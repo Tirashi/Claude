@@ -220,8 +220,8 @@ const HILLS = strip(400, VH, (x, w) => {
 });
 const FENCE = strip(256, VH, (x, w) => {
   // ring fence with sponsor-free banners
-  x.fillStyle = "#f4efe6"; x.fillRect(0, GY-14, w, 2); x.fillRect(0, GY-8, w, 2);
-  for (let i = 0; i < w; i += 32){ x.fillStyle = "#f4efe6"; x.fillRect(i, GY-16, 3, 16); }
+  x.fillStyle = "#9fb59a"; x.fillRect(0, GY-14, w, 2); x.fillRect(0, GY-8, w, 2);
+  for (let i = 0; i < w; i += 32){ x.fillStyle = "#9fb59a"; x.fillRect(i, GY-16, 3, 16); }
   const flags = ["#d6312a", "#ffd23f", "#2f6fb0", "#f4efe6"];
   for (let i = 0; i < w; i += 16){ x.fillStyle = flags[(i/16)%4]; x.fillRect(i+4, GY-26, 6, 5); x.fillRect(i+5, GY-21, 4, 1); x.fillRect(i+6, GY-20, 2, 1); }
   x.fillStyle = "#1f1b26"; x.fillRect(0, GY-27, w, 1);
@@ -249,12 +249,12 @@ function striped(x, y, w, h, a, b, step=3){ for (let i = 0; i < w; i++){ ctx.fil
 function post(x, h, col){ ctx.fillStyle = "#1f1b26"; ctx.fillRect(x-1, GY-h-1, 4, h+1); ctx.fillStyle = col; ctx.fillRect(x, GY-h, 2, h); ctx.fillStyle = "#1f1b26"; ctx.fillRect(x-2, GY-1, 6, 2); }
 function drawBack(o){
   const x = Math.round(o.x);
-  if (o.type === "haie"){ post(x, 26, "#f4efe6"); post(x+12, 26, "#f4efe6");
-    ctx.fillStyle = "#1f1b26"; ctx.fillRect(x, GY-19, 14, 4); striped(x+1, GY-18, 12, 2, "#d6312a", "#f4efe6"); }
+  if (o.type === "haie"){ post(x, 26, "#d6312a"); post(x+12, 26, "#d6312a");
+    ctx.fillStyle = "#1f1b26"; ctx.fillRect(x, GY-19, 14, 4); striped(x+1, GY-18, 12, 2, "#d6312a", "#ffd23f"); }
   else if (o.type === "oxer"){ post(x, 24, "#ffd23f"); post(x+12, 24, "#ffd23f"); post(x+24, 24, "#ffd23f");
     ctx.fillStyle = "#1f1b26"; ctx.fillRect(x, GY-15, 14, 4); ctx.fillRect(x+12, GY-17, 14, 4);
-    striped(x+1, GY-14, 12, 2, "#2f6fb0", "#f4efe6"); striped(x+13, GY-16, 12, 2, "#2f6fb0", "#f4efe6"); }
-  else if (o.type === "pneu"){ post(x, 50, "#f4efe6"); post(x+22, 50, "#f4efe6");
+    striped(x+1, GY-14, 12, 2, "#2f6fb0", "#ffd23f"); striped(x+13, GY-16, 12, 2, "#2f6fb0", "#ffd23f"); }
+  else if (o.type === "pneu"){ post(x, 50, "#ffd23f"); post(x+22, 50, "#ffd23f");
     ctx.fillStyle = "#1f1b26"; ctx.fillRect(x, GY-51, 24, 3); ctx.fillStyle = "#ffd23f"; ctx.fillRect(x+1, GY-50, 22, 1);
     ctx.fillStyle = "#3a3540"; ctx.fillRect(x+11, GY-48, 1, 6); ctx.fillRect(x+12, GY-48, 1, 6);
     ring(x+12, GY-31, 11, 7, "#1f1b26", "#3a3540", true); }
