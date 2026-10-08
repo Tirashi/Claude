@@ -15,6 +15,7 @@ Ouvre `index.html` dans n'importe quel navigateur récent. Aucun build, aucune d
 ## Fonctionnalités
 
 - Grilles de 5×5 à 9×9 générées à l'infini, chacune avec **une solution unique** (vérifiée par un solveur).
-- Conflits signalés en rouge, option Auto-X qui grise les cases interdites.
+- Conflits signalés en rouge.
+- Auto-X (activé par défaut) : poser une reine met une croix sur toutes les cases qu'elle interdit, retirer la reine les enlève.
 - Annuler, effacer, indice, chrono et record par taille (stocké localement).
 - Jouable au clavier : flèches, Espace, Q, X, Z.

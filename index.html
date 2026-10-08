@@ -103,7 +103,7 @@ h1 svg{width:clamp(34px,9vw,52px); height:auto; filter:drop-shadow(3px 3px 0 #00
 }
 .cell svg{width:62%; height:auto; image-rendering:pixelated; pointer-events:none}
 .cell .x svg, .cell svg.x{width:34%}
-.cell svg.auto{width:22%; opacity:.45}
+.cell svg.xa{width:34%; opacity:.55}
 .cell.q svg{filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45)); animation:pop .18s steps(3) both}
 @keyframes pop{from{transform:scale(.4)} to{transform:scale(1)}}
 .cell.bad::after{
@@ -185,6 +185,7 @@ kbd{font-family:var(--f-display); font-size:9px; background:var(--grid-line); pa
       <li>Deux reines ne peuvent pas se toucher, même en diagonale.</li>
       <li>Touche une case une fois pour poser un ✕, deux fois pour poser une reine, trois fois pour la vider.</li>
       <li>Glisse sur la grille pour poser plusieurs ✕ d'un coup.</li>
+      <li>Avec AUTO-X, poser une reine met une ✕ sur toutes les cases qu'elle interdit. Les croix disparaissent quand tu retires la reine.</li>
     </ul>
     <p>Clavier : <kbd>←↑→↓</kbd> déplacer · <kbd>ESPACE</kbd> changer la case · <kbd>Q</kbd> reine · <kbd>X</kbd> croix · <kbd>Z</kbd> annuler</p>
   </section>
@@ -237,7 +238,7 @@ function sprite(map, pal, cls){
 }
 const SVG_Q = sprite(CROWN, PAL, "q");
 const SVG_X = sprite(CROSS, {o:"rgba(26,15,46,.78)"}, "x");
-const SVG_AUTO = sprite(CROSS, {o:"rgba(26,15,46,.9)"}, "auto");
+const SVG_XA = sprite(CROSS, {o:"rgba(26,15,46,.78)"}, "xa");
 document.getElementById("logoCrown").innerHTML = SVG_Q;
 document.getElementById("winCrown").innerHTML = SVG_Q.replace('class="q"','style="width:64px"');
 
@@ -359,10 +360,10 @@ function savePref(k, v){ try{ localStorage.setItem("queens16."+k, JSON.stringify
 const $ = id => document.getElementById(id);
 const boardEl = $("board");
 let P = null;            // puzzle
-let cells = [];          // 0 empty, 1 cross, 2 queen
+let cells = [];          // 0 empty, 1 cross, 2 queen, 3 cross placed automatically by a queen
 let history = [];
 let startTime = 0, elapsed = 0, won = false, hints = 0, timerId = null;
-let size = loadPref("size", 7), autoX = loadPref("autoX", false);
+let size = loadPref("size", 7), autoX = loadPref("autoCross", true);
 let cursor = 0;
 soundOn = loadPref("sound", true);
 let best = loadBest();
@@ -433,25 +434,34 @@ function attacked(){
 
 function render(){
   const {bad, badQ} = conflicts();
-  const att = autoX ? attacked() : null;
   [...boardEl.children].forEach((d,i) => {
     const v = cells[i];
-    const want = v === 2 ? "q" : v === 1 ? "x" : (att && att.has(i)) ? "a" : "";
+    const want = v === 2 ? "q" : v === 1 ? "x" : v === 3 ? "a" : "";
     if (d.dataset.v !== want){
       d.dataset.v = want;
-      d.innerHTML = want === "q" ? SVG_Q : want === "x" ? SVG_X : want === "a" ? SVG_AUTO : "";
+      d.innerHTML = want === "q" ? SVG_Q : want === "x" ? SVG_X : want === "a" ? SVG_XA : "";
     }
     d.classList.toggle("q", v === 2);
     d.classList.toggle("bad", bad.has(i));
     d.classList.toggle("badq", badQ.has(i));
     d.classList.toggle("cur", i === cursor && document.activeElement === boardEl);
     const r = Math.floor(i/P.N)+1, c = i%P.N+1;
-    d.setAttribute("aria-label", `Ligne ${r}, colonne ${c}, ${["vide","croix","reine"][v]}`);
+    d.setAttribute("aria-label", `Ligne ${r}, colonne ${c}, ${["vide","croix","reine","croix"][v]}`);
   });
   return {bad, badQ};
 }
 
+// Crosses follow the queens: every cell a queen rules out gets one, and they go away with the queen.
+function syncAuto(){
+  const att = autoX ? attacked() : new Set();
+  cells.forEach((v,i) => {
+    if (v === 3 && !att.has(i)) cells[i] = 0;
+    else if (v === 0 && att.has(i)) cells[i] = 3;
+  });
+}
+
 function commit(prev){
+  syncAuto();
   history.push(prev);
   if (history.length > 300) history.shift();
   const {badQ, qs} = Object.assign(render(), conflicts());
@@ -463,7 +473,7 @@ function commit(prev){
 function setCell(i, v){ if (won) return; const prev = cells.slice(); cells[i] = v; commit(prev);
   if (v === 2){ conflicts().badQ.has(i) ? SFX.bad() : SFX.q(); } else if (v === 1) SFX.x(); else SFX.clr(); }
 
-function cycle(i){ setCell(i, (cells[i]+1) % 3); }
+function cycle(i){ setCell(i, cells[i] === 3 ? 2 : (cells[i]+1) % 3); }
 
 function win(){
   won = true; clearInterval(timerId);
@@ -495,7 +505,7 @@ boardEl.addEventListener("pointermove", e => {
   const i = cellAt(e.clientX, e.clientY);
   if (i < 0 || (i === drag.start && !drag.moved)) return;
   if (!drag.moved){
-    if (cells[drag.start] !== 0 && cells[drag.start] !== 1){ return; }
+    if (cells[drag.start] === 2){ return; }
     drag.moved = true;
     if (cells[drag.start] === 0){ cells[drag.start] = 1; drag.painted.add(drag.start); }
   }
@@ -533,7 +543,7 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- controls ---------- */
-function undo(){ if (won || !history.length) return; cells = history.pop(); render(); SFX.clr();
+function undo(){ if (won || !history.length) return; cells = history.pop(); syncAuto(); render(); SFX.clr();
   setMsg(`Reines : <span class="hl">${cells.filter(v => v === 2).length}</span> / ${P.N}`); }
 $("undoBtn").onclick = undo;
 $("clearBtn").onclick = () => { if (won || cells.every(v => !v)) return; const prev = cells.slice(); cells.fill(0); commit(prev); SFX.clr(); };
@@ -544,7 +554,7 @@ $("hintBtn").onclick = () => {
   let target, text;
   if (wrong >= 0){ target = wrong; text = `Cette reine est <span class="hl">mal placée</span>.`; }
   else {
-    const wrongX = cells.findIndex((v,i) => v === 1 && solCells.has(i));
+    const wrongX = cells.findIndex((v,i) => (v === 1 || v === 3) && solCells.has(i));
     if (wrongX >= 0){ target = wrongX; const prev = cells.slice(); cells[wrongX] = 2; hints++; commit(prev);
       text = `Une reine se cachait sous une croix !`; }
     else {
@@ -558,7 +568,7 @@ $("hintBtn").onclick = () => {
   SFX.hint();
   const el = boardEl.children[target]; el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
 };
-$("autoBtn").onclick = () => { autoX = !autoX; savePref("autoX", autoX); syncToggles(); render(); };
+$("autoBtn").onclick = () => { autoX = !autoX; savePref("autoCross", autoX); syncToggles(); if (!won){ syncAuto(); render(); } };
 $("soundBtn").onclick = () => { soundOn = !soundOn; savePref("sound", soundOn); syncToggles(); SFX.q(); };
 $("newBtn").onclick = () => { newGame(); SFX.hint(); };
 $("nextBtn").onclick = () => { newGame(); SFX.hint(); };
