@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Queens 16-Bit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: one centred column like a console title screen — HUD bar, RPG-window board, button row, rules window. */
+:root{
+  color-scheme: dark;
+  --night:#120c2a;        /* page ground */
+  --night-2:#1d1545;      /* dither tone */
+  --win-top:#3a4cc8;      /* RPG window gradient */
+  --win-bot:#141a6a;
+  --frame:#f2f0ff;        /* window border */
+  --frame-shadow:#6b6aa8;
+  --ink:#f2f0ff;          /* text */
+  --ink-dim:#a9a6d8;
+  --gold:#ffd23f;         /* accent */
+  --red:#ff3b5c;          /* conflicts */
+  --grid-line:#0d0820;
+  --f-display:"Press Start 2P", "Courier New", monospace;
+  --f-body:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{min-height:100%}
+body{
+  margin:0; color:var(--ink); font-family:var(--f-body); font-size:22px; line-height:1.15;
+  background-color:var(--night);
+  background-image:
+    radial-gradient(var(--night-2) 1px, transparent 1.5px);
+  background-size:4px 4px;
+  padding-inline:16px; padding-block:20px 40px;
+  -webkit-font-smoothing:none;
+}
+body::after{ /* CRT scanlines */
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:50;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.18) 0 1px, transparent 1px 3px);
+}
+.wrap{max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:16px; align-items:stretch}
+
+header{display:flex; flex-direction:column; align-items:center; gap:8px; padding-top:4px}
+h1{
+  margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(28px, 8vw, 44px); letter-spacing:4px;
+  color:var(--gold);
+  text-shadow: 3px 0 0 #b8571a, 0 3px 0 #b8571a, 3px 3px 0 #b8571a, 6px 6px 0 #000;
+  display:flex; align-items:center; gap:14px; text-wrap:balance;
+}
+h1 svg{width:clamp(34px,9vw,52px); height:auto; filter:drop-shadow(3px 3px 0 #000)}
+.tag{font-family:var(--f-display); font-size:9px; letter-spacing:1px; text-align:center; line-height:1.8; color:var(--ink-dim)}
+.tag b{color:var(--ink); font-weight:400}
+
+/* RPG window */
+.win{
+  position:relative;
+  background:linear-gradient(to bottom, var(--win-top), var(--win-bot));
+  border:4px solid var(--frame);
+  border-radius:6px;
+  box-shadow: 0 0 0 3px var(--grid-line), inset 0 0 0 2px var(--frame-shadow), 6px 6px 0 3px #000;
+  padding:14px;
+}
+
+.hud{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center}
+.hud .k{font-family:var(--f-display); font-size:8px; letter-spacing:2px; color:var(--ink-dim)}
+.hud .v{font-family:var(--f-display); font-size:clamp(12px,3.6vw,16px); color:var(--ink); margin-top:8px; font-variant-numeric:tabular-nums}
+.hud .v.gold{color:var(--gold)}
+
+.sizes{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+
+.btn{
+  font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--ink);
+  background:var(--win-bot); border:3px solid var(--frame); border-radius:3px;
+  padding:10px 12px; cursor:pointer;
+  box-shadow: inset -3px -3px 0 rgba(0,0,0,.35), inset 3px 3px 0 rgba(255,255,255,.18), 3px 3px 0 #000;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.btn:hover{background:var(--win-top)}
+.btn:active{transform:translate(2px,2px); box-shadow: inset 3px 3px 0 rgba(0,0,0,.35), 1px 1px 0 #000}
+.btn:focus-visible{outline:3px dashed var(--gold); outline-offset:3px}
+.btn[aria-pressed="true"]{background:var(--gold); color:#2a1600; border-color:#fff3b8}
+.btn.cursor::before{content:"▶"; color:var(--gold); font-size:9px}
+.btn[aria-pressed="true"].cursor::before{color:#2a1600}
+
+.stage{display:flex; justify-content:center; padding:16px}
+.board{
+  --n:8;
+  --cell:min(54px, calc((100vw - 32px - 28px - 8px - 14px) / var(--n)));
+  display:grid; grid-template-columns:repeat(var(--n), var(--cell)); grid-auto-rows:var(--cell);
+  border:4px solid var(--grid-line);
+  box-shadow: 0 0 0 3px var(--frame), 5px 5px 0 3px #000;
+  touch-action:none; user-select:none; -webkit-user-select:none;
+  background:var(--grid-line); position:relative;
+}
+.board:focus{outline:none}
+.cell{
+  position:relative; border:0 solid var(--grid-line); border-right-width:1px; border-bottom-width:1px;
+  box-shadow: inset 3px 3px 0 rgba(255,255,255,.30), inset -3px -3px 0 rgba(0,0,0,.20);
+  display:grid; place-items:center; cursor:pointer;
+}
+.cell svg{width:62%; height:auto; image-rendering:pixelated; pointer-events:none}
+.cell .x svg, .cell svg.x{width:34%}
+.cell svg.auto{width:22%; opacity:.45}
+.cell.q svg{filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45)); animation:pop .18s steps(3) both}
+@keyframes pop{from{transform:scale(.4)} to{transform:scale(1)}}
+.cell.bad::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(45deg, rgba(255,59,92,.55) 0 4px, transparent 4px 8px);
+}
+.cell.q.badq svg{animation:blink .5s steps(1) infinite}
+@keyframes blink{50%{filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45)) brightness(2) hue-rotate(-40deg)}}
+.cell.cur::before{
+  content:""; position:absolute; inset:2px; border:3px dashed #fff; pointer-events:none; z-index:2;
+  mix-blend-mode:difference;
+}
+.cell.flash{animation:flash .25s steps(2) 4}
+@keyframes flash{50%{filter:invert(1)}}
+.board.won .cell.q svg{animation:hop .6s steps(4) infinite alternate}
+.board.won .cell.q:nth-child(odd) svg{animation-delay:.15s}
+@keyframes hop{to{transform:translateY(-18%)}}
+
+.controls{display:flex; flex-wrap:wrap; gap:10px; justify-content:center}
+
+.msg{font-family:var(--f-display); font-size:10px; line-height:1.8; text-align:center; min-height:2.2em; color:var(--ink)}
+.msg .hl{color:var(--gold)}
+
+.rules h2{font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:2px; color:var(--gold); margin:0 0 10px}
+.rules ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; max-width:65ch}
+.rules li{display:flex; gap:10px}
+.rules li::before{content:"♛"; color:var(--gold)}
+.rules p{margin:12px 0 0; color:var(--ink-dim)}
+kbd{font-family:var(--f-display); font-size:9px; background:var(--grid-line); padding:2px 5px; border:2px solid var(--frame-shadow)}
+
+/* Win dialog */
+.overlay{position:fixed; inset:0; z-index:40; display:grid; place-items:center; padding:16px; background:rgba(8,4,24,.72)}
+.overlay .win{max-width:400px; width:100%; text-align:center; display:flex; flex-direction:column; gap:16px; align-items:center; animation:drop .35s steps(5) both}
+@keyframes drop{from{transform:translateY(-60px); opacity:0}}
+.overlay h3{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px,5vw,22px); color:var(--gold); text-shadow:3px 3px 0 #000; line-height:1.4}
+.overlay .stats{font-family:var(--f-display); font-size:10px; line-height:2.2}
+.overlay .stats .new{color:var(--gold); animation:blink2 .6s steps(1) infinite}
+@keyframes blink2{50%{opacity:0}}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 aria-label="Queens"><span id="logoCrown"></span>QUEENS</h1>
+    <div class="tag">UNE REINE PAR <b>LIGNE</b> · <b>COLONNE</b> · <b>COULEUR</b></div>
+  </header>
+
+  <section class="win hud" aria-label="Statut">
+    <div><div class="k">STAGE</div><div class="v" id="stageNo">0000</div></div>
+    <div><div class="k">TEMPS</div><div class="v gold" id="time">00:00</div></div>
+    <div><div class="k">RECORD</div><div class="v" id="best">--:--</div></div>
+  </section>
+
+  <nav class="sizes" id="sizes" aria-label="Taille de la grille"></nav>
+
+  <section class="win stage">
+    <div class="board" id="board" tabindex="0" role="grid" aria-label="Plateau de jeu"></div>
+  </section>
+
+  <div class="msg" id="msg" aria-live="polite"></div>
+
+  <div class="controls">
+    <button class="btn" id="undoBtn" type="button">ANNULER</button>
+    <button class="btn" id="hintBtn" type="button">INDICE</button>
+    <button class="btn" id="clearBtn" type="button">EFFACER</button>
+    <button class="btn" id="autoBtn" type="button" aria-pressed="false">AUTO-X</button>
+    <button class="btn" id="soundBtn" type="button" aria-pressed="true">SON</button>
+    <button class="btn cursor" id="newBtn" type="button">NOUVEAU</button>
+  </div>
+
+  <section class="win rules">
+    <h2>RÈGLES</h2>
+    <ul>
+      <li>Place exactement une reine dans chaque ligne, chaque colonne et chaque zone de couleur.</li>
+      <li>Deux reines ne peuvent pas se toucher, même en diagonale.</li>
+      <li>Touche une case une fois pour poser un ✕, deux fois pour poser une reine, trois fois pour la vider.</li>
+      <li>Glisse sur la grille pour poser plusieurs ✕ d'un coup.</li>
+    </ul>
+    <p>Clavier : <kbd>←↑→↓</kbd> déplacer · <kbd>ESPACE</kbd> changer la case · <kbd>Q</kbd> reine · <kbd>X</kbd> croix · <kbd>Z</kbd> annuler</p>
+  </section>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="win" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div id="winCrown"></div>
+    <h3 id="winTitle">STAGE CLEAR!</h3>
+    <div class="stats" id="winStats"></div>
+    <button class="btn cursor" id="nextBtn" type="button">STAGE SUIVANT</button>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------- 16-bit palette for regions ---------- */
+const COLORS = ["#ef7a5f","#ffcf4a","#86d16c","#5fb0ea","#b98ae0","#f59ac4","#8fe0d4","#d9a46e","#c9c6e4","#ff9f43"];
+const SIZES = [{n:5,l:"5×5"},{n:6,l:"6×6"},{n:7,l:"7×7"},{n:8,l:"8×8"},{n:9,l:"9×9"}];
+
+/* ---------- pixel sprites ---------- */
+const CROWN = [
+  ".o...o...o.",
+  "oho.oho.oho",
+  "oyo.oyo.oyo",
+  "oyyoyyyoyyo",
+  "ohyyyyyyyyo",
+  "oyryyryyryo",
+  "oyyyyyyyyyo",
+  "odddddddddo",
+  "ooooooooooo"];
+const CROSS = [
+  "oo...oo",
+  "ooo.ooo",
+  ".ooooo.",
+  "..ooo..",
+  ".ooooo.",
+  "ooo.ooo",
+  "oo...oo"];
+const PAL = {o:"#1a0f2e", y:"#ffd23f", h:"#fff6c2", d:"#d98a1c", r:"#e8264d"};
+function sprite(map, pal, cls){
+  const h = map.length, w = map[0].length;
+  let s = `<svg class="${cls||""}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">`;
+  map.forEach((row,y) => [...row].forEach((ch,x) => {
+    if (pal[ch]) s += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${pal[ch]}"/>`;
+  }));
+  return s + "</svg>";
+}
+const SVG_Q = sprite(CROWN, PAL, "q");
+const SVG_X = sprite(CROSS, {o:"rgba(26,15,46,.78)"}, "x");
+const SVG_AUTO = sprite(CROSS, {o:"rgba(26,15,46,.9)"}, "auto");
+document.getElementById("logoCrown").innerHTML = SVG_Q;
+document.getElementById("winCrown").innerHTML = SVG_Q.replace('class="q"','style="width:64px"');
+
+/* ---------- seeded RNG ---------- */
+function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffle(arr, rnd){ for (let i = arr.length - 1; i > 0; i--){ const j = Math.floor(rnd()*(i+1)); [arr[i],arr[j]] = [arr[j],arr[i]]; } return arr; }
+
+/* ---------- solver: counts up to `limit` solutions ---------- */
+function solve(reg, N, limit){
+  const sols = [], cols = new Array(N), usedC = new Array(N).fill(false), usedR = new Array(N).fill(false);
+  (function rec(r){
+    if (r === N){ sols.push(cols.slice()); return sols.length >= limit; }
+    for (let c = 0; c < N; c++){
+      const g = reg[r*N+c];
+      if (usedC[c] || usedR[g] || (r > 0 && Math.abs(cols[r-1]-c) <= 1)) continue;
+      usedC[c] = usedR[g] = true; cols[r] = c;
+      if (rec(r+1)) return true;
+      usedC[c] = usedR[g] = false;
+    }
+    return false;
+  })(0);
+  return sols;
+}
+
+/* ---------- generator: unique-solution puzzle ---------- */
+function neighbors4(i, N){ const r = Math.floor(i/N), c = i%N, out = [];
+  if (r>0) out.push(i-N); if (r<N-1) out.push(i+N); if (c>0) out.push(i-1); if (c<N-1) out.push(i+1); return out; }
+
+function randomQueens(N, rnd){
+  const cols = [], used = new Array(N).fill(false);
+  (function rec(r){
+    if (r === N) return true;
+    for (const c of shuffle([...Array(N).keys()], rnd)){
+      if (used[c] || (r>0 && Math.abs(cols[r-1]-c) <= 1)) continue;
+      used[c] = true; cols[r] = c;
+      if (rec(r+1)) return true;
+      used[c] = false;
+    }
+    return false;
+  })(0);
+  return cols;
+}
+
+function connectedWithout(reg, N, g, removed, seed){
+  const seen = new Set([seed]), stack = [seed]; let size = 0;
+  for (let i = 0; i < N*N; i++) if (reg[i] === g && i !== removed) size++;
+  while (stack.length){ const i = stack.pop();
+    for (const j of neighbors4(i,N)) if (j !== removed && reg[j] === g && !seen.has(j)){ seen.add(j); stack.push(j); } }
+  return seen.size === size;
+}
+
+function generate(N, seed){
+  const rnd = mulberry32(seed);
+  for (let attempt = 0; attempt < 60; attempt++){
+    const sol = randomQueens(N, rnd);
+    const qcell = sol.map((c,r) => r*N+c);
+    const reg = new Array(N*N).fill(-1);
+    qcell.forEach((i,g) => reg[i] = g);
+    // organic growth: pick a random frontier pair each step
+    let left = N*N - N;
+    while (left > 0){
+      const front = [];
+      for (let i = 0; i < N*N; i++) if (reg[i] === -1)
+        for (const j of neighbors4(i,N)) if (reg[j] !== -1) front.push([i, reg[j]]);
+      const [i,g] = front[Math.floor(rnd()*front.length)];
+      reg[i] = g; left--;
+    }
+    // repair until the planted solution is the only one
+    for (let it = 0; it < 400; it++){
+      const sols = solve(reg, N, 2);
+      if (sols.length === 1) return {N, reg, sol, seed};
+      const alt = sols.find(s => s.some((c,r) => c !== sol[r]));
+      const cand = shuffle(alt.map((c,r) => r*N+c).filter(i => !qcell.includes(i)), rnd);
+      let moved = false;
+      for (const i of cand){
+        const g = reg[i];
+        const opts = shuffle([...new Set(neighbors4(i,N).map(j => reg[j]).filter(h => h !== g))], rnd);
+        if (!opts.length || !connectedWithout(reg, N, g, i, qcell[g])) continue;
+        reg[i] = opts[0]; moved = true; break;
+      }
+      if (!moved) break;
+    }
+  }
+  return null;
+}
+
+/* ---------- sound (square-wave chip blips) ---------- */
+let actx = null, soundOn = true;
+function blip(notes, type="square", dur=.07, vol=.06){
+  if (!soundOn) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    for (const f of notes){
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t+dur);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t+dur); t += dur*.9;
+    }
+  }catch(e){}
+}
+const SFX = {
+  x: () => blip([660], "square", .04, .035),
+  q: () => blip([523, 784], "square", .07),
+  clr: () => blip([330], "triangle", .05, .08),
+  bad: () => blip([140, 110], "sawtooth", .12, .05),
+  win: () => blip([523,659,784,1047,784,1047,1319], "square", .11, .06),
+  hint: () => blip([880, 660, 990], "triangle", .08, .09),
+};
+
+/* ---------- storage (best times) ---------- */
+function loadBest(){ try{ return JSON.parse(localStorage.getItem("queens16.best") || "{}"); }catch(e){ return {}; } }
+function saveBest(b){ try{ localStorage.setItem("queens16.best", JSON.stringify(b)); }catch(e){} }
+function loadPref(k, d){ try{ const v = localStorage.getItem("queens16."+k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }
+function savePref(k, v){ try{ localStorage.setItem("queens16."+k, JSON.stringify(v)); }catch(e){} }
+
+/* ---------- state ---------- */
+const $ = id => document.getElementById(id);
+const boardEl = $("board");
+let P = null;            // puzzle
+let cells = [];          // 0 empty, 1 cross, 2 queen
+let history = [];
+let startTime = 0, elapsed = 0, won = false, hints = 0, timerId = null;
+let size = loadPref("size", 7), autoX = loadPref("autoX", false);
+let cursor = 0;
+soundOn = loadPref("sound", true);
+let best = loadBest();
+
+const fmt = ms => { const s = Math.floor(ms/1000); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); };
+
+function setMsg(html){ $("msg").innerHTML = html; }
+
+function newGame(seed, saved){
+  seed = seed ?? (Math.floor(Math.random()*9000)+1000);
+  let p = generate(size, seed), s = seed;
+  while (!p){ s++; p = generate(size, s); }
+  P = p;
+  cells = saved?.cells?.length === size*size ? saved.cells.slice() : new Array(size*size).fill(0);
+  history = []; won = false; hints = saved?.hints || 0;
+  elapsed = saved?.elapsed || 0; startTime = performance.now() - elapsed;
+  cursor = 0;
+  $("overlay").hidden = true;
+  boardEl.classList.remove("won");
+  $("stageNo").textContent = String(P.seed).padStart(4,"0");
+  renderBest();
+  build();
+  render();
+  setMsg(`Trouve les <span class="hl">${size}</span> reines.`);
+  clearInterval(timerId);
+  timerId = setInterval(tick, 250); tick();
+}
+function tick(){ if (won) return; elapsed = performance.now() - startTime; $("time").textContent = fmt(elapsed); }
+function renderBest(){ const b = best[size]; $("best").textContent = b ? fmt(b) : "--:--"; }
+
+function build(){
+  const N = P.N; boardEl.style.setProperty("--n", N); boardEl.innerHTML = "";
+  for (let i = 0; i < N*N; i++){
+    const r = Math.floor(i/N), c = i%N, g = P.reg[i];
+    const d = document.createElement("div");
+    d.className = "cell"; d.dataset.i = i; d.setAttribute("role","gridcell");
+    d.style.background = COLORS[g];
+    d.style.borderRightWidth = c === N-1 ? "0" : (P.reg[i+1] !== g ? "3px" : "1px");
+    d.style.borderBottomWidth = r === N-1 ? "0" : (P.reg[i+N] !== g ? "3px" : "1px");
+    boardEl.appendChild(d);
+  }
+}
+
+function conflicts(){
+  const N = P.N, bad = new Set(), badQ = new Set();
+  const qs = []; cells.forEach((v,i) => { if (v === 2) qs.push(i); });
+  const mark = pred => { for (let i = 0; i < N*N; i++) if (pred(i)) bad.add(i); };
+  for (let a = 0; a < qs.length; a++) for (let b = a+1; b < qs.length; b++){
+    const i = qs[a], j = qs[b], ri = Math.floor(i/N), ci = i%N, rj = Math.floor(j/N), cj = j%N;
+    let hit = false;
+    if (ri === rj){ mark(k => Math.floor(k/N) === ri); hit = true; }
+    if (ci === cj){ mark(k => k%N === ci); hit = true; }
+    if (P.reg[i] === P.reg[j]){ mark(k => P.reg[k] === P.reg[i]); hit = true; }
+    if (!hit && Math.abs(ri-rj) <= 1 && Math.abs(ci-cj) <= 1){ bad.add(i); bad.add(j); hit = true; }
+    if (hit){ badQ.add(i); badQ.add(j); }
+  }
+  return {bad, badQ, qs};
+}
+
+function attacked(){
+  const N = P.N, att = new Set();
+  cells.forEach((v,i) => { if (v !== 2) return;
+    const r = Math.floor(i/N), c = i%N;
+    for (let k = 0; k < N*N; k++){ const rk = Math.floor(k/N), ck = k%N;
+      if (k !== i && (rk === r || ck === c || P.reg[k] === P.reg[i] || (Math.abs(rk-r) <= 1 && Math.abs(ck-c) <= 1))) att.add(k); } });
+  return att;
+}
+
+function render(){
+  const {bad, badQ} = conflicts();
+  const att = autoX ? attacked() : null;
+  [...boardEl.children].forEach((d,i) => {
+    const v = cells[i];
+    const want = v === 2 ? "q" : v === 1 ? "x" : (att && att.has(i)) ? "a" : "";
+    if (d.dataset.v !== want){
+      d.dataset.v = want;
+      d.innerHTML = want === "q" ? SVG_Q : want === "x" ? SVG_X : want === "a" ? SVG_AUTO : "";
+    }
+    d.classList.toggle("q", v === 2);
+    d.classList.toggle("bad", bad.has(i));
+    d.classList.toggle("badq", badQ.has(i));
+    d.classList.toggle("cur", i === cursor && document.activeElement === boardEl);
+    const r = Math.floor(i/P.N)+1, c = i%P.N+1;
+    d.setAttribute("aria-label", `Ligne ${r}, colonne ${c}, ${["vide","croix","reine"][v]}`);
+  });
+  return {bad, badQ};
+}
+
+function commit(prev){
+  history.push(prev);
+  if (history.length > 300) history.shift();
+  const {badQ, qs} = Object.assign(render(), conflicts());
+  if (badQ.size){ setMsg(`<span class="hl">Conflit !</span> Deux reines se gênent.`); }
+  else setMsg(`Reines : <span class="hl">${qs.length}</span> / ${P.N}`);
+  if (qs.length === P.N && !badQ.size) win();
+}
+
+function setCell(i, v){ if (won) return; const prev = cells.slice(); cells[i] = v; commit(prev);
+  if (v === 2){ conflicts().badQ.has(i) ? SFX.bad() : SFX.q(); } else if (v === 1) SFX.x(); else SFX.clr(); }
+
+function cycle(i){ setCell(i, (cells[i]+1) % 3); }
+
+function win(){
+  won = true; clearInterval(timerId);
+  elapsed = performance.now() - startTime; $("time").textContent = fmt(elapsed);
+  boardEl.classList.add("won");
+  const rec = !best[size] || elapsed < best[size];
+  if (rec && !hints){ best[size] = Math.round(elapsed); saveBest(best); renderBest(); }
+  SFX.win();
+  setMsg(`<span class="hl">STAGE CLEAR !</span>`);
+  $("winStats").innerHTML =
+    `GRILLE ${size}×${size}<br>TEMPS ${fmt(elapsed)}<br>INDICES ${hints}<br>` +
+    (hints ? `<span>RECORD NON ÉLIGIBLE</span>` : rec ? `<span class="new">NOUVEAU RECORD !</span>` : `RECORD ${fmt(best[size])}`);
+  setTimeout(() => { if (won){ $("overlay").hidden = false; $("nextBtn").focus(); } }, 1100);
+}
+
+/* ---------- pointer: tap cycles, drag paints crosses ---------- */
+let drag = null;
+function cellAt(x, y){ const el = document.elementFromPoint(x, y); const c = el && el.closest(".cell"); return c && boardEl.contains(c) ? +c.dataset.i : -1; }
+boardEl.addEventListener("pointerdown", e => {
+  if (won) return;
+  const i = cellAt(e.clientX, e.clientY); if (i < 0) return;
+  e.preventDefault(); boardEl.focus({preventScroll:true});
+  cursor = i;
+  drag = {start:i, moved:false, prev:cells.slice(), painted:new Set()};
+  try{ boardEl.setPointerCapture(e.pointerId); }catch(_){}
+});
+boardEl.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const i = cellAt(e.clientX, e.clientY);
+  if (i < 0 || (i === drag.start && !drag.moved)) return;
+  if (!drag.moved){
+    if (cells[drag.start] !== 0 && cells[drag.start] !== 1){ return; }
+    drag.moved = true;
+    if (cells[drag.start] === 0){ cells[drag.start] = 1; drag.painted.add(drag.start); }
+  }
+  if (cells[i] === 0 && !drag.painted.has(i)){ cells[i] = 1; drag.painted.add(i); SFX.x(); render(); }
+});
+function endDrag(e){
+  if (!drag) return;
+  const d = drag; drag = null;
+  if (d.moved){ if (d.painted.size) commit(d.prev); }
+  else cycle(d.start);
+}
+boardEl.addEventListener("pointerup", endDrag);
+boardEl.addEventListener("pointercancel", () => { if (drag && drag.moved && drag.painted.size) commit(drag.prev); drag = null; });
+
+/* ---------- keyboard ---------- */
+boardEl.addEventListener("focus", render);
+boardEl.addEventListener("blur", render);
+boardEl.addEventListener("keydown", e => {
+  if (!P) return;
+  const N = P.N, r = Math.floor(cursor/N), c = cursor%N;
+  const k = e.key;
+  if (k === "ArrowUp"){ cursor = ((r-1+N)%N)*N + c; }
+  else if (k === "ArrowDown"){ cursor = ((r+1)%N)*N + c; }
+  else if (k === "ArrowLeft"){ cursor = r*N + (c-1+N)%N; }
+  else if (k === "ArrowRight"){ cursor = r*N + (c+1)%N; }
+  else if (k === " " || k === "Enter"){ cycle(cursor); }
+  else if (k === "q" || k === "Q"){ setCell(cursor, cells[cursor] === 2 ? 0 : 2); }
+  else if (k === "x" || k === "X"){ setCell(cursor, cells[cursor] === 1 ? 0 : 1); }
+  else if (k === "Backspace" || k === "Delete"){ setCell(cursor, 0); }
+  else return;
+  e.preventDefault(); render();
+});
+document.addEventListener("keydown", e => {
+  if ((e.key === "z" || e.key === "Z") && !e.metaKey && !e.ctrlKey && document.activeElement?.tagName !== "INPUT") undo();
+});
+
+/* ---------- controls ---------- */
+function undo(){ if (won || !history.length) return; cells = history.pop(); render(); SFX.clr();
+  setMsg(`Reines : <span class="hl">${cells.filter(v => v === 2).length}</span> / ${P.N}`); }
+$("undoBtn").onclick = undo;
+$("clearBtn").onclick = () => { if (won || cells.every(v => !v)) return; const prev = cells.slice(); cells.fill(0); commit(prev); SFX.clr(); };
+$("hintBtn").onclick = () => {
+  if (won) return;
+  const N = P.N, solCells = new Set(P.sol.map((c,r) => r*N+c));
+  const wrong = cells.findIndex((v,i) => v === 2 && !solCells.has(i));
+  let target, text;
+  if (wrong >= 0){ target = wrong; text = `Cette reine est <span class="hl">mal placée</span>.`; }
+  else {
+    const wrongX = cells.findIndex((v,i) => v === 1 && solCells.has(i));
+    if (wrongX >= 0){ target = wrongX; const prev = cells.slice(); cells[wrongX] = 2; hints++; commit(prev);
+      text = `Une reine se cachait sous une croix !`; }
+    else {
+      const free = [...solCells].filter(i => cells[i] !== 2);
+      target = free[Math.floor(Math.random()*free.length)];
+      const prev = cells.slice(); cells[target] = 2; hints++; commit(prev);
+      text = `Indice : une reine posée pour toi.`;
+    }
+  }
+  if (!won) setMsg(text);
+  SFX.hint();
+  const el = boardEl.children[target]; el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+};
+$("autoBtn").onclick = () => { autoX = !autoX; savePref("autoX", autoX); syncToggles(); render(); };
+$("soundBtn").onclick = () => { soundOn = !soundOn; savePref("sound", soundOn); syncToggles(); SFX.q(); };
+$("newBtn").onclick = () => { newGame(); SFX.hint(); };
+$("nextBtn").onclick = () => { newGame(); SFX.hint(); };
+function syncToggles(){
+  $("autoBtn").setAttribute("aria-pressed", autoX);
+  $("soundBtn").setAttribute("aria-pressed", soundOn);
+  $("soundBtn").textContent = soundOn ? "SON" : "MUET";
+}
+function buildSizes(){
+  const nav = $("sizes"); nav.innerHTML = "";
+  SIZES.forEach(s => {
+    const b = document.createElement("button");
+    b.className = "btn"; b.type = "button"; b.textContent = s.l;
+    b.setAttribute("aria-pressed", s.n === size);
+    b.onclick = () => { if (s.n === size && !won) return; size = s.n; savePref("size", size); buildSizes(); newGame(); SFX.hint(); };
+    nav.appendChild(b);
+  });
+}
+
+/* ---------- boot (keeps an in-progress game across live updates) ---------- */
+function start(data){
+  if (data && data.size) size = data.size;
+  buildSizes(); syncToggles();
+  newGame(data?.seed, data);
+}
+window.claude?.hot?.snapshot?.(() => ({size, seed:P?.seed, cells, elapsed, hints}));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
