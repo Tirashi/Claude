@@ -2,7 +2,7 @@
 
 Des jeux jouables dans le navigateur, sans build ni dépendance :
 
-- [`index.html`](index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
+- [`queens/index.html`](queens/index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
 - [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu de course sans fin façon dino de Chrome, avec un bouvier bernois sur un parcours d'agility.
 
@@ -14,7 +14,7 @@ Une reprise du jeu **Queens** de LinkedIn, jouable dans le navigateur, avec une 
 
 ### Jouer
 
-Ouvre `index.html` dans n'importe quel navigateur récent. Aucun build, aucune dépendance.
+Ouvre `queens/index.html` dans n'importe quel navigateur récent. Aucun build, aucune dépendance.
 
 ### Règles
 
