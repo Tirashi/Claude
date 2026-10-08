@@ -1,6 +1,6 @@
 # Jeux 16 bits
 
-Des jeux jouables dans le navigateur, sans build ni dépendance :
+Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index.html`](index.html) à la racine est un menu qui mène aux trois jeux :
 
 - [`queens/index.html`](queens/index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
