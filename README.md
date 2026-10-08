@@ -1,9 +1,10 @@
 # Jeux 16 bits
 
-Deux jeux de réflexion jouables dans le navigateur, sans build ni dépendance :
+Des jeux jouables dans le navigateur, sans build ni dépendance :
 
 - [`index.html`](index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
+- [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu de course sans fin façon dino de Chrome, avec un bouvier bernois sur un parcours d'agility.
 
 ---
 
@@ -41,3 +42,14 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 - Progression, records et grilles en cours sauvegardés dans le navigateur.
 
 Projet de fan à usage strictement personnel, sans lien avec Nintendo, Game Freak ou The Pokémon Company. Le pixel art a été dessiné pour ce jeu.
+
+---
+
+## Injagility (prototype)
+
+Un petit bouvier bernois enchaîne les obstacles d'agility au pied des Alpes, dans l'esprit du jeu du dino de Chrome.
+
+- Obstacles : haie, oxer (double barre), pneu (plus haut) et tunnel (il faut se baisser jusqu'à la sortie).
+- Saut à hauteur variable selon la durée d'appui, descente rapide en se baissant en l'air.
+- Vitesse qui augmente avec la distance, points par obstacle, record sauvegardé dans le navigateur.
+- Commandes : Espace ou ↑ pour sauter, ↓ pour se baisser ; sur mobile, toucher l'écran, glisser vers le bas ou utiliser les boutons SAUTER et TUNNEL.
