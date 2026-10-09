@@ -92,6 +92,19 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .entry.locked canvas{opacity:.85}
 .dexmsg{margin:10px 0 0; font-family:var(--f-display); font-size:8px; line-height:1.9; color:var(--ink)}
 .dexmsg b{font-weight:400; color:var(--dex)}
+/* transfert de sauvegarde */
+.xfer-open{display:flex; justify-content:center; margin-top:14px}
+.xfer{margin-top:14px; border:3px solid var(--ink); background:var(--screen); padding:12px; display:flex; flex-direction:column; gap:10px; box-shadow:3px 3px 0 var(--ink-soft)}
+.xfer h3{margin:0; font-family:var(--f-display); font-weight:400; font-size:10px; letter-spacing:1px}
+.xfer p{margin:0; font-size:15px; line-height:1.35; color:var(--ink)}
+.xfer ol{margin:0; padding-left:20px; font-size:15px; line-height:1.35}
+.xfer textarea{width:100%; min-height:72px; resize:vertical; font:12px/1.3 "Courier New",monospace; color:var(--ink); background:#fff; border:3px solid var(--ink); padding:6px; word-break:break-all}
+.xfer .row{display:flex; flex-wrap:wrap; gap:10px}
+.xfer .row .btn{flex:1 1 auto}
+.xfer .res{font-family:var(--f-display); font-size:8px; line-height:1.9; min-height:1.9em}
+.xfer .res.ok{color:#2f7a48} .xfer .res.err{color:var(--dex)}
+.fbnote{margin:10px 0 0; padding:8px 10px; border:3px dashed var(--dex); font-size:15px; line-height:1.35; color:var(--ink)}
+.fbnote b{color:var(--dex)}
 
 /* Play */
 .board-wrap{margin-top:12px; overflow-x:auto; display:flex; justify-content:center}
@@ -176,7 +189,20 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
       <section id="dexView">
         <div class="bar"><span>CAPTURÉS <b id="capCount">0/0</b></span><div class="meter" aria-hidden="true"><span id="capBar"></span></div></div>
         <p class="dexmsg" id="dexMsg" aria-live="polite"></p>
+        <p class="fbnote" id="fbNote" hidden>Tu joues dans le <b>navigateur de Facebook</b> : ta progression reste enregistrée ici. Pour la retrouver dans Chrome, utilise <b>Transférer ma sauvegarde</b> en bas du Dex.</p>
         <div class="list" id="list"></div>
+        <div class="xfer-open"><button class="btn" id="xferBtn" type="button" aria-expanded="false" aria-controls="xfer">TRANSFÉRER MA SAUVEGARDE</button></div>
+        <section class="xfer" id="xfer" hidden aria-label="Transfert de sauvegarde">
+          <h3>1. COPIER</h3>
+          <p>Dans le navigateur où tu as joué, copie ta sauvegarde : tes Pokémon capturés, tes records et tes grilles en cours.</p>
+          <div class="row"><button class="btn" id="exportBtn" type="button">COPIER MA SAUVEGARDE</button></div>
+          <textarea id="exportBox" readonly hidden aria-label="Code de sauvegarde à copier"></textarea>
+          <h3>2. IMPORTER</h3>
+          <p>Ouvre le jeu dans l'autre navigateur (Chrome ou l'appli installée), colle le code ci-dessous puis importe. Rien n'est effacé : les deux progressions sont réunies, et le meilleur temps est gardé.</p>
+          <textarea id="importBox" placeholder="Colle ici le code qui commence par PICROSSDEX1-" aria-label="Code de sauvegarde à importer"></textarea>
+          <div class="row"><button class="btn" id="pasteBtn" type="button">COLLER</button><button class="btn" id="importBtn" type="button">IMPORTER</button></div>
+          <div class="res" id="xferRes" aria-live="polite"></div>
+        </section>
       </section>
 
       <!-- Puzzle -->
@@ -815,6 +841,71 @@ let captured = store.get("captured", {});
 let P = null, W = 0, H = 0, sol = [], cells = [], rowClues = [], colClues = [];
 let history = [], tool = "fill", startT = 0, elapsed = 0, timer = null, solved = false, hints = 0, cursor = 0;
 let progress = store.get("progress", {});   // unfinished grids, per puzzle id
+
+/* ---------- save transfer between browsers (e.g. Facebook's in-app browser -> Chrome) ---------- */
+const SAVE_PREFIX = "PICROSSDEX1-";
+function exportCode(){
+  const c = {}, p = {};
+  for (const [id, v] of Object.entries(captured)) c[id] = {t: v.time, h: v.hints || 0};
+  for (const [id, v] of Object.entries(progress)) if (v && v.cells) p[id] = {c: v.cells.join(""), e: Math.round(v.elapsed || 0), h: v.hints || 0};
+  return SAVE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify({c, p}))));
+}
+function importCode(text){
+  const raw = (text || "").replace(/\s+/g, "");
+  const at = raw.indexOf(SAVE_PREFIX);
+  if (at < 0) throw new Error("Ce n'est pas un code de sauvegarde Picross Dex : il doit commencer par PICROSSDEX1-.");
+  let data;
+  try { data = JSON.parse(decodeURIComponent(escape(atob(raw.slice(at + SAVE_PREFIX.length))))); }
+  catch (e) { throw new Error("Le code est incomplet ou abîmé. Copie-le de nouveau en entier."); }
+  const byId = Object.fromEntries(PUZZLES.map(q => [q.id, q]));
+  let added = 0, faster = 0, grids = 0;
+  for (const [id, v] of Object.entries(data.c || {})){
+    if (!byId[id] || !(v.t > 0)) continue;
+    const mine = captured[id];
+    if (!mine){ captured[id] = {time: Math.round(v.t), hints: v.h || 0}; added++; }
+    else if (v.t < mine.time){ captured[id] = {time: Math.round(v.t), hints: v.h || 0}; faster++; }
+  }
+  for (const [id, v] of Object.entries(data.p || {})){
+    const q = byId[id];
+    if (!q || captured[id] || progress[id] || typeof v.c !== "string") continue;
+    if (v.c.length !== q.art.length * q.art[0].length || /[^012]/.test(v.c)) continue;
+    progress[id] = {cells: [...v.c].map(Number), elapsed: v.e || 0, hints: v.h || 0}; grids++;
+  }
+  // grilles en cours devenues inutiles parce que le Pokémon est maintenant capturé
+  for (const id of Object.keys(progress)) if (captured[id]) delete progress[id];
+  store.set("captured", captured); store.set("progress", progress);
+  return {added, faster, grids};
+}
+function setXferRes(text, ok){ const el = $("xferRes"); el.textContent = text; el.className = "res " + (ok ? "ok" : "err"); }
+$("xferBtn").onclick = () => {
+  const box = $("xfer"); box.hidden = !box.hidden; $("xferBtn").setAttribute("aria-expanded", !box.hidden);
+  if (!box.hidden) box.scrollIntoView({behavior: "smooth", block: "start"});
+};
+$("exportBtn").onclick = () => {
+  const code = exportCode(), box = $("exportBox");
+  box.value = code; box.hidden = false;
+  const n = Object.keys(captured).length;
+  const done = ok => setXferRes(ok ? `Sauvegarde copiée (${n} Pokémon). Colle-la dans l'autre navigateur.`
+                                   : "Copie automatique impossible ici : appuie longuement sur le code ci-dessus, puis Copier.", ok);
+  try { navigator.clipboard.writeText(code).then(() => done(true), () => { box.focus(); box.select(); done(false); }); }
+  catch (e) { box.focus(); box.select(); done(false); }
+};
+$("pasteBtn").onclick = async () => {
+  try { const t = await navigator.clipboard.readText(); if (t) { $("importBox").value = t; setXferRes("Code collé. Appuie sur IMPORTER.", true); return; } } catch (e) {}
+  $("importBox").focus(); setXferRes("Appuie longuement dans la case, puis Coller.", false);
+};
+$("importBtn").onclick = () => {
+  try {
+    const r = importCode($("importBox").value);
+    const parts = [];
+    if (r.added) parts.push(`${r.added} Pokémon ajouté${r.added > 1 ? "s" : ""}`);
+    if (r.faster) parts.push(`${r.faster} record${r.faster > 1 ? "s" : ""} amélioré${r.faster > 1 ? "s" : ""}`);
+    if (r.grids) parts.push(`${r.grids} grille${r.grids > 1 ? "s" : ""} en cours`);
+    setXferRes(parts.length ? "Importé : " + parts.join(", ") + "." : "Rien de nouveau : cette sauvegarde est déjà à jour ici.", true);
+    $("importBox").value = ""; renderList(); SFX.win();
+  } catch (e) { setXferRes(e.message, false); blip([196, 147], "square", .08, .05); }
+};
+if (/FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent)) $("fbNote").hidden = false;
 
 /* ---------- legendary birds: locked until enough grids are solved ---------- */
 const UNLOCK_AT = 10;

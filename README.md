@@ -48,6 +48,7 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 - Clic ou toucher pour remplir, clic droit ou outil CROIX pour marquer, glisser pour peindre une ligne.
 - Indices barrés quand une ligne est juste, aperçu miniature, chrono, indice, annuler.
 - Progression, records et grilles en cours sauvegardés dans le navigateur.
+- **Transférer ma sauvegarde** (en bas du Dex) : copie un code dans le presse-papiers et le colle dans un autre navigateur, par exemple pour passer du navigateur intégré de Facebook à Chrome. L'import fusionne les deux progressions et garde le meilleur temps.
 
 Projet de fan à usage strictement personnel, sans lien avec Nintendo, Game Freak ou The Pokémon Company. Le pixel art a été dessiné pour ce jeu.
 
