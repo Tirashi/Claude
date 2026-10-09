@@ -3,13 +3,13 @@
    - Les fichiers du site passent toujours d'abord par le réseau : en ligne, on reçoit
      la dernière version publiée ; hors ligne, on retombe sur la copie en cache.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v1";
+const VERSION = "ludotheque-v2";
 const FONTS = "ludotheque-fonts";
 const FILES = [
   "./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png",
   "./queens/index.html", "./picross/index.html", "./injagility/index.html", "./touche-coule/index.html",
-  "./tetris/index.html", "./snake/index.html", "./asteroids/index.html",
+  "./tetris/index.html", "./snake/index.html", "./asteroids/index.html", "./solitaire/index.html",
   "./jeu-de-la-vie/index.html", "./jeu-de-la-vie/style.css", "./jeu-de-la-vie/app.js"
 ];
 

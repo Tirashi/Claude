@@ -10,6 +10,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`snake/index.html`](snake/index.html) : **Snake**.
 - [`asteroids/index.html`](asteroids/index.html) : **Asteroids**.
 - [`jeu-de-la-vie/index.html`](jeu-de-la-vie/index.html) : **Jeu de la Vie**, l'automate cellulaire de Conway (voir son propre README).
+- [`solitaire/index.html`](solitaire/index.html) : **Solitaire**, le Klondike de Windows XP.
 
 ---
 
@@ -76,9 +77,19 @@ Touché Coulé était déjà en 16 bits et n'a pas été modifié. Les quatre au
 
 ---
 
+## Solitaire
+
+Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
+
+- Pioche de 3 cartes par défaut, comme sous XP, ou d'une seule carte (changer de mode redistribue les cartes).
+- Barème « standard » de Windows : +10 par carte posée sur une pile, +5 par carte posée de la défausse vers une colonne ou retournée, −15 pour reprendre une carte d'une pile, −2 toutes les 10 secondes, −100 (pioche 1) ou −20 (pioche 3) à chaque tour de pioche, et un bonus de vitesse à la victoire (700 000 ÷ secondes, au-delà de 30 s).
+- Toucher une carte l'envoie à la meilleure place (pile d'abord, sinon colonne) ; on peut aussi la glisser. Annuler, bouton TOUT RANGER quand toutes les cartes sont visibles.
+- Les cartes rebondissent à la victoire, comme dans l'original.
+- La partie en cours est sauvegardée et reprend au prochain lancement ; le meilleur score fait partie du transfert de sauvegardes.
+
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Queens, Tetris, Snake, Asteroids, Injagility), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Touché Coulé et le Jeu de la Vie n'enregistrent rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Queens, Tetris, Snake, Asteroids, Injagility, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Touché Coulé et le Jeu de la Vie n'enregistrent rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Application installable (PWA)
 
