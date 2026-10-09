@@ -67,5 +67,5 @@ Touché Coulé était déjà en 16 bits et n'a pas été modifié. Les quatre au
 
 - **Tetris** : briques en relief, puits en damier, pièce fantôme en pointillés, record sauvegardé, écran d'accueil, boutons tactiles avec répétition.
 - **Snake** : jardin en damier, pomme et serpent dessinés en pixels, tête orientée avec langue, record conservé (même clé que l'original), file de virages pour ne jamais se retourner sur soi, glisser ou croix directionnelle sur mobile.
-- **Asteroids** : rendu en basse résolution pixel par pixel, astéroïdes ombrés avec cratères, vaisseau en sprite, flamme du réacteur, nébuleuse et étoiles scintillantes, record sauvegardé, tir continu en maintenant le bouton sur mobile.
+- **Asteroids** : rendu en basse résolution pixel par pixel, astéroïdes ombrés avec cratères, grand vaisseau au contour lumineux, flamme du réacteur, nébuleuse et étoiles fixes qui scintillent, record sauvegardé, tir continu en maintenant le bouton sur mobile.
 - **Jeu de la Vie** : moteur et réglages inchangés ; cellules en briques, traces en paliers de couleur, panneaux et curseurs en style pixel.

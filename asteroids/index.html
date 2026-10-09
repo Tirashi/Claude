@@ -123,7 +123,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
   let score = 0, lives = 3, level = 1, best = store.get("asteroids16.best", 0);
   let state = "start", respawnTimer = 0, invulnTimer = 0, T = 0;
   bestEl.textContent = best;
-  const SHIP_SIZE = () => 16 * U(), SHIP_TURN_SPEED = 4.2, SHIP_THRUST = () => 220 * U(), SHIP_FRICTION = 0.7;
+  const SHIP_SIZE = () => Math.max(9, 26 * U()), SHIP_TURN_SPEED = 4.2, SHIP_THRUST = () => 220 * U(), SHIP_FRICTION = 0.7;
   const BULLET_SPEED = () => 480 * U(), BULLET_LIFE = 0.9, FIRE_COOLDOWN = 0.22;
 
   function newShip() { return { x: W / 2, y: H / 2, vx: 0, vy: 0, angle: -Math.PI / 2, thrusting: false, fireCooldown: 0, dead: false }; }
@@ -226,7 +226,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
       ship.x = wrap(ship.x + ship.vx * dt, W); ship.y = wrap(ship.y + ship.vy * dt, H);
       if (ship.fireCooldown > 0) ship.fireCooldown -= dt;
       if (mobile.fire) tryFire();
-      if (invulnTimer <= 0) for (const a of asteroids) if (dist(ship.x, ship.y, a.x, a.y) < a.radius + SHIP_SIZE() * 0.6) { shipHit(); break; }
+      if (invulnTimer <= 0) for (const a of asteroids) if (dist(ship.x, ship.y, a.x, a.y) < a.radius + 16 * U() * 0.6) { shipHit(); break; }
     }
     for (let i = bullets.length - 1; i >= 0; i--) {
       const b = bullets[i];
@@ -265,9 +265,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
   }
   function background() {
     buf.set(nebula);
-    const drift = state === "playing" && ship && !ship.dead ? ship : { vx: 0, vy: 0 };
     for (const s of stars) {
-      s.x = wrap(s.x - drift.vx * s.d * 0.016, W); s.y = wrap(s.y - drift.vy * s.d * 0.016, H);
       if (Math.sin(T * 3 + s.tw) > -0.6 || s.d < 1) px(s.x, s.y, s.c);
       if (s.d === 1 && Math.sin(T * 2 + s.tw) > 0.92) { px(s.x - 1, s.y, s.c); px(s.x + 1, s.y, s.c); px(s.x, s.y - 1, s.c); px(s.x, s.y + 1, s.c); }
     }
@@ -294,7 +292,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
       px(a.x + dx, a.y + dy, c);
     }
   }
-  const SHIP_C = { out: hex("#0a0a1a"), hull: hex("#e8f0ff"), hull2: hex("#9fb0d8"), cock: hex("#5ce1ff"), wing: hex("#ff4d6d") };
+  const SHIP_C = { out: hex("#7fe6ff"), hull: hex("#ffffff"), hull2: hex("#a8b8e0"), cock: hex("#1d4ed8"), wing: hex("#ff4d6d") };
   function drawShip() {
     if (ship.dead) return;
     if (invulnTimer > 0 && Math.floor(invulnTimer * 8) % 2 === 0) return;
