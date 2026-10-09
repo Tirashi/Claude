@@ -41,7 +41,8 @@ Ouvre `queens/index.html` dans n'importe quel navigateur récent. Aucun build, a
 
 Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque grille résolue révèle un Pokémon en couleur et l'enregistre dans le Dex.
 
-- 10 grilles : 4 en 10×10 et 6 en 15×15, toutes résolubles par pure logique, sans deviner (vérifié par un solveur).
+- 16 grilles : 6 en 10×10, 9 en 15×15 et 1 en 15×10, toutes résolubles par pure logique, sans deviner (vérifié par un solveur).
+- Les nouvelles grilles sont toujours ajoutées en fin de liste, sans toucher aux anciennes, pour que les sauvegardes restent valides.
 - Clic ou toucher pour remplir, clic droit ou outil CROIX pour marquer, glisser pour peindre une ligne.
 - Indices barrés quand une ligne est juste, aperçu miniature, chrono, indice, annuler.
 - Progression, records et grilles en cours sauvegardés dans le navigateur.
