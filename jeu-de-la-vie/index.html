@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jeu de la Vie 16 bits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>JEU DE LA VIE <span class="sub">automate cellulaire de Conway</span></h1>
+  <div class="stats">
+    <div class="stat"><span class="k">Génération</span><span class="v" id="statGen">0</span></div>
+    <div class="stat"><span class="k">Population</span><span class="v" id="statPop">0</span></div>
+    <div class="stat"><span class="k">Grille</span><span class="v" id="statSize">—</span></div>
+    <div class="stat"><span class="k">Règle</span><span class="v" id="statRule">B3/S23</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="board" id="boardWrap">
+    <canvas id="board"></canvas>
+  </section>
+
+  <aside class="panel">
+
+    <div class="group">
+      <h2>Lecture</h2>
+      <div class="row">
+        <button id="btnPlay" class="primary">DÉMARRER</button>
+        <button id="btnStep">PAS À PAS</button>
+      </div>
+      <div class="row">
+        <button id="btnRandom">ALÉATOIRE</button>
+        <button id="btnClear">VIDER</button>
+      </div>
+      <label class="field">
+        <span>Vitesse <output id="outSpeed">12 gén/s</output></span>
+        <input type="range" id="inSpeed" min="1" max="60" value="12">
+      </label>
+      <label class="field">
+        <span>Densité du remplissage <output id="outDensity">30 %</output></span>
+        <input type="range" id="inDensity" min="1" max="90" value="30">
+      </label>
+    </div>
+
+    <div class="group">
+      <h2>Motifs</h2>
+      <select id="inPattern" aria-label="Motif à placer"></select>
+      <div class="row">
+        <button id="btnRotate">PIVOTER</button>
+        <button id="btnCenter">AU CENTRE</button>
+      </div>
+      <p class="hint" id="patternHint"></p>
+    </div>
+
+    <div class="group">
+      <h2>Règles</h2>
+      <select id="inRulePreset" aria-label="Règle prédéfinie"></select>
+      <label class="field">
+        <span>Règle personnalisée</span>
+        <input type="text" id="inRule" value="B3/S23" spellcheck="false" autocomplete="off">
+      </label>
+      <p class="hint">Format <code>B3/S23</code> : naissance avec 3 voisins, survie avec 2 ou 3.</p>
+    </div>
+
+    <div class="group">
+      <h2>Grille</h2>
+      <div class="row">
+        <label class="field"><span>Colonnes</span><input type="number" id="inCols" min="10" max="400" step="1" value="90"></label>
+        <label class="field"><span>Lignes</span><input type="number" id="inRows" min="10" max="400" step="1" value="50"></label>
+      </div>
+      <label class="field">
+        <span>Taille des cellules <output id="outCell">12 px</output></span>
+        <input type="range" id="inCell" min="2" max="30" value="12">
+      </label>
+      <label class="check"><input type="checkbox" id="inWrap" checked> Bords toriques (le monde boucle)</label>
+      <label class="check"><input type="checkbox" id="inGridLines" checked> Afficher le quadrillage</label>
+      <label class="check"><input type="checkbox" id="inTrails" checked> Traces des cellules mortes</label>
+      <button id="btnFit">AJUSTER À LA FENÊTRE</button>
+    </div>
+
+    <div class="group">
+      <h2>Raccourcis</h2>
+      <ul class="keys">
+        <li><kbd>Espace</kbd><span>démarrer / pause</span></li>
+        <li><kbd>N</kbd><span>avancer d'une génération</span></li>
+        <li><kbd>R</kbd><span>remplissage aléatoire</span></li>
+        <li><kbd>C</kbd><span>vider la grille</span></li>
+        <li><kbd>P</kbd><span>pivoter le motif</span></li>
+      </ul>
+      <p class="hint">Clic gauche : dessiner · Clic droit : effacer · Cliquer-glisser fonctionne aussi pendant la simulation.</p>
+    </div>
+
+  </aside>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

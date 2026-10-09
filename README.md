@@ -1,10 +1,15 @@
 # Jeux 16 bits
 
-Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index.html`](index.html) à la racine est un menu qui mène aux trois jeux :
+Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index.html`](index.html) à la racine est un menu qui mène à tous les jeux :
 
 - [`queens/index.html`](queens/index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
 - [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu de course sans fin façon dino de Chrome, avec un bouvier bernois sur un parcours d'agility.
+- [`touche-coule/index.html`](touche-coule/index.html) : **Touché Coulé**, une bataille navale contre l'ordinateur (modes Classique et Arsenal).
+- [`tetris/index.html`](tetris/index.html) : **Tetris**.
+- [`snake/index.html`](snake/index.html) : **Snake**.
+- [`asteroids/index.html`](asteroids/index.html) : **Asteroids**.
+- [`jeu-de-la-vie/index.html`](jeu-de-la-vie/index.html) : **Jeu de la Vie**, l'automate cellulaire de Conway (voir son propre README).
 
 ---
 
@@ -53,3 +58,14 @@ Un petit bouvier bernois enchaîne les obstacles d'agility au pied des Alpes, da
 - Saut à hauteur variable selon la durée d'appui, descente rapide en se baissant en l'air.
 - Vitesse qui augmente avec la distance, points par obstacle, record sauvegardé dans le navigateur.
 - Commandes : Espace ou ↑ pour sauter, ↓ pour se baisser ; sur mobile, toucher l'écran, glisser vers le bas ou utiliser les boutons SAUTER et TUNNEL.
+
+---
+
+## Les classiques passés en 16 bits
+
+Touché Coulé était déjà en 16 bits et n'a pas été modifié. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).
+
+- **Tetris** : briques en relief, puits en damier, pièce fantôme en pointillés, record sauvegardé, écran d'accueil, boutons tactiles avec répétition.
+- **Snake** : jardin en damier, pomme et serpent dessinés en pixels, tête orientée avec langue, record conservé (même clé que l'original), file de virages pour ne jamais se retourner sur soi, glisser ou croix directionnelle sur mobile.
+- **Asteroids** : rendu en basse résolution pixel par pixel, astéroïdes ombrés avec cratères, vaisseau en sprite, flamme du réacteur, nébuleuse et étoiles scintillantes, record sauvegardé, tir continu en maintenant le bouton sur mobile.
+- **Jeu de la Vie** : moteur et réglages inchangés ; cellules en briques, traces en paliers de couleur, panneaux et curseurs en style pixel.
