@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ludothèque 16 bits</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#110d22">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Ludothèque">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
@@ -24,6 +32,7 @@
   --f-body:"VT323", "Lucida Console", monospace;
 }
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html,body{min-height:100%}
 body{margin:0; background-color:var(--night); color:var(--text); font-family:var(--f-body); font-size:22px; line-height:1.2;
   background-image:radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size:4px 4px;
@@ -76,6 +85,16 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 
 .status{text-align:center; font-family:var(--f-display); font-size:9px; letter-spacing:1px; line-height:2; color:var(--text-dim)}
 .status kbd{font-family:inherit; color:var(--text); border:2px solid var(--text-dim); padding:1px 4px}
+/* installation de l'appli */
+.install{display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center}
+.install-btn{font-family:var(--f-display); font-size:11px; letter-spacing:1px; color:#2a1600; background:var(--gold); cursor:pointer;
+  border:3px solid #fff6cc; border-radius:4px; padding:12px 16px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000; display:inline-flex; align-items:center; gap:10px}
+.install-btn img{width:24px; height:24px; image-rendering:pixelated}
+.install-btn:hover{background:#ffe27a}
+.install-btn:active{transform:translate(2px,2px); box-shadow:0 0 0 3px var(--ink), 2px 2px 0 3px #000}
+.install-btn:focus-visible{outline:3px dashed var(--text); outline-offset:4px}
+.ios-help{max-width:440px; margin:0; font-size:20px; line-height:1.25; color:var(--text-dim); background:#1e1840; border:3px solid var(--text-dim); padding:10px 14px; box-shadow:4px 4px 0 #000}
+.ios-help b{color:var(--gold); font-weight:400}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none !important; transition:none !important} }
 </style>
 </head>
@@ -85,6 +104,11 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
     <h1>LUDOTHÈQUE 16 BITS</h1>
     <div class="prompt">CHOISIS UNE CARTOUCHE <b></b></div>
   </header>
+
+  <div class="install" id="install" hidden>
+    <button class="install-btn" id="installBtn" type="button" hidden><img src="icons/favicon-32.png" alt="">INSTALLER L'APPLI</button>
+    <p class="ios-help" id="iosHelp" hidden>Pour installer la Ludothèque sur ton iPhone : touche <b>Partager</b> en bas de Safari, puis <b>Sur l'écran d'accueil</b>.</p>
+  </div>
 
   <nav class="shelf" id="shelf" aria-label="Jeux">
     <a class="cart queens" href="queens/index.html">
@@ -309,6 +333,27 @@ document.addEventListener("keydown", e => {
   else if (e.key === "Enter" && document.activeElement === document.body){ carts[sel].click(); }
 });
 select(0);
+
+/* installation : bouton sur Android et ordinateur, explication sur iPhone */
+const installBox = document.getElementById("install"), installBtn = document.getElementById("installBtn"), iosHelp = document.getElementById("iosHelp");
+const installed = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+let deferredPrompt = null;
+if (!installed){
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; installBox.hidden = false; installBtn.hidden = false; });
+  window.addEventListener("appinstalled", () => { installBox.hidden = true; deferredPrompt = null; });
+  installBtn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch (e) {}
+    deferredPrompt = null; installBtn.hidden = true; installBox.hidden = iosHelp.hidden;
+  });
+}
+if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))){
+  navigator.serviceWorker.register("sw.js").then(() => {
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (ios && !installed){ installBox.hidden = false; iosHelp.hidden = false; }
+  }).catch(() => {});
+}
 })();
 </script>
 </body>
