@@ -98,7 +98,9 @@ h1 span{color:#7fd3ff; text-shadow:3px 3px 0 #1d4ed8, 6px 6px 0 #000; margin-lef
 
 #msgbox{width:100%; max-width:900px; min-height:62px; position:relative; font-size:11px; line-height:1.8; padding:12px 34px 12px 14px}
 #msgbox .caret{position:absolute; right:12px; bottom:8px; color:var(--accent); animation:blink 1s steps(1) infinite}
-#actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+#actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; width:100%}
+#actions .btn{flex:1 1 auto}
+#actions .go{flex:1 1 100%}
 #stats{color:var(--dim); font-size:9px; text-align:center}
 .hint{color:var(--dim); font-size:8px; text-align:center}
 
@@ -172,6 +174,12 @@ h1 span{color:#7fd3ff; text-shadow:3px 3px 0 #1d4ed8, 6px 6px 0 #000; margin-lef
     <section class="window panel" id="panel-player">
       <h2>VOTRE FLOTTE <small id="lbl-player">Placement</small></h2>
       <div class="cv-wrap"><canvas id="cv-player" width="176" height="176"></canvas></div>
+      <div id="actions">
+        <button class="btn" id="btn-rotate">Pivoter (R)</button>
+        <button class="btn" id="btn-random">Aléatoire</button>
+        <button class="btn" id="btn-clear">Effacer</button>
+        <button class="btn big go" id="btn-start" disabled>Combattre !</button>
+      </div>
       <ul class="fleet selectable" id="fleet-player"></ul>
     </section>
     <section class="window panel" id="panel-enemy">
@@ -188,12 +196,6 @@ h1 span{color:#7fd3ff; text-shadow:3px 3px 0 #1d4ed8, 6px 6px 0 #000; margin-lef
 
   <div class="window" id="msgbox"><span id="msg"></span><span class="caret">▼</span></div>
 
-  <div id="actions">
-    <button class="btn" id="btn-rotate">Pivoter (R)</button>
-    <button class="btn" id="btn-random">Aléatoire</button>
-    <button class="btn" id="btn-clear">Effacer</button>
-    <button class="btn big go" id="btn-start" disabled>Combattre !</button>
-  </div>
   <div id="stats"></div>
   <div class="hint" id="hint">Clic : poser / reprendre un navire · Clic droit ou R : pivoter</div>
 </div>
