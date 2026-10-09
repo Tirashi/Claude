@@ -199,7 +199,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
           <textarea id="exportBox" readonly hidden aria-label="Code de sauvegarde à copier"></textarea>
           <h3>2. IMPORTER</h3>
           <p>Ouvre le jeu dans l'autre navigateur (Chrome ou l'appli installée), colle le code ci-dessous puis importe. Rien n'est effacé : les deux progressions sont réunies, et le meilleur temps est gardé.</p>
-          <textarea id="importBox" placeholder="Colle ici le code qui commence par PICROSSDEX1-" aria-label="Code de sauvegarde à importer"></textarea>
+          <textarea id="importBox" placeholder="Colle ici le code (PICROSSDEX1- ou LUDO1-)" aria-label="Code de sauvegarde à importer"></textarea>
           <div class="row"><button class="btn" id="pasteBtn" type="button">COLLER</button><button class="btn" id="importBtn" type="button">IMPORTER</button></div>
           <div class="res" id="xferRes" aria-live="polite"></div>
         </section>
@@ -852,10 +852,11 @@ function exportCode(){
 }
 function importCode(text){
   const raw = (text || "").replace(/\s+/g, "");
-  const at = raw.indexOf(SAVE_PREFIX);
-  if (at < 0) throw new Error("Ce n'est pas un code de sauvegarde Picross Dex : il doit commencer par PICROSSDEX1-.");
+  const dec = b => JSON.parse(decodeURIComponent(escape(atob(b))));
+  const at = raw.indexOf(SAVE_PREFIX), atAll = raw.indexOf("LUDO1-");   // LUDO1- : code de tous les jeux, depuis le menu
+  if (at < 0 && atAll < 0) throw new Error("Ce n'est pas un code de sauvegarde : il doit commencer par PICROSSDEX1- ou LUDO1-.");
   let data;
-  try { data = JSON.parse(decodeURIComponent(escape(atob(raw.slice(at + SAVE_PREFIX.length))))); }
+  try { data = at >= 0 ? dec(raw.slice(at + SAVE_PREFIX.length)) : ((dec(raw.slice(atAll + 6)).g || {}).picross || {}); }
   catch (e) { throw new Error("Le code est incomplet ou abîmé. Copie-le de nouveau en entier."); }
   const byId = Object.fromEntries(PUZZLES.map(q => [q.id, q]));
   let added = 0, faster = 0, grids = 0;

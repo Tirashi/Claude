@@ -95,6 +95,26 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .install-btn:focus-visible{outline:3px dashed var(--text); outline-offset:4px}
 .ios-help{max-width:440px; margin:0; font-size:20px; line-height:1.25; color:var(--text-dim); background:#1e1840; border:3px solid var(--text-dim); padding:10px 14px; box-shadow:4px 4px 0 #000}
 .ios-help b{color:var(--gold); font-weight:400}
+/* transfert de sauvegardes */
+.fbnote{max-width:560px; margin:0 auto; font-size:20px; line-height:1.25; color:var(--text); background:#3a1030; border:3px dashed #ff8fb0; padding:10px 14px; text-align:center}
+.fbnote b{color:var(--gold); font-weight:400}
+.saves-open{display:flex; justify-content:center}
+.saves-btn{font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--text); background:#2b2a4a; cursor:pointer;
+  border:3px solid var(--text-dim); border-radius:4px; padding:11px 14px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000}
+.saves-btn:hover{color:var(--gold); border-color:var(--gold)}
+.saves-btn:active{transform:translate(2px,2px); box-shadow:0 0 0 3px var(--ink), 2px 2px 0 3px #000}
+.saves-btn:focus-visible{outline:3px dashed var(--gold); outline-offset:4px}
+.saves{max-width:640px; width:100%; margin:0 auto; background:#1e1840; border:3px solid var(--text-dim); box-shadow:0 0 0 3px var(--ink), 6px 6px 0 3px #000;
+  padding:16px; display:flex; flex-direction:column; gap:12px}
+.saves h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; color:var(--gold)}
+.saves p{margin:0; font-size:20px; line-height:1.2; color:var(--text-dim); max-width:65ch}
+.saves p b{color:var(--text); font-weight:400}
+.saves .sum{font-size:19px; color:var(--text); line-height:1.3}
+.saves textarea{width:100%; min-height:76px; resize:vertical; font:13px/1.3 "Courier New",monospace; color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:6px; word-break:break-all}
+.saves .row{display:flex; flex-wrap:wrap; gap:10px}
+.saves .row .saves-btn{flex:1 1 auto}
+.saves .res{font-family:var(--f-display); font-size:9px; line-height:1.9; min-height:1.9em}
+.saves .res.ok{color:#5cff8a} .saves .res.err{color:#ff8fb0}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none !important; transition:none !important} }
 </style>
 </head>
@@ -184,6 +204,22 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
       </div>
     </a>
   </nav>
+
+  <p class="fbnote" id="fbNote" hidden>Tu joues dans le <b>navigateur de Facebook</b> : tes sauvegardes restent ici. Pour les retrouver dans Chrome ou l'appli, utilise <b>Transférer mes sauvegardes</b> plus bas.</p>
+
+  <div class="saves-open"><button class="saves-btn" id="savesBtn" type="button" aria-expanded="false" aria-controls="saves">TRANSFÉRER MES SAUVEGARDES</button></div>
+  <section class="saves" id="saves" hidden aria-label="Transfert de sauvegardes">
+    <h2>1. COPIER</h2>
+    <p>Dans le navigateur où tu as joué, copie toutes tes sauvegardes d'un coup : Picross Dex, Queens, Tetris, Snake, Asteroids et Injagility. <b>Touché Coulé</b> et le <b>Jeu de la Vie</b> n'enregistrent rien.</p>
+    <div class="sum" id="savesSum"></div>
+    <div class="row"><button class="saves-btn" id="exportAll" type="button">COPIER MES SAUVEGARDES</button></div>
+    <textarea id="exportAllBox" readonly hidden aria-label="Code de sauvegarde à copier"></textarea>
+    <h2>2. IMPORTER</h2>
+    <p>Ouvre la Ludothèque dans l'autre navigateur (Chrome ou l'appli installée), colle le code puis importe. <b>Rien n'est effacé</b> : on garde le meilleur score ou le meilleur temps de chaque côté. Les codes du Picross Dex marchent aussi ici.</p>
+    <textarea id="importAllBox" placeholder="Colle ici le code qui commence par LUDO1-" aria-label="Code de sauvegarde à importer"></textarea>
+    <div class="row"><button class="saves-btn" id="pasteAll" type="button">COLLER</button><button class="saves-btn" id="importAll" type="button">IMPORTER</button></div>
+    <div class="res" id="savesRes" aria-live="polite"></div>
+  </section>
 
   <div class="status" id="status"><kbd>FLÈCHES</kbd> CHOISIR · <kbd>ENTRÉE</kbd> JOUER</div>
 </div>
@@ -333,6 +369,102 @@ document.addEventListener("keydown", e => {
   else if (e.key === "Enter" && document.activeElement === document.body){ carts[sel].click(); }
 });
 select(0);
+
+/* ---------- transfert de toutes les sauvegardes entre navigateurs ---------- */
+const readKey = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
+const writeKey = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+// meilleurs scores : on garde le plus grand
+const SCORES = [["tetris16.best", "Tetris"], ["snakeBestScore", "Snake"], ["asteroids16.best", "Asteroids"], ["injagility.best", "Injagility"]];
+const fmtTime = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
+function collectSaves(){
+  const g = {};
+  for (const [k] of SCORES){ const v = Number(readKey(k, 0)); if (v > 0) g[k] = v; }
+  const q = readKey("queens16.best", {}); if (q && Object.keys(q).length) g.queens = q;
+  const cap = readKey("picrossdex.captured", {}), prog = readKey("picrossdex.progress", {});
+  const c = {}, p = {};
+  for (const [id, v] of Object.entries(cap || {})) if (v && v.time > 0) c[id] = {t: v.time, h: v.hints || 0};
+  for (const [id, v] of Object.entries(prog || {})) if (v && Array.isArray(v.cells)) p[id] = {c: v.cells.join(""), e: Math.round(v.elapsed || 0), h: v.hints || 0};
+  if (Object.keys(c).length || Object.keys(p).length) g.picross = {c, p};
+  return g;
+}
+function describeSaves(g){
+  const out = [];
+  if (g.picross) out.push(`Picross Dex : ${Object.keys(g.picross.c).length} Pokémon` + (Object.keys(g.picross.p).length ? `, ${Object.keys(g.picross.p).length} grille(s) en cours` : ""));
+  if (g.queens) out.push("Queens : " + Object.keys(g.queens).sort((a, b) => a - b).map(n => `${n}×${n} en ${fmtTime(g.queens[n])}`).join(", "));
+  for (const [k, name] of SCORES) if (g[k]) out.push(`${name} : ${g[k]} ${k === "injagility.best" ? "obstacles" : "points"}`);
+  return out;
+}
+function decodeSaves(text){
+  const raw = (text || "").replace(/\s+/g, "");
+  const dec = b => JSON.parse(decodeURIComponent(escape(atob(b))));
+  let at = raw.indexOf("LUDO1-");
+  try {
+    if (at >= 0) return (dec(raw.slice(at + 6)).g) || {};
+    at = raw.indexOf("PICROSSDEX1-");
+    if (at >= 0) return {picross: dec(raw.slice(at + 12))};
+  } catch (e) { throw new Error("Le code est incomplet ou abîmé. Copie-le de nouveau en entier."); }
+  throw new Error("Ce n'est pas un code de sauvegarde : il doit commencer par LUDO1- ou PICROSSDEX1-.");
+}
+function mergeSaves(g){
+  const done = [];
+  for (const [k, name] of SCORES){
+    const v = Number(g[k]); if (!(v > 0)) continue;
+    if (v > Number(readKey(k, 0))){ writeKey(k, v); done.push(`${name} : record ${v}`); }
+  }
+  if (g.queens && typeof g.queens === "object"){
+    const mine = readKey("queens16.best", {}) || {}; let n = 0;
+    for (const [size, t] of Object.entries(g.queens)) if (/^[5-9]$/.test(size) && t > 0 && (!mine[size] || t < mine[size])){ mine[size] = Math.round(t); n++; }
+    if (n){ writeKey("queens16.best", mine); done.push(`Queens : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.picross){
+    const cap = readKey("picrossdex.captured", {}) || {}, prog = readKey("picrossdex.progress", {}) || {};
+    let added = 0, faster = 0, grids = 0;
+    for (const [id, v] of Object.entries(g.picross.c || {})){
+      if (!/^[a-z0-9_-]+$/.test(id) || !(v.t > 0)) continue;
+      if (!cap[id]){ cap[id] = {time: Math.round(v.t), hints: v.h || 0}; added++; }
+      else if (v.t < cap[id].time){ cap[id] = {time: Math.round(v.t), hints: v.h || 0}; faster++; }
+    }
+    for (const [id, v] of Object.entries(g.picross.p || {})){
+      if (!/^[a-z0-9_-]+$/.test(id) || cap[id] || prog[id] || typeof v.c !== "string" || !/^[012]+$/.test(v.c)) continue;
+      prog[id] = {cells: [...v.c].map(Number), elapsed: v.e || 0, hints: v.h || 0}; grids++;
+    }
+    for (const id of Object.keys(prog)) if (cap[id]) delete prog[id];
+    writeKey("picrossdex.captured", cap); writeKey("picrossdex.progress", prog);
+    const parts = [];
+    if (added) parts.push(`${added} Pokémon`); if (faster) parts.push(`${faster} record${faster > 1 ? "s" : ""}`); if (grids) parts.push(`${grids} grille${grids > 1 ? "s" : ""} en cours`);
+    if (parts.length) done.push("Picross Dex : " + parts.join(", "));
+  }
+  return done;
+}
+const savesRes = (t, ok) => { const el = document.getElementById("savesRes"); el.textContent = t; el.className = "res " + (ok ? "ok" : "err"); };
+function showSum(){
+  const lines = describeSaves(collectSaves());
+  document.getElementById("savesSum").innerHTML = lines.length ? "Dans ce navigateur :<br>" + lines.map(l => "· " + l).join("<br>") : "Aucune sauvegarde dans ce navigateur pour l'instant.";
+}
+document.getElementById("savesBtn").addEventListener("click", () => {
+  const box = document.getElementById("saves"); box.hidden = !box.hidden;
+  document.getElementById("savesBtn").setAttribute("aria-expanded", !box.hidden);
+  if (!box.hidden){ showSum(); box.scrollIntoView({behavior: "smooth", block: "start"}); }
+});
+document.getElementById("exportAll").addEventListener("click", () => {
+  const g = collectSaves(), box = document.getElementById("exportAllBox");
+  const code = "LUDO1-" + btoa(unescape(encodeURIComponent(JSON.stringify({v: 1, g}))));
+  box.value = code; box.hidden = false;
+  const fallback = () => { box.focus(); box.select(); savesRes("Copie automatique impossible ici : appuie longuement sur le code, puis Copier.", false); };
+  try { navigator.clipboard.writeText(code).then(() => savesRes("Sauvegardes copiées. Colle-les dans l'autre navigateur.", true), fallback); } catch (e) { fallback(); }
+});
+document.getElementById("pasteAll").addEventListener("click", async () => {
+  try { const t = await navigator.clipboard.readText(); if (t){ document.getElementById("importAllBox").value = t; savesRes("Code collé. Appuie sur IMPORTER.", true); return; } } catch (e) {}
+  document.getElementById("importAllBox").focus(); savesRes("Appuie longuement dans la case, puis Coller.", false);
+});
+document.getElementById("importAll").addEventListener("click", () => {
+  try {
+    const done = mergeSaves(decodeSaves(document.getElementById("importAllBox").value));
+    savesRes(done.length ? "Importé. " + done.join(" · ") + "." : "Rien de nouveau : ces sauvegardes sont déjà à jour ici.", true);
+    document.getElementById("importAllBox").value = ""; showSum();
+  } catch (e) { savesRes(e.message, false); }
+});
+if (/FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent)) document.getElementById("fbNote").hidden = false;
 
 /* installation : bouton sur Android et ordinateur, explication sur iPhone */
 const installBox = document.getElementById("install"), installBtn = document.getElementById("installBtn"), iosHelp = document.getElementById("iosHelp");
