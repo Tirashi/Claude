@@ -87,6 +87,11 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
   background:repeating-linear-gradient(45deg, var(--screen-2) 0 3px, transparent 3px 6px)}
 .entry .nm{font-family:var(--f-display); font-size:7px; letter-spacing:.5px; text-align:center; min-height:1em}
 .entry .meta{font-size:13px; color:var(--ink-soft)}
+.entry.legend{box-shadow:0 0 0 3px var(--gold), 3px 3px 0 3px var(--ink-soft)}
+.entry.locked{cursor:not-allowed; background:repeating-linear-gradient(45deg, var(--screen) 0 4px, var(--screen-2) 4px 8px)}
+.entry.locked canvas{opacity:.85}
+.dexmsg{margin:10px 0 0; font-family:var(--f-display); font-size:8px; line-height:1.9; color:var(--ink)}
+.dexmsg b{font-weight:400; color:var(--dex)}
 
 /* Play */
 .board-wrap{margin-top:12px; overflow-x:auto; display:flex; justify-content:center}
@@ -170,6 +175,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
       <!-- Dex list -->
       <section id="dexView">
         <div class="bar"><span>CAPTURÉS <b id="capCount">0/0</b></span><div class="meter" aria-hidden="true"><span id="capBar"></span></div></div>
+        <p class="dexmsg" id="dexMsg" aria-live="polite"></p>
         <div class="list" id="list"></div>
       </section>
 
@@ -580,12 +586,187 @@ const PUZZLES = [
   ".kpppppppppppk.",
   "..kkpppppppkk..",
   "....kkkkkkk..k.",
-  "............kpk"]},
+  "............kpk"]}, {id:"pidgey", no:"016", name:"ROUCOOL", art:[
+  "...............",
+  "........kkkk...",
+  ".......kbbbbk..",
+  "......kbbbbbbk.",
+  "......kbcwkcbkk",
+  "......kcckkczzk",
+  ".....kccccccck.",
+  "..kk.kccccckk..",
+  ".kbbkkbbbccck..",
+  "kbbbbbkbbcccck.",
+  "kbbnbbbkbccck..",
+  ".kbbnbbbbbbk...",
+  "..kkkbbbbbk....",
+  "......kpk.kpk..",
+  "......p.p.p.p.."]},
+ {id:"pidgeotto", no:"017", name:"ROUCOUPS", art:[
+  ".rr............",
+  "..rrykkkk......",
+  "...ryybbbbk....",
+  "....kbbbbbbk...",
+  "....kbcwkccbkk.",
+  "....kccckkcczzk",
+  "...kcccccccck..",
+  "..kbbccccccck..",
+  ".kbbbkcccccck..",
+  "kbbnbbkccccck..",
+  "kbnbbbbkccck...",
+  "kbbnbbbbkck....",
+  ".kkbnbbbbk.....",
+  "...kkkkkzkzk...",
+  "........z.z...."]},
+ {id:"pidgeot", no:"018", name:"ROUCARNAGE", art:[
+  "rrrryy.........",
+  ".rrryyyk.......",
+  "..rryykbbbk....",
+  "...ykbbbbbbk...",
+  "....kbbbbbbbk..",
+  "....kbckkcbbkk.",
+  "....kckwkccczzk",
+  "...kccccccccczk",
+  "...kccccccccck.",
+  "..kbcccccccck..",
+  ".kbbbcccccck...",
+  "kbbbbbcccck....",
+  "kbbnbbbbck.....",
+  "kbnbbbbbk......",
+  ".kkkkkkk......."]},
+ {id:"dratini", no:"147", name:"MINIDRACO", art:[
+  "........kkkkk..",
+  ".......kBBBBBk.",
+  "......kxBBBBBxk",
+  "......kxBkBkBxk",
+  "......kxBBBBBxk",
+  ".......kBxxxBk.",
+  "........kBBBk..",
+  ".......kBBxk...",
+  "......kBBxk....",
+  ".....kBBxk.....",
+  "....kBBxBkkk...",
+  "...kBBxBBBBBk..",
+  "...kBBBxxxxBBk.",
+  "....kkkkkkkkBk.",
+  "............kk."]},
+ {id:"dragonair", no:"148", name:"DRACO", art:[
+  "......kxk......",
+  "......kxk......",
+  ".....kBBBk.....",
+  "kxk.kBBBBBk.kxk",
+  "kxxkBBBBBBBkxxk",
+  ".kxkBkBBBkBkxk.",
+  "..kkBBBBBBBkk..",
+  "....kBBxBBk....",
+  ".....kBBBk.....",
+  "....kaBBBak....",
+  "....kBBBBBk....",
+  "...kBBxxxBBk...",
+  "...kBxxxxxBk...",
+  "..kBBxxxxxBBk..",
+  "..kkkkkkkkkkk.."]},
+ {id:"dragonite", no:"149", name:"DRACOLOSSE", art:[
+  "...k.......k...",
+  "....k.....k....",
+  "...kkkkkkkkk...",
+  "..koooooooook..",
+  ".koookoookoook.",
+  ".koooooooooook.",
+  ".koookkkkkoook.",
+  "..koooooooook..",
+  "ttkkocccccokktt",
+  "tttkocccccokttt",
+  ".ttkocccccoktt.",
+  "..kocccccccok..",
+  "..koooooooook..",
+  "..kookkkkkook..",
+  "..kkkk...kkkk.."]},
+ {id:"growlithe", no:"058", name:"CANINOS", art:[
+  "kk....kck....kk",
+  "kok..kccck..kok",
+  "kook.kccck.kook",
+  "koookkkckkkoook",
+  ".koooooooooook.",
+  "kookkoooookkook",
+  "kookwooooowkook",
+  "kooocccccccoook",
+  "kooccckkkcccook",
+  "kcoccckckcccock",
+  "kccocccccccocck",
+  ".kccooooooocck.",
+  "..kkkoooookkk..",
+  "....kkkkkkk....",
+  "..............."]},
+ {id:"arcanine", no:"059", name:"ARCANIN", art:[
+  "..kk..kkk..kk..",
+  ".kook.kck.kook.",
+  ".koookccckoook.",
+  "kcckoooooooocck",
+  "kccokkoookkocck",
+  "kcckwkoookwkcck",
+  "kccooooooooocck",
+  "kccoocccccoocck",
+  "kccocckkkccocck",
+  "kccccckckccccck",
+  ".kccccccccccck.",
+  "..kccccccccck..",
+  "...kckckckck...",
+  "....k.k.k.k....",
+  "..............."]},
+ {id:"articuno", no:"144", name:"ARTIKODIN", legend:true, art:[
+  "......kak......",
+  ".....kaBak.....",
+  "ak...kBBBk...ka",
+  "ak..kBrBrBk..ka",
+  "aBk.kBBzBBk.kBa",
+  "aBBkkBxxxBkkBBa",
+  "aBBBkBxxxBkBBBa",
+  ".aBBBkxxxkBBBa.",
+  "..aBBkxxxkBBa..",
+  "...aakBxBkaa...",
+  ".....kBBBk.....",
+  "......kBk......",
+  ".....kBaBk.....",
+  "....kBa.aBk....",
+  "....ka...ak...."]},
+ {id:"zapdos", no:"145", name:"ÉLECTHOR", legend:true, art:[
+  "k.....k.k.....k",
+  "yk...kykyk...ky",
+  "yyk..kyyyk..kyy",
+  "kyyk.kkykk.kyyk",
+  ".kyyk.kok.kyyk.",
+  "kyyyyykokyyyyyk",
+  ".kyyyyykyyyyyk.",
+  "..kyyykkkyyyk..",
+  "kyyyk.kyk.kyyyk",
+  ".kyk..kyk..kyk.",
+  "..k...kyk...k..",
+  "......kyk......",
+  ".....kyyyk.....",
+  "....kyk.kyk....",
+  "....kk...kk...."]},
+ {id:"moltres", no:"146", name:"SULFURA", legend:true, art:[
+  "......r.r......",
+  ".....roror.....",
+  "or...kyoyk...ro",
+  "or..kykykyk..ro",
+  "ror.kyyzyyk.ror",
+  "oorrkkyyykkrroo",
+  "yoorrkyyykrrooy",
+  ".yoorkyyykrooy.",
+  "..yookyyykooy..",
+  "...yykyyykyy...",
+  ".....kyyyk.....",
+  "......kyk......",
+  ".....rkokr.....",
+  "....ro.r.or....",
+  "....rr.r.rr...."]},
 ];
 const PAL = {k:"#20182e", r:"#e0383e", w:"#f6f4ee", b:"#a86a3c", p:"#f4a3b8", n:"#6b4428", m:"#b58ad8", u:"#3a7bd5",
   y:"#ffd23f", g:"#4fa86a", G:"#2f7a48", t:"#7fd0b8", d:"#3f9a86", o:"#f58a3a", v:"#7c5cb8", e:"#2f6f78", c:"#f1e2c0",
   a:"#5cb8e8", h:"#7a2e14", s:"#b8703a", q:"#3a2c58",
-  i:"#4a78d0", l:"#e0a83a", x:"#f6f1de", f:"#ff7aa8", z:"#b8c0cc"};
+  i:"#4a78d0", l:"#e0a83a", x:"#f6f1de", f:"#ff7aa8", z:"#b8c0cc", B:"#86b8f0"};
 // "w" is white: visible in the reveal but empty in the puzzle.
 const filled = ch => ch !== "." && ch !== "w";
 
@@ -635,14 +816,45 @@ let P = null, W = 0, H = 0, sol = [], cells = [], rowClues = [], colClues = [];
 let history = [], tool = "fill", startT = 0, elapsed = 0, timer = null, solved = false, hints = 0, cursor = 0;
 let progress = store.get("progress", {});   // unfinished grids, per puzzle id
 
+/* ---------- legendary birds: locked until enough grids are solved ---------- */
+const UNLOCK_AT = 10;
+const LOCK = {art:[
+  "...kkkk...",
+  "..k....k..",
+  "..k....k..",
+  ".kkkkkkkk.",
+  ".kxyyyyyk.",
+  ".kyyykyyk.",
+  ".kyykkkyk.",
+  ".kyyykyyk.",
+  ".kkkkkkkk.",
+  ".........."]};
+const solvedCount = () => PUZZLES.filter(p => !p.legend && captured[p.id]).length;
+const legendsOpen = () => solvedCount() >= UNLOCK_AT;
+const isLocked = p => !!p.legend && !legendsOpen();
+function legendMsg(){
+  const left = UNLOCK_AT - solvedCount();
+  if (left > 0) return `Termine encore <b>${left}</b> picross pour réveiller les trois oiseaux légendaires.`;
+  return PUZZLES.some(p => p.legend && !captured[p.id]) ? `Les <b>oiseaux légendaires</b> sont apparus en fin de Dex !` : "";
+}
+
 /* ---------- Dex list ---------- */
 function renderList(){
   const list = $("list"); list.innerHTML = "";
   PUZZLES.forEach((p, idx) => {
     const got = captured[p.id];
     const b = document.createElement("button");
-    b.className = "entry"; b.type = "button";
+    b.className = "entry" + (p.legend ? " legend" : ""); b.type = "button";
     b.innerHTML = `<span class="no">${p.no === "OBJ" ? "OBJ" : "#"+p.no}</span>`;
+    if (isLocked(p)){
+      b.classList.add("locked");
+      const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
+      b.insertAdjacentHTML("beforeend", `<span class="nm">LÉGENDAIRE</span><span class="meta">${Math.min(solvedCount(), UNLOCK_AT)}/${UNLOCK_AT} picross</span>`);
+      b.setAttribute("aria-label", `Pokémon légendaire verrouillé : termine ${UNLOCK_AT} picross pour le débloquer`);
+      b.onclick = () => { blip([196, 147], "square", .08, .05); $("dexMsg").innerHTML = legendMsg(); };
+      list.appendChild(b);
+      return;
+    }
     if (got){ const cv = document.createElement("canvas"); drawArt(cv, p, 60); b.appendChild(cv); }
     else { const u = document.createElement("div"); u.className = "unk"; u.textContent = "?"; b.appendChild(u); }
     b.insertAdjacentHTML("beforeend", `<span class="nm">${got ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
@@ -653,6 +865,7 @@ function renderList(){
   const n = Object.keys(captured).filter(id => PUZZLES.some(p => p.id === id)).length;
   $("capCount").textContent = `${n}/${PUZZLES.length}`;
   $("capBar").style.width = (100*n/PUZZLES.length)+"%";
+  $("dexMsg").innerHTML = legendMsg(); $("dexMsg").hidden = !legendMsg();
 }
 function showDex(){
   saveProgress(); clearInterval(timer); P = null;
@@ -661,6 +874,7 @@ function showDex(){
 
 /* ---------- puzzle ---------- */
 function open(idx, saved){
+  if (isLocked(PUZZLES[idx])) return;
   P = PUZZLES[idx]; P.idx = idx; H = P.art.length; W = P.art[0].length;
   sol = P.art.flatMap(r => [...r].map(ch => filled(ch) ? 1 : 0));
   rowClues = [...Array(H).keys()].map(r => clueOf(sol.slice(r*W, r*W+W)));
@@ -753,6 +967,7 @@ function afterChange(prev){
 }
 
 function win(){
+  const wasOpen = legendsOpen();
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed);
   delete progress[P.id]; store.set("progress", progress);
   const before = captured[P.id];
@@ -766,8 +981,14 @@ function win(){
   $("pName").textContent = P.name;
   SFX.win();
   $("tools").hidden = true; setMsg("");
-  $("winTitle").innerHTML = P.no === "OBJ" ? `Tu as trouvé une <span class="hl">${P.name}</span> !` : `<span class="hl">${P.name}</span> a été enregistré dans le Dex !`;
+  $("winTitle").innerHTML = P.no === "OBJ" ? `Tu as trouvé une <span class="hl">${P.name}</span> !`
+    : P.legend ? `<span class="hl">${P.name}</span>, Pokémon légendaire, rejoint ton Dex !`
+    : `<span class="hl">${P.name}</span> a été enregistré dans le Dex !`;
   $("winStats").innerHTML = `TEMPS ${fmt(elapsed)} · INDICES ${hints}` + (before ? (record ? `<br>NOUVEAU RECORD !` : `<br>RECORD ${fmt(before.time)}`) : "");
+  if (!wasOpen && legendsOpen()){
+    $("winStats").innerHTML += `<br><span class="hl">LES OISEAUX LÉGENDAIRES SONT APPARUS !</span>`;
+    setTimeout(() => blip([523, 659, 784, 1047, 784, 1047, 1319, 1568], "square", .12, .05), 900);
+  }
   $("win").hidden = false; $("nextBtn").focus({preventScroll:true});
 }
 
@@ -851,7 +1072,7 @@ $("backBtn2").onclick = () => { SFX.nav(); showDex(); };
 $("nextBtn").onclick = () => {
   SFX.nav();
   const order = PUZZLES.map((_,k) => (P.idx+1+k) % PUZZLES.length);
-  const next = order.find(k => !captured[PUZZLES[k].id]);
+  const next = order.find(k => !captured[PUZZLES[k].id] && !isLocked(PUZZLES[k]));
   next === undefined ? showDex() : open(next);
 };
 function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = soundOn ? "SON" : "MUET"; }
