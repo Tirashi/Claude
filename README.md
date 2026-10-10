@@ -44,7 +44,9 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 
 - 187 grilles : 8 en 10×10, 173 en 15×15, 3 en 15×10 et 3 en 20×20 (Dracaufeu, Léviator et Mewtwo), toutes résolubles par pure logique, sans deviner (vérifié par un solveur). Le Dex est rangé par numéro de Pokédex.
 - Les 151 Pokémon de la première génération au complet (de Bulbizarre à Mew), plus la Poké Ball.
-- Johto : les n° 152 à 180 (des starters à Lainergie, Togepi compris), dessinés d'après la planche « Minidex », et ses légendaires Raikou, Entei, Suicune, Lugia, Ho-Oh et Celebi, encore scellés (jouables en mode test) en attendant leur mode d'apparition.
+- Johto : les n° 152 à 180 (des starters à Lainergie, Togepi compris), dessinés d'après la planche « Minidex », et ses légendaires :
+  - Raikou, Entei et Suicune se réveillent après 10 captures à Johto, puis rôdent : chaque nouvelle rencontre dans les hautes herbes de Johto a 1 chance sur 10 d'en faire surgir un (garanti après 15 rencontres sans chien). Quitter sa grille, ou fermer le jeu, le fait fuir.
+  - Ho-Oh apparaît une fois les trois chiens capturés, Lugia après 30 captures à Johto (plafonné au nombre de Pokémon de Johto déjà dans le jeu), et Celebi (fabuleux) une fois Lugia et Ho-Oh capturés.
 - **Deux Pokédex, Kanto et Johto** : le Dex de Johto reste caché jusqu'à la capture de Mewtwo, puis un onglet JOHTO apparaît (liste, compteur et hautes herbes propres à chaque région). Togepi attend dans le Dex de Kanto et passe dans celui de Johto à ce moment-là, capture comprise.
 - **Hautes herbes** : on choisit une taille de grille et un Pokémon sauvage pas encore capturé de cette taille est tiré au hasard. Son nom et son numéro restent cachés jusqu'à la fin de la grille ; il apparaît ensuite dans le Dex, où l'on peut refaire sa grille pour battre son temps.
 - Une rencontre en cours par taille : quitter la grille la met de côté, et le bouton de la taille devient REPRENDRE. FUIR (deux appuis) abandonne la grille et renvoie le Pokémon dans les hautes herbes.

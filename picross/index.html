@@ -113,6 +113,8 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 #dexView.johto .grass{box-shadow:0 0 0 3px #c8a030, 3px 3px 0 3px var(--ink-soft)}
 #dexView.johto .entry{border-color:#7a5a10}
 #dexView.johto .meter span{background:#c8a030}
+@keyframes burst{0%,40%{filter:brightness(3) saturate(0)} 20%,60%{filter:none} 80%{filter:brightness(2) saturate(0)} 100%{filter:none}}
+.board-wrap.burst{animation:burst .9s steps(5)}
 /* transfert de sauvegarde */
 .xfer-open{display:flex; justify-content:center; margin-top:14px}
 .xfer{margin-top:14px; border:3px solid var(--ink); background:var(--screen); padding:12px; display:flex; flex-direction:column; gap:10px; box-shadow:3px 3px 0 var(--ink-soft)}
@@ -3375,10 +3377,26 @@ const mewtwoOpen = () => birdsDone() === BIRDS.length && allDone() >= MEWTWO_AT;
 const MEWTWO = PUZZLES.find(p => p.legend === "mewtwo");
 const mewOpen = () => !!captured[MEWTWO.id];
 // un Pokémon déjà capturé n'est jamais reverrouillé (Mew a pu être capturé avant cette règle)
-// Johto legendaries: how they appear is still to be decided, so they stay sealed (test mode opens them)
+/* Johto legendaries
+   - the three dogs wake up after 10 Johto captures, then roam: each new encounter in the Johto grass has
+     1 chance in 10 to be one of them (guaranteed after 15 misses); leaving its grid makes it run away
+   - Ho-Oh once the three dogs are caught, Lugia after 30 Johto captures, Celebi once both are caught */
 const JOHTO_LEGENDS = ["dog", "lugia", "hooh", "celebi"];
 const isJohtoLegend = p => JOHTO_LEGENDS.includes(p.legend);
-const isLocked = p => !captured[p.id] && (isJohtoLegend(p) ? true : p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
+const DOGS_AT = 10, LUGIA_AT = 30, DOG_CHANCE = 0.1, DOG_PITY = 15;
+const DOGS = PUZZLES.filter(p => p.legend === "dog");
+const isDog = p => p.legend === "dog";
+const johtoCount = () => PUZZLES.filter(p => !p.legend && captured[p.id] && regionOf(p) === "johto").length;
+const dogsAwake = () => johtoUnlocked() && johtoCount() >= DOGS_AT;
+const dogsDone = () => DOGS.filter(p => captured[p.id]).length;
+const hoohOpen = () => dogsDone() === DOGS.length;
+// capped to the Johto Pokémon that exist so far, so Lugia stays reachable while the Dex grows
+const lugiaAt = () => Math.min(LUGIA_AT, PUZZLES.filter(p => !p.legend && p.no !== "OBJ" && dexNum(p) > 151).length);
+const lugiaOpen = () => johtoUnlocked() && johtoCount() >= lugiaAt();
+const celebiOpen = () => PUZZLES.filter(p => p.legend === "lugia" || p.legend === "hooh").every(p => captured[p.id]);
+const johtoLegendOpen = p => isDog(p) ? Object.values(encounters).includes(p.id)
+  : p.legend === "hooh" ? hoohOpen() : p.legend === "lugia" ? lugiaOpen() : celebiOpen();
+const isLocked = p => !captured[p.id] && (isJohtoLegend(p) ? !johtoLegendOpen(p) : p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
 function legendMsg(){
   const left = UNLOCK_AT - solvedCount();
   if (left > 0) return `Termine encore <b>${left}</b> picross pour réveiller les trois oiseaux légendaires.`;
@@ -3399,6 +3417,24 @@ let region = store.get("region", "kanto");
 const curRegion = () => region === "johto" && johtoVisible() ? "johto" : "kanto";
 function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); renderList(); }
 
+function johtoMsg(){
+  const n = johtoCount(), out = [];
+  if (!n) out.push("Bienvenue à <b>Johto</b> ! De nouveaux Pokémon se cachent dans les hautes herbes.");
+  if (!dogsAwake()) { if (n) out.push(`Capture encore <b>${DOGS_AT - n}</b> Pokémon à Johto : la Tour Cendrée cache un secret…`); }
+  else if (dogsDone() < DOGS.length) out.push(`Raikou, Entei et Suicune rôdent dans les <b>hautes herbes</b> de Johto (${dogsDone()}/${DOGS.length} capturés).`);
+  const lugia = PUZZLES.find(p => p.legend === "lugia"), hooh = PUZZLES.find(p => p.legend === "hooh"), celebi = PUZZLES.find(p => p.legend === "celebi");
+  if (dogsAwake() && !lugiaOpen()) out.push(`Plus que <b>${lugiaAt() - n}</b> capture${lugiaAt() - n > 1 ? "s" : ""} à Johto pour que <b>Lugia</b> sorte des profondeurs.`);
+  if (hoohOpen() && !captured[hooh.id]) out.push(`<b>Ho-Oh</b> est apparu dans le Dex (n° 250) !`);
+  if (lugiaOpen() && !captured[lugia.id]) out.push(`<b>Lugia</b> est apparu dans le Dex (n° 249) !`);
+  if (celebiOpen() && !captured[celebi.id]) out.push(`La GS Ball brille : <b>Celebi</b> t'attend (n° 251) !`);
+  return out.join("<br>");
+}
+function dogRunsAway(p){
+  delete progress[p.id]; store.set("progress", progress);
+  for (const k of Object.keys(encounters)) if (encounters[k] === p.id) delete encounters[k];
+  store.set("encounters", encounters);
+}
+
 /* ---------- hautes herbes : the wild Pokémon is drawn at random among those not yet captured ---------- */
 const sizeOf = p => p.art[0].length + "x" + p.art.length;
 const bySize = (a, b) => { const [aw, ah] = a.split("x").map(Number), [bw, bh] = b.split("x").map(Number); return aw*ah - bw*bh; };
@@ -3407,7 +3443,7 @@ const wildPool = (size, r = curRegion()) => PUZZLES.filter(p => !p.legend && !ca
 const encKey = (size, r = curRegion()) => r === "kanto" ? size : r + ":" + size;   // Kanto keeps the old keys
 function currentEncounter(size, r = curRegion()){
   const k = encKey(size, r), id = encounters[k], p = id && PUZZLES.find(q => q.id === id);
-  if (p && !p.legend && !captured[id] && sizeOf(p) === size && regionOf(p) === r) return p;
+  if (p && (!p.legend || isDog(p)) && !captured[id] && sizeOf(p) === size && regionOf(p) === r) return p;
   if (id){ delete encounters[k]; store.set("encounters", encounters); }   // an unfinished grid stays in progress, in its own Dex
   return null;
 }
@@ -3420,19 +3456,26 @@ function encounter(size){
     const fresh = pool.filter(q => !progress[q.id]);   // older unfinished grids stay in the Dex, so prefer new ones
     const pick = fresh.length ? fresh : pool;
     p = pick[Math.floor(Math.random()*pick.length)];
+    const dogs = curRegion() === "johto" && dogsAwake() ? DOGS.filter(d => !captured[d.id] && sizeOf(d) === size) : [];
+    if (dogs.length){
+      const miss = store.get("dogMiss", 0);
+      if (miss + 1 >= DOG_PITY || Math.random() < DOG_CHANCE){ p = dogs[Math.floor(Math.random()*dogs.length)]; store.set("dogMiss", 0); }
+      else store.set("dogMiss", miss + 1);
+    }
     encounters[encKey(size)] = p.id; store.set("encounters", encounters);
   }
   open(PUZZLES.indexOf(p));
 }
 function flee(){
-  if (!P || solved || !isWild(P)) return;
+  if (!P || solved || !(isWild(P) || isDog(P) && !captured[P.id])) return;
+  const dog = isDog(P) ? P.name : "";
   delete progress[P.id]; store.set("progress", progress);
   for (const k of Object.keys(encounters)) if (encounters[k] === P.id) delete encounters[k];
   store.set("encounters", encounters);
   P = null; clearInterval(timer);
   blip([392, 330, 262, 196], "square", .07, .05);
   $("playView").hidden = true; $("dexView").hidden = false; renderList();
-  $("dexMsg").hidden = false; $("dexMsg").innerHTML = "Tu as pris la fuite ! Le Pokémon est retourné dans les <b>hautes herbes</b>.";
+  $("dexMsg").hidden = false; $("dexMsg").innerHTML = dog ? `<b>${dog}</b> s'est enfui ! Il rôde toujours dans les hautes herbes…` : "Tu as pris la fuite ! Le Pokémon est retourné dans les <b>hautes herbes</b>.";
 }
 function renderSizes(){
   const box = $("sizes"); box.innerHTML = "";
@@ -3465,8 +3508,11 @@ function renderList(){
       b.classList.add("locked");
       const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
       const mew = p.legend === "mewtwo", fab = p.legend === "mew" || p.legend === "celebi", jl = isJohtoLegend(p);
+      const jmeta = !jl ? "" : isDog(p) ? (dogsAwake() ? "rôde à Johto" : "mystère…")
+        : p.legend === "hooh" ? `chiens ${dogsDone()}/${DOGS.length}`
+        : p.legend === "lugia" ? `${Math.min(johtoCount(), lugiaAt())}/${lugiaAt()} à Johto` : "après Lugia et Ho-Oh";
       b.insertAdjacentHTML("beforeend", jl
-        ? `<span class="nm">${fab ? "FABULEUX" : "LÉGENDAIRE"}</span><span class="meta">mystère…</span>`
+        ? `<span class="nm">${fab ? "FABULEUX" : "LÉGENDAIRE"}</span><span class="meta">${jmeta}</span>`
         : fab
         ? `<span class="nm">FABULEUX</span><span class="meta">après Mewtwo</span>`
         : mew
@@ -3477,7 +3523,8 @@ function renderList(){
                                  : mew ? `Pokémon légendaire verrouillé : capture les trois oiseaux et termine ${MEWTWO_AT} picross`
                                        : `Pokémon légendaire verrouillé : termine ${UNLOCK_AT} picross pour le débloquer`);
       b.onclick = () => { blip([196, 147], "square", .08, .05); $("dexMsg").hidden = false;
-        $("dexMsg").innerHTML = jl ? "Ce Pokémon légendaire ne s'est pas encore montré à <b>Johto</b>…" : legendMsg(); };
+        $("dexMsg").innerHTML = !jl ? legendMsg() : isDog(p) && dogsAwake() ? `Ce Pokémon légendaire rôde dans les <b>hautes herbes</b> de Johto : il peut surgir à chaque rencontre.`
+          : johtoMsg() || "Ce Pokémon légendaire ne s'est pas encore montré à <b>Johto</b>…"; };
       list.appendChild(b);
       return;
     }
@@ -3499,14 +3546,17 @@ function renderList(){
   const n = shown.filter(idx => captured[PUZZLES[idx].id]).length;
   $("capCount").textContent = `${n}/${shown.length}`;
   $("capBar").style.width = (100*n/shown.length)+"%";
-  const msg = r === "kanto" ? legendMsg() : n ? "" : "Bienvenue à <b>Johto</b> ! De nouveaux Pokémon se cachent dans les hautes herbes.";
+  const msg = r === "kanto" ? legendMsg() : johtoMsg();
   $("dexMsg").innerHTML = msg; $("dexMsg").hidden = !msg;
   renderSizes();
   $("testNote").hidden = !testMode;
 }
 function showDex(){
+  const ran = P && !solved && isDog(P) && !captured[P.id] && !testMode ? P : null;
   saveProgress(); clearInterval(timer); P = null;
+  if (ran) dogRunsAway(ran);
   $("playView").hidden = true; $("dexView").hidden = false; renderList();
+  if (ran){ $("dexMsg").hidden = false; $("dexMsg").innerHTML = `<b>${ran.name}</b> s'est enfui ! Il rôde toujours dans les hautes herbes…`; blip([784, 659, 523, 392, 262], "square", .06, .05); }
 }
 
 /* ---------- puzzle ---------- */
@@ -3525,10 +3575,15 @@ function open(idx, saved){
   $("dexView").hidden = true; $("playView").hidden = false;
   $("win").hidden = true; $("tools").hidden = false;
   if (window.scrollY > $("playView").getBoundingClientRect().top + window.scrollY) window.scrollTo(0, 0);
-  $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] ? P.name : "???";
-  $("fleeBtn").hidden = !isWild(P); $("fleeBtn").textContent = "FUIR";
+  const roaming = isDog(P) && !captured[P.id];
+  $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] || roaming ? P.name : "???";
+  $("fleeBtn").hidden = !(isWild(P) || roaming); $("fleeBtn").textContent = "FUIR";
   build(); render();
-  setMsg(captured[P.id] ? `Déjà capturé. Rejoue pour battre <span class="hl">${fmt(captured[P.id].time)}</span>.`
+  if (roaming){
+    const w = $("wrap"); w.classList.remove("burst"); void w.offsetWidth; w.classList.add("burst");
+    setTimeout(() => blip([131, 196, 262, 196, 262, 330, 392, 523], "sawtooth", .09, .05), 150);
+  }
+  setMsg(roaming ? `<span class="hl">${P.name}</span> surgit des hautes herbes ! Termine la grille sans la quitter, sinon il s'enfuit.` : captured[P.id] ? `Déjà capturé. Rejoue pour battre <span class="hl">${fmt(captured[P.id].time)}</span>.`
     : isWild(P) ? (cells.some(v => v) ? `Le Pokémon sauvage t'attend toujours…` : `Un Pokémon sauvage apparaît ! Qui se cache dans cette grille ?`)
     : `Qui se cache dans cette grille ?`);
   startT = performance.now() - elapsed; clearInterval(timer); timer = setInterval(tick, 250); tick();
@@ -3610,7 +3665,7 @@ function afterChange(prev){
 }
 
 function win(){
-  const wasJohto = johtoUnlocked();
+  const wasJohto = johtoUnlocked(), wasDogs = dogsAwake(), wasHooh = hoohOpen(), wasLugia = lugiaOpen(), wasCelebi = celebiOpen();
   const wasOpen = legendsOpen(), wasMew = mewtwoOpen(), wasFab = mewOpen() || !!captured[PUZZLES.find(q => q.legend === "mew").id];
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed);
   delete progress[P.id]; store.set("progress", progress);
@@ -3641,6 +3696,11 @@ function win(){
     $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON FABULEUX SE MONTRE… MEW !</span>`;
     setTimeout(() => blip([1047, 1319, 1568, 2093, 1568, 2093, 2637], "triangle", .12, .06), 1500);
   }
+  const announce = (txt, notes, wave, at) => { $("winStats").innerHTML += `<br><span class="hl">${txt}</span>`; setTimeout(() => blip(notes, wave, .11, .05), at); };
+  if (!wasDogs && dogsAwake()) announce("TROIS POKÉMON LÉGENDAIRES SE SONT ENFUIS À TRAVERS JOHTO !", [262, 330, 392, 330, 262, 196, 262, 392, 523], "sawtooth", 900);
+  if (!wasHooh && hoohOpen()) announce("UN ARC-EN-CIEL TRAVERSE LE CIEL… HO-OH EST APPARU !", [523, 659, 784, 1047, 1319, 1568, 2093], "triangle", 1300);
+  if (!wasLugia && lugiaOpen()) announce("UNE PLUME ARGENTÉE TOMBE DES FLOTS… LUGIA EST APPARU !", [196, 247, 294, 392, 494, 587, 784], "triangle", 1300);
+  if (!wasCelebi && celebiOpen()) announce("LA GS BALL SE MET À BRILLER… CELEBI !", [1047, 1319, 1568, 2093, 1568, 2093, 2637], "triangle", 1700);
   if (!wasJohto && johtoUnlocked()){
     $("winStats").innerHTML += `<br><span class="hl">UN NOUVEAU POKÉDEX S'OUVRE… JOHTO !</span>`;
     setTimeout(() => blip([392, 523, 659, 784, 659, 784, 1047, 1319, 1047, 1568], "triangle", .11, .06), 2600);
@@ -3768,7 +3828,11 @@ window.addEventListener("pagehide", saveProgress);
 
 /* ---------- boot (keeps the current grid across live updates) ---------- */
 function start(data){
-  syncSound(); renderList();
+  syncSound();
+  const gone = DOGS.filter(d => !captured[d.id] && Object.values(encounters).includes(d.id));
+  gone.forEach(dogRunsAway);
+  renderList();
+  if (gone.length){ $("dexMsg").hidden = false; $("dexMsg").innerHTML = `<b>${gone.map(d => d.name).join(", ")}</b> s'est enfui pendant ton absence…`; data = null; }
   if (data && data.id){ const k = PUZZLES.findIndex(p => p.id === data.id); if (k >= 0 && !data.solved) open(k, data); }
 }
 window.claude?.hot?.snapshot?.(() => P ? {id:P.id, cells, elapsed, hints, solved} : {});
