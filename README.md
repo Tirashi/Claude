@@ -58,7 +58,7 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 - **Mode test** : toucher 5 fois le titre PICROSS DEX ouvre toutes les grilles du Dex (légendaires compris) et rend les indices illimités ; 5 nouveaux appuis le coupent. Les captures y comptent comme d'habitude.
 - Clic ou toucher pour remplir, clic droit ou outil CROIX pour marquer, glisser pour peindre une ligne.
 - Indices barrés quand une ligne est juste, aperçu miniature, chrono, annuler.
-- **ZOOM** (pendant une grille) : masque le boîtier, la décoration et l'aide pour que la grille prenne toute la largeur (sur téléphone, cases de 17 à 21 px en 15×15, de 13 à 16 px en 20×20). Le choix est mémorisé.
+- **ZOOM** (pendant une grille) : masque le boîtier, la décoration et l'aide, place la miniature, le numéro et le chrono sous la grille et ajuste les cases au pixel près pour que la grille prenne toute la largeur (sur téléphone, cases de 17 à 23 px en 15×15, de 13 à 17 px en 20×20). Le choix est mémorisé.
 - 3 indices par grille (chacun complète une ligne), illimités en mode test. Effacer la grille ne les rend pas.
 - Progression, records et grilles en cours sauvegardés dans le navigateur.
 - **Transférer ma sauvegarde** (en bas du Dex) : copie un code dans le presse-papiers et le colle dans un autre navigateur, par exemple pour passer du navigateur intégré de Facebook à Chrome. L'import fusionne les deux progressions et garde le meilleur temps.

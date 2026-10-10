@@ -202,7 +202,17 @@ body.zoom > a[aria-label^="Retour"], body.zoom .top, body.zoom .pads, body.zoom 
 body.zoom .dex{max-width:none; padding:0; gap:0; border-width:2px; border-radius:6px; box-shadow:none}
 body.zoom .screen-frame{padding:0; border:0; border-radius:0; box-shadow:none; background:none}
 body.zoom .screen{padding:4px; border-width:2px; box-shadow:none; min-height:0}
-body.zoom .board-wrap{margin-top:6px}
+body.zoom{padding:2px 2px 16px}
+body.zoom .screen{padding:2px}
+body.zoom #playView{display:flex; flex-direction:column}
+body.zoom #playView > .bar{order:2; margin-top:6px; justify-content:flex-start}
+body.zoom #playView > .bar > span:last-child{margin-left:auto}
+body.zoom #playView > .board-wrap{order:1; margin-top:0}
+body.zoom #playView > .msg{order:3} body.zoom #playView > .win{order:4} body.zoom #playView > .tools{order:5}
+body.zoom .corner{padding:0}
+body.zoom .rc{padding-right:2px; gap:calc(var(--cell)*.14)}
+.barprev{display:inline-flex}
+.barprev canvas{height:34px !important; width:auto !important; image-rendering:pixelated; border:2px solid var(--ink); background:var(--screen)}
 body.zoom .msg{margin-top:6px; min-height:1.9em}
 body.zoom .tools{gap:6px; margin-top:8px}
 body.zoom .tools .btn{padding:8px 9px}
@@ -251,6 +261,7 @@ body.zoom .tools .btn{padding:8px 9px}
       <!-- Puzzle -->
       <section id="playView" hidden>
         <div class="bar">
+          <span id="barPrev" class="barprev" hidden></span>
           <span>N° <b id="pNo">000</b> <b id="pName">???</b></span>
           <span>TEMPS <b id="pTime">00:00</b></span>
         </div>
@@ -3484,7 +3495,7 @@ function flee(){
   delete progress[P.id]; store.set("progress", progress);
   for (const k of Object.keys(encounters)) if (encounters[k] === P.id) delete encounters[k];
   store.set("encounters", encounters);
-  P = null; clearInterval(timer); document.body.classList.remove("zoom");
+  P = null; clearInterval(timer); document.body.classList.remove("zoom"); $("barPrev").hidden = true;
   blip([392, 330, 262, 196], "square", .07, .05);
   $("playView").hidden = true; $("dexView").hidden = false; renderList();
   $("dexMsg").hidden = false; $("dexMsg").innerHTML = dog ? `<b>${dog}</b> s'est enfui ! Il rôde toujours dans les hautes herbes…` : "Tu as pris la fuite ! Le Pokémon est retourné dans les <b>hautes herbes</b>.";
@@ -3570,7 +3581,7 @@ function showDex(){
   const ran = P && !solved && isDog(P) && !captured[P.id] && !testMode ? P : null;
   saveProgress(); clearInterval(timer); P = null;
   if (ran) dogRunsAway(ran);
-  document.body.classList.remove("zoom");
+  document.body.classList.remove("zoom"); $("barPrev").hidden = true;
   $("playView").hidden = true; $("dexView").hidden = false; renderList();
   if (ran){ $("dexMsg").hidden = false; $("dexMsg").innerHTML = `<b>${ran.name}</b> s'est enfui ! Il rôde toujours dans les hautes herbes…`; blip([784, 659, 523, 392, 262], "square", .06, .05); }
 }
@@ -3626,7 +3637,7 @@ function build(){
   const corner = document.createElement("div"); corner.className = "corner";
   preview = document.createElement("canvas"); preview.width = W; preview.height = H;
   const ps = Math.max(W, Math.min(W*3, cs*2.2)); preview.style.width = ps+"px"; preview.style.height = ps*H/W+"px";
-  corner.appendChild(preview); b.appendChild(corner);
+  corner.appendChild(preview); b.appendChild(corner); cornerEl = corner;
   requestAnimationFrame(fit);
   ccEls = colClues.map((cl,c) => { const d = document.createElement("div"); d.className = "cc"+(Math.floor(c/5)%2 ? " alt" : "");
     d.innerHTML = cl.map(n => `<span>${n}</span>`).join("") || "<span>0</span>"; b.appendChild(d); return d; });
@@ -3645,10 +3656,15 @@ function build(){
   }
 }
 // shrink cells until clues + grid fit the screen width
+let cornerEl = null;
 function fit(){
   const b = $("board"), wrap = $("wrap"); if (!P || !wrap.clientWidth) return;
   let cs = cellSize(); b.style.setProperty("--cell", cs+"px");
   while (b.scrollWidth > wrap.clientWidth && cs > 12){ cs--; b.style.setProperty("--cell", cs+"px"); }
+  // in ZOOM, grow to the largest size that still fits exactly
+  if (document.body.classList.contains("zoom")){
+    while (cs < 34){ b.style.setProperty("--cell", (cs+1)+"px"); if (b.scrollWidth > wrap.clientWidth){ b.style.setProperty("--cell", cs+"px"); break; } cs++; }
+  }
 }
 function lineDone(vals, clue){ return same(clueOf(vals.map(v => v === 1)), clue); }
 function render(hot){
@@ -3840,7 +3856,10 @@ $("title").addEventListener("click", () => {
 // ZOOM: remembered; only applies while a grid is on screen
 let zoomOn = store.get("zoom", false);
 function applyZoom(){
-  document.body.classList.toggle("zoom", zoomOn && !!P);
+  const z = zoomOn && !!P;
+  document.body.classList.toggle("zoom", z);
+  // the preview leaves the board's corner (it widened the clue column) for the bar under the grid
+  if (preview){ if (z) $("barPrev").replaceChildren(preview); else { $("barPrev").replaceChildren(); if (cornerEl) cornerEl.appendChild(preview); } $("barPrev").hidden = !z; }
   $("zoomBtn").setAttribute("aria-pressed", zoomOn);
   requestAnimationFrame(() => { fit(); if (P) window.scrollTo(0, 0); });
 }
