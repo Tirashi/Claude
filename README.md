@@ -46,7 +46,7 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 - 56 Pokémon de la première génération, dont les 27 premiers du Pokédex (de Bulbizarre à Sabelette) sans trou, plus Togepi et la Poké Ball.
 - Lignes d'évolution complètes de Roucool, Minidraco et Caninos.
 - Les trois oiseaux légendaires (Artikodin, Électhor, Sulfura) sont verrouillés jusqu'à ce que 10 picross soient terminés.
-- Mewtwo apparaît une fois les trois oiseaux capturés et 40 picross terminés.
+- Mewtwo apparaît une fois les trois oiseaux capturés et 40 picross terminés, et Mew (Pokémon fabuleux) une fois Mewtwo capturé. Un Pokémon déjà capturé n'est jamais reverrouillé.
 - Les nouvelles grilles sont toujours ajoutées en fin de liste, sans toucher aux anciennes, pour que les sauvegardes restent valides.
 - Clic ou toucher pour remplir, clic droit ou outil CROIX pour marquer, glisser pour peindre une ligne.
 - Indices barrés quand une ligne est juste, aperçu miniature, chrono, indice, annuler.

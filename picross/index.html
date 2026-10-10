@@ -597,7 +597,7 @@ const PUZZLES = [
   ".kxxxxuuuxxxxk.",
   "..kxxxxxxxxxk..",
   "...kkkkkkkkk..."]},
- {id:"mew", no:"151", name:"MEW", art:[
+ {id:"mew", no:"151", name:"MEW", legend:"mew", art:[
   ".k...........k.",
   "kpk.........kpk",
   "kppk.kkkkk.kppk",
@@ -1268,19 +1268,23 @@ const LOCK = {art:[
   ".kkkkkkkk.",
   ".........."]};
 const MEWTWO_AT = 40;
-const solvedCount = () => PUZZLES.filter(p => !p.legend && captured[p.id]).length;
+const solvedCount = () => PUZZLES.filter(p => (!p.legend || p.legend === "mew") && captured[p.id]).length;
 const legendsOpen = () => solvedCount() >= UNLOCK_AT;
 const BIRDS = PUZZLES.filter(p => p.legend === true);
 const birdsDone = () => BIRDS.filter(p => captured[p.id]).length;
 const allDone = () => PUZZLES.filter(p => p.legend !== "mewtwo" && captured[p.id]).length;   // oiseaux compris
 const mewtwoOpen = () => birdsDone() === BIRDS.length && allDone() >= MEWTWO_AT;
-const isLocked = p => p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen());
+const MEWTWO = PUZZLES.find(p => p.legend === "mewtwo");
+const mewOpen = () => !!captured[MEWTWO.id];
+// un Pokémon déjà capturé n'est jamais reverrouillé (Mew a pu être capturé avant cette règle)
+const isLocked = p => !captured[p.id] && (p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
 function legendMsg(){
   const left = UNLOCK_AT - solvedCount();
   if (left > 0) return `Termine encore <b>${left}</b> picross pour réveiller les trois oiseaux légendaires.`;
   if (birdsDone() < BIRDS.length) return `Les <b>oiseaux légendaires</b> sont apparus (n° 144 à 146) ! Capture-les tous pour te rapprocher de Mewtwo.`;
   if (!mewtwoOpen()) return `Plus que <b>${MEWTWO_AT - allDone()}</b> picross pour faire apparaître <b>Mewtwo</b>.`;
-  return PUZZLES.some(p => p.legend === "mewtwo" && !captured[p.id]) ? `<b>Mewtwo</b> est apparu dans le Dex (n° 150) !` : "";
+  if (!captured[MEWTWO.id]) return `<b>Mewtwo</b> est apparu dans le Dex (n° 150) !`;
+  return PUZZLES.some(p => p.legend === "mew" && !captured[p.id]) ? `Un Pokémon fabuleux se montre enfin : <b>Mew</b> (n° 151) !` : "";
 }
 const dexNum = p => p.no === "OBJ" ? 0 : parseInt(p.no, 10);
 const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - dexNum(PUZZLES[b]));
@@ -1296,11 +1300,14 @@ function renderList(){
     if (isLocked(p)){
       b.classList.add("locked");
       const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
-      const mew = p.legend === "mewtwo";
-      b.insertAdjacentHTML("beforeend", mew
+      const mew = p.legend === "mewtwo", fab = p.legend === "mew";
+      b.insertAdjacentHTML("beforeend", fab
+        ? `<span class="nm">FABULEUX</span><span class="meta">après Mewtwo</span>`
+        : mew
         ? `<span class="nm">LÉGENDAIRE</span><span class="meta">${Math.min(allDone(), MEWTWO_AT)}/${MEWTWO_AT} · oiseaux ${birdsDone()}/${BIRDS.length}</span>`
         : `<span class="nm">LÉGENDAIRE</span><span class="meta">${Math.min(solvedCount(), UNLOCK_AT)}/${UNLOCK_AT} picross</span>`);
-      b.setAttribute("aria-label", mew ? `Pokémon légendaire verrouillé : capture les trois oiseaux et termine ${MEWTWO_AT} picross`
+      b.setAttribute("aria-label", fab ? "Pokémon fabuleux verrouillé : capture Mewtwo pour le faire apparaître"
+                                 : mew ? `Pokémon légendaire verrouillé : capture les trois oiseaux et termine ${MEWTWO_AT} picross`
                                        : `Pokémon légendaire verrouillé : termine ${UNLOCK_AT} picross pour le débloquer`);
       b.onclick = () => { blip([196, 147], "square", .08, .05); $("dexMsg").innerHTML = legendMsg(); };
       list.appendChild(b);
@@ -1418,7 +1425,7 @@ function afterChange(prev){
 }
 
 function win(){
-  const wasOpen = legendsOpen(), wasMew = mewtwoOpen();
+  const wasOpen = legendsOpen(), wasMew = mewtwoOpen(), wasFab = mewOpen() || !!captured[PUZZLES.find(q => q.legend === "mew").id];
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed);
   delete progress[P.id]; store.set("progress", progress);
   const before = captured[P.id];
@@ -1433,12 +1440,17 @@ function win(){
   SFX.win();
   $("tools").hidden = true; setMsg("");
   $("winTitle").innerHTML = P.no === "OBJ" ? `Tu as trouvé une <span class="hl">${P.name}</span> !`
+    : P.legend === "mew" ? `<span class="hl">${P.name}</span>, Pokémon fabuleux, rejoint ton Dex !`
     : P.legend ? `<span class="hl">${P.name}</span>, Pokémon légendaire, rejoint ton Dex !`
     : `<span class="hl">${P.name}</span> a été enregistré dans le Dex !`;
   $("winStats").innerHTML = `TEMPS ${fmt(elapsed)} · INDICES ${hints}` + (before ? (record ? `<br>NOUVEAU RECORD !` : `<br>RECORD ${fmt(before.time)}`) : "");
   if (!wasOpen && legendsOpen()){
     $("winStats").innerHTML += `<br><span class="hl">LES OISEAUX LÉGENDAIRES SONT APPARUS !</span>`;
     setTimeout(() => blip([523, 659, 784, 1047, 784, 1047, 1319, 1568], "square", .12, .05), 900);
+  }
+  if (!wasFab && mewOpen()){
+    $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON FABULEUX SE MONTRE… MEW !</span>`;
+    setTimeout(() => blip([1047, 1319, 1568, 2093, 1568, 2093, 2637], "triangle", .12, .06), 1500);
   }
   if (!wasMew && mewtwoOpen()){
     $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON MYSTÉRIEUX EST APPARU… MEWTWO !</span>`;
