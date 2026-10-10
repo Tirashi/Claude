@@ -1359,7 +1359,12 @@ requestAnimationFrame(loop);
       a.style.position = "fixed"; a.style.left = "50%"; a.style.transform = "translateX(-50%)"; a.style.margin = "0";
       a.style.bottom = "calc(18px + env(safe-area-inset-bottom, 0px))";
     }
-    document.body.insertBefore(a, document.body.firstChild);
+    // body is a flex row here: give the button its own full-width line above the game
+    var line = document.createElement("div");
+    line.style.cssText = "flex:0 0 100%; width:100%;";
+    line.appendChild(a);
+    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
+    document.body.insertBefore(line, document.body.firstChild);
   } catch (e) {}
 })();
 </script>
