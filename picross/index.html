@@ -103,6 +103,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .grass .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
 .entry.hidden{cursor:default; background:repeating-linear-gradient(45deg, var(--screen) 0 4px, var(--screen-2) 4px 8px)}
 .entry.hidden .unk{opacity:.5}
+.testnote{margin:10px 0 0; padding:8px 10px; border:3px dashed var(--ink); background:var(--gold); color:var(--ink); font-family:var(--f-display); font-size:8px; line-height:1.9}
 /* transfert de sauvegarde */
 .xfer-open{display:flex; justify-content:center; margin-top:14px}
 .xfer{margin-top:14px; border:3px solid var(--ink); background:var(--screen); padding:12px; display:flex; flex-direction:column; gap:10px; box-shadow:3px 3px 0 var(--ink-soft)}
@@ -191,7 +192,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
   <div class="top">
     <div class="lens" aria-hidden="true"></div>
     <div class="leds" aria-hidden="true"><i></i><i></i><i></i></div>
-    <div class="brand"><h1>PICROSS DEX</h1><small>FAN-GAME NON OFFICIEL</small></div>
+    <div class="brand"><h1 id="title">PICROSS DEX</h1><small>FAN-GAME NON OFFICIEL</small></div>
   </div>
 
   <div class="screen-frame">
@@ -199,6 +200,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
       <!-- Dex list -->
       <section id="dexView">
         <div class="bar"><span>CAPTURÉS <b id="capCount">0/0</b></span><div class="meter" aria-hidden="true"><span id="capBar"></span></div></div>
+        <p class="testnote" id="testNote" hidden>MODE TEST : toutes les grilles du Dex sont jouables, légendaires compris. Les captures comptent comme d'habitude. Touche 5 fois le titre pour le couper.</p>
         <p class="dexmsg" id="dexMsg" aria-live="polite"></p>
         <p class="fbnote" id="fbNote" hidden>Tu joues dans le <b>navigateur de Facebook</b> : ta progression reste enregistrée ici. Pour la retrouver dans Chrome, utilise <b>Transférer ma sauvegarde</b> en bas du Dex.</p>
         <section class="grass" aria-label="Hautes herbes">
@@ -2667,13 +2669,157 @@ const PUZZLES = [
   "...kDDk.kDDk...",
   "...kkk.k.kkk...",
   "..............."]},
+ {id:"chikorita", no:"152", name:"GERMIGNON", art:[
+  ".....kkk.......",
+  "....kMMMk......",
+  "...kMMGMMk.....",
+  "...kMGMMMk.....",
+  "....kGMMk......",
+  ".....kGk.......",
+  "...kkkHkkkk....",
+  "..kHHHHHHHHk...",
+  ".kHHkkHHHkkHk..",
+  ".kHHkkHHHkkHk..",
+  ".kHHHHHHHHHHk..",
+  "..kgkgkgkgkk...",
+  "...kHHHHHHk....",
+  "..kHHk..kHHk...",
+  "..kkk....kkk..."]},
+ {id:"bayleef", no:"153", name:"MACRONIUM", art:[
+  "......kkkk.....",
+  ".....kMMMMk....",
+  "....kMMGGMMk...",
+  "..kkkkkkkMMk...",
+  ".kHHHHHHkkk....",
+  "kHHkkHHHHk.....",
+  "kHHkkHHHHk.....",
+  ".kHHHHHHk......",
+  "..kgGgGgk......",
+  "..kHHHHHkkkk...",
+  "...kHHHHHHHHk..",
+  "...kHHHHHHHHHk.",
+  "...kHHkkkkHHk..",
+  "...kHk....kHk..",
+  "...kk......kk.."]},
+ {id:"meganium", no:"154", name:"MÉGANIUM", art:[
+  "...k.......k...",
+  "....k.....k....",
+  "....kkkkkkk....",
+  "...kHHHHHHHk...",
+  "...kHkkHkkHk...",
+  "...kHHHHHHHk...",
+  ".pkkkHHHHHkkkp.",
+  "pppppkkkkkppppp",
+  "kppyyyyyyyyyppk",
+  ".kpppkkkkkpppk.",
+  "..kkHHHHHHHkk..",
+  "...kHHHHHHHk...",
+  "...kHHkkkHHk...",
+  "...kHHk.kHHk...",
+  "...kkkk.kkkk..."]},
+ {id:"cyndaquil", no:"155", name:"HÉRICENDRE", art:[
+  "...............",
+  "..........R.R..",
+  ".........RoRoR.",
+  "........RoyyoR.",
+  "....kkkkkkkkk..",
+  "..kkeeeeeeeeek.",
+  ".keeeeeeeeeeek.",
+  "keekkeeeeeeeek.",
+  "kcccccceeeeek..",
+  ".kccccceeeek...",
+  "..kccccccck....",
+  "..kccccccck....",
+  "..kckkkkkck....",
+  "..kck...kck....",
+  "..kkk...kkk...."]},
+ {id:"quilava", no:"156", name:"FEURISSON", art:[
+  "..R.R....R.R...",
+  ".RoRoR..RoRoR..",
+  ".RyoyR..RyoyR..",
+  "..kkkk...kkkkk.",
+  ".keeeek.keeeeek",
+  "keekeeekeeeeeek",
+  "kcceeeeeeeeeek.",
+  ".kcccceeeeeeek.",
+  "..kkcccccccck..",
+  "...kcccccccck..",
+  "...kcek..kcek..",
+  "...kcek..kcek..",
+  "..kcck...kcck..",
+  "..kkk....kkk...",
+  "..............."]},
+ {id:"typhlosion", no:"157", name:"TYPHLOSION", art:[
+  ".R...R...R...R.",
+  ".RR.RoR.RoR.RR.",
+  "RoRRoyRRRyoRRoR",
+  "RyoRkkkkkkkRoyR",
+  ".RRkeeeeeeekRR.",
+  "..keekeeekeek..",
+  "..keeeeeeeeek..",
+  "..kccccccccck..",
+  ".kekcccccccckek",
+  ".kk.kcccccck.kk",
+  "....kcccccck...",
+  "....keeeeeek...",
+  "...keek..keek..",
+  "...kcck..kcck..",
+  "...kkkk..kkkk.."]},
+ {id:"totodile", no:"158", name:"KAIMINUS", art:[
+  "...............",
+  "....kkkkkkk....",
+  "...kaaaaaaak...",
+  "..kaakkaaaaak..",
+  "..kaakkaaaaak..",
+  "..kaaaaaaaaaak.",
+  "..kyyyyyyyyyyk.",
+  "..kkxkxkxkxkk..",
+  "...kyyyyyyyk...",
+  "..r.kaaaaaak...",
+  ".rrkaayyyaak...",
+  "..kaayyyyyaakk.",
+  "..kaayyyyyaaak.",
+  "...kaakkkaak...",
+  "...kkk...kkk..."]},
+ {id:"croconaw", no:"159", name:"CROCRODIL", art:[
+  "...rrr.........",
+  "...krrkkkkk....",
+  "..kaaaaaaaaak..",
+  ".kaakkaaaaaaak.",
+  ".kaakkaaaaaaaak",
+  ".kaaaaaaaaaaak.",
+  ".kkxkxkxkxkkk..",
+  "..kyyyyyyyyk...",
+  "...kkaaaaak.rr.",
+  "..kaakyyykaakrr",
+  ".kaakyyyyykaak.",
+  ".kk.kyyyyykkrr.",
+  "....kaaaaaakr..",
+  "...kaak..kaak..",
+  "...kkkk..kkkk.."]},
+ {id:"feraligatr", no:"160", name:"ALIGATUEUR", art:[
+  ".rr.kkkkkkk....",
+  "rrrkaaaaaaakk..",
+  ".rkaakkaaaaaak.",
+  "..kaakkaaaaaaak",
+  "..kaaaaakkkkkk.",
+  "..kaaaakxkxkx..",
+  ".rkaaaakrrrrrk.",
+  "rrkaaaaakxkxkk.",
+  "rkaakyyykkkk...",
+  ".kaakyyyyykak..",
+  ".kxkkyyyyykkxk.",
+  "..k.kyyyyyk.k..",
+  "...kaaaaaaak...",
+  "..kaaak.kaaak..",
+  "..kkkk...kkkk.."]},
 ];
 const PAL = {k:"#20182e", r:"#e0383e", w:"#f6f4ee", b:"#a86a3c", p:"#f4a3b8", n:"#6b4428", m:"#b58ad8", u:"#3a7bd5",
   y:"#ffd23f", g:"#4fa86a", G:"#2f7a48", t:"#7fd0b8", d:"#3f9a86", o:"#f58a3a", v:"#7c5cb8", e:"#2f6f78", c:"#f1e2c0",
   a:"#5cb8e8", h:"#7a2e14", s:"#b8703a", q:"#3a2c58",
   i:"#4a78d0", l:"#e0a83a", x:"#f6f1de", f:"#ff7aa8", z:"#b8c0cc", B:"#86b8f0",
   P:"#e8607a", R:"#e0502a", T:"#2f8f9f", U:"#8fa8f0", A:"#3f6fb0", M:"#6cc04a", O:"#d8903a", j:"#c8954a", W:"#ddd0ea",
-  C:"#a8b8cc", D:"#a898c8", E:"#a09a8a", F:"#6e685c"};
+  C:"#a8b8cc", D:"#a898c8", E:"#a09a8a", F:"#6e685c", H:"#c8e890"};
 // "w" is white: visible in the reveal but empty in the puzzle.
 const filled = ch => ch !== "." && ch !== "w";
 
@@ -2722,6 +2868,7 @@ let captured = store.get("captured", {});
 let P = null, W = 0, H = 0, sol = [], cells = [], rowClues = [], colClues = [];
 let history = [], tool = "fill", startT = 0, elapsed = 0, timer = null, solved = false, hints = 0, cursor = 0;
 let progress = store.get("progress", {});   // unfinished grids, per puzzle id
+let testMode = store.get("testmode", false);   // 5 taps on the title: every grid of the Dex can be opened
 let encounters = store.get("encounters", {}); // current wild encounter per grid size, e.g. {"15x15": "pikachu"}
 
 /* ---------- save transfer between browsers (e.g. Facebook's in-app browser -> Chrome) ---------- */
@@ -2880,7 +3027,7 @@ function renderList(){
     const b = document.createElement("button");
     b.className = "entry" + (p.legend ? " legend" : ""); b.type = "button";
     b.innerHTML = `<span class="no">${p.no === "OBJ" && !got ? "#???" : p.no === "OBJ" ? "OBJ" : "#"+p.no}</span>`;
-    if (isLocked(p)){
+    if (isLocked(p) && !testMode){
       b.classList.add("locked");
       const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
       const mew = p.legend === "mewtwo", fab = p.legend === "mew";
@@ -2896,7 +3043,7 @@ function renderList(){
       list.appendChild(b);
       return;
     }
-    if (!got && isWild(p) && !inPlay(p)){
+    if (!got && isWild(p) && !inPlay(p) && !testMode){
       b.classList.add("hidden");
       b.insertAdjacentHTML("beforeend", `<div class="unk">?</div><span class="nm">???</span><span class="meta">&nbsp;</span>`);
       b.setAttribute("aria-label", `N° ${p.no}, pas encore rencontré`);
@@ -2916,6 +3063,7 @@ function renderList(){
   $("capBar").style.width = (100*n/PUZZLES.length)+"%";
   $("dexMsg").innerHTML = legendMsg(); $("dexMsg").hidden = !legendMsg();
   renderSizes();
+  $("testNote").hidden = !testMode;
 }
 function showDex(){
   saveProgress(); clearInterval(timer); P = null;
@@ -2924,7 +3072,7 @@ function showDex(){
 
 /* ---------- puzzle ---------- */
 function open(idx, saved){
-  if (isLocked(PUZZLES[idx])) return;
+  if (isLocked(PUZZLES[idx]) && !testMode) return;
   fleeArm = false;
   P = PUZZLES[idx]; P.idx = idx; H = P.art.length; W = P.art[0].length;
   sol = P.art.flatMap(r => [...r].map(ch => filled(ch) ? 1 : 0));
@@ -2936,6 +3084,7 @@ function open(idx, saved){
   history = []; solved = false; cursor = 0;
   $("dexView").hidden = true; $("playView").hidden = false;
   $("win").hidden = true; $("tools").hidden = false;
+  if (window.scrollY > $("playView").getBoundingClientRect().top + window.scrollY) window.scrollTo(0, 0);
   $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] ? P.name : "???";
   $("fleeBtn").hidden = !isWild(P); $("fleeBtn").textContent = "FUIR";
   build(); render();
@@ -3146,6 +3295,14 @@ $("fleeBtn").onclick = () => {
     clearTimeout(fleeT); fleeT = setTimeout(() => { fleeArm = false; $("fleeBtn").textContent = "FUIR"; }, 3000); return; }
   fleeArm = false; clearTimeout(fleeT); flee();
 };
+let titleTaps = 0, titleT = null;
+$("title").addEventListener("click", () => {
+  titleTaps++; clearTimeout(titleT); titleT = setTimeout(() => { titleTaps = 0; }, 1500);
+  if (titleTaps < 5) return;
+  titleTaps = 0; testMode = !testMode; store.set("testmode", testMode);
+  blip(testMode ? [523, 659, 784, 1047] : [1047, 784, 659, 523], "square", .06, .05);
+  if (P) showDex(); else renderList();
+});
 function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = soundOn ? "SON" : "MUET"; }
 $("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); SFX.nav(); };
 window.addEventListener("resize", fit);
