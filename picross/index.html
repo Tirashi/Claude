@@ -196,6 +196,16 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
   .lens{width:42px; height:42px}
   .rc{padding-right:3px}
 }
+/* mode ZOOM : pendant une grille, la déco s'efface et la grille prend toute la largeur */
+body.zoom{padding:4px 4px 16px}
+body.zoom > a[aria-label^="Retour"], body.zoom .top, body.zoom .pads, body.zoom .help{display:none !important}
+body.zoom .dex{max-width:none; padding:0; gap:0; border-width:2px; border-radius:6px; box-shadow:none}
+body.zoom .screen-frame{padding:0; border:0; border-radius:0; box-shadow:none; background:none}
+body.zoom .screen{padding:4px; border-width:2px; box-shadow:none; min-height:0}
+body.zoom .board-wrap{margin-top:6px}
+body.zoom .msg{margin-top:6px; min-height:1.9em}
+body.zoom .tools{gap:6px; margin-top:8px}
+body.zoom .tools .btn{padding:8px 9px}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none !important} }
 </style>
 </head>
@@ -261,6 +271,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
           <button class="btn" id="resetBtn" type="button">EFFACER</button>
           <button class="btn" id="fleeBtn" type="button" hidden>FUIR</button>
           <button class="btn" id="backBtn" type="button">◀ DEX</button>
+          <button class="btn" id="zoomBtn" type="button" aria-pressed="false" aria-label="Mode zoom : masquer la décoration pour agrandir la grille">ZOOM</button>
           <button class="btn" id="soundBtn" type="button" aria-pressed="true">SON</button>
         </div>
       </section>
@@ -3473,7 +3484,7 @@ function flee(){
   delete progress[P.id]; store.set("progress", progress);
   for (const k of Object.keys(encounters)) if (encounters[k] === P.id) delete encounters[k];
   store.set("encounters", encounters);
-  P = null; clearInterval(timer);
+  P = null; clearInterval(timer); document.body.classList.remove("zoom");
   blip([392, 330, 262, 196], "square", .07, .05);
   $("playView").hidden = true; $("dexView").hidden = false; renderList();
   $("dexMsg").hidden = false; $("dexMsg").innerHTML = dog ? `<b>${dog}</b> s'est enfui ! Il rôde toujours dans les hautes herbes…` : "Tu as pris la fuite ! Le Pokémon est retourné dans les <b>hautes herbes</b>.";
@@ -3559,6 +3570,7 @@ function showDex(){
   const ran = P && !solved && isDog(P) && !captured[P.id] && !testMode ? P : null;
   saveProgress(); clearInterval(timer); P = null;
   if (ran) dogRunsAway(ran);
+  document.body.classList.remove("zoom");
   $("playView").hidden = true; $("dexView").hidden = false; renderList();
   if (ran){ $("dexMsg").hidden = false; $("dexMsg").innerHTML = `<b>${ran.name}</b> s'est enfui ! Il rôde toujours dans les hautes herbes…`; blip([784, 659, 523, 392, 262], "square", .06, .05); }
 }
@@ -3582,7 +3594,7 @@ function open(idx, saved){
   const roaming = isDog(P) && !captured[P.id];
   $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] || roaming ? P.name : "???";
   $("fleeBtn").hidden = !(isWild(P) || roaming); $("fleeBtn").textContent = "FUIR";
-  build(); render();
+  build(); render(); applyZoom();
   if (roaming){
     const w = $("wrap"); w.classList.remove("burst"); void w.offsetWidth; w.classList.add("burst");
     setTimeout(() => blip([131, 196, 262, 196, 262, 330, 392, 523], "sawtooth", .09, .05), 150);
@@ -3825,6 +3837,14 @@ $("title").addEventListener("click", () => {
   if (P) showDex(); else renderList();
   syncHint();
 });
+// ZOOM: remembered; only applies while a grid is on screen
+let zoomOn = store.get("zoom", false);
+function applyZoom(){
+  document.body.classList.toggle("zoom", zoomOn && !!P);
+  $("zoomBtn").setAttribute("aria-pressed", zoomOn);
+  requestAnimationFrame(() => { fit(); if (P) window.scrollTo(0, 0); });
+}
+$("zoomBtn").onclick = () => { zoomOn = !zoomOn; store.set("zoom", zoomOn); SFX.nav(); applyZoom(); };
 function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = soundOn ? "SON" : "MUET"; }
 $("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); SFX.nav(); };
 window.addEventListener("resize", fit);
