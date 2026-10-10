@@ -44,7 +44,7 @@ body{
   padding-inline:16px; padding-block:18px 40px;
 }
 body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:60;
-  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.14) 0 1px, transparent 1px 3px)}
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.06) 0 1px, transparent 1px 3px)}
 
 .dex{
   max-width:620px; margin:0 auto; background:var(--dex); border-radius:14px 14px 10px 10px;
@@ -146,6 +146,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .cell.c0{border-left:3px solid var(--ink)} .cell.r0{border-top:3px solid var(--ink)}
 .cell.c5{border-right:2px solid var(--ink)} .cell.r5{border-bottom:2px solid var(--ink)}
 .cell.cl{border-right:3px solid var(--ink)} .cell.rl{border-bottom:3px solid var(--ink)}
+.cell.b2{background:#d2ddb6}   /* 5x5 blocks in a checkerboard, easier to count */
 .cell.hot{background:#eef3dc}
 .cell.f{background:var(--ink); box-shadow:inset 2px 2px 0 #4a3f5e}
 .cell.x::before,.cell.x::after{content:""; position:absolute; left:22%; right:22%; top:calc(50% - 1.5px); height:3px; background:var(--dex); transform:rotate(45deg)}
@@ -3650,6 +3651,7 @@ function build(){
       if (c === 0) cls += " c0"; if (r === 0) cls += " r0";
       if (c === W-1) cls += " cl"; else if ((c+1)%5 === 0) cls += " c5";
       if (r === H-1) cls += " rl"; else if ((r+1)%5 === 0) cls += " r5";
+      if ((Math.floor(r/5) + Math.floor(c/5)) % 2) cls += " b2";
       e.className = cls; e.dataset.i = r*W+c; e.style.setProperty("--d", r+c);
       b.appendChild(e); cellEls.push(e);
     }
