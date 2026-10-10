@@ -92,6 +92,17 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .entry.locked canvas{opacity:.85}
 .dexmsg{margin:10px 0 0; font-family:var(--f-display); font-size:8px; line-height:1.9; color:var(--ink)}
 .dexmsg b{font-weight:400; color:var(--dex)}
+/* hautes herbes : rencontres aléatoires */
+.grass{margin-top:12px; border:3px solid var(--ink); padding:10px; box-shadow:3px 3px 0 var(--ink-soft);
+  background:repeating-linear-gradient(90deg, #4fa86a 0 3px, #2f7a48 3px 6px)}
+.grass h3{margin:0 0 8px; font-family:var(--f-display); font-weight:400; font-size:10px; letter-spacing:1px; color:#fff; text-shadow:2px 2px 0 var(--ink)}
+.grass .sizes{display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:8px}
+.grass .btn{display:flex; flex-direction:column; align-items:center; gap:6px; line-height:1.2}
+.grass .btn small{font-size:8px; letter-spacing:.5px; opacity:.9}
+.grass .btn.resume{background:var(--gold); color:var(--ink)}
+.grass .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+.entry.hidden{cursor:default; background:repeating-linear-gradient(45deg, var(--screen) 0 4px, var(--screen-2) 4px 8px)}
+.entry.hidden .unk{opacity:.5}
 /* transfert de sauvegarde */
 .xfer-open{display:flex; justify-content:center; margin-top:14px}
 .xfer{margin-top:14px; border:3px solid var(--ink); background:var(--screen); padding:12px; display:flex; flex-direction:column; gap:10px; box-shadow:3px 3px 0 var(--ink-soft)}
@@ -190,6 +201,10 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
         <div class="bar"><span>CAPTURÉS <b id="capCount">0/0</b></span><div class="meter" aria-hidden="true"><span id="capBar"></span></div></div>
         <p class="dexmsg" id="dexMsg" aria-live="polite"></p>
         <p class="fbnote" id="fbNote" hidden>Tu joues dans le <b>navigateur de Facebook</b> : ta progression reste enregistrée ici. Pour la retrouver dans Chrome, utilise <b>Transférer ma sauvegarde</b> en bas du Dex.</p>
+        <section class="grass" aria-label="Hautes herbes">
+          <h3>HAUTES HERBES</h3>
+          <div class="sizes" id="sizes"></div>
+        </section>
         <div class="list" id="list"></div>
         <div class="xfer-open"><button class="btn" id="xferBtn" type="button" aria-expanded="false" aria-controls="xfer">TRANSFÉRER MA SAUVEGARDE</button></div>
         <section class="xfer" id="xfer" hidden aria-label="Transfert de sauvegarde">
@@ -216,7 +231,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
         <div class="win" id="win" hidden>
           <h2 id="winTitle"></h2>
           <div class="stats" id="winStats"></div>
-          <div class="row"><button class="btn" id="nextBtn" type="button">SUIVANT ▶</button><button class="btn" id="backBtn2" type="button">VOIR LE DEX</button></div>
+          <div class="row"><button class="btn" id="nextBtn" type="button">RENCONTRE ▶</button><button class="btn" id="backBtn2" type="button">VOIR LE DEX</button></div>
         </div>
         <div class="tools" id="tools">
           <div class="mode" role="group" aria-label="Outil">
@@ -226,6 +241,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
           <button class="btn" id="undoBtn" type="button">ANNULER</button>
           <button class="btn" id="hintBtn" type="button">INDICE</button>
           <button class="btn" id="resetBtn" type="button">EFFACER</button>
+          <button class="btn" id="fleeBtn" type="button" hidden>FUIR</button>
           <button class="btn" id="backBtn" type="button">◀ DEX</button>
           <button class="btn" id="soundBtn" type="button" aria-pressed="true">SON</button>
         </div>
@@ -236,7 +252,8 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
   <div class="pads" aria-hidden="true"><div class="dpad"></div><div class="ab"><i></i><i></i></div></div>
 
   <div class="help">
-    <p>Les nombres indiquent les blocs de cases pleines de chaque ligne et colonne, dans l'ordre. Remplis la grille pour révéler le Pokémon et l'enregistrer dans ton Dex.</p>
+    <p>Choisis une taille dans les <b>hautes herbes</b> : un Pokémon sauvage, encore inconnu, se cache dans la grille. Remplis-la pour le révéler et l'enregistrer dans ton Dex ; tu pourras ensuite la refaire depuis le Dex pour battre ton temps. Les légendaires, eux, apparaissent directement dans le Dex.</p>
+    <p>Les nombres indiquent les blocs de cases pleines de chaque ligne et colonne, dans l'ordre.</p>
     <p>Clic ou toucher : remplir. Clic droit ou outil CROIX : marquer une case vide. Glisse pour peindre une ligne entière.</p>
     <p>Clavier : <kbd>←↑→↓</kbd> déplacer · <kbd>ESPACE</kbd> remplir · <kbd>X</kbd> croix · <kbd>Z</kbd> annuler</p>
     <p class="legal">Projet de fan à usage personnel, sans lien avec Nintendo, Game Freak ou The Pokémon Company. Pixel art dessiné pour ce jeu.</p>
@@ -2705,6 +2722,7 @@ let captured = store.get("captured", {});
 let P = null, W = 0, H = 0, sol = [], cells = [], rowClues = [], colClues = [];
 let history = [], tool = "fill", startT = 0, elapsed = 0, timer = null, solved = false, hints = 0, cursor = 0;
 let progress = store.get("progress", {});   // unfinished grids, per puzzle id
+let encounters = store.get("encounters", {}); // current wild encounter per grid size, e.g. {"15x15": "pikachu"}
 
 /* ---------- save transfer between browsers (e.g. Facebook's in-app browser -> Chrome) ---------- */
 const SAVE_PREFIX = "PICROSSDEX1-";
@@ -2807,6 +2825,53 @@ function legendMsg(){
 const dexNum = p => p.no === "OBJ" ? 0 : parseInt(p.no, 10);
 const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - dexNum(PUZZLES[b]));
 
+/* ---------- hautes herbes : the wild Pokémon is drawn at random among those not yet captured ---------- */
+const sizeOf = p => p.art[0].length + "x" + p.art.length;
+const SIZES = [...new Set(PUZZLES.map(sizeOf))].sort((a, b) => { const [aw, ah] = a.split("x").map(Number), [bw, bh] = b.split("x").map(Number); return aw*ah - bw*bh; });
+const wildPool = size => PUZZLES.filter(p => !p.legend && !captured[p.id] && sizeOf(p) === size);
+function currentEncounter(size){
+  const id = encounters[size], p = id && PUZZLES.find(q => q.id === id);
+  if (p && !p.legend && !captured[id] && sizeOf(p) === size) return p;
+  if (id){ delete encounters[size]; store.set("encounters", encounters); }
+  return null;
+}
+const inPlay = p => !!progress[p.id] || Object.values(encounters).includes(p.id);
+const isWild = p => !p.legend && !captured[p.id];   // still hidden in the grass
+function encounter(size){
+  let p = currentEncounter(size);
+  if (!p){
+    const pool = wildPool(size); if (!pool.length) return;
+    const fresh = pool.filter(q => !progress[q.id]);   // older unfinished grids stay in the Dex, so prefer new ones
+    const pick = fresh.length ? fresh : pool;
+    p = pick[Math.floor(Math.random()*pick.length)];
+    encounters[size] = p.id; store.set("encounters", encounters);
+  }
+  open(PUZZLES.indexOf(p));
+}
+function flee(){
+  if (!P || solved || !isWild(P)) return;
+  delete progress[P.id]; store.set("progress", progress);
+  for (const k of Object.keys(encounters)) if (encounters[k] === P.id) delete encounters[k];
+  store.set("encounters", encounters);
+  P = null; clearInterval(timer);
+  blip([392, 330, 262, 196], "square", .07, .05);
+  $("playView").hidden = true; $("dexView").hidden = false; renderList();
+  $("dexMsg").hidden = false; $("dexMsg").innerHTML = "Tu as pris la fuite ! Le Pokémon est retourné dans les <b>hautes herbes</b>.";
+}
+function renderSizes(){
+  const box = $("sizes"); box.innerHTML = "";
+  for (const size of SIZES){
+    const left = wildPool(size).length, cur = currentEncounter(size);
+    const b = document.createElement("button"); b.type = "button"; b.className = "btn" + (cur ? " resume" : "");
+    const label = size.replace("x", "×");
+    b.innerHTML = `<span>${label}</span><small>${cur ? "REPRENDRE" : left ? left + (left > 1 ? " RESTANTS" : " RESTANT") : "COMPLET"}</small>`;
+    b.disabled = !left;
+    b.setAttribute("aria-label", cur ? `Reprendre la rencontre en ${label}` : left ? `Chercher un Pokémon sauvage en ${label}, ${left} restants` : `Tous les Pokémon en ${label} sont capturés`);
+    b.onclick = () => { SFX.nav(); encounter(size); };
+    box.appendChild(b);
+  }
+}
+
 /* ---------- Dex list ---------- */
 function renderList(){
   const list = $("list"); list.innerHTML = "";
@@ -2814,7 +2879,7 @@ function renderList(){
     const got = captured[p.id];
     const b = document.createElement("button");
     b.className = "entry" + (p.legend ? " legend" : ""); b.type = "button";
-    b.innerHTML = `<span class="no">${p.no === "OBJ" ? "OBJ" : "#"+p.no}</span>`;
+    b.innerHTML = `<span class="no">${p.no === "OBJ" && !got ? "#???" : p.no === "OBJ" ? "OBJ" : "#"+p.no}</span>`;
     if (isLocked(p)){
       b.classList.add("locked");
       const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
@@ -2831,6 +2896,14 @@ function renderList(){
       list.appendChild(b);
       return;
     }
+    if (!got && isWild(p) && !inPlay(p)){
+      b.classList.add("hidden");
+      b.insertAdjacentHTML("beforeend", `<div class="unk">?</div><span class="nm">???</span><span class="meta">&nbsp;</span>`);
+      b.setAttribute("aria-label", `N° ${p.no}, pas encore rencontré`);
+      b.onclick = () => { blip([196, 147], "square", .08, .05); $("dexMsg").hidden = false; $("dexMsg").innerHTML = "Ce Pokémon se cache encore dans les <b>hautes herbes</b>."; };
+      list.appendChild(b);
+      return;
+    }
     if (got){ const cv = document.createElement("canvas"); drawArt(cv, p, 60); b.appendChild(cv); }
     else { const u = document.createElement("div"); u.className = "unk"; u.textContent = "?"; b.appendChild(u); }
     b.insertAdjacentHTML("beforeend", `<span class="nm">${got ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
@@ -2842,6 +2915,7 @@ function renderList(){
   $("capCount").textContent = `${n}/${PUZZLES.length}`;
   $("capBar").style.width = (100*n/PUZZLES.length)+"%";
   $("dexMsg").innerHTML = legendMsg(); $("dexMsg").hidden = !legendMsg();
+  renderSizes();
 }
 function showDex(){
   saveProgress(); clearInterval(timer); P = null;
@@ -2851,6 +2925,7 @@ function showDex(){
 /* ---------- puzzle ---------- */
 function open(idx, saved){
   if (isLocked(PUZZLES[idx])) return;
+  fleeArm = false;
   P = PUZZLES[idx]; P.idx = idx; H = P.art.length; W = P.art[0].length;
   sol = P.art.flatMap(r => [...r].map(ch => filled(ch) ? 1 : 0));
   rowClues = [...Array(H).keys()].map(r => clueOf(sol.slice(r*W, r*W+W)));
@@ -2861,9 +2936,12 @@ function open(idx, saved){
   history = []; solved = false; cursor = 0;
   $("dexView").hidden = true; $("playView").hidden = false;
   $("win").hidden = true; $("tools").hidden = false;
-  $("pNo").textContent = P.no; $("pName").textContent = captured[P.id] ? P.name : "???";
+  $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] ? P.name : "???";
+  $("fleeBtn").hidden = !isWild(P); $("fleeBtn").textContent = "FUIR";
   build(); render();
-  setMsg(captured[P.id] ? `Déjà capturé. Rejoue pour battre <span class="hl">${fmt(captured[P.id].time)}</span>.` : `Qui se cache dans cette grille ?`);
+  setMsg(captured[P.id] ? `Déjà capturé. Rejoue pour battre <span class="hl">${fmt(captured[P.id].time)}</span>.`
+    : isWild(P) ? (cells.some(v => v) ? `Le Pokémon sauvage t'attend toujours…` : `Un Pokémon sauvage apparaît ! Qui se cache dans cette grille ?`)
+    : `Qui se cache dans cette grille ?`);
   startT = performance.now() - elapsed; clearInterval(timer); timer = setInterval(tick, 250); tick();
 }
 function tick(){ if (solved || !P) return; elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed); }
@@ -2946,6 +3024,9 @@ function win(){
   const wasOpen = legendsOpen(), wasMew = mewtwoOpen(), wasFab = mewOpen() || !!captured[PUZZLES.find(q => q.legend === "mew").id];
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed);
   delete progress[P.id]; store.set("progress", progress);
+  for (const k of Object.keys(encounters)) if (encounters[k] === P.id) delete encounters[k];
+  store.set("encounters", encounters);
+  $("pNo").textContent = P.no; $("fleeBtn").hidden = true;
   const before = captured[P.id];
   const record = !before || elapsed < before.time;
   if (record) captured[P.id] = {time: Math.round(elapsed), hints};
@@ -2974,7 +3055,10 @@ function win(){
     $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON MYSTÉRIEUX EST APPARU… MEWTWO !</span>`;
     setTimeout(() => blip([220, 233, 247, 262, 523, 494, 466, 440, 880, 1760], "square", .14, .05), 1300);
   }
-  $("win").hidden = false; $("nextBtn").focus({preventScroll:true});
+  $("nextBtn").hidden = !wildPool(sizeOf(P)).length;
+  $("nextBtn").textContent = `${sizeOf(P).replace("x", "×")} ▶`;
+  $("nextBtn").setAttribute("aria-label", `Nouvelle rencontre en ${sizeOf(P).replace("x", "×")}`);
+  $("win").hidden = false; ($("nextBtn").hidden ? $("backBtn2") : $("nextBtn")).focus({preventScroll:true});
 }
 
 /* ---------- painting: tap toggles, drag paints along one row or column ---------- */
@@ -3054,12 +3138,13 @@ $("hintBtn").onclick = () => {
 };
 $("backBtn").onclick = () => { SFX.nav(); showDex(); };
 $("backBtn2").onclick = () => { SFX.nav(); showDex(); };
-$("nextBtn").onclick = () => {
-  SFX.nav();
-  const pos = DEX_ORDER.indexOf(P.idx);
-  const order = DEX_ORDER.map((_, k) => DEX_ORDER[(pos + 1 + k) % DEX_ORDER.length]);
-  const next = order.find(k => !captured[PUZZLES[k].id] && !isLocked(PUZZLES[k]));
-  next === undefined ? showDex() : open(next);
+$("nextBtn").onclick = () => { SFX.nav(); const size = sizeOf(P); wildPool(size).length ? encounter(size) : showDex(); };
+// FUIR asks for a second tap: the unfinished grid is thrown away
+let fleeArm = false, fleeT = null;
+$("fleeBtn").onclick = () => {
+  if (!fleeArm){ fleeArm = true; $("fleeBtn").textContent = "SÛR ?"; setMsg(`Touche encore <span class="hl">FUIR</span> pour abandonner cette grille.`); SFX.nav();
+    clearTimeout(fleeT); fleeT = setTimeout(() => { fleeArm = false; $("fleeBtn").textContent = "FUIR"; }, 3000); return; }
+  fleeArm = false; clearTimeout(fleeT); flee();
 };
 function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = soundOn ? "SON" : "MUET"; }
 $("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); SFX.nav(); };

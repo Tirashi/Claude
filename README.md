@@ -44,6 +44,9 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 
 - 153 grilles : 8 en 10×10, 139 en 15×15, 3 en 15×10 et 3 en 20×20 (Dracaufeu, Léviator et Mewtwo), toutes résolubles par pure logique, sans deviner (vérifié par un solveur). Le Dex est rangé par numéro de Pokédex.
 - Les 151 Pokémon de la première génération au complet (de Bulbizarre à Mew), plus Togepi et la Poké Ball.
+- **Hautes herbes** : on choisit une taille de grille et un Pokémon sauvage pas encore capturé de cette taille est tiré au hasard. Son nom et son numéro restent cachés jusqu'à la fin de la grille ; il apparaît ensuite dans le Dex, où l'on peut refaire sa grille pour battre son temps.
+- Une rencontre en cours par taille : quitter la grille la met de côté, et le bouton de la taille devient REPRENDRE. FUIR (deux appuis) abandonne la grille et renvoie le Pokémon dans les hautes herbes.
+- Les cases des Pokémon pas encore rencontrés restent vides dans le Dex. Les grilles commencées avant l'arrivée des hautes herbes y restent accessibles (« en cours »).
 - Lignes d'évolution complètes de Roucool, Minidraco et Caninos.
 - Les trois oiseaux légendaires (Artikodin, Électhor, Sulfura) sont verrouillés jusqu'à ce que 10 picross soient terminés.
 - Mewtwo apparaît une fois les trois oiseaux capturés et 40 picross terminés, et Mew (Pokémon fabuleux) une fois Mewtwo capturé. Un Pokémon déjà capturé n'est jamais reverrouillé.
