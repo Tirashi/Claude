@@ -104,6 +104,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .entry.hidden{cursor:default; background:repeating-linear-gradient(45deg, var(--screen) 0 4px, var(--screen-2) 4px 8px)}
 .entry.hidden .unk{opacity:.5}
 .testnote{margin:10px 0 0; padding:8px 10px; border:3px dashed var(--ink); background:var(--gold); color:var(--ink); font-family:var(--f-display); font-size:8px; line-height:1.9}
+/* régions : Kanto, puis Johto (caché jusqu'à la capture de Mewtwo) */
+.tabs{display:flex; gap:8px; margin-bottom:10px}
+.tabs .btn{flex:1 1 0; background:var(--screen-2); color:var(--ink); box-shadow:2px 2px 0 var(--ink)}
+.tabs .btn[aria-selected="true"]{background:var(--dex-lo); color:var(--paper)}
+.tabs .btn.johto[aria-selected="true"]{background:#c8a030; color:var(--ink)}
+.tabs .btn.new::after{content:" NEW"; color:var(--dex)}
+#dexView.johto .grass{box-shadow:0 0 0 3px #c8a030, 3px 3px 0 3px var(--ink-soft)}
+#dexView.johto .entry{border-color:#7a5a10}
+#dexView.johto .meter span{background:#c8a030}
 /* transfert de sauvegarde */
 .xfer-open{display:flex; justify-content:center; margin-top:14px}
 .xfer{margin-top:14px; border:3px solid var(--ink); background:var(--screen); padding:12px; display:flex; flex-direction:column; gap:10px; box-shadow:3px 3px 0 var(--ink-soft)}
@@ -200,6 +209,10 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
     <div class="screen">
       <!-- Dex list -->
       <section id="dexView">
+        <div class="tabs" id="tabs" role="tablist" aria-label="Pokédex" hidden>
+          <button class="btn" type="button" role="tab" id="tabKanto">KANTO</button>
+          <button class="btn johto" type="button" role="tab" id="tabJohto">JOHTO</button>
+        </div>
         <div class="bar"><span>CAPTURÉS <b id="capCount">0/0</b></span><div class="meter" aria-hidden="true"><span id="capBar"></span></div></div>
         <p class="testnote" id="testNote" hidden>MODE TEST : toutes les grilles du Dex sont jouables, légendaires compris. Les captures comptent comme d'habitude. Touche 5 fois le titre pour le couper.</p>
         <p class="dexmsg" id="dexMsg" aria-live="polite"></p>
@@ -2974,14 +2987,25 @@ function legendMsg(){
 const dexNum = p => p.no === "OBJ" ? 0 : parseInt(p.no, 10);
 const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - dexNum(PUZZLES[b]));
 
+/* ---------- regions: Johto opens (hidden until then) once Mewtwo is captured ---------- */
+const johtoUnlocked = () => !!captured[MEWTWO.id];
+const johtoVisible = () => johtoUnlocked() || testMode;
+// Togepi (#175) waits in the Kanto Dex and moves to Johto when it opens
+const regionOf = p => p.no !== "OBJ" && dexNum(p) > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto";
+let region = store.get("region", "kanto");
+const curRegion = () => region === "johto" && johtoVisible() ? "johto" : "kanto";
+function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); renderList(); }
+
 /* ---------- hautes herbes : the wild Pokémon is drawn at random among those not yet captured ---------- */
 const sizeOf = p => p.art[0].length + "x" + p.art.length;
-const SIZES = [...new Set(PUZZLES.map(sizeOf))].sort((a, b) => { const [aw, ah] = a.split("x").map(Number), [bw, bh] = b.split("x").map(Number); return aw*ah - bw*bh; });
-const wildPool = size => PUZZLES.filter(p => !p.legend && !captured[p.id] && sizeOf(p) === size);
-function currentEncounter(size){
-  const id = encounters[size], p = id && PUZZLES.find(q => q.id === id);
-  if (p && !p.legend && !captured[id] && sizeOf(p) === size) return p;
-  if (id){ delete encounters[size]; store.set("encounters", encounters); }
+const bySize = (a, b) => { const [aw, ah] = a.split("x").map(Number), [bw, bh] = b.split("x").map(Number); return aw*ah - bw*bh; };
+const sizesOf = r => [...new Set(PUZZLES.filter(p => regionOf(p) === r).map(sizeOf))].sort(bySize);
+const wildPool = (size, r = curRegion()) => PUZZLES.filter(p => !p.legend && !captured[p.id] && sizeOf(p) === size && regionOf(p) === r);
+const encKey = (size, r = curRegion()) => r === "kanto" ? size : r + ":" + size;   // Kanto keeps the old keys
+function currentEncounter(size, r = curRegion()){
+  const k = encKey(size, r), id = encounters[k], p = id && PUZZLES.find(q => q.id === id);
+  if (p && !p.legend && !captured[id] && sizeOf(p) === size && regionOf(p) === r) return p;
+  if (id){ delete encounters[k]; store.set("encounters", encounters); }   // an unfinished grid stays in progress, in its own Dex
   return null;
 }
 const inPlay = p => !!progress[p.id] || Object.values(encounters).includes(p.id);
@@ -2993,7 +3017,7 @@ function encounter(size){
     const fresh = pool.filter(q => !progress[q.id]);   // older unfinished grids stay in the Dex, so prefer new ones
     const pick = fresh.length ? fresh : pool;
     p = pick[Math.floor(Math.random()*pick.length)];
-    encounters[size] = p.id; store.set("encounters", encounters);
+    encounters[encKey(size)] = p.id; store.set("encounters", encounters);
   }
   open(PUZZLES.indexOf(p));
 }
@@ -3009,7 +3033,7 @@ function flee(){
 }
 function renderSizes(){
   const box = $("sizes"); box.innerHTML = "";
-  for (const size of SIZES){
+  for (const size of sizesOf(curRegion())){
     const left = wildPool(size).length, cur = currentEncounter(size);
     const b = document.createElement("button"); b.type = "button"; b.className = "btn" + (cur ? " resume" : "");
     const label = size.replace("x", "×");
@@ -3024,7 +3048,12 @@ function renderSizes(){
 /* ---------- Dex list ---------- */
 function renderList(){
   const list = $("list"); list.innerHTML = "";
-  DEX_ORDER.forEach(idx => { const p = PUZZLES[idx];
+  const r = curRegion(), shown = DEX_ORDER.filter(idx => regionOf(PUZZLES[idx]) === r);
+  $("tabs").hidden = !johtoVisible();
+  $("tabKanto").setAttribute("aria-selected", r === "kanto"); $("tabJohto").setAttribute("aria-selected", r === "johto");
+  $("tabJohto").classList.toggle("new", !store.get("johtoSeen", false) && r !== "johto");
+  $("dexView").classList.toggle("johto", r === "johto");
+  shown.forEach(idx => { const p = PUZZLES[idx];
     const got = captured[p.id];
     const b = document.createElement("button");
     b.className = "entry" + (p.legend ? " legend" : ""); b.type = "button";
@@ -3060,10 +3089,11 @@ function renderList(){
     b.onclick = () => { SFX.nav(); open(idx); };
     list.appendChild(b);
   });
-  const n = Object.keys(captured).filter(id => PUZZLES.some(p => p.id === id)).length;
-  $("capCount").textContent = `${n}/${PUZZLES.length}`;
-  $("capBar").style.width = (100*n/PUZZLES.length)+"%";
-  $("dexMsg").innerHTML = legendMsg(); $("dexMsg").hidden = !legendMsg();
+  const n = shown.filter(idx => captured[PUZZLES[idx].id]).length;
+  $("capCount").textContent = `${n}/${shown.length}`;
+  $("capBar").style.width = (100*n/shown.length)+"%";
+  const msg = r === "kanto" ? legendMsg() : n ? "" : "Bienvenue à <b>Johto</b> ! De nouveaux Pokémon se cachent dans les hautes herbes.";
+  $("dexMsg").innerHTML = msg; $("dexMsg").hidden = !msg;
   renderSizes();
   $("testNote").hidden = !testMode;
 }
@@ -3076,6 +3106,7 @@ function showDex(){
 function open(idx, saved){
   if (isLocked(PUZZLES[idx]) && !testMode) return;
   fleeArm = false;
+  if (regionOf(PUZZLES[idx]) !== curRegion()){ region = regionOf(PUZZLES[idx]); store.set("region", region); }
   P = PUZZLES[idx]; P.idx = idx; H = P.art.length; W = P.art[0].length;
   sol = P.art.flatMap(r => [...r].map(ch => filled(ch) ? 1 : 0));
   rowClues = [...Array(H).keys()].map(r => clueOf(sol.slice(r*W, r*W+W)));
@@ -3172,6 +3203,7 @@ function afterChange(prev){
 }
 
 function win(){
+  const wasJohto = johtoUnlocked();
   const wasOpen = legendsOpen(), wasMew = mewtwoOpen(), wasFab = mewOpen() || !!captured[PUZZLES.find(q => q.legend === "mew").id];
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed);
   delete progress[P.id]; store.set("progress", progress);
@@ -3201,6 +3233,10 @@ function win(){
   if (!wasFab && mewOpen()){
     $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON FABULEUX SE MONTRE… MEW !</span>`;
     setTimeout(() => blip([1047, 1319, 1568, 2093, 1568, 2093, 2637], "triangle", .12, .06), 1500);
+  }
+  if (!wasJohto && johtoUnlocked()){
+    $("winStats").innerHTML += `<br><span class="hl">UN NOUVEAU POKÉDEX S'OUVRE… JOHTO !</span>`;
+    setTimeout(() => blip([392, 523, 659, 784, 659, 784, 1047, 1319, 1047, 1568], "triangle", .11, .06), 2600);
   }
   if (!wasMew && mewtwoOpen()){
     $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON MYSTÉRIEUX EST APPARU… MEWTWO !</span>`;
@@ -3308,6 +3344,8 @@ $("fleeBtn").onclick = () => {
   fleeArm = false; clearTimeout(fleeT); flee();
 };
 let titleTaps = 0, titleT = null;
+$("tabKanto").onclick = () => { if (curRegion() !== "kanto"){ SFX.nav(); setRegion("kanto"); } };
+$("tabJohto").onclick = () => { if (curRegion() !== "johto"){ SFX.nav(); setRegion("johto"); } };
 $("title").addEventListener("click", () => {
   titleTaps++; clearTimeout(titleT); titleT = setTimeout(() => { titleTaps = 0; }, 1500);
   if (titleTaps < 5) return;

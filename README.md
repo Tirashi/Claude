@@ -44,6 +44,7 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 
 - 162 grilles : 8 en 10×10, 148 en 15×15, 3 en 15×10 et 3 en 20×20 (Dracaufeu, Léviator et Mewtwo), toutes résolubles par pure logique, sans deviner (vérifié par un solveur). Le Dex est rangé par numéro de Pokédex.
 - Les 151 Pokémon de la première génération au complet (de Bulbizarre à Mew), les starters de la deuxième génération et leurs évolutions (n° 152 à 160), plus Togepi et la Poké Ball.
+- **Deux Pokédex, Kanto et Johto** : le Dex de Johto reste caché jusqu'à la capture de Mewtwo, puis un onglet JOHTO apparaît (liste, compteur et hautes herbes propres à chaque région). Togepi attend dans le Dex de Kanto et passe dans celui de Johto à ce moment-là, capture comprise.
 - **Hautes herbes** : on choisit une taille de grille et un Pokémon sauvage pas encore capturé de cette taille est tiré au hasard. Son nom et son numéro restent cachés jusqu'à la fin de la grille ; il apparaît ensuite dans le Dex, où l'on peut refaire sa grille pour battre son temps.
 - Une rencontre en cours par taille : quitter la grille la met de côté, et le bouton de la taille devient REPRENDRE. FUIR (deux appuis) abandonne la grille et renvoie le Pokémon dans les hautes herbes.
 - Les cases des Pokémon pas encore rencontrés restent vides dans le Dex. Les grilles commencées avant l'arrivée des hautes herbes y restent accessibles (« en cours »).
