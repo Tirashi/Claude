@@ -3452,12 +3452,13 @@ const isWild = p => !p.legend && !captured[p.id];   // still hidden in the grass
 function encounter(size){
   let p = currentEncounter(size);
   if (!p){
-    const pool = wildPool(size); if (!pool.length) return;
+    const pool = wildPool(size), dogs = roamingDogs(size);
+    if (!pool.length && !dogs.length) return;
     const fresh = pool.filter(q => !progress[q.id]);   // older unfinished grids stay in the Dex, so prefer new ones
     const pick = fresh.length ? fresh : pool;
     p = pick[Math.floor(Math.random()*pick.length)];
-    const dogs = curRegion() === "johto" && dogsAwake() ? DOGS.filter(d => !captured[d.id] && sizeOf(d) === size) : [];
-    if (dogs.length){
+    if (!pool.length) p = dogs[Math.floor(Math.random()*dogs.length)];   // grass emptied: only the dogs are left
+    else if (dogs.length){
       const miss = store.get("dogMiss", 0);
       if (miss + 1 >= DOG_PITY || Math.random() < DOG_CHANCE){ p = dogs[Math.floor(Math.random()*dogs.length)]; store.set("dogMiss", 0); }
       else store.set("dogMiss", miss + 1);
@@ -3477,15 +3478,18 @@ function flee(){
   $("playView").hidden = true; $("dexView").hidden = false; renderList();
   $("dexMsg").hidden = false; $("dexMsg").innerHTML = dog ? `<b>${dog}</b> s'est enfui ! Il rôde toujours dans les hautes herbes…` : "Tu as pris la fuite ! Le Pokémon est retourné dans les <b>hautes herbes</b>.";
 }
+// dogs still to catch, roaming the Johto grass of that size
+const roamingDogs = (size, r = curRegion()) => r === "johto" && dogsAwake() ? DOGS.filter(d => !captured[d.id] && sizeOf(d) === size) : [];
 function renderSizes(){
   const box = $("sizes"); box.innerHTML = "";
   for (const size of sizesOf(curRegion())){
-    const left = wildPool(size).length, cur = currentEncounter(size);
+    const left = wildPool(size).length, cur = currentEncounter(size), roam = roamingDogs(size).length;
     const b = document.createElement("button"); b.type = "button"; b.className = "btn" + (cur ? " resume" : "");
     const label = size.replace("x", "×");
-    b.innerHTML = `<span>${label}</span><small>${cur ? "REPRENDRE" : left ? left + (left > 1 ? " RESTANTS" : " RESTANT") : "COMPLET"}</small>`;
-    b.disabled = !left;
-    b.setAttribute("aria-label", cur ? `Reprendre la rencontre en ${label}` : left ? `Chercher un Pokémon sauvage en ${label}, ${left} restants` : `Tous les Pokémon en ${label} sont capturés`);
+    b.innerHTML = `<span>${label}</span><small>${cur ? "REPRENDRE" : left ? left + (left > 1 ? " RESTANTS" : " RESTANT") : roam ? "LÉGENDAIRES" : "COMPLET"}</small>`;
+    b.disabled = !left && !cur && !roam;
+    b.setAttribute("aria-label", cur ? `Reprendre la rencontre en ${label}` : left ? `Chercher un Pokémon sauvage en ${label}, ${left} restants`
+      : roam ? `Chercher les Pokémon légendaires qui rôdent en ${label}` : `Tous les Pokémon en ${label} sont capturés`);
     b.onclick = () => { SFX.nav(); encounter(size); };
     box.appendChild(b);
   }
@@ -3709,7 +3713,7 @@ function win(){
     $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON MYSTÉRIEUX EST APPARU… MEWTWO !</span>`;
     setTimeout(() => blip([220, 233, 247, 262, 523, 494, 466, 440, 880, 1760], "square", .14, .05), 1300);
   }
-  $("nextBtn").hidden = !wildPool(sizeOf(P)).length;
+  $("nextBtn").hidden = !wildPool(sizeOf(P)).length && !roamingDogs(sizeOf(P)).length;
   $("nextBtn").textContent = `${sizeOf(P).replace("x", "×")} ▶`;
   $("nextBtn").setAttribute("aria-label", `Nouvelle rencontre en ${sizeOf(P).replace("x", "×")}`);
   $("win").hidden = false; ($("nextBtn").hidden ? $("backBtn2") : $("nextBtn")).focus({preventScroll:true});
@@ -3802,7 +3806,7 @@ $("hintBtn").onclick = () => {
 };
 $("backBtn").onclick = () => { SFX.nav(); showDex(); };
 $("backBtn2").onclick = () => { SFX.nav(); showDex(); };
-$("nextBtn").onclick = () => { SFX.nav(); const size = sizeOf(P); wildPool(size).length ? encounter(size) : showDex(); };
+$("nextBtn").onclick = () => { SFX.nav(); const size = sizeOf(P); wildPool(size).length || roamingDogs(size).length ? encounter(size) : showDex(); };
 // FUIR asks for a second tap: the unfinished grid is thrown away
 let fleeArm = false, fleeT = null;
 $("fleeBtn").onclick = () => {
