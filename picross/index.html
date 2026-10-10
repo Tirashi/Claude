@@ -155,6 +155,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .btn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink)}
 .btn:focus-visible{outline:3px dashed var(--gold); outline-offset:3px}
 .btn[aria-pressed="true"]{background:var(--gold); color:var(--ink)}
+.tools .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
 .mode{display:inline-flex; border:3px solid var(--ink); border-radius:12px; overflow:hidden; box-shadow:3px 3px 0 var(--ink)}
 .mode .btn{border:0; border-radius:0; box-shadow:none}
 .mode .btn + .btn{border-left:3px solid var(--ink)}
@@ -256,6 +257,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
   <div class="help">
     <p>Choisis une taille dans les <b>hautes herbes</b> : un Pokémon sauvage, encore inconnu, se cache dans la grille. Remplis-la pour le révéler et l'enregistrer dans ton Dex ; tu pourras ensuite la refaire depuis le Dex pour battre ton temps. Les légendaires, eux, apparaissent directement dans le Dex.</p>
     <p>Les nombres indiquent les blocs de cases pleines de chaque ligne et colonne, dans l'ordre.</p>
+    <p>3 indices par grille : chacun complète une ligne au hasard.</p>
     <p>Clic ou toucher : remplir. Clic droit ou outil CROIX : marquer une case vide. Glisse pour peindre une ligne entière.</p>
     <p>Clavier : <kbd>←↑→↓</kbd> déplacer · <kbd>ESPACE</kbd> remplir · <kbd>X</kbd> croix · <kbd>Z</kbd> annuler</p>
     <p class="legal">Projet de fan à usage personnel, sans lien avec Nintendo, Game Freak ou The Pokémon Company. Pixel art dessiné pour ce jeu.</p>
@@ -3080,7 +3082,7 @@ function open(idx, saved){
   colClues = [...Array(W).keys()].map(c => clueOf([...Array(H).keys()].map(r => sol[r*W+c])));
   const prog = saved || progress[P.id];
   cells = prog && prog.cells && prog.cells.length === W*H ? prog.cells.slice() : new Array(W*H).fill(0);
-  elapsed = prog ? prog.elapsed || 0 : 0; hints = prog ? prog.hints || 0 : 0;
+  elapsed = prog ? prog.elapsed || 0 : 0; hints = prog ? prog.hints || 0 : 0; syncHint();
   history = []; solved = false; cursor = 0;
   $("dexView").hidden = true; $("playView").hidden = false;
   $("win").hidden = true; $("tools").hidden = false;
@@ -3096,7 +3098,7 @@ function open(idx, saved){
 function tick(){ if (solved || !P) return; elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed); }
 function saveProgress(){
   if (!P || solved) return;
-  if (cells.some(v => v)) progress[P.id] = {cells, elapsed, hints}; else delete progress[P.id];
+  if (cells.some(v => v) || hints) progress[P.id] = {cells, elapsed, hints}; else delete progress[P.id];
   store.set("progress", progress);
 }
 function setMsg(h){ $("msg").innerHTML = h; }
@@ -3273,15 +3275,25 @@ $("mCross").onclick = () => setTool("cross");
 function undo(){ if (solved || !history.length) return; cells = history.pop(); render(); saveProgress(); SFX.cross(); }
 $("undoBtn").onclick = undo;
 $("resetBtn").onclick = () => { if (solved || !cells.some(v => v)) return; const prev = cells.slice(); cells.fill(0); afterChange(prev); SFX.cross(); setMsg("Grille effacée. <span class=\"hl\">ANNULER</span> la ramène."); };
+const MAX_HINTS = 3;   // per grid; unlimited in test mode
+const hintsLeft = () => testMode ? Infinity : Math.max(0, MAX_HINTS - hints);
+function syncHint(){
+  const b = $("hintBtn"), left = hintsLeft();
+  b.textContent = testMode ? "INDICE" : `INDICE ${left}/${MAX_HINTS}`;
+  b.disabled = !left;
+  b.setAttribute("aria-label", testMode ? "Indice (illimité en mode test)" : `Indice, ${left} restant${left > 1 ? "s" : ""} sur ${MAX_HINTS}`);
+}
 $("hintBtn").onclick = () => {
   if (solved) return;
+  if (!hintsLeft()){ setMsg(`Plus d'indice pour cette grille : à toi de jouer !`); return; }
   // reveal the first row that disagrees with the picture (fills and crosses)
   const rows = [...Array(H).keys()].filter(r => [...Array(W).keys()].some(c => (cells[r*W+c] === 1) !== (sol[r*W+c] === 1) || (sol[r*W+c] === 0 && cells[r*W+c] !== 2)));
   if (!rows.length) return;
   const r = rows[Math.floor(Math.random()*rows.length)];
   const prev = cells.slice();
   for (let c = 0; c < W; c++) cells[r*W+c] = sol[r*W+c] ? 1 : 2;
-  hints++; SFX.hint(); setMsg(`Indice : la ligne <span class="hl">${r+1}</span> est complétée.`);
+  hints++; syncHint(); SFX.hint();
+  setMsg(`Indice : la ligne <span class="hl">${r+1}</span> est complétée.` + (testMode ? "" : hintsLeft() ? ` Encore <span class="hl">${hintsLeft()}</span>.` : ` C'était le dernier.`));
   afterChange(prev);
   if (!solved) for (let c = 0; c < W; c++){ const e = cellEls[r*W+c]; e.classList.remove("flash"); void e.offsetWidth; e.classList.add("flash"); }
 };
@@ -3302,6 +3314,7 @@ $("title").addEventListener("click", () => {
   titleTaps = 0; testMode = !testMode; store.set("testmode", testMode);
   blip(testMode ? [523, 659, 784, 1047] : [1047, 784, 659, 523], "square", .06, .05);
   if (P) showDex(); else renderList();
+  syncHint();
 });
 function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = soundOn ? "SON" : "MUET"; }
 $("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); SFX.nav(); };

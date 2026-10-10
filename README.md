@@ -51,9 +51,10 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 - Les trois oiseaux légendaires (Artikodin, Électhor, Sulfura) sont verrouillés jusqu'à ce que 10 picross soient terminés.
 - Mewtwo apparaît une fois les trois oiseaux capturés et 40 picross terminés, et Mew (Pokémon fabuleux) une fois Mewtwo capturé. Un Pokémon déjà capturé n'est jamais reverrouillé.
 - Les nouvelles grilles sont toujours ajoutées en fin de liste, sans toucher aux anciennes, pour que les sauvegardes restent valides.
-- **Mode test** : toucher 5 fois le titre PICROSS DEX ouvre toutes les grilles du Dex (légendaires compris) ; 5 nouveaux appuis le coupent. Les captures y comptent comme d'habitude.
+- **Mode test** : toucher 5 fois le titre PICROSS DEX ouvre toutes les grilles du Dex (légendaires compris) et rend les indices illimités ; 5 nouveaux appuis le coupent. Les captures y comptent comme d'habitude.
 - Clic ou toucher pour remplir, clic droit ou outil CROIX pour marquer, glisser pour peindre une ligne.
-- Indices barrés quand une ligne est juste, aperçu miniature, chrono, indice, annuler.
+- Indices barrés quand une ligne est juste, aperçu miniature, chrono, annuler.
+- 3 indices par grille (chacun complète une ligne), illimités en mode test. Effacer la grille ne les rend pas.
 - Progression, records et grilles en cours sauvegardés dans le navigateur.
 - **Transférer ma sauvegarde** (en bas du Dex) : copie un code dans le presse-papiers et le colle dans un autre navigateur, par exemple pour passer du navigateur intégré de Facebook à Chrome. L'import fusionne les deux progressions et garde le meilleur temps.
 
