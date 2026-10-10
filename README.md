@@ -42,8 +42,8 @@ Ouvre `queens/index.html` dans n'importe quel navigateur récent. Aucun build, a
 
 Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque grille résolue révèle un Pokémon en couleur et l'enregistre dans le Dex.
 
-- 58 grilles : 7 en 10×10, 46 en 15×15, 3 en 15×10 et 2 en 20×20 (Dracaufeu et Mewtwo), toutes résolubles par pure logique, sans deviner (vérifié par un solveur). Le Dex est rangé par numéro de Pokédex.
-- 56 Pokémon de la première génération, dont les 27 premiers du Pokédex (de Bulbizarre à Sabelette) sans trou, plus Togepi et la Poké Ball.
+- 81 grilles : 7 en 10×10, 69 en 15×15, 3 en 15×10 et 2 en 20×20 (Dracaufeu et Mewtwo), toutes résolubles par pure logique, sans deviner (vérifié par un solveur). Le Dex est rangé par numéro de Pokédex.
+- 79 Pokémon de la première génération, dont les 60 premiers du Pokédex (de Bulbizarre à Ptitard) sans trou, plus Togepi et la Poké Ball.
 - Lignes d'évolution complètes de Roucool, Minidraco et Caninos.
 - Les trois oiseaux légendaires (Artikodin, Électhor, Sulfura) sont verrouillés jusqu'à ce que 10 picross soient terminés.
 - Mewtwo apparaît une fois les trois oiseaux capturés et 40 picross terminés, et Mew (Pokémon fabuleux) une fois Mewtwo capturé. Un Pokémon déjà capturé n'est jamais reverrouillé.
