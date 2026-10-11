@@ -194,7 +194,7 @@ kbd{font-family:var(--f-display); font-size:9px; background:var(--grid-line); pa
     <ul>
       <li>Place exactement une reine dans chaque ligne, chaque colonne et chaque zone de couleur.</li>
       <li>Deux reines ne peuvent pas se toucher, même en diagonale.</li>
-      <li>Touche une case une fois pour poser un ✕, deux fois pour poser une reine, trois fois pour la vider.</li>
+      <li>Touche une case une fois pour poser une ✕, deux fois pour poser une reine, trois fois pour la vider.</li>
       <li>Glisse sur la grille pour poser plusieurs ✕ d'un coup.</li>
       <li>Avec AUTO-X, poser une reine met une ✕ sur toutes les cases qu'elle interdit. Les croix disparaissent quand tu retires la reine.</li>
     </ul>
@@ -205,9 +205,10 @@ kbd{font-family:var(--f-display); font-size:9px; background:var(--grid-line); pa
 <div class="overlay" id="overlay" hidden>
   <div class="win" role="dialog" aria-modal="true" aria-labelledby="winTitle">
     <div id="winCrown"></div>
-    <h3 id="winTitle">STAGE CLEAR!</h3>
+    <h3 id="winTitle">STAGE CLEAR !</h3>
     <div class="stats" id="winStats"></div>
     <button class="btn cursor" id="nextBtn" type="button">STAGE SUIVANT</button>
+    <a class="btn" id="rankLink" href="../classements/index.html#queens" style="text-decoration:none">CLASSEMENT</a>
   </div>
 </div>
 

@@ -43,6 +43,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(22px
 h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px,5vw,24px); color:var(--gold); text-shadow:3px 3px 0 #000}
 .win p{margin:0; font-size:20px; line-height:1.2; color:var(--dim)}
 .win p b{color:var(--text); font-weight:400}
+.win .rank{font-family:var(--f-display); font-size:9px; color:var(--text); border:2px solid var(--dim); border-radius:4px; padding:8px 10px; text-decoration:none; display:inline-block}
 .blink{font-family:var(--f-display); font-size:10px; color:var(--gold); animation:blink 1s steps(1) infinite; line-height:1.8}
 @keyframes blink{50%{opacity:0}}
 #mobileControls{position:fixed; left:0; right:0; bottom:0; display:none; justify-content:space-between; padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); z-index:6; user-select:none; -webkit-user-select:none}
@@ -166,7 +167,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
     if (invulnTimer > 0 || state !== "playing") return;
     lives--; updateHud(); sfxShipDeath(); explode(ship.x, ship.y, 34, "ship"); explode(ship.x, ship.y, 14, "fire");
     if (lives <= 0) {
-      state = "gameover";
+      state = "gameover"; overAt = performance.now();
       const rec = score > best; if (rec) { best = score; store.set("asteroids16.best", best); updateHud(); }
       const msg = `Score final : ${score}${rec && score ? " · NOUVEAU RECORD !" : ""}`;
       showOverlay("GAME OVER", msg, "ESPACE OU TOUCHE L'ÉCRAN POUR REJOUER");
@@ -181,22 +182,29 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
     const h = document.createElement("h2"); h.textContent = title; overlayWin.appendChild(h);
     if (sub) { const p = document.createElement("p"); p.textContent = sub; overlayWin.appendChild(p); }
     const b = document.createElement("div"); b.className = "blink"; b.textContent = blink || ""; overlayWin.appendChild(b);
+    if (state === "gameover"){ const a = document.createElement("a"); a.className = "rank"; a.href = "../classements/index.html#asteroids"; a.textContent = "CLASSEMENT"; overlayWin.appendChild(a); }
     overlay.hidden = false;
   }
   const hideOverlay = () => { overlay.hidden = true; };
 
   /* ---------- entrées ---------- */
+  let overAt = 0;
   addEventListener("keydown", e => {
+    if (e.repeat && state !== "playing"){ if (e.code === "Space") e.preventDefault(); return; }   // Espace maintenu : pas de relance sans voir le score
     KEY[e.code] = true;
     if (e.code === "Space") { e.preventDefault(); handleFireOrStart(); }
     if (e.code === "KeyP") togglePause();
     if (/^Arrow/.test(e.code)) e.preventDefault();
   });
   addEventListener("keyup", e => { KEY[e.code] = false; });
+  // on quitte l'onglet : touches relâchées et partie en pause
+  const release = () => { for (const k in KEY) KEY[k] = false; for (const k in mobile) mobile[k] = false; if (state === "playing") togglePause(); };
+  addEventListener("blur", release);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
   function startGame() { resetGame(); state = "playing"; hideOverlay(); }
   function handleFireOrStart() {
     ensureAudio();
-    if (state === "start" || state === "gameover") startGame();
+    if (state === "start" || (state === "gameover" && performance.now() - overAt > 700)) startGame();
     else if (state === "playing" && !ship.dead) tryFire();
   }
   function togglePause() {
@@ -214,7 +222,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
   function bindHold(id, key) {
     const el = $(id);
     el.addEventListener("pointerdown", e => { e.preventDefault(); ensureAudio(); mobile[key] = true; el.classList.add("on");
-      if (key === "fire" && (state === "start" || state === "gameover")) { mobile.fire = false; startGame(); }
+      if (key === "fire" && (state === "start" || (state === "gameover" && performance.now() - overAt > 700))) { mobile.fire = false; startGame(); }
       try { el.setPointerCapture(e.pointerId); } catch (_) {} });
     const off = () => { mobile[key] = false; el.classList.remove("on"); };
     el.addEventListener("pointerup", off); el.addEventListener("pointercancel", off);
@@ -222,8 +230,9 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
   }
   bindHold("btnLeft", "left"); bindHold("btnRight", "right"); bindHold("btnThrust", "thrust"); bindHold("btnFire", "fire");
   overlay.addEventListener("pointerdown", e => {
+    if (e.target.closest("a")) return;   // le lien CLASSEMENT
     e.preventDefault(); ensureAudio();
-    if (state === "start" || state === "gameover") startGame(); else if (state === "paused") { state = "playing"; hideOverlay(); }
+    if (state === "start" || (state === "gameover" && performance.now() - overAt > 700)) startGame(); else if (state === "paused") { state = "playing"; hideOverlay(); }
   });
 
   /* ---------- mise à jour ---------- */
@@ -384,7 +393,8 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
       "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
     if (document.body.getAttribute("data-menu") === "fixed") {
       a.style.position = "fixed"; a.style.left = "50%"; a.style.transform = "translateX(-50%)"; a.style.margin = "0";
-      a.style.bottom = "calc(18px + env(safe-area-inset-bottom, 0px))";
+      // au-dessus des commandes tactiles (et non entre elles), sous le bandeau du score
+      a.style.bottom = matchMedia("(pointer: coarse)").matches ? "calc(118px + env(safe-area-inset-bottom, 0px))" : "calc(18px + env(safe-area-inset-bottom, 0px))";
     }
     document.body.insertBefore(a, document.body.firstChild);
   } catch (e) {}

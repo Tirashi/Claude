@@ -87,6 +87,7 @@ canvas:focus{outline:none}
         <h2>GAGNÉ !</h2>
         <div class="stats" id="winStats"></div>
         <button class="btn go" id="againBtn" type="button">NOUVELLE DONNE</button>
+        <a class="btn" href="../classements/index.html#solitaire" style="text-decoration:none">CLASSEMENT</a>
       </div>
     </div>
   </div>
@@ -238,6 +239,7 @@ const RECYCLE = [".xxx.", "x...x", "x..xx", "x....", ".xxx."], NOPE = ["x...x", 
 /* ---------- état de la partie ---------- */
 let st = null, undoStack = [], drawMode = store.get("draw", 3), best = store.get("best", 0);
 function deal(){
+  clearTimeout(bounceTimer); bounce = null; celebrating = false;   // une nouvelle donne pendant la fête de victoire
   const deck = [];
   for (let s = 0; s < 4; s++) for (let r = 1; r <= 13; r++) deck.push({s, r, up: false, id: s * 13 + r - 1});
   for (let i = deck.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
@@ -352,12 +354,16 @@ function afterAction(){
 }
 function undo(){
   if (!undoStack.length || st.won || celebrating) return;
-  st = JSON.parse(undoStack.pop()); anims = []; save(); hud(); SFX.flip();
+  // annuler un coup ne rembobine ni le chrono ni les pénalités
+  const {elapsed, penal, started} = st;
+  const prev = JSON.parse(undoStack.pop());
+  prev.score = Math.max(0, prev.score - 2 * (penal - (prev.penal || 0)));   // les pénalités de temps déjà payées restent payées
+  st = Object.assign(prev, {elapsed, penal, started}); anims = []; save(); hud(); SFX.flip();
   $("autoBtn").hidden = !canAutoFinish();
 }
 
 /* ---------- victoire : les cartes rebondissent comme sous Windows ---------- */
-let celebrating = false, bounce = null;
+let celebrating = false, bounce = null, bounceTimer = null;
 function win(){
   st.won = true;
   const secs = Math.max(1, Math.round(st.elapsed / 1000));
@@ -370,7 +376,7 @@ function win(){
   $("winStats").innerHTML = `SCORE ${st.score}<br>TEMPS ${fmt(st.elapsed)} · BONUS ${bonus}<br>${record ? '<span class="new">NOUVEAU RECORD !</span>' : "RECORD " + best}<br>PARTIES GAGNÉES ${stats.won}/${stats.played}`;
   // classement familial : le record part tout seul
   if (record && window.LudoScores) LudoScores.submit("solitaire", "best", st.score, false).then(r => { if (r) $("winStats").innerHTML += `<br>${LudoScores.rankText(r).toUpperCase()} AU CLASSEMENT`; });
-  setTimeout(startBounce, 350);
+  bounceTimer = setTimeout(startBounce, 350);
 }
 function startBounce(){
   celebrating = true; anims = [];

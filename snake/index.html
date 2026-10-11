@@ -80,6 +80,7 @@ kbd{font-family:var(--f-display); font-size:8px; color:var(--text); background:#
         <h2 id="ovTitle">PRÊT ?</h2>
         <p id="ovMsg">Appuie sur une flèche ou glisse sur l'écran pour partir.</p>
         <button class="btn" id="ovBtn" type="button">JOUER</button>
+        <a class="btn" id="ovRank" href="../classements/index.html#snake" hidden style="text-decoration:none">CLASSEMENT</a>
       </div>
     </div>
   </div>
@@ -156,7 +157,10 @@ function resetGame(){
 function placeFood(){ let p; do { p = {x: Math.floor(Math.random()*GRID), y: Math.floor(Math.random()*GRID)}; } while (snake.some(s => s.x === p.x && s.y === p.y)); return p; }
 function updateHud(){ $("score").textContent = score; $("apples").textContent = apples; }
 
-function start(){ resetGame(); state = "run"; hideOverlay(); SFX.start(); clearTimeout(timer); timer = setTimeout(tick, speed); }
+let overAt = 0, gameNo = 0, overTimer = null;
+function start(){
+  if (state === "over" && performance.now() - overAt < 650) return;   // on laisse le temps de voir le score
+  clearTimeout(overTimer); gameNo++; resetGame(); state = "run"; hideOverlay(); SFX.start(); clearTimeout(timer); timer = setTimeout(tick, speed); }
 function tick(){
   if (state !== "run") return;
   if (queue.length) dir = queue.shift();
@@ -172,21 +176,22 @@ function tick(){
   timer = setTimeout(tick, speed);
 }
 function gameOver(){
-  state = "over"; clearTimeout(timer); flash = 1; SFX.die();
+  state = "over"; overAt = performance.now(); clearTimeout(timer); flash = 1; SFX.die();
+  const g = gameNo;
   const rec = score > best;
   if (rec){ best = score; store.set("snakeBestScore", best); $("best").textContent = best; }
   const msg = `Score : ${score} · ${apples} pomme${apples > 1 ? "s" : ""}${rec && score ? " · NOUVEAU RECORD !" : ""}`;
-  setTimeout(() => showOverlay("PARTIE TERMINÉE", msg, "REJOUER"), 600);
+  overTimer = setTimeout(() => showOverlay("PARTIE TERMINÉE", msg, "REJOUER"), 600);
   // classement familial : le record part tout seul
   if (rec && score && window.LudoScores) LudoScores.submit("snake", "best", score, false).then(r => {
-    if (r) setTimeout(() => { if (state === "over") $("ovMsg").textContent = msg + " · " + LudoScores.rankText(r) + " au classement"; }, 650);
+    if (r) setTimeout(() => { if (state === "over" && g === gameNo) $("ovMsg").textContent = msg + " · " + LudoScores.rankText(r) + " au classement"; }, 650);
   });
 }
 function togglePause(){
   if (state === "run"){ state = "pause"; clearTimeout(timer); SFX.pause(); showOverlay("PAUSE", "Appuie sur Espace pour continuer.", "REPRENDRE"); }
   else if (state === "pause"){ state = "run"; hideOverlay(); SFX.pause(); timer = setTimeout(tick, speed); }
 }
-function showOverlay(t, m, b){ $("ovTitle").textContent = t; $("ovMsg").textContent = m; $("ovBtn").textContent = b; $("overlay").hidden = false; }
+function showOverlay(t, m, b){ $("ovTitle").textContent = t; $("ovMsg").textContent = m; $("ovBtn").textContent = b; $("ovRank").hidden = state !== "over"; $("overlay").hidden = false; }
 function hideOverlay(){ $("overlay").hidden = true; canvas.focus({preventScroll:true}); }
 
 /* ---------- direction : file de 2 virages pour ne jamais se retourner sur soi ---------- */
@@ -201,10 +206,14 @@ function steer(name){
 }
 const KEYS = {ArrowUp:"up", ArrowDown:"down", ArrowLeft:"left", ArrowRight:"right", w:"up", z:"up", s:"down", a:"left", q:"left", d:"right"};
 window.addEventListener("keydown", e => {
-  if (e.code === "Space"){ e.preventDefault(); if (state === "run" || state === "pause") togglePause(); else if (e.target.tagName !== "BUTTON") start(); return; }
+  if (e.code === "Space"){
+    if ((e.target.tagName === "BUTTON" || e.target.tagName === "A") && state !== "run") return;   // Espace active le bouton
+    e.preventDefault(); if (state === "run" || state === "pause") togglePause(); else start(); return; }
   const n = KEYS[e.key] || KEYS[e.key.toLowerCase()]; if (!n) return;
   e.preventDefault(); steer(n);
 });
+// on quitte l'onglet : la partie se met en pause
+document.addEventListener("visibilitychange", () => { if (document.hidden && state === "run") togglePause(); });
 let sw = null;
 canvas.addEventListener("pointerdown", e => { sw = {x: e.clientX, y: e.clientY}; });
 canvas.addEventListener("pointerup", e => {

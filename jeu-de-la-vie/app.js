@@ -378,8 +378,8 @@
 
   function cellAt(ev) {
     const r = canvas.getBoundingClientRect();
-    const x = Math.floor((ev.clientX - r.left) / cellSize);
-    const y = Math.floor((ev.clientY - r.top) / cellSize);
+    const x = Math.floor((ev.clientX - r.left - canvas.clientLeft) / cellSize);
+    const y = Math.floor((ev.clientY - r.top - canvas.clientTop) / cellSize);
     if (x < 0 || y < 0 || x >= cols || y >= rows) return null;
     return { x: x, y: y };
   }
@@ -510,6 +510,7 @@
   window.addEventListener('keydown', (e) => {
     const t = e.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;   // Ctrl+C, Ctrl+R… restent ceux du navigateur
     switch (e.key.toLowerCase()) {
       case ' ': e.preventDefault(); setRunning(!running); break;
       case 'n': setRunning(false); step(); break;

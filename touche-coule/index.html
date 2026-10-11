@@ -334,6 +334,7 @@ const MUSIC = {
   stop() { clearInterval(this.timer); this.timer = null; },
   schedule() {
     const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+    if (this.next < AC.ctx.currentTime) this.next = AC.ctx.currentTime + 0.05;   // après un retard : on repart d'ici, sans rafale
     while (this.next < AC.ctx.currentTime + 0.15) {
       const s = this.step % this.lead.length, at = this.next, dest = AC.mus;
       const n = this.lead[s];
@@ -1345,6 +1346,8 @@ fitCanvases();
 refreshUI();
 $('#msg').textContent = '...';
 requestAnimationFrame(loop);
+// onglet caché : la musique se tait, et reprend au retour
+document.addEventListener("visibilitychange", () => { if (!AC.ctx) return; if (document.hidden) AC.ctx.suspend(); else AC.ctx.resume(); });
 </script>
 <script>
 /* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */

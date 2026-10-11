@@ -218,7 +218,7 @@ h1 span{text-shadow:3px 3px 0 #000}
     return lv === 13 ? 100 : 80;
   }
   function updateHUD() { scoreEl.textContent = score; levelEl.textContent = level; linesEl.textContent = linesCleared; }
-  function hardDrop() { let n = 0; while (!collides(current, 0, 1)) { current.y++; n++; } if (n) SFX.drop(); lockPiece(); }
+  function hardDrop() { let n = 0; while (!collides(current, 0, 1)) { current.y++; n++; } if (n){ SFX.drop(); score += 2 * n; updateHUD(); } lockPiece(); }   // 2 points par ligne, comme l'original
   function lockPiece() {
     merge();
     const full = getFullRows();
@@ -267,14 +267,14 @@ h1 span{text-shadow:3px 3px 0 #000}
 
   function showOverlay(title, msg, btn) { overlayTitle.textContent = title; overlayScore.textContent = msg; overlayBtn.textContent = btn; overlay.hidden = false; }
   function endGame() {
-    gameOver = true; SFX.over();
+    gameOver = true; SFX.over(); const g = gameNo;
     const rec = score > best;
     if (rec) { best = score; store.set("tetris16.best", best); bestEl.textContent = best; }
     const msg = `Score final : ${score}${rec && score ? " · NOUVEAU RECORD !" : ""}`;
     showOverlay("GAME OVER", msg, "REJOUER");
     // classement de la Ludothèque : chaque record part tout seul
     if (rec && score && window.LudoScores) LudoScores.submit("tetris", "best", score, false).then(r => {
-      if (r && gameOver) overlayScore.textContent = msg + ` · ${r.rank === 1 ? "1er" : r.rank + "e"} sur ${r.total} au classement`;
+      if (r && gameOver && g === gameNo) overlayScore.textContent = msg + ` · ${LudoScores.rankText(r)} au classement`;
     });
     if (animFrame) cancelAnimationFrame(animFrame);
   }
@@ -284,7 +284,9 @@ h1 span{text-shadow:3px 3px 0 #000}
     if (paused) showOverlay("PAUSE", "", "REPRENDRE");
     else { overlay.hidden = true; lastTime = performance.now(); loop(lastTime); }
   }
+  let gameNo = 0;
   function resetGame() {
+    gameNo++;
     board = createEmptyBoard(); score = 0; level = 1; linesCleared = 0; dropInterval = 800; dropTimer = 0;
     clearingRows = []; clearAnimTimer = 0; paused = false; gameOver = false; started = true;
     updateHUD(); next = createPiece(randomType()); spawnPiece();
@@ -295,9 +297,16 @@ h1 span{text-shadow:3px 3px 0 #000}
   }
   function loop(time) {
     if (paused || gameOver) return;
-    const delta = time - lastTime; lastTime = time;
+    const delta = Math.min(100, time - lastTime); lastTime = time;   // pas de chute en rafale au retour sur l'onglet
     if (clearingRows.length) { clearAnimTimer += delta; if (clearAnimTimer >= CLEAR_ANIM_DURATION) finishClear(); }
-    else { dropTimer += delta; if (dropTimer > dropInterval) { dropTimer = 0; if (!collides(current, 0, 1)) current.y++; else lockPiece(); } }
+    else {
+      // on garde le reste du temps : aux niveaux rapides, une pièce peut descendre de plusieurs cases par image
+      dropTimer += delta;
+      while (dropTimer >= dropInterval && current && !clearingRows.length && !gameOver){
+        dropTimer -= dropInterval;
+        if (!collides(current, 0, 1)) current.y++; else { lockPiece(); dropTimer = 0; break; }
+      }
+    }
     draw();
     animFrame = requestAnimationFrame(loop);
   }
@@ -309,8 +318,10 @@ h1 span{text-shadow:3px 3px 0 #000}
     else if (a === "rotate") rotate(); else if (a === "hard") hardDrop();
     draw();
   }
+  // on quitte l'onglet : pause
+  document.addEventListener("visibilitychange", () => { if (document.hidden && started && !gameOver && !paused) togglePause(); });
   document.addEventListener("keydown", e => {
-    if ((!started || gameOver) && (e.key === "Enter" || e.key === " ")) { if (e.target.tagName !== "BUTTON") { e.preventDefault(); resetGame(); } return; }
+    if ((!started || gameOver) && (e.key === "Enter" || e.key === " ")) { if (!e.target.closest("a, button, input, select")) { e.preventDefault(); resetGame(); } return; }
     const map = { ArrowLeft: "left", ArrowRight: "right", ArrowDown: "soft", ArrowUp: "rotate", " ": "hard" };
     if (map[e.key]) { e.preventDefault(); act(map[e.key]); }
     else if (e.key === "p" || e.key === "P") togglePause();
