@@ -62,6 +62,8 @@ canvas:focus-visible{outline:3px dashed var(--snow); outline-offset:3px}
 .btn:active,.btn.on{transform:translate(3px,3px); box-shadow: inset 3px 3px 0 rgba(0,0,0,.25), 1px 1px 0 #000}
 .btn:focus-visible{outline:3px dashed var(--snow); outline-offset:3px}
 .btn small{display:block; font-size:7px; margin-top:8px; opacity:.8}
+/* 32 bits : reflet bombé sur les boutons et les onglets */
+.btn, .mini, .tabs a, .tabs span{background-image:linear-gradient(to bottom, rgba(255,255,255,.28), rgba(255,255,255,.08) 48%, rgba(0,0,0,0) 52%, rgba(0,0,0,.18))}
 .mini{font-size:8px; padding:8px 10px; background:var(--wood-lo); border-width:3px; box-shadow:3px 3px 0 #000}
 .info{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:16px}
 .card{background:#1a2a36; border:3px solid var(--ink); padding:14px; box-shadow:4px 4px 0 #000; min-width:0}
@@ -129,10 +131,17 @@ const store = {
   get(k, d){ try{ const v = localStorage.getItem("injagility."+k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem("injagility."+k, JSON.stringify(v)); }catch(e){} }
 };
-// le chien : celui choisi dans le chenil du mode Parcours
-const C32 = window.Chiens32, OUT = C32.OUT;
-const DOGF = C32.frames((store.get("parcours", {}) || {}).dog || "bernois");
-const STRIDE = 76 * DOGF.breed.s;   // distance parcourue pendant une foulée de galop (8 images)
+// le chien : au choix sur l'écran titre (par défaut, celui du chenil du mode Parcours)
+const C32 = window.Chiens32, OUT = C32.OUT, BREEDS = C32.BREEDS;
+let breedIdx = Math.max(0, BREEDS.findIndex(b => b.id === (store.get("dog", null) || (store.get("parcours", {}) || {}).dog || "bernois")));
+let DOGF = C32.frames(BREEDS[breedIdx].id);
+let STRIDE = 76 * DOGF.breed.s;   // distance parcourue pendant une foulée de galop (8 images)
+function setBreed(d){
+  breedIdx = (breedIdx + d + BREEDS.length) % BREEDS.length;
+  DOGF = C32.frames(BREEDS[breedIdx].id); STRIDE = 76 * DOGF.breed.s; store.set("dog", DOGF.breed.id);
+  arrowFlash = {d, t: .25}; SFX.bark();
+}
+let arrowFlash = null;
 
 /* ---------- sound ---------- */
 let actx = null, soundOn = store.get("sound", true);
@@ -227,7 +236,7 @@ function bar(x0, y0, c1, c2){
   for (const [bx, by, a] of seg){ const c = a ? c1 : c2;
     ctx.fillStyle = c[1]; ctx.fillRect(bx, by, 2, 4); ctx.fillStyle = c[0]; ctx.fillRect(bx, by, 2, 1); ctx.fillStyle = c[2]; ctx.fillRect(bx, by + 3, 2, 1); }
 }
-function shadowBar(x){ ctx.fillStyle = "#3e8636"; for (let k = 0; k < 18; k++) ctx.fillRect(Math.round(x + 4 + k * .9), GY + 9 - Math.round(k * .25), 3, 1); }
+function shadowBar(x){ ctx.fillStyle = "#3e8636"; for (let k = 0; k < 18; k++) ctx.fillRect(Math.round(x + 4 + k * .9), GY + 7 - Math.round(k * .3), 3, 1); }
 // demi-pneu : la moitié arrière avant le chien, la moitié avant après, pour qu'il passe dedans
 function ring(cx, cy, R, r, back){
   for (let y = -R; y <= R; y++) for (let xx = -R; xx <= R; xx++){
@@ -243,12 +252,12 @@ function ring(cx, cy, R, r, back){
 }
 function drawBack(o){
   const x = Math.round(o.x);
-  if (o.type === "haie"){ shadowBar(x); post(x + 18, GY - 6, 38, RED, WHITE); bar(x + 20, GY - 33, RED, WHITE); }
+  if (o.type === "haie"){ shadowBar(x); post(x + 18, GY, 44, RED, WHITE); bar(x + 20, GY - 33, RED, WHITE); }
   else if (o.type === "oxer"){ shadowBar(x); shadowBar(x + 18);
-    post(x + 18, GY - 6, 34, BLUE, YEL); post(x + 36, GY - 6, 38, BLUE, YEL);
+    post(x + 18, GY, 40, BLUE, YEL); post(x + 36, GY, 44, BLUE, YEL);
     bar(x + 20, GY - 29, BLUE, YEL); bar(x + 38, GY - 33, BLUE, YEL); }
   else if (o.type === "pneu"){
-    post(x + 30, GY - 6, 72, YEL, YEL); post(x, GY, 72, YEL, YEL);
+    post(x + 30, GY, 79, YEL, YEL);
     // la traverse du haut et les chaînes
     ctx.fillStyle = OUT; ctx.fillRect(x - 1, GY - 79, 38, 5); ctx.fillStyle = "#ffd23f"; ctx.fillRect(x, GY - 78, 36, 2); ctx.fillStyle = "#d09a1c"; ctx.fillRect(x, GY - 76, 36, 1);
     ctx.fillStyle = "#6a6378"; for (let k = 0; k < 10; k += 2){ ctx.fillRect(x + 17, GY - 74 + k, 1, 1); ctx.fillRect(x + 18, GY - 73 + k, 1, 1); }
@@ -259,9 +268,9 @@ function drawBack(o){
 }
 function drawFront(o){
   const x = Math.round(o.x);
-  if (o.type === "haie") post(x, GY, 38, RED, WHITE);
-  else if (o.type === "oxer"){ post(x, GY, 34, BLUE, YEL); }
-  else if (o.type === "pneu") ring(x + 18, GY - 48, 17, 10, false);
+  if (o.type === "haie") post(x, GY + 6, 44, RED, WHITE);
+  else if (o.type === "oxer"){ post(x, GY + 6, 40, BLUE, YEL); post(x + 18, GY + 6, 44, BLUE, YEL); }
+  else if (o.type === "pneu"){ ring(x + 18, GY - 48, 17, 10, false); post(x, GY + 6, 85, YEL, YEL); }
   else if (o.type === "tunnel"){
     const w = o.w;
     ctx.fillStyle = OUT; ctx.fillRect(x + 7, GY - 33, w - 6, 33);
@@ -279,7 +288,7 @@ function drawFront(o){
 }
 
 /* ---------- game state ---------- */
-let state = "title", best = store.get("best", 0);
+let state = "title", best = store.get("best", 0), newRecord = false;
 let dog, obs, speed, dist, score, nextGap, t, floats, dust, fault, overAt, groundPhase, clouds;
 function reset(){
   dog = {y: 0, vy: 0, ground: true, duck: false, hold: 0};
@@ -319,7 +328,7 @@ function dogBox(){
 const hit = (a, b) => a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
 
 function update(dt){
-  t += dt;
+  t += dt; if (arrowFlash) arrowFlash.t -= dt;
   // le ciel bouge même sur l'écran titre et l'écran de fin
   for (const c of clouds){ c.x -= (state === "run" ? speed : 30) * c.s * dt; if (c.x < -100) { c.x = VW + Math.random()*90; c.y = 10 + Math.random()*40; } }
   if (state !== "run") return;
@@ -358,7 +367,7 @@ function update(dt){
   dust = dust.filter(d => d.life > 0);
 }
 function gameOver(o){
-  state = "over"; overAt = performance.now(); fault = TYPES[o.type].fault;
+  state = "over"; overAt = performance.now(); fault = TYPES[o.type].fault; newRecord = score > best && score > 0;
   if (score > best){ best = score; store.set("best", best); }
   SFX.over();
 }
@@ -420,30 +429,75 @@ function draw(){
   for (const o of obs) drawFront(o);
   for (const d of dust){ ctx.fillStyle = d.life > .25 ? "#efe3c2" : d.life > .12 ? "#d8c79e" : "#b9a67c"; ctx.fillRect(Math.round(d.x), Math.round(d.y), d.life > .2 ? 3 : 2, 2); }
 
-  // HUD
-  text("OBSTACLES " + String(score).padStart(3,"0"), 12, 12, 12, "#ffffff");
-  text("RECORD " + String(best).padStart(3,"0"), VW-12, 12, 12, "#ffffff", "right");
-  if (state === "run") text(Math.floor(dist/24) + " m", 12, 30, 12, "#1f1b26", "left", null);
-  for (const f of floats) text(f.txt, f.x, Math.round(f.y), f.big ? 18 : 12, f.big ? "#ffd23f" : "#ffffff", f.big ? "center" : "left");
+  // HUD : deux plaques biseautées
+  plate(8, 8, 150, 22); plate(VW - 150 - 8, 8, 150, 22);
+  text("OBSTACLES " + String(score).padStart(3,"0"), 16, 14, 10, "#ffffff");
+  text("RECORD " + String(best).padStart(3,"0"), VW-16, 14, 10, "#ffd23f", "right");
+  if (state === "run") text(Math.floor(dist/24) + " m", 14, 36, 10, "#1f1b26", "left", null);
+  for (const f of floats) f.big ? logo(f.txt, f.x, Math.round(f.y), 18, GOLD) : text(f.txt, f.x, Math.round(f.y), 10, "#ffffff");
 
-  if (state === "title"){
-    panel(90, 56, 300, 96);
-    text("INJAGILITY", VW/2, 70, 20, "#ffffff", "center", "#d6312a");
-    text(DOGF.breed.name, VW/2, 100, 10, "#86d06a", "center");
-    text("TOUCHE OU ESPACE", VW/2, 118, 12, "#ffd23f", "center");
-    text("POUR PARTIR", VW/2, 134, 12, "#ffd23f", "center");
-  } else if (state === "over"){
-    panel(75, 54, 330, 112);
-    text("ÉLIMINÉ !", VW/2, 66, 20, "#ffffff", "center", "#d6312a");
-    text(fault, VW/2, 98, 12, "#ffd23f", "center");
-    text(`${score} OBSTACLES · ${Math.floor(dist/24)} m`, VW/2, 120, 12, "#ffffff", "center");
-    if (performance.now() - overAt > 450 && Math.floor(t*2.5) % 2) text("REJOUER : ESPACE", VW/2, 144, 12, "#86d06a", "center");
+  if (state === "title") titleScreen();
+  else if (state === "over") overScreen();
+}
+/* ---------- menus en 32 bits ---------- */
+const GOLD = ["#fff6c2", "#ffd23f", "#e0782a"], REDT = ["#ffd0c8", "#ff5a46", "#a8202a"], GREENT = ["#e6ffd0", "#8ee05a", "#3f8f34"];
+// titre en relief : contour épais, ombre portée et dégradé vertical
+function logo(s, x, y, size, ramp){
+  ctx.font = `${size}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.lineJoin = "round";
+  ctx.fillStyle = OUT; ctx.fillText(s, x + 3, y + 4);
+  ctx.lineWidth = Math.max(4, size / 4); ctx.strokeStyle = OUT; ctx.strokeText(s, x, y);
+  const g = ctx.createLinearGradient(0, y, 0, y + size); g.addColorStop(0, ramp[0]); g.addColorStop(.5, ramp[1]); g.addColorStop(1, ramp[2]);
+  ctx.fillStyle = g; ctx.fillText(s, x, y);
+}
+// plaque de verre sombre, biseautée (clair en haut à gauche, sombre en bas à droite), coins cassés
+function plate(x, y, w, h, strong){
+  ctx.fillStyle = OUT; ctx.fillRect(x + 2, y - 2, w - 4, h + 4); ctx.fillRect(x - 2, y + 2, w + 4, h - 4); ctx.fillRect(x, y, w, h);
+  const g = ctx.createLinearGradient(0, y, 0, y + h);
+  g.addColorStop(0, strong ? "rgba(48,70,104,.96)" : "rgba(40,58,86,.82)"); g.addColorStop(1, strong ? "rgba(16,26,44,.96)" : "rgba(14,22,38,.82)");
+  ctx.fillStyle = g; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+  ctx.fillStyle = "rgba(160,200,240,.55)"; ctx.fillRect(x + 2, y + 1, w - 4, 1); ctx.fillRect(x + 1, y + 2, 1, h - 4);
+  ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.fillRect(x + 2, y + h - 2, w - 4, 1); ctx.fillRect(x + w - 2, y + 2, 1, h - 4);
+}
+// flèche pixel ◀ ▶ avec contour et ombre
+function arrow(cx, cy, dir, lit){
+  for (let k = 0; k <= 9; k++){ const hgt = 9 - k, xx = cx + dir * (k - 5); ctx.fillStyle = OUT; ctx.fillRect(xx - 1, cy - hgt - 1, 3, hgt * 2 + 3); }
+  for (let k = 0; k <= 8; k++){
+    const hgt = 8 - k, xx = cx + dir * (k - 5);
+    ctx.fillStyle = lit ? "#ffffff" : "#ffd23f"; ctx.fillRect(xx, cy - hgt, 1, hgt * 2 + 1);
+    ctx.fillStyle = lit ? "#fff6c2" : "#e0782a"; ctx.fillRect(xx, cy + 1, 1, Math.max(0, hgt));
   }
 }
-function panel(x, y, w, h){
-  ctx.fillStyle = "#1f1b26"; ctx.fillRect(x-3, y-3, w+6, h+6);
-  ctx.fillStyle = "rgba(20,33,43,.92)"; ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = "#f4efe6"; ctx.fillRect(x, y, w, 3); ctx.fillRect(x, y+h-3, w, 3); ctx.fillRect(x, y, 3, h); ctx.fillRect(x+w-3, y, 3, h);
+const TITLE_ARROWS = {left: 118, right: 362, y: 118};
+function titleScreen(){
+  ctx.fillStyle = "rgba(10,14,30,.35)"; ctx.fillRect(0, 0, VW, VH);
+  plate(76, 20, 328, 202, true);
+  logo("INJAGILITY", VW / 2, 30, 24, GOLD);
+  text("AGILITY · PARCOURS SANS FIN", VW / 2, 62, 8, "#a8d0f4", "center", null);
+  // le chien choisi, en grand sur son socle
+  const B = DOGF.breed, im = DOGF.stand, pawY = 170;
+  ctx.fillStyle = "rgba(0,0,0,.4)"; for (let y = 0; y < 5; y++){ const hw = Math.round(54 * Math.sqrt(1 - ((y - 2) / 2.6) ** 2)); ctx.fillRect(VW / 2 - hw, pawY - 3 + y, hw * 2, 1); }
+  ctx.drawImage(im, Math.round(VW / 2 - 88), pawY - C32.GROUND * 2, C32.SW * 2, C32.SH * 2);
+  const fl = arrowFlash && arrowFlash.t > 0 ? arrowFlash.d : 0, bob = Math.floor(t * 3) % 2;
+  arrow(TITLE_ARROWS.left - (fl < 0 ? 3 : bob), TITLE_ARROWS.y, -1, fl < 0);
+  arrow(TITLE_ARROWS.right + (fl > 0 ? 3 : bob), TITLE_ARROWS.y, 1, fl > 0);
+  text(B.name, VW / 2, 178, 10, "#ffd23f", "center");
+  text(`RACE ${breedIdx + 1}/${BREEDS.length} · CHANGE AVEC LES FLECHES`, VW / 2, 194, 8, "#a8d0f4", "center", null);
+  if (Math.floor(t * 2.5) % 2) text("TOUCHE OU ESPACE POUR PARTIR", VW / 2, 207, 8, "#ffffff", "center");
+}
+function overScreen(){
+  ctx.fillStyle = "rgba(10,14,30,.4)"; ctx.fillRect(0, 0, VW, VH);
+  plate(70, 28, 340, 182, true);
+  logo("ÉLIMINÉ !", VW / 2, 40, 22, REDT);
+  text(fault, VW / 2, 74, 10, "#ffd23f", "center");
+  // le chien à gauche, les chiffres à droite
+  ctx.fillStyle = "rgba(0,0,0,.4)"; for (let y = 0; y < 3; y++) ctx.fillRect(112 - 22 + y, 168 + y, 44 - y * 2, 1);
+  ctx.drawImage(DOGF.stand, 86, 170 - C32.GROUND);
+  logo(String(score), 300, 96, 32, GOLD);
+  text("OBSTACLES", 300, 134, 8, "#a8d0f4", "center", null);
+  text(`${Math.floor(dist / 24)} m`, 300, 148, 10, "#ffffff", "center");
+  if (newRecord){ if (Math.floor(t * 4) % 2) logo("NOUVEAU RECORD !", 300, 166, 10, GREENT); }
+  else text(`RECORD ${best}`, 300, 168, 8, "#ffd23f", "center", null);
+  if (performance.now() - overAt > 450 && Math.floor(t * 2.5) % 2) text("REJOUER : TOUCHE OU ESPACE", VW / 2, 192, 8, "#8ee05a", "center");
 }
 
 if (location.hash === "#test") window.__inj = () => ({obs, dog, state, score, speed});
@@ -460,6 +514,7 @@ function frame(now){
 /* ---------- input ---------- */
 document.addEventListener("keydown", e => {
   if (e.target.tagName === "BUTTON" && (e.key === " " || e.key === "Enter")) return;
+  if (state === "title" && (e.key === "ArrowLeft" || e.key === "ArrowRight")){ e.preventDefault(); setBreed(e.key === "ArrowLeft" ? -1 : 1); return; }
   if (["ArrowUp"," ","w","W","z","Z"].includes(e.key)){ e.preventDefault(); if (!e.repeat) pressJump(); }
   else if (["ArrowDown","s","S"].includes(e.key)){ e.preventDefault(); setDuck(true); }
 });
@@ -469,7 +524,12 @@ document.addEventListener("keyup", e => {
 });
 // screen: tap = jump, swipe down = duck while the finger stays down
 let touch = null;
-cv.addEventListener("pointerdown", e => { e.preventDefault(); cv.focus({preventScroll:true}); touch = {y: e.clientY, ducked: false}; pressJump(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
+cv.addEventListener("pointerdown", e => {
+  e.preventDefault(); cv.focus({preventScroll:true});
+  // sur l'écran titre, les flèches changent de race
+  if (state === "title"){ const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * VW;
+    if (x < TITLE_ARROWS.left + 34){ setBreed(-1); return; } if (x > TITLE_ARROWS.right - 34){ setBreed(1); return; } }
+  touch = {y: e.clientY, ducked: false}; pressJump(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
 cv.addEventListener("pointermove", e => { if (touch && !touch.ducked && e.clientY - touch.y > 24){ touch.ducked = true; releaseJump(); setDuck(true); } });
 const endTouch = () => { if (!touch) return; if (touch.ducked) setDuck(false); releaseJump(); touch = null; };
 cv.addEventListener("pointerup", endTouch); cv.addEventListener("pointercancel", endTouch);
