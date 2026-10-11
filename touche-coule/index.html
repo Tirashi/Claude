@@ -119,6 +119,8 @@ h1 span{color:#7fd3ff; text-shadow:3px 3px 0 #1d4ed8, 6px 6px 0 #000; margin-lef
 .endtitle.lose{color:var(--red); text-shadow:3px 3px 0 #7a0a0a, 6px 6px 0 #000}
 .endstats{display:grid; grid-template-columns:auto auto; gap:6px 24px; text-align:left}
 .endstats b{color:var(--accent); font-weight:normal; text-align:right}
+.endrank{min-height:1em}
+.endbtns{display:flex; flex-wrap:wrap; gap:12px; justify-content:center}
 
 #arsenal{width:100%; max-width:900px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:10px 12px}
 #weapons{display:flex; gap:8px; flex-wrap:wrap}
@@ -222,10 +224,12 @@ h1 span{color:#7fd3ff; text-shadow:3px 3px 0 #1d4ed8, 6px 6px 0 #000; margin-lef
     <h2 class="endtitle" id="end-title">VICTOIRE !</h2>
     <div id="end-sub"></div>
     <div class="endstats" id="end-stats"></div>
-    <button class="btn big go" id="btn-again">Rejouer</button>
+    <div id="end-rank" class="endrank"></div>
+    <div class="endbtns"><button class="btn big go" id="btn-again">Rejouer</button><a class="btn big" id="end-board" href="../classements/index.html#touchecoule" style="text-decoration:none">Classement</a></div>
   </div>
 </div>
 
+<script src="../ludo-scores.js"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -842,6 +846,9 @@ function startBattle() {
   refreshUI();
 }
 
+// meilleures victoires (le moins de tirs), gardées dans le téléphone
+const readBest = () => { try { return JSON.parse(localStorage.getItem('touchecoule.best') || '{}') || {}; } catch (e) { return {}; } };
+const writeBest = b => { try { localStorage.setItem('touchecoule.best', JSON.stringify(b)); } catch (e) {} };
 function gameOver(win) {
   S.phase = 'over'; S.busy = true;
   MUSIC.stop();
@@ -857,6 +864,18 @@ function gameOver(win) {
       `<span>Tirs</span><b>${st.shots}</b><span>Touchés</span><b>${st.hits}</b>` +
       `<span>Précision</span><b>${acc}%</b><span>Navires restants</span><b>${left}/5</b>` +
       `<span>Précision IA</span><b>${st.aiShots ? Math.round(st.aiHits / st.aiShots * 100) : 0}%</b>`;
+    // record : la victoire en le moins de tirs, par mode et par niveau de l'IA
+    $('#end-rank').textContent = '';
+    if (win){
+      const key = S.mode + ':' + S.diff, best = readBest(), rec = !best[key] || st.shots < best[key];
+      const label = `${S.mode === 'arsenal' ? 'Arsenal' : 'Classique'} · IA ${{easy: 'Facile', normal: 'Normal', hard: 'Amiral'}[S.diff]}`;
+      if (rec){ best[key] = st.shots; writeBest(best); }
+      $('#end-stats').innerHTML += `<span>Record (${label})</span><b>${best[key]} tirs</b>`;
+      if (rec) $('#end-rank').textContent = 'NOUVEAU RECORD !';
+      $('#end-board').href = `../classements/index.html#touchecoule-0-${S.mode}-${S.diff}`;
+      if (rec && window.LudoScores) LudoScores.submit('touchecoule', 'best:' + key, st.shots, true).then(r => {
+        if (r && S.phase === 'over') $('#end-rank').textContent = `NOUVEAU RECORD ! ${LudoScores.rankText(r).toUpperCase()} AU CLASSEMENT`; });
+    }
     $('#end').classList.remove('hidden');
   }, 1600);
 }

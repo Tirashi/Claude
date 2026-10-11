@@ -240,7 +240,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
   <div class="saves-open"><button class="saves-btn" id="savesBtn" type="button" aria-expanded="false" aria-controls="saves">TRANSFÉRER MES SAUVEGARDES</button></div>
   <section class="saves" id="saves" hidden aria-label="Transfert de sauvegardes">
     <h2>1. COPIER</h2>
-    <p>Dans le navigateur où tu as joué, copie toutes tes sauvegardes d'un coup : Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility (et son mode Parcours) et Solitaire. <b>Touché Coulé</b> et le <b>Jeu de la Vie</b> n'enregistrent rien.</p>
+    <p>Dans le navigateur où tu as joué, copie toutes tes sauvegardes d'un coup : Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility (et son mode Parcours), Solitaire et Touché Coulé. Le <b>Jeu de la Vie</b> n'enregistre rien.</p>
     <div class="sum" id="savesSum"></div>
     <div class="row"><button class="saves-btn" id="exportAll" type="button">COPIER MES SAUVEGARDES</button></div>
     <textarea id="exportAllBox" readonly hidden aria-label="Code de sauvegarde à copier"></textarea>
@@ -429,6 +429,7 @@ function collectSaves(){
   if (Object.keys(c).length || Object.keys(p).length) g.picross = {c, p};
   const lg = readKey("lignee.stats", {}); if (lg && Object.keys(lg).length) g.lignee = lg;
   const ld = readKey("lignee.daily", {}); if (ld && Object.keys(ld).length) g.ligneeDaily = ld;
+  const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
 }
@@ -439,6 +440,7 @@ function describeSaves(g){
   for (const [k, name] of SCORES) if (g[k]) out.push(`${name} : ${g[k]} ${k === "injagility.best" ? "obstacles" : "points"}`);
   if (g.parcours) out.push(`Injagility Parcours : ${(g.parcours.unlocked || 1) - 1} parcours réussis, ${g.parcours.wallet || 0} points, ${(g.parcours.owned || []).length} chien${(g.parcours.owned || []).length > 1 ? "s" : ""}`);
   if (g.lignee){ const n = Object.values(g.lignee).reduce((s, v) => s + (v && v.n || 0), 0); if (n) out.push(`Lignée : ${n} arbre${n > 1 ? "s" : ""} reconstitué${n > 1 ? "s" : ""}`); }
+  if (g.touchecoule){ const v = Object.values(g.touchecoule).filter(x => x > 0); if (v.length) out.push(`Touché Coulé : meilleure victoire en ${Math.min(...v)} tirs`); }
   return out;
 }
 function decodeSaves(text){
@@ -503,6 +505,11 @@ function mergeSaves(g){
       if (JSON.stringify(m) !== before){ mine[k] = m; n++; }
     }
     if (n){ writeKey("lignee.stats", mine); done.push(`Lignée : ${n} niveau${n > 1 ? "x" : ""} mis à jour`); }
+  }
+  if (g.touchecoule && typeof g.touchecoule === "object"){
+    const mine = readKey("touchecoule.best", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(g.touchecoule)) if (/^(classic|arsenal):(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
+    if (n){ writeKey("touchecoule.best", mine); done.push(`Touché Coulé : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.ligneeDaily && typeof g.ligneeDaily === "object"){
     const mine = readKey("lignee.daily", {}) || {}; let n = 0;

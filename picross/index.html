@@ -4146,7 +4146,7 @@ function win(){
       $("winStats").innerHTML += `<br>${L.rankText(r).toUpperCase()} POUR ${name}` + (hints ? ` (+${hints * HINT_MS / 1000} S D'INDICES)` : "");
       return L.board("picross", "t:" + id, 3).then(rows => { if (!rows || !rows.length || !same()) return;
         const clean = s => String(s).replace(/[<>&"]/g, "");
-        $("winStats").innerHTML += "<br>" + rows.map((x, i) => `${i + 1}. ${x.me ? "<span class=\"hl\">" + clean(x.pseudo) + "</span>" : clean(x.pseudo)} ${fmt(x.value)}`).join(" · "); });
+        $("winStats").innerHTML += "<br>" + rows.map((x, i, all) => `${all.findIndex(y => y.value === x.value) + 1}. ${x.me ? "<span class=\"hl\">" + clean(x.pseudo) + "</span>" : clean(x.pseudo)} ${fmt(x.value)}`).join(" · "); });
     });
   }
   if (!wasOpen && legendsOpen()){

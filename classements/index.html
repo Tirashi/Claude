@@ -54,14 +54,14 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
 label{font-family:var(--f-display); font-size:9px; letter-spacing:1px; display:flex; flex-direction:column; gap:6px}
 input{width:100%; font:22px/1.2 var(--f-body); color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:8px}
 
-.tabs{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px}
-@media (max-width:520px){ .tabs{grid-template-columns:repeat(2, minmax(0,1fr))} }
+.tabs{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px}
 .tabs .btn{font-size:9px; padding:12px 4px; line-height:1.5}
+@media (max-width:520px){ .tabs .btn{font-size:8px; padding:10px 2px} }
 .views{display:flex; flex-wrap:wrap; gap:8px}
 .views .btn{flex:1 1 auto; font-size:8px; padding:9px 8px}
 .ctl{display:flex; flex-direction:column; gap:10px}
 .chips{display:flex; flex-wrap:wrap; gap:8px}
-.chips .btn{flex:1 1 0; font-size:8px; padding:9px 4px; min-width:0}
+.chips .btn{flex:1 1 auto; font-size:8px; padding:9px 6px}
 select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:6px 8px}
 .note{margin:0; font-size:18px; color:var(--text-dim); text-align:center}
 .sub{display:grid; grid-template-columns:1fr 1fr; gap:10px}
@@ -141,7 +141,8 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
   // même code que l'Arbre du jour de Lignée : C2-J + date aaaammjj en base 36
   const dayCode = (mode, d) => `${mode}2-J${(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()).toString(36).toUpperCase()}`;
   const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
-  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null};
+  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal"};
+  const TCMODES = [["classic", "CLASSIQUE"], ["arsenal", "ARSENAL"]], TCAI = [["easy", "FACILE"], ["normal", "NORMAL"], ["hard", "AMIRAL"]];
   const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
   const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
     day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "");
@@ -178,6 +179,9 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       {label: "INFINI", game: "injagility", board: () => "best", fmt: v => N(v) + " obst.", title: () => "INFINI · OBSTACLES FRANCHIS"},
       {label: "PARCOURS · TOTAL", game: "parcours", board: () => "total", fmt: v => N(v) + " pts", title: () => "PARCOURS · TOTAL DES MEILLEURS SCORES", play: "../injagility/parcours.html"},
       {label: "PAR PARCOURS", ctl: ["plevel"], game: "parcours", board: () => "lvl:" + st.plevel, fmt: v => N(v) + " pts", title: () => `PARCOURS N° ${st.plevel}`, play: "../injagility/parcours.html"}]},
+    {id: "touchecoule", name: "TOUCHÉ COULÉ", play: "../touche-coule/index.html", views: [
+      {label: "MEILLEURE VICTOIRE", ctl: ["tcmode", "tcai"], game: "touchecoule", board: () => `best:${st.tcmode}:${st.tcai}`, fmt: v => N(v) + " tirs",
+       title: () => `${TCMODES.find(m => m[0] === st.tcmode)[1]} · IA ${TCAI.find(m => m[0] === st.tcai)[1]}`, note: "La victoire en le moins de tirs, par mode et par niveau de l'IA."}]},
   ];
   const ord = n => n === 1 ? "1er" : n + "e";
   const res = (t, ok) => { $("res").textContent = t; $("res").className = "res " + (ok ? "ok" : "err"); };
@@ -189,7 +193,8 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     if (h[0] === "lignee" && /^[CR]$/.test(h[1] || "")) st.mode = h[1];
     else if (/^\d$/.test(h[1] || "")) st.view = +h[1];
     if (/^[CR]$/.test(h[2] || "")) st.mode = h[2];
-    if (h[0] === "parcours"){ st.game = "injagility"; st.view = 2; } }
+    if (h[0] === "parcours"){ st.game = "injagility"; st.view = 2; }
+    if (h[0] === "touchecoule"){ if (/^(classic|arsenal)$/.test(h[2] || "")) st.tcmode = h[2]; if (/^(easy|normal|hard)$/.test(h[3] || "")) st.tcai = h[3]; } }
 
   function button(label, pressed, onclick, extra){ const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.textContent = label;
     b.setAttribute("aria-pressed", !!pressed); b.onclick = onclick; if (extra) Object.assign(b, extra); return b; }
@@ -209,6 +214,9 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       if (c === "day") box.appendChild(stepper(dayName(), () => { st.back = Math.min(60, st.back + 1); view_(); }, () => { st.back = Math.max(0, st.back - 1); view_(); }, st.back >= 60, st.back === 0));
       if (c === "level"){ const r = document.createElement("div"); r.className = "chips";
         LEVELS.forEach((l, i) => r.appendChild(button(l, st.level === i + 1, () => { st.level = i + 1; view_(); }))); box.appendChild(r); }
+      if (c === "tcmode" || c === "tcai"){ const r = document.createElement("div"); r.className = "chips";
+        for (const [k, l] of c === "tcmode" ? TCMODES : TCAI) r.appendChild(button(l, st[c] === k, () => { st[c] = k; view_(); }));
+        box.appendChild(r); }
       if (c === "size"){ const r = document.createElement("div"); r.className = "chips";
         for (let n = 5; n <= 9; n++) r.appendChild(button(`${n}×${n}`, st.size === n, () => { st.size = n; view_(); })); box.appendChild(r); }
       if (c === "plevel") box.appendChild(stepper(`PARCOURS N° ${st.plevel}`, () => { st.plevel = Math.max(1, st.plevel - 1); view_(); }, () => { st.plevel++; view_(); }, st.plevel <= 1, st.plevel >= 999));
@@ -246,23 +254,25 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
   let ticket = 0;
   function show(rows, fmt){
     rows = rows || [];
+    // ex æquo au même rang : 1, 2, 2, 4 (les lignes arrivent déjà triées)
+    const rank = []; rows.forEach((r, i) => rank[i] = i && r.value === rows[i - 1].value ? rank[i - 1] : i + 1);
     [1, 0, 2].forEach(i => {
       const r = rows[i], s = document.createElement("div");
-      s.className = `step p${i + 1}` + (r ? (r.me ? " me" : "") : " empty");
+      s.className = `step p${r ? Math.min(3, rank[i]) : i + 1}` + (r ? (r.me ? " me" : "") : " empty");
       const n = document.createElement("div"); n.className = "name"; n.textContent = r ? r.pseudo : "…";
       const v = document.createElement("div"); v.className = "val"; v.textContent = r ? fmt(r.value) : "";
-      const b = document.createElement("div"); b.className = "block"; b.textContent = i + 1;
+      const b = document.createElement("div"); b.className = "block"; b.textContent = r ? rank[i] : i + 1;
       s.append(n, v, b); $("podium").appendChild(s);
     });
     rows.slice(3).forEach((r, k) => {
       const li = document.createElement("li"); if (r.me) li.className = "me";
-      const a = document.createElement("span"); a.className = "r"; a.textContent = k + 4;
+      const a = document.createElement("span"); a.className = "r"; a.textContent = rank[k + 3];
       const n = document.createElement("span"); n.className = "n"; n.textContent = r.pseudo;
       const v = document.createElement("span"); v.className = "v"; v.textContent = fmt(r.value);
       li.append(a, n, v); $("list").appendChild(li);
     });
     const me = rows.findIndex(r => r.me);
-    $("mine").textContent = me >= 0 ? `TU ES ${ord(me + 1).toUpperCase()} SUR ${rows.length}` : "";
+    $("mine").textContent = me >= 0 ? `TU ES ${ord(rank[me]).toUpperCase()}${rank.filter(x => x === rank[me]).length > 1 ? " EX ÆQUO" : ""} SUR ${rows.length}` : "";
   }
   function load(){
     const v = view(), my = ++ticket;

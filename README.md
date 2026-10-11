@@ -131,7 +131,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Touché Coulé et le Jeu de la Vie n'enregistrent rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -142,6 +142,9 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Picross Dex** : un classement par Pokémon (temps de la grille, plus **30 secondes par indice**), le tableau de qui détient le plus de records, et le Pokédex le plus complet. L'écran de victoire montre sa place et le top 3 de la famille sur ce Pokémon ; dans le Pokédex, une couronne marque les Pokémon dont on détient le record (le mode test n'envoie rien).
 - **Lignée** : l'Arbre du jour (Classique et Royal, qui repart de zéro chaque jour, avec les flèches pour revoir les jours précédents), le meilleur temps par mode et par niveau, et le nombre d'arbres reconstitués.
 - **Injagility** : le record d'obstacles du mode Infini, les points de chaque parcours numéroté et le total des meilleurs scores du mode Parcours.
+- **Touché Coulé** : la victoire en le moins de tirs, par mode (Classique, Arsenal) et par niveau de l'IA (Facile, Normal, Amiral).
+
+Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).
 
 Les jeux affichent leur place au classement quand un record part (écran de fin ou de victoire), et plusieurs ont un bouton **Classement** qui ouvre directement le bon tableau. Hors connexion, un record attend dans le téléphone et part au retour du réseau. En rejoignant, les records déjà faits dans ce navigateur sont envoyés aussi ; les joueurs déjà inscrits envoient une fois ceux des jeux ajoutés depuis.
 

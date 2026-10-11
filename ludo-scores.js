@@ -53,12 +53,28 @@
     if (!code) return Promise.reject(new Error("Entre le code familial."));
     return rpc("ludo_check", {code: code}).then(function (ok){
       if (ok !== true) { var e = new Error("Ce code familial n'est pas le bon."); e.code = "code"; throw e; }
+      return pseudoTaken(pseudo, code);
+    }).then(function (taken){
+      if (taken){ var e = new Error("Ce pseudo est déjà pris par quelqu'un d'autre de la famille : choisis-en un autre."); e.code = "pseudo"; throw e; }
       set("pseudo", pseudo); set("code", code); set("synced", SYNC); player();
       pushExisting(); flush();
       return true;
     });
   }
   function leave(){ set("code", ""); }
+
+  // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
+  // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
+  var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
+    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"]];
+  function pseudoTaken(pseudo, code){
+    var me = player(), want = pseudo.toLowerCase();
+    return Promise.all(PSEUDO_BOARDS.map(function (gb){
+      return rpc("ludo_board", {code: code, p_game: gb[0], p_board: gb[1], p_player: me, p_limit: 100}).catch(function (){ return []; });
+    })).then(function (lists){
+      return lists.some(function (rows){ return (rows || []).some(function (r){ return !r.me && String(r.pseudo).toLowerCase() === want; }); });
+    }, function (){ return false; });
+  }
 
   // records déjà présents dans ce navigateur, envoyés au moment de rejoindre
   var existing = [];
@@ -145,6 +161,8 @@
     var cap = readKey("picrossdex.captured", {}) || {}, ids = Object.keys(cap).filter(function (id){ return cap[id] && !cap[id].test; });
     ids.forEach(function (id){ var c = cap[id]; if (c.time > 0 && /^[a-z0-9_-]{1,36}$/.test(id)) lo("picross", "t:" + id, c.time + HINT_PENALTY * (c.hints || 0)); });
     hi("picross", "dex", ids.filter(function (id){ return id !== "pokeball"; }).length);
+    var tc = readKey("touchecoule.best", {}) || {};
+    Object.keys(tc).forEach(function (k){ if (/^(classic|arsenal):(easy|normal|hard)$/.test(k)) lo("touchecoule", "best:" + k, tc[k]); });
     return out;
   });
 

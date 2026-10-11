@@ -961,7 +961,7 @@ function dailyBoard(code, ms){
     return L.board("lignee", "daily:" + code, 5).then(rows => {
       if (!rows || !rows.length || !G || G.code !== code) return;
       box.hidden = false;
-      box.innerHTML = "<b>Arbre du jour :</b><ol>" + rows.map(x => `<li class="${x.me ? "me" : ""}">${String(x.pseudo).replace(/[<>&]/g, "")} · ${fmt(x.value)}</li>`).join("") + "</ol>";
+      box.innerHTML = "<b>Arbre du jour :</b><ol>" + rows.map((x, i, all) => `<li value="${all.findIndex(y => y.value === x.value) + 1}" class="${x.me ? "me" : ""}">${String(x.pseudo).replace(/[<>&]/g, "")} · ${fmt(x.value)}</li>`).join("") + "</ol>";
     });
   }).catch(() => { box.hidden = false; box.textContent = "Classement injoignable pour le moment : ton temps partira au retour du réseau."; });
 }
