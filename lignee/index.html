@@ -74,6 +74,7 @@ h1{font-family:var(--f-display); font-weight:400; margin:0; font-size:clamp(22px
 .lvl small{font-family:var(--f-body); font-size:16px; letter-spacing:0; opacity:.95}
 .row{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
 .row .btn{flex:1 1 auto}
+a.btn{text-decoration:none; text-align:center}
 .code{display:flex; gap:8px; margin-top:12px}
 .code input{flex:1; min-width:0; font-family:var(--f-display); font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:10px;
   border:3px solid #000; border-radius:6px; background:#fffaf0; color:#2a1a08}
@@ -154,6 +155,7 @@ h1{font-family:var(--f-display); font-weight:400; margin:0; font-size:clamp(22px
       <div class="row">
         <button class="btn" type="button" id="dailyBtn">ARBRE DU JOUR</button>
         <button class="btn" type="button" id="resumeBtn" hidden>REPRENDRE</button>
+        <a class="btn" id="menuRank" href="../classements/index.html#lignee-C">CLASSEMENT</a>
       </div>
       <div class="code">
         <input id="codeIn" placeholder="EX. C2-K3F9QX" maxlength="20" aria-label="Code d'un arbre à rejouer" autocomplete="off">
@@ -192,7 +194,7 @@ h1{font-family:var(--f-display); font-weight:400; margin:0; font-size:clamp(22px
           <p id="winStory"></p>
           <p class="small" id="winStats"></p>
           <div id="winBoard" class="small" hidden></div>
-          <div class="row"><button class="btn" type="button" id="againBtn">NOUVEL ARBRE</button><button class="btn" type="button" id="menuBtn2">MENU</button></div>
+          <div class="row"><button class="btn" type="button" id="againBtn">NOUVEL ARBRE</button><a class="btn" id="winRank" href="../classements/index.html#lignee-C" hidden>CLASSEMENT</a><button class="btn" type="button" id="menuBtn2">MENU</button></div>
         </div>
       </div>
       <div class="panel">
@@ -892,7 +894,7 @@ function win(){
   const record = !st.best || elapsed < st.best;
   st.n = (st.n || 0) + 1; if (record) st.best = Math.round(elapsed); stats[key] = st; store.set("stats", stats);
   if (/-J/.test(G.code)){ const d = store.get("daily", {}); if (!d[G.code] || elapsed < d[G.code]) d[G.code] = Math.round(elapsed); store.set("daily", d); }
-  $("winBoard").hidden = true;
+  $("winBoard").hidden = true; $("winRank").hidden = !/-J/.test(G.code); $("winRank").href = "../classements/index.html#lignee-" + G.code[0];
   if (/-J/.test(G.code)) dailyBoard(G.code, Math.round(elapsed));
   store.set("cur", null);
   const gens = G.gens;
@@ -909,7 +911,7 @@ function win(){
 function dailyBoard(code, ms){
   const box = $("winBoard"), L = window.LudoScores;
   if (!L) return;
-  if (!L.joined()){ box.hidden = false; box.innerHTML = "Pour comparer ton temps à celui des autres, rejoins le <b>classement</b> depuis le menu de la Ludothèque."; return; }
+  if (!L.joined()){ box.hidden = false; box.innerHTML = "Pour comparer ton temps à celui des autres, rejoins le classement avec le bouton <b>Classement</b>."; return; }
   L.submit("lignee", "daily:" + code, ms, true).then(r => {
     if (!G || G.code !== code) return;
     if (!r){ box.hidden = false; box.textContent = "Classement injoignable pour le moment : ton temps partira au retour du réseau."; return; }
@@ -978,7 +980,7 @@ function renderMenu(){
   document.body.classList.toggle("royal", mode === "R"); document.body.classList.toggle("cine", mode === "F");
   $("modeC").setAttribute("aria-pressed", mode === "C"); $("modeR").setAttribute("aria-pressed", mode === "R"); $("modeF").setAttribute("aria-pressed", mode === "F");
   const cine = mode === "F";
-  $("levels").hidden = cine; $("dailyBtn").hidden = cine; $("cineBox").hidden = !cine;
+  $("levels").hidden = cine; $("dailyBtn").hidden = cine; $("menuRank").hidden = cine; $("menuRank").href = "../classements/index.html#lignee-" + mode; $("cineBox").hidden = !cine;
   $("newTitle").textContent = cine ? "CHOISIS UNE FAMILLE" : "NOUVEL ARBRE";
   if (cine) renderCine();
   const stats = store.get("stats", {}), box = $("levels"); box.innerHTML = "";

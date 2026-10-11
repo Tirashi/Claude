@@ -131,10 +131,10 @@ Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Fac
 
 ## Classements familiaux
 
-Le bouton **Classements**, en bas du menu, ouvre des classements privés, partagés entre les personnes qui connaissent le **code familial**. On choisit un pseudo, on entre le code une fois, et c'est tout : ensuite les records partent **tout seuls**.
+Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`](classements/index.html) : des classements privés, partagés entre les personnes qui connaissent le **code familial**. On choisit un pseudo, on entre le code une fois, et c'est tout : ensuite les records partent **tout seuls**. Chaque tableau a son podium et la liste complète, et sa propre ligne est en vert. Tetris (écran de fin) et Lignée (menu et victoire de l'Arbre du jour) ont un bouton **Classement** qui ouvre directement le bon tableau.
 
 - **Tetris** : le meilleur score de chacun.
-- **Arbre du jour de Lignée** (Classique et Royal) : le meilleur temps du jour. Le classement repart de zéro chaque jour, avec le nouvel arbre.
+- **Arbre du jour de Lignée** (Classique et Royal) : le meilleur temps du jour. Le classement repart de zéro chaque jour, avec le nouvel arbre ; les flèches permettent de revoir les jours précédents.
 
 Hors connexion, un record attend dans le téléphone et part au retour du réseau. En rejoignant, les records déjà faits dans ce navigateur sont envoyés aussi.
 

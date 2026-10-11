@@ -100,6 +100,15 @@
       .catch(function (err){ if (err && err.code === "code") leave(); throw err; });
   }
 
+  // records déjà faits sur ce navigateur, envoyés en rejoignant le classement
+  function readKey(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
+  registerExisting(function (){
+    var out = [], t = Number(readKey("tetris16.best", 0)), d = readKey("lignee.daily", {}) || {};
+    if (t > 0) out.push({game: "tetris", board: "best", value: t, low: false});
+    Object.keys(d).forEach(function (code){ if (/^[CR]2-J[0-9A-Z]+$/.test(code) && d[code] > 0) out.push({game: "lignee", board: "daily:" + code, value: d[code], low: true}); });
+    return out;
+  });
+
   window.addEventListener("online", function (){ flush(); });
   setTimeout(flush, 1500);
 

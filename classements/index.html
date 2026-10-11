@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<style>/* page déjà sombre : le mode sombre forcé des navigateurs (Samsung Internet, Chrome…) n'a pas à la repeindre */
+@media (prefers-color-scheme: dark){ :root{ color-scheme: dark; } }</style>
+<title>Classements · Ludothèque 16 bits</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#110d22">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Page des classements familiaux : onglets par jeu, podium, liste complète. */
+:root{
+  color-scheme: dark;
+  --night:#110d22; --night-2:#1e1840; --panel:#1e1840; --ink:#0d0a18;
+  --text:#f2f0ff; --text-dim:#a9a6d8; --gold:#ffd23f; --me:#5cff8a; --err:#ff8fb0;
+  --silver:#cfd3e6; --bronze:#e0905a;
+  --f-display:"Press Start 2P", "Courier New", monospace;
+  --f-body:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{min-height:100%}
+body{margin:0; background-color:var(--night); color:var(--text); font-family:var(--f-body); font-size:22px; line-height:1.2;
+  background-image:radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size:4px 4px;
+  padding-inline:16px; padding-block:18px 48px}
+body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:50;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.05) 0 1px, transparent 1px 3px)}
+.wrap{max-width:640px; margin:0 auto; display:flex; flex-direction:column; gap:18px}
+.top{display:flex; align-items:center; justify-content:space-between; gap:10px}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px,5.4vw,26px); letter-spacing:2px; line-height:1.3;
+  color:var(--gold); text-shadow:3px 0 0 #b8571a, 0 3px 0 #b8571a, 3px 3px 0 #b8571a, 5px 5px 0 #000}
+.who{font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:var(--text-dim); line-height:1.8}
+.who b{color:var(--me); font-weight:400}
+
+.btn{font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:var(--text); background:#2b2a4a; cursor:pointer; text-decoration:none; text-align:center;
+  border:3px solid var(--text-dim); border-radius:4px; padding:10px 12px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000; display:inline-block}
+.btn:hover{color:var(--gold); border-color:var(--gold)}
+.btn:active{transform:translate(2px,2px); box-shadow:0 0 0 3px var(--ink), 2px 2px 0 3px #000}
+.btn:focus-visible{outline:3px dashed var(--gold); outline-offset:4px}
+.btn[aria-pressed="true"]{color:#110d22; background:var(--gold); border-color:var(--gold)}
+.btn:disabled{opacity:.35; cursor:default; transform:none}
+
+.panel{background:var(--panel); border:3px solid var(--text-dim); box-shadow:0 0 0 3px var(--ink), 6px 6px 0 3px #000; padding:16px; display:flex; flex-direction:column; gap:14px}
+.panel h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; color:var(--gold); line-height:1.6}
+.panel p{margin:0; font-size:20px; color:var(--text-dim)}
+.panel p b{color:var(--text); font-weight:400}
+label{font-family:var(--f-display); font-size:9px; letter-spacing:1px; display:flex; flex-direction:column; gap:6px}
+input{width:100%; font:22px/1.2 var(--f-body); color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:8px}
+
+.tabs{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.tabs .btn{font-size:11px; padding:13px 6px}
+.sub{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.day{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px}
+.day .btn{font-size:12px; padding:9px 13px}
+.day span{text-align:center; font-family:var(--f-display); font-size:10px; letter-spacing:1px; line-height:1.6}
+
+/* podium : 2e, 1er, 3e */
+.podium{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); align-items:end; gap:8px; margin-top:6px}
+.step{display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0}
+.step .name{font-size:21px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.step .val{font-family:var(--f-display); font-size:10px; color:var(--text)}
+.step .block{width:100%; display:grid; place-items:center; font-family:var(--f-display); font-size:18px; color:#110d22;
+  border:3px solid var(--ink); box-shadow:4px 4px 0 #000}
+.step.p1 .block{height:92px; background:var(--gold)}
+.step.p2 .block{height:66px; background:var(--silver)}
+.step.p3 .block{height:48px; background:var(--bronze)}
+.step.me .name{color:var(--me)}
+.step.empty .name{color:#4b4780}
+
+.list{margin:0; padding:0; list-style:none}
+.list li{display:grid; grid-template-columns:2.6em 1fr auto; gap:10px; align-items:baseline; padding:6px 2px; border-bottom:2px dotted #3a3466}
+.list .r{font-family:var(--f-display); font-size:10px; color:var(--gold)}
+.list .n{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.list .n small{font-size:17px; color:var(--text-dim)}
+.list .v{font-family:var(--f-display); font-size:11px; color:var(--gold)}
+.list li.me .n{color:var(--me)}
+.mine{font-family:var(--f-display); font-size:9px; line-height:1.9; color:var(--me); text-align:center}
+.res{font-family:var(--f-display); font-size:9px; line-height:1.9; min-height:1.9em; text-align:center}
+.res.err{color:var(--err)} .res.ok{color:var(--text-dim)}
+.row{display:flex; flex-wrap:wrap; gap:12px}
+.row .btn{flex:1 1 auto}
+.foot{display:flex; flex-wrap:wrap; gap:12px; justify-content:center}
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none !important; transition:none !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="btn" href="../index.html">◀ MENU</a>
+    <div class="who" id="who"></div>
+  </div>
+  <h1>CLASSEMENTS</h1>
+
+  <section class="panel" id="join" hidden>
+    <h2>REJOINDRE LE CLASSEMENT</h2>
+    <p>Choisis un <b>pseudo</b> et entre le <b>code familial</b> qu'on t'a donné. Ensuite, tes records partent tout seuls dans le classement commun, même ceux déjà faits sur ce téléphone.</p>
+    <label>PSEUDO<input id="pseudo" maxlength="16" autocomplete="nickname" placeholder="ex. Rudy"></label>
+    <label>CODE FAMILIAL<input id="code" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <div class="row"><button class="btn" id="joinBtn" type="button">REJOINDRE</button></div>
+    <div class="res" id="joinRes" aria-live="polite"></div>
+  </section>
+
+  <div id="boards" hidden>
+    <div class="tabs" role="group" aria-label="Jeu">
+      <button class="btn" type="button" data-game="tetris">TETRIS</button>
+      <button class="btn" type="button" data-game="lignee">LIGNÉE</button>
+    </div>
+    <section class="panel" style="margin-top:18px">
+      <h2 id="title"></h2>
+      <div id="ligneeBar" hidden style="display:flex; flex-direction:column; gap:12px">
+        <div class="sub" role="group" aria-label="Mode">
+          <button class="btn" type="button" data-mode="C">CLASSIQUE</button>
+          <button class="btn" type="button" data-mode="R">ROYAL</button>
+        </div>
+        <div class="day">
+          <button class="btn" type="button" id="prevDay" aria-label="Jour précédent">◀</button>
+          <span id="dayLabel"></span>
+          <button class="btn" type="button" id="nextDay" aria-label="Jour suivant">▶</button>
+        </div>
+      </div>
+      <div class="podium" id="podium"></div>
+      <ol class="list" id="list"></ol>
+      <div class="mine" id="mine"></div>
+      <div class="res" id="res" aria-live="polite"></div>
+      <div class="row"><button class="btn" type="button" id="refresh">ACTUALISER</button><a class="btn" id="play" href="#">JOUER</a></div>
+    </section>
+    <div class="foot" style="margin-top:22px"><button class="btn" type="button" id="change">CHANGER DE PSEUDO</button></div>
+  </div>
+</div>
+
+<script src="../ludo-scores.js"></script>
+<script>
+(() => {
+  const L = window.LudoScores, $ = id => document.getElementById(id);
+  const fmtTime = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
+  // même code que l'Arbre du jour de Lignée : C2-J + date aaaammjj en base 36
+  const dayCode = (mode, d) => `${mode}2-J${(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()).toString(36).toUpperCase()}`;
+  const st = {game: "tetris", mode: "C", back: 0};   // back : nombre de jours avant aujourd'hui
+  const h = location.hash.slice(1).split("-");
+  if (h[0] === "lignee"){ st.game = "lignee"; if (h[1] === "R") st.mode = "R"; }
+
+  const GAMES = {
+    tetris: {title: () => "TETRIS · MEILLEUR SCORE", board: () => "best", fmt: v => String(Math.round(v)), date: true, play: "../tetris/index.html",
+             empty: "Personne pour l'instant : à toi de jouer !"},
+    lignee: {title: () => `LIGNÉE · ARBRE DU JOUR ${st.mode === "R" ? "ROYAL" : "CLASSIQUE"}`, board: () => "daily:" + dayCode(st.mode, day()), fmt: fmtTime, play: "../lignee/index.html",
+             empty: () => st.back ? "Personne n'a fini l'arbre ce jour-là." : "Personne n'a encore fini l'arbre du jour : à toi de jouer !"},
+  };
+  const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
+  const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
+    day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "");
+  const ord = n => n === 1 ? "1er" : n + "e";
+  const res = (t, ok) => { $("res").textContent = t; $("res").className = "res " + (ok ? "ok" : "err"); };
+
+  function view(){
+    const j = L && L.joined();
+    $("join").hidden = j; $("boards").hidden = !j;
+    $("who").innerHTML = j ? `JOUEUR<br><b></b>` : "";
+    if (j) $("who").querySelector("b").textContent = L.pseudo();
+    if (!j){ $("pseudo").value = (L && L.pseudo()) || ""; return; }
+    const g = GAMES[st.game];
+    document.querySelectorAll("[data-game]").forEach(b => b.setAttribute("aria-pressed", b.dataset.game === st.game));
+    document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === st.mode));
+    $("ligneeBar").hidden = st.game !== "lignee";
+    $("dayLabel").textContent = dayName(); $("nextDay").disabled = st.back === 0; $("prevDay").disabled = st.back >= 60;
+    $("title").textContent = g.title();
+    $("play").href = g.play;
+    history.replaceState(null, "", "#" + st.game + (st.game === "lignee" ? "-" + st.mode : ""));
+    load();
+  }
+
+  let ticket = 0;
+  function load(){
+    const g = GAMES[st.game], my = ++ticket;
+    $("podium").innerHTML = ""; $("list").innerHTML = ""; $("mine").textContent = ""; res("Chargement…", true);
+    L.flush().then(() => L.board(st.game, g.board(), 100)).then(rows => {
+      if (my !== ticket) return;
+      if (rows === null){ view(); $("joinRes").textContent = "Le code familial a changé : entre le nouveau code."; $("joinRes").className = "res err"; return; }
+      res("", true);
+      if (!rows.length){ res(typeof g.empty === "function" ? g.empty() : g.empty, true); return; }
+      // podium
+      [1, 0, 2].forEach(i => {
+        const r = rows[i], s = document.createElement("div");
+        s.className = `step p${i + 1}` + (r ? (r.me ? " me" : "") : " empty");
+        const n = document.createElement("div"); n.className = "name"; n.textContent = r ? r.pseudo : "…";
+        const v = document.createElement("div"); v.className = "val"; v.textContent = r ? g.fmt(r.value) : "";
+        const b = document.createElement("div"); b.className = "block"; b.textContent = i + 1;
+        s.append(n, v, b); $("podium").appendChild(s);
+      });
+      // suite du classement
+      rows.slice(3).forEach((r, k) => {
+        const li = document.createElement("li"); if (r.me) li.className = "me";
+        const a = document.createElement("span"); a.className = "r"; a.textContent = k + 4;
+        const n = document.createElement("span"); n.className = "n"; n.textContent = r.pseudo;
+        if (g.date && r.updated_at){ const sm = document.createElement("small"); sm.textContent = " · " + new Date(r.updated_at).toLocaleDateString("fr-FR", {day: "numeric", month: "short"}); n.appendChild(sm); }
+        const v = document.createElement("span"); v.className = "v"; v.textContent = g.fmt(r.value);
+        li.append(a, n, v); $("list").appendChild(li);
+      });
+      const me = rows.findIndex(r => r.me);
+      $("mine").textContent = me >= 0 ? `TU ES ${ord(me + 1).toUpperCase()} SUR ${rows.length}` : (st.back ? "" : "PAS ENCORE DE SCORE POUR TOI ICI");
+      if (L.pending()) res(`${L.pending()} score(s) en attente d'envoi.`, true);
+    }).catch(() => { if (my === ticket) res("Classement injoignable pour le moment (pas de réseau ?).", false); });
+  }
+
+  if (!L){ $("join").hidden = false; $("joinRes").textContent = "Le module des classements n'a pas pu se charger."; $("joinRes").className = "res err"; return; }
+  document.querySelectorAll("[data-game]").forEach(b => b.onclick = () => { st.game = b.dataset.game; view(); });
+  document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { st.mode = b.dataset.mode; view(); });
+  $("prevDay").onclick = () => { st.back = Math.min(60, st.back + 1); view(); };
+  $("nextDay").onclick = () => { st.back = Math.max(0, st.back - 1); view(); };
+  $("refresh").onclick = load;
+  $("change").onclick = () => { L.leave(); $("joinRes").textContent = ""; view(); $("code").focus(); };
+  $("joinBtn").onclick = () => {
+    $("joinRes").textContent = "Vérification du code…"; $("joinRes").className = "res ok";
+    L.join($("pseudo").value, $("code").value).then(() => { $("code").value = ""; $("joinRes").textContent = ""; view(); })
+      .catch(e => { $("joinRes").className = "res err";
+        $("joinRes").textContent = e.code === "code" ? "Ce code familial n'est pas le bon." : (e.message && !/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? e.message : "Impossible de joindre le classement (pas de réseau ?)."); });
+  };
+  [$("pseudo"), $("code")].forEach(i => i.addEventListener("keydown", e => { if (e.key === "Enter") $("joinBtn").click(); }));
+  view();
+})();
+</script>
+</body>
+</html>

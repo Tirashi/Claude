@@ -122,19 +122,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .saves .res.ok{color:#5cff8a} .saves .res.err{color:#ff8fb0}
 .saves-open{gap:12px; flex-wrap:wrap}
 .ranks-open{margin:0 0 14px}
-.ranks-open .saves-btn{color:#110d22; background:var(--gold); border-color:var(--gold)}
-.saves.ranks{margin:0 auto 18px}
-.saves input{width:100%; font:20px/1.2 inherit; font-family:inherit; color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:8px}
-.saves label{font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:var(--text); display:flex; flex-direction:column; gap:6px}
-.rk-tabs{display:flex; flex-wrap:wrap; gap:8px}
-.rk-tabs .saves-btn{font-size:9px; padding:9px 10px}
-.rk-tabs .saves-btn[aria-pressed="true"]{color:#110d22; background:var(--gold); border-color:var(--gold)}
-.rk-list{margin:0; padding:0; list-style:none; counter-reset:r}
-.rk-list li{counter-increment:r; display:flex; gap:10px; align-items:baseline; font-size:21px; padding:4px 2px; border-bottom:2px dotted #3a3466; color:var(--text)}
-.rk-list li::before{content:counter(r); font-family:var(--f-display); font-size:10px; color:var(--gold); min-width:2.2em}
-.rk-list li span{flex:1}
-.rk-list li b{font-weight:400; font-family:var(--f-display); font-size:11px; color:var(--gold)}
-.rk-list li.me{color:#5cff8a}
+.ranks-open .saves-btn{text-decoration:none; font-size:12px; padding:13px 22px; color:#110d22; background:var(--gold); border-color:var(--gold)}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none !important; transition:none !important} }
 </style>
 </head>
@@ -150,25 +138,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
     <p class="ios-help" id="iosHelp" hidden>Pour installer la Ludothèque sur ton iPhone : touche <b>Partager</b> en bas de Safari, puis <b>Sur l'écran d'accueil</b>.</p>
   </div>
 
-  <div class="saves-open ranks-open"><button class="saves-btn" id="ranksBtn" type="button" aria-expanded="false" aria-controls="ranks">CLASSEMENTS</button></div>
-  <section class="saves ranks" id="ranks" hidden aria-label="Classements">
-    <div id="rkJoin">
-      <h2>REJOINDRE LE CLASSEMENT</h2>
-      <p>Choisis un <b>pseudo</b> et entre le <b>code familial</b> qu'on t'a donné. Ensuite, tes records en Tetris et à l'Arbre du jour de Lignée partent tout seuls dans le classement commun.</p>
-      <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px">
-        <label>PSEUDO<input id="rkPseudo" maxlength="16" autocomplete="nickname" placeholder="ex. Rudy"></label>
-        <label>CODE FAMILIAL<input id="rkCode" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-        <div class="row"><button class="saves-btn" id="rkJoinBtn" type="button">REJOINDRE</button></div>
-      </div>
-    </div>
-    <div id="rkBoards" hidden>
-      <h2 id="rkHello">CLASSEMENTS</h2>
-      <div class="rk-tabs" id="rkTabs"></div>
-      <ol class="rk-list" id="rkList"></ol>
-      <div class="row"><button class="saves-btn" id="rkRefresh" type="button">ACTUALISER</button><button class="saves-btn" id="rkChange" type="button">CHANGER DE PSEUDO</button></div>
-    </div>
-    <div class="res" id="rkRes" aria-live="polite"></div>
-  </section>
+  <div class="saves-open ranks-open"><a class="saves-btn" href="classements/index.html">CLASSEMENTS</a></div>
 
   <nav class="shelf" id="shelf" aria-label="Jeux">
     <a class="cart picross" href="picross/index.html">
@@ -282,7 +252,6 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
   <div class="status" id="status"><kbd>FLÈCHES</kbd> CHOISIR · <kbd>ENTRÉE</kbd> JOUER</div>
 </div>
 
-<script src="ludo-scores.js"></script>
 <script>
 (() => {
 "use strict";
@@ -578,56 +547,6 @@ document.getElementById("importAll").addEventListener("click", () => {
 });
 if (/FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent)) document.getElementById("fbNote").hidden = false;
 
-/* ---------- classements (Supabase, code familial) ---------- */
-(() => {
-  const L = window.LudoScores, $ = id => document.getElementById(id);
-  if (!L) return;
-  const day = mode => { const d = new Date(); return `${mode}2-J${(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()).toString(36).toUpperCase()}`; };
-  const BOARDS = [
-    {label: "TETRIS", game: "tetris", board: "best", fmt: v => String(Math.round(v))},
-    {label: "ARBRE DU JOUR · CLASSIQUE", game: "lignee", board: () => "daily:" + day("C"), fmt: v => fmtTime(v)},
-    {label: "ARBRE DU JOUR · ROYAL", game: "lignee", board: () => "daily:" + day("R"), fmt: v => fmtTime(v)},
-  ];
-  // en rejoignant, les records déjà faits dans ce navigateur partent aussi
-  L.registerExisting(() => {
-    const out = [], t = Number(readKey("tetris16.best", 0)); if (t > 0) out.push({game: "tetris", board: "best", value: t, low: false});
-    for (const [code, ms] of Object.entries(readKey("lignee.daily", {}) || {})) if (/^[CR]2-J[0-9A-Z]+$/.test(code) && ms > 0) out.push({game: "lignee", board: "daily:" + code, value: ms, low: true});
-    return out;
-  });
-  let cur = 0;
-  const res = (t, ok) => { $("rkRes").textContent = t; $("rkRes").className = "res " + (ok ? "ok" : "err"); };
-  function show(){
-    const j = L.joined(); $("rkJoin").hidden = j; $("rkBoards").hidden = !j;
-    if (!j){ $("rkPseudo").value = L.pseudo() || ""; return; }
-    $("rkHello").textContent = "CLASSEMENTS · " + L.pseudo().toUpperCase();
-    const tabs = $("rkTabs"); tabs.innerHTML = "";
-    BOARDS.forEach((b, i) => { const x = document.createElement("button"); x.type = "button"; x.className = "saves-btn"; x.textContent = b.label; x.setAttribute("aria-pressed", i === cur);
-      x.onclick = () => { cur = i; show(); }; tabs.appendChild(x); });
-    load();
-  }
-  function load(){
-    const b = BOARDS[cur], list = $("rkList"); list.innerHTML = ""; res("Chargement…", true);
-    L.flush().then(() => L.board(b.game, typeof b.board === "function" ? b.board() : b.board, 20)).then(rows => {
-      if (rows === null){ show(); res("Le code familial a changé : entre le nouveau code.", false); return; }
-      res(rows.length ? "" : "Personne pour l'instant : à toi de jouer !", true);
-      rows.forEach(r => { const li = document.createElement("li"); if (r.me) li.className = "me";
-        const n = document.createElement("span"); n.textContent = r.pseudo; const v = document.createElement("b"); v.textContent = b.fmt(r.value);
-        li.append(n, v); list.appendChild(li); });
-      if (L.pending()) res(`${L.pending()} score(s) en attente d'envoi.`, true);
-    }).catch(() => res("Classement injoignable pour le moment (pas de réseau ?).", false));
-  }
-  $("ranksBtn").addEventListener("click", () => {
-    const box = $("ranks"); box.hidden = !box.hidden; $("ranksBtn").setAttribute("aria-expanded", !box.hidden);
-    if (!box.hidden){ res("", true); show(); }
-  });
-  $("rkJoinBtn").addEventListener("click", () => {
-    res("Vérification du code…", true);
-    L.join($("rkPseudo").value, $("rkCode").value).then(() => { $("rkCode").value = ""; res("Bienvenue au classement !", true); show(); })
-      .catch(e => res(e.code === "code" ? "Ce code familial n'est pas le bon." : (e.message && !/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? e.message : "Impossible de joindre le classement (pas de réseau ?)."), false));
-  });
-  $("rkRefresh").addEventListener("click", load);
-  $("rkChange").addEventListener("click", () => { L.leave(); res("", true); show(); $("rkCode").focus(); });
-})();
 
 /* installation : bouton sur Android et ordinateur, explication sur iPhone */
 const installBox = document.getElementById("install"), installBtn = document.getElementById("installBtn"), iosHelp = document.getElementById("iosHelp");
