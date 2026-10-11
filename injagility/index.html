@@ -131,12 +131,15 @@ const store = {
   get(k, d){ try{ const v = localStorage.getItem("injagility."+k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem("injagility."+k, JSON.stringify(v)); }catch(e){} }
 };
-// le chien : au choix sur l'écran titre (par défaut, celui du chenil du mode Parcours)
-const C32 = window.Chiens32, OUT = C32.OUT, BREEDS = C32.BREEDS;
-let breedIdx = Math.max(0, BREEDS.findIndex(b => b.id === (store.get("dog", null) || (store.get("parcours", {}) || {}).dog || "bernois")));
+// le chien : au choix sur l'écran titre, parmi les races adoptées au chenil du mode Parcours
+const C32 = window.Chiens32, OUT = C32.OUT;
+const parc = store.get("parcours", {}) || {}, owned = Array.isArray(parc.owned) ? parc.owned : [];
+const BREEDS = C32.BREEDS.filter(b => b.id === "bernois" || owned.includes(b.id));
+let breedIdx = Math.max(0, BREEDS.findIndex(b => b.id === (store.get("dog", null) || parc.dog || "bernois")));
 let DOGF = C32.frames(BREEDS[breedIdx].id);
 let STRIDE = 76 * DOGF.breed.s;   // distance parcourue pendant une foulée de galop (8 images)
 function setBreed(d){
+  if (BREEDS.length < 2) return;
   breedIdx = (breedIdx + d + BREEDS.length) % BREEDS.length;
   DOGF = C32.frames(BREEDS[breedIdx].id); STRIDE = 76 * DOGF.breed.s; store.set("dog", DOGF.breed.id);
   arrowFlash = {d, t: .25}; SFX.bark();
@@ -478,10 +481,12 @@ function titleScreen(){
   ctx.fillStyle = "rgba(0,0,0,.4)"; for (let y = 0; y < 5; y++){ const hw = Math.round(54 * Math.sqrt(1 - ((y - 2) / 2.6) ** 2)); ctx.fillRect(VW / 2 - hw, pawY - 3 + y, hw * 2, 1); }
   ctx.drawImage(im, Math.round(VW / 2 - 88), pawY - C32.GROUND * 2, C32.SW * 2, C32.SH * 2);
   const fl = arrowFlash && arrowFlash.t > 0 ? arrowFlash.d : 0, bob = Math.floor(t * 3) % 2;
-  arrow(TITLE_ARROWS.left - (fl < 0 ? 3 : bob), TITLE_ARROWS.y, -1, fl < 0);
-  arrow(TITLE_ARROWS.right + (fl > 0 ? 3 : bob), TITLE_ARROWS.y, 1, fl > 0);
+  if (BREEDS.length > 1){
+    arrow(TITLE_ARROWS.left - (fl < 0 ? 3 : bob), TITLE_ARROWS.y, -1, fl < 0);
+    arrow(TITLE_ARROWS.right + (fl > 0 ? 3 : bob), TITLE_ARROWS.y, 1, fl > 0);
+  }
   text(B.name, VW / 2, 178, 10, "#ffd23f", "center");
-  text(`RACE ${breedIdx + 1}/${BREEDS.length} · CHANGE AVEC LES FLECHES`, VW / 2, 194, 8, "#a8d0f4", "center", null);
+  text(BREEDS.length > 1 ? `CHIEN ${breedIdx + 1}/${BREEDS.length} · CHANGE AVEC LES FLECHES` : "ADOPTE D'AUTRES CHIENS EN MODE PARCOURS", VW / 2, 194, 8, "#a8d0f4", "center", null);
   if (Math.floor(t * 2.5) % 2) text("TOUCHE OU ESPACE POUR PARTIR", VW / 2, 207, 8, "#ffffff", "center");
 }
 function overScreen(){
@@ -527,7 +532,7 @@ let touch = null;
 cv.addEventListener("pointerdown", e => {
   e.preventDefault(); cv.focus({preventScroll:true});
   // sur l'écran titre, les flèches changent de race
-  if (state === "title"){ const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * VW;
+  if (state === "title" && BREEDS.length > 1){ const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * VW;
     if (x < TITLE_ARROWS.left + 34){ setBreed(-1); return; } if (x > TITLE_ARROWS.right - 34){ setBreed(1); return; } }
   touch = {y: e.clientY, ducked: false}; pressJump(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
 cv.addEventListener("pointermove", e => { if (touch && !touch.ducked && e.clientY - touch.y > 24){ touch.ducked = true; releaseJump(); setDuck(true); } });
