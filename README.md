@@ -80,7 +80,8 @@ Un puzzle de logique sur le thème de la généalogie. Un arbre vide s'affiche (
 - Indices « X est plus âgé que Y » entre frères et sœurs, en plus des liens de parenté.
 - Arbres générés à l'infini : le générateur tire une famille, écrit des indices vrais, puis un solveur ajoute et retire des indices jusqu'à ce qu'il ne reste qu'une seule solution, trouvable sans deviner.
 - Chaque arbre a un code (par exemple `C2-K3F9QX`) pour le rejouer ou le partager, et un **Arbre du jour** (niveau Moyen) est le même pour tout le monde dans chaque mode.
-- Toucher une personne puis une case pour la placer ; toucher un indice pour le barrer ; l'option AIDE coche les indices respectés et signale ceux qui sont contredits.
+- Toucher une personne (la réserve est rangée par ordre alphabétique) puis une case pour la placer. Une personne bien placée y reste ; une erreur coûte une des **3 vies** et renvoie la personne dans la réserve. Sans vie, l'arbre est perdu : on peut le retenter, mais le chrono continue.
+- Un indice dont toutes les personnes sont placées se coche tout seul et descend en bas de la liste ; toucher un indice le barre.
 - La partie en cours est sauvegardée ; les records de temps et le nombre d'arbres réussis par mode et par niveau font partie du transfert de sauvegardes.
 
 ## Injagility

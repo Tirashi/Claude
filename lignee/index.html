@@ -117,8 +117,15 @@ a.btn{text-decoration:none; text-align:center}
 .clues li b{font-weight:400; color:var(--accent)}
 .clues li.struck{opacity:.42; text-decoration:line-through}
 .clues li.good::after{content:"✓"; position:absolute; right:6px; top:4px; color:var(--good); font-family:Arial, sans-serif}
-.clues li.bad{color:var(--bad)}
-.clues li.bad::after{content:"✕"; position:absolute; right:6px; top:4px; color:var(--bad); font-family:Arial, sans-serif}
+.clues li.done{opacity:.5; cursor:default}
+.clues li.done::after{content:"✓"; position:absolute; right:6px; top:4px; color:var(--good); font-family:Arial, sans-serif}
+.clues li.sep{border-top:3px dashed var(--paper2)}
+.slot.nope{animation:nope .45s steps(6) both; border-color:var(--bad); background:#ffe0d8}
+@keyframes nope{0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)}}
+.lives{font-family:Arial, "Segoe UI Symbol", sans-serif; font-size:15px; letter-spacing:2px; color:var(--bad)}
+.lives i{font-style:normal; color:#b9ad95}
+.lives.hit{animation:pop .4s steps(3) both}
+#win.lost h2{color:var(--bad)}
 .gamegrid{display:flex; flex-direction:column; gap:12px}
 .tools{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
 .win{text-align:center}
@@ -165,7 +172,8 @@ a.btn{text-decoration:none; text-align:center}
     </div>
     <div class="panel rules">
       <h2>RÈGLES</h2>
-      <p>Touche une personne de la réserve, puis la case de l'arbre où elle doit aller. Toucher une case remplie la reprend : touche une autre case pour l'y déplacer, ou la même pour la renvoyer dans la réserve.</p>
+      <p>Touche une personne de la réserve (rangée par ordre alphabétique), puis la case de l'arbre où elle doit aller. Une personne bien placée y reste. <b>Tu as 3 vies</b> : chaque erreur en coûte une et renvoie la personne dans la réserve. Sans vie, l'arbre est perdu : tu peux le retenter, mais le chrono continue.</p>
+      <p>Un indice dont toutes les personnes sont placées se coche tout seul et descend en bas de la liste.</p>
       <ul>
         <li>Dans un couple, <b>l'homme est à gauche</b> et la femme à droite.</li>
         <li>Les frères et sœurs sont rangés <b>du plus âgé, à gauche, au plus jeune, à droite</b>.</li>
@@ -183,7 +191,7 @@ a.btn{text-decoration:none; text-align:center}
 
   <!-- ===== partie ===== -->
   <section id="game" hidden>
-    <div class="bar"><span id="gTitle">CLASSIQUE · FACILE</span><span>CODE <b id="gCode">—</b></span><span>TEMPS <b id="gTime">00:00</b></span></div>
+    <div class="bar"><span id="gTitle">CLASSIQUE · FACILE</span><span>CODE <b id="gCode">—</b></span><span>TEMPS <b id="gTime">00:00</b></span><span class="lives" id="gLives" aria-label="3 vies">♥♥♥</span></div>
     <div class="gamegrid">
       <div class="panel" style="padding:8px">
         <div class="treebox"><div class="tree" id="tree"></div></div>
@@ -194,18 +202,16 @@ a.btn{text-decoration:none; text-align:center}
           <p id="winStory"></p>
           <p class="small" id="winStats"></p>
           <div id="winBoard" class="small" hidden></div>
-          <div class="row"><button class="btn" type="button" id="againBtn">NOUVEL ARBRE</button><a class="btn" id="winRank" href="../classements/index.html#lignee-C" hidden>CLASSEMENT</a><button class="btn" type="button" id="menuBtn2">MENU</button></div>
+          <div class="row"><button class="btn" type="button" id="retryBtn" hidden>RÉESSAYER</button><button class="btn" type="button" id="againBtn">NOUVEL ARBRE</button><a class="btn" id="winRank" href="../classements/index.html#lignee-C" hidden>CLASSEMENT</a><button class="btn" type="button" id="menuBtn2">MENU</button></div>
         </div>
       </div>
       <div class="panel">
         <h2>INDICES</h2>
         <ol class="clues" id="clues"></ol>
-        <p class="small" style="margin:8px 0 0">Touche un indice pour le barrer.</p>
+        <p class="small" style="margin:8px 0 0">Touche un indice pour le barrer. Les indices résolus se cochent tout seuls.</p>
       </div>
       <div class="tools">
         <button class="btn" type="button" id="menuBtn">◀ MENU</button>
-        <button class="btn" type="button" id="clearBtn">VIDER</button>
-        <button class="btn" type="button" id="aidBtn" aria-pressed="false">AIDE</button>
         <button class="btn" type="button" id="soundBtn" aria-pressed="true">SON</button>
       </div>
     </div>
@@ -721,7 +727,8 @@ function clueText(c, P, names, royal){
 let mode = store.get("mode", "C");
 let G = null;              // la partie : {code, mode, level, P, lay, rel, clues, sexKnown, names, looks, order, family}
 let place = [], where = [], sel = -1, struck = new Set(), elapsed = 0, startT = 0, timer = null, solved = false;
-let aid = store.get("aid", false);
+const LIVES = 3;
+let lives = LIVES, over = false;   // over : plus de vie, l'arbre est perdu
 
 const randomSeed = () => Math.floor(Math.random() * 2176782336).toString(36).toUpperCase().padStart(6, "0");
 const parseCode = s => {
@@ -822,7 +829,8 @@ function paintSlots(){
 function renderTray(){
   const tray = $("tray"); tray.innerHTML = "";
   cardEls = [];
-  for (const q of G.order){
+  const abc = [...G.order].sort((a, b) => G.names[a].localeCompare(G.names[b], "fr"));
+  for (const q of abc){
     if (where[q] >= 0) continue;
     const c = document.createElement("button"); c.type = "button"; c.className = "card" + (q === sel ? " sel" : "");
     const cv = document.createElement("canvas"); drawPortrait(cv, G.P[q].sex, G.looks[q], G.royal); c.appendChild(cv);
@@ -834,58 +842,76 @@ function renderTray(){
   const left = G.P.length - place.filter(x => x >= 0).length;
   $("trayHint").textContent = left ? `Réserve (${left}) : touche une personne, puis sa case.` : "Tout le monde est placé.";
 }
+// un indice est résolu quand toutes ses personnes sont placées (elles le sont toujours au bon endroit)
+const clueDone = c => where[c.a] >= 0 && (c.b == null || where[c.b] >= 0);
 function renderClues(){
   const ol = $("clues"); ol.innerHTML = "";
-  G.clues.forEach((c, k) => {
-    const li = document.createElement("li"); li.innerHTML = clueText(c, G.P, G.names, G.royal);
-    li.classList.toggle("struck", struck.has(k));
-    if (aid){
-      const sa = where[c.a], sb = c.b != null ? where[c.b] : 0;
-      if (sa >= 0 && sb >= 0){
-        const ok = c.b != null ? G.rel.R[c.t][sa][sb] : c.v != null ? G.rel.U[c.t](sa) === c.v : G.rel.U[c.t](sa);
-        li.classList.add(ok ? "good" : "bad");
-      }
+  const ks = G.clues.map((c, k) => k), done = ks.filter(k => clueDone(G.clues[k]));
+  const open = ks.filter(k => !done.includes(k));
+  [...open, ...done].forEach((k, n) => {
+    const c = G.clues[k], li = document.createElement("li"); li.innerHTML = clueText(c, G.P, G.names, G.royal);
+    if (done.includes(k)){ li.classList.add("done"); if (n === open.length && open.length) li.classList.add("sep"); }
+    else {
+      li.classList.toggle("struck", struck.has(k));
+      li.onclick = () => { struck.has(k) ? struck.delete(k) : struck.add(k); SFX.nav(); renderClues(); save(); };
     }
-    li.onclick = () => { struck.has(k) ? struck.delete(k) : struck.add(k); SFX.nav(); renderClues(); save(); };
     ol.appendChild(li);
   });
+}
+function renderLives(hit){
+  const el = $("gLives"); el.innerHTML = "♥".repeat(lives) + "<i>" + "♥".repeat(LIVES - lives) + "</i>";
+  el.setAttribute("aria-label", `${lives} vie${lives > 1 ? "s" : ""}`);
+  if (hit){ el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); }
 }
 const setMsg = h => { $("msg").innerHTML = h; };
 
 /* ---------- jouer ---------- */
+// une personne est à sa place si c'est sa case, ou celle d'un « jumeau » interchangeable (Cinélogie)
+const right = (q, s) => q === s || (G.sym && G.sym[s] >= 0 && G.sym[q] === G.sym[s]);
 function tapCard(q){
-  if (solved) return;
+  if (solved || over) return;
   sel = sel === q ? -1 : q; sel >= 0 ? SFX.pick() : SFX.nav();
   setMsg(sel >= 0 ? `Où va <span class="hl">${G.names[q]}</span> ?` : "");
   paintSlots(); renderTray();
 }
 function fits(q, s){ return !G.sexKnown[s] || G.P[s].sex === G.P[q].sex; }
 function tapSlot(s){
-  if (solved) return;
+  if (solved || over) return;
   const occ = place[s];
-  if (sel < 0){
-    if (occ < 0){ SFX.no(); setMsg("Choisis d'abord une personne dans la réserve."); return; }
-    sel = occ; SFX.pick(); setMsg(`<span class="hl">${G.names[occ]}</span> : touche une autre case, ou la même pour la renvoyer dans la réserve.`);
-    paintSlots(); renderTray(); return;
-  }
-  const q = sel, from = where[q];
-  if (from === s){ place[s] = -1; where[q] = -1; sel = -1; SFX.back(); setMsg(""); return changed(); }
+  if (occ >= 0){ SFX.nav(); setMsg(`<span class="hl">${G.names[occ]}</span> est déjà à sa place.`); return; }
+  if (sel < 0){ SFX.no(); setMsg("Choisis d'abord une personne dans la réserve."); return; }
+  const q = sel;
   if (!fits(q, s)){ SFX.no(); setMsg(`Cette case attend ${G.P[s].sex === "M" ? "un homme" : "une femme"}.`); return; }
-  if (occ >= 0 && from >= 0 && !fits(occ, from)){ SFX.no(); setMsg(`${G.names[occ]} ne peut pas aller à la place de ${G.names[q]}.`); return; }
-  if (from >= 0) place[from] = -1;
-  if (occ >= 0){ if (from >= 0){ place[from] = occ; where[occ] = from; } else where[occ] = -1; }
-  place[s] = q; where[q] = s; sel = -1; SFX.place(); setMsg("");
+  sel = -1;
+  if (!right(q, s)){
+    lives--; renderLives(true); SFX.no();
+    const b = slotEls[s]; b.classList.remove("nope"); void b.offsetWidth; b.classList.add("nope");
+    if (lives <= 0) return lose(q);
+    setMsg(`Raté : <span class="hl">${G.names[q]}</span> ne va pas là. ${lives > 1 ? `Il te reste ${lives} vies.` : "Plus qu'une vie !"}`);
+    paintSlots(); renderTray(); save(); return;
+  }
+  place[s] = q; where[q] = s; SFX.place(); setMsg("");
   changed();
 }
 function changed(){
   paintSlots(); renderTray(); renderClues(); save();
-  if (place.every(x => x >= 0)){
-    const right = (q, s) => q === s || (G.sym && G.sym[s] >= 0 && G.sym[q] === G.sym[s]);
-    if (place.every(right)) return win();
-    const wrong = place.filter((q, s) => !right(q, s)).length;
-    SFX.no();
-    setMsg(G.level <= 2 ? `L'arbre n'est pas encore juste : <span class="hl">${wrong}</span> personne${wrong > 1 ? "s" : ""} mal placée${wrong > 1 ? "s" : ""}.` : "L'arbre n'est pas encore juste. Relis les indices…");
-  }
+  if (place.every(x => x >= 0)) return win();
+}
+function lose(q){
+  over = true; clearInterval(timer); elapsed = performance.now() - startT; $("gTime").textContent = fmt(elapsed);
+  paintSlots(); renderTray(); save();
+  $("winTitle").textContent = G.royal ? "LA COURONNE VACILLE…" : "L'ARBRE S'EST EMMÊLÉ…";
+  $("winStory").innerHTML = `<span class="hl">${G.names[q]}</span> n'allait pas là, et c'était ta dernière vie.`;
+  $("winStats").textContent = `Tu peux retenter le même arbre : le chrono reprend à ${fmt(elapsed)}.`;
+  $("winBoard").hidden = true; $("winRank").hidden = true; $("retryBtn").hidden = false;
+  $("trayBox").hidden = true; $("win").classList.add("lost"); $("win").hidden = false; setMsg("");
+}
+function retry(){
+  over = false; lives = LIVES; renderLives(); place.fill(-1); where.fill(-1); sel = -1;
+  $("win").hidden = true; $("trayBox").hidden = false; $("retryBtn").hidden = true;
+  slotEls.forEach(b => b.classList.remove("nope"));
+  startT = performance.now() - elapsed; clearInterval(timer); timer = setInterval(tick, 250); tick();
+  changed(); setMsg("On reprend l'arbre depuis le début. Le chrono continue !");
 }
 function win(){
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("gTime").textContent = fmt(elapsed);
@@ -894,7 +920,7 @@ function win(){
   const record = !st.best || elapsed < st.best;
   st.n = (st.n || 0) + 1; if (record) st.best = Math.round(elapsed); stats[key] = st; store.set("stats", stats);
   if (/-J/.test(G.code)){ const d = store.get("daily", {}); if (!d[G.code] || elapsed < d[G.code]) d[G.code] = Math.round(elapsed); store.set("daily", d); }
-  $("winBoard").hidden = true; $("winRank").hidden = !/-J/.test(G.code); $("winRank").href = "../classements/index.html#lignee-" + G.code[0];
+  $("win").classList.remove("lost"); $("retryBtn").hidden = true; $("winBoard").hidden = true; $("winRank").hidden = !/-J/.test(G.code); $("winRank").href = "../classements/index.html#lignee-" + G.code[0];
   if (/-J/.test(G.code)) dailyBoard(G.code, Math.round(elapsed));
   store.set("cur", null);
   const gens = G.gens;
@@ -927,25 +953,29 @@ function dailyBoard(code, ms){
 /* ---------- sauvegarde de la partie en cours ---------- */
 function save(){
   if (!G || solved) return;
-  store.set("cur", {code: G.code, place, struck: [...struck], elapsed: Math.round(timerElapsed())});
+  store.set("cur", {code: G.code, place, struck: [...struck], lives: over ? 0 : lives, elapsed: Math.round(timerElapsed())});
 }
-const timerElapsed = () => solved ? elapsed : performance.now() - startT;
+const timerElapsed = () => solved || over ? elapsed : performance.now() - startT;
 function tick(){ if (!solved) $("gTime").textContent = fmt(performance.now() - startT); }
 
 function startGame(code, saved){
   const g = buildGame(code);
   if (!g){ $("menuMsg").textContent = "Code inconnu : il ressemble à C2-K3F9QX."; SFX.no(); return; }
-  G = g; solved = false; sel = -1;
+  G = g; solved = false; over = false; lives = LIVES; sel = -1;
   const n = G.P.length;
   place = new Array(n).fill(-1); where = new Array(n).fill(-1); struck = new Set(); elapsed = 0;
   if (saved && saved.code === G.code && Array.isArray(saved.place) && saved.place.length === n){
-    saved.place.forEach((q, s) => { if (q >= 0 && q < n && where[q] < 0){ place[s] = q; where[q] = s; } });
     struck = new Set((saved.struck || []).filter(k => k < G.clues.length)); elapsed = saved.elapsed || 0;
+    // partie perdue puis quittée : on la reprend du début, avec 3 vies
+    if (saved.lives > 0) lives = Math.min(LIVES, saved.lives);
+    // seules les personnes bien placées restent (anciennes sauvegardes : placement libre)
+    if (saved.lives !== 0) saved.place.forEach((q, s) => { if (q >= 0 && q < n && where[q] < 0 && right(q, s)){ place[s] = q; where[q] = s; } });
   }
   document.body.classList.toggle("royal", G.royal); document.body.classList.toggle("cine", !!G.cine);
   $("gTitle").textContent = G.cine ? `${G.saga.title.toUpperCase()} · ${LEVELS[G.level].name}` : (G.royal ? "ROYAL" : "CLASSIQUE") + " · " + LEVELS[G.level].name + (/-J/.test(G.code) ? " · DU JOUR" : "");
   $("gCode").textContent = G.code;
-  $("menu").hidden = true; $("game").hidden = false; $("win").hidden = true; $("trayBox").hidden = false;
+  $("menu").hidden = true; $("game").hidden = false; $("win").hidden = true; $("trayBox").hidden = false; $("retryBtn").hidden = true;
+  renderLives();
   window.scrollTo(0, 0);
   renderTree(); renderTray(); renderClues();
   setMsg(G.cine ? `${G.saga.univers} : replace chaque personnage dans l'arbre.` : G.royal ? "Rends à chaque membre de la dynastie sa place dans l'arbre." : "Replace chaque membre de la famille dans l'arbre.");
@@ -1008,9 +1038,7 @@ $("codeIn").addEventListener("keydown", e => { if (e.key === "Enter") $("codeBtn
 $("menuBtn").onclick = () => { SFX.nav(); showMenu(); };
 $("menuBtn2").onclick = () => { SFX.nav(); showMenu(); };
 $("againBtn").onclick = () => { SFX.nav(); startGame(G.cine ? `F${G.level}-${G.saga.key}-${randomSeed()}` : `${G.mode}${G.level}-${randomSeed()}`); };
-$("clearBtn").onclick = () => { if (solved || !place.some(x => x >= 0)) return; place.fill(-1); where.fill(-1); sel = -1; SFX.back(); setMsg("Arbre vidé."); changed(); };
-function syncAid(){ $("aidBtn").setAttribute("aria-pressed", aid); $("aidBtn").setAttribute("aria-label", aid ? "Aide activée : les indices respectés sont cochés, les indices contredits en rouge" : "Aide désactivée"); }
-$("aidBtn").onclick = () => { aid = !aid; store.set("aid", aid); syncAid(); SFX.nav(); if (G) renderClues(); };
+$("retryBtn").onclick = () => { SFX.nav(); retry(); };
 function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = soundOn ? "SON" : "MUET"; }
 $("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); SFX.nav(); };
 window.addEventListener("pagehide", save);
@@ -1027,7 +1055,7 @@ let rT = null; window.addEventListener("resize", () => { clearTimeout(rT); rT = 
 })();
 
 if (location.hash === "#test") window.__lignee = () => G && {names: G.names.slice(), sex: G.P.map(p => p.sex)};
-syncSound(); syncAid(); renderMenu();
+syncSound(); renderMenu();
 })();
 </script>
 <script>
