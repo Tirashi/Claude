@@ -209,7 +209,22 @@ body.zoom #playView{display:flex; flex-direction:column}
 body.zoom #playView > .bar{order:2; margin-top:6px; justify-content:flex-start}
 body.zoom #playView > .bar > span:last-child{margin-left:auto}
 body.zoom #playView > .board-wrap{order:1; margin-top:0}
-body.zoom #playView > .msg{order:3} body.zoom #playView > .win{order:4} body.zoom #playView > .tools{order:5}
+body.zoom #playView > .msg{order:3} body.zoom #playView > .gpad{order:4} body.zoom #playView > .win{order:5} body.zoom #playView > .tools{order:6}
+/* manette du mode ZOOM */
+.gpad{display:none}
+body.zoom .gpad{display:flex; justify-content:space-between; align-items:center; gap:12px; margin:4px auto 0; width:100%; max-width:380px; padding:0 6px}
+body.zoom .gpad.off{display:none}
+.gpad button{font-family:Arial, sans-serif; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; cursor:pointer;
+  border:3px solid var(--ink); color:var(--paper); background:#3b3644; box-shadow:2px 2px 0 var(--ink)}
+.gpad button:active, .gpad button.on{transform:translate(2px,2px); box-shadow:none; background:#5a5466}
+.gdir{display:grid; grid-template-columns:repeat(3, 52px); grid-template-rows:repeat(3, 52px)}
+.gk{font-size:20px; padding:0; border-radius:8px}
+.gk.up{grid-area:1/2} .gk.left{grid-area:2/1} .gk.right{grid-area:2/3} .gk.down{grid-area:3/2}
+.gab{display:flex; gap:14px; align-items:center; transform:rotate(-14deg)}
+.gpad .gb{width:66px; height:66px; border-radius:50%; font-size:24px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; background:var(--dex-lo)}
+.gb.a{margin-top:-26px}
+.gb small{font-family:var(--f-display); font-size:8px; margin-top:4px}
+.gpad .gb:active, .gpad .gb.on{background:#9c1a26}
 body.zoom .corner{padding:0}
 body.zoom .rc{padding-right:2px; gap:calc(var(--cell)*.14)}
 .barprev{display:inline-flex}
@@ -268,6 +283,18 @@ body.zoom .tools .btn{padding:8px 9px}
         </div>
         <div class="board-wrap" id="wrap"><div class="board" id="board" tabindex="0" aria-label="Grille de picross"></div></div>
         <div class="msg" id="msg" aria-live="polite"></div>
+        <div class="gpad" id="gpad" aria-label="Manette : déplacer le curseur, A remplit, B pose une croix">
+          <div class="gdir">
+            <button type="button" class="gk up" data-d="up" aria-label="Haut">▲</button>
+            <button type="button" class="gk left" data-d="left" aria-label="Gauche">◀</button>
+            <button type="button" class="gk right" data-d="right" aria-label="Droite">▶</button>
+            <button type="button" class="gk down" data-d="down" aria-label="Bas">▼</button>
+          </div>
+          <div class="gab">
+            <button type="button" class="gb" id="padB" aria-label="B : poser une croix">✕<small>B</small></button>
+            <button type="button" class="gb a" id="padA" aria-label="A : remplir">■<small>A</small></button>
+          </div>
+        </div>
         <div class="win" id="win" hidden>
           <h2 id="winTitle"></h2>
           <div class="stats" id="winStats"></div>
@@ -3601,7 +3628,7 @@ function open(idx, saved){
   elapsed = prog ? prog.elapsed || 0 : 0; hints = prog ? prog.hints || 0 : 0; syncHint();
   history = []; solved = false; cursor = 0;
   $("dexView").hidden = true; $("playView").hidden = false;
-  $("win").hidden = true; $("tools").hidden = false;
+  $("win").hidden = true; $("tools").hidden = false; $("gpad").classList.remove("off");
   if (window.scrollY > $("playView").getBoundingClientRect().top + window.scrollY) window.scrollTo(0, 0);
   const roaming = isDog(P) && !captured[P.id];
   $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] || roaming ? P.name : "???";
@@ -3672,7 +3699,7 @@ function lineDone(vals, clue){ return same(clueOf(vals.map(v => v === 1)), clue)
 function render(hot){
   cellEls.forEach((e,i) => {
     e.classList.toggle("f", cells[i] === 1); e.classList.toggle("x", cells[i] === 2);
-    e.classList.toggle("cur", i === cursor && document.activeElement === $("board"));
+    e.classList.toggle("cur", i === cursor && (document.activeElement === $("board") || document.body.classList.contains("zoom")));
   });
   for (let r = 0; r < H; r++) rcEls[r].classList.toggle("done", lineDone(cells.slice(r*W, r*W+W), rowClues[r]));
   for (let c = 0; c < W; c++) ccEls[c].classList.toggle("done", lineDone([...Array(H).keys()].map(r => cells[r*W+c]), colClues[c]));
@@ -3716,7 +3743,7 @@ function win(){
   rcEls.concat(ccEls).forEach(e => e.classList.add("done"));
   $("pName").textContent = P.name;
   SFX.win();
-  $("tools").hidden = true; setMsg("");
+  $("tools").hidden = true; $("gpad").classList.add("off"); padHold = null; setMsg("");
   $("winTitle").innerHTML = P.no === "OBJ" ? `Tu as trouvé une <span class="hl">${P.name}</span> !`
     : P.legend === "mew" || P.legend === "celebi" ? `<span class="hl">${P.name}</span>, Pokémon fabuleux, rejoint ton Dex !`
     : P.legend ? `<span class="hl">${P.name}</span>, Pokémon légendaire, rejoint ton Dex !`
@@ -3805,6 +3832,40 @@ $("board").addEventListener("keydown", e => {
 });
 document.addEventListener("keydown", e => { if ((e.key === "z" || e.key === "Z") && !e.ctrlKey && !e.metaKey && P) undo(); });
 
+/* ---------- manette (mode ZOOM) : D-pad moves the cursor, A fills, B crosses; holding A/B while moving paints ---------- */
+let padHold = null, padRep = null;
+function padApply(i){
+  // same rule as a finger drag: only cells still in the starting state change, a cross never covers a filled cell
+  if (!padHold || cells[i] !== padHold.from) return;
+  const prev = cells.slice(); cells[i] = padHold.to; (padHold.to === 1 ? SFX.fill : SFX.cross)(); afterChange(prev);
+}
+function padMove(d){
+  if (!P || solved) return;
+  const r = Math.floor(cursor/W), c = cursor%W;
+  cursor = d === "up" ? ((r-1+H)%H)*W + c : d === "down" ? ((r+1)%H)*W + c : d === "left" ? r*W + (c-1+W)%W : r*W + (c+1)%W;
+  padApply(cursor); if (!solved) render(cursor);
+}
+function padPress(t){
+  if (!P || solved) return;
+  const from = cells[cursor];
+  if (t === 2 && from === 1){ padHold = null; return; }
+  padHold = {from, to: from === t ? 0 : t};
+  padApply(cursor); if (!solved) render(cursor);
+}
+document.querySelectorAll(".gk").forEach(btn => {
+  const stop = () => { clearTimeout(padRep); clearInterval(padRep); padRep = null; };
+  btn.addEventListener("pointerdown", e => { e.preventDefault(); stop(); padMove(btn.dataset.d);
+    padRep = setTimeout(() => { padRep = setInterval(() => padMove(btn.dataset.d), 85); }, 320); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(ev => btn.addEventListener(ev, stop));
+  btn.addEventListener("contextmenu", e => e.preventDefault());
+});
+[["padA", 1], ["padB", 2]].forEach(([id, t]) => {
+  const btn = $(id), up = () => { btn.classList.remove("on"); padHold = null; };
+  btn.addEventListener("pointerdown", e => { e.preventDefault(); btn.classList.add("on"); padPress(t); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(ev => btn.addEventListener(ev, up));
+  btn.addEventListener("contextmenu", e => e.preventDefault());
+});
+
 /* ---------- tools ---------- */
 function setTool(t){ tool = t; $("mFill").setAttribute("aria-pressed", t === "fill"); $("mCross").setAttribute("aria-pressed", t === "cross"); }
 $("mFill").onclick = () => setTool("fill");
@@ -3863,6 +3924,7 @@ function applyZoom(){
   // the preview leaves the board's corner (it widened the clue column) for the bar under the grid
   if (preview){ if (z) $("barPrev").replaceChildren(preview); else { $("barPrev").replaceChildren(); if (cornerEl) cornerEl.appendChild(preview); } $("barPrev").hidden = !z; }
   $("zoomBtn").setAttribute("aria-pressed", zoomOn);
+  if (P && !solved) render();   // shows (or hides) the pad cursor
   requestAnimationFrame(() => { fit(); if (P) window.scrollTo(0, 0); });
 }
 $("zoomBtn").onclick = () => { zoomOn = !zoomOn; store.set("zoom", zoomOn); SFX.nav(); applyZoom(); };
