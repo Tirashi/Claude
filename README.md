@@ -97,7 +97,7 @@ Deux modes, reliés par des onglets en haut de page.
 **Mode parcours** ([`injagility/parcours.html`](injagility/parcours.html)) : un terrain vu du dessus, en grille. On trace au doigt le chemin du chien de la ligne de départ à l'arrivée, en passant par les obstacles numérotés dans l'ordre, puis le chien le parcourt.
 
 - Haie et pneu se prennent de face (on entre et on ressort tout droit, barre en travers) ; le tunnel, en U ou en S, se suit d'un bout à l'autre ; slalom et passerelle demandent pendant la course de taper une suite de flèches (◀ ▶ pour le slalom) avant la fin du chrono.
-- Os en bonus, flaques en malus (ralentissent et coûtent des points), buissons infranchissables.
+- Os en bonus (des points, et un coup de boost de 4 cases), flaques en malus (ralentissent et coûtent des points), buissons infranchissables.
 - Parcours numérotés et sans fin, de plus en plus longs, avec de nouveaux obstacles aux niveaux 2 à 5. Chaque parcours est généré à partir d'un chemin caché, donc toujours faisable.
 - Points : 30 par obstacle, os, bonus de temps, moins les flaques et les fautes de boutons. Ils servent à adopter des races au chenil : Jack Russell (slalom facile), Golden retriever (os doublés), Border collie (plus rapide), Berger australien (les sauts ne ralentissent pas), Berger des Shetland (passerelle facile, flaques sans effet).
 - La progression (niveaux, records, points, chiens) est sauvegardée et fait partie du transfert de sauvegardes.
