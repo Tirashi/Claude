@@ -490,7 +490,7 @@ function mergeSaves(g){
   if (g.lignee && typeof g.lignee === "object"){
     const mine = readKey("lignee.stats", {}) || {}; let n = 0;
     for (const [k, v] of Object.entries(g.lignee)){
-      if (!/^[CR][1-4]$/.test(k) || !v) continue;
+      if (!/^([CR][1-4]|F[1-4]:[A-Z]{2,8})$/.test(k) || !v) continue;
       const m = mine[k] || {best: 0, n: 0}, before = JSON.stringify(m);
       if (v.best > 0 && (!m.best || v.best < m.best)) m.best = Math.round(v.best);
       if ((v.n || 0) > (m.n || 0)) m.n = v.n;

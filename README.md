@@ -73,9 +73,11 @@ Projet de fan à usage strictement personnel, sans lien avec Nintendo, Game Frea
 
 Un puzzle de logique sur le thème de la généalogie. Un arbre vide s'affiche (couples reliés, enfants en dessous) avec une réserve de personnages en pixel art ; une liste d'indices (« Louise est la grand-mère de Hugo », « Paul n'a pas de frère », « Le père de Chloé n'a ni frère ni sœur »…) permet de replacer chacun dans sa case.
 
-- Deux modes : **Classique** (familles françaises, prénoms d'époque de génération en génération) et **Royal** (dynasties médiévales, portraits couronnés, indices au vocabulaire royal : aïeul, premier-né, descendance…).
+- Trois modes : **Classique** (familles françaises, prénoms d'époque de génération en génération), **Royal** (dynasties médiévales, portraits couronnés, indices au vocabulaire royal : aïeul, premier-né, descendance…) et **Cinélogie**.
+- **Cinélogie** : les familles de films et de séries, dans leur version officielle et sans révélation : les Ewing (Dallas), les Maisons Stark et Lannister (Game of Thrones), les Simpson, les Skywalker (Star Wars), les Weasley (Harry Potter), les Corleone (Le Parrain), les Roy (Succession) et les Bridgerton. L'arbre est fixe, mais chaque partie tire de nouveaux indices au niveau choisi. Un trait en pointillés relie un enfant à un seul parent (Jon Snow, Herb Simpson, Connor Roy…), et les jumeaux à l'ordre de naissance inconnu (Fred et George) sont interchangeables.
 - Quatre niveaux : **Facile** (3 générations, 6 ou 7 personnes, liens directs), **Moyen** (3 générations, 9 ou 10 personnes, grands-parents, oncles, cousins, aînés), **Difficile** (4 générations, 12 à 14 personnes, belle-famille et comptages) et **Expert** (4 générations, jusqu'à 16 personnes, sans le sexe des cases hors couples).
 - Conventions : dans un couple, l'homme est à gauche ; les frères et sœurs vont du plus âgé (à gauche) au plus jeune (à droite) ; l'arbre est complet.
+- Indices « X est plus âgé que Y » entre frères et sœurs, en plus des liens de parenté.
 - Arbres générés à l'infini : le générateur tire une famille, écrit des indices vrais, puis un solveur ajoute et retire des indices jusqu'à ce qu'il ne reste qu'une seule solution, trouvable sans deviner.
 - Chaque arbre a un code (par exemple `C2-K3F9QX`) pour le rejouer ou le partager, et un **Arbre du jour** (niveau Moyen) est le même pour tout le monde dans chaque mode.
 - Toucher une personne puis une case pour la placer ; toucher un indice pour le barrer ; l'option AIDE coche les indices respectés et signale ceux qui sont contredits.
