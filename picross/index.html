@@ -80,6 +80,13 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 
 /* Dex list */
 .list{display:grid; grid-template-columns:repeat(auto-fill, minmax(104px,1fr)); gap:10px; margin-top:12px}
+/* le Dex défile dans l'écran au lieu d'allonger toute la page */
+.list{max-height:clamp(300px, calc(100dvh - 170px), 900px); overflow-y:auto; overscroll-behavior:contain; align-content:start;
+  padding:8px 8px 10px 6px; border:3px solid var(--ink); background:var(--screen-2); box-shadow:inset 3px 3px 0 var(--ink-soft);
+  scrollbar-width:auto; scrollbar-color:var(--ink) var(--screen)}
+.list::-webkit-scrollbar{width:14px}
+.list::-webkit-scrollbar-track{background:var(--screen); border-left:3px solid var(--ink)}
+.list::-webkit-scrollbar-thumb{background:var(--ink); border:3px solid var(--screen)}
 .entry{font:inherit; color:var(--ink); background:var(--screen); border:3px solid var(--ink); padding:8px 6px 6px; cursor:pointer;
   display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:3px 3px 0 var(--ink-soft)}
 .entry:hover{background:var(--screen-2)}
@@ -106,6 +113,13 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .grass .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
 .entry.hidden{cursor:default; background:repeating-linear-gradient(45deg, var(--screen) 0 4px, var(--screen-2) 4px 8px)}
 .entry.hidden .unk{opacity:.5}
+@media (max-width:540px){
+  .list{grid-template-columns:repeat(auto-fill, minmax(76px,1fr)); gap:8px; padding:6px 6px 8px 5px}
+  .entry{padding:6px 3px 5px; gap:4px}
+  .entry canvas, .entry .unk{width:54px; height:54px}
+  .entry .nm{font-size:6px; overflow-wrap:anywhere}
+  .entry .meta{font-size:12px}
+}
 .testnote{margin:10px 0 0; padding:8px 10px; border:3px dashed var(--ink); background:var(--gold); color:var(--ink); font-family:var(--f-display); font-size:8px; line-height:1.9}
 /* régions : Kanto, puis Johto (caché jusqu'à la capture de Mewtwo) */
 .tabs{display:flex; gap:8px; margin-bottom:10px}
@@ -3869,8 +3883,10 @@ function renderSizes(){
 }
 
 /* ---------- Dex list ---------- */
+const listScroll = {};   // position de défilement du Dex, par région
 function renderList(){
-  const list = $("list"); list.innerHTML = "";
+  const list = $("list"); if (!$("dexView").hidden && list.dataset.region) listScroll[list.dataset.region] = list.scrollTop;
+  list.innerHTML = "";
   const r = curRegion(), shown = DEX_ORDER.filter(idx => regionOf(PUZZLES[idx]) === r);
   $("tabs").hidden = !johtoVisible();
   $("tabKanto").setAttribute("aria-selected", r === "kanto"); $("tabJohto").setAttribute("aria-selected", r === "johto");
@@ -3927,6 +3943,7 @@ function renderList(){
   $("dexMsg").innerHTML = msg; $("dexMsg").hidden = !msg;
   renderSizes();
   $("testNote").hidden = !testMode;
+  list.dataset.region = r; list.scrollTop = listScroll[r] || 0;
 }
 function showDex(){
   const ran = P && !solved && isDog(P) && !captured[P.id] && !testMode ? P : null;
@@ -3950,6 +3967,7 @@ function open(idx, saved){
   cells = prog && prog.cells && prog.cells.length === W*H ? prog.cells.slice() : new Array(W*H).fill(0);
   elapsed = prog ? prog.elapsed || 0 : 0; hints = prog ? prog.hints || 0 : 0; syncHint();
   history = []; solved = false; cursor = 0;
+  if (!$("dexView").hidden) listScroll[$("list").dataset.region] = $("list").scrollTop;
   $("dexView").hidden = true; $("playView").hidden = false;
   $("win").hidden = true; $("tools").hidden = false; $("gpad").classList.remove("off");
   if (window.scrollY > $("playView").getBoundingClientRect().top + window.scrollY) window.scrollTo(0, 0);
