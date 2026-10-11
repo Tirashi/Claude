@@ -286,13 +286,14 @@ const CACHE = {};
 function frames(id){
   if (CACHE[id]) return CACHE[id];
   const B = BREEDS.find(b => b.id === id) || BREEDS[0];
-  return CACHE[id] = {
-    breed: B,
-    run: [...Array(8).keys()].map(k => dogFrame(gallopPose(k / 8), B)),
-    jump: [0, .25, .5, .75, 1].map(p => dogFrame(jumpPose(p), B)),
-    crawl: [0, .25, .5, .75].map(t => dogFrame(crawlPose(t), B)),
-    stand: dogFrame(standPose(), B),
-  };
+  // chaque série d'images n'est dessinée qu'au premier usage (le chenil n'a besoin que de la pose debout)
+  const lazy = (o, k, make) => Object.defineProperty(o, k, {get(){ const v = make(); Object.defineProperty(o, k, {value: v}); return v; }, configurable: true});
+  const f = {breed: B};
+  lazy(f, "run", () => [...Array(8).keys()].map(k => dogFrame(gallopPose(k / 8), B)));
+  lazy(f, "jump", () => [0, .25, .5, .75, 1].map(p => dogFrame(jumpPose(p), B)));
+  lazy(f, "crawl", () => [0, .25, .5, .75].map(t => dogFrame(crawlPose(t), B)));
+  lazy(f, "stand", () => dogFrame(standPose(), B));
+  return CACHE[id] = f;
 }
 
 
@@ -304,8 +305,12 @@ function blob(g, shapes, ramp, outline){
   RAMP._tmp = ramp; const C = Canvas(w, h);
   shapes.forEach((s, k) => C.draw(ell(s[0] - ox, s[1] - oy, s[2], s[3] || s[2]), {mat: "_tmp", id: 1, flat: true, fur: false}));
   const cv = C.toCanvas(false), gg = cv.getContext("2d");
-  if (outline){ gg.globalCompositeOperation = "destination-over"; gg.fillStyle = outline;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) gg.drawImage(C.toCanvas(false), dx, dy); }
+  if (outline){
+    // contour : la silhouette teintée, décalée d'un pixel dans les 4 directions, glissée dessous
+    const sil = document.createElement("canvas"); sil.width = cv.width; sil.height = cv.height;
+    const sg = sil.getContext("2d"); sg.drawImage(cv, 0, 0); sg.globalCompositeOperation = "source-in"; sg.fillStyle = outline; sg.fillRect(0, 0, sil.width, sil.height);
+    gg.globalCompositeOperation = "destination-over";
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) gg.drawImage(sil, dx, dy); }
   g.drawImage(cv, ox, oy);
 }
 

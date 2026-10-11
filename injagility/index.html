@@ -100,11 +100,11 @@ kbd{font-family:var(--f-display); font-size:8px; background:#000; border:2px sol
 
   <div class="info">
     <section class="card">
-      <h2>LE PARCOURS</h2>
+      <h2>LES OBSTACLES</h2>
       <dl>
         <dt>HAIE</dt><dd>Saute par-dessus la barre.</dd>
         <dt>OXER</dt><dd>Double barre, plus large : saute plus tôt.</dd>
-        <dt>PNEU</dt><dd>Plus haut : maintiens le saut pour passer dans le pneu.</dd>
+        <dt>PNEU</dt><dd>Plus haut : saute franchement pour passer dans le pneu.</dd>
         <dt>TUNNEL</dt><dd>Baisse-toi et maintiens jusqu'à la sortie.</dd>
       </dl>
     </section>
@@ -113,6 +113,7 @@ kbd{font-family:var(--f-display); font-size:8px; background:#000; border:2px sol
       <p>Touche l'écran ou appuie sur <kbd>ESPACE</kbd> pour sauter. Plus tu maintiens, plus le saut est haut.</p>
       <p>Glisse vers le bas, maintiens TUNNEL ou <kbd>↓</kbd> pour te baisser. En l'air, ça fait redescendre plus vite.</p>
       <p>Une barre touchée ou un refus au tunnel, et c'est l'élimination.</p>
+      <p>Sur l'écran titre et l'écran de fin, les flèches ◀ ▶ (ou <kbd>←</kbd> <kbd>→</kbd>) changent de chien, parmi ceux adoptés au chenil du mode Parcours.</p>
     </section>
   </div>
 </div>
@@ -136,7 +137,7 @@ const store = {
 const C32 = window.Chiens32, OUT = C32.OUT;
 const parc = store.get("parcours", {}) || {}, owned = Array.isArray(parc.owned) ? parc.owned : [];
 const BREEDS = C32.BREEDS.filter(b => b.id === "bernois" || owned.includes(b.id));
-let breedIdx = Math.max(0, BREEDS.findIndex(b => b.id === (store.get("dog", null) || parc.dog || "bernois")));
+let breedIdx = Math.max(0, [store.get("dog", null), parc.dog, "bernois"].map(id => BREEDS.findIndex(b => b.id === id)).find(i => i >= 0) ?? 0);
 let DOGF = C32.frames(BREEDS[breedIdx].id);
 let STRIDE = 76 * DOGF.breed.s;   // distance parcourue pendant une foulée de galop (8 images)
 function setBreed(d){
@@ -218,7 +219,7 @@ const TYPES = {
 function hitboxes(o){
   const x = o.x;
   if (o.type === "haie") return [{x:x+4, y:GY-27, w:12, h:27}];
-  if (o.type === "oxer") return [{x:x+4, y:GY-24, w:30, h:24}];
+  if (o.type === "oxer") return [{x:x+4, y:GY-24, w:14, h:24}, {x:x+20, y:GY-28, w:16, h:28}];
   if (o.type === "pneu") return [{x:x+12, y:GY-32, w:12, h:32}];
   return [{x:x+6, y:GY-29, w:o.w-9, h:9}];   // tunnel : seul le toit arrête un chien debout
 }
@@ -241,8 +242,15 @@ function bar(x0, y0, c1, c2){
     ctx.fillStyle = c[1]; ctx.fillRect(bx, by, 2, 4); ctx.fillStyle = c[0]; ctx.fillRect(bx, by, 2, 1); ctx.fillStyle = c[2]; ctx.fillRect(bx, by + 3, 2, 1); }
 }
 function shadowBar(x){ ctx.fillStyle = "#3e8636"; for (let k = 0; k < 18; k++) ctx.fillRect(Math.round(x + 4 + k * .9), GY + 7 - Math.round(k * .3), 3, 1); }
-// demi-pneu : la moitié arrière avant le chien, la moitié avant après, pour qu'il passe dedans
+// demi-pneu : la moitié arrière avant le chien, la moitié avant après, pour qu'il passe dedans (pré-dessinées)
+const RINGS = {};
 function ring(cx, cy, R, r, back){
+  const key = back ? "b" : "f";
+  if (!RINGS[key]) RINGS[key] = strip(2 * R + 1, 2 * R + 1, g => ringPixels(g, R, r, back));
+  ctx.drawImage(RINGS[key], cx - R, cy - R);
+}
+function ringPixels(ctx, R, r, back){
+  const cx = R, cy = R;
   for (let y = -R; y <= R; y++) for (let xx = -R; xx <= R; xx++){
     const d = Math.hypot(xx, y); if (d > R || d < r) continue;
     if (back ? xx > 0 : xx <= 0) continue;
@@ -277,39 +285,38 @@ function drawFront(o){
   else if (o.type === "pneu"){ ring(x + 18, GY - 48, 17, 10, false); post(x, GY + 6, 85, YEL, YEL); }
   else if (o.type === "tunnel"){
     const w = o.w;
-    ctx.fillStyle = OUT; ctx.fillRect(x + 7, GY - 33, w - 6, 33);
-    for (let i = 9; i < w; i++){
-      const band = Math.floor((i - o.phase) / 9) % 2 === 0;
-      for (let y = GY - 32; y < GY - 1; y++){
-        const v = (y - (GY - 32)) / 31;   // de haut en bas : reflet, couleur, ombre
-        ctx.fillStyle = v < .12 ? (band ? "#7fb6ea" : "#a8d0f4") : v < .7 ? (band ? "#3a7fc8" : "#5a9ae0") : v < .9 ? (band ? "#25568e" : "#3a72b0") : "#1a3c66";
-        ctx.fillRect(x + i, y, 1, 1);
-      }
-    }
-    ctx.fillStyle = "#f4efe6"; ctx.fillRect(x + 9, GY - 32, 3, 31); ctx.fillStyle = "#c9c0b0"; ctx.fillRect(x + 11, GY - 32, 1, 31);   // cerceau
-    ctx.fillStyle = OUT; ctx.fillRect(x + w, GY - 30, 3, 30);
+    o.img = o.img || strip(w + 4, 34, g => {
+      g.fillStyle = OUT; g.fillRect(7, 1, w - 6, 33);
+      // bandes de toile : de haut en bas, reflet, couleur, ombre
+      const tone = [[.12, "#7fb6ea", "#a8d0f4"], [.7, "#3a7fc8", "#5a9ae0"], [.9, "#25568e", "#3a72b0"], [1.1, "#1a3c66", "#1a3c66"]];
+      for (let i = 9; i < w; i++){ const band = Math.floor(i / 9) % 2 === 0; let y0 = 0;
+        for (const [lim, a, b] of tone){ const y1 = Math.round(31 * lim > 31 ? 31 : 31 * lim); g.fillStyle = band ? a : b; g.fillRect(i, 2 + y0, 1, Math.max(0, y1 - y0)); y0 = y1; } }
+      g.fillStyle = "#f4efe6"; g.fillRect(9, 2, 3, 31); g.fillStyle = "#c9c0b0"; g.fillRect(11, 2, 1, 31);   // cerceau
+      g.fillStyle = OUT; g.fillRect(w, 4, 3, 30);
+    });
+    ctx.drawImage(o.img, x, GY - 34);
   }
 }
 
 /* ---------- game state ---------- */
 let state = "title", best = store.get("best", 0), newRecord = false, rankLine = "";
-let dog, obs, speed, dist, score, nextGap, t, floats, dust, fault, overAt, groundPhase, clouds;
+let dog, obs, speed, dist, score, nextGap, t, floats, dust, fault, overAt, clouds, gameId = 0, jumpAt = 0;
 function reset(){
   dog = {y: 0, vy: 0, ground: true, duck: false, hold: 0};
-  obs = []; speed = 180; dist = 0; score = 0; nextGap = 240; t = 0; floats = []; dust = []; fault = ""; groundPhase = 0;
+  obs = []; speed = 180; dist = 0; score = 0; nextGap = 240; t = 0; floats = []; dust = []; fault = ""; gameId++;
   clouds = [{x: 60, y: 20, s: .12, k: 0}, {x: 260, y: 42, s: .08, k: 1}, {x: 420, y: 12, s: .1, k: 2}];
 }
 reset();
 
 const input = {jump: false, duck: false};
 function pressJump(){
-  if (state === "title"){ state = "run"; SFX.bark(); }
+  if (state === "title"){ state = "run"; SFX.bark(); return; }   // partir sans sauter
   else if (state === "over"){ if (performance.now() - overAt > 450){ reset(); state = "run"; SFX.bark(); } return; }
   input.jump = true;
-  if (dog.ground && !dog.duck){ dog.vy = -352; dog.ground = false; dog.hold = .2; SFX.jump(); }
+  if (dog.ground && !input.duck){ dog.vy = -352; dog.ground = false; dog.hold = .2; jumpAt = performance.now(); SFX.jump(); }
 }
 function releaseJump(){ input.jump = false; }
-function setDuck(v){ input.duck = v; if (v && state === "title"){ state = "run"; SFX.bark(); } }
+function setDuck(v){ input.duck = v; }
 
 function spawn(){
   const roll = Math.random(), lvl = Math.min(1, dist/6000);
@@ -332,13 +339,13 @@ function dogBox(){
 const hit = (a, b) => a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
 
 function update(dt){
-  t += dt; if (arrowFlash) arrowFlash.t -= dt;
+  t += dt;
   // le ciel bouge même sur l'écran titre et l'écran de fin
   for (const c of clouds){ c.x -= (state === "run" ? speed : 30) * c.s * dt; if (c.x < -100) { c.x = VW + Math.random()*90; c.y = 10 + Math.random()*40; } }
   if (state !== "run") return;
 
   speed = Math.min(495, 180 + dist * 0.035);
-  const dx = speed * dt; dist += dx; groundPhase = (groundPhase + dx) % 24;
+  const dx = speed * dt; dist += dx;
 
   // physique du chien : maintenir le saut le fait planer un peu, se baisser en l'air le fait retomber vite
   dog.duck = input.duck;
@@ -355,7 +362,7 @@ function update(dt){
   nextGap -= dx; if (nextGap <= 0) spawn();
   const box = dogBox();
   for (const o of obs){
-    o.x -= dx; o.phase += dx;
+    o.x -= dx;
     if (!o.done && o.x + o.w < DOG_X + 26){
       o.done = true; score += TYPES[o.type].pts;
       floats.push({x: DOG_X+40, y: GY-60, txt: "+"+TYPES[o.type].pts+" "+TYPES[o.type].label, life: .9});
@@ -373,9 +380,9 @@ function update(dt){
 function gameOver(o){
   state = "over"; overAt = performance.now(); fault = TYPES[o.type].fault; newRecord = score > best && score > 0;
   if (score > best){ best = score; store.set("best", best); }
-  SFX.over(); rankLine = "";
+  SFX.over(); rankLine = ""; const g = gameId;
   // classement familial : le record part tout seul
-  if (newRecord && window.LudoScores) LudoScores.submit("injagility", "best", score, false).then(r => { if (r) rankLine = LudoScores.rankText(r).toUpperCase() + " AU CLASSEMENT"; });
+  if (newRecord && window.LudoScores) LudoScores.submit("injagility", "best", score, false).then(r => { if (r && g === gameId) rankLine = LudoScores.rankText(r).toUpperCase() + " AU CLASSEMENT"; });
 }
 
 /* ---------- dessin ---------- */
@@ -473,7 +480,7 @@ function arrow(cx, cy, dir, lit){
     ctx.fillStyle = lit ? "#fff6c2" : "#e0782a"; ctx.fillRect(xx, cy + 1, 1, Math.max(0, hgt));
   }
 }
-const TITLE_ARROWS = {left: 118, right: 362, y: 118};
+const TITLE_ARROWS = {left: 118, right: 362, y: 118}, OVER_ARROWS = {left: 86, right: 200, y: 142};
 function titleScreen(){
   ctx.fillStyle = "rgba(10,14,30,.35)"; ctx.fillRect(0, 0, VW, VH);
   plate(76, 20, 328, 202, true);
@@ -498,8 +505,10 @@ function overScreen(){
   logo("ÉLIMINÉ !", VW / 2, 40, 22, REDT);
   text(fault, VW / 2, 74, 10, "#ffd23f", "center");
   // le chien à gauche, les chiffres à droite
-  ctx.fillStyle = "rgba(0,0,0,.4)"; for (let y = 0; y < 3; y++) ctx.fillRect(112 - 22 + y, 168 + y, 44 - y * 2, 1);
-  ctx.drawImage(DOGF.stand, 86, 170 - C32.GROUND);
+  ctx.fillStyle = "rgba(0,0,0,.4)"; for (let y = 0; y < 3; y++) ctx.fillRect(124 - 22 + y, 168 + y, 44 - y * 2, 1);
+  ctx.drawImage(DOGF.stand, 98, 170 - C32.GROUND);
+  if (BREEDS.length > 1){ const fl = arrowFlash && arrowFlash.t > 0 ? arrowFlash.d : 0;
+    arrow(OVER_ARROWS.left - (fl < 0 ? 2 : 0), OVER_ARROWS.y, -1, fl < 0); arrow(OVER_ARROWS.right + (fl > 0 ? 2 : 0), OVER_ARROWS.y, 1, fl > 0); }
   logo(String(score), 300, 96, 32, GOLD);
   text("OBSTACLES", 300, 134, 8, "#a8d0f4", "center", null);
   text(`${Math.floor(dist / 24)} m`, 300, 148, 10, "#ffffff", "center");
@@ -514,8 +523,10 @@ if (location.hash === "#test") window.__inj = () => ({obs, dog, state, score, sp
 /* ---------- loop ---------- */
 let last = performance.now();
 function frame(now){
+  if (arrowFlash) arrowFlash.t -= Math.min(.05, (now - last) / 1000);
   const dt = Math.min(.05, (now - last)/1000); last = now;
-  if (state === "over") t += dt; else update(dt);
+  if (state === "over"){ t += dt; for (const c of clouds){ c.x -= 30 * c.s * dt; if (c.x < -100) c.x = VW + 40; } }
+  else update(dt);
   draw(); requestAnimationFrame(frame);
 }
 (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(frame));
@@ -523,7 +534,7 @@ function frame(now){
 /* ---------- input ---------- */
 document.addEventListener("keydown", e => {
   if (e.target.tagName === "BUTTON" && (e.key === " " || e.key === "Enter")) return;
-  if (state === "title" && (e.key === "ArrowLeft" || e.key === "ArrowRight")){ e.preventDefault(); setBreed(e.key === "ArrowLeft" ? -1 : 1); return; }
+  if ((state === "title" || state === "over") && (e.key === "ArrowLeft" || e.key === "ArrowRight")){ e.preventDefault(); setBreed(e.key === "ArrowLeft" ? -1 : 1); return; }
   if (["ArrowUp"," ","w","W","z","Z"].includes(e.key)){ e.preventDefault(); if (!e.repeat) pressJump(); }
   else if (["ArrowDown","s","S"].includes(e.key)){ e.preventDefault(); setDuck(true); }
 });
@@ -536,10 +547,14 @@ let touch = null;
 cv.addEventListener("pointerdown", e => {
   e.preventDefault(); cv.focus({preventScroll:true});
   // sur l'écran titre, les flèches changent de race
-  if (state === "title" && BREEDS.length > 1){ const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * VW;
-    if (x < TITLE_ARROWS.left + 34){ setBreed(-1); return; } if (x > TITLE_ARROWS.right - 34){ setBreed(1); return; } }
+  if ((state === "title" || state === "over") && BREEDS.length > 1){
+    const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * VW, y = (e.clientY - r.top) / r.height * VH;
+    const A = state === "title" ? TITLE_ARROWS : OVER_ARROWS, near = (ax) => Math.abs(x - ax) < 30 && Math.abs(y - A.y) < 34;
+    if (near(A.left)){ setBreed(-1); return; } if (near(A.right)){ setBreed(1); return; } }
   touch = {y: e.clientY, ducked: false}; pressJump(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} });
-cv.addEventListener("pointermove", e => { if (touch && !touch.ducked && e.clientY - touch.y > 24){ touch.ducked = true; releaseJump(); setDuck(true); } });
+cv.addEventListener("pointermove", e => { if (touch && !touch.ducked && e.clientY - touch.y > 24){ touch.ducked = true; releaseJump(); setDuck(true);
+  // le doigt glisse vers le bas juste après le toucher : ce n'était pas un saut
+  if (state === "run" && !dog.ground && dog.vy < 0 && performance.now() - jumpAt < 180){ dog.y = 0; dog.vy = 0; dog.ground = true; } } });
 const endTouch = () => { if (!touch) return; if (touch.ducked) setDuck(false); releaseJump(); touch = null; };
 cv.addEventListener("pointerup", endTouch); cv.addEventListener("pointercancel", endTouch);
 cv.addEventListener("contextmenu", e => e.preventDefault());

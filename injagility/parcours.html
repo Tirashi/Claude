@@ -147,7 +147,7 @@ body.playing .msg{min-height:2em; margin:6px 0}
   <section id="play" hidden>
     <div class="frame">
       <div class="hud"><span>PARCOURS <b id="pNum">1</b></span><span>OBSTACLE <b id="pNext">1</b></span><span>TEMPS <b id="pTime">0.0</b></span></div>
-      <div class="fieldbox"><canvas id="field" width="128" height="176" aria-label="Terrain vu du dessus : trace le parcours du chien"></canvas><div id="badges" aria-hidden="true"></div></div>
+      <div class="fieldbox"><canvas id="field" width="256" height="352" aria-label="Terrain vu du dessus : trace le parcours du chien"></canvas><div id="badges" aria-hidden="true"></div></div>
       <div class="msg" id="msg" aria-live="polite"></div>
       <div class="tools3" id="drawTools">
         <button class="btn wood" type="button" id="backBtn" aria-label="Retour aux parcours">◀</button>
@@ -212,12 +212,12 @@ const SFX = {
 
 /* ---------- races de chiens ---------- */
 const DOGS = [
-  {id: "bernois", name: "BOUVIER BERNOIS", price: 0,   pal: {b: "#1f1b26", w: "#f4efe6", t: "#c8652c"}, perk: "Le chien de la maison : solide et motivé, sans talent particulier."},
-  {id: "jack",    name: "JACK RUSSELL",    price: 300, pal: {b: "#ece4d6", w: "#ffffff", t: "#b8742c"}, perk: "Slalom : des séquences plus courtes et plus de temps pour les taper."},
-  {id: "golden",  name: "GOLDEN RETRIEVER", price: 450, pal: {b: "#d8a040", w: "#f0d090", t: "#b8802a"}, perk: "Flair : chaque os rapporte le double."},
-  {id: "border",  name: "BORDER COLLIE",   price: 600, pal: {b: "#1a1a22", w: "#f4f4f4", t: "#f4f4f4"}, perk: "Vitesse : court 30 % plus vite, donc plus de bonus de temps."},
-  {id: "aussie",  name: "BERGER AUSTRALIEN", price: 750, pal: {b: "#6a7a8a", w: "#f4efe6", t: "#c8652c"}, perk: "Sauteur : les haies et les pneus ne le ralentissent pas."},
-  {id: "sheltie", name: "BERGER DES SHETLAND", price: 900, pal: {b: "#b8702a", w: "#f4efe6", t: "#e0a050"}, perk: "Équilibre : passerelle plus facile, et les flaques ne lui font rien."},
+  {id: "bernois", name: "BOUVIER BERNOIS", price: 0,   perk: "Le chien de la maison : solide et motivé, sans talent particulier."},
+  {id: "jack",    name: "JACK RUSSELL",    price: 300, perk: "Slalom : des séquences plus courtes et plus de temps pour les taper."},
+  {id: "golden",  name: "GOLDEN RETRIEVER", price: 450, perk: "Flair : chaque os rapporte le double."},
+  {id: "border",  name: "BORDER COLLIE",   price: 600, perk: "Vitesse : court 30 % plus vite, donc plus de bonus de temps."},
+  {id: "aussie",  name: "BERGER AUSTRALIEN", price: 750, perk: "Sauteur : les haies et les pneus ne le ralentissent pas."},
+  {id: "sheltie", name: "BERGER DES SHETLAND", price: 900, perk: "Équilibre : passerelle plus facile, et les flaques ne lui font rien."},
 ];
 const dogById = id => DOGS.find(d => d.id === id) || DOGS[0];
 
@@ -398,7 +398,7 @@ cv.addEventListener("pointerup", stopDraw); cv.addEventListener("pointercancel",
 /* ---------- dessin du terrain (32 bits, vu du dessus) ---------- */
 // cases de 32 px ; lumière en haut à gauche, ombres portées vers le bas à droite
 const C32 = window.Chiens32, OUT = C32.OUT;
-const COL = {ink: OUT, white: "#f4efe6", red: "#d6312a", yellow: "#ffd23f", blue: "#2f6fb0", blue2: "#4a8fd4"};
+const COL = {white: "#f4efe6", red: "#d6312a", yellow: "#ffd23f"};
 const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
 const SHADOW = "rgba(20,40,20,.32)";
 const RAMPS = {
@@ -443,7 +443,7 @@ function buildField(){
     g.font = "600 20px 'Pixelify Sans', monospace"; g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
     g.lineWidth = 5; g.strokeStyle = OUT; g.strokeText(txt, W * CS / 2, y); g.fillStyle = y < CS ? "#ffd23f" : COL.white; g.fillText(txt, W * CS / 2, y);
   }
-  for (const c of G.puddles) puddle(cx(c) * CS, cy(c) * CS, c);
+  for (const c of G.puddles) puddle(cx(c) * CS, cy(c) * CS);
   for (const c of G.bushes) bush(cx(c) * CS, cy(c) * CS, c);
   for (const o of G.objs) drawObj(o);
   ctx = realCtx; fieldCache = off; fieldFor = G;
@@ -496,7 +496,8 @@ function drawObj(o){
     const pts = o.cells.map(c => [cx(c) * CS + 16, cy(c) * CS + 16]);
     const minX = Math.min(...pts.map(p => p[0])) - 16, minY = Math.min(...pts.map(p => p[1])) - 16;
     const w = Math.max(...pts.map(p => p[0])) - minX + 17, hh = Math.max(...pts.map(p => p[1])) - minY + 17;
-    ctx.fillStyle = SHADOW; for (let k = 1; k < pts.length; k++){ const [a, b] = [pts[k - 1], pts[k]]; ctx.fillRect(Math.min(a[0], b[0]) - 9, Math.min(a[1], b[1]) - 6, Math.abs(a[0] - b[0]) + 22, Math.abs(a[1] - b[1]) + 20); }
+    ctx.save(); ctx.strokeStyle = SHADOW; ctx.lineWidth = 22; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.beginPath();
+    pts.forEach(([X, Y], k) => k ? ctx.lineTo(X + 3, Y + 5) : ctx.moveTo(X + 3, Y + 5)); ctx.stroke(); ctx.restore();
     const shapes = [];
     for (let k = 1; k < pts.length; k++) shapes.push([C32.cap(pts[k - 1][0] - minX, pts[k - 1][1] - minY, pts[k][0] - minX, pts[k][1] - minY, 11), RAMPS.blue, {flat: true}]);
     shaded(minX, minY, w, hh, shapes);
@@ -626,7 +627,7 @@ function startQte(o){
     run.qte = {o, title: "SLALOM !", seq: Array.from({length: n}, (_, k) => k % 2 ? (s === "L" ? "R" : "L") : s), pos: 0, limit: D.id === "jack" ? 5 : 3.6}; }
   else { const n = D.id === "sheltie" ? 3 : 4, K = ["L", "R", "U", "D"];
     run.qte = {o, title: "PASSERELLE !", seq: Array.from({length: n}, () => K[Math.floor(rng() * 4)]), pos: 0, limit: D.id === "sheltie" ? 5.5 : 4}; }
-  run.qte.left = run.qte.limit; $("qte").hidden = false; SFX.bark();
+  run.qte.left = run.qte.limit; $("qte").hidden = false; SFX.bark(); fitField();
 }
 function qteKey(k){
   if (!run || !run.qte) return;
@@ -634,12 +635,12 @@ function qteKey(k){
   if (q.seq[q.pos] === k){ q.pos++; SFX.ok(); if (q.pos >= q.seq.length) endQte(); }
   else { run.faults++; SFX.bad(); flash = .3; }
 }
-function endQte(){ run.qteDone.add(run.qte.o.n); run.qte = null; $("qte").hidden = true; }
+function endQte(){ run.qteDone.add(run.qte.o.n); run.qte = null; $("qte").hidden = true; fitField(); }
 let flash = 0;
 function update(dt){
   if (!run || run.done) return;
   run.time += dt;
-  if (run.qte){ run.qte.left -= dt; if (run.qte.left <= 0){ run.faults++; SFX.bad(); endQte(); } return; }
+  if (run.qte){ run.qte.left -= dt; $("pTime").textContent = run.time.toFixed(1); if (run.qte.left <= 0){ run.faults++; SFX.bad(); endQte(); } return; }
   const i = run.i;
   if (i >= path.length - 1){ finish(); return; }
   // arrivé à l'entrée d'un slalom ou d'une passerelle : épreuve de boutons
@@ -650,12 +651,15 @@ function update(dt){
   const a = path[i], b = path[i + 1], f = Math.min(1, run.t / dur);
   run.pose.x = (cx(a) + (cx(b) - cx(a)) * f + .5) * CS; run.pose.y = (cy(a) + (cy(b) - cy(a)) * f + .5) * CS;
   run.pose.ang = {U: 0, R: Math.PI / 2, D: Math.PI, L: -Math.PI / 2}[dirOf(a, b)];
-  const ob = objAt(b);
-  run.pose.hop = ob && (ob.type === "haie" || ob.type === "pneu") ? Math.sin(f * Math.PI) : 0;
-  run.pose.hidden = !!(objAt(a) && objAt(a).type === "tunnel" && ob && ob.type === "tunnel");
+  const ob = objAt(b), oa = objAt(a), jumpy = o => o && (o.type === "haie" || o.type === "pneu"), tun = o => o && o.type === "tunnel";
+  // le saut culmine au-dessus de la barre (au milieu de la case de l'obstacle) : on monte en y entrant, on redescend en sortant
+  run.pose.hop = jumpy(ob) ? Math.sin(f * Math.PI / 2) : jumpy(oa) ? Math.cos(f * Math.PI / 2) : 0;
+  if (jumpy(ob) && run.jumpFor !== i){ run.jumpFor = i; SFX.jump(); }
+  // dans le tunnel, le chien disparaît dès qu'il a passé l'entrée et réapparaît à la sortie
+  run.pose.hidden = (tun(oa) && tun(ob)) || (!tun(oa) && tun(ob) && f > .5) || (tun(oa) && !tun(ob) && f < .5);
   if (f >= 1){
     run.i++; run.t = 0; if (run.boost > 0) run.boost--;
-    if (ob && (ob.type === "haie" || ob.type === "pneu")) SFX.jump(); else SFX.step();
+    if (!jumpy(ob)) SFX.step();
     if (G.bones.has(b) && !run.got.has(b)){ run.got.add(b); run.boost = BOOST_STEPS; SFX.bone(); tone([523, 784, 1047], "square", .04, .03); }
     if (G.puddles.has(b)){ run.wet++; SFX.splash(); }
   }
@@ -689,7 +693,7 @@ function finish(){
       if (r && G && G.n === n) setMsg(`Tu as <span class="hl">${save.wallet}</span> points au total · parcours ${n} : <span class="hl">${LudoScores.rankText(r)}</span> au classement.`); });
     if (sum > 0) LudoScores.submit("parcours", "total", sum, false);
   }
-  SFX.win();
+  SFX.win(); fitField();   // le panneau de résultat est plus haut que les outils : on refait la place
 }
 
 /* ---------- écrans ---------- */
@@ -736,8 +740,8 @@ function renderKennel(){
     const own = save.owned.includes(D.id), cur = save.dog === D.id;
     const el = document.createElement("div"); el.className = "dog" + (cur ? " cur" : "");
     // le chien en 32 bits, debout (Chiens32 est partagé avec le mode Infini)
-    const c = document.createElement("canvas"); c.width = 76; c.height = 58;
-    c.getContext("2d").drawImage(window.Chiens32.frames(D.id).stand, -8, -4); el.appendChild(c);
+    const c = document.createElement("canvas"); c.width = 82; c.height = 58;
+    c.getContext("2d").drawImage(window.Chiens32.frames(D.id).stand, -2, -4); el.appendChild(c);
     const t = document.createElement("div"); t.innerHTML = `<h3>${D.name}</h3><p>${D.perk}</p>`; el.appendChild(t);
     const b = document.createElement("button"); b.type = "button"; b.className = "btn " + (cur ? "wood" : own ? "alt" : "");
     b.textContent = cur ? "EN PISTE" : own ? "CHOISIR" : `${D.price} PTS`;
@@ -779,7 +783,8 @@ function frame(now){
 }
 if (location.hash === "#test") window.__parcours = { gen: generate, get G(){ return G; }, get run(){ return run; }, get path(){ return path; }, set path(p){ path = p; }, open: openLevel, save: () => save };
 syncSound(); renderMap(); requestAnimationFrame(frame);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
+// la police des textes ARRIVÉE / DÉPART arrive parfois après le premier dessin : on redessine le terrain
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fieldFor = null; });
 })();
 </script>
 <script>
