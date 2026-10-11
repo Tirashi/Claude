@@ -99,8 +99,6 @@ a.btn{text-decoration:none; text-align:center}
 .slot .nm{font-family:var(--f-body); color:var(--ink); white-space:nowrap; line-height:1; margin-top:1px}
 .slot.empty canvas{opacity:.5}
 .slot.filled{background:#fffaf0; border-color:var(--frame)}
-.slot.sel{outline:3px dashed var(--bad); outline-offset:2px}
-.slot.target{border-color:var(--accent)}
 .slot.ok{border-color:var(--gold); background:#fff6d6; animation:pop .4s steps(3) both}
 @keyframes pop{0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)}}
 .msg{font-family:var(--f-display); font-size:9px; line-height:1.9; text-align:center; min-height:2em; margin:6px 0 8px; color:var(--ink)}
@@ -111,12 +109,11 @@ a.btn{text-decoration:none; text-align:center}
 .card canvas{width:44px; height:44px; image-rendering:pixelated}
 .card.sel{background:var(--gold); outline:3px dashed var(--bad); outline-offset:2px}
 .trayhint{font-size:17px; color:var(--ink-soft); margin:0 0 6px}
-.clues{margin:0; padding:0; list-style:none; counter-reset:c}
-.clues li{counter-increment:c; position:relative; padding:5px 6px 5px 34px; border-bottom:2px dotted var(--paper2); font-size:19px; cursor:pointer; color:var(--ink)}
-.clues li::before{content:counter(c); position:absolute; left:4px; top:6px; font-family:var(--f-display); font-size:9px; color:var(--ink-soft)}
+.clues{margin:0; padding:0; list-style:none}
+.clues li{position:relative; padding:5px 6px 5px 34px; border-bottom:2px dotted var(--paper2); font-size:19px; color:var(--ink)}
+/* chaque indice garde son numéro, même quand il descend en bas de la liste */
+.clues li::before{content:attr(data-n); position:absolute; left:4px; top:6px; font-family:var(--f-display); font-size:9px; color:var(--ink-soft)}
 .clues li b{font-weight:400; color:var(--accent)}
-.clues li.struck{opacity:.42; text-decoration:line-through}
-.clues li.good::after{content:"✓"; position:absolute; right:6px; top:4px; color:var(--good); font-family:Arial, sans-serif}
 .clues li.done{opacity:.5; cursor:default}
 .clues li.done::after{content:"✓"; position:absolute; right:6px; top:4px; color:var(--good); font-family:Arial, sans-serif}
 .clues li.sep{border-top:3px dashed var(--paper2)}
@@ -172,7 +169,7 @@ a.btn{text-decoration:none; text-align:center}
     </div>
     <div class="panel rules">
       <h2>RÈGLES</h2>
-      <p>Touche une personne de la réserve (rangée par ordre alphabétique), puis la case de l'arbre où elle doit aller. Une personne bien placée y reste. <b>Tu as 3 vies</b> : chaque erreur en coûte une et renvoie la personne dans la réserve. Sans vie, l'arbre est perdu : tu peux le retenter, mais le chrono continue.</p>
+      <p>Touche une personne de la réserve (rangée par ordre alphabétique), puis la case de l'arbre où elle doit aller. Une personne bien placée y reste. <b>Tu as 3 vies</b> : chaque erreur en coûte une et renvoie la personne dans la réserve. Quand tu n'as plus de vie, l'arbre est perdu : tu peux le recommencer depuis le début, mais le chrono continue.</p>
       <p>Un indice dont toutes les personnes sont placées se coche tout seul et descend en bas de la liste.</p>
       <ul>
         <li>Dans un couple, <b>l'homme est à gauche</b> et la femme à droite.</li>
@@ -182,7 +179,8 @@ a.btn{text-decoration:none; text-align:center}
         <li><b>Oncle, tante</b> : frère ou sœur d'un parent, ou son conjoint. <b>Cousins</b> : enfants de deux frères et sœurs.</li>
         <li><b>Beau-père, belle-mère</b> : parent du conjoint. <b>Gendre, belle-fille</b> : conjoint d'un enfant. <b>Beau-frère, belle-sœur</b> : frère ou sœur du conjoint, ou conjoint d'un frère ou d'une sœur.</li>
         <li>Un trait en <b>pointillés</b> relie un enfant à un seul de ses parents (l'autre n'est pas dans l'arbre) : il a des demi-frères et sœurs, qui comptent dans sa fratrie.</li>
-        <li>En <b>Expert</b>, les cases ne montrent plus si elles attendent un homme ou une femme.</li>
+        <li>En <b>Expert</b>, seules les cases des couples montrent encore qui est l'homme (à gauche) et qui est la femme.</li>
+        <li>Un arbre déjà reconstitué (Arbre du jour compris) peut se rejouer, mais hors classement : il ne compte plus dans les records.</li>
         <li><b>Cinélogie</b> : les familles de films et de séries, dans leur version officielle, sans révélation. Les jumeaux dont on ignore l'ordre de naissance sont interchangeables.</li>
         <li>Chaque arbre n'a qu'une seule solution, trouvable sans deviner.</li>
       </ul>
@@ -191,13 +189,13 @@ a.btn{text-decoration:none; text-align:center}
 
   <!-- ===== partie ===== -->
   <section id="game" hidden>
-    <div class="bar"><span id="gTitle">CLASSIQUE · FACILE</span><span>CODE <b id="gCode">—</b></span><span>TEMPS <b id="gTime">00:00</b></span><span class="lives" id="gLives" aria-label="3 vies">♥♥♥</span></div>
+    <div class="bar"><span id="gTitle">CLASSIQUE · FACILE</span><span>CODE <b id="gCode">—</b></span><span>TEMPS <b id="gTime">00:00</b></span><span class="lives" id="gLives" role="img" aria-label="3 vies">♥♥♥</span></div>
     <div class="gamegrid">
       <div class="panel" style="padding:8px">
         <div class="treebox"><div class="tree" id="tree"></div></div>
         <div class="msg" id="msg" aria-live="polite"></div>
         <div id="trayBox"><p class="trayhint" id="trayHint">Réserve : touche une personne, puis sa case.</p><div class="tray" id="tray"></div></div>
-        <div class="win" id="win" hidden>
+        <div class="win" id="win" hidden aria-live="polite">
           <h2 id="winTitle"></h2>
           <p id="winStory"></p>
           <p class="small" id="winStats"></p>
@@ -208,7 +206,7 @@ a.btn{text-decoration:none; text-align:center}
       <div class="panel">
         <h2>INDICES</h2>
         <ol class="clues" id="clues"></ol>
-        <p class="small" style="margin:8px 0 0">Touche un indice pour le barrer. Les indices résolus se cochent tout seuls.</p>
+        <p class="small" style="margin:8px 0 0">Les indices résolus se cochent tout seuls et descendent en bas de la liste.</p>
       </div>
       <div class="tools">
         <button class="btn" type="button" id="menuBtn">◀ MENU</button>
@@ -690,10 +688,12 @@ function drawSilhouette(cv, sex){
 
 /* ---------- les phrases des indices ---------- */
 const NUM = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit"];
+// « d'Annie », « d'Héloïse », mais « de Hugues »
+const elide = n => /^(?:[AEIOUYÉÈÊÂÎÔ]|H(?:é|è|enri|ermione|omer|erb|ugo|uguette|ortense|onoré|ubert|élène))/i.test(n);
 function clueText(c, P, names, royal){
   const A = `<b>${names[c.a]}</b>`, B = c.b != null ? `<b>${names[c.b]}</b>` : "", m = P[c.a].sex === "M";
   // « de Annie » devient « d'Annie »
-  const dB = c.b != null ? (/^[AEIOUYÉÈÊÂÎÔ]/i.test(names[c.b]) ? `d'${B}` : `de ${B}`) : "";
+  const dB = c.b != null ? (elide(names[c.b]) ? `d'${B}` : `de ${B}`) : "";
   const g = (h, f) => m ? h : f;
   switch (c.t){
     case "parent": return `${A} est ${g("le père", "la mère")} ${dB}.`;
@@ -717,8 +717,8 @@ function clueText(c, P, names, royal){
     case "noSister": return `${A} n'a pas de sœur.`;
     case "eldest": return royal ? `${A} est ${g("le premier-né", "la première-née")} de sa fratrie.` : `${A} est ${g("l'aîné", "l'aînée")} de sa fratrie.`;
     case "youngest": return royal ? `${A} est ${g("le dernier-né", "la dernière-née")} de sa fratrie.` : `${A} est ${g("le benjamin", "la benjamine")} de sa fratrie.`;
-    case "dadOnly": return `Le père ${/^[AEIOUYÉÈÊÂÎÔ]/i.test(names[c.a]) ? "d'" + A : "de " + A} n'a ni frère ni sœur.`;
-    case "mumOnly": return `La mère ${/^[AEIOUYÉÈÊÂÎÔ]/i.test(names[c.a]) ? "d'" + A : "de " + A} n'a ni frère ni sœur.`;
+    case "dadOnly": return `Le père ${elide(names[c.a]) ? "d'" + A : "de " + A} n'a ni frère ni sœur.`;
+    case "mumOnly": return `La mère ${elide(names[c.a]) ? "d'" + A : "de " + A} n'a ni frère ni sœur.`;
   }
   return "";
 }
@@ -726,7 +726,7 @@ function clueText(c, P, names, royal){
 /* ---------- état ---------- */
 let mode = store.get("mode", "C");
 let G = null;              // la partie : {code, mode, level, P, lay, rel, clues, sexKnown, names, looks, order, family}
-let place = [], where = [], sel = -1, struck = new Set(), elapsed = 0, startT = 0, timer = null, solved = false;
+let place = [], where = [], sel = -1, elapsed = 0, startT = 0, timer = null, solved = false, replay = false;
 const LIVES = 3;
 let lives = LIVES, over = false;   // over : plus de vie, l'arbre est perdu
 
@@ -814,7 +814,7 @@ function renderTree(){
 function paintSlots(){
   G.P.forEach((p, i) => {
     const b = slotEls[i], cv = b.querySelector("canvas"), nm = b.querySelector(".nm"), q = place[i];
-    b.classList.toggle("filled", q >= 0); b.classList.toggle("empty", q < 0); b.classList.toggle("sel", q >= 0 && q === sel);
+    b.classList.toggle("filled", q >= 0); b.classList.toggle("empty", q < 0);
     if (q >= 0){
       drawPortrait(cv, G.P[q].sex, G.looks[q], G.royal);
       const name = G.names[q], w = parseFloat(b.style.width);
@@ -849,12 +849,8 @@ function renderClues(){
   const ks = G.clues.map((c, k) => k), done = ks.filter(k => clueDone(G.clues[k]));
   const open = ks.filter(k => !done.includes(k));
   [...open, ...done].forEach((k, n) => {
-    const c = G.clues[k], li = document.createElement("li"); li.innerHTML = clueText(c, G.P, G.names, G.royal);
-    if (done.includes(k)){ li.classList.add("done"); if (n === open.length && open.length) li.classList.add("sep"); }
-    else {
-      li.classList.toggle("struck", struck.has(k));
-      li.onclick = () => { struck.has(k) ? struck.delete(k) : struck.add(k); SFX.nav(); renderClues(); save(); };
-    }
+    const c = G.clues[k], li = document.createElement("li"); li.innerHTML = clueText(c, G.P, G.names, G.royal); li.dataset.n = k + 1;
+    if (done.includes(k)){ li.classList.add("done"); li.setAttribute("aria-label", `Indice ${k + 1}, résolu : ${li.textContent}`); if (n === open.length && open.length) li.classList.add("sep"); }
     ol.appendChild(li);
   });
 }
@@ -907,6 +903,7 @@ function lose(q){
   $("winStats").textContent = `Tu peux retenter le même arbre : le chrono reprend à ${fmt(elapsed)}.`;
   $("winBoard").hidden = true; $("winRank").hidden = true; $("retryBtn").hidden = false;
   $("trayBox").hidden = true; $("win").classList.add("lost"); $("win").hidden = false; setMsg("");
+  $("retryBtn").focus({preventScroll: true});
 }
 function retry(){
   over = false; lives = LIVES; renderLives(); place.fill(-1); where.fill(-1); sel = -1;
@@ -919,26 +916,36 @@ function win(){
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("gTime").textContent = fmt(elapsed);
   slotEls.forEach((b, i) => { b.classList.add("ok"); b.style.animationDelay = (G.P[i].gen * 120 + i * 30) + "ms"; });
   const key = G.mode + G.level + (G.cine ? ":" + G.saga.key : ""), stats = store.get("stats", {}), st = stats[key] || {best: 0, n: 0};
-  const record = !st.best || elapsed < st.best;
-  st.n = (st.n || 0) + 1; if (record) st.best = Math.round(elapsed); stats[key] = st; store.set("stats", stats);
-  if (/-J/.test(G.code)){ const d = store.get("daily", {}); if (!d[G.code] || elapsed < d[G.code]) d[G.code] = Math.round(elapsed); store.set("daily", d); }
-  $("win").classList.remove("lost"); $("retryBtn").hidden = true; $("winBoard").hidden = true; $("winRank").hidden = !/-J/.test(G.code); $("winRank").href = "../classements/index.html#lignee-" + G.code[0];
-  if (/-J/.test(G.code)) dailyBoard(G.code, Math.round(elapsed));
-  // classement familial : meilleur temps par mode et niveau, et nombre d'arbres reconstitués
-  if (window.LudoScores && LudoScores.joined()){
-    const trees = Object.values(stats).reduce((s, x) => s + (x && x.n || 0), 0), code = G.code;
-    LudoScores.submit("lignee", "arbres", trees, false);
-    if (!G.cine && !/-J/.test(G.code) && record) LudoScores.submit("lignee", "best:" + G.mode + G.level, Math.round(elapsed), true).then(r => {
-      if (r && G && G.code === code) $("winStats").textContent += ` · ${LudoScores.rankText(r)} en ${LEVELS[G.level].name.toLowerCase()}`; });
+  const daily = /-J/.test(G.code), dailies = store.get("daily", {}), solvedCodes = store.get("solved", []);
+  // un arbre déjà reconstitué (même code) se rejoue hors classement : on connaît déjà la solution
+  replay = solvedCodes.includes(G.code) || (daily && !!dailies[G.code]);
+  const record = !replay && (!st.best || elapsed < st.best);
+  if (!replay){
+    st.n = (st.n || 0) + 1; if (record) st.best = Math.round(elapsed); stats[key] = st; store.set("stats", stats);
+    store.set("solved", solvedCodes.concat(G.code).slice(-400));
+    if (daily){ dailies[G.code] = Math.round(elapsed); store.set("daily", dailies); }
   }
-  store.set("cur", null);
+  const L = window.LudoScores, ranked = !!(L && L.joined() && !G.cine);
+  $("win").classList.remove("lost"); $("retryBtn").hidden = true; $("winBoard").hidden = true;
+  $("winRank").hidden = !(daily || ranked); $("winRank").href = "../classements/index.html#lignee-" + (daily ? G.code[0] : "1-" + G.mode);
+  if (daily && !replay) dailyBoard(G.code, Math.round(elapsed));
+  // classement familial : meilleur temps par mode et niveau (Arbre du jour compris), et nombre d'arbres reconstitués
+  if (L && L.joined() && !replay){
+    const trees = Object.values(stats).reduce((s, x) => s + (x && x.n || 0), 0), code = G.code;
+    L.submit("lignee", "arbres", trees, false);
+    if (!G.cine && record) L.submit("lignee", "best:" + G.mode + G.level, Math.round(elapsed), true).then(r => {
+      if (r && G && G.code === code) $("winStats").textContent += ` · ${L.rankText(r)} en ${LEVELS[G.level].name.toLowerCase()}`; });
+  }
+  store.set(daily ? "curDaily" : "cur", null);
   const gens = G.gens;
   $("winTitle").textContent = G.cine ? "SCÈNE FINALE !" : G.royal ? "LA DYNASTIE EST RÉTABLIE !" : "LIGNÉE RECONSTITUÉE !";
   $("winStory").innerHTML = G.cine ? `${G.saga.tagline}<br><span class="small">${G.saga.title} · ${G.saga.univers}</span>`
                           : G.royal ? `La dynastie des <b>${G.family}</b> : ${gens} générations, ${G.P.length} têtes couronnées.`
                                     : `La famille <b>${G.family}</b> : ${gens} générations, ${G.P.length} membres.`;
-  $("winStats").textContent = `TEMPS ${fmt(elapsed)}` + (record ? " · NOUVEAU RECORD !" : ` · RECORD ${fmt(st.best)}`) + (G.cine ? ` · ${st.n} fois en ${LEVELS[G.level].name.toLowerCase()}` : ` · ${st.n} arbre${st.n > 1 ? "s" : ""} en ${LEVELS[G.level].name.toLowerCase()}`);
+  $("winStats").textContent = replay ? `TEMPS ${fmt(elapsed)} · ARBRE DÉJÀ RECONSTITUÉ : HORS CLASSEMENT`
+    : `TEMPS ${fmt(elapsed)}` + (record ? " · NOUVEAU RECORD !" : st.best ? ` · RECORD ${fmt(st.best)}` : "") + (G.cine ? ` · ${st.n} fois en ${LEVELS[G.level].name.toLowerCase()}` : ` · ${st.n} arbre${st.n > 1 ? "s" : ""} en ${LEVELS[G.level].name.toLowerCase()}`);
   $("trayBox").hidden = true; $("win").hidden = false; setMsg("");
+  $("againBtn").focus({preventScroll: true});
   SFX.win();
 }
 
@@ -950,7 +957,7 @@ function dailyBoard(code, ms){
   L.submit("lignee", "daily:" + code, ms, true).then(r => {
     if (!G || G.code !== code) return;
     if (!r){ box.hidden = false; box.textContent = "Classement injoignable pour le moment : ton temps partira au retour du réseau."; return; }
-    if (r) $("winStats").textContent += ` · ${r.rank === 1 ? "1er" : r.rank + "e"} sur ${r.total} aujourd'hui`;
+    $("winStats").textContent += ` · ${r.rank === 1 ? "1er" : r.rank + "e"} sur ${r.total} aujourd'hui`;
     return L.board("lignee", "daily:" + code, 5).then(rows => {
       if (!rows || !rows.length || !G || G.code !== code) return;
       box.hidden = false;
@@ -962,7 +969,7 @@ function dailyBoard(code, ms){
 /* ---------- sauvegarde de la partie en cours ---------- */
 function save(){
   if (!G || solved) return;
-  store.set("cur", {code: G.code, place, struck: [...struck], lives: over ? 0 : lives, elapsed: Math.round(timerElapsed())});
+  store.set(/-J/.test(G.code) ? "curDaily" : "cur", {code: G.code, place, lives: over ? 0 : lives, elapsed: Math.round(timerElapsed())});
 }
 const timerElapsed = () => solved || over ? elapsed : performance.now() - startT;
 function tick(){ if (!solved) $("gTime").textContent = fmt(performance.now() - startT); }
@@ -970,11 +977,12 @@ function tick(){ if (!solved) $("gTime").textContent = fmt(performance.now() - s
 function startGame(code, saved){
   const g = buildGame(code);
   if (!g){ $("menuMsg").textContent = "Code inconnu : il ressemble à C2-K3F9QX."; SFX.no(); return; }
-  G = g; solved = false; over = false; lives = LIVES; sel = -1;
+  G = g; solved = false; over = false; replay = false; lives = LIVES; sel = -1;
   const n = G.P.length;
-  place = new Array(n).fill(-1); where = new Array(n).fill(-1); struck = new Set(); elapsed = 0;
+  place = new Array(n).fill(-1); where = new Array(n).fill(-1); elapsed = 0;
+  const lostBefore = !!(saved && saved.code === G.code && saved.lives === 0);
   if (saved && saved.code === G.code && Array.isArray(saved.place) && saved.place.length === n){
-    struck = new Set((saved.struck || []).filter(k => k < G.clues.length)); elapsed = saved.elapsed || 0;
+    elapsed = saved.elapsed || 0;
     // partie perdue puis quittée : on la reprend du début, avec 3 vies
     if (saved.lives > 0) lives = Math.min(LIVES, saved.lives);
     // seules les personnes bien placées restent (anciennes sauvegardes : placement libre)
@@ -987,7 +995,8 @@ function startGame(code, saved){
   renderLives();
   window.scrollTo(0, 0);
   renderTree(); renderTray(); renderClues();
-  setMsg(G.cine ? `${G.saga.univers} : replace chaque personnage dans l'arbre.` : G.royal ? "Rends à chaque membre de la dynastie sa place dans l'arbre." : "Replace chaque membre de la famille dans l'arbre.");
+  setMsg(lostBefore ? "Cet arbre était perdu : on le reprend depuis le début. Le chrono continue !"
+    : G.cine ? `${G.saga.univers} : replace chaque personnage dans l'arbre.` : G.royal ? "Rends à chaque membre de la dynastie sa place dans l'arbre." : "Replace chaque membre de la famille dans l'arbre.");
   startT = performance.now() - elapsed; clearInterval(timer); timer = setInterval(tick, 250); tick();
   save();
 }
@@ -1030,19 +1039,21 @@ function renderMenu(){
     b.onclick = () => { SFX.nav(); startGame(`${mode}${lv}-${randomSeed()}`); };
     box.appendChild(b);
   }
-  const cur = store.get("cur", null);
+  let cur = store.get("cur", null);
+  // anciennes sauvegardes : l'Arbre du jour en cours a maintenant son propre emplacement
+  if (cur && /-J/.test(cur.code)){ store.set("curDaily", cur); store.set("cur", null); cur = null; }
   $("resumeBtn").hidden = !(cur && parseCode(cur.code));
   if (cur && parseCode(cur.code)){ const pc = parseCode(cur.code), S = pc.saga && SAGAS.find(x => x.key === pc.saga);
-    $("resumeBtn").textContent = `REPRENDRE (${S ? S.title.toUpperCase() : pc.mode === "R" ? "ROYAL" : "CLASSIQUE"} · ${LEVELS[pc.level].name})`; }
-  const d = store.get("daily", {}), dc = todayCode(mode);
-  $("dailyBtn").textContent = d[dc] ? `ARBRE DU JOUR ✓ ${fmt(d[dc])}` : "ARBRE DU JOUR";
+    $("resumeBtn").textContent = `REPRENDRE (${S ? S.title.toUpperCase() : pc.mode === "R" ? "ROYAL" : "CLASSIQUE"} · ${LEVELS[pc.level].name}${cur.lives === 0 ? " · PERDU" : ""})`; }
+  const d = store.get("daily", {}), dc = todayCode(mode), cd = store.get("curDaily", null);
+  $("dailyBtn").textContent = d[dc] ? `ARBRE DU JOUR ✓ ${fmt(d[dc])}` : cd && cd.code === dc ? "ARBRE DU JOUR (EN COURS)" : "ARBRE DU JOUR";
 }
 $("modeC").onclick = () => { mode = "C"; store.set("mode", mode); SFX.nav(); renderMenu(); };
 $("modeR").onclick = () => { mode = "R"; store.set("mode", mode); SFX.nav(); renderMenu(); };
 $("modeF").onclick = () => { mode = "F"; store.set("mode", mode); SFX.nav(); renderMenu(); };
-$("dailyBtn").onclick = () => { SFX.nav(); const cur = store.get("cur", null), dc = todayCode(mode); startGame(dc, cur && cur.code === dc ? cur : null); };
+$("dailyBtn").onclick = () => { SFX.nav(); const cur = store.get("curDaily", null), dc = todayCode(mode); startGame(dc, cur && cur.code === dc ? cur : null); };
 $("resumeBtn").onclick = () => { const cur = store.get("cur", null); if (cur){ SFX.nav(); startGame(cur.code, cur); } };
-$("codeBtn").onclick = () => { const pc = parseCode($("codeIn").value); if (!pc){ $("menuMsg").textContent = "Code inconnu : il ressemble à C2-K3F9QX."; SFX.no(); return; } SFX.nav(); const cur = store.get("cur", null); startGame(pc.code, cur && cur.code === pc.code ? cur : null); };
+$("codeBtn").onclick = () => { const pc = parseCode($("codeIn").value); if (!pc){ $("menuMsg").textContent = "Code inconnu : il ressemble à C2-K3F9QX."; SFX.no(); return; } SFX.nav(); const cur = store.get(/-J/.test(pc.code) ? "curDaily" : "cur", null); startGame(pc.code, cur && cur.code === pc.code ? cur : null); };
 $("codeIn").addEventListener("keydown", e => { if (e.key === "Enter") $("codeBtn").click(); });
 $("menuBtn").onclick = () => { SFX.nav(); showMenu(); };
 $("menuBtn2").onclick = () => { SFX.nav(); showMenu(); };
@@ -1051,7 +1062,11 @@ $("retryBtn").onclick = () => { SFX.nav(); retry(); };
 function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = soundOn ? "SON" : "MUET"; }
 $("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); SFX.nav(); };
 window.addEventListener("pagehide", save);
-document.addEventListener("visibilitychange", () => { if (document.hidden) save(); });
+document.addEventListener("visibilitychange", () => {
+  if (!G || solved || over) return;
+  if (document.hidden){ elapsed = performance.now() - startT; clearInterval(timer); timer = null; save(); }
+  else if (!timer && !$("game").hidden){ startT = performance.now() - elapsed; timer = setInterval(tick, 250); tick(); }
+});
 let rT = null; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => { if (G){ renderTree(); } }, 150); });
 
 /* logo : un petit arbre */
