@@ -70,15 +70,27 @@
     var q = get("queue", []).filter(function (x){ return !(x.game === s.game && x.board === s.board); });
     var prev = get("queue", []).find(function (x){ return x.game === s.game && x.board === s.board; });
     if (prev) s.value = s.low ? Math.min(prev.value, s.value) : Math.max(prev.value, s.value);
-    q.push(s); set("queue", q.slice(-50));
+    q.push(s); set("queue", q.slice(-1000));   // assez pour tous les records d'un coup (207 Pokémon…)
   }
+  function unqueue(s){ set("queue", get("queue", []).filter(function (x){ return !(x.game === s.game && x.board === s.board && x.value === s.value); })); }
+  // envoi de la file, un score après l'autre : un score refusé par le serveur est jeté,
+  // une coupure réseau (ou un code familial changé) arrête l'envoi jusqu'à la prochaine fois
   var flushing = null;
   function flush(){
     if (!joined() || flushing) return flushing || Promise.resolve();
     var q = get("queue", []); if (!q.length) return Promise.resolve();
+    var sent = 0;
     flushing = q.reduce(function (p, s){
-      return p.then(function (){ return send(s).then(function (){ set("queue", get("queue", []).filter(function (x){ return !(x.game === s.game && x.board === s.board && x.value === s.value); })); }); });
-    }, Promise.resolve()).catch(function (){}).then(function (){ flushing = null; });
+      return p.then(function (){ return send(s).then(function (){ unqueue(s); sent++; }, function (err){
+        if (err && err.status >= 400 && err.status < 500 && err.code !== "code"){ unqueue(s); return; }
+        if (err && err.code === "code") leave();
+        throw err;
+      }); });
+    }, Promise.resolve()).catch(function (){}).then(function (){
+      flushing = null;
+      // des scores arrivés pendant l'envoi : on repart pour un tour
+      if (sent && joined() && get("queue", []).length) return flush();
+    });
     return flushing;
   }
   function send(s){
@@ -92,8 +104,10 @@
     if (!(s.value >= 0) || !isFinite(s.value)) return Promise.resolve(null);
     if (!joined()) return Promise.resolve(null);
     return send(s).then(function (res){ flush(); return res; }, function (err){
-      if (err && err.code === "code"){ leave(); return null; }   // le code a changé : il faudra le retaper
-      queue(s); return null;
+      if (err && err.status >= 400 && err.status < 500 && err.code !== "code") return null;   // refusé par le serveur
+      queue(s);                                                    // hors connexion : il partira plus tard
+      if (err && err.code === "code") leave();                     // le code a changé : il faudra le retaper
+      return null;
     });
   }
   // le meilleur de chaque classement d'un jeu, en un appel (fonction ajoutée par classements-2.sql)
@@ -128,9 +142,9 @@
     var pc = readKey("injagility.parcours", {}) || {}, best = pc.best || {}, total = 0;
     Object.keys(best).forEach(function (n){ if (/^\d{1,3}$/.test(n)){ hi("parcours", "lvl:" + n, best[n]); total += Number(best[n]) || 0; } });
     hi("parcours", "total", total);
-    var cap = readKey("picrossdex.captured", {}) || {}, ids = Object.keys(cap);
-    ids.forEach(function (id){ var c = cap[id]; if (c && c.time > 0 && /^[a-z0-9_-]{1,36}$/.test(id)) lo("picross", "t:" + id, c.time + HINT_PENALTY * (c.hints || 0)); });
-    hi("picross", "dex", ids.length);
+    var cap = readKey("picrossdex.captured", {}) || {}, ids = Object.keys(cap).filter(function (id){ return cap[id] && !cap[id].test; });
+    ids.forEach(function (id){ var c = cap[id]; if (c.time > 0 && /^[a-z0-9_-]{1,36}$/.test(id)) lo("picross", "t:" + id, c.time + HINT_PENALTY * (c.hints || 0)); });
+    hi("picross", "dex", ids.filter(function (id){ return id !== "pokeball"; }).length);
     return out;
   });
 
@@ -142,7 +156,9 @@
     flush();
   }, 1500);
 
-  window.LudoScores = {joined: joined, join: join, leave: leave, submit: submit, board: board, bests: bests, flush: flush, registerExisting: registerExisting, HINT_PENALTY: HINT_PENALTY,
+  // après un import de sauvegarde : renvoyer tous les records (le serveur garde le meilleur)
+  function resync(){ if (!joined()) return Promise.resolve(); pushExisting(); return flush(); }
+  window.LudoScores = {resync: resync, joined: joined, join: join, leave: leave, submit: submit, board: board, bests: bests, flush: flush, registerExisting: registerExisting, HINT_PENALTY: HINT_PENALTY,
     pseudo: function (){ return get("pseudo", ""); }, pending: function (){ return get("queue", []).length; },
     rankText: function (r){ return r ? (r.rank === 1 ? "1er" : r.rank + "e") + " sur " + r.total : ""; }};
 })();

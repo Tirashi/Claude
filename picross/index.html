@@ -90,7 +90,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .scroller::-webkit-scrollbar-thumb{background:var(--ink); border:3px solid var(--screen)}
 .scroller .help{color:var(--ink); margin-top:16px; padding-top:12px; border-top:3px dashed var(--ink-soft)}
 .scroller .legal{color:var(--ink-soft)}
-body.index{height:100dvh; display:flex; flex-direction:column; padding-block:10px}
+body.index{height:100vh; height:100dvh; display:flex; flex-direction:column; padding-block:10px}
 body.index .dex{flex:1 1 0; min-height:560px; width:100%}
 body.index .screen-frame{flex:1 1 0; min-height:0; display:flex; flex-direction:column}
 body.index .screen{flex:1 1 0; min-height:0; display:flex; flex-direction:column}
@@ -352,7 +352,8 @@ body.zoom .tools .btn{padding:8px 9px}
   <div class="pads" aria-hidden="true"><div class="dpad"></div><div class="ab"><i></i><i></i></div></div>
 
   <div class="help">
-    <p>Choisis une taille dans les <b>hautes herbes</b> : un Pokémon sauvage, encore inconnu, se cache dans la grille. Remplis-la pour le révéler et l'enregistrer dans ton Dex ; tu pourras ensuite la refaire depuis le Dex pour battre ton temps. Les légendaires, eux, apparaissent directement dans le Dex.</p>
+    <p>Choisis une taille dans les <b>hautes herbes</b> : un Pokémon sauvage, encore inconnu, se cache dans la grille. Remplis-la pour le révéler et l'enregistrer dans ton Dex ; tu pourras ensuite la refaire depuis le Dex pour battre ton temps. La plupart des légendaires apparaissent directement dans le Dex ; les trois chiens de Johto, eux, rôdent dans les hautes herbes.</p>
+    <p>Au classement familial, chaque indice ajoute 30 secondes au temps de la grille. FUIR abandonne une rencontre sauvage ; ZOOM agrandit la grille et affiche une manette.</p>
     <p>Les nombres indiquent les blocs de cases pleines de chaque ligne et colonne, dans l'ordre.</p>
     <p>3 indices par grille : chacun complète une ligne au hasard.</p>
     <p>Clic ou toucher : remplir. Clic droit ou outil CROIX : marquer une case vide. Glisse pour peindre une ligne entière.</p>
@@ -3707,13 +3708,14 @@ function importCode(text){
   let data;
   try { data = at >= 0 ? dec(raw.slice(at + SAVE_PREFIX.length)) : ((dec(raw.slice(atAll + 6)).g || {}).picross || {}); }
   catch (e) { throw new Error("Le code est incomplet ou abîmé. Copie-le de nouveau en entier."); }
-  const byId = Object.fromEntries(PUZZLES.map(q => [q.id, q]));
+  const byId = Object.fromEntries(PUZZLES.map(q => [q.id, q])), before0 = Object.assign({}, captured);
   let added = 0, faster = 0, grids = 0;
   for (const [id, v] of Object.entries(data.c || {})){
     if (!byId[id] || !(v.t > 0)) continue;
     const mine = captured[id];
-    if (!mine){ captured[id] = {time: Math.round(v.t), hints: v.h || 0}; added++; }
-    else if (v.t < mine.time){ captured[id] = {time: Math.round(v.t), hints: v.h || 0}; faster++; }
+    const mk = () => Object.assign({time: Math.round(v.t), hints: v.h || 0}, v.x ? {test: true} : {});
+    if (!mine){ captured[id] = mk(); added++; }
+    else if (v.t + HINT_MS * (v.h || 0) < mine.time + HINT_MS * (mine.hints || 0)){ captured[id] = mk(); faster++; }
   }
   for (const [id, v] of Object.entries(data.p || {})){
     const q = byId[id];
@@ -3721,8 +3723,8 @@ function importCode(text){
     if (v.c.length !== q.art.length * q.art[0].length || /[^012]/.test(v.c)) continue;
     progress[id] = {cells: [...v.c].map(Number), elapsed: v.e || 0, hints: v.h || 0}; grids++;
   }
-  // grilles en cours devenues inutiles parce que le Pokémon est maintenant capturé
-  for (const id of Object.keys(progress)) if (captured[id]) delete progress[id];
+  // grilles en cours devenues inutiles : seulement pour les Pokémon que cet import vient d'ajouter
+  for (const [id, v] of Object.entries(data.c || {})) if (v && v.t > 0 && progress[id] && !Object.prototype.hasOwnProperty.call(before0, id)) delete progress[id];
   store.set("captured", captured); store.set("progress", progress);
   return {added, faster, grids};
 }
@@ -3753,6 +3755,7 @@ $("importBtn").onclick = () => {
     if (r.grids) parts.push(`${r.grids} grille${r.grids > 1 ? "s" : ""} en cours`);
     setXferRes(parts.length ? "Importé : " + parts.join(", ") + "." : "Rien de nouveau : cette sauvegarde est déjà à jour ici.", true);
     $("importBox").value = ""; renderList(); SFX.win();
+    if ((r.added || r.faster) && window.LudoScores) LudoScores.resync().then(() => { crowns = null; markCrowns(); });
   } catch (e) { setXferRes(e.message, false); blip([196, 147], "square", .08, .05); }
 };
 if (/FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent)) $("fbNote").hidden = false;
@@ -3823,7 +3826,7 @@ function setRegion(r){ region = r; store.set("region", r); if (r === "johto") st
 function johtoMsg(){
   const n = johtoCount(), out = [];
   if (!n) out.push("Bienvenue à <b>Johto</b> ! De nouveaux Pokémon se cachent dans les hautes herbes.");
-  if (!dogsAwake()) { if (n) out.push(`Capture encore <b>${DOGS_AT - n}</b> Pokémon à Johto : la Tour Cendrée cache un secret…`); }
+  if (!dogsAwake()) { if (n && n < DOGS_AT) out.push(`Capture encore <b>${DOGS_AT - n}</b> Pokémon à Johto : la Tour Cendrée cache un secret…`); }
   else if (dogsDone() < DOGS.length) out.push(`Raikou, Entei et Suicune rôdent dans les <b>hautes herbes</b> de Johto (${dogsDone()}/${DOGS.length} capturés).`);
   const lugia = PUZZLES.find(p => p.legend === "lugia"), hooh = PUZZLES.find(p => p.legend === "hooh"), celebi = PUZZLES.find(p => p.legend === "celebi");
   if (dogsAwake() && !lugiaOpen()) out.push(`Plus que <b>${lugiaAt() - n}</b> capture${lugiaAt() - n > 1 ? "s" : ""} à Johto pour que <b>Lugia</b> sorte des profondeurs.`);
@@ -3910,15 +3913,16 @@ let crowns = null, crownsAt = 0;
 function markCrowns(){
   const L = window.LudoScores; if (!L || !L.joined()) return;
   const apply = () => { for (const b of $("list").querySelectorAll(".entry[data-id]")){ const r = crowns[b.dataset.id];
-    b.classList.toggle("crown", !!(r && r.me)); if (r) b.title = `Record de la famille : ${r.pseudo} en ${fmt(r.value)}`; } };
+    b.classList.toggle("crown", !!(r && r.me)); if (r) b.title = `Record de la famille : ${r.pseudo} en ${fmt(r.value)}`;
+    if (r && r.me && !/record de la famille/.test(b.getAttribute("aria-label"))) b.setAttribute("aria-label", b.getAttribute("aria-label") + ", record de la famille"); } };
   if (crowns && performance.now() - crownsAt < 60000) return apply();
-  L.bests("picross").then(rows => { if (!rows) return; crowns = {};
+  L.flush().then(() => L.bests("picross")).then(rows => { if (!rows) return; crowns = {};
     for (const x of rows) if (String(x.board).startsWith("t:")) crowns[x.board.slice(2)] = x;
     crownsAt = performance.now(); if (!$("dexView").hidden) apply(); }).catch(() => {});
 }
 function renderList(){
   const list = $("list"), sc = $("scroller"); if (document.body.classList.contains("index") && list.dataset.region) listScroll[list.dataset.region] = sc.scrollTop;
-  dexMode(true);
+  if (!$("dexView").hidden) dexMode(true);
   list.innerHTML = "";
   const r = curRegion(), shown = DEX_ORDER.filter(idx => regionOf(PUZZLES[idx]) === r);
   $("tabs").hidden = !johtoVisible();
@@ -3965,7 +3969,8 @@ function renderList(){
     if (got){ const cv = document.createElement("canvas"); drawArt(cv, p, 60); b.appendChild(cv); }
     else { const u = document.createElement("div"); u.className = "unk"; u.textContent = "?"; b.appendChild(u); }
     b.insertAdjacentHTML("beforeend", `<span class="nm">${got ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
-    b.setAttribute("aria-label", got ? `${p.name}, capturé en ${fmt(got.time)}` : `Grille ${idx+1}, ${p.art[0].length} par ${p.art.length}, pas encore capturé`);
+    b.setAttribute("aria-label", got ? `${p.name}, capturé en ${fmt(got.time)}` : isWild(p) ? `Pokémon sauvage en cours, grille ${p.art[0].length} par ${p.art.length}` : `N° ${p.no}, grille ${p.art[0].length} par ${p.art.length}, pas encore capturé`);
+    if (!got && isWild(p)) b.querySelector(".no").textContent = "#???";
     if (got) b.dataset.id = p.id;
     b.onclick = () => { SFX.nav(); open(idx); };
     list.appendChild(b);
@@ -4102,7 +4107,10 @@ function afterChange(prev){
   if (checkWin()) win();
 }
 
+const HINT_MS = 30000;   // 30 s par indice
+let winToken = 0;
 function win(){
+  const myWin = ++winToken;
   const wasJohto = johtoUnlocked(), wasDogs = dogsAwake(), wasHooh = hoohOpen(), wasLugia = lugiaOpen(), wasCelebi = celebiOpen();
   const wasOpen = legendsOpen(), wasMew = mewtwoOpen(), wasFab = mewOpen() || !!captured[PUZZLES.find(q => q.legend === "mew").id];
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed);
@@ -4110,9 +4118,10 @@ function win(){
   for (const k of Object.keys(encounters)) if (encounters[k] === P.id) delete encounters[k];
   store.set("encounters", encounters);
   $("pNo").textContent = P.no; $("fleeBtn").hidden = true;
-  const before = captured[P.id];
-  const record = !before || elapsed < before.time;
-  if (record) captured[P.id] = {time: Math.round(elapsed), hints};
+  const before = captured[P.id], score = (t, n) => t + HINT_MS * (n || 0);
+  // un record se juge sur le temps pénalisé par les indices, comme au classement familial
+  const record = !before || score(elapsed, hints) < score(before.time, before.hints) || (before.test && !testMode);
+  if (record) captured[P.id] = Object.assign({time: Math.round(elapsed), hints}, testMode ? {test: true} : {});
   store.set("captured", captured);
   setHot(-1);
   const b = $("board"); b.classList.add("revealed");
@@ -4129,13 +4138,13 @@ function win(){
   // classement familial : temps + 30 s par indice, et taille du Pokédex
   const L = window.LudoScores;
   if (L && !testMode){
-    const id = P.id, name = P.name, value = Math.round(elapsed) + L.HINT_PENALTY * hints;
-    L.submit("picross", "dex", Object.keys(captured).length, false);
+    const id = P.id, name = P.name, value = Math.round(elapsed) + HINT_MS * hints, same = () => myWin === winToken && P && P.id === id && solved;
+    L.submit("picross", "dex", Object.entries(captured).filter(([k, v]) => k !== "pokeball" && !v.test).length, false);
     if (L.joined()) L.submit("picross", "t:" + id, value, true).then(r => {
-      crowns = null;
-      if (!r || !P || P.id !== id) return;
-      $("winStats").innerHTML += `<br>${L.rankText(r).toUpperCase()} POUR ${name}` + (hints ? ` (+${hints * 30} S D'INDICES)` : "");
-      return L.board("picross", "t:" + id, 3).then(rows => { if (!rows || !rows.length || !P || P.id !== id) return;
+      crowns = null; if (!$("dexView").hidden) markCrowns();
+      if (!r || !same()) return;
+      $("winStats").innerHTML += `<br>${L.rankText(r).toUpperCase()} POUR ${name}` + (hints ? ` (+${hints * HINT_MS / 1000} S D'INDICES)` : "");
+      return L.board("picross", "t:" + id, 3).then(rows => { if (!rows || !rows.length || !same()) return;
         const clean = s => String(s).replace(/[<>&"]/g, "");
         $("winStats").innerHTML += "<br>" + rows.map((x, i) => `${i + 1}. ${x.me ? "<span class=\"hl\">" + clean(x.pseudo) + "</span>" : clean(x.pseudo)} ${fmt(x.value)}`).join(" · "); });
     });
@@ -4323,14 +4332,19 @@ function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("so
 $("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); SFX.nav(); };
 window.addEventListener("resize", fit);
 window.addEventListener("pagehide", saveProgress);
+document.addEventListener("visibilitychange", () => {
+  if (!P || solved) return;
+  if (document.hidden){ elapsed = performance.now() - startT; clearInterval(timer); timer = null; saveProgress(); }
+  else if (!timer){ startT = performance.now() - elapsed; timer = setInterval(tick, 250); tick(); }
+});
 
 /* ---------- boot (keeps the current grid across live updates) ---------- */
 function start(data){
   syncSound();
-  const gone = DOGS.filter(d => !captured[d.id] && Object.values(encounters).includes(d.id));
+  const gone = testMode ? [] : DOGS.filter(d => !captured[d.id] && Object.values(encounters).includes(d.id));
   gone.forEach(dogRunsAway);
   renderList();
-  if (gone.length){ $("dexMsg").hidden = false; $("dexMsg").innerHTML = `<b>${gone.map(d => d.name).join(", ")}</b> s'est enfui pendant ton absence…`; data = null; }
+  if (gone.length){ $("dexMsg").hidden = false; $("dexMsg").innerHTML = `<b>${gone.map(d => d.name).join(", ")}</b> ${gone.length > 1 ? "se sont enfuis" : "s'est enfui"} dans les hautes herbes…`; data = null; }
   if (data && data.id){ const k = PUZZLES.findIndex(p => p.id === data.id); if (k >= 0 && !data.solved) open(k, data); }
 }
 window.claude?.hot?.snapshot?.(() => P ? {id:P.id, cells, elapsed, hints, solved} : {});

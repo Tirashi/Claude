@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
-/* Layout: a console "select game" screen — title, a shelf of three cartridges, a status line telling which one is picked. */
+/* Layout: a console "select game" screen — title, a shelf of cartridges, a status line telling which one is picked. */
 :root{
   color-scheme: dark;
   --night:#110d22;        /* page */
@@ -88,6 +88,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.lignee{--lb:linear-gradient(to bottom, #6b3f1f, #2f1a0c); --lt:#e0a83a; --ld:#efe0bd}
 .cart.touche{--lb:linear-gradient(to bottom, #2b6fd0, #0f1866); --lt:#ffd84a; --ld:#e8ecff}
 
+@media (hover: none) and (pointer: coarse){ .status{display:none} }
 .status{text-align:center; font-family:var(--f-display); font-size:9px; letter-spacing:1px; line-height:2; color:var(--text-dim)}
 .status kbd{font-family:inherit; color:var(--text); border:2px solid var(--text-dim); padding:1px 4px}
 /* installation de l'appli */
@@ -155,7 +156,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
       <div class="label">
         <canvas data-icon="tree" width="16" height="16" aria-hidden="true"></canvas>
         <h2>LIGNÉE</h2>
-        <p>Reconstitue un arbre généalogique grâce aux indices : familles françaises ou dynasties royales, à l'infini.</p>
+        <p>Reconstitue un arbre généalogique grâce aux indices, avec 3 vies : familles françaises, dynasties royales ou familles de films et de séries.</p>
         <div class="tags"><span>LOGIQUE</span><span>ARBRES INFINIS</span></div>
       </div>
     </a>
@@ -171,9 +172,9 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
     <a class="cart inja" href="injagility/index.html">
       <span class="arrow" aria-hidden="true">▼</span>
       <div class="label">
-        <canvas data-icon="dog" width="20" height="20" aria-hidden="true"></canvas>
+        <canvas data-icon="dog" width="96" height="96" aria-hidden="true"></canvas>
         <h2>INJAGILITY</h2>
-        <p>Un bouvier bernois en agility : course sans fin, ou parcours vus du dessus à tracer au doigt, avec des races à adopter.</p>
+        <p>Ton chien en agility : course sans fin, ou parcours vus du dessus à tracer au doigt. Six races à adopter au chenil.</p>
         <div class="tags"><span>COURSE</span><span>PARCOURS</span></div>
       </div>
     </a>
@@ -238,7 +239,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
   <div class="saves-open"><button class="saves-btn" id="savesBtn" type="button" aria-expanded="false" aria-controls="saves">TRANSFÉRER MES SAUVEGARDES</button></div>
   <section class="saves" id="saves" hidden aria-label="Transfert de sauvegardes">
     <h2>1. COPIER</h2>
-    <p>Dans le navigateur où tu as joué, copie toutes tes sauvegardes d'un coup : Picross Dex, Queens, Tetris, Snake, Asteroids, Injagility et Solitaire. <b>Touché Coulé</b> et le <b>Jeu de la Vie</b> n'enregistrent rien.</p>
+    <p>Dans le navigateur où tu as joué, copie toutes tes sauvegardes d'un coup : Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility (et son mode Parcours) et Solitaire. <b>Touché Coulé</b> et le <b>Jeu de la Vie</b> n'enregistrent rien.</p>
     <div class="sum" id="savesSum"></div>
     <div class="row"><button class="saves-btn" id="exportAll" type="button">COPIER MES SAUVEGARDES</button></div>
     <textarea id="exportAllBox" readonly hidden aria-label="Code de sauvegarde à copier"></textarea>
@@ -252,6 +253,8 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
   <div class="status" id="status"><kbd>FLÈCHES</kbd> CHOISIR · <kbd>ENTRÉE</kbd> JOUER</div>
 </div>
 
+<script src="injagility/chiens32.js"></script>
+<script src="ludo-scores.js"></script>
 <script>
 (() => {
 "use strict";
@@ -382,27 +385,8 @@ const ICONS = {
     [[1,0],[2,1],[0,2],[1,2],[2,2]].forEach(([a,b]) => { const X = a*5+1, Y = b*5+1;
       x.fillStyle = "#1f8a4a"; x.fillRect(X, Y, 4, 4); x.fillStyle = "#5cff8a"; x.fillRect(X, Y, 3, 3); x.fillStyle = "#d4ffe0"; x.fillRect(X, Y, 3, 1); x.fillRect(X, Y, 1, 3); });
   }},
-  dog: {pal:{k:"#1f1b26", w:"#f4efe6", t:"#c8652c", p:"#ea7d8f", e:"#ffffff"}, map:[
-    "....................",
-    "....................",
-    "...........kkkkk....",
-    "..........kkkkkkk...",
-    ".........kkkkkkkkk..",
-    ".........kkkkktkkkk.",
-    "ww.......kkkkkkekwww",
-    "wkk......kkkkkttwwwk",
-    ".kk......kkkkkttwwww",
-    "..kk.....kkkkkkwwpp.",
-    "...kkkkkkkkkkkkwww..",
-    "..kkkkkkkkkkkkkwww..",
-    "..kkkkkkkkkkkkkwww..",
-    "..kkkkkkkkkkkkktww..",
-    "..kkkkkkkkkkkkkttt..",
-    "..tt.........tt.....",
-    ".tt...........tt....",
-    ".tt...........tt....",
-    ".ww............ww...",
-    "...................."]},
+  // le chien d'Injagility, le même bouvier bernois en 32 bits que dans le jeu
+  dog: {draw: x => { const C = window.Chiens32; if (!C) return; const f = C.frames("bernois").stand; x.drawImage(f, Math.round((96 - C.SW) / 2) + 2, 96 - C.GROUND - 18); }},
 };
 document.querySelectorAll("canvas[data-icon]").forEach(c => {
   const ic = ICONS[c.dataset.icon], x = c.getContext("2d");
@@ -420,6 +404,7 @@ function select(i, focus){
 }
 carts.forEach((c,i) => { c.addEventListener("mouseenter", () => select(i)); c.addEventListener("focus", () => select(i)); });
 document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("textarea, input, select, .saves")) return;
   if (["ArrowRight","ArrowDown"].includes(e.key)){ e.preventDefault(); select(sel+1, true); }
   else if (["ArrowLeft","ArrowUp"].includes(e.key)){ e.preventDefault(); select(sel-1, true); }
   else if (e.key === "Enter" && document.activeElement === document.body){ carts[sel].click(); }
@@ -438,10 +423,11 @@ function collectSaves(){
   const q = readKey("queens16.best", {}); if (q && Object.keys(q).length) g.queens = q;
   const cap = readKey("picrossdex.captured", {}), prog = readKey("picrossdex.progress", {});
   const c = {}, p = {};
-  for (const [id, v] of Object.entries(cap || {})) if (v && v.time > 0) c[id] = {t: v.time, h: v.hints || 0};
+  for (const [id, v] of Object.entries(cap || {})) if (v && v.time > 0) c[id] = Object.assign({t: v.time, h: v.hints || 0}, v.test ? {x: 1} : {});
   for (const [id, v] of Object.entries(prog || {})) if (v && Array.isArray(v.cells)) p[id] = {c: v.cells.join(""), e: Math.round(v.elapsed || 0), h: v.hints || 0};
   if (Object.keys(c).length || Object.keys(p).length) g.picross = {c, p};
   const lg = readKey("lignee.stats", {}); if (lg && Object.keys(lg).length) g.lignee = lg;
+  const ld = readKey("lignee.daily", {}); if (ld && Object.keys(ld).length) g.ligneeDaily = ld;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
 }
@@ -481,8 +467,10 @@ function mergeSaves(g){
     let added = 0, faster = 0, grids = 0;
     for (const [id, v] of Object.entries(g.picross.c || {})){
       if (!/^[a-z0-9_-]+$/.test(id) || !(v.t > 0)) continue;
-      if (!cap[id]){ cap[id] = {time: Math.round(v.t), hints: v.h || 0}; added++; }
-      else if (v.t < cap[id].time){ cap[id] = {time: Math.round(v.t), hints: v.h || 0}; faster++; }
+      const mk = () => Object.assign({time: Math.round(v.t), hints: v.h || 0}, v.x ? {test: true} : {});
+      const score = (t, n) => t + 30000 * (n || 0);
+      if (!cap[id]){ cap[id] = mk(); added++; }
+      else if (score(v.t, v.h) < score(cap[id].time, cap[id].hints)){ cap[id] = mk(); faster++; }
     }
     for (const [id, v] of Object.entries(g.picross.p || {})){
       if (!/^[a-z0-9_-]+$/.test(id) || cap[id] || prog[id] || typeof v.c !== "string" || !/^[012]+$/.test(v.c)) continue;
@@ -515,6 +503,11 @@ function mergeSaves(g){
     }
     if (n){ writeKey("lignee.stats", mine); done.push(`Lignée : ${n} niveau${n > 1 ? "x" : ""} mis à jour`); }
   }
+  if (g.ligneeDaily && typeof g.ligneeDaily === "object"){
+    const mine = readKey("lignee.daily", {}) || {}; let n = 0;
+    for (const [code, t] of Object.entries(g.ligneeDaily)) if (/^[CR]2-J[0-9A-Z]+$/.test(code) && t > 0 && (!mine[code] || t < mine[code])){ mine[code] = Math.round(t); n++; }
+    if (n){ writeKey("lignee.daily", mine); done.push(`Lignée : ${n} Arbre${n > 1 ? "s" : ""} du jour`); }
+  }
   return done;
 }
 const savesRes = (t, ok) => { const el = document.getElementById("savesRes"); el.textContent = t; el.className = "res " + (ok ? "ok" : "err"); };
@@ -543,6 +536,7 @@ document.getElementById("importAll").addEventListener("click", () => {
     const done = mergeSaves(decodeSaves(document.getElementById("importAllBox").value));
     savesRes(done.length ? "Importé. " + done.join(" · ") + "." : "Rien de nouveau : ces sauvegardes sont déjà à jour ici.", true);
     document.getElementById("importAllBox").value = ""; showSum();
+    if (done.length && window.LudoScores) LudoScores.resync();
   } catch (e) { savesRes(e.message, false); }
 });
 if (/FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent)) document.getElementById("fbNote").hidden = false;

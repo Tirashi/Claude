@@ -2,7 +2,7 @@
 --  Classements de la Ludothèque : à coller UNE FOIS dans Supabase,
 --  menu « SQL Editor » > « New query », puis bouton « Run ».
 --
---  AVANT DE LANCER : remplace MON-CODE (ligne 18) par ton code familial.
+--  AVANT DE LANCER : remplace MON-CODE (ligne 19) par ton code familial.
 --  Le code reste dans Supabase : il n'apparaît nulle part dans le site.
 -- =====================================================================
 

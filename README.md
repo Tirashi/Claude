@@ -5,7 +5,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`queens/index.html`](queens/index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
 - [`lignee/index.html`](lignee/index.html) : **Lignée**, un puzzle de généalogie : reconstituer un arbre grâce aux indices, en famille française ou en dynastie royale.
-- [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu de course sans fin façon dino de Chrome, avec un bouvier bernois sur un parcours d'agility.
+- [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu d'agility canine en 32 bits : course sans fin façon dino de Chrome, et parcours vus du dessus ([`injagility/parcours.html`](injagility/parcours.html)) avec six races à adopter.
 - [`touche-coule/index.html`](touche-coule/index.html) : **Touché Coulé**, une bataille navale contre l'ordinateur (modes Classique et Arsenal).
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
 - [`snake/index.html`](snake/index.html) : **Snake**.
@@ -79,9 +79,9 @@ Un puzzle de logique sur le thème de la généalogie. Un arbre vide s'affiche (
 - Conventions : dans un couple, l'homme est à gauche ; les frères et sœurs vont du plus âgé (à gauche) au plus jeune (à droite) ; l'arbre est complet.
 - Indices « X est plus âgé que Y » entre frères et sœurs, en plus des liens de parenté.
 - Arbres générés à l'infini : le générateur tire une famille, écrit des indices vrais, puis un solveur ajoute et retire des indices jusqu'à ce qu'il ne reste qu'une seule solution, trouvable sans deviner.
-- Chaque arbre a un code (par exemple `C2-K3F9QX`) pour le rejouer ou le partager, et un **Arbre du jour** (niveau Moyen) est le même pour tout le monde dans chaque mode.
-- Toucher une personne (la réserve est rangée par ordre alphabétique) puis une case pour la placer. Une personne bien placée y reste ; une erreur coûte une des **3 vies** et renvoie la personne dans la réserve. Sans vie, l'arbre est perdu : on peut le retenter, mais le chrono continue.
-- Un indice dont toutes les personnes sont placées se coche tout seul et descend en bas de la liste ; toucher un indice le barre.
+- Chaque arbre a un code (par exemple `C2-K3F9QX`) pour le rejouer ou le partager, et un **Arbre du jour** (niveau Moyen) est le même pour tout le monde, en Classique et en Royal. Un arbre déjà reconstitué se rejoue hors classement.
+- Toucher une personne (la réserve est rangée par ordre alphabétique) puis une case pour la placer. Une personne bien placée y reste ; une erreur coûte une des **3 vies** et renvoie la personne dans la réserve. Quand il n'y a plus de vie, l'arbre est perdu : on peut le recommencer depuis le début, mais le chrono continue.
+- Un indice dont toutes les personnes sont placées se coche tout seul et descend en bas de la liste, en gardant son numéro.
 - La partie en cours est sauvegardée ; les records de temps et le nombre d'arbres réussis par mode et par niveau font partie du transfert de sauvegardes.
 
 ## Injagility

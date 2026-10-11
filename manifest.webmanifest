@@ -1,7 +1,7 @@
 {
   "name": "Ludothèque 16 bits",
   "short_name": "Ludothèque",
-  "description": "Huit jeux en pixel art : Queens, Picross Dex, Injagility, Touché Coulé, Tetris, Snake, Asteroids et le Jeu de la Vie.",
+  "description": "Dix jeux en pixel art : Picross Dex, Lignée, Queens, Injagility, Solitaire, Touché Coulé, Tetris, Snake, Asteroids et le Jeu de la Vie.",
   "lang": "fr",
   "id": "./",
   "start_url": "./",
