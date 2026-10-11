@@ -63,6 +63,14 @@ h1 span{color:var(--swiss); text-shadow:3px 3px 0 var(--snow), 6px 6px 0 #000}
 .hud b{font-weight:400; color:var(--gold)}
 canvas#field{display:block; width:100%; height:auto; image-rendering:pixelated; image-rendering:crisp-edges; border:3px solid var(--ink);
   background:#4f9a3a; touch-action:none; cursor:crosshair}
+/* numéros des obstacles : de vrais caractères par-dessus le terrain, pour rester nets */
+.fieldbox{position:relative}
+#badges{position:absolute; inset:3px; pointer-events:none}
+.nb{position:absolute; transform:translate(-50%, -50%); font-family:var(--f-display); font-size:clamp(10px, 3.2vw, 14px); line-height:1; color:var(--ink);
+  background:var(--gold); border:2px solid var(--ink); border-radius:5px; min-width:1.9em; padding:.3em .25em .25em; text-align:center; box-shadow:2px 2px 0 rgba(0,0,0,.5)}
+.nb.next{background:#fff; outline:2px solid var(--gold); animation:nbp 1s steps(2) infinite}
+.nb.done{background:#4fa850; color:#fff; opacity:.8}
+@keyframes nbp{50%{outline-color:transparent}}
 .msg{font-family:var(--f-display); font-size:9px; line-height:1.9; text-align:center; min-height:3.8em; margin-top:8px}
 .msg .hl{color:var(--gold)}
 .msg .bad{color:#ff7a6a}
@@ -126,7 +134,7 @@ canvas#field{display:block; width:100%; height:auto; image-rendering:pixelated; 
   <section id="play" hidden>
     <div class="frame">
       <div class="hud"><span>PARCOURS <b id="pNum">1</b></span><span>OBSTACLE <b id="pNext">1</b></span><span>TEMPS <b id="pTime">0.0</b></span></div>
-      <canvas id="field" width="128" height="176" aria-label="Terrain vu du dessus : trace le parcours du chien"></canvas>
+      <div class="fieldbox"><canvas id="field" width="128" height="176" aria-label="Terrain vu du dessus : trace le parcours du chien"></canvas><div id="badges" aria-hidden="true"></div></div>
       <div class="msg" id="msg" aria-live="polite"></div>
       <div class="row" id="drawTools">
         <button class="btn wood" type="button" id="backBtn">◀ PARCOURS</button>
@@ -438,7 +446,24 @@ function drawObj(o){
     if (horiz){ R(X0, Y0 + 5, 3 * CS, 6, COL.ink); R(X0 + 1, Y0 + 6, 3 * CS - 2, 4, COL.wood2); R(X0 + 1, Y0 + 6, 8, 4, COL.yellow); R(X0 + 3 * CS - 9, Y0 + 6, 8, 4, COL.yellow); for (let i = 12; i < 3 * CS - 10; i += 6) R(X0 + i, Y0 + 6, 1, 4, COL.wood); }
     else { R(X0 + 5, Y0, 6, 3 * CS, COL.ink); R(X0 + 6, Y0 + 1, 4, 3 * CS - 2, COL.wood2); R(X0 + 6, Y0 + 1, 4, 8, COL.yellow); R(X0 + 6, Y0 + 3 * CS - 9, 4, 8, COL.yellow); for (let i = 12; i < 3 * CS - 10; i += 6) R(X0 + 6, Y0 + i, 4, 1, COL.wood); }
   }
-  badge(c0, o.n);
+}
+// pastilles numérotées, placées en haut à droite de la première case de chaque obstacle
+function buildBadges(){
+  const box = $("badges"); box.innerHTML = "";
+  for (const o of G.objs){
+    const c = o.cells[0], s = document.createElement("span"); s.className = "nb"; s.textContent = o.n;
+    s.style.left = ((cx(c) + .78) / W * 100) + "%"; s.style.top = ((cy(c) + .22) / H * 100) + "%";
+    box.appendChild(s); o.badge = s;
+  }
+}
+function updateBadges(){
+  for (const o of G.objs){
+    let done;
+    if (run){ const last = Math.max(...o.cells.map(c => path.indexOf(c))); done = run.i >= last; }
+    else done = o.n < nextNum();
+    const cls = "nb" + (done ? " done" : !run && o.n === nextNum() ? " next" : "");
+    if (o.badge && o.badge.className !== cls) o.badge.className = cls;
+  }
 }
 function drawPath(){
   if (path.length){
@@ -457,7 +482,7 @@ function drawDog(){
 }
 function render(){
   if (!G) return;
-  drawField(); drawPath(); drawDog();
+  drawField(); drawPath(); drawDog(); updateBadges();
   if (run && run.qte){ const q = run.qte;
     R(4, H * CS / 2 - 18, W * CS - 8, 36, "rgba(31,27,38,.88)");
     ctx.fillStyle = COL.yellow; ctx.font = "600 11px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -572,6 +597,7 @@ function renderMap(){
 function openLevel(n){
   G = generate(n); if (!G) return;
   path = []; run = null; phase = "draw";
+  buildBadges();
   $("pNum").textContent = n; $("pTime").textContent = "0.0"; $("result").hidden = true; $("qte").hidden = true; $("drawTools").hidden = false;
   const plan = levelPlan(n);
   setMsg(plan.fresh ? `Nouveau : <span class="hl">${plan.fresh.toUpperCase()}</span> ! Trace ton chemin du départ à l'arrivée, obstacles dans l'ordre.`
