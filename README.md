@@ -83,14 +83,24 @@ Un puzzle de logique sur le thème de la généalogie. Un arbre vide s'affiche (
 - Toucher une personne puis une case pour la placer ; toucher un indice pour le barrer ; l'option AIDE coche les indices respectés et signale ceux qui sont contredits.
 - La partie en cours est sauvegardée ; les records de temps et le nombre d'arbres réussis par mode et par niveau font partie du transfert de sauvegardes.
 
-## Injagility (prototype)
+## Injagility
 
-Un petit bouvier bernois enchaîne les obstacles d'agility au pied des Alpes, dans l'esprit du jeu du dino de Chrome.
+Deux modes, reliés par des onglets en haut de page.
+
+**Mode infini** : un petit bouvier bernois enchaîne les obstacles d'agility au pied des Alpes, dans l'esprit du jeu du dino de Chrome.
 
 - Obstacles : haie, oxer (double barre), pneu (plus haut) et tunnel (il faut se baisser jusqu'à la sortie).
 - Saut à hauteur variable selon la durée d'appui, descente rapide en se baissant en l'air.
 - Vitesse qui augmente avec la distance, points par obstacle, record sauvegardé dans le navigateur.
 - Commandes : Espace ou ↑ pour sauter, ↓ pour se baisser ; sur mobile, toucher l'écran, glisser vers le bas ou utiliser les boutons SAUTER et TUNNEL.
+
+**Mode parcours** ([`injagility/parcours.html`](injagility/parcours.html)) : un terrain vu du dessus, en grille. On trace au doigt le chemin du chien de la ligne de départ à l'arrivée, en passant par les obstacles numérotés dans l'ordre, puis le chien le parcourt.
+
+- Haie et pneu se prennent de face (on entre et on ressort tout droit, barre en travers) ; le tunnel, en U ou en S, se suit d'un bout à l'autre ; slalom et passerelle demandent pendant la course de taper une suite de flèches (◀ ▶ pour le slalom) avant la fin du chrono.
+- Os en bonus, flaques en malus (ralentissent et coûtent des points), buissons infranchissables.
+- Parcours numérotés et sans fin, de plus en plus longs, avec de nouveaux obstacles aux niveaux 2 à 5. Chaque parcours est généré à partir d'un chemin caché, donc toujours faisable.
+- Points : 30 par obstacle, os, bonus de temps, moins les flaques et les fautes de boutons. Ils servent à adopter des races au chenil : Jack Russell (slalom facile), Golden retriever (os doublés), Border collie (plus rapide), Berger australien (les sauts ne ralentissent pas), Berger des Shetland (passerelle facile, flaques sans effet).
+- La progression (niveaux, records, points, chiens) est sauvegardée et fait partie du transfert de sauvegardes.
 
 ---
 
@@ -117,7 +127,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Touché Coulé et le Jeu de la Vie n'enregistrent rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Touché Coulé et le Jeu de la Vie n'enregistrent rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Application installable (PWA)
 

@@ -168,8 +168,8 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
       <div class="label">
         <canvas data-icon="dog" width="20" height="20" aria-hidden="true"></canvas>
         <h2>INJAGILITY</h2>
-        <p>Un petit bouvier bernois enchaîne haies, pneus et tunnels d'agility.</p>
-        <div class="tags"><span>COURSE</span><span>PROTOTYPE</span></div>
+        <p>Un bouvier bernois en agility : course sans fin, ou parcours vus du dessus à tracer au doigt, avec des races à adopter.</p>
+        <div class="tags"><span>COURSE</span><span>PARCOURS</span></div>
       </div>
     </a>
     <a class="cart soli" href="solitaire/index.html">
@@ -437,6 +437,7 @@ function collectSaves(){
   for (const [id, v] of Object.entries(prog || {})) if (v && Array.isArray(v.cells)) p[id] = {c: v.cells.join(""), e: Math.round(v.elapsed || 0), h: v.hints || 0};
   if (Object.keys(c).length || Object.keys(p).length) g.picross = {c, p};
   const lg = readKey("lignee.stats", {}); if (lg && Object.keys(lg).length) g.lignee = lg;
+  const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
 }
 function describeSaves(g){
@@ -444,6 +445,7 @@ function describeSaves(g){
   if (g.picross) out.push(`Picross Dex : ${Object.keys(g.picross.c).length} Pokémon` + (Object.keys(g.picross.p).length ? `, ${Object.keys(g.picross.p).length} grille(s) en cours` : ""));
   if (g.queens) out.push("Queens : " + Object.keys(g.queens).sort((a, b) => a - b).map(n => `${n}×${n} en ${fmtTime(g.queens[n])}`).join(", "));
   for (const [k, name] of SCORES) if (g[k]) out.push(`${name} : ${g[k]} ${k === "injagility.best" ? "obstacles" : "points"}`);
+  if (g.parcours) out.push(`Injagility Parcours : ${(g.parcours.unlocked || 1) - 1} parcours réussis, ${g.parcours.wallet || 0} points, ${(g.parcours.owned || []).length} chien${(g.parcours.owned || []).length > 1 ? "s" : ""}`);
   if (g.lignee){ const n = Object.values(g.lignee).reduce((s, v) => s + (v && v.n || 0), 0); if (n) out.push(`Lignée : ${n} arbre${n > 1 ? "s" : ""} reconstitué${n > 1 ? "s" : ""}`); }
   return out;
 }
@@ -486,6 +488,16 @@ function mergeSaves(g){
     const parts = [];
     if (added) parts.push(`${added} Pokémon`); if (faster) parts.push(`${faster} record${faster > 1 ? "s" : ""}`); if (grids) parts.push(`${grids} grille${grids > 1 ? "s" : ""} en cours`);
     if (parts.length) done.push("Picross Dex : " + parts.join(", "));
+  }
+  if (g.parcours && typeof g.parcours === "object"){
+    // on garde le plus avancé : niveaux, meilleurs scores, chiens adoptés, et le plus gros porte-monnaie
+    const mine = readKey("injagility.parcours", {}) || {}, o = g.parcours, before = JSON.stringify(mine);
+    mine.unlocked = Math.max(mine.unlocked || 1, Math.min(999, o.unlocked || 1));
+    mine.wallet = Math.max(mine.wallet || 0, Math.min(1e7, o.wallet || 0));
+    mine.best = mine.best || {}; for (const [k, v] of Object.entries(o.best || {})) if (/^\d+$/.test(k) && v > (mine.best[k] || 0)) mine.best[k] = Math.round(v);
+    mine.owned = [...new Set([...(mine.owned || ["bernois"]), ...(o.owned || []).filter(x => /^[a-z]+$/.test(x))])];
+    mine.dog = mine.dog || o.dog || "bernois";
+    if (JSON.stringify(mine) !== before){ writeKey("injagility.parcours", mine); done.push("Injagility Parcours : progression mise à jour"); }
   }
   if (g.lignee && typeof g.lignee === "object"){
     const mine = readKey("lignee.stats", {}) || {}; let n = 0;

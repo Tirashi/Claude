@@ -71,6 +71,10 @@ canvas:focus-visible{outline:3px dashed var(--snow); outline-offset:3px}
 .card dt{font-family:var(--f-display); font-size:8px; color:var(--snow); padding-top:4px}
 .card dd{margin:0; color:var(--snow-dim)}
 kbd{font-family:var(--f-display); font-size:8px; background:#000; border:2px solid var(--snow-dim); padding:1px 4px}
+.tabs{display:flex; gap:8px; align-items:center}
+.tabs a, .tabs span{font-family:var(--f-display); font-size:9px; letter-spacing:1px; padding:9px 10px; border:3px solid var(--ink); border-radius:6px;
+  text-decoration:none; color:var(--snow); background:var(--wood-lo); box-shadow:3px 3px 0 #000}
+.tabs span{background:#ffd23f; color:var(--ink)}
 </style>
 </head>
 <body>
@@ -80,7 +84,7 @@ kbd{font-family:var(--f-display); font-size:8px; background:#000; border:2px sol
       <h1>INJA<span>GILITY</span></h1>
       <div class="sub">UN BOUVIER BERNOIS · UN PARCOURS SANS FIN</div>
     </div>
-    <button class="btn mini" id="soundBtn" type="button" aria-pressed="true">SON : OUI</button>
+    <div class="tabs"><span>INFINI</span><a href="parcours.html">PARCOURS</a><button class="btn mini" id="soundBtn" type="button" aria-pressed="true">SON : OUI</button></div>
   </header>
 
   <div class="frame">

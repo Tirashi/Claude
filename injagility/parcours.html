@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<style>/* page déjà sombre : le mode sombre forcé des navigateurs (Samsung Internet, Chrome…) n'a pas à la repeindre */
+@media (prefers-color-scheme: dark){ :root{ color-scheme: dark; } }</style>
+<title>Injagility · Parcours</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#110d22">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --night:#14212b; --night-2:#1d3040;
+  --wood:#9a6233; --wood-hi:#c98a4f; --wood-lo:#5a3418;
+  --ink:#1f1b26; --snow:#f4efe6; --snow-dim:#a8bccb;
+  --swiss:#d6312a; --swiss-lo:#8e1a16; --tan:#c8652c; --gold:#ffd23f; --grass:#4f9a3a;
+  --f-display:"Press Start 2P", "Courier New", monospace;
+  --f-body:"Pixelify Sans", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{min-height:100%}
+body{margin:0; background-color:var(--night); color:var(--snow); font-family:var(--f-body); font-size:17px; line-height:1.4;
+  background-image:radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size:4px 4px;
+  padding-inline:12px; padding-block:16px 40px}
+body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:60;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.06) 0 1px, transparent 1px 3px)}
+.wrap{max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:14px}
+header{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px,5.4vw,30px); letter-spacing:2px; color:var(--snow);
+  text-shadow:3px 3px 0 var(--swiss), 6px 6px 0 #000}
+h1 span{color:var(--swiss); text-shadow:3px 3px 0 var(--snow), 6px 6px 0 #000}
+.tabs{display:flex; gap:8px}
+.tabs a, .tabs span{font-family:var(--f-display); font-size:9px; letter-spacing:1px; padding:9px 10px; border:3px solid var(--ink); border-radius:6px;
+  text-decoration:none; color:var(--snow); background:var(--wood-lo); box-shadow:3px 3px 0 #000}
+.tabs span{background:var(--gold); color:var(--ink)}
+.btn{font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--snow); background:var(--swiss);
+  border:4px solid var(--ink); border-radius:10px; padding:13px 10px; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-user-select:none;
+  box-shadow: inset 3px 3px 0 rgba(255,255,255,.25), inset -3px -3px 0 var(--swiss-lo), 4px 4px 0 #000; -webkit-tap-highlight-color:transparent}
+.btn.alt{background:#2f6fb0; box-shadow: inset 3px 3px 0 rgba(255,255,255,.25), inset -3px -3px 0 #1a3f6a, 4px 4px 0 #000}
+.btn.wood{background:var(--wood); box-shadow: inset 3px 3px 0 var(--wood-hi), inset -3px -3px 0 var(--wood-lo), 4px 4px 0 #000}
+.btn:active,.btn.on{transform:translate(3px,3px); box-shadow: inset 3px 3px 0 rgba(0,0,0,.25), 1px 1px 0 #000}
+.btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+.btn:focus-visible{outline:3px dashed var(--snow); outline-offset:3px}
+.mini{font-size:8px; padding:8px 10px; background:var(--wood-lo); border-width:3px; box-shadow:3px 3px 0 #000}
+.frame{background:var(--wood); border:4px solid var(--ink); border-radius:6px; padding:8px;
+  box-shadow: inset 3px 3px 0 var(--wood-hi), inset -4px -4px 0 var(--wood-lo), 6px 6px 0 #000}
+.card{background:#1a2a36; border:3px solid var(--ink); padding:14px; box-shadow:4px 4px 0 #000}
+.card h2{margin:0 0 10px; font-family:var(--f-display); font-weight:400; font-size:10px; letter-spacing:1px; color:var(--tan)}
+.card p{margin:0 0 6px}
+.card dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 12px}
+.card dt{font-family:var(--f-display); font-size:8px; padding-top:4px}
+.card dd{margin:0; color:var(--snow-dim)}
+.wallet{font-family:var(--f-display); font-size:10px; color:var(--gold)}
+.hud{display:flex; justify-content:space-between; align-items:center; gap:8px; font-family:var(--f-display); font-size:9px; letter-spacing:1px; margin-bottom:8px}
+.hud b{font-weight:400; color:var(--gold)}
+canvas#field{display:block; width:100%; height:auto; image-rendering:pixelated; image-rendering:crisp-edges; border:3px solid var(--ink);
+  background:#4f9a3a; touch-action:none; cursor:crosshair}
+.msg{font-family:var(--f-display); font-size:9px; line-height:1.9; text-align:center; min-height:3.8em; margin-top:8px}
+.msg .hl{color:var(--gold)}
+.msg .bad{color:#ff7a6a}
+.row{display:flex; gap:10px; flex-wrap:wrap}
+.row .btn{flex:1 1 auto}
+.qte{display:grid; grid-template-columns:repeat(4, 1fr); gap:10px}
+.qte .btn{font-family:Arial, sans-serif; font-size:26px; padding:14px 0}
+.levels{display:grid; grid-template-columns:repeat(auto-fill, minmax(74px, 1fr)); gap:10px}
+.lvl{display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 4px}
+.lvl small{font-family:var(--f-body); font-size:15px; letter-spacing:0}
+.lvl.locked{background:#3a3540; box-shadow:4px 4px 0 #000}
+.dogs{display:grid; grid-template-columns:1fr; gap:10px}
+.dog{display:grid; grid-template-columns:64px 1fr auto; gap:12px; align-items:center; background:#1a2a36; border:3px solid var(--ink); padding:10px; box-shadow:4px 4px 0 #000}
+.dog canvas{width:64px; height:auto; image-rendering:pixelated}
+.dog h3{margin:0 0 4px; font-family:var(--f-display); font-weight:400; font-size:10px; color:var(--snow)}
+.dog p{margin:0; color:var(--snow-dim); font-size:16px; line-height:1.3}
+.dog.cur{border-color:var(--gold)}
+.result{text-align:center}
+.result h2{font-family:var(--f-display); font-weight:400; font-size:13px; color:var(--gold); margin:0 0 10px; line-height:1.6}
+.result table{margin:0 auto 10px; border-collapse:collapse; font-size:17px}
+.result td{padding:2px 8px; text-align:left} .result td:last-child{text-align:right; font-family:var(--f-display); font-size:10px}
+.result .tot td{border-top:2px solid var(--snow-dim); padding-top:6px; color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>INJA<span>GILITY</span></h1></div>
+    <div class="tabs"><a href="index.html">INFINI</a><span>PARCOURS</span></div>
+  </header>
+
+  <!-- ===== carte des parcours ===== -->
+  <section id="map">
+    <div class="card">
+      <div class="hud"><span>TES POINTS</span><span class="wallet" id="wallet">0</span></div>
+      <div class="row"><button class="btn wood" type="button" id="kennelBtn">LE CHENIL</button><button class="btn mini" type="button" id="soundBtn" aria-pressed="true">SON : OUI</button></div>
+      <p id="curDog" style="margin:10px 0 0"></p>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>LES PARCOURS</h2>
+      <div class="levels" id="levels"></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>COMMENT JOUER</h2>
+      <p>Trace au doigt le chemin du chien, case par case, de la ligne de <b>DÉPART</b> (en bas) à l'<b>ARRIVÉE</b> (en haut), en passant par les obstacles <b>dans l'ordre des numéros</b>. Puis appuie sur PARTIR : le chien suit ton tracé.</p>
+      <dl>
+        <dt>HAIE</dt><dd>Se franchit dans le sens de la course, barre en travers : on entre et on ressort tout droit.</dd>
+        <dt>PNEU</dt><dd>Pareil que la haie, en plus lent.</dd>
+        <dt>TUNNEL</dt><dd>Entre par un bout : le chien suit tout le tunnel, en U ou en S, jusqu'à l'autre bout.</dd>
+        <dt>SLALOM</dt><dd>Pendant la course, appuie sur ◀ ▶ dans l'ordre affiché.</dd>
+        <dt>PASSERELLE</dt><dd>Pendant la course, recopie la suite de flèches pour garder l'équilibre.</dd>
+        <dt>OS</dt><dd>Bonus de points si le chien passe dessus.</dd>
+        <dt>FLAQUE</dt><dd>Malus : le chien ralentit et perd des points.</dd>
+        <dt>BUISSON</dt><dd>Infranchissable.</dd>
+      </dl>
+      <p style="margin-top:8px">Les points gagnés servent à adopter d'autres races au chenil, chacune avec son talent.</p>
+    </div>
+  </section>
+
+  <!-- ===== un parcours ===== -->
+  <section id="play" hidden>
+    <div class="frame">
+      <div class="hud"><span>PARCOURS <b id="pNum">1</b></span><span>OBSTACLE <b id="pNext">1</b></span><span>TEMPS <b id="pTime">0.0</b></span></div>
+      <canvas id="field" width="128" height="176" aria-label="Terrain vu du dessus : trace le parcours du chien"></canvas>
+      <div class="msg" id="msg" aria-live="polite"></div>
+      <div class="row" id="drawTools">
+        <button class="btn wood" type="button" id="backBtn">◀ PARCOURS</button>
+        <button class="btn alt" type="button" id="undoBtn">EFFACER</button>
+        <button class="btn" type="button" id="goBtn">PARTIR !</button>
+      </div>
+      <div class="qte" id="qte" hidden>
+        <button class="btn alt" type="button" data-k="L" aria-label="Gauche">◀</button>
+        <button class="btn alt" type="button" data-k="U" aria-label="Haut">▲</button>
+        <button class="btn alt" type="button" data-k="D" aria-label="Bas">▼</button>
+        <button class="btn alt" type="button" data-k="R" aria-label="Droite">▶</button>
+      </div>
+      <div class="result" id="result" hidden>
+        <h2 id="rTitle"></h2>
+        <table id="rTable"></table>
+        <div class="row"><button class="btn wood" type="button" id="rMap">PARCOURS</button><button class="btn alt" type="button" id="rAgain">REFAIRE</button><button class="btn" type="button" id="rNext">SUIVANT ▶</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== le chenil ===== -->
+  <section id="kennel" hidden>
+    <div class="card">
+      <div class="hud"><span>LE CHENIL</span><span class="wallet" id="wallet2">0</span></div>
+      <p>Adopte un chien avec tes points, puis choisis celui qui court. Chacun a son talent.</p>
+      <div class="dogs" id="dogs"></div>
+      <div class="row" style="margin-top:12px"><button class="btn wood" type="button" id="kennelBack">◀ PARCOURS</button></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem("injagility."+k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem("injagility."+k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------- son ---------- */
+let actx = null, soundOn = store.get("sound", true);
+function tone(notes, type = "square", dur = .06, vol = .05, slide = 0){
+  if (!soundOn) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    for (const f of notes){ const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(f * slide, t + dur);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur); t += dur * .9; }
+  }catch(e){}
+}
+const SFX = {
+  step: () => tone([660], "square", .03, .025), no: () => tone([196, 147], "square", .08, .05), jump: () => tone([380], "square", .12, .04, 2),
+  bone: () => tone([988, 1319], "square", .05, .04), splash: () => tone([300, 200], "triangle", .08, .05), tunnel: () => tone([220, 260, 300], "triangle", .07, .05),
+  ok: () => tone([784], "square", .04, .04), bad: () => tone([150], "sawtooth", .12, .05), bark: () => tone([520, 390], "sawtooth", .07, .05),
+  win: () => tone([523, 659, 784, 1047, 784, 1047, 1319], "square", .09, .045), buy: () => tone([659, 784, 988, 1319], "square", .07, .045),
+};
+
+/* ---------- races de chiens ---------- */
+const DOGS = [
+  {id: "bernois", name: "BOUVIER BERNOIS", price: 0,   pal: {b: "#1f1b26", w: "#f4efe6", t: "#c8652c"}, perk: "Le chien de la maison : solide et motivé, sans talent particulier."},
+  {id: "jack",    name: "JACK RUSSELL",    price: 300, pal: {b: "#ece4d6", w: "#ffffff", t: "#b8742c"}, perk: "Slalom : des séquences plus courtes et plus de temps pour les taper."},
+  {id: "golden",  name: "GOLDEN RETRIEVER", price: 450, pal: {b: "#d8a040", w: "#f0d090", t: "#b8802a"}, perk: "Flair : chaque os rapporte le double."},
+  {id: "border",  name: "BORDER COLLIE",   price: 600, pal: {b: "#1a1a22", w: "#f4f4f4", t: "#f4f4f4"}, perk: "Vitesse : court 30 % plus vite, donc plus de bonus de temps."},
+  {id: "aussie",  name: "BERGER AUSTRALIEN", price: 750, pal: {b: "#6a7a8a", w: "#f4efe6", t: "#c8652c"}, perk: "Sauteur : les haies et les pneus ne le ralentissent pas."},
+  {id: "sheltie", name: "BERGER DES SHETLAND", price: 900, pal: {b: "#b8702a", w: "#f4efe6", t: "#e0a050"}, perk: "Équilibre : passerelle plus facile, et les flaques ne lui font rien."},
+];
+const dogById = id => DOGS.find(d => d.id === id) || DOGS[0];
+
+// le chien vu de côté (même dessin que le mode infini, aux couleurs de la race)
+const SIDE = [
+  "...........kkkkk....", "..........kkkkkkk...", ".........kkkkkkkkk..", ".........kkkkktkkkk.", "ww.......kkkkkkekwww", "wkk......kkkkkttwwwk",
+  ".kk......kkkkkttwwww", "..kk.....kkkkkkwwpp.", "...kkkkkkkkkkkkwww..", "..kkkkkkkkkkkkkwww..", "..kkkkkkkkkkkkkwww..", "..kkkkkkkkkkkkktww..",
+  "..kkkkkkkkkkkkkttt..", "..tt.........tt.....", ".tt...........tt....", ".tt...........tt....", ".ww............ww..."];
+// le chien vu du dessus, tête vers le haut
+const TOP = ["..oooo..", "oobbbboo", "obbwwbbo", "obbwwbbo", ".obbbbo.", "..obbo..", ".obbbbo.", "obtbbtbo", "obbbbbbo", "obbbbbbo", ".obbbbo.", "..obbo..", "...oo..."];
+function sprite(map, pal){
+  const c = document.createElement("canvas"); c.width = map[0].length; c.height = map.length;
+  const x = c.getContext("2d");
+  map.forEach((row, r) => [...row].forEach((ch, col) => { if (pal[ch]){ x.fillStyle = pal[ch]; x.fillRect(col, r, 1, 1); } }));
+  return c;
+}
+const sideSprite = d => sprite(SIDE, {k: d.pal.b, w: d.pal.w, t: d.pal.t, p: "#ea7d8f", e: "#ffffff"});
+const topSprite = d => sprite(TOP, {o: "#1f1b26", b: d.pal.b, w: d.pal.w, t: d.pal.t});
+
+/* ---------- sauvegarde ---------- */
+const SAVE_KEY = "parcours";
+let save = Object.assign({unlocked: 1, best: {}, wallet: 0, owned: ["bernois"], dog: "bernois"}, store.get(SAVE_KEY, {}));
+const persist = () => store.set(SAVE_KEY, save);
+
+/* ---------- génération d'un parcours ---------- */
+const W = 8, H = 11, CS = 16;
+function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const idx = (x, y) => y * W + x, cx = c => c % W, cy = c => Math.floor(c / W);
+const DIRS = {U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0]};
+const dirOf = (a, b) => { const dx = cx(b) - cx(a), dy = cy(b) - cy(a); return dx === 1 ? "R" : dx === -1 ? "L" : dy === 1 ? "D" : "U"; };
+const adjacent = (a, b) => Math.abs(cx(a) - cx(b)) + Math.abs(cy(a) - cy(b)) === 1;
+
+function walk(rng){
+  // un chemin sans boucle du bas vers le haut, qui serpente
+  for (let t = 0; t < 400; t++){
+    const start = idx(Math.floor(rng() * W), H - 1), path = [start, start - W], seen = new Set(path);
+    let stuck = false;
+    while (cy(path[path.length - 1]) > 0){
+      const c = path[path.length - 1], opts = [];
+      for (const [d, [dx, dy]] of Object.entries(DIRS)){
+        const x = cx(c) + dx, y = cy(c) + dy;
+        if (x < 0 || x >= W || y < 0 || y > H - 2) continue;
+        const n = idx(x, y); if (seen.has(n)) continue;
+        if (y === 0 && path.length < 14) continue;          // pas d'arrivée trop tôt
+        if (y > 0 && [...seen].some(s => s !== c && adjacent(s, n))) { if (rng() < .85) continue; }   // évite de se coller à lui-même
+        const prev = path.length > 1 ? dirOf(path[path.length - 2], c) : "U";
+        opts.push([n, (d === "U" ? 3 : d === "D" ? .9 : 2.2) * (d === prev ? 2.4 : 1)]);   // de l'élan : des lignes droites pour slalom et passerelle
+      }
+      if (!opts.length){ stuck = true; break; }
+      let r = rng() * opts.reduce((s, o) => s + o[1], 0), n = opts[0][0];
+      for (const [o, w] of opts){ r -= w; if (r <= 0){ n = o; break; } }
+      path.push(n); seen.add(n);
+      if (path.length > 44){ stuck = true; break; }
+    }
+    if (!stuck && path.length >= 16) return path;
+  }
+  return null;
+}
+function levelPlan(n){
+  const types = ["haie"]; if (n >= 2) types.push("pneu"); if (n >= 3) types.push("tunnel"); if (n >= 4) types.push("slalom"); if (n >= 5) types.push("passerelle");
+  const fresh = n === 2 ? "pneu" : n === 3 ? "tunnel" : n === 4 ? "slalom" : n === 5 ? "passerelle" : null;
+  return {count: Math.min(3 + Math.floor((n - 1) / 2), 9), types, fresh};
+}
+function generate(n){
+  const rng = mulberry32(n * 7919 + 17), plan = levelPlan(n);
+  for (let attempt = 0; attempt < 300; attempt++){
+    const want = attempt < 200 ? plan.count : plan.count - 1 - Math.floor((attempt - 200) / 50);   // plan B : un obstacle de moins
+    const path = walk(rng); if (!path) continue;
+    const L = path.length, dirAt = i => dirOf(path[i - 1], path[i]);
+    const used = new Array(L).fill(false), objs = [];
+    const free = (i, j) => { for (let k = Math.max(1, i - 1); k <= Math.min(L - 2, j + 1); k++) if (used[k]) return false; return i >= 2 && j <= L - 3; };
+    const tryPlace = type => {
+      const cands = [];
+      for (let i = 2; i < L - 2; i++){
+        if (type === "haie" || type === "pneu"){ if (free(i, i) && dirAt(i) === dirAt(i + 1)) cands.push([i, i]); }
+        else if (type === "slalom" || type === "passerelle"){ if (i + 2 < L - 2 && free(i, i + 2) && [i, i + 1, i + 2, i + 3].every(k => dirAt(k) === dirAt(i))) cands.push([i, i + 2]); }
+        else if (type === "tunnel"){ for (const len of [3, 4, 5]){ const j = i + len - 1; if (j >= L - 2 || !free(i, j)) continue;
+          let turns = 0; for (let k = i + 1; k < j; k++) if (dirAt(k) !== dirAt(k + 1)) turns++;   // deux virages : un U ou un S
+          if (turns >= 2) cands.push([i, j]); } }
+      }
+      if (!cands.length) return false;
+      const [i, j] = cands[Math.floor(rng() * cands.length)];
+      for (let k = i; k <= j; k++) used[k] = true;
+      objs.push({type, i, j, cells: path.slice(i, j + 1), orient: (type === "haie" || type === "pneu") ? ("UD".includes(dirAt(i)) ? "h" : "v") : null});
+      return true;
+    };
+    if (plan.fresh) tryPlace(plan.fresh);
+    // types répartis équitablement : on essaie d'abord les moins utilisés
+    let guard = 0;
+    while (objs.length < want && guard++ < 40){
+      const use = t => objs.filter(o => o.type === t).length;
+      const order = plan.types.slice().sort((a, b) => use(a) - use(b) || rng() - .5);
+      if (!order.some(t => tryPlace(t))) break;
+    }
+    if (objs.length < want) continue;
+    objs.sort((a, b) => a.i - b.i); objs.forEach((o, k) => o.n = k + 1);
+    // décor : buissons, os et flaques hors du chemin prévu (quelques flaques dessus, à contourner)
+    const onPath = new Set(path), cell = new Array(W * H).fill(null);
+    for (const o of objs) for (const c of o.cells) cell[c] = o;
+    const freeCells = [...Array(W * H).keys()].filter(c => !onPath.has(c) && cy(c) > 0 && cy(c) < H - 1);
+    const pickFree = () => { const k = Math.floor(rng() * freeCells.length); return freeCells.splice(k, 1)[0]; };
+    const bushes = new Set(), bones = new Set(), puddles = new Set();
+    const nb = Math.min(freeCells.length - 6, 6 + Math.floor(n * 1.2)); for (let k = 0; k < Math.min(nb, 18); k++) bushes.add(pickFree());
+    for (let k = 0; k < 3 + (n % 2); k++) bones.add(pickFree());
+    for (let k = 0; k < 1 + Math.min(2, Math.floor(n / 3)); k++) puddles.add(pickFree());
+    const plain = path.filter((c, i) => i > 1 && i < L - 2 && !cell[c]);
+    if (n >= 2 && plain.length) puddles.add(plain[Math.floor(rng() * plain.length)]);   // une flaque sur le chemin prévu : à éviter… ou pas
+    return {n, objs, cell, bushes, bones, puddles, solution: path};
+  }
+  return null;
+}
+
+/* ---------- état d'une partie ---------- */
+let G = null, path = [], phase = "map", drawing = false, run = null;
+const cv = $("field"), ctx = cv.getContext("2d"); cv.width = W * CS; cv.height = H * CS; ctx.imageSmoothingEnabled = false;
+const setMsg = h => { $("msg").innerHTML = h; };
+const objAt = c => G.cell[c];
+const doneCount = () => { const seen = new Set(); for (const c of path){ const o = objAt(c); if (o) seen.add(o.n); } return seen.size; };
+const nextNum = () => doneCount() + 1;
+
+/* ---------- tracé au doigt ---------- */
+function tryAdd(c){
+  const last = path[path.length - 1];
+  if (c === last) return true;
+  // revenir sur ses pas : on efface jusqu'à cette case (un obstacle long s'efface en entier)
+  const k = path.indexOf(c);
+  if (k >= 0){
+    let cut = k + 1;
+    const o = objAt(c);
+    if (o && o.cells.length > 1){
+      const pos = path.map((x, i) => objAt(x) === o ? i : -1).filter(i => i >= 0);
+      cut = k === Math.max(...pos) ? k + 1 : Math.min(...pos);
+    }
+    path = path.slice(0, cut); SFX.step(); return false;
+  }
+  if (!path.length){
+    if (cy(c) !== H - 1){ setMsg(`Commence sur la ligne de <span class="hl">DÉPART</span>, en bas.`); return false; }
+    path = [c]; SFX.step(); return true;
+  }
+  if (!adjacent(last, c)) return false;
+  if (G.bushes.has(c)){ SFX.no(); setMsg(`Un <span class="bad">buisson</span> bloque le passage.`); return false; }
+  const d = dirOf(last, c), lo = objAt(last);
+  // on ressort d'une haie ou d'un pneu tout droit
+  if (lo && lo.cells.length === 1 && path.length > 1 && dirOf(path[path.length - 2], last) !== d){ SFX.no(); setMsg(`On ressort ${lo.type === "haie" ? "de la haie" : "du pneu"} tout droit.`); return false; }
+  const o = objAt(c);
+  if (o){
+    if (o.n !== nextNum()){ SFX.no(); setMsg(o.n < nextNum() ? `L'obstacle ${o.n} est déjà passé.` : `D'abord l'obstacle <span class="hl">${nextNum()}</span> !`); return false; }
+    if (o.cells.length === 1){
+      if ((o.orient === "h") !== "UD".includes(d)){ SFX.no(); setMsg(`Prends ${o.type === "haie" ? "la haie" : "le pneu"} de face, barre en travers.`); return false; }
+      path.push(c);
+    } else {
+      const first = o.cells[0], lastC = o.cells[o.cells.length - 1];
+      if (c !== first && c !== lastC){ SFX.no(); setMsg(`Entre dans ${o.type === "tunnel" ? "le tunnel" : o.type === "slalom" ? "le slalom" : "la passerelle"} par un bout.`); return false; }
+      const seq = c === first ? o.cells : o.cells.slice().reverse();
+      if ((o.type !== "tunnel") && dirOf(last, seq[0]) !== dirOf(seq[0], seq[1])){ SFX.no(); setMsg(`Aborde ${o.type === "slalom" ? "le slalom" : "la passerelle"} dans l'axe.`); return false; }
+      path.push(...seq); if (o.type === "tunnel") SFX.tunnel();
+    }
+    SFX.step(); setMsg(nextNum() > G.objs.length ? `Tous les obstacles sont passés : file vers l'<span class="hl">ARRIVÉE</span> !` : `Obstacle <span class="hl">${o.n}</span> passé. Au suivant !`);
+    return true;
+  }
+  if (cy(c) === H - 1){ SFX.no(); return false; }
+  path.push(c); SFX.step();
+  if (cy(c) === 0) setMsg(nextNum() > G.objs.length ? `Parcours complet ! Appuie sur <span class="hl">PARTIR</span>.` : `Il manque encore l'obstacle <span class="hl">${nextNum()}</span>…`);
+  return true;
+}
+// un doigt rapide saute des cases : on avance case par case vers la case visée
+function dragTo(c){
+  for (let guard = 0; guard < 20; guard++){
+    const last = path[path.length - 1];
+    if (last === undefined || c === last || path.includes(c) || adjacent(last, c)){ tryAdd(c); return; }
+    const dx = Math.sign(cx(c) - cx(last)), dy = Math.sign(cy(c) - cy(last));
+    const step = Math.abs(cx(c) - cx(last)) >= Math.abs(cy(c) - cy(last)) ? idx(cx(last) + dx, cy(last)) : idx(cx(last), cy(last) + dy);
+    if (!tryAdd(step) || path[path.length - 1] === last) return;
+  }
+}
+const cellFromEvent = e => { const r = cv.getBoundingClientRect(); const x = Math.floor((e.clientX - r.left) / r.width * W), y = Math.floor((e.clientY - r.top) / r.height * H);
+  return x >= 0 && x < W && y >= 0 && y < H ? idx(x, y) : -1; };
+cv.addEventListener("pointerdown", e => {
+  if (phase !== "draw") return; e.preventDefault(); const c = cellFromEvent(e); if (c < 0) return;
+  drawing = true; try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+  if (path.length && !path.includes(c) && !adjacent(path[path.length - 1], c) && cy(c) === H - 1) path = [];   // recommencer ailleurs sur le départ
+  tryAdd(c);
+});
+cv.addEventListener("pointermove", e => { if (!drawing || phase !== "draw") return; const c = cellFromEvent(e); if (c >= 0) dragTo(c); });
+const stopDraw = () => { drawing = false; };
+cv.addEventListener("pointerup", stopDraw); cv.addEventListener("pointercancel", stopDraw);
+
+/* ---------- dessin du terrain (pixel art vu du dessus) ---------- */
+const COL = {g1: "#4f9a3a", g2: "#5aa845", ink: "#1f1b26", white: "#f4efe6", red: "#d6312a", yellow: "#ffd23f", blue: "#2f6fb0", blue2: "#4a8fd4", wood: "#9a6233", wood2: "#c98a4f"};
+const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+function badge(c, n){
+  const x = cx(c) * CS, y = cy(c) * CS;
+  R(x + 8, y - 1, 9, 9, COL.ink); R(x + 9, y, 7, 7, COL.yellow);
+  ctx.fillStyle = COL.ink; ctx.font = "600 9px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String(n), x + 12.5, y + 3.8);
+}
+function drawField(){
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) R(x * CS, y * CS, CS, CS, (x + y) % 2 ? COL.g1 : COL.g2);
+  // départ (bas) et arrivée (haut, damier)
+  for (let x = 0; x < W * CS; x += 4){ R(x, (H - 1) * CS, 2, CS, "rgba(255,255,255,.18)"); }
+  R(0, (H - 1) * CS, W * CS, 1, COL.white);
+  for (let x = 0; x < W * CS; x += 4) for (let y = 0; y < CS; y += 4) R(x, y, 4, 4, ((x + y) / 4) % 2 ? COL.ink : COL.white);
+  ctx.globalAlpha = .55; R(0, 0, W * CS, CS, COL.g1); ctx.globalAlpha = 1;
+  R(0, CS - 1, W * CS, 1, COL.white);
+  ctx.fillStyle = COL.white; ctx.font = "600 11px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("ARRIVÉE", W * CS / 2, CS / 2 + .5); ctx.fillText("DÉPART", W * CS / 2, (H - .5) * CS + .5);
+  for (const c of G.bushes){ const x = cx(c) * CS, y = cy(c) * CS; R(x + 2, y + 3, 12, 11, "#1f4f24"); R(x + 3, y + 2, 10, 12, "#2f7a38"); R(x + 4, y + 4, 4, 3, "#4fa850"); R(x + 9, y + 7, 3, 3, "#4fa850"); }
+  for (const c of G.puddles){ const x = cx(c) * CS, y = cy(c) * CS; R(x + 2, y + 5, 12, 7, "#1f4f80"); R(x + 3, y + 6, 10, 5, COL.blue2); R(x + 4, y + 7, 3, 1, "#a8d4f8"); }
+  for (const c of G.bones){ if (run && run.got.has(c)) continue; const x = cx(c) * CS, y = cy(c) * CS;
+    R(x + 4, y + 7, 8, 2, COL.white); R(x + 3, y + 6, 2, 2, COL.white); R(x + 3, y + 8, 2, 2, COL.white); R(x + 11, y + 6, 2, 2, COL.white); R(x + 11, y + 8, 2, 2, COL.white); }
+  for (const o of G.objs) drawObj(o);
+}
+function drawObj(o){
+  const c0 = o.cells[0], x = cx(c0) * CS, y = cy(c0) * CS;
+  if (o.type === "haie" || o.type === "pneu"){
+    const h = o.orient === "h";
+    if (o.type === "haie"){
+      if (h){ R(x + 1, y + 6, 14, 4, COL.ink); for (let i = 0; i < 12; i++) R(x + 2 + i, y + 7, 1, 2, Math.floor(i / 3) % 2 ? COL.yellow : COL.red); R(x, y + 5, 3, 6, COL.white); R(x + 13, y + 5, 3, 6, COL.white); }
+      else { R(x + 6, y + 1, 4, 14, COL.ink); for (let i = 0; i < 12; i++) R(x + 7, y + 2 + i, 2, 1, Math.floor(i / 3) % 2 ? COL.yellow : COL.red); R(x + 5, y, 6, 3, COL.white); R(x + 5, y + 13, 6, 3, COL.white); }
+    } else {
+      if (h){ R(x, y + 6, 16, 4, COL.ink); R(x + 1, y + 7, 14, 2, COL.yellow); R(x + 4, y + 5, 8, 6, COL.ink); R(x + 5, y + 6, 6, 4, "#3a3540"); R(x + 6, y + 7, 4, 2, COL.red); }
+      else { R(x + 6, y, 4, 16, COL.ink); R(x + 7, y + 1, 2, 14, COL.yellow); R(x + 5, y + 4, 6, 8, COL.ink); R(x + 6, y + 5, 4, 6, "#3a3540"); R(x + 7, y + 6, 2, 4, COL.red); }
+    }
+  } else if (o.type === "tunnel"){
+    const seg = (a, b, pad, col) => { const x0 = Math.min(cx(a), cx(b)) * CS + 8, x1 = Math.max(cx(a), cx(b)) * CS + 8, y0 = Math.min(cy(a), cy(b)) * CS + 8, y1 = Math.max(cy(a), cy(b)) * CS + 8;
+      R(x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad, col); };
+    for (let k = 1; k < o.cells.length; k++) seg(o.cells[k - 1], o.cells[k], 6, COL.ink);
+    for (let k = 1; k < o.cells.length; k++) seg(o.cells[k - 1], o.cells[k], 5, COL.blue);
+    for (let k = 0; k < o.cells.length; k++){ const X = cx(o.cells[k]) * CS, Y = cy(o.cells[k]) * CS; R(X + 4, Y + 4, 8, 8, k % 2 ? COL.blue2 : COL.blue); }
+    for (const c of [o.cells[0], o.cells[o.cells.length - 1]]){ const X = cx(c) * CS, Y = cy(c) * CS; R(X + 5, Y + 5, 6, 6, "#0b0a10"); }
+  } else if (o.type === "slalom"){
+    const a = o.cells[0], b = o.cells[2], dx = Math.sign(cx(b) - cx(a)), dy = Math.sign(cy(b) - cy(a));
+    const sx = cx(a) * CS + 8 - dx * 6, sy = cy(a) * CS + 8 - dy * 6, ex = cx(b) * CS + 8 + dx * 6, ey = cy(b) * CS + 8 + dy * 6;
+    for (let k = 0; k < 6; k++){
+      const f = (k + .5) / 6, off = k % 2 ? 3 : -3;
+      const px = Math.round(sx + (ex - sx) * f + (dy ? off : 0)), py = Math.round(sy + (ey - sy) * f + (dx ? off : 0));
+      R(px - 2, py - 2, 4, 4, COL.ink); R(px - 1, py - 1, 2, 2, k % 2 ? COL.red : COL.white);
+    }
+  } else if (o.type === "passerelle"){
+    const a = o.cells[0], b = o.cells[2], X0 = Math.min(cx(a), cx(b)) * CS, Y0 = Math.min(cy(a), cy(b)) * CS;
+    const horiz = cy(a) === cy(b);
+    if (horiz){ R(X0, Y0 + 5, 3 * CS, 6, COL.ink); R(X0 + 1, Y0 + 6, 3 * CS - 2, 4, COL.wood2); R(X0 + 1, Y0 + 6, 8, 4, COL.yellow); R(X0 + 3 * CS - 9, Y0 + 6, 8, 4, COL.yellow); for (let i = 12; i < 3 * CS - 10; i += 6) R(X0 + i, Y0 + 6, 1, 4, COL.wood); }
+    else { R(X0 + 5, Y0, 6, 3 * CS, COL.ink); R(X0 + 6, Y0 + 1, 4, 3 * CS - 2, COL.wood2); R(X0 + 6, Y0 + 1, 4, 8, COL.yellow); R(X0 + 6, Y0 + 3 * CS - 9, 4, 8, COL.yellow); for (let i = 12; i < 3 * CS - 10; i += 6) R(X0 + 6, Y0 + i, 4, 1, COL.wood); }
+  }
+  badge(c0, o.n);
+}
+function drawPath(){
+  if (path.length){
+    ctx.strokeStyle = run ? "rgba(255,210,63,.35)" : "rgba(255,210,63,.85)"; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.beginPath(); path.forEach((c, i) => { const X = cx(c) * CS + 8, Y = cy(c) * CS + 8; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke();
+    const s = path[0]; R(cx(s) * CS + 5, cy(s) * CS + 5, 6, 6, COL.ink); R(cx(s) * CS + 6, cy(s) * CS + 6, 4, 4, COL.yellow);
+  }
+}
+let dogImg = null;
+function drawDog(){
+  if (!run) return;
+  const {x, y, ang, hop, hidden} = run.pose; if (hidden) return;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang); const s = 1 + hop * .35; ctx.scale(s, s);
+  if (hop) { ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(-4, -2 + hop * 4, 8, 8); }
+  ctx.drawImage(dogImg, -4, -6); ctx.restore();
+}
+function render(){
+  if (!G) return;
+  drawField(); drawPath(); drawDog();
+  if (run && run.qte){ const q = run.qte;
+    R(4, H * CS / 2 - 18, W * CS - 8, 36, "rgba(31,27,38,.88)");
+    ctx.fillStyle = COL.yellow; ctx.font = "600 11px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(q.title, W * CS / 2, H * CS / 2 - 10);
+    const ARW = {L: "◀", R: "▶", U: "▲", D: "▼"};
+    ctx.font = "11px Arial";
+    const span = Math.min(14, (W * CS - 16) / q.seq.length);
+    q.seq.forEach((k, i) => { ctx.fillStyle = i < q.pos ? "#4fa850" : i === q.pos ? COL.white : "#7a7a8a"; ctx.fillText(ARW[k], W * CS / 2 + (i - (q.seq.length - 1) / 2) * span, H * CS / 2 + 3); });
+    R(10, H * CS / 2 + 12, (W * CS - 20) * Math.max(0, q.left / q.limit), 2, q.left < q.limit * .3 ? COL.red : COL.yellow);
+  }
+}
+
+/* ---------- la course ---------- */
+function startRun(){
+  if (!path.length || cy(path[path.length - 1]) !== 0 || nextNum() <= G.objs.length){
+    SFX.no(); setMsg(nextNum() <= G.objs.length ? `Il manque l'obstacle <span class="hl">${nextNum()}</span>.` : `Le tracé doit finir sur la ligne d'<span class="hl">ARRIVÉE</span>.`); return; }
+  const D = dogById(save.dog);
+  phase = "run"; dogImg = topSprite(D);
+  run = {i: 0, t: 0, time: 0, got: new Set(), wet: 0, faults: 0, qteDone: new Set(), qte: null, wait: 0, pose: {x: 0, y: 0, ang: 0, hop: 0, hidden: false}, dog: D, done: false};
+  run.pose.x = cx(path[0]) * CS + 8; run.pose.y = cy(path[0]) * CS + 8;
+  $("drawTools").hidden = true; setMsg(""); SFX.bark();
+}
+const speed = () => (run.dog.id === "border" ? 1.3 : 1) / .26;   // cases par seconde
+function stepDur(i){   // durée pour aller de path[i] à path[i+1]
+  let d = 1 / speed();
+  const o = objAt(path[i + 1]);
+  if (o && (o.type === "haie" || o.type === "pneu") && run.dog.id !== "aussie") d += o.type === "pneu" ? .28 : .2;
+  if (o && o.type === "tunnel") d *= 1.25;
+  if (G.puddles.has(path[i + 1]) && run.dog.id !== "sheltie") d += .3;
+  return d;
+}
+function startQte(o){
+  const D = run.dog, rng = Math.random;
+  if (o.type === "slalom"){ const n = D.id === "jack" ? 4 : 6, s = rng() < .5 ? "L" : "R";
+    run.qte = {o, title: "SLALOM !", seq: Array.from({length: n}, (_, k) => k % 2 ? (s === "L" ? "R" : "L") : s), pos: 0, limit: D.id === "jack" ? 5 : 3.6}; }
+  else { const n = D.id === "sheltie" ? 3 : 4, K = ["L", "R", "U", "D"];
+    run.qte = {o, title: "PASSERELLE !", seq: Array.from({length: n}, () => K[Math.floor(rng() * 4)]), pos: 0, limit: D.id === "sheltie" ? 5.5 : 4}; }
+  run.qte.left = run.qte.limit; $("qte").hidden = false; SFX.bark();
+}
+function qteKey(k){
+  if (!run || !run.qte) return;
+  const q = run.qte;
+  if (q.seq[q.pos] === k){ q.pos++; SFX.ok(); if (q.pos >= q.seq.length) endQte(); }
+  else { run.faults++; SFX.bad(); flash = .3; }
+}
+function endQte(){ run.qteDone.add(run.qte.o.n); run.qte = null; $("qte").hidden = true; }
+let flash = 0;
+function update(dt){
+  if (!run || run.done) return;
+  run.time += dt;
+  if (run.qte){ run.qte.left -= dt; if (run.qte.left <= 0){ run.faults++; SFX.bad(); endQte(); } return; }
+  const i = run.i;
+  if (i >= path.length - 1){ finish(); return; }
+  // arrivé à l'entrée d'un slalom ou d'une passerelle : épreuve de boutons
+  const o = objAt(path[i]);
+  if (o && (o.type === "slalom" || o.type === "passerelle") && !run.qteDone.has(o.n) && o.cells.includes(path[i]) && run.t === 0){ startQte(o); return; }
+  const dur = stepDur(i);
+  run.t += dt;
+  const a = path[i], b = path[i + 1], f = Math.min(1, run.t / dur);
+  run.pose.x = (cx(a) + (cx(b) - cx(a)) * f) * CS + 8; run.pose.y = (cy(a) + (cy(b) - cy(a)) * f) * CS + 8;
+  run.pose.ang = {U: 0, R: Math.PI / 2, D: Math.PI, L: -Math.PI / 2}[dirOf(a, b)];
+  const ob = objAt(b);
+  run.pose.hop = ob && (ob.type === "haie" || ob.type === "pneu") ? Math.sin(f * Math.PI) : 0;
+  run.pose.hidden = !!(objAt(a) && objAt(a).type === "tunnel" && ob && ob.type === "tunnel");
+  if (f >= 1){
+    run.i++; run.t = 0;
+    if (ob && (ob.type === "haie" || ob.type === "pneu")) SFX.jump(); else SFX.step();
+    if (G.bones.has(b) && !run.got.has(b)){ run.got.add(b); SFX.bone(); }
+    if (G.puddles.has(b)){ run.wet++; SFX.splash(); }
+  }
+  $("pTime").textContent = run.time.toFixed(1);
+}
+function par(){   // temps de référence : le chemin prévu par le générateur
+  const sol = G.solution; let t = 0;
+  for (let i = 0; i < sol.length - 1; i++){ t += .26; const o = G.cell[sol[i + 1]]; if (o && (o.type === "haie" || o.type === "pneu")) t += .25; if (o && o.type === "tunnel") t += .065; }
+  return t + G.objs.filter(o => o.type === "slalom" || o.type === "passerelle").length * 2.2;
+}
+function finish(){
+  run.done = true; phase = "result";
+  const D = run.dog, obs = G.objs.length;
+  const lines = [[`${obs} obstacle${obs > 1 ? "s" : ""} franchi${obs > 1 ? "s" : ""}`, obs * 30]];
+  if (run.got.size) lines.push([`${run.got.size} os ramassé${run.got.size > 1 ? "s" : ""}${D.id === "golden" ? " (flair)" : ""}`, run.got.size * (D.id === "golden" ? 30 : 15)]);
+  if (run.wet && D.id !== "sheltie") lines.push([`${run.wet} flaque${run.wet > 1 ? "s" : ""}`, -run.wet * 10]);
+  if (run.faults) lines.push([`${run.faults} faute${run.faults > 1 ? "s" : ""} aux boutons`, -run.faults * 10]);
+  const bonus = Math.max(0, Math.round((par() * 1.15 - run.time) * 12));
+  lines.push([`Temps ${run.time.toFixed(1)} s (réf. ${par().toFixed(1)} s)`, bonus]);
+  const total = Math.max(0, lines.reduce((s, l) => s + l[1], 0));
+  const prev = save.best[G.n] || 0;
+  save.best[G.n] = Math.max(prev, total); save.wallet += total; if (save.unlocked <= G.n) save.unlocked = G.n + 1; persist();
+  $("rTitle").innerHTML = run.faults === 0 && !run.wet ? "SANS FAUTE !" : "PARCOURS TERMINÉ !";
+  $("rTable").innerHTML = lines.map(([l, v]) => `<tr><td>${l}</td><td>${v > 0 ? "+" : ""}${v}</td></tr>`).join("") +
+    `<tr class="tot"><td>Points gagnés${total > prev ? " · record !" : ""}</td><td>+${total}</td></tr>`;
+  $("result").hidden = false; $("qte").hidden = true; setMsg(`Tu as <span class="hl">${save.wallet}</span> points au total.`);
+  SFX.win();
+}
+
+/* ---------- écrans ---------- */
+function show(id){ for (const s of ["map", "play", "kennel"]) $(s).hidden = s !== id; window.scrollTo(0, 0); }
+function renderMap(){
+  $("wallet").textContent = save.wallet; const D = dogById(save.dog);
+  $("curDog").innerHTML = `Chien : <b>${D.name.toLowerCase()}</b>.`;
+  const box = $("levels"); box.innerHTML = "";
+  const max = Math.max(save.unlocked + 2, 12);
+  for (let n = 1; n <= max; n++){
+    const b = document.createElement("button"); b.type = "button"; const open = n <= save.unlocked;
+    b.className = "btn lvl " + (open ? (save.best[n] ? "alt" : "") : "locked"); b.disabled = !open;
+    b.innerHTML = `${n}<small>${save.best[n] ? save.best[n] + " pts" : open ? "à faire" : "verrouillé"}</small>`;
+    b.onclick = () => openLevel(n); box.appendChild(b);
+  }
+  show("map");
+}
+function openLevel(n){
+  G = generate(n); if (!G) return;
+  path = []; run = null; phase = "draw";
+  $("pNum").textContent = n; $("pTime").textContent = "0.0"; $("result").hidden = true; $("qte").hidden = true; $("drawTools").hidden = false;
+  const plan = levelPlan(n);
+  setMsg(plan.fresh ? `Nouveau : <span class="hl">${plan.fresh.toUpperCase()}</span> ! Trace ton chemin du départ à l'arrivée, obstacles dans l'ordre.`
+                    : `Trace ton chemin du <span class="hl">DÉPART</span> à l'<span class="hl">ARRIVÉE</span>, obstacles dans l'ordre.`);
+  show("play");
+}
+function renderKennel(){
+  $("wallet2").textContent = save.wallet;
+  const box = $("dogs"); box.innerHTML = "";
+  for (const D of DOGS){
+    const own = save.owned.includes(D.id), cur = save.dog === D.id;
+    const el = document.createElement("div"); el.className = "dog" + (cur ? " cur" : "");
+    const c = sideSprite(D); c.style.width = "64px"; el.appendChild(c);
+    const t = document.createElement("div"); t.innerHTML = `<h3>${D.name}</h3><p>${D.perk}</p>`; el.appendChild(t);
+    const b = document.createElement("button"); b.type = "button"; b.className = "btn " + (cur ? "wood" : own ? "alt" : "");
+    b.textContent = cur ? "EN PISTE" : own ? "CHOISIR" : `${D.price} PTS`;
+    b.disabled = cur || (!own && save.wallet < D.price);
+    b.onclick = () => {
+      if (!own){ if (save.wallet < D.price) return; save.wallet -= D.price; save.owned.push(D.id); SFX.buy(); }
+      else SFX.bark();
+      save.dog = D.id; persist(); renderKennel();
+    };
+    el.appendChild(b); box.appendChild(el);
+  }
+  show("kennel");
+}
+
+/* ---------- boutons ---------- */
+$("kennelBtn").onclick = renderKennel;
+$("kennelBack").onclick = renderMap;
+$("backBtn").onclick = () => { phase = "map"; G = null; run = null; renderMap(); };
+$("undoBtn").onclick = () => { if (phase === "draw"){ path = []; SFX.no(); setMsg("Tracé effacé."); } };
+$("goBtn").onclick = startRun;
+$("rMap").onclick = () => { phase = "map"; G = null; run = null; renderMap(); };
+$("rAgain").onclick = () => { const n = G.n; openLevel(n); };
+$("rNext").onclick = () => openLevel(G.n + 1);
+document.querySelectorAll("#qte .btn").forEach(b => b.addEventListener("pointerdown", e => { e.preventDefault(); qteKey(b.dataset.k); }));
+document.addEventListener("keydown", e => {
+  const k = {ArrowLeft: "L", ArrowRight: "R", ArrowUp: "U", ArrowDown: "D"}[e.key];
+  if (k && run && run.qte){ e.preventDefault(); qteKey(k); }
+});
+function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = "SON : " + (soundOn ? "OUI" : "NON"); }
+$("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); };
+
+/* ---------- boucle ---------- */
+let lastT = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+  if (phase === "run") update(dt);
+  if (G){ render(); if (flash > 0){ flash -= dt; R(0, 0, W * CS, H * CS, "rgba(214,49,42,.25)"); } if (phase === "draw") $("pNext").textContent = nextNum() > G.objs.length ? "✓" : nextNum(); }
+  requestAnimationFrame(frame);
+}
+if (location.hash === "#test") window.__parcours = { gen: generate, get G(){ return G; }, get run(){ return run; }, get path(){ return path; }, set path(p){ path = p; }, open: openLevel, save: () => save };
+syncSound(); renderMap(); requestAnimationFrame(frame);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
+})();
+</script>
+<script>
+/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    if (!app) return;
+    var a = document.createElement("a");
+    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
+    a.style.cssText = "display:block; width:max-content; margin:0 auto 10px; padding:8px 12px; font:10px 'Press Start 2P',monospace; letter-spacing:1px;" +
+      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
+    document.body.insertBefore(a, document.body.firstChild);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
