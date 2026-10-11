@@ -211,6 +211,7 @@ kbd{font-family:var(--f-display); font-size:9px; background:var(--grid-line); pa
   </div>
 </div>
 
+<script src="../ludo-scores.js"></script>
 <script>
 (() => {
 "use strict";
@@ -497,6 +498,8 @@ function win(){
   $("winStats").innerHTML =
     `GRILLE ${size}×${size}<br>TEMPS ${fmt(elapsed)}<br>INDICES ${hints}<br>` +
     (hints ? `<span>RECORD NON ÉLIGIBLE</span>` : rec ? `<span class="new">NOUVEAU RECORD !</span>` : `RECORD ${fmt(best[size])}`);
+  // classement familial : le meilleur temps sans indice part tout seul
+  if (!hints && rec && window.LudoScores) LudoScores.submit("queens", "best:" + size, Math.round(elapsed), true).then(r => { if (r) $("winStats").innerHTML += `<br>${LudoScores.rankText(r).toUpperCase()} EN ${size}×${size}`; });
   setTimeout(() => { if (won){ $("overlay").hidden = false; $("nextBtn").focus(); } }, 1100);
 }
 

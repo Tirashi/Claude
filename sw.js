@@ -3,7 +3,7 @@
    - Les fichiers du site passent toujours d'abord par le réseau : en ligne, on reçoit
      la dernière version publiée ; hors ligne, on retombe sur la copie en cache.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v7";
+const VERSION = "ludotheque-v8";
 const FONTS = "ludotheque-fonts";
 const FILES = [
   "./", "./index.html", "./manifest.webmanifest", "./ludo-scores.js",

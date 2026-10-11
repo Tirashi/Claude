@@ -117,6 +117,7 @@ kbd{font-family:var(--f-display); font-size:8px; background:#000; border:2px sol
   </div>
 </div>
 
+<script src="../ludo-scores.js"></script>
 <script src="chiens32.js"></script>
 <script>
 (() => {
@@ -291,7 +292,7 @@ function drawFront(o){
 }
 
 /* ---------- game state ---------- */
-let state = "title", best = store.get("best", 0), newRecord = false;
+let state = "title", best = store.get("best", 0), newRecord = false, rankLine = "";
 let dog, obs, speed, dist, score, nextGap, t, floats, dust, fault, overAt, groundPhase, clouds;
 function reset(){
   dog = {y: 0, vy: 0, ground: true, duck: false, hold: 0};
@@ -372,7 +373,9 @@ function update(dt){
 function gameOver(o){
   state = "over"; overAt = performance.now(); fault = TYPES[o.type].fault; newRecord = score > best && score > 0;
   if (score > best){ best = score; store.set("best", best); }
-  SFX.over();
+  SFX.over(); rankLine = "";
+  // classement familial : le record part tout seul
+  if (newRecord && window.LudoScores) LudoScores.submit("injagility", "best", score, false).then(r => { if (r) rankLine = LudoScores.rankText(r).toUpperCase() + " AU CLASSEMENT"; });
 }
 
 /* ---------- dessin ---------- */
@@ -502,6 +505,7 @@ function overScreen(){
   text(`${Math.floor(dist / 24)} m`, 300, 148, 10, "#ffffff", "center");
   if (newRecord){ if (Math.floor(t * 4) % 2) logo("NOUVEAU RECORD !", 300, 166, 10, GREENT); }
   else text(`RECORD ${best}`, 300, 168, 8, "#ffd23f", "center", null);
+  if (rankLine) text(rankLine, 300, 180, 8, "#a8d0f4", "center", null);
   if (performance.now() - overAt > 450 && Math.floor(t * 2.5) % 2) text("REJOUER : TOUCHE OU ESPACE", VW / 2, 192, 8, "#8ee05a", "center");
 }
 

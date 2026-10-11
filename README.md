@@ -135,14 +135,17 @@ Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Fac
 
 ## Classements familiaux
 
-Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`](classements/index.html) : des classements privés, partagés entre les personnes qui connaissent le **code familial**. On choisit un pseudo, on entre le code une fois, et c'est tout : ensuite les records partent **tout seuls**. Chaque tableau a son podium et la liste complète, et sa propre ligne est en vert. Tetris (écran de fin) et Lignée (menu et victoire de l'Arbre du jour) ont un bouton **Classement** qui ouvre directement le bon tableau.
+Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`](classements/index.html) : des classements privés, partagés entre les personnes qui connaissent le **code familial**. On choisit un pseudo, on entre le code une fois, et c'est tout : ensuite les records partent **tout seuls**. Chaque tableau a son podium et la liste complète, et sa propre ligne est en vert.
 
-- **Tetris** : le meilleur score de chacun.
-- **Arbre du jour de Lignée** (Classique et Royal) : le meilleur temps du jour. Le classement repart de zéro chaque jour, avec le nouvel arbre ; les flèches permettent de revoir les jours précédents.
+- **Tetris, Snake, Asteroids, Solitaire** : le meilleur score de chacun.
+- **Queens** : le meilleur temps sans indice, une grille par taille (5×5 à 9×9).
+- **Picross Dex** : un classement par Pokémon (temps de la grille, plus **30 secondes par indice**), le tableau de qui détient le plus de records, et le Pokédex le plus complet. L'écran de victoire montre sa place et le top 3 de la famille sur ce Pokémon ; dans le Pokédex, une couronne marque les Pokémon dont on détient le record (le mode test n'envoie rien).
+- **Lignée** : l'Arbre du jour (Classique et Royal, qui repart de zéro chaque jour, avec les flèches pour revoir les jours précédents), le meilleur temps par mode et par niveau, et le nombre d'arbres reconstitués.
+- **Injagility** : le record d'obstacles du mode Infini, les points de chaque parcours numéroté et le total des meilleurs scores du mode Parcours.
 
-Hors connexion, un record attend dans le téléphone et part au retour du réseau. En rejoignant, les records déjà faits dans ce navigateur sont envoyés aussi.
+Les jeux affichent leur place au classement quand un record part (écran de fin ou de victoire), et plusieurs ont un bouton **Classement** qui ouvre directement le bon tableau. Hors connexion, un record attend dans le téléphone et part au retour du réseau. En rejoignant, les records déjà faits dans ce navigateur sont envoyés aussi ; les joueurs déjà inscrits envoient une fois ceux des jeux ajoutés depuis.
 
-Côté technique, les scores sont rangés dans une base [Supabase](https://supabase.com) (offre gratuite). Le site ne contient que l'adresse du projet et sa clé **publique**. La table des scores est verrouillée : on n'y accède qu'au travers de fonctions qui vérifient le code familial, et ce code n'est rangé que dans Supabase, jamais dans le dépôt. Le script de création est [`supabase/classements.sql`](supabase/classements.sql). Le module partagé par les jeux est [`ludo-scores.js`](ludo-scores.js). Une tâche GitHub Actions ([`reveil-classements.yml`](.github/workflows/reveil-classements.yml)) réveille la base tous les 3 jours, pour que Supabase ne la mette pas en pause.
+Côté technique, les scores sont rangés dans une base [Supabase](https://supabase.com) (offre gratuite). Le site ne contient que l'adresse du projet et sa clé **publique**. La table des scores est verrouillée : on n'y accède qu'au travers de fonctions qui vérifient le code familial, et ce code n'est rangé que dans Supabase, jamais dans le dépôt. Le script de création est [`supabase/classements.sql`](supabase/classements.sql) ; [`supabase/classements-2.sql`](supabase/classements-2.sql) ajoute la fonction `ludo_bests` (le meilleur de chaque classement d'un jeu, pour les records du Picross) sur une base déjà installée. Le module partagé par les jeux est [`ludo-scores.js`](ludo-scores.js). Une tâche GitHub Actions ([`reveil-classements.yml`](.github/workflows/reveil-classements.yml)) réveille la base tous les 3 jours, pour que Supabase ne la mette pas en pause.
 
 ## Application installable (PWA)
 

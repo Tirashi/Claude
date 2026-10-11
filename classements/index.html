@@ -54,8 +54,16 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
 label{font-family:var(--f-display); font-size:9px; letter-spacing:1px; display:flex; flex-direction:column; gap:6px}
 input{width:100%; font:22px/1.2 var(--f-body); color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:8px}
 
-.tabs{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-.tabs .btn{font-size:11px; padding:13px 6px}
+.tabs{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px}
+@media (max-width:520px){ .tabs{grid-template-columns:repeat(2, minmax(0,1fr))} }
+.tabs .btn{font-size:9px; padding:12px 4px; line-height:1.5}
+.views{display:flex; flex-wrap:wrap; gap:8px}
+.views .btn{flex:1 1 auto; font-size:8px; padding:9px 8px}
+.ctl{display:flex; flex-direction:column; gap:10px}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chips .btn{flex:1 1 0; font-size:8px; padding:9px 4px; min-width:0}
+select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:6px 8px}
+.note{margin:0; font-size:18px; color:var(--text-dim); text-align:center}
 .sub{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 .day{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px}
 .day .btn{font-size:12px; padding:9px 13px}
@@ -108,26 +116,15 @@ input{width:100%; font:22px/1.2 var(--f-body); color:#110d22; background:#f2f0ff
   </section>
 
   <div id="boards" hidden>
-    <div class="tabs" role="group" aria-label="Jeu">
-      <button class="btn" type="button" data-game="tetris">TETRIS</button>
-      <button class="btn" type="button" data-game="lignee">LIGNÉE</button>
-    </div>
+    <div class="tabs" id="games" role="group" aria-label="Jeu"></div>
     <section class="panel" style="margin-top:18px">
+      <div class="views" id="views" role="group" aria-label="Classement"></div>
       <h2 id="title"></h2>
-      <div id="ligneeBar" hidden style="display:flex; flex-direction:column; gap:12px">
-        <div class="sub" role="group" aria-label="Mode">
-          <button class="btn" type="button" data-mode="C">CLASSIQUE</button>
-          <button class="btn" type="button" data-mode="R">ROYAL</button>
-        </div>
-        <div class="day">
-          <button class="btn" type="button" id="prevDay" aria-label="Jour précédent">◀</button>
-          <span id="dayLabel"></span>
-          <button class="btn" type="button" id="nextDay" aria-label="Jour suivant">▶</button>
-        </div>
-      </div>
+      <div class="ctl" id="ctl"></div>
       <div class="podium" id="podium"></div>
       <ol class="list" id="list"></ol>
       <div class="mine" id="mine"></div>
+      <p class="note" id="note" hidden></p>
       <div class="res" id="res" aria-live="polite"></div>
       <div class="row"><button class="btn" type="button" id="refresh">ACTUALISER</button><a class="btn" id="play" href="#">JOUER</a></div>
     </section>
@@ -140,89 +137,177 @@ input{width:100%; font:22px/1.2 var(--f-body); color:#110d22; background:#f2f0ff
 (() => {
   const L = window.LudoScores, $ = id => document.getElementById(id);
   const fmtTime = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
+  const N = v => String(Math.round(v)), T = fmtTime;
   // même code que l'Arbre du jour de Lignée : C2-J + date aaaammjj en base 36
   const dayCode = (mode, d) => `${mode}2-J${(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()).toString(36).toUpperCase()}`;
-  const st = {game: "tetris", mode: "C", back: 0};   // back : nombre de jours avant aujourd'hui
-  const h = location.hash.slice(1).split("-");
-  if (h[0] === "lignee"){ st.game = "lignee"; if (h[1] === "R") st.mode = "R"; }
-
-  const GAMES = {
-    tetris: {title: () => "TETRIS · MEILLEUR SCORE", board: () => "best", fmt: v => String(Math.round(v)), date: true, play: "../tetris/index.html",
-             empty: "Personne pour l'instant : à toi de jouer !"},
-    lignee: {title: () => `LIGNÉE · ARBRE DU JOUR ${st.mode === "R" ? "ROYAL" : "CLASSIQUE"}`, board: () => "daily:" + dayCode(st.mode, day()), fmt: fmtTime, play: "../lignee/index.html",
-             empty: () => st.back ? "Personne n'a fini l'arbre ce jour-là." : "Personne n'a encore fini l'arbre du jour : à toi de jouer !"},
-  };
+  const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
+  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null};
   const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
   const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
     day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "");
+
+  // les Pokémon du Picross Dex (noms lus dans la page du jeu, mise en cache par l'appli)
+  let DEX = null;
+  const dexReady = fetch("../picross/index.html").then(r => r.text()).then(t => {
+    DEX = {}; for (const m of t.matchAll(/\{id:"([a-z0-9_-]+)", no:"([0-9A-Z]+)", name:"([^"]+)"/g)) DEX[m[1]] = {no: m[2], name: m[3]};
+  }).catch(() => { DEX = {}; });
+  const pokeLabel = id => { const d = DEX && DEX[id]; return d ? `${d.no === "OBJ" ? "OBJ" : "#" + d.no} ${d.name}` : id.toUpperCase(); };
+
+  /* chaque jeu : ses classements (vues), leur réglage, leur format */
+  const GAMES = [
+    {id: "tetris", name: "TETRIS", play: "../tetris/index.html", views: [{label: "MEILLEUR SCORE", game: "tetris", board: () => "best", fmt: N}]},
+    {id: "snake", name: "SNAKE", play: "../snake/index.html", views: [{label: "MEILLEUR SCORE", game: "snake", board: () => "best", fmt: N}]},
+    {id: "asteroids", name: "ASTEROIDS", play: "../asteroids/index.html", views: [{label: "MEILLEUR SCORE", game: "asteroids", board: () => "best", fmt: N}]},
+    {id: "solitaire", name: "SOLITAIRE", play: "../solitaire/index.html", views: [{label: "MEILLEUR SCORE", game: "solitaire", board: () => "best", fmt: N}]},
+    {id: "queens", name: "QUEENS", play: "../queens/index.html", views: [{label: "MEILLEUR TEMPS", ctl: ["size"], game: "queens", board: () => "best:" + st.size, fmt: T,
+      title: () => `QUEENS · ${st.size}×${st.size}`, note: "Grilles réussies sans indice."}]},
+    {id: "picross", name: "PICROSS DEX", play: "../picross/index.html", views: [
+      {label: "PAR POKÉMON", ctl: ["pokemon"], game: "picross", board: () => "t:" + st.poke, fmt: T, title: () => st.poke ? pokeLabel(st.poke) : "PICROSS DEX",
+       note: "Temps de la grille, plus 30 secondes par indice utilisé.", empty: "Personne n'a encore capturé de Pokémon."},
+      {label: "RECORDS DÉTENUS", kind: "records", game: "picross", fmt: v => N(v) + (v > 1 ? " records" : " record"), title: () => "QUI DÉTIENT LE PLUS DE RECORDS",
+       note: "Nombre de Pokémon sur lesquels chacun a le meilleur temps de la famille."},
+      {label: "POKÉDEX", game: "picross", board: () => "dex", fmt: v => N(v) + " capturés", title: () => "LE POKÉDEX LE PLUS COMPLET"}]},
+    {id: "lignee", name: "LIGNÉE", play: "../lignee/index.html", views: [
+      {label: "ARBRE DU JOUR", ctl: ["mode", "day"], game: "lignee", board: () => "daily:" + dayCode(st.mode, day()), fmt: T,
+       title: () => `ARBRE DU JOUR · ${st.mode === "R" ? "ROYAL" : "CLASSIQUE"}`,
+       empty: () => st.back ? "Personne n'a fini l'arbre ce jour-là." : "Personne n'a encore fini l'arbre du jour : à toi de jouer !"},
+      {label: "PAR NIVEAU", ctl: ["mode", "level"], game: "lignee", board: () => "best:" + st.mode + st.level, fmt: T,
+       title: () => `${st.mode === "R" ? "ROYAL" : "CLASSIQUE"} · ${LEVELS[st.level - 1]}`},
+      {label: "ARBRES", game: "lignee", board: () => "arbres", fmt: v => N(v) + (v > 1 ? " arbres" : " arbre"), title: () => "ARBRES RECONSTITUÉS"}]},
+    {id: "injagility", name: "INJAGILITY", play: "../injagility/index.html", views: [
+      {label: "INFINI", game: "injagility", board: () => "best", fmt: v => N(v) + " obst.", title: () => "INFINI · OBSTACLES FRANCHIS"},
+      {label: "PARCOURS · TOTAL", game: "parcours", board: () => "total", fmt: v => N(v) + " pts", title: () => "PARCOURS · TOTAL DES MEILLEURS SCORES", play: "../injagility/parcours.html"},
+      {label: "PAR PARCOURS", ctl: ["plevel"], game: "parcours", board: () => "lvl:" + st.plevel, fmt: v => N(v) + " pts", title: () => `PARCOURS N° ${st.plevel}`, play: "../injagility/parcours.html"}]},
+  ];
   const ord = n => n === 1 ? "1er" : n + "e";
   const res = (t, ok) => { $("res").textContent = t; $("res").className = "res " + (ok ? "ok" : "err"); };
+  const game = () => GAMES.find(g => g.id === st.game) || GAMES[0], view = () => game().views[Math.min(st.view, game().views.length - 1)];
 
-  function view(){
+  // anciens liens (#tetris, #lignee-C, #lignee-R) et nouveaux (#jeu ou #jeu-vue)
+  { const h = location.hash.slice(1).split("-");
+    if (GAMES.some(g => g.id === h[0])) st.game = h[0];
+    if (h[0] === "lignee" && /^[CR]$/.test(h[1] || "")) st.mode = h[1];
+    else if (/^\d$/.test(h[1] || "")) st.view = +h[1];
+    if (h[0] === "parcours"){ st.game = "injagility"; st.view = 2; } }
+
+  function button(label, pressed, onclick, extra){ const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.textContent = label;
+    b.setAttribute("aria-pressed", !!pressed); b.onclick = onclick; if (extra) Object.assign(b, extra); return b; }
+  function stepper(label, onPrev, onNext, prevOff, nextOff){
+    const box = document.createElement("div"); box.className = "day";
+    const a = button("◀", false, onPrev, {disabled: prevOff}), b = button("▶", false, onNext, {disabled: nextOff}), s = document.createElement("span");
+    a.setAttribute("aria-label", "Précédent"); b.setAttribute("aria-label", "Suivant"); s.textContent = label; box.append(a, s, b); return box; }
+
+  // le réglage de la vue : mode, jour, niveau, taille, parcours, Pokémon
+  let pokeList = [];
+  function controls(v){
+    const box = $("ctl"); box.innerHTML = "";
+    for (const c of v.ctl || []){
+      if (c === "mode"){ const r = document.createElement("div"); r.className = "chips";
+        for (const [m, l] of [["C", "CLASSIQUE"], ["R", "ROYAL"]]) r.appendChild(button(l, st.mode === m, () => { st.mode = m; view_(); }));
+        box.appendChild(r); }
+      if (c === "day") box.appendChild(stepper(dayName(), () => { st.back = Math.min(60, st.back + 1); view_(); }, () => { st.back = Math.max(0, st.back - 1); view_(); }, st.back >= 60, st.back === 0));
+      if (c === "level"){ const r = document.createElement("div"); r.className = "chips";
+        LEVELS.forEach((l, i) => r.appendChild(button(l, st.level === i + 1, () => { st.level = i + 1; view_(); }))); box.appendChild(r); }
+      if (c === "size"){ const r = document.createElement("div"); r.className = "chips";
+        for (let n = 5; n <= 9; n++) r.appendChild(button(`${n}×${n}`, st.size === n, () => { st.size = n; view_(); })); box.appendChild(r); }
+      if (c === "plevel") box.appendChild(stepper(`PARCOURS N° ${st.plevel}`, () => { st.plevel = Math.max(1, st.plevel - 1); view_(); }, () => { st.plevel++; view_(); }, st.plevel <= 1, st.plevel >= 999));
+      if (c === "pokemon"){
+        const sel = document.createElement("select"); sel.id = "pokeSel"; sel.setAttribute("aria-label", "Pokémon");
+        if (!pokeList.length){ const o = document.createElement("option"); o.textContent = "Aucun Pokémon classé pour l'instant"; sel.appendChild(o); sel.disabled = true; }
+        for (const id of pokeList){ const o = document.createElement("option"); o.value = id; o.textContent = pokeLabel(id); if (id === st.poke) o.selected = true; sel.appendChild(o); }
+        sel.onchange = () => { st.poke = sel.value; view_(); };
+        const i = pokeList.indexOf(st.poke);
+        box.appendChild(stepper("", () => { st.poke = pokeList[i - 1]; view_(); }, () => { st.poke = pokeList[i + 1]; view_(); }, i <= 0, i < 0 || i >= pokeList.length - 1));
+        box.lastChild.querySelector("span").replaceWith(sel);
+      }
+    }
+  }
+
+  function view_(){
     const j = L && L.joined();
     $("join").hidden = j; $("boards").hidden = !j;
     $("who").innerHTML = j ? `JOUEUR<br><b></b>` : "";
     if (j) $("who").querySelector("b").textContent = L.pseudo();
     if (!j){ $("pseudo").value = (L && L.pseudo()) || ""; return; }
-    const g = GAMES[st.game];
-    document.querySelectorAll("[data-game]").forEach(b => b.setAttribute("aria-pressed", b.dataset.game === st.game));
-    document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === st.mode));
-    $("ligneeBar").hidden = st.game !== "lignee";
-    $("dayLabel").textContent = dayName(); $("nextDay").disabled = st.back === 0; $("prevDay").disabled = st.back >= 60;
-    $("title").textContent = g.title();
-    $("play").href = g.play;
-    history.replaceState(null, "", "#" + st.game + (st.game === "lignee" ? "-" + st.mode : ""));
+    const g = game(), v = view();
+    const gb = $("games"); gb.innerHTML = "";
+    for (const G of GAMES) gb.appendChild(button(G.name, G.id === g.id, () => { st.game = G.id; st.view = 0; view_(); }));
+    const vb = $("views"); vb.innerHTML = ""; vb.hidden = g.views.length < 2;
+    g.views.forEach((V, i) => vb.appendChild(button(V.label, V === v, () => { st.view = i; view_(); })));
+    $("title").textContent = v.title ? v.title() : `${g.name} · ${v.label}`;
+    $("note").hidden = !v.note; $("note").textContent = v.note || "";
+    $("play").href = v.play || g.play;
+    history.replaceState(null, "", "#" + g.id + (g.views.length > 1 ? "-" + st.view : ""));
+    controls(v);
     load();
   }
 
   let ticket = 0;
+  function show(rows, fmt){
+    rows = rows || [];
+    [1, 0, 2].forEach(i => {
+      const r = rows[i], s = document.createElement("div");
+      s.className = `step p${i + 1}` + (r ? (r.me ? " me" : "") : " empty");
+      const n = document.createElement("div"); n.className = "name"; n.textContent = r ? r.pseudo : "…";
+      const v = document.createElement("div"); v.className = "val"; v.textContent = r ? fmt(r.value) : "";
+      const b = document.createElement("div"); b.className = "block"; b.textContent = i + 1;
+      s.append(n, v, b); $("podium").appendChild(s);
+    });
+    rows.slice(3).forEach((r, k) => {
+      const li = document.createElement("li"); if (r.me) li.className = "me";
+      const a = document.createElement("span"); a.className = "r"; a.textContent = k + 4;
+      const n = document.createElement("span"); n.className = "n"; n.textContent = r.pseudo;
+      const v = document.createElement("span"); v.className = "v"; v.textContent = fmt(r.value);
+      li.append(a, n, v); $("list").appendChild(li);
+    });
+    const me = rows.findIndex(r => r.me);
+    $("mine").textContent = me >= 0 ? `TU ES ${ord(me + 1).toUpperCase()} SUR ${rows.length}` : "";
+  }
   function load(){
-    const g = GAMES[st.game], my = ++ticket;
+    const v = view(), my = ++ticket;
     $("podium").innerHTML = ""; $("list").innerHTML = ""; $("mine").textContent = ""; res("Chargement…", true);
-    L.flush().then(() => L.board(st.game, g.board(), 100)).then(rows => {
+    const fail = e => { if (my !== ticket) return;
+      if (e && e.code === "code"){ view_(); $("joinRes").textContent = "Le code familial a changé : entre le nouveau code."; $("joinRes").className = "res err"; return; }
+      res(e && e.code === "missing" ? "Ce classement demande une mise à jour de Supabase (fichier classements-2.sql)." : "Classement injoignable pour le moment (pas de réseau ?).", false); };
+    let job;
+    if (v.kind === "records" || (v.ctl || []).includes("pokemon")){
+      // une seule requête : le meilleur temps de chaque Pokémon
+      job = Promise.all([L.flush(), dexReady]).then(() => L.bests("picross")).then(rows => {
+        if (rows === null) return null;
+        const recs = rows.filter(r => String(r.board).startsWith("t:"));
+        const order = id => { const d = DEX && DEX[id]; return d ? (d.no === "OBJ" ? 0 : +d.no) : 9999; };
+        pokeList = recs.map(r => r.board.slice(2)).sort((a, b) => order(a) - order(b) || a.localeCompare(b));
+        if (v.kind === "records"){
+          const by = {};
+          for (const r of recs){ const k = r.pseudo; by[k] = by[k] || {pseudo: k, value: 0, me: false}; by[k].value++; if (r.me) by[k].me = true; }
+          return Object.values(by).sort((a, b) => b.value - a.value || a.pseudo.localeCompare(b.pseudo));
+        }
+        if (!st.poke || !pokeList.includes(st.poke)) st.poke = pokeList[0] || null;
+        controls(v); $("title").textContent = v.title();
+        return st.poke ? L.board("picross", "t:" + st.poke, 100) : [];
+      });
+    } else job = L.flush().then(() => L.board(v.game, v.board(), 100));
+    job.then(rows => {
       if (my !== ticket) return;
-      if (rows === null){ view(); $("joinRes").textContent = "Le code familial a changé : entre le nouveau code."; $("joinRes").className = "res err"; return; }
+      if (rows === null){ view_(); $("joinRes").textContent = "Le code familial a changé : entre le nouveau code."; $("joinRes").className = "res err"; return; }
       res("", true);
-      if (!rows.length){ res(typeof g.empty === "function" ? g.empty() : g.empty, true); return; }
-      // podium
-      [1, 0, 2].forEach(i => {
-        const r = rows[i], s = document.createElement("div");
-        s.className = `step p${i + 1}` + (r ? (r.me ? " me" : "") : " empty");
-        const n = document.createElement("div"); n.className = "name"; n.textContent = r ? r.pseudo : "…";
-        const v = document.createElement("div"); v.className = "val"; v.textContent = r ? g.fmt(r.value) : "";
-        const b = document.createElement("div"); b.className = "block"; b.textContent = i + 1;
-        s.append(n, v, b); $("podium").appendChild(s);
-      });
-      // suite du classement
-      rows.slice(3).forEach((r, k) => {
-        const li = document.createElement("li"); if (r.me) li.className = "me";
-        const a = document.createElement("span"); a.className = "r"; a.textContent = k + 4;
-        const n = document.createElement("span"); n.className = "n"; n.textContent = r.pseudo;
-        if (g.date && r.updated_at){ const sm = document.createElement("small"); sm.textContent = " · " + new Date(r.updated_at).toLocaleDateString("fr-FR", {day: "numeric", month: "short"}); n.appendChild(sm); }
-        const v = document.createElement("span"); v.className = "v"; v.textContent = g.fmt(r.value);
-        li.append(a, n, v); $("list").appendChild(li);
-      });
-      const me = rows.findIndex(r => r.me);
-      $("mine").textContent = me >= 0 ? `TU ES ${ord(me + 1).toUpperCase()} SUR ${rows.length}` : (st.back ? "" : "PAS ENCORE DE SCORE POUR TOI ICI");
+      if (!rows.length){ const e = view().empty; res(typeof e === "function" ? e() : e || "Personne pour l'instant : à toi de jouer !", true); return; }
+      show(rows, v.fmt);
       if (L.pending()) res(`${L.pending()} score(s) en attente d'envoi.`, true);
-    }).catch(() => { if (my === ticket) res("Classement injoignable pour le moment (pas de réseau ?).", false); });
+    }).catch(fail);
   }
 
   if (!L){ $("join").hidden = false; $("joinRes").textContent = "Le module des classements n'a pas pu se charger."; $("joinRes").className = "res err"; return; }
-  document.querySelectorAll("[data-game]").forEach(b => b.onclick = () => { st.game = b.dataset.game; view(); });
-  document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { st.mode = b.dataset.mode; view(); });
-  $("prevDay").onclick = () => { st.back = Math.min(60, st.back + 1); view(); };
-  $("nextDay").onclick = () => { st.back = Math.max(0, st.back - 1); view(); };
   $("refresh").onclick = load;
-  $("change").onclick = () => { L.leave(); $("joinRes").textContent = ""; view(); $("code").focus(); };
+  $("change").onclick = () => { L.leave(); $("joinRes").textContent = ""; view_(); $("code").focus(); };
   $("joinBtn").onclick = () => {
     $("joinRes").textContent = "Vérification du code…"; $("joinRes").className = "res ok";
-    L.join($("pseudo").value, $("code").value).then(() => { $("code").value = ""; $("joinRes").textContent = ""; view(); })
+    L.join($("pseudo").value, $("code").value).then(() => { $("code").value = ""; $("joinRes").textContent = ""; view_(); })
       .catch(e => { $("joinRes").className = "res err";
         $("joinRes").textContent = e.code === "code" ? "Ce code familial n'est pas le bon." : (e.message && !/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? e.message : "Impossible de joindre le classement (pas de réseau ?)."); });
   };
   [$("pseudo"), $("code")].forEach(i => i.addEventListener("keydown", e => { if (e.key === "Enter") $("joinBtn").click(); }));
-  view();
+  view_();
 })();
 </script>
 </body>

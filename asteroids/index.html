@@ -76,6 +76,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
   <div class="grp"><button id="btnThrust" type="button" aria-label="Propulser">▲</button><button id="btnFire" type="button" aria-label="Tirer">●</button></div>
 </div>
 
+<script src="../ludo-scores.js"></script>
 <script>
 (function () {
   "use strict";
@@ -167,7 +168,12 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
     if (lives <= 0) {
       state = "gameover";
       const rec = score > best; if (rec) { best = score; store.set("asteroids16.best", best); updateHud(); }
-      showOverlay("GAME OVER", `Score final : ${score}${rec && score ? " · NOUVEAU RECORD !" : ""}`, "ESPACE OU TOUCHE L'ÉCRAN POUR REJOUER");
+      const msg = `Score final : ${score}${rec && score ? " · NOUVEAU RECORD !" : ""}`;
+      showOverlay("GAME OVER", msg, "ESPACE OU TOUCHE L'ÉCRAN POUR REJOUER");
+      // classement familial : le record part tout seul
+      if (rec && score && window.LudoScores) LudoScores.submit("asteroids", "best", score, false).then(r => {
+        const p = overlayWin.querySelector("p"); if (r && p && state === "gameover") p.textContent = msg + " · " + LudoScores.rankText(r) + " au classement";
+      });
     } else { ship.dead = true; respawnTimer = 1.5; }
   }
   function showOverlay(title, sub, blink) {

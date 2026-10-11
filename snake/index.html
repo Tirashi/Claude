@@ -97,6 +97,7 @@ kbd{font-family:var(--f-display); font-size:8px; color:var(--text); background:#
   <div class="info"><kbd>FLÈCHES</kbd> ou <kbd>ZQSD</kbd> pour se déplacer · <kbd>ESPACE</kbd> pause</div>
 </div>
 
+<script src="../ludo-scores.js"></script>
 <script>
 (() => {
 "use strict";
@@ -174,7 +175,12 @@ function gameOver(){
   state = "over"; clearTimeout(timer); flash = 1; SFX.die();
   const rec = score > best;
   if (rec){ best = score; store.set("snakeBestScore", best); $("best").textContent = best; }
-  setTimeout(() => showOverlay("PARTIE TERMINÉE", `Score : ${score} · ${apples} pomme${apples > 1 ? "s" : ""}${rec && score ? " · NOUVEAU RECORD !" : ""}`, "REJOUER"), 600);
+  const msg = `Score : ${score} · ${apples} pomme${apples > 1 ? "s" : ""}${rec && score ? " · NOUVEAU RECORD !" : ""}`;
+  setTimeout(() => showOverlay("PARTIE TERMINÉE", msg, "REJOUER"), 600);
+  // classement familial : le record part tout seul
+  if (rec && score && window.LudoScores) LudoScores.submit("snake", "best", score, false).then(r => {
+    if (r) setTimeout(() => { if (state === "over") $("ovMsg").textContent = msg + " · " + LudoScores.rankText(r) + " au classement"; }, 650);
+  });
 }
 function togglePause(){
   if (state === "run"){ state = "pause"; clearTimeout(timer); SFX.pause(); showOverlay("PAUSE", "Appuie sur Espace pour continuer.", "REPRENDRE"); }

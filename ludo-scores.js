@@ -35,7 +35,9 @@
     return go(false).then(function (r){ return r.status === 401 ? go(true) : r; }).then(function (r){
       return r.text().then(function (t){
         var data = null; try { data = t ? JSON.parse(t) : null; } catch (e) {}
-        if (!r.ok){ var err = new Error((data && (data.message || data.hint)) || ("Erreur " + r.status)); err.status = r.status; err.code = /code familial/.test(t) ? "code" : "http"; throw err; }
+        if (!r.ok){ var err = new Error((data && (data.message || data.hint)) || ("Erreur " + r.status)); err.status = r.status;
+          // une fonction absente de Supabase (mise à jour SQL pas encore faite) : PGRST202
+          err.code = /code familial/.test(t) ? "code" : (r.status === 404 || /PGRST202/.test(t)) ? "missing" : "http"; throw err; }
         return data;
       });
     });
@@ -51,7 +53,7 @@
     if (!code) return Promise.reject(new Error("Entre le code familial."));
     return rpc("ludo_check", {code: code}).then(function (ok){
       if (ok !== true) { var e = new Error("Ce code familial n'est pas le bon."); e.code = "code"; throw e; }
-      set("pseudo", pseudo); set("code", code); player();
+      set("pseudo", pseudo); set("code", code); set("synced", SYNC); player();
       pushExisting(); flush();
       return true;
     });
@@ -94,6 +96,12 @@
       queue(s); return null;
     });
   }
+  // le meilleur de chaque classement d'un jeu, en un appel (fonction ajoutée par classements-2.sql)
+  function bests(game){
+    if (!joined()) return Promise.resolve(null);
+    return rpc("ludo_bests", {code: get("code", ""), p_game: game, p_player: player()})
+      .catch(function (err){ if (err && err.code === "code") leave(); throw err; });
+  }
   function board(game, b, limit){
     if (!joined()) return Promise.resolve(null);
     return rpc("ludo_board", {code: get("code", ""), p_game: game, p_board: b, p_player: player(), p_limit: limit || 20})
@@ -102,16 +110,39 @@
 
   // records déjà faits sur ce navigateur, envoyés en rejoignant le classement
   function readKey(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
+  var HINT_PENALTY = 30000;   // Picross : 30 s de pénalité par indice
   registerExisting(function (){
-    var out = [], t = Number(readKey("tetris16.best", 0)), d = readKey("lignee.daily", {}) || {};
-    if (t > 0) out.push({game: "tetris", board: "best", value: t, low: false});
-    Object.keys(d).forEach(function (code){ if (/^[CR]2-J[0-9A-Z]+$/.test(code) && d[code] > 0) out.push({game: "lignee", board: "daily:" + code, value: d[code], low: true}); });
+    var out = [], hi = function (game, board, v){ v = Number(v); if (v > 0) out.push({game: game, board: board, value: v, low: false}); },
+        lo = function (game, board, v){ v = Number(v); if (v > 0) out.push({game: game, board: board, value: v, low: true}); };
+    hi("tetris", "best", readKey("tetris16.best", 0));
+    hi("snake", "best", readKey("snakeBestScore", 0));
+    hi("asteroids", "best", readKey("asteroids16.best", 0));
+    hi("solitaire", "best", readKey("solitaire16.best", 0));
+    hi("injagility", "best", readKey("injagility.best", 0));
+    var q = readKey("queens16.best", {}) || {}; Object.keys(q).forEach(function (n){ if (/^[5-9]$/.test(n)) lo("queens", "best:" + n, q[n]); });
+    var d = readKey("lignee.daily", {}) || {};
+    Object.keys(d).forEach(function (code){ if (/^[CR]2-J[0-9A-Z]+$/.test(code)) lo("lignee", "daily:" + code, d[code]); });
+    var ls = readKey("lignee.stats", {}) || {}, trees = 0;
+    Object.keys(ls).forEach(function (k){ var s = ls[k] || {}; trees += Number(s.n) || 0; if (/^[CR][1-4]$/.test(k)) lo("lignee", "best:" + k, s.best); });
+    hi("lignee", "arbres", trees);
+    var pc = readKey("injagility.parcours", {}) || {}, best = pc.best || {}, total = 0;
+    Object.keys(best).forEach(function (n){ if (/^\d{1,3}$/.test(n)){ hi("parcours", "lvl:" + n, best[n]); total += Number(best[n]) || 0; } });
+    hi("parcours", "total", total);
+    var cap = readKey("picrossdex.captured", {}) || {}, ids = Object.keys(cap);
+    ids.forEach(function (id){ var c = cap[id]; if (c && c.time > 0 && /^[a-z0-9_-]{1,36}$/.test(id)) lo("picross", "t:" + id, c.time + HINT_PENALTY * (c.hints || 0)); });
+    hi("picross", "dex", ids.length);
     return out;
   });
 
   window.addEventListener("online", function (){ flush(); });
-  setTimeout(flush, 1500);
+  // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 2 : tous les jeux)
+  var SYNC = 2;
+  setTimeout(function (){
+    if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
+    flush();
+  }, 1500);
 
-  window.LudoScores = {joined: joined, join: join, leave: leave, submit: submit, board: board, flush: flush, registerExisting: registerExisting,
-    pseudo: function (){ return get("pseudo", ""); }, pending: function (){ return get("queue", []).length; }};
+  window.LudoScores = {joined: joined, join: join, leave: leave, submit: submit, board: board, bests: bests, flush: flush, registerExisting: registerExisting, HINT_PENALTY: HINT_PENALTY,
+    pseudo: function (){ return get("pseudo", ""); }, pending: function (){ return get("queue", []).length; },
+    rankText: function (r){ return r ? (r.rank === 1 ? "1er" : r.rank + "e") + " sur " + r.total : ""; }};
 })();

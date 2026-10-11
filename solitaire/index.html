@@ -101,6 +101,7 @@ canvas:focus{outline:none}
   <p class="help">Range toutes les cartes sur les quatre piles en haut à droite, de l'<b>As</b> au <b>Roi</b>, par couleur. Dans les colonnes, descends d'une valeur en alternant rouge et noir ; seul un <b>Roi</b> va sur une colonne vide. <b>Touche</b> une carte pour l'envoyer à la meilleure place, ou <b>glisse-la</b> où tu veux. Clavier : <b>Espace</b> piocher, <b>Z</b> annuler, <b>N</b> nouvelle donne.</p>
 </div>
 
+<script src="../ludo-scores.js"></script>
 <script>
 (() => {
 "use strict";
@@ -367,6 +368,8 @@ function win(){
   store.del("game"); hud(); $("autoBtn").hidden = true;
   SFX.win();
   $("winStats").innerHTML = `SCORE ${st.score}<br>TEMPS ${fmt(st.elapsed)} · BONUS ${bonus}<br>${record ? '<span class="new">NOUVEAU RECORD !</span>' : "RECORD " + best}<br>PARTIES GAGNÉES ${stats.won}/${stats.played}`;
+  // classement familial : le record part tout seul
+  if (record && window.LudoScores) LudoScores.submit("solitaire", "best", st.score, false).then(r => { if (r) $("winStats").innerHTML += `<br>${LudoScores.rankText(r).toUpperCase()} AU CLASSEMENT`; });
   setTimeout(startBounce, 350);
 }
 function startBounce(){

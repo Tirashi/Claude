@@ -96,7 +96,9 @@ body.index .screen-frame{flex:1 1 0; min-height:0; display:flex; flex-direction:
 body.index .screen{flex:1 1 0; min-height:0; display:flex; flex-direction:column}
 body.index #dexView{flex:1 1 0; min-height:0; display:flex; flex-direction:column}
 body.index .scroller{flex:1 1 0; min-height:200px}
-.entry{font:inherit; color:var(--ink); background:var(--screen); border:3px solid var(--ink); padding:8px 6px 6px; cursor:pointer;
+.entry.crown::after{content:"♛"; position:absolute; top:1px; right:4px; font:16px/1 Arial, "Segoe UI Symbol", sans-serif; color:#ffd23f;
+  text-shadow:1px 0 0 var(--ink), -1px 0 0 var(--ink), 0 1px 0 var(--ink), 0 -1px 0 var(--ink)}
+.entry{position:relative; font:inherit; color:var(--ink); background:var(--screen); border:3px solid var(--ink); padding:8px 6px 6px; cursor:pointer;
   display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:3px 3px 0 var(--ink-soft)}
 .entry:hover{background:var(--screen-2)}
 .entry:focus-visible{outline:3px dashed var(--dex); outline-offset:2px}
@@ -201,6 +203,7 @@ body.index .scroller{flex:1 1 0; min-height:200px}
 
 .msg{font-family:var(--f-display); font-size:9px; line-height:1.9; text-align:center; min-height:2em; margin-top:12px; color:var(--ink)}
 .msg .hl{color:var(--dex)}
+.win .stats .hl{color:var(--dex)}
 
 .win{margin-top:12px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px}
 .win h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(13px,4vw,18px); letter-spacing:1px; line-height:1.6; text-wrap:balance}
@@ -358,6 +361,7 @@ body.zoom .tools .btn{padding:8px 9px}
   </div>
 </main>
 
+<script src="../ludo-scores.js"></script>
 <script>
 (() => {
 "use strict";
@@ -3901,6 +3905,17 @@ function dexMode(on){
   document.body.classList.toggle("index", on);
   if (on) $("scroller").appendChild(helpBox); else document.querySelector("main.dex").appendChild(helpBox);
 }
+/* ---------- classement familial : couronne sur les Pokémon dont on détient le record ---------- */
+let crowns = null, crownsAt = 0;
+function markCrowns(){
+  const L = window.LudoScores; if (!L || !L.joined()) return;
+  const apply = () => { for (const b of $("list").querySelectorAll(".entry[data-id]")){ const r = crowns[b.dataset.id];
+    b.classList.toggle("crown", !!(r && r.me)); if (r) b.title = `Record de la famille : ${r.pseudo} en ${fmt(r.value)}`; } };
+  if (crowns && performance.now() - crownsAt < 60000) return apply();
+  L.bests("picross").then(rows => { if (!rows) return; crowns = {};
+    for (const x of rows) if (String(x.board).startsWith("t:")) crowns[x.board.slice(2)] = x;
+    crownsAt = performance.now(); if (!$("dexView").hidden) apply(); }).catch(() => {});
+}
 function renderList(){
   const list = $("list"), sc = $("scroller"); if (document.body.classList.contains("index") && list.dataset.region) listScroll[list.dataset.region] = sc.scrollTop;
   dexMode(true);
@@ -3951,9 +3966,11 @@ function renderList(){
     else { const u = document.createElement("div"); u.className = "unk"; u.textContent = "?"; b.appendChild(u); }
     b.insertAdjacentHTML("beforeend", `<span class="nm">${got ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
     b.setAttribute("aria-label", got ? `${p.name}, capturé en ${fmt(got.time)}` : `Grille ${idx+1}, ${p.art[0].length} par ${p.art.length}, pas encore capturé`);
+    if (got) b.dataset.id = p.id;
     b.onclick = () => { SFX.nav(); open(idx); };
     list.appendChild(b);
   });
+  markCrowns();
   const n = shown.filter(idx => captured[PUZZLES[idx].id]).length;
   $("capCount").textContent = `${n}/${shown.length}`;
   $("capBar").style.width = (100*n/shown.length)+"%";
@@ -4109,6 +4126,20 @@ function win(){
     : P.legend ? `<span class="hl">${P.name}</span>, Pokémon légendaire, rejoint ton Dex !`
     : `<span class="hl">${P.name}</span> a été enregistré dans le Dex !`;
   $("winStats").innerHTML = `TEMPS ${fmt(elapsed)} · INDICES ${hints}` + (before ? (record ? `<br>NOUVEAU RECORD !` : `<br>RECORD ${fmt(before.time)}`) : "");
+  // classement familial : temps + 30 s par indice, et taille du Pokédex
+  const L = window.LudoScores;
+  if (L && !testMode){
+    const id = P.id, name = P.name, value = Math.round(elapsed) + L.HINT_PENALTY * hints;
+    L.submit("picross", "dex", Object.keys(captured).length, false);
+    if (L.joined()) L.submit("picross", "t:" + id, value, true).then(r => {
+      crowns = null;
+      if (!r || !P || P.id !== id) return;
+      $("winStats").innerHTML += `<br>${L.rankText(r).toUpperCase()} POUR ${name}` + (hints ? ` (+${hints * 30} S D'INDICES)` : "");
+      return L.board("picross", "t:" + id, 3).then(rows => { if (!rows || !rows.length || !P || P.id !== id) return;
+        const clean = s => String(s).replace(/[<>&"]/g, "");
+        $("winStats").innerHTML += "<br>" + rows.map((x, i) => `${i + 1}. ${x.me ? "<span class=\"hl\">" + clean(x.pseudo) + "</span>" : clean(x.pseudo)} ${fmt(x.value)}`).join(" · "); });
+    });
+  }
   if (!wasOpen && legendsOpen()){
     $("winStats").innerHTML += `<br><span class="hl">LES OISEAUX LÉGENDAIRES SONT APPARUS !</span>`;
     setTimeout(() => blip([523, 659, 784, 1047, 784, 1047, 1319, 1568], "square", .12, .05), 900);

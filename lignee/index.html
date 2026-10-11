@@ -924,6 +924,13 @@ function win(){
   if (/-J/.test(G.code)){ const d = store.get("daily", {}); if (!d[G.code] || elapsed < d[G.code]) d[G.code] = Math.round(elapsed); store.set("daily", d); }
   $("win").classList.remove("lost"); $("retryBtn").hidden = true; $("winBoard").hidden = true; $("winRank").hidden = !/-J/.test(G.code); $("winRank").href = "../classements/index.html#lignee-" + G.code[0];
   if (/-J/.test(G.code)) dailyBoard(G.code, Math.round(elapsed));
+  // classement familial : meilleur temps par mode et niveau, et nombre d'arbres reconstitués
+  if (window.LudoScores && LudoScores.joined()){
+    const trees = Object.values(stats).reduce((s, x) => s + (x && x.n || 0), 0), code = G.code;
+    LudoScores.submit("lignee", "arbres", trees, false);
+    if (!G.cine && !/-J/.test(G.code) && record) LudoScores.submit("lignee", "best:" + G.mode + G.level, Math.round(elapsed), true).then(r => {
+      if (r && G && G.code === code) $("winStats").textContent += ` · ${LudoScores.rankText(r)} en ${LEVELS[G.level].name.toLowerCase()}`; });
+  }
   store.set("cur", null);
   const gens = G.gens;
   $("winTitle").textContent = G.cine ? "SCÈNE FINALE !" : G.royal ? "LA DYNASTIE EST RÉTABLIE !" : "LIGNÉE RECONSTITUÉE !";

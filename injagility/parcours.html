@@ -179,6 +179,7 @@ body.playing .msg{min-height:2em; margin:6px 0}
   </section>
 </div>
 
+<script src="../ludo-scores.js"></script>
 <script src="chiens32.js"></script>
 <script>
 (() => {
@@ -681,6 +682,13 @@ function finish(){
   $("rTable").innerHTML = lines.map(([l, v]) => `<tr><td>${l}</td><td>${v > 0 ? "+" : ""}${v}</td></tr>`).join("") +
     `<tr class="tot"><td>Points gagnés${total > prev ? " · record !" : ""}</td><td>+${total}</td></tr>`;
   $("result").hidden = false; $("qte").hidden = true; setMsg(`Tu as <span class="hl">${save.wallet}</span> points au total.`);
+  // classement familial : les points du parcours et le total des meilleurs scores partent tout seuls
+  if (window.LudoScores && total > 0){
+    const sum = Object.values(save.best).reduce((s, v) => s + (Number(v) || 0), 0), n = G.n;
+    LudoScores.submit("parcours", "lvl:" + n, total, false).then(r => {
+      if (r && G && G.n === n) setMsg(`Tu as <span class="hl">${save.wallet}</span> points au total · parcours ${n} : <span class="hl">${LudoScores.rankText(r)}</span> au classement.`); });
+    if (sum > 0) LudoScores.submit("parcours", "total", sum, false);
+  }
   SFX.win();
 }
 
