@@ -121,6 +121,9 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .saves .res{font-family:var(--f-display); font-size:9px; line-height:1.9; min-height:1.9em}
 .saves .res.ok{color:#5cff8a} .saves .res.err{color:#ff8fb0}
 .saves-open{gap:12px; flex-wrap:wrap}
+.ranks-open{margin:0 0 14px}
+.ranks-open .saves-btn{color:#110d22; background:var(--gold); border-color:var(--gold)}
+.saves.ranks{margin:0 auto 18px}
 .saves input{width:100%; font:20px/1.2 inherit; font-family:inherit; color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:8px}
 .saves label{font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:var(--text); display:flex; flex-direction:column; gap:6px}
 .rk-tabs{display:flex; flex-wrap:wrap; gap:8px}
@@ -147,20 +150,31 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
     <p class="ios-help" id="iosHelp" hidden>Pour installer la Ludothèque sur ton iPhone : touche <b>Partager</b> en bas de Safari, puis <b>Sur l'écran d'accueil</b>.</p>
   </div>
 
-  <nav class="shelf" id="shelf" aria-label="Jeux">
-    <a class="cart queens" href="queens/index.html">
-      <span class="arrow" aria-hidden="true">▼</span>
-      <div class="label">
-        <canvas data-icon="crown" width="16" height="16" aria-hidden="true"></canvas>
-        <h2>QUEENS</h2>
-        <p>Une reine par ligne, par colonne et par couleur, sans qu'elles se touchent.</p>
-        <div class="tags"><span>RÉFLEXION</span><span>5×5 À 9×9</span></div>
+  <div class="saves-open ranks-open"><button class="saves-btn" id="ranksBtn" type="button" aria-expanded="false" aria-controls="ranks">CLASSEMENTS</button></div>
+  <section class="saves ranks" id="ranks" hidden aria-label="Classements">
+    <div id="rkJoin">
+      <h2>REJOINDRE LE CLASSEMENT</h2>
+      <p>Choisis un <b>pseudo</b> et entre le <b>code familial</b> qu'on t'a donné. Ensuite, tes records en Tetris et à l'Arbre du jour de Lignée partent tout seuls dans le classement commun.</p>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px">
+        <label>PSEUDO<input id="rkPseudo" maxlength="16" autocomplete="nickname" placeholder="ex. Rudy"></label>
+        <label>CODE FAMILIAL<input id="rkCode" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+        <div class="row"><button class="saves-btn" id="rkJoinBtn" type="button">REJOINDRE</button></div>
       </div>
-    </a>
+    </div>
+    <div id="rkBoards" hidden>
+      <h2 id="rkHello">CLASSEMENTS</h2>
+      <div class="rk-tabs" id="rkTabs"></div>
+      <ol class="rk-list" id="rkList"></ol>
+      <div class="row"><button class="saves-btn" id="rkRefresh" type="button">ACTUALISER</button><button class="saves-btn" id="rkChange" type="button">CHANGER DE PSEUDO</button></div>
+    </div>
+    <div class="res" id="rkRes" aria-live="polite"></div>
+  </section>
+
+  <nav class="shelf" id="shelf" aria-label="Jeux">
     <a class="cart picross" href="picross/index.html">
       <span class="arrow" aria-hidden="true">▼</span>
       <div class="label">
-        <canvas data-icon="grid" width="16" height="16" aria-hidden="true"></canvas>
+        <canvas data-icon="ball" width="16" height="16" aria-hidden="true"></canvas>
         <h2>PICROSS DEX</h2>
         <p>Remplis la grille d'après les nombres pour révéler un Pokémon. Fan-game personnel.</p>
         <div class="tags"><span>PICROSS</span><span>207 GRILLES</span></div>
@@ -173,6 +187,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <h2>LIGNÉE</h2>
         <p>Reconstitue un arbre généalogique grâce aux indices : familles françaises ou dynasties royales, à l'infini.</p>
         <div class="tags"><span>LOGIQUE</span><span>ARBRES INFINIS</span></div>
+      </div>
+    </a>
+    <a class="cart queens" href="queens/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="crown" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>QUEENS</h2>
+        <p>Une reine par ligne, par colonne et par couleur, sans qu'elles se touchent.</p>
+        <div class="tags"><span>RÉFLEXION</span><span>5×5 À 9×9</span></div>
       </div>
     </a>
     <a class="cart inja" href="injagility/index.html">
@@ -242,25 +265,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 
   <p class="fbnote" id="fbNote" hidden>Tu joues dans le <b>navigateur de Facebook</b> : tes sauvegardes restent ici. Pour les retrouver dans Chrome ou l'appli, utilise <b>Transférer mes sauvegardes</b> plus bas.</p>
 
-  <div class="saves-open"><button class="saves-btn" id="ranksBtn" type="button" aria-expanded="false" aria-controls="ranks">CLASSEMENTS</button><button class="saves-btn" id="savesBtn" type="button" aria-expanded="false" aria-controls="saves">TRANSFÉRER MES SAUVEGARDES</button></div>
-  <section class="saves" id="ranks" hidden aria-label="Classements">
-    <div id="rkJoin">
-      <h2>REJOINDRE LE CLASSEMENT</h2>
-      <p>Choisis un <b>pseudo</b> et entre le <b>code familial</b> qu'on t'a donné. Ensuite, tes records en Tetris et à l'Arbre du jour de Lignée partent tout seuls dans le classement commun.</p>
-      <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px">
-        <label>PSEUDO<input id="rkPseudo" maxlength="16" autocomplete="nickname" placeholder="ex. Rudy"></label>
-        <label>CODE FAMILIAL<input id="rkCode" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-        <div class="row"><button class="saves-btn" id="rkJoinBtn" type="button">REJOINDRE</button></div>
-      </div>
-    </div>
-    <div id="rkBoards" hidden>
-      <h2 id="rkHello">CLASSEMENTS</h2>
-      <div class="rk-tabs" id="rkTabs"></div>
-      <ol class="rk-list" id="rkList"></ol>
-      <div class="row"><button class="saves-btn" id="rkRefresh" type="button">ACTUALISER</button><button class="saves-btn" id="rkChange" type="button">CHANGER DE PSEUDO</button></div>
-    </div>
-    <div class="res" id="rkRes" aria-live="polite"></div>
-  </section>
+  <div class="saves-open"><button class="saves-btn" id="savesBtn" type="button" aria-expanded="false" aria-controls="saves">TRANSFÉRER MES SAUVEGARDES</button></div>
   <section class="saves" id="saves" hidden aria-label="Transfert de sauvegardes">
     <h2>1. COPIER</h2>
     <p>Dans le navigateur où tu as joué, copie toutes tes sauvegardes d'un coup : Picross Dex, Queens, Tetris, Snake, Asteroids, Injagility et Solitaire. <b>Touché Coulé</b> et le <b>Jeu de la Vie</b> n'enregistrent rien.</p>
@@ -317,23 +322,23 @@ const ICONS = {
     "................",
     "................",
     "................"].map(r => r.slice(0,16))},
-  grid: {pal:{o:"#20182e", f:"#20182e", s:"#dfe8c8", l:"#c9d6ad"}, map:[
-    "oooooooooooooooo",
-    "osssssssssssssso",
-    "osffsssssssffsso",
-    "osfffssssssfffso",
-    "osffffssssffffso",
-    "osfffffssfffffso",
-    "osffffffffffffso",
-    "osffffffffffffso",
-    "ossffffffffffsso",
-    "osssffffffffssso",
-    "ossssffffffsssso",
-    "osssssffffssssso",
-    "ossssssffsssssso",
-    "osssssssssssssso",
-    "osssssssssssssso",
-    "oooooooooooooooo"]},
+  ball: {pal:{o:"#20182e", r:"#e3343c", h:"#ff9a9a", d:"#a8202a", W:"#f2f0ff", s:"#b9b4d6", b:"#ffffff"}, map:[
+    ".....oooooo.....",
+    "...oorrrrrroo...",
+    "..orrrrrrrrrro..",
+    ".orhhrrrrrrrrdo.",
+    ".orhrrrrrrrrrdo.",
+    "orrrrrrrrrrrrrdo",
+    "orrrroooooorrrdo",
+    "oooooobbbboooooo",
+    "oWWWWobbbboWWWso",
+    "oWWWWooooooWWWso",
+    "oWWWWWWWWWWWWWso",
+    ".oWWWWWWWWWWWso.",
+    ".oWWWWWWWWWWsso.",
+    "..oWWWWWWWWsso..",
+    "...ooWWWWWWoo...",
+    ".....oooooo....."]},
   snake: {pal:{g:"#7cfc00", G:"#3f9a0a", r:"#ff4b4b", w:"#ffffff", n:"#5a3418"}, map:[
     "................",
     "...........n....",
@@ -613,7 +618,7 @@ if (/FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent)) document.getElement
   }
   $("ranksBtn").addEventListener("click", () => {
     const box = $("ranks"); box.hidden = !box.hidden; $("ranksBtn").setAttribute("aria-expanded", !box.hidden);
-    if (!box.hidden){ res("", true); show(); box.scrollIntoView({behavior: "smooth", block: "start"}); }
+    if (!box.hidden){ res("", true); show(); }
   });
   $("rkJoinBtn").addEventListener("click", () => {
     res("Vérification du code…", true);
