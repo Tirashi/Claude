@@ -885,7 +885,9 @@ function tapSlot(s){
   sel = -1;
   if (!right(q, s)){
     lives--; renderLives(true); SFX.no();
-    const b = slotEls[s]; b.classList.remove("nope"); void b.offsetWidth; b.classList.add("nope");
+    // la case rougit et tremble, puis reprend sa couleur au bout de 1,5 s
+    const b = slotEls[s]; clearTimeout(b._nope); b.classList.remove("nope"); void b.offsetWidth; b.classList.add("nope");
+    b._nope = setTimeout(() => b.classList.remove("nope"), 1500);
     if (lives <= 0) return lose(q);
     setMsg(`Raté : <span class="hl">${G.names[q]}</span> ne va pas là. ${lives > 1 ? `Il te reste ${lives} vies.` : "Plus qu'une vie !"}`);
     paintSlots(); renderTray(); save(); return;
