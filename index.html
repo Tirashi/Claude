@@ -85,6 +85,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.ast{--lb:radial-gradient(circle at 70% 30%, #1d2a5a, #05040e 70%); --lt:#5ce1ff; --ld:#c8d4f4}
 .cart.vie{--lb:linear-gradient(to bottom, #23307e, #0d1450); --lt:#5cff8a; --ld:#dfe5ff}
 .cart.soli{--lb:linear-gradient(to bottom, #2a8a48, #145a2c); --lt:#ffd23f; --ld:#e4f7dc}
+.cart.lignee{--lb:linear-gradient(to bottom, #6b3f1f, #2f1a0c); --lt:#e0a83a; --ld:#efe0bd}
 .cart.touche{--lb:linear-gradient(to bottom, #2b6fd0, #0f1866); --lt:#ffd84a; --ld:#e8ecff}
 
 .status{text-align:center; font-family:var(--f-display); font-size:9px; letter-spacing:1px; line-height:2; color:var(--text-dim)}
@@ -151,6 +152,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <h2>PICROSS DEX</h2>
         <p>Remplis la grille d'après les nombres pour révéler un Pokémon. Fan-game personnel.</p>
         <div class="tags"><span>PICROSS</span><span>207 GRILLES</span></div>
+      </div>
+    </a>
+    <a class="cart lignee" href="lignee/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="tree" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>LIGNÉE</h2>
+        <p>Reconstitue un arbre généalogique grâce aux indices : familles françaises ou dynasties royales, à l'infini.</p>
+        <div class="tags"><span>LOGIQUE</span><span>ARBRES INFINIS</span></div>
       </div>
     </a>
     <a class="cart inja" href="injagility/index.html">
@@ -242,6 +252,23 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 "use strict";
 /* pixel icons, one per game */
 const ICONS = {
+  tree: {pal:{o:"#1a0f2e", g:"#4fa86a", G:"#2f7a48", b:"#8a5a2a"}, map:[
+    "................",
+    ".....oooooo.....",
+    "...ooggGgggoo...",
+    "..ogggggggGggo..",
+    ".oggGgggggggggo.",
+    ".ogggggGgggGggo.",
+    ".oggggggggggggo.",
+    "..ogGgggggGggo..",
+    "...oooggggooo...",
+    "......obbo......",
+    "......obbo......",
+    "......obbo......",
+    ".....obbbbo.....",
+    "....obboobbo....",
+    "...oo..oo..oo...",
+    "................"]},
   crown: {pal:{o:"#1a0f2e", y:"#ffd23f", h:"#fff6c2", d:"#d98a1c", r:"#e8264d"}, map:[
     "................",
     "................",
@@ -409,6 +436,7 @@ function collectSaves(){
   for (const [id, v] of Object.entries(cap || {})) if (v && v.time > 0) c[id] = {t: v.time, h: v.hints || 0};
   for (const [id, v] of Object.entries(prog || {})) if (v && Array.isArray(v.cells)) p[id] = {c: v.cells.join(""), e: Math.round(v.elapsed || 0), h: v.hints || 0};
   if (Object.keys(c).length || Object.keys(p).length) g.picross = {c, p};
+  const lg = readKey("lignee.stats", {}); if (lg && Object.keys(lg).length) g.lignee = lg;
   return g;
 }
 function describeSaves(g){
@@ -416,6 +444,7 @@ function describeSaves(g){
   if (g.picross) out.push(`Picross Dex : ${Object.keys(g.picross.c).length} Pokémon` + (Object.keys(g.picross.p).length ? `, ${Object.keys(g.picross.p).length} grille(s) en cours` : ""));
   if (g.queens) out.push("Queens : " + Object.keys(g.queens).sort((a, b) => a - b).map(n => `${n}×${n} en ${fmtTime(g.queens[n])}`).join(", "));
   for (const [k, name] of SCORES) if (g[k]) out.push(`${name} : ${g[k]} ${k === "injagility.best" ? "obstacles" : "points"}`);
+  if (g.lignee){ const n = Object.values(g.lignee).reduce((s, v) => s + (v && v.n || 0), 0); if (n) out.push(`Lignée : ${n} arbre${n > 1 ? "s" : ""} reconstitué${n > 1 ? "s" : ""}`); }
   return out;
 }
 function decodeSaves(text){
@@ -457,6 +486,17 @@ function mergeSaves(g){
     const parts = [];
     if (added) parts.push(`${added} Pokémon`); if (faster) parts.push(`${faster} record${faster > 1 ? "s" : ""}`); if (grids) parts.push(`${grids} grille${grids > 1 ? "s" : ""} en cours`);
     if (parts.length) done.push("Picross Dex : " + parts.join(", "));
+  }
+  if (g.lignee && typeof g.lignee === "object"){
+    const mine = readKey("lignee.stats", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(g.lignee)){
+      if (!/^[CR][1-4]$/.test(k) || !v) continue;
+      const m = mine[k] || {best: 0, n: 0}, before = JSON.stringify(m);
+      if (v.best > 0 && (!m.best || v.best < m.best)) m.best = Math.round(v.best);
+      if ((v.n || 0) > (m.n || 0)) m.n = v.n;
+      if (JSON.stringify(m) !== before){ mine[k] = m; n++; }
+    }
+    if (n){ writeKey("lignee.stats", mine); done.push(`Lignée : ${n} niveau${n > 1 ? "x" : ""} mis à jour`); }
   }
   return done;
 }

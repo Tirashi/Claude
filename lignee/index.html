@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<style>/* page déjà sombre : le mode sombre forcé des navigateurs (Samsung Internet, Chrome…) n'a pas à la repeindre */
+@media (prefers-color-scheme: dark){ :root{ color-scheme: dark; } }</style>
+<title>Lignée 16 bits</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#110d22">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --f-display:"Press Start 2P", "Courier New", monospace;
+  --f-body:"VT323", "Courier New", monospace;
+  --bg:#1a1220; --bg2:#241a2c;
+  --paper:#efe0bd; --paper2:#e2cc9c; --ink:#3b2414; --ink-soft:#7a5a3a;
+  --accent:#2f7a48; --accent-hi:#4fa86a; --gold:#e0a83a; --bad:#c83a2a; --good:#2f7a48;
+  --frame:#8a5a2a; --btn:#6b3f1f; --btn-hi:#8a5a2a; --btn-text:#fff3d6;
+}
+body.royal{
+  --bg:#120f24; --bg2:#1b1636;
+  --paper:#e9e2f4; --paper2:#d4c8ea; --ink:#2a1a48; --ink-soft:#5e4c86;
+  --accent:#5a3aa0; --accent-hi:#7c5cc8; --gold:#e8b830; --frame:#b08a1c; --btn:#3a2470; --btn-hi:#55389a;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0}
+body{background-color:var(--bg); background-image:radial-gradient(var(--bg2) 1px, transparent 1.5px); background-size:4px 4px;
+  color:var(--paper); font-family:var(--f-body); font-size:19px; line-height:1.25; padding:14px 12px 40px; min-height:100vh}
+body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:60;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.06) 0 1px, transparent 1px 3px)}
+.wrap{max-width:720px; margin:0 auto}
+h1{font-family:var(--f-display); font-weight:400; margin:0; font-size:clamp(22px,7vw,34px); letter-spacing:3px; color:var(--gold);
+  text-shadow:3px 3px 0 #000; text-align:center}
+.sub{text-align:center; font-family:var(--f-display); font-size:8px; letter-spacing:1px; color:var(--paper2); margin:10px 0 0}
+.btn{font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--btn-text); background:var(--btn); border:3px solid #000;
+  border-radius:6px; padding:11px 12px; cursor:pointer; box-shadow:3px 3px 0 #000; -webkit-tap-highlight-color:transparent}
+.btn:hover{background:var(--btn-hi)}
+.btn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 #000}
+.btn:focus-visible{outline:3px dashed var(--gold); outline-offset:3px}
+.btn[aria-pressed="true"]{background:var(--gold); color:#2a1a08}
+.btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+.panel{background:var(--paper); color:var(--ink); border:4px solid #000; border-radius:6px; box-shadow:inset 0 0 0 3px var(--frame), 5px 5px 0 #000; padding:14px}
+.panel h2{font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; margin:0 0 10px; color:var(--ink)}
+
+/* ---------- menu ---------- */
+.logo{display:flex; justify-content:center; margin:6px 0 10px}
+.logo canvas{width:96px; height:96px; image-rendering:pixelated}
+.modes{display:flex; gap:10px; margin:18px 0 14px}
+.modes .btn{flex:1 1 0; font-size:11px; padding:14px 8px}
+.modes small{display:block; font-family:var(--f-body); font-size:16px; letter-spacing:0; margin-top:6px; text-transform:none}
+.levels{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.lvl{display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 8px}
+.lvl b{font-weight:400; font-size:11px}
+.lvl small{font-family:var(--f-body); font-size:16px; letter-spacing:0; opacity:.95}
+.row{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
+.row .btn{flex:1 1 auto}
+.code{display:flex; gap:8px; margin-top:12px}
+.code input{flex:1; min-width:0; font-family:var(--f-display); font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:10px;
+  border:3px solid #000; border-radius:6px; background:#fffaf0; color:#2a1a08}
+.rules{margin-top:14px}
+.rules p, .rules li{margin:0 0 6px; font-size:18px}
+.rules ul{margin:0; padding-left:20px}
+.rules b{color:var(--accent)}
+.msgline{font-family:var(--f-display); font-size:8px; line-height:1.9; min-height:1.9em; margin-top:10px; color:var(--paper2)}
+
+/* ---------- partie ---------- */
+.bar{display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; align-items:center; font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:var(--paper2); margin-bottom:10px}
+.bar b{font-weight:400; color:var(--gold)}
+.treebox{overflow-x:auto; padding:10px 4px 6px}
+.tree{position:relative; margin:0 auto}
+.tree svg{position:absolute; inset:0; overflow:visible; pointer-events:none}
+.tree svg line{stroke:var(--ink); stroke-width:3; stroke-linecap:square}
+.tree svg line.couple{stroke:var(--accent); stroke-width:4}
+.slot{position:absolute; padding:0; border:3px solid var(--ink); border-radius:5px; background:var(--paper2); cursor:pointer; display:flex; flex-direction:column; align-items:center;
+  -webkit-tap-highlight-color:transparent; box-shadow:2px 2px 0 rgba(0,0,0,.35)}
+.slot canvas{image-rendering:pixelated; display:block; margin-top:2px}
+.slot .nm{font-family:var(--f-body); color:var(--ink); white-space:nowrap; line-height:1; margin-top:1px}
+.slot.empty canvas{opacity:.5}
+.slot.filled{background:#fffaf0; border-color:var(--frame)}
+.slot.sel{outline:3px dashed var(--bad); outline-offset:2px}
+.slot.target{border-color:var(--accent)}
+.slot.ok{border-color:var(--gold); background:#fff6d6; animation:pop .4s steps(3) both}
+@keyframes pop{0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)}}
+.msg{font-family:var(--f-display); font-size:9px; line-height:1.9; text-align:center; min-height:2em; margin:6px 0 8px; color:var(--ink)}
+.msg .hl{color:var(--bad)}
+.tray{display:grid; grid-template-columns:repeat(auto-fill, minmax(76px, 1fr)); gap:8px; min-height:40px}
+.card{border:3px solid var(--ink); border-radius:5px; background:#fffaf0; padding:6px 2px 4px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer;
+  font-family:var(--f-body); font-size:17px; color:var(--ink); -webkit-tap-highlight-color:transparent; box-shadow:2px 2px 0 rgba(0,0,0,.35)}
+.card canvas{width:44px; height:44px; image-rendering:pixelated}
+.card.sel{background:var(--gold); outline:3px dashed var(--bad); outline-offset:2px}
+.trayhint{font-size:17px; color:var(--ink-soft); margin:0 0 6px}
+.clues{margin:0; padding:0; list-style:none; counter-reset:c}
+.clues li{counter-increment:c; position:relative; padding:5px 6px 5px 34px; border-bottom:2px dotted var(--paper2); font-size:19px; cursor:pointer; color:var(--ink)}
+.clues li::before{content:counter(c); position:absolute; left:4px; top:6px; font-family:var(--f-display); font-size:9px; color:var(--ink-soft)}
+.clues li b{font-weight:400; color:var(--accent)}
+.clues li.struck{opacity:.42; text-decoration:line-through}
+.clues li.good::after{content:"✓"; position:absolute; right:6px; top:4px; color:var(--good); font-family:Arial, sans-serif}
+.clues li.bad{color:var(--bad)}
+.clues li.bad::after{content:"✕"; position:absolute; right:6px; top:4px; color:var(--bad); font-family:Arial, sans-serif}
+.gamegrid{display:flex; flex-direction:column; gap:12px}
+.tools{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+.win{text-align:center}
+.win h2{font-size:13px; line-height:1.7; color:var(--accent)}
+.win p{margin:6px 0; font-size:19px}
+.win .row{justify-content:center}
+.small{font-size:16px; color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== menu ===== -->
+  <section id="menu">
+    <div class="logo"><canvas id="logo" width="24" height="24" aria-hidden="true"></canvas></div>
+    <h1>LIGNÉE</h1>
+    <p class="sub">RECONSTITUE L'ARBRE GRÂCE AUX INDICES</p>
+    <div class="modes" role="group" aria-label="Mode de jeu">
+      <button class="btn" type="button" id="modeC" aria-pressed="true">CLASSIQUE<small>familles françaises</small></button>
+      <button class="btn" type="button" id="modeR" aria-pressed="false">ROYAL<small>dynasties et couronnes</small></button>
+    </div>
+    <div class="panel">
+      <h2>NOUVEL ARBRE</h2>
+      <div class="levels" id="levels"></div>
+      <div class="row">
+        <button class="btn" type="button" id="dailyBtn">ARBRE DU JOUR</button>
+        <button class="btn" type="button" id="resumeBtn" hidden>REPRENDRE</button>
+      </div>
+      <div class="code">
+        <input id="codeIn" placeholder="EX. C2-K3F9QX" maxlength="12" aria-label="Code d'un arbre à rejouer" autocomplete="off">
+        <button class="btn" type="button" id="codeBtn">JOUER</button>
+      </div>
+      <p class="msgline" id="menuMsg" aria-live="polite"></p>
+    </div>
+    <div class="panel rules">
+      <h2>RÈGLES</h2>
+      <p>Touche une personne de la réserve, puis la case de l'arbre où elle doit aller. Toucher une case remplie la reprend : touche une autre case pour l'y déplacer, ou la même pour la renvoyer dans la réserve.</p>
+      <ul>
+        <li>Dans un couple, <b>l'homme est à gauche</b> et la femme à droite.</li>
+        <li>Les frères et sœurs sont rangés <b>du plus âgé, à gauche, au plus jeune, à droite</b>.</li>
+        <li>L'arbre est complet : « n'a pas de frère » veut dire aucun frère dans l'arbre.</li>
+        <li><b>Oncle, tante</b> : frère ou sœur d'un parent, ou son conjoint. <b>Cousins</b> : enfants de deux frères et sœurs.</li>
+        <li><b>Beau-père, belle-mère</b> : parent du conjoint. <b>Gendre, belle-fille</b> : conjoint d'un enfant. <b>Beau-frère, belle-sœur</b> : frère ou sœur du conjoint, ou conjoint d'un frère ou d'une sœur.</li>
+        <li>En <b>Expert</b>, les cases ne montrent plus si elles attendent un homme ou une femme.</li>
+        <li>Chaque arbre n'a qu'une seule solution, trouvable sans deviner.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== partie ===== -->
+  <section id="game" hidden>
+    <div class="bar"><span id="gTitle">CLASSIQUE · FACILE</span><span>CODE <b id="gCode">—</b></span><span>TEMPS <b id="gTime">00:00</b></span></div>
+    <div class="gamegrid">
+      <div class="panel" style="padding:8px">
+        <div class="treebox"><div class="tree" id="tree"></div></div>
+        <div class="msg" id="msg" aria-live="polite"></div>
+        <div id="trayBox"><p class="trayhint" id="trayHint">Réserve : touche une personne, puis sa case.</p><div class="tray" id="tray"></div></div>
+        <div class="win" id="win" hidden>
+          <h2 id="winTitle"></h2>
+          <p id="winStory"></p>
+          <p class="small" id="winStats"></p>
+          <div class="row"><button class="btn" type="button" id="againBtn">NOUVEL ARBRE</button><button class="btn" type="button" id="menuBtn2">MENU</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>INDICES</h2>
+        <ol class="clues" id="clues"></ol>
+        <p class="small" style="margin:8px 0 0">Touche un indice pour le barrer.</p>
+      </div>
+      <div class="tools">
+        <button class="btn" type="button" id="menuBtn">◀ MENU</button>
+        <button class="btn" type="button" id="clearBtn">VIDER</button>
+        <button class="btn" type="button" id="aidBtn" aria-pressed="false">AIDE</button>
+        <button class="btn" type="button" id="soundBtn" aria-pressed="true">SON</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ===== Lignée : moteur (arbre, indices, solveur) ===== */
+const Engine = (() => {
+  // PRNG déterministe : le même code donne toujours le même arbre
+  function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const pick = (rng, a) => a[Math.floor(rng() * a.length)];
+  const shuffle = (rng, a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const hashStr = s => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+
+  const LEVELS = {
+    1: {name: "FACILE",    gens: 3, min: 6,  max: 7,  units: 7,   sil: true},
+    2: {name: "MOYEN",     gens: 3, min: 9,  max: 10, units: 8.6, sil: true},
+    3: {name: "DIFFICILE", gens: 4, min: 12, max: 14, units: 9.8, sil: true},
+    4: {name: "EXPERT",    gens: 4, min: 14, max: 16, units: 9.8, sil: false},
+  };
+
+  /* ---------- 1. la forme de l'arbre ---------- */
+  // personnes : {sex:"M"|"F", gen, blood, parents:[pere, mere]|null, spouse, kids:[]}
+  function buildShape(rng, L){
+    for (let attempt = 0; attempt < 400; attempt++){
+      const P = [];
+      const add = (sex, gen, blood, parents) => { P.push({sex, gen, blood, parents, spouse: -1, kids: []}); return P.length - 1; };
+      const marry = i => { const s = add(P[i].sex === "M" ? "F" : "M", P[i].gen, false, null); P[i].spouse = s; P[s].spouse = i; return s; };
+      const root = add(rng() < .5 ? "M" : "F", 0, true, null); marry(root);
+      const grow = (i, depth) => {
+        const p = P[i];
+        if (p.gen >= L.gens - 1) return;
+        if (p.spouse < 0){ if (p.gen === 0 || rng() < (L.gens === 3 ? .72 : .62)) marry(i); else return; }
+        const k = p.gen === 0 ? (rng() < .5 ? 2 : 3) : pick(rng, L.gens === 3 ? [1, 2, 2, 3] : [0, 1, 2, 2, 3]);
+        const dad = p.sex === "M" ? i : p.spouse, mum = p.sex === "M" ? p.spouse : i;
+        for (let c = 0; c < k; c++){ const ch = add(rng() < .5 ? "M" : "F", p.gen + 1, true, [dad, mum]); P[dad].kids.push(ch); P[mum].kids.push(ch); }
+        for (const ch of P[dad].kids) grow(ch, depth + 1);
+      };
+      grow(root, 0);
+      if (P.length < L.min || P.length > L.max) continue;
+      if (!P.some(p => p.gen === L.gens - 1)) continue;
+      const lay = layout(P);
+      if (lay.width > L.units) continue;
+      return {P, lay};
+    }
+    return null;
+  }
+
+  /* ---------- 2. la mise en page (en unités de case) ---------- */
+  // dans un couple l'homme est à gauche ; les frères et sœurs vont du plus âgé (gauche) au plus jeune (droite)
+  const SLOT = 1, CGAP = .22, SGAP = .42;
+  function layout(P){
+    const root = P.findIndex(p => p.blood && p.gen === 0);
+    const kidsOf = i => P[i].kids;
+    const coupleW = i => P[i].spouse >= 0 ? 2 * SLOT + CGAP : SLOT;
+    const W = {};
+    const width = i => { if (W[i] != null) return W[i]; const ks = kidsOf(i); const kw = ks.reduce((s, k) => s + width(k), 0) + Math.max(0, ks.length - 1) * SGAP; return W[i] = Math.max(coupleW(i), kw); };
+    const pos = new Array(P.length);
+    const place = (i, x0) => {
+      const w = width(i), ks = kidsOf(i);
+      const kw = ks.reduce((s, k) => s + width(k), 0) + Math.max(0, ks.length - 1) * SGAP;
+      let x = x0 + (w - kw) / 2;
+      for (const k of ks){ place(k, x); x += width(k) + SGAP; }
+      // le couple se centre au-dessus de ses enfants
+      let cx = ks.length ? (pos[ks[0]].x + pos[ks[ks.length - 1]].x) / 2 + SLOT / 2 : x0 + w / 2;
+      const cw = coupleW(i);
+      let left = Math.min(Math.max(cx - cw / 2, x0), x0 + w - cw);
+      const s = P[i].spouse;
+      if (s >= 0){ const m = P[i].sex === "M" ? i : s, f = m === i ? s : i; pos[m] = {x: left, gen: P[i].gen}; pos[f] = {x: left + SLOT + CGAP, gen: P[i].gen}; }
+      else pos[i] = {x: left, gen: P[i].gen};
+    };
+    place(root, 0);
+    return {pos, width: width(root)};
+  }
+
+  /* ---------- 3. les liens de parenté ---------- */
+  function relations(P){
+    const n = P.length;
+    const parents = i => P[i].parents || [];
+    const sibs = i => P[i].parents ? P[P[i].parents[0]].kids.filter(k => k !== i) : [];
+    const has = (a, x) => a.includes(x);
+    const M = () => Array.from({length: n}, () => new Array(n).fill(false));
+    const R = {parent: M(), child: M(), spouse: M(), sibling: M(), grandparent: M(), grandchild: M(), uncle: M(), nephew: M(), cousin: M(), parentInLaw: M(), childInLaw: M(), siblingInLaw: M()};
+    for (let a = 0; a < n; a++) for (let b = 0; b < n; b++){
+      if (a === b) continue;
+      const pb = parents(b), pa = parents(a);
+      R.parent[a][b] = has(pb, a);
+      R.child[a][b] = has(pa, b);
+      R.spouse[a][b] = P[a].spouse === b;
+      R.sibling[a][b] = has(sibs(a), b);
+      R.grandparent[a][b] = pb.some(p => has(parents(p), a));
+      R.grandchild[a][b] = pa.some(p => has(parents(p), b));
+      const pSibs = pb.flatMap(p => sibs(p));
+      R.uncle[a][b] = has(pSibs, a) || pSibs.some(s => P[s].spouse === a);
+      const aSibsParents = pa.flatMap(p => sibs(p));
+      R.nephew[a][b] = has(aSibsParents, b) || aSibsParents.some(s => P[s].spouse === b);
+      R.cousin[a][b] = pa.some(p => sibs(p).some(s => has(P[s].kids, b)));
+      const sb = P[b].spouse, sa = P[a].spouse;
+      R.parentInLaw[a][b] = sb >= 0 && has(parents(sb), a);
+      R.childInLaw[a][b] = sa >= 0 && has(parents(sa), b);
+      R.siblingInLaw[a][b] = (sb >= 0 && has(sibs(sb), a)) || sibs(b).some(s => P[s].spouse === a);
+    }
+    const U = {
+      childless: i => P[i].kids.length === 0,
+      nKids: i => P[i].kids.length,
+      nGrand: i => P[i].kids.reduce((s, k) => s + P[k].kids.length, 0),
+      onlyChild: i => !!P[i].parents && sibs(i).length === 0,
+      noBrother: i => !!P[i].parents && sibs(i).length > 0 && !sibs(i).some(s => P[s].sex === "M"),
+      noSister: i => !!P[i].parents && sibs(i).length > 0 && !sibs(i).some(s => P[s].sex === "F"),
+      eldest: i => !!P[i].parents && sibs(i).length > 0 && P[P[i].parents[0]].kids[0] === i,
+      youngest: i => !!P[i].parents && sibs(i).length > 0 && P[P[i].parents[0]].kids.slice(-1)[0] === i,
+      // le père (ou la mère) de X n'a ni frère ni sœur
+      dadOnly: i => !!P[i].parents && !!P[P[i].parents[0]].parents && sibs(P[i].parents[0]).length === 0,
+      mumOnly: i => !!P[i].parents && !!P[P[i].parents[1]].parents && sibs(P[i].parents[1]).length === 0,
+    };
+    return {R, U};
+  }
+
+  /* ---------- 4. les indices ---------- */
+  const SYM = new Set(["spouse", "sibling", "cousin"]);
+  const WEIGHTS = {
+    1: {parent: 3, child: 3, spouse: 3, sibling: 3, childless: 1, nKids: 1.2},
+    2: {parent: 1, child: 1, spouse: 1.4, sibling: 1, grandparent: 2, grandchild: 2, uncle: 2, nephew: 2, cousin: 2,
+        noBrother: 1, noSister: 1, onlyChild: 1, eldest: 1.5, youngest: 1.5, childless: .7, nKids: .7},
+    3: {parent: .35, child: .35, spouse: .6, sibling: .5, grandparent: 1.4, grandchild: 1.4, uncle: 1.6, nephew: 1.6, cousin: 1.6,
+        parentInLaw: 2, childInLaw: 2, siblingInLaw: 2, noBrother: 1, noSister: 1, onlyChild: .8, eldest: 1, youngest: 1,
+        nGrand: 1, dadOnly: 1.1, mumOnly: 1.1, childless: .5, nKids: .7},
+  };
+  WEIGHTS[4] = WEIGHTS[3];
+
+  function candidates(P, rel, level){
+    const w = WEIGHTS[level], out = [], n = P.length;
+    for (const t of Object.keys(rel.R)){
+      if (!w[t]) continue;
+      for (let a = 0; a < n; a++) for (let b = 0; b < n; b++){
+        if (!rel.R[t][a][b]) continue;
+        if (SYM.has(t) && b < a) continue;
+        out.push({t, a, b, w: w[t]});
+      }
+    }
+    for (const t of Object.keys(rel.U)){
+      if (!w[t]) continue;
+      for (let a = 0; a < n; a++){
+        const v = rel.U[t](a);
+        if (t === "nKids" || t === "nGrand"){ if (v > 0) out.push({t, a, v, w: w[t]}); }
+        else if (v) out.push({t, a, w: w[t]});
+      }
+    }
+    return out;
+  }
+
+  /* ---------- 5. le solveur : combien d'arbres respectent ces indices ? ---------- */
+  // chaque carte (personne de la solution) doit aller dans une case ; on compte les solutions jusqu'à 2
+  function countSolutions(P, rel, clues, sexKnown, budget = 400000){
+    const n = P.length;
+    const unaryOk = (c, s) => c.v != null ? rel.U[c.t](s) === c.v : rel.U[c.t](s);
+    const byPerson = Array.from({length: n}, () => ({un: [], bin: []}));
+    for (const c of clues){
+      if (c.b == null) byPerson[c.a].un.push(c);
+      else { byPerson[c.a].bin.push(c); byPerson[c.b].bin.push(c); }
+    }
+    // les plus contraintes d'abord
+    const order = [...Array(n).keys()].sort((x, y) => (byPerson[y].un.length * 2 + byPerson[y].bin.length) - (byPerson[x].un.length * 2 + byPerson[x].bin.length));
+    const rank = new Array(n); order.forEach((p, i) => rank[p] = i);
+    const cand = order.map(p => [...Array(n).keys()].filter(s => (!sexKnown[s] || P[s].sex === P[p].sex) && byPerson[p].un.every(c => unaryOk(c, s))));
+    const checks = order.map(p => byPerson[p].bin.filter(c => rank[c.a === p ? c.b : c.a] < rank[p]));
+    const at = new Array(n).fill(-1), used = new Array(n).fill(false);
+    let found = 0, nodes = 0;
+    const go = k => {
+      if (found > 1 || nodes > budget) return;
+      if (k === n){ found++; return; }
+      const p = order[k];
+      for (const s of cand[k]){
+        if (used[s]) continue;
+        nodes++;
+        let ok = true;
+        for (const c of checks[k]){ const sa = c.a === p ? s : at[c.a], sb = c.b === p ? s : at[c.b]; if (!rel.R[c.t][sa][sb]){ ok = false; break; } }
+        if (!ok) continue;
+        used[s] = true; at[p] = s; go(k + 1); used[s] = false; at[p] = -1;
+        if (found > 1) return;
+      }
+    };
+    go(0);
+    return nodes > budget ? -1 : found;
+  }
+
+  function weightedPick(rng, list){ const tot = list.reduce((s, c) => s + c.w, 0); let r = rng() * tot; for (const c of list){ r -= c.w; if (r <= 0) return c; } return list[list.length - 1]; }
+
+  /* ---------- 6. un puzzle complet ---------- */
+  function generate(seed, level){
+    const L = LEVELS[level];
+    const rng = mulberry32(seed);
+    for (let tries = 0; tries < 30; tries++){
+      const shape = buildShape(rng, L); if (!shape) continue;
+      const {P, lay} = shape;
+      const rel = relations(P);
+      // en Expert, seules les cases des couples révèlent le sexe (l'homme à gauche)
+      const sexKnown = P.map(p => L.sil || p.spouse >= 0);
+      let pool = candidates(P, rel, level), clues = [];
+      let res = 2, guard = 0;
+      while (res !== 1 && pool.length && guard++ < 80){
+        const c = weightedPick(rng, pool); pool = pool.filter(x => x !== c); clues.push(c);
+        if (clues.length < Math.floor(P.length * .6)) continue;
+        res = countSolutions(P, rel, clues, sexKnown);
+      }
+      if (res !== 1) continue;
+      // on retire tout indice superflu
+      for (const c of shuffle(rng, clues)){
+        const rest = clues.filter(x => x !== c);
+        if (countSolutions(P, rel, rest, sexKnown) === 1) clues = rest;
+      }
+      // en Facile, deux indices simples en bonus
+      if (level === 1) for (let i = 0; i < 2 && pool.length; i++){ const c = weightedPick(rng, pool); pool = pool.filter(x => x !== c); clues.push(c); }
+      return {P, lay, rel, clues: shuffle(rng, clues), sexKnown, rng};
+    }
+    return null;
+  }
+
+  return {LEVELS, generate, countSolutions, relations, mulberry32, hashStr, pick, shuffle};
+})();
+
+
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("lignee." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem("lignee." + k, JSON.stringify(v)); } catch (e) {} }
+};
+const fmt = ms => { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
+const {LEVELS, mulberry32, hashStr, pick, shuffle} = Engine;
+
+/* ---------- sons ---------- */
+let actx = null, soundOn = store.get("sound", true);
+function blip(notes, type = "square", dur = .06, vol = .05){
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    for (const f of notes){ const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur); t += dur * .9; }
+  } catch (e) {}
+}
+const SFX = { pick: () => blip([660], "square", .05), place: () => blip([523, 784], "square", .05), back: () => blip([392, 262], "square", .05),
+  no: () => blip([196, 147], "square", .08), nav: () => blip([880], "square", .03, .03),
+  win: () => blip([523, 659, 784, 1047, 784, 1047, 1319], "square", .1, .05) };
+
+/* ---------- prénoms ---------- */
+const NAMES = {
+  C: [ // par époque : arrière-grands-parents, grands-parents, parents, enfants
+    {M: ["Marcel","Robert","René","Henri","Georges","André","Lucien","Fernand","Raymond","Gaston","Albert","Émile","Léon","Maurice"],
+     F: ["Marguerite","Jeanne","Germaine","Suzanne","Marcelle","Yvonne","Simone","Paulette","Madeleine","Lucienne","Odette","Renée","Gisèle","Henriette"]},
+    {M: ["Jean","Michel","Alain","Bernard","Gérard","Daniel","Jacques","Claude","Pierre","Roger","Serge","Guy","Yves","Gilbert"],
+     F: ["Monique","Françoise","Nicole","Jacqueline","Danielle","Annie","Colette","Josette","Michèle","Denise","Ginette","Huguette","Chantal","Arlette"]},
+    {M: ["Nicolas","Julien","Sébastien","Stéphane","Christophe","Frédéric","Laurent","Olivier","Thierry","Pascal","Éric","David","Franck","Vincent"],
+     F: ["Nathalie","Isabelle","Sandrine","Céline","Stéphanie","Valérie","Sophie","Sylvie","Karine","Virginie","Delphine","Corinne","Véronique","Caroline"]},
+    {M: ["Hugo","Léo","Lucas","Gabriel","Jules","Arthur","Raphaël","Nathan","Tom","Louis","Adam","Noah","Ethan","Théo"],
+     F: ["Emma","Jade","Louise","Chloé","Léa","Manon","Inès","Alice","Lina","Zoé","Rose","Anna","Mila","Lou"]},
+  ],
+  R: [{M: ["Louis","Philippe","Charles","Henri","Godefroy","Baudouin","Thibaut","Arnaud","Raoul","Enguerrand","Tristan","Gauvain","Aymeric","Bertrand","Hugues","Geoffroy","Lothaire","Clovis","Amaury","Foulques"],
+       F: ["Aliénor","Blanche","Isabeau","Mathilde","Constance","Berthe","Agnès","Yolande","Héloïse","Guenièvre","Mahaut","Adélaïde","Ermengarde","Clotilde","Sibylle","Jehanne","Margot","Bérengère","Iseut","Pétronille"]}],
+};
+const SURNAMES = ["Morel","Dubois","Lefèvre","Garnier","Fontaine","Rousseau","Mercier","Lambert","Bonnet","Girard","Chevalier","Perrin","Marchand","Leroy","Gauthier","Masson"];
+const DYNASTIES = ["Valmorel","Montaigu","Blanchelande","Hautecombe","Rochefort","Clairval","Beaumanoir","Lyonnesse","Aigremont","Belcastel","Montrevel","Valombre"];
+
+/* ---------- portraits 16 bits ---------- */
+const SKIN = ["#f2c9a0", "#e5b083", "#c98d5e", "#9a6440"];
+const HAIR = ["#2a1a10", "#5a3418", "#8a5a2a", "#d8b058", "#b8501c", "#1a1a22"];
+const CLOTH = ["#2f6f9f", "#a83a3a", "#3f8a4a", "#7c5cb8", "#c8862a", "#2f8f8f", "#8a3a6a", "#4a4a6a"];
+function makeLook(rng, p, era, royal){
+  const old = era <= (royal ? -1 : 0) || (royal && p.gen === 0);
+  return {
+    skin: pick(rng, SKIN),
+    hair: old ? pick(rng, ["#e8e8ec", "#b8b8c0", "#d0d0d8"]) : pick(rng, HAIR),
+    cloth: pick(rng, CLOTH),
+    style: Math.floor(rng() * 3),
+    beard: p.sex === "M" && era < 3 && rng() < (royal ? .55 : .3),
+    glasses: !royal && era < 3 && rng() < .28,
+    kid: !royal && era === 3,
+  };
+}
+function drawPortrait(cv, sex, look, royal){
+  const x = cv.getContext("2d"); cv.width = 16; cv.height = 16; x.clearRect(0, 0, 16, 16);
+  const px = (c, X, Y, w = 1, h = 1) => { x.fillStyle = c; x.fillRect(X, Y, w, h); };
+  const K = "#20140c";
+  const top = look.kid ? 4 : 3;
+  // épaules
+  px(K, 2, 13, 12, 3); px(look.cloth, 3, 14, 10, 2); px(look.cloth, 4, 13, 8, 1);
+  if (royal) px("#e8c040", 7, 14, 2, 2);
+  // cou + visage
+  px(look.skin, 7, 11, 2, 2);
+  px(K, 4, top, 8, 9 - (top - 3)); px(look.skin, 5, top + 1, 6, 8 - (top - 3) - 1); px(look.skin, 4, top + 3, 8, 3);
+  // cheveux
+  if (sex === "F"){
+    px(look.hair, 4, top, 8, 2); px(look.hair, 3, top + 1, 2, look.style === 0 ? 9 : 6); px(look.hair, 11, top + 1, 2, look.style === 0 ? 9 : 6);
+    if (look.style === 2){ px(look.hair, 6, top - 2, 4, 2); }
+  } else {
+    px(look.hair, 4, top, 8, 2); px(look.hair, 4, top + 2, 1, look.style === 1 ? 2 : 1); px(look.hair, 11, top + 2, 1, look.style === 1 ? 2 : 1);
+    if (look.style === 2) px(look.hair, 5, top - 1, 6, 1);
+  }
+  // yeux, bouche
+  const ey = top + 4;
+  px(K, 6, ey, 1, 1); px(K, 9, ey, 1, 1);
+  if (look.glasses){ px("#3a3a4a", 5, ey - 1, 3, 1); px("#3a3a4a", 8, ey - 1, 3, 1); px("#3a3a4a", 5, ey + 1, 3, 1); px("#3a3a4a", 8, ey + 1, 3, 1); }
+  px(sex === "F" ? "#c0404a" : "#8a4a3a", 7, ey + 3, 2, 1);
+  if (look.beard){ px(look.hair, 5, ey + 2, 6, 3); px(look.skin, 7, ey + 2, 2, 1); px("#8a4a3a", 7, ey + 3, 2, 1); }
+  // couronne ou diadème
+  if (royal){
+    if (sex === "M"){ px("#e8c040", 4, top - 2, 8, 2); px("#e8c040", 4, top - 3, 1, 1); px("#e8c040", 7, top - 3, 2, 1); px("#e8c040", 11, top - 3, 1, 1); px("#d0302a", 7, top - 2, 2, 1); }
+    else { px("#e8c040", 5, top - 1, 6, 1); px("#e8c040", 7, top - 2, 2, 1); px("#5ab0e8", 7, top - 1, 2, 1); }
+  }
+}
+function drawSilhouette(cv, sex){
+  const x = cv.getContext("2d"); cv.width = 16; cv.height = 16; x.clearRect(0, 0, 16, 16);
+  const c = "#3b2414"; x.fillStyle = c;
+  if (sex === "?"){ x.font = "bold 12px Arial"; x.textAlign = "center"; x.fillText("?", 8, 12); return; }
+  if (sex === "F"){
+    // longs cheveux, robe évasée
+    x.fillRect(5, 2, 6, 2); x.fillRect(4, 3, 8, 6); x.fillRect(3, 4, 2, 9); x.fillRect(11, 4, 2, 9); x.fillRect(7, 10, 2, 2);
+    x.fillRect(4, 12, 8, 1); x.fillRect(3, 13, 10, 1); x.fillRect(2, 14, 12, 2);
+  } else {
+    // cheveux courts, épaules carrées et cravate
+    x.fillRect(5, 2, 6, 2); x.fillRect(5, 4, 6, 6); x.fillRect(4, 5, 8, 3); x.fillRect(7, 10, 2, 2); x.fillRect(1, 12, 14, 4);
+    x.clearRect(7, 12, 2, 1); x.clearRect(6, 13, 1, 1); x.clearRect(9, 13, 1, 1);
+  }
+}
+
+/* ---------- les phrases des indices ---------- */
+const NUM = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit"];
+function clueText(c, P, names, royal){
+  const A = `<b>${names[c.a]}</b>`, B = c.b != null ? `<b>${names[c.b]}</b>` : "", m = P[c.a].sex === "M";
+  // « de Annie » devient « d'Annie »
+  const dB = c.b != null ? (/^[AEIOUYÉÈÊÂÎÔ]/i.test(names[c.b]) ? `d'${B}` : `de ${B}`) : "";
+  const g = (h, f) => m ? h : f;
+  switch (c.t){
+    case "parent": return `${A} est ${g("le père", "la mère")} ${dB}.`;
+    case "child": return `${A} est ${g("le fils", "la fille")} ${dB}.`;
+    case "spouse": return royal ? `${A} a épousé ${B}.` : `${A} et ${B} sont mariés.`;
+    case "sibling": { const mb = P[c.b].sex === "M"; return `${A} et ${B} sont ${m && mb ? "frères" : !m && !mb ? "sœurs" : "frère et sœur"}.`; }
+    case "grandparent": return royal ? `${A} est ${g("l'aïeul", "l'aïeule")} ${dB}.` : `${A} est ${g("le grand-père", "la grand-mère")} ${dB}.`;
+    case "grandchild": return `${A} est ${g("le petit-fils", "la petite-fille")} ${dB}.`;
+    case "uncle": return `${A} est ${g("l'oncle", "la tante")} ${dB}.`;
+    case "nephew": return `${A} est ${g("le neveu", "la nièce")} ${dB}.`;
+    case "cousin": { const mb = P[c.b].sex === "M"; return `${A} et ${B} sont ${!m && !mb ? "cousines" : "cousins"}.`; }
+    case "parentInLaw": return `${A} est ${g("le beau-père", "la belle-mère")} ${dB}.`;
+    case "childInLaw": return `${A} est ${g("le gendre", "la belle-fille")} ${dB}.`;
+    case "siblingInLaw": return `${A} est ${g("le beau-frère", "la belle-sœur")} ${dB}.`;
+    case "childless": return royal ? `${A} n'a pas de descendance.` : `${A} n'a pas d'enfant.`;
+    case "nKids": return c.v === 1 ? `${A} a un seul enfant.` : `${A} a ${NUM[c.v]} enfants.`;
+    case "nGrand": return c.v === 1 ? `${A} a un seul petit-enfant.` : `${A} a ${NUM[c.v]} petits-enfants.`;
+    case "onlyChild": return royal ? `${A} est l'unique enfant de ses parents.` : `${A} est ${g("fils unique", "fille unique")}.`;
+    case "noBrother": return `${A} n'a pas de frère.`;
+    case "noSister": return `${A} n'a pas de sœur.`;
+    case "eldest": return royal ? `${A} est ${g("le premier-né", "la première-née")} de sa fratrie.` : `${A} est ${g("l'aîné", "l'aînée")} de sa fratrie.`;
+    case "youngest": return royal ? `${A} est ${g("le dernier-né", "la dernière-née")} de sa fratrie.` : `${A} est ${g("le benjamin", "la benjamine")} de sa fratrie.`;
+    case "dadOnly": return `Le père ${/^[AEIOUYÉÈÊÂÎÔ]/i.test(names[c.a]) ? "d'" + A : "de " + A} n'a ni frère ni sœur.`;
+    case "mumOnly": return `La mère ${/^[AEIOUYÉÈÊÂÎÔ]/i.test(names[c.a]) ? "d'" + A : "de " + A} n'a ni frère ni sœur.`;
+  }
+  return "";
+}
+
+/* ---------- état ---------- */
+let mode = store.get("mode", "C");
+let G = null;              // la partie : {code, mode, level, P, lay, rel, clues, sexKnown, names, looks, order, family}
+let place = [], where = [], sel = -1, struck = new Set(), elapsed = 0, startT = 0, timer = null, solved = false;
+let aid = store.get("aid", false);
+
+const randomSeed = () => Math.floor(Math.random() * 2176782336).toString(36).toUpperCase().padStart(6, "0");
+const parseCode = s => { const m = /^([CR])([1-4])-([0-9A-Z]{1,8})$/.exec((s || "").trim().toUpperCase()); return m ? {mode: m[1], level: +m[2], code: `${m[1]}${m[2]}-${m[3]}`} : null; };
+const todayCode = md => { const d = new Date(); return `${md}2-J${(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()).toString(36).toUpperCase()}`; };
+
+function buildGame(code){
+  const pc = parseCode(code); if (!pc) return null;
+  const gen = Engine.generate(hashStr(pc.code), pc.level); if (!gen) return null;
+  const royal = pc.mode === "R";
+  const rng = mulberry32(hashStr(pc.code + "#noms"));
+  const gens = LEVELS[pc.level].gens;
+  const taken = new Set(), names = [], looks = [];
+  gen.P.forEach((p, i) => {
+    const era = royal ? 0 : p.gen + (gens === 3 ? 1 : 0);
+    const list = (royal ? NAMES.R[0] : NAMES.C[era])[p.sex].filter(n => !taken.has(n));
+    const nm = pick(rng, list); taken.add(nm); names.push(nm);
+    looks.push(makeLook(rng, p, royal ? (p.gen === 0 ? -1 : 1) : era, royal));
+  });
+  const family = royal ? pick(rng, DYNASTIES) : pick(rng, SURNAMES);
+  const order = shuffle(rng, [...gen.P.keys()]);
+  return {...gen, code: pc.code, mode: pc.mode, level: pc.level, royal, names, looks, family, order};
+}
+
+/* ---------- l'arbre à l'écran ---------- */
+let slotEls = [], cardEls = [];
+function renderTree(){
+  const tree = $("tree"); tree.innerHTML = "";
+  const L = G.lay, gens = LEVELS[G.level].gens;
+  const avail = Math.max(260, $("tree").parentElement.clientWidth - 8);
+  const u = Math.max(38, Math.min(76, Math.floor(avail / L.width)));
+  const sw = u, sh = Math.round(u * 1.3), rowH = sh + Math.round(u * .62);
+  tree.style.width = Math.ceil(L.width * u) + "px"; tree.style.height = (gens * rowH - (rowH - sh)) + "px";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg"); tree.appendChild(svg);
+  const line = (x1, y1, x2, y2, cls) => { const l = document.createElementNS(svgNS, "line"); l.setAttribute("x1", x1); l.setAttribute("y1", y1); l.setAttribute("x2", x2); l.setAttribute("y2", y2); if (cls) l.setAttribute("class", cls); svg.appendChild(l); };
+  const X = i => L.pos[i].x * u, Y = i => G.P[i].gen * rowH;
+  G.P.forEach((p, i) => {
+    if (!p.blood) return;
+    const s = p.spouse;
+    if (s >= 0){
+      const [l, r] = X(i) < X(s) ? [i, s] : [s, i];
+      line(X(l) + sw, Y(i) + sh * .42, X(r), Y(i) + sh * .42, "couple");
+      if (p.kids.length){
+        const cx = (X(l) + sw + X(r)) / 2, y0 = Y(i) + sh * .42, yb = Y(i) + sh + (rowH - sh) / 2;
+        line(cx, y0, cx, yb);
+        const xs = p.kids.map(k => X(k) + sw / 2);
+        line(Math.min(cx, ...xs), yb, Math.max(cx, ...xs), yb);
+        for (const xk of xs) line(xk, yb, xk, yb + (rowH - sh) / 2);
+      }
+    }
+  });
+  slotEls = G.P.map((p, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "slot";
+    b.style.left = X(i) + "px"; b.style.top = Y(i) + "px"; b.style.width = sw + "px"; b.style.height = sh + "px";
+    const cv = document.createElement("canvas"); const cs = sw - 10; cv.style.width = cs + "px"; cv.style.height = cs + "px";
+    b.appendChild(cv); const nm = document.createElement("span"); nm.className = "nm"; b.appendChild(nm);
+    b.onclick = () => tapSlot(i);
+    tree.appendChild(b); return b;
+  });
+  paintSlots();
+}
+function paintSlots(){
+  const gens = LEVELS[G.level].gens;
+  G.P.forEach((p, i) => {
+    const b = slotEls[i], cv = b.querySelector("canvas"), nm = b.querySelector(".nm"), q = place[i];
+    b.classList.toggle("filled", q >= 0); b.classList.toggle("empty", q < 0); b.classList.toggle("sel", q >= 0 && q === sel);
+    if (q >= 0){
+      drawPortrait(cv, G.P[q].sex, G.looks[q], G.royal);
+      const name = G.names[q], w = parseFloat(b.style.width);
+      nm.textContent = name; nm.style.fontSize = Math.max(11, Math.min(17, (w + 6) / (name.length * .46))) + "px";
+      b.setAttribute("aria-label", `${name}, case de génération ${p.gen + 1}`);
+    } else {
+      drawSilhouette(cv, G.sexKnown[i] ? p.sex : "?"); nm.textContent = "";
+      b.setAttribute("aria-label", `Case vide, génération ${p.gen + 1}` + (G.sexKnown[i] ? (p.sex === "M" ? ", un homme" : ", une femme") : ""));
+    }
+  });
+}
+function renderTray(){
+  const tray = $("tray"); tray.innerHTML = "";
+  cardEls = [];
+  for (const q of G.order){
+    if (where[q] >= 0) continue;
+    const c = document.createElement("button"); c.type = "button"; c.className = "card" + (q === sel ? " sel" : "");
+    const cv = document.createElement("canvas"); drawPortrait(cv, G.P[q].sex, G.looks[q], G.royal); c.appendChild(cv);
+    c.appendChild(document.createTextNode(G.names[q]));
+    c.setAttribute("aria-label", G.names[q] + (q === sel ? ", choisi" : ""));
+    c.onclick = () => tapCard(q);
+    tray.appendChild(c); cardEls.push(c);
+  }
+  const left = G.P.length - place.filter(x => x >= 0).length;
+  $("trayHint").textContent = left ? `Réserve (${left}) : touche une personne, puis sa case.` : "Tout le monde est placé.";
+}
+function renderClues(){
+  const ol = $("clues"); ol.innerHTML = "";
+  G.clues.forEach((c, k) => {
+    const li = document.createElement("li"); li.innerHTML = clueText(c, G.P, G.names, G.royal);
+    li.classList.toggle("struck", struck.has(k));
+    if (aid){
+      const sa = where[c.a], sb = c.b != null ? where[c.b] : 0;
+      if (sa >= 0 && sb >= 0){
+        const ok = c.b != null ? G.rel.R[c.t][sa][sb] : c.v != null ? G.rel.U[c.t](sa) === c.v : G.rel.U[c.t](sa);
+        li.classList.add(ok ? "good" : "bad");
+      }
+    }
+    li.onclick = () => { struck.has(k) ? struck.delete(k) : struck.add(k); SFX.nav(); renderClues(); save(); };
+    ol.appendChild(li);
+  });
+}
+const setMsg = h => { $("msg").innerHTML = h; };
+
+/* ---------- jouer ---------- */
+function tapCard(q){
+  if (solved) return;
+  sel = sel === q ? -1 : q; sel >= 0 ? SFX.pick() : SFX.nav();
+  setMsg(sel >= 0 ? `Où va <span class="hl">${G.names[q]}</span> ?` : "");
+  paintSlots(); renderTray();
+}
+function fits(q, s){ return !G.sexKnown[s] || G.P[s].sex === G.P[q].sex; }
+function tapSlot(s){
+  if (solved) return;
+  const occ = place[s];
+  if (sel < 0){
+    if (occ < 0){ SFX.no(); setMsg("Choisis d'abord une personne dans la réserve."); return; }
+    sel = occ; SFX.pick(); setMsg(`<span class="hl">${G.names[occ]}</span> : touche une autre case, ou la même pour la renvoyer dans la réserve.`);
+    paintSlots(); renderTray(); return;
+  }
+  const q = sel, from = where[q];
+  if (from === s){ place[s] = -1; where[q] = -1; sel = -1; SFX.back(); setMsg(""); return changed(); }
+  if (!fits(q, s)){ SFX.no(); setMsg(`Cette case attend ${G.P[s].sex === "M" ? "un homme" : "une femme"}.`); return; }
+  if (occ >= 0 && from >= 0 && !fits(occ, from)){ SFX.no(); setMsg(`${G.names[occ]} ne peut pas aller à la place de ${G.names[q]}.`); return; }
+  if (from >= 0) place[from] = -1;
+  if (occ >= 0){ if (from >= 0){ place[from] = occ; where[occ] = from; } else where[occ] = -1; }
+  place[s] = q; where[q] = s; sel = -1; SFX.place(); setMsg("");
+  changed();
+}
+function changed(){
+  paintSlots(); renderTray(); renderClues(); save();
+  if (place.every(x => x >= 0)){
+    if (place.every((q, s) => q === s)) return win();
+    const wrong = place.filter((q, s) => q !== s).length;
+    SFX.no();
+    setMsg(G.level <= 2 ? `L'arbre n'est pas encore juste : <span class="hl">${wrong}</span> personne${wrong > 1 ? "s" : ""} mal placée${wrong > 1 ? "s" : ""}.` : "L'arbre n'est pas encore juste. Relis les indices…");
+  }
+}
+function win(){
+  solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("gTime").textContent = fmt(elapsed);
+  slotEls.forEach((b, i) => { b.classList.add("ok"); b.style.animationDelay = (G.P[i].gen * 120 + i * 30) + "ms"; });
+  const key = G.mode + G.level, stats = store.get("stats", {}), st = stats[key] || {best: 0, n: 0};
+  const record = !st.best || elapsed < st.best;
+  st.n = (st.n || 0) + 1; if (record) st.best = Math.round(elapsed); stats[key] = st; store.set("stats", stats);
+  if (/-J/.test(G.code)){ const d = store.get("daily", {}); if (!d[G.code] || elapsed < d[G.code]) d[G.code] = Math.round(elapsed); store.set("daily", d); }
+  store.set("cur", null);
+  const gens = LEVELS[G.level].gens;
+  $("winTitle").textContent = G.royal ? "LA DYNASTIE EST RÉTABLIE !" : "LIGNÉE RECONSTITUÉE !";
+  $("winStory").innerHTML = G.royal ? `La dynastie des <b>${G.family}</b> : ${gens} générations, ${G.P.length} têtes couronnées.`
+                                    : `La famille <b>${G.family}</b> : ${gens} générations, ${G.P.length} membres.`;
+  $("winStats").textContent = `TEMPS ${fmt(elapsed)}` + (record ? " · NOUVEAU RECORD !" : ` · RECORD ${fmt(st.best)}`) + ` · ${st.n} arbre${st.n > 1 ? "s" : ""} en ${LEVELS[G.level].name.toLowerCase()}`;
+  $("trayBox").hidden = true; $("win").hidden = false; setMsg("");
+  SFX.win();
+}
+
+/* ---------- sauvegarde de la partie en cours ---------- */
+function save(){
+  if (!G || solved) return;
+  store.set("cur", {code: G.code, place, struck: [...struck], elapsed: Math.round(timerElapsed())});
+}
+const timerElapsed = () => solved ? elapsed : performance.now() - startT;
+function tick(){ if (!solved) $("gTime").textContent = fmt(performance.now() - startT); }
+
+function startGame(code, saved){
+  const g = buildGame(code);
+  if (!g){ $("menuMsg").textContent = "Code inconnu : il ressemble à C2-K3F9QX."; SFX.no(); return; }
+  G = g; solved = false; sel = -1;
+  const n = G.P.length;
+  place = new Array(n).fill(-1); where = new Array(n).fill(-1); struck = new Set(); elapsed = 0;
+  if (saved && saved.code === G.code && Array.isArray(saved.place) && saved.place.length === n){
+    saved.place.forEach((q, s) => { if (q >= 0 && q < n && where[q] < 0){ place[s] = q; where[q] = s; } });
+    struck = new Set((saved.struck || []).filter(k => k < G.clues.length)); elapsed = saved.elapsed || 0;
+  }
+  document.body.classList.toggle("royal", G.royal);
+  $("gTitle").textContent = (G.royal ? "ROYAL" : "CLASSIQUE") + " · " + LEVELS[G.level].name + (/-J/.test(G.code) ? " · DU JOUR" : "");
+  $("gCode").textContent = G.code;
+  $("menu").hidden = true; $("game").hidden = false; $("win").hidden = true; $("trayBox").hidden = false;
+  window.scrollTo(0, 0);
+  renderTree(); renderTray(); renderClues();
+  setMsg(G.royal ? "Rends à chaque membre de la dynastie sa place dans l'arbre." : "Replace chaque membre de la famille dans l'arbre.");
+  startT = performance.now() - elapsed; clearInterval(timer); timer = setInterval(tick, 250); tick();
+  save();
+}
+function showMenu(){
+  if (G && !solved){ save(); }
+  clearInterval(timer); G = null;
+  $("game").hidden = true; $("menu").hidden = false; renderMenu(); window.scrollTo(0, 0);
+}
+
+/* ---------- menu ---------- */
+function renderMenu(){
+  document.body.classList.toggle("royal", mode === "R");
+  $("modeC").setAttribute("aria-pressed", mode === "C"); $("modeR").setAttribute("aria-pressed", mode === "R");
+  const stats = store.get("stats", {}), box = $("levels"); box.innerHTML = "";
+  for (const lv of [1, 2, 3, 4]){
+    const L = LEVELS[lv], st = stats[mode + lv];
+    const b = document.createElement("button"); b.type = "button"; b.className = "btn lvl";
+    b.innerHTML = `<b>${L.name}</b><small>${L.gens} générations · ${L.min}-${L.max} pers.</small><small>${st && st.n ? `${st.n} réussi${st.n > 1 ? "s" : ""} · record ${fmt(st.best)}` : "jamais joué"}</small>`;
+    b.onclick = () => { SFX.nav(); startGame(`${mode}${lv}-${randomSeed()}`); };
+    box.appendChild(b);
+  }
+  const cur = store.get("cur", null);
+  $("resumeBtn").hidden = !(cur && parseCode(cur.code));
+  if (cur && parseCode(cur.code)){ const pc = parseCode(cur.code); $("resumeBtn").textContent = `REPRENDRE (${pc.mode === "R" ? "ROYAL" : "CLASSIQUE"} · ${LEVELS[pc.level].name})`; }
+  const d = store.get("daily", {}), dc = todayCode(mode);
+  $("dailyBtn").textContent = d[dc] ? `ARBRE DU JOUR ✓ ${fmt(d[dc])}` : "ARBRE DU JOUR";
+}
+$("modeC").onclick = () => { mode = "C"; store.set("mode", mode); SFX.nav(); renderMenu(); };
+$("modeR").onclick = () => { mode = "R"; store.set("mode", mode); SFX.nav(); renderMenu(); };
+$("dailyBtn").onclick = () => { SFX.nav(); const cur = store.get("cur", null), dc = todayCode(mode); startGame(dc, cur && cur.code === dc ? cur : null); };
+$("resumeBtn").onclick = () => { const cur = store.get("cur", null); if (cur){ SFX.nav(); startGame(cur.code, cur); } };
+$("codeBtn").onclick = () => { const pc = parseCode($("codeIn").value); if (!pc){ $("menuMsg").textContent = "Code inconnu : il ressemble à C2-K3F9QX."; SFX.no(); return; } SFX.nav(); const cur = store.get("cur", null); startGame(pc.code, cur && cur.code === pc.code ? cur : null); };
+$("codeIn").addEventListener("keydown", e => { if (e.key === "Enter") $("codeBtn").click(); });
+$("menuBtn").onclick = () => { SFX.nav(); showMenu(); };
+$("menuBtn2").onclick = () => { SFX.nav(); showMenu(); };
+$("againBtn").onclick = () => { SFX.nav(); startGame(`${G.mode}${G.level}-${randomSeed()}`); };
+$("clearBtn").onclick = () => { if (solved || !place.some(x => x >= 0)) return; place.fill(-1); where.fill(-1); sel = -1; SFX.back(); setMsg("Arbre vidé."); changed(); };
+function syncAid(){ $("aidBtn").setAttribute("aria-pressed", aid); $("aidBtn").setAttribute("aria-label", aid ? "Aide activée : les indices respectés sont cochés, les indices contredits en rouge" : "Aide désactivée"); }
+$("aidBtn").onclick = () => { aid = !aid; store.set("aid", aid); syncAid(); SFX.nav(); if (G) renderClues(); };
+function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = soundOn ? "SON" : "MUET"; }
+$("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); SFX.nav(); };
+window.addEventListener("pagehide", save);
+document.addEventListener("visibilitychange", () => { if (document.hidden) save(); });
+let rT = null; window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => { if (G){ renderTree(); } }, 150); });
+
+/* logo : un petit arbre */
+(() => {
+  const m = ["........gggg........", "......gggGGggg......", "....ggGggggggGgg....", "...gggggGggGgggggg..", "..ggGggggggggggGggg.", "..gggggGggggGgggggg.", "...ggggggggggggggg..", "....gggGgggggGggg...",
+             "......ggggggggg.....", "........bbbb........", ".........bb.........", ".........bb.........", "........bbbb........", "......bb.bb.bb......", ".....b...bb...b.....", "..........b........."];
+  const cv = $("logo"), x = cv.getContext("2d"); cv.width = 20; cv.height = 16; cv.style.width = "120px"; cv.style.height = "96px";
+  const C = {g: "#4fa86a", G: "#2f7a48", b: "#8a5a2a"};
+  m.forEach((r, y) => [...r].forEach((ch, X) => { if (C[ch]){ x.fillStyle = C[ch]; x.fillRect(X, y, 1, 1); } }));
+})();
+
+if (location.hash === "#test") window.__lignee = () => G && {names: G.names.slice(), sex: G.P.map(p => p.sex)};
+syncSound(); syncAid(); renderMenu();
+})();
+</script>
+<script>
+/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    if (!app) return;
+    var a = document.createElement("a");
+    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
+    a.style.cssText = "display:block; width:max-content; margin:0 auto 10px; padding:8px 12px; font:10px 'Press Start 2P',monospace; letter-spacing:1px;" +
+      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
+    document.body.insertBefore(a, document.body.firstChild);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

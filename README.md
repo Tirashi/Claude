@@ -4,6 +4,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 
 - [`queens/index.html`](queens/index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
+- [`lignee/index.html`](lignee/index.html) : **Lignée**, un puzzle de généalogie : reconstituer un arbre grâce aux indices, en famille française ou en dynastie royale.
 - [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu de course sans fin façon dino de Chrome, avec un bouvier bernois sur un parcours d'agility.
 - [`touche-coule/index.html`](touche-coule/index.html) : **Touché Coulé**, une bataille navale contre l'ordinateur (modes Classique et Arsenal).
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
@@ -68,6 +69,18 @@ Projet de fan à usage strictement personnel, sans lien avec Nintendo, Game Frea
 
 ---
 
+## Lignée
+
+Un puzzle de logique sur le thème de la généalogie. Un arbre vide s'affiche (couples reliés, enfants en dessous) avec une réserve de personnages en pixel art ; une liste d'indices (« Louise est la grand-mère de Hugo », « Paul n'a pas de frère », « Le père de Chloé n'a ni frère ni sœur »…) permet de replacer chacun dans sa case.
+
+- Deux modes : **Classique** (familles françaises, prénoms d'époque de génération en génération) et **Royal** (dynasties médiévales, portraits couronnés, indices au vocabulaire royal : aïeul, premier-né, descendance…).
+- Quatre niveaux : **Facile** (3 générations, 6 ou 7 personnes, liens directs), **Moyen** (3 générations, 9 ou 10 personnes, grands-parents, oncles, cousins, aînés), **Difficile** (4 générations, 12 à 14 personnes, belle-famille et comptages) et **Expert** (4 générations, jusqu'à 16 personnes, sans le sexe des cases hors couples).
+- Conventions : dans un couple, l'homme est à gauche ; les frères et sœurs vont du plus âgé (à gauche) au plus jeune (à droite) ; l'arbre est complet.
+- Arbres générés à l'infini : le générateur tire une famille, écrit des indices vrais, puis un solveur ajoute et retire des indices jusqu'à ce qu'il ne reste qu'une seule solution, trouvable sans deviner.
+- Chaque arbre a un code (par exemple `C2-K3F9QX`) pour le rejouer ou le partager, et un **Arbre du jour** (niveau Moyen) est le même pour tout le monde dans chaque mode.
+- Toucher une personne puis une case pour la placer ; toucher un indice pour le barrer ; l'option AIDE coche les indices respectés et signale ceux qui sont contredits.
+- La partie en cours est sauvegardée ; les records de temps et le nombre d'arbres réussis par mode et par niveau font partie du transfert de sauvegardes.
+
 ## Injagility (prototype)
 
 Un petit bouvier bernois enchaîne les obstacles d'agility au pied des Alpes, dans l'esprit du jeu du dino de Chrome.
@@ -102,7 +115,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Queens, Tetris, Snake, Asteroids, Injagility, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Touché Coulé et le Jeu de la Vie n'enregistrent rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Touché Coulé et le Jeu de la Vie n'enregistrent rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Application installable (PWA)
 
