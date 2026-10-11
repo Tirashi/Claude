@@ -80,13 +80,22 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 
 /* Dex list */
 .list{display:grid; grid-template-columns:repeat(auto-fill, minmax(104px,1fr)); gap:10px; margin-top:12px}
-/* le Dex défile dans l'écran au lieu d'allonger toute la page */
-.list{max-height:clamp(300px, calc(100dvh - 170px), 900px); overflow-y:auto; overscroll-behavior:contain; align-content:start;
-  padding:8px 8px 10px 6px; border:3px solid var(--ink); background:var(--screen-2); box-shadow:inset 3px 3px 0 var(--ink-soft);
+/* écran du Dex : la console tient dans la hauteur de l'écran, seule la liste défile */
+.scroller{margin-top:12px; overflow-y:auto; overscroll-behavior:contain; padding:8px 8px 12px 6px;
+  border:3px solid var(--ink); background:var(--screen-2); box-shadow:inset 3px 3px 0 var(--ink-soft);
   scrollbar-width:auto; scrollbar-color:var(--ink) var(--screen)}
-.list::-webkit-scrollbar{width:14px}
-.list::-webkit-scrollbar-track{background:var(--screen); border-left:3px solid var(--ink)}
-.list::-webkit-scrollbar-thumb{background:var(--ink); border:3px solid var(--screen)}
+.scroller .list{margin-top:0; align-content:start}
+.scroller::-webkit-scrollbar{width:14px}
+.scroller::-webkit-scrollbar-track{background:var(--screen); border-left:3px solid var(--ink)}
+.scroller::-webkit-scrollbar-thumb{background:var(--ink); border:3px solid var(--screen)}
+.scroller .help{color:var(--ink); margin-top:16px; padding-top:12px; border-top:3px dashed var(--ink-soft)}
+.scroller .legal{color:var(--ink-soft)}
+body.index{height:100dvh; display:flex; flex-direction:column; padding-block:10px}
+body.index .dex{flex:1 1 0; min-height:560px; width:100%}
+body.index .screen-frame{flex:1 1 0; min-height:0; display:flex; flex-direction:column}
+body.index .screen{flex:1 1 0; min-height:0; display:flex; flex-direction:column}
+body.index #dexView{flex:1 1 0; min-height:0; display:flex; flex-direction:column}
+body.index .scroller{flex:1 1 0; min-height:200px}
 .entry{font:inherit; color:var(--ink); background:var(--screen); border:3px solid var(--ink); padding:8px 6px 6px; cursor:pointer;
   display:flex; flex-direction:column; align-items:center; gap:6px; box-shadow:3px 3px 0 var(--ink-soft)}
 .entry:hover{background:var(--screen-2)}
@@ -106,7 +115,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .grass{margin-top:12px; border:3px solid var(--ink); padding:10px; box-shadow:3px 3px 0 var(--ink-soft);
   background:repeating-linear-gradient(90deg, #4fa86a 0 3px, #2f7a48 3px 6px)}
 .grass h3{margin:0 0 8px; font-family:var(--f-display); font-weight:400; font-size:10px; letter-spacing:1px; color:#fff; text-shadow:2px 2px 0 var(--ink)}
-.grass .sizes{display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:8px}
+.grass .sizes{display:grid; grid-template-columns:repeat(auto-fit, minmax(108px,1fr)); gap:8px}
 .grass .btn{display:flex; flex-direction:column; align-items:center; gap:6px; line-height:1.2}
 .grass .btn small{font-size:8px; letter-spacing:.5px; opacity:.9}
 .grass .btn.resume{background:var(--gold); color:var(--ink)}
@@ -114,7 +123,8 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px
 .entry.hidden{cursor:default; background:repeating-linear-gradient(45deg, var(--screen) 0 4px, var(--screen-2) 4px 8px)}
 .entry.hidden .unk{opacity:.5}
 @media (max-width:540px){
-  .list{grid-template-columns:repeat(auto-fill, minmax(76px,1fr)); gap:8px; padding:6px 6px 8px 5px}
+  .list{grid-template-columns:repeat(auto-fill, minmax(76px,1fr)); gap:8px}
+  .scroller{padding:6px 6px 10px 5px}
   .entry{padding:6px 3px 5px; gap:4px}
   .entry canvas, .entry .unk{width:54px; height:54px}
   .entry .nm{font-size:6px; overflow-wrap:anywhere}
@@ -276,6 +286,7 @@ body.zoom .tools .btn{padding:8px 9px}
           <h3>HAUTES HERBES</h3>
           <div class="sizes" id="sizes"></div>
         </section>
+        <div class="scroller" id="scroller">
         <div class="list" id="list"></div>
         <div class="xfer-open"><button class="btn" id="xferBtn" type="button" aria-expanded="false" aria-controls="xfer">TRANSFÉRER MA SAUVEGARDE</button></div>
         <section class="xfer" id="xfer" hidden aria-label="Transfert de sauvegarde">
@@ -289,6 +300,7 @@ body.zoom .tools .btn{padding:8px 9px}
           <div class="row"><button class="btn" id="pasteBtn" type="button">COLLER</button><button class="btn" id="importBtn" type="button">IMPORTER</button></div>
           <div class="res" id="xferRes" aria-live="polite"></div>
         </section>
+        </div>
       </section>
 
       <!-- Puzzle -->
@@ -3884,8 +3896,14 @@ function renderSizes(){
 
 /* ---------- Dex list ---------- */
 const listScroll = {};   // position de défilement du Dex, par région
+const helpBox = document.querySelector(".help");
+function dexMode(on){
+  document.body.classList.toggle("index", on);
+  if (on) $("scroller").appendChild(helpBox); else document.querySelector("main.dex").appendChild(helpBox);
+}
 function renderList(){
-  const list = $("list"); if (!$("dexView").hidden && list.dataset.region) listScroll[list.dataset.region] = list.scrollTop;
+  const list = $("list"), sc = $("scroller"); if (document.body.classList.contains("index") && list.dataset.region) listScroll[list.dataset.region] = sc.scrollTop;
+  dexMode(true);
   list.innerHTML = "";
   const r = curRegion(), shown = DEX_ORDER.filter(idx => regionOf(PUZZLES[idx]) === r);
   $("tabs").hidden = !johtoVisible();
@@ -3943,7 +3961,7 @@ function renderList(){
   $("dexMsg").innerHTML = msg; $("dexMsg").hidden = !msg;
   renderSizes();
   $("testNote").hidden = !testMode;
-  list.dataset.region = r; list.scrollTop = listScroll[r] || 0;
+  list.dataset.region = r; sc.scrollTop = listScroll[r] || 0;
 }
 function showDex(){
   const ran = P && !solved && isDog(P) && !captured[P.id] && !testMode ? P : null;
@@ -3967,7 +3985,8 @@ function open(idx, saved){
   cells = prog && prog.cells && prog.cells.length === W*H ? prog.cells.slice() : new Array(W*H).fill(0);
   elapsed = prog ? prog.elapsed || 0 : 0; hints = prog ? prog.hints || 0 : 0; syncHint();
   history = []; solved = false; cursor = 0;
-  if (!$("dexView").hidden) listScroll[$("list").dataset.region] = $("list").scrollTop;
+  if (!$("dexView").hidden) listScroll[$("list").dataset.region] = $("scroller").scrollTop;
+  dexMode(false);
   $("dexView").hidden = true; $("playView").hidden = false;
   $("win").hidden = true; $("tools").hidden = false; $("gpad").classList.remove("off");
   if (window.scrollY > $("playView").getBoundingClientRect().top + window.scrollY) window.scrollTo(0, 0);
