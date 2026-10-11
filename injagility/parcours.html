@@ -72,9 +72,18 @@ canvas#field{display:block; width:100%; height:auto; image-rendering:pixelated; 
 .nb.done{background:#4fa850; color:#fff; opacity:.8}
 @keyframes nbp{50%{outline-color:transparent}}
 .msg{font-family:var(--f-display); font-size:9px; line-height:1.9; text-align:center; min-height:3.8em; margin-top:8px}
+@media (max-width:420px){ .msg{font-size:8px} }
 .msg .hl{color:var(--gold)}
 .msg .bad{color:#ff7a6a}
 .row{display:flex; gap:10px; flex-wrap:wrap}
+.tools3{display:grid; grid-template-columns:auto 1fr 1.4fr; gap:8px}
+.tools3 .btn{padding:13px 8px}
+/* pendant un parcours, tout tient dans l'écran : pas de titre, d'onglets ni de bouton MENU de l'appli */
+body.playing{padding-block:6px 10px}
+body.playing header, body.playing > a[aria-label^="Retour"]{display:none !important}
+body.playing .frame{padding:6px}
+body.playing .msg{min-height:2em; margin:6px 0}
+.fieldbox{margin:0 auto}
 .row .btn{flex:1 1 auto}
 .qte{display:grid; grid-template-columns:repeat(4, 1fr); gap:10px}
 .qte .btn{font-family:Arial, sans-serif; font-size:26px; padding:14px 0}
@@ -136,8 +145,8 @@ canvas#field{display:block; width:100%; height:auto; image-rendering:pixelated; 
       <div class="hud"><span>PARCOURS <b id="pNum">1</b></span><span>OBSTACLE <b id="pNext">1</b></span><span>TEMPS <b id="pTime">0.0</b></span></div>
       <div class="fieldbox"><canvas id="field" width="128" height="176" aria-label="Terrain vu du dessus : trace le parcours du chien"></canvas><div id="badges" aria-hidden="true"></div></div>
       <div class="msg" id="msg" aria-live="polite"></div>
-      <div class="row" id="drawTools">
-        <button class="btn wood" type="button" id="backBtn">◀ PARCOURS</button>
+      <div class="tools3" id="drawTools">
+        <button class="btn wood" type="button" id="backBtn" aria-label="Retour aux parcours">◀</button>
         <button class="btn alt" type="button" id="undoBtn">EFFACER</button>
         <button class="btn" type="button" id="goBtn">PARTIR !</button>
       </div>
@@ -327,16 +336,18 @@ const nextNum = () => doneCount() + 1;
 function tryAdd(c){
   const last = path[path.length - 1];
   if (c === last) return true;
-  // revenir sur ses pas : on efface jusqu'à cette case (un obstacle long s'efface en entier)
+  // revenir d'un pas : seule l'avant-dernière case recule (un obstacle long recule en entier) ;
+  // repasser ailleurs sur son tracé, ou suivre du doigt un tunnel déjà tracé, ne change rien
   const k = path.indexOf(c);
   if (k >= 0){
-    let cut = k + 1;
-    const o = objAt(c);
-    if (o && o.cells.length > 1){
-      const pos = path.map((x, i) => objAt(x) === o ? i : -1).filter(i => i >= 0);
-      cut = k === Math.max(...pos) ? k + 1 : Math.min(...pos);
+    const lo = objAt(last);
+    if (lo && lo.cells.length > 1){
+      const start = path.length - lo.cells.length;
+      if (k === start - 1){ path = path.slice(0, start); SFX.step(); }
+      return false;
     }
-    path = path.slice(0, cut); SFX.step(); return false;
+    if (k === path.length - 2){ path.pop(); SFX.step(); }
+    return false;
   }
   if (!path.length){
     if (cy(c) !== H - 1){ setMsg(`Commence sur la ligne de <span class="hl">DÉPART</span>, en bas.`); return false; }
@@ -382,8 +393,11 @@ const cellFromEvent = e => { const r = cv.getBoundingClientRect(); const x = Mat
   return x >= 0 && x < W && y >= 0 && y < H ? idx(x, y) : -1; };
 cv.addEventListener("pointerdown", e => {
   if (phase !== "draw") return; e.preventDefault(); const c = cellFromEvent(e); if (c < 0) return;
+  const last = path[path.length - 1];
+  // on ne trace qu'en partant du départ (tracé vide) ou du bout du tracé ; un appui ailleurs ne touche à rien
+  const ok = !path.length || c === last || (adjacent(last, c) && !path.includes(c));
+  if (!ok){ setMsg(`Pour continuer, pars du <span class="hl">bout du tracé</span> (la case qui clignote). EFFACER pour tout recommencer.`); return; }
   drawing = true; try{ cv.setPointerCapture(e.pointerId); }catch(_){}
-  if (path.length && !path.includes(c) && !adjacent(path[path.length - 1], c) && cy(c) === H - 1) path = [];   // recommencer ailleurs sur le départ
   tryAdd(c);
 });
 cv.addEventListener("pointermove", e => { if (!drawing || phase !== "draw") return; const c = cellFromEvent(e); if (c >= 0) dragTo(c); });
@@ -470,6 +484,7 @@ function drawPath(){
     ctx.strokeStyle = run ? "rgba(255,210,63,.35)" : "rgba(255,210,63,.85)"; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round";
     ctx.beginPath(); path.forEach((c, i) => { const X = cx(c) * CS + 8, Y = cy(c) * CS + 8; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke();
     const s = path[0]; R(cx(s) * CS + 5, cy(s) * CS + 5, 6, 6, COL.ink); R(cx(s) * CS + 6, cy(s) * CS + 6, 4, 4, COL.yellow);
+    if (!run && Math.floor(performance.now() / 400) % 2){ const e = path[path.length - 1]; ctx.strokeStyle = COL.white; ctx.lineWidth = 1; ctx.strokeRect(cx(e) * CS + 1.5, cy(e) * CS + 1.5, CS - 3, CS - 3); }
   }
 }
 let dogImg = null;
@@ -582,7 +597,19 @@ function finish(){
 }
 
 /* ---------- écrans ---------- */
-function show(id){ for (const s of ["map", "play", "kennel"]) $(s).hidden = s !== id; window.scrollTo(0, 0); }
+function show(id){ for (const s of ["map", "play", "kennel"]) $(s).hidden = s !== id; document.body.classList.toggle("playing", id === "play"); window.scrollTo(0, 0); if (id === "play") fitField(); }
+// la hauteur du terrain s'adapte à l'écran : le chrono, le message et les boutons (ou les flèches) restent visibles
+function fitField(){
+  const box = document.querySelector(".fieldbox"); if ($("play").hidden) return;
+  box.style.width = ""; cv.style.width = "100%";
+  const full = box.parentElement.clientWidth, canvasH = cv.getBoundingClientRect().height;
+  // place prise par le reste, en comptant la plus haute des deux barres du bas (outils ou flèches)
+  const rest = $("play").getBoundingClientRect().height - canvasH + Math.max(0, 70 - $("drawTools").getBoundingClientRect().height);
+  const avail = window.innerHeight - rest - 16;
+  const w = Math.max(200, Math.min(full, avail * W / H));
+  box.style.width = w + "px";
+}
+window.addEventListener("resize", () => { if (phase !== "map") fitField(); });
 function renderMap(){
   $("wallet").textContent = save.wallet; const D = dogById(save.dog);
   $("curDog").innerHTML = `Chien : <b>${D.name.toLowerCase()}</b>.`;
