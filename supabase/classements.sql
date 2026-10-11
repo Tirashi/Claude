@@ -14,6 +14,7 @@ create table if not exists ludo_private.settings (
   id          int  primary key default 1 check (id = 1),
   family_code text not null
 );
+alter table ludo_private.settings enable row level security;   -- double verrou : aucune règle, donc aucun accès depuis le site
 insert into ludo_private.settings (id, family_code)
 values (1, 'MON-CODE')
 on conflict (id) do update set family_code = excluded.family_code;
