@@ -98,7 +98,7 @@ Deux modes, reliés par des onglets en haut de page.
 - Vitesse qui augmente avec la distance, points par obstacle, record sauvegardé dans le navigateur.
 - Commandes : Espace ou ↑ pour sauter, ↓ pour se baisser ; sur mobile, toucher l'écran, glisser vers le bas ou utiliser les boutons SAUTER et TUNNEL.
 
-**Mode parcours** ([`injagility/parcours.html`](injagility/parcours.html)) : un terrain vu du dessus, en grille. On trace au doigt le chemin du chien de la ligne de départ à l'arrivée, en passant par les obstacles numérotés dans l'ordre, puis le chien le parcourt.
+**Mode parcours** ([`injagility/parcours.html`](injagility/parcours.html)) : un terrain vu du dessus, en grille. Il est dessiné en 32 bits, comme le mode Infini : cases de 32 pixels, pelouse tondue, buissons et flaques en volume, obstacles avec leurs ombres, et un chien vu du dessus pour chaque race, qui trotte, saute et accélère après un os. On trace au doigt le chemin du chien de la ligne de départ à l'arrivée, en passant par les obstacles numérotés dans l'ordre, puis le chien le parcourt.
 
 - Haie et pneu se prennent de face (on entre et on ressort tout droit, barre en travers) ; le tunnel, en U ou en S, se suit d'un bout à l'autre ; slalom et passerelle demandent pendant la course de taper une suite de flèches (◀ ▶ pour le slalom) avant la fin du chrono.
 - Os en bonus (des points, et un coup de boost de 4 cases), flaques en malus (ralentissent et coûtent des points), buissons infranchissables.

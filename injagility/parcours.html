@@ -72,6 +72,7 @@ canvas#field{display:block; width:100%; height:auto; image-rendering:pixelated; 
   background:var(--gold); border:2px solid var(--ink); border-radius:5px; min-width:1.9em; padding:.3em .25em .25em; text-align:center; box-shadow:2px 2px 0 rgba(0,0,0,.5)}
 .nb.next{background:#fff; outline:2px solid var(--gold); animation:nbp 1s steps(2) infinite}
 .nb.done{background:#4fa850; color:#fff; opacity:.8}
+.nb{background-image:linear-gradient(to bottom, rgba(255,255,255,.45), rgba(255,255,255,.1) 48%, rgba(0,0,0,0) 52%, rgba(0,0,0,.15))}
 @keyframes nbp{50%{outline-color:transparent}}
 .msg{font-family:var(--f-display); font-size:9px; line-height:1.9; text-align:center; min-height:3.8em; margin-top:8px}
 @media (max-width:420px){ .msg{font-size:8px} }
@@ -219,15 +220,6 @@ const DOGS = [
 ];
 const dogById = id => DOGS.find(d => d.id === id) || DOGS[0];
 
-// le chien vu du dessus, tête vers le haut
-const TOP = ["..oooo..", "oobbbboo", "obbwwbbo", "obbwwbbo", ".obbbbo.", "..obbo..", ".obbbbo.", "obtbbtbo", "obbbbbbo", "obbbbbbo", ".obbbbo.", "..obbo..", "...oo..."];
-function sprite(map, pal){
-  const c = document.createElement("canvas"); c.width = map[0].length; c.height = map.length;
-  const x = c.getContext("2d");
-  map.forEach((row, r) => [...row].forEach((ch, col) => { if (pal[ch]){ x.fillStyle = pal[ch]; x.fillRect(col, r, 1, 1); } }));
-  return c;
-}
-const topSprite = d => sprite(TOP, {o: "#1f1b26", b: d.pal.b, w: d.pal.w, t: d.pal.t});
 
 /* ---------- sauvegarde ---------- */
 const SAVE_KEY = "parcours";
@@ -235,7 +227,7 @@ let save = Object.assign({unlocked: 1, best: {}, wallet: 0, owned: ["bernois"], 
 const persist = () => store.set(SAVE_KEY, save);
 
 /* ---------- génération d'un parcours ---------- */
-const W = 8, H = 11, CS = 16;
+const W = 8, H = 11, CS = 32;   // cases de 32 px : terrain de 256 × 352
 function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const idx = (x, y) => y * W + x, cx = c => c % W, cy = c => Math.floor(c / W);
 const DIRS = {U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0]};
@@ -324,7 +316,7 @@ function generate(n){
 
 /* ---------- état d'une partie ---------- */
 let G = null, path = [], phase = "map", drawing = false, run = null;
-const cv = $("field"), ctx = cv.getContext("2d"); cv.width = W * CS; cv.height = H * CS; ctx.imageSmoothingEnabled = false;
+const cv = $("field"); let ctx = cv.getContext("2d"); cv.width = W * CS; cv.height = H * CS; ctx.imageSmoothingEnabled = false;
 const setMsg = h => { $("msg").innerHTML = h; };
 const objAt = c => G.cell[c];
 const doneCount = () => { const seen = new Set(); for (const c of path){ const o = objAt(c); if (o) seen.add(o.n); } return seen.size; };
@@ -402,62 +394,147 @@ cv.addEventListener("pointermove", e => { if (!drawing || phase !== "draw") retu
 const stopDraw = () => { drawing = false; };
 cv.addEventListener("pointerup", stopDraw); cv.addEventListener("pointercancel", stopDraw);
 
-/* ---------- dessin du terrain (pixel art vu du dessus) ---------- */
-const COL = {g1: "#4f9a3a", g2: "#5aa845", ink: "#1f1b26", white: "#f4efe6", red: "#d6312a", yellow: "#ffd23f", blue: "#2f6fb0", blue2: "#4a8fd4", wood: "#9a6233", wood2: "#c98a4f"};
+/* ---------- dessin du terrain (32 bits, vu du dessus) ---------- */
+// cases de 32 px ; lumière en haut à gauche, ombres portées vers le bas à droite
+const C32 = window.Chiens32, OUT = C32.OUT;
+const COL = {ink: OUT, white: "#f4efe6", red: "#d6312a", yellow: "#ffd23f", blue: "#2f6fb0", blue2: "#4a8fd4"};
 const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
-function badge(c, n){
-  const x = cx(c) * CS, y = cy(c) * CS;
-  R(x + 8, y - 1, 9, 9, COL.ink); R(x + 9, y, 7, 7, COL.yellow);
-  ctx.fillStyle = COL.ink; ctx.font = "600 9px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String(n), x + 12.5, y + 3.8);
+const SHADOW = "rgba(20,40,20,.32)";
+const RAMPS = {
+  red: ["#ff8a76", "#e04a3c", "#a8302a", "#6e1d1d"], white: ["#ffffff", "#f1ece2", "#d3cbbd", "#ab9f8e"], yellow: ["#fff2a8", "#ffd23f", "#d09a1c", "#8f6410"],
+  blue: ["#a8d0f4", "#4a8fd4", "#2f6fb0", "#1a3f6a"], wood: ["#f0c890", "#d39a5c", "#a46a32", "#6e4420"], leaf: ["#9ed07c", "#6aab57", "#4a8a47", "#2f5f34"],
+  water: ["#d6ecfb", "#7fbbeb", "#3f86c8", "#225a94"], tyre: ["#5a5468", "#3a3548", "#262233", "#17131e"],
+};
+// une forme ombrée en volume (même moteur que les chiens), posée sur le terrain
+function shaded(x0, y0, w, h, shapes){
+  const C = C32.Canvas(w, h);
+  for (const [shape, ramp, opt] of shapes){ C32.RAMP._p = ramp; C.draw(shape, Object.assign({mat: "_p", id: 1, fur: false}, opt || {})); }
+  ctx.drawImage(C.toCanvas(), x0, y0);
 }
-function drawField(){
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) R(x * CS, y * CS, CS, CS, (x + y) % 2 ? COL.g1 : COL.g2);
-  // départ (bas) et arrivée (haut, damier)
-  for (let x = 0; x < W * CS; x += 4){ R(x, (H - 1) * CS, 2, CS, "rgba(255,255,255,.18)"); }
-  R(0, (H - 1) * CS, W * CS, 1, COL.white);
-  for (let x = 0; x < W * CS; x += 4) for (let y = 0; y < CS; y += 4) R(x, y, 4, 4, ((x + y) / 4) % 2 ? COL.ink : COL.white);
-  ctx.globalAlpha = .55; R(0, 0, W * CS, CS, COL.g1); ctx.globalAlpha = 1;
-  R(0, CS - 1, W * CS, 1, COL.white);
-  ctx.fillStyle = COL.white; ctx.font = "600 11px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText("ARRIVÉE", W * CS / 2, CS / 2 + .5); ctx.fillText("DÉPART", W * CS / 2, (H - .5) * CS + .5);
-  for (const c of G.bushes){ const x = cx(c) * CS, y = cy(c) * CS; R(x + 2, y + 3, 12, 11, "#1f4f24"); R(x + 3, y + 2, 10, 12, "#2f7a38"); R(x + 4, y + 4, 4, 3, "#4fa850"); R(x + 9, y + 7, 3, 3, "#4fa850"); }
-  for (const c of G.puddles){ const x = cx(c) * CS, y = cy(c) * CS; R(x + 2, y + 5, 12, 7, "#1f4f80"); R(x + 3, y + 6, 10, 5, COL.blue2); R(x + 4, y + 7, 3, 1, "#a8d4f8"); }
-  for (const c of G.bones){ if (run && run.got.has(c)) continue; const x = cx(c) * CS, y = cy(c) * CS;
-    R(x + 4, y + 7, 8, 2, COL.white); R(x + 3, y + 6, 2, 2, COL.white); R(x + 3, y + 8, 2, 2, COL.white); R(x + 11, y + 6, 2, 2, COL.white); R(x + 11, y + 8, 2, 2, COL.white); }
+// pelouse tondue en bandes, avec un léger damier pour bien voir les cases
+function grass(g){
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    const base = y % 2 ? ["#5cae4a", "#56a645"] : ["#64b752", "#5daf4b"];
+    g.fillStyle = base[x % 2]; g.fillRect(x * CS, y * CS, CS, CS);
+  }
+  // brins d'herbe
+  const rng = mulberry32(G.n * 977 + 13);
+  for (let i = 0; i < W * H * 5; i++){ const x = Math.floor(rng() * W * CS), y = Math.floor(rng() * H * CS);
+    g.fillStyle = rng() < .5 ? "#479a3b" : "#7fcc66"; g.fillRect(x, y, 1, 2); }
+}
+let fieldCache = null, fieldFor = null;
+function buildField(){
+  const off = document.createElement("canvas"); off.width = W * CS; off.height = H * CS;
+  const g = off.getContext("2d"); g.imageSmoothingEnabled = false;
+  const realCtx = ctx; ctx = g;   // les fonctions de dessin écrivent dans le cache
+  grass(g);
+  // ligne de départ : bande plus claire et trait de craie
+  R(0, (H - 1) * CS, W * CS, CS, "rgba(255,255,255,.12)");
+  R(0, (H - 1) * CS, W * CS, 3, COL.white); R(0, (H - 1) * CS + 3, W * CS, 1, "rgba(0,0,0,.18)");
+  // arrivée : damier en relief
+  for (let x = 0; x < W * CS; x += 8) for (let y = 0; y < CS; y += 8){
+    const dark = ((x + y) / 8) % 2; R(x, y, 8, 8, dark ? "#2a2533" : "#f4efe6");
+    R(x, y, 8, 1, dark ? "#4a4459" : "#ffffff"); R(x, y + 7, 8, 1, dark ? "#17131e" : "#c9c0b0");
+  }
+  R(0, CS - 3, W * CS, 3, OUT);
+  // textes
+  for (const [txt, y] of [["ARRIVÉE", CS / 2], ["DÉPART", (H - .5) * CS + 1]]){
+    g.font = "600 20px 'Pixelify Sans', monospace"; g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
+    g.lineWidth = 5; g.strokeStyle = OUT; g.strokeText(txt, W * CS / 2, y); g.fillStyle = y < CS ? "#ffd23f" : COL.white; g.fillText(txt, W * CS / 2, y);
+  }
+  for (const c of G.puddles) puddle(cx(c) * CS, cy(c) * CS, c);
+  for (const c of G.bushes) bush(cx(c) * CS, cy(c) * CS, c);
   for (const o of G.objs) drawObj(o);
+  ctx = realCtx; fieldCache = off; fieldFor = G;
+}
+function bush(x, y, c){
+  const r = mulberry32(c * 31 + 7);
+  ctx.fillStyle = SHADOW; ctx.beginPath(); ctx.ellipse(x + 18, y + 22, 13, 8, 0, 0, 7); ctx.fill();
+  shaded(x, y, CS, CS, [[C32.ell(11, 14, 8, 7.5), RAMPS.leaf], [C32.ell(21, 13, 8.5, 8), RAMPS.leaf], [C32.ell(16, 20, 9, 7), RAMPS.leaf], [C32.ell(15, 9, 7, 6), RAMPS.leaf]]);
+  for (let k = 0; k < 3; k++){ const fx = x + 8 + Math.floor(r() * 16), fy = y + 7 + Math.floor(r() * 14); R(fx, fy, 2, 2, k % 2 ? "#ffd23f" : "#ff8fb0"); R(fx, fy, 1, 1, "#ffffff"); }
+}
+function puddle(x, y){
+  shaded(x, y, CS, CS, [[C32.ell(16, 18, 13, 8), RAMPS.water, {flat: true}]]);
+  R(x + 8, y + 15, 6, 1, "#ffffff"); R(x + 18, y + 20, 4, 1, "#d6ecfb");
+}
+// petits sprites mis en cache (os, plot de départ)
+function sprite32(w, h, shapes){ const C = C32.Canvas(w, h); for (const [shape, ramp, opt] of shapes){ C32.RAMP._p = ramp; C.draw(shape, Object.assign({mat: "_p", id: 1, fur: false}, opt || {})); } return C.toCanvas(); }
+let boneImg = null, startImg = null;
+function bone(x, y, t){
+  boneImg = boneImg || sprite32(CS, CS, [[C32.cap(10, 16, 22, 16, 2.2), RAMPS.white], [C32.ell(9, 13.5, 2.8, 2.8), RAMPS.white], [C32.ell(9, 18.5, 2.8, 2.8), RAMPS.white],
+    [C32.ell(23, 13.5, 2.8, 2.8), RAMPS.white], [C32.ell(23, 18.5, 2.8, 2.8), RAMPS.white]]);
+  const b = Math.round(Math.sin(t * 4 + x) * 1.5);
+  ctx.fillStyle = SHADOW; ctx.beginPath(); ctx.ellipse(x + 17, y + 22, 9, 3, 0, 0, 7); ctx.fill();
+  ctx.drawImage(boneImg, x, y - 2 + b);
+}
+// montant vu du dessus : un plot rond
+function stand(px, py, ramp){ ctx.fillStyle = SHADOW; ctx.fillRect(px - 2, py, 7, 5); shaded(px - 5, py - 5, 10, 10, [[C32.ell(5, 5, 3.4, 3.4), ramp]]); }
+// barre rayée, en travers de la case
+function barTop(x0, y0, x1, y1, r1, r2){
+  const n = Math.round(Math.hypot(x1 - x0, y1 - y0) / 2);
+  const W2 = Math.max(x1 - x0, 4) + 8, H2 = Math.max(y1 - y0, 4) + 8, ox = Math.min(x0, x1) - 4, oy = Math.min(y0, y1) - 4;
+  ctx.fillStyle = SHADOW; ctx.fillRect(ox + 4 + 3, oy + 4 + 4, Math.max(x1 - x0, 3), Math.max(y1 - y0, 3));
+  const shapes = [];
+  for (let k = 0; k < n; k++){ const f0 = k / n, f1 = (k + 1) / n;
+    shapes.push([C32.cap(x0 - ox + (x1 - x0) * f0, y0 - oy + (y1 - y0) * f0, x0 - ox + (x1 - x0) * f1, y0 - oy + (y1 - y0) * f1, 1.8), Math.floor(k / 3) % 2 ? r2 : r1, {flat: true}]); }
+  shaded(ox, oy, W2, H2, shapes);
 }
 function drawObj(o){
-  const c0 = o.cells[0], x = cx(c0) * CS, y = cy(c0) * CS;
-  if (o.type === "haie" || o.type === "pneu"){
-    const h = o.orient === "h";
-    if (o.type === "haie"){
-      if (h){ R(x + 1, y + 6, 14, 4, COL.ink); for (let i = 0; i < 12; i++) R(x + 2 + i, y + 7, 1, 2, Math.floor(i / 3) % 2 ? COL.yellow : COL.red); R(x, y + 5, 3, 6, COL.white); R(x + 13, y + 5, 3, 6, COL.white); }
-      else { R(x + 6, y + 1, 4, 14, COL.ink); for (let i = 0; i < 12; i++) R(x + 7, y + 2 + i, 2, 1, Math.floor(i / 3) % 2 ? COL.yellow : COL.red); R(x + 5, y, 6, 3, COL.white); R(x + 5, y + 13, 6, 3, COL.white); }
-    } else {
-      if (h){ R(x, y + 6, 16, 4, COL.ink); R(x + 1, y + 7, 14, 2, COL.yellow); R(x + 4, y + 5, 8, 6, COL.ink); R(x + 5, y + 6, 6, 4, "#3a3540"); R(x + 6, y + 7, 4, 2, COL.red); }
-      else { R(x + 6, y, 4, 16, COL.ink); R(x + 7, y + 1, 2, 14, COL.yellow); R(x + 5, y + 4, 6, 8, COL.ink); R(x + 6, y + 5, 4, 6, "#3a3540"); R(x + 7, y + 6, 2, 4, COL.red); }
-    }
+  const c0 = o.cells[0], x = cx(c0) * CS, y = cy(c0) * CS, h = o.orient === "h";
+  if (o.type === "haie"){
+    if (h){ barTop(x + 4, y + 16, x + 28, y + 16, RAMPS.red, RAMPS.white); stand(x + 4, y + 16, RAMPS.white); stand(x + 28, y + 16, RAMPS.white); }
+    else { barTop(x + 16, y + 4, x + 16, y + 28, RAMPS.red, RAMPS.white); stand(x + 16, y + 4, RAMPS.white); stand(x + 16, y + 28, RAMPS.white); }
+  } else if (o.type === "pneu"){
+    // portique jaune et pneu vu de dessus (un anneau aplati)
+    if (h){ barTop(x + 2, y + 16, x + 30, y + 16, RAMPS.yellow, RAMPS.yellow); ctx.fillStyle = SHADOW; ctx.fillRect(x + 9, y + 21, 16, 6);
+      shaded(x, y, CS, CS, [[C32.ell(16, 16, 9, 5), RAMPS.red], [C32.ell(16, 16, 5, 2), RAMPS.tyre, {flat: true}]]); stand(x + 2, y + 16, RAMPS.yellow); stand(x + 30, y + 16, RAMPS.yellow); }
+    else { barTop(x + 16, y + 2, x + 16, y + 30, RAMPS.yellow, RAMPS.yellow); ctx.fillStyle = SHADOW; ctx.fillRect(x + 20, y + 9, 6, 16);
+      shaded(x, y, CS, CS, [[C32.ell(16, 16, 5, 9), RAMPS.red], [C32.ell(16, 16, 2, 5), RAMPS.tyre, {flat: true}]]); stand(x + 16, y + 2, RAMPS.yellow); stand(x + 16, y + 30, RAMPS.yellow); }
   } else if (o.type === "tunnel"){
-    const seg = (a, b, pad, col) => { const x0 = Math.min(cx(a), cx(b)) * CS + 8, x1 = Math.max(cx(a), cx(b)) * CS + 8, y0 = Math.min(cy(a), cy(b)) * CS + 8, y1 = Math.max(cy(a), cy(b)) * CS + 8;
-      R(x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad, col); };
-    for (let k = 1; k < o.cells.length; k++) seg(o.cells[k - 1], o.cells[k], 6, COL.ink);
-    for (let k = 1; k < o.cells.length; k++) seg(o.cells[k - 1], o.cells[k], 5, COL.blue);
-    for (let k = 0; k < o.cells.length; k++){ const X = cx(o.cells[k]) * CS, Y = cy(o.cells[k]) * CS; R(X + 4, Y + 4, 8, 8, k % 2 ? COL.blue2 : COL.blue); }
-    for (const c of [o.cells[0], o.cells[o.cells.length - 1]]){ const X = cx(c) * CS, Y = cy(c) * CS; R(X + 5, Y + 5, 6, 6, "#0b0a10"); }
+    // un tube de toile bleue, avec ses cerceaux, qui suit les cases
+    const pts = o.cells.map(c => [cx(c) * CS + 16, cy(c) * CS + 16]);
+    const minX = Math.min(...pts.map(p => p[0])) - 16, minY = Math.min(...pts.map(p => p[1])) - 16;
+    const w = Math.max(...pts.map(p => p[0])) - minX + 17, hh = Math.max(...pts.map(p => p[1])) - minY + 17;
+    ctx.fillStyle = SHADOW; for (let k = 1; k < pts.length; k++){ const [a, b] = [pts[k - 1], pts[k]]; ctx.fillRect(Math.min(a[0], b[0]) - 9, Math.min(a[1], b[1]) - 6, Math.abs(a[0] - b[0]) + 22, Math.abs(a[1] - b[1]) + 20); }
+    const shapes = [];
+    for (let k = 1; k < pts.length; k++) shapes.push([C32.cap(pts[k - 1][0] - minX, pts[k - 1][1] - minY, pts[k][0] - minX, pts[k][1] - minY, 11), RAMPS.blue, {flat: true}]);
+    shaded(minX, minY, w, hh, shapes);
+    // cerceaux : une bande claire toutes les demi-cases
+    for (let k = 1; k < pts.length; k++){ const [a, b] = [pts[k - 1], pts[k]], vert = a[0] === b[0];
+      for (const f of [.25, .75]){ const px = a[0] + (b[0] - a[0]) * f, py = a[1] + (b[1] - a[1]) * f;
+        if (vert) { R(px - 10, py, 20, 2, "#a8d0f4"); R(px - 10, py + 2, 20, 1, "#1a3f6a"); } else { R(px, py - 10, 2, 20, "#a8d0f4"); R(px + 2, py - 10, 1, 20, "#1a3f6a"); } } }
+    // entrées sombres avec leur cerceau blanc
+    for (const [k, k2] of [[0, 1], [pts.length - 1, pts.length - 2]]){ const [a, b] = [pts[k], pts[k2]], dx = Math.sign(a[0] - b[0]), dy = Math.sign(a[1] - b[1]);
+      const ex = a[0] + dx * 9, ey = a[1] + dy * 9;
+      if (dx){ R(ex - 2, ey - 11, 5, 22, OUT); R(ex - 1, ey - 10, 3, 20, "#0b0a10"); R(ex + (dx > 0 ? -3 : 3), ey - 11, 2, 22, COL.white); }
+      else { R(ex - 11, ey - 2, 22, 5, OUT); R(ex - 10, ey - 1, 20, 3, "#0b0a10"); R(ex - 11, ey + (dy > 0 ? -3 : 3), 22, 2, COL.white); } }
   } else if (o.type === "slalom"){
     const a = o.cells[0], b = o.cells[2], dx = Math.sign(cx(b) - cx(a)), dy = Math.sign(cy(b) - cy(a));
-    const sx = cx(a) * CS + 8 - dx * 6, sy = cy(a) * CS + 8 - dy * 6, ex = cx(b) * CS + 8 + dx * 6, ey = cy(b) * CS + 8 + dy * 6;
+    const sx = cx(a) * CS + 16 - dx * 12, sy = cy(a) * CS + 16 - dy * 12, ex = cx(b) * CS + 16 + dx * 12, ey = cy(b) * CS + 16 + dy * 12;
     for (let k = 0; k < 6; k++){
-      const f = (k + .5) / 6, off = k % 2 ? 3 : -3;
+      const f = (k + .5) / 6, off = k % 2 ? 6 : -6;
       const px = Math.round(sx + (ex - sx) * f + (dy ? off : 0)), py = Math.round(sy + (ey - sy) * f + (dx ? off : 0));
-      R(px - 2, py - 2, 4, 4, COL.ink); R(px - 1, py - 1, 2, 2, k % 2 ? COL.red : COL.white);
+      ctx.fillStyle = SHADOW; ctx.fillRect(px - 1, py + 1, 8, 4);
+      shaded(px - 5, py - 5, 10, 10, [[C32.ell(5, 5, 3.2, 3.2), k % 2 ? RAMPS.red : RAMPS.white]]);
     }
   } else if (o.type === "passerelle"){
-    const a = o.cells[0], b = o.cells[2], X0 = Math.min(cx(a), cx(b)) * CS, Y0 = Math.min(cy(a), cy(b)) * CS;
-    const horiz = cy(a) === cy(b);
-    if (horiz){ R(X0, Y0 + 5, 3 * CS, 6, COL.ink); R(X0 + 1, Y0 + 6, 3 * CS - 2, 4, COL.wood2); R(X0 + 1, Y0 + 6, 8, 4, COL.yellow); R(X0 + 3 * CS - 9, Y0 + 6, 8, 4, COL.yellow); for (let i = 12; i < 3 * CS - 10; i += 6) R(X0 + i, Y0 + 6, 1, 4, COL.wood); }
-    else { R(X0 + 5, Y0, 6, 3 * CS, COL.ink); R(X0 + 6, Y0 + 1, 4, 3 * CS - 2, COL.wood2); R(X0 + 6, Y0 + 1, 4, 8, COL.yellow); R(X0 + 6, Y0 + 3 * CS - 9, 4, 8, COL.yellow); for (let i = 12; i < 3 * CS - 10; i += 6) R(X0 + 6, Y0 + i, 4, 1, COL.wood); }
+    const a = o.cells[0], b = o.cells[2], X0 = Math.min(cx(a), cx(b)) * CS, Y0 = Math.min(cy(a), cy(b)) * CS, horiz = cy(a) === cy(b);
+    const L = 3 * CS;
+    if (horiz){ ctx.fillStyle = SHADOW; ctx.fillRect(X0 + 5, Y0 + 15, L - 4, 13);
+      R(X0 + 1, Y0 + 9, L - 2, 14, OUT); R(X0 + 2, Y0 + 10, L - 4, 12, RAMPS.wood[1]); R(X0 + 2, Y0 + 10, L - 4, 2, RAMPS.wood[0]); R(X0 + 2, Y0 + 20, L - 4, 2, RAMPS.wood[2]);
+      for (let i = 20; i < L - 18; i += 8) R(X0 + i, Y0 + 10, 1, 12, RAMPS.wood[3]);
+      for (const zx of [X0 + 2, X0 + L - 18]){ R(zx, Y0 + 10, 16, 12, RAMPS.yellow[1]); R(zx, Y0 + 10, 16, 2, RAMPS.yellow[0]); R(zx, Y0 + 20, 16, 2, RAMPS.yellow[2]); } }
+    else { ctx.fillStyle = SHADOW; ctx.fillRect(X0 + 15, Y0 + 5, 13, L - 4);
+      R(X0 + 9, Y0 + 1, 14, L - 2, OUT); R(X0 + 10, Y0 + 2, 12, L - 4, RAMPS.wood[1]); R(X0 + 10, Y0 + 2, 2, L - 4, RAMPS.wood[0]); R(X0 + 20, Y0 + 2, 2, L - 4, RAMPS.wood[2]);
+      for (let i = 20; i < L - 18; i += 8) R(X0 + 10, Y0 + i, 12, 1, RAMPS.wood[3]);
+      for (const zy of [Y0 + 2, Y0 + L - 18]){ R(X0 + 10, zy, 12, 16, RAMPS.yellow[1]); R(X0 + 10, zy, 2, 16, RAMPS.yellow[0]); R(X0 + 20, zy, 2, 16, RAMPS.yellow[2]); } }
   }
+}
+function drawField(){
+  if (fieldFor !== G) buildField();
+  ctx.drawImage(fieldCache, 0, 0);
+  const t = performance.now() / 1000;
+  for (const c of G.bones){ if (run && run.got.has(c)) continue; bone(cx(c) * CS, cy(c) * CS, t); }
 }
 // pastilles numérotées, placées en haut à droite de la première case de chaque obstacle
 function buildBadges(){
@@ -477,35 +554,48 @@ function updateBadges(){
     if (o.badge && o.badge.className !== cls) o.badge.className = cls;
   }
 }
+// le tracé : un ruban doré bordé de sombre
 function drawPath(){
-  if (path.length){
-    ctx.strokeStyle = run ? "rgba(255,210,63,.35)" : "rgba(255,210,63,.85)"; ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round";
-    ctx.beginPath(); path.forEach((c, i) => { const X = cx(c) * CS + 8, Y = cy(c) * CS + 8; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke();
-    const s = path[0]; R(cx(s) * CS + 5, cy(s) * CS + 5, 6, 6, COL.ink); R(cx(s) * CS + 6, cy(s) * CS + 6, 4, 4, COL.yellow);
-    if (!run && Math.floor(performance.now() / 400) % 2){ const e = path[path.length - 1]; ctx.strokeStyle = COL.white; ctx.lineWidth = 1; ctx.strokeRect(cx(e) * CS + 1.5, cy(e) * CS + 1.5, CS - 3, CS - 3); }
-  }
+  if (!path.length) return;
+  const pts = path.map(c => [cx(c) * CS + 16, cy(c) * CS + 16]);
+  const line = (w, col) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.beginPath(); pts.forEach(([X, Y], i) => i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y)); ctx.stroke(); };
+  ctx.globalAlpha = run ? .45 : 1;
+  line(8, "rgba(31,27,38,.7)"); line(5, "#ffd23f"); line(1, "#fff6c2");
+  ctx.globalAlpha = 1;
+  startImg = startImg || sprite32(16, 16, [[C32.ell(8, 8, 5, 5), RAMPS.yellow]]);
+  const [sx, sy] = pts[0]; ctx.drawImage(startImg, sx - 8, sy - 8);
+  if (!run && Math.floor(performance.now() / 400) % 2){ const [ex, ey] = pts[pts.length - 1];
+    ctx.strokeStyle = OUT; ctx.lineWidth = 4; ctx.strokeRect(ex - 14, ey - 14, 28, 28); ctx.strokeStyle = COL.white; ctx.lineWidth = 2; ctx.strokeRect(ex - 14, ey - 14, 28, 28); }
 }
-let dogImg = null;
+let dogTop = null;
 function drawDog(){
   if (!run) return;
   const {x, y, ang, hop, hidden} = run.pose; if (hidden) return;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(ang); const s = 1 + hop * .35; ctx.scale(s, s);
-  if (run.boost > 0){ for (let k = 0; k < 3; k++){ ctx.fillStyle = k % 2 ? "rgba(255,210,63,.75)" : "rgba(255,255,255,.7)"; ctx.fillRect(-3 + k * 3, 8 + (k % 2) * 2 + Math.round(Math.random() * 2), 1, 3); } }
-  if (hop) { ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(-4, -2 + hop * 4, 8, 8); }
-  ctx.drawImage(dogImg, -4, -6); ctx.restore();
+  const fr = dogTop[Math.floor(run.time * (run.boost > 0 ? 14 : 9)) % 4];
+  // ombre au sol, qui s'éloigne pendant un saut
+  ctx.fillStyle = SHADOW; ctx.beginPath(); ctx.ellipse(x + 2 + hop * 5, y + 3 + hop * 6, 9, 13, ang, 0, 7); ctx.fill();
+  ctx.save(); ctx.translate(Math.round(x), Math.round(y)); ctx.rotate(ang); const s = 1 + hop * .3; ctx.scale(s, s);
+  if (run.boost > 0){ for (let k = 0; k < 4; k++){ ctx.fillStyle = k % 2 ? "rgba(255,210,63,.85)" : "rgba(255,255,255,.8)"; ctx.fillRect(-7 + k * 4, 18 + (k % 2) * 3 + Math.round(Math.random() * 3), 2, 5); } }
+  ctx.drawImage(fr, -C32.TW / 2, -C32.TH / 2); ctx.restore();
 }
 function render(){
   if (!G) return;
   drawField(); drawPath(); drawDog(); updateBadges();
-  if (run && run.qte){ const q = run.qte;
-    R(4, H * CS / 2 - 18, W * CS - 8, 36, "rgba(31,27,38,.88)");
-    ctx.fillStyle = COL.yellow; ctx.font = "600 11px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(q.title, W * CS / 2, H * CS / 2 - 10);
+  if (run && run.qte){ const q = run.qte, cx0 = W * CS / 2, cy0 = H * CS / 2;
+    // plaque biseautée, comme les menus du mode Infini
+    R(8, cy0 - 40, W * CS - 16, 80, OUT);
+    const g = ctx.createLinearGradient(0, cy0 - 38, 0, cy0 + 38); g.addColorStop(0, "rgba(48,70,104,.97)"); g.addColorStop(1, "rgba(16,26,44,.97)");
+    ctx.fillStyle = g; ctx.fillRect(10, cy0 - 38, W * CS - 20, 76);
+    R(11, cy0 - 37, W * CS - 22, 1, "rgba(160,200,240,.6)");
+    ctx.font = "600 20px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+    ctx.lineWidth = 5; ctx.strokeStyle = OUT; ctx.strokeText(q.title, cx0, cy0 - 20); ctx.fillStyle = COL.yellow; ctx.fillText(q.title, cx0, cy0 - 20);
     const ARW = {L: "◀", R: "▶", U: "▲", D: "▼"};
-    ctx.font = "11px Arial";
-    const span = Math.min(14, (W * CS - 16) / q.seq.length);
-    q.seq.forEach((k, i) => { ctx.fillStyle = i < q.pos ? "#4fa850" : i === q.pos ? COL.white : "#7a7a8a"; ctx.fillText(ARW[k], W * CS / 2 + (i - (q.seq.length - 1) / 2) * span, H * CS / 2 + 3); });
-    R(10, H * CS / 2 + 12, (W * CS - 20) * Math.max(0, q.left / q.limit), 2, q.left < q.limit * .3 ? COL.red : COL.yellow);
+    ctx.font = "22px Arial";
+    const span = Math.min(28, (W * CS - 32) / q.seq.length);
+    q.seq.forEach((k, i) => { ctx.fillStyle = i < q.pos ? "#8ee05a" : i === q.pos ? COL.white : "#6a6f8a"; ctx.fillText(ARW[k], cx0 + (i - (q.seq.length - 1) / 2) * span, cy0 + 6); });
+    R(20, cy0 + 26, W * CS - 40, 6, OUT);
+    R(21, cy0 + 27, (W * CS - 42) * Math.max(0, q.left / q.limit), 4, q.left < q.limit * .3 ? COL.red : COL.yellow);
   }
 }
 
@@ -514,9 +604,9 @@ function startRun(){
   if (!path.length || cy(path[path.length - 1]) !== 0 || nextNum() <= G.objs.length){
     SFX.no(); setMsg(nextNum() <= G.objs.length ? `Il manque l'obstacle <span class="hl">${nextNum()}</span>.` : `Le tracé doit finir sur la ligne d'<span class="hl">ARRIVÉE</span>.`); return; }
   const D = dogById(save.dog);
-  phase = "run"; dogImg = topSprite(D);
+  phase = "run"; dogTop = C32.topFrames(D.id);
   run = {i: 0, t: 0, time: 0, boost: 0, got: new Set(), wet: 0, faults: 0, qteDone: new Set(), qte: null, wait: 0, pose: {x: 0, y: 0, ang: 0, hop: 0, hidden: false}, dog: D, done: false};
-  run.pose.x = cx(path[0]) * CS + 8; run.pose.y = cy(path[0]) * CS + 8;
+  run.pose.x = cx(path[0]) * CS + CS / 2; run.pose.y = cy(path[0]) * CS + CS / 2;
   $("drawTools").hidden = true; setMsg(""); SFX.bark();
 }
 const speed = () => (run.dog.id === "border" ? 1.3 : 1) / .26;   // cases par seconde
@@ -557,7 +647,7 @@ function update(dt){
   const dur = stepDur(i);
   run.t += dt;
   const a = path[i], b = path[i + 1], f = Math.min(1, run.t / dur);
-  run.pose.x = (cx(a) + (cx(b) - cx(a)) * f) * CS + 8; run.pose.y = (cy(a) + (cy(b) - cy(a)) * f) * CS + 8;
+  run.pose.x = (cx(a) + (cx(b) - cx(a)) * f + .5) * CS; run.pose.y = (cy(a) + (cy(b) - cy(a)) * f + .5) * CS;
   run.pose.ang = {U: 0, R: Math.PI / 2, D: Math.PI, L: -Math.PI / 2}[dirOf(a, b)];
   const ob = objAt(b);
   run.pose.hop = ob && (ob.type === "haie" || ob.type === "pneu") ? Math.sin(f * Math.PI) : 0;

@@ -310,5 +310,51 @@ function blob(g, shapes, ramp, outline){
 }
 
 
-window.Chiens32 = {SW, SH, GROUND, BREEDS, frames, blob, Canvas, ell, cap, RAMP, OUT};
+/* ---------- le chien vu du dessus (mode Parcours), tête vers le haut ---------- */
+const TW = 30, TH = 40;
+function topFrame(B, t){
+  RAMP.coat = B.coat; RAMP.pts = B.pts; RAMP.wh = B.wh; RAMP.merle = B.merle || B.coat; RAMP.nose = R.noir; FUR_ON = B.fur;
+  const C = Canvas(TW, TH), s = .72 + .28 * B.s, cx = TW / 2, ph = 2 * Math.PI * t;
+  const E = (x, y, rx, ry, a = 0) => ell(cx + x * s, 20 + y * s, rx * s, ry * s, a);
+  const lg = B.leg, legMat = lg.from < 1 ? lg.lower : "coat";
+  // pattes au trot : diagonales opposées, bien visibles de chaque côté du corps
+  const legs = [[-1, -5, 0], [1, -5, .5], [-1, 8, .5], [1, 8, 0]];
+  for (const [d, y, k] of legs){ const sw = 2.4 * Math.sin(ph + k * 2 * Math.PI), x0 = d * 3.6, x1 = d * 7.4;
+    C.draw(cap(cx + x0 * s, 20 + y * s, cx + x1 * s, 20 + (y + sw) * s, 1.9 * s, 1.5 * s), {mat: y < 0 && lg.from < .3 ? lg.lower : y > 0 ? lg.meta : legMat, id: 7});
+    C.draw(E(x1 + d * .4, y + sw, 1.6, 1.4), {mat: lg.paw, id: 7}); }
+  // queue
+  { const tl = B.tail, len = Math.min(11, tl.n * 1.7), sway = 2.4 * Math.sin(ph * 2) * (tl.n > 3 ? 1 : .3);
+    C.draw(cap(cx, 20 + 10 * s, cx + sway * s, 20 + (10 + len) * s, Math.min(3, tl.r * .65) * s, 1.3 * s), {mat: "coat", id: 6, group: 50});
+    if (tl.tip) C.draw(E(sway, 10 + len, 1.5, 1.5), {mat: tl.tip, on: [6]}); }
+  // corps (taille fine), poitrine, croupe
+  C.draw(E(0, 4, 5 * B.slim + .3, 8.5 * B.body), {mat: "coat", id: 1, group: 60});
+  C.draw(E(0, 9, 5.2 * B.slim + .3, 4), {mat: "coat", id: 1, group: 60});
+  C.draw(E(0, -3.5, 5.6 * B.slim + .4, 4.4), {mat: "coat", id: 1, group: 60});
+  if (B.mane) C.draw(E(0, -5.6, 7, 4), {mat: "coat", id: 1, group: 60});
+  if (B.spots) for (const [x, y, rx, ry] of [[-2.4, 2, 2.2, 1.8], [2.2, 6.5, 1.8, 2.2], [1.6, -3, 1.6, 1.3], [-1.8, 9.5, 1.4, 1.2]]) C.draw(E(x, y, rx, ry), {mat: "merle", on: [1]});
+  if (B.patch) C.draw(E(0, 9, 4, 3), {mat: "pts", on: [1]});
+  if (B.collar) C.draw(E(0, -7, B.mane ? 7.2 : 5.6, B.mane ? 3.4 : 2.2), {mat: "wh", on: [1]});
+  // tête bien ronde, museau vers l'avant
+  C.draw(E(0, -11.5, 5.4, 5), {mat: B.head, id: 3, group: 70});
+  C.draw(E(0, -16 - (B.muzzleLen - 1) * 3, 2.7 * B.muzzleH, 3 * B.muzzleLen), {mat: B.muzzle, id: 4, group: 70});
+  if (B.blaze) C.draw(E(0, -12.6, 1 * B.blaze, 3.2), {mat: "wh", on: [3]});
+  if (B.brows) for (const x of [-2.2, 2.2]) C.draw(E(x, -13.4, 1, .8), {mat: "pts", on: [3]});
+  if (B.cheeks) for (const x of [-3.2, 3.2]) C.draw(E(x, -10.4, 1.2, 1.3), {mat: "pts", on: [3]});
+  C.draw(E(0, -18.6 - (B.muzzleLen - 1) * 5, 1.4, 1.1), {mat: "nose", id: 4});
+  // oreilles
+  const flap = .25 * Math.sin(ph * 2);
+  if (B.ear === "prick") for (const d of [-1, 1]) C.draw(cap(cx + d * 3 * s, 20 - 12.5 * s, cx + d * 5.4 * s, 20 - 15.5 * s, 1.7 * s, .6 * s), {mat: B.head, id: 5});
+  else { const big = B.ear === "dropBig" ? 1.15 : 1;
+    for (const d of [-1, 1]) C.draw(E(d * 5.6, -11, 1.9 * big, 3.4 * big, d * (.3 + flap)), {mat: "coat", id: 5}); }
+  FUR_ON = true;
+  return C.toCanvas();
+}
+const TCACHE = {};
+function topFrames(id){
+  if (TCACHE[id]) return TCACHE[id];
+  const B = BREEDS.find(b => b.id === id) || BREEDS[0];
+  return TCACHE[id] = [0, .25, .5, .75].map(t => topFrame(B, t));
+}
+
+window.Chiens32 = {SW, SH, GROUND, BREEDS, frames, topFrames, TW, TH, blob, Canvas, ell, cap, RAMP, OUT};
 })();
