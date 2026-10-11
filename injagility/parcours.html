@@ -92,8 +92,9 @@ body.playing .msg{min-height:2em; margin:6px 0}
 .lvl small{font-family:var(--f-body); font-size:15px; letter-spacing:0}
 .lvl.locked{background:#3a3540; box-shadow:4px 4px 0 #000}
 .dogs{display:grid; grid-template-columns:1fr; gap:10px}
-.dog{display:grid; grid-template-columns:64px 1fr auto; gap:12px; align-items:center; background:#1a2a36; border:3px solid var(--ink); padding:10px; box-shadow:4px 4px 0 #000}
-.dog canvas{width:64px; height:auto; image-rendering:pixelated}
+.dog{display:grid; grid-template-columns:100px 1fr auto; gap:12px; align-items:center; background:#1a2a36; border:3px solid var(--ink); padding:10px; box-shadow:4px 4px 0 #000}
+.dog canvas{width:100px; height:auto; image-rendering:pixelated; image-rendering:crisp-edges}
+@media (max-width:420px){ .dog{grid-template-columns:84px 1fr; } .dog canvas{width:84px} .dog .btn{grid-column:1 / -1} }
 .dog h3{margin:0 0 4px; font-family:var(--f-display); font-weight:400; font-size:10px; color:var(--snow)}
 .dog p{margin:0; color:var(--snow-dim); font-size:16px; line-height:1.3}
 .dog.cur{border-color:var(--gold)}
@@ -175,6 +176,7 @@ body.playing .msg{min-height:2em; margin:6px 0}
   </section>
 </div>
 
+<script src="chiens32.js"></script>
 <script>
 (() => {
 "use strict";
@@ -215,11 +217,6 @@ const DOGS = [
 ];
 const dogById = id => DOGS.find(d => d.id === id) || DOGS[0];
 
-// le chien vu de côté (même dessin que le mode infini, aux couleurs de la race)
-const SIDE = [
-  "...........kkkkk....", "..........kkkkkkk...", ".........kkkkkkkkk..", ".........kkkkktkkkk.", "ww.......kkkkkkekwww", "wkk......kkkkkttwwwk",
-  ".kk......kkkkkttwwww", "..kk.....kkkkkkwwpp.", "...kkkkkkkkkkkkwww..", "..kkkkkkkkkkkkkwww..", "..kkkkkkkkkkkkkwww..", "..kkkkkkkkkkkkktww..",
-  "..kkkkkkkkkkkkkttt..", "..tt.........tt.....", ".tt...........tt....", ".tt...........tt....", ".ww............ww..."];
 // le chien vu du dessus, tête vers le haut
 const TOP = ["..oooo..", "oobbbboo", "obbwwbbo", "obbwwbbo", ".obbbbo.", "..obbo..", ".obbbbo.", "obtbbtbo", "obbbbbbo", "obbbbbbo", ".obbbbo.", "..obbo..", "...oo..."];
 function sprite(map, pal){
@@ -228,7 +225,6 @@ function sprite(map, pal){
   map.forEach((row, r) => [...row].forEach((ch, col) => { if (pal[ch]){ x.fillStyle = pal[ch]; x.fillRect(col, r, 1, 1); } }));
   return c;
 }
-const sideSprite = d => sprite(SIDE, {k: d.pal.b, w: d.pal.w, t: d.pal.t, p: "#ea7d8f", e: "#ffffff"});
 const topSprite = d => sprite(TOP, {o: "#1f1b26", b: d.pal.b, w: d.pal.w, t: d.pal.t});
 
 /* ---------- sauvegarde ---------- */
@@ -639,7 +635,9 @@ function renderKennel(){
   for (const D of DOGS){
     const own = save.owned.includes(D.id), cur = save.dog === D.id;
     const el = document.createElement("div"); el.className = "dog" + (cur ? " cur" : "");
-    const c = sideSprite(D); c.style.width = "64px"; el.appendChild(c);
+    // le chien en 32 bits, debout (Chiens32 est partagé avec le mode Infini)
+    const c = document.createElement("canvas"); c.width = 76; c.height = 58;
+    c.getContext("2d").drawImage(window.Chiens32.frames(D.id).stand, -8, -4); el.appendChild(c);
     const t = document.createElement("div"); t.innerHTML = `<h3>${D.name}</h3><p>${D.perk}</p>`; el.appendChild(t);
     const b = document.createElement("button"); b.type = "button"; b.className = "btn " + (cur ? "wood" : own ? "alt" : "");
     b.textContent = cur ? "EN PISTE" : own ? "CHOISIR" : `${D.price} PTS`;
