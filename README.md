@@ -129,6 +129,17 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Touché Coulé et le Jeu de la Vie n'enregistrent rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
+## Classements familiaux
+
+Le bouton **Classements**, en bas du menu, ouvre des classements privés, partagés entre les personnes qui connaissent le **code familial**. On choisit un pseudo, on entre le code une fois, et c'est tout : ensuite les records partent **tout seuls**.
+
+- **Tetris** : le meilleur score de chacun.
+- **Arbre du jour de Lignée** (Classique et Royal) : le meilleur temps du jour. Le classement repart de zéro chaque jour, avec le nouvel arbre.
+
+Hors connexion, un record attend dans le téléphone et part au retour du réseau. En rejoignant, les records déjà faits dans ce navigateur sont envoyés aussi.
+
+Côté technique, les scores sont rangés dans une base [Supabase](https://supabase.com) (offre gratuite). Le site ne contient que l'adresse du projet et sa clé **publique**. La table des scores est verrouillée : on n'y accède qu'au travers de fonctions qui vérifient le code familial, et ce code n'est rangé que dans Supabase, jamais dans le dépôt. Le script de création est [`supabase/classements.sql`](supabase/classements.sql). Le module partagé par les jeux est [`ludo-scores.js`](ludo-scores.js). Une tâche GitHub Actions ([`reveil-classements.yml`](.github/workflows/reveil-classements.yml)) réveille la base tous les 3 jours, pour que Supabase ne la mette pas en pause.
+
 ## Application installable (PWA)
 
 Sur le site GitHub Pages, la Ludothèque s'installe comme une application, avec une seule icône pour tous les jeux.

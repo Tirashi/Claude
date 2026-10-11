@@ -125,6 +125,10 @@ h1{font-family:var(--f-display); font-weight:400; margin:0; font-size:clamp(22px
 .win p{margin:6px 0; font-size:19px}
 .win .row{justify-content:center}
 .small{font-size:16px; color:var(--ink-soft)}
+#winBoard{margin:4px auto 8px; max-width:280px; text-align:left}
+#winBoard ol{margin:4px 0 0; padding-left:26px}
+#winBoard li{font-size:18px; color:var(--ink)}
+#winBoard li.me{color:var(--accent); font-weight:700}
 </style>
 </head>
 <body>
@@ -187,6 +191,7 @@ h1{font-family:var(--f-display); font-weight:400; margin:0; font-size:clamp(22px
           <h2 id="winTitle"></h2>
           <p id="winStory"></p>
           <p class="small" id="winStats"></p>
+          <div id="winBoard" class="small" hidden></div>
           <div class="row"><button class="btn" type="button" id="againBtn">NOUVEL ARBRE</button><button class="btn" type="button" id="menuBtn2">MENU</button></div>
         </div>
       </div>
@@ -205,6 +210,7 @@ h1{font-family:var(--f-display); font-weight:400; margin:0; font-size:clamp(22px
   </section>
 </div>
 
+<script src="../ludo-scores.js"></script>
 <script>
 /* ===== Lignée : moteur (arbre, indices, solveur) ===== */
 const Engine = (() => {
@@ -886,6 +892,8 @@ function win(){
   const record = !st.best || elapsed < st.best;
   st.n = (st.n || 0) + 1; if (record) st.best = Math.round(elapsed); stats[key] = st; store.set("stats", stats);
   if (/-J/.test(G.code)){ const d = store.get("daily", {}); if (!d[G.code] || elapsed < d[G.code]) d[G.code] = Math.round(elapsed); store.set("daily", d); }
+  $("winBoard").hidden = true;
+  if (/-J/.test(G.code)) dailyBoard(G.code, Math.round(elapsed));
   store.set("cur", null);
   const gens = G.gens;
   $("winTitle").textContent = G.cine ? "SCÈNE FINALE !" : G.royal ? "LA DYNASTIE EST RÉTABLIE !" : "LIGNÉE RECONSTITUÉE !";
@@ -895,6 +903,23 @@ function win(){
   $("winStats").textContent = `TEMPS ${fmt(elapsed)}` + (record ? " · NOUVEAU RECORD !" : ` · RECORD ${fmt(st.best)}`) + (G.cine ? ` · ${st.n} fois en ${LEVELS[G.level].name.toLowerCase()}` : ` · ${st.n} arbre${st.n > 1 ? "s" : ""} en ${LEVELS[G.level].name.toLowerCase()}`);
   $("trayBox").hidden = true; $("win").hidden = false; setMsg("");
   SFX.win();
+}
+
+/* ---------- classement de l'Arbre du jour (Ludothèque) ---------- */
+function dailyBoard(code, ms){
+  const box = $("winBoard"), L = window.LudoScores;
+  if (!L) return;
+  if (!L.joined()){ box.hidden = false; box.innerHTML = "Pour comparer ton temps à celui des autres, rejoins le <b>classement</b> depuis le menu de la Ludothèque."; return; }
+  L.submit("lignee", "daily:" + code, ms, true).then(r => {
+    if (!G || G.code !== code) return;
+    if (!r){ box.hidden = false; box.textContent = "Classement injoignable pour le moment : ton temps partira au retour du réseau."; return; }
+    if (r) $("winStats").textContent += ` · ${r.rank === 1 ? "1er" : r.rank + "e"} sur ${r.total} aujourd'hui`;
+    return L.board("lignee", "daily:" + code, 5).then(rows => {
+      if (!rows || !rows.length || !G || G.code !== code) return;
+      box.hidden = false;
+      box.innerHTML = "<b>Arbre du jour :</b><ol>" + rows.map(x => `<li class="${x.me ? "me" : ""}">${String(x.pseudo).replace(/[<>&]/g, "")} · ${fmt(x.value)}</li>`).join("") + "</ol>";
+    });
+  }).catch(() => { box.hidden = false; box.textContent = "Classement injoignable pour le moment : ton temps partira au retour du réseau."; });
 }
 
 /* ---------- sauvegarde de la partie en cours ---------- */
