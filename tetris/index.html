@@ -205,8 +205,17 @@ h1 span{text-shadow:3px 3px 0 #000}
     const newLevel = 1 + Math.floor(linesCleared / 10);
     if (newLevel > level) SFX.level();
     level = newLevel;
-    dropInterval = Math.max(100, 800 - (level - 1) * 60);
+    dropInterval = speedFor(level);
     updateHUD(); clearingRows = []; spawnPiece();
+  }
+  // délai de chute d'une case (ms) : -60 ms par niveau jusqu'au niveau 12, puis la courbe de la NES
+  // (1/10 s au niveau 13, 1/20 s au 15, 1/30 s au 19, une image par case au 29)
+  function speedFor(lv) {
+    if (lv <= 12) return 800 - (lv - 1) * 60;
+    if (lv >= 29) return 17;
+    if (lv >= 19) return 33;
+    if (lv >= 15) return 50;
+    return lv === 13 ? 100 : 80;
   }
   function updateHUD() { scoreEl.textContent = score; levelEl.textContent = level; linesEl.textContent = linesCleared; }
   function hardDrop() { let n = 0; while (!collides(current, 0, 1)) { current.y++; n++; } if (n) SFX.drop(); lockPiece(); }

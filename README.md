@@ -108,7 +108,7 @@ Deux modes, reliés par des onglets en haut de page.
 
 Touché Coulé était déjà en 16 bits et n'a pas été modifié. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).
 
-- **Tetris** : briques en relief, puits en damier, pièce fantôme en pointillés, record sauvegardé, écran d'accueil, boutons tactiles avec répétition.
+- **Tetris** : briques en relief, puits en damier, pièce fantôme en pointillés, record sauvegardé, un niveau toutes les 10 lignes avec une vitesse qui suit la courbe de la NES (jusqu'à une case par image au niveau 29), écran d'accueil, boutons tactiles avec répétition.
 - **Snake** : jardin en damier, pomme et serpent dessinés en pixels, tête orientée avec langue, record conservé (même clé que l'original), file de virages pour ne jamais se retourner sur soi, glisser ou croix directionnelle sur mobile.
 - **Asteroids** : rendu en basse résolution pixel par pixel, astéroïdes ombrés avec cratères, grand vaisseau au contour lumineux, flamme du réacteur, nébuleuse et étoiles fixes qui scintillent, record sauvegardé, tir continu en maintenant le bouton sur mobile.
 - **Jeu de la Vie** : moteur et réglages inchangés ; cellules en briques, traces en paliers de couleur, panneaux et curseurs en style pixel.
