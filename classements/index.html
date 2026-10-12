@@ -183,6 +183,10 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     {id: "touchecoule", name: "TOUCHÉ COULÉ", play: "../touche-coule/index.html", views: [
       {label: "MEILLEURE VICTOIRE", ctl: ["tcmode", "tcai"], game: "touchecoule", board: () => `best:${st.tcmode}:${st.tcai}`, fmt: v => N(v) + " tirs",
        title: () => `${TCMODES.find(m => m[0] === st.tcmode)[1]} · IA ${TCAI.find(m => m[0] === st.tcai)[1]}`, note: "La victoire en le moins de tirs, par mode et par niveau de l'IA."}]},
+    {id: "club", name: "CLUB D'AGILITY", play: "../club/index.html", views: [
+      {label: "REPUTATION", game: "club", board: () => "rep", fmt: v => N(v) + " pts", title: () => "LA PLUS GRANDE RÉPUTATION"},
+      {label: "CHAMPION", game: "club", board: () => "champion", fmt: v => N(v) + " sem.", title: () => "CHAMPION DE FRANCE LE PLUS RAPIDE",
+       note: "Le nombre de semaines pour gagner le Championnat de France.", empty: "Personne n'est encore champion de France."}]},
     {id: "amiral", name: "AMIRAL !", play: "../amiral/index.html", views: [
       {label: "MEILLEURE VICTOIRE", ctl: ["amai"], game: "amiral", board: () => `best:${st.amai}`, fmt: v => N(v) + " tours",
        title: () => `AMIRAL ! · ${AMAI.find(m => m[0] === st.amai)[1]}`, note: "La victoire en le moins de tours, par niveau de l'ordinateur."}]},

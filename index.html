@@ -88,6 +88,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.soli{--lb:linear-gradient(to bottom, #2a8a48, #145a2c); --lt:#ffd23f; --ld:#e4f7dc}
 .cart.lignee{--lb:linear-gradient(to bottom, #6b3f1f, #2f1a0c); --lt:#e0a83a; --ld:#efe0bd}
 .cart.touche{--lb:linear-gradient(to bottom, #2b6fd0, #0f1866); --lt:#ffd84a; --ld:#e8ecff}
+.cart.club{--lb:linear-gradient(to bottom, #3f8a37, #173a1a); --lt:#ffd23f; --ld:#e4f7dc}
 .cart.amiral{--lb:linear-gradient(to bottom, #1c579c, #0a1c40); --lt:#ffd23f; --ld:#dcebff}
 
 @media (hover: none) and (pointer: coarse){ .status{display:none} }
@@ -205,6 +206,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <h2>AMIRAL !</h2>
         <p>La bataille navale où chaque navire a un pouvoir : avion, salve, torpille et plongée du sous-marin.</p>
         <div class="tags"><span>TACTIQUE</span><span>32 BITS</span><span>3 NIVEAUX</span></div>
+      </div>
+    </a>
+    <a class="cart club" href="club/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="cup" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>LE CLUB D'AGILITY</h2>
+        <p>Recrute des chiens, entraîne-les semaine après semaine et mène ton club jusqu'au Championnat de France.</p>
+        <div class="tags"><span>GESTION</span><span>32 BITS</span><span>6 RACES</span></div>
       </div>
     </a>
     <a class="cart tetris" href="tetris/index.html">
@@ -356,6 +366,23 @@ const ICONS = {
     ".kck............",
     "kwwwk...........",
     "krkrk..........."]},
+  cup: {pal:{k:"#0f121b", y:"#ffd23f", Y:"#fff2a8", o:"#d09a1c", b:"#3a7fc8", w:"#ffffff"}, map:[
+    "................",
+    "...kkkkkkkkkk...",
+    ".kkkYYyyyyyyokk.",
+    "kYkkYyyyyyyyokYk",
+    "ky.kYyyyyyyyok.k",
+    "kyk.kYyyyyyok.ok",
+    ".kok.kYyyyok.kk.",
+    "..kkkkYyyyokkk..",
+    "......kyyok.....",
+    ".......kok......",
+    ".......kok......",
+    "......kyyok.....",
+    ".....kkkkkkk....",
+    "....kbbbwbbbk...",
+    "....kbbbbbbbk...",
+    "....kkkkkkkkk..."]},
   anchor: {pal:{k:"#0f121b", y:"#ffd23f", Y:"#fff2a8", o:"#d09a1c", b:"#2462c0", B:"#9fd3ff"}, map:[
     "................",
     "......kkkk......",
@@ -458,6 +485,7 @@ function collectSaves(){
   const ld = readKey("lignee.daily", {}); if (ld && Object.keys(ld).length) g.ligneeDaily = ld;
   const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
   const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
+  const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
 }
@@ -469,6 +497,7 @@ function describeSaves(g){
   if (g.parcours) out.push(`Injagility Parcours : ${(g.parcours.unlocked || 1) - 1} parcours réussis, ${g.parcours.wallet || 0} points, ${(g.parcours.owned || []).length} chien${(g.parcours.owned || []).length > 1 ? "s" : ""}`);
   if (g.lignee){ const n = Object.values(g.lignee).reduce((s, v) => s + (v && v.n || 0), 0); if (n) out.push(`Lignée : ${n} arbre${n > 1 ? "s" : ""} reconstitué${n > 1 ? "s" : ""}`); }
   if (g.touchecoule){ const v = Object.values(g.touchecoule).filter(x => x > 0); if (v.length) out.push(`Touché Coulé : meilleure victoire en ${Math.min(...v)} tirs`); }
+  if (g.club && g.club.week) out.push(`Club d'agility : semaine ${g.club.week}, ${(g.club.dogs || []).length} chien${(g.club.dogs || []).length > 1 ? "s" : ""}, réputation ${g.club.rep || 0}`);
   if (g.amiral){ const v = Object.values(g.amiral).filter(x => x > 0); if (v.length) out.push(`Amiral ! : meilleure victoire en ${Math.min(...v)} tours`); }
   return out;
 }
@@ -539,6 +568,12 @@ function mergeSaves(g){
     const mine = readKey("touchecoule.best", {}) || {}; let n = 0;
     for (const [k, v] of Object.entries(g.touchecoule)) if (/^(classic|arsenal):(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
     if (n){ writeKey("touchecoule.best", mine); done.push(`Touché Coulé : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  // le club : on garde la partie la plus avancée (la plus grande réputation)
+  if (g.club && typeof g.club === "object" && g.club.v === 1 && Array.isArray(g.club.dogs)){
+    const mine = readKey("club.save", null);
+    if (!mine || (g.club.rep || 0) > (mine.rep || 0) || ((g.club.rep || 0) === (mine.rep || 0) && g.club.week > mine.week)){
+      writeKey("club.save", g.club); done.push(`Club d'agility : partie de la semaine ${g.club.week}`); }
   }
   if (g.amiral && typeof g.amiral === "object"){
     const mine = readKey("amiral.best", {}) || {}; let n = 0;

@@ -7,6 +7,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`lignee/index.html`](lignee/index.html) : **Lignée**, un puzzle de généalogie : reconstituer un arbre grâce aux indices, en famille française ou en dynastie royale.
 - [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu d'agility canine en 32 bits : course sans fin façon dino de Chrome, et parcours vus du dessus ([`injagility/parcours.html`](injagility/parcours.html)) avec six races à adopter.
 - [`touche-coule/index.html`](touche-coule/index.html) : **Touché Coulé**, une bataille navale contre l'ordinateur (modes Classique et Arsenal).
+- [`club/index.html`](club/index.html) : **Le Club d'agility**, un jeu de gestion en 32 bits : recruter des chiens, les entraîner semaine après semaine, gagner les concours et faire grandir le club jusqu'au Championnat de France.
 - [`amiral/index.html`](amiral/index.html) : **Amiral !**, une bataille navale tactique en 32 bits où chaque navire a un pouvoir (avion de reconnaissance, salve, torpille, plongée du sous-marin).
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
 - [`snake/index.html`](snake/index.html) : **Snake**.
@@ -144,6 +145,7 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Lignée** : l'Arbre du jour (Classique et Royal, qui repart de zéro chaque jour, avec les flèches pour revoir les jours précédents), le meilleur temps par mode et par niveau, et le nombre d'arbres reconstitués.
 - **Injagility** : le record d'obstacles du mode Infini, les points de chaque parcours numéroté et le total des meilleurs scores du mode Parcours.
 - **Touché Coulé** : la victoire en le moins de tirs, par mode (Classique, Arsenal) et par niveau de l'IA (Facile, Normal, Amiral).
+- **Le Club d'agility** : la plus grande réputation, et le Championnat de France gagné en le moins de semaines.
 - **Amiral !** : la victoire en le moins de tours, par niveau de l'ordinateur (Mousse, Capitaine, Amiral).
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).
