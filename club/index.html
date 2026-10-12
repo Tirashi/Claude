@@ -671,6 +671,12 @@ function drawDog(t) {
     if (!arm) { UI.confirm = now(); SFX.click(); return; }
     G.dogs = G.dogs.filter(x => x !== d); G.rep += 5; save(); UI.screen = 'club'; SFX.bark();
     toast(`${d.name} part vivre dans une famille adorable. +5 réputation.`); } });
+  // séance guidée : en option, une fois par semaine, sur un agrès
+  const rest = d.act === 'repos' || d.act === 'calins', did = d.guided === G.week;
+  button(4, lastY + 36, LW - 8, 30, did ? `SEANCE FAITE : PROGRES x${(d.boost || 1).toFixed(1).replace('.', ',')}` : 'SEANCE GUIDEE (EN OPTION)', { tiny: true, blue: !rest && !did, disabled: rest || did, act: () => {
+    if (rest) { SFX.error(); toast('Choisis d\'abord un agrès pour la séance.'); return; }
+    if (did) { SFX.error(); toast('Une seule séance guidée par semaine.'); return; }
+    UI.run = null; startRun('train', d); } });
 }
 
 function drawShop(t) {
@@ -732,15 +738,17 @@ function train(d) {
       const room = Math.max(0, d.pot[k] - d.st[k]) / d.pot[k];
       let v = 1.4 * base * BREEDS[d.breed].m[k] * (.35 + .65 * d.forme / 100) * (.8 + .4 * d.humeur / 100) * Math.pow(room, .5) * (owns('terrain') ? 1.25 : 1) * rf(.8, 1.2);
       if (wasTired) v *= .4;
+      v *= d.boost || 1;   // séance guidée réussie
       v = Math.min(v, d.pot[k] - d.st[k]);
       d.st[k] = Math.round((d.st[k] + v) * 10) / 10;
       if (v >= .5) out.push(`+${Math.round(v)} ${STATS.find(s => s[0] === k)[1].toLowerCase()}`);
     }
     if (!out.length) out.push('ne progresse plus ici');
     d.forme -= 11; d.humeur -= 4;
+    if (d.boost > 1) out.push(`séance guidée x${d.boost.toFixed(1).replace('.', ',')}`);
     if (wasTired) out.push('trop fatigué !');
   }
-  d.forme = clamp(d.forme + 6, 0, 100); d.humeur = clamp(d.humeur, 0, 100);
+  d.forme = clamp(d.forme + 6, 0, 100); d.humeur = clamp(d.humeur, 0, 100); d.boost = 0;
   return out.join(', ');
 }
 function nextWeek() {
@@ -775,18 +783,16 @@ const AI_CLUBS = ['Les Pattes Agiles', 'Canicross 44', 'Club des Vosges', 'Agili
 function startCompetition(entrants) {
   const tier = TIERS[G.tier], D = tier.d;
   G.coins = Math.max(0, G.coins - tier.fee * entrants.length);
-  const field = entrants.map(d => ({ mine: true, dog: d, name: d.name, breed: d.breed, club: 'MON CLUB', res: perform(d.st, d.forme, d.humeur, D) }));
+  const field = entrants.map(d => ({ mine: true, dog: d, name: d.name, breed: d.breed, club: 'MON CLUB', res: null }));
   const used = new Set();
   while (field.length < 8) {
     let n; do n = pick(AI_NAMES); while (used.has(n)); used.add(n);
     const st = { vit: clamp(D - 14 + rand(25), 10, 99), saut: clamp(D - 14 + rand(25), 10, 99), obe: clamp(D - 14 + rand(25), 10, 99) };
     field.push({ mine: false, name: n, breed: pick(BREED_IDS), club: pick(AI_CLUBS), res: perform(st, 70 + rand(30), 60 + rand(40), D) });
   }
-  field.sort((a, b) => a.res.total - b.res.total);
-  field.forEach((f, i) => f.rank = i + 1);
-  for (const d of entrants) { d.forme = clamp(d.forme - 14, 0, 100); d.comps++; }
-  UI.run = { tier, field, queue: field.filter(f => f.mine), idx: 0, t0: now(), d: 0, done: false };
-  UI.screen = 'run'; SFX.whistle();
+  for (const d of entrants) d.comps++;
+  UI.run = { tier, field, queue: field.filter(f => f.mine), idx: 0 };
+  startRun('comp', entrants[0]);
   save();
 }
 function finishCompetition() {
@@ -794,6 +800,7 @@ function finishCompetition() {
   let money = 0, rep = 0, champ = false;
   for (const f of R0.field.filter(f => f.mine)) {
     const d = f.dog, i = f.rank - 1;
+    d.forme = clamp(d.forme - 14, 0, 100);   // la fatigue du concours
     const pr = i < 3 ? tier.prize[i] : 0, rp = Math.round(((i < 3 ? tier.rep[i] : 2 + G.tier * 2)) * (owns('tribunes') ? 1.5 : 1));
     money += pr; rep += rp;
     if (i < 3) { d.podiums++; G.trophies.push({ t: G.tier, rank: f.rank, w: G.week, dog: d.name }); dirtyBase(); }
@@ -815,45 +822,134 @@ function finishCompetition() {
   }, { gold: money > 0 });
 }
 
-function drawRun(t) {
-  const run = UI.run, f = run.queue[run.idx];
-  bgFill(t);
-  logo(g, run.tier.name, LW / 2, 8, 12);
-  tiny(g, run.tier.full, LW / 2, 26, '#cfe6ff', 'center');
-  // déroulé : avance le long de la boucle ; refus = petit arrêt, faute = barre qui tombe
-  // le chien avance d'obstacle en obstacle ; un refus le fait s'arrêter 0,8 s devant l'obstacle
-  const DUR = 7 * (f.res.time / 38), el = (now() - run.t0) / 1000;
-  let rem = el, prevAt = 0, u = -1, stop = false;
-  for (let i = 0; i < OBST.length; i++) {
-    const at = OBST[i].d / PERIM * DUR, seg = at - prevAt;
-    if (rem < seg) { u = (prevAt + rem) / DUR; break; }
-    rem -= seg; prevAt = at;
-    if (f.res.ev[i] === 'refus') { if (rem < .8) { u = prevAt / DUR; stop = true; break; } rem -= .8; }
+/* ---------- la course jouable : le joueur guide le chien au bon moment ---------- */
+// actions attendues le long de la boucle : un appui par haie, pneu ou tunnel, quatre en rythme au slalom
+function runActions() {
+  const out = [];
+  OBST.forEach((o, i) => {
+    if (o.kind === 'slalom') for (let j = 0; j < 4; j++) out.push({ obs: i, at: o.d + 6 + j * 24, beat: j });
+    else out.push({ obs: i, at: o.d - 8 });
+  });
+  return out;
+}
+// demi-largeur de la zone verte (en pixels du terrain) selon la qualité utile et la forme
+function zoneOf(dog, kind) {
+  const st = kind === 'slalom' || kind === 'tunnel' ? dog.st.obe : dog.st.saut;
+  return (8 + st * .14) * (.6 + .4 * dog.forme / 100);
+}
+function baseTime(dog) { return 38 * (1.5 - dog.st.vit / 100 * .75) * (1.06 - dog.forme / 100 * .12) + rf(-1, 1); }
+function startRun(mode, dog, extra) {
+  const base = baseTime(dog), DUR = 7 * (base / 38);
+  UI.run = Object.assign(UI.run || {}, extra || {}, {
+    mode, dog, base, speed: PERIM / DUR, d: 0, last: 0, pause: 0, acts: runActions(), k: 0,
+    res: OBST.map(() => null), beats: [], pops: [], finished: 0, started: now() + 900, elapsed: 0, pens: 0, stop: false, bump: 0,
+  });
+  UI.screen = 'run'; SFX.whistle();
+}
+function resolveAct(run, ok, early) {
+  const a = run.acts[run.k], o = OBST[a.obs];
+  run.k++;
+  const pos = along(o.d);
+  if (o.kind === 'slalom') {
+    run.beats[a.beat] = ok;
+    if (ok) SFX.click(); else SFX.fault();
+    if (a.beat === 3 || !ok) {
+      if (!ok) { run.res[a.obs] = 'faute'; run.pens++; while (run.k < run.acts.length && run.acts[run.k].obs === a.obs) run.k++; }
+      else run.res[a.obs] = 'ok';
+      run.pops.push({ x: pos.x, y: pos.y, s: ok ? 'BRAVO !' : 'FAUTE !', ok, t0: now() });
+    }
+    return;
   }
-  if (u < 0) u = clamp((prevAt + rem) / DUR, 0, 1);
-  const d = u * PERIM;
-  run.d = d; run.stop = stop; run.dog = f.dog; run.cheer = u >= 1;
+  if (ok) { run.res[a.obs] = 'ok'; SFX.jump(); run.pops.push({ x: pos.x, y: pos.y, s: o.kind === 'tunnel' ? 'TUNNEL !' : 'HOP !', ok: true, t0: now() }); return; }
+  run.pens++;
+  if (o.kind === 'tunnel') { run.res[a.obs] = 'refus'; run.pause = .9; SFX.bark(); run.pops.push({ x: pos.x, y: pos.y, s: 'REFUS !', ok: false, t0: now() }); }
+  else { run.res[a.obs] = 'faute'; SFX.fault(); run.pops.push({ x: pos.x, y: pos.y, s: early ? 'TROP TOT !' : 'FAUTE !', ok: false, t0: now() }); }
+}
+function hop() {
+  const run = UI.run; if (!run || run.finished || now() < run.started) return;
+  const a = run.acts[run.k]; if (!a) return;
+  const o = OBST[a.obs], hw = zoneOf(run.dog, o.kind), dd = run.d - a.at;
+  if (dd < -hw * 2.6) return;                       // trop loin : on ignore l'appui
+  resolveAct(run, Math.abs(dd) <= hw, dd < 0);
+}
+function stepRun(dt) {
+  const run = UI.run; if (!run || run.finished || now() < run.started) return;
+  if (run.pause > 0) { run.pause -= dt; run.stop = true; run.elapsed += dt; return; }
+  run.stop = false; run.elapsed += dt;
+  run.d += run.speed * dt;
+  // action manquée : la zone est dépassée sans appui
+  const a = run.acts[run.k];
+  if (a && run.d - a.at > zoneOf(run.dog, OBST[a.obs].kind)) resolveAct(run, false, false);
+  // petit saut visuel aux haies et au pneu réussis
+  if (run.d >= PERIM) { run.d = PERIM; run.finished = now(); SFX.clap(); endRun(run); }
+}
+function endRun(run) {
+  const succ = run.res.filter(r => r === 'ok').length;
+  if (run.mode === 'comp') {
+    const f = run.queue[run.idx];
+    f.res = { ev: run.res.map(r => r || 'ok'), time: Math.round(run.base * 100) / 100, pen: run.pens * 5, total: Math.round((run.base + run.pens * 5) * 100) / 100 };
+  } else {
+    run.boost = 1 + .12 * succ;   // jusqu'à x1,6 pour un parcours parfait
+  }
+}
+function drawRun(t) {
+  const run = UI.run, f = run.mode === 'comp' ? run.queue[run.idx] : null, dog = run.dog;
+  const dt = Math.min(.05, run.last ? t - run.last : 0); run.last = t; stepRun(dt);
+  bgFill(t);
+  logo(g, run.mode === 'comp' ? run.tier.name : 'SEANCE GUIDEE', LW / 2, 8, 12);
+  tiny(g, run.mode === 'comp' ? run.tier.full : 'CHAQUE OBSTACLE REUSSI FAIT MIEUX PROGRESSER', LW / 2, 26, '#cfe6ff', 'center');
+  // saut visuel : juste après une haie ou le pneu réussis
+  let bump = 0;
+  OBST.forEach((o, i) => { if ((o.kind === 'haie' || o.kind === 'pneu') && run.res[i] === 'ok') { const q = (run.d - (o.d - 10)) / 22; if (q > 0 && q < 1) bump = Math.sin(q * Math.PI); } });
+  run.bump = bump; run.cheer = !!run.finished;
   sceneBox(t, 38, run);
-  // événements
-  const passed = OBST.filter(o => o.d <= d);
-  if (passed.length !== run.lastPassed) { run.lastPassed = passed.length; const e = f.res.ev[passed.length - 1]; if (passed.length) { if (e === 'faute') SFX.fault(); else if (e === 'refus') SFX.bark(); else SFX.jump(); } }
-  plate(g, 4, 166, LW - 8, 26);
-  text(g, f.name, 10, 175, '#ffd23f');
-  const shownT = u >= 1 ? f.res.time : f.res.time * u;
-  text(g, (shownT).toFixed(2) + ' s', LW - 10, 175, '#ffffff', 'right');
-  OBST.forEach((o, i) => { const y = 200 + i * 20, done = o.d <= d, e = f.res.ev[i];
-    plate(g, 4, y, LW - 8, 16, done ? (e === 'ok' ? null : 'red') : 'dim');
-    tiny(g, o.name, 12, y + 6, done ? '#ffffff' : '#7d867a');
-    if (done) tiny(g, e === 'ok' ? 'PARFAIT' : e === 'faute' ? 'FAUTE ! +5 S' : 'REFUS ! +5 S', LW - 12, y + 6, e === 'ok' ? '#8ee05a' : '#ffb4a8', 'right'); });
-  if (u >= 1) {
-    if (!run.finished) { run.finished = now(); SFX.clap(); }
-    text(g, `TOTAL : ${f.res.total.toFixed(2)} s`, LW / 2, 306, '#ffd23f', 'center');
-    if (f.res.pen === 0) text(g, 'SANS FAUTE !', LW / 2, 320, '#8ee05a', 'center');
+  // bulles au-dessus du terrain
+  run.pops = run.pops.filter(p => now() - p.t0 < 900);
+  for (const p of run.pops) { const q = (now() - p.t0) / 900, x = 16 + p.x / 2, y = 38 + p.y / 2 - 10 - q * 12;
+    g.globalAlpha = q > .7 ? (1 - q) / .3 : 1; text(g, p.s, x, y, p.ok ? '#8ee05a' : '#ff6a5a', 'center', 8, OUT); g.globalAlpha = 1; }
+  // chrono
+  plate(g, 4, 166, LW - 8, 24);
+  text(g, dog.name, 10, 174, '#ffd23f');
+  const DUR = PERIM / run.speed, shown = run.finished ? run.base + run.pens * 5 : Math.min(run.base, run.elapsed * run.base / DUR) + run.pens * 5;
+  if (run.mode === 'comp') text(g, shown.toFixed(2) + ' s', LW - 10, 174, '#ffffff', 'right');
+  // la jauge de l'action en cours
+  const a = run.acts[run.k];
+  plate(g, 4, 196, LW - 8, 58, 'blue');
+  if (now() < run.started) { text(g, 'PRET ?', LW / 2, 210, '#ffd23f', 'center'); tiny(g, 'TOUCHE L\'ECRAN QUAND LE CHIEN ARRIVE DANS LE VERT', LW / 2, 230, '#cfe6ff', 'center'); }
+  else if (a && !run.finished) {
+    const o = OBST[a.obs], hw = zoneOf(dog, o.kind), span = 70, x0 = 14, w = LW - 28;
+    const toX = dd => x0 + Math.round(clamp((dd + span) / (span + 24), 0, 1) * w);
+    text(g, o.kind === 'slalom' ? `SLALOM ${a.beat + 1}/4` : o.name, 12, 202, '#ffffff');
+    tiny(g, o.kind === 'tunnel' ? 'APPELLE TON CHIEN !' : o.kind === 'slalom' ? 'EN RYTHME !' : 'HOP AU BON MOMENT !', LW - 12, 204, '#ffd23f', 'right');
+    R(g, x0 - 1, 219, w + 2, 14, OUT); R(g, x0, 220, w, 12, '#1c2236');
+    R(g, toX(-hw), 220, toX(hw) - toX(-hw), 12, '#3fa84a'); R(g, toX(-hw), 220, toX(hw) - toX(-hw), 2, '#8ee05a');
+    R(g, toX(0), 218, 1, 16, '#fff6c2');
+    const cx = toX(run.d - a.at);
+    R(g, cx - 3, 216, 7, 20, OUT); R(g, cx - 2, 217, 5, 18, '#ffd23f'); R(g, cx - 2, 217, 5, 2, '#fff6c2');
+    if (o.kind === 'slalom') for (let j = 0; j < 4; j++) { const v = run.beats[j]; R(g, LW / 2 - 30 + j * 16, 240, 10, 8, OUT); R(g, LW / 2 - 29 + j * 16, 241, 8, 6, v === true ? '#8ee05a' : v === false ? '#e04a3c' : j === a.beat ? '#ffd23f' : '#3a4a58'); }
+    else tiny(g, 'TOUCHE N\'IMPORTE OU SUR L\'ECRAN', LW / 2, 242, '#8fa0b8', 'center');
+  } else if (run.finished) {
+    const succ = run.res.filter(r => r === 'ok').length;
+    if (run.mode === 'comp') { text(g, `TOTAL : ${(run.base + run.pens * 5).toFixed(2)} s`, LW / 2, 206, '#ffd23f', 'center'); text(g, run.pens ? `${run.pens} PENALITE${run.pens > 1 ? 'S' : ''}` : 'SANS FAUTE !', LW / 2, 224, run.pens ? '#ffb4a8' : '#8ee05a', 'center'); }
+    else { text(g, `${succ}/${OBST.length} OBSTACLES REUSSIS`, LW / 2, 206, '#ffd23f', 'center'); text(g, `PROGRES x${run.boost.toFixed(1).replace('.', ',')}`, LW / 2, 224, '#8ee05a', 'center'); }
+  }
+  // la liste des obstacles
+  OBST.forEach((o, i) => { const y = 262 + i * 22, e = run.res[i];
+    plate(g, 4, y, LW - 8, 18, e ? (e === 'ok' ? null : 'red') : 'dim');
+    tiny(g, o.name, 12, y + 7, e ? '#ffffff' : '#7d867a');
+    if (e) tiny(g, e === 'ok' ? 'PARFAIT' : e === 'faute' ? 'FAUTE ! +5 S' : 'REFUS ! +5 S', LW - 12, y + 7, e === 'ok' ? '#8ee05a' : '#ffb4a8', 'right'); });
+  if (!run.finished) { BTN.push({ x: 0, y: 0, w: LW, h: LH, act: hop }); return; }
+  if (now() - run.finished < 600) return;
+  if (run.mode === 'train') {
+    button(36, 420, 200, 36, 'TERMINER', { gold: true, act: () => {
+      dog.boost = run.boost; dog.guided = G.week; save(); UI.run = null; UI.screen = 'dog'; SFX.select();
+      toast(`Séance terminée : les progrès de ${dog.name} seront multipliés par ${run.boost.toFixed(1).replace('.', ',')} cette semaine.`); } });
+    return;
   }
   const last = run.idx >= run.queue.length - 1;
-  button(36, 430, 200, 36, u < 1 ? 'PASSER' : last ? 'CLASSEMENT' : 'CHIEN SUIVANT', { gold: u >= 1, act: () => {
-    if (u < 1) { run.t0 = now() - (DUR + 10) * 1000; return; }
-    if (!last) { run.idx++; run.t0 = now(); run.finished = 0; run.lastPassed = 0; SFX.whistle(); return; }
+  button(36, 420, 200, 36, last ? 'CLASSEMENT' : 'CHIEN SUIVANT', { gold: true, act: () => {
+    if (!last) { run.idx++; startRun('comp', run.queue[run.idx].dog); return; }
+    run.field.sort((x, y) => x.res.total - y.res.total); run.field.forEach((x, i) => x.rank = i + 1);
     UI.screen = 'results'; SFX.select();
   } });
 }
@@ -900,7 +996,7 @@ function drawTitle(t) {
     audioInit(); UI.confirm = 0; freshGame(); dirtyBase(); UI.screen = 'club'; MUSIC.start(); SFX.bark();
     const d = G.dogs[0];
     modal('BIENVENUE !', [`Voici ${d.name}, ton premier chien (${BREEDS[d.breed].name}).`, 'Choisis son activité de la semaine en touchant sa fiche.',
-      'Inscris-le aux concours pour gagner des pièces et de la réputation.', 'Objectif : le Championnat de France !'], "C'EST PARTI");
+      'Inscris-le aux concours pour gagner des pièces et de la réputation.', 'Pendant la course, touche l\'écran quand ton chien arrive dans la zone verte !', 'Objectif : le Championnat de France !'], "C'EST PARTI");
   } });
   y += 42;
   button(36, y, 200, 28, 'CLASSEMENT', { act: () => { location.href = '../classements/index.html#club'; } });
