@@ -146,7 +146,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
   const AMAI = [["easy", "MOUSSE"], ["normal", "CAPITAINE"], ["hard", "AMIRAL"]];
   const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
   const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
-    day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "");
+    day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   // les Pokémon du Picross Dex (noms lus dans la page du jeu, mise en cache par l'appli)
   let DEX = null;
@@ -164,27 +164,27 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     {id: "queens", name: "QUEENS", play: "../queens/index.html", views: [{label: "MEILLEUR TEMPS", ctl: ["size"], game: "queens", board: () => "best:" + st.size, fmt: T,
       title: () => `QUEENS · ${st.size}×${st.size}`, note: "Grilles réussies sans indice."}]},
     {id: "picross", name: "PICROSS DEX", play: "../picross/index.html", views: [
-      {label: "PAR POKÉMON", ctl: ["pokemon"], game: "picross", board: () => "t:" + st.poke, fmt: T, title: () => st.poke ? pokeLabel(st.poke) : "PICROSS DEX",
+      {label: "PAR POKEMON", ctl: ["pokemon"], game: "picross", board: () => "t:" + st.poke, fmt: T, title: () => st.poke ? pokeLabel(st.poke) : "PICROSS DEX",
        note: "Temps de la grille, plus 30 secondes par indice utilisé.", empty: "Personne n'a encore capturé de Pokémon."},
-      {label: "RECORDS DÉTENUS", kind: "records", game: "picross", fmt: v => N(v) + (v > 1 ? " records" : " record"), title: () => "QUI DÉTIENT LE PLUS DE RECORDS",
+      {label: "RECORDS DETENUS", kind: "records", game: "picross", fmt: v => N(v) + (v > 1 ? " records" : " record"), title: () => "QUI DETIENT LE PLUS DE RECORDS",
        note: "Nombre de Pokémon sur lesquels chacun a le meilleur temps de la famille."},
-      {label: "POKÉDEX", game: "picross", board: () => "dex", fmt: v => N(v) + " capturés", title: () => "LE POKÉDEX LE PLUS COMPLET"}]},
-    {id: "lignee", name: "LIGNÉE", play: "../lignee/index.html", views: [
+      {label: "POKEDEX", game: "picross", board: () => "dex", fmt: v => N(v) + " capturés", title: () => "LE POKEDEX LE PLUS COMPLET"}]},
+    {id: "lignee", name: "LIGNEE", play: "../lignee/index.html", views: [
       {label: "ARBRE DU JOUR", ctl: ["mode", "day"], game: "lignee", board: () => "daily:" + dayCode(st.mode, day()), fmt: T,
        title: () => `ARBRE DU JOUR · ${st.mode === "R" ? "ROYAL" : "CLASSIQUE"}`,
        empty: () => st.back ? "Personne n'a fini l'arbre ce jour-là." : "Personne n'a encore fini l'arbre du jour : à toi de jouer !"},
       {label: "PAR NIVEAU", ctl: ["mode", "level"], game: "lignee", board: () => "best:" + st.mode + st.level, fmt: T,
        title: () => `${st.mode === "R" ? "ROYAL" : "CLASSIQUE"} · ${LEVELS[st.level - 1]}`},
-      {label: "ARBRES", game: "lignee", board: () => "arbres", fmt: v => N(v) + (v > 1 ? " arbres" : " arbre"), title: () => "ARBRES RECONSTITUÉS"}]},
+      {label: "ARBRES", game: "lignee", board: () => "arbres", fmt: v => N(v) + (v > 1 ? " arbres" : " arbre"), title: () => "ARBRES RECONSTITUES"}]},
     {id: "injagility", name: "INJAGILITY", play: "../injagility/index.html", views: [
       {label: "INFINI", game: "injagility", board: () => "best", fmt: v => N(v) + " obst.", title: () => "INFINI · OBSTACLES FRANCHIS"},
       {label: "PARCOURS · TOTAL", game: "parcours", board: () => "total", fmt: v => N(v) + " pts", title: () => "PARCOURS · TOTAL DES MEILLEURS SCORES", play: "../injagility/parcours.html"},
       {label: "PAR PARCOURS", ctl: ["plevel"], game: "parcours", board: () => "lvl:" + st.plevel, fmt: v => N(v) + " pts", title: () => `PARCOURS N° ${st.plevel}`, play: "../injagility/parcours.html"}]},
-    {id: "touchecoule", name: "TOUCHÉ COULÉ", play: "../touche-coule/index.html", views: [
+    {id: "touchecoule", name: "TOUCHE COULE", play: "../touche-coule/index.html", views: [
       {label: "MEILLEURE VICTOIRE", ctl: ["tcmode", "tcai"], game: "touchecoule", board: () => `best:${st.tcmode}:${st.tcai}`, fmt: v => N(v) + " tirs",
        title: () => `${TCMODES.find(m => m[0] === st.tcmode)[1]} · IA ${TCAI.find(m => m[0] === st.tcai)[1]}`, note: "La victoire en le moins de tirs, par mode et par niveau de l'IA."}]},
     {id: "club", name: "CLUB D'AGILITY", play: "../club/index.html", views: [
-      {label: "REPUTATION", game: "club", board: () => "rep", fmt: v => N(v) + " pts", title: () => "LA PLUS GRANDE RÉPUTATION"},
+      {label: "REPUTATION", game: "club", board: () => "rep", fmt: v => N(v) + " pts", title: () => "LA PLUS GRANDE REPUTATION"},
       {label: "CHAMPION", game: "club", board: () => "champion", fmt: v => N(v) + " sem.", title: () => "CHAMPION DE FRANCE LE PLUS RAPIDE",
        note: "Le nombre de semaines pour gagner le Championnat de France.", empty: "Personne n'est encore champion de France."}]},
     {id: "pontstellaire", name: "PONT STELLAIRE", play: "../pont-stellaire/index.html", views: [
@@ -193,9 +193,9 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
        empty: () => st.back ? "Personne n'a dessiné le ciel ce jour-là." : "Personne n'a encore dessiné le ciel du jour : à toi de jouer !"},
       {label: "PAR TAILLE", ctl: ["pssize"], game: "pontstellaire", board: () => "best:" + st.pssize, fmt: T,
        title: () => `PONT STELLAIRE · ${st.pssize}×${st.pssize}`, note: "Le meilleur temps, plus 30 secondes par indice."},
-      {label: "CONSTELLATIONS", game: "pontstellaire", board: () => "ciels", fmt: v => N(v) + (v > 1 ? " ciels" : " ciel"), title: () => "CONSTELLATIONS DESSINÉES"}]},
+      {label: "CONSTELLATIONS", game: "pontstellaire", board: () => "ciels", fmt: v => N(v) + (v > 1 ? " ciels" : " ciel"), title: () => "CONSTELLATIONS DESSINEES"}]},
     {id: "orbite", name: "ORBITE", play: "../orbite/index.html", views: [
-      {label: "ÉTOILES", game: "orbite", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "ORBITE · TOTAL D'ÉTOILES",
+      {label: "ETOILES", game: "orbite", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "ORBITE · TOTAL D'ETOILES",
        note: "3 étoiles par niveau réussi du premier coup, 2 au deuxième essai, 1 au troisième (90 au maximum)."}]},
     {id: "amiral", name: "AMIRAL !", play: "../amiral/index.html", views: [
       {label: "MEILLEURE VICTOIRE", ctl: ["amai"], game: "amiral", board: () => `best:${st.amai}`, fmt: v => N(v) + " tours",
@@ -293,7 +293,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       li.append(a, n, v); $("list").appendChild(li);
     });
     const me = rows.findIndex(r => r.me);
-    $("mine").textContent = me >= 0 ? `TU ES ${ord(rank[me]).toUpperCase()}${rank.filter(x => x === rank[me]).length > 1 ? " EX ÆQUO" : ""} SUR ${rows.length}` : "";
+    $("mine").textContent = me >= 0 ? `TU ES ${ord(rank[me]).toUpperCase()}${rank.filter(x => x === rank[me]).length > 1 ? " EX AEQUO" : ""} SUR ${rows.length}` : "";
   }
   function load(){
     const v = view(), my = ++ticket;
