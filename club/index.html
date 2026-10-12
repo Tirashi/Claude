@@ -130,6 +130,11 @@ function load() {
   G = g; return true;
 }
 const owns = id => !!(G.owned && G.owned[id]);
+const clubName = () => (G && G.clubName) || 'MON CLUB';
+function renameClub() {
+  const n = prompt('Nom du club :', G.clubName || '');
+  if (n && n.trim()) { G.clubName = n.trim().slice(0, 20); save(); SFX.select(); toast(`Bienvenue au club « ${G.clubName} » !`); }
+}
 function shopPrice(it) {
   if (it.id === 'chenil') return G.kennel >= 6 ? 0 : it.price[G.kennel - 2];
   return it.price;
@@ -590,6 +595,12 @@ function canEnter(d) { const tier = TIERS[G.tier]; return G.coins >= tier.fee * 
 function drawClub(t) {
   bgFill(t); hud();
   sceneBox(t, 34, null);
+  // le nom du club, sur une plaque en bas du décor : on la touche pour le changer
+  { const nm = clubName().toUpperCase(), w = Math.min(232, nm.length * 4 + 22);
+    plate(g, 20, 138, w, 13, 'gold'); tiny(g, nm, 26, 142, '#fff6c2');
+    for (let k = 0; k < 5; k++) R(g, 20 + w - 12 + k, 145 - k, 2, 1, k === 4 ? '#ff8a76' : '#fff6c2');   // petit crayon
+    R(g, 20 + w - 13, 146, 1, 1, '#fff6c2');
+    BTN.push({ x: 16, y: 34, w: 240, h: 120, act: renameClub }); }
   // concours du week-end
   const lv = level(G.rep), tier = TIERS[G.tier];
   plate(g, 4, 160, LW - 8, 22, 'blue');
@@ -783,7 +794,7 @@ const AI_CLUBS = ['Les Pattes Agiles', 'Canicross 44', 'Club des Vosges', 'Agili
 function startCompetition(entrants) {
   const tier = TIERS[G.tier], D = tier.d;
   G.coins = Math.max(0, G.coins - tier.fee * entrants.length);
-  const field = entrants.map(d => ({ mine: true, dog: d, name: d.name, breed: d.breed, club: 'MON CLUB', res: null }));
+  const field = entrants.map(d => ({ mine: true, dog: d, name: d.name, breed: d.breed, club: clubName().toUpperCase(), res: null }));
   const used = new Set();
   while (field.length < 8) {
     let n; do n = pick(AI_NAMES); while (used.has(n)); used.add(n);
@@ -995,7 +1006,7 @@ function drawTitle(t) {
     if (has && !arm) { UI.confirm = now(); SFX.click(); toast('Touche encore pour recommencer : la partie en cours sera effacée.'); return; }
     audioInit(); UI.confirm = 0; freshGame(); dirtyBase(); UI.screen = 'club'; MUSIC.start(); SFX.bark();
     const d = G.dogs[0];
-    modal('BIENVENUE !', [`Voici ${d.name}, ton premier chien (${BREEDS[d.breed].name}).`, 'Choisis son activité de la semaine en touchant sa fiche.',
+    modal('BIENVENUE !', [`Voici ${d.name}, ton premier chien (${BREEDS[d.breed].name}).`, 'Choisis son activité de la semaine en touchant sa fiche.', 'Touche le décor du club pour lui donner un nom.',
       'Inscris-le aux concours pour gagner des pièces et de la réputation.', 'Pendant la course, touche l\'écran quand ton chien arrive dans la zone verte !', 'Objectif : le Championnat de France !'], "C'EST PARTI");
   } });
   y += 42;
