@@ -9,6 +9,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`touche-coule/index.html`](touche-coule/index.html) : **Touché Coulé**, une bataille navale contre l'ordinateur (modes Classique et Arsenal).
 - [`club/index.html`](club/index.html) : **Le Club d'agility**, un jeu de gestion en 32 bits : recruter des chiens, les entraîner semaine après semaine, gagner les concours et faire grandir le club jusqu'au Championnat de France.
 - [`amiral/index.html`](amiral/index.html) : **Amiral !**, une bataille navale tactique en 32 bits où chaque navire a un pouvoir (avion de reconnaissance, salve, torpille, plongée du sous-marin).
+- [`orbite/index.html`](orbite/index.html) : **Orbite**, un jeu de physique en 32 bits : lancer une sonde dont la trajectoire est courbée par la gravité des planètes pour atteindre une balise, en 30 niveaux.
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
 - [`snake/index.html`](snake/index.html) : **Snake**.
 - [`asteroids/index.html`](asteroids/index.html) : **Asteroids**.
@@ -110,6 +111,18 @@ Deux modes, reliés par des onglets en haut de page.
 
 ---
 
+## Orbite
+
+Un jeu de physique spatiale en 32 bits : on lance une sonde depuis sa rampe, la gravité des planètes courbe sa trajectoire, et il faut atteindre la balise dorée.
+
+- **Viser au lance-pierre** : poser le doigt n'importe où, tirer vers l'arrière, puis lâcher. Plus on tire, plus la sonde part vite (jauge de puissance en bas). Le début de la trajectoire s'affiche pendant la visée, et les essais ratés restent tracés en pâle pour corriger le tir.
+- **30 niveaux** qui introduisent peu à peu les planètes (rocheuses, gazeuses, glacées, de lave, jungle, à anneaux), les astéroïdes fixes, les trous noirs (ils attirent très fort et avalent la sonde), les portails (on ressort par l'autre bout avec la même vitesse) et les astéroïdes en orbite autour des planètes.
+- **3 essais par niveau** : 3 étoiles du premier coup, 2 au deuxième essai, 1 au troisième. Après trois sondes perdues, on recommence le niveau avec trois sondes neuves. Réussir un niveau ouvre le suivant ; on peut rejouer les anciens pour gagner des étoiles.
+- Le vol est calculé à pas fixe : une même visée donne toujours la même trajectoire. Chaque niveau a été vérifié par un solveur, qui s'assure qu'il existe des tirs gagnants avec une marge suffisante pour être faits au doigt.
+- Les étoiles sont sauvegardées et font partie du transfert de sauvegardes ; le total d'étoiles (90 au maximum) part au classement familial.
+
+---
+
 ## Les classiques passés en 16 bits
 
 Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire en le moins de tirs) et le classement. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).
@@ -133,7 +146,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -147,6 +160,7 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Touché Coulé** : la victoire en le moins de tirs, par mode (Classique, Arsenal) et par niveau de l'IA (Facile, Normal, Amiral).
 - **Le Club d'agility** : la plus grande réputation, et le Championnat de France gagné en le moins de semaines.
 - **Amiral !** : la victoire en le moins de tours, par niveau de l'ordinateur (Mousse, Capitaine, Amiral).
+- **Orbite** : le total d'étoiles gagnées sur les 30 niveaux.
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).
 

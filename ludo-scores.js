@@ -66,7 +66,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"]];
+    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -165,14 +165,17 @@
     Object.keys(tc).forEach(function (k){ if (/^(classic|arsenal):(easy|normal|hard)$/.test(k)) lo("touchecoule", "best:" + k, tc[k]); });
     var am = readKey("amiral.best", {}) || {};
     Object.keys(am).forEach(function (k){ if (/^(easy|normal|hard)$/.test(k)) lo("amiral", "best:" + k, am[k]); });
+    var ob = readKey("orbite.stars", {}) || {}, stars = 0;
+    Object.keys(ob).forEach(function (k){ if (/^\d{1,2}$/.test(k)) stars += Math.min(3, Number(ob[k]) || 0); });
+    hi("orbite", "etoiles", stars);
     var cs = readKey("club.save", null);
     if (cs && typeof cs === "object"){ hi("club", "rep", cs.bestRep || cs.rep || 0); if (cs.champion > 0) lo("club", "champion", cs.champion); }
     return out;
   });
 
   window.addEventListener("online", function (){ flush(); });
-  // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 2 : tous les jeux)
-  var SYNC = 2;
+  // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 3 : avec Orbite)
+  var SYNC = 3;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();

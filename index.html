@@ -90,6 +90,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.touche{--lb:linear-gradient(to bottom, #2b6fd0, #0f1866); --lt:#ffd84a; --ld:#e8ecff}
 .cart.club{--lb:linear-gradient(to bottom, #3f8a37, #173a1a); --lt:#ffd23f; --ld:#e4f7dc}
 .cart.amiral{--lb:linear-gradient(to bottom, #1c579c, #0a1c40); --lt:#ffd23f; --ld:#dcebff}
+.cart.orbite{--lb:radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%); --lt:#6fd8ff; --ld:#dfe5ff}
 
 @media (hover: none) and (pointer: coarse){ .status{display:none} }
 .status{text-align:center; font-family:var(--f-display); font-size:9px; letter-spacing:1px; line-height:2; color:var(--text-dim)}
@@ -215,6 +216,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <h2>LE CLUB D'AGILITY</h2>
         <p>Recrute des chiens, entraîne-les semaine après semaine et mène ton club jusqu'au Championnat de France.</p>
         <div class="tags"><span>GESTION</span><span>32 BITS</span><span>6 RACES</span></div>
+      </div>
+    </a>
+    <a class="cart orbite" href="orbite/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="planet" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>ORBITE</h2>
+        <p>Lance ta sonde et laisse la gravité des planètes la guider jusqu'à la balise, entre trous noirs et portails.</p>
+        <div class="tags"><span>PHYSIQUE</span><span>32 BITS</span><span>30 NIVEAUX</span></div>
       </div>
     </a>
     <a class="cart tetris" href="tetris/index.html">
@@ -400,6 +410,23 @@ const ICONS = {
     "..kkyyyyyyyyok..",
     "....kkoooookk...",
     "......kkkk......"]},
+  planet: {pal:{k:"#0b0614", w:"#fff4d8", y:"#e8cf95", o:"#c39a62", d:"#8a6444", r:"#6fd8ff"}, map:[
+    "................",
+    "................",
+    ".....kkkkkk.....",
+    "....kwwyyyok....",
+    "...kwyyyyyyok...",
+    "..kkyyoooyyokk..",
+    "kkrrkkyyyyokrrkk",
+    "krrrrkkkkkkrrrrk",
+    "kkrrkooooodkrrkk",
+    "..kkkyyyyodkkk..",
+    "...kyoooodddk...",
+    "....kooodddk....",
+    ".....kkkkkk.....",
+    "................",
+    "................",
+    "................"]},
   boat: {pal:{k:"#0f121b", g:"#a1aabb", h:"#dfe4ee", r:"#ff5050", b:"#2462c0", B:"#9fd3ff", d:"#163e94"}, map:[
     "................",
     "......k.........",
@@ -485,6 +512,7 @@ function collectSaves(){
   const ld = readKey("lignee.daily", {}); if (ld && Object.keys(ld).length) g.ligneeDaily = ld;
   const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
   const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
+  const ob = readKey("orbite.stars", {}); if (ob && Object.keys(ob).length) g.orbite = ob;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
@@ -499,6 +527,7 @@ function describeSaves(g){
   if (g.touchecoule){ const v = Object.values(g.touchecoule).filter(x => x > 0); if (v.length) out.push(`Touché Coulé : meilleure victoire en ${Math.min(...v)} tirs`); }
   if (g.club && g.club.week) out.push(`Club d'agility : semaine ${g.club.week}, ${(g.club.dogs || []).length} chien${(g.club.dogs || []).length > 1 ? "s" : ""}, réputation ${g.club.rep || 0}`);
   if (g.amiral){ const v = Object.values(g.amiral).filter(x => x > 0); if (v.length) out.push(`Amiral ! : meilleure victoire en ${Math.min(...v)} tours`); }
+  if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
   return out;
 }
 function decodeSaves(text){
@@ -579,6 +608,11 @@ function mergeSaves(g){
     const mine = readKey("amiral.best", {}) || {}; let n = 0;
     for (const [k, v] of Object.entries(g.amiral)) if (/^(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
     if (n){ writeKey("amiral.best", mine); done.push(`Amiral ! : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.orbite && typeof g.orbite === "object"){
+    const mine = readKey("orbite.stars", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(g.orbite)) if (/^\d{1,2}$/.test(k) && v >= 1 && v <= 3 && !(mine[k] >= v)){ mine[k] = Math.round(v); n++; }
+    if (n){ writeKey("orbite.stars", mine); done.push(`Orbite : ${n} niveau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
   }
   if (g.ligneeDaily && typeof g.ligneeDaily === "object"){
     const mine = readKey("lignee.daily", {}) || {}; let n = 0;

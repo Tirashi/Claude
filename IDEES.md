@@ -33,6 +33,6 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 ## Idées de jeux dans l'espace (à choisir)
 1. **Cargo Stellaire** (commerce) — acheter bon marché, revendre cher de planète en planète ; carburant, événements (astéroïdes, pirates, signal de détresse) ; améliorer soute et moteurs ; classement : plus grande fortune en 50 jours.
 2. **Lune-Rover** (puzzle de programmation) — programmer à l'avance un petit robot (avancer, tourner, sauter, ramasser) pour récolter des cristaux sur la Lune ; 60 niveaux, boucles et conditions progressives, 3 étoiles pour le programme le plus court. *Rapide à faire.*
-3. **Orbite** (arcade / physique) — lancer des sondes dont la trajectoire est courbée par la gravité des planètes pour atteindre une cible ; trous noirs, astéroïdes, portails ; 3 essais par niveau. *Rapide à faire.*
+3. **Orbite** — ✅ réalisé (30 niveaux). (arcade / physique) — lancer des sondes dont la trajectoire est courbée par la gravité des planètes pour atteindre une cible ; trous noirs, astéroïdes, portails ; 3 essais par niveau. *Rapide à faire.*
 4. **Station Alpha** (gestion) — construire une station spatiale module par module (dortoirs, serres, panneaux solaires, labos, quais) en équilibrant oxygène, énergie, nourriture et moral ; vaisseaux qui s'amarrent, pannes, météorites ; une journée par tour.
 5. **Invasion 2.0** (arcade) — hommage à Space Invaders / Galaga : formations qui plongent, boss toutes les 5 vagues, bonus (double tir, bouclier, laser, escorte) ; mode infini avec score et classement.
