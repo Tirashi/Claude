@@ -190,7 +190,7 @@ const TINY = {
   Y:'101101010010010',Z:'111001010100111',0:'010101101101010',1:'010110010010111',2:'110001010100111',3:'110001010001110',
   4:'101101111001001',5:'111100110001110',6:'011100110101010',7:'111001010010010',8:'010101010101010',9:'010101011001110',
   '.':'000000000000010','!':'010010010000010','-':'000000111000000',':':'000010000010000','/':'001001010100100','+':'000010111010000',
-  "'":'010010000000000','?':'110001010000010',
+  "'":'010010000000000','?':'110001010000010','>':'100010001010100','<':'001010100010001',
 };
 function tiny(g, s, x, y, col, align) {
   s = String(s).toUpperCase();
@@ -1095,6 +1095,11 @@ function drawTitle(t) {
   plate(g, 50, 438, LW - 58, 32);
   text(g, 'Coulez la flotte', 58, 444, '#f2f0ff'); text(g, 'en moins de tours !', 58, 456, '#f2f0ff');
 }
+function setTorp(h) {
+  if (S.torpH === h) return;
+  S.torpH = h; S.armed = null; SFX.rotate();
+  setMsg(h ? 'Torpille en ligne : elle part du bord gauche. Touchez une ligne.' : 'Torpille en colonne : elle part du haut. Touchez une colonne.');
+}
 function saveOpts() { store.set('opts', { sfx: AC.sfxOn, music: AC.musicOn }); }
 
 const BY_BAR = 284, MINI = { x: 8, y: 340, s: 88 };
@@ -1115,7 +1120,12 @@ function drawHud(t) {
   const v = S.view, mine = v === 'player';
   const ttl = place ? 'PLACEZ VOTRE FLOTTE' : mine ? (S.turn === 'ai' ? "L'ENNEMI ATTAQUE !" : S.weapon === 'plongee' ? 'CHOISISSEZ OU PLONGER' : 'VOTRE FLOTTE')
             : (S.turn === 'player' ? 'EAUX ENNEMIES : A VOUS' : 'EAUX ENNEMIES');
-  tiny(g, ttl, LW / 2, 32, mine ? '#9fd3ff' : '#ffb4a8', 'center');
+  if (!mine && S.weapon === 'torpille' && S.phase === 'play' && S.turn === 'player' && !S.busy) {
+    // la torpille : un bouton pour choisir son sens, bien visible au-dessus de la grille
+    tiny(g, 'TORPILLE :', 62, 33, '#ffb4a8', 'right');
+    button(68, 27, 92, 16, 'LIGNE  >', { tiny: true, gold: S.torpH, act: () => setTorp(true) });
+    button(164, 27, 92, 16, 'COLONNE  V', { tiny: true, gold: !S.torpH, act: () => setTorp(false) });
+  } else tiny(g, ttl, LW / 2, 32, mine ? '#9fd3ff' : '#ffb4a8', 'center');
 }
 function drawBar(t) {
   if (S.phase === 'place') {
@@ -1141,13 +1151,13 @@ function drawBar(t) {
     BTN.push({ x, y, w, h, act: () => {
       if (!myTurn) return;
       if (!ok) { SFX.error(); setMsg(ship && ship.sunk ? `${ship.def.name} coulé : plus de ${POWERS[p].name.toLowerCase()} !` : p === 'plongee' && ship.hits ? 'Le sous-marin est touché : il ne peut plus plonger.' : `${POWERS[p].name} sera prêt dans ${b.cd[p]} tour${b.cd[p] > 1 ? 's' : ''}.`); return; }
-      if (p === 'torpille' && S.weapon === 'torpille') { S.torpH = !S.torpH; SFX.rotate(); setMsg(S.torpH ? 'Torpille : elle part de la gauche, sur une ligne.' : 'Torpille : elle part du haut, sur une colonne.'); return; }
+      if (p === 'torpille' && S.weapon === 'torpille') { setTorp(!S.torpH); return; }
       S.weapon = p; S.aim = null; S.armed = null; SFX.select();
       setView(p === 'plongee' ? 'player' : 'enemy'); S.peek = false;
       setMsg({ tir: 'Touchez une case des eaux ennemies pour tirer.',
                avion: "Avion : touchez le centre de la zone à survoler, puis encore pour l'envoyer.",
                salve: 'Salve : touchez le centre de la croix, puis encore pour faire feu.',
-               torpille: 'Torpille : touchez une ligne, puis encore pour tirer. Re-touchez TORPILLE pour viser une colonne.',
+               torpille: 'Torpille : choisissez LIGNE ou COLONNE en haut, touchez la grille, puis encore pour tirer.',
                plongee: 'Plongée : choisissez un point vert pour le sous-marin, puis touchez encore.' }[p]);
     } });
   });
