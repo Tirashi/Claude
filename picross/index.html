@@ -168,7 +168,7 @@ body.index .scroller{flex:1 1 0; min-height:200px}
 .rc{display:flex; justify-content:flex-end; align-items:center; padding-right:5px; gap:calc(var(--cell)*.22)}
 .cc span,.rc span{font-family:var(--f-display); font-size:calc(var(--cell)*.4); line-height:1.25; font-variant-numeric:tabular-nums}
 .cc.alt,.rc.alt{background:var(--screen-2)}
-.cc.done span,.rc.done span{opacity:.32}
+.cc.done span,.rc.done span,.cc span.ok,.rc span.ok{opacity:.32}
 .cc.hot,.rc.hot{background:var(--gold)}
 .cell{width:var(--cell); height:var(--cell); background:var(--screen); border-right:1px solid var(--ink-soft); border-bottom:1px solid var(--ink-soft);
   position:relative; cursor:pointer}
@@ -4078,13 +4078,37 @@ function fit(){
   }
 }
 function lineDone(vals, clue){ return same(clueOf(vals.map(v => v === 1)), clue); }
+// numéros validés un par un : un bloc fermé (bord ou croix de chaque côté) atteint depuis un bord
+// sans case vide sur le chemin correspond au nombre suivant de l'indice, en partant de ce bord
+function clueMarks(vals, clue){
+  const ok = new Set(), n = vals.length;
+  let lim = 0; // le balayage depuis la droite s'arrête aux blocs déjà attribués depuis la gauche
+  const scan = (from, step, idx) => {
+    let i = from, k = 0;
+    while (k < clue.length){
+      while (i >= 0 && i < n && vals[i] === 2) i += step;
+      if (i < 0 || i >= n || vals[i] !== 1 || (step < 0 && i < lim)) return;
+      let len = 0; while (i >= 0 && i < n && vals[i] === 1){ len++; i += step; }
+      if (i >= 0 && i < n && vals[i] !== 2) return;
+      const ci = idx(k); if (len !== clue[ci]) return;
+      ok.add(ci); k++; if (step > 0) lim = i;
+    }
+  };
+  scan(0, 1, k => k); scan(n-1, -1, k => clue.length-1-k);
+  return ok;
+}
+function markClues(el, vals, clue){
+  const done = lineDone(vals, clue), ok = done ? null : clueMarks(vals, clue);
+  el.classList.toggle("done", done);
+  [...el.children].forEach((s, k) => s.classList.toggle("ok", !done && ok.has(k)));
+}
 function render(hot){
   cellEls.forEach((e,i) => {
     e.classList.toggle("f", cells[i] === 1); e.classList.toggle("x", cells[i] === 2);
     e.classList.toggle("cur", i === cursor && (document.activeElement === $("board") || document.body.classList.contains("zoom")));
   });
-  for (let r = 0; r < H; r++) rcEls[r].classList.toggle("done", lineDone(cells.slice(r*W, r*W+W), rowClues[r]));
-  for (let c = 0; c < W; c++) ccEls[c].classList.toggle("done", lineDone([...Array(H).keys()].map(r => cells[r*W+c]), colClues[c]));
+  for (let r = 0; r < H; r++) markClues(rcEls[r], cells.slice(r*W, r*W+W), rowClues[r]);
+  for (let c = 0; c < W; c++) markClues(ccEls[c], [...Array(H).keys()].map(r => cells[r*W+c]), colClues[c]);
   const x = preview.getContext("2d"); x.clearRect(0,0,W,H); x.fillStyle = PAL.k;
   cells.forEach((v,i) => { if (v === 1) x.fillRect(i%W, Math.floor(i/W), 1, 1); });
   setHot(hot ?? lastHot);
