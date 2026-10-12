@@ -31,8 +31,14 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 4. **Le Chalutier** (gestion / incrémental) — d'une barque à une flotte de chalutiers : mini-jeu de pêche au filet, vente au marché (prix variables), bateaux et marins qui pêchent même hors ligne, nouvelles zones (mer froide, récifs, grand large), aquarium à compléter.
 
 ## Idées de jeux dans l'espace (à choisir)
-1. **Cargo Stellaire** (commerce) — acheter bon marché, revendre cher de planète en planète ; carburant, événements (astéroïdes, pirates, signal de détresse) ; améliorer soute et moteurs ; classement : plus grande fortune en 50 jours.
-2. **Lune-Rover** (puzzle de programmation) — programmer à l'avance un petit robot (avancer, tourner, sauter, ramasser) pour récolter des cristaux sur la Lune ; 60 niveaux, boucles et conditions progressives, 3 étoiles pour le programme le plus court. *Rapide à faire.*
-3. **Orbite** — ✅ réalisé (30 niveaux). (arcade / physique) — lancer des sondes dont la trajectoire est courbée par la gravité des planètes pour atteindre une cible ; trous noirs, astéroïdes, portails ; 3 essais par niveau. *Rapide à faire.*
-4. **Station Alpha** (gestion) — construire une station spatiale module par module (dortoirs, serres, panneaux solaires, labos, quais) en équilibrant oxygène, énergie, nourriture et moral ; vaisseaux qui s'amarrent, pannes, météorites ; une journée par tour.
-5. **Invasion 2.0** (arcade) — hommage à Space Invaders / Galaga : formations qui plongent, boss toutes les 5 vagues, bonus (double tir, bouclier, laser, escorte) ; mode infini avec score et classement.
+1. **Lune-Rover** (puzzle de programmation) — programmer à l'avance un petit robot (avancer, tourner, sauter, ramasser) pour récolter des cristaux sur la Lune ; 60 niveaux, boucles et conditions progressives, 3 étoiles pour le programme le plus court. *Rapide à faire.*
+2. **Orbite** — ✅ réalisé (30 niveaux). (arcade / physique) — lancer des sondes dont la trajectoire est courbée par la gravité des planètes pour atteindre une cible ; trous noirs, astéroïdes, portails ; 3 essais par niveau.
+3. **Invasion 2.0** (arcade) — hommage à Space Invaders / Galaga : formations qui plongent, boss toutes les 5 vagues, bonus (double tir, bouclier, laser, escorte) ; mode infini avec score et classement.
+4. **Alunissage** (adresse) — poser un module lunaire en douceur avec deux réacteurs au doigt : gravité, carburant limité, relief accidenté, aires d'atterrissage plus ou moins étroites (×1 à ×5 points) ; 20 sites (Lune, Mars, comète…), site du jour au classement. *Rapide à faire.*
+5. **Pont stellaire** (réflexion) — relier les étoiles par des faisceaux droits (1 ou 2 par paire, sans croisement) pour que chaque étoile ait son nombre de liens et que tout le ciel soit connecté (règles du Hashi) ; une constellation se dessine à la fin ; grilles générées à solution unique, grille du jour. *Rapide à faire.*
+6. **Astro-Mineur** (exploration / améliorations) — une foreuse creuse un astéroïde vers le bas : minerais de plus en plus rares, carburant et coque à surveiller, remonter vendre à la station pour améliorer foret, réservoir et soute ; poches de gaz et grottes ; un trésor au cœur de l'astéroïde.
+7. **Apesanteur** (plateforme physique) — un spationaute flotte dans une station abandonnée et se propulse par petites poussées d'extincteur ; oxygène limité, débris qui dérivent, sas et interrupteurs ; 30 salles, record en moins de poussées.
+8. **Bouclier lunaire** (arcade) — façon Missile Command : protéger les dômes d'une base lunaire des pluies de météorites en tirant des charges qui explosent là où l'on touche ; vagues de plus en plus denses, comètes qui se divisent, réparation des dômes entre les vagues ; score et classement.
+
+## Préférences notées
+- Cargo Stellaire et Station Alpha : retirés de la liste (pas retenus).
