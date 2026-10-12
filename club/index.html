@@ -17,10 +17,20 @@ html, body { margin: 0; height: 100%; background: #0f1a12; overflow: hidden; }
 body { display: flex; justify-content: center; align-items: flex-start; touch-action: manipulation;
   -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 #cv { display: block; touch-action: none; cursor: pointer; }
+#ask { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: rgba(4,10,6,.7); }
+#ask[hidden] { display: none; }
+#ask form { width: min(320px, 90vw); padding: 16px; background: linear-gradient(#34543a, #142616); border: 3px solid #f4efe6; box-shadow: 0 0 0 3px #120c16, 4px 4px 0 3px #120c16; border-radius: 4px; }
+#askTitle { font: 12px 'Press Start 2P', monospace; color: #ffd23f; text-align: center; margin-bottom: 14px; text-shadow: 2px 2px 0 #120c16; }
+#askInput { box-sizing: border-box; width: 100%; font: 14px 'Press Start 2P', monospace; padding: 10px 8px; color: #120c16; background: #fff6e0; border: 3px solid #120c16; border-radius: 2px; }
+#ask .row { display: flex; gap: 10px; margin-top: 14px; }
+#ask button { flex: 1; font: 10px 'Press Start 2P', monospace; padding: 10px 4px; color: #fff; background: #2c4a30; border: 3px solid #120c16; box-shadow: inset 0 2px 0 rgba(255,255,255,.25); cursor: pointer; }
+#ask #askOk { background: #a07018; color: #fff6c2; }
 </style>
 </head>
 <body>
 <canvas id="cv" width="272" height="480" aria-label="Le Club d'agility"></canvas>
+<div id="ask" hidden><form onsubmit="return false"><div id="askTitle"></div><input id="askInput" type="text" autocomplete="off" spellcheck="false">
+<div class="row"><button type="button" id="askNo">ANNULER</button><button type="submit" id="askOk">OK</button></div></form></div>
 <script src="../injagility/chiens32.js"></script>
 <script src="../ludo-scores.js"></script>
 <script>
@@ -131,9 +141,20 @@ function load() {
 }
 const owns = id => !!(G.owned && G.owned[id]);
 const clubName = () => (G && G.clubName) || 'MON CLUB';
+// petite fenêtre de saisie en HTML par-dessus le jeu (prompt() est bloqué dans certains cadres)
+function askText(title, value, max, done) {
+  const box = document.getElementById('ask'), inp = document.getElementById('askInput');
+  document.getElementById('askTitle').textContent = title;
+  inp.value = value || ''; inp.maxLength = max; box.hidden = false;
+  setTimeout(() => { inp.focus(); inp.select(); }, 30);
+  const close = ok => { box.hidden = true; document.getElementById('askOk').onclick = document.getElementById('askNo').onclick = inp.onkeydown = null;
+    if (ok && inp.value.trim()) done(inp.value.trim().slice(0, max)); };
+  document.getElementById('askOk').onclick = () => close(true);
+  document.getElementById('askNo').onclick = () => close(false);
+  inp.onkeydown = e => { if (e.key === 'Enter') close(true); else if (e.key === 'Escape') close(false); };
+}
 function renameClub() {
-  const n = prompt('Nom du club :', G.clubName || '');
-  if (n && n.trim()) { G.clubName = n.trim().slice(0, 20); save(); SFX.select(); toast(`Bienvenue au club « ${G.clubName} » !`); }
+  askText('NOM DU CLUB', G.clubName || '', 20, n => { G.clubName = n; save(); SFX.select(); toast(`Bienvenue au club « ${G.clubName} » !`); });
 }
 function shopPrice(it) {
   if (it.id === 'chenil') return G.kennel >= 6 ? 0 : it.price[G.kennel - 2];
@@ -646,8 +667,7 @@ function drawDog(t) {
   button(6, 6, 64, 20, '< CLUB', { tiny: true, act: () => { UI.screen = 'club'; SFX.click(); } });
   logo(g, d.name, LW / 2, 34, 12);
   button(LW / 2 - 40, 52, 80, 16, 'RENOMMER', { tiny: true, act: () => {
-    const n = prompt('Nouveau nom du chien :', d.name);
-    if (n && n.trim()) { d.name = n.trim().slice(0, 10); save(); SFX.select(); } } });
+    askText('NOM DU CHIEN', d.name, 10, n => { d.name = n; save(); SFX.select(); }); } });
   // portrait
   const px = 56, py = 74, pw = 160, ph = 72;
   R(g, px - 3, py - 3, pw + 6, ph + 6, OUT);
