@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pont stellaire</title>
+<meta name="description" content="Pont stellaire : relie les étoiles par des faisceaux de lumière pour dessiner une constellation.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#070a1c">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+html, body { margin: 0; height: 100%; background: #04050e; overflow: hidden; }
+body { display: flex; justify-content: center; align-items: flex-start; touch-action: manipulation;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#cv { display: block; touch-action: none; cursor: pointer; }
+</style>
+</head>
+<body>
+<canvas id="cv" width="272" height="480" aria-label="Pont stellaire : puzzle des étoiles à relier"></canvas>
+<script src="../ludo-scores.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   PONT STELLAIRE : les règles du Hashi, dans un ciel étoilé en 32 bits.
+   - Chaque étoile porte un nombre : c'est le nombre de faisceaux qui
+     doivent en partir.
+   - Les faisceaux sont droits (horizontaux ou verticaux), un ou deux
+     entre deux étoiles, et ne se croisent jamais.
+   - À la fin, toutes les étoiles sont reliées en une seule constellation.
+   - Commandes : toucher une étoile puis une voisine (ou glisser de l'une
+     vers l'autre) ajoute un faisceau : 1, puis 2, puis aucun. Toucher un
+     faisceau le fait aussi tourner.
+   - Les grilles sont générées à partir d'une graine, puis un solveur
+     vérifie qu'elles n'ont qu'une seule solution. Le Ciel du jour (9×9)
+     a la même graine pour toute la famille.
+   - Records : le meilleur temps par taille (+30 s par indice), et le
+     temps du Ciel du jour, envoyés au classement familial.
+   L'écran est dessiné en 272×480 pixels logiques puis agrandi sans lissage.
+   ===================================================================== */
+const LW = 272, LH = 480, TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace', OUT = '#0b0614';
+const SIZES = [[7, 'PETIT'], [9, 'MOYEN'], [11, 'GRAND']];
+const ISLANDS = { 7: [10, 13], 9: [17, 21], 11: [25, 31] };
+const HINT_MS = 30000;
+const NAMES = ['la Lyre', 'le Cygne', 'Cassiopée', 'la Licorne', "l'Aigle", 'le Dauphin', 'la Baleine', 'le Phénix', 'la Colombe', 'le Caméléon',
+  'la Boussole', 'le Paon', 'la Grue', 'le Toucan', 'la Girafe', 'le Lynx', 'la Flèche', 'le Petit Renard', 'la Couronne', 'le Sextant',
+  'le Bouvier', 'la Chevelure', 'le Loup', 'le Corbeau', 'la Coupe', 'le Lézard', 'le Petit Cheval', "l'Écu", 'le Télescope', 'la Mouche'];
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem('pontstellaire.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('pontstellaire.' + k, JSON.stringify(v)); } catch (e) {} },
+};
+const now = () => performance.now();
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const todayKey = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+const fmtTime = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
+
+/* =========================================================
+   GRILLE : étoiles, faisceaux possibles, croisements
+   ========================================================= */
+// à partir des étoiles [{x, y, n}], la liste des paires voisines (la plus proche dans chaque direction)
+function buildEdges(N, isl) {
+  const at = {}; isl.forEach((s, i) => at[s.x + ',' + s.y] = i);
+  const edges = [], adj = isl.map(() => []);
+  isl.forEach((s, i) => {
+    for (const [dx, dy] of [[1, 0], [0, 1]]) {
+      for (let k = 1; k < N; k++) {
+        const j = at[(s.x + dx * k) + ',' + (s.y + dy * k)];
+        if (j !== undefined) { const e = { a: i, b: j, h: dy === 0, cross: [] }; adj[i].push(edges.length); adj[j].push(edges.length); edges.push(e); break; }
+      }
+    }
+  });
+  // deux faisceaux se croisent si l'un est horizontal, l'autre vertical, et qu'ils se coupent hors des étoiles
+  edges.forEach((e, i) => {
+    if (!e.h) return;
+    const y = isl[e.a].y, x0 = Math.min(isl[e.a].x, isl[e.b].x), x1 = Math.max(isl[e.a].x, isl[e.b].x);
+    edges.forEach((f, j) => {
+      if (f.h) return;
+      const x = isl[f.a].x, y0 = Math.min(isl[f.a].y, isl[f.b].y), y1 = Math.max(isl[f.a].y, isl[f.b].y);
+      if (x > x0 && x < x1 && y > y0 && y < y1) { e.cross.push(j); f.cross.push(i); }
+    });
+  });
+  return { edges, adj };
+}
+function connected(isl, edges, val) {
+  const seen = new Set([0]), stack = [0];
+  while (stack.length) { const i = stack.pop(); edges.forEach((e, k) => { if (val[k] > 0) { const j = e.a === i ? e.b : e.b === i ? e.a : -1; if (j >= 0 && !seen.has(j)) { seen.add(j); stack.push(j); } } }); }
+  return seen.size === isl.length;
+}
+
+/* =========================================================
+   SOLVEUR : bornes [lo, hi] par faisceau, propagation, puis essais.
+   Renvoie le nombre de solutions (on s'arrête à 2) et la première trouvée.
+   ========================================================= */
+function solve(isl, G, limit = 2) {
+  const { edges, adj } = G, E = edges.length;
+  let count = 0, first = null, nodes = 0;
+  function propagate(lo, hi) {
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let i = 0; i < isl.length; i++) {
+        const need = isl[i].n; let sl = 0, sh = 0;
+        for (const k of adj[i]) { sl += lo[k]; sh += hi[k]; }
+        if (sl > need || sh < need) return false;
+        for (const k of adj[i]) {
+          const nlo = Math.max(lo[k], need - (sh - hi[k])), nhi = Math.min(hi[k], need - (sl - lo[k]));
+          if (nlo > nhi) return false;
+          if (nlo !== lo[k] || nhi !== hi[k]) { lo[k] = nlo; hi[k] = nhi; changed = true; }
+        }
+      }
+      for (let k = 0; k < E; k++) if (lo[k] > 0) for (const c of edges[k].cross) { if (lo[c] > 0) return false; if (hi[c] > 0) { hi[c] = 0; changed = true; } }
+      // deux étoiles de 1 (ou deux étoiles de 2 en double) ne peuvent pas se suffire à elles seules
+      if (isl.length > 2) for (let k = 0; k < E; k++) {
+        const e = edges[k], na = isl[e.a].n, nb = isl[e.b].n;
+        if (na === nb && na <= 2 && hi[k] >= na) { hi[k] = na - 1; if (lo[k] > hi[k]) return false; changed = true; }
+      }
+    }
+    return true;
+  }
+  function rec(lo, hi) {
+    if (count >= limit || ++nodes > 200000) return;
+    if (!propagate(lo, hi)) return;
+    let pick = -1, best = 9;
+    for (let k = 0; k < E; k++) if (lo[k] < hi[k]) { const w = hi[k] - lo[k]; if (w < best) { best = w; pick = k; if (w === 1) break; } }
+    if (pick < 0) {
+      if (connected(isl, edges, lo)) { count++; if (!first) first = lo.slice(); }
+      return;
+    }
+    for (let v = hi[pick]; v >= lo[pick]; v--) {
+      const l2 = lo.slice(), h2 = hi.slice(); l2[pick] = v; h2[pick] = v; rec(l2, h2);
+      if (count >= limit) return;
+    }
+  }
+  const lo = new Array(E).fill(0), hi = edges.map(e => Math.min(2, isl[e.a].n, isl[e.b].n));
+  rec(lo, hi);
+  return { count: nodes > 200000 ? 99 : count, sol: first };
+}
+
+/* =========================================================
+   GÉNÉRATEUR : on fait pousser un arbre de faisceaux depuis une étoile,
+   on ajoute quelques boucles, puis on garde la grille si sa solution est unique.
+   ========================================================= */
+function generate(N, seed) {
+  const rand = mulberry(seed);
+  const ri = n => Math.floor(rand() * n);
+  const [minI, maxI] = ISLANDS[N];
+  for (let tries = 0; tries < 400; tries++) {
+    const target = minI + ri(maxI - minI + 1);
+    const cell = [...Array(N)].map(() => new Array(N).fill(0));          // 0 vide, 1 étoile, 2 faisceau
+    const isl = [], bridges = [];
+    const put = (x, y) => { cell[y][x] = 1; isl.push({ x, y, n: 0 }); return isl.length - 1; };
+    put(ri(N), ri(N));
+    let stall = 0;
+    while (isl.length < target && stall < 600) {
+      stall++;
+      const i = ri(isl.length), s = isl[i], [dx, dy] = [[1, 0], [-1, 0], [0, 1], [0, -1]][ri(4)];
+      const len = 2 + ri(Math.max(1, N - 2));
+      const tx = s.x + dx * len, ty = s.y + dy * len;
+      if (tx < 0 || ty < 0 || tx >= N || ty >= N || cell[ty][tx]) continue;
+      let ok = true;
+      for (let k = 1; k < len; k++) if (cell[s.y + dy * k][s.x + dx * k]) { ok = false; break; }
+      if (!ok) continue;
+      // pas d'étoiles collées l'une à l'autre : plus joli et plus lisible
+      if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([ax, ay]) => cell[ty + ay] && cell[ty + ay][tx + ax] === 1)) continue;
+      for (let k = 1; k < len; k++) cell[s.y + dy * k][s.x + dx * k] = 2;
+      const j = put(tx, ty), w = rand() < .4 ? 2 : 1;
+      bridges.push([i, j, w]); isl[i].n += w; isl[j].n += w; stall = 0;
+    }
+    if (isl.length < minI) continue;
+    // boucles : relier des voisines alignées dont le chemin est libre
+    const G = buildEdges(N, isl);
+    for (const e of G.edges) {
+      if (bridges.some(b => (b[0] === e.a && b[1] === e.b) || (b[0] === e.b && b[1] === e.a))) continue;
+      if (rand() > .35) continue;
+      const A = isl[e.a], B = isl[e.b], dx = Math.sign(B.x - A.x), dy = Math.sign(B.y - A.y), len = Math.abs(B.x - A.x) + Math.abs(B.y - A.y);
+      let ok = true; for (let k = 1; k < len; k++) if (cell[A.y + dy * k][A.x + dx * k]) { ok = false; break; }
+      if (!ok) continue;
+      for (let k = 1; k < len; k++) cell[A.y + dy * k][A.x + dx * k] = 2;
+      const w = rand() < .3 ? 2 : 1; bridges.push([e.a, e.b, w]); A.n += w; B.n += w;
+    }
+    if (isl.some(s => s.n > 8 || s.n < 1)) continue;
+    const res = solve(isl, G);
+    if (res.count === 1) return { N, isl, G, sol: res.sol, seed };
+  }
+  return null;
+}
+
+/* =========================================================
+   AUDIO (petits bruitages WebAudio)
+   ========================================================= */
+const AC = { ctx: null, out: null, on: store.get('sfx', true) };
+function audioInit() {
+  if (AC.ctx) { if (AC.ctx.state === 'suspended') AC.ctx.resume(); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  AC.ctx = new Ctx(); AC.out = AC.ctx.createGain(); AC.out.gain.value = .45; AC.out.connect(AC.ctx.destination);
+}
+function tone(f, d, type = 'triangle', vol = .2, slide = 0, delay = 0) {
+  if (!AC.on || !AC.ctx) return;
+  const t = AC.ctx.currentTime + delay, o = AC.ctx.createOscillator(), g = AC.ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+  o.connect(g); g.connect(AC.out); o.start(t); o.stop(t + d + .02);
+}
+const SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319];
+const SFX = {
+  click: () => tone(660, .05, 'square', .08),
+  select: () => tone(880, .06, 'sine', .15),
+  beam: v => tone(v === 0 ? 330 : v === 1 ? 660 : 990, .12, 'sine', .2, v === 0 ? -120 : 200),
+  done: i => tone(SCALE[i % SCALE.length] * 2, .15, 'sine', .1),
+  error: () => tone(160, .15, 'square', .12),
+  win: () => [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, .3, 'sine', .15, 0, i * .1)),
+};
+
+/* =========================================================
+   GRAPHISMES : ciel tramé, étoiles en volume ombré
+   ========================================================= */
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function buildSky() {
+  const [c, g] = mk(LW, LH), img = g.createImageData(LW, LH), rand = mulberry(777);
+  const blobs = [[200, 120, 130, [40, 70, 140]], [60, 300, 140, [90, 30, 120]], [220, 440, 110, [20, 80, 110]]];
+  const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) {
+    let r = 5, gg = 6, b = 20;
+    for (const [bx, by, br, col] of blobs) {
+      const d = Math.hypot(x - bx, (y - by) * 1.15) / br, w = Math.max(0, 1 - d) + Math.sin(x * .06 + y * .025) * .07;
+      const q = Math.floor(w * 4 + bayer[(y & 3) * 4 + (x & 3)] / 16) / 4;
+      r += col[0] * q * .45; gg += col[1] * q * .45; b += col[2] * q * .45;
+    }
+    const k = (y * LW + x) * 4; img.data[k] = r; img.data[k + 1] = gg; img.data[k + 2] = b; img.data[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const tw = [];
+  for (let i = 0; i < 150; i++) {
+    const x = Math.floor(rand() * LW), y = Math.floor(rand() * LH), s = rand();
+    if (s > .94) tw.push([x, y, rand() * TAU]); else { g.fillStyle = s > .6 ? '#aab4ee' : s > .3 ? '#6870a8' : '#40447a'; g.fillRect(x, y, 1, 1); }
+  }
+  return { img: c, tw };
+}
+// une étoile : disque ombré (lumière en haut à gauche), halo et branches de lumière
+const STAR_PAL = {
+  base: ['#ffffff', '#fff1c4', '#ffd76a', '#e09a2a', '#9a5a1a'],
+  done: ['#ffffff', '#d8fff0', '#7ff0c0', '#2fb88a', '#16705a'],
+  over: ['#ffffff', '#ffd0c8', '#ff8a7a', '#d0403a', '#7a1a20'],
+  sel:  ['#ffffff', '#e6f6ff', '#9fdcff', '#4a9ae0', '#24508a'],
+};
+function starSprite(r, pal) {
+  const S = r * 2 + 9, [c, g] = mk(S, S), img = g.createImageData(S, S), o = S / 2;
+  const L = [-.5, -.65, .57];
+  const put = (x, y, col, a = 255) => { const k = (y * S + x) * 4, n = parseInt(col.slice(1), 16);
+    img.data[k] = n >> 16; img.data[k + 1] = (n >> 8) & 255; img.data[k + 2] = n & 255; img.data[k + 3] = a; };
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const dx = x + .5 - o, dy = y + .5 - o, d = Math.hypot(dx, dy);
+    if (d <= r) {
+      const nx = dx / r, ny = dy / r, nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+      const l = nx * L[0] + ny * L[1] + nz * L[2] + (((x + y) & 1) ? .03 : -.03);
+      put(x, y, d > r - 1 ? pal[4] : pal[l > .85 ? 0 : l > .55 ? 1 : l > .2 ? 2 : 3]);
+    } else if (d <= r + 1.2) put(x, y, OUT);
+    else if ((Math.abs(dx) < 1 || Math.abs(dy) < 1) && d < r + 4.5) put(x, y, pal[1], 200);   // petites branches en croix
+    else if (d < r + 3 && ((x + y) & 1)) put(x, y, pal[2], 70);                              // halo tramé
+  }
+  g.putImageData(img, 0, 0);
+  return c;
+}
+
+/* =========================================================
+   ÉTAT
+   ========================================================= */
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+let K = 1, T = 0, BTN = [], SKY = null, SPR = {};
+const S = {
+  phase: 'title', P: null, val: [], hist: [], sel: -1, drag: null, t0: 0, elapsed: 0, hints: 0, mode: 9, daily: false,
+  best: store.get('best', {}) || {}, dailyDone: store.get('daily', {}) || {}, wins: store.get('wins', 0) || 0,
+  winT: 0, rankText: '', record: false, flash: [], parts: [], name: '', msg: '', msgT: 0,
+};
+// géométrie de la grille à l'écran
+function layout(N) { const cs = Math.floor(256 / N), size = cs * N; return { cs, ox: Math.floor((LW - size) / 2), oy: 58 + Math.floor((256 - size) / 2), r: Math.max(7, Math.round(cs * .36)) }; }
+const pos = (s, Lo) => [Lo.ox + s.x * Lo.cs + Lo.cs / 2, Lo.oy + s.y * Lo.cs + Lo.cs / 2];
+function sprites(r) {
+  if (SPR.r === r) return SPR;
+  SPR = { r }; for (const k in STAR_PAL) SPR[k] = starSprite(r, STAR_PAL[k]); return SPR;
+}
+function startPuzzle(N, daily) {
+  const seed = daily ? todayKey() * 7 + 11 : (Math.random() * 2 ** 31) | 0;
+  let P = generate(N, seed), s2 = seed;
+  while (!P) P = generate(N, ++s2);
+  S.P = P; S.val = new Array(P.G.edges.length).fill(0); S.hist = []; S.sel = -1; S.hints = 0; S.mode = N; S.daily = daily;
+  S.t0 = now(); S.elapsed = 0; S.phase = 'play'; S.flash = []; S.parts = []; S.msg = ''; S.rankText = ''; S.record = false;
+  S.name = NAMES[P.seed % NAMES.length];
+  saveGame();
+}
+function saveGame() {
+  if (!S.P || S.phase !== 'play') { store.set('game', null); return; }
+  store.set('game', { N: S.P.N, seed: S.P.seed, daily: S.daily, day: S.daily ? todayKey() : 0, val: S.val, el: S.elapsed + (now() - S.t0), h: S.hints });
+}
+function resumeGame() {
+  const s = store.get('game', null);
+  if (!s || !ISLANDS[s.N] || (s.daily && s.day !== todayKey())) return false;
+  const P = generate(s.N, s.seed); if (!P || P.G.edges.length !== (s.val || []).length) return false;
+  S.P = P; S.val = s.val.slice(); S.hist = []; S.sel = -1; S.hints = s.h || 0; S.mode = s.N; S.daily = !!s.daily;
+  S.elapsed = s.el || 0; S.t0 = now(); S.phase = 'play'; S.flash = []; S.parts = []; S.name = NAMES[P.seed % NAMES.length]; S.msg = '';
+  return true;
+}
+const elapsed = () => S.elapsed + (S.phase === 'play' ? now() - S.t0 : 0);
+const score = () => Math.round(elapsed() + S.hints * HINT_MS);
+function degree(i) { let n = 0; for (const k of S.P.G.adj[i]) n += S.val[k]; return n; }
+
+/* =========================================================
+   COUPS
+   ========================================================= */
+function edgeBetween(i, j) { return S.P.G.adj[i].find(k => { const e = S.P.G.edges[k]; return (e.a === i && e.b === j) || (e.a === j && e.b === i); }); }
+function blocked(k) { return S.P.G.edges[k].cross.some(c => S.val[c] > 0); }
+function cycle(k) {
+  const e = S.P.G.edges[k], max = Math.min(2, S.P.isl[e.a].n, S.P.isl[e.b].n);
+  if (S.val[k] === 0 && blocked(k)) { SFX.error(); say('Un faisceau en croise un autre.'); return; }
+  const before = [degree(e.a) === S.P.isl[e.a].n, degree(e.b) === S.P.isl[e.b].n];
+  S.hist.push([k, S.val[k]]);
+  S.val[k] = S.val[k] >= max ? 0 : S.val[k] + 1;
+  SFX.beam(S.val[k]);
+  [e.a, e.b].forEach((i, q) => { if (!before[q] && degree(i) === S.P.isl[i].n) { S.flash.push([i, now()]); SFX.done(i); } });
+  checkWin(); saveGame();
+}
+function say(m) { S.msg = m; S.msgT = now(); }
+function undo() { const h = S.hist.pop(); if (!h) return; S.val[h[0]] = h[1]; SFX.click(); saveGame(); }
+function clearAll() { if (!S.val.some(v => v)) return; S.hist.push(...S.val.map((v, k) => [k, v]).filter(x => x[1]).reverse()); S.val.fill(0); SFX.click(); saveGame(); }
+// indice : corrige ou pose un faisceau de la solution (30 s de pénalité)
+function hint() {
+  const sol = S.P.sol, wrong = S.val.findIndex((v, k) => v > sol[k]);
+  let k = wrong >= 0 ? wrong : S.val.findIndex((v, k) => v < sol[k]);
+  if (k < 0) return;
+  S.hist.push([k, S.val[k]]); S.val[k] = sol[k]; S.hints++; S.flash.push([S.P.G.edges[k].a, now()], [S.P.G.edges[k].b, now()]);
+  // un faisceau posé par l'indice peut en bloquer un faux : on enlève ceux qui le croisent
+  for (const c of S.P.G.edges[k].cross) if (S.val[c] && S.val[k]) { S.hist.push([c, S.val[c]]); S.val[c] = 0; }
+  SFX.select(); say(wrong >= 0 ? 'Indice : ce faisceau était en trop (+30 s).' : 'Indice : un faisceau de la solution (+30 s).');
+  checkWin(); saveGame();
+}
+function checkWin() {
+  const P = S.P;
+  if (!P.isl.every((s, i) => degree(i) === s.n) || !connected(P.isl, P.G.edges, S.val)) return;
+  S.elapsed = elapsed(); S.phase = 'won'; S.winT = now(); S.sel = -1; store.set('game', null);
+  SFX.win();
+  const sc = score(), key = String(S.mode);
+  S.wins++; store.set('wins', S.wins);
+  if (S.daily) {
+    const d = todayKey(); if (!(S.dailyDone[d] > 0) || sc < S.dailyDone[d]) { S.dailyDone[d] = sc; store.set('daily', S.dailyDone); }
+    if (window.LudoScores) LudoScores.submit('pontstellaire', 'daily:' + d, sc, true).then(r => { if (r) S.rankText = 'CIEL DU JOUR : ' + LudoScores.rankText(r).toUpperCase(); });
+  }
+  if (!(S.best[key] > 0) || sc < S.best[key]) { S.best[key] = sc; store.set('best', S.best); S.record = true;
+    if (window.LudoScores && !S.daily) LudoScores.submit('pontstellaire', 'best:' + key, sc, true).then(r => { if (r) S.rankText = 'CLASSEMENT : ' + LudoScores.rankText(r).toUpperCase(); }); }
+  if (window.LudoScores) LudoScores.submit('pontstellaire', 'ciels', S.wins, false);
+  const Lo = layout(S.P.N);
+  P.isl.forEach((s, i) => { const [x, y] = pos(s, Lo); setTimeout(() => burst(x, y), i * 40); });
+}
+function burst(x, y) {
+  for (let i = 0; i < 10; i++) { const a = Math.random() * TAU, v = 20 + Math.random() * 40;
+    S.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: .6 + Math.random() * .5, c: ['#fff6c2', '#ffd76a', '#9fdcff'][i % 3] }); }
+}
+
+/* =========================================================
+   DESSIN
+   ========================================================= */
+const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function text(s, x, y, col, align = 'left', size = 8, shadow = '#05030c') {
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
+  if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+function wrap(s, max) { const out = []; let line = ''; for (const w of s.split(' ')) { if ((line + ' ' + w).trim().length > max) { out.push(line); line = w; } else line = (line + ' ' + w).trim(); } if (line) out.push(line); return out; }
+function logo(s, x, y, size) {
+  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
+  g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, '#fffbe8'); gr.addColorStop(.5, '#ffd76a'); gr.addColorStop(1, '#9fdcff');
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function panel(x, y, w, h, gold) {
+  R(x - 2, y - 2, w + 4, h + 4, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, gold ? '#5a3c10' : '#1c2858'); gr.addColorStop(1, gold ? '#2a1606' : '#0b0f2e');
+  g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x, y, w, 1, gold ? '#ffe28a' : '#8fb0ff'); R(x, y, 1, h, gold ? '#ffe28a' : '#8fb0ff');
+  R(x, y + h - 1, w, 1, gold ? '#8a5a18' : '#2a3a7a'); R(x + w - 1, y, 1, h, gold ? '#8a5a18' : '#2a3a7a');
+}
+function button(x, y, w, h, label, act, opts = {}) {
+  BTN.push({ x, y, w, h, act });
+  R(x - 1, y - 1, w + 2, h + 2, OUT);
+  const top = opts.gold ? '#ffd23f' : opts.off ? '#3a3f5c' : '#3f63d8', bot = opts.gold ? '#c27a12' : opts.off ? '#22263a' : '#1d2f86';
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x + 1, y + 1, w - 2, 1, opts.gold ? '#fff2b0' : '#9fb8ff');
+  text(label, x + w / 2, y + Math.round((h - (opts.size || 8)) / 2) + 1, opts.gold ? '#2a1600' : '#f2f4ff', 'center', opts.size || 8, opts.gold ? null : '#05030c');
+}
+function drawSky(t) {
+  g.drawImage(SKY.img, 0, 0);
+  for (const [x, y, p] of SKY.tw) { R(x, y, 1, 1, '#ffffff'); if (Math.sin(t * 1.7 + p) > .4) { R(x - 1, y, 3, 1, 'rgba(200,220,255,.6)'); R(x, y - 1, 1, 3, 'rgba(200,220,255,.6)'); } }
+}
+// un faisceau : ligne de lumière (double si 2), avec un cœur clair
+function beam(x0, y0, x1, y1, v, col, t, k) {
+  const h = y0 === y1, offs = v === 2 ? [-2, 2] : [0];
+  for (const o of offs) {
+    const ax = Math.round(h ? Math.min(x0, x1) : x0 + o), ay = Math.round(h ? y0 + o : Math.min(y0, y1));
+    const len = Math.round(h ? Math.abs(x1 - x0) : Math.abs(y1 - y0));
+    if (h) { R(ax, ay - 1, len, 3, col[2]); R(ax, ay, len, 1, col[0]); } else { R(ax - 1, ay, 3, len, col[2]); R(ax, ay, 1, len, col[0]); }
+    // une petite étincelle qui file le long du faisceau
+    const p = ((t * 60 + k * 37) % (len + 30)) - 15;
+    if (p > 0 && p < len) { if (h) R(ax + Math.round(p), ay - 1, 2, 3, '#ffffff'); else R(ax - 1, ay + Math.round(p), 3, 2, '#ffffff'); }
+  }
+}
+function drawBoard(t) {
+  const P = S.P, Lo = layout(P.N), sp = sprites(Lo.r), won = S.phase === 'won';
+  // repères discrets de la grille
+  for (let y = 0; y < P.N; y++) for (let x = 0; x < P.N; x++) R(Lo.ox + x * Lo.cs + Lo.cs / 2, Lo.oy + y * Lo.cs + Lo.cs / 2, 1, 1, 'rgba(140,160,230,.28)');
+  const BEAM = won ? ['#fffbe8', '#ffd76a', 'rgba(255,190,70,.55)'] : ['#e8f8ff', '#9fdcff', 'rgba(90,170,255,.45)'];
+  P.G.edges.forEach((e, k) => {
+    if (!S.val[k]) return;
+    const [x0, y0] = pos(P.isl[e.a], Lo), [x1, y1] = pos(P.isl[e.b], Lo);
+    beam(x0, y0, x1, y1, S.val[k], BEAM, t, k);
+  });
+  // glisser : un trait pointillé vers le doigt
+  if (S.drag && S.drag.i >= 0 && S.drag.moved) {
+    const [x0, y0] = pos(P.isl[S.drag.i], Lo), d = S.drag, dx = d.x - x0, dy = d.y - y0;
+    const h = Math.abs(dx) > Math.abs(dy), len = Math.min(Lo.cs * P.N, Math.abs(h ? dx : dy)), sg = Math.sign(h ? dx : dy);
+    for (let q = Lo.r + 2; q < len; q += 4) R(Math.round(x0 + (h ? sg * q : 0)), Math.round(y0 + (h ? 0 : sg * q)), 2, 2, '#ffd76a');
+  }
+  P.isl.forEach((s, i) => {
+    const [x, y] = pos(s, Lo), d = degree(i);
+    const kind = won ? 'base' : i === S.sel ? 'sel' : d > s.n ? 'over' : d === s.n ? 'done' : 'base';
+    const f = S.flash.find(q => q[0] === i), pulse = f ? Math.max(0, 1 - (now() - f[1]) / 400) : 0;
+    const img = sp[kind];
+    g.drawImage(img, Math.round(x - img.width / 2), Math.round(y - img.height / 2));
+    if (pulse > 0) { g.strokeStyle = `rgba(255,255,255,${pulse})`; g.lineWidth = 1; g.beginPath(); g.arc(x, y, Lo.r + 3 + (1 - pulse) * 6, 0, TAU); g.stroke(); }
+    if (won) { const tw = Math.sin(t * 3 + i * 1.3); if (tw > .6) { R(Math.round(x) - 1, Math.round(y - Lo.r - 5), 2, 3, '#ffffff'); } }
+    const fs = Lo.r >= 10 ? 8 : 7;
+    text(String(s.n), Math.round(x) + 1, Math.round(y - fs / 2) + 1, kind === 'over' ? '#5a0a10' : '#2a1a08', 'center', fs, null);
+  });
+  S.flash = S.flash.filter(q => now() - q[1] < 400);
+}
+function drawPlay(t) {
+  drawSky(t);
+  const P = S.P;
+  // bandeau du haut
+  R(0, 0, LW, 40, 'rgba(6,8,24,.9)'); R(0, 40, LW, 1, '#2a3a7a');
+  const label = S.daily ? 'CIEL DU JOUR' : SIZES.find(z => z[0] === P.N)[1] + ` ${P.N}x${P.N}`;
+  text(label, 8, 8, '#ffd76a');
+  text(fmtTime(elapsed()) + (S.hints ? ` +${S.hints * 30}s` : ''), 8, 24, '#c8d4f4', 'left', 8);
+  const best = S.best[String(P.N)];
+  if (best && !S.daily) text('RECORD ' + fmtTime(best), 264, 24, '#8fa0d0', 'right', 6);
+  button(LW - 60, 6, 54, 14, 'MENU', () => { saveGame(); S.phase = 'title'; SFX.click(); }, { size: 6 });
+  drawBoard(t);
+  for (const p of S.parts) R(Math.round(p.x), Math.round(p.y), 1, 1, p.c);
+  if (S.phase === 'won') return drawWin(t);
+  // barre d'outils
+  const y = 328;
+  button(10, y, 78, 24, 'ANNULER', undo, { size: 7 });
+  button(97, y, 78, 24, 'EFFACER', () => { if (S.clearArm && now() - S.clearArm < 2500) { S.clearArm = 0; clearAll(); } else { S.clearArm = now(); say('Touche encore EFFACER pour tout enlever.'); } }, { size: 7, off: !!(S.clearArm && now() - S.clearArm < 2500) });
+  button(184, y, 78, 24, 'INDICE', hint, { size: 7 });
+  // aide en bas
+  const placed = P.isl.filter((s, i) => degree(i) === s.n).length;
+  text(`ETOILES COMPLETES : ${placed} / ${P.isl.length}`, 136, 366, '#ffd76a', 'center', 7);
+  const msg = S.msg && now() - S.msgT < 3500 ? S.msg : S.sel >= 0 ? 'Touche une étoile voisine pour tirer un faisceau.' :
+    'Touche une étoile puis sa voisine, ou glisse de l\'une à l\'autre. Recommence pour 2 faisceaux, puis aucun.';
+  wrap(msg, 32).slice(0, 4).forEach((l, i) => text(l, 136, 386 + i * 12, '#c8d4f4', 'center', 7));
+}
+function drawWin(t) {
+  const k = Math.min(1, (now() - S.winT) / 1200), y = 326;
+  panel(18, y, 236, 146, true);
+  text('CONSTELLATION', 136, y + 10, '#fff2a8', 'center');
+  text(S.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''), 136, y + 26, '#ffd76a', 'center', 8);
+  text(`TEMPS : ${fmtTime(score())}` + (S.hints ? ` (${S.hints} INDICE${S.hints > 1 ? 'S' : ''})` : ''), 136, y + 46, '#e8d8b0', 'center', 7);
+  if (S.record && k >= 1) text(S.daily ? 'MEILLEUR TEMPS DU JOUR !' : 'NOUVEAU RECORD !', 136, y + 60, '#5cff8a', 'center', 7);
+  if (S.rankText) text(S.rankText, 136, y + 74, '#9fdcff', 'center', 6);
+  if (S.daily) button(34, y + 90, 204, 22, 'CIEL AU HASARD 9x9', () => { SFX.click(); startPuzzle(9, false); }, { gold: true, size: 7 });
+  else button(34, y + 90, 204, 22, 'NOUVEAU CIEL', () => { SFX.click(); startPuzzle(S.mode, false); }, { gold: true });
+  button(34, y + 118, 98, 20, 'MENU', () => { SFX.click(); S.phase = 'title'; }, { size: 7 });
+  button(140, y + 118, 98, 20, 'CLASSEMENT', () => { location.href = '../classements/index.html#pontstellaire'; }, { size: 7 });
+}
+let TITLE = null;
+function drawTitle(t) {
+  drawSky(t);
+  if (!TITLE) {
+    // une petite constellation qui se dessine sur l'écran titre
+    TITLE = { pts: [[52, 118], [104, 96], [150, 132], [204, 104], [236, 150], [180, 178], [120, 170]], spr: starSprite(4, STAR_PAL.base) };
+  }
+  const n = TITLE.pts.length, k = (t * .8) % (n + 2);
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0] = TITLE.pts[i], [x1, y1] = TITLE.pts[i + 1], u = Math.max(0, Math.min(1, k - i));
+    if (u <= 0) continue;
+    for (let q = 0; q <= 1; q += .02) if (q <= u) R(Math.round(x0 + (x1 - x0) * q), Math.round(y0 + (y1 - y0) * q), 1, 1, '#ffd76a');
+  }
+  for (const [x, y] of TITLE.pts) g.drawImage(TITLE.spr, x - TITLE.spr.width / 2, y - TITLE.spr.height / 2);
+  logo('PONT', 136, 30, 24); logo('STELLAIRE', 136, 58, 18);
+  text('RELIE LES ETOILES', 136, 194, '#c8d4f4', 'center', 7);
+  let y = 214;
+  const d = todayKey(), dd = S.dailyDone[d];
+  const saved = store.get('game', null);
+  if (saved && (!saved.daily || saved.day === d)) { button(46, y, 180, 24, 'REPRENDRE', () => { SFX.click(); if (!resumeGame()) startPuzzle(9, false); }, { gold: true }); y += 32; }
+  button(46, y, 180, 26, dd ? 'CIEL DU JOUR  ' + fmtTime(dd) : 'CIEL DU JOUR', () => { SFX.click(); startPuzzle(9, true); }, { gold: !saved, size: 8 }); y += 36;
+  for (const [N, name] of SIZES) {
+    const b = S.best[String(N)];
+    button(46, y, 180, 24, `${name} ${N}x${N}`, () => { SFX.click(); startPuzzle(N, false); });
+    if (b) text(fmtTime(b), 232, y + 9, '#8fa0d0', 'left', 6);
+    y += 30;
+  }
+  y += 4;
+  button(46, y, 86, 20, 'CLASSEMENT', () => { location.href = '../classements/index.html#pontstellaire'; }, { size: 6 });
+  button(140, y, 86, 20, 'AIDE', () => { SFX.click(); S.phase = 'help'; }, { size: 7 });
+  y += 26;
+  button(46, y, 180, 18, AC.on ? 'SON : OUI' : 'SON : NON', () => { AC.on = !AC.on; store.set('sfx', AC.on); SFX.click(); }, { off: !AC.on, size: 6 });
+  if (S.wins) text(`${S.wins} CONSTELLATION${S.wins > 1 ? 'S' : ''} DESSINEE${S.wins > 1 ? 'S' : ''}`, 136, 466, '#8fa0d0', 'center', 6);
+}
+function drawHelp(t) {
+  drawSky(t);
+  panel(12, 26, 248, 428);
+  logo('LES REGLES', 136, 40, 12);
+  const lines = [
+    ['#ffd76a', 'Chaque étoile porte un nombre : c\'est le nombre de faisceaux qui en partent.'],
+    ['#c8d4f4', 'Les faisceaux sont droits, horizontaux ou verticaux, et vont d\'une étoile à sa voisine.'],
+    ['#c8d4f4', 'Entre deux étoiles : un ou deux faisceaux, pas plus. Ils ne se croisent jamais.'],
+    ['#9fdcff', 'Au bout du compte, toutes les étoiles sont reliées en une seule constellation.'],
+    ['#7ff0c0', 'Une étoile verte est complète ; rouge, elle a trop de faisceaux.'],
+    ['#c8d4f4', 'Toucher une étoile puis sa voisine (ou glisser) : 1 faisceau, puis 2, puis aucun. Toucher un faisceau marche aussi.'],
+    ['#ff9a8a', 'Un indice coûte 30 secondes.'],
+  ];
+  let y = 66;
+  for (const [c, s] of lines) { for (const l of wrap(s, 29)) { text(l, 24, y, c, 'left', 7); y += 11; } y += 6; }
+  button(76, 418, 120, 22, 'OK', () => { SFX.click(); S.phase = 'title'; }, { gold: true });
+}
+
+/* =========================================================
+   BOUCLE
+   ========================================================= */
+function frame(ts) {
+  const t = ts / 1000, dt = Math.min(.05, t - (T || t)); T = t;
+  for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .96; p.vy *= .96; }
+  S.parts = S.parts.filter(p => p.t < p.life);
+  BTN = [];
+  g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
+  if (S.phase === 'title') drawTitle(t);
+  else if (S.phase === 'help') drawHelp(t);
+  else drawPlay(t);
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   COMMANDES
+   ========================================================= */
+function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
+function islandAt(x, y) {
+  const Lo = layout(S.P.N); let best = -1, bd = (Lo.cs * .55) ** 2;
+  S.P.isl.forEach((s, i) => { const [sx, sy] = pos(s, Lo), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+function edgeAt(x, y) {
+  const Lo = layout(S.P.N); let best = -1, bd = 7;
+  S.P.G.edges.forEach((e, k) => {
+    if (!S.val[k]) return;
+    const [x0, y0] = pos(S.P.isl[e.a], Lo), [x1, y1] = pos(S.P.isl[e.b], Lo);
+    const d = e.h ? (x > Math.min(x0, x1) && x < Math.max(x0, x1) ? Math.abs(y - y0) : 99) : (y > Math.min(y0, y1) && y < Math.max(y0, y1) ? Math.abs(x - x0) : 99);
+    if (d < bd) { bd = d; best = k; }
+  });
+  return best;
+}
+// la voisine de l'étoile i dans la direction du geste
+function neighborDir(i, dx, dy) {
+  const h = Math.abs(dx) > Math.abs(dy), sg = Math.sign(h ? dx : dy), s = S.P.isl[i];
+  for (const k of S.P.G.adj[i]) { const e = S.P.G.edges[k], j = e.a === i ? e.b : e.a, o = S.P.isl[j];
+    if (h && e.h && Math.sign(o.x - s.x) === sg) return k; if (!h && !e.h && Math.sign(o.y - s.y) === sg) return k; }
+  return -1;
+}
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); audioInit();
+  const [x, y] = logical(e);
+  for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { b.act(); return; } }
+  if (S.phase !== 'play') return;
+  S.drag = { i: islandAt(x, y), x0: x, y0: y, x, y, moved: false, id: e.pointerId };
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+});
+cv.addEventListener('pointermove', e => {
+  const d = S.drag; if (!d || e.pointerId !== d.id) return;
+  [d.x, d.y] = logical(e); if (Math.hypot(d.x - d.x0, d.y - d.y0) > 8) d.moved = true;
+});
+cv.addEventListener('pointerup', e => {
+  const d = S.drag; if (!d || e.pointerId !== d.id) return; S.drag = null;
+  if (S.phase !== 'play') return;
+  const [x, y] = logical(e);
+  if (d.moved && d.i >= 0) {
+    // glisser depuis une étoile : la voisine dans cette direction
+    const k = neighborDir(d.i, x - d.x0, y - d.y0); S.sel = -1;
+    if (k >= 0) cycle(k); else SFX.error();
+    return;
+  }
+  if (d.moved) return;
+  const i = islandAt(x, y);
+  if (i >= 0) {
+    if (S.sel === i) { S.sel = -1; SFX.click(); return; }
+    if (S.sel >= 0) { const k = edgeBetween(S.sel, i); if (k !== undefined) { S.sel = -1; cycle(k); return; } }
+    S.sel = i; SFX.select(); return;
+  }
+  const k = edgeAt(x, y);
+  if (k >= 0) { S.sel = -1; cycle(k); return; }
+  S.sel = -1;
+});
+cv.addEventListener('pointercancel', () => { S.drag = null; });
+document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z' && S.phase === 'play') undo(); });
+document.addEventListener('visibilitychange', () => {
+  if (S.phase !== 'play') return;
+  if (document.hidden) { S.elapsed = elapsed(); S.t0 = Infinity; saveGame(); } else S.t0 = now();
+});
+function resize() {
+  const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
+  const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);
+  const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
+  cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
+  cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
+  K = Math.max(1, Math.ceil(sc * dpr - .05));
+  cv.width = LW * K; cv.height = LH * K;
+}
+window.addEventListener('resize', resize);
+window.PontStellaire = { generate, solve, buildEdges, S, startPuzzle, cycle };   // pour les tests
+
+SKY = buildSky();
+setTimeout(resize, 0); resize();
+(document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));
+</script>
+<script>
+/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    if (!app) return;
+    var a = document.createElement("a");
+    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
+    a.style.cssText = "display:block; width:max-content; margin:4px auto 6px; padding:6px 10px; font:9px 'Press Start 2P',monospace; letter-spacing:1px;" +
+      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
+    var line = document.createElement("div");
+    line.style.cssText = "flex:0 0 100%; width:100%;";
+    line.appendChild(a);
+    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
+    document.body.insertBefore(line, document.body.firstChild);
+    window.dispatchEvent(new Event("resize"));
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

@@ -141,7 +141,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
   // même code que l'Arbre du jour de Lignée : C2-J + date aaaammjj en base 36
   const dayCode = (mode, d) => `${mode}2-J${(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()).toString(36).toUpperCase()}`;
   const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
-  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal", amai: "normal"};
+  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal", amai: "normal", pssize: 9};
   const TCMODES = [["classic", "CLASSIQUE"], ["arsenal", "ARSENAL"]], TCAI = [["easy", "FACILE"], ["normal", "NORMAL"], ["hard", "AMIRAL"]];
   const AMAI = [["easy", "MOUSSE"], ["normal", "CAPITAINE"], ["hard", "AMIRAL"]];
   const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
@@ -187,6 +187,13 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       {label: "REPUTATION", game: "club", board: () => "rep", fmt: v => N(v) + " pts", title: () => "LA PLUS GRANDE RÉPUTATION"},
       {label: "CHAMPION", game: "club", board: () => "champion", fmt: v => N(v) + " sem.", title: () => "CHAMPION DE FRANCE LE PLUS RAPIDE",
        note: "Le nombre de semaines pour gagner le Championnat de France.", empty: "Personne n'est encore champion de France."}]},
+    {id: "pontstellaire", name: "PONT STELLAIRE", play: "../pont-stellaire/index.html", views: [
+      {label: "CIEL DU JOUR", ctl: ["day"], game: "pontstellaire", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: T,
+       title: () => "CIEL DU JOUR", note: "Le même ciel 9×9 pour toute la famille, plus 30 secondes par indice.",
+       empty: () => st.back ? "Personne n'a dessiné le ciel ce jour-là." : "Personne n'a encore dessiné le ciel du jour : à toi de jouer !"},
+      {label: "PAR TAILLE", ctl: ["pssize"], game: "pontstellaire", board: () => "best:" + st.pssize, fmt: T,
+       title: () => `PONT STELLAIRE · ${st.pssize}×${st.pssize}`, note: "Le meilleur temps, plus 30 secondes par indice."},
+      {label: "CONSTELLATIONS", game: "pontstellaire", board: () => "ciels", fmt: v => N(v) + (v > 1 ? " ciels" : " ciel"), title: () => "CONSTELLATIONS DESSINÉES"}]},
     {id: "orbite", name: "ORBITE", play: "../orbite/index.html", views: [
       {label: "ÉTOILES", game: "orbite", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "ORBITE · TOTAL D'ÉTOILES",
        note: "3 étoiles par niveau réussi du premier coup, 2 au deuxième essai, 1 au troisième (90 au maximum)."}]},
@@ -229,6 +236,8 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       if (c === "tcmode" || c === "tcai" || c === "amai"){ const r = document.createElement("div"); r.className = "chips";
         for (const [k, l] of c === "tcmode" ? TCMODES : c === "amai" ? AMAI : TCAI) r.appendChild(button(l, st[c] === k, () => { st[c] = k; view_(); }));
         box.appendChild(r); }
+      if (c === "pssize"){ const r = document.createElement("div"); r.className = "chips";
+        for (const n of [7, 9, 11]) r.appendChild(button(`${n}×${n}`, st.pssize === n, () => { st.pssize = n; view_(); })); box.appendChild(r); }
       if (c === "size"){ const r = document.createElement("div"); r.className = "chips";
         for (let n = 5; n <= 9; n++) r.appendChild(button(`${n}×${n}`, st.size === n, () => { st.size = n; view_(); })); box.appendChild(r); }
       if (c === "plevel") box.appendChild(stepper(`PARCOURS N° ${st.plevel}`, () => { st.plevel = Math.max(1, st.plevel - 1); view_(); }, () => { st.plevel++; view_(); }, st.plevel <= 1, st.plevel >= 999));

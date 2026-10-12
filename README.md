@@ -10,6 +10,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`club/index.html`](club/index.html) : **Le Club d'agility**, un jeu de gestion en 32 bits : recruter des chiens, les entraîner semaine après semaine, gagner les concours et faire grandir le club jusqu'au Championnat de France.
 - [`amiral/index.html`](amiral/index.html) : **Amiral !**, une bataille navale tactique en 32 bits où chaque navire a un pouvoir (avion de reconnaissance, salve, torpille, plongée du sous-marin).
 - [`orbite/index.html`](orbite/index.html) : **Orbite**, un jeu de physique en 32 bits : lancer une sonde dont la trajectoire est courbée par la gravité des planètes pour atteindre une balise, en 30 niveaux.
+- [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
 - [`snake/index.html`](snake/index.html) : **Snake**.
 - [`asteroids/index.html`](asteroids/index.html) : **Asteroids**.
@@ -123,6 +124,19 @@ Un jeu de physique spatiale en 32 bits : on lance une sonde depuis sa rampe, la 
 
 ---
 
+## Pont stellaire
+
+Un puzzle de logique sur les règles du **Hashi**, dans un ciel étoilé en 32 bits.
+
+- Chaque étoile porte un nombre : c'est le nombre de faisceaux de lumière qui doivent en partir.
+- Les faisceaux sont droits (horizontaux ou verticaux) et vont d'une étoile à sa voisine : un ou deux entre deux étoiles, jamais plus, et ils ne se croisent jamais.
+- À la fin, toutes les étoiles doivent être reliées en une seule constellation, qui s'illumine en or et reçoit un nom (la Lyre, le Cygne, Cassiopée…).
+- **Commandes** : toucher une étoile puis sa voisine, ou glisser de l'une vers l'autre, pose un faisceau ; recommencer en pose deux, puis les enlève. Toucher un faisceau le fait aussi tourner. Une étoile devient verte quand elle est complète, rouge quand elle a trop de faisceaux. ANNULER, EFFACER (deux appuis) et INDICE (+30 secondes).
+- **Trois tailles** (7×7, 9×9 et 11×11) et un **Ciel du jour** en 9×9, le même pour toute la famille. Les grilles sont générées à l'infini, et un solveur vérifie que chacune n'a **qu'une seule solution**.
+- La partie en cours est sauvegardée et se reprend depuis l'écran titre. Les meilleurs temps, les temps du Ciel du jour et le nombre de constellations font partie du transfert de sauvegardes.
+
+---
+
 ## Les classiques passés en 16 bits
 
 Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire en le moins de tirs) et le classement. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).
@@ -146,7 +160,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -161,6 +175,7 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Le Club d'agility** : la plus grande réputation, et le Championnat de France gagné en le moins de semaines.
 - **Amiral !** : la victoire en le moins de tours, par niveau de l'ordinateur (Mousse, Capitaine, Amiral).
 - **Orbite** : le total d'étoiles gagnées sur les 30 niveaux.
+- **Pont stellaire** : le Ciel du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille (7×7, 9×9, 11×11, plus 30 secondes par indice) et le nombre de constellations dessinées.
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).
 
