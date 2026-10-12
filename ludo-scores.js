@@ -66,7 +66,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"]];
+    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -163,6 +163,8 @@
     hi("picross", "dex", ids.filter(function (id){ return id !== "pokeball"; }).length);
     var tc = readKey("touchecoule.best", {}) || {};
     Object.keys(tc).forEach(function (k){ if (/^(classic|arsenal):(easy|normal|hard)$/.test(k)) lo("touchecoule", "best:" + k, tc[k]); });
+    var am = readKey("amiral.best", {}) || {};
+    Object.keys(am).forEach(function (k){ if (/^(easy|normal|hard)$/.test(k)) lo("amiral", "best:" + k, am[k]); });
     return out;
   });
 

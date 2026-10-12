@@ -88,6 +88,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.soli{--lb:linear-gradient(to bottom, #2a8a48, #145a2c); --lt:#ffd23f; --ld:#e4f7dc}
 .cart.lignee{--lb:linear-gradient(to bottom, #6b3f1f, #2f1a0c); --lt:#e0a83a; --ld:#efe0bd}
 .cart.touche{--lb:linear-gradient(to bottom, #2b6fd0, #0f1866); --lt:#ffd84a; --ld:#e8ecff}
+.cart.amiral{--lb:linear-gradient(to bottom, #1c579c, #0a1c40); --lt:#ffd23f; --ld:#dcebff}
 
 @media (hover: none) and (pointer: coarse){ .status{display:none} }
 .status{text-align:center; font-family:var(--f-display); font-size:9px; letter-spacing:1px; line-height:2; color:var(--text-dim)}
@@ -195,6 +196,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <h2>TOUCHÉ COULÉ</h2>
         <p>Bataille navale contre l'ordinateur, en mode classique ou avec sonar et torpilles.</p>
         <div class="tags"><span>STRATÉGIE</span><span>3 NIVEAUX D'IA</span></div>
+      </div>
+    </a>
+    <a class="cart amiral" href="amiral/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="anchor" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>AMIRAL !</h2>
+        <p>La bataille navale où chaque navire a un pouvoir : avion, salve, torpille et plongée du sous-marin.</p>
+        <div class="tags"><span>TACTIQUE</span><span>32 BITS</span><span>3 NIVEAUX</span></div>
       </div>
     </a>
     <a class="cart tetris" href="tetris/index.html">
@@ -346,6 +356,23 @@ const ICONS = {
     ".kck............",
     "kwwwk...........",
     "krkrk..........."]},
+  anchor: {pal:{k:"#0f121b", y:"#ffd23f", Y:"#fff2a8", o:"#d09a1c", b:"#2462c0", B:"#9fd3ff"}, map:[
+    "................",
+    "......kkkk......",
+    ".....kYyyok.....",
+    ".....kyk.yk.....",
+    ".....kyokok.....",
+    "...kkkkyokkkk...",
+    "...kYyyyyyyok...",
+    "...kkkkyokkkk...",
+    "......kyok......",
+    ".k....kyok....k.",
+    "kYk...kyok...kok",
+    "kyok..kyok..kook",
+    ".kyoo.kyok.ooyk.",
+    "..kkyyyyyyyyok..",
+    "....kkoooookk...",
+    "......kkkk......"]},
   boat: {pal:{k:"#0f121b", g:"#a1aabb", h:"#dfe4ee", r:"#ff5050", b:"#2462c0", B:"#9fd3ff", d:"#163e94"}, map:[
     "................",
     "......k.........",
@@ -430,6 +457,7 @@ function collectSaves(){
   const lg = readKey("lignee.stats", {}); if (lg && Object.keys(lg).length) g.lignee = lg;
   const ld = readKey("lignee.daily", {}); if (ld && Object.keys(ld).length) g.ligneeDaily = ld;
   const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
+  const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
 }
@@ -441,6 +469,7 @@ function describeSaves(g){
   if (g.parcours) out.push(`Injagility Parcours : ${(g.parcours.unlocked || 1) - 1} parcours réussis, ${g.parcours.wallet || 0} points, ${(g.parcours.owned || []).length} chien${(g.parcours.owned || []).length > 1 ? "s" : ""}`);
   if (g.lignee){ const n = Object.values(g.lignee).reduce((s, v) => s + (v && v.n || 0), 0); if (n) out.push(`Lignée : ${n} arbre${n > 1 ? "s" : ""} reconstitué${n > 1 ? "s" : ""}`); }
   if (g.touchecoule){ const v = Object.values(g.touchecoule).filter(x => x > 0); if (v.length) out.push(`Touché Coulé : meilleure victoire en ${Math.min(...v)} tirs`); }
+  if (g.amiral){ const v = Object.values(g.amiral).filter(x => x > 0); if (v.length) out.push(`Amiral ! : meilleure victoire en ${Math.min(...v)} tours`); }
   return out;
 }
 function decodeSaves(text){
@@ -510,6 +539,11 @@ function mergeSaves(g){
     const mine = readKey("touchecoule.best", {}) || {}; let n = 0;
     for (const [k, v] of Object.entries(g.touchecoule)) if (/^(classic|arsenal):(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
     if (n){ writeKey("touchecoule.best", mine); done.push(`Touché Coulé : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.amiral && typeof g.amiral === "object"){
+    const mine = readKey("amiral.best", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(g.amiral)) if (/^(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
+    if (n){ writeKey("amiral.best", mine); done.push(`Amiral ! : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.ligneeDaily && typeof g.ligneeDaily === "object"){
     const mine = readKey("lignee.daily", {}) || {}; let n = 0;

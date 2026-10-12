@@ -141,8 +141,9 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
   // même code que l'Arbre du jour de Lignée : C2-J + date aaaammjj en base 36
   const dayCode = (mode, d) => `${mode}2-J${(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()).toString(36).toUpperCase()}`;
   const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
-  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal"};
+  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal", amai: "normal"};
   const TCMODES = [["classic", "CLASSIQUE"], ["arsenal", "ARSENAL"]], TCAI = [["easy", "FACILE"], ["normal", "NORMAL"], ["hard", "AMIRAL"]];
+  const AMAI = [["easy", "MOUSSE"], ["normal", "CAPITAINE"], ["hard", "AMIRAL"]];
   const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
   const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
     day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "");
@@ -182,6 +183,9 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     {id: "touchecoule", name: "TOUCHÉ COULÉ", play: "../touche-coule/index.html", views: [
       {label: "MEILLEURE VICTOIRE", ctl: ["tcmode", "tcai"], game: "touchecoule", board: () => `best:${st.tcmode}:${st.tcai}`, fmt: v => N(v) + " tirs",
        title: () => `${TCMODES.find(m => m[0] === st.tcmode)[1]} · IA ${TCAI.find(m => m[0] === st.tcai)[1]}`, note: "La victoire en le moins de tirs, par mode et par niveau de l'IA."}]},
+    {id: "amiral", name: "AMIRAL !", play: "../amiral/index.html", views: [
+      {label: "MEILLEURE VICTOIRE", ctl: ["amai"], game: "amiral", board: () => `best:${st.amai}`, fmt: v => N(v) + " tours",
+       title: () => `AMIRAL ! · ${AMAI.find(m => m[0] === st.amai)[1]}`, note: "La victoire en le moins de tours, par niveau de l'ordinateur."}]},
   ];
   const ord = n => n === 1 ? "1er" : n + "e";
   const res = (t, ok) => { $("res").textContent = t; $("res").className = "res " + (ok ? "ok" : "err"); };
@@ -194,6 +198,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     else if (/^\d$/.test(h[1] || "")) st.view = +h[1];
     if (/^[CR]$/.test(h[2] || "")) st.mode = h[2];
     if (h[0] === "parcours"){ st.game = "injagility"; st.view = 2; }
+    if (h[0] === "amiral" && /^(easy|normal|hard)$/.test(h[2] || "")) st.amai = h[2];
     if (h[0] === "touchecoule"){ if (/^(classic|arsenal)$/.test(h[2] || "")) st.tcmode = h[2]; if (/^(easy|normal|hard)$/.test(h[3] || "")) st.tcai = h[3]; } }
 
   function button(label, pressed, onclick, extra){ const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.textContent = label;
@@ -214,8 +219,8 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       if (c === "day") box.appendChild(stepper(dayName(), () => { st.back = Math.min(60, st.back + 1); view_(); }, () => { st.back = Math.max(0, st.back - 1); view_(); }, st.back >= 60, st.back === 0));
       if (c === "level"){ const r = document.createElement("div"); r.className = "chips";
         LEVELS.forEach((l, i) => r.appendChild(button(l, st.level === i + 1, () => { st.level = i + 1; view_(); }))); box.appendChild(r); }
-      if (c === "tcmode" || c === "tcai"){ const r = document.createElement("div"); r.className = "chips";
-        for (const [k, l] of c === "tcmode" ? TCMODES : TCAI) r.appendChild(button(l, st[c] === k, () => { st[c] = k; view_(); }));
+      if (c === "tcmode" || c === "tcai" || c === "amai"){ const r = document.createElement("div"); r.className = "chips";
+        for (const [k, l] of c === "tcmode" ? TCMODES : c === "amai" ? AMAI : TCAI) r.appendChild(button(l, st[c] === k, () => { st[c] = k; view_(); }));
         box.appendChild(r); }
       if (c === "size"){ const r = document.createElement("div"); r.className = "chips";
         for (let n = 5; n <= 9; n++) r.appendChild(button(`${n}×${n}`, st.size === n, () => { st.size = n; view_(); })); box.appendChild(r); }
