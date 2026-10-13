@@ -624,9 +624,10 @@ const fmtDay = d => { const [y, m, j] = d.split("-"); return `${j}/${m}`; };
 const favKey = "ludo.favs";
 let favs = []; try { favs = JSON.parse(localStorage.getItem(favKey)) || []; } catch (e) {}
 const shelf = document.getElementById("shelf"), allCarts = [...shelf.querySelectorAll(".cart")], order = new Map(allCarts.map((c, i) => [c, i]));
-const metaOf = c => META[c.getAttribute("href")] || {genres: []};
+allCarts.forEach(c => { c.dataset.k = c.getAttribute("href").replace(/^.*\/Claude\//, ""); });   // clé du jeu (même si le lien est absolu, comme dans l'artefact)
+const metaOf = c => META[c.dataset.k] || {genres: []};
 allCarts.forEach(c => {
-  const m = metaOf(c), href = c.getAttribute("href");
+  const m = metaOf(c), href = c.dataset.k;
   if (recent(m.added)) c.insertAdjacentHTML("afterbegin", '<span class="badge">NOUVEAU</span>');
   else if (recent(m.updated)) c.insertAdjacentHTML("afterbegin", '<span class="badge maj">MIS A JOUR</span>');
   const b = document.createElement("button"); b.type = "button"; b.className = "fav"; b.textContent = "★";
@@ -637,10 +638,10 @@ allCarts.forEach(c => {
 let filter = "TOUS"; try { filter = sessionStorage.getItem("ludo.filter") || "TOUS"; } catch (e) {}
 const fbar = document.getElementById("filters");
 FILTERS.forEach(f => { const b = document.createElement("button"); b.type = "button"; b.dataset.f = f; if (f === "★ FAVORIS") b.innerHTML = '<span class="st">★</span> FAVORIS'; else b.textContent = f; b.addEventListener("click", () => { filter = f; try { sessionStorage.setItem("ludo.filter", f); } catch (e) {} arrange(); }); fbar.appendChild(b); });
-const shows = c => { const m = metaOf(c); return filter === "TOUS" || (filter === "★ FAVORIS" ? favs.includes(c.getAttribute("href")) : filter === "NOUVEAU" ? recent(m.added) || recent(m.updated) : (m.genres || []).includes(filter)); };
+const shows = c => { const m = metaOf(c); return filter === "TOUS" || (filter === "★ FAVORIS" ? favs.includes(c.dataset.k) : filter === "NOUVEAU" ? recent(m.added) || recent(m.updated) : (m.genres || []).includes(filter)); };
 // favoris en tête de l'étagère, puis l'ordre d'origine ; le filtre cache les autres
 function arrange(){
-  const isFav = c => favs.includes(c.getAttribute("href"));
+  const isFav = c => favs.includes(c.dataset.k);
   allCarts.slice().sort((a, b) => (isFav(b) - isFav(a)) || order.get(a) - order.get(b)).forEach(c => { c.hidden = !shows(c); shelf.appendChild(c); });
   [...fbar.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.f === filter));
   document.getElementById("shelfEmpty").hidden = allCarts.some(c => !c.hidden);
@@ -648,15 +649,15 @@ function arrange(){
 }
 // jeu à la une : le dernier sorti, présenté dans sa boîte
 (function une(){
-  const keys = Object.keys(META), rank = c => keys.indexOf(c.getAttribute("href"));   // à date égale, le premier de META l'emporte
+  const keys = Object.keys(META), rank = c => keys.indexOf(c.dataset.k);   // à date égale, le premier de META l'emporte
   const c = allCarts.filter(c => metaOf(c).added).sort((a, b) => metaOf(b).added.localeCompare(metaOf(a).added) || rank(a) - rank(b))[0];
   if (!c) return;
   const m = metaOf(c), box = document.getElementById("une"), name = c.querySelector("h2").textContent, cs = getComputedStyle(c);
   box.style.setProperty("--lb", cs.getPropertyValue("--lb")); box.style.setProperty("--lt", cs.getPropertyValue("--lt"));
-  box.innerHTML = `<a class="box" href="${c.getAttribute("href")}" aria-label="Jouer à ${name}"><span class="spine">${name}</span><span class="front"><span class="brand">LUDOTHEQUE</span><span class="art"></span><h3>${name}</h3></span>` +
+  box.innerHTML = `<a class="box" href="${c.href}" aria-label="Jouer à ${name}"><span class="spine">${name}</span><span class="front"><span class="brand">LUDOTHEQUE</span><span class="art"></span><h3>${name}</h3></span>` +
     (recent(m.added) ? '<span class="sticker">TOUT<br>NEUF !</span>' : "") + `</a>` +
     `<div class="une-txt"><span class="kicker">${recent(m.added) ? "NOUVEAU JEU" : "A LA UNE"} · ${fmtDay(m.added)}</span><h2>${name}</h2><p>${c.querySelector("p").textContent}</p>` +
-    `<a class="saves-btn play" href="${c.getAttribute("href")}">JOUER</a>` +
+    `<a class="saves-btn play" href="${c.href}">JOUER</a>` +
     `<details class="news"><summary>QUOI DE NEUF ?</summary><ul>${NEWS.map(([d, t]) => `<li><b>${fmtDay(d)}</b>${t}</li>`).join("")}</ul></details></div>`;
   const art = box.querySelector(".art"), img = c.querySelector("img.shot"), cvs = c.querySelector("canvas");
   if (img) art.appendChild(img.cloneNode());
