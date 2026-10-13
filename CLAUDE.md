@@ -60,6 +60,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 Queens, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie **n'ont pas d'artefact** : on les joue sur le site (https://tirashi.github.io/Claude/). Ne pas en créer sans demande. Les maquettes de style sont listées dans `IDEES.md`.
 
 ## En cours / à vérifier
+- **Prochain chantier : Nebula** (rogue-lite tactique spatial). Cahier des charges : [`specs/nebula.md`](specs/nebula.md) ; référence des vaisseaux : `maquettes/nebula-chantier-naval.html` ; écrans : `maquettes/nebula.html`. Le jeu familial « Nebula : l'Empire des étoiles » viendra ensuite (réutilisera `nebula/vaisseaux.js`).
 - Orbite : les niveaux 12, 23, 25, 28 et 30 sont les plus serrés (8 à 11 tirs robustes) ; à ajuster si l'utilisateur ou son fils les trouvent trop durs.
 - Orbite et Pont stellaire : classements testés seulement avec le faux serveur ; confirmer qu'un vrai record apparaît bien.
 - Forfait : limite hebdomadaire remise à zéro le mercredi à 19 h ; privilégier les chantiers courts en fin de semaine.
