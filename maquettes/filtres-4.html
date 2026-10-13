@@ -1,0 +1,111 @@
+<title>Filtres de l'accueil</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : quatre propositions pour les quatre filtres de l'accueil (TOUS, FAVORIS, NOUVEAU, DU JOUR),
+   chacune dans un cadre d'écran. Thème sombre unique, celui de la Ludothèque. */
+:root {
+  --night: #110d22; --night-2: #1e1840; --ink: #0d0a18; --text: #f2f0ff; --dim: #a9a6d8; --gold: #ffd23f; --pink: #ff8fb0;
+  --f-display: "Press Start 2P", "Courier New", monospace; --f-body: "VT323", "Lucida Console", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color: var(--text);
+  font-family: var(--f-body); font-size: 21px; line-height: 1.25; padding-inline: 16px; padding-block: 32px 56px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(16px, 4vw, 26px); color: var(--gold); line-height: 1.4; text-shadow: 3px 3px 0 #b8571a, 5px 5px 0 #000; }
+.lead, .cap { margin: 0; color: var(--dim); max-width: 70ch; }
+.cap b { color: var(--gold); font-family: var(--f-display); font-weight: 400; font-size: 10px; margin-right: 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 30px; }
+.demo { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.stage { background: #0b0818; border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 6px 6px 0 3px #000; padding: 22px 12px; min-height: 210px; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.result { text-align: center; font-family: var(--f-display); font-size: 8px; color: var(--dim); line-height: 1.8; }
+.result b { color: var(--gold); font-weight: 400; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px dashed var(--gold); outline-offset: 3px; }
+
+/* A · les quatre boutons ronds d'une manette, en losange */
+.abxy { position: relative; width: 250px; height: 170px; margin: 0 auto; }
+.abxy button { position: absolute; display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; font-family: var(--f-display); font-size: 7px; color: var(--dim); }
+.abxy i { width: 46px; height: 46px; flex: none; border-radius: 50%; border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 12px; color: #fff;
+  box-shadow: inset 0 -5px 0 rgba(0,0,0,.3), 3px 3px 0 #000; transition: transform .1s steps(2); }
+.abxy .x { left: 102px; top: 0; flex-direction: column-reverse; } .abxy .y { left: 0; top: 56px; } .abxy .a { right: 0; top: 56px; flex-direction: row-reverse; } .abxy .b { left: 102px; top: 112px; flex-direction: column; }
+.abxy .x i { background: #3b7bff; } .abxy .y i { background: #3fbf5a; } .abxy .a i { background: #e8264d; } .abxy .b i { background: #ffd23f; color: #3a2400; }
+.abxy .x { left: 92px; top: -6px; width: 66px; justify-content: center; } .abxy .b { left: 92px; top: 106px; width: 66px; justify-content: center; }
+.abxy button.on { color: var(--gold); } .abxy button.on i { transform: translateY(3px); box-shadow: inset 0 3px 0 rgba(0,0,0,.35), 0 0 0 3px #fff, 0 0 14px var(--gold); }
+
+/* B · un interrupteur à glissière à quatre crans */
+.slide { position: relative; width: min(100%, 300px); margin: 0 auto; }
+.track { height: 30px; margin: 0 22px; background: #050409; border: 3px solid var(--ink); border-radius: 15px; box-shadow: inset 0 3px 0 #000, 0 0 0 2px #3b3566; position: relative; }
+.knob { position: absolute; top: -9px; width: 44px; height: 42px; margin-left: -22px; background: linear-gradient(#e6e3f0, #9a96ad); border: 3px solid var(--ink); border-radius: 6px;
+  box-shadow: 3px 3px 0 #000, inset 0 0 0 3px rgba(255,255,255,.3); transition: left .3s steps(5); }
+.knob::before, .knob::after { content: ""; position: absolute; top: 8px; bottom: 8px; width: 3px; background: #6a6680; } .knob::before { left: 13px; } .knob::after { right: 13px; }
+.notches { display: flex; justify-content: space-between; margin-top: 14px; }
+.notches button { width: 66px; background: none; border: 0; padding: 0; text-align: center; font-family: var(--f-display); font-size: 6px; color: var(--dim); line-height: 1.6; }
+.notches button::before { content: ""; display: block; width: 3px; height: 8px; margin: 0 auto 6px; background: #3b3566; }
+.notches button.on { color: var(--gold); } .notches button.on::before { background: var(--gold); }
+@media (prefers-reduced-motion: reduce) { .knob { transition: none; } }
+
+/* C · la façade de la console : quatre voyants et leur nom gravé */
+.panel { margin: 0 auto; width: min(100%, 320px); padding: 16px 12px 12px; background: linear-gradient(#4b4a5c, #34333f); border: 3px solid var(--ink); border-radius: 8px;
+  box-shadow: inset 0 3px 0 #6e6d84, 4px 4px 0 #000; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.panel button { background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.panel i { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--ink); background: radial-gradient(circle at 35% 35%, #6a2030, #3a0e18); box-shadow: inset 0 0 0 2px rgba(0,0,0,.4); }
+.panel span { font-family: var(--f-display); font-size: 6px; color: #c9c6d6; text-shadow: 0 1px 0 #000; }
+.panel button:nth-child(2) i { background: radial-gradient(circle at 35% 35%, #6a5a20, #3a300e); }
+.panel button:nth-child(3) i { background: radial-gradient(circle at 35% 35%, #206a34, #0e3a18); }
+.panel button:nth-child(4) i { background: radial-gradient(circle at 35% 35%, #20406a, #0e1e3a); }
+.panel button.on:nth-child(1) i { background: radial-gradient(circle at 35% 35%, #ffc0cc, #ff2a4d); box-shadow: 0 0 12px #ff2a4d, 0 0 22px #ff2a4d; }
+.panel button.on:nth-child(2) i { background: radial-gradient(circle at 35% 35%, #fff4c0, #ffd23f); box-shadow: 0 0 12px #ffd23f, 0 0 22px #ffb000; }
+.panel button.on:nth-child(3) i { background: radial-gradient(circle at 35% 35%, #d0ffd8, #3fdf6a); box-shadow: 0 0 12px #3fdf6a, 0 0 22px #3fdf6a; }
+.panel button.on:nth-child(4) i { background: radial-gradient(circle at 35% 35%, #d0e4ff, #3b8bff); box-shadow: 0 0 12px #3b8bff, 0 0 22px #3b8bff; }
+.panel button.on span { color: #fff; }
+.grill { grid-column: 1 / -1; height: 14px; margin-top: 6px; background: repeating-linear-gradient(90deg, #26252f 0 4px, transparent 4px 8px); border-radius: 3px; }
+
+/* D · quatre mini-boîtes couchées, au style de la boîte de l'accueil ; celle choisie sort de la pile */
+.boxes { display: flex; flex-direction: column; gap: 4px; width: min(100%, 300px); margin: 0 auto; }
+.boxes button { position: relative; height: 34px; padding: 0 0 0 42px; text-align: left; border: 3px solid #000; background: repeating-linear-gradient(#2a2a2a 0 3px, #111 3px 7px);
+  font-family: var(--f-display); font-size: 9px; letter-spacing: 2px; transition: transform .2s steps(3); box-shadow: 3px 3px 0 #000; }
+.boxes button::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 32px; background: var(--c); border-right: 3px solid #e8264d; }
+.boxes button span { background: linear-gradient(#fff 30%, #9fb4d6 55%, #fff 60%, #c9d6f0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #fff; }
+.boxes button em { position: absolute; left: 7px; top: 4px; font-style: normal; font-size: 14px; color: #fff; text-shadow: 1px 1px 0 #000; font-family: "Segoe UI Symbol", sans-serif; }
+.boxes button.on { transform: translateX(22px); box-shadow: 3px 3px 0 #000, 0 0 0 3px var(--gold); }
+@media (prefers-reduced-motion: reduce) { .boxes button { transition: none; } }
+.note { margin: 0; border-top: 2px dashed rgba(255,255,255,.15); padding-top: 16px; color: var(--dim); max-width: 78ch; }
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>FILTRES DE L'ACCUEIL · V4</h1>
+    <p class="lead">Quatre façons de présenter les quatre filtres retenus : TOUS, FAVORIS, NOUVEAU et DU JOUR. Tout est cliquable.</p>
+  </header>
+  <section class="grid">
+    <div class="demo"><div class="stage"><div class="abxy" id="abxy">
+        <button class="x" data-f="NOUVEAU"><i>X</i>NOUVEAU</button><button class="y" data-f="FAVORIS"><i>Y</i>FAVORIS</button>
+        <button class="a on" data-f="TOUS"><i>A</i>TOUS</button><button class="b" data-f="DU JOUR"><i>B</i>DU JOUR</button></div><div class="result" data-r></div></div>
+      <p class="cap"><b>A · BOUTONS DE MANETTE</b>Quatre filtres, quatre boutons ronds en losange comme sur une manette, chacun avec sa couleur et son nom. Le bouton choisi s'enfonce et s'illumine.</p></div>
+
+    <div class="demo"><div class="stage"><div class="slide" id="slide"><div class="track"><div class="knob" id="knob"></div></div>
+        <div class="notches"><button class="on" data-f="TOUS">TOUS</button><button data-f="FAVORIS">FAVORIS</button><button data-f="NOUVEAU">NOUVEAU</button><button data-f="DU JOUR">DU JOUR</button></div></div><div class="result" data-r></div></div>
+      <p class="cap"><b>B · GLISSIERE</b>Un interrupteur à glissière à quatre crans, comme le bouton d'alimentation d'une vieille console. On touche un nom : la manette métallique glisse jusqu'à son cran.</p></div>
+
+    <div class="demo"><div class="stage"><div class="panel" id="panel">
+        <button class="on" data-f="TOUS"><i></i><span>TOUS</span></button><button data-f="FAVORIS"><i></i><span>FAVORIS</span></button><button data-f="NOUVEAU"><i></i><span>NOUVEAU</span></button><button data-f="DU JOUR"><i></i><span>DU JOUR</span></button><div class="grill"></div></div><div class="result" data-r></div></div>
+      <p class="cap"><b>C · VOYANTS</b>La façade grise de la console avec quatre voyants et leur nom gravé dessous, et la grille d'aération. Le voyant du filtre choisi s'allume (rouge, jaune, vert ou bleu).</p></div>
+
+    <div class="demo"><div class="stage"><div class="boxes" id="boxes">
+        <button class="on" data-f="TOUS" style="--c:#3b2a8a"><em>☰</em><span>TOUS</span></button><button data-f="FAVORIS" style="--c:#b8862a"><em>★</em><span>FAVORIS</span></button>
+        <button data-f="NOUVEAU" style="--c:#2f7a48"><em>✦</em><span>NOUVEAU</span></button><button data-f="DU JOUR" style="--c:#1c579c"><em>☀</em><span>DU JOUR</span></button></div><div class="result" data-r></div></div>
+      <p class="cap"><b>D · PILE DE BOITES</b>Quatre boîtes couchées en pile, au style de la boîte de l'accueil et de l'étagère des classements (noir strié, filet rouge, titre chromé). La boîte choisie sort de la pile.</p></div>
+  </section>
+  <p class="note">A et D vont bien avec le reste du site (boutons de manette, boîtes de jeu) ; B et C rappellent la console elle-même.</p>
+</div>
+<script>
+'use strict';
+const COUNT = { TOUS: 16, FAVORIS: 3, NOUVEAU: 5, 'DU JOUR': 3 };
+document.querySelectorAll('.demo').forEach(d => {
+  const r = d.querySelector('[data-r]'), btns = [...d.querySelectorAll('[data-f]')];
+  const pick = b => { btns.forEach(x => x.classList.toggle('on', x === b)); r.innerHTML = `FILTRE : <b>${b.dataset.f}</b> · ${COUNT[b.dataset.f]} JEUX`;
+    const knob = d.querySelector('#knob'); if (knob) { const i = btns.indexOf(b); knob.style.left = (i / (btns.length - 1) * 100) + '%'; } };
+  btns.forEach(b => b.addEventListener('click', () => pick(b))); pick(btns.find(b => b.classList.contains('on')));
+});
+</script>
