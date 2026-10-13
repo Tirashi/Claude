@@ -14,6 +14,7 @@ python3 -m http.server 8765
 | `faux-classements.js <ancre> [records-json] [capture]` | Classements avec un faux serveur Supabase : ce qui part à l'inscription, quel tableau la page demande. |
 | `orbite-solveur.js [niveaux]` | Orbite : tirs gagnants et robustes par niveau. |
 | `pont-stellaire-unicite.js [n]` | Pont stellaire : temps de génération et unicité des solutions. |
-| `artefact.py <jeu.html> <sortie.html>` | Copie d'un jeu prête à publier en artefact (chiens32.js intégré, sans ludo-scores.js). |
+| `nebula-simulateur.js [n] [prudence]` | Nebula : combats automatiques (victoires, coque perdue) et vérification des graines. |
+| `artefact.py <jeu.html> <sortie.html>` | Copie d'un jeu prête à publier en artefact (chiens32.js et nebula/vaisseaux.js intégrés, sans ludo-scores.js). |
 
 `pw.js` charge Playwright (installé dans `/opt/node22`) et règle l'écran de téléphone.

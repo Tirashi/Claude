@@ -192,6 +192,9 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
        note: "Score d'une mission : à chaque site, (100 + carburant restant) × le multiplicateur de l'aire."},
       {label: "MISSION DU JOUR", ctl: ["day"], game: "alunissage", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: v => N(v) + " pts",
        title: () => "MISSION DU JOUR", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}]},
+    {id: "nebula", name: "NEBULA", play: "../nebula/index.html", views: [
+      {label: "MEILLEUR SCORE", game: "nebula", board: () => "best", fmt: v => N(v) + " pts", title: () => "NEBULA · MEILLEURE PARTIE",
+       note: "1000 par secteur terminé, 20 par pirate détruit, plus les crédits restants."}]},
     {id: "pontstellaire", name: "PONT STELLAIRE", play: "../pont-stellaire/index.html", views: [
       {label: "CIEL DU JOUR", ctl: ["day"], game: "pontstellaire", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: T,
        title: () => "CIEL DU JOUR", note: "Le même ciel 9×9 pour toute la famille, plus 30 secondes par indice.",

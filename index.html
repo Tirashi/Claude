@@ -92,6 +92,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.amiral{--lb:linear-gradient(to bottom, #1c579c, #0a1c40); --lt:#ffd23f; --ld:#dcebff}
 .cart.alu{--lb:linear-gradient(to bottom, #0a0c1e, #2c2a28); --lt:#e8e4d8; --ld:#dfe5ff}
 .cart.pont{--lb:radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%); --lt:#ffd76a; --ld:#dfe5ff}
+.cart.nebula{--lb:radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%); --lt:#f2b24a; --ld:#d8dee8}
 .cart.orbite{--lb:radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%); --lt:#6fd8ff; --ld:#dfe5ff}
 
 @media (hover: none) and (pointer: coarse){ .status{display:none} }
@@ -245,6 +246,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <h2>PONT STELLAIRE</h2>
         <p>Relie les étoiles par des faisceaux de lumière, sans croisement, pour dessiner une constellation. Un ciel du jour pour toute la famille.</p>
         <div class="tags"><span>LOGIQUE</span><span>32 BITS</span><span>CIEL DU JOUR</span></div>
+      </div>
+    </a>
+    <a class="cart nebula" href="nebula/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="nebula" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>NEBULA</h2>
+        <p>Mène ta flotte de balise en balise jusqu'à l'amiral pirate. Les pirates annoncent leurs tirs : esquive, riposte, survis.</p>
+        <div class="tags"><span>TACTIQUE</span><span>ROGUE-LITE</span><span>32 BITS</span></div>
       </div>
     </a>
     <a class="cart tetris" href="tetris/index.html">
@@ -430,6 +440,23 @@ const ICONS = {
     "..kkyyyyyyyyok..",
     "....kkoooookk...",
     "......kkkk......"]},
+  nebula: {pal:{k:"#05070c", a:"#f2b24a", s:"#8a929e", d:"#4a505a", b:"#9fdcff", w:"#ffffff"}, map:[
+    "................",
+    ".......kk.......",
+    "......kssk......",
+    "......kbbk......",
+    ".....ksssdk.....",
+    ".....ksaadk.....",
+    "....kssssddk....",
+    "...kassssddak...",
+    "..kaasssssddaak.",
+    ".kaaksssssdkaak.",
+    ".kk.ksssssdk.kk.",
+    "....kddssddk....",
+    "....kkdkkdkk....",
+    ".....bb..bb.....",
+    ".....wb..bw.....",
+    "................"]},
   lander: {pal:{k:"#0b0614", w:"#ffffff", g:"#c8ccd4", o:"#8a5a10", y:"#ffd76a", b:"#2a3a5a", f:"#fff2a8", r:"#ff9a3a"}, map:[
     "................",
     "......kkkk......",
@@ -571,6 +598,8 @@ function collectSaves(){
   if (al.b || al.s) g.alunissage = al;
   const ps = {b: readKey("pontstellaire.best", {}) || {}, d: readKey("pontstellaire.daily", {}) || {}, w: Number(readKey("pontstellaire.wins", 0)) || 0};
   if (ps.w || Object.keys(ps.b).length) g.pontstellaire = ps;
+  const nb = {b: Number(readKey("nebula.best", 0)) || 0, m: readKey("nebula.meta", null), d: readKey("nebula.daily", {}) || {}};
+  if (nb.b || (nb.m && nb.m.games)) g.nebula = nb;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
@@ -588,6 +617,7 @@ function describeSaves(g){
   if (g.alunissage) out.push(`Alunissage : record ${g.alunissage.b || 0} points, ${g.alunissage.s || 0} site${g.alunissage.s > 1 ? "s" : ""} atteint${g.alunissage.s > 1 ? "s" : ""}`);
   if (g.pontstellaire){ const p = g.pontstellaire, b = Object.keys(p.b || {}).sort((x, y) => x - y).map(n => `${n}×${n} en ${fmtTime(p.b[n])}`);
     out.push(`Pont stellaire : ${p.w || 0} constellation${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
+  if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
   if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
   return out;
 }
@@ -685,6 +715,19 @@ function mergeSaves(g){
     const w = Number(readKey("pontstellaire.wins", 0)) || 0;
     if (p.w > w){ writeKey("pontstellaire.wins", Math.round(p.w)); n++; }
     if (n){ writeKey("pontstellaire.best", best); writeKey("pontstellaire.daily", daily); done.push(`Pont stellaire : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.nebula && typeof g.nebula === "object"){
+    const a = g.nebula; let n = 0;
+    if (a.b > (Number(readKey("nebula.best", 0)) || 0)){ writeKey("nebula.best", Math.round(a.b)); n++; }
+    // statistiques : on garde le maximum de chaque compteur (les données stellaires ne s'additionnent pas, sinon un aller-retour les doublerait)
+    if (a.m && typeof a.m === "object"){
+      const mine = readKey("nebula.meta", {}) || {}; let ch = false;
+      for (const [k, v] of Object.entries(a.m)) if (typeof v === "number" && v > (Number(mine[k]) || 0)){ mine[k] = v; ch = true; }
+      if (ch){ writeKey("nebula.meta", mine); n++; }
+    }
+    const daily = readKey("nebula.daily", {}) || {};
+    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
+    if (n){ writeKey("nebula.daily", daily); done.push(`Nebula : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.orbite && typeof g.orbite === "object"){
     const mine = readKey("orbite.stars", {}) || {}; let n = 0;
