@@ -56,6 +56,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 | Injagility, Parcours (`injagility/parcours.html`) | https://claude.ai/artifact/LxcviTcJyAAGWd32HwPGmb |
 | Orbite | https://claude.ai/artifact/UysU574KpYMa7DdHhKsaHv |
 | Pont stellaire | https://claude.ai/artifact/Twgkpb1scdCh2Th6Nh35bF |
+| Alunissage | https://claude.ai/artifact/2TgrmzSKuzoyPHYufyHrWh |
 
 Queens, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie **n'ont pas d'artefact** : on les joue sur le site (https://tirashi.github.io/Claude/). Ne pas en créer sans demande. Les maquettes de style sont listées dans `IDEES.md`.
 
