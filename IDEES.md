@@ -3,6 +3,7 @@
 Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici les nouvelles idées et maquettes.
 
 ## Maquettes de style déjà faites (artefacts)
+- Rogue-lite spatial (titre, carte du secteur, combat tactique, hangar ; 4 titres à comparer) : https://claude.ai/artifact/4NpBo4SY7oDYSwc2GnJKoD
 - Maquette 32 bits d'Injagility : https://claude.ai/artifact/TymnL37HHZbjo2BTgMT5Kj
 - 9 coups de cœur + 4 jeux de bateaux en 32 bits : https://claude.ai/artifact/XzRmvgNKZeSMRUAM1NuFsA
 - Amiral en HD-2D : https://claude.ai/artifact/UNpVXyxYPmRUsJuTs8Zuvb
@@ -45,6 +46,9 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux, des planètes, des améliorations, pour **toute la famille**. Quatre formes proposées (toutes gardées) :
 1. **Empire familial** (façon Ogame) — une planète qui produit en continu même téléphone fermé, constructions de plus en plus longues, flottes qui explorent, chassent les pirates et pillent les autres joueurs de la famille ; parties sur des semaines. Combats **résolus automatiquement** avec des ordres génériques. *Piste détaillée en cours.*
 2. **Rogue-lite tactique** (façon FTL / Into the Breach) — une flottille saute de balise en balise sur une carte qui change à chaque partie ; combats **au tour par tour** sur une grille ; améliorations entre les combats, déblocages après une défaite ; parties de 20 à 40 min. *Piste détaillée en cours.*
+
+**Décisions** : on commence par le **rogue-lite** (il pose les graphismes et les bases), puis la version familiale dans le même univers, avec le même titre en version longue (titres envisagés : Flottille / Flottille : les Colonies, Orion / Orion : les Maisons, Sillage / Sillage : l'Empire des étoiles, Nebula / Nebula : Dynasties). Les combats tactiques du rogue-lite sont comme les missions des flottes du jeu familial.
+
 3. **Conquête d'un amas** — solo contre 3 empires de l'ordinateur sur une carte d'étoiles, quelques tours par jour, une partie sur plusieurs jours.
 4. **Mélange empire + raids** — l'empire qui pousse sur plusieurs jours, avec des combats tactiques joués au doigt et des raids asynchrones (défense jouée par l'ordinateur).
 
