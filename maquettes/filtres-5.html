@@ -1,0 +1,123 @@
+<title>Filtres façon RPG</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : quatre menus de jeux de rôle des années 90 pour les quatre filtres de l'accueil, chacun dans un
+   cadre d'écran. Thème sombre unique, celui de la Ludothèque. */
+:root {
+  --night: #110d22; --night-2: #1e1840; --ink: #0d0a18; --text: #f2f0ff; --dim: #a9a6d8; --gold: #ffd23f;
+  --f-display: "Press Start 2P", "Courier New", monospace; --f-body: "VT323", "Lucida Console", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color: var(--text);
+  font-family: var(--f-body); font-size: 21px; line-height: 1.25; padding-inline: 16px; padding-block: 32px 56px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(16px, 4vw, 26px); color: var(--gold); line-height: 1.4; text-shadow: 3px 3px 0 #b8571a, 5px 5px 0 #000; }
+.lead, .cap { margin: 0; color: var(--dim); max-width: 70ch; }
+.cap b { color: var(--gold); font-family: var(--f-display); font-weight: 400; font-size: 10px; margin-right: 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 30px; }
+.demo { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.stage { background: #0b0818; border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 6px 6px 0 3px #000; padding: 20px 14px; min-height: 230px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; text-align: left; }
+:focus-visible { outline: 3px dashed var(--gold); outline-offset: 3px; }
+@keyframes bob { 50% { transform: translateX(-3px); } }
+@keyframes blink { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* A · fenêtre bleue de RPG, main qui pointe */
+.win { background: linear-gradient(#3a4cc8, #141a6a); border: 3px solid #fff; border-radius: 6px; box-shadow: 0 0 0 3px #000, 4px 4px 0 3px #000; padding: 14px 16px; }
+.menuA { display: flex; flex-direction: column; gap: 4px; }
+.menuA button { position: relative; padding: 6px 0 6px 34px; font-family: var(--f-display); font-size: 11px; color: #fff; text-shadow: 2px 2px 0 #000; }
+.menuA button em { font-style: normal; font-family: var(--f-body); font-size: 20px; color: #b9c4ff; margin-left: 10px; text-shadow: none; }
+.hand { position: absolute; left: 0; top: 3px; width: 26px; height: 18px; image-rendering: pixelated; animation: bob .5s steps(2) infinite; }
+.descA { margin-top: 10px; font-size: 20px; color: #fff; }
+
+/* B · commandes de combat noir et blanc, deux colonnes, curseur ▶ */
+.dq { background: #000; border: 4px double #fff; border-radius: 4px; padding: 12px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 4px; }
+.dq button { font-family: var(--f-display); font-size: 10px; color: #fff; padding: 6px 4px 6px 22px; position: relative; }
+.dq button.on::before { content: "▶"; position: absolute; left: 4px; top: 6px; font-size: 9px; animation: blink .7s steps(1) infinite; }
+.hp { display: flex; gap: 8px; }
+.hp div { flex: 1; background: #000; border: 4px double #fff; border-radius: 4px; padding: 8px; font-family: var(--f-display); font-size: 7px; line-height: 1.9; color: #fff; }
+.hp b { font-weight: 400; color: var(--gold); }
+
+/* C · inventaire : objets dans des cases, description dessous */
+.inv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; background: #2b1d10; border: 3px solid #000; box-shadow: inset 0 0 0 3px #7a4a24, 4px 4px 0 #000; }
+.inv button { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #1a1008; border: 3px solid #000; box-shadow: inset 0 0 0 2px #5a3418; }
+.inv canvas { width: 40px; height: 40px; image-rendering: pixelated; }
+.inv button.on { box-shadow: inset 0 0 0 2px #5a3418, 0 0 0 3px var(--gold); }
+.inv button.on::after { content: ""; position: absolute; inset: -9px; border: 3px solid var(--gold); clip-path: polygon(0 0,30% 0,30% 6%,6% 6%,6% 30%,0 30%, 0 70%,6% 70%,6% 94%,30% 94%,30% 100%,0 100%, 100% 100%,70% 100%,70% 94%,94% 94%,94% 70%,100% 70%, 100% 30%,94% 30%,94% 6%,70% 6%,70% 0,100% 0); animation: blink 1s steps(1) infinite; }
+.desc { background: #f2e2c0; color: #3a2410; border: 3px solid #000; box-shadow: 4px 4px 0 #000; padding: 10px 12px; font-size: 20px; }
+.desc b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 10px; margin-bottom: 6px; color: #7a2a10; }
+
+/* D · anneau de commandes autour du héros */
+.ring { position: relative; width: 240px; height: 240px; margin: 0 auto; }
+.ring .hero { position: absolute; left: 96px; top: 92px; width: 48px; height: 56px; image-rendering: pixelated; }
+.ring button { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #5a4cb0, #241a5a); border: 3px solid #000; box-shadow: 3px 3px 0 #000; transition: left .35s, top .35s, transform .35s; }
+.ring button canvas { width: 32px; height: 32px; image-rendering: pixelated; }
+.ring button.on { transform: scale(1.25); box-shadow: 0 0 0 3px var(--gold), 3px 3px 0 #000; }
+.ringlabel { text-align: center; font-family: var(--f-display); font-size: 11px; color: var(--gold); text-shadow: 2px 2px 0 #000; }
+.note { margin: 0; border-top: 2px dashed rgba(255,255,255,.15); padding-top: 16px; color: var(--dim); max-width: 78ch; }
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>FILTRES FACON RPG · V5</h1>
+    <p class="lead">Quatre menus de jeux de rôle des années 90 pour TOUS, FAVORIS, NOUVEAU et DU JOUR. Tout est cliquable ; dans chaque cadre, les flèches du clavier marchent aussi.</p>
+  </header>
+  <section class="grid">
+    <div class="demo"><div class="stage" data-demo="a"><div class="win"><div class="menuA">
+        <button data-f="TOUS" class="on">TOUS<em>16 jeux</em></button><button data-f="FAVORIS">FAVORIS<em>3</em></button><button data-f="NOUVEAU">NOUVEAU<em>5</em></button><button data-f="DU JOUR">DU JOUR<em>3</em></button></div></div>
+        <div class="win descA" data-d></div></div>
+      <p class="cap"><b>A · FENETRE BLEUE</b>La fenêtre bleue à bord blanc des grands RPG, avec la petite main qui pointe l'option choisie en se balançant. Une seconde fenêtre explique le filtre.</p></div>
+
+    <div class="demo"><div class="stage" data-demo="b"><div class="hp"><div>LUDOTHEQUE<br>JEUX <b data-n>16</b></div><div>FILTRE<br><b data-d>TOUS</b></div></div>
+        <div class="dq"><button data-f="TOUS" class="on">TOUS</button><button data-f="FAVORIS">FAVORIS</button><button data-f="NOUVEAU">NOUVEAU</button><button data-f="DU JOUR">DU JOUR</button></div></div>
+      <p class="cap"><b>B · COMMANDES DE COMBAT</b>Le menu noir à double bord blanc des RPG à la Dragon Quest, en deux colonnes comme ATTAQUE / MAGIE / OBJET / FUIR, avec le curseur ▶ qui clignote. Au-dessus, la « fiche du héros » : nombre de jeux et filtre en cours.</p></div>
+
+    <div class="demo"><div class="stage" data-demo="c"><div class="inv" id="inv"></div><div class="desc" data-d></div></div>
+      <p class="cap"><b>C · INVENTAIRE</b>Un coffre en bois avec quatre objets dans leurs cases (un gros joyau, une étoile, un parchemin neuf, un sablier). La case choisie est encadrée de coins dorés qui clignotent, et le parchemin du dessous décrit l'objet.</p></div>
+
+    <div class="demo"><div class="stage" data-demo="d"><div class="ring" id="ring"></div><div class="ringlabel" data-d></div></div>
+      <p class="cap"><b>D · ANNEAU DE COMMANDES</b>Comme dans Secret of Mana : les quatre objets tournent en anneau autour du petit héros. On touche un objet, l'anneau tourne pour l'amener en haut et son nom s'affiche.</p></div>
+  </section>
+  <p class="note">Les menus A et B sont les plus lisibles ; C et D les plus « jeu ». Le texte de description peut dire combien de jeux correspondent.</p>
+</div>
+<script>
+'use strict';
+const P = { k: '#0d0a18', y: '#ffd23f', o: '#e09a2a', w: '#f2f0ff', r: '#e8264d', b: '#3b7bff', c: '#5ce1ff', g: '#5cff8a', G: '#2f7a48', p: '#b48cff', n: '#8a5a2a', s: '#c9b48a', S: '#8a6a3a', f: '#f2c8a0', h: '#5a3418', B: '#1c579c' };
+function sprite(m, w = 16) { const c = document.createElement('canvas'); c.width = w; c.height = m.length; const g = c.getContext('2d');
+  m.forEach((row, y) => [...row].forEach((ch, x) => { if (P[ch]) { g.fillStyle = P[ch]; g.fillRect(x, y, 1, 1); } })); return c; }
+const IT = {
+  TOUS: ['................', '......kkkk......', '....kkcccckk....', '...kccwwccbbk...', '..kcwwccccbbbk..', '..kcwcccccbbbk..', '..kccccccbbbbk..', '...kccccbbbbk...', '....kkcbbbkk....', '......kbbk......', '.......kk.......', '................'],
+  FAVORIS: ['.......k........', '......kyk.......', '......kyk.......', '..kkkkyyykkkk...', '..kyyyywyyyyk...', '...kyyyyyyyk....', '....kyyyyyk.....', '....kyykyyk.....', '...kyyk.kyyk....', '...kkk...kkk....'],
+  NOUVEAU: ['...kkkkkkkkk....', '..kssssssssssk..', '..kswwwwwwwwsk..', '...kwkkkwkkwk...', '...kwwwwwwwwk...', '...kwkkwkkkwk...', '...kwwwwwwwwk...', '..kssssssssssk..', '...kkkkkkkkkk...', '..........gg....', '.........gGGg...', '..........gg....'],
+  'DU JOUR': ['...kkkkkkkkkk...', '...kSSSSSSSSk...', '....kyyyyyyk....', '.....kyyyyk.....', '......kyyk......', '.......kk.......', '......kwwk......', '.....kwwwwk.....', '....kwwyywwk....', '...kSSSSSSSSk...', '...kkkkkkkkkk...'],
+};
+const HAND = ['.....kkkk.................', '....kwwwwk................', 'kkkkwwwwwwkkkkkkkk........', 'kwwwwwwwwwwwwwwwwwk.......', 'kwwwwwwwwwkkkkkkkk........', 'kwwwwwwwwwk...............', 'kwwwwwwwwwkk..............', 'kwwwwwwwwwk...............', '.kkkkkkkkkk...............'];
+const HERO = ['....hhhhhh......', '...hhhhhhhh.....', '...hffffffh.....', '...fkfffkff.....', '...ffffffff.....', '....ffrrff......', '...BBBBBBBB.....', '..fBBByyBBBf....', '..fBBBBBBBBf....', '...BBBBBBBB.....', '...nnn..nnn.....', '...kkk..kkk.....'];
+const DESC = { TOUS: 'Toute la Ludothèque : 16 jeux.', FAVORIS: 'Les jeux marqués d\'une étoile : 3 jeux.', NOUVEAU: 'Sortis ou mis à jour ces 3 derniers jours : 5 jeux.', 'DU JOUR': 'Un défi par jour pour toute la famille : 3 jeux.' };
+const COUNT = { TOUS: 16, FAVORIS: 3, NOUVEAU: 5, 'DU JOUR': 3 };
+// cases de l'inventaire et anneau
+const inv = document.getElementById('inv'), ring = document.getElementById('ring');
+Object.keys(IT).forEach((f, i) => { const b = document.createElement('button'); b.dataset.f = f; b.setAttribute('aria-label', f); if (!i) b.className = 'on'; b.append(sprite(IT[f])); inv.append(b); });
+const hero = sprite(HERO); hero.className = 'hero'; ring.append(hero);
+Object.keys(IT).forEach((f, i) => { const b = document.createElement('button'); b.dataset.f = f; b.setAttribute('aria-label', f); if (!i) b.className = 'on'; b.append(sprite(IT[f])); ring.append(b); });
+document.querySelectorAll('.menuA button').forEach(b => { const h = sprite(HAND, 26); h.className = 'hand'; h.hidden = true; b.prepend(h); });
+// comportement commun : clic, flèches, description
+document.querySelectorAll('[data-demo]').forEach(st => {
+  const kind = st.dataset.demo, btns = [...st.querySelectorAll('[data-f]')], d = st.querySelector('[data-d]'), n = st.querySelector('[data-n]');
+  const pick = (b, focus) => {
+    btns.forEach(x => { x.classList.toggle('on', x === b); const h = x.querySelector('.hand'); if (h) h.hidden = x !== b; });
+    const f = b.dataset.f;
+    if (kind === 'a') d.textContent = DESC[f]; else if (kind === 'b') { d.textContent = f; n.textContent = COUNT[f]; }
+    else if (kind === 'c') d.innerHTML = `<b>${f}</b>${DESC[f]}`; else d.textContent = f;
+    if (kind === 'd') { const k = btns.indexOf(b); btns.forEach((x, i) => { const a = (i - k) / btns.length * Math.PI * 2 - Math.PI / 2; x.style.left = (120 + Math.cos(a) * 86) + 'px'; x.style.top = (120 + Math.sin(a) * 86) + 'px'; }); }
+    if (focus) b.focus();
+  };
+  btns.forEach(b => b.addEventListener('click', () => pick(b)));
+  st.addEventListener('keydown', e => { const i = btns.findIndex(b => b.classList.contains('on')), dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!dir) return; e.preventDefault(); pick(btns[(i + dir + btns.length) % btns.length], true); });
+  pick(btns[0]);
+});
+</script>
