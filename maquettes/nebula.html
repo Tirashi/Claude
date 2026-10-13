@@ -30,21 +30,21 @@ figure { margin: 0; display: flex; flex-direction: column; gap: 12px; min-width:
 canvas { display: block; width: 272px; max-width: 100%; height: auto; border-radius: 14px; }
 figcaption { font-size: 17px; color: var(--dim); max-width: 36ch; align-self: center; }
 figcaption b { font-family: var(--f-mono); font-weight: 400; font-size: 12px; letter-spacing: 3px; color: var(--accent); display: block; margin-bottom: 4px; }
+.yard canvas { width: 100%; max-width: 1200px; border-radius: 10px; border: 1px solid var(--line); align-self: center; image-rendering: pixelated; }
+.yard figcaption { max-width: 80ch; }
 .note { border-top: 1px solid var(--line); padding-top: 16px; color: var(--dim); max-width: 78ch; }
 .note b { color: var(--text); font-weight: 600; }
 </style>
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">MAQUETTE N° 2 · STYLE RÉALISTE</div>
+    <div class="eyebrow">MAQUETTE N° 3 · VAISSEAUX EN RELIEF</div>
     <h1>NEBULA<small>ROGUE-LITE TACTIQUE · PUIS « NEBULA : L'EMPIRE DES ÉTOILES »</small></h1>
-    <p class="lead">Les quatre mêmes écrans que la première maquette, dans un rendu plus réaliste : coques en panneaux de métal, détails, hublots éclairés, lumière douce, pirates en tôle rouillée, interface de tableau de bord. Deux ambiances à comparer.</p>
-    <div class="tabs" role="group" aria-label="Ambiance">
-      <span>AMBIANCE</span>
-      <button type="button" id="t0" aria-pressed="true">MILITAIRE · AMBRE</button>
-      <button type="button" id="t1" aria-pressed="false">EXPLORATION · CYAN</button>
-    </div>
-  </header>
+    <p class="lead">Les vaisseaux sont maintenant construits comme des maquettes en relief : coque, pont, tourelles, îlot de commandement et petits détails, éclairés d'en haut à gauche avec de vraies ombres portées. Acier sombre et marquages ambre pour ta flotte, tôle rouillée pour les pirates. Les gros vaisseaux occupent plusieurs cases.</p>
+</header>
+
+  <figure class="yard"><canvas id="yard" width="1200" height="600" aria-label="Chantier naval : les six vaisseaux"></canvas>
+    <figcaption><b>CHANTIER NAVAL</b>Ta flotte à gauche, les pirates à droite, à l'échelle du combat : chasseur et intercepteur sur 1 case, frégate et croiseur sur 2 cases, porte-vaisseaux et amiral pirate sur 3 cases.</figcaption></figure>
 
   <section class="screens">
     <figure><div class="phone"><canvas id="c0" width="544" height="960" aria-label="Écran titre"></canvas></div>
@@ -52,7 +52,7 @@ figcaption b { font-family: var(--f-mono); font-weight: 400; font-size: 12px; le
     <figure><div class="phone"><canvas id="c1" width="544" height="960" aria-label="Carte du secteur"></canvas></div>
       <figcaption><b>CARTE DE NAVIGATION</b>Le secteur comme une carte de pilote : coordonnées, balises, saut suivant en surbrillance, l'amiral pirate au bout.</figcaption></figure>
     <figure><div class="phone"><canvas id="c2" width="544" height="960" aria-label="Combat tactique"></canvas></div>
-      <figcaption><b>COMBAT TACTIQUE</b>Traits rouges et dégâts prévus : ce que les pirates vont faire au prochain tour. Cases bleutées : où la frégate peut aller.</figcaption></figure>
+      <figcaption><b>COMBAT TACTIQUE</b>Les gros vaisseaux prennent plusieurs cases : plus dur de les cacher derrière un astéroïde, plus facile à toucher. Traits rouges : ce que les pirates vont faire au prochain tour.</figcaption></figure>
     <figure><div class="phone"><canvas id="c3" width="544" height="960" aria-label="Hangar"></canvas></div>
       <figcaption><b>HANGAR</b>Fiche de chaque vaisseau, modules installés, pilote. En bas, les pirates du secteur.</figcaption></figure>
   </section>
@@ -74,117 +74,189 @@ const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), pars
 function grad(stops, t) { t = clamp(t); const n = stops.length - 1, i = Math.min(n - 1, Math.floor(t * n)), f = t * n - i, a = stops[i], b = stops[i + 1]; return [mix(a[0], b[0], f), mix(a[1], b[1], f), mix(a[2], b[2], f)]; }
 
 /* =====================================================================
-   VAISSEAUX : coque en panneaux de métal, éclairée par une lumière douce
-   (haut gauche) et une lumière froide de la nébuleuse sur le bord opposé.
-   Formes en coordonnées 0..1 sur la boîte du sprite, nez vers le haut.
+   CHANTIER NAVAL : chaque vaisseau est une carte de hauteurs (coque,
+   superstructures, blindages, tourelles, détails), éclairée comme un
+   relief : lumière en haut à gauche, ombres portées des parties hautes,
+   occlusion dans les creux, rainures entre les plaques, reflets sur les
+   arêtes, lumière froide de la nébuleuse côté ombre.
+   1 case = 72 px : chasseur 1 case, frégate 2 cases, porte-vaisseaux 3.
+   Les pirates sont construits nez en haut puis retournés avant l'éclairage.
    ===================================================================== */
-const LIGHT = (() => { const v = [-.45, -.65, .62], n = Math.hypot(...v); return v.map(x => x / n); })();
+const LIGHT = (() => { const v = [-.5, -.62, .6], n = Math.hypot(...v); return v.map(x => x / n); })();
+const HALF = (() => { const v = [LIGHT[0], LIGHT[1], LIGHT[2] + 1], n = Math.hypot(...v); return v.map(x => x / n); })();
+// albédo (couleur de la matière), brillance, plaques
 const MAT = {
-  steel:  { ramp: ['#1a1f27', '#3a414c', '#646d7a', '#97a0ac', '#c9cfd6'].map(hex), panel: 9, plate: 7 },
-  white:  { ramp: ['#20242b', '#4a505a', '#808894', '#b8bec6', '#e6e9ec'].map(hex), panel: 9, plate: 7 },
-  dark:   { ramp: ['#101318', '#22272f', '#383f49', '#565e6a', '#7a828e'].map(hex), panel: 7, plate: 6 },
-  rust:   { ramp: ['#1a1210', '#3a2620', '#6a4232', '#946048', '#b88a68'].map(hex), panel: 12, plate: 9, grime: .5 },
-  scrap:  { ramp: ['#141516', '#2c2e30', '#4a4c4e', '#6e6e6c', '#98948c'].map(hex), panel: 11, plate: 8, grime: .35 },
-  paint:  { ramp: ['#0f1a26', '#1c3550', '#2c5a82', '#4a86b0', '#7fb4d4'].map(hex), panel: 99, plate: 99 },
-  hazard: { ramp: ['#1a1408', '#4a3610', '#8a6420', '#c09030', '#e0b850'].map(hex), panel: 99, plate: 99, stripes: true },
-  glass:  { ramp: ['#060a10', '#0e1a28', '#1e3a54', '#5a8aa8', '#c8e6f4'].map(hex), panel: 99, plate: 99, gloss: true },
+  hull:   { c: [92, 98, 108], spec: .35, plates: 1 },     // acier canon de fusil
+  hull2:  { c: [62, 66, 74], spec: .3, plates: 1 },       // acier sombre
+  deck:   { c: [118, 120, 122], spec: .25, plates: 1 },   // pont plus clair
+  amber:  { c: [176, 118, 42], spec: .4, plates: 0 },     // marquages de la flotte (ambre)
+  black:  { c: [30, 32, 36], spec: .15, plates: 0 },      // tuyères, baies
+  glass:  { c: [26, 44, 62], spec: 1.2, plates: 0, glass: 1 },
+  rust:   { c: [112, 66, 44], spec: .15, plates: 1, grime: 1 },
+  scrap:  { c: [78, 76, 72], spec: .2, plates: 1, grime: .8 },
+  hazard: { c: [190, 150, 50], spec: .2, plates: 0, stripes: 1 },
+  red:    { c: [150, 40, 36], spec: .3, plates: 0 },
 };
 function inPoly(x, y, p) { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; }
 function edgeDist(x, y, p) { let d = 1e9; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [ax, ay] = p[j], [bx, by] = p[i], dx = bx - ax, dy = by - ay; if (!dx && !dy) continue; const t = clamp(((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)); d = Math.min(d, Math.hypot(x - ax - t * dx, y - ay - t * dy)); } return d; }
-const sym = pts => pts.concat(pts.slice().reverse().map(([x, y]) => [1 - x, y]).filter(([x]) => x !== .5));   // demi-coque gauche → coque symétrique
-// parts : {m: matériau, p: polygone (0..1) ou e: [cx, cy, rx, ry], z: hauteur, b: biseau (px)}
-function shipSprite(w, h, parts, opt = {}) {
-  const N = w * h, hgt = new Float32Array(N).fill(-1), mat = new Array(N).fill(null), pid = new Int16Array(N).fill(-1);
-  parts.forEach((pt, k) => {
-    const poly = pt.p && pt.p.map(([x, y]) => [x * w, y * h]);
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const px = x + .5, py = y + .5; let v = -1;
-      if (pt.e) { const [cx, cy, rx, ry] = pt.e, d = ((px - cx * w) / (rx * w)) ** 2 + ((py - cy * h) / (ry * h)) ** 2; if (d <= 1) v = Math.sqrt(1 - d); }
-      else if (inPoly(px, py, poly)) v = Math.min(1, edgeDist(px, py, poly) / (pt.b || 3));
-      if (v >= 0) { const i = y * w + x, z = (pt.z || 1) * (.55 + .45 * v); if (z >= hgt[i] - .02 || pt.over) { hgt[i] = z; mat[i] = pt.m; pid[i] = k; } }
-    }
-  });
-  // détails en relief (boîtiers, conduites) et hublots
-  const R = rnd(opt.seed || 1), greeb = [], wins = [];
-  for (let i = 0; i < (opt.greebles || 10); i++) { const x = R() * w | 0, y = R() * h | 0; if (hgt[y * w + x] > .3) greeb.push([x, y, 2 + (R() * 4 | 0), 2 + (R() * 3 | 0)]); }
-  for (const [x0, y0, gw, gh] of greeb) for (let y = y0; y < y0 + gh; y++) for (let x = x0; x < x0 + gw; x++) { const i = y * w + x; if (x < w && y < h && hgt[i] > 0) hgt[i] += .12; }
-  for (const [y, x0, x1, n] of (opt.windows || [])) for (let k = 0; k < n; k++) wins.push([Math.round(mix(x0, x1, n > 1 ? k / (n - 1) : .5) * w), Math.round(y * h)]);
-  const [c, g] = mk(w, h), img = g.createImageData(w, h), at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? -.3 : Math.max(-.3, hgt[y * w + x]);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const i = y * w + x, z = hgt[i]; if (z < 0) continue;
-    const M = MAT[mat[i]];
-    let nx = (at(x - 1, y) - at(x + 1, y)) * 2.4, ny = (at(x, y - 1) - at(x, y + 1)) * 2.4, nz = 1, n = Math.hypot(nx, ny, nz); nx /= n; ny /= n; nz /= n;
-    let l = clamp(nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]) * .8 + z * .18;
-    // panneaux : lignes de tôle et légères variations de teinte par plaque
-    const pw = M.panel, ph = M.plate, row = Math.floor(y / ph), col = Math.floor((x + (row % 2) * pw / 2) / pw);
-    if (pw < 50) { l += (hash(col, row, opt.seed || 1) - .5) * .07; if (y % ph === 0 || (x + (row % 2) * pw / 2) % pw === 0) l -= .055; }
-    if (M.grime) l -= fbm(x * .18, y * .18, 7) * M.grime * .4;
-    if (M.stripes) l -= ((Math.floor((x + y) / 4) & 1) ? .45 : 0);
-    // couture sombre entre deux pièces
-    const seam = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const xx = x + dx, yy = y + dy; return xx >= 0 && yy >= 0 && xx < w && yy < h && pid[yy * w + xx] >= 0 && pid[yy * w + xx] !== pid[i] && hgt[yy * w + xx] > z + .05; });
-    if (seam) l -= .25;
-    let [r, gg, b] = grad(M.ramp, l);
-    if (M.gloss && l > .62) { const s = (l - .62) * 2.2; r = mix(r, 235, s); gg = mix(gg, 245, s); b = mix(b, 255, s); }
-    // lumière froide de la nébuleuse sur le bord à l'ombre
-    const rim = clamp(-(nx * LIGHT[0] + ny * LIGHT[1]) * 1.6) * (1 - z) * .55;
-    r += rim * 40; gg += rim * 70; b += rim * 110;
-    // bord : léger assombrissement, pas de contour noir
-    if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) < 0)) { r *= .6; gg *= .6; b *= .66; }
-    const k = i * 4; img.data[k] = r; img.data[k + 1] = gg; img.data[k + 2] = b; img.data[k + 3] = 255;
-  }
-  const winCol = opt.winCol || [255, 214, 150];
-  for (const [x, y] of wins) if (x >= 0 && y >= 0 && x < w && y < h && hgt[y * w + x] > 0) { const k = (y * w + x) * 4; img.data[k] = winCol[0]; img.data[k + 1] = winCol[1]; img.data[k + 2] = winCol[2]; }
-  g.putImageData(img, 0, 0);
-  const engines = (opt.engines || []).map(([ex, ey, er]) => [ex * w, ey * h, er]);
-  if (!opt.flip) return { img: c, w, h, engines, flip: false };
-  const [c2, g2] = mk(w, h); g2.translate(w, h); g2.rotate(Math.PI); g2.drawImage(c, 0, 0);
-  return { img: c2, w, h, engines: engines.map(([x, y, r]) => [w - x, h - y, r]), flip: true };
+// une coque décrite par sa moitié gauche (x mesuré depuis l'axe, vers la gauche) : renvoie le polygone complet
+const half = (cx, pts) => pts.map(([dx, y]) => [cx - dx, y]).concat(pts.slice().reverse().filter(([dx]) => dx !== 0).map(([dx, y]) => [cx + dx, y]));
+const smooth = t => t * t * (3 - 2 * t);
+/* Construction : B.poly(pts, haut, biseau, matière), B.box(x, y, w, h, ...), B.dome(cx, cy, rx, ry, base, haut, matière),
+   B.mirror(fn) : dessine aussi la pièce en miroir, B.lights(pts, couleur), B.engines(pts). */
+function builder(w, h) {
+  const N = w * h, H = new Float32Array(N).fill(-99), M = new Array(N).fill(null), P = new Int16Array(N).fill(-1);
+  let pid = 0; const glow = [], eng = [];
+  const B = {
+    w, h, H, M, P, glow, eng,
+    poly(pts, top, bev, mat, base = 0) {
+      const id = pid++, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+      for (let y = Math.max(0, Math.floor(Math.min(...ys))); y < Math.min(h, Math.ceil(Math.max(...ys)) + 1); y++)
+        for (let x = Math.max(0, Math.floor(Math.min(...xs))); x < Math.min(w, Math.ceil(Math.max(...xs)) + 1); x++) {
+          if (!inPoly(x + .5, y + .5, pts)) continue;
+          const d = edgeDist(x + .5, y + .5, pts), z = base + (top - base) * smooth(Math.min(1, d / bev)), i = y * w + x;
+          if (z >= H[i]) { H[i] = z; M[i] = mat; P[i] = id; }
+        }
+      return B;
+    },
+    box(x, y, bw, bh, top, bev, mat, base = 0) { return B.poly([[x, y], [x + bw, y], [x + bw, y + bh], [x, y + bh]], top, bev, mat, base); },
+    dome(cx, cy, rx, ry, base, top, mat) {
+      const id = pid++;
+      for (let y = Math.max(0, Math.floor(cy - ry)); y < Math.min(h, Math.ceil(cy + ry) + 1); y++) for (let x = Math.max(0, Math.floor(cx - rx)); x < Math.min(w, Math.ceil(cx + rx) + 1); x++) {
+        const d = ((x + .5 - cx) / rx) ** 2 + ((y + .5 - cy) / ry) ** 2; if (d > 1) continue;
+        const z = base + (top - base) * Math.sqrt(1 - d), i = y * w + x; if (z >= H[i]) { H[i] = z; M[i] = mat; P[i] = id; }
+      }
+      return B;
+    },
+    lights(pts, col) { for (const p of pts) glow.push([p[0], p[1], col]); return B; },
+    engines(pts) { for (const p of pts) eng.push(p); return B; },
+    // petits détails en relief posés sur les surfaces (boîtiers, conduites, antennes)
+    greebles(n, seed, area) {
+      const R = rnd(seed), [ax, ay, aw, ah] = area || [0, 0, w, h];
+      for (let k = 0; k < n; k++) {
+        const x = ax + R() * aw | 0, y = ay + R() * ah | 0, i = y * w + x; if (H[i] < 3) continue;
+        const gw = 2 + (R() * 5 | 0), gh = 2 + (R() * 4 | 0), lvl = H[i];
+        let ok = true; for (let yy = y; yy < y + gh && ok; yy++) for (let xx = x; xx < x + gw; xx++) if (xx >= w || yy >= h || Math.abs(H[yy * w + xx] - lvl) > .6) { ok = false; break; }
+        if (ok) B.box(x, y, gw, gh, lvl + 1 + R() * 1.6, .8, R() < .7 ? M[i] : 'hull2', lvl);
+      }
+      return B;
+    },
+  };
+  return B;
 }
+function render(B, opt = {}) {
+  let { w, h, H, M, P, glow, eng } = B;
+  if (opt.flip) {   // retourne le vaisseau (nez vers le bas) AVANT l'éclairage
+    const N = w * h, H2 = new Float32Array(N), M2 = new Array(N), P2 = new Int16Array(N);
+    for (let i = 0; i < N; i++) { H2[N - 1 - i] = H[i]; M2[N - 1 - i] = M[i]; P2[N - 1 - i] = P[i]; }
+    H = H2; M = M2; P = P2; glow = glow.map(([x, y, c]) => [w - 1 - x, h - 1 - y, c]); eng = eng.map(([x, y, r]) => [w - x, h - y, r]);
+  }
+  const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? -99 : H[y * w + x];
+  // rainures entre les plaques : on creuse un peu la carte de hauteurs
+  const seed = opt.seed || 1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x; if (H[i] < 0 || !MAT[M[i]].plates) continue;
+    const pw = 12, ph = 18, row = Math.floor((y + hash(Math.floor(x / pw), 0, seed) * 6) / ph), col = Math.floor((x + (row % 2) * 4) / pw);
+    if ((y + Math.floor(hash(Math.floor(x / pw), 0, seed) * 6)) % ph === 0 || (x + (row % 2) * 4) % pw === 0) H[i] -= .28;
+  }
+  const [c, g] = mk(w, h), img = g.createImageData(w, h), D = img.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, z = H[i]; if (z < -50) continue;
+    const m = MAT[M[i]];
+    // normale (relief accentué)
+    const hl = Math.max(at(x - 1, y), z - 3), hr = Math.max(at(x + 1, y), z - 3), hu = Math.max(at(x, y - 1), z - 3), hd = Math.max(at(x, y + 1), z - 3);
+    let nx = (hl - hr) * .55, ny = (hu - hd) * .55, nz = 1, n = Math.hypot(nx, ny, nz); nx /= n; ny /= n; nz /= n;
+    let dif = Math.max(0, nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]);
+    // ombre portée : on remonte vers la lumière
+    let sh = 1;
+    for (let s = 1; s <= 18; s++) { const xx = Math.round(x + LIGHT[0] * -1 * -s), yy = Math.round(y - LIGHT[1] * -1 * s); const hz = at(Math.round(x - (-LIGHT[0]) * s), Math.round(y - (-LIGHT[1]) * s)); if (hz > z + s * .42 + .3) { sh = .38; break; } }
+    // occlusion ambiante : creux entourés de parties plus hautes
+    let occ = 0; for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2], [-2, -2], [2, 2], [-2, 2], [2, -2]]) occ += Math.max(0, Math.min(3, at(x + dx, y + dy) - z));
+    const ao = 1 - Math.min(.5, occ / 14);
+    // matière : variation par plaque, salissures, bandes de danger
+    let [r, gg, b] = m.c;
+    if (m.plates) { const v = (hash(Math.floor(x / 12), Math.floor(y / 18), seed + 3) - .5) * .12; r *= 1 + v; gg *= 1 + v; b *= 1 + v; }
+    if (m.grime) { const v = (fbm(x * .12, y * .12, seed + 11, 3) - .5) * .5 * m.grime; r *= 1 + v; gg *= 1 + v * .9; b *= 1 + v * .8; }
+    if (m.stripes && (Math.floor((x + y) / 5) & 1)) { r = 34; gg = 30; b = 26; }
+    const amb = .22, light = (amb + dif * .95 * sh) * ao;
+    r *= light; gg *= light; b *= light;
+    // reflet (arêtes tournées vers la lumière)
+    const sp = Math.pow(Math.max(0, nx * HALF[0] + ny * HALF[1] + nz * HALF[2]), m.glass ? 40 : 18) * m.spec * sh * 255;
+    r += sp; gg += sp; b += sp * 1.05;
+    if (m.glass) { const t = clamp(.3 - ny * .8); r += 30 * t; gg += 70 * t; b += 100 * t; }
+    // lumière froide de la nébuleuse sur les flancs à l'ombre
+    const rim = Math.max(0, -(nx * LIGHT[0] + ny * LIGHT[1])) * (1 - nz) * 1.6;
+    r += rim * 18; gg += rim * 40; b += rim * 70;
+    const k = i * 4; D[k] = clamp(r, 0, 255); D[k + 1] = clamp(gg, 0, 255); D[k + 2] = clamp(b, 0, 255); D[k + 3] = 255;
+  }
+  for (const [x, y, col] of glow) { const k = (Math.round(y) * w + Math.round(x)) * 4; if (D[k + 3]) { D[k] = col[0]; D[k + 1] = col[1]; D[k + 2] = col[2]; } }
+  g.putImageData(img, 0, 0);
+  return { img: c, w, h, engines: eng, flip: !!opt.flip, glows: glow, gcol: opt.flip ? 'rgba(255,90,60,' : 'rgba(255,190,110,' };
+}
+const WARM = [255, 206, 140], REDL = [255, 90, 70];
 const SHIPS = {
-  chasseur: () => shipSprite(40, 52, [
-    { m: 'steel', p: sym([[.5, .02], [.4, .22], [.36, .55], [.12, .66], [.04, .84], [.36, .82], [.38, .96]]), b: 3 },
-    { m: 'paint', p: sym([[.5, .30], [.44, .34], [.16, .68], [.12, .76], [.42, .74]]), z: 1.04, b: 2 },
-    { m: 'dark', p: [[.41, .84], [.48, .84], [.48, .99], [.41, .99]], z: .9 }, { m: 'dark', p: [[.52, .84], [.59, .84], [.59, .99], [.52, .99]], z: .9 },
-    { m: 'glass', e: [.5, .26, .07, .1], z: 1.25 },
-  ], { seed: 3, greebles: 6, engines: [[.445, .99, 3], [.555, .99, 3]] }),
-  fregate: () => shipSprite(60, 96, [
-    { m: 'steel', p: sym([[.5, .01], [.42, .08], [.36, .34], [.2, .40], [.16, .70], [.3, .74], [.32, .96]]), b: 4 },
-    { m: 'dark', p: sym([[.24, .44], [.08, .48], [.06, .72], [.2, .74]]), z: .95, b: 2 },
-    { m: 'white', p: sym([[.5, .16], [.42, .2], [.4, .5], [.46, .54]]), z: 1.15, b: 3 },
-    { m: 'paint', p: sym([[.5, .58], [.38, .58], [.36, .64], [.5, .64]]), z: 1.05, b: 1.5 },
-    { m: 'glass', p: sym([[.5, .22], [.45, .24], [.45, .28], [.5, .28]]), z: 1.3, b: 1.5 },
-    { m: 'dark', p: [[.36, .92], [.46, .92], [.46, 1], [.36, 1]], z: .9 }, { m: 'dark', p: [[.54, .92], [.64, .92], [.64, 1], [.54, 1]], z: .9 },
-  ], { seed: 5, greebles: 18, windows: [[.36, .38, .62, 5], [.46, .42, .58, 3]], engines: [[.41, 1, 4], [.59, 1, 4], [.1, .74, 2.5], [.9, .74, 2.5]] }),
-  mere: () => shipSprite(84, 132, [
-    { m: 'white', p: sym([[.5, .0], [.38, .04], [.3, .2], [.28, .5], [.12, .56], [.1, .86], [.3, .9], [.32, .99]]), b: 5 },
-    { m: 'dark', p: sym([[.5, .3], [.42, .3], [.42, .7], [.5, .7]]), z: 1.02, b: 2 },
-    { m: 'steel', p: sym([[.22, .58], [.14, .6], [.14, .84], [.24, .86]]), z: 1.1, b: 3 },
-    { m: 'paint', p: sym([[.5, .74], [.34, .74], [.34, .78], [.5, .78]]), z: 1.05, b: 1.5 },
-    { m: 'steel', p: [[.6, .2], [.72, .22], [.72, .34], [.6, .34]], z: 1.3, b: 2 },
-    { m: 'glass', p: [[.62, .23], [.7, .24], [.7, .27], [.62, .27]], z: 1.4, b: 1 },
-  ], { seed: 9, greebles: 30, windows: [[.12, .32, .68, 8], [.46, .16, .84, 7], [.66, .3, .7, 2]], engines: [[.36, .99, 5], [.5, .99, 5], [.64, .99, 5]] }),
-  intercepteur: () => shipSprite(44, 52, [
-    { m: 'rust', p: [[.5, .02], [.6, .3], [.96, .7], [.62, .66], [.56, .92], [.44, .92], [.38, .62], [.06, .76], [.4, .3]], b: 3 },
-    { m: 'hazard', p: [[.66, .5], [.9, .66], [.82, .68], [.62, .56]], z: 1.04, b: 1 },
-    { m: 'scrap', p: [[.38, .4], [.5, .36], [.56, .56], [.42, .6]], z: 1.1, b: 2 },
-    { m: 'glass', e: [.5, .28, .06, .08], z: 1.2 },
-  ], { seed: 13, greebles: 8, flip: true, engines: [[.5, .94, 3.5]], winCol: [255, 120, 90] }),
-  croiseur: () => shipSprite(68, 96, [
-    { m: 'scrap', p: [[.5, .02], [.66, .12], [.72, .4], [.94, .5], [.9, .8], [.66, .84], [.6, .98], [.38, .98], [.32, .8], [.08, .76], [.1, .46], [.3, .38], [.36, .1]], b: 4 },
-    { m: 'rust', p: [[.14, .5], [.32, .48], [.34, .74], [.12, .72]], z: 1.08, b: 2 },
-    { m: 'rust', p: [[.7, .44], [.88, .54], [.86, .76], [.68, .78]], z: 1.06, b: 2 },
-    { m: 'hazard', p: [[.4, .2], [.6, .2], [.62, .26], [.38, .26]], z: 1.05, b: 1 },
-    { m: 'steel', p: [[.42, .5], [.58, .5], [.58, .66], [.42, .66]], z: 1.2, b: 2 },
-  ], { seed: 17, greebles: 22, flip: true, windows: [[.36, .38, .62, 4]], engines: [[.42, .98, 4], [.58, .98, 4]], winCol: [255, 120, 90] }),
-  amiral: () => shipSprite(104, 136, [
-    { m: 'scrap', p: [[.5, 0], [.62, .06], [.7, .26], [.98, .36], [.92, .62], [.74, .7], [.7, .96], [.3, .96], [.26, .7], [.06, .64], [.02, .38], [.3, .26], [.38, .06]], b: 6 },
-    { m: 'rust', p: [[.08, .4], [.3, .36], [.3, .6], [.1, .6]], z: 1.08, b: 3 }, { m: 'rust', p: [[.7, .34], [.92, .4], [.9, .6], [.7, .62]], z: 1.08, b: 3 },
-    { m: 'dark', p: [[.4, .3], [.6, .3], [.6, .74], [.4, .74]], z: 1.15, b: 3 },
-    { m: 'hazard', p: [[.3, .78], [.7, .78], [.7, .82], [.3, .82]], z: 1.05, b: 1 },
-    { m: 'steel', p: [[.44, .1], [.56, .1], [.56, .22], [.44, .22]], z: 1.3, b: 2 },
-  ], { seed: 21, greebles: 40, flip: true, windows: [[.16, .14, .26, 4], [.16, .74, .86, 4], [.42, .42, .58, 3]], engines: [[.36, .96, 6], [.5, .96, 6], [.64, .96, 6]], winCol: [255, 120, 90] }),
+  // CHASSEUR (1 case) : fuselage étroit, ailes en flèche, deux réacteurs
+  chasseur: () => { const B = builder(60, 66), cx = 30;
+    B.poly(half(cx, [[0, 4], [4, 14], [6, 30], [24, 46], [26, 54], [8, 52], [6, 60], [0, 60]]), 4, 3, 'hull');
+    B.poly(half(cx, [[0, 18], [3, 22], [4, 44], [0, 46]]), 7, 2, 'hull2', 3);
+    B.poly([[cx - 24, 46], [cx - 12, 40], [cx - 10, 44], [cx - 22, 50]], 5, 1.5, 'amber', 3); B.poly([[cx + 24, 46], [cx + 12, 40], [cx + 10, 44], [cx + 22, 50]], 5, 1.5, 'amber', 3);
+    B.dome(cx, 22, 3, 6, 6, 10, 'glass');
+    B.box(cx - 8, 50, 5, 12, 6, 1.5, 'hull2', 2); B.box(cx + 3, 50, 5, 12, 6, 1.5, 'hull2', 2);
+    B.greebles(10, 2, [10, 30, 40, 24]);
+    return render(B.engines([[cx - 5.5, 62, 3.5], [cx + 5.5, 62, 3.5]]), { seed: 2 }); },
+  // FRÉGATE (2 cases) : coque longue, nacelles latérales, tour de commandement, tourelles
+  fregate: () => { const B = builder(66, 140), cx = 33;
+    B.poly(half(cx, [[0, 3], [6, 12], [11, 40], [13, 96], [12, 126], [8, 136], [0, 136]]), 6, 4, 'hull');
+    B.poly(half(cx, [[0, 30], [6, 34], [7, 92], [0, 96]]), 9, 2.5, 'deck', 6);
+    for (const s of [-1, 1]) { B.poly([[cx + s * 12, 64], [cx + s * 26, 70], [cx + s * 28, 116], [cx + s * 22, 126], [cx + s * 12, 120]].map(([x, y]) => [x, y]), 7, 2.5, 'hull2');
+      B.box(Math.min(cx + s * 20, cx + s * 27), 74, 6, 4, 8, 1, 'amber', 6); }
+    B.box(cx - 5, 44, 10, 18, 14, 2, 'hull', 9); B.box(cx - 4, 46, 8, 3, 15.5, 1, 'glass', 13);
+    B.dome(cx, 20, 4, 4, 6, 10, 'hull2'); B.box(cx - 1, 9, 2, 10, 10, .6, 'hull2', 8);   // tourelle avant et son canon
+    B.dome(cx, 104, 4.5, 4.5, 6, 11, 'hull2'); B.box(cx - 1, 92, 2, 10, 11, .6, 'hull2', 9);
+    B.box(cx - 10, 98, 3, 22, 7.5, 1, 'amber', 6); B.box(cx + 7, 98, 3, 22, 7.5, 1, 'amber', 6);
+    B.greebles(40, 5, [12, 30, 42, 96]);
+    B.lights([[cx - 8, 40], [cx - 8, 52], [cx - 8, 64], [cx + 8, 40], [cx + 8, 52], [cx + 8, 64], [cx - 3, 82], [cx + 3, 82]], WARM);
+    return render(B.engines([[cx - 7, 137, 4.5], [cx + 7, 137, 4.5], [cx - 24, 127, 3], [cx + 24, 127, 3]]), { seed: 5 }); },
+  // PORTE-VAISSEAUX (3 cases) : grande coque, pont d'envol, îlot de commandement décalé, baies de lancement
+  mere: () => { const B = builder(70, 214), cx = 35;
+    B.poly(half(cx, [[0, 2], [10, 10], [17, 40], [20, 120], [22, 176], [18, 204], [0, 208]]), 7, 5, 'hull');
+    B.poly(half(cx, [[0, 18], [10, 24], [13, 60], [13, 168], [0, 172]]), 10, 2.5, 'deck', 7);
+    B.box(cx - 2, 26, 4, 140, 10.4, .6, 'amber', 10);                                   // ligne d'envol
+    B.box(cx - 13, 60, 4, 24, 9, 1, 'black', 6); B.box(cx + 9, 60, 4, 24, 9, 1, 'black', 6);   // baies de lancement
+    B.box(cx - 13, 120, 4, 24, 9, 1, 'black', 6); B.box(cx + 9, 120, 4, 24, 9, 1, 'black', 6);
+    B.box(cx + 14, 88, 8, 30, 18, 2, 'hull', 9); B.box(cx + 15, 92, 6, 4, 19.5, 1, 'glass', 17); B.box(cx + 17, 100, 2, 12, 22, .6, 'hull2', 18);  // îlot
+    for (const s of [-1, 1]) B.poly([[cx + s * 18, 172], [cx + s * 25, 178], [cx + s * 24, 200], [cx + s * 16, 204]], 9, 2, 'hull2', 4);
+    B.greebles(60, 9, [8, 14, 54, 190]);
+    B.lights([[cx - 15, 40], [cx - 15, 50], [cx - 15, 96], [cx - 15, 106], [cx - 15, 150], [cx + 15, 40], [cx + 15, 50], [cx + 15, 150], [cx + 18, 94]], WARM);
+    return render(B.engines([[cx - 12, 207, 5], [cx, 208, 6], [cx + 12, 207, 5], [cx - 21, 202, 3.5], [cx + 21, 202, 3.5]]), { seed: 9 }); },
+  // PIRATES : tôle rouillée, pièces rapportées, asymétrie, bandes de danger
+  intercepteur: () => { const B = builder(60, 66), cx = 30;
+    B.poly([[cx, 3], [cx + 6, 20], [cx + 27, 44], [cx + 22, 50], [cx + 7, 44], [cx + 6, 60], [cx - 6, 60], [cx - 8, 40], [cx - 26, 54], [cx - 24, 46], [cx - 6, 20]], 5, 3, 'rust');
+    B.poly([[cx + 14, 34], [cx + 24, 44], [cx + 20, 47], [cx + 12, 40]], 6.5, 1, 'hazard', 4);
+    B.box(cx - 5, 26, 10, 16, 8, 2, 'scrap', 4); B.dome(cx, 18, 2.5, 5, 6, 9, 'glass');
+    B.box(cx - 22, 44, 3, 12, 6.5, 1, 'scrap', 4);   // canon rapporté
+    B.greebles(10, 13, [10, 20, 40, 34]); B.lights([[cx - 4, 30], [cx + 4, 30]], REDL);
+    return render(B.engines([[cx, 61, 4.5]]), { seed: 13, flip: true }); },
+  croiseur: () => { const B = builder(66, 140), cx = 33;
+    B.poly([[cx, 4], [cx + 9, 14], [cx + 14, 50], [cx + 30, 62], [cx + 28, 104], [cx + 16, 110], [cx + 12, 134], [cx - 12, 134], [cx - 15, 112], [cx - 29, 100], [cx - 27, 58], [cx - 13, 46], [cx - 8, 14]], 6, 4, 'scrap');
+    B.poly([[cx - 26, 62], [cx - 14, 58], [cx - 13, 96], [cx - 26, 98]], 8, 2, 'rust', 6); B.poly([[cx + 15, 60], [cx + 28, 66], [cx + 26, 100], [cx + 15, 104]], 8.5, 2, 'rust', 6);
+    B.box(cx - 8, 30, 16, 50, 11, 2.5, 'rust', 6); B.box(cx - 10, 84, 20, 4, 9, 1, 'hazard', 6);
+    B.box(cx - 5, 36, 10, 8, 15, 1.5, 'scrap', 11); B.box(cx - 4, 37, 8, 2, 16.5, .8, 'red', 14);
+    B.dome(cx - 20, 80, 4, 4, 8, 12, 'scrap'); B.box(cx - 21, 68, 2, 11, 12, .6, 'scrap', 10); B.dome(cx + 21, 84, 4, 4, 8.5, 12, 'scrap');
+    B.greebles(40, 17, [6, 20, 54, 110]); B.lights([[cx - 6, 50], [cx + 6, 50], [cx - 6, 62], [cx + 6, 70]], REDL);
+    return render(B.engines([[cx - 6, 135, 5], [cx + 6, 135, 5]]), { seed: 17, flip: true }); },
+  amiral: () => { const B = builder(70, 214), cx = 35;
+    B.poly([[cx, 2], [cx + 12, 16], [cx + 16, 60], [cx + 33, 74], [cx + 32, 150], [cx + 20, 160], [cx + 18, 206], [cx - 18, 206], [cx - 21, 158], [cx - 34, 146], [cx - 32, 78], [cx - 16, 64], [cx - 11, 16]], 7, 5, 'scrap');
+    B.poly([[cx - 31, 82], [cx - 18, 76], [cx - 17, 140], [cx - 31, 142]], 10, 2, 'rust', 7); B.poly([[cx + 17, 74], [cx + 31, 80], [cx + 31, 146], [cx + 18, 150]], 10.5, 2, 'rust', 7);
+    B.box(cx - 11, 40, 22, 120, 13, 3, 'rust', 7); B.box(cx - 12, 166, 24, 5, 10, 1, 'hazard', 7);
+    B.box(cx - 7, 52, 14, 14, 19, 2, 'scrap', 13); B.box(cx - 6, 54, 12, 3, 20.5, 1, 'red', 18);
+    for (const y of [88, 118, 146]) { B.dome(cx - 24, y, 5, 5, 10, 15, 'scrap'); B.box(cx - 25, y - 14, 2, 13, 15, .6, 'scrap', 12); B.dome(cx + 24, y + 4, 5, 5, 10.5, 15, 'scrap'); }
+    B.dome(cx, 20, 6, 6, 7, 13, 'scrap'); B.box(cx - 3, 4, 2, 15, 13, .6, 'scrap', 11); B.box(cx + 1, 4, 2, 15, 13, .6, 'scrap', 11);
+    B.greebles(70, 21, [4, 30, 62, 170]); B.lights([[cx - 8, 76], [cx + 8, 76], [cx - 8, 100], [cx + 8, 100], [cx - 8, 124], [cx + 8, 124], [cx - 8, 148]], REDL);
+    return render(B.engines([[cx - 11, 207, 6], [cx, 208, 6], [cx + 11, 207, 6]]), { seed: 21, flip: true }); },
 };
 const SP = {}; for (const k in SHIPS) SP[k] = SHIPS[k]();
+
 // astéroïdes : rochers irréguliers au bruit fractal, cratères
 function rock(size, seed) {
   const [c, g] = mk(size, size), img = g.createImageData(size, size), r0 = size * .42;
@@ -269,7 +341,7 @@ function btn(x, y, w, h, label, primary, size = 22) {
   txt(label, x + w / 2, y + (h - size) / 2 + 1, primary ? TH.acc : TH.txt, F.ui(size), 'center', 3);
 }
 function meter(x, y, w, v, max, col) { g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(x, y, w, 6); const n = max, sw = (w - (n - 1) * 2) / n; for (let i = 0; i < n; i++) { g.fillStyle = i < v ? col : 'rgba(255,255,255,.08)'; g.fillRect(x + i * (sw + 2), y, sw, 6); } }
-function drawShip(s, x, y, sc = 1, t = 0, ang = 0) {
+function drawShip(s, x, y, sc = 1, t = 0, ang = 0, soft = false) {
   g.save(); g.translate(x, y); if (ang) g.rotate(ang); g.scale(sc, sc);
   // lueur des réacteurs (additive)
   g.globalCompositeOperation = 'lighter';
@@ -279,7 +351,7 @@ function drawShip(s, x, y, sc = 1, t = 0, ang = 0) {
     g.fillStyle = gr; g.fillRect(fx - len, fy - len, len * 2, len * 2);
   }
   g.globalCompositeOperation = 'source-over';
-  g.imageSmoothingEnabled = sc < 1; g.drawImage(s.img, -s.w / 2, -s.h / 2);
+  g.imageSmoothingEnabled = sc < 1 || soft; g.drawImage(s.img, -s.w / 2, -s.h / 2);
   g.restore();
 }
 function corners(x, y, w, h, col, len = 10, lw = 2) { g.strokeStyle = col; g.lineWidth = lw; g.beginPath();
@@ -299,8 +371,8 @@ function drawTitle(t) {
   txt('ROGUE-LITE TACTIQUE', W / 2, 256, TH.dim, F.ui(22), 'center', 8);
   // la flotte en formation, petite face à la planète
   const b = k => Math.sin(t * .8 + k) * 2;
-  drawShip(SP.mere, 272, 470 + b(0), 1.1, t); drawShip(SP.fregate, 168, 520 + b(1), 1, t); drawShip(SP.fregate, 376, 530 + b(2), 1, t);
-  drawShip(SP.chasseur, 112, 590 + b(3), .9, t); drawShip(SP.chasseur, 430, 600 + b(4), .9, t);
+  drawShip(SP.mere, 272, 470 + b(0), 1, t); drawShip(SP.fregate, 172, 500 + b(1), .85, t); drawShip(SP.fregate, 372, 510 + b(2), .85, t);
+  drawShip(SP.chasseur, 100, 570 + b(3), .8, t); drawShip(SP.chasseur, 444, 584 + b(4), .8, t);
   btn(132, 690, 280, 52, 'NOUVELLE PARTIE', true, 24); btn(132, 754, 280, 44, 'PARTIE DU JOUR', false, 21);
   btn(132, 810, 134, 40, 'HANGAR', false, 19); btn(278, 810, 134, 40, 'CLASSEMENT', false, 19);
   txt('BIENTÔT', W / 2, 878, TH.acc, F.mono(16), 'center', 4); txt("NEBULA : L'EMPIRE DES ÉTOILES", W / 2, 902, TH.txt, F.ui(22), 'center', 3);
@@ -345,7 +417,7 @@ function drawMap(t) {
     if (next) { const p = 24 + Math.sin(t * 4) * 3; corners(x - p, y - p, p * 2, p * 2, TH.acc, 7, 2); txt(NAMES[k], x, y + 30, TH.acc, F.mono(14), 'center', 1); }
   });
   // position de la flotte
-  const [hx, hy] = NODES[HERE]; drawShip(SP.mere, hx + 48, hy, .35, t);
+  const [hx, hy] = NODES[HERE]; drawShip(SP.mere, hx + 48, hy, .3, t);
   txt('FLOTTE ICI', hx + 48, hy + 28, TH.ally, F.mono(13), 'center', 1);
   frameBox(20, 904, W - 40, 44, TH.dim, 8);
   txt('SAUT : 1 CARBURANT', 36, 916, TH.dim, F.mono(17)); txt('2 DESTINATIONS', W - 36, 916, TH.acc, F.mono(17), 'right');
@@ -365,40 +437,62 @@ function drawCombat(t) {
   for (let i = 0; i < 6; i++) { const [x, y] = cc(5, 4), a = i + t * .2, gr = g.createRadialGradient(x + Math.cos(a) * 14, y + Math.sin(a) * 10, 0, x, y, 46); gr.addColorStop(0, 'rgba(120,80,200,.10)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x - 50, y - 50, 100, 100); }
   g.globalCompositeOperation = 'source-over';
   txt('ION', cc(5, 4)[0], cc(5, 4)[1] + 20, 'rgba(190,160,255,.6)', F.mono(13), 'center', 2);
-  [[2, 3, 0], [1, 5, 1], [4, 2, 3], [6, 6, 2]].forEach(([c, r, i]) => { const [x, y] = cc(c, r); g.drawImage(ROCKS[i], x - ROCKS[i].width / 2, y - ROCKS[i].height / 2); });
-  // déplacements possibles
-  const sel = [3, 6], blocked = (c, r) => (c === 2 && r === 3) || (c === 1 && r === 5) || (c === 1 && r === 7) || (c === 5 && r === 7) || (c === 6 && r === 6);
-  for (let r = 0; r < 9; r++) for (let c = 0; c < 7; c++) { const d = Math.abs(c - sel[0]) + Math.abs(r - sel[1]); if (d > 0 && d <= 2 && !blocked(c, r)) { g.fillStyle = TH.ally2 + '.08)'; g.fillRect(GX + c * CS + 2, GY + r * CS + 2, CS - 3, CS - 3); g.strokeStyle = TH.ally2 + '.35)'; g.strokeRect(GX + c * CS + 3.5, GY + r * CS + 3.5, CS - 6, CS - 6); } }
+  [[2, 3, 0], [1, 4, 1], [4, 3, 3], [6, 6, 2]].forEach(([c, r, i]) => { const [x, y] = cc(c, r); g.drawImage(ROCKS[i], x - ROCKS[i].width / 2, y - ROCKS[i].height / 2); });
+  // occupation : chaque vaisseau couvre 1, 2 ou 3 cases (colonne, première ligne, longueur)
+  const foot = (c, r, n, col, a) => { g.fillStyle = col + a + ')'; g.fillRect(GX + c * CS + 2, GY + r * CS + 2, CS - 3, n * CS - 3); };
+  foot(1, 6, 3, TH.ally2, '.06'); foot(3, 6, 2, TH.ally2, '.06'); foot(5, 7, 1, TH.ally2, '.06'); foot(5, 0, 2, TH.foe2, '.06'); foot(3, 1, 1, TH.foe2, '.06');
+  // où la frégate (2 cases) peut aller : contours de son emprise
+  for (const [c, r] of [[2, 5], [4, 5], [3, 4], [4, 6], [2, 7]]) { g.strokeStyle = TH.ally2 + '.35)'; g.setLineDash([5, 5]); g.strokeRect(GX + c * CS + 4.5, GY + r * CS + 4.5, CS - 8, 2 * CS - 8); g.setLineDash([]); }
   // intentions ennemies
-  const intent = (from, to, dmg, kind) => {
+  const intent = (from, to, n, dmg, kind) => {
     const [ax, ay] = cc(...from), [bx, by] = cc(...to);
-    g.strokeStyle = TH.foe2 + '.8)'; g.lineWidth = 1.5; g.setLineDash([8, 6]); g.lineDashOffset = -t * 30; g.beginPath(); g.moveTo(ax, ay + 26); g.lineTo(bx, by - 20); g.stroke(); g.setLineDash([]);
-    const p = .55 + Math.sin(t * 5) * .45; g.globalAlpha = p; corners(GX + to[0] * CS + 6, GY + to[1] * CS + 6, CS - 12, CS - 12, TH.foe, 12, 2); g.globalAlpha = 1;
+    g.strokeStyle = TH.foe2 + '.8)'; g.lineWidth = 1.5; g.setLineDash([8, 6]); g.lineDashOffset = -t * 30; g.beginPath(); g.moveTo(ax, ay + 30); g.lineTo(bx, by - 26); g.stroke(); g.setLineDash([]);
+    const p = .55 + Math.sin(t * 5) * .45; g.globalAlpha = p; corners(GX + to[0] * CS + 6, GY + to[1] * CS + 6, CS - 12, n * CS - 12, TH.foe, 12, 2); g.globalAlpha = 1;
     g.fillStyle = 'rgba(30,6,6,.85)'; g.fillRect(GX + to[0] * CS + CS - 40, GY + to[1] * CS + 6, 34, 22); txt('-' + dmg, GX + to[0] * CS + CS - 23, GY + to[1] * CS + 8, TH.foe, F.mono(18), 'center');
-    txt(kind, ax, ay - 50, TH.foe, F.mono(13), 'center', 1);
+    txt(kind, ax, ay - 46, TH.foe, F.mono(13), 'center', 1);
   };
-  intent([3, 2], [3, 6], 2, 'CANON'); intent([5, 1], [1, 7], 3, 'TORPILLE');
-  // ennemi en approche
-  const [ex, ey] = cc(0, 0); g.strokeStyle = TH.foe2 + '.6)'; g.setLineDash([4, 5]); g.beginPath(); g.moveTo(ex, ey + 20); g.lineTo(ex, ey + 60); g.stroke(); g.setLineDash([]);
-  // vaisseaux
-  const bb = k => Math.sin(t * 1.2 + k) * 1.5;
-  drawShip(SP.intercepteur, ...cc(3, 2), .95, t); drawShip(SP.croiseur, cc(5, 1)[0], cc(5, 1)[1] + bb(1), .7, t); drawShip(SP.intercepteur, ex, ey - 4, .7, t);
-  drawShip(SP.mere, cc(1, 7)[0], cc(1, 7)[1] + 6 + bb(2), .52, t); drawShip(SP.fregate, cc(3, 6)[0], cc(3, 6)[1] + bb(3), .7, t); drawShip(SP.chasseur, cc(5, 7)[0], cc(5, 7)[1] + bb(4), .95, t);
-  // ligne de tir du laser choisi
-  const [fx, fy] = cc(3, 6), [ix, iy] = cc(3, 2); g.strokeStyle = TH.acc2 + '.7)'; g.lineWidth = 1; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(fx, fy - 36); g.lineTo(ix, iy + 30); g.stroke(); g.setLineDash([]);
-  txt('PORTÉE 4 · 72 %', fx + 8, (fy + iy) / 2 - 8, TH.acc, F.mono(14), 'left');
-  // sélection
-  corners(GX + sel[0] * CS + 4, GY + sel[1] * CS + 4, CS - 8, CS - 8, TH.ally, 14, 2);
-  // boucliers
-  const sh = (c, r, n, m, col) => { const [x, y] = cc(c, r); for (let i = 0; i < m; i++) { g.fillStyle = i < n ? col : 'rgba(255,255,255,.12)'; g.fillRect(x - m * 7 + i * 14 + 2, y + 28, 10, 3); } };
-  sh(3, 6, 2, 3, TH.ally); sh(1, 7, 3, 3, TH.ally); sh(5, 7, 1, 2, TH.ally); sh(5, 1, 2, 2, TH.foe); sh(3, 2, 0, 1, TH.foe);
+  intent([3, 1], [3, 6], 1, 2, 'CANON'); intent([5, 1], [1, 6], 1, 3, 'TORPILLE');
+  const [ex, ey] = cc(0, 0); g.strokeStyle = TH.foe2 + '.6)'; g.setLineDash([4, 5]); g.beginPath(); g.moveTo(ex, ey + 24); g.lineTo(ex, ey + 64); g.stroke(); g.setLineDash([]);
+  // vaisseaux, centrés sur leur emprise
+  const bb = k => Math.sin(t * 1.2 + k) * 1.2, mid = (c, r, n) => [GX + c * CS + CS / 2, GY + r * CS + n * CS / 2];
+  drawShip(SP.intercepteur, ...mid(3, 1, 1), 1, t); { const [x, y] = mid(5, 0, 2); drawShip(SP.croiseur, x, y + bb(1), 1, t); }
+  drawShip(SP.intercepteur, ex, ey - 6, .8, t);
+  { const [x, y] = mid(1, 6, 3); drawShip(SP.mere, x, y + bb(2), 1, t); }
+  { const [x, y] = mid(3, 6, 2); drawShip(SP.fregate, x, y + bb(3), 1, t); }
+  { const [x, y] = mid(5, 7, 1); drawShip(SP.chasseur, x, y + bb(4), 1, t); }
+  // ligne de tir choisie
+  const [fx, fy] = mid(3, 6, 2), [ix, iy] = mid(3, 1, 1); g.strokeStyle = TH.acc2 + '.7)'; g.lineWidth = 1; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(fx + 14, fy - 70); g.lineTo(ix + 14, iy + 34); g.stroke(); g.setLineDash([]);
+  txt('PORTÉE 4 · 72 %', fx + 20, GY + 3 * CS + 4, TH.acc, F.mono(14), 'left');
+  corners(GX + 3 * CS + 3, GY + 6 * CS + 3, CS - 6, 2 * CS - 6, TH.ally, 14, 2);
+  // boucliers (à côté de chaque vaisseau)
+  const sh = (c, r, n, m, col) => { for (let i = 0; i < m; i++) { g.fillStyle = i < n ? col : 'rgba(255,255,255,.12)'; g.fillRect(GX + c * CS + 6, GY + r * CS + 8 + i * 8, 3, 6); } };
+  sh(3, 6, 2, 3, TH.ally); sh(1, 6, 3, 3, TH.ally); sh(5, 7, 1, 2, TH.ally); sh(5, 0, 2, 2, TH.foe); sh(3, 1, 0, 1, TH.foe);
   // fiche
   frameBox(16, 776, W - 32, 168, TH.acc, 12);
-  g.save(); g.beginPath(); g.rect(24, 784, 96, 96); g.clip(); g.fillStyle = 'rgba(255,255,255,.03)'; g.fillRect(24, 784, 96, 96); drawShip(SP.fregate, 72, 832, .9, t); g.restore();
-  txt('FRÉGATE AURORE', 134, 788, TH.txt, F.ui(26), 'left', 2); txt('PILOTE : LOU · AS DU PILOTAGE', 134, 818, TH.dim, F.mono(14), 'left');
+  g.save(); g.beginPath(); g.rect(24, 784, 96, 152); g.clip(); g.fillStyle = 'rgba(255,255,255,.03)'; g.fillRect(24, 784, 96, 152); drawShip(SP.fregate, 72, 860, 1, t); g.restore();
+  txt('FRÉGATE AURORE', 134, 788, TH.txt, F.ui(26), 'left', 2); txt('LOU · AS DU PILOTAGE · 2 CASES', 134, 818, TH.dim, F.mono(14), 'left');
   txt('COQUE', 134, 842, TH.dim, F.mono(14)); meter(198, 846, 150, 5, 8, TH.ok); txt('5/8', 360, 842, TH.txt, F.mono(14));
   txt('BOUCL.', 400, 842, TH.dim, F.mono(14)); meter(458, 846, 54, 2, 3, TH.ally);
-  btn(28, 880, 150, 50, 'LASER · 2', true, 20); btn(190, 880, 150, 50, 'MISSILE · 3', false, 20); btn(352, 880, 164, 50, 'FIN DU TOUR', false, 20);
+  btn(134, 878, 120, 50, 'LASER · 2', true, 19); btn(262, 878, 120, 50, 'MISSILE · 3', false, 19); btn(390, 878, 126, 50, 'FIN DU TOUR', false, 19);
+}
+
+/* ---------- chantier naval (vitrine des six vaisseaux) ---------- */
+function drawYard(t) {
+  const YW = 1200, YH = 600;
+  const gr = g.createLinearGradient(0, 0, 0, YH); gr.addColorStop(0, '#080c14'); gr.addColorStop(1, '#04060a'); g.fillStyle = gr; g.fillRect(0, 0, YW, YH);
+  g.strokeStyle = 'rgba(140,170,210,.06)'; g.lineWidth = 1;
+  for (let x = 0; x < YW; x += 36) { g.beginPath(); g.moveTo(x + .5, 0); g.lineTo(x + .5, YH); g.stroke(); }
+  for (let y = 0; y < YH; y += 36) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(YW, y + .5); g.stroke(); }
+  g.fillStyle = 'rgba(242,178,74,.35)'; g.fillRect(600, 30, 1, 540);
+  txt('TA FLOTTE', 300, 24, TH.acc, F.mono(16), 'center', 4); txt('PIRATES', 900, 24, TH.foe, F.mono(16), 'center', 4);
+  const list = [[SP.chasseur, 'CHASSEUR', 1, 100], [SP.fregate, 'FRÉGATE', 2, 300], [SP.mere, 'PORTE-VAISSEAUX', 3, 500],
+    [SP.intercepteur, 'INTERCEPTEUR', 1, 700], [SP.croiseur, 'CROISEUR', 2, 900], [SP.amiral, 'AMIRAL ROUILLE', 3, 1100]];
+  list.forEach(([s, name, n, x], i) => {
+    const col = i < 3 ? TH.acc : TH.foe;
+    g.imageSmoothingQuality = 'high'; drawShip(s, x, 290 + Math.sin(t * .8 + i) * 2, n === 3 ? 2.1 : n === 2 ? 2.3 : 2.8, t, 0, true);
+    txt(name, x, 540, TH.txt, F.ui(22), 'center', 2);
+    txt(n + (n > 1 ? ' CASES' : ' CASE'), x, 566, col, F.mono(15), 'center', 2);
+  });
 }
 
 /* ---------- 4. hangar ---------- */
@@ -406,9 +500,9 @@ function drawHangar(t) {
   g.drawImage(BG[3], 0, 0);
   topBar('HANGAR', '3 VAISSEAUX SUR 5', 'CRÉDITS 140', 'PIÈCES 12');
   const fleet = [
-    [SP.mere, 'VAISSEAU-MÈRE « ARCHE »', 'CAPITAINE : TOI', 9, 12, 3, ['HANGAR', 'BLINDAGE', null], .62],
-    [SP.fregate, 'FRÉGATE « AURORE »', 'LOU · AS DU PILOTAGE', 5, 8, 2, ['LASER MK2', 'BOUCLIER', null], .85],
-    [SP.chasseur, 'CHASSEUR « PIQUE »', 'TOM · MÉCANO', 3, 6, 1, ['MISSILES', null, null], 1.3],
+    [SP.mere, 'VAISSEAU-MÈRE « ARCHE »', 'CAPITAINE : TOI · 3 CASES', 9, 12, 3, ['HANGAR', 'BLINDAGE', null], .72],
+    [SP.fregate, 'FRÉGATE « AURORE »', 'LOU · AS DU PILOTAGE · 2 CASES', 5, 8, 2, ['LASER MK2', 'BOUCLIER', null], 1],
+    [SP.chasseur, 'CHASSEUR « PIQUE »', 'TOM · MÉCANO · 1 CASE', 3, 6, 1, ['MISSILES', null, null], 1.6],
   ];
   fleet.forEach(([s, name, pil, v, m, shd, mods, sc], i) => {
     const y = 112 + i * 200, sel = i === 1;
@@ -425,7 +519,7 @@ function drawHangar(t) {
   });
   frameBox(16, 716, W - 32, 228, TH.foe, 12);
   txt('HOSTILES · SECTEUR 01', 32, 730, TH.foe, F.mono(16), 'left', 2);
-  [[SP.intercepteur, 'INTERCEPTEUR', 1.1, 110], [SP.croiseur, 'CROISEUR PIRATE', .9, 272], [SP.amiral, 'AMIRAL ROUILLE', .72, 432]].forEach(([s, n, sc, x], i) => {
+  [[SP.intercepteur, 'INTERCEPTEUR', 1.3, 110], [SP.croiseur, 'CROISEUR PIRATE', .95, 272], [SP.amiral, 'AMIRAL ROUILLE', .7, 432]].forEach(([s, n, sc, x], i) => {
     drawShip(s, x, 832 + Math.sin(t + i * 2) * 1.5, sc, t); txt(n, x, 900, TH.txt, F.ui(17), 'center', 1);
   });
 }
@@ -434,10 +528,7 @@ function drawHangar(t) {
 const CTX = [...Array(4)].map((_, i) => document.getElementById('c' + i).getContext('2d'));
 const DRAW = [drawTitle, drawMap, drawCombat, drawHangar];
 const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-function frame(ts) { const t = still ? 1 : ts / 1000; CTX.forEach((c, i) => { g = c; DRAW[i](t); }); if (!still) requestAnimationFrame(frame); }
-document.querySelectorAll('.tabs button').forEach((b, i) => b.addEventListener('click', () => {
-  TH = THEMES[i]; document.documentElement.style.setProperty('--accent', TH.acc);
-  document.querySelectorAll('.tabs button').forEach((o, k) => o.setAttribute('aria-pressed', k === i)); if (still) frame(0);
-}));
+const YCTX = document.getElementById('yard').getContext('2d');
+function frame(ts) { const t = still ? 1 : ts / 1000; CTX.forEach((c, i) => { g = c; DRAW[i](t); }); g = YCTX; drawYard(t); if (!still) requestAnimationFrame(frame); }
 Promise.all(['22px Michroma', '600 20px Rajdhani', '16px "Share Tech Mono"'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : 0)).then(() => requestAnimationFrame(frame));
 </script>
