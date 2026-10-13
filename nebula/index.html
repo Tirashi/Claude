@@ -532,6 +532,8 @@ const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick:
 function save() { if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
 
 /* ---------- sprites et décors fabriqués à la demande ---------- */
+const COARSE = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);   // écran tactile = téléphone
+V.setScale(COARSE ? 1 : 2);
 const want = new Set(), BGS = {};
 const hexs = a => a.map(V.hex);
 const BGDEF = {
@@ -545,11 +547,11 @@ function bg(k) { if (BGS[k]) return BGS[k]; want.add('bg:' + k); return null; }
 function work() {
   const t0 = performance.now();
   for (const id of want) {
-    if (id.startsWith('bg:')) { const d = BGDEF[id.slice(3)]; BGS[id.slice(3)] = V.space(d[0], d[1], d[2], 2); } else V.get(id);
+    if (id.startsWith('bg:')) { const d = BGDEF[id.slice(3)]; BGS[id.slice(3)] = V.space(d[0], d[1], d[2], COARSE ? 2 : 1); } else V.get(id);
     want.delete(id); if (performance.now() - t0 > 24) break;
   }
 }
-const ROCKS = [V.rock(52, 3), V.rock(44, 8), V.rock(60, 14)];
+const RS = COARSE ? 1 : 2, ROCKS = [V.rock(52 * RS, 3), V.rock(44 * RS, 8), V.rock(60 * RS, 14)];   // astéroïdes en double définition sur ordinateur
 // fond : agrandi une fois à la taille réelle de l'écran puis posé tel quel (l'agrandir à chaque image coûtait cher au téléphone)
 const BGK = {};
 function drawBg(k) {
@@ -718,7 +720,7 @@ function drawStatic(st) {
     for (let c = 0; c <= COLS; c++) { g.beginPath(); g.moveTo(GX + c * CS + .5, GY); g.lineTo(GX + c * CS + .5, GY + ROWS * CS); g.stroke(); }
     for (let r = 0; r <= ROWS; r++) { g.beginPath(); g.moveTo(GX, GY + r * CS + .5); g.lineTo(GX + COLS * CS, GY + r * CS + .5); g.stroke(); }
     g.fillStyle = C.ally2 + '.035)'; g.fillRect(GX, GY + 6 * CS, COLS * CS, 3 * CS);
-    for (const [c, r] of st.rocks) { const R = ROCKS[(c * 7 + r * 3) % 3], [x, y] = cellCenter(c, r); g.drawImage(R, x - R.width / 2, y - R.height / 2); }
+    for (const [c, r] of st.rocks) { const R = ROCKS[(c * 7 + r * 3) % 3], [x, y] = cellCenter(c, r), w = R.width / RS; g.drawImage(R, x - w / 2, y - w / 2, w, w); }
     g = keep; STATIC.cv = c2; STATIC.key = key;
   }
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(STATIC.cv, 0, 0); g.restore();
@@ -1139,9 +1141,11 @@ function resize() {
   const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
   const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);
   const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
-  cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
-  cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
-  K = Math.max(.5, Math.min(2, sc * dpr)); STATIC.key = ''; cv.width = Math.round(LW * K); cv.height = Math.round(LH * K);
+  const cw = Math.floor(LW * sc), ch = Math.round(cw * LH / LW), maxK = COARSE ? 2 : 4;
+  cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
+  cv.style.marginTop = Math.max(0, Math.floor((ah - ch) / 2)) + 'px';
+  const k = Math.min(dpr, maxK / sc);   // pixels réels par pixel CSS (plafonné sur téléphone)
+  cv.width = Math.round(cw * k); cv.height = Math.round(ch * k); K = Math.max(.5, cv.width / LW); STATIC.key = '';
 }
 window.addEventListener('resize', resize);
 Object.assign(window.Nebula, { UI, ANIM, recordEnd, save, store, makeShop });

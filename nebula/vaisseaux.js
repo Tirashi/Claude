@@ -54,11 +54,11 @@ const half = (cx, pts) => pts.map(([dx, y]) => [cx - dx, y]).concat(pts.slice().
 const smooth = t => t * t * (3 - 2 * t);
 /* Construction : B.poly(pts, haut, biseau, matière), B.box(x, y, w, h, ...), B.dome(cx, cy, rx, ry, base, haut, matière),
    B.mirror(fn) : dessine aussi la pièce en miroir, B.lights(pts, couleur), B.engines(pts). */
-function builder(w, h) {
+function rawBuilder(w, h, S) {
   const N = w * h, H = new Float32Array(N).fill(-99), M = new Array(N).fill(null), P = new Int16Array(N).fill(-1);
   let pid = 0; const glow = [], eng = [];
   const B = {
-    w, h, H, M, P, glow, eng,
+    w, h, H, M, P, glow, eng, S,
     poly(pts, top, bev, mat, base = 0) {
       const id = pid++, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
       for (let y = Math.max(0, Math.floor(Math.min(...ys))); y < Math.min(h, Math.ceil(Math.max(...ys)) + 1); y++)
@@ -88,16 +88,37 @@ function builder(w, h) {
       const R = rnd(seed), [ax, ay, aw, ah] = area || [0, 0, w, h];
       for (let k = 0; k < n; k++) {
         const x = ax + R() * aw | 0, y = ay + R() * ah | 0, i = y * w + x; if (H[i] < 3) continue;
-        const gw = 2 + (R() * 5 | 0), gh = 2 + (R() * 4 | 0), lvl = H[i];
+        const gw = (2 + (R() * 5 | 0)) * S, gh = (2 + (R() * 4 | 0)) * S, lvl = H[i];
         let ok = true; for (let yy = y; yy < y + gh && ok; yy++) for (let xx = x; xx < x + gw; xx++) if (xx >= w || yy >= h || Math.abs(H[yy * w + xx] - lvl) > .6) { ok = false; break; }
-        if (ok) B.box(x, y, gw, gh, lvl + 1 + R() * 1.6, .8, R() < .7 ? M[i] : 'hull2', lvl);
+        if (ok) B.box(x, y, gw, gh, lvl + (1 + R() * 1.6) * S, .8 * S, R() < .7 ? M[i] : 'hull2', lvl);
       }
       return B;
     },
   };
   return B;
 }
+// définition des sprites : 1 = un pixel par pixel logique, 2 = deux fois plus fins (écrans d'ordinateur)
+let SS = 1;
+const setScale = s => { SS = s; };
+function builder(w, h) {
+  const S = SS, B0 = rawBuilder(w * S, h * S, S), sc = pts => pts.map(p => [p[0] * S, p[1] * S]);
+  const B = {
+    raw: B0, w, h,
+    poly(pts, top, bev, mat, base = 0) { B0.poly(sc(pts), top * S, bev * S, mat, base * S); return B; },
+    box(x, y, bw, bh, top, bev, mat, base = 0) { B0.box(x * S, y * S, bw * S, bh * S, top * S, bev * S, mat, base * S); return B; },
+    dome(cx, cy, rx, ry, base, top, mat) { B0.dome(cx * S, cy * S, rx * S, ry * S, base * S, top * S, mat); return B; },
+    hole(x, y, bw, bh, depth, mat) { B0.hole(x * S, y * S, bw * S, bh * S, depth * S, mat); return B; },
+    paint(x, y, bw, bh, mat) { B0.paint(x * S, y * S, bw * S, bh * S, mat); return B; },
+    holeE(cx, cy, rx, ry, depth, mat) { B0.holeE(cx * S, cy * S, rx * S, ry * S, depth * S, mat); return B; },
+    lights(pts, col) { for (const p of pts) for (let a = 0; a < S; a++) for (let b = 0; b < S; b++) B0.glow.push([p[0] * S + a, p[1] * S + b, col]); return B; },
+    engines(pts) { for (const p of pts) B0.eng.push([p[0] * S, p[1] * S, p[2] * S]); return B; },
+    greebles(n, seed, area) { B0.greebles(n, seed, area && sc([area.slice(0, 2), area.slice(2)]).flat()); return B; },
+  };
+  return B;
+}
 function render(B, opt = {}) {
+  if (B.raw) B = B.raw;
+  const S = B.S || 1;
   let { w, h, H, M, P, glow, eng } = B;
   if (opt.flip) {   // retourne le vaisseau (nez vers le bas) AVANT l'éclairage
     const N = w * h, H2 = new Float32Array(N), M2 = new Array(N), P2 = new Int16Array(N);
@@ -109,28 +130,28 @@ function render(B, opt = {}) {
   const seed = opt.seed || 1;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const i = y * w + x; if (H[i] < 0 || !MAT[M[i]].plates) continue;
-    const pw = 12, ph = 18, row = Math.floor((y + hash(Math.floor(x / pw), 0, seed) * 6) / ph), col = Math.floor((x + (row % 2) * 4) / pw);
-    if ((y + Math.floor(hash(Math.floor(x / pw), 0, seed) * 6)) % ph === 0 || (x + (row % 2) * 4) % pw === 0) H[i] -= .28;
+    const pw = 12 * S, ph = 18 * S, row = Math.floor((y + hash(Math.floor(x / pw), 0, seed) * 6 * S) / ph), col = Math.floor((x + (row % 2) * 4) / pw);
+    if ((y + Math.floor(hash(Math.floor(x / pw), 0, seed) * 6 * S)) % ph === 0 || (x + (row % 2) * 4 * S) % pw === 0) H[i] -= .28 * S;
   }
   const [c, g] = mk(w, h), img = g.createImageData(w, h), D = img.data;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const i = y * w + x, z = H[i]; if (z < -50) continue;
     const m = MAT[M[i]];
     // normale (relief accentué)
-    const hl = Math.max(at(x - 1, y), z - 3), hr = Math.max(at(x + 1, y), z - 3), hu = Math.max(at(x, y - 1), z - 3), hd = Math.max(at(x, y + 1), z - 3);
+    const hl = Math.max(at(x - 1, y), z - 3 * S), hr = Math.max(at(x + 1, y), z - 3 * S), hu = Math.max(at(x, y - 1), z - 3 * S), hd = Math.max(at(x, y + 1), z - 3 * S);
     let nx = (hl - hr) * .55, ny = (hu - hd) * .55, nz = 1, n = Math.hypot(nx, ny, nz); nx /= n; ny /= n; nz /= n;
     let dif = Math.max(0, nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]);
     // ombre portée : on remonte vers la lumière
     let sh = 1;
-    for (let s = 1; s <= 18; s++) { const xx = Math.round(x + LIGHT[0] * -1 * -s), yy = Math.round(y - LIGHT[1] * -1 * s); const hz = at(Math.round(x - (-LIGHT[0]) * s), Math.round(y - (-LIGHT[1]) * s)); if (hz > z + s * .42 + .3) { sh = .38; break; } }
+    for (let s = 1; s <= 18 * S; s++) { const xx = Math.round(x + LIGHT[0] * -1 * -s), yy = Math.round(y - LIGHT[1] * -1 * s); const hz = at(Math.round(x - (-LIGHT[0]) * s), Math.round(y - (-LIGHT[1]) * s)); if (hz > z + s * .42 + .3) { sh = .38; break; } }
     // occlusion ambiante : creux entourés de parties plus hautes
-    let occ = 0; for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2], [-2, -2], [2, 2], [-2, 2], [2, -2]]) occ += Math.max(0, Math.min(3, at(x + dx, y + dy) - z));
+    let occ = 0; for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2], [-2, -2], [2, 2], [-2, 2], [2, -2]]) occ += Math.max(0, Math.min(3, (at(x + dx * S, y + dy * S) - z) / S));
     const ao = 1 - Math.min(.5, occ / 14);
     // matière : variation par plaque, salissures, bandes de danger
     let [r, gg, b] = m.c;
-    if (m.plates) { const v = (hash(Math.floor(x / 12), Math.floor(y / 18), seed + 3) - .5) * .12; r *= 1 + v; gg *= 1 + v; b *= 1 + v; }
-    if (m.grime) { const v = (fbm(x * .12, y * .12, seed + 11, 3) - .5) * .5 * m.grime; r *= 1 + v; gg *= 1 + v * .9; b *= 1 + v * .8; }
-    if (m.stripes && (Math.floor((x + y) / 5) & 1)) { r = 34; gg = 30; b = 26; }
+    if (m.plates) { const v = (hash(Math.floor(x / (12 * S)), Math.floor(y / (18 * S)), seed + 3) - .5) * .12; r *= 1 + v; gg *= 1 + v; b *= 1 + v; }
+    if (m.grime) { const v = (fbm(x * .12 / S, y * .12 / S, seed + 11, 3) - .5) * .5 * m.grime; r *= 1 + v; gg *= 1 + v * .9; b *= 1 + v * .8; }
+    if (m.stripes && (Math.floor((x + y) / (5 * S)) & 1)) { r = 34; gg = 30; b = 26; }
     const amb = .22, light = (amb + dif * .95 * sh) * ao;
     r *= light; gg *= light; b *= light;
     // reflet (arêtes tournées vers la lumière)
@@ -144,7 +165,7 @@ function render(B, opt = {}) {
   }
   for (const [x, y, col] of glow) { const k = (Math.round(y) * w + Math.round(x)) * 4; if (D[k + 3]) { D[k] = col[0]; D[k + 1] = col[1]; D[k + 2] = col[2]; } }
   g.putImageData(img, 0, 0);
-  return { img: c, w, h, engines: eng, flip: !!opt.flip, glows: glow, gcol: opt.flip ? 'rgba(255,90,60,' : 'rgba(255,190,110,' };
+  return { img: c, w: w / S, h: h / S, S, engines: eng.map(([x, y, r]) => [x / S, y / S, r / S]), flip: !!opt.flip, glows: glow, gcol: opt.flip ? 'rgba(255,90,60,' : 'rgba(255,190,110,' };
 }
 const WARM = [255, 206, 140], REDL = [255, 90, 70];
 const SHIPS = {
@@ -457,8 +478,8 @@ function drawShip(g, s, x, y, sc = 1, t = 0, alpha = 1) {
     g.drawImage(G, fx - len, fy - len, len * 2, len * 2);
   }
   g.globalCompositeOperation = 'source-over';
-  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(s.img, -s.w / 2, -s.h / 2);
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(s.img, -s.w / 2, -s.h / 2, s.w, s.h);
   g.restore();
 }
-window.NebulaVaisseaux = { W, H, TAU, mk, rnd, hash, vnoise, fbm, mix, clamp, hex, grad, MAT, builder, render, half, SHIPS, get, TIMES, cellsOf, drawShip, rock, space, drawPlanet, WARM, REDL, CYAN };
+window.NebulaVaisseaux = { setScale, W, H, TAU, mk, rnd, hash, vnoise, fbm, mix, clamp, hex, grad, MAT, builder, render, half, SHIPS, get, TIMES, cellsOf, drawShip, rock, space, drawPlanet, WARM, REDL, CYAN };
 })();
