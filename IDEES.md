@@ -60,6 +60,8 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 ## Page d'accueil (idées du 13/10)
 Réalisé le 13/10 ✅ : **favoris** (étoile sur chaque cartouche, favoris en tête), badges **NOUVEAU** / **MIS A JOUR** (3 jours), **filtres par genre**, **jeu à la une** dans une boîte de jeu (« TOUT NEUF ! »), **quoi de neuf**. Dates, genres et journal : `META` et `NEWS` dans `index.html` (à tenir à jour à chaque sortie ou mise à jour).
 
+Maquette des **boîtes de jeu** pour le jeu à la une (A Europe, B Amérique, C Japon, D Collector) : https://claude.ai/artifact/Te1taXoF7a6fQstZPmjRAc — source `maquettes/boites-de-jeu.html`. **Choix de l'utilisateur à venir.**
+
 À faire plus tard (plan proposé : session A = Reprendre ; session B = défis du jour + profil ; session C = activité de la famille) :
 - **Reprendre** : bannière « Continuer Nebula, secteur 1 / Club, semaine 12 » (un petit lecteur de la partie en cours par jeu, sans toucher aux jeux).
 - **Défis du jour** : encadré « Aujourd'hui » (Lignée, Pont stellaire, Alunissage, plus tard Nebula) coché quand c'est fait, avec le résultat et la place dans la famille.

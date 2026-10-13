@@ -1,0 +1,146 @@
+<title>Boîtes de jeu 16 bits</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : quatre propositions de « boîte de jeu » pour le jeu à la une de l'accueil, posées sur
+   l'étagère pointillée de la Ludothèque. Un seul thème sombre, celui du menu. */
+:root {
+  --night: #110d22; --night-2: #1e1840; --ink: #0d0a18; --text: #f2f0ff; --dim: #a9a6d8; --gold: #ffd23f;
+  --f-display: "Press Start 2P", "Courier New", monospace; --f-body: "VT323", "Lucida Console", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color: var(--text);
+  font-family: var(--f-body); font-size: 21px; line-height: 1.25; padding-inline: 16px; padding-block: 32px 56px; }
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+header { display: flex; flex-direction: column; gap: 10px; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(16px, 4vw, 26px); color: var(--gold); line-height: 1.4;
+  text-shadow: 3px 3px 0 #b8571a, 5px 5px 0 #000; text-wrap: balance; }
+.lead { margin: 0; color: var(--dim); max-width: 68ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 44px 28px; }
+figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 18px; min-width: 0; }
+figcaption { max-width: 34ch; color: var(--dim); font-size: 20px; }
+figcaption b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 10px; color: var(--gold); margin-bottom: 6px; letter-spacing: 1px; }
+.stage { height: 330px; display: flex; align-items: center; justify-content: center; perspective: 900px; }
+
+/* une boîte : face avant, tranche à gauche, dessus ; on la fait pivoter un peu */
+.box { position: relative; transform-style: preserve-3d; transform: rotateY(-24deg) rotateX(4deg); transition: transform .4s; }
+.box:hover { transform: rotateY(-10deg) rotateX(2deg); }
+@media (prefers-reduced-motion: reduce) { .box { transition: none; } }
+.box > * { position: absolute; }
+.front { inset: 0; overflow: hidden; }
+.spine { top: 0; left: 0; height: 100%; width: var(--d); transform-origin: left; transform: rotateY(90deg); overflow: hidden; }
+.top { top: 0; left: 0; width: 100%; height: var(--d); transform-origin: top; transform: rotateX(-90deg); }
+.shadow { left: 6%; right: -8%; bottom: -26px; height: 22px; background: radial-gradient(ellipse at center, rgba(0,0,0,.65), transparent 70%); transform: rotateX(90deg) translateZ(-12px); }
+.cover { display: block; width: 100%; height: 100%; object-fit: cover; }
+.sticker { position: absolute; z-index: 5; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; text-align: center;
+  font-family: var(--f-display); font-size: 8px; line-height: 1.4; color: #110d22; background: #ff5a7a; transform: translateZ(2px) rotate(14deg);
+  clip-path: polygon(50% 0,61% 13%,77% 6%,80% 23%,96% 26%,89% 41%,100% 54%,86% 63%,90% 80%,73% 81%,65% 97%,50% 87%,35% 97%,27% 81%,10% 80%,14% 63%,0 54%,11% 41%,4% 26%,20% 23%,23% 6%,39% 13%); }
+.logo { font-family: var(--f-display); letter-spacing: 1px; }
+.dots i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 3px; }
+.dots i:nth-child(1) { background: #e8264d; } .dots i:nth-child(2) { background: #ffd23f; } .dots i:nth-child(3) { background: #3fbf5a; } .dots i:nth-child(4) { background: #3b7bff; }
+
+/* A · EUROPE : boîte verticale gris clair, bandeau de la console en haut, ruban de couleur en biais */
+.a { --d: 34px; width: 200px; height: 280px; }
+.a .front { background: #d9d9de; border: 2px solid #9a9aa4; display: flex; flex-direction: column; }
+.a .band { height: 34px; background: linear-gradient(#5a5a66, #3c3c46); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; color: #f2f0ff; font-size: 7px; }
+.a .art { position: relative; flex: 1; margin: 8px; border: 2px solid #3c3c46; overflow: hidden; }
+.a .ribbon { position: absolute; left: -10px; right: -10px; bottom: 22px; padding: 8px 14px; background: #f2b24a; transform: rotate(-6deg); text-align: center;
+  font-family: var(--f-display); font-size: 15px; color: #1a1208; letter-spacing: 3px; box-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.a .foot { height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-family: var(--f-display); font-size: 6px; color: #3c3c46; }
+.a .age { background: #3fbf5a; color: #fff; padding: 4px 5px; border: 2px solid #1d6a2f; }
+.a .spine { background: #c8c8ce; border: 2px solid #9a9aa4; }
+.a .spine span { position: absolute; inset: 0; writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; font-family: var(--f-display); font-size: 9px; color: #3c3c46; letter-spacing: 2px; }
+.a .spine::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 34px; background: #3c3c46; }
+.a .top { background: #bdbdc4; border: 2px solid #9a9aa4; }
+.a .sticker { top: 48px; right: -18px; }
+
+/* B · AMERIQUE : boîte horizontale, bord noir strié, titre en lettres chromées */
+.b { --d: 34px; width: 300px; height: 210px; }
+.b .front { background: #111; border: 2px solid #000; display: grid; grid-template-columns: 34px 1fr; }
+.b .stripe { background: repeating-linear-gradient(#2a2a2a 0 3px, #111 3px 7px); border-right: 3px solid #e8264d; display: flex; align-items: center; justify-content: center; }
+.b .stripe span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--f-display); font-size: 7px; color: #ddd; letter-spacing: 2px; }
+.b .art { position: relative; overflow: hidden; }
+.b .title { position: absolute; left: 0; right: 0; top: 10px; text-align: center; font-family: var(--f-display); font-size: 24px; letter-spacing: 4px;
+  color: #fff; background: linear-gradient(#fff 30%, #9fb4d6 55%, #fff 60%, #c9d6f0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(2px 2px 0 #000) drop-shadow(0 0 6px rgba(127,196,255,.6)); }
+.b .tag { position: absolute; right: 8px; bottom: 8px; font-family: var(--f-display); font-size: 6px; color: #ddd; background: rgba(0,0,0,.6); padding: 5px 6px; }
+.b .spine { background: #111; border: 2px solid #000; }
+.b .spine span { position: absolute; inset: 0; writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; font-family: var(--f-display); font-size: 9px; color: #f2b24a; letter-spacing: 2px; }
+.b .top { background: repeating-linear-gradient(90deg, #2a2a2a 0 3px, #111 3px 7px); border: 2px solid #000; }
+.b .sticker { top: -20px; right: -18px; }
+
+/* C · JAPON : boîte blanche, grande illustration, bandes de couleur en bas, titre en katakana */
+.c { --d: 30px; width: 200px; height: 270px; }
+.c .front { background: #f7f5ee; border: 2px solid #cfcabd; display: flex; flex-direction: column; }
+.c .head { height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 8px; font-size: 7px; color: #333; }
+.c .art { margin: 0 10px; height: 150px; border: 2px solid #222; overflow: hidden; }
+.c .ttl { text-align: center; padding-top: 10px; font-family: var(--f-display); font-size: 15px; color: #1a1a2a; letter-spacing: 3px; }
+.c .kana { text-align: center; font-size: 20px; color: #e8264d; letter-spacing: 4px; }
+.c .bands { margin-top: auto; height: 22px; background: linear-gradient(90deg, #e8264d 0 25%, #ffd23f 25% 50%, #3fbf5a 50% 75%, #3b7bff 75%); }
+.c .spine { background: #f7f5ee; border: 2px solid #cfcabd; }
+.c .spine::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px; background: linear-gradient(#e8264d 0 25%, #ffd23f 25% 50%, #3fbf5a 50% 75%, #3b7bff 75%); }
+.c .spine span { position: absolute; inset: 0 0 24px; writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; font-family: var(--f-display); font-size: 9px; color: #1a1a2a; letter-spacing: 2px; }
+.c .top { background: #ebe7dc; border: 2px solid #cfcabd; }
+.c .sticker { top: 120px; right: -22px; }
+
+/* D · COLLECTOR : boîte noire brillante, liseré doré, illustration pleine page, titre gravé */
+.d { --d: 34px; width: 200px; height: 280px; }
+.d .front { background: #050608; border: 3px solid #b8892c; box-shadow: inset 0 0 0 2px #050608, inset 0 0 0 4px #6b5020; }
+.d .art { position: absolute; inset: 8px; overflow: hidden; }
+.d .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 45%, rgba(0,0,0,.85)), linear-gradient(115deg, rgba(255,255,255,.22), transparent 35%); }
+.d .ttl { position: absolute; left: 0; right: 0; bottom: 34px; z-index: 2; text-align: center; font-family: var(--f-display); font-size: 17px; letter-spacing: 4px;
+  color: #f2d48a; text-shadow: 0 1px 0 #fff3c4, 0 -1px 0 #6b5020, 2px 3px 0 #000; }
+.d .sub { position: absolute; left: 0; right: 0; bottom: 16px; z-index: 2; text-align: center; font-family: var(--f-display); font-size: 6px; color: #b8892c; letter-spacing: 2px; }
+.d .ed { position: absolute; top: 14px; left: 14px; z-index: 2; font-family: var(--f-display); font-size: 6px; color: #050608; background: #d9b25a; padding: 4px 5px; }
+.d .spine { background: #050608; border: 3px solid #b8892c; }
+.d .spine span { position: absolute; inset: 0; writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; font-family: var(--f-display); font-size: 9px; color: #d9b25a; letter-spacing: 2px; }
+.d .top { background: #0d0e12; border: 3px solid #b8892c; }
+.d .sticker { top: -18px; right: -20px; background: #d9b25a; }
+
+.note { border-top: 2px dashed rgba(255,255,255,.15); padding-top: 16px; color: var(--dim); max-width: 78ch; margin: 0; }
+.note b { color: var(--text); font-weight: 400; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>BOITES DE JEU · JEU A LA UNE</h1>
+    <p class="lead">Quatre façons de présenter le dernier jeu sorti sur l'accueil, dans l'esprit des boîtes de cartouches 16 bits des années 90. Ici avec Nebula ; chaque boîte reprend l'image et les couleurs du jeu. Passe la souris (ou le doigt) sur une boîte pour la tourner.</p>
+  </header>
+  <section class="grid">
+    <figure>
+      <div class="stage"><div class="box a">
+        <div class="front"><div class="band logo"><span>LUDOTHEQUE</span><span class="dots"><i></i><i></i><i></i><i></i></span></div>
+          <div class="art"><img class="cover" src="../nebula/cartouche.jpg" alt=""><div class="ribbon">NEBULA</div></div>
+          <div class="foot"><span>VERSION FRANCAISE</span><span class="age">7+</span></div></div>
+        <div class="spine"><span>NEBULA</span></div><div class="top"></div><div class="shadow"></div><div class="sticker">TOUT<br>NEUF !</div>
+      </div></div>
+      <figcaption><b>A · EUROPE</b>Boîte verticale gris clair : bandeau sombre de la console en haut, ruban de couleur en biais avec le titre, « version française » et pastille d'âge en bas.</figcaption>
+    </figure>
+    <figure>
+      <div class="stage"><div class="box b">
+        <div class="front"><div class="stripe"><span>LUDOTHEQUE 16 BITS</span></div>
+          <div class="art"><img class="cover" src="../nebula/cartouche.jpg" alt=""><div class="title">NEBULA</div><div class="tag">1 JOUEUR · SAUVEGARDE</div></div></div>
+        <div class="spine"><span>NEBULA</span></div><div class="top"></div><div class="shadow"></div><div class="sticker">TOUT<br>NEUF !</div>
+      </div></div>
+      <figcaption><b>B · AMERIQUE</b>Boîte horizontale, bord noir strié avec un filet rouge, titre en grosses lettres chromées sur l'illustration. La plus « arcade ».</figcaption>
+    </figure>
+    <figure>
+      <div class="stage"><div class="box c">
+        <div class="front"><div class="head logo"><span class="dots"><i></i><i></i><i></i><i></i></span><span>LUDOTHEQUE</span></div>
+          <div class="art"><img class="cover" src="../nebula/cartouche.jpg" alt=""></div>
+          <div class="ttl">NEBULA</div><div class="kana">ネビュラ</div><div class="bands"></div></div>
+        <div class="spine"><span>NEBULA</span></div><div class="top"></div><div class="shadow"></div><div class="sticker">TOUT<br>NEUF !</div>
+      </div></div>
+      <figcaption><b>C · JAPON</b>Boîte blanche et sobre : illustration encadrée, titre et sa version en katakana, bandes de quatre couleurs en bas qui continuent sur la tranche.</figcaption>
+    </figure>
+    <figure>
+      <div class="stage"><div class="box d">
+        <div class="front"><div class="art"><img class="cover" src="../nebula/cartouche.jpg" alt=""></div><div class="ed">EDITION COLLECTOR</div>
+          <div class="ttl">NEBULA</div><div class="sub">ROGUE-LITE TACTIQUE</div></div>
+        <div class="spine"><span>NEBULA</span></div><div class="top"></div><div class="shadow"></div><div class="sticker">TOUT<br>NEUF !</div>
+      </div></div>
+      <figcaption><b>D · COLLECTOR</b>Boîte noire brillante à liseré doré, illustration pleine page, titre doré gravé. Plus chic, va bien aux jeux 32 bits.</figcaption>
+    </figure>
+  </section>
+  <p class="note"><b>À choisir</b> : une boîte pour tous les jeux (avec les couleurs de chacun), ou une boîte différente selon le jeu (par exemple Collector pour les jeux 32 bits). Les noms et logos des vraies consoles ne sont volontairement pas repris : le bandeau porte celui de la Ludothèque.</p>
+</div>

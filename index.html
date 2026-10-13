@@ -169,10 +169,12 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .filters button:focus-visible{outline:3px dashed var(--gold); outline-offset:4px}
 .cart[hidden]{display:none}
 .shelf-empty{text-align:center; color:var(--text-dim); font-size:20px}
-.fav{font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; position:absolute; top:2px; right:8px; z-index:3; width:30px; height:30px; padding:0; border:0; background:none; cursor:pointer;
-  font-size:22px; line-height:30px; color:var(--shell-lo); text-shadow:1px 1px 0 var(--shell-hi)}
-.fav.on{color:var(--gold); text-shadow:2px 2px 0 #000}
-.fav:focus-visible{outline:3px dashed var(--gold)}
+.fav{font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; position:absolute; top:-14px; right:-12px; z-index:3; width:38px; height:38px; padding:0; cursor:pointer;
+  border:3px solid var(--ink); border-radius:50%; background:#1e1840; color:#a9a6d8; font-size:20px; line-height:30px; text-align:center;
+  box-shadow:0 0 0 2px var(--text-dim), 3px 3px 0 2px #000}
+.fav:hover{color:var(--gold); box-shadow:0 0 0 2px var(--gold), 3px 3px 0 2px #000}
+.fav.on{background:var(--gold); color:#110d22; box-shadow:0 0 0 2px #fff6cc, 3px 3px 0 2px #000}
+.fav:focus-visible{outline:3px dashed var(--gold); outline-offset:3px}
 .badge{position:absolute; top:-12px; left:-10px; z-index:3; transform:rotate(-6deg); font-family:var(--f-display); font-size:8px; letter-spacing:1px;
   padding:6px 7px; color:#110d22; background:#5cff8a; border:3px solid var(--ink); box-shadow:3px 3px 0 #000}
 .badge.maj{background:#5ce1ff}
