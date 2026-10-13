@@ -60,7 +60,12 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 ## Page d'accueil (idées du 13/10)
 Réalisé le 13/10 ✅ : **favoris** (étoile sur chaque cartouche, favoris en tête), badges **NOUVEAU** / **MIS A JOUR** (3 jours), **filtres par genre**, **jeu à la une** dans une boîte de jeu (« TOUT NEUF ! »), **quoi de neuf**. Dates, genres et journal : `META` et `NEWS` dans `index.html` (à tenir à jour à chaque sortie ou mise à jour).
 
-Maquette des **boîtes de jeu** pour le jeu à la une (A Europe, B Amérique, C Japon, D Collector) : https://claude.ai/artifact/Te1taXoF7a6fQstZPmjRAc — source `maquettes/boites-de-jeu.html`. **Choix de l'utilisateur à venir.**
+Maquette des **boîtes de jeu** pour le jeu à la une (A Europe, B Amérique, C Japon, D Collector) : https://claude.ai/artifact/Te1taXoF7a6fQstZPmjRAc — source `maquettes/boites-de-jeu.html`. **Choix : B (Amérique)**, installée sur l'accueil le 13/10.
+
+**À retravailler plus tard : le design des cartouches et des boîtes**
+- Revoir le dessin des cartouches et de la boîte de jeu, et les couleurs des cartouches selon le type de jeu (logique, tactique, adresse, arcade…).
+- Pourquoi pas **trois modèles de cartouche** : un pour les jeux **16 bits** (pixel art), un pour les jeux **32 bits** (Orbite, Pont stellaire, Alunissage, Club, Amiral, Injagility…), un troisième pour les autres (reprises, simulation, cartes).
+- Et du coup **une boîte de jeu pour chaque cartouche** (même famille de style que la cartouche, aux couleurs du jeu), pas seulement pour le jeu à la une.
 
 À faire plus tard (plan proposé : session A = Reprendre ; session B = défis du jour + profil ; session C = activité de la famille) :
 - **Reprendre** : bannière « Continuer Nebula, secteur 1 / Club, semaine 12 » (un petit lecteur de la partie en cours par jeu, sans toucher aux jeux).
