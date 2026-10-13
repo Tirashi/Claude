@@ -65,11 +65,11 @@ const sprite = t => (TYPES[t] && TYPES[t].sprite) || t;
 // réglages issus du simulateur : sans tirs de zone, un joueur attentif esquivait tout
 const TUNE = { cross: { croiseur: 2, amiral: 2 } };   // dégâts sur les 4 cases voisines de la case visée
 const MODS = {
-  blindage: { name: 'BLINDAGE', desc: '+3 coque', price: 50 },
-  bouclier: { name: 'BOUCLIER+', desc: '+1 bouclier', price: 60 },
-  propulseurs: { name: 'PROPULSEURS', desc: '+1 vitesse', price: 55 },
-  ciblage: { name: 'CIBLAGE', desc: '+1 portée', price: 45 },
-  canons: { name: 'CANONS MK2', desc: '+1 dégât', price: 75 },
+  blindage: { name: 'BLINDAGE', desc: '+3 coque', long: '+3 points de coque maximum (et 3 tout de suite).', price: 50 },
+  bouclier: { name: 'BOUCLIER+', desc: '+1 bouclier', long: '+1 point de bouclier maximum, rechargé chaque tour.', price: 60 },
+  propulseurs: { name: 'PROPULSEURS', desc: '+1 vitesse', long: '+1 case de déplacement par tour.', price: 55 },
+  ciblage: { name: 'CIBLAGE', desc: '+1 portée', long: "+1 case de portée pour les armes (sauf l'essaim).", price: 45 },
+  canons: { name: 'CANONS MK2', desc: '+1 dégât', long: '+1 dégât à chaque tir (essaim compris).', price: 75 },
 };
 const MOD_IDS = Object.keys(MODS);
 const NAMES = ['ARCHE', 'AURORE', 'PIQUE', 'VESPER', 'ORION', 'SIRIUS', 'ÉCLAT', 'BORÉE', 'ALTAÏR', 'COMÈTE', 'ZÉPHYR', 'ANTARÈS', 'VÉGA', 'HÉLIOS', 'NOVA', 'CASSINI'];
@@ -527,7 +527,7 @@ let K = 1, BTN = [], now = 0, run = store.get('run', null);
 if (run && run.v !== 1) run = null;
 const meta = Object.assign({ data: 0, games: 0, wins: 0, cleared: 0, kills: 0, bestSector: 0 }, store.get('meta', {}));
 let best = Number(store.get('best', 0)) || 0, SFX = store.get('sfx', true);
-const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0 };
+const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, ranges: !!store.get('ranges', false) };
 function save() { if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
 
 /* ---------- sprites et décors fabriqués à la demande ---------- */
@@ -552,7 +552,13 @@ const ROCKS = [V.rock(52, 3), V.rock(44, 8), V.rock(60, 14)];
 function drawBg(k) { const b = bg(k); if (b) g.drawImage(b, 0, 0); else { g.fillStyle = '#04060c'; g.fillRect(0, 0, LW, LH); } }
 
 /* ---------- petits outils de dessin ---------- */
-function txt(s, x, y, col, font, align = 'left', ls = 0) { g.font = font; g.textAlign = align; g.textBaseline = 'top'; g.fillStyle = col; if ('letterSpacing' in g) g.letterSpacing = ls + 'px'; g.fillText(s, x, y); if ('letterSpacing' in g) g.letterSpacing = '0px'; }
+// texte ; s'il dépasse la largeur permise (par défaut : jusqu'au bord de l'écran moins 16 px), il est resserré
+function txt(s, x, y, col, font, align = 'left', ls = 0, maxW) {
+  g.font = font; g.textAlign = align; g.textBaseline = 'top'; g.fillStyle = col; if ('letterSpacing' in g) g.letterSpacing = ls + 'px';
+  const room = maxW || (align === 'center' ? Math.min(x, LW - x) * 2 - 32 : align === 'right' ? x - 16 : LW - x - 16), w = g.measureText(s).width;
+  if (w > room && room > 0) { g.save(); g.translate(x, y); g.scale(room / w, 1); g.fillText(s, 0, 0); g.restore(); } else g.fillText(s, x, y);
+  if ('letterSpacing' in g) g.letterSpacing = '0px';
+}
 function wrapLines(s, maxW, font) { g.font = font; const out = []; let line = ''; for (const w of s.split(' ')) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; } if (line) out.push(line); return out; }
 function para(s, x, y, maxW, col, font, lh) { const L = wrapLines(s, maxW, font); L.forEach((l, i) => txt(l, x, y + i * lh, col, font)); return L.length * lh; }
 function frameBox(x, y, w, h, col, corner = 10, fill = 'rgba(6,10,18,.72)') {
@@ -574,10 +580,10 @@ function btn(x, y, w, h, label, act, o = {}) {
 }
 function zone(x, y, w, h, act) { BTN.push({ x, y, w, h, act }); }
 function meter(x, y, w, v, max, col) { const n = Math.max(1, max), gap = n > 12 ? 1 : 2, sw = (w - (n - 1) * gap) / n; for (let i = 0; i < n; i++) { g.fillStyle = i < v ? col : 'rgba(255,255,255,.08)'; g.fillRect(x + i * (sw + gap), y, sw, 6); } }
-function topBar(left, sub, r1, r2) {
+function topBar(left, sub, r1, r2, subW) {
   const gr = g.createLinearGradient(0, 0, 0, 96); gr.addColorStop(0, 'rgba(4,6,12,.95)'); gr.addColorStop(1, 'rgba(4,6,12,.55)'); g.fillStyle = gr; g.fillRect(0, 0, LW, 96);
   g.fillStyle = C.acc2 + '.5)'; g.fillRect(24, 94, LW - 48, 1);
-  txt(left, 24, 22, C.txt, F.title(19), 'left', 4); txt(sub, 24, 56, C.dim, F.ui(20), 'left', 2);
+  txt(left, 24, 22, C.txt, F.title(19), 'left', 4); txt(sub, 24, 56, C.dim, F.ui(20), 'left', 2, subW);
   txt(r1, LW - 24, 22, C.acc, F.mono(22), 'right'); txt(r2, LW - 24, 54, C.dim, F.mono(20), 'right');
 }
 const pad2 = n => String(n).padStart(2, '0');
@@ -732,6 +738,7 @@ function drawCombat() {
       txt('-' + (d + extra), GX + c * CS + CS - 24, GY + r * CS + 8, C.foe, F.mono(18), 'center');
     }
   }
+  if (UI.ranges && !B) drawRanges(st, s);
   // vaisseaux
   const hittable = mine && !B && canAct(st, mine) ? new Set(targetsFor(st, mine, UI.wi).map(o => o.id)) : new Set();
   const swarm = mine && TYPES[mine.t].w[UI.wi] && TYPES[mine.t].w[UI.wi].swarm;
@@ -749,11 +756,52 @@ function drawCombat() {
     if (o === s && !o.dead) corners(L + 3, T + 3, CS - 6, n * CS - 6, foe ? C.foe : C.ally, 14, 2);
   }
   drawFx();
+  if (UI.ranges && !B) rangeLabel(st, s);
   const boss = sideOf(st, 'E').find(o => o.t === 'amiral'), foes = sideOf(st, 'E').length;
-  topBar(st.kind === 'amiral' ? 'AMIRAL ROUILLÉ' : NODE_NAMES[st.kind], `TOUR ${st.turn} · ${B ? 'LES PIRATES AGISSENT' : 'TON TOUR'}`, `${foes} HOSTILE${foes > 1 ? 'S' : ''}`,
-    boss ? `RENFORTS DANS ${3 - st.turn % 3}` : canFlee(st) ? 'FUITE POSSIBLE' : '');
+  topBar(st.kind === 'amiral' ? 'AMIRAL ROUILLÉ' : NODE_NAMES[st.kind], `TOUR ${st.turn} · ${B ? 'PIRATES EN ACTION' : 'TON TOUR'}${boss ? ` · RENFORTS DANS ${3 - st.turn % 3}` : canFlee(st) ? ' · FUITE POSSIBLE' : ''}`,
+    `${foes} HOSTILE${foes > 1 ? 'S' : ''}`, '', LW - 230);
+  btn(LW - 186, 50, 162, 36, UI.ranges ? 'PORTÉES : OUI' : 'PORTÉES : NON', () => { UI.ranges = !UI.ranges; store.set('ranges', UI.ranges); }, { size: 16, ls: 1, primary: UI.ranges });
   drawFiche(st, s, B);
   if (st.result && !B) drawResult(st);
+}
+// portées : en ambre où tes vaisseaux peuvent tirer, en rouge où les pirates peuvent tirer (depuis leur place actuelle)
+function rangeCells(st, o, wi) {
+  const out = new Set(), n = lenOf(o), T = TYPES[o.t];
+  if (T.ai === 'brulot') { for (const p of ends(reachable(st, o))) for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) { const c = p.c + dc, r = p.r + dr; if (inGrid(c, r) && !rockAt(st, c, r)) out.add(c + ',' + r); } return out; }
+  const ws = wi != null && T.w[wi] ? [T.w[wi]] : T.w;
+  for (const w of ws) { const rg = wRng(o, w);
+    for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
+      const d = gap(o.c, o.r, n, c, r, 1); if (!d || d > rg || rockAt(st, c, r)) continue;
+      if (w.swarm || los(st, cellsOf(o), [[c, r]])) out.add(c + ',' + r);
+    } }
+  return out;
+}
+function outline(set, fill, line) {
+  g.fillStyle = fill; g.strokeStyle = line; g.lineWidth = 2; g.beginPath();
+  for (const k of set) {
+    const [c, r] = k.split(',').map(Number), x = GX + c * CS, y = GY + r * CS; g.fillRect(x, y, CS, CS);
+    if (!set.has(c + ',' + (r - 1))) { g.moveTo(x, y + 1); g.lineTo(x + CS, y + 1); }
+    if (!set.has(c + ',' + (r + 1))) { g.moveTo(x, y + CS - 1); g.lineTo(x + CS, y + CS - 1); }
+    if (!set.has((c - 1) + ',' + r)) { g.moveTo(x + 1, y); g.lineTo(x + 1, y + CS); }
+    if (!set.has((c + 1) + ',' + r)) { g.moveTo(x + CS - 1, y); g.lineTo(x + CS - 1, y + CS); }
+  }
+  g.stroke();
+}
+function drawRanges(st, s) {
+  const foeSel = s && !s.dead && s.side === 'E', mineSel = s && !s.dead && s.side === 'P';
+  // pirates : plus la case est foncée, plus de pirates peuvent y tirer (le brûlot seulement quand on le touche)
+  const heat = new Map();
+  for (const o of foeSel ? [s] : sideOf(st, 'E').filter(o => TYPES[o.t].ai !== 'brulot')) for (const k of rangeCells(st, o)) heat.set(k, (heat.get(k) || 0) + 1);
+  for (const [k, n] of heat) { const [c, r] = k.split(',').map(Number); g.fillStyle = C.foe2 + Math.min(.32, .08 * n) + ')'; g.fillRect(GX + c * CS, GY + r * CS, CS, CS); }
+  outline(new Set(heat.keys()), 'rgba(0,0,0,0)', C.foe2 + '.6)');
+  if (mineSel) outline(rangeCells(st, s, UI.wi), C.acc2 + '.10)', C.acc);
+}
+function rangeLabel(st, s) {
+  const foeSel = s && !s.dead && s.side === 'E', mineSel = s && !s.dead && s.side === 'P';
+  const label = foeSel ? `ROUGE : PORTÉE · ${TYPES[s.t].name}` : mineSel ? `AMBRE : PORTÉE · ${TYPES[s.t].name} · ROUGE : PIRATES` : 'ROUGE : OÙ LES PIRATES PEUVENT TIRER · TOUCHE UN VAISSEAU';
+  g.font = F.mono(13); const w = Math.min(LW - 40, g.measureText(label).width + 24);
+  g.fillStyle = 'rgba(4,6,12,.85)'; g.fillRect(LW / 2 - w / 2, GY + ROWS * CS - 26, w, 22);
+  txt(label, LW / 2, GY + ROWS * CS - 22, C.txt, F.mono(13), 'center', 0, w - 12);
 }
 function drawFiche(st, s, B) {
   frameBox(16, 776, LW - 32, 168, s && s.side === 'E' ? C.foe : C.acc, 12);
@@ -889,7 +937,7 @@ function drawShop() {
   row(112, 74, 'CARBURANT', '1 unité pour un saut', 10, 'ACHETER', () => { buy(run, 'fuel'); save(); }, run.cr >= 10);
   row(194, 74, 'RÉPARATIONS', miss ? `${miss} point${miss > 1 ? 's' : ''} de coque à réparer · 3 cr le point` : 'La flotte est intacte', pts * 3, pts < miss ? `${pts} PTS` : 'TOUT', () => { buy(run, 'repair'); save(); }, pts > 0);
   txt('MODULES', 32, 284, C.acc, F.mono(15), 'left', 3);
-  sh.mods.forEach((o, i) => row(308 + i * 82, 74, MODS[o.m].name, MODS[o.m].desc, o.price, 'ACHETER', () => { buy(run, 'mod', i); save(); }, run.cr >= o.price, o.sold));
+  sh.mods.forEach((o, i) => row(308 + i * 82, 74, MODS[o.m].name, MODS[o.m].long, o.price, 'ACHETER', () => { buy(run, 'mod', i); save(); }, run.cr >= o.price, o.sold));
   txt('RECRUE', 32, 560, C.acc, F.mono(15), 'left', 3);
   const o = sh.ship, T = TYPES[o.t], full = run.fleet.length >= 5;
   frameBox(16, 584, LW - 32, 150, o.sold ? 'rgba(125,138,158,.4)' : C.dim, 8);
@@ -913,6 +961,16 @@ function drawDock() {
 }
 
 /* ---------- hangar : modules ---------- */
+// effet d'un module sur un vaisseau : « VITESSE 3 → 4 »
+function modPreview(f, m) {
+  const ws = TYPES[f.t].w, up = (a, b) => `${a} → ${b}`;
+  if (m === 'blindage') return 'COQUE MAX ' + up(maxHullOf(f), maxHullOf(f) + 3);
+  if (m === 'bouclier') return 'BOUCLIER ' + up(shMaxOf(f), shMaxOf(f) + 1);
+  if (m === 'propulseurs') return 'VITESSE ' + up(spdOf(f), spdOf(f) + 1);
+  if (m === 'ciblage') { const a = ws.filter(w => !w.swarm); return a.length ? 'PORTÉE ' + a.map(w => `${w.name} ${up(wRng(f, w), wRng(f, w) + 1)}`).join(' · ') : "SANS EFFET SUR L'ESSAIM"; }
+  if (m === 'canons') return ws.length ? 'DÉGÂTS ' + ws.map(w => `${w.name} ${up(wDmg(f, w), wDmg(f, w) + 1)}`).join(' · ') : 'SANS EFFET';
+  return '';
+}
 function drawHangar() {
   drawBg('hangar');
   topBar('HANGAR', `${run.fleet.length} VAISSEAU${run.fleet.length > 1 ? 'X' : ''} SUR 5`, `CRÉDITS ${run.cr}`, `RÉSERVE ${run.stock.length}`);
@@ -924,7 +982,9 @@ function drawHangar() {
     g.strokeStyle = 'rgba(140,170,210,.08)'; for (let k = 0; k < 12; k++) { g.beginPath(); g.moveTo(24 + k * 16.5, y); g.lineTo(24 + k * 16.5, y + h); g.stroke(); g.beginPath(); g.moveTo(24, y + 6 + k * 16.5); g.lineTo(124, y + 6 + k * 16.5); g.stroke(); }
     drawSprite(f.t, 74, y + h / 2, fitScale(f.t, h - 14)); g.restore();
     txt(`${T.name} « ${f.name} »`, 138, y + 8, C.txt, F.ui(21), 'left', 1);
-    txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ')}`, 138, y + 34, C.dim, F.mono(13));
+    const pm = UI.pick != null ? run.stock[UI.pick] : null;
+    if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 34, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13));
+    else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ')}`, 138, y + 34, C.dim, F.mono(13));
     txt('COQUE', 138, y + 54, C.dim, F.mono(13)); meter(196, y + 58, 200, f.hull, m, f.hull / m > .5 ? C.ok : C.foe); txt(`${f.hull}/${m}`, 404, y + 54, C.txt, F.mono(13));
     const ns = slotsOf(f.t), sy = y + h - 44;
     for (let k = 0; k < ns; k++) {
@@ -937,7 +997,8 @@ function drawHangar() {
   frameBox(16, 770, LW - 32, 110, C.acc, 10);
   txt('RÉSERVE DE MODULES', 32, 780, C.acc, F.mono(14), 'left', 3);
   if (!run.stock.length) txt('Vide. Les contacts lourds rapportent un module ; le comptoir en vend.', 32, 812, C.dim, F.ui(17));
-  else txt(UI.pick != null ? 'Touche un emplacement libre.' : 'Un module, puis un emplacement libre. Toucher un module posé le retire.', 32, 860, C.dim, F.ui(15), 'left');
+  else if (UI.pick != null) txt(`${MODS[run.stock[UI.pick]].name} : ${MODS[run.stock[UI.pick]].long}`, 32, 858, C.acc, F.ui(17), 'left');
+  else txt('Touche un module pour voir ce qu\'il donne, puis un emplacement libre.', 32, 858, C.dim, F.ui(16), 'left');
   run.stock.forEach((m, i) => { const x = 32 + (i % 4) * 122, y = 802 + Math.floor(i / 4) * 30; if (i > 7) return;
     btn(x, y, 114, 26, MODS[m].name, () => { UI.pick = UI.pick === i ? null : i; }, { size: 14, ls: 1, primary: UI.pick === i }); });
   if (run.stock.length > 8) txt(`+${run.stock.length - 8}`, LW - 32, 780, C.acc, F.mono(14), 'right');
@@ -1006,7 +1067,7 @@ function recordEnd() {
 function drawEnd() {
   recordEnd(); drawBg('title'); const f = run.final, win = run.cleared;
   txt(win ? 'SECTEUR LIBÉRÉ' : 'FLOTTE PERDUE', LW / 2, 130, win ? C.acc : C.foe, F.title(30), 'center', 8);
-  txt(win ? "L'amiral rouillé est vaincu. La suite du voyage arrive bientôt." : 'Les pirates ont eu raison de ta flotte.', LW / 2, 184, C.txt, F.ui(20), 'center', 1);
+  wrapLines(win ? "L'amiral rouillé est vaincu. La suite du voyage arrive bientôt." : 'Les pirates ont eu raison de ta flotte.', LW - 80, F.ui(20)).forEach((l, i) => txt(l, LW / 2, 180 + i * 24, C.txt, F.ui(20), 'center', 1));
   frameBox(40, 240, LW - 80, 360, win ? C.acc : C.foe, 14);
   const rows = [['SECTEURS TERMINÉS', `${run.sectorsDone} × 1000`], ['PIRATES DÉTRUITS', `${run.kills} × 20`], ['CRÉDITS RESTANTS', `${run.cr}`]];
   rows.forEach(([l, v], i) => { txt(l, 70, 270 + i * 42, C.dim, F.ui(20), 'left', 2); txt(v, LW - 70, 270 + i * 42, C.txt, F.mono(20), 'right'); });

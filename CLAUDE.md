@@ -3,7 +3,7 @@
 ## Le projet
 - Dépôt GitHub : **Tirashi/Claude**. Site publié : **https://tirashi.github.io/Claude/** (installé en appli PWA sur Android).
 - Jeux en HTML autonomes (un fichier par jeu, sans build), un dossier par jeu. La page d'accueil `index.html` est le menu.
-- Service worker `sw.js` (mode hors connexion) : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v15` au moment d'écrire ces lignes).
+- Service worker `sw.js` (mode hors connexion) : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v16` au moment d'écrire ces lignes).
 - Moteur de sprites 32 bits partagé : `injagility/chiens32.js` (volumes ombrés, 6 races de chiens).
 - Moteur de vaisseaux en relief de Nebula : `nebula/vaisseaux.js` (16 vaisseaux, astéroïdes, nébuleuse, planètes ; sprites fabriqués à la demande), réutilisé par l'Empire. `outils/artefact.py` l'intègre dans l'artefact.
 - Classements en ligne : `ludo-scores.js` + page `classements/index.html`, base Supabase (scripts dans `supabase/`). Égalités classées 1, 2, 2, 4. Les records déjà présents sont envoyés une fois à l'inscription.
@@ -37,6 +37,7 @@
 8. **Tests** (`outils/`), commit, push sur la branche, **artefact** publié et noté ci-dessous.
 
 ## Leçons apprises
+- Nebula : `txt()` resserre tout seul un texte trop large pour l'écran (sur le téléphone, les polices sont un peu plus larges que dans Playwright) ; la cartouche du menu est une image (`nebula/cartouche.jpg`, capture de l'écran titre).
 - La police **Press Start 2P n'a pas de majuscules accentuées** (« É » s'affiche « é ») : écrire les textes en MAJUSCULES sans accent (ETOILES, REESSAYER…). Les minuscules accentuées s'affichent bien.
 - **Supabase n'est pas joignable** depuis l'environnement de Claude (proxy 403) : tester les classements avec `outils/faux-classements.js`, puis demander à l'utilisateur un essai réel sur son téléphone.
 - Playwright : changer seulement l'ancre (`#…`) ne recharge pas la page ; repasser par `about:blank`.

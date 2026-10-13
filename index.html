@@ -71,6 +71,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 
 .label{border:3px solid var(--ink); background:var(--lb); padding:14px 12px; display:flex; flex-direction:column; gap:12px; min-height:270px; height:100%}
 .label canvas[data-icon="dog"]{width:156px; height:108px; max-width:100%}
+.label img.shot{display:block; margin:0 auto; width:156px; height:108px; max-width:100%; border-radius:4px; box-shadow:3px 3px 0 rgba(0,0,0,.45)}
 .label canvas{display:block; margin:0 auto; image-rendering:pixelated; width:96px; height:96px; filter:drop-shadow(3px 3px 0 rgba(0,0,0,.45))}
 .label h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:13px; letter-spacing:1px; line-height:1.5; color:var(--lt); text-shadow:2px 2px 0 rgba(0,0,0,.5); text-align:center}
 .label p{margin:0; font-size:20px; line-height:1.1; color:var(--ld)}
@@ -251,7 +252,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
     <a class="cart nebula" href="nebula/index.html">
       <span class="arrow" aria-hidden="true">▼</span>
       <div class="label">
-        <canvas data-icon="nebula" width="16" height="16" aria-hidden="true"></canvas>
+        <img class="shot" src="nebula/cartouche.jpg" width="156" height="108" alt="">
         <h2>NEBULA</h2>
         <p>Mène ta flotte de balise en balise jusqu'à l'amiral pirate. Les pirates annoncent leurs tirs : esquive, riposte, survis.</p>
         <div class="tags"><span>TACTIQUE</span><span>ROGUE-LITE</span><span>32 BITS</span></div>
@@ -440,23 +441,6 @@ const ICONS = {
     "..kkyyyyyyyyok..",
     "....kkoooookk...",
     "......kkkk......"]},
-  nebula: {pal:{k:"#05070c", a:"#f2b24a", s:"#8a929e", d:"#4a505a", b:"#9fdcff", w:"#ffffff"}, map:[
-    "................",
-    ".......kk.......",
-    "......kssk......",
-    "......kbbk......",
-    ".....ksssdk.....",
-    ".....ksaadk.....",
-    "....kssssddk....",
-    "...kassssddak...",
-    "..kaasssssddaak.",
-    ".kaaksssssdkaak.",
-    ".kk.ksssssdk.kk.",
-    "....kddssddk....",
-    "....kkdkkdkk....",
-    ".....bb..bb.....",
-    ".....wb..bw.....",
-    "................"]},
   lander: {pal:{k:"#0b0614", w:"#ffffff", g:"#c8ccd4", o:"#8a5a10", y:"#ffd76a", b:"#2a3a5a", f:"#fff2a8", r:"#ff9a3a"}, map:[
     "................",
     "......kkkk......",
