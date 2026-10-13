@@ -171,6 +171,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .news ul{margin:10px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; font-size:19px; color:var(--text-dim); text-align:left}
 .news li b{font-family:var(--f-display); font-weight:400; font-size:8px; color:var(--text); margin-right:6px}
 .filters{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+@media (max-width:440px){ .filters{gap:6px} .filters button{font-size:7px; padding:8px 6px; letter-spacing:0} }
 .filters button{font-family:var(--f-display); font-size:8px; letter-spacing:1px; padding:9px 10px; color:var(--text); background:#1e1840; border:3px solid var(--ink);
   box-shadow:0 0 0 2px var(--text-dim), 3px 3px 0 2px #000; cursor:pointer}
 .filters button[aria-pressed="true"]{color:#110d22; background:var(--gold); box-shadow:0 0 0 2px var(--gold), 3px 3px 0 2px #000}
@@ -628,7 +629,8 @@ const NEWS = [
   ["2026-10-12", "Orbite : nouveau jeu de physique spatiale en 30 niveaux."],
   ["2026-10-12", "Le Club d'agility : nouveau jeu de gestion de club canin."],
 ];
-const FILTERS = ["TOUS", "★ FAVORIS", "NOUVEAU", "DU JOUR", "LOGIQUE", "TACTIQUE", "ADRESSE", "ESPACE", "CHIENS", "ARCADE", "GESTION", "CARTES", "SIMULATION"];
+// filtres de l'accueil (choix de l'utilisateur : peu de filtres) ; les genres de META restent prêts pour plus tard
+const FILTERS = ["TOUS", "★ FAVORIS", "NOUVEAU", "DU JOUR"];
 const daysSince = d => d ? (Date.now() - new Date(d + "T00:00:00").getTime()) / 864e5 : 1e9;
 const recent = d => daysSince(d) < 3;
 const fmtDay = d => { const [y, m, j] = d.split("-"); return `${j}/${m}`; };
@@ -647,6 +649,7 @@ allCarts.forEach(c => {
   paint(); c.appendChild(b);
 });
 let filter = "TOUS"; try { filter = sessionStorage.getItem("ludo.filter") || "TOUS"; } catch (e) {}
+if (!FILTERS.includes(filter)) filter = "TOUS";
 const fbar = document.getElementById("filters");
 FILTERS.forEach(f => { const b = document.createElement("button"); b.type = "button"; b.dataset.f = f; if (f === "★ FAVORIS") b.innerHTML = '<span class="st">★</span> FAVORIS'; else b.textContent = f; b.addEventListener("click", () => { filter = f; try { sessionStorage.setItem("ludo.filter", f); } catch (e) {} arrange(); }); fbar.appendChild(b); });
 const shows = c => { const m = metaOf(c); return filter === "TOUS" || (filter === "★ FAVORIS" ? favs.includes(c.dataset.k) : filter === "NOUVEAU" ? recent(m.added) || recent(m.updated) : (m.genres || []).includes(filter)); };
