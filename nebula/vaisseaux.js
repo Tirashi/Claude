@@ -440,14 +440,21 @@ function get(id) {
 }
 // cases occupées par un sprite (d'après sa hauteur)
 const cellsOf = s => s.h > 180 ? 3 : s.h > 100 ? 2 : 1;
+// lueur d'un réacteur, dessinée une fois (bleutée pour la flotte, orangée pour les pirates, tournée vers l'arrière)
+const GLOW = {};
+function glow(flip) {
+  const k = flip ? 1 : 0; if (GLOW[k]) return GLOW[k];
+  const S = 128, [c, g] = mk(S, S), dir = flip ? -1 : 1, gr = g.createRadialGradient(64, 64, 0, 64, 64 + dir * 64 * .4, 64);
+  gr.addColorStop(0, flip ? 'rgba(255,170,110,.95)' : 'rgba(170,220,255,.95)'); gr.addColorStop(.3, flip ? 'rgba(255,90,40,.45)' : 'rgba(80,150,255,.45)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, S, S); return GLOW[k] = c;
+}
 function drawShip(g, s, x, y, sc = 1, t = 0, alpha = 1) {
   g.save(); g.translate(x, y); g.scale(sc, sc); g.globalAlpha = alpha;
   g.globalCompositeOperation = 'lighter';
+  const G = glow(s.flip);
   for (const [ex, ey, er] of s.engines) {
-    const fx = ex - s.w / 2, fy = ey - s.h / 2, dir = s.flip ? -1 : 1, len = er * 5 * (1 + Math.sin(t * 23 + ex) * .12);
-    const gr = g.createRadialGradient(fx, fy, 0, fx, fy + dir * len * .4, len);
-    gr.addColorStop(0, s.flip ? 'rgba(255,170,110,.95)' : 'rgba(170,220,255,.95)'); gr.addColorStop(.3, s.flip ? 'rgba(255,90,40,.45)' : 'rgba(80,150,255,.45)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = gr; g.fillRect(fx - len, fy - len, len * 2, len * 2);
+    const fx = ex - s.w / 2, fy = ey - s.h / 2, len = er * 5 * (1 + Math.sin(t * 23 + ex) * .12);
+    g.drawImage(G, fx - len, fy - len, len * 2, len * 2);
   }
   g.globalCompositeOperation = 'source-over';
   g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(s.img, -s.w / 2, -s.h / 2);

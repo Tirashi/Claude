@@ -37,7 +37,7 @@
 8. **Tests** (`outils/`), commit, push sur la branche, **artefact** publié et noté ci-dessous.
 
 ## Leçons apprises
-- Nebula : `txt()` resserre tout seul un texte trop large pour l'écran (sur le téléphone, les polices sont un peu plus larges que dans Playwright) ; la cartouche du menu est une image (`nebula/cartouche.jpg`, capture de l'écran titre).
+- Nebula : `txt()` resserre tout seul un texte trop large pour l'écran (sur le téléphone, les polices sont un peu plus larges que dans Playwright) ; la cartouche du menu est une image (`nebula/cartouche.jpg`, capture de l'écran titre). Fluidité : agrandir une grande image à chaque trame coûte très cher au téléphone ; les fonds et le décor du combat sont agrandis une fois à la taille réelle de l'écran (`drawBg`, `drawStatic`), la résolution est plafonnée à 2 pixels par pixel logique, les lueurs des réacteurs sont pré-dessinées et les portées calculées seulement quand un vaisseau bouge.
 - La police **Press Start 2P n'a pas de majuscules accentuées** (« É » s'affiche « é ») : écrire les textes en MAJUSCULES sans accent (ETOILES, REESSAYER…). Les minuscules accentuées s'affichent bien.
 - **Supabase n'est pas joignable** depuis l'environnement de Claude (proxy 403) : tester les classements avec `outils/faux-classements.js`, puis demander à l'utilisateur un essai réel sur son téléphone.
 - Playwright : changer seulement l'ancre (`#…`) ne recharge pas la page ; repasser par `about:blank`.

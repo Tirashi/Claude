@@ -520,7 +520,8 @@ window.Nebula = { TUNE, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, end
    (le double des jeux 272×480), agrandi avec lissage.
    ===================================================================== */
 const LW = 544, LH = 960, TAU = Math.PI * 2, CS = 72, GX = 20, GY = 112;
-const cv = document.getElementById('cv'), g = cv.getContext('2d');
+const cv = document.getElementById('cv');
+let g = cv.getContext('2d');   // contexte de dessin courant (le décor du combat se dessine un temps ailleurs)
 const C = { acc: '#f2b24a', acc2: 'rgba(242,178,74,', txt: '#d8dee8', dim: '#7d8a9e', ally: '#7fc4ff', ally2: 'rgba(127,196,255,', foe: '#ff5a4a', foe2: 'rgba(255,90,74,', ok: '#8fe0a0' };
 const F = { ui: s => `600 ${s}px Rajdhani, "Arial Narrow", sans-serif`, bold: s => `700 ${s}px Rajdhani, "Arial Narrow", sans-serif`, mono: s => `${s}px "Share Tech Mono", Consolas, monospace`, title: s => `${s}px Michroma, "Arial Narrow", sans-serif` };
 let K = 1, BTN = [], now = 0, run = store.get('run', null);
@@ -549,7 +550,14 @@ function work() {
   }
 }
 const ROCKS = [V.rock(52, 3), V.rock(44, 8), V.rock(60, 14)];
-function drawBg(k) { const b = bg(k); if (b) g.drawImage(b, 0, 0); else { g.fillStyle = '#04060c'; g.fillRect(0, 0, LW, LH); } }
+// fond : agrandi une fois à la taille réelle de l'écran puis posé tel quel (l'agrandir à chaque image coûtait cher au téléphone)
+const BGK = {};
+function drawBg(k) {
+  const b = bg(k); if (!b) { g.fillStyle = '#04060c'; g.fillRect(0, 0, LW, LH); return; }
+  if (g !== cv.getContext('2d')) { g.drawImage(b, 0, 0); return; }
+  let c = BGK[k]; if (!c || c.K !== K) { const [c2, g2] = V.mk(Math.round(LW * K), Math.round(LH * K)); g2.imageSmoothingEnabled = true; g2.imageSmoothingQuality = 'high'; g2.drawImage(b, 0, 0, c2.width, c2.height); c = BGK[k] = c2; c.K = K; }
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(c, 0, 0); g.restore();
+}
 
 /* ---------- petits outils de dessin ---------- */
 // texte ; s'il dépasse la largeur permise (par défaut : jusqu'au bord de l'écran moins 16 px), il est resserré
@@ -575,7 +583,7 @@ function btn(x, y, w, h, label, act, o = {}) {
   const size = o.size || 20, col = o.off ? 'rgba(125,138,158,.45)' : o.col || (o.primary ? C.acc : C.dim);
   if (o.primary && !o.off) { g.fillStyle = C.acc2 + '.16)'; g.fillRect(x, y, w, h); }
   frameBox(x, y, w, h, col, 8, o.primary ? 'rgba(0,0,0,0)' : 'rgba(6,10,18,.6)');
-  txt(label, x + w / 2, y + (h - size) / 2 + 1, o.off ? 'rgba(125,138,158,.6)' : o.col || (o.primary ? C.acc : C.txt), F.ui(size), 'center', o.ls == null ? 3 : o.ls);
+  txt(label, x + w / 2, y + (h - size) / 2 + 1, o.off ? 'rgba(125,138,158,.6)' : o.col || (o.primary ? C.acc : C.txt), F.ui(size), 'center', o.ls == null ? 3 : o.ls, w - 14);
   if (!o.off && act) BTN.push({ x, y, w, h, act });
 }
 function zone(x, y, w, h, act) { BTN.push({ x, y, w, h, act }); }
@@ -700,14 +708,24 @@ function drawFx() {
 /* ---------- écran de combat ---------- */
 function doEv(ev) { if (!ev) return false; play(ev); save(); return true; }
 function selShip() { const st = run.combat; return UI.sel != null ? byId(st, UI.sel) : null; }
+const STATIC = { key: '', cv: null };
+function drawStatic(st) {
+  const key = st.seed + ':' + K + ':' + !!BGS.combat;
+  if (STATIC.key !== key) {
+    const [c2, g2] = V.mk(Math.round(LW * K), Math.round(LH * K)), keep = g; g = g2; g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    drawBg('combat');
+    g.strokeStyle = 'rgba(150,180,220,.12)'; g.lineWidth = 1;
+    for (let c = 0; c <= COLS; c++) { g.beginPath(); g.moveTo(GX + c * CS + .5, GY); g.lineTo(GX + c * CS + .5, GY + ROWS * CS); g.stroke(); }
+    for (let r = 0; r <= ROWS; r++) { g.beginPath(); g.moveTo(GX, GY + r * CS + .5); g.lineTo(GX + COLS * CS, GY + r * CS + .5); g.stroke(); }
+    g.fillStyle = C.ally2 + '.035)'; g.fillRect(GX, GY + 6 * CS, COLS * CS, 3 * CS);
+    for (const [c, r] of st.rocks) { const R = ROCKS[(c * 7 + r * 3) % 3], [x, y] = cellCenter(c, r); g.drawImage(R, x - R.width / 2, y - R.height / 2); }
+    g = keep; STATIC.cv = c2; STATIC.key = key;
+  }
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(STATIC.cv, 0, 0); g.restore();
+}
 function drawCombat() {
   const st = run.combat, B = busy(), s = selShip(), mine = s && !s.dead && s.side === 'P' ? s : null;
-  drawBg('combat');
-  g.strokeStyle = 'rgba(150,180,220,.12)'; g.lineWidth = 1;
-  for (let c = 0; c <= COLS; c++) { g.beginPath(); g.moveTo(GX + c * CS + .5, GY); g.lineTo(GX + c * CS + .5, GY + ROWS * CS); g.stroke(); }
-  for (let r = 0; r <= ROWS; r++) { g.beginPath(); g.moveTo(GX, GY + r * CS + .5); g.lineTo(GX + COLS * CS, GY + r * CS + .5); g.stroke(); }
-  g.fillStyle = C.ally2 + '.035)'; g.fillRect(GX, GY + 6 * CS, COLS * CS, 3 * CS);
-  for (const [c, r] of st.rocks) { const R = ROCKS[(c * 7 + r * 3) % 3], [x, y] = cellCenter(c, r); g.drawImage(R, x - R.width / 2, y - R.height / 2); }
+  drawStatic(st);
   // où le vaisseau choisi peut aller
   if (mine && !B && canAct(st, mine) && !mine.moved) {
     const reach = reachable(st, mine), cells = new Set();
@@ -787,14 +805,20 @@ function outline(set, fill, line) {
   }
   g.stroke();
 }
+const RCACHE = { key: '' };
 function drawRanges(st, s) {
   const foeSel = s && !s.dead && s.side === 'E', mineSel = s && !s.dead && s.side === 'P';
   // pirates : plus la case est foncée, plus de pirates peuvent y tirer (le brûlot seulement quand on le touche)
-  const heat = new Map();
-  for (const o of foeSel ? [s] : sideOf(st, 'E').filter(o => TYPES[o.t].ai !== 'brulot')) for (const k of rangeCells(st, o)) heat.set(k, (heat.get(k) || 0) + 1);
+  const key = alive(st).map(o => o.id + ':' + o.c + ':' + o.r).join(',') + '|' + (s ? s.id : '') + '|' + UI.wi;
+  if (RCACHE.key !== key) {
+    const heat = new Map();
+    for (const o of foeSel ? [s] : sideOf(st, 'E').filter(o => TYPES[o.t].ai !== 'brulot')) for (const k of rangeCells(st, o)) heat.set(k, (heat.get(k) || 0) + 1);
+    Object.assign(RCACHE, { key, heat, edge: new Set(heat.keys()), mine: mineSel ? rangeCells(st, s, UI.wi) : null });
+  }
+  const { heat } = RCACHE;
   for (const [k, n] of heat) { const [c, r] = k.split(',').map(Number); g.fillStyle = C.foe2 + Math.min(.32, .08 * n) + ')'; g.fillRect(GX + c * CS, GY + r * CS, CS, CS); }
-  outline(new Set(heat.keys()), 'rgba(0,0,0,0)', C.foe2 + '.6)');
-  if (mineSel) outline(rangeCells(st, s, UI.wi), C.acc2 + '.10)', C.acc);
+  outline(RCACHE.edge, 'rgba(0,0,0,0)', C.foe2 + '.6)');
+  if (RCACHE.mine) outline(RCACHE.mine, C.acc2 + '.10)', C.acc);
 }
 function rangeLabel(st, s) {
   const foeSel = s && !s.dead && s.side === 'E', mineSel = s && !s.dead && s.side === 'P';
@@ -815,8 +839,8 @@ function drawFiche(st, s, B) {
   g.save(); g.beginPath(); g.rect(24, 784, 96, 152); g.clip(); g.fillStyle = 'rgba(255,255,255,.03)'; g.fillRect(24, 784, 96, 152);
   drawSprite(s.t, 72, 860, fitScale(s.t, 148)); g.restore();
   const T = TYPES[s.t], foe = s.side === 'E';
-  txt(foe ? T.name : `${T.name} ${s.name || ''}`.trim(), 134, 786, foe ? C.foe : C.txt, F.ui(25), 'left', 2);
-  txt(`${T.n} CASE${T.n > 1 ? 'S' : ''} · VITESSE ${spdOf(s)}${T.w[0] ? ' · PORTÉE ' + wRng(s, T.w[UI.wi] || T.w[0]) : ''}`, 134, 816, C.dim, F.mono(14));
+  txt(foe ? T.name : `${T.name} ${s.name || ''}`.trim(), 134, 786, foe ? C.foe : C.txt, F.ui(25), 'left', 2, 280);
+  txt(`${T.n} CASE${T.n > 1 ? 'S' : ''} · VITESSE ${spdOf(s)}${T.w[0] ? ' · PORTÉE ' + wRng(s, T.w[UI.wi] || T.w[0]) : ''}`, 134, 816, C.dim, F.mono(14), 'left', 0, 380);
   txt('COQUE', 134, 840, C.dim, F.mono(14)); meter(198, 844, 150, s.hull, s.hmax, s.hull / s.hmax > .5 ? C.ok : C.foe); txt(`${s.hull}/${s.hmax}`, 356, 840, C.txt, F.mono(14));
   txt('BOUCL.', 410, 840, C.dim, F.mono(14)); meter(466, 844, 50, s.sh, Math.max(s.shMax, s.sh), C.ally);
   if (foe || T.temp && !canAct(st, s)) { para(`${T.skill} : ${T.sdesc}`, 134, 864, 250, C.dim, F.ui(16), 18); endBtn(); return; }
@@ -881,9 +905,10 @@ function drawMap() {
   const N = run.map.nodes, here = run.at, next = nodeAt(run, here).links, seen = new Set(run.visited);
   for (const a of N) for (const b of a.links) {
     const B = N[b], done = seen.has(a.id) && seen.has(b), nx = a.id === here;
-    g.strokeStyle = done ? C.ally2 + '.8)' : nx ? C.acc : 'rgba(150,170,200,.25)'; g.lineWidth = nx ? 2 : 1;
-    g.setLineDash(done ? [] : nx ? [6, 6] : [3, 7]); g.lineDashOffset = nx ? -now * 20 : 0;
-    g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(B.x, B.y); g.stroke(); g.setLineDash([]);
+    g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(B.x, B.y);
+    if (nx) { g.strokeStyle = C.acc2 + '.25)'; g.lineWidth = 9; g.stroke(); }   // halo du saut possible
+    g.strokeStyle = done ? C.ally2 + '.9)' : nx ? C.acc : 'rgba(170,190,220,.55)'; g.lineWidth = done ? 2.5 : nx ? 3.5 : 2;
+    g.setLineDash(done ? [] : nx ? [12, 7] : [5, 7]); g.lineDashOffset = nx ? -now * 24 : 0; g.stroke(); g.setLineDash([]);
   }
   for (const nd of N) {
     const done = seen.has(nd.id) && nd.id !== here, isNext = next.includes(nd.id), { x, y, k } = nd;
@@ -931,7 +956,7 @@ function drawShop() {
   topBar('COMPTOIR', 'MARCHÉ LIBRE DE KARN', `CRÉDITS ${run.cr}`, `CARBURANT ${pad2(run.fuel)}`);
   const row = (y, h, title, sub, price, label, act, ok, sold) => {
     frameBox(16, y, LW - 32, h, sold ? 'rgba(125,138,158,.4)' : C.dim, 8);
-    txt(title, 32, y + 12, sold ? C.dim : C.txt, F.ui(22), 'left', 2); txt(sub, 32, y + 40, C.dim, F.ui(17), 'left', 1);
+    txt(title, 32, y + 10, sold ? C.dim : C.txt, F.ui(22), 'left', 2, LW - 220); wrapLines(sub, LW - 226, F.ui(16)).slice(0, 2).forEach((l, i) => txt(l, 32, y + 37 + i * 18, C.dim, F.ui(16), 'left', 0, LW - 226));
     btn(LW - 170, y + (h - 46) / 2, 138, 46, sold ? 'VENDU' : `${label} · ${price}`, act, { size: 17, ls: 1, off: sold || !ok, primary: ok && !sold });
   };
   row(112, 74, 'CARBURANT', '1 unité pour un saut', 10, 'ACHETER', () => { buy(run, 'fuel'); save(); }, run.cr >= 10);
@@ -942,7 +967,7 @@ function drawShop() {
   const o = sh.ship, T = TYPES[o.t], full = run.fleet.length >= 5;
   frameBox(16, 584, LW - 32, 150, o.sold ? 'rgba(125,138,158,.4)' : C.dim, 8);
   g.save(); g.beginPath(); g.rect(24, 592, 96, 134); g.clip(); drawSprite(o.t, 72, 659, fitScale(o.t, 130)); g.restore();
-  txt(`${T.name} « ${o.name} »`, 132, 596, C.txt, F.ui(21), 'left', 1);
+  txt(`${T.name} « ${o.name} »`, 132, 596, C.txt, F.ui(21), 'left', 1, LW - 164);
   txt(`${T.n} CASE${T.n > 1 ? 'S' : ''} · COQUE ${T.hull} · BOUCL. ${T.sh} · VIT. ${T.spd}`, 132, 624, C.dim, F.mono(13));
   para(`${T.skill} : ${T.sdesc}`, 132, 646, 220, C.dim, F.ui(15), 17);
   btn(LW - 170, 662, 138, 46, o.sold ? 'RECRUTÉ' : full ? 'FLOTTE PLEINE' : `RECRUTER · ${o.price}`, () => { buy(run, 'ship'); save(); }, { size: 16, ls: 1, off: o.sold || full || run.cr < o.price, primary: !o.sold && !full && run.cr >= o.price });
@@ -981,24 +1006,24 @@ function drawHangar() {
     g.save(); g.beginPath(); g.rect(24, y + 6, 100, h - 12); g.clip();
     g.strokeStyle = 'rgba(140,170,210,.08)'; for (let k = 0; k < 12; k++) { g.beginPath(); g.moveTo(24 + k * 16.5, y); g.lineTo(24 + k * 16.5, y + h); g.stroke(); g.beginPath(); g.moveTo(24, y + 6 + k * 16.5); g.lineTo(124, y + 6 + k * 16.5); g.stroke(); }
     drawSprite(f.t, 74, y + h / 2, fitScale(f.t, h - 14)); g.restore();
-    txt(`${T.name} « ${f.name} »`, 138, y + 8, C.txt, F.ui(21), 'left', 1);
+    txt(`${T.name} « ${f.name} »`, 138, y + 8, C.txt, F.ui(21), 'left', 1, LW - 180);
     const pm = UI.pick != null ? run.stock[UI.pick] : null;
-    if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 34, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13));
-    else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ')}`, 138, y + 34, C.dim, F.mono(13));
+    if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 34, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13), 'left', 0, LW - 180);
+    else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ')}`, 138, y + 34, C.dim, F.mono(13), 'left', 0, LW - 180);
     txt('COQUE', 138, y + 54, C.dim, F.mono(13)); meter(196, y + 58, 200, f.hull, m, f.hull / m > .5 ? C.ok : C.foe); txt(`${f.hull}/${m}`, 404, y + 54, C.txt, F.mono(13));
     const ns = slotsOf(f.t), sy = y + h - 44;
     for (let k = 0; k < ns; k++) {
       const x = 138 + k * 124, md = f.mods[k], can = !md && UI.pick != null;
       g.strokeStyle = md ? C.acc2 + '.7)' : can ? C.acc : 'rgba(140,160,190,.3)'; g.lineWidth = can ? 2 : 1; g.setLineDash(md ? [] : [4, 4]); g.strokeRect(x + .5, sy + .5, 116, 36); g.setLineDash([]);
-      txt(md ? MODS[md].name : can ? 'POSER ICI' : 'LIBRE', x + 58, sy + 9, md ? C.txt : can ? C.acc : C.dim, F.ui(16), 'center', 1);
+      txt(md ? MODS[md].name : can ? 'POSER ICI' : 'LIBRE', x + 58, sy + 9, md ? C.txt : can ? C.acc : C.dim, F.ui(16), 'center', 1, 104);
       zone(x, sy, 116, 36, () => { if (md) { uninstall(run, f.uid, k); save(); } else if (UI.pick != null && install(run, f.uid, run.stock[UI.pick])) { UI.pick = null; save(); } });
     }
   });
   frameBox(16, 770, LW - 32, 110, C.acc, 10);
   txt('RÉSERVE DE MODULES', 32, 780, C.acc, F.mono(14), 'left', 3);
-  if (!run.stock.length) txt('Vide. Les contacts lourds rapportent un module ; le comptoir en vend.', 32, 812, C.dim, F.ui(17));
-  else if (UI.pick != null) txt(`${MODS[run.stock[UI.pick]].name} : ${MODS[run.stock[UI.pick]].long}`, 32, 858, C.acc, F.ui(17), 'left');
-  else txt('Touche un module pour voir ce qu\'il donne, puis un emplacement libre.', 32, 858, C.dim, F.ui(16), 'left');
+  if (!run.stock.length) txt('Vide. Les contacts lourds rapportent un module ; le comptoir en vend.', 32, 812, C.dim, F.ui(17), 'left', 0, LW - 64);
+  else if (UI.pick != null) txt(`${MODS[run.stock[UI.pick]].name} : ${MODS[run.stock[UI.pick]].long}`, 32, 858, C.acc, F.ui(17), 'left', 0, LW - 64);
+  else txt('Touche un module pour voir ce qu\'il donne, puis un emplacement libre.', 32, 858, C.dim, F.ui(16), 'left', 0, LW - 64);
   run.stock.forEach((m, i) => { const x = 32 + (i % 4) * 122, y = 802 + Math.floor(i / 4) * 30; if (i > 7) return;
     btn(x, y, 114, 26, MODS[m].name, () => { UI.pick = UI.pick === i ? null : i; }, { size: 14, ls: 1, primary: UI.pick === i }); });
   if (run.stock.length > 8) txt(`+${run.stock.length - 8}`, LW - 32, 780, C.acc, F.mono(14), 'right');
@@ -1116,7 +1141,7 @@ function resize() {
   const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
   cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
   cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
-  K = Math.max(.5, sc * dpr); cv.width = Math.round(LW * K); cv.height = Math.round(LH * K);
+  K = Math.max(.5, Math.min(2, sc * dpr)); STATIC.key = ''; cv.width = Math.round(LW * K); cv.height = Math.round(LH * K);
 }
 window.addEventListener('resize', resize);
 Object.assign(window.Nebula, { UI, ANIM, recordEnd, save, store, makeShop });
