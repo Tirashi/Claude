@@ -4,7 +4,8 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 
 ## Maquettes de style déjà faites (artefacts)
 - **Nebula, chantier naval** (catalogue de 11 vaisseaux + 5 pirates, 3 tailles de coque, jauges et capacités) : https://claude.ai/artifact/8umubGbkPTmeoTvKtmSPX8 — source dans `maquettes/nebula-chantier-naval.html`.
-- **Nebula**, rogue-lite spatial (titre, carte de navigation, combat tactique, hangar ; ambiances ambre et cyan) : https://claude.ai/artifact/4NpBo4SY7oDYSwc2GnJKoD — version 3 : vaisseaux en relief (cartes de hauteurs, ombres portées, acier sombre et marquages ambre, pirates rouillés), ambiance **ambre** retenue, vaisseaux sur plusieurs cases. (Version 1 pixel art « jouet » : pas aimée ; version 2 : trop blanche, pas assez de relief.) Source dans `maquettes/nebula.html` (moteur de vaisseaux à panneaux de coque, nébuleuse et planètes réutilisables).
+- **Nebula** — ✅ session 1 réalisée (secteur 1 jouable) : https://claude.ai/artifact/EPDtjTHPDsCnYKjtHCuxwY, dans `nebula/`. Sessions 2 et 3 à venir.
+- **Nebula**, maquette des écrans (titre, carte de navigation, combat tactique, hangar ; ambiances ambre et cyan) : https://claude.ai/artifact/4NpBo4SY7oDYSwc2GnJKoD — version 3 : vaisseaux en relief (cartes de hauteurs, ombres portées, acier sombre et marquages ambre, pirates rouillés), ambiance **ambre** retenue, vaisseaux sur plusieurs cases. (Version 1 pixel art « jouet » : pas aimée ; version 2 : trop blanche, pas assez de relief.) Source dans `maquettes/nebula.html` (moteur de vaisseaux à panneaux de coque, nébuleuse et planètes réutilisables).
 - Maquette 32 bits d'Injagility : https://claude.ai/artifact/TymnL37HHZbjo2BTgMT5Kj
 - 9 coups de cœur + 4 jeux de bateaux en 32 bits : https://claude.ai/artifact/XzRmvgNKZeSMRUAM1NuFsA
 - Amiral en HD-2D : https://claude.ai/artifact/UNpVXyxYPmRUsJuTs8Zuvb

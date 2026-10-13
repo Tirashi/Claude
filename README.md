@@ -12,6 +12,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`orbite/index.html`](orbite/index.html) : **Orbite**, un jeu de physique en 32 bits : lancer une sonde dont la trajectoire est courbée par la gravité des planètes pour atteindre une balise, en 30 niveaux.
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
+- [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
 - [`snake/index.html`](snake/index.html) : **Snake**.
 - [`asteroids/index.html`](asteroids/index.html) : **Asteroids**.
@@ -138,6 +139,18 @@ Un puzzle de logique sur les règles du **Hashi**, dans un ciel étoilé en 32 b
 
 ---
 
+## Nebula
+
+Rogue-lite tactique dans l'espace, vaisseaux en relief (première version jouable : le secteur 1).
+
+- La **flotte d'escorte** (porte-vaisseaux, frégate, chasseur) traverse la **Ceinture de Karn** : une carte de 7 étages de balises jusqu'à l'**amiral rouillé**. Chaque saut coûte 1 carburant ; sans carburant, chaque vaisseau perd 2 de coque.
+- **Combat** sur une grille de 7×9 : les vaisseaux occupent 1, 2 ou 3 cases. À chaque tour, les pirates se déplacent puis **annoncent en rouge la case qu'ils vont frapper** : on sort de la case, ou on détruit le pirate avant la fin du tour. Chaque vaisseau se déplace (cases bleues) puis agit une fois. Les astéroïdes bloquent les tirs ; le bouclier encaisse d'abord et remonte de 1 par tour. Un vaisseau détruit est perdu pour la partie.
+- Capacités : riposte du chasseur, laser ou missile de la frégate, baies du porte-vaisseaux (chasseur léger ou drones), torpilles du bombardier, essaim des drones, bulle de l'Égide. Pirates : intercepteurs en meute, brûlots kamikazes, croiseurs lance-torpilles, l'amiral et ses renforts.
+- Entre les combats : **comptoir** (carburant, réparations, modules, recrues), **dock** (réparation ou module gratuit), **hangar** pour poser les modules (blindage, bouclier, propulseurs, ciblage, canons Mk2).
+- Score : 1000 par secteur terminé, 20 par pirate détruit, plus les crédits restants. Partie sauvegardée à chaque étape. Le record fait partie des classements et du transfert de sauvegardes.
+
+---
+
 ## Alunissage
 
 Poser un module lunaire en douceur, site après site.
@@ -172,7 +185,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire, Alunissage), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire, Alunissage, Nebula), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -188,6 +201,7 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Amiral !** : la victoire en le moins de tours, par niveau de l'ordinateur (Mousse, Capitaine, Amiral).
 - **Orbite** : le total d'étoiles gagnées sur les 30 niveaux.
 - **Alunissage** : la meilleure mission et la mission du jour.
+- **Nebula** : le meilleur score.
 - **Pont stellaire** : le Ciel du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille (7×7, 9×9, 11×11, plus 30 secondes par indice) et le nombre de constellations dessinées.
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).

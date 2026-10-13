@@ -152,3 +152,12 @@ Cartouche dans le menu (icône 16×16 : silhouette de vaisseau ambre), transfert
 - Simulateur de combat sans affichage dans `window.Nebula` : faire jouer des combats automatiques (IA joueur simple) pour vérifier qu'aucun combat n'est impossible ni trivial, et que la partie du jour est identique à graine égale.
 - Captures Playwright sur téléphone (390×780) de chaque écran, avec `outils/captures.js`.
 - Classements avec `outils/faux-classements.js`.
+
+## 17. Session 1 : ce qui a été fait, écarts et réglages
+- **Pirates** : ils se déplacent **au début du tour** (déplacement animé), puis annoncent leurs tirs ; les tirs partent à la FIN DU TOUR (choix de l'utilisateur).
+- **Équilibrage** (choix de l'utilisateur d'après `outils/nebula-simulateur.js`) : avec les valeurs du § 5, une IA attentive esquivait tout (0 coque perdue). Réglages : la **torpille du croiseur et les tourelles de l'amiral font 2 dégâts sur les 4 cases voisines** de la case visée (`TUNE.cross`), et le secteur 1 a des pirates **+50 % de coque** et **+1 pirate** par combat (`SECTORS[0].mult`, `extra`). Résultat de l'IA attentive : contact ≈ 1–2 de coque perdue, contact lourd ≈ 7, amiral ≈ 1 ; une IA qui ignore les annonces perd l'amiral.
+- **Fin de partie** : après l'amiral du secteur 1, la partie se termine (« SECTEUR LIBÉRÉ ») ; les +3000 de victoire finale viendront avec le secteur 3.
+- Modules de la session 1 : blindage, bouclier renforcé, propulseurs, ciblage, canons Mk2 (posés au hangar en touchant module puis emplacement, au lieu de les glisser).
+- Récompenses : contact 20–35 cr (+1 carburant une fois sur deux, module 1 fois sur 4), contact lourd 50–70 cr, 1 carburant et un module, amiral 100 cr et un module. Départ : 40 crédits, 6 carburant.
+- Baies du porte-vaisseaux : bouton BAIE (prêt tous les 2 tours), sans consommer l'action du porte-vaisseaux ; le vaisseau lancé agit au tour suivant.
+- Pas encore : épaves, nébuleuses, partie du jour (bouton grisé), données stellaires et déblocages (comptées dans `nebula.meta`, pas encore dépensables), tutoriel, manuel (un écran RÈGLES en 6 rubriques le remplace), nappe d'ambiance.
