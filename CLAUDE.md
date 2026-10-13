@@ -47,9 +47,17 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 
 | Jeu | Lien |
 |---|---|
+| Accueil de la Ludothèque (`index.html`) | https://claude.ai/artifact/2ThkvtRxf5y61K7bJWiAX7 |
+| Amiral ! | https://claude.ai/artifact/XqUmx4zyyEARcrVjDHZE7v |
+| Le Club d'agility | https://claude.ai/artifact/BT1R6L5DFd18w9A3XYghuc |
+| Picross Dex | https://claude.ai/artifact/Ctm7ugtEDTNNCs6ExDViXQ |
+| Lignée | https://claude.ai/artifact/LKCMLo7P1pC7QEJ5UyqcJA |
+| Injagility, Infini (`injagility/index.html`) | https://claude.ai/artifact/Tk729YfzNqNXeBqfZYjs7k |
+| Injagility, Parcours (`injagility/parcours.html`) | https://claude.ai/artifact/LxcviTcJyAAGWd32HwPGmb |
 | Orbite | https://claude.ai/artifact/UysU574KpYMa7DdHhKsaHv |
 | Pont stellaire | https://claude.ai/artifact/Twgkpb1scdCh2Th6Nh35bF |
-| Queens, Picross Dex, Lignée, Injagility, Touché Coulé, Amiral !, Club d'agility, Tetris, Snake, Asteroids, Solitaire, Jeu de la vie | liens à retrouver (les demander à l'utilisateur) |
+
+Queens, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie **n'ont pas d'artefact** : on les joue sur le site (https://tirashi.github.io/Claude/). Ne pas en créer sans demande. Les maquettes de style sont listées dans `IDEES.md`.
 
 ## En cours / à vérifier
 - Orbite : les niveaux 12, 23, 25, 28 et 30 sont les plus serrés (8 à 11 tirs robustes) ; à ajuster si l'utilisateur ou son fils les trouvent trop durs.

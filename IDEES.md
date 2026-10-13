@@ -3,6 +3,7 @@
 Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici les nouvelles idées et maquettes.
 
 ## Maquettes de style déjà faites (artefacts)
+- Maquette 32 bits d'Injagility : https://claude.ai/artifact/TymnL37HHZbjo2BTgMT5Kj
 - 9 coups de cœur + 4 jeux de bateaux en 32 bits : https://claude.ai/artifact/XzRmvgNKZeSMRUAM1NuFsA
 - Amiral en HD-2D : https://claude.ai/artifact/UNpVXyxYPmRUsJuTs8Zuvb
 - Amiral en low poly : https://claude.ai/artifact/G2by9gwxhq79KTep63FPTH
