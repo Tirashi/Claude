@@ -1,0 +1,130 @@
+<title>Filtres RPG, suite</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : quatre variantes des menus A (fenêtre bleue) et B (commandes noir et blanc), chacune montrée
+   en situation, en haut d'un accueil de téléphone avec une cartouche dessous. Thème sombre de la Ludothèque. */
+:root {
+  --night: #110d22; --night-2: #1e1840; --ink: #0d0a18; --text: #f2f0ff; --dim: #a9a6d8; --gold: #ffd23f;
+  --f-display: "Press Start 2P", "Courier New", monospace; --f-body: "VT323", "Lucida Console", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color: var(--text);
+  font-family: var(--f-body); font-size: 21px; line-height: 1.25; padding-inline: 16px; padding-block: 32px 56px; }
+.wrap { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(16px, 4vw, 26px); color: var(--gold); line-height: 1.4; text-shadow: 3px 3px 0 #b8571a, 5px 5px 0 #000; }
+.lead, .cap { margin: 0; color: var(--dim); max-width: 70ch; }
+.cap b { color: var(--gold); font-family: var(--f-display); font-weight: 400; font-size: 10px; margin-right: 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 34px 26px; }
+.demo { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* un écran de téléphone : le filtre, puis le début de l'étagère */
+.phone { width: 100%; max-width: 360px; margin: 0 auto; background: var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px;
+  border: 3px solid #000; border-radius: 20px; box-shadow: 0 0 0 6px #232c3a, 8px 8px 0 6px #000; padding: 18px 14px 0; height: 420px; overflow: hidden; display: flex; flex-direction: column; gap: 16px; }
+.cart { flex: none; background: #4b4a5c; border: 4px solid var(--ink); border-radius: 10px 10px 4px 4px; padding: 10px 10px 0; box-shadow: inset 3px 3px 0 #6e6d84, 5px 5px 0 #000; }
+.cart div { height: 230px; border: 3px solid var(--ink); background: var(--lb); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.cart div b { font-family: var(--f-display); font-weight: 400; font-size: 12px; color: var(--lt); text-shadow: 2px 2px 0 rgba(0,0,0,.5); }
+.cart div i { font-style: normal; font-size: 19px; color: #dfe5ff; padding: 0 12px; text-align: center; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; text-align: left; }
+:focus-visible { outline: 3px dashed var(--gold); outline-offset: 3px; }
+@keyframes bob { 50% { transform: translateX(-3px); } }
+@keyframes bobY { 50% { transform: translateY(-3px); } }
+@keyframes blink { 50% { opacity: .2; } }
+@keyframes caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.hand { width: 26px; height: 18px; image-rendering: pixelated; flex: none; }
+
+/* A1 · fenêtre bleue sur une ligne, la main au-dessus du choix */
+.blue { background: linear-gradient(#3a4cc8, #141a6a); border: 3px solid #fff; border-radius: 6px; box-shadow: 0 0 0 3px #000, 4px 4px 0 3px #000; }
+.a1 { display: grid; grid-template-columns: repeat(4, 1fr); padding: 26px 6px 10px; position: relative; }
+.a1 button { position: relative; text-align: center; font-family: var(--f-display); font-size: 7px; color: #fff; text-shadow: 2px 2px 0 #000; padding: 4px 0; line-height: 1.6; }
+.a1 button small { display: block; font-family: var(--f-body); font-size: 17px; color: #b9c4ff; text-shadow: none; }
+.a1 button .hand { position: absolute; left: 50%; top: -22px; margin-left: -9px; transform: rotate(90deg); animation: bobY .5s steps(2) infinite; }
+.a1 button.on { color: var(--gold); }
+
+/* A2 · fenêtre bleue en colonne + bulle de description qui s'écrit lettre par lettre */
+.a2 { display: grid; grid-template-columns: 140px 1fr; gap: 10px; }
+.a2 .list { padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
+.a2 .list button { display: flex; align-items: center; gap: 4px; font-family: var(--f-display); font-size: 8px; color: #fff; text-shadow: 2px 2px 0 #000; padding: 6px 0; }
+.a2 .list button .hand { animation: bob .5s steps(2) infinite; }
+.a2 .list button:not(.on) .hand { visibility: hidden; }
+.a2 .say { padding: 10px; font-size: 19px; color: #fff; line-height: 1.2; }
+.a2 .say::after { content: "▼"; display: block; text-align: right; font-size: 12px; animation: caret .6s steps(1) infinite; }
+
+/* B1 · commandes noir et blanc sur une ligne, comptes au-dessus comme des PV */
+.dq { background: #000; border: 4px double #fff; border-radius: 4px; }
+.b1 { padding: 10px 8px; display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 4px; }
+.b1 button { position: relative; font-family: var(--f-display); font-size: 8px; color: #fff; padding: 6px 2px 6px 14px; }
+.b1 button.on::before { content: "▶"; position: absolute; left: 0; top: 6px; font-size: 8px; animation: blink .7s steps(1) infinite; }
+.b1 button small { display: block; margin-top: 6px; font-size: 6px; color: #9a9a9a; }
+.b1 button.on small { color: var(--gold); }
+.stat { display: flex; justify-content: space-between; padding: 8px 10px; font-family: var(--f-display); font-size: 7px; color: #fff; line-height: 1.8; }
+.stat b { font-weight: 400; color: var(--gold); }
+
+/* B2 · commandes en 2×2 + boîte de dialogue « QUE VEUX-TU FAIRE ? » */
+.b2 { display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; }
+.b2 .cmd { padding: 10px 6px; display: grid; grid-template-columns: 1fr; gap: 6px; }
+.b2 .cmd button { position: relative; font-family: var(--f-display); font-size: 8px; color: #fff; padding: 5px 0 5px 16px; }
+.b2 .cmd button.on::before { content: "▶"; position: absolute; left: 2px; top: 5px; font-size: 8px; animation: blink .7s steps(1) infinite; }
+.b2 .talk { padding: 10px; font-size: 19px; color: #fff; line-height: 1.2; display: flex; flex-direction: column; gap: 6px; }
+.b2 .talk em { font-style: normal; font-family: var(--f-display); font-size: 7px; color: var(--gold); }
+.note { margin: 0; border-top: 2px dashed rgba(255,255,255,.15); padding-top: 16px; color: var(--dim); max-width: 78ch; }
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>FILTRES RPG · V6</h1>
+    <p class="lead">Quatre variantes des menus A (fenêtre bleue) et B (commandes noir et blanc), montrées en situation en haut de l'accueil sur un téléphone. Tout est cliquable ; les flèches du clavier marchent aussi.</p>
+  </header>
+  <section class="grid">
+    <div class="demo"><div class="phone" data-demo="a1"><div class="blue a1">
+        <button data-f="TOUS" class="on">TOUS<small>16</small></button><button data-f="FAVORIS">FAVORIS<small>3</small></button><button data-f="NOUVEAU">NOUVEAU<small>5</small></button><button data-f="DU JOUR">DU JOUR<small>3</small></button></div>
+        <div class="cart" data-cart><div></div></div></div>
+      <p class="cap"><b>A1 · FENETRE BLEUE EN LIGNE</b>La fenêtre bleue sur une seule ligne, très peu haute ; la petite main pointe vers le bas sur le filtre choisi et rebondit. Le nombre de jeux sous chaque nom.</p></div>
+
+    <div class="demo"><div class="phone" data-demo="a2"><div class="a2"><div class="blue list">
+        <button data-f="TOUS" class="on">TOUS</button><button data-f="FAVORIS">FAVORIS</button><button data-f="NOUVEAU">NOUVEAU</button><button data-f="DU JOUR">DU JOUR</button></div><div class="blue say" data-say></div></div>
+        <div class="cart" data-cart><div></div></div></div>
+      <p class="cap"><b>A2 · FENETRE BLEUE ET BULLE</b>La liste avec la main à gauche, et à droite une bulle qui s'écrit lettre par lettre comme un dialogue de RPG, avec la flèche ▼ qui clignote.</p></div>
+
+    <div class="demo"><div class="phone" data-demo="b1"><div class="dq stat"><span>LUDOTHEQUE</span><span>JEUX <b data-n>16</b>/16</span></div>
+        <div class="dq b1"><button data-f="TOUS" class="on">TOUS<small>16</small></button><button data-f="FAVORIS">FAVORIS<small>3</small></button><button data-f="NOUVEAU">NOUVEAU<small>5</small></button><button data-f="DU JOUR">DU JOUR<small>3</small></button></div>
+        <div class="cart" data-cart><div></div></div></div>
+      <p class="cap"><b>B1 · COMMANDES EN LIGNE</b>Le menu noir à double bord blanc sur une ligne, le curseur ▶ qui clignote, et au-dessus une barre « de héros » : JEUX 3/16 comme des points de vie.</p></div>
+
+    <div class="demo"><div class="phone" data-demo="b2"><div class="b2"><div class="dq cmd">
+        <button data-f="TOUS" class="on">TOUS</button><button data-f="FAVORIS">FAVORIS</button><button data-f="NOUVEAU">NOUVEAU</button><button data-f="DU JOUR">DU JOUR</button></div>
+        <div class="dq talk"><em>LE GARDIEN</em><span data-say></span></div></div>
+        <div class="cart" data-cart><div></div></div></div>
+      <p class="cap"><b>B2 · COMMANDES ET DIALOGUE</b>Les commandes en colonne et, à côté, le « gardien de la Ludothèque » qui parle : « Voici tes 3 jeux préférés. » Son texte s'écrit lettre par lettre.</p></div>
+  </section>
+  <p class="note">On peut aussi mélanger : la fenêtre bleue (A) avec le curseur ▶ de B, ou le menu noir (B) avec la main de A.</p>
+</div>
+<script>
+'use strict';
+const P = { k: '#0d0a18', w: '#f2f0ff' };
+const HAND = ['.....kkkk.................', '....kwwwwk................', 'kkkkwwwwwwkkkkkkkk........', 'kwwwwwwwwwwwwwwwwwk.......', 'kwwwwwwwwwkkkkkkkk........', 'kwwwwwwwwwk...............', 'kwwwwwwwwwkk..............', 'kwwwwwwwwwk...............', '.kkkkkkkkkk...............'];
+function hand() { const c = document.createElement('canvas'); c.width = 26; c.height = 9; c.className = 'hand'; const g = c.getContext('2d');
+  HAND.forEach((row, y) => [...row].forEach((ch, x) => { if (P[ch]) { g.fillStyle = P[ch]; g.fillRect(x, y, 1, 1); } })); return c; }
+const COUNT = { TOUS: 16, FAVORIS: 3, NOUVEAU: 5, 'DU JOUR': 3 };
+const SAY = { TOUS: 'Voici toute la Ludothèque : 16 jeux.', FAVORIS: 'Voici tes 3 jeux préférés.', NOUVEAU: '5 jeux tout neufs ou mis à jour !', 'DU JOUR': '3 défis t\'attendent aujourd\'hui.' };
+const CART = { TOUS: ['PICROSS DEX', '#cf2b34', '#fff7ec', 'Remplis la grille pour révéler un Pokémon.'], FAVORIS: ['TETRIS', 'linear-gradient(#3b2a8a,#160f45)', '#facc15', 'Empile les pièces, complète des lignes.'],
+  NOUVEAU: ['NEBULA', 'radial-gradient(circle at 75% 20%,#3a2a4a,#04060c 70%)', '#f2b24a', 'Mène ta flotte jusqu\'à l\'amiral pirate.'], 'DU JOUR': ['PONT STELLAIRE', 'radial-gradient(circle at 70% 25%,#24407a,#070a1c 75%)', '#ffd76a', 'Relie les étoiles, un ciel par jour.'] };
+document.querySelectorAll('[data-demo]').forEach(ph => {
+  const kind = ph.dataset.demo, btns = [...ph.querySelectorAll('[data-f]')], say = ph.querySelector('[data-say]'), n = ph.querySelector('[data-n]'), cart = ph.querySelector('[data-cart] div');
+  if (kind.startsWith('a')) btns.forEach(b => b.prepend(hand()));
+  let typer = null;
+  const pick = (b, focus) => {
+    btns.forEach(x => { x.classList.toggle('on', x === b); const h = x.querySelector('.hand'); if (h && kind === 'a1') h.style.visibility = x === b ? 'visible' : 'hidden'; });
+    const f = b.dataset.f, [t, lb, lt, d] = CART[f];
+    cart.style.setProperty('--lb', lb); cart.style.setProperty('--lt', lt); cart.innerHTML = `<b>${t}</b><i>${d}</i>`;
+    if (n) n.textContent = COUNT[f];
+    if (say) { clearInterval(typer); const text = SAY[f]; let k = 0; say.textContent = '';
+      typer = setInterval(() => { say.textContent = text.slice(0, ++k); if (k >= text.length) clearInterval(typer); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 28); }
+    if (focus) b.focus();
+  };
+  btns.forEach(b => b.addEventListener('click', () => pick(b)));
+  ph.addEventListener('keydown', e => { const i = btns.findIndex(b => b.classList.contains('on')), dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!dir) return; e.preventDefault(); pick(btns[(i + dir + btns.length) % btns.length], true); });
+  pick(btns[0]);
+});
+</script>
