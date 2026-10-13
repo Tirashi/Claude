@@ -1,0 +1,206 @@
+<title>Étagère des classements v3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : en haut, la page des classements en étagère de boîtes de jeu (cliquables) ; en bas, trois
+   filtres pour l'accueil qui ne sont pas des boutons rectangulaires : jetons d'arcade, manette, intercalaires.
+   Thème sombre unique, celui de la Ludothèque. */
+:root {
+  --night: #110d22; --night-2: #1e1840; --ink: #0d0a18; --text: #f2f0ff; --dim: #a9a6d8; --gold: #ffd23f; --pink: #ff8fb0; --wood: #7a4a24; --wood-2: #5a3418;
+  --f-display: "Press Start 2P", "Courier New", monospace; --f-body: "VT323", "Lucida Console", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color: var(--text);
+  font-family: var(--f-body); font-size: 21px; line-height: 1.25; padding-inline: 16px; padding-block: 32px 56px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(16px, 4vw, 26px); color: var(--gold); line-height: 1.4; text-shadow: 3px 3px 0 #b8571a, 5px 5px 0 #000; }
+h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 13px; color: var(--pink); letter-spacing: 2px; }
+.lead, .cap { margin: 0; color: var(--dim); max-width: 72ch; }
+.cap b { color: var(--gold); font-family: var(--f-display); font-weight: 400; font-size: 10px; margin-right: 6px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px dashed var(--gold); outline-offset: 3px; }
+
+/* ================= CLASSEMENTS : l'étagère ================= */
+.shelf { position: relative; padding: 18px 14px 0; background: linear-gradient(#1a1430, #120e24); border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 6px 6px 0 3px #000; }
+.spines { display: flex; align-items: flex-end; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 26px 6px 0; min-height: 250px; }
+.plank { height: 18px; margin: 0 -14px; background: linear-gradient(#9a643a, var(--wood) 40%, var(--wood-2)); border-top: 3px solid #b77a48; border-bottom: 3px solid var(--ink); }
+.spine { flex: none; position: relative; width: 50px; height: var(--h, 210px); border: 3px solid #000; cursor: pointer; padding: 0; overflow: visible;
+  background: repeating-linear-gradient(90deg, #2a2a2a 0 3px, #111 3px 7px); display: flex; flex-direction: column; align-items: center;
+  box-shadow: inset 3px 0 0 rgba(255,255,255,.12), inset -4px 0 0 rgba(0,0,0,.5); transition: transform .25s steps(4); transform-origin: bottom center; }
+.spine::before { content: ""; position: absolute; top: 0; bottom: 0; right: 4px; width: 3px; background: #e8264d; }
+.spine .ico { margin-top: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--c); border: 2px solid #000; }
+.spine canvas { width: 28px; height: 28px; image-rendering: pixelated; }
+.spine span { margin-top: 10px; writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--f-display); font-size: 10px; letter-spacing: 2px; white-space: nowrap;
+  background: linear-gradient(90deg, #fff 30%, #9fb4d6 55%, #fff 60%, #c9d6f0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #fff;
+  filter: drop-shadow(1px 1px 0 #000); }
+.spine .lab { position: absolute; bottom: 8px; left: 6px; right: 10px; height: 18px; background: var(--c); border: 2px solid #000; }
+.spine:hover { transform: translateY(-8px); }
+.spine.on { transform: translateY(-26px) rotate(-4deg); box-shadow: inset 3px 0 0 rgba(255,255,255,.12), inset -4px 0 0 rgba(0,0,0,.5), 0 0 0 3px var(--gold); }
+.spine .crown { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-style: normal; font-family: "Segoe UI Symbol", sans-serif; font-size: 18px; color: var(--gold); text-shadow: 2px 2px 0 #000; }
+@media (prefers-reduced-motion: reduce) { .spine { transition: none; } }
+.board { margin-top: 18px; display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 22px; background: #1e1840; border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 6px 6px 0 3px #000; padding: 18px; }
+@media (max-width: 680px) { .board { grid-template-columns: minmax(0, 1fr); } }
+.board { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); }
+.cover { position: relative; align-self: start; width: 100%; aspect-ratio: 300 / 210; display: grid; grid-template-columns: 28px 1fr; background: #111; border: 3px solid #000; box-shadow: 8px 8px 0 #000;
+  transform: perspective(900px) rotateY(-14deg); }
+.cover .stripe { background: repeating-linear-gradient(#2a2a2a 0 3px, #111 3px 7px); border-right: 3px solid #e8264d; display: flex; align-items: center; justify-content: center; }
+.cover .stripe i { writing-mode: vertical-rl; transform: rotate(180deg); font-style: normal; font-family: var(--f-display); font-size: 6px; color: #ddd; letter-spacing: 2px; }
+.cover .art { position: relative; background: var(--c); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.cover .art canvas { width: 88px; height: 88px; image-rendering: pixelated; margin-top: 22px; }
+.cover .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,.18), transparent 40%); }
+.cover b { position: absolute; left: 0; right: 0; top: 8px; text-align: center; font-family: var(--f-display); font-weight: 400; font-size: 15px; letter-spacing: 2px; line-height: 1.3; padding: 0 6px;
+  background: linear-gradient(#fff 30%, #9fb4d6 55%, #fff 60%, #c9d6f0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #fff; filter: drop-shadow(2px 2px 0 #000); }
+.res { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.res h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 14px; color: var(--gold); line-height: 1.5; }
+.views { display: flex; flex-wrap: wrap; gap: 8px; }
+.views button { font-family: var(--f-display); font-size: 8px; padding: 8px 10px; background: none; border: 0; border-bottom: 3px solid #3b3566; color: var(--dim); cursor: pointer; }
+.views button.on { color: var(--gold); border-color: var(--gold); }
+.rank { display: flex; flex-direction: column; gap: 4px; }
+.rank div { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 10px; background: #15112c; font-size: 22px; }
+.rank div b { font-family: var(--f-display); font-weight: 400; font-size: 10px; }
+.rank div:nth-child(1) b { color: var(--gold); } .rank div:nth-child(2) b { color: #d9e2f0; } .rank div:nth-child(3) b { color: #e09a5a; }
+.rank div.me { background: #23402c; }
+.rank em { font-style: normal; font-variant-numeric: tabular-nums; color: var(--text); }
+
+/* ================= FILTRES ================= */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 30px; }
+.demo { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.stage { background: #0b0818; border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 6px 6px 0 3px #000; padding: 18px 12px; min-height: 230px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.result { text-align: center; font-family: var(--f-display); font-size: 8px; color: var(--dim); line-height: 1.8; }
+.result b { color: var(--gold); font-weight: 400; }
+
+/* 1 · le cadran : un gros bouton rotatif, les genres tout autour */
+.dial { position: relative; width: 250px; height: 250px; margin: 0 auto; }
+.dial .knob { position: absolute; left: 75px; top: 75px; width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--ink);
+  background: radial-gradient(circle at 35% 30%, #8d89b8, #4b4a5c 60%, #2b2a38); box-shadow: 4px 4px 0 #000, inset 0 0 0 6px rgba(255,255,255,.08); transition: transform .35s steps(6); }
+.dial .knob::before { content: ""; position: absolute; left: 44px; top: 6px; width: 6px; height: 30px; background: var(--gold); border: 2px solid var(--ink); }
+.dial .knob::after { content: ""; position: absolute; inset: 30px; border-radius: 50%; background: #1e1840; border: 3px solid var(--ink); }
+.dial button { position: absolute; width: 60px; margin-left: -30px; margin-top: -12px; background: none; border: 0; cursor: pointer; padding: 2px; font-family: var(--f-display); font-size: 6px; color: var(--dim); text-align: center; line-height: 1.5; }
+.dial button::before { content: ""; display: block; width: 8px; height: 8px; margin: 0 auto 3px; border-radius: 50%; background: #3b3566; border: 2px solid var(--ink); }
+.dial button.on { color: var(--gold); } .dial button.on::before { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+@media (prefers-reduced-motion: reduce) { .dial .knob { transition: none; } }
+
+/* 2 · enseignes au néon sur un mur de briques */
+.wall { padding: 14px 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 18px;
+  background: repeating-linear-gradient(0deg, #2a1418 0 2px, transparent 2px 22px), repeating-linear-gradient(90deg, #2a1418 0 2px, transparent 2px 44px), #3a1c22; border: 3px solid var(--ink); }
+.neon { background: none; border: 0; cursor: pointer; padding: 6px 4px; font-family: var(--f-display); font-size: 11px; letter-spacing: 1px; color: #6a4a52; text-shadow: none; transition: all .15s steps(2); }
+.neon:nth-child(4n+1).on { color: #fff0f6; text-shadow: 0 0 4px #ff4d9a, 0 0 10px #ff4d9a, 0 0 18px #ff4d9a; }
+.neon:nth-child(4n+2).on { color: #f0fbff; text-shadow: 0 0 4px #5ce1ff, 0 0 10px #5ce1ff, 0 0 18px #5ce1ff; }
+.neon:nth-child(4n+3).on { color: #fffbe6; text-shadow: 0 0 4px #ffd23f, 0 0 10px #ffd23f, 0 0 18px #ffb000; }
+.neon:nth-child(4n).on { color: #f0fff4; text-shadow: 0 0 4px #5cff8a, 0 0 10px #5cff8a, 0 0 18px #5cff8a; }
+@keyframes flick { 0%, 100% { opacity: 1; } 92% { opacity: 1; } 94% { opacity: .4; } 96% { opacity: 1; } }
+.neon.on { animation: flick 3s infinite; }
+@media (prefers-reduced-motion: reduce) { .neon.on { animation: none; } }
+
+/* 3 · étiquettes suspendues à une tringle, qui se balancent */
+.rail { position: relative; height: 120px; }
+.rail::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 8px; background: linear-gradient(#d9e2f0, #8a90a8); border: 2px solid var(--ink); border-radius: 4px; }
+.tags { position: absolute; left: 0; right: 0; top: 14px; display: flex; justify-content: space-around; }
+.tag { position: relative; width: 52px; background: none; border: 0; padding: 0; cursor: pointer; transform-origin: 50% 0; animation: sway 3s ease-in-out infinite; }
+.tag:nth-child(2n) { animation-delay: -1.5s; }
+.tag::before { content: ""; display: block; width: 2px; height: var(--l, 30px); margin: 0 auto; background: #a9a6d8; }
+.tag em { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 2px 8px; font-style: normal; font-family: var(--f-display); font-size: 5px; color: #3a2a10; background: #e9dcb8;
+  border: 3px solid var(--ink); clip-path: polygon(50% 0, 100% 16%, 100% 100%, 0 100%, 0 16%); }
+.tag em canvas { width: 20px; height: 20px; image-rendering: pixelated; }
+.tag.on em { background: var(--gold); } .tag.on { animation: none; transform: translateY(8px); }
+@keyframes sway { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@media (prefers-reduced-motion: reduce) { .tag { animation: none; } }
+.note { margin: 0; border-top: 2px dashed rgba(255,255,255,.15); padding-top: 16px; color: var(--dim); max-width: 78ch; }
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>ETAGERE ET FILTRES · V3</h1>
+    <p class="lead">En haut, la page des classements en étagère : touche la tranche d'une boîte, elle sort du rang et son classement s'affiche. En bas, trois filtres pour l'accueil, sans boutons rectangulaires. Tout est cliquable ; noms et scores sont des exemples.</p>
+  </header>
+
+  <h2>CLASSEMENTS · L'ETAGERE</h2>
+  <div class="shelf"><div class="spines" id="spines"></div><div class="plank"></div></div>
+  <section class="board" id="board" aria-live="polite"></section>
+  <p class="cap"><b>COMMENT CA MARCHE</b>Une tranche par jeu, à ses couleurs, avec son icône en haut et son nom en dessous ; les hauteurs varient un peu comme de vraies boîtes. Une couronne au-dessus des jeux où tu détiens le record. Les tranches reprennent la boîte de l'accueil (noir strié, filet rouge, titre chromé, couleur du jeu en haut et en bas). La boîte touchée se soulève et penche ; dessous, sa face avant et le classement, avec ses différents tableaux.</p>
+
+  <h2>FILTRES DE L'ACCUEIL</h2>
+  <section class="filters">
+    <div class="demo"><div class="stage"><div class="dial" id="dial"><div class="knob" id="knob"></div></div><div class="result" id="r1"></div></div>
+      <p class="cap"><b>1 · CADRAN</b>Un gros bouton rotatif de vieille console, les genres écrits tout autour. On touche un genre : le bouton tourne, l'aiguille dorée le pointe et sa lampe s'allume.</p></div>
+    <div class="demo"><div class="stage"><div class="wall" id="wall"></div><div class="result" id="r2"></div></div>
+      <p class="cap"><b>2 · ENSEIGNES AU NEON</b>Les genres écrits en néon sur un mur de briques de salle d'arcade. Éteints au repos ; celui qu'on touche s'allume (rose, bleu, jaune ou vert) et grésille de temps en temps.</p></div>
+    <div class="demo"><div class="stage"><div class="rail"><div class="tags" id="tags"></div></div><div class="rail"><div class="tags" id="tags2"></div></div><div class="result" id="r3"></div></div>
+      <p class="cap"><b>3 · ETIQUETTES</b>Des étiquettes en carton suspendues à une tringle, qui se balancent doucement, avec un pictogramme. Celle qu'on touche s'arrête, descend un peu et devient dorée.</p></div>
+  </section>
+  <p class="note">Le cadran et les étiquettes reprennent les mêmes pictogrammes que l'étagère des classements ; les néons misent tout sur la lumière.</p>
+</div>
+<script>
+'use strict';
+const P = { k: '#0d0a18', y: '#ffd23f', o: '#e09a2a', g: '#5cff8a', G: '#2f7a48', r: '#e8264d', w: '#f2f0ff', b: '#3b7bff', c: '#5ce1ff', p: '#b48cff', n: '#8a5a2a', s: '#a9a6d8', d: '#4b4a5c', l: '#d9e2f0' };
+const IC = {
+  star: ['.......y........', '......yyy.......', '......yyy.......', '.yyyyyyyyyyyyy..', '..yyyyyyyyyyy...', '...yyyyyyyyy....', '....yyyyyyy.....', '....yyy.yyy.....', '...yyy...yyy....', '...yy.....yy....'],
+  news: ['....g......g....', '.....g....g.....', '..gggggggggggg..', '..gwwwwwwwwwwg..', '..gwkwkwkwkwwg..', '..gwkkwkwkwkwg..', '..gwwwwwwwwwwg..', '..gggggggggggg..'],
+  day: ['..r.......r.....', '.rrrrrrrrrrrr...', '.wwwwwwwwwwww...', '.wkkwwwwwwwkw...', '.wwwwkkkkwwww...', '.wwwwkwwkwwww...', '.wwwwkkkkwwww...', '.wwwwwwwwwwww...'],
+  puzzle: ['....bbb.........', '...bbbbb........', '.bbbbbbbbbbb....', '.bbbbbbbbbbbbb..', '.bbbbbbbbbbbbb..', '.bbbbbbbbbbb....', '..bbbbbbbbb.....', '...bbb.bbb......'],
+  sword: ['...........ss...', '..........sws...', '.........sws....', '........sws.....', '..n....sws......', '...n..sws.......', '....nnss........', '....nns.........', '...n..n.........'],
+  target: ['.....rrrrr......', '...rrwwwwwrr....', '..rwwrrrrrwwr...', '..rwrrwwwrrwr...', '..rwrwwrwwrwr...', '..rwrrwwwrrwr...', '..rwwrrrrrwwr...', '...rrwwwwwrr....', '.....rrrrr......'],
+  planet: ['.......oooo.....', '.....oooooooo...', '....oooyyyoooo..', 'pppppppppppppppp', '....oooooooooo..', '.....oooooooo...', '.......oooo.....'],
+  dog: ['..nn......nn....', '..nnn....nnn....', '..nnnnnnnnnn....', '..nnwknnnwkn....', '..nnnnnnnnnn....', '...nnnkknnn.....', '....nnrrnn......', '.....nnnn.......'],
+  joy: ['......rr........', '.....rrrr.......', '......rr........', '.......k........', '.......k........', '..dddddddddd....', '..dllllllllld...', '..dddddddddd....'],
+  ball: ['.....kkkkk......', '...kkrrrrrkk....', '..krrrrrrrrrk...', '..krrkkkkkrrk...', '..kkkkwwwkkkk...', '..kwwkkkkkwwk...', '..kwwwwwwwwwk...', '...kkwwwwwkk....', '.....kkkkk......'],
+  tree: ['....gggggg......', '..ggggGggggg....', '.gggggggGgggg...', '.ggGggggggggg...', '..gggggGgggg....', '....ggnngg......', '......nn........', '.....nnnn.......'],
+  ship: ['.......s........', '......sss.......', '......scs.......', '.....sssss......', '....osssssso....', '...oossssssoo...', '..oo.sssss.oo...', '.....c...c......'],
+};
+function icon(name, size = 16) { const c = document.createElement('canvas'); c.width = 16; c.height = 16; const g = c.getContext('2d'), m = IC[name], oy = Math.floor((16 - m.length) / 2);
+  m.forEach((row, y) => [...row].forEach((ch, x) => { if (P[ch]) { g.fillStyle = P[ch]; g.fillRect(x, y + oy, 1, 1); } })); return c; }
+
+/* ---------- l'étagère des classements ---------- */
+const GAMES = [
+  { id: 'nebula', name: 'NEBULA', ic: 'ship', c: 'radial-gradient(circle at 75% 20%,#3a2a4a,#04060c 70%)', t: '#f2b24a', h: 226, views: ['MEILLEUR SCORE'], unit: 'pts', rows: [['Papa', 2480], ['Fiston', 1667], ['Toi', 1210, 1], ['Maman', 430]] },
+  { id: 'picross', name: 'PICROSS DEX', ic: 'ball', c: '#cf2b34', t: '#fff7ec', h: 214, views: ['POKEDEX', 'RECORDS', 'PAR POKEMON'], unit: 'capturés', rows: [['Maman', 88], ['Toi', 41, 1], ['Fiston', 12]], crown: 0 },
+  { id: 'lignee', name: 'LIGNEE', ic: 'tree', c: 'linear-gradient(#6b3f1f,#2f1a0c)', t: '#e0a83a', h: 198, views: ['ARBRE DU JOUR', 'PAR NIVEAU', 'ARBRES'], unit: 'arbres', rows: [['Toi', 34, 1], ['Papa', 29], ['Maman', 11]], crown: 1 },
+  { id: 'orbite', name: 'ORBITE', ic: 'planet', c: 'radial-gradient(circle at 30% 30%,#3a2a8a,#070a1c 75%)', t: '#6fd8ff', h: 220, views: ['ETOILES'], unit: '★', rows: [['Fiston', 78], ['Toi', 71, 1], ['Maman', 52]] },
+  { id: 'alu', name: 'ALUNISSAGE', ic: 'target', c: 'linear-gradient(#0a0c1e,#2c2a28)', t: '#e8e4d8', h: 206, views: ['MEILLEUR', 'DU JOUR'], unit: 'pts', rows: [['Toi', 3120, 1], ['Papa', 2890]], crown: 1 },
+  { id: 'pont', name: 'PONT STELLAIRE', ic: 'star', c: 'radial-gradient(circle at 70% 25%,#24407a,#070a1c 75%)', t: '#ffd76a', h: 236, views: ['CIEL DU JOUR', 'PAR TAILLE', 'CIELS'], unit: 'ciels', rows: [['Papa', 22], ['Toi', 19, 1]] },
+  { id: 'club', name: "CLUB D'AGILITY", ic: 'dog', c: 'linear-gradient(#3f8a37,#173a1a)', t: '#ffd23f', h: 232, views: ['REPUTATION', 'CHAMPION'], unit: 'pts', rows: [['Fiston', 940], ['Toi', 610, 1]] },
+  { id: 'tetris', name: 'TETRIS', ic: 'puzzle', c: 'linear-gradient(#3b2a8a,#160f45)', t: '#facc15', h: 190, views: ['MEILLEUR SCORE'], unit: 'pts', rows: [['Fiston', 25100], ['Papa', 18400], ['Toi', 9800, 1]] },
+  { id: 'amiral', name: 'AMIRAL !', ic: 'sword', c: 'linear-gradient(#1c579c,#0a1c40)', t: '#ffd23f', h: 204, views: ['MOUSSE', 'CAPITAINE', 'AMIRAL'], unit: 'tours', rows: [['Toi', 18, 1], ['Papa', 21]], crown: 1 },
+  { id: 'snake', name: 'SNAKE', ic: 'joy', c: 'linear-gradient(#377a28,#1c4214)', t: '#c4ff7a', h: 186, views: ['MEILLEUR SCORE'], unit: 'pts', rows: [['Papa', 412], ['Toi', 380, 1]] },
+];
+const spines = document.getElementById('spines'), board = document.getElementById('board');
+let cur = 0, view = 0;
+GAMES.forEach((g, i) => {
+  const b = document.createElement('button'); b.className = 'spine'; b.style.setProperty('--c', g.c); b.style.setProperty('--t', g.t); b.style.setProperty('--h', g.h + 'px');
+  b.setAttribute('aria-label', 'Classement : ' + g.name); const ic = document.createElement('i'); ic.className = 'ico'; ic.append(icon(g.ic)); b.append(ic);
+  const s = document.createElement('span'); s.textContent = g.name; if (g.name.length > 10) s.style.fontSize = '8px'; b.append(s); const lab = document.createElement('i'); lab.className = 'lab'; b.append(lab);
+  if (g.crown != null && g.rows[0][2]) { const k = document.createElement('i'); k.className = 'crown'; k.textContent = '♛'; b.append(k); }
+  b.addEventListener('click', () => { cur = i; view = 0; show(); }); spines.append(b);
+});
+function show() {
+  const g = GAMES[cur]; [...spines.children].forEach((b, i) => b.classList.toggle('on', i === cur));
+  board.style.setProperty('--c', g.c); board.style.setProperty('--t', g.t);
+  board.innerHTML = `<div class="cover"><span class="stripe"><i>LUDOTHEQUE 16 BITS</i></span><span class="art"></span></div><div class="res"><h3>${g.name} · ${g.views[view]}</h3><div class="views">${g.views.map((v, i) => `<button class="${i === view ? 'on' : ''}" data-v="${i}">${v}</button>`).join('')}</div>
+    <div class="rank">${g.rows.map((r, i) => `<div class="${r[2] ? 'me' : ''}"><b>${i ? i + 1 + 'E' : '1ER'}</b><span>${r[0]}</span><em>${r[1].toLocaleString('fr-FR')} ${g.unit}</em></div>`).join('')}</div></div>`;
+  const cv = board.querySelector('.cover .art'); cv.append(icon(g.ic)); const t = document.createElement('b'); t.textContent = g.name; cv.append(t);
+  board.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => { view = +b.dataset.v; show(); }));
+}
+show();
+
+/* ---------- filtres ---------- */
+const COUNT = { TOUS: 16, FAVORIS: 3, NOUVEAU: 5, 'DU JOUR': 4, LOGIQUE: 4, TACTIQUE: 3, ADRESSE: 3, ESPACE: 5, CHIENS: 2, ARCADE: 3 };
+const say = (el, f) => { el.innerHTML = `FILTRE : <b>${f}</b> · ${COUNT[f]} JEUX`; };
+const F = [['TOUS', 'joy'], ['FAVORIS', 'star'], ['NOUVEAU', 'news'], ['DU JOUR', 'day'], ['LOGIQUE', 'puzzle'], ['TACTIQUE', 'sword'], ['ADRESSE', 'target'], ['ESPACE', 'planet'], ['CHIENS', 'dog'], ['ARCADE', 'ball']];
+// 1 · cadran
+const dial = document.getElementById('dial'), knob = document.getElementById('knob'), r1 = document.getElementById('r1');
+F.forEach(([f], i) => { const ang = -90 + i * 360 / F.length, rad = ang * Math.PI / 180, b = document.createElement('button');
+  b.style.left = (125 + Math.cos(rad) * 104) + 'px'; b.style.top = (125 + Math.sin(rad) * 104) + 'px'; b.textContent = f; if (!i) b.className = 'on';
+  b.addEventListener('click', () => { [...dial.querySelectorAll('button')].forEach(x => x.classList.toggle('on', x === b)); knob.style.transform = `rotate(${ang + 90}deg)`; say(r1, f); }); dial.append(b); });
+say(r1, 'TOUS');
+// 2 · néons
+const wall = document.getElementById('wall'), r2 = document.getElementById('r2');
+F.forEach(([f], i) => { const b = document.createElement('button'); b.className = 'neon' + (i ? '' : ' on'); b.textContent = f;
+  b.addEventListener('click', () => { [...wall.children].forEach(x => x.classList.toggle('on', x === b)); say(r2, f); }); wall.append(b); });
+say(r2, 'TOUS');
+// 3 · étiquettes
+const tags = document.getElementById('tags'), tags2 = document.getElementById('tags2'), r3 = document.getElementById('r3'), allTags = [];
+F.forEach(([f, ic], i) => { const b = document.createElement('button'); b.className = 'tag' + (i ? '' : ' on'); b.style.setProperty('--l', (18 + (i % 3) * 14) + 'px');
+  const e = document.createElement('em'); e.append(icon(ic)); e.append(f); b.append(e); b.setAttribute('aria-label', f);
+  b.addEventListener('click', () => { allTags.forEach(x => x.classList.toggle('on', x === b)); say(r3, f); }); allTags.push(b); (i < 5 ? tags : tags2).append(b); });
+say(r3, 'TOUS');
+</script>
