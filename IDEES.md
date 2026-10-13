@@ -56,3 +56,15 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 
 ## Préférences notées
 - Cargo Stellaire et Station Alpha : retirés de la liste (pas retenus).
+
+## Page d'accueil (idées du 13/10)
+Réalisé le 13/10 ✅ : **favoris** (étoile sur chaque cartouche, favoris en tête), badges **NOUVEAU** / **MIS A JOUR** (3 jours), **filtres par genre**, **jeu à la une** dans une boîte de jeu (« TOUT NEUF ! »), **quoi de neuf**. Dates, genres et journal : `META` et `NEWS` dans `index.html` (à tenir à jour à chaque sortie ou mise à jour).
+
+À faire plus tard (plan proposé : session A = Reprendre ; session B = défis du jour + profil ; session C = activité de la famille) :
+- **Reprendre** : bannière « Continuer Nebula, secteur 1 / Club, semaine 12 » (un petit lecteur de la partie en cours par jeu, sans toucher aux jeux).
+- **Défis du jour** : encadré « Aujourd'hui » (Lignée, Pont stellaire, Alunissage, plus tard Nebula) coché quand c'est fait, avec le résultat et la place dans la famille.
+- **Mes records sur chaque cartouche** (« Record 1667 pts · 2e de la famille »).
+- **Profil** : pseudo, nombre de records, jeux joués, série de jours avec un défi du jour.
+- **Activité de la famille** (« Fiston a battu ton record à Orbite ») : demande un nouveau script SQL Supabase (historique des records), à lancer par l'utilisateur.
+- **Surprends-moi** : un jeu au hasard (animation de cartouche insérée).
+- **Trier** (récent, préféré, nom, dernière partie) ; **recherche** si la liste grandit encore.

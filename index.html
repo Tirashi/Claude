@@ -132,6 +132,50 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .saves-open{gap:12px; flex-wrap:wrap}
 .ranks-open{margin:0 0 14px}
 .ranks-open .saves-btn{text-decoration:none; font-size:12px; padding:13px 22px; color:#110d22; background:var(--gold); border-color:var(--gold)}
+
+/* ---------- accueil : jeu à la une (boîte de jeu), quoi de neuf, filtres, favoris, badges ---------- */
+.une{display:grid; grid-template-columns:auto minmax(0,1fr); gap:26px; align-items:center; background:#1e1840; border:3px solid var(--text-dim);
+  box-shadow:0 0 0 3px var(--ink), 6px 6px 0 3px #000; padding:22px 22px 22px 30px}
+@media (max-width:640px){ .une{grid-template-columns:minmax(0,1fr); justify-items:center; text-align:center; padding:22px 16px} }
+.box{position:relative; width:190px; height:250px; transform:perspective(700px) rotateY(-18deg); transform-style:preserve-3d; text-decoration:none}
+.box .front{position:absolute; inset:0; border:3px solid var(--ink); background:var(--lb, #222); display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+  padding:14px 10px 12px; box-shadow:inset 0 0 0 3px rgba(255,255,255,.12), 10px 10px 0 #000}
+.box .front::after{content:""; position:absolute; inset:0; background:linear-gradient(115deg, rgba(255,255,255,.18), transparent 40%); pointer-events:none}
+.box .spine{position:absolute; top:0; left:0; width:26px; height:100%; transform-origin:left; transform:rotateY(90deg); background:#0b0820; border:3px solid var(--ink);
+  font-family:var(--f-display); font-size:8px; color:var(--lt, var(--gold)); writing-mode:vertical-rl; display:flex; align-items:center; justify-content:center; letter-spacing:2px}
+.box .brand{font-family:var(--f-display); font-size:7px; letter-spacing:1px; color:var(--lt, var(--gold)); opacity:.8}
+.box .art img, .box .art canvas{display:block; width:150px; height:104px; object-fit:cover; image-rendering:auto; border:2px solid var(--ink)}
+.box .art canvas.px{width:96px; height:96px; image-rendering:pixelated; border:0}
+.box h3{margin:0; font-family:var(--f-display); font-weight:400; font-size:13px; line-height:1.4; color:var(--lt, var(--gold)); text-shadow:2px 2px 0 rgba(0,0,0,.6); text-align:center}
+.sticker{position:absolute; top:-16px; right:-20px; width:74px; height:74px; display:flex; align-items:center; justify-content:center; text-align:center; transform:rotate(14deg);
+  font-family:var(--f-display); font-size:8px; line-height:1.4; color:#110d22; background:#ff5a7a;
+  clip-path:polygon(50% 0,61% 13%,77% 6%,80% 23%,96% 26%,89% 41%,100% 54%,86% 63%,90% 80%,73% 81%,65% 97%,50% 87%,35% 97%,27% 81%,10% 80%,14% 63%,0 54%,11% 41%,4% 26%,20% 23%,23% 6%,39% 13%)}
+.une-txt{display:flex; flex-direction:column; gap:12px; min-width:0}
+.une-txt .kicker{font-family:var(--f-display); font-size:9px; letter-spacing:2px; color:#ff8fb0}
+.une-txt h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:18px; color:var(--gold); line-height:1.4}
+.une-txt p{margin:0; font-size:21px; color:var(--text); max-width:52ch}
+.une-txt .play{align-self:flex-start; text-decoration:none; font-size:12px; padding:13px 22px; color:#110d22; background:var(--gold); border-color:var(--gold)}
+@media (max-width:640px){ .une-txt .play{align-self:center} }
+.news{border-top:3px dashed rgba(255,255,255,.15); padding-top:10px}
+.news summary{cursor:pointer; font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--gold); list-style:none}
+.news summary::before{content:"▶ "} .news[open] summary::before{content:"▼ "}
+.news ul{margin:10px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; font-size:19px; color:var(--text-dim); text-align:left}
+.news li b{font-family:var(--f-display); font-weight:400; font-size:8px; color:var(--text); margin-right:6px}
+.filters{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+.filters button{font-family:var(--f-display); font-size:8px; letter-spacing:1px; padding:9px 10px; color:var(--text); background:#1e1840; border:3px solid var(--ink);
+  box-shadow:0 0 0 2px var(--text-dim), 3px 3px 0 2px #000; cursor:pointer}
+.filters button[aria-pressed="true"]{color:#110d22; background:var(--gold); box-shadow:0 0 0 2px var(--gold), 3px 3px 0 2px #000}
+.filters .st{font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; font-size:13px; line-height:0}
+.filters button:focus-visible{outline:3px dashed var(--gold); outline-offset:4px}
+.cart[hidden]{display:none}
+.shelf-empty{text-align:center; color:var(--text-dim); font-size:20px}
+.fav{font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; position:absolute; top:2px; right:8px; z-index:3; width:30px; height:30px; padding:0; border:0; background:none; cursor:pointer;
+  font-size:22px; line-height:30px; color:var(--shell-lo); text-shadow:1px 1px 0 var(--shell-hi)}
+.fav.on{color:var(--gold); text-shadow:2px 2px 0 #000}
+.fav:focus-visible{outline:3px dashed var(--gold)}
+.badge{position:absolute; top:-12px; left:-10px; z-index:3; transform:rotate(-6deg); font-family:var(--f-display); font-size:8px; letter-spacing:1px;
+  padding:6px 7px; color:#110d22; background:#5cff8a; border:3px solid var(--ink); box-shadow:3px 3px 0 #000}
+.badge.maj{background:#5ce1ff}
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none !important; transition:none !important} }
 </style>
 </head>
@@ -149,6 +193,9 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 
   <div class="saves-open ranks-open"><a class="saves-btn" href="classements/index.html">CLASSEMENTS</a></div>
 
+  <section class="une" id="une" hidden></section>
+  <div class="filters" id="filters" role="toolbar" aria-label="Filtrer les jeux"></div>
+  <p class="shelf-empty" id="shelfEmpty" hidden>Aucun jeu ici pour l'instant. Touche l'étoile d'une cartouche pour l'ajouter à tes favoris.</p>
   <nav class="shelf" id="shelf" aria-label="Jeux">
     <a class="cart picross" href="picross/index.html">
       <span class="arrow" aria-hidden="true">▼</span>
@@ -541,15 +588,94 @@ document.querySelectorAll("canvas[data-icon]").forEach(c => {
   ic.map.forEach((row,r) => [...row].forEach((ch,col) => { if (ic.pal[ch]){ x.fillStyle = ic.pal[ch]; x.fillRect(col,r,1,1); } }));
 });
 
+/* ---------- accueil : dates de sortie et de mise à jour, genres, jeu à la une, quoi de neuf ---------- */
+// À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
+// Une cartouche porte le badge NOUVEAU ou MIS A JOUR pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
+const META = {
+  "nebula/index.html": {added: "2026-10-13", updated: "2026-10-13", genres: ["TACTIQUE", "ESPACE"]},
+  "alunissage/index.html": {added: "2026-10-13", genres: ["ADRESSE", "ESPACE", "DU JOUR"]},
+  "pont-stellaire/index.html": {added: "2026-10-12", genres: ["LOGIQUE", "ESPACE", "DU JOUR"]},
+  "orbite/index.html": {added: "2026-10-12", genres: ["ADRESSE", "ESPACE"]},
+  "club/index.html": {added: "2026-10-12", genres: ["GESTION", "CHIENS"]},
+  "picross/index.html": {genres: ["LOGIQUE"]},
+  "lignee/index.html": {genres: ["LOGIQUE", "DU JOUR"]},
+  "queens/index.html": {genres: ["LOGIQUE"]},
+  "injagility/index.html": {genres: ["ADRESSE", "CHIENS"]},
+  "solitaire/index.html": {genres: ["CARTES"]},
+  "touche-coule/index.html": {genres: ["TACTIQUE"]},
+  "amiral/index.html": {genres: ["TACTIQUE"]},
+  "tetris/index.html": {genres: ["ARCADE"]},
+  "snake/index.html": {genres: ["ARCADE"]},
+  "asteroids/index.html": {genres: ["ARCADE", "ESPACE"]},
+  "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
+};
+const NEWS = [
+  ["2026-10-13", "Accueil : favoris (étoile), filtres par genre, jeu à la une et badges des nouveautés."],
+  ["2026-10-13", "Nebula : nouveau rogue-lite tactique spatial, secteur 1 jusqu'à l'amiral rouillé. Plus fluide et plus net."],
+  ["2026-10-13", "Alunissage : nouveau jeu d'adresse, avec la mission du jour."],
+  ["2026-10-12", "Pont stellaire : nouveau puzzle de constellations, avec le ciel du jour."],
+  ["2026-10-12", "Orbite : nouveau jeu de physique spatiale en 30 niveaux."],
+  ["2026-10-12", "Le Club d'agility : nouveau jeu de gestion de club canin."],
+];
+const FILTERS = ["TOUS", "★ FAVORIS", "NOUVEAU", "DU JOUR", "LOGIQUE", "TACTIQUE", "ADRESSE", "ESPACE", "CHIENS", "ARCADE", "GESTION", "CARTES", "SIMULATION"];
+const daysSince = d => d ? (Date.now() - new Date(d + "T00:00:00").getTime()) / 864e5 : 1e9;
+const recent = d => daysSince(d) < 3;
+const fmtDay = d => { const [y, m, j] = d.split("-"); return `${j}/${m}`; };
+const favKey = "ludo.favs";
+let favs = []; try { favs = JSON.parse(localStorage.getItem(favKey)) || []; } catch (e) {}
+const shelf = document.getElementById("shelf"), allCarts = [...shelf.querySelectorAll(".cart")], order = new Map(allCarts.map((c, i) => [c, i]));
+const metaOf = c => META[c.getAttribute("href")] || {genres: []};
+allCarts.forEach(c => {
+  const m = metaOf(c), href = c.getAttribute("href");
+  if (recent(m.added)) c.insertAdjacentHTML("afterbegin", '<span class="badge">NOUVEAU</span>');
+  else if (recent(m.updated)) c.insertAdjacentHTML("afterbegin", '<span class="badge maj">MIS A JOUR</span>');
+  const b = document.createElement("button"); b.type = "button"; b.className = "fav"; b.textContent = "★";
+  const paint = () => { const on = favs.includes(href); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); b.setAttribute("aria-label", (on ? "Retirer des favoris : " : "Ajouter aux favoris : ") + c.querySelector("h2").textContent); };
+  b.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); favs = favs.includes(href) ? favs.filter(x => x !== href) : favs.concat(href); try { localStorage.setItem(favKey, JSON.stringify(favs)); } catch (err) {} paint(); arrange(); });
+  paint(); c.appendChild(b);
+});
+let filter = "TOUS"; try { filter = sessionStorage.getItem("ludo.filter") || "TOUS"; } catch (e) {}
+const fbar = document.getElementById("filters");
+FILTERS.forEach(f => { const b = document.createElement("button"); b.type = "button"; b.dataset.f = f; if (f === "★ FAVORIS") b.innerHTML = '<span class="st">★</span> FAVORIS'; else b.textContent = f; b.addEventListener("click", () => { filter = f; try { sessionStorage.setItem("ludo.filter", f); } catch (e) {} arrange(); }); fbar.appendChild(b); });
+const shows = c => { const m = metaOf(c); return filter === "TOUS" || (filter === "★ FAVORIS" ? favs.includes(c.getAttribute("href")) : filter === "NOUVEAU" ? recent(m.added) || recent(m.updated) : (m.genres || []).includes(filter)); };
+// favoris en tête de l'étagère, puis l'ordre d'origine ; le filtre cache les autres
+function arrange(){
+  const isFav = c => favs.includes(c.getAttribute("href"));
+  allCarts.slice().sort((a, b) => (isFav(b) - isFav(a)) || order.get(a) - order.get(b)).forEach(c => { c.hidden = !shows(c); shelf.appendChild(c); });
+  [...fbar.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.f === filter));
+  document.getElementById("shelfEmpty").hidden = allCarts.some(c => !c.hidden);
+  if (typeof refreshCarts === "function") refreshCarts();
+}
+// jeu à la une : le dernier sorti, présenté dans sa boîte
+(function une(){
+  const keys = Object.keys(META), rank = c => keys.indexOf(c.getAttribute("href"));   // à date égale, le premier de META l'emporte
+  const c = allCarts.filter(c => metaOf(c).added).sort((a, b) => metaOf(b).added.localeCompare(metaOf(a).added) || rank(a) - rank(b))[0];
+  if (!c) return;
+  const m = metaOf(c), box = document.getElementById("une"), name = c.querySelector("h2").textContent, cs = getComputedStyle(c);
+  box.style.setProperty("--lb", cs.getPropertyValue("--lb")); box.style.setProperty("--lt", cs.getPropertyValue("--lt"));
+  box.innerHTML = `<a class="box" href="${c.getAttribute("href")}" aria-label="Jouer à ${name}"><span class="spine">${name}</span><span class="front"><span class="brand">LUDOTHEQUE</span><span class="art"></span><h3>${name}</h3></span>` +
+    (recent(m.added) ? '<span class="sticker">TOUT<br>NEUF !</span>' : "") + `</a>` +
+    `<div class="une-txt"><span class="kicker">${recent(m.added) ? "NOUVEAU JEU" : "A LA UNE"} · ${fmtDay(m.added)}</span><h2>${name}</h2><p>${c.querySelector("p").textContent}</p>` +
+    `<a class="saves-btn play" href="${c.getAttribute("href")}">JOUER</a>` +
+    `<details class="news"><summary>QUOI DE NEUF ?</summary><ul>${NEWS.map(([d, t]) => `<li><b>${fmtDay(d)}</b>${t}</li>`).join("")}</ul></details></div>`;
+  const art = box.querySelector(".art"), img = c.querySelector("img.shot"), cvs = c.querySelector("canvas");
+  if (img) art.appendChild(img.cloneNode());
+  else if (cvs){ const k = document.createElement("canvas"); k.width = cvs.width; k.height = cvs.height; k.className = cvs.dataset.icon === "dog" ? "" : "px"; k.getContext("2d").drawImage(cvs, 0, 0); art.appendChild(k); }
+  box.hidden = false;
+})();
+
 /* console-style selection: arrows move the cursor, Enter launches */
-const carts = [...document.querySelectorAll(".cart")];
+let carts = [];
 let sel = 0;
+function refreshCarts(){ carts = [...shelf.querySelectorAll(".cart:not([hidden])")]; carts.forEach((c, k) => c.classList.toggle("sel", k === sel)); }
 function select(i, focus){
+  if (!carts.length) return;
   sel = (i + carts.length) % carts.length;
   carts.forEach((c,k) => c.classList.toggle("sel", k === sel));
   if (focus) carts[sel].focus({preventScroll:false});
 }
-carts.forEach((c,i) => { c.addEventListener("mouseenter", () => select(i)); c.addEventListener("focus", () => select(i)); });
+allCarts.forEach(c => { c.addEventListener("mouseenter", () => select(carts.indexOf(c))); c.addEventListener("focus", () => select(carts.indexOf(c))); });
+arrange();
 document.addEventListener("keydown", e => {
   if (e.target.closest && e.target.closest("textarea, input, select, .saves")) return;
   if (["ArrowRight","ArrowDown"].includes(e.key)){ e.preventDefault(); select(sel+1, true); }
