@@ -41,5 +41,12 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 7. **Apesanteur** (plateforme physique) — un spationaute flotte dans une station abandonnée et se propulse par petites poussées d'extincteur ; oxygène limité, débris qui dérivent, sas et interrupteurs ; 30 salles, record en moins de poussées.
 8. **Bouclier lunaire** (arcade) — façon Missile Command : protéger les dômes d'une base lunaire des pluies de météorites en tirant des charges qui explosent là où l'on touche ; vagues de plus en plus denses, comètes qui se divisent, réparation des dômes entre les vagues ; score et classement.
 
+## Grand jeu spatial : gestion + tactique (brainstorm du 13/10/2026, à approfondir)
+Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux, des planètes, des améliorations, pour **toute la famille**. Quatre formes proposées (toutes gardées) :
+1. **Empire familial** (façon Ogame) — une planète qui produit en continu même téléphone fermé, constructions de plus en plus longues, flottes qui explorent, chassent les pirates et pillent les autres joueurs de la famille ; parties sur des semaines. Combats **résolus automatiquement** avec des ordres génériques. *Piste détaillée en cours.*
+2. **Rogue-lite tactique** (façon FTL / Into the Breach) — une flottille saute de balise en balise sur une carte qui change à chaque partie ; combats **au tour par tour** sur une grille ; améliorations entre les combats, déblocages après une défaite ; parties de 20 à 40 min. *Piste détaillée en cours.*
+3. **Conquête d'un amas** — solo contre 3 empires de l'ordinateur sur une carte d'étoiles, quelques tours par jour, une partie sur plusieurs jours.
+4. **Mélange empire + raids** — l'empire qui pousse sur plusieurs jours, avec des combats tactiques joués au doigt et des raids asynchrones (défense jouée par l'ordinateur).
+
 ## Préférences notées
 - Cargo Stellaire et Station Alpha : retirés de la liste (pas retenus).
