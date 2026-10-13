@@ -62,6 +62,8 @@ Réalisé le 13/10 ✅ : **favoris** (étoile sur chaque cartouche, favoris en t
 
 Maquette des **boîtes de jeu** pour le jeu à la une (A Europe, B Amérique, C Japon, D Collector) : https://claude.ai/artifact/Te1taXoF7a6fQstZPmjRAc — source `maquettes/boites-de-jeu.html`. **Choix : B (Amérique)**, installée sur l'accueil le 13/10.
 
+Maquette **filtres et classements** (filtres : 1 onglets, 2 sélecteur de console, 3 icônes ; classements : A écran d'arcade, B étagère et podium, C tableau de la famille) : https://claude.ai/artifact/XvfqunkzRbx7x7pHmuJ65h — source `maquettes/filtres-classements.html`. **Choix de l'utilisateur à venir.**
+
 **À retravailler plus tard : le design des cartouches et des boîtes**
 - Revoir le dessin des cartouches et de la boîte de jeu, et les couleurs des cartouches selon le type de jeu (logique, tactique, adresse, arcade…).
 - Pourquoi pas **trois modèles de cartouche** : un pour les jeux **16 bits** (pixel art), un pour les jeux **32 bits** (Orbite, Pont stellaire, Alunissage, Club, Amiral, Injagility…), un troisième pour les autres (reprises, simulation, cartes).
