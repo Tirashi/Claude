@@ -13,8 +13,8 @@
 - Développer et pousser **uniquement sur la branche de travail** de la session. Ne pousser sur `main` **que quand l'utilisateur dit « mets à jour main »**, en avance rapide uniquement :
   `git fetch origin main && git merge-base --is-ancestor origin/main HEAD && git push origin HEAD:main`
 - Messages de commit en français, écrits dans un fichier puis `git commit -F`.
-- Après chaque modification d'un jeu, **republier son artefact** (copie avec `chiens32.js` intégré, sans `ludo-scores.js`) et donner le lien.
-- Tester avec Playwright (captures sur un écran de téléphone) avant de pousser.
+- Après chaque modification d'un jeu, **republier son artefact** (copie avec `chiens32.js` intégré, sans `ludo-scores.js`, fabriquée par `python3 outils/artefact.py`) **au même lien** (voir « Artefacts des jeux ») et donner le lien.
+- Tester avec Playwright (captures sur un écran de téléphone) avant de pousser : scripts prêts dans [`outils/`](outils/README.md).
 - **Sécurité** : ne jamais demander, stocker ni committer la clé secrète Supabase ni le mot de passe de la base. Seules l'URL publique `https://hfoiofrgltzdyetoqpjc.supabase.co` et la clé publiable `sb_publishable_6nlzAAAG3LLLonztigio4g_0Q6dakQE` sont dans le code. Le **code familial ne doit jamais être dans le dépôt** (le SQL garde `MON-CODE`).
 - Accessibilité : « pas pour le moment ».
 - Économie : une conversation par chantier, Sonnet pour réfléchir et les petites retouches, Opus pour coder un jeu ; éviter les sous-agents et les captures inutiles.
@@ -24,6 +24,37 @@
 - `CLAUDE.md` (ce fichier) : nouvelle règle donnée par l'utilisateur, nouveau jeu dans le tableau, changement d'état d'un jeu, version du cache, nouveau fichier partagé…
 - `IDEES.md` : marquer une idée comme réalisée (✅), ajouter les nouvelles idées et les nouvelles maquettes (liens d'artefacts), noter les préférences exprimées.
 - `README.md` : description du jeu pour les joueurs (liste du haut, section dédiée, transfert de sauvegardes, classements).
+
+## Ajouter un nouveau jeu (liste de contrôle)
+1. **Le jeu** : `<dossier>/index.html` autonome. Gabarit des jeux 32 bits (copier `orbite/index.html` ou `pont-stellaire/index.html`) : canvas 272×480 pixels logiques agrandi sans lissage (`resize()`), police Press Start 2P, boutons dessinés dans le canvas (`BTN`), sauvegarde `localStorage` préfixée `<jeu>.`, `<script src="../ludo-scores.js">`, et en fin de page le script commun « Ludothèque » (service worker + bouton ◀ MENU dans l'appli). Exposer un objet `window.<Jeu>` pour les tests.
+2. **Menu** `index.html` : une cartouche `<a class="cart <classe>">` (couleurs `.cart.<classe>{--lb; --lt; --ld}`), une icône 16×16 dans `ICONS` (lignes de 16 caractères exactement).
+3. **Transfert de sauvegarde** `index.html` : `collectSaves()` (collecte), `describeSaves()` (description), `mergeSaves()` (fusion qui garde le meilleur de chaque côté).
+4. **Classements** `ludo-scores.js` : envoi dans le jeu par `LudoScores.submit(jeu, tableau, valeur, plusBasGagne)` ; records existants dans `registerExisting` ; un tableau dans `PSEUDO_BOARDS` ; **incrémenter `SYNC`** pour que les joueurs déjà inscrits envoient leurs anciens records. Noms : jeu `^[a-z0-9_-]{1,24}$`, tableau `^[A-Za-z0-9_:.-]{1,40}$` (contraintes de la base).
+5. **Page des classements** `classements/index.html` : une entrée dans `GAMES` (vues, réglages `ctl`, format `fmt` ; `T` = temps en ms).
+6. **`sw.js`** : ajouter le fichier à `FILES` et changer `VERSION`.
+7. **Docs** : `README.md`, ce fichier (tableau des jeux, artefact), `IDEES.md` (✅).
+8. **Tests** (`outils/`), commit, push sur la branche, **artefact** publié et noté ci-dessous.
+
+## Leçons apprises
+- La police **Press Start 2P n'a pas de majuscules accentuées** (« É » s'affiche « é ») : écrire les textes en MAJUSCULES sans accent (ETOILES, REESSAYER…). Les minuscules accentuées s'affichent bien.
+- **Supabase n'est pas joignable** depuis l'environnement de Claude (proxy 403) : tester les classements avec `outils/faux-classements.js`, puis demander à l'utilisateur un essai réel sur son téléphone.
+- Playwright : changer seulement l'ancre (`#…`) ne recharge pas la page ; repasser par `about:blank`.
+- Dans `page.evaluate`, les `const` et fonctions de haut niveau d'un jeu sont accessibles (`S`, `gameOver()`…) : pratique pour simuler une fin de partie.
+- Orbite : un niveau n'est jouable au doigt que s'il a des tirs « robustes » (±1°, ±2 %) ; `outils/orbite-solveur.js` les compte.
+
+## Artefacts des jeux
+Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'artefact avant, comme l'exige l'outil). Un jeu sans lien connu : demander le lien à l'utilisateur avant d'en créer un nouveau.
+
+| Jeu | Lien |
+|---|---|
+| Orbite | https://claude.ai/artifact/UysU574KpYMa7DdHhKsaHv |
+| Pont stellaire | https://claude.ai/artifact/Twgkpb1scdCh2Th6Nh35bF |
+| Queens, Picross Dex, Lignée, Injagility, Touché Coulé, Amiral !, Club d'agility, Tetris, Snake, Asteroids, Solitaire, Jeu de la vie | liens à retrouver (les demander à l'utilisateur) |
+
+## En cours / à vérifier
+- Orbite : les niveaux 12, 23, 25, 28 et 30 sont les plus serrés (8 à 11 tirs robustes) ; à ajuster si l'utilisateur ou son fils les trouvent trop durs.
+- Orbite et Pont stellaire : classements testés seulement avec le faux serveur ; confirmer qu'un vrai record apparaît bien.
+- Forfait : limite hebdomadaire remise à zéro le mercredi à 19 h ; privilégier les chantiers courts en fin de semaine.
 
 ## Les jeux existants
 | Jeu | Dossier | État / particularités |
