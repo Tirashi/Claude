@@ -395,14 +395,15 @@ function rock(size, seed) {
 /* =====================================================================
    DÉCOR : nébuleuse en bruit fractal, étoiles, planète avec atmosphère
    ===================================================================== */
-function space(seed, tint, planet) {
-  const [c, g] = mk(W, H), img = g.createImageData(W, H), R = rnd(seed);
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const n = fbm(x / 210, y / 210, seed, 5), m = fbm(x / 90 + 7, y / 90, seed + 3, 3), d = clamp((n - .42) * 2.2) * (.6 + m * .6);
-    const k = (y * W + x) * 4;
+// q = 2 : la nébuleuse est calculée en demi-résolution puis agrandie (4 fois plus rapide, elle est floue de toute façon)
+function space(seed, tint, planet, q = 1) {
+  const [c, g] = mk(W, H), R = rnd(seed), w = W / q | 0, h = H / q | 0, [c2, g2] = mk(w, h), img = g2.createImageData(w, h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const X = x * q, Y = y * q, n = fbm(X / 210, Y / 210, seed, 5), m = fbm(X / 90 + 7, Y / 90, seed + 3, 3), d = clamp((n - .42) * 2.2) * (.6 + m * .6);
+    const k = (y * w + x) * 4;
     img.data[k] = 3 + tint[0] * d * .55 + tint[3] * d * d * .4; img.data[k + 1] = 5 + tint[1] * d * .55 + tint[4] * d * d * .4; img.data[k + 2] = 10 + tint[2] * d * .55 + tint[5] * d * d * .4; img.data[k + 3] = 255;
   }
-  g.putImageData(img, 0, 0);
+  g2.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(c2, 0, 0, W, H);
   for (let i = 0; i < 900; i++) { const x = R() * W, y = R() * H, s = R(), a = .25 + s * .75; g.fillStyle = `rgba(${s > .9 ? '255,236,210' : s > .7 ? '210,224,255' : '200,210,235'},${a})`; g.fillRect(x, y, s > .97 ? 2 : 1, s > .97 ? 2 : 1); }
   for (let i = 0; i < 6; i++) { const x = R() * W, y = R() * H, gr = g.createRadialGradient(x, y, 0, x, y, 9); gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(.15, 'rgba(200,220,255,.35)'); gr.addColorStop(1, 'rgba(200,220,255,0)'); g.fillStyle = gr; g.fillRect(x - 9, y - 9, 18, 18); }
   if (planet) drawPlanet(g, ...planet);
