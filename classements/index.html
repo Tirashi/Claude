@@ -187,6 +187,11 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       {label: "REPUTATION", game: "club", board: () => "rep", fmt: v => N(v) + " pts", title: () => "LA PLUS GRANDE REPUTATION"},
       {label: "CHAMPION", game: "club", board: () => "champion", fmt: v => N(v) + " sem.", title: () => "CHAMPION DE FRANCE LE PLUS RAPIDE",
        note: "Le nombre de semaines pour gagner le Championnat de France.", empty: "Personne n'est encore champion de France."}]},
+    {id: "alunissage", name: "ALUNISSAGE", play: "../alunissage/index.html", views: [
+      {label: "MEILLEUR SCORE", game: "alunissage", board: () => "best", fmt: v => N(v) + " pts", title: () => "ALUNISSAGE · MEILLEURE MISSION",
+       note: "Score d'une mission : à chaque site, (100 + carburant restant) × le multiplicateur de l'aire."},
+      {label: "MISSION DU JOUR", ctl: ["day"], game: "alunissage", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: v => N(v) + " pts",
+       title: () => "MISSION DU JOUR", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}]},
     {id: "pontstellaire", name: "PONT STELLAIRE", play: "../pont-stellaire/index.html", views: [
       {label: "CIEL DU JOUR", ctl: ["day"], game: "pontstellaire", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: T,
        title: () => "CIEL DU JOUR", note: "Le même ciel 9×9 pour toute la famille, plus 30 secondes par indice.",

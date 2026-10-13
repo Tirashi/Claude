@@ -3,7 +3,7 @@
 ## Le projet
 - Dépôt GitHub : **Tirashi/Claude**. Site publié : **https://tirashi.github.io/Claude/** (installé en appli PWA sur Android).
 - Jeux en HTML autonomes (un fichier par jeu, sans build), un dossier par jeu. La page d'accueil `index.html` est le menu.
-- Service worker `sw.js` (mode hors connexion) : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v13` au moment d'écrire ces lignes).
+- Service worker `sw.js` (mode hors connexion) : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v14` au moment d'écrire ces lignes).
 - Moteur de sprites 32 bits partagé : `injagility/chiens32.js` (volumes ombrés, 6 races de chiens).
 - Classements en ligne : `ludo-scores.js` + page `classements/index.html`, base Supabase (scripts dans `supabase/`). Égalités classées 1, 2, 2, 4. Les records déjà présents sont envoyés une fois à l'inscription.
 - Code de transfert de sauvegarde (export/import `LUDO1-…`) dans `index.html` : chaque nouveau jeu doit y être ajouté (collecte, description, fusion).
@@ -77,6 +77,7 @@ Queens, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie 
 | Le Club d'agility | `club/` | Gestion d'un club (une semaine par tour) : 6 races, activités (agrès, repos, câlins), concours jouables au doigt (zone verte), séance guidée en option, boutique (chenil, buvette, tribunes, gazon pro), 5 niveaux de concours jusqu'au Championnat de France, nom du club modifiable. |
 | Orbite | `orbite/` | Physique spatiale 32 bits : lance-pierre au doigt, gravité des planètes, trous noirs, portails, astéroïdes en orbite. 30 niveaux vérifiés par un solveur (tirs gagnants avec une marge), 3 essais = 1 à 3 étoiles, classement du total d'étoiles (`orbite` / `etoiles`). `window.Orbite` expose `sim` et `LEVELS` pour les tests. |
 | Pont stellaire | `pont-stellaire/` | Hashi en 32 bits (étoiles et faisceaux). Tailles 7×7, 9×9, 11×11 + Ciel du jour 9×9 (graine = date). Générateur à graine + solveur d'unicité. Classements `pontstellaire` : `best:7/9/11`, `daily:AAAAMMJJ` (temps + 30 s par indice), `ciels`. `window.PontStellaire` expose `generate` et `solve`. |
+| Alunissage | `alunissage/` | Adresse 32 bits : deux réacteurs (un doigt par moitié d'écran), aires ×2/×3/×5, mission de sites enchaînés (6 mondes, gravité, vent) jusqu'au crash ; mission du jour (graine = date). Classements `alunissage` : `best`, `daily:AAAAMMJJ`. `window.Alunissage` expose `step`, `makeSite`. |
 | Tetris, Snake, Asteroids, Solitaire, Jeu de la vie | dossiers du même nom | Reprises en style pixel art. |
 
 ## Idées et maquettes

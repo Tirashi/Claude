@@ -66,7 +66,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["pontstellaire", "ciels"]];
+    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["pontstellaire", "ciels"], ["alunissage", "best"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -168,6 +168,9 @@
     var ob = readKey("orbite.stars", {}) || {}, stars = 0;
     Object.keys(ob).forEach(function (k){ if (/^\d{1,2}$/.test(k)) stars += Math.min(3, Number(ob[k]) || 0); });
     hi("orbite", "etoiles", stars);
+    hi("alunissage", "best", readKey("alunissage.best", 0));
+    var ad = readKey("alunissage.daily", {}) || {};
+    Object.keys(ad).forEach(function (k){ if (/^\d{8}$/.test(k)) hi("alunissage", "daily:" + k, ad[k]); });
     var pb = readKey("pontstellaire.best", {}) || {}, pd = readKey("pontstellaire.daily", {}) || {};
     Object.keys(pb).forEach(function (k){ if (/^(7|9|11)$/.test(k)) lo("pontstellaire", "best:" + k, pb[k]); });
     Object.keys(pd).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("pontstellaire", "daily:" + k, pd[k]); });
@@ -178,8 +181,8 @@
   });
 
   window.addEventListener("online", function (){ flush(); });
-  // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 4 : avec Pont stellaire)
-  var SYNC = 4;
+  // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 5 : avec Alunissage)
+  var SYNC = 5;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();

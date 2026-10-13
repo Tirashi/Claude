@@ -11,6 +11,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`amiral/index.html`](amiral/index.html) : **Amiral !**, une bataille navale tactique en 32 bits où chaque navire a un pouvoir (avion de reconnaissance, salve, torpille, plongée du sous-marin).
 - [`orbite/index.html`](orbite/index.html) : **Orbite**, un jeu de physique en 32 bits : lancer une sonde dont la trajectoire est courbée par la gravité des planètes pour atteindre une balise, en 30 niveaux.
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
+- [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
 - [`snake/index.html`](snake/index.html) : **Snake**.
 - [`asteroids/index.html`](asteroids/index.html) : **Asteroids**.
@@ -137,6 +138,17 @@ Un puzzle de logique sur les règles du **Hashi**, dans un ciel étoilé en 32 b
 
 ---
 
+## Alunissage
+
+Poser un module lunaire en douceur, site après site.
+
+- **Deux réacteurs**, un par moitié d'écran (un doigt chacun) : le gauche pousse vers le haut et vers la droite, le droit vers le haut et vers la gauche, les deux ensemble tout droit. Au clavier : flèches gauche, droite, haut.
+- Se poser **sur une aire**, à plat, avec une vitesse verticale et horizontale assez faibles (affichées en vert ou en rouge). Les aires étroites rapportent ×5, les moyennes ×3, les larges ×2.
+- Une **mission** enchaîne les sites (la Lune, Phobos, Mars, Europe, Titan et son vent, une comète…), de plus en plus durs, jusqu'au crash ou à l'arrêt. Chaque site rapporte (100 + carburant restant) × le multiplicateur ; le carburant se recharge en partie à chaque alunissage.
+- **Mission du jour** : la même suite de sites pour toute la famille. Le record et la mission du jour font partie des classements et du transfert de sauvegardes.
+
+---
+
 ## Les classiques passés en 16 bits
 
 Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire en le moins de tirs) et le classement. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).
@@ -160,7 +172,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire, Alunissage), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -175,6 +187,7 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Le Club d'agility** : la plus grande réputation, et le Championnat de France gagné en le moins de semaines.
 - **Amiral !** : la victoire en le moins de tours, par niveau de l'ordinateur (Mousse, Capitaine, Amiral).
 - **Orbite** : le total d'étoiles gagnées sur les 30 niveaux.
+- **Alunissage** : la meilleure mission et la mission du jour.
 - **Pont stellaire** : le Ciel du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille (7×7, 9×9, 11×11, plus 30 secondes par indice) et le nombre de constellations dessinées.
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).

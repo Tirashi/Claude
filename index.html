@@ -90,6 +90,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.touche{--lb:linear-gradient(to bottom, #2b6fd0, #0f1866); --lt:#ffd84a; --ld:#e8ecff}
 .cart.club{--lb:linear-gradient(to bottom, #3f8a37, #173a1a); --lt:#ffd23f; --ld:#e4f7dc}
 .cart.amiral{--lb:linear-gradient(to bottom, #1c579c, #0a1c40); --lt:#ffd23f; --ld:#dcebff}
+.cart.alu{--lb:linear-gradient(to bottom, #0a0c1e, #2c2a28); --lt:#e8e4d8; --ld:#dfe5ff}
 .cart.pont{--lb:radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%); --lt:#ffd76a; --ld:#dfe5ff}
 .cart.orbite{--lb:radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%); --lt:#6fd8ff; --ld:#dfe5ff}
 
@@ -226,6 +227,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <h2>ORBITE</h2>
         <p>Lance ta sonde et laisse la gravité des planètes la guider jusqu'à la balise, entre trous noirs et portails.</p>
         <div class="tags"><span>PHYSIQUE</span><span>32 BITS</span><span>30 NIVEAUX</span></div>
+      </div>
+    </a>
+    <a class="cart alu" href="alunissage/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="lander" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>ALUNISSAGE</h2>
+        <p>Pose ton module en douceur avec deux réacteurs, de la Lune à la comète. Plus l'aire est étroite, plus elle rapporte.</p>
+        <div class="tags"><span>ADRESSE</span><span>MISSION DU JOUR</span></div>
       </div>
     </a>
     <a class="cart pont" href="pont-stellaire/index.html">
@@ -420,6 +430,23 @@ const ICONS = {
     "..kkyyyyyyyyok..",
     "....kkoooookk...",
     "......kkkk......"]},
+  lander: {pal:{k:"#0b0614", w:"#ffffff", g:"#c8ccd4", o:"#8a5a10", y:"#ffd76a", b:"#2a3a5a", f:"#fff2a8", r:"#ff9a3a"}, map:[
+    "................",
+    "......kkkk......",
+    ".....kwwgk......",
+    ".....kwbgk......",
+    ".....kggok......",
+    "....kkkkkkk.....",
+    "...kyyyyyyok....",
+    "...kyoooooyk....",
+    "...kkkkkkkkk....",
+    "...k.k...k.k....",
+    "..k..k...k..k...",
+    ".kk.........kk..",
+    "................",
+    "....ff...ff.....",
+    ".....r...r......",
+    "................"]},
   stars: {pal:{k:"#0b0614", w:"#ffffff", y:"#ffd76a", o:"#e09a2a", b:"#9fdcff"}, map:[
     "................",
     ".kkk............",
@@ -540,6 +567,8 @@ function collectSaves(){
   const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
   const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
   const ob = readKey("orbite.stars", {}); if (ob && Object.keys(ob).length) g.orbite = ob;
+  const al = {b: Number(readKey("alunissage.best", 0)) || 0, s: Number(readKey("alunissage.sites", 0)) || 0, d: readKey("alunissage.daily", {}) || {}};
+  if (al.b || al.s) g.alunissage = al;
   const ps = {b: readKey("pontstellaire.best", {}) || {}, d: readKey("pontstellaire.daily", {}) || {}, w: Number(readKey("pontstellaire.wins", 0)) || 0};
   if (ps.w || Object.keys(ps.b).length) g.pontstellaire = ps;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
@@ -556,6 +585,7 @@ function describeSaves(g){
   if (g.touchecoule){ const v = Object.values(g.touchecoule).filter(x => x > 0); if (v.length) out.push(`Touché Coulé : meilleure victoire en ${Math.min(...v)} tirs`); }
   if (g.club && g.club.week) out.push(`Club d'agility : semaine ${g.club.week}, ${(g.club.dogs || []).length} chien${(g.club.dogs || []).length > 1 ? "s" : ""}, réputation ${g.club.rep || 0}`);
   if (g.amiral){ const v = Object.values(g.amiral).filter(x => x > 0); if (v.length) out.push(`Amiral ! : meilleure victoire en ${Math.min(...v)} tours`); }
+  if (g.alunissage) out.push(`Alunissage : record ${g.alunissage.b || 0} points, ${g.alunissage.s || 0} site${g.alunissage.s > 1 ? "s" : ""} atteint${g.alunissage.s > 1 ? "s" : ""}`);
   if (g.pontstellaire){ const p = g.pontstellaire, b = Object.keys(p.b || {}).sort((x, y) => x - y).map(n => `${n}×${n} en ${fmtTime(p.b[n])}`);
     out.push(`Pont stellaire : ${p.w || 0} constellation${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
   if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
@@ -639,6 +669,14 @@ function mergeSaves(g){
     const mine = readKey("amiral.best", {}) || {}; let n = 0;
     for (const [k, v] of Object.entries(g.amiral)) if (/^(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
     if (n){ writeKey("amiral.best", mine); done.push(`Amiral ! : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.alunissage && typeof g.alunissage === "object"){
+    const a = g.alunissage; let n = 0;
+    if (a.b > (Number(readKey("alunissage.best", 0)) || 0)){ writeKey("alunissage.best", Math.round(a.b)); n++; }
+    if (a.s > (Number(readKey("alunissage.sites", 0)) || 0)){ writeKey("alunissage.sites", Math.round(a.s)); n++; }
+    const daily = readKey("alunissage.daily", {}) || {};
+    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
+    if (n){ writeKey("alunissage.daily", daily); done.push(`Alunissage : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.pontstellaire && typeof g.pontstellaire === "object"){
     const p = g.pontstellaire, best = readKey("pontstellaire.best", {}) || {}, daily = readKey("pontstellaire.daily", {}) || {}; let n = 0;
