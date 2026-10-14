@@ -261,12 +261,19 @@ Sur téléphone, « SECTEUR 02 TERMINÉ · +3 CARBURANT POUR LA SUITE » débord
 Fait : retours § 18 (capacités, carte lisible, drones, IA par score), confort de placement (fantôme, replacement), 5 vaisseaux et le harponneur, secteurs 2 et 3 avec terrain et amiraux, victoire finale, épaves et nébuleuses, pilotes, déblocages et flottes, partie du jour et classements, `@ts-check`. Écarts notés plus haut : éclaireur (marquage), flotte marchande (chasseur au lieu de l'égide, 100 crédits), bombardier / drones / égide restent d'office.
 **Pour la session 3** (§ 15) : tutoriel (premier combat guidé), manuel (fiches des vaisseaux, terrain, pilotes), finitions (sons, animations), et les pistes de confort de `nebula-analyse.md` § 8 (toucher long = fiche, avertissement sur FIN DU TOUR, économie de batterie…). À surveiller : la flotte de choc un peu plus forte que les autres.
 
-## 20. Session 3 : découpage proposé (à valider en début de session)
-Proposé le 14/10, pas encore validé par l'utilisateur, qui lancera la session 3 dans une nouvelle conversation. Même méthode qu'en session 2 : chaque étape jouable, testée, poussée, artefact republié ; branche `claude/nebula-session-3` partie de `main`.
-1. **Manuel** (remplace l'écran RÈGLES) : fiches de tous les vaisseaux et pirates avec leurs jauges expliquées, terrain (astéroïdes, ions, nébuleuse), balises, modules, pilotes, règles en rubriques ; navigation par onglets.
+## 20. Session 3 : découpage et avancement
+Validé par l'utilisateur le 14/10. Même méthode qu'en session 2 : chaque étape jouable, testée, poussée, artefact republié (branche de travail de la session). Précision de l'utilisateur : **le tutoriel est proposé au moins une fois, même à un joueur qui a déjà fait des parties**.
+1. ✅ **Manuel** (14/10) (remplace l'écran RÈGLES) : fiches de tous les vaisseaux et pirates avec leurs jauges expliquées, terrain (astéroïdes, ions, nébuleuse), balises, modules, pilotes, règles en rubriques ; navigation par onglets.
 2. **Tutoriel** (§ 12) : premier combat de la première partie guidé en 5 bulles (choisir un vaisseau, sortir d'une case visée, tirer, bouclier, FIN DU TOUR), désactivable, rejouable depuis le manuel.
 3. **Confort au doigt** (`nebula-analyse.md` § 8) : toucher long = fiche (vaisseau, pirate, balise), avertissement doux sur FIN DU TOUR si un vaisseau peut encore tirer, zones tactiles plus grandes, vitesse des animations pirates ×1/×2, vibration quand un vaisseau est touché.
 4. **Sons et animations** (§ 13) : bruitages manquants (grappin, ions, salve, couvée), nappe d'ambiance coupée par défaut, petites finitions (saut, débris).
 5. **Hors connexion et batterie** (`nebula-analyse.md` § 6 et § 8 ; touche `sw.js`, donc tout le site) : polices dans le dépôt, délai réseau du service worker, redessin seulement quand quelque chose bouge.
 6. **Équilibrage final et bilan** : flotte de choc un peu forte, retours de jeu de l'utilisateur, docs.
 Reste aussi, hors Nebula : l'artefact de l'accueil est une ancienne copie à plusieurs fichiers (sans Orbite, Pont stellaire, Alunissage, Nebula) ; le refaire demande un chantier à part.
+
+### Étape 1 (14/10) : manuel
+- Écran `manual` (bouton MANUEL de l'écran titre, et MANUEL COMPLET dans la légende de la carte, qui ouvre l'onglet CARTE et ramène au jeu) : 6 onglets sur 2 rangées (RÈGLES, VAISSEAUX, PIRATES, TERRAIN, CARTE, ÉQUIPEMENT). `openManual(retour, onglet)` ; état dans `MAN` (exposé par `window.Nebula`).
+- **Règles** : 12 rubriques (`RULES`, dont fuite, carburant et dérive, secteurs, score, données stellaires, partie du jour), réparties en pages selon la place (PRÉCÉDENT / SUIVANT).
+- **Vaisseaux** (11) et **pirates** (7) : vignettes, puis la fiche `shipCard(t, …)` : sprite, cases, jauges coque / bouclier / vitesse (pirates : coque réelle selon les secteurs où on les croise, ×1,5 / ×1,6 / ×1,8), armes (dégâts, portée, tourelles), renforts, capacité (`sdesc`), où le trouver (flotte de départ, comptoir, déblocage et son coût, secteurs), et les jauges expliquées. `shipCard` servira au toucher long de l'étape 3.
+- **Terrain** : astéroïde, nuage ionique, nébuleuse, case visée, case voisine, grappin, case bleue, dessinés comme en combat (`ionTile`, `fogTile` sortis de `drawStatic`).
+- **Carte** : la légende des balises (`legendRow`, partagée avec ? LÉGENDE). **Équipement** : les 5 modules (prix, effet, emplacements) et les 5 pilotes.

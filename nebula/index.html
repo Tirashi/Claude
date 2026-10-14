@@ -251,6 +251,17 @@ function drawFx() {
 /* ---------- écran de combat ---------- */
 function doEv(ev) { if (!ev) return false; play(ev); save(); return true; }
 function selShip() { const st = run.combat; return UI.sel != null ? byId(st, UI.sel) : null; }
+// une case de nuage ionique (bleu électrique) ; une case de nébuleuse (brume violette)
+function ionTile(x, y, seed) {
+  const R = V.rnd(seed); g.fillStyle = 'rgba(80,170,255,.16)'; g.fillRect(x + 1, y + 1, CS - 2, CS - 2);
+  g.strokeStyle = 'rgba(140,210,255,.55)'; g.lineWidth = 1.2;
+  for (let k = 0; k < 3; k++) { g.beginPath(); let px = x + 8 + R() * 56, py = y + 6; g.moveTo(px, py); for (let j = 0; j < 4; j++) { px += (R() - .5) * 18; py += 14; g.lineTo(px, py); } g.stroke(); }
+  txt('IONS', x + 6, y + 4, 'rgba(160,220,255,.8)', F.mono(11));
+}
+function fogTile(x, y) {
+  const gr = g.createRadialGradient(x + CS / 2, y + CS / 2, 4, x + CS / 2, y + CS / 2, CS * .8);
+  gr.addColorStop(0, 'rgba(170,110,230,.30)'); gr.addColorStop(1, 'rgba(120,70,190,.12)'); g.fillStyle = gr; g.fillRect(x, y, CS, CS);
+}
 const STATIC = { key: '', cv: null };
 function drawStatic(st) {
   const key = [st.seed, st.sector, st.kind, K, !!BGS[secBg('combat')]].join(':');   // le décor change avec le combat et le secteur
@@ -262,17 +273,8 @@ function drawStatic(st) {
     for (let r = 0; r <= ROWS; r++) { g.beginPath(); g.moveTo(GX, GY + r * CS + .5); g.lineTo(GX + COLS * CS, GY + r * CS + .5); g.stroke(); }
     g.fillStyle = C.ally2 + '.035)'; g.fillRect(GX, GY + 6 * CS, COLS * CS, 3 * CS);
     // nuages ioniques : bleu électrique ; nébuleuse : brume violette
-    for (const [c, r] of st.ions || []) {
-      const x = GX + c * CS, y = GY + r * CS, R = V.rnd(c * 31 + r * 7);
-      g.fillStyle = 'rgba(80,170,255,.16)'; g.fillRect(x + 1, y + 1, CS - 2, CS - 2);
-      g.strokeStyle = 'rgba(140,210,255,.55)'; g.lineWidth = 1.2;
-      for (let k = 0; k < 3; k++) { g.beginPath(); let px = x + 8 + R() * 56, py = y + 6; g.moveTo(px, py); for (let j = 0; j < 4; j++) { px += (R() - .5) * 18; py += 14; g.lineTo(px, py); } g.stroke(); }
-      txt('IONS', x + 6, y + 4, 'rgba(160,220,255,.8)', F.mono(11));
-    }
-    for (const [c, r] of st.fog || []) {
-      const x = GX + c * CS, y = GY + r * CS, gr = g.createRadialGradient(x + CS / 2, y + CS / 2, 4, x + CS / 2, y + CS / 2, CS * .8);
-      gr.addColorStop(0, 'rgba(170,110,230,.30)'); gr.addColorStop(1, 'rgba(120,70,190,.12)'); g.fillStyle = gr; g.fillRect(x, y, CS, CS);
-    }
+    for (const [c, r] of st.ions || []) ionTile(GX + c * CS, GY + r * CS, c * 31 + r * 7);
+    for (const [c, r] of st.fog || []) fogTile(GX + c * CS, GY + r * CS);
     for (const [c, r] of st.rocks) { const R = ROCKS[(c * 7 + r * 3) % 3], [x, y] = cellCenter(c, r), w = R.width / RS; g.drawImage(R, x - w / 2, y - w / 2, w, w); }
     g = keep; STATIC.cv = c2; STATIC.key = key;
   }
@@ -536,22 +538,25 @@ function nodeCard(nd, seen, next) {
   txt(nd.id === run.at ? 'ICI' : seen.has(nd.id) ? 'VISITÉE' : next.includes(nd.id) ? 'À PORTÉE' : 'PLUS LOIN', x + w - 14, y + 13, C.dim, F.mono(13), 'right');
   lines.forEach((l, i) => txt(l, x + 14, y + 38 + i * 20, C.dim, F.ui(17)));
 }
-// légende de la carte : chaque balise et ce qu'on y trouve
+// légende de la carte : chaque balise et ce qu'on y trouve (aussi dans le manuel)
+const LEGEND_KINDS = ['contact', 'lourd', 'comptoir', 'dock', 'epave', 'nebuleuse', 'amiral'];
+function legendRow(k, x, y, w) {
+  const col = nodeCol(k);
+  g.fillStyle = 'rgba(4,8,14,.85)'; g.beginPath(); g.arc(x, y + 30, 18, 0, TAU); g.fill();
+  g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y + 30, 18, 0, TAU); g.stroke();
+  if (k === 'amiral') corners(x - 22, y + 8, 44, 44, C.foe, 8, 2); else glyph(x, y + 30, k, col);
+  txt(NODE_NAMES[k], x + 38, y + 4, C.txt, F.ui(21), 'left', 2);
+  para(NODE_INFO[k], x + 38, y + 32, w, C.dim, F.ui(17), 19);
+}
 function drawLegend() {
   g.fillStyle = 'rgba(2,4,8,.8)'; g.fillRect(0, 0, LW, LH);
-  const kinds = ['contact', 'lourd', 'comptoir', 'dock', 'epave', 'nebuleuse', 'amiral'];
+  const kinds = LEGEND_KINDS;
   frameBox(24, 120, LW - 48, 100 + kinds.length * 92, C.acc, 12, 'rgba(6,10,18,.96)');
   txt('LÉGENDE DE LA CARTE', LW / 2, 138, C.acc, F.mono(18), 'center', 4);
-  kinds.forEach((k, i) => {
-    const y = 176 + i * 92, col = nodeCol(k);
-    g.fillStyle = 'rgba(4,8,14,.85)'; g.beginPath(); g.arc(66, y + 30, 18, 0, TAU); g.fill();
-    g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(66, y + 30, 18, 0, TAU); g.stroke();
-    if (k === 'amiral') corners(44, y + 8, 44, 44, C.foe, 8, 2); else glyph(66, y + 30, k, col);
-    txt(NODE_NAMES[k], 104, y + 4, C.txt, F.ui(21), 'left', 2);
-    para(NODE_INFO[k], 104, y + 32, LW - 160, C.dim, F.ui(17), 19);
-  });
+  kinds.forEach((k, i) => legendRow(k, 66, 176 + i * 92, LW - 160));
   txt('TOUCHE UNE BALISE POUR VOIR SA FICHE', LW / 2, 176 + kinds.length * 92 + 4, C.dim, F.mono(14), 'center', 1);
   zone(0, 0, LW, LH, () => { UI.legend = false; });
+  btn(LW / 2 - 110, 884, 220, 50, 'MANUEL COMPLET', () => { UI.legend = false; openManual('game', 'carte'); }, { size: 18 });
 }
 
 /* ---------- récompense, comptoir, dock ---------- */
@@ -692,7 +697,7 @@ function drawHangar() {
   btn(LW / 2 - 100, 892, 200, 52, 'RETOUR', () => { UI.hangar = false; UI.pick = null; UI.pickP = null; }, { primary: true, size: 20 });
 }
 
-/* ---------- titre, flotte, règles, fin ---------- */
+/* ---------- titre, flotte, fin ---------- */
 function drawTitle() {
   drawBg('title');
   txt('NEBULA', LW / 2, 150, '#eef2f6', F.title(64), 'center', 18);
@@ -709,7 +714,7 @@ function drawTitle() {
     const dk = todayKey(), done = dailyBest[dk] != null, tried = store.get('dailyTry', 0) === dk;
     btn(132, 734, 280, 44, done ? `DU JOUR · ${dailyBest[dk]} PTS` : tried ? 'PARTIE DU JOUR · REJOUER' : 'PARTIE DU JOUR', () => startDaily(), { size: 19, ls: 2, col: tried ? null : C.ally });
   }
-  btn(52, 790, 104, 40, 'RÈGLES', () => { UI.screen = 'rules'; }, { size: 17, ls: 1 });
+  btn(52, 790, 104, 40, 'MANUEL', () => openManual('title'), { size: 17, ls: 1 });
   btn(164, 790, 104, 40, 'DÉBLOCAGES', () => { UI.screen = 'unlocks'; UI.back = 'title'; }, { size: 15, ls: 1, col: walletOf(meta) >= cheapest() ? C.acc : null });
   btn(276, 790, 104, 40, 'CLASSEMENT', () => { location.href = '../classements/index.html#nebula'; }, { size: 15, ls: 1 });
   btn(388, 790, 104, 40, SFX ? 'SON : OUI' : 'SON : NON', () => { SFX = !SFX; store.set('sfx', SFX); if (SFX) sfx('click'); }, { size: 15, ls: 1 });
@@ -761,19 +766,151 @@ function drawUnlocks() {
   });
   btn(LW / 2 - 100, 880, 200, 52, 'RETOUR', () => { UI.screen = UI.back || 'title'; }, { primary: true, size: 20 });
 }
+/* ---------- manuel : règles, vaisseaux, pirates, terrain, carte, équipement ---------- */
 const RULES = [
-  ['LA PARTIE', "Trois secteurs à traverser de balise en balise, chacun gardé par un amiral pirate. Chaque saut coûte 1 carburant ; sans carburant, chaque vaisseau perd 2 de coque."],
-  ['TON TOUR', 'Chaque vaisseau peut se déplacer (cases bleues) puis agir une fois. Touche un vaisseau, une case bleue, puis un pirate encadré pour tirer.'],
-  ['LES INTENTIONS', "En rouge : la case que chaque pirate frappera à la FIN DU TOUR. Sors de la case… ou détruis le pirate avant qu'il tire."],
-  ['BOUCLIER ET COQUE', "Les dégâts touchent d'abord le bouclier (+1 par tour), puis la coque. Un vaisseau détruit est perdu pour toute la partie."],
-  ['LIGNE DE VUE', "Un astéroïde entre deux vaisseaux bloque les tirs. Les gros vaisseaux offrent plus de cases : ils sont plus faciles à toucher."],
-  ['ENTRE LES COMBATS', 'Comptoir : carburant, réparations, modules, recrues. Dock : réparation ou module gratuit. Les modules se posent au hangar.'],
+  ['LA PARTIE', "Trois secteurs à traverser de balise en balise, chacun gardé par un amiral pirate. Un vaisseau détruit est perdu pour toute la partie ; elle s'arrête quand toute la flotte est détruite."],
+  ['TON TOUR', "Chaque vaisseau peut se déplacer (cases bleues) puis agir une fois. Touche un vaisseau, garde le doigt sur une case bleue pour voir où il ira, lève le doigt, puis touche un pirate encadré pour tirer. Tant qu'il n'a pas tiré, un vaisseau déplacé peut encore être replacé."],
+  ['LES INTENTIONS', "En rouge : les cases que chaque pirate frappera à la FIN DU TOUR, avec les dégâts. Sors de la case… ou détruis le pirate avant qu'il tire."],
+  ['BOUCLIER ET COQUE', "Les dégâts touchent d'abord le bouclier, puis la coque. Le bouclier se recharge de 1 au début de chaque tour, jusqu'à son maximum."],
+  ['PORTÉE ET LIGNE DE VUE', "La portée se compte en cases, une case en diagonale compte pour 1. Un astéroïde entre deux vaisseaux bloque les tirs. Les gros vaisseaux occupent plus de cases : ils sont plus faciles à toucher."],
+  ['FUIR', "À partir du 3e tour, si tous tes vaisseaux touchent la dernière rangée, le bouton FUIR apparaît : pas de récompense, 1 carburant perdu. Impossible contre un amiral."],
+  ['ENTRE LES COMBATS', "Comptoir : carburant, réparations, modules, un pilote et une recrue. Dock : la moitié des dégâts réparés, ou un module offert. Modules et pilotes se posent au HANGAR (bouton de la carte)."],
+  ['CARBURANT', "Chaque saut coûte 1 carburant. Sans carburant, la flotte dérive : chaque vaisseau perd 2 de coque à chaque saut (sans descendre sous 1). Entrer dans un nouveau secteur rapporte 3 carburant."],
+  ['LES SECTEURS', "1 Ceinture de Karn : astéroïdes, pirates prudents. 2 Nébuleuse d'Orphée : nuages ioniques, nébuleuses, harponneurs, pirates plus malins. 3 Le Seuil : un peu de tout, les pirates les plus coriaces et les plus rusés."],
+  ['SCORE', "1000 points par secteur terminé, 20 par pirate détruit, les crédits restants, et 3000 pour la victoire finale contre la Rouille-Reine."],
+  ['DONNÉES STELLAIRES', "Gagnées en fin de partie (10 par secteur atteint, 3 par contact lourd gagné, 20 par amiral vaincu) et dans certaines épaves. Elles débloquent vaisseaux et flottes : écran DÉBLOCAGES."],
+  ['PARTIE DU JOUR', "La même partie pour toute la famille : même carte, mêmes combats, flotte d'escorte sans déblocages. Seule la première tentative du jour est classée."],
 ];
-function drawRules() {
-  drawBg('hangar'); topBar('RÈGLES', 'EN 6 RUBRIQUES', '', '');
-  let y = 116;
-  RULES.forEach(([t, s]) => { txt(t, 32, y, C.acc, F.mono(17), 'left', 3); y += 30 + para(s, 32, y + 28, LW - 64, C.txt, F.ui(21), 26) + 14; });
-  btn(LW / 2 - 100, 880, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { primary: true, size: 20 });
+const MAN_TABS = [['regles', 'RÈGLES'], ['vaisseaux', 'VAISSEAUX'], ['pirates', 'PIRATES'], ['terrain', 'TERRAIN'], ['carte', 'CARTE'], ['equipement', 'ÉQUIPEMENT']];
+const MAN_SHIPS = ['chasseur', 'fregate', 'mere', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier'];
+const MAN_FOES = ['intercepteur', 'brulot', 'croiseur', 'harponneur', 'amiral', 'veuve', 'reine'];
+const MAN = { tab: 'regles', page: 0, ship: 'chasseur', foe: 'intercepteur' };
+function openManual(back, tab) { UI.screen = 'manual'; UI.back = back; if (tab) { MAN.tab = tab; MAN.page = 0; } }
+function drawManual() {
+  drawBg('hangar'); topBar('MANUEL', 'TOUT CE QU\'IL FAUT SAVOIR', '', '');
+  MAN_TABS.forEach(([k, l], i) => btn(16 + (i % 3) * 172, 106 + Math.floor(i / 3) * 46, 164, 40, l, () => { MAN.tab = k; MAN.page = 0; }, { size: 17, ls: 2, primary: MAN.tab === k }));
+  const y0 = 208;
+  if (MAN.tab === 'regles') manRules(y0);
+  else if (MAN.tab === 'vaisseaux') shipCard(MAN.ship, 16, manPicker(MAN_SHIPS, MAN.ship, t => { MAN.ship = t; }, y0 - 4), LW - 32, 488);
+  else if (MAN.tab === 'pirates') shipCard(MAN.foe, 16, manPicker(MAN_FOES, MAN.foe, t => { MAN.foe = t; }, y0 - 4), LW - 32, 488);
+  else if (MAN.tab === 'terrain') manTerrain(y0);
+  else if (MAN.tab === 'carte') manMap(y0);
+  else manGear(y0);
+  btn(LW / 2 - 100, 892, 200, 52, 'RETOUR', () => { UI.screen = UI.back || 'title'; }, { primary: true, size: 20 });
+}
+// règles en rubriques, réparties en pages selon la place
+function manRules(y0) {
+  const font = F.ui(20), lh = 24, room = 800 - y0, pages = [[]]; let h = 0;
+  for (const [t, s] of RULES) {
+    const L = wrapLines(s, LW - 64, font), bh = 28 + L.length * lh + 14;
+    if (h + bh > room && pages[pages.length - 1].length) { pages.push([]); h = 0; }
+    pages[pages.length - 1].push([t, L]); h += bh;
+  }
+  MAN.page = Math.max(0, Math.min(MAN.page, pages.length - 1));
+  let y = y0;
+  for (const [t, L] of pages[MAN.page]) { txt(t, 32, y, C.acc, F.mono(17), 'left', 3); L.forEach((l, i) => txt(l, 32, y + 28 + i * lh, C.txt, font)); y += 28 + L.length * lh + 14; }
+  if (pages.length > 1) {
+    txt(`${MAN.page + 1} / ${pages.length}`, LW / 2, 834, C.dim, F.mono(17), 'center', 2);
+    btn(32, 818, 160, 48, 'PRÉCÉDENT', () => { MAN.page--; }, { size: 18, off: MAN.page === 0 });
+    btn(LW - 192, 818, 160, 48, 'SUIVANT', () => { MAN.page++; }, { size: 18, off: MAN.page >= pages.length - 1, primary: MAN.page < pages.length - 1 });
+  }
+}
+// vignettes des vaisseaux sur 2 rangées ; renvoie le bas des vignettes
+function manPicker(list, cur, pick, y0) {
+  const cols = Math.ceil(list.length / 2), w = (LW - 32) / cols, h = 78;
+  list.forEach((t, i) => {
+    const x = 16 + (i % cols) * w, y = y0 + Math.floor(i / cols) * (h + 6), on = t === cur;
+    frameBox(x + 2, y, w - 4, h, on ? (TYPES[t].foe ? C.foe : C.acc) : 'rgba(125,138,158,.5)', 6, on ? 'rgba(242,178,74,.10)' : 'rgba(6,10,18,.6)');
+    g.save(); g.beginPath(); g.rect(x + 3, y + 1, w - 6, h - 2); g.clip();
+    drawSprite(t, x + w / 2, y + h / 2, Math.min(.9, (h - 8) / (TYPES[t].n * 72), (w - 10) / 72)); g.restore();
+    zone(x, y, w, h, () => pick(t));
+  });
+  return y0 + 2 * (h + 6) + 2;
+}
+// où trouver un vaisseau (joueur) ou dans quels secteurs on croise un pirate
+const foeSectors = t => SECTORS.map((S, i) => S.boss === t || JSON.stringify(S.pool).includes(`"${t}"`) || (t === 'intercepteur' && S.extra) ? i + 1 : 0).filter(Boolean);
+function shipWhere(t) {
+  const T = TYPES[t], out = [];
+  if (T.foe) {
+    const ss = foeSectors(t);
+    out.push(T.spawn ? `AMIRAL DU SECTEUR ${ss[0]} · ${SECTORS[ss[0] - 1].name}` : `SECTEUR${ss.length > 1 ? 'S' : ''} ${ss.join(', ')}`);
+    return out;
+  }
+  const fl = FLEETS.filter(f => f.ships.includes(t)).map(f => f.name);
+  if (fl.length) out.push('AU DÉPART : ' + fl.join(', '));
+  if (BASE_RECRUITS.includes(t)) out.push(`AU COMPTOIR DÈS LE DÉBUT · ${T.price} CRÉDITS`);
+  const u = UNLOCKS.find(u => u.id === t);
+  if (u) out.push(meta.unlocked.includes(t) ? `DÉBLOQUÉ : AU COMPTOIR (${T.price} CRÉDITS) ET DANS LES ÉPAVES` : `À DÉBLOQUER : ${u.cost} DONNÉES STELLAIRES`);
+  return out;
+}
+const JAUGES = 'COQUE : sa solidité ; à 0, le vaisseau est détruit. BOUCLIER : encaisse les dégâts en premier, +1 au début de chaque tour. VITESSE : cases parcourues par tour. PORTÉE : distance de tir en cases.';
+// fiche complète d'un vaisseau ou d'un pirate (manuel)
+function shipCard(t, x, y, w, h) {
+  const T = TYPES[t], foe = !!T.foe, col = foe ? C.foe : C.acc, X = x + 144, RW = w - 160;
+  frameBox(x, y, w, h, col, 12);
+  g.save(); g.beginPath(); g.rect(x + 8, y + 8, 124, 200); g.clip(); g.fillStyle = 'rgba(255,255,255,.03)'; g.fillRect(x + 8, y + 8, 124, 200);
+  drawSprite(t, x + 70, y + 108, fitScale(t, 186)); g.restore();
+  txt(T.name, X, y + 12, foe ? C.foe : C.txt, F.ui(26), 'left', 2, RW);
+  txt(`${T.n} CASE${T.n > 1 ? 'S' : ''}${foe ? ' · PIRATE' : ''}`, X, y + 44, C.dim, F.mono(14), 'left', 1, RW);
+  // jauges : coque (pirates : selon le secteur), bouclier, vitesse
+  const hulls = foe ? foeSectors(t).map(i => Math.round(T.hull * SECTORS[i - 1].mult)) : null;
+  const rows = [['COQUE', foe ? Math.max(...hulls) : T.hull, foe ? 60 : 16, foe ? (hulls.length > 1 ? `${Math.min(...hulls)} À ${Math.max(...hulls)}` : String(hulls[0])) : String(T.hull), C.ok],
+    ['BOUCLIER', T.sh, 4, T.regen ? T.sh + ' ↻' : String(T.sh), C.ally], ['VITESSE', T.spd, 5, String(T.spd), C.acc]];
+  rows.forEach(([l, v, m, s, c], i) => { const yy = y + 70 + i * 26; txt(l, X, yy, C.dim, F.mono(14)); meter(X + 92, yy + 4, RW - 162, v, m, c); txt(s, X + RW, yy, C.txt, F.mono(14), 'right'); });
+  let yy = y + 152;
+  if (!T.w.length) { txt(T.ai === 'brulot' ? 'SANS ARME : EXPLOSE AU CONTACT' : 'SANS ARME', X, yy, C.dim, F.mono(14), 'left', 0, RW); yy += 22; }
+  for (const wp of T.w) {
+    const rg = wp.swarm ? 'PIRATES COLLÉS' : `PORTÉE ${wp.min ? wp.min + ' À ' : ''}${wp.rng}`;
+    txt(`${wp.name}${T.turrets ? ' ×' + T.turrets : ''} · ${wp.dmg} DÉGÂT${wp.dmg > 1 ? 'S' : ''} · ${rg}`, X, yy, C.txt, F.mono(14), 'left', 0, RW); yy += 22;
+  }
+  if (T.spawn) { txt(`RENFORTS : ${T.spawn.n} ${TYPES[T.spawn.t].name}S / ${T.spawn.every} TOURS`, X, yy, C.dim, F.mono(14), 'left', 0, RW); }
+  // capacité, où le trouver, les jauges expliquées
+  let y2 = y + 222;
+  txt(T.skill, x + 16, y2, col, F.mono(17), 'left', 3, w - 32); y2 += 28;
+  y2 += para(T.sdesc.charAt(0).toUpperCase() + T.sdesc.slice(1), x + 16, y2, w - 32, C.txt, F.ui(19), 23) + 10;
+  if (t === 'mere') y2 += para('Chasseur léger : coque 3, canons 2. Drones : coque 3, essaim. Ils repartent après le combat.', x + 16, y2, w - 32, C.dim, F.ui(17), 20) + 8;
+  for (const l of shipWhere(t)) { txt(l, x + 16, y2, foe ? C.foe : C.ally, F.mono(14), 'left', 1, w - 32); y2 += 22; }
+  if (foe && !T.spawn) { txt('COQUE PLUS FORTE À CHAQUE SECTEUR (×1,5 · ×1,6 · ×1,8)', x + 16, y2, C.dim, F.mono(13), 'left', 0, w - 32); y2 += 20; }
+  const L = wrapLines(JAUGES, w - 32, F.ui(16)), yb = y + h - 12 - L.length * 18;
+  if (yb > y2 + 4) { g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(x + 16, yb - 8, w - 32, 1); L.forEach((l, i) => txt(l, x + 16, yb + i * 18, C.dim, F.ui(16))); }
+}
+// terrain et marques de la grille, dessinés comme en combat
+const TERRAIN = [
+  ['rock', 'ASTÉROÏDE', "Infranchissable. Il bloque les tirs qui passent derrière lui (sauf la salve de l'artilleur)."],
+  ['ion', 'NUAGE IONIQUE', 'Qui y finit le tour perd son bouclier, pirate comme allié, juste avant les tirs pirates. Secteurs 2 et 3.'],
+  ['fog', 'NÉBULEUSE', "Un vaisseau entièrement dedans ne peut pas être visé à plus de 2 cases, ni viser plus loin (sauf l'éclaireur)."],
+  ['aim', 'CASE VISÉE', 'Un pirate y tirera à la FIN DU TOUR : le chiffre donne les dégâts. Sors-en, ou détruis le tireur avant.'],
+  ['side', 'CASE VOISINE', "Éclats autour d'un gros tir (torpille, tourelle d'amiral, brûlot) : moins de dégâts, mais il faut y penser."],
+  ['grap', 'GRAPPIN', 'Le harponneur tirera de 2 cases vers lui le vaisseau de 1 case resté sur la case. Quitte-la pour y échapper.'],
+  ['move', 'CASE BLEUE', 'Où le vaisseau choisi peut aller. Garde le doigt posé : un fantôme montre sa place et les dégâts qui l\'y attendent.'],
+];
+function manTerrain(y0) {
+  TERRAIN.forEach(([k, name, s], i) => {
+    const x = 24, y = y0 + i * 84, cx = x + CS / 2, cy = y + CS / 2;
+    g.fillStyle = 'rgba(6,10,18,.75)'; g.fillRect(x, y, CS, CS); g.strokeStyle = 'rgba(150,180,220,.25)'; g.lineWidth = 1; g.strokeRect(x + .5, y + .5, CS - 1, CS - 1);
+    if (k === 'rock') { const R = ROCKS[0], w = R.width / RS; g.drawImage(R, cx - w / 2, cy - w / 2, w, w); }
+    else if (k === 'ion') ionTile(x, y, 5);
+    else if (k === 'fog') fogTile(x, y);
+    else if (k === 'aim') { g.fillStyle = C.foe2 + '.2)'; g.fillRect(x + 2, y + 2, CS - 4, CS - 4); corners(x + 6, y + 6, CS - 12, CS - 12, C.foe, 12, 2); g.fillStyle = 'rgba(30,6,6,.88)'; g.fillRect(x + CS - 42, y + 6, 36, 22); txt('-3', x + CS - 24, y + 8, C.foe, F.mono(18), 'center'); }
+    else if (k === 'side') { g.fillStyle = C.foe2 + '.10)'; g.fillRect(x + 2, y + 2, CS - 4, CS - 4); txt('-2', x + CS - 8, y + CS - 24, C.foe2 + '.85)', F.mono(16), 'right'); }
+    else if (k === 'grap') { corners(x + 6, y + 6, CS - 12, CS - 12, '#c8d2e1', 12, 2); g.fillStyle = 'rgba(10,14,22,.9)'; g.fillRect(x + 4, y + 6, CS - 8, 20); txt('GRAPPIN', cx, y + 9, '#c8d2e1', F.mono(13), 'center', 0, CS - 12); }
+    else { g.fillStyle = C.ally2 + '.14)'; g.fillRect(x + 3, y + 3, CS - 6, CS - 6); }
+    txt(name, x + CS + 16, y + 2, k === 'aim' || k === 'side' ? C.foe : k === 'move' || k === 'ion' ? C.ally : k === 'fog' ? NEB : C.txt, F.ui(21), 'left', 2);
+    para(s, x + CS + 16, y + 28, LW - x - CS - 40, C.dim, F.ui(17), 19);
+  });
+}
+function manMap(y0) {
+  LEGEND_KINDS.forEach((k, i) => legendRow(k, 46, y0 + i * 78, LW - 100));
+  para('Les balises touchées sur la carte montrent leur fiche ; on ne saute que vers une balise reliée à celle où est la flotte (encadrée en ambre).', 32, y0 + LEGEND_KINDS.length * 78 + 6, LW - 64, C.txt, F.ui(18), 21);
+}
+function manGear(y0) {
+  txt('MODULES', 32, y0, C.acc, F.mono(17), 'left', 3);
+  let y = y0 + 30;
+  for (const k of MOD_IDS) { const M = MODS[k]; txt(M.name, 32, y, C.txt, F.ui(20), 'left', 2); txt(`${M.price} CR`, LW - 32, y + 2, C.dim, F.mono(14), 'right'); txt(M.long, 32, y + 22, C.dim, F.ui(17), 'left', 0, LW - 64); y += 48; }
+  y += para('Emplacements : 2 sur un vaisseau de 1 case, 3 sur les plus gros. Au HANGAR, touche un module puis un emplacement libre ; touche un module posé pour le reprendre.', 32, y, LW - 64, C.txt, F.ui(17), 20) + 18;
+  txt('PILOTES', 32, y, C.ally, F.mono(17), 'left', 3); y += 30;
+  for (const k of PILOT_IDS) { const P = PILOTS[k]; txt(P.name, 32, y, C.txt, F.ui(20), 'left', 2); txt(P.desc, 160, y + 2, C.dim, F.ui(18), 'left', 0, LW - 192); y += 30; }
+  para('Recrutés dans les épaves et au comptoir (40 à 60 crédits). Un pilote par vaisseau, posé au HANGAR ; il suit son vaisseau, et le vétéran garde ses bonus.', 32, y + 8, LW - 64, C.txt, F.ui(17), 20);
 }
 function recordEnd() {
   if (run.recorded) return; run.recorded = true;
@@ -839,7 +976,7 @@ function draw() {
   BTN = []; g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
   if (UI.screen === 'title') drawTitle();
   else if (UI.screen === 'fleet') drawFleet();
-  else if (UI.screen === 'rules') drawRules();
+  else if (UI.screen === 'manual') drawManual();
   else if (UI.screen === 'unlocks') drawUnlocks();
   else if (!run) UI.screen = 'title';
   else if (UI.hangar && run.phase !== 'combat') drawHangar();
@@ -892,7 +1029,7 @@ function resize() {
   cv.width = Math.round(cw * k); cv.height = Math.round(ch * k); K = Math.max(.5, cv.width / LW); STATIC.key = '';
 }
 window.addEventListener('resize', resize);
-Object.assign(window.Nebula, { UI, ANIM, recordEnd, save, store, makeShop, crash });
+Object.assign(window.Nebula, { UI, MAN, openManual, ANIM, recordEnd, save, store, makeShop, crash });
 Object.defineProperty(window.Nebula, 'run', { get: () => run, set: v => { run = v; } });
 ['mere', 'fregate', 'chasseur'].forEach(spr); bg('title');
 ['intercepteur', 'brulot', 'croiseur', 'harponneur', 'amiral', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier', 'veuve', 'reine'].forEach(spr); ['map', 'combat', 'hangar', 'map2', 'combat2', 'map3', 'combat3'].forEach(bg);
