@@ -161,3 +161,6 @@ Cartouche dans le menu (icône 16×16 : silhouette de vaisseau ambre), transfert
 - Récompenses : contact 20–35 cr (+1 carburant une fois sur deux, module 1 fois sur 4), contact lourd 50–70 cr, 1 carburant et un module, amiral 100 cr et un module. Départ : 40 crédits, 6 carburant.
 - Baies du porte-vaisseaux : bouton BAIE (prêt tous les 2 tours), sans consommer l'action du porte-vaisseaux ; le vaisseau lancé agit au tour suivant.
 - Pas encore : épaves, nébuleuses, partie du jour (bouton grisé), données stellaires et déblocages (comptées dans `nebula.meta`, pas encore dépensables), tutoriel, manuel (un écran RÈGLES en 6 rubriques le remplace), nappe d'ambiance.
+
+## 18. À faire en session 2 (retours de l'utilisateur)
+- **Capacité de chaque vaisseau visible** : la fiche de combat d'un vaisseau du joueur doit afficher sa capacité (ex. « BULLE : +1 bouclier aux alliés voisins », « RIPOSTE… », « BAIES… »), comme c'est déjà le cas pour les pirates ; idem sur la carte de chaque vaisseau dans le **hangar**. Pour **tous** les vaisseaux (chasseur, frégate, porte-vaisseaux, bombardier, drones, égide, et les nouveaux de la session 2). Aujourd'hui elle n'apparaît qu'au comptoir (recrue).
