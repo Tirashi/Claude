@@ -28,6 +28,10 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 8. **Bord de lac** (détente) — pêche au lever du soleil dans la brume : ferrer au bon moment, gérer la tension du fil, remplir son carnet de poissons.
 9. **Le Club d'agility** — ✅ réalisé.
 
+## Jeux de réflexion à ajouter (idées du 14/10)
+1. **Murdoku** (logique / enquête) — un sudoku policier : sur le plan d'une maison découpé en pièces (grille 6×6 ou plus), placer chaque suspect et la victime pour qu'il n'y ait qu'**une personne par ligne et par colonne**, en suivant les indices (« le colonel est dans la cuisine », « Rose est à côté d'une plante », « personne n'est sur le tapis »…). Le coupable est celui qui se retrouve **seul dans la même pièce que la victime**. Générateur à graine + solveur d'unicité (comme Pont stellaire), plusieurs tailles, **enquête du jour**, temps + 30 s par indice, classement.
+2. **Sudoku** (logique) — le classique 9×9 (et 4×4 / 6×6 pour débuter), niveaux de difficulté selon les techniques nécessaires, notes au crayon, surlignage des chiffres identiques, erreurs signalées ou non ; **grille du jour** (graine = date), temps + 30 s par indice, classement par niveau. Générateur + solveur d'unicité.
+
 ## Les jeux de bateaux sélectionnés (pour mon fils)
 1. **Amiral !** — ✅ réalisé.
 2. **Pavillon noir** (rogue-lite pirate) — un sloop navigue d'île en île sur une carte qui change à chaque partie pour trouver le trésor de Barbe-Grise : îles à piller, marchands, tempêtes, sirènes ; combats de profil par bordées (boulets, chaînes pour les mâts, grappin pour l'abordage) avec le vent qui tourne ; équipage à recruter (cuisinier, canonnier, perroquet…) ; si on coule, on garde quelques doublons pour améliorer le bateau suivant.
