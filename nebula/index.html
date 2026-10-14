@@ -47,7 +47,8 @@ const C = { acc: '#f2b24a', acc2: 'rgba(242,178,74,', txt: '#d8dee8', dim: '#7d8
 const F = { ui: s => `600 ${s}px Rajdhani, "Arial Narrow", sans-serif`, bold: s => `700 ${s}px Rajdhani, "Arial Narrow", sans-serif`, mono: s => `${s}px "Share Tech Mono", Consolas, monospace`, title: s => `${s}px Michroma, "Arial Narrow", sans-serif` };
 let K = 1, BTN = [], now = 0, run = store.get('run', null);
 { const raw = run; run = migrate(raw); if (raw && !run) store.set('run.bak', raw); }   // illisible : mise de côté, pas effacée
-const meta = Object.assign({ data: 0, games: 0, wins: 0, cleared: 0, kills: 0, bestSector: 0 }, store.get('meta', {}));
+const meta = Object.assign({ data: 0, games: 0, wins: 0, cleared: 0, kills: 0, bestSector: 0, unlocked: [] }, store.get('meta', {}));
+if (!Array.isArray(meta.unlocked)) meta.unlocked = [];
 let best = Number(store.get('best', 0)) || 0, SFX = store.get('sfx', true);
 const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, node: null, legend: false, ghost: null, pickP: null, ranges: !!store.get('ranges', false) };
 function save() { if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
@@ -707,26 +708,49 @@ function drawTitle() {
     btn(132, 670, 280, 52, 'NOUVELLE PARTIE', () => { UI.screen = 'fleet'; }, { primary: true, size: 24 });
     btn(132, 734, 280, 44, 'PARTIE DU JOUR · BIENTÔT', null, { size: 19, off: true });
   }
-  btn(92, 790, 112, 40, 'RÈGLES', () => { UI.screen = 'rules'; }, { size: 18 });
-  btn(216, 790, 112, 40, 'CLASSEMENT', () => { location.href = '../classements/index.html#nebula'; }, { size: 16, ls: 1 });
-  btn(340, 790, 112, 40, SFX ? 'SON : OUI' : 'SON : NON', () => { SFX = !SFX; store.set('sfx', SFX); if (SFX) sfx('click'); }, { size: 16, ls: 1 });
-  if (best || meta.games) txt(`RECORD ${best} · ${meta.games} PARTIE${meta.games > 1 ? 'S' : ''} · ${meta.data} DONNÉES STELLAIRES`, LW / 2, 848, C.dim, F.mono(14), 'center', 1);
+  btn(52, 790, 104, 40, 'RÈGLES', () => { UI.screen = 'rules'; }, { size: 17, ls: 1 });
+  btn(164, 790, 104, 40, 'DÉBLOCAGES', () => { UI.screen = 'unlocks'; UI.back = 'title'; }, { size: 15, ls: 1, col: walletOf(meta) >= cheapest() ? C.acc : null });
+  btn(276, 790, 104, 40, 'CLASSEMENT', () => { location.href = '../classements/index.html#nebula'; }, { size: 15, ls: 1 });
+  btn(388, 790, 104, 40, SFX ? 'SON : OUI' : 'SON : NON', () => { SFX = !SFX; store.set('sfx', SFX); if (SFX) sfx('click'); }, { size: 15, ls: 1 });
+  if (best || meta.games) txt(`RECORD ${best} · ${meta.games} PARTIE${meta.games > 1 ? 'S' : ''} · ${walletOf(meta)} DONNÉES STELLAIRES`, LW / 2, 848, C.dim, F.mono(14), 'center', 1);
   txt('BIENTÔT', LW / 2, 882, C.acc, F.mono(16), 'center', 4); txt("NEBULA : L'EMPIRE DES ÉTOILES", LW / 2, 906, C.txt, F.ui(22), 'center', 3);
 }
+// choix de la flotte : toucher une flotte ouverte la choisit, une flotte verrouillée mène aux déblocages
 function drawFleet() {
-  drawBg('hangar'); topBar('FLOTTE', 'CHOIX DE LA FLOTTE DE DÉPART', '', '');
+  drawBg('hangar'); topBar('FLOTTE', 'CHOIX DE LA FLOTTE DE DÉPART', `${walletOf(meta)} DONNÉES`, '');
+  if (!FLEETS.some(f => f.id === UI.fleet && fleetOpen(f, meta.unlocked))) UI.fleet = 'escorte';
   FLEETS.forEach((fl, i) => {
-    const y = 120 + i * 220, lock = !!fl.locked;
-    frameBox(16, y, LW - 32, 204, lock ? 'rgba(125,138,158,.4)' : C.acc, 12);
-    txt(fl.name, 32, y + 14, lock ? C.dim : C.acc, F.ui(25), 'left', 3);
-    txt(lock ? `À DÉBLOQUER · ${fl.locked} DONNÉES STELLAIRES (PROCHAINEMENT)` : fl.desc, 32, y + 46, C.dim, lock ? F.mono(13) : F.ui(18));
-    fl.ships.forEach((t, k) => drawSprite(t, 80 + k * 110, y + 136, Math.min(1, 118 / (TYPES[t].n * 72)), lock ? .35 : 1));
-    if (!lock) zone(16, y, LW - 32, 204, () => startRun());
+    const y = 112 + i * 222, lock = !fleetOpen(fl, meta.unlocked), on = UI.fleet === fl.id;
+    if (on) { g.fillStyle = C.acc2 + '.10)'; g.fillRect(16, y, LW - 32, 206); }
+    frameBox(16, y, LW - 32, 206, lock ? 'rgba(125,138,158,.4)' : on ? C.acc : C.dim, 12, on ? 'rgba(0,0,0,0)' : undefined);
+    txt(fl.name, 32, y + 14, lock ? C.dim : on ? C.acc : C.txt, F.ui(25), 'left', 3, LW - 200);
+    if (on) txt('CHOISIE', LW - 34, y + 20, C.acc, F.mono(15), 'right', 2);
+    txt(lock ? `À DÉBLOQUER · ${fl.locked} DONNÉES STELLAIRES (TU EN AS ${walletOf(meta)})` : fl.desc, 32, y + 46, lock ? C.acc : C.dim, lock ? F.mono(13) : F.ui(18), 'left', 0, LW - 64);
+    fl.ships.forEach((t, k) => drawSprite(t, 80 + k * 110, y + 138, Math.min(1, 118 / (TYPES[t].n * 72)), lock ? .35 : 1));
+    zone(16, y, LW - 32, 206, () => { if (lock) { UI.screen = 'unlocks'; UI.back = 'fleet'; } else UI.fleet = fl.id; });
   });
   btn(40, 800, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
-  btn(LW - 240, 800, 200, 52, 'DÉCOLLER', () => startRun(), { primary: true, size: 20 });
+  btn(LW - 240, 800, 200, 52, 'DÉCOLLER', () => startRun(UI.fleet), { primary: true, size: 20 });
 }
-function startRun() { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, 'escorte'); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump'); }
+function startRun(fleetId = 'escorte') { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, fleetId, meta.unlocked); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump'); }
+const cheapest = () => Math.min(...UNLOCKS.filter(u => !meta.unlocked.includes(u.id)).map(u => u.cost), 1e9);
+// déblocages : les données stellaires gagnées en fin de partie ouvrent de nouveaux vaisseaux (au comptoir) et flottes
+function drawUnlocks() {
+  drawBg('hangar'); const W = walletOf(meta);
+  topBar('DÉBLOCAGES', 'DONNÉES STELLAIRES', `${W} DONNÉES`, `${meta.data} GAGNÉES`, LW - 250);
+  para('Gagnées en fin de partie : 10 par secteur atteint, 3 par contact lourd gagné, 20 par amiral vaincu, et dans certaines épaves. Toujours au comptoir : chasseur, frégate, bombardier, drones, égide.', 32, 108, LW - 64, C.dim, F.ui(17), 20);
+  UNLOCKS.forEach((u, i) => {
+    const y = 190 + i * 84, fl = u.fleet && FLEETS.find(f => f.id === u.id), have = meta.unlocked.includes(u.id), ok = !have && W >= u.cost;
+    frameBox(16, y, LW - 32, 76, have ? C.ok : ok ? C.acc : C.dim, 8);
+    g.save(); g.beginPath(); g.rect(22, y + 4, 70, 68); g.clip();
+    const t = fl ? fl.ships[0] : u.id; drawSprite(t, 57, y + 38, Math.min(.85, 66 / (TYPES[t].n * 72)), have || ok ? 1 : .45); g.restore();
+    txt(fl ? fl.name : TYPES[u.id].name, 104, y + 10, have ? C.ok : C.txt, F.ui(21), 'left', 2, LW - 290);
+    txt(fl ? fl.desc : `${TYPES[u.id].skill} · ${TYPES[u.id].short}`, 104, y + 40, C.dim, F.ui(15), 'left', 0, LW - 290);
+    if (have) txt(fl ? 'FLOTTE OUVERTE' : 'AU COMPTOIR', LW - 104, y + 28, C.ok, F.mono(14), 'center', 1, 140);
+    else btn(LW - 176, y + 14, 144, 48, `${u.cost} DONNÉES`, () => { if (unlock(meta, u.id)) { store.set('meta', meta); sfx('shield'); } }, { size: 16, ls: 1, primary: ok, off: !ok });
+  });
+  btn(LW / 2 - 100, 880, 200, 52, 'RETOUR', () => { UI.screen = UI.back || 'title'; }, { primary: true, size: 20 });
+}
 const RULES = [
   ['LA PARTIE', "Trois secteurs à traverser de balise en balise, chacun gardé par un amiral pirate. Chaque saut coûte 1 carburant ; sans carburant, chaque vaisseau perd 2 de coque."],
   ['TON TOUR', 'Chaque vaisseau peut se déplacer (cases bleues) puis agir une fois. Touche un vaisseau, une case bleue, puis un pirate encadré pour tirer.'],
@@ -766,7 +790,8 @@ function drawEnd() {
   if (run.rankText) txt(run.rankText, LW / 2, 548, C.txt, F.mono(16), 'center', 2);
   btn(60, 660, 200, 52, 'MENU', () => { run = null; UI.screen = 'title'; }, { size: 20 });
   btn(LW - 260, 660, 200, 52, 'REJOUER', () => { UI.screen = 'fleet'; run = null; }, { primary: true, size: 20 });
-  btn(LW / 2 - 100, 730, 200, 44, 'CLASSEMENT', () => { location.href = '../classements/index.html#nebula'; }, { size: 18 });
+  btn(60, 730, 200, 44, 'CLASSEMENT', () => { location.href = '../classements/index.html#nebula'; }, { size: 18 });
+  btn(LW - 260, 730, 200, 44, 'DÉBLOCAGES', () => { run = null; UI.screen = 'unlocks'; UI.back = 'title'; }, { size: 18, col: walletOf(meta) >= cheapest() ? C.acc : null });
 }
 
 /* ---------- boucle ---------- */
@@ -798,6 +823,7 @@ function draw() {
   if (UI.screen === 'title') drawTitle();
   else if (UI.screen === 'fleet') drawFleet();
   else if (UI.screen === 'rules') drawRules();
+  else if (UI.screen === 'unlocks') drawUnlocks();
   else if (!run) UI.screen = 'title';
   else if (UI.hangar && run.phase !== 'combat') drawHangar();
   else if (run.phase === 'map') drawMap();

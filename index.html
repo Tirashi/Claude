@@ -627,6 +627,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-14", "Nebula : déblocages avec les données stellaires, flottes de choc et marchande."],
   ["2026-10-14", "Nebula : épaves à choix, nébuleuses et pilotes (As, Mécano, Tireur, Prudent, Vétéran)."],
   ["2026-10-14", "Nebula : les secteurs 2 et 3, leurs nuages ioniques, la Veuve d'Orphée, la Rouille-Reine et la victoire finale."],
   ["2026-10-14", "Nebula : placement des vaisseaux au doigt plus sûr (aperçu, replacement), 5 nouveaux vaisseaux au comptoir et le harponneur pirate."],
@@ -875,6 +876,8 @@ function mergeSaves(g){
     if (a.m && typeof a.m === "object"){
       const mine = readKey("nebula.meta", {}) || {}; let ch = false;
       for (const [k, v] of Object.entries(a.m)) if (typeof v === "number" && v > (Number(mine[k]) || 0)){ mine[k] = v; ch = true; }
+      // déblocages : on réunit les deux listes (le solde est recalculé par le jeu : données gagnées - coût des déblocages)
+      if (Array.isArray(a.m.unlocked)){ const u = new Set(Array.isArray(mine.unlocked) ? mine.unlocked : []); for (const x of a.m.unlocked) if (typeof x === "string" && /^[a-z]{1,16}$/.test(x) && !u.has(x)){ u.add(x); ch = true; } mine.unlocked = [...u]; }
       if (ch){ writeKey("nebula.meta", mine); n++; }
     }
     const daily = readKey("nebula.daily", {}) || {};

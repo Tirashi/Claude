@@ -744,12 +744,37 @@ function makeMap(seed, sector = 1) {
 const FLEETS = [
   { id: 'escorte', name: "FLOTTE D'ESCORTE", ships: ['mere', 'fregate', 'chasseur'], desc: 'Un porte-vaisseaux et son escorte : solide et polyvalente.' },
   { id: 'choc', name: 'FLOTTE DE CHOC', ships: ['cuirasse', 'bombardier', 'chasseur'], locked: 60, desc: 'Cuirassé, bombardier et chasseur : frappe lourde.' },
-  { id: 'marchande', name: 'FLOTTE MARCHANDE', ships: ['convoyeur', 'egide', 'fregate', 'eclaireur'], locked: 80, desc: 'Plus de crédits, moins de puissance.' },
+  { id: 'marchande', name: 'FLOTTE MARCHANDE', ships: ['convoyeur', 'fregate', 'chasseur', 'eclaireur'], locked: 80, cr: 100, desc: 'Part avec 100 crédits, gagne plus, frappe moins fort.' },
 ];
-function newRun(seed, fleetId = 'escorte') {
+/* ---------- déblocages (données stellaires, entre les parties) ----------
+   Le solde = données gagnées (meta.data, cumulées) - coût de ce qui est débloqué (meta.unlocked) :
+   rien d'autre à stocker, et le transfert de sauvegarde n'a qu'à garder le maximum et réunir les listes. */
+const BASE_RECRUITS = ['chasseur', 'fregate', 'bombardier', 'drones', 'egide'];   // au comptoir dès le départ
+const UNLOCKS = [
+  { id: 'eclaireur', cost: 15 }, { id: 'convoyeur', cost: 30 }, { id: 'artilleur', cost: 55 },
+  { id: 'choc', cost: 60, fleet: true }, { id: 'marchande', cost: 80, fleet: true },
+  { id: 'cuirasse', cost: 90 }, { id: 'atelier', cost: 90 },
+];
+/** @param {string[]} unlocked */
+const spentOf = unlocked => UNLOCKS.filter(u => unlocked.includes(u.id)).reduce((a, u) => a + u.cost, 0);
+/** @param {{ data?: number, unlocked?: string[] }} meta */
+const walletOf = meta => Math.max(0, (meta.data || 0) - spentOf(meta.unlocked || []));
+/** @param {{ data?: number, unlocked?: string[] }} meta @param {string} id */
+function unlock(meta, id) {
+  const u = UNLOCKS.find(x => x.id === id), have = meta.unlocked || [];
+  if (!u || have.includes(id) || walletOf(meta) < u.cost) return false;
+  meta.unlocked = have.concat(id); return true;
+}
+/** @param {string[]} unlocked */
+const recruitsFor = unlocked => BASE_RECRUITS.concat(UNLOCKS.filter(u => !u.fleet && unlocked.includes(u.id)).map(u => u.id));
+const fleetOpen = (fl, unlocked) => !fl.locked || unlocked.includes(fl.id);
+/** @param {number} seed @param {string} [fleetId] @param {string[]} [unlocked] */
+function newRun(seed, fleetId = 'escorte', unlocked = []) {
   const R = rng(seedOf(seed, 5)), names = shuffle(R, NAMES.slice());
   const run = { v: RUN_V, seed, sector: 1, fuel: 6, cr: 40, kills: 0, heavy: 0, admirals: 0, sectorsDone: 0, stock: [], crew: [], data: 0, seen: [], uid: 1, phase: 'map', visited: [], combat: null, shop: null, reward: null, event: null, msg: null, fleet: [] };
   for (const t of FLEETS.find(f => f.id === fleetId).ships) addFleet(run, t, names.pop());
+  run.fleetId = fleetId; run.recruits = recruitsFor(unlocked);
+  const fl = FLEETS.find(f => f.id === fleetId); if (fl.cr) run.cr = fl.cr; if (fl.fuel) run.fuel = fl.fuel;   // la flotte marchande part riche   // ce que le comptoir et les épaves peuvent proposer
   run.map = makeMap(seed, 1); run.at = 0; run.visited = [0];
   return run;
 }
@@ -808,7 +833,7 @@ function resolveEvent(run, i) {
   if (o.mod) { const m = pick(R, MOD_IDS); run.stock.push(m); gains.push('MODULE : ' + MODS[m].name); }
   if (o.pilot) { const p = randomPilot(R, run, typeof o.pilot === 'string' ? o.pilot : null); run.crew.push(p); gains.push(`PILOTE : ${p.name} (${PILOTS[p.k].name})`); }
   if (o.ship) {
-    if (run.fleet.length < 5) { const t = pick(R, RECRUITS), f = addFleet(run, t, pick(R, NAMES)); f.hull = Math.ceil(maxHullOf(f) / 2); gains.push('VAISSEAU : ' + TYPES[t].name); }
+    if (run.fleet.length < 5) { const t = pick(R, run.recruits || RECRUITS), f = addFleet(run, t, pick(R, NAMES)); f.hull = Math.ceil(maxHullOf(f) / 2); gains.push('VAISSEAU : ' + TYPES[t].name); }
     else { run.cr += 40; gains.push('+40 CRÉDITS (FLOTTE PLEINE)'); }
   }
   if (o.data) { run.data = (run.data || 0) + o.data; gains.push(`+${o.data} DONNÉES STELLAIRES`); }
@@ -868,7 +893,7 @@ function afterReward(run) {
 const RECRUITS = ['chasseur', 'fregate', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier'];
 function makeShop(run, seed) {
   const R = rng(seedOf(seed, 3)), mods = shuffle(R, MOD_IDS.slice()).slice(0, 2).map(m => ({ m, price: Math.round(Math.min(80, Math.max(40, MODS[m].price + (R() - .5) * 20))), sold: false }));
-  const t = pick(R, RECRUITS);
+  const t = pick(R, run.recruits || RECRUITS);
   return { mods, ship: { t, price: Math.round(Math.min(150, Math.max(80, TYPES[t].price + (R() - .5) * 20))), name: pick(R, NAMES), sold: false },
     pilot: { p: randomPilot(R, run), price: 40 + Math.floor(R() * 21), sold: false } };
 }
@@ -918,6 +943,6 @@ function migrate(r) {
 const scoreOf = run => 1000 * run.sectorsDone + 20 * run.kills + run.cr + (run.victory ? 3000 : 0);
 const stellarOf = run => 10 * run.sector + 3 * run.heavy + 20 * run.admirals + (run.data || 0);
 
-const NEBULA_API = { TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, seedOf, dangerMap, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
+const NEBULA_API = { TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
 if (typeof window !== 'undefined') window.Nebula = NEBULA_API;
 if (typeof module !== 'undefined') module.exports = NEBULA_API;

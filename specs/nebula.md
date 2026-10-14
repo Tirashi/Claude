@@ -177,7 +177,7 @@ Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, p
 2. ✅ Nouveaux vaisseaux : éclaireur, convoyeur, artilleur, cuirassé, atelier ; pirate harponneur (14/10). Avec le confort de placement demandé après l'étape 1.
 3. ✅ Secteurs 2 (Nébuleuse d'Orphée, la Veuve d'Orphée) et 3 (Le Seuil, la Rouille-Reine), victoire finale +3000 (14/10). `RUN_V` reste à 1 : la partie n'a pas gagné de champ (le terrain est dans le combat, absent = pas de terrain).
 4. ✅ `nebula/evenements.js` : épaves et nébuleuses ; pilotes (14/10).
-5. Données stellaires dépensables, écran DÉBLOCAGES, flottes de choc et marchande.
+5. ✅ Données stellaires dépensables, écran DÉBLOCAGES, flottes de choc et marchande (14/10).
 6. Partie du jour, tableaux `daily:AAAAMMJJ` et `victoires`, équilibrage final.
 
 ### Étape 1 (14/10)
@@ -240,3 +240,14 @@ L'utilisateur a joué jusqu'à la Rouille-Reine : « c'était super, la difficul
 - **Données stellaires** gagnées dans les événements (`run.data`) : ajoutées à celles de fin de partie (`stellarOf`).
 - **Sauvegarde** : `RUN_V` = 2 ; `migrate()` complète une partie de la session 1 (`crew`, `data`, `seen`, `event`), testé par le simulateur. `sw.js` : `evenements.js` dans `FILES`, `VERSION` `ludotheque-v18`.
 - Parties de l'IA de test (`nebula-parties.js`, qui choisit toujours le premier choix possible et pose les pilotes) : ~25 % de victoires, comme avant.
+
+### Retour (14/10)
+Sur téléphone, « SECTEUR 02 TERMINÉ · +3 CARBURANT POUR LA SUITE » débordait du cadre du butin : texte sur deux lignes, et `txt()` ajoute maintenant l'espacement des lettres à la largeur mesurée (le navigateur du téléphone ne le comptait pas, le resserrement automatique ne se déclenchait pas).
+
+### Étape 5 (14/10) : déblocages et flottes
+- **Solde** = données gagnées (`meta.data`, cumulées depuis la session 1) − coût de ce qui est débloqué (`meta.unlocked`) : `walletOf(meta)`. Rien d'autre à stocker ; le transfert de sauvegarde garde le maximum des compteurs et **réunit** les listes `unlocked`.
+- **Écart au § 9** : bombardier, drones et égide restent au comptoir d'office (ils l'étaient depuis la session 1, pour ne rien retirer) : `BASE_RECRUITS` = chasseur, frégate, bombardier, drones, égide. À débloquer (`UNLOCKS`) : éclaireur 15, convoyeur 30, artilleur 55, flotte de choc 60, flotte marchande 80, cuirassé 90, atelier 90. Un vaisseau débloqué peut ensuite apparaître au comptoir et dans les épaves (`run.recruits`, fixé au départ de la partie ; une partie sauvegardée plus ancienne garde tout).
+- **Écran DÉBLOCAGES** (titre, fin de partie, ou toucher une flotte verrouillée) : solde, ce qui rapporte des données, chaque déblocage avec son coût ; le bouton du titre passe en ambre quand on peut débloquer quelque chose.
+- **Choix de la flotte** : toucher une flotte ouverte la choisit (CHOISIE), DÉCOLLER part avec elle.
+- **Flotte marchande** (écart au § 8) : convoyeur, frégate, chasseur, éclaireur, et 100 crédits au départ. Avec l'égide à la place du chasseur, le simulateur ne venait pas à bout de l'amiral du secteur 1 (18 parties sur 60 arrêtées au secteur 1, 3 victoires) ; les crédits seuls n'y changeaient rien.
+- `node outils/nebula-parties.js 60 4 <flotte>` (tous les vaisseaux débloqués) : escorte 15 victoires sur 60, choc 22, marchande 11.
