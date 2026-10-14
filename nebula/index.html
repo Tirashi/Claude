@@ -48,7 +48,7 @@ let K = 1, BTN = [], now = 0, run = store.get('run', null);
 { const raw = run; run = migrate(raw); if (raw && !run) store.set('run.bak', raw); }   // illisible : mise de côté, pas effacée
 const meta = Object.assign({ data: 0, games: 0, wins: 0, cleared: 0, kills: 0, bestSector: 0 }, store.get('meta', {}));
 let best = Number(store.get('best', 0)) || 0, SFX = store.get('sfx', true);
-const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, node: null, legend: false, ranges: !!store.get('ranges', false) };
+const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, node: null, legend: false, ghost: null, ranges: !!store.get('ranges', false) };
 function save() { if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
 
 /* ---------- sprites et décors fabriqués à la demande ---------- */
@@ -159,7 +159,7 @@ function play(ev) {
     else if (e.e === 'shot') {
       const a = byId(st, e.from), d = e.fx === 'torpille' ? .55 : e.fx === 'missile' ? .45 : e.fx === 'charge' ? .3 : .25;
       const to = e.to != null ? center(byId(st, e.to)) : cellCenter(...e.cell);
-      ANIM.fx.push({ k: 'shot', fx: e.fx, foe: a.side === 'E', t0: t, dur: d, a: center(a), b: to }); sfx(e.fx === 'charge' ? 'missile' : e.fx, t - now); t += d;
+      ANIM.fx.push({ k: 'shot', fx: e.fx, foe: a.side === 'E', t0: t, dur: d, a: center(a), b: to }); sfx(e.fx === 'charge' ? 'missile' : e.fx === 'grapple' ? 'laser' : e.fx, t - now); t += d;
     }
     else if (e.e === 'swarm') { ANIM.fx.push({ k: 'swarm', t0: t, dur: .35, a: center(s || byId(st, e.from)) }); sfx('essaim', t - now); t += .3; }
     else if (e.e === 'dmg') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '-' + e.n, col: e.hull ? (s.side === 'E' ? C.acc : C.foe) : C.ally }); ANIM.fx.push({ k: 'hit', t0: t, dur: .3, x, y, shield: !e.hull }); if (!e.hull) sfx('shield', t - now); }
@@ -167,6 +167,9 @@ function play(ev) {
     else if (e.e === 'blast') { const [x, y] = cellCenter(e.c, e.r); ANIM.fx.push({ k: 'blast', t0: t, dur: .6, x, y, big: e.big }); sfx('boom', t - now); t += .15; }
     else if (e.e === 'spawn') { ANIM.spawn[e.id] = t; const [x, y] = center(s); ANIM.fx.push({ k: 'warp', t0: t, dur: .5, x, y }); t += .25; }
     else if (e.e === 'shield') { const [x, y] = center(s); ANIM.fx.push({ k: 'hit', t0: t, dur: .5, x, y, shield: true }); }
+    else if (e.e === 'heal') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '+' + e.n, col: C.ok }); }
+    else if (e.e === 'mark') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'MARQUÉ', col: C.acc, small: true }); }
+    else if (e.e === 'zone') { ANIM.fx.push({ k: 'zone', t0: t, dur: .6, x: GX + e.c * CS, y: GY + e.r * CS }); sfx('boom', t - now); t += .2; }
     else if (e.e === 'miss') { const [x, y] = cellCenter(...e.cell); ANIM.fx.push({ k: 'num', t0: t, dur: .8, x, y, text: 'DANS LE VIDE', col: C.dim, small: true }); }
   }
   ANIM.busy = t;
@@ -190,7 +193,10 @@ function drawFx() {
     g.save();
     if (f.k === 'shot') {
       const [ax, ay] = f.a, [bx, by] = f.b, col = f.foe ? '255,110,80' : '255,200,120';
-      if (f.fx === 'laser' || f.fx === 'canon') {
+      if (f.fx === 'grapple') {   // le câble du grappin
+        g.strokeStyle = `rgba(200,210,225,${1 - u * .6})`; g.lineWidth = 2; g.setLineDash([4, 3]); const v = Math.min(1, u * 2);
+        g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax + (bx - ax) * v, ay + (by - ay) * v); g.stroke(); g.setLineDash([]);
+      } else if (f.fx === 'laser' || f.fx === 'canon') {
         g.globalCompositeOperation = 'lighter'; g.strokeStyle = `rgba(${col},${(1 - u) * .9})`; g.lineWidth = f.fx === 'laser' ? 3 : 2;
         if (f.fx === 'canon') { const v = Math.min(1, u * 2.5), w = .25; g.beginPath(); g.moveTo(ax + (bx - ax) * Math.max(0, v - w), ay + (by - ay) * Math.max(0, v - w)); g.lineTo(ax + (bx - ax) * v, ay + (by - ay) * v); g.stroke(); }
         else { g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke(); g.lineWidth = 8; g.strokeStyle = `rgba(${col},${(1 - u) * .2})`; g.stroke(); }
@@ -217,6 +223,9 @@ function drawFx() {
     } else if (f.k === 'swarm') {
       g.strokeStyle = `rgba(242,178,74,${1 - u})`; g.lineWidth = 2; g.strokeRect(f.a[0] - CS * 1.5 + 2, f.a[1] - CS * 1.5 + 2, CS * 3 - 4, CS * 3 - 4);
       g.fillStyle = `rgba(242,178,74,${.15 * (1 - u)})`; g.fillRect(f.a[0] - CS * 1.5, f.a[1] - CS * 1.5, CS * 3, CS * 3);
+    } else if (f.k === 'zone') {
+      g.globalCompositeOperation = 'lighter'; g.fillStyle = `rgba(255,170,80,${.35 * (1 - u)})`; g.fillRect(f.x, f.y, CS * 2, CS * 2);
+      g.strokeStyle = `rgba(255,200,120,${1 - u})`; g.lineWidth = 2; g.strokeRect(f.x + 2, f.y + 2, CS * 2 - 4, CS * 2 - 4);
     } else if (f.k === 'warp') {
       g.globalCompositeOperation = 'lighter'; g.strokeStyle = `rgba(150,210,255,${1 - u})`; g.lineWidth = 2; g.beginPath(); g.ellipse(f.x, f.y, 8 + u * 30, 30 - u * 20, 0, 0, TAU); g.stroke();
     } else if (f.k === 'banner') {
@@ -249,16 +258,24 @@ function drawCombat() {
   const st = run.combat, B = busy(), s = selShip(), mine = s && !s.dead && s.side === 'P' ? s : null;
   drawStatic(st);
   // où le vaisseau choisi peut aller
-  if (mine && !B && canAct(st, mine) && !mine.moved) {
-    const reach = reachable(st, mine), cells = new Set();
-    for (const p of ends(reach)) if (p.d) for (let i = 0; i < lenOf(mine); i++) cells.add(p.c + ',' + (p.r + i));
+  // (déjà déplacé sans avoir agi : on peut encore le replacer, depuis sa case de départ)
+  if (mine && !B && canAct(st, mine)) {
+    const cells = new Set();
+    for (const p of moveSpots(st, mine)) for (let i = 0; i < lenOf(mine); i++) cells.add(p.c + ',' + (p.r + i));
     g.fillStyle = C.ally2 + '.14)'; g.strokeStyle = C.ally2 + '.35)';
     for (const k of cells) { const [c, r] = k.split(',').map(Number); g.fillRect(GX + c * CS + 3, GY + r * CS + 3, CS - 6, CS - 6); }
   }
   // annonces des pirates : les cases menacées (une seule teinte par case, total des dégâts), puis les traits de tir
   if (!B) {
     const main = new Map(), side = new Map(), add = (m, c, r, d) => { if (inGrid(c, r)) { const k = c + ',' + r; m.set(k, (m.get(k) || 0) + d); } };
-    const live = st.intents.filter(it => { const p = byId(st, it.src); return p && !p.dead; });
+    const all = st.intents.filter(it => { const p = byId(st, it.src); return p && !p.dead; }), live = all.filter(it => it.fx !== 'grapple');
+    for (const it of all.filter(it => it.fx === 'grapple')) {
+      const [ax, ay] = center(byId(st, it.src)), [bx, by] = cellCenter(...it.cell);
+      g.strokeStyle = 'rgba(200,210,225,.75)'; g.lineWidth = 1.5; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke(); g.setLineDash([]);
+      corners(GX + it.cell[0] * CS + 6, GY + it.cell[1] * CS + 6, CS - 12, CS - 12, '#c8d2e1', 12, 2);
+      g.fillStyle = 'rgba(10,14,22,.9)'; g.fillRect(GX + it.cell[0] * CS + 4, GY + it.cell[1] * CS + 6, CS - 8, 20);
+      txt('GRAPPIN', GX + it.cell[0] * CS + CS / 2, GY + it.cell[1] * CS + 9, '#c8d2e1', F.mono(13), 'center', 0, CS - 12);
+    }
     for (const it of live) {
       add(main, it.cell[0], it.cell[1], it.dmg);
       if (it.cross) for (const [dc, dr] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) add(side, it.cell[0] + dc, it.cell[1] + dr, it.cross);
@@ -291,10 +308,12 @@ function drawCombat() {
     for (let i = 0; i < Math.max(o.shMax, o.sh); i++) { g.fillStyle = i < o.sh ? (foe ? C.foe : C.ally) : 'rgba(255,255,255,.12)'; g.fillRect(L + 6, T + 8 + i * 8, 3, 6); }
     const fr = Math.max(0, o.hull) / o.hmax; g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(L + 10, T + n * CS - 9, CS - 20, 4);
     g.fillStyle = fr > .5 ? C.ok : fr > .25 ? C.acc : C.foe; g.fillRect(L + 10, T + n * CS - 9, (CS - 20) * fr, 4);
-    if (hittable.has(o.id)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); const w = TYPES[mine.t].w[UI.wi], d = wDmg(mine, w) * (w.big && n >= 2 ? 2 : 1); txt('-' + d, L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
+    if (foe && o.mark === st.turn && !o.dead) { g.fillStyle = 'rgba(30,20,4,.9)'; g.fillRect(L + CS - 32, T + 4, 28, 18); txt('+1', L + CS - 18, T + 5, C.acc, F.mono(15), 'center'); }
+    if (hittable.has(o.id)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); const w = TYPES[mine.t].w[UI.wi], d = wDmg(mine, w) * (w.big && n >= 2 ? 2 : 1) + (o.mark === st.turn ? 1 : 0); txt('-' + d, L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
     if (swarm && foe && !o.dead && dist(o, mine) <= 1 && canAct(st, mine)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); txt('-' + ((mine.hull <= 2 ? 1 : 2) + nMod(mine, 'canons')), L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
     if (o === s && !o.dead) corners(L + 3, T + 3, CS - 6, n * CS - 6, foe ? C.foe : C.ally, 14, 2);
   }
+  if (mine && UI.ghost && !B) drawGhost(st, mine, UI.ghost);
   drawFx();
   if (UI.ranges && !B) rangeLabel(st, s);
   const boss = sideOf(st, 'E').find(o => o.t === 'amiral'), foes = sideOf(st, 'E').length;
@@ -303,6 +322,17 @@ function drawCombat() {
   btn(LW - 186, 50, 162, 36, UI.ranges ? 'PORTÉES : OUI' : 'PORTÉES : NON', () => { UI.ranges = !UI.ranges; store.set('ranges', UI.ranges); }, { size: 16, ls: 1, primary: UI.ranges });
   drawFiche(st, s, B);
   if (st.result && !B) drawResult(st);
+}
+// fantôme du vaisseau là où il irait si l'on lève le doigt, avec les dégâts annoncés sur ces cases
+function drawGhost(st, s, p) {
+  const n = lenOf(s), L = GX + p.c * CS, T = GY + p.r * CS, danger = dangerMap(st);
+  let d = 0; for (let i = 0; i < n; i++) d += danger.get(p.c + ',' + (p.r + i)) || 0;
+  g.fillStyle = C.ally2 + '.18)'; g.fillRect(L + 2, T + 2, CS - 4, n * CS - 4);
+  g.strokeStyle = C.ally; g.lineWidth = 2; g.setLineDash([6, 5]); g.strokeRect(L + 3, T + 3, CS - 6, n * CS - 6); g.setLineDash([]);
+  drawSprite(s.t, L + CS / 2, T + n * CS / 2, 1, .5);
+  const label = d ? '-' + d : 'À L\'ABRI', w = d ? 40 : 76, y = T + n * CS / 2 - 11;
+  g.fillStyle = 'rgba(4,6,12,.88)'; g.fillRect(L + CS / 2 - w / 2, y, w, 22);
+  txt(label, L + CS / 2, y + 3, d ? C.foe : C.ok, F.mono(16), 'center', 0, w);
 }
 // portées : en ambre où tes vaisseaux peuvent tirer, en rouge où les pirates peuvent tirer (depuis leur place actuelle)
 function rangeCells(st, o, wi) {
@@ -354,7 +384,7 @@ function drawFiche(st, s, B) {
   const endBtn = () => btn(390, 878, 126, 50, 'FIN DU TOUR', () => { UI.sel = null; UI.bay = false; doEv(endTurn(st)); }, { primary: !s || s.acted || !canAct(st, s), size: 19, off: B || !!st.result });
   if (!s || s.dead) {
     txt('TON TOUR', 36, 792, C.acc, F.mono(16), 'left', 3);
-    para('Touche un de tes vaisseaux pour le déplacer (cases bleues) puis tirer. En rouge : les cases que les pirates frapperont à la fin du tour.', 36, 818, 470, C.txt, F.ui(19), 22);
+    para('Touche un de tes vaisseaux, puis une case bleue (garde le doigt posé pour voir où il ira) et tire. En rouge : les cases que les pirates frapperont à la fin du tour.', 36, 818, 470, C.txt, F.ui(19), 22);
     if (canFlee(st)) btn(134, 878, 120, 50, 'FUIR', () => { if (flee(st)) save(); }, { size: 19, off: B });
     endBtn(); return;
   }
@@ -366,7 +396,7 @@ function drawFiche(st, s, B) {
   txt('COQUE', 134, 840, C.dim, F.mono(14)); meter(198, 844, 150, s.hull, s.hmax, s.hull / s.hmax > .5 ? C.ok : C.foe); txt(`${s.hull}/${s.hmax}`, 356, 840, C.txt, F.mono(14));
   txt('BOUCL.', 410, 840, C.dim, F.mono(14)); meter(466, 844, 50, s.sh, Math.max(s.shMax, s.sh), C.ally);
   if (foe || T.temp && !canAct(st, s)) { para(`${T.skill} : ${T.sdesc}`, 134, 864, 250, C.dim, F.ui(16), 18); endBtn(); return; }
-  if (s.moved && !s.acted && !B) btn(420, 786, 96, 30, 'ANNULER', () => doEv(undoMove(st, s)), { size: 15, ls: 1 });
+  if (s.moved && s.from && !s.acted && !B) btn(420, 786, 96, 30, 'ANNULER', () => doEv(undoMove(st, s)), { size: 15, ls: 1 });
   if (UI.bay) {
     btn(134, 878, 120, 50, 'CHASSEUR', () => { UI.bay = false; doEv(launchFrom(st, s, 'leger')); }, { size: 18 });
     btn(262, 878, 120, 50, '3 DRONES', () => { UI.bay = false; doEv(launchFrom(st, s, 'essaim')); }, { size: 18 });
@@ -374,7 +404,7 @@ function drawFiche(st, s, B) {
   }
   const off = B || !canAct(st, s);
   T.w.forEach((w, i) => {
-    const label = `${w.name} · ${wDmg(s, w) * (w.big ? 1 : 1)}`;
+    const label = s.fired && !s.acted ? `2E TOURELLE · ${wDmg(s, w)}` : `${w.name} · ${wDmg(s, w)}`;
     btn(134 + i * 128, 878, 120, 50, label, () => {
       if (w.swarm) { doEv(attack(st, s, i)); return; }
       UI.wi = i;
@@ -402,12 +432,16 @@ function tapGrid(c, r) {
     if (w && !w.swarm && canHit(st, s, w, s.c, s.r, o)) { doEv(attack(st, s, UI.wi, o)); return; }
   }
   if (o) { if (UI.sel !== o.id) { UI.sel = o.id; UI.wi = 0; UI.bay = false; sfx('click'); } return; }
-  if (s && !s.dead && s.side === 'P' && canAct(st, s) && !s.moved) {
-    let bestP = null, bd = 1e9;
-    for (const p of ends(reachable(st, s))) if (p.d && c === p.c && r >= p.r && r < p.r + lenOf(s)) { const d = Math.abs(p.r + (lenOf(s) - 1) / 2 - r); if (d < bd) { bd = d; bestP = p; } }
-    if (bestP) { doEv(moveShip(st, s, bestP.c, bestP.r)); return; }
-  }
+  const p = s && !s.dead && s.side === 'P' ? spotAt(st, s, c, r) : null;
+  if (p) { placeShip(st, s, p); return; }
   UI.sel = null; UI.bay = false;
+}
+function placeShip(st, s, p) { doEv(s.moved ? replaceShip(st, s, p.c, p.r) : moveShip(st, s, p.c, p.r)); }
+// doigt posé sur une case bleue : le fantôme suit le doigt, le vaisseau part quand on le lève
+function ghostAt(c, r) {
+  const st = run.combat, s = selShip();
+  if (!inGrid(c, r) || st.result || !s || s.dead || s.side !== 'P' || occupant(st, c, r)) return null;
+  return spotAt(st, s, c, r);
 }
 
 /* ---------- carte du secteur ---------- */
@@ -495,7 +529,7 @@ function drawReward() {
   topBar('VICTOIRE', rw.kind === 'amiral' ? "L'AMIRAL ROUILLÉ EST TOMBÉ" : NODE_NAMES[rw.kind], `CRÉDITS ${run.cr}`, `CARBURANT ${pad2(run.fuel)}`);
   frameBox(40, 200, LW - 80, 420, C.acc, 14);
   txt('BUTIN', LW / 2, 230, C.acc, F.mono(18), 'center', 6);
-  const rows = [[`+${rw.cr}`, 'CRÉDITS'], rw.fuel ? [`+${rw.fuel}`, 'CARBURANT'] : null, [`${rw.kills}`, `PIRATE${rw.kills > 1 ? 'S' : ''} DÉTRUIT${rw.kills > 1 ? 'S' : ''}`]].filter(Boolean);
+  const rows = [[`+${rw.cr}`, 'CRÉDITS' + (rw.lostCargo ? ` (SOUTE PERDUE : -${rw.lostCargo})` : '')], rw.fuel ? [`+${rw.fuel}`, 'CARBURANT'] : null, [`${rw.kills}`, `PIRATE${rw.kills > 1 ? 'S' : ''} DÉTRUIT${rw.kills > 1 ? 'S' : ''}`]].filter(Boolean);
   rows.forEach(([v, l], i) => { txt(v, 220, 290 + i * 56, C.txt, F.mono(34), 'right'); txt(l, 240, 298 + i * 56, C.dim, F.ui(22), 'left', 3); });
   if (rw.mod) { const y = 290 + rows.length * 56 + 10; frameBox(80, y, LW - 160, 70, C.acc, 8); txt('MODULE : ' + MODS[rw.mod].name, LW / 2, y + 12, C.acc, F.ui(22), 'center', 2); txt(MODS[rw.mod].desc + ' · à poser au hangar', LW / 2, y + 40, C.dim, F.ui(17), 'center', 1); }
   if (rw.kind === 'amiral') txt('SECTEUR 01 TERMINÉ', LW / 2, 560, C.ok, F.mono(18), 'center', 4);
@@ -549,8 +583,8 @@ function modPreview(f, m) {
   if (m === 'blindage') return 'COQUE MAX ' + up(maxHullOf(f), maxHullOf(f) + 3);
   if (m === 'bouclier') return 'BOUCLIER ' + up(shMaxOf(f), shMaxOf(f) + 1);
   if (m === 'propulseurs') return 'VITESSE ' + up(spdOf(f), spdOf(f) + 1);
-  if (m === 'ciblage') { const a = ws.filter(w => !w.swarm); return a.length ? 'PORTÉE ' + a.map(w => `${w.name} ${up(wRng(f, w), wRng(f, w) + 1)}`).join(' · ') : "SANS EFFET SUR L'ESSAIM"; }
-  if (m === 'canons') return ws.length ? 'DÉGÂTS ' + ws.map(w => `${w.name} ${up(wDmg(f, w), wDmg(f, w) + 1)}`).join(' · ') : 'SANS EFFET';
+  if (m === 'ciblage') { const a = ws.filter(w => !w.swarm); return a.length ? 'PORTÉE ' + a.map(w => `${w.name} ${up(wRng(f, w), wRng(f, w) + 1)}`).join(' · ') : ws.length ? "SANS EFFET SUR L'ESSAIM" : 'SANS EFFET : PAS D\'ARME'; }
+  if (m === 'canons') return ws.length ? 'DÉGÂTS ' + ws.map(w => `${w.name} ${up(wDmg(f, w), wDmg(f, w) + 1)}`).join(' · ') : 'SANS EFFET : PAS D\'ARME';
   return '';
 }
 function drawHangar() {
@@ -566,7 +600,7 @@ function drawHangar() {
     txt(`${T.name} « ${f.name} »`, 138, y + 6, C.txt, F.ui(21), 'left', 1, LW - 180);
     const pm = UI.pick != null ? run.stock[UI.pick] : null;
     if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 30, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13), 'left', 0, LW - 180);
-    else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ')}`, 138, y + 30, C.dim, F.mono(13), 'left', 0, LW - 180);
+    else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.length ? T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ') : 'SANS ARME'}`, 138, y + 30, C.dim, F.mono(13), 'left', 0, LW - 180);
     txt(`${T.skill} · ${T.short || T.sdesc}`, 138, y + 46, C.acc, F.ui(15), 'left', 1, LW - 180);
     txt('COQUE', 138, y + 62, C.dim, F.mono(13)); meter(196, y + 66, 200, f.hull, m, f.hull / m > .5 ? C.ok : C.foe); txt(`${f.hull}/${m}`, 404, y + 62, C.txt, F.mono(13));
     const ns = slotsOf(f.t), sy = y + h - 44;
@@ -617,7 +651,7 @@ function drawFleet() {
     frameBox(16, y, LW - 32, 204, lock ? 'rgba(125,138,158,.4)' : C.acc, 12);
     txt(fl.name, 32, y + 14, lock ? C.dim : C.acc, F.ui(25), 'left', 3);
     txt(lock ? `À DÉBLOQUER · ${fl.locked} DONNÉES STELLAIRES (PROCHAINEMENT)` : fl.desc, 32, y + 46, C.dim, lock ? F.mono(13) : F.ui(18));
-    fl.ships.forEach((t, k) => drawSprite(t, 80 + k * 110, y + 136, Math.min(1, 118 / ((TYPES[t] ? TYPES[t].n : { cuirasse: 3, convoyeur: 2, eclaireur: 1 }[t]) * 72)), lock ? .35 : 1));
+    fl.ships.forEach((t, k) => drawSprite(t, 80 + k * 110, y + 136, Math.min(1, 118 / (TYPES[t].n * 72)), lock ? .35 : 1));
     if (!lock) zone(16, y, LW - 32, 204, () => startRun());
   });
   btn(40, 800, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
@@ -714,10 +748,23 @@ function tap(e) {
   for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { sfx('click'); b.act(); return; } }
   if (UI.screen === 'title') UI.confirm = 0;
   UI.node = null;
-  if (UI.screen === 'game' && run && run.phase === 'combat' && !busy() && !UI.hangar) {
-    const c = Math.floor((x - GX) / CS), r = Math.floor((y - GY) / CS); if (inGrid(c, r)) tapGrid(c, r);
+  if (inCombat()) {
+    const c = Math.floor((x - GX) / CS), r = Math.floor((y - GY) / CS);
+    const p = ghostAt(c, r); if (p) { UI.ghost = p; return; }
+    if (inGrid(c, r)) tapGrid(c, r);
   }
 }
+const inCombat = () => UI.screen === 'game' && run && run.phase === 'combat' && !busy() && !UI.hangar;
+cv.addEventListener('pointermove', e => {
+  if (!UI.ghost || !inCombat()) return;
+  const [x, y] = logical(e), p = ghostAt(Math.floor((x - GX) / CS), Math.floor((y - GY) / CS));
+  if (p) UI.ghost = p;
+});
+window.addEventListener('pointerup', () => {
+  const p = UI.ghost; UI.ghost = null;
+  try { if (p && inCombat()) { const s = selShip(); if (s) placeShip(run.combat, s, p); } } catch (err) { crash(err); }
+});
+window.addEventListener('pointercancel', () => { UI.ghost = null; });
 cv.addEventListener('contextmenu', e => e.preventDefault());
 function resize() {
   const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
@@ -733,7 +780,7 @@ window.addEventListener('resize', resize);
 Object.assign(window.Nebula, { UI, ANIM, recordEnd, save, store, makeShop, crash });
 Object.defineProperty(window.Nebula, 'run', { get: () => run, set: v => { run = v; } });
 ['mere', 'fregate', 'chasseur'].forEach(spr); bg('title');
-['intercepteur', 'brulot', 'croiseur', 'amiral', 'bombardier', 'drones', 'egide'].forEach(spr); ['map', 'combat', 'hangar'].forEach(bg);
+['intercepteur', 'brulot', 'croiseur', 'harponneur', 'amiral', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier'].forEach(spr); ['map', 'combat', 'hangar'].forEach(bg);
 setTimeout(resize, 0); resize();
 Promise.all(['22px Michroma', '600 20px Rajdhani', '700 20px Rajdhani', '16px "Share Tech Mono"'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : 0)).then(() => requestAnimationFrame(frame));
 </script>

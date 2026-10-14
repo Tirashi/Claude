@@ -28,6 +28,13 @@ for (const ai of [1, 2]) for (const [kind, floor] of [['contact', 4], ['lourd', 
   check(r.won > 0, `IA ${ai} · ${kind} étage ${floor} : au moins une victoire`);
 }
 
+// les autres flottes (vaisseaux de la session 2) : combats possibles, aucune erreur
+const mk = ts => ts.map((t, i) => ({ uid: i + 1, t, hull: N.TYPES[t].hull, mods: [], name: 'X' + i }));
+for (const [name, ts] of [['choc', ['cuirasse', 'bombardier', 'chasseur']], ['marchande', ['convoyeur', 'egide', 'fregate', 'eclaireur']], ['soutien', ['atelier', 'artilleur', 'chasseur']]]) {
+  let won = 0; for (let i = 0; i < K; i++) if (N.simulate(i * 7919 + 1, 'lourd', 4, mk(ts), 4, 30, 1, 1).result === 'won') won++;
+  check(won > 0, `flotte ${name} · contact lourd, IA 1 : ${won}/${K} victoires`);
+}
+
 // une partie complète jouée par l'IA : toujours le premier saut, réparations au comptoir et au dock
 function autoRun(seed) {
   const run = N.newRun(seed, 'escorte'), trace = [];

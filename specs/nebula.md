@@ -174,7 +174,7 @@ Cartouche dans le menu (icône 16×16 : silhouette de vaisseau ambre), transfert
 ## 19. Session 2 : découpage et avancement
 Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, poussée, artefact republié) :
 1. ✅ **Retours § 18 + IA + types** (14/10).
-2. Nouveaux vaisseaux : éclaireur, convoyeur, artilleur, cuirassé, atelier ; pirate harponneur.
+2. ✅ Nouveaux vaisseaux : éclaireur, convoyeur, artilleur, cuirassé, atelier ; pirate harponneur (14/10). Avec le confort de placement demandé après l'étape 1.
 3. Secteurs 2 (Nébuleuse d'Orphée, la Veuve d'Orphée) et 3 (Le Seuil, la Rouille-Reine), victoire finale +3000, `RUN_V` 2.
 4. `nebula/evenements.js` : épaves et nébuleuses ; pilotes.
 5. Données stellaires dépensables, écran DÉBLOCAGES, flottes de choc et marchande.
@@ -195,3 +195,19 @@ Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, p
 
   L'IA par score suppose que le joueur esquive : un joueur qui ne bouge jamais est un peu moins puni qu'avec l'IA 0, un joueur attentif beaucoup plus. Les secteurs 2 et 3 seront réglés à l'étape 3 (pirates, coque, IA).
 - **Types** : `// @ts-check` et typedefs JSDoc (`Ship`, `Combat`, `Intent`, `FleetShip`, `MapNode`, `Sector`, `AiLevel`…) en tête de `regles.js`, vérifiés par `tsc -p outils/tsconfig.nebula.json` (lancé par `outils/verifications.js` ; la CI installe TypeScript).
+
+### Retour de l'utilisateur après l'étape 1 (14/10)
+« L'IA est vraiment bien équilibrée. » Mais placer un vaisseau de 2 ou 3 cases était difficile : un toucher raté obligeait à passer par ANNULER.
+- **Fantôme** : le doigt posé sur une case bleue montre le vaisseau à l'endroit où il irait (contour pointillé, sprite transparent, dégâts annoncés sur ces cases ou « À L'ABRI ») ; il suit le doigt ; le vaisseau part au **lever** du doigt.
+- **Replacer** : tant qu'il n'a pas agi, un vaisseau déjà déplacé montre encore ses cases bleues (calculées depuis sa case de départ) ; toucher une autre case le replace directement (`replaceShip`), toucher sa case de départ annule (`undoMove`). Le bouton ANNULER reste.
+- `moveSpots(st, s)` et `spotAt(st, s, c, r)` (règles) donnent les positions possibles et celle choisie pour une case touchée.
+
+### Étape 2 (14/10) : nouveaux vaisseaux
+- **Éclaireur** (1 case, coque 3, vitesse 5, canon 1/4) : **MARQUAGE** au lieu du « repérage » du § 5 (montrer les déplacements du tour suivant aurait été peu lisible) : le pirate touché prend +1 à chacun des tirs du joueur jusqu'à la fin du tour (badge « +1 » ambre). L'effet nébuleuse (ignore la règle des 2 cases) viendra avec les nébuleuses.
+- **Convoyeur** (2 cases, coque 8, sans arme) : **SOUTE** +50 % de crédits et de carburant gagnés tant qu'il est en vie (`bonus(run)`) ; s'il est détruit, -20 crédits (affiché au butin).
+- **Artilleur** (2 cases, coque 7, salve 2) : **TIR INDIRECT** de 3 à 6 cases, sans ligne de vue ; la salve frappe la zone 2×2 (contenant la cible) qui touche le plus de pirates (`zoneFor`), pirates seulement.
+- **Cuirassé** (3 cases, coque 16, tourelles 3/4) : **BORDÉE**, deux tirs par tour (`s.fired`, bouton « 2E TOURELLE ») ; il ne bouge plus après le premier tir.
+- **Atelier mobile** (3 cases, coque 14, sans arme) : **RÉPARATION** +2 coque aux alliés collés en début de tour, +3 à toute la flotte après chaque combat (gagné ou fui).
+- **Harponneur** pirate (2 cases, coque 10, canon 2/2) : **GRAPPIN** prioritaire sur un vaisseau de 1 case à 2 ou 3 cases en vue : annonce « GRAPPIN » sur la case ; à la fin du tour, le vaisseau encore sur la case est tiré de 2 cases vers lui (s'arrête s'il est bloqué). Il apparaîtra dans les secteurs 2 et 3 (étape 3).
+- Les cinq nouveaux vaisseaux sont recrutables au comptoir en attendant les déblocages (étape 5).
+- Simulateur (contact lourd, IA 1) : flottes de choc, marchande et « soutien » (atelier, artilleur, chasseur) gagnent ~40/40. La flotte marchande est fragile face à l'IA 2 et à l'amiral : voulu (« moins de puissance »), à revoir à l'équilibrage final.
