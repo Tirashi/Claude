@@ -2,10 +2,10 @@
 
 ## Le projet
 - Dépôt GitHub : **Tirashi/Claude**. Site publié : **https://tirashi.github.io/Claude/** (installé en appli PWA sur Android).
-- Jeux en HTML autonomes (un fichier par jeu, sans build), un dossier par jeu. La page d'accueil `index.html` est le menu.
-- Service worker `sw.js` (mode hors connexion) : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v16` au moment d'écrire ces lignes).
+- Jeux en HTML **sans build** (le fichier poussé est celui que joue le téléphone), un dossier par jeu. La page d'accueil `index.html` est le menu. Un petit jeu tient dans son `index.html` ; un gros jeu peut se répartir en **scripts classiques** (`<script src>`, pas de modules ES, pas de dépendances npm) : `outils/artefact.py` les intègre tous dans l'artefact, et chacun va dans `FILES` de `sw.js`.
+- Service worker `sw.js` (mode hors connexion) : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v17` au moment d'écrire ces lignes).
 - Moteur de sprites 32 bits partagé : `injagility/chiens32.js` (volumes ombrés, 6 races de chiens).
-- Moteur de vaisseaux en relief de Nebula : `nebula/vaisseaux.js` (16 vaisseaux, astéroïdes, nébuleuse, planètes ; sprites fabriqués à la demande), réutilisé par l'Empire. `outils/artefact.py` l'intègre dans l'artefact.
+- Moteur de vaisseaux en relief de Nebula : `nebula/vaisseaux.js` (16 vaisseaux, astéroïdes, nébuleuse, planètes ; sprites fabriqués à la demande), réutilisé par l'Empire. Règles de Nebula (logique pure, sans affichage, utilisable sous Node) : `nebula/regles.js`.
 - Classements en ligne : `ludo-scores.js` + page `classements/index.html`, base Supabase (scripts dans `supabase/`). Égalités classées 1, 2, 2, 4. Les records déjà présents sont envoyés une fois à l'inscription.
 - Code de transfert de sauvegarde (export/import `LUDO1-…`) dans `index.html` : chaque nouveau jeu doit y être ajouté (collecte, description, fusion).
 
@@ -15,7 +15,7 @@
   `git fetch origin main && git merge-base --is-ancestor origin/main HEAD && git push origin HEAD:main`
 - Messages de commit en français, écrits dans un fichier puis `git commit -F`.
 - Après chaque modification d'un jeu, **republier son artefact** (copie avec `chiens32.js` intégré, sans `ludo-scores.js`, fabriquée par `python3 outils/artefact.py`) **au même lien** (voir « Artefacts des jeux ») et donner le lien.
-- Tester avec Playwright (captures sur un écran de téléphone) avant de pousser : scripts prêts dans [`outils/`](outils/README.md).
+- Tester avec Playwright (captures sur un écran de téléphone) avant de pousser : scripts prêts dans [`outils/`](outils/README.md). Avant chaque push : `node outils/verifications.js` (syntaxe, `sw.js`, sécurité, icônes, simulateur Nebula) ; après une modification d'un jeu : `node outils/fumee.js`. La CI GitHub (`.github/workflows/verifications.yml`) relance les deux à chaque push : regarder l'onglet *Actions* avant de mettre à jour `main`.
 - **Sécurité** : ne jamais demander, stocker ni committer la clé secrète Supabase ni le mot de passe de la base. Seules l'URL publique `https://hfoiofrgltzdyetoqpjc.supabase.co` et la clé publiable `sb_publishable_6nlzAAAG3LLLonztigio4g_0Q6dakQE` sont dans le code. Le **code familial ne doit jamais être dans le dépôt** (le SQL garde `MON-CODE`).
 - Accessibilité : « pas pour le moment ».
 - Économie : une conversation par chantier, Sonnet pour réfléchir et les petites retouches, Opus pour coder un jeu ; éviter les sous-agents et les captures inutiles.
@@ -42,6 +42,7 @@
 - **Supabase n'est pas joignable** depuis l'environnement de Claude (proxy 403) : tester les classements avec `outils/faux-classements.js`, puis demander à l'utilisateur un essai réel sur son téléphone.
 - Playwright : changer seulement l'ancre (`#…`) ne recharge pas la page ; repasser par `about:blank`.
 - Dans `page.evaluate`, les `const` et fonctions de haut niveau d'un jeu sont accessibles (`S`, `gameOver()`…) : pratique pour simuler une fin de partie.
+- Nebula : les constantes et fonctions de `regles.js` sont partagées avec le script de la page (scripts classiques = même portée globale) ; ne pas y toucher au DOM ni au `localStorage`. Partie sauvegardée : `RUN_V` + `migrate()` dans `regles.js` (monter `RUN_V` et compléter les anciennes parties quand on ajoute un champ) ; une partie illisible est mise de côté dans `nebula.run.bak`. Une erreur affiche l'écran INCIDENT au lieu de figer le jeu.
 - Orbite : un niveau n'est jouable au doigt que s'il a des tirs « robustes » (±1°, ±2 %) ; `outils/orbite-solveur.js` les compte.
 
 ## Artefacts des jeux
@@ -64,7 +65,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 Queens, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie **n'ont pas d'artefact** : on les joue sur le site (https://tirashi.github.io/Claude/). Ne pas en créer sans demande. Les maquettes de style sont listées dans `IDEES.md`.
 
 ## En cours / à vérifier
-- **Nebula** : session 1 faite (secteur 1 jouable de bout en bout). **Prochain chantier : session 2** (secteurs 2 et 3, épaves, nébuleuses, autres vaisseaux, pilotes, déblocages, flottes de départ, partie du jour) puis session 3 (tutoriel, manuel, équilibrage, finitions) : voir [`specs/nebula.md`](specs/nebula.md) § 15, § 17 (écarts et réglages de la session 1) et § 18 (retours de l'utilisateur à traiter en session 2). Équilibrage : `node outils/nebula-simulateur.js`. Confirmé par l'utilisateur : le jeu se joue très bien au doigt et le classement `nebula`/`best` se met bien à jour. Secteur 1 « un chouïa facile » (un seul vaisseau perdu en une dizaine de parties), voulu comme secteur de prise en main : juger la difficulté sur les 3 secteurs (specs § 18). Le jeu familial « Nebula : l'Empire des étoiles » viendra ensuite (réutilisera `nebula/vaisseaux.js`). **Analyse technique et propositions** (protection contre les erreurs, migration des sauvegardes, découpage du code, `@ts-check`, CI GitHub…) : [`specs/nebula-analyse.md`](specs/nebula-analyse.md), en attente de l'accord de l'utilisateur.
+- **Nebula** : session 1 faite (secteur 1 jouable de bout en bout). **Prochain chantier : session 2** (secteurs 2 et 3, épaves, nébuleuses, autres vaisseaux, pilotes, déblocages, flottes de départ, partie du jour) puis session 3 (tutoriel, manuel, équilibrage, finitions) : voir [`specs/nebula.md`](specs/nebula.md) § 15, § 17 (écarts et réglages de la session 1) et § 18 (retours de l'utilisateur à traiter en session 2). Équilibrage : `node outils/nebula-simulateur.js`. Confirmé par l'utilisateur : le jeu se joue très bien au doigt et le classement `nebula`/`best` se met bien à jour. Secteur 1 « un chouïa facile » (un seul vaisseau perdu en une dizaine de parties), voulu comme secteur de prise en main : juger la difficulté sur les 3 secteurs (specs § 18). Le jeu familial « Nebula : l'Empire des étoiles » viendra ensuite (réutilisera `nebula/vaisseaux.js`). **Analyse technique et propositions** (protection contre les erreurs, migration des sauvegardes, découpage du code, `@ts-check`, CI GitHub…) : [`specs/nebula-analyse.md`](specs/nebula-analyse.md), chantier préparatoire fait (§ 9, étape 1) ; `@ts-check` à mettre en place pendant la session 2.
 - Orbite : les niveaux 12, 23, 25, 28 et 30 sont les plus serrés (8 à 11 tirs robustes) ; à ajuster si l'utilisateur ou son fils les trouvent trop durs.
 - Orbite et Pont stellaire : classements testés seulement avec le faux serveur ; confirmer qu'un vrai record apparaît bien.
 - Forfait : limite hebdomadaire remise à zéro le mercredi à 19 h ; privilégier les chantiers courts en fin de semaine.
@@ -82,7 +83,7 @@ Queens, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie 
 | Orbite | `orbite/` | Physique spatiale 32 bits : lance-pierre au doigt, gravité des planètes, trous noirs, portails, astéroïdes en orbite. 30 niveaux vérifiés par un solveur (tirs gagnants avec une marge), 3 essais = 1 à 3 étoiles, classement du total d'étoiles (`orbite` / `etoiles`). `window.Orbite` expose `sim` et `LEVELS` pour les tests. |
 | Pont stellaire | `pont-stellaire/` | Hashi en 32 bits (étoiles et faisceaux). Tailles 7×7, 9×9, 11×11 + Ciel du jour 9×9 (graine = date). Générateur à graine + solveur d'unicité. Classements `pontstellaire` : `best:7/9/11`, `daily:AAAAMMJJ` (temps + 30 s par indice), `ciels`. `window.PontStellaire` expose `generate` et `solve`. |
 | Alunissage | `alunissage/` | Adresse 32 bits : deux réacteurs (un doigt par moitié d'écran), aires ×2/×3/×5, mission de sites enchaînés (6 mondes, gravité, vent) jusqu'au crash ; mission du jour (graine = date). Classements `alunissage` : `best`, `daily:AAAAMMJJ`. `window.Alunissage` expose `step`, `makeSite`. |
-| Nebula | `nebula/` | Rogue-lite tactique spatial (Michroma/Rajdhani, canvas 544×960 lissé). Session 1 : secteur 1 (Ceinture de Karn, amiral rouillé), combat 7×9 à intentions, comptoir, dock, hangar et 5 modules, score, sauvegarde `nebula.run` à chaque action, classement `nebula`/`best`. `window.Nebula` expose `simulate`, `makeCombat`, `makeMap`, `newRun`, `run`… |
+| Nebula | `nebula/` | Rogue-lite tactique spatial (Michroma/Rajdhani, canvas 544×960 lissé). Session 1 : secteur 1 (Ceinture de Karn, amiral rouillé), combat 7×9 à intentions, comptoir, dock, hangar et 5 modules, score, sauvegarde `nebula.run` à chaque action, classement `nebula`/`best`. Règles dans `nebula/regles.js` (aussi chargé par Node : `node outils/nebula-simulateur.js`). `window.Nebula` expose `simulate`, `makeCombat`, `makeMap`, `newRun`, `migrate`, `crash`, `run`… |
 | Tetris, Snake, Asteroids, Solitaire, Jeu de la vie | dossiers du même nom | Reprises en style pixel art. |
 
 ## Idées et maquettes

@@ -1,0 +1,505 @@
+/* =====================================================================
+   NEBULA · les RÈGLES (logique pure, sans affichage ni stockage).
+   Combat, IA des pirates, carte du secteur, comptoir, dock, score.
+   Tout l'aléatoire passe par des générateurs à graine : même graine =
+   même carte, mêmes combats. Le combat produit une liste d'événements
+   (déplacement, tir, dégâts, explosion…) que l'affichage rejoue.
+   - Dans la page : script classique chargé avant le script du jeu ; ses
+     constantes et fonctions sont partagées avec lui (portée globale).
+   - Dans Node : require('nebula/regles.js') (simulateur, tests).
+   Cahier des charges : specs/nebula.md.
+   ===================================================================== */
+'use strict';
+const COLS = 7, ROWS = 9;
+// générateur à graine mulberry32 (le même que NebulaVaisseaux.rnd : ne pas le modifier, les graines en dépendent)
+function rng(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const seedOf = (...a) => { let h = 2166136261; for (const x of a) { h = Math.imul(h ^ (x | 0), 16777619); h ^= h >>> 13; } return h >>> 0; };
+const pick = (R, a) => a[Math.floor(R() * a.length)];
+const shuffle = (R, a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ---------- vaisseaux ---------- */
+const TYPES = {
+  chasseur: { name: 'CHASSEUR', n: 1, hull: 6, sh: 1, spd: 4, w: [{ name: 'CANONS', dmg: 2, rng: 3, fx: 'canon' }], skill: 'RIPOSTE', sdesc: 'tire 1 dégât sur un pirate qui finit son déplacement à 2 cases ou moins (une fois par tour).', price: 80 },
+  fregate: { name: 'FRÉGATE', n: 2, hull: 10, sh: 2, spd: 3, w: [{ name: 'LASER', dmg: 3, rng: 3, fx: 'laser' }, { name: 'MISSILE', dmg: 2, rng: 5, fx: 'missile' }], skill: 'DOUBLE ARMEMENT', sdesc: 'laser précis ou missile à longue portée, au choix à chaque tour.', price: 120 },
+  mere: { name: 'PORTE-VAISSEAUX', n: 3, hull: 16, sh: 3, spd: 1, w: [{ name: 'CANONS', dmg: 2, rng: 3, fx: 'canon' }], skill: 'BAIES', sdesc: 'tous les 2 tours, lance un chasseur léger ou 3 drones (2 en jeu au plus).', price: 0 },
+  bombardier: { name: 'BOMBARDIER', n: 1, hull: 6, sh: 0, spd: 2, w: [{ name: 'TORPILLES', dmg: 3, rng: 2, fx: 'torpille', big: true }], skill: 'TORPILLES LOURDES', sdesc: 'dégâts doublés contre les vaisseaux de 2 et 3 cases.', price: 90 },
+  drones: { name: 'NUÉE DE DRONES', n: 1, hull: 5, sh: 0, spd: 4, w: [{ name: 'ESSAIM', dmg: 2, rng: 1, fx: 'essaim', swarm: true }], skill: 'ESSAIM', sdesc: '2 dégâts à chaque pirate sur les 8 cases autour (1 s\'il reste 2 drones ou moins).', price: 85 },
+  egide: { name: 'ÉGIDE', n: 2, hull: 10, sh: 4, spd: 2, w: [{ name: 'CANON', dmg: 1, rng: 2, fx: 'canon' }], skill: 'BULLE', sdesc: 'en début de tour, +1 bouclier aux alliés voisins (jusqu\'à 1 au-dessus de leur maximum).', price: 110 },
+  leger: { name: 'CHASSEUR LÉGER', sprite: 'chasseur', n: 1, hull: 3, sh: 0, spd: 4, w: [{ name: 'CANONS', dmg: 2, rng: 3, fx: 'canon' }], temp: true, skill: 'ESCADRILLE', sdesc: 'lancé par le porte-vaisseaux, disparaît après le combat.' },
+  essaim: { name: 'DRONES', sprite: 'drones', n: 1, hull: 3, sh: 0, spd: 4, w: [{ name: 'ESSAIM', dmg: 2, rng: 1, fx: 'essaim', swarm: true }], temp: true, skill: 'ESSAIM', sdesc: 'lancés par le porte-vaisseaux, disparaissent après le combat.' },
+  // pirates
+  intercepteur: { name: 'INTERCEPTEUR', n: 1, hull: 4, sh: 0, spd: 4, w: [{ name: 'CANON', dmg: 2, rng: 3, fx: 'canon' }], foe: true, ai: 'near', skill: 'MEUTE', sdesc: '+1 dégât s\'il est collé à un autre intercepteur. Vise le plus proche.' },
+  brulot: { name: 'BRÛLOT', n: 1, hull: 3, sh: 0, spd: 4, w: [], foe: true, ai: 'brulot', skill: 'CHARGE', sdesc: 'fonce sur ton plus gros vaisseau et explose au contact : 5 dégâts, 2 autour. Détruit avant : 2 dégâts autour.' },
+  croiseur: { name: 'CROISEUR PIRATE', n: 2, hull: 10, sh: 2, spd: 2, w: [{ name: 'TORPILLE', dmg: 4, rng: 6, fx: 'torpille' }], foe: true, ai: 'big', skill: 'TORPILLE', sdesc: 'longue portée, 2 dégâts sur les 4 cases voisines ; vise d\'abord les vaisseaux de 3 cases, puis de 2.' },
+  amiral: { name: 'AMIRAL ROUILLÉ', n: 3, hull: 30, sh: 3, spd: 1, w: [{ name: 'TOURELLES', dmg: 3, rng: 4, fx: 'canon' }], foe: true, ai: 'amiral', turrets: 3, skill: 'RENFORTS', sdesc: '3 tourelles sur 3 cibles (2 dégâts autour de chaque case visée) ; tous les 3 tours, appelle 2 intercepteurs.' },
+};
+const sprite = t => (TYPES[t] && TYPES[t].sprite) || t;
+// réglages issus du simulateur : sans tirs de zone, un joueur attentif esquivait tout
+const TUNE = { cross: { croiseur: 2, amiral: 2 } };   // dégâts sur les 4 cases voisines de la case visée
+const MODS = {
+  blindage: { name: 'BLINDAGE', desc: '+3 coque', long: '+3 points de coque maximum (et 3 tout de suite).', price: 50 },
+  bouclier: { name: 'BOUCLIER+', desc: '+1 bouclier', long: '+1 point de bouclier maximum, rechargé chaque tour.', price: 60 },
+  propulseurs: { name: 'PROPULSEURS', desc: '+1 vitesse', long: '+1 case de déplacement par tour.', price: 55 },
+  ciblage: { name: 'CIBLAGE', desc: '+1 portée', long: "+1 case de portée pour les armes (sauf l'essaim).", price: 45 },
+  canons: { name: 'CANONS MK2', desc: '+1 dégât', long: '+1 dégât à chaque tir (essaim compris).', price: 75 },
+};
+const MOD_IDS = Object.keys(MODS);
+const NAMES = ['ARCHE', 'AURORE', 'PIQUE', 'VESPER', 'ORION', 'SIRIUS', 'ÉCLAT', 'BORÉE', 'ALTAÏR', 'COMÈTE', 'ZÉPHYR', 'ANTARÈS', 'VÉGA', 'HÉLIOS', 'NOVA', 'CASSINI'];
+const nMod = (s, m) => (s.mods || []).filter(x => x === m).length;
+const slotsOf = t => TYPES[t].n === 1 ? 2 : 3;
+const maxHullOf = s => Math.round(TYPES[s.t].hull * (s.mult || 1)) + 3 * nMod(s, 'blindage');
+const shMaxOf = s => TYPES[s.t].sh + nMod(s, 'bouclier');
+const spdOf = s => TYPES[s.t].spd + nMod(s, 'propulseurs');
+const wDmg = (s, w) => w.dmg + nMod(s, 'canons');
+const wRng = (s, w) => w.swarm ? 1 : w.rng + nMod(s, 'ciblage');
+
+/* ---------- géométrie de la grille ---------- */
+const cellsOf = s => { const o = []; for (let i = 0; i < TYPES[s.t].n; i++) o.push([s.c, s.r + i]); return o; };
+const lenOf = s => TYPES[s.t].n;
+// distance de Tchebychev entre les cases les plus proches de deux emprises verticales
+function gap(c1, r1, n1, c2, r2, n2) { return Math.max(Math.abs(c1 - c2), Math.max(0, r2 - (r1 + n1 - 1), r1 - (r2 + n2 - 1))); }
+const dist = (a, b) => gap(a.c, a.r, lenOf(a), b.c, b.r, lenOf(b));
+const alive = st => st.ships.filter(s => !s.dead);
+const sideOf = (st, side) => st.ships.filter(s => !s.dead && s.side === side);
+const byId = (st, id) => st.ships.find(s => s.id === id);
+const rockAt = (st, c, r) => st.rocks.some(k => k[0] === c && k[1] === r);
+const inGrid = (c, r) => c >= 0 && r >= 0 && c < COLS && r < ROWS;
+function occupant(st, c, r, except) { for (const s of st.ships) if (!s.dead && s !== except && s.c === c && r >= s.r && r < s.r + lenOf(s)) return s; return null; }
+// ligne de vue : un astéroïde entre deux cases bloque les tirs directs
+function clearLine(st, a, b) {
+  const [ax, ay] = [a[0] + .5, a[1] + .5], [bx, by] = [b[0] + .5, b[1] + .5], n = Math.ceil(Math.hypot(bx - ax, by - ay) * 8);
+  for (let i = 1; i < n; i++) {
+    const t = i / n, c = Math.floor(ax + (bx - ax) * t), r = Math.floor(ay + (by - ay) * t);
+    if ((c === a[0] && r === a[1]) || (c === b[0] && r === b[1])) continue;
+    if (rockAt(st, c, r)) return false;
+  }
+  return true;
+}
+function los(st, cellsA, cellsB) { for (const a of cellsA) for (const b of cellsB) if (clearLine(st, a, b)) return true; return false; }
+// la case de la cible la plus proche du tireur (cases d'emprise passées en argument)
+function nearestCell(from, n, target) {
+  let best = null, bd = 1e9;
+  for (const [c, r] of cellsOf(target)) { const d = gap(from.c, from.r, n, c, r, 1) * 10 + Math.abs(c - from.c); if (d < bd) { bd = d; best = [c, r]; } }
+  return best;
+}
+// positions atteignables (case du haut de l'emprise) : on passe à travers ses alliés, pas à travers l'ennemi ni les astéroïdes
+function reachable(st, s, spd = spdOf(s)) {
+  const n = lenOf(s), key = (c, r) => c + ',' + r, out = new Map([[key(s.c, s.r), { c: s.c, r: s.r, d: 0, prev: null }]]), q = [[s.c, s.r]];
+  const pass = (c, r) => { for (let i = 0; i < n; i++) { if (!inGrid(c, r + i) || rockAt(st, c, r + i)) return false; const o = occupant(st, c, r + i, s); if (o && o.side !== s.side) return false; } return true; };
+  while (q.length) {
+    const [c, r] = q.shift(), cur = out.get(key(c, r)); if (cur.d >= spd) continue;
+    for (const [dc, dr] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+      const nc = c + dc, nr = r + dr, k = key(nc, nr); if (out.has(k) || !pass(nc, nr)) continue;
+      out.set(k, { c: nc, r: nr, d: cur.d + 1, prev: key(c, r) }); q.push([nc, nr]);
+    }
+  }
+  // on ne s'arrête que sur des cases libres
+  for (const [k, p] of out) { if (p.d === 0) continue; for (let i = 0; i < n; i++) if (occupant(st, p.c, p.r + i, s)) { p.through = true; break; } }
+  return out;
+}
+const ends = reach => [...reach.values()].filter(p => !p.through);
+function pathTo(reach, c, r) { const o = []; let k = c + ',' + r; while (k) { const p = reach.get(k); o.unshift([p.c, p.r]); k = p.prev; } return o; }
+// peut-on tirer depuis (c, r) sur la cible avec cette arme ?
+function canHit(st, s, w, c, r, target) {
+  const n = lenOf(s), d = gap(c, r, n, target.c, target.r, lenOf(target));
+  if (d > wRng(s, w)) return false;
+  if (w.swarm) return d <= 1;
+  const mine = []; for (let i = 0; i < n; i++) mine.push([c, r + i]);
+  return los(st, mine, cellsOf(target));
+}
+
+/* ---------- dégâts ---------- */
+function damage(st, s, amount, ev, byPlayer) {
+  if (s.dead || amount <= 0) return;
+  const abs = Math.min(s.sh, amount); s.sh -= abs; const h = amount - abs; s.hull = Math.max(0, s.hull - h);
+  ev.push({ e: 'dmg', id: s.id, n: amount, sh: abs, hull: h });
+  if (s.hull <= 0) kill(st, s, ev, byPlayer);
+}
+function kill(st, s, ev, byPlayer, silent) {
+  s.dead = true; ev.push({ e: 'boom', id: s.id, big: lenOf(s) });
+  if (s.side === 'E' && byPlayer && !silent) st.kills++;
+  // un brûlot détruit avant d'arriver explose sur place
+  if (s.t === 'brulot' && !silent) blast(st, s.c, s.r, 0, 2, ev, byPlayer, s);
+}
+// explosion : `main` dégâts sur la case, `around` sur les 8 cases autour
+function blast(st, c, r, main, around, ev, byPlayer, src) {
+  ev.push({ e: 'blast', c, r, big: main > 0 });
+  const hit = new Set(), center = occupant(st, c, r, src);
+  if (center && main) { hit.add(center); damage(st, center, main, ev, byPlayer); }
+  for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) {
+    if (!dc && !dr) continue; const o = occupant(st, c + dc, r + dr, src);
+    if (o && !hit.has(o) && o !== center) { hit.add(o); damage(st, o, around, ev, byPlayer); }
+  }
+}
+
+/* ---------- création d'un combat ---------- */
+const SECTORS = [
+  { name: 'CEINTURE DE KARN', boss: 'amiral', rocks: [3, 5], mult: 1.5, extra: 1 },
+];
+function makeShip(st, t, side, c, r, o = {}) {
+  const s = Object.assign({ id: st.next++, t, side, c, r, mods: [], dead: false, moved: false, acted: false, rip: false, bay: 0, from: null }, o);
+  if (s.hull == null) s.hull = maxHullOf(s);
+  s.hmax = maxHullOf(s); s.shMax = shMaxOf(s); s.sh = s.shMax;
+  st.ships.push(s); return s;
+}
+function pirateList(R, kind, floor, sector) {
+  const S = SECTORS[sector - 1] || SECTORS[0];
+  if (kind === 'amiral') return [S.boss, 'intercepteur', 'intercepteur'];
+  let list;
+  if (kind === 'lourd') list = ['croiseur', R() < .5 ? 'croiseur' : 'intercepteur', 'intercepteur', pick(R, ['intercepteur', 'brulot'])];
+  else {
+    const n = floor <= 2 ? 2 : floor <= 4 ? 3 : 3 + (R() < .5 ? 1 : 0);
+    list = []; for (let i = 0; i < n; i++) list.push(pick(R, floor <= 2 ? ['intercepteur', 'intercepteur', 'brulot'] : ['intercepteur', 'intercepteur', 'brulot', 'croiseur']));
+    if (list.filter(x => x === 'croiseur').length > 1) list[list.lastIndexOf('croiseur')] = 'intercepteur';
+  }
+  for (let i = 0; i < S.extra; i++) list.push('intercepteur');
+  return list;
+}
+function makeCombat(seed, kind, floor, fleet, sector = 1) {
+  const R = rng(seed), S = SECTORS[sector - 1] || SECTORS[0];
+  const st = { seed, kind, floor, sector, turn: 0, ships: [], rocks: [], intents: [], kills: 0, next: 1, result: null, log: [] };
+  // astéroïdes au milieu de la grille
+  const nr = S.rocks[0] + Math.floor(R() * (S.rocks[1] - S.rocks[0] + 1)) - (kind === 'amiral' ? 1 : 0);
+  while (st.rocks.length < nr) { const c = Math.floor(R() * COLS), r = 3 + Math.floor(R() * 3); if (!rockAt(st, c, r)) st.rocks.push([c, r]); }
+  // pirates en haut
+  for (const t of pirateList(R, kind, floor, sector)) {
+    const n = TYPES[t].n;
+    for (let k = 0; k < 60; k++) {
+      const c = t === 'amiral' ? 3 : Math.floor(R() * COLS), r = n === 3 ? 0 : Math.floor(R() * (4 - n));
+      let ok = true; for (let i = 0; i < n; i++) if (occupant(st, c, r + i) || rockAt(st, c, r + i)) ok = false;
+      if (ok) { makeShip(st, t, 'E', c, r, { mult: S.mult }); break; }
+    }
+  }
+  // la flotte en bas, les plus gros d'abord
+  const order = [3, 1, 5, 2, 4, 0, 6];
+  fleet.slice().sort((a, b) => TYPES[b.t].n - TYPES[a.t].n).forEach(f => {
+    const n = TYPES[f.t].n, r = n === 1 ? 7 : 6;
+    const c = order.find(c => ![0, 1, 2].some(i => i < n && (occupant(st, c, r + i) || rockAt(st, c, r + i))));
+    if (c != null) makeShip(st, f.t, 'P', c, r, { fid: f.uid, name: f.name, mods: f.mods.slice(), hull: f.hull });
+  });
+  startTurn(st, []);
+  return st;
+}
+
+/* ---------- déroulement d'un tour ---------- */
+function startTurn(st, ev) {
+  st.turn++;
+  ev.push({ e: 'turn', n: st.turn });
+  if (st.turn > 1) for (const s of alive(st)) if (s.sh < s.shMax) { s.sh++; }
+  for (const s of sideOf(st, 'P')) {
+    s.moved = s.acted = s.rip = false; s.from = null; if (s.bay > 0) s.bay--;
+    if (s.t === 'egide') for (const o of sideOf(st, 'P')) if (o !== s && dist(o, s) === 1 && o.sh < o.shMax + 1) { o.sh++; ev.push({ e: 'shield', id: o.id }); }
+  }
+  for (const s of sideOf(st, 'E')) s.rip = false;
+  // renforts de l'amiral
+  const boss = sideOf(st, 'E').find(s => s.t === 'amiral');
+  if (boss && st.turn % 3 === 0) {
+    let n = 0; for (const c of [boss.c - 1, boss.c + 1, boss.c - 2, boss.c + 2, boss.c - 3, boss.c + 3]) {
+      if (n >= 2 || !inGrid(c, 0) || occupant(st, c, 0) || rockAt(st, c, 0)) continue;
+      const s = makeShip(st, 'intercepteur', 'E', c, 0, { mult: boss.mult }); ev.push({ e: 'spawn', id: s.id }); n++;
+    }
+  }
+  planPirates(st, ev);
+  checkEnd(st);
+}
+function targetOrder(st, p) {
+  const T = sideOf(st, 'P'), ai = TYPES[p.t].ai;
+  if (ai === 'brulot' || ai === 'big') return T.sort((a, b) => lenOf(b) - lenOf(a) || dist(p, a) - dist(p, b) || a.id - b.id);
+  return T.sort((a, b) => dist(p, a) - dist(p, b) || a.id - b.id);
+}
+// IA des pirates : ils se déplacent tout de suite, puis annoncent leurs tirs (sur une CASE)
+function planPirates(st, ev) {
+  st.intents = [];
+  const pirates = sideOf(st, 'E').sort((a, b) => a.id - b.id);
+  for (const p of pirates) {
+    if (p.dead || !sideOf(st, 'P').length) continue;
+    const reach = reachable(st, p), E = ends(reach), order = targetOrder(st, p), ai = TYPES[p.t].ai, w = TYPES[p.t].w[0];
+    let best = null;
+    const better = (pos, key) => { if (!best || key < best.key) best = { pos, key }; };
+    if (ai === 'brulot') {
+      const T = order[0];
+      for (const pos of E) { const d = gap(pos.c, pos.r, 1, T.c, T.r, lenOf(T)); better(pos, (d <= 1 ? 0 : d * 100) + pos.d); }
+      p.goal = T.id;
+    } else if (ai === 'amiral') {
+      for (const pos of E) { const k = order.filter(T => canHit(st, p, w, pos.c, pos.r, T)).length; better(pos, -k * 100 + pos.d); }
+    } else {
+      for (const T of order) {
+        for (const pos of E) if (canHit(st, p, w, pos.c, pos.r, T)) better(pos, pos.d * 10 - gap(pos.c, pos.r, lenOf(p), T.c, T.r, lenOf(T)));
+        if (best) { p.goal = T.id; break; }
+      }
+      if (!best) { const T = order[0]; p.goal = T.id; for (const pos of E) better(pos, gap(pos.c, pos.r, lenOf(p), T.c, T.r, lenOf(T)) * 100 + pos.d); }
+    }
+    if (best && (best.pos.c !== p.c || best.pos.r !== p.r)) {
+      ev.push({ e: 'move', id: p.id, path: pathTo(reach, best.pos.c, best.pos.r) }); p.c = best.pos.c; p.r = best.pos.r;
+    }
+    riposte(st, p, ev);
+  }
+  // annonces, une fois tout le monde en place
+  for (const p of sideOf(st, 'E').sort((a, b) => a.id - b.id)) {
+    const ai = TYPES[p.t].ai, w = TYPES[p.t].w[0], n = lenOf(p);
+    if (ai === 'brulot') {
+      const T = byId(st, p.goal); if (T && !T.dead && dist(p, T) <= 1) st.intents.push({ src: p.id, cell: nearestCell(p, n, T), dmg: 5, splash: 2, fx: 'charge' });
+    } else if (ai === 'amiral') {
+      targetOrder(st, p).filter(T => canHit(st, p, w, p.c, p.r, T)).slice(0, TYPES[p.t].turrets)
+        .forEach(T => st.intents.push({ src: p.id, cell: nearestCell(p, n, T), dmg: wDmg(p, w), fx: w.fx, cross: TUNE.cross[p.t] || 0 }));
+    } else {
+      let T = byId(st, p.goal);
+      if (!T || T.dead || !canHit(st, p, w, p.c, p.r, T)) T = targetOrder(st, p).find(o => canHit(st, p, w, p.c, p.r, o));
+      if (!T) continue;
+      const pack = TYPES[p.t].skill === 'MEUTE' && sideOf(st, 'E').some(o => o !== p && o.t === 'intercepteur' && dist(o, p) === 1);
+      st.intents.push({ src: p.id, cell: nearestCell(p, n, T), dmg: wDmg(p, w) + (pack ? 1 : 0), fx: w.fx, pack, cross: TUNE.cross[p.t] || 0 });
+    }
+  }
+}
+// riposte du chasseur sur un pirate qui vient d'arriver tout près
+function riposte(st, p, ev) {
+  for (const s of sideOf(st, 'P')) {
+    if (p.dead) return;
+    if (s.t !== 'chasseur' || s.rip || dist(s, p) > 2 || !los(st, cellsOf(s), cellsOf(p))) continue;
+    s.rip = true; ev.push({ e: 'shot', from: s.id, to: p.id, fx: 'canon', riposte: true }); damage(st, p, 1, ev, true);
+  }
+}
+function checkEnd(st) {
+  if (st.result) return st.result;
+  if (!sideOf(st, 'E').length) st.result = 'won';
+  else if (!sideOf(st, 'P').some(s => !TYPES[s.t].temp)) st.result = 'lost';
+  return st.result;
+}
+// FIN DU TOUR : les pirates tirent dans l'ordre annoncé, puis le tour suivant commence
+function endTurn(st) {
+  const ev = [];
+  if (st.result) return ev;
+  for (const it of st.intents) {
+    const p = byId(st, it.src); if (!p || p.dead) continue;
+    if (it.fx === 'charge') { ev.push({ e: 'shot', from: p.id, cell: it.cell, fx: 'charge' }); kill(st, p, ev, false, true); blast(st, it.cell[0], it.cell[1], it.dmg, it.splash, ev, false, p); }
+    else {
+      ev.push({ e: 'shot', from: p.id, cell: it.cell, fx: it.fx });
+      const o = occupant(st, it.cell[0], it.cell[1], p); if (o) damage(st, o, it.dmg, ev, false); else ev.push({ e: 'miss', cell: it.cell });
+      if (it.cross) { const hit = new Set([o, p]); for (const [dc, dr] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) { const q = occupant(st, it.cell[0] + dc, it.cell[1] + dr); if (q && !hit.has(q)) { hit.add(q); damage(st, q, it.cross, ev, false); } } }
+    }
+    if (checkEnd(st)) break;
+  }
+  st.intents = [];
+  if (!checkEnd(st)) startTurn(st, ev);
+  return ev;
+}
+
+/* ---------- actions du joueur ---------- */
+function canAct(st, s) { return !st.result && s && !s.dead && s.side === 'P' && !s.acted; }
+function moveShip(st, s, c, r) {
+  if (!canAct(st, s) || s.moved) return null;
+  const reach = reachable(st, s), p = reach.get(c + ',' + r); if (!p || p.through || !p.d) return null;
+  s.from = { c: s.c, r: s.r }; s.moved = true; s.c = c; s.r = r;
+  return [{ e: 'move', id: s.id, path: pathTo(reach, c, r) }];
+}
+function undoMove(st, s) {
+  if (!s || !s.moved || s.acted || !s.from) return null;
+  const ev = [{ e: 'move', id: s.id, path: [[s.c, s.r], [s.from.c, s.from.r]] }]; s.c = s.from.c; s.r = s.from.r; s.from = null; s.moved = false; return ev;
+}
+const targetsFor = (st, s, wi) => { const w = TYPES[s.t].w[wi]; return w ? sideOf(st, 'E').filter(T => canHit(st, s, w, s.c, s.r, T)) : []; };
+function attack(st, s, wi, target) {
+  const w = TYPES[s.t].w[wi]; if (!canAct(st, s) || !w) return null;
+  const ev = [];
+  if (w.swarm) {
+    const T = sideOf(st, 'E').filter(o => dist(o, s) <= 1); if (!T.length) return null;
+    const d = (s.hull <= 2 ? 1 : 2) + nMod(s, 'canons');
+    ev.push({ e: 'swarm', from: s.id }); for (const o of T) damage(st, o, d, ev, true);
+  } else {
+    if (!target || target.dead || !canHit(st, s, w, s.c, s.r, target)) return null;
+    const d = wDmg(s, w) * (w.big && lenOf(target) >= 2 ? 2 : 1);
+    ev.push({ e: 'shot', from: s.id, to: target.id, fx: w.fx }); damage(st, target, d, ev, true);
+  }
+  s.acted = s.moved = true; s.from = null;
+  checkEnd(st);
+  return ev;
+}
+// baies du porte-vaisseaux : ne compte pas comme l'action du vaisseau
+function launchFrom(st, s, t) {
+  if (st.result || !s || s.dead || s.t !== 'mere' || s.bay > 0) return null;
+  if (sideOf(st, 'P').filter(o => TYPES[o.t].temp).length >= 2) return null;
+  const spots = [[s.c, s.r - 1], [s.c - 1, s.r], [s.c + 1, s.r], [s.c - 1, s.r + 1], [s.c + 1, s.r + 1], [s.c - 1, s.r + 2], [s.c + 1, s.r + 2], [s.c, s.r + 3]];
+  const pos = spots.find(([c, r]) => inGrid(c, r) && !rockAt(st, c, r) && !occupant(st, c, r)); if (!pos) return null;
+  const o = makeShip(st, t, 'P', pos[0], pos[1], { name: t === 'leger' ? 'ESCADRILLE' : 'DRONES' }); o.moved = o.acted = true;
+  s.bay = 2;
+  return [{ e: 'spawn', id: o.id, from: s.id }];
+}
+const bayReady = (st, s) => s && s.t === 'mere' && !s.dead && s.bay <= 0 && sideOf(st, 'P').filter(o => TYPES[o.t].temp).length < 2;
+const canFlee = st => st.turn >= 3 && st.kind !== 'amiral' && sideOf(st, 'P').filter(s => !TYPES[s.t].temp).every(s => s.r + lenOf(s) - 1 === ROWS - 1);
+function flee(st) { if (!canFlee(st) || st.result) return false; st.result = 'fled'; return true; }
+// cases menacées par les annonces (pour l'affichage et l'IA de test)
+function dangerMap(st) {
+  const m = new Map(), add = (c, r, d) => { const k = c + ',' + r; m.set(k, (m.get(k) || 0) + d); };
+  for (const it of st.intents) { add(it.cell[0], it.cell[1], it.dmg); if (it.cross) for (const [dc, dr] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) add(it.cell[0] + dc, it.cell[1] + dr, it.cross); if (it.splash) for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) if (dc || dr) add(it.cell[0] + dc, it.cell[1] + dr, it.splash); }
+  return m;
+}
+
+/* ---------- IA du joueur (pour les tests automatiques) ---------- */
+function autoTurn(st, riskW = 4) {
+  for (const s of sideOf(st, 'P').sort((a, b) => lenOf(b) - lenOf(a))) {
+    if (st.result) break;
+    if (bayReady(st, s)) launchFrom(st, s, 'leger');
+    if (s.acted) continue;
+    const danger = dangerMap(st), reach = reachable(st, s);
+    let best = null;
+    for (const pos of ends(reach)) {
+      let risk = 0; for (let i = 0; i < lenOf(s); i++) risk += danger.get(pos.c + ',' + (pos.r + i)) || 0;
+      let gain = 0, act = null;
+      TYPES[s.t].w.forEach((w, wi) => {
+        if (w.swarm) { const T = sideOf(st, 'E').filter(o => gap(pos.c, pos.r, 1, o.c, o.r, lenOf(o)) <= 1); const v = T.length * 2; if (v > gain) { gain = v; act = [wi, null]; } return; }
+        for (const T of sideOf(st, 'E')) if (canHit(st, s, w, pos.c, pos.r, T)) {
+          const d = wDmg(s, w) * (w.big && lenOf(T) >= 2 ? 2 : 1), v = Math.min(d, T.hull + T.sh) + (d >= T.hull + T.sh ? 4 : 0) + (T.t === 'brulot' ? 2 : 0);
+          if (v > gain) { gain = v; act = [wi, T]; }
+        }
+      });
+      const near = Math.min(...sideOf(st, 'E').map(o => gap(pos.c, pos.r, lenOf(s), o.c, o.r, lenOf(o))));
+      const score = gain * 3 - risk * riskW - near * .2 - pos.d * .01;
+      if (!best || score > best.score) best = { pos, act, score };
+    }
+    if (best.pos.d) moveShip(st, s, best.pos.c, best.pos.r);
+    if (best.act) attack(st, s, best.act[0], best.act[1]);
+  }
+  if (!st.result) endTurn(st);
+}
+function simulate(seed, kind, floor, fleet, riskW = 4, maxTurns = 30) {
+  const st = makeCombat(seed, kind, floor, fleet);
+  while (!st.result && st.turn <= maxTurns) autoTurn(st, riskW);
+  return { result: st.result || 'timeout', turns: st.turn, kills: st.kills, hull: sideOf(st, 'P').filter(s => !TYPES[s.t].temp).reduce((a, s) => a + s.hull, 0), lost: fleet.length - sideOf(st, 'P').filter(s => !TYPES[s.t].temp).length };
+}
+
+/* ---------- carte d'un secteur ---------- */
+const NODE_NAMES = { depart: 'POINT DE SAUT', contact: 'CONTACT', lourd: 'CONTACT LOURD', comptoir: 'COMPTOIR', dock: 'DOCK', amiral: 'AMIRAL ROUILLÉ' };
+function makeMap(seed, sector = 1) {
+  const R = rng(seedOf(seed, sector, 77)), floors = [[{ k: 'depart' }]];
+  for (let f = 1; f <= 7; f++) { const n = R() < .55 ? 3 : 2, row = []; for (let i = 0; i < n; i++) row.push({ k: 'contact' }); floors.push(row); }
+  floors.push([{ k: 'amiral' }]);
+  // 2 contacts lourds (étages 3 à 6, deux étages différents), 1 ou 2 comptoirs, 1 dock juste avant l'amiral
+  shuffle(R, [3, 4, 5, 6]).slice(0, 2).forEach(f => { pick(R, floors[f]).k = 'lourd'; });
+  const shopFloors = shuffle(R, [2, 3, 4, 5, 6]).slice(0, R() < .5 ? 1 : 2);
+  shopFloors.forEach(f => { const free = floors[f].filter(x => x.k === 'contact'); if (free.length) pick(R, free).k = 'comptoir'; });
+  pick(R, floors[7]).k = 'dock';
+  const nodes = [];
+  floors.forEach((row, f) => row.forEach((nd, i) => {
+    const n = row.length, sp = n === 3 ? 168 : 210, jx = n === 1 ? 0 : (R() - .5) * 36;
+    Object.assign(nd, { id: nodes.length, f, i, x: Math.round(272 + (i - (n - 1) / 2) * sp + jx), y: Math.round(812 - f * 80 + (n === 1 ? 0 : (R() - .5) * 18)), links: [] });
+    nodes.push(nd);
+  }));
+  // liaisons sans croisement : chaque balise a au moins un départ et une arrivée
+  for (let f = 0; f < floors.length - 1; f++) {
+    const A = floors[f], B = floors[f + 1]; let i = 0, j = 0; A[0].links.push(B[0].id);
+    while (i < A.length - 1 || j < B.length - 1) {
+      const ci = i < A.length - 1, cj = j < B.length - 1, r = R();
+      if (ci && cj && r < .34) { i++; j++; } else if (cj && (!ci || r < .67)) j++; else i++;
+      if (!A[i].links.includes(B[j].id)) A[i].links.push(B[j].id);
+    }
+  }
+  return { sector, nodes };
+}
+
+/* ---------- la partie ---------- */
+const FLEETS = [
+  { id: 'escorte', name: "FLOTTE D'ESCORTE", ships: ['mere', 'fregate', 'chasseur'], desc: 'Un porte-vaisseaux et son escorte : solide et polyvalente.' },
+  { id: 'choc', name: 'FLOTTE DE CHOC', ships: ['cuirasse', 'bombardier', 'chasseur'], locked: 60, desc: 'Cuirassé, bombardier et chasseur : frappe lourde.' },
+  { id: 'marchande', name: 'FLOTTE MARCHANDE', ships: ['convoyeur', 'egide', 'fregate', 'eclaireur'], locked: 80, desc: 'Plus de crédits, moins de puissance.' },
+];
+function newRun(seed, fleetId = 'escorte') {
+  const R = rng(seedOf(seed, 5)), names = shuffle(R, NAMES.slice());
+  const run = { v: 1, seed, sector: 1, fuel: 6, cr: 40, kills: 0, heavy: 0, admirals: 0, sectorsDone: 0, stock: [], uid: 1, phase: 'map', visited: [], combat: null, shop: null, reward: null, msg: null, fleet: [] };
+  for (const t of FLEETS.find(f => f.id === fleetId).ships) addFleet(run, t, names.pop());
+  run.map = makeMap(seed, 1); run.at = 0; run.visited = [0];
+  return run;
+}
+function addFleet(run, t, name) { const f = { uid: run.uid++, t, name: name || NAMES[run.uid % NAMES.length], mods: [] }; f.hull = maxHullOf(f); run.fleet.push(f); return f; }
+const nodeAt = (run, id) => run.map.nodes[id];
+const nextNodes = run => nodeAt(run, run.at).links.map(id => nodeAt(run, id));
+const bonus = run => 1;   // la soute du convoyeur (+50 %) arrivera avec le convoyeur
+function jump(run, id) {
+  if (run.phase !== 'map' || !nodeAt(run, run.at).links.includes(id)) return false;
+  run.msg = null;
+  if (run.fuel > 0) run.fuel--;
+  else { for (const f of run.fleet) f.hull = Math.max(1, f.hull - 2); run.msg = 'DÉRIVE : PLUS DE CARBURANT, CHAQUE VAISSEAU PERD 2 DE COQUE'; }
+  run.at = id; run.visited.push(id);
+  const nd = nodeAt(run, id), seed = seedOf(run.seed, run.sector, id);
+  if (nd.k === 'contact' || nd.k === 'lourd' || nd.k === 'amiral') { run.combat = makeCombat(seed, nd.k, nd.f, run.fleet, run.sector); run.phase = 'combat'; }
+  else if (nd.k === 'comptoir') { run.shop = makeShop(run, seed); run.phase = 'shop'; }
+  else if (nd.k === 'dock') { run.dockMod = pick(rng(seed), MOD_IDS); run.phase = 'dock'; }
+  return true;
+}
+function finishCombat(run) {
+  const st = run.combat; if (!st || !st.result) return;
+  run.fleet = run.fleet.filter(f => { const s = st.ships.find(x => x.fid === f.uid); if (!s || s.dead) return false; f.hull = s.hull; return true; });
+  run.kills += st.kills;
+  const R = rng(seedOf(st.seed, 99));
+  if (st.result === 'won') {
+    const k = st.kind, rw = { kind: k, kills: st.kills };
+    rw.cr = Math.round((k === 'amiral' ? 100 : k === 'lourd' ? 50 + R() * 21 : 20 + R() * 16) * bonus(run));
+    rw.fuel = k === 'lourd' ? 1 : k === 'contact' && R() < .5 ? 1 : 0;
+    rw.mod = k === 'lourd' || k === 'amiral' || R() < .25 ? pick(R, MOD_IDS) : null;
+    run.cr += rw.cr; run.fuel += rw.fuel; if (rw.mod) run.stock.push(rw.mod);
+    if (k === 'lourd') run.heavy++;
+    if (k === 'amiral') { run.admirals++; run.sectorsDone++; }
+    run.reward = rw; run.phase = 'reward';
+  } else if (st.result === 'fled') { run.fuel = Math.max(0, run.fuel - 1); run.phase = 'map'; run.msg = 'FUITE : PAS DE RÉCOMPENSE, -1 CARBURANT'; }
+  else { run.phase = 'end'; run.victory = false; }
+  run.combat = null;
+}
+// après la récompense : la carte, ou la fin si l'amiral est tombé
+function afterReward(run) {
+  const k = run.reward && run.reward.kind; run.reward = null;
+  if (k === 'amiral') {
+    if (run.sector < SECTORS.length) { run.sector++; run.map = makeMap(run.seed, run.sector); run.at = 0; run.visited = [0]; run.phase = 'map'; }
+    else { run.phase = 'end'; run.victory = run.sectorsDone >= 3; run.cleared = true; }
+  } else run.phase = 'map';
+}
+function makeShop(run, seed) {
+  const R = rng(seedOf(seed, 3)), mods = shuffle(R, MOD_IDS.slice()).slice(0, 3).map(m => ({ m, price: Math.round(Math.min(80, Math.max(40, MODS[m].price + (R() - .5) * 20))), sold: false }));
+  const t = pick(R, ['chasseur', 'fregate', 'bombardier', 'drones', 'egide']);
+  return { mods, ship: { t, price: Math.round(Math.min(150, Math.max(80, TYPES[t].price + (R() - .5) * 20))), name: pick(R, NAMES), sold: false } };
+}
+const missingHull = run => run.fleet.reduce((a, f) => a + maxHullOf(f) - f.hull, 0);
+function buy(run, what, i) {
+  const sh = run.shop; if (run.phase !== 'shop') return false;
+  if (what === 'fuel') { if (run.cr < 10) return false; run.cr -= 10; run.fuel++; return true; }
+  if (what === 'repair') {
+    let pts = Math.min(missingHull(run), Math.floor(run.cr / 3)); if (!pts) return false; run.cr -= pts * 3;
+    for (const f of run.fleet) { const k = Math.min(pts, maxHullOf(f) - f.hull); f.hull += k; pts -= k; } return true;
+  }
+  if (what === 'mod') { const o = sh.mods[i]; if (!o || o.sold || run.cr < o.price) return false; run.cr -= o.price; o.sold = true; run.stock.push(o.m); return true; }
+  if (what === 'ship') { const o = sh.ship; if (o.sold || run.cr < o.price || run.fleet.length >= 5) return false; run.cr -= o.price; o.sold = true; addFleet(run, o.t, o.name); return true; }
+  return false;
+}
+function dock(run, choice) {
+  if (run.phase !== 'dock') return false;
+  if (choice === 'repair') for (const f of run.fleet) f.hull += Math.ceil((maxHullOf(f) - f.hull) / 2);
+  else run.stock.push(run.dockMod);
+  run.phase = 'map'; return true;
+}
+// modules : poser depuis la réserve, ou rendre à la réserve
+function install(run, uid, m) {
+  const f = run.fleet.find(x => x.uid === uid), i = run.stock.indexOf(m);
+  if (!f || i < 0 || f.mods.length >= slotsOf(f.t)) return false;
+  run.stock.splice(i, 1); f.mods.push(m); if (m === 'blindage') f.hull += 3; return true;
+}
+function uninstall(run, uid, k) {
+  const f = run.fleet.find(x => x.uid === uid); if (!f || !f.mods[k]) return false;
+  const m = f.mods.splice(k, 1)[0]; run.stock.push(m); if (m === 'blindage') f.hull = Math.max(1, f.hull - 3); return true;
+}
+/* ---------- sauvegardes d'une version à l'autre ----------
+   RUN_V : version de la partie sauvegardée. Quand une session ajoute des champs
+   à la partie, monter RUN_V et compléter ici les anciennes sauvegardes.
+   Renvoie la partie remise à niveau, ou null si elle est illisible. */
+const RUN_V = 1;
+const PHASES = ['map', 'combat', 'reward', 'shop', 'dock', 'end'];
+function migrate(r) {
+  if (!r || typeof r !== 'object' || !(r.v >= 1) || r.v > RUN_V) return null;
+  // (exemple pour la suite : if (r.v === 1) { r.pilots = r.pilots || []; r.v = 2; })
+  const ok = Array.isArray(r.fleet) && r.fleet.every(f => f && TYPES[f.t] && Array.isArray(f.mods)) && r.map && Array.isArray(r.map.nodes)
+    && r.map.nodes[r.at] && PHASES.includes(r.phase) && (r.phase !== 'combat' || (r.combat && Array.isArray(r.combat.ships)))
+    && (r.phase !== 'shop' || r.shop) && (r.phase !== 'reward' || r.reward) && Array.isArray(r.stock);
+  return ok ? r : null;
+}
+const scoreOf = run => 1000 * run.sectorsDone + 20 * run.kills + run.cr + (run.victory ? 3000 : 0);
+const stellarOf = run => 10 * run.sector + 3 * run.heavy + 20 * run.admirals;
+
+const NEBULA_API = { TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, seedOf, dangerMap, RUN_V, migrate };
+if (typeof window !== 'undefined') window.Nebula = NEBULA_API;
+if (typeof module !== 'undefined') module.exports = NEBULA_API;

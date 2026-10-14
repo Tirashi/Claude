@@ -1,6 +1,7 @@
 # Nebula : analyse technique et propositions (14/10/2026)
 
-> Bilan fait après la session 1, avant la session 2. Rien n'est encore appliqué : chaque piste attend l'accord de l'utilisateur.
+> Bilan fait après la session 1, avant la session 2.
+> **Décision de l'utilisateur (14/10)** : on garde « sans build » ; la règle « un fichier par jeu » est assouplie (scripts classiques autorisés). **Étape 1 du § 9 faite le 14/10** (voir § 10).
 > Contraintes prises en compte : site statique sur **GitHub Pages** (pas de serveur, pas d'en-têtes personnalisés), base **Supabase** gratuite appelée avec la clé publique, jeux **sans build** (un fichier par jeu), **artefacts** fabriqués par `outils/artefact.py`, appli **PWA** jouée sur Android.
 
 ## 1. État des lieux
@@ -86,3 +87,11 @@ Résultat : un push cassé se voit dans l'onglet *Actions* avant de mettre `main
 1. **Petit chantier préparatoire** (avant la session 2) : protection contre les erreurs + `migrate()`, suppression du `Math.random`, découpage `regles.js` / `evenements.js` / `index.html`, `artefact.py` généralisé, simulateur sous Node, CI GitHub (vérifications 1, 3, 4).
 2. **Session 2** telle que prévue, avec l'IA par score et `@ts-check` sur `regles.js`.
 3. **Session 3** : polices locales, délai réseau du service worker, confort (§ 8), mesures sur téléphone et, si besoin, Web Worker pour les sprites.
+
+## 10. Chantier préparatoire : fait (14/10/2026)
+- `nebula/regles.js` : toute la logique sortie de `index.html` (comportement identique : le simulateur donne exactement les mêmes chiffres qu'avant). `evenements.js` sera créé en session 2 avec les premiers textes d'épaves.
+- `migrate()` + `RUN_V` (une partie illisible est mise de côté dans `nebula.run.bak`) ; écran **INCIDENT** (RÉESSAYER / ABANDONNER LA PARTIE) au lieu d'un jeu figé ; plus de `Math.random` dans les règles.
+- `outils/nebula-simulateur.js` sous Node, avec parties complètes rejouées deux fois (reproductibilité) et test de `migrate()`.
+- `outils/artefact.py` intègre tous les scripts locaux d'une page.
+- `outils/verifications.js` + `outils/fumee.js`, lancés par `.github/workflows/verifications.yml` à chaque push.
+- Reste pour plus tard : ESLint et `@ts-check` (session 2), polices locales, délai réseau du service worker, confort (§ 8).

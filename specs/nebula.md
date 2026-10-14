@@ -17,7 +17,7 @@
 - Nom affiché : **NEBULA**, sous-titre « ROGUE-LITE TACTIQUE ». Sur l'écran titre : « BIENTÔT · NEBULA : L'EMPIRE DES ÉTOILES ».
 
 ## 3. Technique
-- Dossier `nebula/` : `index.html` (le jeu) + **`nebula/vaisseaux.js`** (moteur de sprites extrait du catalogue, avec `builder`, `render`, `SHIPS`, `MAT`, décor), **réutilisé plus tard par l'Empire**. Ajouter les deux à `FILES` de `sw.js` et changer `VERSION`.
+- Dossier `nebula/` : `index.html` (affichage, commandes, sauvegarde) + **`nebula/regles.js`** (logique pure : combat, IA, carte, comptoir, score, `migrate()` ; chargée aussi par Node pour le simulateur) + **`nebula/vaisseaux.js`** (moteur de sprites extrait du catalogue, avec `builder`, `render`, `SHIPS`, `MAT`, décor), **réutilisé plus tard par l'Empire**. Ajouter les deux à `FILES` de `sw.js` et changer `VERSION`.
 - Canvas en **544×960 pixels logiques** (densité ×2 par rapport aux jeux 272×480 de la ludothèque), agrandi à l'écran comme les autres jeux (`resize()`), lissage activé pour les réductions.
 - Sprites générés une fois au chargement (mesurer le temps ; si > 300 ms, les générer à la demande et les garder en cache).
 - Gabarit commun : bouton ◀ MENU dans l'appli installée, service worker, `<script src="../ludo-scores.js">`, `window.Nebula` exposé pour les tests (état, simulateur de combat, générateur de carte).
