@@ -277,6 +277,19 @@ function makeCombat(seed, kind, floor, fleet, sector = 1, /** @type {{ ai?: numb
   return st;
 }
 
+/* ---------- entraînement guidé (tutoriel) ----------
+   Toujours le même petit combat : la flotte d'escorte, deux intercepteurs, deux astéroïdes.
+   Le premier intercepteur vise le chasseur (à esquiver), le second la frégate. */
+/** @returns {Combat} */
+function makeTraining() {
+  /** @type {Combat} */
+  const st = { seed: 1, kind: 'contact', floor: 1, sector: 1, ai: 0, label: 'ENTRAÎNEMENT', turn: 0, ships: [], rocks: [[2, 4], [6, 3]], intents: [], kills: 0, next: 1, result: null, log: [] };
+  makeShip(st, 'intercepteur', 'E', 5, 1); makeShip(st, 'intercepteur', 'E', 0, 2);
+  makeShip(st, 'chasseur', 'P', 5, 6, { fid: 3, name: 'PIQUE' }); makeShip(st, 'fregate', 'P', 1, 6, { fid: 2, name: 'AURORE' }); makeShip(st, 'mere', 'P', 3, 6, { fid: 1, name: 'ARCHE' });
+  startTurn(st, []);
+  return st;
+}
+
 /* ---------- déroulement d'un tour ---------- */
 function startTurn(st, ev) {
   st.turn++;
@@ -943,6 +956,6 @@ function migrate(r) {
 const scoreOf = run => 1000 * run.sectorsDone + 20 * run.kills + run.cr + (run.victory ? 3000 : 0);
 const stellarOf = run => 10 * run.sector + 3 * run.heavy + 20 * run.admirals + (run.data || 0);
 
-const NEBULA_API = { TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
+const NEBULA_API = { makeTraining, TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
 if (typeof window !== 'undefined') window.Nebula = NEBULA_API;
 if (typeof module !== 'undefined') module.exports = NEBULA_API;

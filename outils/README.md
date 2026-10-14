@@ -15,7 +15,7 @@ python3 -m http.server 8765
 | `orbite-solveur.js [niveaux]` | Orbite : tirs gagnants et robustes par niveau. |
 | `pont-stellaire-unicite.js [n]` | Pont stellaire : temps de génération et unicité des solutions. |
 | `verifications.js` | **Avant chaque push** (sans navigateur ni serveur) : syntaxe de tous les scripts, `sw.js` (fichiers et version notée dans CLAUDE.md), aucune clé secrète, `MON-CODE`, icônes 16×16, simulateur Nebula, types de `nebula/regles.js` (`tsc -p outils/tsconfig.nebula.json`, ignoré si `tsc` est absent). Lancé aussi par la CI GitHub. |
-| `fumee.js [captures]` | Chaque jeu s'ouvre sans erreur JavaScript ; Nebula : saut, toucher, fin de tour, écran INCIDENT. Lancé aussi par la CI. |
+| `fumee.js [captures]` | Chaque jeu s'ouvre sans erreur JavaScript ; Nebula : saut, toucher, fin de tour, entraînement, écran INCIDENT. Lancé aussi par la CI. |
 | `nebula-simulateur.js [n] [prudence]` | Nebula, **sous Node** (pas besoin du serveur) : combats automatiques (victoires, coque perdue) contre l'IA du secteur 1 puis l'IA par score (niveaux 1 et 2), parties complètes reproductibles, `migrate()`. |
 | `nebula-parties.js [n] [prudence]` | Nebula, sous Node : parties complètes sur les 3 secteurs (où la flotte tombe, victoires, coque perdue par secteur et par type de combat). Pour régler la difficulté. |
 | `artefact.py <jeu.html> <sortie.html>` | Copie d'un jeu prête à publier en artefact (tous les scripts locaux intégrés, sans ludo-scores.js). |

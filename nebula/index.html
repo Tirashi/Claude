@@ -51,7 +51,7 @@ const meta = Object.assign({ data: 0, games: 0, wins: 0, cleared: 0, kills: 0, b
 if (!Array.isArray(meta.unlocked)) meta.unlocked = [];
 let best = Number(store.get('best', 0)) || 0, SFX = store.get('sfx', true);
 const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, node: null, legend: false, ghost: null, pickP: null, ranges: !!store.get('ranges', false) };
-function save() { if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
+function save() { if (run && run.training) return; if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
 
 /* ---------- sprites et décors fabriqués à la demande ---------- */
 const COARSE = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);   // écran tactile = téléphone
@@ -349,6 +349,7 @@ function drawCombat() {
   btn(LW - 186, 50, 162, 36, UI.ranges ? 'PORTÉES : OUI' : 'PORTÉES : NON', () => { UI.ranges = !UI.ranges; store.set('ranges', UI.ranges); }, { size: 16, ls: 1, primary: UI.ranges });
   drawFiche(st, s, B);
   if (st.result && !B) drawResult(st);
+  if (TUTO.on && run.training) drawTuto(st);
 }
 // fantôme du vaisseau là où il irait si l'on lève le doigt, avec les dégâts annoncés sur ces cases
 function drawGhost(st, s, p) {
@@ -450,7 +451,7 @@ function drawResult(st) {
   txt(won ? 'VICTOIRE' : st.result === 'fled' ? 'REPLI' : 'DÉFAITE', LW / 2, 372, col, F.title(30), 'center', 10);
   const msg = won ? `Tous les pirates sont détruits (${st.kills} abattus).` : st.result === 'fled' ? 'La flotte saute hors du combat : pas de récompense, 1 carburant perdu.' : 'Toute la flotte est détruite.';
   para(msg, 92, 430, LW - 184, C.txt, F.ui(20), 24);
-  btn(152, 500, 240, 50, 'CONTINUER', () => { finishCombat(run); resetAnim(); UI.sel = null; save(); if (run.phase === 'end') recordEnd(); }, { primary: true, size: 22 });
+  btn(152, 500, 240, 50, 'CONTINUER', () => { if (run.training) { endTraining(); return; } finishCombat(run); resetAnim(); UI.sel = null; save(); if (run.phase === 'end') recordEnd(); }, { primary: true, size: 22 });
 }
 function tapGrid(c, r) {
   const st = run.combat; if (st.result) return;
@@ -654,6 +655,18 @@ function modPreview(f, m) {
   if (m === 'canons') return ws.length ? 'DÉGÂTS ' + ws.map(w => `${w.name} ${up(wDmg(f, w), wDmg(f, w) + 1)}`).join(' · ') : 'SANS EFFET : PAS D\'ARME';
   return '';
 }
+// effet d'un pilote sur un vaisseau (à la place du pilote déjà posé, dont on perd le bonus) : « VITESSE 3 → 4 »
+function pilotPreview(f, p) {
+  const g2 = Object.assign({}, f, { pilot: p }), up = (a, b) => `${a} → ${b}`, out = [], ws = TYPES[f.t].w;
+  if (maxHullOf(g2) !== maxHullOf(f)) out.push('COQUE MAX ' + up(maxHullOf(f), maxHullOf(g2)));
+  if (shMaxOf(g2) !== shMaxOf(f)) out.push('BOUCLIER ' + up(shMaxOf(f), shMaxOf(g2)));
+  if (spdOf(g2) !== spdOf(f)) out.push('VITESSE ' + up(spdOf(f), spdOf(g2)));
+  if (ws.some(w => wDmg(g2, w) !== wDmg(f, w))) out.push('DÉGÂTS ' + ws.map(w => `${w.name} ${up(wDmg(f, w), wDmg(g2, w))}`).join(' · '));
+  if (p.k === 'mecano') out.push('+1 COQUE À CHAQUE TOUR DE COMBAT');
+  if (p.k === 'veteran' && (p.vet || 0) < 4) out.push('+1 COQUE MAX PAR VICTOIRE');
+  if (p.k === 'tireur' && !ws.length) out.push("SANS EFFET : PAS D'ARME");
+  return out.join(' · ') || 'SANS CHANGEMENT';
+}
 function drawHangar() {
   drawBg('hangar');
   topBar('HANGAR', `${run.fleet.length} VAISSEAU${run.fleet.length > 1 ? 'X' : ''} SUR 5`, `CRÉDITS ${run.cr}`, `RÉSERVE ${run.stock.length}`);
@@ -670,8 +683,9 @@ function drawHangar() {
     g.strokeStyle = pl ? C.ally2 + '.7)' : canP ? C.ally : 'rgba(140,160,190,.3)'; g.lineWidth = canP ? 2 : 1; g.setLineDash(pl ? [] : [4, 4]); g.strokeRect(px + .5, y + 5.5, 156, 24); g.setLineDash([]);
     txt(pl ? `${pl.name} · ${PILOTS[pl.k].name}${pl.k === 'veteran' && pl.vet ? ' +' + pl.vet : ''}` : canP ? 'POSER LE PILOTE' : 'SANS PILOTE', px + 78, y + 9, pl ? C.ally : canP ? C.ally : C.dim, F.ui(15), 'center', 1, 146);
     zone(px, y + 2, 156, 30, () => { if (UI.pickP != null) { if (assignPilot(run, f.uid, UI.pickP)) { UI.pickP = null; save(); } } else if (pl) { unassignPilot(run, f.uid); save(); } });
-    const pm = UI.pick != null ? run.stock[UI.pick] : null;
-    if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 30, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13), 'left', 0, LW - 180);
+    const pm = UI.pick != null ? run.stock[UI.pick] : null, pq = UI.pickP != null ? (run.crew || [])[UI.pickP] : null;
+    if (pq) txt(`${pq.name} : ${pilotPreview(f, pq)}`, 138, y + 30, C.ally, F.mono(13), 'left', 0, LW - 180);
+    else if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 30, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13), 'left', 0, LW - 180);
     else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.length ? T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ') : 'SANS ARME'}`, 138, y + 30, C.dim, F.mono(13), 'left', 0, LW - 180);
     txt(`${T.skill} · ${T.short || T.sdesc}`, 138, y + 46, C.acc, F.ui(15), 'left', 1, LW - 180);
     txt('COQUE', 138, y + 62, C.dim, F.mono(13)); meter(196, y + 66, 200, f.hull, m, f.hull / m > .5 ? C.ok : C.foe); txt(`${f.hull}/${m}`, 404, y + 62, C.txt, F.mono(13));
@@ -697,6 +711,69 @@ function drawHangar() {
   btn(LW / 2 - 100, 892, 200, 52, 'RETOUR', () => { UI.hangar = false; UI.pick = null; UI.pickP = null; }, { primary: true, size: 20 });
 }
 
+/* ---------- entraînement guidé (tutoriel) ----------
+   Un combat préparé (makeTraining) joué à la place de la partie, qui est mise de côté puis rendue
+   telle quelle (l'entraînement n'est jamais sauvegardé). Proposé une fois avant le premier départ
+   (nebula.tuto), et rejouable depuis le manuel. Étapes : 0 accueil, 1 choisir, 2 esquiver, 3 tirer,
+   4 bouclier et coque, 5 FIN DU TOUR, 6 bravo, 7 combat libre jusqu'au bout. */
+const TUTO = { on: false, step: 0, real: null, after: null, label: 'TERMINER' };
+function startTraining(after, label = 'TERMINER') {
+  store.set('tuto', 1);
+  TUTO.real = run; TUTO.after = after; TUTO.label = label; TUTO.step = 0; TUTO.on = true;
+  run = { training: true, phase: 'combat', combat: makeTraining(), sector: 1, fleet: [] };
+  UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); sfx('jump');
+}
+function leaveTraining() { if (!TUTO.on) return; TUTO.on = false; run = TUTO.real; TUTO.real = null; resetAnim(); UI.sel = null; UI.ghost = null; }
+function endTraining() { const a = TUTO.after; leaveTraining(); TUTO.after = null; if (a) a(); else UI.screen = 'title'; }
+// premier départ : on propose l'entraînement une fois (même à qui a déjà joué)
+function launch(go) { if (store.get('tuto', 0)) go(); else { UI.screen = 'tutoAsk'; UI.after = go; } }
+function drawTutoAsk() {
+  drawBg('hangar');
+  frameBox(40, 280, LW - 80, 330, C.ally, 14, 'rgba(6,10,18,.94)');
+  txt('PREMIER VOL ?', LW / 2, 310, C.ally, F.title(24), 'center', 6);
+  para("Avant de partir, un petit combat d'entraînement guidé (2 minutes) montre l'essentiel. Ta partie n'est pas touchée, et tu pourras le refaire depuis le MANUEL.", 72, 366, LW - 144, C.txt, F.ui(20), 25);
+  btn(92, 476, LW - 184, 54, "S'ENTRAÎNER", () => startTraining(UI.after, 'DÉCOLLER'), { primary: true, size: 22 });
+  btn(92, 542, LW - 184, 46, 'PARTIR DIRECTEMENT', () => { store.set('tuto', 1); const go = UI.after; UI.after = null; go(); }, { size: 19 });
+}
+const inDanger = (st, s) => { const d = dangerMap(st); return cellsOf(s).some(([c, r]) => d.get(c + ',' + r)); };
+// une bulle d'aide : en haut de l'écran (y = 4) ou au milieu ; les touchers dessus ne passent pas au combat
+function bubble(title, text, y, btns = [], quit = true) {
+  const L = wrapLines(text, LW - 72, F.ui(19)), h = 44 + L.length * 22 + (btns.length ? 64 : 0);
+  if (y == null) y = Math.round((LH - h) / 2) - 40;
+  zone(16, y, LW - 32, h, () => {});
+  frameBox(16, y, LW - 32, h, C.ally, 10, 'rgba(6,12,22,.96)');
+  txt(title, 34, y + 12, C.ally, F.mono(16), 'left', 3, LW - 200);
+  L.forEach((l, i) => txt(l, 34, y + 38 + i * 22, C.txt, F.ui(19)));
+  if (quit) btn(LW - 132, y + 6, 104, 30, 'QUITTER', () => endTraining(), { size: 14, ls: 1 });
+  btns.forEach(([label, act, primary], i) => { const w = (LW - 80 - (btns.length - 1) * 12) / btns.length; btn(40 + i * (w + 12), y + h - 58, w, 46, label, act, { primary, size: 19 }); });
+}
+const pulseBox = (x, y, w, h, col) => { g.globalAlpha = .5 + Math.sin(now * 6) * .5; corners(x - 4, y - 4, w + 8, h + 8, col, 16, 3); g.globalAlpha = 1; };
+function drawTuto(st) {
+  const B = busy(), ch = st.ships.find(s => s.t === 'chasseur'), mine = sideOf(st, 'P');
+  if (!ch) return;
+  // on avance tout seul quand le joueur a fait ce qu'on attend
+  if (TUTO.step >= 1 && TUTO.step <= 5 && st.turn >= 2 && !B) TUTO.step = 6;
+  if (TUTO.step === 1 && UI.sel === ch.id) TUTO.step = 2;
+  if (TUTO.step === 2 && ((ch.moved && !inDanger(st, ch)) || ch.acted)) TUTO.step = 3;
+  if (TUTO.step === 3 && mine.some(s => s.acted) && !B) TUTO.step = 4;
+  if (TUTO.step === 7 || st.result) return;
+  const L = GX + ch.c * CS, T = GY + ch.r * CS;
+  if (TUTO.step === 0) { g.fillStyle = 'rgba(2,4,8,.6)'; g.fillRect(0, 0, LW, LH); zone(0, 0, LW, LH, () => {});
+    bubble('ENTRAÎNEMENT', 'Un petit combat guidé en 5 étapes, sans risque pour ta partie. Les pirates (en haut) annoncent leurs tirs avant de les faire : à toi de les esquiver.', null, [["C'EST PARTI", () => { TUTO.step = 1; }, true]]); }
+  else if (TUTO.step === 1) { pulseBox(L, T, CS, CS, C.ally); bubble('1/5 · CHOISIR UN VAISSEAU', 'Touche ton CHASSEUR, encadré en bleu. Sa fiche s\'affiche en bas de l\'écran.', 4); }
+  else if (TUTO.step === 2) bubble('2/5 · ESQUIVER', ch.moved ? 'Toujours dans le rouge ! Touche une autre case bleue pour le replacer.'
+    : 'Case rouge : un intercepteur y tirera 2 à la FIN DU TOUR. Garde le doigt sur une case bleue hors du rouge, puis lève-le.', 4);
+  else if (TUTO.step === 3) bubble('3/5 · TIRER', !ch.acted && !targetsFor(st, ch, 0).length
+    ? 'Aucun pirate à portée du chasseur. Choisis la FRÉGATE (à gauche) : son MISSILE porte à 5 cases.'
+    : 'Les pirates encadrés en ambre sont à portée : touche-en un pour tirer. Le chiffre donne les dégâts.', 4);
+  else if (TUTO.step === 4 && !B) { g.fillStyle = 'rgba(2,4,8,.45)'; g.fillRect(0, 0, LW, LH); zone(0, 0, LW, LH, () => {}); pulseBox(L, T, CS, CS, C.ally);
+    bubble('4/5 · BOUCLIER ET COQUE', 'Les petits traits bleus à gauche d\'un vaisseau : son BOUCLIER. Il encaisse les dégâts en premier et remonte de 1 à chaque tour. La barre en bas : sa COQUE. À 0, le vaisseau est perdu pour toute la partie.', 4, [['COMPRIS', () => { TUTO.step = 5; }, true]]); }
+  else if (TUTO.step === 5) { pulseBox(390, 878, 126, 50, C.acc); bubble('5/5 · FIN DU TOUR', 'Tes autres vaisseaux peuvent encore bouger et tirer. Quand tu es prêt, touche FIN DU TOUR : les pirates tirent sur les cases rouges, puis annoncent leurs prochains tirs.', 4); }
+  else if (TUTO.step === 6 && !B) { g.fillStyle = 'rgba(2,4,8,.6)'; g.fillRect(0, 0, LW, LH); zone(0, 0, LW, LH, () => {});
+    bubble('BRAVO !', 'Tu connais l\'essentiel : regarder le rouge, se mettre à l\'abri, tirer, puis finir le tour. Le MANUEL (écran titre) explique tout le reste : vaisseaux, pirates, terrain.', null,
+      [['FINIR LE COMBAT', () => { TUTO.step = 7; }], [TUTO.label, () => endTraining(), true]], false); }
+}
+
 /* ---------- titre, flotte, fin ---------- */
 function drawTitle() {
   drawBg('title');
@@ -712,7 +789,7 @@ function drawTitle() {
   } else {
     btn(132, 670, 280, 52, 'NOUVELLE PARTIE', () => { UI.screen = 'fleet'; }, { primary: true, size: 24 });
     const dk = todayKey(), done = dailyBest[dk] != null, tried = store.get('dailyTry', 0) === dk;
-    btn(132, 734, 280, 44, done ? `DU JOUR · ${dailyBest[dk]} PTS` : tried ? 'PARTIE DU JOUR · REJOUER' : 'PARTIE DU JOUR', () => startDaily(), { size: 19, ls: 2, col: tried ? null : C.ally });
+    btn(132, 734, 280, 44, done ? `DU JOUR · ${dailyBest[dk]} PTS` : tried ? 'PARTIE DU JOUR · REJOUER' : 'PARTIE DU JOUR', () => launch(startDaily), { size: 19, ls: 2, col: tried ? null : C.ally });
   }
   btn(52, 790, 104, 40, 'MANUEL', () => openManual('title'), { size: 17, ls: 1 });
   btn(164, 790, 104, 40, 'DÉBLOCAGES', () => { UI.screen = 'unlocks'; UI.back = 'title'; }, { size: 15, ls: 1, col: walletOf(meta) >= cheapest() ? C.acc : null });
@@ -736,7 +813,7 @@ function drawFleet() {
     zone(16, y, LW - 32, 206, () => { if (lock) { UI.screen = 'unlocks'; UI.back = 'fleet'; } else UI.fleet = fl.id; });
   });
   btn(40, 800, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
-  btn(LW - 240, 800, 200, 52, 'DÉCOLLER', () => startRun(UI.fleet), { primary: true, size: 20 });
+  btn(LW - 240, 800, 200, 52, 'DÉCOLLER', () => { const f = UI.fleet; launch(() => startRun(f)); }, { primary: true, size: 20 });
 }
 // partie du jour : graine = date, flotte d'escorte sans déblocages (la même partie pour toute la famille) ;
 // seule la première tentative du jour est classée (nebula.dailyTry), les suivantes se jouent hors classement
@@ -788,6 +865,7 @@ const MAN = { tab: 'regles', page: 0, ship: 'chasseur', foe: 'intercepteur' };
 function openManual(back, tab) { UI.screen = 'manual'; UI.back = back; if (tab) { MAN.tab = tab; MAN.page = 0; } }
 function drawManual() {
   drawBg('hangar'); topBar('MANUEL', 'TOUT CE QU\'IL FAUT SAVOIR', '', '');
+  btn(LW - 200, 28, 176, 46, 'ENTRAÎNEMENT', () => startTraining(() => { UI.screen = 'manual'; }), { size: 17, ls: 1, col: C.ally });
   MAN_TABS.forEach(([k, l], i) => btn(16 + (i % 3) * 172, 106 + Math.floor(i / 3) * 46, 164, 40, l, () => { MAN.tab = k; MAN.page = 0; }, { size: 17, ls: 2, primary: MAN.tab === k }));
   const y0 = 208;
   if (MAN.tab === 'regles') manRules(y0);
@@ -962,8 +1040,8 @@ function drawCrash() {
   txt('INCIDENT', LW / 2, 300, C.foe, F.title(26), 'center', 3);
   para('Le jeu a rencontré une erreur. Réessaie depuis l\'écran titre, ou abandonne la partie (elle reste mise de côté, sans être effacée).', 60, 360, LW - 120, C.txt, F.ui(20), 26);
   para(CRASH.msg + (CRASH.at ? ' · ' + CRASH.at : ''), 60, 500, LW - 120, C.dim, F.mono(14), 18);
-  btn(132, 640, 280, 50, 'RÉESSAYER', () => { CRASH = null; resetAnim(); UI.screen = 'title'; UI.hangar = false; UI.sel = null; }, { size: 20 });
-  btn(132, 710, 280, 50, 'ABANDONNER LA PARTIE', () => { if (run) store.set('run.bak', run); run = null; store.del('run'); CRASH = null; resetAnim(); UI.screen = 'title'; UI.hangar = false; UI.sel = null; }, { size: 20, col: C.foe });
+  btn(132, 640, 280, 50, 'RÉESSAYER', () => { leaveTraining(); CRASH = null; resetAnim(); UI.screen = 'title'; UI.hangar = false; UI.sel = null; }, { size: 20 });
+  btn(132, 710, 280, 50, 'ABANDONNER LA PARTIE', () => { leaveTraining(); if (run) store.set('run.bak', run); run = null; store.del('run'); CRASH = null; resetAnim(); UI.screen = 'title'; UI.hangar = false; UI.sel = null; }, { size: 20, col: C.foe });
 }
 function frame(ts) {
   requestAnimationFrame(frame);
@@ -977,6 +1055,7 @@ function draw() {
   if (UI.screen === 'title') drawTitle();
   else if (UI.screen === 'fleet') drawFleet();
   else if (UI.screen === 'manual') drawManual();
+  else if (UI.screen === 'tutoAsk') drawTutoAsk();
   else if (UI.screen === 'unlocks') drawUnlocks();
   else if (!run) UI.screen = 'title';
   else if (UI.hangar && run.phase !== 'combat') drawHangar();
@@ -1029,7 +1108,7 @@ function resize() {
   cv.width = Math.round(cw * k); cv.height = Math.round(ch * k); K = Math.max(.5, cv.width / LW); STATIC.key = '';
 }
 window.addEventListener('resize', resize);
-Object.assign(window.Nebula, { UI, MAN, openManual, ANIM, recordEnd, save, store, makeShop, crash });
+Object.assign(window.Nebula, { UI, MAN, openManual, TUTO, startTraining, endTraining, launch, ANIM, recordEnd, save, store, makeShop, crash });
 Object.defineProperty(window.Nebula, 'run', { get: () => run, set: v => { run = v; } });
 ['mere', 'fregate', 'chasseur'].forEach(spr); bg('title');
 ['intercepteur', 'brulot', 'croiseur', 'harponneur', 'amiral', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier', 'veuve', 'reine'].forEach(spr); ['map', 'combat', 'hangar', 'map2', 'combat2', 'map3', 'combat3'].forEach(bg);

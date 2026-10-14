@@ -25,6 +25,10 @@ const shots = process.argv[2];
         tapAt(20 + s.c * 72 + 36, 112 + s.r * 72 + 36); await wait(100);
         if (N.UI.sel !== s.id) return 'le toucher ne sélectionne pas le vaisseau';
         const t = st.turn; N.endTurn(st); if (st.turn === t && !st.result) return 'FIN DU TOUR sans effet';
+        // entraînement guidé : joué à la place de la partie, qui est rendue intacte
+        const saved = JSON.stringify(N.run); N.startTraining(() => {}); await wait(300);
+        if (!N.run.training || !N.run.combat) return "l'entraînement ne démarre pas";
+        N.endTraining(); if (JSON.stringify(N.run) !== saved) return "l'entraînement n'a pas rendu la partie";
         N.crash(new Error('essai')); await wait(200);
         return 'ok';
       });
