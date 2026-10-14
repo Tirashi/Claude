@@ -52,6 +52,8 @@ function autoRun(seed) {
     else if (run.phase === 'reward') { while (run.stock.length && run.fleet.some(f => N.install(run, f.uid, run.stock[0]))); N.afterReward(run); }
     else if (run.phase === 'shop') { N.buy(run, 'repair'); N.buy(run, 'ship'); run.phase = 'map'; }
     else if (run.phase === 'dock') N.dock(run, 'repair');
+    else if (run.phase === 'event') { const ev = N.eventById(run.event.id); N.resolveEvent(run, ev.choices.findIndex(c => N.canChoose(run, c))); N.closeEvent(run); }
+    while (run.crew && run.crew.length && run.fleet.some(f => !f.pilot)) N.assignPilot(run, run.fleet.find(f => !f.pilot).uid, 0);
     trace.push(JSON.stringify(run));
   }
   return { run, trace: trace.join('\n') };
@@ -64,5 +66,7 @@ check(same, `même graine + mêmes actions = même partie complète : ${ends.joi
 // une partie relue après sauvegarde (JSON) est acceptée telle quelle, une partie abîmée est refusée
 const saved = JSON.parse(autoRun(5).trace.split('\n')[3]);   // une partie en cours, relue comme après une sauvegarde
 check(N.migrate(saved) !== null, 'migrate() accepte une partie sauvegardée');
+const v1 = JSON.parse(JSON.stringify(saved)); v1.v = 1; delete v1.crew; delete v1.data; delete v1.seen;
+check((m => m && m.v === N.RUN_V && Array.isArray(m.crew))(N.migrate(v1)), 'migrate() complète une partie de la session 1 (v1 → v2 : équipage, données)');
 check(N.migrate({ v: 1, fleet: 'abîmée' }) === null && N.migrate({ v: 99 }) === null && N.migrate(null) === null, 'migrate() refuse une partie illisible ou d\'une version future');
 process.exit(fail ? 1 : 0);

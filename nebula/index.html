@@ -22,6 +22,7 @@ body { display: flex; justify-content: center; align-items: flex-start; touch-ac
 <body>
 <canvas id="cv" width="544" height="960" aria-label="Nebula : combat tactique spatial"></canvas>
 <script src="vaisseaux.js"></script>
+<script src="evenements.js"></script>
 <script src="regles.js"></script>
 <script src="../ludo-scores.js"></script>
 <script>
@@ -48,7 +49,7 @@ let K = 1, BTN = [], now = 0, run = store.get('run', null);
 { const raw = run; run = migrate(raw); if (raw && !run) store.set('run.bak', raw); }   // illisible : mise de côté, pas effacée
 const meta = Object.assign({ data: 0, games: 0, wins: 0, cleared: 0, kills: 0, bestSector: 0 }, store.get('meta', {}));
 let best = Number(store.get('best', 0)) || 0, SFX = store.get('sfx', true);
-const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, node: null, legend: false, ghost: null, ranges: !!store.get('ranges', false) };
+const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, node: null, legend: false, ghost: null, pickP: null, ranges: !!store.get('ranges', false) };
 function save() { if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
 
 /* ---------- sprites et décors fabriqués à la demande ---------- */
@@ -337,7 +338,7 @@ function drawCombat() {
   drawFx();
   if (UI.ranges && !B) rangeLabel(st, s);
   const boss = sideOf(st, 'E').find(o => TYPES[o.t].spawn), foes = sideOf(st, 'E').length, every = boss && TYPES[boss.t].spawn.every;
-  topBar(nodeName(st.kind, st.sector), `TOUR ${st.turn} · ${B ? 'PIRATES EN ACTION' : 'TON TOUR'}${boss ? ` · RENFORTS DANS ${every - st.turn % every}` : canFlee(st) ? ' · FUITE POSSIBLE' : ''}`,
+  topBar(st.label || nodeName(st.kind, st.sector), `TOUR ${st.turn} · ${B ? 'PIRATES EN ACTION' : 'TON TOUR'}${boss ? ` · RENFORTS DANS ${every - st.turn % every}` : canFlee(st) ? ' · FUITE POSSIBLE' : ''}`,
     `${foes} HOSTILE${foes > 1 ? 'S' : ''}`, '', LW - 230);
   btn(LW - 186, 50, 162, 36, UI.ranges ? 'PORTÉES : OUI' : 'PORTÉES : NON', () => { UI.ranges = !UI.ranges; store.set('ranges', UI.ranges); }, { size: 16, ls: 1, primary: UI.ranges });
   drawFiche(st, s, B);
@@ -413,7 +414,7 @@ function drawFiche(st, s, B) {
   g.save(); g.beginPath(); g.rect(24, 784, 96, 152); g.clip(); g.fillStyle = 'rgba(255,255,255,.03)'; g.fillRect(24, 784, 96, 152);
   drawSprite(s.t, 72, 860, fitScale(s.t, 148)); g.restore();
   const T = TYPES[s.t], foe = s.side === 'E';
-  txt(foe ? T.name : `${T.name} ${s.name || ''}`.trim(), 134, 786, foe ? C.foe : C.txt, F.ui(25), 'left', 2, 280);
+  txt(foe ? T.name : `${T.name} ${s.name || ''}${s.pilot ? ' · ' + s.pilot.name : ''}`.trim(), 134, 786, foe ? C.foe : C.txt, F.ui(25), 'left', 2, 280);
   txt(`${T.n} CASE${T.n > 1 ? 'S' : ''} · VITESSE ${spdOf(s)}${T.w[0] ? ' · PORTÉE ' + wRng(s, T.w[UI.wi] || T.w[0]) : ''}`, 134, 816, C.dim, F.mono(14), 'left', 0, 380);
   txt('COQUE', 134, 840, C.dim, F.mono(14)); meter(198, 844, 150, s.hull, s.hmax, s.hull / s.hmax > .5 ? C.ok : C.foe); txt(`${s.hull}/${s.hmax}`, 356, 840, C.txt, F.mono(14));
   txt('BOUCL.', 410, 840, C.dim, F.mono(14)); meter(466, 844, 50, s.sh, Math.max(s.shMax, s.sh), C.ally);
@@ -473,9 +474,13 @@ function glyph(x, y, k, col) {
   else if (k === 'lourd') { g.moveTo(x - 8, y + 2); g.lineTo(x, y - 6); g.lineTo(x + 8, y + 2); g.moveTo(x - 8, y + 8); g.lineTo(x, y); g.lineTo(x + 8, y + 8); }
   else if (k === 'comptoir') { g.moveTo(x, y - 8); g.lineTo(x + 8, y); g.lineTo(x, y + 8); g.lineTo(x - 8, y); g.closePath(); }
   else if (k === 'dock') { g.moveTo(x, y - 8); g.lineTo(x, y + 8); g.moveTo(x - 8, y); g.lineTo(x + 8, y); }
+  else if (k === 'epave') { g.moveTo(x - 8, y - 2); g.lineTo(x - 8, y - 8); g.lineTo(x - 1, y - 8); g.moveTo(x + 2, y - 5); g.lineTo(x + 8, y - 5); g.lineTo(x + 8, y + 3); g.moveTo(x + 5, y + 8); g.lineTo(x - 8, y + 8); g.lineTo(x - 8, y + 3); }
+  else if (k === 'nebuleuse') { g.arc(x - 4, y + 2, 5, Math.PI * .5, Math.PI * 1.6); g.arc(x + 1, y - 3, 5, Math.PI * 1.1, Math.PI * 1.95); g.arc(x + 4, y + 3, 5, Math.PI * 1.5, Math.PI * .5); g.closePath(); }
   else g.arc(x, y, 5, 0, TAU);
   g.stroke();
 }
+const NEB = '#b48cff';
+const nodeCol = k => k === 'contact' || k === 'lourd' || k === 'amiral' ? C.foe : k === 'dock' ? C.ok : k === 'epave' ? C.acc : k === 'nebuleuse' ? NEB : C.txt;
 function drawMap() {
   drawBg(secBg('map'));
   g.strokeStyle = 'rgba(140,170,210,.07)'; g.lineWidth = 1;
@@ -495,7 +500,7 @@ function drawMap() {
     if (k === 'amiral') { drawSprite(bossOf(run.sector), x, y - 8, .5); corners(x - 40, y - 62, 80, 100, C.foe, 10, 2); txt(nodeName(k, run.sector), x, y + 44, isNext ? C.acc : C.foe, F.mono(15), 'center', 2); }
     else {
       g.fillStyle = 'rgba(4,8,14,.85)'; g.beginPath(); g.arc(x, y, 18, 0, TAU); g.fill();
-      const col = done ? 'rgba(127,150,180,.5)' : k === 'contact' || k === 'lourd' ? C.foe : k === 'dock' ? C.ok : C.txt;
+      const col = done ? 'rgba(127,150,180,.5)' : nodeCol(k);
       g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, 18, 0, TAU); g.stroke(); glyph(x, y, k, col);
     }
     if (isNext) { const p = 24 + Math.sin(now * 4) * 3; if (k !== 'amiral') { corners(x - p, y - p, p * 2, p * 2, C.acc, 7, 2); txt(NODE_NAMES[k], x, y + 30, C.acc, F.mono(14), 'center', 1); } }
@@ -512,7 +517,7 @@ function drawMap() {
   // la flotte en bas
   frameBox(16, 884, LW - 32, 64, C.dim, 8);
   run.fleet.forEach((f, i) => { const x = 50 + i * 62; drawSprite(f.t, x, 905, Math.min(.55, 40 / (TYPES[f.t].n * 72))); const m = maxHullOf(f); txt(`${f.hull}/${m}`, x, 926, f.hull / m > .5 ? C.ok : C.foe, F.mono(13), 'center'); });
-  btn(LW - 230, 892, 100, 48, 'HANGAR', () => { UI.hangar = true; UI.pick = null; }, { size: 18 });
+  btn(LW - 230, 892, 100, 48, 'HANGAR', () => { UI.hangar = true; UI.pick = null; UI.pickP = null; }, { size: 18 });
   btn(LW - 122, 892, 98, 48, 'MENU', () => { UI.screen = 'title'; UI.confirm = 0; }, { size: 18 });
   txt(run.fuel > 0 ? 'SAUT : 1 CARBURANT' : 'SANS CARBURANT : DÉRIVE', 26, 862, run.fuel > 0 ? C.dim : C.foe, F.mono(15));
   btn(LW - 140, 844, 116, 34, '? LÉGENDE', () => { UI.legend = true; UI.node = null; }, { size: 16, ls: 1 });
@@ -522,7 +527,7 @@ function drawMap() {
 function nodeCard(nd, seen, next) {
   const w = 320, x = Math.max(16, Math.min(LW - w - 16, nd.x - w / 2)), lines = wrapLines(NODE_INFO[nd.k] || '', w - 28, F.ui(17)), h = 52 + lines.length * 20;
   const y = nd.y > 340 ? nd.y - h - (nd.k === 'amiral' ? 70 : 34) : nd.y + (nd.k === 'amiral' ? 50 : 34);
-  frameBox(x, y, w, h, nd.k === 'contact' || nd.k === 'lourd' || nd.k === 'amiral' ? C.foe : C.acc, 8, 'rgba(6,10,18,.94)');
+  frameBox(x, y, w, h, nodeCol(nd.k), 8, 'rgba(6,10,18,.94)');
   txt(nodeName(nd.k, run.sector), x + 14, y + 10, C.txt, F.ui(20), 'left', 2, w - 140);
   txt(nd.id === run.at ? 'ICI' : seen.has(nd.id) ? 'VISITÉE' : next.includes(nd.id) ? 'À PORTÉE' : 'PLUS LOIN', x + w - 14, y + 13, C.dim, F.mono(13), 'right');
   lines.forEach((l, i) => txt(l, x + 14, y + 38 + i * 20, C.dim, F.ui(17)));
@@ -530,18 +535,18 @@ function nodeCard(nd, seen, next) {
 // légende de la carte : chaque balise et ce qu'on y trouve
 function drawLegend() {
   g.fillStyle = 'rgba(2,4,8,.8)'; g.fillRect(0, 0, LW, LH);
-  const kinds = ['contact', 'lourd', 'comptoir', 'dock', 'amiral'];
-  frameBox(24, 150, LW - 48, 110 + kinds.length * 92, C.acc, 12, 'rgba(6,10,18,.96)');
-  txt('LÉGENDE DE LA CARTE', LW / 2, 172, C.acc, F.mono(18), 'center', 4);
+  const kinds = ['contact', 'lourd', 'comptoir', 'dock', 'epave', 'nebuleuse', 'amiral'];
+  frameBox(24, 120, LW - 48, 100 + kinds.length * 92, C.acc, 12, 'rgba(6,10,18,.96)');
+  txt('LÉGENDE DE LA CARTE', LW / 2, 138, C.acc, F.mono(18), 'center', 4);
   kinds.forEach((k, i) => {
-    const y = 214 + i * 92, col = k === 'contact' || k === 'lourd' || k === 'amiral' ? C.foe : k === 'dock' ? C.ok : C.txt;
+    const y = 176 + i * 92, col = nodeCol(k);
     g.fillStyle = 'rgba(4,8,14,.85)'; g.beginPath(); g.arc(66, y + 30, 18, 0, TAU); g.fill();
     g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(66, y + 30, 18, 0, TAU); g.stroke();
     if (k === 'amiral') corners(44, y + 8, 44, 44, C.foe, 8, 2); else glyph(66, y + 30, k, col);
     txt(NODE_NAMES[k], 104, y + 4, C.txt, F.ui(21), 'left', 2);
     para(NODE_INFO[k], 104, y + 32, LW - 160, C.dim, F.ui(17), 19);
   });
-  txt('TOUCHE UNE BALISE POUR VOIR SA FICHE', LW / 2, 214 + kinds.length * 92 + 8, C.dim, F.mono(14), 'center', 1);
+  txt('TOUCHE UNE BALISE POUR VOIR SA FICHE', LW / 2, 176 + kinds.length * 92 + 4, C.dim, F.mono(14), 'center', 1);
   zone(0, 0, LW, LH, () => { UI.legend = false; });
 }
 
@@ -555,7 +560,7 @@ function drawReward() {
   rows.forEach(([v, l], i) => { txt(v, 220, 290 + i * 56, C.txt, F.mono(34), 'right'); txt(l, 240, 298 + i * 56, C.dim, F.ui(22), 'left', 3); });
   if (rw.mod) { const y = 290 + rows.length * 56 + 10; frameBox(80, y, LW - 160, 70, C.acc, 8); txt('MODULE : ' + MODS[rw.mod].name, LW / 2, y + 12, C.acc, F.ui(22), 'center', 2); txt(MODS[rw.mod].desc + ' · à poser au hangar', LW / 2, y + 40, C.dim, F.ui(17), 'center', 1); }
   if (rw.kind === 'amiral') txt(run.sector < SECTORS.length ? `SECTEUR ${pad2(run.sector)} TERMINÉ · +${REFUEL} CARBURANT POUR LA SUITE` : 'LES TROIS SECTEURS SONT LIBÉRÉS', LW / 2, 560, C.ok, F.mono(17), 'center', 2);
-  btn(92, 660, 170, 52, 'HANGAR', () => { UI.hangar = true; UI.pick = null; }, { size: 20 });
+  btn(92, 660, 170, 52, 'HANGAR', () => { UI.hangar = true; UI.pick = null; UI.pickP = null; }, { size: 20 });
   btn(282, 660, 170, 52, 'CONTINUER', () => { afterReward(run); save(); if (run.phase === 'end') recordEnd(); }, { primary: true, size: 20 });
   fleetStrip(760);
 }
@@ -574,8 +579,9 @@ function drawShop() {
   };
   row(112, 74, 'CARBURANT', '1 unité pour un saut', 10, 'ACHETER', () => { buy(run, 'fuel'); save(); }, run.cr >= 10);
   row(194, 74, 'RÉPARATIONS', miss ? `${miss} point${miss > 1 ? 's' : ''} de coque à réparer · 3 cr le point` : 'La flotte est intacte', pts * 3, pts < miss ? `${pts} PTS` : 'TOUT', () => { buy(run, 'repair'); save(); }, pts > 0);
-  txt('MODULES', 32, 284, C.acc, F.mono(15), 'left', 3);
+  txt(sh.pilot ? 'MODULES ET PILOTE' : 'MODULES', 32, 284, C.acc, F.mono(15), 'left', 3);
   sh.mods.forEach((o, i) => row(308 + i * 82, 74, MODS[o.m].name, MODS[o.m].long, o.price, 'ACHETER', () => { buy(run, 'mod', i); save(); }, run.cr >= o.price, o.sold));
+  if (sh.pilot) { const o = sh.pilot; row(308 + sh.mods.length * 82, 74, `PILOTE ${o.p.name} · ${PILOTS[o.p.k].name}`, `${PILOTS[o.p.k].desc} · à poser sur un vaisseau au hangar`, o.price, 'ENGAGER', () => { buy(run, 'pilot'); save(); }, run.cr >= o.price, o.sold); }
   txt('RECRUE', 32, 560, C.acc, F.mono(15), 'left', 3);
   const o = sh.ship, T = TYPES[o.t], full = run.fleet.length >= 5;
   frameBox(16, 584, LW - 32, 150, o.sold ? 'rgba(125,138,158,.4)' : C.dim, 8);
@@ -584,7 +590,7 @@ function drawShop() {
   txt(`${T.n} CASE${T.n > 1 ? 'S' : ''} · COQUE ${T.hull} · BOUCL. ${T.sh} · VIT. ${T.spd}`, 132, 624, C.dim, F.mono(13));
   para(`${T.skill} : ${T.sdesc}`, 132, 646, 220, C.dim, F.ui(15), 17);
   btn(LW - 170, 662, 138, 46, o.sold ? 'RECRUTÉ' : full ? 'FLOTTE PLEINE' : `RECRUTER · ${o.price}`, () => { buy(run, 'ship'); save(); }, { size: 16, ls: 1, off: o.sold || full || run.cr < o.price, primary: !o.sold && !full && run.cr >= o.price });
-  btn(40, 760, 200, 52, 'HANGAR', () => { UI.hangar = true; UI.pick = null; }, { size: 20 });
+  btn(40, 760, 200, 52, 'HANGAR', () => { UI.hangar = true; UI.pick = null; UI.pickP = null; }, { size: 20 });
   btn(LW - 240, 760, 200, 52, 'REPARTIR', () => { run.phase = 'map'; run.shop = null; save(); }, { primary: true, size: 20 });
   fleetStrip(828);
 }
@@ -596,6 +602,33 @@ function drawDock() {
   card(200, 'RÉPARATION', miss ? `+${heal} coque : la moitié des dégâts de la flotte` : 'La flotte est intacte', () => { dock(run, 'repair'); sfx('shield'); save(); });
   card(380, 'MODULE GRATUIT', `${MODS[run.dockMod].name} · ${MODS[run.dockMod].desc}`, () => { dock(run, 'mod'); save(); });
   fleetStrip(580);
+}
+
+/* ---------- épaves et nébuleuses ---------- */
+function drawEvent() {
+  const E = run.event, ev = eventById(E.id), neb = E.kind === 'nebuleuse', col = neb ? NEB : C.acc;
+  drawBg(secBg('map'));
+  topBar(neb ? 'NÉBULEUSE' : 'ÉPAVE', ev.title, `CRÉDITS ${run.cr}`, `CARBURANT ${pad2(run.fuel)}`);
+  frameBox(24, 120, LW - 48, 640, col, 12, 'rgba(6,10,18,.82)');
+  // une épave qui dérive, en filigrane dans le coin du cadre
+  if (!neb) { g.save(); g.beginPath(); g.rect(24, 120, LW - 48, 640); g.clip(); g.translate(LW - 60, 690); g.rotate(.7); drawSprite(['convoyeur', 'fregate', 'croiseur', 'chasseur'][E.seed % 4], 0, 0, .9, .22); g.restore(); }
+  txt(ev.title, 48, 144, col, F.ui(28), 'left', 3, LW - 96);
+  let y = 188 + para(ev.text, 48, 188, LW - 96, C.txt, F.ui(21), 26) + 18;
+  if (!E.done) {
+    ev.choices.forEach((ch, i) => {
+      const ok = canChoose(run, ch);
+      btn(48, y, LW - 96, 62, ch.label, () => { if (resolveEvent(run, i)) { sfx('click'); save(); } }, { size: 20, ls: 2, off: !ok, primary: ok, col: ok ? col : null });
+      if (!ok) txt(ch.need.cr ? `IL FAUT ${ch.need.cr} CRÉDITS` : `IL FAUT ${ch.need.fuel} CARBURANT`, LW / 2, y + 64, C.foe, F.mono(13), 'center');
+      y += 82;
+    });
+  } else {
+    const D = E.done;
+    txt('› ' + ev.choices[D.choice].label, 48, y, C.dim, F.mono(15), 'left', 1, LW - 96); y += 30;
+    y += para(D.text, 48, y, LW - 96, C.txt, F.ui(21), 26) + 14;
+    for (const gn of D.gains) { txt(gn, 48, y, gn.startsWith('-') || gn.startsWith('COMBAT') ? C.foe : C.ok, F.mono(17), 'left', 1, LW - 96); y += 26; }
+    btn(LW / 2 - 130, 680, 260, 56, D.combat ? 'AU COMBAT !' : 'CONTINUER', () => { if (closeEvent(run)) { resetAnim(); UI.sel = null; save(); if (run.phase === 'combat') sfx('jump'); } }, { primary: true, size: 22, col: D.combat ? C.foe : null });
+  }
+  fleetStrip(780);
 }
 
 /* ---------- hangar : modules ---------- */
@@ -619,7 +652,12 @@ function drawHangar() {
     g.save(); g.beginPath(); g.rect(24, y + 6, 100, h - 12); g.clip();
     g.strokeStyle = 'rgba(140,170,210,.08)'; for (let k = 0; k < 12; k++) { g.beginPath(); g.moveTo(24 + k * 16.5, y); g.lineTo(24 + k * 16.5, y + h); g.stroke(); g.beginPath(); g.moveTo(24, y + 6 + k * 16.5); g.lineTo(124, y + 6 + k * 16.5); g.stroke(); }
     drawSprite(f.t, 74, y + h / 2, fitScale(f.t, h - 14)); g.restore();
-    txt(`${T.name} « ${f.name} »`, 138, y + 6, C.txt, F.ui(21), 'left', 1, LW - 180);
+    txt(`${T.name} « ${f.name} »`, 138, y + 6, C.txt, F.ui(21), 'left', 1, LW - 336);
+    // la case du pilote : toucher pour poser le pilote choisi, ou pour le rendre à l'équipage
+    const pl = f.pilot, canP = UI.pickP != null, px = LW - 186;
+    g.strokeStyle = pl ? C.ally2 + '.7)' : canP ? C.ally : 'rgba(140,160,190,.3)'; g.lineWidth = canP ? 2 : 1; g.setLineDash(pl ? [] : [4, 4]); g.strokeRect(px + .5, y + 5.5, 156, 24); g.setLineDash([]);
+    txt(pl ? `${pl.name} · ${PILOTS[pl.k].name}${pl.k === 'veteran' && pl.vet ? ' +' + pl.vet : ''}` : canP ? 'POSER LE PILOTE' : 'SANS PILOTE', px + 78, y + 9, pl ? C.ally : canP ? C.ally : C.dim, F.ui(15), 'center', 1, 146);
+    zone(px, y + 2, 156, 30, () => { if (UI.pickP != null) { if (assignPilot(run, f.uid, UI.pickP)) { UI.pickP = null; save(); } } else if (pl) { unassignPilot(run, f.uid); save(); } });
     const pm = UI.pick != null ? run.stock[UI.pick] : null;
     if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 30, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13), 'left', 0, LW - 180);
     else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.length ? T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ') : 'SANS ARME'}`, 138, y + 30, C.dim, F.mono(13), 'left', 0, LW - 180);
@@ -634,14 +672,17 @@ function drawHangar() {
     }
   });
   frameBox(16, 770, LW - 32, 110, C.acc, 10);
-  txt('RÉSERVE DE MODULES', 32, 780, C.acc, F.mono(14), 'left', 3);
-  if (!run.stock.length) txt('Vide. Les contacts lourds rapportent un module ; le comptoir en vend.', 32, 812, C.dim, F.ui(17), 'left', 0, LW - 64);
+  txt('RÉSERVE : MODULES ET PILOTES', 32, 780, C.acc, F.mono(14), 'left', 3);
+  const crew = run.crew || [], pp = UI.pickP != null ? crew[UI.pickP] : null;
+  if (!run.stock.length && !crew.length) txt('Vide. Les contacts lourds rapportent un module ; épaves et comptoirs, des pilotes.', 32, 812, C.dim, F.ui(17), 'left', 0, LW - 64);
   else if (UI.pick != null) txt(`${MODS[run.stock[UI.pick]].name} : ${MODS[run.stock[UI.pick]].long}`, 32, 858, C.acc, F.ui(17), 'left', 0, LW - 64);
-  else txt('Touche un module pour voir ce qu\'il donne, puis un emplacement libre.', 32, 858, C.dim, F.ui(16), 'left', 0, LW - 64);
-  run.stock.forEach((m, i) => { const x = 32 + (i % 4) * 122, y = 802 + Math.floor(i / 4) * 30; if (i > 7) return;
-    btn(x, y, 114, 26, MODS[m].name, () => { UI.pick = UI.pick === i ? null : i; }, { size: 14, ls: 1, primary: UI.pick === i }); });
-  if (run.stock.length > 8) txt(`+${run.stock.length - 8}`, LW - 32, 780, C.acc, F.mono(14), 'right');
-  btn(LW / 2 - 100, 892, 200, 52, 'RETOUR', () => { UI.hangar = false; UI.pick = null; }, { primary: true, size: 20 });
+  else if (pp) txt(`${pp.name} (${PILOTS[pp.k].name}) : ${PILOTS[pp.k].desc} · touche la case PILOTE d'un vaisseau`, 32, 858, C.ally, F.ui(17), 'left', 0, LW - 64);
+  else txt('Touche un module ou un pilote, puis un emplacement libre.', 32, 858, C.dim, F.ui(16), 'left', 0, LW - 64);
+  const items = run.stock.map((m, i) => ({ mod: true, i, label: MODS[m].name })).concat(crew.map((c, i) => ({ mod: false, i, label: `${c.name} · ${PILOTS[c.k].name}` })));
+  items.forEach((it, j) => { if (j > 7) return; const x = 32 + (j % 4) * 122, y = 802 + Math.floor(j / 4) * 30, on = it.mod ? UI.pick === it.i : UI.pickP === it.i;
+    btn(x, y, 114, 26, it.label, () => { if (it.mod) { UI.pick = on ? null : it.i; UI.pickP = null; } else { UI.pickP = on ? null : it.i; UI.pick = null; } }, { size: 14, ls: 1, primary: on, col: it.mod ? null : C.ally }); });
+  if (items.length > 8) txt(`+${items.length - 8}`, LW - 32, 780, C.acc, F.mono(14), 'right');
+  btn(LW / 2 - 100, 892, 200, 52, 'RETOUR', () => { UI.hangar = false; UI.pick = null; UI.pickP = null; }, { primary: true, size: 20 });
 }
 
 /* ---------- titre, flotte, règles, fin ---------- */
@@ -758,6 +799,7 @@ function draw() {
   else if (run.phase === 'reward') drawReward();
   else if (run.phase === 'shop') drawShop();
   else if (run.phase === 'dock') drawDock();
+  else if (run.phase === 'event') drawEvent();
   else if (run.phase === 'end') drawEnd();
   if (UI.flash && now - UI.flash < .6) { const u = (now - UI.flash) / .6; g.fillStyle = `rgba(200,225,255,${(1 - u) * .7})`; g.fillRect(0, 0, LW, LH); }
 }

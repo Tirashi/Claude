@@ -18,8 +18,10 @@ function autoRun(seed) {
       N.finishCombat(run); lost[sec].push([k, before - run.fleet.reduce((a, f) => a + f.hull, 0)]);
     }
     else if (run.phase === 'reward') { while (run.stock.length && run.fleet.some(f => N.install(run, f.uid, run.stock[0]))); N.afterReward(run); }
-    else if (run.phase === 'shop') { N.buy(run, 'ship'); N.buy(run, 'repair'); for (let i = 0; i < 3; i++) N.buy(run, 'mod', i); while (run.stock.length && run.fleet.some(f => N.install(run, f.uid, run.stock[0]))); run.phase = 'map'; }
+    else if (run.phase === 'shop') { N.buy(run, 'ship'); N.buy(run, 'pilot'); N.buy(run, 'repair'); for (let i = 0; i < 3; i++) N.buy(run, 'mod', i); while (run.stock.length && run.fleet.some(f => N.install(run, f.uid, run.stock[0]))); run.phase = 'map'; }
     else if (run.phase === 'dock') N.dock(run, 'repair');
+    else if (run.phase === 'event') { const ev = N.eventById(run.event.id); N.resolveEvent(run, ev.choices.findIndex(c => N.canChoose(run, c))); N.closeEvent(run); }
+    while (run.crew && run.crew.length && run.fleet.some(f => !f.pilot)) N.assignPilot(run, run.fleet.find(f => !f.pilot).uid, 0);
   }
   return { run, lost };
 }

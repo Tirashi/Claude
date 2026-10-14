@@ -176,7 +176,7 @@ Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, p
 1. ✅ **Retours § 18 + IA + types** (14/10).
 2. ✅ Nouveaux vaisseaux : éclaireur, convoyeur, artilleur, cuirassé, atelier ; pirate harponneur (14/10). Avec le confort de placement demandé après l'étape 1.
 3. ✅ Secteurs 2 (Nébuleuse d'Orphée, la Veuve d'Orphée) et 3 (Le Seuil, la Rouille-Reine), victoire finale +3000 (14/10). `RUN_V` reste à 1 : la partie n'a pas gagné de champ (le terrain est dans le combat, absent = pas de terrain).
-4. `nebula/evenements.js` : épaves et nébuleuses ; pilotes.
+4. ✅ `nebula/evenements.js` : épaves et nébuleuses ; pilotes (14/10).
 5. Données stellaires dépensables, écran DÉBLOCAGES, flottes de choc et marchande.
 6. Partie du jour, tableaux `daily:AAAAMMJJ` et `victoires`, équilibrage final.
 
@@ -227,3 +227,16 @@ Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, p
 - **Entre deux secteurs** : +3 carburant (`REFUEL`, message sur la carte) ; fonds de carte et de combat propres à chaque secteur (violet, puis rouge).
 - **Victoire finale** après la Rouille-Reine : écran VICTOIRE, ligne « VICTOIRE FINALE 3000 » dans le score.
 - **Réglage** (`node outils/nebula-parties.js`, 60 parties de l'IA de test avec la flotte d'escorte, choix de route simple, achats au comptoir) : joueur attentif : jamais arrêté au secteur 1, arrêté au secteur 2 dans ~23 % des parties, victoire dans ~22 % ; joueur qui ignore les annonces : toujours arrêté au secteur 1. Coque perdue moyenne par combat : secteur 1 contact 0,6 / lourd 6,9 / amiral 0,7 ; secteur 2 contact 1,3 / lourd 6,2 / amiral 9,8 ; secteur 3 contact 2,3 / lourd 8,3 / amiral 16,2. Essais écartés : Veuve qui lâche ses brûlots tous les 2 tours (18 parties sur 60 s'y arrêtaient) ; Rouille-Reine à 40 de coque et 4 de bouclier (presque imbattable : coque ×1,8 = 72).
+
+### Retour après l'étape 3 (14/10)
+L'utilisateur a joué jusqu'à la Rouille-Reine : « c'était super, la difficulté n'est pas trop mal dosée » ; défaite contre la Reine, « je pense avoir mal joué ». Rien à changer pour l'instant.
+
+### Étape 4 (14/10) : épaves, nébuleuses, pilotes
+- **`nebula/evenements.js`** (script classique, chargé avant `regles.js`, aussi lu par Node) : des données seulement. 13 épaves (cargo éventré, capsule de survie, signal de détresse, balise éteinte, chantier abandonné, épave pirate, vaisseau fantôme, nuage de débris, contrebandiers, station médicale, champ de mines, archives stellaires, le vieux pilote) et 4 nébuleuses calmes. Chaque choix peut demander ou coûter des crédits / du carburant ; chaque issue a une probabilité et des effets (crédits, carburant, dégâts, réparations, module, pilote, vaisseau, données stellaires, combat). Format décrit en tête du fichier.
+- **Carte** : 1 ou 2 épaves (étages 2 à 6) et une nébuleuse (étages 3 à 6) prises sur des contacts (jamais le dernier contact d'un étage). Légende et fiches à jour (épave ambre, nébuleuse violette).
+- **Épave** : écran ÉPAVE (texte, 2 ou 3 choix ; un choix impossible est grisé avec ce qu'il faut) ; l'issue est tirée avec la graine (`resolveEvent`), puis CONTINUER ou AU COMBAT ! (`closeEvent` : combat « EMBUSCADE » avec la récompense normale). Un événement déjà vu dans la partie ne revient pas tant qu'il en reste d'autres.
+- **Nébuleuse** : une fois sur deux un combat (contact) avec une nébuleuse garantie, sinon un événement calme.
+- **Pilotes** (`PILOTS`) : As (+1 vitesse), Mécano (+1 coque à chaque tour, dès le 2e tour), Tireur (+1 dégât), Prudent (+1 bouclier), Vétéran (+1 coque max par combat gagné, jusqu'à +4 ; le bonus suit le pilote). Un pilote = `{ k, name, vet }`, posé sur un vaisseau (`fleet[].pilot`) ou dans l'équipage (`run.crew`). Recrutés dans les épaves et au comptoir (qui propose maintenant 2 modules + 1 pilote, 40 à 60 cr). Au hangar : case PILOTE en haut à droite de chaque vaisseau ; toucher un pilote de la réserve puis la case ; toucher la case d'un pilote posé le rend à l'équipage. Le nom du pilote apparaît sur la fiche de combat.
+- **Données stellaires** gagnées dans les événements (`run.data`) : ajoutées à celles de fin de partie (`stellarOf`).
+- **Sauvegarde** : `RUN_V` = 2 ; `migrate()` complète une partie de la session 1 (`crew`, `data`, `seen`, `event`), testé par le simulateur. `sw.js` : `evenements.js` dans `FILES`, `VERSION` `ludotheque-v18`.
+- Parties de l'IA de test (`nebula-parties.js`, qui choisit toujours le premier choix possible et pose les pilotes) : ~25 % de victoires, comme avant.
