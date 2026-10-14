@@ -9,13 +9,14 @@ on:
   workflow_dispatch:
 jobs:
   rapides:
-    name: Syntaxe, service worker, sécurité, icônes, simulateur Nebula
+    name: Syntaxe, service worker, sécurité, icônes, simulateur et types Nebula
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: npm install -g typescript@5.8.3
       - run: node outils/verifications.js
   navigateur:
     name: Chaque jeu s'ouvre sans erreur (Chromium)

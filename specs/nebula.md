@@ -163,8 +163,35 @@ Cartouche dans le menu (icône 16×16 : silhouette de vaisseau ambre), transfert
 - Pas encore : épaves, nébuleuses, partie du jour (bouton grisé), données stellaires et déblocages (comptées dans `nebula.meta`, pas encore dépensables), tutoriel, manuel (un écran RÈGLES en 6 rubriques le remplace), nappe d'ambiance.
 
 ## 18. À faire en session 2 (retours de l'utilisateur)
+> Avancement : voir § 19. Faits à l'étape 1 : capacités visibles, carte lisible, drones au toucher, IA par score.
+
 - **Capacité de chaque vaisseau visible** : la fiche de combat d'un vaisseau du joueur doit afficher sa capacité (ex. « BULLE : +1 bouclier aux alliés voisins », « RIPOSTE… », « BAIES… »), comme c'est déjà le cas pour les pirates ; idem sur la carte de chaque vaisseau dans le **hangar**. Pour **tous** les vaisseaux (chasseur, frégate, porte-vaisseaux, bombardier, drones, égide, et les nouveaux de la session 2). Aujourd'hui elle n'apparaît qu'au comptoir (recrue).
 - **Carte du secteur plus lisible** : indiquer au joueur ce que veut dire chaque icône de balise (contact, contact lourd, comptoir, dock, amiral ; puis épave et nébuleuse en session 2). Pistes : une petite légende repliable (bouton « ? » ou bandeau en bas de la carte), le nom de la balise sous **chaque** icône (pas seulement les sauts possibles), et/ou une info-bulle quand on touche une balise (nom + ce qu'on y trouve : « Combat contre 2 à 4 pirates », « Combat difficile, module garanti », « Carburant, réparations, modules, recrues »…).
 - **Attaque des drones plus fluide** : pour tous les autres vaisseaux, on touche le vaisseau puis un ennemi entouré en jaune et l'attaque part. Pour le drone, même quand un ennemi est entouré en jaune, il faut passer par le bouton en bas de l'écran, ce qui casse le rythme. À harmoniser : toucher un ennemi entouré en jaune doit attaquer directement avec le drone (le bouton ne servant plus qu'aux actions sans cible, ou plus du tout).
 - **Difficulté** (retour après une dizaine de parties au doigt) : le secteur 1 est « un chouïa facile » (un seul vaisseau perdu en une dizaine de parties). C'est acceptable, voire voulu : le secteur 1 sert de prise en main et laisse le temps de se construire une flotte solide. **Juger la difficulté sur l'ensemble des 3 secteurs** : la montée en difficulté doit venir des secteurs 2 et 3 (pirates plus nombreux et plus solides, nouveaux pirates, amiraux plus durs), avec l'objectif qu'une flotte mal construite ne passe pas le secteur 3. Ne retoucher le secteur 1 qu'à la marge (éventuellement un contact lourd un peu plus mordant), et régler les secteurs 2 et 3 avec `outils/nebula-simulateur.js` puis en vraies parties.
 - **IA des pirates plus agressive** (retour du 14/10) : aujourd'hui les pirates bougent peu. Ils devraient se déplacer davantage et chercher à **coincer** les vaisseaux du joueur : viser les cases de repli, se placer pour que plusieurs tirs couvrent toutes les cases où le vaisseau pourrait fuir (il doit alors choisir quel dégât encaisser), bloquer un passage entre astéroïdes, encercler un vaisseau isolé, se concentrer sur le plus abîmé. Proposition de progression par secteur (à valider) : **secteur 1** comportement actuel (prise en main) ; **secteur 2** on ajoute ces comportements (déplacements plus francs, tirs croisés sur les cases de repli, chasse au vaisseau isolé) ; **secteur 3** on les renforce (coordination de toute la flotte pirate, pièges systématiques, amiral qui joue avec ses escortes). Réglage via un niveau d'IA par secteur dans `SECTORS` (ex. `ai: 0/1/2`) et vérification au simulateur que les combats restent gagnables avec une flotte bien construite.
+
+## 19. Session 2 : découpage et avancement
+Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, poussée, artefact republié) :
+1. ✅ **Retours § 18 + IA + types** (14/10).
+2. Nouveaux vaisseaux : éclaireur, convoyeur, artilleur, cuirassé, atelier ; pirate harponneur.
+3. Secteurs 2 (Nébuleuse d'Orphée, la Veuve d'Orphée) et 3 (Le Seuil, la Rouille-Reine), victoire finale +3000, `RUN_V` 2.
+4. `nebula/evenements.js` : épaves et nébuleuses ; pilotes.
+5. Données stellaires dépensables, écran DÉBLOCAGES, flottes de choc et marchande.
+6. Partie du jour, tableaux `daily:AAAAMMJJ` et `victoires`, équilibrage final.
+
+### Étape 1 (14/10)
+- **Capacités** : champ `short` de `TYPES` (une ligne) affiché sous la coque sur la fiche de combat (à la place de l'aide « touche un pirate encadré ») et sur chaque carte du hangar ; `sdesc` reste la version longue (comptoir, pirates).
+- **Carte** : nom sous chaque balise (en petit, grisé si visitée ; pas sous la balise où est la flotte) ; toucher une balise qui n'est pas à portée ouvre sa fiche (nom, ICI / VISITÉE / À PORTÉE / PLUS LOIN, ce qu'on y trouve : `NODE_INFO`) ; toucher une balise à portée saute toujours directement ; bouton **? LÉGENDE** en bas à droite.
+- **Drones** : toucher un pirate collé à la nuée (encadré en jaune, dégâts affichés) lance l'essaim ; le bouton ESSAIM reste.
+- **IA par score** (`planScored`, poids dans `AI_LEVELS`) : le joueur est supposé se replier sur la position la moins touchée ; chaque pirate note chaque case d'arrivée et chaque case visée (cases de repli couvertes en tenant compte des tirs déjà annoncés, prime de destruction, place actuelle du vaisseau, vaisseaux abîmés ou isolés, danger encouru, rester au contact, ne pas se mettre dans les tirs alliés). Niveau 2 en plus : se poser sur une case de repli pour la bloquer, et chaque pirate revoit son tir une fois tout le monde en place. Les tirs peuvent viser une **case vide** (case de repli). Niveau par combat `st.ai` (absent dans une ancienne sauvegarde = 0, pas de migration). Choix validé : **secteur 1 = niveau 0** (IA de la session 1), **sauf ses contacts lourds au niveau 1** (« un peu plus mordants », § 18) ; secteur 2 = niveau 1, secteur 3 = niveau 2.
+- Simulateur (flotte d'escorte neuve, joueur attentif / joueur qui ignore les annonces), coque perdue sur 32 :
+
+| Combat | IA 0 | IA 1 | IA 2 |
+|---|---|---|---|
+| contact étage 4 | 1,4 / 12 | 2,4 / 10 | 3,8 / 9 |
+| contact lourd étage 4 | 7 / 27 | 7,5 / 27 | 12,8 / 24 |
+| amiral rouillé | 1 / 32 (perdu) | 17 / 32 (perdu) | 22 / 32 (perdu) |
+
+  L'IA par score suppose que le joueur esquive : un joueur qui ne bouge jamais est un peu moins puni qu'avec l'IA 0, un joueur attentif beaucoup plus. Les secteurs 2 et 3 seront réglés à l'étape 3 (pirates, coque, IA).
+- **Types** : `// @ts-check` et typedefs JSDoc (`Ship`, `Combat`, `Intent`, `FleetShip`, `MapNode`, `Sector`, `AiLevel`…) en tête de `regles.js`, vérifiés par `tsc -p outils/tsconfig.nebula.json` (lancé par `outils/verifications.js` ; la CI installe TypeScript).

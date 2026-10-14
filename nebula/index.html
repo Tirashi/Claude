@@ -48,7 +48,7 @@ let K = 1, BTN = [], now = 0, run = store.get('run', null);
 { const raw = run; run = migrate(raw); if (raw && !run) store.set('run.bak', raw); }   // illisible : mise de côté, pas effacée
 const meta = Object.assign({ data: 0, games: 0, wins: 0, cleared: 0, kills: 0, bestSector: 0 }, store.get('meta', {}));
 let best = Number(store.get('best', 0)) || 0, SFX = store.get('sfx', true);
-const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, ranges: !!store.get('ranges', false) };
+const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, node: null, legend: false, ranges: !!store.get('ranges', false) };
 function save() { if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
 
 /* ---------- sprites et décors fabriqués à la demande ---------- */
@@ -292,7 +292,7 @@ function drawCombat() {
     const fr = Math.max(0, o.hull) / o.hmax; g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(L + 10, T + n * CS - 9, CS - 20, 4);
     g.fillStyle = fr > .5 ? C.ok : fr > .25 ? C.acc : C.foe; g.fillRect(L + 10, T + n * CS - 9, (CS - 20) * fr, 4);
     if (hittable.has(o.id)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); const w = TYPES[mine.t].w[UI.wi], d = wDmg(mine, w) * (w.big && n >= 2 ? 2 : 1); txt('-' + d, L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
-    if (swarm && foe && !o.dead && dist(o, mine) <= 1 && canAct(st, mine)) corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2);
+    if (swarm && foe && !o.dead && dist(o, mine) <= 1 && canAct(st, mine)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); txt('-' + ((mine.hull <= 2 ? 1 : 2) + nMod(mine, 'canons')), L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
     if (o === s && !o.dead) corners(L + 3, T + 3, CS - 6, n * CS - 6, foe ? C.foe : C.ally, 14, 2);
   }
   drawFx();
@@ -381,7 +381,7 @@ function drawFiche(st, s, B) {
     }, { primary: UI.wi === i && !off, size: 18, ls: 1, off: off || (w.swarm && !sideOf(st, 'E').some(o => dist(o, s) <= 1)) });
   });
   if (s.t === 'mere') btn(262, 878, 120, 50, s.bay > 0 ? `BAIE · ${s.bay}` : 'BAIE', () => { UI.bay = true; }, { size: 18, off: B || !bayReady(st, s) });
-  if (!s.acted && !B) txt(T.w.length ? (T.w[UI.wi] && T.w[UI.wi].swarm ? 'Essaim : frappe les 8 cases autour.' : 'Touche un pirate encadré pour tirer.') : '', 134, 864, C.dim, F.ui(15));
+  txt(`${T.skill} · ${T.short || T.sdesc}`, 134, 858, C.acc, F.ui(16), 'left', 1, 382);
   endBtn();
 }
 function drawResult(st) {
@@ -397,7 +397,9 @@ function tapGrid(c, r) {
   const st = run.combat; if (st.result) return;
   const o = occupant(st, c, r), s = selShip();
   if (s && !s.dead && s.side === 'P' && canAct(st, s) && o && o.side === 'E') {
-    const w = TYPES[s.t].w[UI.wi]; if (w && !w.swarm && canHit(st, s, w, s.c, s.r, o)) { doEv(attack(st, s, UI.wi, o)); return; }
+    const w = TYPES[s.t].w[UI.wi];
+    if (w && w.swarm && dist(o, s) <= 1) { doEv(attack(st, s, UI.wi)); return; }   // l'essaim frappe tous les pirates collés
+    if (w && !w.swarm && canHit(st, s, w, s.c, s.r, o)) { doEv(attack(st, s, UI.wi, o)); return; }
   }
   if (o) { if (UI.sel !== o.id) { UI.sel = o.id; UI.wi = 0; UI.bay = false; sfx('click'); } return; }
   if (s && !s.dead && s.side === 'P' && canAct(st, s) && !s.moved) {
@@ -440,9 +442,14 @@ function drawMap() {
       const col = done ? 'rgba(127,150,180,.5)' : k === 'contact' || k === 'lourd' ? C.foe : k === 'dock' ? C.ok : C.txt;
       g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, 18, 0, TAU); g.stroke(); glyph(x, y, k, col);
     }
-    if (isNext) { const p = 24 + Math.sin(now * 4) * 3; if (k !== 'amiral') { corners(x - p, y - p, p * 2, p * 2, C.acc, 7, 2); txt(NODE_NAMES[k], x, y + 30, C.acc, F.mono(14), 'center', 1); }
-      zone(x - 34, y - (k === 'amiral' ? 62 : 34), 68, k === 'amiral' ? 110 : 68, () => { if (jump(run, nd.id)) { sfx('jump'); UI.flash = now; resetAnim(); UI.sel = null; save(); } }); }
+    if (isNext) { const p = 24 + Math.sin(now * 4) * 3; if (k !== 'amiral') { corners(x - p, y - p, p * 2, p * 2, C.acc, 7, 2); txt(NODE_NAMES[k], x, y + 30, C.acc, F.mono(14), 'center', 1); } }
+    else if (k !== 'amiral' && nd.id !== here) txt(NODE_NAMES[k], x, y + 22, done ? 'rgba(127,150,180,.45)' : 'rgba(200,212,230,.7)', F.mono(12), 'center', 0);
+    // toucher une balise : on y saute si c'est possible, sinon sa fiche s'affiche
+    zone(x - 34, y - (k === 'amiral' ? 62 : 34), 68, k === 'amiral' ? 110 : 68, isNext
+      ? () => { UI.node = null; if (jump(run, nd.id)) { sfx('jump'); UI.flash = now; resetAnim(); UI.sel = null; save(); } }
+      : () => { UI.node = UI.node === nd.id ? null : nd.id; });
   }
+  if (UI.node != null && N[UI.node]) nodeCard(N[UI.node], seen, next);
   const hn = N[here]; drawSprite('mere', hn.x + 46, hn.y, .3); txt('FLOTTE ICI', hn.x + 46, hn.y + 30, C.ally, F.mono(13), 'center', 1);
   topBar(`SECTEUR ${pad2(run.sector)}`, SECTORS[run.sector - 1].name, `CARBURANT ${pad2(run.fuel)}`, `CRÉDITS ${run.cr}`);
   if (run.msg) { frameBox(20, 104, LW - 40, 40, C.foe, 8, 'rgba(30,8,8,.85)'); txt(run.msg, LW / 2, 115, C.foe, F.ui(17), 'center', 1); }
@@ -452,6 +459,34 @@ function drawMap() {
   btn(LW - 230, 892, 100, 48, 'HANGAR', () => { UI.hangar = true; UI.pick = null; }, { size: 18 });
   btn(LW - 122, 892, 98, 48, 'MENU', () => { UI.screen = 'title'; UI.confirm = 0; }, { size: 18 });
   txt(run.fuel > 0 ? 'SAUT : 1 CARBURANT' : 'SANS CARBURANT : DÉRIVE', 26, 862, run.fuel > 0 ? C.dim : C.foe, F.mono(15));
+  btn(LW - 140, 844, 116, 34, '? LÉGENDE', () => { UI.legend = true; UI.node = null; }, { size: 16, ls: 1 });
+  if (UI.legend) drawLegend();
+}
+// fiche d'une balise touchée sur la carte
+function nodeCard(nd, seen, next) {
+  const w = 320, x = Math.max(16, Math.min(LW - w - 16, nd.x - w / 2)), lines = wrapLines(NODE_INFO[nd.k] || '', w - 28, F.ui(17)), h = 52 + lines.length * 20;
+  const y = nd.y > 340 ? nd.y - h - (nd.k === 'amiral' ? 70 : 34) : nd.y + (nd.k === 'amiral' ? 50 : 34);
+  frameBox(x, y, w, h, nd.k === 'contact' || nd.k === 'lourd' || nd.k === 'amiral' ? C.foe : C.acc, 8, 'rgba(6,10,18,.94)');
+  txt(NODE_NAMES[nd.k], x + 14, y + 10, C.txt, F.ui(20), 'left', 2, w - 140);
+  txt(nd.id === run.at ? 'ICI' : seen.has(nd.id) ? 'VISITÉE' : next.includes(nd.id) ? 'À PORTÉE' : 'PLUS LOIN', x + w - 14, y + 13, C.dim, F.mono(13), 'right');
+  lines.forEach((l, i) => txt(l, x + 14, y + 38 + i * 20, C.dim, F.ui(17)));
+}
+// légende de la carte : chaque balise et ce qu'on y trouve
+function drawLegend() {
+  g.fillStyle = 'rgba(2,4,8,.8)'; g.fillRect(0, 0, LW, LH);
+  const kinds = ['contact', 'lourd', 'comptoir', 'dock', 'amiral'];
+  frameBox(24, 150, LW - 48, 110 + kinds.length * 92, C.acc, 12, 'rgba(6,10,18,.96)');
+  txt('LÉGENDE DE LA CARTE', LW / 2, 172, C.acc, F.mono(18), 'center', 4);
+  kinds.forEach((k, i) => {
+    const y = 214 + i * 92, col = k === 'contact' || k === 'lourd' || k === 'amiral' ? C.foe : k === 'dock' ? C.ok : C.txt;
+    g.fillStyle = 'rgba(4,8,14,.85)'; g.beginPath(); g.arc(66, y + 30, 18, 0, TAU); g.fill();
+    g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(66, y + 30, 18, 0, TAU); g.stroke();
+    if (k === 'amiral') corners(44, y + 8, 44, 44, C.foe, 8, 2); else glyph(66, y + 30, k, col);
+    txt(NODE_NAMES[k], 104, y + 4, C.txt, F.ui(21), 'left', 2);
+    para(NODE_INFO[k], 104, y + 32, LW - 160, C.dim, F.ui(17), 19);
+  });
+  txt('TOUCHE UNE BALISE POUR VOIR SA FICHE', LW / 2, 214 + kinds.length * 92 + 8, C.dim, F.mono(14), 'center', 1);
+  zone(0, 0, LW, LH, () => { UI.legend = false; });
 }
 
 /* ---------- récompense, comptoir, dock ---------- */
@@ -528,11 +563,12 @@ function drawHangar() {
     g.save(); g.beginPath(); g.rect(24, y + 6, 100, h - 12); g.clip();
     g.strokeStyle = 'rgba(140,170,210,.08)'; for (let k = 0; k < 12; k++) { g.beginPath(); g.moveTo(24 + k * 16.5, y); g.lineTo(24 + k * 16.5, y + h); g.stroke(); g.beginPath(); g.moveTo(24, y + 6 + k * 16.5); g.lineTo(124, y + 6 + k * 16.5); g.stroke(); }
     drawSprite(f.t, 74, y + h / 2, fitScale(f.t, h - 14)); g.restore();
-    txt(`${T.name} « ${f.name} »`, 138, y + 8, C.txt, F.ui(21), 'left', 1, LW - 180);
+    txt(`${T.name} « ${f.name} »`, 138, y + 6, C.txt, F.ui(21), 'left', 1, LW - 180);
     const pm = UI.pick != null ? run.stock[UI.pick] : null;
-    if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 34, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13), 'left', 0, LW - 180);
-    else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ')}`, 138, y + 34, C.dim, F.mono(13), 'left', 0, LW - 180);
-    txt('COQUE', 138, y + 54, C.dim, F.mono(13)); meter(196, y + 58, 200, f.hull, m, f.hull / m > .5 ? C.ok : C.foe); txt(`${f.hull}/${m}`, 404, y + 54, C.txt, F.mono(13));
+    if (pm) txt(f.mods.length >= slotsOf(f.t) ? 'EMPLACEMENTS PLEINS' : `AVEC ${MODS[pm].name} : ${modPreview(f, pm)}`, 138, y + 30, f.mods.length >= slotsOf(f.t) ? C.dim : C.acc, F.mono(13), 'left', 0, LW - 180);
+    else txt(`VIT. ${spdOf(f)} · BOUCL. ${shMaxOf(f)} · ${T.w.map(w => `${w.name} ${wDmg(f, w)}/${wRng(f, w)}`).join(' · ')}`, 138, y + 30, C.dim, F.mono(13), 'left', 0, LW - 180);
+    txt(`${T.skill} · ${T.short || T.sdesc}`, 138, y + 46, C.acc, F.ui(15), 'left', 1, LW - 180);
+    txt('COQUE', 138, y + 62, C.dim, F.mono(13)); meter(196, y + 66, 200, f.hull, m, f.hull / m > .5 ? C.ok : C.foe); txt(`${f.hull}/${m}`, 404, y + 62, C.txt, F.mono(13));
     const ns = slotsOf(f.t), sy = y + h - 44;
     for (let k = 0; k < ns; k++) {
       const x = 138 + k * 124, md = f.mods[k], can = !md && UI.pick != null;
@@ -677,6 +713,7 @@ function tap(e) {
   const [x, y] = logical(e);
   for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { sfx('click'); b.act(); return; } }
   if (UI.screen === 'title') UI.confirm = 0;
+  UI.node = null;
   if (UI.screen === 'game' && run && run.phase === 'combat' && !busy() && !UI.hangar) {
     const c = Math.floor((x - GX) / CS), r = Math.floor((y - GY) / CS); if (inGrid(c, r)) tapGrid(c, r);
   }

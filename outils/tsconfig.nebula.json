@@ -1,0 +1,8 @@
+{
+  "//": "Vérification des types de nebula/regles.js sans rien compiler (// @ts-check + JSDoc) : tsc -p outils/tsconfig.nebula.json",
+  "compilerOptions": {
+    "allowJs": true, "checkJs": true, "noEmit": true, "strict": false, "noImplicitThis": true,
+    "target": "es2022", "lib": ["es2022", "dom"], "types": [], "skipLibCheck": true
+  },
+  "files": ["nebula-globals.d.ts", "../nebula/regles.js"]
+}

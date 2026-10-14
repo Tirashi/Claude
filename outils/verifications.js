@@ -4,7 +4,8 @@
    2. sw.js : chaque fichier de FILES existe ; la version du cache notée dans CLAUDE.md est la bonne ;
    3. sécurité : aucune clé secrète Supabase dans le dépôt, le SQL garde MON-CODE ;
    4. menu : les icônes de ICONS font bien 16 lignes de 16 caractères ;
-   5. Nebula : simulateur de combats et de parties (reproductibilité, migrate()).
+   5. Nebula : simulateur de combats et de parties (reproductibilité, migrate()) ;
+   6. Nebula : types de regles.js (// @ts-check + JSDoc) vérifiés par tsc, sans rien compiler.
    Code de sortie 1 si quelque chose ne va pas. */
 const fs = require('fs'), path = require('path'), vm = require('vm'), { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
@@ -66,6 +67,10 @@ else {
 // 5. Nebula
 try { execFileSync(process.execPath, [path.join(__dirname, 'nebula-simulateur.js'), '40', '4'], { stdio: 'pipe', encoding: 'utf8' }); ok('Nebula : simulateur (combats possibles, parties reproductibles, migrate)'); }
 catch (e) { bad('Nebula : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+
+// 6. types de Nebula (tsc installé : npm install -g typescript ; la CI l'installe)
+try { execFileSync('tsc', ['-p', path.join(__dirname, 'tsconfig.nebula.json')], { stdio: 'pipe', encoding: 'utf8' }); ok('Nebula : types de regles.js (tsc)'); }
+catch (e) { if (e.code === 'ENOENT') console.log('--    Nebula : tsc absent, types non vérifiés'); else bad('Nebula : types de regles.js\n' + (e.stdout || '') + (e.stderr || '')); }
 
 console.log(fail ? `\n${fail} problème(s)` : '\nTout est bon.');
 process.exit(fail ? 1 : 0);

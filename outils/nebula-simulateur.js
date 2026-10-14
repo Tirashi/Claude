@@ -3,6 +3,7 @@
    prudence 4 = joueur attentif qui esquive, 0 = joueur qui ignore les annonces.
    Affiche, par type de combat : victoires, tours, coque perdue, vaisseaux perdus
    (flotte d'escorte neuve : porte-vaisseaux, frégate, chasseur = 32 de coque).
+   Puis les mêmes combats contre l'IA par score (niveaux 1 et 2 des secteurs suivants).
    Vérifie aussi que tout est reproductible : même graine (+ mêmes actions) = même
    carte, même combat, même partie complète. Code de sortie 1 si une vérification
    échoue (utilisé par la CI : outils/verifications.js). */
@@ -17,6 +18,14 @@ for (const rw of risks) for (const [kind, floor] of [['contact', 1], ['contact',
   for (let i = 0; i < K; i++) { const s = N.simulate(i * 7919 + 1, kind, floor, fleet, rw); r[s.result]++; r.turns += s.turns; r.dmg += 32 - s.hull; r.lost2 += s.lost; }
   console.log(`prudence ${rw} · ${kind} étage ${floor} : ${r.won}/${K} victoires · ${(r.turns / K).toFixed(1)} tours · coque perdue ${(r.dmg / K).toFixed(1)} · vaisseaux perdus ${(r.lost2 / K).toFixed(2)}`);
   if (rw === 4) check(r.won > 0, `${kind} étage ${floor} : au moins une victoire (combat possible)`);
+}
+
+// IA des pirates par score (niveaux 1 et 2, voir AI_LEVELS) : plus dure, mais toujours gagnable
+for (const ai of [1, 2]) for (const [kind, floor] of [['contact', 4], ['lourd', 4], ['amiral', 8]]) {
+  const r = { won: 0, dmg: 0, lost2: 0 };
+  for (let i = 0; i < K; i++) { const s = N.simulate(i * 7919 + 1, kind, floor, fleet, 4, 30, 1, ai); if (s.result === 'won') r.won++; r.dmg += 32 - s.hull; r.lost2 += s.lost; }
+  console.log(`IA ${ai}, prudence 4 · ${kind} étage ${floor} : ${r.won}/${K} victoires · coque perdue ${(r.dmg / K).toFixed(1)} · vaisseaux perdus ${(r.lost2 / K).toFixed(2)}`);
+  check(r.won > 0, `IA ${ai} · ${kind} étage ${floor} : au moins une victoire`);
 }
 
 // une partie complète jouée par l'IA : toujours le premier saut, réparations au comptoir et au dock
