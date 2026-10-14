@@ -148,6 +148,7 @@ Rogue-lite tactique dans l'espace, vaisseaux en relief : trois secteurs pirates 
 - Capacités (rappelées sur la fiche du vaisseau en combat et au hangar) : riposte du chasseur, laser ou missile de la frégate, baies du porte-vaisseaux (chasseur léger ou drones), torpilles du bombardier, essaim des drones (on touche un pirate collé à la nuée pour l'attaquer), bulle de l'Égide. Pirates : intercepteurs en meute, brûlots kamikazes, croiseurs lance-torpilles, l'amiral et ses renforts. Dans les contacts lourds, les pirates manœuvrent pour **coincer** la flotte : ils visent aussi les cases où l'on pourrait se replier.
 - Pour déplacer un vaisseau, garder le doigt sur une case bleue montre où il ira (et les dégâts qui l'y attendent) ; il part quand on lève le doigt. Tant qu'il n'a pas tiré, on peut le replacer en touchant une autre case bleue.
 - Autres vaisseaux à recruter au comptoir : **éclaireur** (marque un pirate : +1 à chacun de tes tirs sur lui ce tour), **convoyeur** (+50 % de crédits et de carburant), **artilleur** (salve sur 2×2 cases par-dessus les astéroïdes), **cuirassé** (deux tirs par tour), **atelier mobile** (répare les voisins et toute la flotte après chaque combat). Nouveau pirate : le **harponneur**, qui attire les petits vaisseaux avec son grappin.
+- **Partie du jour** (écran titre) : la même carte et les mêmes combats pour toute la famille, avec la flotte d'escorte et sans déblocages ; seule la première tentative du jour est classée, on peut la rejouer hors classement.
 - **Données stellaires** (gagnées en fin de partie et dans certaines épaves) : l'écran **DÉBLOCAGES** les dépense pour ouvrir de nouveaux vaisseaux au comptoir (éclaireur, convoyeur, artilleur, cuirassé, atelier) et deux flottes de départ : la **flotte de choc** (cuirassé, bombardier, chasseur) et la **flotte marchande** (convoyeur, frégate, chasseur, éclaireur, 100 crédits au départ). Les déblocages font partie du transfert de sauvegardes.
 - **Épaves** : une petite histoire à choix (fouiller une soute, réveiller un pilote, répondre à un signal de détresse… parfois un piège ou une embuscade). **Nébuleuses** : un combat dans la brume, ou un moment de calme.
 - **Pilotes** (épaves et comptoirs) : As (+1 vitesse), Mécano (répare 1 de coque par tour), Tireur (+1 dégât), Prudent (+1 bouclier), Vétéran (gagne de la coque à chaque victoire). On les place au hangar, un par vaisseau.
@@ -208,7 +209,7 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Amiral !** : la victoire en le moins de tours, par niveau de l'ordinateur (Mousse, Capitaine, Amiral).
 - **Orbite** : le total d'étoiles gagnées sur les 30 niveaux.
 - **Alunissage** : la meilleure mission et la mission du jour.
-- **Nebula** : le meilleur score.
+- **Nebula** : le meilleur score, la partie du jour (jour par jour) et le nombre de victoires.
 - **Pont stellaire** : le Ciel du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille (7×7, 9×9, 11×11, plus 30 secondes par indice) et le nombre de constellations dessinées.
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).

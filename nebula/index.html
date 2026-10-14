@@ -516,7 +516,7 @@ function drawMap() {
   }
   if (UI.node != null && N[UI.node]) nodeCard(N[UI.node], seen, next);
   const hn = N[here]; drawSprite('mere', hn.x + 46, hn.y, .3); txt('FLOTTE ICI', hn.x + 46, hn.y + 30, C.ally, F.mono(13), 'center', 1);
-  topBar(`SECTEUR ${pad2(run.sector)}`, SECTORS[run.sector - 1].name, `CARBURANT ${pad2(run.fuel)}`, `CRÉDITS ${run.cr}`);
+  topBar(`SECTEUR ${pad2(run.sector)}`, SECTORS[run.sector - 1].name + (run.daily ? (run.ranked ? ' · DU JOUR' : ' · DU JOUR (HORS CLASSEMENT)') : ''), `CARBURANT ${pad2(run.fuel)}`, `CRÉDITS ${run.cr}`);
   if (run.msg) { frameBox(20, 104, LW - 40, 40, C.foe, 8, 'rgba(30,8,8,.85)'); txt(run.msg, LW / 2, 115, C.foe, F.ui(17), 'center', 1); }
   // la flotte en bas
   frameBox(16, 884, LW - 32, 64, C.dim, 8);
@@ -706,7 +706,8 @@ function drawTitle() {
     btn(132, 734, 280, 44, UI.confirm ? 'EFFACER LA PARTIE ?' : 'NOUVELLE PARTIE', () => { if (UI.confirm) { UI.screen = 'fleet'; UI.confirm = 0; } else UI.confirm = 1; }, { size: 20, col: UI.confirm ? C.foe : null });
   } else {
     btn(132, 670, 280, 52, 'NOUVELLE PARTIE', () => { UI.screen = 'fleet'; }, { primary: true, size: 24 });
-    btn(132, 734, 280, 44, 'PARTIE DU JOUR · BIENTÔT', null, { size: 19, off: true });
+    const dk = todayKey(), done = dailyBest[dk] != null, tried = store.get('dailyTry', 0) === dk;
+    btn(132, 734, 280, 44, done ? `DU JOUR · ${dailyBest[dk]} PTS` : tried ? 'PARTIE DU JOUR · REJOUER' : 'PARTIE DU JOUR', () => startDaily(), { size: 19, ls: 2, col: tried ? null : C.ally });
   }
   btn(52, 790, 104, 40, 'RÈGLES', () => { UI.screen = 'rules'; }, { size: 17, ls: 1 });
   btn(164, 790, 104, 40, 'DÉBLOCAGES', () => { UI.screen = 'unlocks'; UI.back = 'title'; }, { size: 15, ls: 1, col: walletOf(meta) >= cheapest() ? C.acc : null });
@@ -731,6 +732,15 @@ function drawFleet() {
   });
   btn(40, 800, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
   btn(LW - 240, 800, 200, 52, 'DÉCOLLER', () => startRun(UI.fleet), { primary: true, size: 20 });
+}
+// partie du jour : graine = date, flotte d'escorte sans déblocages (la même partie pour toute la famille) ;
+// seule la première tentative du jour est classée (nebula.dailyTry), les suivantes se jouent hors classement
+const todayKey = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+const dailyBest = store.get('daily', {}) || {};
+function startDaily() {
+  const dk = todayKey(), ranked = store.get('dailyTry', 0) !== dk;
+  run = newRun(dk, 'escorte', []); run.daily = dk; run.ranked = ranked; if (ranked) store.set('dailyTry', dk);
+  UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump');
 }
 function startRun(fleetId = 'escorte') { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, fleetId, meta.unlocked); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump'); }
 const cheapest = () => Math.min(...UNLOCKS.filter(u => !meta.unlocked.includes(u.id)).map(u => u.cost), 1e9);
@@ -772,7 +782,13 @@ function recordEnd() {
   if (sc > best) { best = sc; store.set('best', best); }
   meta.data += data; meta.games++; if (run.victory) meta.wins++; if (run.cleared) meta.cleared++; meta.kills += run.kills; meta.bestSector = Math.max(meta.bestSector, run.sectorsDone);
   store.set('meta', meta); store.del('run');
-  if (sc > 0 && window.LudoScores) LudoScores.submit('nebula', 'best', sc, false).then(r => { if (r) run.rankText = 'CLASSEMENT : ' + LudoScores.rankText(r).toUpperCase(); });
+  if (run.daily && run.ranked && !(dailyBest[run.daily] >= sc)) { dailyBest[run.daily] = sc; store.set('daily', dailyBest); }
+  if (window.LudoScores) {
+    const r0 = run;
+    if (sc > 0) LudoScores.submit('nebula', 'best', sc, false).then(r => { if (r && !r0.daily) r0.rankText = 'CLASSEMENT : ' + LudoScores.rankText(r).toUpperCase(); });
+    if (r0.daily && r0.ranked) LudoScores.submit('nebula', 'daily:' + r0.daily, sc, false).then(r => { if (r) r0.rankText = 'PARTIE DU JOUR : ' + LudoScores.rankText(r).toUpperCase(); });
+    if (r0.victory) LudoScores.submit('nebula', 'victoires', meta.wins, false);
+  }
 }
 function drawEnd() {
   recordEnd(); drawBg('title'); const f = run.final, win = run.cleared;
@@ -788,6 +804,7 @@ function drawEnd() {
   txt(f.newBest ? 'NOUVEAU RECORD !' : `RECORD : ${best}`, LW / 2, 474, f.newBest ? C.ok : C.dim, F.mono(18), 'center', 2);
   txt(`+${f.data} DONNÉES STELLAIRES`, LW / 2, 510, C.ally, F.mono(18), 'center', 2);
   if (run.rankText) txt(run.rankText, LW / 2, 548, C.txt, F.mono(16), 'center', 2);
+  else if (run.daily) txt(run.ranked ? 'PARTIE DU JOUR · CLASSÉE' : 'PARTIE DU JOUR · HORS CLASSEMENT', LW / 2, 548, C.ally, F.mono(15), 'center', 2);
   btn(60, 660, 200, 52, 'MENU', () => { run = null; UI.screen = 'title'; }, { size: 20 });
   btn(LW - 260, 660, 200, 52, 'REJOUER', () => { UI.screen = 'fleet'; run = null; }, { primary: true, size: 20 });
   btn(60, 730, 200, 44, 'CLASSEMENT', () => { location.href = '../classements/index.html#nebula'; }, { size: 18 });

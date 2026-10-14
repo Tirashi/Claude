@@ -194,7 +194,12 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
        title: () => "MISSION DU JOUR", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}]},
     {id: "nebula", name: "NEBULA", play: "../nebula/index.html", views: [
       {label: "MEILLEUR SCORE", game: "nebula", board: () => "best", fmt: v => N(v) + " pts", title: () => "NEBULA · MEILLEURE PARTIE",
-       note: "1000 par secteur terminé, 20 par pirate détruit, plus les crédits restants."}]},
+       note: "1000 par secteur terminé, 20 par pirate détruit, les crédits restants, et 3000 pour la victoire finale."},
+      {label: "PARTIE DU JOUR", ctl: ["day"], game: "nebula", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: v => N(v) + " pts",
+       title: () => "PARTIE DU JOUR", note: "La même carte et les mêmes combats pour toute la famille, avec la flotte d'escorte. Une seule tentative classée par jour.",
+       empty: () => st.back ? "Personne n'a joué la partie ce jour-là." : "Personne n'a encore joué la partie du jour : à toi !"},
+      {label: "VICTOIRES", game: "nebula", board: () => "victoires", fmt: v => N(v) + " victoire" + (v > 1 ? "s" : ""), title: () => "NEBULA · VICTOIRES",
+       note: "Le nombre de parties gagnées (la Rouille-Reine vaincue).", empty: "Personne n'a encore vaincu la Rouille-Reine."}]},
     {id: "pontstellaire", name: "PONT STELLAIRE", play: "../pont-stellaire/index.html", views: [
       {label: "CIEL DU JOUR", ctl: ["day"], game: "pontstellaire", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: T,
        title: () => "CIEL DU JOUR", note: "Le même ciel 9×9 pour toute la famille, plus 30 secondes par indice.",

@@ -178,7 +178,7 @@ Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, p
 3. ✅ Secteurs 2 (Nébuleuse d'Orphée, la Veuve d'Orphée) et 3 (Le Seuil, la Rouille-Reine), victoire finale +3000 (14/10). `RUN_V` reste à 1 : la partie n'a pas gagné de champ (le terrain est dans le combat, absent = pas de terrain).
 4. ✅ `nebula/evenements.js` : épaves et nébuleuses ; pilotes (14/10).
 5. ✅ Données stellaires dépensables, écran DÉBLOCAGES, flottes de choc et marchande (14/10).
-6. Partie du jour, tableaux `daily:AAAAMMJJ` et `victoires`, équilibrage final.
+6. ✅ Partie du jour, tableaux `daily:AAAAMMJJ` et `victoires`, équilibrage final (14/10). **Session 2 terminée.**
 
 ### Étape 1 (14/10)
 - **Capacités** : champ `short` de `TYPES` (une ligne) affiché sous la coque sur la fiche de combat (à la place de l'aide « touche un pirate encadré ») et sur chaque carte du hangar ; `sdesc` reste la version longue (comptoir, pirates).
@@ -251,3 +251,12 @@ Sur téléphone, « SECTEUR 02 TERMINÉ · +3 CARBURANT POUR LA SUITE » débord
 - **Choix de la flotte** : toucher une flotte ouverte la choisit (CHOISIE), DÉCOLLER part avec elle.
 - **Flotte marchande** (écart au § 8) : convoyeur, frégate, chasseur, éclaireur, et 100 crédits au départ. Avec l'égide à la place du chasseur, le simulateur ne venait pas à bout de l'amiral du secteur 1 (18 parties sur 60 arrêtées au secteur 1, 3 victoires) ; les crédits seuls n'y changeaient rien.
 - `node outils/nebula-parties.js 60 4 <flotte>` (tous les vaisseaux débloqués) : escorte 15 victoires sur 60, choc 22, marchande 11.
+
+### Étape 6 (14/10) : partie du jour, classements, bilan
+- **Partie du jour** (bouton de l'écran titre, quand aucune partie n'est en cours) : graine = date `AAAAMMJJ`, flotte d'escorte, **aucun déblocage** (comptoir et épaves avec `BASE_RECRUITS`) : la même partie pour toute la famille (carte, combats, événements, boutique). La première tentative du jour est classée (`nebula.dailyTry` = date, posé au départ : abandonner compte comme une tentative) ; les suivantes sont « HORS CLASSEMENT » (bandeau de la carte, fin de partie). Le score classé est gardé dans `nebula.daily` (déjà dans le transfert de sauvegardes) ; le bouton affiche « DU JOUR · score ».
+- **Classements** (`nebula`) : `best` (toutes les parties), `daily:AAAAMMJJ` (tentative classée), `victoires` (nombre de victoires, envoyé à chaque victoire). `registerExisting` envoie les trois ; `PSEUDO_BOARDS` + `victoires` ; `SYNC` = 7. Page des classements : vues MEILLEUR SCORE, PARTIE DU JOUR (flèches des jours), VICTOIRES. Testé avec `outils/faux-classements.js` (inscription : best, victoires, daily) et dans le jeu avec un faux `LudoScores` : à confirmer avec un vrai essai sur téléphone.
+- **Équilibrage final** : rien à retoucher. 60 parties de l'IA de test (joueur attentif) : escorte 15 victoires, choc 22, marchande 11 ; joueur qui ignore les annonces : arrêté au secteur 1. Retour de l'utilisateur après une partie complète : difficulté « pas trop mal dosée ».
+
+### Bilan de la session 2
+Fait : retours § 18 (capacités, carte lisible, drones, IA par score), confort de placement (fantôme, replacement), 5 vaisseaux et le harponneur, secteurs 2 et 3 avec terrain et amiraux, victoire finale, épaves et nébuleuses, pilotes, déblocages et flottes, partie du jour et classements, `@ts-check`. Écarts notés plus haut : éclaireur (marquage), flotte marchande (chasseur au lieu de l'égide, 100 crédits), bombardier / drones / égide restent d'office.
+**Pour la session 3** (§ 15) : tutoriel (premier combat guidé), manuel (fiches des vaisseaux, terrain, pilotes), finitions (sons, animations), et les pistes de confort de `nebula-analyse.md` § 8 (toucher long = fiche, avertissement sur FIN DU TOUR, économie de batterie…). À surveiller : la flotte de choc un peu plus forte que les autres.
