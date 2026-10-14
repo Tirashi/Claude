@@ -48,6 +48,9 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 7. **Apesanteur** (plateforme physique) — un spationaute flotte dans une station abandonnée et se propulse par petites poussées d'extincteur ; oxygène limité, débris qui dérivent, sas et interrupteurs ; 30 salles, record en moins de poussées.
 8. **Bouclier lunaire** (arcade) — façon Missile Command : protéger les dômes d'une base lunaire des pluies de météorites en tirant des charges qui explosent là où l'on touche ; vagues de plus en plus denses, comètes qui se divisent, réparation des dômes entre les vagues ; score et classement.
 
+## Améliorations des jeux existants
+- **Alunissage : interface près du module** (retour du 14/10) — pendant la descente, le regard reste sur le module et on ne voit plus les jauges du haut de l'écran. Idées : une **petite jauge de carburant à côté du module**, qui apparaît quand on allume les réacteurs (et clignote quand il en reste peu) ; une **indication des vitesses** près du module (vitesse verticale et horizontale, en vert quand elle est assez faible pour se poser, orange puis rouge au-delà ; flèche ou petit vecteur qui montre la dérive) ; éventuellement l'**altitude** au-dessus du sol et un repère de l'inclinaison quand on approche de l'aire. Garder les jauges du haut, mais l'essentiel doit se lire sans quitter le module des yeux.
+
 ## Grand jeu spatial : gestion + tactique (brainstorm du 13/10/2026, à approfondir)
 Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux, des planètes, des améliorations, pour **toute la famille**. Quatre formes proposées (toutes gardées) :
 1. **Empire familial** (façon Ogame) — une planète qui produit en continu même téléphone fermé, constructions de plus en plus longues, flottes qui explorent, chassent les pirates et pillent les autres joueurs de la famille ; parties sur des semaines. Combats **résolus automatiquement** avec des ordres génériques. *Piste détaillée en cours.*
