@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nebula</title>
-<meta name="description" content="Nebula : rogue-lite tactique spatial. Mène ta flotte à travers la Ceinture de Karn jusqu'à l'amiral pirate.">
+<meta name="description" content="Nebula : rogue-lite tactique spatial. Mène ta flotte à travers trois secteurs pirates jusqu'à la Rouille-Reine.">
 <link rel="manifest" href="../manifest.webmanifest">
 <meta name="theme-color" content="#04060c">
 <link rel="icon" href="../icons/icon-192.png">
@@ -61,7 +61,13 @@ const BGDEF = {
   map: [7, [30, 50, 80, 50, 40, 70]],
   combat: [12, [50, 40, 70, 80, 40, 60], [560, 40, 120, 5, hexs(['#3a1e14', '#6a3a22', '#9a5a32', '#c88a5a', '#e8c09a']), [255, 170, 120], false]],
   hangar: [19, [20, 40, 60, 40, 40, 60]],
+  // secteur 2 (nébuleuse d'Orphée, violette) et 3 (le Seuil, rouge)
+  map2: [8, [70, 30, 100, 90, 40, 120]],
+  combat2: [13, [80, 30, 110, 110, 50, 140], [520, 860, 140, 17, hexs(['#1a1030', '#3a2060', '#6a40a0', '#a080d0', '#e0d0ff']), [190, 140, 255], false]],
+  map3: [9, [90, 30, 20, 120, 50, 30]],
+  combat3: [14, [100, 30, 25, 140, 60, 30], [60, 900, 160, 23, hexs(['#200806', '#501410', '#902818', '#d05028', '#ffb070']), [255, 120, 80], false]],
 };
+const secBg = k => k + (run && run.sector > 1 ? run.sector : '');   // fond du secteur en cours
 function spr(t) { const id = sprite(t); if (id in V.TIMES) return V.get(id); want.add(id); return null; }
 function bg(k) { if (BGS[k]) return BGS[k]; want.add('bg:' + k); return null; }
 function work() {
@@ -166,6 +172,7 @@ function play(ev) {
     else if (e.e === 'boom') { const [x, y] = center(s); ANIM.death[e.id] = t + .08; ANIM.fx.push({ k: 'boom', t0: t, dur: .9, x, y, big: e.big }); sfx('boom', t - now); t += .22; }
     else if (e.e === 'blast') { const [x, y] = cellCenter(e.c, e.r); ANIM.fx.push({ k: 'blast', t0: t, dur: .6, x, y, big: e.big }); sfx('boom', t - now); t += .15; }
     else if (e.e === 'spawn') { ANIM.spawn[e.id] = t; const [x, y] = center(s); ANIM.fx.push({ k: 'warp', t0: t, dur: .5, x, y }); t += .25; }
+    else if (e.e === 'ion') { const [x, y] = center(s); ANIM.fx.push({ k: 'hit', t0: t, dur: .5, x, y, shield: true }); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'BOUCLIER PERDU', col: C.ally, small: true }); sfx('shield', t - now); t += .1; }
     else if (e.e === 'shield') { const [x, y] = center(s); ANIM.fx.push({ k: 'hit', t0: t, dur: .5, x, y, shield: true }); }
     else if (e.e === 'heal') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '+' + e.n, col: C.ok }); }
     else if (e.e === 'mark') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'MARQUÉ', col: C.acc, small: true }); }
@@ -241,14 +248,26 @@ function doEv(ev) { if (!ev) return false; play(ev); save(); return true; }
 function selShip() { const st = run.combat; return UI.sel != null ? byId(st, UI.sel) : null; }
 const STATIC = { key: '', cv: null };
 function drawStatic(st) {
-  const key = st.seed + ':' + K + ':' + !!BGS.combat;
+  const key = [st.seed, st.sector, st.kind, K, !!BGS[secBg('combat')]].join(':');   // le décor change avec le combat et le secteur
   if (STATIC.key !== key) {
     const [c2, g2] = V.mk(Math.round(LW * K), Math.round(LH * K)), keep = g; g = g2; g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
-    drawBg('combat');
+    drawBg(secBg('combat'));
     g.strokeStyle = 'rgba(150,180,220,.12)'; g.lineWidth = 1;
     for (let c = 0; c <= COLS; c++) { g.beginPath(); g.moveTo(GX + c * CS + .5, GY); g.lineTo(GX + c * CS + .5, GY + ROWS * CS); g.stroke(); }
     for (let r = 0; r <= ROWS; r++) { g.beginPath(); g.moveTo(GX, GY + r * CS + .5); g.lineTo(GX + COLS * CS, GY + r * CS + .5); g.stroke(); }
     g.fillStyle = C.ally2 + '.035)'; g.fillRect(GX, GY + 6 * CS, COLS * CS, 3 * CS);
+    // nuages ioniques : bleu électrique ; nébuleuse : brume violette
+    for (const [c, r] of st.ions || []) {
+      const x = GX + c * CS, y = GY + r * CS, R = V.rnd(c * 31 + r * 7);
+      g.fillStyle = 'rgba(80,170,255,.16)'; g.fillRect(x + 1, y + 1, CS - 2, CS - 2);
+      g.strokeStyle = 'rgba(140,210,255,.55)'; g.lineWidth = 1.2;
+      for (let k = 0; k < 3; k++) { g.beginPath(); let px = x + 8 + R() * 56, py = y + 6; g.moveTo(px, py); for (let j = 0; j < 4; j++) { px += (R() - .5) * 18; py += 14; g.lineTo(px, py); } g.stroke(); }
+      txt('IONS', x + 6, y + 4, 'rgba(160,220,255,.8)', F.mono(11));
+    }
+    for (const [c, r] of st.fog || []) {
+      const x = GX + c * CS, y = GY + r * CS, gr = g.createRadialGradient(x + CS / 2, y + CS / 2, 4, x + CS / 2, y + CS / 2, CS * .8);
+      gr.addColorStop(0, 'rgba(170,110,230,.30)'); gr.addColorStop(1, 'rgba(120,70,190,.12)'); g.fillStyle = gr; g.fillRect(x, y, CS, CS);
+    }
     for (const [c, r] of st.rocks) { const R = ROCKS[(c * 7 + r * 3) % 3], [x, y] = cellCenter(c, r), w = R.width / RS; g.drawImage(R, x - w / 2, y - w / 2, w, w); }
     g = keep; STATIC.cv = c2; STATIC.key = key;
   }
@@ -313,11 +332,12 @@ function drawCombat() {
     if (swarm && foe && !o.dead && dist(o, mine) <= 1 && canAct(st, mine)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); txt('-' + ((mine.hull <= 2 ? 1 : 2) + nMod(mine, 'canons')), L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
     if (o === s && !o.dead) corners(L + 3, T + 3, CS - 6, n * CS - 6, foe ? C.foe : C.ally, 14, 2);
   }
+  for (const [c, r] of st.fog || []) { g.fillStyle = 'rgba(140,90,210,.22)'; g.fillRect(GX + c * CS, GY + r * CS, CS, CS); }
   if (mine && UI.ghost && !B) drawGhost(st, mine, UI.ghost);
   drawFx();
   if (UI.ranges && !B) rangeLabel(st, s);
-  const boss = sideOf(st, 'E').find(o => o.t === 'amiral'), foes = sideOf(st, 'E').length;
-  topBar(st.kind === 'amiral' ? 'AMIRAL ROUILLÉ' : NODE_NAMES[st.kind], `TOUR ${st.turn} · ${B ? 'PIRATES EN ACTION' : 'TON TOUR'}${boss ? ` · RENFORTS DANS ${3 - st.turn % 3}` : canFlee(st) ? ' · FUITE POSSIBLE' : ''}`,
+  const boss = sideOf(st, 'E').find(o => TYPES[o.t].spawn), foes = sideOf(st, 'E').length, every = boss && TYPES[boss.t].spawn.every;
+  topBar(nodeName(st.kind, st.sector), `TOUR ${st.turn} · ${B ? 'PIRATES EN ACTION' : 'TON TOUR'}${boss ? ` · RENFORTS DANS ${every - st.turn % every}` : canFlee(st) ? ' · FUITE POSSIBLE' : ''}`,
     `${foes} HOSTILE${foes > 1 ? 'S' : ''}`, '', LW - 230);
   btn(LW - 186, 50, 162, 36, UI.ranges ? 'PORTÉES : OUI' : 'PORTÉES : NON', () => { UI.ranges = !UI.ranges; store.set('ranges', UI.ranges); }, { size: 16, ls: 1, primary: UI.ranges });
   drawFiche(st, s, B);
@@ -330,9 +350,10 @@ function drawGhost(st, s, p) {
   g.fillStyle = C.ally2 + '.18)'; g.fillRect(L + 2, T + 2, CS - 4, n * CS - 4);
   g.strokeStyle = C.ally; g.lineWidth = 2; g.setLineDash([6, 5]); g.strokeRect(L + 3, T + 3, CS - 6, n * CS - 6); g.setLineDash([]);
   drawSprite(s.t, L + CS / 2, T + n * CS / 2, 1, .5);
-  const label = d ? '-' + d : 'À L\'ABRI', w = d ? 40 : 76, y = T + n * CS / 2 - 11;
+  const ion = cellsOf({ t: s.t, c: p.c, r: p.r }).some(([x, y]) => ionAt(st, x, y));
+  const label = (d ? '-' + d : 'À L\'ABRI') + (ion ? ' · IONS' : ''), w = (d ? 40 : 76) + (ion ? 58 : 0), y = T + n * CS / 2 - 11;
   g.fillStyle = 'rgba(4,6,12,.88)'; g.fillRect(L + CS / 2 - w / 2, y, w, 22);
-  txt(label, L + CS / 2, y + 3, d ? C.foe : C.ok, F.mono(16), 'center', 0, w);
+  txt(label, L + CS / 2, y + 3, d ? C.foe : ion ? C.ally : C.ok, F.mono(16), 'center', 0, w);
 }
 // portées : en ambre où tes vaisseaux peuvent tirer, en rouge où les pirates peuvent tirer (depuis leur place actuelle)
 function rangeCells(st, o, wi) {
@@ -384,7 +405,8 @@ function drawFiche(st, s, B) {
   const endBtn = () => btn(390, 878, 126, 50, 'FIN DU TOUR', () => { UI.sel = null; UI.bay = false; doEv(endTurn(st)); }, { primary: !s || s.acted || !canAct(st, s), size: 19, off: B || !!st.result });
   if (!s || s.dead) {
     txt('TON TOUR', 36, 792, C.acc, F.mono(16), 'left', 3);
-    para('Touche un de tes vaisseaux, puis une case bleue (garde le doigt posé pour voir où il ira) et tire. En rouge : les cases que les pirates frapperont à la fin du tour.', 36, 818, 470, C.txt, F.ui(19), 22);
+    if ((st.ions && st.ions.length) || (st.fog && st.fog.length)) para('Bleu (IONS) : qui y finit le tour perd son bouclier. Violet : nébuleuse, on n\'y vise rien à plus de 2 cases (sauf l\'éclaireur).', 36, 816, 470, C.txt, F.ui(17), 20);
+    else para('Touche un de tes vaisseaux, puis une case bleue (garde le doigt posé pour voir où il ira) et tire. En rouge : les cases que les pirates frapperont à la fin du tour.', 36, 818, 470, C.txt, F.ui(19), 22);
     if (canFlee(st)) btn(134, 878, 120, 50, 'FUIR', () => { if (flee(st)) save(); }, { size: 19, off: B });
     endBtn(); return;
   }
@@ -455,7 +477,7 @@ function glyph(x, y, k, col) {
   g.stroke();
 }
 function drawMap() {
-  drawBg('map');
+  drawBg(secBg('map'));
   g.strokeStyle = 'rgba(140,170,210,.07)'; g.lineWidth = 1;
   for (let x = 32; x < LW; x += 64) { g.beginPath(); g.moveTo(x + .5, 100); g.lineTo(x + .5, 880); g.stroke(); }
   for (let y = 128; y < 880; y += 64) { g.beginPath(); g.moveTo(0, y + .5); g.lineTo(LW, y + .5); g.stroke(); }
@@ -470,7 +492,7 @@ function drawMap() {
   }
   for (const nd of N) {
     const done = seen.has(nd.id) && nd.id !== here, isNext = next.includes(nd.id), { x, y, k } = nd;
-    if (k === 'amiral') { drawSprite('amiral', x, y - 8, .5); corners(x - 40, y - 62, 80, 100, C.foe, 10, 2); txt(NODE_NAMES[k], x, y + 44, isNext ? C.acc : C.foe, F.mono(15), 'center', 2); }
+    if (k === 'amiral') { drawSprite(bossOf(run.sector), x, y - 8, .5); corners(x - 40, y - 62, 80, 100, C.foe, 10, 2); txt(nodeName(k, run.sector), x, y + 44, isNext ? C.acc : C.foe, F.mono(15), 'center', 2); }
     else {
       g.fillStyle = 'rgba(4,8,14,.85)'; g.beginPath(); g.arc(x, y, 18, 0, TAU); g.fill();
       const col = done ? 'rgba(127,150,180,.5)' : k === 'contact' || k === 'lourd' ? C.foe : k === 'dock' ? C.ok : C.txt;
@@ -501,7 +523,7 @@ function nodeCard(nd, seen, next) {
   const w = 320, x = Math.max(16, Math.min(LW - w - 16, nd.x - w / 2)), lines = wrapLines(NODE_INFO[nd.k] || '', w - 28, F.ui(17)), h = 52 + lines.length * 20;
   const y = nd.y > 340 ? nd.y - h - (nd.k === 'amiral' ? 70 : 34) : nd.y + (nd.k === 'amiral' ? 50 : 34);
   frameBox(x, y, w, h, nd.k === 'contact' || nd.k === 'lourd' || nd.k === 'amiral' ? C.foe : C.acc, 8, 'rgba(6,10,18,.94)');
-  txt(NODE_NAMES[nd.k], x + 14, y + 10, C.txt, F.ui(20), 'left', 2, w - 140);
+  txt(nodeName(nd.k, run.sector), x + 14, y + 10, C.txt, F.ui(20), 'left', 2, w - 140);
   txt(nd.id === run.at ? 'ICI' : seen.has(nd.id) ? 'VISITÉE' : next.includes(nd.id) ? 'À PORTÉE' : 'PLUS LOIN', x + w - 14, y + 13, C.dim, F.mono(13), 'right');
   lines.forEach((l, i) => txt(l, x + 14, y + 38 + i * 20, C.dim, F.ui(17)));
 }
@@ -525,14 +547,14 @@ function drawLegend() {
 
 /* ---------- récompense, comptoir, dock ---------- */
 function drawReward() {
-  drawBg('map'); const rw = run.reward;
-  topBar('VICTOIRE', rw.kind === 'amiral' ? "L'AMIRAL ROUILLÉ EST TOMBÉ" : NODE_NAMES[rw.kind], `CRÉDITS ${run.cr}`, `CARBURANT ${pad2(run.fuel)}`);
+  drawBg(secBg('map')); const rw = run.reward;
+  topBar('VICTOIRE', rw.kind === 'amiral' ? nodeName('amiral', run.sector) + ' EST TOMBÉ' + (bossOf(run.sector) === 'amiral' ? '' : 'E') : NODE_NAMES[rw.kind], `CRÉDITS ${run.cr}`, `CARBURANT ${pad2(run.fuel)}`);
   frameBox(40, 200, LW - 80, 420, C.acc, 14);
   txt('BUTIN', LW / 2, 230, C.acc, F.mono(18), 'center', 6);
   const rows = [[`+${rw.cr}`, 'CRÉDITS' + (rw.lostCargo ? ` (SOUTE PERDUE : -${rw.lostCargo})` : '')], rw.fuel ? [`+${rw.fuel}`, 'CARBURANT'] : null, [`${rw.kills}`, `PIRATE${rw.kills > 1 ? 'S' : ''} DÉTRUIT${rw.kills > 1 ? 'S' : ''}`]].filter(Boolean);
   rows.forEach(([v, l], i) => { txt(v, 220, 290 + i * 56, C.txt, F.mono(34), 'right'); txt(l, 240, 298 + i * 56, C.dim, F.ui(22), 'left', 3); });
   if (rw.mod) { const y = 290 + rows.length * 56 + 10; frameBox(80, y, LW - 160, 70, C.acc, 8); txt('MODULE : ' + MODS[rw.mod].name, LW / 2, y + 12, C.acc, F.ui(22), 'center', 2); txt(MODS[rw.mod].desc + ' · à poser au hangar', LW / 2, y + 40, C.dim, F.ui(17), 'center', 1); }
-  if (rw.kind === 'amiral') txt('SECTEUR 01 TERMINÉ', LW / 2, 560, C.ok, F.mono(18), 'center', 4);
+  if (rw.kind === 'amiral') txt(run.sector < SECTORS.length ? `SECTEUR ${pad2(run.sector)} TERMINÉ · +${REFUEL} CARBURANT POUR LA SUITE` : 'LES TROIS SECTEURS SONT LIBÉRÉS', LW / 2, 560, C.ok, F.mono(17), 'center', 2);
   btn(92, 660, 170, 52, 'HANGAR', () => { UI.hangar = true; UI.pick = null; }, { size: 20 });
   btn(282, 660, 170, 52, 'CONTINUER', () => { afterReward(run); save(); if (run.phase === 'end') recordEnd(); }, { primary: true, size: 20 });
   fleetStrip(760);
@@ -544,7 +566,7 @@ function fleetStrip(y) {
 }
 function drawShop() {
   drawBg('hangar'); const sh = run.shop, miss = missingHull(run), pts = Math.min(miss, Math.floor(run.cr / 3));
-  topBar('COMPTOIR', 'MARCHÉ LIBRE DE KARN', `CRÉDITS ${run.cr}`, `CARBURANT ${pad2(run.fuel)}`);
+  topBar('COMPTOIR', SECTORS[run.sector - 1].shop, `CRÉDITS ${run.cr}`, `CARBURANT ${pad2(run.fuel)}`);
   const row = (y, h, title, sub, price, label, act, ok, sold) => {
     frameBox(16, y, LW - 32, h, sold ? 'rgba(125,138,158,.4)' : C.dim, 8);
     txt(title, 32, y + 10, sold ? C.dim : C.txt, F.ui(22), 'left', 2, LW - 220); wrapLines(sub, LW - 226, F.ui(16)).slice(0, 2).forEach((l, i) => txt(l, 32, y + 37 + i * 18, C.dim, F.ui(16), 'left', 0, LW - 226));
@@ -659,7 +681,7 @@ function drawFleet() {
 }
 function startRun() { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, 'escorte'); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump'); }
 const RULES = [
-  ['LA PARTIE', "Traverse le secteur de balise en balise jusqu'à l'amiral pirate. Chaque saut coûte 1 carburant ; sans carburant, chaque vaisseau perd 2 de coque."],
+  ['LA PARTIE', "Trois secteurs à traverser de balise en balise, chacun gardé par un amiral pirate. Chaque saut coûte 1 carburant ; sans carburant, chaque vaisseau perd 2 de coque."],
   ['TON TOUR', 'Chaque vaisseau peut se déplacer (cases bleues) puis agir une fois. Touche un vaisseau, une case bleue, puis un pirate encadré pour tirer.'],
   ['LES INTENTIONS', "En rouge : la case que chaque pirate frappera à la FIN DU TOUR. Sors de la case… ou détruis le pirate avant qu'il tire."],
   ['BOUCLIER ET COQUE', "Les dégâts touchent d'abord le bouclier (+1 par tour), puis la coque. Un vaisseau détruit est perdu pour toute la partie."],
@@ -683,11 +705,13 @@ function recordEnd() {
 }
 function drawEnd() {
   recordEnd(); drawBg('title'); const f = run.final, win = run.cleared;
-  txt(win ? 'SECTEUR LIBÉRÉ' : 'FLOTTE PERDUE', LW / 2, 130, win ? C.acc : C.foe, F.title(30), 'center', 8);
-  wrapLines(win ? "L'amiral rouillé est vaincu. La suite du voyage arrive bientôt." : 'Les pirates ont eu raison de ta flotte.', LW - 80, F.ui(20)).forEach((l, i) => txt(l, LW / 2, 180 + i * 24, C.txt, F.ui(20), 'center', 1));
+  txt(win ? 'VICTOIRE' : 'FLOTTE PERDUE', LW / 2, 130, win ? C.acc : C.foe, F.title(30), 'center', 8);
+  wrapLines(win ? 'La Rouille-Reine est tombée : les trois secteurs sont libérés.' : `Les pirates ont eu raison de ta flotte (secteur ${pad2(run.sector)} : ${SECTORS[run.sector - 1].name}).`, LW - 80, F.ui(20)).forEach((l, i) => txt(l, LW / 2, 180 + i * 24, C.txt, F.ui(20), 'center', 1));
   frameBox(40, 240, LW - 80, 360, win ? C.acc : C.foe, 14);
   const rows = [['SECTEURS TERMINÉS', `${run.sectorsDone} × 1000`], ['PIRATES DÉTRUITS', `${run.kills} × 20`], ['CRÉDITS RESTANTS', `${run.cr}`]];
-  rows.forEach(([l, v], i) => { txt(l, 70, 270 + i * 42, C.dim, F.ui(20), 'left', 2); txt(v, LW - 70, 270 + i * 42, C.txt, F.mono(20), 'right'); });
+  if (run.victory) rows.push(['VICTOIRE FINALE', '3000']);
+  const step = rows.length > 3 ? 32 : 42;
+  rows.forEach(([l, v], i) => { txt(l, 70, 266 + i * step, C.dim, F.ui(20), 'left', 2); txt(v, LW - 70, 266 + i * step, C.txt, F.mono(20), 'right'); });
   g.fillStyle = C.acc2 + '.4)'; g.fillRect(70, 400, LW - 140, 1);
   txt('SCORE', 70, 418, C.acc, F.ui(24), 'left', 4); txt(String(f.score), LW - 70, 410, C.acc, F.mono(40), 'right');
   txt(f.newBest ? 'NOUVEAU RECORD !' : `RECORD : ${best}`, LW / 2, 474, f.newBest ? C.ok : C.dim, F.mono(18), 'center', 2);
@@ -780,7 +804,7 @@ window.addEventListener('resize', resize);
 Object.assign(window.Nebula, { UI, ANIM, recordEnd, save, store, makeShop, crash });
 Object.defineProperty(window.Nebula, 'run', { get: () => run, set: v => { run = v; } });
 ['mere', 'fregate', 'chasseur'].forEach(spr); bg('title');
-['intercepteur', 'brulot', 'croiseur', 'harponneur', 'amiral', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier'].forEach(spr); ['map', 'combat', 'hangar'].forEach(bg);
+['intercepteur', 'brulot', 'croiseur', 'harponneur', 'amiral', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier', 'veuve', 'reine'].forEach(spr); ['map', 'combat', 'hangar', 'map2', 'combat2', 'map3', 'combat3'].forEach(bg);
 setTimeout(resize, 0); resize();
 Promise.all(['22px Michroma', '600 20px Rajdhani', '700 20px Rajdhani', '16px "Share Tech Mono"'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : 0)).then(() => requestAnimationFrame(frame));
 </script>

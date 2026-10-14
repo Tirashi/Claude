@@ -141,7 +141,7 @@ Un puzzle de logique sur les règles du **Hashi**, dans un ciel étoilé en 32 b
 
 ## Nebula
 
-Rogue-lite tactique dans l'espace, vaisseaux en relief (première version jouable : le secteur 1).
+Rogue-lite tactique dans l'espace, vaisseaux en relief : trois secteurs pirates à traverser.
 
 - La **flotte d'escorte** (porte-vaisseaux, frégate, chasseur) traverse la **Ceinture de Karn** : une carte de 7 étages de balises jusqu'à l'**amiral rouillé**. Chaque saut coûte 1 carburant ; sans carburant, chaque vaisseau perd 2 de coque.
 - **Combat** sur une grille de 7×9 : les vaisseaux occupent 1, 2 ou 3 cases. À chaque tour, les pirates se déplacent puis **annoncent en rouge la case qu'ils vont frapper** : on sort de la case, ou on détruit le pirate avant la fin du tour. Chaque vaisseau se déplace (cases bleues) puis agit une fois. Les astéroïdes bloquent les tirs ; le bouclier encaisse d'abord et remonte de 1 par tour. Un vaisseau détruit est perdu pour la partie. Le bouton **PORTÉES** (en haut) montre ou cache la portée des armes sur la grille : en ambre celle du vaisseau choisi, en rouge les cases où les pirates peuvent tirer (plus c'est foncé, plus ils sont nombreux).
@@ -150,7 +150,8 @@ Rogue-lite tactique dans l'espace, vaisseaux en relief (première version jouabl
 - Autres vaisseaux à recruter au comptoir : **éclaireur** (marque un pirate : +1 à chacun de tes tirs sur lui ce tour), **convoyeur** (+50 % de crédits et de carburant), **artilleur** (salve sur 2×2 cases par-dessus les astéroïdes), **cuirassé** (deux tirs par tour), **atelier mobile** (répare les voisins et toute la flotte après chaque combat). Nouveau pirate : le **harponneur**, qui attire les petits vaisseaux avec son grappin.
 - Sur la carte, chaque balise porte son nom ; en touchant une balise hors de portée, sa fiche dit ce qu'on y trouve, et le bouton **? LÉGENDE** les explique toutes.
 - Entre les combats : **comptoir** (carburant, réparations, modules, recrues), **dock** (réparation ou module gratuit), **hangar** pour poser les modules (blindage, bouclier, propulseurs, ciblage, canons Mk2) : en touchant un module, chaque vaisseau montre ce qu'il y gagnerait (par exemple VITESSE 3 → 4).
-- Score : 1000 par secteur terminé, 20 par pirate détruit, plus les crédits restants. Partie sauvegardée à chaque étape. Le record fait partie des classements et du transfert de sauvegardes.
+- Trois secteurs, chacun gardé par un amiral : la **Ceinture de Karn** (astéroïdes, l'amiral rouillé), la **Nébuleuse d'Orphée** (nuages ioniques qui font perdre le bouclier à qui y finit son tour, nébuleuse où l'on ne vise rien à plus de 2 cases ; la Veuve d'Orphée et sa couvée de brûlots) et **Le Seuil** (pirates plus nombreux et plus rusés ; la Rouille-Reine, dont le bouclier se recharge à chaque tour). +3 carburant en entrant dans un nouveau secteur.
+- Score : 1000 par secteur terminé, 20 par pirate détruit, plus les crédits restants, plus 3000 pour la victoire finale. Partie sauvegardée à chaque étape. Le record fait partie des classements et du transfert de sauvegardes.
 
 ---
 

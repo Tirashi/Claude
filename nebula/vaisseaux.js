@@ -453,6 +453,35 @@ function drawPlanet(g, cx, cy, r, seed, cols, atm, cityLights) {
   g.putImageData(img, x0, y0);
 }
 
+/* ---------- amiraux des secteurs 2 et 3 (session 2) ---------- */
+Object.assign(SHIPS, {
+  // VEUVE D'ORPHÉE : porte-brûlots, coque large en éventail, six alvéoles de lancement, rangées de feux rouges
+  veuve: () => { const B = builder(70, 214), cx = 35;
+    B.poly([[cx, 4], [cx + 10, 20], [cx + 14, 54], [cx + 34, 90], [cx + 33, 160], [cx + 22, 176], [cx + 16, 208], [cx - 16, 208], [cx - 22, 176], [cx - 33, 160], [cx - 34, 90], [cx - 14, 54], [cx - 10, 20]], 7, 5, 'scrap');
+    for (const s of [-1, 1]) {
+      B.poly([[cx + s * 15, 86], [cx + s * 31, 96], [cx + s * 30, 156], [cx + s * 16, 164]], 10, 2, 'rust', 7);
+      for (const y of [102, 122, 142]) { B.box(s < 0 ? cx - 28 : cx + 18, y, 10, 13, 10, 1, 'scrap', 9); B.hole(s < 0 ? cx - 26 : cx + 20, y + 2, 6, 9, 3, 'black'); }
+    }
+    B.box(cx - 9, 30, 18, 150, 12, 3, 'rust', 7); B.box(cx - 10, 182, 20, 5, 10, 1, 'hazard', 7);
+    B.dome(cx, 64, 9, 11, 12, 19, 'scrap'); B.dome(cx, 62, 4, 5, 18, 21, 'red');
+    B.dome(cx, 24, 5, 7, 7, 12, 'scrap'); B.box(cx - 1, 6, 2, 16, 12, .6, 'scrap', 10);
+    B.greebles(60, 61, [6, 30, 58, 160]);
+    B.lights([[cx - 5, 90], [cx + 5, 90], [cx - 5, 110], [cx + 5, 110], [cx - 5, 130], [cx + 5, 130], [cx - 5, 150], [cx + 5, 150], [cx - 24, 92], [cx + 24, 92]], REDL);
+    return render(B.engines([[cx - 12, 209, 5], [cx, 210, 6], [cx + 12, 209, 5]]), { seed: 61, flip: true }); },
+  // ROUILLE-REINE : cuirassé géant, trois tourelles lourdes en ligne, couronne d'émetteurs de bouclier
+  reine: () => { const B = builder(70, 214), cx = 35;
+    B.poly(half(cx, [[0, 2], [12, 14], [20, 44], [27, 90], [27, 176], [20, 202], [0, 210]]), 8, 5, 'scrap');
+    B.poly(half(cx, [[0, 24], [12, 34], [18, 86], [18, 172], [0, 178]]), 11, 3, 'rust', 8);
+    for (const y of [52, 94, 136]) { B.dome(cx, y, 12, 12, 11, 18, 'scrap'); B.box(cx - 6, y - 26, 3, 20, 17, .6, 'scrap', 14); B.box(cx + 3, y - 26, 3, 20, 17, .6, 'scrap', 14); B.dome(cx, y, 4, 4, 18, 20, 'red'); }
+    B.box(cx - 9, 156, 18, 22, 19, 2.5, 'scrap', 11); B.box(cx - 7, 158, 14, 3, 20.5, 1, 'red', 18);
+    for (const s of [-1, 1]) for (const y of [70, 112, 160]) B.dome(cx + s * 22, y, 3.5, 3.5, 9, 12.5, 'glass');
+    B.box(cx - 14, 186, 28, 5, 10, 1, 'hazard', 8);
+    B.greebles(50, 63, [8, 30, 54, 170]);
+    B.lights([[cx - 22, 70], [cx + 22, 70], [cx - 22, 112], [cx + 22, 112], [cx - 22, 160], [cx + 22, 160]], CYAN);
+    B.lights([[cx - 12, 196], [cx + 12, 196]], REDL);
+    return render(B.engines([[cx - 13, 209, 6], [cx, 210, 7], [cx + 13, 209, 6]]), { seed: 63, flip: true }); },
+});
+
 /* ---------- cache et dessin ---------- */
 const CACHE = {}, TIMES = {};
 function get(id) {

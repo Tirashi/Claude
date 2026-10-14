@@ -35,6 +35,14 @@ for (const [name, ts] of [['choc', ['cuirasse', 'bombardier', 'chasseur']], ['ma
   check(won > 0, `flotte ${name} · contact lourd, IA 1 : ${won}/${K} victoires`);
 }
 
+// secteurs 2 et 3 (terrain, harponneurs, amiraux) avec une flotte de 5 vaisseaux : combats possibles
+const five = mk(['mere', 'fregate', 'chasseur', 'cuirasse', 'egide']);
+for (const sector of [2, 3]) for (const [kind, floor] of [['contact', 4], ['lourd', 5], ['amiral', 8]]) {
+  let won = 0, dmg = 0; const tot = five.reduce((a, f) => a + f.hull, 0);
+  for (let i = 0; i < K; i++) { const s = N.simulate(i * 7919 + 1, kind, floor, five, 4, 30, sector); if (s.result === 'won') won++; dmg += tot - s.hull; }
+  check(won > 0, `secteur ${sector} · ${kind} : ${won}/${K} victoires, coque perdue ${(dmg / K).toFixed(1)}/${tot}`);
+}
+
 // une partie complète jouée par l'IA : toujours le premier saut, réparations au comptoir et au dock
 function autoRun(seed) {
   const run = N.newRun(seed, 'escorte'), trace = [];

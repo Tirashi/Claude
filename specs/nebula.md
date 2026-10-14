@@ -175,7 +175,7 @@ Cartouche dans le menu (icône 16×16 : silhouette de vaisseau ambre), transfert
 Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, poussée, artefact republié) :
 1. ✅ **Retours § 18 + IA + types** (14/10).
 2. ✅ Nouveaux vaisseaux : éclaireur, convoyeur, artilleur, cuirassé, atelier ; pirate harponneur (14/10). Avec le confort de placement demandé après l'étape 1.
-3. Secteurs 2 (Nébuleuse d'Orphée, la Veuve d'Orphée) et 3 (Le Seuil, la Rouille-Reine), victoire finale +3000, `RUN_V` 2.
+3. ✅ Secteurs 2 (Nébuleuse d'Orphée, la Veuve d'Orphée) et 3 (Le Seuil, la Rouille-Reine), victoire finale +3000 (14/10). `RUN_V` reste à 1 : la partie n'a pas gagné de champ (le terrain est dans le combat, absent = pas de terrain).
 4. `nebula/evenements.js` : épaves et nébuleuses ; pilotes.
 5. Données stellaires dépensables, écran DÉBLOCAGES, flottes de choc et marchande.
 6. Partie du jour, tableaux `daily:AAAAMMJJ` et `victoires`, équilibrage final.
@@ -211,3 +211,19 @@ Découpage validé par l'utilisateur le 14/10 (chaque étape jouable, testée, p
 - **Harponneur** pirate (2 cases, coque 10, canon 2/2) : **GRAPPIN** prioritaire sur un vaisseau de 1 case à 2 ou 3 cases en vue : annonce « GRAPPIN » sur la case ; à la fin du tour, le vaisseau encore sur la case est tiré de 2 cases vers lui (s'arrête s'il est bloqué). Il apparaîtra dans les secteurs 2 et 3 (étape 3).
 - Les cinq nouveaux vaisseaux sont recrutables au comptoir en attendant les déblocages (étape 5).
 - Simulateur (contact lourd, IA 1) : flottes de choc, marchande et « soutien » (atelier, artilleur, chasseur) gagnent ~40/40. La flotte marchande est fragile face à l'IA 2 et à l'amiral : voulu (« moins de puissance »), à revoir à l'équilibrage final.
+
+### Étape 3 (14/10) : secteurs 2 et 3
+- `SECTORS` décrit chaque secteur : astéroïdes, nuages ioniques, chance de nébuleuse, coque des pirates (`mult`), intercepteurs en plus (`extra`), niveau d'IA, nom du comptoir, et les pirates tirés au sort (`pool` : contacts des étages 1-2, des étages 3 et plus, contacts lourds case par case, escorte de l'amiral). Le secteur 1 tire exactement les mêmes combats qu'avant.
+
+| Secteur | Terrain | Pirates | IA | Amiral |
+|---|---|---|---|---|
+| 1 Ceinture de Karn | 3-5 astéroïdes | coque ×1,5, +1 intercepteur | 0 (contacts lourds : 1) | Amiral rouillé (renforts : 2 intercepteurs / 3 tours) |
+| 2 Nébuleuse d'Orphée | 1-2 astéroïdes, 2-3 nuages ioniques, une nébuleuse | ×1,6, +2, harponneurs | 1 | Veuve d'Orphée (2 tourelles, couvée : 2 brûlots / 3 tours) |
+| 3 Le Seuil | 2-3 astéroïdes, 1-2 nuages, nébuleuse une fois sur deux | ×1,8, +2, croiseurs et harponneurs partout | 2 | Rouille-Reine (3 tourelles, bouclier rechargé en entier à chaque tour, 2 intercepteurs / 3 tours) |
+
+- **Nuage ionique** (1 ou 2 cases, « IONS » en bleu) : à la FIN DU TOUR, avant les tirs pirates, tout vaisseau (des deux camps) qui a une case dans un nuage perd son bouclier. Les pirates de l'IA par score évitent d'y finir ; le fantôme de placement affiche « · IONS ».
+- **Nébuleuse** (3 × 2 cases, brume violette) : un vaisseau entièrement dedans ne peut pas être visé à plus de 2 cases (sauf par l'éclaireur, dans les deux sens).
+- **Amiraux** : sprites `veuve` et `reine` ajoutés à `vaisseaux.js` ; renforts décrits par `TYPES[…].spawn` ; `regen` = bouclier rechargé en entier.
+- **Entre deux secteurs** : +3 carburant (`REFUEL`, message sur la carte) ; fonds de carte et de combat propres à chaque secteur (violet, puis rouge).
+- **Victoire finale** après la Rouille-Reine : écran VICTOIRE, ligne « VICTOIRE FINALE 3000 » dans le score.
+- **Réglage** (`node outils/nebula-parties.js`, 60 parties de l'IA de test avec la flotte d'escorte, choix de route simple, achats au comptoir) : joueur attentif : jamais arrêté au secteur 1, arrêté au secteur 2 dans ~23 % des parties, victoire dans ~22 % ; joueur qui ignore les annonces : toujours arrêté au secteur 1. Coque perdue moyenne par combat : secteur 1 contact 0,6 / lourd 6,9 / amiral 0,7 ; secteur 2 contact 1,3 / lourd 6,2 / amiral 9,8 ; secteur 3 contact 2,3 / lourd 8,3 / amiral 16,2. Essais écartés : Veuve qui lâche ses brûlots tous les 2 tours (18 parties sur 60 s'y arrêtaient) ; Rouille-Reine à 40 de coque et 4 de bouclier (presque imbattable : coque ×1,8 = 72).

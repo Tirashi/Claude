@@ -14,7 +14,8 @@
 /**
  * @typedef {{ name: string, dmg: number, rng: number, fx: string, big?: boolean, swarm?: boolean, min?: number, zone?: boolean, mark?: boolean }} Weapon
  * @typedef {{ name: string, n: number, hull: number, sh: number, spd: number, w: Weapon[], skill: string, sdesc: string, short?: string,
- *   price?: number, sprite?: string, temp?: boolean, foe?: boolean, ai?: string, turrets?: number }} ShipType
+ *   price?: number, sprite?: string, temp?: boolean, foe?: boolean, ai?: string, turrets?: number, regen?: boolean,
+ *   spawn?: { every: number, t: string, n: number } }} ShipType
  * @typedef {[number, number]} Cell
  * @typedef {{ t: string, mods?: string[], mult?: number }} Fit   un vaisseau et ses modules (en combat ou dans la flotte)
  * @typedef {{ id: number, t: string, side: string, c: number, r: number, mods: string[], dead: boolean, moved: boolean, acted: boolean,
@@ -22,12 +23,13 @@
  *   mult?: number, fid?: number, name?: string, goal?: number, fired?: number, mark?: number }} Ship
  * @typedef {{ src: number, cell: Cell, dmg: number, fx: string, cross?: number, splash?: number, pack?: boolean, pull?: number }} Intent
  * @typedef {{ seed: number, kind: string, floor: number, sector: number, ai?: number, turn: number, ships: Ship[], rocks: Cell[],
- *   intents: Intent[], kills: number, next: number, result: string | null, log: any[] }} Combat
+ *   intents: Intent[], kills: number, next: number, result: string | null, log: any[], ions?: Cell[], fog?: Cell[] }} Combat
  * @typedef {{ e: string, [k: string]: any }} Ev   événement rejoué par l'affichage
  * @typedef {{ c: number, r: number, d: number, prev: string | null, through?: boolean }} Step   position atteignable
  * @typedef {{ uid: number, t: string, name: string, mods: string[], hull: number }} FleetShip
  * @typedef {{ id: number, k: string, f: number, i: number, x: number, y: number, links: number[] }} MapNode
- * @typedef {{ name: string, boss: string, rocks: number[], mult: number, extra: number, ai: number, aiHeavy?: number }} Sector
+ * @typedef {{ name: string, boss: string, shop: string, rocks: number[], ions: number[], fog: number, mult: number, extra: number, ai: number, aiHeavy?: number,
+ *   pool: { early: string[], mid: string[], lourd: (string | string[])[], escort: string[] } }} Sector
  * @typedef {{ frac: number, stay: number, kill: number, iso: number, hurt: number, risk: number, near: number, block: boolean, refine: boolean }} AiLevel
  */
 const COLS = 7, ROWS = 9;
@@ -59,11 +61,16 @@ const TYPES = {
   brulot: { name: 'BRÛLOT', n: 1, hull: 3, sh: 0, spd: 4, w: [], foe: true, ai: 'brulot', skill: 'CHARGE', sdesc: 'fonce sur ton plus gros vaisseau et explose au contact : 5 dégâts, 2 autour. Détruit avant : 2 dégâts autour.' },
   croiseur: { name: 'CROISEUR PIRATE', n: 2, hull: 10, sh: 2, spd: 2, w: [{ name: 'TORPILLE', dmg: 4, rng: 6, fx: 'torpille' }], foe: true, ai: 'big', skill: 'TORPILLE', sdesc: 'longue portée, 2 dégâts sur les 4 cases voisines ; vise d\'abord les vaisseaux de 3 cases, puis de 2.' },
   harponneur: { name: 'HARPONNEUR', n: 2, hull: 10, sh: 1, spd: 2, w: [{ name: 'CANON', dmg: 2, rng: 2, fx: 'canon' }], foe: true, ai: 'harpon', skill: 'GRAPPIN', sdesc: 'à 3 cases ou moins, attire un vaisseau de 1 case de 2 cases vers lui au lieu de tirer (tu le vois venir : case marquée GRAPPIN).' },
-  amiral: { name: 'AMIRAL ROUILLÉ', n: 3, hull: 30, sh: 3, spd: 1, w: [{ name: 'TOURELLES', dmg: 3, rng: 4, fx: 'canon' }], foe: true, ai: 'amiral', turrets: 3, skill: 'RENFORTS', sdesc: '3 tourelles sur 3 cibles (2 dégâts autour de chaque case visée) ; tous les 3 tours, appelle 2 intercepteurs.' },
+  amiral: { name: 'AMIRAL ROUILLÉ', n: 3, hull: 30, sh: 3, spd: 1, w: [{ name: 'TOURELLES', dmg: 3, rng: 4, fx: 'canon' }], foe: true, ai: 'amiral', turrets: 3, spawn: { every: 3, t: 'intercepteur', n: 2 }, skill: 'RENFORTS', sdesc: '3 tourelles sur 3 cibles (2 dégâts autour de chaque case visée) ; tous les 3 tours, appelle 2 intercepteurs.' },
 };
+// amiraux des secteurs 2 et 3
+Object.assign(TYPES, {
+  veuve: { name: 'VEUVE D\'ORPHÉE', n: 3, hull: 32, sh: 3, spd: 1, w: [{ name: 'CANONS', dmg: 3, rng: 4, fx: 'canon' }], foe: true, ai: 'amiral', turrets: 2, spawn: { every: 3, t: 'brulot', n: 2 }, skill: 'COUVÉE', sdesc: '2 tourelles (2 dégâts autour de chaque case visée) ; tous les 3 tours, lâche 2 brûlots.' },
+  reine: { name: 'ROUILLE-REINE', n: 3, hull: 32, sh: 3, spd: 1, w: [{ name: 'TOURELLES', dmg: 3, rng: 4, fx: 'canon' }], foe: true, ai: 'amiral', turrets: 3, regen: true, spawn: { every: 3, t: 'intercepteur', n: 2 }, skill: 'BOUCLIER RÉGÉNÉRANT', sdesc: '3 tourelles ; son bouclier se recharge en entier à chaque tour (frappe-la fort en un seul tour) ; tous les 3 tours, 2 intercepteurs.' },
+});
 const sprite = t => (TYPES[t] && TYPES[t].sprite) || t;
 // réglages issus du simulateur : sans tirs de zone, un joueur attentif esquivait tout
-const TUNE = { cross: { croiseur: 2, amiral: 2 } };   // dégâts sur les 4 cases voisines de la case visée
+const TUNE = { cross: { croiseur: 2, amiral: 2, veuve: 2, reine: 2 } };   // dégâts sur les 4 cases voisines de la case visée
 const MODS = {
   blindage: { name: 'BLINDAGE', desc: '+3 coque', long: '+3 points de coque maximum (et 3 tout de suite).', price: 50 },
   bouclier: { name: 'BOUCLIER+', desc: '+1 bouclier', long: '+1 point de bouclier maximum, rechargé chaque tour.', price: 60 },
@@ -140,6 +147,7 @@ function canHit(st, s, w, c, r, target) {
   const n = lenOf(s), d = gap(c, r, n, target.c, target.r, lenOf(target));
   if (d > wRng(s, w) || (w.min && d < w.min)) return false;
   if (w.swarm) return d <= 1;
+  if (d > 2 && s.t !== 'eclaireur' && cellsOf(target).every(([x, y]) => fogAt(st, x, y))) return false;   // caché dans la nébuleuse
   if (w.zone) return true;   // tir indirect : par-dessus les astéroïdes
   const mine = []; for (let i = 0; i < n; i++) mine.push([c, r + i]);
   return los(st, mine, cellsOf(target));
@@ -172,10 +180,23 @@ function blast(st, c, r, main, around, ev, byPlayer, src) {
 /* ---------- création d'un combat ---------- */
 // ai : niveau de l'IA des pirates (0 = IA simple de la session 1, 1 et 2 = IA par score, voir AI_LEVELS) ;
 // aiHeavy : niveau pour les contacts lourds, s'il est différent
+// rocks, ions : nombre d'astéroïdes et de nuages ioniques (min, max) ; fog : chance d'une nébuleuse dans un combat ;
+// mult : coque des pirates ; extra : intercepteurs en plus ; pool : pirates tirés au sort (contacts des étages 1-2,
+// des étages 3 et plus, contacts lourds case par case, escorte de l'amiral)
 /** @type {Sector[]} */
 const SECTORS = [
-  { name: 'CEINTURE DE KARN', boss: 'amiral', rocks: [3, 5], mult: 1.5, extra: 1, ai: 0, aiHeavy: 1 },
+  { name: 'CEINTURE DE KARN', boss: 'amiral', shop: 'MARCHÉ LIBRE DE KARN', rocks: [3, 5], ions: [0, 0], fog: 0, mult: 1.5, extra: 1, ai: 0, aiHeavy: 1,
+    pool: { early: ['intercepteur', 'intercepteur', 'brulot'], mid: ['intercepteur', 'intercepteur', 'brulot', 'croiseur'], lourd: ['croiseur', ['croiseur', 'intercepteur'], 'intercepteur', ['intercepteur', 'brulot']], escort: ['intercepteur', 'intercepteur'] } },
+  { name: 'NÉBULEUSE D\'ORPHÉE', boss: 'veuve', shop: 'COMPTOIR D\'ORPHÉE', rocks: [1, 2], ions: [2, 3], fog: 1, mult: 1.6, extra: 2, ai: 1,
+    pool: { early: ['intercepteur', 'intercepteur', 'brulot', 'harponneur'], mid: ['intercepteur', 'brulot', 'harponneur', 'croiseur'], lourd: ['croiseur', ['harponneur', 'croiseur'], 'intercepteur', ['brulot', 'harponneur']], escort: ['harponneur', 'intercepteur'] } },
+  { name: 'LE SEUIL', boss: 'reine', shop: 'DERNIER COMPTOIR', rocks: [2, 3], ions: [1, 2], fog: .5, mult: 1.8, extra: 2, ai: 2,
+    pool: { early: ['intercepteur', 'brulot', 'harponneur', 'croiseur'], mid: ['intercepteur', 'brulot', 'harponneur', 'croiseur'], lourd: ['croiseur', ['croiseur', 'harponneur'], 'harponneur', ['intercepteur', 'brulot']], escort: ['croiseur', 'intercepteur'] } },
 ];
+// terrain : nuages ioniques et nébuleuse
+const inCells = (cells, c, r) => !!cells && cells.some(k => k[0] === c && k[1] === r);
+const ionAt = (st, c, r) => inCells(st.ions, c, r);
+const fogAt = (st, c, r) => inCells(st.fog, c, r);
+const inIons = (st, s) => cellsOf(s).some(([c, r]) => ionAt(st, c, r));
 /** @param {Combat} st @param {string} t @param {string} side @param {number} c @param {number} r @returns {Ship} */
 function makeShip(st, t, side, c, r, o = {}) {
   const s = /** @type {Ship} */ (Object.assign({ id: st.next++, t, side, c, r, mods: [], dead: false, moved: false, acted: false, rip: false, bay: 0, from: null }, o));
@@ -185,13 +206,14 @@ function makeShip(st, t, side, c, r, o = {}) {
 }
 function pirateList(R, kind, floor, sector) {
   const S = SECTORS[sector - 1] || SECTORS[0];
-  if (kind === 'amiral') return [S.boss, 'intercepteur', 'intercepteur'];
+  if (kind === 'amiral') return [S.boss, ...S.pool.escort];
   let list;
-  if (kind === 'lourd') list = ['croiseur', R() < .5 ? 'croiseur' : 'intercepteur', 'intercepteur', pick(R, ['intercepteur', 'brulot'])];
+  if (kind === 'lourd') list = S.pool.lourd.map(x => typeof x === 'string' ? x : pick(R, x));
   else {
     const n = floor <= 2 ? 2 : floor <= 4 ? 3 : 3 + (R() < .5 ? 1 : 0);
-    list = []; for (let i = 0; i < n; i++) list.push(pick(R, floor <= 2 ? ['intercepteur', 'intercepteur', 'brulot'] : ['intercepteur', 'intercepteur', 'brulot', 'croiseur']));
-    if (list.filter(x => x === 'croiseur').length > 1) list[list.lastIndexOf('croiseur')] = 'intercepteur';
+    list = []; for (let i = 0; i < n; i++) list.push(pick(R, floor <= 2 ? S.pool.early : S.pool.mid));
+    // un seul gros pirate (2 cases) par contact
+    let big = 0; list = list.map(t => TYPES[t].n > 1 && big++ ? 'intercepteur' : t);
   }
   for (let i = 0; i < S.extra; i++) list.push('intercepteur');
   return list;
@@ -205,6 +227,19 @@ function makeCombat(seed, kind, floor, fleet, sector = 1, o = {}) {
   // astéroïdes au milieu de la grille
   const nr = S.rocks[0] + Math.floor(R() * (S.rocks[1] - S.rocks[0] + 1)) - (kind === 'amiral' ? 1 : 0);
   while (st.rocks.length < nr) { const c = Math.floor(R() * COLS), r = 3 + Math.floor(R() * 3); if (!rockAt(st, c, r)) st.rocks.push([c, r]); }
+  // nuages ioniques (1 ou 2 cases) et nébuleuse (3 × 2 cases), au milieu de la grille
+  if (S.ions[1]) {
+    st.ions = []; const k = S.ions[0] + Math.floor(R() * (S.ions[1] - S.ions[0] + 1));
+    for (let i = 0; i < k; i++) for (let t = 0; t < 20; t++) {
+      const c = Math.floor(R() * COLS), r = 2 + Math.floor(R() * 5), c2 = c + (R() < .5 ? 1 : -1), two = R() < .5 && inGrid(c2, r);
+      if (rockAt(st, c, r) || ionAt(st, c, r)) continue;
+      st.ions.push([c, r]); if (two && !rockAt(st, c2, r) && !ionAt(st, c2, r)) st.ions.push([c2, r]); break;
+    }
+  }
+  if (S.fog && R() < S.fog) {
+    const c0 = Math.floor(R() * (COLS - 2)), r0 = 2 + Math.floor(R() * 3); st.fog = [];
+    for (let dc = 0; dc < 3; dc++) for (let dr = 0; dr < 2; dr++) if (!rockAt(st, c0 + dc, r0 + dr)) st.fog.push([c0 + dc, r0 + dr]);
+  }
   // pirates en haut
   for (const t of pirateList(R, kind, floor, sector)) {
     const n = TYPES[t].n;
@@ -229,19 +264,19 @@ function makeCombat(seed, kind, floor, fleet, sector = 1, o = {}) {
 function startTurn(st, ev) {
   st.turn++;
   ev.push({ e: 'turn', n: st.turn });
-  if (st.turn > 1) for (const s of alive(st)) if (s.sh < s.shMax) { s.sh++; }
+  if (st.turn > 1) for (const s of alive(st)) if (s.sh < s.shMax) { s.sh = TYPES[s.t].regen ? s.shMax : s.sh + 1; }
   for (const s of sideOf(st, 'P')) {
     s.moved = s.acted = s.rip = false; s.from = null; s.fired = 0; if (s.bay > 0) s.bay--;
     if (s.t === 'atelier') for (const o of sideOf(st, 'P')) if (o !== s && dist(o, s) === 1 && o.hull < o.hmax) { const k = Math.min(2, o.hmax - o.hull); o.hull += k; ev.push({ e: 'heal', id: o.id, n: k }); }
     if (s.t === 'egide') for (const o of sideOf(st, 'P')) if (o !== s && dist(o, s) === 1 && o.sh < o.shMax + 1) { o.sh++; ev.push({ e: 'shield', id: o.id }); }
   }
   for (const s of sideOf(st, 'E')) s.rip = false;
-  // renforts de l'amiral
-  const boss = sideOf(st, 'E').find(s => s.t === 'amiral');
-  if (boss && st.turn % 3 === 0) {
+  // renforts des amiraux (par le haut de la grille, à côté de l'amiral)
+  for (const boss of sideOf(st, 'E').filter(s => TYPES[s.t].spawn)) {
+    const sp = TYPES[boss.t].spawn, len = TYPES[sp.t].n; if (st.turn % sp.every) continue;
     let n = 0; for (const c of [boss.c - 1, boss.c + 1, boss.c - 2, boss.c + 2, boss.c - 3, boss.c + 3]) {
-      if (n >= 2 || !inGrid(c, 0) || occupant(st, c, 0) || rockAt(st, c, 0)) continue;
-      const s = makeShip(st, 'intercepteur', 'E', c, 0, { mult: boss.mult }); ev.push({ e: 'spawn', id: s.id }); n++;
+      if (n >= sp.n || !inGrid(c, 0) || footprint(c, 0, len).some(([x, y]) => occupant(st, x, y) || rockAt(st, x, y))) continue;
+      const s = makeShip(st, sp.t, 'E', c, 0, { mult: boss.mult }); ev.push({ e: 'spawn', id: s.id }); n++;
     }
   }
   planPirates(st, ev);
@@ -391,6 +426,7 @@ function bestShots(st, p, c, r, E, A) {
   /** @type {number[]} */ const cand = [];
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
     const d = gap(c, r, n, x, y, 1); if (!d || d > rg || rockAt(st, x, y) || !E.some(e => e.rel.has(x + y * COLS))) continue;
+    if (d > 2 && fogAt(st, x, y)) continue;   // on ne vise pas dans la nébuleuse au-delà de 2 cases
     if (brulot || losCell(st, mine, x, y)) cand.push(x + y * COLS);
   }
   for (let t = 0; t < (TYPES[p.t].turrets || 1); t++) {
@@ -426,7 +462,8 @@ function planScored(st, ev, A) {
         const d = gap(pos.c, pos.r, n, S.c, S.r, lenOf(S)), ws = TYPES[S.t].w; near = Math.min(near, d);
         if (ws.length && d <= spdOf(S) + Math.max(...ws.map(w => wRng(S, w)))) threat += Math.max(...ws.map(w => wDmg(S, w)));
       }
-      const v = o.v - A.risk * threat - A.near * near - .01 * pos.d - mine.reduce((a, it) => a + hitOn(it, cells), 0);
+      const ions = cells.some(([x, y]) => ionAt(st, x, y)) ? p.sh : 0;   // finir dans un nuage ionique coûte le bouclier
+      const v = o.v - A.risk * threat - A.near * near - .01 * pos.d - mine.reduce((a, it) => a + hitOn(it, cells), 0) - ions;
       if (!best || v > best.v + 1e-9) best = { pos, v, shots: o.shots };
     }
     if (!best) continue;
@@ -463,6 +500,8 @@ function checkEnd(st) {
 function endTurn(st) {
   const ev = [];
   if (st.result) return ev;
+  // nuages ioniques : qui y finit le tour perd son bouclier (avant les tirs)
+  for (const s of alive(st)) if (s.sh > 0 && inIons(st, s)) { s.sh = 0; ev.push({ e: 'ion', id: s.id }); }
   for (const it of st.intents) {
     const p = byId(st, it.src); if (!p || p.dead) continue;
     if (it.fx === 'grapple') grapple(st, p, it, ev);
@@ -610,7 +649,7 @@ function autoTurn(st, riskW = 4) {
     const danger = dangerMap(st), reach = reachable(st, s);
     let best = null;
     for (const pos of ends(reach)) {
-      let risk = 0; for (let i = 0; i < lenOf(s); i++) risk += danger.get(pos.c + ',' + (pos.r + i)) || 0;
+      let risk = 0; for (let i = 0; i < lenOf(s); i++) risk += (danger.get(pos.c + ',' + (pos.r + i)) || 0) + (ionAt(st, pos.c, pos.r + i) ? s.sh * .5 : 0);
       let gain = 0, act = null;
       TYPES[s.t].w.forEach((w, wi) => {
         if (w.swarm) { const T = sideOf(st, 'E').filter(o => gap(pos.c, pos.r, 1, o.c, o.r, lenOf(o)) <= 1); const v = T.length * 2; if (v > gain) { gain = v; act = [wi, null]; } return; }
@@ -638,7 +677,9 @@ function simulate(seed, kind, floor, fleet, riskW = 4, maxTurns = 30, sector = 1
 }
 
 /* ---------- carte d'un secteur ---------- */
-const NODE_NAMES = { depart: 'POINT DE SAUT', contact: 'CONTACT', lourd: 'CONTACT LOURD', comptoir: 'COMPTOIR', dock: 'DOCK', amiral: 'AMIRAL ROUILLÉ' };
+const NODE_NAMES = { depart: 'POINT DE SAUT', contact: 'CONTACT', lourd: 'CONTACT LOURD', comptoir: 'COMPTOIR', dock: 'DOCK', amiral: 'AMIRAL PIRATE' };
+const bossOf = sector => (SECTORS[sector - 1] || SECTORS[0]).boss;
+const nodeName = (k, sector) => k === 'amiral' ? TYPES[bossOf(sector)].name : NODE_NAMES[k];
 // ce qu'on trouve à chaque balise (légende et fiche de la carte)
 const NODE_INFO = {
   depart: 'Point d\'arrivée de la flotte dans le secteur.',
@@ -646,7 +687,7 @@ const NODE_INFO = {
   lourd: 'Combat difficile contre des pirates mieux armés. Module garanti et plus de crédits.',
   comptoir: 'Marché : carburant, réparations, modules et un vaisseau à recruter.',
   dock: 'Chantier gratuit : réparation de la moitié des dégâts, ou un module offert.',
-  amiral: 'Le chef pirate du secteur et ses escortes. Le vaincre libère le secteur.',
+  amiral: 'Le chef pirate du secteur et ses escortes. Le vaincre ouvre le secteur suivant (le 3e : victoire finale).',
 };
 function makeMap(seed, sector = 1) {
   const R = rng(seedOf(seed, sector, 77)), floors = [[{ k: 'depart' }]];
@@ -724,12 +765,15 @@ function finishCombat(run) {
   else { run.phase = 'end'; run.victory = false; }
   run.combat = null;
 }
-// après la récompense : la carte, ou la fin si l'amiral est tombé
+const REFUEL = 3;   // carburant offert en entrant dans un nouveau secteur
+// après la récompense : le secteur suivant, ou la fin (victoire) après le dernier amiral
 function afterReward(run) {
   const k = run.reward && run.reward.kind; run.reward = null;
   if (k === 'amiral') {
-    if (run.sector < SECTORS.length) { run.sector++; run.map = makeMap(run.seed, run.sector); run.at = 0; run.visited = [0]; run.phase = 'map'; }
-    else { run.phase = 'end'; run.victory = run.sectorsDone >= 3; run.cleared = true; }
+    if (run.sector < SECTORS.length) {
+      run.sector++; run.map = makeMap(run.seed, run.sector); run.at = 0; run.visited = [0]; run.phase = 'map';
+      run.fuel += REFUEL; run.msg = `SECTEUR ${String(run.sector).padStart(2, '0')} · RAVITAILLEMENT : +${REFUEL} CARBURANT`;
+    } else { run.phase = 'end'; run.victory = run.sectorsDone >= SECTORS.length; run.cleared = true; }
   } else run.phase = 'map';
 }
 function makeShop(run, seed) {
@@ -782,6 +826,6 @@ function migrate(r) {
 const scoreOf = run => 1000 * run.sectorsDone + 20 * run.kills + run.cr + (run.victory ? 3000 : 0);
 const stellarOf = run => 10 * run.sector + 3 * run.heavy + 20 * run.admirals;
 
-const NEBULA_API = { TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, seedOf, dangerMap, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
+const NEBULA_API = { TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, seedOf, dangerMap, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
 if (typeof window !== 'undefined') window.Nebula = NEBULA_API;
 if (typeof module !== 'undefined') module.exports = NEBULA_API;
