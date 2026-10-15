@@ -308,7 +308,7 @@ Reste aussi, hors Nebula : l'artefact de l'accueil est une ancienne copie à plu
 - Testé : ouverture hors connexion (jeu et 3 polices chargés), réseau très lent avec un serveur qui attend 8 s par fichier (page ouverte en 2,6 s), réseau normal (une modification publiée arrive tout de suite) ; test de fumée des 19 pages.
 - Non fait : préparer les sprites dans un *Web Worker* (§ 6 de l'analyse) : à faire seulement si l'utilisateur constate des à-coups sur le téléphone.
 
-## 21. Pistes d'équilibrage et de renouvellement (proposées le 15/10, validées le 15/10)
+## 21. Pistes d'équilibrage et de renouvellement (proposées le 15/10, validées le 15/10, réalisées en session 4)
 Retour de l'utilisateur (15/10) : après plusieurs parties, la flotte de choc est très efficace. Idées en vrac : flotte de choc dès le début mais moins récompensée, flotte marchande comme une mission d'escorte mieux récompensée ; composer sa flotte de départ avec des **points de flotte** (chaque vaisseau a un coût et rapporte plus ou moins en fin de partie) ; nouveaux vaisseaux alliés et ennemis ; **objectifs** de partie ou de combat (ne perdre aucun vaisseau, un pilote dans chaque vaisseau…) ; **partie du jour** avec une flotte différente chaque jour (que des chasseurs, que des bombardiers, escorte d'un vaisseau qui ne doit pas être détruit…).
 
 ### Mesures (IA de test, 40 parties complètes par flotte, joueur attentif, tout débloqué)
@@ -389,3 +389,7 @@ Découpage du § 21 **validé le 15/10** avec les choix proposés : budget **10 
 - Retenu (`nebula/sons.js`, `NebulaSons`) : saut façon Helldivers 2 (2 s de montée, « vwOOM » ; en jeu la flotte arrive en combat au moment du choc, `UI.jumpAt`) ; armes et impacts graves et filtrés (canon, laser, missile, torpille, bouclier, coque — nouveau son à chaque dégât de coque —, explosion en deux variantes) ; bip de sélection et bip de validation (boutons `primary`) ; sons secondaires (grappin, treuil, ions et brouillage, renforts, mine, réparation, marquage) dans le même esprit ; Tension II en combat, Garde sur les autres écrans (réglage AMBIANCE, toujours coupé par défaut). Sons fabriqués une fois (3 variantes chacun) pendant les temps morts (`warmSounds`), position stéréo selon la case.
 - Choix finaux : défaite B (plus résignée), ambiance Garde sur la carte (martiale et héroïque) ; Marche reste dans `sons.js` en réserve.
 
+### Étape 5 et bilan de la session 4 (15/10)
+- Équilibrage : l'utilisateur le juge correct en l'état ; il faudra plus de parties pour repérer les vrais problèmes. Pistes notées : plafond de la prime d'audace (+40 % ?), brouilleur à 2 points, prix des déblocages du mouilleur (45) et du brouilleur (65) jugés longs à obtenir, défi « décapitation » et contrats à surveiller.
+- Fait : flotte à points et prime d'audace, arrivée de la flotte par le bas (traînées du saut retirées), défis de combat et contrats de partie, missions du jour, 4 nouveaux vaisseaux et les mines (maquette validée), sound design complet (`nebula/sons.js`, banc d'écoute).
+- Leçons : faire valider les dessins par une maquette avant de coder (fait pour les vaisseaux) ; pour le son, demander d'abord des références (jeux, films) plutôt que de proposer des variantes au hasard : c'est la référence Helldivers 2 et le mot « étouffé » qui ont débloqué la troisième passe.
