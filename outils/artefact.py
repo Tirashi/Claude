@@ -18,7 +18,7 @@ s = open(os.path.join(root, src), encoding='utf-8').read()
 title = re.search(r'<title>.*?</title>', s, re.S).group(0)
 styles = ''.join(re.findall(r'<style>.*?</style>', s[:s.index('</head>')], re.S))
 body = s[s.index('<body>') + 6:s.rindex('</body>')]
-body = re.sub(r'<script src="\.\./ludo-scores\.js"></script>\n?', '', body)
+body = re.sub(r'<script src="(?:\.\./)?ludo-scores\.js"></script>\n?', '', body)
 here = os.path.dirname(os.path.join(root, src))
 inlined = []
 def inline(m):
