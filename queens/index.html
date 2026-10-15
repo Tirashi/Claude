@@ -82,8 +82,9 @@ h1 svg{width:clamp(34px,9vw,52px); height:auto; filter:drop-shadow(3px 3px 0 #00
 
 .sizes{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
 .daily{display:flex; justify-content:center}
-.daily .btn{min-width:min(100%, 340px)}
-.daily .btn small{display:block; margin-top:6px; font-size:.8em; color:var(--gold)}
+.daily .btn{width:min(100%, 420px); flex-direction:column; justify-content:center; gap:6px; text-align:center; line-height:1.7}
+.daily .btn small{display:block; font-size:.8em; line-height:1.6; color:var(--gold)}
+.daily .btn[aria-pressed="true"] small{color:#5a3a00}
 
 .btn{
   font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--ink);
@@ -427,7 +428,7 @@ function paintDaily(){
   const k = todayKey(), done = dailyDone[k], b = $("dailyBtn");
   const run = !done && dailyRun();
   b.innerHTML = `GRILLE DU JOUR · ${DAY_NAME[new Date().getDay()]} ${dailySize()}×${dailySize()}` +
-    (done ? `<small>TON SCORE ${fmt(done)} · REJOUER HORS CLASSEMENT</small>` : run && !(daily && !won) ? `<small>EN COURS · ${fmt(run.elapsed)} · REPRENDRE</small>` : "");
+    (done ? `<small>TON SCORE ${fmt(done)}<br>REJOUER : HORS CLASSEMENT</small>` : run && !(daily && !won) ? `<small>EN COURS · ${fmt(run.elapsed)} · REPRENDRE</small>` : "");
   b.setAttribute("aria-pressed", daily);
 }
 function dailyRun(){ const r = loadPref("dailyRun", null); return r && r.day === todayKey() ? r : null; }
