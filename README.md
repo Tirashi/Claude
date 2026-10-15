@@ -43,6 +43,7 @@ Ouvre `queens/index.html` dans n'importe quel navigateur récent. Aucun build, a
 - Conflits signalés en rouge.
 - Auto-X (activé par défaut) : poser une reine met une croix sur toutes les cases qu'elle interdit, retirer la reine les enlève.
 - Annuler, effacer, indice, chrono et record par taille (stocké localement).
+- **Grille du jour** : la même grille pour toute la famille (graine = date), qui grandit au fil de la semaine (5×5 le lundi, 6×6 le mardi, 7×7 le mercredi et le jeudi, 8×8 le vendredi, 9×9 le week-end). Score = temps + 30 secondes par indice ; le meilleur score du jour part au classement et au transfert de sauvegardes. Lien direct : `queens/index.html#jour`.
 - Jouable au clavier : flèches, Espace, Q, X, Z.
 
 ---

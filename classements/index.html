@@ -189,7 +189,11 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     {id: "asteroids", name: "ASTEROIDS", play: "../asteroids/index.html", views: [{label: "MEILLEUR SCORE", game: "asteroids", board: () => "best", fmt: N}]},
     {id: "solitaire", name: "SOLITAIRE", play: "../solitaire/index.html", views: [{label: "MEILLEUR SCORE", game: "solitaire", board: () => "best", fmt: N}]},
     {id: "queens", name: "QUEENS", play: "../queens/index.html", views: [{label: "MEILLEUR TEMPS", ctl: ["size"], game: "queens", board: () => "best:" + st.size, fmt: T,
-      title: () => `QUEENS · ${st.size}×${st.size}`, note: "Grilles réussies sans indice."}]},
+      title: () => `QUEENS · ${st.size}×${st.size}`, note: "Grilles réussies sans indice."},
+      {label: "GRILLE DU JOUR", ctl: ["day"], game: "queens", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: T,
+       title: () => `GRILLE DU JOUR · ${[9, 5, 6, 7, 7, 8, 9][day().getDay()]}×${[9, 5, 6, 7, 7, 8, 9][day().getDay()]}`, play: "../queens/index.html#jour",
+       note: "La même grille pour toute la famille, de 5×5 le lundi à 9×9 le week-end. Temps plus 30 secondes par indice.",
+       empty: () => st.back ? "Personne n'a fini la grille ce jour-là." : "Personne n'a encore fini la grille du jour : à toi de jouer !"}]},
     {id: "picross", name: "PICROSS DEX", play: "../picross/index.html", views: [
       {label: "PAR POKEMON", ctl: ["pokemon"], game: "picross", board: () => "t:" + st.poke, fmt: T, title: () => st.poke ? pokeLabel(st.poke) : "PICROSS DEX",
        note: "Temps de la grille, plus 30 secondes par indice utilisé.", empty: "Personne n'a encore capturé de Pokémon."},

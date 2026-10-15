@@ -150,6 +150,7 @@
     hi("solitaire", "best", readKey("solitaire16.best", 0));
     hi("injagility", "best", readKey("injagility.best", 0));
     var q = readKey("queens16.best", {}) || {}; Object.keys(q).forEach(function (n){ if (/^[5-9]$/.test(n)) lo("queens", "best:" + n, q[n]); });
+    var qd = readKey("queens16.daily", {}) || {}; Object.keys(qd).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("queens", "daily:" + k, qd[k]); });
     var d = readKey("lignee.daily", {}) || {};
     Object.keys(d).forEach(function (code){ if (/^[CR]2-J[0-9A-Z]+$/.test(code)) lo("lignee", "daily:" + code, d[code]); });
     var ls = readKey("lignee.stats", {}) || {}, trees = 0;
@@ -186,7 +187,7 @@
 
   window.addEventListener("online", function (){ flush(); });
   // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 6 : avec Nebula)
-  var SYNC = 7;
+  var SYNC = 8;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();

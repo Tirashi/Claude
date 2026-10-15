@@ -426,7 +426,7 @@ const META = {
   "club/index.html": {added: "2026-10-12", genres: ["GESTION", "CHIENS"]},
   "picross/index.html": {genres: ["LOGIQUE"]},
   "lignee/index.html": {genres: ["LOGIQUE", "DU JOUR"]},
-  "queens/index.html": {genres: ["LOGIQUE"]},
+  "queens/index.html": {updated: "2026-10-15", genres: ["LOGIQUE", "DU JOUR"]},
   "injagility/index.html": {genres: ["ADRESSE", "CHIENS"]},
   "solitaire/index.html": {genres: ["CARTES"]},
   "touche-coule/index.html": {genres: ["TACTIQUE"]},
@@ -437,6 +437,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-15", "Queens : la grille du jour, la même pour toute la famille, de 5×5 le lundi à 9×9 le week-end, avec son classement."],
   ["2026-10-15", "Alunissage : nouveaux graphismes, avec la lumière du soleil et les ombres, un décor par monde, un module plus détaillé, l'astronaute et son drapeau, l'explosion et son cratère."],
   ["2026-10-15", "Alunissage : des cadrans près du module (réticule qui passe au vert, carburant, vitesses, aire survolée, flèche de dérive et hauteur jusqu'au sol)."],
   ["2026-10-15", "Accueil : bouton SURPRENDS-MOI (un jeu au hasard), tri des cartouches et recherche. Classements : la nouvelle étagère de boîtes de jeu, avec une couronne sur tes records."],
@@ -611,6 +612,7 @@ function collectSaves(){
   const g = {};
   for (const [k] of SCORES){ const v = Number(readKey(k, 0)); if (v > 0) g[k] = v; }
   const q = readKey("queens16.best", {}); if (q && Object.keys(q).length) g.queens = q;
+  const qd = readKey("queens16.daily", {}); if (qd && Object.keys(qd).length) g.queensDaily = qd;
   const cap = readKey("picrossdex.captured", {}), prog = readKey("picrossdex.progress", {});
   const c = {}, p = {};
   for (const [id, v] of Object.entries(cap || {})) if (v && v.time > 0) c[id] = Object.assign({t: v.time, h: v.hints || 0}, v.test ? {x: 1} : {});
@@ -635,6 +637,7 @@ function describeSaves(g){
   const out = [];
   if (g.picross) out.push(`Picross Dex : ${Object.keys(g.picross.c).length} Pokémon` + (Object.keys(g.picross.p).length ? `, ${Object.keys(g.picross.p).length} grille(s) en cours` : ""));
   if (g.queens) out.push("Queens : " + Object.keys(g.queens).sort((a, b) => a - b).map(n => `${n}×${n} en ${fmtTime(g.queens[n])}`).join(", "));
+  if (g.queensDaily){ const n = Object.keys(g.queensDaily).length; out.push(`Queens : ${n} grille${n > 1 ? "s" : ""} du jour`); }
   for (const [k, name] of SCORES) if (g[k]) out.push(`${name} : ${g[k]} ${k === "injagility.best" ? "obstacles" : "points"}`);
   if (g.parcours) out.push(`Injagility Parcours : ${(g.parcours.unlocked || 1) - 1} parcours réussis, ${g.parcours.wallet || 0} points, ${(g.parcours.owned || []).length} chien${(g.parcours.owned || []).length > 1 ? "s" : ""}`);
   if (g.lignee){ const n = Object.values(g.lignee).reduce((s, v) => s + (v && v.n || 0), 0); if (n) out.push(`Lignée : ${n} arbre${n > 1 ? "s" : ""} reconstitué${n > 1 ? "s" : ""}`); }
@@ -669,6 +672,11 @@ function mergeSaves(g){
     const mine = readKey("queens16.best", {}) || {}; let n = 0;
     for (const [size, t] of Object.entries(g.queens)) if (/^[5-9]$/.test(size) && t > 0 && (!mine[size] || t < mine[size])){ mine[size] = Math.round(t); n++; }
     if (n){ writeKey("queens16.best", mine); done.push(`Queens : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.queensDaily && typeof g.queensDaily === "object"){
+    const mine = readKey("queens16.daily", {}) || {}; let n = 0;
+    for (const [d, t] of Object.entries(g.queensDaily)) if (/^\d{8}$/.test(d) && t > 0 && (!mine[d] || t < mine[d])){ mine[d] = Math.round(t); n++; }
+    if (n){ writeKey("queens16.daily", mine); done.push(`Queens : ${n} grille${n > 1 ? "s" : ""} du jour`); }
   }
   if (g.picross){
     const cap = readKey("picrossdex.captured", {}) || {}, prog = readKey("picrossdex.progress", {}) || {};
