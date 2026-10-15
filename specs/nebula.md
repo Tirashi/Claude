@@ -308,7 +308,7 @@ Reste aussi, hors Nebula : l'artefact de l'accueil est une ancienne copie à plu
 - Testé : ouverture hors connexion (jeu et 3 polices chargés), réseau très lent avec un serveur qui attend 8 s par fichier (page ouverte en 2,6 s), réseau normal (une modification publiée arrive tout de suite) ; test de fumée des 19 pages.
 - Non fait : préparer les sprites dans un *Web Worker* (§ 6 de l'analyse) : à faire seulement si l'utilisateur constate des à-coups sur le téléphone.
 
-## 21. Pistes d'équilibrage et de renouvellement (proposées le 15/10, à valider)
+## 21. Pistes d'équilibrage et de renouvellement (proposées le 15/10, validées le 15/10)
 Retour de l'utilisateur (15/10) : après plusieurs parties, la flotte de choc est très efficace. Idées en vrac : flotte de choc dès le début mais moins récompensée, flotte marchande comme une mission d'escorte mieux récompensée ; composer sa flotte de départ avec des **points de flotte** (chaque vaisseau a un coût et rapporte plus ou moins en fin de partie) ; nouveaux vaisseaux alliés et ennemis ; **objectifs** de partie ou de combat (ne perdre aucun vaisseau, un pilote dans chaque vaisseau…) ; **partie du jour** avec une flotte différente chaque jour (que des chasseurs, que des bombardiers, escorte d'un vaisseau qui ne doit pas être détruit…).
 
 ### Mesures (IA de test, 40 parties complètes par flotte, joueur attentif, tout débloqué)
@@ -351,3 +351,16 @@ Même méthode : chaque étape jouable, testée, poussée, artefact republié.
 ### Bilan de la session 3 (15/10)
 Fait : manuel en 6 onglets (fiches des vaisseaux et pirates, terrain, carte, équipement) ; entraînement guidé (combat préparé, proposé une fois à tous) ; aperçu des pilotes au hangar ; confort au doigt (toucher long ou clic droit = fiche, tir et saut au lever du doigt, zones élargies, confirmation de FIN DU TOUR, animations ×2, vibrations) ; bruitages et nappe d'ambiance ; saut et débris animés ; polices dans le dépôt, délai réseau du service worker (tout le site, `ludotheque-v19`), images/s réduites au repos ; mesures de 12 flottes au simulateur et pistes de la session 4 (§ 21).
 À confirmer sur téléphone : appui long (0,45 s) et tir au lever du doigt, volume des nouveaux sons et de l'ambiance, ouverture hors connexion et sur réseau lent après la mise à jour de `main`. Reste ouvert : retirer ou non la petite vibration du toucher long (Chrome en fait déjà une) ; Web Worker pour les sprites seulement si des à-coups sont constatés.
+
+## 22. Session 4 « Flotte et défis » : avancement
+Découpage du § 21 **validé le 15/10** avec les choix proposés : budget **10 points**, prime **plafonnée à +50 %**, classement `best` gardé (score prime comprise ; une flotte d'escorte vaut 10 points, donc 0 %, les anciens records restent comparables), **pas de prime** pour la partie du jour (flotte d'escorte imposée). Retouche demandée en plus : retirer les traînées du saut (« sortie d'hyperespace ») et faire arriver la flotte par le bas au début d'un combat.
+
+### Étape 1 : flotte à points ✅ (15/10)
+- **Écran FLOTTE** : 3 modèles (escorte 10, choc 10, marchande 8 = +20 %), 4 places (toucher = retirer), prime d'audace, vaisseaux disponibles (toucher = ajouter, doigt posé = fiche ; vaisseau à débloquer = écran DÉBLOCAGES). La dernière composition est gardée (`nebula.compo`).
+- **Coûts** (`FLEET_COST`) : éclaireur, convoyeur, drones 1 ; bombardier, égide 2 ; chasseur, artilleur, porte-vaisseaux, atelier 3 ; frégate 4 ; cuirassé 5. Toujours disponibles : chasseur, frégate, porte-vaisseaux, bombardier, drones, égide ; les autres après déblocage.
+- **Prime d'audace** : +10 % de score et de données stellaires par point non dépensé, au plus +50 % (`primeOf`) ; ligne PRIME D'AUDACE dans le bilan de fin.
+- **Déblocages** : les flottes de choc et marchande ne se débloquent plus (les données dépensées reviennent toutes seules, le solde étant recalculé) ; un modèle est disponible quand tous ses vaisseaux le sont (choc : cuirassé ; marchande : convoyeur et éclaireur). La flotte marchande ne part plus avec 100 crédits : sa prime de +20 % la remplace (2 chasseurs au lieu de frégate + chasseur).
+- **Sauvegarde** : `RUN_V` 3 (`run.compo`, `run.prime` ; `fleetId` disparaît). Une partie de la session 3 reprend sans prime.
+- **Combat** : plus de traînées au saut ; au début d'un combat, la flotte surgit du bas de l'écran et freine jusqu'à sa case (`arrive()`, ~0,8 s, « ARRIVÉE DE LA FLOTTE »).
+- Mesures (IA de test, 40 parties, joueur attentif, tout débloqué) : frégate + 2 chasseurs (10 pts) 22/40 ; 3 chasseurs + éclaireur (10) 21/40 ; 2 chasseurs + bombardier + drones (9) 14/40 ; choc (10) 12/40 ; frégate + chasseur + bombardier + éclaireur (10) 12/40 ; escorte (10) 8/40 ; 2 chasseurs (6, +40 %) 5/40 ; marchande (8, +20 %) 4/40 ; 4 éclaireurs (4, +50 %) 0/40. L'IA de test joue mal les baies du porte-vaisseaux, la bulle de l'égide et l'atelier, et sous-estime le cuirassé (l'utilisateur trouve la flotte de choc forte) : leurs coûts tiennent compte du ressenti plus que du simulateur. **À confirmer en jouant** : la frégate à 4 et le chasseur à 3 sont-ils justes ? les petites flottes à prime sont-elles tentantes ?
+

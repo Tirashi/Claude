@@ -68,5 +68,11 @@ const saved = JSON.parse(autoRun(5).trace.split('\n')[3]);   // une partie en co
 check(N.migrate(saved) !== null, 'migrate() accepte une partie sauvegardée');
 const v1 = JSON.parse(JSON.stringify(saved)); v1.v = 1; delete v1.crew; delete v1.data; delete v1.seen;
 check((m => m && m.v === N.RUN_V && Array.isArray(m.crew))(N.migrate(v1)), 'migrate() complète une partie de la session 1 (v1 → v2 : équipage, données)');
+const v2 = JSON.parse(JSON.stringify(saved)); v2.v = 2; v2.fleetId = 'choc'; delete v2.compo; delete v2.prime;
+check((m => m && m.v === N.RUN_V && m.prime === 0 && m.compo.join() === 'cuirasse,bombardier,chasseur' && !('fleetId' in m))(N.migrate(v2)), 'migrate() complète une partie de la session 3 (v2 → v3 : composition, sans prime)');
+// flotte à points : budget, 4 vaisseaux au plus, vaisseaux débloqués, prime d'audace plafonnée
+check(N.FLEETS.every(f => N.fleetOk(f.ships, ['eclaireur', 'convoyeur', 'cuirasse'])) && !N.fleetOk(['cuirasse', 'fregate', 'chasseur'], ['cuirasse']) && !N.fleetOk(['chasseur', 'cuirasse'], [])
+  && !N.fleetOk(['eclaireur', 'eclaireur', 'eclaireur', 'eclaireur', 'eclaireur'], ['eclaireur']) && !N.fleetOk([], []), 'flotte à points : modèles valides, budget, déblocages et 4 vaisseaux au plus vérifiés');
+check((r => r.prime === .2 && N.scoreOf(r) === Math.round(N.baseScoreOf(r) * 1.2))(N.newRun(3, 'marchande', ['eclaireur', 'convoyeur'])) && N.primeOf(['eclaireur']) === .5 && N.newRun(3, 'escorte').prime === 0, "prime d'audace : +10 % par point non dépensé, au plus +50 %");
 check(N.migrate({ v: 1, fleet: 'abîmée' }) === null && N.migrate({ v: 99 }) === null && N.migrate(null) === null, 'migrate() refuse une partie illisible ou d\'une version future');
 process.exit(fail ? 1 : 0);

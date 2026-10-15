@@ -1,11 +1,11 @@
 /* Nebula : parties complètes (3 secteurs) jouées par l'IA de test, sans navigateur. Où la flotte tombe-t-elle ?
-   node outils/nebula-parties.js [nombre-de-parties] [prudence] [flotte : escorte, choc, marchande]   (prudence 4 = joueur attentif, 0 = ignore les annonces)
+   node outils/nebula-parties.js [nombre-de-parties] [prudence] [flotte : escorte, choc, marchande, ou vaisseaux séparés par des virgules]   (prudence 4 = joueur attentif, 0 = ignore les annonces)
    Choix de route simple : comptoir ou dock si la flotte est abîmée, contact lourd si elle est en forme ;
    au comptoir : recrue, réparations, modules. Sert à régler la difficulté des secteurs (specs/nebula.md § 19). */
 const N = require('../nebula/regles.js');
 const Kr = Number(process.argv[2]) || 60, prud = process.argv[3] != null ? Number(process.argv[3]) : 4;
 function autoRun(seed) {
-  const run = N.newRun(seed, process.argv[4] || 'escorte', ['eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier']); const lost = { 1: [], 2: [], 3: [] };
+  const run = N.newRun(seed, (a => a && a.includes(',') ? a.split(',') : a || 'escorte')(process.argv[4]), ['eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier']); const lost = { 1: [], 2: [], 3: [] };
   for (let step = 0; step < 600 && run.phase !== 'end'; step++) {
     if (run.phase === 'map') {
       // choisit la balise suivante : comptoir/dock si la flotte est abîmée, sinon un contact

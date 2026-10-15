@@ -754,18 +754,35 @@ function makeMap(seed, sector = 1) {
 }
 
 /* ---------- la partie ---------- */
+/* ---------- flotte de départ à points (session 4) ----------
+   Chaque vaisseau coûte des points de flotte (PF) ; budget FLEET_BUDGET, FLEET_MAX vaisseaux au plus.
+   Prime d'audace : chaque point non dépensé = +10 % de score et de données stellaires en fin de partie
+   (au plus +50 %). Coûts calibrés avec outils/nebula-flottes.js (specs/nebula.md § 22). */
+const FLEET_BUDGET = 10, FLEET_MAX = 4, PRIME_STEP = .1, PRIME_MAX = 5;
+/** @type {Record<string, number>} */
+const FLEET_COST = { eclaireur: 1, convoyeur: 1, drones: 1, bombardier: 2, egide: 2, chasseur: 3, artilleur: 3, mere: 3, atelier: 3, fregate: 4, cuirasse: 5 };
+const FLEET_BASE = ['chasseur', 'fregate', 'mere', 'bombardier', 'drones', 'egide'];   // toujours dans la composition
+// modèles prêts à l'emploi (on les charge puis on les modifie)
 const FLEETS = [
   { id: 'escorte', name: "FLOTTE D'ESCORTE", ships: ['mere', 'fregate', 'chasseur'], desc: 'Un porte-vaisseaux et son escorte : solide et polyvalente.' },
-  { id: 'choc', name: 'FLOTTE DE CHOC', ships: ['cuirasse', 'bombardier', 'chasseur'], locked: 60, desc: 'Cuirassé, bombardier et chasseur : frappe lourde.' },
-  { id: 'marchande', name: 'FLOTTE MARCHANDE', ships: ['convoyeur', 'fregate', 'chasseur', 'eclaireur'], locked: 80, cr: 100, desc: 'Part avec 100 crédits, gagne plus, frappe moins fort.' },
+  { id: 'choc', name: 'FLOTTE DE CHOC', ships: ['cuirasse', 'bombardier', 'chasseur'], desc: 'Cuirassé, bombardier et chasseur : frappe lourde.' },
+  { id: 'marchande', name: 'FLOTTE MARCHANDE', ships: ['convoyeur', 'chasseur', 'chasseur', 'eclaireur'], desc: 'Un convoyeur à protéger : plus de crédits, et une belle prime.' },
 ];
+/** @param {string[]} ships */
+const fleetCost = ships => ships.reduce((a, t) => a + (FLEET_COST[t] || 99), 0);
+/** @param {string[]} ships */
+const primeOf = ships => Math.min(PRIME_MAX, Math.max(0, FLEET_BUDGET - fleetCost(ships))) * PRIME_STEP;
+/** @param {string[]} unlocked */
+const fleetShips = unlocked => Object.keys(FLEET_COST).filter(t => FLEET_BASE.includes(t) || unlocked.includes(t));
+/** une composition est-elle permise ? @param {string[]} ships @param {string[]} unlocked */
+const fleetOk = (ships, unlocked) => Array.isArray(ships) && ships.length >= 1 && ships.length <= FLEET_MAX && fleetCost(ships) <= FLEET_BUDGET && ships.every(t => fleetShips(unlocked).includes(t));
 /* ---------- déblocages (données stellaires, entre les parties) ----------
    Le solde = données gagnées (meta.data, cumulées) - coût de ce qui est débloqué (meta.unlocked) :
    rien d'autre à stocker, et le transfert de sauvegarde n'a qu'à garder le maximum et réunir les listes. */
 const BASE_RECRUITS = ['chasseur', 'fregate', 'bombardier', 'drones', 'egide'];   // au comptoir dès le départ
+// (les anciens déblocages de flottes, choc et marchande, ne comptent plus : leurs données reviennent toutes seules)
 const UNLOCKS = [
   { id: 'eclaireur', cost: 15 }, { id: 'convoyeur', cost: 30 }, { id: 'artilleur', cost: 55 },
-  { id: 'choc', cost: 60, fleet: true }, { id: 'marchande', cost: 80, fleet: true },
   { id: 'cuirasse', cost: 90 }, { id: 'atelier', cost: 90 },
 ];
 /** @param {string[]} unlocked */
@@ -779,15 +796,17 @@ function unlock(meta, id) {
   meta.unlocked = have.concat(id); return true;
 }
 /** @param {string[]} unlocked */
-const recruitsFor = unlocked => BASE_RECRUITS.concat(UNLOCKS.filter(u => !u.fleet && unlocked.includes(u.id)).map(u => u.id));
-const fleetOpen = (fl, unlocked) => !fl.locked || unlocked.includes(fl.id);
-/** @param {number} seed @param {string} [fleetId] @param {string[]} [unlocked] */
-function newRun(seed, fleetId = 'escorte', unlocked = []) {
+const recruitsFor = unlocked => BASE_RECRUITS.concat(UNLOCKS.filter(u => unlocked.includes(u.id)).map(u => u.id));
+// un modèle est disponible quand tous ses vaisseaux le sont
+const fleetOpen = (fl, unlocked) => fl.ships.every(t => fleetShips(unlocked).includes(t));
+/** @param {number} seed @param {string | string[]} [fleet] modèle (escorte…) ou composition @param {string[]} [unlocked] */
+function newRun(seed, fleet = 'escorte', unlocked = []) {
+  const preset = typeof fleet === 'string' ? FLEETS.find(f => f.id === fleet) : null, ships = preset ? preset.ships : /** @type {string[]} */ (fleet);
   const R = rng(seedOf(seed, 5)), names = shuffle(R, NAMES.slice());
   const run = { v: RUN_V, seed, sector: 1, fuel: 6, cr: 40, kills: 0, heavy: 0, admirals: 0, sectorsDone: 0, stock: [], crew: [], data: 0, seen: [], uid: 1, phase: 'map', visited: [], combat: null, shop: null, reward: null, event: null, msg: null, fleet: [] };
-  for (const t of FLEETS.find(f => f.id === fleetId).ships) addFleet(run, t, names.pop());
-  run.fleetId = fleetId; run.recruits = recruitsFor(unlocked);
-  const fl = FLEETS.find(f => f.id === fleetId); if (fl.cr) run.cr = fl.cr; if (fl.fuel) run.fuel = fl.fuel;   // la flotte marchande part riche   // ce que le comptoir et les épaves peuvent proposer
+  for (const t of ships) addFleet(run, t, names.pop());
+  run.compo = ships.slice(); run.prime = primeOf(ships);   // composition de départ et prime d'audace (0 à 0,5)
+  run.recruits = recruitsFor(unlocked);   // ce que le comptoir et les épaves peuvent proposer
   run.map = makeMap(seed, 1); run.at = 0; run.visited = [0];
   return run;
 }
@@ -943,19 +962,23 @@ function uninstall(run, uid, k) {
    RUN_V : version de la partie sauvegardée. Quand une session ajoute des champs
    à la partie, monter RUN_V et compléter ici les anciennes sauvegardes.
    Renvoie la partie remise à niveau, ou null si elle est illisible. */
-const RUN_V = 2;
+const RUN_V = 3;
 const PHASES = ['map', 'combat', 'reward', 'shop', 'dock', 'event', 'end'];
 function migrate(r) {
   if (!r || typeof r !== 'object' || !(r.v >= 1) || r.v > RUN_V) return null;
   if (r.v === 1) { r.crew = r.crew || []; r.data = r.data || 0; r.seen = r.seen || []; r.event = null; r.v = 2; }   // session 2 : pilotes, données, événements
+  if (r.v === 2) { const fl = FLEETS.find(f => f.id === r.fleetId); r.compo = fl ? fl.ships.slice() : []; r.prime = 0; delete r.fleetId; r.v = 3; }   // session 4 : flotte à points (pas de prime pour une partie déjà commencée)
   const ok = Array.isArray(r.fleet) && r.fleet.every(f => f && TYPES[f.t] && Array.isArray(f.mods)) && r.map && Array.isArray(r.map.nodes)
     && r.map.nodes[r.at] && PHASES.includes(r.phase) && (r.phase !== 'combat' || (r.combat && Array.isArray(r.combat.ships)))
     && (r.phase !== 'shop' || r.shop) && (r.phase !== 'reward' || r.reward) && (r.phase !== 'event' || (r.event && eventById(r.event.id))) && Array.isArray(r.stock) && Array.isArray(r.crew);
   return ok ? r : null;
 }
-const scoreOf = run => 1000 * run.sectorsDone + 20 * run.kills + run.cr + (run.victory ? 3000 : 0);
-const stellarOf = run => 10 * run.sector + 3 * run.heavy + 20 * run.admirals + (run.data || 0);
+// score et données avant la prime d'audace, puis avec
+const baseScoreOf = run => 1000 * run.sectorsDone + 20 * run.kills + run.cr + (run.victory ? 3000 : 0);
+const baseStellarOf = run => 10 * run.sector + 3 * run.heavy + 20 * run.admirals + (run.data || 0);
+const scoreOf = run => Math.round(baseScoreOf(run) * (1 + (run.prime || 0)));
+const stellarOf = run => Math.round(baseStellarOf(run) * (1 + (run.prime || 0)));
 
-const NEBULA_API = { makeTraining, TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
+const NEBULA_API = { makeTraining, TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, baseScoreOf, baseStellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, FLEET_BUDGET, FLEET_MAX, FLEET_COST, PRIME_STEP, PRIME_MAX, fleetCost, primeOf, fleetShips, fleetOk, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
 if (typeof window !== 'undefined') window.Nebula = NEBULA_API;
 if (typeof module !== 'undefined') module.exports = NEBULA_API;

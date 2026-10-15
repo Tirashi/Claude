@@ -49,7 +49,7 @@ let K = 1, BTN = [], now = 0, run = store.get('run', null);
 const meta = Object.assign({ data: 0, games: 0, wins: 0, cleared: 0, kills: 0, bestSector: 0, unlocked: [] }, store.get('meta', {}));
 if (!Array.isArray(meta.unlocked)) meta.unlocked = [];
 let best = Number(store.get('best', 0)) || 0, SFX = store.get('sfx', true), VIB = store.get('vib', true), SPEED = store.get('speed', 1) === 2 ? 2 : 1;
-const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, flash: 0, node: null, legend: false, ghost: null, pickP: null, ranges: !!store.get('ranges', false) };
+const UI = { screen: 'title', sel: null, wi: 0, bay: false, hangar: false, pick: null, confirm: 0, node: null, legend: false, ghost: null, pickP: null, ranges: !!store.get('ranges', false) };
 function save() { if (run && run.training) return; if (run && run.phase !== 'end') store.set('run', run); else store.del('run'); }
 
 /* ---------- sprites et décors fabriqués à la demande ---------- */
@@ -187,11 +187,11 @@ document.addEventListener('visibilitychange', () => { if (!AU.ctx) return; if (d
 function buzz(ms, delay = 0) { if (!VIB || !navigator.vibrate) return; setTimeout(() => { try { navigator.vibrate(ms); } catch (e) {} }, Math.max(0, delay) * 1000); }
 
 /* ---------- animations : on rejoue les événements de la logique ---------- */
-const ANIM = { move: {}, death: {}, spawn: {}, fx: [], busy: 0 };
+const ANIM = { move: {}, death: {}, spawn: {}, fx: [], busy: 0, arrive: 0 };
 const busy = () => now < ANIM.busy;
 const center = s => [GX + s.c * CS + CS / 2, GY + s.r * CS + lenOf(s) * CS / 2];
 const cellCenter = (c, r) => [GX + c * CS + CS / 2, GY + r * CS + CS / 2];
-function resetAnim() { ANIM.move = {}; ANIM.death = {}; ANIM.spawn = {}; ANIM.fx = []; ANIM.busy = 0; }
+function resetAnim() { ANIM.move = {}; ANIM.death = {}; ANIM.spawn = {}; ANIM.fx = []; ANIM.busy = 0; ANIM.arrive = 0; }
 function play(ev) {
   const st = run.combat, k = 1 / SPEED; let t = Math.max(now, ANIM.busy);   // k : animations deux fois plus rapides en ×2
   for (const e of ev) {
@@ -217,12 +217,21 @@ function play(ev) {
   }
   ANIM.busy = t;
 }
+// début d'un combat : la flotte arrive très vite du bas de l'écran et freine jusqu'à sa case de départ
+function arrive(st) {
+  const k = 1 / SPEED; let end = now;
+  st.ships.filter(o => o.side === 'P' && !o.dead).sort((a, b) => a.r - b.r || a.c - b.c).forEach((o, i) => {
+    const t0 = now + .1 * k + i * .08 * k, t1 = t0 + .6 * k;
+    ANIM.move[o.id] = [{ t0, t1, path: [[o.c, o.r + 8], [o.c, o.r]], ease: 1 }]; end = Math.max(end, t1);
+  });
+  ANIM.busy = Math.max(ANIM.busy, end); ANIM.arrive = end;
+}
 function shipPos(s) {
   const segs = ANIM.move[s.id]; let c = s.c, r = s.r;
   if (segs && segs.length) {
     const cur = segs.filter(q => q.t0 <= now).pop();
     if (!cur) [c, r] = segs[0].path[0];
-    else if (now < cur.t1) { const p = cur.path, f = (now - cur.t0) / (cur.t1 - cur.t0) * (p.length - 1), i = Math.min(p.length - 2, Math.floor(f)), u = f - i; c = p[i][0] + (p[i + 1][0] - p[i][0]) * u; r = p[i][1] + (p[i + 1][1] - p[i][1]) * u; }
+    else if (now < cur.t1) { const p = cur.path, v = (now - cur.t0) / (cur.t1 - cur.t0), f = (cur.ease ? 1 - (1 - v) ** 3 : v) * (p.length - 1), i = Math.min(p.length - 2, Math.floor(f)), u = f - i; c = p[i][0] + (p[i + 1][0] - p[i][0]) * u; r = p[i][1] + (p[i + 1][1] - p[i][1]) * u; }
     else [c, r] = cur.path[cur.path.length - 1];
     if (now > segs[segs.length - 1].t1) delete ANIM.move[s.id];
   }
@@ -319,7 +328,9 @@ function drawStatic(st) {
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(STATIC.cv, 0, 0); g.restore();
 }
 function drawCombat() {
-  const st = run.combat, B = busy(), s = selShip(), mine = s && !s.dead && s.side === 'P' ? s : null;
+  const st = run.combat;
+  if (UI.arrived !== st) { UI.arrived = st; if (st.turn === 1 && !st.ships.some(o => o.side === 'P' && (o.moved || o.acted))) arrive(st); }
+  const B = busy(), s = selShip(), mine = s && !s.dead && s.side === 'P' ? s : null;
   drawStatic(st);
   // où le vaisseau choisi peut aller
   // (déjà déplacé sans avoir agi : on peut encore le replacer, depuis sa case de départ)
@@ -382,7 +393,7 @@ function drawCombat() {
   drawFx();
   if (UI.ranges && !B) rangeLabel(st, s);
   const boss = sideOf(st, 'E').find(o => TYPES[o.t].spawn), foes = sideOf(st, 'E').length, every = boss && TYPES[boss.t].spawn.every;
-  topBar(st.label || nodeName(st.kind, st.sector), `TOUR ${st.turn} · ${B ? 'PIRATES EN ACTION' : 'TON TOUR'}${boss ? ` · RENFORTS DANS ${every - st.turn % every}` : canFlee(st) ? ' · FUITE POSSIBLE' : ''}`,
+  topBar(st.label || nodeName(st.kind, st.sector), `TOUR ${st.turn} · ${B ? (now < ANIM.arrive ? 'ARRIVÉE DE LA FLOTTE' : 'PIRATES EN ACTION') : 'TON TOUR'}${boss ? ` · RENFORTS DANS ${every - st.turn % every}` : canFlee(st) ? ' · FUITE POSSIBLE' : ''}`,
     `${foes} HOSTILE${foes > 1 ? 'S' : ''}`, '', LW - 230);
   btn(LW - 186, 50, 162, 36, UI.ranges ? 'PORTÉES : OUI' : 'PORTÉES : NON', () => { UI.ranges = !UI.ranges; store.set('ranges', UI.ranges); }, { size: 16, ls: 1, primary: UI.ranges });
   drawFiche(st, s, B);
@@ -570,7 +581,7 @@ function drawMap() {
     // toucher une balise : on y saute si c'est possible, sinon sa fiche s'affiche
     // (à portée : le saut part au lever du doigt ; un toucher long montre la fiche sans sauter)
     zone(x - 34, y - (k === 'amiral' ? 62 : 34), 68, k === 'amiral' ? 110 : 68, isNext
-      ? () => { UI.node = null; if (run.phase === 'map' && jump(run, nd.id)) { sfx('jump'); UI.flash = now; resetAnim(); UI.sel = null; save(); } }
+      ? () => { UI.node = null; if (run.phase === 'map' && jump(run, nd.id)) { sfx('jump'); resetAnim(); UI.sel = null; save(); } }
       : () => { UI.node = UI.node === nd.id ? null : nd.id; }, isNext ? { hold: () => { UI.node = nd.id; } } : null);
   }
   if (UI.node != null && N[UI.node]) nodeCard(N[UI.node], seen, next);
@@ -865,22 +876,55 @@ function drawTitle() {
   if (best || meta.games) txt(`RECORD ${best} · ${meta.games} PARTIE${meta.games > 1 ? 'S' : ''} · ${walletOf(meta)} DONNÉES STELLAIRES`, LW / 2, 892, C.dim, F.mono(14), 'center', 1);
   txt('BIENTÔT', LW / 2, 914, C.acc, F.mono(14), 'center', 4); txt("NEBULA : L'EMPIRE DES ÉTOILES", LW / 2, 932, C.txt, F.ui(20), 'center', 3);
 }
-// choix de la flotte : toucher une flotte ouverte la choisit, une flotte verrouillée mène aux déblocages
+// composition de la flotte de départ : modèles à charger, 4 places, vaisseaux à ajouter (toucher) ou à voir (doigt posé)
+const pct = p => Math.round(p * 100);
+let COMPO = store.get('compo', null);
+function compo() { if (!fleetOk(COMPO, meta.unlocked)) COMPO = FLEETS[0].ships.slice(); return COMPO; }
+function setCompo(ships) { COMPO = ships; store.set('compo', COMPO); }
 function drawFleet() {
-  drawBg('hangar'); topBar('FLOTTE', 'CHOIX DE LA FLOTTE DE DÉPART', `${walletOf(meta)} DONNÉES`, '');
-  if (!FLEETS.some(f => f.id === UI.fleet && fleetOpen(f, meta.unlocked))) UI.fleet = 'escorte';
+  drawBg('hangar'); const cur = compo(), cost = fleetCost(cur), left = FLEET_BUDGET - cost, avail = fleetShips(meta.unlocked), prime = primeOf(cur);
+  topBar('FLOTTE', 'COMPOSE TA FLOTTE DE DÉPART', `${left} POINT${left > 1 ? 'S' : ''}`, `SUR ${FLEET_BUDGET}`);
+  txt('MODÈLES', 24, 108, C.acc, F.mono(15), 'left', 3);
+  const bw = (LW - 48 - 16) / 3;
   FLEETS.forEach((fl, i) => {
-    const y = 112 + i * 222, lock = !fleetOpen(fl, meta.unlocked), on = UI.fleet === fl.id;
-    if (on) { g.fillStyle = C.acc2 + '.10)'; g.fillRect(16, y, LW - 32, 206); }
-    frameBox(16, y, LW - 32, 206, lock ? 'rgba(125,138,158,.4)' : on ? C.acc : C.dim, 12, on ? 'rgba(0,0,0,0)' : undefined);
-    txt(fl.name, 32, y + 14, lock ? C.dim : on ? C.acc : C.txt, F.ui(25), 'left', 3, LW - 200);
-    if (on) txt('CHOISIE', LW - 34, y + 20, C.acc, F.mono(15), 'right', 2);
-    txt(lock ? `À DÉBLOQUER · ${fl.locked} DONNÉES STELLAIRES (TU EN AS ${walletOf(meta)})` : fl.desc, 32, y + 46, lock ? C.acc : C.dim, lock ? F.mono(13) : F.ui(18), 'left', 0, LW - 64);
-    fl.ships.forEach((t, k) => drawSprite(t, 80 + k * 110, y + 138, Math.min(1, 118 / (TYPES[t].n * 72)), lock ? .35 : 1));
-    zone(16, y, LW - 32, 206, () => { if (lock) { UI.screen = 'unlocks'; UI.back = 'fleet'; } else UI.fleet = fl.id; });
+    const open = fleetOpen(fl, meta.unlocked), same = cur.length === fl.ships.length && cur.every((t, k) => t === fl.ships[k]), x = 24 + i * (bw + 8);
+    btn(x, 130, bw, 50, `${fl.name.replace(/^FLOTTE (D'|DE )?/, '')} · ${fleetCost(fl.ships)}`, () => { if (open) { setCompo(fl.ships.slice()); sfx('click'); } else { UI.screen = 'unlocks'; UI.back = 'fleet'; } }, { size: 16, ls: 1, primary: same, off: !open });
+    if (!open) txt(`${fl.ships.filter(t => !avail.includes(t)).map(t => TYPES[t].name).join(', ')} À DÉBLOQUER`, x + bw / 2, 184, C.dim, F.mono(11), 'center', 0, bw);
   });
-  btn(40, 800, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
-  btn(LW - 240, 800, 200, 52, 'DÉCOLLER', () => { const f = UI.fleet; launch(() => startRun(f)); }, { primary: true, size: 20 });
+  txt('TA FLOTTE', 24, 206, C.acc, F.mono(15), 'left', 3);
+  txt(`${cur.length} / ${FLEET_MAX} VAISSEAUX · ${cost} / ${FLEET_BUDGET} POINTS`, LW - 24, 206, C.dim, F.mono(14), 'right', 1);
+  const sw = (LW - 48 - 24) / FLEET_MAX;
+  for (let i = 0; i < FLEET_MAX; i++) {
+    const t = cur[i], x = 24 + i * (sw + 8), y = 228, h = 150;
+    frameBox(x, y, sw, h, t ? C.ally : 'rgba(125,138,158,.35)', 8, t ? 'rgba(6,10,18,.72)' : 'rgba(6,10,18,.35)');
+    if (!t) { txt('+', x + sw / 2, y + 50, 'rgba(125,138,158,.5)', F.ui(40), 'center'); continue; }
+    g.save(); g.beginPath(); g.rect(x + 2, y + 2, sw - 4, 104); g.clip(); drawSprite(t, x + sw / 2, y + 56, Math.min(.95, 98 / (TYPES[t].n * 72), (sw - 10) / 72)); g.restore();
+    txt(TYPES[t].name, x + sw / 2, y + 108, C.txt, F.ui(16), 'center', 1, sw - 8);
+    txt(`${FLEET_COST[t]} PT${FLEET_COST[t] > 1 ? 'S' : ''} · RETIRER`, x + sw / 2, y + 130, C.dim, F.mono(11), 'center', 0, sw - 8);
+    zone(x, y, sw, h, () => { if (cur.length > 1) { setCompo(cur.filter((_, k) => k !== i)); sfx('click'); } }, { hold: () => { UI.card = t; } });
+  }
+  // prime d'audace
+  const pc = prime > 0 ? C.ok : C.dim;
+  frameBox(24, 392, LW - 48, 70, pc, 8);
+  txt(`PRIME D'AUDACE  +${pct(prime)} %`, 40, 402, pc, F.ui(22), 'left', 2);
+  txt(left > 0 ? `${left} point${left > 1 ? 's' : ''} non dépensé${left > 1 ? 's' : ''} : +${pct(prime)} % de score et de données stellaires en fin de partie${left > PRIME_MAX ? ` (au plus +${pct(PRIME_MAX * PRIME_STEP)} %)` : ''}.` : `Chaque point non dépensé rapporte +${pct(PRIME_STEP)} % de score et de données stellaires.`, 40, 432, C.dim, F.ui(16), 'left', 0, LW - 80);
+  // vaisseaux disponibles
+  txt('VAISSEAUX', 24, 476, C.acc, F.mono(15), 'left', 3);
+  txt('TOUCHER : AJOUTER · DOIGT POSÉ : FICHE', LW - 24, 477, C.dim, F.mono(12), 'right', 0);
+  const all = Object.keys(FLEET_COST), cols = 4, cw = (LW - 32) / cols, ch = 104;
+  all.forEach((t, i) => {
+    const x = 16 + (i % cols) * cw, y = 498 + Math.floor(i / cols) * (ch + 6), lock = !avail.includes(t), ok = !lock && cur.length < FLEET_MAX && FLEET_COST[t] <= left;
+    frameBox(x + 3, y, cw - 6, ch, lock ? 'rgba(125,138,158,.3)' : ok ? C.acc : 'rgba(125,138,158,.5)', 6, 'rgba(6,10,18,.6)');
+    g.save(); g.beginPath(); g.rect(x + 4, y + 1, cw - 8, 66); g.clip(); drawSprite(t, x + cw / 2, y + 34, Math.min(.8, 62 / (TYPES[t].n * 72), (cw - 12) / 72), ok ? 1 : .4); g.restore();
+    txt(TYPES[t].name, x + cw / 2, y + 66, ok ? C.txt : C.dim, F.ui(14), 'center', 0, cw - 12);
+    txt(lock ? 'À DÉBLOQUER' : `${FLEET_COST[t]} PT${FLEET_COST[t] > 1 ? 'S' : ''}`, x + cw / 2, y + 85, lock ? C.dim : ok ? C.acc : C.dim, F.mono(12), 'center', 1, cw - 12);
+    zone(x, y, cw, ch, () => {
+      if (lock) { UI.screen = 'unlocks'; UI.back = 'fleet'; }
+      else if (ok) { setCompo(cur.concat(t)); sfx('click'); }
+    }, { hold: () => { UI.card = t; } });
+  });
+  btn(40, 864, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
+  btn(LW - 240, 864, 200, 52, 'DÉCOLLER', () => { const f = compo().slice(); launch(() => startRun(f)); }, { primary: true, size: 20 });
 }
 // partie du jour : graine = date, flotte d'escorte sans déblocages (la même partie pour toute la famille) ;
 // seule la première tentative du jour est classée (nebula.dailyTry), les suivantes se jouent hors classement
@@ -891,21 +935,21 @@ function startDaily() {
   run = newRun(dk, 'escorte', []); run.daily = dk; run.ranked = ranked; if (ranked) store.set('dailyTry', dk);
   UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump');
 }
-function startRun(fleetId = 'escorte') { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, fleetId, meta.unlocked); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump'); }
+function startRun(ships = FLEETS[0].ships) { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, ships, meta.unlocked); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump'); }
 const cheapest = () => Math.min(...UNLOCKS.filter(u => !meta.unlocked.includes(u.id)).map(u => u.cost), 1e9);
-// déblocages : les données stellaires gagnées en fin de partie ouvrent de nouveaux vaisseaux (au comptoir) et flottes
+// déblocages : les données stellaires gagnées en fin de partie ouvrent de nouveaux vaisseaux (composition de départ, comptoir, épaves)
 function drawUnlocks() {
   drawBg('hangar'); const W = walletOf(meta);
   topBar('DÉBLOCAGES', 'DONNÉES STELLAIRES', `${W} DONNÉES`, `${meta.data} GAGNÉES`, LW - 250);
-  para('Gagnées en fin de partie : 10 par secteur atteint, 3 par contact lourd gagné, 20 par amiral vaincu, et dans certaines épaves. Toujours au comptoir : chasseur, frégate, bombardier, drones, égide.', 32, 108, LW - 64, C.dim, F.ui(17), 20);
+  para("Gagnées en fin de partie : 10 par secteur atteint, 3 par contact lourd gagné, 20 par amiral vaincu, et dans certaines épaves (plus la prime d'audace). Un vaisseau débloqué entre dans la flotte de départ, au comptoir et dans les épaves.", 32, 108, LW - 64, C.dim, F.ui(17), 20);
   UNLOCKS.forEach((u, i) => {
-    const y = 190 + i * 84, fl = u.fleet && FLEETS.find(f => f.id === u.id), have = meta.unlocked.includes(u.id), ok = !have && W >= u.cost;
+    const y = 190 + i * 84, t = u.id, have = meta.unlocked.includes(u.id), ok = !have && W >= u.cost;
     frameBox(16, y, LW - 32, 76, have ? C.ok : ok ? C.acc : C.dim, 8);
     g.save(); g.beginPath(); g.rect(22, y + 4, 70, 68); g.clip();
-    const t = fl ? fl.ships[0] : u.id; drawSprite(t, 57, y + 38, Math.min(.85, 66 / (TYPES[t].n * 72)), have || ok ? 1 : .45); g.restore();
-    txt(fl ? fl.name : TYPES[u.id].name, 104, y + 10, have ? C.ok : C.txt, F.ui(21), 'left', 2, LW - 290);
-    txt(fl ? fl.desc : `${TYPES[u.id].skill} · ${TYPES[u.id].short}`, 104, y + 40, C.dim, F.ui(15), 'left', 0, LW - 290);
-    if (have) txt(fl ? 'FLOTTE OUVERTE' : 'AU COMPTOIR', LW - 104, y + 28, C.ok, F.mono(14), 'center', 1, 140);
+    drawSprite(t, 57, y + 38, Math.min(.85, 66 / (TYPES[t].n * 72)), have || ok ? 1 : .45); g.restore();
+    txt(`${TYPES[t].name} · ${FLEET_COST[t]} PT${FLEET_COST[t] > 1 ? 'S' : ''}`, 104, y + 10, have ? C.ok : C.txt, F.ui(21), 'left', 2, LW - 290);
+    txt(`${TYPES[t].skill} · ${TYPES[t].short}`, 104, y + 40, C.dim, F.ui(15), 'left', 0, LW - 290);
+    if (have) txt('DÉBLOQUÉ', LW - 104, y + 28, C.ok, F.mono(14), 'center', 1, 140);
     else btn(LW - 176, y + 14, 144, 48, `${u.cost} DONNÉES`, () => { if (unlock(meta, u.id)) { store.set('meta', meta); sfx('shield'); } }, { size: 16, ls: 1, primary: ok, off: !ok });
   });
   btn(LW / 2 - 100, 880, 200, 52, 'RETOUR', () => { UI.screen = UI.back || 'title'; }, { primary: true, size: 20 });
@@ -922,8 +966,10 @@ const RULES = [
   ['ENTRE LES COMBATS', "Comptoir : carburant, réparations, modules, un pilote et une recrue. Dock : la moitié des dégâts réparés, ou un module offert. Modules et pilotes se posent au HANGAR (bouton de la carte)."],
   ['CARBURANT', "Chaque saut coûte 1 carburant. Sans carburant, la flotte dérive : chaque vaisseau perd 2 de coque à chaque saut (sans descendre sous 1). Entrer dans un nouveau secteur rapporte 3 carburant."],
   ['LES SECTEURS', "1 Ceinture de Karn : astéroïdes, pirates prudents. 2 Nébuleuse d'Orphée : nuages ioniques, nébuleuses, harponneurs, pirates plus malins. 3 Le Seuil : un peu de tout, les pirates les plus coriaces et les plus rusés."],
-  ['SCORE', "1000 points par secteur terminé, 20 par pirate détruit, les crédits restants, et 3000 pour la victoire finale contre la Rouille-Reine."],
-  ['DONNÉES STELLAIRES', "Gagnées en fin de partie (10 par secteur atteint, 3 par contact lourd gagné, 20 par amiral vaincu) et dans certaines épaves. Elles débloquent vaisseaux et flottes : écran DÉBLOCAGES."],
+  ['FLOTTE DE DÉPART', "Compose-la avec 10 points de flotte, 4 vaisseaux au plus : chaque vaisseau a son coût (éclaireur 1… cuirassé 5). Les modèles escorte, choc et marchande se chargent d'un toucher, puis se modifient."],
+  ["PRIME D'AUDACE", "Chaque point de flotte non dépensé rapporte +10 % de score et de données stellaires en fin de partie, jusqu'à +50 %. Une petite flotte rapporte gros… si elle survit."],
+  ['SCORE', "1000 points par secteur terminé, 20 par pirate détruit, les crédits restants, et 3000 pour la victoire finale contre la Rouille-Reine ; puis la prime d'audace."],
+  ['DONNÉES STELLAIRES', "Gagnées en fin de partie (10 par secteur atteint, 3 par contact lourd gagné, 20 par amiral vaincu, plus la prime) et dans certaines épaves. Elles débloquent de nouveaux vaisseaux : écran DÉBLOCAGES."],
   ['PARTIE DU JOUR', "La même partie pour toute la famille : même carte, mêmes combats, flotte d'escorte sans déblocages. Seule la première tentative du jour est classée."],
 ];
 const MAN_TABS = [['regles', 'RÈGLES'], ['vaisseaux', 'VAISSEAUX'], ['pirates', 'PIRATES'], ['terrain', 'TERRAIN'], ['carte', 'CARTE'], ['equipement', 'ÉQUIPEMENT']];
@@ -982,8 +1028,7 @@ function shipWhere(t) {
     out.push(T.spawn ? `AMIRAL DU SECTEUR ${ss[0]} · ${SECTORS[ss[0] - 1].name}` : `SECTEUR${ss.length > 1 ? 'S' : ''} ${ss.join(', ')}`);
     return out;
   }
-  const fl = FLEETS.filter(f => f.ships.includes(t)).map(f => f.name);
-  if (fl.length) out.push('AU DÉPART : ' + fl.join(', '));
+  if (FLEET_COST[t]) out.push(`FLOTTE DE DÉPART : ${FLEET_COST[t]} POINT${FLEET_COST[t] > 1 ? 'S' : ''}${FLEET_BASE.includes(t) ? '' : ' (UNE FOIS DÉBLOQUÉ)'}`);
   if (BASE_RECRUITS.includes(t)) out.push(`AU COMPTOIR DÈS LE DÉBUT · ${T.price} CRÉDITS`);
   const u = UNLOCKS.find(u => u.id === t);
   if (u) out.push(meta.unlocked.includes(t) ? `DÉBLOQUÉ : AU COMPTOIR (${T.price} CRÉDITS) ET DANS LES ÉPAVES` : `À DÉBLOQUER : ${u.cost} DONNÉES STELLAIRES`);
@@ -1080,7 +1125,8 @@ function drawEnd() {
   frameBox(40, 240, LW - 80, 360, win ? C.acc : C.foe, 14);
   const rows = [['SECTEURS TERMINÉS', `${run.sectorsDone} × 1000`], ['PIRATES DÉTRUITS', `${run.kills} × 20`], ['CRÉDITS RESTANTS', `${run.cr}`]];
   if (run.victory) rows.push(['VICTOIRE FINALE', '3000']);
-  const step = rows.length > 3 ? 32 : 42;
+  if (run.prime) rows.push(["PRIME D'AUDACE", `+${pct(run.prime)} %`]);
+  const step = rows.length > 4 ? 26 : rows.length > 3 ? 32 : 42;
   rows.forEach(([l, v], i) => { txt(l, 70, 266 + i * step, C.dim, F.ui(20), 'left', 2); txt(v, LW - 70, 266 + i * step, C.txt, F.mono(20), 'right'); });
   g.fillStyle = C.acc2 + '.4)'; g.fillRect(70, 400, LW - 140, 1);
   txt('SCORE', 70, 418, C.acc, F.ui(24), 'left', 4); txt(String(f.score), LW - 70, 410, C.acc, F.mono(40), 'right');
@@ -1116,7 +1162,7 @@ function drawCrash() {
    et à l'écran titre (petits mouvements des vaisseaux), 12 sur les écrans fixes (manuel, hangar, comptoir…) */
 let lastDraw = -1e9, lastInput = -1e9, FPS = 60;
 function fpsWanted() {
-  if (now - lastInput < 1.5 || busy() || ANIM.fx.length || UI.ghost || PRESS.on || (UI.flash && now - UI.flash < 1) || want.size) return 60;
+  if (now - lastInput < 1.5 || busy() || ANIM.fx.length || UI.ghost || PRESS.on || want.size) return 60;
   return UI.screen === 'title' || (UI.screen === 'game' && run && !UI.hangar && !UI.card && (run.phase === 'combat' || run.phase === 'map')) ? 30 : 12;
 }
 function frame(ts) {
@@ -1147,14 +1193,6 @@ function draw() {
   else if (run.phase === 'event') drawEvent();
   else if (run.phase === 'end') drawEnd();
   if (UI.card) drawCard();
-  if (UI.flash && now - UI.flash < .9) {   // saut : les étoiles s'étirent en traînées, puis un éclair
-    const u = (now - UI.flash) / .9, R = V.rnd(7), cx = LW / 2, cy = LH / 2;
-    g.save(); g.globalCompositeOperation = 'lighter'; g.lineCap = 'round';
-    for (let i = 0; i < 70; i++) { const a = R() * TAU, r0 = 20 + R() * 260, len = (30 + R() * 140) * u * u * 2.2, w = .8 + R() * 1.6, al = (1 - u) * (.35 + R() * .5);
-      g.strokeStyle = `rgba(200,225,255,${al})`; g.lineWidth = w; g.beginPath(); g.moveTo(cx + Math.cos(a) * (r0 + len * .3), cy + Math.sin(a) * (r0 + len * .3)); g.lineTo(cx + Math.cos(a) * (r0 + len * 1.3), cy + Math.sin(a) * (r0 + len * 1.3)); g.stroke(); }
-    g.restore();
-    if (u > .45) { const v = (u - .45) / .55; g.fillStyle = `rgba(200,225,255,${(1 - v) * .6})`; g.fillRect(0, 0, LW, LH); }
-  }
 }
 function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
 let DRAWS = 0;   // nombre d'images dessinées (pour les tests)
