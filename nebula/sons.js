@@ -168,8 +168,8 @@ function stopAmb(fade = 1.5) {
   a.timers.forEach(clearInterval); a.out.gain.cancelScheduledValues(t); a.out.gain.setValueAtTime(a.out.gain.value, t); a.out.gain.linearRampToValueAtTime(0, t + fade);
   setTimeout(() => { a.stops.forEach(o => { try { o.stop(); } catch (e) {} }); a.out.disconnect(); }, fade * 1000 + 200);
 }
-// mixage : les ambiances restent environ 10 dB sous les bruitages (mesure : -27 dB efficaces contre -17 à -25 dB pour les tirs)
-const AMB_GAIN = .22;
+// mixage : les ambiances restent environ 15 dB sous les bruitages (mesure : -32 dB efficaces contre -17 à -25 dB pour les tirs)
+const AMB_GAIN = .12;
 // id : 'tension' (combats), 'marche' ou 'garde' (carte), null = silence ; on ne fait rien si l'ambiance demandée joue déjà
 function ambience(id, vol = 1) {
   if (!A) return;

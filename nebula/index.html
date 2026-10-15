@@ -14,7 +14,7 @@
 <style>
 html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
 body { display: flex; justify-content: center; align-items: flex-start; touch-action: manipulation;
-  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  -webkit-user-select: none; -webkit-touch-callout: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 #cv { display: block; touch-action: none; cursor: pointer; }
 </style>
 </head>
@@ -151,7 +151,6 @@ function sfx(k, delay = 0, pan = 0) {
   const t = AU.ctx.currentTime + delay;
   if (k === 'salve') { for (let i = 0; i < 3; i++) NebulaSons.play('missile', t + i * .08, pan + (i - 1) * .2, .6); return; }
   if (SND[k]) NebulaSons.play(SND[k], t, pan);
-  if (k === 'jump') UI.jumpAt = now + delay;   // la flotte arrive en combat avec le « vwOOM » du saut
 }
 const panX = x => (x / LW - .5) * 1.4;
 /* ambiance (réglage AMBIANCE de l'écran titre) : TENSION en combat, GARDE sur les autres écrans ; coupée quand la page est cachée */
@@ -201,7 +200,8 @@ function play(ev) {
 }
 // début d'un combat : la flotte arrive très vite du bas de l'écran et freine jusqu'à sa case de départ
 function arrive(st) {
-  const k = 1 / SPEED, base = SFX && UI.jumpAt && now - UI.jumpAt < 2 ? UI.jumpAt + 1.95 : now; let end = now;
+  // le saut ne s'entend qu'ici : sa montée de 2 s, puis la flotte surgit avec le « vwOOM »
+  const k = 1 / SPEED, snd = !!au(); if (snd) sfx('jump'); const base = snd ? now + 1.95 : now; let end = now;
   st.ships.filter(o => o.side === 'P' && !o.dead).sort((a, b) => a.r - b.r || a.c - b.c).forEach((o, i) => {
     const t0 = base + .1 * k + i * .08 * k, t1 = t0 + .6 * k;
     ANIM.move[o.id] = [{ t0, t1, path: [[o.c, o.r + 8], [o.c, o.r]], ease: 1 }]; end = Math.max(end, t1);
@@ -505,7 +505,7 @@ function drawFiche(st, s, B) {
 // vaisseaux du joueur qui n'ont pas agi et ont encore un pirate à portée
 const canStillFire = st => sideOf(st, 'P').filter(o => canAct(st, o) && TYPES[o.t].w.some((w, i) => w.swarm ? sideOf(st, 'E').some(e => dist(e, o) <= 1) : !w.jam && targetsFor(st, o, i).length));
 function drawResult(st) {
-  if (UI.rs !== st) { UI.rs = st; sfx(st.result === 'won' ? 'win' : st.result === 'fled' ? 'jump' : 'lose'); }
+  if (UI.rs !== st) { UI.rs = st; if (st.result !== 'fled') sfx(st.result === 'won' ? 'win' : 'lose'); }
   g.fillStyle = 'rgba(2,4,8,.55)'; g.fillRect(0, 0, LW, LH);
   const won = st.result === 'won', col = won ? C.acc : st.result === 'fled' ? C.ally : C.foe;
   frameBox(60, 340, LW - 120, 250, col, 14, 'rgba(6,10,18,.92)');
@@ -586,7 +586,7 @@ function drawMap() {
     // toucher une balise : on y saute si c'est possible, sinon sa fiche s'affiche
     // (à portée : le saut part au lever du doigt ; un toucher long montre la fiche sans sauter)
     zone(x - 34, y - (k === 'amiral' ? 62 : 34), 68, k === 'amiral' ? 110 : 68, isNext
-      ? () => { UI.node = null; if (run.phase === 'map' && jump(run, nd.id)) { sfx('jump'); resetAnim(); UI.sel = null; save(); } }
+      ? () => { UI.node = null; if (run.phase === 'map' && jump(run, nd.id)) { resetAnim(); UI.sel = null; save(); } }
       : () => { UI.node = UI.node === nd.id ? null : nd.id; }, isNext ? { hold: () => { UI.node = nd.id; } } : null);
   }
   if (UI.node != null && N[UI.node]) nodeCard(N[UI.node], seen, next);
@@ -715,7 +715,7 @@ function drawEvent() {
     txt('› ' + ev.choices[D.choice].label, 48, y, C.dim, F.mono(15), 'left', 1, LW - 96); y += 30;
     y += para(D.text, 48, y, LW - 96, C.txt, F.ui(21), 26) + 14;
     for (const gn of D.gains) { txt(gn, 48, y, gn.startsWith('-') || gn.startsWith('COMBAT') ? C.foe : C.ok, F.mono(17), 'left', 1, LW - 96); y += 26; }
-    btn(LW / 2 - 130, 680, 260, 56, D.combat ? 'AU COMBAT !' : 'CONTINUER', () => { if (closeEvent(run)) { resetAnim(); UI.sel = null; save(); if (run.phase === 'combat') sfx('jump'); } }, { primary: true, size: 22, col: D.combat ? C.foe : null });
+    btn(LW / 2 - 130, 680, 260, 56, D.combat ? 'AU COMBAT !' : 'CONTINUER', () => { if (closeEvent(run)) { resetAnim(); UI.sel = null; save(); } }, { primary: true, size: 22, col: D.combat ? C.foe : null });
   }
   fleetStrip(780);
 }
@@ -798,7 +798,7 @@ function startTraining(after, label = 'TERMINER') {
   store.set('tuto', 1);
   TUTO.real = run; TUTO.after = after; TUTO.label = label; TUTO.step = 0; TUTO.on = true;
   run = { training: true, phase: 'combat', combat: makeTraining(), sector: 1, fleet: [] };
-  UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); sfx('jump');
+  UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim();
 }
 function leaveTraining() { if (!TUTO.on) return; TUTO.on = false; run = TUTO.real; TUTO.real = null; resetAnim(); UI.sel = null; UI.ghost = null; }
 function endTraining() { const a = TUTO.after; leaveTraining(); TUTO.after = null; if (a) a(); else UI.screen = 'title'; }
@@ -956,7 +956,7 @@ const dailyBest = store.get('daily', {}) || {};
 function startDaily() {
   const dk = todayKey(), ranked = store.get('dailyTry', 0) !== dk;
   run = newDaily(dk); run.daily = dk; run.ranked = ranked; if (ranked) store.set('dailyTry', dk);
-  UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump');
+  UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save();
 }
 // présentation de la mission du jour, avant le départ
 const MOIS = ['JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN', 'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'];
@@ -988,7 +988,7 @@ function drawMission() {
   btn(40, 820, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
   btn(LW - 240, 820, 200, 52, 'DÉCOLLER', () => launch(startDaily), { primary: true, size: 20, col: C.ally });
 }
-function startRun(ships = FLEETS[0].ships) { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, ships, meta.unlocked); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump'); }
+function startRun(ships = FLEETS[0].ships) { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, ships, meta.unlocked); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); }
 const cheapest = () => Math.min(...UNLOCKS.filter(u => !meta.unlocked.includes(u.id)).map(u => u.cost), 1e9);
 // déblocages : les données stellaires gagnées en fin de partie ouvrent de nouveaux vaisseaux (composition de départ, comptoir, épaves)
 function drawUnlocks() {
@@ -1307,8 +1307,13 @@ window.addEventListener('pointerup', () => {
 });
 window.addEventListener('pointercancel', () => { UI.ghost = null; PRESS.on = false; });
 // clic droit (ordinateur) : la fiche tout de suite, comme un toucher long
+// (sur téléphone, un toucher long déclenche aussi 'contextmenu' : on l'ignore, sinon il refermait la fiche à peine ouverte)
+let lastPointer = 'mouse';
+cv.addEventListener('pointerdown', e => { lastPointer = e.pointerType || 'mouse'; }, true);
 cv.addEventListener('contextmenu', e => {
-  e.preventDefault(); touched();
+  e.preventDefault();
+  if (PRESS.on || lastPointer !== 'mouse') return;
+  touched();
   try {
     if (UI.card) { UI.card = null; return; }
     const [x, y] = logical(e), b = hitButton(x, y);
