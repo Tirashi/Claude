@@ -159,7 +159,7 @@ let AMB = store.get('amb', false);
 function ambience() {
   if (!AU.ctx) return;
   const on = SFX && AMB && !document.hidden, combat = UI.screen === 'game' && run && run.phase === 'combat' && !run.training;
-  NebulaSons.ambience(on ? (combat ? 'tension' : 'garde') : null, .9);
+  NebulaSons.ambience(on ? (combat ? 'tension' : 'garde') : null);
 }
 document.addEventListener('visibilitychange', () => { if (!AU.ctx) return; if (document.hidden) AU.ctx.suspend(); else if (SFX) AU.ctx.resume(); ambience(); });
 

@@ -7,7 +7,7 @@
      tel retard, les fichiers suivants (scripts, polices…) sont servis du cache sans attendre
      pendant 10 s : la page ne s'ouvre pas étage par étage.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v20";
+const VERSION = "ludotheque-v21";
 const NET_WAIT = 2500;
 let slowUntil = 0;   // réseau jugé lent : pendant 10 s, les copies en cache sont servies sans attendre
 const FONTS = "ludotheque-fonts";

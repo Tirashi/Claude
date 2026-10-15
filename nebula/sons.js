@@ -168,13 +168,15 @@ function stopAmb(fade = 1.5) {
   a.timers.forEach(clearInterval); a.out.gain.cancelScheduledValues(t); a.out.gain.setValueAtTime(a.out.gain.value, t); a.out.gain.linearRampToValueAtTime(0, t + fade);
   setTimeout(() => { a.stops.forEach(o => { try { o.stop(); } catch (e) {} }); a.out.disconnect(); }, fade * 1000 + 200);
 }
+// mixage : les ambiances restent environ 10 dB sous les bruitages (mesure : -27 dB efficaces contre -17 à -25 dB pour les tirs)
+const AMB_GAIN = .22;
 // id : 'tension' (combats), 'marche' ou 'garde' (carte), null = silence ; on ne fait rien si l'ambiance demandée joue déjà
 function ambience(id, vol = 1) {
   if (!A) return;
   if ((AMB && AMB.id) === id) return;
   stopAmb(); if (!id) return;
   const out = A.createGain(), t0 = A.currentTime, a = { id, out, timers: [], stops: [] }; AMB = a;
-  out.gain.setValueAtTime(0, t0); out.gain.linearRampToValueAtTime(vol, t0 + 3);
+  out.gain.setValueAtTime(0, t0); out.gain.linearRampToValueAtTime(vol * AMB_GAIN, t0 + 3);
   const comp = A.createDynamicsCompressor(); comp.threshold.value = -24; comp.ratio.value = 3; comp.connect(init.dest); out.connect(comp);
   const rev = A.createConvolver(); rev.buffer = impulse(id === 'tension' ? 2.8 : 3.5, 2); const wet = A.createGain(); wet.gain.value = .7; rev.connect(wet); wet.connect(out);
   const dry = A.createGain(); dry.connect(out);
