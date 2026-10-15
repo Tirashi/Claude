@@ -30,6 +30,9 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 8. **Bord de lac** (détente) — pêche au lever du soleil dans la brume : ferrer au bon moment, gérer la tension du fil, remplir son carnet de poissons.
 9. **Le Club d'agility** — ✅ réalisé.
 
+## RPG (idée du 15/10)
+1. **RPG façon Dragon Quest 1** (aventure / jeu de rôle) — un jeu de rôle de la taille de Dragon Quest 1 (une carte du monde, quelques villes et donjons, combats au tour par tour contre des monstres, niveaux, équipement, sorts, une quête principale jusqu'au boss final), avec des **graphismes façon Vampire Survivors** (pixel art gothique et sombre, sprites simples mais expressifs, monstres en grand nombre). Très gros chantier : à découper en sessions comme Nebula (cahier des charges, puis maquette de style, puis carte et combats, puis contenu).
+
 ## Jeux de réflexion à ajouter (idées du 14/10)
 1. **Murdoku** (logique / enquête) — un sudoku policier : sur le plan d'une maison découpé en pièces (grille 6×6 ou plus), placer chaque suspect et la victime pour qu'il n'y ait qu'**une personne par ligne et par colonne**, en suivant les indices (« le colonel est dans la cuisine », « Rose est à côté d'une plante », « personne n'est sur le tapis »…). Le coupable est celui qui se retrouve **seul dans la même pièce que la victime**. Générateur à graine + solveur d'unicité (comme Pont stellaire), plusieurs tailles, **enquête du jour**, temps + 30 s par indice, classement.
 2. **Sudoku** (logique) — le classique 9×9 (et 4×4 / 6×6 pour débuter), niveaux de difficulté selon les techniques nécessaires, notes au crayon, surlignage des chiffres identiques, erreurs signalées ou non ; **grille du jour** (graine = date), temps + 30 s par indice, classement par niveau. Générateur + solveur d'unicité.
@@ -83,6 +86,8 @@ Maquette **filtres et classements** (filtres : 1 onglets, 2 sélecteur de consol
 
 **Animations sur l'accueil** (idée du 13/10) : faire passer de temps en temps des sprites des jeux sur la page d'accueil, par exemple l'avion d'Amiral ! qui traverse l'écran, un serpent de Snake qui serpente en bas, un chien d'Injagility qui court, un vaisseau de Nebula. Prévoir un petit système commun d'animations (liste de sprites, trajets, fréquence) pour pouvoir en ajouter facilement à chaque nouveau jeu, et un réglage pour les couper.
 
+**Refonte de la sélection des jeux** (idée du 15/10) : sur l'accueil, des cartouches avec un **effet 3D au repos** (elles flottent ou pivotent doucement, reflets qui bougent) ; en touchant une cartouche, une **page dédiée au jeu** : sa **boîte de jeu**, une petite description, **les records et classements du joueur** (place dans la famille), puis un bouton JOUER. Rejoint « le design des cartouches et des boîtes » (une boîte par jeu) et « Mes records sur chaque cartouche » ci-dessous : à faire ensemble. Commencer par une maquette.
+
 **À retravailler plus tard : le design des cartouches et des boîtes**
 - Revoir le dessin des cartouches et de la boîte de jeu, et les couleurs des cartouches selon le type de jeu (logique, tactique, adresse, arcade…).
 - Pourquoi pas **trois modèles de cartouche** : un pour les jeux **16 bits** (pixel art), un pour les jeux **32 bits** (Orbite, Pont stellaire, Alunissage, Club, Amiral, Injagility…), un troisième pour les autres (reprises, simulation, cartes).
@@ -96,3 +101,11 @@ Maquette **filtres et classements** (filtres : 1 onglets, 2 sélecteur de consol
 - **Activité de la famille** (« Fiston a battu ton record à Orbite ») : demande un nouveau script SQL Supabase (historique des records), à lancer par l'utilisateur.
 - **Surprends-moi** : un jeu au hasard (animation de cartouche insérée).
 - **Trier** (récent, préféré, nom, dernière partie) ; **recherche** si la liste grandit encore.
+
+## Classement des idées par quantité de travail (15/10)
+Pour choisir selon le forfait restant (limite hebdomadaire remise à zéro le mercredi à 19 h).
+- 🟢 **Très petit** (quelques minutes, Sonnet) : texte de première connexion des classements ; Surprends-moi ; trier / rechercher sur l'accueil.
+- 🟡 **Petit** (une courte conversation) : Alunissage, interface près du module ; Queens, grille du jour ; installer l'étagère des classements ; Reprendre ; mes records sur chaque cartouche (sans la place dans la famille).
+- 🟠 **Moyen** (une conversation, Opus) : Invasion 2.0 ; Bouclier lunaire ; Sudoku ; Le Mot d'or (la liste de mots est le gros du travail) ; Lune-Rover ; Capitaine du port ; Carreau ! ; défis du jour + profil ; animations sur l'accueil ; revue « ingénieur senior » (lecture de tout le code : à faire en début de semaine).
+- 🔴 **Gros** (1 à 2 conversations) : Murdoku ; Escadrille ; Bord de lac ; Apesanteur ; Astro-Mineur ; Le Fort des lapins ; activité de la famille (SQL Supabase) ; **refonte de la sélection des jeux** (cartouches en 3D, page dédiée, avec une boîte par jeu : maquette d'abord, puis 2 conversations).
+- ⚫ **Très gros** (plusieurs conversations, comme Nebula) : Donjon de poche ; Escarmouche ; Le Potager ; Le Chalutier ; Pavillon noir ; **RPG façon Dragon Quest 1** (5 à 6 sessions : carte, villes, donjons, 30 à 40 monstres, sorts, dialogues, équilibrage) ; Nebula : l'Empire des étoiles (le plus gros : jeu sur des semaines et serveur pour la famille).
