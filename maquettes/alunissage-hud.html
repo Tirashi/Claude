@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alunissage, cadrans de bord</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Maquette : quatre façons d'afficher carburant, vitesses et altitude près du module d'Alunissage.
+   Le module se pose tout seul (démo) ; touche l'écran du jeu pour piloter (une moitié par réacteur). */
+:root{
+  color-scheme: dark;
+  --night:#110d22; --night-2:#1e1840; --ink:#0d0a18; --text:#f2f0ff; --dim:#a9a6d8; --gold:#ffd23f;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ color-scheme: dark; } }
+*{box-sizing:border-box}
+body{margin:0; background:var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color:var(--text);
+  font-family:var(--f-body); font-size:21px; line-height:1.25; padding:24px 16px 48px}
+.wrap{max-width:980px; margin:0 auto; display:flex; flex-direction:column; gap:22px}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px,4.4vw,24px); line-height:1.4; color:var(--gold); text-shadow:3px 3px 0 #b8571a, 5px 5px 0 #000}
+.lead{margin:0; color:var(--dim); max-width:70ch}
+.lead b{color:var(--text); font-weight:400}
+.tabs{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px}
+.tabs button{font-family:var(--f-display); font-size:9px; line-height:1.6; padding:10px 4px; color:var(--text); background:#2b2a4a; cursor:pointer;
+  border:3px solid var(--dim); border-radius:4px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000}
+.tabs button[aria-pressed="true"]{color:#110d22; background:var(--gold); border-color:var(--gold)}
+.tabs button:focus-visible{outline:3px dashed var(--gold); outline-offset:4px}
+.stage{display:grid; grid-template-columns:auto minmax(0,1fr); gap:24px; align-items:start}
+@media (max-width:720px){ .stage{grid-template-columns:minmax(0,1fr); justify-items:center} }
+canvas{display:block; width:min(100%, 340px); aspect-ratio:272 / 480; image-rendering:pixelated; border:3px solid #000; box-shadow:0 0 0 3px #3b3566, 6px 6px 0 3px #000; touch-action:none; cursor:pointer}
+.info{display:flex; flex-direction:column; gap:12px; min-width:0}
+.info h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:12px; line-height:1.6; color:var(--gold)}
+.info p{margin:0; color:var(--text)}
+.info ul{margin:0; padding-left:20px; color:var(--dim)}
+.info li b{color:var(--text); font-weight:400}
+.ctl{display:flex; flex-wrap:wrap; gap:10px}
+.ctl button{font-family:var(--f-display); font-size:8px; padding:9px 10px; color:var(--text); background:#2b2a4a; border:3px solid var(--dim); border-radius:4px; cursor:pointer}
+.ctl button[aria-pressed="true"]{color:var(--gold); border-color:var(--gold)}
+.note{margin:0; border-top:2px dashed rgba(255,255,255,.15); padding-top:14px; color:var(--dim)}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ALUNISSAGE · CADRANS DE BORD</h1>
+  <p class="lead">Quatre façons de lire <b>carburant</b>, <b>vitesses</b> et <b>altitude</b> sans quitter le module des yeux. Les jauges du haut restent. Le module se pose tout seul pour la démonstration ; <b>touche l'écran du jeu</b> pour piloter (moitié gauche : réacteur gauche, moitié droite : réacteur droit, ou les flèches du clavier).</p>
+  <div class="tabs" id="tabs" role="group" aria-label="Proposition"></div>
+  <div class="stage">
+    <canvas id="cv" width="544" height="960" aria-label="Démonstration d'Alunissage"></canvas>
+    <div class="info">
+      <h2 id="title"></h2>
+      <p id="desc"></p>
+      <ul id="pts"></ul>
+      <div class="ctl"><button type="button" id="demo" aria-pressed="true">DEMO AUTOMATIQUE</button><button type="button" id="world">CHANGER DE MONDE</button></div>
+      <p class="note">On peut aussi mélanger : par exemple la jauge de carburant de A avec l'ombre au sol de D.</p>
+    </div>
+  </div>
+</div>
+<script>
+"use strict";
+const LW = 272, LH = 480, TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace', OUT = '#0b0614';
+const GROUND_TOP = 230, GROUND_BOT = 392, VY_OK = 24, VX_OK = 12;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function mulberry(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const WORLDS = [
+  { name: 'LA LUNE', g: 11, wind: 0, rough: .6, sky: ['#05060f', '#0a0c1e'], rock: ['#d6d4cc', '#a8a59c', '#7a776f', '#4e4b46', '#2c2a28'] },
+  { name: 'MARS', g: 14, wind: 4, rough: .8, sky: ['#2a1410', '#6a3420'], rock: ['#e8a070', '#c07048', '#904a30', '#5e2e1e', '#341810'] },
+  { name: 'EUROPE', g: 10, wind: 0, rough: 1, sky: ['#04081a', '#0e1838'], rock: ['#f0f6ff', '#c4d8ee', '#8eaccc', '#5a7898', '#2e4260'] },
+  { name: 'TITAN', g: 9, wind: 5, rough: .9, sky: ['#3a2a0a', '#7a5a1e'], rock: ['#d8b070', '#a8844a', '#7a5e32', '#4e3c20', '#2a2010'] },
+];
+function makeSite(seed, wi){
+  const R = mulberry(seed * 977 + 131), w = WORLDS[wi], rough = w.rough * 1.1, pts = [], N = 34;
+  let y = GROUND_TOP + 60 + R() * 80;
+  for (let i = 0; i <= N; i++){ y = clamp(y + (R() - .5) * 46 * rough, GROUND_TOP + 10, GROUND_BOT - 8); pts.push([i * LW / N, y]); }
+  const pads = [];
+  for (const [mul, segs] of [[5, 3], [3, 5], [2, 7]]){
+    for (let tries = 0; tries < 40; tries++){
+      const i0 = 1 + Math.floor(R() * (N - segs - 2));
+      if (pads.some(p => i0 < p.i1 + 2 && i0 + segs > p.i0 - 2)) continue;
+      const py = Math.round(clamp(pts[i0][1], GROUND_TOP + 20, GROUND_BOT - 12));
+      for (let k = i0; k <= i0 + segs; k++) pts[k][1] = py;
+      pads.push({ i0, i1: i0 + segs, x0: pts[i0][0], x1: pts[i0 + segs][0], y: py, mul }); break;
+    }
+  }
+  return { world: w, pts, pads, g: w.g, wind: w.wind * (R() < .5 ? -1 : 1), x0: 40 + R() * 192, vx0: (R() - .5) * 30 };
+}
+function groundY(site, x){
+  const p = site.pts, i = clamp(Math.floor(x / (LW / (p.length - 1))), 0, p.length - 2), [ax, ay] = p[i], [bx, by] = p[i + 1];
+  return ay + (by - ay) * (x - ax) / (bx - ax);
+}
+
+/* ---------- état ---------- */
+const S = { site: null, ship: null, fuel: 100, left: false, right: false, phase: 'fly', result: null, parts: [], burnT: -9, seed: 7, wi: 0, demo: true, target: null, wait: 0 };
+const THRUST = 30, SIDE = 13, BURN = 6;
+function startSite(){
+  S.site = makeSite(S.seed, S.wi); S.ship = { x: S.site.x0, y: 52, vx: S.site.vx0, vy: 0, t: 0 }; S.parts = []; S.result = null; S.phase = 'fly';
+  S.fuel = 55 + (S.seed % 4) * 15; S.burnT = -9;
+  // la démo vise une aire au hasard
+  S.target = S.site.pads[S.seed % S.site.pads.length];
+}
+function autopilot(){
+  const s = S.ship, tx = (S.target.x0 + S.target.x1) / 2, alt = S.target.y - s.y - 8;
+  const wantVx = clamp((tx - s.x) * .35, -14, 14) * (alt < 20 ? .2 : 1), wantVy = alt > 120 ? 34 : alt > 40 ? 14 + alt * .12 : 6;
+  let l = false, r = false;
+  if (s.t < 1.2) return [false, false];                       // un temps de chute libre, pour voir les couleurs changer
+  const dvx = wantVx - s.vx;
+  if (s.vy > wantVy){ l = r = true; if (dvx > 3) r = false; if (dvx < -3) l = false; }
+  else if (Math.abs(dvx) > 3 && s.vy > wantVy - 10){ if (dvx > 0) l = true; else r = true; }
+  return [l, r];
+}
+function step(dt){
+  const s = S.ship, site = S.site;
+  if (S.demo && S.phase === 'fly'){ [S.left, S.right] = autopilot(); }
+  const l = S.left && S.fuel > 0, r = S.right && S.fuel > 0;
+  let ax = site.wind * (s.y < GROUND_TOP ? 1 : .5), ay = site.g;
+  if (l){ ay -= THRUST * (r ? .75 : .62); ax += SIDE * (r ? 0 : 1); }
+  if (r){ ay -= THRUST * (l ? .75 : .62); ax -= SIDE * (l ? 0 : 1); }
+  if (l || r) S.burnT = s.t;
+  S.fuel = Math.max(0, S.fuel - ((l ? 1 : 0) + (r ? 1 : 0)) * BURN * dt);
+  s.vx += ax * dt; s.vy += ay * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.t += dt;
+  if (s.x < 6){ s.x = 6; s.vx = Math.abs(s.vx) * .3; } if (s.x > LW - 6){ s.x = LW - 6; s.vx = -Math.abs(s.vx) * .3; }
+  if (s.y < 20){ s.y = 20; s.vy = Math.max(0, s.vy); }
+  const flame = (dx, side) => { for (let k = 0; k < 2; k++) S.parts.push({ x: s.x + dx, y: s.y + 7, vx: side * 10 + (Math.random() - .5) * 10, vy: 30 + Math.random() * 30, t: 0, life: .25 + Math.random() * .15, c: Math.random() < .5 ? '#fff2a8' : '#ff9a3a' }); };
+  if (l) flame(-4, -1); if (r) flame(4, 1);
+  const feet = [s.x - 6, s.x + 6].map(x => groundY(site, x));
+  if (Math.min(...feet) - (s.y + 8) <= 0) land(feet);
+}
+function land(feet){
+  const s = S.ship, pad = S.site.pads.find(p => s.x - 5 >= p.x0 && s.x + 5 <= p.x1);
+  const soft = s.vy <= VY_OK && Math.abs(s.vx) <= VX_OK, flat = Math.abs(feet[0] - feet[1]) < 2;
+  if (pad && soft && flat){ s.y = pad.y - 8; S.result = { ok: true, mul: pad.mul }; S.phase = 'landed'; }
+  else {
+    S.result = { ok: false, why: !soft ? (s.vy > VY_OK ? 'TROP VITE' : 'TROP DE GLISSADE') : !pad ? 'HORS DE L\'AIRE' : 'SOL EN PENTE' }; S.phase = 'crashed';
+    for (let k = 0; k < 50; k++){ const a = Math.random() * TAU, v = 20 + Math.random() * 70; S.parts.push({ x: s.x, y: s.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: 0, life: .8 + Math.random(), c: ['#fff2a8', '#ff9a3a', '#e2603a', '#9aa0a8'][k % 4], gr: 1 }); }
+  }
+  s.vx = s.vy = 0; S.left = S.right = false; S.wait = 2.2;
+}
+
+/* ---------- dessin commun (repris du jeu) ---------- */
+const cv = document.getElementById('cv'), g = cv.getContext('2d'); g.scale(2, 2); g.imageSmoothingEnabled = false;
+const R_ = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function text(s, x, y, col, align = 'left', size = 8, sh = '#05030c'){ g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top'; if (sh){ g.fillStyle = sh; g.fillText(s, x + 1, y + 1); } g.fillStyle = col; g.fillText(s, x, y); }
+const SKYC = {};
+function sky(site){
+  const key = site.world.name; if (SKYC[key]) return SKYC[key];
+  const c = document.createElement('canvas'); c.width = LW; c.height = LH; const x = c.getContext('2d'), R = mulberry(key.length * 71);
+  const gr = x.createLinearGradient(0, 0, 0, GROUND_BOT); gr.addColorStop(0, site.world.sky[0]); gr.addColorStop(1, site.world.sky[1]); x.fillStyle = gr; x.fillRect(0, 0, LW, LH);
+  for (let i = 0; i < 120; i++){ const s = R(); x.fillStyle = s > .9 ? '#ffffff' : s > .6 ? 'rgba(200,210,255,.7)' : 'rgba(150,160,210,.45)'; x.fillRect(R() * LW | 0, R() * 260 | 0, 1, 1); }
+  return SKYC[key] = c;
+}
+let T = 0;
+function drawGround(site){
+  const p = site.pts, rock = site.world.rock;
+  g.beginPath(); g.moveTo(0, LH); for (const [x, y] of p) g.lineTo(x, y); g.lineTo(LW, LH); g.closePath();
+  const gr = g.createLinearGradient(0, GROUND_TOP, 0, LH); gr.addColorStop(0, rock[2]); gr.addColorStop(1, rock[4]); g.fillStyle = gr; g.fill();
+  for (let i = 0; i < p.length - 1; i++){ const [ax, ay] = p[i], [bx, by] = p[i + 1], up = by < ay, len = Math.ceil(bx - ax);
+    for (let k = 0; k < len; k++){ const x = ax + k, y = ay + (by - ay) * k / len; R_(x | 0, y | 0, 1, 2, up ? rock[0] : rock[1]); R_(x | 0, (y | 0) + 2, 1, 2, rock[2]); } }
+  for (const pad of site.pads){
+    R_(pad.x0, pad.y, pad.x1 - pad.x0, 3, '#c8ccd4'); R_(pad.x0, pad.y + 3, pad.x1 - pad.x0, 1, '#6a7080');
+    const on = Math.sin(T * 5 + pad.mul) > 0;
+    R_(pad.x0, pad.y - 3, 2, 3, on ? '#5cff8a' : '#2a6a40'); R_(pad.x1 - 2, pad.y - 3, 2, 3, on ? '#5cff8a' : '#2a6a40');
+    text('x' + pad.mul, (pad.x0 + pad.x1) / 2 + 1, pad.y + 7, pad.mul === 5 ? '#ffd23f' : '#e6fbff', 'center', 6);
+  }
+}
+function drawShip(s, t){
+  const x = Math.round(s.x), y = Math.round(s.y), l = S.left && S.fuel > 0 && S.phase === 'fly', r = S.right && S.fuel > 0 && S.phase === 'fly';
+  R_(x - 7, y + 4, 1, 4, '#9aa0a8'); R_(x + 6, y + 4, 1, 4, '#9aa0a8'); R_(x - 8, y + 7, 3, 1, '#c8ccd4'); R_(x + 5, y + 7, 3, 1, '#c8ccd4');
+  R_(x - 6, y + 3, 2, 2, '#6a7080'); R_(x + 4, y + 3, 2, 2, '#6a7080');
+  R_(x - 6, y, 12, 5, OUT); R_(x - 5, y + 1, 10, 3, '#c88a20'); R_(x - 5, y + 1, 6, 1, '#ffd76a'); R_(x - 5, y + 3, 10, 1, '#8a5a10');
+  R_(x - 5, y - 6, 10, 7, OUT); R_(x - 4, y - 5, 8, 5, '#c8ccd4'); R_(x - 4, y - 5, 3, 2, '#ffffff'); R_(x + 1, y - 2, 3, 2, '#7a8090'); R_(x - 2, y - 4, 3, 2, '#2a3a5a'); R_(x - 2, y - 4, 1, 1, '#9fd8ff');
+  R_(x + 2, y - 9, 1, 3, '#9aa0a8'); R_(x + 1, y - 10, 3, 1, '#c8ccd4');
+  R_(x - 5, y + 5, 3, 2, '#3a3f4a'); R_(x + 2, y + 5, 3, 2, '#3a3f4a');
+  const fl = fx => { const n = 4 + (t * 30 | 0) % 3; for (let k = 0; k < n; k++) R_(fx, y + 7 + k, 2, 1, k < 2 ? '#fff2a8' : k < 4 ? '#ffb040' : '#e2603a'); };
+  if (l) fl(x - 5); if (r) fl(x + 3);
+}
+function hud(){
+  const s = S.ship, w = S.site.world;
+  R_(0, 0, LW, 40, 'rgba(6,8,24,.85)'); R_(0, 40, LW, 1, '#2a3a7a');
+  text(`SITE 1 · ${w.name}`, 6, 6, '#e6fbff', 'left', 7); text('SCORE 0', 266, 6, '#ffd23f', 'right', 7);
+  text('CARBURANT', 6, 20, '#8fa0d0', 'left', 6);
+  R_(64, 20, 70, 6, OUT); R_(65, 21, Math.round(68 * S.fuel / 100), 4, S.fuel < 20 ? '#ff6a5a' : '#5cf2ff');
+  text(`V ${Math.max(0, Math.round(s.vy))}`, 150, 20, s.vy <= VY_OK ? '#5cff8a' : '#ff6a5a', 'left', 6);
+  text(`H ${Math.round(Math.abs(s.vx))}`, 196, 20, Math.abs(s.vx) <= VX_OK ? '#5cff8a' : '#ff6a5a', 'left', 6);
+  text(`ALT ${alt()}`, 266, 30, '#8fa0d0', 'right', 6);
+  if (S.site.wind) text(S.site.wind > 0 ? 'VENT >' : '< VENT', 6, 30, '#ffb040', 'left', 6);
+}
+function engineButtons(){
+  const y = 404, h = 70;
+  for (const [x, label, on] of [[8, 'GAUCHE', S.left], [140, 'DROIT', S.right]]){
+    R_(x - 1, y - 1, 126, h + 2, OUT); const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, on ? '#ffb040' : '#2a3458'); gr.addColorStop(1, on ? '#a85a10' : '#141a34'); g.fillStyle = gr; g.fillRect(x, y, 124, h);
+    R_(x, y, 124, 1, on ? '#fff2b0' : '#6a7ab0');
+    text('REACTEUR', x + 62, y + 22, on ? '#2a1600' : '#c8d4f4', 'center', 7, on ? null : '#05030c');
+    text(label, x + 62, y + 36, on ? '#2a1600' : '#ffd23f', 'center', 8, on ? null : '#05030c');
+  }
+}
+
+/* ---------- les mesures, et leur couleur ---------- */
+const alt = () => Math.max(0, Math.round(groundY(S.site, S.ship.x) - S.ship.y - 8));
+// vert : on peut se poser ; orange : presque ; rouge : trop
+const col = (v, ok) => v <= ok ? '#5cff8a' : v <= ok * 1.5 ? '#ffb040' : '#ff6a5a';
+const vyCol = () => col(Math.max(0, S.ship.vy), VY_OK), vxCol = () => col(Math.abs(S.ship.vx), VX_OK);
+const lowFuel = () => S.fuel < 20, blink = () => Math.sin(T * 14) > 0;
+// sous le module : une aire plate ? laquelle ?
+function under(){
+  const s = S.ship, pad = S.site.pads.find(p => s.x - 5 >= p.x0 && s.x + 5 <= p.x1);
+  const flat = Math.abs(groundY(S.site, s.x - 6) - groundY(S.site, s.x + 6)) < 2;
+  return { pad, flat, gy: groundY(S.site, s.x) };
+}
+// côté libre pour un cadran : à droite, sauf près du bord droit
+const side = () => S.ship.x > LW - 70 ? -1 : 1;
+function arrow(x, y, dx, dy, c){
+  const n = Math.hypot(dx, dy); if (n < 1.5) return;
+  const steps = Math.round(n);
+  for (let k = 0; k <= steps; k++) R_(Math.round(x + dx * k / steps), Math.round(y + dy * k / steps), 1, 1, c);
+  const ux = dx / n, uy = dy / n, ex = x + dx, ey = y + dy;
+  for (const a of [2.5, -2.5]){ const c2 = Math.cos(a), s2 = Math.sin(a), hx = ux * c2 - uy * s2, hy = ux * s2 + uy * c2;
+    for (let k = 1; k <= 3; k++) R_(Math.round(ex + hx * k), Math.round(ey + hy * k), 1, 1, c); }
+}
+
+/* ---------- les quatre propositions ---------- */
+const VARIANTS = [
+  { id: 'A', name: 'A · BULLES DE BORD', desc: 'Deux petites bulles accrochées au module, du côté libre de l\'écran.',
+    pts: ['<b>Carburant</b> : une jauge verticale à gauche du module ; elle apparaît quand un réacteur s\'allume, s\'efface 2 s après, et clignote en rouge sous 20 %.',
+          '<b>Vitesses</b> : V (descente) et H (glissade) écrites à côté, en vert quand on peut se poser, orange quand c\'est limite, rouge au-delà.',
+          '<b>Altitude</b> : sous 100 m, elle s\'ajoute sous les vitesses.'],
+    draw(){ const s = S.ship, x = Math.round(s.x), y = Math.round(s.y), d = side();
+      // jauge de carburant, visible pendant la poussée et 2 s après
+      const seen = s.t - S.burnT < 2 || lowFuel();
+      if (seen && (!lowFuel() || blink())){ const gx = x - d * 14 - (d < 0 ? 4 : 0), h = 22, f = Math.round((h - 2) * S.fuel / 100);
+        R_(gx, y - 12, 5, h, OUT); R_(gx + 1, y - 11, 3, h - 2, '#1a2040'); R_(gx + 1, y - 11 + (h - 2 - f), 3, f, lowFuel() ? '#ff6a5a' : '#5cf2ff'); }
+      // bulle des vitesses
+      const a = alt(), bw = 40, bh = a < 100 ? 30 : 21, bx = d > 0 ? x + 13 : x - 13 - bw, by = y - 14;
+      g.fillStyle = 'rgba(6,8,24,.78)'; g.fillRect(bx, by, bw, bh); R_(bx, by, bw, 1, '#2a3a7a');
+      text(`V ${Math.max(0, Math.round(s.vy))}`, bx + 4, by + 4, vyCol(), 'left', 6);
+      text(`H ${Math.round(Math.abs(s.vx))}`, bx + 4, by + 13, vxCol(), 'left', 6);
+      if (a < 100) text(`${a} M`, bx + 4, by + 22, '#c8d4f4', 'left', 6); } },
+  { id: 'B', name: 'B · VECTEUR ET ANNEAU', desc: 'Le module est entouré d\'un anneau de carburant, et une flèche montre où il va.',
+    pts: ['<b>Carburant</b> : un anneau autour du module qui se vide comme une horloge ; rouge et clignotant sous 20 %.',
+          '<b>Vitesses</b> : une flèche part du module dans le sens du mouvement ; sa longueur dit la vitesse, sa couleur si l\'on peut se poser (la pire des deux vitesses). La dérive se voit d\'un coup d\'œil.',
+          '<b>Altitude</b> : sous 120 m, un pointillé descend jusqu\'au sol, avec la hauteur écrite à côté.'],
+    draw(){ const s = S.ship, x = Math.round(s.x), y = Math.round(s.y);
+      // anneau de carburant (rayon 15), un point tous les 6°
+      const R = 15, n = 60, f = Math.round(n * S.fuel / 100);
+      for (let k = 0; k < n; k++){ const a = -Math.PI / 2 + k / n * TAU; const on = k < f;
+        if (!on && k % 3) continue;
+        R_(Math.round(x + Math.cos(a) * R), Math.round(y + 1 + Math.sin(a) * R), 1, 1, on ? (lowFuel() ? (blink() ? '#ff6a5a' : '#5a1a1a') : '#5cf2ff') : '#2a3458'); }
+      // flèche de vitesse
+      const worst = Math.max(Math.max(0, s.vy) / VY_OK, Math.abs(s.vx) / VX_OK), c = worst <= 1 ? '#5cff8a' : worst <= 1.5 ? '#ffb040' : '#ff6a5a';
+      const k = .7; arrow(x + s.vx / Math.max(1, Math.hypot(s.vx, s.vy)) * 18, y + 1 + s.vy / Math.max(1, Math.hypot(s.vx, s.vy)) * 18, s.vx * k * .6, s.vy * k * .6, c);
+      // altitude
+      const a = alt(), u = under();
+      if (a < 120){ for (let yy = y + 18; yy < u.gy - 2; yy += 4) R_(x, yy, 1, 2, 'rgba(200,212,244,.6)'); text(`${a} M`, x + 5, Math.min(u.gy - 12, y + 22), '#c8d4f4', 'left', 6); } } },
+  { id: 'C', name: 'C · RETICULE D\'APPROCHE', desc: 'Un réticule de visée encadre le module, façon tableau de bord d\'avion.',
+    pts: ['<b>Feu vert</b> : les quatre coins du réticule passent au vert quand tout est bon pour se poser (vitesses douces, aire plate dessous) ; sinon orange ou rouge.',
+          '<b>Vitesses</b> : deux petites barres sous le module, avec la zone verte marquée : on voit de combien on dépasse.',
+          '<b>Carburant</b> : 5 segments au-dessus du module ; le dernier clignote.',
+          '<b>Altitude et aire</b> : à droite du réticule, la hauteur et le multiplicateur de l\'aire survolée (x2, x3, x5), ou un trait si le sol est en pente.'],
+    draw(){ const s = S.ship, x = Math.round(s.x), y = Math.round(s.y), u = under();
+      const vyR = Math.max(0, s.vy) / VY_OK, vxR = Math.abs(s.vx) / VX_OK, worst = Math.max(vyR, vxR);
+      const good = worst <= 1 && u.pad && u.flat, c = good ? '#5cff8a' : worst <= 1.5 ? '#ffb040' : '#ff6a5a';
+      // coins du réticule
+      const L = 4, X0 = x - 13, X1 = x + 13, Y0 = y - 14, Y1 = y + 12;
+      for (const [cx, cy, dx, dy] of [[X0, Y0, 1, 1], [X1, Y0, -1, 1], [X0, Y1, 1, -1], [X1, Y1, -1, -1]]){ R_(cx, cy, dx * L || 1, 1, c); R_(cx, cy, 1, dy * L || 1, c);
+        if (dx < 0) R_(cx - L + 1, cy, L, 1, c); if (dy < 0) R_(cx, cy - L + 1, 1, L, c); }
+      // carburant : 5 segments au-dessus
+      const segs = Math.ceil(S.fuel / 20);
+      for (let k = 0; k < 5; k++){ const on = k < segs, last = segs === 1 && k === 0; R_(x - 12 + k * 5, Y0 - 5, 4, 2, on ? (last ? (blink() ? '#ff6a5a' : '#5a1a1a') : '#5cf2ff') : '#2a3458'); }
+      // barres de vitesse sous le module
+      const bar = (yy, r, lab) => { R_(x - 12, yy, 24, 4, OUT); const w = Math.min(22, Math.round(r * 11)); R_(x - 11, yy + 1, w, 2, col(r, 1)); R_(x - 1, yy - 1, 1, 6, '#e6fbff'); text(lab, x - 15, yy - 1, '#8fa0d0', 'right', 5, null); };
+      bar(Y1 + 5, vyR, 'V'); bar(Y1 + 12, vxR, 'H');
+      // altitude et aire
+      const a = alt(), lab = u.pad && u.flat ? 'x' + u.pad.mul : u.flat ? '--' : '/\\';
+      text(`${a}`, X1 + 4, Y0, '#c8d4f4', 'left', 6); text(lab, X1 + 4, Y0 + 10, u.pad && u.flat ? (u.pad.mul === 5 ? '#ffd23f' : '#5cff8a') : '#ff6a5a', 'left', 6); } },
+  { id: 'D', name: 'D · OMBRE ET VOYANT', desc: 'Le moins chargé : une ombre sur le sol et un seul voyant.',
+    pts: ['<b>Ombre au sol</b> : sous le module, une ombre qui grandit et se précise en approchant ; verte au-dessus d\'une aire plate, rouge au-dessus d\'une pente ou d\'un sol nu. On voit où l\'on va se poser.',
+          '<b>Voyant</b> : une seule pastille sur le module, verte, orange ou rouge selon les vitesses, avec une petite flèche du côté où l\'on glisse.',
+          '<b>Carburant</b> : un mince trait sous les pieds, qui raccourcit ; il clignote sous 20 %.'],
+    draw(){ const s = S.ship, x = Math.round(s.x), y = Math.round(s.y), u = under(), a = alt();
+      // ombre
+      const k = clamp(1 - a / 180, .15, 1), w = Math.round(8 + 10 * k), ok = u.pad && u.flat;
+      g.globalAlpha = .35 + .5 * k; R_(x - w, Math.round(u.gy) - 1, w * 2, 2, ok ? '#5cff8a' : '#ff6a5a'); R_(x - w + 2, Math.round(u.gy) - 2, w * 2 - 4, 1, ok ? '#5cff8a' : '#ff6a5a'); g.globalAlpha = 1;
+      // voyant et flèche de glissade
+      const worst = Math.max(Math.max(0, s.vy) / VY_OK, Math.abs(s.vx) / VX_OK), c = worst <= 1 ? '#5cff8a' : worst <= 1.5 ? '#ffb040' : '#ff6a5a';
+      R_(x - 2, y - 15, 5, 5, OUT); R_(x - 1, y - 14, 3, 3, c);
+      if (Math.abs(s.vx) > 3){ const d = Math.sign(s.vx); text(d > 0 ? '>' : '<', x + d * 8, y - 15, c, 'center', 6, null); if (Math.abs(s.vx) > VX_OK) text(d > 0 ? '>' : '<', x + d * 13, y - 15, c, 'center', 6, null); }
+      // carburant
+      if (!lowFuel() || blink()){ R_(x - 9, y + 10, 19, 2, OUT); R_(x - 9, y + 10, Math.round(19 * S.fuel / 100), 1, lowFuel() ? '#ff6a5a' : '#5cf2ff'); } } },
+];
+let cur = 0;
+
+/* ---------- boucle ---------- */
+function draw(){
+  g.drawImage(sky(S.site), 0, 0); drawGround(S.site);
+  for (const p of S.parts) R_(Math.round(p.x), Math.round(p.y), 1, 1, p.c);
+  if (S.phase !== 'crashed') drawShip(S.ship, T);
+  if (S.phase === 'fly') VARIANTS[cur].draw();
+  hud(); R_(0, 398, LW, LH - 398, '#05060f'); engineButtons();
+  text(`PROPOSITION ${VARIANTS[cur].id}`, 136, 48, '#ffd23f', 'center', 6);
+  if (S.result) text(S.result.ok ? `POSE ! AIRE x${S.result.mul}` : S.result.why, 136, 150, S.result.ok ? '#5cff8a' : '#ff6a5a', 'center', 8);
+}
+let last = 0;
+function frame(ts){
+  const dt = Math.min(.05, (ts - last) / 1000 || 0); last = ts; T += dt;
+  if (S.phase === 'fly') step(dt);
+  else if ((S.wait -= dt) <= 0){ S.seed++; startSite(); }
+  for (const p of S.parts){ p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.gr) p.vy += 40 * dt; }
+  S.parts = S.parts.filter(p => p.t < p.life);
+  draw(); requestAnimationFrame(frame);
+}
+
+/* ---------- commandes ---------- */
+const touches = new Map();
+const sideOf = e => { const r = cv.getBoundingClientRect(); return (e.clientX - r.left) < r.width / 2 ? 'L' : 'R'; };
+function takeOver(){ if (S.demo){ S.demo = false; paintCtl(); } }
+function engines(){ let l = false, r = false; for (const v of touches.values()){ if (v === 'L') l = true; if (v === 'R') r = true; } S.left = l || KEYS.l; S.right = r || KEYS.r; }
+const KEYS = { l: false, r: false };
+cv.addEventListener('pointerdown', e => { e.preventDefault(); takeOver(); cv.setPointerCapture(e.pointerId); touches.set(e.pointerId, sideOf(e)); engines(); });
+cv.addEventListener('pointermove', e => { if (touches.has(e.pointerId)){ touches.set(e.pointerId, sideOf(e)); engines(); } });
+for (const ev of ['pointerup', 'pointercancel']) cv.addEventListener(ev, e => { touches.delete(e.pointerId); engines(); });
+addEventListener('keydown', e => { if (e.key === 'ArrowLeft'){ takeOver(); KEYS.l = true; engines(); e.preventDefault(); } if (e.key === 'ArrowRight'){ takeOver(); KEYS.r = true; engines(); e.preventDefault(); } });
+addEventListener('keyup', e => { if (e.key === 'ArrowLeft') KEYS.l = false; if (e.key === 'ArrowRight') KEYS.r = false; engines(); });
+const demoBtn = document.getElementById('demo');
+function paintCtl(){ demoBtn.setAttribute('aria-pressed', S.demo); demoBtn.textContent = S.demo ? 'DEMO AUTOMATIQUE' : 'A TOI DE PILOTER'; }
+demoBtn.onclick = () => { S.demo = !S.demo; S.left = S.right = false; paintCtl(); };
+document.getElementById('world').onclick = () => { S.wi = (S.wi + 1) % WORLDS.length; startSite(); };
+const tabs = document.getElementById('tabs');
+VARIANTS.forEach((v, i) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = v.name.split(' · ')[0] + ' · ' + v.name.split(' · ')[1].split(' ')[0];
+  b.onclick = () => { cur = i; show(); }; tabs.appendChild(b); });
+function show(){
+  const v = VARIANTS[cur]; [...tabs.children].forEach((b, i) => b.setAttribute('aria-pressed', i === cur));
+  document.getElementById('title').textContent = v.name; document.getElementById('desc').textContent = v.desc;
+  document.getElementById('pts').innerHTML = v.pts.map(p => `<li>${p}</li>`).join('');
+}
+startSite(); show(); paintCtl();
+document.fonts && document.fonts.load('8px "Press Start 2P"');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
