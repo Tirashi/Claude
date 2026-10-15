@@ -145,7 +145,7 @@ function warmSounds() { if (AU.warm && AU.warm.length) NebulaSons.warm(AU.warm.s
 // nom du jeu → son retenu ; pan : position du tir à l'écran (-1 gauche, 1 droite)
 const SND = { canon: 'canon', essaim: 'canon', laser: 'laser', missile: 'missile', torpille: 'torpille', charge: 'missile', salve: 'missile', boom: 'explosion', shield: 'bouclier', coque: 'coque',
   jump: 'saut', click: 'bip', valide: 'valide', grapple: 'grappin', winch: 'treuil', ion: 'ion', warp: 'renforts', couvee: 'renforts', heal: 'soin', mark: 'marque', mine: 'mine', jam: 'ion',
-  win: 'victoire', lose: 'defaite' };
+  win: 'victoire', lose: 'defaiteB' };
 function sfx(k, delay = 0, pan = 0) {
   if (!au()) return; delay = Math.max(0, delay);
   const t = AU.ctx.currentTime + delay;
@@ -154,12 +154,12 @@ function sfx(k, delay = 0, pan = 0) {
   if (k === 'jump') UI.jumpAt = now + delay;   // la flotte arrive en combat avec le « vwOOM » du saut
 }
 const panX = x => (x / LW - .5) * 1.4;
-/* ambiance (réglage AMBIANCE de l'écran titre) : TENSION en combat, MARCHE sur les autres écrans ; coupée quand la page est cachée */
+/* ambiance (réglage AMBIANCE de l'écran titre) : TENSION en combat, GARDE sur les autres écrans ; coupée quand la page est cachée */
 let AMB = store.get('amb', false);
 function ambience() {
   if (!AU.ctx) return;
   const on = SFX && AMB && !document.hidden, combat = UI.screen === 'game' && run && run.phase === 'combat' && !run.training;
-  NebulaSons.ambience(on ? (combat ? 'tension' : 'marche') : null, .9);
+  NebulaSons.ambience(on ? (combat ? 'tension' : 'garde') : null, .9);
 }
 document.addEventListener('visibilitychange', () => { if (!AU.ctx) return; if (document.hidden) AU.ctx.suspend(); else if (SFX) AU.ctx.resume(); ambience(); });
 

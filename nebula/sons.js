@@ -6,7 +6,7 @@
      étouffés (on les « entend » à travers la coque), bips discrets,
      saut en hyperespace façon Helldivers 2.
    - Ambiances génératives (nœuds Web Audio) : TENSION (combats) et
-     MARCHE / GARDE (carte, propositions martiales).
+     GARDE (carte, retenue ; MARCHE gardée en réserve).
    NebulaSons.init(ctx, sortie) puis play(nom, quand, pan), ambience(id).
    ===================================================================== */
 (function () {
