@@ -915,7 +915,7 @@ function drawUnlocks() {
 const RULES = [
   ['LA PARTIE', "Trois secteurs à traverser de balise en balise, chacun gardé par un amiral pirate. Un vaisseau détruit est perdu pour toute la partie ; elle s'arrête quand toute la flotte est détruite."],
   ['TON TOUR', "Chaque vaisseau peut se déplacer (cases bleues) puis agir une fois. Touche un vaisseau, garde le doigt sur une case bleue pour voir où il ira, lève le doigt, puis touche un pirate encadré pour tirer. Tant qu'il n'a pas tiré, un vaisseau déplacé peut encore être replacé."],
-  ['GESTES', "Garde le doigt posé sur un vaisseau, un pirate ou une balise : sa fiche s'ouvre (un toucher la ferme). Le tir et le saut partent quand on lève le doigt. Si un vaisseau peut encore tirer, FIN DU TOUR demande une confirmation. Écran titre : vitesse des animations, vibrations et nappe d'ambiance."],
+  ['GESTES', "Garde le doigt posé sur un vaisseau, un pirate ou une balise : sa fiche s'ouvre (un toucher la ferme ; sur ordinateur : clic droit). Le tir et le saut partent quand on lève le doigt. Si un vaisseau peut encore tirer, FIN DU TOUR demande une confirmation. Écran titre : vitesse des animations, vibrations et nappe d'ambiance."],
   ['LES INTENTIONS', "En rouge : les cases que chaque pirate frappera à la FIN DU TOUR, avec les dégâts. Sors de la case… ou détruis le pirate avant qu'il tire."],
   ['BOUCLIER ET COQUE', "Les dégâts touchent d'abord le bouclier, puis la coque. Le bouclier se recharge de 1 au début de chaque tour, jusqu'à son maximum."],
   ['PORTÉE ET LIGNE DE VUE', "La portée se compte en cases, une case en diagonale compte pour 1. Un astéroïde entre deux vaisseaux bloque les tirs. Les gros vaisseaux occupent plus de cases : ils sont plus faciles à toucher."],
@@ -1149,6 +1149,7 @@ function draw() {
 function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
 cv.addEventListener('pointerdown', e => {
   e.preventDefault();
+  if (e.button === 2) return;   // clic droit : voir 'contextmenu' (fiche)
   try { tap(e); } catch (err) { crash(err); }
 });
 /* touchers : un bouton agit dès que le doigt se pose, sauf ceux qui ont une action « au toucher long »
@@ -1193,7 +1194,16 @@ window.addEventListener('pointerup', () => {
   } catch (err) { crash(err); }
 });
 window.addEventListener('pointercancel', () => { UI.ghost = null; PRESS.on = false; });
-cv.addEventListener('contextmenu', e => e.preventDefault());
+// clic droit (ordinateur) : la fiche tout de suite, comme un toucher long
+cv.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  try {
+    if (UI.card) { UI.card = null; return; }
+    const [x, y] = logical(e), b = hitButton(x, y);
+    if (b && b.hold) { b.hold(); return; }
+    if (inCombat()) { const o = occupant(run.combat, Math.floor((x - GX) / CS), Math.floor((y - GY) / CS)); if (o) UI.card = o.t; }
+  } catch (err) { crash(err); }
+});
 function resize() {
   const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
   const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);

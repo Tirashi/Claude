@@ -288,6 +288,7 @@ Reste aussi, hors Nebula : l'artefact de l'accueil est une ancienne copie à plu
 
 ### Étape 3 (15/10) : confort au doigt
 - **Toucher long** (`HOLD_MS` 450 ms sans glisser de plus de 16 px, petite vibration) : sur un vaisseau ou un pirate en combat, ou un vaisseau du hangar, ouvre sa fiche du manuel (`shipCard`) en plein écran, fermée au toucher suivant ; sur une balise à portée de la carte, sa fiche sans sauter. Pour que ce soit possible, **le tir sur un pirate et le saut vers une balise partent au lever du doigt** (`PRESS.up`, revérifiés par `fire()`) ; le reste agit toujours dès que le doigt se pose. Mécanique générale : `zone(…, { hold })`.
+- **Clic droit** (ordinateur, demandé le 15/10) : la même fiche tout de suite (`contextmenu` reprend l'action `hold` du bouton, ou le vaisseau sous la souris en combat) ; le bouton droit n'agit jamais sur le jeu.
 - **Zones tactiles élargies** : un toucher qui ne tombe sur aucun bouton prend le plus proche à moins de 12 pixels logiques (`hitButton`, `PAD`).
 - **FIN DU TOUR** : si un vaisseau n'a pas agi et a un pirate à portée (`canStillFire`), le premier toucher affiche « LA FRÉGATE PEUT ENCORE TIRER · TOUCHE ENCORE POUR FINIR » et le bouton devient CONFIRMER (4 s).
 - **Écran titre** : ANIMATIONS ×1 / ×2 (`nebula.speed` : toutes les animations du combat deux fois plus courtes, sauf les chiffres de dégâts, qui restent lisibles) et VIBRATIONS : OUI / NON (`nebula.vib`, active par défaut et indépendante du son : vibration courte quand un vaisseau du joueur perd de la coque, plus longue s'il est détruit).
