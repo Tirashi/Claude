@@ -266,7 +266,7 @@ Validé par l'utilisateur le 14/10. Même méthode qu'en session 2 : chaque éta
 1. ✅ **Manuel** (14/10) (remplace l'écran RÈGLES) : fiches de tous les vaisseaux et pirates avec leurs jauges expliquées, terrain (astéroïdes, ions, nébuleuse), balises, modules, pilotes, règles en rubriques ; navigation par onglets.
 2. ✅ **Tutoriel** (14/10) (§ 12) : premier combat de la première partie guidé en 5 bulles (choisir un vaisseau, sortir d'une case visée, tirer, bouclier, FIN DU TOUR), désactivable, rejouable depuis le manuel.
 3. ✅ **Confort au doigt** (15/10) (`nebula-analyse.md` § 8) : toucher long = fiche (vaisseau, pirate, balise), avertissement doux sur FIN DU TOUR si un vaisseau peut encore tirer, zones tactiles plus grandes, vitesse des animations pirates ×1/×2, vibration quand un vaisseau est touché.
-4. **Sons et animations** (§ 13) : bruitages manquants (grappin, ions, salve, couvée), nappe d'ambiance coupée par défaut, petites finitions (saut, débris).
+4. ✅ **Sons et animations** (15/10) (§ 13) : bruitages manquants (grappin, ions, salve, couvée), nappe d'ambiance coupée par défaut, petites finitions (saut, débris).
 5. **Hors connexion et batterie** (`nebula-analyse.md` § 6 et § 8 ; touche `sw.js`, donc tout le site) : polices dans le dépôt, délai réseau du service worker, redessin seulement quand quelque chose bouge.
 6. **Équilibrage final et bilan** : flotte de choc un peu forte, retours de jeu de l'utilisateur, docs.
 Reste aussi, hors Nebula : l'artefact de l'accueil est une ancienne copie à plusieurs fichiers (sans Orbite, Pont stellaire, Alunissage, Nebula) ; le refaire demande un chantier à part.
@@ -293,3 +293,9 @@ Reste aussi, hors Nebula : l'artefact de l'accueil est une ancienne copie à plu
 - **Écran titre** : ANIMATIONS ×1 / ×2 (`nebula.speed` : toutes les animations du combat deux fois plus courtes, sauf les chiffres de dégâts, qui restent lisibles) et VIBRATIONS : OUI / NON (`nebula.vib`, active par défaut et indépendante du son : vibration courte quand un vaisseau du joueur perd de la coque, plus longue s'il est détruit).
 - Manuel : rubrique GESTES. L'aperçu du danger (§ 8 de l'analyse) existait déjà avec le fantôme de placement.
 - Testé avec de vrais touchers (Playwright) : appui long sur une balise (fiche, pas de saut) puis toucher court (saut), appui long sur un pirate (fiche, pas de tir) puis toucher court (tir), avertissement puis fin du tour en touchant 8 px sous le bouton, tour pirate 0,7 s → 0,35 s en ×2 ; tutoriel rejoué de bout en bout.
+
+### Étape 4 (15/10) : sons et animations
+- **Bruitages ajoutés** (WebAudio, toujours graves et discrets) : `grapple` (harpon et câble ; avant, on entendait le laser), `winch` (treuil quand le vaisseau est tiré), `ion` (grésillement ; avant, le son du bouclier), `salve` (4 impacts en rafale de l'artilleur), `warp` (renforts qui sortent de l'hyperespace), `couvee` (la Veuve lâche ses brûlots), `heal` (réparation), `mark` (marquage de l'éclaireur), `win` / `lose` (une fois, à l'écran de fin de combat ; un repli rejoue le saut).
+- **Nappe d'ambiance** (réglage AMBIANCE de l'écran titre, `nebula.amb`, **coupée par défaut**, grisée si le son est coupé) : deux scies graves désaccordées, une quinte et une sous-basse dans un passe-bas qui respire lentement (oscillateur à 0,06 Hz), montée en 4 s. L'audio est suspendu quand la page est cachée (économie de batterie).
+- **Animations** : saut hyperspatial avec traînées d'étoiles qui s'étirent puis éclair (0,9 s, au lieu du seul éclair) ; débris de coque qui tournoient et s'éteignent à chaque destruction (plus nombreux pour les gros vaisseaux, teinte orangée pour les pirates).
+- Testé dans Chromium : les 19 bruitages et la nappe (marche / arrêt) sans erreur ; captures du saut et des débris.

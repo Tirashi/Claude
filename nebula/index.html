@@ -138,7 +138,7 @@ function au() {
   if (!SFX) return null;
   if (!AU.ctx) { const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return null; AU.ctx = new Ctx(); AU.out = AU.ctx.createGain(); AU.out.gain.value = .35; AU.out.connect(AU.ctx.destination);
     const n = AU.ctx.sampleRate; AU.noise = AU.ctx.createBuffer(1, n, n); const d = AU.noise.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; }
-  if (AU.ctx.state === 'suspended') AU.ctx.resume(); return AU.ctx;
+  if (AU.ctx.state === 'suspended' && !document.hidden) AU.ctx.resume(); ambience(); return AU.ctx;
 }
 function tone(type, f0, f1, dur, vol, delay) { const a = AU.ctx, t = a.currentTime + delay, o = a.createOscillator(), v = a.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
   v.gain.setValueAtTime(vol, t); v.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(v); v.connect(AU.out); o.start(t); o.stop(t + dur + .02); }
@@ -154,7 +154,35 @@ function sfx(k, delay = 0) {
   else if (k === 'shield') tone('sine', 420, 760, .16, .06, delay);
   else if (k === 'jump') { tone('sine', 70, 700, .7, .12, delay); noise(.7, 150, 2600, .1, delay); }
   else if (k === 'click') tone('square', 900, 700, .035, .03, delay);
+  else if (k === 'grapple') { tone('triangle', 520, 240, .22, .06, delay); noise(.1, 3200, 900, .16, delay); tone('square', 160, 150, .05, .03, delay + .2); }   // le harpon et son câble
+  else if (k === 'winch') { tone('sawtooth', 70, 120, .45, .035, delay); noise(.45, 400, 900, .06, delay); }                                             // le treuil qui tire le vaisseau
+  else if (k === 'ion') { for (const d of [0, .05, .12, .2]) noise(.05, 7000, 2500, .14, delay + d); tone('square', 1300, 500, .09, .015, delay); }      // grésillement électrique
+  else if (k === 'salve') { for (let i = 0; i < 4; i++) { noise(.32, 700, 60, .3, delay + i * .07); tone('sine', 80 - i * 6, 35, .3, .12, delay + i * .07); } }
+  else if (k === 'warp') { tone('sine', 900, 110, .45, .06, delay); noise(.45, 2600, 200, .07, delay); }                                                // un pirate sort de l'hyperespace
+  else if (k === 'couvee') { tone('sawtooth', 62, 44, .7, .05, delay); tone('sine', 900, 110, .45, .05, delay + .1); noise(.6, 900, 120, .1, delay); }  // la Veuve lâche ses brûlots
+  else if (k === 'heal') tone('sine', 320, 520, .22, .035, delay);
+  else if (k === 'mark') { tone('sine', 1500, 1500, .1, .025, delay); tone('sine', 2000, 2000, .08, .02, delay + .09); }
+  else if (k === 'win') { for (const [f, d] of [[220, 0], [277, .12], [330, .24], [440, .36]]) tone('sine', f, f, .9, .05, delay + d); }
+  else if (k === 'lose') { tone('sine', 196, 98, 1.2, .08, delay); tone('sine', 147, 73, 1.4, .06, delay + .2); }
 }
+/* nappe d'ambiance (réglage AMBIANCE, coupée par défaut) : deux scies graves désaccordées et une quinte,
+   dans un filtre passe-bas qui respire lentement ; coupée quand la page est cachée */
+let AMB = store.get('amb', false);
+function ambience() {
+  const on = SFX && AMB && !document.hidden, a = AU.ctx;
+  if (!a) return;
+  if (on && !AU.amb) {
+    const out = a.createGain(), f = a.createBiquadFilter(), lfo = a.createOscillator(), lg = a.createGain(), oscs = [];
+    f.type = 'lowpass'; f.frequency.value = 260; f.Q.value = 3; lfo.frequency.value = .06; lg.gain.value = 140; lfo.connect(lg); lg.connect(f.frequency);
+    for (const [type, fr, v] of [['sawtooth', 55, .5], ['sawtooth', 55.35, .5], ['sine', 82.4, .6], ['sine', 27.5, .8]]) { const o = a.createOscillator(), gg = a.createGain(); o.type = type; o.frequency.value = fr; gg.gain.value = v; o.connect(gg); gg.connect(f); o.start(); oscs.push(o); }
+    f.connect(out); out.connect(AU.out); out.gain.setValueAtTime(0, a.currentTime); out.gain.linearRampToValueAtTime(.09, a.currentTime + 4); lfo.start();
+    AU.amb = { out, oscs: oscs.concat(lfo) };
+  } else if (!on && AU.amb) {
+    const { out, oscs } = AU.amb, t = a.currentTime; out.gain.cancelScheduledValues(t); out.gain.setValueAtTime(out.gain.value, t); out.gain.linearRampToValueAtTime(0, t + .6);
+    oscs.forEach(o => o.stop(t + .7)); AU.amb = null;
+  }
+}
+document.addEventListener('visibilitychange', () => { if (!AU.ctx) return; if (document.hidden) AU.ctx.suspend(); else if (SFX) AU.ctx.resume(); ambience(); });
 
 // vibration courte quand un vaisseau du joueur est touché (réglage VIBRATIONS de l'écran titre)
 function buzz(ms, delay = 0) { if (!VIB || !navigator.vibrate) return; setTimeout(() => { try { navigator.vibrate(ms); } catch (e) {} }, Math.max(0, delay) * 1000); }
@@ -170,22 +198,22 @@ function play(ev) {
   for (const e of ev) {
     const s = e.id != null ? byId(st, e.id) : null;
     if (e.e === 'turn') { if (e.n > 1) ANIM.fx.push({ k: 'banner', t0: t, dur: 1 * k, text: 'TOUR ' + e.n }); t += .2 * k; }
-    else if (e.e === 'move') { const d = ((e.path.length - 1) * .1 + .05) * k; (ANIM.move[e.id] = ANIM.move[e.id] || []).push({ t0: t, t1: t + d, path: e.path }); t += d + .04 * k; }
+    else if (e.e === 'move') { const d = ((e.path.length - 1) * .1 + .05) * k; if (e.pulled) sfx('winch', t - now); (ANIM.move[e.id] = ANIM.move[e.id] || []).push({ t0: t, t1: t + d, path: e.path }); t += d + .04 * k; }
     else if (e.e === 'shot') {
       const a = byId(st, e.from), d = (e.fx === 'torpille' ? .55 : e.fx === 'missile' ? .45 : e.fx === 'charge' ? .3 : .25) * k;
       const to = e.to != null ? center(byId(st, e.to)) : cellCenter(...e.cell);
-      ANIM.fx.push({ k: 'shot', fx: e.fx, foe: a.side === 'E', t0: t, dur: d, a: center(a), b: to }); sfx(e.fx === 'charge' ? 'missile' : e.fx === 'grapple' ? 'laser' : e.fx, t - now); t += d;
+      ANIM.fx.push({ k: 'shot', fx: e.fx, foe: a.side === 'E', t0: t, dur: d, a: center(a), b: to }); sfx(e.fx === 'charge' ? 'missile' : e.fx, t - now); t += d;
     }
     else if (e.e === 'swarm') { ANIM.fx.push({ k: 'swarm', t0: t, dur: .35 * k, a: center(s || byId(st, e.from)) }); sfx('essaim', t - now); t += .3 * k; }
     else if (e.e === 'dmg') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '-' + e.n, col: e.hull ? (s.side === 'E' ? C.acc : C.foe) : C.ally }); ANIM.fx.push({ k: 'hit', t0: t, dur: .3 * k, x, y, shield: !e.hull }); if (!e.hull) sfx('shield', t - now); else if (s.side === 'P') buzz(e.n >= 4 ? 70 : 35, t - now); }
-    else if (e.e === 'boom') { const [x, y] = center(s); ANIM.death[e.id] = t + .08 * k; ANIM.fx.push({ k: 'boom', t0: t, dur: .9 * k, x, y, big: e.big }); sfx('boom', t - now); if (s.side === 'P') buzz(160, t - now); t += .22 * k; }
+    else if (e.e === 'boom') { const [x, y] = center(s); ANIM.death[e.id] = t + .08 * k; ANIM.fx.push({ k: 'boom', t0: t, dur: .9 * k, x, y, big: e.big }); ANIM.fx.push({ k: 'debris', t0: t, dur: 1.3 * k, x, y, big: e.big, seed: e.id * 97 + 13, foe: s.side === 'E' }); sfx('boom', t - now); if (s.side === 'P') buzz(160, t - now); t += .22 * k; }
     else if (e.e === 'blast') { const [x, y] = cellCenter(e.c, e.r); ANIM.fx.push({ k: 'blast', t0: t, dur: .6 * k, x, y, big: e.big }); sfx('boom', t - now); t += .15 * k; }
-    else if (e.e === 'spawn') { ANIM.spawn[e.id] = t; const [x, y] = center(s); ANIM.fx.push({ k: 'warp', t0: t, dur: .5 * k, x, y }); t += .25 * k; }
-    else if (e.e === 'ion') { const [x, y] = center(s); ANIM.fx.push({ k: 'hit', t0: t, dur: .5 * k, x, y, shield: true }); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'BOUCLIER PERDU', col: C.ally, small: true }); sfx('shield', t - now); t += .1 * k; }
+    else if (e.e === 'spawn') { ANIM.spawn[e.id] = t; const [x, y] = center(s); sfx(s.t === 'brulot' ? 'couvee' : 'warp', t - now); ANIM.fx.push({ k: 'warp', t0: t, dur: .5 * k, x, y }); t += .25 * k; }
+    else if (e.e === 'ion') { const [x, y] = center(s); ANIM.fx.push({ k: 'hit', t0: t, dur: .5 * k, x, y, shield: true }); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'BOUCLIER PERDU', col: C.ally, small: true }); sfx('ion', t - now); t += .1 * k; }
     else if (e.e === 'shield') { const [x, y] = center(s); ANIM.fx.push({ k: 'hit', t0: t, dur: .5 * k, x, y, shield: true }); }
-    else if (e.e === 'heal') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '+' + e.n, col: C.ok }); }
-    else if (e.e === 'mark') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'MARQUÉ', col: C.acc, small: true }); }
-    else if (e.e === 'zone') { ANIM.fx.push({ k: 'zone', t0: t, dur: .6 * k, x: GX + e.c * CS, y: GY + e.r * CS }); sfx('boom', t - now); t += .2 * k; }
+    else if (e.e === 'heal') { const [x, y] = center(s); sfx('heal', t - now); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '+' + e.n, col: C.ok }); }
+    else if (e.e === 'mark') { const [x, y] = center(s); sfx('mark', t - now); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'MARQUÉ', col: C.acc, small: true }); }
+    else if (e.e === 'zone') { ANIM.fx.push({ k: 'zone', t0: t, dur: .6 * k, x: GX + e.c * CS, y: GY + e.r * CS }); sfx('salve', t - now); t += .2 * k; }
     else if (e.e === 'miss') { const [x, y] = cellCenter(...e.cell); ANIM.fx.push({ k: 'num', t0: t, dur: .8, x, y, text: 'DANS LE VIDE', col: C.dim, small: true }); }
   }
   ANIM.busy = t;
@@ -236,6 +264,13 @@ function drawFx() {
       g.fillStyle = gr; g.fillRect(f.x - R, f.y - R, R * 2, R * 2);
       const Rn = V.rnd(Math.round(f.t0 * 1000)); g.fillStyle = `rgba(255,200,140,${1 - u})`;
       for (let k = 0; k < 14; k++) { const a = Rn() * TAU, d = R * (.4 + Rn() * .8); g.fillRect(f.x + Math.cos(a) * d, f.y + Math.sin(a) * d, 2, 2); }
+    } else if (f.k === 'debris') {   // éclats de coque qui tournoient et s'éteignent
+      const Rn = V.rnd(f.seed), n = f.big ? 16 : 10, e = 1 - (1 - u) * (1 - u);
+      for (let i = 0; i < n; i++) {
+        const a = Rn() * TAU, sp = (30 + Rn() * 60) * (f.big ? 1.4 : 1), sz = 2 + Rn() * (f.big ? 5 : 3.5), rot = (Rn() - .5) * 12 * u, x = f.x + Math.cos(a) * sp * e, y = f.y + Math.sin(a) * sp * e;
+        g.save(); g.translate(x, y); g.rotate(rot + a); g.globalAlpha = (1 - u) * .95;
+        g.fillStyle = Rn() < .35 ? (f.foe ? '#ff9a5a' : '#ffc070') : Rn() < .5 ? '#6a6e78' : '#3c4048'; g.fillRect(-sz, -sz * .45, sz * 2, sz * .9); g.restore();
+      }
     } else if (f.k === 'swarm') {
       g.strokeStyle = `rgba(242,178,74,${1 - u})`; g.lineWidth = 2; g.strokeRect(f.a[0] - CS * 1.5 + 2, f.a[1] - CS * 1.5 + 2, CS * 3 - 4, CS * 3 - 4);
       g.fillStyle = `rgba(242,178,74,${.15 * (1 - u)})`; g.fillRect(f.a[0] - CS * 1.5, f.a[1] - CS * 1.5, CS * 3, CS * 3);
@@ -457,6 +492,7 @@ function drawFiche(st, s, B) {
 // vaisseaux du joueur qui n'ont pas agi et ont encore un pirate à portée
 const canStillFire = st => sideOf(st, 'P').filter(o => canAct(st, o) && TYPES[o.t].w.some((w, i) => w.swarm ? sideOf(st, 'E').some(e => dist(e, o) <= 1) : targetsFor(st, o, i).length));
 function drawResult(st) {
+  if (UI.rs !== st) { UI.rs = st; sfx(st.result === 'won' ? 'win' : st.result === 'fled' ? 'jump' : 'lose'); }
   g.fillStyle = 'rgba(2,4,8,.55)'; g.fillRect(0, 0, LW, LH);
   const won = st.result === 'won', col = won ? C.acc : st.result === 'fled' ? C.ally : C.foe;
   frameBox(60, 340, LW - 120, 230, col, 14, 'rgba(6,10,18,.92)');
@@ -823,9 +859,10 @@ function drawTitle() {
   btn(52, 790, 104, 40, 'MANUEL', () => openManual('title'), { size: 17, ls: 1 });
   btn(164, 790, 104, 40, 'DÉBLOCAGES', () => { UI.screen = 'unlocks'; UI.back = 'title'; }, { size: 15, ls: 1, col: walletOf(meta) >= cheapest() ? C.acc : null });
   btn(276, 790, 104, 40, 'CLASSEMENT', () => { location.href = '../classements/index.html#nebula'; }, { size: 15, ls: 1 });
-  btn(388, 790, 104, 40, SFX ? 'SON : OUI' : 'SON : NON', () => { SFX = !SFX; store.set('sfx', SFX); if (SFX) sfx('click'); }, { size: 15, ls: 1 });
-  btn(52, 840, 216, 38, SPEED === 2 ? 'ANIMATIONS ×2' : 'ANIMATIONS ×1', () => { SPEED = SPEED === 2 ? 1 : 2; store.set('speed', SPEED); }, { size: 15, ls: 1, primary: SPEED === 2 });
-  btn(276, 840, 216, 38, VIB ? 'VIBRATIONS : OUI' : 'VIBRATIONS : NON', () => { VIB = !VIB; store.set('vib', VIB); buzz(40); }, { size: 15, ls: 1 });
+  btn(388, 790, 104, 40, SFX ? 'SON : OUI' : 'SON : NON', () => { SFX = !SFX; store.set('sfx', SFX); if (SFX) sfx('click'); ambience(); }, { size: 15, ls: 1 });
+  btn(52, 840, 141, 38, SPEED === 2 ? 'ANIMATIONS ×2' : 'ANIMATIONS ×1', () => { SPEED = SPEED === 2 ? 1 : 2; store.set('speed', SPEED); }, { size: 14, ls: 1, primary: SPEED === 2 });
+  btn(201, 840, 142, 38, VIB ? 'VIBRATIONS : OUI' : 'VIBRATIONS : NON', () => { VIB = !VIB; store.set('vib', VIB); buzz(40); }, { size: 14, ls: 1 });
+  btn(351, 840, 141, 38, AMB ? 'AMBIANCE : OUI' : 'AMBIANCE : NON', () => { AMB = !AMB; store.set('amb', AMB); au(); ambience(); }, { size: 14, ls: 1, primary: AMB, off: !SFX });
   if (best || meta.games) txt(`RECORD ${best} · ${meta.games} PARTIE${meta.games > 1 ? 'S' : ''} · ${walletOf(meta)} DONNÉES STELLAIRES`, LW / 2, 892, C.dim, F.mono(14), 'center', 1);
   txt('BIENTÔT', LW / 2, 914, C.acc, F.mono(14), 'center', 4); txt("NEBULA : L'EMPIRE DES ÉTOILES", LW / 2, 932, C.txt, F.ui(20), 'center', 3);
 }
@@ -878,7 +915,7 @@ function drawUnlocks() {
 const RULES = [
   ['LA PARTIE', "Trois secteurs à traverser de balise en balise, chacun gardé par un amiral pirate. Un vaisseau détruit est perdu pour toute la partie ; elle s'arrête quand toute la flotte est détruite."],
   ['TON TOUR', "Chaque vaisseau peut se déplacer (cases bleues) puis agir une fois. Touche un vaisseau, garde le doigt sur une case bleue pour voir où il ira, lève le doigt, puis touche un pirate encadré pour tirer. Tant qu'il n'a pas tiré, un vaisseau déplacé peut encore être replacé."],
-  ['GESTES', "Garde le doigt posé sur un vaisseau, un pirate ou une balise : sa fiche s'ouvre (un toucher la ferme). Le tir et le saut partent quand on lève le doigt. Si un vaisseau peut encore tirer, FIN DU TOUR demande une confirmation. Écran titre : vitesse des animations et vibrations."],
+  ['GESTES', "Garde le doigt posé sur un vaisseau, un pirate ou une balise : sa fiche s'ouvre (un toucher la ferme). Le tir et le saut partent quand on lève le doigt. Si un vaisseau peut encore tirer, FIN DU TOUR demande une confirmation. Écran titre : vitesse des animations, vibrations et nappe d'ambiance."],
   ['LES INTENTIONS', "En rouge : les cases que chaque pirate frappera à la FIN DU TOUR, avec les dégâts. Sors de la case… ou détruis le pirate avant qu'il tire."],
   ['BOUCLIER ET COQUE', "Les dégâts touchent d'abord le bouclier, puis la coque. Le bouclier se recharge de 1 au début de chaque tour, jusqu'à son maximum."],
   ['PORTÉE ET LIGNE DE VUE', "La portée se compte en cases, une case en diagonale compte pour 1. Un astéroïde entre deux vaisseaux bloque les tirs. Les gros vaisseaux occupent plus de cases : ils sont plus faciles à toucher."],
@@ -1100,7 +1137,14 @@ function draw() {
   else if (run.phase === 'event') drawEvent();
   else if (run.phase === 'end') drawEnd();
   if (UI.card) drawCard();
-  if (UI.flash && now - UI.flash < .6) { const u = (now - UI.flash) / .6; g.fillStyle = `rgba(200,225,255,${(1 - u) * .7})`; g.fillRect(0, 0, LW, LH); }
+  if (UI.flash && now - UI.flash < .9) {   // saut : les étoiles s'étirent en traînées, puis un éclair
+    const u = (now - UI.flash) / .9, R = V.rnd(7), cx = LW / 2, cy = LH / 2;
+    g.save(); g.globalCompositeOperation = 'lighter'; g.lineCap = 'round';
+    for (let i = 0; i < 70; i++) { const a = R() * TAU, r0 = 20 + R() * 260, len = (30 + R() * 140) * u * u * 2.2, w = .8 + R() * 1.6, al = (1 - u) * (.35 + R() * .5);
+      g.strokeStyle = `rgba(200,225,255,${al})`; g.lineWidth = w; g.beginPath(); g.moveTo(cx + Math.cos(a) * (r0 + len * .3), cy + Math.sin(a) * (r0 + len * .3)); g.lineTo(cx + Math.cos(a) * (r0 + len * 1.3), cy + Math.sin(a) * (r0 + len * 1.3)); g.stroke(); }
+    g.restore();
+    if (u > .45) { const v = (u - .45) / .55; g.fillStyle = `rgba(200,225,255,${(1 - v) * .6})`; g.fillRect(0, 0, LW, LH); }
+  }
 }
 function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
 cv.addEventListener('pointerdown', e => {
