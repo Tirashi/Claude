@@ -192,7 +192,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       title: () => `QUEENS · ${st.size}×${st.size}`, note: "Grilles réussies sans indice."},
       {label: "GRILLE DU JOUR", ctl: ["day"], game: "queens", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: T,
        title: () => `GRILLE DU JOUR · ${[9, 5, 6, 7, 7, 8, 9][day().getDay()]}×${[9, 5, 6, 7, 7, 8, 9][day().getDay()]}`, play: "../queens/index.html#jour",
-       note: "La même grille pour toute la famille, de 5×5 le lundi à 9×9 le week-end. Temps plus 30 secondes par indice.",
+       note: "La même grille pour toute la famille, de 5×5 le lundi à 9×9 le week-end. Temps plus 30 secondes par indice. Une seule tentative classée par jour.",
        empty: () => st.back ? "Personne n'a fini la grille ce jour-là." : "Personne n'a encore fini la grille du jour : à toi de jouer !"}]},
     {id: "picross", name: "PICROSS DEX", play: "../picross/index.html", views: [
       {label: "PAR POKEMON", ctl: ["pokemon"], game: "picross", board: () => "t:" + st.poke, fmt: T, title: () => st.poke ? pokeLabel(st.poke) : "PICROSS DEX",
@@ -222,7 +222,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       {label: "MEILLEUR SCORE", game: "alunissage", board: () => "best", fmt: v => N(v) + " pts", title: () => "ALUNISSAGE · MEILLEURE MISSION",
        note: "Score d'une mission : à chaque site, (100 + carburant restant) × le multiplicateur de l'aire."},
       {label: "MISSION DU JOUR", ctl: ["day"], game: "alunissage", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: v => N(v) + " pts",
-       title: () => "MISSION DU JOUR", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}]},
+       title: () => "MISSION DU JOUR", note: "La même suite de sites pour toute la famille. Seule la première mission du jour est classée.", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}]},
     {id: "nebula", name: "NEBULA", play: "../nebula/index.html", views: [
       {label: "MEILLEUR SCORE", game: "nebula", board: () => "best", fmt: v => N(v) + " pts", title: () => "NEBULA · MEILLEURE PARTIE",
        note: "1000 par secteur terminé, 20 par pirate détruit, les crédits restants, et 3000 pour la victoire finale."},
@@ -233,7 +233,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
        note: "Le nombre de parties gagnées (la Rouille-Reine vaincue).", empty: "Personne n'a encore vaincu la Rouille-Reine."}]},
     {id: "pontstellaire", name: "PONT STELLAIRE", play: "../pont-stellaire/index.html", views: [
       {label: "CIEL DU JOUR", ctl: ["day"], game: "pontstellaire", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: T,
-       title: () => "CIEL DU JOUR", note: "Le même ciel 9×9 pour toute la famille, plus 30 secondes par indice.",
+       title: () => "CIEL DU JOUR", note: "Le même ciel 9×9 pour toute la famille, plus 30 secondes par indice. Une seule tentative classée par jour.",
        empty: () => st.back ? "Personne n'a dessiné le ciel ce jour-là." : "Personne n'a encore dessiné le ciel du jour : à toi de jouer !"},
       {label: "PAR TAILLE", ctl: ["pssize"], game: "pontstellaire", board: () => "best:" + st.pssize, fmt: T,
        title: () => `PONT STELLAIRE · ${st.pssize}×${st.pssize}`, note: "Le meilleur temps, plus 30 secondes par indice."},

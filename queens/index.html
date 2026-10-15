@@ -382,8 +382,10 @@ let history = [];
 let startTime = 0, elapsed = 0, won = false, hints = 0, timerId = null;
 let size = loadPref("size", 7), autoX = loadPref("autoCross", true);
 /* grille du jour : la même pour toute la famille (graine = date), plus grande au fil de la semaine
-   (5×5 le lundi → 9×9 le week-end) ; score = temps + 30 s par indice ; meilleur score du jour gardé dans queens16.daily */
-let daily = false, dailyDone = loadPref("daily", {}) || {};
+   (5×5 le lundi → 9×9 le week-end) ; score = temps + 30 s par indice, gardé dans queens16.daily.
+   Une seule tentative classée : la partie en cours (chrono compris) est gardée dans queens16.dailyRun et reprise
+   si on revient ; une fois réussie, la grille du jour se rejoue hors classement (offRank). */
+let daily = false, offRank = false, dailyDone = loadPref("daily", {}) || {};
 const DAY_SIZE = [9, 5, 6, 7, 7, 8, 9], DAY_NAME = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
 const todayKey = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
 const dailySize = () => DAY_SIZE[new Date().getDay()];
@@ -419,14 +421,26 @@ function newGame(seed, saved){
   clearInterval(timerId);
   timerId = setInterval(tick, 250); tick();
 }
-function tick(){ if (won) return; elapsed = performance.now() - startTime; $("time").textContent = fmt(elapsed); }
+function tick(){ if (won || document.hidden) return; elapsed = performance.now() - startTime; $("time").textContent = fmt(elapsed); }
 function renderBest(){ const b = daily ? dailyDone[P ? P.day : todayKey()] : best[size]; $("best").textContent = b ? fmt(b) : "--:--"; }
 function paintDaily(){
   const k = todayKey(), done = dailyDone[k], b = $("dailyBtn");
-  b.innerHTML = `GRILLE DU JOUR · ${DAY_NAME[new Date().getDay()]} ${dailySize()}×${dailySize()}` + (done ? `<small>TON SCORE ${fmt(done)}</small>` : "");
+  const run = !done && dailyRun();
+  b.innerHTML = `GRILLE DU JOUR · ${DAY_NAME[new Date().getDay()]} ${dailySize()}×${dailySize()}` +
+    (done ? `<small>TON SCORE ${fmt(done)} · REJOUER HORS CLASSEMENT</small>` : run && !(daily && !won) ? `<small>EN COURS · ${fmt(run.elapsed)} · REPRENDRE</small>` : "");
   b.setAttribute("aria-pressed", daily);
 }
-function startDaily(){ daily = true; size = dailySize(); buildSizes(); newGame(todayKey()); }
+function dailyRun(){ const r = loadPref("dailyRun", null); return r && r.day === todayKey() ? r : null; }
+function saveRun(){
+  if (!daily || offRank || won || !P) return;
+  savePref("dailyRun", {day: P.day, cells, hints, elapsed: Math.round(document.hidden ? elapsed : performance.now() - startTime)});
+}
+function startDaily(){
+  const k = todayKey(); daily = true; size = dailySize(); offRank = dailyDone[k] > 0; buildSizes();
+  newGame(k, offRank ? null : dailyRun());
+  if (offRank) setMsg(`Grille du jour déjà réussie : <span class="hl">hors classement</span>.`);
+  saveRun();
+}
 
 function build(){
   const N = P.N; boardEl.style.setProperty("--n", N); boardEl.innerHTML = "";
@@ -501,7 +515,7 @@ function commit(prev){
   const {badQ, qs} = Object.assign(render(), conflicts());
   if (badQ.size){ setMsg(`<span class="hl">Conflit !</span> Deux reines se gênent.`); }
   else setMsg(`Reines : <span class="hl">${qs.length}</span> / ${P.N}`);
-  if (qs.length === P.N && !badQ.size) win();
+  if (qs.length === P.N && !badQ.size) win(); else saveRun();
 }
 
 function setCell(i, v){ if (won) return; const prev = cells.slice(); cells[i] = v; commit(prev);
@@ -528,13 +542,13 @@ function win(){
 
 // grille du jour : temps + 30 s par indice ; le meilleur score du jour part au classement queens / daily:AAAAMMJJ
 function winDaily(){
-  const k = P.day, sc = Math.round(elapsed) + hints * PENALTY, rec = !(dailyDone[k] > 0) || sc < dailyDone[k];
-  if (rec){ dailyDone[k] = sc; savePref("daily", dailyDone); }
+  const k = P.day, sc = Math.round(elapsed) + hints * PENALTY;
+  if (!offRank){ dailyDone[k] = sc; savePref("daily", dailyDone); savePref("dailyRun", null); }
   renderBest(); paintDaily();
   setMsg(`<span class="hl">GRILLE DU JOUR REUSSIE !</span>`);
   $("winStats").innerHTML = `GRILLE DU JOUR ${size}×${size}<br>TEMPS ${fmt(elapsed)}<br>INDICES ${hints}${hints ? ` (+${hints * PENALTY / 1000} S)` : ""}<br>SCORE ${fmt(sc)}<br>` +
-    (rec ? `<span class="new">MEILLEUR SCORE DU JOUR !</span>` : `TON SCORE DU JOUR ${fmt(dailyDone[k])}`);
-  if (window.LudoScores) LudoScores.submit("queens", "daily:" + k, sc, true).then(r => { if (r) $("winStats").innerHTML += `<br>GRILLE DU JOUR : ${LudoScores.rankText(r).toUpperCase()}`; });
+    (offRank ? `DEJA JOUEE AUJOURD'HUI :<br>HORS CLASSEMENT (TON SCORE ${fmt(dailyDone[k])})` : `<span class="new">SCORE DU JOUR ENREGISTRE !</span>`);
+  if (!offRank && window.LudoScores) LudoScores.submit("queens", "daily:" + k, sc, true).then(r => { if (r) $("winStats").innerHTML += `<br>GRILLE DU JOUR : ${LudoScores.rankText(r).toUpperCase()}`; });
   setTimeout(() => { if (won){ $("overlay").hidden = false; $("nextBtn").focus(); } }, 1100);
 }
 
@@ -619,9 +633,15 @@ $("hintBtn").onclick = () => {
 };
 $("autoBtn").onclick = () => { autoX = !autoX; savePref("autoCross", autoX); syncToggles(); if (!won){ syncAuto(); render(); } };
 $("soundBtn").onclick = () => { soundOn = !soundOn; savePref("sound", soundOn); syncToggles(); SFX.q(); };
-$("newBtn").onclick = () => { daily = false; buildSizes(); newGame(); SFX.hint(); };
-$("nextBtn").onclick = () => { daily = false; buildSizes(); newGame(); SFX.hint(); };
-$("dailyBtn").onclick = () => { if (daily && !won && P && P.day === todayKey()) return; startDaily(); SFX.hint(); };
+$("newBtn").onclick = () => { saveRun(); daily = false; buildSizes(); newGame(); SFX.hint(); };
+$("nextBtn").onclick = () => { saveRun(); daily = false; buildSizes(); newGame(); SFX.hint(); };
+$("dailyBtn").onclick = () => { if (daily && !won && P && P.day === todayKey()) return; saveRun(); startDaily(); SFX.hint(); };
+// le chrono s'arrête quand l'appli est cachée, et la tentative du jour est sauvegardée régulièrement
+document.addEventListener("visibilitychange", () => {
+  if (won || !P) return;
+  if (document.hidden){ elapsed = performance.now() - startTime; saveRun(); } else startTime = performance.now() - elapsed;
+});
+setInterval(() => { if (!document.hidden) saveRun(); }, 3000);
 function syncToggles(){
   $("autoBtn").setAttribute("aria-pressed", autoX);
   $("soundBtn").setAttribute("aria-pressed", soundOn);
@@ -633,7 +653,7 @@ function buildSizes(){
     const b = document.createElement("button");
     b.className = "btn"; b.type = "button"; b.textContent = s.l;
     b.setAttribute("aria-pressed", !daily && s.n === size);
-    b.onclick = () => { if (s.n === size && !won && !daily) return; daily = false; size = s.n; savePref("size", size); buildSizes(); newGame(); SFX.hint(); };
+    b.onclick = () => { if (s.n === size && !won && !daily) return; saveRun(); daily = false; size = s.n; savePref("size", size); buildSizes(); newGame(); SFX.hint(); };
     nav.appendChild(b);
   });
 }
@@ -641,8 +661,7 @@ function buildSizes(){
 /* ---------- boot (keeps an in-progress game across live updates) ---------- */
 function start(data){
   if (data && data.size) size = data.size;
-  daily = !!(data && data.daily && data.seed === todayKey());
-  if (daily) size = dailySize();
+  if (data && data.daily && data.seed === todayKey()){ startDaily(); syncToggles(); return; }
   // lien direct vers la grille du jour (#jour), par exemple depuis l'accueil
   if (!data?.seed && location.hash === "#jour"){ startDaily(); syncToggles(); return; }
   buildSizes(); syncToggles();

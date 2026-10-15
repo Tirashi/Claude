@@ -43,7 +43,7 @@ Ouvre `queens/index.html` dans n'importe quel navigateur récent. Aucun build, a
 - Conflits signalés en rouge.
 - Auto-X (activé par défaut) : poser une reine met une croix sur toutes les cases qu'elle interdit, retirer la reine les enlève.
 - Annuler, effacer, indice, chrono et record par taille (stocké localement).
-- **Grille du jour** : la même grille pour toute la famille (graine = date), qui grandit au fil de la semaine (5×5 le lundi, 6×6 le mardi, 7×7 le mercredi et le jeudi, 8×8 le vendredi, 9×9 le week-end). Score = temps + 30 secondes par indice ; le meilleur score du jour part au classement et au transfert de sauvegardes. Lien direct : `queens/index.html#jour`.
+- **Grille du jour** : la même grille pour toute la famille (graine = date), qui grandit au fil de la semaine (5×5 le lundi, 6×6 le mardi, 7×7 le mercredi et le jeudi, 8×8 le vendredi, 9×9 le week-end). Score = temps + 30 secondes par indice. **Une seule tentative classée** : la partie du jour est sauvegardée, chrono compris (le chrono s'arrête quand on quitte l'appli et reprend au retour) ; une fois réussie, elle se rejoue hors classement. Le score du jour part au classement et au transfert de sauvegardes. Lien direct : `queens/index.html#jour`.
 - Jouable au clavier : flèches, Espace, Q, X, Z.
 
 ---
@@ -138,6 +138,7 @@ Un puzzle de logique sur les règles du **Hashi**, dans un ciel étoilé en 32 b
 - À la fin, toutes les étoiles doivent être reliées en une seule constellation, qui s'illumine en or et reçoit un nom (la Lyre, le Cygne, Cassiopée…).
 - **Commandes** : toucher une étoile puis sa voisine, ou glisser de l'une vers l'autre, pose un faisceau ; recommencer en pose deux, puis les enlève. Toucher un faisceau le fait aussi tourner. Une étoile devient verte quand elle est complète, rouge quand elle a trop de faisceaux. ANNULER, EFFACER (deux appuis) et INDICE (+30 secondes).
 - **Trois tailles** (7×7, 9×9 et 11×11) et un **Ciel du jour** en 9×9, le même pour toute la famille. Les grilles sont générées à l'infini, et un solveur vérifie que chacune n'a **qu'une seule solution**.
+- **Ciel du jour : une seule tentative classée.** Elle est sauvegardée à part, chrono compris : quitter puis revenir la reprend au même temps. Une fois réussi, le ciel du jour se rejoue hors classement.
 - La partie en cours est sauvegardée et se reprend depuis l'écran titre. Les meilleurs temps, les temps du Ciel du jour et le nombre de constellations font partie du transfert de sauvegardes.
 
 ---
@@ -180,7 +181,7 @@ Poser un module lunaire en douceur, site après site.
 - Se poser **sur une aire**, à plat, avec une vitesse verticale et horizontale assez faibles (affichées en vert ou en rouge). Les aires étroites rapportent ×5, les moyennes ×3, les larges ×2.
 - **Cadrans près du module**, pour ne pas le quitter des yeux : un réticule qui passe au vert quand tout est bon pour se poser (orange ou rouge sinon), 5 segments de carburant au-dessus, deux barres de vitesse (V et H, le trait blanc marque la limite) dessous, l'aire survolée à côté (×2, ×3, ×5, ou un trait si le sol est en pente), une flèche qui montre où va le module, et sous 120 m un pointillé jusqu'au sol avec la hauteur.
 - Une **mission** enchaîne les sites (la Lune, Phobos, Mars, Europe, Titan et son vent, une comète…), de plus en plus durs, jusqu'au crash ou à l'arrêt. Chaque site rapporte (100 + carburant restant) × le multiplicateur ; le carburant se recharge en partie à chaque alunissage.
-- **Mission du jour** : la même suite de sites pour toute la famille. Le record et la mission du jour font partie des classements et du transfert de sauvegardes.
+- **Mission du jour** : la même suite de sites pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) ; on peut la rejouer hors classement. Le record et la mission du jour font partie des classements et du transfert de sauvegardes.
 - **Graphismes « cinématiques »** : un soleil qui éclaire le relief et fait des ombres, des montagnes lointaines qui glissent avec le module, un sol de cratères et de rochers, l'astre de chaque monde dans le ciel (la Terre, Mars, Jupiter, Saturne…) et ses effets (vent de poussière sur Mars, geysers sur Europe, brume sur Titan, jets de gaz sur la comète). Le module, plus grand, a ses feux de position, une ombre et des flammes qui éclairent le sol ; après un alunissage, un astronaute plante un drapeau ; après un crash, explosion et cratère fumant.
 
 ---

@@ -110,7 +110,11 @@ const cv = document.getElementById('cv'), g = cv.getContext('2d');
 let K = 1, T = 0, BTN = [];
 const S = { phase: 'title', site: null, n: 0, seed: 0, daily: false, ship: null, fuel: 100, score: 0, parts: [], best: store.get('best', 0) || 0,
   dailyBest: store.get('daily', {}) || {}, sites: store.get('sites', 0) || 0, left: false, right: false, msg: '', result: null, rankText: '', stars: null, fx: [], anim: null, shake: 0 };
+// mission du jour : seule la première tentative est classée (alunissage.dailyTry, posé dès le départ) ;
+// les suivantes se jouent hors classement
 function newMission(daily) {
+  const d = todayKey(); S.offRank = daily && store.get('dailyTry', 0) === d;
+  if (daily && !S.offRank) store.set('dailyTry', d);
   S.daily = daily; S.seed = daily ? todayKey() : (Math.random() * 2 ** 31) | 0; S.n = 0; S.score = 0; S.fuel = 100; S.rankText = ''; startSite();
 }
 function startSite() {
@@ -166,10 +170,12 @@ function land(feet) {
 function endMission() {
   const sc = S.score;
   if (sc > S.best) { S.best = sc; store.set('best', sc); }
-  if (S.daily) { const d = todayKey(); if (!(S.dailyBest[d] >= sc)) { S.dailyBest[d] = sc; store.set('daily', S.dailyBest); } }
+  const ranked = S.daily && !S.offRank;
+  if (ranked) { S.dailyBest[todayKey()] = sc; store.set('daily', S.dailyBest); }
+  if (S.daily && S.offRank) S.rankText = 'DU JOUR DEJA JOUEE : HORS CLASSEMENT';
   if (sc > 0 && window.LudoScores) {
     LudoScores.submit('alunissage', 'best', sc, false).then(r => { if (r && !S.daily) S.rankText = 'CLASSEMENT : ' + LudoScores.rankText(r).toUpperCase(); });
-    if (S.daily) LudoScores.submit('alunissage', 'daily:' + todayKey(), sc, false).then(r => { if (r) S.rankText = 'MISSION DU JOUR : ' + LudoScores.rankText(r).toUpperCase(); });
+    if (ranked) LudoScores.submit('alunissage', 'daily:' + todayKey(), sc, false).then(r => { if (r) S.rankText = 'MISSION DU JOUR : ' + LudoScores.rankText(r).toUpperCase(); });
   }
 }
 
@@ -471,6 +477,7 @@ function hud() {
   const s = S.ship, w = S.site.world;
   R_(0, 0, LW, 40, 'rgba(6,8,24,.85)'); R_(0, 40, LW, 1, '#2a3a7a');
   text(`SITE ${S.n + 1} · ${w.name}`, 6, 6, '#e6fbff', 'left', 7);
+  if (S.daily) text(S.offRank ? 'DU JOUR · HORS CLASSEMENT' : 'MISSION DU JOUR', 136, 44, S.offRank ? '#8fa0d0' : '#ffd23f', 'center', 5);
   text(`SCORE ${S.score}`, 266, 6, '#ffd23f', 'right', 7);
   text('CARBURANT', 6, 20, '#8fa0d0', 'left', 6);
   R_(64, 20, 70, 6, OUT); R_(65, 21, Math.round(68 * S.fuel / 100), 4, S.fuel < 20 ? '#ff6a5a' : '#5cf2ff');
@@ -588,7 +595,9 @@ function drawTitle(t) {
   R_(0, 300, LW, LH - 300, 'rgba(5,6,15,.55)');
   const d = todayKey();
   button(46, 312, 180, 28, 'MISSION', () => { audioInit(); SFX.click(); newMission(false); }, { gold: true });
-  button(46, 348, 180, 24, S.dailyBest[d] ? `DU JOUR · ${S.dailyBest[d]}` : 'MISSION DU JOUR', () => { audioInit(); SFX.click(); newMission(true); }, { size: 7 });
+  const tried = store.get('dailyTry', 0) === d;
+  button(46, 348, 180, 24, tried ? (S.dailyBest[d] != null ? `DU JOUR · ${S.dailyBest[d]}` : 'DU JOUR · DEJA JOUEE') : 'MISSION DU JOUR', () => { audioInit(); SFX.click(); newMission(true); }, { size: 7 });
+  if (tried) text('REJOUER : HORS CLASSEMENT', 136, 373, '#8fa0d0', 'center', 5);
   button(46, 380, 86, 22, 'CLASSEMENT', () => { location.href = '../classements/index.html#alunissage'; }, { size: 6 });
   button(140, 380, 86, 22, AC.on ? 'SON OUI' : 'SON NON', () => { AC.on = !AC.on; store.set('sfx', AC.on); SFX.click(); }, { size: 6 });
   text(`RECORD : ${S.best}`, 136, 414, '#ffd23f', 'center', 7);

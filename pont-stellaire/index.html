@@ -271,7 +271,7 @@ function starSprite(r, pal) {
 const cv = document.getElementById('cv'), g = cv.getContext('2d');
 let K = 1, T = 0, BTN = [], SKY = null, SPR = {};
 const S = {
-  phase: 'title', P: null, val: [], hist: [], sel: -1, drag: null, t0: 0, elapsed: 0, hints: 0, mode: 9, daily: false,
+  phase: 'title', P: null, val: [], hist: [], sel: -1, drag: null, t0: 0, elapsed: 0, hints: 0, mode: 9, daily: false, offRank: false,
   best: store.get('best', {}) || {}, dailyDone: store.get('daily', {}) || {}, wins: store.get('wins', 0) || 0,
   winT: 0, rankText: '', record: false, flash: [], parts: [], name: '', msg: '', msgT: 0,
 };
@@ -282,25 +282,40 @@ function sprites(r) {
   if (SPR.r === r) return SPR;
   SPR = { r }; for (const k in STAR_PAL) SPR[k] = starSprite(r, STAR_PAL[k]); return SPR;
 }
+/* ciel du jour : une seule tentative classée. Elle est sauvegardée à part (pontstellaire.dailyRun, chrono compris) :
+   quitter puis revenir la reprend au même temps. Une fois réussie, le ciel du jour se rejoue hors classement. */
+function dailyRun() { const r = store.get('dailyRun', null); return r && r.day === todayKey() ? r : null; }
+{ // ancienne sauvegarde : un ciel du jour en cours rangé avec les autres parties
+  const old = store.get('game', null);
+  if (old && old.daily) { if (old.day === todayKey() && !store.get('dailyRun', null)) store.set('dailyRun', old); store.set('game', null); }
+}
+function startDaily() {
+  const d = todayKey(), run = dailyRun();
+  if (!(S.dailyDone[d] > 0) && run && resumeGame(run)) return;
+  startPuzzle(9, true);
+}
 function startPuzzle(N, daily) {
   const seed = daily ? todayKey() * 7 + 11 : (Math.random() * 2 ** 31) | 0;
   let P = generate(N, seed), s2 = seed;
   while (!P) P = generate(N, ++s2);
   S.P = P; S.val = new Array(P.G.edges.length).fill(0); S.hist = []; S.sel = -1; S.hints = 0; S.mode = N; S.daily = daily;
+  S.offRank = daily && S.dailyDone[todayKey()] > 0;
   S.t0 = now(); S.elapsed = 0; S.phase = 'play'; S.flash = []; S.parts = []; S.msg = ''; S.rankText = ''; S.record = false;
   S.name = NAMES[P.seed % NAMES.length];
   saveGame();
 }
 function saveGame() {
-  if (!S.P || S.phase !== 'play') { store.set('game', null); return; }
-  store.set('game', { N: S.P.N, seed: S.P.seed, daily: S.daily, day: S.daily ? todayKey() : 0, val: S.val, el: S.elapsed + (now() - S.t0), h: S.hints });
+  const ranked = S.daily && !S.offRank, slot = ranked ? 'dailyRun' : 'game';
+  if (!S.P || S.phase !== 'play') { if (!S.daily) store.set('game', null); return; }
+  if (S.daily && !ranked) return;   // le ciel du jour rejoué hors classement ne se sauvegarde pas
+  store.set(slot, { N: S.P.N, seed: S.P.seed, daily: S.daily, day: S.daily ? todayKey() : 0, val: S.val, el: S.elapsed + (now() - S.t0), h: S.hints });
 }
-function resumeGame() {
-  const s = store.get('game', null);
+function resumeGame(saved) {
+  const s = saved || store.get('game', null);
   if (!s || !ISLANDS[s.N] || (s.daily && s.day !== todayKey())) return false;
   const P = generate(s.N, s.seed); if (!P || P.G.edges.length !== (s.val || []).length) return false;
   S.P = P; S.val = s.val.slice(); S.hist = []; S.sel = -1; S.hints = s.h || 0; S.mode = s.N; S.daily = !!s.daily;
-  S.elapsed = s.el || 0; S.t0 = now(); S.phase = 'play'; S.flash = []; S.parts = []; S.name = NAMES[P.seed % NAMES.length]; S.msg = '';
+  S.offRank = false; S.elapsed = s.el || 0; S.t0 = now(); S.phase = 'play'; S.flash = []; S.parts = []; S.name = NAMES[P.seed % NAMES.length]; S.msg = '';
   return true;
 }
 const elapsed = () => S.elapsed + (S.phase === 'play' ? now() - S.t0 : 0);
@@ -339,15 +354,16 @@ function hint() {
 function checkWin() {
   const P = S.P;
   if (!P.isl.every((s, i) => degree(i) === s.n) || !connected(P.isl, P.G.edges, S.val)) return;
-  S.elapsed = elapsed(); S.phase = 'won'; S.winT = now(); S.sel = -1; store.set('game', null);
+  S.elapsed = elapsed(); S.phase = 'won'; S.winT = now(); S.sel = -1; store.set(S.daily ? 'dailyRun' : 'game', null);
   SFX.win();
   const sc = score(), key = String(S.mode);
   S.wins++; store.set('wins', S.wins);
-  if (S.daily) {
-    const d = todayKey(); if (!(S.dailyDone[d] > 0) || sc < S.dailyDone[d]) { S.dailyDone[d] = sc; store.set('daily', S.dailyDone); }
+  if (S.offRank) S.rankText = 'DEJA JOUE AUJOURD\'HUI : HORS CLASSEMENT';
+  else if (S.daily) {
+    const d = todayKey(); S.dailyDone[d] = sc; store.set('daily', S.dailyDone);
     if (window.LudoScores) LudoScores.submit('pontstellaire', 'daily:' + d, sc, true).then(r => { if (r) S.rankText = 'CIEL DU JOUR : ' + LudoScores.rankText(r).toUpperCase(); });
   }
-  if (!(S.best[key] > 0) || sc < S.best[key]) { S.best[key] = sc; store.set('best', S.best); S.record = true;
+  if (!S.offRank && (!(S.best[key] > 0) || sc < S.best[key])) { S.best[key] = sc; store.set('best', S.best); S.record = true;
     if (window.LudoScores && !S.daily) LudoScores.submit('pontstellaire', 'best:' + key, sc, true).then(r => { if (r) S.rankText = 'CLASSEMENT : ' + LudoScores.rankText(r).toUpperCase(); }); }
   if (window.LudoScores) LudoScores.submit('pontstellaire', 'ciels', S.wins, false);
   const Lo = layout(S.P.N);
@@ -440,7 +456,7 @@ function drawPlay(t) {
   const P = S.P;
   // bandeau du haut
   R(0, 0, LW, 40, 'rgba(6,8,24,.9)'); R(0, 40, LW, 1, '#2a3a7a');
-  const label = S.daily ? 'CIEL DU JOUR' : SIZES.find(z => z[0] === P.N)[1] + ` ${P.N}x${P.N}`;
+  const label = S.daily ? (S.offRank ? 'CIEL DU JOUR (HORS CL.)' : 'CIEL DU JOUR') : SIZES.find(z => z[0] === P.N)[1] + ` ${P.N}x${P.N}`;
   text(label, 8, 8, '#ffd76a');
   text(fmtTime(elapsed()) + (S.hints ? ` +${S.hints * 30}s` : ''), 8, 24, '#c8d4f4', 'left', 8);
   const best = S.best[String(P.N)];
@@ -467,7 +483,7 @@ function drawWin(t) {
   text('CONSTELLATION', 136, y + 10, '#fff2a8', 'center');
   text(S.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''), 136, y + 26, '#ffd76a', 'center', 8);
   text(`TEMPS : ${fmtTime(score())}` + (S.hints ? ` (${S.hints} INDICE${S.hints > 1 ? 'S' : ''})` : ''), 136, y + 46, '#e8d8b0', 'center', 7);
-  if (S.record && k >= 1) text(S.daily ? 'MEILLEUR TEMPS DU JOUR !' : 'NOUVEAU RECORD !', 136, y + 60, '#5cff8a', 'center', 7);
+  if (S.record && k >= 1 && !S.daily) text('NOUVEAU RECORD !', 136, y + 60, '#5cff8a', 'center', 7);
   if (S.rankText) text(S.rankText, 136, y + 74, '#9fdcff', 'center', 6);
   if (S.daily) button(34, y + 90, 204, 22, 'CIEL AU HASARD 9x9', () => { SFX.click(); startPuzzle(9, false); }, { gold: true, size: 7 });
   else button(34, y + 90, 204, 22, 'NOUVEAU CIEL', () => { SFX.click(); startPuzzle(S.mode, false); }, { gold: true });
@@ -493,8 +509,11 @@ function drawTitle(t) {
   let y = 214;
   const d = todayKey(), dd = S.dailyDone[d];
   const saved = store.get('game', null);
-  if (saved && (!saved.daily || saved.day === d)) { button(46, y, 180, 24, 'REPRENDRE', () => { SFX.click(); if (!resumeGame()) startPuzzle(9, false); }, { gold: true }); y += 32; }
-  button(46, y, 180, 26, dd ? 'CIEL DU JOUR  ' + fmtTime(dd) : 'CIEL DU JOUR', () => { SFX.click(); startPuzzle(9, true); }, { gold: !saved, size: 8 }); y += 36;
+  if (saved && !saved.daily) { button(46, y, 180, 24, 'REPRENDRE', () => { SFX.click(); if (!resumeGame()) startPuzzle(9, false); }, { gold: true }); y += 32; }
+  const run = !dd && dailyRun();
+  button(46, y, 180, 26, dd ? 'CIEL DU JOUR  ' + fmtTime(dd) : run ? 'CIEL DU JOUR · REPRENDRE' : 'CIEL DU JOUR', () => { SFX.click(); startDaily(); }, { gold: !saved, size: dd ? 8 : run ? 7 : 8 });
+  if (dd) text('REJOUER : HORS CLASSEMENT', 136, y + 29, '#8fa0d0', 'center', 5);
+  y += 36;
   for (const [N, name] of SIZES) {
     const b = S.best[String(N)];
     button(46, y, 180, 24, `${name} ${N}x${N}`, () => { SFX.click(); startPuzzle(N, false); });
@@ -604,8 +623,11 @@ cv.addEventListener('pointercancel', () => { S.drag = null; });
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'z' && S.phase === 'play') undo(); });
 document.addEventListener('visibilitychange', () => {
   if (S.phase !== 'play') return;
-  if (document.hidden) { S.elapsed = elapsed(); S.t0 = Infinity; saveGame(); } else S.t0 = now();
+  // sauvegarder avant de geler le chrono (avec t0 infini, le temps enregistré était perdu)
+  if (document.hidden) { S.elapsed = elapsed(); S.t0 = now(); saveGame(); S.t0 = Infinity; } else S.t0 = now();
 });
+// le chrono est aussi sauvegardé régulièrement (ciel du jour : on ne peut pas repartir de zéro en quittant le jeu)
+setInterval(() => { if (S.phase === 'play' && !document.hidden) saveGame(); }, 3000);
 function resize() {
   const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
   const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);

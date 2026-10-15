@@ -122,6 +122,7 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 4. **Mélange empire + raids** — l'empire qui pousse sur plusieurs jours, avec des combats tactiques joués au doigt et des raids asynchrones (défense jouée par l'ordinateur).
 
 ## Préférences notées
+- Défis du jour : **une seule tentative classée par jour** (15/10), pour éviter la triche en rejouant une grille connue ; appliqué à Queens, Pont stellaire et Alunissage (déjà le cas pour Nebula et Lignée).
 - Cargo Stellaire et Station Alpha : retirés de la liste (pas retenus).
 - Carreau ! (pétanque), Le Fort des lapins (tower defense), Pavillon noir (rogue-lite pirate), Apesanteur (plateforme physique) et Bouclier lunaire (arcade) : abandonnés le 15/10.
 
