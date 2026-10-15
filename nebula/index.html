@@ -201,7 +201,7 @@ function play(ev) {
     else if (e.e === 'shot') {
       const a = byId(st, e.from), d = (e.fx === 'torpille' ? .55 : e.fx === 'missile' ? .45 : e.fx === 'charge' ? .3 : .25) * k;
       const to = e.to != null ? center(byId(st, e.to)) : cellCenter(...e.cell);
-      ANIM.fx.push({ k: 'shot', fx: e.fx, foe: a.side === 'E', t0: t, dur: d, a: center(a), b: to }); sfx(e.fx === 'charge' ? 'missile' : e.fx, t - now); t += d;
+      ANIM.fx.push({ k: 'shot', fx: e.fx, foe: a.side === 'E', t0: t, dur: d, a: center(a), b: to }); sfx(e.fx === 'charge' ? 'missile' : e.fx === 'jam' ? 'ion' : e.fx === 'mine' ? 'mark' : e.fx, t - now); t += d;
     }
     else if (e.e === 'swarm') { ANIM.fx.push({ k: 'swarm', t0: t, dur: .35 * k, a: center(s || byId(st, e.from)) }); sfx('essaim', t - now); t += .3 * k; }
     else if (e.e === 'dmg') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '-' + e.n, col: e.hull ? (s.side === 'E' ? C.acc : C.foe) : C.ally }); ANIM.fx.push({ k: 'hit', t0: t, dur: .3 * k, x, y, shield: !e.hull }); if (!e.hull) sfx('shield', t - now); else if (s.side === 'P') buzz(e.n >= 4 ? 70 : 35, t - now); }
@@ -213,6 +213,8 @@ function play(ev) {
     else if (e.e === 'heal') { const [x, y] = center(s); sfx('heal', t - now); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '+' + e.n, col: C.ok }); }
     else if (e.e === 'mark') { const [x, y] = center(s); sfx('mark', t - now); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'MARQUÉ', col: C.acc, small: true }); }
     else if (e.e === 'zone') { ANIM.fx.push({ k: 'zone', t0: t, dur: .6 * k, x: GX + e.c * CS, y: GY + e.r * CS }); sfx('salve', t - now); t += .2 * k; }
+    else if (e.e === 'jam') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'BROUILLÉ', col: '#78dcff', small: true }); }
+    else if (e.e === 'mine') { const [x, y] = cellCenter(e.c, e.r); sfx('mark', t - now); ANIM.fx.push({ k: 'hit', t0: t, dur: .4 * k, x, y, shield: e.side === 'P' }); ANIM.fx.push({ k: 'num', t0: t, dur: .8, x, y, text: 'MINE POSÉE', col: e.side === 'P' ? C.acc : C.foe, small: true }); t += .15 * k; }
     else if (e.e === 'miss') { const [x, y] = cellCenter(...e.cell); ANIM.fx.push({ k: 'num', t0: t, dur: .8, x, y, text: 'DANS LE VIDE', col: C.dim, small: true }); }
   }
   ANIM.busy = t;
@@ -245,7 +247,11 @@ function drawFx() {
     g.save();
     if (f.k === 'shot') {
       const [ax, ay] = f.a, [bx, by] = f.b, col = f.foe ? '255,110,80' : '255,200,120';
-      if (f.fx === 'grapple') {   // le câble du grappin
+      if (f.fx === 'jam') {   // brouillage : une onde cyan qui file vers le pirate
+        g.strokeStyle = `rgba(120,220,255,${1 - u * .7})`; g.lineWidth = 2; g.setLineDash([6, 5]); g.lineDashOffset = -now * 60;
+        g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke(); g.setLineDash([]);
+        g.globalCompositeOperation = 'lighter'; g.strokeStyle = `rgba(120,220,255,${.6 * (1 - u)})`; g.beginPath(); g.arc(bx, by, 10 + u * 30, 0, TAU); g.stroke();
+      } else if (f.fx === 'grapple') {   // le câble du grappin
         g.strokeStyle = `rgba(200,210,225,${1 - u * .6})`; g.lineWidth = 2; g.setLineDash([4, 3]); const v = Math.min(1, u * 2);
         g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax + (bx - ax) * v, ay + (by - ay) * v); g.stroke(); g.setLineDash([]);
       } else if (f.fx === 'laser' || f.fx === 'canon') {
@@ -343,7 +349,12 @@ function drawCombat() {
   // annonces des pirates : les cases menacées (une seule teinte par case, total des dégâts), puis les traits de tir
   if (!B) {
     const main = new Map(), side = new Map(), add = (m, c, r, d) => { if (inGrid(c, r)) { const k = c + ',' + r; m.set(k, (m.get(k) || 0) + d); } };
-    const all = st.intents.filter(it => { const p = byId(st, it.src); return p && !p.dead; }), live = all.filter(it => it.fx !== 'grapple');
+    const all0 = st.intents.filter(it => { const p = byId(st, it.src); return p && !p.dead; }), all = all0.filter(it => !it.jam), live = all.filter(it => it.fx !== 'grapple');
+    for (const it of all0.filter(it => it.jam)) {   // tirs brouillés : gris, ils ne partiront pas
+      const x = GX + it.cell[0] * CS, y = GY + it.cell[1] * CS;
+      g.fillStyle = 'rgba(160,170,185,.10)'; g.fillRect(x + 2, y + 2, CS - 4, CS - 4); g.setLineDash([4, 4]); g.strokeStyle = 'rgba(160,170,185,.55)'; g.lineWidth = 1; g.strokeRect(x + 5.5, y + 5.5, CS - 11, CS - 11); g.setLineDash([]);
+      txt('BROUILLÉ', x + CS / 2, y + CS / 2 - 8, '#aeb8c6', F.mono(13), 'center', 0, CS - 10);
+    }
     for (const it of all.filter(it => it.fx === 'grapple')) {
       const [ax, ay] = center(byId(st, it.src)), [bx, by] = cellCenter(...it.cell);
       g.strokeStyle = 'rgba(200,210,225,.75)'; g.lineWidth = 1.5; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke(); g.setLineDash([]);
@@ -368,9 +379,13 @@ function drawCombat() {
       g.globalAlpha = pulse; corners(GX + c * CS + 6, GY + r * CS + 6, CS - 12, CS - 12, C.foe, 12, 2); g.globalAlpha = 1;
       g.fillStyle = 'rgba(30,6,6,.88)'; g.fillRect(GX + c * CS + CS - 42, GY + r * CS + 6, 36, 22);
       txt('-' + (d + extra), GX + c * CS + CS - 24, GY + r * CS + 8, C.foe, F.mono(18), 'center');
+      if (live.some(it => it.fx === 'mine' && it.cell[0] === c && it.cell[1] === r)) txt('MINE', GX + c * CS + CS / 2, GY + r * CS + CS - 22, C.foe, F.mono(14), 'center', 1);
     }
   }
   if (UI.ranges && !B) drawRanges(st, s);
+  // mines : ambre (mouilleur), rouille (poseur) ; en mode pose, les cases possibles du mouilleur
+  for (const m of st.mines || []) { const [x, y] = cellCenter(m.c, m.r); drawSprite(m.side === 'P' ? 'mine' : 'minePirate', x, y, 1); }
+  if (UI.mineMode && mine && !B) for (const [c, r] of mineSpots(st, mine)) { g.fillStyle = C.acc2 + '.12)'; g.fillRect(GX + c * CS + 3, GY + r * CS + 3, CS - 6, CS - 6); corners(GX + c * CS + 8, GY + r * CS + 8, CS - 16, CS - 16, C.acc, 10, 1.5); }
   // vaisseaux
   const hittable = mine && !B && canAct(st, mine) ? new Set(targetsFor(st, mine, UI.wi).map(o => o.id)) : new Set();
   const swarm = mine && TYPES[mine.t].w[UI.wi] && TYPES[mine.t].w[UI.wi].swarm;
@@ -384,7 +399,9 @@ function drawCombat() {
     const fr = Math.max(0, o.hull) / o.hmax; g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(L + 10, T + n * CS - 9, CS - 20, 4);
     g.fillStyle = fr > .5 ? C.ok : fr > .25 ? C.acc : C.foe; g.fillRect(L + 10, T + n * CS - 9, (CS - 20) * fr, 4);
     if (foe && o.mark === st.turn && !o.dead) { g.fillStyle = 'rgba(30,20,4,.9)'; g.fillRect(L + CS - 32, T + 4, 28, 18); txt('+1', L + CS - 18, T + 5, C.acc, F.mono(15), 'center'); }
-    if (hittable.has(o.id)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); const w = TYPES[mine.t].w[UI.wi], d = wDmg(mine, w) * (w.big && n >= 2 ? 2 : 1) + (o.mark === st.turn ? 1 : 0); txt('-' + d, L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
+    if (hittable.has(o.id)) { const w = TYPES[mine.t].w[UI.wi]; corners(L + 4, T + 4, CS - 8, n * CS - 8, w.jam ? '#78dcff' : C.acc, 12, 2);
+      if (w.jam) txt('BROUILLER', L + CS / 2, T + n * CS - 26, '#78dcff', F.mono(13), 'center', 0, CS - 8);
+      else { const d = wDmg(mine, w) * (w.big && n >= 2 ? 2 : 1) + (o.mark === st.turn ? 1 : 0); txt('-' + d, L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); } }
     if (swarm && foe && !o.dead && dist(o, mine) <= 1 && canAct(st, mine)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); txt('-' + ((mine.hull <= 2 ? 1 : 2) + nMod(mine, 'canons')), L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
     if (o === s && !o.dead) corners(L + 3, T + 3, CS - 6, n * CS - 6, foe ? C.foe : C.ally, 14, 2);
     if (o.vip && !o.dead) { corners(L + 5, T + 5, CS - 10, n * CS - 10, C.acc, 10, 1.5); g.fillStyle = 'rgba(30,20,4,.92)'; g.fillRect(L + 4, T + n * CS - 30, CS - 8, 17); txt('À PROTÉGER', L + CS / 2, T + n * CS - 29, C.acc, F.mono(12), 'center', 0, CS - 10); }
@@ -469,7 +486,7 @@ function drawFiche(st, s, B) {
   const endBtn = () => btn(390, 878, 126, 50, warn ? 'CONFIRMER' : 'FIN DU TOUR', () => {
     const idle = warn ? [] : canStillFire(st);
     if (idle.length) { UI.endWarn = now; UI.endWho = idle.length > 1 ? `${idle.length} VAISSEAUX PEUVENT ENCORE TIRER` : `${TYPES[idle[0].t].name} PEUT ENCORE TIRER`; return; }
-    UI.endWarn = 0; UI.sel = null; UI.bay = false; doEv(endTurn(st));
+    UI.endWarn = 0; UI.sel = null; UI.bay = false; UI.mineMode = false; doEv(endTurn(st));
   }, { primary: !s || s.acted || !canAct(st, s), size: 19, off: B || !!st.result, col: warn ? C.acc : null });
   if (!s || s.dead) {
     txt('TON TOUR', 36, 792, C.acc, F.mono(16), 'left', 3);
@@ -494,18 +511,19 @@ function drawFiche(st, s, B) {
   }
   const off = B || !canAct(st, s);
   T.w.forEach((w, i) => {
-    const label = s.fired && !s.acted ? `2E TOURELLE · ${wDmg(s, w)}` : `${w.name} · ${wDmg(s, w)}`;
+    const label = w.jam ? w.name : s.fired && !s.acted ? `2E TOURELLE · ${wDmg(s, w)}` : `${w.name} · ${wDmg(s, w)}`;
     btn(134 + i * 128, 878, 120, 50, label, () => {
       if (w.swarm) { doEv(attack(st, s, i)); return; }
-      UI.wi = i;
+      UI.wi = i; UI.mineMode = false;
     }, { primary: UI.wi === i && !off, size: 18, ls: 1, off: off || (w.swarm && !sideOf(st, 'E').some(o => dist(o, s) <= 1)) });
   });
   if (s.t === 'mere') btn(262, 878, 120, 50, s.bay > 0 ? `BAIE · ${s.bay}` : 'BAIE', () => { UI.bay = true; }, { size: 18, off: B || !bayReady(st, s) });
+  if (s.t === 'mouilleur') btn(134, 878, 160, 50, `MINE · ${MINES_PER_COMBAT - (s.laid || 0)}`, () => { UI.mineMode = !UI.mineMode; }, { size: 18, ls: 1, primary: UI.mineMode && !off, off: off || !mineSpots(st, s).length });
   txt(`${T.skill} · ${T.short || T.sdesc}`, 134, 858, C.acc, F.ui(16), 'left', 1, 382);
   endBtn();
 }
 // vaisseaux du joueur qui n'ont pas agi et ont encore un pirate à portée
-const canStillFire = st => sideOf(st, 'P').filter(o => canAct(st, o) && TYPES[o.t].w.some((w, i) => w.swarm ? sideOf(st, 'E').some(e => dist(e, o) <= 1) : targetsFor(st, o, i).length));
+const canStillFire = st => sideOf(st, 'P').filter(o => canAct(st, o) && TYPES[o.t].w.some((w, i) => w.swarm ? sideOf(st, 'E').some(e => dist(e, o) <= 1) : !w.jam && targetsFor(st, o, i).length));
 function drawResult(st) {
   if (UI.rs !== st) { UI.rs = st; sfx(st.result === 'won' ? 'win' : st.result === 'fled' ? 'jump' : 'lose'); }
   g.fillStyle = 'rgba(2,4,8,.55)'; g.fillRect(0, 0, LW, LH);
@@ -526,10 +544,11 @@ function tapGrid(c, r) {
     // le tir part au lever du doigt (rien si le toucher était long) ; l'essaim frappe tous les pirates collés
     if (w && ((w.swarm && dist(o, s) <= 1) || (!w.swarm && canHit(st, s, w, s.c, s.r, o)))) { PRESS.up = () => fire(s.id, o.id, UI.wi); return; }
   }
-  if (o) { if (UI.sel !== o.id) { UI.sel = o.id; UI.wi = 0; UI.bay = false; sfx('click'); } return; }
+  if (o) { if (UI.sel !== o.id) { UI.sel = o.id; UI.wi = 0; UI.bay = false; UI.mineMode = false; sfx('click'); } return; }
+  if (UI.mineMode && s && s.t === 'mouilleur' && mineSpots(st, s).some(k => k[0] === c && k[1] === r)) { PRESS.up = () => { if (inCombat() && selShip() === s) { UI.mineMode = false; doEv(layMine(st, s, c, r)); } }; return; }
   const p = s && !s.dead && s.side === 'P' ? spotAt(st, s, c, r) : null;
   if (p) { placeShip(st, s, p); return; }
-  UI.sel = null; UI.bay = false;
+  UI.sel = null; UI.bay = false; UI.mineMode = false;
 }
 // tir demandé au lever du doigt : on revérifie (le combat a pu changer entre-temps)
 function fire(sid, oid, wi) {
@@ -935,7 +954,7 @@ function drawFleet() {
   // vaisseaux disponibles
   txt('VAISSEAUX', 24, 476, C.acc, F.mono(15), 'left', 3);
   txt('TOUCHER : AJOUTER · DOIGT POSÉ : FICHE', LW - 24, 477, C.dim, F.mono(12), 'right', 0);
-  const all = Object.keys(FLEET_COST), cols = 4, cw = (LW - 32) / cols, ch = 104;
+  const all = Object.keys(FLEET_COST), cols = 5, cw = (LW - 32) / cols, ch = 104;
   all.forEach((t, i) => {
     const x = 16 + (i % cols) * cw, y = 498 + Math.floor(i / cols) * (ch + 6), lock = !avail.includes(t), ok = !lock && cur.length < FLEET_MAX && FLEET_COST[t] <= left;
     frameBox(x + 3, y, cw - 6, ch, lock ? 'rgba(125,138,158,.3)' : ok ? C.acc : 'rgba(125,138,158,.5)', 6, 'rgba(6,10,18,.6)');
@@ -1016,6 +1035,7 @@ const RULES = [
   ['LES INTENTIONS', "En rouge : les cases que chaque pirate frappera à la FIN DU TOUR, avec les dégâts. Sors de la case… ou détruis le pirate avant qu'il tire."],
   ['BOUCLIER ET COQUE', "Les dégâts touchent d'abord le bouclier, puis la coque. Le bouclier se recharge de 1 au début de chaque tour, jusqu'à son maximum."],
   ['PORTÉE ET LIGNE DE VUE', "La portée se compte en cases, une case en diagonale compte pour 1. Un astéroïde entre deux vaisseaux bloque les tirs. Les gros vaisseaux occupent plus de cases : ils sont plus faciles à toucher."],
+  ['MINES', "Le mouilleur pose ses mines (ambre, 4 par combat) au lieu de tirer : un pirate qui passe dessus prend 5 dégâts, sans les avoir vues. Le poseur pirate annonce les siennes (case rouge MINE), puis les pose : passer sur une mine rouillée coûte 3 dégâts. Le brouilleur, lui, annule le tir annoncé d'un pirate (case grise BROUILLÉ)."],
   ['FUIR', "À partir du 3e tour, si tous tes vaisseaux touchent la dernière rangée, le bouton FUIR apparaît : pas de récompense, 1 carburant perdu. Impossible contre un amiral."],
   ['ENTRE LES COMBATS', "Comptoir : carburant, réparations, modules, un pilote et une recrue. Dock : la moitié des dégâts réparés, ou un module offert. Modules et pilotes se posent au HANGAR (bouton de la carte)."],
   ['CARBURANT', "Chaque saut coûte 1 carburant. Sans carburant, la flotte dérive : chaque vaisseau perd 2 de coque à chaque saut (sans descendre sous 1). Entrer dans un nouveau secteur rapporte 3 carburant."],
@@ -1029,8 +1049,8 @@ const RULES = [
   ['MISSION DU JOUR', "La même partie pour toute la famille : même carte, mêmes combats, et une mission qui change chaque jour (escadrille de chasseurs, convoi à protéger, comptoirs fermés, carburant compté…), avec sa flotte imposée, sans prime d'audace. Seule la première tentative du jour est classée."],
 ];
 const MAN_TABS = [['regles', 'RÈGLES'], ['vaisseaux', 'VAISSEAUX'], ['pirates', 'PIRATES'], ['terrain', 'TERRAIN'], ['carte', 'CARTE'], ['equipement', 'ÉQUIPEMENT']];
-const MAN_SHIPS = ['chasseur', 'fregate', 'mere', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier'];
-const MAN_FOES = ['intercepteur', 'brulot', 'croiseur', 'harponneur', 'amiral', 'veuve', 'reine'];
+const MAN_SHIPS = ['chasseur', 'fregate', 'mere', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier', 'brouilleur', 'mouilleur'];
+const MAN_FOES = ['intercepteur', 'brulot', 'croiseur', 'harponneur', 'bouclier', 'poseur', 'amiral', 'veuve', 'reine'];
 const MAN = { tab: 'regles', page: 0, ship: 'chasseur', foe: 'intercepteur' };
 function openManual(back, tab) { UI.screen = 'manual'; UI.back = back; if (tab) { MAN.tab = tab; MAN.page = 0; } }
 function drawManual() {

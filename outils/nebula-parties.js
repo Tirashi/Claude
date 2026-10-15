@@ -5,7 +5,7 @@
 const N = require('../nebula/regles.js');
 const Kr = Number(process.argv[2]) || 60, prud = process.argv[3] != null ? Number(process.argv[3]) : 4;
 function autoRun(seed) {
-  const run = N.newRun(seed, (a => a && a.includes(',') ? a.split(',') : a || 'escorte')(process.argv[4]), ['eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier']); const lost = { 1: [], 2: [], 3: [] };
+  const run = N.newRun(seed, (a => a && a.includes(',') ? a.split(',') : a || 'escorte')(process.argv[4]), ['eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier', 'brouilleur', 'mouilleur']); const lost = { 1: [], 2: [], 3: [] };
   for (let step = 0; step < 600 && run.phase !== 'end'; step++) {
     if (run.phase === 'map') {
       // choisit la balise suivante : comptoir/dock si la flotte est abîmée, sinon un contact

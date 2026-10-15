@@ -12,7 +12,7 @@ else Object.assign(COMPOS, {
   'artilleur+2 chasseurs': ['artilleur', 'chasseur', 'chasseur'], '2 chasseurs': ['chasseur', 'chasseur'],
 });
 function autoRun(seed, ships) {
-  const run = N.newRun(seed, ships, ['eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier']);
+  const run = N.newRun(seed, ships, ['eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier', 'brouilleur', 'mouilleur']);
   for (let step = 0; step < 600 && run.phase !== 'end'; step++) {
     if (run.phase === 'map') { const next = N.nextNodes(run), hurt = run.fleet.reduce((a, f) => a + f.hull, 0) / run.fleet.reduce((a, f) => a + N.TYPES[f.t].hull, 0);
       const pref = n => (n.k === 'comptoir' || n.k === 'dock') ? (hurt < .8 ? 0 : 2) : n.k === 'lourd' ? (hurt > .85 ? 1 : 3) : 1; N.jump(run, next.sort((a, b) => pref(a) - pref(b))[0].id); }

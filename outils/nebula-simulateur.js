@@ -84,5 +84,16 @@ check((r => { const s0 = N.scoreOf(r), d0 = N.stellarOf(r); r.offers = ['fortune
 check(N.MISSIONS.every(M => M.ships.length <= 4 && M.ships.every(t => N.FLEET_COST[t])) && JSON.stringify(N.newDaily(20261015)) === JSON.stringify(N.newDaily(20261015)) && N.newDaily(20261015).prime === 0, 'missions du jour : flottes valides, même partie pour une date, sans prime');
 check((() => { const r = N.newDaily(20261015); r.mission = 'convoi'; r.fleet[0].vip = true; const st = N.makeCombat(3, 'contact', 1, r.fleet); const v = st.ships.find(o => o.vip); v.hull = 0; v.dead = true; st.result = null; return v && N.endTurn(st) && st.result === 'lost'; })(), 'mission convoi : le vaisseau à protéger détruit, le combat est perdu');
 check(new Set(Array.from({ length: 40 }, (_, i) => N.missionFor(20261001 + i).id)).size >= 6, 'missions du jour : au moins 6 missions différentes sur 40 jours');
+// session 4 : mines, brouillage, bouclier commun
+check((() => { const st = N.makeCombat(3, 'contact', 1, [{ uid: 1, t: 'mouilleur', hull: 9, mods: [], name: 'M' }, { uid: 2, t: 'chasseur', hull: 6, mods: [], name: 'C' }]);
+  const m = st.ships.find(o => o.t === 'mouilleur'), sp = N.mineSpots(st, m)[0]; if (!sp || !N.layMine(st, m, sp[0], sp[1]) || !m.acted || N.mineSpots(st, m).length) return false;
+  const c = st.ships.find(o => o.t === 'chasseur'); st.mines.push({ c: c.c, r: c.r - 1, side: 'E', dmg: 3 }); const h = c.hull + c.sh, ev = N.moveShip(st, c, c.c, c.r - 2);
+  return ev && c.hull + c.sh === h - 3 && !N.mineAt(st, c.c, c.r + 1) && c.from === null; })(), 'mines : le mouilleur pose une mine (son action), une mine pirate explose au passage');
+check((() => { const st = N.makeCombat(5, 'contact', 4, [{ uid: 1, t: 'brouilleur', hull: 7, mods: [], name: 'B' }], 1); const b = st.ships.find(o => o.t === 'brouilleur');
+  const T = st.ships.find(o => o.side === 'E' && st.intents.some(it => it.src === o.id)); if (!T) return false; b.c = T.c; b.r = Math.min(7, T.r + 2);
+  const ev = N.attack(st, b, 1, T); return ev && st.intents.filter(it => it.src === T.id).every(it => it.jam) && !N.dangerMap(st).size === !st.intents.some(it => !it.jam); })(), 'brouillage : les tirs annoncés du pirate sont annulés');
+check((() => { const st = N.makeCombat(9, 'contact', 1, [{ uid: 1, t: 'chasseur', hull: 6, mods: [], name: 'C' }]); st.ships = st.ships.filter(o => o.side === 'P'); st.intents = [];
+  const st2 = st; const b = { id: 90, t: 'bouclier', side: 'E', c: 3, r: 0, mods: [], dead: false, hull: 10, hmax: 10, sh: 3, shMax: 3 }, i = { id: 91, t: 'intercepteur', side: 'E', c: 4, r: 0, mods: [], dead: false, hull: 4, hmax: 4, sh: 0, shMax: 0 };
+  st2.ships.push(/** @type {any} */ (b), /** @type {any} */ (i)); N.startTurn(st2, []); return i.sh === 1; })(), 'frégate-bouclier : +1 bouclier aux pirates collés');
 check(N.migrate({ v: 1, fleet: 'abîmée' }) === null && N.migrate({ v: 99 }) === null && N.migrate(null) === null, 'migrate() refuse une partie illisible ou d\'une version future');
 process.exit(fail ? 1 : 0);
