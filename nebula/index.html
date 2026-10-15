@@ -387,6 +387,7 @@ function drawCombat() {
     if (hittable.has(o.id)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); const w = TYPES[mine.t].w[UI.wi], d = wDmg(mine, w) * (w.big && n >= 2 ? 2 : 1) + (o.mark === st.turn ? 1 : 0); txt('-' + d, L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
     if (swarm && foe && !o.dead && dist(o, mine) <= 1 && canAct(st, mine)) { corners(L + 4, T + 4, CS - 8, n * CS - 8, C.acc, 12, 2); txt('-' + ((mine.hull <= 2 ? 1 : 2) + nMod(mine, 'canons')), L + CS - 10, T + n * CS - 30, C.acc, F.mono(18), 'right'); }
     if (o === s && !o.dead) corners(L + 3, T + 3, CS - 6, n * CS - 6, foe ? C.foe : C.ally, 14, 2);
+    if (o.vip && !o.dead) { corners(L + 5, T + 5, CS - 10, n * CS - 10, C.acc, 10, 1.5); g.fillStyle = 'rgba(30,20,4,.92)'; g.fillRect(L + 4, T + n * CS - 30, CS - 8, 17); txt('À PROTÉGER', L + CS / 2, T + n * CS - 29, C.acc, F.mono(12), 'center', 0, CS - 10); }
   }
   for (const [c, r] of st.fog || []) { g.fillStyle = 'rgba(140,90,210,.22)'; g.fillRect(GX + c * CS, GY + r * CS, CS, CS); }
   if (mine && UI.ghost && !B) drawGhost(st, mine, UI.ghost);
@@ -511,7 +512,7 @@ function drawResult(st) {
   const won = st.result === 'won', col = won ? C.acc : st.result === 'fled' ? C.ally : C.foe;
   frameBox(60, 340, LW - 120, 250, col, 14, 'rgba(6,10,18,.92)');
   txt(won ? 'VICTOIRE' : st.result === 'fled' ? 'REPLI' : 'DÉFAITE', LW / 2, 372, col, F.title(30), 'center', 10);
-  const msg = won ? `Tous les pirates sont détruits (${st.kills} abattus).` : st.result === 'fled' ? 'La flotte saute hors du combat : pas de récompense, 1 carburant perdu.' : 'Toute la flotte est détruite.';
+  const msg = won ? `Tous les pirates sont détruits (${st.kills} abattus).` : st.result === 'fled' ? 'La flotte saute hors du combat : pas de récompense, 1 carburant perdu.' : st.ships.some(o => o.vip && o.dead) ? 'Le vaisseau à protéger est détruit : la mission échoue.' : 'Toute la flotte est détruite.';
   para(msg, 92, 424, LW - 184, C.txt, F.ui(20), 24);
   if (st.goal && !run.training) { const ok = won && goalState(st) === 'ok'; txt(`DÉFI ${GOALS[st.goal.k].name} : ${ok ? `RÉUSSI · +${st.goal.cr} CRÉDITS` : 'MANQUÉ'}`, LW / 2, 476, ok ? C.ok : C.dim, F.mono(15), 'center', 1, LW - 150); }
   btn(152, 516, 240, 50, 'CONTINUER', () => { if (run.training) { endTraining(); return; } finishCombat(run); resetAnim(); UI.sel = null; save(); if (run.phase === 'end') recordEnd(); }, { primary: true, size: 22 });
@@ -591,7 +592,7 @@ function drawMap() {
   }
   if (UI.node != null && N[UI.node]) nodeCard(N[UI.node], seen, next);
   const hn = N[here]; drawSprite('mere', hn.x + 46, hn.y, .3); txt('FLOTTE ICI', hn.x + 46, hn.y + 30, C.ally, F.mono(13), 'center', 1);
-  topBar(`SECTEUR ${pad2(run.sector)}`, SECTORS[run.sector - 1].name + (run.daily ? (run.ranked ? ' · DU JOUR' : ' · DU JOUR (HORS CLASSEMENT)') : ''), `CARBURANT ${pad2(run.fuel)}`, `CRÉDITS ${run.cr}`);
+  topBar(`SECTEUR ${pad2(run.sector)}`, SECTORS[run.sector - 1].name + (run.daily ? ` · ${run.mission ? missionOf(run).name : 'DU JOUR'}${run.ranked ? '' : ' (HORS CLASSEMENT)'}` : ''), `CARBURANT ${pad2(run.fuel)}`, `CRÉDITS ${run.cr}`);
   if (run.msg) { frameBox(20, 104, LW - 40, 40, C.foe, 8, 'rgba(30,8,8,.85)'); txt(run.msg, LW / 2, 115, C.foe, F.ui(17), 'center', 1); }
   // la flotte en bas
   frameBox(16, 884, LW - 32, 64, C.dim, 8);
@@ -886,8 +887,8 @@ function drawTitle() {
     btn(132, 734, 280, 44, UI.confirm ? 'EFFACER LA PARTIE ?' : 'NOUVELLE PARTIE', () => { if (UI.confirm) { UI.screen = 'fleet'; UI.confirm = 0; } else UI.confirm = 1; }, { size: 20, col: UI.confirm ? C.foe : null });
   } else {
     btn(132, 670, 280, 52, 'NOUVELLE PARTIE', () => { UI.screen = 'fleet'; }, { primary: true, size: 24 });
-    const dk = todayKey(), done = dailyBest[dk] != null, tried = store.get('dailyTry', 0) === dk;
-    btn(132, 734, 280, 44, done ? `DU JOUR · ${dailyBest[dk]} PTS` : tried ? 'PARTIE DU JOUR · REJOUER' : 'PARTIE DU JOUR', () => launch(startDaily), { size: 19, ls: 2, col: tried ? null : C.ally });
+    const dk = todayKey(), done = dailyBest[dk] != null, tried = store.get('dailyTry', 0) === dk, M = missionFor(dk);
+    btn(132, 734, 280, 44, done ? `${M.name} · ${dailyBest[dk]} PTS` : `MISSION DU JOUR · ${M.name}`, () => { UI.screen = 'mission'; }, { size: 17, ls: 1, col: tried ? null : C.ally });
   }
   btn(52, 790, 104, 40, 'MANUEL', () => openManual('title'), { size: 17, ls: 1 });
   btn(164, 790, 104, 40, 'DÉBLOCAGES', () => { UI.screen = 'unlocks'; UI.back = 'title'; }, { size: 15, ls: 1, col: walletOf(meta) >= cheapest() ? C.acc : null });
@@ -949,14 +950,44 @@ function drawFleet() {
   btn(40, 864, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
   btn(LW - 240, 864, 200, 52, 'DÉCOLLER', () => { const f = compo().slice(); launch(() => startRun(f)); }, { primary: true, size: 20 });
 }
-// partie du jour : graine = date, flotte d'escorte sans déblocages (la même partie pour toute la famille) ;
+// partie du jour : graine = date, mission du jour (flotte et règle imposées, la même pour toute la famille) ;
 // seule la première tentative du jour est classée (nebula.dailyTry), les suivantes se jouent hors classement
 const todayKey = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
 const dailyBest = store.get('daily', {}) || {};
 function startDaily() {
   const dk = todayKey(), ranked = store.get('dailyTry', 0) !== dk;
-  run = newRun(dk, 'escorte', []); run.daily = dk; run.ranked = ranked; if (ranked) store.set('dailyTry', dk);
+  run = newDaily(dk); run.daily = dk; run.ranked = ranked; if (ranked) store.set('dailyTry', dk);
   UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump');
+}
+// présentation de la mission du jour, avant le départ
+const MOIS = ['JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN', 'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'];
+function missionRules(M) {
+  const out = ["FLOTTE IMPOSÉE · PAS DE PRIME D'AUDACE"];
+  if (M.vip != null) out.push(`À PROTÉGER : ${TYPES[M.ships[M.vip]].name} (DÉTRUIT = MISSION ÉCHOUÉE)`);
+  if (M.pilots) out.push('UN PILOTE DANS CHAQUE VAISSEAU');
+  if (M.noshop) out.push('COMPTOIRS FERMÉS');
+  if (M.fuel != null) out.push(`CARBURANT AU DÉPART : ${M.fuel}${M.refuel === 0 ? ' · AUCUN RAVITAILLEMENT' : ''}`);
+  if (M.cr != null) out.push(`CRÉDITS AU DÉPART : ${M.cr}`);
+  return out;
+}
+function drawMission() {
+  drawBg('hangar'); const dk = todayKey(), M = missionFor(dk), tried = store.get('dailyTry', 0) === dk;
+  topBar('MISSION DU JOUR', `${dk % 100} ${MOIS[Math.floor(dk / 100) % 100 - 1]} ${Math.floor(dk / 10000)} · LA MÊME POUR TOUTE LA FAMILLE`, '', '', LW - 48);
+  frameBox(24, 120, LW - 48, 660, C.ally, 14);
+  txt(M.name, LW / 2, 150, C.ally, F.title(26), 'center', 6, LW - 80);
+  para(M.desc, 56, 208, LW - 112, C.txt, F.ui(21), 25);
+  const n = M.ships.length, w = Math.min(120, (LW - 96) / n);
+  M.ships.forEach((t, i) => {
+    const x = LW / 2 + (i - (n - 1) / 2) * w;
+    drawSprite(t, x, 380, Math.min(1, 150 / (TYPES[t].n * 72), (w - 10) / 72));
+    txt(TYPES[t].name, x, 470, M.vip === i ? C.acc : C.txt, F.ui(15), 'center', 0, w - 6);
+    if (M.pilots && M.pilots[i]) txt('PILOTE ' + PILOTS[M.pilots[i]].name, x, 490, C.ally, F.mono(12), 'center', 0, w - 6);
+    if (M.vip === i) txt('À PROTÉGER', x, 490, C.acc, F.mono(12), 'center', 0, w - 6);
+  });
+  missionRules(M).forEach((l, i) => txt(l, LW / 2, 540 + i * 30, i ? C.acc : C.dim, F.mono(15), 'center', 1, LW - 80));
+  txt(tried ? 'DÉJÀ TENTÉE AUJOURD\'HUI : HORS CLASSEMENT' : 'PREMIÈRE TENTATIVE : CLASSÉE', LW / 2, 730, tried ? C.dim : C.ok, F.mono(15), 'center', 2);
+  btn(40, 820, 200, 52, 'RETOUR', () => { UI.screen = 'title'; }, { size: 20 });
+  btn(LW - 240, 820, 200, 52, 'DÉCOLLER', () => launch(startDaily), { primary: true, size: 20, col: C.ally });
 }
 function startRun(ships = FLEETS[0].ships) { run = newRun((Date.now() ^ (Math.random() * 1e9)) >>> 0, ships, meta.unlocked); UI.screen = 'game'; UI.sel = null; UI.hangar = false; resetAnim(); save(); sfx('jump'); }
 const cheapest = () => Math.min(...UNLOCKS.filter(u => !meta.unlocked.includes(u.id)).map(u => u.cost), 1e9);
@@ -995,7 +1026,7 @@ const RULES = [
   ['CONTRATS', "Au départ, choisis un contrat parmi 3 (chasse aux pirates, gros gibier, zéro perte, équipage complet…). Son avancement s'affiche sur la carte ; réussi, il rapporte des points de score et des données stellaires."],
   ['SCORE', "1000 points par secteur terminé, 20 par pirate détruit, les crédits restants, 3000 pour la victoire finale contre la Rouille-Reine et le contrat réussi ; puis la prime d'audace."],
   ['DONNÉES STELLAIRES', "Gagnées en fin de partie (10 par secteur atteint, 3 par contact lourd gagné, 20 par amiral vaincu, plus la prime) et dans certaines épaves. Elles débloquent de nouveaux vaisseaux : écran DÉBLOCAGES."],
-  ['PARTIE DU JOUR', "La même partie pour toute la famille : même carte, mêmes combats, flotte d'escorte sans déblocages. Seule la première tentative du jour est classée."],
+  ['MISSION DU JOUR', "La même partie pour toute la famille : même carte, mêmes combats, et une mission qui change chaque jour (escadrille de chasseurs, convoi à protéger, comptoirs fermés, carburant compté…), avec sa flotte imposée, sans prime d'audace. Seule la première tentative du jour est classée."],
 ];
 const MAN_TABS = [['regles', 'RÈGLES'], ['vaisseaux', 'VAISSEAUX'], ['pirates', 'PIRATES'], ['terrain', 'TERRAIN'], ['carte', 'CARTE'], ['equipement', 'ÉQUIPEMENT']];
 const MAN_SHIPS = ['chasseur', 'fregate', 'mere', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier'];
@@ -1139,14 +1170,14 @@ function recordEnd() {
   if (window.LudoScores) {
     const r0 = run;
     if (sc > 0) LudoScores.submit('nebula', 'best', sc, false).then(r => { if (r && !r0.daily) r0.rankText = 'CLASSEMENT : ' + LudoScores.rankText(r).toUpperCase(); });
-    if (r0.daily && r0.ranked) LudoScores.submit('nebula', 'daily:' + r0.daily, sc, false).then(r => { if (r) r0.rankText = 'PARTIE DU JOUR : ' + LudoScores.rankText(r).toUpperCase(); });
+    if (r0.daily && r0.ranked) LudoScores.submit('nebula', 'daily:' + r0.daily, sc, false).then(r => { if (r) r0.rankText = 'MISSION DU JOUR : ' + LudoScores.rankText(r).toUpperCase(); });
     if (r0.victory) LudoScores.submit('nebula', 'victoires', meta.wins, false);
   }
 }
 function drawEnd() {
   recordEnd(); drawBg('title'); const f = run.final, win = run.cleared;
-  txt(win ? 'VICTOIRE' : 'FLOTTE PERDUE', LW / 2, 130, win ? C.acc : C.foe, F.title(30), 'center', 8);
-  wrapLines(win ? 'La Rouille-Reine est tombée : les trois secteurs sont libérés.' : `Les pirates ont eu raison de ta flotte (secteur ${pad2(run.sector)} : ${SECTORS[run.sector - 1].name}).`, LW - 80, F.ui(20)).forEach((l, i) => txt(l, LW / 2, 180 + i * 24, C.txt, F.ui(20), 'center', 1));
+  txt(win ? 'VICTOIRE' : run.vipLost ? 'MISSION ÉCHOUÉE' : 'FLOTTE PERDUE', LW / 2, 130, win ? C.acc : C.foe, F.title(30), 'center', 8);
+  wrapLines(win ? 'La Rouille-Reine est tombée : les trois secteurs sont libérés.' : run.vipLost ? `Le vaisseau à protéger est détruit (secteur ${pad2(run.sector)} : ${SECTORS[run.sector - 1].name}).` : `Les pirates ont eu raison de ta flotte (secteur ${pad2(run.sector)} : ${SECTORS[run.sector - 1].name}).`, LW - 80, F.ui(20)).forEach((l, i) => txt(l, LW / 2, 180 + i * 24, C.txt, F.ui(20), 'center', 1));
   const rows = [['SECTEURS TERMINÉS', `${run.sectorsDone} × 1000`], ['PIRATES DÉTRUITS', `${run.kills} × 20`], ['CRÉDITS RESTANTS', `${run.cr}`]];
   if (run.victory) rows.push(['VICTOIRE FINALE', '3000']);
   if (run.contract) rows.push([`CONTRAT ${CONTRACTS[run.contract].name}`, run.contractDone ? `+${CONTRACTS[run.contract].score}` : 'MANQUÉ']);
@@ -1160,7 +1191,7 @@ function drawEnd() {
   txt(f.newBest ? 'NOUVEAU RECORD !' : `RECORD : ${best}`, LW / 2, ly + 70, f.newBest ? C.ok : C.dim, F.mono(18), 'center', 2);
   txt(`+${f.data} DONNÉES STELLAIRES`, LW / 2, ly + 102, C.ally, F.mono(18), 'center', 2);
   if (run.rankText) txt(run.rankText, LW / 2, ly + 136, C.txt, F.mono(16), 'center', 2);
-  else if (run.daily) txt(run.ranked ? 'PARTIE DU JOUR · CLASSÉE' : 'PARTIE DU JOUR · HORS CLASSEMENT', LW / 2, ly + 136, C.ally, F.mono(15), 'center', 2);
+  else if (run.daily) txt(run.ranked ? 'MISSION DU JOUR · CLASSÉE' : 'MISSION DU JOUR · HORS CLASSEMENT', LW / 2, ly + 136, C.ally, F.mono(15), 'center', 2);
   btn(60, 660, 200, 52, 'MENU', () => { run = null; UI.screen = 'title'; }, { size: 20 });
   btn(LW - 260, 660, 200, 52, 'REJOUER', () => { UI.screen = 'fleet'; run = null; }, { primary: true, size: 20 });
   btn(60, 730, 200, 44, 'CLASSEMENT', () => { location.href = '../classements/index.html#nebula'; }, { size: 18 });
@@ -1210,6 +1241,7 @@ function draw() {
   else if (UI.screen === 'manual') drawManual();
   else if (UI.screen === 'tutoAsk') drawTutoAsk();
   else if (UI.screen === 'unlocks') drawUnlocks();
+  else if (UI.screen === 'mission') drawMission();
   else if (!run) UI.screen = 'title';
   else if (UI.hangar && run.phase !== 'combat') drawHangar();
   else if (run.phase === 'map') drawMap();

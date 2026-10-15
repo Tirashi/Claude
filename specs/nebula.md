@@ -370,3 +370,8 @@ Découpage du § 21 **validé le 15/10** avec les choix proposés : budget **10 
 - `RUN_V` 4 (`offers`, `contract`, `contractDone`, `bonus`, `goals`, `secLost`, `cleanSectors`) ; une partie déjà commencée continue sans contrat.
 - À confirmer en jouant : défis trop faciles ou trop durs ? contrats assez différents pour que le choix compte ?
 
+### Étape 3 : missions du jour ✅ (15/10)
+- La partie du jour devient la **mission du jour** (`MISSIONS`, `missionFor(date)`, `newDaily`) : flotte et règle imposées, tirées avec la date, sans prime d'audace ; contrats proposés comme d'habitude (mêmes 3 pour toute la famille). Écran de présentation (`drawMission`) depuis le bouton MISSION DU JOUR · NOM de l'écran titre : flotte, pilotes, vaisseau à protéger, règles, tentative classée ou non.
+- 8 missions (victoires de l'IA de test sur 20 parties) : escadrille (3 chasseurs + éclaireur, 9), tapis de bombes (3 bombardiers + chasseur, 7), convoi (convoyeur à protéger + frégate + 2 chasseurs, 2), équipage d'élite (frégate, chasseur, éclaireur avec pilotes prudent, as, tireur, 6), blocus (escorte + chasseur, comptoirs fermés, 2), réservoirs à sec (frégate + 2 chasseurs, 5 carburants, aucun ravitaillement, 7), armada (cuirassé, porte-vaisseaux, chasseur, 7), la meute (éclaireur, drones, 2 chasseurs, 4). L'IA de test protège mal le convoyeur : le convoi devrait être plus facile pour un joueur.
+- Vaisseau à protéger : `vip` sur le vaisseau de la flotte et en combat ; détruit = combat perdu (`checkEnd`), fin « MISSION ÉCHOUÉE » (`run.vipLost`) ; repère « À PROTÉGER » en combat. Comptoirs fermés : on y passe sans rien acheter (message). Pas de nouvelle version de sauvegarde (champs facultatifs : `mission`, `vip`, `vipLost`).
+

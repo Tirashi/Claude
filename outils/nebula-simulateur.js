@@ -80,5 +80,9 @@ check((m => m && m.v === N.RUN_V && m.contract === null && m.offers.length === 0
 check((a => a.goal && JSON.stringify(a.goal) === JSON.stringify(N.makeCombat(7, 'lourd', 4, fleet).goal) && N.GOALS[a.goal.k])(N.makeCombat(7, 'lourd', 4, fleet)), 'défi de combat tiré avec la graine');
 check((r => { const s0 = N.scoreOf(r), d0 = N.stellarOf(r); r.offers = ['fortune']; N.chooseContract(r, 'fortune'); r.cr = 600; N.contractCheck(r);
   return r.offers.length === 1 && r.contractDone && N.scoreOf(r) === s0 + 560 + 500 && N.stellarOf(r) === d0 + 10 && !N.contractCheck(r); })(N.newRun(11, 'escorte')), 'contrat réussi : +score et +données, une seule fois');
+// missions du jour : même mission et même partie pour une date, flotte imposée sans prime, vaisseau à protéger
+check(N.MISSIONS.every(M => M.ships.length <= 4 && M.ships.every(t => N.FLEET_COST[t])) && JSON.stringify(N.newDaily(20261015)) === JSON.stringify(N.newDaily(20261015)) && N.newDaily(20261015).prime === 0, 'missions du jour : flottes valides, même partie pour une date, sans prime');
+check((() => { const r = N.newDaily(20261015); r.mission = 'convoi'; r.fleet[0].vip = true; const st = N.makeCombat(3, 'contact', 1, r.fleet); const v = st.ships.find(o => o.vip); v.hull = 0; v.dead = true; st.result = null; return v && N.endTurn(st) && st.result === 'lost'; })(), 'mission convoi : le vaisseau à protéger détruit, le combat est perdu');
+check(new Set(Array.from({ length: 40 }, (_, i) => N.missionFor(20261001 + i).id)).size >= 6, 'missions du jour : au moins 6 missions différentes sur 40 jours');
 check(N.migrate({ v: 1, fleet: 'abîmée' }) === null && N.migrate({ v: 99 }) === null && N.migrate(null) === null, 'migrate() refuse une partie illisible ou d\'une version future');
 process.exit(fail ? 1 : 0);

@@ -21,7 +21,7 @@
  * @typedef {{ t: string, mods?: string[], mult?: number, pilot?: Pilot | null }} Fit   un vaisseau, ses modules et son pilote (en combat ou dans la flotte)
  * @typedef {{ id: number, t: string, side: string, c: number, r: number, mods: string[], dead: boolean, moved: boolean, acted: boolean,
  *   rip: boolean, bay: number, from: { c: number, r: number } | null, hull: number, hmax: number, sh: number, shMax: number,
- *   mult?: number, fid?: number, name?: string, goal?: number, fired?: number, mark?: number, pilot?: Pilot | null }} Ship
+ *   mult?: number, fid?: number, name?: string, goal?: number, fired?: number, mark?: number, pilot?: Pilot | null, vip?: boolean }} Ship
  * @typedef {{ src: number, cell: Cell, dmg: number, fx: string, cross?: number, splash?: number, pack?: boolean, pull?: number }} Intent
  * @typedef {{ seed: number, kind: string, floor: number, sector: number, ai?: number, turn: number, ships: Ship[], rocks: Cell[],
  *   intents: Intent[], kills: number, next: number, result: string | null, log: any[], ions?: Cell[], fog?: Cell[], label?: string,
@@ -273,7 +273,7 @@ function makeCombat(seed, kind, floor, fleet, sector = 1, /** @type {{ ai?: numb
   fleet.slice().sort((a, b) => TYPES[b.t].n - TYPES[a.t].n).forEach(f => {
     const n = TYPES[f.t].n, r = n === 1 ? 7 : 6;
     const c = order.find(c => ![0, 1, 2].some(i => i < n && (occupant(st, c, r + i) || rockAt(st, c, r + i))));
-    if (c != null) makeShip(st, f.t, 'P', c, r, { fid: f.uid, name: f.name, mods: f.mods.slice(), hull: f.hull, pilot: f.pilot || null });
+    if (c != null) makeShip(st, f.t, 'P', c, r, Object.assign({ fid: f.uid, name: f.name, mods: f.mods.slice(), hull: f.hull, pilot: f.pilot || null }, f.vip ? { vip: true } : {}));
   });
   st.goal = makeGoal(st);
   startTurn(st, []);
@@ -556,7 +556,8 @@ function riposte(st, p, ev) {
 }
 function checkEnd(st) {
   if (st.result) return st.result;
-  if (!sideOf(st, 'E').length) st.result = 'won';
+  if (st.ships.some(s => s.vip && s.dead)) st.result = 'lost';   // mission du jour : le vaisseau à protéger est détruit
+  else if (!sideOf(st, 'E').length) st.result = 'won';
   else if (!sideOf(st, 'P').some(s => !TYPES[s.t].temp)) st.result = 'lost';
   return st.result;
 }
@@ -856,6 +857,7 @@ function jump(run, id) {
   run.at = id; run.visited.push(id);
   const nd = nodeAt(run, id), seed = seedOf(run.seed, run.sector, id);
   if (nd.k === 'contact' || nd.k === 'lourd' || nd.k === 'amiral') { run.combat = makeCombat(seed, nd.k, nd.f, run.fleet, run.sector); run.phase = 'combat'; }
+  else if (nd.k === 'comptoir' && missionOf(run).noshop) run.msg = 'COMPTOIR FERMÉ (MISSION DU JOUR)';
   else if (nd.k === 'comptoir') { run.shop = makeShop(run, seed); run.phase = 'shop'; }
   else if (nd.k === 'dock') { run.dockMod = pick(rng(seed), MOD_IDS); run.phase = 'dock'; }
   else if (nd.k === 'epave') startEvent(run, 'epaves', seed);
@@ -928,6 +930,7 @@ function finishCombat(run) {
   const st = run.combat; if (!st || !st.result) return;
   const lostCargo = run.fleet.some(f => f.t === 'convoyeur' && (st.ships.find(x => x.fid === f.uid) || { dead: true }).dead) ? 20 : 0;
   const before = run.fleet.length;
+  if (run.fleet.some(f => f.vip && (st.ships.find(x => x.fid === f.uid) || { dead: true }).dead)) run.vipLost = true;   // mission du jour : le vaisseau à protéger est perdu
   run.fleet = run.fleet.filter(f => { const s = st.ships.find(x => x.fid === f.uid); if (!s || s.dead) return false; f.hull = s.hull; return true; });
   run.secLost = (run.secLost || 0) + before - run.fleet.length;
   if (st.goal && run.goals) { run.goals.n++; if (st.result === 'won' && goalState(st) === 'ok') { run.goals.ok++; run.cr += st.goal.cr; } }
@@ -956,9 +959,41 @@ function afterReward(run) {
   if (k === 'amiral') {
     if (run.sector < SECTORS.length) {
       run.sector++; run.map = makeMap(run.seed, run.sector); run.at = 0; run.visited = [0]; run.phase = 'map'; run.secLost = 0;
-      run.fuel += REFUEL; run.msg = `SECTEUR ${String(run.sector).padStart(2, '0')} · RAVITAILLEMENT : +${REFUEL} CARBURANT`;
+      const rf = missionOf(run).refuel != null ? missionOf(run).refuel : REFUEL;
+      run.fuel += rf; run.msg = `SECTEUR ${String(run.sector).padStart(2, '0')} · ${rf ? `RAVITAILLEMENT : +${rf} CARBURANT` : 'PAS DE RAVITAILLEMENT'}`;
     } else { run.phase = 'end'; run.victory = run.sectorsDone >= SECTORS.length; run.cleared = true; }
   } else run.phase = 'map';
+}
+/* ---------- missions du jour (session 4) ----------
+   La partie du jour impose une flotte et une règle, tirées avec la date : la même pour toute la famille.
+   Champs : ships (flotte imposée), pilots (pilote de chaque vaisseau, dans l'ordre), vip (indice du vaisseau
+   à protéger : détruit = partie perdue), noshop (comptoirs fermés), fuel (carburant au départ),
+   refuel (carburant en entrant dans un secteur), cr (crédits au départ). Pas de prime d'audace. */
+/** @type {{ id: string, name: string, desc: string, ships: string[], pilots?: string[], vip?: number, noshop?: boolean, fuel?: number, refuel?: number, cr?: number }[]} */
+const MISSIONS = [
+  { id: 'escadrille', name: 'ESCADRILLE', desc: 'Trois chasseurs et un éclaireur : vitesse, ripostes et marquage.', ships: ['chasseur', 'chasseur', 'chasseur', 'eclaireur'] },
+  { id: 'bombardiers', name: 'TAPIS DE BOMBES', desc: 'Trois bombardiers et un chasseur pour les couvrir.', ships: ['bombardier', 'bombardier', 'bombardier', 'chasseur'] },
+  { id: 'convoi', name: 'CONVOI', desc: 'Escorte le convoyeur jusqu\'au bout : s\'il est détruit, la mission échoue.', ships: ['convoyeur', 'fregate', 'chasseur', 'chasseur'], vip: 0 },
+  { id: 'elite', name: 'ÉQUIPAGE D\'ÉLITE', desc: 'Trois petits vaisseaux, mais chacun a son pilote.', ships: ['fregate', 'chasseur', 'eclaireur'], pilots: ['prudent', 'as', 'tireur'] },
+  { id: 'blocus', name: 'BLOCUS', desc: 'Les comptoirs sont fermés : pas d\'achats ni de réparations payantes.', ships: ['mere', 'fregate', 'chasseur', 'chasseur'], noshop: true },
+  { id: 'reserve', name: 'RÉSERVOIRS À SEC', desc: '5 carburants au départ et aucun ravitaillement entre les secteurs.', ships: ['fregate', 'chasseur', 'chasseur'], fuel: 5, refuel: 0 },
+  { id: 'armada', name: 'ARMADA', desc: 'Deux géants lents, le cuirassé et le porte-vaisseaux, et un chasseur.', ships: ['cuirasse', 'mere', 'chasseur'] },
+  { id: 'meute', name: 'LA MEUTE', desc: 'Un éclaireur pour marquer, une nuée de drones et deux chasseurs pour frapper.', ships: ['eclaireur', 'drones', 'chasseur', 'chasseur'] },
+];
+const NO_MISSION = {};
+/** la mission du jour (date AAAAMMJJ) */
+const missionFor = dk => MISSIONS[Math.floor(rng(seedOf(dk, 51))() * MISSIONS.length)];
+/** @returns {any} */
+const missionOf = run => (run && run.mission && MISSIONS.find(m => m.id === run.mission)) || NO_MISSION;
+/** la partie du jour : graine = date, flotte et règle de la mission, sans prime d'audace */
+function newDaily(dk) {
+  const M = missionFor(dk), run = newRun(dk, M.ships, []), R = rng(seedOf(dk, 52));
+  run.mission = M.id; run.prime = 0;
+  if (M.pilots) M.pilots.forEach((k, i) => { if (run.fleet[i]) run.fleet[i].pilot = randomPilot(R, run, k); });
+  if (M.vip != null && run.fleet[M.vip]) run.fleet[M.vip].vip = true;
+  if (M.fuel != null) run.fuel = M.fuel;
+  if (M.cr != null) run.cr = M.cr;
+  return run;
 }
 /* ---------- contrats de partie (session 4) ----------
    3 contrats proposés au départ (graine de la partie), le joueur en choisit un ; réussi = score et données en plus. */
@@ -1039,6 +1074,6 @@ const baseStellarOf = run => 10 * run.sector + 3 * run.heavy + 20 * run.admirals
 const scoreOf = run => Math.round(baseScoreOf(run) * (1 + (run.prime || 0)));
 const stellarOf = run => Math.round(baseStellarOf(run) * (1 + (run.prime || 0)));
 
-const NEBULA_API = { makeTraining, TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, baseScoreOf, baseStellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, FLEET_BUDGET, FLEET_MAX, FLEET_COST, PRIME_STEP, PRIME_MAX, fleetCost, primeOf, fleetShips, fleetOk, GOALS, goalText, goalState, CONTRACTS, chooseContract, contractCheck, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
+const NEBULA_API = { makeTraining, TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, baseScoreOf, baseStellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, FLEET_BUDGET, FLEET_MAX, FLEET_COST, PRIME_STEP, PRIME_MAX, fleetCost, primeOf, fleetShips, fleetOk, MISSIONS, missionFor, missionOf, newDaily, GOALS, goalText, goalState, CONTRACTS, chooseContract, contractCheck, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
 if (typeof window !== 'undefined') window.Nebula = NEBULA_API;
 if (typeof module !== 'undefined') module.exports = NEBULA_API;
