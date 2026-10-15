@@ -268,7 +268,7 @@ Validé par l'utilisateur le 14/10. Même méthode qu'en session 2 : chaque éta
 3. ✅ **Confort au doigt** (15/10) (`nebula-analyse.md` § 8) : toucher long = fiche (vaisseau, pirate, balise), avertissement doux sur FIN DU TOUR si un vaisseau peut encore tirer, zones tactiles plus grandes, vitesse des animations pirates ×1/×2, vibration quand un vaisseau est touché.
 4. ✅ **Sons et animations** (15/10) (§ 13) : bruitages manquants (grappin, ions, salve, couvée), nappe d'ambiance coupée par défaut, petites finitions (saut, débris).
 5. ✅ **Hors connexion et batterie** (15/10) (`nebula-analyse.md` § 6 et § 8 ; touche `sw.js`, donc tout le site) : polices dans le dépôt, délai réseau du service worker, redessin seulement quand quelque chose bouge.
-6. **Équilibrage final et bilan** : flotte de choc un peu forte, retours de jeu de l'utilisateur, docs.
+6. ✅ **Bilan** (15/10) : l'équilibrage de la flotte de choc est reporté à la session 4 (flotte à points, § 21), sur décision de l'utilisateur.
 Reste aussi, hors Nebula : l'artefact de l'accueil est une ancienne copie à plusieurs fichiers (sans Orbite, Pont stellaire, Alunissage, Nebula) ; le refaire demande un chantier à part.
 
 ### Étape 1 (14/10) : manuel
@@ -335,5 +335,19 @@ Lecture : le **nombre de vaisseaux** compte énormément (plus d'actions par tou
 3. **Missions du jour** : la partie du jour impose chaque jour une flotte et une règle tirées avec la date (escadrille de 4 chasseurs, 3 bombardiers, escorte d'un convoyeur qui ne doit pas être détruit, 2 vaisseaux avec pilotes vétérans, sans comptoir, carburant compté…). La même pour toute la famille : le classement du jour reste juste.
 4. **Nouveaux vaisseaux** (plus tard) : alliés *brouilleur* (annule une intention pirate par tour) et *mouilleur de mines* (piège une case) ; pirates *frégate-bouclier* (+1 bouclier aux pirates voisins) et *poseur de mines*. Chaque nouveau pirate doit rester lisible avec le système d'annonces.
 
-### Proposition de découpage
-Clore la session 3 par une étape 6 courte (bilan, docs), puis une **session 4 « Flotte et défis »** : 1) flotte à points, prime d'audace, calibrage des coûts au simulateur ; 2) objectifs de combat et contrats de partie ; 3) missions du jour ; 4) nouveaux vaisseaux (en option). À valider par l'utilisateur.
+### Décisions de l'utilisateur (15/10)
+- **Flotte à points avec prime d'audace : oui**, comme socle. **Garder les archétypes** (escorte, choc, marchande) comme modèles prêts à l'emploi, pour donner des idées aux débutants.
+- **On n'écarte rien** : objectifs, missions du jour et nouveaux vaisseaux sont tous retenus.
+- Session 4 dans une **nouvelle conversation** (économie du forfait : le contexte de la session 3 était à 42 %).
+
+### Session 4 « Flotte et défis » : découpage proposé (à faire valider en début de session)
+Même méthode : chaque étape jouable, testée, poussée, artefact republié.
+1. **Flotte à points** : écran FLOTTE de composition (budget, coût de chaque vaisseau, 4 vaisseaux au plus au départ, modèles escorte / choc / marchande à charger puis modifier), prime d'audace (+10 % de score et de données par point non dépensé, affichée au départ et à la fin), coûts calibrés avec `outils/nebula-flottes.js` (viser des chances voisines à coût égal ; le chasseur est sous-évalué, le nombre de vaisseaux pèse lourd). Déblocages : plus de flottes à débloquer (solde recalculé tout seul), les vaisseaux débloqués entrent dans la composition. Partie sauvegardée : `RUN_V` 3 si la partie garde sa composition ou sa prime. Points à trancher : budget (10 ?), le score `best` reste-t-il comparable avec la prime.
+2. **Objectifs** : un défi par combat (tiré avec la graine, affiché en haut, récompense en crédits) et un contrat de partie choisi au départ parmi 3 (récompense en score et en données) ; affichés dans le bilan de fin.
+3. **Missions du jour** : la partie du jour impose une flotte et une règle tirées avec la date (escadrille de chasseurs, bombardiers, escorte d'un convoyeur à protéger, vétérans, sans comptoir, carburant compté…) ; même mission pour toute la famille ; présentation sur l'écran titre.
+4. **Nouveaux vaisseaux** : alliés brouilleur (annule une intention pirate par tour) et mouilleur de mines ; pirates frégate-bouclier et poseur de mines ; sprites dans `vaisseaux.js`, fiches du manuel, IA, simulateur.
+5. **Équilibrage et bilan** : simulateur, retours de l'utilisateur, docs.
+
+### Bilan de la session 3 (15/10)
+Fait : manuel en 6 onglets (fiches des vaisseaux et pirates, terrain, carte, équipement) ; entraînement guidé (combat préparé, proposé une fois à tous) ; aperçu des pilotes au hangar ; confort au doigt (toucher long ou clic droit = fiche, tir et saut au lever du doigt, zones élargies, confirmation de FIN DU TOUR, animations ×2, vibrations) ; bruitages et nappe d'ambiance ; saut et débris animés ; polices dans le dépôt, délai réseau du service worker (tout le site, `ludotheque-v19`), images/s réduites au repos ; mesures de 12 flottes au simulateur et pistes de la session 4 (§ 21).
+À confirmer sur téléphone : appui long (0,45 s) et tir au lever du doigt, volume des nouveaux sons et de l'ambiance, ouverture hors connexion et sur réseau lent après la mise à jour de `main`. Reste ouvert : retirer ou non la petite vibration du toucher long (Chrome en fait déjà une) ; Web Worker pour les sprites seulement si des à-coups sont constatés.
