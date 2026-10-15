@@ -177,6 +177,7 @@ Poser un module lunaire en douceur, site après site.
 
 - **Deux réacteurs**, un par moitié d'écran (un doigt chacun) : le gauche pousse vers le haut et vers la droite, le droit vers le haut et vers la gauche, les deux ensemble tout droit. Au clavier : flèches gauche, droite, haut.
 - Se poser **sur une aire**, à plat, avec une vitesse verticale et horizontale assez faibles (affichées en vert ou en rouge). Les aires étroites rapportent ×5, les moyennes ×3, les larges ×2.
+- **Cadrans près du module**, pour ne pas le quitter des yeux : un réticule qui passe au vert quand tout est bon pour se poser (orange ou rouge sinon), 5 segments de carburant au-dessus, deux barres de vitesse (V et H, le trait blanc marque la limite) dessous, l'aire survolée à côté (×2, ×3, ×5, ou un trait si le sol est en pente), une flèche qui montre où va le module, et sous 120 m un pointillé jusqu'au sol avec la hauteur.
 - Une **mission** enchaîne les sites (la Lune, Phobos, Mars, Europe, Titan et son vent, une comète…), de plus en plus durs, jusqu'au crash ou à l'arrêt. Chaque site rapporte (100 + carburant restant) × le multiplicateur ; le carburant se recharge en partie à chaque alunissage.
 - **Mission du jour** : la même suite de sites pour toute la famille. Le record et la mission du jour font partie des classements et du transfert de sauvegardes.
 

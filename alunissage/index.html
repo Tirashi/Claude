@@ -245,6 +245,46 @@ function hud() {
   if (S.site.wind) text(S.site.wind > 0 ? 'VENT >' : '< VENT', 6, 30, '#ffb040', 'left', 6);
   text(`G ${(S.site.g / 6.2).toFixed(1)}`, 100, 30, '#8fa0d0', 'left', 6);
 }
+/* ---------- cadrans près du module (pour ne pas quitter le module des yeux) ----------
+   réticule : vert quand on peut se poser (vitesses douces, aire plate dessous), sinon orange ou rouge ;
+   5 segments de carburant au-dessus ; barres V et H dessous (trait blanc = limite) ; à droite l'aire survolée ;
+   flèche de vitesse dans le sens du mouvement ; sous 120 m, un pointillé jusqu'au sol avec la hauteur. */
+const okCol = r => r <= 1 ? '#5cff8a' : r <= 1.5 ? '#ffb040' : '#ff6a5a';
+function underShip() {
+  const s = S.ship, site = S.site, pad = site.pads.find(p => s.x - 5 >= p.x0 && s.x + 5 <= p.x1);
+  return { pad, flat: Math.abs(groundY(site, s.x - 6) - groundY(site, s.x + 6)) < 2, gy: groundY(site, s.x) };
+}
+function shipGauges() {
+  const s = S.ship, x = Math.round(s.x), y = Math.round(s.y), u = underShip(), blink = Math.sin(T * 14) > 0;
+  const vyR = Math.max(0, s.vy) / VY_OK, vxR = Math.abs(s.vx) / VX_OK, worst = Math.max(vyR, vxR);
+  const c = worst <= 1 && u.pad && u.flat ? '#5cff8a' : worst <= 1.5 ? '#ffb040' : '#ff6a5a';
+  // réticule
+  const L = 4, X0 = x - 13, X1 = x + 13, Y0 = y - 14, Y1 = y + 12;
+  R_(X0, Y0, L, 1, c); R_(X0, Y0, 1, L, c); R_(X1 - L + 1, Y0, L, 1, c); R_(X1, Y0, 1, L, c);
+  R_(X0, Y1, L, 1, c); R_(X0, Y1 - L + 1, 1, L, c); R_(X1 - L + 1, Y1, L, 1, c); R_(X1, Y1 - L + 1, 1, L, c);
+  // carburant : 5 segments, le dernier clignote
+  const segs = Math.ceil(S.fuel / 20);
+  for (let k = 0; k < 5; k++) R_(x - 12 + k * 5, Y0 - 5, 4, 2, k < segs ? (segs === 1 ? (blink ? '#ff6a5a' : '#5a1a1a') : '#5cf2ff') : '#2a3458');
+  // vitesses
+  const bar = (yy, r, lab) => { R_(x - 12, yy, 24, 4, OUT); R_(x - 11, yy + 1, Math.min(22, Math.round(r * 11)), 2, okCol(r)); R_(x - 1, yy - 1, 1, 6, '#e6fbff'); text(lab, x - 15, yy - 1, '#8fa0d0', 'right', 5, null); };
+  bar(Y1 + 5, vyR, 'V'); bar(Y1 + 12, vxR, 'H');
+  // aire survolée : x2 / x3 / x5, -- (sol plat sans aire) ou /\ (pente)
+  text(u.pad && u.flat ? 'x' + u.pad.mul : u.flat ? '--' : '/\\', X1 + 4, Y0, u.pad && u.flat ? (u.pad.mul === 5 ? '#ffd23f' : '#5cff8a') : '#ff6a5a', 'left', 6);
+  // flèche de vitesse
+  const n = Math.hypot(s.vx, s.vy);
+  if (n > 2) {
+    const ux = s.vx / n, uy = s.vy / n, ax = x + ux * 19, ay = y + 1 + uy * 19, dx = s.vx * .42, dy = s.vy * .42, len = Math.round(Math.hypot(dx, dy)), ac = okCol(worst);
+    for (let k = 0; k <= len; k++) R_(Math.round(ax + dx * k / len), Math.round(ay + dy * k / len), 1, 1, ac);
+    for (const a of [2.5, -2.5]) { const hx = ux * Math.cos(a) - uy * Math.sin(a), hy = ux * Math.sin(a) + uy * Math.cos(a);
+      for (let k = 1; k <= 3; k++) R_(Math.round(ax + dx + hx * k), Math.round(ay + dy + hy * k), 1, 1, ac); }
+  }
+  // hauteur : pointillé jusqu'au sol sous 120 m
+  const alt = Math.max(0, Math.round(u.gy - s.y - 8));
+  if (alt < 120) {
+    for (let yy = y + 26; yy < u.gy - 2; yy += 4) R_(x, yy, 1, 2, 'rgba(200,212,244,.6)');
+    text(`${alt} M`, x + 5, Math.min(u.gy - 12, Math.max(y + 30, (y + 26 + u.gy) / 2 - 4)), '#c8d4f4', 'left', 6);
+  }
+}
 // boutons des réacteurs, en bas
 function engineButtons() {
   const y = 404, h = 70, sides = [[8, 'GAUCHE', S.left], [140, 'DROIT', S.right]];
@@ -260,6 +300,7 @@ function drawFly(t) {
   g.drawImage(sky(site), 0, 0); drawGround(site);
   for (const p of S.parts) R_(Math.round(p.x), Math.round(p.y), p.s, p.s, p.c);
   if (S.phase !== 'crashed') drawShip(S.ship, t);
+  if (S.phase === 'fly') shipGauges();
   hud();
   R_(0, 398, LW, LH - 398, '#05060f');
   if (S.phase === 'fly') { engineButtons(); if (S.ship.t < 3) { const m = wrap('Pose-toi doucement sur une aire. Les deux réacteurs ensemble : tout droit.', 30); m.forEach((l, i) => text(l, 136, 52 + i * 10, '#e6fbff', 'center', 6)); } }
