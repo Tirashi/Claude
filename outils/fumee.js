@@ -17,7 +17,7 @@ const shots = process.argv[2];
     if (url === 'nebula/index.html') {
       const r = await p.evaluate(async () => {
         const N = Nebula, wait = ms => new Promise(r => setTimeout(r, ms));
-        N.run = N.newRun(77, 'escorte'); N.UI.screen = 'game'; N.jump(N.run, N.nextNodes(N.run)[0].id); await wait(1500);
+        N.run = N.newRun(77, 'escorte'); N.UI.screen = 'game'; N.jump(N.run, N.nextNodes(N.run)[0].id); await wait(3000);   // montée du saut (2 s) puis arrivée de la flotte
         const st = N.run.combat; if (!st) return 'pas de combat';
         // un vrai toucher sur le premier vaisseau du joueur, puis FIN DU TOUR
         const s = st.ships.find(x => x.side === 'P'), cv = document.getElementById('cv'), b = cv.getBoundingClientRect();
