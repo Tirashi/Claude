@@ -23,6 +23,7 @@ body { display: flex; justify-content: center; align-items: flex-start; touch-ac
 <script src="vaisseaux.js"></script>
 <script src="evenements.js"></script>
 <script src="regles.js"></script>
+<script src="sons.js"></script>
 <script src="../ludo-scores.js"></script>
 <script>
 'use strict';
@@ -116,7 +117,7 @@ function btn(x, y, w, h, label, act, o = {}) {
   if (o.primary && !o.off) { g.fillStyle = C.acc2 + '.16)'; g.fillRect(x, y, w, h); }
   frameBox(x, y, w, h, col, 8, o.primary ? 'rgba(0,0,0,0)' : 'rgba(6,10,18,.6)');
   txt(label, x + w / 2, y + (h - size) / 2 + 1, o.off ? 'rgba(125,138,158,.6)' : o.col || (o.primary ? C.acc : C.txt), F.ui(size), 'center', o.ls == null ? 3 : o.ls, w - 14);
-  if (!o.off && act) BTN.push({ x, y, w, h, act });
+  if (!o.off && act) BTN.push({ x, y, w, h, act, primary: !!o.primary });
 }
 // zone tactile ; o.hold : l'action attend le lever du doigt, et un toucher long fait o.hold à la place
 function zone(x, y, w, h, act, o) { BTN.push({ x, y, w, h, act, hold: o && o.hold }); }
@@ -131,55 +132,34 @@ const pad2 = n => String(n).padStart(2, '0');
 function drawSprite(t, x, y, sc = 1, alpha = 1) { const s = spr(t); if (s) V.drawShip(g, s, x, y, sc, now, alpha); }
 const fitScale = (t, h) => Math.min(1.6, h / (TYPES[t].n * 72));
 
-/* ---------- sons : bruitages graves et discrets ---------- */
+/* ---------- sons : nebula/sons.js (bruitages étouffés, bips discrets, saut lourd, ambiances) ---------- */
 const AU = {};
 function au() {
   if (!SFX) return null;
-  if (!AU.ctx) { const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return null; AU.ctx = new Ctx(); AU.out = AU.ctx.createGain(); AU.out.gain.value = .35; AU.out.connect(AU.ctx.destination);
-    const n = AU.ctx.sampleRate; AU.noise = AU.ctx.createBuffer(1, n, n); const d = AU.noise.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; }
+  if (!AU.ctx) { const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx || !window.NebulaSons) return null; AU.ctx = new Ctx(); AU.out = AU.ctx.createGain(); AU.out.gain.value = .9; AU.out.connect(AU.ctx.destination);
+    NebulaSons.init(AU.ctx, AU.out); AU.warm = NebulaSons.LIST.slice(); }
   if (AU.ctx.state === 'suspended' && !document.hidden) AU.ctx.resume(); ambience(); return AU.ctx;
 }
-function tone(type, f0, f1, dur, vol, delay) { const a = AU.ctx, t = a.currentTime + delay, o = a.createOscillator(), v = a.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-  v.gain.setValueAtTime(vol, t); v.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(v); v.connect(AU.out); o.start(t); o.stop(t + dur + .02); }
-function noise(dur, f0, f1, vol, delay) { const a = AU.ctx, t = a.currentTime + delay, s = a.createBufferSource(), f = a.createBiquadFilter(), v = a.createGain(); s.buffer = AU.noise; f.type = 'lowpass'; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
-  v.gain.setValueAtTime(vol, t); v.gain.exponentialRampToValueAtTime(.001, t + dur); s.connect(f); f.connect(v); v.connect(AU.out); s.start(t); s.stop(t + dur + .02); }
-function sfx(k, delay = 0) {
+// fabrique les sons d'avance, un à la fois, quand le jeu est au repos
+function warmSounds() { if (AU.warm && AU.warm.length) NebulaSons.warm(AU.warm.shift()); }
+// nom du jeu → son retenu ; pan : position du tir à l'écran (-1 gauche, 1 droite)
+const SND = { canon: 'canon', essaim: 'canon', laser: 'laser', missile: 'missile', torpille: 'torpille', charge: 'missile', salve: 'missile', boom: 'explosion', shield: 'bouclier', coque: 'coque',
+  jump: 'saut', click: 'bip', valide: 'valide', grapple: 'grappin', winch: 'treuil', ion: 'ion', warp: 'renforts', couvee: 'renforts', heal: 'soin', mark: 'marque', mine: 'mine', jam: 'ion',
+  win: 'victoire', lose: 'defaite' };
+function sfx(k, delay = 0, pan = 0) {
   if (!au()) return; delay = Math.max(0, delay);
-  if (k === 'laser') tone('sawtooth', 700, 160, .2, .07, delay);
-  else if (k === 'canon' || k === 'essaim') { noise(.14, 1600, 250, .45, delay); tone('square', 130, 55, .1, .06, delay); }
-  else if (k === 'missile') noise(.4, 500, 2200, .22, delay);
-  else if (k === 'torpille') { tone('sine', 110, 45, .55, .25, delay); noise(.45, 380, 160, .18, delay); }
-  else if (k === 'boom') { noise(.8, 800, 50, .7, delay); tone('sine', 70, 28, .7, .35, delay); }
-  else if (k === 'shield') tone('sine', 420, 760, .16, .06, delay);
-  else if (k === 'jump') { tone('sine', 70, 700, .7, .12, delay); noise(.7, 150, 2600, .1, delay); }
-  else if (k === 'click') tone('square', 900, 700, .035, .03, delay);
-  else if (k === 'grapple') { tone('triangle', 520, 240, .22, .06, delay); noise(.1, 3200, 900, .16, delay); tone('square', 160, 150, .05, .03, delay + .2); }   // le harpon et son câble
-  else if (k === 'winch') { tone('sawtooth', 70, 120, .45, .035, delay); noise(.45, 400, 900, .06, delay); }                                             // le treuil qui tire le vaisseau
-  else if (k === 'ion') { for (const d of [0, .05, .12, .2]) noise(.05, 7000, 2500, .14, delay + d); tone('square', 1300, 500, .09, .015, delay); }      // grésillement électrique
-  else if (k === 'salve') { for (let i = 0; i < 4; i++) { noise(.32, 700, 60, .3, delay + i * .07); tone('sine', 80 - i * 6, 35, .3, .12, delay + i * .07); } }
-  else if (k === 'warp') { tone('sine', 900, 110, .45, .06, delay); noise(.45, 2600, 200, .07, delay); }                                                // un pirate sort de l'hyperespace
-  else if (k === 'couvee') { tone('sawtooth', 62, 44, .7, .05, delay); tone('sine', 900, 110, .45, .05, delay + .1); noise(.6, 900, 120, .1, delay); }  // la Veuve lâche ses brûlots
-  else if (k === 'heal') tone('sine', 320, 520, .22, .035, delay);
-  else if (k === 'mark') { tone('sine', 1500, 1500, .1, .025, delay); tone('sine', 2000, 2000, .08, .02, delay + .09); }
-  else if (k === 'win') { for (const [f, d] of [[220, 0], [277, .12], [330, .24], [440, .36]]) tone('sine', f, f, .9, .05, delay + d); }
-  else if (k === 'lose') { tone('sine', 196, 98, 1.2, .08, delay); tone('sine', 147, 73, 1.4, .06, delay + .2); }
+  const t = AU.ctx.currentTime + delay;
+  if (k === 'salve') { for (let i = 0; i < 3; i++) NebulaSons.play('missile', t + i * .08, pan + (i - 1) * .2, .6); return; }
+  if (SND[k]) NebulaSons.play(SND[k], t, pan);
+  if (k === 'jump') UI.jumpAt = now + delay;   // la flotte arrive en combat avec le « vwOOM » du saut
 }
-/* nappe d'ambiance (réglage AMBIANCE, coupée par défaut) : deux scies graves désaccordées et une quinte,
-   dans un filtre passe-bas qui respire lentement ; coupée quand la page est cachée */
+const panX = x => (x / LW - .5) * 1.4;
+/* ambiance (réglage AMBIANCE de l'écran titre) : TENSION en combat, MARCHE sur les autres écrans ; coupée quand la page est cachée */
 let AMB = store.get('amb', false);
 function ambience() {
-  const on = SFX && AMB && !document.hidden, a = AU.ctx;
-  if (!a) return;
-  if (on && !AU.amb) {
-    const out = a.createGain(), f = a.createBiquadFilter(), lfo = a.createOscillator(), lg = a.createGain(), oscs = [];
-    f.type = 'lowpass'; f.frequency.value = 260; f.Q.value = 3; lfo.frequency.value = .06; lg.gain.value = 140; lfo.connect(lg); lg.connect(f.frequency);
-    for (const [type, fr, v] of [['sawtooth', 55, .5], ['sawtooth', 55.35, .5], ['sine', 82.4, .6], ['sine', 27.5, .8]]) { const o = a.createOscillator(), gg = a.createGain(); o.type = type; o.frequency.value = fr; gg.gain.value = v; o.connect(gg); gg.connect(f); o.start(); oscs.push(o); }
-    f.connect(out); out.connect(AU.out); out.gain.setValueAtTime(0, a.currentTime); out.gain.linearRampToValueAtTime(.09, a.currentTime + 4); lfo.start();
-    AU.amb = { out, oscs: oscs.concat(lfo) };
-  } else if (!on && AU.amb) {
-    const { out, oscs } = AU.amb, t = a.currentTime; out.gain.cancelScheduledValues(t); out.gain.setValueAtTime(out.gain.value, t); out.gain.linearRampToValueAtTime(0, t + .6);
-    oscs.forEach(o => o.stop(t + .7)); AU.amb = null;
-  }
+  if (!AU.ctx) return;
+  const on = SFX && AMB && !document.hidden, combat = UI.screen === 'game' && run && run.phase === 'combat' && !run.training;
+  NebulaSons.ambience(on ? (combat ? 'tension' : 'marche') : null, .9);
 }
 document.addEventListener('visibilitychange', () => { if (!AU.ctx) return; if (document.hidden) AU.ctx.suspend(); else if (SFX) AU.ctx.resume(); ambience(); });
 
@@ -201,11 +181,11 @@ function play(ev) {
     else if (e.e === 'shot') {
       const a = byId(st, e.from), d = (e.fx === 'torpille' ? .55 : e.fx === 'missile' ? .45 : e.fx === 'charge' ? .3 : .25) * k;
       const to = e.to != null ? center(byId(st, e.to)) : cellCenter(...e.cell);
-      ANIM.fx.push({ k: 'shot', fx: e.fx, foe: a.side === 'E', t0: t, dur: d, a: center(a), b: to }); sfx(e.fx === 'charge' ? 'missile' : e.fx === 'jam' ? 'ion' : e.fx === 'mine' ? 'mark' : e.fx, t - now); t += d;
+      ANIM.fx.push({ k: 'shot', fx: e.fx, foe: a.side === 'E', t0: t, dur: d, a: center(a), b: to }); sfx(e.fx, t - now, panX(center(a)[0])); t += d;
     }
     else if (e.e === 'swarm') { ANIM.fx.push({ k: 'swarm', t0: t, dur: .35 * k, a: center(s || byId(st, e.from)) }); sfx('essaim', t - now); t += .3 * k; }
-    else if (e.e === 'dmg') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '-' + e.n, col: e.hull ? (s.side === 'E' ? C.acc : C.foe) : C.ally }); ANIM.fx.push({ k: 'hit', t0: t, dur: .3 * k, x, y, shield: !e.hull }); if (!e.hull) sfx('shield', t - now); else if (s.side === 'P') buzz(e.n >= 4 ? 70 : 35, t - now); }
-    else if (e.e === 'boom') { const [x, y] = center(s); ANIM.death[e.id] = t + .08 * k; ANIM.fx.push({ k: 'boom', t0: t, dur: .9 * k, x, y, big: e.big }); ANIM.fx.push({ k: 'debris', t0: t, dur: 1.3 * k, x, y, big: e.big, seed: e.id * 97 + 13, foe: s.side === 'E' }); sfx('boom', t - now); if (s.side === 'P') buzz(160, t - now); t += .22 * k; }
+    else if (e.e === 'dmg') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: 1, x, y, text: '-' + e.n, col: e.hull ? (s.side === 'E' ? C.acc : C.foe) : C.ally }); ANIM.fx.push({ k: 'hit', t0: t, dur: .3 * k, x, y, shield: !e.hull }); if (!e.hull) sfx('shield', t - now, panX(x)); else { sfx('coque', t - now, panX(x)); if (s.side === 'P') buzz(e.n >= 4 ? 70 : 35, t - now); } }
+    else if (e.e === 'boom') { const [x, y] = center(s); ANIM.death[e.id] = t + .08 * k; ANIM.fx.push({ k: 'boom', t0: t, dur: .9 * k, x, y, big: e.big }); ANIM.fx.push({ k: 'debris', t0: t, dur: 1.3 * k, x, y, big: e.big, seed: e.id * 97 + 13, foe: s.side === 'E' }); sfx('boom', t - now, panX(x)); if (s.side === 'P') buzz(160, t - now); t += .22 * k; }
     else if (e.e === 'blast') { const [x, y] = cellCenter(e.c, e.r); ANIM.fx.push({ k: 'blast', t0: t, dur: .6 * k, x, y, big: e.big }); sfx('boom', t - now); t += .15 * k; }
     else if (e.e === 'spawn') { ANIM.spawn[e.id] = t; const [x, y] = center(s); sfx(s.t === 'brulot' ? 'couvee' : 'warp', t - now); ANIM.fx.push({ k: 'warp', t0: t, dur: .5 * k, x, y }); t += .25 * k; }
     else if (e.e === 'ion') { const [x, y] = center(s); ANIM.fx.push({ k: 'hit', t0: t, dur: .5 * k, x, y, shield: true }); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'BOUCLIER PERDU', col: C.ally, small: true }); sfx('ion', t - now); t += .1 * k; }
@@ -214,16 +194,16 @@ function play(ev) {
     else if (e.e === 'mark') { const [x, y] = center(s); sfx('mark', t - now); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'MARQUÉ', col: C.acc, small: true }); }
     else if (e.e === 'zone') { ANIM.fx.push({ k: 'zone', t0: t, dur: .6 * k, x: GX + e.c * CS, y: GY + e.r * CS }); sfx('salve', t - now); t += .2 * k; }
     else if (e.e === 'jam') { const [x, y] = center(s); ANIM.fx.push({ k: 'num', t0: t, dur: .9, x, y, text: 'BROUILLÉ', col: '#78dcff', small: true }); }
-    else if (e.e === 'mine') { const [x, y] = cellCenter(e.c, e.r); sfx('mark', t - now); ANIM.fx.push({ k: 'hit', t0: t, dur: .4 * k, x, y, shield: e.side === 'P' }); ANIM.fx.push({ k: 'num', t0: t, dur: .8, x, y, text: 'MINE POSÉE', col: e.side === 'P' ? C.acc : C.foe, small: true }); t += .15 * k; }
+    else if (e.e === 'mine') { const [x, y] = cellCenter(e.c, e.r); sfx('mine', t - now, panX(x)); ANIM.fx.push({ k: 'hit', t0: t, dur: .4 * k, x, y, shield: e.side === 'P' }); ANIM.fx.push({ k: 'num', t0: t, dur: .8, x, y, text: 'MINE POSÉE', col: e.side === 'P' ? C.acc : C.foe, small: true }); t += .15 * k; }
     else if (e.e === 'miss') { const [x, y] = cellCenter(...e.cell); ANIM.fx.push({ k: 'num', t0: t, dur: .8, x, y, text: 'DANS LE VIDE', col: C.dim, small: true }); }
   }
   ANIM.busy = t;
 }
 // début d'un combat : la flotte arrive très vite du bas de l'écran et freine jusqu'à sa case de départ
 function arrive(st) {
-  const k = 1 / SPEED; let end = now;
+  const k = 1 / SPEED, base = SFX && UI.jumpAt && now - UI.jumpAt < 2 ? UI.jumpAt + 1.95 : now; let end = now;
   st.ships.filter(o => o.side === 'P' && !o.dead).sort((a, b) => a.r - b.r || a.c - b.c).forEach((o, i) => {
-    const t0 = now + .1 * k + i * .08 * k, t1 = t0 + .6 * k;
+    const t0 = base + .1 * k + i * .08 * k, t1 = t0 + .6 * k;
     ANIM.move[o.id] = [{ t0, t1, path: [[o.c, o.r + 8], [o.c, o.r]], ease: 1 }]; end = Math.max(end, t1);
   });
   ANIM.busy = Math.max(ANIM.busy, end); ANIM.arrive = end;
@@ -708,7 +688,7 @@ function drawDock() {
   topBar('DOCK', 'CHANTIER DE LA FLOTTE', `CRÉDITS ${run.cr}`, `CARBURANT ${pad2(run.fuel)}`);
   para("Dernière escale avant l'amiral pirate. Les mécaniciens du dock t'offrent un service, au choix :", 32, 120, LW - 64, C.txt, F.ui(20), 24);
   const card = (y, title, sub, act) => { frameBox(32, y, LW - 64, 150, C.acc, 12); txt(title, LW / 2, y + 30, C.acc, F.ui(28), 'center', 4); txt(sub, LW / 2, y + 74, C.txt, F.ui(19), 'center', 1); zone(32, y, LW - 64, 150, act); };
-  card(200, 'RÉPARATION', miss ? `+${heal} coque : la moitié des dégâts de la flotte` : 'La flotte est intacte', () => { dock(run, 'repair'); sfx('shield'); save(); });
+  card(200, 'RÉPARATION', miss ? `+${heal} coque : la moitié des dégâts de la flotte` : 'La flotte est intacte', () => { dock(run, 'repair'); sfx('heal'); save(); });
   card(380, 'MODULE GRATUIT', `${MODS[run.dockMod].name} · ${MODS[run.dockMod].desc}`, () => { dock(run, 'mod'); save(); });
   fleetStrip(580);
 }
@@ -889,7 +869,7 @@ function drawContracts() {
     txt(K.name, 60, y + 16, C.acc, F.ui(25), 'left', 3, LW - 120);
     txt(K.desc.charAt(0).toUpperCase() + K.desc.slice(1) + '.', 60, y + 52, C.txt, F.ui(20), 'left', 0, LW - 120);
     txt(`+${K.score} POINTS · +${K.data} DONNÉES`, 60, y + 90, C.ok, F.mono(16), 'left', 1);
-    zone(40, y, LW - 80, 134, () => { if (chooseContract(run, id)) { sfx('shield'); save(); } });
+    zone(40, y, LW - 80, 134, () => { if (chooseContract(run, id)) { sfx('valide'); save(); } });
   });
 }
 /* ---------- titre, flotte, fin ---------- */
@@ -1023,7 +1003,7 @@ function drawUnlocks() {
     txt(`${TYPES[t].name} · ${FLEET_COST[t]} PT${FLEET_COST[t] > 1 ? 'S' : ''}`, 104, y + 10, have ? C.ok : C.txt, F.ui(21), 'left', 2, LW - 290);
     txt(`${TYPES[t].skill} · ${TYPES[t].short}`, 104, y + 40, C.dim, F.ui(15), 'left', 0, LW - 290);
     if (have) txt('DÉBLOQUÉ', LW - 104, y + 28, C.ok, F.mono(14), 'center', 1, 140);
-    else btn(LW - 176, y + 14, 144, 48, `${u.cost} DONNÉES`, () => { if (unlock(meta, u.id)) { store.set('meta', meta); sfx('shield'); } }, { size: 16, ls: 1, primary: ok, off: !ok });
+    else btn(LW - 176, y + 14, 144, 48, `${u.cost} DONNÉES`, () => { if (unlock(meta, u.id)) { store.set('meta', meta); sfx('heal'); } }, { size: 16, ls: 1, primary: ok, off: !ok });
   });
   btn(LW / 2 - 100, 880, 200, 52, 'RETOUR', () => { UI.screen = UI.back || 'title'; }, { primary: true, size: 20 });
 }
@@ -1246,6 +1226,7 @@ function fpsWanted() {
 function frame(ts) {
   requestAnimationFrame(frame);
   now = ts / 1000;
+  if (AU.ctx) { ambience(); warmSounds(); }   // l'ambiance suit l'écran (combat ou non) ; sons fabriqués d'avance au repos
   if (PRESS.on && !PRESS.done && PRESS.hold && performance.now() - PRESS.t0 > HOLD_MS) { PRESS.done = true; const h = PRESS.hold; buzz(15); try { h(); } catch (e) { crash(e); } lastDraw = -1e9; }
   FPS = CRASH ? 10 : fpsWanted();
   if (ts - lastDraw < 1000 / FPS - 4) return;
@@ -1298,7 +1279,7 @@ function tap(e) {
   Object.assign(PRESS, { on: true, done: false, x, y, t0: performance.now(), hold: null, up: null });
   if (UI.card) { UI.card = null; PRESS.on = false; return; }   // la fiche ouverte se ferme au toucher suivant
   const b = hitButton(x, y);
-  if (b) { sfx('click'); if (b.hold) { PRESS.hold = b.hold; PRESS.up = b.act; } else b.act(); return; }
+  if (b) { sfx(b.primary ? 'valide' : 'click'); if (b.hold) { PRESS.hold = b.hold; PRESS.up = b.act; } else b.act(); return; }
   if (UI.screen === 'title') UI.confirm = 0;
   UI.node = null;
   if (inCombat()) {

@@ -384,3 +384,8 @@ Découpage du § 21 **validé le 15/10** avec les choix proposés : budget **10 
 - Mesures (40 parties, tout débloqué) : escorte 6/40 (8 avant les nouveaux pirates), choc 14, frégate + 2 chasseurs 16 (22 avant), brouilleur + frégate + chasseur 10, mouilleur + frégate + chasseur 2. L'IA de test joue mal les deux nouveaux vaisseaux (elle brouille au hasard, pose ses mines sans prévoir) : à juger en jouant.
 - Manuel : fiches des 4 vaisseaux, rubrique MINES ; composition de la flotte sur 5 colonnes (13 vaisseaux).
 
+### Sound design (15/10, demande de l'utilisateur)
+- Constat : sons trop « jouet » ou clichés de jeu vidéo ; ambiance « pas terrible ». Trois passes au banc d'écoute (`maquettes/nebula-sons.html`, https://claude.ai/artifact/YNaEu29GySPDBeNtQi8GqA) : A/B en oscillateurs (rejetée), synthèse échantillon par échantillon (rejetée sauf les ambiances), 48 sons Kenney CC0 fournis par l'utilisateur (« rien ne me va »), puis sons étouffés d'après ses références.
+- Retenu (`nebula/sons.js`, `NebulaSons`) : saut façon Helldivers 2 (2 s de montée, « vwOOM » ; en jeu la flotte arrive en combat au moment du choc, `UI.jumpAt`) ; armes et impacts graves et filtrés (canon, laser, missile, torpille, bouclier, coque — nouveau son à chaque dégât de coque —, explosion en deux variantes) ; bip de sélection et bip de validation (boutons `primary`) ; sons secondaires (grappin, treuil, ions et brouillage, renforts, mine, réparation, marquage) dans le même esprit ; Tension II en combat, Marche sur les autres écrans (réglage AMBIANCE, toujours coupé par défaut). Sons fabriqués une fois (3 variantes chacun) pendant les temps morts (`warmSounds`), position stéréo selon la case.
+- À trancher : défaite A ou B, ambiance de la carte Marche ou Garde.
+
