@@ -9,9 +9,8 @@
 <meta name="theme-color" content="#04060c">
 <link rel="icon" href="../icons/icon-192.png">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<!-- polices dans le dépôt (hors connexion) ; data-google : le lien utilisé par l'artefact (outils/artefact.py) -->
+<link rel="stylesheet" href="../polices/nebula.css" data-google="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
 <style>
 html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
 body { display: flex; justify-content: center; align-items: flex-start; touch-action: manipulation;
@@ -1112,10 +1111,21 @@ function drawCrash() {
   btn(132, 640, 280, 50, 'RÉESSAYER', () => { leaveTraining(); CRASH = null; resetAnim(); UI.screen = 'title'; UI.hangar = false; UI.sel = null; }, { size: 20 });
   btn(132, 710, 280, 50, 'ABANDONNER LA PARTIE', () => { leaveTraining(); if (run) store.set('run.bak', run); run = null; store.del('run'); CRASH = null; resetAnim(); UI.screen = 'title'; UI.hangar = false; UI.sel = null; }, { size: 20, col: C.foe });
 }
+/* économie de batterie : 60 images/s seulement quand quelque chose bouge vraiment (toucher récent,
+   animations du combat, saut, sprites en préparation) ; au repos, 30 images/s en combat, sur la carte
+   et à l'écran titre (petits mouvements des vaisseaux), 12 sur les écrans fixes (manuel, hangar, comptoir…) */
+let lastDraw = -1e9, lastInput = -1e9, FPS = 60;
+function fpsWanted() {
+  if (now - lastInput < 1.5 || busy() || ANIM.fx.length || UI.ghost || PRESS.on || (UI.flash && now - UI.flash < 1) || want.size) return 60;
+  return UI.screen === 'title' || (UI.screen === 'game' && run && !UI.hangar && !UI.card && (run.phase === 'combat' || run.phase === 'map')) ? 30 : 12;
+}
 function frame(ts) {
   requestAnimationFrame(frame);
   now = ts / 1000;
-  if (PRESS.on && !PRESS.done && PRESS.hold && performance.now() - PRESS.t0 > HOLD_MS) { PRESS.done = true; const h = PRESS.hold; buzz(15); try { h(); } catch (e) { crash(e); } }
+  if (PRESS.on && !PRESS.done && PRESS.hold && performance.now() - PRESS.t0 > HOLD_MS) { PRESS.done = true; const h = PRESS.hold; buzz(15); try { h(); } catch (e) { crash(e); } lastDraw = -1e9; }
+  FPS = CRASH ? 10 : fpsWanted();
+  if (ts - lastDraw < 1000 / FPS - 4) return;
+  lastDraw = ts; DRAWS++;
   if (CRASH) { BTN = []; try { drawCrash(); } catch (e) { g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#400'; g.fillRect(0, 0, cv.width, cv.height); } return; }
   try { draw(); } catch (e) { crash(e); }
 }
@@ -1147,8 +1157,10 @@ function draw() {
   }
 }
 function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
+let DRAWS = 0;   // nombre d'images dessinées (pour les tests)
+const touched = () => { lastInput = now; lastDraw = -1e9; };
 cv.addEventListener('pointerdown', e => {
-  e.preventDefault();
+  e.preventDefault(); touched();
   if (e.button === 2) return;   // clic droit : voir 'contextmenu' (fiche)
   try { tap(e); } catch (err) { crash(err); }
 });
@@ -1180,6 +1192,7 @@ function tap(e) {
 }
 const inCombat = () => UI.screen === 'game' && run && run.phase === 'combat' && !busy() && !UI.hangar;
 cv.addEventListener('pointermove', e => {
+  if (PRESS.on || UI.ghost) touched();
   const [x, y] = logical(e);
   if (PRESS.on && Math.hypot(x - PRESS.x, y - PRESS.y) > 16) PRESS.hold = null;   // le doigt glisse : pas de toucher long
   if (!UI.ghost || !inCombat()) return;
@@ -1187,6 +1200,7 @@ cv.addEventListener('pointermove', e => {
   if (p) UI.ghost = p;
 });
 window.addEventListener('pointerup', () => {
+  touched();
   const p = UI.ghost, up = PRESS.on && !PRESS.done ? PRESS.up : null; UI.ghost = null; PRESS.on = false;
   try {
     if (up) up();
@@ -1196,7 +1210,7 @@ window.addEventListener('pointerup', () => {
 window.addEventListener('pointercancel', () => { UI.ghost = null; PRESS.on = false; });
 // clic droit (ordinateur) : la fiche tout de suite, comme un toucher long
 cv.addEventListener('contextmenu', e => {
-  e.preventDefault();
+  e.preventDefault(); touched();
   try {
     if (UI.card) { UI.card = null; return; }
     const [x, y] = logical(e), b = hitButton(x, y);
@@ -1212,9 +1226,10 @@ function resize() {
   cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
   cv.style.marginTop = Math.max(0, Math.floor((ah - ch) / 2)) + 'px';
   const k = Math.min(dpr, maxK / sc);   // pixels réels par pixel CSS (plafonné sur téléphone)
-  cv.width = Math.round(cw * k); cv.height = Math.round(ch * k); K = Math.max(.5, cv.width / LW); STATIC.key = '';
+  cv.width = Math.round(cw * k); cv.height = Math.round(ch * k); K = Math.max(.5, cv.width / LW); STATIC.key = ''; lastDraw = -1e9;   // le canvas vient d'être vidé : redessiner tout de suite
 }
 window.addEventListener('resize', resize);
+Object.defineProperty(window.Nebula, 'draws', { get: () => DRAWS });
 Object.assign(window.Nebula, { UI, MAN, openManual, TUTO, startTraining, endTraining, launch, ANIM, recordEnd, save, store, makeShop, crash });
 Object.defineProperty(window.Nebula, 'run', { get: () => run, set: v => { run = v; } });
 ['mere', 'fregate', 'chasseur'].forEach(spr); bg('title');

@@ -3,7 +3,8 @@
    python3 outils/artefact.py orbite/index.html /chemin/sortie.html
 - intègre tous les scripts locaux de la page (<script src="…"> : chiens32.js, nebula/vaisseaux.js,
   nebula/regles.js…), car l'artefact ne peut pas les charger ;
-- garde la police Google Fonts de la page (Press Start 2P par défaut) ;
+- garde la police Google Fonts de la page (Press Start 2P par défaut) ; une feuille de polices du dépôt
+  (`polices/…css`) est remplacée par son lien Google (attribut data-google) ;
 - retire ludo-scores.js (pas de classement dans l'artefact) et le script du service worker / bouton MENU ;
 - retire <!DOCTYPE>, <html>, <head>, <body> (l'artefact ajoute son propre squelette) ;
 - garde le <title>, la police Google Fonts et le <style> ;
@@ -28,7 +29,8 @@ i = body.find('/* Ludothèque : mode hors connexion')
 if i >= 0: body = body[:body.rfind('<script>', 0, i)] + body[body.find('</script>', i) + 9:]
 body = body.replace('../classements/', SITE + 'classements/')
 font = re.search(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com/[^"]+">', s)
-font = font.group(0) if font else '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">'
+local = re.search(r'<link rel="stylesheet" href="[^"]+" data-google="(https://fonts\.googleapis\.com/[^"]+)">', s)   # polices du dépôt : leur équivalent Google
+font = font.group(0) if font else f'<link rel="stylesheet" href="{local.group(1)}">' if local else '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">'
 html = title + '\n' + font + '\n' + styles + body
 open(out, 'w', encoding='utf-8').write(html)
 rest = sorted(set(re.findall(r'["\'](\.\./[^"\']+|[a-z-]+\.html[^"\']*)["\']', body)))

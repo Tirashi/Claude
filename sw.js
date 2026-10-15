@@ -1,14 +1,21 @@
 /* Service worker de la Ludothèque.
    - Au premier passage, met tous les jeux en cache : ils marchent ensuite hors connexion.
-   - Les fichiers du site passent toujours d'abord par le réseau : en ligne, on reçoit
-     la dernière version publiée ; hors ligne, on retombe sur la copie en cache.
+   - Les fichiers du site passent d'abord par le réseau : en ligne, on reçoit la dernière
+     version publiée ; hors ligne, on retombe sur la copie en cache. Sur un réseau lent
+     (pas de réponse en NET_WAIT ms), on sert tout de suite la copie en cache : la réponse
+     du réseau, quand elle arrive, met le cache à jour pour la prochaine ouverture. Après un
+     tel retard, les fichiers suivants (scripts, polices…) sont servis du cache sans attendre
+     pendant 10 s : la page ne s'ouvre pas étage par étage.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v18";
+const VERSION = "ludotheque-v19";
+const NET_WAIT = 2500;
+let slowUntil = 0;   // réseau jugé lent : pendant 10 s, les copies en cache sont servies sans attendre
 const FONTS = "ludotheque-fonts";
 const FILES = [
   "./", "./index.html", "./manifest.webmanifest", "./ludo-scores.js",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png",
   "./queens/index.html", "./picross/index.html", "./injagility/index.html", "./injagility/parcours.html", "./injagility/chiens32.js", "./touche-coule/index.html", "./amiral/index.html", "./club/index.html", "./orbite/index.html", "./pont-stellaire/index.html", "./alunissage/index.html", "./nebula/index.html", "./nebula/vaisseaux.js", "./nebula/regles.js", "./nebula/evenements.js", "./nebula/cartouche.jpg",
+  "./polices/nebula.css", "./polices/michroma.woff2", "./polices/rajdhani-500.woff2", "./polices/rajdhani-600.woff2", "./polices/rajdhani-700.woff2", "./polices/share-tech-mono.woff2",
   "./lignee/index.html", "./classements/index.html", "./tetris/index.html", "./snake/index.html", "./asteroids/index.html", "./solitaire/index.html",
   "./jeu-de-la-vie/index.html", "./jeu-de-la-vie/style.css", "./jeu-de-la-vie/app.js"
 ];
@@ -41,19 +48,22 @@ self.addEventListener("fetch", event => {
   }
   if (url.origin !== self.location.origin) return;
 
-  // Fichiers du site : le réseau d'abord, la copie en cache si on est hors ligne
+  // Fichiers du site : le réseau d'abord ; la copie en cache si on est hors ligne ou si le réseau traîne
+  const net = fetch(req).then(async res => {
+    if (res && res.ok) { const cache = await caches.open(VERSION); await cache.put(req, res.clone()); }
+    return res;
+  });
+  event.waitUntil(net.catch(() => {}));   // laisser la mise à jour du cache se terminer
   event.respondWith((async () => {
     const cache = await caches.open(VERSION);
-    try {
-      const res = await fetch(req);
-      if (res && res.ok) cache.put(req, res.clone());
-      return res;
-    } catch (err) {
-      const hit = await cache.match(req, { ignoreSearch: true })
-        || (url.pathname.endsWith("/") && await cache.match(new Request(url.href + "index.html")))
-        || (req.mode === "navigate" && await cache.match("./index.html"));
-      if (hit) return hit;
-      throw err;
-    }
+    const hit = await cache.match(req, { ignoreSearch: true })
+      || (url.pathname.endsWith("/") && await cache.match(new Request(url.href + "index.html")))
+      || (req.mode === "navigate" && await cache.match("./index.html"));
+    if (!hit) return net;
+    if (Date.now() < slowUntil) return hit;
+    let done = false;
+    const fresh = net.then(res => { done = true; return res && res.ok ? res : hit; }, () => { done = true; return hit; });
+    const slow = new Promise(resolve => setTimeout(() => { if (!done) slowUntil = Date.now() + 10000; resolve(hit); }, NET_WAIT));
+    return Promise.race([fresh, slow]);
   })());
 });

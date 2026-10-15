@@ -1,0 +1,8 @@
+/* Polices de Nebula, hébergées dans le dépôt (sous-ensemble latin de Google Fonts) :
+   affichage correct dès la première ouverture hors connexion, sans appel à un site tiers.
+   Michroma, Rajdhani et Share Tech Mono : licence SIL Open Font License 1.1. */
+@font-face { font-family: 'Michroma'; font-style: normal; font-weight: 400; font-display: swap; src: url(michroma.woff2) format('woff2'); }
+@font-face { font-family: 'Rajdhani'; font-style: normal; font-weight: 500; font-display: swap; src: url(rajdhani-500.woff2) format('woff2'); }
+@font-face { font-family: 'Rajdhani'; font-style: normal; font-weight: 600; font-display: swap; src: url(rajdhani-600.woff2) format('woff2'); }
+@font-face { font-family: 'Rajdhani'; font-style: normal; font-weight: 700; font-display: swap; src: url(rajdhani-700.woff2) format('woff2'); }
+@font-face { font-family: 'Share Tech Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(share-tech-mono.woff2) format('woff2'); }

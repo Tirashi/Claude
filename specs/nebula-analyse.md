@@ -61,6 +61,8 @@ Résultat : un push cassé se voit dans l'onglet *Actions* avant de mettre `main
 
 ## 6. Hors connexion et chargement (PWA)
 
+> Fait le 15/10 (session 3, étape 5) : polices de Nebula dans le dépôt, délai réseau de 2,5 s, économie de batterie (voir `specs/nebula.md` § 20). Restent : Web Worker (si à-coups constatés), polices des autres jeux.
+
 - **Polices** : Michroma, Rajdhani et Share Tech Mono viennent de Google Fonts ; elles ne sont en cache qu'après une première ouverture en ligne. Les héberger dans le dépôt (`polices/*.woff2`, ~60 Ko, dans `FILES`) : affichage correct dès la première ouverture hors ligne, aucun appel à un site tiers. L'artefact garde le lien Google Fonts (seul autorisé dans un artefact) : `artefact.py` fait l'échange.
 - **Réseau d'abord avec délai** : `sw.js` attend toujours le réseau. Sur une connexion mobile lente, le jeu met longtemps à s'ouvrir. Proposition : au-delà de ~2,5 s, servir la copie en cache (la nouvelle version arrive au lancement suivant).
 - **`VERSION` du cache** : la CI (§ 5) peut vérifier qu'elle a changé quand `FILES` change.
