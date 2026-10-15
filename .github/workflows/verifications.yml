@@ -1,10 +1,10 @@
-# Vérifications à chaque push (branches claude/* et main) : rien n'est publié ni modifié,
+# Vérifications à chaque push (branches main, claude/* et ccr-*) : rien n'est publié ni modifié,
 # aucun secret n'est utilisé. Un push cassé apparaît en rouge dans l'onglet « Actions »
 # avant de mettre main à jour. Mêmes commandes en local (voir outils/README.md).
 name: Vérifications
 on:
   push:
-    branches: [main, "claude/**"]
+    branches: [main, "claude/**", "ccr-*"]
   pull_request:
   workflow_dispatch:
 jobs:
