@@ -1,0 +1,161 @@
+<meta charset="utf-8">
+<title>Nouveaux vaisseaux de Nebula</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Même registre que le chantier naval : une fiche par nouveau type, puis une scène de combat. Thème sombre voulu, accent ambre. */
+:root {
+  --night: #04060c; --panel: #0a0f19; --line: #1c2738; --text: #d8dee8; --dim: #7d8a9e; --amber: #f2b24a; --foe: #ff6a52; --ok: #8fe0a0;
+  --f-title: "Michroma", "Eurostile", "Arial Narrow", sans-serif; --f-ui: "Rajdhani", "Arial Narrow", sans-serif; --f-mono: "Share Tech Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+html { background: var(--night); }
+body { background: radial-gradient(ellipse at 20% -10%, #142034 0%, var(--night) 50%) fixed, var(--night); color: var(--text);
+  font-family: var(--f-ui); font-weight: 500; font-size: 18px; line-height: 1.4; padding-inline: 16px; padding-block: 32px 56px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+header { display: flex; flex-direction: column; gap: 10px; }
+.eyebrow { font-family: var(--f-mono); font-size: 13px; letter-spacing: 3px; color: var(--amber); }
+h1 { font-family: var(--f-title); font-weight: 400; font-size: clamp(22px, 4.4vw, 38px); letter-spacing: .24em; margin: 0; line-height: 1.2; text-wrap: balance; }
+.lead { color: var(--dim); max-width: 72ch; margin: 0; }
+#list { display: flex; flex-direction: column; gap: 40px; }
+section { display: flex; flex-direction: column; gap: 16px; }
+h2 { font-family: var(--f-mono); font-weight: 400; font-size: 15px; letter-spacing: 4px; color: var(--amber); margin: 0; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+h2 span { color: var(--dim); letter-spacing: 1px; font-size: 14px; }
+section.foe h2 { color: var(--foe); }
+.row { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 14px; min-width: 0; }
+.card canvas { display: block; background: #05080e; border: 1px solid var(--line); }
+.info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.name { font-family: var(--f-ui); font-weight: 700; font-size: 21px; overflow-wrap: anywhere; letter-spacing: 2px; line-height: 1.1; }
+.role { font-family: var(--f-mono); font-size: 12px; letter-spacing: 1px; color: var(--dim); }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 4px 0; align-items: center; }
+dt { font-family: var(--f-mono); font-size: 12px; color: var(--dim); letter-spacing: 1px; }
+dd { margin: 0; display: flex; gap: 3px; }
+dd i { width: 14px; height: 6px; background: rgba(255,255,255,.09); }
+dd i.on { background: var(--amber); }
+.foe dd i.on { background: var(--foe); }
+.skill { font-size: 16px; line-height: 1.3; }
+.skill b { color: var(--amber); font-weight: 700; letter-spacing: 1px; }
+.foe .skill b { color: var(--foe); }
+.empire { font-size: 15px; color: var(--dim); border-top: 1px dashed var(--line); padding-top: 6px; }
+@media (max-width: 420px) { .card { grid-template-columns: 1fr; } .card canvas { justify-self: center; } }
+.note { border-top: 1px solid var(--line); padding-top: 16px; color: var(--dim); max-width: 80ch; }
+.note b { color: var(--text); font-weight: 600; }
+.scene { background: var(--panel); border: 1px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.scene canvas { width: 100%; max-width: 544px; height: auto; align-self: center; background: #05080e; }
+.legend { color: var(--dim); font-size: 16px; margin: 0; max-width: 80ch; }
+.legend b { color: var(--text); font-weight: 600; }
+.cost { font-family: var(--f-mono); font-size: 13px; color: var(--amber); letter-spacing: 1px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">NEBULA · CHANTIER NAVAL · SESSION 4</div>
+    <h1>QUATRE NOUVEAUX VAISSEAUX</h1>
+    <p class="lead">Deux pour la flotte (le brouilleur et le mouilleur de mines), deux pour les pirates (la frégate-bouclier et le poseur de mines), plus les mines elles-mêmes. Dessinés avec le même moteur que les vaisseaux du jeu : ce sont les vrais sprites.</p>
+  </header>
+  <div id="list"></div>
+  <section>
+    <h2>EN SITUATION<span>une case = 72 px, comme dans le jeu</span></h2>
+    <div class="scene">
+      <canvas id="scene" width="544" height="536" aria-label="Scène de combat avec les nouveaux vaisseaux"></canvas>
+      <p class="legend"><b>Frégate-bouclier</b> : les pirates collés à elle gagnent +1 bouclier (traits cyan). <b>Brouilleur</b> : le tir annoncé du croiseur est brouillé (case grise, il ne tirera pas ce tour). <b>Mines</b> : en ambre celle du mouilleur, en rouge celle du poseur ; une mine explose quand un vaisseau ennemi s'arrête dessus.</p>
+    </div>
+  </section>
+  <p class="note"><b>À valider</b> : l'allure des quatre vaisseaux et des mines. Les chiffres (coque, bouclier, vitesse, coût) sont une première proposition, réglée ensuite au simulateur.</p>
+</div>
+<script src="../nebula/vaisseaux.js"></script>
+<script>
+'use strict';
+const V = window.NebulaVaisseaux, TAU = Math.PI * 2;
+const CLASSES = [
+  { title: 'FLOTTE', sub: 'acier sombre et marquages ambre', ships: [
+    ['brouilleur', 'BROUILLEUR', '2 cases · guerre électronique', [3, 1, 3, 1, 3], 'Brouillage', "une fois par tour, annule le tir annoncé d'un pirate à 4 cases ou moins (la case rouge devient grise).", 'coque 7 · bouclier 1 · vitesse 3 · canon 1 dégât à 3 cases', 3],
+    ['mouilleur', 'MOUILLEUR DE MINES', '2 cases · piégeur', [4, 1, 2, 3, 2], 'Mines', "pose une mine sur une case libre à 2 cases ou moins (3 mines par combat) ; un pirate qui s'y arrête prend 4 dégâts.", 'coque 9 · bouclier 1 · vitesse 2 · pas de canon', 2],
+  ] },
+  { title: 'PIRATES', sub: 'tôle rouillée et pièces rapportées', foe: true, ships: [
+    ['bouclier', 'FRÉGATE-BOUCLIER', '2 cases · soutien', [4, 3, 2, 2, 3], 'Bouclier commun', 'en début de tour, +1 bouclier aux pirates collés à elle (au-delà de leur maximum, jusqu\'à +2).', 'coque 10 · bouclier 3 · vitesse 2 · canon 2 dégâts à 3 cases'],
+    ['poseur', 'POSEUR DE MINES', '1 case · piégeur', [2, 0, 3, 3, 2], 'Champ de mines', "annonce une mine sur une case libre près de ta flotte, posée à la fin du tour ; s'y arrêter coûte 3 dégâts.", 'coque 4 · vitesse 3 · canon 1 dégât à 2 cases'],
+  ] },
+];
+const STATS = ['COQUE', 'BOUCLIER', 'VITESSE', 'PUISSANCE', 'PORTÉE'];
+const cards = [], list = document.getElementById('list');
+for (const cl of CLASSES) {
+  const sec = document.createElement('section'); if (cl.foe) sec.className = 'foe';
+  sec.innerHTML = `<h2>${cl.title}<span>${cl.sub}</span></h2>`;
+  const row = document.createElement('div'); row.className = 'row';
+  for (const [id, name, role, st, skill, desc, nums, cost] of cl.ships) {
+    const s = V.get(id), n = V.cellsOf(s), sc = n === 1 ? 1.8 : 1.25, cell = Math.round(72 * sc);
+    const card = document.createElement('article'); card.className = 'card';
+    const cv = document.createElement('canvas'); cv.width = cell + 16; cv.height = n * cell + 16; cv.setAttribute('aria-label', name);
+    card.appendChild(cv);
+    const info = document.createElement('div'); info.className = 'info';
+    info.innerHTML = `<div class="name">${name}</div><div class="role">${role.toUpperCase()}</div>` +
+      `<dl>${STATS.map((k, i) => `<dt>${k}</dt><dd aria-label="${k} ${st[i]} sur 5">${Array.from({ length: 5 }, (_, j) => `<i class="${j < st[i] ? 'on' : ''}"></i>`).join('')}</dd>`).join('')}</dl>` +
+      `<div class="skill"><b>${skill.toUpperCase()}</b> : ${desc}</div><div class="empire">${nums}</div>` + (cost ? `<div class="cost">FLOTTE DE DÉPART : ${cost} POINTS · À DÉBLOQUER</div>` : '');
+    card.appendChild(info); row.appendChild(card);
+    cards.push({ ctx: cv.getContext('2d'), s, n, sc, cell, foe: cl.foe });
+  }
+  sec.appendChild(row); list.appendChild(sec);
+}
+// les mines, en grand
+{ const sec = document.createElement('section'); sec.innerHTML = '<h2>MINES<span>posées sur une case de la grille</span></h2>';
+  const row = document.createElement('div'); row.className = 'row';
+  for (const [id, name, txt, foe] of [['mine', 'MINE DE LA FLOTTE', "posée par le mouilleur ; invisible pour les pirates, qui peuvent s'y arrêter. 4 dégâts.", false], ['minePirate', 'MINE PIRATE', 'annoncée en rouge un tour avant, puis posée par le poseur ; à éviter. 3 dégâts.', true]]) {
+    const card = document.createElement('article'); card.className = 'card' + (foe ? ' foe' : '');
+    const cv = document.createElement('canvas'); cv.width = 146; cv.height = 146; card.appendChild(cv);
+    const info = document.createElement('div'); info.className = 'info'; info.innerHTML = `<div class="name">${name}</div><div class="skill">${txt}</div>`; card.appendChild(info); row.appendChild(card);
+    cards.push({ ctx: cv.getContext('2d'), s: V.get(id), n: 1, sc: 2.4, cell: 130, foe, mine: true });
+  }
+  sec.appendChild(row); list.appendChild(sec); }
+function drawCard(o, t) {
+  const g = o.ctx, { s, n, sc, cell } = o, W2 = cell + 16, H2 = n * cell + 16;
+  g.fillStyle = '#05080e'; g.fillRect(0, 0, W2, H2);
+  g.strokeStyle = 'rgba(140,170,210,.12)'; g.lineWidth = 1;
+  for (let k = 0; k <= n; k++) { g.beginPath(); g.moveTo(8, 8 + k * cell + .5); g.lineTo(8 + cell, 8 + k * cell + .5); g.stroke(); }
+  g.strokeRect(8.5, 8.5, cell - 1, n * cell - 1);
+  g.fillStyle = o.foe ? 'rgba(255,106,82,.05)' : 'rgba(242,178,74,.05)'; g.fillRect(9, 9, cell - 2, n * cell - 2);
+  V.drawShip(g, s, W2 / 2, H2 / 2 + (o.mine ? 0 : Math.sin(t * .9 + n) * 1.5), sc, t);
+  if (s.shield) shieldGlow(g, W2 / 2 - s.w * sc / 2 + s.shield[0] * sc, H2 / 2 - s.h * sc / 2 + s.shield[1] * sc, 40 * sc, t);
+}
+function shieldGlow(g, x, y, r, t) {
+  const a = .12 + Math.sin(t * 2) * .05, gr = g.createRadialGradient(x, y, r * .4, x, y, r);
+  gr.addColorStop(0, 'rgba(120,200,255,0)'); gr.addColorStop(.8, `rgba(120,200,255,${a})`); gr.addColorStop(1, 'rgba(120,200,255,0)');
+  g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); g.restore();
+}
+// la scène : 7 colonnes × 7 rangées
+const sc = document.getElementById('scene').getContext('2d'), CS = 72, GX = 20, GY = 16;
+const cellC = (c, r, n = 1) => [GX + c * CS + CS / 2, GY + r * CS + n * CS / 2];
+const SHIPS = [
+  ['croiseur', 0, 0, 2, true], ['bouclier', 3, 0, 2, true], ['intercepteur', 2, 1, 1, true], ['intercepteur', 4, 1, 1, true], ['poseur', 6, 1, 1, true],
+  ['brouilleur', 1, 4, 2, false], ['mouilleur', 3, 4, 2, false], ['chasseur', 5, 5, 1, false], ['fregate', 6, 4, 2, false],
+];
+function scene(t) {
+  const g = sc; g.fillStyle = '#05080e'; g.fillRect(0, 0, 544, 536);
+  g.strokeStyle = 'rgba(140,170,210,.10)'; g.lineWidth = 1;
+  for (let c = 0; c <= 7; c++) { g.beginPath(); g.moveTo(GX + c * CS + .5, GY); g.lineTo(GX + c * CS + .5, GY + 7 * CS); g.stroke(); }
+  for (let r = 0; r <= 7; r++) { g.beginPath(); g.moveTo(GX, GY + r * CS + .5); g.lineTo(GX + 7 * CS, GY + r * CS + .5); g.stroke(); }
+  // annonces : un tir de l'intercepteur (rouge), le tir brouillé du croiseur (gris), la mine annoncée du poseur
+  const red = (c, r, d) => { g.fillStyle = 'rgba(255,90,70,.18)'; g.fillRect(GX + c * CS + 2, GY + r * CS + 2, CS - 4, CS - 4); g.fillStyle = '#ff6a52'; g.font = '18px "Share Tech Mono", monospace'; g.textAlign = 'right'; g.fillText(d, GX + c * CS + CS - 8, GY + r * CS + 22); };
+  red(5, 5, '-2');
+  g.fillStyle = 'rgba(160,170,185,.12)'; g.fillRect(GX + 0 * CS + 2, GY + 5 * CS + 2, CS - 4, CS - 4); g.setLineDash([4, 4]); g.strokeStyle = 'rgba(160,170,185,.6)'; g.strokeRect(GX + 0 * CS + 4.5, GY + 5 * CS + 4.5, CS - 9, CS - 9); g.setLineDash([]);
+  g.fillStyle = '#aeb8c6'; g.font = '13px "Share Tech Mono", monospace'; g.textAlign = 'center'; g.fillText('BROUILLÉ', GX + 0 * CS + CS / 2, GY + 5 * CS + 40); g.fillText('-3', GX + 0 * CS + CS / 2, GY + 5 * CS + 22);
+  g.fillStyle = 'rgba(255,90,70,.12)'; g.fillRect(GX + 4 * CS + 2, GY + 3 * CS + 2, CS - 4, CS - 4); g.fillStyle = '#ff6a52'; g.fillText('MINE', GX + 4 * CS + CS / 2, GY + 3 * CS + 14);
+  // traits : brouillage (cyan) et bouclier commun
+  const line = (a, b, col, dash) => { g.strokeStyle = col; g.lineWidth = 1.5; g.setLineDash(dash); g.lineDashOffset = -t * 20; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); g.setLineDash([]); };
+  line(cellC(1, 4, 2), cellC(0, 0, 2), 'rgba(120,220,255,.7)', [6, 5]);
+  line(cellC(3, 0, 2), cellC(2, 1), 'rgba(120,200,255,.55)', [3, 4]); line(cellC(3, 0, 2), cellC(4, 1), 'rgba(120,200,255,.55)', [3, 4]);
+  // mines
+  V.drawShip(g, V.get('mine'), ...cellC(2, 3), 1, t); V.drawShip(g, V.get('minePirate'), ...cellC(4, 3), 1, t, .45 + Math.sin(t * 4) * .15);
+  V.drawShip(g, V.get('minePirate'), ...cellC(6, 3), 1, t);
+  for (const [id, c, r, n, foe] of SHIPS) {
+    const [x, y] = cellC(c, r, n), s = V.get(id);
+    g.fillStyle = foe ? 'rgba(255,106,82,.05)' : 'rgba(126,200,255,.05)'; g.fillRect(GX + c * CS + 2, GY + r * CS + 2, CS - 3, n * CS - 3);
+    V.drawShip(g, s, x, y + Math.sin(t * 1.2 + c) * 1.2, 1, t);
+    if (s.shield) shieldGlow(g, x - s.w / 2 + s.shield[0], y - s.h / 2 + s.shield[1], 44, t);
+    if (id === 'intercepteur') { g.fillStyle = '#78c8ff'; g.font = '14px "Share Tech Mono", monospace'; g.textAlign = 'center'; g.fillText('+1', GX + c * CS + 14, GY + r * CS + 20); }
+  }
+}
+const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(ts) { const t = still ? 1 : ts / 1000; cards.forEach(o => drawCard(o, t)); scene(t); if (!still) requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+</script>

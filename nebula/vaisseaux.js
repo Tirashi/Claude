@@ -482,6 +482,60 @@ Object.assign(SHIPS, {
     return render(B.engines([[cx - 13, 209, 6], [cx, 210, 7], [cx + 13, 209, 6]]), { seed: 63, flip: true }); },
 });
 
+/* ---------- session 4 : nouveaux vaisseaux (brouilleur, mouilleur de mines, frégate-bouclier, poseur de mines) et mines ---------- */
+Object.assign(SHIPS, {
+  // BROUILLEUR (2 cases) : coque fine, grande parabole à l'avant, deux mâts d'antennes, baies électroniques à feux cyan
+  brouilleur: () => { const B = builder(66, 140), cx = 33;
+    B.poly(half(cx, [[0, 30], [7, 36], [11, 60], [12, 118], [8, 132], [0, 134]]), 6, 4, 'hull');
+    B.dome(cx, 30, 21, 21, 4, 10, 'hull2'); B.holeE(cx, 30, 15, 15, 4, 'deck'); B.dome(cx, 30, 4, 4, 6, 14, 'hull'); B.box(cx - 1, 12, 2, 18, 12, .5, 'hull2', 8);   // parabole et son cornet
+    for (const s of [-1, 1]) { const x = s < 0 ? cx - 25 : cx + 22;
+      B.box(x, 52, 3, 70, 9, .8, 'hull2', 4); for (let y = 56; y < 120; y += 9) B.box(s < 0 ? x - 3 : x, y, 6, 2, 9.4, .4, 'hull', 8);   // mâts d'antennes
+      B.box(s < 0 ? cx - 16 : cx + 8, 66, 8, 40, 9, 1.4, 'hull2', 5); }
+    for (let y = 70; y < 104; y += 8) B.lights([[cx - 12, y], [cx + 12, y]], CYAN);
+    B.box(cx - 5, 112, 10, 12, 11, 2, 'hull', 6); B.box(cx - 4, 113, 8, 2, 12.4, .6, 'glass', 10);
+    B.box(cx - 10, 56, 20, 3, 7.6, 1, 'amber', 6);
+    B.greebles(16, 71, [18, 104, 30, 26]);
+    return render(B.engines([[cx - 5, 135, 4], [cx + 5, 135, 4]]), { seed: 71 }); },
+  // MOUILLEUR DE MINES (2 cases) : coque trapue, passerelle à l'avant, deux rails de mines à l'arrière et une rampe de largage
+  mouilleur: () => { const B = builder(66, 140), cx = 33;
+    B.poly(half(cx, [[0, 4], [9, 10], [15, 26], [17, 60], [18, 120], [15, 134], [0, 136]]), 6, 4, 'hull');
+    B.box(cx - 10, 16, 20, 22, 12, 2.5, 'hull', 6); B.box(cx - 8, 18, 16, 3, 13.4, 1, 'glass', 11); B.box(cx - 1, 6, 2, 12, 12, .5, 'hull2', 8);
+    for (const s of [-1, 1]) { const x0 = s < 0 ? cx - 15 : cx + 3;
+      B.box(x0, 44, 12, 82, 7.5, 1.2, 'hull2', 5);                                    // rail
+      for (let y = 50; y < 122; y += 12) { B.dome(x0 + 6, y, 4.6, 4.6, 7.5, 12, 'hazard'); B.dome(x0 + 6, y, 1.6, 1.6, 12, 13, 'black'); } }
+    B.box(cx - 2, 44, 4, 80, 8, .8, 'amber', 5);
+    B.box(cx - 14, 126, 28, 6, 7, 1, 'black', 3);                                      // rampe de largage
+    B.lights([[cx - 16, 30], [cx + 15, 30], [cx - 9, 128], [cx + 8, 128]], WARM);
+    return render(B.engines([[cx - 12, 137, 4], [cx + 12, 137, 4]]), { seed: 73 }); },
+  // FRÉGATE-BOUCLIER pirate (2 cases) : coque rouillée autour d'un gros générateur de bouclier, couronne d'émetteurs cyan
+  bouclier: () => { const B = builder(66, 140), cx = 33;
+    B.poly([[cx, 6], [cx + 9, 16], [cx + 13, 40], [cx + 26, 56], [cx + 27, 96], [cx + 15, 106], [cx + 12, 134], [cx - 12, 134], [cx - 16, 104], [cx - 28, 92], [cx - 25, 54], [cx - 12, 40], [cx - 9, 16]], 6, 4, 'scrap');
+    B.dome(cx, 76, 22, 22, 6, 12, 'rust'); B.dome(cx, 76, 13, 13, 12, 16, 'scrap'); B.dome(cx, 76, 6, 6, 16, 19, 'glass');
+    for (let k = 0; k < 6; k++) { const a = k / 6 * TAU + .3, x = cx + Math.cos(a) * 19, y = 76 + Math.sin(a) * 19; B.dome(x, y, 2.6, 2.6, 12, 14.5, 'scrap'); B.lights([[x, y]], CYAN); }
+    B.box(cx - 6, 20, 12, 18, 10, 2, 'rust', 6); B.box(cx - 4, 22, 8, 2, 11.4, .6, 'red', 9);
+    B.box(cx - 13, 108, 26, 4, 8, 1, 'hazard', 6); B.box(cx - 24, 60, 3, 14, 8, .5, 'scrap', 5);   // tôle rapportée
+    B.greebles(24, 75, [10, 96, 46, 34]); B.lights([[cx - 6, 116], [cx + 6, 116]], REDL);
+    const r = render(B.engines([[cx - 6, 135, 5], [cx + 6, 135, 5]]), { seed: 75, flip: true }); r.shield = [cx, 140 - 76]; return r; },
+  // POSEUR DE MINES pirate (1 case) : un remorqueur rouillé qui traîne un barillet de mines
+  poseur: () => { const B = builder(60, 66), cx = 30;
+    B.poly(half(cx, [[0, 4], [7, 8], [10, 26], [8, 32], [0, 34]]), 6, 2.5, 'rust'); B.dome(cx, 14, 2.6, 4, 6, 8.5, 'glass');
+    B.box(cx - 3, 32, 6, 6, 5, 1, 'hull2', 2);                                         // attelage
+    B.box(cx - 13, 37, 26, 22, 8, 6, 'scrap');                                          // barillet (biseau large = cylindre)
+    for (const x of [cx - 8, cx, cx + 8]) { B.dome(x, 48, 3.4, 3.4, 8, 11, 'hazard'); B.dome(x, 48, 1.2, 1.2, 11, 12, 'red'); }
+    for (const s of [-1, 1]) B.poly([[cx + s * 8, 14], [cx + s * 20, 26], [cx + s * 18, 30], [cx + s * 8, 26]], 5, 1, 'scrap', 2);
+    B.lights([[cx - 4, 22], [cx + 4, 22]], REDL);
+    return render(B.engines([[cx - 6, 61, 3.4], [cx + 6, 61, 3.4]]), { seed: 77, flip: true }); },
+  // MINES posées sur une case : alliée (ambre) ou pirate (rouille, feu rouge)
+  mine: () => { const B = builder(44, 44), c = 22;
+    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU, x = c + Math.cos(a) * 14, y = c + Math.sin(a) * 14; B.dome(x, y, 3, 3, 2, 6.5, 'hull2'); }
+    B.dome(c, c, 13, 13, 1, 10, 'hazard'); B.dome(c, c, 4.5, 4.5, 10, 12, 'amber'); B.lights([[c, c], [c + 1, c]], WARM);
+    return render(B, { seed: 79 }); },
+  minePirate: () => { const B = builder(44, 44), c = 22;
+    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU + .2, x = c + Math.cos(a) * 14, y = c + Math.sin(a) * 14; B.dome(x, y, 3, 3, 2, 6.5, 'scrap'); }
+    B.dome(c, c, 13, 13, 1, 10, 'rust'); B.dome(c, c, 4.5, 4.5, 10, 12, 'red'); B.lights([[c, c], [c + 1, c], [c, c + 1]], REDL);
+    return render(B, { seed: 81 }); },
+});
+
 /* ---------- cache et dessin ---------- */
 const CACHE = {}, TIMES = {};
 function get(id) {
