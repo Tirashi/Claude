@@ -22,10 +22,10 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 ## Les jeux futurs sélectionnés (coups de cœur, en 32 bits)
 1. **Escarmouche** (tactique) — Advance Wars avec des soldats de plomb peints sur la table de la cuisine : grille, fantassins, archers, cavaliers, catapulte ; le relief, ce sont des objets du quotidien (tasse = tour, serviette pliée = colline, miettes = rochers). Tour par tour contre l'ordinateur.
 2. **Donjon de poche** (rogue-lite à cartes) — on descend étage par étage dans un donjon éclairé aux torches ; chaque tour on joue des cartes (Frappe, Parade, Boule de feu, Soin…) avec 3 d'énergie ; on améliore son paquet entre les combats.
-3. **Carreau !** (arcade) — pétanque sur une place de Provence sous les platanes : pointer ou tirer avec une jauge de force et un arc de visée, sous le regard des anciens sur le banc. Mènes jusqu'à 13 points.
+3. ~~**Carreau !**~~ — *abandonné (15/10).* (arcade) — pétanque sur une place de Provence sous les platanes : pointer ou tirer avec une jauge de force et un arc de visée, sous le regard des anciens sur le banc. Mènes jusqu'à 13 points.
 4. **Le Mot d'or** (réflexion) — un mot de 6 lettres par jour en 6 essais, tuiles en bois : or = bien placée, argent = mal placée, gris = absente. Série de jours, classement du jour.
 5. **Le Potager** (gestion) — semer, arroser, récolter au fil des saisons dans un potager vu de dessus ; météo (averses), ventes, nouvelles graines.
-6. **Le Fort des lapins** (tower defense) — des vagues de lapins foncent vers les carottes ; on les repousse avec épouvantail, arroseur rotatif, chat, filet ; boss lapin géant.
+6. ~~**Le Fort des lapins**~~ — *abandonné (15/10).* (tower defense) — des vagues de lapins foncent vers les carottes ; on les repousse avec épouvantail, arroseur rotatif, chat, filet ; boss lapin géant.
 7. **Escadrille** (shoot'em up vertical) — biplan au-dessus des îles, escadrilles ennemies, bonus « P », bombes, et le zeppelin GOLIATH en boss.
 8. **Bord de lac** (détente) — pêche au lever du soleil dans la brume : ferrer au bon moment, gérer la tension du fil, remplir son carnet de poissons.
 9. **Le Club d'agility** — ✅ réalisé.
@@ -72,6 +72,7 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 
 ## Préférences notées
 - Cargo Stellaire et Station Alpha : retirés de la liste (pas retenus).
+- Carreau ! (pétanque) et Le Fort des lapins (tower defense) : abandonnés le 15/10.
 
 ## Page d'accueil (idées du 13/10)
 Réalisé le 13/10 ✅ : **favoris** (étoile sur chaque cartouche, favoris en tête), badges **NOUVEAU** / **MIS A JOUR** (3 jours), **filtres par genre**, **jeu à la une** dans une boîte de jeu (« TOUT NEUF ! »), **quoi de neuf**. Dates, genres et journal : `META` et `NEWS` dans `index.html` (à tenir à jour à chaque sortie ou mise à jour).
@@ -108,6 +109,6 @@ Maquette **filtres et classements** (filtres : 1 onglets, 2 sélecteur de consol
 Pour choisir selon le forfait restant (limite hebdomadaire remise à zéro le mercredi à 19 h).
 - 🟢 **Très petit** (quelques minutes, Sonnet) : texte de première connexion des classements ; Surprends-moi ; trier / rechercher sur l'accueil.
 - 🟡 **Petit** (une courte conversation) : Alunissage, interface près du module ; Queens, grille du jour ; installer l'étagère des classements ; Reprendre ; mes records sur chaque cartouche (sans la place dans la famille).
-- 🟠 **Moyen** (une conversation, Opus) : Invasion 2.0 ; Bouclier lunaire ; Sudoku ; Le Mot d'or (la liste de mots est le gros du travail) ; Lune-Rover ; Capitaine du port ; Carreau ! ; défis du jour + profil ; animations sur l'accueil ; revue « ingénieur senior » (lecture de tout le code : à faire en début de semaine).
-- 🔴 **Gros** (1 à 2 conversations) : Murdoku ; Escadrille ; Bord de lac ; Apesanteur ; Astro-Mineur ; Le Fort des lapins ; activité de la famille (SQL Supabase) ; **refonte de la sélection des jeux** (cartouches en 3D, page dédiée, avec une boîte par jeu : maquette d'abord, puis 2 conversations) ; **refonte de la DA du site façon Dragon Quest** (maquette, puis 1 à 2 conversations ; à fusionner avec la refonte de la sélection : 3 conversations en tout pour les deux).
+- 🟠 **Moyen** (une conversation, Opus) : Invasion 2.0 ; Bouclier lunaire ; Sudoku ; Le Mot d'or (la liste de mots est le gros du travail) ; Lune-Rover ; Capitaine du port ; défis du jour + profil ; animations sur l'accueil ; revue « ingénieur senior » (lecture de tout le code : à faire en début de semaine).
+- 🔴 **Gros** (1 à 2 conversations) : Murdoku ; Escadrille ; Bord de lac ; Apesanteur ; Astro-Mineur ; activité de la famille (SQL Supabase) ; **refonte de la sélection des jeux** (cartouches en 3D, page dédiée, avec une boîte par jeu : maquette d'abord, puis 2 conversations) ; **refonte de la DA du site façon Dragon Quest** (maquette, puis 1 à 2 conversations ; à fusionner avec la refonte de la sélection : 3 conversations en tout pour les deux).
 - ⚫ **Très gros** (plusieurs conversations, comme Nebula) : Donjon de poche ; Escarmouche ; Le Potager ; Le Chalutier ; Pavillon noir ; **RPG façon Dragon Quest 1** (5 à 6 sessions : carte, villes, donjons, 30 à 40 monstres, sorts, dialogues, équilibrage) ; Nebula : l'Empire des étoiles (le plus gros : jeu sur des semaines et serveur pour la famille).
