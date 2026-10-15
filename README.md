@@ -13,6 +13,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
+- [`ile/index.html`](ile/index.html) : **L'Île des naufragés**, un jeu de gestion et de survie en 32 bits : répartir les tâches de huit naufragés, explorer l'île et la quitter avant la saison des tempêtes.
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
 - [`snake/index.html`](snake/index.html) : **Snake**.
 - [`asteroids/index.html`](asteroids/index.html) : **Asteroids**.
@@ -173,6 +174,19 @@ Rogue-lite tactique dans l'espace, vaisseaux en relief : trois secteurs pirates 
 
 ---
 
+## L'Île des naufragés
+
+Huit naufragés sur une île inconnue, et 40 jours avant que la saison des tempêtes ne rende la mer infranchissable.
+
+- **Chaque jour**, on donne une tâche à chacun : pêche, cueillette, eau, bois, chantier, exploration, soins, repos ou guet. Puis **FIN DU JOUR** fait passer la nuit : chacun mange et boit une ration ; la faim et la soif coûtent un cœur et du moral. Personne ne meurt : un naufragé à bout de forces se repose jusqu'à ce qu'on le soigne.
+- **Talents et caractères** : pêcheur, charpentier, infirmière, cuisinier, exploratrice, enfant débrouillard, mécano, marin ; courageux, râleur, peureux (refuse d'explorer), rêveur, travailleur, gourmand.
+- **L'île est dans le brouillard** : les explorateurs découvrent les cases (on peut choisir laquelle en la touchant). Source, grotte, colline, volcan, ruines, épave, lagon… et ce qu'elles cachent : hache, filet, trousse, corde, voile, la radio et ses pièces, une autre naufragée, un trésor.
+- **Chantiers** : abri, réserve, citerne, pièges, tour de guet, feu de signal, radeau, radio.
+- **Les nuits** : pluie, crabes, caisse échouée, maladie, dispute, tempêtes (plus fréquentes à la fin).
+- **Trois façons de s'enfuir** : allumer le feu de signal quand un navire passe (il faut un guetteur ce jour-là ; la tour ou le marin le voient venir la veille), prendre la mer en radeau (10 repas et 10 eau, un peu de chance), ou réparer la radio (les secours arrivent 3 jours après).
+- **Île du jour** : la même île, le même équipage et les mêmes nuits pour toute la famille ; seule la première partie du jour est classée. La partie en cours est sauvegardée à chaque action.
+- Score : 1000 pour une évasion (+200 en radeau), 40 par jour d'avance, la santé, le moral, les découvertes et le trésor. Record, île du jour et nombre d'évasions au classement et dans le transfert de sauvegardes.
+
 ## Alunissage
 
 Poser un module lunaire en douceur, site après site.
@@ -209,7 +223,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire, Alunissage, Nebula), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire, Alunissage, Nebula, L'Île des naufragés), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -226,6 +240,7 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Orbite** : le total d'étoiles gagnées sur les 30 niveaux.
 - **Alunissage** : la meilleure mission et la mission du jour.
 - **Nebula** : le meilleur score, la partie du jour (jour par jour) et le nombre de victoires.
+- **L'Île des naufragés** : le meilleur score, l'île du jour (jour par jour) et le nombre d'évasions.
 - **Pont stellaire** : le Ciel du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille (7×7, 9×9, 11×11, plus 30 secondes par indice) et le nombre de constellations dessinées.
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).

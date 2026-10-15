@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L'Île des naufragés</title>
+<meta name="description" content="L'Île des naufragés : répartis les tâches, explore l'île et quitte-la avant la saison des tempêtes.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#0a2a3a">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+html, body { margin: 0; height: 100%; background: #04121a; overflow: hidden; }
+body { display: flex; justify-content: center; align-items: flex-start; touch-action: manipulation;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#cv { display: block; touch-action: none; cursor: pointer; }
+</style>
+</head>
+<body>
+<canvas id="cv" width="272" height="480" aria-label="L'Île des naufragés : survivre et quitter l'île"></canvas>
+<script src="../ludo-scores.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   L'ÎLE DES NAUFRAGÉS : gestion de survie en 32 bits.
+   - Huit naufragés, chacun avec un talent et un caractère. Chaque matin,
+     on donne une tâche à chacun (pêche, cueillette, eau, bois, chantier,
+     exploration, soins, repos, guet) ; « FIN DU JOUR » fait passer la nuit.
+   - Il faut manger, boire, s'abriter et garder le moral. Personne ne meurt :
+     un naufragé à bout de forces se repose jusqu'à ce qu'on le soigne.
+   - L'île est dans le brouillard : explorer révèle les cases (source,
+     grotte, épave, ruines, volcan…) et ce qu'elles cachent.
+   - Trois façons de partir avant le 40e jour (saison des tempêtes) :
+     le FEU DE SIGNAL allumé par le guetteur quand un navire passe,
+     le RADEAU (corde et voile de l'épave, provisions), ou la RADIO de
+     l'épave réparée avec 3 pièces (les secours arrivent 3 jours après).
+   - Tout est tiré d'une graine : l'Île du jour est la même pour toute la
+     famille (une seule tentative classée, qui compte dès le départ).
+   - Score : évasion, jours d'avance, santé, moral, découvertes, trésor.
+   L'écran est dessiné en 272×480 pixels logiques puis agrandi sans lissage.
+   ===================================================================== */
+const LW = 272, LH = 480, TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace', OUT = '#08141c';
+const DAYS = 40, MW = 6, MH = 5, TW = 44, TH = 33, MX = 4, MY = 40;
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem('ile.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('ile.' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('ile.' + k); } catch (e) {} },
+};
+const now = () => performance.now();
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const todayKey = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+// hasard reproductible : le même pour une graine, un jour et un naufragé donnés (quels que soient les choix du joueur)
+function H(seed, a = 0, b = 0) { let h = Math.imul(seed | 0, 374761393) ^ Math.imul(a + 1, 668265263) ^ Math.imul(b + 7, 2246822519); h = Math.imul(h ^ h >>> 13, 1274126177); return ((h ^ h >>> 16) >>> 0) / 4294967296; }
+
+/* =========================================================
+   LES NAUFRAGÉS : talents et caractères
+   ========================================================= */
+const TALENTS = {
+  pecheur: { name: 'PECHEUR', txt: 'Pêche beaucoup mieux (+1,5).' },
+  charpentier: { name: 'CHARPENTIER', txt: 'Coupe plus de bois et bâtit deux fois plus vite.' },
+  infirmiere: { name: 'INFIRMIERE', txt: 'Ses soins rendent 2 cœurs au lieu d\'un.' },
+  cuisinier: { name: 'CUISINIER', txt: 'Tout le monde mange un peu moins, et le moral monte (+2 par jour).' },
+  exploratrice: { name: 'EXPLORATRICE', txt: 'Explore deux cases par jour, sans jamais se blesser.' },
+  enfant: { name: 'ENFANT DEBROUILLARD', txt: 'Cueille plus de fruits (+1) et remonte le moral (+1 par jour).' },
+  mecano: { name: 'MECANO', txt: 'Répare la radio deux fois plus vite, et bâtit bien (+0,5).' },
+  marin: { name: 'MARIN', txt: 'Au guet, voit les navires venir la veille. Le radeau a plus de chances avec lui.' },
+};
+const TRAITS = {
+  courageux: { name: 'COURAGEUX', txt: 'Se blesse deux fois moins en explorant.' },
+  raleur: { name: 'RALEUR', txt: 'Fait baisser le moral (-2 par jour).' },
+  peureux: { name: 'PEUREUX', txt: 'Refuse d\'explorer : il se repose à la place.' },
+  reveur: { name: 'REVEUR', txt: 'Le repos lui remonte beaucoup le moral (+5).' },
+  travailleur: { name: 'TRAVAILLEUR', txt: 'Produit 50 % de plus.' },
+  gourmand: { name: 'GOURMAND', txt: 'Mange une ration et demie.' },
+};
+const NAMES = ['Léa', 'Hugo', 'Jade', 'Louis', 'Inès', 'Malo', 'Rose', 'Nina', 'Tom', 'Iris', 'Noé', 'Lou', 'Basile', 'Margot', 'Sacha', 'Zoé',
+  'Jules', 'Alice', 'Gaspard', 'Lina', 'Max', 'Chloé', 'Victor', 'Emma', 'Paul', 'Mila', 'Oscar', 'Anna', 'Elio', 'Romy'];
+const TASKS = [
+  ['peche', 'PECHE', '#3fa0e0'], ['cueillette', 'CUEILLETTE', '#5cbf4a'], ['eau', 'EAU', '#5ce1ff'], ['bois', 'BOIS', '#c08040'],
+  ['chantier', 'CHANTIER', '#ffb040'], ['explorer', 'EXPLORER', '#e8d070'], ['soins', 'SOINS', '#ff7a8a'], ['repos', 'REPOS', '#a9a6d8'], ['guet', 'GUET', '#ffffff'],
+];
+const TASK = Object.fromEntries(TASKS.map(t => [t[0], t]));
+
+/* =========================================================
+   LES CHANTIERS
+   ========================================================= */
+const PROJ = [
+  { id: 'abri', name: 'ABRI', pts: 6, wood: 4, txt: 'Protège des nuits froides et des tempêtes.' },
+  { id: 'reserve', name: 'RESERVE', pts: 4, wood: 3, txt: 'La nourriture ne se gâte plus, et les crabes ne la volent plus.' },
+  { id: 'citerne', name: 'CITERNE', pts: 4, wood: 3, txt: '+1 eau chaque jour, +3 quand il pleut.' },
+  { id: 'pieges', name: 'PIEGES', pts: 3, wood: 2, txt: '+1,5 nourriture chaque jour.' },
+  { id: 'tour', name: 'TOUR DE GUET', pts: 5, wood: 5, txt: 'Le guetteur voit les navires la veille de leur passage.' },
+  { id: 'feu', name: 'FEU DE SIGNAL', pts: 6, wood: 8, txt: 'Quand un navire passe, le guetteur l\'allume : sauvés !' },
+  { id: 'radeau', name: 'RADEAU', pts: 12, wood: 14, need: ['corde', 'voile'], txt: 'Avec la corde et la voile de l\'épave. Pour prendre la mer : 10 repas et 10 eau.' },
+  { id: 'radio', name: 'RADIO', pts: 5, wood: 0, need: ['radio', 'pieces'], txt: 'La radio de l\'épave et 3 pièces : les secours arrivent 3 jours après l\'appel.' },
+];
+const P = Object.fromEntries(PROJ.map(p => [p.id, p]));
+const ITEMS = {
+  hache: 'HACHE (+1 bois)', filet: 'FILET (pêche x1,5)', trousse: 'TROUSSE (soins +1)', corde: 'CORDE (radeau)', voile: 'VOILE (radeau)',
+  radio: 'RADIO CASSEE', pieces: 'PIECES DE RADIO', longue: 'LONGUE-VUE (guet)',
+};
+
+/* =========================================================
+   L'ÎLE : 6 × 5 cases, plage tout autour, brouillard à explorer
+   ========================================================= */
+const TILES = {
+  mer: { name: 'LA MER' }, plage: { name: 'PLAGE' }, jungle: { name: 'JUNGLE' }, colline: { name: 'COLLINE' }, rochers: { name: 'ROCHERS' },
+  source: { name: 'SOURCE' }, grotte: { name: 'GROTTE' }, volcan: { name: 'VOLCAN' }, ruines: { name: 'RUINES' }, epave: { name: 'EPAVE' }, lagon: { name: 'LAGON' },
+};
+const nb4 = i => { const x = i % MW, y = (i / MW) | 0, o = []; if (x > 0) o.push(i - 1); if (x < MW - 1) o.push(i + 1); if (y > 0) o.push(i - MW); if (y < MH - 1) o.push(i + MW); return o; };
+function makeIsland(seed) {
+  const R = mulberry(seed * 31 + 7);
+  for (let tries = 0; tries < 200; tries++) {
+    // une île en forme de patate : on part du centre et on ajoute des cases voisines
+    const land = new Set([2 * MW + 2]);
+    while (land.size < 21) { const a = [...land][Math.floor(R() * land.size)], n = nb4(a); land.add(n[Math.floor(R() * n.length)]); }
+    const tiles = [...Array(MW * MH)].map((_, i) => ({ t: land.has(i) ? 'jungle' : 'mer', seen: false, item: null, done: false }));
+    const isLand = i => tiles[i].t !== 'mer';
+    const edge = i => isLand(i) && (nb4(i).some(j => !isLand(j)) || nb4(i).length < 4);
+    const coast = [...land].filter(edge), inner = [...land].filter(i => !edge(i));
+    if (inner.length < 3) continue;
+    coast.forEach(i => tiles[i].t = 'plage');
+    // le camp : une plage en bas de l'île
+    const camp = coast.slice().sort((a, b) => ((b / MW) | 0) - ((a / MW) | 0) || R() - .5)[0];
+    const far = coast.filter(i => i !== camp && !nb4(camp).includes(i));
+    if (far.length < 3) continue;
+    const pick = arr => arr.splice(Math.floor(R() * arr.length), 1)[0];
+    const sh = arr => arr.sort(() => R() - .5);
+    sh(far); sh(inner);
+    const midd = [...land].filter(i => i !== camp && !nb4(camp).includes(i) && tiles[i].t === 'jungle');
+    tiles[pick(far)].t = 'epave';
+    tiles[pick(inner)].t = 'volcan';
+    const rest = sh([...land].filter(i => i !== camp && tiles[i].t !== 'epave' && tiles[i].t !== 'volcan'));
+    for (const t of ['source', 'grotte', 'ruines', 'colline', 'rochers', 'rochers', 'colline', 'lagon']) { const i = rest.pop(); if (i == null) break; if (t === 'lagon' && tiles[i].t !== 'plage') continue; tiles[i].t = t; }
+    if (!tiles.some(x => x.t === 'source') || !tiles.some(x => x.t === 'grotte') || !tiles.some(x => x.t === 'ruines')) continue;
+    // ce que cachent les cases
+    const at = t => tiles.findIndex(x => x.t === t);
+    tiles[at('epave')].item = ['radio', 'corde', 'voile'];
+    tiles[at('ruines')].item = ['pieces', R() < .5 ? 'tresor' : 'longue'];
+    tiles[at('grotte')].item = ['pieces'];
+    const others = sh(tiles.map((x, i) => i).filter(i => isLand(i) && i !== camp && !tiles[i].item));
+    tiles[others.pop()].item = ['pieces'];
+    tiles[others.pop()].item = ['hache'];
+    tiles[others.pop()].item = ['filet'];
+    tiles[others.pop()].item = ['trousse'];
+    tiles[others.pop()].item = ['naufrage'];
+    if (!tiles.some(x => x.item && x.item.includes('tresor'))) tiles[others.pop()].item = ['tresor'];
+    tiles[camp].seen = true; nb4(camp).forEach(j => { if (tiles[j].t === 'mer') tiles[j].seen = true; });
+    tiles.forEach((x, i) => { if (x.t === 'mer') x.seen = true; });
+    return { tiles, camp };
+  }
+  return null;
+}
+
+/* =========================================================
+   NOUVELLE PARTIE
+   ========================================================= */
+function makeCrew(seed) {
+  const R = mulberry(seed * 17 + 3), names = NAMES.slice().sort(() => R() - .5), tal = Object.keys(TALENTS).sort(() => R() - .5);
+  const tr = Object.keys(TRAITS);
+  return [...Array(8)].map((_, i) => ({
+    name: names[i], talent: tal[i], trait: tr[Math.floor(R() * tr.length)], hp: 3, task: ['peche', 'peche', 'cueillette', 'eau', 'eau', 'bois', 'chantier', 'explorer'][i],
+    skin: Math.floor(R() * 4), hair: Math.floor(R() * 6), long: R() < .5,
+  }));
+}
+function shipsFor(seed) { return [[9, 16], [19, 27], [29, 37]].map(([a, b], k) => a + Math.floor(H(seed, 900 + k) * (b - a + 1))); }
+function newRun(seed, daily) {
+  let isl = makeIsland(seed), s = seed; while (!isl) isl = makeIsland(++s);
+  const proj = {}; PROJ.forEach(p => proj[p.id] = { p: 0, paid: false });
+  return { v: 1, seed, daily: !!daily, offRank: false, day: 1, food: 10, water: 10, wood: 3, moral: 60, items: {}, pieces: 0, crew: makeCrew(seed),
+    tiles: isl.tiles, camp: isl.camp, target: -1, proj, sel: 'abri', ships: shipsFor(seed), radioDay: 0, tresor: false, found: 1, sick: -1,
+    phase: 'day', report: [], result: null, rescuers: 0 };
+}
+
+/* =========================================================
+   UNE JOURNÉE PUIS UNE NUIT
+   ========================================================= */
+const built = (r, id) => r.proj[id].p >= P[id].pts;
+const alive = r => r.crew;
+function eff(r, c) {
+  if (c.hp <= 0) return 0;
+  return (c.hp === 1 ? .6 : 1) * (c.trait === 'travailleur' ? 1.5 : 1) * (.7 + r.moral / 333);
+}
+const fmt1 = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
+function canBuild(r, id) {
+  const p = P[id];
+  if (built(r, id)) return 'TERMINE';
+  if (p.need) for (const n of p.need) { if (n === 'pieces' ? r.pieces < 3 : !r.items[n]) return 'IL MANQUE : ' + (n === 'pieces' ? `PIECES ${r.pieces}/3` : n === 'radio' ? 'LA RADIO' : n.toUpperCase()); }
+  if (!r.proj[id].paid && r.wood < p.wood) return `IL MANQUE DU BOIS (${p.wood})`;
+  return '';
+}
+function explorable(r) { const o = []; r.tiles.forEach((x, i) => { if (!x.seen && nb4(i).some(j => r.tiles[j].seen && r.tiles[j].t !== 'mer')) o.push(i); }); return o; }
+function reveal(r, i, log, who) {
+  const x = r.tiles[i]; if (x.seen) return; x.seen = true; r.found++;
+  const name = TILES[x.t].name;
+  let line = `${who} découvre : ${name.toLowerCase()}`;
+  if (x.t === 'source') line += ' (de l\'eau douce !)';
+  if (x.t === 'grotte') line += ' (un abri naturel)';
+  if (x.t === 'jungle') { r.food += 2; line += ' (+2 fruits)'; }
+  if (x.t === 'colline' || x.t === 'volcan') { nb4(i).forEach(j => { if (!r.tiles[j].seen) { r.tiles[j].seen = true; r.found++; } }); line += ' : vue sur les alentours'; }
+  if (x.t === 'lagon') { r.food += 2; line += ' (+2 poissons)'; }
+  log.push(line + '.');
+  if (x.item) for (const it of x.item) {
+    if (it === 'pieces') { r.pieces++; log.push(`  Une pièce de radio ! (${r.pieces}/3)`); }
+    else if (it === 'tresor') { r.tresor = true; r.moral += 10; log.push('  Un coffre plein d\'or : le trésor de l\'île !'); }
+    else if (it === 'naufrage') {
+      const R = mulberry(r.seed * 5 + i), name = NAMES.filter(n => !r.crew.some(c => c.name === n))[Math.floor(R() * 10)], tal = Object.keys(TALENTS)[Math.floor(R() * 8)];
+      r.crew.push({ name, talent: tal, trait: 'courageux', hp: 2, task: 'repos', skin: Math.floor(R() * 4), hair: Math.floor(R() * 6), long: R() < .5 });
+      r.moral += 8; log.push(`  ${name}, une autre naufragée, se joint au camp !`);
+    } else { r.items[it] = true; log.push(`  Trouvé : ${ITEMS[it].toLowerCase()}.`); }
+  }
+  x.item = null;
+}
+function endDay(r) {
+  const log = [], crew = r.crew, has = t => crew.some(c => c.talent === t && c.hp > 0);
+  const work = {}; TASKS.forEach(t => work[t[0]] = []);
+  crew.forEach(c => { let t = c.task; if (c.hp <= 0) t = 'repos'; if (t === 'explorer' && c.trait === 'peureux') t = 'repos'; work[t].push(c); });
+  const sum = (t, f) => work[t].reduce((a, c) => a + f(c) * eff(r, c), 0);
+  // production
+  const fish = sum('peche', c => 3 + (c.talent === 'pecheur' ? 1.5 : 0)) * (r.items.filet ? 1.5 : 1);
+  const jungles = r.tiles.filter(x => x.seen && x.t === 'jungle').length;
+  const fruit = sum('cueillette', c => 2.5 + (c.talent === 'enfant' ? 1 : 0) + Math.min(1.5, jungles * .3));
+  const source = r.tiles.some(x => x.seen && x.t === 'source');
+  const water = sum('eau', () => source ? 5 : 3);
+  const wood = sum('bois', c => 2.5 + (r.items.hache ? 1 : 0) + (c.talent === 'charpentier' ? 1 : 0));
+  r.food += fish + fruit; r.water += water; r.wood += wood;
+  if (fish) log.push(`Pêche : +${fmt1(fish)} nourriture.`); if (fruit) log.push(`Cueillette : +${fmt1(fruit)} nourriture.`);
+  if (water) log.push(`Eau : +${fmt1(water)}${source ? ' (source)' : ''}.`); if (wood) log.push(`Bois : +${fmt1(wood)}.`);
+  if (built(r, 'pieges')) { r.food += 1.5; log.push('Pièges : +1,5 nourriture.'); }
+  if (built(r, 'citerne')) { r.water += 1; log.push('Citerne : +1 eau.'); }
+  // chantier
+  if (work.chantier.length) {
+    const id = r.sel, p = P[id], why = canBuild(r, id);
+    if (why === 'TERMINE') log.push(`Chantier : ${p.name.toLowerCase()} déjà terminé, choisis-en un autre.`);
+    else if (why) log.push(`Chantier ${p.name.toLowerCase()} : ${why.toLowerCase()}.`);
+    else {
+      if (!r.proj[id].paid) { r.wood -= p.wood; r.proj[id].paid = true; }
+      const pts = sum('chantier', c => 1 + (c.talent === 'charpentier' ? 1 : 0) + (c.talent === 'mecano' ? (id === 'radio' ? 1 : .5) : 0));
+      r.proj[id].p = Math.min(p.pts, r.proj[id].p + pts);
+      if (built(r, id)) { log.push(`${p.name} TERMINE !`); r.moral += 6;
+        // le chantier suivant est choisi tout seul (le premier de la liste encore à faire)
+        const next = PROJ.find(q => !built(r, q.id) && !/IL MANQUE : /.test(canBuild(r, q.id))) || PROJ.find(q => !built(r, q.id));
+        if (next) { r.sel = next.id; log.push(`  Prochain chantier : ${next.name.toLowerCase()}.`); } if (id === 'radio') { r.radioDay = r.day + 3; log.push('Appel lancé à la radio : les secours arrivent dans 3 jours !'); } }
+      else log.push(`Chantier ${p.name.toLowerCase()} : ${fmt1(r.proj[id].p)}/${p.pts}.`);
+    }
+  }
+  // exploration
+  const targets = explorable(r);
+  for (const c of work.explorer) {
+    for (let k = 0; k < (c.talent === 'exploratrice' ? 2 : 1); k++) {
+      const open = explorable(r); if (!open.length) { if (!k) log.push(`${c.name} : toute l'île est explorée.`); break; }
+      const i = open.includes(r.target) ? r.target : open.sort((a, b) => H(r.seed, r.day, a) - H(r.seed, r.day, b))[0];
+      const danger = r.tiles[i].t === 'volcan' ? .45 : .15, safe = c.talent === 'exploratrice' ? 0 : c.trait === 'courageux' ? .5 : 1;
+      reveal(r, i, log, c.name);
+      if (r.target === i) r.target = -1;
+      if (H(r.seed, r.day * 13 + k, crew.indexOf(c)) < danger * safe) { c.hp--; log.push(`  ${c.name} s'est blessé en chemin.`); }
+    }
+  }
+  void targets;
+  // soins et repos
+  for (const c of work.soins) { const n = 1 + (c.talent === 'infirmiere' ? 1 : 0) + (r.items.trousse ? 1 : 0), t = crew.filter(x => x.hp < 3 && x !== c).sort((a, b) => a.hp - b.hp)[0];
+    if (t) { t.hp = Math.min(3, t.hp + n); if (r.sick === crew.indexOf(t)) r.sick = -1; log.push(`${c.name} soigne ${t.name} (+${n}).`); } }
+  for (const c of work.repos) { if (c.hp < 3) c.hp++; r.moral += c.trait === 'reveur' ? 5 : 1.5; }
+  // guet et navires
+  const ship = r.ships.includes(r.day), soon = r.ships.includes(r.day + 1), watch = work.guet.length > 0;
+  const seesEarly = built(r, 'tour') || work.guet.some(c => c.talent === 'marin') || r.items.longue;
+  if (ship) {
+    if (watch && built(r, 'feu')) { log.push('Un navire passe au large… le guetteur allume le feu de signal. Il fait demi-tour : SAUVES !'); return finish(r, log, 'feu'); }
+    if (watch) log.push('Un navire est passé au large ! Sans feu de signal, il ne vous a pas vus.');
+    else log.push('Personne ne faisait le guet… Plus tard, quelqu\'un dit avoir vu une fumée de navire.');
+    r.moral -= 8;
+  }
+  if (soon && watch && seesEarly) log.push('Le guetteur aperçoit un navire à l\'horizon : il passera DEMAIN !');
+  if (r.radioDay && r.day >= r.radioDay) { log.push('Un hélicoptère se pose sur la plage : les secours sont là. SAUVES !'); return finish(r, log, 'radio'); }
+  // la nuit : manger, boire, dormir
+  const eat = crew.reduce((a, c) => a + (c.trait === 'gourmand' ? 1.5 : 1), 0) * (has('cuisinier') ? .85 : 1), drink = crew.length;
+  r.food -= eat; r.water -= drink;
+  log.push(`Le soir : ${fmt1(eat)} nourriture et ${drink} eau consommées.`);
+  if (r.food < 0) { const n = Math.min(crew.length, Math.ceil(-r.food)); hurt(r, n, 1, log, 'ont eu faim'); r.food = 0; r.moral -= 10; }
+  if (r.water < 0) { const n = Math.min(crew.length, Math.ceil(-r.water)); hurt(r, n, 2, log, 'ont eu soif'); r.water = 0; r.moral -= 12; }
+  if (!built(r, 'reserve') && r.food > 6) { const lost = Math.floor((r.food - 6) * .25); if (lost) { r.food -= lost; log.push(`${lost} nourriture s'est gâtée (une réserve la garderait).`); } }
+  const shelter = built(r, 'abri') ? 1 : r.tiles.some(x => x.seen && x.t === 'grotte') ? .5 : 0;
+  if (!shelter) { r.moral -= 3; log.push('Nuit froide sans abri (-3 moral).'); }
+  // traits et talents
+  crew.forEach(c => { if (c.trait === 'raleur') r.moral -= 2; if (c.talent === 'enfant' && c.hp > 0) r.moral += 1; if (c.talent === 'cuisinier' && c.hp > 0) r.moral += 2; });
+  // malade : perd un cœur chaque nuit tant qu'on ne le soigne pas
+  if (r.sick >= 0 && crew[r.sick]) { const c = crew[r.sick]; if (c.hp > 0) { c.hp--; log.push(`${c.name}, malade, s'affaiblit (soigne-le).`); } }
+  nightEvent(r, log, shelter);
+  r.moral = clamp(r.moral, 0, 100); r.food = Math.max(0, r.food); r.water = Math.max(0, r.water); r.wood = Math.max(0, r.wood);
+  crew.forEach(c => c.hp = clamp(c.hp, 0, 3));
+  r.day++;
+  if (r.day > DAYS) { log.push('Le vent forcit, la mer gronde : la saison des tempêtes est arrivée.'); return finish(r, log, null); }
+  if (r.day >= DAYS - 4) log.push(`Plus que ${DAYS - r.day + 1} jours avant les tempêtes !`);
+  r.report = log; r.phase = 'report';
+  return r;
+}
+function hurt(r, n, salt, log, what) {
+  const order = r.crew.map((c, i) => i).sort((a, b) => H(r.seed, r.day * 7 + salt, a) - H(r.seed, r.day * 7 + salt, b)).slice(0, n);
+  order.forEach(i => r.crew[i].hp--);
+  log.push(`${n} naufragé${n > 1 ? 's' : ''} ${n > 1 ? what : what.replace('ont eu', 'a eu')} (-1 coeur).`);
+}
+function nightEvent(r, log, shelter) {
+  const x = H(r.seed, r.day, 4242), late = r.day > 25;
+  if (x < (late ? .2 : .1)) {
+    if (shelter >= 1) log.push('TEMPETE dans la nuit ! L\'abri a tenu bon.');
+    else { r.crew.forEach((c, i) => { if (shelter < 1 && (shelter === 0 || i % 2)) c.hp--; }); r.moral -= 8; log.push(`TEMPETE dans la nuit ! ${shelter ? 'La grotte n\'abrite pas tout le monde' : 'Sans abri, tout le monde souffre'} (-1 coeur).`); }
+    const open = PROJ.filter(p => r.proj[p.id].p > 0 && !built(r, p.id));
+    if (open.length) { const p = open[0]; r.proj[p.id].p = Math.max(0, r.proj[p.id].p - 2); log.push(`  Le chantier ${p.name.toLowerCase()} est abîmé (-2).`); }
+  } else if (x < .3) { const w = 4 + (built(r, 'citerne') ? 3 : 0); r.water += w; log.push(`Il pleut toute la nuit : +${w} eau.`); }
+  else if (x < .38) { if (built(r, 'reserve')) log.push('Des crabes rôdent autour de la réserve, sans succès.'); else { const n = Math.min(3, Math.floor(r.food)); r.food -= n; log.push(`Des crabes ont volé ${n} nourriture.`); } }
+  else if (x < .45) { const R = H(r.seed, r.day, 77); if (R < .5) { r.food += 3; log.push('Une caisse s\'échoue sur la plage : +3 nourriture.'); } else { r.wood += 3; log.push('Des planches s\'échouent sur la plage : +3 bois.'); } }
+  else if (x < .52 && r.sick < 0) { r.sick = Math.floor(H(r.seed, r.day, 5) * r.crew.length); log.push(`${r.crew[r.sick].name} tombe malade. Il faut le soigner.`); }
+  else if (x < .58 && r.crew.some(c => c.trait === 'raleur')) { r.moral -= 6; log.push('Une dispute éclate autour du feu (-6 moral).'); }
+  else if (x < .66) { r.moral += 5; log.push('Ciel étoilé, histoires au coin du feu (+5 moral).'); }
+}
+function finish(r, log, how) {
+  r.phase = 'end'; r.report = log;
+  const hearts = r.crew.reduce((a, c) => a + c.hp, 0);
+  const sc = how ? 1000 + (DAYS - r.day) * 40 + hearts * 10 + Math.round(r.moral) * 3 + r.found * 10 + (r.tresor ? 300 : 0) + (how === 'radeau' ? 200 : 0)
+    : r.day * 8 + r.found * 10 + (r.tresor ? 100 : 0);
+  r.result = { how, score: sc, day: Math.min(r.day, DAYS) };
+  return r;
+}
+// le radeau : on prend la mer
+function sail(r) {
+  const log = [], c = r.crew, need = 10;
+  if (r.food < need || r.water < need) return null;
+  r.food -= need; r.water -= need;
+  const chance = .55 + (c.some(x => x.talent === 'marin' && x.hp > 0) ? .2 : 0) + r.moral / 500 + c.reduce((a, x) => a + x.hp, 0) / (c.length * 3) * .15;
+  if (H(r.seed, r.day, 999) < chance) { log.push('Le radeau franchit la barrière de corail… Trois jours plus tard, une côte ! SAUVES !'); return finish(r, log, 'radeau'); }
+  r.proj.radeau.p = Math.floor(P.radeau.pts / 2); r.moral -= 15; c.forEach(x => x.hp = Math.max(0, x.hp - 1));
+  log.push('Une vague géante renverse le radeau ! Tout le monde regagne la plage, épuisé (-1 coeur).', 'Le radeau est à moitié détruit : il faudra le réparer.');
+  r.day++; r.report = log; r.phase = 'report'; r.moral = clamp(r.moral, 0, 100);
+  if (r.day > DAYS) return finish(r, log, null);
+  return r;
+}
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+const AC = { ctx: null, out: null, on: store.get('sfx', true) };
+function audioInit() {
+  if (AC.ctx) { if (AC.ctx.state === 'suspended') AC.ctx.resume(); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  AC.ctx = new Ctx(); AC.out = AC.ctx.createGain(); AC.out.gain.value = .4; AC.out.connect(AC.ctx.destination);
+}
+function tone(f, d, type = 'triangle', vol = .15, slide = 0, delay = 0) {
+  if (!AC.on || !AC.ctx) return;
+  const t = AC.ctx.currentTime + delay, o = AC.ctx.createOscillator(), g = AC.ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g); g.connect(AC.out); o.start(t); o.stop(t + d + .02);
+}
+const SFX = {
+  click: () => tone(660, .05, 'square', .07),
+  pick: () => tone(880, .06, 'sine', .12),
+  night: () => [392, 330, 262].forEach((f, i) => tone(f, .25, 'sine', .1, 0, i * .12)),
+  win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .3, 'sine', .14, 0, i * .11)),
+  lose: () => [330, 262, 196, 147].forEach((f, i) => tone(f, .35, 'triangle', .14, 0, i * .16)),
+};
+
+/* =========================================================
+   ÉTAT ET SAUVEGARDE
+   ========================================================= */
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+let K = 1, T = 0, BTN = [];
+const S = { screen: 'title', run: null, pop: null, rankText: '', best: store.get('best', 0) || 0, wins: store.get('wins', 0) || 0, dailyBest: store.get('daily', {}) || {}, help: 0 };
+function save() { if (!S.run) return; if (S.run.phase === 'end') store.del('run'); else store.set('run', S.run); }
+function start(daily) {
+  const d = todayKey(), seed = daily ? d * 13 + 5 : (Math.random() * 2 ** 31) | 0;
+  S.run = newRun(seed, daily);
+  if (daily) { S.run.offRank = store.get('dailyTry', 0) === d; if (!S.run.offRank) store.set('dailyTry', d); S.run.dayKey = d; }
+  S.screen = 'intro'; S.pop = null; S.rankText = ''; save();
+}
+function resume() { const r = store.get('run', null); if (!r || r.v !== 1) return false; S.run = r; S.screen = r.phase === 'report' ? 'report' : 'play'; S.pop = null; return true; }
+function nextDay() { audioInit(); SFX.night(); endDay(S.run); afterTurn(); }
+function afterTurn() {
+  const r = S.run;
+  if (r.phase === 'end') { S.screen = 'end'; ended(); }
+  else S.screen = 'report';
+  save();
+}
+function ended() {
+  const r = S.run, sc = r.result.score;
+  if (r.result.how) { SFX.win(); S.wins++; store.set('wins', S.wins); } else SFX.lose();
+  if (sc > S.best) { S.best = sc; store.set('best', sc); }
+  const ranked = r.daily && !r.offRank;
+  if (ranked) { S.dailyBest[r.dayKey] = sc; store.set('daily', S.dailyBest); }
+  if (r.daily && r.offRank) S.rankText = 'ILE DU JOUR DEJA JOUEE : HORS CLASSEMENT';
+  if (window.LudoScores) {
+    LudoScores.submit('ile', 'best', sc, false).then(x => { if (x && !r.daily) S.rankText = 'CLASSEMENT : ' + LudoScores.rankText(x).toUpperCase(); });
+    if (ranked) LudoScores.submit('ile', 'daily:' + r.dayKey, sc, false).then(x => { if (x) S.rankText = 'ILE DU JOUR : ' + LudoScores.rankText(x).toUpperCase(); });
+    if (r.result.how) LudoScores.submit('ile', 'evasions', S.wins, false);
+  }
+}
+
+/* =========================================================
+   DESSIN : outils
+   ========================================================= */
+const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function text(s, x, y, col, align = 'left', size = 8, sh = '#02080c') { g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top'; if (sh) { g.fillStyle = sh; g.fillText(s, x + 1, y + 1); } g.fillStyle = col; g.fillText(s, x, y); }
+function wrap(s, max) { const out = []; let line = ''; for (const w of s.split(' ')) { if ((line + ' ' + w).trim().length > max) { out.push(line); line = w; } else line = (line + ' ' + w).trim(); } if (line) out.push(line); return out; }
+function logo(s, x, y, size) {
+  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3); g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, '#fff6d0'); gr.addColorStop(.5, '#ffd76a'); gr.addColorStop(1, '#e08a3a'); g.fillStyle = gr; g.fillText(s, x, y);
+}
+function panel(x, y, w, h, gold) {
+  R(x - 2, y - 2, w + 4, h + 4, OUT); const gr = g.createLinearGradient(0, y, 0, y + h);
+  gr.addColorStop(0, gold ? '#5a3c10' : '#14465a'); gr.addColorStop(1, gold ? '#2a1606' : '#08202c'); g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x, y, w, 1, gold ? '#ffe28a' : '#8fe0ff'); R(x, y, 1, h, gold ? '#ffe28a' : '#8fe0ff');
+}
+function button(x, y, w, h, label, act, o = {}) {
+  if (act) BTN.push({ x, y, w, h, act });
+  R(x - 1, y - 1, w + 2, h + 2, OUT);
+  const top = o.gold ? '#ffd23f' : o.off ? '#2a3a44' : o.col || '#2f8ab0', bot = o.gold ? '#c27a12' : o.off ? '#18242c' : o.col2 || '#145a78';
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x + 1, y + 1, w - 2, 1, o.gold ? '#fff2b0' : '#bfefff');
+  text(label, x + w / 2, y + Math.round((h - (o.size || 8)) / 2) + 1, o.gold ? '#2a1600' : o.off ? '#6a7a84' : '#f2fbff', 'center', o.size || 8, o.gold || o.off ? null : '#02080c');
+}
+// petites icônes de ressources (8×8)
+const ICON = {
+  food: ['..rr....', '.rrrr...', 'rrRrrr..', 'rrrrrr..', '.rrrr.b.', '..rr.bb.', '....bb..', '...b....'],
+  water: ['...c....', '...c....', '..ccc...', '.ccCcc..', '.cCccc..', '.ccccc..', '..ccc...', '........'],
+  wood: ['........', '.bbbbbb.', 'bBbbbbBb', 'bbbbbbbb', '.bbbbbb.', 'bBbbbbBb', 'bbbbbbbb', '........'],
+  heart: ['.rr.rr..', 'rRrrrrr.', 'rrrrrrr.', '.rrrrr..', '..rrr...', '...r....', '........', '........'],
+  heartE: ['.kk.kk..', 'k..k..k.', 'k.....k.', '.k...k..', '..k.k...', '...k....', '........', '........'],
+  sun: ['...y....', '.y.y.y..', '..yyy...', 'yyyYyyy.', '..yyy...', '.y.y.y..', '...y....', '........'],
+};
+const IPAL = { r: '#e8484a', R: '#ffb0a0', b: '#8a5a2a', B: '#c08a50', c: '#5ce1ff', C: '#e8fbff', k: '#4a5a64', y: '#ffd23f', Y: '#fff6c2' };
+function icon(name, x, y) { ICON[name].forEach((row, j) => [...row].forEach((ch, i) => { if (IPAL[ch]) R(x + i, y + j, 1, 1, IPAL[ch]); })); }
+// visage d'un naufragé (12×12)
+const SKIN = [['#ffd8b8', '#e8b090'], ['#e8b084', '#c08060'], ['#b07850', '#8a5a38'], ['#7a4a2a', '#5a3218']];
+const HAIR = ['#2a1a10', '#6a3a1a', '#c08a3a', '#e8c86a', '#b84a2a', '#3a3a44'];
+function face(c, x, y) {
+  const [sk, sd] = SKIN[c.skin], hr = HAIR[c.hair];
+  R(x, y, 12, 12, OUT); R(x + 1, y + 1, 10, 10, '#1a3a48');
+  R(x + 3, y + 3, 6, 7, sk); R(x + 8, y + 4, 1, 6, sd);
+  R(x + 2, y + 2, 8, 2, hr); R(x + 2, y + 3, 1, c.long ? 7 : 3, hr); R(x + 9, y + 3, 1, c.long ? 7 : 3, hr);
+  R(x + 4, y + 6, 1, 1, '#1a1010'); R(x + 7, y + 6, 1, 1, '#1a1010');
+  R(x + 5, y + 8, 2, 1, c.hp <= 0 ? '#5a3a3a' : '#c0504a');
+  if (c.hp <= 0) { R(x + 4, y + 6, 1, 1, sd); R(x + 7, y + 6, 1, 1, sd); R(x + 3, y + 6, 2, 1, '#1a1010'); R(x + 7, y + 6, 2, 1, '#1a1010'); }
+}
+
+/* =========================================================
+   DESSIN : la carte
+   ========================================================= */
+function tileArt(t, x, y, i, seed) {
+  const rnd = k => H(seed, i, k);
+  const sea = () => { R(x, y, TW, TH, '#145a8a'); for (let k = 0; k < 6; k++) { const wx = (rnd(k) * TW + T * 6 * (k % 2 ? 1 : -1)) % TW; R(x + ((wx + TW) % TW | 0), y + (rnd(k + 9) * (TH - 2) | 0), 4, 1, '#3f8ac0'); } };
+  if (t === 'mer') return sea();
+  // sol de base : sable ou herbe, avec un liseré d'écume au bord de la mer
+  const sand = ['plage', 'epave', 'lagon'].includes(t);
+  R(x, y, TW, TH, sand ? '#e8d090' : '#3f8a3a');
+  for (let k = 0; k < 14; k++) R(x + (rnd(20 + k) * TW | 0), y + (rnd(40 + k) * TH | 0), 1, 1, sand ? '#c8a860' : '#2f6a2a');
+  if (t === 'jungle' || t === 'source' || t === 'grotte' || t === 'ruines') for (let k = 0; k < 5; k++) { const px = x + 4 + (rnd(60 + k) * (TW - 12) | 0), py = y + 6 + (rnd(70 + k) * (TH - 14) | 0);
+    R(px + 2, py + 3, 1, 6, '#6a4a20'); R(px - 1, py, 7, 2, '#2f7a2a'); R(px, py - 1, 5, 1, '#5cbf4a'); R(px - 2, py + 2, 2, 1, '#2f7a2a'); R(px + 5, py + 2, 2, 1, '#2f7a2a'); }
+  if (t === 'plage') { R(x + 30, y + 8, 1, 10, '#8a5a2a'); R(x + 26, y + 6, 9, 2, '#3f9a3a'); R(x + 27, y + 5, 7, 1, '#7cdf5a'); }
+  if (t === 'colline') { g.fillStyle = '#5a9a4a'; g.beginPath(); g.moveTo(x + 4, y + TH - 4); g.lineTo(x + 22, y + 6); g.lineTo(x + 40, y + TH - 4); g.fill(); R(x + 20, y + 7, 4, 2, '#8ac07a'); }
+  if (t === 'rochers') for (let k = 0; k < 4; k++) { const px = x + 6 + k * 9, py = y + 12 + (rnd(80 + k) * 10 | 0); R(px, py, 7, 5, '#7a7a80'); R(px, py, 7, 1, '#b8b8c0'); R(px + 5, py + 1, 2, 4, '#4a4a50'); }
+  if (t === 'source') { R(x + 12, y + 14, 20, 8, '#3fa0e0'); R(x + 14, y + 15, 6, 1, '#bfefff'); R(x + 11, y + 13, 22, 1, '#2f6a2a'); }
+  if (t === 'grotte') { R(x + 10, y + 8, 24, 18, '#6a6a70'); R(x + 10, y + 8, 24, 2, '#a8a8b0'); R(x + 16, y + 15, 12, 11, '#141418'); }
+  if (t === 'volcan') { g.fillStyle = '#5a4a44'; g.beginPath(); g.moveTo(x + 4, y + TH - 2); g.lineTo(x + 18, y + 6); g.lineTo(x + 26, y + 6); g.lineTo(x + 40, y + TH - 2); g.fill();
+    R(x + 18, y + 5, 8, 2, '#ff6a2a'); const sm = (T * 4) % 8; R(x + 20 + (sm > 4 ? 1 : 0), y + 1 - (sm | 0) % 3, 3, 2, 'rgba(200,200,200,.6)'); }
+  if (t === 'ruines') { R(x + 10, y + 10, 4, 14, '#b8b0a0'); R(x + 18, y + 14, 4, 10, '#b8b0a0'); R(x + 26, y + 8, 4, 16, '#a8a090'); R(x + 9, y + 9, 22, 2, '#d8d0c0'); R(x + 8, y + 24, 26, 2, '#8a8070'); }
+  if (t === 'epave') { R(x + 6, y + 14, 30, 8, '#6a4a2a'); R(x + 8, y + 12, 26, 2, '#8a6a3a'); R(x + 20, y + 2, 2, 12, '#5a3a1a'); R(x + 22, y + 4, 8, 6, '#e8e0c8'); R(x + 6, y + 22, 30, 2, '#3f8ac0'); }
+  if (t === 'lagon') { R(x + 8, y + 8, 28, 16, '#3fc0d0'); R(x + 12, y + 12, 6, 1, '#bff8ff'); }
+}
+function drawMap(r) {
+  R(MX - 2, MY - 2, MW * TW + 4, MH * TH + 4, OUT);
+  r.tiles.forEach((x, i) => {
+    const tx = MX + (i % MW) * TW, ty = MY + ((i / MW) | 0) * TH;
+    if (x.seen) tileArt(x.t, tx, ty, i, r.seed);
+    else { R(tx, ty, TW, TH, '#5a6a74'); for (let k = 0; k < 18; k++) R(tx + (H(r.seed, i, 100 + k) * TW | 0), ty + (H(r.seed, i, 200 + k) * TH | 0), 3, 2, '#8a9aa4');
+      text('?', tx + TW / 2, ty + TH / 2 - 4, '#c8d4dc', 'center', 8, null); }
+  });
+  // le camp : tente (ou cabane), feu de signal, radeau, tour
+  const cx = MX + (r.camp % MW) * TW, cy = MY + ((r.camp / MW) | 0) * TH;
+  if (built(r, 'abri')) { R(cx + 4, cy + 12, 16, 12, '#8a5a2a'); R(cx + 2, cy + 9, 20, 4, '#c8a050'); R(cx + 10, cy + 17, 4, 7, '#2a1a10'); }
+  else { g.fillStyle = '#e0d0b0'; g.beginPath(); g.moveTo(cx + 3, cy + 24); g.lineTo(cx + 12, cy + 10); g.lineTo(cx + 21, cy + 24); g.fill(); R(cx + 11, cy + 18, 3, 6, '#5a4a3a'); }
+  if (built(r, 'feu')) { R(cx + 28, cy + 20, 10, 4, '#6a4a2a'); const f = Math.sin(T * 12) > 0; R(cx + 30, cy + 13, 6, 7, f ? '#ff9a3a' : '#ffd23f'); R(cx + 32, cy + 10, 2, 3, '#fff2a8'); }
+  else if (r.proj.feu.p > 0) R(cx + 28, cy + 20, 10, 4, '#6a4a2a');
+  if (r.proj.radeau.p > 0) { const w = Math.round(14 * r.proj.radeau.p / P.radeau.pts) + 2; R(cx + 24, cy + 27, w, 4, '#a07040'); if (built(r, 'radeau')) { R(cx + 30, cy + 18, 1, 9, '#5a3a1a'); R(cx + 31, cy + 19, 6, 6, '#f2ead6'); } }
+  if (built(r, 'tour')) { R(cx + 38, cy + 2, 2, 22, '#8a5a2a'); R(cx + 35, cy + 2, 8, 3, '#a07040'); }
+  R(cx, cy, TW, 1, '#ffd23f'); text('CAMP', cx + 2, cy + 2, '#ffd23f', 'left', 5);
+  // case à explorer choisie
+  if (r.target >= 0 && Math.sin(T * 8) > -.3) { const tx = MX + (r.target % MW) * TW, ty = MY + ((r.target / MW) | 0) * TH; g.strokeStyle = '#ffd23f'; g.lineWidth = 2; g.strokeRect(tx + 1, ty + 1, TW - 2, TH - 2); }
+}
+
+/* =========================================================
+   ÉCRANS
+   ========================================================= */
+function topBar(r) {
+  R(0, 0, LW, 36, 'rgba(4,18,26,.95)'); R(0, 36, LW, 1, '#2a6a8a');
+  text(`JOUR ${Math.min(r.day, DAYS)}/${DAYS}`, 6, 5, r.day >= DAYS - 4 ? '#ff9a8a' : '#ffd76a', 'left', 8);
+  icon('food', 6, 20); text(fmt1(Math.floor(r.food * 10) / 10), 16, 21, '#f2fbff', 'left', 6);
+  icon('water', 56, 20); text(fmt1(Math.floor(r.water * 10) / 10), 66, 21, '#f2fbff', 'left', 6);
+  icon('wood', 106, 20); text(fmt1(Math.floor(r.wood * 10) / 10), 116, 21, '#f2fbff', 'left', 6);
+  text('MORAL', 156, 21, '#8fc0d0', 'left', 5);
+  R(186, 20, 48, 7, OUT); R(187, 21, Math.round(46 * r.moral / 100), 5, r.moral < 25 ? '#ff6a5a' : r.moral < 50 ? '#ffb040' : '#5cff8a');
+  button(LW - 32, 4, 28, 12, '?', () => { SFX.click(); S.pop = { kind: 'help' }; }, { size: 6 });
+  button(LW - 70, 4, 34, 12, 'MENU', () => { SFX.click(); save(); S.screen = 'title'; }, { size: 5 });
+  if (r.daily) text(r.offRank ? 'DU JOUR (HORS CL.)' : 'ILE DU JOUR', 160, 6, r.offRank ? '#6a8a9a' : '#9fdcff', 'right', 5);
+}
+function drawPlay() {
+  const r = S.run; topBar(r); drawMap(r);
+  // objets trouvés
+  const its = Object.keys(r.items);
+  let ix = 6; text('OBJETS :', 6, 211, '#8fc0d0', 'left', 5);
+  ix = 50; for (const it of its) { const n = it.slice(0, 4).toUpperCase(); text(n, ix, 211, '#ffd76a', 'left', 5); ix += n.length * 5 + 6; }
+  if (r.pieces) { text(`PIECES ${r.pieces}/3`, ix, 211, '#9fdcff', 'left', 5); ix += 60; }
+  if (!its.length && !r.pieces) text('aucun', 50, 211, '#5a7a8a', 'left', 5);
+  // l'équipe
+  const y0 = 220, rh = r.crew.length > 8 ? 19 : 21;
+  r.crew.forEach((c, k) => {
+    const y = y0 + k * rh, t = TASK[c.task];
+    BTN.push({ x: 0, y, w: LW, h: rh - 1, act: () => { SFX.pick(); S.pop = { kind: 'task', k }; } });
+    R(4, y, LW - 8, rh - 2, k % 2 ? '#0c2a38' : '#0e3242');
+    face(c, 6, y + (rh - 14) / 2 | 0);
+    text(c.name.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, ''), 22, y + 3, c.hp <= 0 ? '#8a9aa4' : '#f2fbff', 'left', 6, null);
+    text(TALENTS[c.talent].name.slice(0, 13), 22, y + 11, '#8fc0d0', 'left', 5, null);
+    for (let h = 0; h < 3; h++) icon(h < c.hp ? 'heart' : 'heartE', 100 + h * 9, y + 5);
+    if (k === r.sick) text('MALADE', 127, y + 6, '#ff9a8a', 'left', 5, null);
+    const busy = c.hp <= 0 ? 'A BOUT' : c.task === 'explorer' && c.trait === 'peureux' ? 'REFUSE' : t[1];
+    R(158, y + 2, 108, rh - 6, OUT); R(159, y + 3, 106, rh - 8, c.hp <= 0 ? '#3a3a44' : '#08161e'); R(159, y + 3, 3, rh - 8, t[2]);
+    text(busy, 214, y + (rh - 6) / 2 - 2, c.hp <= 0 ? '#8a9aa4' : t[2], 'center', 6, null);
+  });
+  // chantier et fin de journée
+  const yb = 412, p = P[r.sel], pr = r.proj[r.sel];
+  button(4, yb, 150, 30, '', () => { SFX.pick(); S.pop = { kind: 'proj' }; });
+  text('CHANTIER', 12, yb + 5, '#bfefff', 'left', 5, null);
+  text(p.name, 12, yb + 15, '#ffd76a', 'left', 7);
+  text(`${fmt1(Math.floor(pr.p * 10) / 10)}/${p.pts}`, 148, yb + 16, '#f2fbff', 'right', 6, null);
+  button(160, yb, 108, 30, 'FIN DU JOUR', nextDay, { gold: true, size: 7 });
+  const hint = r.day === 1 ? 'Touche un naufragé pour changer sa tâche. Touche une case ? pour l\'explorer en priorité.'
+    : r.ships.includes(r.day) && r.report.some(l => /DEMAIN/.test(l)) ? 'Un navire passe AUJOURD\'HUI : un guetteur, et le feu s\'il est prêt !' : '';
+  wrap(hint, 44).slice(0, 3).forEach((l, i) => text(l, 136, 448 + i * 9, '#c8e4f0', 'center', 5, null));
+  if (r.sel === 'radeau' && built(r, 'radeau')) button(160, 450, 108, 24, 'PRENDRE LA MER', () => { S.pop = { kind: 'sail' }; }, { col: '#3fa060', col2: '#1a5a30', size: 6 });
+}
+function drawPop() {
+  const r = S.run, p = S.pop;
+  R(0, 0, LW, LH, 'rgba(2,8,12,.7)');
+  if (p.kind === 'task') {
+    const c = r.crew[p.k]; panel(10, 60, 252, 360);
+    face(c, 20, 70); text(c.name.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, ''), 38, 70, '#ffd76a', 'left', 8);
+    text(TALENTS[c.talent].name, 38, 82, '#9fdcff', 'left', 5); text(TRAITS[c.trait].name, 200, 82, '#e8b0a0', 'right', 5);
+    let y = 96; for (const l of wrap(TALENTS[c.talent].txt, 38)) { text(l, 20, y, '#c8e4f0', 'left', 5, null); y += 9; }
+    for (const l of wrap(TRAITS[c.trait].txt, 38)) { text(l, 20, y, '#e8c0b0', 'left', 5, null); y += 9; }
+    y += 6;
+    TASKS.forEach(([id, name, col], i) => {
+      const bx = 20 + (i % 3) * 78, by = y + Math.floor(i / 3) * 34;
+      button(bx, by, 72, 28, name, () => { c.task = id; SFX.pick(); S.pop = null; save(); }, { col: c.task === id ? '#ffd23f' : col, col2: c.task === id ? '#c27a12' : '#14465a', size: 5 });
+    });
+    y += 108;
+    const help = { peche: 'Nourriture : 3 par pêcheur.', cueillette: 'Fruits : 2,5, plus avec la jungle explorée.', eau: 'Eau : 3, ou 5 une fois la source trouvée.', bois: 'Bois : 2,5 (+1 avec la hache).',
+      chantier: 'Avance le chantier choisi (en bas à gauche).', explorer: 'Découvre une case (risque de blessure).', soins: 'Rend un cœur au plus blessé.', repos: 'Reprend un cœur et du moral.', guet: 'Surveille la mer : indispensable quand un navire passe.' };
+    for (const l of wrap(help[c.task], 38)) { text(l, 20, y, '#ffd76a', 'left', 5, null); y += 9; }
+    button(86, 384, 100, 24, 'OK', () => { SFX.click(); S.pop = null; }, { gold: true });
+  }
+  if (p.kind === 'proj') {
+    panel(6, 40, 260, 420); text('LES CHANTIERS', 136, 48, '#ffd76a', 'center', 8);
+    PROJ.forEach((q, i) => {
+      const y = 64 + i * 46, pr = r.proj[q.id], done = built(r, q.id), why = canBuild(r, q.id);
+      BTN.push({ x: 12, y, w: 248, h: 42, act: () => { r.sel = q.id; SFX.pick(); S.pop = null; save(); } });
+      R(12, y, 248, 42, r.sel === q.id ? '#3a5a20' : '#0c2a38'); if (r.sel === q.id) R(12, y, 3, 42, '#ffd23f');
+      text(q.name, 20, y + 4, done ? '#5cff8a' : '#ffd76a', 'left', 6);
+      text(done ? 'TERMINE' : `${fmt1(Math.floor(pr.p * 10) / 10)}/${q.pts}`, 254, y + 4, done ? '#5cff8a' : '#f2fbff', 'right', 6, null);
+      wrap(q.txt, 46).slice(0, 2).forEach((l, k) => text(l, 20, y + 15 + k * 8, '#c8e4f0', 'left', 5, null));
+      text(done ? '' : why ? why : pr.paid ? 'BOIS DEJA FOURNI' : `COUT : ${q.wood} BOIS`, 20, y + 33, why && !done ? '#ff9a8a' : '#8fc0d0', 'left', 5, null);
+    });
+    button(86, 432, 100, 22, 'FERMER', () => { SFX.click(); S.pop = null; });
+  }
+  if (p.kind === 'sail') {
+    panel(16, 140, 240, 180, true); text('PRENDRE LA MER ?', 136, 152, '#fff2a8', 'center', 8);
+    const ok = r.food >= 10 && r.water >= 10;
+    ['Le radeau emporte 10 repas et 10 rations d\'eau.', 'La mer est dangereuse : un marin, une équipe en forme et un bon moral aident à passer la barrière de corail.', ok ? '' : 'IL MANQUE DES PROVISIONS.']
+      .flatMap(l => wrap(l, 36)).forEach((l, i) => text(l, 26, 172 + i * 10, /MANQUE/.test(l) ? '#ff9a8a' : '#e8d8b0', 'left', 5, null));
+    button(30, 286, 100, 24, ok ? 'EN AVANT !' : 'PAS ENCORE', ok ? () => { S.pop = null; audioInit(); sail(r); afterTurn(); } : null, { gold: ok, off: !ok, size: 6 });
+    button(142, 286, 100, 24, 'ATTENDRE', () => { S.pop = null; }, { size: 6 });
+  }
+  if (p.kind === 'help') drawHelpBox(() => { S.pop = null; });
+}
+function drawHelpBox(close) {
+  panel(8, 30, 256, 430);
+  const pages = [
+    ['LE BUT', 'Quitter l\'île avant le 40e jour, quand arrive la saison des tempêtes.', 'Trois façons : allumer le FEU DE SIGNAL quand un navire passe (il faut un guetteur ce jour-là), construire un RADEAU (corde et voile de l\'épave), ou réparer la RADIO de l\'épave avec 3 pièces.'],
+    ['CHAQUE JOUR', 'Touche un naufragé pour lui donner une tâche, puis FIN DU JOUR.', 'Le soir, chacun mange une ration et boit une ration. Faim et soif coûtent un cœur et du moral. À zéro cœur, un naufragé se repose jusqu\'à ce qu\'on le soigne.'],
+    ['L\'ILE', 'Les cases ? sont dans le brouillard : les explorateurs les découvrent (touche une case ? pour la choisir). La source donne plus d\'eau, la grotte abrite à moitié, la colline et le volcan montrent les alentours.', 'L\'épave, les ruines et la grotte cachent des objets et des pièces de radio.'],
+    ['LES NUITS', 'Pluie, crabes, caisse échouée, maladie, dispute, tempête (plus fréquentes à la fin) : un abri et une réserve protègent bien.', 'Le moral fait travailler mieux ou moins bien.'],
+  ];
+  const pg = pages[S.help % pages.length];
+  text(pg[0], 136, 42, '#ffd76a', 'center', 9);
+  let y = 66; for (const para of pg.slice(1)) { for (const l of wrap(para, 38)) { text(l, 20, y, '#e0f0f8', 'left', 6, null); y += 11; } y += 8; }
+  text(`${S.help % pages.length + 1}/${pages.length}`, 136, 406, '#8fc0d0', 'center', 6);
+  button(20, 420, 110, 26, 'SUITE', () => { SFX.click(); S.help++; }, { size: 7 });
+  button(142, 420, 110, 26, 'FERMER', () => { SFX.click(); S.help = 0; close(); }, { gold: true, size: 7 });
+}
+function drawReport() {
+  const r = S.run; topBar(r); drawMap(r);
+  R(0, 40, LW, LH - 40, 'rgba(2,12,20,.55)');
+  panel(8, 60, 256, 380);
+  text(`NUIT DU JOUR ${r.day - 1}`, 136, 70, '#ffd76a', 'center', 8);
+  let y = 90;
+  for (const line of r.report) for (const l of wrap(line, 40)) { if (y > 398) break; text(l, 18, y, /SAUVES|TERMINE|DEMAIN|trésor|découvre|pièce|Trouvé/.test(line) ? '#ffd76a' : /TEMPETE|faim|soif|blessé|malade|abîmé|volé|dispute|gâtée|froide/.test(line) ? '#ff9a8a' : '#e0f0f8', 'left', 5, null); y += 9; }
+  button(70, 408, 132, 26, 'JOUR SUIVANT', () => { SFX.click(); r.phase = 'day'; S.screen = 'play'; save(); }, { gold: true, size: 7 });
+}
+function drawIntro() {
+  const r = S.run; topBar(r); drawMap(r);
+  R(0, 40, LW, LH - 40, 'rgba(2,12,20,.6)');
+  panel(8, 70, 256, 370, true);
+  text('NAUFRAGES !', 136, 80, '#fff2a8', 'center', 10);
+  const lines = [`Votre bateau s'est échoué sur une île inconnue. Vous êtes ${r.crew.length}. Les vivres du canot tiendront un jour ou deux.`,
+    `Dans ${DAYS} jours, la saison des tempêtes rendra la mer infranchissable.`,
+    'Pour partir : un FEU DE SIGNAL quand un navire passe, un RADEAU, ou la RADIO de l\'épave.'];
+  let y = 104; for (const p of lines) { for (const l of wrap(p, 38)) { text(l, 20, y, '#f2e8d0', 'left', 6, null); y += 11; } y += 6; }
+  r.crew.forEach((c, k) => { const x = 22 + (k % 4) * 60, yy = 290 + Math.floor(k / 4) * 46; face(c, x + 18, yy);
+    text(c.name.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, ''), x + 24, yy + 15, '#ffd76a', 'center', 5, null); text(TALENTS[c.talent].name.slice(0, 10), x + 24, yy + 23, '#c8e4f0', 'center', 5, null); });
+  button(70, 396, 132, 28, 'AU TRAVAIL !', () => { SFX.click(); S.screen = 'play'; }, { gold: true, size: 7 });
+}
+function drawEnd() {
+  const r = S.run, res = r.result; topBar(r); drawMap(r);
+  R(0, 40, LW, LH - 40, 'rgba(2,12,20,.6)');
+  panel(8, 60, 256, 390, !!res.how);
+  text(res.how ? 'SAUVES !' : 'PRISONNIERS DE L\'ILE', 136, 72, res.how ? '#fff2a8' : '#ff9a8a', 'center', res.how ? 12 : 8);
+  text(res.how ? { feu: 'PAR LE FEU DE SIGNAL', radio: 'PAR LA RADIO', radeau: 'PAR LE RADEAU' }[res.how] : 'LA SAISON DES TEMPETES EST LA', 136, 92, '#ffd76a', 'center', 6);
+  let y = 112; for (const line of r.report.slice(-4)) for (const l of wrap(line, 40)) { text(l, 18, y, '#e0f0f8', 'left', 5, null); y += 9; }
+  y += 8;
+  const hearts = r.crew.reduce((a, c) => a + c.hp, 0);
+  const rows = res.how ? [['EVASION', 1000 + (res.how === 'radeau' ? 200 : 0)], [`${DAYS - r.day} JOURS D'AVANCE`, (DAYS - r.day) * 40], [`SANTE (${hearts} COEURS)`, hearts * 10], ['MORAL', Math.round(r.moral) * 3], [`DECOUVERTES (${r.found})`, r.found * 10]]
+    : [[`${res.day} JOURS TENUS`, res.day * 8], [`DECOUVERTES (${r.found})`, r.found * 10]];
+  if (r.tresor) rows.push(['TRESOR', res.how ? 300 : 100]);
+  for (const [k, v] of rows) { text(k, 24, y, '#c8e4f0', 'left', 6, null); text(String(v), 248, y, '#f2fbff', 'right', 6, null); y += 12; }
+  R(24, y, 224, 1, '#8fc0d0'); y += 6;
+  text('SCORE', 24, y, '#ffd76a', 'left', 8); text(String(res.score), 248, y, '#ffd76a', 'right', 8); y += 16;
+  text(res.score >= S.best ? 'NOUVEAU RECORD !' : `RECORD : ${S.best}`, 136, y, res.score >= S.best ? '#5cff8a' : '#8fc0d0', 'center', 6); y += 12;
+  if (S.rankText) text(S.rankText, 136, y, '#9fdcff', 'center', 5);
+  button(30, 404, 212, 26, 'NOUVELLE ILE', () => { SFX.click(); start(false); }, { gold: true, size: 7 });
+  button(30, 436, 100, 20, 'MENU', () => { SFX.click(); S.screen = 'title'; }, { size: 6 });
+  button(142, 436, 100, 20, 'CLASSEMENT', () => { location.href = '../classements/index.html#ile'; }, { size: 6 });
+}
+let TITLE = null;
+function drawTitle() {
+  if (!TITLE) { TITLE = newRun(4242, false); TITLE.tiles.forEach(x => x.seen = true); }
+  R(0, 0, LW, LH, '#0a3a5a');
+  drawMap(TITLE);
+  const gr = g.createLinearGradient(0, 0, 0, 160); gr.addColorStop(0, 'rgba(4,18,26,.95)'); gr.addColorStop(1, 'rgba(4,18,26,.2)'); g.fillStyle = gr; g.fillRect(0, 0, LW, 160);
+  logo("L'ILE DES", 136, 14, 16); logo('NAUFRAGES', 136, 36, 20);
+  text('SURVIVRE · EXPLORER · S\'ENFUIR', 136, 64, '#c8e4f0', 'center', 6);
+  R(0, 220, LW, LH - 220, 'rgba(4,18,26,.8)');
+  let y = 232;
+  const saved = store.get('run', null), d = todayKey();
+  if (saved && saved.v === 1) { button(46, y, 180, 26, `REPRENDRE · JOUR ${saved.day}`, () => { SFX.click(); audioInit(); resume(); }, { gold: true, size: 7 }); y += 34; }
+  button(46, y, 180, 26, 'NOUVELLE ILE', () => { audioInit(); SFX.click(); start(false); }, { gold: !saved, size: 8 }); y += 34;
+  const tried = store.get('dailyTry', 0) === d;
+  button(46, y, 180, 24, tried ? (S.dailyBest[d] != null ? `ILE DU JOUR · ${S.dailyBest[d]}` : 'ILE DU JOUR · ENTAMEE') : 'ILE DU JOUR', () => { audioInit(); SFX.click(); start(true); }, { size: 7 });
+  if (tried) text('REJOUER : HORS CLASSEMENT', 136, y + 27, '#8fc0d0', 'center', 5);
+  y += 40;
+  button(46, y, 86, 22, 'CLASSEMENT', () => { location.href = '../classements/index.html#ile'; }, { size: 6 });
+  button(140, y, 86, 22, 'AIDE', () => { SFX.click(); S.screen = 'help'; }, { size: 7 }); y += 30;
+  button(46, y, 180, 18, AC.on ? 'SON : OUI' : 'SON : NON', () => { AC.on = !AC.on; store.set('sfx', AC.on); SFX.click(); }, { off: !AC.on, size: 6 });
+  text(`RECORD : ${S.best}`, 136, 440, '#ffd76a', 'center', 7);
+  if (S.wins) text(`${S.wins} EVASION${S.wins > 1 ? 'S' : ''} REUSSIE${S.wins > 1 ? 'S' : ''}`, 136, 456, '#8fc0d0', 'center', 6);
+}
+
+/* =========================================================
+   BOUCLE ET COMMANDES
+   ========================================================= */
+function frame(ts) {
+  T = ts / 1000; BTN = [];
+  g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
+  R(0, 0, LW, LH, '#04121a');
+  if (S.screen === 'title') drawTitle();
+  else if (S.screen === 'help') drawHelpBox(() => { S.screen = 'title'; });
+  else if (S.screen === 'intro') drawIntro();
+  else if (S.screen === 'report') drawReport();
+  else if (S.screen === 'end') drawEnd();
+  else drawPlay();
+  if (S.pop && (S.screen === 'play')) { BTN = []; drawPop(); }
+  requestAnimationFrame(frame);
+}
+function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); audioInit();
+  const [x, y] = logical(e);
+  for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { b.act(); return; } }
+  // toucher une case du brouillard : l'explorer en priorité
+  if (S.screen === 'play' && !S.pop && x >= MX && x < MX + MW * TW && y >= MY && y < MY + MH * TH) {
+    const i = Math.floor((y - MY) / TH) * MW + Math.floor((x - MX) / TW), r = S.run;
+    if (explorable(r).includes(i)) { r.target = r.target === i ? -1 : i; SFX.pick(); save(); }
+  }
+});
+cv.addEventListener('contextmenu', e => e.preventDefault());
+function resize() {
+  const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
+  const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);
+  const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
+  cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
+  cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
+  K = Math.max(1, Math.ceil(sc * dpr - .05)); cv.width = LW * K; cv.height = LH * K;
+}
+window.addEventListener('resize', resize);
+window.Ile = { S, newRun, endDay, sail, built, canBuild, explorable, makeIsland, start, PROJ, TASKS };   // pour les tests
+setTimeout(resize, 0); resize();
+(document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));
+</script>
+<script>
+/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    if (!app) return;
+    var a = document.createElement("a");
+    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
+    a.style.cssText = "display:block; width:max-content; margin:4px auto 6px; padding:6px 10px; font:9px 'Press Start 2P',monospace; letter-spacing:1px;" +
+      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
+    var line = document.createElement("div");
+    line.style.cssText = "flex:0 0 100%; width:100%;";
+    line.appendChild(a);
+    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
+    document.body.insertBefore(line, document.body.firstChild);
+    window.dispatchEvent(new Event("resize"));
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

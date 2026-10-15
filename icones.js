@@ -215,6 +215,23 @@ const ICONS = {
     [[1,0],[2,1],[0,2],[1,2],[2,2]].forEach(([a,b]) => { const X = a*5+1, Y = b*5+1;
       x.fillStyle = "#1f8a4a"; x.fillRect(X, Y, 4, 4); x.fillStyle = "#5cff8a"; x.fillRect(X, Y, 3, 3); x.fillStyle = "#d4ffe0"; x.fillRect(X, Y, 3, 1); x.fillRect(X, Y, 1, 3); });
   }},
+  palm: {pal:{G:"#2f8a2a", g:"#7cdf5a", b:"#6a4a20", n:"#9a6a30", y:"#e8d090", Y:"#fff2b8", w:"#bfefff", s:"#2f7ac0", S:"#145a8a"}, map:[
+    "................",
+    "....gg....gg....",
+    "..ggGGg..gGGgg..",
+    ".gG..GGggGG..Gg.",
+    "g.....GbbG.....g",
+    "......bnbG......",
+    ".......nb.......",
+    ".......nb.......",
+    "......nb........",
+    "......nb........",
+    ".....nb.........",
+    "...yYyyyyyy.....",
+    "..yyyyyyyyyyy...",
+    "wwSssSssssSssswS",
+    "sSsssssSssssSsss",
+    "SsssSssssSsssSss"]},
   // le chien d'Injagility, le même bouvier bernois en 32 bits que dans le jeu
   dog: {draw: x => { const C = window.Chiens32; if (!C) return; x.drawImage(C.frames("bernois").stand, -2, 52 - C.GROUND); }},
 };

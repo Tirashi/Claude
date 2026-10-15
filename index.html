@@ -92,6 +92,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.club{--lb:linear-gradient(to bottom, #3f8a37, #173a1a); --lt:#ffd23f; --ld:#e4f7dc}
 .cart.amiral{--lb:linear-gradient(to bottom, #1c579c, #0a1c40); --lt:#ffd23f; --ld:#dcebff}
 .cart.alu{--lb:linear-gradient(to bottom, #0a0c1e, #2c2a28); --lt:#e8e4d8; --ld:#dfe5ff}
+.cart.ile{--lb:linear-gradient(to bottom, #2f8ac0, #0a3a5a); --lt:#ffd76a; --ld:#e0f4ff}
 .cart.pont{--lb:radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%); --lt:#ffd76a; --ld:#dfe5ff}
 .cart.nebula{--lb:radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%); --lt:#f2b24a; --ld:#d8dee8}
 .cart.orbite{--lb:radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%); --lt:#6fd8ff; --ld:#dfe5ff}
@@ -347,6 +348,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <div class="tags"><span>LOGIQUE</span><span>32 BITS</span><span>CIEL DU JOUR</span></div>
       </div>
     </a>
+    <a class="cart ile" href="ile/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="palm" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>L'ILE DES NAUFRAGES</h2>
+        <p>Huit naufragés, une île dans le brouillard et 40 jours avant les tempêtes : pêche, explore, bâtis, et trouve un moyen de partir.</p>
+        <div class="tags"><span>GESTION</span><span>SURVIE</span><span>32 BITS</span></div>
+      </div>
+    </a>
     <a class="cart nebula" href="nebula/index.html">
       <span class="arrow" aria-hidden="true">▼</span>
       <div class="label">
@@ -425,6 +435,7 @@ LudoIcons.paint();
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte le badge NOUVEAU ou MIS A JOUR pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "ile/index.html": {added: "2026-10-15", genres: ["GESTION", "DU JOUR"]},
   "nebula/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["TACTIQUE", "ESPACE"]},
   "alunissage/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["ADRESSE", "ESPACE", "DU JOUR"]},
   "pont-stellaire/index.html": {added: "2026-10-12", updated: "2026-10-15", genres: ["LOGIQUE", "ESPACE", "DU JOUR"]},
@@ -443,6 +454,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-15", "L'Île des naufragés : nouveau jeu de gestion et de survie. Huit naufragés, 40 jours, trois façons de s'enfuir, et l'île du jour."],
   ["2026-10-15", "Accueil : filtre EN COURS pour retrouver les parties commencées, et sur chaque cartouche ta partie en cours et ton record."],
   ["2026-10-15", "Défis du jour : dans Queens, Pont stellaire et Alunissage, seule la première tentative du jour est classée (la partie en cours se reprend au même temps)."],
   ["2026-10-15", "Queens : la grille du jour, la même pour toute la famille, de 5×5 le lundi à 9×9 le week-end, avec son classement."],
@@ -500,6 +512,7 @@ const PROGRESS = {
     return cd && cd.lives !== 0 && String(cd.code).endsWith("-J" + today) ? "ARBRE DU JOUR" : c && c.lives !== 0 ? "UN ARBRE" : null; },
   "picross/index.html": () => { const n = Object.keys(rk("picrossdex.progress", {}) || {}).length; return n ? plural(n, "GRILLE") : null; },
   "solitaire/index.html": () => { const g = rk("solitaire16.game", null); return g && g.started && !g.won ? "UNE DONNE" : null; },
+  "ile/index.html": () => { const r = rk("ile.run", null); return r && r.phase !== "end" ? `JOUR ${r.day}` : null; },
 };
 // le record du joueur sur ce téléphone (null si aucun)
 const RECORD = {
@@ -518,9 +531,10 @@ const RECORD = {
   "pont-stellaire/index.html": () => { const n = Number(rk("pontstellaire.wins", 0)) || 0; return n ? plural(n, "CIEL") : null; },
   "alunissage/index.html": () => rk("alunissage.best", 0) > 0 ? `RECORD ${rk("alunissage.best", 0)} PTS` : null,
   "nebula/index.html": () => rk("nebula.best", 0) > 0 ? `RECORD ${rk("nebula.best", 0)} PTS` : null,
+  "ile/index.html": () => rk("ile.best", 0) > 0 ? `RECORD ${rk("ile.best", 0)} PTS` : null,
 };
 const NICE = {"nebula/index.html": "Nebula", "club/index.html": "le Club", "queens/index.html": "Queens", "pont-stellaire/index.html": "Pont stellaire",
-  "lignee/index.html": "Lignée", "picross/index.html": "Picross Dex", "solitaire/index.html": "le Solitaire"};
+  "lignee/index.html": "Lignée", "picross/index.html": "Picross Dex", "solitaire/index.html": "le Solitaire", "ile/index.html": "l'Île"};
 const inProgress = c => { try { return (PROGRESS[c.dataset.k] || (() => null))(); } catch (e) { return null; } };
 function paintMine(){
   allCarts.forEach(c => {
@@ -693,6 +707,8 @@ function collectSaves(){
   const nb = {b: Number(readKey("nebula.best", 0)) || 0, m: readKey("nebula.meta", null), d: readKey("nebula.daily", {}) || {}};
   if (nb.b || (nb.m && nb.m.games)) g.nebula = nb;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
+  const il = {b: Number(readKey("ile.best", 0)) || 0, w: Number(readKey("ile.wins", 0)) || 0, d: readKey("ile.daily", {}) || {}};
+  if (il.b || il.w) g.ile = il;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
 }
@@ -711,6 +727,7 @@ function describeSaves(g){
   if (g.pontstellaire){ const p = g.pontstellaire, b = Object.keys(p.b || {}).sort((x, y) => x - y).map(n => `${n}×${n} en ${fmtTime(p.b[n])}`);
     out.push(`Pont stellaire : ${p.w || 0} constellation${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
   if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
+  if (g.ile) out.push(`L'Île des naufragés : record ${g.ile.b || 0} points, ${g.ile.w || 0} évasion${g.ile.w > 1 ? "s" : ""}`);
   if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
   return out;
 }
@@ -805,6 +822,13 @@ function mergeSaves(g){
     const daily = readKey("alunissage.daily", {}) || {};
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
     if (n){ writeKey("alunissage.daily", daily); done.push(`Alunissage : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.ile && typeof g.ile === "object"){
+    const o = g.ile, daily = readKey("ile.daily", {}) || {}; let n = 0;
+    if (o.b > (Number(readKey("ile.best", 0)) || 0)){ writeKey("ile.best", Math.round(o.b)); n++; }
+    if (o.w > (Number(readKey("ile.wins", 0)) || 0)){ writeKey("ile.wins", Math.round(o.w)); n++; }
+    for (const [d, v] of Object.entries(o.d || {})) if (/^\d{8}$/.test(d) && v > 0 && !(daily[d] >= v)){ daily[d] = Math.round(v); n++; }
+    if (n){ writeKey("ile.daily", daily); done.push(`L'Île des naufragés : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.pontstellaire && typeof g.pontstellaire === "object"){
     const p = g.pontstellaire, best = readKey("pontstellaire.best", {}) || {}, daily = readKey("pontstellaire.daily", {}) || {}; let n = 0;
