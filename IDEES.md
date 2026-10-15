@@ -39,7 +39,7 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 
 ## Les jeux de bateaux sélectionnés (pour mon fils)
 1. **Amiral !** — ✅ réalisé.
-2. **Pavillon noir** (rogue-lite pirate) — un sloop navigue d'île en île sur une carte qui change à chaque partie pour trouver le trésor de Barbe-Grise : îles à piller, marchands, tempêtes, sirènes ; combats de profil par bordées (boulets, chaînes pour les mâts, grappin pour l'abordage) avec le vent qui tourne ; équipage à recruter (cuisinier, canonnier, perroquet…) ; si on coule, on garde quelques doublons pour améliorer le bateau suivant.
+2. ~~**Pavillon noir**~~ — *abandonné (15/10).* (rogue-lite pirate) — un sloop navigue d'île en île sur une carte qui change à chaque partie pour trouver le trésor de Barbe-Grise : îles à piller, marchands, tempêtes, sirènes ; combats de profil par bordées (boulets, chaînes pour les mâts, grappin pour l'abordage) avec le vent qui tourne ; équipage à recruter (cuisinier, canonnier, perroquet…) ; si on coule, on garde quelques doublons pour améliorer le bateau suivant.
 3. **Capitaine du port** (puzzle) — façon « Rush Hour » : un petit remorqueur pousse et tire péniches, cargos et ferries (qui n'avancent que dans leur longueur) pour amener le navire doré à son quai en un minimum de coups ; 60 niveaux, étoiles, niveau du jour.
 4. **Le Chalutier** (gestion / incrémental) — d'une barque à une flotte de chalutiers : mini-jeu de pêche au filet, vente au marché (prix variables), bateaux et marins qui pêchent même hors ligne, nouvelles zones (mer froide, récifs, grand large), aquarium à compléter.
 
@@ -72,7 +72,7 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 
 ## Préférences notées
 - Cargo Stellaire et Station Alpha : retirés de la liste (pas retenus).
-- Carreau ! (pétanque) et Le Fort des lapins (tower defense) : abandonnés le 15/10.
+- Carreau ! (pétanque), Le Fort des lapins (tower defense) et Pavillon noir (rogue-lite pirate) : abandonnés le 15/10.
 
 ## Page d'accueil (idées du 13/10)
 Réalisé le 13/10 ✅ : **favoris** (étoile sur chaque cartouche, favoris en tête), badges **NOUVEAU** / **MIS A JOUR** (3 jours), **filtres par genre**, **jeu à la une** dans une boîte de jeu (« TOUT NEUF ! »), **quoi de neuf**. Dates, genres et journal : `META` et `NEWS` dans `index.html` (à tenir à jour à chaque sortie ou mise à jour).
@@ -111,4 +111,4 @@ Pour choisir selon le forfait restant (limite hebdomadaire remise à zéro le me
 - 🟡 **Petit** (une courte conversation) : Alunissage, interface près du module ; Queens, grille du jour ; installer l'étagère des classements ; Reprendre ; mes records sur chaque cartouche (sans la place dans la famille).
 - 🟠 **Moyen** (une conversation, Opus) : Invasion 2.0 ; Bouclier lunaire ; Sudoku ; Le Mot d'or (la liste de mots est le gros du travail) ; Lune-Rover ; Capitaine du port ; défis du jour + profil ; animations sur l'accueil ; revue « ingénieur senior » (lecture de tout le code : à faire en début de semaine).
 - 🔴 **Gros** (1 à 2 conversations) : Murdoku ; Escadrille ; Bord de lac ; Apesanteur ; Astro-Mineur ; activité de la famille (SQL Supabase) ; **refonte de la sélection des jeux** (cartouches en 3D, page dédiée, avec une boîte par jeu : maquette d'abord, puis 2 conversations) ; **refonte de la DA du site façon Dragon Quest** (maquette, puis 1 à 2 conversations ; à fusionner avec la refonte de la sélection : 3 conversations en tout pour les deux).
-- ⚫ **Très gros** (plusieurs conversations, comme Nebula) : Donjon de poche ; Escarmouche ; Le Potager ; Le Chalutier ; Pavillon noir ; **RPG façon Dragon Quest 1** (5 à 6 sessions : carte, villes, donjons, 30 à 40 monstres, sorts, dialogues, équilibrage) ; Nebula : l'Empire des étoiles (le plus gros : jeu sur des semaines et serveur pour la famille).
+- ⚫ **Très gros** (plusieurs conversations, comme Nebula) : Donjon de poche ; Escarmouche ; Le Potager ; Le Chalutier ; **RPG façon Dragon Quest 1** (5 à 6 sessions : carte, villes, donjons, 30 à 40 monstres, sorts, dialogues, équilibrage) ; Nebula : l'Empire des étoiles (le plus gros : jeu sur des semaines et serveur pour la famille).
