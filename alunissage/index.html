@@ -53,6 +53,8 @@ const WORLDS = [
   { name: 'TITAN', g: 9, wind: 5, rough: .9, sky: ['#3a2a0a', '#7a5a1e'], rock: ['#d8b070', '#a8844a', '#7a5e32', '#4e3c20', '#2a2010'] },
   { name: 'COMETE', g: 4, wind: 0, rough: 1.3, sky: ['#02030a', '#060a1a'], rock: ['#9aa0a8', '#6e747c', '#4c5058', '#30343a', '#1a1c20'] },
 ];
+// décor de chaque monde : position du soleil et astre du ciel
+[[36, 66, 'earth'], [30, 150, 'mars'], [44, 70, 'moons'], [226, 60, 'jupiter'], [50, 60, 'saturn'], [40, 80, 'sun']].forEach(([x, y, b], i) => { WORLDS[i].sun = [x, y]; WORLDS[i].body = b; });
 const SITE_COUNT = 12;
 function makeSite(seed, n) {
   const R = mulberry(seed * 977 + n * 131), w = WORLDS[n < 6 ? n : Math.floor(R() * WORLDS.length)], lvl = n;
@@ -107,12 +109,12 @@ function engineSound(level) { if (AC.ng && AC.ctx) AC.ng.gain.setTargetAtTime(AC
 const cv = document.getElementById('cv'), g = cv.getContext('2d');
 let K = 1, T = 0, BTN = [];
 const S = { phase: 'title', site: null, n: 0, seed: 0, daily: false, ship: null, fuel: 100, score: 0, parts: [], best: store.get('best', 0) || 0,
-  dailyBest: store.get('daily', {}) || {}, sites: store.get('sites', 0) || 0, left: false, right: false, msg: '', result: null, rankText: '', stars: null };
+  dailyBest: store.get('daily', {}) || {}, sites: store.get('sites', 0) || 0, left: false, right: false, msg: '', result: null, rankText: '', stars: null, fx: [], anim: null, shake: 0 };
 function newMission(daily) {
   S.daily = daily; S.seed = daily ? todayKey() : (Math.random() * 2 ** 31) | 0; S.n = 0; S.score = 0; S.fuel = 100; S.rankText = ''; startSite();
 }
 function startSite() {
-  S.site = makeSite(S.seed, S.n); S.ship = { x: S.site.x0, y: 52, vx: S.site.vx0, vy: 0, t: 0 }; S.parts = []; S.result = null; S.phase = 'fly'; S.left = S.right = false;
+  S.site = makeSite(S.seed, S.n); S.ship = { x: S.site.x0, y: 52, vx: S.site.vx0, vy: 0, t: 0 }; S.parts = []; S.fx = []; S.anim = null; S.shake = 0; S.result = null; S.phase = 'fly'; S.left = S.right = false;
 }
 
 /* ---------- physique ---------- */
@@ -127,10 +129,12 @@ function step(dt) {
   if (s.x < 6) { s.x = 6; s.vx = Math.abs(s.vx) * .3; } if (s.x > LW - 6) { s.x = LW - 6; s.vx = -Math.abs(s.vx) * .3; }
   if (s.y < 20) { s.y = 20; s.vy = Math.max(0, s.vy); }
   // flammes et poussière
-  const flame = (dx, side) => { for (let k = 0; k < 2; k++) S.parts.push({ x: s.x + dx, y: s.y + 7, vx: side * 10 + (Math.random() - .5) * 10, vy: 30 + Math.random() * 30, t: 0, life: .25 + Math.random() * .15, c: Math.random() < .5 ? '#fff2a8' : '#ff9a3a', s: 1 }); };
+  const flame = (dx, side) => { for (let k = 0; k < 2; k++) S.parts.push({ x: s.x + dx, y: s.y + 9, vx: side * 10 + (Math.random() - .5) * 10, vy: 30 + Math.random() * 30, t: 0, life: .25 + Math.random() * .15, c: Math.random() < .5 ? '#fff2a8' : '#ff9a3a', s: 1 }); };
   if (l) flame(-4, -1); if (r) flame(4, 1);
   const gy = groundY(site, s.x);
-  if ((l || r) && gy - s.y < 40) for (let k = 0; k < 2; k++) S.parts.push({ x: s.x + (Math.random() - .5) * 20, y: gy - 1, vx: (Math.random() < .5 ? -1 : 1) * (20 + Math.random() * 40), vy: -Math.random() * 12, t: 0, life: .5, c: site.world.rock[1], s: 1 });
+  if ((l || r) && gy - s.y < 60) { const k = 1 - (gy - s.y) / 60;
+    for (let n = 0; n < 3; n++) { const d = Math.random() < .5 ? -1 : 1;
+      S.parts.push({ x: s.x + d * Math.random() * 6, y: gy - 1, vx: d * (25 + Math.random() * 55) * (.5 + k), vy: -Math.random() * 16 * k, t: 0, life: .5 + Math.random() * .5, c: site.world.rock[Math.random() < .5 ? 1 : 2], s: 1, dust: 1 }); } }
   engineSound((l ? .5 : 0) + (r ? .5 : 0));
   // contact avec le sol : sous les deux pieds
   const feet = [s.x - 6, s.x + 6].map(x => groundY(site, x)), touch = Math.min(...feet) - (s.y + 8);
@@ -147,11 +151,15 @@ function land(feet) {
     S.score += pts; S.result = { ok: true, pts, mul: pad.mul, fuelB, t: performance.now() };
     S.fuel = Math.min(100, S.fuel + 60); S.phase = 'landed'; SFX.land();
     S.sites = Math.max(S.sites, S.n + 1); store.set('sites', S.sites);
-    for (let k = 0; k < 24; k++) { const a = -Math.random() * Math.PI; S.parts.push({ x: s.x, y: s.y + 8, vx: Math.cos(a) * 30, vy: Math.sin(a) * 20, t: 0, life: .7, c: S.site.world.rock[1], s: 1 }); }
+    for (let k = 0; k < 30; k++) { const a = -Math.random() * Math.PI; S.parts.push({ x: s.x + Math.cos(a) * 4, y: pad.y - 1, vx: Math.cos(a) * 40, vy: Math.sin(a) * 14, t: 0, life: .8, c: S.site.world.rock[1], s: 1, dust: 1 }); }
+    S.anim = { t0: T, ok: true, x: s.x, gy: pad.y, side: s.x > (pad.x0 + pad.x1) / 2 ? -1 : 1 };
   } else {
     const why = !soft ? (s.vy > VY_OK ? 'TROP VITE' : 'TROP DE GLISSADE') : !pad ? 'HORS DE L\'AIRE' : 'SOL EN PENTE';
     S.result = { ok: false, why, t: performance.now() }; S.phase = 'crashed'; SFX.crash();
-    for (let k = 0; k < 60; k++) { const a = Math.random() * TAU, v = 20 + Math.random() * 70; S.parts.push({ x: s.x, y: s.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: 0, life: .8 + Math.random(), c: ['#fff2a8', '#ff9a3a', '#e2603a', '#d8c070', '#9aa0a8'][k % 5], s: k % 4 ? 1 : 2, gr: 1 }); }
+    for (let k = 0; k < 60; k++) { const a = Math.random() * TAU, v = 20 + Math.random() * 80; S.parts.push({ x: s.x, y: s.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 35, t: 0, life: .7 + Math.random(), c: ['#ffffff', '#fff2a8', '#ff9a3a', '#e2603a', '#d8c070'][k % 5], s: k % 4 ? 1 : 2, gr: 1 }); }
+    // débris du module qui rebondissent, puis un cratère qui fume
+    for (let k = 0; k < 9; k++) { const a = -Math.PI * (.15 + Math.random() * .7); S.parts.push({ x: s.x, y: s.y, vx: Math.cos(a) * (30 + Math.random() * 50), vy: Math.sin(a) * (40 + Math.random() * 40), t: 0, life: 6, c: ['#c88a20', '#c8ccd4', '#8a909c', '#ffd76a'][k % 4], s: 2, gr: 1, bounce: 1 }); }
+    S.anim = { t0: T, ok: false, x: s.x, gy: groundY(S.site, s.x) }; S.shake = .45;
     endMission();
   }
 }
@@ -184,52 +192,280 @@ function button(x, y, w, h, label, act, o = {}) {
   const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, o.gold ? '#ffd23f' : '#3f63d8'); gr.addColorStop(1, o.gold ? '#c27a12' : '#1d2f86'); g.fillStyle = gr; g.fillRect(x, y, w, h);
   R_(x + 1, y + 1, w - 2, 1, o.gold ? '#fff2b0' : '#9fb8ff'); text(label, x + w / 2, y + Math.round((h - (o.size || 8)) / 2) + 1, o.gold ? '#2a1600' : '#f2f4ff', 'center', o.size || 8, o.gold ? null : '#05030c');
 }
-// ciel : dégradé du monde, étoiles, et la Terre (ou le soleil) au loin
-let SKYC = {};
-function sky(site) {
-  const key = site.world.name; if (SKYC[key]) return SKYC[key];
-  const c = document.createElement('canvas'); c.width = LW; c.height = LH; const x = c.getContext('2d'), R = mulberry(key.length * 71);
-  const gr = x.createLinearGradient(0, 0, 0, GROUND_BOT); gr.addColorStop(0, site.world.sky[0]); gr.addColorStop(1, site.world.sky[1]); x.fillStyle = gr; x.fillRect(0, 0, LW, LH);
-  for (let i = 0; i < 120; i++) { const s = R(); x.fillStyle = s > .9 ? '#ffffff' : s > .6 ? 'rgba(200,210,255,.7)' : 'rgba(150,160,210,.45)'; x.fillRect(R() * LW | 0, R() * 260 | 0, 1, 1); }
-  // une planète au loin, ombrée en paliers
-  const px = 40 + R() * 190, py = 70 + R() * 60, pr = 10 + R() * 12;
-  for (let yy = -pr; yy <= pr; yy++) for (let xx = -pr; xx <= pr; xx++) { const d = (xx * xx + yy * yy) / (pr * pr); if (d > 1) continue;
-    const l = (-xx * .6 - yy * .5) / pr + Math.sqrt(1 - d) * .6, k = l > .7 ? 0 : l > .35 ? 1 : l > 0 ? 2 : 3;
-    x.fillStyle = key === 'LA LUNE' ? ['#bfe0ff', '#4a8ad8', '#2a5a9a', '#122a4a'][k] : ['#fff0c8', '#e8b060', '#a86a30', '#4a2a14'][k]; x.fillRect(px + xx | 0, py + yy | 0, 1, 1); }
-  return SKYC[key] = c;
-}
-function drawGround(site) {
-  const p = site.pts, rock = site.world.rock;
-  g.beginPath(); g.moveTo(0, LH); for (const [x, y] of p) g.lineTo(x, y); g.lineTo(LW, LH); g.closePath();
-  const gr = g.createLinearGradient(0, GROUND_TOP, 0, LH); gr.addColorStop(0, rock[2]); gr.addColorStop(1, rock[4]); g.fillStyle = gr; g.fill();
-  // arêtes éclairées et cratères
-  for (let i = 0; i < p.length - 1; i++) { const [ax, ay] = p[i], [bx, by] = p[i + 1], up = by < ay, len = Math.ceil(bx - ax);
-    for (let k = 0; k < len; k++) { const x = ax + k, y = ay + (by - ay) * k / len; R_(x | 0, y | 0, 1, 2, up ? rock[0] : rock[1]); R_(x | 0, (y | 0) + 2, 1, 2, rock[2]); } }
-  const R = mulberry(site.n * 7 + 3);
-  for (let i = 0; i < 18; i++) { const x = R() * LW, y = groundY(site, x) + 10 + R() * 50, r = 2 + R() * 4; if (y > GROUND_BOT + 40) continue;
-    g.fillStyle = rock[4]; g.fillRect(x - r | 0, y | 0, r * 2 | 0, Math.max(1, r * .6) | 0); g.fillStyle = rock[1]; g.fillRect(x - r | 0, (y + r * .6) | 0, r * 2 | 0, 1); }
-  // aires d'atterrissage : plaque, balises, multiplicateur
-  for (const pad of site.pads) {
-    R_(pad.x0, pad.y, pad.x1 - pad.x0, 3, '#c8ccd4'); R_(pad.x0, pad.y + 3, pad.x1 - pad.x0, 1, '#6a7080');
-    const on = Math.sin(T * 5 + pad.mul) > 0;
-    R_(pad.x0, pad.y - 3, 2, 3, on ? '#5cff8a' : '#2a6a40'); R_(pad.x1 - 2, pad.y - 3, 2, 3, on ? '#5cff8a' : '#2a6a40');
-    text('x' + pad.mul, (pad.x0 + pad.x1) / 2 + 1, pad.y + 7, pad.mul === 5 ? '#ffd23f' : '#e6fbff', 'center', 6);
+/* ---------- décor « cinématique » : ciel et astres, montagnes lointaines, sol texturé et ombré, lumière ----------
+   Le ciel est dessiné une fois par monde, montagnes et sol une fois par site ; à chaque image, seuls le module,
+   les flammes, la poussière, les effets du monde et quelques dégradés de lumière bougent. */
+function hash2(x, y){ let h = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) | 0; h = Math.imul(h ^ h >>> 13, 1274126177); return ((h ^ h >>> 16) >>> 0) / 4294967296; }
+function vnoise(x, y){ const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, s = t => t * t * (3 - 2 * t);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1), u = s(xf), v = s(yf);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
+const fbm = (x, y) => vnoise(x, y) * .55 + vnoise(x * 2.1, y * 2.1) * .3 + vnoise(x * 4.3, y * 4.3) * .15;
+const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+
+function canvas(w, h){ const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; }
+// une sphère ombrée en paliers : colorAt(u, v) renvoie une palette de 4 teintes (de la plus claire à la plus sombre)
+function sphere(x, cx, cy, r, colorAt, lx = -.62, ly = -.5){
+  for (let yy = -r; yy <= r; yy++) for (let xx = -r; xx <= r; xx++){
+    const d = (xx * xx + yy * yy) / (r * r); if (d > 1) continue;
+    const nz = Math.sqrt(1 - d), l = (xx / r) * lx + (yy / r) * ly + nz * .55;
+    const dth = BAYER[(cy + yy) & 3][(cx + xx) & 3] / 16 * .18;
+    const k = l + dth > .78 ? 0 : l + dth > .42 ? 1 : l + dth > .05 ? 2 : 3;
+    x.fillStyle = colorAt(xx / r, yy / r, nz)[k]; x.fillRect(cx + xx, cy + yy, 1, 1);
   }
 }
-function drawShip(s, t) {
-  const x = Math.round(s.x), y = Math.round(s.y), l = S.left && S.fuel > 0 && S.phase === 'fly', r = S.right && S.fuel > 0 && S.phase === 'fly';
-  // jambes
-  R_(x - 7, y + 4, 1, 4, '#9aa0a8'); R_(x + 6, y + 4, 1, 4, '#9aa0a8'); R_(x - 8, y + 7, 3, 1, '#c8ccd4'); R_(x + 5, y + 7, 3, 1, '#c8ccd4');
-  R_(x - 6, y + 3, 2, 2, '#6a7080'); R_(x + 4, y + 3, 2, 2, '#6a7080');
-  // étage de descente : feuille d'or ombrée
-  R_(x - 6, y, 12, 5, OUT); R_(x - 5, y + 1, 10, 3, '#c88a20'); R_(x - 5, y + 1, 6, 1, '#ffd76a'); R_(x - 5, y + 3, 10, 1, '#8a5a10');
-  // étage de remontée : cabine grise, hublot
-  R_(x - 5, y - 6, 10, 7, OUT); R_(x - 4, y - 5, 8, 5, '#c8ccd4'); R_(x - 4, y - 5, 3, 2, '#ffffff'); R_(x + 1, y - 2, 3, 2, '#7a8090'); R_(x - 2, y - 4, 3, 2, '#2a3a5a'); R_(x - 2, y - 4, 1, 1, '#9fd8ff');
-  R_(x + 2, y - 9, 1, 3, '#9aa0a8'); R_(x + 1, y - 10, 3, 1, '#c8ccd4');
-  // réacteurs (gauche et droit) et leurs flammes
-  R_(x - 5, y + 5, 3, 2, '#3a3f4a'); R_(x + 2, y + 5, 3, 2, '#3a3f4a');
-  const fl = (fx) => { const n = 4 + (t * 30 | 0) % 3; for (let k = 0; k < n; k++) R_(fx, y + 7 + k, 2, 1, k < 2 ? '#fff2a8' : k < 4 ? '#ffb040' : '#e2603a'); };
-  if (l) fl(x - 5); if (r) fl(x + 3);
+/* ---------- le ciel de chaque monde (dessiné une fois) ---------- */
+const SKY_B = {};
+function skyCanvas(wi, dir = 2){
+  const key = wi; if (SKY_B[key]) return SKY_B[key];
+  const w = WORLDS[wi], [c, x] = canvas(LW, LH), R = mulberry(wi * 71 + 5);
+  const top = dir === 2 ? mix(w.sky[0], '#000000', .35) : w.sky[0], bot = dir === 2 ? mix(w.sky[1], '#000000', .25) : w.sky[1];
+  const gr = x.createLinearGradient(0, 0, 0, GROUND_BOT); gr.addColorStop(0, top); gr.addColorStop(1, bot); x.fillStyle = gr; x.fillRect(0, 0, LW, LH);
+  const dark = hex(w.sky[0]).reduce((a, b) => a + b) < 160;
+  // la Voie lactée : une bande diagonale de poussière d'étoiles
+  if (dark) for (let i = 0; i < 900; i++){ const t = R() * LW, spread = (R() + R() + R() - 1.5) * 26, px = t, py = 40 + t * .55 + spread;
+    if (py > 250) continue; x.fillStyle = R() < .15 ? 'rgba(220,200,255,.55)' : R() < .5 ? 'rgba(150,140,220,.28)' : 'rgba(110,120,200,.18)'; x.fillRect(px | 0, py | 0, 1, 1); }
+  for (let i = 0; i < 150; i++){ const s = R(); x.fillStyle = s > .93 ? '#ffffff' : s > .65 ? 'rgba(200,210,255,.75)' : 'rgba(150,160,210,.45)'; x.fillRect(R() * LW | 0, R() * 250 | 0, 1, 1); }
+  // les astres
+  const [sx, sy] = w.sun;
+  if (w.body === 'earth'){
+    sphere(x, 206, 96, 17, (u, v) => { const land = fbm(u * 2.4 + 7, v * 2.4 + 3) > .52, cloud = fbm(u * 4 + 20, v * 5 + 1) > .6;
+      return cloud ? ['#ffffff', '#dfe8f4', '#8a9ab4', '#1a2238'] : land ? ['#a8d06a', '#5a9a3a', '#2e5a2a', '#0e1a12'] : ['#9fd8ff', '#3a7ad8', '#1e4a9a', '#08142e']; }, .7, -.3);
+  }
+  if (w.body === 'mars'){
+    sphere(x, 236, 74, 58, (u, v) => { if (v < -.86) return ['#ffffff', '#e8e4e0', '#a8a0a0', '#3a2a28'];
+      const dk = fbm(u * 3 + 2, v * 3 + 9) > .55; return dk ? ['#d07848', '#9a4a2a', '#6a2a18', '#2a100a'] : ['#ffb27a', '#e07a48', '#a84a2a', '#3a160c']; }, -.8, .1);
+  }
+  if (w.body === 'moons'){
+    sphere(x, 66, 84, 4, () => ['#d8c8b8', '#9a8878', '#5a4a40', '#2a2020']);
+    sphere(x, 196, 58, 2, () => ['#d8c8b8', '#9a8878', '#5a4a40', '#2a2020']);
+  }
+  if (w.body === 'jupiter'){
+    sphere(x, 54, 150, 44, (u, v) => { const b = Math.floor((v + 1 + fbm(u * 2, v * 8) * .12) * 7);
+      if ((u - .25) ** 2 * 3 + (v - .28) ** 2 * 14 < .045) return ['#ffb08a', '#d8644a', '#9a3a2a', '#3a140c'];
+      return b % 2 ? ['#f4e2c0', '#d8b888', '#9a7a52', '#3a2a1a'] : ['#e8c49a', '#b8865a', '#7a5434', '#2a1a10']; }, .75, -.25);
+  }
+  if (w.body === 'saturn'){
+    const cx = 196, cy = 104, r = 17;
+    const ring = (front) => { for (let a = 0; a < TAU; a += .004){ const sn = Math.sin(a); if (front ? sn < 0 : sn > 0) continue;
+      for (const [rr, col] of [[30, '#e8d8a8'], [28, '#c8b080'], [25, '#a89060']]){ const px = cx + Math.cos(a) * rr, py = cy + sn * rr * .28;
+        if (!front && (px - cx) ** 2 + (py - cy) ** 2 < r * r) continue; x.fillStyle = col; x.fillRect(px | 0, py | 0, 1, 1); } } };
+    ring(false); sphere(x, cx, cy, r, (u, v) => Math.floor((v + 1) * 6) % 2 ? ['#f4e4b8', '#d8bc84', '#9a7c4e', '#3a2a14'] : ['#ecd8a4', '#c8a870', '#8a6a3e', '#2e200e']); ring(true);
+  }
+  // le soleil : petit disque blanc et halo (bleuté sur Mars, comme au coucher)
+  if (w.body === 'sun' || w.body === 'moons' || dir === 2){
+    const halo = x.createRadialGradient(sx, sy, 0, sx, sy, w.body === 'sun' ? 60 : 30);
+    halo.addColorStop(0, w.body === 'moons' ? 'rgba(190,220,255,.55)' : 'rgba(255,240,200,.55)'); halo.addColorStop(1, 'rgba(255,240,200,0)');
+    x.fillStyle = halo; x.fillRect(sx - 60, sy - 60, 120, 120);
+    x.fillStyle = '#ffffff'; x.beginPath(); x.arc(sx, sy, w.body === 'sun' ? 6 : 3, 0, TAU); x.fill();
+  }
+  return SKY_B[key] = c;
+}
+/* ---------- montagnes lointaines, en deux plans ---------- */
+function ridgeCanvases(site, dir = 2){
+  const w = site.world, R = mulberry(site.seed * 31 + site.wi), out = [], top = Math.min(...site.pts.map(p => p[1]));
+  for (const [layer, base, amp, t] of [[0, top - 26, 22, .22], [1, top - 8, 16, .42]]){
+    const [c, x] = canvas(LW + 60, LH), ph = R() * 10, col = mix(w.sky[1], w.rock[3], dir === 2 ? t * .7 : t), lit = mix(col, w.rock[1], .35);
+    let prev = 0;
+    for (let i = 0; i < LW + 60; i++){
+      const h = base - amp * (.55 * Math.sin(i * .021 + ph) + .3 * Math.sin(i * .057 + ph * 2) + .3 * fbm(i * .05 + layer * 9, ph));
+      x.fillStyle = col; x.fillRect(i, h | 0, 1, LH);
+      // arête éclairée côté soleil
+      x.fillStyle = (h < prev) === (w.sun[0] < LW / 2) ? col : lit; x.fillRect(i, h | 0, 1, 1); prev = h;
+    }
+    if (dir === 2){ const hz = x.createLinearGradient(0, base - amp, 0, base + 20); hz.addColorStop(0, 'rgba(0,0,0,0)'); hz.addColorStop(1, 'rgba(0,0,0,.35)'); x.fillStyle = hz; x.globalCompositeOperation = 'source-atop'; x.fillRect(0, 0, LW + 60, LH); }
+    out.push(c);
+  }
+  return out;
+}
+/* ---------- le sol texturé (dessiné une fois par site) ---------- */
+function groundCanvas(site, dir = 2){
+  const w = site.world, rock = w.rock, [c, x] = canvas(LW, LH), R = mulberry(site.seed * 7 + 3);
+  const sunLeft = w.sun[0] < LW / 2, L = [sunLeft ? -.72 : .72, -.7];
+  // ombres portées (B) : le relief cache-t-il le soleil ?
+  const shade = new Float32Array(LW);
+  if (dir === 2) for (let xx = 0; xx < LW; xx++){ const gy = groundY(site, xx); let sh = 0;
+    for (let d = 1; d < 160; d++){ const ox = sunLeft ? xx - d : xx + d; if (ox < 0 || ox >= LW) break; if (groundY(site, ox) < gy - d * .42){ sh = 1; break; } } shade[xx] = sh; }
+  const pal = dir === 2 ? rock.map((col, i) => mix(col, '#000000', .08 + i * .03)) : rock;
+  for (let xx = 0; xx < LW; xx++){
+    const top = groundY(site, xx + .5), slope = groundY(site, xx + 1) - groundY(site, xx - 1);
+    const n = Math.hypot(slope / 2, 1);
+    const lit = clamp((-(slope / 2) * L[0] - L[1]) / n, 0, 1) * (shade[xx] ? .35 : 1);
+    for (let yy = Math.ceil(top); yy < LH; yy++){
+      const depth = yy - top, b = BAYER[yy & 3][xx & 3] / 16;
+      let idx;
+      if (depth < 2) idx = lit > .82 ? 0 : lit > .55 ? 1 : 2;
+      else {
+        // près de la surface, la pente compte ; plus bas, des plaques de roche et des couches
+        const near = clamp(1 - depth / 14, 0, 1), strata = ((yy + fbm(xx * .04, 3) * 10) % 15) < 1.3 ? .3 : 0;
+        const t = .32 + depth / 260 + (1 - lit) * .45 * near + (fbm(xx * .035 + 5, yy * .045) - .5) * .9 + strata + (shade[xx] && depth < 40 ? .35 : 0);
+        idx = clamp(Math.floor(1 + t * 3 + (b - .5) * .6), 1, 4);
+      }
+      x.fillStyle = pal[idx]; x.fillRect(xx, yy, 1, 1);
+    }
+  }
+  // cratères ronds : paroi éloignée du soleil éclairée, l'autre dans l'ombre
+  for (let i = 0; i < 16; i++){
+    const cx = R() * LW, top = groundY(site, cx), cy = top + 10 + R() * 70, rx = 3 + R() * 6, ry = rx * .38;
+    if (cy > GROUND_BOT + 60 || onPad(site, cx)) continue;
+    for (let yy = -ry; yy <= ry; yy++) for (let xx = -rx; xx <= rx; xx++){ const d = (xx / rx) ** 2 + (yy / ry) ** 2; if (d > 1) continue;
+      const far = sunLeft ? xx > 0 : xx < 0; x.fillStyle = d > .7 ? pal[1] : far ? pal[2] : pal[4]; x.fillRect(cx + xx | 0, cy + yy | 0, 1, 1); }
+  }
+  // rochers posés sur le sol, avec leur ombre
+  for (let i = 0; i < 26; i++){
+    const rx = 4 + R() * (LW - 8), top = groundY(site, rx); if (onPad(site, rx)) continue;
+    const s = R() < .3 ? 3 : 2;
+    x.fillStyle = pal[4]; x.fillRect(rx + (sunLeft ? s : -2) | 0, top - 1 | 0, 2, 1);
+    x.fillStyle = pal[2]; x.fillRect(rx | 0, top - s | 0, s, s); x.fillStyle = pal[0]; x.fillRect(rx + (sunLeft ? 0 : s - 1) | 0, top - s | 0, 1, 1);
+  }
+  // détails de monde : lacs de méthane (Titan), lignes rouges dans la glace (Europe)
+  if (w.body === 'saturn') for (let i = 1; i < site.pts.length - 1; i++){ const [px, py] = site.pts[i];
+    if (py > site.pts[i - 1][1] + 4 && py > site.pts[i + 1][1] + 4 && !onPad(site, px)) { for (let k = -9; k <= 9; k++){ const yy = groundY(site, px + k) | 0; x.fillStyle = '#1a1408'; x.fillRect(px + k | 0, yy, 1, 2); }
+      x.fillStyle = '#7a6a40'; x.fillRect(px - 4 | 0, groundY(site, px) | 0, 5, 1); } }
+  if (w.body === 'jupiter') for (let i = 0; i < 7; i++){ let lx = R() * LW, ly = groundY(site, lx) + 8 + R() * 60;
+    for (let k = 0; k < 40; k++){ lx += 1; ly += (R() - .5) * 1.6; if (ly > groundY(site, lx) + 2){ x.fillStyle = k % 9 ? '#a0604a' : '#c8806a'; x.fillRect(lx | 0, ly | 0, 1, 1); } } }
+  return c;
+}
+
+function drawLander(x, y, comp, sunLeft, dark){
+  x = Math.round(x); y = Math.round(y + comp);
+  const L = (x0, y0, x1, y1, c) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)); for (let k = 0; k <= n; k++) R_(Math.round(x0 + (x1 - x0) * k / n), Math.round(y0 + (y1 - y0) * k / n), 1, 1, c); };
+  const fy = Math.round(y - comp + 8);
+  // jambes (elles se plient un peu à l'atterrissage)
+  L(x - 5, y + 2, x - 9, fy - 1, OUT); L(x + 5, y + 2, x + 9, fy - 1, OUT);
+  L(x - 5, y + 3, x - 8, fy - 1, '#b8bcc4'); L(x + 5, y + 3, x + 8, fy - 1, '#8a909c');
+  L(x - 3, y + 5, x - 7, fy - 1, '#8a909c'); L(x + 3, y + 5, x + 7, fy - 1, '#6a7080');
+  R_(x - 10, fy, 4, 1, '#d8dce4'); R_(x + 7, fy, 4, 1, '#d8dce4');
+  // étage de descente : octogone en feuille d'or froissée
+  R_(x - 7, y - 1, 15, 8, OUT);
+  for (let yy = 0; yy < 6; yy++) for (let xx = -6; xx <= 6; xx++){
+    if ((yy === 0 || yy === 5) && Math.abs(xx) === 6) continue;
+    const h = hash2(xx + 40, yy + 7), side = sunLeft ? xx > 2 : xx < -2;
+    R_(x + xx, y + yy, 1, 1, h < .16 ? '#ffe9a0' : h < .32 ? '#8a5a10' : side ? '#a8701a' : '#d89a2a');
+  }
+  R_(x - 6, y + 5, 13, 1, '#2a2a30');
+  R_(x - 5, y + 6, 3, 2, '#3a3f4a'); R_(x + 3, y + 6, 3, 2, '#3a3f4a');
+  // étage de remontée : cabine à facettes, hublots, antenne
+  R_(x - 6, y - 10, 13, 10, OUT);
+  for (let yy = -9; yy <= -1; yy++) for (let xx = -5; xx <= 5; xx++){
+    if (yy === -9 && Math.abs(xx) > 3) continue;
+    const lit = sunLeft ? xx < -1 : xx > 1, sh = sunLeft ? xx > 2 : xx < -2;
+    R_(x + xx, y + yy, 1, 1, lit ? '#e8ecf2' : sh ? '#7a808c' : '#b8bcc6');
+  }
+  R_(x - 3, y - 7, 3, 2, '#20283a'); R_(x - 3, y - 7, 1, 1, '#9fd8ff'); R_(x + 1, y - 7, 2, 2, '#20283a');
+  R_(x - 1, y - 4, 3, 3, '#6a7080'); R_(x - 1, y - 4, 3, 1, '#9aa0aa');
+  R_(x - 7, y - 6, 2, 2, '#5a606c'); R_(x + 6, y - 6, 2, 2, '#5a606c');
+  R_(x + 3, y - 13, 1, 4, '#9aa0a8'); R_(x + 1, y - 14, 5, 1, '#e8ecf2'); R_(x + 2, y - 15, 3, 1, '#c8ccd4');
+  // feux de position : rouge à gauche, vert à droite, en alternance
+  const on = Math.sin(T * 6) > 0;
+  R_(x - 7, y + 1, 1, 1, on ? '#ff3048' : '#5a1018'); R_(x + 7, y + 1, 1, 1, on ? '#1a4a2a' : '#5cff8a');
+  if (dark){ g.globalAlpha = .3; R_(sunLeft ? x : x - 7, y - 15, 8, 23, '#000000'); g.globalAlpha = 1; }
+}
+function drawFlames(x, y, l, r){
+  const fl = fx => { const n = 5 + (T * 30 | 0) % 3;
+    for (let k = 0; k < n; k++){ const w = k < 4 ? 3 : k < 6 ? 2 : 1; R_(fx - (w > 2 ? 1 : 0) + (k > 5 ? (Math.random() < .5 ? 0 : 1) : 0), y + 8 + k, w, 1, k < 2 ? '#ffffff' : k < 3 ? '#fff2a8' : k < 5 ? '#ffb040' : '#e2603a'); } };
+  if (l) fl(Math.round(x) - 4); if (r) fl(Math.round(x) + 4);
+}
+function drawPads(site, dir = 2){
+  for (const p of site.pads){
+    const w = p.x1 - p.x0, n = Math.max(3, Math.floor(w / 5)), lit = Math.floor(T * 8) % n;
+    R_(p.x0 - 1, p.y - 1, w + 2, 6, OUT); R_(p.x0, p.y, w, 4, '#8a909c'); R_(p.x0, p.y, w, 1, '#e0e4ea'); R_(p.x0, p.y + 3, w, 1, '#4a505a');
+    for (let k = 0; k < 4; k++){ R_(p.x0 + k, p.y + 1, 1, 2, (k >> 1) % 2 ? '#1a1a1a' : '#ffd23f'); R_(p.x1 - 1 - k, p.y + 1, 1, 2, (k >> 1) % 2 ? '#1a1a1a' : '#ffd23f'); }
+    for (let k = 0; k < n; k++){ const bx = p.x0 + 3 + k * (w - 6) / Math.max(1, n - 1); R_(bx | 0, p.y - 2, 1, 1, k === lit ? '#7affa0' : '#1f5a34'); }
+    // panneau du multiplicateur, lumineux
+    const cx = (p.x0 + p.x1) / 2 | 0; R_(cx - 7, p.y + 6, 15, 9, OUT); R_(cx - 6, p.y + 7, 13, 7, '#10141e');
+    text('x' + p.mul, cx + 1, p.y + 8, p.mul === 5 ? '#ffd23f' : '#9fdcff', 'center', 5, null);
+    // faisceau d'approche au-dessus de l'aire x5
+    if (p.mul === 5 && dir !== 3){ const gr = g.createLinearGradient(0, p.y - 110, 0, p.y); gr.addColorStop(0, 'rgba(120,255,170,0)'); gr.addColorStop(1, `rgba(120,255,170,${dir === 2 ? .16 : .09})`);
+      g.fillStyle = gr; g.fillRect(p.x0 + 2, p.y - 110, w - 4, 110); }
+  }
+}
+function worldFx(site, dt){
+  const w = site.world;
+  if (w.body === 'moons' && S.fx.length < 40){ const d = Math.sign(site.wind) || 1; S.fx.push({ k: 'wind', x: d > 0 ? -10 : LW + 10, y: 120 + Math.random() * 260, vx: d * (60 + Math.random() * 60), vy: (Math.random() - .5) * 6, t: 0, life: 6, len: 2 + Math.random() * 5 }); }
+  if (w.body === 'jupiter' && Math.random() < dt / 2.5){ let gx; do gx = 10 + Math.random() * (LW - 20); while (onPad(site, gx));
+    for (let k = 0; k < 40; k++) S.fx.push({ k: 'gey', x: gx + (Math.random() - .5) * 2, y: groundY(site, gx), vx: (Math.random() - .5) * 8, vy: -60 - Math.random() * 50, t: -k * .03, life: 1.6, g: 40 }); }
+  if (w.body === 'sun' && Math.random() < dt * 6){ const gx = Math.random() * LW; if (!onPad(site, gx)) S.fx.push({ k: 'gas', x: gx, y: groundY(site, gx), vx: 6 + Math.random() * 4, vy: -14 - Math.random() * 10, t: 0, life: 3 }); }
+  for (const p of S.fx){ p.t += dt; if (p.t < 0) continue; p.x += p.vx * dt; p.y += p.vy * dt; if (p.g) p.vy += p.g * dt; }
+  S.fx = S.fx.filter(p => p.t < p.life && p.x > -20 && p.x < LW + 20);
+}
+function drawFx(){
+  for (const p of S.fx){ if (p.t < 0) continue; const a = 1 - p.t / p.life;
+    if (p.k === 'wind'){ g.globalAlpha = .35; R_(p.x | 0, p.y | 0, p.len | 0, 1, '#ffc8a0'); }
+    if (p.k === 'gey'){ g.globalAlpha = a * .9; R_(p.x | 0, p.y | 0, 1 + (p.t > .8 ? 1 : 0), 1, p.t < .3 ? '#ffffff' : '#c4e0ff'); }
+    if (p.k === 'gas'){ g.globalAlpha = a * .45; R_(p.x | 0, p.y | 0, 1, 2, '#b8e8ff'); }
+  }
+  g.globalAlpha = 1;
+}
+/* ---------- l'astronaute et le drapeau, après un alunissage réussi ---------- */
+function drawAstronaut(a){
+  const t = a.t; if (t < .9) return;
+  const d = a.side, walk = clamp((t - .9) / 1, 0, 1), x = Math.round(a.x + d * (9 + walk * 9)), y = a.gy - 1, step = walk < 1 ? (Math.floor(t * 6) % 2) : 0;
+  if (t > 2.1){ const fx = x + d * 4, wave = Math.sin(t * 5) > 0 ? 1 : 0;
+    R_(fx, y - 11, 1, 11, '#d8dce4');
+    for (let k = 0; k < 3; k++) R_(fx + (d > 0 ? 1 + k * 2 : -2 - k * 2), y - 11 + (k === 1 ? wave : 0), 2, 4, ['#2a5ad8', '#ffffff', '#e8264d'][d > 0 ? k : 2 - k]); }
+  R_(x - 1, y - 7, 3, 2, '#ffffff'); R_(x + (d > 0 ? 1 : -1), y - 6, 1, 1, '#ffd23f');
+  R_(x - 1, y - 5, 3, 3, '#e8ecf2'); R_(x - d * 2, y - 5, 1, 2, '#8a909c');
+  R_(x - 1, y - 2, 1, 2 - step, '#c8ccd4'); R_(x + 1, y - 2, 1, 1 + step, '#c8ccd4');
+}
+
+function drawAstronaut(a){
+  const t = T - a.t0; if (t < .9) return;
+  const d = a.side, walk = clamp((t - .9) / 1, 0, 1), x = Math.round(a.x + d * (9 + walk * 9)), y = a.gy - 1, step = walk < 1 ? (Math.floor(t * 6) % 2) : 0;
+  if (t > 2.1){ const fx = x + d * 4, wave = Math.sin(t * 5) > 0 ? 1 : 0;
+    R_(fx, y - 11, 1, 11, '#d8dce4');
+    for (let k = 0; k < 3; k++) R_(fx + (d > 0 ? 1 + k * 2 : -2 - k * 2), y - 11 + (k === 1 ? wave : 0), 2, 4, ['#2a5ad8', '#ffffff', '#e8264d'][d > 0 ? k : 2 - k]); }
+  R_(x - 1, y - 7, 3, 2, '#ffffff'); R_(x + (d > 0 ? 1 : -1), y - 6, 1, 1, '#ffd23f');
+  R_(x - 1, y - 5, 3, 3, '#e8ecf2'); R_(x - d * 2, y - 5, 1, 2, '#8a909c');
+  R_(x - 1, y - 2, 1, 2 - step, '#c8ccd4'); R_(x + 1, y - 2, 1, 1 + step, '#c8ccd4');
+}
+
+function lights(site, s, on){
+  const w = site.world, gy = groundY(site, s.x), alt = gy - s.y - 8;
+  g.globalCompositeOperation = 'lighter';
+  if (on){
+    const fl = .8 + Math.random() * .2, hg = g.createRadialGradient(s.x, s.y + 10, 0, s.x, s.y + 10, 18);
+    hg.addColorStop(0, `rgba(255,190,110,${.55 * fl})`); hg.addColorStop(1, 'rgba(255,120,40,0)'); g.fillStyle = hg; g.fillRect(s.x - 18, s.y - 8, 36, 36);
+    if (alt < 70){ const k = 1 - alt / 70, gg = g.createRadialGradient(s.x, gy, 0, s.x, gy, 44 * k + 8);
+      gg.addColorStop(0, `rgba(255,170,90,${.5 * k * fl})`); gg.addColorStop(1, 'rgba(255,120,40,0)'); g.fillStyle = gg; g.fillRect(s.x - 60, gy - 30, 120, 60); }
+  }
+  // feux du module : petite lueur
+  const blink = Math.sin(T * 6) > 0, px = blink ? s.x - 7 : s.x + 7, pg = g.createRadialGradient(px, s.y + 1, 0, px, s.y + 1, 6);
+  if (S.phase !== 'crashed' && S.phase !== 'stopped'){ pg.addColorStop(0, blink ? 'rgba(255,60,80,.6)' : 'rgba(90,255,140,.6)'); pg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = pg; g.fillRect(px - 6, s.y - 5, 12, 12); }
+  // reflet d'objectif : des disques le long de la ligne soleil → centre
+  const [sx, sy] = w.sun, dx = 136 - sx, dy = 240 - sy;
+  for (const [t, r, a, col] of [[.35, 6, .12, '120,200,255'], [.6, 3, .18, '255,220,160'], [.9, 10, .07, '160,255,200'], [1.25, 5, .1, '255,160,200']]){
+    const fx = sx + dx * t, fy = sy + dy * t, fg = g.createRadialGradient(fx, fy, 0, fx, fy, r); fg.addColorStop(0, `rgba(${col},${a})`); fg.addColorStop(1, `rgba(${col},0)`); g.fillStyle = fg; g.fillRect(fx - r, fy - r, r * 2, r * 2); }
+  g.globalCompositeOperation = 'source-over';
+  const v = g.createRadialGradient(136, 230, 120, 136, 230, 320); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.45)'); g.fillStyle = v; g.fillRect(0, 0, LW, LH);
+}
+function shadow(site, s){
+  const w = site.world;
+  { // ombre portée allongée, à l'opposé du soleil
+    const sunLeft = w.sun[0] < LW / 2, gy0 = groundY(site, s.x), alt = gy0 - s.y - 8, sx = s.x + (sunLeft ? 1 : -1) * alt * .9, gy = groundY(site, sx);
+    if (alt > 220 || sx < -20 || sx > LW + 20) return;
+    g.globalAlpha = clamp(.55 - alt / 500, .1, .55); g.fillStyle = '#000000'; g.beginPath(); g.ellipse(sx, gy, 11 + alt * .05, 2.2, 0, 0, TAU); g.fill(); g.globalAlpha = 1;
+  }
+}
+function titanHaze(){ const hz = g.createLinearGradient(0, 40, 0, LH); hz.addColorStop(0, 'rgba(210,150,60,.28)'); hz.addColorStop(.6, 'rgba(180,120,40,.14)'); hz.addColorStop(1, 'rgba(120,80,20,.05)'); g.fillStyle = hz; g.fillRect(0, 0, LW, 398); }
+
+const onPad = (site, x) => site.pads.some(p => x >= p.x0 - 2 && x <= p.x1 + 2);
+function sky(site) { return skyCanvas(WORLDS.indexOf(site.world)); }
+function drawGround(site, shipX = 136) {
+  if (!site._ridges) { site.seed = Math.round(site.x0 * 977 + site.n * 31); site.wi = WORLDS.indexOf(site.world); site._ridges = ridgeCanvases(site); site._ground = groundCanvas(site); }
+  site._ridges.forEach((c, i) => g.drawImage(c, Math.round(-30 - (shipX - 136) * (i ? .1 : .05)), 0));
+  g.drawImage(site._ground, 0, 0);
+  drawFx(); drawPads(site);
+}
+function stars(site) {
+  const R = mulberry(WORLDS.indexOf(site.world) * 13 + 2);
+  for (let i = 0; i < 24; i++) { const x = R() * LW | 0, y = R() * 220 | 0, ph = R() * 6, v = Math.sin(T * 2.2 + ph); if (v > .6) { R_(x, y, 1, 1, '#ffffff'); if (v > .93) { g.globalAlpha = .5; R_(x - 1, y, 3, 1, '#ffffff'); R_(x, y - 1, 1, 3, '#ffffff'); g.globalAlpha = 1; } } }
+}
+// le module, ses flammes et son ombre ; comp : enfoncement des jambes à l'atterrissage
+function drawShip(s, t, site = S.site, l = S.left && S.fuel > 0 && S.phase === 'fly', r = S.right && S.fuel > 0 && S.phase === 'fly') {
+  const a = S.anim, at = a && a.ok ? T - a.t0 : 0, comp = a && a.ok ? (at < .12 ? at / .12 * 2 : at < .4 ? 2 - (at - .12) / .28 * 1.2 : .8) : 0;
+  drawFlames(s.x, s.y, l, r); drawLander(s.x, s.y, comp, site.world.sun[0] < LW / 2, true);
 }
 function hud() {
   const s = S.ship, w = S.site.world;
@@ -259,7 +495,7 @@ function shipGauges() {
   const vyR = Math.max(0, s.vy) / VY_OK, vxR = Math.abs(s.vx) / VX_OK, worst = Math.max(vyR, vxR);
   const c = worst <= 1 && u.pad && u.flat ? '#5cff8a' : worst <= 1.5 ? '#ffb040' : '#ff6a5a';
   // réticule
-  const L = 4, X0 = x - 13, X1 = x + 13, Y0 = y - 14, Y1 = y + 12;
+  const L = 4, X0 = x - 16, X1 = x + 16, Y0 = y - 18, Y1 = y + 12;
   R_(X0, Y0, L, 1, c); R_(X0, Y0, 1, L, c); R_(X1 - L + 1, Y0, L, 1, c); R_(X1, Y0, 1, L, c);
   R_(X0, Y1, L, 1, c); R_(X0, Y1 - L + 1, 1, L, c); R_(X1 - L + 1, Y1, L, 1, c); R_(X1, Y1 - L + 1, 1, L, c);
   // carburant : 5 segments, le dernier clignote
@@ -273,7 +509,7 @@ function shipGauges() {
   // flèche de vitesse
   const n = Math.hypot(s.vx, s.vy);
   if (n > 2) {
-    const ux = s.vx / n, uy = s.vy / n, ax = x + ux * 19, ay = y + 1 + uy * 19, dx = s.vx * .42, dy = s.vy * .42, len = Math.round(Math.hypot(dx, dy)), ac = okCol(worst);
+    const ux = s.vx / n, uy = s.vy / n, ax = x + ux * 21, ay = y + 1 + uy * 21, dx = s.vx * .42, dy = s.vy * .42, len = Math.round(Math.hypot(dx, dy)), ac = okCol(worst);
     for (let k = 0; k <= len; k++) R_(Math.round(ax + dx * k / len), Math.round(ay + dy * k / len), 1, 1, ac);
     for (const a of [2.5, -2.5]) { const hx = ux * Math.cos(a) - uy * Math.sin(a), hy = ux * Math.sin(a) + uy * Math.cos(a);
       for (let k = 1; k <= 3; k++) R_(Math.round(ax + dx + hx * k), Math.round(ay + dy + hy * k), 1, 1, ac); }
@@ -281,8 +517,8 @@ function shipGauges() {
   // hauteur : pointillé jusqu'au sol sous 120 m
   const alt = Math.max(0, Math.round(u.gy - s.y - 8));
   if (alt < 120) {
-    for (let yy = y + 26; yy < u.gy - 2; yy += 4) R_(x, yy, 1, 2, 'rgba(200,212,244,.6)');
-    text(`${alt} M`, x + 5, Math.min(u.gy - 12, Math.max(y + 30, (y + 26 + u.gy) / 2 - 4)), '#c8d4f4', 'left', 6);
+    for (let yy = y + 28; yy < u.gy - 2; yy += 4) R_(x, yy, 1, 2, 'rgba(200,212,244,.6)');
+    text(`${alt} M`, x + 5, Math.min(u.gy - 12, Math.max(y + 32, (y + 28 + u.gy) / 2 - 4)), '#c8d4f4', 'left', 6);
   }
 }
 // boutons des réacteurs, en bas
@@ -297,10 +533,21 @@ function engineButtons() {
 }
 function drawFly(t) {
   const site = S.site;
-  g.drawImage(sky(site), 0, 0); drawGround(site);
-  for (const p of S.parts) R_(Math.round(p.x), Math.round(p.y), p.s, p.s, p.c);
-  if (S.phase !== 'crashed') drawShip(S.ship, t);
+  if (S.shake > 0) g.translate((Math.random() - .5) * 5, (Math.random() - .5) * 5);
+  g.drawImage(sky(site), 0, 0); stars(site); drawGround(site, S.ship.x);
+  // cratère après un crash : il suit le sol, bord soulevé et creux noirci
+  const a = S.anim;
+  if (a && !a.ok && T - a.t0 > .15) for (let k = -10; k <= 10; k++) { const gy = Math.round(groundY(site, a.x + k)), dep = Math.round(3 * (1 - (k / 10) ** 2));
+    R_(Math.round(a.x + k), gy - (Math.abs(k) > 7 ? 1 : 0), 1, 1, site.world.rock[1]); if (Math.abs(k) <= 7) R_(Math.round(a.x + k), gy, 1, dep + 1, '#0c0a08'); }
+  const alive = S.phase !== 'crashed' && !(S.phase === 'stopped' && !(a && a.ok));
+  if (alive) shadow(site, S.ship);
+  for (const p of S.parts) { if (p.smoke) { g.globalAlpha = (1 - p.t / p.life) * .5; R_(Math.round(p.x - p.r), Math.round(p.y - p.r), Math.round(p.r * 2), Math.round(p.r * 2), p.c); g.globalAlpha = 1; } else R_(Math.round(p.x), Math.round(p.y), p.s, p.s, p.c); }
+  if (alive) drawShip(S.ship, t);
+  if (a && a.ok) drawAstronaut(a);
+  if (site.world.body === 'saturn') titanHaze();
+  lights(site, S.ship, (S.left || S.right) && S.fuel > 0 && S.phase === 'fly');
   if (S.phase === 'fly') shipGauges();
+  g.setTransform(K, 0, 0, K, 0, 0);
   hud();
   R_(0, 398, LW, LH - 398, '#05060f');
   if (S.phase === 'fly') { engineButtons(); if (S.ship.t < 3) { const m = wrap('Pose-toi doucement sur une aire. Les deux réacteurs ensemble : tout droit.', 30); m.forEach((l, i) => text(l, 136, 52 + i * 10, '#e6fbff', 'center', 6)); } }
@@ -308,6 +555,7 @@ function drawFly(t) {
 }
 function drawResult(t) {
   const r = S.result, y = 404;
+  if (!r.stop && performance.now() - r.t < (r.ok ? 2800 : 1300)) return;   // le temps de voir le drapeau planté ou l'explosion
   if (r.ok) {
     panel(10, y - 120, 252, 100, true);
     text('ALUNISSAGE REUSSI', 136, y - 110, '#fff2a8', 'center', 8);
@@ -332,9 +580,9 @@ function drawResult(t) {
 let TITLE = null;
 function drawTitle(t) {
   if (!TITLE) TITLE = makeSite(4242, 0);
-  g.drawImage(sky(TITLE), 0, 0); drawGround(TITLE);
-  const s = { x: 136 + Math.sin(t * .7) * 50, y: 200 + Math.sin(t * 1.3) * 10 }; S.left = Math.sin(t * 3) > 0; S.right = Math.sin(t * 3 + 1) > 0;
-  const keep = S.phase; S.phase = 'fly'; drawShip(s, t); S.phase = keep; S.left = S.right = false;
+  g.drawImage(sky(TITLE), 0, 0); stars(TITLE);
+  const s = { x: 136 + Math.sin(t * .7) * 50, y: 200 + Math.sin(t * 1.3) * 10 }, l = Math.sin(t * 3) > 0, r = Math.sin(t * 3 + 1) > 0;
+  drawGround(TITLE, s.x); shadow(TITLE, s); drawShip(s, t, TITLE, l, r); lights(TITLE, s, l || r);
   logo('ALUNISSAGE', 136, 56, 20);
   text('POSE-TOI EN DOUCEUR', 136, 86, '#c8d4f4', 'center', 7);
   R_(0, 300, LW, LH - 300, 'rgba(5,6,15,.55)');
@@ -352,8 +600,16 @@ function frame(ts) {
   const t = ts / 1000, dt = Math.min(.04, t - (T || t)); T = t;
   if (S.phase === 'fly') { let left = dt; while (left > 0) { const h = Math.min(left, 1 / 120); step(h); left -= h; if (S.phase !== 'fly') break; }
     if (S.fuel > 0 && S.fuel < 15 && (t * 4 | 0) !== ((t - dt) * 4 | 0)) SFX.alarm(); }
-  for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.gr) p.vy += 40 * dt; }
+  const site = S.phase === 'title' ? TITLE : S.site;
+  if (S.anim && !S.anim.ok && T - S.anim.t0 > .3 && Math.random() < dt * 14) S.parts.push({ x: S.anim.x + (Math.random() - .5) * 8, y: S.anim.gy - 2, vx: 3 + (Math.random() - .5) * 6, vy: -10 - Math.random() * 8, t: 0, life: 2.4, c: Math.random() < .5 ? '#5a5650' : '#3a3632', r: 1, smoke: 1 });
+  S.shake = Math.max(0, (S.shake || 0) - dt);
+  for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.gr) p.vy += 50 * dt;
+    if (!site) continue;
+    if (p.dust) { p.vx *= 1 - 2.2 * dt; p.vy += 12 * dt; const gy = groundY(site, p.x); if (p.y > gy - 1) { p.y = gy - 1; p.vy = 0; } }
+    if (p.smoke) { p.r += 3 * dt; p.vx += site.wind * dt; }
+    if (p.bounce) { const gy = groundY(site, p.x); if (p.y > gy - 1) { p.y = gy - 1; p.vy = -Math.abs(p.vy) * .35; p.vx *= .6; } } }
   S.parts = S.parts.filter(p => p.t < p.life);
+  if (site) worldFx(site, dt);
   BTN = []; g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
   if (S.phase === 'title') drawTitle(t); else drawFly(t);
   requestAnimationFrame(frame);

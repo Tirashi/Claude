@@ -180,6 +180,7 @@ Poser un module lunaire en douceur, site après site.
 - **Cadrans près du module**, pour ne pas le quitter des yeux : un réticule qui passe au vert quand tout est bon pour se poser (orange ou rouge sinon), 5 segments de carburant au-dessus, deux barres de vitesse (V et H, le trait blanc marque la limite) dessous, l'aire survolée à côté (×2, ×3, ×5, ou un trait si le sol est en pente), une flèche qui montre où va le module, et sous 120 m un pointillé jusqu'au sol avec la hauteur.
 - Une **mission** enchaîne les sites (la Lune, Phobos, Mars, Europe, Titan et son vent, une comète…), de plus en plus durs, jusqu'au crash ou à l'arrêt. Chaque site rapporte (100 + carburant restant) × le multiplicateur ; le carburant se recharge en partie à chaque alunissage.
 - **Mission du jour** : la même suite de sites pour toute la famille. Le record et la mission du jour font partie des classements et du transfert de sauvegardes.
+- **Graphismes « cinématiques »** : un soleil qui éclaire le relief et fait des ombres, des montagnes lointaines qui glissent avec le module, un sol de cratères et de rochers, l'astre de chaque monde dans le ciel (la Terre, Mars, Jupiter, Saturne…) et ses effets (vent de poussière sur Mars, geysers sur Europe, brume sur Titan, jets de gaz sur la comète). Le module, plus grand, a ses feux de position, une ombre et des flammes qui éclairent le sol ; après un alunissage, un astronaute plante un drapeau ; après un crash, explosion et cratère fumant.
 
 ---
 
