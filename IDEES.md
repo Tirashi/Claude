@@ -50,7 +50,7 @@ Penser à cocher (✅) une idée quand le jeu est réalisé, et à ajouter ici l
 4. **Alunissage** — ✅ réalisé. (adresse) — poser un module lunaire en douceur avec deux réacteurs au doigt : gravité, carburant limité, relief accidenté, aires d'atterrissage plus ou moins étroites (×1 à ×5 points) ; 20 sites (Lune, Mars, comète…), site du jour au classement. *Rapide à faire.*
 5. **Pont stellaire** — ✅ réalisé. (réflexion) — relier les étoiles par des faisceaux droits (1 ou 2 par paire, sans croisement) pour que chaque étoile ait son nombre de liens et que tout le ciel soit connecté (règles du Hashi) ; une constellation se dessine à la fin ; grilles générées à solution unique, grille du jour. *Rapide à faire.*
 6. **Astro-Mineur** (exploration / améliorations) — une foreuse creuse un astéroïde vers le bas : minerais de plus en plus rares, carburant et coque à surveiller, remonter vendre à la station pour améliorer foret, réservoir et soute ; poches de gaz et grottes ; un trésor au cœur de l'astéroïde.
-7. **Apesanteur** (plateforme physique) — un spationaute flotte dans une station abandonnée et se propulse par petites poussées d'extincteur ; oxygène limité, débris qui dérivent, sas et interrupteurs ; 30 salles, record en moins de poussées.
+7. ~~**Apesanteur**~~ — *abandonné (15/10).* (plateforme physique) — un spationaute flotte dans une station abandonnée et se propulse par petites poussées d'extincteur ; oxygène limité, débris qui dérivent, sas et interrupteurs ; 30 salles, record en moins de poussées.
 8. **Bouclier lunaire** (arcade) — façon Missile Command : protéger les dômes d'une base lunaire des pluies de météorites en tirant des charges qui explosent là où l'on touche ; vagues de plus en plus denses, comètes qui se divisent, réparation des dômes entre les vagues ; score et classement.
 
 ## Améliorations des jeux existants
@@ -72,7 +72,7 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 
 ## Préférences notées
 - Cargo Stellaire et Station Alpha : retirés de la liste (pas retenus).
-- Carreau ! (pétanque), Le Fort des lapins (tower defense) et Pavillon noir (rogue-lite pirate) : abandonnés le 15/10.
+- Carreau ! (pétanque), Le Fort des lapins (tower defense) Pavillon noir (rogue-lite pirate) et Apesanteur (plateforme physique) : abandonnés le 15/10.
 
 ## Page d'accueil (idées du 13/10)
 Réalisé le 13/10 ✅ : **favoris** (étoile sur chaque cartouche, favoris en tête), badges **NOUVEAU** / **MIS A JOUR** (3 jours), **filtres par genre**, **jeu à la une** dans une boîte de jeu (« TOUT NEUF ! »), **quoi de neuf**. Dates, genres et journal : `META` et `NEWS` dans `index.html` (à tenir à jour à chaque sortie ou mise à jour).
@@ -110,5 +110,5 @@ Pour choisir selon le forfait restant (limite hebdomadaire remise à zéro le me
 - 🟢 **Très petit** (quelques minutes, Sonnet) : texte de première connexion des classements ; Surprends-moi ; trier / rechercher sur l'accueil.
 - 🟡 **Petit** (une courte conversation) : Alunissage, interface près du module ; Queens, grille du jour ; installer l'étagère des classements ; Reprendre ; mes records sur chaque cartouche (sans la place dans la famille).
 - 🟠 **Moyen** (une conversation, Opus) : Invasion 2.0 ; Bouclier lunaire ; Sudoku ; Le Mot d'or (la liste de mots est le gros du travail) ; Lune-Rover ; Capitaine du port ; défis du jour + profil ; animations sur l'accueil ; revue « ingénieur senior » (lecture de tout le code : à faire en début de semaine).
-- 🔴 **Gros** (1 à 2 conversations) : Murdoku ; Escadrille ; Bord de lac ; Apesanteur ; Astro-Mineur ; activité de la famille (SQL Supabase) ; **refonte de la sélection des jeux** (cartouches en 3D, page dédiée, avec une boîte par jeu : maquette d'abord, puis 2 conversations) ; **refonte de la DA du site façon Dragon Quest** (maquette, puis 1 à 2 conversations ; à fusionner avec la refonte de la sélection : 3 conversations en tout pour les deux).
+- 🔴 **Gros** (1 à 2 conversations) : Murdoku ; Escadrille ; Bord de lac ; Astro-Mineur ; activité de la famille (SQL Supabase) ; **refonte de la sélection des jeux** (cartouches en 3D, page dédiée, avec une boîte par jeu : maquette d'abord, puis 2 conversations) ; **refonte de la DA du site façon Dragon Quest** (maquette, puis 1 à 2 conversations ; à fusionner avec la refonte de la sélection : 3 conversations en tout pour les deux).
 - ⚫ **Très gros** (plusieurs conversations, comme Nebula) : Donjon de poche ; Escarmouche ; Le Potager ; Le Chalutier ; **RPG façon Dragon Quest 1** (5 à 6 sessions : carte, villes, donjons, 30 à 40 monstres, sorts, dialogues, équilibrage) ; Nebula : l'Empire des étoiles (le plus gros : jeu sur des semaines et serveur pour la famille).
