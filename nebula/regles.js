@@ -29,7 +29,7 @@
  * @typedef {{ k: string, n?: number, cr: number, target?: number }} Goal   défi du combat (n : tours ; target : le pirate à abattre en premier)
  * @typedef {{ e: string, [k: string]: any }} Ev   événement rejoué par l'affichage
  * @typedef {{ c: number, r: number, d: number, prev: string | null, through?: boolean }} Step   position atteignable
- * @typedef {{ uid: number, t: string, name: string, mods: string[], hull: number, pilot?: Pilot | null }} FleetShip
+ * @typedef {{ uid: number, t: string, name: string, mods: string[], hull: number, pilot?: Pilot | null, vip?: boolean }} FleetShip
  * @typedef {{ id: number, k: string, f: number, i: number, x: number, y: number, links: number[] }} MapNode
  * @typedef {{ name: string, boss: string, shop: string, rocks: number[], ions: number[], fog: number, mult: number, extra: number, ai: number, aiHeavy?: number,
  *   pool: { early: string[], mid: string[], lourd: (string | string[])[], escort: string[] } }} Sector
