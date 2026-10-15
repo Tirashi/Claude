@@ -19,6 +19,8 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`jeu-de-la-vie/index.html`](jeu-de-la-vie/index.html) : **Jeu de la Vie**, l'automate cellulaire de Conway (voir son propre README).
 - [`solitaire/index.html`](solitaire/index.html) : **Solitaire**, le Klondike de Windows XP.
 
+Sur le menu : le jeu à la une dans sa boîte, des favoris (étoile), des filtres (tous, favoris, nouveau, du jour) commentés par le gardien, un **tri** (favoris d'abord, nouveautés, nom, dernière partie lancée depuis le menu), une **recherche** (nom, description ou genre, sans se soucier des accents ; Entrée lance le premier jeu trouvé) et le bouton **Surprends-moi**, qui fait défiler les cartouches dans une console et lance un jeu au hasard parmi ceux affichés.
+
 ---
 
 ## Queens 16-Bit
@@ -207,7 +209,7 @@ Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Fac
 
 ## Classements familiaux
 
-Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`](classements/index.html) : des classements privés, partagés entre les personnes qui connaissent le **code familial**. On choisit un pseudo, on entre le code une fois, et c'est tout : ensuite les records partent **tout seuls**. Chaque tableau a son podium et la liste complète, et sa propre ligne est en vert.
+Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`](classements/index.html) : des classements privés, partagés entre les personnes qui connaissent le **code familial**. On choisit un pseudo, on entre le code une fois, et c'est tout : ensuite les records partent **tout seuls**. Les jeux sont rangés sur une **étagère de boîtes** : on touche la tranche d'une boîte, elle sort du rang, et sa face avant s'affiche avec son classement (1er en or, 2e en argent, 3e en bronze, sa propre ligne en vert). Une couronne au-dessus d'une boîte signale un jeu où l'on détient au moins un record.
 
 - **Tetris, Snake, Asteroids, Solitaire** : le meilleur score de chacun.
 - **Queens** : le meilleur temps sans indice, une grille par taille (5×5 à 9×9).

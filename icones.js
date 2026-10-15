@@ -1,0 +1,228 @@
+/* Icônes 16×16 des jeux de la Ludothèque, partagées par l'accueil et la page des classements.
+   Chaque icône : une palette et 16 lignes de 16 caractères (vérifié par outils/verifications.js),
+   ou une fonction draw(contexte) pour les icônes dessinées. Le chien demande injagility/chiens32.js.
+   LudoIcons.draw(canvas, nom) dessine une icône ; LudoIcons.paint() dessine tous les canvas[data-icon]. */
+(function (){
+"use strict";
+const ICONS = {
+  tree: {pal:{o:"#1a0f2e", g:"#4fa86a", G:"#2f7a48", b:"#8a5a2a"}, map:[
+    "................",
+    ".....oooooo.....",
+    "...ooggGgggoo...",
+    "..ogggggggGggo..",
+    ".oggGgggggggggo.",
+    ".ogggggGgggGggo.",
+    ".oggggggggggggo.",
+    "..ogGgggggGggo..",
+    "...oooggggooo...",
+    "......obbo......",
+    "......obbo......",
+    "......obbo......",
+    ".....obbbbo.....",
+    "....obboobbo....",
+    "...oo..oo..oo...",
+    "................"]},
+  crown: {pal:{o:"#1a0f2e", y:"#ffd23f", h:"#fff6c2", d:"#d98a1c", r:"#e8264d"}, map:[
+    "................",
+    "................",
+    "................",
+    "..o....o....o...",
+    ".oho..oho..oho..",
+    ".oyo..oyo..oyo..",
+    ".oyyooyyyooyyo..",
+    ".ohyyyyyyyyyyo..",
+    ".oyryyyryyyryo..",
+    ".oyyyyyyyyyyyo..",
+    ".oddddddddddddo.",
+    ".oooooooooooooo.",
+    "................",
+    "................",
+    "................",
+    "................"].map(r => r.slice(0,16))},
+  ball: {pal:{o:"#20182e", r:"#e3343c", h:"#ff9a9a", d:"#a8202a", W:"#f2f0ff", s:"#b9b4d6", b:"#ffffff"}, map:[
+    ".....oooooo.....",
+    "...oorrrrrroo...",
+    "..orrrrrrrrrro..",
+    ".orhhrrrrrrrrdo.",
+    ".orhrrrrrrrrrdo.",
+    "orrrrrrrrrrrrrdo",
+    "orrrroooooorrrdo",
+    "oooooobbbboooooo",
+    "oWWWWobbbboWWWso",
+    "oWWWWooooooWWWso",
+    "oWWWWWWWWWWWWWso",
+    ".oWWWWWWWWWWWso.",
+    ".oWWWWWWWWWWsso.",
+    "..oWWWWWWWWsso..",
+    "...ooWWWWWWoo...",
+    ".....oooooo....."]},
+  snake: {pal:{g:"#7cfc00", G:"#3f9a0a", r:"#ff4b4b", w:"#ffffff", n:"#5a3418"}, map:[
+    "................",
+    "...........n....",
+    "..........rrr...",
+    ".........rrwrr..",
+    ".........rrrrr..",
+    "..........rrr...",
+    "................",
+    "..gggggggg......",
+    "..gGGGGGGg......",
+    "..gg............",
+    "..gg............",
+    "..gggggggggggg..",
+    "..gGGGGGGGGGwgr.",
+    "..............r.",
+    "................",
+    "................"]},
+  rock: {pal:{k:"#1a1420", g:"#7a7080", G:"#4a4250", h:"#d8d0d8", w:"#e8f0ff", c:"#5ce1ff", y:"#ffd23f", r:"#ff4d6d"}, map:[
+    "................",
+    "........kkkk....",
+    ".......khhggk...",
+    "......khgggGgk..",
+    "......kgGgggggk.",
+    "......kgggggGgk.",
+    "......kggGgggk..",
+    ".......kgggGk...",
+    "........kkkk....",
+    "....y...........",
+    "................",
+    "..k.............",
+    ".kwk............",
+    ".kck............",
+    "kwwwk...........",
+    "krkrk..........."]},
+  cup: {pal:{k:"#0f121b", y:"#ffd23f", Y:"#fff2a8", o:"#d09a1c", b:"#3a7fc8", w:"#ffffff"}, map:[
+    "................",
+    "...kkkkkkkkkk...",
+    ".kkkYYyyyyyyokk.",
+    "kYkkYyyyyyyyokYk",
+    "ky.kYyyyyyyyok.k",
+    "kyk.kYyyyyyok.ok",
+    ".kok.kYyyyok.kk.",
+    "..kkkkYyyyokkk..",
+    "......kyyok.....",
+    ".......kok......",
+    ".......kok......",
+    "......kyyok.....",
+    ".....kkkkkkk....",
+    "....kbbbwbbbk...",
+    "....kbbbbbbbk...",
+    "....kkkkkkkkk..."]},
+  anchor: {pal:{k:"#0f121b", y:"#ffd23f", Y:"#fff2a8", o:"#d09a1c", b:"#2462c0", B:"#9fd3ff"}, map:[
+    "................",
+    "......kkkk......",
+    ".....kYyyok.....",
+    ".....kyk.yk.....",
+    ".....kyokok.....",
+    "...kkkkyokkkk...",
+    "...kYyyyyyyok...",
+    "...kkkkyokkkk...",
+    "......kyok......",
+    ".k....kyok....k.",
+    "kYk...kyok...kok",
+    "kyok..kyok..kook",
+    ".kyoo.kyok.ooyk.",
+    "..kkyyyyyyyyok..",
+    "....kkoooookk...",
+    "......kkkk......"]},
+  lander: {pal:{k:"#0b0614", w:"#ffffff", g:"#c8ccd4", o:"#8a5a10", y:"#ffd76a", b:"#2a3a5a", f:"#fff2a8", r:"#ff9a3a"}, map:[
+    "................",
+    "......kkkk......",
+    ".....kwwgk......",
+    ".....kwbgk......",
+    ".....kggok......",
+    "....kkkkkkk.....",
+    "...kyyyyyyok....",
+    "...kyoooooyk....",
+    "...kkkkkkkkk....",
+    "...k.k...k.k....",
+    "..k..k...k..k...",
+    ".kk.........kk..",
+    "................",
+    "....ff...ff.....",
+    ".....r...r......",
+    "................"]},
+  stars: {pal:{k:"#0b0614", w:"#ffffff", y:"#ffd76a", o:"#e09a2a", b:"#9fdcff"}, map:[
+    "................",
+    ".kkk............",
+    "kwyok...........",
+    "kyoobbbbbbbbkkk.",
+    "kkok.......kwyok",
+    ".kk........kyook",
+    ".b..........kok.",
+    ".b...........b..",
+    ".b...........b..",
+    ".b...........b..",
+    "kkk..........b..",
+    "wyokbbbbbbbbkkk.",
+    "yook.......kwyok",
+    "kok........kyook",
+    ".k..........kok.",
+    "................"]},
+  planet: {pal:{k:"#0b0614", w:"#fff4d8", y:"#e8cf95", o:"#c39a62", d:"#8a6444", r:"#6fd8ff"}, map:[
+    "................",
+    "................",
+    ".....kkkkkk.....",
+    "....kwwyyyok....",
+    "...kwyyyyyyok...",
+    "..kkyyoooyyokk..",
+    "kkrrkkyyyyokrrkk",
+    "krrrrkkkkkkrrrrk",
+    "kkrrkooooodkrrkk",
+    "..kkkyyyyodkkk..",
+    "...kyoooodddk...",
+    "....kooodddk....",
+    ".....kkkkkk.....",
+    "................",
+    "................",
+    "................"]},
+  boat: {pal:{k:"#0f121b", g:"#a1aabb", h:"#dfe4ee", r:"#ff5050", b:"#2462c0", B:"#9fd3ff", d:"#163e94"}, map:[
+    "................",
+    "......k.........",
+    "......k..r......",
+    ".....kkk........",
+    "....khhhk.......",
+    "...kkkkkkkk.....",
+    ".kkhhhhhhhhkk...",
+    ".kggggggggggk...",
+    "..kggggggggk....",
+    "bbbkkkkkkkkbbbbb",
+    "bBbbbBbbbbbBbbbb",
+    "dbbbbbbdbbbbbbdb",
+    "bbbBbbbbbBbbbbbb",
+    "bdbbbbbdbbbbbdbb",
+    "bbbbbBbbbbbbBbbb",
+    "dbbbbbbbbdbbbbbb"]},
+  cards: {draw(x){
+    const card = (ox, oy, red, suit) => {
+      x.fillStyle = "#16161e"; x.fillRect(ox + 1, oy, 8, 12); x.fillRect(ox, oy + 1, 10, 10);
+      x.fillStyle = "#fbfaf2"; x.fillRect(ox + 1, oy + 1, 8, 10);
+      x.fillStyle = red ? "#d22b3c" : "#20202c";
+      suit.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === "x") x.fillRect(ox + 3 + c, oy + 4 + r, 1, 1); }));
+      x.fillRect(ox + 2, oy + 2, 1, 1);
+    };
+    card(1, 1, false, ["..x..", ".xxx.", "xxxxx", "..x.."]);
+    card(6, 3, true, [".x.x.", "xxxxx", ".xxx.", "..x.."]);
+  }},
+  blocks: {draw(x){
+    const cell = (cx, cy, c, hi, lo) => { x.fillStyle = lo; x.fillRect(cx*4, cy*4, 4, 4); x.fillStyle = c; x.fillRect(cx*4, cy*4, 3, 3); x.fillStyle = hi; x.fillRect(cx*4, cy*4, 3, 1); x.fillRect(cx*4, cy*4, 1, 3); };
+    [[0,0],[1,0],[2,0],[1,1]].forEach(([a,b]) => cell(a, b, "#a855f7", "#e2c4ff", "#4a1a80"));
+    [[3,1],[3,2],[3,3],[2,3]].forEach(([a,b]) => cell(a, b, "#3b82f6", "#bcd6ff", "#173a80"));
+    [[0,2],[1,2],[1,3],[0,3]].forEach(([a,b]) => cell(a, b, "#facc15", "#fff2a8", "#8a6a00"));
+  }},
+  glider: {draw(x){
+    x.fillStyle = "#0b0f24"; x.fillRect(0, 0, 16, 16);
+    x.fillStyle = "#18204a"; for (let i = 0; i <= 16; i += 5){ x.fillRect(i, 0, 1, 16); x.fillRect(0, i, 16, 1); }
+    [[1,0],[2,1],[0,2],[1,2],[2,2]].forEach(([a,b]) => { const X = a*5+1, Y = b*5+1;
+      x.fillStyle = "#1f8a4a"; x.fillRect(X, Y, 4, 4); x.fillStyle = "#5cff8a"; x.fillRect(X, Y, 3, 3); x.fillStyle = "#d4ffe0"; x.fillRect(X, Y, 3, 1); x.fillRect(X, Y, 1, 3); });
+  }},
+  // le chien d'Injagility, le même bouvier bernois en 32 bits que dans le jeu
+  dog: {draw: x => { const C = window.Chiens32; if (!C) return; x.drawImage(C.frames("bernois").stand, -2, 52 - C.GROUND); }},
+};
+function draw(c, name){
+  const ic = ICONS[name], x = c.getContext("2d");
+  if (!ic) return;
+  if (ic.draw) return ic.draw(x);
+  ic.map.forEach((row, r) => [...row].forEach((ch, col) => { if (ic.pal[ch]){ x.fillStyle = ic.pal[ch]; x.fillRect(col, r, 1, 1); } }));
+}
+window.LudoIcons = {ICONS, draw, paint: root => (root || document).querySelectorAll("canvas[data-icon]").forEach(c => draw(c, c.dataset.icon))};
+})();

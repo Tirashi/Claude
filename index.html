@@ -183,6 +183,33 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 @keyframes rpgblink{50%{opacity:.2}}
 @media (max-width:400px){ .rpg .cmd button{font-size:8px; padding-left:18px} .rpg .talk{font-size:19px} }
 .cart[hidden]{display:none}
+/* tri et recherche : deux petites fenêtres du même style que le menu des filtres */
+.tools{display:flex; flex-wrap:wrap; gap:10px; width:100%; max-width:560px; margin:-14px auto 0}
+.tools .dq{background:#000; border:4px double #fff; border-radius:4px; box-shadow:4px 4px 0 #000}
+.tools .sort{font-family:var(--f-display); font-size:9px; line-height:1.6; color:#fff; padding:10px 12px; cursor:pointer; text-align:left; flex:0 1 auto}
+.tools .sort b{color:var(--gold); font-weight:400}
+.tools .sort:focus-visible, .tools .find:focus-within{outline:2px dashed var(--gold); outline-offset:2px}
+.tools .find{flex:1 1 180px; display:flex; align-items:center; gap:6px; padding:0 10px}
+.tools .find span{font-family:var(--f-display); font-size:9px; color:var(--gold)}
+.tools .find input{flex:1; min-width:0; font:22px/1.2 var(--f-body); color:#fff; background:none; border:0; padding:8px 0; outline:none}
+.tools .find input::placeholder{color:#7d7aa8}
+/* surprends-moi : une console tire une cartouche au hasard et l'insère */
+.ranks-open #surprise{color:var(--text); background:#2b2a4a; border-color:var(--text-dim)}
+.ranks-open #surprise:hover{color:var(--gold); border-color:var(--gold)}
+.surprise{position:fixed; inset:0; z-index:60; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; background:rgba(8,6,20,.94); cursor:pointer}
+.surprise .slotwin{position:relative; width:270px; height:290px; overflow:hidden}
+.surprise .cart{position:absolute; left:14px; right:14px; top:30px; height:auto; transform:none; box-shadow:inset 3px 3px 0 var(--shell-hi), inset -4px -4px 0 var(--shell-lo), 6px 6px 0 #000}
+.surprise .cart .label{min-height:0}
+.surprise .cart p, .surprise .cart .tags{display:none}
+.surprise .cart.in{transform:translateY(290px); transition:transform .7s steps(10)}
+.surprise .console{position:relative; z-index:2; width:300px; height:74px; margin-top:-4px; border:4px solid var(--ink); border-radius:8px;
+  background:linear-gradient(var(--shell-hi), var(--shell) 30%, var(--shell-lo)); box-shadow:6px 6px 0 #000}
+.surprise .console::before{content:""; position:absolute; left:34px; right:34px; top:-4px; height:14px; background:#000; border:3px solid var(--ink); border-top:0}
+.surprise .console::after{content:""; position:absolute; right:18px; bottom:16px; width:12px; height:12px; border-radius:50%; background:#3a0a14; border:2px solid var(--ink)}
+.surprise.on .console::after{background:#ff3048; box-shadow:0 0 10px #ff3048}
+.surprise .console i{position:absolute; left:18px; bottom:14px; font-style:normal; font-family:var(--f-display); font-size:8px; letter-spacing:2px; color:var(--text-dim)}
+.surprise .say{margin-top:26px; font-family:var(--f-display); font-size:11px; line-height:1.8; color:var(--gold); text-align:center; min-height:3.6em}
+.surprise .say small{display:block; font-size:7px; color:var(--text-dim)}
 .shelf-empty{text-align:center; color:var(--text-dim); font-size:20px}
 .fav{font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; position:absolute; top:-14px; right:-12px; z-index:3; width:38px; height:38px; padding:0; cursor:pointer;
   border:3px solid var(--ink); border-radius:50%; background:#1e1840; color:#a9a6d8; font-size:20px; line-height:30px; text-align:center;
@@ -208,10 +235,11 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
     <p class="ios-help" id="iosHelp" hidden>Pour installer la Ludothèque sur ton iPhone : touche <b>Partager</b> en bas de Safari, puis <b>Sur l'écran d'accueil</b>.</p>
   </div>
 
-  <div class="saves-open ranks-open"><a class="saves-btn" href="classements/index.html">CLASSEMENTS</a></div>
+  <div class="saves-open ranks-open"><a class="saves-btn" href="classements/index.html">CLASSEMENTS</a><button class="saves-btn" id="surprise" type="button">SURPRENDS-MOI</button></div>
 
   <section class="une" id="une" hidden></section>
   <div class="rpg"><div class="dq cmd" id="filters" role="toolbar" aria-label="Filtrer les jeux"></div><div class="dq talk"><em>LE GARDIEN</em><span id="gardien" aria-live="polite"></span></div></div>
+  <div class="tools"><button class="dq sort" id="sort" type="button"></button><label class="dq find"><span>?</span><input id="find" type="search" placeholder="Chercher un jeu…" autocomplete="off" spellcheck="false" aria-label="Chercher un jeu"></label></div>
   <p class="shelf-empty" id="shelfEmpty" hidden>Aucun jeu ici pour l'instant. Touche l'étoile d'une cartouche pour l'ajouter à tes favoris.</p>
   <nav class="shelf" id="shelf" aria-label="Jeux">
     <a class="cart picross" href="picross/index.html">
@@ -380,230 +408,12 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 </div>
 
 <script src="injagility/chiens32.js"></script>
+<script src="icones.js"></script>
 <script src="ludo-scores.js"></script>
 <script>
 (() => {
 "use strict";
-/* pixel icons, one per game */
-const ICONS = {
-  tree: {pal:{o:"#1a0f2e", g:"#4fa86a", G:"#2f7a48", b:"#8a5a2a"}, map:[
-    "................",
-    ".....oooooo.....",
-    "...ooggGgggoo...",
-    "..ogggggggGggo..",
-    ".oggGgggggggggo.",
-    ".ogggggGgggGggo.",
-    ".oggggggggggggo.",
-    "..ogGgggggGggo..",
-    "...oooggggooo...",
-    "......obbo......",
-    "......obbo......",
-    "......obbo......",
-    ".....obbbbo.....",
-    "....obboobbo....",
-    "...oo..oo..oo...",
-    "................"]},
-  crown: {pal:{o:"#1a0f2e", y:"#ffd23f", h:"#fff6c2", d:"#d98a1c", r:"#e8264d"}, map:[
-    "................",
-    "................",
-    "................",
-    "..o....o....o...",
-    ".oho..oho..oho..",
-    ".oyo..oyo..oyo..",
-    ".oyyooyyyooyyo..",
-    ".ohyyyyyyyyyyo..",
-    ".oyryyyryyyryo..",
-    ".oyyyyyyyyyyyo..",
-    ".oddddddddddddo.",
-    ".oooooooooooooo.",
-    "................",
-    "................",
-    "................",
-    "................"].map(r => r.slice(0,16))},
-  ball: {pal:{o:"#20182e", r:"#e3343c", h:"#ff9a9a", d:"#a8202a", W:"#f2f0ff", s:"#b9b4d6", b:"#ffffff"}, map:[
-    ".....oooooo.....",
-    "...oorrrrrroo...",
-    "..orrrrrrrrrro..",
-    ".orhhrrrrrrrrdo.",
-    ".orhrrrrrrrrrdo.",
-    "orrrrrrrrrrrrrdo",
-    "orrrroooooorrrdo",
-    "oooooobbbboooooo",
-    "oWWWWobbbboWWWso",
-    "oWWWWooooooWWWso",
-    "oWWWWWWWWWWWWWso",
-    ".oWWWWWWWWWWWso.",
-    ".oWWWWWWWWWWsso.",
-    "..oWWWWWWWWsso..",
-    "...ooWWWWWWoo...",
-    ".....oooooo....."]},
-  snake: {pal:{g:"#7cfc00", G:"#3f9a0a", r:"#ff4b4b", w:"#ffffff", n:"#5a3418"}, map:[
-    "................",
-    "...........n....",
-    "..........rrr...",
-    ".........rrwrr..",
-    ".........rrrrr..",
-    "..........rrr...",
-    "................",
-    "..gggggggg......",
-    "..gGGGGGGg......",
-    "..gg............",
-    "..gg............",
-    "..gggggggggggg..",
-    "..gGGGGGGGGGwgr.",
-    "..............r.",
-    "................",
-    "................"]},
-  rock: {pal:{k:"#1a1420", g:"#7a7080", G:"#4a4250", h:"#d8d0d8", w:"#e8f0ff", c:"#5ce1ff", y:"#ffd23f", r:"#ff4d6d"}, map:[
-    "................",
-    "........kkkk....",
-    ".......khhggk...",
-    "......khgggGgk..",
-    "......kgGgggggk.",
-    "......kgggggGgk.",
-    "......kggGgggk..",
-    ".......kgggGk...",
-    "........kkkk....",
-    "....y...........",
-    "................",
-    "..k.............",
-    ".kwk............",
-    ".kck............",
-    "kwwwk...........",
-    "krkrk..........."]},
-  cup: {pal:{k:"#0f121b", y:"#ffd23f", Y:"#fff2a8", o:"#d09a1c", b:"#3a7fc8", w:"#ffffff"}, map:[
-    "................",
-    "...kkkkkkkkkk...",
-    ".kkkYYyyyyyyokk.",
-    "kYkkYyyyyyyyokYk",
-    "ky.kYyyyyyyyok.k",
-    "kyk.kYyyyyyok.ok",
-    ".kok.kYyyyok.kk.",
-    "..kkkkYyyyokkk..",
-    "......kyyok.....",
-    ".......kok......",
-    ".......kok......",
-    "......kyyok.....",
-    ".....kkkkkkk....",
-    "....kbbbwbbbk...",
-    "....kbbbbbbbk...",
-    "....kkkkkkkkk..."]},
-  anchor: {pal:{k:"#0f121b", y:"#ffd23f", Y:"#fff2a8", o:"#d09a1c", b:"#2462c0", B:"#9fd3ff"}, map:[
-    "................",
-    "......kkkk......",
-    ".....kYyyok.....",
-    ".....kyk.yk.....",
-    ".....kyokok.....",
-    "...kkkkyokkkk...",
-    "...kYyyyyyyok...",
-    "...kkkkyokkkk...",
-    "......kyok......",
-    ".k....kyok....k.",
-    "kYk...kyok...kok",
-    "kyok..kyok..kook",
-    ".kyoo.kyok.ooyk.",
-    "..kkyyyyyyyyok..",
-    "....kkoooookk...",
-    "......kkkk......"]},
-  lander: {pal:{k:"#0b0614", w:"#ffffff", g:"#c8ccd4", o:"#8a5a10", y:"#ffd76a", b:"#2a3a5a", f:"#fff2a8", r:"#ff9a3a"}, map:[
-    "................",
-    "......kkkk......",
-    ".....kwwgk......",
-    ".....kwbgk......",
-    ".....kggok......",
-    "....kkkkkkk.....",
-    "...kyyyyyyok....",
-    "...kyoooooyk....",
-    "...kkkkkkkkk....",
-    "...k.k...k.k....",
-    "..k..k...k..k...",
-    ".kk.........kk..",
-    "................",
-    "....ff...ff.....",
-    ".....r...r......",
-    "................"]},
-  stars: {pal:{k:"#0b0614", w:"#ffffff", y:"#ffd76a", o:"#e09a2a", b:"#9fdcff"}, map:[
-    "................",
-    ".kkk............",
-    "kwyok...........",
-    "kyoobbbbbbbbkkk.",
-    "kkok.......kwyok",
-    ".kk........kyook",
-    ".b..........kok.",
-    ".b...........b..",
-    ".b...........b..",
-    ".b...........b..",
-    "kkk..........b..",
-    "wyokbbbbbbbbkkk.",
-    "yook.......kwyok",
-    "kok........kyook",
-    ".k..........kok.",
-    "................"]},
-  planet: {pal:{k:"#0b0614", w:"#fff4d8", y:"#e8cf95", o:"#c39a62", d:"#8a6444", r:"#6fd8ff"}, map:[
-    "................",
-    "................",
-    ".....kkkkkk.....",
-    "....kwwyyyok....",
-    "...kwyyyyyyok...",
-    "..kkyyoooyyokk..",
-    "kkrrkkyyyyokrrkk",
-    "krrrrkkkkkkrrrrk",
-    "kkrrkooooodkrrkk",
-    "..kkkyyyyodkkk..",
-    "...kyoooodddk...",
-    "....kooodddk....",
-    ".....kkkkkk.....",
-    "................",
-    "................",
-    "................"]},
-  boat: {pal:{k:"#0f121b", g:"#a1aabb", h:"#dfe4ee", r:"#ff5050", b:"#2462c0", B:"#9fd3ff", d:"#163e94"}, map:[
-    "................",
-    "......k.........",
-    "......k..r......",
-    ".....kkk........",
-    "....khhhk.......",
-    "...kkkkkkkk.....",
-    ".kkhhhhhhhhkk...",
-    ".kggggggggggk...",
-    "..kggggggggk....",
-    "bbbkkkkkkkkbbbbb",
-    "bBbbbBbbbbbBbbbb",
-    "dbbbbbbdbbbbbbdb",
-    "bbbBbbbbbBbbbbbb",
-    "bdbbbbbdbbbbbdbb",
-    "bbbbbBbbbbbbBbbb",
-    "dbbbbbbbbdbbbbbb"]},
-  cards: {draw(x){
-    const card = (ox, oy, red, suit) => {
-      x.fillStyle = "#16161e"; x.fillRect(ox + 1, oy, 8, 12); x.fillRect(ox, oy + 1, 10, 10);
-      x.fillStyle = "#fbfaf2"; x.fillRect(ox + 1, oy + 1, 8, 10);
-      x.fillStyle = red ? "#d22b3c" : "#20202c";
-      suit.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === "x") x.fillRect(ox + 3 + c, oy + 4 + r, 1, 1); }));
-      x.fillRect(ox + 2, oy + 2, 1, 1);
-    };
-    card(1, 1, false, ["..x..", ".xxx.", "xxxxx", "..x.."]);
-    card(6, 3, true, [".x.x.", "xxxxx", ".xxx.", "..x.."]);
-  }},
-  blocks: {draw(x){
-    const cell = (cx, cy, c, hi, lo) => { x.fillStyle = lo; x.fillRect(cx*4, cy*4, 4, 4); x.fillStyle = c; x.fillRect(cx*4, cy*4, 3, 3); x.fillStyle = hi; x.fillRect(cx*4, cy*4, 3, 1); x.fillRect(cx*4, cy*4, 1, 3); };
-    [[0,0],[1,0],[2,0],[1,1]].forEach(([a,b]) => cell(a, b, "#a855f7", "#e2c4ff", "#4a1a80"));
-    [[3,1],[3,2],[3,3],[2,3]].forEach(([a,b]) => cell(a, b, "#3b82f6", "#bcd6ff", "#173a80"));
-    [[0,2],[1,2],[1,3],[0,3]].forEach(([a,b]) => cell(a, b, "#facc15", "#fff2a8", "#8a6a00"));
-  }},
-  glider: {draw(x){
-    x.fillStyle = "#0b0f24"; x.fillRect(0, 0, 16, 16);
-    x.fillStyle = "#18204a"; for (let i = 0; i <= 16; i += 5){ x.fillRect(i, 0, 1, 16); x.fillRect(0, i, 16, 1); }
-    [[1,0],[2,1],[0,2],[1,2],[2,2]].forEach(([a,b]) => { const X = a*5+1, Y = b*5+1;
-      x.fillStyle = "#1f8a4a"; x.fillRect(X, Y, 4, 4); x.fillStyle = "#5cff8a"; x.fillRect(X, Y, 3, 3); x.fillStyle = "#d4ffe0"; x.fillRect(X, Y, 3, 1); x.fillRect(X, Y, 1, 3); });
-  }},
-  // le chien d'Injagility, le même bouvier bernois en 32 bits que dans le jeu
-  dog: {draw: x => { const C = window.Chiens32; if (!C) return; x.drawImage(C.frames("bernois").stand, -2, 52 - C.GROUND); }},
-};
-document.querySelectorAll("canvas[data-icon]").forEach(c => {
-  const ic = ICONS[c.dataset.icon], x = c.getContext("2d");
-  if (ic.draw) return ic.draw(x);
-  ic.map.forEach((row,r) => [...row].forEach((ch,col) => { if (ic.pal[ch]){ x.fillStyle = ic.pal[ch]; x.fillRect(col,r,1,1); } }));
-});
+LudoIcons.paint();
 
 /* ---------- accueil : dates de sortie et de mise à jour, genres, jeu à la une, quoi de neuf ---------- */
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
@@ -627,6 +437,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-15", "Accueil : bouton SURPRENDS-MOI (un jeu au hasard), tri des cartouches et recherche. Classements : la nouvelle étagère de boîtes de jeu, avec une couronne sur tes records."],
   ["2026-10-15", "Nebula : nouveaux sons, armes étouffées, saut en hyperespace, musique de combat et marche sur la carte (réglage AMBIANCE)."],
   ["2026-10-15", "Nebula : quatre nouveaux vaisseaux, le brouilleur et le mouilleur de mines dans ta flotte, la frégate-bouclier et le poseur de mines chez les pirates."],
   ["2026-10-15", "Nebula : la partie du jour devient la mission du jour, avec chaque jour une flotte et une règle imposées (convoi à protéger, comptoirs fermés, carburant compté…)."],
@@ -673,7 +484,32 @@ let filter = "TOUS"; try { filter = sessionStorage.getItem("ludo.filter") || "TO
 if (!FILTERS.includes(filter)) filter = "TOUS";
 const fbar = document.getElementById("filters");
 FILTERS.forEach(f => { const b = document.createElement("button"); b.type = "button"; b.dataset.f = f; b.textContent = f.replace("★ ", ""); b.addEventListener("click", () => { filter = f; try { sessionStorage.setItem("ludo.filter", f); } catch (e) {} arrange(); }); fbar.appendChild(b); });
-const shows = c => { const m = metaOf(c); return filter === "TOUS" || (filter === "★ FAVORIS" ? favs.includes(c.dataset.k) : filter === "NOUVEAU" ? recent(m.added) || recent(m.updated) : (m.genres || []).includes(filter)); };
+// recherche : dans le nom, la description, les étiquettes et les genres, sans tenir compte des accents
+const plain = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+allCarts.forEach(c => { c.dataset.txt = plain(c.textContent + " " + (metaOf(c).genres || []).join(" ")); });
+const findBox = document.getElementById("find");
+let query = "";
+findBox.addEventListener("input", () => { query = plain(findBox.value.trim()); arrange(); });
+findBox.addEventListener("keydown", e => { if (e.key === "Enter"){ const c = allCarts.find(c => !c.hidden); if (c) c.click(); } else if (e.key === "Escape"){ findBox.value = ""; query = ""; arrange(); } });
+// tri : favoris d'abord (ordre d'origine), nouveautés, nom, dernière partie (notée quand on lance un jeu depuis l'accueil)
+const SORTS = [["fav", "FAVORIS D'ABORD"], ["new", "NOUVEAUTES"], ["az", "NOM A-Z"], ["last", "DERNIERE PARTIE"]];
+let sortBy = "fav"; try { sortBy = localStorage.getItem("ludo.sort") || "fav"; } catch (e) {}
+if (!SORTS.some(x => x[0] === sortBy)) sortBy = "fav";
+let played = {}; try { played = JSON.parse(localStorage.getItem("ludo.played")) || {}; } catch (e) {}
+const notePlayed = c => { played[c.dataset.k] = Date.now(); try { localStorage.setItem("ludo.played", JSON.stringify(played)); } catch (e) {} };
+allCarts.forEach(c => c.addEventListener("click", () => notePlayed(c)));
+const sortBtn = document.getElementById("sort");
+sortBtn.addEventListener("click", () => { sortBy = SORTS[(SORTS.findIndex(x => x[0] === sortBy) + 1) % SORTS.length][0]; try { localStorage.setItem("ludo.sort", sortBy); } catch (e) {} arrange(); });
+const lastDate = c => { const m = metaOf(c); return [m.added || "", m.updated || ""].sort().pop(); };
+const name = c => c.querySelector("h2").textContent;
+function compare(a, b){
+  const isFav = c => favs.includes(c.dataset.k);
+  if (sortBy === "new") return lastDate(b).localeCompare(lastDate(a)) || order.get(a) - order.get(b);
+  if (sortBy === "az") return name(a).localeCompare(name(b), "fr");
+  if (sortBy === "last") return (played[b.dataset.k] || 0) - (played[a.dataset.k] || 0) || order.get(a) - order.get(b);
+  return (isFav(b) - isFav(a)) || order.get(a) - order.get(b);
+}
+const shows = c => { const m = metaOf(c); if (query && !c.dataset.txt.includes(query)) return false; return filter === "TOUS" || (filter === "★ FAVORIS" ? favs.includes(c.dataset.k) : filter === "NOUVEAU" ? recent(m.added) || recent(m.updated) : (m.genres || []).includes(filter)); };
 // favoris en tête de l'étagère, puis l'ordre d'origine ; le filtre cache les autres
 // le texte du gardien s'écrit lettre par lettre, comme un dialogue de RPG
 let sayText = "", sayTimer = null;
@@ -689,12 +525,13 @@ fbar.addEventListener("keydown", e => {
   filter = f; try { sessionStorage.setItem("ludo.filter", f); } catch (err) {} arrange(); [...fbar.children].find(b => b.dataset.f === f).focus();
 });
 function arrange(){
-  const isFav = c => favs.includes(c.dataset.k);
-  allCarts.slice().sort((a, b) => (isFav(b) - isFav(a)) || order.get(a) - order.get(b)).forEach(c => { c.hidden = !shows(c); shelf.appendChild(c); });
+  allCarts.slice().sort(compare).forEach(c => { c.hidden = !shows(c); shelf.appendChild(c); });
+  sortBtn.innerHTML = `TRI ▶ <b>${SORTS.find(x => x[0] === sortBy)[1]}</b>`; sortBtn.setAttribute("aria-label", "Changer le tri (actuel : " + SORTS.find(x => x[0] === sortBy)[1].toLowerCase() + ")");
   [...fbar.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.f === filter));
   document.getElementById("shelfEmpty").hidden = true;
   const n = allCarts.filter(c => !c.hidden).length, jeux = n > 1 ? "jeux" : "jeu";
-  say(filter === "TOUS" ? `Bienvenue ! Voici toute la Ludothèque : ${n} ${jeux}.`
+  if (query) say(n ? `${n} ${jeux} ${n > 1 ? "répondent" : "répond"} à « ${findBox.value.trim()} ».` : `Aucun jeu ne répond à « ${findBox.value.trim()} ». Essaie un autre mot !`);
+  else say(filter === "TOUS" ? `Bienvenue ! Voici toute la Ludothèque : ${n} ${jeux}.`
     : filter === "★ FAVORIS" ? (n ? `Voici tes ${n} ${n > 1 ? "jeux préférés" : "jeu préféré"}.` : "Tu n'as pas encore de favori. Touche l'étoile d'une cartouche pour l'ajouter ici.")
     : filter === "NOUVEAU" ? (n ? `${n} ${n > 1 ? "jeux tout neufs ou mis à jour" : "jeu tout neuf ou mis à jour"} !` : "Rien de neuf ces trois derniers jours. Reviens bientôt !")
     : `${n} ${n > 1 ? "défis t'attendent" : "défi t'attend"} aujourd'hui.`);
@@ -728,6 +565,30 @@ function select(i, focus){
   carts.forEach((c,k) => c.classList.toggle("sel", k === sel));
   if (focus) carts[sel].focus({preventScroll:false});
 }
+// surprends-moi : les cartouches défilent dans la console de plus en plus lentement, puis la choisie est insérée
+document.getElementById("surprise").addEventListener("click", () => {
+  const pool = allCarts.filter(c => !c.hidden).length ? allCarts.filter(c => !c.hidden) : allCarts;
+  const pick = pool[Math.floor(Math.random() * pool.length)], go = () => { notePlayed(pick); location.href = pick.href; };
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return go();
+  const ov = document.createElement("div"); ov.className = "surprise"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", "Surprends-moi");
+  ov.innerHTML = '<div class="slotwin"></div><div class="console" aria-hidden="true"><i>LUDO 16</i></div><div class="say" aria-live="polite">LE GARDIEN CHOISIT...<small>TOUCHE L\'ECRAN POUR ANNULER</small></div>';
+  const win = ov.querySelector(".slotwin"), sayEl = ov.querySelector(".say");
+  const clones = pool.map(c => { const k = c.cloneNode(true); k.removeAttribute("href"); k.removeAttribute("tabindex"); k.classList.remove("sel"); k.hidden = true;
+    k.querySelectorAll(".fav, .badge, .arrow").forEach(e => e.remove()); LudoIcons.paint(k); win.appendChild(k); return k; });
+  document.body.appendChild(ov);
+  const steps = 14 + Math.floor(Math.random() * 6), n = pool.length;
+  let i = ((pool.indexOf(pick) - steps) % n + n) % n, step = 0, delay = 55, timer = 0;
+  const stop = () => { clearTimeout(timer); ov.remove(); document.removeEventListener("keydown", esc, true); };
+  const esc = e => { if (e.key === "Escape"){ e.stopPropagation(); stop(); } };
+  ov.addEventListener("click", stop); document.addEventListener("keydown", esc, true);
+  const tick = () => {
+    clones.forEach((k, j) => { k.hidden = j !== i; });
+    if (step++ < steps){ i = (i + 1) % n; delay *= 1.14; timer = setTimeout(tick, delay); return; }
+    sayEl.textContent = pick.querySelector("h2").textContent + " !";
+    timer = setTimeout(() => { clones[i].classList.add("in"); ov.classList.add("on"); sayEl.textContent = "INSERTION..."; timer = setTimeout(go, 900); }, 700);
+  };
+  tick();
+});
 allCarts.forEach(c => { c.addEventListener("mouseenter", () => select(carts.indexOf(c))); c.addEventListener("focus", () => select(carts.indexOf(c))); });
 arrange();
 document.addEventListener("keydown", e => {

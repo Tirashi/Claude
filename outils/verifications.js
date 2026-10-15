@@ -3,7 +3,7 @@
    1. syntaxe de chaque script (.js et <script> des pages .html, maquettes comprises) ;
    2. sw.js : chaque fichier de FILES existe ; la version du cache notée dans CLAUDE.md est la bonne ;
    3. sécurité : aucune clé secrète Supabase dans le dépôt, le SQL garde MON-CODE ;
-   4. menu : les icônes de ICONS font bien 16 lignes de 16 caractères ;
+   4. menu : les icônes de ICONS (icones.js) font bien 16 lignes de 16 caractères ;
    5. Nebula : simulateur de combats et de parties (reproductibilité, migrate()) ;
    6. Nebula : types de regles.js (// @ts-check + JSDoc) vérifiés par tsc, sans rien compiler.
    Code de sortie 1 si quelque chose ne va pas. */
@@ -53,8 +53,8 @@ for (const f of files.filter(f => f.endsWith('.sql')))
     if (m[1] !== 'MON-CODE') bad(`${f} : le code familial doit rester MON-CODE dans le dépôt`);
 
 // 4. icônes du menu
-const icons = read('index.html').match(/const ICONS = \{([\s\S]*?)\n\};/);
-if (!icons) bad('index.html : ICONS introuvable');
+const icons = read('icones.js').match(/const ICONS = \{([\s\S]*?)\n\};/);
+if (!icons) bad('icones.js : ICONS introuvable');
 else {
   let k = 0;
   for (const m of icons[1].matchAll(/(\w+)\s*:\s*\{[^[]*map:\s*\[([\s\S]*?)\]/g)) {
