@@ -49,17 +49,17 @@ button.amb.on { background: rgba(126, 200, 255, .14); border-color: var(--cyan);
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">NEBULA · SOUND DESIGN · SESSION 4</div>
+    <div class="eyebrow">NEBULA · SOUND DESIGN · DEUXIÈME PASSE</div>
     <h1>BANC D'ÉCOUTE</h1>
-    <p class="lead">Pour chaque son : la version <b>actuelle</b> du jeu, puis deux propositions. <b>A</b> est plus ample (sons en couches, petite réverbération, stéréo selon la case), <b>B</b> plus sec et nerveux, façon arcade moderne. Tout est fabriqué par le navigateur, sans fichier son : le jeu reste léger et marche hors connexion. Mets un casque ou des écouteurs si tu peux.</p>
+    <p class="lead">Les bruitages repartent de zéro. Chacun est maintenant calculé échantillon par échantillon, comme dans un synthétiseur de bruitages : résonances de tôle, arcs électriques, chirps de blaster, moteur de fusée, grondement d'explosion en couches. Deux versions par son (<b>V1</b>, <b>V2</b>) et la version <b>actuelle</b> pour comparer ; chaque toucher joue une variante un peu différente, comme dans le jeu. Toujours sans fichier son : le jeu reste léger et marche hors connexion. Mets un casque si tu peux.</p>
     <div class="vol"><label for="vol">VOLUME</label><input id="vol" type="range" min="0" max="100" value="70"></div>
   </header>
 
   <section>
     <h2>EN SITUATION<span>quelques secondes de combat</span></h2>
     <div class="strip">
-      <div><div class="name">SÉQUENCE DE COMBAT</div><div class="what">Canon, laser, impact sur la coque, missile, impact sur le bouclier, torpille, explosion : le même enchaînement avec chaque jeu de sons.</div></div>
-      <div class="pads"><button class="cur" data-seq="cur">ACTUEL</button><button class="prop" data-seq="A">A</button><button class="prop" data-seq="B">B</button></div>
+      <div><div class="name">SÉQUENCE DE COMBAT</div><div class="what">Canon, blaster, impact sur la coque, missile, impact sur le bouclier, torpille à plasma, explosion : le même enchaînement avec chaque jeu de sons.</div></div>
+      <div class="pads"><button class="cur" data-seq="cur">ACTUEL</button><button class="prop" data-seq="V1">V1</button><button class="prop" data-seq="V2">V2</button></div>
     </div>
   </section>
 
@@ -70,12 +70,7 @@ button.amb.on { background: rgba(126, 200, 255, .14); border-color: var(--cyan);
     <div id="amb"></div>
   </section>
 
-  <div class="legend">
-    <div><b>ACTUEL</b>Un oscillateur ou un souffle par son, sans espace : sec et un peu « bip ».</div>
-    <div class="a"><b>A · AMPLE</b>Attaque, corps et queue superposés, variations de hauteur à chaque tir, réverbération courte, son placé à gauche ou à droite selon la case, compresseur commun.</div>
-    <div class="a"><b>B · ARCADE</b>Plus court et plus franc : impulsions carrées, distorsion légère, peu d'espace. Se mélange bien quand beaucoup de tirs partent ensemble.</div>
-  </div>
-  <p class="note"><b>Pour choisir</b> : dis-moi, son par son, ce que tu gardes (par exemple « canon A, laser B, explosion A, ambiance Dérive sur la carte et Tension en combat »), ou ce qu'il faut retoucher (plus grave, plus court, moins fort…). On peut aussi mélanger : la chaîne commune de A avec certains sons de B.</p>
+  <p class="note"><b>Pour choisir</b> : dis-moi, son par son, ce que tu gardes (par exemple « canon V1, laser V2, torpille V1, Dérive II sur la carte »), ou ce qu'il faut retoucher (plus grave, plus court, plus métallique, moins fort…). Si tu préfères de vrais bruitages enregistrés, une banque libre de droits comme Kenney « Sci-fi Sounds » (licence CC0) peut aussi servir : il faudrait me déposer les fichiers, car je ne peux pas les télécharger depuis mon environnement.</p>
 </div>
 
 <script>
@@ -83,48 +78,220 @@ button.amb.on { background: rgba(126, 200, 255, .14); border-color: var(--cyan);
 /* ---------- moteur ---------- */
 let A = null, OUT, RAW, REV, NOISE;
 const vol = () => document.getElementById('vol').value / 100;
+// réverbération : premières réflexions puis queue qui s'assombrit (amortissement des aigus)
 function impulse(sec, decay) {
-  const n = Math.floor(A.sampleRate * sec), b = A.createBuffer(2, n, A.sampleRate);
-  for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, decay); }
+  const sr = A.sampleRate, n = Math.floor(sr * sec), b = A.createBuffer(2, n, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = b.getChannelData(ch); let lp = 0;
+    for (let i = 0; i < n; i++) { const t = i / sr, k = .15 + .8 * Math.exp(-t * 5); lp += k * ((Math.random() * 2 - 1) - lp); d[i] = lp * Math.pow(1 - i / n, decay); }
+    for (const [ms, g] of [[11, .5], [19, .35], [27, .3], [41, .22]]) { const i = Math.floor((ms + ch * 3) * sr / 1000); if (i < n) d[i] += g; }
+  }
   return b;
 }
 function ctx() {
   if (!A) {
     A = new (window.AudioContext || window.webkitAudioContext)();
     const master = A.createGain(); master.connect(A.destination); ctx.master = master;
-    // chaîne des propositions : compresseur commun + réverbération courte
-    const comp = A.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = .003; comp.release.value = .25; comp.connect(master);
-    OUT = A.createGain(); OUT.gain.value = .55; OUT.connect(comp);
-    REV = A.createConvolver(); REV.buffer = impulse(2.2, 2.6); const wet = A.createGain(); wet.gain.value = .9; REV.connect(wet); wet.connect(comp);
-    // chaîne actuelle du jeu : un simple gain à 0,35
+    const comp = A.createDynamicsCompressor(); comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 5; comp.attack.value = .002; comp.release.value = .2; comp.connect(master);
+    OUT = A.createGain(); OUT.gain.value = .8; OUT.connect(comp);
+    REV = A.createConvolver(); REV.buffer = impulse(1.8, 2.8); const wet = A.createGain(); wet.gain.value = .7; REV.connect(wet); wet.connect(comp);
     RAW = A.createGain(); RAW.gain.value = .35; RAW.connect(master);
     const n = A.sampleRate * 2; NOISE = A.createBuffer(1, n, A.sampleRate); const d = NOISE.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
   }
-  ctx.master.gain.value = vol() * 1.4;
+  ctx.master.gain.value = vol() * 1.3;
   if (A.state === 'suspended') A.resume();
   return A;
 }
-document.getElementById('vol').addEventListener('input', () => { if (A) ctx.master.gain.value = vol() * 1.4; });
-// une voie : panoramique + envoi en réverbération
-function bus(pan = 0, rev = .2) {
-  const g = A.createGain(), p = A.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(OUT);
-  if (rev) { const s = A.createGain(); s.gain.value = rev; g.connect(s); s.connect(REV); }
-  return g;
+document.getElementById('vol').addEventListener('input', () => { if (A) ctx.master.gain.value = vol() * 1.3; });
+
+/* ---------- boîte à outils de synthèse (échantillon par échantillon) ---------- */
+const TAU = Math.PI * 2;
+function rng(seed) { let a = seed | 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const SRATE = () => A.sampleRate;
+const arr = d => new Float32Array(Math.ceil(d * SRATE()));
+// filtre biquad à fréquence variable (fc : nombre ou fonction du temps)
+function biquad(x, type, fc, Q = .707) {
+  const sr = SRATE(); let b0, b1, b2, a1, a2, x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+  const set = f => { f = Math.max(20, Math.min(f, sr * .45)); const w = TAU * f / sr, cs = Math.cos(w), sn = Math.sin(w), al = sn / (2 * Q); let n0, n1, n2;
+    if (type === 'lp') { n0 = (1 - cs) / 2; n1 = 1 - cs; n2 = n0; } else if (type === 'hp') { n0 = (1 + cs) / 2; n1 = -(1 + cs); n2 = n0; } else { n0 = al; n1 = 0; n2 = -al; }
+    const d0 = 1 + al; b0 = n0 / d0; b1 = n1 / d0; b2 = n2 / d0; a1 = -2 * cs / d0; a2 = (1 - al) / d0; };
+  const fn = typeof fc === 'function'; if (!fn) set(fc);
+  for (let i = 0; i < x.length; i++) { if (fn && (i & 31) === 0) set(fc(i / sr)); const y = b0 * x[i] + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = x[i]; y2 = y1; y1 = y; x[i] = y; }
+  return x;
 }
-function env(g, t, vol, att, dur) { g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + att); g.gain.exponentialRampToValueAtTime(.0001, t + dur); }
-function osc(type, f0, f1, dur, v, dest, t, att = .002, detune = 0) {
-  const o = A.createOscillator(), g = A.createGain(); o.type = type; o.detune.value = detune;
-  o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur); env(g, t, v, att, dur);
-  o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + .05); return o;
+const white = (n, r) => { const x = new Float32Array(n); for (let i = 0; i < n; i++) x[i] = r() * 2 - 1; return x; };
+const brown = (n, r) => { const x = new Float32Array(n); let b = 0; for (let i = 0; i < n; i++) { b = (b + .02 * (r() * 2 - 1)) * .998; x[i] = b * 3.5; } return x; };
+function addTo(dst, src, g = 1, at = 0) { const o = Math.floor(at * SRATE()); for (let i = 0; i < src.length && o + i < dst.length; i++) dst[o + i] += src[i] * g; return dst; }
+const shape = (x, k) => { for (let i = 0; i < x.length; i++) x[i] = Math.tanh(k * x[i]) / Math.tanh(k); return x; };
+// résonateur modal : une somme de sinusoïdes amorties (une tôle, une cloche, un émetteur)
+function modal(d, modes, r) { const x = arr(d), sr = SRATE(); for (const [f, a, tau] of modes) { const ph = r() * TAU; for (let i = 0; i < x.length; i++) { const t = i / sr; x[i] += a * Math.exp(-t / tau) * Math.sin(TAU * f * t + ph); } } return x; }
+// crépitement : impulsions au hasard (arcs électriques, éclats)
+function crackle(d, rate, decay, r, len = 3) { const x = arr(d), sr = SRATE(); for (let i = 0; i < x.length; i++) { const t = i / sr; if (r() < rate(t) / sr) { const a = (r() * 2 - 1) * Math.exp(-t / decay); for (let k = 0; k < len && i + k < x.length; k++) x[i + k] += a * (1 - k / len); } } return x; }
+function toBuffer(L, R, level = .9) {
+  R = R || L; let pk = 0; for (const x of [L, R]) for (let i = 0; i < x.length; i++) pk = Math.max(pk, Math.abs(x[i]));
+  const g = pk ? level / pk : 1, n = Math.max(L.length, R.length), b = A.createBuffer(2, n, SRATE());
+  // fondu de 5 ms à la fin, pour éviter un clic
+  [L, R].forEach((x, ch) => { const d = b.getChannelData(ch), f = Math.floor(SRATE() * .005); for (let i = 0; i < x.length; i++) d[i] = x[i] * g * Math.min(1, (x.length - i) / f); });
+  return b;
 }
-function nz(dur, type, f0, f1, q, v, dest, t, att = .002) {
-  const s = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain(); s.buffer = NOISE; s.loop = true;
-  f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur); env(g, t, v, att, dur);
-  s.connect(f); f.connect(g); g.connect(dest); s.start(t, Math.random()); s.stop(t + dur + .05);
+const env = (t, att, tau) => Math.min(1, t / att) * Math.exp(-t / tau);
+function sweepSine(d, f, amp, r, drive = 0) { const x = arr(d), sr = SRATE(); let ph = r() * TAU; for (let i = 0; i < x.length; i++) { const t = i / sr; ph += TAU * f(t) / sr; let s = Math.sin(ph); if (drive) s = Math.tanh(drive * s); x[i] = s * amp(t); } return x; }
+function noiseEnv(d, r, amp, kind = 'white') { const n = Math.ceil(d * SRATE()), x = kind === 'brown' ? brown(n, r) : white(n, r), sr = SRATE(); for (let i = 0; i < n; i++) x[i] *= amp(i / sr); return x; }
+
+/* ---------- les bruitages ---------- */
+const GEN = {
+  V1: {
+    // autocanon : claquement, corps qui plonge et sature, mécanique métallique, souffle
+    canon: r => { const d = .5, x = arr(d);
+      addTo(x, biquad(noiseEnv(.006, r, t => 1 - t / .006), 'hp', 1800));
+      addTo(x, sweepSine(d, t => 55 + 120 * Math.exp(-t / .025), t => env(t, .001, .09) * .9, r, 3));
+      addTo(x, modal(.2, [612, 1430, 2210, 3170].map((f, k) => [f * (.96 + .08 * r()), .12 / (1 + k * .4), .05 - k * .008]), r));
+      addTo(x, biquad(noiseEnv(d, r, t => env(t, .002, .13) * .6, 'brown'), 'lp', t => 300 + 2500 * Math.exp(-t / .08)));
+      return toBuffer(biquad(x, 'hp', 35)); },
+    // blaster : plusieurs chirps dispersés, comme un câble tendu qu'on frappe
+    laser: r => { const d = .34, x = arr(d), sr = SRATE();
+      for (let k = 0; k < 5; k++) { const f0 = 2200 + k * 170 + r() * 120, al = 7 + k * .9; let ph = r() * TAU; const a = 1 - k * .13;
+        for (let i = 0; i < x.length; i++) { const t = i / sr; ph += TAU * f0 * Math.exp(-al * t) / sr; x[i] += Math.sin(ph) * Math.exp(-t / .11) * a; } }
+      addTo(x, biquad(noiseEnv(.004, r, t => 1), 'hp', 3000), .6);
+      return toBuffer(biquad(shape(x, 1.6), 'hp', 250)); },
+    // missile : mise à feu, puis moteur qui crépite et s'éloigne
+    missile: r => { const d = 1.1, x = arr(d), sr = SRATE();
+      addTo(x, noiseEnv(.01, r, t => 1 - t / .01), .9); addTo(x, sweepSine(.1, t => 95 - 300 * t, t => env(t, .001, .04), r), .8);
+      const m = brown(x.length, r); let am = 1, tgt = 1;
+      for (let i = 0; i < m.length; i++) { const t = i / sr; if (i % 1200 === 0) tgt = .35 + .65 * r(); am += (tgt - am) * .004; m[i] *= am * Math.min(1, t / .06) * Math.exp(-t / .5); }
+      addTo(x, biquad(m, 'lp', t => 2200 - 1200 * Math.min(1, t)), 1.1);
+      addTo(x, biquad(noiseEnv(d, r, t => env(t, .05, .35) * .25), 'bp', 3500, 1.5));
+      return toBuffer(biquad(x, 'hp', 40)); },
+    // torpille à plasma : charge qui monte en tremblant, puis lâcher grave et souffle électrique
+    torpille: r => { const d = 1.2, x = arr(d), sr = SRATE(), T0 = .3; let ph = 0;
+      for (let i = 0; i < x.length && i / sr < T0 + .02; i++) { const t = i / sr; ph += TAU * (90 * Math.pow(3, t / T0)) / sr; x[i] += Math.tanh(2 * Math.sin(ph)) * (t / T0) * .35 * (1 + .5 * Math.sin(TAU * (8 + 40 * t) * t)) * (t < T0 ? 1 : 1 - (t - T0) / .02); }
+      biquad(x, 'lp', 1600);
+      const rel = arr(d - T0);
+      addTo(rel, sweepSine(d - T0, t => 40 + 30 * Math.exp(-t / .15), t => env(t, .004, .38), r, 2.5), 1);
+      addTo(rel, biquad(noiseEnv(d - T0, r, t => env(t, .004, .25) * .7), 'bp', t => 300 + 2200 * Math.exp(-t / .15), .9));
+      addTo(rel, biquad(crackle(d - T0, t => 600 * Math.exp(-t / .3), .3, r), 'hp', 2500), .5);
+      addTo(x, rel, 1, T0);
+      return toBuffer(biquad(x, 'hp', 30)); },
+    // impact sur le bouclier : arcs électriques, anneau d'énergie, souffle sourd
+    bouclier: r => { const d = .6, x = arr(d);
+      addTo(x, biquad(crackle(d, t => 1100 * Math.exp(-t / .07), .2, r, 4), 'hp', 2000), .9);
+      addTo(x, modal(d, [[880, .25, .16], [1320, .2, .12], [1985, .15, .09], [2650, .1, .06]].map(([f, a, tau]) => [f * (.97 + .06 * r()), a, tau]), r), .6);
+      addTo(x, biquad(noiseEnv(.3, r, t => env(t, .002, .08) * .5), 'lp', 450));
+      return toBuffer(x, null, .8); },
+    // impact sur la coque : tôle frappée (modes d'une plaque), coup sourd, éclats
+    coque: r => { const d = .7, x = arr(d), base = 170 + 30 * r();
+      addTo(x, modal(d, [1, 1.59, 2.14, 2.3, 2.65, 2.92, 3.5, 4.15, 5.4, 6.2].map((m, k) => [base * m * (.98 + .04 * r()), (1 / (1 + .35 * k)) * (.5 + .5 * r()), .16 / (1 + .5 * k)]), r), .3);
+      addTo(x, biquad(noiseEnv(.12, r, t => env(t, .001, .03)), 'bp', base * 6, 1.2), .7);
+      addTo(x, biquad(noiseEnv(.005, r, t => 1), 'bp', 2500, .8), .8);
+      addTo(x, sweepSine(.2, t => 50 + 40 * Math.exp(-t / .03), t => env(t, .001, .07), r, 2.5), .8);
+      for (let k = 0; k < 6; k++) addTo(x, biquad(noiseEnv(.012, r, t => 1 - t / .012), 'bp', 2500 + 2500 * r(), 3), .25, .03 + .2 * r());
+      return toBuffer(biquad(x, 'hp', 40)); },
+    // explosion : claquement, grave saturé, grondement stéréo, pluie d'éclats
+    explosion: r => { const d = 2.3, L = arr(d), R = arr(d);
+      const crack = biquad(noiseEnv(.006, r, t => 1), 'hp', 1500), sub = sweepSine(d, t => 26 + 32 * Math.exp(-t / .25), t => env(t, .004, .7), r, 2);
+      for (const [x, s] of [[L, 11], [R, 29]]) { const rr = rng(s + Math.floor(r() * 1e6));
+        addTo(x, crack, .9); addTo(x, sub, 1);
+        addTo(x, biquad(noiseEnv(d, rr, t => env(t, .01, .9) * 1.1, 'brown'), 'lp', t => 120 + 900 * Math.exp(-t / .4)));
+        addTo(x, biquad(noiseEnv(.5, rr, t => env(t, .002, .15) * .8), 'lp', t => 300 + 5000 * Math.exp(-t / .06)));
+        for (let k = 0; k < 28; k++) { const at = .05 + 1.4 * Math.pow(rr(), 1.6), len = .01 + .03 * rr(); addTo(x, biquad(noiseEnv(len, rr, t => 1 - t / len), 'bp', 1200 + 4000 * rr(), 2.5), .35 * Math.exp(-at / .6), at); } }
+      return toBuffer(biquad(L, 'hp', 25), biquad(R, 'hp', 25)); },
+    // saut : montée de plus en plus aiguë, puis arrivée sourde
+    saut: r => { const d = 1.7, x = arr(d), T = 1;
+      for (let k = 0; k < 3; k++) addTo(x, sweepSine(T, t => 150 * (1 + k * .5) * Math.exp(t * 2.6), t => Math.pow(t / T, 2) * .15, r));
+      addTo(x, biquad(noiseEnv(T, r, t => Math.pow(t / T, 2) * .6), 'bp', t => 400 * Math.exp(t * 2.4), 3));
+      const end = arr(d - T); addTo(end, biquad(noiseEnv(.006, r, t => 1), 'hp', 1200), .8);
+      addTo(end, sweepSine(d - T, t => 35 + 60 * Math.exp(-t / .12), t => env(t, .002, .3), r, 2), 1);
+      addTo(end, biquad(noiseEnv(d - T, r, t => env(t, .002, .35) * .5), 'lp', t => 200 + 2800 * Math.exp(-t / .2)));
+      addTo(x, end, 1, T); return toBuffer(biquad(x, 'hp', 30)); },
+    clic: r => { const x = arr(.04); addTo(x, biquad(noiseEnv(.0015, r, t => 1), 'bp', 3500, 2), .6); addTo(x, sweepSine(.03, t => 1900, t => Math.exp(-t / .008) * .2, r)); return toBuffer(x, null, .25); },
+    victoire: r => chordBloom([62, 66, 69, 73, 76], [50, 57, 66], 3.2, r),
+    defaite: r => darkFall(r),
+  },
+  V2: {
+    // canon à plasma : impulsion d'énergie saturée, grésillement, petit coup grave
+    canon: r => { const d = .38, x = arr(d);
+      addTo(x, sweepSine(d, t => 180 + 260 * Math.exp(-t / .03), t => env(t, .001, .11) * .8, r, 2.5));
+      addTo(x, biquad(noiseEnv(d, r, t => env(t, .001, .06) * .5), 'bp', 3200, 1.2));
+      addTo(x, sweepSine(.15, t => 70, t => env(t, .002, .05) * .6, r));
+      return toBuffer(biquad(x, 'hp', 40)); },
+    // rayon : faisceau qui ronfle (FM), filtre qui balaie, crépitements
+    laser: r => { const d = .45, x = arr(d), sr = SRATE(); let p1 = 0, p2 = 0;
+      for (let i = 0; i < x.length; i++) { const t = i / sr, f = 880 + 40 * Math.sin(TAU * 55 * t); p1 = (p1 + f / sr) % 1; p2 = (p2 + f * 1.006 / sr) % 1; x[i] = ((2 * p1 - 1) + (2 * p2 - 1)) * .5 * Math.min(1, t / .01) * (t < .3 ? 1 : Math.exp(-(t - .3) / .05)); }
+      biquad(x, 'bp', t => 2600 - 1300 * Math.min(1, t / .45), 2);
+      addTo(x, biquad(crackle(d, t => 300, 1, r), 'hp', 3000), .3);
+      return toBuffer(x); },
+    // micro-missiles : trois départs rapprochés
+    missile: r => { const d = .8, x = arr(d);
+      for (let k = 0; k < 3; k++) { const at = k * .075, m = arr(.35); addTo(m, noiseEnv(.008, r, t => 1), .8); addTo(m, biquad(noiseEnv(.35, r, t => env(t, .02, .1), 'brown'), 'lp', 2600 + 400 * k), 1.2); addTo(x, m, 1 - k * .15, at); }
+      addTo(x, biquad(noiseEnv(d, r, t => env(t, .05, .25) * .3), 'hp', 4000));
+      return toBuffer(biquad(x, 'hp', 50)); },
+    // torpille à protons : une sphère d'énergie qui pulse en partant
+    torpille: r => { const d = .95, x = arr(d), sr = SRATE(); let p = 0;
+      for (let i = 0; i < x.length; i++) { const t = i / sr; p = (p + (160 + 40 * t) / sr) % 1; x[i] = (2 * p - 1) * (.6 + .4 * Math.sin(TAU * 18 * t)) * env(t, .05, .4); }
+      biquad(x, 'lp', t => 1100 - 500 * t, 2);
+      addTo(x, sweepSine(d, t => 50, t => env(t, .02, .35) * .7, r));
+      addTo(x, biquad(crackle(d, t => 400 * Math.exp(-t / .5), .5, r), 'hp', 3500), .4);
+      return toBuffer(biquad(x, 'hp', 30)); },
+    // bouclier : une bulle qui se tend et vibre
+    bouclier: r => { const d = .5, x = arr(d);
+      addTo(x, biquad(noiseEnv(d, r, t => env(t, .02, .15)), 'bp', t => 500 * Math.pow(5, Math.min(1, t / .2)), 3), 1);
+      addTo(x, sweepSine(d, t => 2400 + 60 * Math.sin(TAU * 25 * t), t => env(t, .005, .18) * .25, r));
+      return toBuffer(x, null, .75); },
+    // coque : plus lourde, tôle grave et craquement saturé
+    coque: r => { const d = .8, x = arr(d), base = 105 + 20 * r();
+      addTo(x, modal(d, [1, 1.59, 2.14, 2.3, 2.65, 2.92, 3.5].map((m, k) => [base * m, 1 / (1 + .3 * k), .45 / (1 + .4 * k)]), r), .35);
+      addTo(x, biquad(shape(noiseEnv(.25, r, t => env(t, .001, .12)), 6), 'lp', 1500), .6);
+      addTo(x, sweepSine(.25, t => 45 + 30 * Math.exp(-t / .04), t => env(t, .001, .1), r, 3), .9);
+      return toBuffer(biquad(x, 'hp', 35)); },
+    // explosion compacte : craquement saturé et grave court
+    explosion: r => { const d = 1.1, x = arr(d);
+      addTo(x, biquad(shape(noiseEnv(d, r, t => env(t, .002, .25)), 8), 'lp', t => 200 + 2400 * Math.exp(-t / .15)), .8);
+      addTo(x, sweepSine(d, t => 30 + 40 * Math.exp(-t / .15), t => env(t, .003, .35), r, 2), 1);
+      for (let k = 0; k < 10; k++) { const at = .05 + .6 * r(), len = .015 + .02 * r(); addTo(x, biquad(noiseEnv(len, r, t => 1 - t / len), 'bp', 1500 + 3000 * r(), 2), .3, at); }
+      return toBuffer(biquad(x, 'hp', 30)); },
+    // saut : distorsion de l'espace (filtre en peigne qui balaie)
+    saut: r => { const d = 1.3, n = Math.ceil(d * SRATE()), sr = SRATE(), src = new Float32Array(n), x = new Float32Array(n); let p = 0;
+      for (let i = 0; i < n; i++) { const t = i / sr; p = (p + 80 / sr) % 1; src[i] = ((2 * p - 1) * .5 + (r() * 2 - 1) * .5) * Math.min(1, t / .6) * (t < 1 ? 1 : Math.exp(-(t - 1) / .1)); }
+      for (let i = 0; i < n; i++) { const t = i / sr, D = Math.floor(sr * (.006 - .0055 * Math.min(1, t / 1))); x[i] = src[i] + .85 * (i >= D ? src[i - D] : 0); }
+      biquad(x, 'lp', 5000); return toBuffer(biquad(x, 'hp', 60)); },
+    clic: r => { const x = arr(.05); addTo(x, sweepSine(.006, t => 2600, t => 1 - t / .006, r)); addTo(x, sweepSine(.008, t => 1700, t => 1 - t / .008, r), .7, .025); return toBuffer(x, null, .2); },
+    victoire: r => fanfare(r),
+    defaite: r => bellsFall(r),
+  },
+};
+// petits morceaux musicaux (fin de combat)
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+function fmBell(f, d, r, ratio = 3.5, idx = 3, decay = 1.6) { const x = arr(d), sr = SRATE(); for (let i = 0; i < x.length; i++) { const t = i / sr; x[i] = Math.sin(TAU * f * t + idx * Math.exp(-t / .35) * Math.sin(TAU * f * ratio * t)) * env(t, .003, decay); } return x; }
+function sawPad(f, d, att, rel, cut, r) { const x = arr(d), sr = SRATE(); const ps = [0, 0, 0].map(() => r()); for (let i = 0; i < x.length; i++) { const t = i / sr; let s = 0; [-8, 0, 8].forEach((c, k) => { ps[k] = (ps[k] + f * Math.pow(2, c / 1200) / sr) % 1; s += 2 * ps[k] - 1; }); x[i] = s / 3 * Math.min(1, t / att) * Math.min(1, Math.max(0, (d - t) / rel)); } return biquad(x, 'lp', cut, .8); }
+function chordBloom(notes, padNotes, d, r) { const L = arr(d), R = arr(d);
+  padNotes.forEach((m, k) => { const p = sawPad(mtof(m), d, .25, 1.6, 1400, r); addTo(L, p, .12 * (k % 2 ? .6 : 1)); addTo(R, p, .12 * (k % 2 ? 1 : .6)); });
+  notes.forEach((m, k) => { const b = fmBell(mtof(m), d - k * .07, r, 1, 1.2, 1.4); addTo(k % 2 ? R : L, b, .22, k * .07); addTo(k % 2 ? L : R, b, .1, k * .07); });
+  const top = fmBell(mtof(93), 1.6, r, 3.5, 2, .8); addTo(L, top, .06, .45); addTo(R, top, .06, .5);
+  return toBuffer(L, R, .8); }
+function darkFall(r) { const d = 3.4, L = arr(d), R = arr(d);
+  [[50, 53, 57], [46, 50, 55]].forEach((ch, j) => ch.forEach((m, k) => { const p = sawPad(mtof(m), 1.9, .3, 1, t => 900 - 300 * t, r); addTo(k % 2 ? R : L, p, .14, j * 1.2); addTo(k % 2 ? L : R, p, .07, j * 1.2); }));
+  [74, 69, 65, 62].forEach((m, k) => { const b = fmBell(mtof(m), 1.8, r, 3.5, 2, 1); addTo(L, b, .12, .3 + k * .45); addTo(R, b, .12, .32 + k * .45); });
+  const s = sweepSine(d, t => 36.7, t => env(t, .4, 1.6) * .4, r); addTo(L, s); addTo(R, s);
+  return toBuffer(L, R, .8); }
+function fanfare(r) { const d = 2, x = arr(d), sr = SRATE();
+  for (const [m, at, len] of [[62, 0, .14], [69, .15, .14], [74, .3, 1.5]]) { const n = Math.ceil(len * sr), y = new Float32Array(n); const ps = [0, 0, 0];
+    for (let i = 0; i < n; i++) { const t = i / sr; let s = 0; [-7, 0, 7].forEach((c, k) => { ps[k] = (ps[k] + mtof(m) * Math.pow(2, c / 1200) / sr) % 1; s += 2 * ps[k] - 1; }); y[i] = s / 3 * Math.min(1, t / .01) * Math.min(1, (len - t) / .08); }
+    biquad(y, 'lp', t => 600 + 2800 * Math.min(1, t / .04) * Math.exp(-t / .5), 1.2); addTo(x, y, .5, at); }
+  return toBuffer(x, null, .7); }
+function bellsFall(r) { const d = 3, x = arr(d); [74, 72, 69, 65, 62].forEach((m, k) => addTo(x, fmBell(mtof(m), 1.6, r, 3.5, 2.5, .9), .2, k * .3)); addTo(x, sweepSine(d, t => 36.7, t => env(t, .5, 1.4) * .35, r)); return toBuffer(x, null, .7); }
+
+// trois variantes par son, fabriquées à la demande puis gardées
+const CACHE = {};
+function variant(v, k) { const key = v + k; if (!CACHE[key]) CACHE[key] = [0, 1, 2].map(s => GEN[v][k](rng(1000 + s * 7919 + k.length * 31))); const l = CACHE[key]; return l[Math.floor(Math.random() * l.length)]; }
+function playBuf(buf, t, pan = 0, rev = .15, rate = 1, sweep) {
+  const s = A.createBufferSource(), g = A.createGain(), p = A.createStereoPanner(); s.buffer = buf; s.playbackRate.value = rate;
+  if (sweep) { p.pan.setValueAtTime(-.7, t); p.pan.linearRampToValueAtTime(.7, t + buf.duration); } else p.pan.value = pan;
+  s.connect(g); g.connect(p); p.connect(OUT); if (rev) { const sd = A.createGain(); sd.gain.value = rev; p.connect(sd); sd.connect(REV); }
+  s.start(t);
 }
-function shaper(k, dest) { const w = A.createWaveShaper(), c = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; c[i] = (1 + k) * x / (1 + k * Math.abs(x)); } w.curve = c; w.connect(dest); return w; }
-const vary = (a = .08) => 1 + (Math.random() - .5) * a;
-const side = () => (Math.random() - .5) * .9;
+const REVAMT = { canon: .08, laser: .15, missile: .2, torpille: .25, bouclier: .3, coque: .12, explosion: .3, saut: .35, clic: 0, victoire: .45, defaite: .45 };
+const MUSIC = new Set(['victoire', 'defaite', 'clic']);
+const mkSet = v => Object.fromEntries(Object.keys(GEN.V1).map(k => [k, (t, pan = (Math.random() - .5) * .9) => playBuf(variant(v, k), t, MUSIC.has(k) ? 0 : pan, REVAMT[k], MUSIC.has(k) ? 1 : 1 + (Math.random() - .5) * .06, k === 'missile' && v === 'V1')]));
 
 /* ---------- sons actuels (copie exacte du jeu) ---------- */
 function rtone(type, f0, f1, dur, v, t) { const o = A.createOscillator(), g = A.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g); g.connect(RAW); o.start(t); o.stop(t + dur + .02); }
@@ -143,83 +310,30 @@ const CUR = {
   defaite: t => { rtone('sine', 196, 98, 1.2, .08, t); rtone('sine', 147, 73, 1.4, .06, t + .2); },
 };
 
-/* ---------- proposition A : ample ---------- */
-const PA = {
-  canon: (t, p = side()) => { const b = bus(p, .18), v = vary();
-    nz(.025, 'highpass', 5000, 4000, .7, .35, b, t);                         // claquement
-    osc('sine', 180 * v, 46, .22, .9, b, t);                                  // corps
-    nz(.28, 'lowpass', 2600, 160, 1, .45, shaper(4, b), t); },               // souffle granuleux
-  laser: (t, p = side()) => { const b = bus(p, .3), v = vary(), f = A.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(3500, t); f.frequency.exponentialRampToValueAtTime(700, t + .24); f.connect(b);
-    osc('sawtooth', 1700 * v, 260, .24, .16, f, t, .004, -9); osc('sawtooth', 1700 * v, 260, .24, .16, f, t, .004, 9); osc('sine', 420 * v, 110, .2, .3, b, t); },
-  missile: (t, p = side()) => { const b = A.createGain(), pn = A.createStereoPanner(); pn.pan.setValueAtTime(-.7, t); pn.pan.linearRampToValueAtTime(.7, t + .6); b.connect(pn); pn.connect(OUT); const s = A.createGain(); s.gain.value = .3; b.connect(s); s.connect(REV);
-    nz(.08, 'bandpass', 900, 2500, 1.5, .4, b, t);                            // mise à feu
-    nz(.65, 'bandpass', 500, 2800, 2.2, .55, b, t + .03, .18);                // vol du missile
-    osc('sine', 70, 48, .6, .3, b, t, .1); },
-  torpille: (t, p = side()) => { const b = bus(p, .45);
-    osc('sine', 130, 36, 1, .85, b, t, .01); nz(.9, 'lowpass', 600, 70, 1, .4, b, t, .01);
-    for (let i = 0; i < 5; i++) { const tt = t + .05 + Math.random() * .45; osc('sine', 300 + Math.random() * 400, 900, .06, .05, b, tt); } },
-  bouclier: (t, p = side()) => { const b = bus(p, .5);
-    [1180, 1710, 2390, 3120].forEach((f, i) => osc('sine', f * vary(.03), f * .98, .55 - i * .1, .07, b, t, .003));
-    nz(.12, 'highpass', 6000, 9000, .7, .12, b, t); },
-  coque: (t, p = side()) => { const b = bus(p, .22);
-    nz(.2, 'bandpass', 1100 * vary(), 700, 6, .9, b, t);                      // tôle frappée
-    osc('triangle', 215, 170, .32, .25, b, t); osc('triangle', 331, 290, .26, .14, b, t);
-    osc('sine', 95, 48, .18, .55, shaper(6, b), t); },
-  explosion: (t, p = side()) => { const b = bus(p * .5, .5);
-    osc('sine', 72, 24, 1.5, .95, b, t, .004); nz(1.4, 'lowpass', 4200, 80, .8, .95, shaper(3, b), t, .004);
-    for (let i = 0; i < 12; i++) { const tt = t + .04 + Math.random() * .8, bb = bus(side() * 1.6, .3); nz(.035, 'highpass', 2500 + Math.random() * 3000, 2000, 1, .25, bb, tt); } },
-  saut: t => { const b = bus(0, .6);
-    osc('sine', 80, 1300, .95, .22, b, t, .35); nz(.95, 'bandpass', 300, 5200, 4, .45, b, t, .45);
-    osc('sine', 110, 38, .4, .5, b, t + .9); nz(.35, 'lowpass', 1500, 100, 1, .25, b, t + .9); },
-  clic: t => { const b = bus(0, .05); osc('sine', 2400, 2300, .015, .14, b, t); osc('sine', 1200, 1100, .035, .06, b, t + .004); },
-  victoire: t => { const b = bus(0, .55);
-    [[220, 0], [277.2, .13], [329.6, .26], [440, .39], [554.4, .52]].forEach(([f, d]) => { osc('triangle', f, f, 1.8, .14, b, t + d, .01); osc('sine', f / 2, f / 2, 1.8, .1, b, t + d, .02); });
-    [1760, 2217, 2637].forEach((f, i) => osc('sine', f, f, 1.6, .025, b, t + .7 + i * .05, .01)); },
-  defaite: t => { const b = bus(0, .6), f = A.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900; f.connect(b);
-    [[293.7, 0], [261.6, .45], [233.1, .9], [220, 1.35]].forEach(([fr, d]) => { osc('sawtooth', fr, fr, 1.2, .06, f, t + d, .05, -6); osc('sawtooth', fr, fr, 1.2, .06, f, t + d, .05, 6); });
-    osc('sine', 73.4, 73.4, 3, .25, b, t, .3); },
-};
 
-/* ---------- proposition B : arcade ---------- */
-const PB = {
-  canon: (t, p = side()) => { const b = bus(p, .06), v = vary(), d = shaper(8, b); osc('square', 230 * v, 80, .06, .2, d, t); osc('square', 200 * v, 70, .06, .16, d, t + .05); nz(.08, 'bandpass', 1300, 600, 1.2, .5, b, t); },
-  laser: (t, p = side()) => { const b = bus(p, .08), v = vary(), car = A.createOscillator(), mod = A.createOscillator(), mg = A.createGain(), g = A.createGain();
-    car.type = 'sine'; car.frequency.setValueAtTime(1300 * v, t); car.frequency.exponentialRampToValueAtTime(260, t + .16);
-    mod.frequency.value = 640; mg.gain.setValueAtTime(500, t); mg.gain.exponentialRampToValueAtTime(10, t + .16); mod.connect(mg); mg.connect(car.frequency);
-    env(g, t, .3, .002, .17); car.connect(g); g.connect(b); car.start(t); mod.start(t); car.stop(t + .2); mod.stop(t + .2); },
-  missile: (t, p = side()) => { const b = bus(p, .1); osc('triangle', 1500, 480, .45, .12, b, t, .01); nz(.45, 'lowpass', 3200, 700, 1, .3, b, t, .05); },
-  torpille: (t, p = side()) => { const b = bus(p, .15), f = A.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 450; f.connect(b);
-    osc('sawtooth', 95, 38, .6, .35, f, t, .01); osc('sine', 58, 40, .6, .5, b, t); },
-  bouclier: (t, p = side()) => { const b = bus(p, .12), o = A.createOscillator(), g = A.createGain(), l = A.createOscillator(), lg = A.createGain();
-    o.type = 'sine'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(1500, t + .15); l.frequency.value = 38; lg.gain.value = 120; l.connect(lg); lg.connect(o.frequency);
-    env(g, t, .2, .003, .17); o.connect(g); g.connect(b); o.start(t); l.start(t); o.stop(t + .2); l.stop(t + .2); },
-  coque: (t, p = side()) => { const b = bus(p, .06); nz(.2, 'lowpass', 1900, 300, 1, .7, shaper(30, b), t); osc('sine', 115, 58, .2, .5, b, t); },
-  explosion: (t, p = side()) => { const b = bus(p * .5, .15); nz(.55, 'lowpass', 2200, 90, 1, .9, shaper(10, b), t); osc('sine', 95, 30, .55, .8, b, t); },
-  saut: t => { const b = bus(0, .2); osc('triangle', 200, 1700, .45, .18, b, t, .05); [880, 1320, 1760].forEach((f, i) => osc('square', f, f, .08, .04, b, t + .4 + i * .06)); },
-  clic: t => { const b = bus(0, 0), f = A.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 4000; f.connect(b); osc('square', 1800, 1700, .02, .06, f, t); },
-  victoire: t => { const b = bus(0, .15), f = A.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2500; f.connect(b);
-    [[440, 0], [554.4, .1], [659.3, .2], [880, .3], [659.3, .45], [880, .55]].forEach(([fr, d]) => osc('square', fr, fr, d > .5 ? .6 : .12, .07, f, t + d, .005)); },
-  defaite: t => { const b = bus(0, .15); [[392, 0], [370, .25], [349.2, .5], [329.6, .75]].forEach(([f, d]) => osc('square', f, f * (d > .7 ? .5 : 1), d > .7 ? .9 : .22, .06, b, t + d, .005)); },
-};
+// outils de la première proposition (ambiances I)
+function oenv(g, t, v, att, dur) { g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + att); g.gain.exponentialRampToValueAtTime(.0001, t + dur); }
+function oosc(type, f0, f1, dur, v, dest, t, att = .002, detune = 0) { const o = A.createOscillator(), g = A.createGain(); o.type = type; o.detune.value = detune; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur); oenv(g, t, v, att, dur); o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + .05); return o; }
+function onz(dur, type, f0, f1, q, v, dest, t, att = .002) { const s = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain(); s.buffer = NOISE; s.loop = true; f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur); oenv(g, t, v, att, dur); s.connect(f); f.connect(g); g.connect(dest); s.start(t, Math.random()); s.stop(t + dur + .05); }
 
 /* ---------- la page : une tranche par son ---------- */
 const SOUNDS = [
   ['TIRS', 'quand un vaisseau ou un pirate fait feu', [
-    ['canon', 'CANON', 'Chasseur, intercepteur, porte-vaisseaux. Le son le plus fréquent : il doit rester court et ne pas lasser.'],
-    ['laser', 'LASER', 'Arme de la frégate. A : deux scies désaccordées qui plongent dans un filtre ; B : « piou » en modulation de fréquence.'],
-    ['missile', 'MISSILE', 'Missile de la frégate, salve de l\'artilleur. A traverse l\'espace de gauche à droite.'],
-    ['torpille', 'TORPILLE', 'Bombardier, croiseur pirate. Grave et lourde, avec des bulles de propulseur dans A.'],
+    ['canon', 'CANON', 'Le son le plus fréquent (chasseur, intercepteur, porte-vaisseaux). V1 : autocanon, claquement et mécanique métallique. V2 : impulsion de plasma.'],
+    ['laser', 'LASER', 'Arme de la frégate. V1 : blaster, des chirps dispersés comme un câble tendu qu\'on frappe. V2 : rayon qui ronfle.'],
+    ['missile', 'MISSILE', 'Frégate, salve de l\'artilleur. V1 : mise à feu puis moteur qui crépite en traversant l\'écran. V2 : trois micro-missiles.'],
+    ['torpille', 'TORPILLE À PLASMA', 'Bombardier, croiseur pirate. Plus rien d\'aquatique. V1 : une charge qui monte en tremblant, puis le lâcher. V2 : une sphère d\'énergie qui pulse.'],
   ]],
   ['IMPACTS', 'quand un tir arrive', [
-    ['bouclier', 'IMPACT SUR LE BOUCLIER', 'Le bouclier encaisse. A : un tintement d\'énergie cristallin ; B : un « zap » électrique.'],
-    ['coque', 'IMPACT SUR LA COQUE', 'Il n\'y a pas de son dédié aujourd\'hui (le jeu rejoue un bruit de canon). A : une tôle frappée ; B : un craquement sourd.'],
-    ['explosion', 'EXPLOSION', 'Un vaisseau détruit. A : grave profond, souffle et éclats dispersés en stéréo ; B : plus court et plus sec.'],
+    ['bouclier', 'IMPACT SUR LE BOUCLIER', 'V1 : arcs électriques et anneau d\'énergie. V2 : une bulle qui se tend et vibre.'],
+    ['coque', 'IMPACT SUR LA COQUE', 'Nouveau son (aujourd\'hui le jeu rejoue un canon). V1 : tôle frappée, coup sourd, éclats. V2 : plus lourd et plus grave.'],
+    ['explosion', 'EXPLOSION', 'V1 : claquement, grave saturé, grondement en stéréo, pluie d\'éclats. V2 : plus court et plus sec.'],
   ]],
   ['NAVIGATION ET INTERFACE', 'carte, boutons, fin de combat', [
-    ['saut', 'SAUT', 'Saut vers une balise et départ d\'une partie. A : montée qui se termine par une arrivée sourde.'],
+    ['saut', 'SAUT', 'V1 : montée de plus en plus aiguë, puis arrivée sourde. V2 : distorsion de l\'espace.'],
     ['clic', 'TOUCHER UN BOUTON', 'Doit rester presque inaudible.'],
-    ['victoire', 'VICTOIRE', 'Fin de combat gagné. A : accord majeur qui s\'ouvre ; B : petite fanfare 8 bits.'],
-    ['defaite', 'DÉFAITE', 'Flotte détruite. A : descente mineure sur un bourdon grave.'],
+    ['victoire', 'VICTOIRE', 'V1 : accord qui s\'ouvre en cloches (même couleur que l\'ambiance Dérive). V2 : courte fanfare de synthé.'],
+    ['defaite', 'DÉFAITE', 'V1 : accords sombres qui tombent et cloches. V2 : cloches qui descendent sur un bourdon.'],
   ]],
 ];
 const root = document.getElementById('sfx');
@@ -227,35 +341,117 @@ for (const [title, sub, list] of SOUNDS) {
   const sec = document.createElement('section'); sec.innerHTML = `<h2>${title}<span>${sub}</span></h2>`;
   for (const [id, name, what] of list) {
     const d = document.createElement('div'); d.className = 'strip';
-    d.innerHTML = `<div><div class="name">${name}</div><div class="what">${what}</div></div><div class="pads"><button class="cur" data-s="${id}" data-v="cur">ACTUEL</button><button class="prop" data-s="${id}" data-v="A">A</button><button class="prop" data-s="${id}" data-v="B">B</button></div>`;
+    d.innerHTML = `<div><div class="name">${name}</div><div class="what">${what}</div></div><div class="pads"><button class="cur" data-s="${id}" data-v="cur">ACTUEL</button><button class="prop" data-s="${id}" data-v="V1">V1</button><button class="prop" data-s="${id}" data-v="V2">V2</button></div>`;
     sec.appendChild(d);
   }
   root.appendChild(sec);
 }
-const SETS = { cur: CUR, A: PA, B: PB };
+let SETS = null;
+const sets = () => SETS || (SETS = { cur: CUR, V1: mkSet('V1'), V2: mkSet('V2') });
 function flash(btn, ms = 350) { btn.classList.add('on'); setTimeout(() => btn.classList.remove('on'), ms); }
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.s) { ctx(); const S = SETS[b.dataset.v]; S[b.dataset.s](A.currentTime + .02); flash(b); }
-  else if (b.dataset.seq) { ctx(); const S = SETS[b.dataset.seq], t = A.currentTime + .05;
-    const seq = [['canon', 0, -.5], ['canon', .18, .4], ['laser', .55, .2], ['coque', .78, -.3], ['missile', 1.2, 0], ['bouclier', 1.8, .5], ['torpille', 2.3, -.2], ['coque', 2.75, .1], ['explosion', 3.1, .3], ['canon', 3.9, -.4], ['bouclier', 4.05, -.1]];
-    for (const [k, d, p] of seq) S[k](t + d, p); flash(b, 4300); }
+  if (b.dataset.s) { ctx(); sets()[b.dataset.v][b.dataset.s](A.currentTime + .03); flash(b); }
+  else if (b.dataset.seq) { ctx(); const S = sets()[b.dataset.seq], t = A.currentTime + .08;
+    const seq = [['canon', 0, -.5], ['canon', .16, .4], ['laser', .55, .2], ['coque', .78, -.3], ['missile', 1.2, 0], ['bouclier', 1.9, .5], ['torpille', 2.3, -.2], ['coque', 3.0, .1], ['explosion', 3.25, .3], ['canon', 4.2, -.4], ['bouclier', 4.35, -.1]];
+    for (const [k, d, p] of seq) S[k](t + d, p); flash(b, 4600); }
   else if (b.dataset.amb) toggleAmb(b);
 });
 
-/* ---------- ambiances génératives ---------- */
+/* ---------- ambiances ---------- */
 const AMBS = [
-  ['cur', 'ACTUELLE', 'La nappe du jeu : deux scies graves désaccordées et une quinte dans un filtre qui respire. Toujours le même accord.'],
-  ['derive', 'DÉRIVE', 'Pour la carte. Un bourdon très grave, des accords lents qui changent toutes les 9 secondes (ré dorien), et de petites notes de cloche lointaines, au hasard, dans une longue réverbération.'],
-  ['tension', 'TENSION', 'Pour les combats. Une pulsation grave à 84 battements par minute, un frottement de demi-ton, des tics feutrés et un « ping » de sonar toutes les 4 mesures. Discrète, pour ne pas couvrir les tirs.'],
-  ['orphee', 'NÉBULEUSE', 'Variante éthérée pour la Nébuleuse d\'Orphée : nappes aiguës qui ondulent, voix synthétique filtrée sur une voyelle, cloches plus nombreuses.'],
+  ['cur', 'ACTUELLE', 'La nappe du jeu : toujours le même accord grave.', 'cur'],
+  ['derive', 'DÉRIVE', 'Première proposition, pour la carte : bourdon, accords lents, cloches au hasard.', 'prop'],
+  ['derive2', 'DÉRIVE II', 'Même direction, creusée : nappes plus larges (chorus stéréo), accords en ré dorien qui s\'enchaînent note à note, un écho qui rebondit de gauche à droite, et de temps en temps une courte phrase en cloches.', 'prop'],
+  ['tension', 'TENSION', 'Première proposition, pour les combats : pulsation grave, frottement de demi-ton, sonar.', 'prop'],
+  ['tension2', 'TENSION II', 'Plus cinématographique : tambours graves, arpège pincé en ré mineur qui tourne dans l\'écho, nappe sombre, sonar. Reste sous les bruitages.', 'prop'],
+  ['orphee', 'NÉBULEUSE', 'Première proposition pour la Nébuleuse d\'Orphée : nappes aiguës, voix filtrée, cloches.', 'prop'],
+  ['orphee2', 'NÉBULEUSE II', 'Plus mystérieuse : chœur synthétique à trois voix qui change de voyelle, nappes en verre, vent stellaire, cloches dans un grand écho.', 'prop'],
 ];
 const ambRoot = document.getElementById('amb');
-for (const [id, name, what] of AMBS) {
+for (const [id, name, what, cls] of AMBS) {
   const d = document.createElement('div'); d.className = 'strip'; d.style.marginBottom = '10px';
-  d.innerHTML = `<div><div class="name">${name}</div><div class="what">${what}</div></div><div class="pads"><button class="amb ${id === 'cur' ? 'cur' : 'prop'}" data-amb="${id}">ÉCOUTER</button></div>`;
+  d.innerHTML = `<div><div class="name">${name}</div><div class="what">${what}</div></div><div class="pads"><button class="amb ${cls}" data-amb="${id}">ÉCOUTER</button></div>`;
   ambRoot.appendChild(d);
 }
+// ambiances II : nappes à chorus, écho ping-pong, cloches FM, cordes pincées, tambours graves
+function amb2(id, a, out) {
+  const comp = A.createDynamicsCompressor(); comp.threshold.value = -24; comp.ratio.value = 3; comp.connect(ctx.master); out.connect(comp);
+  const rev = A.createConvolver(); rev.buffer = impulse(id === 'tension2' ? 2.8 : 5.5, 2); const wet = A.createGain(); wet.gain.value = id === 'orphee2' ? 1.1 : .75; rev.connect(wet); wet.connect(out);
+  const dry = A.createGain(); dry.connect(out);
+  const send = (node, amt) => { const g = A.createGain(); g.gain.value = amt; node.connect(g); g.connect(rev); node.connect(dry); };
+  // écho ping-pong (avec un filtre dans la boucle)
+  const echoIn = A.createGain(), dl = A.createDelay(2), dr = A.createDelay(2), fb = A.createGain(), lf = A.createBiquadFilter(), pl = A.createStereoPanner(), pr = A.createStereoPanner();
+  const beat = id === 'tension2' ? 60 / 84 : .5; dl.delayTime.value = beat * .75; dr.delayTime.value = beat * .75; fb.gain.value = id === 'orphee2' ? .5 : .38; lf.type = 'lowpass'; lf.frequency.value = 2600;
+  pl.pan.value = -.8; pr.pan.value = .8; echoIn.connect(dl); dl.connect(pl); dl.connect(dr); dr.connect(pr); dr.connect(lf); lf.connect(fb); fb.connect(dl);
+  const eo = A.createGain(); eo.gain.value = .55; pl.connect(eo); pr.connect(eo); send(eo, .6);
+  // chorus stéréo pour les nappes
+  const chorusIn = A.createGain(), cout = A.createGain(); chorusIn.connect(cout);
+  [[-.9, .012, .21], [.9, .017, .27]].forEach(([pan, base, rate]) => { const d = A.createDelay(.1), l = A.createOscillator(), lg = A.createGain(), p = A.createStereoPanner(); d.delayTime.value = base; l.frequency.value = rate; lg.gain.value = .003; l.connect(lg); lg.connect(d.delayTime); l.start(); a.stops.push(l); p.pan.value = pan; chorusIn.connect(d); d.connect(p); p.connect(cout); });
+  send(cout, .7);
+  const bellBufs = {}, bell = (m, t, v, pan) => { const k = m; if (!bellBufs[k]) bellBufs[k] = toBuffer(fmBell(mtof(m), 3, rng(m), id === 'orphee2' ? 2 : 3.5, 2.2, 1.6), null, .9);
+    const s = A.createBufferSource(), g = A.createGain(), p = A.createStereoPanner(); s.buffer = bellBufs[k]; g.gain.value = v; p.pan.value = pan; s.connect(g); g.connect(p); p.connect(echoIn); send(p, .8); s.start(t); };
+  // une voix de nappe : 5 scies désaccordées, filtre lent
+  const padVoice = (m, t, len, v, cut, type = 'sawtooth') => { const f = A.createBiquadFilter(), g = A.createGain(); f.type = 'lowpass'; f.Q.value = .6;
+    f.frequency.setValueAtTime(cut * .6, t); f.frequency.linearRampToValueAtTime(cut, t + len * .45); f.frequency.linearRampToValueAtTime(cut * .55, t + len);
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + len * .3); g.gain.setValueAtTime(v, t + len * .62); g.gain.linearRampToValueAtTime(.0001, t + len);
+    for (const c of [-14, -6, 0, 6, 14]) { const o = A.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = c + (Math.random() - .5) * 4; o.connect(f); o.start(t); o.stop(t + len + .1); }
+    f.connect(g); g.connect(chorusIn); };
+  const sub = (m, t, len, v) => { const o = A.createOscillator(), g = A.createGain(); o.frequency.value = mtof(m); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + len * .4); g.gain.linearRampToValueAtTime(.0001, t + len); o.connect(g); g.connect(dry); o.start(t); o.stop(t + len + .1); };
+  const wind = (v, cut) => { const s = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain(), l = A.createOscillator(), lg = A.createGain(); s.buffer = NOISE; s.loop = true; f.type = 'bandpass'; f.Q.value = 1.5; f.frequency.value = cut;
+    l.frequency.value = .05; lg.gain.value = cut * .6; l.connect(lg); lg.connect(f.frequency); g.gain.value = v; s.connect(f); f.connect(g); send(g, .6); s.start(); l.start(); a.stops.push(s, l); };
+  const pick = list => list[Math.floor(Math.random() * list.length)];
+  if (id === 'derive2' || id === 'orphee2') {
+    const eth = id === 'orphee2', LEN = eth ? 14 : 12;
+    // accords enchaînés note à note (les voix bougent peu d'un accord à l'autre)
+    const CH = eth ? [[57, 64, 69, 72, 76], [57, 65, 69, 72, 77], [55, 62, 67, 71, 74], [57, 64, 67, 72, 76]]
+                   : [[38, 57, 60, 64, 65], [34, 53, 57, 62, 64], [41, 57, 60, 64, 67], [36, 55, 57, 62, 64]];
+    const SCALE = eth ? [76, 79, 81, 83, 84, 88, 91] : [69, 72, 74, 76, 77, 79, 81, 84];
+    let k = 0;
+    const chord = () => { const t = A.currentTime + .1, ch = CH[k++ % CH.length];
+      sub(ch[0] - (eth ? 24 : 0), t, LEN + 4, eth ? .12 : .22);
+      ch.slice(1).forEach((m, i) => padVoice(m, t, LEN + 4, eth ? .018 : .022, eth ? 2600 : 900 + i * 120, eth ? 'triangle' : 'sawtooth'));
+      if (eth) {   // chœur : trois voix sur une voyelle qui change (a → o)
+        ch.slice(1, 4).forEach((m, i) => { const o = A.createOscillator(), vib = A.createOscillator(), vg = A.createGain(), g = A.createGain(); o.type = 'sawtooth'; o.frequency.value = mtof(m - 12); vib.frequency.value = 4.5 + i * .3; vg.gain.value = 5; vib.connect(vg); vg.connect(o.detune);
+          const F = [[730, 1090], [570, 840]].map(([f1, f2]) => [f1, f2]); const b1 = A.createBiquadFilter(), b2 = A.createBiquadFilter(); b1.type = b2.type = 'bandpass'; b1.Q.value = b2.Q.value = 10;
+          b1.frequency.setValueAtTime(F[0][0], t); b1.frequency.linearRampToValueAtTime(F[1][0], t + LEN); b2.frequency.setValueAtTime(F[0][1], t); b2.frequency.linearRampToValueAtTime(F[1][1], t + LEN);
+          g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.07, t + 5); g.gain.linearRampToValueAtTime(.0001, t + LEN + 3);
+          o.connect(b1); o.connect(b2); b1.connect(g); b2.connect(g); const p = A.createStereoPanner(); p.pan.value = (i - 1) * .6; g.connect(p); send(p, .9); o.start(t); vib.start(t); o.stop(t + LEN + 3.2); vib.stop(t + LEN + 3.2); });
+      }
+    };
+    chord(); a.timers.push(setInterval(chord, LEN * 1000));
+    // phrase en cloches de temps en temps, et grains isolés
+    const phrase = () => { const t = A.currentTime + .2, n = 3 + Math.floor(Math.random() * 3); let m = pick(SCALE);
+      for (let i = 0; i < n; i++) { bell(m, t + i * (eth ? .75 : .5) + (Math.random() < .3 ? .25 : 0), eth ? .06 : .05, (Math.random() - .5) * .8); const j = SCALE.indexOf(m) + pick([-2, -1, 1, 2]); m = SCALE[Math.max(0, Math.min(SCALE.length - 1, j))]; } };
+    a.timers.push(setInterval(() => { if (Math.random() < .55) phrase(); }, 9000));
+    a.timers.push(setInterval(() => { if (Math.random() < .5) bell(pick(SCALE) + 12, A.currentTime + Math.random(), .025, (Math.random() - .5) * 1.6); }, 2300));
+    setTimeout(() => { if (AMB === a) phrase(); }, 3000);
+    wind(eth ? .05 : .03, eth ? 1800 : 500);
+  } else if (id === 'tension2') {
+    const bt = 60 / 84, step8 = bt / 2;
+    // nappe sombre
+    const pad = () => { const t = A.currentTime + .1; sub(26, t, 18, .3); padVoice(50, t, 18, .02, 500); padVoice(51, t, 18, .012, 420); padVoice(57, t, 18, .014, 600); };
+    pad(); a.timers.push(setInterval(pad, 16000));
+    // cordes pincées (Karplus-Strong), fabriquées une fois par note
+    const PL = {}, pluck = (m, t, v, pan) => { if (!PL[m]) { const sr = SRATE(), N = Math.round(sr / mtof(m)), d = 1.4, x = new Float32Array(Math.ceil(d * sr)), r = rng(m); for (let i = 0; i < N; i++) x[i] = r() * 2 - 1;
+        for (let i = N + 1; i < x.length; i++) x[i] = .5 * (x[i - N] + x[i - N - 1]) * .994; PL[m] = toBuffer(biquad(x, 'lp', 2400), null, .9); }
+      const s = A.createBufferSource(), g = A.createGain(), p = A.createStereoPanner(); s.buffer = PL[m]; g.gain.value = v; p.pan.value = pan; s.connect(g); g.connect(p); p.connect(dry); p.connect(echoIn); s.start(t); };
+    // tambour grave
+    let drum = null; const hit = (t, v) => { if (!drum) { drum = toBuffer((() => { const r = rng(7), x = arr(.7); addTo(x, sweepSine(.7, tt => 45 + 40 * Math.exp(-tt / .05), tt => env(tt, .002, .22), r, 2)); addTo(x, biquad(noiseEnv(.2, r, tt => env(tt, .001, .04)), 'lp', 500), .5); return x; })(), null, .9); }
+      const s = A.createBufferSource(), g = A.createGain(); s.buffer = drum; g.gain.value = v; s.connect(g); send(g, .25); s.start(t); };
+    const ARP = [[62, 62, 65, 62, 69, 62, 67, 65], [62, 62, 65, 62, 70, 62, 69, 67]];
+    let step = 0, next = A.currentTime + .15;
+    const sched = () => { while (next < A.currentTime + .3) {
+      const bar = Math.floor(step / 8), s8 = step % 8, ph = ARP[Math.floor(bar / 2) % 2];
+      if (bar % 8 >= 1) pluck(ph[s8] - (bar % 4 === 3 && s8 > 3 ? 12 : 0), next, s8 % 2 ? .1 : .16, s8 % 2 ? .35 : -.35);
+      if (s8 === 0) hit(next, .8); if (s8 === 3) hit(next, .45); if (s8 === 4 && bar % 2) hit(next, .6); if (s8 === 6) hit(next, .35);
+      if (step % 64 === 32) bell(81, next, .05, -.4);
+      step++; next += step8; } };
+    a.timers.push(setInterval(sched, 60)); sched();
+    wind(.015, 300);
+  }
+}
+
 let AMB = null;
 function stopAmb() {
   if (!AMB) return; const a = AMB, t = A.currentTime; AMB = null;
@@ -267,6 +463,7 @@ function toggleAmb(btn) {
   ctx(); const was = AMB && AMB.id; stopAmb(); if (was === btn.dataset.amb) return;
   const id = btn.dataset.amb, out = A.createGain(), t0 = A.currentTime; out.gain.setValueAtTime(0, t0); out.gain.linearRampToValueAtTime(1, t0 + 3);
   const a = { id, out, timers: [], stops: [] }; AMB = a; btn.classList.add('on'); btn.textContent = 'COUPER';
+  if (id.endsWith('2')) { amb2(id, a, out); return; }
   if (id === 'cur') {   // copie de la nappe du jeu
     out.connect(RAW); const f = A.createBiquadFilter(), lfo = A.createOscillator(), lg = A.createGain(), g2 = A.createGain(); g2.gain.value = .09 / .35 * .35; g2.connect(out);
     f.type = 'lowpass'; f.frequency.value = 260; f.Q.value = 3; lfo.frequency.value = .06; lg.gain.value = 140; lfo.connect(lg); lg.connect(f.frequency); f.connect(g2); lfo.start(); a.stops.push(lfo);
@@ -279,7 +476,7 @@ function toggleAmb(btn) {
   const dry = A.createGain(); dry.gain.value = 1; dry.connect(out);
   const send = (node, amt) => { const g = A.createGain(); g.gain.value = amt; node.connect(g); g.connect(rev); node.connect(dry); };
   const drone = (f, type, v, filt) => { const o = A.createOscillator(), g = A.createGain(); o.type = type; o.frequency.value = f; g.gain.value = v; o.connect(g); if (filt) { g.connect(filt); } else send(g, .3); o.start(); a.stops.push(o); return o; };
-  const bell = (f, t, v, pan, len = 2.6) => { const p = A.createStereoPanner(); p.pan.value = pan; send(p, .9); [1, 2.76, 5.4].forEach((m, i) => osc('sine', f * m, f * m * .999, len / (i + 1), v / (i + 1.5), p, t, .004)); };
+  const bell = (f, t, v, pan, len = 2.6) => { const p = A.createStereoPanner(); p.pan.value = pan; send(p, .9); [1, 2.76, 5.4].forEach((m, i) => oosc('sine', f * m, f * m * .999, len / (i + 1), v / (i + 1.5), p, t, .004)); };
   const note = m => 440 * Math.pow(2, (m - 69) / 12);
   if (id === 'derive' || id === 'orphee') {
     const eth = id === 'orphee';
@@ -312,8 +509,8 @@ function toggleAmb(btn) {
     const sched = () => {
       while (next < A.currentTime + .3) {
         const acc = step % 8 === 0, half = step % 4 === 0, g = A.createGain(); g.connect(dry); const s2 = A.createGain(); s2.gain.value = .15; g.connect(s2); s2.connect(rev);
-        if (half || step % 8 === 3 || step % 8 === 6) osc('sine', acc ? 62 : 55, 40, .22, acc ? .55 : .35, g, next, .004);
-        if (step % 2 === 1) nz(.03, 'highpass', 7000, 6000, .7, .045, g, next);
+        if (half || step % 8 === 3 || step % 8 === 6) oosc('sine', acc ? 62 : 55, 40, .22, acc ? .55 : .35, g, next, .004);
+        if (step % 2 === 1) onz(.03, 'highpass', 7000, 6000, .7, .045, g, next);
         if (step % 64 === 32) bell(note(57), next, .05, -.4, 3.5);
         step++; next += beat;
       }
