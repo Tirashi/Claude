@@ -34,6 +34,8 @@ button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 button.cur { color: var(--dim); }
 button.prop { border-color: rgba(242, 178, 74, .55); color: var(--amber); }
 button.on { background: rgba(242, 178, 74, .16); border-color: var(--amber); }
+button.k { min-width: 0; font-size: 12px; letter-spacing: 1px; padding: 10px 10px; }
+button.k.sel { border-color: var(--amber); color: var(--amber); background: rgba(242, 178, 74, .10); }
 button.amb.on { background: rgba(126, 200, 255, .14); border-color: var(--cyan); color: var(--cyan); }
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
 .legend div { border: 1px solid var(--line); padding: 12px 14px; background: var(--panel); font-size: 16px; color: var(--dim); }
@@ -51,18 +53,28 @@ button.amb.on { background: rgba(126, 200, 255, .14); border-color: var(--cyan);
   <header>
     <div class="eyebrow">NEBULA · SOUND DESIGN · DEUXIÈME PASSE</div>
     <h1>BANC D'ÉCOUTE</h1>
-    <p class="lead">Les bruitages repartent de zéro. Chacun est maintenant calculé échantillon par échantillon, comme dans un synthétiseur de bruitages : résonances de tôle, arcs électriques, chirps de blaster, moteur de fusée, grondement d'explosion en couches. Deux versions par son (<b>V1</b>, <b>V2</b>) et la version <b>actuelle</b> pour comparer ; chaque toucher joue une variante un peu différente, comme dans le jeu. Toujours sans fichier son : le jeu reste léger et marche hors connexion. Mets un casque si tu peux.</p>
+    <p class="lead">En tête, les vrais bruitages de Kenney (licence CC0) que tu as fournis : plusieurs candidats par rôle, à choisir à l'oreille. En dessous, la deuxième passe de synthèse pour comparer. Les bruitages de synthèse repartent de zéro. Chacun est maintenant calculé échantillon par échantillon, comme dans un synthétiseur de bruitages : résonances de tôle, arcs électriques, chirps de blaster, moteur de fusée, grondement d'explosion en couches. Deux versions par son (<b>V1</b>, <b>V2</b>) et la version <b>actuelle</b> pour comparer ; chaque toucher joue une variante un peu différente, comme dans le jeu. Toujours sans fichier son : le jeu reste léger et marche hors connexion. Mets un casque si tu peux.</p>
     <div class="vol"><label for="vol">VOLUME</label><input id="vol" type="range" min="0" max="100" value="70"></div>
   </header>
 
   <section>
-    <h2>EN SITUATION<span>quelques secondes de combat</span></h2>
+    <h2>VRAIS BRUITAGES<span>Kenney, licence CC0 · toucher un son pour l'écouter et le choisir</span></h2>
+    <div id="kenney"></div>
     <div class="strip">
-      <div><div class="name">SÉQUENCE DE COMBAT</div><div class="what">Canon, blaster, impact sur la coque, missile, impact sur le bouclier, torpille à plasma, explosion : le même enchaînement avec chaque jeu de sons.</div></div>
-      <div class="pads"><button class="cur" data-seq="cur">ACTUEL</button><button class="prop" data-seq="V1">V1</button><button class="prop" data-seq="V2">V2</button></div>
+      <div><div class="name">TA SÉLECTION</div><div class="what" id="ksel"></div></div>
+      <div class="pads"><button class="prop" id="kcopy">COPIER</button></div>
     </div>
   </section>
 
+  <section>
+    <h2>EN SITUATION<span>quelques secondes de combat</span></h2>
+    <div class="strip">
+      <div><div class="name">SÉQUENCE DE COMBAT</div><div class="what">Canon, laser, impact sur la coque, missile, impact sur le bouclier, torpille, explosion : le même enchaînement avec chaque jeu de sons (KENNEY = ta sélection ci-dessus).</div></div>
+      <div class="pads"><button class="cur" data-seq="cur">ACTUEL</button><button class="prop" data-seq="K">KENNEY</button><button class="prop" data-seq="V1">V1</button><button class="prop" data-seq="V2">V2</button></div>
+    </div>
+  </section>
+
+  <section><h2>SYNTHÈSE<span>la deuxième passe, pour comparer</span></h2></section>
   <section id="sfx"></section>
 
   <section>
@@ -346,11 +358,32 @@ for (const [title, sub, list] of SOUNDS) {
   }
   root.appendChild(sec);
 }
+
+/* ---------- vrais bruitages (Kenney, CC0) ---------- */
+const KROLES = [["canon", "CANON", ["laserSmall_000", "laserSmall_001", "laserSmall_003", "laserRetro_000", "laserRetro_002"]], ["laser", "LASER", ["laserLarge_000", "laserLarge_002", "laserLarge_004", "laser4", "laser6"]], ["missile", "MISSILE", ["thrusterFire_000", "thrusterFire_002", "thrusterFire_004", "phaserUp6"]], ["torpille", "TORPILLE", ["laserLarge_001", "laserLarge_003", "phaserDown1", "phaserDown3", "lowFrequency_explosion_001"]], ["bouclier", "IMPACT SUR LE BOUCLIER", ["forceField_000", "forceField_002", "forceField_004", "zap1"]], ["coque", "IMPACT SUR LA COQUE", ["impactMetal_000", "impactMetal_002", "impactMetal_004", "impactPlate_heavy_000", "impactMetal_heavy_001"]], ["explosion", "EXPLOSION", ["explosionCrunch_000", "explosionCrunch_002", "explosionCrunch_004", "lowFrequency_explosion_000"]], ["saut", "SAUT", ["phaseJump1", "phaseJump3", "phaserUp3", "zapTwoTone"]], ["clic", "TOUCHER UN BOUTON", ["click_001", "click_002", "tick_002", "drop_001"]], ["victoire", "VICTOIRE", ["powerUp1", "powerUp3", "threeTone1", "confirmation_002"]], ["defaite", "DÉFAITE", ["zapThreeToneDown", "lowDown", "error_003", "phaserDown3"]]];
+const KBUF = {}, KSEL = (() => { try { return JSON.parse(localStorage.getItem('ksel') || '{}'); } catch (e) { return {}; } })();
+for (const [k, , l] of KROLES) if (!l.includes(KSEL[k])) KSEL[k] = l[0];
+async function kload(name) { if (!KBUF[name]) { const r = await fetch('sons-kenney/' + name + '.ogg'); KBUF[name] = await A.decodeAudioData(await r.arrayBuffer()); } return KBUF[name]; }
+function kplay(name, t, pan = 0, k = '') { kload(name).then(b => playBuf(b, Math.max(t, A.currentTime), pan, REVAMT[k] || .1, MUSIC.has(k) ? 1 : 1 + (Math.random() - .5) * .05)); }
+const KSET = Object.fromEntries(KROLES.map(([k]) => [k, (t, pan = (Math.random() - .5) * .9) => kplay(KSEL[k], t, MUSIC.has(k) ? 0 : pan, k)]));
+function kdraw() {
+  const root = document.getElementById('kenney'); root.innerHTML = '';
+  for (const [k, name, l] of KROLES) { const d = document.createElement('div'); d.className = 'strip'; d.style.marginBottom = '10px';
+    d.innerHTML = `<div><div class="name">${name}</div></div><div class="pads">${l.map((n, i) => `<button class="k${KSEL[k] === n ? ' sel' : ''}" data-k="${k}" data-n="${n}">${i + 1} · ${n.replace(/_0+(\d)/, ' $1').replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase()}</button>`).join('')}</div>`;
+    root.appendChild(d); }
+  document.getElementById('ksel').textContent = KROLES.map(([k, name]) => `${name.toLowerCase()} : ${KSEL[k]}`).join(' · ');
+}
+kdraw();
+document.addEventListener('click', e => {
+  const b = e.target.closest('button[data-k]'); if (b) { ctx(); KSEL[b.dataset.k] = b.dataset.n; try { localStorage.setItem('ksel', JSON.stringify(KSEL)); } catch (x) {} kplay(b.dataset.n, A.currentTime + .02, 0, b.dataset.k); kdraw(); return; }
+  if (e.target.id === 'kcopy') { const txt = document.getElementById('ksel').textContent; navigator.clipboard.writeText(txt).then(() => { e.target.textContent = 'COPIÉ'; setTimeout(() => { e.target.textContent = 'COPIER'; }, 1500); }).catch(() => { const r = document.createRange(); r.selectNodeContents(document.getElementById('ksel')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }); }
+});
 let SETS = null;
-const sets = () => SETS || (SETS = { cur: CUR, V1: mkSet('V1'), V2: mkSet('V2') });
+const sets = () => SETS || (SETS = { cur: CUR, K: KSET, V1: mkSet('V1'), V2: mkSet('V2') });
 function flash(btn, ms = 350) { btn.classList.add('on'); setTimeout(() => btn.classList.remove('on'), ms); }
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.k || b.id === 'kcopy') return;
   if (b.dataset.s) { ctx(); sets()[b.dataset.v][b.dataset.s](A.currentTime + .03); flash(b); }
   else if (b.dataset.seq) { ctx(); const S = sets()[b.dataset.seq], t = A.currentTime + .08;
     const seq = [['canon', 0, -.5], ['canon', .16, .4], ['laser', .55, .2], ['coque', .78, -.3], ['missile', 1.2, 0], ['bouclier', 1.9, .5], ['torpille', 2.3, -.2], ['coque', 3.0, .1], ['explosion', 3.25, .3], ['canon', 4.2, -.4], ['bouclier', 4.35, -.1]];
