@@ -21,12 +21,17 @@ body{margin:0; background:var(--night) radial-gradient(var(--night-2) 1px, trans
 h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(15px,4.4vw,24px); line-height:1.4; color:var(--gold); text-shadow:3px 3px 0 #b8571a, 5px 5px 0 #000}
 .lead{margin:0; color:var(--dim); max-width:70ch}
 .lead b{color:var(--text); font-weight:400}
-.tabs{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px}
+.tabs{display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:8px}
+@media (max-width:520px){ .tabs{grid-template-columns:repeat(3, minmax(0,1fr))} }
+.screens{display:flex; gap:12px; justify-content:center; width:100%}
+.screens #cv2{display:none}
+.screens.duo #cv2{display:block}
+.screens.duo canvas{width:min(48%, 300px)}
 .tabs button{font-family:var(--f-display); font-size:9px; line-height:1.6; padding:10px 4px; color:var(--text); background:#2b2a4a; cursor:pointer;
   border:3px solid var(--dim); border-radius:4px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000}
 .tabs button[aria-pressed="true"]{color:#110d22; background:var(--gold); border-color:var(--gold)}
 .tabs button:focus-visible{outline:3px dashed var(--gold); outline-offset:4px}
-.stage{display:grid; grid-template-columns:auto minmax(0,1fr); gap:24px; align-items:start}
+.stage{display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:24px; align-items:start}
 @media (max-width:720px){ .stage{grid-template-columns:minmax(0,1fr); justify-items:center} }
 canvas{display:block; width:min(100%, 340px); aspect-ratio:272 / 480; image-rendering:pixelated; border:3px solid #000; box-shadow:0 0 0 3px #3b3566, 6px 6px 0 3px #000; touch-action:none; cursor:pointer}
 .info{display:flex; flex-direction:column; gap:12px; min-width:0}
@@ -47,13 +52,13 @@ canvas{display:block; width:min(100%, 340px); aspect-ratio:272 / 480; image-rend
   <p class="lead">Quatre façons de lire <b>carburant</b>, <b>vitesses</b> et <b>altitude</b> sans quitter le module des yeux. Les jauges du haut restent. Le module se pose tout seul pour la démonstration ; <b>touche l'écran du jeu</b> pour piloter (moitié gauche : réacteur gauche, moitié droite : réacteur droit, ou les flèches du clavier).</p>
   <div class="tabs" id="tabs" role="group" aria-label="Proposition"></div>
   <div class="stage">
-    <canvas id="cv" width="544" height="960" aria-label="Démonstration d'Alunissage"></canvas>
+    <div class="screens duo"><canvas id="cv" width="544" height="960" aria-label="Démonstration d'Alunissage"></canvas><canvas id="cv2" width="544" height="960" aria-label="Démonstration d'Alunissage, mélange C et B"></canvas></div>
     <div class="info">
       <h2 id="title"></h2>
       <p id="desc"></p>
       <ul id="pts"></ul>
-      <div class="ctl"><button type="button" id="demo" aria-pressed="true">DEMO AUTOMATIQUE</button><button type="button" id="world">CHANGER DE MONDE</button></div>
-      <p class="note">On peut aussi mélanger : par exemple la jauge de carburant de A avec l'ombre au sol de D.</p>
+      <div class="ctl"><button type="button" id="demo" aria-pressed="true">DEMO AUTOMATIQUE</button><button type="button" id="world">CHANGER DE MONDE</button><button type="button" id="zoom" aria-pressed="true">LOUPE</button></div>
+      <p class="note">Les autres onglets montrent chaque proposition seule, en grand.</p>
     </div>
   </div>
 </div>
@@ -138,7 +143,10 @@ function land(feet){
 }
 
 /* ---------- dessin commun (repris du jeu) ---------- */
-const cv = document.getElementById('cv'), g = cv.getContext('2d'); g.scale(2, 2); g.imageSmoothingEnabled = false;
+const cv = document.getElementById('cv'), cv2 = document.getElementById('cv2');
+const ctx1 = cv.getContext('2d'), ctx2 = cv2.getContext('2d');
+for (const c of [ctx1, ctx2]){ c.scale(2, 2); c.imageSmoothingEnabled = false; }
+let g = ctx1;   // l'écran en cours de dessin
 const R_ = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
 function text(s, x, y, col, align = 'left', size = 8, sh = '#05030c'){ g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top'; if (sh){ g.fillStyle = sh; g.fillText(s, x + 1, y + 1); } g.fillStyle = col; g.fillText(s, x, y); }
 const SKYC = {};
@@ -218,7 +226,37 @@ function arrow(x, y, dx, dy, c){
     for (let k = 1; k <= 3; k++) R_(Math.round(ex + hx * k), Math.round(ey + hy * k), 1, 1, c); }
 }
 
-/* ---------- les quatre propositions ---------- */
+// pièces de B, reprises dans le mélange
+function speedArrow(x, y, from){
+  const s = S.ship, worst = Math.max(Math.max(0, s.vy) / VY_OK, Math.abs(s.vx) / VX_OK), c = worst <= 1 ? '#5cff8a' : worst <= 1.5 ? '#ffb040' : '#ff6a5a';
+  const n = Math.max(1, Math.hypot(s.vx, s.vy));
+  arrow(x + s.vx / n * from, y + 1 + s.vy / n * from, s.vx * .42, s.vy * .42, c);
+}
+function altLine(x, y, top){
+  const a = alt(), u = under();
+  if (a >= 120) return false;
+  for (let yy = y + top; yy < u.gy - 2; yy += 4) R_(x, yy, 1, 2, 'rgba(200,212,244,.6)');
+  text(`${a} M`, x + 5, Math.min(u.gy - 12, Math.max(y + top + 4, (y + top + u.gy) / 2 - 4)), '#c8d4f4', 'left', 6);
+  return true;
+}
+// le réticule de C ; showAlt : la hauteur écrite à côté (C seul) ou non (mélange)
+function reticle(showAlt){
+  const s = S.ship, x = Math.round(s.x), y = Math.round(s.y), u = under();
+  const vyR = Math.max(0, s.vy) / VY_OK, vxR = Math.abs(s.vx) / VX_OK, worst = Math.max(vyR, vxR);
+  const good = worst <= 1 && u.pad && u.flat, c = good ? '#5cff8a' : worst <= 1.5 ? '#ffb040' : '#ff6a5a';
+  const L = 4, X0 = x - 13, X1 = x + 13, Y0 = y - 14, Y1 = y + 12;
+  for (const [cx, cy, dx, dy] of [[X0, Y0, 1, 1], [X1, Y0, -1, 1], [X0, Y1, 1, -1], [X1, Y1, -1, -1]]){ R_(cx, cy, dx * L || 1, 1, c); R_(cx, cy, 1, dy * L || 1, c);
+    if (dx < 0) R_(cx - L + 1, cy, L, 1, c); if (dy < 0) R_(cx, cy - L + 1, 1, L, c); }
+  const segs = Math.ceil(S.fuel / 20);
+  for (let k = 0; k < 5; k++){ const on = k < segs, last = segs === 1 && k === 0; R_(x - 12 + k * 5, Y0 - 5, 4, 2, on ? (last ? (blink() ? '#ff6a5a' : '#5a1a1a') : '#5cf2ff') : '#2a3458'); }
+  const bar = (yy, r, lab) => { R_(x - 12, yy, 24, 4, OUT); const w = Math.min(22, Math.round(r * 11)); R_(x - 11, yy + 1, w, 2, col(r, 1)); R_(x - 1, yy - 1, 1, 6, '#e6fbff'); text(lab, x - 15, yy - 1, '#8fa0d0', 'right', 5, null); };
+  bar(Y1 + 5, vyR, 'V'); bar(Y1 + 12, vxR, 'H');
+  const lab = u.pad && u.flat ? 'x' + u.pad.mul : u.flat ? '--' : '/\\', labC = u.pad && u.flat ? (u.pad.mul === 5 ? '#ffd23f' : '#5cff8a') : '#ff6a5a';
+  if (showAlt){ text(`${alt()}`, X1 + 4, Y0, '#c8d4f4', 'left', 6); text(lab, X1 + 4, Y0 + 10, labC, 'left', 6); }
+  else text(lab, X1 + 4, Y0, labC, 'left', 6);
+}
+
+/* ---------- les propositions ---------- */
 const VARIANTS = [
   { id: 'A', name: 'A · BULLES DE BORD', desc: 'Deux petites bulles accrochées au module, du côté libre de l\'écran.',
     pts: ['<b>Carburant</b> : une jauge verticale à gauche du module ; elle apparaît quand un réacteur s\'allume, s\'efface 2 s après, et clignote en rouge sous 20 %.',
@@ -256,22 +294,7 @@ const VARIANTS = [
           '<b>Vitesses</b> : deux petites barres sous le module, avec la zone verte marquée : on voit de combien on dépasse.',
           '<b>Carburant</b> : 5 segments au-dessus du module ; le dernier clignote.',
           '<b>Altitude et aire</b> : à droite du réticule, la hauteur et le multiplicateur de l\'aire survolée (x2, x3, x5), ou un trait si le sol est en pente.'],
-    draw(){ const s = S.ship, x = Math.round(s.x), y = Math.round(s.y), u = under();
-      const vyR = Math.max(0, s.vy) / VY_OK, vxR = Math.abs(s.vx) / VX_OK, worst = Math.max(vyR, vxR);
-      const good = worst <= 1 && u.pad && u.flat, c = good ? '#5cff8a' : worst <= 1.5 ? '#ffb040' : '#ff6a5a';
-      // coins du réticule
-      const L = 4, X0 = x - 13, X1 = x + 13, Y0 = y - 14, Y1 = y + 12;
-      for (const [cx, cy, dx, dy] of [[X0, Y0, 1, 1], [X1, Y0, -1, 1], [X0, Y1, 1, -1], [X1, Y1, -1, -1]]){ R_(cx, cy, dx * L || 1, 1, c); R_(cx, cy, 1, dy * L || 1, c);
-        if (dx < 0) R_(cx - L + 1, cy, L, 1, c); if (dy < 0) R_(cx, cy - L + 1, 1, L, c); }
-      // carburant : 5 segments au-dessus
-      const segs = Math.ceil(S.fuel / 20);
-      for (let k = 0; k < 5; k++){ const on = k < segs, last = segs === 1 && k === 0; R_(x - 12 + k * 5, Y0 - 5, 4, 2, on ? (last ? (blink() ? '#ff6a5a' : '#5a1a1a') : '#5cf2ff') : '#2a3458'); }
-      // barres de vitesse sous le module
-      const bar = (yy, r, lab) => { R_(x - 12, yy, 24, 4, OUT); const w = Math.min(22, Math.round(r * 11)); R_(x - 11, yy + 1, w, 2, col(r, 1)); R_(x - 1, yy - 1, 1, 6, '#e6fbff'); text(lab, x - 15, yy - 1, '#8fa0d0', 'right', 5, null); };
-      bar(Y1 + 5, vyR, 'V'); bar(Y1 + 12, vxR, 'H');
-      // altitude et aire
-      const a = alt(), lab = u.pad && u.flat ? 'x' + u.pad.mul : u.flat ? '--' : '/\\';
-      text(`${a}`, X1 + 4, Y0, '#c8d4f4', 'left', 6); text(lab, X1 + 4, Y0 + 10, u.pad && u.flat ? (u.pad.mul === 5 ? '#ffd23f' : '#5cff8a') : '#ff6a5a', 'left', 6); } },
+    draw(){ reticle(true); } },
   { id: 'D', name: 'D · OMBRE ET VOYANT', desc: 'Le moins chargé : une ombre sur le sol et un seul voyant.',
     pts: ['<b>Ombre au sol</b> : sous le module, une ombre qui grandit et se précise en approchant ; verte au-dessus d\'une aire plate, rouge au-dessus d\'une pente ou d\'un sol nu. On voit où l\'on va se poser.',
           '<b>Voyant</b> : une seule pastille sur le module, verte, orange ou rouge selon les vitesses, avec une petite flèche du côté où l\'on glisse.',
@@ -286,18 +309,44 @@ const VARIANTS = [
       if (Math.abs(s.vx) > 3){ const d = Math.sign(s.vx); text(d > 0 ? '>' : '<', x + d * 8, y - 15, c, 'center', 6, null); if (Math.abs(s.vx) > VX_OK) text(d > 0 ? '>' : '<', x + d * 13, y - 15, c, 'center', 6, null); }
       // carburant
       if (!lowFuel() || blink()){ R_(x - 9, y + 10, 19, 2, OUT); R_(x - 9, y + 10, Math.round(19 * S.fuel / 100), 1, lowFuel() ? '#ff6a5a' : '#5cf2ff'); } } },
+  { id: 'E', name: 'E · C + FLECHE ET HAUTEUR DE B', desc: 'Le réticule de C, avec la flèche de vitesse et le pointillé de hauteur de B.',
+    pts: ['<b>Réticule</b>, segments de carburant, barres V et H et multiplicateur de l\'aire : comme C.',
+          '<b>Flèche</b> de B : elle part du bord du réticule, dans le sens du mouvement ; longueur = vitesse, couleur = peut-on se poser.',
+          '<b>Hauteur</b> de B : sous 120 m, un pointillé descend jusqu\'au sol avec la hauteur écrite ; plus haut, rien (la hauteur reste dans les jauges du haut).'],
+    draw(){ const s = S.ship, x = Math.round(s.x), y = Math.round(s.y);
+      reticle(false); speedArrow(x, y, 19); altLine(x, y, 26); } },
 ];
-let cur = 0;
+// la comparaison côte à côte : C à gauche, le mélange à droite, sur la même descente
+const DUO = { name: 'C CONTRE C + B', desc: 'La même descente sur deux écrans : à gauche C seul, à droite C avec la flèche et la hauteur de B. On peut piloter sur l\'un ou l\'autre.',
+  pts: ['<b>C</b> : la hauteur est écrite en chiffres à droite du réticule, au-dessus du multiplicateur de l\'aire.',
+        '<b>C + B</b> : une flèche montre la dérive et la vitesse ; près du sol, un pointillé mesure la hauteur jusqu\'au point d\'arrivée.'] };
+let cur = -1;   // -1 : comparaison
 
 /* ---------- boucle ---------- */
 function draw(){
+  if (cur < 0){ g = ctx1; scene(VARIANTS[2], 'C'); g = ctx2; scene(VARIANTS[4], 'C + B'); g = ctx1; }
+  else { g = ctx1; scene(VARIANTS[cur], VARIANTS[cur].id); }
+}
+function scene(v, label){
   g.drawImage(sky(S.site), 0, 0); drawGround(S.site);
   for (const p of S.parts) R_(Math.round(p.x), Math.round(p.y), 1, 1, p.c);
   if (S.phase !== 'crashed') drawShip(S.ship, T);
-  if (S.phase === 'fly') VARIANTS[cur].draw();
+  if (S.phase === 'fly') v.draw();
   hud(); R_(0, 398, LW, LH - 398, '#05060f'); engineButtons();
-  text(`PROPOSITION ${VARIANTS[cur].id}`, 136, 48, '#ffd23f', 'center', 6);
+  text(`PROPOSITION ${label}`, 136, 48, '#ffd23f', 'center', 6);
+  if (LOUPE && S.phase === 'fly') loupe();
   if (S.result) text(S.result.ok ? `POSE ! AIRE x${S.result.mul}` : S.result.why, 136, 150, S.result.ok ? '#5cff8a' : '#ff6a5a', 'center', 8);
+}
+// loupe : le module et ses cadrans agrandis ×2 dans un coin, pour bien voir sur un petit écran
+let LOUPE = true;
+function loupe(){
+  const s = S.ship, w = 66, h = 72, sx = clamp(s.x - w / 2, 0, LW - w), sy = clamp(s.y - 22, 0, LH - h);
+  const dw = w * 2, dh = h * 2, dx = s.x > LW / 2 ? 6 : LW - dw - 6, dy = 60;
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  g.drawImage(g.canvas, sx * 2, sy * 2, w * 2, h * 2, dx * 2, dy * 2, dw * 2, dh * 2);
+  g.restore();
+  g.strokeStyle = '#ffd23f'; g.lineWidth = 1; g.strokeRect(dx - .5, dy - .5, dw + 1, dh + 1);
+  text('LOUPE', dx + 3, dy + 3, '#ffd23f', 'left', 5);
 }
 let last = 0;
 function frame(ts){
@@ -311,24 +360,28 @@ function frame(ts){
 
 /* ---------- commandes ---------- */
 const touches = new Map();
-const sideOf = e => { const r = cv.getBoundingClientRect(); return (e.clientX - r.left) < r.width / 2 ? 'L' : 'R'; };
+const sideOf = e => { const r = e.currentTarget.getBoundingClientRect(); return (e.clientX - r.left) < r.width / 2 ? 'L' : 'R'; };
 function takeOver(){ if (S.demo){ S.demo = false; paintCtl(); } }
 function engines(){ let l = false, r = false; for (const v of touches.values()){ if (v === 'L') l = true; if (v === 'R') r = true; } S.left = l || KEYS.l; S.right = r || KEYS.r; }
 const KEYS = { l: false, r: false };
-cv.addEventListener('pointerdown', e => { e.preventDefault(); takeOver(); cv.setPointerCapture(e.pointerId); touches.set(e.pointerId, sideOf(e)); engines(); });
-cv.addEventListener('pointermove', e => { if (touches.has(e.pointerId)){ touches.set(e.pointerId, sideOf(e)); engines(); } });
-for (const ev of ['pointerup', 'pointercancel']) cv.addEventListener(ev, e => { touches.delete(e.pointerId); engines(); });
+for (const c of [cv, cv2]){
+  c.addEventListener('pointerdown', e => { e.preventDefault(); takeOver(); c.setPointerCapture(e.pointerId); touches.set(e.pointerId, sideOf(e)); engines(); });
+  c.addEventListener('pointermove', e => { if (touches.has(e.pointerId)){ touches.set(e.pointerId, sideOf(e)); engines(); } });
+  for (const ev of ['pointerup', 'pointercancel']) c.addEventListener(ev, e => { touches.delete(e.pointerId); engines(); });
+}
 addEventListener('keydown', e => { if (e.key === 'ArrowLeft'){ takeOver(); KEYS.l = true; engines(); e.preventDefault(); } if (e.key === 'ArrowRight'){ takeOver(); KEYS.r = true; engines(); e.preventDefault(); } });
 addEventListener('keyup', e => { if (e.key === 'ArrowLeft') KEYS.l = false; if (e.key === 'ArrowRight') KEYS.r = false; engines(); });
 const demoBtn = document.getElementById('demo');
 function paintCtl(){ demoBtn.setAttribute('aria-pressed', S.demo); demoBtn.textContent = S.demo ? 'DEMO AUTOMATIQUE' : 'A TOI DE PILOTER'; }
 demoBtn.onclick = () => { S.demo = !S.demo; S.left = S.right = false; paintCtl(); };
+document.getElementById('zoom').onclick = e => { LOUPE = !LOUPE; e.currentTarget.setAttribute('aria-pressed', LOUPE); };
 document.getElementById('world').onclick = () => { S.wi = (S.wi + 1) % WORLDS.length; startSite(); };
 const tabs = document.getElementById('tabs');
-VARIANTS.forEach((v, i) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = v.name.split(' · ')[0] + ' · ' + v.name.split(' · ')[1].split(' ')[0];
+[[-1, 'C / C+B'], [0, 'A'], [1, 'B'], [2, 'C'], [3, 'D'], [4, 'C+B']].forEach(([i, l]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = l; b.dataset.i = i;
   b.onclick = () => { cur = i; show(); }; tabs.appendChild(b); });
 function show(){
-  const v = VARIANTS[cur]; [...tabs.children].forEach((b, i) => b.setAttribute('aria-pressed', i === cur));
+  const v = cur < 0 ? DUO : VARIANTS[cur]; [...tabs.children].forEach(b => b.setAttribute('aria-pressed', +b.dataset.i === cur));
+  document.querySelector('.screens').classList.toggle('duo', cur < 0);
   document.getElementById('title').textContent = v.name; document.getElementById('desc').textContent = v.desc;
   document.getElementById('pts').innerHTML = v.pts.map(p => `<li>${p}</li>`).join('');
 }
