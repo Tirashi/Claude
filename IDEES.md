@@ -72,7 +72,7 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 
 ## Préférences notées
 - Cargo Stellaire et Station Alpha : retirés de la liste (pas retenus).
-- Carreau ! (pétanque), Le Fort des lapins (tower defense) Pavillon noir (rogue-lite pirate) et Apesanteur (plateforme physique) : abandonnés le 15/10.
+- Carreau ! (pétanque), Le Fort des lapins (tower defense), Pavillon noir (rogue-lite pirate) et Apesanteur (plateforme physique) : abandonnés le 15/10.
 
 ## Page d'accueil (idées du 13/10)
 Réalisé le 13/10 ✅ : **favoris** (étoile sur chaque cartouche, favoris en tête), badges **NOUVEAU** / **MIS A JOUR** (3 jours), **filtres par genre**, **jeu à la une** dans une boîte de jeu (« TOUT NEUF ! »), **quoi de neuf**. Dates, genres et journal : `META` et `NEWS` dans `index.html` (à tenir à jour à chaque sortie ou mise à jour).
