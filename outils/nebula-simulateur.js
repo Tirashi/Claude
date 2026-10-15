@@ -74,5 +74,11 @@ check((m => m && m.v === N.RUN_V && m.prime === 0 && m.compo.join() === 'cuirass
 check(N.FLEETS.every(f => N.fleetOk(f.ships, ['eclaireur', 'convoyeur', 'cuirasse'])) && !N.fleetOk(['cuirasse', 'fregate', 'chasseur'], ['cuirasse']) && !N.fleetOk(['chasseur', 'cuirasse'], [])
   && !N.fleetOk(['eclaireur', 'eclaireur', 'eclaireur', 'eclaireur', 'eclaireur'], ['eclaireur']) && !N.fleetOk([], []), 'flotte à points : modèles valides, budget, déblocages et 4 vaisseaux au plus vérifiés');
 check((r => r.prime === .2 && N.scoreOf(r) === Math.round(N.baseScoreOf(r) * 1.2))(N.newRun(3, 'marchande', ['eclaireur', 'convoyeur'])) && N.primeOf(['eclaireur']) === .5 && N.newRun(3, 'escorte').prime === 0, "prime d'audace : +10 % par point non dépensé, au plus +50 %");
+const v3 = JSON.parse(JSON.stringify(saved)); v3.v = 3; for (const k of ['offers', 'contract', 'contractDone', 'bonus', 'goals', 'secLost', 'cleanSectors']) delete v3[k];
+check((m => m && m.v === N.RUN_V && m.contract === null && m.offers.length === 0 && m.goals.ok === 0)(N.migrate(v3)), 'migrate() complète une partie de la session 4 étape 1 (v3 → v4 : contrat, défis)');
+// défis et contrats : tirés avec la graine, sans changer le combat ; un contrat réussi rapporte score et données
+check((a => a.goal && JSON.stringify(a.goal) === JSON.stringify(N.makeCombat(7, 'lourd', 4, fleet).goal) && N.GOALS[a.goal.k])(N.makeCombat(7, 'lourd', 4, fleet)), 'défi de combat tiré avec la graine');
+check((r => { const s0 = N.scoreOf(r), d0 = N.stellarOf(r); r.offers = ['fortune']; N.chooseContract(r, 'fortune'); r.cr = 600; N.contractCheck(r);
+  return r.offers.length === 1 && r.contractDone && N.scoreOf(r) === s0 + 560 + 500 && N.stellarOf(r) === d0 + 10 && !N.contractCheck(r); })(N.newRun(11, 'escorte')), 'contrat réussi : +score et +données, une seule fois');
 check(N.migrate({ v: 1, fleet: 'abîmée' }) === null && N.migrate({ v: 99 }) === null && N.migrate(null) === null, 'migrate() refuse une partie illisible ou d\'une version future');
 process.exit(fail ? 1 : 0);

@@ -24,7 +24,9 @@
  *   mult?: number, fid?: number, name?: string, goal?: number, fired?: number, mark?: number, pilot?: Pilot | null }} Ship
  * @typedef {{ src: number, cell: Cell, dmg: number, fx: string, cross?: number, splash?: number, pack?: boolean, pull?: number }} Intent
  * @typedef {{ seed: number, kind: string, floor: number, sector: number, ai?: number, turn: number, ships: Ship[], rocks: Cell[],
- *   intents: Intent[], kills: number, next: number, result: string | null, log: any[], ions?: Cell[], fog?: Cell[], label?: string }} Combat
+ *   intents: Intent[], kills: number, next: number, result: string | null, log: any[], ions?: Cell[], fog?: Cell[], label?: string,
+ *   goal?: Goal | null, first?: number }} Combat
+ * @typedef {{ k: string, n?: number, cr: number, target?: number }} Goal   défi du combat (n : tours ; target : le pirate à abattre en premier)
  * @typedef {{ e: string, [k: string]: any }} Ev   événement rejoué par l'affichage
  * @typedef {{ c: number, r: number, d: number, prev: string | null, through?: boolean }} Step   position atteignable
  * @typedef {{ uid: number, t: string, name: string, mods: string[], hull: number, pilot?: Pilot | null }} FleetShip
@@ -179,7 +181,7 @@ function damage(st, s, amount, ev, byPlayer) {
 }
 function kill(st, s, ev, byPlayer, silent) {
   s.dead = true; ev.push({ e: 'boom', id: s.id, big: lenOf(s) });
-  if (s.side === 'E' && byPlayer && !silent) st.kills++;
+  if (s.side === 'E' && byPlayer && !silent) { st.kills++; if (st.first == null) st.first = s.id; }
   // un brûlot détruit avant d'arriver explose sur place
   if (s.t === 'brulot' && !silent) blast(st, s.c, s.r, 0, 2, ev, byPlayer, s);
 }
@@ -273,8 +275,39 @@ function makeCombat(seed, kind, floor, fleet, sector = 1, /** @type {{ ai?: numb
     const c = order.find(c => ![0, 1, 2].some(i => i < n && (occupant(st, c, r + i) || rockAt(st, c, r + i))));
     if (c != null) makeShip(st, f.t, 'P', c, r, { fid: f.uid, name: f.name, mods: f.mods.slice(), hull: f.hull, pilot: f.pilot || null });
   });
+  st.goal = makeGoal(st);
   startTurn(st, []);
   return st;
+}
+/* ---------- défis de combat (session 4) ----------
+   Un défi par combat, tiré avec la graine du combat ; réussi = des crédits en plus du butin. */
+const GOALS = {
+  intact: { name: 'AUCUNE PERTE', desc: 'aucun de tes vaisseaux détruit', short: 'AUCUN VAISSEAU DÉTRUIT' },
+  rapide: { name: 'BLITZ', desc: 'victoire en {n} tours ou moins', short: 'VICTOIRE EN {n} TOURS' },
+  gros: { name: 'DÉCAPITATION', desc: 'abattre en premier le {t}', short: '{T} EN PREMIER' },
+  solide: { name: 'BLINDÉS', desc: 'finir avec chaque vaisseau à moitié de sa coque ou plus', short: 'COQUES À MOITIÉ OU PLUS' },
+};
+const GOAL_TURNS = { contact: 4, lourd: 6, amiral: 8 }, GOAL_CR = { contact: 15, lourd: 25, amiral: 40 };
+/** @param {Combat} st @returns {Goal | null} */
+function makeGoal(st) {
+  const R = rng(seedOf(st.seed, 77)), foes = sideOf(st, 'E'), top = Math.max(...foes.map(o => o.hmax)), big = foes.filter(o => o.hmax === top);
+  const ks = ['intact', 'rapide', 'solide'].concat(st.kind !== 'amiral' && big.length === 1 && foes.length > 1 ? ['gros'] : []);
+  const k = pick(R, ks), g = /** @type {Goal} */ ({ k, cr: GOAL_CR[st.kind] || 15 });
+  if (k === 'rapide') g.n = GOAL_TURNS[st.kind] || 5;
+  if (k === 'gros') g.target = big[0].id;
+  return g;
+}
+/** texte du défi (short : la version courte, en majuscules) @param {Goal} g @param {Combat} st @param {boolean} [short] */
+const goalText = (g, st, short) => (short ? GOALS[g.k].short : GOALS[g.k].desc).replace('{n}', String(g.n)).replace('{t}', g.target != null ? TYPES[byId(st, g.target).t].name.toLowerCase() : '').replace('{T}', g.target != null ? TYPES[byId(st, g.target).t].name : '');
+/** état du défi : 'ok' (tenu ou réussi), 'fail' (manqué) @param {Combat} st */
+function goalState(st) {
+  const g = st.goal; if (!g) return null;
+  if (st.result && st.result !== 'won') return 'fail';
+  const mine = st.ships.filter(o => o.side === 'P' && !TYPES[o.t].temp);
+  if (g.k === 'intact') return mine.some(o => o.dead) ? 'fail' : 'ok';
+  if (g.k === 'rapide') return st.turn > /** @type {number} */ (g.n) ? 'fail' : 'ok';
+  if (g.k === 'gros') return st.first != null && st.first !== g.target ? 'fail' : st.first === g.target || !st.result ? 'ok' : 'fail';
+  return mine.some(o => o.dead || o.hull * 2 < o.hmax) ? 'fail' : 'ok';
 }
 
 /* ---------- entraînement guidé (tutoriel) ----------
@@ -806,6 +839,7 @@ function newRun(seed, fleet = 'escorte', unlocked = []) {
   const run = { v: RUN_V, seed, sector: 1, fuel: 6, cr: 40, kills: 0, heavy: 0, admirals: 0, sectorsDone: 0, stock: [], crew: [], data: 0, seen: [], uid: 1, phase: 'map', visited: [], combat: null, shop: null, reward: null, event: null, msg: null, fleet: [] };
   for (const t of ships) addFleet(run, t, names.pop());
   run.compo = ships.slice(); run.prime = primeOf(ships);   // composition de départ et prime d'audace (0 à 0,5)
+  run.offers = contractOffers(seed); run.contract = null; run.contractDone = false; run.bonus = 0; run.goals = { ok: 0, n: 0 }; run.secLost = 0; run.cleanSectors = 0;   // contrat et défis
   run.recruits = recruitsFor(unlocked);   // ce que le comptoir et les épaves peuvent proposer
   run.map = makeMap(seed, 1); run.at = 0; run.visited = [0];
   return run;
@@ -871,7 +905,7 @@ function resolveEvent(run, i) {
   if (o.data) { run.data = (run.data || 0) + o.data; gains.push(`+${o.data} DONNÉES STELLAIRES`); }
   if (o.combat) gains.push(o.combat === 'lourd' ? 'COMBAT DIFFICILE !' : 'COMBAT !');
   E.done = { choice: i, text: o.text, gains, combat: o.combat || null };
-  return true;
+  contractCheck(run); return true;
 }
 // après l'événement : la carte, ou le combat qu'il a déclenché
 function closeEvent(run) {
@@ -884,7 +918,7 @@ function closeEvent(run) {
 function assignPilot(run, uid, i) {
   const f = run.fleet.find(x => x.uid === uid), p = run.crew[i]; if (!f || !p) return false;
   const old = f.pilot; run.crew.splice(i, 1); if (old) run.crew.push(old);
-  const before = maxHullOf(f); f.pilot = p; f.hull = Math.max(1, Math.min(maxHullOf(f), f.hull + maxHullOf(f) - before)); return true;
+  const before = maxHullOf(f); f.pilot = p; f.hull = Math.max(1, Math.min(maxHullOf(f), f.hull + maxHullOf(f) - before)); contractCheck(run); return true;
 }
 function unassignPilot(run, uid) {
   const f = run.fleet.find(x => x.uid === uid); if (!f || !f.pilot) return false;
@@ -893,7 +927,10 @@ function unassignPilot(run, uid) {
 function finishCombat(run) {
   const st = run.combat; if (!st || !st.result) return;
   const lostCargo = run.fleet.some(f => f.t === 'convoyeur' && (st.ships.find(x => x.fid === f.uid) || { dead: true }).dead) ? 20 : 0;
+  const before = run.fleet.length;
   run.fleet = run.fleet.filter(f => { const s = st.ships.find(x => x.fid === f.uid); if (!s || s.dead) return false; f.hull = s.hull; return true; });
+  run.secLost = (run.secLost || 0) + before - run.fleet.length;
+  if (st.goal && run.goals) { run.goals.n++; if (st.result === 'won' && goalState(st) === 'ok') { run.goals.ok++; run.cr += st.goal.cr; } }
   run.kills += st.kills; run.cr = Math.max(0, run.cr - lostCargo);
   if (st.result !== 'lost' && run.fleet.some(f => f.t === 'atelier')) for (const f of run.fleet) f.hull = Math.min(maxHullOf(f), f.hull + 3);
   const R = rng(seedOf(st.seed, 99));
@@ -902,14 +939,15 @@ function finishCombat(run) {
     rw.cr = Math.round((k === 'amiral' ? 100 : k === 'lourd' ? 50 + R() * 21 : 20 + R() * 16) * bonus(run));
     rw.fuel = Math.round((k === 'lourd' ? 1 : k === 'contact' && R() < .5 ? 1 : 0) * bonus(run)); rw.lostCargo = lostCargo;
     rw.mod = k === 'lourd' || k === 'amiral' || R() < .25 ? pick(R, MOD_IDS) : null;
+    if (st.goal) rw.goal = { k: st.goal.k, text: goalText(st.goal, st), cr: st.goal.cr, ok: goalState(st) === 'ok' };
     run.cr += rw.cr; run.fuel += rw.fuel; if (rw.mod) run.stock.push(rw.mod);
     if (k === 'lourd') run.heavy++;
     for (const f of run.fleet) if (hasPilot(f, 'veteran') && (f.pilot.vet || 0) < 4) { f.pilot.vet = (f.pilot.vet || 0) + 1; f.hull++; }
-    if (k === 'amiral') { run.admirals++; run.sectorsDone++; }
+    if (k === 'amiral') { run.admirals++; run.sectorsDone++; if (!run.secLost) run.cleanSectors = (run.cleanSectors || 0) + 1; }
     run.reward = rw; run.phase = 'reward';
   } else if (st.result === 'fled') { run.fuel = Math.max(0, run.fuel - 1); run.phase = 'map'; run.msg = 'FUITE : PAS DE RÉCOMPENSE, -1 CARBURANT'; }
   else { run.phase = 'end'; run.victory = false; }
-  run.combat = null;
+  run.combat = null; contractCheck(run);
 }
 const REFUEL = 3;   // carburant offert en entrant dans un nouveau secteur
 // après la récompense : le secteur suivant, ou la fin (victoire) après le dernier amiral
@@ -917,10 +955,31 @@ function afterReward(run) {
   const k = run.reward && run.reward.kind; run.reward = null;
   if (k === 'amiral') {
     if (run.sector < SECTORS.length) {
-      run.sector++; run.map = makeMap(run.seed, run.sector); run.at = 0; run.visited = [0]; run.phase = 'map';
+      run.sector++; run.map = makeMap(run.seed, run.sector); run.at = 0; run.visited = [0]; run.phase = 'map'; run.secLost = 0;
       run.fuel += REFUEL; run.msg = `SECTEUR ${String(run.sector).padStart(2, '0')} · RAVITAILLEMENT : +${REFUEL} CARBURANT`;
     } else { run.phase = 'end'; run.victory = run.sectorsDone >= SECTORS.length; run.cleared = true; }
   } else run.phase = 'map';
+}
+/* ---------- contrats de partie (session 4) ----------
+   3 contrats proposés au départ (graine de la partie), le joueur en choisit un ; réussi = score et données en plus. */
+/** @type {Record<string, { name: string, desc: string, score: number, data: number, goal?: number, prog: (run: any) => number }>} */
+const CONTRACTS = {
+  chasse: { name: 'CHASSE AUX PIRATES', desc: 'détruire 90 pirates', score: 600, data: 15, goal: 90, prog: r => r.kills },
+  lourds: { name: 'GROS GIBIER', desc: 'gagner 4 contacts lourds', score: 900, data: 20, goal: 4, prog: r => r.heavy },
+  amiraux: { name: 'TÊTES COURONNÉES', desc: 'vaincre 2 amiraux', score: 500, data: 10, goal: 2, prog: r => r.admirals },
+  intact: { name: 'ZÉRO PERTE', desc: 'terminer 2 secteurs sans y perdre de vaisseau', score: 800, data: 20, goal: 2, prog: r => r.cleanSectors || 0 },
+  equipage: { name: 'ÉQUIPAGE COMPLET', desc: 'un pilote dans chacun de 3 vaisseaux ou plus', score: 800, data: 20, prog: r => r.fleet.length >= 3 && r.fleet.every(f => f.pilot) ? 1 : 0 },
+  fortune: { name: 'FORTUNE', desc: 'avoir 600 crédits', score: 500, data: 10, goal: 600, prog: r => r.cr },
+  escadre: { name: 'GRANDE ESCADRE', desc: 'compter 5 vaisseaux dans ta flotte', score: 700, data: 15, goal: 5, prog: r => r.fleet.length },
+  defis: { name: 'TÊTE BRÛLÉE', desc: 'réussir 10 défis de combat', score: 700, data: 15, goal: 10, prog: r => r.goals ? r.goals.ok : 0 },
+};
+const contractOffers = seed => shuffle(rng(seedOf(seed, 41)), Object.keys(CONTRACTS)).slice(0, 3);
+function chooseContract(run, id) { if (run.contract || !run.offers || !run.offers.includes(id)) return false; run.contract = id; contractCheck(run); return true; }
+// contrat réussi dès que son objectif est atteint (vérifié après chaque combat, épave, achat, pilote posé…)
+function contractCheck(run) {
+  const C = run.contract && CONTRACTS[run.contract]; if (!C || run.contractDone) return false;
+  if (C.prog(run) < (C.goal || 1)) return false;
+  run.contractDone = true; run.bonus = (run.bonus || 0) + C.score; run.data = (run.data || 0) + C.data; return true;
 }
 const RECRUITS = ['chasseur', 'fregate', 'bombardier', 'drones', 'egide', 'eclaireur', 'convoyeur', 'artilleur', 'cuirasse', 'atelier'];
 function makeShop(run, seed) {
@@ -939,7 +998,7 @@ function buy(run, what, i) {
   }
   if (what === 'pilot') { const o = sh.pilot; if (!o || o.sold || run.cr < o.price) return false; run.cr -= o.price; o.sold = true; run.crew.push(o.p); return true; }
   if (what === 'mod') { const o = sh.mods[i]; if (!o || o.sold || run.cr < o.price) return false; run.cr -= o.price; o.sold = true; run.stock.push(o.m); return true; }
-  if (what === 'ship') { const o = sh.ship; if (o.sold || run.cr < o.price || run.fleet.length >= 5) return false; run.cr -= o.price; o.sold = true; addFleet(run, o.t, o.name); return true; }
+  if (what === 'ship') { const o = sh.ship; if (o.sold || run.cr < o.price || run.fleet.length >= 5) return false; run.cr -= o.price; o.sold = true; addFleet(run, o.t, o.name); contractCheck(run); return true; }
   return false;
 }
 function dock(run, choice) {
@@ -962,23 +1021,24 @@ function uninstall(run, uid, k) {
    RUN_V : version de la partie sauvegardée. Quand une session ajoute des champs
    à la partie, monter RUN_V et compléter ici les anciennes sauvegardes.
    Renvoie la partie remise à niveau, ou null si elle est illisible. */
-const RUN_V = 3;
+const RUN_V = 4;
 const PHASES = ['map', 'combat', 'reward', 'shop', 'dock', 'event', 'end'];
 function migrate(r) {
   if (!r || typeof r !== 'object' || !(r.v >= 1) || r.v > RUN_V) return null;
   if (r.v === 1) { r.crew = r.crew || []; r.data = r.data || 0; r.seen = r.seen || []; r.event = null; r.v = 2; }   // session 2 : pilotes, données, événements
   if (r.v === 2) { const fl = FLEETS.find(f => f.id === r.fleetId); r.compo = fl ? fl.ships.slice() : []; r.prime = 0; delete r.fleetId; r.v = 3; }   // session 4 : flotte à points (pas de prime pour une partie déjà commencée)
+  if (r.v === 3) { r.offers = []; r.contract = null; r.contractDone = false; r.bonus = 0; r.goals = { ok: 0, n: 0 }; r.secLost = 0; r.cleanSectors = 0; r.v = 4; }   // session 4 : défis et contrats (pas de contrat pour une partie déjà commencée)
   const ok = Array.isArray(r.fleet) && r.fleet.every(f => f && TYPES[f.t] && Array.isArray(f.mods)) && r.map && Array.isArray(r.map.nodes)
     && r.map.nodes[r.at] && PHASES.includes(r.phase) && (r.phase !== 'combat' || (r.combat && Array.isArray(r.combat.ships)))
     && (r.phase !== 'shop' || r.shop) && (r.phase !== 'reward' || r.reward) && (r.phase !== 'event' || (r.event && eventById(r.event.id))) && Array.isArray(r.stock) && Array.isArray(r.crew);
   return ok ? r : null;
 }
 // score et données avant la prime d'audace, puis avec
-const baseScoreOf = run => 1000 * run.sectorsDone + 20 * run.kills + run.cr + (run.victory ? 3000 : 0);
+const baseScoreOf = run => 1000 * run.sectorsDone + 20 * run.kills + run.cr + (run.victory ? 3000 : 0) + (run.bonus || 0);
 const baseStellarOf = run => 10 * run.sector + 3 * run.heavy + 20 * run.admirals + (run.data || 0);
 const scoreOf = run => Math.round(baseScoreOf(run) * (1 + (run.prime || 0)));
 const stellarOf = run => Math.round(baseStellarOf(run) * (1 + (run.prime || 0)));
 
-const NEBULA_API = { makeTraining, TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, baseScoreOf, baseStellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, FLEET_BUDGET, FLEET_MAX, FLEET_COST, PRIME_STEP, PRIME_MAX, fleetCost, primeOf, fleetShips, fleetOk, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
+const NEBULA_API = { makeTraining, TUNE, nextNodes, nodeAt, makeShop, TYPES, MODS, SECTORS, FLEETS, makeCombat, startTurn, endTurn, moveShip, undoMove, replaceShip, moveSpots, spotAt, attack, launchFrom, flee, canFlee, targetsFor, reachable, autoTurn, simulate, makeMap, newRun, jump, finishCombat, afterReward, buy, dock, install, uninstall, scoreOf, stellarOf, baseScoreOf, baseStellarOf, seedOf, dangerMap, UNLOCKS, BASE_RECRUITS, walletOf, unlock, recruitsFor, fleetOpen, FLEET_BUDGET, FLEET_MAX, FLEET_COST, PRIME_STEP, PRIME_MAX, fleetCost, primeOf, fleetShips, fleetOk, GOALS, goalText, goalState, CONTRACTS, chooseContract, contractCheck, PILOTS, EVENTS, eventById, resolveEvent, closeEvent, canChoose, assignPilot, unassignPilot, nodeName, bossOf, ionAt, fogAt, REFUEL, zoneFor, zoneShips, NODE_INFO, RUN_V, migrate, AI_LEVELS };
 if (typeof window !== 'undefined') window.Nebula = NEBULA_API;
 if (typeof module !== 'undefined') module.exports = NEBULA_API;
