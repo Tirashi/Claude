@@ -18,6 +18,7 @@ python3 -m http.server 8765
 | `fumee.js [captures]` | Chaque jeu s'ouvre sans erreur JavaScript ; Nebula : saut, toucher, fin de tour, entraînement, écran INCIDENT. Lancé aussi par la CI. |
 | `nebula-simulateur.js [n] [prudence]` | Nebula, **sous Node** (pas besoin du serveur) : combats automatiques (victoires, coque perdue) contre l'IA du secteur 1 puis l'IA par score (niveaux 1 et 2), parties complètes reproductibles, `migrate()`. |
 | `nebula-parties.js [n] [prudence]` | Nebula, sous Node : parties complètes sur les 3 secteurs (où la flotte tombe, victoires, coque perdue par secteur et par type de combat). Pour régler la difficulté. |
+| `nebula-flottes.js [n]` | Nebula, sous Node : force de différentes flottes de départ (victoires, secteurs, score). Pour calibrer les points de flotte. |
 | `artefact.py <jeu.html> <sortie.html>` | Copie d'un jeu prête à publier en artefact (tous les scripts locaux intégrés, sans ludo-scores.js). |
 
 `pw.js` charge Playwright (installé dans `/opt/node22`) et règle l'écran de téléphone.

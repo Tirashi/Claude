@@ -307,3 +307,33 @@ Reste aussi, hors Nebula : l'artefact de l'accueil est une ancienne copie à plu
 - **Batterie** : la boucle ne dessine que si besoin (`fpsWanted`) : 60 images/s après un toucher (1,5 s), pendant les animations du combat, le saut ou la préparation des sprites ; au repos, 30 images/s à l'écran titre, sur la carte et en combat (petits mouvements des vaisseaux), 12 sur les écrans fixes (manuel, hangar, comptoir, fiches…). Mesuré dans Chromium : 30 / 12 / 64 images/s.
 - Testé : ouverture hors connexion (jeu et 3 polices chargés), réseau très lent avec un serveur qui attend 8 s par fichier (page ouverte en 2,6 s), réseau normal (une modification publiée arrive tout de suite) ; test de fumée des 19 pages.
 - Non fait : préparer les sprites dans un *Web Worker* (§ 6 de l'analyse) : à faire seulement si l'utilisateur constate des à-coups sur le téléphone.
+
+## 21. Pistes d'équilibrage et de renouvellement (proposées le 15/10, à valider)
+Retour de l'utilisateur (15/10) : après plusieurs parties, la flotte de choc est très efficace. Idées en vrac : flotte de choc dès le début mais moins récompensée, flotte marchande comme une mission d'escorte mieux récompensée ; composer sa flotte de départ avec des **points de flotte** (chaque vaisseau a un coût et rapporte plus ou moins en fin de partie) ; nouveaux vaisseaux alliés et ennemis ; **objectifs** de partie ou de combat (ne perdre aucun vaisseau, un pilote dans chaque vaisseau…) ; **partie du jour** avec une flotte différente chaque jour (que des chasseurs, que des bombardiers, escorte d'un vaisseau qui ne doit pas être détruit…).
+
+### Mesures (IA de test, 40 parties complètes par flotte, joueur attentif, tout débloqué)
+| Flotte de départ | Victoires | Secteurs terminés (moy.) | Score moyen |
+|---|---|---|---|
+| 4 chasseurs | **35/40** | 2,85 | 8030 |
+| 3 frégates | 20/40 | 2,50 | 6584 |
+| choc (cuirassé, bombardier, chasseur) | 12/40 | 2,15 | 5199 |
+| cuirassé, frégate, chasseur | 12/40 | 2,25 | 5422 |
+| 3 bombardiers | 9/40 | 1,73 | 4124 |
+| escorte (porte-vaisseaux, frégate, chasseur) | 8/40 | 2,00 | 4809 |
+| marchande (+100 crédits) | 5/40 | 1,93 | 4954 |
+| 2 chasseurs | 5/40 | 1,70 | 4149 |
+| porte-vaisseaux, égide, chasseur | 4/40 | 1,55 | 3784 |
+| atelier, artilleur, chasseur | 3/40 | 1,25 | 3214 |
+| frégate, chasseur | 3/40 | 1,73 | 4168 |
+| cuirassé seul | 0/40 | 0,25 | 1029 |
+
+Lecture : le **nombre de vaisseaux** compte énormément (plus d'actions par tour, des tirs pirates éparpillés) et le **chasseur** est de loin le vaisseau le plus rentable (vitesse 4, riposte, coque 6). L'IA de test joue mal les vaisseaux de soutien (égide, atelier, baies du porte-vaisseaux) : ces chiffres les sous-estiment, mais le classement des flottes « de combat » est fiable, et il rejoint le ressenti (choc forte).
+
+### Pistes
+1. **Flotte à points (socle des autres)** : écran FLOTTE où l'on compose sa flotte de départ avec un budget de **points de flotte** (par ex. 10 PF, 4 vaisseaux au plus au départ). Coûts à calibrer au simulateur pour que deux flottes de même coût aient des chances voisines (premier jet : éclaireur 1, convoyeur 1, drones 2, bombardier 2, chasseur 3, frégate 3, égide 3, artilleur 3, atelier 3, porte-vaisseaux 4, cuirassé 5). **Prime d'audace** : chaque point non dépensé = +10 % de score et de données stellaires en fin de partie (une flotte légère, ou marchande, rapporte plus ; une flotte lourde moins). Les trois flottes actuelles deviennent des modèles prêts à l'emploi (escorte 10, choc 10, marchande 8 + 100 crédits = +20 %). Déblocages : les vaisseaux débloqués entrent dans l'écran de composition ; les déblocages de flottes disparaissent (le solde est recalculé, les données dépensées reviennent toutes seules).
+2. **Objectifs** : *de combat* (un défi tiré avec la graine, affiché en haut : aucun vaisseau détruit, gagner en 4 tours ou moins, détruire le gros pirate en premier… ; récompense en crédits) et *de partie* (un contrat choisi au départ parmi 3 : ne perdre aucun vaisseau, finir avec un pilote dans chaque vaisseau, vaincre les 3 amiraux sans fuir, finir avec 300 crédits… ; récompense en score et en données).
+3. **Missions du jour** : la partie du jour impose chaque jour une flotte et une règle tirées avec la date (escadrille de 4 chasseurs, 3 bombardiers, escorte d'un convoyeur qui ne doit pas être détruit, 2 vaisseaux avec pilotes vétérans, sans comptoir, carburant compté…). La même pour toute la famille : le classement du jour reste juste.
+4. **Nouveaux vaisseaux** (plus tard) : alliés *brouilleur* (annule une intention pirate par tour) et *mouilleur de mines* (piège une case) ; pirates *frégate-bouclier* (+1 bouclier aux pirates voisins) et *poseur de mines*. Chaque nouveau pirate doit rester lisible avec le système d'annonces.
+
+### Proposition de découpage
+Clore la session 3 par une étape 6 courte (bilan, docs), puis une **session 4 « Flotte et défis »** : 1) flotte à points, prime d'audace, calibrage des coûts au simulateur ; 2) objectifs de combat et contrats de partie ; 3) missions du jour ; 4) nouveaux vaisseaux (en option). À valider par l'utilisateur.
