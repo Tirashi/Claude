@@ -19,7 +19,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`jeu-de-la-vie/index.html`](jeu-de-la-vie/index.html) : **Jeu de la Vie**, l'automate cellulaire de Conway (voir son propre README).
 - [`solitaire/index.html`](solitaire/index.html) : **Solitaire**, le Klondike de Windows XP.
 
-Sur le menu : le jeu à la une dans sa boîte, des favoris (étoile), des filtres (tous, favoris, nouveau, du jour) commentés par le gardien, un **tri** (favoris d'abord, nouveautés, nom, dernière partie lancée depuis le menu), une **recherche** (nom, description ou genre, sans se soucier des accents ; Entrée lance le premier jeu trouvé) et le bouton **Surprends-moi**, qui fait défiler les cartouches dans une console et lance un jeu au hasard parmi ceux affichés.
+Sur le menu : le jeu à la une dans sa boîte, des favoris (étoile), des filtres (tous, favoris, nouveau, du jour, **en cours**) commentés par le gardien, sur chaque cartouche **la partie en cours** (Nebula secteur 2, Club semaine 12, grille du jour de Queens commencée…) et **ton record**, un **tri** (favoris d'abord, nouveautés, nom, dernière partie lancée depuis le menu), une **recherche** (nom, description ou genre, sans se soucier des accents ; Entrée lance le premier jeu trouvé) et le bouton **Surprends-moi**, qui fait défiler les cartouches dans une console et lance un jeu au hasard parmi ceux affichés.
 
 ---
 

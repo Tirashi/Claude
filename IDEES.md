@@ -149,9 +149,9 @@ Maquette **filtres et classements** (filtres : 1 onglets, 2 sélecteur de consol
 - Et du coup **une boîte de jeu pour chaque cartouche** (même famille de style que la cartouche, aux couleurs du jeu), pas seulement pour le jeu à la une.
 
 À faire plus tard (plan proposé : session A = Reprendre ; session B = défis du jour + profil ; session C = activité de la famille) :
-- **Reprendre** : bannière « Continuer Nebula, secteur 1 / Club, semaine 12 » (un petit lecteur de la partie en cours par jeu, sans toucher aux jeux).
+- ✅ **Reprendre** (15/10) : finalement un filtre **EN COURS** (choix de l'utilisateur, plutôt qu'une bannière) et une étiquette « EN COURS · SECTEUR 2 » sur les cartouches (`PROGRESS` dans `index.html`).
 - **Défis du jour** : encadré « Aujourd'hui » (Lignée, Pont stellaire, Alunissage, plus tard Nebula) coché quand c'est fait, avec le résultat et la place dans la famille.
-- **Mes records sur chaque cartouche** (« Record 1667 pts · 2e de la famille »).
+- ✅ **Mes records sur chaque cartouche** (15/10, records du téléphone, `RECORD` dans `index.html`) ; la place dans la famille reste à faire (« 2e de la famille », demande les classements).
 - **Profil** : pseudo, nombre de records, jeux joués, série de jours avec un défi du jour.
 - **Activité de la famille** (« Fiston a battu ton record à Orbite ») : demande un nouveau script SQL Supabase (historique des records), à lancer par l'utilisateur.
 - ✅ **Surprends-moi** (15/10) : un jeu au hasard parmi ceux affichés, les cartouches défilent dans une console puis la choisie est insérée.
@@ -160,7 +160,7 @@ Maquette **filtres et classements** (filtres : 1 onglets, 2 sélecteur de consol
 ## Classement des idées par quantité de travail (15/10)
 Pour choisir selon le forfait restant (limite hebdomadaire remise à zéro le mercredi à 19 h).
 - 🟢 **Très petit** : ✅ tout fait le 15/10 (texte des classements, Surprends-moi, tri et recherche).
-- 🟡 **Petit** (une courte conversation) : L'Île des naufragés (petit à moyen) ; ✅ Alunissage, interface près du module (15/10) ; ✅ Queens, grille du jour (15/10) ; ✅ étagère des classements (15/10) ; Reprendre ; mes records sur chaque cartouche (sans la place dans la famille).
+- 🟡 **Petit** (une courte conversation) : L'Île des naufragés (petit à moyen) ; ✅ Alunissage, interface près du module (15/10) ; ✅ Queens, grille du jour (15/10) ; ✅ étagère des classements (15/10) ; ✅ filtre EN COURS et records sur les cartouches (15/10).
 - 🟠 **Moyen** (une conversation, Opus) : La Boutique de cartes ; Terres nouvelles (1 à 2 conversations) ; Invasion 2.0 ; Sudoku ; Le Mot d'or (la liste de mots est le gros du travail) ; Lune-Rover ; Capitaine du port ; défis du jour + profil ; animations sur l'accueil ; revue « ingénieur senior » (lecture de tout le code : à faire en début de semaine).
 - 🔴 **Gros** (1 à 2 conversations) : Murdoku ; Escadrille ; Bord de lac ; Astro-Mineur ; activité de la famille (SQL Supabase) ; Le Potager et son échoppe ; La Colonie ; Le Petit Royaume (2 à 3 conversations) ; **Défense orbitale** (tower defense + auto-battler, 2 à 3 conversations après une maquette) ; **refonte de la sélection des jeux** (cartouches en 3D, page dédiée, avec une boîte par jeu : maquette d'abord, puis 2 conversations) ; **refonte de la DA du site façon Dragon Quest** (maquette, puis 1 à 2 conversations ; à fusionner avec la refonte de la sélection : 3 conversations en tout pour les deux).
 - ⚫ **Très gros** (plusieurs conversations, comme Nebula) : Donjon de poche ; Escarmouche ; Le Chalutier ; **RPG façon Dragon Quest 1** (5 à 6 sessions : carte, villes, donjons, 30 à 40 monstres, sorts, dialogues, équilibrage) ; Nebula : l'Empire des étoiles (le plus gros : jeu sur des semaines et serveur pour la famille).

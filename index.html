@@ -183,6 +183,12 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 @keyframes rpgblink{50%{opacity:.2}}
 @media (max-width:400px){ .rpg .cmd button{font-size:8px; padding-left:18px} .rpg .talk{font-size:19px} }
 .cart[hidden]{display:none}
+/* sur la cartouche : partie en cours et record du joueur */
+.mine{display:flex; flex-direction:column; gap:5px; align-items:flex-start}
+.mine span{font-family:var(--f-display); font-size:7px; letter-spacing:1px; line-height:1.5; padding:4px 6px; border:2px solid var(--ink)}
+.mine .cur{color:#08260f; background:#5cff8a}
+.mine .cur::before{content:"▶ "; animation:rpgblink .9s steps(1) infinite}
+.mine .rec{color:var(--lt); background:rgba(0,0,0,.45); border-color:rgba(0,0,0,.6)}
 /* tri et recherche : deux petites fenêtres du même style que le menu des filtres */
 .tools{display:flex; flex-wrap:wrap; gap:10px; width:100%; max-width:560px; margin:-14px auto 0}
 .tools .dq{background:#000; border:4px double #fff; border-radius:4px; box-shadow:4px 4px 0 #000}
@@ -437,6 +443,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-15", "Accueil : filtre EN COURS pour retrouver les parties commencées, et sur chaque cartouche ta partie en cours et ton record."],
   ["2026-10-15", "Défis du jour : dans Queens, Pont stellaire et Alunissage, seule la première tentative du jour est classée (la partie en cours se reprend au même temps)."],
   ["2026-10-15", "Queens : la grille du jour, la même pour toute la famille, de 5×5 le lundi à 9×9 le week-end, avec son classement."],
   ["2026-10-15", "Alunissage : nouveaux graphismes, avec la lumière du soleil et les ombres, un décor par monde, un module plus détaillé, l'astronaute et son drapeau, l'explosion et son cratère."],
@@ -466,7 +473,7 @@ const NEWS = [
   ["2026-10-12", "Le Club d'agility : nouveau jeu de gestion de club canin."],
 ];
 // filtres de l'accueil (choix de l'utilisateur : peu de filtres) ; les genres de META restent prêts pour plus tard
-const FILTERS = ["TOUS", "★ FAVORIS", "NOUVEAU", "DU JOUR"];
+const FILTERS = ["TOUS", "★ FAVORIS", "NOUVEAU", "DU JOUR", "EN COURS"];
 const daysSince = d => d ? (Date.now() - new Date(d + "T00:00:00").getTime()) / 864e5 : 1e9;
 const recent = d => daysSince(d) < 3;
 const fmtDay = d => { const [y, m, j] = d.split("-"); return `${j}/${m}`; };
@@ -475,6 +482,58 @@ let favs = []; try { favs = JSON.parse(localStorage.getItem(favKey)) || []; } ca
 const shelf = document.getElementById("shelf"), allCarts = [...shelf.querySelectorAll(".cart")], order = new Map(allCarts.map((c, i) => [c, i]));
 allCarts.forEach(c => { c.dataset.k = c.getAttribute("href").replace(/^.*\/Claude\//, ""); });   // clé du jeu (même si le lien est absolu, comme dans l'artefact)
 const metaOf = c => META[c.dataset.k] || {genres: []};
+/* ---------- parties en cours et records, lus dans les sauvegardes de chaque jeu (sans toucher aux jeux) ---------- */
+const rk = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
+const dayNum = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+const mmss = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
+const sum = o => Object.values(o || {}).reduce((a, v) => a + (Number(v) || 0), 0);
+const minOf = o => { const v = Object.values(o || {}).map(Number).filter(x => x > 0); return v.length ? Math.min(...v) : 0; };
+const plural = (n, w) => `${n} ${w}${n > 1 ? "S" : ""}`;
+// ce qui attend d'être repris (null si rien)
+const PROGRESS = {
+  "nebula/index.html": () => { const r = rk("nebula.run", null); return r && r.phase !== "end" && !r.training ? `SECTEUR ${r.sector || 1}` : null; },
+  "club/index.html": () => { const g = rk("club.save", null); return g && g.week > 1 ? `SEMAINE ${g.week}` : null; },
+  "queens/index.html": () => { const r = rk("queens16.dailyRun", null); return r && r.day === dayNum() ? "GRILLE DU JOUR" : null; },
+  "pont-stellaire/index.html": () => { const d = rk("pontstellaire.dailyRun", null), g = rk("pontstellaire.game", null);
+    return d && d.day === dayNum() ? "CIEL DU JOUR" : g && !g.daily ? "UN CIEL" : null; },
+  "lignee/index.html": () => { const today = dayNum().toString(36).toUpperCase(), cd = rk("lignee.curDaily", null), c = rk("lignee.cur", null);
+    return cd && cd.lives !== 0 && String(cd.code).endsWith("-J" + today) ? "ARBRE DU JOUR" : c && c.lives !== 0 ? "UN ARBRE" : null; },
+  "picross/index.html": () => { const n = Object.keys(rk("picrossdex.progress", {}) || {}).length; return n ? plural(n, "GRILLE") : null; },
+  "solitaire/index.html": () => { const g = rk("solitaire16.game", null); return g && g.started && !g.won ? "UNE DONNE" : null; },
+};
+// le record du joueur sur ce téléphone (null si aucun)
+const RECORD = {
+  "tetris/index.html": () => rk("tetris16.best", 0) > 0 ? `RECORD ${rk("tetris16.best", 0)}` : null,
+  "snake/index.html": () => rk("snakeBestScore", 0) > 0 ? `RECORD ${rk("snakeBestScore", 0)}` : null,
+  "asteroids/index.html": () => rk("asteroids16.best", 0) > 0 ? `RECORD ${rk("asteroids16.best", 0)}` : null,
+  "solitaire/index.html": () => rk("solitaire16.best", 0) > 0 ? `RECORD ${rk("solitaire16.best", 0)}` : null,
+  "injagility/index.html": () => rk("injagility.best", 0) > 0 ? `RECORD ${rk("injagility.best", 0)} OBST.` : null,
+  "queens/index.html": () => { const b = rk("queens16.best", {}) || {}, n = Object.keys(b).filter(k => b[k] > 0).map(Number).sort((a, x) => x - a)[0]; return n ? `RECORD ${n}×${n} ${mmss(b[n])}` : null; },
+  "picross/index.html": () => { const n = Object.keys(rk("picrossdex.captured", {}) || {}).length; return n ? `${n} POKEMON` : null; },
+  "lignee/index.html": () => { const n = Object.values(rk("lignee.stats", {}) || {}).reduce((a, v) => a + (v && v.n || 0), 0); return n ? plural(n, "ARBRE") : null; },
+  "touche-coule/index.html": () => { const m = minOf(rk("touchecoule.best", {})); return m ? `RECORD ${m} TIRS` : null; },
+  "amiral/index.html": () => { const m = minOf(rk("amiral.best", {})); return m ? `RECORD ${m} TOURS` : null; },
+  "club/index.html": () => { const g = rk("club.save", null), r = g ? Math.max(g.rep || 0, g.bestRep || 0) : 0; return r ? `REPUTATION ${r}` : null; },
+  "orbite/index.html": () => { const n = sum(rk("orbite.stars", {})); return n ? `${n}/90 ETOILES` : null; },
+  "pont-stellaire/index.html": () => { const n = Number(rk("pontstellaire.wins", 0)) || 0; return n ? plural(n, "CIEL") : null; },
+  "alunissage/index.html": () => rk("alunissage.best", 0) > 0 ? `RECORD ${rk("alunissage.best", 0)} PTS` : null,
+  "nebula/index.html": () => rk("nebula.best", 0) > 0 ? `RECORD ${rk("nebula.best", 0)} PTS` : null,
+};
+const NICE = {"nebula/index.html": "Nebula", "club/index.html": "le Club", "queens/index.html": "Queens", "pont-stellaire/index.html": "Pont stellaire",
+  "lignee/index.html": "Lignée", "picross/index.html": "Picross Dex", "solitaire/index.html": "le Solitaire"};
+const inProgress = c => { try { return (PROGRESS[c.dataset.k] || (() => null))(); } catch (e) { return null; } };
+function paintMine(){
+  allCarts.forEach(c => {
+    let box = c.querySelector(".mine"); if (!box){ box = document.createElement("div"); box.className = "mine"; c.querySelector(".tags").before(box); }
+    let rec = null; try { rec = (RECORD[c.dataset.k] || (() => null))(); } catch (e) {}
+    const cur = inProgress(c);
+    box.innerHTML = (cur ? '<span class="cur"></span>' : "") + (rec ? '<span class="rec"></span>' : "");
+    if (cur) box.querySelector(".cur").textContent = "EN COURS · " + cur;
+    if (rec) box.querySelector(".rec").textContent = rec;
+    box.hidden = !cur && !rec;
+  });
+}
+paintMine();
 allCarts.forEach(c => {
   const m = metaOf(c), href = c.dataset.k;
   if (recent(m.added)) c.insertAdjacentHTML("afterbegin", '<span class="badge">NOUVEAU</span>');
@@ -513,7 +572,7 @@ function compare(a, b){
   if (sortBy === "last") return (played[b.dataset.k] || 0) - (played[a.dataset.k] || 0) || order.get(a) - order.get(b);
   return (isFav(b) - isFav(a)) || order.get(a) - order.get(b);
 }
-const shows = c => { const m = metaOf(c); if (query && !c.dataset.txt.includes(query)) return false; return filter === "TOUS" || (filter === "★ FAVORIS" ? favs.includes(c.dataset.k) : filter === "NOUVEAU" ? recent(m.added) || recent(m.updated) : (m.genres || []).includes(filter)); };
+const shows = c => { const m = metaOf(c); if (query && !c.dataset.txt.includes(query)) return false; if (filter === "EN COURS") return !!inProgress(c); return filter === "TOUS" || (filter === "★ FAVORIS" ? favs.includes(c.dataset.k) : filter === "NOUVEAU" ? recent(m.added) || recent(m.updated) : (m.genres || []).includes(filter)); };
 // favoris en tête de l'étagère, puis l'ordre d'origine ; le filtre cache les autres
 // le texte du gardien s'écrit lettre par lettre, comme un dialogue de RPG
 let sayText = "", sayTimer = null;
@@ -538,6 +597,7 @@ function arrange(){
   else say(filter === "TOUS" ? `Bienvenue ! Voici toute la Ludothèque : ${n} ${jeux}.`
     : filter === "★ FAVORIS" ? (n ? `Voici tes ${n} ${n > 1 ? "jeux préférés" : "jeu préféré"}.` : "Tu n'as pas encore de favori. Touche l'étoile d'une cartouche pour l'ajouter ici.")
     : filter === "NOUVEAU" ? (n ? `${n} ${n > 1 ? "jeux tout neufs ou mis à jour" : "jeu tout neuf ou mis à jour"} !` : "Rien de neuf ces trois derniers jours. Reviens bientôt !")
+    : filter === "EN COURS" ? (n ? `${n > 1 ? n + " parties t'attendent" : "Une partie t'attend"} : ${(l => l.slice(0, 3).join(", ") + (l.length > 3 ? ` et ${l.length - 3} autre${l.length > 4 ? "s" : ""}` : ""))(allCarts.filter(c => !c.hidden).map(c => (NICE[c.dataset.k] || c.querySelector("h2").textContent) + " (" + inProgress(c).toLowerCase() + ")"))}.` : "Aucune partie en cours. Choisis un jeu et lance-toi !")
     : `${n} ${n > 1 ? "défis t'attendent" : "défi t'attend"} aujourd'hui.`);
   if (typeof refreshCarts === "function") refreshCarts();
 }
@@ -595,6 +655,8 @@ document.getElementById("surprise").addEventListener("click", () => {
 });
 allCarts.forEach(c => { c.addEventListener("mouseenter", () => select(carts.indexOf(c))); c.addEventListener("focus", () => select(carts.indexOf(c))); });
 arrange();
+// revenir sur l'accueil depuis un jeu (page gardée en mémoire) : relire parties en cours et records
+addEventListener("pageshow", e => { if (e.persisted){ paintMine(); arrange(); } });
 document.addEventListener("keydown", e => {
   if (e.target.closest && e.target.closest("textarea, input, select, .saves")) return;
   if (["ArrowRight","ArrowDown"].includes(e.key)){ e.preventDefault(); select(sel+1, true); }
