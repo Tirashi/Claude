@@ -93,7 +93,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"]];
+    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -202,6 +202,9 @@
     hi("alunissage", "best", readKey("alunissage.best", 0));
     var ad = readKey("alunissage.daily", {}) || {};
     Object.keys(ad).forEach(function (k){ if (/^\d{8}$/.test(k)) hi("alunissage", "daily:" + k, ad[k]); });
+    hi("empilage", "best", readKey("empilage.best", 0));
+    var ed = readKey("empilage.daily", {}) || {};
+    Object.keys(ed).forEach(function (k){ if (/^\d{8}$/.test(k)) hi("empilage", "daily:" + k, ed[k]); });
     hi("nebula", "best", readKey("nebula.best", 0));
     var nm = readKey("nebula.meta", {}) || {}; hi("nebula", "victoires", Number(nm.wins) || 0);
     var nd = readKey("nebula.daily", {}) || {};
@@ -224,7 +227,7 @@
 
   window.addEventListener("online", function (){ flush(); });
   // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 6 : avec Nebula)
-  var SYNC = 12;
+  var SYNC = 13;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();

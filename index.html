@@ -453,6 +453,8 @@ const GAMES = [
    d: "Un chiffre par ligne, par colonne et par bloc, sous la lune d'un jardin japonais. Notes au crayon et grille du jour.", tags: ["4×4 A 9×9"]},
   {k: "calculator/index.html", n: "CALCULATOR", s: "CALCULATOR", ic: "calc", fam: "32", lb: "linear-gradient(#3a3d43, #1c1d21)", lt: "#c4d0a8", sh: "#e8783a", rank: "calculator",
    d: "Le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour. Trois styles : arcade, cahier ou calculatrice.", tags: ["5 NIVEAUX"]},
+  {k: "empilage/index.html", n: "EMPILAGE", s: "EMPILAGE", ic: "stack", fam: "32", lb: "linear-gradient(#9fd8ff, #ffd6c8)", lt: "#5a46a8", sh: "#f29bc0", rank: "empilage",
+   d: "Lâche chaque bloc pile sur la tour : ce qui dépasse tombe. Monte du matin jusqu'à la nuit étoilée, en 3D pastel. Une tour du jour pour toute la famille.", tags: ["3D", "TOUR DU JOUR"]},
   {k: "nebula/index.html", n: "NEBULA", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
    d: "Mène ta flotte de balise en balise jusqu'à l'amiral pirate. Les pirates annoncent leurs tirs : esquive, riposte, survis.", tags: ["ROGUE-LITE"]},
   {k: "tetris/index.html", n: "TETRIS", s: "TETRIS", ic: "blocks", fam: "rep", lb: "linear-gradient(#3b2a8a, #160f45)", lt: "#facc15", sh: "#6a4ad0", rank: "tetris",
@@ -471,6 +473,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "empilage/index.html": {added: "2026-10-16", genres: ["ADRESSE", "DU JOUR"]},
   "calculator/index.html": {added: "2026-10-16", genres: ["CALCUL", "DU JOUR"]},
   "lune-rover/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "ESPACE"]},
   "sudoku/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "DU JOUR"]},
@@ -492,6 +495,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-16", "Nouveau jeu : Empilage, le premier jeu en 3D de la Ludothèque. Touche pour lâcher chaque bloc pile sur la tour ; ce qui dépasse tombe. Le ciel passe du matin à la nuit étoilée à mesure que tu montes. Tour du jour : les mêmes vitesses pour toute la famille."],
   ["2026-10-16", "Nouveau jeu : Calculator, le calcul mental de 7 à 77 ans. Choisis tes opérations et ton niveau (de Petit écolier à Champion), joue une série de 20, 60 secondes contre la montre ou le calcul du jour. Trois styles au choix : arcade, cahier d'écolier ou calculatrice de poche."],
   ["2026-10-16", "Nouveau jeu : Lune-Rover. Programme Pico, le petit robot lunaire, à l'avance pour ramasser les cristaux : 30 niveaux, avec sauts, fonction F1, répétitions, boucles et conditions."],
   ["2026-10-16", "Classements : le même compte sur plusieurs navigateurs. Sous les cartouches, CODE DE MON COMPTE ; dans l'autre navigateur, REJOINDRE LE CLASSEMENT puis J'AI DEJA UN COMPTE. Les sauvegardes restent dans chaque navigateur."],
@@ -591,6 +595,7 @@ const RECS = {
     for (const k of Object.keys(b).sort()){ const [m, l, c] = k.split(":"); if (m === "serie" && b[k] > 0) out.push([`Série de 20 · niv. ${l} · ${nm[c] || c}`, mmss(b[k])]); }
     for (const k of Object.keys(b).sort()){ const [m, l, c] = k.split(":"); if (m === "chrono" && b[k] > 0) out.push([`60 s · niv. ${l} · ${nm[c] || c}`, num(b[k], "bonnes")]); }
     return out.slice(0, 8).concat([["Calculs du jour", num(count(rk("calculator.daily", {})))], ["Parties jouées", num(rk("calculator.parties", 0))]]); },
+  "empilage/index.html": () => [["Plus haute tour", num(rk("empilage.best", 0), "blocs")], ["Tours du jour", num(count(rk("empilage.daily", {})))], ["Parties jouées", num(rk("empilage.parties", 0))]],
   "nebula/index.html": () => { const m = rk("nebula.meta", {}) || {}; return [["Meilleur score", num(rk("nebula.best", 0), "pts")], ["Victoires", num(m.wins)], ["Parties jouées", num(m.games)]]; },
 };
 const myRecords = g => { try { return (RECS[g.k] || (() => []))().filter(r => r[1]); } catch (e) { return []; } };
@@ -813,6 +818,10 @@ const RANKS = {
      note: "Score d'une mission : à chaque site, (100 + carburant restant) × le multiplicateur de l'aire."},
     {label: "MISSION DU JOUR", ctl: ["day"], game: "alunissage", board: daily, fmt: v => N(v) + " pts",
      title: () => "MISSION DU JOUR", note: "La même suite de sites pour toute la famille. Seule la première mission du jour est classée.", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}],
+  empilage: [{label: "PLUS HAUTE TOUR", game: "empilage", board: () => "best", fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "PLUS HAUTE TOUR"},
+    {label: "TOUR DU JOUR", ctl: ["day"], game: "empilage", board: daily, fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "TOUR DU JOUR",
+     note: "Les mêmes vitesses et les mêmes départs pour toute la famille. Seule la première tour du jour est classée.",
+     empty: () => st.back ? "Personne n'a joué la tour ce jour-là." : "Personne n'a encore joué la tour du jour : à toi !"}],
   nebula: [{label: "MEILLEUR SCORE", game: "nebula", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEURE PARTIE",
      note: "1000 par secteur terminé, 20 par pirate détruit, les crédits restants, et 3000 pour la victoire finale."},
     {label: "MISSION DU JOUR", ctl: ["day"], game: "nebula", board: daily, fmt: v => N(v) + " pts",
@@ -1158,6 +1167,8 @@ function collectSaves(){
   if (cc.p || Object.keys(cc.b).length) g.calculator = cc;
   const nb = {b: Number(readKey("nebula.best", 0)) || 0, m: readKey("nebula.meta", null), d: readKey("nebula.daily", {}) || {}};
   if (nb.b || (nb.m && nb.m.games)) g.nebula = nb;
+  const em = {b: Number(readKey("empilage.best", 0)) || 0, p: Number(readKey("empilage.parties", 0)) || 0, d: readKey("empilage.daily", {}) || {}};
+  if (em.b || em.p) g.empilage = em;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
@@ -1179,6 +1190,7 @@ function describeSaves(g){
   if (g.sudoku){ const p = g.sudoku, nm = {"4": "4×4", "6": "6×6", "9-1": "9×9 facile", "9-2": "9×9 moyen", "9-3": "9×9 difficile"};
     const b = Object.keys(nm).filter(k => (p.b || {})[k] > 0).map(k => `${nm[k]} en ${fmtTime(p.b[k])}`);
     out.push(`Sudoku : ${p.w || 0} grille${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
+  if (g.empilage) out.push(`Empilage : record ${g.empilage.b || 0} bloc${g.empilage.b > 1 ? "s" : ""}, ${g.empilage.p || 0} partie${g.empilage.p > 1 ? "s" : ""}`);
   if (g.calculator){ const p = g.calculator; out.push(`Calculator : ${p.p || 0} partie${p.p > 1 ? "s" : ""}, ${Object.keys(p.b || {}).length} record${Object.keys(p.b || {}).length > 1 ? "s" : ""}`); }
   if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
   if (g.lunerover){ const n = Object.values(g.lunerover).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Lune-Rover : ${n} étoile${n > 1 ? "s" : ""}`); }
@@ -1276,6 +1288,14 @@ function mergeSaves(g){
     const daily = readKey("alunissage.daily", {}) || {};
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
     if (n){ writeKey("alunissage.daily", daily); done.push(`Alunissage : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.empilage && typeof g.empilage === "object"){
+    const a = g.empilage; let n = 0;
+    if (a.b > (Number(readKey("empilage.best", 0)) || 0)){ writeKey("empilage.best", Math.round(a.b)); n++; }
+    if (a.p > (Number(readKey("empilage.parties", 0)) || 0)) writeKey("empilage.parties", Math.round(a.p));
+    const daily = readKey("empilage.daily", {}) || {};
+    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
+    if (n){ writeKey("empilage.daily", daily); done.push(`Empilage : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.pontstellaire && typeof g.pontstellaire === "object"){
     const p = g.pontstellaire, best = readKey("pontstellaire.best", {}) || {}, daily = readKey("pontstellaire.daily", {}) || {}; let n = 0;
