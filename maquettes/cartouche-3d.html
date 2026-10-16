@@ -1,0 +1,185 @@
+<title>Cartouches des jeux 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : trois téléphones, un par direction ; en haut deux cartouches 3D en gros plan, en bas la planche de l'accueil avec les familles actuelles à côté. */
+:root{
+  color-scheme:dark;
+  --night:#110d22; --night-2:#1e1840; --ink:#0d0a18; --text:#f2f0ff; --text-dim:#a9a6d8; --gold:#ffd23f; --red:#e8264d;
+  --wood-hi:#b77a48; --wood:#7a4a24;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+}
+html,body{background:var(--night);color:var(--text)}
+body{font-family:var(--f-body);font-size:21px;line-height:1.25;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 44px}
+.page{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(14px,3.6vw,20px);line-height:1.6;margin:0;color:var(--gold);text-wrap:balance}
+header p{margin:8px 0 0;color:var(--text-dim);max-width:60ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:30px 22px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.tel{width:100%;max-width:340px;box-sizing:border-box;border:9px solid #05040b;border-radius:30px;background:var(--night);padding:18px 10px 16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 16px 36px rgba(0,0,0,.5)}
+.tel h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:8px;letter-spacing:1px;color:var(--text-dim);text-align:center}
+.gros{display:flex;justify-content:center;gap:26px;padding:22px 0 30px;--k:1.35}
+.fiche{width:100%;max-width:340px}
+.fiche h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:12px;line-height:1.7;color:var(--gold)}
+.fiche p{margin:6px 0 0;color:var(--text-dim)}
+.fiche ul{margin:8px 0 0;padding-left:1em;display:flex;flex-direction:column;gap:4px}
+.question{border:3px solid var(--ink);box-shadow:0 0 0 3px #3b3566;background:var(--night-2);padding:14px 16px;max-width:760px}
+.question p{margin:0}
+.question b{font-family:var(--f-display);font-weight:400;font-size:9px;color:var(--gold)}
+
+/* ---------- la planche (copiée de l'accueil) ---------- */
+.rack{--k:.78; --row:128px; display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:var(--row); justify-items:center; align-items:end; padding:0 4px;
+  background:linear-gradient(transparent calc(100% - 16px), var(--wood-hi) calc(100% - 16px) calc(100% - 13px), var(--wood) calc(100% - 13px) calc(100% - 3px), var(--ink) calc(100% - 3px)) 0 0 / 100% var(--row);
+  border:3px solid var(--ink); box-shadow:0 0 0 3px #3b3566, 5px 5px 0 3px #000; background-color:#140f28}
+.rack .c3{margin-bottom:24px}
+
+/* ---------- une cartouche en 3D (copiée de l'accueil) ---------- */
+.c3{position:relative; width:var(--w); height:var(--h); perspective:520px; flex:none; display:block}
+.c3 .body{position:absolute; inset:0; transform-style:preserve-3d; animation:sway 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+.c3 .f{position:absolute; left:0; top:0; backface-visibility:hidden; overflow:hidden}
+.c3 .front{width:var(--w); height:var(--h); transform:translateZ(calc(var(--d) / 2))}
+.c3 .back{width:var(--w); height:var(--h); transform:rotateY(180deg) translateZ(calc(var(--d) / 2))}
+.c3 .left,.c3 .right{width:var(--d); height:var(--h); left:calc((var(--w) - var(--d)) / 2)}
+.c3 .left{transform:rotateY(-90deg) translateZ(calc(var(--w) / 2))}
+.c3 .right{transform:rotateY(90deg) translateZ(calc(var(--w) / 2))}
+.c3 .top,.c3 .bottom{width:var(--w); height:var(--d); top:calc((var(--h) - var(--d)) / 2)}
+.c3 .top{transform:rotateX(90deg) translateZ(calc(var(--h) / 2))}
+.c3 .bottom{transform:rotateX(-90deg) translateZ(calc(var(--h) / 2))}
+.c3 .front::after{content:""; position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 47%, rgba(255,255,255,.08) 52%, transparent 62%) 0 0 / 300% 100%;
+  animation:gloss 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+.c3::after{content:""; position:absolute; left:12%; right:12%; bottom:calc(-14px * var(--k)); height:calc(8px * var(--k)); border-radius:50%;
+  background:radial-gradient(rgba(0,0,0,.6), transparent 70%); animation:shad 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+@keyframes sway{0%,100%{transform:translateY(0) rotateX(9deg) rotateY(-26deg)} 50%{transform:translateY(calc(-6px * var(--k))) rotateX(5deg) rotateY(24deg)}}
+@keyframes gloss{0%,100%{background-position:100% 0} 50%{background-position:0 0}}
+@keyframes shad{50%{transform:scaleX(.8); opacity:.6}}
+.c3 canvas{display:block; image-rendering:pixelated}
+
+/* famille 16 bits (A) */
+.sA{--w:calc(92px * var(--k)); --h:calc(102px * var(--k)); --d:calc(16px * var(--k))}
+.sA .front{background:#8d8b9e; border:2px solid var(--ink); border-radius:calc(7px * var(--k)) calc(7px * var(--k)) 3px 3px; box-shadow:inset 2px 2px 0 #b6b4c8, inset -3px -3px 0 #5c5a6e}
+.sA .rid{position:absolute; left:18%; right:18%; top:calc(5px * var(--k)); height:calc(7px * var(--k)); background:repeating-linear-gradient(90deg, #5c5a6e 0 2px, transparent 2px 5px)}
+.sA .lab{position:absolute; left:calc(7px * var(--k)); right:calc(7px * var(--k)); top:calc(16px * var(--k)); bottom:calc(14px * var(--k)); background:var(--lb); border:2px solid var(--ink);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(5px * var(--k)); padding:2px}
+.sA .lab canvas{width:calc(34px * var(--k)); height:calc(34px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45))}
+.sA .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(6px * var(--k)); line-height:1.5; color:var(--lt); text-align:center; text-shadow:1px 1px 0 rgba(0,0,0,.6)}
+.sA .notch{position:absolute; left:30%; right:30%; bottom:calc(4px * var(--k)); height:calc(5px * var(--k)); border:2px solid #5c5a6e; border-top:0}
+.sA .left,.sA .right{background:linear-gradient(90deg, #5c5a6e, #747286)}
+.sA .top{background:#a19fb2} .sA .bottom{background:#3a3848} .sA .back{background:#7a788c; border:2px solid var(--ink)}
+
+/* famille 32 bits (C) */
+.sC{--w:calc(92px * var(--k)); --h:calc(106px * var(--k)); --d:calc(18px * var(--k))}
+.sC .front{background:repeating-linear-gradient(90deg, #2a2a2a 0 3px, #111 3px 7px); border:2px solid #000; border-radius:3px; box-shadow:inset 2px 0 0 rgba(255,255,255,.12), inset -3px 0 0 rgba(0,0,0,.5)}
+.sC .front::before{content:""; position:absolute; top:0; bottom:0; right:calc(5px * var(--k)); width:3px; background:var(--red)}
+.sC .lab{position:absolute; left:calc(7px * var(--k)); right:calc(14px * var(--k)); top:calc(8px * var(--k)); height:calc(56px * var(--k)); background:var(--lb); border:2px solid #000; display:flex; align-items:center; justify-content:center; overflow:hidden}
+.sC .lab canvas{width:calc(36px * var(--k)); height:calc(36px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
+.sC .ttl{position:absolute; left:calc(6px * var(--k)); right:calc(12px * var(--k)); top:calc(70px * var(--k)); text-align:center; font-family:var(--f-display); font-size:calc(6px * var(--k)); line-height:1.6; letter-spacing:.5px}
+.chrome{background:linear-gradient(90deg, #fff 30%, #9fb4d6 55%, #fff 60%, #c9d6f0); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(1px 1px 0 #000)}
+.sC .grip{position:absolute; left:22%; right:28%; bottom:calc(5px * var(--k)); height:calc(5px * var(--k)); background:repeating-linear-gradient(90deg, #3a3a3a 0 2px, transparent 2px 4px)}
+.sC .left,.sC .right{background:#141414 linear-gradient(90deg, transparent 40%, rgba(232,38,77,.8) 40% 55%, transparent 55%)}
+.sC .top{background:#0c0c0c} .sC .bottom{background:#0c0c0c} .sC .back{background:#161616; border:2px solid #000}
+
+/* ===== Direction 1 : le boîtier de CD (l'époque de la 3D, c'est celle du CD-ROM) ===== */
+.d1{--w:calc(100px * var(--k)); --h:calc(90px * var(--k)); --d:calc(9px * var(--k))}
+.d1 .front{background:linear-gradient(135deg, rgba(235,242,255,.30), rgba(235,242,255,.08) 45%, rgba(235,242,255,.20)); border:2px solid rgba(225,232,255,.75); border-radius:2px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.d1 .disc{position:absolute; top:12%; right:-14%; width:74%; aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle, rgba(20,20,30,.9) 0 8%, #e9ecf5 8% 11%, rgba(255,255,255,.25) 11% 30%, transparent 30%), conic-gradient(#e6e8f2, #a9ecff, #f3c6ff, #fff0a6, #c9ffd8, #e6e8f2);
+  box-shadow:0 0 0 1px rgba(255,255,255,.5)}
+.d1 .spine{position:absolute; left:0; top:0; bottom:0; width:11%; background:repeating-linear-gradient(0deg, #15141c 0 3px, #2a2936 3px 5px); border-right:1px solid rgba(255,255,255,.35)}
+.d1 .lab{position:absolute; left:14%; right:20%; top:6%; bottom:6%; background:var(--lb); box-shadow:2px 0 4px rgba(0,0,0,.35);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(5px * var(--k))}
+.d1 .lab canvas{width:calc(32px * var(--k)); height:calc(32px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.3))}
+.d1 .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(5px * var(--k)); line-height:1.5; color:var(--lt); text-align:center}
+.d1 .tag3d{position:absolute; left:14%; top:6%; font-family:var(--f-display); font-size:calc(4px * var(--k)); padding:calc(2px * var(--k)) calc(3px * var(--k)); background:var(--ink); color:#fff}
+.d1 .left{background:repeating-linear-gradient(0deg, #15141c 0 3px, #2a2936 3px 5px)}
+.d1 .right,.d1 .top,.d1 .bottom{background:rgba(205,215,245,.45)}
+.d1 .back{background:#1b1a24; border:2px solid rgba(225,232,255,.6)}
+.d1 .back::before{content:""; position:absolute; inset:12%; border-radius:50%; background:radial-gradient(circle, #1b1a24 0 9%, #e9ecf5 9% 12%, transparent 12%), conic-gradient(#e6e8f2, #a9ecff, #f3c6ff, #fff0a6, #c9ffd8, #e6e8f2)}
+
+/* ===== Direction 2 : la cartouche bonbon translucide ===== */
+.d2{--w:calc(90px * var(--k)); --h:calc(104px * var(--k)); --d:calc(16px * var(--k))}
+.d2 .f{backface-visibility:visible}
+.d2 .front,.d2 .back{border-radius:calc(16px * var(--k)) calc(16px * var(--k)) calc(5px * var(--k)) calc(5px * var(--k))}
+.d2 .front{background:color-mix(in srgb, var(--sh) 46%, transparent); border:2px solid color-mix(in srgb, var(--sh) 75%, #fff);
+  box-shadow:inset 3px 3px 0 rgba(255,255,255,.45), inset -3px -3px 0 color-mix(in srgb, var(--sh) 70%, #000 15%)}
+.d2 .back{background:color-mix(in srgb, var(--sh) 60%, #fff 10%)}
+.d2 .pcb{position:absolute; left:14%; right:14%; top:30%; height:62%; transform:translateZ(0); background:#f4f0ff; border-radius:3px}
+.d2 .pcb::before{content:"3D"; position:absolute; left:24%; right:24%; top:22%; height:34%; background:#2b2540; color:#fff; font:calc(5px * var(--k)) var(--f-display); display:flex; align-items:center; justify-content:center}
+.d2 .pcb::after{content:""; position:absolute; left:8%; right:8%; bottom:0; height:13%; background:repeating-linear-gradient(90deg, #e2c25a 0 3px, transparent 3px 5px)}
+.d2 .rid{position:absolute; left:26%; right:26%; top:calc(4px * var(--k)); height:calc(5px * var(--k)); background:repeating-linear-gradient(90deg, rgba(255,255,255,.55) 0 2px, transparent 2px 5px)}
+.d2 .lab{position:absolute; left:calc(8px * var(--k)); right:calc(8px * var(--k)); top:calc(12px * var(--k)); height:calc(54px * var(--k)); background:var(--lb); border-radius:calc(8px * var(--k)) calc(8px * var(--k)) 3px 3px;
+  border:2px solid rgba(255,255,255,.85); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(4px * var(--k))}
+.d2 .lab canvas{width:calc(30px * var(--k)); height:calc(30px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.25))}
+.d2 .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(5px * var(--k)); line-height:1.5; color:var(--lt); text-align:center}
+.d2 .left,.d2 .right,.d2 .top,.d2 .bottom{background:color-mix(in srgb, var(--sh) 60%, transparent)}
+
+/* ===== Direction 3 : la cartouche nacrée holographique ===== */
+.d3{--w:calc(92px * var(--k)); --h:calc(104px * var(--k)); --d:calc(16px * var(--k))}
+.holo{background:linear-gradient(110deg, #ff9ad5, #9ad8ff, #b8ffcf, #fff1a8, #ffb0e0, #9ad8ff) 0 0 / 300% 100%; animation:gloss 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+.d3 .front{background:linear-gradient(160deg, #f6f4fc, #dcd8ec); border:2px solid var(--ink); border-radius:calc(6px * var(--k)); box-shadow:inset 2px 2px 0 #fff, inset -3px -3px 0 #b8b2d0}
+.d3 .cadre{position:absolute; left:calc(6px * var(--k)); right:calc(6px * var(--k)); top:calc(7px * var(--k)); height:calc(60px * var(--k)); padding:calc(3px * var(--k)); box-sizing:border-box; border:2px solid var(--ink)}
+.d3 .lab{width:100%; height:100%; background:var(--lb); display:flex; align-items:center; justify-content:center}
+.d3 .lab canvas{width:calc(34px * var(--k)); height:calc(34px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.3))}
+.d3 .ttl{position:absolute; left:calc(4px * var(--k)); right:calc(4px * var(--k)); top:calc(73px * var(--k)); text-align:center; font-family:var(--f-display); font-size:calc(6px * var(--k)); line-height:1.5; color:#3a3058}
+.d3 .badge{position:absolute; right:calc(2px * var(--k)); top:calc(2px * var(--k)); width:calc(17px * var(--k)); height:calc(17px * var(--k)); border-radius:50%; border:2px solid var(--ink);
+  font:calc(5px * var(--k)) var(--f-display); color:var(--ink); display:flex; align-items:center; justify-content:center}
+.d3 .grip{position:absolute; left:26%; right:26%; bottom:calc(5px * var(--k)); height:calc(4px * var(--k)); background:repeating-linear-gradient(90deg, #b8b2d0 0 2px, transparent 2px 4px)}
+.d3 .left,.d3 .right{background:linear-gradient(90deg, #cfc9e2, #eeebf8)}
+.d3 .left::before,.d3 .right::before{content:""; position:absolute; left:35%; width:30%; top:0; bottom:0; background:linear-gradient(#ff9ad5, #9ad8ff, #b8ffcf, #fff1a8)}
+.d3 .top{background:#e8e5f4} .d3 .bottom{background:#b8b2d0} .d3 .back{background:#dcd8ec; border:2px solid var(--ink)}
+@media (prefers-reduced-motion:reduce){.c3 .body,.c3 .front::after,.c3::after,.holo{animation:none}}
+</style>
+
+<div class="page">
+  <header>
+    <h1>UNE CARTOUCHE POUR LES JEUX 3D</h1>
+    <p>Trois idées pour une quatrième famille, à côté des cartouches grises (16 bits), noires striées (32 bits) et des poches transparentes (reprises). En haut, Empilage et un futur jeu 3D (La Bille) en gros plan ; en bas, la planche de l'accueil à la taille réelle.</p>
+  </header>
+  <div class="grille" id="grille"></div>
+  <div class="question"><p><b>TON CHOIX ?</b> Dis-moi 1, 2 ou 3. On peut aussi mélanger, par exemple la cartouche nacrée avec un petit disque qui dépasse.</p></div>
+</div>
+
+<script>
+const ICONS = {"crown":{"pal":{"o":"#1a0f2e","y":"#ffd23f","h":"#fff6c2","d":"#d98a1c","r":"#e8264d"},"map":["................","................","................","..o....o....o...",".oho..oho..oho..",".oyo..oyo..oyo..",".oyyooyyyooyyo..",".ohyyyyyyyyyyo..",".oyryyyryyyryo..",".oyyyyyyyyyyyo..",".oddddddddddddo.",".oooooooooooooo.","................","................","................","................"]},"planet":{"pal":{"k":"#0b0614","w":"#fff4d8","y":"#e8cf95","o":"#c39a62","d":"#8a6444","r":"#6fd8ff"},"map":["................","................",".....kkkkkk.....","....kwwyyyok....","...kwyyyyyyok...","..kkyyoooyyokk..","kkrrkkyyyyokrrkk","krrrrkkkkkkrrrrk","kkrrkooooodkrrkk","..kkkyyyyodkkk..","...kyoooodddk...","....kooodddk....",".....kkkkkk.....","................","................","................"]},"stack":{"pal":{"w":"#ffffff","k":"#4a3a6a","o":"#f2b56b","p":"#f29bc0","v":"#9b8cf0","a":"#7cc6f2","b":"#f3d9c4"},"map":["......kkkkkkkkk.","......kwooooook.","......koooooook.","....kkkkkkkkkkk.","....kwppppppk...","....kpppppppk...","....kkkkkkkkk...","....kwvvvvvvk...","....kvvvvvvvk...","....kkkkkkkkk...","....kwaaaaaak...","....kaaaaaaak...","..kkkkkkkkkkkkk.","..kwbbbbbbbbbbk.","..kbbbbbbbbbbbk.","..kkkkkkkkkkkkk."]},"marble":{"pal":{"k":"#4a2a10","w":"#e8b878","d":"#b07a40","h":"#1a1008","s":"#c8d0dc","S":"#7a8494","W":"#ffffff"},"map":["kkkkkkkkkkkkkkkk","kwwwwwwwwwwwwwwk","kwddddddddddddwk","kwdwwwwwwwwwwdwk","kwdwhhwwwwwwwdwk","kwdwhhwwwddddwwk","kwdwwwwwwdwwwwwk","kwdddddwwdwsswwk","kwwwwwdwwdsWssSk","kwwwwwdwwdssssSk","kwhhwwdwwwwSSSwk","kwhhwwdwwwwwwwwk","kwwwwwdddddddwwk","kwwwwwwwwwwwwwwk","kwwwwwwwwwwwwwwk","kkkkkkkkkkkkkkkk"]}};
+const GAMES = {
+  queens: {s: "QUEENS", ic: "crown", fam: "A", lb: "linear-gradient(#3a4cc8, #141a6a)", lt: "#ffd23f", sh: "#3a4cc8"},
+  orbite: {s: "ORBITE", ic: "planet", fam: "C", lb: "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt: "#6fd8ff", sh: "#5a3ab8"},
+  empilage: {s: "EMPILAGE", ic: "stack", lb: "linear-gradient(#9fd8ff, #ffd6c8)", lt: "#5a46a8", sh: "#f29bc0"},
+  bille: {s: "LA BILLE", ic: "marble", lb: "linear-gradient(#f6e2b8, #d9a56c)", lt: "#5a3418", sh: "#8fd6c0"}
+};
+const DIRS = [
+  {c: "d1", t: "1 · LE BOITIER DE CD", p: "L'époque des premiers jeux en 3D, c'est celle du CD-ROM.", li: ["Boîtier carré en plastique transparent, tranche noire striée", "La jaquette du jeu, et le disque irisé qui dépasse sur le côté", "Plus large et plus fin que les cartouches : on le repère tout de suite"]},
+  {c: "d2", t: "2 · LA CARTOUCHE BONBON", p: "Une cartouche en plastique translucide couleur bonbon, comme les consoles transparentes.", li: ["Teinte propre à chaque jeu (rose pour Empilage, menthe pour La Bille)", "On voit la carte électronique et sa puce « 3D » à travers", "Coins très arrondis, dans l'esprit pastel d'Empilage"]},
+  {c: "d3", t: "3 · LA CARTOUCHE NACREE", p: "Une coque blanc nacré et une étiquette entourée d'un cadre holographique.", li: ["Le cadre et le badge « 3D » changent de couleur quand la cartouche pivote", "Bande holographique sur les tranches", "Claire et brillante : elle ressort sur les planches sombres"]}
+];
+const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt) e.textContent = txt; return e; };
+function art(g){
+  const c = el("canvas"); c.width = c.height = 16; const x = c.getContext("2d"), ic = ICONS[g.ic];
+  ic.map.forEach((row, r) => [...row].forEach((ch, col) => { if (ic.pal[ch]){ x.fillStyle = ic.pal[ch]; x.fillRect(col, r, 1, 1); } }));
+  return c;
+}
+let n = 0;
+function cart(g, st){
+  const b = el("div", "c3 " + st); b.style.cssText = `--i:${n++}; --lb:${g.lb}; --lt:${g.lt}; --sh:${g.sh}`;
+  const body = el("div", "body"), front = el("div", "f front"), lab = el("div", "lab");
+  if (st === "sA"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "rid"), lab, el("i", "notch")); }
+  else if (st === "sC"){ lab.append(art(g)); front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip")); }
+  else if (st === "d1"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "disc"), el("i", "spine"), lab, el("span", "tag3d", "3D")); }
+  else if (st === "d2"){ body.append(el("div", "f pcb")); lab.append(art(g), el("b", "", g.s)); front.append(el("i", "rid"), lab); }
+  else { lab.append(art(g)); const cadre = el("div", "cadre holo"); cadre.style.setProperty("--i", n); cadre.append(lab);
+    const badge = el("span", "badge holo", "3D"); front.append(cadre, el("div", "ttl", g.s), badge, el("i", "grip")); }
+  ["back", "left", "right", "top", "bottom"].forEach(f => body.append(el("div", "f " + f)));
+  body.append(front); b.append(body); return b;
+}
+const grille = document.getElementById("grille");
+for (const d of DIRS){
+  const dir = el("div", "dir"), tel = el("div", "tel"), gros = el("div", "gros"), rack = el("div", "rack");
+  gros.append(cart(GAMES.empilage, d.c), cart(GAMES.bille, d.c));
+  rack.append(cart(GAMES.queens, "sA"), cart(GAMES.orbite, "sC"), cart(GAMES.empilage, d.c), cart(GAMES.bille, d.c));
+  tel.append(el("h3", "", "GROS PLAN"), gros, el("h3", "", "SUR LA PLANCHE"), rack);
+  const fiche = el("div", "fiche"); fiche.append(el("h2", "", d.t), el("p", "", d.p));
+  const ul = el("ul"); d.li.forEach(t => ul.append(el("li", "", t))); fiche.append(ul);
+  dir.append(tel, fiche); grille.append(dir);
+}
+</script>
