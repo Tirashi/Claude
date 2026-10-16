@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L'Île, trois écrans</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Maquette : trois façons de présenter la journée de L'Île des naufragés, plus lisibles et plus claires à jouer.
+   A « carnet de bord » (équipe en cartes), B « postes de travail » (+ / − par tâche, prévision du soir),
+   C « île vivante » (les naufragés sur la carte). Tout est cliquable ; les chiffres sont ceux du jeu. */
+:root{
+  color-scheme: dark;
+  --night:#06141c; --ink:#04090d; --text:#f2f0ff; --dim:#a9c4d0; --gold:#ffd23f; --ok:#5cff8a; --bad:#ff7a6a;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--night) radial-gradient(#0e2a38 1px, transparent 1.5px) 0 0 / 4px 4px; color:var(--text); font-family:var(--f-body); font-size:21px; line-height:1.25; padding:22px 16px 48px}
+.wrap{max-width:1040px; margin:0 auto; display:flex; flex-direction:column; gap:18px}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,4.2vw,22px); line-height:1.4; color:var(--gold); text-shadow:3px 3px 0 #a0501a, 5px 5px 0 #000}
+.lead{margin:0; color:var(--dim); max-width:74ch} .lead b{color:var(--text); font-weight:400}
+.dirs{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px}
+.dirs button{font-family:var(--f-display); font-size:9px; line-height:1.6; padding:10px 4px; color:var(--text); background:#163a4a; border:3px solid var(--dim); border-radius:4px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000; cursor:pointer}
+.dirs button[aria-pressed="true"]{color:#1a1000; background:var(--gold); border-color:var(--gold)}
+.stage{display:grid; grid-template-columns:auto minmax(0,1fr); gap:26px; align-items:start}
+@media (max-width:780px){ .stage{grid-template-columns:minmax(0,1fr); justify-items:center} }
+.info{display:flex; flex-direction:column; gap:10px; min-width:0}
+.info h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:12px; line-height:1.6; color:var(--gold)}
+.info ul{margin:0; padding-left:20px; color:var(--dim); display:flex; flex-direction:column; gap:6px} .info li b{color:var(--text); font-weight:400}
+.note{margin:0; border-top:2px dashed rgba(255,255,255,.15); padding-top:12px; color:var(--dim)}
+
+/* le téléphone */
+.phone{position:relative; width:min(100%, 360px); height:720px; overflow:hidden; border:4px solid #000; border-radius:14px; box-shadow:0 0 0 3px #2a5a6a, 8px 8px 0 3px #000; display:flex; flex-direction:column}
+.screen{flex:1; min-height:0; overflow-y:auto; scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+button{font:inherit; color:inherit; cursor:pointer}
+canvas.px{image-rendering:pixelated; display:block}
+
+/* commun : barre des ressources avec la prévision du soir */
+.res{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)) 1.2fr; gap:6px; padding:8px}
+.res .r{display:flex; flex-direction:column; align-items:center; gap:2px; padding:5px 2px; border-radius:6px}
+.res .r b{font-family:var(--f-display); font-weight:400; font-size:11px}
+.res .r small{font-size:17px; line-height:1}
+.res .r small.bad{color:var(--bad)} .res .r small.ok{color:var(--ok)}
+.moral{display:flex; flex-direction:column; justify-content:center; gap:4px; padding:4px 6px}
+.moral i{display:block; height:10px; border:2px solid #000; background:#1a2a30} .moral i span{display:block; height:100%; background:var(--ok)}
+.moral em{font-style:normal; font-family:var(--f-display); font-size:7px}
+.end{margin:8px; padding:14px; border:3px solid #000; border-radius:6px; font-family:var(--f-display); font-size:12px; color:#2a1600;
+  background:linear-gradient(#ffd23f, #e09a1a); box-shadow:inset 0 2px 0 #fff2b0, 3px 3px 0 #000}
+.end small{display:block; margin-top:6px; font-family:var(--f-body); font-size:18px}
+.warn{margin:0 8px; padding:6px 10px; border-radius:6px; background:#4a1a1a; color:#ffd0c8; border:2px solid var(--bad); font-size:19px}
+.warn.ok{background:#16402a; color:#c8ffd8; border-color:var(--ok)}
+
+/* bas d'écran : onglets */
+.tabs{display:grid; grid-template-columns:repeat(3,1fr); border-top:3px solid #000}
+.tabs button{padding:10px 2px 8px; border:0; font-family:var(--f-display); font-size:8px; display:flex; flex-direction:column; align-items:center; gap:6px}
+.tabs button canvas{width:24px; height:24px}
+
+/* feuille des tâches (commune) */
+.sheet{position:absolute; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:flex-end}
+.sheet .box{width:100%; max-height:88%; overflow-y:auto; border-top:4px solid #000; padding:14px 12px 16px; border-radius:14px 14px 0 0}
+.sheet h3{margin:0 0 4px; font-family:var(--f-display); font-weight:400; font-size:12px}
+.sheet .who{display:flex; gap:10px; align-items:center; margin-bottom:10px}
+.sheet .who canvas{width:48px; height:48px; border:2px solid #000; border-radius:6px}
+.sheet .grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px}
+.sheet .grid button{display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 2px; border:3px solid #000; border-radius:8px; box-shadow:2px 2px 0 #000}
+.sheet .grid button b{font-family:var(--f-display); font-weight:400; font-size:8px}
+.sheet .grid button small{font-size:17px; line-height:1}
+.sheet .grid button canvas{width:32px; height:32px}
+.sheet .grid button.on{outline:3px solid var(--gold); outline-offset:1px}
+.sheet .close{margin-top:12px; width:100%; padding:10px; font-family:var(--f-display); font-size:10px; border:3px solid #000; border-radius:6px}
+
+/* ===== A · carnet de bord : papier, cartes de l'équipe ===== */
+.A{background:#e8d8b0; color:#2a1a0a}
+.A .top{display:flex; justify-content:space-between; align-items:center; padding:10px 12px 0}
+.A .day{font-family:var(--f-display); font-size:13px; color:#7a2a10}
+.A .day small{display:block; font-family:var(--f-body); font-size:18px; color:#6a4a2a; margin-top:4px}
+.A .res .r{background:#f6ecd0; border:2px solid #8a6a40}
+.A .res .r small.ok{color:#1a7a3a} .A .res .r small.bad{color:#b02a1a}
+.A .moral em{color:#6a4a2a}
+.A .cards{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px}
+.A .card{display:flex; flex-direction:column; gap:4px; padding:8px; border:2px solid #8a6a40; border-radius:8px; background:#f6ecd0; box-shadow:2px 2px 0 #8a6a40; text-align:left}
+.A .card .h{display:flex; gap:8px; align-items:center}
+.A .card .h canvas{width:36px; height:36px; border:2px solid #2a1a0a; border-radius:4px}
+.A .card .n{font-family:var(--f-display); font-size:9px} .A .card .t{font-size:17px; color:#6a4a2a}
+.A .card .job{display:flex; align-items:center; gap:6px; margin-top:4px; padding:4px 6px; border-radius:6px; background:#2a1a0a; color:#ffe8b0; font-family:var(--f-display); font-size:8px}
+.A .card .job canvas{width:20px; height:20px}
+.A .card .job::after{content:"▼"; margin-left:auto; font-size:7px; color:#ffd23f}
+.A .tabs{background:#d8c090} .A .tabs button{background:#d8c090; color:#4a2a10} .A .tabs button[aria-pressed="true"]{background:#f6ecd0; color:#7a2a10}
+.A .sheet .box{background:#f6ecd0; color:#2a1a0a} .A .sheet .grid button{background:#fff8e0} .A .sheet .close{background:#d8c090}
+.A .warn{background:#f8d8c8; color:#7a1a0a; border-color:#b02a1a} .A .warn.ok{background:#d8f0c8; color:#1a5a2a; border-color:#3a8a3a}
+
+/* ===== B · postes de travail : + / − par tâche ===== */
+.B{background:#0a2430; color:#f2fbff}
+.B .top{display:flex; justify-content:space-between; align-items:baseline; padding:10px 12px 0}
+.B .day{font-family:var(--f-display); font-size:13px; color:var(--gold)} .B .day small{font-size:18px; color:var(--dim); font-family:var(--f-body)}
+.B .res .r{background:#103644; border:2px solid #2a6a80}
+.B .moral em{color:var(--dim)}
+.B .posts{display:flex; flex-direction:column; gap:6px; padding:8px}
+.B .post{display:grid; grid-template-columns:40px minmax(0,1fr) auto; gap:8px; align-items:center; padding:6px 8px; border-radius:8px; background:#103644; border:2px solid #1f5a70}
+.B .post.on{border-color:var(--gold); background:#173f4f}
+.B .post canvas.ic{width:40px; height:40px}
+.B .post .n{font-family:var(--f-display); font-size:9px} .B .post .y{font-size:18px; color:var(--dim)} .B .post .y b{color:var(--ok); font-weight:400}
+.B .post .faces{display:flex; gap:2px; margin-top:3px; min-height:18px} .B .post .faces canvas{width:18px; height:18px; border:1px solid #000}
+.B .pm{display:flex; align-items:center; gap:6px}
+.B .pm button{width:36px; height:36px; border:3px solid #000; border-radius:8px; font-family:var(--f-display); font-size:14px; background:#2f8ab0; color:#fff; box-shadow:2px 2px 0 #000}
+.B .pm button:disabled{opacity:.3}
+.B .pm b{font-family:var(--f-display); font-weight:400; font-size:14px; width:18px; text-align:center}
+.B .free{margin:0 8px; font-size:19px; color:var(--dim)} .B .free b{color:var(--gold); font-weight:400}
+.B .tabs{background:#08202a} .B .tabs button{background:#08202a; color:var(--dim)} .B .tabs button[aria-pressed="true"]{background:#163a4a; color:var(--gold)}
+.B .sheet .box{background:#0e2e3c} .B .sheet .grid button{background:#163a4a} .B .sheet .close{background:#2f8ab0; color:#fff}
+
+/* ===== C · île vivante : les naufragés sur la carte ===== */
+.C{background:#0a3a5a; color:#f2fbff}
+.C .mapw{position:relative}
+.C .mapw canvas{width:100%; height:auto}
+.C .hud{position:absolute; left:0; right:0; top:0; display:flex; justify-content:space-between; align-items:flex-start; padding:8px; pointer-events:none}
+.C .hud .day{font-family:var(--f-display); font-size:12px; color:var(--gold); text-shadow:2px 2px 0 #000; background:rgba(0,0,0,.45); padding:6px 8px; border-radius:6px}
+.C .res{background:#08202a; border-top:3px solid #000}
+.C .res .r{background:#103644; border:2px solid #2a6a80}
+.C .moral em{color:var(--dim)}
+.C .tip{margin:6px 8px; font-size:19px; color:var(--dim)} .C .tip b{color:var(--gold); font-weight:400}
+.C .sheet .box{background:#0e2e3c} .C .sheet .grid button{background:#163a4a} .C .sheet .close{background:#2f8ab0; color:#fff}
+.C .tabs{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>L'ILE · TROIS ECRANS</h1>
+  <p class="lead">Trois façons de présenter une journée, plus <b>lisibles</b> et plus <b>claires à jouer</b>. Les trois ont en commun : des textes deux fois plus grands, des boutons qui ressemblent à des boutons, et la <b>prévision du soir</b> sous chaque ressource (ce qui rentre et ce qui sera consommé) avec une alerte avant de finir la journée. Tout est cliquable : change les tâches et regarde la prévision bouger.</p>
+  <div class="dirs" id="dirs" role="group" aria-label="Proposition"></div>
+  <div class="stage">
+    <div class="phone" id="phone"></div>
+    <div class="info"><h2 id="title"></h2><p id="desc"></p><ul id="pts"></ul>
+      <p class="note">Le compte rendu de la nuit serait lui aussi refait en <b>cartes</b> (une par événement, avec une icône), et la carte de l'île redessinée : mer bleue animée, brouillard en nuages blancs, cases plus grandes. On peut aussi mélanger : par exemple les <b>postes</b> de B avec la <b>carte vivante</b> de C.</p></div>
+  </div>
+</div>
+<script>
+"use strict";
+/* ---------- un peu de pixel art : icônes 16×16 et visages ---------- */
+const PAL = { k: '#04090d', w: '#ffffff', W: '#d8e8f0', b: '#3f8ac0', B: '#145a8a', c: '#5ce1ff', C: '#bfefff', g: '#5cbf4a', G: '#2f7a2a', n: '#8a5a2a', N: '#c08a50',
+  y: '#ffd23f', Y: '#fff2a8', o: '#ff9a3a', r: '#e8484a', R: '#ffb0a0', s: '#a8a8b0', S: '#6a6a74', p: '#e8b0ff', e: '#e8d090' };
+const ICONS = {
+  peche: ['................', '..........k.....', '.........kWk....', '........kWk.....', '.......kWk......', '......kWk.......', '.....kWk........', '....kWk.........', '...kWk..........', '..kNk...........', '.kNk......c.....', 'kNk......cbc....', '........cbbbc...', '.......cbbbbbbk.', '........cbbbc.k.', '.........ccc....'],
+  cueillette: ['................', '.......Gg.......', '......GgG.......', '.......n........', '....rrrnrr......', '...rRrrrrrr.....', '..rRRrrrrrrr....', '..rRrrrrrrrr....', '..rrrrrrrrrr....', '..rrrrrrrrrr....', '...rrrrrrrr.....', '....rrrrrr......', '................', '................', '................', '................'],
+  eau: ['................', '.......c........', '.......c........', '......ccc.......', '......cbc.......', '.....cbbbc......', '.....cCbbc......', '....cCbbbbc.....', '....cCbbbbc.....', '....cbbbbbc.....', '....cbbbbbc.....', '.....cbbbc......', '......ccc.......', '................', '................', '................'],
+  bois: ['................', '................', '...nnnnnnnnnn...', '..nNnnnnnnnnNn..', '..nnnnnnnnnnnn..', '...nnnnnnnnnn...', '................', '..nnnnnnnnnnnn..', '.nNnnnnnnnnnNnn.', '.nnnnnnnnnnnnnn.', '..nnnnnnnnnnnn..', '................', '................', '................', '................', '................'],
+  chantier: ['................', '..ssss..........', '.sSSSSs.........', '.sSsssSnnn......', '..ss..snnNn.....', '.......nNn......', '......nNn.......', '.....nNn........', '....nNn.........', '...nNn..........', '..nNn...........', '..nn............', '................', '................', '................', '................'],
+  explorer: ['................', '......kkkk......', '....kkyyyykk....', '...kyyyyyyyyk...', '..kyyyYyyyyyyk..', '..kyyyyyyryyyk..', '.kyyyyyyrryyyyk.', '.kyyyyyrrryyyyk.', '.kyyyyyyrryyyyk.', '..kyyyyyyryyyk..', '..kyyyyyyyyyyk..', '...kyyyyyyyyk...', '....kkyyyykk....', '......kkkk......', '................', '................'],
+  soins: ['................', '................', '......rrrr......', '......rRRr......', '......rRRr......', '..rrrrrRRrrrr...', '..rRRRRRRRRRr...', '..rRRRRRRRRRr...', '..rrrrrRRrrrr...', '......rRRr......', '......rRRr......', '......rrrr......', '................', '................', '................', '................'],
+  repos: ['................', '..........WWW...', '...........W....', '..........W.....', '.........WWW....', '......WW........', '.......W........', '......WW........', '..pppppppppppp..', '..pPpppppppppp..', '..pppppppppppp..', '..nn........nn..', '................', '................', '................', '................'],
+  guet: ['................', '................', '...kk.....kk....', '..kSSk...kSSk...', '..kSSkkkkkSSk...', '..kSSSSSSSSSk...', '.kSSSSkkkSSSSk..', '.kcCSk...kcCSk..', '.kccSk...kccSk..', '..kkk.....kkk...', '................', '................', '................', '................', '................', '................'],
+  equipe: ['................', '.....kkk........', '....kRRRk.......', '....kRRRk..kkk..', '.....kkk..kRRRk.', '...kbbbbbkkRRRk.', '..kbbbbbbbkkkk..', '..kbbbbbbbkgggk.', '..kbbbbbbbkgggk.', '..kbbbbbbbkgggk.', '................', '................', '................', '................', '................', '................'],
+  ile: ['................', '................', '.......Gg.Gg....', '......GgGgGg....', '........n.......', '........n.......', '.......n........', '.....eeeee......', '...eeeeeeeee....', '.bbbbbbbbbbbbbb.', 'bBbbbBbbbbBbbbbb', 'bbbbbbbbbbbbbbbb', '................', '................', '................', '................'],
+};
+function iconCanvas(name, px = 16) { const c = document.createElement('canvas'); c.width = 16; c.height = 16; c.className = 'px'; const g = c.getContext('2d');
+  (ICONS[name] || []).forEach((row, y) => [...row].forEach((ch, x) => { if (PAL[ch]) { g.fillStyle = PAL[ch]; g.fillRect(x, y, 1, 1); } })); return c; }
+const SKIN = [['#ffd8b8', '#e8b090'], ['#e8b084', '#c08060'], ['#b07850', '#8a5a38'], ['#7a4a2a', '#5a3218']], HAIR = ['#2a1a10', '#6a3a1a', '#c08a3a', '#e8c86a', '#b84a2a', '#3a3a44'];
+function faceCanvas(c) { const k = document.createElement('canvas'); k.width = 12; k.height = 12; k.className = 'px'; const g = k.getContext('2d'), R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  const [sk, sd] = SKIN[c.skin], hr = HAIR[c.hair];
+  R(0, 0, 12, 12, '#2a6a80'); R(3, 3, 6, 7, sk); R(8, 4, 1, 6, sd); R(2, 2, 8, 2, hr); R(2, 3, 1, c.long ? 7 : 3, hr); R(9, 3, 1, c.long ? 7 : 3, hr);
+  R(4, 6, 1, 1, '#1a1010'); R(7, 6, 1, 1, '#1a1010'); R(5, 8, 2, 1, '#c0504a'); return k; }
+
+/* ---------- l'état de la maquette (mêmes règles que le jeu) ---------- */
+const TAL = { pecheur: 'Pêcheur', charpentier: 'Charpentier', infirmiere: 'Infirmière', cuisinier: 'Cuisinier', exploratrice: 'Exploratrice', enfant: 'Enfant débrouillard', mecano: 'Mécano', marin: 'Marin' };
+const TASKS = [['peche', 'PECHE', '#3f8ac0'], ['cueillette', 'CUEILLETTE', '#3f9a3a'], ['eau', 'EAU', '#2a9ab8'], ['bois', 'BOIS', '#9a6a30'], ['chantier', 'CHANTIER', '#c08a20'], ['explorer', 'EXPLORER', '#b8a040'], ['soins', 'SOINS', '#c0505a'], ['repos', 'REPOS', '#6a6aa0'], ['guet', 'GUET', '#5a7a8a']];
+const crew = [
+  { name: 'Gaspard', talent: 'cuisinier', hp: 3, task: 'peche', skin: 0, hair: 1 }, { name: 'Tom', talent: 'infirmiere', hp: 3, task: 'peche', skin: 1, hair: 0 },
+  { name: 'Noé', talent: 'marin', hp: 2, task: 'cueillette', skin: 2, hair: 5, long: true }, { name: 'Anna', talent: 'mecano', hp: 3, task: 'eau', skin: 0, hair: 3, long: true },
+  { name: 'Basile', talent: 'enfant', hp: 3, task: 'eau', skin: 3, hair: 0 }, { name: 'Victor', talent: 'exploratrice', hp: 3, task: 'bois', skin: 1, hair: 4 },
+  { name: 'Jade', talent: 'charpentier', hp: 1, task: 'chantier', skin: 2, hair: 2, long: true }, { name: 'Paul', talent: 'pecheur', hp: 3, task: 'explorer', skin: 0, hair: 1 },
+];
+const G = { day: 3, food: 7, water: 6, wood: 3, moral: 58, chantier: 'ABRI', chP: 2, chMax: 6, source: false };
+const yieldOf = (t, c) => ({ peche: 3 + (c && c.talent === 'pecheur' ? 1.5 : 0), cueillette: 2.5 + (c && c.talent === 'enfant' ? 1 : 0), eau: G.source ? 5 : 3, bois: 2.5 + (c && c.talent === 'charpentier' ? 1 : 0),
+  chantier: 1 + (c && c.talent === 'charpentier' ? 1 : 0) }[t] || 0) * (c ? (c.hp === 1 ? .6 : 1) * (.7 + G.moral / 333) : 1);
+const fmt = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
+function forecast() {
+  const s = { food: 0, water: 0, wood: 0, ch: 0 };
+  crew.forEach(c => { if (c.task === 'peche' || c.task === 'cueillette') s.food += yieldOf(c.task, c); if (c.task === 'eau') s.water += yieldOf('eau', c); if (c.task === 'bois') s.wood += yieldOf('bois', c); if (c.task === 'chantier') s.ch += yieldOf('chantier', c); });
+  const eat = crew.length * (crew.some(c => c.talent === 'cuisinier') ? .85 : 1), drink = crew.length;
+  return { ...s, eat, drink, food2: G.food + s.food - eat, water2: G.water + s.water - drink };
+}
+const YTXT = { peche: c => `+${fmt(yieldOf('peche', c))} nourriture`, cueillette: c => `+${fmt(yieldOf('cueillette', c))} nourriture`, eau: c => `+${fmt(yieldOf('eau', c))} eau`, bois: c => `+${fmt(yieldOf('bois', c))} bois`,
+  chantier: c => `+${fmt(yieldOf('chantier', c))} au chantier`, explorer: () => 'une case découverte', soins: () => '+1 coeur au plus blessé', repos: () => '+1 coeur, +moral', guet: () => 'surveille les navires' };
+
+/* ---------- morceaux communs ---------- */
+const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+function resBar() {
+  const f = forecast(), bar = h('div', 'res');
+  for (const [ic, now, inc, out, after] of [['cueillette', G.food, f.food, f.eat, f.food2], ['eau', G.water, f.water, f.drink, f.water2], ['bois', G.wood, f.wood, 0, G.wood + f.wood]]) {
+    const r = h('div', 'r'); r.append(iconCanvas(ic)); r.firstChild.style.cssText = 'width:22px;height:22px';
+    r.append(h('b', '', fmt(now))); r.append(h('small', after < 0 ? 'bad' : 'ok', out ? `+${fmt(inc)} −${fmt(out)}` : `+${fmt(inc)}`)); bar.append(r);
+  }
+  const m = h('div', 'moral', `<em>MORAL</em><i><span style="width:${G.moral}%"></span></i><em>${G.moral}/100</em>`); bar.append(m);
+  return bar;
+}
+function warning() {
+  const f = forecast(), msgs = [];
+  if (f.food2 < 0) msgs.push(`Ce soir il manquera ${fmt(-f.food2)} nourriture`);
+  if (f.water2 < 0) msgs.push(`il manquera ${fmt(-f.water2)} eau`);
+  const w = h('div', 'warn' + (msgs.length ? '' : ' ok'), msgs.length ? '⚠ ' + msgs.join(', ') + ' : quelqu\'un aura faim ou soif (−1 coeur).' : '✓ Ce soir, tout le monde mangera et boira.');
+  return w;
+}
+function endBtn() { const b = h('button', 'end', `FIN DU JOUR ▶<small>la nuit passe, puis le compte rendu</small>`); b.onclick = () => alert('Dans le jeu : la nuit passe, puis le compte rendu en cartes.'); return b; }
+function taskSheet(c, after) {
+  const s = h('div', 'sheet'), box = h('div', 'box');
+  const who = h('div', 'who'); who.append(faceCanvas(c)); who.append(h('div', '', `<h3>${c.name.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}</h3>${TAL[c.talent]} · ${'♥'.repeat(c.hp)}${'♡'.repeat(3 - c.hp)}`)); box.append(who);
+  const grid = h('div', 'grid');
+  TASKS.forEach(([id, name, col]) => { const b = h('button', c.task === id ? 'on' : ''); b.style.borderColor = col; b.append(iconCanvas(id)); b.append(h('b', '', name)); b.append(h('small', '', YTXT[id](c)));
+    b.onclick = () => { c.task = id; s.remove(); after(); }; grid.append(b); });
+  box.append(grid); const cl = h('button', 'close', 'FERMER'); cl.onclick = () => s.remove(); box.append(cl);
+  s.append(box); s.onclick = e => { if (e.target === s) s.remove(); };
+  return s;
+}
+function tabs(active) { const t = h('div', 'tabs'); [['equipe', 'EQUIPE'], ['ile', "L'ILE"], ['chantier', 'CHANTIERS']].forEach(([ic, l]) => { const b = h('button'); b.setAttribute('aria-pressed', ic === active); b.append(iconCanvas(ic)); b.append(h('span', '', l)); t.append(b); }); return t; }
+
+/* ---------- A : carnet de bord ---------- */
+function renderA(phone) {
+  phone.className = 'phone A'; phone.innerHTML = '';
+  const sc = h('div', 'screen');
+  sc.append(h('div', 'top', `<div class="day">JOUR ${G.day} / 40<small>37 jours avant les tempêtes</small></div><div style="font-size:18px;text-align:right;color:#6a4a2a">Chantier : ${G.chantier.toLowerCase()} ${G.chP}/${G.chMax}</div>`));
+  sc.append(resBar()); sc.append(warning());
+  const cards = h('div', 'cards');
+  crew.forEach(c => { const k = h('button', 'card'), hd = h('div', 'h'); hd.append(faceCanvas(c));
+    hd.append(h('div', '', `<div class="n">${c.name.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '')}</div><div class="t">${TAL[c.talent]}</div><div style="color:#b02a1a;font-size:18px">${'♥'.repeat(c.hp)}<span style="color:#a89070">${'♡'.repeat(3 - c.hp)}</span></div>`));
+    k.append(hd); const j = h('div', 'job'); j.append(iconCanvas(c.task)); j.append(h('span', '', TASKS.find(t => t[0] === c.task)[1])); k.append(j);
+    k.onclick = () => phone.append(taskSheet(c, () => renderA(phone))); cards.append(k); });
+  sc.append(cards); sc.append(endBtn());
+  phone.append(sc); phone.append(tabs('equipe'));
+}
+/* ---------- B : postes de travail ---------- */
+const TALENT_FOR = { peche: 'pecheur', cueillette: 'enfant', bois: 'charpentier', chantier: 'charpentier', explorer: 'exploratrice', soins: 'infirmiere', guet: 'marin' };
+function renderB(phone) {
+  phone.className = 'phone B'; phone.innerHTML = '';
+  const sc = h('div', 'screen');
+  sc.append(h('div', 'top', `<div class="day">JOUR ${G.day}/40 <small>· 37 jours avant les tempêtes</small></div>`));
+  sc.append(resBar()); sc.append(warning());
+  const free = crew.filter(c => c.task === 'repos').length;
+  sc.append(h('p', 'free', `Mets les naufragés au travail avec <b>+</b> et <b>−</b> : le plus doué y va en premier. Au repos : <b>${free}</b>.`));
+  const list = h('div', 'posts');
+  TASKS.filter(t => t[0] !== 'repos').concat([TASKS.find(t => t[0] === 'repos')]).forEach(([id, name]) => {
+    const on = crew.filter(c => c.task === id), row = h('div', 'post' + (on.length ? ' on' : ''));
+    const ic = iconCanvas(id); ic.classList.add('ic'); row.append(ic);
+    const mid = h('div', '', `<div class="n">${name}</div><div class="y">${on.length ? '<b>' + (id === 'peche' || id === 'cueillette' ? '+' + fmt(on.reduce((a, c) => a + yieldOf(id, c), 0)) + ' nourriture' : id === 'eau' ? '+' + fmt(on.reduce((a, c) => a + yieldOf(id, c), 0)) + ' eau' : id === 'bois' ? '+' + fmt(on.reduce((a, c) => a + yieldOf(id, c), 0)) + ' bois' : id === 'chantier' ? '+' + fmt(on.reduce((a, c) => a + yieldOf(id, c), 0)) + ' ' + G.chantier.toLowerCase() : YTXT[id]()) + '</b>' : YTXT[id]().replace(/^\+[\d,]+ /, 'par personne : +' + fmt(yieldOf(id)) + ' ')}</div>`);
+    const fc = h('div', 'faces'); on.forEach(c => fc.append(faceCanvas(c))); mid.append(fc); row.append(mid);
+    if (id !== 'repos') { const pm = h('div', 'pm'), minus = h('button', '', '−'), plus = h('button', '', '+');
+      minus.disabled = !on.length; plus.disabled = !free;
+      minus.onclick = () => { const c = on.find(x => x.talent !== TALENT_FOR[id]) || on[0]; c.task = 'repos'; renderB(phone); };
+      plus.onclick = () => { const pool = crew.filter(c => c.task === 'repos').sort((a, b) => (b.talent === TALENT_FOR[id]) - (a.talent === TALENT_FOR[id]) || b.hp - a.hp); pool[0].task = id; renderB(phone); };
+      pm.append(minus, h('b', '', on.length), plus); row.append(pm); }
+    else row.append(h('b', '', `<span style="font-family:var(--f-display);font-size:14px">${on.length}</span>`));
+    row.onclick = e => { if (e.target.tagName !== 'BUTTON' && on.length) phone.append(taskSheet(on[0], () => renderB(phone))); };
+    list.append(row);
+  });
+  sc.append(list); sc.append(endBtn());
+  phone.append(sc); phone.append(tabs('equipe'));
+}
+/* ---------- C : île vivante ---------- */
+const MAP = ['mmmmmm', 'mjjsgm', 'mjvjrm', 'mpjjpm', 'mmpcpm'];
+const SEEN = ['111111', '100111', '100011', '111111', '111111'];
+const SPOT = { peche: [4, 4], cueillette: [2, 3], eau: [3, 1], bois: [1, 3], chantier: [3, 4], explorer: [2, 2], soins: [3, 4], repos: [3, 4], guet: [5, 4] };
+function drawIsland(cv, sel) {
+  const W = 6, Hh = 5, T = 45, g = cv.getContext('2d'); cv.width = W * T; cv.height = Hh * T + 10; g.imageSmoothingEnabled = false;
+  const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); }, t0 = performance.now() / 1000;
+  R(0, 0, cv.width, cv.height, '#145a8a');
+  for (let k = 0; k < 60; k++) R((k * 37 + t0 * 8 * (k % 2 ? 1 : -1)) % cv.width + (k % 2 ? 0 : cv.width) % cv.width, (k * 53) % cv.height, 5, 1, '#3f8ac0');
+  MAP.forEach((row, y) => [...row].forEach((ch, x) => {
+    const X = x * T, Y = y * T + 10;
+    if (ch === 'm') return;
+    if (SEEN[y][x] === '0') { R(X, Y, T, T, '#e8f0f8'); for (let k = 0; k < 7; k++) { g.fillStyle = k % 2 ? '#ffffff' : '#c8d8e4'; g.beginPath(); g.arc(X + 8 + (k * 13) % 34, Y + 10 + (k * 17) % 28, 9, 0, 6.3); g.fill(); }
+      g.font = '14px "Press Start 2P"'; g.fillStyle = '#7a9ab0'; g.textAlign = 'center'; g.fillText('?', X + T / 2, Y + T / 2 + 7); return; }
+    const sand = 'pc'.includes(ch); R(X, Y, T, T, sand ? '#e8d090' : '#3f8a3a');
+    for (let k = 0; k < 10; k++) R(X + (k * 17 + x * 7) % T, Y + (k * 23 + y * 5) % T, 2, 1, sand ? '#c8a860' : '#2f6a2a');
+    if (ch === 'j') for (let k = 0; k < 3; k++) { const px = X + 8 + k * 12, py = Y + 14 + (k % 2) * 10; R(px + 3, py + 4, 2, 10, '#6a4a20'); R(px - 2, py, 12, 4, '#2f7a2a'); R(px, py - 2, 8, 2, '#7cdf5a'); }
+    if (ch === 's') { R(X + 10, Y + 14, 26, 14, '#3fa0e0'); R(X + 14, Y + 17, 8, 2, '#bfefff'); }
+    if (ch === 'v') { g.fillStyle = '#5a4a44'; g.beginPath(); g.moveTo(X + 4, Y + T - 4); g.lineTo(X + 18, Y + 8); g.lineTo(X + 28, Y + 8); g.lineTo(X + 41, Y + T - 4); g.fill(); R(X + 18, Y + 6, 10, 3, '#ff6a2a'); }
+    if (ch === 'g') { R(X + 8, Y + 10, 30, 24, '#6a6a70'); R(X + 16, Y + 18, 14, 16, '#141418'); }
+    if (ch === 'r') for (let k = 0; k < 3; k++) { R(X + 6 + k * 12, Y + 18 + (k % 2) * 6, 10, 8, '#8a8a90'); R(X + 6 + k * 12, Y + 18 + (k % 2) * 6, 10, 2, '#c8c8d0'); }
+    if (ch === 'c') { g.fillStyle = '#f0e0c0'; g.beginPath(); g.moveTo(X + 6, Y + 34); g.lineTo(X + 18, Y + 14); g.lineTo(X + 30, Y + 34); g.fill(); R(X + 16, Y + 24, 4, 10, '#5a4a3a');
+      g.font = '7px "Press Start 2P"'; g.fillStyle = '#7a2a10'; g.textAlign = 'left'; g.fillText('CAMP', X + 3, Y + 9); }
+  }));
+  // les naufragés, sur la case de leur tâche
+  const groups = {}; crew.forEach((c, i) => { const k = SPOT[c.task].join(); (groups[k] = groups[k] || []).push(i); });
+  for (const [k, list] of Object.entries(groups)) { const [x, y] = k.split(',').map(Number);
+    list.forEach((i, n) => { const c = crew[i], X = x * T + 4 + (n % 3) * 13, Y = y * T + 10 + 6 + Math.floor(n / 3) * 16, bob = Math.sin(t0 * 4 + i) > .6 ? 1 : 0;
+      const f = faceCanvas(c); g.drawImage(f, X, Y - bob, 12, 12); R(X + 2, Y + 12 - bob, 8, 3, TASKS.find(t => t[0] === c.task)[2]);
+      if (sel === i) { g.strokeStyle = '#ffd23f'; g.lineWidth = 2; g.strokeRect(X - 2, Y - 2 - bob, 16, 19); }
+      c._hit = [X - 2, Y - 2, 16, 20]; }); }
+}
+function renderC(phone) {
+  phone.className = 'phone C'; phone.innerHTML = '';
+  const sc = h('div', 'screen'), mw = h('div', 'mapw'), cv = h('canvas', 'px');
+  mw.append(cv); mw.append(h('div', 'hud', `<div class="day">JOUR ${G.day}/40</div><div class="day" style="font-size:9px">CHANTIER ${G.chantier} ${G.chP}/${G.chMax}</div>`));
+  sc.append(mw); sc.append(resBar()); sc.append(warning());
+  sc.append(h('p', 'tip', 'Touche un <b>naufragé sur la carte</b> pour changer sa tâche : il va travailler à l\'endroit voulu (la mer pour pêcher, la jungle pour le bois…). Touche un <b>nuage ?</b> pour l\'explorer.'));
+  sc.append(endBtn()); phone.append(sc);
+  let raf; const loop = () => { if (!cv.isConnected) return; drawIsland(cv); raf = requestAnimationFrame(loop); }; loop();
+  cv.onclick = e => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * cv.width, y = (e.clientY - r.top) / r.height * cv.height;
+    const c = crew.find(c => c._hit && x >= c._hit[0] && x < c._hit[0] + c._hit[2] && y >= c._hit[1] && y < c._hit[1] + c._hit[3]);
+    if (c) phone.append(taskSheet(c, () => renderC(phone))); };
+}
+
+/* ---------- la page ---------- */
+const DIRS = [
+  { id: 'A', short: 'A CARNET', name: 'A · CARNET DE BORD', render: renderA, desc: 'Un carnet de bord en papier, chaud et lisible. L\'équipe en cartes : on touche une carte pour changer la tâche.',
+    pts: ['<b>Cartes de l\'équipe</b> sur deux colonnes : grand portrait, nom, talent, cœurs, et la tâche en bandeau avec ▼ (on voit que ça se touche).', '<b>Feuille des tâches</b> qui monte du bas : 9 grandes icônes, et pour chacune ce qu\'elle rapporte avec <b>ce</b> naufragé.', '<b>Onglets en bas</b> : ÉQUIPE, L\'ÎLE, CHANTIERS ; la carte et les chantiers ont chacun leur écran plein.'] },
+  { id: 'B', short: 'B POSTES', name: 'B · POSTES DE TRAVAIL', render: renderB, desc: 'On ne place plus les gens un par un : on règle combien vont à chaque tâche avec + et −. Le plus doué y va en premier.',
+    pts: ['<b>Le plus rapide à jouer</b> : quelques + et −, la prévision du soir se met à jour, FIN DU JOUR.', 'Les visages des naufragés apparaissent sur leur poste ; toucher un poste permet quand même de choisir qui y va.', 'Le talent compte tout seul : + met le pêcheur à la pêche, l\'infirmière aux soins…'] },
+  { id: 'C', short: 'C ILE', name: 'C · ILE VIVANTE', render: renderC, desc: 'La carte de l\'île devient l\'écran principal : chaque naufragé est dessiné là où il travaille.',
+    pts: ['<b>Le plus vivant</b> : on voit l\'équipe pêcher sur la plage, couper du bois dans la jungle, explorer près du volcan.', 'On touche un naufragé sur la carte pour changer sa tâche ; les nuages ? se touchent pour choisir où explorer.', 'Plus de place pour la carte (cases plus grandes, brouillard en nuages), mais moins pour le détail de l\'équipe.'] },
+];
+const phone = document.getElementById('phone'), dirs = document.getElementById('dirs');
+let cur = 1;
+DIRS.forEach((d, i) => { const b = h('button', '', d.short); b.onclick = () => { cur = i; show(); }; dirs.append(b); });
+function show() {
+  [...dirs.children].forEach((b, i) => b.setAttribute('aria-pressed', i === cur));
+  const d = DIRS[cur]; document.getElementById('title').textContent = d.name; document.getElementById('desc').textContent = d.desc;
+  document.getElementById('pts').innerHTML = d.pts.map(p => `<li>${p}</li>`).join(''); d.render(phone);
+}
+(document.fonts ? document.fonts.load('10px "Press Start 2P"') : Promise.resolve()).then(show);
+</script>
+</body>
+</html>
