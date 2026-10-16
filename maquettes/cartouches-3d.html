@@ -1,0 +1,567 @@
+<title>Cartouches 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : trois onglets. 1 = les trois styles de cartouches en 3D (CSS seul), plus petites qu'aujourd'hui ;
+   2 et 3 = deux façons de fusionner l'accueil et les classements, montrées dans un écran de téléphone.
+   Monde unique sombre de la Ludothèque (nuit violette tramée, or, Press Start 2P + VT323). */
+:root{
+  color-scheme: dark;
+  --night:#110d22; --night-2:#1e1840; --ink:#0d0a18; --text:#f2f0ff; --dim:#a9a6d8; --gold:#ffd23f; --red:#e8264d;
+  --wood-hi:#b77a48; --wood:#7a4a24; --wood-lo:#5a3418;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color:var(--text);
+  font-family:var(--f-body); font-size:21px; line-height:1.25;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:28px 56px}
+.wrap{max-width:1100px; margin:0 auto; display:flex; flex-direction:column; gap:24px}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(18px,5vw,30px); letter-spacing:2px; color:var(--gold); line-height:1.4; text-wrap:balance;
+  text-shadow:3px 0 0 #b8571a, 0 3px 0 #b8571a, 3px 3px 0 #b8571a, 6px 6px 0 #000}
+.lead{margin:0; color:var(--dim); max-width:68ch}
+.lead b{color:var(--text); font-weight:400}
+button{font:inherit; color:inherit; cursor:pointer; background:none; border:0; padding:0}
+:focus-visible{outline:3px dashed var(--gold); outline-offset:3px}
+
+/* onglets façon menu B2 du gardien */
+.tabs{display:flex; flex-wrap:wrap; gap:4px 18px; background:#000; border:3px solid #fff; box-shadow:0 0 0 3px #000, 6px 6px 0 3px #000; padding:12px 16px; border-radius:6px}
+.tabs button{font-family:var(--f-display); font-size:10px; letter-spacing:1px; line-height:2.2; color:var(--dim); padding-left:18px; position:relative}
+.tabs button[aria-selected="true"]{color:#fff}
+.tabs button[aria-selected="true"]::before{content:"▶"; position:absolute; left:0; color:var(--gold); animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.panel{display:flex; flex-direction:column; gap:20px}
+.panel h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:12px; letter-spacing:1px; color:var(--gold); line-height:1.6}
+.opts{display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center}
+.opts span{font-family:var(--f-display); font-size:8px; letter-spacing:1px; color:var(--dim)}
+.seg{display:inline-flex; border:3px solid var(--dim); box-shadow:0 0 0 3px var(--ink)}
+.seg button{font-family:var(--f-display); font-size:8px; letter-spacing:1px; padding:9px 10px; color:var(--dim)}
+.seg button[aria-pressed="true"]{background:var(--gold); color:#2a1600}
+.notes{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap:14px}
+.note{background:#1e1840; border:3px solid #3b3566; padding:12px 14px; display:flex; flex-direction:column; gap:6px}
+.note b{font-family:var(--f-display); font-weight:400; font-size:9px; color:var(--gold); line-height:1.6}
+.note p{margin:0; color:var(--dim); font-size:19px}
+.ex{font-family:var(--f-display); font-size:7px; letter-spacing:1px; color:#8a86b8}
+
+/* ---------- la cartouche en 3D : six faces, posée en perspective, qui flotte et pivote doucement ---------- */
+.c3{--k:1; position:relative; width:var(--w); height:var(--h); perspective:520px; flex:none; display:block; -webkit-tap-highlight-color:transparent}
+.c3 .body{position:absolute; inset:0; transform-style:preserve-3d; animation:sway 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+.c3 .f{position:absolute; left:0; top:0; backface-visibility:hidden; overflow:hidden}
+.c3 .front{width:var(--w); height:var(--h); transform:translateZ(calc(var(--d) / 2))}
+.c3 .back{width:var(--w); height:var(--h); transform:rotateY(180deg) translateZ(calc(var(--d) / 2))}
+.c3 .left,.c3 .right{width:var(--d); height:var(--h); left:calc((var(--w) - var(--d)) / 2)}
+.c3 .left{transform:rotateY(-90deg) translateZ(calc(var(--w) / 2))}
+.c3 .right{transform:rotateY(90deg) translateZ(calc(var(--w) / 2))}
+.c3 .top,.c3 .bottom{width:var(--w); height:var(--d); top:calc((var(--h) - var(--d)) / 2)}
+.c3 .top{transform:rotateX(90deg) translateZ(calc(var(--h) / 2))}
+.c3 .bottom{transform:rotateX(-90deg) translateZ(calc(var(--h) / 2))}
+/* reflet qui glisse sur la face avant, au rythme du pivot */
+.c3 .front::after{content:""; position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 47%, rgba(255,255,255,.08) 52%, transparent 62%) 0 0 / 300% 100%;
+  animation:gloss 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+.c3::after{content:""; position:absolute; left:12%; right:12%; bottom:calc(-14px * var(--k)); height:calc(8px * var(--k)); border-radius:50%;
+  background:radial-gradient(rgba(0,0,0,.6), transparent 70%); animation:shad 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+@keyframes sway{0%,100%{transform:translateY(0) rotateX(9deg) rotateY(-26deg)} 50%{transform:translateY(calc(-6px * var(--k))) rotateX(5deg) rotateY(24deg)}}
+@keyframes gloss{0%,100%{background-position:100% 0} 50%{background-position:0 0}}
+@keyframes shad{50%{transform:scaleX(.8); opacity:.6}}
+.retro .c3 .body, .retro .c3 .front::after, .retro .c3::after{animation-timing-function:steps(9)}
+.c3.spin .body{animation:spin .9s cubic-bezier(.3,.7,.3,1)}
+@keyframes spin{0%{transform:rotateY(0)} 45%{transform:translateY(calc(-22px * var(--k))) rotateY(200deg)} 100%{transform:rotateY(360deg)}}
+.c3 canvas, .c3 img{display:block; image-rendering:pixelated}
+.c3 .crown{position:absolute; z-index:2; top:calc(-24px * var(--k)); left:50%; transform:translateX(-50%); font-style:normal; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif;
+  font-size:calc(17px * var(--k)); color:var(--gold); text-shadow:2px 2px 0 #000; animation:crown 1.2s steps(2) infinite alternate}
+@keyframes crown{to{transform:translate(-50%, -3px)}}
+.c3 .stk{position:absolute; z-index:3; top:calc(4px * var(--k)); right:calc(-8px * var(--k)); transform:rotate(12deg); font-family:var(--f-display); font-size:calc(6px * var(--k)); letter-spacing:1px;
+  padding:3px 4px; background:var(--gold); color:#2a1600; border:2px solid #000; box-shadow:2px 2px 0 #000; white-space:nowrap}
+.c3 .stk.cours{background:#5cff8a; color:#06280f}
+
+/* A · 16 bits : plastique gris, deux rangées de stries, grande étiquette */
+.sA{--w:calc(92px * var(--k)); --h:calc(102px * var(--k)); --d:calc(16px * var(--k))}
+.sA .front{background:#8d8b9e; border:2px solid var(--ink); border-radius:calc(7px * var(--k)) calc(7px * var(--k)) 3px 3px;
+  box-shadow:inset 2px 2px 0 #b6b4c8, inset -3px -3px 0 #5c5a6e}
+.sA .rid{position:absolute; left:18%; right:18%; top:calc(5px * var(--k)); height:calc(7px * var(--k)); background:repeating-linear-gradient(90deg, #5c5a6e 0 2px, transparent 2px 5px)}
+.sA .lab{position:absolute; left:calc(7px * var(--k)); right:calc(7px * var(--k)); top:calc(16px * var(--k)); bottom:calc(14px * var(--k)); background:var(--lb); border:2px solid var(--ink);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(5px * var(--k)); padding:2px}
+.sA .lab canvas{width:calc(34px * var(--k)); height:calc(34px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45))}
+.sA .lab canvas.wide{width:calc(52px * var(--k)); height:calc(36px * var(--k))}
+.sA .lab img{width:calc(62px * var(--k)); height:calc(36px * var(--k)); object-fit:cover; border:1px solid #000}
+.sA .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(6px * var(--k)); line-height:1.5; letter-spacing:.5px; color:var(--lt); text-align:center; text-shadow:1px 1px 0 rgba(0,0,0,.6)}
+.sA .notch{position:absolute; left:30%; right:30%; bottom:calc(4px * var(--k)); height:calc(5px * var(--k)); border:2px solid #5c5a6e; border-top:0}
+.sA .left,.sA .right{background:linear-gradient(90deg, #5c5a6e, #747286)}
+.sA .top{background:#a19fb2 repeating-linear-gradient(90deg, #6e6c80 0 2px, transparent 2px 5px)}
+.sA .bottom{background:#3a3848 repeating-linear-gradient(90deg, #c9a43a 0 3px, #8a6b1c 3px 5px) center / 70% 60% no-repeat}
+.sA .back{background:#7a788c; border:2px solid var(--ink)}
+
+/* B · poche : petite cartouche en plastique coloré transparent, on voit le circuit au travers */
+.sB{--w:calc(80px * var(--k)); --h:calc(92px * var(--k)); --d:calc(12px * var(--k))}
+.sB .f{backface-visibility:visible}
+.sB .front,.sB .back{clip-path:polygon(0 0, 84% 0, 100% 11%, 100% 100%, 0 100%); border-radius:3px}
+.sB .front{background:color-mix(in srgb, var(--sh) 52%, transparent); box-shadow:inset 2px 2px 0 rgba(255,255,255,.35), inset -3px -3px 0 color-mix(in srgb, var(--sh) 60%, #000)}
+.sB .back{background:color-mix(in srgb, var(--sh) 70%, #000 10%)}
+.sB .pcb{position:absolute; left:12%; right:12%; top:8%; height:78%; transform:translateZ(0); background:#1f6b3a;
+  background-image:linear-gradient(90deg, transparent 46%, #d9b44a 46% 49%, transparent 49%), linear-gradient(transparent 70%, #d9b44a 70% 72%, transparent 72%);
+  border:1px solid #0d3a1c}
+.sB .pcb::before{content:""; position:absolute; left:22%; top:16%; width:56%; height:30%; background:#151515; border:1px solid #444}
+.sB .pcb::after{content:""; position:absolute; left:8%; right:8%; bottom:0; height:12%; background:repeating-linear-gradient(90deg, #e2c25a 0 3px, transparent 3px 5px)}
+.sB .emb{position:absolute; left:calc(7px * var(--k)); top:calc(4px * var(--k)); font-family:var(--f-display); font-size:calc(5px * var(--k)); letter-spacing:1px; color:rgba(255,255,255,.55)}
+.sB .lab{position:absolute; left:calc(7px * var(--k)); right:calc(7px * var(--k)); top:calc(13px * var(--k)); height:calc(56px * var(--k)); background:var(--lb); border:2px solid var(--ink); border-radius:2px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(4px * var(--k)); padding:2px}
+.sB .lab canvas{width:calc(30px * var(--k)); height:calc(30px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45))}
+.sB .lab canvas.wide{width:calc(46px * var(--k)); height:calc(32px * var(--k))}
+.sB .lab img{width:calc(56px * var(--k)); height:calc(34px * var(--k)); object-fit:cover; border:1px solid #000}
+.sB .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(5px * var(--k)); line-height:1.5; color:var(--lt); text-align:center; text-shadow:1px 1px 0 rgba(0,0,0,.6)}
+.sB .arw{position:absolute; left:calc(8px * var(--k)); bottom:calc(5px * var(--k)); font-size:calc(9px * var(--k)); color:rgba(255,255,255,.5); line-height:1}
+.sB .left,.sB .right,.sB .top,.sB .bottom{background:color-mix(in srgb, var(--sh) 65%, transparent)}
+
+/* C · 32 bits : plastique noir strié et filet rouge, comme les boîtes de l'étagère ; titre chromé */
+.sC{--w:calc(92px * var(--k)); --h:calc(106px * var(--k)); --d:calc(18px * var(--k))}
+.sC .front{background:repeating-linear-gradient(90deg, #2a2a2a 0 3px, #111 3px 7px); border:2px solid #000; border-radius:3px;
+  box-shadow:inset 2px 0 0 rgba(255,255,255,.12), inset -3px 0 0 rgba(0,0,0,.5)}
+.sC .front::before{content:""; position:absolute; top:0; bottom:0; right:calc(5px * var(--k)); width:3px; background:var(--red)}
+.sC .lab{position:absolute; left:calc(7px * var(--k)); right:calc(14px * var(--k)); top:calc(8px * var(--k)); height:calc(56px * var(--k)); background:var(--lb); border:2px solid #000;
+  display:flex; align-items:center; justify-content:center}
+.sC .lab canvas{width:calc(36px * var(--k)); height:calc(36px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
+.sC .lab canvas.wide{width:calc(56px * var(--k)); height:calc(38px * var(--k))}
+.sC .lab img{width:100%; height:100%; object-fit:cover}
+.sC .ttl{position:absolute; left:calc(6px * var(--k)); right:calc(12px * var(--k)); top:calc(70px * var(--k)); text-align:center; font-family:var(--f-display); font-size:calc(6px * var(--k)); line-height:1.6; letter-spacing:.5px}
+.chrome{background:linear-gradient(90deg, #fff 30%, #9fb4d6 55%, #fff 60%, #c9d6f0); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(1px 1px 0 #000)}
+.sC .grip{position:absolute; left:22%; right:28%; bottom:calc(5px * var(--k)); height:calc(5px * var(--k)); background:repeating-linear-gradient(90deg, #3a3a3a 0 2px, transparent 2px 4px)}
+.sC .left,.sC .right{background:#141414 linear-gradient(90deg, transparent 40%, rgba(232,38,77,.8) 40% 55%, transparent 55%)}
+.sC .top{background:#0c0c0c repeating-linear-gradient(90deg, #d9b44a 0 3px, #7a5a14 3px 5px) center / 76% 50% no-repeat}
+.sC .bottom{background:#0c0c0c}
+.sC .back{background:#161616; border:2px solid #000}
+
+/* grille des cartouches : trois ou quatre par ligne sur téléphone (aujourd'hui : une seule) */
+.grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:42px 10px; justify-items:center; padding:30px 4px 12px}
+.grid figure{margin:0; display:flex; flex-direction:column; align-items:center; gap:20px}
+.grid figcaption{font-family:var(--f-display); font-size:7px; letter-spacing:1px; color:var(--dim); text-align:center; line-height:1.6}
+
+/* ---------- écran de téléphone pour les plans fusionnés ---------- */
+.stage{display:grid; grid-template-columns:minmax(0, 420px) minmax(0, 1fr); gap:28px; align-items:start}
+@media (max-width:820px){ .stage{grid-template-columns:minmax(0,1fr)} }
+.phone{position:relative; width:100%; max-width:420px; margin:0 auto; height:min(760px, 86vh); min-height:560px; overflow:hidden auto; overscroll-behavior:contain;
+  background:var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; border:3px solid #000; border-radius:22px;
+  box-shadow:0 0 0 6px #232c3a, 8px 8px 0 6px #000; scrollbar-width:none}
+.phone::-webkit-scrollbar{display:none}
+.scr{display:flex; flex-direction:column; gap:16px; padding:18px 12px 28px}
+.logo{margin:0; text-align:center; font-family:var(--f-display); font-weight:400; font-size:17px; letter-spacing:2px; line-height:1.4; color:var(--gold); text-shadow:2px 0 0 #b8571a, 0 2px 0 #b8571a, 2px 2px 0 #b8571a, 4px 4px 0 #000}
+.menu{background:#000; border:3px solid #fff; box-shadow:0 0 0 3px #000; border-radius:5px; padding:8px 10px; display:flex; flex-wrap:wrap; gap:2px 12px}
+.menu button{font-family:var(--f-display); font-size:8px; letter-spacing:1px; line-height:2.2; color:#8a86b8; padding-left:13px; position:relative}
+.menu button[aria-pressed="true"]{color:#fff}
+.menu button[aria-pressed="true"]::before{content:"▶"; position:absolute; left:0; color:var(--gold); animation:blink 1s steps(1) infinite}
+.label-row{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.label-row b{font-family:var(--f-display); font-weight:400; font-size:8px; letter-spacing:1px; color:var(--dim)}
+.label-row i{font-style:normal; font-size:17px; color:#8a86b8}
+
+/* étagère de boîtes (reprise de la page des classements) */
+.shelf{position:relative; padding:0 10px; background:linear-gradient(#1a1430, #120e24); border:3px solid var(--ink); box-shadow:0 0 0 3px #3b3566, 5px 5px 0 3px #000}
+.spines{display:flex; align-items:flex-end; gap:4px; overflow-x:auto; scrollbar-width:none; padding:30px 16px 0; margin:0 -10px}
+.spines::-webkit-scrollbar{display:none}
+.plank{height:16px; margin:0 -10px; background:linear-gradient(#9a643a, var(--wood) 40%, var(--wood-lo)); border-top:3px solid var(--wood-hi); border-bottom:3px solid var(--ink)}
+.spine{flex:none; position:relative; width:44px; height:var(--h, 180px); border:3px solid #000; color:#fff;
+  background:repeating-linear-gradient(90deg, #2a2a2a 0 3px, #111 3px 7px); display:flex; flex-direction:column; align-items:center;
+  box-shadow:inset 3px 0 0 rgba(255,255,255,.12), inset -4px 0 0 rgba(0,0,0,.5); transition:transform .25s steps(4); transform-origin:bottom center}
+.spine::before{content:""; position:absolute; top:0; bottom:0; right:4px; width:3px; background:var(--red)}
+.spine .ico{margin-top:7px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:var(--c); border:2px solid #000}
+.spine .ico canvas{width:24px; height:24px; image-rendering:pixelated}
+.spine .ico canvas.wide{width:30px; height:21px}
+.spine .ico img{width:100%; height:100%; object-fit:cover}
+.spine .t{margin-top:9px; writing-mode:vertical-rl; transform:rotate(180deg); font-family:var(--f-display); font-size:var(--fs, 9px); letter-spacing:2px; white-space:nowrap}
+.spine .lab{position:absolute; bottom:7px; left:5px; right:9px; height:15px; background:var(--c); border:2px solid #000}
+.spine:hover{transform:translateY(-6px)}
+.spine.out{transform:translateY(-22px) rotate(-4deg); box-shadow:inset 3px 0 0 rgba(255,255,255,.12), inset -4px 0 0 rgba(0,0,0,.5), 0 0 0 3px var(--gold)}
+.spine .crown{position:absolute; top:-24px; left:50%; transform:translateX(-50%); font-style:normal; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; font-size:16px; color:var(--gold); text-shadow:2px 2px 0 #000}
+
+/* plan 1 : étage du bas, les cartouches debout sur des planches */
+.rack{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); grid-auto-rows:128px; justify-items:center; align-items:end; padding:0 4px;
+  background:linear-gradient(transparent calc(100% - 16px), var(--wood-hi) calc(100% - 16px) calc(100% - 13px), var(--wood) calc(100% - 13px) calc(100% - 3px), var(--ink) calc(100% - 3px)) 0 0 / 100% 128px;
+  border:3px solid var(--ink); box-shadow:0 0 0 3px #3b3566, 5px 5px 0 3px #000; background-color:#140f28}
+.rack .c3{margin-bottom:24px}
+@media (max-width:370px){ .rack{grid-template-columns:repeat(3, minmax(0,1fr))} }
+
+/* fiche d'un jeu : boîte et cartouche en 3D, records, classement de la famille, JOUER */
+.sheet{position:absolute; inset:0; z-index:20; background:rgba(5,3,14,.7); display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity .2s}
+.sheet.on{opacity:1; pointer-events:auto}
+.sheet .in{position:relative; width:100%; max-height:92%; overflow:auto; background:#1e1840; border-top:3px solid #fff; box-shadow:0 -3px 0 #000; border-radius:14px 14px 0 0;
+  transform:translateY(100%); transition:transform .3s steps(6); scrollbar-width:none}
+.sheet.on .in{transform:none}
+.sheet .close{position:absolute; top:10px; right:10px; font-family:var(--f-display); font-size:10px; color:var(--text); background:#000; border:2px solid #fff; padding:7px 8px; z-index:2}
+.fiche{display:flex; flex-direction:column; gap:14px; padding:18px 14px 20px}
+.fiche .show{display:flex; justify-content:center; align-items:flex-end; gap:30px; padding:16px 0 18px; perspective:700px}
+.fiche h3{margin:0; text-align:center; font-family:var(--f-display); font-weight:400; font-size:13px; letter-spacing:1px; line-height:1.5; color:var(--lt, var(--gold)); text-shadow:2px 2px 0 #000}
+.fiche p{margin:0; color:var(--dim); text-align:center; font-size:19px}
+.fiche .blk{background:#000; border:3px solid #fff; border-radius:5px; box-shadow:0 0 0 3px #000; padding:10px 12px; display:flex; flex-direction:column; gap:6px}
+.fiche .blk > b{font-family:var(--f-display); font-weight:400; font-size:8px; letter-spacing:1px; color:var(--gold)}
+.fiche .row{display:flex; justify-content:space-between; gap:10px; font-size:20px; font-variant-numeric:tabular-nums}
+.fiche .row span:first-child{color:var(--dim)}
+.fiche .row.me{color:var(--gold)} .fiche .row.me span:first-child{color:var(--gold)}
+.fiche .row em{font-style:normal; font-family:var(--f-display); font-size:8px; color:#8a86b8; margin-right:8px}
+.play{align-self:center; font-family:var(--f-display); font-size:12px; letter-spacing:2px; color:#2a1600; background:var(--gold); border:3px solid #fff6cc; border-radius:4px;
+  padding:13px 26px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000}
+.play:active{transform:translate(2px,2px)}
+
+/* la boîte de jeu en 3D (face avant + tranche de l'étagère) */
+.box3{--bw:112px; --bh:156px; --bd:28px; position:relative; width:var(--bw); height:var(--bh); transform-style:preserve-3d; animation:boxturn 9s ease-in-out infinite}
+.box3 > div{position:absolute; left:0; top:0}
+.box3 .bf{width:var(--bw); height:var(--bh); transform:translateZ(calc(var(--bd) / 2)); background:repeating-linear-gradient(90deg, #262626 0 3px, #111 3px 7px); border:3px solid #000;
+  display:flex; flex-direction:column; padding:6px 10px 6px 6px; gap:5px}
+.box3 .bf::before{content:""; position:absolute; top:0; bottom:0; right:4px; width:3px; background:var(--red)}
+.box3 .bf .brand{font-family:var(--f-display); font-size:5px; letter-spacing:1px; color:#fff; background:var(--red); padding:3px 4px; align-self:flex-start}
+.box3 .bf .art{flex:1; background:var(--lb); border:2px solid #000; display:flex; align-items:center; justify-content:center; overflow:hidden}
+.box3 .bf .art canvas{width:56px; height:56px; image-rendering:pixelated; filter:drop-shadow(3px 3px 0 rgba(0,0,0,.5))}
+.box3 .bf .art canvas.wide{width:84px; height:58px}
+.box3 .bf .art img{width:100%; height:100%; object-fit:cover}
+.box3 .bf .tt{font-family:var(--f-display); font-size:7px; line-height:1.5; text-align:center}
+.box3 .bs{width:var(--bd); height:var(--bh); left:calc((var(--bw) - var(--bd)) / 2); transform:rotateY(-90deg) translateZ(calc(var(--bw) / 2));
+  background:repeating-linear-gradient(90deg, #2a2a2a 0 3px, #111 3px 7px); border:2px solid #000; display:flex; flex-direction:column; align-items:center; padding-top:5px; gap:6px}
+.box3 .bs i{width:18px; height:18px; background:var(--lb); border:2px solid #000}
+.box3 .bs span{writing-mode:vertical-rl; transform:rotate(180deg); font-family:var(--f-display); font-size:6px; letter-spacing:1px; white-space:nowrap}
+.box3 .bt{width:var(--bw); height:var(--bd); top:calc((var(--bh) - var(--bd)) / 2); transform:rotateX(90deg) translateZ(calc(var(--bh) / 2)); background:#1a1a1a; border:2px solid #000}
+.box3 .bb{width:var(--bw); height:var(--bh); transform:rotateY(180deg) translateZ(calc(var(--bd) / 2)); background:#141414; border:3px solid #000}
+.box3 .br{width:var(--bd); height:var(--bh); left:calc((var(--bw) - var(--bd)) / 2); transform:rotateY(90deg) translateZ(calc(var(--bw) / 2)); background:#101010; border:2px solid #000}
+@keyframes boxturn{0%,100%{transform:rotateX(6deg) rotateY(38deg)} 50%{transform:rotateX(4deg) rotateY(8deg)}}
+
+/* plan 2 : présentoir tournant */
+.carousel{position:relative; height:176px; perspective:1100px; overflow:hidden; touch-action:pan-y; cursor:grab; margin:0 -12px}
+.carousel:active{cursor:grabbing}
+.ring{position:absolute; left:50%; top:46px; width:0; height:0; transform-style:preserve-3d; transition:transform .45s cubic-bezier(.3,.7,.3,1)}
+.ring.drag{transition:none}
+.slot{position:absolute; margin-left:calc(-46px * .82); transform-style:preserve-3d}
+.ring .c3:not(.sel) .stk{display:none}
+.ring .c3 .stk{transform:translateZ(14px) rotate(12deg)}
+.ring .c3.sel{transform:translateZ(26px) translateY(-4px)}
+.ring .c3{transition:transform .3s}
+.ring .c3{perspective:none; transform-style:preserve-3d}
+.ring .c3 .body{animation-name:bob; animation-duration:3.4s}
+.ring .c3.sel .body{animation-name:sway; animation-duration:7s}
+@keyframes bob{0%,100%{transform:rotateX(6deg)} 50%{transform:translateY(-4px) rotateX(6deg)}}
+.carousel .floor{position:absolute; left:6%; right:6%; bottom:14px; height:46px; border-radius:50%; background:radial-gradient(#2a2250, transparent 70%)}
+.nav{display:flex; justify-content:space-between; align-items:center; gap:10px}
+.nav button{font-family:var(--f-display); font-size:12px; color:var(--gold); background:#000; border:3px solid #fff; border-radius:5px; padding:8px 12px; box-shadow:0 0 0 3px #000}
+.nav b{font-family:var(--f-display); font-weight:400; font-size:10px; letter-spacing:1px; text-align:center; color:var(--lt, #fff); line-height:1.6}
+.inline .fiche{padding:0}
+.inline .fiche .show{padding-top:8px}
+
+@media (prefers-reduced-motion: reduce){
+  .c3 .body, .c3 .front::after, .c3::after, .box3, .c3 .crown{animation:none !important}
+  .c3 .body{transform:rotateX(6deg) rotateY(-18deg)}
+  .box3{transform:rotateY(24deg)}
+}
+</style>
+
+<div class="wrap">
+  <header style="display:flex; flex-direction:column; gap:12px">
+    <h1>CARTOUCHES 3D</h1>
+    <p class="lead">Maquette du 16/10. Des cartouches <b>plus petites</b> (3 ou 4 par ligne sur téléphone au lieu d'une), en vrai relief CSS (six faces, sans bibliothèque), qui <b>flottent et pivotent</b> au repos. Touche une cartouche pour la faire tourner. Les onglets 2 et 3 montrent deux façons de <b>fusionner l'accueil et les classements</b>.</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-a" aria-selected="true" data-p="a">1 · LES CARTOUCHES</button>
+    <button role="tab" id="tab-b" aria-selected="false" data-p="b">2 · DEUX ETAGES</button>
+    <button role="tab" id="tab-c" aria-selected="false" data-p="c">3 · LE PRESENTOIR</button>
+  </nav>
+
+  <section class="panel" id="p-a">
+    <div class="opts">
+      <span>STYLE</span>
+      <div class="seg" id="style-seg">
+        <button data-s="A" aria-pressed="false">A 16 BITS</button><button data-s="B" aria-pressed="false">B POCHE</button><button data-s="C" aria-pressed="false">C 32 BITS</button><button data-s="F" aria-pressed="true">PAR FAMILLE</button>
+      </div>
+      <span>MOUVEMENT</span>
+      <div class="seg" id="anim-seg"><button data-a="soft" aria-pressed="true">DOUX</button><button data-a="retro" aria-pressed="false">RETRO</button></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="notes">
+      <div class="note"><b>A · 16 BITS</b><p>La cartouche actuelle en plus petit et en relief : plastique gris, stries, grande étiquette aux couleurs du jeu. Pour Queens, Picross, Lignée, Touché Coulé.</p></div>
+      <div class="note"><b>B · POCHE</b><p>Plus petite, coin coupé, plastique de couleur transparent : on voit le circuit et la puce au travers. Pour les reprises (Tetris, Snake, Asteroids, Solitaire, Jeu de la vie).</p></div>
+      <div class="note"><b>C · 32 BITS</b><p>Noir strié, filet rouge et titre chromé : la même famille que les boîtes de l'étagère. Pour Nebula, Orbite, Alunissage, Sudoku, Club, Amiral…</p></div>
+      <div class="note"><b>PAR FAMILLE</b><p>Les trois modèles mélangés selon le type de jeu, comme le proposait IDEES.md. RETRO fait pivoter par à-coups, façon jeu vidéo d'époque.</p></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-b" hidden>
+    <div class="stage">
+      <div class="phone" id="ph-b">
+        <div class="scr">
+          <p class="logo">LUDOTHEQUE</p>
+          <div class="menu" id="menu-b"></div>
+          <div class="label-row"><b>MES BOITES</b><i>records de la famille</i></div>
+          <div class="shelf"><div class="spines" id="spines-b"></div><div class="plank"></div></div>
+          <div class="label-row"><b>MES CARTOUCHES</b><i id="count-b"></i></div>
+          <div class="rack" id="rack-b"></div>
+        </div>
+        <div class="sheet" id="sheet-b"><div class="in"><button class="close" id="close-b" aria-label="Fermer">✕</button><div id="fiche-b"></div></div></div>
+      </div>
+      <div class="notes" style="grid-template-columns:minmax(0,1fr)">
+        <div class="note"><b>EN HAUT, LES BOITES</b><p>L'étagère de la page des classements monte sur l'accueil : une boîte par jeu, avec la couronne quand on détient le record de la famille. Elle défile au doigt.</p></div>
+        <div class="note"><b>EN BAS, LES CARTOUCHES</b><p>Rangées debout sur des planches, quatre par rangée. Les filtres (TOUS, FAVORIS, NOUVEAU, DU JOUR, EN COURS) ne changent que les cartouches.</p></div>
+        <div class="note"><b>LA FICHE DU JEU</b><p>Boîte ou cartouche : on ouvre la même fiche, avec la boîte et la cartouche en 3D, les records de l'appareil, le classement de la famille et JOUER. La page des classements actuelle n'a plus besoin d'exister à part.</p></div>
+        <p class="ex">RECORDS ET CLASSEMENTS : EXEMPLES</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-c" hidden>
+    <div class="stage">
+      <div class="phone" id="ph-c">
+        <div class="scr">
+          <p class="logo">LUDOTHEQUE</p>
+          <div class="carousel" id="carousel"><div class="floor"></div><div class="ring" id="ring"></div></div>
+          <div class="nav"><button id="prev" aria-label="Jeu précédent">◀</button><b id="cur-name"></b><button id="next" aria-label="Jeu suivant">▶</button></div>
+          <div class="inline" id="fiche-c"></div>
+          <div class="label-row"><b>L'ETAGERE</b><i>toucher une boîte</i></div>
+          <div class="shelf"><div class="spines" id="spines-c"></div><div class="plank"></div></div>
+        </div>
+      </div>
+      <div class="notes" style="grid-template-columns:minmax(0,1fr)">
+        <div class="note"><b>UN PRESENTOIR QUI TOURNE</b><p>Les cartouches sur un manège en 3D : on le fait tourner au doigt ou avec ◀ ▶. Celle de devant pivote, les autres flottent.</p></div>
+        <div class="note"><b>LA FICHE TOUJOURS VISIBLE</b><p>Sous le présentoir, la fiche du jeu de devant : boîte, records, classement de la famille, JOUER. Pas de page à ouvrir.</p></div>
+        <div class="note"><b>L'ETAGERE EN BAS</b><p>Les boîtes servent de sommaire : on voit d'un coup d'œil où l'on a la couronne, et une boîte touchée fait tourner le présentoir jusqu'à son jeu.</p></div>
+        <p class="ex">RECORDS ET CLASSEMENTS : EXEMPLES</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="../injagility/chiens32.js"></script>
+<script src="../icones.js"></script>
+<script>
+"use strict";
+const NEBULA_IMG = "../nebula/cartouche.jpg";
+// fam : 16 = jeux 16 bits, 32 = jeux 32 bits, rep = reprises ; sh = couleur du plastique transparent (style B)
+const GAMES = [
+  {id:"nebula", n:"NEBULA", s:"NEBULA", ic:"img", fam:"32", lb:"radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt:"#f2b24a", sh:"#c07a20",
+   d:"Mène ta flotte de balise en balise jusqu'à l'amiral pirate.", fav:1, cours:"SECTEUR 2", crown:1,
+   rec:[["Meilleur score","3 420"],["Victoires","2"]], board:"MEILLEUR SCORE", rk:[["MOI","3 420"],["FISTON","2 980"],["PAPI","1 150"]], me:0},
+  {id:"sudoku", n:"SUDOKU", s:"SUDOKU", ic:"grid9", fam:"32", lb:"linear-gradient(#3a1a4a, #12082a)", lt:"#ffb8d0", sh:"#8a3aa8",
+   d:"Un chiffre par ligne, par colonne et par bloc, sous la lune d'un jardin japonais.", neuf:1, jour:1, crown:1,
+   rec:[["9×9 moyen","6:41"],["Grilles finies","14"]], board:"GRILLE DU JOUR", rk:[["MOI","6:41"],["MAMAN","7:20"],["FISTON","11:02"]], me:0},
+  {id:"queens", n:"QUEENS", s:"QUEENS", ic:"crown", fam:"16", lb:"linear-gradient(#3a4cc8, #141a6a)", lt:"#ffd23f", sh:"#3a4cc8",
+   d:"Une reine par ligne, par colonne et par couleur, sans qu'elles se touchent.", jour:1, crown:1,
+   rec:[["Grille du jour","1:12"],["8×8","2:31"]], board:"GRILLE DU JOUR", rk:[["MOI","1:12"],["MAMAN","1:30"],["FISTON","2:05"]], me:0},
+  {id:"picross", n:"PICROSS DEX", s:"PICROSS DEX", ic:"ball", fam:"16", lb:"#cf2b34", lt:"#fff7ec", sh:"#d23a3a",
+   d:"Remplis la grille d'après les nombres pour révéler un Pokémon.", fav:1,
+   rec:[["Pokémon trouvés","48 / 151"]], board:"POKEMON TROUVES", rk:[["FISTON","61"],["MOI","48"],["MAMAN","22"]], me:1},
+  {id:"lignee", n:"LIGNEE", s:"LIGNEE", ic:"tree", fam:"16", lb:"linear-gradient(#6b3f1f, #2f1a0c)", lt:"#e0a83a", sh:"#a0682e",
+   d:"Reconstitue un arbre généalogique grâce aux indices, avec 3 vies.", jour:1, crown:1,
+   rec:[["Arbres reconstitués","12"]], board:"ARBRES", rk:[["MOI","12"],["PAPI","9"],["MAMAN","7"]], me:0},
+  {id:"orbite", n:"ORBITE", s:"ORBITE", ic:"planet", fam:"32", lb:"radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt:"#6fd8ff", sh:"#5a3ab8",
+   d:"Lance ta sonde et laisse la gravité des planètes la guider jusqu'à la balise.",
+   rec:[["Etoiles","64 / 90"]], board:"ETOILES", rk:[["FISTON","71"],["MOI","64"],["PAPI","40"]], me:1},
+  {id:"alunissage", n:"ALUNISSAGE", s:"ALUNISSAGE", ic:"lander", fam:"32", lb:"linear-gradient(#0a0c1e, #2c2a28)", lt:"#e8e4d8", sh:"#8a8a90",
+   d:"Pose ton module en douceur avec deux réacteurs, de la Lune à la comète.", jour:1, crown:1,
+   rec:[["Mission","12 400"]], board:"MISSION", rk:[["MOI","12 400"],["FISTON","9 850"],["MAMAN","3 100"]], me:0},
+  {id:"pont", n:"PONT STELLAIRE", s:"PONT STELLAIRE", ic:"stars", fam:"32", lb:"radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%)", lt:"#ffd76a", sh:"#2a4a9a",
+   d:"Relie les étoiles par des faisceaux de lumière, sans croisement.", jour:1,
+   rec:[["Ciel du jour","3:10"],["11×11","8:45"]], board:"CIEL DU JOUR", rk:[["MAMAN","2:48"],["MOI","3:10"],["FISTON","4:22"]], me:1},
+  {id:"club", n:"LE CLUB D'AGILITY", s:"CLUB AGILITY", ic:"cup", fam:"32", lb:"linear-gradient(#3f8a37, #173a1a)", lt:"#ffd23f", sh:"#3f8a37",
+   d:"Entraîne tes chiens semaine après semaine jusqu'au Championnat de France.", cours:"SEMAINE 14",
+   rec:[["Meilleur niveau","Régional"]], board:"TITRES", rk:[["FISTON","3"],["MOI","1"]], me:1},
+  {id:"inja", n:"INJAGILITY", s:"INJAGILITY", ic:"dog", fam:"32", lb:"linear-gradient(#78bae7, #5fb548)", lt:"#fff", sh:"#5fb548",
+   d:"Ton chien en agility : course sans fin, ou parcours à tracer au doigt.", fav:1,
+   rec:[["Distance","1 210 m"]], board:"DISTANCE", rk:[["FISTON","1 840 m"],["MOI","1 210 m"],["MAMAN","640 m"]], me:1},
+  {id:"amiral", n:"AMIRAL !", s:"AMIRAL !", ic:"anchor", fam:"32", lb:"linear-gradient(#1c579c, #0a1c40)", lt:"#ffd23f", sh:"#1c579c",
+   d:"La bataille navale où chaque navire a un pouvoir.", crown:1,
+   rec:[["Amiral","18 tours"]], board:"MOINS DE TOURS", rk:[["MOI","18"],["FISTON","21"]], me:0},
+  {id:"touche", n:"TOUCHE COULE", s:"TOUCHE COULE", ic:"boat", fam:"16", lb:"linear-gradient(#2b6fd0, #0f1866)", lt:"#ffd84a", sh:"#2b6fd0",
+   d:"Bataille navale contre l'ordinateur, classique ou avec sonar et torpilles.",
+   rec:[["Moins de tirs","44"]], board:"MOINS DE TIRS", rk:[["FISTON","41"],["MOI","44"],["PAPI","52"]], me:1},
+  {id:"tetris", n:"TETRIS", s:"TETRIS", ic:"blocks", fam:"rep", lb:"linear-gradient(#3b2a8a, #160f45)", lt:"#facc15", sh:"#6a4ad0",
+   d:"Empile les pièces, complète des lignes, tiens le plus longtemps possible.",
+   rec:[["Score","31 900"]], board:"SCORE", rk:[["FISTON","48 200"],["MOI","31 900"],["MAMAN","12 300"]], me:1},
+  {id:"snake", n:"SNAKE", s:"SNAKE", ic:"snake", fam:"rep", lb:"linear-gradient(#377a28, #1c4214)", lt:"#c4ff7a", sh:"#3fa02a",
+   d:"Mange les pommes sans te mordre la queue ni toucher les bords.", crown:1,
+   rec:[["Score","86"]], board:"SCORE", rk:[["MOI","86"],["FISTON","71"]], me:0},
+  {id:"ast", n:"ASTEROIDS", s:"ASTEROIDS", ic:"rock", fam:"rep", lb:"radial-gradient(circle at 70% 30%, #1d2a5a, #05040e 70%)", lt:"#5ce1ff", sh:"#2ab0d0",
+   d:"Pilote ton vaisseau et pulvérise les astéroïdes, vague après vague.",
+   rec:[["Score","8 760"]], board:"SCORE", rk:[["FISTON","12 340"],["MOI","8 760"]], me:1},
+  {id:"soli", n:"SOLITAIRE", s:"SOLITAIRE", ic:"cards", fam:"rep", lb:"linear-gradient(#2a8a48, #145a2c)", lt:"#ffd23f", sh:"#2a8a48",
+   d:"Le Klondike de Windows XP : range les cartes de l'As au Roi.", cours:"PARTIE",
+   rec:[["Parties gagnées","12"]], board:"PARTIES GAGNEES", rk:[["MAMAN","34"],["MOI","12"]], me:1},
+  {id:"vie", n:"JEU DE LA VIE", s:"JEU DE LA VIE", ic:"glider", fam:"rep", lb:"linear-gradient(#23307e, #0d1450)", lt:"#5cff8a", sh:"#3ad06a",
+   d:"L'automate de Conway : dessine des cellules et regarde-les évoluer.",
+   rec:[], board:"", rk:[], me:-1},
+];
+const FAMSTYLE = {"16":"A", "32":"C", rep:"B"};
+let styleMode = "F";
+const $ = id => document.getElementById(id);
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+
+// l'image d'un jeu : icône 16×16 (le chien est plus large), ou la capture de Nebula
+function art(g){
+  if (g.ic === "img"){ const i = new Image(); i.src = NEBULA_IMG; i.alt = ""; return i; }
+  const c = document.createElement("canvas");
+  if (g.ic === "dog"){ c.width = 78; c.height = 54; c.className = "wide"; } else { c.width = c.height = 16; }
+  LudoIcons.draw(c, g.ic);
+  return c;
+}
+function styleOf(g){ return styleMode === "F" ? FAMSTYLE[g.fam] : styleMode; }
+
+// une cartouche en 3D : six faces ; la face avant change selon le modèle
+function cart(g, i, k, st){
+  st = st || styleOf(g);
+  const b = el("button", "c3 s" + st);
+  b.type = "button"; b.dataset.id = g.id; b.setAttribute("aria-label", g.n);
+  b.style.cssText = `--i:${i}; --k:${k}; --lb:${g.lb}; --lt:${g.lt}; --sh:${g.sh}`;
+  const body = el("div", "body"), front = el("div", "f front");
+  if (st === "A"){
+    front.append(el("i", "rid"));
+    const lab = el("div", "lab"); lab.append(art(g), el("b", "", g.s)); front.append(lab, el("i", "notch"));
+  } else if (st === "B"){
+    body.append(el("div", "f pcb"));
+    front.append(el("span", "emb", "LUDO"));
+    const lab = el("div", "lab"); lab.append(art(g), el("b", "", g.s)); front.append(lab, el("span", "arw", "▼"));
+  } else {
+    const lab = el("div", "lab"); lab.append(art(g)); front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip"));
+  }
+  ["back", "left", "right", "top", "bottom"].forEach(f => body.append(el("div", "f " + f)));
+  body.append(front);
+  b.append(body);
+  if (g.crown) b.append(el("i", "crown", "♛"));
+  if (g.neuf) b.append(el("span", "stk", "NEUF"));
+  else if (g.cours) b.append(el("span", "stk cours", "EN COURS"));
+  b.addEventListener("click", () => spin(b));
+  return b;
+}
+function spin(b){
+  b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin");
+  b.querySelector(".body").addEventListener("animationend", () => b.classList.remove("spin"), {once:true});
+}
+
+// onglet 1 : la grille
+function renderGrid(){
+  const grid = $("grid"); grid.textContent = "";
+  GAMES.forEach((g, i) => {
+    const fig = el("figure"); fig.append(cart(g, i, 1));
+    fig.append(el("figcaption", "", ({A:"A · 16 BITS", B:"B · POCHE", C:"C · 32 BITS"})[styleOf(g)]));
+    grid.append(fig);
+  });
+}
+function seg(id, attr, cb){
+  $(id).addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === t ? "true" : "false"));
+    cb(t.dataset[attr]);
+  });
+}
+seg("style-seg", "s", v => { styleMode = v; renderGrid(); });
+seg("anim-seg", "a", v => document.body.classList.toggle("retro", v === "retro"));
+
+// la tranche d'une boîte sur l'étagère
+function spine(g, i){
+  const s = el("button", "spine"); s.type = "button"; s.dataset.id = g.id; s.setAttribute("aria-label", g.n);
+  const h = 160 + (i * 37) % 36; s.style.setProperty("--c", g.lb); s.style.setProperty("--h", h + "px");
+  s.style.setProperty("--fs", Math.max(5, Math.min(9, Math.floor((h - 72) / g.s.length) - 2)) + "px");
+  const ico = el("span", "ico"); ico.append(art(g));
+  s.append(ico, el("span", "t chrome", g.s), el("span", "lab"));
+  if (g.crown) s.append(el("i", "crown", "♛"));
+  return s;
+}
+// la boîte de jeu en 3D
+function box(g){
+  const b = el("div", "box3"); b.style.setProperty("--lb", g.lb);
+  const f = el("div", "bf"); const a = el("div", "art"); a.append(art(g));
+  f.append(el("span", "brand", "LUDOTHEQUE"), a, el("div", "tt chrome", g.s));
+  const s = el("div", "bs"); s.append(el("i"), el("span", "chrome", g.s));
+  b.append(el("div", "bb"), el("div", "br"), el("div", "bt"), s, f);
+  return b;
+}
+// fiche d'un jeu
+function fiche(g){
+  const f = el("div", "fiche"); f.style.setProperty("--lt", g.lt);
+  const show = el("div", "show"); show.append(box(g), cart(g, 0, 1)); f.append(show);
+  f.append(el("h3", "", g.n), el("p", "", g.d));
+  const r = el("div", "blk"); r.append(el("b", "", "MES RECORDS"));
+  if (g.rec.length) g.rec.forEach(([k, v]) => r.append(el("div", "row", `<span>${k}</span><span>${v}</span>`)));
+  else r.append(el("div", "row", "<span>Pas de record : un bac à sable.</span>"));
+  f.append(r);
+  if (g.rk.length){
+    const c = el("div", "blk"); c.append(el("b", "", "FAMILLE · " + g.board));
+    const pl = ["1ER", "2E", "3E"];
+    g.rk.forEach(([p, v], k) => c.append(el("div", "row" + (k === g.me ? " me" : ""), `<span><em>${pl[k]}</em>${p}</span><span>${v}</span>`)));
+    f.append(c);
+  }
+  const play = el("button", "play", "JOUER ▶"); play.type = "button"; f.append(play);
+  return f;
+}
+
+// onglet 2 : deux étages
+const FILTERS = [["tous", "TOUS"], ["fav", "FAVORIS"], ["neuf", "NOUVEAU"], ["jour", "DU JOUR"], ["cours", "EN COURS"]];
+let filterB = "tous";
+function renderB(){
+  const m = $("menu-b"); m.textContent = "";
+  FILTERS.forEach(([k, t]) => { const b = el("button", "", t); b.type = "button"; b.setAttribute("aria-pressed", k === filterB); b.onclick = () => { filterB = k; renderB(); }; m.append(b); });
+  const sp = $("spines-b"); if (!sp.childElementCount) GAMES.forEach((g, i) => { const s = spine(g, i); s.onclick = () => openB(g, s); sp.append(s); });
+  const rack = $("rack-b"); rack.textContent = "";
+  const list = GAMES.filter(g => filterB === "tous" || g[filterB]);
+  list.forEach((g, i) => { const c = cart(g, i, .78); c.addEventListener("click", () => setTimeout(() => openB(g), 650)); rack.append(c); });
+  $("count-b").textContent = list.length + (list.length > 1 ? " jeux" : " jeu");
+}
+function openB(g, sp){
+  document.querySelectorAll("#spines-b .spine").forEach(s => s.classList.toggle("out", s.dataset.id === g.id));
+  const fb = $("fiche-b"); fb.textContent = ""; fb.append(fiche(g));
+  $("sheet-b").classList.add("on"); $("sheet-b").querySelector(".in").scrollTop = 0;
+}
+function closeB(){ $("sheet-b").classList.remove("on"); document.querySelectorAll("#spines-b .spine").forEach(s => s.classList.remove("out")); }
+$("close-b").onclick = closeB;
+$("sheet-b").addEventListener("click", e => { if (e.target.id === "sheet-b") closeB(); });
+
+// onglet 3 : présentoir tournant
+const N = GAMES.length, STEP = 360 / N, K3 = .82;
+let rot = 0, cur = 0;
+function radius(){ return Math.round((92 * K3 / 2) / Math.tan(Math.PI / N)) + 46; }
+function buildRing(){
+  const ring = $("ring"), R = radius(); ring.textContent = "";
+  GAMES.forEach((g, i) => {
+    const s = el("div", "slot"); const c = cart(g, i, K3, "C" === styleOf(g) ? "C" : styleOf(g));
+    s.style.transform = `rotateY(${i * STEP}deg) translateZ(${R}px)`;
+    s.style.left = "0"; s.append(c); ring.append(s);
+    c.addEventListener("click", e => { if (dragged) return; e.stopPropagation(); goTo(i); });
+  });
+  ring.style.transform = `translateZ(${-R}px) rotateY(${rot}deg)`;
+}
+function goTo(i, fromRot){
+  cur = (i % N + N) % N;
+  if (!fromRot){ // tourner par le plus court chemin
+    let target = -i * STEP; while (target - rot > 180) target -= 360; while (target - rot < -180) target += 360; rot = target;
+  }
+  $("ring").classList.remove("drag");
+  $("ring").style.transform = `translateZ(${-radius()}px) rotateY(${rot}deg)`;
+  $("ring").querySelectorAll(".c3").forEach((c, k) => c.classList.toggle("sel", k === cur));
+  const g = GAMES[cur];
+  $("cur-name").textContent = g.n; $("cur-name").style.setProperty("--lt", g.lt);
+  const fc = $("fiche-c"); fc.textContent = ""; const f = fiche(g); f.querySelector(".show .c3").remove(); f.querySelector("h3").remove(); f.querySelector("p").remove(); fc.append(f);
+  document.querySelectorAll("#spines-c .spine").forEach(s => s.classList.toggle("out", s.dataset.id === g.id));
+}
+$("prev").onclick = () => goTo(cur - 1);
+$("next").onclick = () => goTo(cur + 1);
+let dragX = null, rot0 = 0, dragged = false;
+const car = $("carousel");
+car.addEventListener("pointerdown", e => { dragX = e.clientX; rot0 = rot; dragged = false; });
+window.addEventListener("pointermove", e => {
+  if (dragX === null) return;
+  const dx = e.clientX - dragX;
+  if (Math.abs(dx) > 6){ dragged = true; $("ring").classList.add("drag"); rot = rot0 + dx * .45; $("ring").style.transform = `translateZ(${-radius()}px) rotateY(${rot}deg)`; }
+});
+window.addEventListener("pointerup", () => {
+  if (dragX === null) return; dragX = null;
+  if (dragged){ const i = Math.round(-rot / STEP); rot = -i * STEP; goTo(i, true); setTimeout(() => dragged = false, 50); }
+});
+function renderC(){
+  buildRing();
+  const sp = $("spines-c"); GAMES.forEach((g, i) => { const s = spine(g, i); s.onclick = () => goTo(i); sp.append(s); });
+  goTo(0);
+}
+
+// onglets
+function show(p){
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.p === p));
+  ["a", "b", "c"].forEach(k => $("p-" + k).hidden = k !== p);
+  try { localStorage.setItem("cartouches3d.tab", p); } catch (e) {}
+}
+document.querySelector(".tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(b.dataset.p); });
+
+renderGrid(); renderB(); renderC();
+let start = (location.hash || "").slice(1);
+if (!["a", "b", "c"].includes(start)){ try { start = localStorage.getItem("cartouches3d.tab") || "a"; } catch (e) { start = "a"; } }
+show(start);
+</script>
