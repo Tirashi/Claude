@@ -63,6 +63,33 @@
   }
   function leave(){ set("code", ""); }
 
+  // le même compte sur plusieurs navigateurs : le « code de compte » porte le numéro du joueur et son pseudo
+  // (pas les sauvegardes, qui restent dans chaque navigateur). Qui a ce code peut jouer sous ce compte.
+  function accountCode(){
+    if (!joined()) return "";
+    return "LUDOCOMPTE-" + btoa(unescape(encodeURIComponent(JSON.stringify({p: player(), n: get("pseudo", "")}))));
+  }
+  function readAccount(text){
+    var raw = String(text || "").replace(/\s+/g, ""), at = raw.indexOf("LUDOCOMPTE-"), a = null;
+    if (at >= 0) try { a = JSON.parse(decodeURIComponent(escape(atob(raw.slice(at + 11))))); } catch (e) {}
+    if (!a || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(a.p) || !cleanPseudo(a.n)) return null;
+    return {player: a.p.toLowerCase(), pseudo: cleanPseudo(a.n)};
+  }
+  // rejoindre avec un compte existant : vérifie le code familial, reprend le joueur, puis publie les records de ce navigateur
+  // (le serveur garde le meilleur de chaque côté)
+  function joinAccount(account, code){
+    var a = readAccount(account); code = String(code || "").trim();
+    if (!a){ var e = new Error("Ce code de compte est incomplet ou abîmé : il commence par LUDOCOMPTE-."); e.code = "account"; return Promise.reject(e); }
+    if (!code) return Promise.reject(new Error("Entre le code familial."));
+    return rpc("ludo_check", {code: code}).then(function (ok){
+      if (ok !== true) { var e = new Error("Ce code familial n'est pas le bon."); e.code = "code"; throw e; }
+      set("player", a.player); set("pseudo", a.pseudo); set("code", code); set("synced", SYNC);
+      try { localStorage.removeItem("ludo.crowns"); } catch (e2) {}
+      pushExisting(); flush();
+      return a.pseudo;
+    });
+  }
+
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
@@ -199,7 +226,7 @@
 
   // après un import de sauvegarde : renvoyer tous les records (le serveur garde le meilleur)
   function resync(){ if (!joined()) return Promise.resolve(); pushExisting(); return flush(); }
-  window.LudoScores = {resync: resync, joined: joined, join: join, leave: leave, submit: submit, board: board, bests: bests, flush: flush, registerExisting: registerExisting, HINT_PENALTY: HINT_PENALTY,
+  window.LudoScores = {resync: resync, joined: joined, join: join, leave: leave, accountCode: accountCode, readAccount: readAccount, joinAccount: joinAccount, submit: submit, board: board, bests: bests, flush: flush, registerExisting: registerExisting, HINT_PENALTY: HINT_PENALTY,
     pseudo: function (){ return get("pseudo", ""); }, pending: function (){ return get("queue", []).length; },
     rankText: function (r){ return r ? (r.rank === 1 ? "1er" : r.rank + "e") + " sur " + r.total : ""; }};
 })();

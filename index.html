@@ -327,6 +327,12 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
 .join label{font-family:var(--f-display); font-size:8px; letter-spacing:1px; color:var(--text-dim); display:flex; flex-direction:column; gap:6px}
 .join input{width:100%; font:21px/1.2 var(--f-body); color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:6px 8px}
 .join .saves-btn{align-self:flex-start}
+.join textarea{width:100%; resize:vertical; font:13px/1.3 "Courier New",monospace; color:#110d22; background:#f2f0ff; border:3px solid var(--ink); padding:6px; word-break:break-all}
+.join .swap{align-self:flex-start; font-family:var(--f-display); font-size:7px; letter-spacing:1px; line-height:1.8; color:var(--text-dim); text-decoration:underline}
+.join .swap:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.join .res:empty{display:none}
+.player .acct{max-width:460px; width:100%; text-align:left; background:#1e1840; border:3px solid var(--text-dim); padding:12px}
+.join p{margin:0; font-size:19px; color:var(--text-dim)}
 .fam-foot{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; font-family:var(--f-display); font-size:7px; letter-spacing:1px; line-height:1.8; color:#8a86b8}
 .fam-foot b{color:var(--me); font-weight:400}
 .fam-foot button{font-family:var(--f-display); font-size:7px; letter-spacing:1px; color:var(--text-dim); text-decoration:underline}
@@ -480,6 +486,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-16", "Classements : le même compte sur plusieurs navigateurs. Sous les cartouches, CODE DE MON COMPTE ; dans l'autre navigateur, REJOINDRE LE CLASSEMENT puis J'AI DEJA UN COMPTE. Les sauvegardes restent dans chaque navigateur."],
   ["2026-10-16", "Nouvel accueil : les cartouches en 3D sur leurs planches (16 bits, 32 bits et reprises). Touche une cartouche : sa boîte, tes records et le classement de la famille, au même endroit. La page des classements disparaît."],
   ["2026-10-16", "Nouveau jeu : Sudoku, le jardin des chiffres. Grilles 4×4 et 6×6 pour débuter, 9×9 facile, moyen ou difficile, notes au crayon et grille du jour pour toute la famille."],
   ["2026-10-15", "Accueil : filtre EN COURS pour retrouver les parties commencées, et sur chaque cartouche ta partie en cours et ton record."],
@@ -1011,20 +1018,33 @@ function load(){
     if (L.pending()) res(`${L.pending()} score(s) en attente d'envoi.`, true);
   }).catch(fail);
 }
-// rejoindre le classement : pseudo + code familial (vérifié par Supabase)
+// rejoindre le classement : pseudo + code familial (vérifié par Supabase), ou un compte déjà créé dans un autre navigateur
+const netMsg = e => e.code === "code" ? "Ce code familial n'est pas le bon." : (e.message && !/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? e.message : "Impossible de joindre le classement (pas de réseau ?).");
 function joinForm(done){
   const f = el("div", "join");
+  let mode = "new";
+  const intro = el("p");
   const lp = el("label", "", "PSEUDO"), ip = el("input"); ip.maxLength = 16; ip.autocomplete = "nickname"; ip.placeholder = "ex. Rudy"; ip.value = L.pseudo() || ""; lp.append(ip);
+  const la = el("label", "", "CODE DE MON COMPTE"), ia = el("textarea"); ia.rows = 3; ia.placeholder = "LUDOCOMPTE-…"; ia.spellcheck = false; ia.setAttribute("autocapitalize", "off"); la.append(ia);
   const lc = el("label", "", "CODE FAMILIAL"), ic = el("input"); ic.maxLength = 40; ic.autocomplete = "off"; ic.setAttribute("autocapitalize", "off"); ic.spellcheck = false; lc.append(ic);
   const go = button("REJOINDRE", false, null), out = el("div", "res"); out.setAttribute("aria-live", "polite");
+  const sw = el("button", "swap"); sw.type = "button";
+  const paint = () => {
+    const acc = mode === "acc";
+    intro.textContent = acc ? "Tu as déjà un compte dans un autre navigateur ? Colle son code de compte (bouton CODE DE MON COMPTE, là-bas) et le code familial : ce navigateur jouera sous le même pseudo. Les sauvegardes, elles, restent dans chaque navigateur."
+      : "Choisis un pseudo et entre le code familial qu'on t'a donné : tes records partent ensuite tout seuls, même ceux déjà faits sur cet appareil.";
+    lp.hidden = acc; la.hidden = !acc; out.textContent = "";
+    sw.textContent = acc ? "◀ NOUVEAU JOUEUR" : "J'AI DEJA UN COMPTE ▶";
+  };
+  sw.onclick = () => { mode = mode === "acc" ? "new" : "acc"; paint(); (mode === "acc" ? ia : ip).focus(); };
   go.onclick = () => {
     out.textContent = "Vérification du code…"; out.className = "res ok";
-    L.join(ip.value, ic.value).then(() => { ic.value = ""; out.textContent = ""; done(); })
-      .catch(e => { out.className = "res err";
-        out.textContent = e.code === "code" ? "Ce code familial n'est pas le bon." : (e.message && !/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? e.message : "Impossible de joindre le classement (pas de réseau ?)."); });
+    (mode === "acc" ? L.joinAccount(ia.value, ic.value) : L.join(ip.value, ic.value)).then(() => { ic.value = ""; ia.value = ""; out.textContent = ""; done(); })
+      .catch(e => { out.className = "res err"; out.textContent = netMsg(e); });
   };
   [ip, ic].forEach(i => i.addEventListener("keydown", e => { if (e.key === "Enter") go.click(); }));
-  f.append(el("p", "", "Choisis un pseudo et entre le code familial qu'on t'a donné : tes records partent ensuite tout seuls, même ceux déjà faits sur cet appareil."), lp, lc, go, out);
+  paint();
+  f.append(intro, lp, la, lc, go, out, sw);
   return f;
 }
 // sous les cartouches : le joueur inscrit (ou de quoi rejoindre le classement)
@@ -1033,9 +1053,20 @@ function paintPlayer(){
   if (!L) return;
   if (L.joined()){
     const who = el("div", "who"); who.append("CLASSEMENT DE LA FAMILLE · JOUEUR ", el("b", "", L.pseudo()));
+    const btns = el("div", "saves-open");
+    const acc = el("button", "saves-btn", "CODE DE MON COMPTE"); acc.type = "button"; acc.setAttribute("aria-expanded", "false");
     const ch = el("button", "saves-btn", "CHANGER DE PSEUDO"); ch.type = "button";
     ch.addEventListener("click", () => { L.leave(); crownSet = new Set(); try { localStorage.removeItem("ludo.crowns"); } catch (e) {} paintMarks(); paintPlayer(); const i = $("player").querySelector("input"); if (i) i.focus(); });
-    p.append(who, ch);
+    // le code de compte : à coller dans un autre navigateur pour y jouer sous le même pseudo
+    const box = el("div", "join acct"); box.hidden = true;
+    const ta = el("textarea"); ta.readOnly = true; ta.rows = 3; ta.value = L.accountCode(); ta.setAttribute("aria-label", "Code de mon compte");
+    const cp = button("COPIER", false, null), msg = el("div", "res"); msg.setAttribute("aria-live", "polite");
+    cp.onclick = () => { const bad = () => { ta.focus(); ta.select(); msg.textContent = "Appuie longuement sur le code, puis Copier."; msg.className = "res err"; };
+      try { navigator.clipboard.writeText(ta.value).then(() => { msg.textContent = "Code copié."; msg.className = "res ok"; }, bad); } catch (e) { bad(); } };
+    box.append(el("p", "", "Pour jouer sous ton pseudo dans un autre navigateur (Chrome, l'appli, une tablette…) : là-bas, touche REJOINDRE LE CLASSEMENT, puis J'AI DEJA UN COMPTE, et colle ce code. Seuls les classements sont partagés : chaque navigateur garde ses propres sauvegardes. Ce code est ta clé : ne le donne à personne d'autre."), ta, cp, msg);
+    acc.addEventListener("click", () => { box.hidden = !box.hidden; acc.setAttribute("aria-expanded", !box.hidden); if (!box.hidden) ta.value = L.accountCode(); });
+    btns.append(acc, ch);
+    p.append(who, btns, box);
   } else {
     const open = el("button", "saves-btn", "REJOINDRE LE CLASSEMENT DE LA FAMILLE"); open.type = "button";
     open.addEventListener("click", () => { open.replaceWith(joinForm(() => { paintPlayer(); crowns(true); })); });
