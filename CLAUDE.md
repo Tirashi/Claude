@@ -74,6 +74,7 @@ Queens, Sudoku, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de
 - **L'Île des naufragés → la colonie** (décision du 16/10) : l'ancienne version (survie de 40 jours) a été **retirée du site** le 16/10 (reste dans l'historique git) ; elle sera remplacée par une colonie à la Banished (paysage, tour par tour, pas de morts, sans fin). Cahier des charges : [`specs/colonie.md`](specs/colonie.md). Prochaine étape : la maquette de l'écran en paysage, dans une nouvelle conversation.
 - Orbite : les niveaux 12, 23, 25, 28 et 30 sont les plus serrés (8 à 11 tirs robustes) ; à ajuster si l'utilisateur ou son fils les trouvent trop durs.
 - Orbite, Pont stellaire, Sudoku et la grille du jour de Queens : classements testés seulement avec le faux serveur ; confirmer qu'un vrai record apparaît bien.
+- ✅ Classement dans le volet de l'accueil (inscription, tableau de la famille, bouton CLASSEMENT d'un jeu qui ramène au volet) : confirmé sur le téléphone de l'utilisateur le 16/10.
 - Forfait : limite hebdomadaire remise à zéro le mercredi à 19 h ; privilégier les chantiers courts en fin de semaine.
 
 ## Les jeux existants
