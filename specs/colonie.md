@@ -137,3 +137,6 @@ Les menaces s'annoncent quand c'est possible (la tour de guet, le ciel, la rivi�
 - Taille de l'île et nombre de bâtiments au départ (tout débloqué, ou plans à trouver dans les ruines ?).
 - Commerce avec des bateaux marchands (le port) : utile ou de trop ?
 - Faut-il un objectif par année (« avoir 20 colons à la fin de l'an 2 ») pour guider les débutants ?
+
+## Artefact
+Publier la colonie au lien de l'ancienne Île (décision du 16/10) : https://claude.ai/artifact/9AnNRRCCBu4pgYh35UwrPb

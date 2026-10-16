@@ -64,7 +64,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 | Pont stellaire | https://claude.ai/artifact/Twgkpb1scdCh2Th6Nh35bF |
 | Alunissage | https://claude.ai/artifact/2TgrmzSKuzoyPHYufyHrWh |
 | Nebula | https://claude.ai/artifact/EPDtjTHPDsCnYKjtHCuxwY |
-| L'Île des naufragés (ancienne version, retirée ; lien réutilisable pour la colonie) | https://claude.ai/artifact/9AnNRRCCBu4pgYh35UwrPb |
+| La colonie (`ile/`, à venir ; contient encore l'ancienne Île des naufragés, à republier au même lien) | https://claude.ai/artifact/9AnNRRCCBu4pgYh35UwrPb |
 
 Queens, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie **n'ont pas d'artefact** : on les joue sur le site (https://tirashi.github.io/Claude/). Ne pas en créer sans demande. Les maquettes de style sont listées dans `IDEES.md`.
 
