@@ -1,0 +1,336 @@
+<title>La Bille, maquette</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Luckiest+Guy&family=Press+Start+2P&display=swap">
+<style>
+/* Trois téléphones côte à côte (empilés sur un téléphone), chacun jouable, avec sa fiche dessous. */
+:root{
+  --fond:#1b1611; --fond2:#29211a; --texte:#f3ece2; --doux:#b8aa98; --accent:#e9b65c; --cadre:#0c0906;
+  --f-texte:'Fredoka', system-ui, sans-serif; --f-pixel:'Press Start 2P', monospace; --f-bd:'Luckiest Guy', 'Fredoka', sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--f-texte);font-size:16px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header h1{font-weight:700;font-size:clamp(28px,6vw,40px);margin:0;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--doux);max-width:64ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:32px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.tel{position:relative;width:100%;max-width:300px;aspect-ratio:9/19;border:9px solid var(--cadre);border-radius:34px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.5);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.tel.actif{outline:3px solid var(--accent);outline-offset:3px}
+.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:22px 16px 26px;text-align:center}
+.haut{display:flex;justify-content:space-between;align-items:baseline}
+.temps{font-size:30px;line-height:1}
+.chutes{font-size:13px}
+.msg{font-size:14px;min-height:2.8em;line-height:1.4}
+.a .hud{font-family:var(--f-texte);font-weight:700;color:#fff8ec;text-shadow:0 2px 3px rgba(60,30,0,.55)}
+.b .hud{font-family:var(--f-pixel);color:#ffd36b;text-shadow:2px 2px 0 #000}
+.b .temps{font-size:20px} .b .chutes{font-size:8px} .b .msg{font-size:8px;line-height:1.9}
+.c .hud{font-family:var(--f-bd);color:#fff;letter-spacing:.03em;-webkit-text-stroke:1.2px #2d3a7a;text-shadow:0 3px 0 #2d3a7a}
+.c .temps{font-size:34px} .c .msg{font-size:16px}
+.fiche{width:100%;max-width:340px}
+.fiche h2{margin:0;font-size:22px;font-weight:700}
+.fiche h2 span{display:inline-block;min-width:1.6em;color:var(--accent)}
+.fiche p{margin:4px 0 8px;color:var(--doux)}
+.fiche ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:3px;font-size:15px}
+.commun{background:var(--fond2);border-radius:16px;padding:18px 20px;max-width:760px}
+.commun h2{margin:0 0 8px;font-size:20px}
+.commun ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.commun p{margin:10px 0 0;color:var(--accent);font-weight:600}
+</style>
+
+<div class="page">
+  <header>
+    <h1>La Bille, trois directions</h1>
+    <p>Chaque téléphone est jouable. La bille roule d'abord toute seule ; touche un plateau pour prendre la main. Sur un téléphone, penche-le (la position de départ sert de « plat ») ; sinon, fais glisser le doigt sur le plateau pour l'incliner. Va jusqu'au drapeau sans tomber dans les trous.</p>
+  </header>
+
+  <div class="grille">
+    <div class="dir">
+      <div class="tel a" id="telA"><canvas></canvas>
+        <div class="hud"><div class="haut"><div class="temps">0:00</div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>A</span>Érable et laiton</h2>
+        <p>Le jouet en bois classique, en plein jour, vu de trois quarts.</p>
+        <ul><li>Plateau en érable clair, murets en hêtre, trous cerclés de laiton</li>
+          <li>Bille d'acier qui brille, ombres douces</li>
+          <li>Chiffres ronds (Fredoka, déjà dans le dépôt)</li></ul></div>
+    </div>
+
+    <div class="dir">
+      <div class="tel b" id="telB"><canvas></canvas>
+        <div class="hud"><div class="haut"><div class="temps">0:00</div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>B</span>Noyer, l'atelier la nuit</h2>
+        <p>Plus sombre et plus précieux : une lampe d'atelier éclaire le plateau.</p>
+        <ul><li>Noyer foncé, murets cerclés de cuivre, bille chromée</li>
+          <li>Cône de lumière chaude, ombres marquées, vue plus rasante</li>
+          <li>Textes en Press Start 2P, comme le reste de la Ludothèque</li></ul></div>
+    </div>
+
+    <div class="dir">
+      <div class="tel c" id="telC"><canvas></canvas>
+        <div class="hud"><div class="haut"><div class="temps">0:00</div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>C</span>Jouet peint</h2>
+        <p>Du bois peint aux couleurs vives, presque vu de dessus : le plus lisible.</p>
+        <ul><li>Murets de couleurs, trous bordés de blanc, grosse bille en verre rouge</li>
+          <li>Fond bleu ciel, étoile à l'arrivée</li>
+          <li>Style « dessin animé » de Lune-Rover (Luckiest Guy)</li></ul></div>
+    </div>
+  </div>
+
+  <section class="commun">
+    <h2>Commun aux trois</h2>
+    <ul>
+      <li>Contrôle : l'inclinaison du téléphone (calibrée au départ de chaque plateau) ; repli au doigt si le capteur manque.</li>
+      <li>Dans le vrai jeu : 30 plateaux de plus en plus retors (trous en chicane, murets mobiles, tremplins, glace), trois étoiles selon le temps et les chutes.</li>
+      <li>Un plateau du jour chronométré, le même pour toute la famille : une seule tentative classée.</li>
+      <li>Three.js déjà dans le dépôt (`lib/three.min.js`), comme Empilage.</li>
+    </ul>
+    <p>Dis-moi A, B ou C, ou un mélange (par exemple le plateau de A avec la lampe de B).</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Plateau de 8 × 12 cases ; x vers la droite, y vers le bas (vers le joueur).
+const LARG = 8, HAUT = 12, R = 0.28, EP = 0.25, TROU = 0.42, PENTE_MAX = 0.2, G = 30;
+const MURS = [[0,2,6,2],[2,4,8,4],[0,6,6,6],[2,8,8,8],[0,10,6,10],[4,2,4,3],[4,6,4,7],[3,9,3,10]];
+const TROUS = [[3.5,.55],[5.5,2.6],[2.5,2.55],[3,4.6],[6,4.6],[5.5,6.55],[2.3,6.6],[5,9.45],[1.8,9.45],[4.5,10.55],[6.3,10.6]];
+const DEPART = [1,1.2], ARRIVEE = [1,11.1];
+const CHEMIN = [[7,1.4],[7,3.5],[1,3.5],[1,5.4],[7,5.4],[7,7.5],[1,7.5],[1,8.5],[7,8.5],[7,11.2],[1,11.1]];
+const BOITES = MURS.map(([x1,y1,x2,y2]) => [Math.min(x1,x2)-EP/2, Math.min(y1,y2)-EP/2, Math.max(x1,x2)+EP/2, Math.max(y1,y2)+EP/2]);
+
+// Fil du bois dessiné sur un canvas
+function veinage(base, fil, n){
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d'); g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = fil;
+  for (let k = 0; k < n; k++){
+    g.globalAlpha = 0.15 + Math.random() * 0.3; g.lineWidth = 1 + Math.random() * 2.5;
+    const x0 = Math.random() * 256, a = 4 + Math.random() * 10, f = 0.01 + Math.random() * 0.02;
+    g.beginPath();
+    for (let y = 0; y <= 256; y += 8) g.lineTo(x0 + Math.sin(y * f + k) * a, y);
+    g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+
+const STYLES = {
+  A: {
+    fond: 0xe9dcc6, cam: [0, 18.5, 10.5], fov: 50, ombres: true,
+    plateau: () => new THREE.MeshLambertMaterial({ map: veinage('#e8c995', '#b98a4e', 40) }),
+    cadre: () => new THREE.MeshLambertMaterial({ map: veinage('#b47a43', '#6e4421', 30) }),
+    mur: () => new THREE.MeshLambertMaterial({ map: veinage('#c9955a', '#7d532b', 30) }),
+    bille: () => new THREE.MeshPhongMaterial({ color: 0x9aa4ae, specular: 0xffffff, shininess: 120, flatShading: true }),
+    bord: 0xc9a13a, trou: 0x1a120a, drapeau: 0xd8402f, arrivee: 0x3f8a4b,
+    lumieres(s){
+      s.add(new THREE.HemisphereLight(0xfff6e8, 0x8a6a48, 0.75));
+      const d = new THREE.DirectionalLight(0xffffff, 0.6); d.position.set(-5, 14, 6); return d;
+    },
+  },
+  B: {
+    fond: 0x0d0a08, cam: [0, 14.5, 15.5], fov: 50, ombres: true,
+    plateau: () => new THREE.MeshPhongMaterial({ map: veinage('#5a3a24', '#2a170b', 50), shininess: 30, specular: 0x332211 }),
+    cadre: () => new THREE.MeshPhongMaterial({ map: veinage('#3d2616', '#1a0e05', 40), shininess: 40, specular: 0x332211 }),
+    mur: () => new THREE.MeshPhongMaterial({ color: 0xb8733d, specular: 0xffc58a, shininess: 80 }),
+    bille: () => new THREE.MeshPhongMaterial({ color: 0xe8eef5, specular: 0xffffff, shininess: 200, flatShading: true }),
+    bord: 0xd08a4a, trou: 0x000000, drapeau: 0xffd36b, arrivee: 0x6b2a12,
+    lumieres(s){
+      s.add(new THREE.AmbientLight(0x3a2a20, 0.6));
+      const d = new THREE.SpotLight(0xffd9a0, 1.5, 40, 0.62, 0.55); d.position.set(3, 16, 2); return d;
+    },
+  },
+  C: {
+    fond: 0x8fd3ff, cam: [0, 21.5, 2.2], fov: 50, ombres: false,
+    plateau: () => new THREE.MeshLambertMaterial({ color: 0xfff1c9 }),
+    cadre: () => new THREE.MeshLambertMaterial({ color: 0x4a6cf0 }),
+    mur: i => new THREE.MeshLambertMaterial({ color: [0xff6b6b, 0xffb84d, 0x5fd38d, 0x5fb8ff, 0xb388ff][i % 5] }),
+    bille: () => new THREE.MeshPhongMaterial({ color: 0xff2d4a, specular: 0xffffff, shininess: 90, transparent: true, opacity: 0.88, flatShading: true }),
+    bord: 0xffffff, trou: 0x2d3a7a, drapeau: 0xff3d5a, arrivee: 0xffd400,
+    lumieres(s){
+      s.add(new THREE.HemisphereLight(0xffffff, 0xb0c8ff, 0.85));
+      const d = new THREE.DirectionalLight(0xffffff, 0.45); d.position.set(-4, 14, 8); return d;
+    },
+  },
+};
+
+const jeux = [];
+let actif = null, orient = null, zero = null;
+
+function creer(id, S){
+  const tel = document.getElementById(id), canvas = tel.querySelector('canvas');
+  const rendu = new THREE.WebGLRenderer({ canvas, antialias: true });
+  rendu.setPixelRatio(Math.min(devicePixelRatio, 2));
+  rendu.setClearColor(S.fond);
+  if (S.ombres){ rendu.shadowMap.enabled = true; rendu.shadowMap.type = THREE.PCFSoftShadowMap; }
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(S.fov, 1, 0.1, 100);
+  cam.position.set(...S.cam); cam.lookAt(0, 0, 0.6);
+  const lum = S.lumieres(scene); scene.add(lum);
+  if (S.ombres){ lum.castShadow = true; lum.shadow.mapSize.set(1024, 1024); Object.assign(lum.shadow.camera, { left: -8, right: 8, top: 8, bottom: -8 }); }
+
+  const pl = new THREE.Group(); scene.add(pl);
+  const P = (x, y) => [x - LARG / 2, y - HAUT / 2];
+  const fond = new THREE.Mesh(new THREE.BoxGeometry(LARG, 0.4, HAUT), S.plateau());
+  fond.position.y = -0.2; fond.receiveShadow = true; pl.add(fond);
+  const mcadre = S.cadre();
+  for (const [w, d, x, z] of [[LARG + 1, 0.5, 0, -HAUT / 2 - 0.25], [LARG + 1, 0.5, 0, HAUT / 2 + 0.25], [0.5, HAUT, -LARG / 2 - 0.25, 0], [0.5, HAUT, LARG / 2 + 0.25, 0]]){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 1.1, d), mcadre);
+    m.position.set(x, 0.05, z); m.castShadow = m.receiveShadow = true; pl.add(m);
+  }
+  MURS.forEach((w, i) => {
+    const [a, b, c, d] = BOITES[i];
+    const m = new THREE.Mesh(new THREE.BoxGeometry(c - a, 0.5, d - b), S.mur(i));
+    const [x, z] = P((a + c) / 2, (b + d) / 2); m.position.set(x, 0.25, z);
+    m.castShadow = m.receiveShadow = true; pl.add(m);
+  });
+  const mtrou = new THREE.MeshBasicMaterial({ color: S.trou }), mbord = new THREE.MeshPhongMaterial({ color: S.bord, specular: 0xffffff, shininess: 70, flatShading: true });
+  for (const [tx, ty] of TROUS){
+    const [x, z] = P(tx, ty);
+    const t = new THREE.Mesh(new THREE.CircleGeometry(TROU, 20), mtrou); t.rotation.x = -Math.PI / 2; t.position.set(x, 0.005, z); pl.add(t);
+    const b = new THREE.Mesh(new THREE.TorusGeometry(TROU + 0.03, 0.05, 6, 20), mbord); b.rotation.x = -Math.PI / 2; b.position.set(x, 0.01, z); pl.add(b);
+  }
+  {
+    const [x, z] = P(...ARRIVEE);
+    const a = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.02, 20), new THREE.MeshLambertMaterial({ color: S.arrivee }));
+    a.position.set(x, 0.01, z); pl.add(a);
+    const mat = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.4, 6), new THREE.MeshLambertMaterial({ color: 0x5b4a3a }));
+    mat.position.set(x + 0.35, 0.7, z - 0.1); mat.castShadow = true; pl.add(mat);
+    const flamme = new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.4, 0), new THREE.Vector3(-0.6, -0.2, 0)]),
+      new THREE.MeshLambertMaterial({ color: S.drapeau, side: THREE.DoubleSide }));
+    flamme.geometry.computeVertexNormals(); flamme.position.set(x + 0.33, 1.38, z - 0.1); flamme.castShadow = true; pl.add(flamme);
+  }
+  const bille = new THREE.Mesh(new THREE.IcosahedronGeometry(R, 1), S.bille());
+  bille.castShadow = true; pl.add(bille);
+  if (S.ombres){ lum.target = pl; }
+
+  const el = q => tel.querySelector(q);
+  const J = { tel, rendu, scene, cam, pl, bille, S, auto: true, x: 0, y: 0, vx: 0, vy: 0, px: 0, py: 0, chute: 0, chutes: 0, t: 0, fini: false, wp: 0,
+    eTemps: el('.temps'), eChutes: el('.chutes'), eMsg: el('.msg'), doigt: null };
+  J.reset = () => {
+    [J.x, J.y] = DEPART; J.vx = J.vy = 0; J.chute = 0; J.wp = 0;
+  };
+  J.nouvelle = () => { J.reset(); J.chutes = 0; J.t = 0; J.fini = false; J.msg(J.auto ? 'DEMO · TOUCHE POUR JOUER' : ''); };
+  J.msg = m => { J.eMsg.textContent = m; };
+  J.nouvelle();
+
+  tel.addEventListener('pointerdown', e => {
+    demanderCapteur();
+    if (actif !== J){ actif?.tel.classList.remove('actif'); actif = J; tel.classList.add('actif'); zero = null; }
+    if (J.auto || J.fini){ J.auto = false; J.nouvelle(); zero = null; }
+    J.doigt = { x: e.clientX, y: e.clientY }; tel.setPointerCapture(e.pointerId);
+  });
+  tel.addEventListener('pointermove', e => {
+    if (!J.doigt || orient) return;
+    J.px = Math.max(-1, Math.min(1, (e.clientX - J.doigt.x) / 70)) * PENTE_MAX;
+    J.py = Math.max(-1, Math.min(1, (e.clientY - J.doigt.y) / 70)) * PENTE_MAX;
+  });
+  const lacher = () => { J.doigt = null; if (!orient){ J.px = J.py = 0; } };
+  tel.addEventListener('pointerup', lacher); tel.addEventListener('pointercancel', lacher);
+
+  jeux.push(J);
+}
+
+// Inclinaison du téléphone (Android direct ; iOS demande la permission au premier toucher)
+let capteurDemande = false;
+function demanderCapteur(){
+  if (capteurDemande) return; capteurDemande = true;
+  const DOE = window.DeviceOrientationEvent;
+  if (DOE && typeof DOE.requestPermission === 'function') DOE.requestPermission().catch(() => {});
+}
+addEventListener('deviceorientation', e => {
+  if (e.beta == null || e.gamma == null) return;
+  orient = { b: e.beta, g: e.gamma };
+});
+
+function pente(J){
+  if (J.auto){
+    // Pilote de la démo : vise le point suivant du chemin
+    const [cx, cy] = CHEMIN[J.wp];
+    const dx = cx - J.x, dy = cy - J.y;
+    if (Math.hypot(dx, dy) < 0.4 && J.wp < CHEMIN.length - 1) J.wp++;
+    const cl = v => Math.max(-PENTE_MAX, Math.min(PENTE_MAX, v));
+    return [cl((dx * 2.2 - J.vx * 1.6) / G * 3), cl((dy * 2.2 - J.vy * 1.6) / G * 3)];
+  }
+  if (J === actif && orient){
+    if (!zero) zero = { ...orient };
+    const cl = v => Math.max(-PENTE_MAX, Math.min(PENTE_MAX, v));
+    return [cl((orient.g - zero.g) * Math.PI / 180), cl((orient.b - zero.b) * Math.PI / 180)];
+  }
+  return [J.px, J.py];
+}
+
+const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+
+function pas(J, dt){
+  const [tx, ty] = pente(J);
+  // Le plateau suit l'inclinaison en douceur
+  J.pl.rotation.z += (-tx - J.pl.rotation.z) * Math.min(1, dt * 10);
+  J.pl.rotation.x += (ty - J.pl.rotation.x) * Math.min(1, dt * 10);
+  const ax = -J.pl.rotation.z * G, ay = J.pl.rotation.x * G;
+
+  if (J.chute > 0){
+    J.chute += dt;
+    if (J.chute > 0.7){ J.reset(); }
+  } else if (!J.fini){
+    if (!J.auto) J.t += dt;
+    const n = 4, h = dt / n;
+    for (let k = 0; k < n; k++){
+      J.vx += ax * h; J.vy += ay * h;
+      const fr = Math.max(0, 1 - 0.9 * h); J.vx *= fr; J.vy *= fr;
+      J.x += J.vx * h; J.y += J.vy * h;
+      // Bords du plateau
+      if (J.x < R){ J.x = R; if (J.vx < 0) J.vx *= -0.3; }
+      if (J.x > LARG - R){ J.x = LARG - R; if (J.vx > 0) J.vx *= -0.3; }
+      if (J.y < R){ J.y = R; if (J.vy < 0) J.vy *= -0.3; }
+      if (J.y > HAUT - R){ J.y = HAUT - R; if (J.vy > 0) J.vy *= -0.3; }
+      // Murets
+      for (const [a, b, c, d] of BOITES){
+        const qx = Math.max(a, Math.min(c, J.x)), qy = Math.max(b, Math.min(d, J.y));
+        let nx = J.x - qx, ny = J.y - qy; const dd = Math.hypot(nx, ny);
+        if (dd < R && dd > 1e-6){
+          nx /= dd; ny /= dd; J.x = qx + nx * R; J.y = qy + ny * R;
+          const vn = J.vx * nx + J.vy * ny; if (vn < 0){ J.vx -= 1.3 * vn * nx; J.vy -= 1.3 * vn * ny; }
+        }
+      }
+    }
+    for (const [hx, hy] of TROUS){
+      if (Math.hypot(J.x - hx, J.y - hy) < TROU * 0.82){
+        J.chute = 0.001; J.x = hx; J.y = hy; J.vx = J.vy = 0;
+        if (!J.auto){ J.chutes++; J.msg('PLOUF ! ON REPART'); setTimeout(() => { if (!J.fini && !J.auto) J.msg(''); }, 1200); }
+        break;
+      }
+    }
+    if (Math.hypot(J.x - ARRIVEE[0], J.y - ARRIVEE[1]) < 0.4){
+      if (J.auto){ J.reset(); }
+      else { J.fini = true; J.vx = J.vy = 0; J.msg(`ARRIVEE EN ${fmt(J.t)} !\nTOUCHE POUR REJOUER`); }
+    }
+  }
+  // Bille : position, roulement, chute
+  const prof = J.chute > 0 ? Math.min(1, J.chute / 0.35) : 0;
+  J.bille.position.set(J.x - LARG / 2, R - prof * 0.9, J.y - HAUT / 2);
+  J.bille.scale.setScalar(1 - prof * 0.4);
+  const v = Math.hypot(J.vx, J.vy);
+  if (v > 1e-4) J.bille.rotateOnWorldAxis(new THREE.Vector3(J.vy / v, 0, -J.vx / v), v * dt / R);
+  J.eTemps.textContent = fmt(J.t);
+  J.eChutes.textContent = J.auto ? '' : `CHUTES ${J.chutes}`;
+}
+
+creer('telA', STYLES.A); creer('telB', STYLES.B); creer('telC', STYLES.C);
+for (const J of jeux) J.eMsg.style.whiteSpace = 'pre-line';
+
+function taille(){
+  for (const J of jeux){
+    const w = J.tel.clientWidth, h = J.tel.clientHeight;
+    J.rendu.setSize(w, h, false); J.cam.aspect = w / h; J.cam.updateProjectionMatrix();
+  }
+}
+addEventListener('resize', taille); taille();
+
+let avant = performance.now();
+function boucle(t){
+  const dt = Math.min(0.05, (t - avant) / 1000); avant = t;
+  for (const J of jeux){ pas(J, dt); J.rendu.render(J.scene, J.cam); }
+  requestAnimationFrame(boucle);
+}
+requestAnimationFrame(boucle);
+</script>
