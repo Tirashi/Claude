@@ -168,9 +168,10 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
   // même code que l'Arbre du jour de Lignée : C2-J + date aaaammjj en base 36
   const dayCode = (mode, d) => `${mode}2-J${(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()).toString(36).toUpperCase()}`;
   const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
-  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal", amai: "normal", pssize: 9};
+  const st = {game: "tetris", view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal", amai: "normal", pssize: 9, sdk: "9-2"};
   const TCMODES = [["classic", "CLASSIQUE"], ["arsenal", "ARSENAL"]], TCAI = [["easy", "FACILE"], ["normal", "NORMAL"], ["hard", "AMIRAL"]];
   const AMAI = [["easy", "MOUSSE"], ["normal", "CAPITAINE"], ["hard", "AMIRAL"]];
+  const SDK = [["4", "4×4"], ["6", "6×6"], ["9-1", "FACILE"], ["9-2", "MOYEN"], ["9-3", "DIFFICILE"]];
   const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
   const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
     day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -238,6 +239,13 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       {label: "PAR TAILLE", ctl: ["pssize"], game: "pontstellaire", board: () => "best:" + st.pssize, fmt: T,
        title: () => `PONT STELLAIRE · ${st.pssize}×${st.pssize}`, note: "Le meilleur temps, plus 30 secondes par indice."},
       {label: "CONSTELLATIONS", game: "pontstellaire", board: () => "ciels", fmt: v => N(v) + (v > 1 ? " ciels" : " ciel"), title: () => "CONSTELLATIONS DESSINEES"}]},
+    {id: "sudoku", name: "SUDOKU", play: "../sudoku/index.html", views: [
+      {label: "GRILLE DU JOUR", ctl: ["day"], game: "sudoku", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: T,
+       title: () => "SUDOKU · GRILLE DU JOUR", note: "La même grille 9×9 pour toute la famille (facile lundi et mardi, moyenne du mercredi au vendredi, difficile le week-end), plus 30 secondes par indice. Une seule tentative classée par jour.",
+       empty: () => st.back ? "Personne n'a rempli la grille ce jour-là." : "Personne n'a encore rempli la grille du jour : à toi de jouer !"},
+      {label: "PAR NIVEAU", ctl: ["sdk"], game: "sudoku", board: () => "best:" + st.sdk, fmt: T,
+       title: () => "SUDOKU · " + SDK.find(m => m[0] === st.sdk)[1], note: "Le meilleur temps, plus 30 secondes par indice."},
+      {label: "GRILLES", game: "sudoku", board: () => "grilles", fmt: v => N(v) + (v > 1 ? " grilles" : " grille"), title: () => "SUDOKU · GRILLES TERMINEES"}]},
     {id: "orbite", name: "ORBITE", play: "../orbite/index.html", views: [
       {label: "ETOILES", game: "orbite", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "ORBITE · TOTAL D'ETOILES",
        note: "3 étoiles par niveau réussi du premier coup, 2 au deuxième essai, 1 au troisième (90 au maximum)."}]},
@@ -253,6 +261,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     injagility: ["dog", "linear-gradient(#78bae7, #5fb548)"], touchecoule: ["boat", "linear-gradient(#2b6fd0, #0f1866)"],
     club: ["cup", "linear-gradient(#3f8a37, #173a1a)"], alunissage: ["lander", "linear-gradient(#0a0c1e, #2c2a28)"],
     nebula: ["../nebula/cartouche.jpg", "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)"],
+    sudoku: ["grid9", "linear-gradient(#3a1a4a, #12082a)"],
     pontstellaire: ["stars", "radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%)"],
     orbite: ["planet", "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)"], amiral: ["anchor", "linear-gradient(#1c579c, #0a1c40)"],
   };
@@ -301,6 +310,8 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
       if (c === "tcmode" || c === "tcai" || c === "amai"){ const r = document.createElement("div"); r.className = "chips";
         for (const [k, l] of c === "tcmode" ? TCMODES : c === "amai" ? AMAI : TCAI) r.appendChild(button(l, st[c] === k, () => { st[c] = k; view_(); }));
         box.appendChild(r); }
+      if (c === "sdk"){ const r = document.createElement("div"); r.className = "chips";
+        for (const [k, l] of SDK) r.appendChild(button(l, st.sdk === k, () => { st.sdk = k; view_(); })); box.appendChild(r); }
       if (c === "pssize"){ const r = document.createElement("div"); r.className = "chips";
         for (const n of [7, 9, 11]) r.appendChild(button(`${n}×${n}`, st.pssize === n, () => { st.pssize = n; view_(); })); box.appendChild(r); }
       if (c === "size"){ const r = document.createElement("div"); r.className = "chips";

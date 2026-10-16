@@ -92,6 +92,7 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
 .cart.club{--lb:linear-gradient(to bottom, #3f8a37, #173a1a); --lt:#ffd23f; --ld:#e4f7dc}
 .cart.amiral{--lb:linear-gradient(to bottom, #1c579c, #0a1c40); --lt:#ffd23f; --ld:#dcebff}
 .cart.alu{--lb:linear-gradient(to bottom, #0a0c1e, #2c2a28); --lt:#e8e4d8; --ld:#dfe5ff}
+.cart.sudoku{--lb:linear-gradient(to bottom, #3a1a4a, #12082a); --lt:#ffb8d0; --ld:#f2dcf0}
 .cart.pont{--lb:radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%); --lt:#ffd76a; --ld:#dfe5ff}
 .cart.nebula{--lb:radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%); --lt:#f2b24a; --ld:#d8dee8}
 .cart.orbite{--lb:radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%); --lt:#6fd8ff; --ld:#dfe5ff}
@@ -348,6 +349,15 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px
         <div class="tags"><span>LOGIQUE</span><span>32 BITS</span><span>CIEL DU JOUR</span></div>
       </div>
     </a>
+    <a class="cart sudoku" href="sudoku/index.html">
+      <span class="arrow" aria-hidden="true">▼</span>
+      <div class="label">
+        <canvas data-icon="grid9" width="16" height="16" aria-hidden="true"></canvas>
+        <h2>SUDOKU</h2>
+        <p>Un chiffre par ligne, par colonne et par bloc, sous la lune d'un jardin japonais. Notes au crayon et grille du jour.</p>
+        <div class="tags"><span>LOGIQUE</span><span>4×4 A 9×9</span><span>GRILLE DU JOUR</span></div>
+      </div>
+    </a>
     <a class="cart nebula" href="nebula/index.html">
       <span class="arrow" aria-hidden="true">▼</span>
       <div class="label">
@@ -426,6 +436,7 @@ LudoIcons.paint();
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte le badge NOUVEAU ou MIS A JOUR pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "sudoku/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "DU JOUR"]},
   "nebula/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["TACTIQUE", "ESPACE"]},
   "alunissage/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["ADRESSE", "ESPACE", "DU JOUR"]},
   "pont-stellaire/index.html": {added: "2026-10-12", updated: "2026-10-15", genres: ["LOGIQUE", "ESPACE", "DU JOUR"]},
@@ -444,6 +455,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-16", "Nouveau jeu : Sudoku, le jardin des chiffres. Grilles 4×4 et 6×6 pour débuter, 9×9 facile, moyen ou difficile, notes au crayon et grille du jour pour toute la famille."],
   ["2026-10-15", "Accueil : filtre EN COURS pour retrouver les parties commencées, et sur chaque cartouche ta partie en cours et ton record."],
   ["2026-10-15", "Défis du jour : dans Queens, Pont stellaire et Alunissage, seule la première tentative du jour est classée (la partie en cours se reprend au même temps)."],
   ["2026-10-15", "Queens : la grille du jour, la même pour toute la famille, de 5×5 le lundi à 9×9 le week-end, avec son classement."],
@@ -495,6 +507,8 @@ const PROGRESS = {
   "nebula/index.html": () => { const r = rk("nebula.run", null); return r && r.phase !== "end" && !r.training ? `SECTEUR ${r.sector || 1}` : null; },
   "club/index.html": () => { const g = rk("club.save", null); return g && g.week > 1 ? `SEMAINE ${g.week}` : null; },
   "queens/index.html": () => { const r = rk("queens16.dailyRun", null); return r && r.day === dayNum() ? "GRILLE DU JOUR" : null; },
+  "sudoku/index.html": () => { const d = rk("sudoku.dailyRun", null), g = rk("sudoku.game", null);
+    return d && d.day === dayNum() ? "GRILLE DU JOUR" : g && !g.daily ? "UNE GRILLE" : null; },
   "pont-stellaire/index.html": () => { const d = rk("pontstellaire.dailyRun", null), g = rk("pontstellaire.game", null);
     return d && d.day === dayNum() ? "CIEL DU JOUR" : g && !g.daily ? "UN CIEL" : null; },
   "lignee/index.html": () => { const today = dayNum().toString(36).toUpperCase(), cd = rk("lignee.curDaily", null), c = rk("lignee.cur", null);
@@ -517,10 +531,11 @@ const RECORD = {
   "club/index.html": () => { const g = rk("club.save", null), r = g ? Math.max(g.rep || 0, g.bestRep || 0) : 0; return r ? `REPUTATION ${r}` : null; },
   "orbite/index.html": () => { const n = sum(rk("orbite.stars", {})); return n ? `${n}/90 ETOILES` : null; },
   "pont-stellaire/index.html": () => { const n = Number(rk("pontstellaire.wins", 0)) || 0; return n ? plural(n, "CIEL") : null; },
+  "sudoku/index.html": () => { const n = Number(rk("sudoku.wins", 0)) || 0; return n ? plural(n, "GRILLE") : null; },
   "alunissage/index.html": () => rk("alunissage.best", 0) > 0 ? `RECORD ${rk("alunissage.best", 0)} PTS` : null,
   "nebula/index.html": () => rk("nebula.best", 0) > 0 ? `RECORD ${rk("nebula.best", 0)} PTS` : null,
 };
-const NICE = {"nebula/index.html": "Nebula", "club/index.html": "le Club", "queens/index.html": "Queens", "pont-stellaire/index.html": "Pont stellaire",
+const NICE = {"nebula/index.html": "Nebula", "club/index.html": "le Club", "queens/index.html": "Queens", "pont-stellaire/index.html": "Pont stellaire", "sudoku/index.html": "le Sudoku",
   "lignee/index.html": "Lignée", "picross/index.html": "Picross Dex", "solitaire/index.html": "le Solitaire"};
 const inProgress = c => { try { return (PROGRESS[c.dataset.k] || (() => null))(); } catch (e) { return null; } };
 function paintMine(){
@@ -691,6 +706,8 @@ function collectSaves(){
   if (al.b || al.s) g.alunissage = al;
   const ps = {b: readKey("pontstellaire.best", {}) || {}, d: readKey("pontstellaire.daily", {}) || {}, w: Number(readKey("pontstellaire.wins", 0)) || 0};
   if (ps.w || Object.keys(ps.b).length) g.pontstellaire = ps;
+  const su = {b: readKey("sudoku.best", {}) || {}, d: readKey("sudoku.daily", {}) || {}, w: Number(readKey("sudoku.wins", 0)) || 0};
+  if (su.w || Object.keys(su.b).length) g.sudoku = su;
   const nb = {b: Number(readKey("nebula.best", 0)) || 0, m: readKey("nebula.meta", null), d: readKey("nebula.daily", {}) || {}};
   if (nb.b || (nb.m && nb.m.games)) g.nebula = nb;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
@@ -711,6 +728,9 @@ function describeSaves(g){
   if (g.alunissage) out.push(`Alunissage : record ${g.alunissage.b || 0} points, ${g.alunissage.s || 0} site${g.alunissage.s > 1 ? "s" : ""} atteint${g.alunissage.s > 1 ? "s" : ""}`);
   if (g.pontstellaire){ const p = g.pontstellaire, b = Object.keys(p.b || {}).sort((x, y) => x - y).map(n => `${n}×${n} en ${fmtTime(p.b[n])}`);
     out.push(`Pont stellaire : ${p.w || 0} constellation${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
+  if (g.sudoku){ const p = g.sudoku, nm = {"4": "4×4", "6": "6×6", "9-1": "9×9 facile", "9-2": "9×9 moyen", "9-3": "9×9 difficile"};
+    const b = Object.keys(nm).filter(k => (p.b || {})[k] > 0).map(k => `${nm[k]} en ${fmtTime(p.b[k])}`);
+    out.push(`Sudoku : ${p.w || 0} grille${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
   if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
   if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
   return out;
@@ -814,6 +834,14 @@ function mergeSaves(g){
     const w = Number(readKey("pontstellaire.wins", 0)) || 0;
     if (p.w > w){ writeKey("pontstellaire.wins", Math.round(p.w)); n++; }
     if (n){ writeKey("pontstellaire.best", best); writeKey("pontstellaire.daily", daily); done.push(`Pont stellaire : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.sudoku && typeof g.sudoku === "object"){
+    const p = g.sudoku, best = readKey("sudoku.best", {}) || {}, daily = readKey("sudoku.daily", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(p.b || {})) if (/^(4|6|9-[123])$/.test(k) && v > 0 && !(best[k] > 0 && best[k] <= v)){ best[k] = Math.round(v); n++; }
+    for (const [k, v] of Object.entries(p.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] > 0 && daily[k] <= v)){ daily[k] = Math.round(v); n++; }
+    const w = Number(readKey("sudoku.wins", 0)) || 0;
+    if (p.w > w){ writeKey("sudoku.wins", Math.round(p.w)); n++; }
+    if (n){ writeKey("sudoku.best", best); writeKey("sudoku.daily", daily); done.push(`Sudoku : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.nebula && typeof g.nebula === "object"){
     const a = g.nebula; let n = 0;

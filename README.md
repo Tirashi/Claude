@@ -11,6 +11,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`amiral/index.html`](amiral/index.html) : **Amiral !**, une bataille navale tactique en 32 bits où chaque navire a un pouvoir (avion de reconnaissance, salve, torpille, plongée du sous-marin).
 - [`orbite/index.html`](orbite/index.html) : **Orbite**, un jeu de physique en 32 bits : lancer une sonde dont la trajectoire est courbée par la gravité des planètes pour atteindre une balise, en 30 niveaux.
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
+- [`sudoku/index.html`](sudoku/index.html) : **Sudoku**, le jardin des chiffres en 32 bits : grilles 4×4 et 6×6 pour débuter, 9×9 facile, moyen ou difficile, notes au crayon et grille du jour.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
@@ -143,6 +144,18 @@ Un puzzle de logique sur les règles du **Hashi**, dans un ciel étoilé en 32 b
 
 ---
 
+## Sudoku
+
+Le **Sudoku** classique, sous la lune d'un jardin japonais en 32 bits.
+
+- Chaque ligne, chaque colonne et chaque bloc contient une seule fois chaque chiffre.
+- **Commandes** : toucher une case, puis un chiffre en bas (retoucher le même chiffre l'enlève). Le **CRAYON** note les chiffres possibles dans une case ; ces notes s'effacent toutes seules quand le chiffre est posé ailleurs dans la ligne, la colonne ou le bloc. GOMME, ANNULER et INDICE (+30 secondes). Les chiffres du même genre que la case choisie sont surlignés, et les doublons apparaissent en rouge (réglage DOUBLONS au menu). Sur ordinateur : chiffres au clavier, flèches, N pour le crayon.
+- **Tailles et niveaux** : 4×4 et 6×6 pour débuter ; 9×9 **facile** (beaucoup de chiffres donnés), **moyen** (peu de chiffres, mais tout se trouve case par case) et **difficile** (il faut raisonner sur les notes : candidats bloqués et paires). Les grilles sont générées à l'infini et toujours **à solution unique**.
+- **Grille du jour** en 9×9, la même pour toute la famille : facile le lundi et le mardi, moyenne du mercredi au vendredi, difficile le week-end. **Une seule tentative classée**, sauvegardée à part avec son chrono ; une fois réussie, elle se rejoue hors classement.
+- La partie en cours (notes comprises) est sauvegardée et se reprend depuis l'écran titre. Les meilleurs temps et le nombre de grilles font partie du transfert de sauvegardes.
+
+---
+
 ## Nebula
 
 Rogue-lite tactique dans l'espace, vaisseaux en relief : trois secteurs pirates à traverser.
@@ -209,7 +222,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire, Alunissage, Nebula), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Pont stellaire, Sudoku, Alunissage, Nebula), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -227,6 +240,7 @@ Le bouton doré **Classements**, en haut du menu, ouvre la page [`classements/`]
 - **Alunissage** : la meilleure mission et la mission du jour.
 - **Nebula** : le meilleur score, la partie du jour (jour par jour) et le nombre de victoires.
 - **Pont stellaire** : le Ciel du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille (7×7, 9×9, 11×11, plus 30 secondes par indice) et le nombre de constellations dessinées.
+- **Sudoku** : la grille du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille et niveau (4×4, 6×6, 9×9 facile, moyen, difficile ; plus 30 secondes par indice) et le nombre de grilles terminées.
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).
 
