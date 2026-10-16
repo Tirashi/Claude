@@ -1,6 +1,6 @@
 # Racines — cahier des charges (idée du 16/10, à approfondir)
 
-Document de game design fourni par l'utilisateur le 16/10, recopié tel quel (§ 1 à 8). La section **« Adaptation à la Ludothèque »** à la fin le traduit dans les règles du dépôt ; à relire et à valider avec l'utilisateur avant de coder.
+Document de game design fourni par l'utilisateur le 16/10, recopié tel quel (§ 1 à 8). Il a été écrit **avant la création de la Ludothèque** : la section **« Adaptation à la Ludothèque »** (validée par l'utilisateur le 16/10) remplace ce qui ne colle pas au dépôt (Godot, React, OpenWeatherMap, applis iOS/Android). Les points encore ouverts sont dans **« Questions pour le brainstorming »**, à trancher avec l'utilisateur avant de coder.
 
 ---
 
@@ -108,7 +108,7 @@ Le jeu réussit s'il crée des **moments de partage**, pas des sessions de grind
 
 ---
 
-## Adaptation à la Ludothèque (proposition de Claude, à valider)
+## Adaptation à la Ludothèque (validée le 16/10)
 
 - **Technique** : pas de Godot ni de React : un jeu HTML **sans build** dans `racines/`, canvas comme les autres jeux, règles en logique pure dans `racines/regles.js` (croisements, gènes, croissance), testables sous Node. Installé dans l'appli PWA existante, donc Android et ordinateur ; iOS par le navigateur.
 - **Temps réel** : la croissance se calcule à l'ouverture à partir de l'heure enregistrée (pas besoin que le jeu tourne). Pas de triche à craindre (pas de classement), mais ignorer une heure qui recule.
@@ -121,4 +121,40 @@ Le jeu réussit s'il crée des **moments de partage**, pas des sessions de grind
 - **Pas de classement** (voulu) : le volet de l'accueil montre l'herbier (espèces découvertes) au lieu d'un classement.
 - **Direction artistique** : aquarelle pastel, une rupture avec le pixel art ; à juger sur une **maquette de 2 ou 3 variantes** d'abord (règle « maquette d'abord »). Musique générative : reprendre le principe de `nebula/sons.js` (synthèse, sans fichiers), en version douce.
 - **Ampleur** : 🔴 gros. Découpage proposé : (1) maquette du style, (2) M1 prototype jouable avec la vraie croissance et les croisements, (3) M2 météo et musique, (4) M3 partage, dont le SQL Supabase, (5) M4 journal, mode nuit, photos.
-- **Questions à poser** : combien d'emplacements de plantes au départ, et comment le jardin s'agrandit-il (serre réparée, nouvelles îles) ? Quel est le but à long terme : compléter l'herbier, le journal ? Le jeu est-il pensé aussi pour les enfants (lecture, noms des espèces) ?
+- **Intégration** : suivre la liste de contrôle de `specs/ludotheque.md` (accueil : `GAMES`, icône, `META`, `NEWS`, volet ; transfert de sauvegarde `LUDO1-` ; `sw.js` ; docs ; artefact). Sauvegarde `localStorage` préfixée `racines.`.
+
+## Questions pour le brainstorming (à trancher par l'utilisateur)
+
+**Public et but**
+1. Pour qui d'abord : toute la famille, les adultes, les enfants (lecture, noms des espèces, textes courts) ?
+2. Le but à long terme : compléter l'herbier, lire tout le journal de l'ancien propriétaire, agrandir l'île… ou pas de fin du tout ?
+3. Combien de temps par jour vise-t-on (5 minutes, comme dans le document) et combien de visites par jour (1, 2, 3) ?
+
+**Jardin et plantes**
+4. Combien d'emplacements au départ, et comment le jardin s'agrandit-il (serre réparée, nouvelles parcelles, nouvelles îles reliées par des ponts) ?
+5. Combien d'espèces de base au départ, et combien d'espèces au total (herbier) ?
+6. Les gènes : lesquels sont visibles (couleur, forme, parfum, taille…) et combien de valeurs chacun ? Les hybrides suivent-ils des règles qu'on peut deviner (comme une vraie génétique simple) ou sont-ils une surprise ?
+7. Comment obtient-on de nouvelles graines : récolte sur une plante fleurie, météo (graines de givre), cadeaux, découvertes ?
+8. Que fait-on d'une plante fleurie : la garder pour toujours, la récolter, la replanter ? Le jardin finit-il par être plein ?
+9. Quels soins au-delà de l'arrosage (engrais, taille, tuteur) ? Garder l'arrosage seul pour rester zen ?
+10. Les durées de pousse (2 à 6 h, 6 à 48 h) conviennent-elles, ou plus court pour les enfants ?
+
+**Temps réel et météo**
+11. Météo de quelle ville : choisie une fois, ou la position du téléphone ?
+12. Les saisons réelles changent-elles le décor et les espèces disponibles (graines de printemps, d'automne) ?
+13. Un mode nuit automatique selon l'heure, ou au choix ?
+14. Faut-il des notifications plus tard (demande un serveur d'envoi), ou le message à l'ouverture suffit-il ?
+
+**Partage en famille**
+15. Ordre des fonctions de partage : d'abord le cadeau de graine par code (sans serveur), puis les visites et l'herbier familial (SQL Supabase) ?
+16. Visites : voir le jardin d'un proche en lecture seule, ou pouvoir arroser chez lui ? Le « caillou peint » : un dessin à faire au doigt, ou des cailloux tout prêts à choisir ?
+17. Herbier familial : afficher qui a découvert chaque espèce en premier ? (c'est un petit classement déguisé : à garder ou non ?)
+18. Utiliser le même pseudo et le même compte que les classements de la Ludothèque (code de compte `LUDOCOMPTE-`) ?
+
+**Style et sons**
+19. Aquarelle pastel, d'accord pour une rupture avec le pixel art du reste de la Ludothèque ? Maquette de 2 ou 3 variantes (par exemple aquarelle douce, aquarelle à contours encrés, pastel en aplats).
+20. Vue : l'île entière en un écran (téléphone en portrait ?) ou une île qu'on fait défiler ?
+21. Musique générative : toujours présente, ou seulement des sons d'ambiance (vent, oiseaux, pluie selon la météo) ?
+
+**Histoire**
+22. Le journal de l'ancien propriétaire : combien de pages, qui l'écrit (Claude propose, l'utilisateur relit) ? Une fin à l'histoire (qui était l'ancien propriétaire ?) ?
