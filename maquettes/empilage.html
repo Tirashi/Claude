@@ -1,0 +1,329 @@
+<title>Empilage, maquette</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Audiowide&family=Fredoka:wght@400;600;700&family=Press+Start+2P&display=swap">
+<style>
+/* Mise en page : trois téléphones côte à côte (empilés sur un téléphone), chacun jouable, avec sa fiche dessous. */
+:root{
+  --fond:#15172b; --fond2:#1d2040; --texte:#ecebf7; --doux:#a9a8c8; --accent:#ffc98a; --cadre:#090a14;
+  --f-titre:'Fredoka', system-ui, sans-serif; --f-texte:'Fredoka', system-ui, sans-serif;
+  --f-pixel:'Press Start 2P', monospace; --f-neon:'Audiowide', system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--f-texte);font-size:16px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header h1{font-family:var(--f-titre);font-weight:700;font-size:clamp(28px,6vw,40px);margin:0;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--doux);max-width:62ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:32px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.tel{position:relative;width:100%;max-width:300px;aspect-ratio:9/19;border:9px solid var(--cadre);border-radius:34px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.45);touch-action:manipulation;user-select:none;-webkit-user-select:none;cursor:pointer}
+.ciel,.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tel.pixel canvas{image-rendering:pixelated}
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:26px 12px 30px;text-align:center}
+.score{font-size:54px;line-height:1}
+.record{font-size:12px;opacity:.85;margin-top:6px}
+.msg{font-size:14px;min-height:2.6em}
+.bonus{position:absolute;left:0;right:0;top:38%;text-align:center;font-size:22px;opacity:0;transition:opacity .25s,transform .4s;pointer-events:none}
+.bonus.vu{opacity:1;transform:translateY(-14px)}
+/* HUD propre à chaque direction */
+.a .hud,.a .bonus{font-family:var(--f-titre);font-weight:700;color:#fff;text-shadow:0 2px 0 rgba(120,90,160,.35)}
+.b .hud,.b .bonus{font-family:var(--f-pixel);color:#ffe14d;text-shadow:3px 3px 0 #000}
+.b .score{font-size:34px} .b .msg{font-size:9px;line-height:1.8} .b .record{font-size:8px} .b .bonus{font-size:13px}
+.c .hud,.c .bonus{font-family:var(--f-neon);color:#7ff6ff;text-shadow:0 0 8px #00e5ff,0 0 18px rgba(0,229,255,.6)}
+.c .bonus{color:#ff8cf0;text-shadow:0 0 8px #ff3ce0}
+.fiche{width:100%;max-width:340px}
+.fiche h2{margin:0;font-size:22px;font-weight:700}
+.fiche h2 span{display:inline-block;min-width:1.6em;color:var(--accent)}
+.fiche p{margin:4px 0 8px;color:var(--doux)}
+.fiche ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:3px;font-size:15px}
+.commun{background:var(--fond2);border-radius:16px;padding:18px 20px;max-width:760px}
+.commun h2{margin:0 0 8px;font-size:20px}
+.commun ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.commun p{margin:10px 0 0;color:var(--accent);font-weight:600}
+@media (prefers-reduced-motion:reduce){.bonus{transition:none}}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Empilage, trois directions</h1>
+    <p>Chaque téléphone est jouable. Il tourne d'abord tout seul ; touche l'écran pour prendre la main, puis touche pour lâcher chaque bloc. Ce qui dépasse tombe ; un bloc posé pile garde sa taille.</p>
+  </header>
+
+  <div class="grille">
+    <div class="dir">
+      <div class="tel a" id="telA"><div class="ciel"></div><canvas></canvas><div class="bonus"></div>
+        <div class="hud"><div><div class="score">0</div><div class="record"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>A</span>Pastel, vers la nuit</h2>
+        <p>Le low poly doux prévu dans les idées.</p>
+        <ul><li>Blocs aux couleurs de bonbon qui glissent d'une teinte à l'autre</li>
+          <li>Nuages en facettes ; le ciel passe du matin au coucher de soleil puis à la nuit étoilée</li>
+          <li>Chiffres ronds (police Fredoka, déjà dans le dépôt)</li></ul></div>
+    </div>
+
+    <div class="dir">
+      <div class="tel b pixel" id="telB"><div class="ciel"></div><canvas></canvas><div class="bonus"></div>
+        <div class="hud"><div><div class="score">0</div><div class="record"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>B</span>Rétro 32 bits</h2>
+        <p>La 3D façon PlayStation 1 : rendu en basse résolution, agrandi sans lissage.</p>
+        <ul><li>Petite île avec ses sapins au départ, blocs aux couleurs de jouet</li>
+          <li>Ciel en bandes : bleu, orange, puis l'espace avec ses étoiles en pixels</li>
+          <li>Textes en Press Start 2P, comme le reste de la Ludothèque</li></ul></div>
+    </div>
+
+    <div class="dir">
+      <div class="tel c" id="telC"><div class="ciel"></div><canvas></canvas><div class="bonus"></div>
+        <div class="hud"><div><div class="score">0</div><div class="record"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>C</span>Néon dans l'espace</h2>
+        <p>Une tour de verre sombre aux arêtes lumineuses, qui monte parmi les étoiles.</p>
+        <ul><li>Arêtes qui passent du cyan au violet puis au rose</li>
+          <li>Sol quadrillé, planète à anneaux qui tourne au loin</li>
+          <li>Va bien avec Nebula, Orbite et Alunissage</li></ul></div>
+    </div>
+  </div>
+
+  <section class="commun">
+    <h2>Commun aux trois</h2>
+    <ul>
+      <li>Trois poses parfaites d'affilée : le bloc regrandit un peu.</li>
+      <li>Les blocs vont un peu plus vite à mesure que la tour monte ; à la fin, la caméra recule pour montrer toute la tour.</li>
+      <li>Dans le vrai jeu : classement du record, et une tour du jour (mêmes vitesses pour toute la famille, une tentative classée).</li>
+      <li>Three.js copié dans le dépôt (script classique, pas de build).</li>
+    </ul>
+    <p>Dis-moi A, B ou C, ou un mélange (par exemple les couleurs de A avec le rendu en pixels de B).</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const H = 0.5, BASE = 3, PORTEE = 3.6, TOL = 0.1;
+const col = c => new THREE.Color(c);
+const hsl = (h, s, l) => new THREE.Color().setHSL(((h % 1) + 1) % 1, s, l);
+
+// Ciel : liste de [hauteur, couleur du haut, couleur du bas]
+function cielA(stops, y){
+  let i = 0; while (i < stops.length - 2 && y > stops[i + 1][0]) i++;
+  const [y0, h0, b0] = stops[i], [y1, h1, b1] = stops[i + 1];
+  const t = Math.min(1, Math.max(0, (y - y0) / (y1 - y0)));
+  return [col(h0).lerp(col(h1), t), col(b0).lerp(col(b1), t)];
+}
+function etoiles(n, taille, couleur, ymin, ymax){
+  const p = [];
+  for (let k = 0; k < n; k++){
+    const a = Math.random() * Math.PI * 2, r = 25 + Math.random() * 20;
+    p.push(Math.cos(a) * r - 15, ymin + Math.random() * (ymax - ymin), Math.sin(a) * r - 15);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  return new THREE.Points(g, new THREE.PointsMaterial({ color: couleur, size: taille, sizeAttenuation: false, transparent: true }));
+}
+
+const STYLES = {
+  A: {
+    pixel: 1,
+    ciel: [[0, '#9fd8ff', '#fff1e6'], [12, '#ffb7c5', '#ffe3b3'], [24, '#8e7cc3', '#f7a8b8'], [36, '#22265a', '#6b5b95'], [50, '#0b0d26', '#262a5c']],
+    degrade: (h, b) => `linear-gradient(#${h.getHexString()},#${b.getHexString()})`,
+    bloc(w, h, d, i){
+      return new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshLambertMaterial({ color: i < 0 ? col('#f3d9c4') : hsl(0.55 + i * 0.035, 0.6, 0.74) }));
+    },
+    eclat: '#ffffff',
+    decor(scene){
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xcdb8ff, 0.85));
+      const sol = new THREE.DirectionalLight(0xffffff, 0.55); sol.position.set(4, 10, 2); scene.add(sol);
+      const nuages = [], blanc = new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true });
+      for (let k = 0; k < 14; k++){
+        const g = new THREE.Group();
+        for (let j = 0; j < 4; j++){
+          const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5 + Math.random() * 0.5, 0), blanc);
+          m.position.set(j * 0.75 - 1.1, Math.random() * 0.3, Math.random() * 0.4); g.add(m);
+        }
+        const z = -7 - Math.random() * 4; g.position.set(z - 8 + Math.random() * 16, 1 + k * 3.2, z);
+        g.userData.v = 0.2 + Math.random() * 0.3; nuages.push(g); scene.add(g);
+      }
+      const ciel = etoiles(260, 2, 0xffffff, 28, 140); scene.add(ciel);
+      return (y, dt) => {
+        for (const n of nuages){ n.position.x += n.userData.v * dt; if (n.position.x - n.position.z > 8) n.position.x = n.position.z - 8; }
+        ciel.material.opacity = Math.min(1, Math.max(0, (y - 26) / 12));
+      };
+    }
+  },
+  B: {
+    pixel: 3, socle: 0.6,
+    ciel: [[0, '#2f7fe0', '#9fd4ff'], [14, '#e8743a', '#ffd06b'], [26, '#3a1d5c', '#c04a5a'], [38, '#05050f', '#1a1240']],
+    // Ciel en quatre bandes nettes
+    degrade(h, b){
+      const s = [];
+      for (let k = 0; k < 4; k++){ const c = '#' + h.clone().lerp(b, k / 3).getHexString(); s.push(`${c} ${k * 25}%`, `${c} ${(k + 1) * 25}%`); }
+      return `linear-gradient(${s.join(',')})`;
+    },
+    bloc(w, h, d, i){
+      const pal = ['#e83b3b', '#f7a531', '#f5e04a', '#4fc35a', '#3aa0e8', '#8f55e0'];
+      return new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshLambertMaterial({ color: i < 0 ? col('#9a9aa8') : col(pal[i % pal.length]) }));
+    },
+    eclat: '#ffe14d',
+    decor(scene){
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+      const sol = new THREE.DirectionalLight(0xffffff, 0.75); sol.position.set(5, 9, 2); scene.add(sol);
+      const herbe = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, 0.5, 7), new THREE.MeshLambertMaterial({ color: 0x4fae3a, flatShading: true }));
+      herbe.position.y = -0.55; scene.add(herbe);
+      const terre = new THREE.Mesh(new THREE.ConeGeometry(4.2, 4, 7), new THREE.MeshLambertMaterial({ color: 0x8a5a2b, flatShading: true }));
+      terre.rotation.x = Math.PI; terre.position.y = -2.8; scene.add(terre);
+      for (const [x, z] of [[-3, 1.6], [2.2, -2.9], [-1.6, -3.2], [3.1, 1.2]]){
+        const sapin = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.4, 5), new THREE.MeshLambertMaterial({ color: 0x1f7a3a, flatShading: true }));
+        sapin.position.set(x, 0.4, z); scene.add(sapin);
+      }
+      const soleil = new THREE.Mesh(new THREE.IcosahedronGeometry(1.4, 0), new THREE.MeshBasicMaterial({ color: 0xfff27a }));
+      soleil.position.set(-9, 9, -12); scene.add(soleil);
+      const ciel = etoiles(160, 1, 0xffffff, 24, 140); scene.add(ciel);
+      return (y) => { ciel.material.opacity = Math.min(1, Math.max(0, (y - 22) / 10)); };
+    }
+  },
+  C: {
+    pixel: 1,
+    ciel: [[0, '#0b1030', '#101a3e'], [20, '#140a33', '#0b1030'], [40, '#04020c', '#0d0624']],
+    degrade: (h, b) => `linear-gradient(#${h.getHexString()},#${b.getHexString()})`,
+    bloc(w, h, d, i){
+      const t = i < 0 ? 0.52 : 0.5 + i * 0.022;
+      const g = new THREE.BoxGeometry(w, h, d);
+      const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: hsl(t, 0.6, 0.09) }));
+      m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: hsl(t, 1, 0.62) })));
+      return m;
+    },
+    eclat: '#ff6cf0',
+    decor(scene){
+      const grille = new THREE.GridHelper(40, 40, 0x00e5ff, 0x1a2a66); grille.position.y = -0.25; scene.add(grille);
+      const ciel = etoiles(400, 1.6, 0xbfe9ff, -2, 160); scene.add(ciel);
+      const planete = new THREE.Group();
+      planete.add(new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 1), new THREE.MeshBasicMaterial({ color: 0x3a1d6e, wireframe: true })));
+      const anneau = new THREE.Mesh(new THREE.RingGeometry(3, 3.6, 40), new THREE.MeshBasicMaterial({ color: 0xff6cf0, side: THREE.DoubleSide, transparent: true, opacity: 0.55 }));
+      anneau.rotation.x = 1.2; planete.add(anneau);
+      planete.position.set(-10, 6, -10); scene.add(planete);
+      return (y, dt) => { planete.rotation.y += dt * 0.25; planete.position.y = 6 + y * 0.7; };
+    }
+  }
+};
+
+function jeu(el, S){
+  const canvas = el.querySelector('canvas'), ciel = el.querySelector('.ciel');
+  const eScore = el.querySelector('.score'), eRec = el.querySelector('.record'), eMsg = el.querySelector('.msg'), eBonus = el.querySelector('.bonus');
+  const rendu = new THREE.WebGLRenderer({ canvas, antialias: S.pixel === 1, alpha: true });
+  rendu.setPixelRatio(S.pixel === 1 ? Math.min(devicePixelRatio, 2) : 1);
+  const scene = new THREE.Scene();
+  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+  const majDecor = S.decor(scene);
+  let couches = [], cur = null, chutes = [], eclats = [], score = 0, record = 0, parfaits = 0;
+  let fini = false, auto = true, camY = 0, vue = 6.5, attente = 0, aspect = 0.5;
+
+  function taille(){
+    const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
+    aspect = w / h;
+    rendu.setSize(Math.round(w / S.pixel), Math.round(h / S.pixel), false);
+  }
+  new ResizeObserver(taille).observe(el); taille();
+
+  function jeter(o){ scene.remove(o); o.traverse(x => { if (x.geometry) x.geometry.dispose(); }); }
+  function poser(c){ c.mesh.position.set(c.x, c.y, c.z); }
+
+  function remise(){
+    couches.forEach(c => jeter(c.mesh)); chutes.forEach(c => jeter(c.mesh));
+    if (cur) jeter(cur.mesh);
+    couches = []; chutes = []; score = 0; parfaits = 0; fini = false; cur = null;
+    const hs = S.socle || 10, socle = { x: 0, y: 0, z: 0, w: BASE, d: BASE, mesh: S.bloc(BASE, hs, BASE, -1) };
+    socle.mesh.position.set(0, -hs / 2 + H / 2, 0); scene.add(socle.mesh);
+    couches.push(socle); nouveau(); affiche();
+  }
+  function nouveau(){
+    const p = couches[couches.length - 1], i = couches.length;
+    cur = { x: p.x, z: p.z, w: p.w, d: p.d, y: i * H, i, axe: i % 2 ? 'x' : 'z', o: -PORTEE, sens: 1,
+      vit: Math.min(6, 2.6 + i * 0.06), err: Math.random() < 0.4 ? 0 : (Math.random() - 0.5) * 0.45 };
+    cur.mesh = S.bloc(cur.w, H, cur.d, i); scene.add(cur.mesh); placeCur();
+  }
+  function placeCur(){ const p = couches[couches.length - 1]; cur[cur.axe] = p[cur.axe] + cur.o; poser(cur); }
+
+  function lacher(){
+    const p = couches[couches.length - 1], a = cur.axe, tk = a === 'x' ? 'w' : 'd';
+    let delta = cur[a] - p[a];
+    if (Math.abs(delta) < TOL){
+      delta = 0; parfaits++;
+      cur[a] = p[a];
+      if (parfaits >= 3){ cur.w = Math.min(BASE, cur.w + 0.2); cur.d = Math.min(BASE, cur.d + 0.2); }
+      eclat(cur); bonus(parfaits >= 3 ? 'PARFAIT x' + parfaits : 'PARFAIT');
+    } else parfaits = 0;
+    const reste = cur[tk] - Math.abs(delta);
+    if (reste <= 0){ chutes.push({ mesh: cur.mesh, vy: 0, rot: (Math.random() - 0.5) * 3 }); cur = null; perdu(); return; }
+    jeter(cur.mesh);
+    if (delta !== 0){
+      const s = Math.sign(delta), c = cur[a] - delta / 2;
+      const bout = { x: cur.x, z: cur.z, w: cur.w, d: cur.d };
+      bout[tk] = Math.abs(delta); bout[a] = c + s * (reste / 2 + Math.abs(delta) / 2);
+      const m = S.bloc(bout.w, H, bout.d, cur.i); m.position.set(bout.x, cur.y, bout.z); scene.add(m);
+      chutes.push({ mesh: m, vy: 0, rot: s * (1.5 + Math.random()), axe: a });
+      cur[a] = c; cur[tk] = reste;
+    }
+    cur.mesh = S.bloc(cur.w, H, cur.d, cur.i); scene.add(cur.mesh); poser(cur);
+    couches.push(cur); score++; if (!auto) record = Math.max(record, score);
+    nouveau(); affiche();
+  }
+  function perdu(){ fini = true; attente = 0; affiche(); }
+
+  function eclat(c){
+    const g = new THREE.EdgesGeometry(new THREE.BoxGeometry(c.w, H, c.d));
+    const m = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: S.eclat, transparent: true }));
+    m.position.set(c.x, c.y, c.z); scene.add(m); eclats.push({ mesh: m, t: 0 });
+  }
+  let minuteur;
+  function bonus(t){ eBonus.textContent = t; eBonus.classList.add('vu'); clearTimeout(minuteur); minuteur = setTimeout(() => eBonus.classList.remove('vu'), 650); }
+  function affiche(){
+    eScore.textContent = score;
+    eRec.textContent = record ? 'RECORD ' + record : '';
+    eMsg.textContent = auto ? 'DEMO - TOUCHE POUR JOUER' : fini ? 'PERDU - TOUCHE POUR REJOUER' : score === 0 ? 'TOUCHE POUR LACHER LE BLOC' : '';
+  }
+
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (auto){ auto = false; remise(); return; }
+    if (fini){ remise(); return; }
+    if (cur) lacher();
+  });
+
+  let avant = performance.now();
+  function boucle(t){
+    const dt = Math.min(0.05, (t - avant) / 1000); avant = t;
+    if (cur && !fini){
+      const o0 = cur.o;
+      cur.o += cur.sens * cur.vit * dt;
+      if (cur.o > PORTEE){ cur.o = PORTEE; cur.sens = -1; }
+      if (cur.o < -PORTEE){ cur.o = -PORTEE; cur.sens = 1; }
+      if (auto && (o0 - cur.err) * (cur.o - cur.err) <= 0){ cur.o = cur.err; placeCur(); lacher(); }
+      else placeCur();
+    }
+    if (auto && fini && (attente += dt) > 1.6) remise();
+    for (const c of chutes){
+      c.vy -= 14 * dt; c.mesh.position.y += c.vy * dt;
+      if (c.axe === 'x') c.mesh.rotation.z -= c.rot * dt; else c.mesh.rotation.x += c.rot * dt;
+    }
+    chutes = chutes.filter(c => { if (c.mesh.position.y < camY - 25){ jeter(c.mesh); return false; } return true; });
+    for (const e of eclats){ e.t += dt; const k = 1 + e.t * 1.6; e.mesh.scale.set(k, 1, k); e.mesh.material.opacity = Math.max(0, 1 - e.t * 2.2); }
+    eclats = eclats.filter(e => { if (e.t > 0.5){ jeter(e.mesh); return false; } return true; });
+
+    // Caméra : suit le sommet ; recule pour montrer la tour quand c'est perdu
+    const haut = couches.length * H;
+    const cibleY = fini ? haut / 2 - 1 : haut - 1.2, cibleV = fini ? Math.max(6.5, haut * 0.55 + 2.5) : 6.5;
+    camY += (cibleY - camY) * Math.min(1, dt * 3); vue += (cibleV - vue) * Math.min(1, dt * 2.5);
+    cam.left = -vue * aspect; cam.right = vue * aspect; cam.top = vue; cam.bottom = -vue; cam.updateProjectionMatrix();
+    cam.position.set(10, camY + 8, 10); cam.lookAt(0, camY, 0);
+
+    majDecor(camY, dt);
+    const [h, b] = cielA(S.ciel, camY);
+    ciel.style.background = S.degrade(h, b);
+    rendu.render(scene, cam);
+    requestAnimationFrame(boucle);
+  }
+  remise();
+  requestAnimationFrame(boucle);
+}
+
+jeu(document.getElementById('telA'), STYLES.A);
+jeu(document.getElementById('telB'), STYLES.B);
+jeu(document.getElementById('telC'), STYLES.C);
+</script>
