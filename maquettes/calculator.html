@@ -1,0 +1,332 @@
+<meta charset="utf-8">
+<title>Calculator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Patrick+Hand&family=Schoolbell&family=Rubik:ital,wght@0,500;0,700;1,800&display=swap">
+<style>
+/* Planche de maquette : trois directions (A arcade 16 bits, B cahier d'écolier, C calculatrice de poche), chacune en trois écrans de téléphone : réglages, partie, résultats. Fond neutre unique, chaque téléphone porte sa propre ambiance. */
+:root {
+  --page: #17181d; --page-2: #22242b; --page-text: #eceae4; --page-dim: #9a9aa6; --page-accent: #ffd23f;
+  --f-page: "Rubik", system-ui, sans-serif;
+  /* A — arcade */
+  --a-bg: #10122b; --a-panel: #1d2150; --a-line: #3a3f8f; --a-yellow: #ffd23f; --a-cyan: #4fd6e8; --a-red: #ff4d6d; --a-green: #6be675; --a-text: #f2f0ff;
+  --f-pixel: "Press Start 2P", "Courier New", monospace;
+  /* B — cahier */
+  --b-paper: #fbf8f0; --b-line: #c7d5ee; --b-line-2: #9db4dd; --b-margin: #e0525a; --b-ink: #1f3b8f; --b-pencil: #4a4a52; --b-star: #f5b301; --b-ok: #2f9e44;
+  --f-hand: "Patrick Hand", "Comic Sans MS", cursive; --f-title: "Schoolbell", "Comic Sans MS", cursive;
+  /* C — calculatrice */
+  --c-body: #2b2d31; --c-body-2: #3a3d43; --c-lcd: #c4d0a8; --c-lcd-ink: #1d2418; --c-ghost: rgba(29,36,24,.08); --c-key: #e9e5da; --c-key-ink: #2b2d31; --c-op: #e8783a; --c-ok: #4caf6a; --c-label: #b8b8be;
+  --f-calc: "Rubik", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--page-text); font-family: var(--f-page); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 56px; }
+.wrap { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+header h1 { margin: 0; font-family: var(--f-calc); font-style: italic; font-weight: 800; font-size: clamp(32px, 8vw, 52px); letter-spacing: 1px; color: var(--page-accent); }
+header p { margin: 6px 0 0; color: var(--page-dim); max-width: 62ch; }
+section.dir { display: flex; flex-direction: column; gap: 14px; }
+.dir-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.dir-head .lettre { font-weight: 700; font-size: 26px; color: var(--page-accent); }
+.dir-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.dir-head p { margin: 0; color: var(--page-dim); flex-basis: 100%; max-width: 70ch; }
+.phones { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+.phone-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.phone-col .cap { font-size: 13px; color: var(--page-dim); text-transform: uppercase; letter-spacing: .08em; }
+.phone { width: 290px; max-width: 100%; height: 590px; border-radius: 30px; border: 8px solid #050507; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--page-accent); outline-offset: 2px; }
+
+/* ---------- A : arcade 16 bits ---------- */
+.A { background: var(--a-bg); color: var(--a-text); font-family: var(--f-pixel); font-size: 9px; line-height: 1.6; padding: 18px 14px; gap: 12px;
+  background-image: linear-gradient(rgba(255,255,255,.03) 50%, transparent 50%); background-size: 100% 4px; }
+.A .logo { text-align: center; font-size: 19px; color: var(--a-yellow); text-shadow: 3px 3px 0 var(--a-red), 6px 6px 0 #000; letter-spacing: 1px; margin: 8px 0 4px; }
+.A .sub { text-align: center; color: var(--a-cyan); font-size: 8px; }
+.A .box { background: var(--a-panel); border: 3px solid var(--a-text); box-shadow: 0 0 0 3px #000, 4px 4px 0 3px #000; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.A .box h3 { margin: 0; font-size: 9px; color: var(--a-yellow); font-weight: 400; }
+.A .ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.A .op { height: 40px; background: var(--a-bg); color: var(--a-line); border: 3px solid var(--a-line); font-family: var(--f-pixel); font-size: 18px; }
+.A .op.on { color: var(--a-bg); background: var(--a-cyan); border-color: var(--a-text); }
+.A .lvl { display: flex; flex-direction: column; gap: 3px; }
+.A .lvl div { display: flex; justify-content: space-between; padding: 3px 4px; color: #a7a9d8; }
+.A .lvl div.on { color: var(--a-text); background: var(--a-line); }
+.A .lvl div.on::before { content: "▶"; color: var(--a-yellow); margin-right: 4px; }
+.A .lvl div span:last-child { color: var(--a-cyan); }
+.A .modes { display: flex; gap: 6px; }
+.A .modes span { flex: 1; text-align: center; padding: 6px 2px; border: 2px solid var(--a-line); color: #a7a9d8; font-size: 7px; }
+.A .modes span.on { border-color: var(--a-yellow); color: var(--a-yellow); }
+.A .go { margin-top: auto; height: 46px; background: var(--a-red); color: var(--a-text); border: 3px solid var(--a-text); box-shadow: 0 5px 0 #000; font-family: var(--f-pixel); font-size: 13px; }
+.A .hud { display: flex; justify-content: space-between; color: var(--a-yellow); }
+.A .bar { height: 10px; border: 2px solid var(--a-text); background: var(--a-bg); }
+.A .bar i { display: block; height: 100%; width: 35%; background: var(--a-green); }
+.A .screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.A .q { font-size: 26px; color: var(--a-text); text-shadow: 3px 3px 0 #000; }
+.A .ans { min-width: 120px; padding: 10px; text-align: center; font-size: 24px; color: var(--a-yellow); border: 3px solid var(--a-text); background: #000; }
+.A .msg { height: 12px; font-size: 9px; }
+.A .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.A .pad button { height: 44px; background: var(--a-panel); color: var(--a-text); border: 3px solid var(--a-line); box-shadow: 0 4px 0 #000; font-family: var(--f-pixel); font-size: 15px; }
+.A .pad button:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
+.A .pad .ok { background: var(--a-green); color: var(--a-bg); }
+.A .pad .del { color: var(--a-red); }
+.A .big { text-align: center; font-size: 22px; color: var(--a-yellow); }
+.A .stars { text-align: center; font-size: 26px; color: var(--a-yellow); letter-spacing: 6px; }
+.A .stars .off { color: var(--a-line); }
+.A .rows div { display: flex; justify-content: space-between; }
+.A .rows .rec { color: var(--a-green); }
+.A .miss div { color: var(--a-red); }
+.A .miss div b { color: var(--a-text); font-weight: 400; }
+
+/* ---------- B : cahier d'écolier ---------- */
+.B { background-color: var(--b-paper); color: var(--b-ink); font-family: var(--f-hand); font-size: 18px; line-height: 1.2; padding: 16px 14px 16px 44px; gap: 10px;
+  background-image: linear-gradient(90deg, transparent 34px, var(--b-margin) 34px, var(--b-margin) 36px, transparent 36px),
+    linear-gradient(var(--b-line-2) 1px, transparent 1px), linear-gradient(var(--b-line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 32px, 100% 8px; }
+.B .titre { font-family: var(--f-title); font-size: 32px; color: var(--b-margin); transform: rotate(-2deg); margin: 4px 0 0; }
+.B .date { font-size: 15px; color: var(--b-pencil); margin-top: -6px; }
+.B h3 { margin: 4px 0 0; font-size: 18px; font-weight: 400; text-decoration: underline; text-decoration-color: var(--b-margin); text-underline-offset: 3px; }
+.B .ops { display: flex; gap: 8px; }
+.B .op { width: 46px; height: 46px; border-radius: 50% 46% 52% 48%; border: 2px solid var(--b-ink); background: transparent; color: var(--b-ink); font-family: var(--f-hand); font-size: 28px; line-height: 1; }
+.B .op.on { background: #ffe58a; box-shadow: 2px 2px 0 var(--b-ink); }
+.B .lvl { display: flex; flex-direction: column; gap: 2px; font-size: 17px; }
+.B .lvl div { display: flex; gap: 8px; align-items: center; color: var(--b-pencil); }
+.B .lvl div::before { content: ""; width: 14px; height: 14px; border: 2px solid currentColor; border-radius: 3px; flex: none; }
+.B .lvl div.on { color: var(--b-ink); }
+.B .lvl div.on::before { background: var(--b-ink); box-shadow: inset 0 0 0 2px var(--b-paper); }
+.B .lvl small { margin-left: auto; font-size: 15px; color: var(--b-pencil); }
+.B .modes { display: flex; flex-direction: column; gap: 2px; font-size: 17px; }
+.B .modes .on { background: linear-gradient(transparent 55%, #ffe58a 55%); width: fit-content; }
+.B .go { margin-top: auto; align-self: center; padding: 6px 30px; background: var(--b-ok); color: #fff; border: none; border-radius: 12px 16px 10px 18px; font-family: var(--f-title); font-size: 24px; box-shadow: 2px 3px 0 var(--b-ink); }
+.B .hud { display: flex; justify-content: space-between; font-size: 17px; color: var(--b-pencil); }
+.B .hud b { color: var(--b-ink); font-weight: 400; }
+.B .screen { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding-left: 4px; }
+.B .q { font-size: 46px; line-height: 1; }
+.B .q .eq { color: var(--b-pencil); }
+.B .ans { font-size: 46px; line-height: 1; min-width: 90px; border-bottom: 2px dashed var(--b-pencil); padding: 0 6px; width: fit-content; min-height: 50px; }
+.B .msg { min-height: 24px; font-family: var(--f-title); font-size: 20px; }
+.B .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.B .pad button { height: 44px; background: rgba(255,255,255,.7); color: var(--b-ink); border: 2px solid var(--b-ink); border-radius: 10px 14px 12px 8px; font-family: var(--f-hand); font-size: 24px; }
+.B .pad .ok { background: var(--b-ok); color: #fff; border-color: var(--b-ok); }
+.B .pad .del { color: var(--b-margin); }
+.B .note { align-self: center; font-family: var(--f-title); font-size: 46px; color: var(--b-margin); transform: rotate(-6deg); border: 3px solid var(--b-margin); border-radius: 50%; padding: 4px 18px; margin-top: 8px; }
+.B .gommettes { display: flex; gap: 8px; justify-content: center; }
+.B .gommettes span { width: 40px; height: 40px; display: grid; place-items: center; font-size: 30px; color: var(--b-star); filter: drop-shadow(1px 1px 0 var(--b-ink)); }
+.B .gommettes span.off { color: var(--b-line-2); filter: none; }
+.B .rows { font-size: 17px; }
+.B .rows .rec { color: var(--b-ok); }
+.B .faux { font-size: 17px; }
+.B .faux s { color: var(--b-margin); }
+.B .faux b { color: var(--b-ok); font-weight: 400; }
+
+/* ---------- C : calculatrice de poche ---------- */
+.C { background: linear-gradient(160deg, var(--c-body-2), var(--c-body) 40%); color: var(--c-label); font-family: var(--f-calc); padding: 16px 14px; gap: 10px; }
+.C .top { display: flex; justify-content: space-between; align-items: center; }
+.C .brand { font-style: italic; font-weight: 800; font-size: 17px; letter-spacing: 1px; color: var(--c-label); }
+.C .solar { display: flex; gap: 2px; padding: 3px; background: #1a1612; border-radius: 3px; }
+.C .solar i { width: 16px; height: 12px; background: linear-gradient(135deg, #5a3a2a, #2a1a12); }
+.C .lcd { background: var(--c-lcd); border-radius: 6px; box-shadow: inset 0 3px 8px rgba(0,0,0,.35), 0 0 0 4px #15161a; padding: 8px 10px; color: var(--c-lcd-ink); display: flex; flex-direction: column; gap: 4px; }
+.C .lcd .small { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; letter-spacing: .05em; }
+.C .lcd .line { display: flex; justify-content: flex-end; align-items: center; gap: 4px; min-height: 36px; }
+.C .lcd .line.big { min-height: 48px; }
+.C .opsym { font-size: 26px; font-weight: 700; padding: 0 2px; }
+.C svg.seg { display: block; }
+.C .cfg { display: flex; flex-direction: column; gap: 8px; font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+.C .row { display: flex; gap: 6px; }
+.C .k { flex: 1; height: 42px; border: none; border-radius: 8px; background: var(--c-key); color: var(--c-key-ink); font-family: var(--f-calc); font-weight: 700; font-size: 20px; box-shadow: 0 3px 0 #8c887e; }
+.C .k.op { background: var(--c-op); color: #fff; box-shadow: 0 3px 0 #9a4a1e; }
+.C .k.off { background: #4a4d55; color: #8a8d96; box-shadow: 0 3px 0 #1f2024; }
+.C .k.sm { font-size: 12px; height: 36px; letter-spacing: .04em; }
+.C .k.ok { background: var(--c-ok); color: #fff; box-shadow: 0 3px 0 #2c6b3e; }
+.C .k:active { transform: translateY(2px); box-shadow: 0 1px 0 #8c887e; }
+.C .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: auto; }
+.C .pad .k { height: 46px; }
+.C .lvlpips { display: flex; gap: 4px; }
+.C .lvlpips i { flex: 1; height: 8px; border-radius: 2px; background: #4a4d55; }
+.C .lvlpips i.on { background: var(--c-op); }
+.C .lvlname { color: #fff; text-transform: none; font-size: 14px; letter-spacing: 0; }
+.C .tape { background: #f4f1e8; color: #2b2d31; border-radius: 2px; padding: 10px 12px; font-family: "Courier New", monospace; font-size: 13px; line-height: 1.5;
+  mask-image: linear-gradient(transparent, #000 6px); -webkit-mask-image: linear-gradient(transparent, #000 6px);
+  background-image: radial-gradient(circle at 6px 100%, var(--c-body) 5px, transparent 5.5px); background-size: 12px 8px; background-repeat: repeat-x; background-position: bottom; padding-bottom: 14px; }
+.C .tape .r { display: flex; justify-content: space-between; }
+.C .tape .x { color: #c0392b; }
+.C .tape hr { border: none; border-top: 1px dashed #999; margin: 4px 0; }
+.C .stars { font-size: 26px; color: var(--c-op); text-align: center; letter-spacing: 6px; }
+.C .stars .off { color: #4a4d55; }
+
+.notes { background: var(--page-2); border-radius: 10px; padding: 14px 16px; color: var(--page-dim); font-size: 14px; }
+.notes b { color: var(--page-text); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Calculator</h1>
+    <p>Maquette de style : trois directions, chacune en trois écrans (réglages, partie, résultats). Sur l'écran de partie, le pavé marche : tapez la réponse puis OK pour passer au calcul suivant.</p>
+  </header>
+
+  <!-- ===================== A ===================== -->
+  <section class="dir">
+    <div class="dir-head"><span class="lettre">A</span><h2>Arcade 16 bits</h2>
+      <p>Dans la lignée de la ludothèque : police pixel, cadres blancs, chrono et barre de progression comme une borne d'arcade. Textes en majuscules sans accent.</p></div>
+    <div class="phones">
+      <div class="phone-col"><div class="phone A">
+        <div class="logo">CALCULATOR</div>
+        <div class="sub">RECORD 0:58 - NIVEAU 2</div>
+        <div class="box"><h3>OPERATIONS</h3>
+          <div class="ops"><button class="op on">+</button><button class="op on">-</button><button class="op on">×</button><button class="op">÷</button></div></div>
+        <div class="box"><h3>NIVEAU</h3>
+          <div class="lvl"><div><span>1 PETIT ECOLIER</span><span>7+2</span></div><div class="on"><span>2 ECOLIER</span><span>8×7</span></div><div><span>3 COLLEGE</span><span>45+27</span></div><div><span>4 COSTAUD</span><span>34×12</span></div><div><span>5 CHAMPION</span><span>-8×15</span></div></div></div>
+        <div class="box"><h3>MODE</h3>
+          <div class="modes"><span class="on">SERIE 20</span><span>60 SEC</span><span>DU JOUR</span></div></div>
+        <button class="go">JOUER</button>
+      </div><span class="cap">Réglages</span></div>
+
+      <div class="phone-col"><div class="phone A" data-jeu="A">
+        <div class="hud"><span>CALCUL <b class="num">7</b>/20</span><span>⏱ 0:42</span></div>
+        <div class="bar"><i></i></div>
+        <div class="screen"><div class="q"></div><div class="ans"></div><div class="msg"></div></div>
+        <div class="pad"></div>
+      </div><span class="cap">Partie (essayez le pavé)</span></div>
+
+      <div class="phone-col"><div class="phone A">
+        <div class="logo" style="font-size:15px">BRAVO !</div>
+        <div class="stars">★★<span class="off">★</span></div>
+        <div class="big">1:12</div>
+        <div class="box rows"><div><span>BONNES</span><span>18/20</span></div><div><span>PENALITE</span><span>+10 S</span></div><div class="rec"><span>RECORD</span><span>0:58</span></div></div>
+        <div class="box miss"><h3>A REVOIR</h3><div><span>8 × 7 = <b>56</b></span><span>(54)</span></div><div><span>9 × 6 = <b>54</b></span><span>(56)</span></div></div>
+        <button class="go">REJOUER</button>
+      </div><span class="cap">Résultats</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== B ===================== -->
+  <section class="dir">
+    <div class="dir-head"><span class="lettre">B</span><h2>Cahier d'écolier</h2>
+      <p>Une page de cahier à grands carreaux (lignes Seyès, marge rouge), écriture à la main, note entourée au stylo rouge et gommettes étoiles. Rassurant pour les petits, sourire pour les grands.</p></div>
+    <div class="phones">
+      <div class="phone-col"><div class="phone B">
+        <div class="titre">Calculator</div>
+        <div class="date">vendredi 16 octobre</div>
+        <h3>Je choisis mes calculs</h3>
+        <div class="ops"><button class="op on">+</button><button class="op on">−</button><button class="op on">×</button><button class="op">÷</button></div>
+        <h3>Mon niveau</h3>
+        <div class="lvl"><div>Petit écolier <small>7 + 2</small></div><div class="on">Écolier <small>8 × 7</small></div><div>Collège <small>45 + 27</small></div><div>Costaud <small>34 × 12</small></div><div>Champion <small>−8 × 15</small></div></div>
+        <h3>Mon exercice</h3>
+        <div class="modes"><span class="on">Série de 20 calculs</span><span>Contre la montre (1 min)</span><span>Calcul du jour</span></div>
+        <button class="go">C'est parti !</button>
+      </div><span class="cap">Réglages</span></div>
+
+      <div class="phone-col"><div class="phone B" data-jeu="B">
+        <div class="hud"><span>calcul <b class="num">7</b> sur 20</span><span>⏱ <b>0:42</b></span></div>
+        <div class="screen"><div class="q"></div><div class="ans"></div><div class="msg"></div></div>
+        <div class="pad"></div>
+      </div><span class="cap">Partie (essayez le pavé)</span></div>
+
+      <div class="phone-col"><div class="phone B">
+        <div class="titre">Bravo !</div>
+        <div class="note">18/20</div>
+        <div class="gommettes"><span>★</span><span>★</span><span class="off">★</span></div>
+        <div class="rows">Temps : 1 min 12 s<br>(dont 10 s de pénalité)<br><span class="rec">Mon record : 58 s</span></div>
+        <h3>Je corrige</h3>
+        <div class="faux">8 × 7 = <s>54</s> <b>56</b><br>9 × 6 = <s>56</s> <b>54</b></div>
+        <button class="go">Encore !</button>
+      </div><span class="cap">Résultats</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== C ===================== -->
+  <section class="dir">
+    <div class="dir-head"><span class="lettre">C</span><h2>Calculatrice de poche</h2>
+      <p>Le téléphone devient une calculatrice des années 80 : écran à cristaux liquides avec chiffres à 7 segments (les segments éteints se devinent), touches en plastique, cellule solaire. Les résultats sortent sur un ticket de caisse.</p></div>
+    <div class="phones">
+      <div class="phone-col"><div class="phone C">
+        <div class="top"><span class="brand">CALCULATOR</span><span class="solar"><i></i><i></i><i></i><i></i></span></div>
+        <div class="lcd"><div class="small"><span>RECORD</span><span>NIV 2</span></div><div class="line big" data-seg="58"></div></div>
+        <div class="cfg">Opérations
+          <div class="row"><button class="k op">+</button><button class="k op">−</button><button class="k op">×</button><button class="k off">÷</button></div></div>
+        <div class="cfg">Niveau · <span class="lvlname">Écolier (8 × 7)</span>
+          <div class="lvlpips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+          <div class="row"><button class="k sm">◀</button><button class="k sm">▶</button></div></div>
+        <div class="cfg">Mode
+          <div class="row"><button class="k sm op">SÉRIE 20</button><button class="k sm">60 S</button><button class="k sm">DU JOUR</button></div></div>
+        <div class="row" style="margin-top:auto"><button class="k ok">ON · JOUER</button></div>
+      </div><span class="cap">Réglages</span></div>
+
+      <div class="phone-col"><div class="phone C" data-jeu="C">
+        <div class="top"><span class="brand">CALCULATOR</span><span class="solar"><i></i><i></i><i></i><i></i></span></div>
+        <div class="lcd"><div class="small"><span>N° <b class="num">7</b>/20</span><span class="msg">⏱ 0:42</span></div>
+          <div class="line q"></div><div class="line big ans"></div></div>
+        <div class="pad"></div>
+      </div><span class="cap">Partie (essayez le pavé)</span></div>
+
+      <div class="phone-col"><div class="phone C">
+        <div class="top"><span class="brand">CALCULATOR</span><span class="solar"><i></i><i></i><i></i><i></i></span></div>
+        <div class="lcd"><div class="small"><span>TEMPS</span><span>18/20</span></div><div class="line big" data-seg="1-12"></div></div>
+        <div class="stars">★★<span class="off">★</span></div>
+        <div class="tape">
+          <div class="r"><span>SERIE 20 · NIV 2</span><span>16/10</span></div><hr>
+          <div class="r"><span>BONNES</span><span>18</span></div>
+          <div class="r"><span>PENALITE</span><span>+10 S</span></div>
+          <div class="r"><span>RECORD</span><span>0:58</span></div><hr>
+          <div class="r x"><span>8 × 7 = 54 ✗</span><span>56</span></div>
+          <div class="r x"><span>9 × 6 = 56 ✗</span><span>54</span></div>
+        </div>
+        <div class="row" style="margin-top:auto"><button class="k ok">REJOUER</button></div>
+      </div><span class="cap">Résultats</span></div>
+    </div>
+  </section>
+
+  <div class="notes"><b>Commun aux trois :</b> grand pavé numérique (pas de clavier du téléphone), vert et petit son si c'est juste, la bonne réponse affichée une seconde si c'est faux, étoiles et liste des calculs à revoir à la fin. <b>Choix à faire :</b> A, B ou C (ou un mélange).</div>
+</div>
+
+<script>
+const QUIZ = [{ q: ["8", "×", "7"], r: 56 }, { q: ["45", "+", "27"], r: 72 }, { q: ["63", "÷", "9"], r: 7 }, { q: ["91", "−", "38"], r: 53 }, { q: ["6", "×", "9"], r: 54 }];
+const SEGS = { 0: "abcdef", 1: "bc", 2: "abged", 3: "abgcd", 4: "fgbc", 5: "afgcd", 6: "afgedc", 7: "abc", 8: "abcdefg", 9: "abcdfg", "-": "g", " ": "", "?": "abge" };
+const GEO = { a: [3, 0, 14, 3], b: [17, 3, 3, 14], c: [17, 19, 3, 14], d: [3, 33, 14, 3], e: [0, 19, 3, 14], f: [0, 3, 3, 14], g: [3, 16.5, 14, 3] };
+function seg(txt, h) {
+  const w = h * 20 / 36;
+  return [...String(txt)].map(ch => {
+    const on = SEGS[ch] ?? "";
+    const rects = Object.entries(GEO).map(([k, [x, y, rw, rh]]) =>
+      `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" rx="1.2" fill="${on.includes(k) ? "var(--c-lcd-ink)" : "var(--c-ghost)"}"/>`).join("");
+    return `<svg class="seg" width="${w}" height="${h}" viewBox="-1 -1 22 38">${rects}</svg>`;
+  }).join("");
+}
+document.querySelectorAll("[data-seg]").forEach(el => el.innerHTML = seg(el.dataset.seg, 40));
+
+document.querySelectorAll("[data-jeu]").forEach(ph => {
+  const style = ph.dataset.jeu, qEl = ph.querySelector(".q"), aEl = ph.querySelector(".ans"), mEl = ph.querySelector(".msg"), nEl = ph.querySelector(".num"), pad = ph.querySelector(".pad");
+  let i = 0, n = 7, val = "", busy = false;
+  const keyCls = style === "C" ? "k" : "";
+  pad.innerHTML = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "←", "0", "OK"].map(k =>
+    `<button class="${keyCls} ${k === "OK" ? "ok" : k === "←" ? "del" + (style === "C" ? " op" : "") : ""}" data-k="${k}">${k}</button>`).join("");
+  function draw(mark) {
+    const c = QUIZ[i];
+    if (style === "C") {
+      qEl.innerHTML = c.q.map(p => /\d/.test(p) ? seg(p, 28) : `<span class="opsym">${p}</span>`).join("") + `<span class="opsym">=</span>`;
+      aEl.innerHTML = seg(val || "?", 40);
+    } else {
+      qEl.innerHTML = c.q.join(" ") + ' <span class="eq">=</span>';
+      aEl.textContent = val || (style === "A" ? "_" : "");
+    }
+    nEl.textContent = n;
+    if (style !== "C") {
+      mEl.textContent = mark === "ok" ? (style === "A" ? "BIEN JOUE !" : "Bravo !") : mark === "ko" ? (style === "A" ? "C'ETAIT " + c.r : "C'était " + c.r) : "";
+      mEl.style.color = mark === "ok" ? (style === "A" ? "var(--a-green)" : "var(--b-ok)") : (style === "A" ? "var(--a-red)" : "var(--b-margin)");
+    } else {
+      mEl.textContent = mark === "ok" ? "✓ JUSTE" : mark === "ko" ? "✗ " + c.r : "⏱ 0:42";
+    }
+    aEl.style.color = mark === "ok" ? (style === "A" ? "var(--a-green)" : style === "B" ? "var(--b-ok)" : "") : mark === "ko" ? (style === "A" ? "var(--a-red)" : style === "B" ? "var(--b-margin)" : "") : "";
+  }
+  pad.addEventListener("click", e => {
+    const k = e.target.closest("button")?.dataset.k; if (!k || busy) return;
+    if (k === "←") val = val.slice(0, -1);
+    else if (k === "OK") {
+      if (!val) return;
+      const ok = +val === QUIZ[i].r; busy = true; draw(ok ? "ok" : "ko");
+      setTimeout(() => { i = (i + 1) % QUIZ.length; n = n % 20 + 1; val = ""; busy = false; draw(); }, ok ? 600 : 1100);
+      return;
+    } else if (val.length < 4) val += k;
+    draw();
+  });
+  draw();
+});
+</script>
