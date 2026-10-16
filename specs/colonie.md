@@ -147,8 +147,13 @@ Les menaces s'annoncent quand c'est possible (la tour de guet, le ciel, la rivi�
 
 ## 13. Questions encore ouvertes
 - **Système de recherche** (décision du 16/10 : pas de plans à trouver sur l'île) : **un arbre de recherche** (choix de l'utilisateur) qui débloque les plans des bâtiments avec des **points de recherche** ; **obtenus (choix du 16/10, solution « mélange »)** : l'essentiel vient d'un **bâtiment de savoir** (école, puis bibliothèque) où l'on place des colons comme à un poste (un colon qui étudie ne produit rien d'autre ; un colon au talent « érudit » produit plus de points) ; s'y ajoutent des **bonus** d'exploration et de grandes étapes (lieu découvert, ruines, premier hiver traversé, 20 colons…). Contenu de l'arbre et bâtiments de départ choisis le 16/10 : voir § 12, étape 2.
-- Commerce avec des bateaux marchands (le port) : utile ou de trop ?
-- Faut-il un objectif par année (« avoir 20 colons à la fin de l'an 2 ») pour guider les débutants ?
+- ~~Commerce avec des bateaux marchands~~ : **non** (décision du 16/10).
+- ~~Objectif par année~~ : **non, plutôt un petit tutoriel** pour guider les débutants (décision du 16/10).
+
+## 14. Retours de partie sur l'étape 2 (16/10, environ 3 ans joués) — à corriger à l'étape 3
+- **Trop peu de nouveaux colons** : 2 arrivées seulement en 3 ans, et 2 départs faute de vêtements. Trouver un moyen pour que des colons arrivent **plus souvent** (pas de bateaux marchands) et rééquilibrer avec le pilote automatique.
+- **Vêtements trop longs à débloquer** : il faut beaucoup de points de recherche pour pouvoir en fabriquer, alors qu'ils sont vitaux dès le premier hiver. **Revoir cette partie de l'arbre** (coût, place dans l'arbre, ou une solution de départ pour se vêtir).
+- **Petit tutoriel** à ajouter (premiers tours guidés).
 
 ## Artefact
 Publier la colonie au lien de l'ancienne Île (décision du 16/10) : https://claude.ai/artifact/9AnNRRCCBu4pgYh35UwrPb
