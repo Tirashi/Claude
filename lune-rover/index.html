@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lune-Rover</title>
+<meta name="description" content="Lune-Rover : programme ton petit robot pour ramasser les cristaux de la Lune.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#08080f">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+html, body { margin: 0; height: 100%; background: #05050b; overflow: hidden; }
+body { display: flex; justify-content: center; align-items: flex-start; touch-action: manipulation;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#cv { display: block; touch-action: none; }
+</style>
+</head>
+<body>
+<canvas id="cv" width="272" height="480" aria-label="Lune-Rover : programmer un robot lunaire"></canvas>
+<script src="../ludo-scores.js"></script>
+<script src="regles.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   LUNE-ROVER : on écrit à l'avance le programme du rover (avancer, tourner,
+   sauter, ramasser, fonction F1, répétitions, conditions), puis GO : il
+   l'exécute pas à pas. Il faut ramasser tous les cristaux.
+   - Règles et niveaux : regles.js (ROVER_LEVELS, roverRun…).
+   - 3 étoiles si le programme n'est pas plus long que la solution de
+     référence, 2 jusqu'à 2 instructions de plus, 1 sinon.
+   - Classement familial : le total d'étoiles (lunerover / etoiles).
+   L'écran est dessiné en 272×480 pixels logiques puis agrandi sans lissage.
+   ===================================================================== */
+const LW = 272, LH = 480, TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace';
+const OUT = '#0c0a12';
+const GX = 8, GY = 34, GW = 256, GH = 216;          // zone de la carte
+const LEVELS = ROVER_LEVELS;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const now = () => performance.now();
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem('lunerover.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('lunerover.' + k, JSON.stringify(v)); } catch (e) {} },
+};
+
+/* =========================================================
+   AUDIO (petits bruitages WebAudio)
+   ========================================================= */
+const AC = { ctx: null, out: null, on: store.get('sfx', true) };
+function audioInit() {
+  if (AC.ctx) { if (AC.ctx.state === 'suspended') AC.ctx.resume(); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  AC.ctx = new Ctx(); AC.out = AC.ctx.createGain(); AC.out.gain.value = .5; AC.out.connect(AC.ctx.destination);
+}
+function tone(f, d, type = 'square', vol = .2, slide = 0, delay = 0) {
+  if (!AC.on || !AC.ctx) return;
+  const t = AC.ctx.currentTime + delay, o = AC.ctx.createOscillator(), g = AC.ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+  o.connect(g); g.connect(AC.out); o.start(t); o.stop(t + d + .02);
+}
+function noise(d, vol = .3, delay = 0) {
+  if (!AC.on || !AC.ctx) return;
+  const t = AC.ctx.currentTime + delay, n = Math.floor(AC.ctx.sampleRate * d), b = AC.ctx.createBuffer(1, n, AC.ctx.sampleRate), c = b.getChannelData(0);
+  for (let i = 0; i < n; i++) c[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const s = AC.ctx.createBufferSource(), g = AC.ctx.createGain(), f = AC.ctx.createBiquadFilter();
+  f.type = 'lowpass'; f.frequency.value = 800; s.buffer = b; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(AC.out); s.start(t);
+}
+const SFX = {
+  click: () => tone(660, .05, 'square', .1),
+  put: () => tone(520, .06, 'square', .1, 200),
+  del: () => tone(300, .08, 'square', .1, -120),
+  move: () => tone(140, .07, 'triangle', .12),
+  turn: () => tone(240, .05, 'triangle', .1, 60),
+  jump: () => tone(260, .25, 'square', .1, 500),
+  pick: () => { tone(988, .08, 'square', .12); tone(1319, .14, 'square', .1, 0, .07); },
+  crash: () => { noise(.4, .45); tone(110, .3, 'square', .14, -60); },
+  fall: () => tone(520, .7, 'triangle', .22, -470),
+  fail: () => tone(260, .4, 'triangle', .18, -140),
+  win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .18, 'square', .14, 0, i * .09)),
+  star: i => tone(880 + i * 220, .12, 'triangle', .2),
+};
+
+/* =========================================================
+   GRAPHISMES : sprites pixel par pixel, contour sombre automatique
+   ========================================================= */
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function sprite(map, pal, s = 1, outline = OUT) {
+  const w = map[0].length, h = map.length, [c, g] = mk(w * s + 2, h * s + 2);
+  map.forEach((row, y) => [...row].forEach((ch, x) => { if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(1 + x * s, 1 + y * s, s, s); } }));
+  if (!outline) return c;
+  const [c2, g2] = mk(c.width, c.height);
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) g2.drawImage(c, dx, dy);
+  g2.globalCompositeOperation = 'source-in'; g2.fillStyle = outline; g2.fillRect(0, 0, c.width, c.height);
+  g2.globalCompositeOperation = 'source-over'; g2.drawImage(c, 0, 0);
+  return c2;
+}
+const ROVER_MAP = [
+  '....kkkkk....', '...kwwwwwk...', '...kwBbBwk...', '....kkkkk....', 'kkk..kwk..kkk', 'kddkkkwkkkddk', 'kddkwwwwwkddk',
+  'kkkkwyyywkkkk', '.k.kwggwwk.k.', 'kkkkbbbbbkkkk', 'kddkbBbBbkddk', 'kddkbbbbbkddk', 'kkk.kkkkk.kkk'];
+const ROVER_PAL = { k: '#1a1622', w: '#e8eef6', g: '#a8b0c0', b: '#2f5fc8', B: '#8fb8ff', y: '#ffd23f', d: '#6a6672' };
+const GEM_MAP = ['...w...', '..wcc..', '.wcccC.', 'wccCCCd', '.cCCCd.', '..CCd..', '...d...'];
+const GEM_PAL = { w: '#ffffff', c: '#9ff6ff', C: '#3ad0f0', d: '#1a6aa0' };
+const ICON = {
+  A: ['....w....', '...www...', '..wwwww..', '.wwwwwww.', '...www...', '...www...', '...www...', '...www...'],
+  G: ['..w......', '.ww......', 'wwwwwww..', '.ww...ww.', '..w....ww', '.......ww', '.......ww', '.......ww'],
+  S: ['..wwww...', '.w....w..', 'w......w.', 'w.....www', 'w......w.', 'w........', '.........', 'www...www'],
+  R: ['....w....', '...www...', '..wwwww..', '.wwwwwww.', '..wwwww..', '...www...', '....w....', '.........'],
+};
+ICON.D = ICON.G.map(r => [...r].reverse().join(''));
+const OPC = { A: ['#5fd37a', '#2a7a44'], G: ['#6f93ff', '#2a3f9a'], D: ['#6f93ff', '#2a3f9a'], S: ['#ffaa4a', '#a2541a'], R: ['#5ae6f2', '#1a7a8a'], F: ['#b07aff', '#5a2ea0'] };
+const OPNAME = { A: 'AVANCER', G: 'TOURNER A GAUCHE', D: 'TOURNER A DROITE', S: 'SAUTER', R: 'RAMASSER', F: 'APPELER F1' };
+const CONDC = { c: '#5ae6f2', l: '#5fd37a', o: '#ffaa4a', b: '#ff5a5a' };
+const CONDW = { c: 'SUR UN CRISTAL', l: 'VOIE LIBRE', o: 'CRATERE DEVANT', b: 'BLOQUE DEVANT' };
+const CONDI = {
+  c: ['..w..', '.www.', 'wwwww', '.www.', '..w..'],
+  l: ['.w...', '.ww..', '.www.', '.ww..', '.w...'],
+  o: ['.www.', 'w...w', 'w...w', 'w...w', '.www.'],
+  b: ['wwwww', 'w.w.w', 'wwwww', 'w.w.w', 'wwwww'],
+};
+const INF = ['.ww.ww.', 'w..w..w', 'w..w..w', '.ww.ww.'];
+let SP = null;
+function buildSprites() {
+  SP = { rover: [sprite(ROVER_MAP, ROVER_PAL, 1), sprite(ROVER_MAP, ROVER_PAL, 2)], gem: [sprite(GEM_MAP, GEM_PAL, 1), sprite(GEM_MAP, GEM_PAL, 2)], icon: {}, cond: {}, inf: sprite(INF, { w: '#ffffff' }, 1) };
+  for (const k in ICON) SP.icon[k] = sprite(ICON[k], { w: '#ffffff' }, 1);
+  for (const k in CONDI) SP.cond[k] = sprite(CONDI[k], { w: CONDC[k] }, 1);
+  SP.sky = buildSky(); SP.earth = sphere(15, [['#ffffff', '#9fd3ff', '#3f7fd8', '#24508c', '#132a50'], ['#e8ffd0', '#7ad06a', '#3a9a4c', '#246a3a', '#163a28']], 9);
+  SP.moon = sphere(46, [['#f4f0e8', '#cdc7bc', '#a39e95', '#77736c', '#4a4744']], 3, true);
+}
+// sphère ombrée (lumière en haut à gauche), avec continents (2 palettes) ou cratères
+function sphere(r, pals, seed, craters) {
+  const W = r * 2 + 3, [c, g] = mk(W, W), img = g.createImageData(W, W), rand = rnd(seed * 31 + r);
+  const blobs = []; for (let i = 0; i < 8; i++) blobs.push([(rand() * 2 - 1) * r, (rand() * 2 - 1) * r, r * (.2 + rand() * .3)]);
+  const L = [-.55, -.65, .52], n = Math.hypot(...L);
+  for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+    const d2 = x * x + y * y; if (d2 > r * r) continue;
+    const nx = x / r, ny = y / r, nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+    let l = (nx * L[0] + ny * L[1] + nz * L[2]) / n + (((x + y) & 1) ? .03 : -.03);
+    const inBlob = blobs.some(([bx, by, br]) => (x - bx) ** 2 + (y - by) ** 2 < br * br);
+    let pal = pals[0];
+    if (pals[1] && inBlob) pal = pals[1];
+    if (craters && inBlob) l -= .18;
+    const idx = l > .8 ? 0 : l > .5 ? 1 : l > .18 ? 2 : l > -.15 ? 3 : 4, k = ((y + r + 1) * W + x + r + 1) * 4, col = parseInt(pal[idx].slice(1), 16);
+    img.data[k] = col >> 16; img.data[k + 1] = (col >> 8) & 255; img.data[k + 2] = col & 255; img.data[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0); return c;
+}
+function buildSky() {
+  const [c, g] = mk(LW, LH), rand = rnd(777);
+  const gr = g.createLinearGradient(0, 0, 0, LH); gr.addColorStop(0, '#0a0a1c'); gr.addColorStop(1, '#05050b');
+  g.fillStyle = gr; g.fillRect(0, 0, LW, LH);
+  for (let i = 0; i < 160; i++) { const s = rand(); g.fillStyle = s > .9 ? '#ffffff' : s > .6 ? '#aab0d8' : '#50547a'; g.fillRect(Math.floor(rand() * LW), Math.floor(rand() * LH), 1, 1); }
+  return c;
+}
+// la carte du niveau est dessinée une fois : sol tramé, cratères, rochers, quadrillage
+function buildBoard(M, cs) {
+  const W = M.w * cs, H = M.h * cs, [c, g] = mk(W, H), rand = rnd(1234 + M.w * 7 + M.h);
+  const SOIL = ['#c9c4ba', '#b5b0a6', '#a19c93', '#8c8880'];
+  const img = g.createImageData(W, H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const v = Math.sin(x * .21 + Math.sin(y * .13) * 2) + Math.sin(y * .17 - x * .05) + (rand() - .5) * 1.2;
+    const col = parseInt(SOIL[clamp(Math.floor(v + 1.6), 0, 3)].slice(1), 16), k = (y * W + x) * 4;
+    img.data[k] = col >> 16; img.data[k + 1] = (col >> 8) & 255; img.data[k + 2] = col & 255; img.data[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  // cailloux du décor
+  for (let i = 0; i < M.w * M.h * 2; i++) { const x = Math.floor(rand() * W), y = Math.floor(rand() * H); g.fillStyle = '#6e6a64'; g.fillRect(x, y, 1, 1); g.fillStyle = '#e4e0d6'; g.fillRect(x - 1, y - 1, 1, 1); }
+  // quadrillage discret
+  g.fillStyle = 'rgba(40,36,48,.28)';
+  for (let x = 0; x <= M.w; x++) g.fillRect(Math.min(W - 1, x * cs), 0, 1, H);
+  for (let y = 0; y <= M.h; y++) g.fillRect(0, Math.min(H - 1, y * cs), W, 1);
+  for (let y = 0; y < M.h; y++) for (let x = 0; x < M.w; x++) {
+    const t = M.cells[y * M.w + x], px = x * cs, py = y * cs, cx = px + cs / 2, cy = py + cs / 2;
+    if (t === 'o') {
+      const r = cs * .44;
+      for (let yy = -r; yy <= r; yy++) for (let xx = -r; xx <= r; xx++) {
+        const d = Math.hypot(xx, yy * 1.1); if (d > r) continue;
+        let col;
+        if (d > r - 2) col = (xx + yy > 0) ? '#e8e3d8' : '#6a665f';          // bord : éclairé en bas à droite
+        else { const l = (xx + yy) / r; col = l < -.3 ? '#1a1820' : l < .2 ? '#2a2830' : l < .6 ? '#3e3a40' : '#56524f'; }
+        g.fillStyle = col; g.fillRect(Math.round(cx + xx), Math.round(cy + yy), 1, 1);
+      }
+    } else if (t === '#') {
+      const r = cs * .42, seed = rnd(x * 31 + y * 17 + 5);
+      const bumps = [0, 1, 2, 3, 4, 5].map(() => .82 + seed() * .2);
+      for (let yy = -r; yy <= r; yy++) for (let xx = -r; xx <= r; xx++) {
+        const a = Math.atan2(yy, xx), rr = r * bumps[Math.floor(((a + Math.PI) / TAU) * 6) % 6];
+        if (Math.hypot(xx, yy) > rr) continue;
+        const nx = xx / r, ny = yy / r, nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny)), l = -nx * .55 - ny * .65 + nz * .5 + (((xx + yy) & 1) ? .04 : -.04);
+        g.fillStyle = l > .7 ? '#e4d6c4' : l > .4 ? '#b29e88' : l > .1 ? '#86725f' : l > -.2 ? '#5c4c40' : '#3a2e28';
+        g.fillRect(Math.round(cx + xx), Math.round(cy + yy), 1, 1);
+      }
+      // ombre portée
+      g.fillStyle = 'rgba(20,16,24,.35)'; g.fillRect(Math.round(cx - r * .2), Math.round(cy + r * .85), Math.round(r * 1.3), 2);
+    }
+  }
+  return c;
+}
+
+/* =========================================================
+   ÉTAT
+   ========================================================= */
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+let K = 1, T = 0, BTN = [];
+const S = {
+  phase: 'title', lvl: 0, P: null, line: 'main', sel: null, run: null, speed: store.get('speed', 1), tip: false,
+  stars: store.get('stars', {}) || {}, best: store.get('best', {}) || {}, progs: store.get('progs', {}) || {},
+  result: null, rankText: '', parts: [], shake: 0, levelPage: 0, board: null, M: null, cs: 30, ox: 0, oy: 0, picked: new Set(),
+};
+const totalStars = () => Object.values(S.stars).reduce((s, v) => s + (v | 0), 0);
+const unlocked = () => { let n = 0; while (n < LEVELS.length && S.stars[n + 1] > 0) n++; return Math.min(n, LEVELS.length - 1); };
+const tier = () => ROVER_TIERS[LEVELS[S.lvl].t];
+function startLevel(i) {
+  S.lvl = i; const L = LEVELS[i], M = roverMap(L);
+  S.M = M; S.cs = Math.min(30, Math.floor(GW / M.w), Math.floor(GH / M.h));
+  S.ox = GX + Math.floor((GW - M.w * S.cs) / 2); S.oy = GY + Math.floor((GH - M.h * S.cs) / 2);
+  S.board = buildBoard(M, S.cs);
+  let P = { main: [], f: [] };
+  try { if (S.progs[i + 1]) { P = roverParse(S.progs[i + 1]); if (!roverAllowed(L, P)) P = { main: [], f: [] }; } } catch (e) { P = { main: [], f: [] }; }
+  S.P = P; S.line = 'main'; S.sel = null; S.run = null; S.result = null; S.rankText = ''; S.parts = []; S.picked = new Set();
+  S.tip = !!L.txt && !(S.stars[i + 1] > 0); S.phase = 'play';
+}
+function saveProg() { S.progs[S.lvl + 1] = roverText(S.P); store.set('progs', S.progs); }
+
+/* =========================================================
+   DESSIN : outils
+   ========================================================= */
+const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function text(s, x, y, col, align = 'left', size = 8, shadow = '#05030c') {
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
+  if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+function wrap(s, max) {
+  const out = []; let line = '';
+  for (const w of s.split(' ')) { if ((line + ' ' + w).trim().length > max) { out.push(line); line = w; } else line = (line + ' ' + w).trim(); }
+  if (line) out.push(line); return out;
+}
+function logo(s, x, y, size) {
+  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
+  g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, '#ffffff'); gr.addColorStop(.5, '#d8d2c6'); gr.addColorStop(1, '#5ae6f2');
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function panel(x, y, w, h, gold) {
+  R(x - 2, y - 2, w + 4, h + 4, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, gold ? '#5a3c10' : '#262836'); gr.addColorStop(1, gold ? '#2a1606' : '#121320');
+  g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x, y, w, 1, gold ? '#ffe28a' : '#9aa0c0'); R(x, y, 1, h, gold ? '#ffe28a' : '#9aa0c0');
+  R(x, y + h - 1, w, 1, gold ? '#8a5a18' : '#3a3c52'); R(x + w - 1, y, 1, h, gold ? '#8a5a18' : '#3a3c52');
+}
+function button(x, y, w, h, label, act, opts = {}) {
+  if (act) BTN.push({ x, y, w, h, act });
+  R(x - 1, y - 1, w + 2, h + 2, OUT);
+  const top = opts.gold ? '#ffd23f' : opts.on ? '#5fd37a' : opts.off ? '#3a3c4c' : '#5a6078', bot = opts.gold ? '#c27a12' : opts.on ? '#2a7a44' : opts.off ? '#22232e' : '#2c2f42';
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x + 1, y + 1, w - 2, 1, opts.gold ? '#fff2b0' : '#c8cee8');
+  if (label) text(label, x + w / 2, y + Math.round((h - 8) / 2) + 1, opts.gold ? '#2a1600' : '#f2f4ff', 'center', 8, opts.gold ? null : '#05030c');
+}
+function star(x, y, on, big) {
+  const m = ['...y...', '...y...', '..yyy..', 'yyyyyyy', '.yyyyy.', '..yyy..', '.yy.yy.', '.y...y.'];
+  const s = big ? 3 : 1;
+  m.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'y') R(x + c * s, y + r * s, s, s, on ? (r < 2 ? '#fff2a8' : '#ffc21f') : '#3a3c52'); }));
+}
+// un bloc d'instruction : couleur de l'opération, icône, répétition et condition
+function block(x, y, w, h, ins, hl) {
+  const [top, bot] = OPC[ins.o];
+  R(x - 1, y - 1, w + 2, h + 2, hl ? '#ffffff' : OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x + 1, y + 1, w - 2, 1, 'rgba(255,255,255,.5)');
+  if (ins.o === 'F') text('F1', x + w / 2, y + Math.round(h / 2) - 4, '#ffffff', 'center', 8, OUT);
+  else { const ic = SP.icon[ins.o]; g.drawImage(ic, Math.round(x + (w - ic.width) / 2), Math.round(y + (h - ic.height) / 2)); }
+  if (ins.c) { R(x, y, 9, 9, OUT); g.drawImage(SP.cond[ins.c], x + 1, y + 1); }
+  if (ins.n === 0) { R(x + w - 10, y + h - 7, 10, 7, OUT); g.drawImage(SP.inf, x + w - 10, y + h - 7); }
+  else if (ins.n > 1) { R(x + w - 9, y + h - 9, 9, 9, OUT); text(String(ins.n), x + w - 4, y + h - 8, '#ffd23f', 'center', 7, null); }
+}
+
+/* =========================================================
+   DESSIN : la carte et le rover
+   ========================================================= */
+const cellXY = (x, y) => [S.ox + x * S.cs + S.cs / 2, S.oy + y * S.cs + S.cs / 2];
+function roverState() {
+  // position affichée du rover : entre deux pas pendant l'exécution
+  const st0 = { x: S.M.start[0], y: S.M.start[1], d: S.M.start[2] };
+  const r = S.run; if (!r) return { ...st0, a: st0.d * Math.PI / 2, z: 0, sc: 1 };
+  const steps = r.res.steps, i = Math.min(Math.floor(r.k), steps.length - 1), f = r.k - Math.floor(r.k);
+  const prev = i > 0 ? steps[i - 1] : st0, cur = steps[i];
+  if (r.k >= steps.length) { const e = steps[steps.length - 1] || st0; return { x: e.x, y: e.y, a: e.d * Math.PI / 2, z: 0, sc: cur && cur.fail === 'chute' ? 0 : 1, fail: cur && cur.fail }; }
+  let da = cur.d - prev.d; if (da > 2) da -= 4; if (da < -2) da += 4;
+  const e = f < .5 ? 2 * f * f : 1 - (2 - 2 * f) ** 2 / 2;
+  let x = prev.x + (cur.x - prev.x) * e, y = prev.y + (cur.y - prev.y) * e, sc = 1, z = 0;
+  if (cur.fail === 'choc') { const b = Math.sin(f * Math.PI) * .28; x = prev.x + ROVER_DIRS[cur.d][0] * b; y = prev.y + ROVER_DIRS[cur.d][1] * b; }
+  if (cur.jump && !cur.fail) z = Math.sin(f * Math.PI);
+  if (cur.fail === 'chute') { if (f > .6) sc = 1 - (f - .6) / .4; z = cur.jump && f < .6 ? Math.sin(f / .6 * Math.PI) : 0; }
+  return { x, y, a: (prev.d + da * e) * Math.PI / 2, z, sc };
+}
+function drawBoard(t) {
+  const cs = S.cs;
+  R(S.ox - 3, S.oy - 3, S.M.w * cs + 6, S.M.h * cs + 6, OUT);
+  R(S.ox - 2, S.oy - 2, S.M.w * cs + 4, 1, '#6a6680'); R(S.ox - 2, S.oy + S.M.h * cs + 1, S.M.w * cs + 4, 1, '#2a2838');
+  g.drawImage(S.board, S.ox, S.oy);
+  // départ : petite plateforme
+  const [sx, sy] = cellXY(S.M.start[0], S.M.start[1]);
+  g.strokeStyle = 'rgba(255,210,63,.55)'; g.lineWidth = 1; g.strokeRect(Math.round(sx - cs / 2) + 2.5, Math.round(sy - cs / 2) + 2.5, cs - 5, cs - 5);
+  // cristaux
+  const gem = SP.gem[cs >= 26 ? 1 : 0];
+  S.M.crystals.forEach(([x, y], i) => {
+    if (S.picked.has(x + ',' + y)) return;
+    const [cx, cy] = cellXY(x, y), bob = Math.round(Math.sin(t * 3 + i) * 1.5);
+    R(Math.round(cx - gem.width / 3), Math.round(cy + gem.height / 2 - 2), Math.round(gem.width * 2 / 3), 2, 'rgba(20,16,24,.35)');
+    g.drawImage(gem, Math.round(cx - gem.width / 2), Math.round(cy - gem.height / 2 - 2 + bob));
+    if (((t * 2 + i * .7) % 3) < .25) { R(Math.round(cx + 3), Math.round(cy - gem.height / 2 - 2 + bob), 1, 3, '#ffffff'); R(Math.round(cx + 2), Math.round(cy - gem.height / 2 - 1 + bob), 3, 1, '#ffffff'); }
+  });
+  // rover
+  const rs = roverState(), [rx, ry] = [S.ox + rs.x * cs + cs / 2, S.oy + rs.y * cs + cs / 2], spr = SP.rover[cs >= 28 ? 1 : 0];
+  if (rs.sc > 0) {
+    const lift = rs.z * cs * .45;
+    g.fillStyle = 'rgba(20,16,24,.4)'; g.fillRect(Math.round(rx - spr.width * .35), Math.round(ry + spr.height * .3), Math.round(spr.width * .7), 3);
+    g.save(); g.translate(Math.round(rx), Math.round(ry - lift)); g.rotate(rs.a); const k = rs.sc * (1 + rs.z * .15); g.scale(k, k);
+    g.drawImage(spr, -Math.round(spr.width / 2), -Math.round(spr.height / 2)); g.restore();
+  }
+  // particules
+  for (const p of S.parts) R(Math.round(p.x), Math.round(p.y), p.s, p.s, p.c);
+}
+
+/* =========================================================
+   ÉCRAN DE JEU : carte, programme, palette
+   ========================================================= */
+const SLOT = 26, SX = 40, ROWY = { main: [254, 282], f: [312] };
+function slotRect(line, i) {
+  const rows = ROWY[line], r = Math.floor(i / 8);
+  return [SX + (i % 8) * 28, rows[r], SLOT, SLOT];
+}
+function drawLine(line, label) {
+  const list = S.P[line], max = line === 'main' ? ROVER_MAX.main : ROVER_MAX.f, rows = ROWY[line], active = S.line === line && !S.run;
+  // étiquette de la ligne
+  const ly = rows[0], lh = rows.length * 28 - 2;
+  R(3, ly - 1, 32, lh + 2, OUT);
+  R(4, ly, 30, lh, active ? '#ffd23f' : '#3a3c52');
+  text(label, 19, ly + Math.round(lh / 2) - 4, active ? '#2a1600' : '#c8cee8', 'center', 8, null);
+  if (!S.run) BTN.push({ x: 3, y: ly, w: 34, h: lh, act: () => { S.line = line; S.sel = null; SFX.click(); } });
+  const cur = S.run && S.run.cur;
+  for (let i = 0; i < max; i++) {
+    const [x, y, w, h] = slotRect(line, i);
+    if (i < list.length) {
+      const sel = S.sel && S.sel.line === line && S.sel.i === i, hl = sel || (cur && cur.line === line && cur.idx === i);
+      block(x, y, w, h, list[i], hl);
+      if (hl && cur && cur.line === line && cur.idx === i) R(x, y + h + 1, w, 2, '#ffd23f');
+      if (!S.run) BTN.push({ x: x - 1, y: y - 1, w: w + 2, h: h + 2, act: () => { S.line = line; S.sel = sel ? null : { line, i }; SFX.click(); } });
+    } else {
+      R(x, y, w, h, i === list.length && active ? 'rgba(255,210,63,.18)' : 'rgba(10,10,20,.55)');
+      g.strokeStyle = i === list.length && active ? 'rgba(255,210,63,.6)' : 'rgba(120,124,150,.35)'; g.lineWidth = 1; g.strokeRect(x + .5, y + .5, w - 1, h - 1);
+    }
+  }
+}
+function addOp(o) {
+  if (S.run) return;
+  const list = S.P[S.line], max = S.line === 'main' ? ROVER_MAX.main : ROVER_MAX.f;
+  if (list.length >= max) { SFX.fail(); return; }
+  const ins = { o, n: 1, c: '' };
+  if (S.sel && S.sel.line === S.line) { list.splice(S.sel.i + 1, 0, ins); S.sel = { line: S.line, i: S.sel.i + 1 }; }
+  else list.push(ins);
+  SFX.put(); saveProg();
+}
+function selIns() { return S.sel ? S.P[S.sel.line][S.sel.i] : null; }
+function insWords(ins) {
+  const w = OPNAME[ins.o], c = ins.c ? CONDW[ins.c] : '';
+  if (ins.n === 0) return c ? `TANT QUE ${c} : ${w}` : `${w} EN BOUCLE`;
+  const rep = ins.n > 1 ? ` x${ins.n}` : '';
+  return c ? `SI ${c} : ${w}${rep}` : w + rep;
+}
+function drawEditor() {
+  const ins = selIns(), T0 = tier(), y = 344;
+  if (!ins) {
+    if (S.run) return;
+    text(S.line === 'f' ? 'TOUCHE UNE INSTRUCTION : ELLE VA DANS F1' : 'TOUCHE UNE INSTRUCTION POUR L\'AJOUTER', 136, y + 9, '#8a90b0', 'center', 6, null);
+    return;
+  }
+  let x = 8;
+  if (T0.rep) {
+    button(x, y, 22, 22, '-', () => { if (ins.n === 0) ins.n = 9; else ins.n = Math.max(1, ins.n - 1); SFX.click(); saveProg(); }, { off: ins.n === 1 }); x += 24;
+    R(x, y, 24, 22, OUT); text(ins.n === 0 ? '' : 'x' + ins.n, x + 12, y + 8, '#ffd23f', 'center', 7, null); if (ins.n === 0) g.drawImage(SP.inf, x + 8, y + 8); x += 26;
+    button(x, y, 22, 22, '+', () => { if (ins.n > 0) ins.n = Math.min(9, ins.n + 1); SFX.click(); saveProg(); }, { off: ins.n === 9 || ins.n === 0 }); x += 28;
+  }
+  if (T0.cond) {
+    button(x, y, 58, 22, 'BOUCLE', () => { ins.n = ins.n === 0 ? 1 : 0; SFX.click(); saveProg(); }, { on: ins.n === 0 }); x += 62;
+    button(x, y, 44, 22, '', () => { ins.c = ROVER_CONDS[(ROVER_CONDS.indexOf(ins.c) + 1) % ROVER_CONDS.length]; SFX.click(); saveProg(); }, { on: !!ins.c });
+    text('SI', x + (ins.c ? 7 : 22), y + 8, '#f2f4ff', ins.c ? 'left' : 'center', 8);
+    if (ins.c) { R(x + 26, y + 5, 12, 12, OUT); g.drawImage(SP.cond[ins.c], x + 28, y + 7); }
+    x += 48;
+  }
+  button(Math.max(x, 236), y, 28, 22, 'X', () => {
+    S.P[S.sel.line].splice(S.sel.i, 1); S.sel = null; SFX.del(); saveProg(); }, {});
+}
+function drawPalette() {
+  const ops = tier().ops.split(''), y = 376, w = Math.floor((256 - (ops.length - 1) * 6) / ops.length);
+  ops.forEach((o, i) => {
+    const x = 8 + i * (w + 6);
+    if (o === 'F' && !tier().f) return;
+    block(x, y, w, 28, { o, n: 1, c: '' }, false);
+    if (!S.run) BTN.push({ x, y, w, h: 28, act: () => addOp(o) });
+  });
+}
+function drawPlay(t) {
+  g.drawImage(SP.sky, 0, 0);
+  // bandeau du haut
+  R(0, 0, LW, 28, '#10101c'); R(0, 28, LW, 1, '#3a3c52');
+  button(4, 4, 26, 20, '<', () => { SFX.click(); S.run = null; S.phase = 'levels'; S.levelPage = Math.floor(S.lvl / 15); });
+  text(`NIVEAU ${S.lvl + 1}`, 38, 10, '#e8e4d8');
+  const left = S.M.crystals.length - S.picked.size;
+  g.drawImage(SP.gem[0], 176, 6); text(`${S.M.crystals.length - left}/${S.M.crystals.length}`, 194, 10, '#5ae6f2');
+  if (LEVELS[S.lvl].txt) button(242, 4, 26, 20, '?', () => { SFX.click(); S.tip = true; });
+  const sh = S.shake > 0 ? Math.round((Math.random() - .5) * S.shake) : 0;
+  g.save(); g.translate(sh, 0); drawBoard(t); g.restore();
+  drawLine('main', 'P');
+  if (tier().f) drawLine('f', 'F1');
+  drawEditor();
+  drawPalette();
+  // bas : effacer, vitesse, GO
+  const by = 414;
+  if (!S.run) button(8, by, 74, 24, 'EFFACER', () => {
+    if (S.sel) S.sel = null;
+    S.P[S.line] = []; SFX.del(); saveProg(); }, {});
+  button(88, by, 60, 24, 'x' + S.speed, () => { S.speed = S.speed === 1 ? 2 : S.speed === 2 ? 4 : 1; store.set('speed', S.speed); SFX.click(); });
+  if (S.run) button(154, by, 110, 24, 'STOP', () => { SFX.click(); stopRun(); }, {});
+  else button(154, by, 110, 24, 'GO !', () => go(), { gold: true });
+  // pied : objectif, ou sens de l'instruction choisie
+  const ins = selIns(), size = roverSize(S.P), par = roverPar(LEVELS[S.lvl]);
+  if (ins && !S.run) wrap(insWords(ins), 38).slice(0, 2).forEach((l, i) => text(l, 136, 446 + i * 10, '#e8e4d8', 'center', 6, null));
+  else {
+    star(10, 449, true); text(`OBJECTIF : ${par} INSTRUCTION${par > 1 ? 'S' : ''}`, 22, 450, '#ffd23f', 'left', 6, null);
+    text(`TON PROGRAMME : ${size}`, 22, 462, size && size <= par ? '#5fd37a' : '#a8aec8', 'left', 6, null);
+    const b = S.best[S.lvl + 1]; if (b) text(`RECORD : ${b}`, 264, 462, '#c8cee8', 'right', 6, null);
+  }
+  if (S.run && S.run.msg) drawFail(t);
+  if (S.tip) drawTip();
+  if (S.phase === 'won') drawWon(t);
+}
+function drawTip() {
+  const lines = wrap(LEVELS[S.lvl].txt, 26), h = 44 + lines.length * 11, y = GY + 30;
+  BTN.push({ x: 0, y: 0, w: LW, h: LH, act: () => { S.tip = false; SFX.click(); } });
+  panel(22, y, 228, h, false);
+  text(`NIVEAU ${S.lvl + 1}`, 136, y + 8, '#ffd23f', 'center', 8);
+  lines.forEach((l, i) => text(l, 136, y + 24 + i * 11, '#e8e4d8', 'center', 7));
+  text('TOUCHE POUR COMMENCER', 136, y + h - 14, '#8a90b0', 'center', 6, null);
+}
+function drawFail() {
+  const lines = wrap(S.run.msg, 28), y = GY + GH - 24 - lines.length * 11;
+  panel(18, y, 236, 30 + lines.length * 11, false);
+  lines.forEach((l, i) => text(l, 136, y + 8 + i * 11, '#ff9a8a', 'center', 7));
+  button(76, y + 12 + lines.length * 11, 120, 14, 'MODIFIER', () => { SFX.click(); stopRun(); }, {});
+}
+function drawWon(t) {
+  const y = 120, r = S.result;
+  g.fillStyle = 'rgba(5,5,11,.6)'; g.fillRect(0, 0, LW, LH);
+  BTN.push({ x: 0, y: 0, w: LW, h: LH, act: () => {} });
+  panel(26, y, 220, 196, true);
+  text(S.lvl === LEVELS.length - 1 ? 'MISSION ACCOMPLIE' : 'CRISTAUX RAMASSES !', 136, y + 12, '#fff2a8', 'center');
+  const k = (now() - r.t0) / 300;
+  for (let i = 0; i < 3; i++) star(94 + i * 32, y + 30, i < Math.min(r.stars, Math.floor(k)), true);
+  text(`PROGRAMME : ${r.size} INSTRUCTION${r.size > 1 ? 'S' : ''}`, 136, y + 62, '#e8d8b0', 'center', 7);
+  text(r.stars === 3 ? 'Le plus court : bravo !' : `3 étoiles avec ${roverPar(LEVELS[S.lvl])} instructions`, 136, y + 76, r.stars === 3 ? '#5fd37a' : '#e8d8b0', 'center', 7);
+  text(`TOTAL : ${totalStars()} / ${LEVELS.length * 3}`, 136, y + 92, '#ffd23f', 'center', 7);
+  if (S.rankText) text(S.rankText, 136, y + 106, '#5fd37a', 'center', 7);
+  if (S.lvl < LEVELS.length - 1) button(48, y + 122, 176, 22, 'NIVEAU SUIVANT', () => { SFX.click(); startLevel(S.lvl + 1); }, { gold: true });
+  else button(48, y + 122, 176, 22, 'CLASSEMENT', () => { location.href = '../index.html#lunerover'; }, { gold: true });
+  button(48, y + 152, 84, 22, 'RETOUCHER', () => { SFX.click(); S.phase = 'play'; stopRun(); });
+  button(140, y + 152, 84, 22, 'NIVEAUX', () => { SFX.click(); S.run = null; S.phase = 'levels'; S.levelPage = Math.floor(S.lvl / 15); });
+}
+
+/* =========================================================
+   EXÉCUTION
+   ========================================================= */
+function go() {
+  audioInit();
+  if (!roverSize(S.P)) { SFX.fail(); return; }
+  S.sel = null; S.picked = new Set(); S.parts = [];
+  const res = roverRun(LEVELS[S.lvl], S.P);
+  S.run = { res, k: 0, done: false, msg: '', cur: res.steps[0] || null };
+  SFX.click();
+  if (!res.steps.length) endRun();
+}
+function stopRun() { S.run = null; S.picked = new Set(); S.parts = []; }
+function burst(x, y, cols, n = 20, sp = 50) {
+  for (let i = 0; i < n; i++) { const a = Math.random() * TAU, v = sp * (.3 + Math.random());
+    S.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: .4 + Math.random() * .5, c: cols[i % cols.length], s: Math.random() < .3 ? 2 : 1 }); }
+}
+// début d'un pas : bruitage ; fin d'un pas : cristal ramassé, chute ou choc
+function stepStart(st) { if (!st) return; ({ A: SFX.move, G: SFX.turn, D: SFX.turn, S: SFX.jump, R: () => {} })[st.op](); }
+function stepEnd(st) {
+  if (st.pick) { S.picked.add(st.pick.join(',')); const [cx, cy] = cellXY(...st.pick); burst(cx, cy - 2, ['#ffffff', '#9ff6ff', '#3ad0f0'], 18, 40); SFX.pick(); }
+  if (st.fail === 'choc') { S.shake = 4; SFX.crash(); const [cx, cy] = cellXY(st.x + ROVER_DIRS[st.d][0] * .45, st.y + ROVER_DIRS[st.d][1] * .45); burst(cx, cy, ['#ffd28a', '#ffffff', '#8c8880'], 14, 40); }
+  if (st.fail === 'chute') SFX.fall();
+}
+function endRun() {
+  const r = S.run, res = r.res; r.done = true; r.cur = null;
+  if (res.r === 'win') {
+    const size = roverSize(S.P), L = LEVELS[S.lvl], stars = roverStars(L, size), key = S.lvl + 1, before = totalStars();
+    if (stars > (S.stars[key] | 0)) { S.stars[key] = stars; store.set('stars', S.stars); }
+    if (!(S.best[key] <= size)) { S.best[key] = size; store.set('best', S.best); }
+    S.result = { stars, size, t0: now() + 400 }; S.rankText = '';
+    SFX.win(); for (let i = 0; i < stars; i++) setTimeout(() => SFX.star(i), 700 + i * 300);
+    if (totalStars() > before && window.LudoScores) LudoScores.submit('lunerover', 'etoiles', totalStars(), false).then(x => {
+      if (x && S.phase === 'won') S.rankText = 'CLASSEMENT : ' + LudoScores.rankText(x).toUpperCase(); });
+    setTimeout(() => { if (S.run === r) S.phase = 'won'; }, 500);
+    return;
+  }
+  const n = res.left;
+  r.msg = res.r === 'choc' ? 'Boum ! Le rover a heurté un obstacle.' : res.r === 'chute' ? 'Le rover est tombé dans un cratère !'
+    : res.r === 'long' ? 'Le rover s\'épuise : plus de 400 pas.' : res.r === 'boucle' ? 'Le programme tourne en rond sans rien faire.'
+    : `Programme terminé : il reste ${n} cristal${n > 1 ? 'aux' : ''}.`;
+  if (res.r === 'fin' || res.r === 'long' || res.r === 'boucle') SFX.fail();
+}
+
+/* =========================================================
+   TITRE, AIDE, NIVEAUX
+   ========================================================= */
+function drawTitle(t) {
+  g.drawImage(SP.sky, 0, 0);
+  g.drawImage(SP.earth, 206, 38);
+  g.drawImage(SP.moon, 136 - SP.moon.width / 2, 196);
+  logo('LUNE-ROVER', 136, 120, 22);
+  text('PROGRAMME TON ROBOT', 136, 152, '#c8cee8', 'center', 7);
+  // le rover fait le tour de la Lune
+  const a = t * .8, rx = 136 + Math.cos(a) * 62, ry = 243 + Math.sin(a) * 18, spr = SP.rover[1];
+  if (Math.sin(a) > -.2) { g.save(); g.translate(Math.round(rx), Math.round(ry)); g.rotate(a + Math.PI); g.drawImage(spr, -13, -13); g.restore(); }
+  const tot = totalStars(), cont = unlocked();
+  star(92, 298, true, true); text(`${tot} / ${LEVELS.length * 3}`, 118, 306, '#ffd23f', 'left', 8);
+  button(56, 330, 160, 26, tot ? `JOUER (NIV. ${cont + 1})` : 'JOUER', () => { SFX.click(); startLevel(cont); }, { gold: true });
+  button(56, 364, 160, 22, 'NIVEAUX', () => { SFX.click(); S.phase = 'levels'; S.levelPage = Math.floor(cont / 15); });
+  button(56, 394, 160, 22, 'CLASSEMENT', () => { location.href = '../index.html#lunerover'; });
+  button(56, 424, 76, 20, AC.on ? 'SON OUI' : 'SON NON', () => { AC.on = !AC.on; store.set('sfx', AC.on); SFX.click(); }, { off: !AC.on });
+  button(140, 424, 76, 20, 'AIDE', () => { SFX.click(); S.phase = 'help'; });
+}
+function drawHelp() {
+  g.drawImage(SP.sky, 0, 0);
+  panel(10, 24, 252, 432);
+  logo('COMMENT JOUER', 136, 36, 12);
+  const lines = [
+    ['#ffd23f', 'Écris le programme du rover, puis GO ! Il doit ramasser tous les cristaux.'],
+    ['A', 'avancer d\'une case'], ['G', 'tourner à gauche'], ['D', 'tourner à droite'],
+    ['S', 'sauter une case (un cratère, pas un rocher)'], ['R', 'ramasser le cristal'], ['F', 'faire toutes les instructions de F1'],
+    ['#c8cee8', 'Touche une instruction posée : + et - la répètent, BOUCLE la répète sans fin, SI ajoute une condition :'],
+    ['c', 'sur un cristal'], ['l', 'voie libre devant'], ['o', 'cratère devant'], ['b', 'rocher ou bord devant'],
+    ['#ffd23f', '3 étoiles avec le programme le plus court.'],
+  ];
+  let y = 60;
+  for (const [k, s] of lines) {
+    if (OPC[k]) { block(22, y - 3, 18, 14, { o: k, n: 1, c: '' }, false); text(s, 48, y, '#e8e4d8', 'left', 6, null); y += 17; continue; }
+    if (CONDI[k]) { R(30, y - 1, 9, 9, OUT); g.drawImage(SP.cond[k], 31, y); text(s, 48, y, '#e8e4d8', 'left', 6, null); y += 13; continue; }
+    y += 4; for (const l of wrap(s, 34)) { text(l, 22, y, k, 'left', 6, null); y += 10; } y += 6;
+  }
+  button(76, 424, 120, 22, 'OK', () => { SFX.click(); S.phase = 'title'; }, { gold: true });
+}
+function drawLevels() {
+  g.drawImage(SP.sky, 0, 0);
+  logo('NIVEAUX', 136, 22, 16);
+  text(`${totalStars()} / ${LEVELS.length * 3} ETOILES`, 136, 50, '#ffd23f', 'center', 7);
+  const page = S.levelPage, cont = unlocked();
+  const NEW = { 0: '', 5: 'S', 8: 'x2', 14: 'F1', 20: 'SI' };
+  for (let k = 0; k < 15; k++) {
+    const i = page * 15 + k; if (i >= LEVELS.length) break;
+    const x = 22 + (k % 3) * 80, y = 74 + Math.floor(k / 3) * 66, open = i <= cont, st = S.stars[i + 1] | 0;
+    panel(x, y, 68, 54, st === 3);
+    if (open) BTN.push({ x, y, w: 68, h: 54, act: () => { SFX.click(); startLevel(i); } });
+    text(open ? String(i + 1) : '?', x + 34, y + 10, open ? '#ffffff' : '#4a4c62', 'center', 12);
+    if (NEW[i]) text(NEW[i], x + 64, y + 4, '#5ae6f2', 'right', 6, null);
+    for (let s = 0; s < 3; s++) star(x + 13 + s * 15, y + 36, s < st);
+  }
+  if (page > 0) button(22, 412, 60, 22, '<', () => { S.levelPage--; SFX.click(); });
+  if ((page + 1) * 15 < LEVELS.length) button(190, 412, 60, 22, '>', () => { S.levelPage++; SFX.click(); });
+  button(96, 412, 80, 22, 'RETOUR', () => { SFX.click(); S.phase = 'title'; });
+}
+
+/* =========================================================
+   BOUCLE
+   ========================================================= */
+const STEP = .34;   // durée d'un pas à la vitesse x1 (s)
+function frame(ts) {
+  const t = ts / 1000, dt = Math.min(.05, t - (T || t)); T = t;
+  for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 40 * dt; p.vx *= .96; }
+  S.parts = S.parts.filter(p => p.t < p.life); S.shake = Math.max(0, S.shake - dt * 12);
+  const r = S.run;
+  if (r && !r.done) {
+    const steps = r.res.steps, before = r.k;
+    if (before === 0) stepStart(steps[0]);
+    r.k = Math.min(steps.length, r.k + dt * S.speed / STEP);
+    for (let i = Math.floor(before); i < Math.floor(r.k); i++) { stepEnd(steps[i]); stepStart(steps[i + 1]); }
+    r.cur = steps[Math.min(Math.floor(r.k), steps.length - 1)];
+    if (r.k >= steps.length) endRun();
+  }
+  BTN = [];
+  g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
+  if (S.phase === 'title') drawTitle(t);
+  else if (S.phase === 'help') drawHelp(t);
+  else if (S.phase === 'levels') drawLevels(t);
+  else drawPlay(t);
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   COMMANDES
+   ========================================================= */
+function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); audioInit();
+  const [x, y] = logical(e);
+  for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { b.act(); return; } }
+  if (S.phase === 'play' && S.sel) S.sel = null;     // toucher ailleurs : désélectionner
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.phase === 'play') { S.run = null; S.phase = 'levels'; } });
+function resize() {
+  const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
+  const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);
+  const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
+  cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
+  cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
+  K = Math.max(1, Math.ceil(sc * dpr - .05));
+  cv.width = LW * K; cv.height = LH * K;
+}
+window.addEventListener('resize', resize);
+// pour les tests : LuneRover.setProgram('A3 R | G A4 R') puis LuneRover.go()
+window.LuneRover = { LEVELS, S, startLevel, go, run: roverRun, parse: roverParse,
+  setProgram(s) { S.P = roverParse(s); saveProg(); } };
+
+buildSprites();
+setTimeout(resize, 0); resize();
+(document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));
+</script>
+<script>
+/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    if (!app) return;
+    var a = document.createElement("a");
+    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
+    a.style.cssText = "display:block; width:max-content; margin:4px auto 6px; padding:6px 10px; font:9px 'Press Start 2P',monospace; letter-spacing:1px;" +
+      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
+    var line = document.createElement("div");
+    line.style.cssText = "flex:0 0 100%; width:100%;";
+    line.appendChild(a);
+    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
+    document.body.insertBefore(line, document.body.firstChild);
+    window.dispatchEvent(new Event("resize"));
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

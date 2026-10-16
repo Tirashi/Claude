@@ -7,14 +7,14 @@
      tel retard, les fichiers suivants (scripts, polices…) sont servis du cache sans attendre
      pendant 10 s : la page ne s'ouvre pas étage par étage.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v27";
+const VERSION = "ludotheque-v28";
 const NET_WAIT = 2500;
 let slowUntil = 0;   // réseau jugé lent : pendant 10 s, les copies en cache sont servies sans attendre
 const FONTS = "ludotheque-fonts";
 const FILES = [
   "./", "./index.html", "./manifest.webmanifest", "./ludo-scores.js", "./icones.js",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png",
-  "./queens/index.html", "./picross/index.html", "./injagility/index.html", "./injagility/parcours.html", "./injagility/chiens32.js", "./touche-coule/index.html", "./amiral/index.html", "./club/index.html", "./orbite/index.html", "./pont-stellaire/index.html", "./sudoku/index.html", "./alunissage/index.html", "./nebula/index.html", "./nebula/vaisseaux.js", "./nebula/regles.js", "./nebula/evenements.js", "./nebula/sons.js", "./nebula/cartouche.jpg",
+  "./queens/index.html", "./picross/index.html", "./injagility/index.html", "./injagility/parcours.html", "./injagility/chiens32.js", "./touche-coule/index.html", "./amiral/index.html", "./club/index.html", "./orbite/index.html", "./lune-rover/index.html", "./lune-rover/regles.js", "./pont-stellaire/index.html", "./sudoku/index.html", "./alunissage/index.html", "./nebula/index.html", "./nebula/vaisseaux.js", "./nebula/regles.js", "./nebula/evenements.js", "./nebula/sons.js", "./nebula/cartouche.jpg",
   "./polices/nebula.css", "./polices/michroma.woff2", "./polices/rajdhani-500.woff2", "./polices/rajdhani-600.woff2", "./polices/rajdhani-700.woff2", "./polices/share-tech-mono.woff2",
   "./lignee/index.html", "./classements/index.html", "./tetris/index.html", "./snake/index.html", "./asteroids/index.html", "./solitaire/index.html",
   "./jeu-de-la-vie/index.html", "./jeu-de-la-vie/style.css", "./jeu-de-la-vie/app.js"
