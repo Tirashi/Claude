@@ -121,12 +121,13 @@ Deux modes, reliés par des onglets en haut de page.
 
 ## Lune-Rover
 
-Un puzzle de programmation en 32 bits : on écrit à l'avance le programme d'un petit robot lunaire, puis GO ! Il l'exécute pas à pas et doit ramasser tous les cristaux, sans heurter un rocher ni tomber dans un cratère.
+Un puzzle de programmation en style dessin animé : on écrit à l'avance le programme de Pico, le petit robot lunaire, puis GO ! Pico réagit à ce qu'il fait (concentré, ravi quand il ramasse un cristal, étourdi après un choc, vertige au bord d'un cratère). Il l'exécute pas à pas et doit ramasser tous les cristaux, sans heurter un rocher ni tomber dans un cratère.
 
 - **Les instructions** : avancer, tourner à gauche ou à droite, sauter par-dessus une case (un cratère, pas un rocher), ramasser. On les touche dans la palette, elles s'ajoutent au programme (16 cases au plus).
 - **30 niveaux en 5 étapes** : les bases, puis le saut, les répétitions (toucher une instruction posée, puis + et -), la fonction **F1** (une suite d'instructions qu'on appelle d'un seul bloc) et enfin les **conditions** (SI sur un cristal, voie libre, cratère devant, bloqué devant) et la **BOUCLE** (avec une condition, elle devient « tant que »).
 - **3 étoiles** pour le programme le plus court (pas plus long que la solution de référence), 2 avec jusqu'à 2 instructions de plus, 1 sinon. Réussir un niveau ouvre le suivant ; le programme de chaque niveau est gardé.
-- Vitesse x1, x2 ou x4 ; un bouton ? rappelle la consigne du niveau. Chaque niveau est vérifié par un outil de test (sa solution de référence gagne).
+- Les niveaux sont posés sur une carte, un chemin de pierres en 5 zones (bases, sauts, répéter, F1, conditions) qu'on fait défiler du doigt.
+- Vitesse x1, x2 ou x4 ; un bouton ? rappelle la consigne du niveau, dite par Pico. Chaque niveau est vérifié par un outil de test (sa solution de référence gagne).
 - Les étoiles font partie du transfert de sauvegardes ; le total d'étoiles (90 au maximum) part au classement familial.
 
 ## Orbite
