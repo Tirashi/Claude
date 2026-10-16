@@ -129,7 +129,7 @@ Les menaces s'annoncent quand c'est possible (la tour de guet, le ciel, la rivi�
 - `window.Ile` exposé pour les tests ; **pilote automatique** sous Node (`outils/ile-colonie.js`) : années tenues selon la stratégie, pour régler la difficulté.
 
 ## 12. Étapes (une conversation chacune)
-1. **Maquette** de l'écran en paysage (carte générée, panneau, postes, prévision, une crue et un hiver simulés) → validation du style et de l'ergonomie.
+1. **Maquette** de l'écran en paysage (carte générée, panneau, postes, prévision, une crue et un hiver simulés) → validation du style et de l'ergonomie. *Faite le 16/10* : https://claude.ai/artifact/3CAZn4Hd3qFu2TMAB3i8LX — source `maquettes/colonie-paysage.html` (générateur d'île réutilisable tel quel dans `ile/regles.js` : bruit de valeur à 3 octaves + masque elliptique, rivière = plus longue descente depuis les collines, berges, marais à l'embouchure ; on est à l'an 2, 16 colons). **En attente du retour de l'utilisateur** (taille de l'île, taille des textes, panneau fixe ou repliable, plans à trouver ou tout débloqué).
 2. **Le moteur** : génération de l'île, bâtiments, postes, ressources, saisons, colons, sauvegarde ; écrans principaux.
 3. **La nature** : crue, incendie, hiver rude, épidémie, loups… ; compte rendu animé ; équilibrage avec le pilote automatique ; intégration (classements, accueil, transfert, docs, artefact).
 

@@ -59,7 +59,7 @@ Queens (`queens/`), Picross Dex (`picross/`), Lignée (`lignee/`), Injagility (`
 
 ## En cours / à vérifier
 - **Nebula** : sessions 1 à 4 faites ; équilibrage jugé correct, à revoir après plus de parties. État détaillé dans le mémo, suivi dans [`specs/nebula.md`](specs/nebula.md) § 17 à 22. Prochain chantier possible : « Nebula : l'Empire des étoiles », dans une nouvelle conversation.
-- **La colonie** (remplace l'Île des naufragés, décision du 16/10) : cahier des charges [`specs/colonie.md`](specs/colonie.md) ; prochaine étape : maquette de l'écran en paysage, dans une nouvelle conversation.
+- **La colonie** (remplace l'Île des naufragés, décision du 16/10) : cahier des charges [`specs/colonie.md`](specs/colonie.md) ; maquette de l'écran en paysage faite le 16/10 (https://claude.ai/artifact/3CAZn4Hd3qFu2TMAB3i8LX, `maquettes/colonie-paysage.html`), en attente du retour de l'utilisateur ; ensuite l'étape 2 (le moteur), dans une nouvelle conversation.
 - Orbite : niveaux 12, 23, 25, 28 et 30 les plus serrés ; à ajuster s'ils sont trop durs.
 - Classements testés seulement avec le faux serveur, à confirmer avec un vrai record : Orbite, Pont stellaire, Sudoku, grille du jour de Queens, Nebula (`daily`, `victoires`).
 
