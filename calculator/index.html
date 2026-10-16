@@ -199,6 +199,8 @@ a { color: inherit; }
 [data-style=C] .rows .rec { font-weight: 700; }
 [data-style=C] .miss div { color: var(--c-red); }
 svg.seg { display: block; }
+.cur { animation: cur 1s steps(1) infinite; }
+@keyframes cur { 50% { opacity: 0; } }
 </style>
 </head>
 <body>
@@ -324,7 +326,7 @@ const t = (k, s = cfg.style) => { const v = TXT[k] ? TXT[k][s] : k; return s ===
 const tx = s => cfg.style === 'A' ? deacc(s) : s;
 
 /* ---------- chiffres à 7 segments (style C) ---------- */
-const SEGS = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg', '-': 'g', '?': 'abge', ' ': '' };
+const SEGS = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg', '-': 'g', '?': 'abge', '_': 'd', ' ': '' };
 const GEO = { a: [3, 0, 14, 3], b: [17, 3, 3, 14], c: [17, 19, 3, 14], d: [3, 33, 14, 3], e: [0, 19, 3, 14], f: [0, 3, 3, 14], g: [3, 16.5, 14, 3] };
 function seg(txt, h) {
   const w = h * 20 / 36;
@@ -433,7 +435,7 @@ function draw(mark) {
   const c = S.cur, C = cfg.style === 'C';
   $('q').innerHTML = C ? segCalc(c) : qText(c) + (cfg.style === 'B' ? ' <span class="eq">=</span>' : ' =');
   const shown = mark === 'ko' ? String(c.res) : S.val;
-  $('ans').innerHTML = C ? segNum(shown.replace('−', '-') || '?', 46) : (shown.replace('-', '−') || (cfg.style === 'A' ? '_' : '&nbsp;'));
+  $('ans').innerHTML = C ? (shown ? segNum(shown.replace('−', '-'), 46) : `<span class="cur">${seg('_', 46)}</span>`) : (shown.replace('-', '−') || (cfg.style === 'A' ? '_' : '&nbsp;'));
   $('ans').className = 'ans' + (mark ? ' ' + mark : '');
   $('msg').className = 'msg' + (mark ? ' ' + mark : '');
   $('msg').textContent = mark === 'ok' ? tx(['Bravo !', 'Bien joué !', 'Juste !', 'Super !'][S.good % 4]) : mark === 'ko' ? tx("C'était " + neg(c.res)) : '';
