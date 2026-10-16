@@ -3,7 +3,7 @@
 ## Le projet
 - Dépôt GitHub : **Tirashi/Claude**. Site publié : **https://tirashi.github.io/Claude/** (installé en appli PWA sur Android).
 - Jeux en HTML **sans build** (le fichier poussé est celui que joue le téléphone), un dossier par jeu. La page d'accueil `index.html` est le menu. Un petit jeu tient dans son `index.html` ; un gros jeu peut se répartir en **scripts classiques** (`<script src>`, pas de modules ES, pas de dépendances npm) : `outils/artefact.py` les intègre tous dans l'artefact, et chacun va dans `FILES` de `sw.js`.
-- Service worker `sw.js` (mode hors connexion) : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v23` au moment d'écrire ces lignes). Réseau d'abord, mais copie en cache servie si le réseau ne répond pas en 2,5 s.
+- Service worker `sw.js` (mode hors connexion) : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v24` au moment d'écrire ces lignes). Réseau d'abord, mais copie en cache servie si le réseau ne répond pas en 2,5 s.
 - Polices hébergées dans `polices/` (Nebula : `polices/nebula.css`, lien Google gardé dans `data-google` pour l'artefact) ; les autres jeux utilisent encore Google Fonts.
 - Moteur de sprites 32 bits partagé : `injagility/chiens32.js` (volumes ombrés, 6 races de chiens).
 - Icônes 16×16 des jeux : `icones.js` (`LudoIcons.draw`, `LudoIcons.paint`), partagé par l'accueil (cartouches) et la page des classements (étagère de boîtes : apparence de chaque jeu dans `LOOK`, à compléter pour un nouveau jeu).
