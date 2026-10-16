@@ -6,8 +6,10 @@
      du réseau, quand elle arrive, met le cache à jour pour la prochaine ouverture. Après un
      tel retard, les fichiers suivants (scripts, polices…) sont servis du cache sans attendre
      pendant 10 s : la page ne s'ouvre pas étage par étage.
+   - Le cache HTTP du navigateur est contourné (préchargement en « reload », réseau en « no-cache ») :
+     une page neuve ne doit jamais tourner avec un script partagé resté ancien.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v30";
+const VERSION = "ludotheque-v31";
 const NET_WAIT = 2500;
 let slowUntil = 0;   // réseau jugé lent : pendant 10 s, les copies en cache sont servies sans attendre
 const FONTS = "ludotheque-fonts";
@@ -21,7 +23,7 @@ const FILES = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", event => {
@@ -49,7 +51,9 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
 
   // Fichiers du site : le réseau d'abord ; la copie en cache si on est hors ligne ou si le réseau traîne
-  const net = fetch(req).then(async res => {
+  // « no-cache » : le navigateur redemande toujours au serveur (sinon un fichier pouvait rester vieux de 10 min
+  // pendant que la page, elle, était neuve : icône absente de la cartouche de Calculator le 16/10)
+  const net = fetch(req, { cache: "no-cache" }).then(async res => {
     if (res && res.ok) { const cache = await caches.open(VERSION); await cache.put(req, res.clone()); }
     return res;
   });
