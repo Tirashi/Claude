@@ -1,9 +1,10 @@
-/* Test « fumée » dans Chromium : chaque jeu s'ouvre sans erreur JavaScript, et Nebula
-   joue une partie (saut, combat au toucher, fin de tour, écran INCIDENT).
+/* Test « fumée » dans Chromium : chaque jeu s'ouvre sans erreur JavaScript, l'accueil ouvre le volet
+   d'un jeu (et l'ancien lien des classements y mène), et Nebula joue une partie (saut, combat au toucher,
+   fin de tour, écran INCIDENT).
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
-const PAGES = ['index.html', 'classements/index.html', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
+const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
   'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'alunissage/index.html', 'nebula/index.html',
   'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
@@ -14,6 +15,17 @@ const shots = process.argv[2];
     const p = await ctx.newPage(), errs = [];
     p.on('pageerror', e => errs.push(e.message));
     await p.goto(BASE + url); await p.waitForTimeout(800);
+    if (url === 'index.html') {
+      // toucher une cartouche : elle tourne, puis le volet s'ouvre avec la boîte, les records et JOUER
+      await p.click('.c3[data-k="orbite/index.html"]'); await p.waitForTimeout(900);
+      const r = await p.evaluate(() => document.getElementById('ov').classList.contains('on') && document.getElementById('vTitle').textContent === 'ORBITE' && !!document.querySelector('#vBody .bwrap') && !!document.querySelector('#vBody a.play'));
+      if (!r) errs.push("Accueil : le volet d'Orbite ne s'ouvre pas");
+      if (shots) await p.screenshot({ path: `${shots}/fumee-accueil-volet.png` });
+    }
+    if (url.startsWith('classements/')) {
+      const r = await p.evaluate(() => location.pathname.endsWith('/index.html') && !location.pathname.includes('classements') && document.getElementById('vTitle').textContent === 'SUDOKU');
+      if (!r) errs.push("L'ancien lien des classements n'ouvre pas le volet du Sudoku");
+    }
     if (url === 'nebula/index.html') {
       const r = await p.evaluate(async () => {
         const N = Nebula, wait = ms => new Promise(r => setTimeout(r, ms));

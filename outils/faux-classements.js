@@ -5,7 +5,8 @@
    Le script :
      1. pose des records locaux (argument JSON optionnel), inscrit « Testeur »
         et affiche ce qui part à l'inscription ;
-     2. ouvre la page des classements sur l'ancre donnée et affiche le tableau demandé.
+     2. ouvre l'accueil sur l'ancre donnée (le volet du jeu, comme les boutons CLASSEMENT des jeux)
+        et affiche le tableau demandé.
    node outils/faux-classements.js <ancre> [records-json] [capture.png]
    ex. : node outils/faux-classements.js amiral-0-easy '{"amiral.best":{"easy":22}}' /tmp/cl.png
    Pour tester l'envoi depuis un jeu, s'en inspirer : ouvrir le jeu dans le même
@@ -28,13 +29,12 @@ const { BASE, phone, logErrors } = require('./pw');
   const p = await ctx.newPage(); logErrors(p);
   await p.goto(BASE + 'index.html');
   await p.evaluate(r => { localStorage.clear(); for (const [k, v] of Object.entries(JSON.parse(r))) localStorage.setItem(k, JSON.stringify(v)); }, recs);
-  await p.goto(BASE + 'classements/index.html');
   await p.evaluate(() => LudoScores.join('Testeur', 'CODE-TEST')); await p.waitForTimeout(2500);
   console.log('Envoyé à l\'inscription :');
   calls.filter(c => c[0] === 'ludo_submit').forEach(c => console.log(`  ${c[1].p_game} ${c[1].p_board} = ${c[1].p_value}${c[1].p_low ? ' (le plus bas gagne)' : ''}`));
   calls.length = 0;
   // une ancre seule ne recharge pas la page : on repasse par about:blank
-  await p.goto('about:blank'); await p.goto(BASE + 'classements/index.html#' + hash); await p.waitForTimeout(1200);
+  await p.goto('about:blank'); await p.goto(BASE + 'index.html#' + hash); await p.waitForTimeout(1500);
   console.log('Tableau demandé pour #' + hash + ' :', calls.filter(c => c[0] === 'ludo_board').map(c => c[1].p_game + ' ' + c[1].p_board).join(', ') || 'aucun');
   if (shot) { await p.screenshot({ path: shot }); console.log('capture', shot); }
   await browser.close();

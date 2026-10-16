@@ -11,7 +11,7 @@ python3 -m http.server 8765
 | Script | Rôle |
 |---|---|
 | `captures.js <sortie> <page>...` | Captures sur un écran de téléphone (390×780). |
-| `faux-classements.js <ancre> [records-json] [capture]` | Classements avec un faux serveur Supabase : ce qui part à l'inscription, quel tableau la page demande. |
+| `faux-classements.js <ancre> [records-json] [capture]` | Classements avec un faux serveur Supabase : ce qui part à l'inscription, quel tableau le volet du jeu demande (accueil ouvert sur l'ancre). |
 | `orbite-solveur.js [niveaux]` | Orbite : tirs gagnants et robustes par niveau. |
 | `pont-stellaire-unicite.js [n]` | Pont stellaire : temps de génération et unicité des solutions. |
 | `verifications.js` | **Avant chaque push** (sans navigateur ni serveur) : syntaxe de tous les scripts, `sw.js` (fichiers et version notée dans CLAUDE.md), aucune clé secrète, `MON-CODE`, icônes 16×16, simulateur Nebula, types de `nebula/regles.js` (`tsc -p outils/tsconfig.nebula.json`, ignoré si `tsc` est absent). Lancé aussi par la CI GitHub. |
