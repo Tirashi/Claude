@@ -377,7 +377,8 @@ function recLine() {
 /* ---------- menu ---------- */
 function setStyle(s) {
   cfg.style = s; $('app').dataset.style = s;
-  document.querySelector('meta[name=theme-color]').content = s === 'A' ? '#10122b' : s === 'B' ? '#fbf8f0' : '#2b2d31';
+  const m = document.querySelector('meta[name=theme-color]');   // absente de l'artefact
+  if (m) m.content = s === 'A' ? '#10122b' : s === 'B' ? '#fbf8f0' : '#2b2d31';
 }
 function renderMenu() {
   const s = cfg.style;
