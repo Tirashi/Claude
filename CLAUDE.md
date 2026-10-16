@@ -47,6 +47,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 | Injagility, Infini (`injagility/index.html`) | https://claude.ai/artifact/Tk729YfzNqNXeBqfZYjs7k |
 | Injagility, Parcours (`injagility/parcours.html`) | https://claude.ai/artifact/LxcviTcJyAAGWd32HwPGmb |
 | Orbite | https://claude.ai/artifact/UysU574KpYMa7DdHhKsaHv |
+| Lune-Rover | https://claude.ai/artifact/Caj42czGsSbBgwVmRVNR8T |
 | Pont stellaire | https://claude.ai/artifact/Twgkpb1scdCh2Th6Nh35bF |
 | Alunissage | https://claude.ai/artifact/2TgrmzSKuzoyPHYufyHrWh |
 | Nebula | https://claude.ai/artifact/EPDtjTHPDsCnYKjtHCuxwY |
