@@ -1,6 +1,6 @@
 # Racines — cahier des charges (idée du 16/10, à approfondir)
 
-Document de game design fourni par l'utilisateur le 16/10, recopié tel quel (§ 1 à 8). Il a été écrit **avant la création de la Ludothèque** : la section **« Adaptation à la Ludothèque »** (validée par l'utilisateur le 16/10) remplace ce qui ne colle pas au dépôt (Godot, React, OpenWeatherMap, applis iOS/Android). Les points encore ouverts sont dans **« Questions pour le brainstorming »**, à trancher avec l'utilisateur avant de coder.
+Document de game design fourni par l'utilisateur le 16/10, recopié tel quel (§ 1 à 8). Il a été écrit **avant la création de la Ludothèque** : la section **« Adaptation à la Ludothèque »** (validée par l'utilisateur le 16/10) remplace ce qui ne colle pas au dépôt (Godot, React, OpenWeatherMap, applis iOS/Android). Les questions de la section **« Questions pour le brainstorming »** ont été tranchées le 16/10 : voir **« Réponses de l'utilisateur »** en fin de fichier. Prochaine étape : la maquette du style.
 
 ---
 
@@ -158,3 +158,44 @@ Le jeu réussit s'il crée des **moments de partage**, pas des sessions de grind
 
 **Histoire**
 22. Le journal de l'ancien propriétaire : combien de pages, qui l'écrit (Claude propose, l'utilisateur relit) ? Une fin à l'histoire (qui était l'ancien propriétaire ?) ?
+
+## Réponses de l'utilisateur (brainstorming du 16/10)
+
+**Public et but**
+1. **Toute la famille** : textes courts, noms d'espèces simples, lisible par un enfant qui lit, sans être niais pour les adultes.
+2. **Pas de fin**, mais des buts à long terme : **compléter l'herbier** et **agrandir l'île**. (Le journal n'est pas un but en soi.)
+3. Rythme **libre** : un mélange de pousses courtes et longues, chacun vient quand il veut (pas de nombre de visites visé).
+
+**Jardin et plantes**
+4. Agrandissement par **nouvelles parcelles** défrichées autour du jardin (pas de serre à réparer ni d'îles reliées pour l'instant).
+5. **4 espèces de base, environ 60 au total** dans l'herbier (plusieurs mois de jeu).
+6. Croisements **devinables** : une génétique simple (couleur, forme, taille…) qu'on apprend, pour viser un hybride.
+7. Nouvelles graines par **récolte** (plante fleurie) et **découvertes** (nuages, oiseaux qui en apportent…). Pas de graines liées à la météo ni de cadeaux comme source principale.
+8. Une plante fleurie **reste en place** et redonne des graines de temps en temps ; on peut l'arracher pour libérer la place.
+9. **Arrosage + 1 ou 2 soins** (par exemple engrais, taille) qui orientent un trait.
+10. Durées **très variées** : de 10 minutes à 2 jours, pour qu'il se passe toujours quelque chose.
+
+**Temps réel et météo**
+11. **Les deux au choix** : une ville par défaut dans les réglages, et un bouton pour utiliser la position du téléphone.
+12. Saisons réelles : **décor seulement** (couleurs, feuilles, neige…) ; toutes les espèces restent accessibles toute l'année.
+13. Mode nuit **automatique** selon l'heure réelle, **forçable** dans les réglages.
+14. Pas de notifications : le **message à l'ouverture** (« pendant ton absence : 2 floraisons ») suffit.
+
+**Partage en famille**
+15. Ordre : d'abord le **cadeau de graine par code** (sans serveur), puis les **visites et l'herbier familial** (SQL Supabase).
+16. Visites : on peut **arroser chez le proche et lui laisser un mot** ; le caillou peint est à **choisir parmi des cailloux tout prêts** (pas de dessin au doigt).
+17. Herbier familial : **oui**, afficher le premier découvreur de chaque espèce (le petit classement déguisé est accepté).
+18. **Même compte** que les classements : numéro de joueur, pseudo et code `LUDOCOMPTE-` de `ludo-scores.js`.
+
+**Style et sons**
+19. Maquette à faire avec **2 variantes** : **pixel art doux aux couleurs pastel** (cohérent avec la Ludothèque) et **aquarelle à contours encrés** (façon livre illustré). L'aquarelle douce sans contours et le pastel en aplats sont écartés.
+20. Vue : **l'île entière sur un écran en portrait** ; quand l'île s'agrandit, on dézoome (pas de défilement).
+21. **Musique générative douce + sons d'ambiance** (vent, oiseaux, pluie selon la météo).
+
+**Histoire**
+22. Journal : **environ 60 pages, une par espèce** de l'herbier (Claude propose, l'utilisateur relit) ; **une fin** quand l'herbier est complet.
+
+**Ce qui change par rapport au document de départ**
+- Pas de graines liées à la météo : la météo agit sur la pousse et le décor, pas sur les graines obtenues. Les cadeaux restent possibles (code de graine) mais ne sont pas une source principale.
+- Le pixel art reste possible : le style se décidera sur la maquette (prochaine étape, avant tout code).
+- Le journal suit l'herbier (une page par espèce découverte) ; la fin du journal = l'herbier complet, mais le jardin continue ensuite (pas de fin au jeu).
