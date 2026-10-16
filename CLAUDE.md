@@ -63,7 +63,7 @@ Queens (`queens/`), Picross Dex (`picross/`), Lignée (`lignee/`), Injagility (`
 - **Nebula** : sessions 1 à 4 faites ; équilibrage jugé correct, à revoir après plus de parties. État détaillé dans le mémo, suivi dans [`specs/nebula.md`](specs/nebula.md) § 17 à 22. Prochain chantier possible : « Nebula : l'Empire des étoiles », dans une nouvelle conversation.
 - **La colonie** (remplace l'Île des naufragés, décision du 16/10) : cahier des charges [`specs/colonie.md`](specs/colonie.md) ; prochaine étape : maquette de l'écran en paysage, dans une nouvelle conversation.
 - Orbite : niveaux 12, 23, 25, 28 et 30 les plus serrés ; à ajuster s'ils sont trop durs.
-- Lune-Rover (16/10) : 30 niveaux, graphismes à refaire : maquette `maquettes/lune-rover-graphismes.html` (A console de mission, B diorama isométrique, C dessin animé), en attente du choix de l'utilisateur. À essayer aussi sur le téléphone : taille des cases du programme, difficulté des niveaux 22 à 30.
+- Lune-Rover (16/10) : 30 niveaux, graphismes à refaire dans le style C « dessin animé » (choisi le 16/10) ; maquette approfondie `maquettes/lune-rover-c.html` (Pico le rover, carte des niveaux en chemin), en attente de validation avant de programmer. À essayer aussi sur le téléphone : taille des cases du programme, difficulté des niveaux 22 à 30.
 - Classements testés seulement avec le faux serveur, à confirmer avec un vrai record : Lune-Rover, Orbite, Pont stellaire, Sudoku, grille du jour de Queens, Nebula (`daily`, `victoires`).
 
 ## Idées et maquettes
