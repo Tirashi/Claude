@@ -1,0 +1,513 @@
+<title>Accueil aux cartouches</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : un écran de téléphone (l'accueil fusionné : filtres puis cartouches 3D sur des planches)
+   et, à côté, le choix entre trois fenêtres de jeu qui montrent la boîte : A volet, B dos de la boîte, C vitrine.
+   Monde unique sombre de la Ludothèque (nuit violette tramée, or, Press Start 2P + VT323). */
+:root{
+  color-scheme: dark;
+  --night:#110d22; --night-2:#1e1840; --ink:#0d0a18; --text:#f2f0ff; --dim:#a9a6d8; --gold:#ffd23f; --red:#e8264d;
+  --wood-hi:#b77a48; --wood:#7a4a24; --wood-lo:#5a3418;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color:var(--text);
+  font-family:var(--f-body); font-size:21px; line-height:1.25;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:28px 56px}
+.wrap{max-width:1000px; margin:0 auto; display:flex; flex-direction:column; gap:22px}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px,4.6vw,28px); letter-spacing:2px; color:var(--gold); line-height:1.4; text-wrap:balance;
+  text-shadow:3px 0 0 #b8571a, 0 3px 0 #b8571a, 3px 3px 0 #b8571a, 6px 6px 0 #000}
+.lead{margin:0; color:var(--dim); max-width:68ch}
+.lead b{color:var(--text); font-weight:400}
+button{font:inherit; color:inherit; cursor:pointer; background:none; border:0; padding:0}
+:focus-visible{outline:3px dashed var(--gold); outline-offset:3px}
+@keyframes blink{50%{opacity:0}}
+
+/* choix de la fenêtre (menu façon B2) */
+.choice{display:flex; flex-direction:column; gap:4px; background:#000; border:3px solid #fff; box-shadow:0 0 0 3px #000, 6px 6px 0 3px #000; padding:12px 16px; border-radius:6px}
+.choice > b{font-family:var(--f-display); font-weight:400; font-size:8px; letter-spacing:1px; color:var(--dim); margin-bottom:6px}
+.choice button{font-family:var(--f-display); font-size:10px; letter-spacing:1px; line-height:2.2; color:var(--dim); padding-left:18px; position:relative; text-align:left}
+.choice button[aria-pressed="true"]{color:#fff}
+.choice button[aria-pressed="true"]::before{content:"▶"; position:absolute; left:0; color:var(--gold); animation:blink 1s steps(1) infinite}
+.notes{display:flex; flex-direction:column; gap:14px}
+.note{background:#1e1840; border:3px solid #3b3566; padding:12px 14px; display:flex; flex-direction:column; gap:6px}
+.note.on{border-color:var(--gold)}
+.note b{font-family:var(--f-display); font-weight:400; font-size:9px; color:var(--gold); line-height:1.6}
+.note p{margin:0; color:var(--dim); font-size:19px}
+.ex{margin:0; font-family:var(--f-display); font-size:7px; letter-spacing:1px; color:#8a86b8}
+.stage{display:grid; grid-template-columns:minmax(0, 420px) minmax(0, 1fr); gap:28px; align-items:start}
+@media (max-width:820px){ .stage{grid-template-columns:minmax(0,1fr)} }
+.side{display:flex; flex-direction:column; gap:18px; min-width:0}
+
+/* ---------- la cartouche en 3D : six faces, posée en perspective, qui flotte et pivote doucement ---------- */
+.c3{--k:1; position:relative; width:var(--w); height:var(--h); perspective:520px; flex:none; display:block; -webkit-tap-highlight-color:transparent}
+.c3 .body{position:absolute; inset:0; transform-style:preserve-3d; animation:sway 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+.c3 .f{position:absolute; left:0; top:0; backface-visibility:hidden; overflow:hidden}
+.c3 .front{width:var(--w); height:var(--h); transform:translateZ(calc(var(--d) / 2))}
+.c3 .back{width:var(--w); height:var(--h); transform:rotateY(180deg) translateZ(calc(var(--d) / 2))}
+.c3 .left,.c3 .right{width:var(--d); height:var(--h); left:calc((var(--w) - var(--d)) / 2)}
+.c3 .left{transform:rotateY(-90deg) translateZ(calc(var(--w) / 2))}
+.c3 .right{transform:rotateY(90deg) translateZ(calc(var(--w) / 2))}
+.c3 .top,.c3 .bottom{width:var(--w); height:var(--d); top:calc((var(--h) - var(--d)) / 2)}
+.c3 .top{transform:rotateX(90deg) translateZ(calc(var(--h) / 2))}
+.c3 .bottom{transform:rotateX(-90deg) translateZ(calc(var(--h) / 2))}
+/* reflet qui glisse sur la face avant, au rythme du pivot */
+.c3 .front::after{content:""; position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 47%, rgba(255,255,255,.08) 52%, transparent 62%) 0 0 / 300% 100%;
+  animation:gloss 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+.c3::after{content:""; position:absolute; left:12%; right:12%; bottom:calc(-14px * var(--k)); height:calc(8px * var(--k)); border-radius:50%;
+  background:radial-gradient(rgba(0,0,0,.6), transparent 70%); animation:shad 7s ease-in-out infinite; animation-delay:calc(var(--i) * -.83s)}
+@keyframes sway{0%,100%{transform:translateY(0) rotateX(9deg) rotateY(-26deg)} 50%{transform:translateY(calc(-6px * var(--k))) rotateX(5deg) rotateY(24deg)}}
+@keyframes gloss{0%,100%{background-position:100% 0} 50%{background-position:0 0}}
+@keyframes shad{50%{transform:scaleX(.8); opacity:.6}}
+.retro .c3 .body, .retro .c3 .front::after, .retro .c3::after{animation-timing-function:steps(9)}
+.c3.spin .body{animation:spin .9s cubic-bezier(.3,.7,.3,1)}
+@keyframes spin{0%{transform:rotateY(0)} 45%{transform:translateY(calc(-22px * var(--k))) rotateY(200deg)} 100%{transform:rotateY(360deg)}}
+.c3 canvas, .c3 img{display:block; image-rendering:pixelated}
+.c3 .crown{position:absolute; z-index:2; top:calc(-24px * var(--k)); left:50%; transform:translateX(-50%); font-style:normal; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif;
+  font-size:calc(17px * var(--k)); color:var(--gold); text-shadow:2px 2px 0 #000; animation:crown 1.2s steps(2) infinite alternate}
+@keyframes crown{to{transform:translate(-50%, -3px)}}
+.c3 .stk{position:absolute; z-index:3; top:calc(4px * var(--k)); right:calc(-8px * var(--k)); transform:rotate(12deg); font-family:var(--f-display); font-size:calc(6px * var(--k)); letter-spacing:1px;
+  padding:3px 4px; background:var(--gold); color:#2a1600; border:2px solid #000; box-shadow:2px 2px 0 #000; white-space:nowrap}
+.c3 .stk.cours{background:#5cff8a; color:#06280f}
+
+/* A · 16 bits : plastique gris, deux rangées de stries, grande étiquette */
+.sA{--w:calc(92px * var(--k)); --h:calc(102px * var(--k)); --d:calc(16px * var(--k))}
+.sA .front{background:#8d8b9e; border:2px solid var(--ink); border-radius:calc(7px * var(--k)) calc(7px * var(--k)) 3px 3px;
+  box-shadow:inset 2px 2px 0 #b6b4c8, inset -3px -3px 0 #5c5a6e}
+.sA .rid{position:absolute; left:18%; right:18%; top:calc(5px * var(--k)); height:calc(7px * var(--k)); background:repeating-linear-gradient(90deg, #5c5a6e 0 2px, transparent 2px 5px)}
+.sA .lab{position:absolute; left:calc(7px * var(--k)); right:calc(7px * var(--k)); top:calc(16px * var(--k)); bottom:calc(14px * var(--k)); background:var(--lb); border:2px solid var(--ink);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(5px * var(--k)); padding:2px}
+.sA .lab canvas{width:calc(34px * var(--k)); height:calc(34px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45))}
+.sA .lab canvas.wide{width:calc(52px * var(--k)); height:calc(36px * var(--k))}
+.sA .lab img{width:calc(62px * var(--k)); height:calc(36px * var(--k)); object-fit:cover; border:1px solid #000}
+.sA .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(6px * var(--k)); line-height:1.5; letter-spacing:.5px; color:var(--lt); text-align:center; text-shadow:1px 1px 0 rgba(0,0,0,.6)}
+.sA .notch{position:absolute; left:30%; right:30%; bottom:calc(4px * var(--k)); height:calc(5px * var(--k)); border:2px solid #5c5a6e; border-top:0}
+.sA .left,.sA .right{background:linear-gradient(90deg, #5c5a6e, #747286)}
+.sA .top{background:#a19fb2 repeating-linear-gradient(90deg, #6e6c80 0 2px, transparent 2px 5px)}
+.sA .bottom{background:#3a3848 repeating-linear-gradient(90deg, #c9a43a 0 3px, #8a6b1c 3px 5px) center / 70% 60% no-repeat}
+.sA .back{background:#7a788c; border:2px solid var(--ink)}
+
+/* B · poche : petite cartouche en plastique coloré transparent, on voit le circuit au travers */
+.sB{--w:calc(80px * var(--k)); --h:calc(92px * var(--k)); --d:calc(12px * var(--k))}
+.sB .f{backface-visibility:visible}
+.sB .front,.sB .back{clip-path:polygon(0 0, 84% 0, 100% 11%, 100% 100%, 0 100%); border-radius:3px}
+.sB .front{background:color-mix(in srgb, var(--sh) 52%, transparent); box-shadow:inset 2px 2px 0 rgba(255,255,255,.35), inset -3px -3px 0 color-mix(in srgb, var(--sh) 60%, #000)}
+.sB .back{background:color-mix(in srgb, var(--sh) 70%, #000 10%)}
+.sB .pcb{position:absolute; left:12%; right:12%; top:8%; height:78%; transform:translateZ(0); background:#1f6b3a;
+  background-image:linear-gradient(90deg, transparent 46%, #d9b44a 46% 49%, transparent 49%), linear-gradient(transparent 70%, #d9b44a 70% 72%, transparent 72%);
+  border:1px solid #0d3a1c}
+.sB .pcb::before{content:""; position:absolute; left:22%; top:16%; width:56%; height:30%; background:#151515; border:1px solid #444}
+.sB .pcb::after{content:""; position:absolute; left:8%; right:8%; bottom:0; height:12%; background:repeating-linear-gradient(90deg, #e2c25a 0 3px, transparent 3px 5px)}
+.sB .emb{position:absolute; left:calc(7px * var(--k)); top:calc(4px * var(--k)); font-family:var(--f-display); font-size:calc(5px * var(--k)); letter-spacing:1px; color:rgba(255,255,255,.55)}
+.sB .lab{position:absolute; left:calc(7px * var(--k)); right:calc(7px * var(--k)); top:calc(13px * var(--k)); height:calc(56px * var(--k)); background:var(--lb); border:2px solid var(--ink); border-radius:2px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(4px * var(--k)); padding:2px}
+.sB .lab canvas{width:calc(30px * var(--k)); height:calc(30px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45))}
+.sB .lab canvas.wide{width:calc(46px * var(--k)); height:calc(32px * var(--k))}
+.sB .lab img{width:calc(56px * var(--k)); height:calc(34px * var(--k)); object-fit:cover; border:1px solid #000}
+.sB .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(5px * var(--k)); line-height:1.5; color:var(--lt); text-align:center; text-shadow:1px 1px 0 rgba(0,0,0,.6)}
+.sB .arw{position:absolute; left:calc(8px * var(--k)); bottom:calc(5px * var(--k)); font-size:calc(9px * var(--k)); color:rgba(255,255,255,.5); line-height:1}
+.sB .left,.sB .right,.sB .top,.sB .bottom{background:color-mix(in srgb, var(--sh) 65%, transparent)}
+
+/* C · 32 bits : plastique noir strié et filet rouge, comme les boîtes de l'étagère ; titre chromé */
+.sC{--w:calc(92px * var(--k)); --h:calc(106px * var(--k)); --d:calc(18px * var(--k))}
+.sC .front{background:repeating-linear-gradient(90deg, #2a2a2a 0 3px, #111 3px 7px); border:2px solid #000; border-radius:3px;
+  box-shadow:inset 2px 0 0 rgba(255,255,255,.12), inset -3px 0 0 rgba(0,0,0,.5)}
+.sC .front::before{content:""; position:absolute; top:0; bottom:0; right:calc(5px * var(--k)); width:3px; background:var(--red)}
+.sC .lab{position:absolute; left:calc(7px * var(--k)); right:calc(14px * var(--k)); top:calc(8px * var(--k)); height:calc(56px * var(--k)); background:var(--lb); border:2px solid #000;
+  display:flex; align-items:center; justify-content:center}
+.sC .lab canvas{width:calc(36px * var(--k)); height:calc(36px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
+.sC .lab canvas.wide{width:calc(56px * var(--k)); height:calc(38px * var(--k))}
+.sC .lab img{width:100%; height:100%; object-fit:cover}
+.sC .ttl{position:absolute; left:calc(6px * var(--k)); right:calc(12px * var(--k)); top:calc(70px * var(--k)); text-align:center; font-family:var(--f-display); font-size:calc(6px * var(--k)); line-height:1.6; letter-spacing:.5px}
+.chrome{background:linear-gradient(90deg, #fff 30%, #9fb4d6 55%, #fff 60%, #c9d6f0); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(1px 1px 0 #000)}
+.sC .grip{position:absolute; left:22%; right:28%; bottom:calc(5px * var(--k)); height:calc(5px * var(--k)); background:repeating-linear-gradient(90deg, #3a3a3a 0 2px, transparent 2px 4px)}
+.sC .left,.sC .right{background:#141414 linear-gradient(90deg, transparent 40%, rgba(232,38,77,.8) 40% 55%, transparent 55%)}
+.sC .top{background:#0c0c0c repeating-linear-gradient(90deg, #d9b44a 0 3px, #7a5a14 3px 5px) center / 76% 50% no-repeat}
+.sC .bottom{background:#0c0c0c}
+.sC .back{background:#161616; border:2px solid #000}
+
+
+/* ---------- l'écran de téléphone ---------- */
+.phone{position:relative; width:100%; max-width:420px; margin:0 auto; height:min(780px, 88vh); min-height:580px; overflow:hidden;
+  background:var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; border:3px solid #000; border-radius:22px;
+  box-shadow:0 0 0 6px #232c3a, 8px 8px 0 6px #000}
+.scr{position:absolute; inset:0; overflow:hidden auto; overscroll-behavior:contain; scrollbar-width:none; display:flex; flex-direction:column; gap:14px; padding:18px 12px 28px}
+.scr::-webkit-scrollbar{display:none}
+.logo{margin:0; text-align:center; font-family:var(--f-display); font-weight:400; font-size:17px; letter-spacing:2px; line-height:1.4; color:var(--gold); text-shadow:2px 0 0 #b8571a, 0 2px 0 #b8571a, 2px 2px 0 #b8571a, 4px 4px 0 #000}
+.menu{background:#000; border:3px solid #fff; box-shadow:0 0 0 3px #000, 4px 4px 0 3px #000; border-radius:5px; padding:8px 10px 10px; display:flex; flex-direction:column; gap:6px}
+.menu .cmds{display:flex; flex-wrap:wrap; gap:0 12px}
+.menu .cmds button{font-family:var(--f-display); font-size:8px; letter-spacing:1px; line-height:2.3; color:#8a86b8; padding-left:13px; position:relative}
+.menu .cmds button[aria-pressed="true"]{color:#fff}
+.menu .cmds button[aria-pressed="true"]::before{content:"▶"; position:absolute; left:0; color:var(--gold); animation:blink 1s steps(1) infinite}
+.menu .say{border-top:2px solid #fff; padding-top:6px; font-size:18px; line-height:1.2; min-height:2.4em; color:#fff}
+.menu .say b{font-family:var(--f-display); font-weight:400; font-size:7px; color:var(--gold); margin-right:6px}
+/* les cartouches debout sur des planches, quatre par rangée */
+.rack{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); grid-auto-rows:128px; justify-items:center; align-items:end; padding:0 4px;
+  background:linear-gradient(transparent calc(100% - 16px), var(--wood-hi) calc(100% - 16px) calc(100% - 13px), var(--wood) calc(100% - 13px) calc(100% - 3px), var(--ink) calc(100% - 3px)) 0 0 / 100% 128px;
+  border:3px solid var(--ink); box-shadow:0 0 0 3px #3b3566, 5px 5px 0 3px #000; background-color:#140f28}
+.rack .c3{margin-bottom:24px}
+@media (max-width:370px){ .rack{grid-template-columns:repeat(3, minmax(0,1fr))} }
+.empty{font-size:19px; color:var(--dim); text-align:center; padding:20px 10px}
+
+/* ---------- la boîte de jeu en 3D (face avant, dos, tranche de l'étagère) ---------- */
+.bwrap{position:relative; width:var(--bw); height:var(--bh); transform-style:preserve-3d; animation:boxin .8s cubic-bezier(.25,.8,.3,1.1) both}
+.flip{position:absolute; inset:0; transform-style:preserve-3d; transition:transform .7s cubic-bezier(.4,.1,.3,1)}
+.flip.back{transform:rotateY(180deg)}
+.box3{position:absolute; inset:0; transform-style:preserve-3d; animation:boxturn 9s ease-in-out infinite}
+.box3 > div{position:absolute; left:0; top:0; backface-visibility:hidden}
+.box3 .bf{width:var(--bw); height:var(--bh); transform:translateZ(calc(var(--bd) / 2)); background:repeating-linear-gradient(90deg, #262626 0 3px, #111 3px 7px); border:3px solid #000;
+  display:flex; flex-direction:column; padding:calc(6px * var(--bk)) calc(11px * var(--bk)) calc(6px * var(--bk)) calc(6px * var(--bk)); gap:calc(5px * var(--bk))}
+.box3 .bf::before,.box3 .bb::before{content:""; position:absolute; top:0; bottom:0; right:calc(4px * var(--bk)); width:3px; background:var(--red)}
+.box3 .brand{font-family:var(--f-display); font-size:calc(5px * var(--bk)); letter-spacing:1px; color:#fff; background:var(--red); padding:calc(3px * var(--bk)) calc(4px * var(--bk)); align-self:flex-start}
+.box3 .art{flex:1; background:var(--lb); border:2px solid #000; display:flex; align-items:center; justify-content:center; overflow:hidden}
+.box3 .art canvas{width:calc(56px * var(--bk)); height:calc(56px * var(--bk)); image-rendering:pixelated; filter:drop-shadow(3px 3px 0 rgba(0,0,0,.5))}
+.box3 .art canvas.wide{width:calc(84px * var(--bk)); height:calc(58px * var(--bk))}
+.box3 .art img{width:100%; height:100%; object-fit:cover}
+.box3 .tt{font-family:var(--f-display); font-size:calc(7px * var(--bk)); line-height:1.5; text-align:center}
+.box3 .gen{align-self:center; font-family:var(--f-display); font-size:calc(4.5px * var(--bk)); letter-spacing:1px; color:#111; background:var(--lt); padding:calc(2px * var(--bk)) calc(5px * var(--bk))}
+.box3 .bs,.box3 .br{width:var(--bd); height:var(--bh); left:calc((var(--bw) - var(--bd)) / 2); background:repeating-linear-gradient(90deg, #2a2a2a 0 3px, #111 3px 7px); border:2px solid #000}
+.box3 .bs{transform:rotateY(-90deg) translateZ(calc(var(--bw) / 2)); display:flex; flex-direction:column; align-items:center; padding-top:calc(5px * var(--bk)); gap:calc(6px * var(--bk))}
+.box3 .bs i{width:calc(18px * var(--bk)); height:calc(18px * var(--bk)); background:var(--lb); border:2px solid #000}
+.box3 .bs span{writing-mode:vertical-rl; transform:rotate(180deg); font-family:var(--f-display); font-size:calc(6px * var(--bk)); letter-spacing:1px; white-space:nowrap}
+.box3 .br{transform:rotateY(90deg) translateZ(calc(var(--bw) / 2))}
+.box3 .bt,.box3 .bo{width:var(--bw); height:var(--bd); top:calc((var(--bh) - var(--bd)) / 2); background:#1a1a1a; border:2px solid #000}
+.box3 .bt{transform:rotateX(90deg) translateZ(calc(var(--bh) / 2))}
+.box3 .bo{transform:rotateX(-90deg) translateZ(calc(var(--bh) / 2))}
+.box3 .bb{width:var(--bw); height:var(--bh); transform:rotateY(180deg) translateZ(calc(var(--bd) / 2)); background:#151515; border:3px solid #000;
+  display:flex; flex-direction:column; gap:7px; padding:10px 16px 10px 10px; overflow:hidden}
+/* le dos de la boîte (proposition B) : records et classement imprimés comme au dos d'un vrai jeu */
+.bb .shot{height:46px; background:var(--lb); border:2px solid #000; display:flex; align-items:center; justify-content:center; overflow:hidden; flex:none}
+.bb .shot canvas{width:32px; height:32px; image-rendering:pixelated} .bb .shot canvas.wide{width:50px; height:34px} .bb .shot img{width:100%; height:100%; object-fit:cover}
+.bb h4{margin:0; font-family:var(--f-display); font-weight:400; font-size:7px; letter-spacing:1px; color:var(--gold)}
+.bb .r{display:flex; justify-content:space-between; gap:8px; font-size:17px; line-height:1.05; color:#e6e3ff; font-variant-numeric:tabular-nums}
+.bb .r.me{color:var(--gold)}
+.bb .r em{font-style:normal; font-family:var(--f-display); font-size:6px; color:#8a86b8; margin-right:5px}
+.bb .bar{margin-top:auto; display:flex; justify-content:space-between; align-items:flex-end}
+.bb .bar i{width:54px; height:20px; background:repeating-linear-gradient(90deg, #fff 0 1px, transparent 1px 3px, #fff 3px 5px, transparent 5px 6px); opacity:.8}
+.bb .bar span{font-family:var(--f-display); font-size:5px; color:#8a86b8}
+@keyframes boxin{0%{transform:translateY(60px) scale(.25) rotateY(-560deg); opacity:0} 15%{opacity:1} 100%{transform:none}}
+@keyframes boxturn{0%,100%{transform:rotateX(6deg) rotateY(var(--t1, 36deg))} 50%{transform:rotateX(3deg) rotateY(var(--t2, 6deg))}}
+.calm .box3{--t1:14deg; --t2:-12deg; animation-duration:7s}
+
+/* ---------- les fenêtres ---------- */
+.ov{position:absolute; inset:0; z-index:20; display:flex; opacity:0; pointer-events:none; transition:opacity .2s}
+.ov.on{opacity:1; pointer-events:auto}
+.x{position:absolute; top:10px; right:10px; z-index:3; font-family:var(--f-display); font-size:10px; color:var(--text); background:#000; border:2px solid #fff; padding:7px 8px}
+.blk{background:#000; border:3px solid #fff; border-radius:5px; box-shadow:0 0 0 3px #000; padding:10px 12px; display:flex; flex-direction:column; gap:6px}
+.blk > b{font-family:var(--f-display); font-weight:400; font-size:8px; letter-spacing:1px; color:var(--gold)}
+.row{display:flex; justify-content:space-between; gap:10px; font-size:20px; font-variant-numeric:tabular-nums}
+.row span:first-child{color:var(--dim)}
+.row.me, .row.me span:first-child{color:var(--gold)}
+.row em{font-style:normal; font-family:var(--f-display); font-size:8px; color:#8a86b8; margin-right:8px}
+.play{font-family:var(--f-display); font-size:12px; letter-spacing:2px; color:#2a1600; background:var(--gold); border:3px solid #fff6cc; border-radius:4px;
+  padding:13px 24px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000}
+.play:active, .sec:active{transform:translate(2px,2px)}
+.sec{font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:#fff; background:#000; border:3px solid #fff; border-radius:4px; padding:12px 14px; box-shadow:0 0 0 3px #000, 4px 4px 0 3px #000}
+.tags{display:flex; flex-wrap:wrap; gap:6px}
+.tags span{font-family:var(--f-display); font-size:7px; letter-spacing:1px; padding:5px 6px; background:rgba(0,0,0,.45); color:var(--lt); border:1px solid rgba(255,255,255,.2)}
+.ov h3{margin:0; font-family:var(--f-display); font-weight:400; font-size:13px; letter-spacing:1px; line-height:1.5; color:var(--lt); text-shadow:2px 2px 0 #000; text-wrap:balance}
+.ov p{margin:0; color:var(--dim); font-size:19px}
+
+/* A · volet qui monte du bas */
+.ovA{background:rgba(5,3,14,.7); align-items:flex-end}
+.ovA .in{position:relative; width:100%; max-height:90%; overflow:auto; scrollbar-width:none; background:#1e1840; border-top:3px solid #fff; box-shadow:0 -3px 0 #000; border-radius:14px 14px 0 0;
+  transform:translateY(100%); transition:transform .3s steps(6); padding:22px 14px 20px; display:flex; flex-direction:column; gap:14px}
+.ovA.on .in{transform:none}
+.ovA .head{display:grid; grid-template-columns:auto minmax(0,1fr); gap:22px; align-items:center; padding:6px 0 4px 10px; perspective:700px}
+.ovA .head > div:last-child{display:flex; flex-direction:column; gap:8px; padding-right:26px}
+.ovA .play{align-self:center}
+
+/* B · la boîte au centre, qu'on retourne pour lire le dos */
+.ovB{background:radial-gradient(circle at 50% 40%, rgba(40,30,90,.85), rgba(5,3,14,.94) 70%); flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:20px 14px}
+.ovB .zone{perspective:900px; cursor:pointer; padding:10px}
+.ovB .hint{font-family:var(--f-display); font-size:7px; letter-spacing:1px; color:#8a86b8}
+.ovB .btns{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+.ovB h3{text-align:center}
+
+/* C · vitrine plein écran : la boîte sur un socle sous un projecteur, on passe d'un jeu à l'autre */
+.ovC{flex-direction:column; background:#07050f; overflow:auto; scrollbar-width:none}
+.ovC .spot{position:relative; flex:none; height:300px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:34px; perspective:900px;
+  background:radial-gradient(ellipse 46% 80% at 50% 0, color-mix(in srgb, var(--sh) 40%, transparent), transparent 70%), linear-gradient(#0d0a1c, #07050f)}
+.ovC .spot::after{content:""; position:absolute; left:50%; bottom:14px; width:190px; height:30px; transform:translateX(-50%); border-radius:50%;
+  background:radial-gradient(#3a3060, #1a1430 60%, transparent 72%); box-shadow:0 0 0 2px #000 inset}
+.ovC .spot .bwrap{z-index:1; margin-bottom:6px}
+.ovC .navs{position:absolute; left:10px; right:10px; top:44%; display:flex; justify-content:space-between; z-index:2; pointer-events:none}
+.ovC .navs button{pointer-events:auto; font-family:var(--f-display); font-size:12px; color:var(--gold); background:#000; border:3px solid #fff; border-radius:5px; padding:8px 10px}
+.ovC .dots{position:absolute; left:0; right:0; bottom:2px; display:flex; justify-content:center; gap:4px}
+.ovC .dots i{width:6px; height:6px; background:#3b3566} .ovC .dots i.on{background:var(--gold)}
+.ovC .info{display:flex; flex-direction:column; gap:12px; padding:14px 14px 22px}
+.ovC h3{text-align:center} .ovC p{text-align:center}
+.ovC .tabs{display:flex; gap:16px; justify-content:center}
+.ovC .tabs button{font-family:var(--f-display); font-size:8px; letter-spacing:1px; color:#8a86b8; padding-left:13px; position:relative; line-height:2}
+.ovC .tabs button[aria-pressed="true"]{color:#fff}
+.ovC .tabs button[aria-pressed="true"]::before{content:"▶"; position:absolute; left:0; color:var(--gold)}
+.ovC .play{align-self:center}
+
+@media (prefers-reduced-motion: reduce){
+  .c3 .body, .c3 .front::after, .c3::after, .box3, .bwrap, .c3 .crown{animation:none !important}
+  .c3 .body{transform:rotateX(6deg) rotateY(-18deg)}
+  .box3{transform:rotateY(24deg)}
+}
+</style>
+
+<div class="wrap">
+  <header style="display:flex; flex-direction:column; gap:12px">
+    <h1>ACCUEIL AUX CARTOUCHES</h1>
+    <p class="lead">Maquette du 16/10, suite du choix : cartouches <b>par famille</b> au mouvement <b>doux</b>, accueil fusionné avec seulement <b>les filtres et les cartouches</b>. Touche une cartouche : elle tourne, puis une fenêtre s'ouvre avec <b>la boîte du jeu</b>, ses records et le classement de la famille. Trois propositions pour cette fenêtre.</p>
+  </header>
+  <div class="stage">
+    <div class="phone" id="phone">
+      <div class="scr">
+        <p class="logo">LUDOTHEQUE</p>
+        <div class="menu"><div class="cmds" id="cmds"></div><div class="say"><b>LE GARDIEN</b><span id="say"></span></div></div>
+        <div class="rack" id="rack"></div>
+      </div>
+      <div class="ov ovA" id="ovA"><div class="in"><button class="x" data-close aria-label="Fermer">✕</button><div id="bodyA" style="display:contents"></div></div></div>
+      <div class="ov ovB" id="ovB"><button class="x" data-close aria-label="Fermer">✕</button><div id="bodyB" style="display:contents"></div></div>
+      <div class="ov ovC" id="ovC"><button class="x" data-close aria-label="Fermer">✕</button><div id="bodyC" style="display:contents"></div></div>
+    </div>
+    <div class="side">
+      <div class="choice" id="choice">
+        <b>FENETRE DU JEU</b>
+        <button data-v="A" aria-pressed="true">A · LE VOLET</button>
+        <button data-v="B" aria-pressed="false">B · LE DOS DE LA BOITE</button>
+        <button data-v="C" aria-pressed="false">C · LA VITRINE</button>
+      </div>
+      <div class="notes">
+        <div class="note" data-v="A"><b>A · LE VOLET</b><p>Un volet monte du bas de l'écran. La boîte arrive en tournoyant et reste à gauche du titre ; dessous, mes records, le classement de la famille et JOUER. Simple et rapide, l'accueil reste visible derrière.</p></div>
+        <div class="note" data-v="B"><b>B · LE DOS DE LA BOITE</b><p>La boîte arrive en grand au milieu de l'écran. On la touche (ou RETOURNER) pour la retourner : les records et le classement sont imprimés au dos, comme sur une vraie boîte de jeu.</p></div>
+        <div class="note" data-v="C"><b>C · LA VITRINE</b><p>Plein écran : la boîte tourne sur un socle sous un projecteur aux couleurs du jeu. Onglets RECORDS / FAMILLE, et ◀ ▶ (ou glisser le doigt) pour passer au jeu suivant sans revenir à l'accueil.</p></div>
+        <div class="note"><b>ET LE RESTE DE L'ACCUEIL ?</b><p>Le jeu à la une, le quoi de neuf, Surprends-moi, le tri et le transfert de sauvegarde restent sous les cartouches (pas montrés ici). La page des classements disparaît : tout est dans la fenêtre du jeu.</p></div>
+        <p class="ex">RECORDS ET CLASSEMENTS : EXEMPLES</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../injagility/chiens32.js"></script>
+<script src="../icones.js"></script>
+<script>
+"use strict";
+const NEBULA_IMG = "../nebula/cartouche.jpg";
+const GAMES = [
+  {id:"nebula", n:"NEBULA", s:"NEBULA", ic:"img", fam:"32", lb:"radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt:"#f2b24a", sh:"#c07a20",
+   d:"Mène ta flotte de balise en balise jusqu'à l'amiral pirate.", fav:1, cours:"SECTEUR 2", crown:1,
+   rec:[["Meilleur score","3 420"],["Victoires","2"]], board:"MEILLEUR SCORE", rk:[["MOI","3 420"],["FISTON","2 980"],["PAPI","1 150"]], me:0},
+  {id:"sudoku", n:"SUDOKU", s:"SUDOKU", ic:"grid9", fam:"32", lb:"linear-gradient(#3a1a4a, #12082a)", lt:"#ffb8d0", sh:"#8a3aa8",
+   d:"Un chiffre par ligne, par colonne et par bloc, sous la lune d'un jardin japonais.", neuf:1, jour:1, crown:1,
+   rec:[["9×9 moyen","6:41"],["Grilles finies","14"]], board:"GRILLE DU JOUR", rk:[["MOI","6:41"],["MAMAN","7:20"],["FISTON","11:02"]], me:0},
+  {id:"queens", n:"QUEENS", s:"QUEENS", ic:"crown", fam:"16", lb:"linear-gradient(#3a4cc8, #141a6a)", lt:"#ffd23f", sh:"#3a4cc8",
+   d:"Une reine par ligne, par colonne et par couleur, sans qu'elles se touchent.", jour:1, crown:1,
+   rec:[["Grille du jour","1:12"],["8×8","2:31"]], board:"GRILLE DU JOUR", rk:[["MOI","1:12"],["MAMAN","1:30"],["FISTON","2:05"]], me:0},
+  {id:"picross", n:"PICROSS DEX", s:"PICROSS DEX", ic:"ball", fam:"16", lb:"#cf2b34", lt:"#fff7ec", sh:"#d23a3a",
+   d:"Remplis la grille d'après les nombres pour révéler un Pokémon.", fav:1,
+   rec:[["Pokémon trouvés","48 / 151"]], board:"POKEMON TROUVES", rk:[["FISTON","61"],["MOI","48"],["MAMAN","22"]], me:1},
+  {id:"lignee", n:"LIGNEE", s:"LIGNEE", ic:"tree", fam:"16", lb:"linear-gradient(#6b3f1f, #2f1a0c)", lt:"#e0a83a", sh:"#a0682e",
+   d:"Reconstitue un arbre généalogique grâce aux indices, avec 3 vies.", jour:1, crown:1,
+   rec:[["Arbres reconstitués","12"]], board:"ARBRES", rk:[["MOI","12"],["PAPI","9"],["MAMAN","7"]], me:0},
+  {id:"orbite", n:"ORBITE", s:"ORBITE", ic:"planet", fam:"32", lb:"radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt:"#6fd8ff", sh:"#5a3ab8",
+   d:"Lance ta sonde et laisse la gravité des planètes la guider jusqu'à la balise.",
+   rec:[["Etoiles","64 / 90"]], board:"ETOILES", rk:[["FISTON","71"],["MOI","64"],["PAPI","40"]], me:1},
+  {id:"alunissage", n:"ALUNISSAGE", s:"ALUNISSAGE", ic:"lander", fam:"32", lb:"linear-gradient(#0a0c1e, #2c2a28)", lt:"#e8e4d8", sh:"#8a8a90",
+   d:"Pose ton module en douceur avec deux réacteurs, de la Lune à la comète.", jour:1, crown:1,
+   rec:[["Mission","12 400"]], board:"MISSION", rk:[["MOI","12 400"],["FISTON","9 850"],["MAMAN","3 100"]], me:0},
+  {id:"pont", n:"PONT STELLAIRE", s:"PONT STELLAIRE", ic:"stars", fam:"32", lb:"radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%)", lt:"#ffd76a", sh:"#2a4a9a",
+   d:"Relie les étoiles par des faisceaux de lumière, sans croisement.", jour:1,
+   rec:[["Ciel du jour","3:10"],["11×11","8:45"]], board:"CIEL DU JOUR", rk:[["MAMAN","2:48"],["MOI","3:10"],["FISTON","4:22"]], me:1},
+  {id:"club", n:"LE CLUB D'AGILITY", s:"CLUB AGILITY", ic:"cup", fam:"32", lb:"linear-gradient(#3f8a37, #173a1a)", lt:"#ffd23f", sh:"#3f8a37",
+   d:"Entraîne tes chiens semaine après semaine jusqu'au Championnat de France.", cours:"SEMAINE 14",
+   rec:[["Meilleur niveau","Régional"]], board:"TITRES", rk:[["FISTON","3"],["MOI","1"]], me:1},
+  {id:"inja", n:"INJAGILITY", s:"INJAGILITY", ic:"dog", fam:"32", lb:"linear-gradient(#78bae7, #5fb548)", lt:"#fff", sh:"#5fb548",
+   d:"Ton chien en agility : course sans fin, ou parcours à tracer au doigt.", fav:1,
+   rec:[["Distance","1 210 m"]], board:"DISTANCE", rk:[["FISTON","1 840 m"],["MOI","1 210 m"],["MAMAN","640 m"]], me:1},
+  {id:"amiral", n:"AMIRAL !", s:"AMIRAL !", ic:"anchor", fam:"32", lb:"linear-gradient(#1c579c, #0a1c40)", lt:"#ffd23f", sh:"#1c579c",
+   d:"La bataille navale où chaque navire a un pouvoir.", crown:1,
+   rec:[["Amiral","18 tours"]], board:"MOINS DE TOURS", rk:[["MOI","18"],["FISTON","21"]], me:0},
+  {id:"touche", n:"TOUCHE COULE", s:"TOUCHE COULE", ic:"boat", fam:"16", lb:"linear-gradient(#2b6fd0, #0f1866)", lt:"#ffd84a", sh:"#2b6fd0",
+   d:"Bataille navale contre l'ordinateur, classique ou avec sonar et torpilles.",
+   rec:[["Moins de tirs","44"]], board:"MOINS DE TIRS", rk:[["FISTON","41"],["MOI","44"],["PAPI","52"]], me:1},
+  {id:"tetris", n:"TETRIS", s:"TETRIS", ic:"blocks", fam:"rep", lb:"linear-gradient(#3b2a8a, #160f45)", lt:"#facc15", sh:"#6a4ad0",
+   d:"Empile les pièces, complète des lignes, tiens le plus longtemps possible.",
+   rec:[["Score","31 900"]], board:"SCORE", rk:[["FISTON","48 200"],["MOI","31 900"],["MAMAN","12 300"]], me:1},
+  {id:"snake", n:"SNAKE", s:"SNAKE", ic:"snake", fam:"rep", lb:"linear-gradient(#377a28, #1c4214)", lt:"#c4ff7a", sh:"#3fa02a",
+   d:"Mange les pommes sans te mordre la queue ni toucher les bords.", crown:1,
+   rec:[["Score","86"]], board:"SCORE", rk:[["MOI","86"],["FISTON","71"]], me:0},
+  {id:"ast", n:"ASTEROIDS", s:"ASTEROIDS", ic:"rock", fam:"rep", lb:"radial-gradient(circle at 70% 30%, #1d2a5a, #05040e 70%)", lt:"#5ce1ff", sh:"#2ab0d0",
+   d:"Pilote ton vaisseau et pulvérise les astéroïdes, vague après vague.",
+   rec:[["Score","8 760"]], board:"SCORE", rk:[["FISTON","12 340"],["MOI","8 760"]], me:1},
+  {id:"soli", n:"SOLITAIRE", s:"SOLITAIRE", ic:"cards", fam:"rep", lb:"linear-gradient(#2a8a48, #145a2c)", lt:"#ffd23f", sh:"#2a8a48",
+   d:"Le Klondike de Windows XP : range les cartes de l'As au Roi.", cours:"PARTIE",
+   rec:[["Parties gagnées","12"]], board:"PARTIES GAGNEES", rk:[["MAMAN","34"],["MOI","12"]], me:1},
+  {id:"vie", n:"JEU DE LA VIE", s:"JEU DE LA VIE", ic:"glider", fam:"rep", lb:"linear-gradient(#23307e, #0d1450)", lt:"#5cff8a", sh:"#3ad06a",
+   d:"L'automate de Conway : dessine des cellules et regarde-les évoluer.",
+   rec:[], board:"", rk:[], me:-1},
+];
+const GENRE = {nebula:"TACTIQUE", sudoku:"LOGIQUE", queens:"LOGIQUE", picross:"LOGIQUE", lignee:"ENQUETE", orbite:"PHYSIQUE", alunissage:"ADRESSE", pont:"LOGIQUE",
+  club:"GESTION", inja:"ADRESSE", amiral:"TACTIQUE", touche:"TACTIQUE", tetris:"ARCADE", snake:"ARCADE", ast:"ARCADE", soli:"CARTES", vie:"SIMULATION"};
+const FAMSTYLE = {"16":"A", "32":"C", rep:"B"};
+let styleMode = "F";
+const $ = id => document.getElementById(id);
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+
+// l'image d'un jeu : icône 16×16 (le chien est plus large), ou la capture de Nebula
+function art(g){
+  if (g.ic === "img"){ const i = new Image(); i.src = NEBULA_IMG; i.alt = ""; return i; }
+  const c = document.createElement("canvas");
+  if (g.ic === "dog"){ c.width = 78; c.height = 54; c.className = "wide"; } else { c.width = c.height = 16; }
+  LudoIcons.draw(c, g.ic);
+  return c;
+}
+function styleOf(g){ return styleMode === "F" ? FAMSTYLE[g.fam] : styleMode; }
+
+// une cartouche en 3D : six faces ; la face avant change selon le modèle
+function cart(g, i, k, st){
+  st = st || styleOf(g);
+  const b = el("button", "c3 s" + st);
+  b.type = "button"; b.dataset.id = g.id; b.setAttribute("aria-label", g.n);
+  b.style.cssText = `--i:${i}; --k:${k}; --lb:${g.lb}; --lt:${g.lt}; --sh:${g.sh}`;
+  const body = el("div", "body"), front = el("div", "f front");
+  if (st === "A"){
+    front.append(el("i", "rid"));
+    const lab = el("div", "lab"); lab.append(art(g), el("b", "", g.s)); front.append(lab, el("i", "notch"));
+  } else if (st === "B"){
+    body.append(el("div", "f pcb"));
+    front.append(el("span", "emb", "LUDO"));
+    const lab = el("div", "lab"); lab.append(art(g), el("b", "", g.s)); front.append(lab, el("span", "arw", "▼"));
+  } else {
+    const lab = el("div", "lab"); lab.append(art(g)); front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip"));
+  }
+  ["back", "left", "right", "top", "bottom"].forEach(f => body.append(el("div", "f " + f)));
+  body.append(front);
+  b.append(body);
+  if (g.crown) b.append(el("i", "crown", "♛"));
+  if (g.neuf) b.append(el("span", "stk", "NEUF"));
+  else if (g.cours) b.append(el("span", "stk cours", "EN COURS"));
+  b.addEventListener("click", () => spin(b));
+  return b;
+}
+function spin(b){
+  b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin");
+  b.querySelector(".body").addEventListener("animationend", () => b.classList.remove("spin"), {once:true});
+}
+
+// la boîte de jeu en 3D ; back = dos imprimé (records et classement)
+function box(g, w, h, d, back){
+  const wrap = el("div", "bwrap"), flip = el("div", "flip"), b = el("div", "box3");
+  wrap.style.cssText = `--bw:${w}px; --bh:${h}px; --bd:${d}px; --bk:${w / 112}; --lb:${g.lb}; --lt:${g.lt}`;
+  const f = el("div", "bf"), a = el("div", "art"); a.append(art(g));
+  f.append(el("span", "brand", "LUDOTHEQUE"), a, el("div", "tt chrome", g.s), el("span", "gen", GENRE[g.id]));
+  const s = el("div", "bs"); s.append(el("i"), el("span", "chrome", g.s));
+  const bb = el("div", "bb");
+  if (back){
+    const sh = el("div", "shot"); sh.append(art(g)); bb.append(sh);
+    bb.append(el("h4", "", "MES RECORDS"));
+    if (g.rec.length) g.rec.forEach(([k, v]) => bb.append(el("div", "r", `<span>${k}</span><span>${v}</span>`)));
+    else bb.append(el("div", "r", "<span>Un bac à sable, sans record.</span>"));
+    if (g.rk.length){
+      bb.append(el("h4", "", "FAMILLE · " + g.board));
+      g.rk.forEach(([p, v], k) => bb.append(el("div", "r" + (k === g.me ? " me" : ""), `<span><em>${["1ER", "2E", "3E"][k]}</em>${p}</span><span>${v}</span>`)));
+    }
+    const bar = el("div", "bar"); bar.append(el("i"), el("span", "", "1 JOUEUR · 16 BITS")); bb.append(bar);
+  }
+  b.append(bb, el("div", "br"), el("div", "bt"), el("div", "bo"), s, f);
+  flip.append(b); wrap.append(flip);
+  return wrap;
+}
+function tags(g){
+  const t = el("div", "tags"); t.append(el("span", "", GENRE[g.id]));
+  if (g.jour) t.append(el("span", "", "DU JOUR")); if (g.cours) t.append(el("span", "", "EN COURS · " + g.cours)); if (g.neuf) t.append(el("span", "", "NOUVEAU"));
+  return t;
+}
+function blocks(g){
+  const r = el("div", "blk"); r.append(el("b", "", "MES RECORDS"));
+  if (g.rec.length) g.rec.forEach(([k, v]) => r.append(el("div", "row", `<span>${k}</span><span>${v}</span>`)));
+  else r.append(el("div", "row", "<span>Pas de record : un bac à sable.</span>"));
+  const c = el("div", "blk"); c.append(el("b", "", "FAMILLE" + (g.board ? " · " + g.board : "")));
+  if (g.rk.length) g.rk.forEach(([p, v], k) => c.append(el("div", "row" + (k === g.me ? " me" : ""), `<span><em>${["1ER", "2E", "3E"][k]}</em>${p}</span><span>${v}</span>`)));
+  else c.append(el("div", "row", "<span>Pas de classement.</span>"));
+  return [r, c];
+}
+const playBtn = () => { const b = el("button", "play", "JOUER ▶"); b.type = "button"; return b; };
+
+// l'accueil : filtres + gardien + cartouches
+const FILTERS = [["tous", "TOUS"], ["fav", "FAVORIS"], ["neuf", "NOUVEAU"], ["jour", "DU JOUR"], ["cours", "EN COURS"]];
+const SAY = {tous:n => `Toute la ludothèque : ${n} cartouches. Touche-en une !`, fav:n => `Tes ${n} favoris, rangés en tête.`, neuf:n => n > 1 ? `${n} nouveautés toutes fraîches.` : "Une seule nouveauté : le Sudoku !",
+  jour:n => `${n} défis du jour. Une seule tentative classée !`, cours:n => `${n} parties t'attendent là où tu les as laissées.`};
+let filter = "tous", variant = "A", list = [], typing = 0;
+function render(){
+  const cm = $("cmds"); cm.textContent = "";
+  FILTERS.forEach(([k, t]) => { const b = el("button", "", t); b.type = "button"; b.setAttribute("aria-pressed", k === filter); b.onclick = () => { filter = k; render(); }; cm.append(b); });
+  list = GAMES.filter(g => filter === "tous" || g[filter]);
+  const rack = $("rack"); rack.textContent = "";
+  list.forEach((g, i) => { const c = cart(g, i, .78); c.addEventListener("click", () => setTimeout(() => open(g), 480)); rack.append(c); });
+  say(SAY[filter](list.length));
+}
+function say(t){ // le gardien écrit lettre par lettre
+  const s = $("say"), id = ++typing; let k = 0; s.textContent = "";
+  (function step(){ if (id !== typing) return; s.textContent = t.slice(0, ++k); if (k < t.length) setTimeout(step, 22); })();
+}
+
+// les trois fenêtres
+function open(g){
+  close();
+  const ov = $("ov" + variant), body = $("body" + variant); body.textContent = "";
+  ov.style.setProperty("--lt", g.lt); ov.style.setProperty("--sh", g.sh);
+  if (variant === "A"){
+    const head = el("div", "head"), txt = el("div");
+    head.append(box(g, 104, 146, 26));
+    txt.append(el("h3", "", g.n), el("p", "", g.d), tags(g)); head.append(txt);
+    body.append(head, ...blocks(g), playBtn());
+    ov.querySelector(".in").scrollTop = 0;
+  } else if (variant === "B"){
+    const zone = el("div", "zone calm"), bx = box(g, 214, 296, 40, true);
+    zone.append(bx); zone.setAttribute("role", "button"); zone.setAttribute("aria-label", "Retourner la boîte");
+    const flipIt = () => { bx.querySelector(".flip").classList.toggle("back"); hint.textContent = bx.querySelector(".flip.back") ? "TOUCHE LA BOITE POUR VOIR LA FACE" : "TOUCHE LA BOITE POUR LIRE LE DOS"; };
+    zone.onclick = flipIt;
+    const hint = el("span", "hint", "TOUCHE LA BOITE POUR LIRE LE DOS");
+    const btns = el("div", "btns"), turn = el("button", "sec", "↻ RETOURNER"); turn.type = "button"; turn.onclick = flipIt;
+    btns.append(turn, playBtn());
+    body.append(el("h3", "", g.n), zone, hint, btns);
+  } else {
+    showC(list.indexOf(g));
+  }
+  ov.classList.add("on");
+}
+let cIdx = 0, cTab = "rec";
+function showC(i){
+  cIdx = (i + list.length) % list.length; const g = list[cIdx], ov = $("ovC"), body = $("bodyC");
+  ov.style.setProperty("--lt", g.lt); ov.style.setProperty("--sh", g.sh); body.textContent = "";
+  const spot = el("div", "spot"); spot.append(box(g, 132, 184, 32));
+  const navs = el("div", "navs"), p = el("button", "", "◀"), n = el("button", "", "▶");
+  p.setAttribute("aria-label", "Jeu précédent"); n.setAttribute("aria-label", "Jeu suivant");
+  p.onclick = () => showC(cIdx - 1); n.onclick = () => showC(cIdx + 1); navs.append(p, n);
+  const dots = el("div", "dots"); list.forEach((_, k) => dots.append(el("i", k === cIdx ? "on" : "")));
+  spot.append(dots, navs);
+  const info = el("div", "info"), tabsEl = el("div", "tabs"), [r, c] = blocks(g), slot = el("div");
+  [["rec", "MES RECORDS"], ["fam", "FAMILLE"]].forEach(([k, t]) => { const b = el("button", "", t); b.type = "button"; b.setAttribute("aria-pressed", k === cTab);
+    b.onclick = () => { cTab = k; tabsEl.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); slot.replaceChildren(k === "rec" ? r : c); }; tabsEl.append(b); });
+  slot.append(cTab === "rec" ? r : c);
+  info.append(el("h3", "", g.n), el("p", "", g.d), tabsEl, slot, playBtn());
+  body.append(spot, info);
+}
+let sx = null;
+$("ovC").addEventListener("pointerdown", e => { if (e.target.closest(".spot")) sx = e.clientX; });
+$("ovC").addEventListener("pointerup", e => { if (sx === null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) showC(cIdx + (dx < 0 ? 1 : -1)); });
+function close(){ ["A", "B", "C"].forEach(v => $("ov" + v).classList.remove("on")); }
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = close);
+["ovA", "ovB"].forEach(id => $(id).addEventListener("click", e => { if (e.target.id === id) close(); }));
+
+function setVariant(v){
+  variant = v;
+  $("choice").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v));
+  document.querySelectorAll(".note[data-v]").forEach(n => n.classList.toggle("on", n.dataset.v === v));
+  try { localStorage.setItem("accueilcart.v", v); } catch (e) {}
+}
+$("choice").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; setVariant(b.dataset.v); close(); open(list.find(g => g.id === "nebula") || list[0]); });
+
+let v0 = (location.hash || "").slice(1).toUpperCase();
+if (!["A", "B", "C"].includes(v0)){ try { v0 = localStorage.getItem("accueilcart.v") || "A"; } catch (e) { v0 = "A"; } }
+setVariant(v0);
+render();
+</script>
