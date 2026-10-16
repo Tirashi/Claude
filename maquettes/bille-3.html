@@ -1,0 +1,462 @@
+<title>La Bille, autre chose qu'une bille</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Cinzel:wght@700&family=Fredoka:wght@400;600;700&family=Luckiest+Guy&display=swap">
+<style>
+/* Trois téléphones côte à côte (empilés sur un téléphone), chacun jouable, avec sa fiche dessous. */
+:root{
+  --fond:#161512; --fond2:#23211c; --texte:#f2eee6; --doux:#ada796; --accent:#e8a45a; --cadre:#070706;
+  --f-texte:'Fredoka', system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--f-texte);font-size:16px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header h1{font-weight:700;font-size:clamp(28px,6vw,40px);margin:0;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--doux);max-width:64ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:32px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.tel{position:relative;width:100%;max-width:300px;aspect-ratio:9/19;border:9px solid var(--cadre);border-radius:34px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.5);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.tel.actif{outline:3px solid var(--accent);outline-offset:3px}
+.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:22px 16px 26px;text-align:center}
+.haut{display:flex;justify-content:space-between;align-items:baseline}
+.temps{font-size:28px;line-height:1}
+.chutes{font-size:13px}
+.msg{font-size:14px;min-height:2.8em;line-height:1.4;white-space:pre-line}
+.a .hud{font-family:'Bungee', sans-serif;color:#fff;text-shadow:0 2px 0 #2b6fb0}
+.a .chutes{font-size:11px} .a .msg{font-size:12px}
+.b .hud{font-family:'Cinzel', serif;font-weight:700;color:#e8873a;text-shadow:0 2px 0 #000}
+.b .temps{font-size:30px} .b .msg{font-size:15px}
+.c .hud{font-family:'Luckiest Guy', sans-serif;color:#fff;letter-spacing:.03em;-webkit-text-stroke:1.2px #6b3a17;text-shadow:0 3px 0 #6b3a17}
+.c .temps{font-size:32px} .c .msg{font-size:16px}
+.fiche{width:100%;max-width:340px}
+.fiche h2{margin:0;font-size:22px;font-weight:700}
+.fiche h2 span{display:inline-block;min-width:1.6em;color:var(--accent)}
+.fiche p{margin:4px 0 8px;color:var(--doux)}
+.fiche ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:3px;font-size:15px}
+.commun{background:var(--fond2);border-radius:16px;padding:18px 20px;max-width:760px}
+.commun h2{margin:0 0 8px;font-size:20px}
+.commun ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.commun p{margin:10px 0 0;color:var(--accent);font-weight:600}
+</style>
+
+<div class="page">
+  <header>
+    <h1>La Bille… qui n'est plus une bille</h1>
+    <p>Trois objets qui ne se conduisent pas pareil : le palet glisse et rebondit, le bateau dérive et se fait aspirer, l'œuf roule de travers et se casse s'il cogne trop fort. Même plateau partout pour comparer. Touche un téléphone pour jouer : penche-le, ou fais glisser le doigt pour incliner.</p>
+  </header>
+
+  <div class="grille">
+    <div class="dir">
+      <div class="tel a" id="telA"><canvas></canvas>
+        <div class="hud"><div class="haut"><div class="temps">0:00</div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>A</span>Le palet sur le lac gelé</h2>
+        <p>Un palet de hockey sur un lac gelé, entre des congères, jusqu'à la cible de curling.</p>
+        <ul><li>Presque pas de frottement : il file, rebondit sur les bords, et il faut contre-pencher pour freiner</li>
+          <li>Trous dans la glace aux bords fendus, sapins enneigés autour</li>
+          <li>Plus tard : plaques de neige qui freinent, glace qui craque après un passage</li></ul></div>
+    </div>
+
+    <div class="dir">
+      <div class="tel b" id="telB"><canvas></canvas>
+        <div class="hud"><div class="haut"><div class="temps">0:00</div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>B</span>Le retour d'Ulysse</h2>
+        <p>Le bateau d'Ulysse rentre à Ithaque, dans le style des vases grecs à figures noires.</p>
+        <ul><li>Mer orange aux vagues noires, frise grecque autour, îlots noirs</li>
+          <li>Les trous sont des tourbillons (Charybde) qui aspirent le bateau quand il passe trop près</li>
+          <li>Le bateau tangue, se tourne dans le sens de la course ; plus tard, un plateau par chant de l'Odyssée (Cyclope, sirènes, Circé…)</li></ul></div>
+    </div>
+
+    <div class="dir">
+      <div class="tel c" id="telC"><canvas></canvas>
+        <div class="hud"><div class="haut"><div class="temps">0:00</div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>C</span>L'œuf fragile</h2>
+        <p>Un œuf s'est échappé du poulailler : le ramener au nid sans le casser.</p>
+        <ul><li>Il roule de travers (il est ovale) ; s'il cogne une botte de foin trop vite, CRAC</li>
+          <li>Paille au sol, bottes de foin, planches de grange rouges</li>
+          <li>Le jeu devient la douceur plutôt que la vitesse ; plus tard, poussins à ramasser en chemin</li></ul></div>
+    </div>
+  </div>
+
+  <section class="commun">
+    <h2>Commun aux trois</h2>
+    <ul>
+      <li>Même règle : 30 plateaux, trois étoiles selon le temps et les chutes, un plateau du jour pour la famille.</li>
+      <li>Le nom du jeu suivrait l'objet choisi (« Le Palet », « Odyssée », « L'Œuf »…).</li>
+      <li>On peut aussi mélanger : par exemple l'Odyssée avec des plateaux sur glace pour le pays des Hyperboréens.</li>
+    </ul>
+    <p>Dis-moi A, B ou C, ou ce qu'il faut changer.</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Plateau de 8 × 12 cases ; x vers la droite, y vers le bas (vers le joueur).
+const LARG = 8, HAUT = 12, R = 0.28, EP = 0.25, TROU = 0.42, PENTE_MAX = 0.2;
+const MURS = [[0,2,6,2],[2,4,8,4],[0,6,6,6],[2,8,8,8],[0,10,6,10],[4,2,4,3],[4,6,4,7],[3,9,3,10]];
+const TROUS = [[3.5,.55],[5.5,2.6],[2.5,2.55],[3,4.6],[6,4.6],[5.5,6.55],[2.3,6.6],[5,9.45],[1.8,9.45],[4.5,10.55],[6.3,10.6]];
+const DEPART = [1,1.2], ARRIVEE = [1,11.1];
+const CHEMIN = [[7,1.4],[7,3.5],[1,3.5],[1,5.4],[7,5.4],[7,7.5],[1,7.5],[1,8.5],[7,8.5],[7,11.2],[1,11.1]];
+const BOITES = MURS.map(([x1,y1,x2,y2]) => [Math.min(x1,x2)-EP/2, Math.min(y1,y2)-EP/2, Math.max(x1,x2)+EP/2, Math.max(y1,y2)+EP/2]);
+const P = (x, y) => [x - LARG / 2, y - HAUT / 2];
+const CADRE = [[LARG + 1, 0.5, 0, -HAUT / 2 - 0.25], [LARG + 1, 0.5, 0, HAUT / 2 + 0.25], [0.5, HAUT, -LARG / 2 - 0.25, 0], [0.5, HAUT, LARG / 2 + 0.25, 0]];
+
+function toile(w, h, dessin){
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  dessin(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+const alea = (a, b) => a + Math.random() * (b - a);
+function disque(r, n, irreg){
+  const s = new THREE.Shape();
+  for (let k = 0; k <= n; k++){
+    const a = k / n * Math.PI * 2, rr = r * (1 - irreg / 2 + (k % n ? Math.random() * irreg : irreg / 2));
+    k ? s.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : s.moveTo(rr, 0);
+  }
+  return new THREE.ShapeGeometry(s);
+}
+const plat = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); return m; };
+
+const STYLES = {
+  // ---------- A : le palet sur le lac gelé ----------
+  A: {
+    fond: 0xbfd9ee, cam: [0, 18.5, 10.5], G: 22, frot: 0.12, rebond: 0.85,
+    construire(scene, pl){
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x6f90b8, 0.6));
+      const d = new THREE.DirectionalLight(0xffffff, 0.75); d.position.set(-7, 9, 4); scene.add(d);
+      const glace = toile(512, 768, (g, w, h) => {
+        const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#b4dbf5'); gr.addColorStop(1, '#78b2df');
+        g.fillStyle = gr; g.fillRect(0, 0, w, h);
+        g.strokeStyle = 'rgba(255,255,255,.55)';
+        for (let k = 0; k < 70; k++){ g.lineWidth = alea(.5, 2); g.beginPath(); const x = Math.random() * w, y = Math.random() * h, a = Math.random() * 6, l = alea(30, 140); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }
+        g.strokeStyle = 'rgba(70,120,170,.18)'; g.lineWidth = 1.2;
+        for (let k = 0; k < 12; k++){ let x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); for (let s = 0; s < 6; s++){ x += alea(-30, 30); y += alea(-30, 30); g.lineTo(x, y); } g.stroke(); }
+        // Cible de curling peinte sous la glace, à l'arrivée
+        const cx = w * ARRIVEE[0] / LARG, cy = h * ARRIVEE[1] / HAUT;
+        [['#2a5fb8', 52], ['#ffffff', 38], ['#d23b3b', 24], ['#ffffff', 10]].forEach(([c, r]) => { g.fillStyle = c; g.globalAlpha = .8; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill(); });
+        g.globalAlpha = 1;
+      });
+      const fond = new THREE.Mesh(new THREE.BoxGeometry(LARG, 0.4, HAUT), new THREE.MeshPhongMaterial({ map: glace, shininess: 90, specular: 0xffffff }));
+      fond.position.y = -0.2; pl.add(fond);
+      // Berges enneigées et sapins
+      const neige = new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true });
+      for (const [w, dd, x, z] of CADRE){ const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.7, dd), neige); m.position.set(x, 0.1, z); pl.add(m); }
+      const vert = new THREE.MeshLambertMaterial({ color: 0x2f6b4f, flatShading: true });
+      for (let k = 0; k < 18; k++){
+        const sg = k % 2 ? 1 : -1, s = new THREE.Group(), h = alea(1, 1.8);
+        for (let j = 0; j < 3; j++){ const c = new THREE.Mesh(new THREE.ConeGeometry(0.55 - j * 0.14, h * 0.5, 6), j === 2 ? neige : vert); c.position.y = h * (0.25 + j * 0.25); s.add(c); }
+        s.position.set(sg * alea(4.8, 6), 0, alea(-8, 8)); pl.add(s);
+      }
+      // Congères : bosses de neige le long des murets
+      MURS.forEach(([x1, y1, x2, y2]) => {
+        const long = Math.hypot(x2 - x1, y2 - y1), n = Math.max(2, Math.round(long / 0.3));
+        for (let k = 0; k <= n; k++){
+          const [x, z] = P(x1 + (x2 - x1) * k / n, y1 + (y2 - y1) * k / n);
+          const b = new THREE.Mesh(new THREE.IcosahedronGeometry(alea(0.19, 0.25), 0), neige);
+          b.position.set(x, 0.12, z); b.scale.y = 0.95; b.rotation.y = Math.random() * 3; pl.add(b);
+        }
+      });
+      // Trous dans la glace : eau sombre, bord fendu
+      const eau = new THREE.MeshBasicMaterial({ color: 0x0d2a44 }), bord = new THREE.MeshLambertMaterial({ color: 0xf4fbff });
+      for (const [tx, ty] of TROUS){
+        const [x, z] = P(tx, ty), geo = disque(TROU, 9, 0.45);
+        const b = plat(geo, bord, x, 0.004, z); b.scale.setScalar(1.18); pl.add(b);
+        pl.add(plat(geo, eau, x, 0.008, z));
+      }
+      // Le palet
+      const palet = new THREE.Group();
+      const corps = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.2, 20), new THREE.MeshPhongMaterial({ color: 0x1a1a1e, shininess: 60 }));
+      const logo = plat(new THREE.CircleGeometry(R * 0.55, 16), new THREE.MeshBasicMaterial({ color: 0xd23b3b }), 0, 0.101, 0);
+      const marque = new THREE.Mesh(new THREE.BoxGeometry(R * 0.9, 0.01, 0.06), new THREE.MeshBasicMaterial({ color: 0xffffff })); marque.position.y = 0.106;
+      palet.add(corps, logo, marque);
+      return palet;
+    },
+    poser(J, v, dt){ J.bille.position.y = 0.1 - J.prof * 0.9; J.bille.rotation.y += dt * (0.6 + v * 1.5); },
+  },
+
+  // ---------- B : le retour d'Ulysse ----------
+  B: {
+    fond: 0x1a1410, cam: [0, 18.5, 10.5], G: 22, frot: 1.4, rebond: 0.4, tourbillons: true,
+    msgChute: 'CHARYBDE ! RETOUR AU PORT',
+    construire(scene, pl){
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xffe0c0, 1.05));
+      const ORANGE = '#d9772b', NOIR = '#1a1410';
+      const mer = toile(256, 384, (g, w, h) => {
+        g.fillStyle = ORANGE; g.fillRect(0, 0, w, h);
+        g.strokeStyle = NOIR; g.lineWidth = 3;
+        for (let y = 24, r = 0; y < h; y += 32, r++){
+          for (let x = (r % 2) * 16 - 16; x < w + 16; x += 32){ g.beginPath(); g.arc(x, y, 12, Math.PI * 1.05, Math.PI * 1.95); g.stroke(); }
+        }
+      });
+      mer.repeat.set(1, 1);
+      const fond = new THREE.Mesh(new THREE.BoxGeometry(LARG, 0.4, HAUT), new THREE.MeshLambertMaterial({ map: mer }));
+      fond.position.y = -0.2; pl.add(fond);
+      this.mer = mer;
+      // Bordure en frise grecque
+      const frise = (n) => toile(64 * n, 64, (g, w, h) => {
+        g.fillStyle = NOIR; g.fillRect(0, 0, w, h); g.strokeStyle = ORANGE; g.lineWidth = 6;
+        for (let i = 0; i < n; i++){
+          const o = i * 64; g.beginPath();
+          g.moveTo(o + 4, 52); g.lineTo(o + 4, 12); g.lineTo(o + 52, 12); g.lineTo(o + 52, 44); g.lineTo(o + 20, 44); g.lineTo(o + 20, 28); g.lineTo(o + 36, 28);
+          g.moveTo(o + 4, 52); g.lineTo(o + 64, 52); g.stroke();
+        }
+      });
+      for (const [w, dd, x, z] of CADRE){
+        const long = Math.max(w, dd), t = frise(Math.round(long * 2));
+        if (dd > w){ t.center.set(.5, .5); t.rotation = Math.PI / 2; }
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.6, dd), [0, 0, 1, 0, 0, 0].map(k => k ? new THREE.MeshLambertMaterial({ map: t }) : new THREE.MeshLambertMaterial({ color: NOIR })));
+        m.position.set(x, 0.1, z); pl.add(m);
+      }
+      // Îlots noirs le long des murets
+      const roc = new THREE.MeshLambertMaterial({ color: 0x1a1410, flatShading: true });
+      MURS.forEach(([x1, y1, x2, y2]) => {
+        const long = Math.hypot(x2 - x1, y2 - y1), n = Math.max(2, Math.round(long / 0.34));
+        for (let k = 0; k <= n; k++){
+          const [x, z] = P(x1 + (x2 - x1) * k / n, y1 + (y2 - y1) * k / n);
+          const b = new THREE.Mesh(new THREE.ConeGeometry(alea(0.17, 0.24), alea(0.3, 0.6), 5), roc);
+          b.position.set(x + alea(-.03, .03), 0.15, z + alea(-.03, .03)); b.rotation.y = Math.random() * 3; pl.add(b);
+        }
+      });
+      // Tourbillons : spirales noires qui tournent
+      const spi = toile(128, 128, (g) => {
+        g.strokeStyle = NOIR; g.lineWidth = 5; g.beginPath();
+        for (let a = 0; a < Math.PI * 6; a += 0.1){ const r = 4 + a * 3.1; g.lineTo(64 + Math.cos(a) * r, 64 + Math.sin(a) * r); }
+        g.stroke(); g.fillStyle = NOIR; g.beginPath(); g.arc(64, 64, 8, 0, 7); g.fill();
+      });
+      this.spirales = TROUS.map(([tx, ty]) => {
+        const [x, z] = P(tx, ty), m = plat(new THREE.CircleGeometry(0.62, 24), new THREE.MeshBasicMaterial({ map: spi, transparent: true }), x, 0.01, z);
+        pl.add(m); return m;
+      });
+      // Ithaque : île et temple
+      const [ax, az] = P(...ARRIVEE), ile = new THREE.Group();
+      ile.add(new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.6, 0.25, 9), roc));
+      const or = new THREE.MeshLambertMaterial({ color: 0xd9772b });
+      for (let k = 0; k < 4; k++){ const c = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 6), or); c.position.set(-0.24 + k * 0.16, 0.32, 0); ile.add(c); }
+      const toit = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.4, 0.18, 3), or); toit.rotation.set(Math.PI / 2, 0, Math.PI / 2); toit.scale.set(1.2, 1, 0.5); toit.position.y = 0.6; ile.add(toit);
+      ile.position.set(ax, 0.1, az + 0.1); pl.add(ile);
+      // Le bateau
+      const bat = new THREE.Group(), coque = new THREE.Group();
+      const noir = new THREE.MeshLambertMaterial({ color: 0x1a1410 });
+      const h = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.24), noir); coque.add(h);
+      const proue = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 4), noir); proue.rotation.z = -Math.PI / 2 - 0.4; proue.position.set(0.38, 0.06, 0); coque.add(proue);
+      const poupe = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.25, 4), noir); poupe.rotation.z = Math.PI / 2 + 0.6; poupe.position.set(-0.35, 0.08, 0); coque.add(poupe);
+      const mat = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.55, 5), noir); mat.position.y = 0.3; coque.add(mat);
+      const v = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.3, 0.42), new THREE.MeshLambertMaterial({ color: 0xa8321e })); v.position.set(0.02, 0.34, 0); coque.add(v);
+      for (let k = 0; k < 4; k++) for (const sg of [-1, 1]){ const r = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.22), noir); r.position.set(-0.18 + k * 0.12, -0.02, sg * 0.2); r.rotation.x = sg * 0.5; coque.add(r); }
+      bat.add(coque); bat.scale.setScalar(1.25); this.coque = coque;
+      return bat;
+    },
+    poser(J, v, dt, temps){
+      const b = J.bille;
+      b.position.y = 0.06 - J.prof * 0.6 + Math.sin(temps * 2.4) * 0.03;
+      if (v > 0.15){ const cible = Math.atan2(-J.vy, J.vx); let d = cible - b.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); b.rotation.y += d * Math.min(1, dt * 6); }
+      if (J.prof > 0) b.rotation.y += dt * 12;
+      this.coque.rotation.x = Math.sin(temps * 2.4) * 0.12; this.coque.rotation.z = Math.sin(temps * 1.7) * 0.06;
+      b.scale.setScalar(1.25 * (1 - J.prof * 0.6));
+    },
+    anim(J, dt){ this.spirales.forEach(s => { s.rotation.z += dt * 2.2; }); this.mer.offset.x += dt * 0.02; },
+  },
+
+  // ---------- C : l'œuf fragile ----------
+  C: {
+    fond: 0x8ec9ef, cam: [0, 18.5, 10.5], G: 26, frot: 1.1, rebond: 0.2, fragile: 3.4,
+    msgChute: 'OUPS ! IL EST TOMBE', msgCasse: 'CRAC ! UN AUTRE OEUF',
+    construire(scene, pl){
+      scene.add(new THREE.HemisphereLight(0xfffbe8, 0x9a7a40, 0.85));
+      const d = new THREE.DirectionalLight(0xffffff, 0.5); d.position.set(-4, 14, 6); scene.add(d);
+      const paille = (base, fil, n) => toile(256, 256, (g, w, h) => {
+        g.fillStyle = base; g.fillRect(0, 0, w, h);
+        for (let k = 0; k < n; k++){ g.strokeStyle = fil[k % fil.length]; g.globalAlpha = alea(.3, .8); g.lineWidth = alea(1, 2.5); g.beginPath(); const x = Math.random() * w, y = Math.random() * h, a = alea(-.6, .6) + (k % 3 ? 0 : 1.5); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * alea(10, 30), y + Math.sin(a) * alea(10, 30)); g.stroke(); }
+      });
+      const sol = paille('#d9b45a', ['#f2d987', '#a9832e', '#e8c66a'], 900); sol.repeat.set(2, 3);
+      const fond = new THREE.Mesh(new THREE.BoxGeometry(LARG, 0.4, HAUT), new THREE.MeshLambertMaterial({ map: sol }));
+      fond.position.y = -0.2; pl.add(fond);
+      // Planches de grange
+      const planche = toile(256, 64, (g, w, h) => {
+        g.fillStyle = '#b8352a'; g.fillRect(0, 0, w, h); g.strokeStyle = '#7a1f17'; g.lineWidth = 3;
+        for (let y = 0; y <= h; y += 21){ g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+        g.fillStyle = '#f3ead6'; for (let x = 10; x < w; x += 60) g.fillRect(x, 0, 6, h);
+      });
+      const mb = new THREE.MeshLambertMaterial({ map: planche });
+      for (const [w, dd, x, z] of CADRE){ const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.8, dd), mb); m.position.set(x, 0.15, z); pl.add(m); }
+      // Bottes de foin
+      const foin = paille('#e2c160', ['#f6dc8a', '#b9933a'], 500);
+      const mf = new THREE.MeshLambertMaterial({ map: foin }), lien = new THREE.MeshLambertMaterial({ color: 0x8a5a2b });
+      BOITES.forEach(([a, b, c, e]) => {
+        const [x, z] = P((a + c) / 2, (b + e) / 2), hz = c - a > e - b;
+        const m = new THREE.Mesh(new THREE.BoxGeometry(c - a + 0.04, 0.36, e - b + 0.04), mf); m.position.set(x, 0.18, z); pl.add(m);
+        const long = Math.max(c - a, e - b);
+        for (let s = -long / 2 + 0.5; s < long / 2 - 0.2; s += 1){
+          const l = new THREE.Mesh(new THREE.BoxGeometry(hz ? 0.04 : 0.3, 0.37, hz ? 0.3 : 0.04), lien);
+          l.position.set(x + (hz ? s : 0), 0.18, z + (hz ? 0 : s)); pl.add(l);
+        }
+      });
+      // Trous dans la paille
+      const mt = new THREE.MeshBasicMaterial({ color: 0x3a2610 }), mbo = new THREE.MeshLambertMaterial({ color: 0xa9832e });
+      for (const [tx, ty] of TROUS){ const [x, z] = P(tx, ty), geo = disque(TROU, 12, 0.25); const b = plat(geo, mbo, x, 0.004, z); b.scale.setScalar(1.15); pl.add(b); pl.add(plat(geo, mt, x, 0.008, z)); }
+      // Le nid, avec deux œufs qui attendent
+      const [ax, az] = P(...ARRIVEE), nid = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.14, 6, 14), new THREE.MeshLambertMaterial({ color: 0x9a6b30, flatShading: true }));
+      nid.rotation.x = -Math.PI / 2; nid.position.set(ax, 0.08, az); pl.add(nid);
+      const blanc = new THREE.MeshPhongMaterial({ color: 0xfff6e6, shininess: 40 });
+      for (const [dx, dz] of [[0.22, -0.18], [0.2, 0.2]]){ const o = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 8), blanc); o.scale.set(1, 1, 1.3); o.position.set(ax + dx, 0.13, az + dz); pl.add(o); }
+      // Le jaune quand il se casse
+      this.jaune = new THREE.Group();
+      this.jaune.add(plat(disque(0.45, 12, 0.4), new THREE.MeshBasicMaterial({ color: 0xfffbf0 }), 0, 0.012, 0), plat(new THREE.CircleGeometry(0.17, 14), new THREE.MeshBasicMaterial({ color: 0xffb21a }), 0, 0.02, 0));
+      this.jaune.visible = false; pl.add(this.jaune);
+      // L'œuf
+      const oeuf = new THREE.Mesh(new THREE.SphereGeometry(R, 16, 12), new THREE.MeshPhongMaterial({ color: 0xfff3dc, shininess: 50, specular: 0x666666 }));
+      oeuf.scale.set(0.9, 0.9, 1.25); return oeuf;
+    },
+    casse(J){ this.jaune.visible = true; this.jaune.position.copy(J.bille.position); this.jaune.position.y = 0; this.jaune.rotation.y = Math.random() * 6; },
+    reset(){ this.jaune.visible = false; },
+  },
+};
+
+const jeux = [];
+let actif = null, orient = null, zero = null;
+
+function creer(id, S){
+  const tel = document.getElementById(id), canvas = tel.querySelector('canvas');
+  const rendu = new THREE.WebGLRenderer({ canvas, antialias: true });
+  rendu.setPixelRatio(Math.min(devicePixelRatio, 2)); rendu.setClearColor(S.fond);
+  const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  cam.position.set(...S.cam); cam.lookAt(0, 0, 0.6);
+  const pl = new THREE.Group(); scene.add(pl);
+  const bille = S.construire(scene, pl); pl.add(bille);
+
+  const el = q => tel.querySelector(q);
+  const J = { tel, rendu, scene, cam, pl, bille, S, auto: true, x: 0, y: 0, vx: 0, vy: 0, px: 0, py: 0, chute: 0, prof: 0, cassé: false, chutes: 0, t: 0, fini: false, wp: 0,
+    eTemps: el('.temps'), eChutes: el('.chutes'), eMsg: el('.msg'), doigt: null };
+  J.reset = () => { [J.x, J.y] = DEPART; J.vx = J.vy = 0; J.chute = 0; J.wp = 0; J.cassé = false; J.bille.visible = true; S.reset?.(); };
+  J.msg = m => { J.eMsg.textContent = m; };
+  J.nouvelle = () => { J.reset(); J.chutes = 0; J.t = 0; J.fini = false; J.msg(J.auto ? 'DEMO · TOUCHE POUR JOUER' : ''); };
+  J.nouvelle();
+
+  tel.addEventListener('pointerdown', e => {
+    demanderCapteur();
+    if (actif !== J){ actif?.tel.classList.remove('actif'); actif = J; tel.classList.add('actif'); zero = null; }
+    if (J.auto || J.fini){ J.auto = false; J.nouvelle(); zero = null; }
+    J.doigt = { x: e.clientX, y: e.clientY }; tel.setPointerCapture(e.pointerId);
+  });
+  tel.addEventListener('pointermove', e => {
+    if (!J.doigt || orient) return;
+    J.px = Math.max(-1, Math.min(1, (e.clientX - J.doigt.x) / 70)) * PENTE_MAX;
+    J.py = Math.max(-1, Math.min(1, (e.clientY - J.doigt.y) / 70)) * PENTE_MAX;
+  });
+  const lacher = () => { J.doigt = null; if (!orient){ J.px = J.py = 0; } };
+  tel.addEventListener('pointerup', lacher); tel.addEventListener('pointercancel', lacher);
+  jeux.push(J);
+}
+
+// Inclinaison du téléphone (Android direct ; iOS demande la permission au premier toucher)
+let capteurDemande = false;
+function demanderCapteur(){
+  if (capteurDemande) return; capteurDemande = true;
+  const DOE = window.DeviceOrientationEvent;
+  if (DOE && typeof DOE.requestPermission === 'function') DOE.requestPermission().catch(() => {});
+}
+addEventListener('deviceorientation', e => { if (e.beta != null && e.gamma != null) orient = { b: e.beta, g: e.gamma }; });
+
+const borne = v => Math.max(-PENTE_MAX, Math.min(PENTE_MAX, v));
+function pente(J){
+  if (J.auto){
+    // Pilote de la démo : vise le point suivant du chemin (freine plus fort sur la glace)
+    const [cx, cy] = CHEMIN[J.wp], dx = cx - J.x, dy = cy - J.y, kd = J.S.frot < 0.5 ? 2.6 : 1.6;
+    if (Math.hypot(dx, dy) < 0.4 && J.wp < CHEMIN.length - 1) J.wp++;
+    return [borne((dx * 2.2 - J.vx * kd) / J.S.G * 3), borne((dy * 2.2 - J.vy * kd) / J.S.G * 3)];
+  }
+  if (J === actif && orient){
+    if (!zero) zero = { ...orient };
+    return [borne((orient.g - zero.g) * Math.PI / 180), borne((orient.b - zero.b) * Math.PI / 180)];
+  }
+  return [J.px, J.py];
+}
+
+const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+const AXE = new THREE.Vector3();
+
+function perdre(J, message){
+  J.chute = 0.001; J.vx = J.vy = 0;
+  if (!J.auto){ J.chutes++; J.msg(message); setTimeout(() => { if (!J.fini && !J.auto) J.msg(''); }, 1300); }
+}
+
+function pas(J, dt, temps){
+  const S = J.S, [tx, ty] = pente(J);
+  J.pl.rotation.z += (-tx - J.pl.rotation.z) * Math.min(1, dt * 10);
+  J.pl.rotation.x += (ty - J.pl.rotation.x) * Math.min(1, dt * 10);
+  const ax = -J.pl.rotation.z * S.G, ay = J.pl.rotation.x * S.G;
+
+  if (J.chute > 0){
+    J.chute += dt; if (J.chute > (J.cassé ? 1.1 : 0.7)) J.reset();
+  } else if (!J.fini){
+    if (!J.auto) J.t += dt;
+    const n = 4, h = dt / n;
+    let choc = 0;
+    for (let k = 0; k < n; k++){
+      J.vx += ax * h; J.vy += ay * h;
+      // Tourbillons : aspiration et rotation autour du centre
+      if (S.tourbillons) for (const [hx, hy] of TROUS){
+        const dx = hx - J.x, dy = hy - J.y, d = Math.hypot(dx, dy);
+        if (d < 1 && d > 1e-3){ const f = 7 * (1 - d); J.vx += (dx / d * f - dy / d * f * 0.8) * h; J.vy += (dy / d * f + dx / d * f * 0.8) * h; }
+      }
+      const fr = Math.max(0, 1 - S.frot * h); J.vx *= fr; J.vy *= fr;
+      J.x += J.vx * h; J.y += J.vy * h;
+      const e = S.rebond;
+      if (J.x < R){ J.x = R; if (J.vx < 0){ choc = Math.max(choc, -J.vx); J.vx *= -e; } }
+      if (J.x > LARG - R){ J.x = LARG - R; if (J.vx > 0){ choc = Math.max(choc, J.vx); J.vx *= -e; } }
+      if (J.y < R){ J.y = R; if (J.vy < 0){ choc = Math.max(choc, -J.vy); J.vy *= -e; } }
+      if (J.y > HAUT - R){ J.y = HAUT - R; if (J.vy > 0){ choc = Math.max(choc, J.vy); J.vy *= -e; } }
+      for (const [a, b, c, d] of BOITES){
+        const qx = Math.max(a, Math.min(c, J.x)), qy = Math.max(b, Math.min(d, J.y));
+        let nx = J.x - qx, ny = J.y - qy; const dd = Math.hypot(nx, ny);
+        if (dd < R && dd > 1e-6){
+          nx /= dd; ny /= dd; J.x = qx + nx * R; J.y = qy + ny * R;
+          const vn = J.vx * nx + J.vy * ny; if (vn < 0){ choc = Math.max(choc, -vn); J.vx -= (1 + e) * vn * nx; J.vy -= (1 + e) * vn * ny; }
+        }
+      }
+    }
+    if (S.fragile && !J.auto && choc > S.fragile){
+      J.cassé = true; S.casse(J); J.bille.visible = false; perdre(J, S.msgCasse);
+    } else {
+      const rayon = S.tourbillons ? 0.22 : TROU * 0.82;
+      for (const [hx, hy] of TROUS){
+        if (Math.hypot(J.x - hx, J.y - hy) < rayon){ J.x = hx; J.y = hy; perdre(J, S.msgChute || 'PLOUF ! ON REPART'); break; }
+      }
+    }
+    if (!J.chute && Math.hypot(J.x - ARRIVEE[0], J.y - ARRIVEE[1]) < 0.4){
+      if (J.auto) J.reset();
+      else { J.fini = true; J.vx = J.vy = 0; J.msg(`ARRIVEE EN ${fmt(J.t)} !\nTOUCHE POUR REJOUER`); }
+    }
+  }
+  J.prof = J.chute > 0 && !J.cassé ? Math.min(1, J.chute / 0.35) : 0;
+  const v = Math.hypot(J.vx, J.vy);
+  J.bille.position.set(J.x - LARG / 2, R * 0.9 - J.prof * 0.9, J.y - HAUT / 2);
+  if (S.poser) S.poser(J, v, dt, temps);
+  else {
+    // Roulement (l'œuf, ovale, roule de travers)
+    J.bille.position.y = R * 0.9 - J.prof * 0.9 + Math.abs(Math.sin(J.roule || 0)) * 0.05;
+    if (v > 1e-4){ AXE.set(J.vy / v, 0, -J.vx / v); J.bille.rotateOnWorldAxis(AXE, v * dt / R); J.roule = (J.roule || 0) + v * dt / R; }
+  }
+  S.anim?.(J, dt, temps);
+  J.eTemps.textContent = fmt(J.t);
+  J.eChutes.textContent = J.auto ? '' : `CHUTES ${J.chutes}`;
+}
+
+creer('telA', STYLES.A); creer('telB', STYLES.B); creer('telC', STYLES.C);
+
+function taille(){
+  for (const J of jeux){
+    const w = J.tel.clientWidth, h = J.tel.clientHeight;
+    J.rendu.setSize(w, h, false); J.cam.aspect = w / h; J.cam.updateProjectionMatrix();
+  }
+}
+addEventListener('resize', taille); taille();
+
+let avant = performance.now();
+function boucle(t){
+  const dt = Math.min(0.05, (t - avant) / 1000); avant = t;
+  for (const J of jeux){ pas(J, dt, t / 1000); J.rendu.render(J.scene, J.cam); }
+  requestAnimationFrame(boucle);
+}
+requestAnimationFrame(boucle);
+</script>
