@@ -159,6 +159,24 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
 .sC .bottom{background:#0c0c0c}
 .sC .back{background:#161616; border:2px solid #000}
 
+/* famille 3D (D) : un CD dans un boîtier translucide couleur bonbon (teinte --sh du jeu), le disque irisé dépasse de la jaquette */
+.sD{--w:calc(100px * var(--k)); --h:calc(90px * var(--k)); --d:calc(10px * var(--k))}
+.sD .f{backface-visibility:visible}
+.sD .front{background:linear-gradient(135deg, color-mix(in srgb, var(--sh) 55%, transparent), color-mix(in srgb, var(--sh) 30%, transparent) 50%, color-mix(in srgb, var(--sh) 48%, transparent));
+  border:2px solid color-mix(in srgb, var(--sh) 65%, #fff); border-radius:3px; box-shadow:inset 2px 2px 0 rgba(255,255,255,.45), inset -2px -2px 0 color-mix(in srgb, var(--sh) 70%, #000 15%)}
+.sD .disc{position:absolute; top:12%; right:-14%; width:74%; aspect-ratio:1; border-radius:50%; box-shadow:0 0 0 1px rgba(255,255,255,.6);
+  background:radial-gradient(circle, color-mix(in srgb, var(--sh) 80%, #000) 0 8%, #f2f3fa 8% 11%, rgba(255,255,255,.3) 11% 30%, transparent 30%), conic-gradient(#e6e8f2, #a9ecff, #f3c6ff, #fff0a6, #c9ffd8, #e6e8f2)}
+.sD .spine{position:absolute; left:0; top:0; bottom:0; width:11%; background:repeating-linear-gradient(0deg, color-mix(in srgb, var(--sh) 85%, #000 15%) 0 3px, color-mix(in srgb, var(--sh) 60%, #fff) 3px 5px); border-right:1px solid rgba(255,255,255,.55)}
+.sD .lab{position:absolute; left:14%; right:20%; top:6%; bottom:6%; background:var(--lb); box-shadow:2px 0 4px rgba(0,0,0,.3);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(5px * var(--k))}
+.sD .lab canvas{width:calc(32px * var(--k)); height:calc(32px * var(--k)); filter:drop-shadow(2px 2px 0 rgba(0,0,0,.3))}
+.sD .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(5.5px * var(--k)); line-height:1.5; color:var(--lt); text-align:center}
+.sD .tag3d{position:absolute; left:14%; top:6%; font-family:var(--f-display); font-size:calc(4px * var(--k)); padding:calc(2px * var(--k)) calc(3px * var(--k)); background:var(--ink); color:#fff}
+.sD .left{background:repeating-linear-gradient(0deg, color-mix(in srgb, var(--sh) 85%, #000 15%) 0 3px, color-mix(in srgb, var(--sh) 60%, #fff) 3px 5px)}
+.sD .right,.sD .top,.sD .bottom{background:color-mix(in srgb, var(--sh) 55%, transparent)}
+.sD .back{background:color-mix(in srgb, var(--sh) 60%, #fff 10%); border:2px solid color-mix(in srgb, var(--sh) 65%, #fff)}
+.sD .back::before{content:""; position:absolute; inset:12%; border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--sh) 80%, #000) 0 9%, #f2f3fa 9% 12%, transparent 12%), conic-gradient(#e6e8f2, #a9ecff, #f3c6ff, #fff0a6, #c9ffd8, #e6e8f2)}
+
 /* ---------- tri, recherche, surprends-moi ---------- */
 .tools{display:flex; flex-wrap:wrap; gap:10px}
 .tools .dq{background:#000; border:4px double #fff; border-radius:4px; box-shadow:4px 4px 0 #000}
@@ -422,7 +440,7 @@ const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- les jeux : cartouche (famille 16 bits, 32 bits ou reprise), couleurs, description ---------- */
 // À TENIR À JOUR pour un nouveau jeu : une ligne dans GAMES (k = chemin de la page, ic = icône de icones.js,
-// fam = "16" | "32" | "rep", lb/lt = étiquette et texte, sh = teinte du plastique de poche, rank = classements dans RANKS),
+// fam = "16" | "32" | "rep" | "3d" (CD dans un boîtier bonbon de la teinte sh), lb/lt = étiquette et texte, sh = teinte du plastique de poche, rank = classements dans RANKS),
 // et dans META (dates, genres), NEWS, PROGRESS, RECS, RANKS.
 const GAMES = [
   {k: "picross/index.html", n: "PICROSS DEX", s: "PICROSS DEX", ic: "ball", fam: "16", lb: "#cf2b34", lt: "#fff7ec", sh: "#d23a3a", rank: "picross",
@@ -453,7 +471,7 @@ const GAMES = [
    d: "Un chiffre par ligne, par colonne et par bloc, sous la lune d'un jardin japonais. Notes au crayon et grille du jour.", tags: ["4×4 A 9×9"]},
   {k: "calculator/index.html", n: "CALCULATOR", s: "CALCULATOR", ic: "calc", fam: "32", lb: "linear-gradient(#3a3d43, #1c1d21)", lt: "#c4d0a8", sh: "#e8783a", rank: "calculator",
    d: "Le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour. Trois styles : arcade, cahier ou calculatrice.", tags: ["5 NIVEAUX"]},
-  {k: "empilage/index.html", n: "EMPILAGE", s: "EMPILAGE", ic: "stack", fam: "32", lb: "linear-gradient(#9fd8ff, #ffd6c8)", lt: "#5a46a8", sh: "#f29bc0", rank: "empilage",
+  {k: "empilage/index.html", n: "EMPILAGE", s: "EMPILAGE", ic: "stack", fam: "3d", lb: "linear-gradient(#9fd8ff, #ffd6c8)", lt: "#5a46a8", sh: "#f29bc0", rank: "empilage",
    d: "Lâche chaque bloc pile sur la tour : ce qui dépasse tombe. Monte du matin jusqu'à la nuit étoilée, en 3D pastel. Une tour du jour pour toute la famille.", tags: ["3D", "TOUR DU JOUR"]},
   {k: "nebula/index.html", n: "NEBULA", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
    d: "Mène ta flotte de balise en balise jusqu'à l'amiral pirate. Les pirates annoncent leurs tirs : esquive, riposte, survis.", tags: ["ROGUE-LITE"]},
@@ -467,7 +485,7 @@ const GAMES = [
    d: "L'automate de Conway : dessine des cellules, pose des motifs, regarde-les évoluer.", tags: ["MOTIFS"]},
 ];
 const NEBULA_IMG = "nebula/cartouche.jpg";
-const FAMSTYLE = {"16": "A", "32": "C", rep: "B"};
+const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 
 /* ---------- accueil : dates de sortie et de mise à jour, genres, jeu à la une, quoi de neuf ---------- */
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
@@ -495,6 +513,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-16", "Accueil : les jeux en 3D ont leur propre cartouche, un CD dans un boîtier translucide couleur bonbon. Empilage est le premier à l'avoir."],
   ["2026-10-16", "Nouveau jeu : Empilage, le premier jeu en 3D de la Ludothèque. Touche pour lâcher chaque bloc pile sur la tour ; ce qui dépasse tombe. Le ciel passe du matin à la nuit étoilée à mesure que tu montes. Tour du jour : les mêmes vitesses pour toute la famille."],
   ["2026-10-16", "Nouveau jeu : Calculator, le calcul mental de 7 à 77 ans. Choisis tes opérations et ton niveau (de Petit écolier à Champion), joue une série de 20, 60 secondes contre la montre ou le calcul du jour. Trois styles au choix : arcade, cahier d'écolier ou calculatrice de poche."],
   ["2026-10-16", "Nouveau jeu : Lune-Rover. Programme Pico, le petit robot lunaire, à l'avance pour ramasser les cristaux : 30 niveaux, avec sauts, fonction F1, répétitions, boucles et conditions."],
@@ -619,6 +638,7 @@ function cart(g, i){
   const body = el("div", "body"), front = el("div", "f front"), lab = el("div", "lab");
   if (st === "A"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "rid"), lab, el("i", "notch")); }
   else if (st === "B"){ body.append(el("div", "f pcb")); lab.append(art(g), el("b", "", g.s)); front.append(el("span", "emb", "LUDO"), lab, el("span", "arw", "▼")); }
+  else if (st === "D"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "disc"), el("i", "spine"), lab, el("span", "tag3d", "3D")); }
   else { lab.append(art(g)); front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip")); }
   ["back", "left", "right", "top", "bottom"].forEach(f => body.append(el("div", "f " + f)));
   body.append(front); b.append(body);
