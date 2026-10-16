@@ -6,7 +6,7 @@
 ## 1. Références à lire avant de coder
 - **`maquettes/nebula-chantier-naval.html`** : la **référence des vaisseaux** (moteur de sprites + 11 vaisseaux du joueur + 5 pirates, noms, rôles, jauges). Artefact : https://claude.ai/artifact/8umubGbkPTmeoTvKtmSPX8
 - **`maquettes/nebula.html`** : maquette des écrans (titre, carte de navigation, combat, hangar), décor (nébuleuse, planètes, astéroïdes) et interface. Artefact : https://claude.ai/artifact/4NpBo4SY7oDYSwc2GnJKoD
-- `CLAUDE.md` : règles du dépôt et liste de contrôle « Ajouter un nouveau jeu ».
+- `CLAUDE.md` : règles du dépôt ; `specs/ludotheque.md` : liste de contrôle « Ajouter un nouveau jeu ».
 
 ## 2. Direction artistique (validée par l'utilisateur)
 - **Réaliste, pas « jouet »** : vaisseaux en relief (cartes de hauteurs, ombres portées, rainures de plaques, reflets, hublots), **pas de contour noir**, couleurs sombres.
@@ -134,7 +134,7 @@ Le **premier combat** de la première partie est guidé en 5 bulles : choisir un
 ## 13. Sons
 Bruitages WebAudio discrets et graves (pas de chiptune) : laser, canon, missile, explosion, bouclier touché, saut hyperspatial, clic d'interface. Une nappe d'ambiance optionnelle (coupée par défaut).
 
-## 14. Intégration Ludothèque (liste de contrôle de CLAUDE.md)
+## 14. Intégration Ludothèque (liste de contrôle de `specs/ludotheque.md`)
 Cartouche dans le menu (icône 16×16 : silhouette de vaisseau ambre), transfert de sauvegarde (`nebula.meta`, `nebula.best`, `nebula.daily` : collecte, description, fusion qui garde le meilleur), classements, `sw.js`, README, CLAUDE.md (tableau des jeux + lien d'artefact), IDEES.md (✅), artefact publié (copie autonome via `outils/artefact.py`, en vérifiant qu'il intègre `vaisseaux.js`).
 
 ## 15. Découpage en sessions
