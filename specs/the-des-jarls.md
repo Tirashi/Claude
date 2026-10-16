@@ -22,12 +22,12 @@ Jeu de dés en duel inspiré de l'**Orlog** d'Assassin's Creed Valhalla (Ubisoft
 - Avant le combat, chaque joueur emporte 3 faveurs (3 niveaux chacune) ; après les lancers, il peut en payer une avec ses jetons.
 - Résolution : haches contre casques, flèches contre boucliers, les mains volent, les faveurs s'appliquent dans l'ordre de leur priorité.
 
-## Questions encore ouvertes
-1. Défi du jour (même adversaire, mêmes dés pour toute la famille, une seule tentative classée) : oui ou non ? Un classement des tavernes battues ?
-2. Les dés en 3D lancés d'un geste (partagés avec **Yams**) ou des dés dessinés ?
-3. Combien de tavernes et de faveurs (par exemple 8 tavernes, 12 faveurs) ? Un boss final (un jarl légendaire) ?
-4. L'ordinateur : quelques caractères différents (prudent, agressif, voleur) ?
-5. Téléphone en portrait (armées en haut et en bas) ou en paysage (armées à gauche et à droite) ?
+## Réponses de l'utilisateur (16/10, suite du brainstorm)
+1. **Défi du jour : oui**, selon la règle des défis du jour de la Ludothèque (une seule tentative classée par jour, comptée dès le départ comme une mission ; même adversaire et mêmes dés pour toute la famille).
+2. **Dés** : 3D lancés d'un geste ou dessinés, **à voir sur les maquettes**.
+3. **Autant de tavernes que de faveurs** : dans chaque taverne, on affronte **le dieu à qui appartient la faveur** ; il faut le battre pour obtenir sa faveur. **Autant de faveurs que dans Assassin's Creed Valhalla** (20 de mémoire, à vérifier : Baldr, Bragi, Brunhild, Freyja, Freyr, Frigg, Heimdall, Hel, Idunn, Loki, Mimir, Odin, Skadi, Skuld, Thor, Thrymr, Tyr, Ullr, Var, Vidar) ; peut-être d'autres plus tard. Effets à reprendre en les vérifiant, sous nos propres textes.
+4. Caractères de l'ordinateur : pas encore tranché ; chaque dieu peut avoir son style de jeu (Thor attaque, Loki vole, Heimdall défend…).
+5. **Téléphone en portrait** : **les dés en bas, la bataille en haut**. En **mode deux joueurs sur le même téléphone**, la disposition reste **à trouver** (pistes pour la maquette : chacun ses dés en bas de son côté, le téléphone posé à plat entre les deux joueurs avec la bataille au milieu ; ou un seul joueur à la fois, l'écran qui passe à l'autre).
 
 ## Ampleur et découpage proposé
-🔴 Gros (2 à 3 conversations, Opus) : (1) maquette du style ; (2) règles en logique pure dans `the-des-jarls/regles.js`, testables sous Node, + ordinateur + duel à deux ; (3) armées animées, campagne, déblocages, intégration (accueil, transfert `LUDO1-`, `sw.js`) ; plus tard : duel en famille avec Supabase.
+🔴 Gros (2 à 3 conversations, Opus) : (1) maquette du style (dont le choix des dés et la disposition à deux joueurs) ; (2) règles en logique pure dans `the-des-jarls/regles.js`, testables sous Node, + ordinateur + duel à deux ; (3) armées animées, campagne, déblocages, intégration (accueil, transfert `LUDO1-`, `sw.js`) ; plus tard : duel en famille avec Supabase.
