@@ -135,7 +135,7 @@ Les menaces s'annoncent quand c'est possible (la tour de guet, le ciel, la rivi�
 3. **La nature** : crue, incendie, hiver rude, épidémie, loups… ; compte rendu animé ; équilibrage avec le pilote automatique ; intégration (classements, accueil, transfert, docs, artefact).
 
 ## 13. Questions encore ouvertes
-- **Système de recherche** (décision du 16/10 : pas de plans à trouver sur l'île) : **un arbre de recherche** (choix de l'utilisateur) qui débloque les plans des bâtiments avec des **points de recherche** ; reste à décider comment on obtient ces points. Pistes : points de savoir produits par un bâtiment (école, bibliothèque) ou par les colons d'un talent précis ; un petit arbre de recherches qui débloque bâtiments et améliorations ; les ruines pourraient donner un bonus de savoir. Quels bâtiments sont disponibles dès le départ ?
+- **Système de recherche** (décision du 16/10 : pas de plans à trouver sur l'île) : **un arbre de recherche** (choix de l'utilisateur) qui débloque les plans des bâtiments avec des **points de recherche** ; **obtenus (choix du 16/10, solution « mélange »)** : l'essentiel vient d'un **bâtiment de savoir** (école, puis bibliothèque) où l'on place des colons comme à un poste (un colon qui étudie ne produit rien d'autre ; un colon au talent « érudit » produit plus de points) ; s'y ajoutent des **bonus** d'exploration et de grandes étapes (lieu découvert, ruines, premier hiver traversé, 20 colons…). Reste à choisir le contenu de l'arbre et les bâtiments disponibles dès le départ.
 - Commerce avec des bateaux marchands (le port) : utile ou de trop ?
 - Faut-il un objectif par année (« avoir 20 colons à la fin de l'an 2 ») pour guider les débutants ?
 
