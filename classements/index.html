@@ -241,13 +241,6 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     {id: "orbite", name: "ORBITE", play: "../orbite/index.html", views: [
       {label: "ETOILES", game: "orbite", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "ORBITE · TOTAL D'ETOILES",
        note: "3 étoiles par niveau réussi du premier coup, 2 au deuxième essai, 1 au troisième (90 au maximum)."}]},
-    {id: "ile", name: "L'ILE DES NAUFRAGES", play: "../ile/index.html", views: [
-      {label: "MEILLEUR SCORE", game: "ile", board: () => "best", fmt: v => N(v) + " pts", title: () => "L'ILE · MEILLEURE PARTIE",
-       note: "1000 pour une évasion (+200 en radeau), 40 par jour d'avance, la santé, le moral, les découvertes et le trésor."},
-      {label: "ILE DU JOUR", ctl: ["day"], game: "ile", board: () => { const d = day(); return "daily:" + (d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }, fmt: v => N(v) + " pts",
-       title: () => "ILE DU JOUR", note: "La même île, le même équipage et les mêmes nuits pour toute la famille. Seule la première partie du jour est classée.",
-       empty: () => st.back ? "Personne n'a joué l'île ce jour-là." : "Personne n'a encore joué l'île du jour : à toi !"},
-      {label: "EVASIONS", game: "ile", board: () => "evasions", fmt: v => N(v) + " évasion" + (v > 1 ? "s" : ""), title: () => "L'ILE · EVASIONS REUSSIES"}]},
     {id: "amiral", name: "AMIRAL !", play: "../amiral/index.html", views: [
       {label: "MEILLEURE VICTOIRE", ctl: ["amai"], game: "amiral", board: () => `best:${st.amai}`, fmt: v => N(v) + " tours",
        title: () => `AMIRAL ! · ${AMAI.find(m => m[0] === st.amai)[1]}`, note: "La victoire en le moins de tours, par niveau de l'ordinateur."}]},
@@ -261,7 +254,7 @@ select{width:100%; font:20px/1.2 var(--f-body); color:#110d22; background:#f2f0f
     club: ["cup", "linear-gradient(#3f8a37, #173a1a)"], alunissage: ["lander", "linear-gradient(#0a0c1e, #2c2a28)"],
     nebula: ["../nebula/cartouche.jpg", "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)"],
     pontstellaire: ["stars", "radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%)"],
-    orbite: ["planet", "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)"], ile: ["palm", "linear-gradient(#2f8ac0, #0a3a5a)"], amiral: ["anchor", "linear-gradient(#1c579c, #0a1c40)"],
+    orbite: ["planet", "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)"], amiral: ["anchor", "linear-gradient(#1c579c, #0a1c40)"],
   };
   // l'image d'une boîte : une icône 16×16 (le chien est plus large), ou la capture de Nebula
   function art(id){

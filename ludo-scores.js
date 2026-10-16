@@ -66,7 +66,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["pontstellaire", "ciels"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["ile", "best"]];
+    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["pontstellaire", "ciels"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -148,8 +148,6 @@
     hi("snake", "best", readKey("snakeBestScore", 0));
     hi("asteroids", "best", readKey("asteroids16.best", 0));
     hi("solitaire", "best", readKey("solitaire16.best", 0));
-    hi("ile", "best", readKey("ile.best", 0)); hi("ile", "evasions", readKey("ile.wins", 0));
-    var idl = readKey("ile.daily", {}) || {}; Object.keys(idl).forEach(function (k){ if (/^\d{8}$/.test(k)) hi("ile", "daily:" + k, idl[k]); });
     hi("injagility", "best", readKey("injagility.best", 0));
     var q = readKey("queens16.best", {}) || {}; Object.keys(q).forEach(function (n){ if (/^[5-9]$/.test(n)) lo("queens", "best:" + n, q[n]); });
     var qd = readKey("queens16.daily", {}) || {}; Object.keys(qd).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("queens", "daily:" + k, qd[k]); });

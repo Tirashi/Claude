@@ -4,7 +4,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'pont-stellaire/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'pont-stellaire/index.html', 'alunissage/index.html', 'nebula/index.html',
   'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
