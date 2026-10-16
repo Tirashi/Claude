@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'alunissage/index.html', 'nebula/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html',
   'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -46,6 +46,25 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Nebula : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-nebula-incident.png` });
+    }
+    if (url === 'ile/index.html') {
+      // la colonie : un chantier posé au toucher du volet, puis trois semaines
+      const r = await p.evaluate(async () => {
+        const I = Ile, wait = ms => new Promise(r => setTimeout(r, ms));
+        I.startRun(I.newRun(4242)); const run = I.run, [wx, wy] = I.makeIsle(4242).wreck; let spot = null;
+        for (let d = 1; d < 6 && !spot; d++) for (let y = wy - d; y <= wy + d && !spot; y++) for (let x = wx - d; x <= wx + d && !spot; x++)
+          if (I.MW > x && x >= 0 && I.MH > y && y >= 0 && I.buildOptions(run, x, y).some(([k, w]) => k === 'habitation' && !w)) spot = [x, y];
+        if (!spot) return 'pas de case pour une habitation';
+        I.selectTile(spot[0], spot[1]); await wait(50);
+        const btn = [...document.querySelectorAll('#panel .build')].find(b => b.textContent.includes('Habitation')); if (!btn) return 'pas de bouton Habitation';
+        btn.click(); if (!run.B.some(b => b.target === 'habitation')) return "le chantier n'est pas posé";
+        for (let k = 0; k < 3; k++) { I.nextWeek(); await wait(1100); }
+        if (run.turn !== 3 || document.getElementById('sheet').hidden) return 'la semaine ne passe pas';
+        I.openSheet('recherche'); I.openSheet('colons'); I.openSheet('postes'); I.openSheet('menu');
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('La colonie : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-colonie.png` });
     }
     if (errs.length) { fail++; console.log('ÉCHEC ' + url + '\n  ' + errs.join('\n  ')); } else console.log('ok    ' + url);
     await p.close();

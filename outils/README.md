@@ -19,6 +19,7 @@ python3 -m http.server 8765
 | `nebula-simulateur.js [n] [prudence]` | Nebula, **sous Node** (pas besoin du serveur) : combats automatiques (victoires, coque perdue) contre l'IA du secteur 1 puis l'IA par score (niveaux 1 et 2), parties complètes reproductibles, `migrate()`. |
 | `nebula-parties.js [n] [prudence]` | Nebula, sous Node : parties complètes sur les 3 secteurs (où la flotte tombe, victoires, coque perdue par secteur et par type de combat). Pour régler la difficulté. |
 | `nebula-flottes.js [n] [vaisseau,vaisseau,…]…` | Nebula, sous Node : force de différentes flottes de départ (victoires, secteurs, score, coût en points et prime). Sans composition : les 3 modèles et quelques flottes de 9-10 points. Pour calibrer les points de flotte. |
+| `ile-colonie.js [parties] [années] [graine] [détail]` | La colonie, sous Node : parties jouées par un pilote automatique simple (années tenues, population, départs, score, `migrate()`). Pour régler la difficulté. |
 | `artefact.py <jeu.html> <sortie.html>` | Copie d'un jeu prête à publier en artefact (tous les scripts locaux intégrés, sans ludo-scores.js). |
 
 `pw.js` charge Playwright (installé dans `/opt/node22`) et règle l'écran de téléphone.
