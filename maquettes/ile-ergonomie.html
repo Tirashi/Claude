@@ -19,7 +19,7 @@ body{margin:0; background:var(--night) radial-gradient(#0e2a38 1px, transparent 
 .wrap{max-width:1040px; margin:0 auto; display:flex; flex-direction:column; gap:18px}
 h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,4.2vw,22px); line-height:1.4; color:var(--gold); text-shadow:3px 3px 0 #a0501a, 5px 5px 0 #000}
 .lead{margin:0; color:var(--dim); max-width:74ch} .lead b{color:var(--text); font-weight:400}
-.dirs{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px}
+.dirs{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px}
 .dirs button{font-family:var(--f-display); font-size:9px; line-height:1.6; padding:10px 4px; color:var(--text); background:#163a4a; border:3px solid var(--dim); border-radius:4px; box-shadow:0 0 0 3px var(--ink), 4px 4px 0 3px #000; cursor:pointer}
 .dirs button[aria-pressed="true"]{color:#1a1000; background:var(--gold); border-color:var(--gold)}
 .stage{display:grid; grid-template-columns:auto minmax(0,1fr); gap:26px; align-items:start}
@@ -122,6 +122,32 @@ canvas.px{image-rendering:pixelated; display:block}
 .C .tip{margin:6px 8px; font-size:19px; color:var(--dim)} .C .tip b{color:var(--gold); font-weight:400}
 .C .sheet .box{background:#0e2e3c} .C .sheet .grid button{background:#163a4a} .C .sheet .close{background:#2f8ab0; color:#fff}
 .C .tabs{display:none}
+
+/* ===== D · postes de B + île vivante de C ===== */
+.D{background:#0a2430; color:#f2fbff}
+.D .mapw{position:relative; border-bottom:3px solid #000}
+.D .mapw canvas{width:100%; height:auto; cursor:pointer}
+.D .hud{position:absolute; left:6px; top:6px; font-family:var(--f-display); font-size:11px; color:var(--gold); text-shadow:2px 2px 0 #000; background:rgba(0,0,0,.5); padding:6px 8px; border-radius:6px; pointer-events:none}
+.D .res .r{background:#103644; border:2px solid #2a6a80}
+.D .moral em{color:var(--dim)}
+.D .grid2{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px}
+.D .post{display:grid; grid-template-columns:28px minmax(0,1fr); grid-template-rows:auto auto; gap:2px 6px; align-items:center; padding:6px; border-radius:8px; background:#103644; border:2px solid #1f5a70}
+.D .post.on{border-color:var(--gold); background:#173f4f}
+.D .post canvas.ic{width:28px; height:28px; grid-row:1 / 3}
+.D .post .n{font-family:var(--f-display); font-size:8px; display:flex; justify-content:space-between; align-items:center}
+.D .post .n em{font-style:normal; color:var(--ok); font-family:var(--f-body); font-size:17px}
+.D .pm{display:flex; align-items:center; justify-content:space-between; gap:4px}
+.D .pm button{width:32px; height:28px; border:3px solid #000; border-radius:6px; font-family:var(--f-display); font-size:12px; background:#2f8ab0; color:#fff; box-shadow:2px 2px 0 #000}
+.D .pm button:disabled{opacity:.3}
+.D .pm b{font-family:var(--f-display); font-weight:400; font-size:12px}
+.D .free{margin:4px 8px 0; font-size:19px; color:var(--dim)} .D .free b{color:var(--gold); font-weight:400}
+.D .sheet .box{background:#0e2e3c} .D .sheet .grid button{background:#163a4a} .D .sheet .close{background:#2f8ab0; color:#fff}
+.D .proj{display:flex; flex-direction:column; gap:6px}
+.D .proj button{display:grid; grid-template-columns:1fr auto; gap:2px 8px; text-align:left; padding:8px; border:3px solid #000; border-radius:8px; background:#163a4a}
+.D .proj button.on{outline:3px solid var(--gold)}
+.D .proj b{font-family:var(--f-display); font-weight:400; font-size:9px} .D .proj small{grid-column:1 / 3; font-size:17px; color:var(--dim)}
+.D .proj .bar{grid-column:1 / 3; height:8px; border:2px solid #000; background:#08202a} .D .proj .bar span{display:block; height:100%; background:var(--gold)}
+.D .tabs{display:none}
 </style>
 </head>
 <body>
@@ -170,7 +196,9 @@ const crew = [
   { name: 'Basile', talent: 'enfant', hp: 3, task: 'eau', skin: 3, hair: 0 }, { name: 'Victor', talent: 'exploratrice', hp: 3, task: 'bois', skin: 1, hair: 4 },
   { name: 'Jade', talent: 'charpentier', hp: 1, task: 'chantier', skin: 2, hair: 2, long: true }, { name: 'Paul', talent: 'pecheur', hp: 3, task: 'explorer', skin: 0, hair: 1 },
 ];
-const G = { day: 3, food: 7, water: 6, wood: 3, moral: 58, chantier: 'ABRI', chP: 2, chMax: 6, source: false };
+const G = { day: 3, food: 7, water: 6, wood: 3, moral: 58, chantier: 'ABRI', chP: 2, chMax: 6, source: false, target: null };
+const PROJS = [['ABRI', 2, 6, 'Protège des nuits froides et des tempêtes.'], ['RESERVE', 0, 4, 'La nourriture ne se gâte plus.'], ['CITERNE', 0, 4, '+1 eau par jour, +3 sous la pluie.'], ['PIEGES', 0, 3, '+1,5 nourriture par jour.'],
+  ['TOUR DE GUET', 0, 5, 'Le guetteur voit les navires la veille.'], ['FEU DE SIGNAL', 0, 6, 'Allumé quand un navire passe : sauvés !'], ['RADEAU', 0, 12, 'Il manque la corde et la voile de l\'épave.'], ['RADIO', 0, 5, 'Il manque la radio et 3 pièces.']];
 const yieldOf = (t, c) => ({ peche: 3 + (c && c.talent === 'pecheur' ? 1.5 : 0), cueillette: 2.5 + (c && c.talent === 'enfant' ? 1 : 0), eau: G.source ? 5 : 3, bois: 2.5 + (c && c.talent === 'charpentier' ? 1 : 0),
   chantier: 1 + (c && c.talent === 'charpentier' ? 1 : 0) }[t] || 0) * (c ? (c.hp === 1 ? .6 : 1) * (.7 + G.moral / 333) : 1);
 const fmt = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
@@ -300,6 +328,84 @@ function renderC(phone) {
     if (c) phone.append(taskSheet(c, () => renderC(phone))); };
 }
 
+/* ---------- D : postes de B + île vivante de C ---------- */
+const SPOT_D = { peche: [4, 4], cueillette: [2, 3], eau: [3, 1], bois: [3, 3], chantier: [2, 4], soins: [2, 4], repos: [2, 4], guet: [4, 3] };
+function drawIslandD(cv) {
+  const W = 6, Hh = 5, T = 60, g = cv.getContext('2d'); cv.width = W * T; cv.height = Hh * T; g.imageSmoothingEnabled = false;
+  const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); }, t0 = performance.now() / 1000;
+  const txt = (s, x, y, col, size = 8, al = 'center') => { g.font = `${size}px "Press Start 2P"`; g.textAlign = al; g.fillStyle = '#000'; g.fillText(s, x + 1, y + 1); g.fillStyle = col; g.fillText(s, x, y); };
+  R(0, 0, cv.width, cv.height, '#145a8a');
+  for (let k = 0; k < 70; k++) { const x = ((k * 53 + t0 * 10 * (k % 2 ? 1 : -1)) % cv.width + cv.width) % cv.width; R(x | 0, (k * 37) % cv.height, 6, 1, '#3f8ac0'); }
+  MAP.forEach((row, y) => [...row].forEach((ch, x) => {
+    const X = x * T, Y = y * T; if (ch === 'm') return;
+    if (SEEN[y][x] === '0') { R(X, Y, T, T, '#d8e6f0'); for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#ffffff' : '#c8d8e4'; g.beginPath(); g.arc(X + 10 + (k * 17) % 44, Y + 12 + (k * 19) % 38, 12, 0, 6.3); g.fill(); }
+      const tg = G.target && G.target[0] === x && G.target[1] === y; txt(tg ? '!' : '?', X + T / 2, Y + T / 2 + 8, tg ? '#e09a1a' : '#7a9ab0', 16);
+      if (tg) { R(X + 40, Y + 10, 2, 22, '#5a3a1a'); R(X + 42, Y + 10, 12, 8, '#e8484a'); } return; }
+    const sand = 'pc'.includes(ch); R(X, Y, T, T, sand ? '#e8d090' : '#3f8a3a');
+    for (let k = 0; k < 14; k++) R(X + (k * 17 + x * 7) % T, Y + (k * 23 + y * 5) % T, 2, 1, sand ? '#c8a860' : '#2f6a2a');
+    if (ch === 'j') for (let k = 0; k < 3; k++) { const px = X + 10 + k * 16, py = Y + 18 + (k % 2) * 14; R(px + 4, py + 5, 3, 14, '#6a4a20'); R(px - 3, py, 16, 5, '#2f7a2a'); R(px, py - 3, 10, 3, '#7cdf5a'); }
+    if (ch === 's') { R(X + 12, Y + 18, 36, 20, '#3fa0e0'); R(X + 18, Y + 22, 10, 2, '#bfefff'); }
+    if (ch === 'v') { g.fillStyle = '#5a4a44'; g.beginPath(); g.moveTo(X + 5, Y + T - 5); g.lineTo(X + 24, Y + 10); g.lineTo(X + 36, Y + 10); g.lineTo(X + 55, Y + T - 5); g.fill(); R(X + 24, Y + 8, 12, 3, '#ff6a2a'); }
+    if (ch === 'g') { R(X + 10, Y + 12, 40, 32, '#6a6a70'); R(X + 21, Y + 22, 18, 22, '#141418'); }
+    if (ch === 'r') for (let k = 0; k < 3; k++) { R(X + 8 + k * 16, Y + 24 + (k % 2) * 8, 13, 10, '#8a8a90'); R(X + 8 + k * 16, Y + 24 + (k % 2) * 8, 13, 2, '#c8c8d0'); }
+  }));
+  // le camp et le chantier en cours : charpente qui monte avec la progression, barre au-dessus
+  const [cx, cy] = [3 * T, 4 * T], f = forecast(), p = PROJS.find(q => q[0] === G.chantier), done = p[1] / p[2], next = Math.min(1, (p[1] + f.ch) / p[2]);
+  // tente à gauche, charpente du chantier à droite (elle monte avec la progression)
+  g.fillStyle = '#f0e0c0'; g.beginPath(); g.moveTo(cx + 3, cy + 34); g.lineTo(cx + 15, cy + 10); g.lineTo(cx + 27, cy + 34); g.fill(); R(cx + 13, cy + 24, 4, 10, '#5a4a3a');
+  const bx = cx + 32, by = cy + 6, bw = 24, bh = 28, lv = Math.round(bh * done);
+  for (let k = 0; k < 4; k++) R(bx + k * 7, by + bh - lv, 2, lv, '#8a5a2a');
+  for (let yy = by + bh - 2; yy > by + bh - lv; yy -= 6) R(bx, yy, bw, 2, '#c08a50');
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.setLineDash([2, 2]); g.strokeRect(bx + .5, by + .5, bw, bh); g.setLineDash([]);
+  // en bas de la case : le nom du chantier et sa barre (or = fait, hachuré = gagné ce soir)
+  R(cx + 1, cy + 37, T - 2, 22, 'rgba(0,0,0,.72)');
+  txt(`${p[0].split(' ')[0]} ${fmt(p[1])}/${p[2]}`, cx + T / 2, cy + 45, '#ffd23f', 6);
+  const X0 = cx + 4, Y0 = cy + 49, BW = T - 8;
+  R(X0, Y0, BW, 7, '#08202a'); R(X0, Y0, Math.round(BW * done), 7, '#ffd23f');
+  for (let x = Math.round(BW * done); x < Math.round(BW * next); x++) if ((x + (t0 * 8 | 0)) % 4 < 2) R(X0 + x, Y0, 1, 7, '#fff2a8');
+  g.strokeStyle = '#ffd23f'; g.lineWidth = 1; if (Math.sin(t0 * 3) > 0) g.strokeRect(cx + .5, cy + .5, T - 1, T - 1);
+  G._camp = [cx, cy, T, T];
+  // les naufragés à leur poste, et ce que rapporte chaque poste
+  const groups = {}; crew.forEach((c, i) => { const k = c.task === 'explorer' ? (G.target ? G.target.join() : '2,2') : SPOT_D[c.task].join(); (groups[k] = groups[k] || []).push(i); });
+  for (const [k, list] of Object.entries(groups)) { const [x, y] = k.split(',').map(Number), ex = crew[list[0]].task === 'explorer';
+    list.forEach((i, n) => { const c = crew[i], X = x * T + 6 + (n % 3) * 17 + (ex ? -4 : 0), Y = y * T + (ex ? 30 : 8) + Math.floor(n / 3) * 20, bob = Math.sin(t0 * 4 + i) > .6 ? 1 : 0;
+      g.drawImage(faceCanvas(c), X, Y - bob, 14, 14); R(X + 2, Y + 14 - bob, 10, 3, TASKS.find(t => t[0] === c.task)[2]); });
+    const t = crew[list[0]].task, sum = list.reduce((a, i) => a + yieldOf(t, crew[i]), 0);
+    if (['peche', 'cueillette', 'eau', 'bois'].includes(t)) { const lab = `+${fmt(sum)}`, X = x * T + T - 4, Y = y * T + T - 8; R(X - 34, Y - 10, 36, 13, 'rgba(0,0,0,.7)');
+      g.drawImage(iconCanvas(t === 'peche' ? 'cueillette' : t), X - 33, Y - 9, 11, 11); txt(lab, X - 20, Y, '#5cff8a', 6, 'left'); } }
+}
+function projSheet(phone, after) {
+  const s = h('div', 'sheet'), box = h('div', 'box'); box.append(h('h3', '', 'CHOISIR LE CHANTIER'));
+  const list = h('div', 'proj');
+  PROJS.forEach(([name, pr, max, txt]) => { const b = h('button', G.chantier === name ? 'on' : '', `<b>${name}</b><b>${fmt(pr)}/${max}</b><small>${txt}</small><div class="bar"><span style="width:${pr / max * 100}%"></span></div>`);
+    b.onclick = () => { G.chantier = name; s.remove(); after(); }; list.append(b); });
+  box.append(list); const cl = h('button', 'close', 'FERMER'); cl.onclick = () => s.remove(); box.append(cl); s.append(box);
+  s.onclick = e => { if (e.target === s) s.remove(); }; return s;
+}
+function renderD(phone) {
+  phone.className = 'phone D'; phone.innerHTML = '';
+  const sc = h('div', 'screen'), mw = h('div', 'mapw'), cv = h('canvas', 'px');
+  mw.append(cv); mw.append(h('div', 'hud', `JOUR ${G.day}/40`)); sc.append(mw);
+  sc.append(resBar()); sc.append(warning());
+  const free = crew.filter(c => c.task === 'repos').length;
+  sc.append(h('p', 'free', `Au repos : <b>${free}</b> · + et − règlent chaque poste. Touche le <b>chantier</b> sur la carte pour en changer, un <b>nuage</b> pour y envoyer l'explorateur.`));
+  const grid = h('div', 'grid2');
+  TASKS.filter(t => t[0] !== 'repos').forEach(([id, name]) => {
+    const on = crew.filter(c => c.task === id), row = h('div', 'post' + (on.length ? ' on' : '')), ic = iconCanvas(id); ic.classList.add('ic'); row.append(ic);
+    const y = on.reduce((a, c) => a + yieldOf(id, c), 0);
+    row.append(h('div', 'n', `<span>${name}</span>${y ? `<em>+${fmt(y)}</em>` : ''}`));
+    const pm = h('div', 'pm'), minus = h('button', '', '−'), plus = h('button', '', '+'); minus.disabled = !on.length; plus.disabled = !free;
+    minus.onclick = () => { const c = on.find(x => x.talent !== TALENT_FOR[id]) || on[0]; c.task = 'repos'; renderD(phone); };
+    plus.onclick = () => { const pool = crew.filter(c => c.task === 'repos').sort((a, b) => (b.talent === TALENT_FOR[id]) - (a.talent === TALENT_FOR[id]) || b.hp - a.hp); pool[0].task = id; renderD(phone); };
+    pm.append(minus, h('b', '', on.length), plus); row.append(pm); grid.append(row);
+  });
+  sc.append(grid); sc.append(endBtn()); phone.append(sc);
+  const loop = () => { if (!cv.isConnected) return; drawIslandD(cv); requestAnimationFrame(loop); }; loop();
+  cv.onclick = e => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * cv.width, y = (e.clientY - r.top) / r.height * cv.height, tx = Math.floor(x / 60), ty = Math.floor(y / 60);
+    const c = G._camp; if (x >= c[0] && x < c[0] + c[2] && y >= c[1] && y < c[1] + c[3]) { phone.append(projSheet(phone, () => renderD(phone))); return; }
+    if (SEEN[ty] && SEEN[ty][tx] === '0') { G.target = G.target && G.target[0] === tx && G.target[1] === ty ? null : [tx, ty]; } };
+}
+
 /* ---------- la page ---------- */
 const DIRS = [
   { id: 'A', short: 'A CARNET', name: 'A · CARNET DE BORD', render: renderA, desc: 'Un carnet de bord en papier, chaud et lisible. L\'équipe en cartes : on touche une carte pour changer la tâche.',
@@ -308,9 +414,11 @@ const DIRS = [
     pts: ['<b>Le plus rapide à jouer</b> : quelques + et −, la prévision du soir se met à jour, FIN DU JOUR.', 'Les visages des naufragés apparaissent sur leur poste ; toucher un poste permet quand même de choisir qui y va.', 'Le talent compte tout seul : + met le pêcheur à la pêche, l\'infirmière aux soins…'] },
   { id: 'C', short: 'C ILE', name: 'C · ILE VIVANTE', render: renderC, desc: 'La carte de l\'île devient l\'écran principal : chaque naufragé est dessiné là où il travaille.',
     pts: ['<b>Le plus vivant</b> : on voit l\'équipe pêcher sur la plage, couper du bois dans la jungle, explorer près du volcan.', 'On touche un naufragé sur la carte pour changer sa tâche ; les nuages ? se touchent pour choisir où explorer.', 'Plus de place pour la carte (cases plus grandes, brouillard en nuages), mais moins pour le détail de l\'équipe.'] },
+  { id: 'D', short: 'D = B + C', name: 'D · POSTES + ILE VIVANTE', render: renderD, desc: 'La carte vivante de C en haut, les postes de B en dessous : on règle les postes avec + et −, et on voit aussitôt l\'équipe partir travailler sur l\'île.',
+    pts: ['<b>Le chantier en cours sur la carte</b>, au camp : une charpente qui monte avec la progression, et au-dessus une barre « ABRI 2/6 » ; la partie <b>hachurée</b> montre ce que le chantier gagnera ce soir.', '<b>Ce que rapporte chaque poste</b> écrit sur la carte, à l\'endroit où l\'on travaille (+5,2 sur la plage pour la pêche…).', 'Toucher le chantier ouvre la liste des chantiers (avec leur progression) ; toucher un nuage y plante un drapeau : l\'explorateur ira là.', 'Les postes en deux colonnes compactes, avec + et − : tout tient sur un écran, sans faire défiler.'] },
 ];
 const phone = document.getElementById('phone'), dirs = document.getElementById('dirs');
-let cur = 1;
+let cur = 3;
 DIRS.forEach((d, i) => { const b = h('button', '', d.short); b.onclick = () => { cur = i; show(); }; dirs.append(b); });
 function show() {
   [...dirs.children].forEach((b, i) => b.setAttribute('aria-pressed', i === cur));
