@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>La colonie en paysage</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@700;800&family=Signika:wght@400;600;700&display=swap">
+<style>
+/* Maquette de La colonie (specs/colonie.md, étape 1), 2e version : direction 32 bits.
+   L'écran fait 640 × 360 pixels logiques. La carte occupe toute la largeur ; le volet de la case glisse depuis la droite
+   et se replie. Terrain dessiné pixel par pixel en cases de 32 (rivages irréguliers, relief ombré), polices lisses et nettes. */
+:root{
+  color-scheme: dark;
+  --night:#0b1a14; --ink:#06100c; --text:#f4f1e6; --dim:#a9c4b8; --gold:#ffd23f; --ok:#6cf09a; --bad:#ff7a6a; --warn:#ffb03a;
+  --panel:rgba(18,40,33,.94); --panel2:#0e221c; --line:#2f6a56;
+  --f-title:"Alegreya Sans SC", "Trebuchet MS", sans-serif; --f-ui:"Signika", "Segoe UI", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--night)}
+body{margin:0; color:var(--text); font-family:var(--f-ui); font-size:17px; line-height:1.35;
+  padding-block:8px 40px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px))}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible{outline:2px solid var(--gold); outline-offset:1px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- l'écran 640 × 360, agrandi ---------- */
+.fit{position:relative; margin:0 auto; overflow:hidden; border-radius:10px; box-shadow:0 0 0 2px #000, 0 0 0 5px #2a4a3e, 0 10px 30px rgba(0,0,0,.6)}
+.screen{position:absolute; left:0; top:0; width:640px; height:360px; transform-origin:0 0; background:var(--ink); overflow:hidden}
+
+/* barre du haut */
+.top{position:absolute; left:0; top:0; width:640px; height:34px; display:flex; align-items:center; gap:4px; padding:0 5px;
+  background:linear-gradient(#2a4a3f, #17322a); border-bottom:1px solid #000; z-index:3}
+.date{display:flex; flex-direction:column; justify-content:center; padding:0 6px 0 2px; min-width:92px}
+.date b{font-family:var(--f-title); font-weight:800; font-size:15px; line-height:15px; color:var(--gold); letter-spacing:.03em}
+.date small{font-size:11px; line-height:13px; color:var(--dim)}
+.res{display:grid; grid-template-columns:14px auto; grid-template-rows:14px 12px; column-gap:4px; align-items:center; height:28px; padding:1px 6px 1px 4px;
+  border-radius:6px; background:linear-gradient(#10261f, #0b1c17); border:1px solid #2f5a4a; text-align:left}
+.res canvas{grid-row:1 / 3; width:14px; height:14px; image-rendering:pixelated}
+.res b{font-weight:700; font-size:13px; line-height:14px; font-variant-numeric:tabular-nums}
+.res i{font-style:normal; font-weight:600; font-size:11px; line-height:12px; color:var(--dim); font-variant-numeric:tabular-nums}
+.res i.up{color:var(--ok)} .res i.dn{color:var(--bad)}
+.res.hot{border-color:var(--bad); box-shadow:0 0 0 1px rgba(255,122,106,.35)}
+.spacer{flex:1}
+
+/* la carte, sur toute la largeur */
+.mapw{position:absolute; left:0; top:34px; width:640px; height:292px; overflow:hidden; background:#145a8a}
+.mapw canvas{position:absolute; left:0; top:0; width:640px; height:292px; touch-action:none; cursor:grab}
+.zoom{position:absolute; left:6px; top:6px; display:flex; flex-direction:column; gap:5px}
+.zoom button{width:30px; height:28px; border:1px solid #000; border-radius:7px; background:linear-gradient(rgba(40,80,66,.95), rgba(15,36,30,.95)); font-size:18px; font-weight:700; line-height:1; box-shadow:0 2px 0 rgba(0,0,0,.5)}
+.zoom button:disabled{opacity:.35}
+
+/* le volet rétractable */
+.drawer{position:absolute; right:0; top:34px; width:214px; height:292px; z-index:2; transform:translateX(0); transition:transform .22s ease-out}
+.drawer.shut{transform:translateX(214px)}
+.drawer .body{height:100%; overflow-y:auto; padding:8px 8px 10px; display:flex; flex-direction:column; gap:6px; background:var(--panel);
+  border-left:1px solid #000; box-shadow:-6px 0 14px rgba(0,0,0,.35); scrollbar-width:thin}
+.handle{position:absolute; left:-28px; top:10px; width:28px; height:52px; border:1px solid #000; border-right:0; border-radius:8px 0 0 8px;
+  background:linear-gradient(90deg, #2a5a4a, #17322a); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:16px; font-weight:700; color:var(--gold); box-shadow:-3px 2px 6px rgba(0,0,0,.35)}
+.handle small{font-size:9px; font-weight:600; color:var(--dim); letter-spacing:.06em}
+.drawer h3{margin:0; display:flex; align-items:flex-start; justify-content:space-between; gap:4px; font-family:var(--f-title); font-weight:800; font-size:16px; line-height:17px; color:var(--gold); letter-spacing:.02em}
+.drawer h3 button{flex:none; width:24px; height:22px; border:1px solid #000; border-radius:6px; background:#1f4a3c; font-size:12px; color:var(--dim)}
+.drawer .hero{display:flex; gap:8px; align-items:center}
+.drawer .hero canvas{width:44px; height:44px; flex:none; image-rendering:pixelated; border-radius:6px; background:#0e221c; border:1px solid var(--line)}
+.drawer p{margin:0; font-size:13px; line-height:16px; color:var(--dim)}
+.drawer p b{color:var(--text); font-weight:600}
+.drawer .lbl{font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--dim); text-transform:uppercase; margin-top:2px}
+.good{color:var(--ok)!important} .bad{color:var(--bad)!important} .warn{color:var(--warn)!important}
+.pm{display:flex; align-items:center; justify-content:space-between; gap:6px; padding:4px; border-radius:8px; background:var(--panel2); border:1px solid var(--line)}
+.pm span{font-weight:700; font-size:15px; font-variant-numeric:tabular-nums; white-space:nowrap}
+.pm button, .btn{min-width:32px; height:28px; border:1px solid #000; border-radius:7px; background:linear-gradient(#3fa070, #2a7a50); color:#fff; font-size:17px; font-weight:700; line-height:1; box-shadow:0 2px 0 #000, 0 1px 0 rgba(255,255,255,.25) inset}
+.pm button:disabled, .btn:disabled{opacity:.35}
+.btn{font-size:13px; padding:0 10px}
+.btn.red{background:linear-gradient(#a8443a, #7a2a20)}
+.who{display:flex; flex-wrap:wrap; gap:4px}
+.who span{display:flex; align-items:center; gap:3px; font-size:12px; font-weight:600; padding:1px 6px 1px 1px; border-radius:5px; background:var(--panel2)}
+.who canvas{width:16px; height:16px; image-rendering:pixelated; border-radius:3px}
+.bar{height:9px; border-radius:5px; border:1px solid #000; background:#08201a; position:relative; overflow:hidden}
+.bar span{position:absolute; left:0; top:0; bottom:0; background:linear-gradient(#ffe27a, #e0a820)}
+.bar em{position:absolute; top:0; bottom:0; background:repeating-linear-gradient(115deg, #fff2a8 0 3px, transparent 3px 6px)}
+.build{display:grid; grid-template-columns:30px 1fr; gap:0 6px; align-items:center; text-align:left; padding:4px 6px 4px 4px; border:1px solid #000; border-radius:8px; background:linear-gradient(#24503f, #1a3d31); box-shadow:0 2px 0 rgba(0,0,0,.5)}
+.build:disabled{opacity:.45}
+.build canvas{grid-row:1 / 3; width:30px; height:30px; image-rendering:pixelated}
+.build b{font-weight:700; font-size:13px; line-height:15px}
+.build small{font-size:12px; line-height:14px; color:var(--dim)}
+.hint{font-size:13px; color:var(--dim); border-top:1px dashed var(--line); padding-top:6px}
+
+/* barre du bas */
+.bottom{position:absolute; left:0; top:326px; width:640px; height:34px; display:flex; align-items:center; gap:5px; padding:0 5px; background:linear-gradient(#17322a, #0e221c); border-top:1px solid #000; z-index:3}
+.alert{flex:1; min-width:0; height:26px; display:flex; align-items:center; gap:6px; padding:0 9px; border:1px solid #000; border-radius:7px; background:#3a2a12; color:var(--warn); font-size:13px; font-weight:700; text-align:left; white-space:nowrap; overflow:hidden}
+.alert span{overflow:hidden; text-overflow:ellipsis}
+.alert.danger{background:linear-gradient(#5a1c18, #43130f); color:#ffc0b0}
+.alert.calm{background:#123026; color:var(--ok)}
+.alert em{font-style:normal; margin-left:auto; padding:0 6px; border-radius:9px; background:rgba(0,0,0,.35); color:var(--dim); font-size:11px}
+.cmd{height:26px; padding:0 12px; border:1px solid #000; border-radius:7px; background:linear-gradient(#2a6a7c, #1a4a5a); font-size:13px; font-weight:700; box-shadow:0 2px 0 #000, 0 1px 0 rgba(255,255,255,.18) inset}
+.cmd.go{background:linear-gradient(#ffc44a, #d88a14); color:#2a1400; padding:0 14px}
+
+/* fenêtres */
+.sheet{position:absolute; left:0; top:34px; width:640px; height:292px; background:rgba(4,10,8,.72); display:flex; align-items:center; justify-content:center; z-index:5}
+.sheet .box{width:620px; max-height:280px; overflow-y:auto; background:#16302a; border:1px solid #000; border-radius:10px; box-shadow:0 0 0 1px var(--line) inset, 0 12px 30px rgba(0,0,0,.6); padding:10px; display:flex; flex-direction:column; gap:8px}
+.sheet h2{margin:0; display:flex; justify-content:space-between; align-items:center; font-family:var(--f-title); font-weight:800; font-size:17px; color:var(--gold); letter-spacing:.02em}
+.sheet h2 button{height:26px; padding:0 10px; border:1px solid #000; border-radius:7px; background:linear-gradient(#2a6a7c, #1a4a5a); font-family:var(--f-ui); font-size:13px; font-weight:700}
+.posts{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px}
+.post{display:grid; grid-template-columns:30px minmax(0, 1fr) auto; gap:0 6px; align-items:center; padding:5px; border-radius:8px; background:var(--panel2); border:1px solid var(--line)}
+.post canvas{width:30px; height:30px; image-rendering:pixelated; grid-row:1 / 3}
+.post b{font-weight:700; font-size:13px; line-height:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.post small{font-size:12px; line-height:14px; color:var(--ok); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.post .pm{grid-column:3; grid-row:1 / 3; background:none; border:0; padding:0; gap:4px}
+.post .pm button{min-width:28px; height:26px}
+.colons{display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px}
+.colon{display:grid; grid-template-columns:30px minmax(0, 1fr); gap:0 6px; align-items:center; text-align:left; padding:5px; border:1px solid #000; border-radius:8px; background:var(--panel2)}
+.colon.on{box-shadow:0 0 0 2px var(--gold)}
+.colon:disabled{opacity:.6; cursor:default}
+.colon canvas{width:30px; height:30px; image-rendering:pixelated; grid-row:1 / 4; border-radius:5px}
+.colon b{font-weight:700; font-size:13px; line-height:15px}
+.colon small{font-size:11px; line-height:13px; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.colon small.job{color:var(--gold)}
+.chips{display:flex; flex-wrap:wrap; gap:5px}
+.chips button{height:26px; padding:0 9px; border:1px solid #000; border-radius:7px; background:linear-gradient(#24503f, #1a3d31); font-size:12px; font-weight:700}
+.chips button:disabled{opacity:.35}
+.cards{display:flex; gap:8px; justify-content:center; flex-wrap:wrap}
+.card{width:150px; min-height:128px; display:flex; flex-direction:column; gap:4px; padding:8px; border:1px solid #3a2a10; border-radius:8px;
+  background:linear-gradient(#fbf3dc, #eadcb4); color:#2a1a08; box-shadow:0 3px 0 rgba(0,0,0,.45); animation:pop .35s both}
+.card canvas{width:36px; height:36px; image-rendering:pixelated}
+.card b{font-family:var(--f-title); font-weight:800; font-size:15px; line-height:16px; color:#7a2a10}
+.card p{margin:0; font-size:13px; line-height:16px}
+.card.bad{background:linear-gradient(#ffe6dc, #f4c4b4)} .card.good{background:linear-gradient(#eaf8dc, #cfe8b8)}
+@keyframes pop{from{transform:translateY(12px) scale(.94); opacity:0}}
+.alerts{display:flex; flex-direction:column; gap:5px}
+.alerts p{margin:0; padding:6px 9px; border-radius:7px; background:var(--panel2); font-size:13px; line-height:17px; color:var(--dim)}
+.alerts p b{display:block; font-size:14px; font-weight:700}
+.alerts p.danger{border:1px solid var(--bad)} .alerts p.danger b{color:#ffb0a0} .alerts p.warn b{color:var(--warn)} .alerts p.info b{color:var(--text)}
+.sheet .wide{align-self:center; height:30px; padding:0 16px; border:1px solid #000; border-radius:7px; background:linear-gradient(#ffc44a, #d88a14); color:#2a1400; font-size:14px; font-weight:700; box-shadow:0 2px 0 #000}
+
+/* « tourne ton téléphone » */
+.rotate{position:fixed; inset:0; z-index:20; background:var(--ink); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); text-align:center}
+.rotate .ph{width:54px; height:92px; border:5px solid var(--text); border-radius:10px; position:relative; animation:turn 2.4s ease-in-out infinite}
+.rotate .ph::before{content:""; position:absolute; inset:6px 5px 16px; border-radius:3px; background:linear-gradient(#5cbf4a, #2f7a2a)}
+@keyframes turn{0%,25%{transform:rotate(0)} 55%,100%{transform:rotate(-90deg)}}
+.rotate b{font-family:var(--f-title); font-weight:800; font-size:26px; line-height:28px; color:var(--gold)}
+.rotate p{margin:0; max-width:30ch; color:var(--dim)}
+.rotate button{padding:10px 16px; border:1px solid #000; border-radius:8px; background:linear-gradient(#2a6a7c, #1a4a5a); font-weight:700}
+
+/* sous l'écran */
+.under{max-width:900px; margin:18px auto 0; display:flex; flex-direction:column; gap:12px}
+.under h1{margin:0; font-family:var(--f-title); font-weight:800; font-size:clamp(22px, 4vw, 30px); line-height:1.1; color:var(--gold); text-wrap:balance}
+.under h2{margin:4px 0 0; font-family:var(--f-title); font-weight:800; font-size:19px; color:var(--gold); letter-spacing:.03em}
+.under p, .under li{margin:0; max-width:70ch; color:var(--dim)}
+.under p b, .under li b{color:var(--text); font-weight:600}
+.under ul{margin:0; padding-left:22px; display:flex; flex-direction:column; gap:5px}
+.sim{display:flex; flex-wrap:wrap; gap:8px}
+.sim button{padding:8px 12px; border:1px solid #000; border-radius:8px; background:linear-gradient(#24503f, #1a3d31); font-weight:700; font-size:14px; box-shadow:0 2px 0 #000}
+@media (prefers-reduced-motion: reduce){ .rotate .ph, .card{animation:none} .drawer{transition:none} }
+</style>
+</head>
+<body>
+<div class="fit" id="fit">
+  <div class="screen" id="screen">
+    <div class="top" id="top"></div>
+    <div class="mapw" id="mapw">
+      <canvas id="map" aria-label="Carte de l'île"></canvas>
+      <div class="zoom"><button id="zin" aria-label="Vue détaillée">+</button><button id="zout" aria-label="Vue d'ensemble">−</button></div>
+    </div>
+    <div class="drawer" id="drawer">
+      <button class="handle" id="handle" aria-label="Ouvrir ou fermer le volet"><span id="harrow">›</span><small>CASE</small></button>
+      <div class="body" id="panel"></div>
+    </div>
+    <div class="bottom" id="bottom"></div>
+    <div class="sheet" id="sheet" hidden></div>
+  </div>
+</div>
+
+<div class="rotate" id="rotate" hidden>
+  <div class="ph" aria-hidden="true"></div>
+  <b>Tourne ton téléphone</b>
+  <p>La colonie se joue à l'horizontale, pour voir toute la carte.</p>
+  <button id="anyway">Voir quand même</button>
+</div>
+
+<div class="under">
+  <h1>La colonie · écran en paysage</h1>
+  <p>Deuxième version de la maquette de l'étape 1. <b>Direction 32 bits</b> : terrain dessiné pixel par pixel en cases de 32 (rivages et rivière irréguliers, relief ombré, arbres et bâtiments détaillés), textes et boutons en polices lisses dessinées à la résolution de l'écran, comme Nebula. La carte prend toute la largeur ; le <b>volet de droite se replie</b> avec sa poignée. Tout est cliquable. On est au <b>printemps de l'an 2</b>, avec 16 colons.</p>
+  <h2>Simuler</h2>
+  <div class="sim" id="sim">
+    <button data-s="0">Printemps</button><button data-s="1">Été</button><button data-s="2">Automne</button><button data-s="3">Hiver</button>
+    <button data-s="crue">Crue</button><button data-s="ile">Autre île</button><button data-s="rot">Téléphone en portrait</button>
+  </div>
+  <h2>Ce qui change par rapport à la 1re version</h2>
+  <ul>
+    <li><b>Le volet rétractable</b> s'ouvre tout seul quand on touche une case et se replie avec sa poignée (ou ✕). Replié, la carte occupe tout l'écran ; ouvert, la carte se décale pour que la case choisie reste visible.</li>
+    <li><b>Les pixels</b> : cases de 32 au lieu de 16, et chaque case est dessinée pixel par pixel. Les rivages et la rivière ne suivent plus la grille, l'ombre des collines donne le relief, et les arbres, rochers et sommets sont dessinés un par un.</li>
+    <li><b>Les textes</b> : polices lisses (Signika pour l'interface, Alegreya Sans SC pour les titres), avec les majuscules accentuées, ce que la police pixel ne permettait pas.</li>
+    <li>Les couleurs sont gardées.</li>
+  </ul>
+  <h2>À décider</h2>
+  <ul>
+    <li>Ce rendu 32 bits te convient-il, ou faut-il pousser plus loin (lumière du jour, ombres qui tournent, eau animée partout) ?</li>
+    <li>Le volet : s'ouvrir tout seul au toucher d'une case, ou seulement avec la poignée ?</li>
+    <li>Tous les bâtiments disponibles dès le départ, ou des plans à trouver dans les ruines ?</li>
+  </ul>
+</div>
+
+<script>
+'use strict';
+/* =================== l'île =================== */
+const MW = 24, MH = 14, TS = 32, WW = MW * TS, WH = MH * TS, VW = 640, VH = 292, DRW = 214;
+const T = { SEA: 0, SAND: 1, MEAD: 2, FOR: 3, DFOR: 4, HILL: 5, ROCK: 6, MOUNT: 7, MARSH: 8, RIV: 9 };
+const TNAME = ['La mer', 'Plage', 'Prairie', 'Forêt claire', 'Forêt dense', 'Collines', 'Rochers', 'Montagne', 'Marais', 'Rivière'];
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function noise(rnd, step, w = MW, h = MH) {
+  const gw = Math.ceil(w / step) + 2, gh = Math.ceil(h / step) + 2, gr = new Float32Array(gw * gh); for (let i = 0; i < gw * gh; i++) gr[i] = rnd();
+  return (x, y) => { const fx = x / step, fy = y / step, ix = Math.floor(fx), iy = Math.floor(fy), ax = fx - ix, ay = fy - iy, tx = ax * ax * (3 - 2 * ax), ty = ay * ay * (3 - 2 * ay), o = iy * gw + ix;
+    return (gr[o] * (1 - tx) + gr[o + 1] * tx) * (1 - ty) + (gr[o + gw] * (1 - tx) + gr[o + gw + 1] * tx) * ty; };
+}
+const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]], N8 = [...N4, [1, 1], [1, -1], [-1, 1], [-1, -1]];
+const inside = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH;
+function tryIsle(rnd) {
+  const a1 = noise(rnd, 6), a2 = noise(rnd, 3), a3 = noise(rnd, 1.5), m1 = noise(rnd, 5), m2 = noise(rnd, 2.5), r1 = noise(rnd, 2);
+  const h = [], t = [], berge = new Array(MW * MH).fill(0);
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    const dx = (x + .5 - MW / 2) / (MW / 2), dy = (y + .5 - MH / 2) / (MH / 2), d = Math.sqrt(dx * dx + dy * dy);
+    let v = (a1(x, y) * .55 + a2(x, y) * .3 + a3(x, y) * .15) * .9 + .62 - d * .95;
+    if (x === 0 || y === 0 || x === MW - 1 || y === MH - 1) v = -1;
+    h.push(v);
+    const moist = m1(x, y) * .7 + m2(x, y) * .3;
+    t.push(v < .4 ? T.SEA : v < .47 ? T.SAND : v < .8 ? (moist > .6 ? T.DFOR : moist > .48 ? T.FOR : T.MEAD) : v < .95 ? (r1(x, y) > .58 ? T.ROCK : T.HILL) : T.MOUNT);
+  }
+  const at = (x, y) => t[y * MW + x];
+  // la rivière : des collines vers la mer, toujours vers la case voisine la plus basse ; on garde la plus longue
+  const src = []; for (let i = 0; i < MW * MH; i++) if (t[i] === T.HILL || t[i] === T.ROCK) src.push(i);
+  src.sort((a, b) => h[b] - h[a]);
+  let river = null, mouthSea = null;
+  for (const s of src.slice(0, 14)) {
+    const path = [s], seen = new Set(path); let ok = null;
+    for (let k = 0; k < 60; k++) {
+      const c = path[path.length - 1], cx = c % MW, cy = c / MW | 0, sea = N4.find(([dx, dy]) => at(cx + dx, cy + dy) === T.SEA);
+      if (sea) { ok = (cy + sea[1]) * MW + cx + sea[0]; break; }
+      const nb = N4.map(([dx, dy]) => (cy + dy) * MW + cx + dx).filter(i => !seen.has(i) && t[i] !== T.MOUNT && t[i] !== T.SEA);
+      if (!nb.length) break;
+      nb.sort((a, b) => h[a] - h[b]); path.push(nb[0]); seen.add(nb[0]);
+    }
+    if (ok !== null && path.length >= 7 && (!river || path.length > river.length)) { river = path; mouthSea = ok; }
+  }
+  if (!river) return null;
+  river.forEach(i => { t[i] = T.RIV; });
+  // les berges : très fertiles, mais inondables
+  river.forEach(i => { const x = i % MW, y = i / MW | 0; N4.forEach(([dx, dy]) => { const j = (y + dy) * MW + x + dx; if (t[j] !== T.RIV && t[j] !== T.SEA && t[j] !== T.MOUNT) { berge[j] = 1; if (t[j] !== T.SAND && t[j] !== T.ROCK) t[j] = T.MEAD; } }); });
+  const mouth = river[river.length - 1], mx = mouth % MW, my = mouth / MW | 0; let mk = 0;
+  N8.forEach(([dx, dy]) => { const j = (my + dy) * MW + mx + dx; if (mk < 3 && (t[j] === T.SAND || t[j] === T.MEAD)) { t[j] = T.MARSH; berge[j] = 0; mk++; } });
+  const land = t.filter(v => v !== T.SEA && v !== T.RIV).length, mount = t.filter(v => v === T.MOUNT).length;
+  if (land < 120 || land > 220 || mount < 2) return null;
+  return { t, h, berge, river: [...river, mouthSea] };
+}
+function genIsle(seed) { for (let k = 0; k < 60; k++) { const r = tryIsle(mulberry32(seed + k * 7919)); if (r) return Object.assign(r, { seed }); } return Object.assign(tryIsle(mulberry32(1)), { seed: 1 }); }
+
+/* =================== les bâtiments et les règles (comme la 1re version) =================== */
+const isFlat = t => t === T.MEAD || t === T.SAND || t === T.HILL;
+const BUILD = {
+  habitation: { n: 'Habitation', terr: 'plat', cost: { bois: 6, pierre: 2 }, postes: 0, d: 'Loge 4 colons. Chauffée l\'hiver avec du bois.' },
+  cueilleur: { n: 'Cueilleur', terr: 'lisiere', cost: { bois: 4 }, postes: 2, d: 'Baies et champignons, pas l\'hiver.' },
+  pecherie: { n: 'Pêcherie', terr: 'eau', cost: { bois: 6 }, postes: 2, d: 'Poisson toute l\'année, moins l\'hiver.' },
+  chasseur: { n: 'Chasseur', terr: 'foret', cost: { bois: 4 }, postes: 2, d: 'Viande et peaux. Le gibier s\'épuise.' },
+  champ: { n: 'Champ', terr: 'prairie', cost: { bois: 2 }, postes: 2, d: 'Semé au printemps, récolté à l\'automne.' },
+  elevage: { n: 'Élevage', terr: 'prairie', cost: { bois: 8, pierre: 2 }, postes: 1, d: 'Œufs et laine. Gare aux loups.' },
+  bucheron: { n: 'Bûcheron', terr: 'foret', cost: { bois: 4 }, postes: 2, d: 'Bois. Les arbres repoussent lentement.' },
+  scierie: { n: 'Scierie', terr: 'riviere', cost: { bois: 6, pierre: 4 }, postes: 2, d: 'Bois → planches.' },
+  carriere: { n: 'Carrière', terr: 'roc', cost: { bois: 4 }, postes: 2, d: 'Pierre.' },
+  forge: { n: 'Forge', terr: 'sol', cost: { planches: 6, pierre: 6 }, postes: 1, d: 'Fer → outils.' },
+  tailleur: { n: 'Tailleur', terr: 'sol', cost: { planches: 4 }, postes: 1, d: 'Laine et peaux → vêtements.' },
+  grenier: { n: 'Grenier', terr: 'sol', cost: { bois: 6, pierre: 4 }, postes: 0, d: 'La nourriture ne se gâte plus.' },
+  entrepot: { n: 'Entrepôt', terr: 'sol', cost: { bois: 6 }, postes: 0, d: 'Stocke bois, pierre, planches, outils.' },
+  puits: { n: 'Puits', terr: 'sol', cost: { pierre: 4 }, postes: 0, d: 'Eau propre : moins d\'épidémies.' },
+  guerisseur: { n: 'Guérisseur', terr: 'sol', cost: { planches: 6 }, postes: 1, d: 'Soigne les malades.' },
+  digue: { n: 'Digue', terr: 'berge', cost: { pierre: 8 }, postes: 0, d: 'Protège les cases voisines de la crue.' },
+  tour: { n: 'Tour de guet', terr: 'sol', cost: { bois: 6 }, postes: 1, d: 'Annonce tempêtes et incendies.' },
+  taverne: { n: 'Taverne', terr: 'sol', cost: { planches: 8 }, postes: 1, d: 'Bonheur +.' },
+  tente: { n: 'Tente', postes: 0, d: 'Loge 8 colons, mais froide l\'hiver.' },
+  epave: { n: 'L\'épave', postes: 0, d: 'Le bateau des naufragés. Tout a commencé ici.' },
+};
+const ORDER = ['habitation', 'champ', 'cueilleur', 'pecherie', 'chasseur', 'bucheron', 'carriere', 'elevage', 'scierie', 'grenier', 'entrepot', 'puits', 'digue', 'tour', 'forge', 'tailleur', 'guerisseur', 'taverne'];
+const RES = ['food', 'bois', 'pierre', 'planches', 'outils', 'vetements'];
+const FOODS = [['poisson', 'Poisson'], ['viande', 'Viande'], ['baies', 'Baies'], ['cereales', 'Céréales'], ['legumes', 'Légumes'], ['oeufs', 'Œufs']];
+const SEASONS = ['Printemps', 'Été', 'Automne', 'Hiver'];
+const PROD = { pecherie: [{ poisson: 6 }, [1, 1.1, 1, .5]], cueilleur: [{ baies: 5 }, [.7, 1.2, 1, 0]], chasseur: [{ viande: 4, peaux: 1 }, [1, 1, 1.2, .8]],
+  bucheron: [{ bois: 5 }, [1, 1, 1, .8]], carriere: [{ pierre: 3 }, [1, 1, 1, .7]], elevage: [{ oeufs: 4 }, [1, 1, 1, .5]], champ: [{ cereales: 9 }, [0, 0, 1, 0]],
+  scierie: [{ planches: 2, bois: -3 }, [1, 1, 1, 1]] };
+const TALENT_FOR = { pecherie: 'pecheur', bucheron: 'charpentier', chantier: 'charpentier', scierie: 'charpentier', cueilleur: 'cuisinier', champ: 'cuisinier', chasseur: 'marin', carriere: 'mecano', forge: 'mecano', guerisseur: 'infirmiere', ecl: 'exploratrice', tour: 'marin' };
+const TAL = { pecheur: 'Pêcheur', charpentier: 'Charpentier', infirmiere: 'Infirmière', cuisinier: 'Cuisinier', exploratrice: 'Exploratrice', enfant: 'Enfant débrouillard', mecano: 'Mécano', marin: 'Marin' };
+const CAR = { courageux: 'courageux', raleur: 'râleur', peureux: 'peureux', reveur: 'rêveur', travailleur: 'travailleur', gourmand: 'gourmand' };
+const POSTCOL = { pecherie: ['#4a9ad0', '#2a6a9a'], cueilleur: ['#d0505a', '#9a3040'], chasseur: ['#9a6a3a', '#6a4520'], bucheron: ['#c08040', '#8a5a2a'], carriere: ['#a0a0aa', '#6a6a74'], champ: ['#e8c040', '#b08a20'], chantier: ['#f09a30', '#b06a10'], ecl: ['#e0d050', '#a09020'], elevage: ['#f0f0f0', '#b8b8c0'], scierie: ['#c08a50', '#8a5a2a'] };
+
+let G, B, C, isle, nextId;
+function terrOk(kind, x, y) {
+  const t = isle.t[y * MW + x], nb = N4.map(([dx, dy]) => inside(x + dx, y + dy) ? isle.t[(y + dy) * MW + x + dx] : T.SEA);
+  switch (kind) {
+    case 'plat': return t === T.MEAD || t === T.SAND;
+    case 'sol': return isFlat(t);
+    case 'prairie': return t === T.MEAD;
+    case 'foret': return t === T.FOR || t === T.DFOR;
+    case 'lisiere': return isFlat(t) && N8.some(([dx, dy]) => inside(x + dx, y + dy) && [T.FOR, T.DFOR].includes(isle.t[(y + dy) * MW + x + dx]));
+    case 'eau': return isFlat(t) && nb.some(v => v === T.SEA || v === T.RIV);
+    case 'riviere': return isFlat(t) && nb.includes(T.RIV);
+    case 'roc': return t === T.HILL || t === T.ROCK;
+    case 'berge': return isle.berge[y * MW + x] === 1 && isFlat(t);
+  }
+  return false;
+}
+const bAt = (x, y) => B.find(b => b.x === x && b.y === y);
+function newGame(seed) {
+  isle = genIsle(seed); nextId = 1;
+  let best = null, bs = -1;
+  for (let y = 1; y < MH - 1; y++) for (let x = 1; x < MW - 1; x++) {
+    if (isle.t[y * MW + x] !== T.SAND || !N4.some(([dx, dy]) => isle.t[(y + dy) * MW + x + dx] === T.SEA)) continue;
+    let sc = 0; for (let j = -4; j <= 4; j++) for (let i = -4; i <= 4; i++) { if (!inside(x + i, y + j)) continue; const v = isle.t[(y + j) * MW + x + i];
+      sc += v === T.MEAD ? 2 : (v === T.FOR || v === T.DFOR) ? 1.5 : v === T.RIV ? 3 : (v === T.HILL || v === T.ROCK) ? 1 : 0; }
+    if (sc > bs) { bs = sc; best = [x, y]; }
+  }
+  B = []; G = { year: 2, season: 0, week: 2, wreck: best, floodPending: true, flood: 0, floodT: 0, target: null, ruins: false, sel: null, zoom: 1.25, cam: { x: 0, y: 0 }, floats: [], confirmed: false, panel: null, drawer: true, sheet: null, rotDismissed: G ? G.rotDismissed : false };
+  const dist = (x, y) => Math.hypot(x - best[0], y - best[1]);
+  const place = (type, ok, extra = {}) => {
+    let pick = null, pd = 1e9;
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { if (bAt(x, y) || !ok(x, y)) continue; const d = dist(x, y); if (d < pd) { pd = d; pick = [x, y]; } }
+    if (!pick) return null; const b = { id: nextId++, type, x: pick[0], y: pick[1], done: true, ...extra }; B.push(b); return b;
+  };
+  B.push({ id: nextId++, type: 'epave', x: best[0], y: best[1], done: true });
+  place('tente', (x, y) => terrOk('plat', x, y));
+  place('habitation', (x, y) => terrOk('plat', x, y)); place('habitation', (x, y) => terrOk('plat', x, y));
+  place('grenier', (x, y) => terrOk('sol', x, y));
+  const pe = place('pecherie', (x, y) => terrOk('eau', x, y));
+  const cu = place('cueilleur', (x, y) => terrOk('lisiere', x, y));
+  const bu = place('bucheron', (x, y) => terrOk('foret', x, y));
+  const ch = place('champ', (x, y) => terrOk('prairie', x, y) && isle.berge[y * MW + x] === 1);
+  place('champ', (x, y) => terrOk('prairie', x, y) && !isle.berge[y * MW + x]);
+  const ca = place('carriere', (x, y) => terrOk('roc', x, y));
+  const en = place('chantier', (x, y) => terrOk('sol', x, y), { done: false, target: 'entrepot', p: 4, max: 12 });
+  isle.seen = isle.t.map((_, i) => dist(i % MW, i / MW | 0) <= 6.5 ? 1 : 0);
+  B.forEach(b => { for (let j = -2; j <= 2; j++) for (let i = -2; i <= 2; i++) if (inside(b.x + i, b.y + j)) isle.seen[(b.y + j) * MW + b.x + i] = 1; });
+  pickTarget();
+  const P = (n, tal, car, age, skin, hair, long, post) => ({ n, tal, car, age, skin, hair, long, post: post ? post.id || post : null });
+  C = [P('Hugo', 'charpentier', 'travailleur', 'adulte', 1, 1, 0, en), P('Jade', null, 'courageux', 'adulte', 0, 4, 1, en),
+    P('Malo', 'pecheur', 'reveur', 'adulte', 2, 0, 0, pe), P('Tom', 'marin', 'raleur', 'adulte', 0, 3, 0, pe),
+    P('Rose', 'cuisinier', 'gourmand', 'adulte', 3, 0, 1, cu), P('Lina', null, 'peureux', 'adulte', 1, 2, 1, cu),
+    P('Sacha', null, 'travailleur', 'adulte', 2, 5, 0, bu), P('Paul', null, 'raleur', 'adulte', 0, 1, 0, bu),
+    P('Ambre', null, 'reveur', 'adulte', 1, 3, 1, ch), P('Noé', 'mecano', 'courageux', 'adulte', 3, 0, 0, ca),
+    P('Inès', 'exploratrice', 'courageux', 'adulte', 2, 4, 1, 'ecl'), P('Léa', 'infirmiere', 'peureux', 'adulte', 0, 2, 1, null),
+    P('Mila', 'enfant', 'courageux', 'enfant', 1, 4, 1, null), P('Zoé', null, 'gourmand', 'enfant', 3, 0, 1, null), P('Yanis', null, 'reveur', 'enfant', 0, 1, 0, null),
+    P('Émile', null, 'raleur', 'ancien', 1, 5, 0, null)];
+  G.res = { poisson: 24, viande: 0, baies: 18, cereales: 40, legumes: 12, oeufs: 0, bois: 46, pierre: 14, planches: 0, outils: 9, peaux: 4, vetements: 10 };
+  G.sel = en ? { x: en.x, y: en.y } : null;
+  buildTerrain(); buildFog();
+  if (G.sel) centerOn(G.sel.x + .5, G.sel.y + .5); else centerOn(best[0] + .5, best[1] + .5);
+}
+function pickTarget() {
+  let best = null, bd = 1e9;
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { const i = y * MW + x; if (isle.seen[i] || isle.t[i] === T.SEA) continue;
+    if (!N4.some(([dx, dy]) => inside(x + dx, y + dy) && isle.seen[(y + dy) * MW + x + dx])) continue;
+    const d = Math.hypot(x - G.wreck[0], y - G.wreck[1]); if (d < bd) { bd = d; best = [x, y]; } }
+  G.target = best;
+}
+const workers = id => C.filter(c => c.post === id);
+const maxOf = b => b === 'ecl' ? 2 : b.done ? BUILD[b.type].postes : 4;
+const keyOf = b => b === 'ecl' ? 'ecl' : b.done ? b.type : 'chantier';
+const nameOf = b => b === 'ecl' ? 'Éclaireur' : b.done ? BUILD[b.type].n : 'Chantier · ' + BUILD[b.target].n;
+const eff = (c, key) => (c.tal && TALENT_FOR[key] === c.tal ? 1.5 : 1) * (c.car === 'travailleur' ? 1.2 : c.car === 'reveur' ? .9 : 1);
+const free = () => C.filter(c => c.age === 'adulte' && c.post === null);
+function addWorker(b) { const id = b === 'ecl' ? 'ecl' : b.id, f = free(); if (!f.length || workers(id).length >= maxOf(b)) return; f.sort((p, q) => eff(q, keyOf(b)) - eff(p, keyOf(b)))[0].post = id; G.confirmed = false; }
+function removeWorker(b) { const w = workers(b === 'ecl' ? 'ecl' : b.id); if (!w.length) return; w.sort((p, q) => eff(p, keyOf(b)) - eff(q, keyOf(b)))[0].post = null; G.confirmed = false; }
+function prodOf(b) {
+  const out = {}; if (!b.done || !PROD[b.type]) return out;
+  const [base, sf] = PROD[b.type], f = sf[G.season] * (b.type === 'champ' && isle.berge[b.y * MW + b.x] ? 1.5 : 1) * (b.flooded ? 0 : 1);
+  workers(b.id).forEach(c => { for (const k in base) out[k] = (out[k] || 0) + base[k] * f * eff(c, b.type); });
+  for (const k in out) out[k] = Math.round(out[k]); return out;
+}
+const fieldState = b => b.flooded ? 'inondé' : ['semis', 'pousse', 'récolte', 'repos'][G.season];
+const foodTotal = () => FOODS.reduce((a, [k]) => a + G.res[k], 0);
+const eaters = () => C.reduce((a, c) => a + (c.age === 'enfant' ? 1 : 2), 0);
+const heatPerWeek = () => B.filter(b => b.done && b.type === 'tente').length * 4 + B.filter(b => b.done && b.type === 'habitation').length * 2;
+const heatNeed = () => G.season === 3 ? heatPerWeek() : 0;
+const chGain = b => Math.round(workers(b.id).reduce((a, c) => a + 2 * eff(c, 'chantier'), 0));
+function forecast() {
+  const d = {}; B.forEach(b => { const p = prodOf(b); for (const k in p) d[k] = (d[k] || 0) + p[k]; });
+  const foodIn = FOODS.reduce((a, [k]) => a + (d[k] || 0), 0);
+  return { d, food: foodIn - eaters(), foodIn, eat: eaters(), bois: (d.bois || 0) - heatNeed(), pierre: d.pierre || 0, planches: d.planches || 0, outils: 0, vetements: 0 };
+}
+const housing = () => B.filter(b => b.done && b.type === 'tente').length * 8 + B.filter(b => b.done && b.type === 'habitation').length * 4;
+function happiness() {
+  const kinds = FOODS.filter(([k]) => G.res[k] > 0).length;
+  return Math.max(0, Math.min(100, 46 + kinds * 4 + (B.some(b => b.done && b.type === 'taverne') ? 10 : 0) - (G.season === 3 ? 8 : 0) - (G.flood ? 6 : 0) - (C.length > housing() ? 10 : 0)));
+}
+function alerts() {
+  const f = forecast(), out = [];
+  if (f.food < 0) { const w = Math.floor(foodTotal() / -f.food); out.push([w <= 4 ? 'danger' : 'warn', `Nourriture : ${w} semaine${w > 1 ? 's' : ''}`, `Il en rentre ${f.foodIn} par semaine et les colons en mangent ${f.eat}. Ajoute des pêcheurs ou des cueilleurs.`]); }
+  if (G.season === 0 && G.floodPending) out.push(['danger', 'La rivière monte : crue probable', 'La crue peut noyer le champ des berges la semaine prochaine. Une digue protège les cases voisines.']);
+  if (G.season === 2) { const need = heatPerWeek() * 4, have = Math.round(G.res.bois + (f.d.bois || 0) * (5 - G.week));
+    out.push([have >= need ? 'info' : 'warn', `Hiver : bois ${have} / ${need}`, `Bois de chauffage prévu au début de l'hiver : ${have}, il en faut ${need} pour les 4 semaines.`]); }
+  if (G.season === 3) { if (f.bois < 0 && G.res.bois / -f.bois < 5) out.push(['danger', `Bois de chauffage : ${Math.floor(G.res.bois / -f.bois)} semaines`, `Les maisons brûlent ${heatNeed()} bois par semaine.`]);
+    const tent = Math.max(0, C.length - B.filter(b => b.done && b.type === 'habitation').length * 4); if (tent) out.push(['warn', `${tent} colons ont froid sous la tente`, 'Construis une habitation, et des vêtements chez le tailleur.']); }
+  const fr = free().length; if (fr) out.push(['info', `${fr} colon${fr > 1 ? 's' : ''} sans poste`, 'Touche Postes pour lui donner du travail.']);
+  return out;
+}
+
+/* =================== le terrain, pixel par pixel =================== */
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const SP = s => ({ // couleurs de chaque terrain selon la saison : [sombre, moyen, clair]
+  mead: [['#3f9a3a', '#5cbf4a', '#7ad65a'], ['#6a9a30', '#8cc04a', '#a8d45a'], ['#8a7a30', '#b0a848', '#c8bc5a'], ['#c0d0dc', '#e2eaf0', '#f8fbfd']][s],
+  forg: [['#2f7a2f', '#3f8f3a', '#4fa046'], ['#4f7a2a', '#628a32', '#749a3c'], ['#6a5a28', '#7f6a30', '#8f7a3a'], ['#b8c8d4', '#d4e0e8', '#eef4f8']][s],
+  hill: [['#6a8a40', '#7f9c4a', '#93ae58'], ['#88883e', '#9c9c48', '#b0b058'], ['#8a7a40', '#9c8c4a', '#ae9e58'], ['#c8d4dc', '#e0e8ee', '#f6f9fb']][s],
+  rock: [['#6e6e64', '#86867a', '#a0a094'], ['#6e6e64', '#86867a', '#a0a094'], ['#6e6a60', '#86827a', '#a09c94'], ['#b4bec6', '#d0d8de', '#eef2f6']][s],
+  sand: s === 3 ? ['#cfcabc', '#e4e0d4', '#f4f2ea'] : ['#d4b878', '#e8d090', '#f4e2a8'],
+  wet: s === 3 ? '#b0b4b0' : '#b89a5c',
+  marsh: s === 3 ? ['#a8bcb4', '#c4d4cc', '#dce8e2'] : ['#3a6a48', '#4a7a50', '#5c8c5a'],
+  sea: s === 3 ? ['#123e60', '#16486e', '#1f5a80'] : ['#0f4e7c', '#145a8a', '#1a6a9e'],
+  shallow: s === 3 ? ['#2a6a8a', '#347a9a', '#3f88a8'] : ['#2478aa', '#2a88bc', '#3498ca'],
+  riv: s === 3 ? ['#a8cce0', '#c4e0f0', '#e4f2fa'] : ['#2a88c8', '#3fa0e0', '#6ab8ea'],
+  bank: s === 3 ? '#9aa8a8' : '#8a7a4a', foam: [236, 248, 255],
+});
+let terrainCv, fogCv, floodCv;
+function riverSegs() { return isle.river.map(i => [(i % MW + .5) * TS, ((i / MW | 0) + .5) * TS]); }
+function buildTerrain() {
+  terrainCv = terrainCv || document.createElement('canvas'); terrainCv.width = WW; terrainCv.height = WH;
+  floodCv = floodCv || document.createElement('canvas'); floodCv.width = WW; floodCv.height = WH;
+  const g2 = terrainCv.getContext('2d'), img = g2.createImageData(WW, WH), d = img.data;
+  const fimg = floodCv.getContext('2d').createImageData(WW, WH), fd = fimg.data;
+  const r = mulberry32(isle.seed ^ 0x5bd1e995), wA = noise(r, 11, WW, WH), wB = noise(r, 11, WW, WH), n1 = noise(r, 3, WW, WH), n2 = noise(r, 8, WW, WH), n3 = noise(r, 20, WW, WH);
+  const P = SP(G.season), C3 = {}; for (const k in P) C3[k] = Array.isArray(P[k]) ? (typeof P[k][0] === 'string' ? P[k].map(hex) : P[k]) : hex(P[k]);
+  const tAt = (x, y) => isle.t[Math.min(MH - 1, Math.max(0, y / TS | 0)) * MW + Math.min(MW - 1, Math.max(0, x / TS | 0))];
+  const landF = isle.t.map(v => v === T.SEA ? 0 : 1), hF = isle.t.map((v, i) => v === T.SEA ? .35 : Math.max(.4, Math.min(1.25, isle.h[i])));
+  const smp = (arr, x, y) => { const u = Math.max(0, Math.min(MW - 1.001, x / TS - .5)), v = Math.max(0, Math.min(MH - 1.001, y / TS - .5)), i = u | 0, j = v | 0; let a = u - i, b = v - j; a = a * a * (3 - 2 * a); b = b * b * (3 - 2 * b);
+    return (arr[j * MW + i] * (1 - a) + arr[j * MW + i + 1] * a) * (1 - b) + (arr[(j + 1) * MW + i] * (1 - a) + arr[(j + 1) * MW + i + 1] * a) * b; };
+  const segs = riverSegs(), nearRiv = isle.t.map((_, i) => { const x = i % MW, y = i / MW | 0; return N8.concat([[0, 0]]).some(([dx, dy]) => inside(x + dx, y + dy) && isle.t[(y + dy) * MW + x + dx] === T.RIV); });
+  const rDist = (x, y) => { let m = 1e9; for (let k = 0; k < segs.length - 1; k++) { const [ax, ay] = segs[k], [bx, by] = segs[k + 1], vx = bx - ax, vy = by - ay, l = vx * vx + vy * vy, tt = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / l)), dx = x - ax - vx * tt, dy = y - ay - vy * tt, dd = dx * dx + dy * dy; if (dd < m) m = dd; } return Math.sqrt(m); };
+  const pick = (arr, v) => v < .4 ? arr[0] : v > .62 ? arr[2] : arr[1];
+  for (let y = 0; y < WH; y++) for (let x = 0; x < WW; x++) {
+    const ox = (wA(x, y) - .5) * 18, oy = (wB(x, y) - .5) * 18, sx = x + ox, sy = y + oy, ti = Math.min(MH - 1, Math.max(0, sy / TS | 0)) * MW + Math.min(MW - 1, Math.max(0, sx / TS | 0));
+    let t = isle.t[ti]; const hsh = ((x * 374761393 + y * 668265263) ^ 0x27d4eb2d) >>> 0, dn = ((hsh % 1000) / 1000 - .5) * .12;
+    const tex = n1(x, y) * .55 + n2(x, y) * .45 + dn;
+    let c, light = 1, flood = false;
+    const tix = x / TS | 0, tiy = y / TS | 0, rd = nearRiv[tiy * MW + tix] ? rDist(x + ox * .45, y + oy * .45) : 1e9, rw = 5.5 + n3(x, y) * 3;
+    if (t === T.SEA && rd > rw) {
+      const coast = tAt(sx + 3, sy) !== T.SEA || tAt(sx - 3, sy) !== T.SEA || tAt(sx, sy + 3) !== T.SEA || tAt(sx, sy - 3) !== T.SEA;
+      c = coast && tex > .35 ? C3.foam : pick(smp(landF, x, y) > .22 ? C3.shallow : C3.sea, tex);
+    } else if (rd <= rw) { c = pick(C3.riv, tex + (Math.sin((x + y) * .35) > .85 ? .3 : 0)); }
+    else {
+      if (t === T.RIV) t = T.MEAD;
+      const relief = (smp(hF, x - 5, y - 5) - smp(hF, x + 5, y + 5)) * 2.6;
+      if (rd <= rw + 2.2) c = C3.bank;
+      else if (t === T.SAND) { const wet = tAt(sx + 4, sy) === T.SEA || tAt(sx - 4, sy) === T.SEA || tAt(sx, sy + 4) === T.SEA || tAt(sx, sy - 4) === T.SEA; c = wet ? C3.wet : pick(C3.sand, tex); light = 1 + relief * .4; }
+      else if (t === T.MEAD) { c = pick(C3.mead, tex); light = 1 + relief; if (G.season < 2 && hsh % 997 === 0) c = hex(['#ffe86a', '#ff9ad0', '#ffffff'][hsh % 3]); if (isle.berge[ti] && G.season < 3) light *= .94; }
+      else if (t === T.FOR || t === T.DFOR) { c = pick(C3.forg, tex - (t === T.DFOR ? .1 : 0)); light = 1 + relief; }
+      else if (t === T.HILL || t === T.MOUNT) { c = pick(C3.hill, tex); light = 1 + relief * 1.6; }
+      else if (t === T.ROCK) { c = pick(tex > .5 ? C3.rock : C3.hill, tex); light = 1 + relief * 1.6; }
+      else if (t === T.MARSH) { c = tex > .6 ? C3.riv[1] : pick(C3.marsh, tex); }
+      else c = pick(C3.sand, tex);
+      flood = isle.berge[ti] === 1;
+    }
+    light = Math.round(Math.max(.72, Math.min(1.25, light)) * 14) / 14; // paliers : rendu « peint en pixels »
+    const o = (y * WW + x) * 4; d[o] = Math.min(255, c[0] * light); d[o + 1] = Math.min(255, c[1] * light); d[o + 2] = Math.min(255, c[2] * light); d[o + 3] = 255;
+    if (flood) { const w = C3.shallow[tex > .6 ? 2 : 1]; fd[o] = w[0]; fd[o + 1] = w[1]; fd[o + 2] = w[2]; fd[o + 3] = 215; if (Math.sin(x * .5 + y * .9) > .93) { fd[o] = 220; fd[o + 1] = 240; fd[o + 2] = 255; } }
+  }
+  g2.putImageData(img, 0, 0); floodCv.getContext('2d').putImageData(fimg, 0, 0);
+  drawScenery(g2);
+}
+// arbres, rochers et sommets, triés de haut en bas pour qu'ils se chevauchent bien
+function pdisc(g, cx, cy, r, col) { g.fillStyle = col; for (let y = -r; y <= r; y++) { const w = Math.round(Math.sqrt(r * r - y * y)); g.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2 + 1, 1); } }
+function drawScenery(g) {
+  const s = G.season, items = [], segs = riverSegs();
+  const nearWater = (x, y) => segs.some(([ax, ay]) => Math.hypot(ax - x, ay - y) < 15);
+  for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+    const t = isle.t[ty * MW + tx], r = mulberry32(tx * 9301 + ty * 49297 + isle.seed), X = tx * TS, Y = ty * TS;
+    if (t === T.FOR || t === T.DFOR) { const n = t === T.DFOR ? 7 : 4; for (let k = 0; k < n; k++) { const x = X + 4 + r() * 24, y = Y + 6 + r() * 24; if (!nearWater(x, y)) items.push([y, 'tree', x, y, t === T.DFOR || r() < .25, r()]); } }
+    if (t === T.MEAD && r() < .12) items.push([Y + 20, 'tree', X + 8 + r() * 16, Y + 10 + r() * 14, false, r()]);
+    if (t === T.ROCK) for (let k = 0; k < 3; k++) { const x = X + 5 + r() * 22, y = Y + 8 + r() * 20; items.push([y, 'rock', x, y, 3 + r() * 3 | 0]); }
+    if (t === T.MOUNT) items.push([Y + 30, 'peak', X + 16 + (r() - .5) * 8, Y + 30, 34 + r() * 14, 34 + r() * 10]);
+    if ((t === T.MEAD || t === T.HILL) && s < 3) for (let k = 0; k < 3; k++) items.push([Y + r() * 32, 'tuft', X + r() * 30, Y + r() * 30]);
+  }
+  items.sort((a, b) => a[0] - b[0]);
+  const OL = '#1c2a14';
+  items.forEach(([, kind, x, y, a, b]) => {
+    if (kind === 'tuft') { g.fillStyle = s === 2 ? '#8a7a30' : '#3f8a30'; g.fillRect(x | 0, y | 0, 1, 2); g.fillRect((x | 0) + 2, (y | 0) - 1, 1, 3); return; }
+    if (kind === 'rock') { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(x - a + 1, y + a - 1, a * 2 + 1, 2); pdisc(g, x, y, a + 1, '#3a3a36'); pdisc(g, x, y, a, s === 3 ? '#c8d0d8' : '#8a8a84'); pdisc(g, x - 1, y - 1, Math.max(1, a - 2), s === 3 ? '#ffffff' : '#b0b0a8'); return; }
+    if (kind === 'peak') {
+      const w = a, h = b, top = y - h; g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.moveTo(x - w / 2 + 6, y + 2); g.lineTo(x + w / 2 + 8, y + 2); g.lineTo(x + 6, top + 6); g.fill();
+      g.fillStyle = '#2a2a30'; g.beginPath(); g.moveTo(x - w / 2 - 1, y + 1); g.lineTo(x, top - 1); g.lineTo(x + w / 2 + 1, y + 1); g.fill();
+      g.fillStyle = '#8a8a96'; g.beginPath(); g.moveTo(x - w / 2, y); g.lineTo(x, top); g.lineTo(x + 2, y); g.fill();
+      g.fillStyle = '#5c5c68'; g.beginPath(); g.moveTo(x, top); g.lineTo(x + w / 2, y); g.lineTo(x + 2, y); g.fill();
+      const sn = s === 3 ? .7 : .38; g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(x - w / 2 * sn, top + h * sn); g.lineTo(x, top); g.lineTo(x + w / 2 * sn, top + h * sn);
+      g.lineTo(x + w / 6 * sn, top + h * sn * .8); g.lineTo(x - w / 8 * sn, top + h * sn * 1.05); g.fill();
+      g.fillStyle = '#d4e0ec'; g.beginPath(); g.moveTo(x, top); g.lineTo(x + w / 2 * sn, top + h * sn); g.lineTo(x + w / 6 * sn, top + h * sn * .8); g.fill(); return;
+    }
+    // un arbre : conifère ou feuillu, avec contour, trois tons et son ombre
+    const conifer = a, v = b; g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(Math.round(x - 3), Math.round(y + 5), 9, 2);
+    g.fillStyle = '#4a2e16'; g.fillRect(Math.round(x), Math.round(y + 1), 2, 5);
+    if (conifer) {
+      const leaf = s === 3 ? ['#1c3a28', '#2a5a3a', '#ffffff'] : s === 2 ? ['#1c4a28', '#2a6a3a', '#3f8a4a'] : ['#1c5a2a', '#2f7a3a', '#4aa04a'];
+      for (let k = 0; k < 4; k++) { const w = 1 + k * 1.6, yy = y - 12 + k * 3.2; g.fillStyle = OL; g.fillRect(Math.round(x + 1 - w - 1), Math.round(yy), Math.round(w * 2 + 2), 4); }
+      for (let k = 0; k < 4; k++) { const w = 1 + k * 1.6, yy = y - 12 + k * 3.2; g.fillStyle = leaf[1]; g.fillRect(Math.round(x + 1 - w), Math.round(yy + 1), Math.round(w * 2), 3); g.fillStyle = leaf[2]; g.fillRect(Math.round(x + 1 - w), Math.round(yy + 1), Math.max(1, Math.round(w * .8)), 1); g.fillStyle = leaf[0]; g.fillRect(Math.round(x + 1 + w * .2), Math.round(yy + 3), Math.round(w * .8), 1); }
+    } else {
+      if (s === 3) { g.fillStyle = '#5a3a20'; g.fillRect(Math.round(x - 3), Math.round(y - 5), 1, 4); g.fillRect(Math.round(x + 4), Math.round(y - 6), 1, 5); g.fillRect(Math.round(x - 2), Math.round(y - 3), 6, 1); g.fillRect(Math.round(x), Math.round(y - 8), 2, 9); g.fillStyle = '#ffffff'; g.fillRect(Math.round(x - 3), Math.round(y - 6), 2, 1); g.fillRect(Math.round(x + 3), Math.round(y - 7), 2, 1); return; }
+      const leaf = s === 2 ? (v > .5 ? ['#8a3a18', '#c86a28', '#f0a040'] : ['#8a6a18', '#c8a030', '#f0d060']) : s === 1 ? ['#2a6a24', '#3f8a32', '#62b04a'] : ['#2f7a2a', '#4aa040', '#7ad060'];
+      pdisc(g, x + 1, y - 5, 6, OL); pdisc(g, x + 1, y - 5, 5, leaf[1]); pdisc(g, x + 2, y - 3, 3, leaf[0]); pdisc(g, x - 1, y - 7, 2, leaf[2]);
+      if (G.season === 0 && v > .7) { g.fillStyle = '#ffd0e8'; g.fillRect(Math.round(x - 2), Math.round(y - 6), 1, 1); g.fillRect(Math.round(x + 3), Math.round(y - 4), 1, 1); }
+    }
+  });
+}
+function buildFog() {
+  fogCv = fogCv || document.createElement('canvas'); fogCv.width = WW; fogCv.height = WH;
+  const g2 = fogCv.getContext('2d'); g2.clearRect(0, 0, WW, WH);
+  const F = G.season === 3 ? ['#8a9cb0', 'rgba(170,186,204,1)', 'rgba(140,158,178,1)', 'rgba(140,158,178,.9)', 'rgba(140,158,178,0)'] : ['#d0dce4', 'rgba(244,248,250,1)', 'rgba(220,230,238,1)', 'rgba(214,226,234,.9)', 'rgba(214,226,234,0)']; // l'hiver, un brouillard plus sombre que la neige
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { if (isle.seen[y * MW + x]) continue; const r = mulberry32(x * 31 + y * 977);
+    const full = N8.every(([dx, dy]) => !inside(x + dx, y + dy) || !isle.seen[(y + dy) * MW + x + dx]);
+    if (full) { g2.fillStyle = F[0]; g2.fillRect(x * TS, y * TS, TS, TS); }
+    for (let k = 0; k < 4; k++) { const cx = x * TS + 6 + r() * 20, cy = y * TS + 6 + r() * 20, rr = 14 + r() * 8, gr = g2.createRadialGradient(cx, cy, 2, cx, cy, rr);
+      gr.addColorStop(0, k % 2 ? F[1] : F[2]); gr.addColorStop(.7, F[3]); gr.addColorStop(1, F[4]); g2.fillStyle = gr; g2.beginPath(); g2.arc(cx, cy, rr, 0, 7); g2.fill(); } }
+}
+
+/* =================== les bâtiments, en 32 × 32 =================== */
+function drawB(g, b, X, Y, now = 0) {
+  const R = (a, c, w, h, col) => { g.fillStyle = col; g.fillRect(X + a, Y + c, w, h); }, s = G.season, snow = s === 3, t = b.done === false ? 'chantier' : b.type, OL = '#24160c';
+  const shadow = (a, c, w) => R(a + 2, c, w, 3, 'rgba(0,0,0,.28)');
+  const house = (x, y, w, h, wall, roof, o = {}) => {
+    const rh = Math.round(h * .45); shadow(x, y + h, w);
+    R(x - 1, y + rh - 1, w + 2, h - rh + 2, OL); R(x, y + rh, w, h - rh, wall[1]); R(x + w - 3, y + rh, 3, h - rh, wall[0]); R(x, y + rh, w, 1, wall[2]);
+    for (let yy = y + rh + 3; yy < y + h; yy += 3) R(x, yy, w - 3, 1, 'rgba(0,0,0,.08)');
+    R(x - 3, y - 1, w + 6, rh + 2, OL); R(x - 2, y, w + 4, rh, roof[1]); for (let yy = y + 2; yy < y + rh; yy += 3) R(x - 2, yy, w + 4, 1, roof[0]);
+    R(x - 2, y, w + 4, 1, roof[2]); R(x + w - 1, y, 3, rh, 'rgba(0,0,0,.15)');
+    if (snow) { R(x - 2, y, w + 4, 3, '#ffffff'); R(x, y + 3, 2, 1, '#ffffff'); R(x + w - 4, y + 3, 2, 2, '#e8f0f8'); }
+    const dw = o.door || 4, dx = Math.round(x + (w - dw) / 2); R(dx - 1, y + h - 7, dw + 2, 7, OL); R(dx, y + h - 6, dw, 6, '#5a3418'); R(dx, y + h - 6, 1, 6, '#7a4a24');
+    const lit = snow || s === 2 ? '#ffd870' : '#bfe0f0';
+    if (w >= 14 && !o.noWin) [x + 2, x + w - 6].forEach(wx => { R(wx - 1, y + rh + 2, 5, 5, OL); R(wx, y + rh + 3, 3, 3, lit); R(wx, y + rh + 3, 1, 1, '#ffffff'); });
+  };
+  switch (t) {
+    case 'epave': shadow(3, 25, 26); R(3, 17, 26, 8, OL); R(4, 18, 24, 6, '#7a5230'); R(4, 18, 24, 1, '#a07040'); for (let k = 0; k < 5; k++) R(6 + k * 5, 18, 1, 6, '#5a3820'); R(4, 23, 24, 1, '#4a2e18');
+      R(28, 15, 3, 6, '#7a5230'); for (let k = 0; k < 13; k++) R(Math.round(17 - k * .6), 4 + k, 2, 1, '#4a2e18'); R(17, 5, 9, 9, OL); R(18, 6, 7, 7, '#efe6cc'); R(18, 6, 2, 7, '#d8ccaa'); R(21, 10, 4, 3, '#c8bc98'); if (snow) R(4, 17, 24, 1, '#ffffff'); break;
+    case 'tente': shadow(5, 26, 22); for (let k = 0; k < 16; k++) { R(16 - k - 1, 9 + k, 2 * k + 3, 1, OL); R(16 - k, 9 + k, 2 * k + 1, 1, k % 4 < 2 ? '#f0e2c4' : '#e0c89e'); } R(14, 17, 5, 9, '#4a3420'); R(15, 7, 2, 3, '#7a5230'); if (snow) R(12, 10, 9, 2, '#ffffff'); break;
+    case 'habitation': house(7, 7, 18, 19, ['#a06a38', '#c08a50', '#d8a868'], ['#7a2a1a', '#a0402a', '#c8603a']); R(21, 3, 3, 6, OL); R(22, 4, 1, 5, '#7a5a4a'); break;
+    case 'grenier': house(5, 5, 22, 22, ['#8a4a28', '#b0603a', '#c87a4a'], ['#5a2a1a', '#7a3a2a', '#9a4a30'], { door: 8, noWin: true }); R(12, 21, 8, 1, '#c08a50'); R(15, 12, 2, 2, '#ffd870'); break;
+    case 'entrepot': house(2, 9, 28, 17, ['#6a6a72', '#8a8a92', '#a8a8b0'], ['#3a3a44', '#5a5a64', '#7a7a84'], { door: 10, noWin: true }); R(5, 23, 5, 2, '#a07040'); R(23, 22, 4, 3, '#8a8a92'); break;
+    case 'bucheron': house(2, 6, 15, 17, ['#7a5230', '#9a6a3a', '#b88a50'], ['#4a2a18', '#6a3a24', '#8a4a2a']);
+      shadow(18, 25, 12); R(18, 18, 12, 7, OL); for (let k = 0; k < 3; k++) { R(19, 19 + k * 2, 10, 2, k % 2 ? '#8a5a2a' : '#a06a30'); R(19, 19 + k * 2, 1, 2, '#e0b070'); R(28, 19 + k * 2, 1, 2, '#e0b070'); }
+      R(21, 27, 6, 3, '#6a4a2a'); R(21, 27, 6, 1, '#c8a060'); R(25, 23, 1, 5, '#7a5a3a'); R(24, 23, 3, 2, '#c0c8d0'); break;
+    case 'cueilleur': house(2, 6, 15, 17, ['#7a5230', '#9a6a3a', '#b88a50'], ['#2a5a2a', '#3f7a3a', '#5a9a4a']);
+      [[19, 20], [25, 23]].forEach(([bx, by]) => { shadow(bx, by + 6, 7); R(bx - 1, by, 8, 7, OL); R(bx, by + 1, 6, 5, '#b08a48'); R(bx, by + 3, 6, 1, '#8a6a30'); R(bx + 1, by - 1, 4, 2, s === 3 ? '#8a6a5a' : '#e0405a'); R(bx + 1, by - 1, 1, 1, '#ff9aa8'); }); break;
+    case 'pecherie': shadow(0, 24, 32); R(0, 18, 32, 6, OL); R(0, 19, 32, 4, '#a07a44'); for (let k = 0; k < 8; k++) R(k * 4, 19, 1, 4, '#6a4a28'); R(3, 23, 2, 6, '#4a2e18'); R(26, 23, 2, 6, '#4a2e18');
+      house(3, 2, 14, 15, ['#a06a38', '#c08a50', '#d8a868'], ['#2a4a6a', '#3f6a8a', '#5a8aaa']); R(20, 8, 10, 1, '#6a4a28'); R(21, 9, 1, 4, '#c0c8d0'); R(24, 9, 1, 5, '#c0c8d0'); R(27, 9, 1, 3, '#c0c8d0');
+      R(19, 26, 11, 4, OL); R(20, 26, 9, 3, '#c0503a'); R(20, 26, 9, 1, '#e07050'); break;
+    case 'chasseur': house(3, 6, 16, 17, ['#6a4a28', '#8a6a3a', '#a8844a'], ['#3a2a18', '#5a3a1a', '#7a4a24']); R(21, 14, 9, 9, OL); R(22, 15, 7, 7, '#c89a68'); R(23, 16, 5, 5, '#b08050'); R(21, 10, 1, 4, '#efe6cc'); R(29, 10, 1, 4, '#efe6cc'); R(20, 10, 2, 1, '#efe6cc'); R(29, 10, 2, 1, '#efe6cc'); break;
+    case 'champ': {
+      R(0, 0, 32, 32, OL); if (b.flooded) { R(1, 1, 30, 30, '#2a88bc'); for (let k = 0; k < 6; k++) { R(3 + k * 4, 5 + k * 4, 7, 1, '#bfe6ff'); R(5 + k * 4, 8 + k * 3, 1, 3, '#7a8a40'); } break; }
+      const soil = snow ? ['#cfd8de', '#e8eef2'] : ['#5a3a20', '#7a5230'], crop = [['#3f9a3a', '#7ad65a'], ['#3f8a2a', '#6ab83a'], ['#c8962a', '#f0cc50'], ['#cfd8de', '#ffffff']][s];
+      R(1, 1, 30, 30, soil[1]); for (let yy = 3; yy < 31; yy += 5) { R(1, yy, 30, 2, soil[0]);
+        if (s === 0) for (let xx = 3; xx < 30; xx += 4) { R(xx, yy - 1, 1, 2, crop[0]); R(xx + 1, yy - 2, 1, 1, crop[1]); }
+        if (s === 1 || s === 2) for (let xx = 2; xx < 30; xx += 2) { R(xx, yy - 3, 1, 4, crop[0]); R(xx, yy - 3, 1, 1, crop[1]); if (s === 2 && xx % 4 === 0) R(xx - 1, yy - 4, 3, 2, crop[1]); } }
+      [[0, 0], [30, 0], [0, 30], [30, 30]].forEach(([a, c]) => R(a, c, 2, 2, '#a07a44')); break; }
+    case 'carriere': shadow(3, 27, 26); R(2, 12, 28, 16, OL); R(3, 13, 26, 14, '#8a8a84'); R(3, 13, 26, 2, '#b8b8b0'); R(3, 20, 26, 1, '#6a6a64');
+      [[5, 6, 9, 7], [17, 8, 8, 6]].forEach(([a, c, w, h]) => { R(a - 1, c - 1, w + 2, h + 2, OL); R(a, c, w, h, '#b0b0a8'); R(a, c, w, 2, '#d8d8d0'); R(a + w - 2, c, 2, h, '#8a8a84'); });
+      R(22, 22, 1, 7, '#7a5a3a'); R(20, 21, 6, 2, '#c0c8d0'); break;
+    case 'scierie': house(2, 6, 18, 18, ['#8a5a30', '#b07a40', '#c8945a'], ['#4a2a1a', '#6a3a2a', '#8a4a30']); R(21, 9, 10, 17, OL); R(22, 10, 8, 15, '#6a4a28'); for (let k = 0; k < 4; k++) R(22, 11 + k * 4, 8, 1, '#a07a44'); R(25, 10, 2, 15, '#4a2e18'); break;
+    case 'elevage': R(1, 4, 30, 1, '#a07a44'); R(1, 28, 30, 1, '#a07a44'); R(1, 4, 1, 25, '#a07a44'); R(30, 4, 1, 25, '#a07a44'); for (let k = 0; k < 8; k++) { R(1 + k * 4, 3, 1, 3, '#6a4a28'); R(1 + k * 4, 27, 1, 3, '#6a4a28'); }
+      [[7, 11], [18, 17], [10, 21]].forEach(([a, c]) => { shadow(a, c + 4, 6); R(a - 1, c - 1, 8, 6, OL); R(a, c, 6, 4, '#f4f4f0'); R(a, c, 6, 1, '#ffffff'); R(a + 5, c - 1, 3, 3, '#3a3a3a'); }); break;
+    case 'forge': house(4, 7, 22, 19, ['#5a5a64', '#74747e', '#8a8a94'], ['#2a2a32', '#3a3a44', '#55555f'], { noWin: true }); R(13, 19, 6, 7, (now / 250 | 0) % 2 ? '#ffa040' : '#ff7020'); R(22, 2, 4, 7, OL); R(23, 3, 2, 6, '#5a5a64'); break;
+    case 'puits': shadow(8, 26, 16); R(8, 17, 16, 9, OL); R(9, 18, 14, 7, '#9a9aa2'); R(9, 18, 14, 2, '#c0c0c8'); R(11, 18, 10, 2, '#2a6a9a'); R(9, 6, 2, 12, '#6a4a28'); R(21, 6, 2, 12, '#6a4a28'); R(7, 4, 18, 4, OL); R(8, 5, 16, 2, '#9a4a30'); if (snow) R(8, 4, 16, 1, '#ffffff'); break;
+    case 'tour': shadow(10, 28, 12); R(11, 6, 10, 22, OL); R(12, 7, 8, 21, '#a07a44'); R(12, 7, 2, 21, '#c09a60'); for (let yy = 10; yy < 28; yy += 4) R(12, yy, 8, 1, '#7a5a34'); R(8, 2, 16, 6, OL); R(9, 3, 14, 4, '#7a3a24'); R(14, 12, 4, 4, '#2a1a10'); break;
+    case 'taverne': house(3, 6, 26, 20, ['#a87840', '#d0a060', '#e8bc78'], ['#5a2a1a', '#7a3a2a', '#9a4a30'], { door: 6 }); R(26, 16, 5, 5, OL); R(27, 17, 3, 3, '#ffd23f'); break;
+    case 'guerisseur': house(5, 6, 22, 20, ['#c8c8c0', '#e8e8e0', '#ffffff'], ['#5a2a1a', '#7a3a2a', '#9a4a30']); R(14, 2, 4, 9, '#e0404a'); R(12, 4, 8, 4, '#e0404a'); break;
+    case 'tailleur': house(4, 6, 20, 20, ['#a06a38', '#c08a50', '#d8a868'], ['#2a3a6a', '#3f4a8a', '#5a6aaa']); pdisc(g, X + 27, Y + 24, 3, OL); pdisc(g, X + 27, Y + 24, 2, '#e8a0ff'); break;
+    case 'digue': R(0, 11, 32, 11, OL); R(0, 12, 32, 9, '#8a8a92'); R(0, 12, 32, 2, '#c0c0c8'); for (let k = 0; k < 4; k++) { R(k * 8 + 3, 16, 1, 5, '#6a6a72'); R(k * 8 + 7, 14, 1, 3, '#6a6a72'); } break;
+    case 'chantier': {
+      const p = b.p / b.max, lv = Math.max(4, Math.round(20 * p));
+      R(3, 26, 26, 3, '#8a8a84'); R(3, 26, 26, 1, '#b8b8b0'); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.setLineDash([2, 2]); g.strokeRect(X + 4.5, Y + 5.5, 23, 20); g.setLineDash([]);
+      for (let k = 0; k < 4; k++) { R(5 + k * 7, 26 - lv, 2, lv, OL); R(5 + k * 7, 26 - lv, 1, lv, '#a07a44'); }
+      for (let yy = 25; yy > 26 - lv; yy -= 5) { R(4, yy, 24, 2, OL); R(4, yy, 24, 1, '#d0a060'); }
+      R(23, 27, 8, 4, OL); R(24, 27, 6, 1, '#d0a060'); R(24, 29, 6, 1, '#b08040'); break; }
+  }
+}
+function iconOf(b) { const c = document.createElement('canvas'); c.width = 32; c.height = 32; const g2 = c.getContext('2d');
+  if (b === 'ecl') { g2.fillStyle = '#24160c'; g2.fillRect(9, 3, 3, 26); g2.fillStyle = '#7a5230'; g2.fillRect(10, 4, 1, 24); g2.fillStyle = '#24160c'; g2.fillRect(11, 3, 16, 11); g2.fillStyle = '#e0404a'; g2.fillRect(12, 4, 14, 9); g2.fillStyle = '#ff7a80'; g2.fillRect(12, 4, 14, 2); g2.fillStyle = '#3f9a3a'; g2.fillRect(3, 27, 16, 3); }
+  else drawB(g2, b, 0, 0); return c; }
+const SKIN = [['#ffd8b8', '#e8b090'], ['#e8b084', '#c08060'], ['#b07850', '#8a5a38'], ['#7a4a2a', '#5a3218']], HAIR = ['#2a1a10', '#6a3a1a', '#c08a3a', '#e8c86a', '#b84a2a', '#3a3a44'];
+function faceCanvas(c) { const k = document.createElement('canvas'); k.width = 16; k.height = 16; const g2 = k.getContext('2d'), R = (x, y, w, h, col) => { g2.fillStyle = col; g2.fillRect(x, y, w, h); };
+  const [sk, sd] = SKIN[c.skin], hr = c.age === 'ancien' ? '#d8d8e0' : HAIR[c.hair];
+  R(0, 0, 16, 16, '#2a5a4a'); R(3, 12, 10, 4, '#5a7aa0'); R(4, 3, 8, 10, sk); R(11, 4, 1, 9, sd); R(4, 12, 8, 1, sd);
+  R(3, 2, 10, 3, hr); R(3, 4, 1, c.long ? 9 : 4, hr); R(12, 4, 1, c.long ? 9 : 4, hr); R(5, 2, 4, 1, 'rgba(255,255,255,.25)');
+  R(5, 7, 2, 2, '#ffffff'); R(9, 7, 2, 2, '#ffffff'); R(6, 8, 1, 1, '#1a1010'); R(10, 8, 1, 1, '#1a1010'); R(7, 10, 2, 1, '#c0504a'); return k; }
+// icônes des ressources, 12 × 12
+const ICO = {
+  food: ['............', '...kkkk.....', '..kNNNNk....', '.kNnNNNNk...', '.kNNNNnNk...', '.kNNnNNNk...', '..kNNNNk....', '...kkkWWk...', '......kWWk..', '.......kWWk.', '........kWk.', '.........k..'],
+  bois: ['............', '.kkkkkkkkkk.', 'kennnnnnnnek', 'kEnNnnnnnnEk', '.kkkkkkkkkk.', '..kkkkkkkkkk', '.kennnnnnnne', '.kEnnnNnnnnE', '..kkkkkkkkkk', '............', '............', '............'],
+  pierre: ['............', '....kkkk....', '...kWWssk...', '..kWssssSk..', '.kWssssssSk.', '.kssssssSSk.', 'kssssssSSSSk', 'kSSSSSSSSSSk', '.kkkkkkkkkk.', '............', '............', '............'],
+  planches: ['............', 'kkkkkkkkkkkk', 'kNNNNNNNNNNk', 'knnnnnnnnnnk', 'kkkkkkkkkkkk', 'kNNNNNNNNNNk', 'knnnnnnnnnnk', 'kkkkkkkkkkkk', 'kNNNNNNNNNNk', 'knnnnnnnnnnk', 'kkkkkkkkkkkk', '............'],
+  outils: ['..kkkk......', '.kWsssk.....', 'kWsssssk....', '.kkksnnk....', '....knnk....', '.....knnk...', '......knnk..', '.......knnk.', '........knnk', '.........kk.', '............', '............'],
+  vetements: ['............', '..kkk..kkk..', '.kpppkkpppk.', 'kpPpppppppPk', 'kpppppppppk.', '.kkpppppppk.', '..kpppppppk.', '..kpPpppppk.', '..kpppppppk.', '..kkkkkkkkk.', '............', '............'],
+  colons: ['....kkkk....', '...kHHHHk...', '...kRRRRk...', '...kRRRRk...', '....kkkk....', '..kbbbbbbk..', '.kbBbbbbbbk.', '.kbbbbbbbbk.', '.kbbbbbbbbk.', '..kbbkkbbk..', '..kkk..kkk..', '............'],
+  joie: ['...kkkkkk...', '..kyyyyyyk..', '.kyYyyyyyyk.', 'kyyykyykyyyk', 'kyyykyykyyyk', 'kyyyyyyyyyyk', 'kykyyyyyykyk', 'kyykkkkkkyyk', '.kyyyyyyyyk.', '..kyyyyyyk..', '...kkkkkk...', '............'],
+  eau: ['.....kk.....', '.....kbk....', '....kbbk....', '...kbWbbk...', '...kWbbbk...', '..kbWbbbbk..', '..kbbbbbbk..', '.kbbbbbbbbk.', '.kbbbbbbbBk.', '..kbbbbbBk..', '...kkkkkk...', '............'],
+};
+const PAL = { k: '#1a1208', W: '#f4f4f0', N: '#d89a58', n: '#a8683a', e: '#e8d090', E: '#c8a870', s: '#a8a8b0', S: '#74747e', p: '#6ab0ea', P: '#9ad0ff', R: '#ffd8b8', H: '#6a3a1a', b: '#3f8ac0', B: '#2a6a9a', y: '#ffd23f', Y: '#fff2a8' };
+const RESICON = { poisson: 'food', viande: 'food', baies: 'food', cereales: 'food', legumes: 'food', oeufs: 'food', bois: 'bois', pierre: 'pierre', planches: 'planches', peaux: 'vetements' };
+function ico(name) { const c = document.createElement('canvas'); c.width = 12; c.height = 12; const g2 = c.getContext('2d');
+  (ICO[name] || []).forEach((row, y) => [...row].forEach((ch, x) => { if (PAL[ch]) { g2.fillStyle = PAL[ch]; g2.fillRect(x, y, 1, 1); } })); return c; }
+const ICOC = {}; for (const k in ICO) ICOC[k] = ico(k);
+
+/* =================== la carte : caméra, dessin, toucher =================== */
+const cv = document.getElementById('map'), g = cv.getContext('2d'), $ = id => document.getElementById(id);
+const Z0 = Math.min(VW / WW, VH / WH), Z1 = 1.25;
+let S = 1;
+const viewW = () => VW - (G.drawer ? DRW : 0);
+function clampCam() {
+  const vw = VW / G.zoom, vh = VH / G.zoom, extra = G.drawer ? DRW / G.zoom : 0;
+  G.cam.x = WW <= vw ? (WW - vw) / 2 : Math.max(0, Math.min(WW - vw + extra, G.cam.x));
+  G.cam.y = WH <= vh ? (WH - vh) / 2 : Math.max(0, Math.min(WH - vh, G.cam.y));
+}
+function centerOn(tx, ty) { G.cam.x = tx * TS - viewW() / G.zoom / 2; G.cam.y = ty * TS - VH / G.zoom / 2; clampCam(); }
+function focusTile(x, y) { // garder la case visible à gauche du volet
+  const sx = (x * TS - G.cam.x) * G.zoom, sy = (y * TS - G.cam.y) * G.zoom, tile = TS * G.zoom;
+  if (sx < 10 || sx + tile > viewW() - 10 || sy < 10 || sy + tile > VH - 10) centerOn(x + .5, y + .5);
+}
+function setZoom(z, fx = viewW() / 2, fy = VH / 2) {
+  const wx = G.cam.x + fx / G.zoom, wy = G.cam.y + fy / G.zoom; G.zoom = z; G.cam.x = wx - fx / z; G.cam.y = wy - fy / z; clampCam();
+  $('zin').disabled = z === Z1; $('zout').disabled = z === Z0;
+}
+const UIF = (px, w = 700) => `${w} ${px}px Signika, "Segoe UI", sans-serif`;
+function pill(x, y, w, h, col) { g.fillStyle = col; g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, h / 2); else g.rect(x, y, w, h); g.fill(); }
+function txt(s, x, y, col, al = 'center', px = 11) { g.font = UIF(px); g.textAlign = al; g.textBaseline = 'middle'; g.fillStyle = 'rgba(0,0,0,.7)'; g.fillText(s, x + .6, y + .8); g.fillStyle = col; g.fillText(s, x, y); }
+const protectedTile = (x, y) => B.some(b => b.done && b.type === 'digue' && Math.abs(b.x - x) <= 1 && Math.abs(b.y - y) <= 1);
+function draw(now) {
+  const t0 = now / 1000, z = G.zoom, k = S * z;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.fillStyle = SP(G.season).sea[1]; g.fillRect(0, 0, cv.width, cv.height);
+  g.setTransform(k, 0, 0, k, -G.cam.x * k, -G.cam.y * k);
+  g.drawImage(terrainCv, 0, 0);
+  // reflets sur la mer et la rivière
+  for (let i = 0; i < MW * MH; i++) { const tt = isle.t[i]; if (tt !== T.SEA && tt !== T.RIV) continue; const x = i % MW, y = i / MW | 0;
+    for (let q = 0; q < 2; q++) { const ph = (x * 7 + y * 13 + q * 5) % 10; if (((t0 * 1.1 + ph * .7) % 4) < 1.4) { g.fillStyle = 'rgba(220,245,255,.55)'; g.fillRect(x * TS + (ph * 3 + q * 11) % 26, y * TS + (ph * 5 + q * 13) % 28, 5, 1); } } }
+  if (G.flood) { g.save(); g.globalAlpha = Math.min(1, (now - G.floodT) / 1600); g.drawImage(floodCv, 0, 0); g.restore(); }
+  // bâtiments et colons, de haut en bas
+  [...B].sort((a, b) => a.y - b.y).forEach(b => { drawB(g, b, b.x * TS, b.y * TS, now);
+    workers(b.id).forEach((c, n) => drawColonist(c, b.x * TS + [3, 24, 13, 27][n % 4], b.y * TS + [22, 22, 28, 10][n % 4], t0, n)); });
+  if (G.season === 3) B.filter(b => b.type === 'habitation' && b.done).forEach(b => { for (let q = 0; q < 4; q++) { const p = (t0 * .6 + q / 4) % 1; g.fillStyle = `rgba(235,235,245,${.75 - p * .75})`; g.beginPath(); g.arc(b.x * TS + 22.5 + Math.sin(p * 6 + q) * 2, b.y * TS + 3 - p * 14, 1 + p * 2.5, 0, 7); g.fill(); } });
+  if (G.season === 3) for (let q = 0; q < 260; q++) { const x = (q * 97.3 + Math.sin(t0 + q) * 8) % WW, y = (q * 53.7 + t0 * 18 * (1 + q % 3) * .5) % WH; g.fillStyle = q % 3 ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.55)'; g.fillRect(x, y, q % 4 ? 1 : 2, q % 4 ? 1 : 2); }
+  g.drawImage(fogCv, 0, 0);
+  if (G.target) { const [x, y] = G.target, X = x * TS, Y = y * TS, wave = Math.sin(t0 * 4) > 0 ? 1 : 0;
+    g.fillStyle = '#24160c'; g.fillRect(X + 14, Y + 4, 2, 22); g.fillStyle = '#e0404a'; g.fillRect(X + 16, Y + 4, 11, 7 + wave); g.fillStyle = '#ff7a80'; g.fillRect(X + 16, Y + 4, 11, 2);
+    workers('ecl').forEach((c, n) => drawColonist(c, X + 4 + n * 18, Y + 26, t0, n)); }
+  // la case choisie : quatre coins dorés
+  if (G.sel) { const X = G.sel.x * TS, Y = G.sel.y * TS, p = 1 + (Math.sin(t0 * 5) + 1), L = 8; g.fillStyle = '#ffd23f';
+    [[X - p, Y - p, 1, 1], [X + TS + p, Y - p, -1, 1], [X - p, Y + TS + p, 1, -1], [X + TS + p, Y + TS + p, -1, -1]].forEach(([a, c, sx, sy]) => { g.fillRect(sx > 0 ? a : a - L, sy > 0 ? c : c - 2, L, 2); g.fillRect(sx > 0 ? a : a - 2, sy > 0 ? c : c - L, 2, L); }); }
+  // ---- en pixels logiques, à la résolution de l'écran : étiquettes, barres, nombres qui s'envolent ----
+  g.setTransform(S, 0, 0, S, 0, 0);
+  const sx = wx => (wx - G.cam.x) * z, sy = wy => (wy - G.cam.y) * z, tile = TS * z;
+  B.forEach(b => {
+    const X = sx(b.x * TS), Y = sy(b.y * TS); if (X < -80 || X > VW + 80 || Y < -40 || Y > VH + 30) return;
+    if (!b.done) {
+      const p = b.p / b.max, nx = Math.min(1, (b.p + chGain(b)) / b.max), bw = Math.max(tile, 46), bx = X + tile / 2 - bw / 2, by = Y + tile + 2;
+      pill(bx - 4, by - 2, bw + 8, z >= Z1 ? 26 : 12, 'rgba(6,16,12,.82)');
+      pill(bx, by + 1, bw, 6, '#08201a'); g.fillStyle = '#ffd23f'; g.fillRect(bx + 1, by + 2, (bw - 2) * p, 4);
+      for (let x = Math.round((bw - 2) * p); x < Math.round((bw - 2) * nx); x++) if ((x + (now / 120 | 0)) % 4 < 2) { g.fillStyle = '#fff2a8'; g.fillRect(bx + 1 + x, by + 2, 1, 4); }
+      if (z >= Z1) txt(`${BUILD[b.target].n} ${b.p}/${b.max}`, X + tile / 2, by + 16, '#ffd23f');
+      return;
+    }
+    let lab = null, col = '#6cf09a', ic = null;
+    if (b.type === 'champ') { const p = prodOf(b).cereales; lab = p ? `+${p}` : fieldState(b); col = b.flooded ? '#ff7a6a' : p ? '#6cf09a' : '#f4f1e6'; ic = p ? 'food' : null; }
+    else if (PROD[b.type]) { const p = prodOf(b), k2 = Object.keys(p).find(q => p[q] > 0); if (k2) { lab = `+${Object.values(p).filter(v => v > 0).reduce((a, v) => a + v, 0)}`; ic = RESICON[k2]; }
+      else if (workers(b.id).length) { lab = G.season === 3 ? 'hiver' : '0'; col = '#f4f1e6'; } }
+    if (!lab) return;
+    g.font = UIF(11); const w = g.measureText(lab).width + (ic ? 15 : 0) + 12, lx = X + tile / 2 - w / 2, ly = Y + tile - 6;
+    pill(lx, ly, w, 15, 'rgba(6,16,12,.8)'); g.imageSmoothingEnabled = false; if (ic) g.drawImage(ICOC[ic], lx + 5, ly + 1.5, 12, 12);
+    txt(lab, lx + (ic ? 19 : 6), ly + 8, col, 'left');
+  });
+  G.floats = G.floats.filter(f => now - f.t < 1600);
+  G.floats.forEach(f => { const p = (now - f.t) / 1600, X = sx(f.x * TS) + tile / 2, Y = sy(f.y * TS) - p * 30; g.globalAlpha = 1 - p * p;
+    if (f.ic) g.drawImage(ICOC[f.ic], X - 20, Y - 7, 14, 14); txt(f.s, X - 3, Y, f.c, 'left', 14); g.globalAlpha = 1; });
+  requestAnimationFrame(draw);
+}
+// un colon, 7 × 13 pixels : cheveux, visage, chemise de la couleur de son poste, jambes qui marchent
+function drawColonist(c, X, Y, t0, n) {
+  const step = Math.sin(t0 * 5 + n * 1.7), bob = step > .6 ? 1 : 0, R = (a, b, w, h, col) => { g.fillStyle = col; g.fillRect(X + a, Y + b - bob, w, h); };
+  const pc = POSTCOL[c.post === 'ecl' ? 'ecl' : keyOf(B.find(b => b.id === c.post))] || ['#888', '#666'], hr = c.age === 'ancien' ? '#d8d8e0' : HAIR[c.hair], [sk, sd] = SKIN[c.skin];
+  g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(X - 1, Y, 9, 2);
+  R(0, -13, 7, 12, '#1a1208'); R(1, -12, 5, 2, hr); R(1, -10, 5, 3, sk); R(5, -10, 1, 3, sd); R(2, -9, 1, 1, '#1a1010'); R(4, -9, 1, 1, '#1a1010');
+  if (c.long) R(1, -10, 1, 4, hr);
+  R(1, -7, 5, 4, pc[0]); R(5, -7, 1, 4, pc[1]); R(0, -6, 1, 3, sk); R(6, -6, 1, 3, sk);
+  R(1, -3, 2, step > 0 ? 3 : 2, '#3a3046'); R(4, -3, 2, step > 0 ? 2 : 3, '#3a3046');
+}
+let drag = null, lastTap = 0;
+cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, cx: G.cam.x, cy: G.cam.y, moved: false }; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { if (!drag) return; const r = cv.getBoundingClientRect(), f = VW / r.width, dx = (e.clientX - drag.x) * f, dy = (e.clientY - drag.y) * f;
+  if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true; if (drag.moved) { G.cam.x = drag.cx - dx / G.zoom; G.cam.y = drag.cy - dy / G.zoom; clampCam(); } });
+cv.addEventListener('pointerup', e => { if (!drag) return; const moved = drag.moved; drag = null; if (moved) return;
+  const r = cv.getBoundingClientRect(), lx = (e.clientX - r.left) * VW / r.width, ly = (e.clientY - r.top) * VH / r.height, now = performance.now();
+  if (now - lastTap < 320) { setZoom(G.zoom === Z1 ? Z0 : Z1, lx, ly); lastTap = 0; return; } lastTap = now;
+  const x = Math.floor((G.cam.x + lx / G.zoom) / TS), y = Math.floor((G.cam.y + ly / G.zoom) / TS);
+  if (!inside(x, y)) return; G.sel = { x, y }; G.panel = null; setDrawer(true); focusTile(x, y); renderPanel(); });
+cv.addEventListener('pointercancel', () => { drag = null; });
+$('zin').onclick = () => setZoom(Z1);
+$('zout').onclick = () => setZoom(Z0);
+
+/* =================== barre du haut, volet, barre du bas =================== */
+const sign = v => v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '±0';
+function setDrawer(open) { G.drawer = open; $('drawer').classList.toggle('shut', !open); $('harrow').textContent = open ? '›' : '‹'; clampCam(); }
+$('handle').onclick = () => { setDrawer(!G.drawer); if (G.drawer && G.sel) focusTile(G.sel.x, G.sel.y); };
+function renderTop() {
+  const f = forecast(), top = $('top'); top.innerHTML = '';
+  const d = document.createElement('div'); d.className = 'date'; d.innerHTML = `<b>${SEASONS[G.season]}</b><small>semaine ${G.week} · an ${G.year}</small>`; top.append(d);
+  const vals = { food: [foodTotal(), f.food], bois: [G.res.bois, f.bois], pierre: [G.res.pierre, f.pierre], planches: [G.res.planches, f.planches], outils: [G.res.outils, 0], vetements: [G.res.vetements, 0] };
+  const names = { food: 'Nourriture', bois: 'Bois', pierre: 'Pierre', planches: 'Planches', outils: 'Outils', vetements: 'Vêtements' };
+  RES.forEach(k => { const [v, dv] = vals[k], el = document.createElement(k === 'food' ? 'button' : 'div'); el.className = 'res'; el.title = names[k];
+    if ((k === 'food' || k === 'bois') && dv < 0 && v / -dv <= 4) el.classList.add('hot');
+    el.append(ico(k)); el.insertAdjacentHTML('beforeend', `<b>${v}</b><i class="${dv > 0 ? 'up' : dv < 0 ? 'dn' : ''}">${sign(dv)}</i>`);
+    if (k === 'food') { el.setAttribute('aria-label', 'Détail de la nourriture'); el.onclick = () => { G.panel = 'food'; setDrawer(true); renderPanel(); }; }
+    top.append(el); });
+  const sp = document.createElement('div'); sp.className = 'spacer'; top.append(sp);
+  const pop = document.createElement('button'); pop.className = 'res'; pop.title = 'Colons'; pop.append(ico('colons')); pop.insertAdjacentHTML('beforeend', `<b>${C.length}</b><i>${housing()} lits</i>`); pop.onclick = () => openSheet('colons'); top.append(pop);
+  const h = happiness(), jo = document.createElement('button'); jo.className = 'res'; jo.title = 'Bonheur'; jo.append(ico('joie')); jo.insertAdjacentHTML('beforeend', `<b>${h}</b><i class="${h >= 60 ? 'up' : h < 45 ? 'dn' : ''}">bonheur</i>`); jo.onclick = () => { G.sel = null; G.panel = null; setDrawer(true); renderPanel(); }; top.append(jo);
+}
+function costTxt(cost) { return Object.entries(cost).map(([k, v]) => `<span class="${G.res[k] < v ? 'bad' : ''}">${v} ${k}</span>`).join(' · '); }
+function canPay(cost) { return Object.entries(cost).every(([k, v]) => G.res[k] >= v); }
+function postesBlock(b) {
+  const w = workers(b === 'ecl' ? 'ecl' : b.id), mx = maxOf(b);
+  const el = document.createElement('div'); el.className = 'pm';
+  el.innerHTML = `<button data-a="minus" ${w.length ? '' : 'disabled'} aria-label="Un colon de moins">−</button><span>${w.length} / ${mx}</span><button data-a="plus" ${w.length < mx && free().length ? '' : 'disabled'} aria-label="Un colon de plus">+</button>`;
+  el.querySelector('[data-a=minus]').onclick = () => { removeWorker(b); refresh(); };
+  el.querySelector('[data-a=plus]').onclick = () => { addWorker(b); refresh(); };
+  const who = document.createElement('div'); who.className = 'who';
+  w.forEach(c => { const s = document.createElement('span'); s.append(faceCanvas(c)); s.insertAdjacentHTML('beforeend', `${c.n}${c.tal && TALENT_FOR[keyOf(b)] === c.tal ? ' ★' : ''}`); who.append(s); });
+  return [el, who];
+}
+function renderPanel() {
+  const P = $('panel'); P.innerHTML = '';
+  const add = html => P.insertAdjacentHTML('beforeend', html);
+  const head = (title, icon) => { add(`<h3><span>${title}</span><button data-close aria-label="Fermer">✕</button></h3>`); P.querySelector('[data-close]').onclick = () => { G.sel = null; G.panel = null; setDrawer(false); renderPanel(); };
+    if (icon) { const hero = document.createElement('div'); hero.className = 'hero'; hero.append(icon); P.append(hero); return hero; } return null; };
+  const heroText = (hero, html) => hero ? hero.insertAdjacentHTML('beforeend', `<p>${html}</p>`) : add(`<p>${html}</p>`);
+  if (G.panel === 'food') {
+    const f = forecast(); head('Nourriture');
+    FOODS.forEach(([k, n]) => add(`<p>${n} : <b class="num">${G.res[k]}</b>${f.d[k] ? ` <span class="good">+${f.d[k]}</span>` : ''}</p>`));
+    const kinds = FOODS.filter(([k]) => G.res[k] > 0).length;
+    add(`<p>Les colons mangent <b>${f.eat}</b> par semaine.</p><p class="${kinds >= 3 ? 'good' : 'warn'}">${kinds} sortes : ${kinds >= 3 ? 'nourriture variée, moins de maladies.' : 'trop peu variée, la santé baisse.'}</p>`); return;
+  }
+  if (!G.sel) {
+    const ad = C.filter(c => c.age === 'adulte').length, h = happiness(); head('La colonie');
+    add(`<p><b>${C.length}</b> colons : ${ad} adultes, ${C.filter(c => c.age === 'enfant').length} enfants, ${C.filter(c => c.age === 'ancien').length} à la retraite.</p>`);
+    add(`<p>Logement : <b class="num">${C.length} / ${housing()}</b></p><p>Bonheur : <b class="num">${h}</b></p><div class="bar"><span style="width:${h}%"></span></div>`);
+    add(`<p>Sans poste : <b>${free().length}</b></p><p class="hint">Touche une case de la carte pour construire, ou un bâtiment pour régler ses postes.</p>`); return;
+  }
+  const { x, y } = G.sel, i = y * MW + x, t = isle.t[i], b = bAt(x, y);
+  if (!isle.seen[i]) {
+    head('Terre inconnue'); add(`<p>Personne n'est encore allé voir. L'éclaireur dévoile la carte peu à peu et trouve des lieux : source, grotte, ruines…</p>`);
+    const isT = G.target && G.target[0] === x && G.target[1] === y, bt = document.createElement('button'); bt.className = 'btn'; bt.style.height = '30px';
+    bt.textContent = isT ? 'L\'éclaireur y va' : 'Envoyer l\'éclaireur'; bt.disabled = isT; bt.onclick = () => { G.target = [x, y]; refresh(); }; P.append(bt);
+    if (isT) { add('<p class="lbl">Éclaireurs</p>'); P.append(...postesBlock('ecl')); } return;
+  }
+  if (b && !b.done) {
+    const gn = chGain(b), left = gn ? Math.ceil((b.max - b.p) / gn) : null, hero = head(`Chantier : ${BUILD[b.target].n}`, iconOf({ type: b.target, done: true }));
+    heroText(hero, BUILD[b.target].d);
+    add(`<div class="bar"><span style="width:${b.p / b.max * 100}%"></span><em style="left:${b.p / b.max * 100}%; width:${Math.min(b.max - b.p, gn) / b.max * 100}%"></em></div>`);
+    add(`<p><b class="num">${b.p} / ${b.max}</b> · <span class="good">+${gn}</span> cette semaine · ${left ? `fini dans <b>${left} sem.</b>` : '<span class="bad">personne ne construit</span>'}</p><p class="lbl">Bâtisseurs</p>`);
+    P.append(...postesBlock(b));
+    const cn = document.createElement('button'); cn.className = 'btn red'; cn.style.height = '28px'; cn.textContent = 'Annuler le chantier'; cn.onclick = () => { workers(b.id).forEach(c => c.post = null); for (const [k2, v] of Object.entries(BUILD[b.target].cost)) G.res[k2] += v; B.splice(B.indexOf(b), 1); refresh(); }; P.append(cn); return;
+  }
+  if (b) {
+    const D = BUILD[b.type], hero = head(D.n, iconOf(b)); heroText(hero, D.d);
+    if (b.type === 'champ') { const p = prodOf(b).cereales; add(`<p>État : <b class="${b.flooded ? 'bad' : ''}">${fieldState(b)}</b>${p ? ` · <span class="good">+${p} céréales</span>` : ''}</p>`);
+      if (isle.berge[i]) add(`<p class="warn">Berges : récolte ×1,5, mais la crue peut tout noyer au printemps.</p>`); if (b.flooded) add(`<p class="bad">La récolte est perdue : il faudra ressemer.</p>`); }
+    else if (PROD[b.type]) { const p = prodOf(b), parts = Object.entries(p).filter(([, v]) => v).map(([k2, v]) => `<span class="${v > 0 ? 'good' : 'bad'}">${sign(v)} ${k2}</span>`).join(', ');
+      add(`<p>Par semaine : ${parts || '<b>rien</b>'}${G.season === 3 && PROD[b.type][1][3] === 0 ? ' (l\'hiver, rien ne pousse)' : ''}</p>`); }
+    if (b.type === 'bucheron') add(`<p>Arbres autour : <b>${N8.filter(([dx, dy]) => inside(x + dx, y + dy) && [T.FOR, T.DFOR].includes(isle.t[(y + dy) * MW + x + dx])).length * 6}</b>. Ils repoussent si on ne coupe pas trop.</p>`);
+    if (b.type === 'habitation' || b.type === 'tente') add(`<p>Lits : <b>${b.type === 'tente' ? 8 : 4}</b>${G.season === 3 ? ` · chauffage <span class="bad">−${b.type === 'tente' ? 4 : 2} bois</span>` : ''}</p>`);
+    if (D.postes) { add('<p class="lbl">Postes</p>'); P.append(...postesBlock(b)); }
+    return;
+  }
+  head(TNAME[t]);
+  const facts = []; if (isle.berge[i]) facts.push('<span class="warn">berges : très fertile, inondable</span>');
+  if (t === T.FOR || t === T.DFOR) facts.push(`arbres : <b>${t === T.DFOR ? 30 : 18}</b>, gibier, baies`); if (t === T.MEAD) facts.push(`fertilité : <b>${isle.berge[i] ? 'très bonne' : 'bonne'}</b>`);
+  if (t === T.HILL || t === T.ROCK) facts.push(`pierre : <b>${t === T.ROCK ? 'beaucoup' : 'un peu'}</b>`); if (N4.some(([dx, dy]) => inside(x + dx, y + dy) && [T.SEA, T.RIV].includes(isle.t[(y + dy) * MW + x + dx]))) facts.push('poisson à côté');
+  if (facts.length) add(`<p>${facts.join(' · ')}</p>`);
+  const list = ORDER.filter(k2 => terrOk(BUILD[k2].terr, x, y));
+  if (!list.length) { add(`<p>${t === T.SEA || t === T.RIV ? 'On ne construit pas sur l\'eau.' : t === T.MOUNT ? 'Montagne : infranchissable.' : 'Rien à construire ici.'}</p>`); return; }
+  add('<p class="lbl">Construire</p>');
+  list.forEach(k2 => { const D = BUILD[k2], bt = document.createElement('button'); bt.className = 'build'; bt.disabled = !canPay(D.cost);
+    bt.append(iconOf({ type: k2, done: true })); bt.insertAdjacentHTML('beforeend', `<b>${D.n}</b><small>${costTxt(D.cost)}${D.postes ? ` · ${D.postes} pers.` : ''}</small>`);
+    bt.title = D.d; bt.onclick = () => { for (const [r2, v] of Object.entries(D.cost)) G.res[r2] -= v; const nb = { id: nextId++, type: 'chantier', x, y, done: false, target: k2, p: 0, max: Object.values(D.cost).reduce((a, v) => a + v, 0) * 2 }; B.push(nb); addWorker(nb); refresh(); };
+    P.append(bt); });
+}
+function renderBottom() {
+  const bt = $('bottom'), al = alerts(), first = al.find(a => a[0] === 'danger') || al.find(a => a[0] === 'warn') || al[0];
+  bt.innerHTML = '';
+  const a = document.createElement('button'); a.className = 'alert ' + (first ? (first[0] === 'info' ? 'calm' : first[0]) : 'calm');
+  a.innerHTML = first ? `<span>⚠ ${first[1]}</span>${al.length > 1 ? `<em>+${al.length - 1}</em>` : ''}` : '<span>Tout va bien</span>'; a.onclick = () => openSheet('alerts'); bt.append(a);
+  [['Postes', 'postes'], ['Colons', 'colons']].forEach(([l, s]) => { const b = document.createElement('button'); b.className = 'cmd'; b.textContent = l; b.onclick = () => openSheet(s); bt.append(b); });
+  const go = document.createElement('button'); go.className = 'cmd go'; go.textContent = 'Semaine ▶'; go.onclick = () => { if (!G.confirmed && alerts().some(a2 => a2[0] === 'danger')) openSheet('confirm'); else nextWeek(); }; bt.append(go);
+}
+function refresh() { renderTop(); renderPanel(); renderBottom(); if (!$('sheet').hidden) openSheet(G.sheet); }
+
+/* =================== fenêtres =================== */
+let colonSel = null;
+function openSheet(kind) {
+  G.sheet = kind; const sh = $('sheet'); sh.hidden = false; sh.innerHTML = '<div class="box"></div>'; const box = sh.firstChild;
+  const close = () => { sh.hidden = true; G.sheet = null; colonSel = null; };
+  const head = title => { box.insertAdjacentHTML('beforeend', `<h2><span>${title}</span><button>Fermer</button></h2>`); box.querySelector('h2 button').onclick = close; };
+  if (kind === 'postes') {
+    head(`Postes · ${free().length} colon${free().length > 1 ? 's' : ''} sans poste`);
+    const grid = document.createElement('div'); grid.className = 'posts'; box.append(grid);
+    [...B.filter(b => maxOf(b) > 0), 'ecl'].forEach(b => { const el = document.createElement('div'); el.className = 'post'; el.append(iconOf(b));
+      let y = ''; if (b === 'ecl') y = workers('ecl').length ? 'dévoile la carte' : 'à l\'arrêt'; else if (!b.done) y = `+${chGain(b)} au chantier`;
+      else if (b.type === 'champ') y = prodOf(b).cereales ? `+${prodOf(b).cereales} céréales` : fieldState(b); else { const p = prodOf(b); y = Object.entries(p).filter(([, v]) => v > 0).map(([k2, v]) => `+${v} ${k2}`).join(' ') || '—'; }
+      el.insertAdjacentHTML('beforeend', `<b>${nameOf(b)}</b><small>${y}</small>`); const [pm] = postesBlock(b); el.append(pm); grid.append(el); });
+    return;
+  }
+  if (kind === 'colons') {
+    head(`Colons · ${C.length}`);
+    const grid = document.createElement('div'); grid.className = 'colons'; box.append(grid);
+    const postName = c => c.age === 'enfant' ? 'joue au village' : c.age === 'ancien' ? 'à la retraite' : c.post === null ? 'sans poste' : nameOf(c.post === 'ecl' ? 'ecl' : B.find(b => b.id === c.post)).toLowerCase();
+    C.forEach(c => { const el = document.createElement('button'); el.className = 'colon' + (colonSel === c ? ' on' : ''); el.append(faceCanvas(c));
+      el.insertAdjacentHTML('beforeend', `<b>${c.n}</b><small>${c.tal ? TAL[c.tal] : 'sans talent'} · ${CAR[c.car]}</small><small class="job">${postName(c)}</small>`);
+      el.disabled = c.age !== 'adulte'; el.onclick = () => { colonSel = c; openSheet('colons'); }; grid.append(el); });
+    if (colonSel) { box.insertAdjacentHTML('beforeend', `<h2><span>Envoyer ${colonSel.n} :</span></h2>`); const ch = document.createElement('div'); ch.className = 'chips'; box.append(ch);
+      [...B.filter(b => maxOf(b) > 0), 'ecl', null].forEach(b => { const bt = document.createElement('button'), id = b === null ? null : b === 'ecl' ? 'ecl' : b.id;
+        bt.textContent = b === null ? 'Sans poste' : nameOf(b); bt.disabled = colonSel.post === id;
+        bt.onclick = () => { if (b !== null && workers(id).length >= maxOf(b)) { const w = workers(id).sort((p, q) => eff(p, keyOf(b)) - eff(q, keyOf(b)))[0]; w.post = colonSel.post; } colonSel.post = id; colonSel = null; refresh(); };
+        ch.append(bt); }); }
+    return;
+  }
+  if (kind === 'alerts' || kind === 'confirm') {
+    const al = alerts(); head(kind === 'confirm' ? 'Avant de finir la semaine' : 'Alertes');
+    const l = document.createElement('div'); l.className = 'alerts'; box.append(l);
+    if (!al.length) l.innerHTML = '<p class="info"><b>Rien à signaler.</b></p>';
+    al.forEach(([lv, t, d]) => l.insertAdjacentHTML('beforeend', `<p class="${lv}"><b>${t}</b>${d}</p>`));
+    if (kind === 'confirm') { const go = document.createElement('button'); go.className = 'wide'; go.textContent = 'Semaine suivante quand même'; go.onclick = () => { G.confirmed = true; close(); nextWeek(); }; box.append(go); }
+    return;
+  }
+  if (kind === 'report') {
+    head(`${SEASONS[G.season]} · semaine ${G.week} · an ${G.year}`);
+    const cards = document.createElement('div'); cards.className = 'cards'; box.append(cards);
+    G.report.forEach(([cls, ic, t, d], n) => { const el = document.createElement('div'); el.className = 'card ' + cls; el.style.animationDelay = `${n * .12}s`; el.append(ic); el.insertAdjacentHTML('beforeend', `<b>${t}</b><p>${d}</p>`); cards.append(el); });
+    const ok = document.createElement('button'); ok.className = 'wide'; ok.textContent = 'Continuer'; ok.onclick = close; box.append(ok);
+  }
+}
+
+/* =================== la semaine passe =================== */
+function bigIcon(name) { const k = document.createElement('canvas'); k.width = 24; k.height = 24; const g2 = k.getContext('2d'); g2.imageSmoothingEnabled = false; g2.drawImage(ICOC[name], 0, 0, 24, 24); return k; }
+function nextWeek() {
+  const f = forecast(), rep = [], now = performance.now();
+  B.forEach(b => { const p = prodOf(b); for (const k in p) G.res[k] = Math.max(0, G.res[k] + p[k]);
+    const plus = Object.entries(p).filter(([, v]) => v > 0); if (plus.length) G.floats.push({ x: b.x, y: b.y, s: `+${plus.reduce((a, [, v]) => a + v, 0)}`, c: '#6cf09a', ic: RESICON[plus[0][0]], t: now }); });
+  rep.push(['good', bigIcon('food'), 'Récoltes', `${f.foodIn} de nourriture, ${f.d.bois || 0} bois, ${f.d.pierre || 0} pierre.`]);
+  B.filter(b => !b.done).forEach(b => { const gn = chGain(b); b.p = Math.min(b.max, b.p + gn);
+    if (b.p >= b.max) { b.done = true; b.type = b.target; workers(b.id).forEach(c => c.post = null); rep.push(['good', iconOf(b), `${BUILD[b.type].n} terminé`, `${BUILD[b.type].d} Les bâtisseurs sont libres.`]); }
+    else if (gn) G.floats.push({ x: b.x, y: b.y, s: `+${gn}`, c: '#ffd23f', t: now }); });
+  const ew = workers('ecl').reduce((a, c) => a + eff(c, 'ecl'), 0);
+  if (ew && G.target) { const n = Math.round(ew * 3), [tx, ty] = G.target, cand = [];
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (!isle.seen[y * MW + x]) cand.push([Math.hypot(x - tx, y - ty), y * MW + x]);
+    cand.sort((a, b) => a[0] - b[0]).slice(0, n).forEach(([, i]) => { isle.seen[i] = 1; }); buildFog();
+    rep.push(['', iconOf('ecl'), 'L\'éclaireur', G.ruins ? `${n} cases dévoilées.` : `Inès a dévoilé ${n} cases et trouvé des ruines : le plan d'une scierie.`]); G.ruins = true;
+    if (isle.seen[ty * MW + tx]) pickTarget(); }
+  let eat = f.eat; while (eat > 0 && foodTotal() > 0) { const k = FOODS.map(([q]) => q).sort((p, q) => G.res[q] - G.res[p])[0]; const take = Math.min(G.res[k], Math.ceil(eat / 3)); G.res[k] -= take; eat -= take; }
+  if (heatNeed()) { G.res.bois = Math.max(0, G.res.bois - heatNeed()); rep.push(['', bigIcon('bois'), 'Chauffage', `Les maisons ont brûlé ${heatNeed()} bois. Il en reste ${G.res.bois}.`]); }
+  if (G.flood) G.flood = 0;
+  if (G.season === 0 && G.floodPending) { G.floodPending = false; flood(rep); }
+  G.week++; if (G.week > 4) { G.week = 1; G.season = (G.season + 1) % 4; if (G.season === 0) G.year++;
+    B.forEach(b => { if (b.type === 'champ' && G.season === 0) b.flooded = false; });
+    rep.push(['', bigIcon('joie'), `${['Le printemps', 'L\'été', 'L\'automne', 'L\'hiver'][G.season]} arrive`, ['On sème les champs. La rivière va bientôt monter.', 'Les récoltes poussent. Gare à la sécheresse et aux incendies.', 'On récolte, et on prépare le bois de l\'hiver.', 'Rien ne pousse. Il faut chauffer les maisons.'][G.season]]);
+    if (G.season === 0) G.floodPending = true; buildTerrain(); buildFog(); }
+  G.report = rep.slice(0, 6); G.confirmed = false; refresh();
+  setTimeout(() => openSheet('report'), 1100);
+}
+function flood(rep) {
+  G.flood = 1; G.floodT = performance.now(); let lost = 0;
+  B.forEach(b => { if (b.done && b.type === 'champ' && isle.berge[b.y * MW + b.x] && !protectedTile(b.x, b.y)) { b.flooded = true; lost++; } });
+  if (rep) rep.push(['bad', bigIcon('eau'), 'Crue !', `La rivière déborde sur les berges. ${lost ? 'Le champ des berges est noyé : la récolte est perdue.' : 'Aucun champ touché.'} Une digue protège les cases voisines.`]);
+}
+
+/* =================== simulations et mise à l'échelle =================== */
+$('sim').addEventListener('click', e => { const s = e.target.closest('button'); if (!s) return; const v = s.dataset.s;
+  if (v === 'rot') { $('rotate').hidden = false; return; }
+  if (v === 'ile') { newGame((Math.random() * 1e9) | 0); setDrawer(true); setZoom(G.zoom); refresh(); return; }
+  if (v === 'crue') { G.season = 0; G.week = 3; G.floodPending = false; buildTerrain(); flood(null); const b = B.find(q => q.flooded); if (b) { G.sel = { x: b.x, y: b.y }; setZoom(Z1); setDrawer(true); centerOn(b.x + .5, b.y + .5); } G.panel = null; refresh(); return; }
+  G.season = +v; G.week = v === '2' ? 3 : 1; G.flood = 0; G.floodPending = G.season === 0; B.forEach(b => { b.flooded = false; }); buildTerrain(); buildFog(); refresh(); });
+$('anyway').onclick = () => { $('rotate').hidden = true; G.rotDismissed = true; };
+function fit() {
+  const W = document.documentElement.clientWidth - 32, H = window.innerHeight - 16, s = Math.max(.4, Math.min(W / 640, H / 360, 2.4));
+  $('fit').style.width = `${640 * s}px`; $('fit').style.height = `${360 * s}px`; $('screen').style.transform = `scale(${s})`;
+  S = s * Math.min(3, window.devicePixelRatio || 1); cv.width = Math.round(VW * S); cv.height = Math.round(VH * S);
+  if (!G.rotDismissed) $('rotate').hidden = !(window.innerHeight > window.innerWidth && window.innerWidth < 700);
+}
+window.addEventListener('resize', fit);
+newGame(20261016);
+const start = () => { fit(); setDrawer(true); setZoom(G.zoom); refresh(); requestAnimationFrame(draw); };
+Promise.all(['700 12px Signika', '400 12px Signika', '800 12px "Alegreya Sans SC"'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : 0)).then(start);
+</script>
+</body>
+</html>

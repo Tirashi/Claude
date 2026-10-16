@@ -4,7 +4,7 @@
 - Dépôt GitHub : **Tirashi/Claude**. Site publié : **https://tirashi.github.io/Claude/** (installé en appli PWA sur Android).
 - Jeux en HTML **sans build** (le fichier poussé est celui que joue le téléphone), un dossier par jeu ; `index.html` = l'accueil (menu aux cartouches, volet de chaque jeu avec ses records et son classement). Un gros jeu peut se répartir en **scripts classiques** (`<script src>`, pas de modules ES ni de npm).
 - Service worker `sw.js` : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v29` au moment d'écrire ces lignes).
-- Fichiers partagés : `ludo-scores.js` (classements Supabase), `icones.js` (icônes 16×16), `injagility/chiens32.js` (chiens 32 bits), `nebula/vaisseaux.js`, `nebula/regles.js`, `nebula/sons.js`, polices dans `polices/`.
+- Fichiers partagés : `ludo-scores.js` (classements Supabase), `icones.js` (icônes 16×16), `injagility/chiens32.js` (chiens 32 bits), `nebula/vaisseaux.js`, `nebula/regles.js`, `nebula/sons.js`, `ile/regles.js` (règles de la colonie), polices dans `polices/`.
 - **Mémo technique : [`specs/ludotheque.md`](specs/ludotheque.md)** — architecture détaillée (accueil, classements, code de compte, transfert `LUDO1-`), **liste de contrôle pour ajouter un jeu**, leçons propres à chaque jeu, détails de chaque jeu. **Le lire avant** d'ajouter un jeu, de toucher à l'accueil, aux classements ou à un fichier partagé, ou de reprendre un jeu.
 
 ## Règles de travail
@@ -52,7 +52,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 | Pont stellaire | https://claude.ai/artifact/Twgkpb1scdCh2Th6Nh35bF |
 | Alunissage | https://claude.ai/artifact/2TgrmzSKuzoyPHYufyHrWh |
 | Nebula | https://claude.ai/artifact/EPDtjTHPDsCnYKjtHCuxwY |
-| La colonie (`ile/`, à venir ; contient encore l'ancienne Île des naufragés, à republier au même lien) | https://claude.ai/artifact/9AnNRRCCBu4pgYh35UwrPb |
+| La colonie (`ile/`) | https://claude.ai/artifact/9AnNRRCCBu4pgYh35UwrPb |
 
 Queens, Sudoku, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie **n'ont pas d'artefact** : on les joue sur le site. Ne pas en créer sans demande.
 
@@ -61,7 +61,7 @@ Queens (`queens/`), Picross Dex (`picross/`), Lignée (`lignee/`), Injagility (`
 
 ## En cours / à vérifier
 - **Nebula** : sessions 1 à 4 faites ; équilibrage jugé correct, à revoir après plus de parties. État détaillé dans le mémo, suivi dans [`specs/nebula.md`](specs/nebula.md) § 17 à 22. Prochain chantier possible : « Nebula : l'Empire des étoiles », dans une nouvelle conversation.
-- **La colonie** (remplace l'Île des naufragés, décision du 16/10) : cahier des charges [`specs/colonie.md`](specs/colonie.md) ; prochaine étape : maquette de l'écran en paysage, dans une nouvelle conversation.
+- **La colonie** (remplace l'Île des naufragés, décision du 16/10) : cahier des charges [`specs/colonie.md`](specs/colonie.md) ; maquette de l'écran en paysage faite le 16/10 (https://claude.ai/artifact/3CAZn4Hd3qFu2TMAB3i8LX, `maquettes/colonie-paysage.html`), **validée**. **Étape 2 (le moteur) faite et validée par l'utilisateur le 16/10** : `ile/regles.js` + `ile/index.html`, artefact republié au lien de la colonie, pilote `outils/ile-colonie.js` (réglages et décisions : `specs/colonie.md` § 12). Prochaine étape : la nature (crue, incendie, hiver rude, épidémie…), l'île du jour et l'intégration (accueil, classements, transfert), dans une nouvelle conversation. Pas encore sur l'accueil.
 - Orbite : niveaux 12, 23, 25, 28 et 30 les plus serrés ; à ajuster s'ils sont trop durs.
 - Lune-Rover (16/10) : 30 niveaux, graphismes refaits dans le style « dessin animé » validé (maquette `maquettes/lune-rover-c.html` : Pico le rover, carte des niveaux en chemin, polices Luckiest Guy et Fredoka dans `polices/`). À essayer aussi sur le téléphone : taille des cases du programme, difficulté des niveaux 22 à 30.
 - Classements testés seulement avec le faux serveur, à confirmer avec un vrai record : Lune-Rover, Orbite, Pont stellaire, Sudoku, grille du jour de Queens, Nebula (`daily`, `victoires`).
