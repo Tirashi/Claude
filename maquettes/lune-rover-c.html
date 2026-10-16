@@ -1,0 +1,387 @@
+<meta charset="utf-8">
+<title>Lune-Rover : style dessin animé</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Planche de style : les quatre écrans du jeu côte à côte, puis le personnage et les éléments du décor. Un seul thème (nuit violette du jeu). */
+:root {
+  --night: #1c1240; --night-2: #2a1a5e; --ink: #1a1030; --cream: #fff6e0; --lilac: #c8b4f4; --pink: #ff5a7a;
+  --gold: #ffd23f; --teal: #5ab8b0; --text: #fff6e0; --dim: #c8b8f0;
+  --f-display: "Luckiest Guy", "Arial Black", sans-serif; --f-body: "Fredoka", "Trebuchet MS", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--night); color: var(--text); font-family: var(--f-body); font-weight: 500; font-size: 17px; line-height: 1.4;
+  background-image: radial-gradient(var(--night-2) 1.2px, transparent 1.6px); background-size: 18px 18px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 26px; }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(30px, 7vw, 54px); line-height: 1; letter-spacing: 1px; color: var(--gold);
+  -webkit-text-stroke: 2px var(--ink); text-shadow: 4px 4px 0 var(--pink), 7px 7px 0 var(--ink); text-wrap: balance; }
+.lead { margin: 0; max-width: 64ch; color: var(--dim); }
+h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 24px; letter-spacing: 1px; color: var(--cream); text-shadow: 3px 3px 0 var(--ink); }
+.screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 22px; align-items: start; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+figcaption { display: flex; flex-direction: column; gap: 2px; }
+figcaption b { font-family: var(--f-display); font-weight: 400; font-size: 18px; letter-spacing: 1px; color: var(--gold); }
+figcaption span { color: var(--dim); font-size: 15px; }
+canvas.scr { display: block; width: 100%; max-width: 320px; aspect-ratio: 272 / 480; border: 4px solid var(--ink); border-radius: 18px; box-shadow: 6px 6px 0 var(--ink); background: var(--night-2); }
+.sheet { background: var(--cream); color: var(--ink); border: 4px solid var(--ink); border-radius: 22px; box-shadow: 7px 7px 0 var(--ink); padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.sheet h2 { color: var(--ink); text-shadow: 3px 3px 0 var(--gold); }
+.sheet p { margin: 0; max-width: 70ch; }
+canvas.wide { display: block; width: 100%; max-width: 900px; aspect-ratio: 900 / 230; }
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.sw { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border: 3px solid var(--ink); border-radius: 999px; background: #fff; font-weight: 600; font-size: 14px; }
+.sw i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink); }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.note { background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.note b { font-family: var(--f-display); font-weight: 400; font-size: 17px; letter-spacing: .5px; }
+.ask { margin: 0; font-size: 18px; color: var(--cream); max-width: 70ch; }
+.ask b { color: var(--gold); font-weight: 700; }
+</style>
+<div class="wrap">
+  <h1>LUNE-ROVER</h1>
+  <p class="lead">Direction C, creusée : un dessin animé du samedi matin sur la Lune. Le rover devient un personnage, <b>Pico</b>, qui réagit à ce que tu programmes : il sautille, il se concentre, il a le vertige au bord d'un cratère et voit trente-six étoiles quand il heurte un rocher.</p>
+
+  <div class="screens">
+    <figure><canvas class="scr" id="sTitle" width="272" height="480"></canvas>
+      <figcaption><b>TITRE</b><span>Pico sur sa petite lune, la Terre qui sourit au loin.</span></figcaption></figure>
+    <figure><canvas class="scr" id="sMap" width="272" height="480"></canvas>
+      <figcaption><b>CARTE DES NIVEAUX</b><span>Un chemin de pierres en 5 zones, une par nouveauté (saut, répétition, F1, conditions).</span></figcaption></figure>
+    <figure><canvas class="scr" id="sPlay" width="272" height="480"></canvas>
+      <figcaption><b>EN JEU</b><span>Animé : on règle x2, on appuie sur GO, Pico saute le cratère et ramasse les cristaux.</span></figcaption></figure>
+    <figure><canvas class="scr" id="sWin" width="272" height="480"></canvas>
+      <figcaption><b>VICTOIRE</b><span>Les étoiles tombent une à une, Pico fait la fête.</span></figcaption></figure>
+  </div>
+
+  <section class="sheet">
+    <h2>PICO ET SON DECOR</h2>
+    <canvas class="wide" id="sheet" width="900" height="230"></canvas>
+    <div class="swatches">
+      <span class="sw"><i style="background:#1a1030"></i>Contour encre</span>
+      <span class="sw"><i style="background:#2a1a5e"></i>Ciel de nuit</span>
+      <span class="sw"><i style="background:#c8b4f4"></i>Sol lilas</span>
+      <span class="sw"><i style="background:#5ab8b0"></i>Rochers</span>
+      <span class="sw"><i style="background:#ff7ac8"></i>Cristal rose</span>
+      <span class="sw"><i style="background:#ffd23f"></i>Cristal d'or</span>
+      <span class="sw"><i style="background:#ff5a7a"></i>GO et Pico</span>
+      <span class="sw"><i style="background:#fff6e0"></i>Crème des panneaux</span>
+    </div>
+    <div class="notes">
+      <div class="note"><b>Les instructions</b><span>Une couleur par famille : vert pour avancer, bleu pour tourner, orange pour sauter, turquoise pour ramasser, violet pour F1. Les blocs ont un contour épais et une ombre, comme des pièces qu'on pose.</span></div>
+      <div class="note"><b>Les réactions de Pico</b><span>Concentré pendant le programme, ravi quand il ramasse, étourdi après un choc, terrifié en tombant, la fête en fin de niveau. Les échecs deviennent drôles plutôt que punitifs.</span></div>
+      <div class="note"><b>Les polices</b><span>Luckiest Guy pour les titres et les boutons, Fredoka pour les phrases (elle garde les accents : É, À…). Elles seront copiées dans <code>polices/</code> pour marcher hors connexion.</span></div>
+      <div class="note"><b>Les sons (proposés)</b><span>Petits « bip-bop » de Pico à chaque instruction, « boing » pour le saut, « ding » pour un cristal, « bonk » pour un choc, et un « tadaa » à la victoire.</span></div>
+    </div>
+  </section>
+
+  <p class="ask">Dis-moi ce qui te plaît ou ce qu'il faut changer (le nom <b>Pico</b>, les couleurs, la carte en chemin, les expressions…). Quand c'est validé, je refais tout le jeu dans ce style.</p>
+</div>
+<script>
+'use strict';
+const LW = 272, LH = 480, TAU = Math.PI * 2, INK = '#1a1030';
+const LG = '"Luckiest Guy", "Arial Black", sans-serif', FR = 'Fredoka, "Trebuchet MS", sans-serif';
+const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+function rnd(s) { return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+const out = (g, w = 2.5) => { g.strokeStyle = INK; g.lineWidth = w; g.lineJoin = 'round'; g.lineCap = 'round'; g.stroke(); };
+function txt(g, s, x, y, size, fill, align = 'left', stroke = 0, font = LG) {
+  g.font = `${size}px ${font}`; g.textAlign = align; g.textBaseline = 'middle';
+  if (stroke) { g.lineWidth = stroke; g.strokeStyle = INK; g.lineJoin = 'round'; g.strokeText(s, x, y); }
+  g.fillStyle = fill; g.fillText(s, x, y);
+}
+// fond étoilé commun
+const SKY = (() => { const c = document.createElement('canvas'); c.width = LW; c.height = LH; const g = c.getContext('2d'), r = rnd(7);
+  const s = g.createLinearGradient(0, 0, 0, LH); s.addColorStop(0, '#30206a'); s.addColorStop(1, '#170f3a'); g.fillStyle = s; g.fillRect(0, 0, LW, LH);
+  for (let i = 0; i < 34; i++) { const x = r() * LW, y = r() * LH, k = 1 + r() * 2; g.fillStyle = r() > .7 ? '#ffe9a0' : '#cfc0ff'; g.fillRect(x - k, y, k * 2 + 1, 1.2); g.fillRect(x, y - k, 1.2, k * 2 + 1); }
+  for (let i = 0; i < 60; i++) { g.fillStyle = 'rgba(220,210,255,.5)'; g.fillRect(r() * LW, r() * LH, 1, 1); }
+  return c; })();
+function earth(g, x, y, r, smile) {
+  g.fillStyle = '#3a8aff'; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
+  g.save(); g.beginPath(); g.arc(x, y, r, 0, TAU); g.clip();
+  g.fillStyle = '#5ad87a'; g.beginPath(); g.ellipse(x - r * .35, y - r * .3, r * .45, r * .3, .4, 0, TAU); g.ellipse(x + r * .45, y + r * .35, r * .35, r * .25, -.3, 0, TAU); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.ellipse(x - r * .4, y - r * .55, r * .35, r * .15, -.5, 0, TAU); g.fill();
+  g.restore(); g.beginPath(); g.arc(x, y, r, 0, TAU); out(g, 2.5);
+  if (smile) { g.fillStyle = INK; g.beginPath(); g.arc(x - r * .3, y - r * .05, r * .09, 0, TAU); g.arc(x + r * .3, y - r * .05, r * .09, 0, TAU); g.fill();
+    g.beginPath(); g.arc(x, y + r * .1, r * .3, .3, Math.PI - .3); out(g, 2); g.fillStyle = '#ff9ab8'; g.beginPath(); g.arc(x - r * .5, y + r * .2, r * .1, 0, TAU); g.arc(x + r * .5, y + r * .2, r * .1, 0, TAU); g.fill(); }
+}
+function star5(g, x, y, r, fill, w = 2.5) {
+  g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, k = i % 2 ? r * .45 : r; g.lineTo(x + Math.cos(a) * k, y + Math.sin(a) * k); } g.closePath();
+  g.fillStyle = fill; g.fill(); out(g, w);
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(x - r * .25, y - r * .25, r * .18, r * .1, -.6, 0, TAU); g.fill();
+}
+function gem(g, x, y, s, gold) {
+  const pts = [[0, -1.1], [.75, -.2], [0, 1], [-.75, -.2]];
+  g.beginPath(); pts.forEach(p => g.lineTo(x + p[0] * s, y + p[1] * s)); g.closePath(); g.fillStyle = gold ? '#ffd23f' : '#ff7ac8'; g.fill(); out(g, 2);
+  g.fillStyle = gold ? '#fff2a0' : '#ffd0ec'; g.beginPath(); g.moveTo(x - .75 * s, y - .2 * s); g.lineTo(x, y - 1.1 * s); g.lineTo(x, y - .2 * s); g.closePath(); g.fill();
+  g.fillStyle = gold ? '#e0a020' : '#e04aa0'; g.beginPath(); g.moveTo(x + .75 * s, y - .2 * s); g.lineTo(x, y + 1 * s); g.lineTo(x, y - .2 * s); g.closePath(); g.fill();
+  g.beginPath(); pts.forEach(p => g.lineTo(x + p[0] * s, y + p[1] * s)); g.closePath(); out(g, 2);
+}
+function sparkle(g, x, y, k, col = '#fff') { g.fillStyle = col; g.beginPath(); g.moveTo(x, y - k); g.quadraticCurveTo(x, y, x + k, y); g.quadraticCurveTo(x, y, x, y + k); g.quadraticCurveTo(x, y, x - k, y); g.quadraticCurveTo(x, y, x, y - k); g.fill(); }
+// Pico : dôme de verre, deux grands yeux, corps blanc à bande rose, roues ; mood = normal, concentre, joie, etourdi, peur
+function pico(g, x, y, s, look, mood, t = 0) {
+  g.save(); g.translate(x, y); g.scale(s, s);
+  const [lx, ly] = look || [0, 0];
+  g.fillStyle = 'rgba(26,16,48,.3)'; g.beginPath(); g.ellipse(0, 15, 15, 4, 0, 0, TAU); g.fill();
+  for (const wx of [-11, 11]) { g.fillStyle = '#3a2a5a'; g.beginPath(); g.arc(wx, 9, 5.5, 0, TAU); g.fill(); out(g, 2); g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(wx, 9, 2, 0, TAU); g.fill(); }
+  g.fillStyle = '#ffffff'; rr(g, -13, -4, 26, 13, 6); g.fill(); out(g, 2);
+  g.fillStyle = '#ff5a7a'; g.fillRect(-12, 3, 24, 3); g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(-7, 0, 1.6, 0, TAU); g.fill();
+  g.fillStyle = '#8ad8ff'; g.beginPath(); g.ellipse(0, -6, 11, 10, 0, Math.PI, 0); g.closePath(); g.fill(); out(g, 2);
+  g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.ellipse(-5, -12, 3, 1.6, -.6, 0, TAU); g.fill();
+  // yeux
+  for (const ex of [-4.5, 4.5]) {
+    if (mood === 'joie') { g.beginPath(); g.arc(ex, -7, 3, Math.PI * 1.1, Math.PI * 1.9); out(g, 2); continue; }
+    if (mood === 'etourdi') { g.beginPath(); for (let a = 0; a < 9; a += .5) g.lineTo(ex + Math.cos(a + t * 6) * a * .38, -8 + Math.sin(a + t * 6) * a * .38); out(g, 1.3); continue; }
+    const r = mood === 'peur' ? 4.2 : 3.6;
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(ex, -8, r, 0, TAU); g.fill(); g.lineWidth = 1.4; g.strokeStyle = INK; g.stroke();
+    g.fillStyle = INK; g.beginPath(); g.arc(ex + lx * 1.4, -8 + ly * 1.2, mood === 'peur' ? 1 : 1.8, 0, TAU); g.fill();
+    if (mood !== 'peur') { g.fillStyle = '#fff'; g.beginPath(); g.arc(ex + lx * 1.4 - .6, -8.8 + ly * 1.2, .6, 0, TAU); g.fill(); }
+    if (mood === 'concentre') { g.fillStyle = '#8ad8ff'; g.fillRect(ex - 4.5, -12.6, 9, 3); g.beginPath(); g.moveTo(ex - 4, -9.4); g.lineTo(ex + 4, -9.4); out(g, 1.4); }
+  }
+  if (mood === 'joie') { g.fillStyle = '#ff9ab8'; g.beginPath(); g.arc(-8, -3.5, 1.8, 0, TAU); g.arc(8, -3.5, 1.8, 0, TAU); g.fill(); }
+  if (mood === 'peur') { g.fillStyle = '#8ae0ff'; g.beginPath(); g.moveTo(10, -14); g.quadraticCurveTo(13, -9, 10, -8); g.quadraticCurveTo(7, -9, 10, -14); g.fill(); out(g, 1); }
+  // antenne
+  const wob = Math.sin(t * 8) * (mood === 'joie' ? 2.5 : .8);
+  g.beginPath(); g.moveTo(2, -15.5); g.quadraticCurveTo(3 + wob * .5, -20, 3 + wob, -23); out(g, 1.6);
+  g.fillStyle = mood === 'etourdi' ? '#ffd23f' : '#ff5a7a'; g.beginPath(); g.arc(3 + wob, -24, 2.6, 0, TAU); g.fill(); out(g, 1.3);
+  if (mood === 'etourdi') for (let i = 0; i < 3; i++) { const a = t * 4 + i * TAU / 3; star5(g, Math.cos(a) * 12, -26 + Math.sin(a) * 3, 3, '#ffd23f', 1); }
+  g.restore();
+}
+// icône d'instruction (encre), centrée
+function icon(g, op, cx, cy, s, col = INK, lw = 2.6) {
+  g.save(); g.translate(cx, cy); g.strokeStyle = col; g.fillStyle = col; g.lineWidth = lw; g.lineCap = 'round'; g.lineJoin = 'round';
+  const tri = (x, y, a) => { g.beginPath(); g.moveTo(x + Math.cos(a) * s * .32, y + Math.sin(a) * s * .32); g.lineTo(x + Math.cos(a + 2.4) * s * .26, y + Math.sin(a + 2.4) * s * .26); g.lineTo(x + Math.cos(a - 2.4) * s * .26, y + Math.sin(a - 2.4) * s * .26); g.closePath(); g.fill(); };
+  if (op === 'A') { g.beginPath(); g.moveTo(0, s * .38); g.lineTo(0, -s * .1); g.stroke(); tri(0, -s * .18, -Math.PI / 2); }
+  else if (op === 'G' || op === 'D') { const m = op === 'G' ? -1 : 1; g.beginPath(); g.moveTo(-m * s * .2, s * .38); g.lineTo(-m * s * .2, 0); g.quadraticCurveTo(-m * s * .2, -s * .24, m * s * .08, -s * .24); g.stroke(); tri(m * s * .18, -s * .24, m > 0 ? 0 : Math.PI); }
+  else if (op === 'S') { g.beginPath(); g.moveTo(-s * .38, s * .3); g.quadraticCurveTo(0, -s * .55, s * .28, s * .12); g.stroke(); tri(s * .3, s * .18, 1.1); g.fillRect(-s * .45, s * .36, s * .9, lw); }
+  else if (op === 'R') { g.beginPath(); g.moveTo(0, -s * .38); g.lineTo(s * .3, -s * .05); g.lineTo(0, s * .38); g.lineTo(-s * .3, -s * .05); g.closePath(); g.fill(); }
+  g.restore();
+}
+const OPC = { A: '#5ad87a', G: '#6a9aff', D: '#6a9aff', S: '#ff9a4a', R: '#4ae0e8', F: '#a87aff' };
+function blob(g, x, y, op, n, hl, w = 30, h = 30, cond) {
+  g.fillStyle = INK; rr(g, x + 2, y + 3, w, h, 10); g.fill();
+  g.fillStyle = OPC[op]; rr(g, x, y, w, h, 10); g.fill(); out(g, 2.2);
+  g.fillStyle = 'rgba(255,255,255,.4)'; rr(g, x + 4, y + 3, w - 8, 6, 3); g.fill();
+  if (op === 'F') txt(g, 'F1', x + w / 2, y + h / 2 + 2, 14, '#fff', 'center', 3); else icon(g, op, x + w / 2, y + h / 2 + 1, h * .62);
+  if (n) { g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(x + w - 3, y + h - 3, 8, 0, TAU); g.fill(); out(g, 1.8); txt(g, n, x + w - 3, y + h - 2, 11, INK, 'center'); }
+  if (cond) { g.fillStyle = '#ff7ac8'; g.beginPath(); g.arc(x + 3, y + 3, 7, 0, TAU); g.fill(); out(g, 1.8); txt(g, '?', x + 3, y + 4, 10, '#fff', 'center'); }
+  if (hl) { g.strokeStyle = hl === 'run' ? '#ff5a7a' : '#ffffff'; g.lineWidth = 3.5; rr(g, x - 4, y - 4, w + 8, h + 9, 13); g.stroke(); g.strokeStyle = INK; g.lineWidth = 1.2; rr(g, x - 5.5, y - 5.5, w + 11, h + 12, 14); g.stroke(); }
+}
+function pill(g, x, y, w, h, s, col, size = 16, press = 0) {
+  g.fillStyle = INK; rr(g, x + 2, y + 3, w, h, h / 2); g.fill();
+  g.fillStyle = col; rr(g, x + press, y + press * 1.5, w, h, h / 2); g.fill(); out(g, 2.5);
+  g.fillStyle = 'rgba(255,255,255,.35)'; rr(g, x + 8 + press, y + 3 + press * 1.5, w - 16, 5, 2.5); g.fill();
+  const light = col === '#ff5a7a' || col === '#a87aff';
+  txt(g, s, x + w / 2 + press, y + h / 2 + 2 + press * 1.5, size, light ? '#fff' : INK, 'center', light ? 3 : 0);
+}
+function logo(g, x, y, size) {
+  for (const [s, dy] of [['LUNE', 0], ['ROVER', size * .95]]) {
+    g.font = `${size}px ${LG}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+    g.fillStyle = INK; g.fillText(s, x + 5, y + dy + 6); g.lineWidth = 9; g.strokeStyle = INK; g.strokeText(s, x, y + dy);
+    g.fillStyle = '#ff5a7a'; g.fillText(s, x + 2, y + dy + 3);
+    const gr = g.createLinearGradient(0, y + dy - size / 2, 0, y + dy + size / 2); gr.addColorStop(0, '#fff6c0'); gr.addColorStop(.55, '#ffd23f'); gr.addColorStop(1, '#ff9a4a');
+    g.fillStyle = gr; g.fillText(s, x, y + dy);
+  }
+}
+
+/* ---------- le plateau en 3/4 ---------- */
+// démo : départ (0,2) vers l'est ; A, S (par-dessus le cratère), R, G, A x2, R
+const MAP = ['#..*.#', '..#...', 'E.o*.o', '.#..#.', '..o...'];
+const GEMS = [[3, 0, 1], [3, 2, 0]];
+function board(g, ox, oy, cs, st, t, dim) {
+  const FH = 8, W = MAP[0].length, H = MAP.length;
+  g.fillStyle = INK; rr(g, ox - 6, oy - 6, W * cs + 12, H * cs + FH + 12, 12); g.fill();
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const px = ox + x * cs, py = oy + y * cs;
+      g.fillStyle = '#7a5ac8'; g.fillRect(px, py + cs - 1, cs, FH);
+      g.fillStyle = (x + y) % 2 ? '#cbb8f6' : '#bfaaf0'; g.fillRect(px, py, cs, cs - 1);
+      g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(px + 6, py + 7, 5, 2); g.fillRect(px + cs - 12, py + cs - 13, 3, 2);
+      g.strokeStyle = 'rgba(26,16,48,.4)'; g.lineWidth = 1; g.strokeRect(px + .5, py + .5, cs - 1, cs - 1);
+      if (x === 0 && y === 2) { g.strokeStyle = '#ffd23f'; g.lineWidth = 2; g.setLineDash([4, 3]); rr(g, px + 4, py + 4, cs - 8, cs - 8, 6); g.stroke(); g.setLineDash([]); }
+      const ch = MAP[y][x], cx = px + cs / 2, cy = py + cs / 2;
+      if (ch === 'o') { g.fillStyle = '#4a2a8a'; g.beginPath(); g.ellipse(cx, cy + 1, cs * .38, cs * .29, 0, 0, TAU); g.fill(); out(g, 2.5);
+        g.fillStyle = '#2a1658'; g.beginPath(); g.ellipse(cx, cy + 4, cs * .28, cs * .19, 0, 0, TAU); g.fill();
+        g.fillStyle = 'rgba(255,255,255,.25)'; g.beginPath(); g.ellipse(cx + cs * .1, cy - cs * .16, cs * .12, cs * .04, 0, 0, TAU); g.fill(); }
+    }
+    for (let x = 0; x < W; x++) if (MAP[y][x] === '#') {
+      const cx = ox + x * cs + cs / 2, cy = oy + y * cs + cs / 2, k = cs / 31;
+      g.fillStyle = 'rgba(26,16,48,.35)'; g.beginPath(); g.ellipse(cx, cy + 8 * k, 13 * k, 5 * k, 0, 0, TAU); g.fill();
+      g.fillStyle = '#5ab8b0'; g.beginPath(); g.moveTo(cx - 13 * k, cy + 7 * k); g.quadraticCurveTo(cx - 15 * k, cy - 13 * k, cx - 2 * k, cy - 15 * k); g.quadraticCurveTo(cx + 15 * k, cy - 15 * k, cx + 13 * k, cy + 7 * k); g.closePath(); g.fill(); out(g, 2.2);
+      g.fillStyle = '#3a8a88'; g.beginPath(); g.moveTo(cx + 4 * k, cy + 7 * k); g.quadraticCurveTo(cx + 12 * k, cy, cx + 11 * k, cy - 8 * k); g.quadraticCurveTo(cx + 14 * k, cy, cx + 13 * k, cy + 7 * k); g.closePath(); g.fill();
+      g.fillStyle = '#a8f0e8'; g.beginPath(); g.ellipse(cx - 5 * k, cy - 8 * k, 4.5 * k, 2.5 * k, -.4, 0, TAU); g.fill();
+    }
+    GEMS.forEach(([gx, gy, gold], i) => { if (gy !== y || (st && st.picked.includes(i))) return;
+      const cx = ox + gx * cs + cs / 2, cy = oy + gy * cs + cs / 2 - 5 + Math.sin(t * 4 + i) * 2;
+      g.fillStyle = 'rgba(26,16,48,.3)'; g.beginPath(); g.ellipse(cx, oy + gy * cs + cs / 2 + 9, 8, 3, 0, 0, TAU); g.fill();
+      gem(g, cx, cy, 10, gold); if ((t * 1.5 + i) % 2 < .35) sparkle(g, cx + 10, cy - 10, 4); });
+    if (st && Math.round(st.y) === y) {
+      const cx = ox + st.x * cs + cs / 2, cy = oy + st.y * cs + cs / 2 - st.z;
+      pico(g, cx, cy, cs / 34, DIRS[st.d], st.mood, t);
+      if (st.say) bubble(g, cx + 12, Math.max(cy - 36, oy + 4), st.say);
+    }
+  }
+  if (dim) { g.fillStyle = 'rgba(23,15,58,.55)'; g.fillRect(ox - 6, oy - 6, W * cs + 12, H * cs + FH + 12); }
+}
+function bubble(g, x, y, s) {
+  g.font = `14px ${LG}`; const w = g.measureText(s).width + 16;
+  g.fillStyle = '#fff'; rr(g, x - w / 2, y - 11, w, 22, 11); g.fill(); out(g, 2);
+  g.beginPath(); g.moveTo(x - 8, y + 10); g.lineTo(x - 12, y + 18); g.lineTo(x - 2, y + 10); g.fillStyle = '#fff'; g.fill(); g.beginPath(); g.moveTo(x - 8, y + 11); g.lineTo(x - 12, y + 18); g.lineTo(x - 2, y + 11); out(g, 2);
+  g.fillStyle = '#fff'; g.fillRect(x - 9, y + 8, 8, 4);
+  txt(g, s, x, y + 1, 14, INK, 'center');
+}
+// déroulé de la démo : réglage, GO, puis les pas
+const STEPS = [
+  { op: 0, x: 1, y: 2, d: 1 }, { op: 1, x: 3, y: 2, d: 1, jump: 1, say: 'HOP !' }, { op: 2, x: 3, y: 2, d: 1, pick: 1, say: 'DING !' },
+  { op: 3, x: 3, y: 2, d: 0 }, { op: 4, x: 3, y: 1, d: 0 }, { op: 4, x: 3, y: 0, d: 0 }, { op: 5, x: 3, y: 0, d: 0, pick: 0, say: 'YOUPI !' },
+];
+const PROG = [['A'], ['S'], ['R'], ['G'], ['A', '2'], ['R']];
+const T_EDIT = 2.2, T_STEP = .55, T_LOOP = T_EDIT + .5 + STEPS.length * T_STEP + 2.2;
+function demo(t) {
+  const k = t % T_LOOP, st = { x: 0, y: 2, d: 1, z: 0, mood: 'normal', picked: [], say: '', op: -1, phase: 'edit', n: k < 1.2 ? '' : '2' };
+  if (k < T_EDIT) return st;
+  st.phase = k < T_EDIT + .5 ? 'go' : 'run';
+  if (st.phase === 'go') { st.mood = 'concentre'; return st; }
+  const s = (k - T_EDIT - .5) / T_STEP, i = Math.min(STEPS.length - 1, Math.floor(s)), f = Math.min(1, s - i);
+  let prev = i > 0 ? STEPS[i - 1] : { x: 0, y: 2, d: 1 };
+  for (let j = 0; j < Math.min(i + (f > .7 ? 1 : 0), STEPS.length); j++) if (STEPS[j].pick != null) st.picked.push(STEPS[j].pick);
+  const cur = STEPS[i], e = f < .5 ? 2 * f * f : 1 - (2 - 2 * f) ** 2 / 2;
+  if (s >= STEPS.length) { Object.assign(st, { x: 3, y: 0, d: 0, mood: 'joie', z: Math.abs(Math.sin(k * 7)) * 5, op: -1, phase: 'win', say: 'YOUPI !' }); return st; }
+  st.x = prev.x + (cur.x - prev.x) * e; st.y = prev.y + (cur.y - prev.y) * e; st.d = f > .4 ? cur.d : prev.d;
+  st.z = cur.jump ? Math.sin(f * Math.PI) * 18 : Math.abs(Math.sin(f * Math.PI)) * 2;
+  st.mood = cur.jump && f < .8 ? 'peur' : cur.pick != null && f > .5 ? 'joie' : 'concentre';
+  st.say = f > .3 ? cur.say || '' : ''; st.op = cur.op;
+  return st;
+}
+
+/* ---------- écran EN JEU ---------- */
+function drawPlay(g, t) {
+  g.drawImage(SKY, 0, 0); earth(g, 244, 30, 15, true);
+  const st = demo(t);
+  pill(g, 8, 8, 120, 30, 'NIVEAU 6', '#ffd23f', 17);
+  g.fillStyle = INK; rr(g, 138, 10, 78, 28, 14); g.fill(); g.fillStyle = '#ff7ac8'; rr(g, 136, 8, 78, 28, 14); g.fill(); out(g, 2.5);
+  gem(g, 154, 22, 8); txt(g, `${st.picked.length}/2`, 186, 23, 17, '#fff', 'center', 3);
+  board(g, 16, 56, 40, st, t);
+  // le carnet du programme
+  g.fillStyle = INK; rr(g, 9, 278, LW - 14, 198, 18); g.fill();
+  g.fillStyle = '#fff6e0'; rr(g, 6, 274, LW - 14, 198, 18); g.fill(); out(g, 3);
+  g.fillStyle = '#ffd23f'; rr(g, 14, 284, 30, 30, 15); g.fill(); out(g, 2); txt(g, 'P', 29, 300, 16, INK, 'center');
+  for (let i = 0; i < 7; i++) { g.fillStyle = '#ece0c8'; rr(g, 52 + i * 30, 284, 26, 30, 9); g.fill(); g.strokeStyle = '#c8b898'; g.lineWidth = 1.5; g.stroke(); }
+  PROG.forEach(([op, n], i) => {
+    const hl = st.phase === 'run' && st.op === i ? 'run' : st.phase === 'edit' && i === 4 ? 'sel' : '';
+    blob(g, 52 + i * 30, 284, op, i === 4 ? st.n : n, hl, 26, 30);
+  });
+  // réglages de l'instruction choisie (pendant l'édition) ou consigne
+  if (st.phase === 'edit') {
+    pill(g, 14, 326, 34, 28, '-', '#e8dcff', 18); g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(70, 340, 15, 0, TAU); g.fill(); out(g, 2.5); txt(g, st.n ? 'x2' : 'x1', 70, 342, 15, INK, 'center');
+    pill(g, 92, 326, 34, 28, '+', '#e8dcff', 18, (t % T_LOOP) > .9 && (t % T_LOOP) < 1.2 ? 2 : 0);
+    pill(g, 134, 326, 74, 28, 'BOUCLE', '#e8dcff', 13); pill(g, 216, 326, 44, 28, 'SI', '#e8dcff', 14);
+    // le doigt qui appuie sur +
+    const k = t % T_LOOP, fy = k > .9 && k < 1.2 ? 2 : 0; g.fillStyle = '#ffe0c8'; g.beginPath(); g.ellipse(116, 352 + fy, 7, 10, -.4, 0, TAU); g.fill(); out(g, 2);
+    txt(g, 'AVANCER 2 FOIS', 136, 368, 13, '#7a5ac8', 'center', 0, FR);
+  } else {
+    txt(g, st.phase === 'win' ? 'BRAVO PICO !' : 'PICO SUIT TON PROGRAMME…', 136, 346, 15, '#7a5ac8', 'center', 0, st.phase === 'win' ? LG : FR);
+  }
+  ['A', 'G', 'D', 'S', 'R'].forEach((op, i) => blob(g, 14 + i * 50, 378, op, '', '', 42, 32));
+  pill(g, 14, 426, 70, 32, 'EFFACER', '#e8dcff', 13); pill(g, 90, 426, 44, 32, 'x2', '#e8dcff', 14);
+  const k = t % T_LOOP; pill(g, 140, 426, 118, 32, st.phase === 'edit' ? 'GO !' : 'STOP', st.phase === 'edit' || st.phase === 'go' ? '#ff5a7a' : '#a87aff', 20, k > T_EDIT - .2 && k < T_EDIT + .2 ? 2 : 0);
+}
+
+/* ---------- écran TITRE ---------- */
+function drawTitle(g, t) {
+  g.drawImage(SKY, 0, 0); earth(g, 214, 70, 24, true);
+  logo(g, 136, 112, 50);
+  txt(g, 'PROGRAMME PICO !', 136, 222, 15, '#fff6e0', 'center', 4);
+  // petite lune et Pico avec son drapeau
+  const mx = 136, my = 318;
+  g.fillStyle = '#bfaaf0'; g.beginPath(); g.arc(mx, my + 70, 92, Math.PI, 0); g.fill(); out(g, 3);
+  g.fillStyle = '#a08ae0'; for (const [x, y, r] of [[-50, 30, 12], [34, 42, 9], [-6, 50, 7], [60, 18, 6]]) { g.beginPath(); g.ellipse(mx + x, my + y, r, r * .55, 0, 0, TAU); g.fill(); out(g, 2); }
+  g.beginPath(); g.moveTo(mx + 40, my - 4); g.lineTo(mx + 40, my - 46); out(g, 3); g.fillStyle = '#ff5a7a'; g.beginPath(); g.moveTo(mx + 41, my - 46); g.quadraticCurveTo(mx + 55, my - 46 + Math.sin(t * 4) * 3, mx + 66, my - 40); g.lineTo(mx + 41, my - 32); g.closePath(); g.fill(); out(g, 2);
+  const hop = Math.abs(Math.sin(t * 3)) * 8;
+  pico(g, mx - 12, my - 6 - hop, 1.9, [Math.sin(t) * .8, 0], hop > 6 ? 'joie' : 'normal', t);
+  gem(g, mx - 64, my - 2 + Math.sin(t * 3) * 2, 11); gem(g, mx + 72, my + 10 + Math.sin(t * 3 + 1) * 2, 9, true);
+  pill(g, 46, 384, 180, 38, 'JOUER', '#ff5a7a', 24);
+  pill(g, 46, 430, 86, 30, 'NIVEAUX', '#ffd23f', 14); pill(g, 140, 430, 86, 30, 'AIDE', '#e8dcff', 14);
+  star5(g, 30, 30, 10, '#ffd23f'); txt(g, '41 / 90', 48, 31, 15, '#fff', 'left', 3);
+}
+
+/* ---------- écran CARTE DES NIVEAUX ---------- */
+const ZONES = [['BASES', '#7ae0a0'], ['SAUTS', '#ffb86a'], ['REPETER', '#8ab4ff'], ['F1', '#c8a0ff'], ['CONDITIONS', '#ff9ac8']];
+function drawMap(g, t) {
+  g.drawImage(SKY, 0, 0);
+  // chemin de pierres en lacets, du bas vers le haut (niveaux 1 à 13)
+  const pts = []; for (let i = 0; i < 13; i++) pts.push([136 + Math.sin(i * 1.05) * 78, 448 - i * 31]);
+  g.fillStyle = '#bfaaf0'; g.beginPath(); g.ellipse(136, 520, 230, 170, 0, 0, TAU); g.fill(); out(g, 3);
+  g.strokeStyle = INK; g.lineWidth = 12; g.lineCap = 'round'; g.beginPath(); pts.forEach(p => g.lineTo(p[0], p[1])); g.stroke();
+  g.strokeStyle = '#fff6e0'; g.lineWidth = 7; g.setLineDash([2, 9]); g.beginPath(); pts.forEach(p => g.lineTo(p[0], p[1])); g.stroke(); g.setLineDash([]);
+  const STARS = [3, 3, 2, 3, 1, 3, 2, 3, 0, 0, 0, 0, 0], CUR = 8;
+  pts.forEach(([x, y], i) => {
+    const z = i < 5 ? 0 : i < 8 ? 1 : 2, done = i < CUR, cur = i === CUR, locked = i > CUR;
+    g.fillStyle = INK; g.beginPath(); g.ellipse(x + 2, y + 4, 17, 14, 0, 0, TAU); g.fill();
+    g.fillStyle = locked ? '#8a7ab0' : ZONES[z][1]; g.beginPath(); g.ellipse(x, y, 17, 14, 0, 0, TAU); g.fill(); out(g, 2.5);
+    g.fillStyle = 'rgba(255,255,255,.45)'; g.beginPath(); g.ellipse(x - 5, y - 6, 6, 3, -.3, 0, TAU); g.fill();
+    txt(g, locked ? '?' : String(i + 1), x, y + 2, 15, locked ? '#d8ccf4' : '#fff', 'center', 3);
+    if (done) for (let s = 0; s < 3; s++) star5(g, x - 12 + s * 12, y + 16, 5, s < STARS[i] ? '#ffd23f' : '#6a5a90', 1.5);
+    if (cur) { const h = Math.abs(Math.sin(t * 3)) * 6; pico(g, x, y - 26 - h, 1, [0, 0], 'normal', t); }
+  });
+  // bannières des zones
+  [[0, 0], [1, 5], [2, 8]].forEach(([z, si]) => {
+    const [px, y] = pts[si], x = px < 136 ? px + 24 : px - 114;
+    g.fillStyle = ZONES[z][1]; rr(g, x, y - 12, 90, 24, 8); g.fill(); out(g, 2.2); txt(g, `${z + 1} · ${ZONES[z][0]}`, x + 45, y + 1, 12, INK, 'center');
+  });
+  g.fillStyle = 'rgba(23,15,58,.85)'; g.fillRect(0, 0, LW, 52); g.beginPath(); g.moveTo(0, 52); g.lineTo(LW, 52); out(g, 3);
+  txt(g, 'LA CARTE', 136, 26, 26, '#ffd23f', 'center', 5);
+  pill(g, 8, 10, 36, 30, '<', '#e8dcff', 18);
+  star5(g, 232, 26, 10, '#ffd23f'); txt(g, '20', 252, 27, 14, '#fff', 'left', 3);
+}
+
+/* ---------- écran VICTOIRE ---------- */
+function drawWin(g, t) {
+  g.drawImage(SKY, 0, 0); earth(g, 244, 30, 15, true);
+  board(g, 16, 56, 40, { x: 3, y: 0, d: 2, z: 0, mood: 'joie', picked: [0, 1] }, t, true);
+  const k = t % 4.5;
+  // confettis
+  const r = rnd(3);
+  for (let i = 0; i < 40; i++) { const x = r() * LW, sp = 40 + r() * 60, y = (r() * 300 + k * sp) % 480 - 20, a = k * 4 + i;
+    g.save(); g.translate(x, y); g.rotate(a); g.fillStyle = ['#ffd23f', '#ff7ac8', '#5ad87a', '#6a9aff', '#ff9a4a'][i % 5]; g.fillRect(-3, -1.5, 6, 3); g.restore(); }
+  g.fillStyle = INK; rr(g, 26, 132, 228, 262, 22); g.fill();
+  g.fillStyle = '#fff6e0'; rr(g, 22, 126, 228, 262, 22); g.fill(); out(g, 3.5);
+  txt(g, 'BRAVO !', 136, 162, 40, '#ffd23f', 'center', 8);
+  for (let i = 0; i < 3; i++) { const p = Math.max(0, Math.min(1, (k - .4 - i * .35) * 3)), sc = p < 1 ? p * 1.25 : 1 + Math.sin((k - i) * 6) * .03;
+    if (p > 0) star5(g, 86 + i * 50, 214 - (i === 1 ? 8 : 0), 20 * sc, '#ffd23f', 3); else star5(g, 86 + i * 50, 214 - (i === 1 ? 8 : 0), 20, '#e0d4b8', 3); }
+  txt(g, 'Programme de 6 blocs', 136, 252, 15, INK, 'center', 0, FR);
+  txt(g, 'le plus court possible !', 136, 270, 15, '#2a9a5a', 'center', 0, FR);
+  const hop = Math.abs(Math.sin(t * 6)) * 10; pico(g, 216, 112 - hop, 1.6, [0, 0], 'joie', t);
+  pill(g, 40, 290, 192, 36, 'NIVEAU SUIVANT', '#ff5a7a', 18);
+  pill(g, 40, 336, 92, 30, 'REJOUER', '#e8dcff', 14); pill(g, 140, 336, 92, 30, 'CARTE', '#ffd23f', 14);
+}
+
+/* ---------- planche : Pico et ses expressions, les éléments ---------- */
+function drawSheet(g, t) {
+  g.clearRect(0, 0, 900, 230);
+  const moods = [['normal', 'NORMAL'], ['concentre', 'CONCENTRE'], ['joie', 'RAVI'], ['etourdi', 'ETOURDI'], ['peur', 'LE VERTIGE']];
+  moods.forEach(([m, l], i) => { const x = 70 + i * 110; g.fillStyle = '#f2e6cc'; g.beginPath(); g.arc(x, 95, 50, 0, TAU); g.fill(); g.strokeStyle = '#d8c8a8'; g.lineWidth = 2; g.stroke();
+    pico(g, x, 100, 2.1, [Math.sin(t + i) * .7, 0], m, t); txt(g, l, x, 172, 16, INK, 'center'); });
+  // éléments
+  const ex = 640;
+  const tileAt = (x, y) => { g.fillStyle = INK; rr(g, x - 3, y - 3, 46, 54, 8); g.fill(); g.fillStyle = '#7a5ac8'; g.fillRect(x, y + 39, 40, 8); g.fillStyle = '#c8b4f4'; g.fillRect(x, y, 40, 40); };
+  tileAt(ex, 60); txt(g, 'SOL', ex + 20, 132, 13, INK, 'center');
+  tileAt(ex + 60, 60); g.fillStyle = '#4a2a8a'; g.beginPath(); g.ellipse(ex + 80, 81, 15, 11, 0, 0, TAU); g.fill(); out(g, 2.5); g.fillStyle = '#2a1658'; g.beginPath(); g.ellipse(ex + 80, 84, 11, 7, 0, 0, TAU); g.fill(); txt(g, 'CRATERE', ex + 80, 132, 13, INK, 'center');
+  tileAt(ex + 120, 60); { const cx = ex + 140, cy = 80; g.fillStyle = '#5ab8b0'; g.beginPath(); g.moveTo(cx - 14, cy + 9); g.quadraticCurveTo(cx - 16, cy - 13, cx - 2, cy - 16); g.quadraticCurveTo(cx + 16, cy - 16, cx + 14, cy + 9); g.closePath(); g.fill(); out(g, 2.2); g.fillStyle = '#a8f0e8'; g.beginPath(); g.ellipse(cx - 5, cy - 8, 4.5, 2.5, -.4, 0, TAU); g.fill(); }
+  txt(g, 'ROCHER', ex + 140, 132, 13, INK, 'center');
+  tileAt(ex + 180, 60); gem(g, ex + 200, 76 + Math.sin(t * 4) * 2, 11); txt(g, 'CRISTAL', ex + 200, 132, 13, INK, 'center');
+  ['A', 'G', 'D', 'S', 'R', 'F'].forEach((op, i) => blob(g, ex - 4 + i * 40, 160, op, i === 0 ? '3' : '', '', 32, 32, i === 4));
+}
+
+/* ---------- animation ---------- */
+const screens = [['sTitle', drawTitle, LW, LH], ['sMap', drawMap, LW, LH], ['sPlay', drawPlay, LW, LH], ['sWin', drawWin, LW, LH], ['sheet', drawSheet, 900, 230]]
+  .map(([id, fn, w, h]) => ({ cv: document.getElementById(id), fn, w, h }));
+function fit() { for (const s of screens) { const k = Math.min(3, Math.max(1, Math.ceil(s.cv.getBoundingClientRect().width / s.w * (window.devicePixelRatio || 1)))); s.k = k; s.cv.width = s.w * k; s.cv.height = s.h * k; } }
+const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(ts) {
+  const t = still ? 1.6 : ts / 1000;
+  for (const s of screens) { const g = s.cv.getContext('2d'); g.setTransform(s.k, 0, 0, s.k, 0, 0); s.fn(g, s.fn === drawPlay && still ? 4.6 : t); }
+  if (!still) requestAnimationFrame(frame);
+}
+window.addEventListener('resize', fit); fit();
+(document.fonts ? Promise.all(['20px "Luckiest Guy"', '500 15px Fredoka'].map(f => document.fonts.load(f))).catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));
+</script>

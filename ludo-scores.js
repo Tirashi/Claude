@@ -93,7 +93,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"]];
+    ["parcours", "total"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -196,6 +196,9 @@
     var ob = readKey("orbite.stars", {}) || {}, stars = 0;
     Object.keys(ob).forEach(function (k){ if (/^\d{1,2}$/.test(k)) stars += Math.min(3, Number(ob[k]) || 0); });
     hi("orbite", "etoiles", stars);
+    var lr = readKey("lunerover.stars", {}) || {}, lrs = 0;
+    Object.keys(lr).forEach(function (k){ if (/^\d{1,2}$/.test(k)) lrs += Math.min(3, Number(lr[k]) || 0); });
+    hi("lunerover", "etoiles", lrs);
     hi("alunissage", "best", readKey("alunissage.best", 0));
     var ad = readKey("alunissage.daily", {}) || {};
     Object.keys(ad).forEach(function (k){ if (/^\d{8}$/.test(k)) hi("alunissage", "daily:" + k, ad[k]); });
@@ -218,7 +221,7 @@
 
   window.addEventListener("online", function (){ flush(); });
   // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 6 : avec Nebula)
-  var SYNC = 10;
+  var SYNC = 11;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();

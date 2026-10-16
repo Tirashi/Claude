@@ -447,6 +447,8 @@ const GAMES = [
    d: "Pose ton module en douceur avec deux réacteurs, de la Lune à la comète. Plus l'aire est étroite, plus elle rapporte.", tags: ["MISSION DU JOUR"]},
   {k: "pont-stellaire/index.html", n: "PONT STELLAIRE", s: "PONT STELLAIRE", ic: "stars", fam: "32", lb: "radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%)", lt: "#ffd76a", sh: "#2a4a9a", rank: "pontstellaire",
    d: "Relie les étoiles par des faisceaux de lumière, sans croisement, pour dessiner une constellation. Un ciel du jour pour toute la famille.", tags: ["CIEL DU JOUR"]},
+  {k: "lune-rover/index.html", n: "LUNE-ROVER", s: "LUNE-ROVER", ic: "rover", fam: "32", lb: "linear-gradient(#14142a, #3a3834)", lt: "#5ae6f2", sh: "#5a5a6a", rank: "lunerover",
+   d: "Programme Pico, le petit robot lunaire, à l'avance (avancer, tourner, sauter, ramasser, boucles et conditions) pour récolter les cristaux. 3 étoiles pour le programme le plus court.", tags: ["30 NIVEAUX"]},
   {k: "sudoku/index.html", n: "SUDOKU", s: "SUDOKU", ic: "grid9", fam: "32", lb: "linear-gradient(#3a1a4a, #12082a)", lt: "#ffb8d0", sh: "#8a3aa8", rank: "sudoku",
    d: "Un chiffre par ligne, par colonne et par bloc, sous la lune d'un jardin japonais. Notes au crayon et grille du jour.", tags: ["4×4 A 9×9"]},
   {k: "nebula/index.html", n: "NEBULA", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
@@ -467,6 +469,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "lune-rover/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "ESPACE"]},
   "sudoku/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "DU JOUR"]},
   "nebula/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["TACTIQUE", "ESPACE"]},
   "alunissage/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["ADRESSE", "ESPACE", "DU JOUR"]},
@@ -486,6 +489,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-16", "Nouveau jeu : Lune-Rover. Programme Pico, le petit robot lunaire, à l'avance pour ramasser les cristaux : 30 niveaux, avec sauts, fonction F1, répétitions, boucles et conditions."],
   ["2026-10-16", "Classements : le même compte sur plusieurs navigateurs. Sous les cartouches, CODE DE MON COMPTE ; dans l'autre navigateur, REJOINDRE LE CLASSEMENT puis J'AI DEJA UN COMPTE. Les sauvegardes restent dans chaque navigateur."],
   ["2026-10-16", "Nouvel accueil : les cartouches en 3D sur leurs planches (16 bits, 32 bits et reprises). Touche une cartouche : sa boîte, tes records et le classement de la famille, au même endroit. La page des classements disparaît."],
   ["2026-10-16", "Nouveau jeu : Sudoku, le jardin des chiffres. Grilles 4×4 et 6×6 pour débuter, 9×9 facile, moyen ou difficile, notes au crayon et grille du jour pour toute la famille."],
@@ -572,6 +576,7 @@ const RECS = {
   "amiral/index.html": () => { const b = rk("amiral.best", {}) || {}; return [["easy", "Mousse"], ["normal", "Capitaine"], ["hard", "Amiral"]].map(([k, l]) => [l, num(b[k], "tours")]); },
   "club/index.html": () => { const g = rk("club.save", null) || {};
     return [["Réputation", num(Math.max(g.rep || 0, g.bestRep || 0))], ["Champion de France en", num(g.champion, "semaines")], ["Partie en cours", g.week > 1 ? "semaine " + g.week : null]]; },
+  "lune-rover/index.html": () => { const s = rk("lunerover.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },
   "orbite/index.html": () => { const s = rk("orbite.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },
   "alunissage/index.html": () => [["Meilleure mission", num(rk("alunissage.best", 0), "pts")], ["Sites atteints", num(rk("alunissage.sites", 0))], ["Missions du jour", num(count(rk("alunissage.daily", {})))]],
   "pont-stellaire/index.html": () => { const b = rk("pontstellaire.best", {}) || {};
@@ -815,6 +820,8 @@ const RANKS = {
      empty: () => st.back ? "Personne n'a rempli la grille ce jour-là." : "Personne n'a encore rempli la grille du jour : à toi de jouer !"},
     {label: "PAR NIVEAU", ctl: ["sdk"], game: "sudoku", board: () => "best:" + st.sdk, fmt: T, title: () => SDK.find(m => m[0] === st.sdk)[1], note: "Le meilleur temps, plus 30 secondes par indice."},
     {label: "GRILLES", game: "sudoku", board: () => "grilles", fmt: v => N(v) + (v > 1 ? " grilles" : " grille"), title: () => "GRILLES TERMINEES"}],
+  lunerover: [{label: "ETOILES", game: "lunerover", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
+     note: "Par niveau : 3 étoiles pour le programme le plus court, 2 avec jusqu'à 2 instructions de plus, 1 sinon (90 au maximum)."}],
   orbite: [{label: "ETOILES", game: "orbite", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
      note: "3 étoiles par niveau réussi du premier coup, 2 au deuxième essai, 1 au troisième (90 au maximum)."}],
   amiral: [{label: "MEILLEURE VICTOIRE", ctl: ["amai"], game: "amiral", board: () => `best:${st.amai}`, fmt: v => N(v) + " tours",
@@ -1121,6 +1128,7 @@ function collectSaves(){
   const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
   const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
   const ob = readKey("orbite.stars", {}); if (ob && Object.keys(ob).length) g.orbite = ob;
+  const lr = readKey("lunerover.stars", {}); if (lr && Object.keys(lr).length) g.lunerover = lr;
   const al = {b: Number(readKey("alunissage.best", 0)) || 0, s: Number(readKey("alunissage.sites", 0)) || 0, d: readKey("alunissage.daily", {}) || {}};
   if (al.b || al.s) g.alunissage = al;
   const ps = {b: readKey("pontstellaire.best", {}) || {}, d: readKey("pontstellaire.daily", {}) || {}, w: Number(readKey("pontstellaire.wins", 0)) || 0};
@@ -1151,6 +1159,7 @@ function describeSaves(g){
     const b = Object.keys(nm).filter(k => (p.b || {})[k] > 0).map(k => `${nm[k]} en ${fmtTime(p.b[k])}`);
     out.push(`Sudoku : ${p.w || 0} grille${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
   if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
+  if (g.lunerover){ const n = Object.values(g.lunerover).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Lune-Rover : ${n} étoile${n > 1 ? "s" : ""}`); }
   if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
   return out;
 }
@@ -1281,6 +1290,11 @@ function mergeSaves(g){
     const mine = readKey("orbite.stars", {}) || {}; let n = 0;
     for (const [k, v] of Object.entries(g.orbite)) if (/^\d{1,2}$/.test(k) && v >= 1 && v <= 3 && !(mine[k] >= v)){ mine[k] = Math.round(v); n++; }
     if (n){ writeKey("orbite.stars", mine); done.push(`Orbite : ${n} niveau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
+  }
+  if (g.lunerover && typeof g.lunerover === "object"){
+    const mine = readKey("lunerover.stars", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(g.lunerover)) if (/^\d{1,2}$/.test(k) && v >= 1 && v <= 3 && !(mine[k] >= v)){ mine[k] = Math.round(v); n++; }
+    if (n){ writeKey("lunerover.stars", mine); done.push(`Lune-Rover : ${n} niveau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
   }
   if (g.ligneeDaily && typeof g.ligneeDaily === "object"){
     const mine = readKey("lignee.daily", {}) || {}; let n = 0;
