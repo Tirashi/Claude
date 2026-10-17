@@ -1,11 +1,11 @@
 /* Test « fumée » dans Chromium : chaque jeu s'ouvre sans erreur JavaScript, l'accueil ouvre le volet
    d'un jeu (et l'ancien lien des classements y mène), et Nebula joue une partie (saut, combat au toucher,
-   fin de tour, écran INCIDENT), et Odyssée traverse un plateau avec son pilote automatique, lance le plateau du jour et montre la cire.
+   fin de tour, écran INCIDENT), Escadrille ! un tour de combat (toucher, riposte), et Odyssée traverse un plateau avec son pilote automatique, lance le plateau du jour et montre la cire.
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'escadrille/index.html',
   'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -80,6 +80,20 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Odyssée : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-odyssee.png` });
+    }
+    if (url === 'escadrille/index.html') {
+      // Escadrille ! : placement au hasard, décollage, un vrai toucher sur le ciel ennemi, puis la riposte de l'ordinateur
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms)), cv = document.getElementById('cv'), b = cv.getBoundingClientRect();
+        newGame(); startBattle(); await wait(100);
+        cv.dispatchEvent(new PointerEvent('pointerdown', { clientX: b.left + (BX + 4.5 * CS) / LW * b.width, clientY: b.top + (BY + 4.5 * CS) / LH * b.height, bubbles: true, pointerType: 'touch' }));
+        await wait(1000); if (!S.enemy.shots[4][4]) return 'le toucher ne largue pas de bombe en E5';
+        for (let k = 0; k < 40 && !(S.turn === 'player' && !S.busy); k++) await wait(200);
+        if (S.turn !== 'player' || !S.player.shots.flat().some(v => v) && !S.player.intel.flat().some(v => v) && !S.enemy.cd.esquive) return "l'ordinateur ne riposte pas";
+        return S.stats.turns === 1 ? 'ok' : 'compte des tours faux';
+      });
+      if (r !== 'ok') errs.push('Escadrille ! : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-escadrille.png` });
     }
     if (errs.length) { fail++; console.log('ÉCHEC ' + url + '\n  ' + errs.join('\n  ')); } else console.log('ok    ' + url);
     await p.close();

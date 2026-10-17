@@ -457,6 +457,8 @@ const GAMES = [
    d: "Bataille navale contre l'ordinateur, en mode classique ou avec sonar et torpilles.", tags: ["3 NIVEAUX D'IA"]},
   {k: "amiral/index.html", n: "AMIRAL !", s: "AMIRAL !", ic: "anchor", fam: "32", lb: "linear-gradient(#1c579c, #0a1c40)", lt: "#ffd23f", sh: "#1c579c", rank: "amiral",
    d: "La bataille navale où chaque navire a un pouvoir : avion, salve, torpille et plongée du sous-marin.", tags: ["3 NIVEAUX"]},
+  {k: "escadrille/index.html", n: "ESCADRILLE !", s: "ESCADRILLE", ic: "fighter", fam: "32", lb: "linear-gradient(#3a7cc4, #0f2850)", lt: "#ffd23f", sh: "#3a7cc4", rank: "escadrille",
+   d: "La bataille aérienne où chaque avion a un pouvoir : radar, bombes en croix, missile et esquive de l'hélicoptère. Abats l'escadrille pirate cachée dans les nuages.", tags: ["3 NIVEAUX"]},
   {k: "club/index.html", n: "LE CLUB D'AGILITY", s: "CLUB AGILITY", ic: "cup", fam: "32", lb: "linear-gradient(#3f8a37, #173a1a)", lt: "#ffd23f", sh: "#3f8a37", rank: "club",
    d: "Recrute des chiens, entraîne-les semaine après semaine et mène ton club jusqu'au Championnat de France.", tags: ["6 RACES"]},
   {k: "orbite/index.html", n: "ORBITE", s: "ORBITE", ic: "planet", fam: "32", lb: "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt: "#6fd8ff", sh: "#5a3ab8", rank: "orbite",
@@ -493,6 +495,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "escadrille/index.html": {added: "2026-10-17", genres: ["TACTIQUE"]},
   "odyssee/index.html": {added: "2026-10-17", genres: ["ADRESSE", "DU JOUR"]},
   "empilage/index.html": {added: "2026-10-16", genres: ["ADRESSE", "DU JOUR"]},
   "calculator/index.html": {added: "2026-10-16", genres: ["CALCUL", "DU JOUR"]},
@@ -516,6 +519,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-17", "Nouveau jeu : Escadrille !, la petite sœur d'Amiral ! dans le ciel. Quatre avions à pouvoirs (radar, bombes en croix, missile, esquive de l'hélicoptère) sur un ciel de 9 × 9, contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As."],
   ["2026-10-17", "Nouveau jeu : Odyssée, le deuxième jeu en 3D. Penche le téléphone (ou glisse le doigt) pour ramener la galère d'Ulysse de Troie à Ithaque : 10 épisodes de 3 plateaux, de Polyphème aux Sirènes en passant par Charybde et Scylla, et un plateau du jour pour toute la famille."],
   ["2026-10-16", "Accueil : les jeux en 3D ont leur propre cartouche, un CD dans un boîtier translucide couleur bonbon. Empilage est le premier à l'avoir."],
   ["2026-10-16", "Nouveau jeu : Empilage, le premier jeu en 3D de la Ludothèque. Touche pour lâcher chaque bloc pile sur la tour ; ce qui dépasse tombe. Le ciel passe du matin à la nuit étoilée à mesure que tu montes. Tour du jour : les mêmes vitesses pour toute la famille."],
@@ -605,6 +609,7 @@ const RECS = {
   "touche-coule/index.html": () => { const b = rk("touchecoule.best", {}) || {}, ai = {easy: "facile", normal: "normale", hard: "amiral"};
     return Object.keys(b).filter(k => b[k] > 0).sort().map(k => { const [m, a] = k.split(":"); return [`${m === "arsenal" ? "Arsenal" : "Classique"} · IA ${ai[a] || a}`, num(b[k], "tirs")]; }); },
   "amiral/index.html": () => { const b = rk("amiral.best", {}) || {}; return [["easy", "Mousse"], ["normal", "Capitaine"], ["hard", "Amiral"]].map(([k, l]) => [l, num(b[k], "tours")]); },
+  "escadrille/index.html": () => { const b = rk("escadrille.best", {}) || {}; return [["easy", "Recrue"], ["normal", "Pilote"], ["hard", "As"]].map(([k, l]) => [l, num(b[k], "tours")]).concat([["Victoires", num(rk("escadrille.victoires", 0), "")]]); },
   "club/index.html": () => { const g = rk("club.save", null) || {};
     return [["Réputation", num(Math.max(g.rep || 0, g.bestRep || 0))], ["Champion de France en", num(g.champion, "semaines")], ["Partie en cours", g.week > 1 ? "semaine " + g.week : null]]; },
   "lune-rover/index.html": () => { const s = rk("lunerover.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },
@@ -802,10 +807,11 @@ const dayKey = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDa
 const dayCode = (mode, d) => `${mode}2-J${dayKey(d).toString(36).toUpperCase()}`;
 const TCMODES = [["classic", "CLASSIQUE"], ["arsenal", "ARSENAL"]], TCAI = [["easy", "FACILE"], ["normal", "NORMAL"], ["hard", "AMIRAL"]];
 const AMAI = [["easy", "MOUSSE"], ["normal", "CAPITAINE"], ["hard", "AMIRAL"]];
+const ESAI = [["easy", "RECRUE"], ["normal", "PILOTE"], ["hard", "AS"]];
 const CCLVL = [[1, "PETIT ECOLIER"], [2, "ECOLIER"], [3, "COLLEGE"], [4, "COSTAUD"], [5, "CHAMPION"]];
 const CCOP = [["add", "+"], ["sub", "−"], ["mul", "×"], ["div", "÷"], ["mix", "MELANGE"]];
 const SDK = [["4", "4×4"], ["6", "6×6"], ["9-1", "FACILE"], ["9-2", "MOYEN"], ["9-3", "DIFFICILE"]];
-const st = {view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal", amai: "normal", pssize: 9, sdk: "9-2", cclvl: 2, ccop: "mix"};
+const st = {view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal", amai: "normal", esai: "normal", pssize: 9, sdk: "9-2", cclvl: 2, ccop: "mix"};
 const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
 const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
   day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "").normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -882,6 +888,8 @@ const RANKS = {
      note: "3 étoiles par niveau réussi du premier coup, 2 au deuxième essai, 1 au troisième (90 au maximum)."}],
   amiral: [{label: "MEILLEURE VICTOIRE", ctl: ["amai"], game: "amiral", board: () => `best:${st.amai}`, fmt: v => N(v) + " tours",
      title: () => AMAI.find(m => m[0] === st.amai)[1], note: "La victoire en le moins de tours, par niveau de l'ordinateur."}],
+  escadrille: [{label: "MEILLEURE VICTOIRE", ctl: ["esai"], game: "escadrille", board: () => `best:${st.esai}`, fmt: v => N(v) + " tours",
+     title: () => ESAI.find(m => m[0] === st.esai)[1], note: "La victoire en le moins de tours, par niveau de l'ordinateur."}],
 };
 // les Pokémon du Picross Dex (noms lus dans la page du jeu, mise en cache par l'appli), chargés à la première demande
 let DEX = null, dexReady = null;
@@ -1019,7 +1027,7 @@ function controls(v){
     if (c === "mode") box.append(chips([["C", "CLASSIQUE"], ["R", "ROYAL"]], k => st.mode === k, k => st.mode = k));
     if (c === "day") box.append(stepper(dayName(), () => { st.back = Math.min(60, st.back + 1); viewRender(); }, () => { st.back = Math.max(0, st.back - 1); viewRender(); }, st.back >= 60, st.back === 0));
     if (c === "level") box.append(chips(LEVELS.map((l, i) => [i + 1, l]), k => st.level === k, k => st.level = k));
-    if (c === "tcmode" || c === "tcai" || c === "amai") box.append(chips(c === "tcmode" ? TCMODES : c === "amai" ? AMAI : TCAI, k => st[c] === k, k => st[c] = k));
+    if (c === "tcmode" || c === "tcai" || c === "amai" || c === "esai") box.append(chips(c === "tcmode" ? TCMODES : c === "amai" ? AMAI : c === "esai" ? ESAI : TCAI, k => st[c] === k, k => st[c] = k));
     if (c === "cclvl") box.append(chips(CCLVL.map(([k]) => [k, String(k)]), k => st.cclvl === k, k => st.cclvl = k));
     if (c === "ccop") box.append(chips(CCOP, k => st.ccop === k, k => st.ccop = k));
     if (c === "sdk") box.append(chips(SDK, k => st.sdk === k, k => st.sdk = k));
@@ -1151,6 +1159,7 @@ function fromHash(){
   else if (/^\d$/.test(h[1] || "")) v = +h[1];
   if (/^[CR]$/.test(h[2] || "")) st.mode = h[2];
   if (id === "amiral" && /^(easy|normal|hard)$/.test(h[2] || "")) st.amai = h[2];
+  if (id === "escadrille" && /^(easy|normal|hard)$/.test(h[2] || "")) st.esai = h[2];
   if (id === "touchecoule"){ if (/^(classic|arsenal)$/.test(h[2] || "")) st.tcmode = h[2]; if (/^(easy|normal|hard)$/.test(h[3] || "")) st.tcai = h[3]; }
   try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
   openVolet(g, v);
@@ -1185,6 +1194,7 @@ function collectSaves(){
   const ld = readKey("lignee.daily", {}); if (ld && Object.keys(ld).length) g.ligneeDaily = ld;
   const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
   const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
+  const es = {b: readKey("escadrille.best", {}) || {}, v: Number(readKey("escadrille.victoires", 0)) || 0}; if (Object.keys(es.b).length || es.v) g.escadrille = es;
   const ob = readKey("orbite.stars", {}); if (ob && Object.keys(ob).length) g.orbite = ob;
   const lr = readKey("lunerover.stars", {}); if (lr && Object.keys(lr).length) g.lunerover = lr;
   const al = {b: Number(readKey("alunissage.best", 0)) || 0, s: Number(readKey("alunissage.sites", 0)) || 0, d: readKey("alunissage.daily", {}) || {}};
@@ -1216,6 +1226,8 @@ function describeSaves(g){
   if (g.touchecoule){ const v = Object.values(g.touchecoule).filter(x => x > 0); if (v.length) out.push(`Touché Coulé : meilleure victoire en ${Math.min(...v)} tirs`); }
   if (g.club && g.club.week) out.push(`Club d'agility : semaine ${g.club.week}, ${(g.club.dogs || []).length} chien${(g.club.dogs || []).length > 1 ? "s" : ""}, réputation ${g.club.rep || 0}`);
   if (g.amiral){ const v = Object.values(g.amiral).filter(x => x > 0); if (v.length) out.push(`Amiral ! : meilleure victoire en ${Math.min(...v)} tours`); }
+  if (g.escadrille){ const v = Object.values(g.escadrille.b || {}).filter(x => x > 0), n = g.escadrille.v || 0;
+    if (v.length || n) out.push(`Escadrille ! : ${n} victoire${n > 1 ? "s" : ""}${v.length ? `, meilleure en ${Math.min(...v)} tours` : ""}`); }
   if (g.alunissage) out.push(`Alunissage : record ${g.alunissage.b || 0} points, ${g.alunissage.s || 0} site${g.alunissage.s > 1 ? "s" : ""} atteint${g.alunissage.s > 1 ? "s" : ""}`);
   if (g.pontstellaire){ const p = g.pontstellaire, b = Object.keys(p.b || {}).sort((x, y) => x - y).map(n => `${n}×${n} en ${fmtTime(p.b[n])}`);
     out.push(`Pont stellaire : ${p.w || 0} constellation${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
@@ -1313,6 +1325,14 @@ function mergeSaves(g){
     const mine = readKey("amiral.best", {}) || {}; let n = 0;
     for (const [k, v] of Object.entries(g.amiral)) if (/^(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
     if (n){ writeKey("amiral.best", mine); done.push(`Amiral ! : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.escadrille && typeof g.escadrille === "object"){
+    const mine = readKey("escadrille.best", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(g.escadrille.b || {})) if (/^(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
+    if (n) writeKey("escadrille.best", mine);
+    const vic = Math.round(Number(g.escadrille.v) || 0), myVic = Number(readKey("escadrille.victoires", 0)) || 0;
+    if (vic > myVic) writeKey("escadrille.victoires", vic);
+    if (n || vic > myVic) done.push(`Escadrille ! : ${n ? n + " record" + (n > 1 ? "s" : "") : "victoires"}`);
   }
   if (g.alunissage && typeof g.alunissage === "object"){
     const a = g.alunissage; let n = 0;

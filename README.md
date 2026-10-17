@@ -9,6 +9,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`touche-coule/index.html`](touche-coule/index.html) : **Touché Coulé**, une bataille navale contre l'ordinateur (modes Classique et Arsenal).
 - [`club/index.html`](club/index.html) : **Le Club d'agility**, un jeu de gestion en 32 bits : recruter des chiens, les entraîner semaine après semaine, gagner les concours et faire grandir le club jusqu'au Championnat de France.
 - [`amiral/index.html`](amiral/index.html) : **Amiral !**, une bataille navale tactique en 32 bits où chaque navire a un pouvoir (avion de reconnaissance, salve, torpille, plongée du sous-marin).
+- [`escadrille/index.html`](escadrille/index.html) : **Escadrille !**, la petite sœur d'Amiral ! dans le ciel : quatre avions en relief, chacun avec son pouvoir (radar, bombes en croix, missile, esquive de l'hélicoptère), contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As.
 - [`lune-rover/index.html`](lune-rover/index.html) : **Lune-Rover**, un puzzle de programmation en 32 bits : écrire à l'avance le programme d'un petit robot lunaire pour ramasser tous les cristaux, en 30 niveaux.
 - [`orbite/index.html`](orbite/index.html) : **Orbite**, un jeu de physique en 32 bits : lancer une sonde dont la trajectoire est courbée par la gravité des planètes pour atteindre une balise, en 30 niveaux.
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
@@ -261,7 +262,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Lune-Rover, Pont stellaire, Sudoku, Calculator, Alunissage, Nebula, Empilage, Odyssée), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, Escadrille !, le Club d'agility, Orbite, Lune-Rover, Pont stellaire, Sudoku, Calculator, Alunissage, Nebula, Empilage, Odyssée), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -275,6 +276,7 @@ Les classements sont dans le **volet de chaque jeu**, sur l'accueil : des classe
 - **Touché Coulé** : la victoire en le moins de tirs, par mode (Classique, Arsenal) et par niveau de l'IA (Facile, Normal, Amiral).
 - **Le Club d'agility** : la plus grande réputation, et le Championnat de France gagné en le moins de semaines.
 - **Amiral !** : la victoire en le moins de tours, par niveau de l'ordinateur (Mousse, Capitaine, Amiral).
+- **Escadrille !** : la victoire en le moins de tours, par niveau de l'ordinateur (Recrue, Pilote, As).
 - **Orbite** : le total d'étoiles gagnées sur les 30 niveaux.
 - **Lune-Rover** : le total d'étoiles gagnées sur les 30 niveaux.
 - **Alunissage** : la meilleure mission et la mission du jour.
