@@ -89,6 +89,7 @@ button.doux, .lien { background: #e3f4fa; color: #1d6f8f; box-shadow: 0 4px 0 #b
       <button id="bJouer">JOUER</button>
       <button class="sable" id="bJour">PLATEAU DU JOUR</button>
       <div class="rang"><a class="lien" href="../classements/index.html#odyssee">CLASSEMENT</a><button class="doux" id="bSon">SON : OUI</button></div>
+      <a class="lien" href="../index.html">◀ LUDOTHÈQUE</a>
     </div>
   </div>
 
@@ -110,6 +111,7 @@ button.doux, .lien { background: #e3f4fa; color: #1d6f8f; box-shadow: 0 4px 0 #b
       <button id="bReprendre">REPRENDRE</button>
       <div class="rang"><button class="doux" id="bRecommencer">RECOMMENCER</button><button class="doux" id="bCarteP">LA CARTE</button></div>
       <button class="doux" id="bSonP">SON : OUI</button>
+      <a class="lien" href="../index.html">◀ RETOUR À LA LUDOTHÈQUE</a>
     </div>
   </div>
 
@@ -562,7 +564,7 @@ function decor(P, v, Q, alea, roc, blanc, bleu, gris) {
 
 // cadrage : la caméra recule pour les grands plateaux (et sur les écrans étroits)
 function cadrer() {
-  // dans l'appli installée, la barre « ◀ MENU » est ajoutée au-dessus du jeu : le jeu prend la hauteur qui reste
+  // le jeu prend la hauteur qui reste sous ce qui le précède dans la page
   jeu.style.height = Math.max(240, innerHeight - (jeu.getBoundingClientRect().top + scrollY)) + 'px';
   const w = jeu.clientWidth || 390, h = jeu.clientHeight || 780;
   if (rendu) rendu.setSize(w, h, false);
@@ -950,23 +952,12 @@ requestAnimationFrame(frame);
 window.Odyssee = { ODY, pilote: false, lancer, lancerJour, partir, carte, titre, fin, get st() { return st; }, get mode() { return mode; } };
 </script>
 <script>
-/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
 (function () {
   try {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
       navigator.serviceWorker.register("../sw.js").catch(function () {});
-    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-    if (!app) return;
-    var a = document.createElement("a");
-    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
-    a.style.cssText = "display:block; width:max-content; margin:4px auto 6px; padding:6px 10px; font:9px 'Press Start 2P',monospace; letter-spacing:1px;" +
-      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
-    var line = document.createElement("div");
-    line.style.cssText = "flex:0 0 100%; width:100%;";
-    line.appendChild(a);
-    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
-    document.body.insertBefore(line, document.body.firstChild);
-    window.dispatchEvent(new Event("resize"));
   } catch (e) {}
 })();
 </script>
