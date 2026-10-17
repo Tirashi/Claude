@@ -74,3 +74,57 @@ Les familles ne changent que le dessin (mêmes cases, mêmes règles). Les ennem
 - **Parachute** : quand un avion est abattu, son pilote saute (deux pour le bombardier) : vu de dessus, la voile s'ouvre puis rapetisse en descendant vers le sol et dérive, avec son ombre ; voile blanche et rouge chez moi, jaune et noire chez les pirates (effet `para`, 3,8 s, `SFX.chute`).
 - **Préparation des sprites** : sur l'écran titre et au hangar, un sprite par image : la famille choisie dans les 4 sens, puis les autres familles nez en haut (pour le hangar) ; une famille choisie au hangar est préparée dans tous les sens.
 - **Accueil et transfert** : volet (records, victoires, escadrilles n/4), transfert `LUDO1-` (familles débloquées réunies, famille choisie reprise si on n'en a pas), quoi de neuf, étiquette MAJ. Test fumée : le hangar s'affiche.
+
+## 9. Reprendre les changements d'Amiral ! (rapport du 17/10, rien n'est décidé)
+Escadrille est partie du moteur d'Amiral ! **d'avant** sa refonte « chantier naval » (`specs/amiral.md`). Elle en a donc
+les défauts corrigés depuis dans Amiral ! : Press Start 2P et petite police 3 × 5, écran figé à 272 × 480 (`LH`, `BY_BAR`
+constants), boutons LIGNE / COLONNE pour le missile (`setMissile`), pas de bouton FEU !, pouvoirs liés à un indice d'avion
+fixe (`POWERS[..].ship`, `FLEET` figée).
+
+### Lot 1 : ergonomie et polices (facile, environ une demi-session, Sonnet ou opusplan)
+Reprise presque mot pour mot d'Amiral ! (même structure de fichier) :
+- **hauteur qui suit l'écran** (480 à 620) : `layout()` (`BY_BAR`, `BAR_H`, minicarte, messages), écrans de menus centrés
+  (`OY`) ; préparer le sol qui défile (`escadrille/sol.js`) et le ciel à 620 de haut ;
+- **police C** : Press Start 2P pour les logos, Rajdhani 700 pour le reste (`polices/nebula.css` en local) ; reprendre
+  directement la version **corrigée** de `tiny()` d'Amiral ! (voir `specs/amiral.md`, correction du 17/10 :
+  l'alignement s'était retrouvé dans un commentaire) ;
+- **missile en deux gestes** (case, puis flèche à gauche de la ligne ou au-dessus de la colonne), comme la torpille ;
+- **bouton FEU !** sur la plaque du pouvoir (radar, bombes, esquive) ;
+- noms longs resserrés dans le panneau de la flotte ennemie ;
+- vérifier en captures tous les écrans (titre, HANGAR, placement, combat, fin) avec les 4 familles ; republier l'artefact.
+
+### Lot 2 : choisir ses avions (gros chantier, 2 ou 3 sessions avec Opus, plus les dessins)
+1. **Règle des places.** Les avions ont une forme (bombardier 8 cases, radar 5, chasseur 4, hélicoptère 2) : des places par
+   catégorie (un gros, deux moyens, un petit) et **chaque nouvel avion avec le même nombre de cases** que celui qu'il remplace,
+   sinon le ciel de 9 × 9 se remplit plus ou moins et la difficulté change.
+2. **Dessins : le plus gros coût.** Chaque avion existe en 4 familles (escadre, furtif, hélices, canonnière), en joueur et en
+   pirate, et dans 4 orientations (calculées par `rotBuilder`). 7 nouveaux avions × 4 familles = 28 dessins, plus une planche de
+   maquettes. Pour alléger : moins d'avions (4), ou les nouveaux avions dans une seule famille commune (moins cohérent avec le HANGAR).
+3. **Pouvoirs** : ceux d'Amiral ! se transposent (le code est écrit et testé) :
+
+   | Amiral ! | Escadrille (proposition) |
+   |---|---|
+   | MISSILES (3 cases au choix) | ROQUETTES : bombardier d'attaque |
+   | SONAR (compte une ligne) | DETECTION : avion de patrouille |
+   | PROJECTEUR (ligne de 4) | CAMERA : drone de reconnaissance |
+   | REPARATION | REPARATION : avion ravitailleur |
+   | MINES | FLAK : ballons de barrage |
+   | FUMEE | LEURRES : avion brouilleur |
+   | LEURRE | FAUX AVION : le dirigeable (écarté le 17/10 « pour le moment ») |
+4. **IA** : celle d'Amiral ! a été réécrite pour jouer les deux camps et chaque pouvoir ; celle d'Escadrille raisonne en formes
+   à 4 orientations (`density`, `aiNear`, `heliThreat`). Porter chaque pouvoir en tenant compte des formes, puis régler avec
+   des parties simulées (comme `Amiral.simulate`). Partie délicate : Opus.
+5. **Deux collections** : le HANGAR débloque des familles (dessins) ; des avions à débloquer en feraient une deuxième. Les réunir
+   sur un seul écran (onglets FAMILLES / AVIONS) pour que l'enfant s'y retrouve.
+6. **Pas de bataille du jour** : décision du 17/10 (« pas de ciel du jour ») ; à reconfirmer si on veut des flottes imposées.
+
+### Moteur commun aux deux jeux ?
+Déconseillé pour l'instant : grille 8 × 8 contre 9 × 9, lignes contre formes, sol qui défile, familles. Porter par copie,
+fonction par fonction, et noter chaque reprise dans les deux cahiers des charges.
+
+### Recommandation
+1. **Lot 1 tout de suite** : peu coûteux, Escadrille devient aussi lisible qu'Amiral !.
+2. **Lot 2 après la session 2 d'Amiral !** et les essais sur le téléphone, pour ne porter qu'une fois des pouvoirs stables
+   (mines, fumée et leurre compris).
+3. Lot 2 en commençant par une **maquette** : les nouveaux avions dans une seule famille pour juger les formes, puis décider du
+   nombre d'avions et de familles.
