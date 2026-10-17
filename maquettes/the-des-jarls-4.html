@@ -337,7 +337,7 @@ class TelA extends Tel{
     // soldats, du fond vers l'avant
     const items=[];for(const s of[0,1])m.c[s].sold.forEach((sd,i)=>items.push({s,i,sd,...posA(s,i,UH)}));items.sort((a,b)=>a.y-b.y);
     for(const it of items){const{s,sd,r,k,d}=it,dir=s?-1:1,o=1-s;let x=it.x,y=it.y,pose='',ang=0;
-      if(ph){const{p,u}=ph;
+      if(ph&&sd.mort===null){const{p,u}=ph;
         if(p.nom==='haches'&&p.att[s]&&r===0){x+=dir*Math.sin(Math.min(1,u*1.6)*Math.PI)*24;pose='charge'}
         if(p.nom==='haches'&&p.att[o]&&p.def[s]&&r<2&&!pose)pose='garde';
         if(p.nom==='fleches'&&p.att[s]&&r===2&&u<.7)pose='tir';
