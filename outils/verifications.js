@@ -6,7 +6,8 @@
    4. menu : les icônes de ICONS (icones.js) font bien 16 lignes de 16 caractères ;
    5. Nebula : simulateur de combats et de parties (reproductibilité, migrate()) ;
    6. Nebula : types de regles.js (// @ts-check + JSDoc) vérifiés par tsc, sans rien compiler ;
-   7. Lune-Rover : chaque niveau est gagné par sa solution de référence.
+   7. Lune-Rover : chaque niveau est gagné par sa solution de référence ;
+   8. Odyssée : chaque plateau est traversé par le pilote automatique, sous le temps cible.
    Code de sortie 1 si quelque chose ne va pas. */
 const fs = require('fs'), path = require('path'), vm = require('vm'), { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
@@ -76,6 +77,10 @@ catch (e) { if (e.code === 'ENOENT') console.log('--    Nebula : tsc absent, typ
 // 7. Lune-Rover : chaque niveau est gagné par sa solution de référence
 try { execFileSync(process.execPath, [path.join(__dirname, 'lune-rover-niveaux.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Lune-Rover : les 30 niveaux ont une solution'); }
 catch (e) { bad('Lune-Rover : niveaux\n' + (e.stdout || '') + (e.stderr || '')); }
+
+// 8. Odyssée : chaque plateau est traversé par le pilote automatique
+try { execFileSync(process.execPath, [path.join(__dirname, 'odyssee.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Odyssée : chaque plateau est faisable, sous le temps cible'); }
+catch (e) { bad('Odyssée : plateaux\n' + (e.stdout || '') + (e.stderr || '')); }
 
 console.log(fail ? `\n${fail} problème(s)` : '\nTout est bon.');
 process.exit(fail ? 1 : 0);

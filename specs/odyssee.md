@@ -62,3 +62,21 @@ Jeu de « bille » à pencher, où la bille est le bateau d'Ulysse qui rentre de
 
 ## 9. Points à confirmer sur le téléphone
 - Sensibilité de l'inclinaison, calibration, et fluidité de la mer animée avec la physique sur un Android moyen.
+- Difficulté des 12 premiers plateaux (surtout 3-3, « La colère du Cyclope ») et temps cibles.
+
+## 10. Bilan de la session 1 (17/10)
+Fait : `odyssee/regles.js` (moteur pur, objet `ODY`, chargé aussi par Node), `odyssee/index.html` (rendu Three.js style C, contrôles, écrans, carte), épisodes 1 à 4 (12 plateaux), étoiles, sauvegarde, `outils/odyssee.js` (lancé par `verifications.js`), test de fumée, `sw.js` (v33).
+
+Décisions et écarts au cahier des charges :
+- **Format des plateaux** : la carte en texte est **encadrée** (`+-+-+` en haut et en bas, `|` à gauche et à droite), ce qui permet d'indenter le texte dans le code. Lignes impaires : les cases séparées par ` ` ou `|` (muret vertical) ; lignes paires : ` ` ou `-` sous chaque case (un `+` sur une case compte aussi comme muret). Cases : `.` mer, `D` départ, `I` arrivée, `X` récif (centre de la case), `L` lotus, `P` phare, `> < ^ v` vent. Les murets sont fusionnés en lignes droites (`map.murs`, `map.boites`).
+- **Pilote automatique** : au lieu d'une liste de points écrite à la main (trop d'erreurs), l'**itinéraire est calculé** (`ODY.itineraire`) : plus court chemin sur une grille de 0,25 case loin des murets et des récifs, 5 fois plus cher dans les lotus, moins cher avec le vent, puis simplifié en lignes droites. Un plateau peut encore imposer `chemin: [[x, y], …]`. Le pilote ne passe au point suivant que s'il le voit ; contre les flèches et les rochers, il essaie 35 caps en simulant vraiment le bateau jusqu'à l'impact.
+- **Temps cible** (★★★) = temps du pilote × 1,3 + 3 s, arrondi ; `outils/odyssee.js` vérifie qu'il reste entre « pilote + 1 s » et « pilote × 1,6 + 5 s » et conseille une valeur.
+- **Étoiles en escalier** : ★ arrivé, ★★ sans naufrage, ★★★ sans naufrage **et** sous le temps cible.
+- Le temps court aussi pendant un naufrage (0,8 s de plus que le retour au départ ou au dernier phare). Après une reprise, les projectiles en vol sont annulés et le bateau clignote 0,8 s sans pouvoir être touché.
+- **Dangers** : flèches enflammées (1-3) qui visent autour du bateau (`fleches: { cadence, alerte, rayon, ecart }`) ; rochers de Polyphème (épisode 3, `rochers: { attente, vol, rayon, avance }`, plus doux en 3-1 qu'en 3-3, un peu de hasard sur la visée) ; lotus (frottement 6 au lieu de 1,4) ; vent par case (`vent:` force, 3 à 3,5 : on peut encore remonter le vent, à 4,4 de pente maximale) ; outre (`outre: 5` : les vents tournent d'un quart de tour toutes les 5 s, les traits clignotent et l'outre s'agite la dernière seconde). Phares sur 4-2 et 4-3.
+- Lumières : aube (Troie en flammes, cheval de bois), jour (Lotophages : plage et palmiers ; Polyphème), vent (Éole : île flottante au rempart de bronze, outre, nuages), orage (4-3, avec éclairs). Un plateau peut avoir sa propre `lumiere`.
+- Contrôles : inclinaison × 1,2 (pente maximale vers 9,5° d'inclinaison du téléphone), position de départ = « plat », bouton ⟲ À PLAT ; doigt (70 px = pente maximale) ; flèches du clavier sur ordinateur.
+- Carte de l'Égée : SVG dessiné par le code (10 escales, trajet en pointillés, trait plein jusqu'à l'épisode atteint, galère sur la dernière escale) ; toucher une escale ouvre son volet (récit et 3 plateaux, étoiles, record). Plateau suivant ouvert dès que le précédent a au moins une étoile.
+- Écran titre : le pilote joue les plateaux les uns après les autres derrière le titre.
+
+Reste pour la session 2 : épisodes 5 à 10 (`lumiere` crépuscule et nuit, lanterne, moly, sirènes et bouton « cire », tourbillons et Scylla, courants de Calypso), plateau du jour, classements, accueil (cartouche `3d`), transfert, artefact. Plus tard : sons.

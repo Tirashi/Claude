@@ -1,11 +1,11 @@
 /* Test « fumée » dans Chromium : chaque jeu s'ouvre sans erreur JavaScript, l'accueil ouvre le volet
    d'un jeu (et l'ancien lien des classements y mène), et Nebula joue une partie (saut, combat au toucher,
-   fin de tour, écran INCIDENT).
+   fin de tour, écran INCIDENT), et Odyssée traverse un plateau avec son pilote automatique.
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html',
   'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -65,6 +65,19 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('La colonie : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-colonie.png` });
+    }
+    if (url === 'odyssee/index.html') {
+      // Odyssée : la carte, puis un plateau traversé quelques secondes par le pilote automatique
+      const r = await p.evaluate(async () => {
+        const O = Odyssee, wait = ms => new Promise(r => setTimeout(r, ms));
+        O.carte(); await wait(100);
+        if (!document.querySelector('#svg .escale') || !document.querySelector('#cVolet .plat')) return "la carte de l'Égée est vide";
+        O.lancer('3-1'); O.pilote = true; O.partir(); const x0 = O.st.x, y0 = O.st.y; await wait(1500);
+        if (O.mode !== 'jeu' || Math.hypot(O.st.x - x0, O.st.y - y0) < 0.5) return 'la galère ne bouge pas';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Odyssée : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-odyssee.png` });
     }
     if (errs.length) { fail++; console.log('ÉCHEC ' + url + '\n  ' + errs.join('\n  ')); } else console.log('ok    ' + url);
     await p.close();

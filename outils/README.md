@@ -15,11 +15,12 @@ python3 -m http.server 8765
 | `orbite-solveur.js [niveaux]` | Orbite : tirs gagnants et robustes par niveau. |
 | `lune-rover-niveaux.js` | Lune-Rover, **sous Node** : chaque niveau est gagné par sa solution de référence (dans le palier du niveau) ; sans répétitions, la solution est la plus courte. Lancé aussi par `verifications.js`. |
 | `pont-stellaire-unicite.js [n]` | Pont stellaire : temps de génération et unicité des solutions. |
-| `verifications.js` | **Avant chaque push** (sans navigateur ni serveur) : syntaxe de tous les scripts, `sw.js` (fichiers et version notée dans CLAUDE.md), aucune clé secrète, `MON-CODE`, icônes 16×16, simulateur Nebula, types de `nebula/regles.js` (`tsc -p outils/tsconfig.nebula.json`, ignoré si `tsc` est absent). Lancé aussi par la CI GitHub. |
-| `fumee.js [captures]` | Chaque jeu s'ouvre sans erreur JavaScript ; Nebula : saut, toucher, fin de tour, entraînement, écran INCIDENT. Lancé aussi par la CI. |
+| `verifications.js` | **Avant chaque push** (sans navigateur ni serveur) : syntaxe de tous les scripts, `sw.js` (fichiers et version notée dans CLAUDE.md), aucune clé secrète, `MON-CODE`, icônes 16×16, simulateur Nebula, plateaux d'Odyssée, types de `nebula/regles.js` (`tsc -p outils/tsconfig.nebula.json`, ignoré si `tsc` est absent). Lancé aussi par la CI GitHub. |
+| `fumee.js [captures]` | Chaque jeu s'ouvre sans erreur JavaScript ; Nebula : saut, toucher, fin de tour, entraînement, écran INCIDENT ; Odyssée : carte, plateau traversé par le pilote. Lancé aussi par la CI. |
 | `nebula-simulateur.js [n] [prudence]` | Nebula, **sous Node** (pas besoin du serveur) : combats automatiques (victoires, coque perdue) contre l'IA du secteur 1 puis l'IA par score (niveaux 1 et 2), parties complètes reproductibles, `migrate()`. |
 | `nebula-parties.js [n] [prudence]` | Nebula, sous Node : parties complètes sur les 3 secteurs (où la flotte tombe, victoires, coque perdue par secteur et par type de combat). Pour régler la difficulté. |
 | `nebula-flottes.js [n] [vaisseau,vaisseau,…]…` | Nebula, sous Node : force de différentes flottes de départ (victoires, secteurs, score, coût en points et prime). Sans composition : les 3 modèles et quelques flottes de 9-10 points. Pour calibrer les points de flotte. |
+| `odyssee.js [plateau] [dessin]` | Odyssée, **sous Node** : chaque plateau se lit et le pilote automatique le traverse (sans naufrage, au moins 3 fois sur 5 avec des projectiles) sous le temps cible ; `dessin` montre la carte et la trace du pilote. Lancé aussi par `verifications.js`. |
 | `ile-colonie.js [parties] [années] [graine] [détail]` | La colonie, sous Node : parties jouées par un pilote automatique simple (années tenues, population, départs, score, `migrate()`). Pour régler la difficulté. |
 | `artefact.py <jeu.html> <sortie.html>` | Copie d'un jeu prête à publier en artefact (tous les scripts locaux intégrés, sans ludo-scores.js). |
 
