@@ -1,6 +1,6 @@
 /* Test « fumée » dans Chromium : chaque jeu s'ouvre sans erreur JavaScript, l'accueil ouvre le volet
    d'un jeu (et l'ancien lien des classements y mène), et Nebula joue une partie (saut, combat au toucher,
-   fin de tour, écran INCIDENT), Escadrille ! un tour de combat (toucher, riposte), et Odyssée traverse un plateau avec son pilote automatique, lance le plateau du jour et montre la cire.
+   fin de tour, écran INCIDENT), Amiral ! les nouveaux pouvoirs (missiles, sonar, projecteur, réparation) et des parties simulées, Escadrille ! un tour de combat (toucher, riposte), et Odyssée traverse un plateau avec son pilote automatique, lance le plateau du jour et montre la cire.
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
@@ -80,6 +80,29 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Odyssée : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-odyssee.png` });
+    }
+    if (url === 'amiral/index.html') {
+      // Amiral ! : le chantier naval (flotte des nouveaux navires), un coup de chaque nouveau pouvoir, la riposte, puis des parties simulées
+      const r = await p.evaluate(async () => {
+        const A = Amiral, S = A.S, wait = ms => new Promise(r => setTimeout(r, ms));
+        A.openYard(); A.YARD.fleet = ['cruiser', 'destroyer', 'sub', 'coast']; A.newGame(); A.startBattle();
+        const turn = async plan => { S.busy = false; S.turn = 'player'; await A.playerAct(plan); for (let k = 0; k < 80 && (S.turn !== 'player' || S.busy) && S.phase === 'play'; k++) await wait(100); };
+        await turn({ w: 'missiles', c: 0, r: 0, h: true, cells: [[0, 0], [7, 7], [3, 4]] });
+        if (S.stats.shots !== 3) return 'les missiles ne tirent pas 3 fois';
+        if (S.turn !== 'player') return "l'ennemi ne rend pas la main";
+        await turn({ w: 'sonar', c: 0, r: 5, h: true });
+        if (!S.enemy.sonar.some(q => q.h && q.i === 5)) return 'le sonar ne note pas la ligne';
+        await turn({ w: 'projecteur', c: 4, r: 2, h: false });
+        A.YARD.fleet = ['tender', 'battle', 'sub', 'torp']; A.newGame(); A.startBattle();
+        const b = S.player, s = b.ships[0]; b.shots[s.r][s.c] = 2; s.hits = 1;
+        await turn({ w: 'reparation', c: s.c, r: s.r, h: true });
+        if (s.hits !== 0 || b.shots[s.r][s.c]) return 'la réparation ne répare pas';
+        const all = ['carrier', 'cruiser', 'tender'].flatMap(a => ['battle', 'destroyer'].flatMap(m => [[a, m, 'sub', 'torp'], [a, 'sub', m, 'coast']]));
+        for (const f of all) for (const d of ['easy', 'normal', 'hard']) { const g = await A.simulate(f, all[(all.indexOf(f) + 3) % all.length], d); if (!g.winner) return 'partie simulée sans vainqueur : ' + f; }
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Amiral ! : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-amiral.png` });
     }
     if (url === 'escadrille/index.html') {
       // Escadrille ! : placement au hasard, décollage, un vrai toucher sur le ciel ennemi, puis la riposte de l'ordinateur

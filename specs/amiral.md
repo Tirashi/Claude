@@ -61,3 +61,48 @@ Les recharges et les conditions sont des propositions, à ajuster pendant les se
 - **Session 2** : MINES, FUMEE, LEURRE (les plus délicats pour l'IA), déblocages et annonce, bataille du jour,
   accueil, classements (`daily:`), transfert `LUDO1-` (navires débloqués), fumée, artefact au lien d'Amiral !.
 - Modèle : Opus (l'IA des pouvoirs est le point délicat).
+
+## 7. Bilan de la session 1 (17/10)
+Fait dans `amiral/index.html` :
+- **Ergonomie** : hauteur logique `LH` entre 480 et 620 selon l'écran (`layout()` : `BY_BAR`, `BAR_H`, minicarte, boîte des
+  messages qui affiche autant de lignes qu'elle peut) ; titre et chantier dessinés pour 480 et centrés (`OY`) ; écran de fin centré.
+- **Polices** (direction C) : Press Start 2P pour les logos, Rajdhani 700 pour tout le reste (`polices/nebula.css` en local,
+  et le lien Google qui contient aussi Press Start 2P pour l'artefact). Petite police 3 × 5 retirée. Les noms trop longs pour
+  leur plaque (REPARATION, PROJECTEUR) passent en 9 px.
+- **Pouvoirs généralisés** : `SHIPS` (catalogue des 11 navires : taille, pouvoir, `ok` = programmé), `POWERS` (nom, recharge,
+  description, `dir` = pouvoir en ligne à deux gestes, `own` = vise sa propre flotte). Chaque flotte est une liste de 4 navires
+  (`makeBoard(fleet)`), `b.cd` est indexé par ses pouvoirs, `shipOf(b, pouvoir)` retrouve le navire, `blocked(side, p)` dit
+  pourquoi un pouvoir ne peut pas servir (`sunk`, `cd`, `hit`, `stuck`, `intact`).
+- **Torpille, sonar et projecteur en deux gestes** : toucher une case, puis la flèche de gauche (ligne) ou du haut (colonne).
+  **FEU !** sur la plaque du pouvoir quand la cible est choisie.
+- **4 nouveaux navires jouables** :
+  - croiseur, MISSILES (recharge **4**) : toucher 3 cases (toucher une cible la retire), puis FEU ! ; les missiles arrivent en biais avec leur traînée ;
+  - destroyer, SONAR (3) : compte les cases de navire **pas encore touchées** d'une ligne ou colonne. Le badge au bout de la
+    ligne (`b.sonar`) reste à jour : il baisse à chaque touché, monte à chaque réparation, disparaît si le sous-marin plonge
+    dans la ligne ; à 0 les cases inconnues deviennent de l'eau, s'il égale le nombre de cases inconnues elles sont repérées (`sonarDeduce`) ;
+  - garde-côte, PROJECTEUR (**2**) : révèle 4 cases autour de la case touchée, dans le sens choisi ;
+  - navire-atelier, REPARATION (**4**) : répare une case touchée d'un navire pas coulé ; **la case retourne dans le brouillard**
+    pour l'adversaire (avec « l'ennemi sait toujours qu'un navire est là », le navire-atelier ne servait à rien : l'ennemi refrappait aussitôt).
+    Réparer le sous-marin lui rend sa plongée.
+- **IA** (fonctions qui prennent le camp, pour pouvoir jouer les deux) : repérage d'abord (avion, projecteur, sonar), puis
+  n'importe quelle arme prête plutôt qu'un tir simple ; missiles sur les 3 cases les plus probables ; sonar sur la ligne la plus
+  prometteuse jamais sondée ; densité renforcée sur les lignes sondées ; réparation dès qu'un navire est touché (d'abord celui
+  qui va couler, ou le sous-marin) ; le sous-marin plonge aussi quand sa ligne a été sondée.
+- **Chantier naval** : JOUER → chantier ; 4 places, onglets 4 / 3 / 2 CASES, cartes du catalogue, EN SERVICE, NOUVEAU !
+  (jusqu'à la première visite de l'onglet), MOUILLEUR, BROUILLEUR et VEDETTE en silhouette « EN CONSTRUCTION » (session 2).
+  Flotte gardée dans `amiral.flotte`, navires vus dans `amiral.vus`. Écran titre : les 4 pouvoirs de la flotte choisie.
+  Écran de fin : bouton CHANTIER.
+- **Flotte ennemie** : classique en MOUSSE, tirée parmi les navires programmés en CAPITAINE et AMIRAL.
+- **Palmarès** (`amiral.palmares` : `victoires`, victoires par niveau, `rapide` < 20 tours, `intacte` sans perdre de navire),
+  enregistré dès maintenant pour les déblocages de la session 2.
+- **Tests** : `window.Amiral` ; `Amiral.simulate(flotteA, flotteB, niveau)` joue une partie IA contre IA sans animation
+  (`S.fast`) ; `outils/fumee.js` joue missiles, sonar, projecteur, réparation, la riposte, et 36 parties simulées.
+
+**Réglages** (parties simulées IA contre IA en AMIRAL, 1 500 par flotte, contre la flotte classique ; le camp qui commence
+gagne 0,60 à flottes égales) : croiseur à la place du porte-avions 0,56 ; navire-atelier à la place du porte-avions 0,50 ;
+garde-côte à la place du torpilleur 0,51 ; destroyer à la place du sous-marin 0,64 (à la place du cuirassé 0,29 : la salve
+est forte). Les pouvoirs de renseignement valent sans doute plus pour un joueur que pour l'IA.
+
+**Pour la session 2** : retirer « EN CONSTRUCTION », brancher les conditions de déblocage sur `amiral.palmares`
+(et `usable()`), l'annonce « NOUVEAU NAVIRE DEBLOQUE ! » ; MINES, FUMEE, LEURRE ; bataille du jour ; accueil ; transfert ; artefact.
+Point à décider : faut-il reverrouiller les 4 navires ouverts pendant la session 1 (les conditions sont-elles déjà remplies ?).
