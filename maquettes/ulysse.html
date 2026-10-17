@@ -1,0 +1,510 @@
+<title>Odyssée, maquette</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Fredoka:wght@400;600;700&family=IM+Fell+English+SC&display=swap">
+<style>
+/* Trois téléphones côte à côte (empilés sur un téléphone), chacun jouable, avec sa fiche dessous. */
+:root{
+  --fond:#14110d; --fond2:#221d16; --texte:#f2ece2; --doux:#b0a693; --accent:#e8873a; --cadre:#060504;
+  --f-texte:'Fredoka', system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--f-texte);font-size:16px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header h1{font-weight:700;font-size:clamp(28px,6vw,40px);margin:0;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--doux);max-width:66ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:32px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.tel{position:relative;width:100%;max-width:300px;aspect-ratio:9/19;border:9px solid var(--cadre);border-radius:34px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.5);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.tel.actif{outline:3px solid var(--accent);outline-offset:3px}
+.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:20px 16px 24px;text-align:center}
+.haut{display:flex;justify-content:space-between;align-items:baseline}
+.ep{font-size:12px;margin-top:4px;text-align:left}
+.temps{font-size:28px;line-height:1}
+.chutes{font-size:13px}
+.msg{font-size:14px;min-height:2.8em;line-height:1.4;white-space:pre-line}
+.a .hud{font-family:'Cinzel', serif;font-weight:700;color:#e8873a;text-shadow:0 2px 0 #000}
+.a .msg{font-size:14px}
+.b .hud{font-family:'IM Fell English SC', serif;color:#f0dcae;text-shadow:0 2px 0 #000}
+.b .temps{font-size:30px} .b .msg{font-size:17px} .b .ep{font-size:14px}
+.c .hud{font-family:var(--f-texte);font-weight:700;color:#fff;text-shadow:0 2px 3px rgba(0,40,70,.6)}
+.fiche{width:100%;max-width:340px}
+.fiche h2{margin:0;font-size:22px;font-weight:700}
+.fiche h2 span{display:inline-block;min-width:1.6em;color:var(--accent)}
+.fiche p{margin:4px 0 8px;color:var(--doux)}
+.fiche ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:3px;font-size:15px}
+.commun{background:var(--fond2);border-radius:16px;padding:18px 20px;max-width:780px}
+.commun h2{margin:0 0 8px;font-size:20px}
+.commun h3{margin:14px 0 6px;font-size:17px}
+.commun ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.commun p{margin:10px 0 0;color:var(--accent);font-weight:600}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Odyssée : le retour d'Ulysse</h1>
+    <p>On penche le téléphone pour guider le bateau d'Ulysse de Troie jusqu'à Ithaque. Chaque téléphone montre un style et un épisode différents, avec son danger propre. Touche un téléphone pour jouer : penche-le, ou fais glisser le doigt pour incliner.</p>
+  </header>
+
+  <div class="grille">
+    <div class="dir">
+      <div class="tel a" id="telA"><canvas></canvas>
+        <div class="hud"><div class="haut"><div><div class="temps">0:00</div><div class="ep">CHANT XII · SCYLLA</div></div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>A</span>Le vase à figures noires</h2>
+        <p>La version précédente, poussée plus loin. Épisode : <b>Charybde et Scylla</b>.</p>
+        <ul><li>Les tourbillons de Charybde aspirent le bateau quand il passe trop près</li>
+          <li>Les têtes de Scylla jaillissent de l'eau à intervalles réguliers : des rides préviennent, puis le cou se dresse. On attend son tour pour passer.</li>
+          <li>Mer orange, frise grecque, tout en ombres noires comme sur une amphore</li></ul></div>
+    </div>
+
+    <div class="dir">
+      <div class="tel b" id="telB"><canvas></canvas>
+        <div class="hud"><div class="haut"><div><div class="temps">0:00</div><div class="ep">Chant X · Les vents d'Eole</div></div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>B</span>La carte ancienne</h2>
+        <p>On navigue sur une carte de marin dessinée à l'encre. Épisode : <b>l'outre des vents d'Éole</b>.</p>
+        <ul><li>Les vents soufflent par bandes (traits qui défilent) et poussent le bateau, parfois vers les écueils</li>
+          <li>Parchemin taché, rose des vents, côtes à l'encre, petite galère en bois</li>
+          <li>La carte de l'Odyssée servirait aussi de menu : le trajet s'y dessine plateau après plateau</li></ul></div>
+    </div>
+
+    <div class="dir">
+      <div class="tel c" id="telC"><canvas></canvas>
+        <div class="hud"><div class="haut"><div><div class="temps">0:00</div><div class="ep">CHANT IX · LE CYCLOPE</div></div><div class="chutes"></div></div><div class="msg"></div></div></div>
+      <div class="fiche"><h2><span>C</span>La mer Égée en 3D</h2>
+        <p>Low poly ensoleillé : vraie mer qui ondule, falaises, maisons blanches. Épisode : <b>Polyphème</b>.</p>
+        <ul><li>Le Cyclope, derrière sa falaise, lance des rochers là où va le bateau : l'ombre grossit, puis PLOUF</li>
+          <li>Récifs pointus entourés d'écume, galère à l'œil peint sur la proue</li>
+          <li>Le plus vivant des trois ; chaque épisode change la lumière (aube, orage, nuit)</li></ul></div>
+    </div>
+  </div>
+
+  <section class="commun">
+    <h2>Le jeu complet : 10 épisodes × 3 plateaux</h2>
+    <ul>
+      <li><b>Troie</b> : apprendre à naviguer, flèches enflammées qui tombent</li>
+      <li><b>Les Lotophages</b> : les fleurs de lotus ralentissent le bateau (eau collante)</li>
+      <li><b>Polyphème</b> : rochers lancés (téléphone C)</li>
+      <li><b>Éole</b> : bandes de vent (téléphone B) ; au dernier plateau, l'outre s'ouvre et tous les vents tournent</li>
+      <li><b>Circé</b> : l'équipage change en cochons… le bateau devient lourd et lent</li>
+      <li><b>Les Enfers</b> : nuit noire, seule la lanterne du bateau éclaire</li>
+      <li><b>Les Sirènes</b> : leur chant attire le bateau vers leurs rochers ; boucher ses oreilles = bouton pour résister un moment</li>
+      <li><b>Charybde et Scylla</b> : tourbillons et têtes qui jaillissent (téléphone A)</li>
+      <li><b>Calypso</b> : île à courants circulaires, il faut trouver la sortie</li>
+      <li><b>Ithaque</b> : le grand plateau final, tous les dangers mêlés</li>
+    </ul>
+    <h3>Et aussi</h3>
+    <ul>
+      <li>Trois étoiles par plateau selon le temps et les naufrages ; un plateau du jour pour la famille, tiré au hasard dans un épisode.</li>
+      <li>Une ligne de récit entre les épisodes (« Le vent nous mena chez les Cyclopes… »).</li>
+      <li>Le nom du jeu deviendrait <b>Odyssée</b>.</li>
+    </ul>
+    <p>Dis-moi le style (A, B ou C) et si la liste des épisodes te plaît.</p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Plateau de 8 × 12 cases ; x vers la droite, y vers le bas (vers le joueur).
+const LARG = 8, HAUT = 12, R = 0.28, EP = 0.25, TROU = 0.42, PENTE_MAX = 0.2;
+const MURS = [[0,2,6,2],[2,4,8,4],[0,6,6,6],[2,8,8,8],[0,10,6,10],[4,2,4,3],[4,6,4,7],[3,9,3,10]];
+const DEPART = [1,1.2], ARRIVEE = [1,11.1];
+const CHEMIN = [[7,1.4],[7,3.5],[1,3.5],[1,5.4],[7,5.4],[7,7.5],[1,7.5],[1,8.5],[7,8.5],[7,11.2],[1,11.1]];
+const BOITES = MURS.map(([x1,y1,x2,y2]) => [Math.min(x1,x2)-EP/2, Math.min(y1,y2)-EP/2, Math.max(x1,x2)+EP/2, Math.max(y1,y2)+EP/2]);
+const P = (x, y) => [x - LARG / 2, y - HAUT / 2];
+const CADRE = [[LARG + 1, 0.5, 0, -HAUT / 2 - 0.25], [LARG + 1, 0.5, 0, HAUT / 2 + 0.25], [0.5, HAUT, -LARG / 2 - 0.25, 0], [0.5, HAUT, LARG / 2 + 0.25, 0]];
+
+function toile(w, h, dessin){
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  dessin(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+const alea = (a, b) => a + Math.random() * (b - a);
+const plat = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); return m; };
+const le_long = ([x1, y1, x2, y2], pasL, f) => {
+  const n = Math.max(2, Math.round(Math.hypot(x2 - x1, y2 - y1) / pasL));
+  for (let k = 0; k <= n; k++) f(...P(x1 + (x2 - x1) * k / n, y1 + (y2 - y1) * k / n), k);
+};
+
+// Galère : coque, mât, voile, rames ; « oeil » peint sur la proue en option
+function galere({ coque, voile, rame, oeil }){
+  const bat = new THREE.Group(), g = new THREE.Group();
+  const mc = new THREE.MeshLambertMaterial({ color: coque, flatShading: true });
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.24), mc));
+  const proue = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 4), mc); proue.rotation.z = -Math.PI / 2 - 0.4; proue.position.set(0.38, 0.06, 0); g.add(proue);
+  const poupe = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.25, 4), mc); poupe.rotation.z = Math.PI / 2 + 0.6; poupe.position.set(-0.35, 0.08, 0); g.add(poupe);
+  const mat = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.55, 5), mc); mat.position.y = 0.3; g.add(mat);
+  const v = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.3, 0.42), new THREE.MeshLambertMaterial({ color: voile })); v.position.set(0.02, 0.34, 0); g.add(v);
+  const mr = new THREE.MeshLambertMaterial({ color: rame });
+  for (let k = 0; k < 4; k++) for (const sg of [-1, 1]){ const r = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.22), mr); r.position.set(-0.18 + k * 0.12, -0.02, sg * 0.2); r.rotation.x = sg * 0.5; g.add(r); }
+  if (oeil) for (const sg of [-1, 1]){ const o = new THREE.Mesh(new THREE.CircleGeometry(0.035, 8), new THREE.MeshBasicMaterial({ color: oeil })); o.position.set(0.24, 0.03, sg * 0.122); o.rotation.y = sg > 0 ? 0 : Math.PI; g.add(o); }
+  bat.add(g); bat.userData.coque = g; return bat;
+}
+
+const STYLES = {
+  // ---------- A : vase à figures noires, Charybde et Scylla ----------
+  A: {
+    fond: 0x14110d, cam: [0, 18.5, 10.5], G: 22, frot: 1.4, rebond: 0.4,
+    trous: [[3.5,.55],[5.5,2.6],[2.5,2.55],[3,4.6],[6,4.6],[5.5,6.55],[2.3,6.6],[5,9.45],[1.8,9.45],[4.5,10.55],[6.3,10.6]],
+    tourbillons: true, msgChute: 'CHARYBDE ! RETOUR AU PORT',
+    construire(scene, pl){
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xffe0c0, 1.05));
+      const ORANGE = '#d9772b', NOIR = '#1a1410';
+      const mer = toile(256, 384, (g, w, h) => {
+        g.fillStyle = ORANGE; g.fillRect(0, 0, w, h); g.strokeStyle = NOIR; g.lineWidth = 3;
+        for (let y = 24, r = 0; y < h; y += 32, r++) for (let x = (r % 2) * 16 - 16; x < w + 16; x += 32){ g.beginPath(); g.arc(x, y, 12, Math.PI * 1.05, Math.PI * 1.95); g.stroke(); }
+      });
+      const fond = new THREE.Mesh(new THREE.BoxGeometry(LARG, 0.4, HAUT), new THREE.MeshLambertMaterial({ map: mer }));
+      fond.position.y = -0.2; pl.add(fond); this.mer = mer;
+      const frise = n => toile(64 * n, 64, (g, w, h) => {
+        g.fillStyle = NOIR; g.fillRect(0, 0, w, h); g.strokeStyle = ORANGE; g.lineWidth = 6;
+        for (let i = 0; i < n; i++){ const o = i * 64; g.beginPath();
+          g.moveTo(o + 4, 52); g.lineTo(o + 4, 12); g.lineTo(o + 52, 12); g.lineTo(o + 52, 44); g.lineTo(o + 20, 44); g.lineTo(o + 20, 28); g.lineTo(o + 36, 28);
+          g.moveTo(o + 4, 52); g.lineTo(o + 64, 52); g.stroke(); }
+      });
+      for (const [w, dd, x, z] of CADRE){
+        const t = frise(Math.round(Math.max(w, dd) * 2)); if (dd > w){ t.center.set(.5, .5); t.rotation = Math.PI / 2; }
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.6, dd), [0, 0, 1, 0, 0, 0].map(k => new THREE.MeshLambertMaterial(k ? { map: t } : { color: NOIR })));
+        m.position.set(x, 0.1, z); pl.add(m);
+      }
+      const roc = new THREE.MeshLambertMaterial({ color: 0x1a1410, flatShading: true });
+      MURS.forEach(w => le_long(w, 0.34, (x, z) => {
+        const b = new THREE.Mesh(new THREE.ConeGeometry(alea(0.17, 0.24), alea(0.3, 0.6), 5), roc);
+        b.position.set(x + alea(-.03, .03), 0.15, z + alea(-.03, .03)); b.rotation.y = Math.random() * 3; pl.add(b);
+      }));
+      const spi = toile(128, 128, g => {
+        g.strokeStyle = NOIR; g.lineWidth = 5; g.beginPath();
+        for (let a = 0; a < Math.PI * 6; a += 0.1){ const r = 4 + a * 3.1; g.lineTo(64 + Math.cos(a) * r, 64 + Math.sin(a) * r); }
+        g.stroke(); g.fillStyle = NOIR; g.beginPath(); g.arc(64, 64, 8, 0, 7); g.fill();
+      });
+      this.spirales = this.trous.map(([tx, ty]) => { const m = plat(new THREE.CircleGeometry(0.62, 24), new THREE.MeshBasicMaterial({ map: spi, transparent: true }), ...[P(tx, ty)[0], 0.01, P(tx, ty)[1]]); pl.add(m); return m; });
+      // Les têtes de Scylla : rides d'alerte puis cou qui se dresse
+      this.scylla = [[4.5, 4.75, 0], [6.5, 9.3, 1.6]].map(([sx, sy, ph]) => {
+        const [x, z] = P(sx, sy), g = new THREE.Group(); g.position.set(x, 0, z); pl.add(g);
+        const rides = [0.35, 0.55].map(r => { const m = plat(new THREE.TorusGeometry(r, 0.03, 4, 24), roc, 0, 0.02, 0); g.add(m); return m; });
+        const cou = new THREE.Group(); g.add(cou);
+        const tronc = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.16, 1.1, 6), roc); tronc.position.y = 0.55; tronc.rotation.z = 0.25; cou.add(tronc);
+        const tete = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 5), roc); tete.rotation.z = -Math.PI / 2 - 0.3; tete.position.set(0.3, 1.1, 0); cou.add(tete);
+        const oeil = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 4), new THREE.MeshBasicMaterial({ color: 0xd9772b })); oeil.position.set(0.25, 1.17, 0.1); cou.add(oeil);
+        const crocs = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.14, 3), new THREE.MeshBasicMaterial({ color: 0xd9772b })); crocs.position.set(0.48, 1.02, 0); crocs.rotation.z = Math.PI; cou.add(crocs);
+        return { sx, sy, ph, g, rides, cou };
+      });
+      const [ax, az] = P(...ARRIVEE), ile = new THREE.Group();
+      ile.add(new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.6, 0.25, 9), roc));
+      const or = new THREE.MeshLambertMaterial({ color: 0xd9772b });
+      for (let k = 0; k < 4; k++){ const c = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 6), or); c.position.set(-0.24 + k * 0.16, 0.32, 0); ile.add(c); }
+      const toit = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.4, 0.18, 3), or); toit.rotation.set(Math.PI / 2, 0, Math.PI / 2); toit.scale.set(1.2, 1, 0.5); toit.position.y = 0.6; ile.add(toit);
+      ile.position.set(ax, 0.1, az + 0.1); pl.add(ile);
+      return galere({ coque: 0x1a1410, voile: 0xa8321e, rame: 0x1a1410 });
+    },
+    danger(J, dt, t){
+      for (const s of this.scylla){
+        const c = (t + s.ph) % 3.4, alerte = c < 1.3, frappe = c >= 1.3 && c < 2.2;
+        s.rides.forEach((r, i) => { r.visible = alerte; r.scale.setScalar(1 + ((c * 2 + i * 0.5) % 1) * 0.6); });
+        const haut = frappe ? Math.min(1, (c - 1.3) / 0.15) : 0;
+        s.cou.position.y = -1.3 + haut * 1.3; s.cou.rotation.y = Math.sin(t * 3) * 0.4; s.cou.visible = haut > 0;
+        if (frappe && Math.hypot(J.x - s.sx, J.y - s.sy) < 0.8) return 'SCYLLA ! RETOUR AU PORT';
+      }
+    },
+    anim(J, dt){ this.spirales.forEach(s => { s.rotation.z += dt * 2.2; }); this.mer.offset.x += dt * 0.02; },
+  },
+
+  // ---------- B : la carte ancienne, les vents d'Éole ----------
+  B: {
+    fond: 0x2a1c12, cam: [0, 18.5, 10.5], G: 22, frot: 1.4, rebond: 0.4,
+    trous: [[3.5,.55],[2.5,2.55],[3,4.6],[5.5,6.55],[2.3,6.6],[1.8,9.45],[4.5,10.55]],
+    msgChute: 'ECUEIL ! NAUFRAGE',
+    // Bandes de vent : [x1, y1, x2, y2, force x, force y]
+    vents: [[2, 4.15, 6.2, 5.85, -5, 0], [1.8, 6.15, 6.5, 7.85, 0, -5], [1.5, 10.15, 6.5, 11.85, 4.5, 0]],
+    construire(scene, pl){
+      scene.add(new THREE.HemisphereLight(0xfff4e0, 0x8a6a48, 0.9));
+      const d = new THREE.DirectionalLight(0xffffff, 0.35); d.position.set(-4, 14, 6); scene.add(d);
+      const ENCRE = '#3b2412', u = 64;
+      const carte = toile(512, 768, (g, w, h) => {
+        g.fillStyle = '#ead6aa'; g.fillRect(0, 0, w, h);
+        for (let k = 0; k < 30; k++){ const x = Math.random() * w, y = Math.random() * h, r = alea(20, 90), gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(150,100,40,.18)'); gr.addColorStop(1, 'rgba(150,100,40,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); }
+        // Mer hachurée
+        g.strokeStyle = 'rgba(59,36,18,.22)'; g.lineWidth = 1.5;
+        for (let y = 10; y < h; y += 14) for (let x = (y / 14 % 2) * 20; x < w; x += 40){ g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 7, y - 5, x + 14, y); g.stroke(); }
+        // Rose des vents
+        const rx = 6.6 * u, ry = 2.9 * u; g.strokeStyle = ENCRE; g.fillStyle = ENCRE; g.lineWidth = 2;
+        g.beginPath(); g.arc(rx, ry, 30, 0, 7); g.stroke();
+        for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4, l = k % 2 ? 22 : 40; g.beginPath(); g.moveTo(rx + Math.cos(a) * l, ry + Math.sin(a) * l); g.lineTo(rx + Math.cos(a + 1.3) * 6, ry + Math.sin(a + 1.3) * 6); g.lineTo(rx, ry); g.closePath(); k % 2 ? g.stroke() : g.fill(); }
+        g.font = '20px serif'; g.textAlign = 'center'; g.fillText('N', rx, ry - 46);
+        g.font = 'italic 26px serif'; g.fillText('Mare Aegaeum', 4.6 * u, 0.55 * u + 10);
+        g.font = 'italic 20px serif'; g.fillText('Aeolia', 7 * u, 9.1 * u); g.fillText('Ithaca', 1.9 * u, 11.7 * u);
+        // Écueils dessinés
+        for (const [tx, ty] of this.trous){
+          g.strokeStyle = ENCRE; g.lineWidth = 2; g.beginPath(); g.arc(tx * u, ty * u, TROU * u, 0, 7); g.stroke();
+          g.lineWidth = 1; for (let k = -2; k <= 2; k++){ g.beginPath(); g.moveTo(tx * u + k * 8 - 10, ty * u + 12); g.lineTo(tx * u + k * 8 + 10, ty * u - 12); g.stroke(); }
+        }
+      });
+      const fond = new THREE.Mesh(new THREE.BoxGeometry(LARG, 0.3, HAUT), new THREE.MeshLambertMaterial({ map: carte }));
+      fond.position.y = -0.15; pl.add(fond);
+      // Cadre : bois sombre aux coins de laiton
+      const bois = new THREE.MeshPhongMaterial({ color: 0x4a2c16, shininess: 30 }), laiton = new THREE.MeshPhongMaterial({ color: 0xc9a13a, specular: 0xfff0b0, shininess: 80 });
+      for (const [w, dd, x, z] of CADRE){ const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.6, dd), bois); m.position.set(x, 0.05, z); pl.add(m); }
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]){ const c = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.64, 0.6), laiton); c.position.set(sx * (LARG / 2 + 0.25), 0.05, sz * (HAUT / 2 + 0.25)); pl.add(c); }
+      // Côtes : traits d'encre en relief, ourlés de sable
+      const encre = new THREE.MeshLambertMaterial({ color: 0x3b2412 }), sable = new THREE.MeshLambertMaterial({ color: 0xc9a46a });
+      BOITES.forEach(([a, b, c, e]) => {
+        const [x, z] = P((a + c) / 2, (b + e) / 2);
+        const s = new THREE.Mesh(new THREE.BoxGeometry(c - a + 0.12, 0.08, e - b + 0.12), sable); s.position.set(x, 0.04, z); pl.add(s);
+        const m = new THREE.Mesh(new THREE.BoxGeometry(c - a, 0.26, e - b), encre); m.position.set(x, 0.13, z); pl.add(m);
+      });
+      // Écueils : petits rochers à l'encre
+      for (const [tx, ty] of this.trous){
+        const [x, z] = P(tx, ty);
+        for (let k = 0; k < 3; k++){ const r = new THREE.Mesh(new THREE.ConeGeometry(alea(0.08, 0.14), alea(0.15, 0.3), 4), encre); r.position.set(x + alea(-.18, .18), 0.08, z + alea(-.18, .18)); pl.add(r); }
+      }
+      // Bandes de vent : traits qui défilent dans le sens du souffle
+      const trait = toile(256, 128, g => {
+        g.strokeStyle = 'rgba(30,60,110,.85)'; g.lineWidth = 4.5; g.lineCap = 'round';
+        for (let k = 0; k < 7; k++){ const y = 10 + k * 17, x = (k * 53) % 200; g.beginPath(); g.moveTo(x, y); g.bezierCurveTo(x + 20, y - 8, x + 40, y + 8, x + 60, y); g.stroke();
+          if (k % 3 === 0){ g.beginPath(); g.arc(x + 66, y - 4, 5, Math.PI * 0.5, Math.PI * 2.2); g.stroke(); } }
+      });
+      this.bandes = this.vents.map(([x1, y1, x2, y2, fx, fy]) => {
+        const t = trait.clone(); t.needsUpdate = true; t.repeat.set((x2 - x1) / 2.5, (y2 - y1) / 1.2);
+        if (fy){ t.center.set(.5, .5); t.rotation = Math.PI / 2; t.repeat.set((y2 - y1) / 2.5, (x2 - x1) / 1.2); }
+        const [x, z] = P((x1 + x2) / 2, (y1 + y2) / 2);
+        const m = plat(new THREE.PlaneGeometry(x2 - x1, y2 - y1), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }), x, 0.02, z);
+        pl.add(m); return { t, fx, fy };
+      });
+      // Ithaque : petite ville et son drapeau
+      const [ax, az] = P(...ARRIVEE), ville = new THREE.Group(), mur = new THREE.MeshLambertMaterial({ color: 0xf2e6c8 });
+      for (const [dx, dz, h] of [[-0.2, 0.1, 0.3], [0.1, -0.1, 0.45], [0.25, 0.2, 0.25]]){ const m = new THREE.Mesh(new THREE.BoxGeometry(0.22, h, 0.22), mur); m.position.set(dx, h / 2, dz); ville.add(m); const t = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.15, 4), new THREE.MeshLambertMaterial({ color: 0xa8321e })); t.position.set(dx, h + 0.07, dz); t.rotation.y = Math.PI / 4; ville.add(t); }
+      ville.position.set(ax, 0, az); pl.add(ville);
+      return galere({ coque: 0x7a4a24, voile: 0xf4ead2, rame: 0x5a3418 });
+    },
+    force(J){
+      let fx = 0, fy = 0;
+      for (const [x1, y1, x2, y2, vx, vy] of this.vents) if (J.x > x1 && J.x < x2 && J.y > y1 && J.y < y2){ fx += vx; fy += vy; }
+      return [fx, fy];
+    },
+    anim(J, dt){ this.bandes.forEach(b => { if (b.fy) b.t.offset.x += dt * 0.5 * Math.sign(b.fy); else b.t.offset.x -= dt * 0.5 * Math.sign(b.fx); }); },
+  },
+
+  // ---------- C : la mer Égée en low poly, Polyphème ----------
+  C: {
+    fond: 0x9fdcff, cam: [0, 18.5, 10.5], G: 22, frot: 1.4, rebond: 0.4,
+    trous: [[3.5,.55],[5.5,2.6],[3,4.6],[6,4.6],[2.3,6.6],[5,9.45],[4.5,10.55]],
+    msgChute: 'RECIF ! NAUFRAGE',
+    construire(scene, pl){
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x2a7090, 0.7));
+      const d = new THREE.DirectionalLight(0xfff2d8, 0.75); d.position.set(-5, 12, 6); scene.add(d);
+      // Mer qui ondule
+      const geo = new THREE.PlaneGeometry(LARG + 0.2, HAUT + 0.2, 24, 36); geo.rotateX(-Math.PI / 2);
+      this.mer = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color: 0x1fb0c9, shininess: 80, specular: 0x9ff4ff, flatShading: true }));
+      this.mer.position.y = -0.05; pl.add(this.mer); this.base = geo.attributes.position.array.slice();
+      const fondMer = new THREE.Mesh(new THREE.BoxGeometry(LARG, 0.3, HAUT), new THREE.MeshLambertMaterial({ color: 0x0d6b8a })); fondMer.position.y = -0.4; pl.add(fondMer);
+      // Falaises et maisons blanches
+      const roc = new THREE.MeshLambertMaterial({ color: 0xd9bf8c, flatShading: true }), blanc = new THREE.MeshLambertMaterial({ color: 0xffffff }), bleu = new THREE.MeshLambertMaterial({ color: 0x2a6fd6 });
+      for (const [w, dd, x, z] of CADRE){ const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.8, dd), roc); m.position.set(x, 0.1, z); pl.add(m); }
+      MURS.forEach((w, i) => le_long(w, 0.3, (x, z, k) => {
+        const b = new THREE.Mesh(new THREE.DodecahedronGeometry(alea(0.17, 0.22), 0), roc); b.position.set(x, 0.12, z); b.scale.y = alea(0.9, 1.4); b.rotation.set(Math.random() * 3, Math.random() * 3, 0); pl.add(b);
+        if (k % 5 === 2 && i < 5){ const m = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.18), blanc); m.position.set(x, 0.38, z); pl.add(m);
+          if (k % 10 === 2){ const c = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 4, 0, 7, 0, Math.PI / 2), bleu); c.position.set(x, 0.47, z); pl.add(c); } }
+      }));
+      // Récifs pointus et leur écume
+      const gris = new THREE.MeshLambertMaterial({ color: 0x6d6a66, flatShading: true }), ecume = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+      this.ecumes = this.trous.map(([tx, ty]) => {
+        const [x, z] = P(tx, ty);
+        for (let k = 0; k < 4; k++){ const r = new THREE.Mesh(new THREE.ConeGeometry(alea(0.1, 0.17), alea(0.3, 0.55), 4), gris); r.position.set(x + alea(-.2, .2), 0.15, z + alea(-.2, .2)); r.rotation.set(alea(-.3, .3), 0, alea(-.3, .3)); pl.add(r); }
+        const e = plat(new THREE.RingGeometry(TROU * 0.7, TROU + 0.05, 16), ecume, x, 0.06, z); pl.add(e); return e;
+      });
+      // Ithaque : quai et temple blanc
+      const [ax, az] = P(...ARRIVEE), ile = new THREE.Group();
+      ile.add(new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.3, 8), roc));
+      for (let k = 0; k < 4; k++){ const c = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.35, 6), blanc); c.position.set(-0.22 + k * 0.15, 0.32, 0); ile.add(c); }
+      const toit = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.06, 0.25), blanc); toit.position.y = 0.52; ile.add(toit);
+      ile.position.set(ax, 0.05, az + 0.1); pl.add(ile);
+      // Polyphème derrière sa falaise, en haut
+      const cy = new THREE.Group(), peau = new THREE.MeshLambertMaterial({ color: 0xc98a5a, flatShading: true });
+      const falaise = new THREE.Mesh(new THREE.DodecahedronGeometry(2.2, 0), roc); falaise.scale.set(2.2, 0.8, 0.8); cy.add(falaise);
+      const corps = new THREE.Mesh(new THREE.DodecahedronGeometry(1.3, 0), peau); corps.position.set(0, 1.7, -0.6); corps.scale.set(1.4, 1, 0.9); cy.add(corps);
+      const tete = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9, 0), peau); tete.position.set(0, 3.1, -0.2); cy.add(tete);
+      const oeil = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), new THREE.MeshLambertMaterial({ color: 0xffffff })); oeil.position.set(0, 3.25, 0.55); cy.add(oeil);
+      const pupille = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), new THREE.MeshBasicMaterial({ color: 0x1a1410 })); pupille.position.set(0, 3.25, 0.84); cy.add(pupille);
+      const barbe = new THREE.Mesh(new THREE.ConeGeometry(0.6, 0.9, 6), new THREE.MeshLambertMaterial({ color: 0x4a2c16, flatShading: true })); barbe.rotation.x = Math.PI; barbe.position.set(0, 2.45, 0.2); cy.add(barbe);
+      const bras = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.6, 6), peau); bras.position.set(1.5, 2.3, -0.3); bras.rotation.z = -0.5; cy.add(bras);
+      cy.scale.setScalar(0.8); cy.position.set(0, -0.3, -HAUT / 2 - 2.4); pl.add(cy);
+      this.cyclope = { cy, bras, pupille };
+      // Rocher lancé : ombre, chute, éclaboussure
+      this.ombre = plat(new THREE.CircleGeometry(0.55, 16), new THREE.MeshBasicMaterial({ color: 0x053a4a, transparent: true, opacity: 0.5 }), 0, 0.07, 0); pl.add(this.ombre);
+      this.rocher = new THREE.Mesh(new THREE.DodecahedronGeometry(0.42, 0), gris); pl.add(this.rocher);
+      this.plouf = plat(new THREE.RingGeometry(0.3, 0.45, 16), ecume.clone(), 0, 0.08, 0); pl.add(this.plouf);
+      this.tir = null; this.attente = 1.5; this.ploufT = 9;
+      return galere({ coque: 0x8a4a22, voile: 0xffffff, rame: 0x6a3a18, oeil: 0x1a1410 });
+    },
+    danger(J, dt){
+      const C = this.cyclope;
+      if (!this.tir){
+        this.attente -= dt; this.ombre.visible = this.rocher.visible = false;
+        C.bras.rotation.z = -0.5 + Math.max(0, 0.6 - this.attente) * 2;
+        if (this.attente <= 0 && J.chute === 0) this.tir = { x: Math.max(.5, Math.min(LARG - .5, J.x + J.vx * 1.1)), y: Math.max(.5, Math.min(HAUT - .5, J.y + J.vy * 1.1)), t: 0 };
+      } else {
+        const T = this.tir; T.t += dt; C.bras.rotation.z = -1.4;
+        const [x, z] = P(T.x, T.y), k = Math.min(1, T.t / 1.3);
+        this.ombre.visible = this.rocher.visible = true; this.ombre.position.set(x, 0.07, z); this.ombre.scale.setScalar(0.3 + k * 0.7);
+        this.rocher.position.set(x, 9 * (1 - k * k), z - 4 * (1 - k)); this.rocher.rotation.x += dt * 5;
+        if (T.t >= 1.3){
+          this.tir = null; this.attente = 1.4; this.ploufT = 0; this.plouf.position.set(x, 0.08, z);
+          if (Math.hypot(J.x - T.x, J.y - T.y) < 0.6) return 'POLYPHEME T\'A EU !';
+        }
+      }
+      // Le Cyclope suit le bateau des yeux
+      C.pupille.position.x = (J.x - LARG / 2) * 0.03;
+    },
+    anim(J, dt, t){
+      const a = this.mer.geometry.attributes.position, b = this.base;
+      for (let i = 0; i < a.count; i++){ const x = b[i * 3], z = b[i * 3 + 2]; a.array[i * 3 + 1] = Math.sin(x * 1.3 + t * 1.6) * 0.05 + Math.cos(z * 1.1 + t * 1.2) * 0.05; }
+      a.needsUpdate = true; this.mer.geometry.computeVertexNormals();
+      this.ecumes.forEach((e, i) => e.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.08));
+      this.ploufT += dt; this.plouf.visible = this.ploufT < 0.6; this.plouf.scale.setScalar(1 + this.ploufT * 3); this.plouf.material.opacity = 0.9 * (1 - this.ploufT / 0.6);
+    },
+  },
+};
+
+const jeux = [];
+let actif = null, orient = null, zero = null;
+
+function creer(id, S){
+  const tel = document.getElementById(id), canvas = tel.querySelector('canvas');
+  const rendu = new THREE.WebGLRenderer({ canvas, antialias: true });
+  rendu.setPixelRatio(Math.min(devicePixelRatio, 2)); rendu.setClearColor(S.fond);
+  const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  cam.position.set(...S.cam); cam.lookAt(0, 0, 0.6);
+  const pl = new THREE.Group(); scene.add(pl);
+  const bille = S.construire(scene, pl); bille.scale.setScalar(1.25); pl.add(bille);
+
+  const el = q => tel.querySelector(q);
+  const J = { tel, rendu, scene, cam, pl, bille, S, auto: true, x: 0, y: 0, vx: 0, vy: 0, px: 0, py: 0, chute: 0, prof: 0, chutes: 0, t: 0, fini: false, wp: 0,
+    eTemps: el('.temps'), eChutes: el('.chutes'), eMsg: el('.msg'), doigt: null };
+  J.reset = () => { [J.x, J.y] = DEPART; J.vx = J.vy = 0; J.chute = 0; J.wp = 0; };
+  J.msg = m => { J.eMsg.textContent = m; };
+  J.nouvelle = () => { J.reset(); J.chutes = 0; J.t = 0; J.fini = false; J.msg(J.auto ? 'DEMO · TOUCHE POUR JOUER' : ''); };
+  J.nouvelle();
+
+  tel.addEventListener('pointerdown', e => {
+    demanderCapteur();
+    if (actif !== J){ actif?.tel.classList.remove('actif'); actif = J; tel.classList.add('actif'); zero = null; }
+    if (J.auto || J.fini){ J.auto = false; J.nouvelle(); zero = null; }
+    J.doigt = { x: e.clientX, y: e.clientY }; tel.setPointerCapture(e.pointerId);
+  });
+  tel.addEventListener('pointermove', e => {
+    if (!J.doigt || orient) return;
+    J.px = Math.max(-1, Math.min(1, (e.clientX - J.doigt.x) / 70)) * PENTE_MAX;
+    J.py = Math.max(-1, Math.min(1, (e.clientY - J.doigt.y) / 70)) * PENTE_MAX;
+  });
+  const lacher = () => { J.doigt = null; if (!orient){ J.px = J.py = 0; } };
+  tel.addEventListener('pointerup', lacher); tel.addEventListener('pointercancel', lacher);
+  jeux.push(J);
+}
+
+// Inclinaison du téléphone (Android direct ; iOS demande la permission au premier toucher)
+let capteurDemande = false;
+function demanderCapteur(){
+  if (capteurDemande) return; capteurDemande = true;
+  const DOE = window.DeviceOrientationEvent;
+  if (DOE && typeof DOE.requestPermission === 'function') DOE.requestPermission().catch(() => {});
+}
+addEventListener('deviceorientation', e => { if (e.beta != null && e.gamma != null) orient = { b: e.beta, g: e.gamma }; });
+
+const borne = v => Math.max(-PENTE_MAX, Math.min(PENTE_MAX, v));
+function pente(J){
+  if (J.auto){
+    // Pilote de la démo : vise le point suivant du chemin
+    const [cx, cy] = CHEMIN[J.wp], dx = cx - J.x, dy = cy - J.y;
+    if (Math.hypot(dx, dy) < 0.4 && J.wp < CHEMIN.length - 1) J.wp++;
+    return [borne((dx * 2.2 - J.vx * 1.6) / J.S.G * 3), borne((dy * 2.2 - J.vy * 1.6) / J.S.G * 3)];
+  }
+  if (J === actif && orient){
+    if (!zero) zero = { ...orient };
+    return [borne((orient.g - zero.g) * Math.PI / 180), borne((orient.b - zero.b) * Math.PI / 180)];
+  }
+  return [J.px, J.py];
+}
+
+const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+
+function perdre(J, message){
+  J.chute = 0.001; J.vx = J.vy = 0;
+  if (!J.auto){ J.chutes++; J.msg(message); setTimeout(() => { if (!J.fini && !J.auto) J.msg(''); }, 1300); }
+}
+
+function pas(J, dt, temps){
+  const S = J.S, [tx, ty] = pente(J);
+  J.pl.rotation.z += (-tx - J.pl.rotation.z) * Math.min(1, dt * 10);
+  J.pl.rotation.x += (ty - J.pl.rotation.x) * Math.min(1, dt * 10);
+  const ax = -J.pl.rotation.z * S.G, ay = J.pl.rotation.x * S.G;
+
+  if (J.chute > 0){
+    J.chute += dt; if (J.chute > 0.8) J.reset();
+  } else if (!J.fini){
+    if (!J.auto) J.t += dt;
+    const [fx, fy] = S.force ? S.force(J) : [0, 0];
+    const n = 4, h = dt / n;
+    for (let k = 0; k < n; k++){
+      J.vx += (ax + fx) * h; J.vy += (ay + fy) * h;
+      // Tourbillons : aspiration et rotation autour du centre
+      if (S.tourbillons) for (const [hx, hy] of S.trous){
+        const dx = hx - J.x, dy = hy - J.y, d = Math.hypot(dx, dy);
+        if (d < 1 && d > 1e-3){ const f = 7 * (1 - d); J.vx += (dx / d * f - dy / d * f * 0.8) * h; J.vy += (dy / d * f + dx / d * f * 0.8) * h; }
+      }
+      const fr = Math.max(0, 1 - S.frot * h); J.vx *= fr; J.vy *= fr;
+      J.x += J.vx * h; J.y += J.vy * h;
+      const e = S.rebond;
+      if (J.x < R){ J.x = R; if (J.vx < 0) J.vx *= -e; }
+      if (J.x > LARG - R){ J.x = LARG - R; if (J.vx > 0) J.vx *= -e; }
+      if (J.y < R){ J.y = R; if (J.vy < 0) J.vy *= -e; }
+      if (J.y > HAUT - R){ J.y = HAUT - R; if (J.vy > 0) J.vy *= -e; }
+      for (const [a, b, c, d] of BOITES){
+        const qx = Math.max(a, Math.min(c, J.x)), qy = Math.max(b, Math.min(d, J.y));
+        let nx = J.x - qx, ny = J.y - qy; const dd = Math.hypot(nx, ny);
+        if (dd < R && dd > 1e-6){
+          nx /= dd; ny /= dd; J.x = qx + nx * R; J.y = qy + ny * R;
+          const vn = J.vx * nx + J.vy * ny; if (vn < 0){ J.vx -= (1 + e) * vn * nx; J.vy -= (1 + e) * vn * ny; }
+        }
+      }
+    }
+    const rayon = S.tourbillons ? 0.22 : TROU * 0.82;
+    for (const [hx, hy] of S.trous){
+      if (Math.hypot(J.x - hx, J.y - hy) < rayon){ J.x = hx; J.y = hy; perdre(J, S.msgChute); break; }
+    }
+    if (!J.chute && Math.hypot(J.x - ARRIVEE[0], J.y - ARRIVEE[1]) < 0.4){
+      if (J.auto) J.reset();
+      else { J.fini = true; J.vx = J.vy = 0; J.msg(`ITHAQUE EN ${fmt(J.t)} !\nTOUCHE POUR REJOUER`); }
+    }
+  }
+  if (S.danger && !J.fini){ const m = S.danger(J, dt, temps); if (m && !J.chute) perdre(J, m); }
+  // Le bateau : cap dans le sens de la course, tangage, tournoie quand il sombre
+  J.prof = J.chute > 0 ? Math.min(1, J.chute / 0.4) : 0;
+  const b = J.bille, v = Math.hypot(J.vx, J.vy);
+  b.position.set(J.x - LARG / 2, 0.06 - J.prof * 0.6 + Math.sin(temps * 2.4) * 0.03, J.y - HAUT / 2);
+  if (v > 0.15){ let d = Math.atan2(-J.vy, J.vx) - b.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); b.rotation.y += d * Math.min(1, dt * 6); }
+  if (J.prof > 0) b.rotation.y += dt * 12;
+  b.userData.coque.rotation.x = Math.sin(temps * 2.4) * 0.12; b.userData.coque.rotation.z = Math.sin(temps * 1.7) * 0.06;
+  b.scale.setScalar(1.25 * (1 - J.prof * 0.6));
+  S.anim?.(J, dt, temps);
+  J.eTemps.textContent = fmt(J.t);
+  J.eChutes.textContent = J.auto ? '' : `NAUFRAGES ${J.chutes}`;
+}
+
+creer('telA', STYLES.A); creer('telB', STYLES.B); creer('telC', STYLES.C);
+
+function taille(){
+  for (const J of jeux){
+    const w = J.tel.clientWidth, h = J.tel.clientHeight;
+    J.rendu.setSize(w, h, false); J.cam.aspect = w / h; J.cam.updateProjectionMatrix();
+  }
+}
+addEventListener('resize', taille); taille();
+
+let avant = performance.now();
+function boucle(t){
+  const dt = Math.min(0.05, (t - avant) / 1000); avant = t;
+  for (const J of jeux){ pas(J, dt, t / 1000); J.rendu.render(J.scene, J.cam); }
+  requestAnimationFrame(boucle);
+}
+requestAnimationFrame(boucle);
+</script>
