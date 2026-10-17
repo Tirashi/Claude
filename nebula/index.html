@@ -875,6 +875,7 @@ function drawContracts() {
 /* ---------- titre, flotte, fin ---------- */
 function drawTitle() {
   drawBg('title');
+  if (!window.ludoArtefact) btn(20, 20, 170, 40, '◀ LUDOTHÈQUE', () => { location.href = '../index.html'; }, { size: 16, ls: 1 });
   txt('NEBULA', LW / 2, 150, '#eef2f6', F.title(64), 'center', 18);
   g.fillStyle = C.acc; g.fillRect(LW / 2 - 60, 238, 120, 2);
   txt('ROGUE-LITE TACTIQUE', LW / 2, 256, C.dim, F.ui(22), 'center', 8);
@@ -1341,23 +1342,12 @@ setTimeout(resize, 0); resize();
 Promise.all(['22px Michroma', '600 20px Rajdhani', '700 20px Rajdhani', '16px "Share Tech Mono"'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : 0)).then(() => requestAnimationFrame(frame));
 </script>
 <script>
-/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu. */
 (function () {
   try {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
       navigator.serviceWorker.register("../sw.js").catch(function () {});
-    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-    if (!app) return;
-    var a = document.createElement("a");
-    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
-    a.style.cssText = "display:block; width:max-content; margin:4px auto 6px; padding:6px 10px; font:9px 'Press Start 2P',monospace; letter-spacing:1px;" +
-      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
-    var line = document.createElement("div");
-    line.style.cssText = "flex:0 0 100%; width:100%;";
-    line.appendChild(a);
-    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
-    document.body.insertBefore(line, document.body.firstChild);
-    window.dispatchEvent(new Event("resize"));
   } catch (e) {}
 })();
 </script>
