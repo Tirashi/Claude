@@ -98,3 +98,6 @@ Mécaniques ajoutées dans `regles.js` (cases et réglages) :
 **Plateau du jour** : `ODY.jour(AAAAMMJJ)` tire un plateau (sauf 1-1 et 1-2) et, une fois sur deux, le retourne gauche-droite (`variante`) ; les dangers tirent avec la graine de la date, donc les mêmes pour toute la famille. Pas de retournement haut-bas (décor toujours en haut ; 1-2 et 9-2 devenaient impossibles). Score = temps + 5 s par naufrage (`scoreJour`), une seule tentative classée, comptée dès le départ (`odyssee.dailyTry`, règle des missions). `outils/odyssee.js` vérifie que les 28 plateaux du tirage restent faisables en miroir.
 
 Reste : essai sur le téléphone, classement avec un vrai record, sons et musique (plus tard). Pas d'artefact (décision de l'utilisateur, 17/10) : on joue sur le site.
+
+## 12. Sons (proposition du 17/10)
+Banc d'écoute `maquettes/odyssee-sons.html` (Web Audio en direct, sans fichier) : musique A lyre et flûte, B épique, C mer et vent, chacune en ambiance mer calme (ré mixolydien), danger (ré phrygien) ou nuit (ré éolien, lent) ; bruitages : rames, choc, naufrage, reprise, flèche, rocher, vent, outre, moly, coupe et groin, chant des Sirènes (voix à formants), cire, tourbillon, Scylla, phare, arrivée, étoiles, gong du plateau du jour ; vagues en fond. En attente du choix (direction, bruitages, volume) ; ensuite `odyssee/sons.js` sur le modèle de `nebula/sons.js`.
