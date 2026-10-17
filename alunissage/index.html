@@ -592,16 +592,17 @@ function drawTitle(t) {
   drawGround(TITLE, s.x); shadow(TITLE, s); drawShip(s, t, TITLE, l, r); lights(TITLE, s, l || r);
   logo('ALUNISSAGE', 136, 56, 20);
   text('POSE-TOI EN DOUCEUR', 136, 86, '#c8d4f4', 'center', 7);
-  R_(0, 300, LW, LH - 300, 'rgba(5,6,15,.55)');
+  R_(0, 290, LW, LH - 290, 'rgba(5,6,15,.55)');
   const d = todayKey();
-  button(46, 312, 180, 28, 'MISSION', () => { audioInit(); SFX.click(); newMission(false); }, { gold: true });
+  button(46, 300, 180, 28, 'MISSION', () => { audioInit(); SFX.click(); newMission(false); }, { gold: true });
   const tried = store.get('dailyTry', 0) === d;
-  button(46, 348, 180, 24, tried ? (S.dailyBest[d] != null ? `DU JOUR · ${S.dailyBest[d]}` : 'DU JOUR · DEJA JOUEE') : 'MISSION DU JOUR', () => { audioInit(); SFX.click(); newMission(true); }, { size: 7 });
-  if (tried) text('REJOUER : HORS CLASSEMENT', 136, 373, '#8fa0d0', 'center', 5);
-  button(46, 380, 86, 22, 'CLASSEMENT', () => { location.href = '../classements/index.html#alunissage'; }, { size: 6 });
-  button(140, 380, 86, 22, AC.on ? 'SON OUI' : 'SON NON', () => { AC.on = !AC.on; store.set('sfx', AC.on); SFX.click(); }, { size: 6 });
-  text(`RECORD : ${S.best}`, 136, 414, '#ffd23f', 'center', 7);
-  wrap('Deux réacteurs : GAUCHE pousse vers la droite, DROIT vers la gauche, les deux ensemble tout droit. Aires x2, x3, x5.', 32).forEach((l, i) => text(l, 136, 430 + i * 11, '#8fa0d0', 'center', 6));
+  button(46, 334, 180, 24, tried ? (S.dailyBest[d] != null ? `DU JOUR · ${S.dailyBest[d]}` : 'DU JOUR · DEJA JOUEE') : 'MISSION DU JOUR', () => { audioInit(); SFX.click(); newMission(true); }, { size: 7 });
+  if (tried) text('REJOUER : HORS CLASSEMENT', 136, 359, '#8fa0d0', 'center', 5);
+  button(46, 366, 86, 22, 'CLASSEMENT', () => { location.href = '../classements/index.html#alunissage'; }, { size: 6 });
+  button(140, 366, 86, 22, AC.on ? 'SON OUI' : 'SON NON', () => { AC.on = !AC.on; store.set('sfx', AC.on); SFX.click(); }, { size: 6 });
+  if (!window.ludoArtefact) button(46, 394, 180, 20, '◀ LUDOTHEQUE', () => { location.href = '../index.html'; }, { size: 6 });
+  text(`RECORD : ${S.best}`, 136, 424, '#ffd23f', 'center', 7);
+  wrap('Deux réacteurs : GAUCHE pousse vers la droite, DROIT vers la gauche, les deux ensemble tout droit. Aires x2, x3, x5.', 32).forEach((l, i) => text(l, 136, 440 + i * 10, '#8fa0d0', 'center', 6));
 }
 
 /* ---------- boucle ---------- */
@@ -656,23 +657,12 @@ setTimeout(resize, 0); resize();
 (document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));
 </script>
 <script>
-/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu. */
 (function () {
   try {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
       navigator.serviceWorker.register("../sw.js").catch(function () {});
-    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-    if (!app) return;
-    var a = document.createElement("a");
-    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
-    a.style.cssText = "display:block; width:max-content; margin:4px auto 6px; padding:6px 10px; font:9px 'Press Start 2P',monospace; letter-spacing:1px;" +
-      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
-    var line = document.createElement("div");
-    line.style.cssText = "flex:0 0 100%; width:100%;";
-    line.appendChild(a);
-    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
-    document.body.insertBefore(line, document.body.firstChild);
-    window.dispatchEvent(new Event("resize"));
   } catch (e) {}
 })();
 </script>

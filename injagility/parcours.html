@@ -37,7 +37,7 @@ header{display:flex; align-items:flex-end; justify-content:space-between; gap:12
 h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px,5.4vw,30px); letter-spacing:2px; color:var(--snow);
   text-shadow:3px 3px 0 var(--swiss), 6px 6px 0 #000}
 h1 span{color:var(--swiss); text-shadow:3px 3px 0 var(--snow), 6px 6px 0 #000}
-.tabs{display:flex; gap:8px}
+.tabs{display:flex; flex-wrap:wrap; gap:8px}
 .tabs a, .tabs span{font-family:var(--f-display); font-size:9px; letter-spacing:1px; padding:9px 10px; border:3px solid var(--ink); border-radius:6px;
   text-decoration:none; color:var(--snow); background:var(--wood-lo); box-shadow:3px 3px 0 #000}
 .tabs span{background:var(--gold); color:var(--ink)}
@@ -112,7 +112,7 @@ body.playing .msg{min-height:2em; margin:6px 0}
 <div class="wrap">
   <header>
     <div><h1>INJA<span>GILITY</span></h1></div>
-    <div class="tabs"><a href="index.html">INFINI</a><span>PARCOURS</span></div>
+    <div class="tabs"><a class="ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><a href="index.html">INFINI</a><span>PARCOURS</span></div>
   </header>
 
   <!-- ===== carte des parcours ===== -->
@@ -788,18 +788,12 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fi
 })();
 </script>
 <script>
-/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu. */
 (function () {
   try {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
       navigator.serviceWorker.register("../sw.js").catch(function () {});
-    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-    if (!app) return;
-    var a = document.createElement("a");
-    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
-    a.style.cssText = "display:block; width:max-content; margin:0 auto 10px; padding:8px 12px; font:10px 'Press Start 2P',monospace; letter-spacing:1px;" +
-      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
-    document.body.insertBefore(a, document.body.firstChild);
   } catch (e) {}
 })();
 </script>
