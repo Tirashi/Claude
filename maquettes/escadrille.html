@@ -1,431 +1,791 @@
-<title>Escadrille, maquettes</title>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escadrille, maquette</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Gochi+Hand&family=VT323&family=Fredoka:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
 <style>
-/* Trois téléphones jouables côte à côte (empilés sur un téléphone), chacun avec sa fiche ; les idées de jeu dessous. */
-:root{
-  --fond:#eef3f9; --fond2:#ffffff; --texte:#18233a; --doux:#56627a; --accent:#d9572b; --cadre:#0b1220; --trait:#d3dcea;
-  --f-texte:'Fredoka', system-ui, sans-serif;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --fond:#0c1322; --fond2:#162036; --texte:#e8eef8; --doux:#9fadc6; --accent:#ff8a5c; --cadre:#020409; --trait:#25324d; color-scheme:dark}}
-:root[data-theme="dark"]{--fond:#0c1322; --fond2:#162036; --texte:#e8eef8; --doux:#9fadc6; --accent:#ff8a5c; --cadre:#020409; --trait:#25324d; color-scheme:dark}
+/* Les trois écrans d'Escadrille ! (titre, placement, combat jouable) dans le style d'Amiral !, puis les règles proposées.
+   Page sombre volontairement : c'est l'univers d'Amiral. */
+:root{ --fond:#070d1f; --fond2:#0f1b3a; --texte:#f2f0ff; --doux:#a8b8d8; --or:#ffd23f; --rouge:#ff8a76; --cadre:#020409; color-scheme:dark;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif; }
 html,body{background:var(--fond);color:var(--texte)}
-body{font-family:var(--f-texte);font-size:16px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
 .page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
-header h1{font-weight:700;font-size:clamp(28px,6vw,40px);margin:0;text-wrap:balance}
-header p{margin:6px 0 0;color:var(--doux);max-width:66ch}
-.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:32px 24px}
-.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
-.tel{position:relative;width:100%;max-width:300px;aspect-ratio:272/480;border:9px solid var(--cadre);border-radius:30px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.35);touch-action:manipulation;user-select:none;-webkit-user-select:none;cursor:pointer;background:#000}
-.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.tel.pix canvas{image-rendering:pixelated}
-.fiche{width:100%;max-width:340px}
-.fiche h2{margin:0;font-size:22px;font-weight:700;text-wrap:balance}
-.fiche h2 span{display:inline-block;min-width:1.4em;color:var(--accent)}
-.fiche p{margin:4px 0 8px;color:var(--doux)}
-.fiche ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:3px;font-size:15px}
-.commun{background:var(--fond2);border:1px solid var(--trait);border-radius:16px;padding:18px 20px;max-width:780px}
-.commun h2{margin:0 0 8px;font-size:22px}
-.commun h3{margin:16px 0 6px;font-size:17px}
-.commun p{margin:0 0 8px;max-width:66ch}
-.commun ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:5px;max-width:66ch}
-.commun b{color:var(--accent);font-weight:600}
-.forme{display:inline-grid;grid-template-columns:repeat(5,14px);gap:2px;vertical-align:middle;margin:4px 0 8px}
-.forme i{width:14px;height:14px;border-radius:2px;background:var(--trait)}
-.forme i.p{background:var(--doux)} .forme i.c{background:var(--accent)}
+h1{font-family:var(--f-titre);font-size:clamp(18px,4.4vw,28px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.tel{width:100%;max-width:300px;aspect-ratio:272/480;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated;cursor:pointer}
+.dir h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:4px 0 0;letter-spacing:.04em}
+.dir p{margin:0;color:var(--doux);max-width:300px;font-size:15px;text-align:center}
+.regles{background:var(--fond2);border:3px solid #3f4f8a;border-radius:6px;padding:20px 22px;max-width:820px;box-shadow:inset 0 0 0 2px #060a18}
+.regles h2{font-family:var(--f-titre);font-size:14px;color:var(--or);margin:0 0 12px;line-height:1.5}
+.regles h3{font-family:var(--f-titre);font-size:11px;color:#9fd3ff;margin:20px 0 8px;letter-spacing:.04em}
+.regles p,.regles li{max-width:66ch}
+.regles p{margin:0 0 8px}
+.regles ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.regles b{color:var(--or);font-weight:600}
+.flotte{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin:6px 0 4px}
+.avion{display:flex;gap:10px;align-items:flex-start;background:#0a1430;border:2px solid #2c3866;border-radius:4px;padding:10px;min-width:0}
+.forme{display:grid;gap:2px;flex:none}
+.forme i{width:10px;height:10px;background:transparent}
+.forme i.p{background:#a9b1bc;box-shadow:inset -1px -1px 0 #474e5c}
+.avion div{min-width:0;font-size:14px;line-height:1.4}
+.avion strong{display:block;font-family:var(--f-titre);font-size:9px;color:var(--or);margin-bottom:4px;line-height:1.5}
 </style>
-
+</head>
+<body>
 <div class="page">
 <header>
-  <h1>Escadrille ! Une bataille d'avions</h1>
-  <p>Trois directions pour une cousine d'Amiral ! dans le ciel. Les trois écrans se jouent : touche les cases pour tirer, essaie le radar et la bombe. Abats les trois avions en visant leur cockpit. L'ordinateur ne riposte pas encore dans la maquette.</p>
+  <h1>ESCADRILLE !</h1>
+  <p>La bataille aérienne des pouvoirs, petite sœur d'Amiral ! : mêmes cadres en acier, mêmes boutons, même police, même brouillard, mais un ciel à la place de la mer et quatre avions à la place des navires. Le troisième écran se joue : choisis un pouvoir, touche le ciel ennemi, et abats l'escadrille cachée dans les nuages.</p>
 </header>
 
 <div class="grille">
-  <section class="dir">
-    <div class="tel pix" id="telA"><canvas width="544" height="960"></canvas></div>
-    <div class="fiche"><h2><span>A</span>Au-dessus des nuages</h2>
-      <p>Pixel art 32 bits, même famille qu'Amiral !</p>
-      <ul><li>Chaque case est un nuage ; un tir le dissipe et montre le ciel.</li>
-      <li>Avions touchés en flammes, avion abattu dessiné en entier.</li>
-      <li>Police, cadres en métal et boutons repris d'Amiral !</li></ul></div>
-  </section>
-  <section class="dir">
-    <div class="tel" id="telB"><canvas width="544" height="960"></canvas></div>
-    <div class="fiche"><h2><span>B</span>Carnet de pilote</h2>
-      <p>Le jeu des avions de la cour d'école, au crayon sur une feuille à carreaux.</p>
-      <ul><li>Ronds au crayon dans l'eau, croix au stylo rouge.</li>
-      <li>Avion abattu croqué et hachuré, cockpit entouré.</li>
-      <li>Coordonnées A à J et 1 à 10, comme sur le papier.</li></ul></div>
-  </section>
-  <section class="dir">
-    <div class="tel" id="telC"><canvas width="544" height="960"></canvas></div>
-    <div class="fiche"><h2><span>C</span>Écran radar de nuit</h2>
-      <p>Tour de contrôle, vert phosphore et balayage qui tourne.</p>
-      <ul><li>Les échos s'allument quand le faisceau passe dessus.</li>
-      <li>Touchés en ambre, avion abattu tracé en vert vif.</li>
-      <li>Messages comme sur un terminal, avec un curseur.</li></ul></div>
-  </section>
+  <section class="dir"><div class="tel"><canvas id="ecran1" width="272" height="480"></canvas></div>
+    <h2>1. ECRAN TITRE</h2><p>Les quatre pouvoirs, trois niveaux, et le pilote à la place de l'amiral. Touche un niveau.</p></section>
+  <section class="dir"><div class="tel"><canvas id="ecran2" width="272" height="480"></canvas></div>
+    <h2>2. PLACEMENT</h2><p>Touche un avion puis une case pour le déplacer. PIVOTER le tourne, HASARD mélange tout.</p></section>
+  <section class="dir"><div class="tel"><canvas id="ecran3" width="272" height="480"></canvas></div>
+    <h2>3. COMBAT</h2><p>À jouer : un tir ou un pouvoir par tour. Pour un pouvoir, touche une première fois pour viser, une deuxième fois pour lancer.</p></section>
 </div>
 
-<section class="commun">
-  <h2>Les règles proposées</h2>
-  <p>Le ciel fait 10 × 10 cases. Chaque joueur y cache <b>3 avions en forme de croix</b> de 10 cases : le nez, des ailes de 5, le fuselage et une queue de 3. On peut les tourner dans les quatre sens.</p>
-  <div class="forme" aria-label="Forme d'un avion vu de dessus">
-    <i></i><i></i><i class="c"></i><i></i><i></i>
-    <i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i>
-    <i></i><i></i><i class="p"></i><i></i><i></i>
-    <i></i><i class="p"></i><i class="p"></i><i class="p"></i><i></i>
+<section class="regles">
+  <h2>LES REGLES PROPOSEES</h2>
+  <p>Comme dans Amiral !, chacun cache son escadrille, et on joue chacun son tour : un tir ou un pouvoir prêt. Le ciel fait <b>9 × 9 cases</b> au lieu de 8 × 8, parce que les avions ont des ailes et prennent plus de place que des navires. Le record, c'est de gagner en le moins de tours. Trois niveaux pour l'ordinateur : RECRUE, PILOTE, AS.</p>
+  <h3>L'ESCADRILLE : 4 AVIONS, 4 POUVOIRS</h3>
+  <div class="flotte">
+    <div class="avion"><div class="forme" style="grid-template-columns:repeat(3,10px)"><i></i><i class="p"></i><i></i><i class="p"></i><i class="p"></i><i class="p"></i><i></i><i class="p"></i><i></i><i class="p"></i><i class="p"></i><i class="p"></i></div>
+      <div><strong>BOMBARDIER (8)</strong>BOMBES : cinq bombes en croix. Attente de 4 tours.</div></div>
+    <div class="avion"><div class="forme" style="grid-template-columns:repeat(3,10px)"><i></i><i class="p"></i><i></i><i class="p"></i><i class="p"></i><i class="p"></i><i></i><i class="p"></i><i></i></div>
+      <div><strong>AVION RADAR (5)</strong>RADAR : révèle une zone de 3 × 3 sans tirer. Attente de 3 tours.</div></div>
+    <div class="avion"><div class="forme" style="grid-template-columns:repeat(3,10px)"><i></i><i class="p"></i><i></i><i class="p"></i><i class="p"></i><i class="p"></i></div>
+      <div><strong>CHASSEUR (4)</strong>MISSILE : file sur une ligne ou une colonne jusqu'au premier avion. Attente de 3 tours.</div></div>
+    <div class="avion"><div class="forme" style="grid-template-columns:repeat(1,10px)"><i class="p"></i><i class="p"></i></div>
+      <div><strong>HELICOPTERE (2)</strong>ESQUIVE : s'échappe de 2 cases s'il n'est pas touché. Attente de 4 tours.</div></div>
   </div>
   <ul>
-    <li><b>Toucher le cockpit abat l'avion d'un coup.</b> Toucher une aile ne fait que l'abîmer. Il faut deviner dans quel sens vole l'avion à partir des cases touchées : c'est la grande différence avec Amiral !.</li>
-    <li>À chaque tour, un tir ou un pouvoir prêt, comme dans Amiral !. Record : la victoire en le moins de tours.</li>
-    <li>Trois niveaux de l'ordinateur : ÉLÈVE PILOTE, PILOTE, AS DU CIEL.</li>
+    <li>Les avions se tournent dans les quatre sens. Un avion est abattu quand toutes ses cases sont touchées, et il perd alors son pouvoir, comme un navire coulé.</li>
+    <li>Les formes rendent la chasse plus maligne : une aile touchée dit « le fuselage est juste à côté ».</li>
   </ul>
-
-  <h3>Les pouvoirs</h3>
+  <h3>A CHOISIR</h3>
   <ul>
-    <li><b>Radar</b> (essayé dans la maquette) : montre une zone de 3 × 3 sans tirer. Attente de 3 tours.</li>
-    <li><b>Bombe</b> (essayée dans la maquette) : cinq tirs en croix. Attente de 4 tours.</li>
-    <li><b>Rafale</b> : trois tirs en ligne.</li>
-    <li><b>Looping</b> : un de tes avions encore intact se déplace d'une case. C'est le pendant de la plongée du sous-marin.</li>
-  </ul>
-  <p>Deux façons de les donner. Option 1 : trois avions identiques, et on choisit 2 pouvoirs avant la partie. Option 2 : plus proche d'Amiral !, trois avions différents, chacun avec son pouvoir : l'avion radar (grand), le bombardier (moyen) et le chasseur (petit). Si l'un est abattu, il perd son pouvoir.</p>
-
-  <h3>Idées en plus, au choix</h3>
-  <ul>
-    <li><b>Le ciel du jour</b> : le même ciel pour toute la famille, une seule tentative classée par jour.</li>
-    <li><b>La météo</b> : un orage cache une zone au radar, le vent décale la bombe d'une case.</li>
-    <li><b>Des avions qui bougent</b> au niveau AS DU CIEL : les avions intacts avancent d'une case tous les 3 tours.</li>
-    <li><b>Le parachute</b> : le pilote saute quand son avion est abattu. Une petite animation, rien de plus.</li>
-    <li><b>Le hangar</b> : chaque victoire débloque un nouvel avion à montrer (biplan, hydravion, Canadair, Concorde, Rafale). Ça change seulement le dessin.</li>
-    <li><b>Le duel à deux</b> sur le même téléphone, avec un écran « passe le téléphone » entre les tours.</li>
+    <li><b>La règle du cockpit</b> : toucher le nez abat l'avion d'un coup. Les parties sont plus courtes et plus surprenantes, mais il y a un peu plus de chance.</li>
+    <li><b>Un cinquième avion</b> : le Canadair, avec le pouvoir NUAGE qui recache une case déjà repérée. Ou un dirigeable de 3 cases, sans pouvoir, juste pour remplir le ciel.</li>
+    <li><b>Le ciel du jour</b> : la même escadrille ennemie pour toute la famille, une seule tentative classée par jour.</li>
+    <li><b>Le pilote en parachute</b> quand un avion est abattu : une petite animation, rien de plus.</li>
   </ul>
 </section>
 </div>
 
+<script src="../injagility/chiens32.js"></script>
 <script>
 'use strict';
-/* ---------- Règles communes aux trois maquettes ---------- */
-const N = 10, CS = 23, GX = 22, GY = 100, W = 272, H = 480, TAU = Math.PI * 2;
-const COLS = 'ABCDEFGHIJ';
-const SHAPE = [[0,0],[-2,1],[-1,1],[0,1],[1,1],[2,1],[0,2],[-1,3],[0,3],[1,3]];
-const rot = (d, [x, y]) => d === 0 ? [x, y] : d === 1 ? [-y, x] : d === 2 ? [-x, -y] : [y, -x];
-const BTN = [['tir', 0], ['radar', 3], ['bombe', 4]];
-const btnRect = k => ({ x: 22 + k * 78, y: 346, w: 72, h: 40 });
-const coord = i => COLS[i % N] + (1 + (i / N | 0));
+/* =====================================================================
+   ESCADRILLE ! (maquette) : Amiral ! dans le ciel.
+   Grille de 9×9 (cases de 23 px), quatre avions en forme d'avion :
+     bombardier (8) : BOMBES, cinq bombes en croix
+     avion radar (5) : RADAR, révèle une zone de 3×3
+     chasseur (4)   : MISSILE, file sur une ligne jusqu'au premier avion
+     hélicoptère (2) : ESQUIVE, s'échappe de 2 cases
+   Les fonctions de dessin (plaques, boutons, polices, cadre, brouillard, flammes, fumée, explosions)
+   sont reprises telles quelles d'Amiral ! ; seuls le ciel, les avions et les icônes changent.
+   ===================================================================== */
+const C32 = window.Chiens32, OUT = C32.OUT, RAMP = C32.RAMP;
+const LW = 272, LH = 480, N = 9, CS = 23, BS = CS * N, BX = 40, BY = 58, TAU = Math.PI * 2;
+const FONT = '"Press Start 2P", monospace';
+const COLS = 'ABCDEFGHI';
+const FLEET = [
+  { id: 'bomb',  name: 'Bombardier',  power: 'bombes',  w: 3, h: 4, cells: [[1,0],[0,1],[1,1],[2,1],[1,2],[0,3],[1,3],[2,3]] },
+  { id: 'radar', name: 'Avion radar', power: 'radar',   w: 3, h: 3, cells: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
+  { id: 'jet',   name: 'Chasseur',    power: 'missile', w: 3, h: 2, cells: [[1,0],[0,1],[1,1],[2,1]] },
+  { id: 'heli',  name: 'Helicoptere', power: 'esquive', w: 1, h: 2, cells: [[0,0],[0,1]] },
+];
+const POWERS = {
+  tir:     { name: 'TIR',     ship: -1, cd: 0 },
+  radar:   { name: 'RADAR',   ship: 1,  cd: 3 },
+  bombes:  { name: 'BOMBES',  ship: 0,  cd: 4 },
+  missile: { name: 'MISSILE', ship: 2,  cd: 3 },
+  esquive: { name: 'ESQUIVE', ship: 3,  cd: 4 },
+};
+const BAR = ['tir', 'radar', 'bombes', 'missile', 'esquive'];
+const DIFFS = [['easy', 'RECRUE'], ['normal', 'PILOTE'], ['hard', 'AS']];
+const rand = n => Math.floor(Math.random() * n);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const cellName = (c, r) => COLS[c] + (r + 1);
+const ease = u => u < 0 ? 0 : u > 1 ? 1 : u * u * (3 - 2 * u);
+const now = () => performance.now();
 
-function newGame() {
-  const own = Array(N * N).fill(-1), planes = [];
-  while (planes.length < 3) {
-    const d = Math.random() * 4 | 0, x = Math.random() * N | 0, y = Math.random() * N | 0;
-    const cells = SHAPE.map(p => { const [a, b] = rot(d, p); return [x + a, y + b]; });
-    if (cells.some(([a, b]) => a < 0 || b < 0 || a >= N || b >= N || own[b * N + a] >= 0)) continue;
-    const idx = cells.map(([a, b]) => b * N + a);
-    idx.forEach(i => own[i] = planes.length);
-    planes.push({ d, x, y, idx, down: false, tDown: 0 });
-  }
-  return { own, planes, shots: Array(N * N).fill(0), seen: Array(N * N).fill(0),
-    turn: 0, down: 0, mode: 'tir', cd: { radar: 0, bombe: 0 }, msg: ['start'], over: false, fx: [] };
+/* ---------- outils de dessin d'Amiral ! ---------- */
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function spr(w, h, list, outline = true) {
+  const C = C32.Canvas(w, h);
+  list.forEach(([shape, ramp, opt], k) => { RAMP['_esc' + k] = ramp; C.draw(shape, Object.assign({ mat: '_esc' + k, id: k + 1, fur: false }, opt || {})); });
+  return C.toCanvas(outline);
 }
-function fire(st, i, now) {
-  if (st.shots[i]) return 'deja';
-  const o = st.own[i];
-  if (o < 0) { st.shots[i] = 1; return 'rate'; }
-  st.shots[i] = 2;
-  const p = st.planes[o];
-  if (p.idx[0] === i) {
-    p.down = true; p.tDown = now; st.down++;
-    p.idx.forEach(j => st.shots[j] = 2);
-    st.fx.push({ i, t0: now });
-    return 'abattu';
+function tint(img, col) { const [c, g] = mk(img.width, img.height); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-in'; R(g, 0, 0, c.width, c.height, col); return c; }
+function over(img, col) { const [c, g] = mk(img.width, img.height); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-atop'; R(g, 0, 0, c.width, c.height, col); return c; }
+function rot(img) { const [c, g] = mk(img.height, img.width); g.translate(img.height, 0); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0); return c; }
+function text(g, s, x, y, col, align = 'left', size = 8, shadow = '#060a18') {
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
+  if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+const GOLD = ['#fff6c2', '#ffd23f', '#e0782a'];
+function logo(g, s, x, y, size) {
+  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
+  g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, GOLD[0]); gr.addColorStop(.5, GOLD[1]); gr.addColorStop(1, GOLD[2]);
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function plate(g, x, y, w, h, tone_) {
+  const top = tone_ === 'gold' ? ['rgba(120,86,20,.97)', 'rgba(60,36,8,.97)'] : tone_ === 'red' ? ['rgba(112,40,44,.96)', 'rgba(44,14,20,.96)']
+            : tone_ === 'dim' ? ['rgba(36,44,60,.92)', 'rgba(16,20,30,.92)'] : ['rgba(48,70,104,.96)', 'rgba(16,26,44,.96)'];
+  R(g, x + 2, y - 2, w - 4, h + 4, OUT); R(g, x - 2, y + 2, w + 4, h - 4, OUT); R(g, x, y, w, h, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top[0]); gr.addColorStop(1, top[1]);
+  g.fillStyle = gr; g.fillRect(x + 1, y + 1, w - 2, h - 2);
+  const hl = tone_ === 'gold' ? 'rgba(255,230,140,.7)' : tone_ === 'red' ? 'rgba(255,170,160,.55)' : 'rgba(160,200,240,.55)';
+  R(g, x + 2, y + 1, w - 4, 1, hl); R(g, x + 1, y + 2, 1, h - 4, hl);
+  R(g, x + 2, y + h - 2, w - 4, 1, 'rgba(0,0,0,.45)'); R(g, x + w - 2, y + 2, 1, h - 4, 'rgba(0,0,0,.45)');
+}
+const TINY = {
+  A:'010101111101101',B:'110101110101110',C:'011100100100011',D:'110101101101110',E:'111100110100111',F:'111100110100100',
+  G:'011100101101011',H:'101101111101101',I:'111010010010111',J:'001001001101010',K:'101101110101101',L:'100100100100111',
+  M:'101111111101101',N:'110101101101101',O:'010101101101010',P:'110101110100100',Q:'010101101110011',R:'110101110101101',
+  S:'011100010001110',T:'111010010010010',U:'101101101101111',V:'101101101101010',W:'101101111111101',X:'101101010101101',
+  Y:'101101010010010',Z:'111001010100111',0:'010101101101010',1:'010110010010111',2:'110001010100111',3:'110001010001110',
+  4:'101101111001001',5:'111100110001110',6:'011100110101010',7:'111001010010010',8:'010101010101010',9:'010101011001110',
+  '.':'000000000000010','!':'010010010000010','-':'000000111000000',':':'000010000010000','/':'001001010100100','+':'000010111010000',
+  "'":'010010000000000','?':'110001010000010','>':'100010001010100','<':'001010100010001',
+};
+function tiny(g, s, x, y, col, align) {
+  s = String(s).toUpperCase();
+  if (align === 'center') x -= Math.floor((s.length * 4 - 1) / 2); else if (align === 'right') x -= s.length * 4 - 1;
+  for (const pass of [0, 1]) {
+    let cx = x;
+    for (const ch of s) {
+      const b = TINY[ch];
+      if (b) for (let k = 0; k < 15; k++) if (b[k] === '1') R(g, cx + k % 3 + (pass ? 0 : 1), y + (k / 3 | 0) + (pass ? 0 : 1), 1, 1, pass ? col : '#060a18');
+      cx += 4;
+    }
   }
-  st.fx.push({ i, t0: now, petit: true });
+}
+const P = {
+  steel: ['#e4e8ee', '#a9b1bc', '#727b8a', '#474e5c'], gun: ['#c8d0dc', '#8a94a4', '#5e6878', '#3a4150'],
+  dark: ['#7a8798', '#4e5a6a', '#36404e', '#232a35'], red: ['#ff8a76', '#e04a3c', '#a8302a', '#6e1d1d'],
+  cream: ['#fffbea', '#f1e4c4', '#cdb98e', '#9a845e'], navy: ['#6a7ab8', '#3f4f8a', '#2c3866', '#1c2444'],
+  skin: ['#ffdcbc', '#f0b48c', '#c8805e', '#8a5040'], white: ['#ffffff', '#f1ece2', '#d3cbbd', '#ab9f8e'],
+  gold: ['#fff2a8', '#ffd23f', '#d09a1c', '#8f6410'], smoke: ['#7c7684', '#57525f', '#3e3a48', '#2a2733'],
+  smokeL: ['#a8a2ae', '#87818f', '#6a6574', '#4e4a58'], blue: ['#a8d0f4', '#4a8fd4', '#2f6fb0', '#1a3f6a'],
+  brown: ['#d8a468', '#a8743e', '#7a5028', '#4e3018'], olive: ['#b8c08a', '#8a9460', '#626c42', '#40482a'],
+};
+const G = {};
+
+/* ---------- le ciel (à la place de la mer d'Amiral) ---------- */
+const SKY_T = ['#2f6fb6', '#3a7cc4', '#4689cf', '#5296d8'];
+function buildSky() {
+  const TS = 96, [t, g] = mk(TS, TS), r = rnd(31), bayer = [[0, 2], [3, 1]];
+  for (let y = 0; y < TS; y++) for (let x = 0; x < TS; x++) {
+    const a = TAU / TS;
+    const v = .6 * Math.sin(a * (x + 2 * y) + 1.3) + .4 * Math.sin(a * (3 * x - y) + .4) + .2 * Math.sin(a * (4 * x + 3 * y) + 2.2);
+    const f = (v + 1.2) / 2.4 * 3 + (bayer[y % 2][x % 2] - 1.5) * .3;
+    R(g, x, y, 1, 1, SKY_T[clamp(Math.floor(f), 0, 3)]);
+  }
+  for (let i = 0; i < 26; i++) { // petits filets de vent
+    const x = Math.floor(r() * TS), y = Math.floor(r() * TS), len = 5 + Math.floor(r() * 6);
+    for (let k = 0; k < len; k++) R(g, (x + k) % TS, y, 1, 1, k === 0 || k === len - 1 ? '#6fb0e4' : '#8cc6f0');
+  }
+  const [c, gg] = mk(LW + TS, LH + TS);
+  for (let y = 0; y < LH + TS; y += TS) for (let x = 0; x < LW + TS; x += TS) gg.drawImage(t, x, y);
+  G.sky = c;
+  // petits cumulus qui passent sous les avions
+  const W2 = BS * 2, [cl, cg] = mk(W2, BS), r2 = rnd(5);
+  for (let i = 0; i < 7; i++) {
+    const x = r2() * BS, y = 12 + r2() * (BS - 24), n = 2 + Math.floor(r2() * 3), list = [];
+    for (let k = 0; k < n; k++) list.push([x + k * 7 + r2() * 3, y + (r2() - .5) * 4, 3.5 + r2() * 3]);
+    for (const dx of [0, BS]) { const [bc, bg2] = mk(W2, BS); C32.blob(bg2, list.map(q => [q[0] + dx, q[1], q[2]]), ['#ffffff', '#eef6ff', '#d6e8fa', '#b4d2f0']); cg.drawImage(bc, 0, 0); }
+  }
+  G.cumulus = cl;
+}
+function rivet(g, x, y) { R(g, x, y, 3, 3, '#14161d'); R(g, x, y, 2, 2, '#8a94a8'); R(g, x, y, 1, 1, '#e0e6f0'); }
+function buildFrame(mine) {
+  const S = BS, [c, g] = mk(S + 24, S + 24), o = 12;
+  const acc = mine ? ['#7ec4ff', '#3f86c8'] : ['#ff9a86', '#c8443a'];
+  R(g, o - 5, o - 5, S + 10, S + 10, OUT);
+  R(g, o - 4, o - 4, S + 8, S + 8, '#6a7383'); R(g, o - 4, o - 4, S + 8, 1, '#d6dbe3'); R(g, o - 4, o - 4, 1, S + 8, '#d6dbe3');
+  R(g, o - 3, o - 3, S + 6, S + 6, '#9aa3b1'); R(g, o - 3, o + S + 2, S + 6, 1, '#4a5160'); R(g, o + S + 2, o - 3, 1, S + 6, '#4a5160');
+  R(g, o - 2, o - 2, S + 4, S + 4, acc[1]); R(g, o - 2, o - 2, S + 4, 1, acc[0]);
+  R(g, o - 1, o - 1, S + 2, S + 2, OUT); g.clearRect(o, o, S, S);
+  for (let k = 1; k < N; k++) {
+    R(g, o + k * CS, o, 1, S, 'rgba(225,242,255,.34)'); R(g, o, o + k * CS, S, 1, 'rgba(225,242,255,.34)');
+    R(g, o + k * CS + 1, o, 1, S, 'rgba(4,20,52,.18)'); R(g, o, o + k * CS + 1, S, 1, 'rgba(4,20,52,.18)');
+  }
+  for (const [x, y] of [[-4, -4], [S + 1, -4], [-4, S + 1], [S + 1, S + 1], [Math.floor(S / 2) - 1, -4], [Math.floor(S / 2) - 1, S + 1], [-4, Math.floor(S / 2) - 1], [S + 1, Math.floor(S / 2) - 1]]) rivet(g, o + x, o + y);
+  return c;
+}
+
+/* ---------- les avions, vus de dessus, nez vers le haut ---------- */
+const PAL = {
+  mine: { a: P.steel, b: P.white, c: P.gun, r1: P.blue, r2: P.white, r3: P.red, h: P.navy },
+  foe:  { a: P.olive, b: P.olive, c: P.dark, r1: P.red, r2: P.gold, r3: P.red, h: P.olive },
+};
+function cocarde(x, y, s, on, p) { return [[C32.ell(x, y, s, s), p.r1, { on }], [C32.ell(x, y, s * .62, s * .62), p.r2, { on }], [C32.ell(x, y, s * .28, s * .28), p.r3, { on }]]; }
+function planeArt(id, p) {
+  if (id === 'bomb') { const W = 69, c = W / 2; return [W, 92, [
+    [C32.cap(12, 80, 57, 80, 4), p.a],                                    // 1 empennage
+    [C32.cap(4, 34, 65, 34, 6), p.a],                                     // 2 ailes
+    [C32.ell(c - 12, 28, 3, 4.5), p.c], [C32.ell(c + 12, 28, 3, 4.5), p.c], [C32.ell(c - 24, 29, 2.6, 4), p.c], [C32.ell(c + 24, 29, 2.6, 4), p.c],
+    [C32.cap(c, 5, c, 84, 6.5, 4), p.a],                                  // 7 fuselage
+    [C32.cap(c, 72, c, 89, 1.8), p.c],
+    [C32.ell(c, 13, 3.5, 4), P.blue, { on: [7] }],
+    ...cocarde(13, 34, 4.5, [2], p), ...cocarde(W - 13, 34, 4.5, [2], p),
+  ], null]; }
+  if (id === 'radar') { const W = 69, c = W / 2; return [W, 69, [
+    [C32.cap(c - 11, 62, c + 11, 62, 3), p.b],                            // 1
+    [C32.cap(4, 34, 65, 34, 5), p.b],                                     // 2
+    [C32.ell(c - 15, 29, 2.5, 4), p.c], [C32.ell(c + 15, 29, 2.5, 4), p.c],
+    [C32.cap(c, 4, c, 64, 5.5, 3.5), p.b],                                // 5
+    [C32.ell(c, 46, 10, 10), P.navy],                                     // 6 radôme
+    [C32.ell(c, 46, 10, 2.4), P.white, { on: [6] }],
+    [C32.ell(c, 11, 3, 3.5), P.blue, { on: [5] }],
+    ...cocarde(12, 34, 3.6, [2], p), ...cocarde(W - 12, 34, 3.6, [2], p),
+  ], [c, 46]]; }
+  if (id === 'jet') { const W = 69, c = W / 2; return [W, 46, [
+    [C32.cap(c, 20, 7, 38, 3, 4.5), p.c], [C32.cap(c, 20, W - 7, 38, 3, 4.5), p.c],   // 1, 2 ailes en delta
+    [C32.cap(c - 9, 42, c + 9, 42, 2), p.c],
+    [C32.ell(8, 37, 2, 2), P.red], [C32.ell(W - 8, 37, 2, 2), P.red],
+    [C32.cap(c, 2, c, 43, 3, 4.5), p.a],                                  // 6 fuselage
+    [C32.ell(c, 14, 2.5, 5), P.blue, { on: [6] }],
+    ...cocarde(19, 33, 2.8, [1], p), ...cocarde(W - 19, 33, 2.8, [2], p),
+  ], null]; }
+  const W = 23, c = W / 2; return [W, 46, [                              // hélicoptère
+    [C32.cap(c - 7, 5, c - 7, 22, 1), P.dark], [C32.cap(c + 7, 5, c + 7, 22, 1), P.dark],
+    [C32.cap(c, 18, c, 41, 2.2, 1.4), p.h],                               // 3 poutre de queue
+    [C32.ell(c, 41, 1.2, 4.5), P.dark],
+    [C32.ell(c, 13, 7, 9), p.h],                                          // 5 cabine
+    [C32.ell(c, 8, 4.2, 3.6), P.blue, { on: [5] }],
+  ], [c, 14]];
+}
+function rotPt([x, y], h) { return [h - 1 - y, x]; }
+function shapeOf(def, d) {
+  let cells = def.cells, w = def.w, h = def.h;
+  for (let k = 0; k < d; k++) { cells = cells.map(([x, y]) => [h - 1 - y, x]); [w, h] = [h, w]; }
+  return { cells, w, h };
+}
+function buildPlanes() {
+  G.pl = {};
+  for (const side of ['mine', 'foe']) { G.pl[side] = {};
+    for (const def of FLEET) {
+      const [w, h, list, rotor] = planeArt(def.id, PAL[side]);
+      let img = spr(w, h, list), pt = rotor, H = h; const out = [];
+      for (let d = 0; d < 4; d++) {
+        out.push({ img, sh: tint(img, 'rgba(4,16,44,.38)'), dead: over(img, 'rgba(26,22,30,.55)'), spot: tint(img, '#ffd23f'), rotor: pt });
+        if (pt) pt = rotPt(pt, H); H = img.width; img = rot(img);
+      }
+      G.pl[side][def.id] = out;
+    }
+  }
+}
+function buildFog() {
+  const S = BS, [t, g] = mk(S, S), bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+  const FOG = ['#dfe6f5', '#c3cde6', '#a3b0d4', '#8996c2', '#7480b0'];
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const a = TAU / S;
+    const v = .55 * Math.sin(a * (x + y)) + .45 * Math.sin(a * (2 * y - x) + 1) + .35 * Math.sin(a * (3 * x - y) + 2) + .25 * Math.sin(a * (4 * x + 3 * y) + .5) + .12 * Math.sin(a * (9 * x - 7 * y));
+    const f = (1.6 - v) / 3.2 * 4.4 + (bayer[y % 4][x % 4] / 16 - .5) * .55;
+    R(g, x, y, 1, 1, FOG[clamp(Math.floor(f), 0, 4)]);
+  }
+  const [c, cg] = mk(S * 2, S * 2); for (const [x, y] of [[0, 0], [S, 0], [0, S], [S, S]]) cg.drawImage(t, x, y);
+  G.fogTex = c; [G.fogBuf, G.fogG] = mk(S, S); [G.fogMask, G.fogMaskG] = mk(S, S);
+  const [w, wg] = mk(S * 2, S), r = rnd(21);
+  for (let i = 0; i < 9; i++) {
+    const x = r() * S, y = 10 + r() * (S - 20), n = 3 + Math.floor(r() * 3), list = [];
+    for (let k = 0; k < n; k++) list.push([x + k * 9 + r() * 4, y + (r() - .5) * 6, 5 + r() * 5, 3 + r() * 2]);
+    for (const dx of [-S, 0, S]) { const [bc, bg2] = mk(S * 2, S); C32.blob(bg2, list.map(q => [q[0] + dx, q[1], q[2], q[3]]), ['#ffffff', '#f4f7fd', '#dfe6f5', '#c3cde6']); wg.drawImage(bc, 0, 0); }
+  }
+  G.fogCloud = w;
+  const [cb, cbg] = mk(CS, CS);
+  R(cbg, 1, 1, CS - 1, 1, 'rgba(255,255,255,.8)'); R(cbg, 1, 2, 1, CS - 2, 'rgba(255,255,255,.55)');
+  R(cbg, 2, CS - 1, CS - 2, 1, 'rgba(40,50,96,.5)'); R(cbg, CS - 1, 2, 1, CS - 2, 'rgba(40,50,96,.5)');
+  G.bevel = cb;
+}
+function buildBoom() {
+  const rampsBy = [
+    ['#ffffff', '#ffffff', '#fff6c2', '#ffd23f'], ['#ffffff', '#fff6c2', '#ffd23f', '#ff9a3c'],
+    ['#fff6c2', '#ffd23f', '#ff9a3c', '#e0502a'], ['#ffd23f', '#ff9a3c', '#e0502a', '#a8302a'],
+    ['#ff9a3c', '#e0502a', '#a8302a', '#5a2a2a'], ['#a89090', '#7e6a6e', '#5a4a52', '#3a3040'],
+    ['#9a9098', '#76707e', '#57525f', '#3a3644'], ['#8a8592', '#6d6878', '#55505f', '#3e3a48'],
+  ];
+  const r = rnd(9), puffs = [...Array(7)].map((_, i) => ({ a: i / 7 * TAU + r() * .5, d: .6 + r() * .5, s: .7 + r() * .5 }));
+  G.boom = [];
+  for (let f = 0; f < 8; f++) {
+    const C = C32.Canvas(40, 40), spread = [0, 2, 4, 6, 8, 9, 10, 11][f], rad = [4, 6, 7, 7, 6, 5.5, 4.5, 3.5][f];
+    RAMP._ebm = rampsBy[f];
+    C.draw(C32.ell(20, 20, Math.max(2, rad * 1.1 - f * .3), Math.max(2, rad * 1.1 - f * .3)), { mat: '_ebm', id: 1, fur: false, flat: true });
+    for (const p of puffs) C.draw(C32.ell(20 + Math.cos(p.a) * spread * p.d, 20 + Math.sin(p.a) * spread * p.d - f * .6, rad * p.s, rad * p.s), { mat: '_ebm', id: 1, fur: false, flat: true });
+    if (f >= 1 && f <= 5) { RAMP._ebc = rampsBy[f - 1]; const cr = [0, 4, 5, 5, 4, 3][f]; C.draw(C32.ell(19, 19 - f * .6, cr, cr), { mat: '_ebc', id: 1, fur: false, flat: true }); }
+    G.boom.push(C.toCanvas(f >= 4));
+  }
+  G.puff = [];
+  for (let k = 0; k < 6; k++) { const s = 2 + k * .9, [c, g] = mk(20, 20);
+    C32.blob(g, [[10, 10, s], [10 + s * .6, 10 - s * .3, s * .7], [10 - s * .5, 10 + s * .2, s * .6]], k < 3 ? P.smoke : P.smokeL, '#17131e'); G.puff.push(c); }
+}
+function buildIcons() {
+  const I = G.icon = {};
+  I.tir = spr(20, 20, [[C32.ell(10, 10, 7, 7), P.red], [C32.ell(10, 10, 4.4, 4.4), P.white, { on: [1] }], [C32.ell(10, 10, 2.2, 2.2), P.red, { on: [2] }]]);
+  I.radar = spr(20, 20, [[C32.ell(10, 10, 8, 8), P.navy], [C32.ell(10, 10, 5, 5), P.navy, { on: [1] }]]);
+  { const g = I.radar.getContext('2d'); for (let k = 0; k < 6; k++) R(g, 10 + k, 10 - k, 1, 1, '#8ee05a'); R(g, 13, 7, 1, 1, '#d8ffb0'); R(g, 6, 12, 2, 2, '#8ee05a'); R(g, 10, 10, 1, 1, '#ffffff'); }
+  I.bombes = spr(20, 20, [[C32.cap(7, 17, 13, 17, 1.4), P.dark], [C32.cap(10, 4, 10, 13, 4.2, 3), P.dark], [C32.cap(10, 11, 10, 18, 1.2), P.dark], [C32.ell(10, 8, 4.4, 1.2), P.red, { on: [2] }]]);
+  I.missile = spr(20, 20, [[C32.cap(4, 6, 4, 14, 1.2), P.dark], [C32.cap(4, 10, 15, 10, 2.4), P.steel], [C32.ell(15.5, 10, 2.4, 2.2), P.red]]);
+  { const g = I.missile.getContext('2d'); R(g, 0, 9, 2, 3, '#ff9a3c'); R(g, 1, 10, 1, 1, '#fff2a8'); }
+  I.esquive = spr(20, 20, [[C32.cap(10, 9, 10, 18, 1.4, 1), P.navy], [C32.ell(10, 7, 4.4, 5), P.navy], [C32.ell(10, 4.5, 2.6, 2), P.blue, { on: [2] }]]);
+  { const g = I.esquive.getContext('2d'); for (let k = -6; k <= 6; k++) { R(g, 10 + k, 7, 1, 1, '#14161d'); } R(g, 15, 13, 3, 3, OUT); R(g, 16, 12, 1, 5, '#8ee05a'); R(g, 14, 14, 5, 1, '#8ee05a'); }
+  // le pilote, à la place de l'amiral : casque de cuir, lunettes et écharpe
+  const A = spr(36, 40, [
+    [C32.ell(18, 38, 15, 8), P.brown], [C32.cap(10, 31, 26, 31, 3), P.white], [C32.cap(25, 31, 31, 38, 2, 1.4), P.white],
+    [C32.ell(18, 21, 8, 8.6), P.skin], [C32.ell(18, 12, 10, 8), P.brown],
+    [C32.ell(9.5, 20, 2.6, 5), P.brown], [C32.ell(26.5, 20, 2.6, 5), P.brown],
+    [C32.ell(13, 12, 3.4, 3), P.gold], [C32.ell(23, 12, 3.4, 3), P.gold],
+    [C32.ell(13, 12, 2.2, 1.9), P.blue, { on: [8] }], [C32.ell(23, 12, 2.2, 1.9), P.blue, { on: [9] }],
+  ]);
+  const ag = A.getContext('2d');
+  R(ag, 14, 19, 2, 2, OUT); R(ag, 21, 19, 2, 2, OUT); R(ag, 14, 19, 1, 1, '#ffffff'); R(ag, 21, 19, 1, 1, '#ffffff');
+  R(ag, 15, 25, 7, 1, OUT); R(ag, 14, 24, 1, 1, OUT); R(ag, 22, 24, 1, 1, OUT); R(ag, 12, 22, 2, 1, '#ff9a86'); R(ag, 23, 22, 2, 1, '#ff9a86');
+  R(ag, 12, 11, 1, 1, '#ffffff'); R(ag, 22, 11, 1, 1, '#ffffff');
+  G.pilot = A;
+}
+function buildAll() {
+  buildSky(); G.frameMine = buildFrame(true); G.frameFoe = buildFrame(false);
+  buildPlanes(); buildFog(); buildBoom(); buildIcons();
+  [G.mini, G.miniG] = mk(BS + 24, BS + 24);
+}
+
+/* ---------- état : deux ciels ---------- */
+function makeBoard() {
+  return {
+    planes: FLEET.map(def => ({ def, c: 0, r: 0, d: 0, hits: 0, down: false })),
+    grid: Array.from({ length: N }, () => Array(N).fill(-1)),
+    shots: Array.from({ length: N }, () => Array(N).fill(0)),   // 0 inconnu, 1 vide, 2 touché
+    intel: Array.from({ length: N }, () => Array(N).fill(0)),   // repéré au radar : 1 vide, 2 avion
+    cd: { radar: 0, bombes: 0, missile: 0, esquive: 0 },
+  };
+}
+const cellsOf = (p, c = p.c, r = p.r, d = p.d) => shapeOf(p.def, d).cells.map(([x, y]) => [c + x, r + y]);
+function fits(b, i, c, r, d) {
+  return cellsOf(b.planes[i], c, r, d).every(([x, y]) => x >= 0 && y >= 0 && x < N && y < N && (b.grid[y][x] < 0 || b.grid[y][x] === i));
+}
+function lift(b, i) { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (b.grid[y][x] === i) b.grid[y][x] = -1; }
+function put(b, i, c, r, d) { lift(b, i); Object.assign(b.planes[i], { c, r, d }); cellsOf(b.planes[i]).forEach(([x, y]) => b.grid[y][x] = i); }
+function randomFleet(b) {
+  b.grid.forEach(row => row.fill(-1));
+  b.planes.forEach((p, i) => { for (;;) { const d = rand(4), c = rand(N), r = rand(N); if (fits(b, i, c, r, d)) { put(b, i, c, r, d); break; } } });
+}
+const ready = (b, w) => w === 'tir' || (!b.planes[POWERS[w].ship].down && b.cd[w] === 0 && !(w === 'esquive' && b.planes[3].hits));
+
+/* ---------- écrans ---------- */
+let g, CUR; // contexte et écran en cours de dessin (button() y range ses zones)
+function button(x, y, w, h, label, opts = {}) {
+  const tone_ = opts.disabled ? 'dim' : opts.gold ? 'gold' : opts.red ? 'red' : null;
+  plate(g, x, y, w, h, tone_);
+  if (opts.sel) { const c = Math.floor(now() / 250) % 2 ? '#ffd23f' : '#fff6c2'; R(g, x - 1, y - 1, w + 2, 1, c); R(g, x - 1, y + h, w + 2, 1, c); R(g, x - 1, y - 1, 1, h + 2, c); R(g, x + w, y - 1, 1, h + 2, c); }
+  if (label) {
+    if (opts.tiny) tiny(g, label, x + w / 2, y + Math.floor(h / 2) - 2, opts.disabled ? '#7d8698' : '#ffffff', 'center');
+    else text(g, label, x + w / 2, y + Math.floor((h - 8) / 2) + 1, opts.disabled ? '#7d8698' : opts.gold ? '#fff6c2' : '#ffffff', 'center');
+  }
+  if (opts.act) CUR.btn.push({ x, y, w, h, act: opts.act });
+}
+function wrap(s, n) {
+  const words = s.split(' '), lines = []; let cur = '';
+  for (const w of words) { if ((cur + ' ' + w).trim().length > n) { lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }
+  if (cur.trim()) lines.push(cur.trim());
+  return lines;
+}
+function setMsg(sc, m) { sc.msg = m; sc.msgT0 = now(); }
+function drawMsg(sc, y) {
+  plate(g, 4, y, LW - 8, 44);
+  let left = Math.min(sc.msg.length, Math.floor((now() - sc.msgT0) / 16));
+  wrap(sc.msg, 31).slice(0, 3).forEach((l, i) => { text(g, l.slice(0, Math.max(0, left)), 9, y + 7 + i * 12, '#f2f0ff'); left -= l.length + 1; });
+}
+function bg(t) {
+  g.drawImage(G.sky, -96 + Math.floor((t * 3) % 96), -96 + Math.floor((t * 2) % 96));
+  g.fillStyle = 'rgba(6,14,36,.55)'; g.fillRect(0, 0, LW, LH);
+}
+function ring(g, x, y, r, col) { const n = Math.max(10, Math.round(r * 6)); for (let k = 0; k < n; k++) { const a = k / n * TAU; R(g, Math.round(x + Math.cos(a) * r), Math.round(y + Math.sin(a) * r), 1, 1, col); } }
+function missMark(g, x, y, t, ph) { // un tir dans le vide : petite bouffée blanche qui s'étire
+  const q = ((t / 2.4) + ph) % 1;
+  g.globalAlpha = 1 - q; ring(g, x, y, 3 + q * 6, '#eaf6ff'); g.globalAlpha = 1;
+  R(g, x - 4, y - 1, 9, 4, OUT); R(g, x - 2, y - 3, 5, 7, OUT);
+  R(g, x - 3, y, 7, 2, '#c6d3e6'); R(g, x - 1, y - 2, 3, 5, '#c6d3e6'); R(g, x - 1, y - 2, 2, 2, '#ffffff'); R(g, x - 3, y, 2, 1, '#ffffff');
+}
+function flames(g, x, y, t, k, big) {
+  const s = big ? 1.15 : 1, f = Math.floor(t * 10 + k * 3);
+  const tongues = [[-3, 6 + (f % 3)], [0, 9 + ((f + 1) % 3) * 1.5], [3, 6 + ((f + 2) % 2) * 2]];
+  for (const pass of [0, 1]) for (const [dx, h0] of tongues) {
+    const h = Math.round(h0 * s), bx = x + Math.round(dx * s);
+    for (let i = 0; i < h; i++) {
+      const w = Math.max(1, Math.round((1 - i / h) * 3.4 * s)), sway = Math.round(Math.sin(t * TAU * 1.5 + i * .6 + dx) * (i / h) * 1.4);
+      const yy = y - i, xx = bx - (w >> 1) + sway;
+      if (pass === 0) R(g, xx - 1, yy - 1, w + 2, 3, OUT);
+      else { const u = i / h; R(g, xx, yy, w, 1, u < .3 ? '#ff6a3c' : u < .6 ? '#ff9a3c' : u < .85 ? '#ffd23f' : '#fff6c2'); if (w > 2 && u < .5) R(g, xx + 1, yy, w - 2, 1, '#ffd23f'); }
+    }
+  }
+}
+function smoke(g, x, y, t, k, amt = 1) {
+  for (let i = 0; i < 4; i++) {
+    const p = (t / 3 + i / 4 + k * .13) % 1, sz = Math.min(5, Math.floor(p * 6));
+    const px = x + p * 14 + Math.sin(p * 5 + k + i) * 3, py = y - 4 - p * 30;
+    g.globalAlpha = amt * (p < .7 ? .9 : (1 - p) / .3 * .9);
+    g.drawImage(G.puff[sz], Math.round(px - 10), Math.round(py - 10));
+  }
+  g.globalAlpha = 1;
+}
+function corners(g, x, y, w, h, col) {
+  for (const [sx, sy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+    const ex = x + sx * (w - 4), ey = y + sy * (h - 4);
+    R(g, ex + (sx ? 1 : 0), ey + (sy ? 3 : 0), 3, 1, col); R(g, ex + (sx ? 3 : 0), ey + (sy ? 1 : 0), 1, 3, col);
+  }
+}
+function rotor(g, x, y, t) { // pales de l'hélicoptère, au pixel
+  const a = t * 14;
+  for (const da of [0, Math.PI / 2]) for (let k = -12; k <= 12; k++) {
+    if (Math.abs(k) < 2) continue;
+    R(g, Math.round(x + Math.cos(a + da) * k), Math.round(y + Math.sin(a + da) * k), 1, 1, Math.abs(k) > 9 ? '#5e6878' : '#1c2030');
+  }
+  g.globalAlpha = .25; ring(g, x, y, 11, '#d6dbe3'); g.globalAlpha = 1;
+  R(g, x - 1, y - 1, 2, 2, '#ffd23f');
+}
+const cx = c => c * CS + CS / 2, cy = r => r * CS + CS / 2;
+
+// dessine un ciel entier ; o.mine : mes avions visibles ; o.main : grande vue ; o.sc : écran (effets, visée)
+function drawBoard(gg, b, ox, oy, t, o) {
+  const mine = o.mine, reveal = o.reveal;
+  gg.save(); gg.translate(ox, oy);
+  gg.beginPath(); gg.rect(0, 0, BS, BS); gg.clip();
+  gg.drawImage(G.sky, -96 + Math.floor((t * 4) % 96), -96 + Math.floor((t * 2.4) % 96));
+  gg.globalAlpha = .7; gg.drawImage(G.cumulus, -Math.floor((t * 5) % BS), 0); gg.globalAlpha = 1;
+  // les avions (ombre portée loin dessous : ils volent haut)
+  b.planes.forEach((p, i) => {
+    if (!(mine || p.down || reveal)) return;
+    const art = G.pl[mine ? 'mine' : 'foe'][p.def.id][p.d], x = p.c * CS, y = p.r * CS;
+    const bob = p.down ? 0 : Math.round(Math.sin(t * 2 + i * 1.7) * 1);
+    if (!p.down) gg.drawImage(art.sh, x + 5, y + 8);
+    gg.drawImage(p.down ? art.dead : art.img, x, y + bob);
+    if (art.rotor && !p.down) rotor(gg, x + art.rotor[0], y + art.rotor[1] + bob, t);
+    if (!mine && reveal && !p.down) { gg.globalAlpha = .25 + .15 * Math.sin(t * 4); gg.drawImage(art.spot, x, y); gg.globalAlpha = 1; }
+    if (o.sel === i) { const sh = shapeOf(p.def, p.d); corners(gg, x + 1, y + 1, sh.w * CS - 1, sh.h * CS - 1, Math.floor(t * 4) % 2 ? '#ffd23f' : '#fff6c2'); }
+  });
+  // les nuages cachent le ciel ennemi
+  if (!mine && !reveal) {
+    const mg = G.fogMaskG; mg.clearRect(0, 0, BS, BS);
+    const fog = (c, r) => !b.shots[r][c] && !b.intel[r][c];
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (fog(c, r)) R(mg, c * CS + 1, r * CS + 1, CS - 1, CS - 1, '#000');
+    const fg = G.fogG, fox = 100 + Math.round(12 * Math.sin(t * .4)), foy = 100 + Math.round(9 * Math.cos(t * .33));
+    fg.globalCompositeOperation = 'source-over'; fg.clearRect(0, 0, BS, BS); fg.drawImage(G.fogTex, -fox, -foy);
+    fg.globalAlpha = .6; fg.drawImage(G.fogCloud, -Math.floor((t * 6) % BS), 0); fg.globalAlpha = 1;
+    fg.globalCompositeOperation = 'destination-in'; fg.drawImage(G.fogMask, 0, 0); fg.globalCompositeOperation = 'source-over';
+    gg.drawImage(G.fogBuf, 0, 0);
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (fog(c, r)) gg.drawImage(G.bevel, c * CS, r * CS);
+  }
+  // repéré au radar
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (b.shots[r][c] || b.intel[r][c] !== 2) continue;
+    const x = c * CS, y = r * CS;
+    gg.fillStyle = `rgba(255,70,40,${.22 + .12 * Math.sin(t * 5 + c + r)})`; gg.fillRect(x + 1, y + 1, CS - 1, CS - 1);
+    corners(gg, x + 2, y + 2, CS - 3, CS - 3, '#ff5a46');
+    text(gg, '!', x + CS / 2 - 3, y + 8 + (Math.floor(t * 3) % 2), '#ffd23f');
+  }
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (b.shots[r][c] === 1) missMark(gg, cx(c), cy(r), t, c * .21 + r * .33);
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (b.shots[r][c] !== 2) continue;
+    const p = b.planes[b.grid[r][c]], x = c * CS, y = r * CS;
+    if (!p.down) {
+      gg.fillStyle = `rgba(255,70,40,${.16 + .08 * Math.sin(t * TAU + c)})`; gg.fillRect(x + 1, y + 1, CS - 1, CS - 1);
+      flames(gg, cx(c), cy(r) + 4, t, c + r * 3, !mine);
+      if (o.main) smoke(gg, cx(c), cy(r) - 2, t, c * 3 + r, .8);
+    } else if (o.main && (c + r) % 2 === 0) smoke(gg, cx(c), cy(r), t, c * 3 + r, .5);
+  }
+  if (o.main && o.sc) { drawAim(gg, o.sc, t); for (const f of o.sc.fx) drawFx(gg, f, t); }
+  gg.restore();
+  gg.drawImage(mine ? G.frameMine : G.frameFoe, ox - 12, oy - 12);
+  if (o.main) for (let k = 0; k < N; k++) {
+    tiny(gg, COLS[k], ox + k * CS + 10, oy - 10, mine ? '#cfe6ff' : '#ffd6cc');
+    tiny(gg, String(k + 1), ox - 10, oy + k * CS + 9, mine ? '#cfe6ff' : '#ffd6cc');
+  }
+}
+function zoneOf(c, r) { return [clamp(c - 1, 0, N - 3), clamp(r - 1, 0, N - 3)]; }
+function weaponCells(w, c, r, h) {
+  if (w === 'radar') { const [x0, y0] = zoneOf(c, r), o = []; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) o.push([x0 + x, y0 + y]); return o; }
+  if (w === 'bombes') return [[c, r], [c - 1, r], [c + 1, r], [c, r - 1], [c, r + 1]].filter(([x, y]) => x >= 0 && y >= 0 && x < N && y < N);
+  if (w === 'missile') return [...Array(N)].map((_, k) => h ? [k, r] : [c, k]);
+  return [[c, r]];
+}
+function drawAim(gg, sc, t) {
+  if (sc.busy || sc.over || !sc.aim) return;
+  const { c, r } = sc.aim, w = sc.weapon, cells = weaponCells(w, c, r, sc.missH), armed = sc.armed;
+  const col = w === 'radar' ? '90,230,255' : '255,214,63';
+  for (const [x, y] of cells) { gg.fillStyle = `rgba(${col},${(armed ? .32 : .18) + .1 * Math.sin(t * 8)})`; gg.fillRect(x * CS + 1, y * CS + 1, CS - 1, CS - 1); }
+  const x = c * CS, y = r * CS;
+  corners(gg, x + 1, y + 1, CS - 1, CS - 1, Math.floor(t * 6) % 2 ? '#ffffff' : '#ffd23f');
+  if (armed) { R(gg, x + 7, y + 11, 10, 2, '#ffffff'); R(gg, x + 11, y + 7, 2, 10, '#ffffff'); }
+}
+function fx(sc, o) { return new Promise(res => { o.t0 = now(); o.done = res; sc.fx.push(o); }); }
+function drawFx(gg, f, t) {
+  const u = clamp((now() - f.t0) / f.dur, 0, 1);
+  if (f.type === 'bomb') { // une bombe qui tombe, son ombre grandit
+    const x = cx(f.c), y = cy(f.r), h = (1 - u) * 60, s = Math.max(1, Math.round(3 - u * 1.5));
+    gg.fillStyle = 'rgba(4,16,44,.4)'; gg.fillRect(x - s, y - 1, s * 2, 2);
+    R(gg, x - s - 1, Math.round(y - h) - s - 2, s * 2 + 2, s * 2 + 4, OUT); R(gg, x - s, Math.round(y - h) - s - 1, s * 2, s * 2 + 2, '#4e5a6a'); R(gg, x - s, Math.round(y - h) - s - 1, 1, 1, '#c8d0dc');
+  } else if (f.type === 'boom') {
+    const k = Math.min(7, Math.floor(u * 8)); gg.drawImage(G.boom[k], Math.round(f.x - 20), Math.round(f.y - 24));
+  } else if (f.type === 'scan') {
+    const S3 = 3 * CS, x = f.zx * CS, y = f.zy * CS, line = Math.floor(u * S3);
+    gg.globalAlpha = 1 - u * .6; gg.fillStyle = 'rgba(90,230,255,.16)'; gg.fillRect(x + 1, y + 1, S3 - 1, S3 - 1);
+    R(gg, x + 1, y + line, S3 - 1, 1, '#bff6ff'); gg.globalAlpha = 1;
+    for (let k = 0; k < S3; k += 4) { const o = Math.floor(t * 20) % 4; R(gg, x + ((k + o) % S3), y, 2, 1, '#bff6ff'); R(gg, x + ((k + o) % S3), y + S3, 2, 1, '#bff6ff'); R(gg, x, y + ((k + o) % S3), 1, 2, '#bff6ff'); R(gg, x + S3, y + ((k + o) % S3), 1, 2, '#bff6ff'); }
+  } else if (f.type === 'missile') { // traînée de fumée, puis le missile
+    const len = (f.stop + 1) * CS, head = Math.min(len, Math.floor(ease(u) * len + 4)), lc = f.line * CS + CS / 2;
+    for (let k = 0; k < head; k += 3) {
+      gg.globalAlpha = Math.max(.15, 1 - (head - k) / (len + 40));
+      const j = (k * 7 + Math.floor(t * 10)) % 3 - 1;
+      if (f.h) R(gg, k, lc - 1 + j, 3, 2, '#eef2fb'); else R(gg, lc - 1 + j, k, 2, 3, '#eef2fb');
+    }
+    gg.globalAlpha = 1;
+    if (f.h) { R(gg, head - 9, lc - 2, 10, 4, OUT); R(gg, head - 8, lc - 1, 8, 2, '#c8d0dc'); R(gg, head - 1, lc - 1, 1, 2, '#e04a3c'); R(gg, head - 11, lc - 1, 2, 2, '#ff9a3c'); }
+    else { R(gg, lc - 2, head - 9, 4, 10, OUT); R(gg, lc - 1, head - 8, 2, 8, '#c8d0dc'); R(gg, lc - 1, head - 1, 2, 1, '#e04a3c'); R(gg, lc - 1, head - 11, 2, 2, '#ff9a3c'); }
+  }
+  if (u >= 1 && !f.ended) { f.ended = true; f.done(); }
+}
+
+/* --- écran 1 : titre --- */
+const E1 = { btn: [], diff: 'normal' };
+function draw1(t) {
+  bg(t);
+  logo(g, 'ESCADRILLE !', LW / 2, 26, 20);
+  tiny(g, 'LA BATAILLE AERIENNE DES POUVOIRS', LW / 2, 56, '#cfe6ff', 'center');
+  plate(g, 8, 72, LW - 16, 154);
+  const rows = [['radar', 'RADAR', 'Révèle une zone 3x3', 'AVION RADAR'], ['bombes', 'BOMBES', 'Cinq bombes en croix', 'BOMBARDIER'],
+                ['missile', 'MISSILE', 'File jusqu\'au 1er avion', 'CHASSEUR'], ['esquive', 'ESQUIVE', 'L\'hélico s\'échappe', 'HELICOPTERE']];
+  rows.forEach(([ic, name, d, who], i) => {
+    const y = 80 + i * 36;
+    g.drawImage(G.icon[ic], 16, y + 4);
+    text(g, name, 44, y + 2, '#ffd23f'); tiny(g, who, LW - 18, y + 3, '#8fb3e0', 'right');
+    text(g, d, 44, y + 15, '#f2f0ff');
+  });
+  tiny(g, 'UN SEUL COUP PAR TOUR : UN TIR OU UN POUVOIR', LW / 2, 230, '#cfe6ff', 'center');
+  text(g, 'NIVEAU', LW / 2, 246, '#ffd23f', 'center');
+  DIFFS.forEach(([k, lbl], i) => {
+    const x = 8 + i * 87;
+    button(x, 260, 82, 26, lbl, { sel: E1.diff === k, gold: E1.diff === k, act: () => { E1.diff = k; } });
+    tiny(g, i === 1 ? 'RECORD 21 TOURS' : 'PAS DE RECORD', x + 41, 292, i === 1 ? '#ffd23f' : '#7d8698', 'center');
+  });
+  button(56, 308, 160, 40, 'DECOLLAGE !', { gold: true, act: () => {} });
+  button(56, 360, 76, 26, 'CLASSEMENT', { tiny: true, act: () => {} });
+  button(140, 360, 76, 26, '< LUDOTHEQUE', { tiny: true, act: () => {} });
+  button(56, 398, 76, 24, 'SON', { tiny: true, act: () => {} });
+  button(140, 398, 76, 24, 'MUSIQUE', { tiny: true, act: () => {} });
+  g.drawImage(G.pilot, 8, 432);
+  plate(g, 50, 438, LW - 58, 32);
+  text(g, 'Abattez l\'escadrille', 58, 444, '#f2f0ff'); text(g, 'en moins de tours !', 58, 456, '#f2f0ff');
+}
+
+/* --- écran 2 : placement --- */
+const E2 = { btn: [], b: makeBoard(), sel: 0, msg: '', msgT0: 0 };
+randomFleet(E2.b);
+setMsg(E2, 'Placez votre escadrille : touchez un avion, puis une case. PIVOTER le tourne.');
+function hud(sc, title, col, turn) {
+  logo(g, 'ESCADRILLE!', 62, 8, 10);
+  if (turn) { plate(g, 124, 6, 74, 18); text(g, `TOUR ${turn}`, 161, 11, '#ffd23f', 'center'); }
+  button(LW - 62, 6, 56, 18, 'MENU', { tiny: true, act: () => {} });
+  tiny(g, title, LW / 2, 32, col, 'center');
+}
+function foePlate(b, t) {
+  const x0 = 104, y0 = 336, W2 = LW - x0 - 6;
+  plate(g, x0, y0, W2, 92, 'red');
+  text(g, 'ESCADRILLE ENNEMIE', x0 + 6, y0 + 5, '#ffd6cc', 'left', 6);
+  b.planes.forEach((p, i) => {
+    const y = y0 + 17 + i * 18, n = p.def.cells.length;
+    for (let k = 0; k < n; k++) { R(g, x0 + 6 + k * 5, y + 3, 5, 6, OUT); R(g, x0 + 7 + k * 5, y + 4, 3, 4, p.down ? '#5a4a52' : '#a9b1bc'); if (p.down) R(g, x0 + 7 + k * 5, y + 4, 3, 1, '#ff5a46'); }
+    text(g, p.down ? 'ABATTU' : POWERS[p.def.power].name, x0 + 50, y + 3, p.down ? '#ff8a76' : '#f2f0ff');
+    if (!p.down) text(g, 'PRET', x0 + W2 - 6, y + 3, '#ffd23f', 'right');
+  });
+}
+function mini(b, t, label, col, o) {
+  const m = { x: 8, y: 340, s: 88 };
+  const mg = G.miniG; mg.setTransform(1, 0, 0, 1, 0, 0); mg.clearRect(0, 0, BS + 24, BS + 24);
+  drawBoard(mg, b, 12, 12, t, o);
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.drawImage(G.mini, 0, 0, BS + 24, BS + 24, m.x - 2, m.y - 2, m.s + 4, m.s + 4);
+  g.imageSmoothingEnabled = false;
+  tiny(g, label, m.x + m.s / 2, m.y + m.s + 6, col, 'center');
+}
+function draw2(t) {
+  bg(t);
+  hud(E2, 'PLACEZ VOTRE ESCADRILLE', '#9fd3ff');
+  drawBoard(g, E2.b, BX, BY, t, { mine: true, main: true, sel: E2.sel });
+  E2.btn.push({ x: BX, y: BY, w: BS, h: BS, act: (x, y) => {
+    const c = Math.floor((x - BX) / CS), r = Math.floor((y - BY) / CS), i = E2.b.grid[r][c];
+    if (i >= 0) { E2.sel = i; setMsg(E2, `${FLEET[i].name} : touchez une case pour le déplacer.`); return; }
+    if (E2.sel == null) return;
+    const p = E2.b.planes[E2.sel], sh = shapeOf(p.def, p.d), c0 = clamp(c - (sh.w >> 1), 0, N - sh.w), r0 = clamp(r - (sh.h >> 1), 0, N - sh.h);
+    if (fits(E2.b, E2.sel, c0, r0, p.d)) put(E2.b, E2.sel, c0, r0, p.d); else setMsg(E2, 'Pas assez de place ici : les ailes touchent un autre avion.');
+  } });
+  button(6, 284, 82, 42, 'PIVOTER', { tiny: true, disabled: E2.sel == null, act: () => {
+    if (E2.sel == null) return; const p = E2.b.planes[E2.sel], d = (p.d + 1) % 4, sh = shapeOf(p.def, d);
+    for (const [dc, dr] of [[0, 0], [-1, 0], [0, -1], [-1, -1], [-2, 0], [0, -2], [-2, -1], [-1, -2]]) {
+      const c = clamp(p.c + dc, 0, N - sh.w), r = clamp(p.r + dr, 0, N - sh.h);
+      if (fits(E2.b, E2.sel, c, r, d)) { put(E2.b, E2.sel, c, r, d); return; }
+    }
+    setMsg(E2, 'Pas la place de le tourner ici.');
+  } });
+  button(95, 284, 82, 42, 'HASARD', { tiny: true, act: () => { randomFleet(E2.b); } });
+  button(184, 284, 82, 42, 'DECOLLAGE !', { gold: true, tiny: true, act: () => setMsg(E2, 'Dans le jeu, le combat commence ici. Essayez le troisième écran !') });
+  mini(E3.foe, t, 'ENNEMI', '#ffb4a8', { mine: false });
+  foePlate(E3.foe, t);
+  drawMsg(E2, 434);
+}
+
+/* --- écran 3 : combat, jouable --- */
+const E3 = { btn: [], fx: [], weapon: 'tir', aim: null, armed: false, missH: true, busy: false, over: false, turn: 1, msg: '', msgT0: 0 };
+function newBattle() {
+  Object.assign(E3, { fx: [], weapon: 'tir', aim: null, armed: false, busy: false, over: false, turn: 1, foe: makeBoard(), me: makeBoard() });
+  randomFleet(E3.foe); randomFleet(E3.me);
+  // l'ordinateur a déjà tiré trois fois sur mon escadrille (pour la miniature)
+  for (let k = 0; k < 3; k++) { const c = rand(N), r = rand(N), i = E3.me.grid[r][c]; E3.me.shots[r][c] = i < 0 ? 1 : 2; if (i >= 0) E3.me.planes[i].hits++; }
+  setMsg(E3, 'Touchez un nuage du ciel ennemi pour tirer, ou choisissez un pouvoir.');
+}
+function shoot(b, c, r) {
+  if (b.shots[r][c]) return 'deja';
+  const i = b.grid[r][c];
+  if (i < 0) { b.shots[r][c] = 1; b.intel[r][c] = 1; return 'vide'; }
+  b.shots[r][c] = 2; const p = b.planes[i]; p.hits++;
+  E3.fx.push({ type: 'boom', x: cx(c), y: cy(r), t0: now(), dur: 480, done() {} });
+  if (p.hits >= p.def.cells.length) {
+    p.down = true;
+    cellsOf(p).forEach(([x, y], k) => setTimeout(() => E3.fx.push({ type: 'boom', x: cx(x), y: cy(y), t0: now(), dur: 480, done() {} }), 120 * k));
+    return p;
+  }
   return 'touche';
 }
-function endTurn(st, used) {
-  st.turn++;
-  for (const k in st.cd) st.cd[k] = Math.max(0, st.cd[k] - 1);
-  if (used) st.cd[used] = used === 'radar' ? 3 : 4;
-  st.mode = 'tir';
-  if (st.down === 3) { st.over = true; st.msg = ['win', st.turn]; }
+function endTurn(used, msg) {
+  E3.turn++;
+  for (const k in E3.me.cd) E3.me.cd[k] = Math.max(0, E3.me.cd[k] - 1);
+  if (used) E3.me.cd[used] = POWERS[used].cd;
+  E3.weapon = 'tir'; E3.aim = null; E3.armed = false; E3.busy = false;
+  if (E3.foe.planes.every(p => p.down)) { E3.over = true; msg = `Victoire en ${E3.turn - 1} tours ! L'escadrille ennemie est abattue. Touchez le ciel pour rejouer.`; }
+  setMsg(E3, msg);
 }
-function tap(st, x, y, now) {
-  if (st.over) return newGame();
-  for (let k = 0; k < 3; k++) {
-    const r = btnRect(k), [id] = BTN[k];
-    if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) {
-      if (id !== 'tir' && st.cd[id] > 0) st.msg = ['attente', id, st.cd[id]];
-      else { st.mode = id; st.msg = [id === 'tir' ? 'start' : 'choix', id]; }
-      return st;
-    }
+const said = (res, cell) => res === 'vide' ? `${cell} : rien dans ce nuage.` : res === 'touche' ? `${cell} : touché ! Il est en feu.` : `${cell} : ${res.def.name.toLowerCase()} abattu !`;
+async function fire(c, r) {
+  const b = E3.foe, w = E3.weapon;
+  if (w === 'tir') {
+    if (b.shots[r][c]) { setMsg(E3, 'Déjà tiré ici : choisissez un autre nuage.'); return; }
+    E3.busy = true; await fx(E3, { type: 'bomb', c, r, dur: 420 });
+    endTurn(null, said(shoot(b, c, r), cellName(c, r)));
+  } else if (w === 'radar') {
+    const [zx, zy] = zoneOf(c, r); E3.busy = true; await fx(E3, { type: 'scan', zx, zy, dur: 900 });
+    let n = 0; for (const [x, y] of weaponCells('radar', c, r)) { if (!b.shots[y][x]) b.intel[y][x] = b.grid[y][x] >= 0 ? 2 : 1; if (b.grid[y][x] >= 0 && !b.shots[y][x]) n++; }
+    endTurn('radar', n ? `Radar : ${n} case${n > 1 ? 's' : ''} d'avion repérée${n > 1 ? 's' : ''} !` : 'Radar : ciel vide dans cette zone.');
+  } else if (w === 'bombes') {
+    E3.busy = true; const cells = weaponCells('bombes', c, r);
+    await Promise.all(cells.map(([x, y]) => fx(E3, { type: 'bomb', c: x, r: y, dur: 420 })));
+    let hits = 0, down = null;
+    for (const [x, y] of cells) { const res = shoot(b, x, y); if (res !== 'vide' && res !== 'deja') hits++; if (typeof res === 'object') down = res; }
+    endTurn('bombes', down ? `Bombes : ${down.def.name.toLowerCase()} abattu !` : hits ? `Bombes : ${hits} touché${hits > 1 ? 's' : ''} !` : 'Bombes : rien en dessous.');
+  } else if (w === 'missile') {
+    const h = E3.missH, line = h ? r : c; let stop = N - 1;
+    for (let k = 0; k < N; k++) { const [x, y] = h ? [k, line] : [line, k]; if (b.grid[y][x] >= 0 && b.shots[y][x] !== 2) { stop = k; break; } }
+    E3.busy = true; await fx(E3, { type: 'missile', h, line, stop, dur: 260 + stop * 70 });
+    const [x, y] = h ? [stop, line] : [line, stop];
+    for (let k = 0; k < stop; k++) { const [a, bb] = h ? [k, line] : [line, k]; if (!b.shots[bb][a] && b.grid[bb][a] < 0) b.intel[bb][a] = 1; }
+    const res = b.grid[y][x] >= 0 && b.shots[y][x] !== 2 ? shoot(b, x, y) : null;
+    endTurn('missile', res ? 'Missile : ' + said(res, cellName(x, y)).replace(/ : /, ', ') : 'Missile : il a traversé le ciel sans rien toucher.');
   }
-  const cx = Math.floor((x - GX) / CS), cy = Math.floor((y - GY) / CS);
-  if (cx < 0 || cy < 0 || cx >= N || cy >= N) return st;
-  const i = cy * N + cx;
-  if (st.mode === 'tir') {
-    const r = fire(st, i, now);
-    if (r === 'deja') { st.msg = ['deja']; return st; }
-    st.msg = [r, coord(i)]; endTurn(st);
-  } else if (st.mode === 'radar') {
-    let n = 0;
-    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-      const a = cx + dx, b = cy + dy; if (a < 0 || b < 0 || a >= N || b >= N) continue;
-      const j = b * N + a; st.seen[j] = st.own[j] >= 0 ? 2 : 1; if (st.own[j] >= 0 && !st.shots[j]) n++;
-    }
-    st.msg = ['radar', n]; st.radarT = now; st.radarI = i; endTurn(st, 'radar');
-  } else {
-    let h = 0, ab = false;
-    for (const [dx, dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]) {
-      const a = cx + dx, b = cy + dy; if (a < 0 || b < 0 || a >= N || b >= N) continue;
-      const r = fire(st, b * N + a, now); if (r === 'touche' || r === 'abattu') h++; if (r === 'abattu') ab = true;
-    }
-    st.msg = ab ? ['abattu', coord(i)] : ['bombe', h]; endTurn(st, 'bombe');
-  }
-  return st;
+}
+function draw3(t) {
+  bg(t);
+  const sc = E3, mt = sc.weapon === 'missile' && !sc.busy && !sc.over;
+  if (mt) {
+    hud(sc, '', '#ffb4a8', sc.turn);
+    tiny(g, 'MISSILE :', 62, 33, '#ffb4a8', 'right');
+    button(68, 27, 92, 16, 'LIGNE  >', { tiny: true, gold: sc.missH, act: () => { sc.missH = true; sc.armed = false; } });
+    button(164, 27, 92, 16, 'COLONNE  V', { tiny: true, gold: !sc.missH, act: () => { sc.missH = false; sc.armed = false; } });
+  } else hud(sc, sc.over ? 'CIEL DEGAGE !' : 'CIEL ENNEMI : A VOUS', '#ffb4a8', sc.turn);
+  drawBoard(g, sc.foe, BX, BY, t, { mine: false, main: true, sc, reveal: sc.over });
+  sc.btn.push({ x: BX, y: BY, w: BS, h: BS, act: (x, y) => {
+    if (sc.busy) return;
+    if (sc.over) { newBattle(); return; }
+    const c = Math.floor((x - BX) / CS), r = Math.floor((y - BY) / CS);
+    if (sc.weapon === 'tir') { fire(c, r); return; }
+    if (sc.armed && sc.aim && sc.aim.c === c && sc.aim.r === r) { fire(c, r); return; }
+    sc.aim = { c, r }; sc.armed = true; setMsg(sc, `${POWERS[sc.weapon].name} sur ${cellName(c, r)} : touchez encore pour lancer.`);
+  } });
+  BAR.forEach((p, i) => {
+    const x = 6 + i * 52, y = 284, w = 48, h = 46, b = sc.me, plane = POWERS[p].ship >= 0 ? b.planes[POWERS[p].ship] : null;
+    const ok = ready(b, p), sel = sc.weapon === p;
+    plate(g, x, y, w, h, sel ? 'gold' : ok ? null : 'dim');
+    if (sel) { const c = Math.floor(t * 4) % 2 ? '#ffd23f' : '#fff6c2'; R(g, x - 1, y - 1, w + 2, 1, c); R(g, x - 1, y + h, w + 2, 1, c); R(g, x - 1, y - 1, 1, h + 2, c); R(g, x + w, y - 1, 1, h + 2, c); }
+    if (!ok) g.globalAlpha = .4;
+    g.drawImage(G.icon[p], x + 14, y + 5);
+    g.globalAlpha = 1;
+    tiny(g, POWERS[p].name, x + w / 2, y + 31, ok ? '#ffffff' : '#7d8698', 'center');
+    if (plane && plane.down) { for (let k = 0; k < 14; k++) { R(g, x + 17 + k, y + 6 + k, 2, 2, '#ff4040'); R(g, x + 30 - k, y + 6 + k, 2, 2, '#ff4040'); } }
+    else if (p !== 'tir' && b.cd[p] > 0) { plate(g, x + 30, y + 3, 15, 13, 'red'); text(g, String(b.cd[p]), x + 38, y + 6, '#ffffff', 'center'); }
+    else if (p === 'esquive' && plane.hits) tiny(g, 'TOUCHE', x + w / 2, y + 38, '#ff8a76', 'center');
+    else if (p !== 'tir') tiny(g, 'PRET', x + w / 2, y + 38, '#8ee05a', 'center');
+    sc.btn.push({ x, y, w, h, act: () => {
+      if (sc.busy || sc.over) return;
+      if (!ok) { setMsg(sc, plane && plane.down ? `${plane.def.name} abattu : plus de ${POWERS[p].name.toLowerCase()} !` : p === 'esquive' && plane.hits ? "L'hélicoptère est touché : il ne peut plus s'échapper." : `${POWERS[p].name} sera prêt dans ${b.cd[p]} tour${b.cd[p] > 1 ? 's' : ''}.`); return; }
+      if (p === 'esquive') { setMsg(sc, "Esquive : dans le jeu, on choisit où l'hélicoptère s'échappe sur sa propre grille (pas dans la maquette)."); return; }
+      if (p === 'missile' && sc.weapon === 'missile') { sc.missH = !sc.missH; return; }
+      sc.weapon = p; sc.aim = null; sc.armed = false;
+      setMsg(sc, { tir: 'Touchez un nuage du ciel ennemi pour tirer.', radar: 'Radar : touchez le centre de la zone, puis encore pour scanner.',
+        bombes: 'Bombes : touchez le centre de la croix, puis encore pour larguer.', missile: 'Missile : choisissez LIGNE ou COLONNE en haut, touchez le ciel, puis encore.' }[p]);
+    } });
+  });
+  mini(sc.me, t, 'MON ESCADRILLE', '#9fd3ff', { mine: true });
+  foePlate(sc.foe, t);
+  drawMsg(sc, 434);
 }
 
-/* ---------- Textes : A et C en majuscules sans accent (polices pixel), B en français normal ---------- */
-const NOMS = { tir: 'TIR', radar: 'RADAR', bombe: 'BOMBE' };
-const TXT = {
-  A: { start: () => 'TOUCHE UN NUAGE POUR TIRER', rate: c => c + ' : RIEN DANS CE NUAGE', touche: c => c + ' : TOUCHE ! CHERCHE LE COCKPIT',
-       abattu: c => c + ' : COCKPIT ! AVION ABATTU', deja: () => 'DEJA TIRE ICI', choix: id => NOMS[id] + ' : CHOISIS LE CENTRE',
-       attente: (id, n) => NOMS[id] + ' PRET DANS ' + n + ' TOUR' + (n > 1 ? 'S' : ''), radar: n => 'RADAR : ' + n + ' CASE' + (n > 1 ? 'S' : '') + ' D\'AVION',
-       bombe: h => 'BOMBE : ' + h + ' TOUCHE' + (h > 1 ? 'S' : ''), win: t => 'VICTOIRE EN ' + t + ' TOURS ! TOUCHE POUR REJOUER' },
-  B: { start: () => 'Touche une case pour tirer.', rate: c => c + ' : rien dans ce coin du ciel.', touche: c => c + ' : touché ! Trouve le cockpit.',
-       abattu: c => c + ' : en plein cockpit, avion abattu !', deja: () => 'Tu as déjà tiré ici.', choix: id => (id === 'radar' ? 'Radar' : 'Bombe') + ' : choisis le centre.',
-       attente: (id, n) => (id === 'radar' ? 'Radar' : 'Bombe') + ' prêt dans ' + n + ' tour' + (n > 1 ? 's' : '') + '.', radar: n => 'Radar : ' + n + ' case' + (n > 1 ? 's' : '') + ' d\'avion.',
-       bombe: h => 'Bombe : ' + h + ' case' + (h > 1 ? 's' : '') + ' touchée' + (h > 1 ? 's' : '') + '.', win: t => 'Gagné en ' + t + ' tours ! Touche pour rejouer.' },
-};
-TXT.C = Object.assign({}, TXT.A, { start: () => 'EN ATTENTE D\'UNE CIBLE', rate: c => c + ' : PAS D\'ECHO', touche: c => c + ' : CIBLE TOUCHEE',
-  abattu: c => c + ' : CIBLE ABATTUE', win: t => 'CIEL NETTOYE EN ' + t + ' TOURS. TOUCHE POUR REJOUER' });
-const say = (s, st) => { const [k, ...a] = st.msg; return TXT[s][k](...a); };
-function wrap(g, s, maxW) {
-  const out = []; let line = '';
-  for (const w of s.split(' ')) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; }
-  out.push(line); return out;
-}
-const cellXY = i => [GX + (i % N) * CS, GY + (i / N | 0) * CS];
-function planePath(g, p, s, fn) {
-  const [x, y] = cellXY(p.idx[0]);
-  g.save(); g.translate(x + CS / 2, y + CS / 2); g.rotate(p.d * TAU / 4); fn(g, s); g.restore();
-}
-
-/* ---------- A : au-dessus des nuages (pixel art 272×480, agrandi sans lissage) ---------- */
-const PX = '"Press Start 2P", monospace', OUT = '#060a18';
-const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x | 0, y | 0, w | 0, h | 0); };
-function txtA(g, s, x, y, col, al = 'left', size = 8) {
-  g.font = size + 'px ' + PX; g.textAlign = al; g.textBaseline = 'alphabetic';
-  g.fillStyle = OUT; g.fillText(s, x + 1, y + 1); g.fillStyle = col; g.fillText(s, x, y);
-}
-function cloud(g, x, y, k, c1, c2) {
-  R(g, x, y + 4, 28 * k, 6 * k, c2); R(g, x + 3 * k, y, 22 * k, 6 * k, c1); R(g, x + 8 * k, y - 4 * k, 12 * k, 6 * k, c1);
-}
-function drawA(g, st, t) {
-  const SKY = ['#1c3f7a', '#24549a', '#2f6fb6', '#3f86c8', '#5fa2dc', '#8cc6f0'];
-  for (let y = 0; y < H; y += 8) R(g, 0, y, W, 8, SKY[Math.min(5, y / 80 | 0)]);
-  for (let k = 0; k < 6; k++) {
-    const x = ((k * 97 + t * 6 * (1 + k % 3)) % 340) - 50;
-    cloud(g, x, 92 + k * 66, 1 + (k % 2) * .5, 'rgba(238,242,251,.5)', 'rgba(185,195,222,.45)');
-  }
-  // bandeau du haut
-  R(g, 8, 8, 256, 74, '#3f4f8a'); R(g, 10, 10, 252, 70, '#0b1530');
-  txtA(g, 'ESCADRILLE !', 136, 34, '#ffd23f', 'center', 12);
-  txtA(g, 'TOUR ' + String(st.turn).padStart(2, '0'), 20, 62, '#ffffff');
-  txtA(g, 'ABATTUS ' + st.down + '/3', 252, 62, st.down ? '#ff9a86' : '#ffffff', 'right');
-  // petits avions ennemis restants
-  for (let k = 0; k < 3; k++) { const c = k < 3 - st.down ? '#e04a3c' : '#3a4150', x = 112 + k * 18; R(g, x + 3, 66, 2, 9, c); R(g, x, 68, 8, 2, c); R(g, x + 1, 73, 6, 2, c); }
-  // cadre de la grille
-  const S = CS * N;
-  R(g, GX - 5, GY - 5, S + 10, S + 10, '#4a5160'); R(g, GX - 4, GY - 4, S + 8, S + 8, '#9aa3b1');
-  R(g, GX - 4, GY - 4, S + 8, 1, '#d6dbe3'); R(g, GX - 2, GY - 2, S + 4, S + 4, '#1a3f6a');
-  for (let i = 0; i < N * N; i++) {
-    const [x, y] = cellXY(i), s = st.shots[i], v = st.seen[i], w = CS - 1;
-    if (!s) {
-      R(g, x, y, w, w, v ? '#dff5e6' : '#eef2fb'); R(g, x, y + w - 6, w, 5, v ? '#bfe3cc' : '#d6ddef'); R(g, x, y + w - 1, w, 1, '#9eaad0');
-      R(g, x + 3, y + 4, 8, 3, '#ffffff'); R(g, x + 1, y + 1, 1, 1, '#ffffff');
-      if (v === 2) { R(g, x + 6, y + 10, 10, 2, '#56628e'); R(g, x + 10, y + 7, 2, 9, '#56628e'); R(g, x + 8, y + 15, 6, 2, '#56628e'); }
-      if (v === 1) { R(g, x + 9, y + 11, 4, 1, '#2fa860'); }
-    } else if (s === 1) {
-      R(g, x, y, w, w, '#4a8fd4'); R(g, x + 3, y + 6, 7, 1, '#8cc6f0'); R(g, x + 11, y + 14, 6, 1, '#8cc6f0');
-    } else {
-      R(g, x, y, w, w, '#2f6fb0');
-      if (!st.planes[st.own[i]].down) {
-        const f = ((t * 8 + i) | 0) % 2;
-        R(g, x + 7, y + 10, 8, 8, '#a8302a'); R(g, x + 8, y + 10, 6, 6, '#e04a3c'); R(g, x + 9, y + 11, 4, 4, '#ff9a3c'); R(g, x + 10, y + 12, 2, 2, '#fff2a8');
-        R(g, x + 4 + f, y + 3, 7, 4, '#57525f'); R(g, x + 11 - f, y + 1, 6, 4, '#7c7684');
-      }
-    }
-  }
-  // avions abattus
-  for (const p of st.planes) if (p.down) planePath(g, p, CS, (g, s) => {
-    const part = (x, y, w, h, c, o) => { g.fillStyle = OUT; g.fillRect(x - 2, y - 2, w + 4, h + 4); g.fillStyle = c; g.fillRect(x, y, w, h); if (o) { g.fillStyle = o; g.fillRect(x, y, w, 2); } };
-    part(-2.4 * s, s - 5, 4.8 * s, 10, '#e04a3c', '#ff8a76');
-    part(-1.4 * s, 3 * s - 4, 2.8 * s, 8, '#e04a3c', '#ff8a76');
-    part(-5, -9, 10, 3 * s + 13, '#c8443a', '#ff8a76');
-    g.fillStyle = '#a8d0f4'; g.fillRect(-3, -6, 6, 7); g.fillStyle = '#ffffff'; g.fillRect(-2, -5, 2, 2);
-    for (const sx of [-1.7, 1.7]) { g.fillStyle = '#fffbea'; g.fillRect(sx * s - 4, s - 4, 8, 8); g.fillStyle = OUT; g.fillRect(sx * s - 2, s - 2, 4, 4); }
+/* ---------- boucle ---------- */
+const SCREENS = [['ecran1', E1, draw1], ['ecran2', E2, draw2], ['ecran3', E3, draw3]].map(([id, sc, draw]) => {
+  const cv = document.getElementById(id), ctx = cv.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * LW, y = (e.clientY - r.top) / r.height * LH;
+    for (let k = sc.btn.length - 1; k >= 0; k--) { const bt = sc.btn[k]; if (x >= bt.x && x < bt.x + bt.w && y >= bt.y && y < bt.y + bt.h) { bt.act(x, y); break; } }
   });
-  fxA(g, st, t);
-  // boutons
-  BTN.forEach(([id, cd], k) => {
-    const r = btnRect(k), sel = st.mode === id, wait = id !== 'tir' && st.cd[id] > 0;
-    R(g, r.x - 1, r.y - 1, r.w + 2, r.h + 2, sel ? '#ffd23f' : OUT); R(g, r.x, r.y, r.w, r.h, sel ? '#4a5160' : '#727b8a');
-    R(g, r.x, r.y, r.w, 2, '#d6dbe3'); R(g, r.x, r.y + r.h - 2, r.w, 2, '#36404e');
-    txtA(g, NOMS[id], r.x + r.w / 2, r.y + 18, sel ? '#ffd23f' : '#ffffff', 'center');
-    txtA(g, wait ? 'DANS ' + st.cd[id] : ['1 CASE', 'ZONE 3X3', 'CROIX'][k], r.x + r.w / 2, r.y + 32, wait ? '#ff8a76' : '#cfe3ff', 'center', 6);
-    if (wait) { g.fillStyle = 'rgba(6,10,24,.45)'; g.fillRect(r.x, r.y, r.w, r.h); }
-  });
-  R(g, 8, 396, 256, 50, '#3f4f8a'); R(g, 10, 398, 252, 46, '#0b1530');
-  g.font = '8px ' + PX; wrap(g, say('A', st), 232).slice(0, 3).forEach((l, n) => txtA(g, l, 136, 416 + n * 14, '#ffffff', 'center'));
-  txtA(g, 'TES AVIONS', 18, 468, '#cfe3ff');
-  for (let k = 0; k < 3; k++) { const x = 112 + k * 20; R(g, x + 3, 457, 2, 11, '#3f86c8'); R(g, x, 460, 8, 2, '#3f86c8'); R(g, x + 1, 466, 6, 2, '#3f86c8'); }
-}
-function fxA(g, st, t) {
-  st.fx = st.fx.filter(f => t - f.t0 < .7);
-  for (const f of st.fx) {
-    const [x, y] = cellXY(f.i), k = (t - f.t0) / .7, r = (f.petit ? 8 : 22) * (.4 + k);
-    g.globalAlpha = 1 - k; g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(x + CS / 2, y + CS / 2, r, 0, TAU); g.fill();
-    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(x + CS / 2, y + CS / 2, r * .5, 0, TAU); g.fill(); g.globalAlpha = 1;
-  }
-}
-
-/* ---------- B : carnet de pilote (crayon sur papier quadrillé) ---------- */
-const HAND = '"Gochi Hand", "Comic Sans MS", cursive', MINE = '#33384a', ROUGE = '#d2343a', BLEU = '#2e5fb8';
-const jit = k => Math.sin(k * 12.9898) * .9;
-function hand(g, s, x, y, size, col, al = 'left') { g.font = size + 'px ' + HAND; g.textAlign = al; g.textBaseline = 'alphabetic'; g.fillStyle = col; g.fillText(s, x, y); }
-function sketchRect(g, x, y, w, h, seed) {
-  g.beginPath(); g.moveTo(x + jit(seed), y + jit(seed + 1)); g.lineTo(x + w + jit(seed + 2), y + jit(seed + 3));
-  g.lineTo(x + w + jit(seed + 4), y + h + jit(seed + 5)); g.lineTo(x + jit(seed + 6), y + h + jit(seed + 7)); g.closePath(); g.stroke();
-}
-function drawB(g, st, t) {
-  g.fillStyle = '#fbf8ef'; g.fillRect(0, 0, W, H);
-  g.strokeStyle = '#d3e0f2'; g.lineWidth = .8;
-  for (let y = 12; y < H; y += 12) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
-  for (let x = 4; x < W; x += 12) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.strokeStyle = 'rgba(211,224,242,.55)'; g.stroke(); }
-  g.save(); g.translate(22, 46); g.rotate(-.03); hand(g, 'Bataille d\'avions', 0, 0, 30, MINE); g.restore();
-  g.strokeStyle = ROUGE; g.lineWidth = 1.5; g.beginPath();
-  for (let x = 22; x < 230; x += 4) g.lineTo(x, 54 + Math.sin(x * .3) * 1.4); g.stroke();
-  hand(g, 'Tour ' + st.turn, 22, 80, 19, MINE);
-  hand(g, 'Abattus : ' + st.down + ' / 3', 250, 80, 19, st.down ? ROUGE : MINE, 'right');
-  // coordonnées
-  for (let k = 0; k < N; k++) {
-    hand(g, COLS[k], GX + k * CS + CS / 2, GY - 5, 14, BLEU, 'center');
-    hand(g, String(k + 1), GX - 3, GY + k * CS + CS / 2 + 5, 13, BLEU, 'right');
-  }
-  g.strokeStyle = 'rgba(70,90,140,.75)'; g.lineWidth = 1;
-  for (let k = 0; k <= N; k++) {
-    g.beginPath(); g.moveTo(GX + k * CS + jit(k), GY - 1); g.lineTo(GX + k * CS + jit(k + 9), GY + N * CS + 1); g.stroke();
-    g.beginPath(); g.moveTo(GX - 1, GY + k * CS + jit(k + 3)); g.lineTo(GX + N * CS + 1, GY + k * CS + jit(k + 7)); g.stroke();
-  }
-  // avions abattus : croquis hachuré
-  for (const p of st.planes) if (p.down) planePath(g, p, CS, (g, s) => {
-    const parts = [[-2.4 * s, s - 6, 4.8 * s, 12], [-1.4 * s, 3 * s - 5, 2.8 * s, 10], [-5, -9, 10, 3 * s + 12]];
-    g.save(); g.beginPath(); parts.forEach(q => g.rect(...q)); g.clip();
-    g.strokeStyle = 'rgba(51,56,74,.4)'; g.lineWidth = .9;
-    for (let k = -4 * s; k < 4 * s; k += 4) { g.beginPath(); g.moveTo(k, -s); g.lineTo(k + 5 * s, 4 * s); g.stroke(); }
-    g.restore();
-    g.strokeStyle = MINE; g.lineWidth = 1.4; parts.forEach((q, n) => sketchRect(g, ...q, n * 8 + p.x));
-  });
-  for (let i = 0; i < N * N; i++) {
-    const [x, y] = cellXY(i), s = st.shots[i], c = [x + CS / 2, y + CS / 2];
-    if (s === 1) { g.strokeStyle = 'rgba(51,56,74,.75)'; g.lineWidth = 1.3; g.beginPath(); g.arc(c[0] + jit(i) * .5, c[1], 5, 0, TAU); g.stroke(); }
-    else if (s === 2) {
-      g.strokeStyle = ROUGE; g.lineWidth = 2.2; g.lineCap = 'round'; g.beginPath();
-      g.moveTo(c[0] - 6, c[1] - 6 + jit(i)); g.lineTo(c[0] + 6, c[1] + 6); g.moveTo(c[0] + 6 + jit(i), c[1] - 6); g.lineTo(c[0] - 6, c[1] + 6); g.stroke();
-    } else if (st.seen[i] === 2) { g.fillStyle = 'rgba(46,95,184,.35)'; g.fillRect(x + 3, y + 3, CS - 6, CS - 6); hand(g, '?', c[0], c[1] + 6, 16, BLEU, 'center'); }
-    else if (st.seen[i] === 1) { g.fillStyle = BLEU; g.beginPath(); g.arc(c[0], c[1], 1.6, 0, TAU); g.fill(); }
-  }
-  for (const p of st.planes) if (p.down) { const [x, y] = cellXY(p.idx[0]); g.strokeStyle = ROUGE; g.lineWidth = 1.6; g.beginPath(); g.ellipse(x + CS / 2, y + CS / 2, 13, 11, .3, 0, TAU); g.stroke(); }
-  st.fx = st.fx.filter(f => t - f.t0 < .5);
-  for (const f of st.fx) { const [x, y] = cellXY(f.i), k = (t - f.t0) / .5; g.strokeStyle = 'rgba(210,52,58,' + (1 - k) + ')'; g.lineWidth = 2; for (let a = 0; a < 8; a++) { const r1 = 8 + k * 10, r2 = 12 + k * 16, an = a * TAU / 8; g.beginPath(); g.moveTo(x + CS / 2 + Math.cos(an) * r1, y + CS / 2 + Math.sin(an) * r1); g.lineTo(x + CS / 2 + Math.cos(an) * r2, y + CS / 2 + Math.sin(an) * r2); g.stroke(); } }
-  BTN.forEach(([id], k) => {
-    const r = btnRect(k), sel = st.mode === id, wait = id !== 'tir' && st.cd[id] > 0;
-    if (sel) { g.fillStyle = 'rgba(255,222,60,.6)'; g.beginPath(); g.moveTo(r.x + 2, r.y + 6); g.lineTo(r.x + r.w, r.y + 2); g.lineTo(r.x + r.w - 2, r.y + r.h - 4); g.lineTo(r.x, r.y + r.h); g.fill(); }
-    g.strokeStyle = MINE; g.lineWidth = 1.5; sketchRect(g, r.x, r.y, r.w, r.h, k * 5);
-    hand(g, ['Tir', 'Radar', 'Bombe'][k], r.x + r.w / 2, r.y + 19, 20, wait ? '#9a9aa6' : MINE, 'center');
-    hand(g, wait ? 'dans ' + st.cd[id] + ' tour' + (st.cd[id] > 1 ? 's' : '') : ['une case', 'zone 3 × 3', 'en croix'][k], r.x + r.w / 2, r.y + 34, 13, wait ? ROUGE : BLEU, 'center');
-  });
-  g.font = '19px ' + HAND; wrap(g, say('B', st), 236).slice(0, 2).forEach((l, n) => hand(g, l, 22, 414 + n * 20, 19, st.over ? ROUGE : MINE));
-  hand(g, 'Mes avions :', 22, 466, 16, BLEU);
-  g.strokeStyle = BLEU; g.lineWidth = 1.4;
-  for (let k = 0; k < 3; k++) { const x = 116 + k * 26, y = 452; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 16); g.moveTo(x - 8, y + 5); g.lineTo(x + 8, y + 5); g.moveTo(x - 4, y + 14); g.lineTo(x + 4, y + 14); g.stroke(); }
-}
-
-/* ---------- C : écran radar de nuit ---------- */
-const MONO = '"VT323", "Courier New", monospace', VERT = '#4dff9a', AMBRE = '#ffb84d';
-function mono(g, s, x, y, size, col, al = 'left', glow = 6) {
-  g.font = size + 'px ' + MONO; g.textAlign = al; g.textBaseline = 'alphabetic'; g.shadowColor = col; g.shadowBlur = glow; g.fillStyle = col; g.fillText(s, x, y); g.shadowBlur = 0;
-}
-function drawC(g, st, t) {
-  g.fillStyle = '#03110a'; g.fillRect(0, 0, W, H);
-  mono(g, 'RADAR ESCADRILLE', 22, 34, 26, VERT);
-  mono(g, 'TOUR ' + String(st.turn).padStart(2, '0'), 22, 62, 20, VERT, 'left', 3);
-  mono(g, 'ABATTUS ' + st.down + '/3', 250, 62, 20, st.down ? AMBRE : VERT, 'right', 3);
-  g.strokeStyle = '#0f4a2b'; g.lineWidth = 1; g.beginPath(); g.moveTo(22, 72); g.lineTo(250, 72); g.stroke();
-  const S = CS * N, ox = GX + S / 2, oy = GY + S / 2, sweep = (t * 1.5) % TAU;
-  for (let k = 0; k < N; k++) {
-    mono(g, COLS[k], GX + k * CS + CS / 2, GY - 6, 15, '#1f9a5a', 'center', 0);
-    mono(g, String(k + 1), GX - 3, GY + k * CS + CS / 2 + 5, 14, '#1f9a5a', 'right', 0);
-  }
-  g.save(); g.beginPath(); g.rect(GX, GY, S, S); g.clip();
-  g.fillStyle = '#041a0f'; g.fillRect(GX, GY, S, S);
-  g.strokeStyle = '#0d3a22'; for (let k = 0; k <= N; k++) { g.beginPath(); g.moveTo(GX + k * CS, GY); g.lineTo(GX + k * CS, GY + S); g.moveTo(GX, GY + k * CS); g.lineTo(GX + S, GY + k * CS); g.stroke(); }
-  g.strokeStyle = '#11552f'; for (const r of [40, 80, 120, 160]) { g.beginPath(); g.arc(ox, oy, r, 0, TAU); g.stroke(); }
-  for (let k = 0; k < 16; k++) { g.fillStyle = 'rgba(77,255,154,' + (.16 * (1 - k / 16)) + ')'; g.beginPath(); g.moveTo(ox, oy); g.arc(ox, oy, 170, sweep - (k + 1) * .045, sweep - k * .045); g.closePath(); g.fill(); }
-  g.strokeStyle = VERT; g.lineWidth = 1.2; g.beginPath(); g.moveTo(ox, oy); g.lineTo(ox + Math.cos(sweep) * 170, oy + Math.sin(sweep) * 170); g.stroke();
-  for (let i = 0; i < N * N; i++) {
-    const [x, y] = cellXY(i), c = [x + CS / 2, y + CS / 2], s = st.shots[i], v = st.seen[i];
-    const an = Math.atan2(c[1] - oy, c[0] - ox), d = ((sweep - an) % TAU + TAU) % TAU, lit = .3 + .7 * Math.exp(-d * 1.4);
-    if (s === 1) { g.strokeStyle = 'rgba(77,255,154,' + (.35 * lit + .1) + ')'; g.lineWidth = 1; g.beginPath(); g.moveTo(c[0] - 3, c[1] - 3); g.lineTo(c[0] + 3, c[1] + 3); g.moveTo(c[0] + 3, c[1] - 3); g.lineTo(c[0] - 3, c[1] + 3); g.stroke(); }
-    else if (s === 2) { const pul = st.planes[st.own[i]].down ? .5 : 1; g.globalAlpha = lit * pul; g.shadowColor = AMBRE; g.shadowBlur = 8; g.fillStyle = AMBRE; g.beginPath(); g.arc(c[0], c[1], 4 + Math.sin(t * 6 + i) * .8, 0, TAU); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1; }
-    else if (v === 2) { g.globalAlpha = lit; g.shadowColor = VERT; g.shadowBlur = 6; g.fillStyle = VERT; g.beginPath(); g.arc(c[0], c[1], 3.2, 0, TAU); g.fill(); g.shadowBlur = 0; g.globalAlpha = 1; }
-    else if (v === 1) { g.fillStyle = 'rgba(77,255,154,.3)'; g.fillRect(c[0] - 1, c[1] - 1, 2, 2); }
-  }
-  for (const p of st.planes) if (p.down) planePath(g, p, CS, (g, s) => {
-    g.strokeStyle = VERT; g.lineWidth = 1.6; g.shadowColor = VERT; g.shadowBlur = 8;
-    g.beginPath(); g.moveTo(0, -9); g.lineTo(5, -2); g.lineTo(5, s - 5); g.lineTo(2.4 * s, s - 2); g.lineTo(2.4 * s, s + 5); g.lineTo(5, s + 6);
-    g.lineTo(5, 3 * s - 4); g.lineTo(1.4 * s, 3 * s); g.lineTo(1.4 * s, 3 * s + 5); g.lineTo(-1.4 * s, 3 * s + 5); g.lineTo(-1.4 * s, 3 * s); g.lineTo(-5, 3 * s - 4);
-    g.lineTo(-5, s + 6); g.lineTo(-2.4 * s, s + 5); g.lineTo(-2.4 * s, s - 2); g.lineTo(-5, s - 5); g.lineTo(-5, -2); g.closePath(); g.stroke(); g.shadowBlur = 0;
-  });
-  st.fx = st.fx.filter(f => t - f.t0 < .8);
-  for (const f of st.fx) { const [x, y] = cellXY(f.i), k = (t - f.t0) / .8; g.strokeStyle = 'rgba(255,184,77,' + (1 - k) + ')'; g.lineWidth = 1.5; g.beginPath(); g.arc(x + CS / 2, y + CS / 2, 4 + k * (f.petit ? 14 : 34), 0, TAU); g.stroke(); }
-  if (st.radarT && t - st.radarT < 1) { const [x, y] = cellXY(st.radarI), k = t - st.radarT; g.strokeStyle = 'rgba(77,255,154,' + (1 - k) + ')'; g.strokeRect(x - CS, y - CS, CS * 3, CS * 3); }
-  g.restore();
-  g.strokeStyle = '#1f9a5a'; g.strokeRect(GX - .5, GY - .5, S + 1, S + 1);
-  BTN.forEach(([id], k) => {
-    const r = btnRect(k), sel = st.mode === id, wait = id !== 'tir' && st.cd[id] > 0, col = wait ? '#1f6a42' : VERT;
-    if (sel) { g.fillStyle = VERT; g.fillRect(r.x, r.y, r.w, r.h); }
-    g.strokeStyle = col; g.lineWidth = 1; g.strokeRect(r.x + .5, r.y + .5, r.w - 1, r.h - 1);
-    mono(g, '[' + NOMS[id] + ']', r.x + r.w / 2, r.y + 19, 20, sel ? '#03110a' : col, 'center', sel ? 0 : 3);
-    mono(g, wait ? 'RECHARGE ' + st.cd[id] : ['1 CASE', 'ZONE 3X3', 'CROIX'][k], r.x + r.w / 2, r.y + 34, 14, sel ? '#03110a' : wait ? AMBRE : '#1f9a5a', 'center', 0);
-  });
-  g.font = '19px ' + MONO;
-  const lines = wrap(g, '> ' + say('C', st), 228).slice(0, 2);
-  lines.forEach((l, n) => mono(g, l + (n === lines.length - 1 && (t * 2 | 0) % 2 ? '_' : ''), 22, 414 + n * 20, 19, st.over ? AMBRE : VERT, 'left', 4));
-  mono(g, 'ESCADRILLE AMIE : 3 APPAREILS', 22, 466, 16, '#1f9a5a', 'left', 0);
-  g.fillStyle = 'rgba(0,0,0,.22)'; for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1);
-}
-
-/* ---------- Boucle et toucher ---------- */
-const TELS = [['telA', drawA, true], ['telB', drawB, false], ['telC', drawC, false]].map(([id, draw, pix]) => {
-  const el = document.getElementById(id), cv = el.querySelector('canvas'), ctx = cv.getContext('2d');
-  const off = pix ? Object.assign(document.createElement('canvas'), { width: W, height: H }) : null;
-  const T = { el, cv, ctx, off, draw, pix, st: newGame() };
-  el.addEventListener('pointerdown', e => {
-    const r = cv.getBoundingClientRect();
-    T.st = tap(T.st, (e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H, performance.now() / 1000);
-  });
-  return T;
+  return { ctx, sc, draw };
 });
 function frame() {
-  const t = performance.now() / 1000;
-  for (const T of TELS) {
-    if (T.pix) { const g = T.off.getContext('2d'); T.draw(g, T.st, t); T.ctx.imageSmoothingEnabled = false; T.ctx.drawImage(T.off, 0, 0, 544, 960); }
-    else { T.ctx.setTransform(2, 0, 0, 2, 0, 0); T.draw(T.ctx, T.st, t); }
+  const t = now() / 1000;
+  for (const s of SCREENS) {
+    g = s.ctx; CUR = s.sc; CUR.btn = [];
+    g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false;
+    s.draw(t);
+    if (s.sc.fx) s.sc.fx = s.sc.fx.filter(f => !f.ended);
   }
   requestAnimationFrame(frame);
 }
-requestAnimationFrame(frame);
+buildAll(); newBattle();
+// une partie déjà entamée pour que l'écran de combat montre tout : quelques tirs, un avion en feu, une zone au radar
+(() => {
+  const b = E3.foe, bomb = cellsOf(b.planes[0]);
+  [bomb[1], bomb[3]].forEach(([x, y]) => { b.shots[y][x] = 2; b.planes[0].hits++; });
+  for (let k = 0, n = 0; k < 40 && n < 6; k++) { const c = rand(N), r = rand(N); if (!b.shots[r][c] && b.grid[r][c] < 0) { b.shots[r][c] = 1; n++; } }
+  const [rx, ry] = cellsOf(b.planes[2])[1];
+  for (const [x, y] of weaponCells('radar', rx, ry)) if (!b.shots[y][x]) b.intel[y][x] = b.grid[y][x] >= 0 ? 2 : 1;
+  E3.turn = 9; E3.me.cd.radar = 2;
+  setMsg(E3, 'A vous ! Le bombardier ennemi est en feu. Le radar a repéré un autre avion.');
+})();
+document.fonts.ready.then(() => requestAnimationFrame(frame));
 </script>
+</body>
+</html>
