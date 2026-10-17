@@ -22,6 +22,17 @@ header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
 .tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated;cursor:pointer}
 .dir h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:4px 0 0;letter-spacing:.04em}
 .dir p{margin:0;color:var(--doux);max-width:300px;font-size:15px;text-align:center}
+.dessins h2{font-family:var(--f-titre);font-size:14px;color:var(--or);margin:0 0 6px;line-height:1.5}
+.dessins>p{margin:0 0 16px;color:var(--doux);max-width:66ch}
+.cartes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.carte{display:flex;flex-direction:column;gap:8px;background:#0a1430;border:3px solid #2c3866;border-radius:6px;padding:10px;cursor:pointer;color:inherit;font:inherit;text-align:left;min-width:0}
+.carte:hover{border-color:#3f86c8}
+.carte:focus-visible{outline:3px solid #9fd3ff;outline-offset:2px}
+.carte[aria-pressed="true"]{border-color:var(--or);box-shadow:0 0 0 2px #060a18,0 0 18px rgba(255,210,63,.25)}
+.carte canvas{width:100%;aspect-ratio:272/232;image-rendering:pixelated;display:block}
+.carte h3{font-family:var(--f-titre);font-size:11px;color:var(--or);margin:4px 0 0;line-height:1.5}
+.carte p{margin:0;font-size:14px;color:var(--doux);line-height:1.45}
+.carte .etat{font-family:var(--f-titre);font-size:8px;color:#8ee05a;min-height:1em}
 .regles{background:var(--fond2);border:3px solid #3f4f8a;border-radius:6px;padding:20px 22px;max-width:820px;box-shadow:inset 0 0 0 2px #060a18}
 .regles h2{font-family:var(--f-titre);font-size:14px;color:var(--or);margin:0 0 12px;line-height:1.5}
 .regles h3{font-family:var(--f-titre);font-size:11px;color:#9fd3ff;margin:20px 0 8px;letter-spacing:.04em}
@@ -44,6 +55,17 @@ header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
   <h1>ESCADRILLE !</h1>
   <p>La bataille aérienne des pouvoirs, petite sœur d'Amiral ! : mêmes cadres en acier, mêmes boutons, même police, même brouillard, mais un ciel à la place de la mer et quatre avions à la place des navires. Le troisième écran se joue : choisis un pouvoir, touche le ciel ennemi, et abats l'escadrille cachée dans les nuages.</p>
 </header>
+
+<section class="dessins">
+  <h2>LES AVIONS : 4 DESSINS</h2>
+  <p>Touche un dessin pour le voir aussi sur les trois écrans de jeu. En haut, ton escadrille ; en bas, celle de l'ennemi.</p>
+  <div class="cartes">
+    <button class="carte" id="choix-a" type="button" aria-pressed="false"><canvas id="carte-a" width="272" height="232"></canvas><h3>A. ACTUELS</h3><p>La version d'avant, pour comparer : jets gris acier, cocardes, ennemis vert kaki.</p><span class="etat"></span></button>
+    <button class="carte" id="choix-b" type="button" aria-pressed="false"><canvas id="carte-b" width="272" height="232"></canvas><h3>B. HELICES D'EPOQUE</h3><p>Avions des années 40 en aluminium, bouts d'ailes jaunes, hélices qui tournent. Le chasseur a des ailes rondes, l'hélico une bulle de verre.</p><span class="etat"></span></button>
+    <button class="carte" id="choix-c" type="button" aria-pressed="false"><canvas id="carte-c" width="272" height="232"></canvas><h3>C. JOUETS</h3><p>Formes rondes et couleurs franches, on voit le casque du pilote dans sa bulle. Les ennemis sont violets et noirs.</p><span class="etat"></span></button>
+    <button class="carte" id="choix-d" type="button" aria-pressed="false"><canvas id="carte-d" width="272" height="232"></canvas><h3>D. PATROUILLE</h3><p>Bleu, blanc, rouge comme la Patrouille de France, avec la fumée tricolore derrière chaque avion. Les ennemis sont noirs et orange.</p><span class="etat"></span></button>
+  </div>
+</section>
 
 <div class="grille">
   <section class="dir"><div class="tel"><canvas id="ecran1" width="272" height="480"></canvas></div>
@@ -70,12 +92,11 @@ header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
   </div>
   <ul>
     <li>Les avions se tournent dans les quatre sens. Un avion est abattu quand toutes ses cases sont touchées, et il perd alors son pouvoir, comme un navire coulé.</li>
+    <li>Pas de règle du cockpit : il faut toucher toutes les cases.</li>
     <li>Les formes rendent la chasse plus maligne : une aile touchée dit « le fuselage est juste à côté ».</li>
   </ul>
-  <h3>A CHOISIR</h3>
+  <h3>ENCORE A CHOISIR</h3>
   <ul>
-    <li><b>La règle du cockpit</b> : toucher le nez abat l'avion d'un coup. Les parties sont plus courtes et plus surprenantes, mais il y a un peu plus de chance.</li>
-    <li><b>Un cinquième avion</b> : le Canadair, avec le pouvoir NUAGE qui recache une case déjà repérée. Ou un dirigeable de 3 cases, sans pouvoir, juste pour remplir le ciel.</li>
     <li><b>Le ciel du jour</b> : la même escadrille ennemie pour toute la famille, une seule tentative classée par jour.</li>
     <li><b>Le pilote en parachute</b> quand un avion est abattu : une petite animation, rien de plus.</li>
   </ul>
@@ -231,47 +252,136 @@ function buildFrame(mine) {
   return c;
 }
 
-/* ---------- les avions, vus de dessus, nez vers le haut ---------- */
-const PAL = {
-  mine: { a: P.steel, b: P.white, c: P.gun, r1: P.blue, r2: P.white, r3: P.red, h: P.navy },
-  foe:  { a: P.olive, b: P.olive, c: P.dark, r1: P.red, r2: P.gold, r3: P.red, h: P.olive },
+/* ---------- les avions, vus de dessus, nez vers le haut : quatre dessins au choix ----------
+   Chaque dessin garde les mêmes formes de cases ; il change la silhouette, les couleurs et les animations
+   (rotor, hélices, fumées de patrouille). */
+const Q = {
+  alu: ['#f6f8fa', '#c9ced6', '#959ca8', '#5f6672'], purple: ['#d6b0f4', '#9e6ed4', '#7046aa', '#462a70'],
+  green: ['#b4f08e', '#62c84a', '#3a9a32', '#1f6a22'], orange: ['#ffc88a', '#ff9a3c', '#d06a1c', '#8a4210'],
+  black: ['#6e6a7c', '#45414f', '#2e2b37', '#1c1a22'], sky: ['#c8ecff', '#7cc4f4', '#4a96d4', '#2a5f9a'],
 };
+const STYLES = {
+  a: { name: 'ACTUELS',
+    mine: { a: P.steel, b: P.white, c: P.gun, r1: P.blue, r2: P.white, r3: P.red, h: P.navy },
+    foe:  { a: P.olive, b: P.olive, c: P.dark, r1: P.red, r2: P.gold, r3: P.red, h: P.olive } },
+  b: { name: 'HELICES',
+    mine: { a: Q.alu, b: Q.alu, c: P.dark, r1: P.blue, r2: P.white, r3: P.red, h: P.red, tip: P.gold },
+    foe:  { a: P.olive, b: P.olive, c: P.dark, r1: P.red, r2: P.gold, r3: P.red, h: P.olive, tip: P.white } },
+  c: { name: 'JOUETS',
+    mine: { a: P.red, b: P.gold, c: P.blue, r1: P.blue, r2: P.white, r3: P.red, h: Q.green, x: P.white },
+    foe:  { a: Q.purple, b: Q.black, c: P.dark, r1: P.gold, r2: Q.black, r3: P.gold, h: Q.purple, x: P.gold } },
+  d: { name: 'PATROUILLE',
+    mine: { a: P.blue, b: P.white, c: P.gun, s: P.red, r1: P.blue, r2: P.white, r3: P.red, h: P.blue, trail: true },
+    foe:  { a: Q.black, b: Q.black, c: P.dark, s: Q.orange, r1: Q.orange, r2: Q.black, r3: Q.orange, h: Q.black } },
+};
+let STYLE = 'b';
 function cocarde(x, y, s, on, p) { return [[C32.ell(x, y, s, s), p.r1, { on }], [C32.ell(x, y, s * .62, s * .62), p.r2, { on }], [C32.ell(x, y, s * .28, s * .28), p.r3, { on }]]; }
-function planeArt(id, p) {
-  if (id === 'bomb') { const W = 69, c = W / 2; return [W, 92, [
-    [C32.cap(12, 80, 57, 80, 4), p.a],                                    // 1 empennage
-    [C32.cap(4, 34, 65, 34, 6), p.a],                                     // 2 ailes
-    [C32.ell(c - 12, 28, 3, 4.5), p.c], [C32.ell(c + 12, 28, 3, 4.5), p.c], [C32.ell(c - 24, 29, 2.6, 4), p.c], [C32.ell(c + 24, 29, 2.6, 4), p.c],
-    [C32.cap(c, 5, c, 84, 6.5, 4), p.a],                                  // 7 fuselage
-    [C32.cap(c, 72, c, 89, 1.8), p.c],
-    [C32.ell(c, 13, 3.5, 4), P.blue, { on: [7] }],
-    ...cocarde(13, 34, 4.5, [2], p), ...cocarde(W - 13, 34, 4.5, [2], p),
-  ], null]; }
-  if (id === 'radar') { const W = 69, c = W / 2; return [W, 69, [
-    [C32.cap(c - 11, 62, c + 11, 62, 3), p.b],                            // 1
-    [C32.cap(4, 34, 65, 34, 5), p.b],                                     // 2
-    [C32.ell(c - 15, 29, 2.5, 4), p.c], [C32.ell(c + 15, 29, 2.5, 4), p.c],
-    [C32.cap(c, 4, c, 64, 5.5, 3.5), p.b],                                // 5
-    [C32.ell(c, 46, 10, 10), P.navy],                                     // 6 radôme
-    [C32.ell(c, 46, 10, 2.4), P.white, { on: [6] }],
-    [C32.ell(c, 11, 3, 3.5), P.blue, { on: [5] }],
-    ...cocarde(12, 34, 3.6, [2], p), ...cocarde(W - 12, 34, 3.6, [2], p),
-  ], [c, 46]]; }
-  if (id === 'jet') { const W = 69, c = W / 2; return [W, 46, [
-    [C32.cap(c, 20, 7, 38, 3, 4.5), p.c], [C32.cap(c, 20, W - 7, 38, 3, 4.5), p.c],   // 1, 2 ailes en delta
-    [C32.cap(c - 9, 42, c + 9, 42, 2), p.c],
-    [C32.ell(8, 37, 2, 2), P.red], [C32.ell(W - 8, 37, 2, 2), P.red],
-    [C32.cap(c, 2, c, 43, 3, 4.5), p.a],                                  // 6 fuselage
-    [C32.ell(c, 14, 2.5, 5), P.blue, { on: [6] }],
-    ...cocarde(19, 33, 2.8, [1], p), ...cocarde(W - 19, 33, 2.8, [2], p),
-  ], null]; }
-  const W = 23, c = W / 2; return [W, 46, [                              // hélicoptère
-    [C32.cap(c - 7, 5, c - 7, 22, 1), P.dark], [C32.cap(c + 7, 5, c + 7, 22, 1), P.dark],
-    [C32.cap(c, 18, c, 41, 2.2, 1.4), p.h],                               // 3 poutre de queue
-    [C32.ell(c, 41, 1.2, 4.5), P.dark],
-    [C32.ell(c, 13, 7, 9), p.h],                                          // 5 cabine
-    [C32.ell(c, 8, 4.2, 3.6), P.blue, { on: [5] }],
-  ], [c, 14]];
+const TRAIL = { bomb: '#2f55e6', radar: '#ffffff', jet: '#e04a3c' };
+// renvoie [largeur, hauteur, formes, animations] ; une animation = [x, y, sorte, réglage]
+function planeArt(st, id, p) {
+  const W = id === 'heli' ? 23 : 69, c = W / 2, H = { bomb: 92, radar: 69, jet: 46, heli: 46 }[id];
+  if (st === 'a' || st === 'd') { // avions d'aujourd'hui ; la patrouille ajoute bandes et fumées
+    const L = st === 'd', an = L && p.trail && TRAIL[id] ? [[c, H - 2, 'trail', TRAIL[id]]] : [];
+    if (id === 'bomb') return [W, H, [
+      [C32.cap(12, 80, 57, 80, 4), p.a], [C32.cap(4, 34, 65, 34, 6), L ? p.b : p.a],
+      [C32.ell(c - 12, 28, 3, 4.5), p.c], [C32.ell(c + 12, 28, 3, 4.5), p.c], [C32.ell(c - 24, 29, 2.6, 4), p.c], [C32.ell(c + 24, 29, 2.6, 4), p.c],
+      [C32.cap(c, 5, c, 84, 6.5, 4), p.a], [C32.cap(c, 72, c, 89, 1.8), p.c],
+      [C32.ell(c, 13, 3.5, 4), P.blue, { on: [7] }],
+      ...(L ? [[C32.cap(3, 34, 12, 34, 6), p.s, { on: [2] }], [C32.cap(57, 34, 66, 34, 6), p.s, { on: [2] }], [C32.cap(c, 40, c, 62, 7), p.b, { on: [7] }], [C32.cap(c, 46, c, 56, 7), p.s, { on: [7] }]] : []),
+      ...cocarde(L ? 20 : 13, 34, 4.5, [2], p), ...cocarde(L ? W - 20 : W - 13, 34, 4.5, [2], p),
+    ], an];
+    if (id === 'radar') return [W, H, [
+      [C32.cap(c - 11, 62, c + 11, 62, 3), p.b], [C32.cap(4, 34, 65, 34, 5), p.b],
+      [C32.ell(c - 15, 29, 2.5, 4), p.c], [C32.ell(c + 15, 29, 2.5, 4), p.c],
+      [C32.cap(c, 4, c, 64, 5.5, 3.5), L ? p.a : p.b], [C32.ell(c, 46, 10, 10), L ? p.b : P.navy],
+      [C32.ell(c, 46, 10, 2.4), L ? p.s : P.white, { on: [6] }], [C32.ell(c, 11, 3, 3.5), P.blue, { on: [5] }],
+      ...(L ? [[C32.cap(3, 34, 10, 34, 5), p.s, { on: [2] }], [C32.cap(59, 34, 66, 34, 5), p.s, { on: [2] }]] : []),
+      ...cocarde(12 + (L ? 6 : 0), 34, 3.6, [2], p), ...cocarde(W - 12 - (L ? 6 : 0), 34, 3.6, [2], p),
+    ], an];
+    if (id === 'jet') return [W, H, [
+      [C32.cap(c, 20, 7, 38, 3, 4.5), L ? p.b : p.c], [C32.cap(c, 20, W - 7, 38, 3, 4.5), L ? p.b : p.c],
+      [C32.cap(c - 9, 42, c + 9, 42, 2), p.c], [C32.ell(8, 37, 2, 2), P.red], [C32.ell(W - 8, 37, 2, 2), P.red],
+      [C32.cap(c, 2, c, 43, 3, 4.5), p.a], [C32.ell(c, 14, 2.5, 5), P.blue, { on: [6] }],
+      ...(L ? [[C32.cap(c, 22, 7, 38, 1.4), p.s, { on: [1] }], [C32.cap(c, 22, W - 7, 38, 1.4), p.s, { on: [2] }]] : []),
+      ...cocarde(19, 33, 2.8, [1], p), ...cocarde(W - 19, 33, 2.8, [2], p),
+    ], an];
+    return [W, H, [
+      [C32.cap(c - 7, 5, c - 7, 22, 1), P.dark], [C32.cap(c + 7, 5, c + 7, 22, 1), P.dark],
+      [C32.cap(c, 18, c, 41, 2.2, 1.4), p.h], [C32.ell(c, 41, 1.2, 4.5), P.dark],
+      [C32.ell(c, 13, 7, 9), p.h], [C32.ell(c, 8, 4.2, 3.6), P.blue, { on: [5] }],
+      ...(L ? [[C32.ell(c, 17, 7, 1.6), P.white, { on: [5] }], [C32.cap(c, 26, c, 32, 2.2), p.s || P.red, { on: [3] }]] : []),
+    ], [[c, 14, 'rotor']]];
+  }
+  if (st === 'b') { // années 40 : aluminium, hélices qui tournent, bouts d'ailes jaunes
+    if (id === 'bomb') return [W, H, [
+      [C32.cap(c, 80, 13, 80, 5, 2.6), p.a], [C32.cap(c, 80, W - 13, 80, 5, 2.6), p.a],      // 1, 2 empennage
+      [C32.cap(c, 33, 3, 35, 7, 3.4), p.b], [C32.cap(c, 33, W - 3, 35, 7, 3.4), p.b],         // 3, 4 ailes effilées
+      [C32.cap(c - 11, 22, c - 11, 33, 2.8), p.a], [C32.cap(c + 11, 22, c + 11, 33, 2.8), p.a],
+      [C32.cap(c - 22, 24, c - 22, 34, 2.4), p.a], [C32.cap(c + 22, 24, c + 22, 34, 2.4), p.a],
+      [C32.cap(c, 3, c, 84, 6, 3), p.a],                                                      // 9 fuselage
+      [C32.cap(c, 70, c, 90, 2), p.a],
+      [C32.ell(c, 8, 4, 4.5), P.blue, { on: [9] }], [C32.ell(c, 24, 3, 2.4), P.blue, { on: [9] }],
+      [C32.ell(5, 35, 3, 3.4), p.tip, { on: [3] }], [C32.ell(W - 5, 35, 3, 3.4), p.tip, { on: [4] }],
+      [C32.cap(c, 64, c, 68, 6), p.tip, { on: [9] }],
+      ...cocarde(17, 34, 4.4, [3], p), ...cocarde(W - 17, 34, 4.4, [4], p),
+    ], [[c - 11, 20, 'prop', 5], [c + 11, 20, 'prop', 5], [c - 22, 22, 'prop', 4.5], [c + 22, 22, 'prop', 4.5]]];
+    if (id === 'radar') return [W, H, [
+      [C32.cap(c - 18, 62, c + 18, 62, 2.6), p.a],                                            // 1 empennage, 4 dérives
+      [C32.ell(c - 18, 62, 1.8, 4.5), p.c], [C32.ell(c + 18, 62, 1.8, 4.5), p.c],
+      [C32.cap(3, 33, 66, 33, 4.6), p.b],                                                     // 4 aile droite
+      [C32.cap(c - 14, 22, c - 14, 36, 3.2), p.c], [C32.cap(c + 14, 22, c + 14, 36, 3.2), p.c],
+      [C32.cap(c, 4, c, 63, 5.5, 3), p.a],                                                    // 7 fuselage
+      [C32.ell(c, 42, 11, 11), P.navy], [C32.ell(c, 42, 11, 2.6), P.white, { on: [8] }], [C32.ell(c, 42, 2, 2), P.gold, { on: [8] }],
+      [C32.ell(c, 10, 3.2, 3.4), P.blue, { on: [7] }],
+      [C32.ell(5, 33, 3, 3), p.tip, { on: [4] }], [C32.ell(W - 5, 33, 3, 3), p.tip, { on: [4] }],
+      ...cocarde(14 - 2, 33, 3.4, [4], p), ...cocarde(W - 12, 33, 3.4, [4], p),
+    ], [[c - 14, 20, 'prop', 6], [c + 14, 20, 'prop', 6]]];
+    if (id === 'jet') return [W, H, [                                                         // chasseur à hélice, ailes elliptiques
+      [C32.ell(c, 31, 32, 7.5), p.b], [C32.ell(c, 42, 11, 3), p.a],
+      [C32.cap(c, 6, c, 43, 4.6, 2.4), p.a],                                                  // 3 fuselage
+      [C32.cap(c, 3, c, 10, 4.6), p.c, { on: [3] }], [C32.ell(c, 3, 2.4, 2.4), p.tip],
+      [C32.ell(c, 19, 2.6, 4.2), P.blue, { on: [3] }],
+      [C32.ell(4, 31, 3, 3), p.tip, { on: [1] }], [C32.ell(W - 4, 31, 3, 3), p.tip, { on: [1] }],
+      ...cocarde(18, 31, 3.6, [1], p), ...cocarde(W - 18, 31, 3.6, [1], p),
+    ], [[c, 2, 'prop', 9]]];
+    return [W, H, [                                                                          // hélicoptère à bulle
+      [C32.cap(c - 7, 6, c - 7, 22, 1), P.dark], [C32.cap(c + 7, 6, c + 7, 22, 1), P.dark],
+      [C32.cap(c, 19, c, 40, 1.6, 1.1), p.h], [C32.ell(c, 41, 1.6, 4.5), p.h],
+      [C32.ell(c, 18, 5, 4), P.dark], [C32.ell(c, 11, 7, 7.5), Q.sky],
+      [C32.ell(c - 2, 9, 2, 2.5), P.white, { on: [6] }],
+    ], [[c, 15, 'rotor']]];
+  }
+  // c : jouets, formes rondes et couleurs franches, le pilote dans sa bulle
+  if (id === 'bomb') return [W, H, [
+    [C32.cap(14, 80, 55, 80, 6), p.b], [C32.cap(6, 34, 63, 34, 8), p.b],
+    [C32.ell(c - 19, 27, 5, 6.5), p.c], [C32.ell(c + 19, 27, 5, 6.5), p.c],
+    [C32.cap(c, 8, c, 82, 9.5, 6), p.a],                                                     // 5 fuselage
+    [C32.ell(c, 16, 5.5, 6), P.blue, { on: [5] }], [C32.ell(c, 17, 2.8, 2.8), P.brown, { on: [5] }],
+    [C32.ell(c, 50, 3.4, 3.4), p.x, { on: [5] }], [C32.ell(c, 60, 3.4, 3.4), p.x, { on: [5] }],
+    [C32.cap(c, 76, c, 90, 2.6), p.a],
+    ...cocarde(14, 34, 5.4, [2], p), ...cocarde(W - 14, 34, 5.4, [2], p),
+  ], [[c - 19, 19, 'prop', 6.5], [c + 19, 19, 'prop', 6.5]]];
+  if (id === 'radar') return [W, H, [
+    [C32.cap(c - 12, 61, c + 12, 61, 5), p.b], [C32.cap(6, 32, 63, 32, 7), p.b],
+    [C32.cap(c, 6, c, 62, 8, 5), p.a],                                                       // 3 fuselage
+    [C32.ell(c, 45, 12, 12), p.x], [C32.ell(c, 45, 12, 3), p.a, { on: [4] }], [C32.ell(c, 45, 2.6, 2.6), p.c, { on: [4] }],
+    [C32.ell(c, 15, 5, 5.5), P.blue, { on: [3] }], [C32.ell(c, 16, 2.6, 2.6), P.brown, { on: [3] }],
+    ...cocarde(15, 32, 4.8, [2], p), ...cocarde(W - 15, 32, 4.8, [2], p),
+  ], [[c, 3, 'prop', 8]]];
+  if (id === 'jet') return [W, H, [
+    [C32.cap(c, 20, 9, 37, 5, 6.5), p.b], [C32.cap(c, 20, W - 9, 37, 5, 6.5), p.b],
+    [C32.cap(c - 10, 41, c + 10, 41, 3.4), p.b],
+    [C32.cap(c, 5, c, 41, 5.5, 6.5), p.a],                                                   // 4 fuselage
+    [C32.ell(c, 15, 4, 6), P.blue, { on: [4] }], [C32.ell(c, 16, 2.4, 2.4), P.brown, { on: [4] }],
+    [C32.ell(c, 4, 3, 3), p.x, { on: [4] }],
+    ...cocarde(17, 34, 3.8, [1], p), ...cocarde(W - 17, 34, 3.8, [2], p),
+  ], []];
+  return [W, H, [
+    [C32.cap(c - 8, 5, c - 8, 23, 1.6), p.c], [C32.cap(c + 8, 5, c + 8, 23, 1.6), p.c],
+    [C32.cap(c, 18, c, 40, 3.2, 2.2), p.h], [C32.ell(c, 41, 2, 5), p.x],
+    [C32.ell(c, 13, 8.5, 10), p.h],                                                          // 5 cabine
+    [C32.ell(c, 9, 5.5, 5), P.blue, { on: [5] }], [C32.ell(c, 10, 2.6, 2.6), P.brown, { on: [5] }],
+  ], [[c, 15, 'rotor']]];
 }
 function rotPt([x, y], h) { return [h - 1 - y, x]; }
 function shapeOf(def, d) {
@@ -281,16 +391,45 @@ function shapeOf(def, d) {
 }
 function buildPlanes() {
   G.pl = {};
-  for (const side of ['mine', 'foe']) { G.pl[side] = {};
-    for (const def of FLEET) {
-      const [w, h, list, rotor] = planeArt(def.id, PAL[side]);
-      let img = spr(w, h, list), pt = rotor, H = h; const out = [];
-      for (let d = 0; d < 4; d++) {
-        out.push({ img, sh: tint(img, 'rgba(4,16,44,.38)'), dead: over(img, 'rgba(26,22,30,.55)'), spot: tint(img, '#ffd23f'), rotor: pt });
-        if (pt) pt = rotPt(pt, H); H = img.width; img = rot(img);
+  for (const st in STYLES) { G.pl[st] = {};
+    for (const side of ['mine', 'foe']) { G.pl[st][side] = {};
+      for (const def of FLEET) {
+        const [w, h, list, anims] = planeArt(st, def.id, STYLES[st][side]);
+        let img = spr(w, h, list), an = side === 'foe' ? anims.filter(a => a[2] !== 'trail') : anims, H = h; const out = [];
+        for (let d = 0; d < 4; d++) {
+          out.push({ img, sh: tint(img, 'rgba(4,16,44,.38)'), dead: over(img, 'rgba(26,22,30,.55)'), spot: tint(img, '#ffd23f'), anims: an });
+          an = an.map(a => [...rotPt(a, H), a[2], a[3]]); H = img.width; img = rot(img);
+        }
+        G.pl[st][side][def.id] = out;
       }
-      G.pl[side][def.id] = out;
     }
+  }
+}
+function prop(g, x, y, r, t, k) { // hélice : deux pales floues et un disque pâle
+  const a = t * 22 + k;
+  g.globalAlpha = .3; ring(g, x, y, r, '#eef2fb'); g.globalAlpha = 1;
+  for (const da of [0, Math.PI]) for (let s = 1; s <= r; s++) R(g, Math.round(x + Math.cos(a + da) * s), Math.round(y + Math.sin(a + da) * s), 1, 1, '#2a2a32');
+  R(g, x - 1, y - 1, 2, 2, '#ffd23f');
+}
+const BACK = [[0, 1], [-1, 0], [0, -1], [1, 0]];
+function trail(g, x, y, d, col, t) { // fumée de patrouille, qui file derrière l'avion
+  const [bx, by] = BACK[d];
+  for (let k = 0; k < 14; k++) {
+    const u = (k + (t * 6) % 1) / 14, dist = 2 + u * 40, w = Math.sin(t * 3 + k) * u * 2;
+    const px = Math.round(x + bx * dist - by * w), py = Math.round(y + by * dist + bx * w), s = 3 + Math.floor(u * 3);
+    g.globalAlpha = .9 * (1 - u); R(g, px - (s >> 1) - 1, py - (s >> 1) - 1, s + 2, s + 2, 'rgba(10,20,50,.35)'); R(g, px - (s >> 1), py - (s >> 1), s, s, col);
+  }
+  g.globalAlpha = 1;
+}
+function drawPlane(g, art, x, y, t, k, d, live) { // un avion avec son ombre, ses fumées et ses hélices
+  if (live) {
+    g.drawImage(art.sh, x + 5, y + 8);
+    for (const a of art.anims) if (a[2] === 'trail') trail(g, x + a[0], y + a[1], d, a[3], t + k);
+  }
+  g.drawImage(live ? art.img : art.dead, x, y);
+  if (live) for (const a of art.anims) {
+    if (a[2] === 'rotor') rotor(g, x + a[0], y + a[1], t + k);
+    else if (a[2] === 'prop') prop(g, x + a[0], y + a[1], a[3], t, k + a[0]);
   }
 }
 function buildFog() {
@@ -473,11 +612,9 @@ function drawBoard(gg, b, ox, oy, t, o) {
   // les avions (ombre portée loin dessous : ils volent haut)
   b.planes.forEach((p, i) => {
     if (!(mine || p.down || reveal)) return;
-    const art = G.pl[mine ? 'mine' : 'foe'][p.def.id][p.d], x = p.c * CS, y = p.r * CS;
+    const art = G.pl[STYLE][mine ? 'mine' : 'foe'][p.def.id][p.d], x = p.c * CS, y = p.r * CS;
     const bob = p.down ? 0 : Math.round(Math.sin(t * 2 + i * 1.7) * 1);
-    if (!p.down) gg.drawImage(art.sh, x + 5, y + 8);
-    gg.drawImage(p.down ? art.dead : art.img, x, y + bob);
-    if (art.rotor && !p.down) rotor(gg, x + art.rotor[0], y + art.rotor[1] + bob, t);
+    drawPlane(gg, art, x, y + bob, t, i, p.d, !p.down);
     if (!mine && reveal && !p.down) { gg.globalAlpha = .25 + .15 * Math.sin(t * 4); gg.drawImage(art.spot, x, y); gg.globalAlpha = 1; }
     if (o.sel === i) { const sh = shapeOf(p.def, p.d); corners(gg, x + 1, y + 1, sh.w * CS - 1, sh.h * CS - 1, Math.floor(t * 4) % 2 ? '#ffd23f' : '#fff6c2'); }
   });
@@ -754,6 +891,26 @@ function draw3(t) {
   drawMsg(sc, 434);
 }
 
+
+/* --- les cartes des dessins d'avions --- */
+const CARTES = Object.keys(STYLES).map(st => {
+  const cv = document.getElementById('carte-' + st), bt = document.getElementById('choix-' + st);
+  bt.addEventListener('click', () => { STYLE = st; marque(); });
+  return { st, ctx: cv.getContext('2d'), bt };
+});
+function marque() { for (const c of CARTES) { c.bt.setAttribute('aria-pressed', c.st === STYLE); c.bt.querySelector('.etat').textContent = c.st === STYLE ? '> SUR LES ECRANS' : ''; } }
+function drawCard(gg, st, t) {
+  gg.drawImage(G.sky, -96 + Math.floor((t * 4) % 96), -96 + Math.floor((t * 2.4) % 96));
+  gg.globalAlpha = .6; gg.drawImage(G.cumulus, -Math.floor((t * 5) % BS), 0); gg.drawImage(G.cumulus, -Math.floor((t * 5) % BS), 120); gg.globalAlpha = 1;
+  const row = (side, y0, lab, col) => {
+    tiny(gg, lab, 8, y0, col);
+    const xs = [6, 80, 158, 240], ys = [0, 10, 26, 22];
+    FLEET.forEach((def, i) => drawPlane(gg, G.pl[st][side][def.id][0], xs[i], y0 + 12 + ys[i], t, i, 0, true));
+  };
+  row('mine', 6, 'TON ESCADRILLE', '#cfe6ff');
+  row('foe', 122, "L'ENNEMI", '#ffd6cc');
+}
+
 /* ---------- boucle ---------- */
 const SCREENS = [['ecran1', E1, draw1], ['ecran2', E2, draw2], ['ecran3', E3, draw3]].map(([id, sc, draw]) => {
   const cv = document.getElementById(id), ctx = cv.getContext('2d');
@@ -772,9 +929,10 @@ function frame() {
     s.draw(t);
     if (s.sc.fx) s.sc.fx = s.sc.fx.filter(f => !f.ended);
   }
+  for (const c of CARTES) { g = c.ctx; g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; drawCard(g, c.st, t); }
   requestAnimationFrame(frame);
 }
-buildAll(); newBattle();
+buildAll(); newBattle(); marque();
 // une partie déjà entamée pour que l'écran de combat montre tout : quelques tirs, un avion en feu, une zone au radar
 (() => {
   const b = E3.foe, bomb = cellsOf(b.planes[0]);
