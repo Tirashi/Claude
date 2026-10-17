@@ -11,7 +11,7 @@ Jeu de dés en duel inspiré de l'**Orlog** d'Assassin's Creed Valhalla (Ubisoft
   - **Bouclier** → les soldats lèvent leur bouclier contre les flèches (mur de boucliers) ;
   - **Main** → un éclaireur file voler un jeton de faveur à l'adversaire ;
   - **Faveur d'un dieu** → le dieu apparaît au-dessus du champ de bataille (éclair de Thor, soin d'Idunn…).
-- **Vie** : les 15 pierres de vie deviennent **15 soldats** ; chaque dégât fait tomber un soldat. L'armée qui n'a plus de soldat perd.
+- **Vie** : 15 PV. ~~Un soldat par PV~~ (jugé « un peu vide » le 17/10) → **3 soldats par PV, 45 par armée** (maquette 3) ; chaque dégât fait tomber 3 soldats. L'armée à 0 PV perd.
 - **Adversaires** : **contre l'ordinateur** et **à deux sur un téléphone** (on se le passe) ; **en famille à distance plus tard** (duel tour par tour, nouveau script SQL Supabase à lancer par l'utilisateur, même compte que les classements).
 - **Progression** : une **campagne de tavernes** (adversaires de plus en plus forts) qui débloque des **faveurs des dieux** et des **unités et apparences** pour son armée (berserkers, cavaliers, bannières ; surtout visuel).
 - **Style** : à choisir sur une **maquette** (règle « maquette d'abord ») comparant : HD-2D de profil (soldats en pixel art détaillé, champ de bataille en relief, brume), diorama low poly (figurines vues de haut et en biais), pixel art 16 bits de profil (le moins cher).
@@ -37,3 +37,6 @@ Jeu de dés en duel inspiré de l'**Orlog** d'Assassin's Creed Valhalla (Ubisoft
 
 ## Maquette 2 (17/10)
 `maquettes/the-des-jarls-2.html` (https://claude.ai/artifact/28nP1RqW7LD8rShRZh9i5k) : A et B seulement, plus détaillés. A : sprites 28×30 composés pixel par pixel (corps, armes, boucliers peints selon la variante), détourés et éclairés côté soleil, mis en cache ; champ de 158 pixels de large ; drakkar, maison longue, pierre runique, bannières corbeau / loup, flèches plantées, poussière, orage de Thor. B : figurines avec bras, cape, nasal, boucliers peints (6 motifs), chef porte-bannière, terrain en relief avec gué et pont, feu de camp, table avec tasse de thé, bougie et pièces (= jetons), dés arrondis. Piège rencontré : clé de cache `s+kind+pose+v` additionnée en nombre → toujours joindre avec un séparateur. Choix entre A et B : à venir.
+
+## Maquette 3 (17/10)
+`maquettes/the-des-jarls-3.html` (https://claude.ai/artifact/XRr9NuYqtwD29qdqhLC3eR) : retour « 15 soldats pour 15 PV, ça fait un peu vide » → 15 PV gardés (casques du HUD), 45 soldats par armée (3 rangs : haches, lances, archers ; chacun 3 colonnes × 5 de profondeur), 3 soldats tombent par PV, Idunn en relève 6. A : perspective (taille 0,74 à 1,02 selon la profondeur) et brume sur les rangs du fond, une bannière par rang. B : figurines à l'échelle 0,8, **fusionnées en une seule géométrie à couleurs de sommets** (bouclier, bras armé et arc restent à part pour être animés) pour garder ~270 objets à dessiner ; lumière déplacée pour que l'ombre de l'armée ne noircisse pas le gué. Choix à venir : nombre de soldats (45 ou entre-deux) et style.
