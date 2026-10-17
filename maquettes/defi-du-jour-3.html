@@ -1,0 +1,125 @@
+<title>Défi du jour, soleil</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Mise en page : trois téléphones côte à côte (A pièce, B tampon, C calendrier), chacun avec une planche de six cartouches
+   vues de face : défi fait, défi à faire, jeu sans défi du jour. Monde sombre de la Ludothèque (nuit violette, or). */
+:root{
+  color-scheme: dark;
+  --night:#110d22; --night-2:#1e1840; --ink:#0d0a18; --text:#f2f0ff; --dim:#a9a6d8; --gold:#ffd23f; --green:#5cff8a; --green-d:#06280f; --red:#e8264d;
+  --wood-hi:#b77a48; --wood:#7a4a24; --wood-lo:#5a3418;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--night) radial-gradient(var(--night-2) 1px, transparent 1.5px) 0 0 / 4px 4px; color:var(--text);
+  font-family:var(--f-body); font-size:21px; line-height:1.25;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:28px 56px}
+.wrap{max-width:1100px; margin:0 auto; display:flex; flex-direction:column; gap:22px}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,4.2vw,24px); letter-spacing:2px; color:var(--gold); line-height:1.5; text-wrap:balance; text-shadow:3px 3px 0 #000}
+.lead{margin:0; color:var(--dim); max-width:68ch}
+.lead b{color:var(--text); font-weight:400}
+.phones{display:flex; flex-wrap:wrap; gap:28px 24px; justify-content:center}
+.dir{display:flex; flex-direction:column; gap:10px; width:min(100%, 330px)}
+.dir h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:10px; letter-spacing:1px; color:var(--gold); line-height:1.6}
+.dir p{margin:0; color:var(--dim); font-size:19px}
+.phone{background:#000; border:3px solid #fff; box-shadow:0 0 0 3px #000, 6px 6px 0 3px #000; border-radius:18px; padding:12px 10px 14px}
+.bar{display:flex; justify-content:space-between; font-family:var(--f-display); font-size:7px; color:var(--dim); padding:2px 4px 10px; letter-spacing:1px}
+.bar b{font-weight:400; color:var(--text)}
+.shelf{display:grid; grid-template-columns:repeat(3, 1fr); gap:20px 10px; padding:6px 4px 12px; background:linear-gradient(transparent calc(50% - 4px), var(--wood) calc(50% - 4px), var(--wood-lo) calc(50% + 4px), transparent calc(50% + 4px))}
+.shelf::before{content:none}
+.row{grid-column:1 / -1; display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; padding-bottom:12px; border-bottom:6px solid var(--wood); box-shadow:0 4px 0 var(--wood-lo)}
+
+/* cartouche vue de face */
+.cart{position:relative; aspect-ratio:92 / 108; display:flex; flex-direction:column; align-items:center; padding:7px 6px 0; background:#8d8b9e; border:2px solid var(--ink); border-radius:7px 7px 3px 3px;
+  box-shadow:inset 2px 2px 0 #b6b4c8, inset -3px -3px 0 #5c5a6e}
+.cart .grip{width:78%; height:8px; background:repeating-linear-gradient(90deg, #5c5a6e 0 3px, transparent 3px 6px); margin-bottom:6px; opacity:.8}
+.cart .lab{flex:1; width:100%; margin-bottom:8px; border:2px solid var(--ink); background:var(--c); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:3px}
+.cart .lab i{font-style:normal; font-size:26px; line-height:1}
+.cart .lab span{font-family:var(--f-display); font-size:6px; letter-spacing:0; color:#fff; text-shadow:1px 1px 0 #000; text-align:center; line-height:1.4}
+.cart .stk{position:absolute; top:4px; right:-7px; transform:rotate(12deg); font-family:var(--f-display); font-size:6px; padding:3px 4px; background:var(--green); color:var(--green-d); border:2px solid #000; box-shadow:2px 2px 0 #000; white-space:nowrap; z-index:3}
+.cart .fv{position:absolute; top:-6px; left:-7px; font-style:normal; font-size:15px; line-height:1; color:var(--gold); text-shadow:2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000; z-index:3}
+
+/* A · pièce : rond vert avec un ✓ posé sur le coin bas droit ; à faire = rond creux qui clignote */
+.A .mk{position:absolute; right:-8px; bottom:-8px; width:26px; height:26px; border-radius:50%; background:var(--green); border:3px solid #000; box-shadow:2px 2px 0 #000, inset 0 -3px 0 #2fbf5c;
+  display:grid; place-items:center; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; font-size:16px; font-weight:700; color:var(--green-d); z-index:3}
+.A .mk.todo{background:#1b1636; box-shadow:2px 2px 0 #000; border-style:dashed; border-color:var(--gold); color:var(--gold); font-family:var(--f-display); font-size:11px; animation:pulse 1.4s steps(2) infinite}
+@keyframes pulse{50%{opacity:.45}}
+
+/* B · tampon : « FAIT » incliné sur l'étiquette, comme un cachet ; à faire = « DU JOUR » en pointillé */
+.B .mk{position:absolute; left:50%; top:46%; transform:translate(-50%,-50%) rotate(-14deg); font-family:var(--f-display); font-size:9px; letter-spacing:1px; padding:3px 5px; color:var(--green); border:3px solid var(--green);
+  background:rgba(6,40,15,.78); box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; z-index:3; white-space:nowrap}
+.B .mk.todo{color:var(--gold); border:3px dashed var(--gold); background:rgba(30,20,0,.78); font-size:7px; animation:pulse 1.4s steps(2) infinite}
+
+/* C · calendrier : petite feuille en bas à gauche, jour du mois et ✓ ; à faire = feuille blanche avec un point d'exclamation */
+.C .mk{position:absolute; left:-7px; bottom:-8px; width:28px; height:30px; background:#f4f1ff; border:3px solid #000; box-shadow:2px 2px 0 #000; z-index:3; display:flex; flex-direction:column; overflow:hidden}
+.C .mk::before{content:""; height:8px; background:var(--red); border-bottom:2px solid #000; flex:none}
+.C .mk b{flex:1; display:grid; place-items:center; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; font-size:15px; font-weight:700; color:#0b8a36; line-height:1}
+.C .mk.todo b{color:var(--red); font-family:var(--f-display); font-size:11px; animation:pulse 1.4s steps(2) infinite}
+
+.key{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:19px; color:var(--dim)}
+.key b{font-weight:400; color:var(--text)}
+.note{border:3px solid var(--dim); border-radius:6px; padding:10px 14px; background:#000}
+.note p{margin:0 0 4px}
+.note p:last-child{margin:0}
+
+.menu{background:#000; border:3px solid #fff; box-shadow:0 0 0 3px #000, 4px 4px 0 3px #000; border-radius:5px; padding:8px 10px 10px; display:flex; flex-direction:column; gap:6px; margin-bottom:16px}
+.menu .cmds{display:flex; flex-wrap:wrap; gap:0 12px}
+.menu .cmds button{font-family:var(--f-display); font-size:7px; letter-spacing:1px; line-height:2.3; color:#8a86b8; padding-left:12px; position:relative}
+.menu .cmds button[aria-pressed="true"]{color:#fff}
+.menu .cmds button[aria-pressed="true"]::before{content:"▶"; position:absolute; left:0; color:var(--gold)}
+.menu .say{border-top:2px solid #fff; padding-top:6px; font-size:18px; line-height:1.15; min-height:3.5em; color:#fff}
+.menu .say b{font-family:var(--f-display); font-weight:400; font-size:6px; color:var(--gold); margin-right:6px}
+.row .cart[hidden]{display:none}
+.row:has(.cart:not([hidden])) {display:grid}
+.row:not(:has(.cart:not([hidden]))){display:none}
+.phone .row + .row{margin-top:14px}
+.cart .grip{display:block}
+.hint{color:var(--gold); font-size:18px}
+/* D · bandeau : ruban en bas de l'étiquette */
+[data-d=D] .mk{position:absolute; left:-4px; right:-4px; bottom:22px; padding:3px 0; text-align:center; font-family:var(--f-display); font-size:6px; letter-spacing:0; background:var(--green); color:var(--green-d); border:2px solid #000; box-shadow:2px 2px 0 #000; z-index:3; white-space:nowrap}
+[data-d=D] .mk.todo{background:var(--gold); color:#2a1600; animation:pulse 1.4s steps(2) infinite}
+/* E · soleil : le défi à faire brille, le défi fait s'éteint (cartouche assombrie) */
+[data-d=E] .mk{position:absolute; right:-8px; bottom:-8px; width:26px; height:26px; border-radius:50%; background:#3a3560; border:3px solid #000; box-shadow:2px 2px 0 #000; display:grid; place-items:center; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; font-size:15px; font-weight:700; color:var(--green); z-index:3}
+[data-d=E] .mk.todo{background:radial-gradient(circle, #fff6a8 0 30%, var(--gold) 31% 100%); box-shadow:2px 2px 0 #000, 0 0 10px 2px rgba(255,210,63,.75); }
+
+/* F · voyant : une diode sous l'étiquette, verte (fait) ou ambre qui clignote (à faire) */
+[data-d=F] .mk{position:absolute; left:50%; bottom:6px; transform:translateX(-50%); width:34px; height:8px; border:2px solid #000; border-radius:4px; background:var(--green); box-shadow:0 0 8px 2px rgba(92,255,138,.7); z-index:3}
+[data-d=F] .mk.todo{background:#ff9a2a; box-shadow:0 0 8px 2px rgba(255,154,42,.8); animation:pulse 1.4s steps(2) infinite}
+[data-d=F] .cart .lab{margin-bottom:16px}
+</style>
+
+<div class="wrap">
+  <h1>DEFI DU JOUR, LE SOLEIL</h1>
+  <p class="lead">La direction <b>E</b> corrigée : le rond jaune ne clignote pas et les cartouches des jeux faits ne sont plus grisées. Touche les filtres pour essayer. Queens et Nebula sont faits, Sudoku, Odyssée et Empilage restent à faire, Tetris n'a pas de défi du jour.</p>
+  <div class="phones">
+<section class="dir">
+<h2>E · LE SOLEIL, VERSION FIXE</h2>
+<div class="phone" data-d="E"><div class="menu"><div class="cmds"><button type="button" data-f="all" aria-pressed="true">TOUS</button><button type="button" data-f="jour" aria-pressed="false">DU JOUR</button><button type="button" data-f="todo" aria-pressed="false">A FAIRE</button></div><div class="say"><b>LE GARDIEN</b><span class="msg"></span></div></div><div class="row"><div class="cart" data-s="done" style="--c:#2b6be0"><i class="grip"></i><div class="lab"><i>♛</i><span>QUEENS</span></div><span class="mk">✓</span></div><div class="cart" data-s="todo" style="--c:#7a3ad6"><i class="grip"></i><div class="lab"><i>✦</i><span>SUDOKU</span></div><span class="mk todo"></span></div><div class="cart" data-s="none" style="--c:#2a9d6a"><i class="grip"></i><div class="lab"><i>▮</i><span>TETRIS</span></div></div></div><div class="row"><div class="cart" data-s="done" style="--c:#d6552a"><i class="grip"></i><div class="lab"><i>☄</i><span>NEBULA</span></div><span class="mk">✓</span></div><div class="cart" data-s="todo" style="--c:#c8a020"><i class="grip"></i><div class="lab"><i>⛵</i><span>ODYSSEE</span></div><span class="mk todo"></span></div><div class="cart" data-s="todo" style="--c:#2a7fa8"><i class="grip"></i><div class="lab"><i>≋</i><span>EMPILAGE</span></div><span class="mk todo"></span></div></div></div>
+<p>Le rond jaune ne clignote plus : il brille, fixe, tant que le défi attend. Une fois fait, il devient un rond sombre avec ✓ vert. Les cartouches gardent leurs couleurs.</p>
+</section>
+  </div>
+  <div class="note">
+    <p>Le filtre A FAIRE n'affiche que les défis pas encore joués ; DU JOUR montre tous les jeux qui en ont un.</p>
+  </div>
+</div>
+<script>
+(function(){
+  var txt={
+    all:function(t,f){return t.length?t.length+" defi"+(t.length>1?"s":"")+" du jour t'attend"+(t.length>1?"ent":"")+" : "+t.join(", ")+".":"Tous tes defis du jour sont faits. Bravo !";},
+    jour:function(t,f,d){return d+" jeux ont un defi du jour, "+f.length+" deja fait"+(f.length>1?"s":"")+".";},
+    todo:function(t){return t.length?"A faire aujourd'hui : "+t.join(", ")+".":"Rien a faire, tout est joue !";}
+  };
+  document.querySelectorAll(".phone").forEach(function(p){
+    var carts=[].slice.call(p.querySelectorAll(".cart")), msg=p.querySelector(".msg"), btns=[].slice.call(p.querySelectorAll(".cmds button"));
+    function name(c){return c.querySelector(".lab span").textContent;}
+    function apply(f){
+      carts.forEach(function(c){var s=c.dataset.s; c.hidden=(f==="jour"&&s==="none")||(f==="todo"&&s!=="todo");});
+      btns.forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.f===f));});
+      var t=carts.filter(function(c){return c.dataset.s==="todo";}).map(name), d=carts.filter(function(c){return c.dataset.s==="done";}).map(name);
+      msg.textContent=txt[f](t,d,t.length+d.length);
+    }
+    btns.forEach(function(b){b.addEventListener("click",function(){apply(b.dataset.f);});});
+    apply("all");
+  });
+})();
+</script>

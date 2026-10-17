@@ -103,6 +103,10 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
   padding:3px 4px; background:var(--gold); color:#2a1600; border:2px solid #000; box-shadow:2px 2px 0 #000; white-space:nowrap}
 .c3 .stk.cours{background:#5cff8a; color:#06280f}
 .c3 .stk.maj{background:#5ce1ff; color:#05222a}
+.c3 .dj{position:absolute; z-index:3; right:calc(-7px * var(--k)); bottom:calc(14px * var(--k)); width:calc(17px * var(--k)); height:calc(17px * var(--k)); border-radius:50%; box-sizing:border-box;
+  border:calc(2px * var(--k)) solid #000; box-shadow:2px 2px 0 #000; display:grid; place-items:center; font-style:normal; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; font-weight:700;
+  font-size:calc(10px * var(--k)); line-height:1; background:radial-gradient(circle, #fff6a8 0 30%, var(--gold) 31% 100%); box-shadow:2px 2px 0 #000, 0 0 8px 2px rgba(255,210,63,.7)}
+.c3 .dj.fait{background:#3a3560; color:#5cff8a; box-shadow:2px 2px 0 #000}
 .c3 .fv{position:absolute; z-index:3; top:calc(-6px * var(--k)); left:calc(-8px * var(--k)); font-style:normal; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif;
   font-size:calc(15px * var(--k)); line-height:1; color:var(--gold); text-shadow:2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000}
 
@@ -522,6 +526,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-17", "Défi du jour : un rond jaune sur la cartouche quand il reste à jouer, un rond sombre avec ✓ quand c'est fait (Queens, Sudoku, Pont stellaire, Lignée, Alunissage, Nebula, Calculator, Empilage, Odyssée)."],
   ["2026-10-17", "Nouveau jeu : Yams, le troisième jeu en 3D. De vrais dés qui roulent et rebondissent, lancés d'un geste ou secoués dans un gobelet, la feuille de marque classique en 13 cases, et six styles de dés à débloquer (taverne, casino de nuit, gros pixels rétro, sur la Lune…)."],
   ["2026-10-17", "Escadrille ! : le hangar et trois escadrilles à débloquer (Furtif, Hélices, Canonnière), un sol différent à chaque partie, et les pilotes abattus sautent en parachute."],
   ["2026-10-17", "Nouveau jeu : Escadrille !, la petite sœur d'Amiral ! dans le ciel. Quatre avions à pouvoirs (radar, bombes en croix, missile, esquive de l'hélicoptère) sur un ciel de 9 × 9, contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As."],
@@ -595,6 +600,19 @@ const PROGRESS = {
   "picross/index.html": () => { const n = count(rk("picrossdex.progress", {})); return n ? `${n} GRILLE${n > 1 ? "S" : ""}` : null; },
   "solitaire/index.html": () => { const g = rk("solitaire16.game", null); return g && g.started && !g.won ? "UNE DONNE" : null; },
 };
+// défi du jour : null = pas de défi du jour, false = à faire, true = joué (puzzles : réussi ; missions : tentative commencée)
+const TODAY = {
+  "queens/index.html": () => !!(rk("queens16.daily", {}) || {})[dayNum()],
+  "sudoku/index.html": () => !!(rk("sudoku.daily", {}) || {})[dayNum()],
+  "pont-stellaire/index.html": () => !!(rk("pontstellaire.daily", {}) || {})[dayNum()],
+  "lignee/index.html": () => { const j = "-J" + dayNum().toString(36).toUpperCase(); return Object.keys(rk("lignee.daily", {}) || {}).some(c => c.endsWith(j)); },
+  "alunissage/index.html": () => rk("alunissage.dailyTry", 0) === dayNum(),
+  "nebula/index.html": () => rk("nebula.dailyTry", 0) === dayNum(),
+  "calculator/index.html": () => rk("calculator.dailyTry", 0) === dayNum(),
+  "empilage/index.html": () => rk("empilage.dailyTry", 0) === dayNum(),
+  "odyssee/index.html": () => rk("odyssee.dailyTry", 0) === dayNum(),
+};
+const dailyState = g => { try { return TODAY[g.k] ? TODAY[g.k]() : null; } catch (e) { return null; } };
 const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catch (e) { return null; } };
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
 const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
@@ -677,13 +695,15 @@ GAMES.forEach((g, i) => {
 // étiquettes posées sur la cartouche : NEUF, EN COURS ou MAJ, étoile des favoris, couronne d'un record de la famille
 function paintMarks(){
   GAMES.forEach(g => {
-    g.el.querySelectorAll(".stk, .fv, .crown").forEach(e => e.remove());
+    g.el.querySelectorAll(".stk, .fv, .crown, .dj").forEach(e => e.remove());
     const m = metaOf(g), cur = inProgress(g);
     const st = recent(m.added) ? ["NEUF", ""] : cur ? ["EN COURS", "cours"] : recent(m.updated) ? ["MAJ", "maj"] : null;
     if (st) g.el.append(el("span", "stk " + st[1], st[0]));
+    const dj = dailyState(g);
+    if (dj !== null) g.el.append(el("i", "dj" + (dj ? " fait" : ""), dj ? "✓" : ""));
     if (isFav(g)) g.el.append(el("i", "fv", "★"));
     if (crownSet.has(g.k)) g.el.append(el("i", "crown", "♛"));
-    g.el.setAttribute("aria-label", g.n + (cur ? ", en cours : " + cur.toLowerCase() : "") + (isFav(g) ? ", favori" : "") + (crownSet.has(g.k) ? ", tu détiens un record" : ""));
+    g.el.setAttribute("aria-label", g.n + (cur ? ", en cours : " + cur.toLowerCase() : "") + (dj === null ? "" : dj ? ", défi du jour fait" : ", défi du jour à faire") + (isFav(g) ? ", favori" : "") + (crownSet.has(g.k) ? ", tu détiens un record" : ""));
   });
 }
 
