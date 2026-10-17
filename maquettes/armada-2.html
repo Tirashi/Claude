@@ -22,6 +22,8 @@ header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
 .tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .dir h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:4px 0 0;text-align:center;line-height:1.5}
 .dir p{margin:0;color:var(--doux);max-width:300px;font-size:16px;text-align:center}
+.dir button{font-family:var(--f-titre);font-size:10px;color:var(--texte);background:#141b33;border:2px solid var(--bord);border-radius:6px;padding:10px 12px;cursor:pointer}
+.dir button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
 .regles{border-top:2px solid var(--bord);padding-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px 32px}
 .regles section{min-width:0}
 .regles h2{font-family:var(--f-titre);font-size:11px;color:var(--or);margin:0 0 8px;line-height:1.5}
@@ -33,25 +35,22 @@ header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
 <div class="page">
 <header>
   <h1>ARMADA : LA FLOTTE</h1>
-  <p>Les trois téléphones jouent la même chose ; seule change la façon d'afficher la vie des vaisseaux. Les chasseurs, plus petits, forment un essaim qui gagne un chasseur à intervalles réguliers. Toutes les 24 secondes, la corvette bouclier est détruite : toute la flotte perd ses boucliers, puis on la rachète. Touche une icône en bas pour changer de formation et voir l'essaim changer de comportement.</p>
+  <p>Deux sortes de petits vaisseaux, deux cartes différentes : les <b>drones</b> (un essaim qui colle aux ennemis) et les <b>chasseurs</b> (des patrouilles de trois qui font des passes d'attaque rapides puis reviennent en boucle). Chaque groupe gagne un vaisseau à intervalles réguliers. Toutes les 24 secondes, la corvette bouclier est détruite : toute la flotte perd ses boucliers, puis on la rachète. Touche une icône en bas pour changer de formation ; le bouton sous chaque téléphone change l'affichage de la vie (réglage du jeu).</p>
 </header>
 <div class="grille">
-  <section class="dir"><div class="tel" id="t1"><canvas width="544" height="960"></canvas></div><h2>1. ARCS</h2><p>Un arc sous chaque vaisseau touché : la coque (vert, orange, rouge) et le bouclier en bleu autour. Rien quand il est intact.</p></section>
-  <section class="dir"><div class="tel" id="t2"><canvas width="544" height="960"></canvas></div><h2>2. PORTRAITS</h2><p>Une rangée de portraits en haut, comme l'équipe d'un RPG. Sur le terrain, seulement la fumée et le clignotement.</p></section>
-  <section class="dir"><div class="tel" id="t3"><canvas width="544" height="960"></canvas></div><h2>3. LES DEUX</h2><p>Les portraits pour la vue d'ensemble et les épaves, des arcs plus discrets sur le terrain.</p></section>
+  <section class="dir"><div class="tel" id="t1"><canvas width="544" height="960"></canvas></div><h2>1. DRONES</h2><p>Petits, vifs, ils tournent autour des ennemis comme des guêpes. L'ancien comportement des « chasseurs ».</p><button type="button" id="b1">VIE : LES DEUX</button></section>
+  <section class="dir"><div class="tel" id="t2"><canvas width="544" height="960"></canvas></div><h2>2. CHASSEURS</h2><p>Patrouilles de trois (un chef et deux ailiers) : ils foncent en ligne droite à travers les ennemis en tirant, puis font une large boucle pour revenir.</p><button type="button" id="b2">VIE : LES DEUX</button></section>
+  <section class="dir"><div class="tel" id="t3"><canvas width="544" height="960"></canvas></div><h2>3. LES DEUX</h2><p>Les deux cartes prises dans la même partie : un portrait par groupe en haut.</p><button type="button" id="b3">VIE : LES DEUX</button></section>
 </div>
 <div class="regles">
-  <section><h2>L'ESSAIM DE CHASSEURS</h2><ul>
-    <li><b>En V</b> : il part en pointe devant la flotte.</li>
-    <li><b>En cercle</b> : il tourne autour de la flotte.</li>
-    <li><b>En convoi</b> : il longe les flancs.</li>
-    <li><b>En carré</b> : il couvre l'arrière.</li>
-    <li>Un chasseur détruit repart de l'amiral quelques secondes plus tard, sans rachat.</li></ul></section>
+  <section><h2>DRONES ET CHASSEURS</h2><ul>
+    <li>Ils ne prennent pas de place dans la formation, mais elle leur donne leur zone : <b>en V</b> devant, <b>en cercle</b> autour, <b>en convoi</b> sur les flancs, <b>en carré</b> à l'arrière.</li>
+    <li>Un drone ou un chasseur détruit repart de l'amiral quelques secondes plus tard, sans rachat.</li></ul></section>
   <section><h2>LES BOUCLIERS</h2>
     <p>Tant que la corvette vit, chaque vaisseau a un bouclier qui encaisse les coups et se recharge après 3 secondes sans être touché.</p>
     <p>Si elle tombe, toute la flotte perd ses boucliers : on a intérêt à la garder au centre.</p></section>
   <section><h2>LA VIE</h2>
-    <p>L'amiral a sa propre barre en haut : s'il tombe, la partie est finie.</p>
+    <p>Par défaut, portraits en haut et arcs autour des vaisseaux ; un réglage permet de garder seulement l'un des deux. L'amiral a sa propre barre en haut : s'il tombe, la partie est finie.</p>
     <p>Sous la moitié, un vaisseau fume ; près de la fin, il clignote en rouge. Le drone mécano répare le plus abîmé (rayon vert).</p></section>
 </div>
 </div>
@@ -70,7 +69,8 @@ const TYPES = {
   canon:     { sp: 'artilleur',  sz: 54,  max: 120, nom: 'CANON' },
   mecano:    { sp: 'atelier',    sz: 42,  max: 90, nom: 'MECANO' },
   mouilleur: { sp: 'mouilleur',  sz: 46,  max: 100, nom: 'MINES' },
-  chasseur:  { sp: 'chasseur',   sz: 24,  max: 24 },
+  chasseur:  { sp: 'chasseur',   sz: 28,  max: 24 },
+  drone:     { sp: 'drone1',     sz: 18,  max: 14 },
 };
 const ESCORTE = ['fregate', 'porte', 'canon', 'bouclier', 'mecano', 'mouilleur', 'fregate'];
 const FORMS = ['EN V', 'EN CERCLE', 'EN CONVOI', 'EN CARRE'];
@@ -84,20 +84,22 @@ function slots(form, n) {
   }
   return out;
 }
-function makeSim(seed) {
+function makeSim(seed, cfg) {
   const R = NV.rnd(seed);
   const S = { R, seed, t: 0, fx: 0, fy: 0, hd: -Math.PI / 2, form: 0, auto: true, autoT: 0, hist: [], en: [], shots: [], eshots: [], beams: [], mines: [], gems: [], parts: [], smoke: [], pops: [],
-    xp: .4, lvl: 12, cr: 412, kills: 1284, clock: 7 * 60 + 42, shields: true, banner: null, nCh: 3, chT: 0, cycle: 0 };
+    xp: .4, lvl: 12, cr: 412, kills: 1284, clock: 7 * 60 + 42, shields: true, banner: null, chT: 0, cfg };
   const mk = k => ({ k, hp: TYPES[k].max, max: TYPES[k].max, sh: 0, shT: 9, x: 0, y: 0, hd: -Math.PI / 2, cd: R() * 1.5, dead: false, deadT: 0, flash: 0 });
   S.amiral = mk('amiral');
   S.esc = ESCORTE.map(mk);
-  S.ch = []; for (let i = 0; i < 8; i++) { const c = mk('chasseur'); c.on = i < S.nCh; c.ph = i / 8 * TAU; S.ch.push(c); }
+  S.dr = []; S.fi = [];
+  for (let i = 0; i < 8; i++) { const d = mk('drone'); d.on = !!cfg.dr && i < 3; S.dr.push(d); const f = mk('chasseur'); f.on = !!cfg.fi && i < 3; f.st = 0; f.v = 340; S.fi.push(f); }
   for (const s of all(S)) s.sh = shMax(S, s);
   for (let i = 0; i < 70; i++) spawn(S, true);
   return S;
 }
-const all = S => [S.amiral, ...S.esc, ...S.ch.filter(c => c.on)];
-const shMax = (S, s) => S.shields ? (s.k === 'chasseur' ? 6 : s.k === 'amiral' ? 60 : 24) : 0;
+const small = k => k === 'chasseur' || k === 'drone';
+const all = S => [S.amiral, ...S.esc, ...S.dr.filter(c => c.on), ...S.fi.filter(c => c.on)];
+const shMax = (S, s) => S.shields ? (small(s.k) ? 6 : s.k === 'amiral' ? 60 : 24) : 0;
 function spawn(S, anywhere) {
   const R = S.R, a = anywhere ? R() * TAU : S.hd + (R() - .5) * 2.8, d = anywhere ? 280 + R() * 400 : 560 + R() * 160, r = R(), type = r < .72 ? 0 : r < .96 ? 1 : 2;
   S.en.push({ x: S.fx + Math.cos(a) * d, y: S.fy + Math.sin(a) * d, type, hp: [1, 3, 14][type], v: [72, 52, 30][type] * (.85 + R() * .3), hd: 0, hit: 0, cd: R() * 2, ph: R() * TAU });
@@ -121,7 +123,7 @@ function destroy(S, s) {
 }
 function revive(S, s, paid) {
   s.dead = false; s.hp = s.max; s.flash = .6;
-  if (s.k === 'chasseur') { s.x = S.fx; s.y = S.fy; }
+  if (small(s.k)) { s.x = S.fx; s.y = S.fy; s.st = 0; }
   if (paid) { S.cr -= paid; S.pops.push({ x: s.x, y: s.y - 40, txt: '-' + paid + ' CR', t: 0, col: '#ffcf70' }); }
   if (s.k === 'bouclier') { S.shields = true; S.banner = { a: 'CORVETTE RACHETEE', b: 'BOUCLIERS REMIS EN ROUTE', t: 0 }; }
   s.sh = shMax(S, s);
@@ -144,8 +146,10 @@ function step(S, dt) {
     if (S.lastCyc < 20 && cyc >= 20 && cor.dead) revive(S, cor, 120);
   }
   S.lastCyc = cyc;
-  // un chasseur de plus toutes les 8 s, jusqu'à 8
-  S.chT += dt; if (S.chT > 8 && S.nCh < 8) { S.chT = 0; const c = S.ch[S.nCh++]; c.on = true; c.x = S.fx; c.y = S.fy; c.hp = c.max; c.sh = shMax(S, c); c.dead = false; S.pops.push({ x: S.fx, y: S.fy - 70, txt: '+1 CHASSEUR', t: 0, col: '#9fe0ff' }); }
+  // un drone ou un chasseur de plus toutes les 8 s, jusqu'à 8 (6 de chaque quand on a les deux)
+  S.chT += dt; if (S.chT > 8) { S.chT = 0; const lim = S.cfg.dr && S.cfg.fi ? 6 : 8;
+    [[S.dr, S.cfg.dr, '+1 DRONE', 0], [S.fi, S.cfg.fi, '+1 CHASSEUR', 26]].forEach(([arr, on, txt, dy]) => { const c = arr.find(x => !x.on);
+      if (!on || !c || arr.filter(x => x.on).length >= lim) return; c.on = true; c.x = S.fx; c.y = S.fy; c.hd = S.hd; c.hp = c.max; c.sh = shMax(S, c); c.dead = false; S.pops.push({ x: S.fx, y: S.fy - 70 - dy, txt, t: 0, col: '#9fe0ff' }); }); }
   if (S.banner) { S.banner.t += dt; if (S.banner.t > 3.2) S.banner = null; }
   // escorte en formation
   const sl = slots(S.form, S.esc.length), c = Math.cos(S.hd + Math.PI / 2), s = Math.sin(S.hd + Math.PI / 2);
@@ -156,19 +160,40 @@ function step(S, dt) {
     move(p, tx, ty, dt, 3.5, S.hd);
     p.cd -= dt; if (p.cd <= 0) fire(S, p);
   });
-  // essaim de chasseurs : un point d'ancrage selon la formation, chasse autour de ce point
-  S.ch.forEach((p, i) => {
-    if (!p.on) return;
+  // zone donnée par la formation (devant, autour, flancs, arrière)
+  const zone = (i, n, r) => { const k = n > 1 ? i / (n - 1) : .5, f = S.form;
+    if (f === 0) return toWorld((k - .5) * 140, 210 * r + Math.sin(t * 3 + i) * 20);
+    if (f === 1) { const a = t * 1.2 / r + i / n * TAU; return [S.fx + Math.cos(a) * 190 * r, S.fy + Math.sin(a) * 190 * r]; }
+    if (f === 2) { const side = i & 1 ? 1 : -1, row = i >> 1; return toWorld(side * 110 * r, 40 - row * 80 + Math.sin(t * 2 + i) * 25); }
+    return toWorld((k - .5) * 170, -190 * r + Math.sin(t * 3 + i) * 20); };
+  // drones : essaim qui colle aux ennemis proches de leur zone
+  const drs = S.dr.filter(d => d.on);
+  drs.forEach((p, i) => {
     if (p.dead) { p.deadT += dt; if (p.deadT > 5) revive(S, p, 0); return; }
-    const n = S.nCh, k = i / n, f = S.form; let ax, ay;
-    if (f === 0) [ax, ay] = toWorld((k - .5) * 120, 210 + Math.sin(t * 3 + i) * 20);
-    else if (f === 1) { const a = t * 1.2 + k * TAU; [ax, ay] = [S.fx + Math.cos(a) * 190, S.fy + Math.sin(a) * 190]; }
-    else if (f === 2) { const side = i & 1 ? 1 : -1, row = i >> 1; [ax, ay] = toWorld(side * 100, 40 - row * 70 + Math.sin(t * 2 + i) * 25); }
-    else [ax, ay] = toWorld((k - .5) * 160, -190 + Math.sin(t * 3 + i) * 20);
+    let [ax, ay] = zone(i, drs.length, 1);
     const e = nearest(S, ax, ay, 130);
     if (e) { ax = e.x + Math.cos(t * 6 + i) * 30; ay = e.y + Math.sin(t * 6 + i) * 30; }
     move(p, ax, ay, dt, 5, null);
     p.cd -= dt; if (p.cd <= 0) { const g = nearest(S, p.x, p.y, 200); if (g) shoot(S, p.x, p.y, g, 0, 700); p.cd = .3 + R() * .15; }
+  });
+  // chasseurs : patrouilles de trois, passes d'attaque en ligne droite puis large boucle (virage limité)
+  const fis = S.fi.filter(f => f.on), np = Math.ceil(fis.length / 3);
+  fis.forEach((p, i) => {
+    if (p.dead) { p.deadT += dt; if (p.deadT > 5) revive(S, p, 0); return; }
+    const pi = Math.floor(i / 3), lead = fis[pi * 3], wing = i % 3;
+    let want;
+    if (wing && !lead.dead) {
+      const side = wing === 1 ? -1 : 1, c = Math.cos(lead.hd), s = Math.sin(lead.hd), tx = lead.x - c * 30 - s * side * 26, ty = lead.y - s * 30 + c * side * 26, d = Math.hypot(tx - p.x, ty - p.y);
+      want = d > 8 ? Math.atan2(ty - p.y, tx - p.x) : lead.hd; p.v = lead.v + clamp((d - 6) * 3, -120, 200); p.firing = lead.st === 1;
+    } else {
+      if (p.st !== 1) { const [ax, ay] = zone(pi, np, 1.25); want = Math.atan2(ay - p.y, ax - p.x); p.v = 330;
+        if (Math.hypot(ax - p.x, ay - p.y) < 170) { const e = nearest(S, p.x, p.y, 400); if (e) { p.st = 1; p.lock = Math.atan2(e.y - p.y, e.x - p.x); p.tt = Math.hypot(e.x - p.x, e.y - p.y) / 450 + .6; } } }
+      else { want = p.lock; p.v = 450; p.tt -= dt; if (p.tt <= 0) p.st = 0; }
+      p.firing = p.st === 1;
+    }
+    let d = want - p.hd; d = Math.atan2(Math.sin(d), Math.cos(d)); p.hd += clamp(d, -dt * 2.8, dt * 2.8);
+    p.x += Math.cos(p.hd) * p.v * dt; p.y += Math.sin(p.hd) * p.v * dt;
+    p.cd -= dt; if (p.firing && p.cd <= 0) { S.shots.push({ x: p.x, y: p.y, vx: Math.cos(p.hd) * 820, vy: Math.sin(p.hd) * 820, kind: 0, t: .7 }); p.cd = .1; }
   });
   S.acd = (S.acd || 0) - dt; if (S.acd <= 0) { const e = nearest(S, S.fx, S.fy, 360); if (e) { shoot(S, S.fx, S.fy, e, 0); S.acd = .35; } }
   // boucliers : recharge après 3 s sans coup, réparation, flash
@@ -228,6 +253,9 @@ function fire(S, p) {
 }
 
 /* ==================== dessin (style Nebula) ==================== */
+NV.SHIPS.drone1 = () => { const B = NV.builder(20, 22), x = 10, y = 9;
+  B.poly([[x, y - 7], [x + 6, y + 5], [x + 2, y + 3], [x, y + 6], [x - 2, y + 3], [x - 6, y + 5]], 3.2, 1.4, 'hull2'); B.dome(x, y, 1.7, 1.7, 3, 4.4, 'amber');
+  return NV.render(B.engines([[x, y + 6, 1.8]]), { seed: 4 }); };
 const BG = NV.space(41, [40, 70, 150, 120, 60, 160], null, 2), ROCKS = [0, 1, 2].map(i => NV.rock(64, 70 + i));
 const EN = ['intercepteur', 'harponneur', 'croiseur'], ESZ = [34, 44, 100];
 const SMALL = EN.map((k, i) => { const s = NV.get(k), sc = ESZ[i] / s.h, [c, cg] = NV.mk(Math.ceil(s.w * sc) + 2, Math.ceil(s.h * sc) + 2); cg.imageSmoothingQuality = 'high'; cg.drawImage(s.img, 1, 1, s.w * sc, s.h * sc); return c; });
@@ -249,13 +277,12 @@ function drawShip(g, o, t, mode) {
     const r = T.sz * .62 + 4; for (let i = 0; i <= 6; i++) { const a = i / 6 * TAU + .5; i ? g.lineTo(o.x + Math.cos(a) * r, o.y + Math.sin(a) * r) : g.moveTo(o.x + Math.cos(a) * r, o.y + Math.sin(a) * r); } g.stroke(); g.restore(); }
   // arcs de vie
   if (mode && o.k !== 'amiral') {
-    const sMax = o.k === 'chasseur' ? 6 : 24;
     if (!(o.hp >= o.max * .95 && o.sh >= (o.sMaxNow || 0) * .95)) {
       const r = T.sz * .5 + 6, a0 = -Math.PI / 2, lw = mode === 1 ? 4 : 2.5;
       g.save(); g.lineCap = 'round'; g.globalAlpha = mode === 1 ? .95 : .75;
       g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = lw + 2; g.beginPath(); g.arc(o.x, o.y, r, 0, TAU); g.stroke();
       g.strokeStyle = hullCol(low); g.lineWidth = lw; g.beginPath(); g.arc(o.x, o.y, r, a0, a0 + TAU * low); g.stroke();
-      if (o.sh > 0) { g.strokeStyle = '#6cc8ff'; g.lineWidth = lw * .8; g.beginPath(); g.arc(o.x, o.y, r + lw + 2, a0, a0 + TAU * o.sh / sMax); g.stroke(); }
+      if (o.sh > 0) { g.strokeStyle = '#6cc8ff'; g.lineWidth = lw * .8; g.beginPath(); g.arc(o.x, o.y, r + lw + 2, a0, a0 + TAU * o.sh / (small(o.k) ? 6 : 24)); g.stroke(); }
       g.restore();
     }
   }
@@ -278,7 +305,7 @@ function render(g, S, t, mode) {
   // fumée des vaisseaux abîmés
   for (const p of S.smoke) { const a = 1 - p.t / 1.2; g.fillStyle = `rgba(120,115,110,${a * .45})`; g.beginPath(); g.arc(p.x, p.y - p.t * 10, p.r + p.t * 12, 0, TAU); g.fill(); }
   for (const o of all(S)) o.sMaxNow = shMax(S, o);
-  for (const o of [...S.esc, ...S.ch.filter(c => c.on)]) drawShip(g, o, t, mode === 0 ? 1 : mode === 2 ? 2 : 0);
+  for (const o of [...S.esc, ...S.dr.filter(c => c.on), ...S.fi.filter(c => c.on)]) drawShip(g, o, t, mode === 0 ? 1 : mode === 2 ? 2 : 0);
   drawShip(g, S.amiral, t, 0);
   g.globalCompositeOperation = 'lighter';
   for (const b of S.shots) { const sp = Math.hypot(b.vx, b.vy), ux = b.vx / sp, uy = b.vy / sp;
@@ -311,18 +338,18 @@ function hud(g, S, t, mode) {
   g.strokeStyle = 'rgba(160,200,255,.4)'; g.lineWidth = 1.5; g.strokeRect(bx, by + 2, bw, 12);
   // portraits
   if (mode > 0) {
-    const list = [...S.esc, 'ch'], n = list.length, pw = 54, gap = 6, x0 = W / 2 - (n * pw + (n - 1) * gap) / 2, py = 92;
+    const list = [...S.esc, ...(S.cfg.dr ? ['drone'] : []), ...(S.cfg.fi ? ['chasseur'] : [])], n = list.length, pw = n > 8 ? 50 : 54, gap = n > 8 ? 5 : 6, x0 = W / 2 - (n * pw + (n - 1) * gap) / 2, py = 92;
     list.forEach((o, i) => {
       const x = x0 + i * (pw + gap);
       g.fillStyle = 'rgba(8,16,32,.78)'; rr(g, x, py, pw, 62, 8); g.fill();
-      if (o === 'ch') {
-        g.drawImage(PORTRAIT.chasseur, x + 7, py + 2); const on = S.ch.filter(c => c.on), up = on.filter(c => !c.dead).length;
+      if (typeof o === 'string') {
+        g.drawImage(PORTRAIT[o], x + pw / 2 - 20, py + 2); const on = (o === 'drone' ? S.dr : S.fi).filter(c => c.on), up = on.filter(c => !c.dead).length;
         g.fillStyle = '#e8f2ff'; g.font = FONT.s; g.textAlign = 'right'; g.fillText('x' + up, x + pw - 4, py + 4);
-        for (let k = 0; k < 8; k++) { g.fillStyle = k >= on.length ? 'rgba(255,255,255,.12)' : on[k].dead ? '#ff4a3a' : '#5ee07a'; g.fillRect(x + 4 + k * 6, py + 50, 5, 6); }
+        for (let k = 0; k < 8; k++) { g.fillStyle = k >= on.length ? 'rgba(255,255,255,.12)' : on[k].dead ? '#ff4a3a' : '#5ee07a'; g.fillRect(x + 4 + k * (pw - 8) / 8, py + 50, (pw - 8) / 8 - 1, 6); }
         g.strokeStyle = '#3a5478'; g.lineWidth = 1.5; rr(g, x, py, pw, 62, 8); g.stroke(); return;
       }
       const low = o.hp / o.max, blink = !o.dead && low < .25 && Math.sin(t * 18) > 0;
-      g.globalAlpha = o.dead ? .35 : 1; g.drawImage(PORTRAIT[o.k], x + 7, py + 2); g.globalAlpha = 1;
+      g.globalAlpha = o.dead ? .35 : 1; g.drawImage(PORTRAIT[o.k], x + pw / 2 - 20, py + 2); g.globalAlpha = 1;
       if (o.dead) {
         g.strokeStyle = '#ff4a3a'; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 10, py + 8); g.lineTo(x + pw - 10, py + 40); g.moveTo(x + pw - 10, py + 8); g.lineTo(x + 10, py + 40); g.stroke();
         g.fillStyle = '#ffcf70'; g.font = FONT.s; g.textAlign = 'center'; g.fillText(o.k === 'bouclier' ? '120' : '80', x + pw / 2, py + 44);
@@ -356,8 +383,10 @@ function hud(g, S, t, mode) {
 }
 
 /* ==================== boucle ==================== */
-const PHONES = [['t1', 3, 0], ['t2', 5, 1], ['t3', 7, 2]].map(([id, seed, mode]) => {
-  const el = document.getElementById(id), cv = el.querySelector('canvas'), g = cv.getContext('2d'), S = makeSim(seed), P = { g, S, mode, vis: true };
+const VIE = [['VIE : AUTOUR', 0], ['VIE : EN HAUT', 1], ['VIE : LES DEUX', 2]];
+const PHONES = [['t1', 'b1', 3, { dr: 1 }], ['t2', 'b2', 5, { fi: 1 }], ['t3', 'b3', 7, { dr: 1, fi: 1 }]].map(([id, bid, seed, cfg]) => {
+  const el = document.getElementById(id), cv = el.querySelector('canvas'), g = cv.getContext('2d'), S = makeSim(seed, cfg), P = { g, S, mode: 2, vis: true }, btn = document.getElementById(bid);
+  btn.addEventListener('click', () => { P.mode = (P.mode + 1) % 3; btn.textContent = VIE[P.mode][0]; });
   cv.addEventListener('pointerdown', ev => { const r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * W, y = (ev.clientY - r.top) / r.height * H;
     for (let i = 0; i < 4; i++) if (Math.abs(x - iconX(i)) < ICON.w / 2 + 8 && Math.abs(y - ICON.y) < ICON.w / 2 + 14) { S.form = i; S.auto = false; } });
   new IntersectionObserver(es => { P.vis = es[0].isIntersecting; }).observe(el);
