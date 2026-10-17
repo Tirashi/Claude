@@ -475,6 +475,8 @@ const GAMES = [
    d: "Le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour. Trois styles : arcade, cahier ou calculatrice.", tags: ["5 NIVEAUX"]},
   {k: "empilage/index.html", n: "EMPILAGE", s: "EMPILAGE", ic: "stack", fam: "3d", lb: "linear-gradient(#9fd8ff, #ffd6c8)", lt: "#5a46a8", sh: "#f29bc0", rank: "empilage",
    d: "Lâche chaque bloc pile sur la tour : ce qui dépasse tombe. Monte du matin jusqu'à la nuit étoilée, en 3D pastel. Une tour du jour pour toute la famille.", tags: ["3D", "TOUR DU JOUR"]},
+  {k: "yams/index.html", n: "YAMS", s: "YAMS", ic: "des", fam: "3d", lb: "linear-gradient(#f6e1f3, #bfe8d0)", lt: "#6b4a7a", sh: "#e0559a", rank: "yams",
+   d: "Le Yams classique avec de vrais dés en 3D : lance-les d'un geste, garde les bons et remplis les 13 cases de la feuille. Six styles de dés à débloquer, de la taverne à la Lune.", tags: ["3D", "DÉS", "6 STYLES"]},
   {k: "odyssee/index.html", n: "ODYSSEE", s: "ODYSSEE", ic: "galere", fam: "3d", lb: "linear-gradient(#9fdcff, #1fb0c9)", lt: "#13506e", sh: "#2bb3cf", rank: "odyssee",
    d: "Penche le téléphone pour ramener la galère d'Ulysse de Troie à Ithaque : Polyphème, Éole, Circé, les Sirènes, Charybde et Scylla… 30 plateaux en 3D et un plateau du jour pour toute la famille.", tags: ["3D", "PLATEAU DU JOUR"]},
   {k: "nebula/index.html", n: "NEBULA", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
@@ -496,6 +498,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
   "escadrille/index.html": {added: "2026-10-17", updated: "2026-10-17", genres: ["TACTIQUE"]},
+  "yams/index.html": {added: "2026-10-17", genres: ["HASARD"]},
   "odyssee/index.html": {added: "2026-10-17", genres: ["ADRESSE", "DU JOUR"]},
   "empilage/index.html": {added: "2026-10-16", genres: ["ADRESSE", "DU JOUR"]},
   "calculator/index.html": {added: "2026-10-16", genres: ["CALCUL", "DU JOUR"]},
@@ -519,6 +522,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-17", "Nouveau jeu : Yams, le troisième jeu en 3D. De vrais dés qui roulent et rebondissent, lancés d'un geste ou secoués dans un gobelet, la feuille de marque classique en 13 cases, et six styles de dés à débloquer (taverne, casino de nuit, gros pixels rétro, sur la Lune…)."],
   ["2026-10-17", "Escadrille ! : le hangar et trois escadrilles à débloquer (Furtif, Hélices, Canonnière), un sol différent à chaque partie, et les pilotes abattus sautent en parachute."],
   ["2026-10-17", "Nouveau jeu : Escadrille !, la petite sœur d'Amiral ! dans le ciel. Quatre avions à pouvoirs (radar, bombes en croix, missile, esquive de l'hélicoptère) sur un ciel de 9 × 9, contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As."],
   ["2026-10-17", "Nouveau jeu : Odyssée, le deuxième jeu en 3D. Penche le téléphone (ou glisse le doigt) pour ramener la galère d'Ulysse de Troie à Ithaque : 10 épisodes de 3 plateaux, de Polyphème aux Sirènes en passant par Charybde et Scylla, et un plateau du jour pour toute la famille."],
@@ -578,6 +582,7 @@ const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))
 const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
 // ce qui attend d'être repris (null si rien)
 const PROGRESS = {
+  "yams/index.html": () => { const p = rk("yams.partie", null); return p && p.tour < 13 ? `TOUR ${p.tour + 1}/13` : null; },
   "nebula/index.html": () => { const r = rk("nebula.run", null); return r && r.phase !== "end" && !r.training ? `SECTEUR ${r.sector || 1}` : null; },
   "club/index.html": () => { const g = rk("club.save", null); return g && g.week > 1 ? `SEMAINE ${g.week}` : null; },
   "queens/index.html": () => { const r = rk("queens16.dailyRun", null); return r && r.day === dayNum() ? "GRILLE DU JOUR" : null; },
@@ -625,6 +630,7 @@ const RECS = {
     for (const k of Object.keys(b).sort()){ const [m, l, c] = k.split(":"); if (m === "serie" && b[k] > 0) out.push([`Série de 20 · niv. ${l} · ${nm[c] || c}`, mmss(b[k])]); }
     for (const k of Object.keys(b).sort()){ const [m, l, c] = k.split(":"); if (m === "chrono" && b[k] > 0) out.push([`60 s · niv. ${l} · ${nm[c] || c}`, num(b[k], "bonnes")]); }
     return out.slice(0, 8).concat([["Calculs du jour", num(count(rk("calculator.daily", {})))], ["Parties jouées", num(rk("calculator.parties", 0))]]); },
+  "yams/index.html": () => [["Meilleur score", num(rk("yams.best", 0), "pts")], ["Yams inscrits", num(rk("yams.nbYams", 0))], ["Parties jouées", num(rk("yams.parties", 0))]],
   "empilage/index.html": () => [["Plus haute tour", num(rk("empilage.best", 0), "blocs")], ["Tours du jour", num(count(rk("empilage.daily", {})))], ["Parties jouées", num(rk("empilage.parties", 0))]],
   "nebula/index.html": () => { const m = rk("nebula.meta", {}) || {}; return [["Meilleur score", num(rk("nebula.best", 0), "pts")], ["Victoires", num(m.wins)], ["Parties jouées", num(m.games)]]; },
 };
@@ -850,6 +856,7 @@ const RANKS = {
      note: "Score d'une mission : à chaque site, (100 + carburant restant) × le multiplicateur de l'aire."},
     {label: "MISSION DU JOUR", ctl: ["day"], game: "alunissage", board: daily, fmt: v => N(v) + " pts",
      title: () => "MISSION DU JOUR", note: "La même suite de sites pour toute la famille. Seule la première mission du jour est classée.", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}],
+  yams: [{label: "MEILLEUR SCORE", game: "yams", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEUR SCORE"}],
   empilage: [{label: "PLUS HAUTE TOUR", game: "empilage", board: () => "best", fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "PLUS HAUTE TOUR"},
     {label: "TOUR DU JOUR", ctl: ["day"], game: "empilage", board: daily, fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "TOUR DU JOUR",
      note: "Les mêmes vitesses et les mêmes départs pour toute la famille. Seule la première tour du jour est classée.",
@@ -1210,6 +1217,8 @@ function collectSaves(){
   if (nb.b || (nb.m && nb.m.games)) g.nebula = nb;
   const em = {b: Number(readKey("empilage.best", 0)) || 0, p: Number(readKey("empilage.parties", 0)) || 0, d: readKey("empilage.daily", {}) || {}};
   if (em.b || em.p) g.empilage = em;
+  const ya = {b: Number(readKey("yams.best", 0)) || 0, p: Number(readKey("yams.parties", 0)) || 0, y: Number(readKey("yams.nbYams", 0)) || 0, o: Number(readKey("yams.bonus", 0)) || 0};
+  if (ya.b || ya.p) g.yams = ya;
   const od = {s: readKey("odyssee.stars", {}) || {}, b: readKey("odyssee.best", {}) || {}, d: readKey("odyssee.daily", {}) || {}};
   if (Object.keys(od.s).length || Object.keys(od.d).length) g.odyssee = od;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
@@ -1236,6 +1245,7 @@ function describeSaves(g){
   if (g.sudoku){ const p = g.sudoku, nm = {"4": "4×4", "6": "6×6", "9-1": "9×9 facile", "9-2": "9×9 moyen", "9-3": "9×9 difficile"};
     const b = Object.keys(nm).filter(k => (p.b || {})[k] > 0).map(k => `${nm[k]} en ${fmtTime(p.b[k])}`);
     out.push(`Sudoku : ${p.w || 0} grille${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
+  if (g.yams) out.push(`Yams : record ${g.yams.b || 0} pts, ${g.yams.p || 0} partie${g.yams.p > 1 ? "s" : ""}`);
   if (g.empilage) out.push(`Empilage : record ${g.empilage.b || 0} bloc${g.empilage.b > 1 ? "s" : ""}, ${g.empilage.p || 0} partie${g.empilage.p > 1 ? "s" : ""}`);
   if (g.calculator){ const p = g.calculator; out.push(`Calculator : ${p.p || 0} partie${p.p > 1 ? "s" : ""}, ${Object.keys(p.b || {}).length} record${Object.keys(p.b || {}).length > 1 ? "s" : ""}`); }
   if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
@@ -1346,6 +1356,12 @@ function mergeSaves(g){
     const daily = readKey("alunissage.daily", {}) || {};
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
     if (n){ writeKey("alunissage.daily", daily); done.push(`Alunissage : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.yams && typeof g.yams === "object"){
+    const a = g.yams; let n = 0;
+    if (a.b > (Number(readKey("yams.best", 0)) || 0)){ writeKey("yams.best", Math.round(a.b)); n++; }
+    [["p", "parties"], ["y", "nbYams"], ["o", "bonus"]].forEach(([c, k]) => { if (a[c] > (Number(readKey("yams." + k, 0)) || 0)) writeKey("yams." + k, Math.round(a[c])); });
+    if (n) done.push("Yams : record");
   }
   if (g.empilage && typeof g.empilage === "object"){
     const a = g.empilage; let n = 0;
