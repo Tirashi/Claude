@@ -1,0 +1,178 @@
+<title>Yams 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
+<style>
+/* Trois styles de Yams en 3D, chacun avec de vrais dés qui roulent (Three.js + cannon.js).
+   Page sombre volontairement, comme les autres maquettes de la Ludothèque. */
+:root{ --fond:#120f14; --texte:#f3eef6; --doux:#b4a9bd; --or:#f5c542; --cadre:#050405; color-scheme:dark;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif; }
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:68ch}
+header b{color:var(--texte);font-weight:600}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:36px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.tel{width:100%;max-width:300px;aspect-ratio:272/520;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 10px 30px #0008}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 8px;font-family:var(--f-titre);font-size:9px;letter-spacing:.04em;position:relative;z-index:2}
+.ecran{flex:1;position:relative;min-height:0;touch-action:none;user-select:none;-webkit-user-select:none}
+.ecran canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+.combi{position:absolute;left:0;right:0;top:10px;text-align:center;font-family:var(--f-titre);font-size:12px;pointer-events:none;transition:transform .2s;z-index:2}
+.combi.pop{transform:scale(1.25)}
+.aide{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-family:var(--f-titre);font-size:8px;line-height:1.7;pointer-events:none;opacity:.85;z-index:2}
+.bas{display:flex;justify-content:center;padding:8px 12px 14px;position:relative;z-index:2}
+.bas button{font-family:var(--f-titre);font-size:9px;padding:10px 14px;border:0;cursor:pointer}
+.bas button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;margin:0;color:var(--or);text-align:center}
+.dir p{margin:0;color:var(--doux);font-size:15px;max-width:34ch}
+.dir ul{margin:0;padding-left:18px;color:var(--doux);font-size:14px;max-width:34ch}
+.dir li b{color:var(--texte);font-weight:600}
+.A .tel{background:#1a100a}.A .hud,.A .combi,.A .aide{color:#ffd08a}.A .bas button{background:#5a3418;color:#ffd08a;box-shadow:inset 0 -3px 0 #0008}
+.B .tel{background:linear-gradient(#f6e1f3,#dcecfb)}.B .hud,.B .combi,.B .aide{color:#7a4f8c;font-family:var(--f-texte);font-weight:600}.B .hud{font-size:14px}.B .combi{font-size:22px}.B .aide{font-size:13px}
+.B .bas button{background:#fff;color:#7a4f8c;border-radius:14px;box-shadow:0 3px 0 #d3b2e0;font-family:var(--f-texte);font-size:15px;font-weight:600}
+.C .tel{background:#070a1c}.C .hud{color:#7af0ff;text-shadow:0 0 6px #22d3ee}.C .combi{color:#ff5fa8;text-shadow:0 0 8px #ff2d87}.C .aide{color:#7af0ff}
+.C .bas button{background:transparent;color:#ff5fa8;border:2px solid #ff5fa8;box-shadow:0 0 10px #ff2d8788,inset 0 0 10px #ff2d8744}
+@media (prefers-reduced-motion:reduce){.combi{transition:none}}
+</style>
+
+<div class="page">
+<header>
+  <h1>YAMS</h1>
+  <p>Ici, la 3D sert au jeu : <b>on lance de vrais dés d'un geste</b>, ils roulent, rebondissent sur les bords et se cognent entre eux. Le résultat dépend du lancer, pas d'un tirage caché.</p>
+  <p>Jouable : lancer, puis <b>toucher un dé pour le garder</b> (il va sur le côté), relancer les autres, trois lancers par tour. La combinaison s'affiche en haut. Les trois styles n'ont pas le même geste, pour comparer les deux.</p>
+</header>
+<div class="grille">
+  <section class="dir A">
+    <div class="tel"><div class="hud"><span class="l">LANCER 0/3</span><span class="s">TOTAL 0</span></div><div class="ecran"><div class="combi"></div><div class="aide"></div></div><div class="bas"><button>NOUVEAU TOUR</button></div></div>
+    <h2>A · LA TAVERNE<br>ET LE GOBELET</h2>
+    <p>Dés en os sur une piste de cuir, table en bois, lumière d'une bougie. On garde le doigt appuyé pour secouer le gobelet, on lâche pour verser.</p>
+    <ul><li><b>Pour</b> : le geste le plus « vrai », et prépare Le Thé des Jarls.</li><li><b>Contre</b> : sombre, moins d'éclat.</li></ul>
+  </section>
+  <section class="dir B">
+    <div class="tel"><div class="hud"><span class="l">Lancer 0/3</span><span class="s">Total 0</span></div><div class="ecran"><div class="combi"></div><div class="aide"></div></div><div class="bas"><button>Nouveau tour</button></div></div>
+    <h2>B · BONBONS<br>PASTEL</h2>
+    <p>Cinq dés couleur bonbon sur un plateau menthe, lumière douce, dans la famille d'Empilage. On glisse le doigt vers le haut pour lancer : plus le geste est rapide, plus les dés vont loin.</p>
+    <ul><li><b>Pour</b> : gai, très lisible, pour toute la famille.</li><li><b>Contre</b> : moins d'ambiance.</li></ul>
+  </section>
+  <section class="dir C">
+    <div class="tel"><div class="hud"><span class="l">LANCER 0/3</span><span class="s">TOTAL 0</span></div><div class="ecran"><div class="combi"></div><div class="aide"></div></div><div class="bas"><button>NOUVEAU TOUR</button></div></div>
+    <h2>C · CASINO<br>DE NUIT</h2>
+    <p>Dés rouges translucides comme au casino, tapis bleu nuit bordé d'or, néons rose et cyan. Même geste que B.</p>
+    <ul><li><b>Pour</b> : les dés brillent, effet « grand jeu ».</li><li><b>Contre</b> : plus froid, moins familial.</li></ul>
+  </section>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+<script>
+// Faces de la boîte Three.js : +x, -x, +y, -y, +z, -z (les faces opposées font 7)
+const VALEURS=[1,6,2,5,3,4], AXES=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+const PTS={1:[[.5,.5]],2:[[.27,.27],[.73,.73]],3:[[.27,.27],[.5,.5],[.73,.73]],4:[[.27,.27],[.73,.27],[.27,.73],[.73,.73]],5:[[.27,.27],[.73,.27],[.5,.5],[.27,.73],[.73,.73]],6:[[.27,.25],[.73,.25],[.27,.5],[.73,.5],[.27,.75],[.73,.75]]};
+const X0=-3,X1=3,Z0=-4.6,Z1=2.3,ZG=3.35; // piste de lancer, rangée des dés gardés
+
+function face(n,fond,pt,bord){const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d");
+  g.fillStyle=bord;g.fillRect(0,0,128,128);g.fillStyle=fond;g.beginPath();g.roundRect?g.roundRect(4,4,120,120,26):g.rect(4,4,120,120);g.fill();
+  g.fillStyle=pt;PTS[n].forEach(([x,y])=>{g.beginPath();g.arc(x*128,y*128,n===1?15:12,0,7);g.fill();});
+  const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;}
+function bois(a,b){const c=document.createElement("canvas");c.width=256;c.height=256;const g=c.getContext("2d");g.fillStyle=a;g.fillRect(0,0,256,256);
+  for(let i=0;i<8;i++){g.fillStyle=b;g.fillRect(0,i*32,256,2);for(let j=0;j<40;j++){g.globalAlpha=.25;g.fillRect(Math.random()*256,i*32+Math.random()*30,30+Math.random()*60,1);}g.globalAlpha=1;}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);return t;}
+function combinaison(v){const n=[0,0,0,0,0,0,0];v.forEach(x=>n[x]++);const c=n.slice(1).sort((a,b)=>b-a),s=new Set(v),suite=k=>[[1,2,3,4,5],[2,3,4,5,6],[1,2,3,4],[2,3,4,5],[3,4,5,6]].filter(q=>q.length===k).some(q=>q.every(x=>s.has(x)));
+  if(c[0]===5)return["YAMS !","Yams !"];if(c[0]===4)return["CARRE","Carré"];if(c[0]===3&&c[1]===2)return["FULL","Full"];
+  if(suite(5))return["GRANDE SUITE","Grande suite"];if(suite(4))return["PETITE SUITE","Petite suite"];if(c[0]===3)return["BRELAN","Brelan"];
+  if(c[0]===2&&c[1]===2)return["DEUX PAIRES","Deux paires"];if(c[0]===2)return["PAIRE","Paire"];return["CHANCE","Chance"];}
+
+const STYLES={
+  A:{geste:"gobelet",fond:0x1a100a,table:()=>new THREE.MeshStandardMaterial({map:bois("#6b3f1e","#4a2a12"),roughness:.8}),piste:0x7a2f1c,bord:0x3d230f,garde:0x5a3418,
+     des:()=>Array(5).fill(["#efe4c8","#3a2414","#cbbd9c"]),mat:{roughness:.55},
+     lumieres(s){s.add(new THREE.AmbientLight(0x553322,.7));const l=new THREE.PointLight(0xffb060,1.6,40,1.5);l.position.set(-2.6,5,-1);l.castShadow=true;l.shadow.mapSize.set(512,512);s.add(l);
+       const b=new THREE.Mesh(new THREE.CylinderGeometry(.22,.25,1,12),new THREE.MeshStandardMaterial({color:0xf2e6c9,emissive:0x332211}));b.position.set(-3.6,.5,-4.4);s.add(b);
+       const f=new THREE.Mesh(new THREE.SphereGeometry(.12,8,8),new THREE.MeshBasicMaterial({color:0xffd27a}));f.scale.y=1.8;f.position.set(-3.6,1.15,-4.4);s.add(f);
+       return t=>{l.intensity=1.5+Math.sin(t*9)*.12+Math.sin(t*23)*.08;f.scale.y=1.8+Math.sin(t*17)*.2;};},
+     texte:0, aide:"MAINTIENS LE DOIGT<br>POUR SECOUER LE GOBELET"},
+  B:{geste:"glisser",fond:0xeee3f7,table:()=>new THREE.MeshStandardMaterial({color:0xf3e6f7,roughness:1}),piste:0x9ed9b8,bord:0xf7dcc0,garde:0xffe9c4,
+     des:()=>[["#ff9ec1","#fff","#f07aa5"],["#9fd8ff","#fff","#72bdf0"],["#ffd36b","#fff","#f0b440"],["#b9f0a6","#fff","#8fd67a"],["#d2b4ff","#fff","#b08ef0"]],mat:{roughness:.35},
+     lumieres(s){s.add(new THREE.HemisphereLight(0xffffff,0xb8a8d8,.5));const d=new THREE.DirectionalLight(0xffffff,.55);d.position.set(3,10,4);d.castShadow=true;Object.assign(d.shadow.camera,{left:-6,right:6,top:6,bottom:-6});d.shadow.mapSize.set(1024,1024);s.add(d);return null;},
+     texte:1, aide:"Glisse le doigt vers le haut pour lancer"},
+  C:{geste:"glisser",fond:0x070a1c,table:()=>new THREE.MeshStandardMaterial({color:0x0b1030,roughness:.9}),piste:0x123a6b,bord:0xc99a2e,garde:0x0d1a3a,
+     des:()=>Array(5).fill(["#d8142b","#ffffff","#a00c1e"]),mat:{roughness:.12,metalness:.1,transparent:true,opacity:.88},
+     lumieres(s){s.add(new THREE.AmbientLight(0x334466,.6));const d=new THREE.DirectionalLight(0xffffff,.7);d.position.set(2,10,3);d.castShadow=true;Object.assign(d.shadow.camera,{left:-6,right:6,top:6,bottom:-6});s.add(d);
+       const r=new THREE.PointLight(0xff2d87,1.4,18);r.position.set(-4,3,-3);s.add(r);const c=new THREE.PointLight(0x22d3ee,1.4,18);c.position.set(4,3,1);s.add(c);
+       return t=>{r.intensity=1.2+Math.sin(t*2)*.3;c.intensity=1.2+Math.cos(t*2)*.3;};},
+     texte:0, aide:"GLISSE VERS LE HAUT<br>POUR LANCER"}
+};
+
+function Table(sec,cle){
+  const st=STYLES[cle],ecran=sec.querySelector(".ecran"),combiEl=sec.querySelector(".combi"),aideEl=sec.querySelector(".aide"),lEl=sec.querySelector(".l"),sEl=sec.querySelector(".s");
+  const rendu=new THREE.WebGLRenderer({antialias:true});rendu.setPixelRatio(Math.min(devicePixelRatio,2));rendu.shadowMap.enabled=true;rendu.setClearColor(st.fond);ecran.prepend(rendu.domElement);
+  const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(42,.6,.1,100);cam.position.set(0,13.5,6.2);cam.lookAt(0,0,-.9);
+  const anime=st.lumieres(scene);
+  // décor : table, piste, bords, rangée des dés gardés
+  const sol=new THREE.Mesh(new THREE.PlaneGeometry(30,30),st.table());sol.rotation.x=-Math.PI/2;sol.position.y=-.02;sol.receiveShadow=true;scene.add(sol);
+  const piste=new THREE.Mesh(new THREE.PlaneGeometry(X1-X0,Z1-Z0),new THREE.MeshStandardMaterial({color:st.piste,roughness:.95}));piste.rotation.x=-Math.PI/2;piste.position.set(0,0,(Z0+Z1)/2);piste.receiveShadow=true;scene.add(piste);
+  const mb=new THREE.MeshStandardMaterial({color:st.bord,roughness:.5,metalness:cle==="C"?.7:0});
+  [[X0-.15,(Z0+Z1)/2,.3,Z1-Z0+.6],[X1+.15,(Z0+Z1)/2,.3,Z1-Z0+.6],[0,Z0-.15,X1-X0,.3],[0,Z1+.15,X1-X0,.3]].forEach(([x,z,w,d])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,.7,d),mb);m.position.set(x,.35,z);m.castShadow=m.receiveShadow=true;scene.add(m);});
+  const gm=new THREE.Mesh(new THREE.BoxGeometry(X1-X0+.6,.1,1.35),new THREE.MeshStandardMaterial({color:st.garde,roughness:.8}));gm.position.set(0,.05,ZG);gm.receiveShadow=true;scene.add(gm);
+  // physique
+  const monde=new CANNON.World();monde.gravity.set(0,-32,0);monde.broadphase=new CANNON.NaiveBroadphase();monde.solver.iterations=12;monde.allowSleep=false;
+  const mDe=new CANNON.Material(),mSol=new CANNON.Material();monde.addContactMaterial(new CANNON.ContactMaterial(mDe,mSol,{friction:.35,restitution:.35}));monde.addContactMaterial(new CANNON.ContactMaterial(mDe,mDe,{friction:.2,restitution:.4}));
+  const plan=(x,y,z,ax,ang)=>{const b=new CANNON.Body({mass:0,material:mSol});b.addShape(new CANNON.Plane());b.position.set(x,y,z);b.quaternion.setFromAxisAngle(new CANNON.Vec3(...ax),ang);monde.addBody(b);};
+  plan(0,0,0,[1,0,0],-Math.PI/2);plan(X0,0,0,[0,1,0],Math.PI/2);plan(X1,0,0,[0,1,0],-Math.PI/2);plan(0,0,Z0,[0,1,0],0);plan(0,0,Z1,[0,1,0],Math.PI);
+  const enleve=b=>{if(b.world)(monde.removeBody||monde.remove).call(monde,b);};
+  // les cinq dés
+  const des=st.des().map(([f,p,b],i)=>{const mats=VALEURS.map(n=>new THREE.MeshStandardMaterial(Object.assign({map:face(n,f,p,b)},st.mat)));
+    const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),mats);m.castShadow=true;scene.add(m);
+    const corps=new CANNON.Body({mass:1,material:mDe,shape:new CANNON.Box(new CANNON.Vec3(.5,.5,.5))});return{m,corps,garde:false,i,cible:null};});
+  function poser(d,x,z,val){d.m.position.set(x,.5,z);d.m.quaternion.setFromUnitVectors(new THREE.Vector3(...AXES[VALEURS.indexOf(val)]),new THREE.Vector3(0,1,0));d.m.rotateY(Math.random()*.4-.2);
+    d.corps.position.copy(d.m.position);d.corps.quaternion.copy(d.m.quaternion);d.corps.velocity.set(0,0,0);d.corps.angularVelocity.set(0,0,0);}
+  const valeur=d=>{let best=-2,v=1;AXES.forEach((a,i)=>{const y=new THREE.Vector3(...a).applyQuaternion(d.m.quaternion).y;if(y>best){best=y;v=VALEURS[i];}});return v;};
+  // gobelet (style A)
+  let gob=null;if(st.geste==="gobelet"){gob=new THREE.Group();const cuir=new THREE.MeshStandardMaterial({color:0x5a2e14,roughness:.7,side:THREE.DoubleSide});
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(1.15,.95,2.2,20,1,true),cuir);c.castShadow=true;gob.add(c);const f=new THREE.Mesh(new THREE.CircleGeometry(.95,20),cuir);f.rotation.x=Math.PI/2;f.position.y=-1.1;gob.add(f);
+    const r=new THREE.Mesh(new THREE.TorusGeometry(1.15,.08,6,24),new THREE.MeshStandardMaterial({color:0xc9a050,metalness:.6,roughness:.4}));r.rotation.x=Math.PI/2;r.position.y=1.1;gob.add(r);
+    gob.position.set(0,1.6,1.2);gob.visible=false;scene.add(gob);}
+
+  let lancers=0,etat="pret",calme=0,tLance=0,secoue=0,verse=-1;
+  function hud(){lEl.textContent=(st.texte?"Lancer ":"LANCER ")+lancers+"/3";const v=des.map(valeur);sEl.textContent=(st.texte?"Total ":"TOTAL ")+(lancers?v.reduce((a,b)=>a+b,0):0);}
+  function montreCombi(){const v=des.map(valeur),c=combinaison(v);combiEl.textContent=c[st.texte];combiEl.classList.add("pop");setTimeout(()=>combiEl.classList.remove("pop"),220);
+    aideEl.innerHTML=lancers<3?(st.texte?"Touche un dé pour le garder, puis relance":"TOUCHE UN DE POUR LE GARDER<br>PUIS RELANCE"):(st.texte?"Fin du tour":"FIN DU TOUR");hud();}
+  function nouveauTour(){lancers=0;etat="pret";des.forEach((d,i)=>{d.garde=false;d.cible=null;enleve(d.corps);d.m.visible=true;poser(d,-2.2+i*1.1,.6,1+((i*7+Date.now())%6|0));monde.addBody(d.corps);});
+    combiEl.textContent="";aideEl.innerHTML=st.aide;hud();}
+  function lance(force,dx){const libres=des.filter(d=>!d.garde);if(!libres.length||lancers>=3)return;lancers++;etat="roule";calme=0;tLance=performance.now();combiEl.textContent="";aideEl.innerHTML="";
+    libres.forEach((d,k)=>{enleve(d.corps);d.m.visible=true;const x=(k-(libres.length-1)/2)*1.15+(gob?0:dx*.3);
+      d.corps.position.set(Math.max(X0+.6,Math.min(X1-.6,x)),gob?2.2:1.2,(gob?1.0:1.6)-(k%2)*.5);d.corps.quaternion.setFromEuler(Math.random()*6,Math.random()*6,Math.random()*6);
+      d.corps.velocity.set(dx*1.5+(Math.random()-.5)*3,gob?1:2.5,-force*(.85+Math.random()*.3));d.corps.angularVelocity.set((Math.random()-.5)*30,(Math.random()-.5)*30,(Math.random()-.5)*30);monde.addBody(d.corps);});hud();}
+  function bascule(d){d.garde=!d.garde;if(d.garde){enleve(d.corps);const n=des.filter(x=>x.garde&&x!==d).length;d.cible=new THREE.Vector3(-2.4+n*1.2,.6,ZG);}
+    else{d.cible=null;const n=des.filter(x=>!x.garde&&x!==d).length;d.m.position.set(-2.2+n*1.1,.5,.9);d.corps.position.copy(d.m.position);d.corps.quaternion.copy(d.m.quaternion);d.corps.velocity.set(0,0,0);d.corps.angularVelocity.set(0,0,0);monde.addBody(d.corps);}
+    des.filter(x=>x.garde).forEach((x,k)=>x.cible=new THREE.Vector3(-2.4+k*1.2,.6,ZG));}
+  // toucher et gestes
+  const ray=new THREE.Raycaster();let dep=null;
+  function deSous(e){const r=rendu.domElement.getBoundingClientRect();ray.setFromCamera({x:(e.clientX-r.left)/r.width*2-1,y:-(e.clientY-r.top)/r.height*2+1},cam);const h=ray.intersectObjects(des.map(d=>d.m));return h.length?des.find(d=>d.m===h[0].object):null;}
+  ecran.addEventListener("pointerdown",e=>{if(etat==="roule")return;dep={x:e.clientX,y:e.clientY,t:performance.now(),de:lancers>0?deSous(e):null};
+    if(gob&&!dep.de&&lancers<3&&des.some(d=>!d.garde)){etat="secoue";secoue=performance.now();gob.visible=true;gob.rotation.set(0,0,0);des.filter(d=>!d.garde).forEach(d=>{d.m.visible=false;enleve(d.corps);});}});
+  ecran.addEventListener("pointerup",e=>{if(!dep)return;const dx=e.clientX-dep.x,dy=e.clientY-dep.y,dt=Math.max(30,performance.now()-dep.t);
+    if(etat==="secoue"){etat="verse";verse=performance.now();dep=null;return;}
+    if(dep.de&&Math.hypot(dx,dy)<14&&etat==="pret"){bascule(dep.de);}
+    else if(!gob&&dy<-30&&etat==="pret"){const v=-dy/dt;lance(Math.min(22,7+v*9),dx/Math.max(40,-dy));}
+    dep=null;});
+  ecran.addEventListener("pointercancel",()=>{dep=null;if(etat==="secoue"){etat="verse";verse=performance.now();}});
+  sec.querySelector(".bas button").onclick=nouveauTour;
+
+  function taille(){const r=ecran.getBoundingClientRect();if(!r.width)return;rendu.setSize(r.width,r.height,false);cam.aspect=r.width/r.height;cam.fov=cam.aspect<.62?44:40;cam.updateProjectionMatrix();}
+  new ResizeObserver(taille).observe(ecran);taille();
+  let prec=performance.now();
+  function boucle(now){const dt=Math.min(.05,(now-prec)/1000);prec=now;const t=now/1000;if(anime)anime(t);
+    if(etat==="secoue"){const k=(now-secoue)/1000;gob.position.set(Math.sin(k*38)*.25,1.6+Math.abs(Math.sin(k*30))*.2,1.2+Math.cos(k*31)*.15);gob.rotation.z=Math.sin(k*40)*.12;}
+    if(etat==="verse"){const k=Math.min(1,(now-verse)/220);gob.rotation.x=-k*1.9;gob.position.set(0,1.6+k*.5,1.2-k*.4);if(k>=1){gob.visible=false;etat="pret";lance(13+Math.min(6,(now-secoue)/400),0);}}
+    if(etat==="roule"){monde.step(1/60,dt,4);const lent=des.every(d=>d.garde||(d.corps.velocity.length()<.08&&d.corps.angularVelocity.length()<.1));calme=lent?calme+1:0;
+      if(calme>18||now-tLance>6000){// un dé resté de travers contre un bord : petite pichenette
+        const travers=des.find(d=>!d.garde&&Math.max(...AXES.map(a=>new THREE.Vector3(...a).applyQuaternion(d.m.quaternion).y))<.95);
+        if(travers&&now-tLance<6000){travers.corps.velocity.set(0,4,0);travers.corps.angularVelocity.set(6,0,4);calme=0;}else{etat="pret";montreCombi();}}}
+    des.forEach(d=>{if(d.cible){d.m.position.lerp(d.cible,Math.min(1,dt*10));}else if(d.corps.world&&etat!=="secoue"){d.m.position.copy(d.corps.position);d.m.quaternion.copy(d.corps.quaternion);}});
+    rendu.render(scene,cam);requestAnimationFrame(boucle);}
+  nouveauTour();requestAnimationFrame(boucle);
+}
+["A","B","C"].forEach(k=>Table(document.querySelector(".dir."+k),k));
+</script>
