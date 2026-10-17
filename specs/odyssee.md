@@ -81,3 +81,20 @@ Décisions et écarts au cahier des charges :
 - Écran titre : le pilote joue les plateaux les uns après les autres derrière le titre.
 
 Reste pour la session 2 : épisodes 5 à 10 (`lumiere` crépuscule et nuit, lanterne, moly, sirènes et bouton « cire », tourbillons et Scylla, courants de Calypso), plateau du jour, classements, accueil (cartouche `3d`), transfert, artefact. Plus tard : sons.
+
+## 11. Bilan de la session 2 (17/10)
+Fait : épisodes 5 à 10 (18 plateaux, 30 en tout), plateau du jour, classements, accueil (cartouche `3d`, icône `galere`, volet, `RECS`, `RANKS`, `META`, `NEWS`), transfert `LUDO1-`, `ludo-scores.js` (`registerExisting`, `PSEUDO_BOARDS`, `SYNC` 14).
+
+Mécaniques ajoutées dans `regles.js` (cases et réglages) :
+- **Circé** (`lourd: true`) : bateau lourd (accélération × 0,5, frottement × 0,75, cochons sur le pont) ; `M` herbe moly (le rend léger, disparaît) ; `C` coupe de Circé (le rend lourd de nouveau). Le pilote passe d'abord par la moly la plus proche (point obligatoire de l'itinéraire) et évite les coupes.
+- **Enfers** : lumière `nuit` (presque noire) ; la lanterne du bateau (lumière ponctuelle de 3,4 cases) éclaire les récifs ; écume, lotus et vents passent en matière éclairée la nuit ; torche au port, phares qui éclairent une fois allumés. Le Styx = courants (`vent: 2.5`).
+- **Sirènes** (`S`) : attirent dans un rayon de 3,2 (force 4,2 au plus, décroissante) ; contact = naufrage. **Cire** : bouton (jauge), 3 s sans attraction, recharge en 7 s. Le pilote met la cire quand le chant tire fort.
+- **Charybde** (`O`) : aspiration et rotation dans un rayon de 1 (force 7), naufrage à moins de 0,22. **Scylla** (`Y`) : cycle de 3,4 s (rides et zone rouge 1,3 s, frappe 0,9 s, rayon 0,8), décalé de 1,7 s d'une tête à l'autre. Le pilote voit les frappes à venir comme des dangers dans le temps et attend son tour.
+- **Calypso** (`courant: true`) : les flèches de vent dessinées en courants bleus ; on part **dans** l'anneau de courants autour de l'île, la sortie est en amont du courant. Les cases qu'on ne peut pas atteindre (dans une île entourée de murets) sont dessinées en terre (sable, herbe, palmiers).
+- **Ithaque** : flèches des prétendants, rochers de Poséidon, puis le plateau final avec vents, lotus, Sirènes, Scylla, tourbillon et deux phares.
+- Lumières ajoutées : `crepuscule` (Circé), `nuit` (Enfers), `soir` (Ithaque) ; décors : palais de Circé et son chaudron, falaises noires et ombres des Enfers, île fleurie des Sirènes, falaises du détroit, grotte et palmiers d'Ogygie, palais d'Ulysse et oliviers.
+- Marges de l'itinéraire réduites près des Sirènes (0,3) et des tourbillons (0,8) : le pilote compense leurs forces (et le vent) ; sinon un couloir de 3 cases était bouché.
+
+**Plateau du jour** : `ODY.jour(AAAAMMJJ)` tire un plateau (sauf 1-1 et 1-2) et, une fois sur deux, le retourne gauche-droite (`variante`) ; les dangers tirent avec la graine de la date, donc les mêmes pour toute la famille. Pas de retournement haut-bas (décor toujours en haut ; 1-2 et 9-2 devenaient impossibles). Score = temps + 5 s par naufrage (`scoreJour`), une seule tentative classée, comptée dès le départ (`odyssee.dailyTry`, règle des missions). `outils/odyssee.js` vérifie que les 28 plateaux du tirage restent faisables en miroir.
+
+Reste : essai sur le téléphone, classement avec un vrai record, sons et musique (plus tard), artefact (lien à créer).

@@ -15,6 +15,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`calculator/index.html`](calculator/index.html) : **Calculator**, le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour, en trois styles (arcade, cahier d'écolier, calculatrice de poche).
 - [`sudoku/index.html`](sudoku/index.html) : **Sudoku**, le jardin des chiffres en 32 bits : grilles 4×4 et 6×6 pour débuter, 9×9 facile, moyen ou difficile, notes au crayon et grille du jour.
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
+- [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
@@ -200,6 +201,17 @@ Rogue-lite tactique dans l'espace, vaisseaux en relief : trois secteurs pirates 
 
 ---
 
+## Odyssée
+
+Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur la mer Égée, de Troie jusqu'à Ithaque.
+
+- **Penche le téléphone** : le plateau penche avec lui et la galère glisse dans la pente. La position du téléphone au départ sert de « plat » (bouton ⟲ À PLAT pour recommencer). Sans capteur, fais glisser le doigt depuis le point touché ; sur ordinateur, les flèches du clavier. Pendant la partie, l'écran reste en portrait.
+- **10 épisodes de 3 plateaux**, sur la carte de l'Égée : Troie (flèches enflammées), les Lotophages (lotus qui collent à la coque), Polyphème (rochers lancés là où va la galère : l'ombre grossit, change de cap !), Éole (vents, puis l'outre qui s'ouvre et fait tourner les vents), Circé (l'équipage en cochons : galère lourde, il faut trouver l'herbe moly et éviter les coupes), les Enfers (nuit noire, seule la lanterne éclaire), les Sirènes (leur chant attire : bouton CIRE pour boucher les oreilles un moment), Charybde et Scylla (tourbillons et têtes qui jaillissent quand l'eau frissonne), Calypso (courants autour de l'île : trouve la sortie), Ithaque (tous les dangers mêlés).
+- Les **récifs** font sombrer la galère : on repart du départ, ou du dernier **phare** allumé.
+- **Trois étoiles** par plateau : une en arrivant au port, deux sans naufrage, trois sans naufrage et sous le temps cible.
+- **Plateau du jour** : le même plateau (parfois en miroir) et les mêmes dangers pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) : le temps, plus 5 secondes par naufrage.
+- Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
+
 ## Empilage
 
 Le premier jeu en 3D de la Ludothèque : une tour de blocs pastel à faire monter le plus haut possible.
@@ -248,7 +260,7 @@ Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
 
 ## Transférer ses sauvegardes
 
-Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Lune-Rover, Pont stellaire, Sudoku, Calculator, Alunissage, Nebula, Empilage), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
+Chaque navigateur garde ses propres sauvegardes : le navigateur intégré de Facebook, Chrome et l'appli installée ne partagent pas forcément les mêmes. Le bouton **Transférer mes sauvegardes**, en bas du menu, copie un code `LUDO1-…` qui contient les sauvegardes de tous les jeux (Picross Dex, Lignée, Queens, Tetris, Snake, Asteroids, Injagility et son mode Parcours, Solitaire, Touché Coulé, Amiral !, le Club d'agility, Orbite, Lune-Rover, Pont stellaire, Sudoku, Calculator, Alunissage, Nebula, Empilage, Odyssée), à coller dans l'autre navigateur. L'import ne supprime rien : il garde le meilleur score ou le meilleur temps de chaque côté. Le Jeu de la Vie n'enregistre rien. Le Picross Dex garde aussi son propre bouton, et les deux formats de code (`LUDO1-` et `PICROSSDEX1-`) sont acceptés aux deux endroits.
 
 ## Classements familiaux
 
@@ -266,6 +278,7 @@ Les classements sont dans le **volet de chaque jeu**, sur l'accueil : des classe
 - **Lune-Rover** : le total d'étoiles gagnées sur les 30 niveaux.
 - **Alunissage** : la meilleure mission et la mission du jour.
 - **Empilage** : la plus haute tour et la tour du jour.
+- **Odyssée** : le total d'étoiles sur les 30 plateaux, et le plateau du jour (le temps, plus 5 secondes par naufrage).
 - **Nebula** : le meilleur score, la partie du jour (jour par jour) et le nombre de victoires.
 - **Pont stellaire** : le Ciel du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille (7×7, 9×9, 11×11, plus 30 secondes par indice) et le nombre de constellations dessinées.
 - **Calculator** : le calcul du jour (même série pour toute la famille, une seule tentative classée), la série de 20 et les 60 secondes, par niveau et par opération (MELANGE quand on en choisit plusieurs).

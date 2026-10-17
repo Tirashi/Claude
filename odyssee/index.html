@@ -61,6 +61,10 @@ button.doux, .lien { background: #e3f4fa; color: #1d6f8f; box-shadow: 0 4px 0 #b
 .plat .et { font-size: 18px; letter-spacing: 1px; color: #ffd45a; text-shadow: 0 1px 0 #b58a1a; }
 #bSuivant:disabled { background: #b9d6e0; box-shadow: 0 4px 0 #9bbcc8; cursor: default; font-size: 15px; }
 .plat:disabled { background: #b9d6e0; box-shadow: 0 4px 0 #9bbcc8; color: #eef7fa; cursor: default; }
+#bCire { position: absolute; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); width: 74px; height: 74px; border-radius: 50%; border: 0; padding: 0;
+  font: 700 15px 'Fredoka', system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px rgba(0, 40, 70, .7); cursor: pointer;
+  background: radial-gradient(circle, rgba(30, 90, 120, .55) 58%, transparent 60%), conic-gradient(#ffd45a var(--j, 100%), rgba(255, 255, 255, .3) 0); }
+#bCire.actif { background: radial-gradient(circle, rgba(240, 180, 60, .8) 58%, transparent 60%), conic-gradient(#fff3b0 var(--j, 100%), rgba(255, 255, 255, .3) 0); }
 [hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { #msg { transition: none; } }
 </style>
@@ -74,14 +78,17 @@ button.doux, .lien { background: #e3f4fa; color: #1d6f8f; box-shadow: 0 4px 0 #b
   </div>
   <div id="msg" class="ombre"></div>
   <button class="rond" id="aplat" hidden>⟲ À PLAT</button>
+  <button id="bCire" hidden aria-label="Boucher les oreilles avec la cire">CIRE</button>
 
   <div class="ecran" id="eTitre">
     <div class="carte">
       <h1>ODYSSÉE</h1>
       <p class="recit">Le retour d'Ulysse, de Troie jusqu'à Ithaque.</p>
       <p>Penche le téléphone pour guider la galère. Sans capteur, fais glisser le doigt.</p>
-      <p class="petit" id="totalTitre"></p>
+      <p class="petit" id="totalTitre" style="white-space: pre-line"></p>
       <button id="bJouer">JOUER</button>
+      <button class="sable" id="bJour">PLATEAU DU JOUR</button>
+      <a class="lien" href="../classements/index.html#odyssee">CLASSEMENT</a>
     </div>
   </div>
 
@@ -113,6 +120,7 @@ button.doux, .lien { background: #e3f4fa; color: #1d6f8f; box-shadow: 0 4px 0 #b
       <div class="grand" id="fTemps"></div>
       <p class="petit" id="fDetail"></p>
       <p class="petit" id="fRecord"></p>
+      <p class="petit" id="fRang"></p>
       <button id="bSuivant">PLATEAU SUIVANT</button>
       <div class="rang"><button class="doux" id="bRejouer">REJOUER</button><button class="doux" id="bCarteF">LA CARTE</button></div>
     </div>
@@ -126,6 +134,7 @@ button.doux, .lien { background: #e3f4fa; color: #1d6f8f; box-shadow: 0 4px 0 #b
 </div>
 <script src="../lib/three.min.js"></script>
 <script src="regles.js"></script>
+<script src="../ludo-scores.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -139,6 +148,9 @@ const $ = id => document.getElementById(id);
 const lireJ = (k, d) => { try { const v = JSON.parse(localStorage.getItem('odyssee.' + k)); return v == null ? d : v; } catch (e) { return d; } };
 const ecrire = (k, v) => { try { localStorage.setItem('odyssee.' + k, JSON.stringify(v)); } catch (e) {} };
 let STARS = lireJ('stars', {}), BEST = lireJ('best', {});
+// plateau du jour : odyssee.daily {AAAAMMJJ: ms (temps + 5 s par naufrage)}, odyssee.dailyTry = jour de la tentative classée
+const todayKey = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+let JOUR = null;      // { d, classe } pendant un plateau du jour
 const ouvert = i => i === 0 || (STARS[ODY.PLATEAUX[i - 1].id] || 0) > 0;
 const episodeAtteint = () => { let e = 1; ODY.PLATEAUX.forEach((P, i) => { if (ouvert(i)) e = Math.max(e, P.ep.n); }); return e; };
 const totalEtoiles = () => ODY.PLATEAUX.reduce((s, P) => s + (STARS[P.id] || 0), 0);
@@ -160,6 +172,9 @@ const LUMIERES = {
   jour:  { ciel: 0x9fdcff, haut: 0xffffff, bas: 0x2a7090, h: 0.62, sol: 0xfff2d8, s: 0.7, pos: [-5, 12, 6], mer: 0x179fbd, fond: 0x0d6b8a },
   vent:  { ciel: 0xbdd5e6, haut: 0xf2f8ff, bas: 0x3a6a88, h: 0.78, sol: 0xffffff, s: 0.55, pos: [4, 12, 6], mer: 0x2a9fbc, fond: 0x0f5f7e },
   orage: { ciel: 0x72839a, haut: 0xc8d4e8, bas: 0x203848, h: 0.7, sol: 0xdfe8ff, s: 0.42, pos: [3, 12, 5], mer: 0x2b8199, fond: 0x0c4a60 },
+  crepuscule: { ciel: 0xc890b4, haut: 0xffd6ea, bas: 0x40306a, h: 0.7, sol: 0xff9a6a, s: 0.75, pos: [7, 6, 3], mer: 0x3a8fb8, fond: 0x1a3f6a },
+  nuit:  { ciel: 0x0a0d1c, haut: 0x4a5a8a, bas: 0x05060c, h: 0.06, sol: 0x8090c0, s: 0.03, pos: [-3, 10, 4], mer: 0x1f5a7a, fond: 0x05141f, nuit: true },
+  soir:  { ciel: 0xf2b77a, haut: 0xfff0d0, bas: 0x4a6080, h: 0.72, sol: 0xffc070, s: 0.8, pos: [6, 8, 4], mer: 0x2a9ab8, fond: 0x0f5a7a },
 };
 
 // petites aides de construction
@@ -177,6 +192,19 @@ const TEX_VENT = toile(128, 128, (g, w, h) => {
   for (const [x, y] of [[6, 22], [70, 108]]) { g.beginPath(); g.moveTo(x, y); g.bezierCurveTo(x + 14, y - 7, x + 30, y + 7, x + 46, y); g.stroke(); }
 });
 
+// courants de Calypso (même dessin, en bleu) et spirale des tourbillons de Charybde
+const TEX_COURANT = toile(128, 128, (g, w, h) => {
+  g.fillStyle = 'rgba(20,70,140,.22)'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(190,240,255,.95)'; g.lineWidth = 8; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(52, 36); g.lineTo(80, 64); g.lineTo(52, 92); g.stroke();
+  g.lineWidth = 5;
+  for (const [x, y] of [[4, 20], [64, 110], [20, 64]]) { g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 12, y - 8, x + 24, y); g.quadraticCurveTo(x + 36, y + 8, x + 48, y); g.stroke(); }
+});
+const TEX_SPIRALE = toile(128, 128, g => {
+  g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 6; g.lineCap = 'round';
+  for (const d of [0, Math.PI]) { g.beginPath(); for (let a = 0; a < Math.PI * 3.2; a += 0.1) { const r = 6 + a * 5.6; g.lineTo(64 + Math.cos(a + d) * r, 64 + Math.sin(a + d) * r); } g.stroke(); }
+});
+
 // la galère : coque, mât, voile, huit rames, œil peint sur la proue (maquette, style C)
 function galere() {
   const bat = new THREE.Group(), g = new THREE.Group(), mc = lambert(0x8a4a22);
@@ -188,7 +216,21 @@ function galere() {
   const mr = lambert(0x6a3a18);
   for (let k = 0; k < 4; k++) for (const sg of [-1, 1]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.22), mr); r.position.set(-0.18 + k * 0.12, -0.02, sg * 0.2); r.rotation.x = sg * 0.5; g.add(r); }
   for (const sg of [-1, 1]) { const o = new THREE.Mesh(new THREE.CircleGeometry(0.035, 8), basic(0x1a1410)); o.position.set(0.24, 0.03, sg * 0.122); o.rotation.y = sg > 0 ? 0 : Math.PI; g.add(o); }
-  bat.add(g); bat.userData.coque = g; return bat;
+  // l'équipage changé en cochons par Circé
+  const cochons = new THREE.Group(), rosee = lambert(0xf4a6b8, { flatShading: false }), groin = lambert(0xe07a92, { flatShading: false });
+  for (const [dx, dz] of [[-0.2, -0.05], [0.12, 0.05], [-0.05, 0.07]]) {
+    const c = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), rosee); c.scale.set(1.3, 1, 1); c.position.set(dx, 0.12, dz); cochons.add(c);
+    const n = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.03, 8), groin); n.rotation.z = Math.PI / 2; n.position.set(dx + 0.1, 0.13, dz); cochons.add(n);
+  }
+  cochons.visible = false; g.add(cochons);
+  bat.add(g); bat.userData.coque = g; bat.userData.cochons = cochons; return bat;
+}
+function palmier(alea, tronc, palme) {
+  const p = new THREE.Group(), h = alea(1.2, 1.8);
+  for (let s = 0; s < 4; s++) { const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, h / 4 + 0.02, 6), tronc); seg.position.set(s * 0.06, h / 8 + s * h / 4, 0); p.add(seg); }
+  const cime = new THREE.Group(); cime.position.set(0.24, h, 0); p.add(cime);
+  for (let f = 0; f < 6; f++) { const fe = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.9, 3), palme); fe.rotation.order = 'YXZ'; fe.rotation.set(0, f * Math.PI / 3, 1.25); fe.position.set(Math.cos(f * Math.PI / 3) * 0.35, -0.08, -Math.sin(f * Math.PI / 3) * 0.35); cime.add(fe); }
+  p.userData.cime = cime; return p;
 }
 
 // ---------- construction d'un plateau ----------
@@ -205,6 +247,7 @@ function construire(P) {
   if (rendu) rendu.setClearColor(L.ciel);
   document.body.style.background = '#' + new THREE.Color(L.ciel).getHexString();
   const v = { P, L };
+  const lum = (c, o) => L.nuit ? lambert(c, Object.assign({ flatShading: false }, o)) : basic(c, o);     // la nuit, éclairé seulement par la lanterne
   // mer qui ondule (plan découpé en facettes) et fond plus sombre
   const geo = new THREE.PlaneGeometry(W + 0.2, H + 0.2, W * 3, H * 3); geo.rotateX(-Math.PI / 2);
   v.mer = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color: L.mer, shininess: 70, specular: 0x7fdcee, flatShading: true }));
@@ -226,14 +269,14 @@ function construire(P) {
     }
   });
   // récifs pointus et leur écume
-  const gris = lambert(0x6d6a66), ecume = basic(0xffffff, { transparent: true, opacity: 0.8 }), pic = new THREE.ConeGeometry(0.14, 0.45, 4), anneau = new THREE.RingGeometry(0.3, 0.47, 16);
+  const gris = lambert(0x6d6a66), ecume = lum(0xffffff, { transparent: true, opacity: 0.8 }), pic = new THREE.ConeGeometry(0.14, 0.45, 4), anneau = new THREE.RingGeometry(0.3, 0.47, 16);
   v.ecumes = M.recifs.map(([tx, ty]) => {
     const [x, z] = Q(tx, ty);
     for (let k = 0; k < 4; k++) { const p = new THREE.Mesh(pic, gris); p.position.set(x + alea(-.2, .2), 0.15, z + alea(-.2, .2)); p.scale.set(alea(0.7, 1.2), alea(0.7, 1.25), alea(0.7, 1.2)); p.rotation.set(alea(-.3, .3), r() * 3, alea(-.3, .3)); pl.add(p); }
     const e = plat(anneau, ecume, x, 0.06, z); pl.add(e); return e;
   });
   // lotus : eau verte, feuilles rondes et fleurs roses
-  const eauVerte = basic(0x7fd88a, { transparent: true, opacity: 0.32, depthWrite: false }), feuille = lambert(0x3f9a4a), rose = lambert(0xf49ac8, { flatShading: false }), coeur = basic(0xffe27a);
+  const eauVerte = lum(0x7fd88a, { transparent: true, opacity: 0.32, depthWrite: false }), feuille = lambert(0x3f9a4a), rose = lambert(0xf49ac8, { flatShading: false }), coeur = basic(0xffe27a);
   const caseG = new THREE.PlaneGeometry(1, 1), feuilleG = new THREE.CircleGeometry(0.16, 7), fleurG = new THREE.ConeGeometry(0.07, 0.1, 6), coeurG = new THREE.SphereGeometry(0.03, 5, 4);
   // vent : traits qui défilent ; phares
   v.vents = []; v.phares = [];
@@ -245,7 +288,7 @@ function construire(P) {
       if (r() < 0.8) { const fl = new THREE.Mesh(fleurG, rose); fl.rotation.x = Math.PI; fl.position.set(cx + alea(-.25, .25), 0.11, cz + alea(-.25, .25)); pl.add(fl);
         const c = new THREE.Mesh(coeurG, coeur); c.position.set(fl.position.x, 0.14, fl.position.z); pl.add(c); }
     } else if (ODY.DIRS[k]) {
-      const m = plat(caseG, basic(0xffffff, { map: TEX_VENT, transparent: true, opacity: 0.75, depthWrite: false }), cx, 0.04, cz);
+      const m = plat(caseG, lum(0xffffff, { map: P.courant ? TEX_COURANT : TEX_VENT, transparent: true, opacity: 0.75, depthWrite: false }), cx, 0.04, cz);
       m.userData.k = k; pl.add(m); v.vents.push(m);
     } else if (k === 'P') {
       const g = new THREE.Group(); g.position.set(cx, 0, cz);
@@ -259,6 +302,71 @@ function construire(P) {
     }
   }));
   orienterVents(v, 0);
+  // Circé : herbe moly (fleur blanche) et coupes enchantées
+  v.molys = M.molys.map(([mx, my]) => {
+    const [x, z] = Q(mx, my), g = new THREE.Group(); g.position.set(x, 0, z);
+    const tige = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.4, 5), lambert(0x3f9a4a)); tige.position.y = 0.2; g.add(tige);
+    for (let k = 0; k < 5; k++) { const a = k * Math.PI * 2 / 5, pe = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), lambert(0xffffff, { flatShading: false })); pe.scale.set(1, 0.4, 0.6); pe.position.set(Math.cos(a) * 0.08, 0.42, Math.sin(a) * 0.08); pe.rotation.y = -a; g.add(pe); }
+    const cm = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 4), basic(0xffe25a)); cm.position.y = 0.44; g.add(cm);
+    const halo = plat(new THREE.RingGeometry(0.36, 0.46, 20), basic(0xfff3a0, { transparent: true, opacity: 0.7, depthWrite: false }), 0, 0.05, 0); g.add(halo);
+    pl.add(g); return { g, halo };
+  });
+  const or = new THREE.MeshPhongMaterial({ color: 0xe0b040, shininess: 80, specular: 0xfff0b0 });
+  v.coupes = M.coupes.map(([qx, qy]) => {
+    const [x, z] = Q(qx, qy), g = new THREE.Group(); g.position.set(x, 0, z);
+    const socle = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.26, 0.16, 7), roc); socle.position.y = 0.05; g.add(socle);
+    const pied = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.08, 0.16, 8), or); pied.position.y = 0.21; g.add(pied);
+    const vasque = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.06, 0.14, 10), or); vasque.position.y = 0.35; g.add(vasque);
+    const philtre = plat(new THREE.CircleGeometry(0.14, 12), basic(0xb04ae0), 0, 0.425, 0); g.add(philtre);
+    const eclat = new THREE.Mesh(new THREE.OctahedronGeometry(0.05, 0), basic(0xf0c0ff)); eclat.position.y = 0.6; g.add(eclat);
+    pl.add(g); return { g, eclat };
+  });
+  // les Sirènes sur leurs rochers, et les ondes de leur chant
+  const ondeG = new THREE.RingGeometry(0.9, 1, 32), ecaille = lambert(0x2fb8a0), chair = lambert(0xf2c09a, { flatShading: false });
+  v.sirenes = M.sirenes.map(([sx, sy], i) => {
+    const [x, z] = Q(sx, sy), g = new THREE.Group(); g.position.set(x, 0, z);
+    const rocher = new THREE.Mesh(new THREE.DodecahedronGeometry(0.36, 0), gris); rocher.scale.y = 0.55; rocher.position.y = 0.08; g.add(rocher);
+    const corps = new THREE.Group(); corps.position.y = 0.22; g.add(corps);
+    const queue = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.4, 6), ecaille); queue.rotation.z = 1.2; queue.position.set(-0.15, 0.02, 0); corps.add(queue);
+    const nag = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.16, 3), ecaille); nag.rotation.z = -0.6; nag.position.set(-0.34, 0.1, 0); corps.add(nag);
+    const buste = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 0.26, 6), chair); buste.position.set(0.04, 0.16, 0); corps.add(buste);
+    const tete = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), chair); tete.position.set(0.04, 0.36, 0); corps.add(tete);
+    const cheveux = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.32, 6), lambert(0xf2c84a)); cheveux.position.set(-0.01, 0.27, 0); corps.add(cheveux);
+    corps.rotation.y = r() * 6;
+    const ondes = [0, 1].map(() => { const o = plat(ondeG, basic(0xff8ac8, { transparent: true, opacity: 0.6, depthWrite: false }), 0, 0.06, 0); g.add(o); return o; });
+    pl.add(g); return { g, corps, ondes, ph: i * 0.7 };
+  });
+  // Charybde : tourbillons qui tournent
+  v.tourbillons = M.tourbillons.map(([hx, hy]) => {
+    const [x, z] = Q(hx, hy);
+    pl.add(plat(new THREE.CircleGeometry(1, 28), basic(0x0a3a50, { transparent: true, opacity: 0.5, depthWrite: false }), x, 0.03, z));
+    const sp = plat(new THREE.CircleGeometry(1, 28), basic(0xffffff, { map: TEX_SPIRALE, transparent: true, opacity: 0.85, depthWrite: false }), x, 0.05, z); pl.add(sp);
+    pl.add(plat(new THREE.CircleGeometry(0.22, 16), basic(0x031820), x, 0.06, z));
+    return sp;
+  });
+  // Scylla : rides d'alerte, puis le cou qui jaillit (maquette, style A refait en C)
+  const peauS = lambert(0x4f7a64);
+  v.scyllas = M.scyllas.map(([sx, sy]) => {
+    const [x, z] = Q(sx, sy), g = new THREE.Group(); g.position.set(x, 0, z); pl.add(g);
+    const zone = plat(new THREE.CircleGeometry(ODY.PHYS.SCYLLA_R, 24), basic(0xff4a3a, { transparent: true, opacity: 0.2, depthWrite: false }), 0, 0.04, 0); g.add(zone);
+    const rides = [0.35, 0.55].map(rr => { const m = plat(new THREE.TorusGeometry(rr, 0.03, 4, 24), basic(0xffffff, { transparent: true, opacity: 0.85 }), 0, 0.05, 0); g.add(m); return m; });
+    const cou = new THREE.Group(); g.add(cou);
+    const tronc = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.16, 1.1, 6), peauS); tronc.position.y = 0.55; tronc.rotation.z = 0.25; cou.add(tronc);
+    const tete = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 5), peauS); tete.rotation.z = -Math.PI / 2 - 0.3; tete.position.set(0.3, 1.1, 0); cou.add(tete);
+    const oeil = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 4), basic(0xffd23a)); oeil.position.set(0.25, 1.17, 0.1); cou.add(oeil);
+    const crocs = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.14, 3), basic(0xffffff)); crocs.position.set(0.48, 1.02, 0); crocs.rotation.z = Math.PI; cou.add(crocs);
+    cou.visible = false;
+    return { g, zone, rides, cou };
+  });
+  // les cases qu'on ne peut pas atteindre (dans une île entourée de murets) deviennent de la terre
+  const atteint = cases(M), sable = lambert(0xe6cf98), gazon = lambert(0x6aae4a), terreG = new THREE.BoxGeometry(1.02, 0.35, 1.02), herbeG = new THREE.BoxGeometry(0.8, 0.08, 0.8);
+  let palme = 0;
+  M.cases.forEach((row, y) => row.forEach((k, x) => {
+    if (atteint.has(x + ',' + y)) return;
+    const [cx, cz] = Q(x + 0.5, y + 0.5), t = new THREE.Mesh(terreG, sable); t.position.set(cx, 0.08, cz); pl.add(t);
+    const h = new THREE.Mesh(herbeG, gazon); h.position.set(cx, 0.28, cz); pl.add(h);
+    if (palme++ % 3 === 0) { const p = palmier(alea, lambert(0x9a6a3a), lambert(0x3f9a4a)); p.scale.setScalar(0.45); p.position.set(cx, 0.3, cz); pl.add(p); }
+  }));
   // le port d'arrivée : îlot et temple blanc
   const [ax, az] = Q(...M.arrivee), ile = new THREE.Group();
   ile.add(new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.58, 0.3, 8), roc));
@@ -286,10 +394,37 @@ function construire(P) {
     v.rocher = new THREE.Mesh(new THREE.DodecahedronGeometry(0.42, 0), gris); pl.add(v.rocher);
     v.ombre.visible = v.rocher.visible = false;
   }
-  // la galère
+  // la galère (la nuit, avec sa lanterne ; le port a sa torche)
   v.bat = galere(); v.bat.scale.setScalar(1.25); pl.add(v.bat);
+  if (L.nuit) {
+    const lanterne = new THREE.PointLight(0xffd08a, 2.4, 3.4, 1.4); lanterne.position.set(0, 0.7, 0); v.bat.add(lanterne);
+    const flamme = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), basic(0xffd08a)); flamme.position.set(-0.2, 0.32, 0); v.bat.userData.coque.add(flamme);
+    const torche = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), basic(0xffb84a)); torche.position.y = 0.85; v.ile.add(torche);
+    const halo = plat(new THREE.RingGeometry(0.6, 0.7, 24), basic(0xffb84a, { transparent: true, opacity: 0.6, depthWrite: false }), 0, 0.02, 0); v.ile.add(halo);
+    v.phares.forEach(ph => ph.g.add(new THREE.PointLight(0xffe25a, 0, 3, 1.6)));
+  }
   V = v; cadrer();
 }
+// cases que le bateau peut atteindre depuis le départ (sans traverser de muret)
+function cases(M) {
+  const mur = new Set();
+  for (const [x1, y1, x2, y2] of M.murs) {
+    if (y1 === y2) for (let x = x1; x < x2; x++) mur.add(`h${x},${y1}`);      // entre (x, y1 - 1) et (x, y1)
+    else for (let y = y1; y < y2; y++) mur.add(`v${x1},${y}`);                // entre (x1 - 1, y) et (x1, y)
+  }
+  const vu = new Set(), pile = [[Math.floor(M.depart[0]), Math.floor(M.depart[1])]];
+  while (pile.length) {
+    const [x, y] = pile.pop(), k = x + ',' + y;
+    if (x < 0 || y < 0 || x >= M.W || y >= M.H || vu.has(k)) continue;
+    vu.add(k);
+    if (!mur.has(`v${x + 1},${y}`)) pile.push([x + 1, y]);
+    if (!mur.has(`v${x},${y}`)) pile.push([x - 1, y]);
+    if (!mur.has(`h${x},${y + 1}`)) pile.push([x, y + 1]);
+    if (!mur.has(`h${x},${y}`)) pile.push([x, y - 1]);
+  }
+  return vu;
+}
+function bat_cochons(v) { v.bat.userData.cochons.visible = st.lourd; }
 function orienterVents(v, rot) {
   for (const m of v.vents) { let [dx, dy] = ODY.DIRS[m.userData.k]; for (let i = 0; i < rot; i++) [dx, dy] = [-dy, dx]; m.rotation.z = Math.atan2(-dy, dx); }
 }
@@ -324,11 +459,8 @@ function decor(P, v, Q, alea, roc, blanc, bleu, gris) {
     const tronc = lambert(0x9a6a3a), palme = lambert(0x3f9a4a);
     v.palmiers = [];
     for (let k = 0; k < 5; k++) {
-      const p = new THREE.Group(), h = alea(1.2, 1.8);
-      for (let s = 0; s < 4; s++) { const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, h / 4 + 0.02, 6), tronc); seg.position.set(s * 0.06, h / 8 + s * h / 4, 0); p.add(seg); }
-      const cime = new THREE.Group(); cime.position.set(0.24, h, 0); p.add(cime);
-      for (let f = 0; f < 6; f++) { const fe = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.9, 3), palme); fe.rotation.set(0, f * Math.PI / 3, 1.25); fe.position.set(Math.cos(f * Math.PI / 3) * 0.35, -0.08, -Math.sin(f * Math.PI / 3) * 0.35); fe.rotation.order = 'YXZ'; cime.add(fe); }
-      p.position.set(-W / 2 + 0.4 + k * (W - 0.8) / 4 + alea(-.3, .3), 0.4, alea(-0.5, 0.2)); p.rotation.y = alea(0, 6); D.add(p); v.palmiers.push(cime);
+      const p = palmier(alea, tronc, palme);
+      p.position.set(-W / 2 + 0.4 + k * (W - 0.8) / 4 + alea(-.3, .3), 0.4, alea(-0.5, 0.2)); p.rotation.y = alea(0, 6); D.add(p); v.palmiers.push(p.userData.cime);
     }
   } else if (quoi === 'cyclope') {
     // Polyphème derrière sa falaise (maquette)
@@ -362,6 +494,57 @@ function decor(P, v, Q, alea, roc, blanc, bleu, gris) {
       for (let j = 0; j < 4; j++) { const b = new THREE.Mesh(new THREE.DodecahedronGeometry(alea(0.3, 0.5), 0), nb); b.position.set(j * 0.42 - 0.6, alea(-.1, .15), alea(-.15, .15)); n.add(b); }
       n.position.set(alea(-W / 2, W / 2), 1.5 + alea(0, 0.6), alea(-1, 0.3)); n.userData.v = alea(0.25, 0.5); D.add(n); v.nuages.push(n);
     }
+  } else if (quoi === 'circe') {
+    // le palais de marbre de Circé sur sa colline, son chaudron fumant et ses cochons
+    const colline = new THREE.Mesh(new THREE.DodecahedronGeometry(1.6, 0), lambert(0x6a9a4a)); colline.scale.set(2.4, 0.55, 0.8); colline.position.set(0, 0.1, -0.4); D.add(colline);
+    const marbre = lambert(0xf4eef8, { flatShading: false });
+    const base = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.16, 0.9), marbre); base.position.set(0.8, 0.85, -0.5); D.add(base);
+    for (let k = 0; k < 6; k++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.7, 8), marbre); c.position.set(-0.1 + k * 0.36, 1.28, -0.2); D.add(c); }
+    const toit = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.6, 2.4, 3), lambert(0xb07ad0)); toit.rotation.set(0, 0, Math.PI / 2); toit.scale.set(1, 1, 0.5); toit.position.set(0.8, 1.8, -0.4); D.add(toit);
+    const chaudron = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 6, 0, 7, Math.PI / 2, Math.PI / 2), lambert(0x2a2430)); chaudron.position.set(-1.8, 0.95, 0); D.add(chaudron);
+    v.fumees = [];
+    for (let k = 0; k < 5; k++) { const f = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 0), basic(0xc890ff, { transparent: true, opacity: 0.5, depthWrite: false })); f.userData.x = -1.8; f.userData.p = k / 5; f.userData.y0 = 1; D.add(f); v.fumees.push(f); }
+    const rosee = lambert(0xf4a6b8, { flatShading: false });
+    for (const [x, z] of [[-W / 2 + 0.6, 0.6], [-W / 2 + 1.3, 0.8], [W / 2 - 0.8, 0.7]]) { const c = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), rosee); c.scale.set(1.4, 1, 1); c.position.set(x, 0.55, z); D.add(c); }
+  } else if (quoi === 'enfers') {
+    // falaises noires, l'entrée rougeoyante des Enfers et les ombres des morts
+    const noir = lambert(0x3a3640);
+    for (let k = 0; k < 7; k++) { const c = new THREE.Mesh(new THREE.ConeGeometry(alea(0.5, 0.9), alea(1.4, 2.6), 5), noir); c.position.set(-W / 2 + k * W / 6, 0.6, alea(-0.6, 0)); D.add(c); }
+    const antre = plat(new THREE.CircleGeometry(0.7, 16), basic(0xff4a1a), 0, 0.7, 0.3); antre.rotation.x = 0; D.add(antre);
+    v.ombres = [];
+    for (let k = 0; k < 6; k++) { const o = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.6, 6), basic(0xbfd4ff, { transparent: true, opacity: 0.35, depthWrite: false })); o.rotation.x = Math.PI; o.userData.x = alea(-W / 2, W / 2); o.userData.p = alea(0, 6); D.add(o); v.ombres.push(o); }
+  } else if (quoi === 'sirenes') {
+    // l'île fleurie des Sirènes
+    const ile = new THREE.Mesh(new THREE.DodecahedronGeometry(1.5, 0), lambert(0x7ab85a)); ile.scale.set(2.6, 0.45, 0.8); ile.position.set(0, 0.1, -0.3); D.add(ile);
+    const fleurs = [0xf49ac8, 0xffe25a, 0xffffff];
+    for (let k = 0; k < 18; k++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), basic(fleurs[k % 3])); f.position.set(alea(-W / 2, W / 2), 0.62, alea(-0.6, 0.2)); D.add(f); }
+    for (let k = 0; k < 4; k++) { const rch = new THREE.Mesh(new THREE.DodecahedronGeometry(alea(0.3, 0.5), 0), gris); rch.position.set(alea(-W / 2, W / 2), 0.5, alea(0.2, 0.7)); D.add(rch); }
+  } else if (quoi === 'charybde') {
+    // les deux falaises du détroit : le figuier de Charybde, l'antre de Scylla
+    const sombre = lambert(0x6a6460);
+    for (const sx of [-1, 1]) { const f = new THREE.Mesh(new THREE.DodecahedronGeometry(1.4, 0), sombre); f.scale.set(1.2, 1.4, 0.8); f.position.set(sx * (W / 2 - 0.6), 1, -0.3); D.add(f); }
+    const figuier = new THREE.Group(), bois = lambert(0x6a4a2a);
+    const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 0.8, 5), bois); tr.rotation.z = 0.4; figuier.add(tr);
+    const feu = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 0), lambert(0x4a8a3a)); feu.position.set(-0.2, 0.5, 0); figuier.add(feu);
+    figuier.position.set(-W / 2 + 0.6, 2.6, -0.2); D.add(figuier);
+    const antre = new THREE.Mesh(new THREE.CircleGeometry(0.45, 12), basic(0x101010)); antre.position.set(W / 2 - 0.6, 1.2, 0.85); D.add(antre);
+  } else if (quoi === 'calypso') {
+    // Ogygie : la grotte de Calypso, ses palmiers et sa vigne
+    const ile = new THREE.Mesh(new THREE.DodecahedronGeometry(1.5, 0), lambert(0x5aa84a)); ile.scale.set(2.6, 0.5, 0.8); ile.position.set(0, 0.1, -0.3); D.add(ile);
+    const grotte = new THREE.Mesh(new THREE.DodecahedronGeometry(0.8, 0), roc); grotte.scale.set(1.2, 0.9, 0.7); grotte.position.set(0.6, 0.9, -0.5); D.add(grotte);
+    const bouche = new THREE.Mesh(new THREE.CircleGeometry(0.32, 12), basic(0x2a1a10)); bouche.position.set(0.6, 0.85, 0.02); D.add(bouche);
+    v.palmiers = [];
+    for (const x of [-W / 2 + 0.6, -1.2, W / 2 - 0.7]) { const p = palmier(alea, lambert(0x9a6a3a), lambert(0x3f9a4a)); p.position.set(x, 0.5, alea(-0.4, 0.2)); p.rotation.y = alea(0, 6); D.add(p); v.palmiers.push(p.userData.cime); }
+  } else if (quoi === 'ithaque') {
+    // Ithaque : collines vertes, le palais d'Ulysse et les oliviers
+    const coll = new THREE.Mesh(new THREE.DodecahedronGeometry(1.6, 0), lambert(0x8aaa5a)); coll.scale.set(2.6, 0.6, 0.8); coll.position.set(0, 0.1, -0.4); D.add(coll);
+    const palais = new THREE.Group();
+    const corps = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 0.7), blanc); corps.position.y = 0.3; palais.add(corps);
+    const toitP = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 0.8), lambert(0xc8452e)); toitP.position.y = 0.64; palais.add(toitP);
+    const tour = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.9, 0.4), blanc); tour.position.set(-0.6, 0.45, 0); palais.add(tour);
+    palais.position.set(0.4, 0.75, -0.4); D.add(palais);
+    for (const x of [-W / 2 + 0.5, -1.6, W / 2 - 0.6, W / 2 - 1.3]) { const o = new THREE.Group(); const t = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.4, 5), lambert(0x7a5a3a)); t.position.y = 0.2; o.add(t);
+      const f = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 0), lambert(0x7a9a5a)); f.position.y = 0.5; o.add(f); o.position.set(x, 0.6, alea(-0.3, 0.4)); D.add(o); }
   }
 }
 
@@ -413,28 +596,45 @@ addEventListener('keyup', e => { touches[e.key] = false; });
 // ---------- écrans ----------
 let mode = 'titre', P = null, st = null, demoI = 0, demoAttente = 0, msgT = 0;
 const ECRANS = ['eTitre', 'eRecit', 'ePause', 'eFin', 'egee'];
-function montrer(id) { for (const e of ECRANS) $(e).hidden = e !== id; $('hud').hidden = !['jeu', 'pause', 'recit'].includes(mode); $('aplat').hidden = !(mode === 'jeu' && capteur); }
+function montrer(id) {
+  for (const e of ECRANS) $(e).hidden = e !== id;
+  $('hud').hidden = !['jeu', 'pause', 'recit'].includes(mode); $('aplat').hidden = !(mode === 'jeu' && capteur);
+  $('bCire').hidden = !(mode === 'jeu' && st && st.M.sirenes.length);
+}
 function message(t, d) { $('msg').textContent = t; $('msg').classList.add('vu'); msgT = d || 1.4; }
 
 function titre() {
   debloquer(); mode = 'titre'; montrer('eTitre');
-  $('totalTitre').textContent = totalEtoiles() ? `★ ${totalEtoiles()} étoiles · ${chantDe(ODY.EPISODES[episodeAtteint() - 1])}` : '';
+  const dj = lireJ('daily', {})[todayKey()];
+  $('totalTitre').textContent = [totalEtoiles() ? `★ ${totalEtoiles()} / ${ODY.PLATEAUX.length * 3} · ${chantDe(ODY.EPISODES[episodeAtteint() - 1])}` : '', dj != null ? `Plateau du jour : ${fmtD(dj / 1000)}` : ''].filter(Boolean).join('\n');
   demo();
 }
 function demo() {       // le pilote automatique joue derrière l'écran titre, d'un plateau à l'autre
   P = ODY.PLATEAUX[demoI % ODY.PLATEAUX.length]; demoI++;
   st = ODY.nouvelle(P, (Math.random() * 1e9) | 0); construire(P); demoAttente = 0;
 }
-function lancer(id) {
-  P = ODY.plateau(id); st = ODY.nouvelle(P, (Math.random() * 1e9) | 0); construire(P);
+function lancer(id, Q, graine) {
+  if (!Q) JOUR = null;
+  P = Q || ODY.plateau(id); st = ODY.nouvelle(P, graine != null ? graine : (Math.random() * 1e9) | 0); construire(P);
   mode = 'recit'; montrer('eRecit'); majHud();
   const E = P.ep;
-  $('rChant').textContent = chantDe(E);
-  $('rNom').textContent = `${E.n}-${P.i + 1} · ${P.nom}`;
-  $('rRecit').textContent = P.i === 0 ? E.recit : '';
+  if (JOUR) {
+    const d = String(JOUR.d);
+    $('rChant').textContent = `PLATEAU DU JOUR · ${d.slice(6)}/${d.slice(4, 6)}`;
+    $('rNom').textContent = `${P.nom}${P.fx ? ' (en miroir)' : ''}`;
+    $('rRecit').textContent = JOUR.classe ? `Une seule tentative classée, comptée dès le départ : le temps, plus ${ODY.PHYS.PENALITE} s par naufrage.` : "Tu as déjà tenté le plateau du jour : celle-ci n'est pas classée.";
+    $('rCible').textContent = chantDe(E);
+  } else {
+    $('rChant').textContent = chantDe(E);
+    $('rNom').textContent = `${E.n}-${P.i + 1} · ${P.nom}`;
+    $('rRecit').textContent = P.i === 0 ? E.recit : '';
+    $('rCible').textContent = `★★★ sans naufrage, en moins de ${fmt(P.cible)}`;
+  }
   $('rAide').textContent = E.aide;
-  $('rCible').textContent = `★★★ sans naufrage, en moins de ${fmt(P.cible)}`;
 }
+// le même plateau pour toute la famille, et les mêmes dangers (graine = la date)
+function lancerJour() { const d = todayKey(); JOUR = { d, classe: lireJ('dailyTry', 0) !== d }; lancer(null, ODY.jour(d), d); }
+const rejouer = () => JOUR ? lancerJour() : lancer(P.id);
 // pendant la partie, l'écran reste en portrait quand on penche le téléphone (Chrome n'autorise
 // le blocage qu'en plein écran : la partie passe en plein écran, la carte et le titre en sortent)
 const TACTILE = matchMedia('(pointer: coarse)').matches;
@@ -450,17 +650,21 @@ function debloquer() {
 const paysage = () => TACTILE && innerWidth > innerHeight;
 addEventListener('resize', () => { if (mode === 'jeu' && paysage()) pause(); $('pTourne').hidden = !paysage(); });
 function partir() {
-  demanderCapteur(); bloquerPortrait(); zero = null; doigt = null; penteDoigt = [0, 0];
+  demanderCapteur(); bloquerPortrait();
+  if (JOUR && JOUR.classe) ecrire('dailyTry', JOUR.d); zero = null; doigt = null; penteDoigt = [0, 0];
   mode = 'jeu'; montrer(null); $('msg').classList.remove('vu');
 }
 function pause() { if (mode !== 'jeu') return; mode = 'pause'; montrer('ePause'); $('pTourne').hidden = !paysage(); }
 function reprendre() { bloquerPortrait(); mode = 'jeu'; montrer(null); }
 function fin() {
-  mode = 'fin';
+  mode = 'fin'; $('fRang').textContent = '';
+  if (JOUR) return finJour();
   const t = st.t, n = st.naufrages, e = ODY.etoiles(P, t, n), avant = STARS[P.id] || 0, record = BEST[P.id] == null || t * 1000 < BEST[P.id];
   if (e > avant) STARS[P.id] = e;
   if (record) BEST[P.id] = Math.round(t * 1000);
   ecrire('stars', STARS); ecrire('best', BEST); ecrire('episode', episodeAtteint());
+  if (e > avant && window.LudoScores) LudoScores.submit('odyssee', 'etoiles', totalEtoiles(), false).then(r => { if (r) $('fRang').textContent = 'Étoiles : ' + LudoScores.rankText(r); });
+  $('fEtoiles').hidden = false;
   const dernier = P.i === P.ep.plateaux.length - 1, i = ODY.PLATEAUX.indexOf(P), suivant = ODY.PLATEAUX[i + 1];
   $('fChant').textContent = chantDe(P.ep);
   $('fTitre').textContent = dernier ? 'CHANT TERMINÉ !' : 'TERRE EN VUE !';
@@ -473,20 +677,40 @@ function fin() {
   $('bSuivant').disabled = !suivant;
   montrer('eFin');
 }
+function finJour() {
+  const t = st.t, n = st.naufrages, sc = ODY.scoreJour(t, n), ms = Math.round(sc * 1000), d = JOUR.d;
+  if (JOUR.classe) {
+    const D = lireJ('daily', {}); D[d] = ms; ecrire('daily', D);
+    if (window.LudoScores) LudoScores.submit('odyssee', 'daily:' + d, ms, true).then(r => { if (r) $('fRang').textContent = 'Plateau du jour : ' + LudoScores.rankText(r); });
+  }
+  $('fChant').textContent = 'PLATEAU DU JOUR';
+  $('fTitre').textContent = 'TERRE EN VUE !';
+  $('fEtoiles').hidden = true;
+  $('fTemps').textContent = fmtD(sc);
+  $('fDetail').textContent = n ? `${fmtD(t)} + ${n} naufrage${n > 1 ? 's' : ''} × ${ODY.PHYS.PENALITE} s` : 'Sans naufrage !';
+  $('fRecord').textContent = JOUR.classe ? 'Tentative classée' : "Hors classement : tu as déjà tenté le plateau du jour";
+  $('bSuivant').hidden = true;
+  montrer('eFin');
+}
 function majHud() {
-  $('temps').textContent = fmt(st.t); $('ep').textContent = chantDe(P.ep) + ` · ${P.ep.n}-${P.i + 1}`;
+  $('temps').textContent = fmt(st.t); $('ep').textContent = JOUR ? 'PLATEAU DU JOUR' : chantDe(P.ep) + ` · ${P.ep.n}-${P.i + 1}`;
+  if (st.M.sirenes.length) { const c = $('bCire'); c.style.setProperty('--j', ((st.cire > 0 ? st.cire / ODY.PHYS.CIRE : st.jauge) * 100).toFixed(0) + '%'); c.classList.toggle('actif', st.cire > 0); }
   $('chutes').textContent = `NAUFRAGES ${st.naufrages}`;
 }
-const CAUSES = { recif: 'RÉCIF ! NAUFRAGE', fleche: 'UNE FLÈCHE ENFLAMMÉE !', rocher: "POLYPHÈME T'A EU !" };
+const cause = c => ({ recif: 'RÉCIF ! NAUFRAGE', fleche: P.ep.n === 10 ? 'UNE FLÈCHE DES PRÉTENDANTS !' : 'UNE FLÈCHE ENFLAMMÉE !',
+  rocher: P.ep.n === 10 ? 'LA COLÈRE DE POSÉIDON !' : "POLYPHÈME T'A EU !", sirene: "LES SIRÈNES T'ONT ENSORCELÉ !",
+  tourbillon: "CHARYBDE T'A AVALÉ !", scylla: 'SCYLLA !' })[c] || 'NAUFRAGE !';
 
 $('bJouer').onclick = () => carte();
+$('bJour').onclick = lancerJour;
+$('bCire').onclick = () => { if (ODY.cire(st)) message('CIRE DANS LES OREILLES !', 1); else if (st.cire <= 0) message("LA CIRE N'EST PAS PRÊTE", 0.8); };
 $('bPartir').onclick = partir;
 $('eRecit').addEventListener('pointerup', e => { if (mode === 'recit' && !e.target.closest('button')) partir(); });
 $('bPause').onclick = pause;
 $('bReprendre').onclick = reprendre;
-$('bRecommencer').onclick = () => lancer(P.id);
-$('bCarteP').onclick = $('bCarteF').onclick = () => carte(P.ep.n);
-$('bRejouer').onclick = () => lancer(P.id);
+$('bRecommencer').onclick = rejouer;
+$('bCarteP').onclick = $('bCarteF').onclick = () => carte(JOUR ? undefined : P.ep.n);
+$('bRejouer').onclick = rejouer;
 $('bSuivant').onclick = () => { const s = ODY.PLATEAUX[ODY.PLATEAUX.indexOf(P) + 1]; if (s) lancer(s.id); };
 $('aplat').onclick = () => { zero = null; message('À PLAT !', 0.8); };
 $('bRetour').onclick = titre;
@@ -585,7 +809,10 @@ function evenement(e) {
     if (e.quoi === 'fleche') { V.brasierT = 0; V.brasier.position.set(e.x - W / 2, 0.15, e.y - H / 2); }
   }
   if (mode !== 'jeu') return;
-  if (e.k === 'naufrage') message(CAUSES[e.cause] || 'NAUFRAGE !');
+  if (e.k === 'naufrage') message(cause(e.cause));
+  else if (e.k === 'moly') message("L'HERBE MOLY !\nL'ÉQUIPAGE REDEVIENT HUMAIN", 1.6);
+  else if (e.k === 'coupe') message('UNE COUPE DE CIRCÉ…\nGROIN !', 1.4);
+  else if (e.k === 'cireFin') message('LA CIRE A FONDU', 0.9);
   else if (e.k === 'phare') message('PHARE ALLUMÉ !\nTU REPARTIRAS D\'ICI', 1.6);
   else if (e.k === 'outre') message('LES VENTS TOURNENT !', 1.2);
   else if (e.k === 'arrivee') fin();
@@ -601,7 +828,7 @@ function animer(dt) {
   v.ecumes.forEach((e, i) => e.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.08));
   // vents (et l'outre d'Éole qui s'agite avant que les vents tournent)
   if (v.vents.length) {
-    TEX_VENT.offset.x -= dt * 0.7;
+    TEX_VENT.offset.x -= dt * 0.7; TEX_COURANT.offset.x -= dt * 0.5;
     if (v.rot !== st.ventRot) { v.rot = st.ventRot; orienterVents(v, st.ventRot); }
     const alerte = st.P.outre && st.P.outre - st.outreT < 1.2;
     for (const m of v.vents) m.material.opacity = alerte ? 0.35 + 0.4 * Math.abs(Math.sin(t * 9)) : 0.75;
@@ -610,7 +837,28 @@ function animer(dt) {
   if (v.ile_eole) v.ile_eole.position.y = 0.9 + Math.sin(t * 0.8) * 0.12;
   if (v.nuages) for (const n of v.nuages) { n.position.x += n.userData.v * dt; if (n.position.x > W / 2 + 3) n.position.x = -W / 2 - 3; }
   if (v.feux) v.feux.forEach((f, i) => { f.scale.y = 0.8 + Math.abs(Math.sin(t * 7 + i * 1.7)) * 0.45; });
-  if (v.fumees) for (const s of v.fumees) { const p = (t * 0.15 + s.userData.p) % 1; s.position.set(s.userData.x + p * 0.8, 2 + p * 3, -0.3 - p); s.scale.setScalar(0.6 + p * 1.4); s.material.opacity = 0.45 * (1 - p); }
+  if (v.fumees) for (const s of v.fumees) { const p = (t * 0.15 + s.userData.p) % 1; s.position.set(s.userData.x + p * 0.8, (s.userData.y0 || 2) + p * 3, -0.3 - p); s.scale.setScalar(0.6 + p * 1.4); s.material.opacity = 0.45 * (1 - p); }
+  if (v.ombres) for (const o of v.ombres) { o.position.set(o.userData.x + Math.sin(t * 0.5 + o.userData.p) * 0.6, 1.6 + Math.sin(t * 1.3 + o.userData.p) * 0.3, 0.4); o.material.opacity = 0.25 + 0.15 * Math.sin(t * 2 + o.userData.p); }
+  // Circé
+  v.molys.forEach((m, i) => { m.g.visible = !st.molys[i]; m.g.rotation.y = t * 0.8; m.halo.scale.setScalar(1 + Math.sin(t * 3 + i) * 0.1); });
+  v.coupes.forEach((c, i) => { c.eclat.rotation.y = t * 2; c.eclat.position.y = 0.6 + Math.sin(t * 2.5 + i) * 0.05; });
+  bat_cochons(v);
+  // Sirènes : elles se balancent ; leur chant (ondes roses) se tait avec la cire
+  v.sirenes.forEach(S => {
+    S.corps.rotation.z = Math.sin(t * 1.5 + S.ph) * 0.12;
+    S.ondes.forEach((o, k) => { const p = (t * 0.45 + k * 0.5 + S.ph) % 1, sc = 0.4 + p * (ODY.PHYS.SIRENE_R - 0.4); o.visible = st.cire <= 0; o.scale.setScalar(sc); o.material.opacity = 0.55 * (1 - p); });
+  });
+  // Charybde et Scylla
+  v.tourbillons.forEach(sp => { sp.rotation.z += dt * 2.6; });
+  v.scyllas.forEach((S, i) => {
+    const e = ODY.scylla(st, i);
+    S.rides.forEach((rd, k) => { rd.visible = e.alerte; rd.scale.setScalar(1 + ((e.c * 2 + k * 0.5) % 1) * 0.6); });
+    S.zone.visible = e.alerte || e.frappe; S.zone.material.opacity = e.frappe ? 0.32 : 0.12 + 0.1 * Math.sin(t * 12);
+    const haut = e.frappe ? Math.min(1, (e.c - ODY.PHYS.SCYLLA_ALERTE) / 0.15) : 0;
+    S.cou.visible = haut > 0; S.cou.position.y = -1.3 + haut * 1.3; S.cou.rotation.y = Math.sin(t * 3 + i) * 0.4;
+  });
+  // la nuit : les phares allumés éclairent
+  if (v.L.nuit) v.phares.forEach((p, i) => { const l = p.g.children.find(c => c.isPointLight); if (l) l.intensity = st.phares[i] ? 1.6 : 0; });
   if (v.palmiers) v.palmiers.forEach((c, i) => { c.rotation.z = Math.sin(t * 1.3 + i) * 0.08; });
   // phares
   v.phares.forEach((p, i) => { const on = st.phares[i]; p.feu.material.color.setHex(on ? 0xffe25a : 0x8a8a8a); p.halo.material.color.setHex(on ? 0xffe25a : 0xffffff); p.halo.scale.setScalar(on ? 1 + Math.sin(t * 3) * 0.08 : 1); });
@@ -642,6 +890,7 @@ function animer(dt) {
   if (prof > 0) bat.rotation.y += dt * 12;
   bat.userData.coque.rotation.x = Math.sin(t * 2.4) * 0.12; bat.userData.coque.rotation.z = Math.sin(t * 1.7) * 0.06;
   bat.scale.setScalar(1.25 * (1 - prof * 0.6));
+  if (st.lourd) bat.position.y -= 0.05;
   bat.visible = !(st.grace > 0 && Math.floor(st.grace * 10) % 2);
   // orage : un éclair de temps en temps
   if (v.L === LUMIERES.orage) {
@@ -656,7 +905,7 @@ function animer(dt) {
 titre();
 cadrer();
 requestAnimationFrame(frame);
-window.Odyssee = { ODY, pilote: false, lancer, partir, carte, titre, fin, get st() { return st; }, get mode() { return mode; } };
+window.Odyssee = { ODY, pilote: false, lancer, lancerJour, partir, carte, titre, fin, get st() { return st; }, get mode() { return mode; } };
 </script>
 <script>
 /* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */

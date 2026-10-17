@@ -1,6 +1,6 @@
 /* Odyssée, sous Node : chaque plateau se lit sans erreur et le pilote automatique le traverse
    sans naufrage (au moins 3 fois sur 5 avec des flèches ou des rochers), sous le temps cible
-   (3 étoiles possibles) ; plusieurs graines pour les dangers.
+   (3 étoiles possibles) ; plusieurs graines pour les dangers ; plateaux du jour (miroir) faisables.
    node outils/odyssee.js [plateau] [dessin]   ex. : node outils/odyssee.js 3-2 dessin
    Code de sortie 1 si un plateau ne va pas. */
 const O = require('../odyssee/regles.js');
@@ -27,6 +27,12 @@ for (const P of O.PLATEAUX) {
     while (!st.fini && st.t < 180) { O.pas(st, O.pilote(st), 1 / 60); const r = g[2 * Math.floor(st.y) + 1], c = 2 * Math.floor(st.x) + 1; if (r && r[c] === '.') r[c] = '·'; }
     console.log(g.map(r => '   ' + r.join('').replace(/\./g, ' ').replace(/·/g, 'o')).join('\n'));
   }
+}
+// plateau du jour : chaque plateau du tirage, retourné gauche-droite, reste faisable
+if (!seul) {
+  const ko = O.POOL_JOUR().filter(P => { const Q = O.variante(P, true, false, 'v'); return Q.map.erreurs.length || [1, 2, 3].some(g => !O.simuler(Q, g, 180).fini); }).map(P => P.id);
+  console.log(`${ko.length ? 'ÉCHEC' : 'ok   '} plateau du jour : les ${O.POOL_JOUR().length} plateaux du tirage, en miroir, sont faisables${ko.length ? ' — sauf ' + ko.join(', ') : ''}`);
+  fail += ko.length;
 }
 // étoiles
 const P = O.PLATEAUX[0];

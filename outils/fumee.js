@@ -1,6 +1,6 @@
 /* Test « fumée » dans Chromium : chaque jeu s'ouvre sans erreur JavaScript, l'accueil ouvre le volet
    d'un jeu (et l'ancien lien des classements y mène), et Nebula joue une partie (saut, combat au toucher,
-   fin de tour, écran INCIDENT), et Odyssée traverse un plateau avec son pilote automatique.
+   fin de tour, écran INCIDENT), et Odyssée traverse un plateau avec son pilote automatique, lance le plateau du jour et montre la cire.
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
@@ -74,6 +74,8 @@ const shots = process.argv[2];
         if (!document.querySelector('#svg .escale') || !document.querySelector('#cVolet .plat')) return "la carte de l'Égée est vide";
         O.lancer('3-1'); O.pilote = true; O.partir(); const x0 = O.st.x, y0 = O.st.y; await wait(1500);
         if (O.mode !== 'jeu' || Math.hypot(O.st.x - x0, O.st.y - y0) < 0.5) return 'la galère ne bouge pas';
+        O.lancerJour(); if (O.mode !== 'recit' || !O.st || !document.getElementById('rChant').textContent.includes('PLATEAU DU JOUR')) return 'le plateau du jour ne se lance pas';
+        O.lancer('7-2'); O.partir(); await wait(300); if (document.getElementById('bCire').hidden) return 'pas de bouton CIRE chez les Sirènes';
         return 'ok';
       });
       if (r !== 'ok') errs.push('Odyssée : ' + r);
