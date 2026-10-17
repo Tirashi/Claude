@@ -99,6 +99,7 @@ button.doux, .lien { background: #e3f4fa; color: #1d6f8f; box-shadow: 0 4px 0 #b
   <div class="ecran" id="ePause" hidden>
     <div class="carte">
       <p class="titre2">PAUSE</p>
+      <p class="petit" id="pTourne" hidden>Remets le téléphone droit, en portrait, pour reprendre.</p>
       <button id="bReprendre">REPRENDRE</button>
       <div class="rang"><button class="doux" id="bRecommencer">RECOMMENCER</button><button class="doux" id="bCarteP">LA CARTE</button></div>
     </div>
@@ -416,7 +417,7 @@ function montrer(id) { for (const e of ECRANS) $(e).hidden = e !== id; $('hud').
 function message(t, d) { $('msg').textContent = t; $('msg').classList.add('vu'); msgT = d || 1.4; }
 
 function titre() {
-  mode = 'titre'; montrer('eTitre');
+  debloquer(); mode = 'titre'; montrer('eTitre');
   $('totalTitre').textContent = totalEtoiles() ? `★ ${totalEtoiles()} étoiles · ${chantDe(ODY.EPISODES[episodeAtteint() - 1])}` : '';
   demo();
 }
@@ -434,12 +435,26 @@ function lancer(id) {
   $('rAide').textContent = E.aide;
   $('rCible').textContent = `★★★ sans naufrage, en moins de ${fmt(P.cible)}`;
 }
+// pendant la partie, l'écran reste en portrait quand on penche le téléphone (Chrome n'autorise
+// le blocage qu'en plein écran : la partie passe en plein écran, la carte et le titre en sortent)
+const TACTILE = matchMedia('(pointer: coarse)').matches;
+function bloquerPortrait() {
+  if (!TACTILE) return;
+  const el = document.documentElement, verrou = () => { try { screen.orientation.lock('portrait-primary').catch(() => {}); } catch (e) {} };
+  try { if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).then(verrou, verrou); else verrou(); } catch (e) {}
+}
+function debloquer() {
+  try { screen.orientation.unlock(); } catch (e) {}
+  try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+}
+const paysage = () => TACTILE && innerWidth > innerHeight;
+addEventListener('resize', () => { if (mode === 'jeu' && paysage()) pause(); $('pTourne').hidden = !paysage(); });
 function partir() {
-  demanderCapteur(); zero = null; doigt = null; penteDoigt = [0, 0];
+  demanderCapteur(); bloquerPortrait(); zero = null; doigt = null; penteDoigt = [0, 0];
   mode = 'jeu'; montrer(null); $('msg').classList.remove('vu');
 }
-function pause() { if (mode !== 'jeu') return; mode = 'pause'; montrer('ePause'); }
-function reprendre() { mode = 'jeu'; montrer(null); }
+function pause() { if (mode !== 'jeu') return; mode = 'pause'; montrer('ePause'); $('pTourne').hidden = !paysage(); }
+function reprendre() { bloquerPortrait(); mode = 'jeu'; montrer(null); }
 function fin() {
   mode = 'fin';
   const t = st.t, n = st.naufrages, e = ODY.etoiles(P, t, n), avant = STARS[P.id] || 0, record = BEST[P.id] == null || t * 1000 < BEST[P.id];
@@ -495,7 +510,7 @@ function ilot(x, y, rr, seed) {
 }
 let escaleChoisie = 1;
 function carte(ep) {
-  mode = 'carte'; montrer('egee');
+  debloquer(); mode = 'carte'; montrer('egee');
   const atteint = episodeAtteint(), dispo = ODY.EPISODES.length;
   escaleChoisie = ep || atteint;
   let s = `<defs><linearGradient id="gm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fd0e6"/><stop offset="1" stop-color="#1b98bf"/></linearGradient></defs>
