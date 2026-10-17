@@ -458,7 +458,7 @@ const GAMES = [
   {k: "amiral/index.html", n: "AMIRAL !", s: "AMIRAL !", ic: "anchor", fam: "32", lb: "linear-gradient(#1c579c, #0a1c40)", lt: "#ffd23f", sh: "#1c579c", rank: "amiral",
    d: "La bataille navale où chaque navire a un pouvoir : avion, salve, torpille et plongée du sous-marin.", tags: ["3 NIVEAUX"]},
   {k: "escadrille/index.html", n: "ESCADRILLE !", s: "ESCADRILLE", ic: "fighter", fam: "32", lb: "linear-gradient(#3a7cc4, #0f2850)", lt: "#ffd23f", sh: "#3a7cc4", rank: "escadrille",
-   d: "La bataille aérienne où chaque avion a un pouvoir : radar, bombes en croix, missile et esquive de l'hélicoptère. Abats l'escadrille pirate cachée dans les nuages.", tags: ["3 NIVEAUX"]},
+   d: "La bataille aérienne où chaque avion a un pouvoir : radar, bombes en croix, missile et esquive de l'hélicoptère. Abats l'escadrille pirate cachée dans les nuages, gagne des escadrilles au hangar.", tags: ["3 NIVEAUX", "4 ESCADRILLES"]},
   {k: "club/index.html", n: "LE CLUB D'AGILITY", s: "CLUB AGILITY", ic: "cup", fam: "32", lb: "linear-gradient(#3f8a37, #173a1a)", lt: "#ffd23f", sh: "#3f8a37", rank: "club",
    d: "Recrute des chiens, entraîne-les semaine après semaine et mène ton club jusqu'au Championnat de France.", tags: ["6 RACES"]},
   {k: "orbite/index.html", n: "ORBITE", s: "ORBITE", ic: "planet", fam: "32", lb: "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt: "#6fd8ff", sh: "#5a3ab8", rank: "orbite",
@@ -495,7 +495,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
-  "escadrille/index.html": {added: "2026-10-17", genres: ["TACTIQUE"]},
+  "escadrille/index.html": {added: "2026-10-17", updated: "2026-10-17", genres: ["TACTIQUE"]},
   "odyssee/index.html": {added: "2026-10-17", genres: ["ADRESSE", "DU JOUR"]},
   "empilage/index.html": {added: "2026-10-16", genres: ["ADRESSE", "DU JOUR"]},
   "calculator/index.html": {added: "2026-10-16", genres: ["CALCUL", "DU JOUR"]},
@@ -519,6 +519,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-17", "Escadrille ! : le hangar et trois escadrilles à débloquer (Furtif, Hélices, Canonnière), un sol différent à chaque partie, et les pilotes abattus sautent en parachute."],
   ["2026-10-17", "Nouveau jeu : Escadrille !, la petite sœur d'Amiral ! dans le ciel. Quatre avions à pouvoirs (radar, bombes en croix, missile, esquive de l'hélicoptère) sur un ciel de 9 × 9, contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As."],
   ["2026-10-17", "Nouveau jeu : Odyssée, le deuxième jeu en 3D. Penche le téléphone (ou glisse le doigt) pour ramener la galère d'Ulysse de Troie à Ithaque : 10 épisodes de 3 plateaux, de Polyphème aux Sirènes en passant par Charybde et Scylla, et un plateau du jour pour toute la famille."],
   ["2026-10-16", "Accueil : les jeux en 3D ont leur propre cartouche, un CD dans un boîtier translucide couleur bonbon. Empilage est le premier à l'avoir."],
@@ -609,7 +610,7 @@ const RECS = {
   "touche-coule/index.html": () => { const b = rk("touchecoule.best", {}) || {}, ai = {easy: "facile", normal: "normale", hard: "amiral"};
     return Object.keys(b).filter(k => b[k] > 0).sort().map(k => { const [m, a] = k.split(":"); return [`${m === "arsenal" ? "Arsenal" : "Classique"} · IA ${ai[a] || a}`, num(b[k], "tirs")]; }); },
   "amiral/index.html": () => { const b = rk("amiral.best", {}) || {}; return [["easy", "Mousse"], ["normal", "Capitaine"], ["hard", "Amiral"]].map(([k, l]) => [l, num(b[k], "tours")]); },
-  "escadrille/index.html": () => { const b = rk("escadrille.best", {}) || {}; return [["easy", "Recrue"], ["normal", "Pilote"], ["hard", "As"]].map(([k, l]) => [l, num(b[k], "tours")]).concat([["Victoires", num(rk("escadrille.victoires", 0), "")]]); },
+  "escadrille/index.html": () => { const b = rk("escadrille.best", {}) || {}; return [["easy", "Recrue"], ["normal", "Pilote"], ["hard", "As"]].map(([k, l]) => [l, num(b[k], "tours")]).concat([["Victoires", num(rk("escadrille.victoires", 0), "")], ["Escadrilles", `${Math.max(1, (rk("escadrille.skins", ["a"]) || ["a"]).length)}/4`]]); },
   "club/index.html": () => { const g = rk("club.save", null) || {};
     return [["Réputation", num(Math.max(g.rep || 0, g.bestRep || 0))], ["Champion de France en", num(g.champion, "semaines")], ["Partie en cours", g.week > 1 ? "semaine " + g.week : null]]; },
   "lune-rover/index.html": () => { const s = rk("lunerover.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },
@@ -1194,7 +1195,7 @@ function collectSaves(){
   const ld = readKey("lignee.daily", {}); if (ld && Object.keys(ld).length) g.ligneeDaily = ld;
   const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
   const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
-  const es = {b: readKey("escadrille.best", {}) || {}, v: Number(readKey("escadrille.victoires", 0)) || 0}; if (Object.keys(es.b).length || es.v) g.escadrille = es;
+  const es = {b: readKey("escadrille.best", {}) || {}, v: Number(readKey("escadrille.victoires", 0)) || 0, s: readKey("escadrille.skins", []) || [], k: readKey("escadrille.skin", null)}; if (Object.keys(es.b).length || es.v) g.escadrille = es;
   const ob = readKey("orbite.stars", {}); if (ob && Object.keys(ob).length) g.orbite = ob;
   const lr = readKey("lunerover.stars", {}); if (lr && Object.keys(lr).length) g.lunerover = lr;
   const al = {b: Number(readKey("alunissage.best", 0)) || 0, s: Number(readKey("alunissage.sites", 0)) || 0, d: readKey("alunissage.daily", {}) || {}};
@@ -1227,7 +1228,8 @@ function describeSaves(g){
   if (g.club && g.club.week) out.push(`Club d'agility : semaine ${g.club.week}, ${(g.club.dogs || []).length} chien${(g.club.dogs || []).length > 1 ? "s" : ""}, réputation ${g.club.rep || 0}`);
   if (g.amiral){ const v = Object.values(g.amiral).filter(x => x > 0); if (v.length) out.push(`Amiral ! : meilleure victoire en ${Math.min(...v)} tours`); }
   if (g.escadrille){ const v = Object.values(g.escadrille.b || {}).filter(x => x > 0), n = g.escadrille.v || 0;
-    if (v.length || n) out.push(`Escadrille ! : ${n} victoire${n > 1 ? "s" : ""}${v.length ? `, meilleure en ${Math.min(...v)} tours` : ""}`); }
+    const f = Math.max(1, (g.escadrille.s || []).length);
+    if (v.length || n) out.push(`Escadrille ! : ${n} victoire${n > 1 ? "s" : ""}${v.length ? `, meilleure en ${Math.min(...v)} tours` : ""}, ${f} escadrille${f > 1 ? "s" : ""} sur 4`); }
   if (g.alunissage) out.push(`Alunissage : record ${g.alunissage.b || 0} points, ${g.alunissage.s || 0} site${g.alunissage.s > 1 ? "s" : ""} atteint${g.alunissage.s > 1 ? "s" : ""}`);
   if (g.pontstellaire){ const p = g.pontstellaire, b = Object.keys(p.b || {}).sort((x, y) => x - y).map(n => `${n}×${n} en ${fmtTime(p.b[n])}`);
     out.push(`Pont stellaire : ${p.w || 0} constellation${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
@@ -1332,7 +1334,10 @@ function mergeSaves(g){
     if (n) writeKey("escadrille.best", mine);
     const vic = Math.round(Number(g.escadrille.v) || 0), myVic = Number(readKey("escadrille.victoires", 0)) || 0;
     if (vic > myVic) writeKey("escadrille.victoires", vic);
-    if (n || vic > myVic) done.push(`Escadrille ! : ${n ? n + " record" + (n > 1 ? "s" : "") : "victoires"}`);
+    const mySk = readKey("escadrille.skins", ["a"]) || ["a"], sk = ["a", "b", "c", "d"].filter(k => mySk.includes(k) || (Array.isArray(g.escadrille.s) && g.escadrille.s.includes(k)));
+    const newSk = sk.length > mySk.length; if (newSk) writeKey("escadrille.skins", sk);
+    if (!readKey("escadrille.skin", null) && /^[abcd]$/.test(g.escadrille.k || "") && sk.includes(g.escadrille.k)) writeKey("escadrille.skin", g.escadrille.k);
+    if (n || vic > myVic || newSk) done.push(`Escadrille ! : ${n ? n + " record" + (n > 1 ? "s" : "") : vic > myVic ? "victoires" : "escadrilles"}`);
   }
   if (g.alunissage && typeof g.alunissage === "object"){
     const a = g.alunissage; let n = 0;

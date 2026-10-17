@@ -8,7 +8,7 @@ Maquette validée le 17/10 : https://claude.ai/artifact/Kbhvmnp4ahAAW9msZiUaqE �
 - **Avions en relief façon Nebula** : construits avec le moteur de `nebula/vaisseaux.js` (`builder`, `render`, `half`, `MAT`), en double définition (`setScale(2)`). Pour chaque sens, la construction est tournée **avant** l'éclairage (`rotBuilder` de la maquette) : la lumière vient toujours d'en haut à gauche. Sprites fabriqués à la demande puis gardés.
 - **Écran en 544 × 960** (comme Nebula) : on dessine avec `setTransform(2, 0, 0, 2, 0, 0)` sur une base logique de 272 × 480 ; l'interface pixel d'Amiral reste nette (rectangles entiers, lissage coupé), les avions sont dessinés lissés.
 - **Écartés** : la règle du cockpit, le Canadair, le dirigeable (pour le moment), les dessins pixel, jouets, patrouille et les simples changements de couleur.
-- **Encore à choisir plus tard** : le ciel du jour (classement famille, une tentative par jour, règle des défis du jour), le pilote en parachute quand un avion est abattu.
+- **Décidé le 17/10 (session 2)** : le pilote en parachute quand un avion est abattu : **oui** ; le ciel du jour : **non**.
 
 ## 2. Règles
 - Ciel de **9 × 9** (cases de 23 px logiques, grille en `BX = 40`, `BY = 58`). Chacun cache son escadrille ; à chaque tour **un tir ou un pouvoir prêt**, comme dans Amiral !.
@@ -66,3 +66,11 @@ Les familles ne changent que le dessin (mêmes cases, mêmes règles). Les ennem
 - **Intégration** : accueil (cartouche 32 bits, icône `fighter`, volet avec records et victoires, classement par niveau), `ludo-scores.js` (`registerExisting`, `PSEUDO_BOARDS`, `SYNC` 15), `sw.js` v35, test fumée (un toucher largue une bombe, l'ordinateur riposte).
 - **Le sol** (retour du 17/10 : le ciel bleu faisait penser à de l'eau) : `escadrille/sol.js` (`EscSol.build(st)`, tuiles de 272 × 256 sans couture) ; A campagne, B forêts et montagnes, C désert et canyon, **tiré au hasard à chaque partie** (`SOL`). Il défile vers le bas (8 px/s sous la grille, 5 px/s en fond assombri des menus), avec un voile d'altitude, les cumulus et leur ombre. Marge du bas : zone sûre du téléphone + 14 px.
 - **À essayer sur le téléphone** : fluidité, taille des cases (23 px logiques), difficulté des trois niveaux, classement avec un vrai record.
+
+## 8. Bilan de la session 2 (17/10)
+- **Familles** : `SKINS` (A escadre, B furtif, C hélices, D canonnière), `STYLE` = famille choisie (`escadrille.skin`). Les ennemis sont toujours les pirates de la même famille. `unlockedSkins()` : A au départ, B si `best.normal`, C si `victoires` ≥ 10, D si `best.hard` ; le résultat est gardé dans `escadrille.skins` (calculé au démarrage, donc les victoires d'avant la session 2 comptent).
+- **HANGAR** (bouton de l'écran titre, entre CLASSEMENT et LUDOTHEQUE) : 4 cartes avec une fenêtre sur le sol, mon escadrille en haut et les pirates en dessous ; bloquée : silhouettes sombres, BLOQUEE et la condition (C : compteur n/10) ; toucher une famille débloquée la met EN SERVICE.
+- **Annonce** : à la victoire qui débloque, un cartouche doré « NOUVELLE ESCADRILLE DEBLOQUEE ! » sous le tableau de fin, avec les avions de la famille et « A CHOISIR AU HANGAR », et une petite fanfare (`SFX.unlock`).
+- **Parachute** : quand un avion est abattu, son pilote saute (deux pour le bombardier) : vu de dessus, la voile s'ouvre puis rapetisse en descendant vers le sol et dérive, avec son ombre ; voile blanche et rouge chez moi, jaune et noire chez les pirates (effet `para`, 3,8 s, `SFX.chute`).
+- **Préparation des sprites** : sur l'écran titre et au hangar, un sprite par image : la famille choisie dans les 4 sens, puis les autres familles nez en haut (pour le hangar) ; une famille choisie au hangar est préparée dans tous les sens.
+- **Accueil et transfert** : volet (records, victoires, escadrilles n/4), transfert `LUDO1-` (familles débloquées réunies, famille choisie reprise si on n'en a pas), quoi de neuf, étiquette MAJ. Test fumée : le hangar s'affiche.

@@ -73,7 +73,16 @@ const store = {
   get(k, d) { try { const v = JSON.parse(localStorage.getItem('escadrille.' + k)); return v == null ? d : v; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('escadrille.' + k, JSON.stringify(v)); } catch (e) {} },
 };
-let STYLE = 'a'; // famille d'avions (session 2 : HANGAR et déblocages)
+// les familles d'avions (skins) : elles ne changent que le dessin ; les ennemis sont les pirates de la même famille
+const SKINS = [['a', 'ESCADRE'], ['b', 'FURTIF'], ['c', 'HELICES'], ['d', 'CANONNIERE']];
+const SKIN_HOW = { b: 'UNE VICTOIRE EN PILOTE', c: '10 VICTOIRES', d: 'UNE VICTOIRE EN AS' };
+// familles débloquées : A au départ, B = une victoire en PILOTE, C = 10 victoires (tous niveaux), D = une victoire en AS
+function unlockedSkins() {
+  const best = store.get('best', {}) || {}, v = Number(store.get('victoires', 0)) || 0, has = new Set(store.get('skins', []) || []);
+  has.add('a'); if (best.normal) has.add('b'); if (v >= 10) has.add('c'); if (best.hard) has.add('d');
+  return SKINS.map(x => x[0]).filter(k => has.has(k));
+}
+let STYLE = 'a'; // famille choisie (escadrille.skin)
 
 /* =========================================================
    AUDIO (WebAudio chiptune, moteur d'Amiral !)
@@ -127,6 +136,8 @@ const SFX = {
   missile() { noise({ d: 0.9, v: 0.3, freq: 3000, f2: 500, type: 'bandpass', q: 0.9 }); tone({ f: 220, f2: 90, d: 0.8, v: 0.07, type: 'sawtooth' }); },
   esquive() { for (let i = 0; i < 12; i++) noise({ d: 0.05, v: 0.22, freq: 380, type: 'lowpass', t: i * 0.075 }); tone({ f: 300, f2: 700, d: 0.9, v: 0.04, type: 'triangle' }); },
   ready()   { seq([880, 1175], 0.06, { v: 0.06 }); },
+  chute()   { noise({ d: 0.3, v: 0.12, freq: 2200, f2: 900, type: 'bandpass', q: 0.8 }); tone({ f: 520, f2: 820, d: 0.18, v: 0.05, type: 'sine', t: 0.05 }); },
+  unlock()  { seq([523, 659, 784, 1047, 0, 784, 1047, 1319], 0.09, { v: 0.08, type: 'triangle' }); },
   win()     { seq([523, 523, 523, 659, 0, 587, 659, 784, 0, 1047], 0.11, { v: 0.1 }); seq([131, 0, 196, 0, 165, 0, 196, 0, 262], 0.12, { type: 'triangle', v: 0.2 }); },
   lose()    { seq([392, 370, 349, 330, 0, 311, 294, 277, 262], 0.16, { v: 0.09 }); seq([98, 0, 92, 0, 87, 0, 82, 0, 65], 0.16, { type: 'triangle', v: 0.2 }); },
 };
@@ -287,7 +298,7 @@ function plane(st, side, id, d) {
   if (m.pirate) { R.paint(w * .2, h * .52, w * .14, h * .12, 'scrap'); R.paint(w * .62, h * .28, w * .1, h * .1, 'hazard'); R.greebles(8, 99, [0, 0, w, h]); }
   const s = NV.render(R.B, { seed: { bomb: 3, radar: 7, jet: 11, heli: 13 }[id] + (side === 'foe' ? 20 : 0) });
   return PLANES[key] = { img: s.img, w: s.w, h: s.h, engines: s.engines, lueur: LUEUR[m.lueur],
-    sh: tint(s.img, 'rgba(4,16,44,.36)'), dead: over(s.img, 'rgba(20,16,24,.6)'), spot: tint(s.img, '#ffd23f'),
+    sh: tint(s.img, 'rgba(4,16,44,.36)'), dead: over(s.img, 'rgba(20,16,24,.6)'), spot: tint(s.img, '#ffd23f'), sil: tint(s.img, '#0c1222'),
     anims: an.map(([k, x, y, ...r]) => [k, ...R.T([x, y]), ...r]) };
 }
 function rotorL(g, x, y, r, t, sens) { // pales d'hélicoptère, floues
@@ -656,7 +667,16 @@ function resolveShot(key, c, r) {
   burst(key, x, y, 'boom', 26); S.fx.push({ type: 'boom', key, x, y, t0: now(), dur: 480 }); SFX.boom(); S.shake = now();
   if (p.hits >= p.def.cells.length) {
     p.down = true; SFX.down();
-    cellsOf(p).forEach(([cc, rr], i) => setTimeout(() => { burst(key, cx(cc), cy(rr), 'boom', 12); S.fx.push({ type: 'boom', key, x: cx(cc), y: cy(rr), t0: now(), dur: 480 }); }, 120 * i));
+    const cells = cellsOf(p);
+    cells.forEach(([cc, rr], i) => setTimeout(() => { burst(key, cx(cc), cy(rr), 'boom', 12); S.fx.push({ type: 'boom', key, x: cx(cc), y: cy(rr), t0: now(), dur: 480 }); }, 120 * i));
+    // le pilote saute en parachute (deux pour le bombardier)
+    const mx = cells.reduce((a, [x]) => a + cx(x), 0) / cells.length, my = cells.reduce((a, [, y]) => a + cy(y), 0) / cells.length;
+    setTimeout(() => {
+      if (S.phase === 'title') return;
+      SFX.chute();
+      for (let k = 0; k < (p.def.id === 'bomb' ? 2 : 1); k++)
+        S.fx.push({ type: 'para', key, x: mx, y: my, dx: (k ? 1 : -1) * (.5 + Math.random() * .5) * (Math.random() < .5 ? 1 : -1), dy: .4 + Math.random() * .5, ph: Math.random() * TAU, t0: now() + k * 250, dur: 3800, done() {} });
+    }, 120 * cells.length + 150);
     return { hit: true, down: p };
   }
   return { hit: true };
@@ -793,7 +813,11 @@ function gameOver(win) {
       rec = !best[S.diff] || st.turns < best[S.diff]; if (rec) { best[S.diff] = st.turns; store.set('best', best); }
       store.set('victoires', (store.get('victoires', 0) || 0) + 1);
     }
-    S.endInfo = { win, rec, best: best[S.diff] || 0 };
+    // une nouvelle famille d'avions débloquée ?
+    const before = store.get('skins', ['a']) || ['a'], after = unlockedSkins(), fresh = after.filter(k => !before.includes(k));
+    store.set('skins', after);
+    S.endInfo = { win, rec, best: best[S.diff] || 0, unlock: fresh[0] || null };
+    if (fresh.length) setTimeout(() => SFX.unlock(), 1400);
     if (!win) setView('enemy');
     S.rankText = rec ? 'NOUVEAU RECORD !' : '';
     if (win && rec && window.LudoScores) LudoScores.submit('escadrille', 'best:' + S.diff, st.turns, true).then(r => {
@@ -971,6 +995,21 @@ function drawFx(g, f, t) {
     g.globalAlpha = 1;
     if (f.h) { R(g, head - 9, lc - 2, 10, 4, OUT); R(g, head - 8, lc - 1, 8, 2, '#c8d0dc'); R(g, head - 1, lc - 1, 1, 2, '#e04a3c'); R(g, head - 11, lc - 1, 2, 2, '#ff9a3c'); }
     else { R(g, lc - 2, head - 9, 4, 10, OUT); R(g, lc - 1, head - 8, 2, 8, '#c8d0dc'); R(g, lc - 1, head - 1, 2, 1, '#e04a3c'); R(g, lc - 1, head - 11, 2, 2, '#ff9a3c'); }
+  } else if (f.type === 'para') { // vu de dessus : la voile s'ouvre puis rapetisse en descendant vers le sol, en dérivant
+    if (u <= 0) return;
+    const x = f.x + f.dx * u * 34 + Math.sin(t * 2.2 + f.ph) * 2, y = f.y + f.dy * u * 34, open = Math.min(1, u * 7), r = (1.5 + 6 * open) * (1 - u * .55);
+    const cols = f.key === 'player' ? ['#f2f0ff', '#e04a3c'] : ['#ffd23f', '#3a3040'], spin = Math.sin(t * 1.5 + f.ph) * .4;
+    g.globalAlpha = u > .8 ? (1 - u) / .2 : 1;
+    g.fillStyle = 'rgba(4,16,44,.3)'; g.beginPath(); g.arc(x + 4 + u * 6, y + 6 + u * 8, r, 0, TAU); g.fill();       // son ombre, plus loin à mesure qu'il descend
+    const py = y + r * .45 + 2;
+    g.strokeStyle = 'rgba(40,40,50,.8)'; g.lineWidth = .6; g.beginPath(); g.moveTo(x - r * .8, y); g.lineTo(x, py); g.lineTo(x + r * .8, y); g.stroke();
+    R(g, Math.round(x) - 1, Math.round(py), 2, 3, '#5a3a28'); R(g, Math.round(x) - 1, Math.round(py), 2, 1, '#f0b48c');  // le pilote, dessous
+    if (open > .3) {
+      for (let k = 0; k < 8; k++) { g.fillStyle = cols[k % 2]; g.beginPath(); g.moveTo(x, y); g.arc(x, y, r, spin + k * TAU / 8, spin + (k + 1) * TAU / 8); g.closePath(); g.fill(); }
+      g.strokeStyle = OUT; g.lineWidth = .8; g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke();
+      g.fillStyle = OUT; g.beginPath(); g.arc(x, y, Math.max(.6, r * .14), 0, TAU); g.fill();
+    }
+    g.globalAlpha = 1;
   } else if (f.type === 'dodge') { // l'hélicoptère file vers sa nouvelle place (caché dans le ciel ennemi)
     if (f.key === 'player') {
       const q = ease(u), p = S.player.planes[HELI], art = artOf('player', p, f.d);
@@ -1041,13 +1080,62 @@ function drawTitle(t) {
     tiny(g, best[k] ? `RECORD ${best[k]} TOURS` : 'PAS DE RECORD', x + 41, 292, best[k] ? '#ffd23f' : '#7d8698', 'center');
   });
   button(56, 308, 160, 40, 'DECOLLAGE !', { gold: true, act: () => { audioInit(); SFX.start(); newGame(); } });
-  if (!window.ludoArtefact) button(140, 360, 76, 26, '< LUDOTHEQUE', { tiny: true, act: () => { location.href = '../index.html'; } });
-  button(56, 360, window.ludoArtefact ? 160 : 76, 26, 'CLASSEMENT', { tiny: !window.ludoArtefact, act: () => { location.href = rankUrl(); } });
+  const art = !!window.ludoArtefact, bw = art ? 116 : 78;
+  button(16, 360, bw, 26, 'CLASSEMENT', { tiny: true, act: () => { location.href = rankUrl(); } });
+  button(LW - 16 - bw - (art ? 0 : bw + 6), 360, bw, 26, 'HANGAR', { tiny: true, gold: false, act: () => { SFX.select(); S.phase = 'hangar'; } });
+  if (!art) button(LW - 16 - bw, 360, bw, 26, '< LUDOTHEQUE', { tiny: true, act: () => { location.href = '../index.html'; } });
   button(56, 398, 76, 24, AC.sfxOn ? 'SON' : 'SON OFF', { tiny: true, disabled: !AC.sfxOn, act: () => { AC.sfxOn = !AC.sfxOn; if (AC.sfx) AC.sfx.gain.value = AC.sfxOn ? .9 : 0; saveOpts(); } });
   button(140, 398, 76, 24, AC.musicOn ? 'MUSIQUE' : 'MUSIQUE OFF', { tiny: true, disabled: !AC.musicOn, act: () => { AC.musicOn = !AC.musicOn; saveOpts(); } });
   g.drawImage(G.pilot, 8, 432);
   plate(g, 50, 438, LW - 58, 32);
   text(g, 'Abattez l\'escadrille', 58, 444, '#f2f0ff'); text(g, 'en moins de tours !', 58, 456, '#f2f0ff');
+}
+// une rangée des 4 avions d'une famille, réduits (k), nez en haut ; en silhouette si la famille est bloquée
+function familyRow(st, side, x, y, k, t, locked) {
+  let px = x;
+  FLEET.forEach((def, i) => {
+    const art = plane(st, side, def.id, 0);
+    g.save(); g.translate(px, y); g.scale(k, k);
+    if (locked) { g.imageSmoothingEnabled = true; g.drawImage(art.sil, 0, 0, art.w, art.h); g.imageSmoothingEnabled = false; }
+    else drawPlane(g, art, 0, 0, t, i, 0, true);
+    g.restore();
+    px += Math.round(art.w * k) + 4;
+  });
+}
+const rowWidth = k => FLEET.reduce((a, def) => a + Math.round(SIZE[def.id][0] * k) + 4, -4);
+function drawHangar(t) {
+  bg(t);
+  logo(g, 'HANGAR', LW / 2, 12, 18);
+  tiny(g, 'CHOISISSEZ VOTRE ESCADRILLE', LW / 2, 38, '#cfe6ff', 'center');
+  const sk = unlockedSkins(), v = Number(store.get('victoires', 0)) || 0, K2 = .42, rw = rowWidth(K2);
+  SKINS.forEach(([st, name], i) => {
+    const x = 8 + (i % 2) * 132, y = 50 + Math.floor(i / 2) * 176, w = 124, h = 168, ok = sk.includes(st), sel = STYLE === st;
+    plate(g, x, y, w, h, sel ? 'gold' : ok ? null : 'dim');
+    if (sel) { const c = Math.floor(t * 4) % 2 ? '#ffd23f' : '#fff6c2'; R(g, x - 1, y - 1, w + 2, 1, c); R(g, x - 1, y + h, w + 2, 1, c); R(g, x - 1, y - 1, 1, h + 2, c); R(g, x + w, y - 1, 1, h + 2, c); }
+    text(g, `${st.toUpperCase()}. ${name}`, x + w / 2, y + 7, ok ? (sel ? '#fff6c2' : '#ffd23f') : '#7d8698', 'center');
+    // la fenêtre sur le ciel : mon escadrille en haut, les pirates en dessous
+    const wx = x + 5, wy = y + 21, ww = w - 10, wh = 96;
+    g.save(); g.beginPath(); g.rect(wx, wy, ww, wh); g.clip();
+    ground(g, wx - 40, wy, ww + 80, wh, t, 6); g.fillStyle = ok ? 'rgba(150,190,230,.2)' : 'rgba(6,14,36,.6)'; g.fillRect(wx, wy, ww, wh);
+    familyRow(st, 'mine', wx + Math.floor((ww - rw) / 2), wy + 4, K2, t, !ok);
+    familyRow(st, 'foe', wx + Math.floor((ww - rw) / 2), wy + 50, K2, t, !ok);
+    g.restore();
+    R(g, wx - 1, wy - 1, ww + 2, 1, OUT); R(g, wx - 1, wy + wh, ww + 2, 1, OUT); R(g, wx - 1, wy, 1, wh, OUT); R(g, wx + ww, wy, 1, wh, OUT);
+    tiny(g, 'VOUS', wx + 3, wy + 3, '#cfe6ff'); tiny(g, 'PIRATES', wx + 3, wy + 49, '#ffd6cc');
+    if (ok) tiny(g, sel ? 'EN SERVICE' : 'TOUCHEZ POUR CHOISIR', x + w / 2, y + 128, sel ? '#8ee05a' : '#ffffff', 'center');
+    else {
+      tiny(g, 'BLOQUEE', x + w / 2, y + 126, '#ff8a76', 'center');
+      tiny(g, SKIN_HOW[st], x + w / 2, y + 138, '#cfe6ff', 'center');
+      if (st === 'c') tiny(g, `${Math.min(v, 10)}/10`, x + w / 2, y + 150, '#ffd23f', 'center');
+    }
+    BTN.push({ x, y, w, h, act: () => {
+      if (!ok) { SFX.error(); return; }
+      if (STYLE !== st) { STYLE = st; store.set('skin', st); warm(st, true); SFX.select(); }
+    } });
+  });
+  button(86, 410, 100, 26, 'RETOUR', { tiny: true, act: () => { SFX.click(); S.phase = 'title'; } });
+  tiny(g, 'LES FAMILLES NE CHANGENT QUE LE DESSIN', LW / 2, 446, '#8fb3e0', 'center');
+  tiny(g, 'LES ENNEMIS SONT LES PIRATES DE LA MEME FAMILLE', LW / 2, 456, '#8fb3e0', 'center');
 }
 function setMissile(h) {
   if (S.missH === h) return;
@@ -1179,19 +1267,28 @@ function drawOver(t) {
   button(32, y + 184, 100, 26, 'REJOUER', { gold: true, tiny: true, act: () => { newGame(); } });
   button(140, y + 184, 100, 26, 'CLASSEMENT', { tiny: true, act: () => { location.href = rankUrl(); } });
   button(86, y + 216, 100, 22, 'MENU', { tiny: true, act: () => { S.phase = 'title'; S.fx = []; S.parts = []; } });
+  if (e.unlock) { // une nouvelle famille d'avions : on la montre sous le tableau
+    const uy = y + 258, name = SKINS.find(x => x[0] === e.unlock)[1], K2 = .42;
+    plate(g, 16, uy, LW - 32, 74, 'gold');
+    tiny(g, 'NOUVELLE ESCADRILLE DEBLOQUEE !', LW / 2, uy + 6, Math.floor(t * 3) % 2 ? '#ffd23f' : '#fff6c2', 'center');
+    familyRow(e.unlock, 'mine', 24, uy + 17, K2, t, false);
+    text(g, `${e.unlock.toUpperCase()}. ${name}`, 24 + rowWidth(K2) + 8, uy + 28, '#fff6c2');
+    tiny(g, 'A CHOISIR', 24 + rowWidth(K2) + 8, uy + 44, '#ffffff'); tiny(g, 'AU HANGAR', 24 + rowWidth(K2) + 8, uy + 52, '#ffffff');
+  }
 }
 
 // les avions sont fabriqués à la demande ; on prépare ceux de la famille en cours un par image, sur l'écran titre
 const WARM = [];
-for (const side of ['mine', 'foe']) for (const def of FLEET) for (let d = 0; d < 4; d++) WARM.push([side, def.id, d]);
+function warm(st, allDirs) { for (const side of ['mine', 'foe']) for (const def of FLEET) for (let d = 0; d < (allDirs ? 4 : 1); d++) WARM.push([st, side, def.id, d]); }
 function frame(ts) {
   const t = ts / 1000, dt = Math.min(.05, t - (T || t)); T = t;
-  if (WARM.length && S.phase === 'title') { const [side, id, d] = WARM.shift(); plane(STYLE, side, id, d); }
+  if (WARM.length && (S.phase === 'title' || S.phase === 'hangar')) { const [st, side, id, d] = WARM.shift(); plane(st, side, id, d); }
   for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; }
   S.parts = S.parts.filter(p => p.t < p.life);
   BTN = [];
   g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
   if (S.phase === 'title') drawTitle(t);
+  else if (S.phase === 'hangar') drawHangar(t);
   else if (S.phase === 'over') drawOver(t);
   else drawPlay(t);
   // un effet se termine même s'il n'est pas à l'écran (vue basculée)
@@ -1277,9 +1374,12 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) MUSIC
   const o = store.get('opts', {}) || {};
   if (o.sfx === false) AC.sfxOn = false; if (o.music === false) AC.musicOn = false;
   const d = store.get('diff', 'normal'); if (DIFFS.some(x => x[0] === d)) S.diff = d;
+  const sk = unlockedSkins(); store.set('skins', sk);
+  const k = store.get('skin', 'a'); if (sk.includes(k)) STYLE = k;
+  warm(STYLE, true); for (const [st] of SKINS) if (st !== STYLE) warm(st, false);
 }
 buildAll();
-window.Escadrille = { S, get sol() { return SOL; }, set sol(v) { SOL = v; }, FLEET, newGame, startBattle, playerAct, aiPlan, gameOver, randomFleet, shapeOf, cellsOf, store };
+window.Escadrille = { S, unlockedSkins, get style() { return STYLE; }, set style(v) { STYLE = v; }, get sol() { return SOL; }, set sol(v) { SOL = v; }, FLEET, newGame, startBattle, playerAct, aiPlan, gameOver, randomFleet, shapeOf, cellsOf, store };
 setTimeout(resize, 0); resize();
 (document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));
 </script>
