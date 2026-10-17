@@ -31,3 +31,6 @@ Jeu de dés en duel inspiré de l'**Orlog** d'Assassin's Creed Valhalla (Ubisoft
 
 ## Ampleur et découpage proposé
 🔴 Gros (2 à 3 conversations, Opus) : (1) maquette du style (dont le choix des dés ; montrer aussi l'écran à deux joueurs) ; (2) règles en logique pure dans `the-des-jarls/regles.js`, testables sous Node, + ordinateur + duel à deux ; (3) armées animées, campagne, déblocages, intégration (accueil, transfert `LUDO1-`, `sw.js`) ; plus tard : duel en famille avec Supabase.
+
+## Maquette (17/10)
+`maquettes/the-des-jarls.html` (https://claude.ai/artifact/JVCdwKwDpuyQuh4BVW3yq9), jouable dans les trois styles avec une première version des règles (6 dés, 3 lancers, flèches/boucliers, haches/casques, mains, faces dorées, faveur à 4 jetons : Thor foudroie 2 soldats, Idunn en relève 2 ; l'ordinateur garde haches, flèches et faces dorées). La classe `Partie` de la maquette peut servir de point de départ à `regles.js`. Écran à deux : téléphone à plat, dés et boutons de J2 tournés à 180°, bataille au milieu. Choix de l'utilisateur : à venir.
