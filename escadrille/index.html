@@ -24,6 +24,7 @@ body { display: flex; justify-content: center; align-items: flex-start; touch-ac
 <script src="../injagility/chiens32.js"></script>
 <script src="../nebula/vaisseaux.js"></script>
 <script src="avions.js"></script>
+<script src="sol.js"></script>
 <script src="../ludo-scores.js"></script>
 <script>
 'use strict';
@@ -400,7 +401,8 @@ function buildIcons() {
   G.pilot = A;
 }
 function buildAll() {
-  buildSky(); G.frameMine = buildFrame(true); G.frameFoe = buildFrame(false);
+  SOLS.forEach(st => EscSol.build(st));
+  buildSky(); G.cloudSh = tint(G.cumulus, 'rgba(8,20,30,.55)'); G.frameMine = buildFrame(true); G.frameFoe = buildFrame(false);
   buildLueurs(); buildFog(); buildBoom(); buildIcons(); buildFoePilot();
   [G.mini, G.miniG] = mk(BS + 24, BS + 24);
 }
@@ -728,7 +730,7 @@ function tickCd(side) {
   for (const p of Object.keys(b.cd)) if (b.cd[p] > 0) { b.cd[p]--; if (!b.cd[p] && side === 'player' && ready('player', p)) S.newReady = p; }
 }
 function newGame() {
-  S.player = makeBoard(); S.enemy = makeBoard();
+  S.player = makeBoard(); S.enemy = makeBoard(); SOL = SOLS[rand(3)];
   randomFleet(S.player);
   S.phase = 'place'; S.sel = null; S.busy = false; S.turn = 'player'; S.view = 'player'; S.prevView = null;
   S.stats = { turns: 0, shots: 0, hits: 0, aiShots: 0, aiHits: 0 };
@@ -850,8 +852,10 @@ function drawBoard(g, key, ox, oy, t, main) {
   g.save(); g.translate(ox, oy);
   g.beginPath(); g.rect(0, 0, BS, BS); g.clip();
   // le ciel et ses petits cumulus
-  g.drawImage(G.sky, -96 + Math.floor((t * 4) % 96), -96 + Math.floor((t * 2.4) % 96));
-  g.globalAlpha = .7; g.drawImage(G.cumulus, -Math.floor((t * 5) % BS), 0); g.globalAlpha = 1;
+  // le sol vu de très haut qui défile, le voile d'altitude, les petits nuages et leur ombre
+  ground(g, -30, 0, BS + 60, BS, t, 8);
+  g.fillStyle = 'rgba(150,190,230,.2)'; g.fillRect(0, 0, BS, BS);
+  g.globalAlpha = .5; g.drawImage(G.cloudSh, -Math.floor((t * 12) % BS) + 10, 14); g.globalAlpha = .8; g.drawImage(G.cumulus, -Math.floor((t * 12) % BS), 0); g.globalAlpha = 1;
   // les avions (ombre portée loin dessous : ils volent haut)
   b.planes.forEach((p, i) => {
     if (!p.placed || !(mine || p.down || reveal)) return;
@@ -1003,9 +1007,16 @@ function drawMsg(y) {
   const lines = wrap(S.msg, 31); let left = shown;
   lines.slice(0, 3).forEach((l, i) => { const part = l.slice(0, Math.max(0, left)); left -= l.length + 1; text(g, part, 9, y + 7 + i * 12, '#f2f0ff'); });
 }
+// le sol de la partie (campagne, forêts et montagnes, désert et canyon : escadrille/sol.js), tiré au hasard à chaque partie
+const SOLS = ['a', 'b', 'c'];
+let SOL = SOLS[rand(3)];
+function ground(gg, x0, y0, w, h, t, speed) { // le sol qui défile vers le bas, répété sans couture
+  const tile = EscSol.build(SOL), oy = Math.floor((t * speed) % EscSol.H);
+  for (let y = -EscSol.H + oy; y < h; y += EscSol.H) for (let x = 0; x < w; x += EscSol.W) gg.drawImage(tile, x0 + x, y0 + y);
+}
 function bg(t) {
-  g.drawImage(G.sky, -96 + Math.floor((t * 3) % 96), -96 + Math.floor((t * 2) % 96));
-  g.fillStyle = 'rgba(6,14,36,.55)'; g.fillRect(0, 0, LW, LH);
+  ground(g, 0, 0, LW, LH, t, 5);
+  g.fillStyle = 'rgba(6,14,36,.62)'; g.fillRect(0, 0, LW, LH);
 }
 const rankUrl = () => `../classements/index.html#escadrille-0-${S.diff}`;
 function drawTitle(t) {
@@ -1268,7 +1279,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) MUSIC
   const d = store.get('diff', 'normal'); if (DIFFS.some(x => x[0] === d)) S.diff = d;
 }
 buildAll();
-window.Escadrille = { S, FLEET, newGame, startBattle, playerAct, aiPlan, gameOver, randomFleet, shapeOf, cellsOf, store };
+window.Escadrille = { S, get sol() { return SOL; }, set sol(v) { SOL = v; }, FLEET, newGame, startBattle, playerAct, aiPlan, gameOver, randomFleet, shapeOf, cellsOf, store };
 setTimeout(resize, 0); resize();
 (document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));
 </script>
