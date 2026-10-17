@@ -19,7 +19,7 @@ header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
 .grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px 24px}
 .dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
 .tel{width:100%;max-width:300px;aspect-ratio:272/480;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated;cursor:pointer}
+.tel canvas{width:100%;height:100%;display:block;cursor:pointer}
 .dir h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:4px 0 0;letter-spacing:.04em}
 .dir p{margin:0;color:var(--doux);max-width:300px;font-size:15px;text-align:center}
 .dessins h2{font-family:var(--f-titre);font-size:14px;color:var(--or);margin:0 0 6px;line-height:1.5}
@@ -29,7 +29,7 @@ header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
 .carte:hover{border-color:#3f86c8}
 .carte:focus-visible{outline:3px solid #9fd3ff;outline-offset:2px}
 .carte[aria-pressed="true"]{border-color:var(--or);box-shadow:0 0 0 2px #060a18,0 0 18px rgba(255,210,63,.25)}
-.carte canvas{width:100%;aspect-ratio:272/232;image-rendering:pixelated;display:block}
+.carte canvas{width:100%;aspect-ratio:272/232;display:block}
 .carte h3{font-family:var(--f-titre);font-size:11px;color:var(--or);margin:4px 0 0;line-height:1.5}
 .carte p{margin:0;font-size:14px;color:var(--doux);line-height:1.45}
 .carte .etat{font-family:var(--f-titre);font-size:8px;color:#8ee05a;min-height:1em}
@@ -58,20 +58,20 @@ header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
 
 <section class="dessins">
   <h2>LES AVIONS : 3 DESSINS</h2>
-  <p>Touche un dessin pour le voir aussi sur les trois écrans de jeu. En haut, ton escadrille ; en bas, celle de l'ennemi.</p>
+  <p>Les avions sont dessinés avec le moteur des vaisseaux de Nebula : un vrai relief éclairé (plaques, rainures, ombres, reflets, petits boîtiers, verrières, feux, lueur des réacteurs). Touche un dessin pour le voir aussi sur les trois écrans de jeu. En haut, ton escadrille ; en bas, celle de l'ennemi.</p>
   <div class="cartes">
-    <button class="carte" id="choix-a" type="button" aria-pressed="false"><canvas id="carte-a" width="272" height="232"></canvas><h3>A. MODERNE</h3><p>Avions d'aujourd'hui en gris basse visibilité : lignes de tôles, volets, rivets, entrées d'air, traînées d'échappement, tourelle, numéros. Les ennemis sont couleur sable.</p><span class="etat"></span></button>
-    <button class="carte" id="choix-b" type="button" aria-pressed="false"><canvas id="carte-b" width="272" height="232"></canvas><h3>B. METAL NU</h3><p>Avions à hélices des années 40 en aluminium : rivets, capot antireflet, bandes noires et blanches, échappements, tourelle vitrée. Les ennemis sont vert olive.</p><span class="etat"></span></button>
-    <button class="carte" id="choix-c" type="button" aria-pressed="false"><canvas id="carte-c" width="272" height="232"></canvas><h3>C. CAMOUFLAGE</h3><p>Les mêmes avions à hélices, camouflés en vert et terre. Les ennemis portent un camouflage gris en éclats.</p><span class="etat"></span></button>
+    <button class="carte" id="choix-a" type="button" aria-pressed="false"><canvas id="carte-a" width="544" height="464"></canvas><h3>A. ESCADRE</h3><p>Comme la flotte de Nebula : acier canon de fusil, marquages ambre, verrières qui brillent, lueur bleue des réacteurs. Les ennemis sont des pirates en tôle rouillée, avec bandes de danger et feux rouges.</p><span class="etat"></span></button>
+    <button class="carte" id="choix-b" type="button" aria-pressed="false"><canvas id="carte-b" width="544" height="464"></canvas><h3>B. CERAMIQUE</h3><p>Même relief, coques gris clair et marquages bleu acier, feux cyan. Les ennemis sont noirs avec des marquages rouges.</p><span class="etat"></span></button>
+    <button class="carte" id="choix-c" type="button" aria-pressed="false"><canvas id="carte-c" width="544" height="464"></canvas><h3>C. ESCADRILLE DE NUIT</h3><p>Coques sombres, presque noires, et plus de feux ambre allumés. Les ennemis sont en tôle sombre avec des feux rouges.</p><span class="etat"></span></button>
   </div>
 </section>
 
 <div class="grille">
-  <section class="dir"><div class="tel"><canvas id="ecran1" width="272" height="480"></canvas></div>
+  <section class="dir"><div class="tel"><canvas id="ecran1" width="544" height="960"></canvas></div>
     <h2>1. ECRAN TITRE</h2><p>Les quatre pouvoirs, trois niveaux, et le pilote à la place de l'amiral. Touche un niveau.</p></section>
-  <section class="dir"><div class="tel"><canvas id="ecran2" width="272" height="480"></canvas></div>
+  <section class="dir"><div class="tel"><canvas id="ecran2" width="544" height="960"></canvas></div>
     <h2>2. PLACEMENT</h2><p>Touche un avion puis une case pour le déplacer. PIVOTER le tourne, HASARD mélange tout.</p></section>
-  <section class="dir"><div class="tel"><canvas id="ecran3" width="272" height="480"></canvas></div>
+  <section class="dir"><div class="tel"><canvas id="ecran3" width="544" height="960"></canvas></div>
     <h2>3. COMBAT</h2><p>À jouer : un tir ou un pouvoir par tour. Pour un pouvoir, touche une première fois pour viser, une deuxième fois pour lancer.</p></section>
 </div>
 
@@ -103,6 +103,7 @@ header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
 </div>
 
 <script src="../injagility/chiens32.js"></script>
+<script src="../nebula/vaisseaux.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -254,211 +255,151 @@ function buildFrame(mine) {
   return c;
 }
 
-/* ---------- les avions, vus de dessus, nez vers le haut : quatre dessins au choix ----------
-   Chaque dessin garde les mêmes formes de cases ; il change la silhouette, les couleurs et les animations
-   (rotor, hélices). */
-const Q = {
-  lowvis: ['#d8e0ea', '#a3b0c0', '#718096', '#46526a'], alu: ['#f2f4f6', '#c4cad2', '#8f97a3', '#5c6470'],
-  od: ['#a8a878', '#7c7c52', '#5a5a3a', '#3a3a26'], sky: ['#c8ecff', '#7cc4f4', '#4a96d4', '#2a5f9a'],
-  verre: ['#dce8ee', '#a2bccc', '#6e8ca4', '#465e74'],
-  sable: ['#d8cfae', '#b0a47e', '#857a58', '#5a5238'],
-  // cocardes ternes (basse visibilité) : rien de criard
-  cBleu: ['#8296bc', '#566c98', '#3c4e76', '#283652'], cBlanc: ['#e6e8ec', '#c4c8d0', '#9aa0aa', '#6e747e'], cRouge: ['#cc8478', '#a2584c', '#7a3e36', '#542824'],
-  eRouge: ['#b8665a', '#8e4438', '#6a2e28', '#461c1a'], eNoir: ['#5a5660', '#3c3842', '#2a2730', '#1a1820'],
-};
-// camouflages : la couleur dépend de la position du pixel (une fonction rend le nom de la nuance)
-Object.assign(RAMP, {
-  cVert: ['#8c9a6a', '#66744a', '#4a5636', '#2e3822'], cTerre: ['#a8906a', '#806a48', '#5e4c32', '#3c3020'],
-  cGris1: ['#c2c8cc', '#9aa2a8', '#747c84', '#4e555c'], cGris2: ['#9aa4ae', '#727e8a', '#56606c', '#3a424c'],
+/* ---------- les avions, en relief comme les vaisseaux de Nebula ----------
+   Chaque avion est une carte de hauteurs construite avec le moteur de nebula/vaisseaux.js
+   (plaques, rainures, ombres, reflets, verrières, petits boîtiers), puis éclairée.
+   Pour chaque sens, on tourne la construction AVANT l'éclairage : la lumière vient toujours d'en haut à gauche.
+   Les sprites sont fabriqués en double définition, à la demande, puis gardés. */
+const NV = window.NebulaVaisseaux; NV.setScale(2);
+Object.assign(NV.MAT, {
+  acier: { c: [136, 142, 152], spec: .45, plates: 1 }, acier2: { c: [100, 106, 116], spec: .35, plates: 1 },
+  blanc: { c: [178, 182, 188], spec: .45, plates: 1 }, blanc2: { c: [126, 132, 140], spec: .35, plates: 1 },
+  bleu: { c: [56, 94, 142], spec: .4, plates: 0 },
+  noir: { c: [56, 56, 62], spec: .35, plates: 1 }, noir2: { c: [38, 38, 44], spec: .3, plates: 1 },
 });
-const camoTaches = (s, x, y) => Math.sin(x * .19 + y * .07) + Math.sin(x * .05 - y * .21 + 1.7) + .7 * Math.sin((x + y) * .13 + 4) > .25 ? 'cVert' : 'cTerre';
-const camoEclats = (s, x, y) => ((Math.floor((x * .8 + y * .45) / 9) + Math.floor((y * .7 - x * .5) / 8)) % 2 + 2) % 2 ? 'cGris1' : 'cGris2';
 const STYLES = {
-  a: { geo: 'jet',
-    mine: { a: Q.lowvis, b: Q.lowvis, c: P.gun, r1: Q.cBleu, r2: Q.cBlanc, r3: Q.cRouge, h: Q.lowvis, num: 'F' },
-    foe:  { a: Q.sable, b: Q.sable, c: P.dark, r1: Q.eNoir, r2: Q.eRouge, r3: Q.eNoir, h: Q.sable, num: 'X' } },
-  b: { geo: 'prop',
-    mine: { a: Q.alu, b: Q.alu, c: P.dark, r1: Q.cBleu, r2: Q.cBlanc, r3: Q.cRouge, h: Q.alu, num: 'F', bandes: true, capot: true },
-    foe:  { a: Q.od, b: Q.od, c: P.dark, r1: Q.eNoir, r2: Q.eRouge, r3: Q.eNoir, h: Q.od, num: 'X' } },
-  c: { geo: 'prop',
-    mine: { a: camoTaches, b: camoTaches, c: P.dark, r1: Q.cBleu, r2: Q.cBlanc, r3: Q.cRouge, h: camoTaches, num: 'F' },
-    foe:  { a: camoEclats, b: camoEclats, c: P.dark, r1: Q.eNoir, r2: Q.eRouge, r3: Q.eNoir, h: camoEclats, num: 'X' } },
+  a: { mine: { hull: 'acier', hull2: 'acier2', deck: 'deck', mark: 'amber', feu: NV.WARM, lueur: 0 },
+       foe:  { hull: 'rust', hull2: 'scrap', deck: 'scrap', mark: 'hazard', feu: NV.REDL, lueur: 1 } },
+  b: { mine: { hull: 'blanc', hull2: 'blanc2', deck: 'blanc', mark: 'bleu', feu: NV.CYAN, lueur: 0 },
+       foe:  { hull: 'noir', hull2: 'noir2', deck: 'noir2', mark: 'red', feu: NV.REDL, lueur: 1 } },
+  c: { mine: { hull: 'hull', hull2: 'hull2', deck: 'acier2', mark: 'amber', feu: NV.WARM, lueur: 0, nuit: true },
+       foe:  { hull: 'scrap', hull2: 'black', deck: 'rust', mark: 'red', feu: NV.REDL, lueur: 1, nuit: true } },
 };
-let STYLE = 'b';
-function cocarde(x, y, s, on, p) { return [[C32.ell(x, y, s, s), p.r1, { on }], [C32.ell(x, y, s * .62, s * .62), p.r2, { on }], [C32.ell(x, y, s * .28, s * .28), p.r3, { on }]]; }
-// renvoie [largeur, hauteur, formes, animations] ; une animation = [x, y, sorte, réglage]
-function planeArt(geo, id, p) {
-  const W = id === 'heli' ? 23 : 69, c = W / 2, H = { bomb: 92, radar: 69, jet: 46, heli: 46 }[id];
-  if (geo === 'jet') {
-    if (id === 'bomb') return [W, H, [
-      [C32.cap(12, 80, 57, 80, 4), p.a], [C32.cap(4, 34, 65, 34, 6, 4.5), p.a],
-      [C32.cap(c - 12, 24, c - 12, 33, 3), p.c], [C32.cap(c + 12, 24, c + 12, 33, 3), p.c], [C32.cap(c - 24, 26, c - 24, 34, 2.6), p.c], [C32.cap(c + 24, 26, c + 24, 34, 2.6), p.c],
-      [C32.cap(c, 5, c, 84, 6.5, 4), p.a], [C32.cap(c, 72, c, 89, 1.8), p.c],
-      [C32.ell(c, 13, 3.5, 4), Q.verre, { on: [7] }],
-      ...cocarde(15, 34, 4, [2], p), ...cocarde(W - 15, 34, 4, [2], p),
-    ], []];
-    if (id === 'radar') return [W, H, [
-      [C32.cap(c - 11, 62, c + 11, 62, 3), p.b], [C32.cap(4, 34, 65, 34, 5, 3.6), p.b],
-      [C32.cap(c - 15, 24, c - 15, 34, 2.6), p.c], [C32.cap(c + 15, 24, c + 15, 34, 2.6), p.c],
-      [C32.cap(c, 4, c, 64, 5.5, 3.5), p.a], [C32.ell(c, 46, 10, 10), Q.lowvis === p.a ? P.dark : P.smoke],
-      [C32.ell(c, 46, 10, 2.2), P.smokeL, { on: [6] }], [C32.ell(c, 11, 3, 3.5), Q.verre, { on: [5] }],
-      ...cocarde(12, 34, 3.4, [2], p), ...cocarde(W - 12, 34, 3.4, [2], p),
-    ], []];
-    if (id === 'jet') return [W, H, [
-      [C32.cap(c, 20, 7, 38, 3, 4.5), p.b], [C32.cap(c, 20, W - 7, 38, 3, 4.5), p.b],
-      [C32.cap(c - 9, 42, c + 9, 42, 2.2), p.b], [C32.cap(7, 31, 7, 42, 1.2), P.white], [C32.cap(W - 7, 31, W - 7, 42, 1.2), P.white],
-      [C32.cap(c, 2, c, 43, 3, 4.5), p.a], [C32.ell(c, 14, 2.5, 5), Q.verre, { on: [6] }],
-      ...cocarde(19, 33, 2.8, [1], p), ...cocarde(W - 19, 33, 2.8, [2], p),
-    ], []];
-    return [W, H, [
-      [C32.cap(c - 7, 5, c - 7, 22, 1), P.dark], [C32.cap(c + 7, 5, c + 7, 22, 1), P.dark],
-      [C32.cap(c, 18, c, 41, 2.2, 1.4), p.h], [C32.ell(c, 41, 1.2, 4.5), P.dark],
-      [C32.ell(c, 13, 7, 9), p.h], [C32.ell(c, 8, 4.2, 3.6), Q.verre, { on: [5] }],
-    ], [[c, 14, 'rotor']]];
-  }
-  // hélices (années 40) : métal nu ou camouflage
-  if (id === 'bomb') return [W, H, [
-    [C32.cap(c, 80, 13, 80, 5, 2.6), p.a], [C32.cap(c, 80, W - 13, 80, 5, 2.6), p.a],
-    [C32.cap(c, 33, 3, 35, 7, 3.4), p.b], [C32.cap(c, 33, W - 3, 35, 7, 3.4), p.b],
-    [C32.cap(c - 11, 22, c - 11, 33, 2.8), p.a], [C32.cap(c + 11, 22, c + 11, 33, 2.8), p.a],
-    [C32.cap(c - 22, 24, c - 22, 34, 2.4), p.a], [C32.cap(c + 22, 24, c + 22, 34, 2.4), p.a],
-    [C32.cap(c, 3, c, 84, 6, 3), p.a], [C32.cap(c, 70, c, 90, 2), p.a],
-    [C32.ell(c, 7, 4, 4.5), Q.verre, { on: [9] }], [C32.ell(c, 23, 3, 2.4), Q.verre, { on: [9] }],
-    ...cocarde(16, 34, 4.2, [3], p), ...cocarde(W - 16, 34, 4.2, [4], p),
-  ], [[c - 11, 20, 'prop', 5], [c + 11, 20, 'prop', 5], [c - 22, 22, 'prop', 4.5], [c + 22, 22, 'prop', 4.5]]];
-  if (id === 'radar') return [W, H, [
-    [C32.cap(c - 18, 62, c + 18, 62, 2.6), p.a], [C32.ell(c - 18, 62, 1.8, 4.5), p.a], [C32.ell(c + 18, 62, 1.8, 4.5), p.a],
-    [C32.cap(3, 33, 66, 33, 4.6, 3.6), p.b],
-    [C32.cap(c - 14, 22, c - 14, 36, 3.2), p.a], [C32.cap(c + 14, 22, c + 14, 36, 3.2), p.a],
-    [C32.cap(c, 4, c, 63, 5.5, 3), p.a], [C32.ell(c, 42, 11, 11), P.smoke], [C32.ell(c, 42, 11, 2.4), P.smokeL, { on: [8] }],
-    [C32.ell(c, 10, 3.2, 3.4), Q.verre, { on: [7] }],
-    ...cocarde(10, 33, 3.2, [4], p), ...cocarde(W - 10, 33, 3.2, [4], p),
-  ], [[c - 14, 20, 'prop', 6], [c + 14, 20, 'prop', 6]]];
-  if (id === 'jet') return [W, H, [
-    [C32.ell(c, 31, 32, 7.5), p.b], [C32.ell(c, 42, 11, 3), p.a],
-    [C32.cap(c, 6, c, 43, 4.6, 2.4), p.a], [C32.cap(c, 3, c, 10, 4.6), P.dark, { on: [3] }], [C32.ell(c, 3, 2.4, 2.4), P.dark],
-    [C32.ell(c, 19, 2.6, 4.2), Q.verre, { on: [3] }],
-    ...cocarde(15, 31, 3.6, [1], p), ...cocarde(W - 15, 31, 3.6, [1], p),
-  ], [[c, 2, 'prop', 9]]];
-  return [W, H, [
-    [C32.cap(c - 7, 6, c - 7, 22, 1), P.dark], [C32.cap(c + 7, 6, c + 7, 22, 1), P.dark],
-    [C32.cap(c, 19, c, 40, 1.6, 1.1), p.h], [C32.ell(c, 41, 1.6, 4.5), p.h],
-    [C32.ell(c, 18, 5, 4), P.dark], [C32.ell(c, 11, 7, 7.5), Q.verre],
-  ], [[c, 15, 'rotor']]];
-}
-/* --- les détails, posés au pixel sur l'avion déjà dessiné (seulement sur ses pixels) --- */
-const DK = 'rgba(14,10,22,.32)', DK2 = 'rgba(14,10,22,.55)', LT = 'rgba(255,255,255,.32)', LT2 = 'rgba(255,255,255,.6)';
-function details(img, geo, id, p) {
-  const g = img.getContext('2d'), W = img.width, c = Math.floor(W / 2);
-  g.globalCompositeOperation = 'source-atop';
-  const px = (x, y, col) => R(g, Math.round(x), Math.round(y), 1, 1, col);
-  const ln = (x1, y1, x2, y2, col, step = 1) => { const n = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1)) || 1; for (let k = 0; k <= n; k += step) px(x1 + (x2 - x1) * k / n, y1 + (y2 - y1) * k / n, col); };
-  const riv = (x1, y1, x2, y2) => ln(x1, y1, x2, y2, LT2, 3);
-  const num = (s, x, y, col) => { let cx2 = x; for (const ch of s) { const b = TINY[ch]; if (b) for (let k = 0; k < 15; k++) if (b[k] === '1') px(cx2 + k % 3, y + (k / 3 | 0), col); cx2 += 4; } };
-  const verriere = (x, y0, y1) => { ln(x, y0, x, y1, DK2); ln(x - 2, Math.round((y0 + y1) / 2), x + 2, Math.round((y0 + y1) / 2), DK2); px(x - 1, y0 + 1, LT2); px(x - 1, y0 + 2, LT2); };
-  const dos = (y0, y1) => { ln(c - 2, y0, c - 2, y1, LT); };        // reflet le long du dos
-  const echappement = (x, y0, y1) => { ln(x, y0, x, y1, DK); ln(x + 1, y0 + 1, x + 1, y1 - 1, DK); };
-  const tourelle = (x, y) => { R(g, x - 2, y - 2, 5, 5, DK2); R(g, x - 1, y - 1, 3, 3, 'rgba(120,180,230,.7)'); px(x - 1, y - 1, LT2); ln(x - 1, y - 3, x - 1, y - 7, DK2); ln(x + 1, y - 3, x + 1, y - 7, DK2); };
-  const radome = (x, y, r) => { for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; ln(x + Math.cos(a) * 3, y + Math.sin(a) * 3, x + Math.cos(a) * (r - 1), y + Math.sin(a) * (r - 1), DK); } ring(g, x, y, r - 1, LT); R(g, x - 1, y - 1, 3, 3, DK2); };
-  const bandes = (x0, y0, w, h, vertical) => { for (let k = 0; k < 5; k++) { const col = k % 2 ? 'rgba(20,18,24,.8)' : 'rgba(255,255,255,.85)'; if (vertical) R(g, x0 + k * w, y0, w, h, col); else R(g, x0, y0 + k * h, w, h, col); } };
-  if (geo === 'jet') {
-    if (id === 'bomb') {
-      for (const x of [9, 18, 51, 60]) ln(x, 31, x, 38, DK);
-      ln(7, 38, 28, 38, DK2); ln(41, 38, 62, 38, DK2); ln(18, 36, 18, 39, DK2); ln(51, 36, 51, 39, DK2);
-      ln(6, 30, 63, 30, LT); riv(8, 34, 27, 34); riv(42, 34, 61, 34);
-      for (const x of [c - 12, c + 12, c - 24, c + 24]) { R(g, x - 1, 22, 3, 2, DK2); echappement(x, 34, 40); }
-      dos(9, 80); for (const y of [22, 46, 58, 70]) ln(c - 5, y, c + 5, y, DK); riv(c + 3, 26, c + 3, 66);
-      verriere(c, 9, 16); tourelle(c, 52);
-      ln(14, 82, 55, 82, DK2); num(p.num + '21', 17, 77, DK2); px(c, 62, DK2);
-    } else if (id === 'radar') {
-      for (const x of [9, 17, 52, 60]) ln(x, 31, x, 37, DK); ln(7, 37, 27, 37, DK2); ln(42, 37, 62, 37, DK2);
-      ln(6, 30, 63, 30, LT); for (const x of [c - 15, c + 15]) { R(g, x - 1, 22, 3, 2, DK2); echappement(x, 35, 40); }
-      dos(8, 34); ln(c - 4, 20, c + 4, 20, DK); ln(c - 3, 58, c + 3, 58, DK); riv(c + 3, 14, c + 3, 32);
-      radome(c, 46, 10); verriere(c, 8, 14); num(p.num + '05', 26, 60, DK2);
-      R(g, c - 1, 4, 3, 3, LT);
-    } else if (id === 'jet') {
-      ln(c - 1, 22, 10, 37, LT); ln(c + 1, 22, 59, 37, LT); ln(12, 39, 28, 39, DK2); ln(41, 39, 57, 39, DK2);
-      for (const [x, y] of [[20, 30], [16, 34], [49, 30], [53, 34]]) ln(x, y, x + (x < c ? 4 : -4), y + 4, DK);
-      R(g, c - 5, 19, 2, 6, DK2); R(g, c + 4, 19, 2, 6, DK2); verriere(c, 10, 18); dos(20, 40);
-      ln(c - 2, 30, c + 2, 30, DK); ln(c - 2, 34, c + 2, 34, DK); R(g, c - 2, 42, 5, 2, DK2);
-      for (const x of [7, W - 7]) { px(x, 31, DK2); px(x, 32, DK2); }
-      num('12', c - 3, 24, DK2);
-    } else {
-      ln(c, 5, c, 11, DK2); ln(6, 10, 6, 18, DK); ln(16, 10, 16, 18, DK); for (let y = 16; y <= 20; y += 2) ln(c - 3, y, c + 3, y, DK2);
-      for (let y = 22; y < 40; y += 3) px(c, y, DK); R(g, c - 2, 30, 5, 2, DK2); px(c - 2, 5, LT2); px(c - 1, 5, LT2);
-    }
-  } else {
-    if (id === 'bomb') {
-      for (const x of [8, 16, 53, 61]) ln(x, 32, x, 37, DK);
-      ln(c - 6, 39, 6, 37, DK2); ln(c + 6, 39, W - 7, 37, DK2); riv(6, 33, c - 7, 32); riv(c + 7, 32, W - 7, 33);
-      for (const x of [c - 11, c + 11, c - 22, c + 22]) { R(g, x - 2, 21, 5, 2, DK2); echappement(x, 34, 41); }
-      dos(10, 80); for (const y of [18, 44, 60, 74]) ln(c - 4, y, c + 4, y, DK); riv(c - 3, 28, c - 3, 70); riv(c + 3, 28, c + 3, 70);
-      if (p.capot) R(g, c - 2, 12, 5, 7, 'rgba(70,70,40,.7)');
-      if (p.bandes) bandes(c - 6, 62, 13, 2, false);
-      verriere(c, 4, 10); tourelle(c, 36); R(g, c - 1, 87, 3, 3, DK2);
-      ln(15, 82, 54, 82, DK); num(p.num + '42', 16, 77, DK2);
-    } else if (id === 'radar') {
-      for (const x of [10, 18, 51, 59]) ln(x, 30, x, 36, DK); ln(5, 36, c - 6, 37, DK2); ln(c + 6, 37, W - 6, 36, DK2);
-      riv(5, 32, c - 6, 32); riv(c + 6, 32, W - 6, 32);
-      for (const x of [c - 14, c + 14]) { R(g, x - 2, 21, 5, 2, DK2); echappement(x, 37, 42); }
-      dos(6, 28); ln(c - 4, 20, c + 4, 20, DK); riv(c + 3, 12, c + 3, 30);
-      if (p.capot) R(g, c - 2, 5, 5, 3, 'rgba(70,70,40,.7)');
-      radome(c, 42, 11); verriere(c, 7, 13); num(p.num + '07', 26, 60, DK2);
-    } else if (id === 'jet') {
-      for (const x of [11, 20, 49, 58]) ln(x, 27, x, 35, DK);
-      ln(5, 35, 22, 37, DK2); ln(47, 37, 64, 35, DK2); riv(8, 29, 26, 27); riv(43, 27, 61, 29);
-      for (const x of [18, 21, 48, 51]) px(x, 25, DK2);
-      for (const y of [6, 8, 10]) { px(c - 5, y, DK2); px(c + 5, y, DK2); } ln(c - 5, 11, c - 5, 16, DK); ln(c + 5, 11, c + 5, 16, DK);
-      if (p.bandes) { bandes(23, 25, 2, 13, true); bandes(37, 25, 2, 13, true); }
-      if (p.capot) R(g, c - 2, 11, 5, 4, 'rgba(70,70,40,.7)');
-      verriere(c, 16, 22); dos(24, 41); ln(c - 9, 43, c + 9, 43, DK2);
-      num(p.num + 'A', c - 3, 27, DK2);
-    } else {
-      ln(5, 10, 18, 10, DK2); ln(c, 5, c, 17, DK2); px(c - 3, 6, LT2); px(c - 2, 6, LT2); px(c - 3, 7, LT2);
-      for (let y = 15; y <= 21; y += 2) ln(c - 3, y, c + 3, y, DK2);
-      for (let y = 21; y < 40; y++) px(c + ((y % 4) < 2 ? -1 : 1), y, DK2);
-    }
-  }
-  g.globalCompositeOperation = 'source-over';
-  return img;
-}
-function rotPt([x, y], h) { return [h - 1 - y, x]; }
+let STYLE = 'a';
 function shapeOf(def, d) {
   let cells = def.cells, w = def.w, h = def.h;
   for (let k = 0; k < d; k++) { cells = cells.map(([x, y]) => [h - 1 - y, x]); [w, h] = [h, w]; }
   return { cells, w, h };
 }
-function buildPlanes() {
-  G.pl = {};
-  for (const st in STYLES) { G.pl[st] = {};
-    for (const side of ['mine', 'foe']) { G.pl[st][side] = {};
-      for (const def of FLEET) {
-        const S0 = STYLES[st], pal = S0[side], [w, h, list, anims] = planeArt(S0.geo, def.id, pal);
-        let img = details(spr(w, h, list), S0.geo, def.id, pal), an = anims, H = h; const out = [];
-        for (let d = 0; d < 4; d++) {
-          out.push({ img, sh: tint(img, 'rgba(4,16,44,.38)'), dead: over(img, 'rgba(26,22,30,.55)'), spot: tint(img, '#ffd23f'), anims: an });
-          an = an.map(a => [...rotPt(a, H), a[2], a[3]]); H = img.width; img = rot(img);
-        }
-        G.pl[st][side][def.id] = out;
-      }
+// un constructeur Nebula tourné d'un quart de tour d sens horaire : on décrit l'avion nez en haut
+function rotBuilder(w, h, d) {
+  const B = NV.builder(d % 2 ? h : w, d % 2 ? w : h);
+  const T = ([x0, y0]) => { let x = x0, y = y0, ch = h, cw = w; for (let k = 0; k < d; k++) { [x, y] = [ch - y, x]; [cw, ch] = [ch, cw]; } return [x, y]; };
+  const Rb = {
+    B, T,
+    poly(pts, top, bev, mat, base) { B.poly(pts.map(T), top, bev, mat, base); return Rb; },
+    box(x, y, bw, bh, top, bev, mat, base) { return Rb.poly([[x, y], [x + bw, y], [x + bw, y + bh], [x, y + bh]], top, bev, mat, base); },
+    dome(cx, cy, rx, ry, base, top, mat) { const [x, y] = T([cx, cy]); B.dome(x, y, d % 2 ? ry : rx, d % 2 ? rx : ry, base, top, mat); return Rb; },
+    greebles(n, seed, [ax, ay, aw, ah]) { const a = T([ax, ay]), b = T([ax + aw, ay + ah]); B.greebles(n, seed, [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])]); return Rb; },
+    lights(pts, col) { B.lights(pts.map(T), col); return Rb; },
+    engines(pts) { B.engines(pts.map(p => [...T(p), p[2]])); return Rb; },
+  };
+  return Rb;
+}
+const half = NV.half;
+const AVIONS = {
+  // BOMBARDIER : ailes droites, quatre réacteurs en nacelles, tourelle sur le dos
+  bomb: (R, m, c) => {
+    R.poly(half(c, [[0, 25], [32, 30], [32, 37], [0, 42]]), 5, 3, m.hull);
+    R.poly(half(c, [[0, 74], [16, 79], [16, 84], [0, 85]]), 4, 2, m.hull);
+    for (const s of [-1, 1]) {
+      R.poly([[c + s * 32, 31], [c + s * 27, 30.4], [c + s * 27, 37], [c + s * 32, 37]], 5, 1, m.mark, 3);
+      R.poly([[c + s * 16, 79], [c + s * 12, 78], [c + s * 12, 84], [c + s * 16, 84]], 5, 1, m.mark, 3);
+      for (const e of [12, 24]) { const x = c + s * e; R.poly([[x - 2, 22], [x + 2, 22], [x + 3, 25], [x + 3, 35], [x - 3, 35], [x - 3, 25]], 7.5, 2.5, m.hull, 4); R.dome(x, 23.5, 1.8, 1.2, 6, 7, 'black'); }
     }
+    R.poly(half(c, [[0, 3], [4, 8], [6.5, 18], [6.5, 60], [5, 78], [3, 86], [0, 88]]), 7, 4, m.hull);
+    R.poly(half(c, [[0, 20], [3, 22], [3, 64], [0, 66]]), 9.5, 2, m.deck, 7);
+    R.box(c - 1, 70, 2, 19, 10, .6, m.hull2, 7);
+    R.box(c - 6, 66, 12, 2.6, 7.6, 1, m.mark, 6);
+    R.dome(c, 11, 3.5, 5, 7, 10, 'glass');
+    R.dome(c, 48, 3.6, 3.6, 9.5, 13, m.hull2); R.box(c - 2.2, 39, 1.2, 8, 13, .5, m.hull2, 10); R.box(c + 1, 39, 1.2, 8, 13, .5, m.hull2, 10);
+    R.greebles(28, 3, [8, 22, 53, 56]);
+    R.lights([[c - 31, 34], [c + 31, 34], [c - 4, 30], [c + 4, 30], [c - 4, 58], [c + 4, 58], ...(m.nuit ? [[c - 18, 33], [c + 18, 33], [c, 80]] : [])], m.feu);
+    R.engines([[c - 24, 36.5, 2.2], [c - 12, 36.5, 2.6], [c + 12, 36.5, 2.6], [c + 24, 36.5, 2.2]]);
+  },
+  // AVION RADAR : grand disque sur un pylône, deux réacteurs, double dérive
+  radar: (R, m, c) => {
+    R.poly(half(c, [[0, 27], [32, 31], [32, 37], [0, 40]]), 5, 2.6, m.hull);
+    R.poly(half(c, [[0, 58], [14, 61], [14, 65], [0, 66]]), 4, 2, m.hull);
+    for (const s of [-1, 1]) {
+      R.poly([[c + s * 32, 32], [c + s * 28, 31.6], [c + s * 28, 37], [c + s * 32, 37]], 5, 1, m.mark, 3);
+      const x = c + s * 15; R.poly([[x - 2, 22], [x + 2, 22], [x + 3, 25], [x + 3, 36], [x - 3, 36], [x - 3, 25]], 7, 2.5, m.hull, 4); R.dome(x, 23.5, 1.8, 1.2, 5.5, 6.5, 'black');
+      R.box(c + s * 13 - 1, 57, 2, 9, 7, .6, m.hull2, 3);
+    }
+    R.poly(half(c, [[0, 3], [4, 8], [5.5, 16], [5.5, 50], [3.5, 62], [0, 65]]), 7, 4, m.hull);
+    R.dome(c, 10, 3, 4.5, 7, 10, 'glass');
+    R.box(c - 2, 37, 4, 6, 9, 1, m.hull2, 6);
+    R.dome(c, 46, 10.5, 10.5, 9, 14, m.hull2);
+    R.box(c - 9, 45, 18, 2.4, 14.4, .6, m.mark, 12);
+    R.greebles(16, 7, [6, 26, 57, 12]);
+    R.lights([[c - 31, 34], [c + 31, 34], [c, 30], ...(m.nuit ? [[c - 15, 38], [c + 15, 38]] : [])], m.feu);
+    R.engines([[c - 15, 37, 2.2], [c + 15, 37, 2.2]]);
+  },
+  // CHASSEUR : aile delta, chevrons, deux missiles, deux tuyères
+  jet: (R, m, c) => {
+    R.poly(half(c, [[0, 16], [5, 18], [30, 35], [30, 40], [5, 41], [0, 41]]), 4, 2.5, m.hull);
+    for (const s of [-1, 1]) {
+      R.poly([[c + s * 24, 35], [c + s * 12, 27], [c + s * 10, 30], [c + s * 21, 38]], 5, 1.4, m.mark, 3);
+      R.box(c + s * 28 - 1, 27, 2, 13, 6.2, .7, m.deck, 3);
+      R.poly([[c + s * 4, 36], [c + s * 12, 41], [c + s * 12, 44], [c + s * 4, 44]], 5, 1, m.hull2, 3);
+    }
+    R.poly(half(c, [[0, 1], [3, 6], [4.5, 16], [4.5, 40], [3.5, 44], [0, 44]]), 7, 3, m.hull);
+    R.poly(half(c, [[0, 18], [2.5, 21], [2.5, 38], [0, 40]]), 9, 1.6, m.hull2, 6);
+    R.dome(c, 12, 2.6, 5.5, 7, 10.5, 'glass');
+    R.greebles(8, 11, [10, 24, 49, 14]);
+    R.lights([[c - 29, 39], [c + 29, 39], ...(m.nuit ? [[c, 24]] : [])], m.feu);
+    R.engines([[c - 2, 44.6, 2], [c + 2, 44.6, 2]]);
+  },
+  // HÉLICOPTÈRE : cabine en goutte, grande verrière, moteur sur le dos, patins
+  heli: (R, m, c) => {
+    for (const s of [-1, 1]) R.box(c + s * 8 - .8, 4, 1.6, 19, 2.6, .6, m.hull2);
+    R.poly(half(c, [[0, 18], [2.4, 20], [1.5, 40], [0, 41]]), 4.5, 1.6, m.hull);
+    R.box(c - 1, 36, 2, 9, 6, .6, m.hull2, 3);
+    R.dome(c, 13, 7, 9.5, 0, 8, m.hull);
+    R.dome(c, 8, 4.8, 4.2, 4, 9, 'glass');
+    R.box(c - 3, 15, 6, 6, 10, 1.2, m.hull2, 7);
+    R.box(c - 1.2, 26, 2.4, 4, 5.4, .6, m.mark, 4);
+    R.lights([[c, 40], ...(m.nuit ? [[c - 6, 13], [c + 6, 13]] : [])], m.feu);
+  },
+};
+const SIZE = { bomb: [69, 92], radar: [69, 69], jet: [69, 46], heli: [23, 46] };
+const LUEUR = [];
+function buildLueurs() {
+  for (const [a, b] of [['rgba(170,220,255,.95)', 'rgba(80,150,255,.4)'], ['rgba(255,170,110,.95)', 'rgba(255,90,40,.4)']]) {
+    const [c, g] = mk(64, 64), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, a); gr.addColorStop(.35, b); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); LUEUR.push(c);
   }
 }
-function prop(g, x, y, r, t, k) { // hélice : deux pales floues et un disque pâle
-  const a = t * 22 + k;
-  g.globalAlpha = .3; ring(g, x, y, r, '#eef2fb'); g.globalAlpha = 1;
-  for (const da of [0, Math.PI]) for (let s = 1; s <= r; s++) R(g, Math.round(x + Math.cos(a + da) * s), Math.round(y + Math.sin(a + da) * s), 1, 1, '#2a2a32');
-  R(g, x - 1, y - 1, 2, 2, '#ffd23f');
+const PLANES = {};
+function plane(st, side, id, d) {
+  const key = st + side + id + d; if (PLANES[key]) return PLANES[key];
+  const m = STYLES[st][side], [w, h] = SIZE[id], R = rotBuilder(w, h, d);
+  AVIONS[id](R, m, w / 2);
+  const s = NV.render(R.B, { seed: { bomb: 3, radar: 7, jet: 11, heli: 13 }[id] + (side === 'foe' ? 20 : 0) });
+  return PLANES[key] = { img: s.img, w: s.w, h: s.h, engines: s.engines, lueur: LUEUR[m.lueur],
+    sh: tint(s.img, 'rgba(4,16,44,.36)'), dead: over(s.img, 'rgba(20,16,24,.6)'), spot: tint(s.img, '#ffd23f'),
+    rotor: id === 'heli' ? R.T([w / 2, 15]) : null };
 }
-function drawPlane(g, art, x, y, t, k, d, live) { // un avion avec son ombre et ses hélices
+function rotorL(g, x, y, t) { // pales de l'hélicoptère, floues
+  const a = t * 14;
+  g.save(); g.translate(x, y);
+  g.globalAlpha = .16; g.fillStyle = '#dfe8f0'; g.beginPath(); g.arc(0, 0, 12, 0, TAU); g.fill();
+  g.globalAlpha = .85; g.strokeStyle = '#22262e'; g.lineWidth = 1.3; g.lineCap = 'round';
+  for (const da of [0, Math.PI / 2]) { g.beginPath(); g.moveTo(Math.cos(a + da) * 12, Math.sin(a + da) * 12); g.lineTo(-Math.cos(a + da) * 12, -Math.sin(a + da) * 12); g.stroke(); }
+  g.globalAlpha = 1; g.fillStyle = '#8a94a4'; g.beginPath(); g.arc(0, 0, 1.6, 0, TAU); g.fill();
+  g.restore();
+}
+function drawPlane(g, art, x, y, t, k, d, live) { // un avion avec son ombre, la lueur de ses réacteurs et son rotor
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
   if (live) {
-    g.drawImage(art.sh, x + 5, y + 8);
+    g.drawImage(art.sh, x + 5, y + 8, art.w, art.h);
+    g.globalCompositeOperation = 'lighter';
+    for (const [ex, ey, er] of art.engines) { const L = er * 3.4 * (1 + Math.sin(t * 23 + ex) * .12); g.drawImage(art.lueur, x + ex - L, y + ey - L, L * 2, L * 2); }
+    g.globalCompositeOperation = 'source-over';
   }
-  g.drawImage(live ? art.img : art.dead, x, y);
-  if (live) for (const a of art.anims) {
-    if (a[2] === 'rotor') rotor(g, x + a[0], y + a[1], t + k);
-    else if (a[2] === 'prop') prop(g, x + a[0], y + a[1], a[3], t, k + a[0]);
-  }
+  g.drawImage(live ? art.img : art.dead, x, y, art.w, art.h);
+  if (live && art.rotor) rotorL(g, x + art.rotor[0], y + art.rotor[1], t + k);
+  g.imageSmoothingEnabled = false;
 }
 function buildFog() {
   const S = BS, [t, g] = mk(S, S), bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
@@ -530,7 +471,7 @@ function buildIcons() {
 }
 function buildAll() {
   buildSky(); G.frameMine = buildFrame(true); G.frameFoe = buildFrame(false);
-  buildPlanes(); buildFog(); buildBoom(); buildIcons();
+  buildLueurs(); buildFog(); buildBoom(); buildIcons();
   [G.mini, G.miniG] = mk(BS + 24, BS + 24);
 }
 
@@ -640,7 +581,7 @@ function drawBoard(gg, b, ox, oy, t, o) {
   // les avions (ombre portée loin dessous : ils volent haut)
   b.planes.forEach((p, i) => {
     if (!(mine || p.down || reveal)) return;
-    const art = G.pl[STYLE][mine ? 'mine' : 'foe'][p.def.id][p.d], x = p.c * CS, y = p.r * CS;
+    const art = plane(STYLE, mine ? 'mine' : 'foe', p.def.id, p.d), x = p.c * CS, y = p.r * CS;
     const bob = p.down ? 0 : Math.round(Math.sin(t * 2 + i * 1.7) * 1);
     drawPlane(gg, art, x, y + bob, t, i, p.d, !p.down);
     if (!mine && reveal && !p.down) { gg.globalAlpha = .25 + .15 * Math.sin(t * 4); gg.drawImage(art.spot, x, y); gg.globalAlpha = 1; }
@@ -933,7 +874,7 @@ function drawCard(gg, st, t) {
   const row = (side, y0, lab, col) => {
     tiny(gg, lab, 8, y0, col);
     const xs = [6, 80, 158, 240], ys = [0, 10, 26, 22];
-    FLEET.forEach((def, i) => drawPlane(gg, G.pl[st][side][def.id][0], xs[i], y0 + 12 + ys[i], t, i, 0, true));
+    FLEET.forEach((def, i) => drawPlane(gg, plane(st, side, def.id, 0), xs[i], y0 + 12 + ys[i], t, i, 0, true));
   };
   row('mine', 6, 'TON ESCADRILLE', '#cfe6ff');
   row('foe', 122, "L'ENNEMI", '#ffd6cc');
@@ -953,11 +894,11 @@ function frame() {
   const t = now() / 1000;
   for (const s of SCREENS) {
     g = s.ctx; CUR = s.sc; CUR.btn = [];
-    g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false;
+    g.setTransform(2, 0, 0, 2, 0, 0); g.imageSmoothingEnabled = false;
     s.draw(t);
     if (s.sc.fx) s.sc.fx = s.sc.fx.filter(f => !f.ended);
   }
-  for (const c of CARTES) { g = c.ctx; g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; drawCard(g, c.st, t); }
+  for (const c of CARTES) { g = c.ctx; g.setTransform(2, 0, 0, 2, 0, 0); g.imageSmoothingEnabled = false; drawCard(g, c.st, t); }
   requestAnimationFrame(frame);
 }
 buildAll(); newBattle(); marque();
