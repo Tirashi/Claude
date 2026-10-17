@@ -88,6 +88,7 @@ canvas:focus{outline:none}
         <div class="stats" id="winStats"></div>
         <button class="btn go" id="againBtn" type="button">NOUVELLE DONNE</button>
         <a class="btn" href="../classements/index.html#solitaire" style="text-decoration:none">CLASSEMENT</a>
+        <a class="btn ludo-retour" href="../index.html" style="text-decoration:none">◀ LUDOTHEQUE</a>
       </div>
     </div>
   </div>
@@ -98,6 +99,7 @@ canvas:focus{outline:none}
     <button class="btn" id="drawBtn" type="button">PIOCHER 1</button>
     <button class="btn go" id="autoBtn" type="button" hidden>TOUT RANGER</button>
     <button class="btn" id="soundBtn" type="button">SON : OUI</button>
+    <a class="btn ludo-retour" href="../index.html" style="text-decoration:none">◀ LUDOTHEQUE</a>
   </div>
   <p class="help">Range toutes les cartes sur les quatre piles en haut à droite, de l'<b>As</b> au <b>Roi</b>, par couleur. Dans les colonnes, descends d'une valeur en alternant rouge et noir ; seul un <b>Roi</b> va sur une colonne vide. <b>Touche</b> une carte pour l'envoyer à la meilleure place, ou <b>glisse-la</b> où tu veux. Clavier : <b>Espace</b> piocher, <b>Z</b> annuler, <b>N</b> nouvelle donne.</p>
 </div>
@@ -547,22 +549,12 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu. */
 (function () {
   try {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
       navigator.serviceWorker.register("../sw.js").catch(function () {});
-    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-    if (!app) return;
-    var a = document.createElement("a");
-    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
-    a.style.cssText = "display:block; width:max-content; margin:0 auto 10px; padding:8px 12px; font:10px 'Press Start 2P',monospace; letter-spacing:1px;" +
-      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
-    if (document.body.getAttribute("data-menu") === "fixed") {
-      a.style.position = "fixed"; a.style.left = "50%"; a.style.transform = "translateX(-50%)"; a.style.margin = "0";
-      a.style.bottom = "calc(18px + env(safe-area-inset-bottom, 0px))";
-    }
-    document.body.insertBefore(a, document.body.firstChild);
   } catch (e) {}
 })();
 </script>

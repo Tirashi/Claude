@@ -216,7 +216,7 @@ svg.seg { display: block; }
     <div class="box"><h3 data-t="mode"></h3><div class="modes" id="modes"></div><p class="note" id="note"></p></div>
     <div class="box"><h3 data-t="style"></h3><div class="styles" id="styles"></div></div>
     <button class="go" id="go"></button>
-    <div class="links"><a id="rk" href="../classements/index.html#calculator"></a><button id="snd"></button></div>
+    <div class="links"><a id="lu" class="ludo-retour" href="../index.html"></a><a id="rk" href="../classements/index.html#calculator"></a><button id="snd"></button></div>
   </section>
 
   <section id="play" class="scr" hidden>
@@ -321,6 +321,7 @@ const TXT = {
   again: { A: 'Rejouer', B: 'Encore !', C: 'Rejouer' },
   back: { A: 'Menu', B: 'Menu', C: 'Menu' },
   rk: { A: 'Classement', B: 'Le classement de la famille', C: 'Classement' },
+  lu: { A: '◀ Ludothèque', B: '◀ Ludothèque', C: '◀ Ludothèque' },
 };
 const t = (k, s = cfg.style) => { const v = TXT[k] ? TXT[k][s] : k; return s === 'A' ? deacc(v) : v; };
 const tx = s => cfg.style === 'A' ? deacc(s) : s;
@@ -396,7 +397,7 @@ function renderMenu() {
   $('boxOps').classList.toggle('dim', jour); $('boxLvl').classList.toggle('dim', jour);
   $('note').textContent = jour ? tx('20 calculs, du plus facile au plus dur, les 4 opérations. ' + (load('dailyTry', 0) === dayNum() ? 'Déjà joué : hors classement.' : 'Une seule tentative classée par jour.'))
     : cfg.mode === 'chrono' ? tx('Le plus de bonnes réponses en 60 secondes.') : tx('20 calculs chronométrés, 5 secondes de plus par erreur.');
-  $('go').textContent = t('go'); $('rk').textContent = t('rk');
+  $('go').textContent = t('go'); $('rk').textContent = t('rk'); $('lu').textContent = t('lu');
   $('snd').textContent = tx(cfg.son ? 'Son : oui' : 'Son : non');
 }
 $('menu').addEventListener('click', e => {
@@ -538,23 +539,12 @@ window.addEventListener('resize', () => { const f = document.body.firstElementCh
 window.Calculator = { gen, dailySeries, start, press, answer, finish, cfg, best, daily, get S() { return S; }, renderMenu, setStyle, catOf };
 </script>
 <script>
-/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu. */
 (function () {
   try {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
       navigator.serviceWorker.register("../sw.js").catch(function () {});
-    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-    if (!app) return;
-    var a = document.createElement("a");
-    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
-    a.style.cssText = "display:block; width:max-content; margin:4px auto 6px; padding:6px 10px; font:9px 'Press Start 2P',monospace; letter-spacing:1px;" +
-      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
-    var line = document.createElement("div");
-    line.style.cssText = "flex:0 0 100%; width:100%;";
-    line.appendChild(a);
-    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
-    document.body.insertBefore(line, document.body.firstChild);
-    window.dispatchEvent(new Event("resize"));
   } catch (e) {}
 })();
 </script>

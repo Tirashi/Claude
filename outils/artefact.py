@@ -6,6 +6,7 @@
 - garde la police Google Fonts de la page (Press Start 2P par défaut) ; une feuille de polices du dépôt
   (`polices/…css`) est remplacée par son lien Google (attribut data-google) ;
 - retire ludo-scores.js (pas de classement dans l'artefact) et le script du service worker / bouton MENU ;
+- masque les boutons de retour à la Ludothèque des menus du jeu (classe `ludo-retour`) : l'artefact n'a pas d'accueil ;
 - retire <!DOCTYPE>, <html>, <head>, <body> (l'artefact ajoute son propre squelette) ;
 - garde le <title>, la police Google Fonts et le <style> ;
 - les liens vers ../classements pointent vers le site publié.
@@ -31,8 +32,8 @@ body = body.replace('../classements/', SITE + 'classements/')
 font = re.search(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com/[^"]+">', s)
 local = re.search(r'<link rel="stylesheet" href="[^"]+" data-google="(https://fonts\.googleapis\.com/[^"]+)">', s)   # polices du dépôt : leur équivalent Google
 font = font.group(0) if font else f'<link rel="stylesheet" href="{local.group(1)}">' if local else '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">'
-html = title + '\n' + font + '\n' + styles + body
+html = title + '\n' + font + '\n' + styles + '<style>.ludo-retour{display:none !important}</style>\n' + body
 open(out, 'w', encoding='utf-8').write(html)
-rest = sorted(set(re.findall(r'["\'](\.\./[^"\']+|[a-z-]+\.html[^"\']*)["\']', body)))
+rest = sorted(set(re.findall(r'["\'](\.\./[^"\']+|[a-z-]+\.html[^"\']*)["\']', body)) - {'../index.html'})   # retour à la Ludothèque : masqué
 print(f'{out} : {len(html) // 1024} Ko' + (' (intégrés : ' + ', '.join(inlined) + ')' if inlined else ''))
 if rest: print('Liens relatifs restants (ne marcheront pas dans l\'artefact) :', ', '.join(rest))

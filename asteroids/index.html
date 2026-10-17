@@ -56,7 +56,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
 @media (prefers-reduced-motion: reduce){ .blink{animation:none} }
 </style>
 </head>
-<body data-menu="fixed">
+<body>
 <canvas id="game" aria-label="Champ d'astéroïdes"></canvas>
 <div id="ui">
   <span>SCORE <b id="score">0</b></span>
@@ -70,6 +70,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
     <p><b>FLÈCHES</b> ou <b>Q / D</b> : tourner · <b>HAUT</b> ou <b>Z</b> : propulser</p>
     <p><b>ESPACE</b> : tirer · <b>P</b> : pause</p>
     <div class="blink">ESPACE OU TOUCHE L'ÉCRAN POUR COMMENCER</div>
+    <a class="rank ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
   </div>
 </div>
 <div id="mobileControls">
@@ -183,6 +184,7 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
     if (sub) { const p = document.createElement("p"); p.textContent = sub; overlayWin.appendChild(p); }
     const b = document.createElement("div"); b.className = "blink"; b.textContent = blink || ""; overlayWin.appendChild(b);
     if (state === "gameover"){ const a = document.createElement("a"); a.className = "rank"; a.href = "../classements/index.html#asteroids"; a.textContent = "CLASSEMENT"; overlayWin.appendChild(a); }
+    const m = document.createElement("a"); m.className = "rank ludo-retour"; m.href = "../index.html"; m.textContent = "◀ LUDOTHEQUE"; overlayWin.appendChild(m);
     overlay.hidden = false;
   }
   const hideOverlay = () => { overlay.hidden = true; };
@@ -380,23 +382,12 @@ h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(16px
 })();
 </script>
 <script>
-/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu. */
 (function () {
   try {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
       navigator.serviceWorker.register("../sw.js").catch(function () {});
-    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-    if (!app) return;
-    var a = document.createElement("a");
-    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
-    a.style.cssText = "display:block; width:max-content; margin:0 auto 10px; padding:8px 12px; font:10px 'Press Start 2P',monospace; letter-spacing:1px;" +
-      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
-    if (document.body.getAttribute("data-menu") === "fixed") {
-      a.style.position = "fixed"; a.style.left = "50%"; a.style.transform = "translateX(-50%)"; a.style.margin = "0";
-      // au-dessus des commandes tactiles (et non entre elles), sous le bandeau du score
-      a.style.bottom = matchMedia("(pointer: coarse)").matches ? "calc(118px + env(safe-area-inset-bottom, 0px))" : "calc(18px + env(safe-area-inset-bottom, 0px))";
-    }
-    document.body.insertBefore(a, document.body.firstChild);
   } catch (e) {}
 })();
 </script>

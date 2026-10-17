@@ -298,6 +298,6 @@ Sur le site GitHub Pages, la Ludothèque s'installe comme une application, avec 
 - **Android, ou Chrome et Edge sur ordinateur** : le bouton INSTALLER L'APPLI apparaît sous le titre du menu.
 - **iPhone et iPad** : un encadré explique la marche à suivre dans Safari (Partager, puis Sur l'écran d'accueil). Apple ne permet pas à une page de lancer l'installation elle-même.
 - **Hors connexion** : `sw.js` met tous les jeux en cache à la première visite. En ligne, il sert toujours la dernière version publiée.
-- **Dans l'appli installée**, un bouton ◀ MENU en haut de chaque jeu ramène à la Ludothèque, puisqu'il n'y a plus de barre de navigateur.
+- Un bouton **◀ LUDOTHÈQUE**, dans les menus de chaque jeu (écran titre, pause, fin de partie), ramène à la Ludothèque. Les jeux pas encore repris gardent le bouton ◀ MENU en haut, dans l'appli installée.
 
 Fichiers : `manifest.webmanifest`, `sw.js` et le dossier `icons/`. Quand on ajoute ou renomme un fichier de jeu, il faut l'ajouter à la liste `FILES` de `sw.js` et changer `VERSION`, pour que le préchargement hors connexion en tienne compte.

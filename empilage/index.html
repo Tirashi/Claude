@@ -58,6 +58,7 @@ button.doux, .lien { background: #eae4fb; color: #6a54b8; box-shadow: 0 4px 0 #c
       <button id="bJouer">JOUER</button>
       <button class="jour" id="bJour">TOUR DU JOUR</button>
       <div class="rang"><a class="lien" id="bClass" href="../classements/index.html#empilage">CLASSEMENT</a><button class="doux" id="bSon">SON : OUI</button></div>
+      <a class="lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
     </div>
   </div>
   <div class="ecran" id="fin" hidden>
@@ -352,23 +353,12 @@ requestAnimationFrame(frame);
 window.Empilage = { S, partie, lacher, finPartie, accueil, couches: () => couches, cur: () => cur };
 </script>
 <script>
-/* Ludothèque : mode hors connexion, et bouton de retour au menu dans l'appli installée */
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu. */
 (function () {
   try {
     if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
       navigator.serviceWorker.register("../sw.js").catch(function () {});
-    var app = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-    if (!app) return;
-    var a = document.createElement("a");
-    a.href = "../index.html"; a.textContent = "◀ MENU"; a.setAttribute("aria-label", "Retour au menu de la Ludothèque");
-    a.style.cssText = "display:block; width:max-content; margin:4px auto 6px; padding:6px 10px; font:9px 'Press Start 2P',monospace; letter-spacing:1px;" +
-      "color:#f2f0ff; background:#110d22; border:3px solid #f2f0ff; border-radius:4px; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000; text-decoration:none; position:relative; z-index:60;";
-    var line = document.createElement("div");
-    line.style.cssText = "flex:0 0 100%; width:100%;";
-    line.appendChild(a);
-    document.body.style.flexWrap = "wrap"; document.body.style.alignContent = "flex-start";
-    document.body.insertBefore(line, document.body.firstChild);
-    window.dispatchEvent(new Event("resize"));
   } catch (e) {}
 })();
 </script>
