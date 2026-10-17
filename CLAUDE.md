@@ -56,7 +56,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 | Calculator | https://claude.ai/artifact/2S5ABaMyUfFsbsjRAWbJZD |
 | Empilage | https://claude.ai/artifact/B7BHw4hC7rLzf9tT5kjuaB |
 
-Queens, Sudoku, Touché Coulé, Tetris, Snake, Asteroids, Solitaire et le Jeu de la vie **n'ont pas d'artefact** : on les joue sur le site. Ne pas en créer sans demande.
+Queens, Sudoku, Touché Coulé, Tetris, Snake, Asteroids, Solitaire, le Jeu de la vie et Odyssée **n'ont pas d'artefact** : on les joue sur le site. Ne pas en créer sans demande.
 
 ## Les jeux
 Queens (`queens/`), Picross Dex (`picross/`), Lignée (`lignee/`), Injagility (`injagility/`), Touché Coulé (`touche-coule/`), Amiral ! (`amiral/`, **on le laisse tel quel pour le moment**), Le Club d'agility (`club/`), Orbite (`orbite/`), Lune-Rover (`lune-rover/`, règles et niveaux dans `regles.js`), Pont stellaire (`pont-stellaire/`), Sudoku (`sudoku/`), Calculator (`calculator/`, calcul mental, 3 styles), Alunissage (`alunissage/`), Nebula (`nebula/`, cahier des charges [`specs/nebula.md`](specs/nebula.md)), Empilage (`empilage/`, premier jeu en 3D, Three.js), Odyssée (`odyssee/`, deuxième jeu en 3D, règles et plateaux dans `regles.js`), Tetris, Snake, Asteroids, Solitaire, Jeu de la vie. L'Île des naufragés a été retirée le 16/10 (la colonie la remplacera dans `ile/`). Détails de chaque jeu (classements, objets `window.<Jeu>` pour les tests) : tableau du mémo.
