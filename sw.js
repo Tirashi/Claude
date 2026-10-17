@@ -9,7 +9,7 @@
    - Le cache HTTP du navigateur est contourné (préchargement en « reload », réseau en « no-cache ») :
      une page neuve ne doit jamais tourner avec un script partagé resté ancien.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v33";
+const VERSION = "ludotheque-v34";
 const NET_WAIT = 2500;
 let slowUntil = 0;   // réseau jugé lent : pendant 10 s, les copies en cache sont servies sans attendre
 const FONTS = "ludotheque-fonts";
@@ -21,7 +21,7 @@ const FILES = [
   "./lignee/index.html", "./classements/index.html", "./tetris/index.html", "./snake/index.html", "./asteroids/index.html", "./solitaire/index.html",
   "./jeu-de-la-vie/index.html", "./jeu-de-la-vie/style.css", "./jeu-de-la-vie/app.js",
   "./empilage/index.html", "./lib/three.min.js", "./polices/empilage.css",
-  "./odyssee/index.html", "./odyssee/regles.js"
+  "./odyssee/index.html", "./odyssee/regles.js", "./odyssee/sons.js"
 ];
 
 self.addEventListener("install", event => {

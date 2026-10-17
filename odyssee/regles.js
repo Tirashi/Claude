@@ -1154,6 +1154,7 @@ const ODY = (function () {
         const x = cl(st.x + st.vx * F.alerte * 0.5 + (st.rnd() * 2 - 1) * F.ecart, 0.4, M.W - 0.4);
         const y = cl(st.y + st.vy * F.alerte * 0.5 + (st.rnd() * 2 - 1) * F.ecart, 0.4, M.H - 0.4);
         st.fleches.push({ x, y, t: 0, dur: F.alerte, r: F.rayon });
+        ev.push({ k: 'fleche' });
       }
       for (const f of st.fleches) {
         f.t += dt;

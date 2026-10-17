@@ -210,6 +210,7 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - Les **récifs** font sombrer la galère : on repart du départ, ou du dernier **phare** allumé.
 - **Trois étoiles** par plateau : une en arrivant au port, deux sans naufrage, trois sans naufrage et sous le temps cible.
 - **Plateau du jour** : le même plateau (parfois en miroir) et les mêmes dangers pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) : le temps, plus 5 secondes par naufrage.
+- **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
 
 ## Empilage
