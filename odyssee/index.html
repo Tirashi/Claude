@@ -550,6 +550,8 @@ function decor(P, v, Q, alea, roc, blanc, bleu, gris) {
 
 // cadrage : la caméra recule pour les grands plateaux (et sur les écrans étroits)
 function cadrer() {
+  // dans l'appli installée, la barre « ◀ MENU » est ajoutée au-dessus du jeu : le jeu prend la hauteur qui reste
+  jeu.style.height = Math.max(240, innerHeight - (jeu.getBoundingClientRect().top + scrollY)) + 'px';
   const w = jeu.clientWidth || 390, h = jeu.clientHeight || 780;
   if (rendu) rendu.setSize(w, h, false);
   cam.aspect = w / h; cam.updateProjectionMatrix();
