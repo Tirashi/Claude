@@ -63,8 +63,11 @@ self.addEventListener("fetch", event => {
   event.respondWith((async () => {
     const cache = await caches.open(VERSION);
     const hit = await cache.match(req, { ignoreSearch: true })
-      || (url.pathname.endsWith("/") && await cache.match(new Request(url.href + "index.html")))
-      || (req.mode === "navigate" && await cache.match("./index.html"));
+      || (url.pathname.endsWith("/") && await cache.match(new Request(url.href + "index.html")));
+    // page absente du cache (un jeu tout neuf) : on attend le réseau ; hors connexion seulement, on renvoie
+    // vers l'accueil, à sa vraie adresse (servi à la place de la page, ses chemins relatifs ne marchaient pas :
+    // accueil vide en ouvrant odyssee/ le 17/10)
+    if (!hit && req.mode === "navigate") return net.catch(async () => (await cache.match("./index.html")) ? Response.redirect(new URL("./index.html", self.registration.scope).href, 302) : Response.error());
     if (!hit) return net;
     if (Date.now() < slowUntil) return hit;
     let done = false;
