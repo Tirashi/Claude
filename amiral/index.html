@@ -211,7 +211,8 @@ function tiny(g, s, x, y, col, align, maxW) {
   s = String(s);
   if (!align && s.length === 1) { align = 'center'; x += 1; }
   g.font = FONT_TINY;
-  if (maxW && g.measureText(s).width > maxW) g.font = '700 9px Rajdhani, sans-serif';   // les noms longs (REPARATION) tiennent sur leur plaque g.textAlign = align || 'left'; g.textBaseline = 'top';
+  if (maxW && g.measureText(s).width > maxW) g.font = '700 9px Rajdhani, sans-serif';   // les noms longs (REPARATION) tiennent sur leur plaque
+  g.textAlign = align || 'left'; g.textBaseline = 'top';
   g.fillStyle = '#060a18'; g.fillText(s, x + 1, y - 2); g.fillStyle = col; g.fillText(s, x, y - 3);
 }
 
@@ -1556,7 +1557,10 @@ function drawBottom(t) {
   S.enemy.ships.forEach((s, i) => {
     const y = y0 + 16 + i * st, p = s.def.power;
     for (let k = 0; k < s.def.len; k++) { R(g, x0 + 6 + k * 7, y + 3, 6, 6, OUT); R(g, x0 + 7 + k * 7, y + 4, 4, 4, s.sunk ? '#5a4a52' : '#a9b1bc'); if (s.sunk) R(g, x0 + 7 + k * 7, y + 4, 4, 1, '#ff5a46'); }
-    text(g, s.sunk ? 'COULE' : POWERS[p].name, x0 + 38, y + 3, s.sunk ? '#ff8a76' : '#f2f0ff');
+    // un nom long (REPARATION, PROJECTEUR) se resserre pour ne pas toucher PRET
+    const nm = s.sunk ? 'COULE' : POWERS[p].name, room = W2 - 44 - 30;
+    g.font = FONT_TEXT(8); const sz = g.measureText(nm).width > room ? 8 * room / g.measureText(nm).width : 8;
+    text(g, nm, x0 + 38, y + 3 + Math.round((8 - sz) / 2), s.sunk ? '#ff8a76' : '#f2f0ff', 'left', sz);
     if (!s.sunk) {
       // le compteur ennemi baisse au début de son tour : à 1, le pouvoir sera prêt dès son prochain coup
       const cd = S.enemy.cd[p], okp = cd <= 1 && !(p === 'plongee' && s.hits);

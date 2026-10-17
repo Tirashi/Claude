@@ -106,3 +106,10 @@ est forte). Les pouvoirs de renseignement valent sans doute plus pour un joueur 
 **Pour la session 2** : retirer « EN CONSTRUCTION », brancher les conditions de déblocage sur `amiral.palmares`
 (et `usable()`), l'annonce « NOUVEAU NAVIRE DEBLOQUE ! » ; MINES, FUMEE, LEURRE ; bataille du jour ; accueil ; transfert ; artefact.
 Point à décider : faut-il reverrouiller les 4 navires ouverts pendant la session 1 (les conditions sont-elles déjà remplies ?).
+
+## Correction du 17/10 (après la session 1)
+- **Textes mal alignés** (boutons, « EN SERVICE », lignes de fin de partie) : dans `tiny()`, l'instruction
+  `g.textAlign = …; g.textBaseline = …` s'était retrouvée collée à la fin d'un commentaire `//`, donc jamais exécutée ;
+  chaque étiquette prenait l'alignement du texte précédent. Leçon : ne jamais ajouter un commentaire de fin de ligne
+  devant une instruction sur la même ligne.
+- Panneau FLOTTE ENNEMIE : un nom long (REPARATION, PROJECTEUR) se resserre pour ne plus toucher « PRET ».
