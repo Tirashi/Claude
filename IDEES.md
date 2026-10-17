@@ -107,6 +107,14 @@ Gestion « qui grandit » : colonie, territoire, pays, boutique. Points communs 
    - **Questions ouvertes** : style graphique (pas encore d'idée : maquette de 3 ou 4 variantes à proposer) ; quels déblocages.
    - **Travail** : 🔴 gros à ⚫ très gros (maquette, puis 2 à 3 conversations : cœur du jeu, contenu, équilibrage).
 
+## Armada : survivor spatial (brainstorm du 17/10)
+Un « Vampire Survivors-like » dans l'espace, mêlé à l'idée de caravane : on pilote un **vaisseau amiral**, et les « armes » sont des **vaisseaux qui rejoignent la flotte** et volent en formation (chasseurs, frégate laser, porte-missiles, corvette bouclier, drone mécano, mouilleur de mines, canonnière ; évolutions par fusion, ex. frégate + bouclier = croiseur). Choix de l'utilisateur :
+- **4 formations dès le début** (en V, en cercle, en convoi façon Snake, en carré), en **icônes en bas de l'écran**, semi-transparentes, celle choisie plus opaque.
+- **Vaisseaux détruits rachetables** avec les crédits gagnés : choix entre le court terme (finir la partie plus sereinement) et le long terme (garder l'or pour les déblocages du **chantier naval**, la progression d'une partie à l'autre).
+- **Secteur du jour** (même graine pour toute la famille, une seule tentative classée, sans la progression pour que ce soit juste).
+- **Parties de 10 minutes** (événements toutes les 3 minutes : escorte de cargo, défense de station, boss ; fin par un saut en hyperespace).
+- Maquette des styles (A Nebula, B néon, C pixel 16 bits, D 3D Three.js), avec le choix de cartes et le rachat d'une épave : https://claude.ai/artifact/QesFkKzq2XaBiDuQawc2L1 — source `maquettes/armada.html`. En attente du choix de l'utilisateur. Gros moteur : Opus, en plusieurs sessions, cahier des charges d'abord.
+
 ## Jardin contemplatif (idée du 16/10)
 1. **Racines** (jardin zen en temps réel, partage en famille) — une île-jardin qui flotte au-dessus des nuages ; les plantes poussent **en temps réel**, même jeu fermé (2 à 6 h pour une commune, 6 à 48 h pour une rare) ; la **météo réelle** du jour change ce qui pousse ; on **croise** des plantes fleuries pour créer des espèces inédites qu'on nomme dans l'**herbier** ; aucune plante ne meurt (elle fait la sieste) ; **pas de classement**, pas de chrono. Partage : **offrir une graine** à un proche, visiter son jardin, herbier familial. Style aquarelle pastel, musique générative douce, mode nuit. Document de game design complet (écrit avant la Ludothèque), **adaptation à la Ludothèque validée** (technique sans build, météo Open-Meteo sans clé, code de graine, SQL Supabase pour les visites) et **brainstorming fait le 16/10** (22 réponses : toute la famille, ~60 espèces, génétique devinable, vue en portrait…) : [`specs/racines.md`](specs/racines.md). Prochaine étape : la maquette du style, 2 variantes (pixel art pastel, aquarelle à contours encrés).
 
