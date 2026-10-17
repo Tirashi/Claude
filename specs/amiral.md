@@ -105,7 +105,7 @@ est forte). Les pouvoirs de renseignement valent sans doute plus pour un joueur 
 
 **Pour la session 2** : retirer « EN CONSTRUCTION », brancher les conditions de déblocage sur `amiral.palmares`
 (et `usable()`), l'annonce « NOUVEAU NAVIRE DEBLOQUE ! » ; MINES, FUMEE, LEURRE ; bataille du jour ; accueil ; transfert ; artefact.
-Point à décider : faut-il reverrouiller les 4 navires ouverts pendant la session 1 (les conditions sont-elles déjà remplies ?).
+**Décision de l'utilisateur (17/10) : on ne reverrouille pas** les 4 navires ouverts à la session 1 (croiseur, destroyer, garde-côte, navire-atelier) ; seuls le mouilleur, le brouilleur et la vedette auront une condition de déblocage.
 
 ## Correction du 17/10 (après la session 1)
 - **Textes mal alignés** (boutons, « EN SERVICE », lignes de fin de partie) : dans `tiny()`, l'instruction
