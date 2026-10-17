@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Amiral ! nouveaux navires</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@600;700&display=swap">
+<style>
+:root { --fond: #070d1f; --plaque: #16233f; --bord: #2c4270; --texte: #e6ecf8; --doux: #9fb4d8; --or: #ffd23f; color-scheme: dark; }
+body { margin: 0; background: var(--fond); color: var(--texte); font: 600 16px/1.35 Rajdhani, sans-serif; }
+main { max-width: 460px; margin: 0 auto; padding-block: 18px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 16px "Press Start 2P", monospace; color: var(--or); text-align: center; margin: 6px 0 10px; text-shadow: 2px 2px 0 #000; line-height: 1.5; }
+.intro { color: var(--doux); text-align: center; margin: 0 0 18px; }
+h2 { font: 11px "Press Start 2P", monospace; color: var(--or); margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 span { font: 700 14px Rajdhani, sans-serif; color: var(--doux); letter-spacing: .06em; text-transform: uppercase; }
+section, .ref { background: linear-gradient(#1a2a4c, #101a32); border: 2px solid #000; box-shadow: inset 1px 1px 0 #3c5888; border-radius: 3px; padding: 12px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px; }
+.pw { margin: -6px 0 0; color: var(--doux); }
+.pw b { color: var(--or); letter-spacing: .05em; }
+figure { margin: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+canvas { display: block; max-width: 100%; image-rendering: pixelated; border: 2px solid #000; }
+figcaption { display: flex; gap: 10px; align-items: flex-start; }
+figcaption .l { font: 12px "Press Start 2P", monospace; color: #241600; background: var(--or); padding: 5px 6px 4px; border: 2px solid #000; }
+figcaption span b { display: block; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .05em; }
+.ref { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+.ref figure { flex: 0 1 auto; }
+.ref figcaption { color: var(--doux); font-size: 14px; }
+.ref h2 { width: 100%; }
+</style>
+</head>
+<body>
+<main>
+<h1>NOUVEAUX NAVIRES</h1>
+<p class="intro">Trois dessins par navire, grossis deux fois, sur la mer et les cases de la grille. Dites la lettre gardée pour chacun.</p>
+<div class="ref" id="ref"><h2>LA FLOTTE ACTUELLE<span>référence</span></h2></div>
+<div id="navires"></div>
+</main>
+<script src="../injagility/chiens32.js"></script>
+<script>
+'use strict';
+const C32 = window.Chiens32, OUT = C32.OUT, RAMP = C32.RAMP, CS = 26, TAU = Math.PI * 2;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function spr(w, h, list, outline = true) {
+  const C = C32.Canvas(w, h);
+  list.forEach(([shape, ramp, opt], k) => { RAMP['_ami' + k] = ramp; C.draw(shape, Object.assign({ mat: '_ami' + k, id: k + 1, fur: false }, opt || {})); });
+  return C.toCanvas(outline);
+}
+function tint(img, col) { const [c, g] = mk(img.width, img.height); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-in'; R(g, 0, 0, c.width, c.height, col); return c; }
+function rot(img) { const [c, g] = mk(img.height, img.width); g.translate(img.height, 0); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0); return c; }
+const P = {
+  steel: ['#e4e8ee', '#a9b1bc', '#727b8a', '#474e5c'], gun: ['#c8d0dc', '#8a94a4', '#5e6878', '#3a4150'],
+  dark: ['#7a8798', '#4e5a6a', '#36404e', '#232a35'], red: ['#ff8a76', '#e04a3c', '#a8302a', '#6e1d1d'],
+  cream: ['#fffbea', '#f1e4c4', '#cdb98e', '#9a845e'], navy: ['#6a7ab8', '#3f4f8a', '#2c3866', '#1c2444'],
+  skin: ['#ffdcbc', '#f0b48c', '#c8805e', '#8a5040'], white: ['#ffffff', '#f1ece2', '#d3cbbd', '#ab9f8e'],
+  gold: ['#fff2a8', '#ffd23f', '#d09a1c', '#8f6410'], smoke: ['#7c7684', '#57525f', '#3e3a48', '#2a2733'],
+  smokeL: ['#a8a2ae', '#87818f', '#6a6574', '#4e4a58'], blue: ['#a8d0f4', '#4a8fd4', '#2f6fb0', '#1a3f6a'],
+};
+const SEA_T = ['#174a8a', '#1c579c', '#2266ae', '#2a76bf'];
+function hull(len, hh, prof, deck, rail) {
+  const w = len * CS, h = CS, [c, g] = mk(w, h), M = new Uint8Array(w * h), mid = h / 2, x0 = 2, x1 = w - 3;
+  for (let x = 0; x < w; x++) {
+    const u = (x + .5 - x0) / (x1 - x0); if (u < 0 || u > 1) continue;
+    const hw = prof(u) * hh;
+    for (let y = 0; y < h; y++) if (Math.abs(y + .5 - mid) <= hw) M[y * w + x] = 1;
+  }
+  const at = (x, y) => x >= 0 && y >= 0 && x < w && y < h && M[y * w + x];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (!at(x, y)) { if (at(x - 1, y) || at(x + 1, y) || at(x, y - 1) || at(x, y + 1)) R(g, x, y, 1, 1, OUT); continue; }
+    const edge = !at(x - 1, y) || !at(x + 1, y) || !at(x, y - 1) || !at(x, y + 1);
+    const edge2 = !edge && (!at(x - 2, y) || !at(x + 2, y) || !at(x, y - 2) || !at(x, y + 2));
+    const top = y + .5 < mid;
+    if (edge) R(g, x, y, 1, 1, top ? rail[0] : rail[3]);
+    else if (edge2) R(g, x, y, 1, 1, top ? rail[1] : rail[2]);
+    else R(g, x, y, 1, 1, deck(x, y, (x - x0) / (x1 - x0), (y + .5 - mid) / hh));
+    if (edge2 && x % 4 === 0) R(g, x, y, 1, 1, top ? '#ffffff' : rail[3]);
+  }
+  return { c, g, M, w, h, mid };
+}
+const pointy = u => u < .06 ? Math.sqrt(1 - ((.06 - u) / .06) ** 2) : u > .62 ? Math.pow(Math.max(0, 1 - Math.pow((u - .62) / .38, 1.8)), .62) : 1;
+const cigar = u => Math.pow(Math.max(0, 1 - ((u - .5) / .5) ** 2), .55);
+function turret(g, x, y, dir) {
+  for (const dy of [-1, 1]) R(g, Math.min(x, x + dir * 8), y + dy - 1, 9, 3, OUT);
+  for (const dy of [-1, 1]) R(g, dir > 0 ? x : x - 7, y + dy, 8, 1, '#c8d0dc');
+  g.drawImage(spr(10, 10, [[C32.ell(5, 5, 3.4, 3.4), P.gun]]), x - 5, y - 5);
+  R(g, x - 2, y - 2, 1, 1, '#ffffff');
+}
+function buildCarrier() {
+  const deckCol = (x, y, u, v) => {
+    if (Math.abs(v) < .12 && x % 7 < 4 && u > .06 && u < .86) return '#f4f4f0';
+    if (Math.abs(Math.abs(v) - .62) < .1 && u > .05 && u < .8) return x % 6 < 3 ? '#ffd23f' : '#5a6272';
+    if (x % 12 === 0) return '#4c5363';
+    return (x + y * 3) % 17 === 0 ? '#6c7484' : '#5a6272';
+  };
+  const H = hull(4, 10, u => u < .03 ? Math.sqrt(1 - ((.03 - u) / .03) ** 2) : u > .8 ? Math.pow(Math.max(0, 1 - ((u - .8) / .2) ** 2.4), .5) : 1, deckCol, P.steel);
+  const g = H.g, m = H.mid;
+  for (const ex of [20, 40]) { R(g, ex, m - 6, 8, 1, '#3a4150'); R(g, ex, m - 6, 1, 5, '#3a4150'); R(g, ex, m - 1, 8, 1, '#7c8494'); R(g, ex + 8, m - 6, 1, 6, '#7c8494'); }
+  R(g, 52, m + 3, 18, 8, OUT); R(g, 53, m + 4, 16, 6, '#9aa3b1'); R(g, 53, m + 4, 16, 1, '#e4e8ee'); R(g, 53, m + 9, 16, 1, '#5e6878');
+  R(g, 56, m + 5, 4, 3, OUT); R(g, 57, m + 5, 2, 2, '#2a2a32');
+  R(g, 63, m + 5, 5, 2, '#3f86c8'); R(g, 63, m + 5, 5, 1, '#a8d0f4');
+  for (const [px, py] of [[9, m - 5], [9, m + 3]]) { R(g, px - 1, py - 2, 7, 5, OUT); R(g, px + 1, py - 3, 3, 7, OUT);
+    R(g, px, py, 5, 1, '#e04a3c'); R(g, px + 2, py - 2, 1, 5, '#e04a3c'); R(g, px + 2, py - 2, 1, 1, '#ff8a76'); R(g, px + 4, py, 1, 1, '#fffbea'); }
+  H.radar = [60, m + 2];
+  return H;
+}
+function buildBattle() {
+  const deckCol = (x, y) => (x + (y >> 1) * 5) % 11 === 0 ? '#8c5a30' : y % 2 === 0 ? '#d7a066' : '#c38a52';
+  const H = hull(3, 8, pointy, deckCol, P.steel), g = H.g, m = H.mid;
+  g.drawImage(spr(28, 14, [[C32.cap(4, 7, 23, 7, 4.4, 3.4), P.steel], [C32.ell(11, 7, 2.6, 2.4), P.dark], [C32.ell(17, 7, 2.4, 2.2), P.dark], [C32.cap(20, 7, 24, 7, 2.4), P.gun]]), 20, m - 7);
+  R(g, 30, m - 2, 2, 2, '#1a1a22'); R(g, 36, m - 2, 2, 2, '#1a1a22');
+  turret(g, 56, m, 1); turret(g, 13, m, -1);
+  R(g, 66, m, 1, 1, '#ffd23f');
+  return H;
+}
+function buildSub() {
+  const H = hull(3, 5.2, cigar, (x, y, u, v) => v < -.3 ? '#5a6676' : (x % 9 === 0 ? '#2c3440' : '#3e4856'), P.dark), g = H.g, m = H.mid;
+  g.drawImage(spr(16, 10, [[C32.cap(4, 5, 11, 5, 2.4, 2), P.dark]]), 28, m - 5);
+  R(g, 36, m - 1, 1, 1, '#ffd23f'); R(g, 33, m - 1, 1, 1, '#ffffff');
+  const { M, w, h } = H;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (!M[y * w + x]) continue;
+    const u = (x - 2) / (w - 5), v = Math.abs(y + .5 - m) / 5.2, s = Math.max(v - .35, Math.abs(u - .5) * 2 - .7);
+    if (s > .35 || (s > .12 && (x + y) % 2 === 0)) R(g, x, y, 1, 1, (x + y) % 3 ? '#2e6aa6' : '#3a7cbc');
+  }
+  return H;
+}
+function buildTorp() {
+  const H = hull(2, 5.4, pointy, (x, y, u) => u > .66 && u < .74 ? '#e04a3c' : u > .74 && u < .8 ? '#fffbea' : (x % 5 === 0 ? '#8a94a4' : '#b3bac6'), P.steel), g = H.g, m = H.mid;
+  R(g, 17, m - 3, 9, 7, OUT); R(g, 18, m - 2, 7, 5, '#e4e8ee'); R(g, 22, m - 2, 3, 5, '#3f86c8'); R(g, 18, m - 2, 7, 1, '#ffffff');
+  for (const dy of [-3, 3]) { R(g, 6, m + dy - 1, 8, 2, OUT); R(g, 7, m + dy - 1, 6, 1, '#5e6878'); }
+  return H;
+}
+function wreckOf(len) {
+  return hull(len, len > 3 ? 9 : 5.4, pointy, (x, y) => (x * 3 + y * 5) % 7 === 0 ? '#6a4a3a' : (x + y) % 4 === 0 ? '#1e1a1e' : '#3a3236',
+    ['#6a6470', '#4a4552', '#36323e', '#25222c']).c;
+}
+// écume autour d'une coque (4 images), calculée à partir du contour du sprite
+function foamOf(img) {
+  const W = img.width + 6, H = img.height + 6, [s, sg] = mk(W, H); sg.drawImage(img, 3, 3);
+  const d = sg.getImageData(0, 0, W, H).data, on = (x, y) => x >= 0 && y >= 0 && x < W && y < H && d[(y * W + x) * 4 + 3] > 0;
+  const out = [];
+  for (let f = 0; f < 4; f++) {
+    const [fc, fg] = mk(W, H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (on(x, y)) continue;
+      const d1 = on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1);
+      const d2 = !d1 && (on(x - 2, y) || on(x + 2, y) || on(x, y - 2) || on(x, y + 2) || on(x - 1, y - 1) || on(x + 1, y + 1) || on(x - 1, y + 1) || on(x + 1, y - 1));
+      const h = (x * 7 + y * 13 + f * 5) % 11;
+      if (d1 && h < 7) R(fg, x, y, 1, 1, h < 3 ? '#ffffff' : '#bfe6ff');
+      else if (d2 && h < 3) R(fg, x, y, 1, 1, '#9fd4f8');
+    }
+    out.push(fc);
+  }
+  return out;
+}
+/* ---------- les dessins proposés (3 par navire) ---------- */
+const boxy = (a, b) => u => u < a ? Math.sqrt(1 - ((a - u) / a) ** 2) : u > 1 - b ? Math.sqrt(Math.max(0, 1 - ((u - 1 + b) / b) ** 2)) : 1;
+const wedge = u => u < .04 ? .75 + u / .04 * .25 : u > .55 ? Math.max(0, 1 - (u - .55) / .45) ** .9 : 1;   // coque à facettes, étrave en pointe droite
+const plain = (a, b) => (x, y) => x % 10 === 0 ? b : (x + y * 3) % 19 === 0 ? '#7a8292' : a;
+function cells(g, x, y, nx, ny, lid = '#5e6878') { for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) { R(g, x + i * 4, y + j * 4, 4, 4, OUT); R(g, x + i * 4 + 1, y + j * 4 + 1, 2, 2, lid); R(g, x + i * 4 + 1, y + j * 4 + 1, 2, 1, '#9aa3b1'); } }
+function box(g, x, y, w, h, col, hi = '#ffffff') { R(g, x - 1, y - 1, w + 2, h + 2, OUT); R(g, x, y, w, h, col); R(g, x, y, w, 1, hi); }
+function ball(g, x, y, r, ramp) { g.drawImage(spr(Math.ceil(r * 2 + 4), Math.ceil(r * 2 + 4), [[C32.ell(r + 2, r + 2, r, r), ramp]]), Math.round(x - r - 2), Math.round(y - r - 2)); }
+function capsule(g, x0, x1, y, rw, ramp, w = 40) { g.drawImage(spr(x1 - x0 + 10, Math.ceil(rw * 2 + 6), [[C32.cap(5, rw + 3, x1 - x0 + 5, rw + 3, rw, rw * .85), ramp]]), x0 - 5, y - rw - 3); }
+function funnel(g, x, y) { box(g, x, y - 3, 6, 6, '#3a4150', '#5e6878'); R(g, x + 1, y - 2, 4, 4, '#1a1a22'); }
+function mineRow(g, x0, x1, step, y) { for (let x = x0; x <= x1; x += step) { ball(g, x, y, 2.4, P.dark); R(g, x - 1, y - 2, 1, 1, '#ffd23f'); } }
+
+const SHIPS = [
+  { name: 'CROISEUR', len: 4, power: 'MISSILES', desc: '3 tirs sur 3 cases au choix', v: [
+    ['Moderne', 'Cellules de lancement verticales à l’avant et à l’arrière, une tourelle en proue.', () => {
+      const H = hull(4, 9, pointy, plain('#6c7484', '#5e6676'), P.steel), g = H.g, m = H.mid;
+      cells(g, 12, m - 4, 3, 2); cells(g, 70, m - 4, 3, 2);
+      capsule(g, 34, 60, m, 4, P.steel); ball(g, 46, m, 2.6, P.dark); ball(g, 54, m, 2, P.gun);
+      R(g, 40, m - 6, 3, 2, '#3f86c8'); R(g, 40, m + 4, 3, 2, '#3f86c8'); turret(g, 90, m, 1); return H; }],
+    ['Furtif', 'Coque à facettes gris sombre, bloc pyramidal, longues rangées de cellules, aucun canon.', () => {
+      const H = hull(4, 9, wedge, (x, y, u, v) => v < 0 ? (x % 12 === 0 ? '#3e4652' : '#4e5664') : (x % 12 === 0 ? '#323944' : '#424a56'), P.dark), g = H.g, m = H.mid;
+      cells(g, 8, m - 6, 6, 3, '#3a4150'); cells(g, 64, m - 4, 5, 2, '#3a4150');
+      box(g, 36, m - 7, 20, 14, '#5a6474', '#7a8696'); R(g, 37, m - 1, 18, 1, '#3a4150'); R(g, 45, m - 6, 1, 12, '#3a4150');
+      R(g, 39, m - 4, 3, 2, '#ffd23f'); R(g, 50, m + 2, 2, 2, '#ff5a46'); return H; }],
+    ['Lance-missiles', 'Grand croiseur à deux cheminées et deux rampes inclinées chargées de missiles à tête rouge.', () => {
+      const H = hull(4, 10, pointy, (x, y) => (x + (y >> 1) * 5) % 11 === 0 ? '#8c5a30' : y % 2 ? '#c38a52' : '#d7a066', P.steel), g = H.g, m = H.mid;
+      for (const [x, d] of [[10, 1], [72, -1]]) for (const dy of [-5, 2]) { box(g, x, m + dy, 16, 3, '#5e6878', '#8a94a4'); R(g, d > 0 ? x + 13 : x, m + dy, 3, 3, '#e04a3c'); }
+      capsule(g, 34, 64, m, 4.4, P.steel); funnel(g, 42, m); funnel(g, 52, m); R(g, 60, m - 1, 2, 2, '#3f86c8'); return H; }],
+  ] },
+  { name: 'NAVIRE-ATELIER', len: 4, power: 'REPARATION', desc: 'Répare une case touchée', v: [
+    ['Portiques', 'Deux portiques jaunes au-dessus d’un pont chargé de conteneurs et d’un atelier à croix rouge.', () => {
+      const H = hull(4, 10, boxy(.05, .1), (x, y, u, v) => Math.abs(v) < .25 && x % 6 < 3 ? '#4c5363' : (x + y) % 13 === 0 ? '#6c7484' : '#5a6272', P.steel), g = H.g, m = H.mid;
+      for (const gx of [28, 62]) { R(g, gx - 1, m - 11, 6, 22, OUT); for (let y = m - 10; y < m + 10; y++) R(g, gx, y, 4, 1, (y >> 1) % 2 ? '#ffd23f' : '#3a3036'); }
+      box(g, 38, m - 6, 6, 4, '#e0782a'); box(g, 46, m - 6, 6, 4, '#3f86c8'); box(g, 54, m - 6, 5, 4, '#8ee05a');
+      box(g, 39, m + 2, 18, 6, '#ffffff', '#ffffff'); R(g, 46, m + 2, 4, 6, '#e04a3c'); R(g, 39, m + 4, 18, 2, '#e04a3c');
+      capsule(g, 6, 14, m, 5, P.white); ball(g, 12, m, 2, P.blue); return H; }],
+    ['Dock flottant', 'Bassin en U : deux murailles, de l’eau au milieu, une grue sur rail et la passerelle à l’arrière.', () => {
+      const H = hull(4, 11, boxy(.02, .02), (x, y, u, v) => Math.abs(v) < .55 && u > .14 && u < .97 ? ((x + y) % 7 === 0 ? '#5fa2dc' : '#2a76bf') : (x % 5 === 0 ? '#5a6272' : '#727b8a'), P.steel), g = H.g, m = H.mid;
+      for (let x = 16; x < 100; x += 8) { R(g, x, m - 9, 2, 1, '#ffd23f'); R(g, x, m + 8, 2, 1, '#ffd23f'); }
+      box(g, 56, m - 11, 4, 22, '#ffd23f', '#fff6c2'); R(g, 57, m - 4, 2, 8, OUT); box(g, 50, m - 2, 8, 4, '#e0782a');
+      capsule(g, 4, 12, m, 6, P.white); R(g, 7, m - 2, 4, 3, '#3f86c8'); return H; }],
+    ['Hôpital', 'Coque blanche à bande verte, grande croix rouge sur l’hélipad arrière, grue à flèche à l’avant.', () => {
+      const H = hull(4, 9.5, pointy, (x, y, u, v) => Math.abs(v) > .55 && Math.abs(v) < .75 ? '#3fae5a' : (x % 9 === 0 ? '#d3cbbd' : '#f1ece2'), P.white), g = H.g, m = H.mid;
+      ball(g, 14, m, 7, P.smoke); R(g, 11, m - 1, 7, 3, '#e04a3c'); R(g, 13, m - 3, 3, 7, '#e04a3c');
+      capsule(g, 30, 56, m, 5, P.white); for (let x = 33; x < 54; x += 4) R(g, x, m - 2, 2, 1, '#3f86c8');
+      R(g, 66, m - 1, 22, 2, OUT); R(g, 67, m - 1, 20, 1, '#ffd23f'); ball(g, 66, m, 3, P.gold); R(g, 86, m - 2, 2, 4, OUT); return H; }],
+  ] },
+  { name: 'DESTROYER', len: 3, power: 'SONAR', desc: 'Compte les cases de navire d’une ligne', v: [
+    ['Moderne', 'Coque fine grise, une tourelle, un mât radar blanc.', () => {
+      const H = hull(3, 6.6, pointy, plain('#8a94a4', '#7a8292'), P.steel), g = H.g, m = H.mid;
+      capsule(g, 20, 38, m, 3.4, P.steel); ball(g, 25, m, 2.2, P.dark); ball(g, 33, m, 2.4, P.white);
+      turret(g, 56, m, 1); for (const dy of [-3, 2]) { R(g, 6, m + dy, 7, 2, OUT); R(g, 7, m + dy, 5, 1, '#5e6878'); } return H; }],
+    ['Chasseur de sous-marins', 'Grand dôme de sonar bleu à l’étrave et câble de sonar remorqué qui sort de la poupe.', () => {
+      const H = hull(3, 6.4, pointy, plain('#7a8696', '#687484'), P.steel), g = H.g, m = H.mid;
+      ball(g, 60, m, 4, P.blue); R(g, 59, m - 2, 2, 1, '#ffffff'); capsule(g, 22, 40, m, 3.4, P.steel); ball(g, 34, m, 2, P.dark);
+      R(g, 0, m, 10, 1, '#ffd23f'); R(g, 0, m + 1, 10, 1, OUT); box(g, 9, m - 2, 4, 4, '#3a4150'); return H; }],
+    ['Années 40', 'Deux tourelles, deux cheminées, pont de bois et grenades sous-marines à la poupe.', () => {
+      const H = hull(3, 6.8, pointy, (x, y) => (x + (y >> 1) * 5) % 9 === 0 ? '#8c5a30' : y % 2 ? '#c38a52' : '#d7a066', P.steel), g = H.g, m = H.mid;
+      turret(g, 58, m, 1); turret(g, 16, m, -1); capsule(g, 28, 46, m, 3.4, P.steel); funnel(g, 32, m); funnel(g, 40, m);
+      for (const dy of [-4, 3]) for (let x = 3; x < 9; x += 3) ball(g, x, m + dy, 1.4, P.dark); return H; }],
+  ] },
+  { name: 'MOUILLEUR DE MINES', len: 3, power: 'MINES', desc: '2 mines : qui tire dessus est touché en retour', v: [
+    ['Rails', 'Deux rangées de mines sur rails le long du pont, passerelle à l’avant.', () => {
+      const H = hull(3, 7.4, boxy(.08, .3), (x, y) => (x + (y >> 1) * 3) % 9 === 0 ? '#5e4a36' : y % 2 ? '#8a6e4e' : '#7a6044', P.steel), g = H.g, m = H.mid;
+      for (const dy of [-4, 3]) { R(g, 4, m + dy, 44, 1, '#3a3036'); mineRow(g, 6, 44, 6, m + dy); }
+      capsule(g, 52, 64, m, 4.4, P.steel); ball(g, 60, m, 2, P.blue); return H; }],
+    ['Rampe arrière', 'Mines rangées en grille sur une plage arrière à bandes jaunes et noires, grue au milieu.', () => {
+      const H = hull(3, 8, boxy(.02, .3), (x, y, u) => u < .42 ? (((x + y) >> 2) % 2 ? '#ffd23f' : '#2a2a32') : (x % 7 === 0 ? '#5a6272' : '#6c7484'), P.steel), g = H.g, m = H.mid;
+      R(g, 3, m - 6, 30, 13, '#4e4a52'); for (let x = 7; x < 32; x += 6) for (const dy of [-3, 3]) ball(g, x, m + dy, 2.3, P.dark);
+      R(g, 36, m - 1, 14, 2, OUT); R(g, 37, m - 1, 12, 1, '#ffd23f'); ball(g, 36, m, 2.6, P.gold);
+      capsule(g, 52, 66, m, 4.6, P.steel); R(g, 60, m - 2, 3, 3, '#3f86c8'); return H; }],
+    ['Danger', 'Petite coque grise, une seule file de grosses mines au centre, bandes de danger orange sur les flancs.', () => {
+      const H = hull(3, 7, pointy, (x, y, u, v) => Math.abs(v) > .55 && ((x >> 2) % 2) ? '#e0782a' : (x % 8 === 0 ? '#5e6878' : '#727b8a'), P.steel), g = H.g, m = H.mid;
+      for (let x = 8; x < 44; x += 8) { ball(g, x, m, 3.2, P.dark); R(g, x - 1, m - 4, 2, 1, '#ffd23f'); R(g, x - 4, m, 1, 1, '#ffd23f'); R(g, x + 3, m, 1, 1, '#ffd23f'); }
+      capsule(g, 50, 62, m, 4, P.steel); return H; }],
+  ] },
+  { name: 'BROUILLEUR', len: 3, power: 'FUMEE', desc: 'Zone 3x3 muette pendant 2 tours', v: [
+    ['Parabole', 'Coque sombre, grande parabole blanche, quatre pots de fumée à l’arrière.', () => {
+      const H = hull(3, 7, pointy, (x, y) => x % 7 === 0 ? '#36404e' : (x + y) % 11 === 0 ? '#5a6676' : '#4e5a6a', P.dark), g = H.g, m = H.mid;
+      ball(g, 42, m, 5.4, P.white); ball(g, 42, m, 2.2, P.gun);
+      for (const [x, dy] of [[12, -3], [18, 2], [12, 2], [18, -3]]) ball(g, x, m + dy, 2.4, P.smokeL);
+      capsule(g, 54, 62, m, 3, P.steel); R(g, 26, m - 6, 1, 12, '#c8d0dc'); return H; }],
+    ['Fumigène', 'Deux gros générateurs de fumée crachent un panache gris ; mât d’antennes en peigne.', () => {
+      const H = hull(3, 7.4, boxy(.06, .32), (x, y) => x % 6 === 0 ? '#3a4150' : '#4a5260', P.dark), g = H.g, m = H.mid;
+      for (const dy of [-3, 3]) { box(g, 8, m + dy - 2, 10, 4, '#2a2a32', '#5e6878'); }
+      for (const [x, y, r] of [[4, m - 5, 3], [3, m + 4, 3.4], [7, m, 2.6]]) ball(g, x, y, r, P.smokeL);
+      R(g, 30, m - 7, 1, 14, '#c8d0dc'); for (let y = m - 6; y < m + 7; y += 3) R(g, 28, y, 5, 1, '#c8d0dc');
+      capsule(g, 40, 60, m, 4.4, P.dark); R(g, 54, m - 1, 2, 2, '#ff5a46'); return H; }],
+    ['Dômes', 'Coque furtive à facettes avec trois dômes radar blancs alignés.', () => {
+      const H = hull(3, 7, wedge, (x, y, u, v) => v < 0 ? '#4e5664' : '#3e4652', P.dark), g = H.g, m = H.mid;
+      for (const x of [16, 30, 44]) ball(g, x, m, 3.8, P.white);
+      box(g, 52, m - 4, 8, 8, '#5a6474', '#7a8696'); R(g, 54, m - 2, 2, 2, '#ffd23f'); return H; }],
+  ] },
+  { name: 'VEDETTE', len: 2, power: 'LEURRE', desc: 'Un faux navire de 2 cases', v: [
+    ['Rapide', 'Petite vedette blanche à bande bleue, poste de pilotage vitré.', () => {
+      const H = hull(2, 4.4, pointy, (x, y, u) => u > .5 && u < .56 ? '#3f86c8' : (x % 6 === 0 ? '#d3cbbd' : '#f1ece2'), P.white), g = H.g, m = H.mid;
+      box(g, 23, m - 2, 7, 5, '#5e6878'); R(g, 27, m - 2, 3, 5, '#a8d0f4'); R(g, 5, m - 1, 6, 3, '#36404e'); return H; }],
+    ['Porte-leurre', 'Patrouilleur gris qui porte, plié sur son pont, un ballon orange en forme de navire.', () => {
+      const H = hull(2, 5, pointy, (x) => x % 6 === 0 ? '#5e6878' : '#727b8a', P.steel), g = H.g, m = H.mid;
+      capsule(g, 6, 22, m, 3.4, P.red); for (let x = 9; x < 22; x += 4) R(g, x, m - 3, 1, 6, '#a8302a');
+      box(g, 30, m - 2, 6, 5, '#e4e8ee'); R(g, 33, m - 2, 3, 5, '#3f86c8'); return H; }],
+    ['Hydroptère', 'Coque rouge effilée, ailerons sur les côtés, une trace d’écume à l’arrière.', () => {
+      const H = hull(2, 4, u => u < .1 ? .5 + u * 5 : u > .5 ? Math.max(0, 1 - (u - .5) / .5) ** .7 : 1, (x, y, u, v) => v < -.2 ? '#ff8a76' : '#e04a3c', P.red), g = H.g, m = H.mid;
+      for (const dy of [-6, 5]) { R(g, 14, m + dy, 8, 2, OUT); R(g, 15, m + dy, 6, 1, '#c8d0dc'); }
+      box(g, 26, m - 2, 6, 4, '#36404e'); R(g, 29, m - 2, 3, 4, '#a8d0f4'); for (let x = 0; x < 6; x += 2) R(g, x, m - 1 + (x % 4 ? 1 : 0), 2, 1, '#ffffff'); return H; }],
+  ] },
+  { name: 'GARDE-COTE', len: 2, power: 'PROJECTEUR', desc: 'Révèle une ligne de 4 cases', beam: true, v: [
+    ['Bande rouge', 'Coque blanche, bande oblique rouge et bleue, projecteur jaune.', () => {
+      const H = hull(2, 5.4, pointy, (x, y, u, v) => Math.abs(u - .62 + v * .1) < .05 ? '#e04a3c' : Math.abs(u - .7 + v * .1) < .025 ? '#3f86c8' : (x % 5 === 0 ? '#d3cbbd' : '#f1ece2'), P.white), g = H.g, m = H.mid;
+      box(g, 14, m - 3, 8, 7, '#e4e8ee'); R(g, 19, m - 3, 3, 7, '#3f86c8'); ball(g, 28, m, 2.4, P.gold); return H; }],
+    ['Sauvetage', 'Coque rouge, cabine blanche, bouées orange et gros projecteur sur le toit.', () => {
+      const H = hull(2, 5.6, boxy(.06, .4), (x, y, u, v) => v < -.3 ? '#ff8a76' : '#e04a3c', P.red), g = H.g, m = H.mid;
+      box(g, 12, m - 3, 12, 7, '#f1ece2'); R(g, 20, m - 3, 3, 7, '#3f86c8'); ball(g, 16, m, 2.6, P.gold);
+      for (const [x, dy] of [[6, -3], [6, 3]]) { ball(g, x, m + dy, 1.8, P.gold); } return H; }],
+    ['Marine', 'Patrouilleur gris à bande bleue, mât et projecteur à l’avant, petit canon.', () => {
+      const H = hull(2, 5.2, pointy, (x, y, u) => u > .3 && u < .36 ? '#3f86c8' : (x % 6 === 0 ? '#7a8292' : '#8a94a4'), P.steel), g = H.g, m = H.mid;
+      box(g, 14, m - 2, 9, 5, '#a9b1bc'); R(g, 18, m - 2, 2, 5, '#3a4150'); ball(g, 36, m, 2.2, P.gold); R(g, 30, m - 4, 1, 8, '#c8d0dc');
+      R(g, 40, m - 1, 6, 2, OUT); R(g, 40, m - 1, 5, 1, '#c8d0dc'); return H; }],
+  ] },
+];
+
+/* ---------- affichage : chaque dessin grossi ×2 sur la mer de la grille ---------- */
+const Z = 2;
+function seaTile(w, h, seed) {
+  const [c, g] = mk(w, h), r = rnd(seed), bayer = [[0, 2], [3, 1]];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const a = Math.PI * 2 / 96, v = .55 * Math.sin(a * (2 * x + y) + 1.3) + .45 * Math.sin(a * (x - 3 * y) + .4) + .25 * Math.sin(a * (5 * x + 2 * y) + 2.2);
+    R(g, x, y, 1, 1, SEA_T[clamp(Math.floor((v + 1.3) / 2.6 * 3 + (bayer[y % 2][x % 2] - 1.5) * .3), 0, 3)]);
+  }
+  for (let i = 0; i < w / 6; i++) { const x = Math.floor(r() * w), y = Math.floor(r() * h); R(g, x, y, 3, 1, '#5fa2dc'); }
+  return c;
+}
+function preview(img, len, beam) {
+  const W = len * CS + 12, Hh = CS + 12, [c, g] = mk(W, Hh);
+  g.drawImage(seaTile(W, Hh, len * 7 + img.width), 0, 0);
+  for (let k = 0; k <= len; k++) R(g, 6 + k * CS, 0, 1, Hh, 'rgba(210,236,255,.3)');
+  R(g, 0, 6, W, 1, 'rgba(210,236,255,.3)'); R(g, 0, 6 + CS, W, 1, 'rgba(210,236,255,.3)');
+  if (beam) { g.fillStyle = 'rgba(255,240,150,.28)'; g.beginPath(); g.moveTo(6 + len * CS - 22, 6 + CS / 2); g.lineTo(W, 0); g.lineTo(W, Hh); g.fill(); }
+  g.drawImage(tint(img, 'rgba(4,18,48,.45)'), 8, 9);
+  foamOf(img).slice(0, 1).forEach(f => g.drawImage(f, 3, 3));
+  g.drawImage(img, 6, 6);
+  const out = document.createElement('canvas'); out.width = W * Z; out.height = Hh * Z;
+  const o = out.getContext('2d'); o.imageSmoothingEnabled = false; o.drawImage(c, 0, 0, W * Z, Hh * Z);
+  return out;
+}
+function refRow() {
+  const wrap = document.getElementById('ref');
+  for (const [nm, b, len] of [['Porte-avions', buildCarrier, 4], ['Cuirassé', buildBattle, 3], ['Sous-marin', buildSub, 3], ['Torpilleur', buildTorp, 2]]) {
+    const f = document.createElement('figure'); f.append(preview(b().c, len)); const t = document.createElement('figcaption'); t.textContent = nm; f.append(t); wrap.append(f);
+  }
+}
+function build() {
+  refRow();
+  const main = document.getElementById('navires');
+  SHIPS.forEach(s => {
+    const sec = document.createElement('section');
+    sec.innerHTML = `<h2>${s.name}<span>${s.len} cases</span></h2><p class="pw"><b>${s.power}</b> · ${s.desc}</p>`;
+    s.v.forEach(([t, d, fn], i) => {
+      const f = document.createElement('figure');
+      f.append(preview(fn().c, s.len, s.beam));
+      const cap = document.createElement('figcaption');
+      cap.innerHTML = `<b class="l">${'ABC'[i]}</b><span><b>${t}</b>${d}</span>`; f.append(cap); sec.append(f);
+    });
+    main.append(sec);
+  });
+}
+build();
+
+</script>
+</body>
+</html>
