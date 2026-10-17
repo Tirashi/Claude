@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escadrille, le sol</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
+<style>
+/* Trois sols vus de très haut pour remplacer le ciel bleu d'Escadrille ! (qui faisait penser à de l'eau).
+   Page sombre volontairement : c'est l'univers du jeu. */
+:root{ --fond:#070d1f; --texte:#f2f0ff; --doux:#a8b8d8; --or:#ffd23f; --cadre:#020409; color-scheme:dark;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif; }
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.tel{width:100%;max-width:300px;aspect-ratio:272/480;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000}
+.tel canvas{width:100%;height:100%;display:block}
+.dir h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:4px 0 0}
+.dir p{margin:0;color:var(--doux);max-width:300px;font-size:15px;text-align:center}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <h1>ESCADRILLE ! : LE SOL</h1>
+  <p>Le ciel bleu uni faisait penser à de l'eau. À la place, le sol vu de très haut défile doucement sous les avions, comme si l'escadrille volait vers le nord. Un voile bleuté rappelle l'altitude, et les petits nuages passent avec leur ombre. Le même sol sert aussi de fond aux menus. Lequel préfères-tu ?</p>
+</header>
+<div class="grille">
+  <section class="dir"><div class="tel"><canvas id="ea" width="544" height="960"></canvas></div><h2>A. CAMPAGNE</h2><p>Champs en damier, haies, bois, une rivière, une route et ses hameaux.</p></section>
+  <section class="dir"><div class="tel"><canvas id="eb" width="544" height="960"></canvas></div><h2>B. FORETS ET MONTAGNES</h2><p>Relief ombré, sapins, lacs, rochers et sommets enneigés.</p></section>
+  <section class="dir"><div class="tel"><canvas id="ec" width="544" height="960"></canvas></div><h2>C. DESERT ET CANYON</h2><p>Dunes, plateaux rouges, un canyon avec son filet d'eau, deux oasis.</p></section>
+</div>
+</div>
+<script src="../injagility/chiens32.js"></script>
+<script src="../nebula/vaisseaux.js"></script>
+<script src="../escadrille/avions.js"></script>
+<script src="../escadrille/sol.js"></script>
+<script>
+'use strict';
+/* Maquette : le décor et les avions repris tels quels du jeu (escadrille/index.html), le sol de escadrille/sol.js. */
+const C32 = window.Chiens32, OUT = C32.OUT, RAMP = C32.RAMP;
+const { NV, STYLES, AVIONS, SIZE, rotBuilder } = window.EscAvions;
+const LW = 272, LH = 480, N = 9, CS = 23, BS = CS * N, BX = 40, BY = 58, TAU = Math.PI * 2;
+const FONT = '"Press Start 2P", monospace';
+const COLS = 'ABCDEFGHI', now = () => performance.now(), clamp = (v, a, b) => v < a ? a : v > b ? b : v; let STYLE = 'a';
+/* ---------- outils de dessin d'Amiral ! ---------- */
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function spr(w, h, list, outline = true) {
+  const C = C32.Canvas(w, h);
+  list.forEach(([shape, ramp, opt], k) => {
+    if (typeof ramp !== 'function') RAMP['_esc' + k] = ramp;   // une fonction : camouflage, la nuance dépend du pixel
+    C.draw(shape, Object.assign({ mat: typeof ramp === 'function' ? ramp : '_esc' + k, id: k + 1, fur: false }, opt || {}));
+  });
+  return C.toCanvas(outline);
+}
+function tint(img, col) { const [c, g] = mk(img.width, img.height); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-in'; R(g, 0, 0, c.width, c.height, col); return c; }
+function over(img, col) { const [c, g] = mk(img.width, img.height); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-atop'; R(g, 0, 0, c.width, c.height, col); return c; }
+function rot(img) { const [c, g] = mk(img.height, img.width); g.translate(img.height, 0); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0); return c; }
+function text(g, s, x, y, col, align = 'left', size = 8, shadow = '#060a18') {
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
+  if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+const GOLD = ['#fff6c2', '#ffd23f', '#e0782a'];
+function logo(g, s, x, y, size) {
+  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
+  g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, GOLD[0]); gr.addColorStop(.5, GOLD[1]); gr.addColorStop(1, GOLD[2]);
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function plate(g, x, y, w, h, tone_) {
+  const top = tone_ === 'gold' ? ['rgba(120,86,20,.97)', 'rgba(60,36,8,.97)'] : tone_ === 'red' ? ['rgba(112,40,44,.96)', 'rgba(44,14,20,.96)']
+            : tone_ === 'dim' ? ['rgba(36,44,60,.92)', 'rgba(16,20,30,.92)'] : ['rgba(48,70,104,.96)', 'rgba(16,26,44,.96)'];
+  R(g, x + 2, y - 2, w - 4, h + 4, OUT); R(g, x - 2, y + 2, w + 4, h - 4, OUT); R(g, x, y, w, h, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top[0]); gr.addColorStop(1, top[1]);
+  g.fillStyle = gr; g.fillRect(x + 1, y + 1, w - 2, h - 2);
+  const hl = tone_ === 'gold' ? 'rgba(255,230,140,.7)' : tone_ === 'red' ? 'rgba(255,170,160,.55)' : 'rgba(160,200,240,.55)';
+  R(g, x + 2, y + 1, w - 4, 1, hl); R(g, x + 1, y + 2, 1, h - 4, hl);
+  R(g, x + 2, y + h - 2, w - 4, 1, 'rgba(0,0,0,.45)'); R(g, x + w - 2, y + 2, 1, h - 4, 'rgba(0,0,0,.45)');
+}
+const TINY = {
+  A:'010101111101101',B:'110101110101110',C:'011100100100011',D:'110101101101110',E:'111100110100111',F:'111100110100100',
+  G:'011100101101011',H:'101101111101101',I:'111010010010111',J:'001001001101010',K:'101101110101101',L:'100100100100111',
+  M:'101111111101101',N:'110101101101101',O:'010101101101010',P:'110101110100100',Q:'010101101110011',R:'110101110101101',
+  S:'011100010001110',T:'111010010010010',U:'101101101101111',V:'101101101101010',W:'101101111111101',X:'101101010101101',
+  Y:'101101010010010',Z:'111001010100111',0:'010101101101010',1:'010110010010111',2:'110001010100111',3:'110001010001110',
+  4:'101101111001001',5:'111100110001110',6:'011100110101010',7:'111001010010010',8:'010101010101010',9:'010101011001110',
+  '.':'000000000000010','!':'010010010000010','-':'000000111000000',':':'000010000010000','/':'001001010100100','+':'000010111010000',
+  "'":'010010000000000','?':'110001010000010','>':'100010001010100','<':'001010100010001',
+};
+function tiny(g, s, x, y, col, align) {
+  s = String(s).toUpperCase();
+  if (align === 'center') x -= Math.floor((s.length * 4 - 1) / 2); else if (align === 'right') x -= s.length * 4 - 1;
+  for (const pass of [0, 1]) {
+    let cx = x;
+    for (const ch of s) {
+      const b = TINY[ch];
+      if (b) for (let k = 0; k < 15; k++) if (b[k] === '1') R(g, cx + k % 3 + (pass ? 0 : 1), y + (k / 3 | 0) + (pass ? 0 : 1), 1, 1, pass ? col : '#060a18');
+      cx += 4;
+    }
+  }
+}
+const P = {
+  steel: ['#e4e8ee', '#a9b1bc', '#727b8a', '#474e5c'], gun: ['#c8d0dc', '#8a94a4', '#5e6878', '#3a4150'],
+  dark: ['#7a8798', '#4e5a6a', '#36404e', '#232a35'], red: ['#ff8a76', '#e04a3c', '#a8302a', '#6e1d1d'],
+  cream: ['#fffbea', '#f1e4c4', '#cdb98e', '#9a845e'], navy: ['#6a7ab8', '#3f4f8a', '#2c3866', '#1c2444'],
+  skin: ['#ffdcbc', '#f0b48c', '#c8805e', '#8a5040'], white: ['#ffffff', '#f1ece2', '#d3cbbd', '#ab9f8e'],
+  gold: ['#fff2a8', '#ffd23f', '#d09a1c', '#8f6410'], smoke: ['#7c7684', '#57525f', '#3e3a48', '#2a2733'],
+  smokeL: ['#a8a2ae', '#87818f', '#6a6574', '#4e4a58'], blue: ['#a8d0f4', '#4a8fd4', '#2f6fb0', '#1a3f6a'],
+  brown: ['#d8a468', '#a8743e', '#7a5028', '#4e3018'], olive: ['#b8c08a', '#8a9460', '#626c42', '#40482a'],
+};
+const G = {};
+
+/* ---------- le ciel (à la place de la mer d'Amiral) ---------- */
+const SKY_T = ['#2f6fb6', '#3a7cc4', '#4689cf', '#5296d8'];
+function buildSky() {
+  const TS = 96, [t, g] = mk(TS, TS), r = rnd(31), bayer = [[0, 2], [3, 1]];
+  for (let y = 0; y < TS; y++) for (let x = 0; x < TS; x++) {
+    const a = TAU / TS;
+    const v = .6 * Math.sin(a * (x + 2 * y) + 1.3) + .4 * Math.sin(a * (3 * x - y) + .4) + .2 * Math.sin(a * (4 * x + 3 * y) + 2.2);
+    const f = (v + 1.2) / 2.4 * 3 + (bayer[y % 2][x % 2] - 1.5) * .3;
+    R(g, x, y, 1, 1, SKY_T[clamp(Math.floor(f), 0, 3)]);
+  }
+  for (let i = 0; i < 26; i++) { // petits filets de vent
+    const x = Math.floor(r() * TS), y = Math.floor(r() * TS), len = 5 + Math.floor(r() * 6);
+    for (let k = 0; k < len; k++) R(g, (x + k) % TS, y, 1, 1, k === 0 || k === len - 1 ? '#6fb0e4' : '#8cc6f0');
+  }
+  const [c, gg] = mk(LW + TS, LH + TS);
+  for (let y = 0; y < LH + TS; y += TS) for (let x = 0; x < LW + TS; x += TS) gg.drawImage(t, x, y);
+  G.sky = c;
+  // petits cumulus qui passent sous les avions
+  const W2 = BS * 2, [cl, cg] = mk(W2, BS), r2 = rnd(5);
+  for (let i = 0; i < 7; i++) {
+    const x = r2() * BS, y = 12 + r2() * (BS - 24), n = 2 + Math.floor(r2() * 3), list = [];
+    for (let k = 0; k < n; k++) list.push([x + k * 7 + r2() * 3, y + (r2() - .5) * 4, 3.5 + r2() * 3]);
+    for (const dx of [0, BS]) { const [bc, bg2] = mk(W2, BS); C32.blob(bg2, list.map(q => [q[0] + dx, q[1], q[2]]), ['#ffffff', '#eef6ff', '#d6e8fa', '#b4d2f0']); cg.drawImage(bc, 0, 0); }
+  }
+  G.cumulus = cl;
+}
+function rivet(g, x, y) { R(g, x, y, 3, 3, '#14161d'); R(g, x, y, 2, 2, '#8a94a8'); R(g, x, y, 1, 1, '#e0e6f0'); }
+function buildFrame(mine) {
+  const S = BS, [c, g] = mk(S + 24, S + 24), o = 12;
+  const acc = mine ? ['#7ec4ff', '#3f86c8'] : ['#ff9a86', '#c8443a'];
+  R(g, o - 5, o - 5, S + 10, S + 10, OUT);
+  R(g, o - 4, o - 4, S + 8, S + 8, '#6a7383'); R(g, o - 4, o - 4, S + 8, 1, '#d6dbe3'); R(g, o - 4, o - 4, 1, S + 8, '#d6dbe3');
+  R(g, o - 3, o - 3, S + 6, S + 6, '#9aa3b1'); R(g, o - 3, o + S + 2, S + 6, 1, '#4a5160'); R(g, o + S + 2, o - 3, 1, S + 6, '#4a5160');
+  R(g, o - 2, o - 2, S + 4, S + 4, acc[1]); R(g, o - 2, o - 2, S + 4, 1, acc[0]);
+  R(g, o - 1, o - 1, S + 2, S + 2, OUT); g.clearRect(o, o, S, S);
+  for (let k = 1; k < N; k++) {
+    R(g, o + k * CS, o, 1, S, 'rgba(225,242,255,.34)'); R(g, o, o + k * CS, S, 1, 'rgba(225,242,255,.34)');
+    R(g, o + k * CS + 1, o, 1, S, 'rgba(4,20,52,.18)'); R(g, o, o + k * CS + 1, S, 1, 'rgba(4,20,52,.18)');
+  }
+  for (const [x, y] of [[-4, -4], [S + 1, -4], [-4, S + 1], [S + 1, S + 1], [Math.floor(S / 2) - 1, -4], [Math.floor(S / 2) - 1, S + 1], [-4, Math.floor(S / 2) - 1], [S + 1, Math.floor(S / 2) - 1]]) rivet(g, o + x, o + y);
+  return c;
+}
+
+
+const LUEUR = [];
+function buildLueurs() {
+  for (const [a, b] of [['rgba(170,220,255,.95)', 'rgba(80,150,255,.4)'], ['rgba(255,170,110,.95)', 'rgba(255,90,40,.4)']]) {
+    const [c, g] = mk(64, 64), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, a); gr.addColorStop(.35, b); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); LUEUR.push(c);
+  }
+}
+const PLANES = {};
+function plane(st, side, id, d) {
+  const key = st + side + id + d; if (PLANES[key]) return PLANES[key];
+  const m = STYLES[st][side], [w, h] = SIZE[id], R = rotBuilder(w, h, d);
+  const an = AVIONS[st][id](R, m, w / 2);
+  if (m.pirate) { R.paint(w * .2, h * .52, w * .14, h * .12, 'scrap'); R.paint(w * .62, h * .28, w * .1, h * .1, 'hazard'); R.greebles(8, 99, [0, 0, w, h]); }
+  const s = NV.render(R.B, { seed: { bomb: 3, radar: 7, jet: 11, heli: 13 }[id] + (side === 'foe' ? 20 : 0) });
+  return PLANES[key] = { img: s.img, w: s.w, h: s.h, engines: s.engines, lueur: LUEUR[m.lueur],
+    sh: tint(s.img, 'rgba(4,16,44,.36)'), dead: over(s.img, 'rgba(20,16,24,.6)'), spot: tint(s.img, '#ffd23f'),
+    anims: an.map(([k, x, y, ...r]) => [k, ...R.T([x, y]), ...r]) };
+}
+function rotorL(g, x, y, r, t, sens) { // pales d'hélicoptère, floues
+  const a = t * 14 * sens;
+  g.save(); g.translate(x, y);
+  g.globalAlpha = .14; g.fillStyle = '#dfe8f0'; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+  g.globalAlpha = .85; g.strokeStyle = '#22262e'; g.lineWidth = 1.3; g.lineCap = 'round';
+  for (const da of [0, Math.PI / 2]) { g.beginPath(); g.moveTo(Math.cos(a + da) * r, Math.sin(a + da) * r); g.lineTo(-Math.cos(a + da) * r, -Math.sin(a + da) * r); g.stroke(); }
+  g.globalAlpha = 1; g.fillStyle = '#8a94a4'; g.beginPath(); g.arc(0, 0, 1.6, 0, TAU); g.fill();
+  g.restore();
+}
+function heliceL(g, x, y, r, t, sens) { // hélice : disque pâle et trois pales
+  const a = t * 26 * sens;
+  g.save(); g.translate(x, y);
+  g.globalAlpha = .2; g.fillStyle = '#e8eef4'; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+  g.globalAlpha = .75; g.strokeStyle = '#1c2028'; g.lineWidth = 1.4; g.lineCap = 'round';
+  for (let k = 0; k < 3; k++) { const b = a + k * TAU / 3; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(b) * r, Math.sin(b) * r); g.stroke(); }
+  g.restore();
+}
+function antenneL(g, x, y, len, t) { // antenne radar qui tourne lentement
+  const a = t * 1.6;
+  g.save(); g.translate(x, y); g.rotate(a);
+  g.fillStyle = 'rgba(4,16,44,.35)'; g.fillRect(-len + 2, 2, len * 2, 3);
+  g.fillStyle = '#3a404c'; g.fillRect(-len, -1.6, len * 2, 3.2); g.fillStyle = '#9aa3b1'; g.fillRect(-len, -1.6, len * 2, 1);
+  g.fillStyle = '#d6a050'; g.fillRect(-len, -1.6, 2.4, 3.2); g.fillRect(len - 2.4, -1.6, 2.4, 3.2);
+  g.fillStyle = '#5e6878'; g.beginPath(); g.arc(0, 0, 2.4, 0, TAU); g.fill();
+  g.restore();
+}
+function drawPlane(g, art, x, y, t, k, d, live) { // un avion avec son ombre, la lueur de ses réacteurs et ses pièces qui tournent
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  if (live) {
+    g.drawImage(art.sh, x + 5, y + 8, art.w, art.h);
+    g.globalCompositeOperation = 'lighter';
+    for (const [ex, ey, er] of art.engines) { const L = er * 3.4 * (1 + Math.sin(t * 23 + ex) * .12); g.drawImage(art.lueur, x + ex - L, y + ey - L, L * 2, L * 2); }
+    g.globalCompositeOperation = 'source-over';
+  }
+  g.drawImage(live ? art.img : art.dead, x, y, art.w, art.h);
+  if (live) for (const [kind, ax, ay, r, sens] of art.anims) {
+    if (kind === 'rotor') rotorL(g, x + ax, y + ay, r, t + k, sens);
+    else if (kind === 'helice') heliceL(g, x + ax, y + ay, r, t + k, sens);
+    else antenneL(g, x + ax, y + ay, r, t + k);
+  }
+  g.imageSmoothingEnabled = false;
+}
+function buildFog() {
+  const S = BS, [t, g] = mk(S, S), bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+  const FOG = ['#dfe6f5', '#c3cde6', '#a3b0d4', '#8996c2', '#7480b0'];
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const a = TAU / S;
+    const v = .55 * Math.sin(a * (x + y)) + .45 * Math.sin(a * (2 * y - x) + 1) + .35 * Math.sin(a * (3 * x - y) + 2) + .25 * Math.sin(a * (4 * x + 3 * y) + .5) + .12 * Math.sin(a * (9 * x - 7 * y));
+    const f = (1.6 - v) / 3.2 * 4.4 + (bayer[y % 4][x % 4] / 16 - .5) * .55;
+    R(g, x, y, 1, 1, FOG[clamp(Math.floor(f), 0, 4)]);
+  }
+  const [c, cg] = mk(S * 2, S * 2); for (const [x, y] of [[0, 0], [S, 0], [0, S], [S, S]]) cg.drawImage(t, x, y);
+  G.fogTex = c; [G.fogBuf, G.fogG] = mk(S, S); [G.fogMask, G.fogMaskG] = mk(S, S);
+  const [w, wg] = mk(S * 2, S), r = rnd(21);
+  for (let i = 0; i < 9; i++) {
+    const x = r() * S, y = 10 + r() * (S - 20), n = 3 + Math.floor(r() * 3), list = [];
+    for (let k = 0; k < n; k++) list.push([x + k * 9 + r() * 4, y + (r() - .5) * 6, 5 + r() * 5, 3 + r() * 2]);
+    for (const dx of [-S, 0, S]) { const [bc, bg2] = mk(S * 2, S); C32.blob(bg2, list.map(q => [q[0] + dx, q[1], q[2], q[3]]), ['#ffffff', '#f4f7fd', '#dfe6f5', '#c3cde6']); wg.drawImage(bc, 0, 0); }
+  }
+  G.fogCloud = w;
+  const [cb, cbg] = mk(CS, CS);
+  R(cbg, 1, 1, CS - 1, 1, 'rgba(255,255,255,.8)'); R(cbg, 1, 2, 1, CS - 2, 'rgba(255,255,255,.55)');
+  R(cbg, 2, CS - 1, CS - 2, 1, 'rgba(40,50,96,.5)'); R(cbg, CS - 1, 2, 1, CS - 2, 'rgba(40,50,96,.5)');
+  G.bevel = cb;
+}
+const SPOTS = [['bomb', 0, 2, 0], ['radar', 5, 4, 2], ['jet', 6, 0, 2], ['heli', 4, 2, 0]];
+const SOLS = ['a', 'b', 'c'].map(st => {
+  const tile = EscSol.build(st), cv = document.getElementById('e' + st), g = cv.getContext('2d');
+  return { st, tile, g };
+});
+function ground(g, tile, x0, y0, w, h, t, speed) { // le sol qui défile vers le bas, répété sans couture
+  const oy = Math.floor((t * speed) % EscSol.H);
+  for (let y = -EscSol.H + oy; y < h; y += EscSol.H) for (let x = 0; x < w; x += EscSol.W) g.drawImage(tile, x0 + x, y0 + y);
+}
+let g, BTN = [];
+function button(x, y, w, h, label, opts = {}) { plate(g, x, y, w, h, opts.gold ? 'gold' : null); tiny(g, label, x + w / 2, y + Math.floor(h / 2) - 2, '#ffffff', 'center'); }
+function screen(s, t) {
+  g = s.g; g.setTransform(2, 0, 0, 2, 0, 0); g.imageSmoothingEnabled = false;
+  // fond de l'écran : le même sol, assombri
+  ground(g, s.tile, 0, 0, LW, LH, t, 5); g.fillStyle = 'rgba(6,14,36,.62)'; g.fillRect(0, 0, LW, LH);
+  logo(g, 'ESCADRILLE!', 62, 8, 10); button(LW - 62, 6, 56, 18, 'MENU');
+  tiny(g, 'PLACEZ VOTRE ESCADRILLE', LW / 2, 32, '#9fd3ff', 'center');
+  g.save(); g.translate(BX, BY); g.beginPath(); g.rect(0, 0, BS, BS); g.clip();
+  ground(g, s.tile, -30, 0, BS + 60, BS, t, 8);
+  g.fillStyle = 'rgba(150,190,230,.2)'; g.fillRect(0, 0, BS, BS);            // voile d'altitude
+  g.globalAlpha = .5; g.drawImage(G.cloudSh, -Math.floor((t * 12) % BS) + 10, 14); g.globalAlpha = .8; g.drawImage(G.cumulus, -Math.floor((t * 12) % BS), 0); g.globalAlpha = 1;
+  for (let k = 1; k < N; k++) { R(g, k * CS, 0, 1, BS, 'rgba(235,245,255,.28)'); R(g, 0, k * CS, BS, 1, 'rgba(235,245,255,.28)'); }
+  SPOTS.forEach(([id, c, r, d], i) => drawPlane(g, plane(STYLE, 'mine', id, d), c * CS, r * CS + Math.round(Math.sin(t * 2 + i * 1.7)), t, i, d, true));
+  g.restore();
+  g.drawImage(G.frameMine, BX - 12, BY - 12);
+  for (let k = 0; k < N; k++) { tiny(g, COLS[k], BX + k * CS + 10, BY - 10, '#cfe6ff'); tiny(g, String(k + 1), BX - 10, BY + k * CS + 9, '#cfe6ff'); }
+  button(6, 284, 82, 42, 'PIVOTER'); button(95, 284, 82, 42, 'HASARD'); button(184, 284, 82, 42, 'DECOLLAGE !', { gold: true });
+  // miniature du ciel ennemi caché par les nuages
+  plate(g, 6, 338, 92, 92); g.save(); g.beginPath(); g.rect(8, 340, 88, 88); g.clip(); g.imageSmoothingEnabled = true;
+  g.drawImage(s.tile, 0, Math.floor(t * 3) % 60, 120, 120, 8, 340, 88, 88); g.globalAlpha = .9; g.drawImage(G.fogTex, 0, 0, BS, BS, 8, 340, 88, 88); g.globalAlpha = 1; g.restore(); g.imageSmoothingEnabled = false;
+  plate(g, 104, 336, LW - 110, 92, 'red'); text(g, 'ESCADRILLE ENNEMIE', 110, 341, '#ffd6cc', 'left', 6);
+  ['BOMBES', 'RADAR', 'MISSILE', 'ESQUIVE'].forEach((p, i) => { text(g, p, 154, 356 + i * 18, '#f2f0ff'); text(g, 'PRET', LW - 12, 356 + i * 18, '#ffd23f', 'right'); for (let k = 0; k < [8, 5, 4, 2][i]; k++) { R(g, 110 + k * 5, 356 + i * 18, 5, 6, OUT); R(g, 111 + k * 5, 357 + i * 18, 3, 4, '#a9b1bc'); } });
+  plate(g, 4, 434, LW - 8, 40); text(g, 'Touchez un avion puis une case', 9, 441, '#f2f0ff'); text(g, 'pour le placer.', 9, 453, '#f2f0ff');
+}
+buildSky(); G.frameMine = buildFrame(true); buildLueurs(); buildFog(); G.cloudSh = tint(G.cumulus, 'rgba(8,20,30,.55)');
+function frame() { const t = now() / 1000; for (const s of SOLS) screen(s, t); requestAnimationFrame(frame); }
+document.fonts.ready.then(() => requestAnimationFrame(frame));
+</script>
+</body>
+</html>

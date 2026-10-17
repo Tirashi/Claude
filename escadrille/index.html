@@ -1248,7 +1248,10 @@ document.addEventListener('keydown', e => {
 });
 function resize() {
   const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
-  const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);
+  // marge du bas : la zone sûre du téléphone (barre de navigation) plus quelques pixels, pour que les menus du bas ne touchent pas le bord
+  const probe = document.createElement('div'); probe.style.cssText = 'position:fixed;height:env(safe-area-inset-bottom,0px);visibility:hidden';
+  document.body.append(probe); const safe = probe.offsetHeight; probe.remove();
+  const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top - safe - 14);
   const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
   cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
   cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
