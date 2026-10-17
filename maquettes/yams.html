@@ -33,6 +33,13 @@ header b{color:var(--texte);font-weight:600}
 .B .bas button{background:#fff;color:#7a4f8c;border-radius:14px;box-shadow:0 3px 0 #d3b2e0;font-family:var(--f-texte);font-size:15px;font-weight:600}
 .C .tel{background:#070a1c}.C .hud{color:#7af0ff;text-shadow:0 0 6px #22d3ee}.C .combi{color:#ff5fa8;text-shadow:0 0 8px #ff2d87}.C .aide{color:#7af0ff}
 .C .bas button{background:transparent;color:#ff5fa8;border:2px solid #ff5fa8;box-shadow:0 0 10px #ff2d8788,inset 0 0 10px #ff2d8744}
+.D .tel{background:#1b1030}.D .hud{color:#fff;background:#3b2470;border-bottom:4px solid #000}.D .combi{color:#ffe14a;text-shadow:3px 3px 0 #000}.D .aide{color:#c9b8ff}
+.D .bas button{background:#ffe14a;color:#000;border:3px solid #000;box-shadow:4px 4px 0 #000}
+.D .ecran canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+.E .tel{background:#05060c}.E .hud,.E .aide{color:#cfe6ff}.E .combi{color:#7fe3ff;text-shadow:0 0 8px #19c3ff}
+.E .bas button{background:#1c2233;color:#cfe6ff;border:1px solid #5a6a8a;border-radius:4px}
+.F .tel{background:#f4ead2}.F .hud,.F .combi,.F .aide{color:#7a3b16;font-family:var(--f-texte);font-weight:600}.F .hud{font-size:14px}.F .combi{font-size:22px}.F .aide{font-size:13px}
+.F .bas button{background:#c94a3a;color:#fff;border-radius:999px;font-family:var(--f-texte);font-size:15px;font-weight:600;box-shadow:0 3px 0 #8a2a1f}
 @media (prefers-reduced-motion:reduce){.combi{transition:none}}
 </style>
 
@@ -40,7 +47,8 @@ header b{color:var(--texte);font-weight:600}
 <header>
   <h1>YAMS</h1>
   <p>Ici, la 3D sert au jeu : <b>on lance de vrais dés d'un geste</b>, ils roulent, rebondissent sur les bords et se cognent entre eux. Le résultat dépend du lancer, pas d'un tirage caché.</p>
-  <p>Jouable : lancer, puis <b>toucher un dé pour le garder</b> (il va sur le côté), relancer les autres, trois lancers par tour. La combinaison s'affiche en haut. Les trois styles n'ont pas le même geste, pour comparer les deux.</p>
+  <p>Jouable : lancer, puis <b>toucher un dé pour le garder</b> (il va sur le côté), relancer les autres, trois lancers par tour. La combinaison s'affiche en haut. Deux gestes à comparer : le gobelet (A, F) et le doigt qu'on glisse (B, C, D, E).</p>
+  <p><b>Six styles</b> : un style de départ et <b>cinq à débloquer en jouant</b> (par exemple un premier Yams, 250 points, une grande suite…).</p>
 </header>
 <div class="grille">
   <section class="dir A">
@@ -61,6 +69,24 @@ header b{color:var(--texte);font-weight:600}
     <p>Dés rouges translucides comme au casino, tapis bleu nuit bordé d'or, néons rose et cyan. Même geste que B.</p>
     <ul><li><b>Pour</b> : les dés brillent, effet « grand jeu ».</li><li><b>Contre</b> : plus froid, moins familial.</li></ul>
   </section>
+  <section class="dir D">
+    <div class="tel"><div class="hud"><span class="l">LANCER 0/3</span><span class="s">TOTAL 0</span></div><div class="ecran"><div class="combi"></div><div class="aide"></div></div><div class="bas"><button>NOUVEAU TOUR</button></div></div>
+    <h2>D · GROS PIXELS<br>3D RETRO</h2>
+    <p>Vraie 3D mais dessinée en très basse définition puis agrandie sans lissage, comme sur la première PlayStation : faces plates, textures de 16 pixels, couleurs franches.</p>
+    <ul><li><b>Pour</b> : le plus rétro, va avec la Ludothèque 16 bits.</li><li><b>Contre</b> : les points des dés éloignés sont moins nets.</li></ul>
+  </section>
+  <section class="dir E">
+    <div class="tel"><div class="hud"><span class="l">LANCER 0/3</span><span class="s">TOTAL 0</span></div><div class="ecran"><div class="combi"></div><div class="aide"></div></div><div class="bas"><button>NOUVEAU TOUR</button></div></div>
+    <h2>E · SUR LA LUNE</h2>
+    <p>Une piste dans un cratère, sol gris et poussière, dés blancs aux points bleus lumineux. <b>La gravité est faible</b> : les dés montent haut et retombent lentement.</p>
+    <ul><li><b>Pour</b> : le style change aussi la sensation du lancer ; clin d'œil à Alunissage.</li><li><b>Contre</b> : un lancer dure plus longtemps.</li></ul>
+  </section>
+  <section class="dir F">
+    <div class="tel"><div class="hud"><span class="l">Lancer 0/3</span><span class="s">Total 0</span></div><div class="ecran"><div class="combi"></div><div class="aide"></div></div><div class="bas"><button>Nouveau tour</button></div></div>
+    <h2>F · PIQUE-NIQUE</h2>
+    <p>Dés en bois clair dans un plateau en osier, sur une nappe à carreaux rouges, en plein soleil. Gobelet en osier, comme A.</p>
+    <ul><li><b>Pour</b> : chaleureux, l'été en famille.</li><li><b>Contre</b> : proche de A pour le geste.</li></ul>
+  </section>
 </div>
 </div>
 
@@ -72,7 +98,9 @@ const VALEURS=[1,6,2,5,3,4], AXES=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,
 const PTS={1:[[.5,.5]],2:[[.27,.27],[.73,.73]],3:[[.27,.27],[.5,.5],[.73,.73]],4:[[.27,.27],[.73,.27],[.27,.73],[.73,.73]],5:[[.27,.27],[.73,.27],[.5,.5],[.27,.73],[.73,.73]],6:[[.27,.25],[.73,.25],[.27,.5],[.73,.5],[.27,.75],[.73,.75]]};
 const X0=-3,X1=3,Z0=-4.6,Z1=2.3,ZG=3.35; // piste de lancer, rangée des dés gardés
 
-function face(n,fond,pt,bord){const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d");
+function face(n,fond,pt,bord,pix){if(pix){const c=document.createElement("canvas");c.width=c.height=16;const g=c.getContext("2d");g.fillStyle=bord;g.fillRect(0,0,16,16);g.fillStyle=fond;g.fillRect(1,1,14,14);
+    g.fillStyle=pt;PTS[n].forEach(([x,y])=>g.fillRect(Math.round(x*16)-1,Math.round(y*16)-1,2,2));const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;return t;}
+  const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d");
   g.fillStyle=bord;g.fillRect(0,0,128,128);g.fillStyle=fond;g.beginPath();g.roundRect?g.roundRect(4,4,120,120,26):g.rect(4,4,120,120);g.fill();
   g.fillStyle=pt;PTS[n].forEach(([x,y])=>{g.beginPath();g.arc(x*128,y*128,n===1?15:12,0,7);g.fill();});
   const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;}
@@ -101,12 +129,33 @@ const STYLES={
      lumieres(s){s.add(new THREE.AmbientLight(0x334466,.6));const d=new THREE.DirectionalLight(0xffffff,.7);d.position.set(2,10,3);d.castShadow=true;Object.assign(d.shadow.camera,{left:-6,right:6,top:6,bottom:-6});s.add(d);
        const r=new THREE.PointLight(0xff2d87,1.4,18);r.position.set(-4,3,-3);s.add(r);const c=new THREE.PointLight(0x22d3ee,1.4,18);c.position.set(4,3,1);s.add(c);
        return t=>{r.intensity=1.2+Math.sin(t*2)*.3;c.intensity=1.2+Math.cos(t*2)*.3;};},
-     texte:0, aide:"GLISSE VERS LE HAUT<br>POUR LANCER"}
+     texte:0, aide:"GLISSE VERS LE HAUT<br>POUR LANCER"},
+  D:{geste:"glisser",pixel:true,fond:0x1b1030,table:()=>new THREE.MeshLambertMaterial({map:damier("#2a1850","#33205f",8),flatShading:true}),piste:0x1f7a4a,bord:0xe0503a,garde:0x3b2470,
+     des:()=>Array(5).fill(["#ffffff","#d81b2a","#9aa0b8"]),mat:{flatShading:true,roughness:1},
+     lumieres(s){s.add(new THREE.AmbientLight(0x8877bb,.65));const d=new THREE.DirectionalLight(0xffffff,.75);d.position.set(4,10,5);d.castShadow=true;Object.assign(d.shadow.camera,{left:-6,right:6,top:6,bottom:-6});d.shadow.mapSize.set(256,256);s.add(d);return null;},
+     texte:0, aide:"GLISSE VERS LE HAUT<br>POUR LANCER"},
+  E:{geste:"glisser",g:-9,fond:0x05060c,table:()=>new THREE.MeshStandardMaterial({map:lune(),roughness:1}),piste:0x5d606b,bord:0xaab2c4,garde:0x2a2e3a,
+     des:()=>Array(5).fill(["#f4f6fb","#19b6ff","#c4cede"]),mat:{roughness:.4,emissive:0x0a1a2a},
+     lumieres(s){s.add(new THREE.AmbientLight(0x667799,.35));const d=new THREE.DirectionalLight(0xffffff,1.1);d.position.set(-6,7,2);d.castShadow=true;Object.assign(d.shadow.camera,{left:-7,right:7,top:7,bottom:-7});d.shadow.mapSize.set(1024,1024);s.add(d);
+       const g=new THREE.BufferGeometry(),p=[];for(let i=0;i<300;i++)p.push((Math.random()-.5)*60,-0.5-Math.random()*.1,-20-Math.random()*30);g.setAttribute("position",new THREE.Float32BufferAttribute(p,3));s.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:.08})));
+       const terre=new THREE.Mesh(new THREE.SphereGeometry(1.1,24,16),new THREE.MeshStandardMaterial({color:0x3a7bd5,emissive:0x0d2a55}));terre.position.set(3.9,.2,-7.2);s.add(terre);
+       return t=>{terre.rotation.y=t*.2;};},
+     texte:0, aide:"GLISSE VERS LE HAUT<br>GRAVITE LUNAIRE"},
+  F:{geste:"gobelet",gobelet:0xb98a4a,fond:0xf4ead2,table:()=>new THREE.MeshStandardMaterial({map:damier("#f6f1e8","#d23c32",14),roughness:.9}),piste:0xe2c486,bord:0xa86e34,garde:0xd8b06a,
+     des:()=>Array(5).fill(["#e9c58e","#5a3214","#c99a5a"]),mat:{roughness:.75},
+     lumieres(s){s.add(new THREE.HemisphereLight(0xfff6e0,0x9a7a50,.6));const d=new THREE.DirectionalLight(0xfff0d0,.8);d.position.set(5,10,3);d.castShadow=true;Object.assign(d.shadow.camera,{left:-6,right:6,top:6,bottom:-6});d.shadow.mapSize.set(1024,1024);s.add(d);return null;},
+     texte:1, aide:"Garde le doigt appuyé pour secouer le gobelet"}
 };
+function damier(a,b,n){const c=document.createElement("canvas");c.width=c.height=64;const g=c.getContext("2d");g.fillStyle=a;g.fillRect(0,0,64,64);g.fillStyle=b;g.globalAlpha=.85;g.fillRect(0,0,32,32);g.fillRect(32,32,32,32);g.globalAlpha=.4;g.fillRect(0,32,32,32);g.fillRect(32,0,32,32);
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(n,n);t.magFilter=THREE.NearestFilter;return t;}
+function lune(){const c=document.createElement("canvas");c.width=c.height=256;const g=c.getContext("2d");g.fillStyle="#4a4c54";g.fillRect(0,0,256,256);
+  for(let i=0;i<900;i++){g.fillStyle=Math.random()<.5?"#3e4048":"#575a63";g.fillRect(Math.random()*256,Math.random()*256,2,2);}
+  for(let i=0;i<14;i++){const x=Math.random()*256,y=Math.random()*256,r=4+Math.random()*16;g.fillStyle="#383a41";g.beginPath();g.arc(x,y,r,0,7);g.fill();g.strokeStyle="#666a74";g.lineWidth=2;g.beginPath();g.arc(x-1,y-1,r,Math.PI*.9,Math.PI*1.7);g.stroke();}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(3,3);return t;}
 
 function Table(sec,cle){
   const st=STYLES[cle],ecran=sec.querySelector(".ecran"),combiEl=sec.querySelector(".combi"),aideEl=sec.querySelector(".aide"),lEl=sec.querySelector(".l"),sEl=sec.querySelector(".s");
-  const rendu=new THREE.WebGLRenderer({antialias:true});rendu.setPixelRatio(Math.min(devicePixelRatio,2));rendu.shadowMap.enabled=true;rendu.setClearColor(st.fond);ecran.prepend(rendu.domElement);
+  const rendu=new THREE.WebGLRenderer({antialias:!st.pixel});rendu.setPixelRatio(st.pixel?.28:Math.min(devicePixelRatio,2));rendu.shadowMap.enabled=true;rendu.setClearColor(st.fond);ecran.prepend(rendu.domElement);
   const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(42,.6,.1,100);cam.position.set(0,13.5,6.2);cam.lookAt(0,0,-.9);
   const anime=st.lumieres(scene);
   // décor : table, piste, bords, rangée des dés gardés
@@ -116,20 +165,20 @@ function Table(sec,cle){
   [[X0-.15,(Z0+Z1)/2,.3,Z1-Z0+.6],[X1+.15,(Z0+Z1)/2,.3,Z1-Z0+.6],[0,Z0-.15,X1-X0,.3],[0,Z1+.15,X1-X0,.3]].forEach(([x,z,w,d])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,.7,d),mb);m.position.set(x,.35,z);m.castShadow=m.receiveShadow=true;scene.add(m);});
   const gm=new THREE.Mesh(new THREE.BoxGeometry(X1-X0+.6,.1,1.35),new THREE.MeshStandardMaterial({color:st.garde,roughness:.8}));gm.position.set(0,.05,ZG);gm.receiveShadow=true;scene.add(gm);
   // physique
-  const monde=new CANNON.World();monde.gravity.set(0,-32,0);monde.broadphase=new CANNON.NaiveBroadphase();monde.solver.iterations=12;monde.allowSleep=false;
+  const monde=new CANNON.World();monde.gravity.set(0,st.g||-32,0);monde.broadphase=new CANNON.NaiveBroadphase();monde.solver.iterations=12;monde.allowSleep=false;
   const mDe=new CANNON.Material(),mSol=new CANNON.Material();monde.addContactMaterial(new CANNON.ContactMaterial(mDe,mSol,{friction:.35,restitution:.35}));monde.addContactMaterial(new CANNON.ContactMaterial(mDe,mDe,{friction:.2,restitution:.4}));
   const plan=(x,y,z,ax,ang)=>{const b=new CANNON.Body({mass:0,material:mSol});b.addShape(new CANNON.Plane());b.position.set(x,y,z);b.quaternion.setFromAxisAngle(new CANNON.Vec3(...ax),ang);monde.addBody(b);};
   plan(0,0,0,[1,0,0],-Math.PI/2);plan(X0,0,0,[0,1,0],Math.PI/2);plan(X1,0,0,[0,1,0],-Math.PI/2);plan(0,0,Z0,[0,1,0],0);plan(0,0,Z1,[0,1,0],Math.PI);
   const enleve=b=>{if(b.world)(monde.removeBody||monde.remove).call(monde,b);};
   // les cinq dés
-  const des=st.des().map(([f,p,b],i)=>{const mats=VALEURS.map(n=>new THREE.MeshStandardMaterial(Object.assign({map:face(n,f,p,b)},st.mat)));
+  const des=st.des().map(([f,p,b],i)=>{const mats=VALEURS.map(n=>new THREE.MeshStandardMaterial(Object.assign({map:face(n,f,p,b,st.pixel)},st.mat)));
     const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),mats);m.castShadow=true;scene.add(m);
     const corps=new CANNON.Body({mass:1,material:mDe,shape:new CANNON.Box(new CANNON.Vec3(.5,.5,.5))});return{m,corps,garde:false,i,cible:null};});
   function poser(d,x,z,val){d.m.position.set(x,.5,z);d.m.quaternion.setFromUnitVectors(new THREE.Vector3(...AXES[VALEURS.indexOf(val)]),new THREE.Vector3(0,1,0));d.m.rotateY(Math.random()*.4-.2);
     d.corps.position.copy(d.m.position);d.corps.quaternion.copy(d.m.quaternion);d.corps.velocity.set(0,0,0);d.corps.angularVelocity.set(0,0,0);}
   const valeur=d=>{let best=-2,v=1;AXES.forEach((a,i)=>{const y=new THREE.Vector3(...a).applyQuaternion(d.m.quaternion).y;if(y>best){best=y;v=VALEURS[i];}});return v;};
   // gobelet (style A)
-  let gob=null;if(st.geste==="gobelet"){gob=new THREE.Group();const cuir=new THREE.MeshStandardMaterial({color:0x5a2e14,roughness:.7,side:THREE.DoubleSide});
+  let gob=null;if(st.geste==="gobelet"){gob=new THREE.Group();const cuir=new THREE.MeshStandardMaterial({color:st.gobelet||0x5a2e14,roughness:.7,side:THREE.DoubleSide});
     const c=new THREE.Mesh(new THREE.CylinderGeometry(1.15,.95,2.2,20,1,true),cuir);c.castShadow=true;gob.add(c);const f=new THREE.Mesh(new THREE.CircleGeometry(.95,20),cuir);f.rotation.x=Math.PI/2;f.position.y=-1.1;gob.add(f);
     const r=new THREE.Mesh(new THREE.TorusGeometry(1.15,.08,6,24),new THREE.MeshStandardMaterial({color:0xc9a050,metalness:.6,roughness:.4}));r.rotation.x=Math.PI/2;r.position.y=1.1;gob.add(r);
     gob.position.set(0,1.6,1.2);gob.visible=false;scene.add(gob);}
@@ -174,5 +223,5 @@ function Table(sec,cle){
     rendu.render(scene,cam);requestAnimationFrame(boucle);}
   nouveauTour();requestAnimationFrame(boucle);
 }
-["A","B","C"].forEach(k=>Table(document.querySelector(".dir."+k),k));
+["A","B","C","D","E","F"].forEach(k=>Table(document.querySelector(".dir."+k),k));
 </script>
