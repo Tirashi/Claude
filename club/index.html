@@ -676,6 +676,13 @@ function drawDog(t) {
   const fr = IMG.side[d.breed], im = d.act === 'repos' ? fr.stand : fr.run[Math.floor(t * 10) % 8];
   g.drawImage(im, px + (pw - im.width) / 2, py + ph - C32.GROUND - 4);
   tiny(g, BREEDS[d.breed].name, LW / 2, py + ph + 6, '#cfe6ff', 'center');
+  // flèches : chien précédent / suivant du club
+  if (G.dogs.length > 1) {
+    const i = G.dogs.indexOf(d), n = G.dogs.length;
+    const go = k => () => { UI.dog = G.dogs[(i + k + n) % n].id; UI.confirm = 0; SFX.click(); };
+    button(6, py, 42, ph, '<', { act: go(-1) });
+    button(LW - 48, py, 42, ph, '>', { act: go(1) });
+  }
   // qualités
   const rows = [...STATS.map(([k, l, c0, c1]) => [l, d.st[k], c0, c1, d.pot[k]]), ['FORME', d.forme, '#ff8ad0', '#ffd0ec'], ['HUMEUR', d.humeur, '#ff9a3c', '#ffd0a0']];
   rows.forEach(([l, v, c0, c1, pot], i) => { const y = 166 + i * 15;
