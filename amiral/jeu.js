@@ -16,19 +16,19 @@ let LH = 480, OY = 0;                     // hauteur logique (suit l'écran) ; d
 const FONT_TEXT = z => `700 ${Math.round(z * 1.6)}px Rajdhani, sans-serif`, FONT_LOGO = z => `${z}px "Press Start 2P", monospace`;
 const FONT_TINY = '700 10px Rajdhani, sans-serif';
 const COLS = 'ABCDEFGH';
-// le catalogue du chantier naval ; `ok` : pouvoir programmé (les autres arrivent à la session 2)
+// le catalogue du chantier naval ; `cond` : condition de déblocage (lue dans amiral.palmares par `unlocked`)
 const SHIPS = {
   carrier:   { name: 'Porte-avions',   le: 'Le porte-avions',    len: 4, power: 'avion',      ok: true, base: true },
-  cruiser:   { name: 'Croiseur',       le: 'Le croiseur',        len: 4, power: 'missiles',   ok: true, cond: 'GAGNER EN MOINS DE 20 TOURS' },
-  tender:    { name: 'Navire-atelier', le: 'Le navire-atelier',  len: 4, power: 'reparation', ok: true, cond: 'GAGNER SANS PERDRE UN NAVIRE' },
+  cruiser:   { name: 'Croiseur',       le: 'Le croiseur',        len: 4, power: 'missiles',   ok: true },
+  tender:    { name: 'Navire-atelier', le: 'Le navire-atelier',  len: 4, power: 'reparation', ok: true },
   battle:    { name: 'Cuirassé',       le: 'Le cuirassé',        len: 3, power: 'salve',      ok: true, base: true },
   sub:       { name: 'Sous-marin',     le: 'Le sous-marin',      len: 3, power: 'plongee',    ok: true, base: true },
-  destroyer: { name: 'Destroyer',      le: 'Le destroyer',       len: 3, power: 'sonar',      ok: true, cond: 'GAGNER UNE PARTIE' },
-  layer:     { name: 'Mouilleur',      le: 'Le mouilleur',       len: 3, power: 'mines',      cond: 'GAGNER EN CAPITAINE' },
-  jammer:    { name: 'Brouilleur',     le: 'Le brouilleur',      len: 3, power: 'fumee',      cond: 'GAGNER EN AMIRAL' },
+  destroyer: { name: 'Destroyer',      le: 'Le destroyer',       len: 3, power: 'sonar',      ok: true },
+  layer:     { name: 'Mouilleur',      le: 'Le mouilleur',       len: 3, power: 'mines',      ok: true, cond: 'GAGNER EN CAPITAINE', need: pm => pm.normal > 0 },
+  jammer:    { name: 'Brouilleur',     le: 'Le brouilleur',      len: 3, power: 'fumee',      ok: true, cond: 'GAGNER EN AMIRAL', need: pm => pm.hard > 0 },
   torp:      { name: 'Torpilleur',     le: 'Le torpilleur',      len: 2, power: 'torpille',   ok: true, base: true },
-  launch:    { name: 'Vedette',        le: 'La vedette',         len: 2, power: 'leurre',     cond: '10 VICTOIRES' },
-  coast:     { name: 'Garde-côte',     le: 'Le garde-côte',      len: 2, power: 'projecteur', ok: true, cond: '5 VICTOIRES' },
+  launch:    { name: 'Vedette',        le: 'La vedette',         len: 2, power: 'leurre',     ok: true, cond: '10 VICTOIRES', need: pm => pm.victoires >= 10 },
+  coast:     { name: 'Garde-côte',     le: 'Le garde-côte',      len: 2, power: 'projecteur', ok: true },
 };
 for (const id in SHIPS) SHIPS[id].id = id;
 const SLOTS = [4, 3, 3, 2];                                   // tailles des 4 places de la flotte
@@ -43,13 +43,17 @@ const POWERS = {
   reparation: { name: 'REPARATION', cd: 4, desc: 'REPARE UNE CASE TOUCHEE', own: true },
   sonar:      { name: 'SONAR',      cd: 3, desc: 'NAVIRES CACHES SUR UNE LIGNE', dir: true },
   projecteur: { name: 'PROJECTEUR', cd: 2, desc: 'REVELE UNE LIGNE DE 4 CASES', dir: true },
-  mines:      { name: 'MINES',      cd: 5, desc: '2 MINES : TIR EN RETOUR' },
-  fumee:      { name: 'FUMEE',      cd: 5, desc: 'ZONE 3X3 MUETTE 2 TOURS' },
-  leurre:     { name: 'LEURRE',     cd: 6, desc: 'UN FAUX NAVIRE DE 2 CASES' },
+  mines:      { name: 'MINES',      cd: 5, desc: '2 MINES : TIR EN RETOUR', own: true },
+  fumee:      { name: 'FUMEE',      cd: 5, desc: 'ZONE 3X3 MUETTE 2 TOURS', own: true },
+  leurre:     { name: 'LEURRE',     cd: 5, desc: 'UN FAUX NAVIRE DE 2 CASES', own: true },
 };
 const DIFFS = [['easy', 'MOUSSE'], ['normal', 'CAPITAINE'], ['hard', 'AMIRAL']];
 const $ = s => document.querySelector(s);
-const rand = n => Math.floor(Math.random() * n);
+// le hasard du jeu (placement ennemi, IA) : tiré de la date pour la bataille du jour ; les effets visuels gardent Math.random
+let rng = Math.random;
+function seeded(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const rand = n => Math.floor(rng() * n);
+const vr = n => Math.floor(Math.random() * n);
 const pick = a => a[rand(a.length)];
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const cellName = (c, r) => COLS[c] + (r + 1);
@@ -111,12 +115,15 @@ const SFX = {
   plane()  { tone({ f: 90, f2: 140, d: 0.9, v: 0.1, type: 'sawtooth' }); tone({ f: 140, f2: 80, d: 0.9, v: 0.08, type: 'sawtooth', t: 0.9 });
              [0, .4, .8].forEach(t => tone({ f: 1250, f2: 1150, d: 0.25, v: 0.06, type: 'sine', t: 0.6 + t })); },
   torpedo(){ noise({ d: 1.1, v: 0.25, freq: 500, f2: 200, type: 'bandpass', q: 1.5 }); tone({ f: 220, f2: 110, d: 0.9, v: 0.08, type: 'triangle' }); },
-  dive()   { for (let i = 0; i < 8; i++) tone({ f: 300 + rand(500), f2: 900 + rand(600), d: 0.06, v: 0.06, type: 'sine', t: i * 0.08 }); },
+  dive()   { for (let i = 0; i < 8; i++) tone({ f: 300 + vr(500), f2: 900 + vr(600), d: 0.06, v: 0.06, type: 'sine', t: i * 0.08 }); },
   ready()  { seq([880, 1175], 0.06, { v: 0.06 }); },
   missile(){ for (let i = 0; i < 3; i++) { noise({ d: 0.5, v: 0.2, freq: 900, f2: 4000, type: 'bandpass', q: 1.2, t: i * 0.26 }); tone({ f: 300, f2: 900, d: 0.35, v: 0.05, type: 'sawtooth', t: i * 0.26 }); } },
   sonar()  { [0, .5, 1].forEach((t, i) => { tone({ f: 1480, d: 0.35, v: 0.09 / (i + 1), type: 'sine', t }); tone({ f: 1480, d: 0.25, v: 0.03 / (i + 1), type: 'sine', t: t + 0.18 }); }); },
   beam()   { tone({ f: 60, d: 1.2, v: 0.06, type: 'sawtooth' }); tone({ f: 520, f2: 1040, d: 0.9, v: 0.05, type: 'triangle', t: 0.1 }); seq([0, 0, 1568, 0, 2093], 0.12, { v: 0.04, type: 'sine' }); },
   repair() { [0, .22, .44, .66].forEach(t => { tone({ f: 1900, d: 0.05, v: 0.07, t }); noise({ d: 0.06, v: 0.12, freq: 5000, type: 'highpass', t }); }); seq([0, 0, 0, 0, 0, 0, 523, 659, 784, 1047], 0.08, { v: 0.07 }); },
+  mine()   { [0, .25].forEach(t => { noise({ d: 0.3, v: 0.25, freq: 700, f2: 200, type: 'bandpass', q: 1.2, t }); tone({ f: 330, f2: 160, d: 0.25, v: 0.06, type: 'triangle', t }); }); tone({ f: 2200, d: 0.04, v: 0.05, t: 0.6 }); },
+  smoke()  { noise({ d: 1.2, v: 0.22, freq: 600, f2: 2400, type: 'bandpass', q: 0.6 }); noise({ d: 0.9, v: 0.12, freq: 3000, type: 'highpass', t: 0.2 }); },
+  decoy()  { noise({ d: 0.8, v: 0.18, freq: 2500, f2: 900, type: 'bandpass', q: 2 }); tone({ f: 200, f2: 420, d: 0.7, v: 0.05, type: 'sine' }); },
   win()    { seq([523, 523, 523, 659, 0, 587, 659, 784, 0, 1047], 0.11, { v: 0.1 }); seq([131, 0, 196, 0, 165, 0, 196, 0, 262], 0.12, { type: 'triangle', v: 0.2 }); },
   lose()   { seq([392, 370, 349, 330, 0, 311, 294, 277, 262], 0.16, { v: 0.09 }); seq([98, 0, 92, 0, 87, 0, 82, 0, 65], 0.16, { type: 'triangle', v: 0.2 }); },
 };
@@ -196,6 +203,7 @@ const P = {
   gold: ['#fff2a8', '#ffd23f', '#d09a1c', '#8f6410'], smoke: ['#7c7684', '#57525f', '#3e3a48', '#2a2733'],
   smokeL: ['#a8a2ae', '#87818f', '#6a6574', '#4e4a58'], blue: ['#a8d0f4', '#4a8fd4', '#2f6fb0', '#1a3f6a'],
 };
+const PORANGE = ['#ffd8a8', '#ff9a3c', '#d0602a', '#8a3a1a'];
 const SEA_T = ['#174a8a', '#1c579c', '#2266ae', '#2a76bf'];
 const G = {}; // tous les graphismes préparés
 
@@ -450,6 +458,11 @@ function buildShips() {
   mk2('cruiser', buildCruiser().c); mk2('tender', buildTender().c); mk2('destroyer', buildDestroyer().c);
   mk2('layer', buildLayer().c); mk2('jammer', buildJammer().c); mk2('launch', buildLaunch().c); mk2('coast', buildCoast().c);
   for (const id in G.ship) G.ship[id].dark = tint(G.ship[id].h.img, '#0d1428');   // silhouette du chantier (navire verrouillé)
+  // le leurre : un faux torpilleur gonflable, orange à bandes
+  { const im = G.ship.torp.h.img, [c, g2] = mk(im.width, im.height); g2.drawImage(im, 0, 0); g2.globalCompositeOperation = 'source-atop';
+    g2.fillStyle = 'rgba(255,140,50,.62)'; g2.fillRect(0, 0, c.width, c.height);
+    for (let x = 6; x < c.width; x += 9) { g2.fillStyle = 'rgba(255,240,200,.55)'; g2.fillRect(x, 0, 3, c.height); }
+    G.decoy = { h: c, v: rot(c) }; }
 }
 // brouillard de guerre (texture qui ondule) et biseau des cases cachées
 function buildFog() {
@@ -529,6 +542,12 @@ function buildIcons() {
   I.reparation = spr(20, 20, [[C32.cap(4, 16, 12, 8, 1.8), P.gun], [C32.ell(13.5, 6.5, 3.6, 3.6), P.gun]]);
   { const g = I.reparation.getContext('2d'); g.clearRect(14, 2, 3, 4); R(g, 13, 5, 1, 2, OUT); R(g, 17, 5, 1, 2, OUT);
     R(g, 12, 13, 7, 3, OUT); R(g, 14, 11, 3, 7, OUT); R(g, 13, 14, 5, 1, '#8ee05a'); R(g, 15, 12, 1, 5, '#8ee05a'); }
+  // mines : une boule à pointes et son voyant ; fumée : trois bouffées ; leurre : un canot gonflable orange
+  I.mines = spr(20, 20, [[C32.ell(10, 11, 5.4, 5.4), P.dark], [C32.ell(8.5, 9.5, 1.6, 1.6), P.red, { on: [1] }]]);
+  { const g = I.mines.getContext('2d'); for (const [x, y, w, h] of [[9, 2, 2, 3], [9, 17, 2, 3], [1, 10, 3, 2], [16, 10, 3, 2], [4, 4, 2, 2], [14, 4, 2, 2], [4, 16, 2, 2], [14, 16, 2, 2]]) { R(g, x - 1, y - 1, w + 2, h + 2, OUT); R(g, x, y, w, h, '#a9b1bc'); } }
+  I.fumee = spr(20, 20, [[C32.ell(6, 13, 4.6, 4), P.smokeL], [C32.ell(13, 12, 5, 4.6), P.smokeL], [C32.ell(10, 6.5, 4.2, 3.8), P.white]]);
+  I.leurre = spr(20, 20, [[C32.cap(3, 11, 17, 11, 3.4, 3.4), PORANGE], [C32.cap(6, 10, 14, 10, 1.4, 1.4), P.gun, { on: [1] }]]);
+  { const g = I.leurre.getContext('2d'); for (const x of [6, 10, 14]) R(g, x, 13, 2, 1, '#fff2c8'); }
   I.tir = spr(20, 20, [[C32.ell(10, 10, 7, 7), P.red], [C32.ell(10, 10, 4.4, 4.4), P.white, { on: [1] }], [C32.ell(10, 10, 2.2, 2.2), P.red, { on: [2] }]]);
   const A = spr(36, 40, [
     [C32.ell(18, 38, 15, 8), P.navy], [C32.ell(5, 33, 4.4, 2.6), P.gold], [C32.ell(31, 33, 4.4, 2.6), P.gold],
@@ -562,10 +581,14 @@ function makeBoard(fleet = CLASSIC) {
   return {
     ships,
     grid: Array.from({ length: N }, () => Array(N).fill(-1)),
-    shots: Array.from({ length: N }, () => Array(N).fill(0)),  // 0 inconnu, 1 à l'eau, 2 touché
+    shots: Array.from({ length: N }, () => Array(N).fill(0)),  // 0 inconnu, 1 à l'eau, 2 touché, 3 leurre touché (l'adversaire croit à un touché)
     intel: Array.from({ length: N }, () => Array(N).fill(0)),  // ce que l'adversaire a repéré : 1 eau, 2 navire
     cd: Object.fromEntries(ships.map(s => [s.def.power, 0])),  // tours d'attente des pouvoirs de ce camp
     sonar: [],                                                 // lignes sondées par l'adversaire : { h, i, n } (n : cases de navire pas encore touchées)
+    mines: [],                                                 // mines posées dans ses eaux : [c, r]
+    decoys: [],                                                // leurres : { cells, h }
+    smoke: null,                                               // fumée : { c0, r0, left } (zone 3 × 3, coups ennemis restants)
+    veil: Array.from({ length: N }, () => Array(N).fill(false)), // cases visées dans la fumée : l'adversaire n'en connaît pas le résultat
   };
 }
 const S = {
@@ -573,7 +596,7 @@ const S = {
   weapon: 'tir', dir: true, aim: null, armed: null, marks: [], peek: false, fast: false,
   player: makeBoard(), enemy: makeBoard(), sel: 0, busy: false, turn: 'player',
   stats: { turns: 0, shots: 0, hits: 0, aiShots: 0, aiHits: 0 },
-  fx: [], parts: [], msg: '', msgT0: 0, quitArm: 0, endInfo: null, rankText: '', titleSel: 1,
+  fx: [], parts: [], msg: '', msgT0: 0, quitArm: 0, endInfo: null, rankText: '', titleSel: 1, daily: null,
 };
 const boardOf = side => side === 'player' ? S.player : S.enemy;   // la flotte de ce camp
 const foeOf = side => side === 'player' ? S.enemy : S.player;     // la flotte visée par ce camp
@@ -600,14 +623,15 @@ function placeShip(b, i, c, r, h) {
   Object.assign(s, { c, r, h, placed: true });
   for (const [cc, rr] of shipCells(s)) b.grid[rr][cc] = i;
 }
-function randomFleet(b) {
+function randomFleet(b, rnd = rng) {
+  const rd = n => Math.floor(rnd() * n);
   for (;;) {
     b.grid.forEach(row => row.fill(-1)); b.ships.forEach(s => { s.placed = false; });
     let ok = true;
     for (let i = 0; i < b.ships.length && ok; i++) {
       const len = b.ships[i].def.len;
       let n = 0, c, r, h;
-      do { h = Math.random() < .5; c = rand(h ? N - len + 1 : N); r = rand(h ? N : N - len + 1); n++; } while (!fits(b, i, c, r, h) && n < 200);
+      do { h = rnd() < .5; c = rd(h ? N - len + 1 : N); r = rd(h ? N : N - len + 1); n++; } while (!fits(b, i, c, r, h) && n < 200);
       if (n >= 200) ok = false; else placeShip(b, i, c, r, h);
     }
     if (ok) return;
@@ -624,6 +648,10 @@ function blocked(side, p) {
   if (p === 'plongee' && s.hits > 0) return 'hit';
   if (p === 'plongee' && !diveTargets(b).length) return 'stuck';
   if (p === 'reparation' && !repairTargets(b).length) return 'intact';
+  if (p === 'mines' && b.mines.length >= MAX_MINES) return 'full';
+  if (p === 'mines' && !mineTargets(b).length) return 'stuck';
+  if (p === 'leurre' && b.decoys.length >= MAX_DECOYS) return 'full';
+  if (p === 'leurre' && !decoySpots(b).length) return 'stuck';
   return null;
 }
 const ready = (side, p) => !blocked(side, p);
@@ -634,7 +662,7 @@ function diveTargets(b) {
   for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
     if (!dc && !dr) continue;
     const c = s.c + dc, r = s.r + dr;
-    if (fits(b, i, c, r, s.h, true)) out.push([c, r]);
+    if (fits(b, i, c, r, s.h, true) && shipCells(s, c, r).every(([x, y]) => !trapAt(b, x, y))) out.push([c, r]);
   }
   return out;
 }
@@ -643,6 +671,26 @@ function repairTargets(b) {
   const out = [];
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (b.shots[r][c] === 2 && !b.ships[b.grid[r][c]].sunk) out.push([c, r]);
   return out;
+}
+
+// mines, fumée, leurre : dans ses propres eaux, sur de l'eau libre que l'adversaire ne connaît pas
+const MAX_MINES = 4, MAX_DECOYS = 2;
+const mineAt = (b, c, r) => b.mines.some(m => m[0] === c && m[1] === r);
+const decoyAt = (b, c, r) => b.decoys.find(d => d.cells.some(([x, y]) => x === c && y === r)) || null;
+const trapAt = (b, c, r) => mineAt(b, c, r) || !!decoyAt(b, c, r);
+const freeWater = (b, c, r) => inb([c, r]) && b.grid[r][c] < 0 && !b.shots[r][c] && !b.intel[r][c] && !trapAt(b, c, r);
+function mineTargets(b) { const out = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (freeWater(b, c, r)) out.push([c, r]); return out; }
+const decoyCells = (c, r, h) => h ? [[c, r], [c + 1, r]] : [[c, r], [c, r + 1]];
+const decoyFits = (b, c, r, h) => decoyCells(c, r, h).every(([x, y]) => freeWater(b, x, y));
+function decoySpots(b) { const out = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) for (const h of [true, false]) if (decoyFits(b, c, r, h)) out.push([c, r, h]); return out; }
+const inSmoke = (b, c, r) => !!b.smoke && c >= b.smoke.c0 && c < b.smoke.c0 + 3 && r >= b.smoke.r0 && r < b.smoke.r0 + 3;
+// les cases que chaque pouvoir « chez soi » peut viser (plongée, réparation, mines, fumée, leurre)
+function ownTargets(b, w) {
+  if (w === 'plongee') return diveTargets(b);
+  if (w === 'reparation') return repairTargets(b);
+  if (w === 'mines') return mineTargets(b);
+  if (w === 'leurre') { const k = new Set(), out = []; for (const [c, r] of decoySpots(b)) if (!k.has(r * N + c)) { k.add(r * N + c); out.push([c, r]); } return out; }
+  const out = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) out.push([c, r]); return out;
 }
 
 /* ---------- cases touchées par chaque arme ---------- */
@@ -684,9 +732,10 @@ function aiKnow(side) {
     if (sh[r][c] === 0) {
       if (b.intel[r][c] === 1) blocked[r][c] = true;
       else { unknown.push([c, r]); if (b.intel[r][c] === 2) detected.push([c, r]); }
-    } else if (sh[r][c] === 1) blocked[r][c] = true;
-    else if (b.ships[b.grid[r][c]].sunk) blocked[r][c] = true;
-    else openHits.push([c, r]);
+    } else if (b.veil[r][c]) continue;                 // visée dans la fumée : résultat inconnu
+    else if (sh[r][c] === 1) blocked[r][c] = true;
+    else if (sh[r][c] === 2 && b.ships[b.grid[r][c]].sunk) blocked[r][c] = true;
+    else openHits.push([c, r]);                         // touché (ou leurre : l'IA s'y laisse prendre)
   }
   return { side, b, unknown, openHits, detected, blocked };
 }
@@ -712,9 +761,9 @@ function density(K) {
 }
 function aiPick(K) {
   const sh = K.b.shots;
-  if (K.detected.length && (S.diff !== 'easy' || Math.random() < .6)) return pick(K.detected);
+  if (K.detected.length && (S.diff !== 'easy' || rng() < .6)) return pick(K.detected);
   if (S.diff === 'easy') {
-    if (K.openHits.length && Math.random() < .5) {
+    if (K.openHits.length && rng() < .5) {
       const near = [];
       for (const [c, r] of K.openHits) for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const cc = c + dc, rr = r + dr;
@@ -734,17 +783,17 @@ function aiAim(w, K) {
   const b = K.b;
   if (w === 'missiles') {
     // les cases repérées d'abord, puis les plus probables
-    const D = S.diff === 'easy' ? null : density(K), list = K.unknown.map(([c, r]) => ({ c, r, v: (b.intel[r][c] === 2 ? 1e6 : 0) + (D ? D[r][c] : 0) + Math.random() }));
+    const D = S.diff === 'easy' ? null : density(K), list = K.unknown.map(([c, r]) => ({ c, r, v: (b.intel[r][c] === 2 ? 1e6 : 0) + (D ? D[r][c] : 0) + rng() }));
     list.sort((p, q) => q.v - p.v);
-    const top = S.diff === 'hard' ? list.slice(0, 3) : S.diff === 'normal' ? list.slice(0, 6).sort(() => Math.random() - .5).slice(0, 3) : list.sort(() => Math.random() - .5).slice(0, 3);
+    const top = S.diff === 'hard' ? list.slice(0, 3) : S.diff === 'normal' ? list.slice(0, 6).sort(() => rng() - .5).slice(0, 3) : list.sort(() => rng() - .5).slice(0, 3);
     return top.length ? { w, c: top[0].c, r: top[0].r, h: true, cells: top.map(q => [q.c, q.r]) } : null;
   }
-  if (S.diff === 'easy') { const [c, r] = pick(K.unknown); return { w, c, r, h: Math.random() < .5 }; }
+  if (S.diff === 'easy') { const [c, r] = pick(K.unknown); return { w, c, r, h: rng() < .5 }; }
   const D = density(K);
   const val = (c, r) => (c >= 0 && r >= 0 && c < N && r < N && b.shots[r][c] === 0 && b.intel[r][c] !== 1) ? D[r][c] + .01 : 0;
   const fresh = (x, y) => !b.shots[y][x] && !b.intel[y][x];
   let best = { s: -1 };
-  const consider = (s, plan) => { s += Math.random() * .001; if (s > best.s) best = { s, plan }; };
+  const consider = (s, plan) => { s += rng() * .001; if (s > best.s) best = { s, plan }; };
   if (w === 'torpille') {
     // la torpille s'arrête au premier navire : on vise la ligne la plus chargée près du bord
     for (let i = 0; i < N; i++) {
@@ -791,7 +840,7 @@ function aiDive(side) {
   // l'endroit le plus calme : loin des tirs et des cases repérées par l'adversaire
   let best = null, bs = -1e9;
   for (const [c, r] of T) {
-    let v = Math.random() * .1;
+    let v = rng() * .1;
     for (const [x, y] of shipCells(s, c, r)) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
       const xx = x + dx, yy = y + dy; if (!inb([xx, yy])) continue;
       if (b.shots[yy][xx]) v -= 1 / (1 + Math.abs(dx) + Math.abs(dy));
@@ -809,15 +858,59 @@ function aiRepair(side) {
     const s = b.ships[b.grid[r][c]];
     let v = s.hits >= s.def.len - 1 ? 2 : s.hits / s.def.len;
     if (s.def.power === 'plongee' && s.hits === 1 && S.diff === 'hard') v += 1;
-    if (S.diff !== 'easy') v += Math.random() * .1;
+    if (S.diff !== 'easy') v += rng() * .1;
     if (v > bs) { bs = v; best = [c, r]; }
   }
   return best && bs >= .3 ? { w: 'reparation', c: best[0], r: best[1], h: true } : null;
 }
+// mines : là où l'adversaire va tirer, à côté de nos navires touchés (il cherche la suite), puis de nos navires
+function aiMines(side) {
+  const b = boardOf(side), T = mineTargets(b), need = Math.min(2, MAX_MINES - b.mines.length, T.length);
+  if (need <= 0) return null;
+  const live = (x, y) => b.grid[y][x] >= 0 && !b.ships[b.grid[y][x]].sunk;
+  const near = (c, r, f) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => inb([c + dx, r + dy]) && f(c + dx, r + dy));
+  const list = T.map(([c, r]) => ({ c, r, v: rng() + (S.diff === 'easy' ? 0 : near(c, r, (x, y) => live(x, y) && b.shots[y][x] === 2) ? 4 : near(c, r, live) ? 1.5 : 0) }));
+  list.sort((p, q) => q.v - p.v);
+  if (S.diff !== 'easy' && list[0].v < 4 && rng() < .6) return null;   // mieux vaut attendre un navire touché
+  const cells = list.slice(0, need).map(q => [q.c, q.r]);
+  return { w: 'mines', c: cells[0][0], r: cells[0][1], h: true, cells };
+}
+// fumée : sur nos navires touchés ou repérés, que l'adversaire est en train de chasser
+function aiSmoke(side) {
+  const b = boardOf(side); let best = null, bs = 0;
+  for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) {
+    let v = rng() * .1;
+    for (const [x, y] of weaponCells('avion', c, r)) {
+      const i = b.grid[y][x]; if (i < 0 || b.ships[i].sunk || b.shots[y][x]) continue;
+      v += b.ships[i].hits || b.intel[y][x] === 2 ? 1 : .25;
+    }
+    if (v > bs) { bs = v; best = [c, r]; }
+  }
+  return best && bs >= (S.diff === 'easy' ? .5 : 2) ? { w: 'fumee', c: best[0], r: best[1], h: true } : null;
+}
+// leurre : là où l'adversaire a le plus de chances de tirer (ses probabilités sur nos eaux), loin de nos navires
+function aiDecoy(side) {
+  const b = boardOf(side), T = decoySpots(b); if (!T.length) return null;
+  if (S.diff === 'easy') { const [c, r, h] = pick(T); return { w: 'leurre', c, r, h }; }
+  const D = density(aiKnow(other(side)));
+  let best = T[0], bs = -1e9;
+  for (const [c, r, h] of T) {
+    let v = rng() * .5;
+    for (const [x, y] of decoyCells(c, r, h)) {
+      v += D[y][x];
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const xx = x + dx, yy = y + dy; if (inb([xx, yy]) && b.grid[yy][xx] >= 0 && !b.ships[b.grid[yy][xx]].sunk) v -= 3; }
+    }
+    if (v > bs) { bs = v; best = [c, r, h]; }
+  }
+  return { w: 'leurre', c: best[0], r: best[1], h: best[2] };
+}
 function aiPlan(side) {
-  const K = aiKnow(side), p = { easy: .3, normal: .6, hard: .95 }[S.diff], has = w => ready(side, w) && Math.random() < p;
-  if (ready(side, 'plongee') && subThreat(side) >= (S.diff === 'hard' ? 2 : 3) && Math.random() < p) { const d = aiDive(side); if (d) return d; }
+  const K = aiKnow(side), p = { easy: .3, normal: .6, hard: .95 }[S.diff], has = w => ready(side, w) && rng() < p;
+  if (ready(side, 'plongee') && subThreat(side) >= (S.diff === 'hard' ? 2 : 3) && rng() < p) { const d = aiDive(side); if (d) return d; }
   if (has('reparation')) { const d = aiRepair(side); if (d) return d; }
+  if (has('fumee')) { const d = aiSmoke(side); if (d) return d; }
+  if (has('mines')) { const d = aiMines(side); if (d) return d; }
+  if (has('leurre') && !boardOf(side).decoys.length && !repairTargets(boardOf(side)).length) { const d = aiDecoy(side); if (d) return d; }
   const hunting = !K.openHits.length && !K.detected.length, aim = w => aiAim(w, K);
   let plan = null;
   if (!hunting) {
@@ -826,7 +919,7 @@ function aiPlan(side) {
   } else {
     // d'abord repérer, puis n'importe quelle arme prête vaut mieux qu'un tir simple
     for (const [w, k] of [['avion', 1], ['projecteur', 1], ['sonar', .8], ['torpille', 1], ['missiles', 1], ['salve', .8]])
-      if (!plan && ready(side, w) && Math.random() < p * k) plan = aim(w);
+      if (!plan && ready(side, w) && rng() < p * k) plan = aim(w);
   }
   if (plan) return plan;
   const [c, r] = aiPick(K);
@@ -852,37 +945,77 @@ function burst(key, x, y, kind, count) {
   for (let i = 0; i < count; i++) {
     const a = Math.random() * TAU, sp = kind === 'boom' ? 20 + Math.random() * 70 : kind === 'bubble' || kind === 'fix' ? 5 + Math.random() * 15 : 15 + Math.random() * 45;
     S.parts.push({ key, x, y, vx: Math.cos(a) * sp, vy: kind === 'bubble' || kind === 'fix' ? -10 - Math.random() * 20 : kind === 'boom' ? Math.sin(a) * sp : -Math.abs(Math.sin(a)) * sp * 1.6,
-      g: kind === 'boom' ? 40 : kind === 'bubble' || kind === 'fix' ? -10 : 160, life: .4 + Math.random() * .5, t: 0, col: pick(cols), sz: Math.random() < .3 ? 2 : 1 });
+      g: kind === 'boom' ? 40 : kind === 'bubble' || kind === 'fix' ? -10 : 160, life: .4 + Math.random() * .5, t: 0, col: cols[vr(cols.length)], sz: Math.random() < .3 ? 2 : 1 });
   }
 }
 function fx(o) { if (S.fast) return Promise.resolve(); return new Promise(res => { o.t0 = now(); o.done = res; S.fx.push(o); }); }
 const shell = (key, c, r) => { SFX.fire(); return fx({ type: 'shell', key, c, r, dur: 520 }); };
 const sfx = k => { if (!S.fast) SFX[k](); };
 
-function resolveShot(key, c, r) {
+// opts.noMine : tir en retour d'une mine (pas de mines en chaîne) ; opts.clear : le résultat se voit même dans la fumée (torpille)
+function resolveShot(key, c, r, opts = {}) {
   const b = S[key], idx = b.grid[r][c], x = cx(c), y = cy(r);
   if (b.shots[r][c]) return { hit: false, again: true };
-  if (idx < 0) { b.shots[r][c] = 1; b.intel[r][c] = 1; burst(key, x, y, 'splash', 18); sfx('splash'); sonarDeduce(b); return { hit: false }; }
+  const veil = !opts.clear && inSmoke(b, c, r);
+  if (veil) b.veil[r][c] = true;
+  const boom = n => { burst(key, x, y, 'boom', n); if (!S.fast) { S.fx.push({ type: 'boom', key, x, y, t0: now(), dur: 480 }); S.shake = now(); } sfx('boom'); };
+  if (idx < 0) {
+    const d = decoyAt(b, c, r);
+    if (d) {
+      // le leurre : un faux touché ; ses deux cases touchées, il se dégonfle et redevient de l'eau
+      b.shots[r][c] = 3; b.intel[r][c] = 2;
+      for (const q of b.sonar) if (onLine(q, c, r)) q.n--;
+      boom(18);
+      const gone = d.cells.every(([xx, yy]) => b.shots[yy][xx] === 3);
+      if (gone) { b.decoys.splice(b.decoys.indexOf(d), 1); for (const [xx, yy] of d.cells) { b.shots[yy][xx] = 1; b.intel[yy][xx] = 1; b.veil[yy][xx] = false; } }
+      sonarDeduce(b);
+      return { hit: false, fake: true, gone, veil: veil && !gone };
+    }
+    b.shots[r][c] = 1; b.intel[r][c] = 1;
+    if (mineAt(b, c, r)) {
+      // une mine : elle saute (et riposte, sauf sous un tir en retour)
+      b.mines = b.mines.filter(m => m[0] !== c || m[1] !== r); b.veil[r][c] = false;
+      boom(22);
+      sonarDeduce(b);
+      return { hit: false, mine: !opts.noMine };
+    }
+    burst(key, x, y, 'splash', 18); sfx('splash'); sonarDeduce(b);
+    return { hit: false, veil };
+  }
   b.shots[r][c] = 2; b.intel[r][c] = 2;
   for (const q of b.sonar) if (onLine(q, c, r)) q.n--;
   sonarDeduce(b);
   const s = b.ships[idx]; s.hits++;
-  burst(key, x, y, 'boom', 26); if (!S.fast) { S.fx.push({ type: 'boom', key, x, y, t0: now(), dur: 480 }); S.shake = now(); } sfx('boom');
+  boom(26);
   if (s.hits >= s.def.len) {
     s.sunk = true; sfx('sunk');
+    for (const [cc, rr] of shipCells(s)) b.veil[rr][cc] = false;     // un navire coulé se voit, même dans la fumée
     if (!S.fast) shipCells(s).forEach(([cc, rr], i) => setTimeout(() => { burst(key, cx(cc), cy(rr), 'boom', 14); S.fx.push({ type: 'boom', key, x: cx(cc), y: cy(rr), t0: now(), dur: 480 }); }, 140 * i));
     return { hit: true, sunk: s };
   }
-  return { hit: true };
+  return { hit: true, veil };
+}
+// la fumée d'une flotte s'use à chaque coup adverse ; quand elle se dissipe, les tirs qu'elle cachait se voient
+function smokeTick(b) {
+  if (!b.smoke || --b.smoke.left > 0) return null;
+  b.smoke = null; let n = 0;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (b.veil[r][c]) { b.veil[r][c] = false; if (b.shots[r][c] >= 2) n++; }
+  return { n };
 }
 
 // exécute une action du camp `side` ; renvoie le bilan
 async function act(side, plan) {
-  const { w, c, r, h } = plan, foe = foeOf(side), key = keyOf(foe), out = { fired: 0, hits: [], sunk: [], found: 0, stop: null, count: 0, ship: null };
-  const apply = (cc, rr) => { const res = resolveShot(key, cc, rr); if (res.again) return; out.fired++; if (res.hit) out.hits.push([cc, rr]); if (res.sunk) out.sunk.push(res.sunk); };
+  const { w, c, r, h } = plan, foe = foeOf(side), key = keyOf(foe);
+  const out = { fired: 0, hits: [], fakes: [], veiled: [], mines: [], gone: 0, sunk: [], found: 0, stop: null, count: 0, ship: null };
+  const apply = (cc, rr) => {
+    const res = resolveShot(key, cc, rr, { noMine: plan.riposte, clear: w === 'torpille' }); if (res.again) return;
+    out.fired++; if (res.hit) out.hits.push([cc, rr]); if (res.fake) out.fakes.push([cc, rr]); if (res.veil) out.veiled.push([cc, rr]);
+    if (res.gone) out.gone++; if (res.mine) out.mines.push([cc, rr]); if (res.sunk) out.sunk.push(res.sunk);
+  };
+  const isShip = (x, y) => (foe.grid[y][x] >= 0 && foe.shots[y][x] !== 2) || (!!decoyAt(foe, x, y) && foe.shots[y][x] !== 3);   // un leurre passe pour un navire
   const me = boardOf(side);
   // ce qu'un pouvoir de repérage découvre (les cases déjà visées ne changent pas)
-  const spot = cells => { for (const [x, y] of cells) { if (foe.shots[y][x]) continue; const ship = foe.grid[y][x] >= 0; foe.intel[y][x] = ship ? 2 : 1; if (ship) out.found++; } };
+  const spot = cells => { for (const [x, y] of cells) { if (foe.shots[y][x] || inSmoke(foe, x, y)) continue; const ship = foe.grid[y][x] >= 0 || !!decoyAt(foe, x, y); foe.intel[y][x] = ship ? 2 : 1; if (ship) out.found++; } };
   if (w !== 'tir') me.cd[w] = POWERS[w].cd + 1;
   if (w === 'tir') { await shell(key, c, r); apply(c, r); }
   else if (w === 'salve' || w === 'missiles') {
@@ -904,14 +1037,14 @@ async function act(side, plan) {
   } else if (w === 'sonar') {
     sfx('sonar');
     await fx({ type: 'ping', key, h, line: h ? r : c, dur: 1500 });
-    const i = h ? r : c, n = lineCells(c, r, h).filter(([x, y]) => foe.grid[y][x] >= 0 && foe.shots[y][x] !== 2).length;
+    const i = h ? r : c, n = lineCells(c, r, h).filter(([x, y]) => isShip(x, y)).length;
     foe.sonar = foe.sonar.filter(q => !(q.h === h && q.i === i));
     foe.sonar.push({ h, i, n });
     out.count = n;
     sonarDeduce(foe);
   } else if (w === 'torpille') {
     let stop = N;
-    for (let i = 0; i < N; i++) { const x = h ? i : c, y = h ? r : i; if (foe.grid[y][x] >= 0 && foe.shots[y][x] !== 2) { stop = i; break; } }
+    for (let i = 0; i < N; i++) { const x = h ? i : c, y = h ? r : i; if (isShip(x, y)) { stop = i; break; } }
     sfx('torpedo');
     await fx({ type: 'torp', key, h, line: h ? r : c, stop, dur: 300 + (stop + 1) * 110 });
     for (let i = 0; i < stop; i++) { const x = h ? i : c, y = h ? r : i; if (!foe.shots[y][x]) foe.intel[y][x] = 1; }
@@ -936,18 +1069,65 @@ async function act(side, plan) {
     for (const q of me.sonar) if (onLine(q, c, r)) q.n++;
     burst(k, cx(c), cy(r), 'fix', 16);
     out.ship = s;
+  } else if (w === 'mines') {
+    const k = keyOf(me), cells = plan.cells.filter(([x, y]) => freeWater(me, x, y));
+    sfx('mine');
+    await fx({ type: 'drop', key: k, cells, dur: 900 });
+    me.mines.push(...cells.map(a => a.slice()));
+    out.count = cells.length;
+  } else if (w === 'fumee') {
+    const k = keyOf(me), [c0, r0] = zoneOf(c, r);
+    sfx('smoke');
+    me.smoke = { c0, r0, left: 2 };
+    await fx({ type: 'smokeup', key: k, zx: c0, zy: r0, dur: 1000 });
+  } else if (w === 'leurre') {
+    const k = keyOf(me), cells = decoyCells(c, r, h);
+    sfx('decoy');
+    await fx({ type: 'inflate', key: k, cells, h, dur: 900 });
+    me.decoys.push({ cells, h });
+    me.sonar = me.sonar.filter(q => !cells.some(([x, y]) => onLine(q, x, y)));   // les lignes déjà sondées ne comptaient pas le leurre
   }
   return out;
 }
+// les mines touchées par le camp `side` : un tir en retour du camp d'en face, qui remonte jusqu'à un navire du tireur (touché assuré)
+async function ripostes(side, res) {
+  const owner = other(side), txt = [], b = boardOf(side);
+  for (const m of res.mines) {
+    const T = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (b.grid[r][c] >= 0 && !b.shots[r][c]) T.push([c, r]);
+    if (!T.length) break;
+    const [c, r] = pick(T);
+    if (!S.fast) {
+      setMsg(side === 'player' ? `BOUM ! Une mine ennemie en ${cellName(...m)} ! Elle riposte sur notre flotte...` : `L'ennemi saute sur notre mine en ${cellName(...m)} ! Tir en retour...`);
+      await wait(1100); setView(side === 'player' ? 'player' : 'enemy');
+    }
+    const rr = await act(owner, { w: 'tir', c, r, h: true, riposte: true });
+    if (owner === 'player') { S.stats.shots += rr.fired; S.stats.hits += rr.hits.length; } else { S.stats.aiShots += rr.fired; S.stats.aiHits += rr.hits.length; }
+    txt.push(`${side === 'player' ? 'Mine ennemie' : 'Notre mine'} en ${cellName(...m)} : tir en retour en ${cellName(c, r)}, ${shotWord(owner, rr)}`);
+    if (!S.fast) { setMsg(txt[txt.length - 1]); await wait(1200); }
+  }
+  return txt.join(' ');
+}
+// le résultat d'un tir simple, vu par le joueur (la fumée ennemie lui cache le sien ; il connaît son leurre)
+function shotWord(side, res) {
+  const sunk = res.sunk.length ? ' ' + res.sunk.map(s => side === 'ai' ? `Notre ${s.def.name.toLowerCase()} est coulé !` : `${s.def.name} ennemi coulé !`).join(' ') : '';
+  if (side === 'player') return res.veiled.length ? 'perdu dans la fumée.' : res.hits.length || res.fakes.length ? 'touché !' + sunk + (res.gone ? " C'était un leurre !" : '') : "à l'eau.";
+  return res.hits.length ? 'touché !' + sunk : res.fakes.length ? 'dans notre leurre !' : "à l'eau.";
+}
 function describe(side, w, c, r, h, res) {
-  const ai = side === 'ai', nm = cellName(c, r), n = res.hits.length;
+  const ai = side === 'ai', nm = cellName(c, r);
+  // le joueur ne voit pas les résultats cachés par la fumée ennemie, et prend un leurre pour un navire ; il connaît les siens
+  const hidden = ([x, y]) => res.veiled.some(v => v[0] === x && v[1] === y);
+  const n = ai ? res.hits.length : [...res.hits, ...res.fakes].filter(q => !hidden(q)).length, nv = ai ? 0 : res.veiled.length;
   const sunk = res.sunk.map(s => ai ? `Notre ${s.def.name.toLowerCase()} est coulé !` : `${s.def.name} ennemi coulé !`).join(' ');
-  const tail = sunk ? ' ' + sunk : '';
+  const tail = (sunk ? ' ' + sunk : '') + (nv && w !== 'tir' ? ` ${nv} dans la fumée.` : '') + (res.gone ? (ai ? ' Notre leurre est crevé.' : " C'était un leurre !") : '')
+    + (ai && res.fakes.length && !res.gone ? ' Le leurre a pris un coup !' : '');
   const lbl = h ? `ligne ${r + 1}` : `colonne ${COLS[c]}`;
   switch (w) {
     case 'tir':
-      if (ai) return res.sunk.length ? `Tir ennemi en ${nm}. ${sunk}` : n ? `Tir ennemi en ${nm} : touchés !` : `Tir ennemi en ${nm} : raté !`;
-      return res.sunk.length ? `${nm} : touché... coulé ! ${sunk}` : n ? `${nm} : touché !` : `${nm} : plouf, à l'eau.`;
+      if (ai) return res.sunk.length ? `Tir ennemi en ${nm}. ${sunk}` : n ? `Tir ennemi en ${nm} : touchés !` : res.fakes.length ? `Tir ennemi en ${nm} : en plein dans notre leurre !${res.gone ? ' Il est crevé.' : ''}` : `Tir ennemi en ${nm} : raté !`;
+      if (res.mines.length) return `${nm} : une mine !`;
+      if (nv) return `${nm} : dans la fumée... impossible de voir !`;
+      return res.sunk.length ? `${nm} : touché... coulé ! ${sunk}` : res.gone ? `${nm} : touché... c'était un leurre !` : n ? `${nm} : touché !` : `${nm} : plouf, à l'eau.`;
     case 'salve': return `${ai ? 'Salve ennemie' : 'Salve'} sur ${nm} : ${n ? n + ' impact' + (n > 1 ? 's' : '') + ' !' : 'rien.'}${tail}`;
     case 'missiles': return `${ai ? 'Missiles ennemis' : 'Missiles'} : ${n ? n + ' touché' + (n > 1 ? 's' : '') + ' sur ' + res.fired + ' !' : 'tous à l\'eau.'}${tail}`;
     case 'avion':
@@ -965,6 +1145,9 @@ function describe(side, w, c, r, h, res) {
       return res.stop ? `${ai ? 'Torpille ennemie' : 'Torpille'} ${lbl} : impact en ${cellName(...res.stop)} !${tail}` : `${ai ? 'Torpille ennemie' : 'Torpille'} ${lbl} : perdue au large.`;
     case 'plongee': return ai ? "Le sous-marin ennemi a plongé ! Il n'est plus là où on l'avait vu." : 'Le sous-marin a plongé et refait surface plus loin !';
     case 'reparation': return ai ? `L'ennemi répare son ${res.ship.def.name.toLowerCase()} en ${nm} !` : `${res.ship.def.le} est réparé en ${nm} !`;
+    case 'mines': return ai ? "L'ennemi a mouillé des mines dans ses eaux : gare aux tirs en retour !" : `${res.count} mine${res.count > 1 ? 's' : ''} dans nos eaux : l'ennemi qui tire dessus prendra un tir en retour.`;
+    case 'fumee': return ai ? "L'ennemi s'abrite derrière un écran de fumée !" : "Écran de fumée : pendant 2 tours, l'ennemi ne saura pas ce qu'il touche dedans.";
+    case 'leurre': return ai ? "L'ennemi met quelque chose à l'eau... un leurre ? Méfiance !" : 'Le leurre est à l\'eau : pour l\'ennemi, c\'est un navire !';
   }
   return '';
 }
@@ -985,9 +1168,28 @@ function enemyFleet() {
   for (const len of SLOTS) out.push(pick(Object.values(SHIPS).filter(d => d.ok && d.len === len && !out.includes(d.id))).id);
   return out;
 }
-function newGame() {
-  S.player = makeBoard(YARD.fleet); S.enemy = makeBoard(enemyFleet());
-  randomFleet(S.player);
+// bataille du jour : flottes des deux camps, placement ennemi et hasard de l'IA tirés de la date ; niveau CAPITAINE
+// amiral.daily {AAAAMMJJ: tours}, amiral.dailyTry = jour de la tentative classée (comptée dès le COMBAT !)
+const todayKey = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+function dailyOf(d) {
+  const r = seeded(Math.imul(d, 2654435761) ^ 0x5eed);
+  const fleet = () => { const out = []; for (const len of SLOTS) { const c = CATALOG.filter(x => x.len === len && !out.includes(x.id)); out.push(c[Math.floor(r() * c.length)].id); } return out; };
+  return { d, fleet: fleet(), foe: fleet(), seed: Math.floor(r() * 4294967296) };
+}
+// on quitte la bataille du jour : le niveau choisi et le hasard ordinaire reviennent
+function endDaily() {
+  if (!S.daily) return;
+  S.daily = null; rng = Math.random;
+  const d = store.get('diff', 'normal'); S.diff = DIFFS.some(x => x[0] === d) ? d : 'normal';
+}
+function goTitle() { endDaily(); S.phase = 'title'; MUSIC.stop(); S.fx = []; S.parts = []; }
+function newGame(daily = null) {
+  endDaily();
+  if (daily) { S.daily = Object.assign(dailyOf(daily), { ranked: store.get('dailyTry', 0) !== daily }); S.diff = 'normal'; rng = seeded(S.daily.seed); }
+  const D = S.daily;
+  S.player = makeBoard(D ? D.fleet : YARD.fleet); S.enemy = makeBoard(D ? D.foe : enemyFleet());
+  if (D) randomFleet(S.enemy);                 // la flotte ennemie du jour est placée tout de suite, avec le hasard du jour
+  randomFleet(S.player, Math.random);
   S.phase = 'place'; S.sel = null; S.busy = false; S.turn = 'player'; S.view = 'player'; S.prevView = null;
   S.stats = { turns: 0, shots: 0, hits: 0, aiShots: 0, aiHits: 0 };
   S.fx = []; S.parts = []; S.endInfo = null; S.rankText = ''; resetAim(); S.peek = false; S.quitArm = 0;
@@ -995,7 +1197,8 @@ function newGame() {
   MUSIC.start();
 }
 function startBattle() {
-  randomFleet(S.enemy);
+  if (!S.daily) randomFleet(S.enemy);
+  else if (S.daily.ranked) store.set('dailyTry', S.daily.d);   // la tentative du jour compte dès le départ
   S.phase = 'play'; S.turn = 'player'; S.busy = false; S.sel = null; S.peek = false;
   setView('enemy'); SFX.start();
   setMsg('Ennemi en vue ! Choisissez un tir ou un pouvoir, puis visez les eaux ennemies.');
@@ -1006,40 +1209,58 @@ const LAUNCH = {
   torpille: p => `Torpille lancée ${p.h ? 'ligne ' + (p.r + 1) : 'colonne ' + COLS[p.c]} !`, plongee: () => 'Plongée !',
   missiles: () => 'Trois missiles à la mer !', sonar: p => `Le sonar écoute la ${p.h ? 'ligne ' + (p.r + 1) : 'colonne ' + COLS[p.c]}...`,
   projecteur: () => 'Le projecteur balaie les eaux ennemies...', reparation: p => `Les mécaniciens réparent la case ${cellName(p.c, p.r)}...`,
+  mines: () => 'Le mouilleur largue ses mines...', fumee: () => 'Le brouilleur crache sa fumée...', leurre: () => 'La vedette gonfle son leurre...',
 };
 const AI_LAUNCH = {
   tir: p => `L'ennemi fait feu en ${cellName(p.c, p.r)}...`, salve: () => "L'ennemi déclenche une salve en croix !", avion: () => 'Un avion ennemi survole notre flotte !',
   torpille: () => "Alerte ! L'ennemi lance une torpille !", plongee: () => "L'ennemi manoeuvre...", missiles: () => "Alerte ! Trois missiles ennemis en approche !",
   sonar: () => "Un sonar ennemi nous écoute...", projecteur: () => 'Un projecteur ennemi balaie notre flotte !', reparation: () => "L'ennemi s'affaire sur un navire touché...",
+  mines: () => "L'ennemi manoeuvre...", fumee: () => "De la fumée monte des eaux ennemies !", leurre: () => "L'ennemi manoeuvre...",
 };
 async function playerAct(plan) {
   if (S.phase !== 'play' || S.busy || S.turn !== 'player') return;
   const { w, c, r, h } = plan;
   if (!ready('player', w)) { SFX.error(); return; }
   if (!POWERS[w].own && !canUse(S.enemy, w, c, r, h, plan.cells)) { SFX.error(); setMsg(w === 'tir' ? 'Cette case a déjà été visée.' : 'Rien à découvrir ici : visez ailleurs.'); return; }
+  if ((w === 'leurre' && !decoyFits(S.player, c, r, h)) || (w === 'mines' && !(plan.cells || []).length)) { SFX.error(); return; }
   S.busy = true; S.stats.turns++; S.aim = null; S.armed = null; S.marks = [];
   setMsg(LAUNCH[w](plan));
   const res = await act('player', plan);
   S.stats.shots += res.fired; S.stats.hits += res.hits.length;
   S.weapon = 'tir';
-  setMsg(describe('player', w, c, r, h, res));
+  let txt = describe('player', w, c, r, h, res);
+  setMsg(txt);
   if (allSunk(S.enemy)) return gameOver(true);
+  if (res.mines.length) {
+    await wait(1100);
+    txt = await ripostes('player', res);
+    if (allSunk(S.player)) { setMsg(txt + ' Notre flotte est anéantie !'); return gameOver(false); }
+  }
+  const sm = smokeTick(S.enemy);
+  if (sm) setMsg(txt + (sm.n ? ` La fumée ennemie se dissipe : ${sm.n} touché${sm.n > 1 ? 's' : ''} !` : ' La fumée ennemie se dissipe.'));
   S.turn = 'ai';
-  await wait(res.sunk.length ? 1700 : w === 'tir' ? 1000 : 1300);
+  await wait(res.sunk.length ? 1700 : w === 'tir' && !sm ? 1000 : 1300);
   aiTurn();
 }
 async function aiTurn() {
   if (S.phase !== 'play') return;
   tickCd('ai');
   const plan = aiChoose('ai'), { w, c, r, h } = plan;
-  if (w !== 'plongee' && w !== 'reparation') setView('player');
+  if (!POWERS[w].own) setView('player');
   setMsg(AI_LAUNCH[w](plan));
   await wait(w === 'tir' ? 700 : 1000);
   const res = await act('ai', plan);
   S.stats.aiShots += res.fired; S.stats.aiHits += res.hits.length;
-  const txt = describe('ai', w, c, r, h, res);
+  let txt = describe('ai', w, c, r, h, res);
   if (allSunk(S.player)) { setMsg(txt + ' Notre flotte est anéantie !'); return gameOver(false); }
   setMsg(txt);
+  if (res.mines.length) {
+    await wait(1100);
+    txt = await ripostes('ai', res);
+    if (allSunk(S.enemy)) return gameOver(true);
+  }
+  const sm = smokeTick(S.player);
+  if (sm) { txt += ' Notre fumée se dissipe.'; setMsg(txt); }
   await wait(res.sunk.length ? 1600 : 1100);
   if (S.phase !== 'play') return;
   tickCd('player');
@@ -1049,23 +1270,26 @@ async function aiTurn() {
 }
 function gameOver(win) {
   S.phase = 'over'; S.busy = true; MUSIC.stop();
+  let fresh = [];
   if (win) {
-    // palmarès : servira aux déblocages du chantier naval (session 2)
-    const pm = store.get('palmares', {}) || {};
+    // palmarès : les déblocages du chantier naval ; un nouveau navire est annoncé à la fin
+    const pm = store.get('palmares', {}) || {}, before = CATALOG.filter(d => unlocked(d.id, pm)).map(d => d.id);
     pm.victoires = (pm.victoires || 0) + 1; pm[S.diff] = (pm[S.diff] || 0) + 1;
     if (S.stats.turns < 20) pm.rapide = true;
     if (S.player.ships.every(s => !s.sunk)) pm.intacte = true;
     store.set('palmares', pm);
+    fresh = CATALOG.filter(d => unlocked(d.id, pm) && !before.includes(d.id));
   }
   setTimeout(() => {
     win ? SFX.win() : SFX.lose();
-    const st = S.stats, best = store.get('best', {}) || {};
+    const st = S.stats, best = store.get('best', {}) || {}, D = S.daily, dd = store.get('daily', {}) || {};
     let rec = false;
-    if (win) { rec = !best[S.diff] || st.turns < best[S.diff]; if (rec) { best[S.diff] = st.turns; store.set('best', best); } }
-    S.endInfo = { win, rec, best: best[S.diff] || 0 };
+    if (D) { if (win && D.ranked) { rec = !dd[D.d] || st.turns < dd[D.d]; if (rec) { dd[D.d] = st.turns; store.set('daily', dd); } } }
+    else if (win) { rec = !best[S.diff] || st.turns < best[S.diff]; if (rec) { best[S.diff] = st.turns; store.set('best', best); } }
+    S.endInfo = { win, rec, best: (D ? dd[D.d] : best[S.diff]) || 0, fresh };
     if (!win) setView('enemy');
-    S.rankText = rec ? 'NOUVEAU RECORD !' : '';
-    if (win && rec && window.LudoScores) LudoScores.submit('amiral', 'best:' + S.diff, st.turns, true).then(r => {
+    S.rankText = rec ? (D ? 'BATAILLE DU JOUR CLASSEE !' : 'NOUVEAU RECORD !') : D && !D.ranked ? 'HORS CLASSEMENT (DEJA TENTEE)' : '';
+    if (win && rec && window.LudoScores) LudoScores.submit('amiral', D ? 'daily:' + D.d : 'best:' + S.diff, st.turns, true).then(r => {
       if (r && S.phase === 'over') S.rankText = `RECORD ! ${LudoScores.rankText(r).toUpperCase()}`; });
     S.endT0 = now();
   }, 1500);
@@ -1080,9 +1304,11 @@ async function simulate(fleetA, fleetB, diff = 'hard') {
     while (turns < 400) {
       tickCd(side); S.newReady = null;
       const plan = aiChoose(side); used[plan.w] = (used[plan.w] || 0) + 1;
-      await act(side, plan);
+      const res = await act(side, plan);
       if (side === 'player') turns++;
       if (allSunk(foeOf(side))) { winner = side; break; }
+      if (res.mines.length) { used.riposte = (used.riposte || 0) + res.mines.length; await ripostes(side, res); if (allSunk(boardOf(side))) { winner = other(side); break; } }
+      smokeTick(foeOf(side));
       side = other(side);
     }
   } finally { Object.assign(S, keep); S.fast = false; }
@@ -1167,6 +1393,11 @@ function drawBoard(g, key, ox, oy, t, main) {
     if (s.def.id === 'carrier' && !s.sunk) { const [rx0, ry0] = G.radar, rx = s.h ? x + rx0 : x + CS - 1 - ry0, ry = s.h ? y + ry0 : y + rx0, f = Math.floor(t * 6) % 4, d = [[-2, 0], [-1, -1], [0, -2], [1, -1]][f];
       R(g, rx - 1, ry - 1, 3, 3, OUT); R(g, rx + d[0] - 1, ry + d[1] - 1, 1, 1, '#e4e8ee'); R(g, rx - d[0], ry - d[1], 1, 1, '#e4e8ee'); R(g, rx, ry, 1, 1, '#ffd23f'); }
   });
+  // leurres et mines : visibles par leur propriétaire (et par tous à la fin)
+  if (mine || reveal) {
+    for (const d of b.decoys) { const [x0, y0] = d.cells[0]; g.globalAlpha = .85; g.drawImage(G.decoy[d.h ? 'h' : 'v'], x0 * CS, y0 * CS + (d.h ? bob : 0)); g.globalAlpha = 1; }
+    for (const [c, r] of b.mines) { const k = Math.floor(t * 2 + c + r) % 2; g.drawImage(G.icon.mines, c * CS + 3, r * CS + 3 + k); }
+  }
   // brouillard de guerre sur les cases ennemies inconnues
   if (!mine && !reveal) {
     const mg = G.fogMaskG; mg.clearRect(0, 0, BS, BS);
@@ -1189,18 +1420,33 @@ function drawBoard(g, key, ox, oy, t, main) {
     text(g, '!', x + CS / 2, y + 7 + (Math.floor(t * 3) % 2), '#ffd23f', 'center');
   }
   // tirs : à l'eau, touchés
+  const veiled = (c, r) => !mine && !reveal && b.veil[r][c];      // dans la fumée ennemie : on ne sait pas
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-    const v = b.shots[r][c]; if (!v) continue;
+    const v = b.shots[r][c]; if (!v || veiled(c, r)) continue;
     if (v === 1) missMark(g, cx(c), cy(r), t, c * .21 + r * .33);
   }
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-    if (b.shots[r][c] !== 2) continue;
-    const s = b.ships[b.grid[r][c]], x = c * CS, y = r * CS;
-    if (!s.sunk) {
+    const v = b.shots[r][c]; if ((v !== 2 && v !== 3) || veiled(c, r)) continue;
+    const s = v === 2 ? b.ships[b.grid[r][c]] : null, x = c * CS, y = r * CS;
+    if (!s || !s.sunk) {
       g.fillStyle = `rgba(255,70,40,${.16 + .08 * Math.sin(t * TAU + c)})`; g.fillRect(x + 1, y + 1, CS - 1, CS - 1);
       flames(g, cx(c), cy(r) + 4, t, c + r * 3, !mine);
       if (main) smoke(g, cx(c), cy(r) - 2, t, c * 3 + r, .8);
     } else if (main && (c + r) % 2 === 0) smoke(g, cx(c), cy(r), t, c * 3 + r, .45);
+  }
+  // écran de fumée : un nuage qui roule sur la zone ; les tirs qu'il cache sont des points d'interrogation
+  if (b.smoke) {
+    const { c0, r0 } = b.smoke, x0 = c0 * CS, y0 = r0 * CS, S3 = 3 * CS;
+    g.fillStyle = mine ? 'rgba(150,146,160,.22)' : 'rgba(150,146,160,.5)'; g.fillRect(x0 + 1, y0 + 1, S3 - 1, S3 - 1);
+    for (let k = 0; k < 9; k++) {
+      const ph = (t * .25 + k * .37) % 1, px = x0 + (k % 3) * CS + 13 + Math.sin(t * .8 + k) * 5, py = y0 + Math.floor(k / 3) * CS + 13 + Math.cos(t * .6 + k * 2) * 4;
+      g.globalAlpha = (mine ? .35 : .75) * (ph < .8 ? 1 : (1 - ph) * 5); g.drawImage(G.puff[5], Math.round(px - 10), Math.round(py - 10));
+    }
+    g.globalAlpha = 1;
+  }
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (b.shots[r][c] && veiled(c, r)) {
+    R(g, c * CS + 8, r * CS + 6, 10, 14, 'rgba(20,18,30,.55)');
+    text(g, '?', cx(c), r * CS + 7 + (Math.floor(t * 2 + c) % 2), '#fff6c2', 'center', 8);
   }
   // lignes sondées : cases de navire encore cachées (badge au bout de la ligne)
   for (const q of b.sonar) {
@@ -1224,9 +1470,29 @@ function drawBoard(g, key, ox, oy, t, main) {
 function drawAim(g, key, t) {
   if (S.phase !== 'play' || S.turn !== 'player' || S.busy) return;
   const w = S.weapon;
-  if (POWERS[w].own) {                       // plongée, réparation : on vise sa propre flotte
+  if (POWERS[w].own) {                       // plongée, réparation, mines, fumée, leurre : on vise sa propre flotte
     if (key !== 'player') return;
-    const T2 = w === 'plongee' ? diveTargets(S.player) : repairTargets(S.player), col = w === 'plongee' ? '#8ee05a' : '#8ee05a';
+    const blink = Math.floor(t * 6) % 2 ? '#ffffff' : '#8ee05a';
+    if (w === 'mines') {
+      S.marks.forEach(([c, r], k) => { g.fillStyle = `rgba(255,120,60,${.22 + .1 * Math.sin(t * 8 + k)})`; g.fillRect(c * CS + 1, r * CS + 1, CS - 1, CS - 1);
+        g.drawImage(G.icon.mines, c * CS + 3, r * CS + 3); corners(g, c * CS + 1, r * CS + 1, CS - 1, CS - 1, blink); });
+      if (S.aim && freeWater(S.player, S.aim.c, S.aim.r)) corners(g, S.aim.c * CS + 1, S.aim.r * CS + 1, CS - 1, CS - 1, '#ffd23f');
+      return;
+    }
+    if (w === 'fumee') {
+      if (!S.aim) return;
+      for (const [x, y] of weaponCells('avion', S.aim.c, S.aim.r)) { g.fillStyle = `rgba(190,186,200,${(S.armed ? .4 : .25) + .1 * Math.sin(t * 6)})`; g.fillRect(x * CS + 1, y * CS + 1, CS - 1, CS - 1); }
+      corners(g, S.aim.c * CS + 1, S.aim.r * CS + 1, CS - 1, CS - 1, blink);
+      return;
+    }
+    if (w === 'leurre') {
+      if (!S.armed) return;
+      const { c, r } = S.armed, h = S.dir;
+      g.globalAlpha = .55 + .2 * Math.sin(t * 6); g.drawImage(G.decoy[h ? 'h' : 'v'], c * CS, r * CS); g.globalAlpha = 1;
+      corners(g, c * CS + 1, r * CS + 1, (h ? 2 * CS : CS) - 1, (h ? CS : 2 * CS) - 1, blink);
+      return;
+    }
+    const T2 = ownTargets(S.player, w), col = '#8ee05a';
     for (const [c, r] of T2) { const x = c * CS, y = r * CS, on = Math.floor(t * 3 + c + r) % 2;
       if (w === 'plongee') { R(g, x + 11, y + 11, 4, 4, OUT); R(g, x + 12, y + 12, 2, 2, on ? col : '#d8ffb0'); }
       else { R(g, x + 8, y + 11, 10, 4, OUT); R(g, x + 11, y + 8, 4, 10, OUT); R(g, x + 9, y + 12, 8, 2, on ? col : '#d8ffb0'); R(g, x + 12, y + 9, 2, 8, on ? col : '#d8ffb0'); } }
@@ -1304,7 +1570,7 @@ function drawFx(g, f, t) {
       else { g.globalAlpha = (u - .5) * 2; g.drawImage(im, f.to[0] * CS, f.to[1] * CS); }
       g.globalAlpha = 1;
     }
-    if (Math.random() < .3 && (u < .5 || !hidden)) { const [x, y] = u < .5 ? f.from[rand(3)] : shipCells(s, f.to[0], f.to[1], f.h)[rand(3)]; burst(f.key, cx(x) + rand(10) - 5, cy(y) + rand(10) - 5, 'bubble', 1); }
+    if (Math.random() < .3 && (u < .5 || !hidden)) { const [x, y] = u < .5 ? f.from[vr(3)] : shipCells(s, f.to[0], f.to[1], f.h)[vr(3)]; burst(f.key, cx(x) + vr(10) - 5, cy(y) + vr(10) - 5, 'bubble', 1); }
   } else if (f.type === 'missile') {
     // arrive en biais depuis le bas à gauche, avec sa traînée de fumée
     const x = cx(f.c), y = cy(f.r), q = ease(u), sx = x - 70 * (1 - q), sy = y + 40 * (1 - q) - Math.sin(q * Math.PI) * 50;
@@ -1337,7 +1603,28 @@ function drawFx(g, f, t) {
     // une clé qui tourne et des étincelles vertes ; les flammes s'éteignent à la fin
     const x = cx(f.c), y = cy(f.r), a = Math.sin(u * TAU * 3) * .6;
     g.save(); g.translate(x, y - 2); g.rotate(a); g.drawImage(G.icon.reparation, -10, -10); g.restore();
-    if (Math.random() < .4) burst(f.key, x + rand(14) - 7, y + rand(10) - 5, 'fix', 1);
+    if (Math.random() < .4) burst(f.key, x + vr(14) - 7, y + vr(10) - 5, 'fix', 1);
+  } else if (f.type === 'drop' && f.key === 'player') {
+    // les mines tombent du mouilleur et s'enfoncent avec des ronds dans l'eau (cachées chez l'ennemi)
+    f.cells.forEach(([c, r], k) => {
+      const q = clamp(u * 1.6 - k * .4, 0, 1), x = cx(c), y = cy(r);
+      if (q <= 0) return;
+      if (q < .5) g.drawImage(G.icon.mines, x - 10, Math.round(y - 10 - (1 - q * 2) * 30));
+      else { g.globalAlpha = 1 - (q - .5) * 2; ring(g, x, y + 2, 4 + (q - .5) * 18, '#d8f0ff'); g.globalAlpha = 1; g.drawImage(G.icon.mines, x - 10, y - 7); }
+    });
+  } else if (f.type === 'smokeup') {
+    // la fumée monte et s'étale sur la zone
+    const x0 = f.zx * CS, y0 = f.zy * CS;
+    for (let k = 0; k < 12; k++) {
+      const q = clamp(u * 1.5 - k * .04, 0, 1), sz = Math.min(5, Math.floor(q * 6));
+      g.globalAlpha = .85 * q; g.drawImage(G.puff[sz], Math.round(x0 + 6 + (k * 23) % 66 - 10 + q * 4), Math.round(y0 + 8 + (k * 37) % 62 - 10 - q * 3));
+    }
+    g.globalAlpha = 1;
+  } else if (f.type === 'inflate' && f.key === 'player') {
+    // le leurre se gonfle (caché chez l'ennemi)
+    const im = G.decoy[f.h ? 'h' : 'v'], [c, r] = f.cells[0], q = ease(u), w = Math.max(1, Math.round(im.width * q)), hh = Math.max(1, Math.round(im.height * q));
+    g.drawImage(im, 0, 0, im.width, im.height, c * CS + Math.round((im.width - w) / 2), r * CS + Math.round((im.height - hh) / 2), w, hh);
+    if (Math.random() < .3) burst(f.key, cx(c) + vr(20) - 4, cy(r) + vr(12) - 6, 'bubble', 1);
   }
   if (u >= 1 && !f.ended) { f.ended = true; if (f.done) f.done(); }
 }
@@ -1392,16 +1679,42 @@ function drawTitle(t) {
     button(x, 232, 82, 26, lbl, { sel: S.diff === k, gold: S.diff === k, act: () => { S.diff = k; store.set('diff', k); SFX.select(); } });
     tiny(g, best[k] ? `RECORD ${best[k]} TOURS` : 'PAS DE RECORD', x + 41, 263, best[k] ? '#ffd23f' : '#7d8698', 'center');
   });
-  button(40, 280, LW - 80, 40, 'JOUER', { gold: true, act: () => { audioInit(); SFX.click(); openYard(); } });
-  if (!window.ludoArtefact) button(140, 334, 76, 26, '< LUDOTHEQUE', { tiny: true, act: () => { location.href = '../index.html'; } });
-  button(56, 334, window.ludoArtefact ? 160 : 76, 26, 'CLASSEMENT', { tiny: !window.ludoArtefact, act: () => { location.href = `../classements/index.html#amiral-0-${S.diff}`; } });
-  button(56, 370, 76, 24, AC.sfxOn ? 'SON' : 'SON OFF', { tiny: true, disabled: !AC.sfxOn, act: () => { AC.sfxOn = !AC.sfxOn; if (AC.sfx) AC.sfx.gain.value = AC.sfxOn ? .9 : 0; saveOpts(); } });
-  button(140, 370, 76, 24, AC.musicOn ? 'MUSIQUE' : 'MUSIQUE OFF', { tiny: true, disabled: !AC.musicOn, act: () => { AC.musicOn = !AC.musicOn; saveOpts(); } });
+  button(40, 276, LW - 80, 34, 'JOUER', { gold: true, act: () => { audioInit(); SFX.click(); openYard(); } });
+  const done = store.get('dailyTry', 0) === todayKey();
+  button(40, 316, LW - 80, 26, done ? 'BATAILLE DU JOUR  (TENTEE)' : 'BATAILLE DU JOUR', { tiny: true, act: () => { audioInit(); SFX.click(); S.phase = 'daily'; } });
+  if (!done) { plate(g, LW - 58, 311, 30, 12, 'red'); tiny(g, 'JOUR', LW - 43, 314, '#ffffff', 'center'); }
+  if (!window.ludoArtefact) button(140, 350, 76, 26, '< LUDOTHEQUE', { tiny: true, act: () => { location.href = '../index.html'; } });
+  button(56, 350, window.ludoArtefact ? 160 : 76, 26, 'CLASSEMENT', { tiny: !window.ludoArtefact, act: () => { location.href = `../classements/index.html#amiral-0-${S.diff}`; } });
+  button(56, 384, 76, 24, AC.sfxOn ? 'SON' : 'SON OFF', { tiny: true, disabled: !AC.sfxOn, act: () => { AC.sfxOn = !AC.sfxOn; if (AC.sfx) AC.sfx.gain.value = AC.sfxOn ? .9 : 0; saveOpts(); } });
+  button(140, 384, 76, 24, AC.musicOn ? 'MUSIQUE' : 'MUSIQUE OFF', { tiny: true, disabled: !AC.musicOn, act: () => { AC.musicOn = !AC.musicOn; saveOpts(); } });
   g.drawImage(G.admiral, 8, 428);
   plate(g, 50, 434, LW - 58, 34);
   text(g, 'Choisissez vos 4 navires', 58, 440, '#f2f0ff'); text(g, 'et coulez la flotte !', 58, 453, '#f2f0ff');
 }
 function saveOpts() { store.set('opts', { sfx: AC.sfxOn, music: AC.musicOn }); }
+// l'écran de la bataille du jour : les deux flottes imposées, la tentative classée
+const dateFr = () => new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function drawDaily(t) {
+  const d = todayKey(), D = dailyOf(d), ranked = store.get('dailyTry', 0) !== d, rec = (store.get('daily', {}) || {})[d];
+  logo(g, 'BATAILLE DU JOUR', LW / 2, 8, 11);
+  tiny(g, dateFr() + '  -  NIVEAU CAPITAINE', LW / 2, 27, '#cfe6ff', 'center');
+  const fleetBox = (list, y, foe) => {
+    plate(g, 8, y, LW - 16, 124, foe ? 'red' : null);
+    text(g, foe ? 'FLOTTE ENNEMIE' : 'VOTRE FLOTTE', 16, y + 6, foe ? '#ffd6cc' : '#ffd23f');
+    list.forEach((id, i) => {
+      const sd = SHIPS[id], yy = y + 22 + i * 25;
+      shipPic(id, 16, yy + 2, sd.len === 4 ? .55 : .62, false);
+      text(g, sd.name.toUpperCase(), 92, yy + 1, '#f2f0ff'); tiny(g, POWERS[sd.power].name + '  -  ' + POWERS[sd.power].desc, 92, yy + 14, foe ? '#ffb4a8' : '#ffd23f', 'left', LW - 104);
+      if (!foe && !usable(id)) { plate(g, LW - 74, yy, 58, 13, 'gold'); tiny(g, 'A ESSAYER', LW - 45, yy + 3, '#fff6c2', 'center'); }
+    });
+  };
+  fleetBox(D.fleet, 40, false); fleetBox(D.foe, 172, true);
+  tiny(g, ranked ? 'UNE SEULE TENTATIVE CLASSEE : ELLE COMPTE DES LE COMBAT' : 'DEJA TENTEE AUJOURD\'HUI : PARTIE HORS CLASSEMENT', LW / 2, 306, ranked ? '#ffd23f' : '#ff9a86', 'center');
+  tiny(g, rec ? `VICTOIRE DU JOUR EN ${rec} TOURS` : 'LA VICTOIRE EN LE MOINS DE TOURS', LW / 2, 320, rec ? '#8ee05a' : '#cfe6ff', 'center');
+  button(40, 340, LW - 80, 26, 'CLASSEMENT DU JOUR', { tiny: true, act: () => { location.href = '../classements/index.html#amiral-1'; } });
+  button(8, 440, 78, 32, '< MENU', { tiny: true, act: () => { S.phase = 'title'; SFX.click(); } });
+  button(94, 440, LW - 102, 32, 'PLACER LA FLOTTE', { gold: true, act: () => { audioInit(); SFX.start(); newGame(d); } });
+}
 
 // la place gagnée en hauteur va aux boutons des pouvoirs, à la minicarte et aux messages
 let BY_BAR = 284, BAR_H = 46, MSG_Y = 434; const MINI = { x: 8, y: 340, s: 88 };
@@ -1417,7 +1730,7 @@ function drawHud(t) {
   const place = S.phase === 'place';
   button(LW - 62, 6, 56, 18, S.quitArm && now() - S.quitArm < 2500 ? 'QUITTER ?' : 'MENU', { tiny: true, red: !!(S.quitArm && now() - S.quitArm < 2500), act: () => {
     if (S.phase !== 'play' && S.phase !== 'place') return;
-    if (S.quitArm && now() - S.quitArm < 2500) { S.phase = 'title'; MUSIC.stop(); S.fx = []; S.parts = []; return; }
+    if (S.quitArm && now() - S.quitArm < 2500) { goTitle(); return; }
     S.quitArm = now(); SFX.click(); setMsg('Touchez encore QUITTER pour abandonner la partie.');
   } });
   if (!place) {
@@ -1426,11 +1739,13 @@ function drawHud(t) {
   }
   // titre de la grille (caché quand les flèches de direction sont affichées)
   const v = S.view, mine = v === 'player', w = S.weapon;
-  const ttl = place ? 'PLACEZ VOTRE FLOTTE' : mine ? (S.turn === 'ai' ? "L'ENNEMI ATTAQUE !" : w === 'plongee' ? 'CHOISISSEZ OU PLONGER' : w === 'reparation' ? 'CHOISISSEZ LA CASE A REPARER' : 'VOTRE FLOTTE')
+  const ttl = place ? 'PLACEZ VOTRE FLOTTE' : mine ? (S.turn === 'ai' ? "L'ENNEMI ATTAQUE !" : { plongee: 'CHOISISSEZ OU PLONGER', reparation: 'CHOISISSEZ LA CASE A REPARER',
+              mines: `MINES : ${S.marks.length} / ${mineNeed()} POSEES`, fumee: 'CHOISISSEZ LA ZONE DE FUMEE', leurre: 'CHOISISSEZ OU POSER LE LEURRE' }[w] || 'VOTRE FLOTTE')
             : w === 'missiles' && S.turn === 'player' && !S.busy ? `MISSILES : ${S.marks.length} / ${missileNeed()} CIBLES` : (S.turn === 'player' ? 'EAUX ENNEMIES : A VOUS' : 'EAUX ENNEMIES');
   if (!arrowsOn()) tiny(g, ttl, LW / 2, 32, mine ? '#9fd3ff' : '#ffb4a8', 'center');
 }
 const missileNeed = () => Math.min(3, S.enemy.shots.flat().filter(v => !v).length);
+const mineNeed = () => Math.min(2, MAX_MINES - S.player.mines.length, mineTargets(S.player).length);
 const HELP = {
   tir: 'Touchez une case des eaux ennemies pour tirer.',
   avion: 'Avion : touchez le centre de la zone à survoler, puis FEU !',
@@ -1441,11 +1756,15 @@ const HELP = {
   sonar: 'Sonar : touchez une case, puis la flèche du sens voulu. Il dit combien de cases de navire sont cachées sur la ligne.',
   projecteur: 'Projecteur : touchez une case, puis la flèche du sens voulu. Il éclaire 4 cases.',
   reparation: 'Réparation : choisissez une case touchée (croix verte) sur votre flotte, puis FEU ! Elle retourne dans le brouillard pour l\'ennemi.',
+  mines: 'Mines : touchez 2 cases d\'eau de votre flotte, puis FEU ! L\'ennemi qui tire dessus prend un tir en retour.',
+  fumee: 'Fumée : touchez le centre de la zone à cacher, puis FEU ! Pendant 2 tours, l\'ennemi ne saura pas ce qu\'il touche dedans.',
+  leurre: 'Leurre : touchez une case d\'eau de votre flotte (encore une fois pour le pivoter), puis FEU ! Pour l\'ennemi, c\'est un navire.',
 };
 function blockedMsg(p, why) {
   const b = S.player, s = shipOf(b, p);
   return why === 'sunk' ? `${s.def.name} coulé : plus de ${POWERS[p].name.toLowerCase()} !` : why === 'hit' ? 'Le sous-marin est touché : il ne peut plus plonger.'
-    : why === 'stuck' ? "Le sous-marin n'a nulle part où plonger." : why === 'intact' ? 'Rien à réparer : aucun navire à flot n\'est touché.'
+    : why === 'stuck' ? (p === 'plongee' ? "Le sous-marin n'a nulle part où plonger." : "Plus assez d'eau libre dans nos eaux.") : why === 'intact' ? 'Rien à réparer : aucun navire à flot n\'est touché.'
+    : why === 'full' ? (p === 'mines' ? `Déjà ${MAX_MINES} mines dans nos eaux.` : `Déjà ${MAX_DECOYS} leurres à l'eau.`)
     : `${POWERS[p].name} sera prêt dans ${b.cd[p]} tour${b.cd[p] > 1 ? 's' : ''}.`;
 }
 function drawBar(t) {
@@ -1462,7 +1781,7 @@ function drawBar(t) {
     plate(g, x, y, w, h, sel ? 'gold' : ok ? null : 'dim');
     if (sel) { const c = Math.floor(T * 4) % 2 ? '#ffd23f' : '#fff6c2'; R(g, x - 1, y - 1, w + 2, 1, c); R(g, x - 1, y + h, w + 2, 1, c); R(g, x - 1, y - 1, 1, h + 2, c); R(g, x + w, y - 1, 1, h + 2, c); }
     // la cible est choisie : la plaque devient FEU ! (ou demande le sens pour les pouvoirs en ligne)
-    const fire = sel && myTurn && p !== 'tir' && (p === 'missiles' ? S.marks.length >= missileNeed() && S.marks.length > 0 : !!S.armed);
+    const fire = sel && myTurn && p !== 'tir' && (p === 'missiles' ? S.marks.length >= missileNeed() && S.marks.length > 0 : p === 'mines' ? S.marks.length >= mineNeed() && S.marks.length > 0 : !!S.armed);
     if (fire) {
       const bl = Math.floor(T * 5) % 2;
       if (POWERS[p].dir) { text(g, 'SENS', x + w / 2, y + h / 2 - 12, '#fff6c2', 'center'); tiny(g, 'TOUCHEZ', x + w / 2, y + h / 2 + 2, '#ffd23f', 'center'); tiny(g, 'UNE FLECHE', x + w / 2, y + h / 2 + 11, '#ffd23f', 'center'); }
@@ -1474,7 +1793,7 @@ function drawBar(t) {
       tiny(g, POWERS[p].name, x + w / 2, y + h - 17, ok ? '#ffffff' : '#7d8698', 'center', w - 4);
       if (why === 'sunk') { for (let k = 0; k < 14; k++) { R(g, x + 14 + k + 3, y + 6 + k, 2, 2, '#ff4040'); R(g, x + 33 - k - 3, y + 6 + k, 2, 2, '#ff4040'); } }
       else if (why === 'cd') { plate(g, x + 30, y + 3, 15, 13, 'red'); text(g, String(b.cd[p]), x + 38, y + 6, '#ffffff', 'center'); }
-      else if (why) tiny(g, { hit: 'TOUCHE', stuck: 'BLOQUE', intact: 'INTACT' }[why], x + w / 2, y + h - 8, why === 'intact' ? '#9aa3b1' : '#ff8a76', 'center');
+      else if (why) tiny(g, { hit: 'TOUCHE', stuck: 'BLOQUE', intact: 'INTACT', full: 'PLEIN' }[why], x + w / 2, y + h - 8, why === 'intact' ? '#9aa3b1' : '#ff8a76', 'center');
       else if (p !== 'tir') tiny(g, 'PRET', x + w / 2, y + h - 8, '#8ee05a', 'center');
     }
     BTN.push({ x, y, w, h, act: () => {
@@ -1482,8 +1801,8 @@ function drawBar(t) {
       if (why) { SFX.error(); setMsg(blockedMsg(p, why)); return; }
       if (fire) {
         if (POWERS[p].dir) { SFX.error(); return; }
-        if (p === 'missiles') { const m = S.marks; playerAct({ w: p, c: m[0][0], r: m[0][1], h: true, cells: m.slice() }); return; }
-        const a = S.armed; playerAct({ w: p, c: a.c, r: a.r, h: p === 'plongee' ? ship.h : true }); return;
+        if (p === 'missiles' || p === 'mines') { const m = S.marks; playerAct({ w: p, c: m[0][0], r: m[0][1], h: true, cells: m.slice() }); return; }
+        const a = S.armed; playerAct({ w: p, c: a.c, r: a.r, h: p === 'plongee' ? ship.h : p === 'leurre' ? S.dir : true }); return;
       }
       resetAim(); S.weapon = p; S.dir = POWERS[p].dir ? null : true; SFX.select();
       setView(POWERS[p].own ? 'player' : 'enemy'); S.peek = false;
@@ -1565,13 +1884,22 @@ function drawOver(t) {
   g.drawImage(e.win ? G.admiral : G.enemyAdm, LW / 2 - 18, y + 40);
   const acc = st.shots ? Math.round(st.hits / st.shots * 100) : 0, left = S.player.ships.filter(s => !s.sunk).length;
   const rows = [['TOURS', st.turns], ['TIRS', st.shots], ['PRECISION', acc + ' %'], ['NAVIRES RESTANTS', left + '/4']];
-  if (e.win) rows.push([`RECORD ${DIFFS.find(d => d[0] === S.diff)[1]}`, e.best + ' tours']);
+  if (e.win && S.daily) rows.push(['BATAILLE DU JOUR', e.best ? e.best + ' tours' : '-']);
+  else if (e.win) rows.push([`RECORD ${DIFFS.find(d => d[0] === S.diff)[1]}`, e.best + ' tours']);
   rows.forEach(([k, v], i) => { tiny(g, k, 34, y + 92 + i * 14, '#f2f0ff'); text(g, String(v), LW - 34, y + 90 + i * 14, '#ffd23f', 'right'); });
   if (S.rankText) tiny(g, S.rankText, LW / 2, y + 168, Math.floor(t * 3) % 2 ? '#ffd23f' : '#fff6c2', 'center');
-  button(32, y + 184, 100, 26, 'REJOUER', { gold: true, tiny: true, act: () => { newGame(); } });
-  button(140, y + 184, 100, 26, 'CLASSEMENT', { tiny: true, act: () => { location.href = `../classements/index.html#amiral-0-${S.diff}`; } });
+  button(32, y + 184, 100, 26, 'REJOUER', { gold: true, tiny: true, act: () => { newGame(S.daily ? S.daily.d : null); } });
+  button(140, y + 184, 100, 26, 'CLASSEMENT', { tiny: true, act: () => { location.href = S.daily ? '../classements/index.html#amiral-1' : `../classements/index.html#amiral-0-${S.diff}`; } });
   button(32, y + 216, 100, 22, 'CHANTIER', { tiny: true, act: () => { S.fx = []; S.parts = []; MUSIC.stop(); openYard(); } });
-  button(140, y + 216, 100, 22, 'MENU', { tiny: true, act: () => { S.phase = 'title'; S.fx = []; S.parts = []; } });
+  button(140, y + 216, 100, 22, 'MENU', { tiny: true, act: () => goTitle() });
+  // un navire débloqué par cette victoire : annonce sous le bilan
+  if (e.fresh && e.fresh.length) {
+    const d = e.fresh[0], yy = y + 262, bl = Math.floor(t * 3) % 2;
+    plate(g, 16, yy, LW - 32, 50, 'gold');
+    tiny(g, 'NOUVEAU NAVIRE DEBLOQUE !', LW / 2, yy + 6, bl ? '#ffffff' : '#ffd23f', 'center');
+    shipPic(d.id, 26, yy + 22, .7, false);
+    text(g, d.name.toUpperCase(), 116, yy + 20, '#fff6c2'); tiny(g, POWERS[d.power].name + (e.fresh.length > 1 ? `  (+${e.fresh.length - 1} AU CHANTIER)` : '  -  AU CHANTIER'), 116, yy + 34, '#ffd23f');
+  }
 }
 
 /* =========================================================
@@ -1579,9 +1907,11 @@ function drawOver(t) {
    ========================================================= */
 const CATALOG = Object.values(SHIPS);
 const YARD = { fleet: CLASSIC.slice(), slot: 0, tab: 4, toast: '', toastT: 0, seen: new Set(), tabs: new Set() };
-const usable = id => !!SHIPS[id].ok;                      // session 2 : les conditions de déblocage
+// débloqué : sans condition, ou condition remplie dans le palmarès (amiral.palmares)
+const unlocked = (id, pm = store.get('palmares', {}) || {}) => !!SHIPS[id].ok && (!SHIPS[id].need || !!SHIPS[id].need(pm));
+const usable = id => unlocked(id);
 const fleetOk = f => Array.isArray(f) && f.length === 4 && f.every((id, i) => SHIPS[id] && SHIPS[id].len === SLOTS[i] && usable(id)) && new Set(f).size === 4;
-function openYard() { S.phase = 'yard'; YARD.slot = 0; YARD.tab = 4; YARD.tabs = new Set([4]); YARD.toast = ''; }
+function openYard() { endDaily(); S.phase = 'yard'; YARD.slot = 0; YARD.tab = 4; YARD.tabs = new Set([4]); YARD.toast = ''; }
 function leaveYard() {
   for (const d of CATALOG) if (YARD.tabs.has(d.len) && usable(d.id)) YARD.seen.add(d.id);
   store.set('vus', [...YARD.seen]); store.set('flotte', YARD.fleet);
@@ -1593,7 +1923,7 @@ function shipPic(id, x, y, sc, locked) {
 }
 function setTab(n) { YARD.tab = n; YARD.tabs.add(n); }
 function chooseShip(d) {
-  if (!usable(d.id)) { SFX.error(); YARD.toast = 'EN CONSTRUCTION : BIENTOT AU CHANTIER !'; YARD.toastT = now(); return; }
+  if (!usable(d.id)) { SFX.error(); YARD.toast = 'VERROUILLE : ' + d.cond; YARD.toastT = now(); return; }
   const i = SLOTS[YARD.slot] === d.len ? YARD.slot : SLOTS.indexOf(d.len), j = YARD.fleet.indexOf(d.id);
   YARD.seen.add(d.id);
   if (j === i) return;
@@ -1622,7 +1952,7 @@ function drawYard(t) {
     shipPic(d.id, 14, y + 10, d.len === 4 ? .6 : .75, lock);
     const tx = 92;
     text(g, d.name.toUpperCase(), tx, y + 5, lock ? '#8a93a6' : '#ffffff');
-    if (lock) { tiny(g, P2.name, tx, y + 18, '#8a93a6'); tiny(g, 'EN CONSTRUCTION', tx, y + 28, '#ff9a86'); }
+    if (lock) { tiny(g, `${P2.name}  -  ${P2.desc}`, tx, y + 18, '#8a93a6', 'left', LW - tx - 12); tiny(g, 'A DEBLOQUER : ' + d.cond, tx, y + 28, '#ff6a5a'); }
     else { tiny(g, `${P2.name}  -  RECHARGE ${P2.cd}`, tx, y + 18, '#ffd23f'); tiny(g, P2.desc, tx, y + 28, '#e6ecf8'); }
     if (inUse) tiny(g, 'EN SERVICE', LW - 14, y + 6, '#8ee05a', 'right');
     else if (!lock && !d.base && !YARD.seen.has(d.id)) { plate(g, LW - 62, y - 5, 50, 13, 'red'); tiny(g, 'NOUVEAU !', LW - 37, y - 1, '#ffffff', 'center'); }
@@ -1640,11 +1970,12 @@ function frame(ts) {
   BTN = [];
   g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
   // écrans de menus : dessinés pour 480 de haut, centrés dans la hauteur de l'écran
-  const centred = S.phase === 'title' || S.phase === 'yard';
+  const centred = S.phase === 'title' || S.phase === 'yard' || S.phase === 'daily';
   OY = centred ? Math.floor((LH - 480) / 2) : 0;
   if (centred) { bg(t); g.setTransform(K, 0, 0, K, 0, K * OY); }
   if (S.phase === 'title') drawTitle(t);
   else if (S.phase === 'yard') drawYard(t);
+  else if (S.phase === 'daily') drawDaily(t);
   else if (S.phase === 'over') drawOver(t);
   else drawPlay(t);
   OY = 0;
@@ -1683,10 +2014,29 @@ function onBoard(cell, mouse) {
   if (S.view === 'player') {
     // plongée et réparation : on choisit une case de sa propre flotte, puis FEU ! (ou la même case encore)
     if (!POWERS[w].own) return;
-    const T2 = w === 'plongee' ? diveTargets(S.player) : repairTargets(S.player);
-    if (!T2.some(([c, r]) => c === cell.c && r === cell.r)) { SFX.error(); return; }
-    if (mouse || same) { playerAct({ w, c: cell.c, r: cell.r, h: w === 'plongee' ? shipOf(S.player, 'plongee').h : true }); return; }
-    S.aim = S.armed = cell; SFX.click(); setMsg(w === 'plongee' ? 'Touchez FEU ! (ou encore le point vert) pour plonger.' : `Réparer ${cellName(cell.c, cell.r)} : touchez FEU ! (ou encore la case).`); return;
+    const me = S.player, { c, r } = cell;
+    if (w === 'mines') {
+      // jusqu'à 2 mines ; toucher une mine choisie la retire
+      const k = S.marks.findIndex(([x, y]) => x === c && y === r);
+      if (k >= 0) { S.marks.splice(k, 1); SFX.rotate(); }
+      else if (!freeWater(me, c, r)) { SFX.error(); setMsg("Une mine se pose sur de l'eau libre : pas sur un navire, ni sur une case déjà visée ou repérée par l'ennemi."); return; }
+      else { if (S.marks.length >= mineNeed()) S.marks.shift(); S.marks.push([c, r]); SFX.click(); }
+      const left = mineNeed() - S.marks.length;
+      setMsg(left > 0 ? `Mines : encore ${left} case${left > 1 ? 's' : ''} à choisir.` : 'Mines prêtes à larguer : touchez FEU !');
+      return;
+    }
+    if (w === 'leurre') {
+      // toucher une case : le leurre s'y pose (couché si possible) ; toucher encore : il pivote
+      if (same) { if (decoyFits(me, c, r, !S.dir)) { S.dir = !S.dir; SFX.rotate(); } else SFX.error(); return; }
+      const h = decoyFits(me, c, r, true) ? true : decoyFits(me, c, r, false) ? false : null;
+      if (h == null) { SFX.error(); setMsg("Le leurre a besoin de 2 cases d'eau libre, que l'ennemi n'a ni visées ni repérées."); return; }
+      S.aim = S.armed = cell; S.dir = h; SFX.click(); setMsg(`Leurre en ${cellName(c, r)} : touchez FEU ! (touchez encore la case pour le pivoter).`); return;
+    }
+    const T2 = ownTargets(me, w);
+    if (!T2.some(([x, y]) => x === c && y === r)) { SFX.error(); return; }
+    if (mouse || same) { playerAct({ w, c, r, h: w === 'plongee' ? shipOf(me, 'plongee').h : true }); return; }
+    S.aim = S.armed = cell; SFX.click();
+    setMsg(w === 'plongee' ? 'Touchez FEU ! (ou encore le point vert) pour plonger.' : w === 'fumee' ? `Fumée autour de ${cellName(c, r)} : touchez FEU ! (ou encore la case).` : `Réparer ${cellName(c, r)} : touchez FEU ! (ou encore la case).`); return;
   }
   if (w === 'missiles') {
     // jusqu'à 3 cibles ; toucher une cible la retire
@@ -1750,7 +2100,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) MUSIC
   YARD.seen = new Set(store.get('vus', []) || []);
 }
 // pour les tests (outils/fumee.js) et les réglages
-window.Amiral = { S, YARD, SHIPS, POWERS, newGame, startBattle, playerAct, aiChoose, act, simulate, openYard, blocked };
+window.Amiral = { S, YARD, SHIPS, POWERS, newGame, startBattle, playerAct, aiChoose, act, simulate, openYard, blocked, dailyOf, todayKey, unlocked, gameOver };
 buildAll();
 setTimeout(resize, 0); resize();
 Promise.all(['8px "Press Start 2P"', '700 10px Rajdhani'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : null)).then(() => requestAnimationFrame(frame));
