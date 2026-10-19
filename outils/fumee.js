@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'magasinier/index.html',
   'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -80,6 +80,20 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Odyssée : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-odyssee.png` });
+    }
+    if (url === 'magasinier/index.html') {
+      // Le Magasinier : un niveau avec de la glace gagné par sa solution, écran de fin ; annuler revient en arrière
+      const r = await p.evaluate(async () => {
+        const M = Magasinier, wait = ms => new Promise(r => setTimeout(r, ms));
+        M.charger(14); M.jouer('H'); if (M.etat().chemin !== 'H') return 'le docker ne bouge pas';
+        M.annuler(); if (M.etat().chemin !== '') return "ANNULER ne revient pas en arrière";
+        M.jouer(MAG_NIVEAUX[14].sol); await wait(200);
+        if (!M.etat().fini) return 'la solution ne gagne pas le niveau';
+        if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Le Magasinier : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-magasinier.png` });
     }
     if (url === 'amiral/index.html') {
       // Amiral ! : le chantier naval (flotte des nouveaux navires), un coup de chaque nouveau pouvoir, la riposte, puis des parties simulées

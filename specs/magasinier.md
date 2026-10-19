@@ -100,3 +100,15 @@ Coût estimé : 6 à 9 % de la semaine en tout (jeu moyen, mais en 3D avec 60 ni
 7. Bruitages **et une musique d'ambiance discrète**.
 
 Cahier des charges validé : prochaine étape la **session 1** (§ 12), opusplan, dans une nouvelle conversation.
+
+## 14. Bilan de la session 1 (19/10)
+Fait :
+- **`magasinier/regles.js`** : lecture des plans (`magLire` : intérieur, coins morts), coup (`magCoup` : poussée, glace, tapis déjà prêts pour la session 2, caisses lourdes qui ne glissent pas), victoire, solveur en largeur (`magResoudre`), étoiles (`magEtoiles`). Utilisable sous Node.
+- **24 niveaux** (`magasinier/niveaux.js`) : 12 au quai, 12 dans la chambre froide (dont le niveau de la maquette, FROID 3). Salles dessinées à la main (`outils/magasinier-salles.js`), marques, caisses et docker placés par `outils/magasinier-generateur.js` (sans glace : recherche à rebours exacte, le niveau le plus long pour ces marques ; avec glace : essais puis améliorations), rangés du plus simple au plus riche. Chaque niveau garde son optimum (`opt`) et une solution optimale (`sol`) ; `outils/magasinier-solveur.js` les vérifie (lancé par `verifications.js`, `--optimum` pour refaire la recherche complète). Optimums : quai 6 à 140 coups, chambre froide 9 à 76.
+- **`docker.js`** (sprites du docker repris de la maquette 5) et **`scene.js`** (scène de la maquette 4, généralisée à toutes les tailles de niveau : cadrage auto, murs bas devant une case, décor qui s'adapte, blocs de glace autour de la chambre froide ; animations à vitesse constante, tapis après le pas du docker, poussière, éclats, onde verte, confettis ; réglage « effets légers » : sans ombres ni passe finale).
+- **`jeu.js`** : titre (CONTINUER le niveau en cours, JOUER), choix des niveaux par entrepôt (déblocage : le suivant d'un niveau fini ; entrepôt suivant à 8 niveaux finis), jeu (geste, croix, clavier, deux gestes en réserve pendant une animation, ANNULER sans limite, RECOMMENCER), bulles d'aide aux niveaux 1, 2, 3 et 13, pause (croix oui/non, effets complets/légers, retour à la Ludothèque), fin de niveau (étoiles, record). Sauvegardes `magasinier.niveaux`, `magasinier.partie`, `magasinier.opts`. `window.Magasinier` pour les tests.
+- `sw.js` (fichiers, version `ludotheque-v40`), test de fumée de la CI.
+
+Pas encore : le jeu n'est **pas sur l'accueil** (session 3) ; on l'ouvre par `magasinier/index.html`. Pas d'artefact (session 3 : demander le lien ou en créer un).
+
+Reste pour la session 2 : dessin des tapis roulants et de la caisse lourde, les 36 niveaux de l'atelier, de la fonderie et du grand entrepôt (salles à dessiner dans `magasinier-salles.js` ; le générateur devra gérer tapis et caisses lourdes par essais et améliorations), bruitages et musique (`sons.js`, le crochet `MagSons.jouer(nom)` est déjà appelé : `pas`, `pousse`, `mur`, `marque`, `victoire`), tutoriel des nouveaux entrepôts, réglages du son.

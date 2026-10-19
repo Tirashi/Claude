@@ -91,6 +91,10 @@ catch (e) { bad('Lune-Rover : niveaux\n' + (e.stdout || '') + (e.stderr || ''));
 try { execFileSync(process.execPath, [path.join(__dirname, 'odyssee.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Odyssée : chaque plateau est faisable, sous le temps cible'); }
 catch (e) { bad('Odyssée : plateaux\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// 8 bis. Le Magasinier : chaque niveau est gagné par sa solution notée (l'optimum complet : magasinier-solveur.js --optimum)
+try { execFileSync(process.execPath, [path.join(__dirname, 'magasinier-solveur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Le Magasinier : chaque niveau est gagné par sa solution notée'); }
+catch (e) { bad('Le Magasinier : niveaux\n' + (e.stdout || '') + (e.stderr || '')); }
+
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
   const pre = new Map(), idx = read('accueil.js'), ls = read('ludo-scores.js');
