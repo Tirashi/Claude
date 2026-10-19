@@ -8,7 +8,7 @@
   const ecrire = (k, v) => { try { localStorage.setItem("magasinier." + k, JSON.stringify(v)); } catch (e) { /* stockage plein ou interdit */ } };
   let faits = lire("niveaux", {}), opts = Object.assign({ croix: true, effets: true }, lire("opts", {}));
 
-  const scene = MagScene.creer($("cv"), { fini: apresAnimation, son: nom => { if (window.MagSons) MagSons.jouer(nom); } });
+  const scene = MagScene.creer($("cv"), { fini: apresAnimation, son: nom => { if (window.MagSons) window.MagSons.jouer(nom); } });
   scene.effets(opts.effets);
 
   // ---------- état de la partie ----------
