@@ -17,7 +17,7 @@ Maquette de référence : **`maquettes/defense-orbitale-4.html`** (https://claud
 - **Toucher un poste vide** : menu de construction. **Toucher une flotte** : +1 vaisseau, spécialisation au niveau 3, ou revente. Pendant la vague aussi (sans pause).
 - **Pouvoirs** : trois boutons en bas à droite, avec leur recharge en camembert.
 - **Pause** : bouton en haut à gauche (reprendre, son, musique, abandonner, Ludothèque).
-- **Vitesse ×2** pendant les vagues (bouton à côté de la pause), le jeu étant volontairement lent. À confirmer (§ 16).
+- **Vitesse ×2** pendant les vagues (bouton à côté de la pause), le jeu étant volontairement lent.
 
 ## 3. Écran et échelle
 - Monde logique **420 × 200** (rapport 2,1, l'écran des téléphones en paysage), dessiné à la **résolution réelle** de l'écran (pas de pixel art), mis à l'échelle sans déformation ; bandes noires si le rapport diffère.
@@ -123,7 +123,8 @@ Reprendre `nebula/sons.js` (synthèse) : `canon` (canonnières, rail de l'amiral
 
 Coût estimé : 12 à 20 % de la semaine (gros chantier, § classement de `IDEES.md`).
 
-## 16. Points à confirmer avec l'utilisateur
+## 16. Points confirmés par l'utilisateur (19/10)
+Tous acceptés tels quels :
 - Le bouton **vitesse ×2** pendant les vagues (§ 2).
 - La **revente** à 50 % (§ 5) et la **réparation de la Terre** payante (§ 8).
 - Les deux nouvelles flottes de la recherche, **brouilleur** et **relais de bouclier**, et les **postes avancés** (§ 9).

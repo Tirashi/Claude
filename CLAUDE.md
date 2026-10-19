@@ -71,7 +71,7 @@ Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/su
 - **Escadrille !** : sessions 1 et 2 faites ; reprise des changements d'Amiral ! (lot 1 facile, lot 2 gros, après la session 2 d'Amiral !), rien de décidé. [`specs/escadrille.md`](specs/escadrille.md) § 9
 - **Le Thé des Jarls** : maquette 4 validée (style A, 45 soldats) ; prochaine étape session 2 (règles, ordinateur, duel), Opus. [`specs/the-des-jarls.md`](specs/the-des-jarls.md)
 - **Armada** : cahier des charges **à relire par l'utilisateur** (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)
-- **Défense orbitale** : maquette 4 validée (direction A, réaliste) ; cahier des charges écrit, **points à confirmer** (§ 16), puis session 1, Opus. [`specs/defense-orbitale.md`](specs/defense-orbitale.md)
+- **Défense orbitale** : maquette 4 validée (direction A, réaliste) ; cahier des charges écrit et validé (19/10) ; prochaine étape **session 1** (le combat), Opus. [`specs/defense-orbitale.md`](specs/defense-orbitale.md)
 - **La colonie** : moteur fait ; reste la nature, l'île du jour et l'intégration (pas encore sur l'accueil). [`specs/colonie.md`](specs/colonie.md)
 - **Nebula** : sessions 1 à 4 faites ; prochain chantier possible « l'Empire des étoiles ». [`specs/nebula.md`](specs/nebula.md)
 - **À essayer sur le téléphone** : Yams (geste, physique, affichage au repos), Odyssée, Escadrille !, Amiral !, Calculator, Lune-Rover (niveaux 22 à 30), marque du défi du jour sur l'accueil ; Orbite : niveaux 12, 23, 25, 28, 30 peut-être trop durs.
