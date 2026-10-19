@@ -1,0 +1,239 @@
+<title>Le Magasinier, tour 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
+<style>
+/* Deuxième tour de maquette du Magasinier : trois styles en 2D (la 3D n'apporte rien à un jeu sur grille, retour du 17/10).
+   Page sombre volontairement, comme les autres maquettes de la Ludothèque. */
+:root{ --fond:#14110e; --texte:#f4ede2; --doux:#b9ab98; --or:#f5c542; --cadre:#050403; color-scheme:dark;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif; }
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:68ch}
+header b{color:var(--texte);font-weight:600}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:36px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.tel{width:100%;max-width:300px;aspect-ratio:272/500;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 10px 30px #0008}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 6px;font-family:var(--f-titre);font-size:9px;letter-spacing:.04em}
+.ecran{flex:1;position:relative;min-height:0;touch-action:none}
+.ecran canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cmd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:6px 12px 14px;gap:8px}
+.pad{display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(3,38px);gap:3px}
+.pad button,.cmd>button{font:inherit;cursor:pointer;border:0;-webkit-tap-highlight-color:transparent}
+.pad button{font-size:16px;line-height:1}
+.pad button:focus-visible,.cmd>button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+.cmd>button{justify-self:center;font-family:var(--f-titre);font-size:8px;padding:9px 6px;line-height:1.5}
+.pad .v{visibility:hidden}
+.bravo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:var(--f-titre);font-size:14px;text-align:center;background:#0009}
+.bravo button{font-family:var(--f-titre);font-size:9px;padding:10px 12px;border:0;cursor:pointer}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;margin:0;color:var(--or);text-align:center}
+.dir p{margin:0;color:var(--doux);font-size:15px;max-width:34ch}
+.dir ul{margin:0;padding-left:18px;color:var(--doux);font-size:14px;max-width:34ch}
+.dir li b{color:var(--texte);font-weight:600}
+/* A : pixel art 3/4 façon RPG Super Nintendo */
+.A .tel{background:#1a1410}.A .hud{color:#ffe7a8;background:#3b2a1c;border-bottom:3px solid #0d0906}
+.A .pad button,.A .cmd>button{background:#e8d6a8;color:#3b2a1c;border:2px solid #0d0906;box-shadow:inset -2px -3px 0 #b49a64}
+.A .bravo{color:#ffe7a8}.A .bravo button{background:#ffe7a8;color:#3b2a1c;border:2px solid #0d0906}
+/* B : dessin animé plat */
+.B .tel{background:#ffd7a8}.B .hud{color:#2f4f56;font-family:var(--f-texte);font-size:15px;font-weight:600}
+.B .pad button,.B .cmd>button{background:#2f4f56;color:#fff6e6;border-radius:12px;box-shadow:0 4px 0 #1b3136}
+.B .cmd>button{font-family:var(--f-texte);font-size:13px;font-weight:600}
+.B .pad button:active,.B .cmd>button:active{transform:translateY(3px);box-shadow:0 1px 0 #1b3136}
+.B .bravo{color:#fff;font-family:var(--f-texte);font-size:28px;font-weight:600;background:#ff8a5c99}.B .bravo button{background:#fff6e6;color:#2f4f56;border-radius:12px;font-family:var(--f-texte);font-size:15px}
+/* C : Game Boy, quatre verts */
+.C .tel{background:#c9c8bd}.C .hud{color:#0f380f;background:#9bbc0f;margin:10px 10px 0;border:3px solid #4a4e5a;border-bottom:0;border-radius:6px 6px 0 0}
+.C .ecran{margin:0 10px;border:3px solid #4a4e5a;border-top:0;background:#9bbc0f}
+.C .pad button{background:#3a3d48;color:#c9c8bd;border-radius:6px}
+.C .cmd>button{background:#a3245a;color:#f1e6ec;border-radius:999px;box-shadow:0 3px 0 #5e1233}
+.C .bravo{color:#0f380f;background:#9bbc0fcc}.C .bravo button{background:#0f380f;color:#9bbc0f}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="page">
+<header>
+  <h1>LE MAGASINIER · TOUR 2</h1>
+  <p>Retour du 17/10 : la 3D et la 2D iso n'apportaient rien. Voici <b>trois styles en vraie 2D</b>, tous différents de la première maquette. Le jeu ne change pas : <b>pousser toutes les caisses sur les marques</b>, sans jamais tirer ; sur <b>la glace</b>, caisses et magasinier glissent jusqu'au premier obstacle.</p>
+  <p>Le même niveau dans les trois styles, jouable : glisser le doigt sur l'écran ou toucher les flèches (flèches du clavier sur ordinateur, après avoir touché un écran). ↶ annule un coup.</p>
+</header>
+<div class="grille">
+  <section class="dir A">
+    <div class="tel"><div class="hud"><span>ENTREPOT 3</span><span class="n">COUPS 0</span></div><div class="ecran"><canvas></canvas></div><div class="cmd"></div></div>
+    <h2>A · PIXEL ART 3/4<br>FACON RPG SNES</h2>
+    <p>Vue de dessus un peu penchée, comme Zelda ou Dragon Quest sur Super Nintendo : on voit le dessus et le devant des murs et des caisses, le magasinier dépasse de sa case. Gros pixels nets, contour noir.</p>
+    <ul><li><b>Pour</b> : chaleureux, va avec l'idée d'une DA du site façon Dragon Quest.</li><li><b>Contre</b> : les murs hauts cachent un peu la case du dessus.</li></ul>
+  </section>
+  <section class="dir B">
+    <div class="tel"><div class="hud"><span>Entrepôt 3</span><span class="n">0 coup</span></div><div class="ecran"><canvas></canvas></div><div class="cmd"></div></div>
+    <h2>B · DESSIN ANIME<br>TOUT PLAT</h2>
+    <p>Formes rondes, gros contours, couleurs vives. Les caisses s'écrasent un peu quand on les pousse, un petit nuage de poussière sort derrière, le magasinier regarde où il va.</p>
+    <ul><li><b>Pour</b> : le plus vivant et le plus lisible sur un petit écran.</li><li><b>Contre</b> : moins « 16 bits » que le reste de la Ludothèque.</li></ul>
+  </section>
+  <section class="dir C">
+    <div class="tel"><div class="hud"><span>NIV 3</span><span class="n">COUPS 0</span></div><div class="ecran"><canvas></canvas></div><div class="cmd"></div></div>
+    <h2>C · GAME BOY<br>QUATRE VERTS</h2>
+    <p>Comme sur la Game Boy de 1989 : quatre nuances de vert, écran à cristaux liquides avec sa grille de pixels, boutons de la console autour.</p>
+    <ul><li><b>Pour</b> : très typé, le moins cher à dessiner, parfait pour un Sokoban.</li><li><b>Contre</b> : peu de couleurs pour distinguer glace, tapis et caisses lourdes plus tard.</li></ul>
+  </section>
+</div>
+</div>
+
+<script>
+// Niveau : # mur, . marque, $ caisse, @ magasinier, ~ glace
+const PLAN=[
+"#######",
+"#  .  #",
+"# $ $ #",
+"#.~~~.#",
+"#  $  #",
+"#  @  #",
+"#######"];
+const W=PLAN[0].length,H=PLAN.length;
+// Magasinier 12x16 (casque jaune, gilet orange à bande, salopette bleue)
+const SPR=[
+"...YYYYYY...",
+"..YYWWYYYY..",
+".YYWYYYYYYY.",
+".kkkkkkkkkk.",
+"..SSSSSSSS..",
+"..SKSSSSKS..",
+"..SSSSSSSS..",
+"...SSmmSS...",
+"..OOOBBOOO..",
+".SOOOBBOOOS.",
+".SWWWBBWWWS.",
+"..OOOBBOOO..",
+"..BBBBBBBB..",
+"..BBB..BBB..",
+"..BBB..BBB..",
+".DDDD..DDDD."];
+const PAL_A={Y:"#f5c542",W:"#fff6c8",k:"#a8741c",S:"#f1b48a",K:"#2a1a12",m:"#c0604a",O:"#ff7a1a",B:"#3a5bd0",D:"#3b2a20",contour:"#0d0906"};
+const PAL_C={Y:"#8bac0f",W:"#9bbc0f",k:"#306230",S:"#9bbc0f",K:"#0f380f",m:"#306230",O:"#8bac0f",B:"#306230",D:"#0f380f",contour:"#0f380f"};
+function sprite(c,pal,x,y){x=Math.round(x);y=Math.round(y);c.fillStyle=pal.contour;
+  for(let j=0;j<SPR.length;j++)for(let i=0;i<12;i++)if(SPR[j][i]!=="."){c.fillRect(x+i-1,y+j,3,1);c.fillRect(x+i,y+j-1,1,3);}
+  for(let j=0;j<SPR.length;j++)for(let i=0;i<12;i++){const q=SPR[j][i];if(q!=="."){c.fillStyle=pal[q];c.fillRect(x+i,y+j,1,1);}}}
+function hash(x,y,n){let h=(x*374761393+y*668265263+n*2147483647)|0;h=(h^(h>>13))*1274126177;return ((h^(h>>16))>>>0)/4294967295;}
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+function Jeu(sec,mode){
+  const can=sec.querySelector("canvas"),ctx=can.getContext("2d"),ecran=sec.querySelector(".ecran"),nEl=sec.querySelector(".n");
+  let murs,glace,marques,caisses,p,coups,hist,fini,poussiere=[];
+  const k=(x,y)=>y*W+x;
+  function init(){murs=new Set;glace=new Set;marques=new Set;caisses=[];hist=[];coups=0;fini=false;poussiere=[];
+    PLAN.forEach((l,y)=>[...l].forEach((ch,x)=>{if(ch==="#")murs.add(k(x,y));if(ch===".")marques.add(k(x,y));if(ch==="~")glace.add(k(x,y));if(ch==="$")caisses.push({x,y,ax:x,ay:y,t:-9,dx:0,dy:0});if(ch==="@")p={x,y,ax:x,ay:y,dx:0,dy:1};}));
+    const b=sec.querySelector(".bravo");if(b)b.remove();hud();}
+  const caisseEn=(x,y)=>caisses.findIndex(c=>c.x===x&&c.y===y);
+  const libre=(x,y)=>!murs.has(k(x,y))&&caisseEn(x,y)<0&&!(p.x===x&&p.y===y);
+  function hud(){nEl.textContent=mode==="B"?coups+(coups>1?" coups":" coup"):"COUPS "+coups;}
+  function bouge(dx,dy){if(fini)return;p.dx=dx;p.dy=dy;const nx=p.x+dx,ny=p.y+dy;if(murs.has(k(nx,ny)))return;
+    const i=caisseEn(nx,ny);if(i>=0&&!libre(nx+dx,ny+dy))return;
+    hist.push({p:{x:p.x,y:p.y},c:caisses.map(c=>({x:c.x,y:c.y}))});
+    if(i>=0){const c=caisses[i];c.x+=dx;c.y+=dy;while(glace.has(k(c.x,c.y))&&libre(c.x+dx,c.y+dy)){c.x+=dx;c.y+=dy;}
+      c.t=performance.now()/1000;c.dx=dx;c.dy=dy;
+      for(let n=0;n<6;n++)poussiere.push({x:nx+.5-dx*.45+(Math.random()-.5)*.5*Math.abs(dy),y:ny+.5-dy*.45+(Math.random()-.5)*.5*Math.abs(dx),vx:-dx*(.6+Math.random())+(Math.random()-.5),vy:-dy*(.6+Math.random())+(Math.random()-.5),v:1});}
+    p.x=nx;p.y=ny;while(glace.has(k(p.x,p.y))&&libre(p.x+dx,p.y+dy)){p.x+=dx;p.y+=dy;}
+    coups++;hud();
+    if(caisses.every(c=>marques.has(k(c.x,c.y)))){fini=true;setTimeout(bravo,400);}}
+  function annule(){const h=hist.pop();if(!h)return;p.x=h.p.x;p.y=h.p.y;h.c.forEach((c,i)=>{caisses[i].x=c.x;caisses[i].y=c.y;});coups--;fini=false;const b=sec.querySelector(".bravo");if(b)b.remove();hud();}
+  function bravo(){const d=document.createElement("div");d.className="bravo";d.innerHTML=(mode==="B"?"Bravo !":"BRAVO !")+"<span style='font-size:.6em'>"+coups+(mode==="B"?" coups":" COUPS")+"</span><button>"+(mode==="B"?"Rejouer":"REJOUER")+"</button>";d.querySelector("button").onclick=init;ecran.appendChild(d);}
+  const cmd=sec.querySelector(".cmd"),B=mode==="B";
+  cmd.innerHTML=`<button class="an">${B?"↶ Annuler":"↶ ANNULER"}</button><div class="pad"><button class="v"></button><button data-d="0,-1">▲</button><button class="v"></button><button data-d="-1,0">◀</button><button class="v"></button><button data-d="1,0">▶</button><button class="v"></button><button data-d="0,1">▼</button><button class="v"></button></div><button class="re">${B?"⟲ Rejouer":"⟲ REJOUER"}</button>`;
+  cmd.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{actif=api;const [dx,dy]=b.dataset.d.split(",").map(Number);bouge(dx,dy);});
+  cmd.querySelector(".an").onclick=()=>{actif=api;annule();};cmd.querySelector(".re").onclick=()=>{actif=api;init();};
+  let dep=null;
+  ecran.addEventListener("pointerdown",e=>{actif=api;dep={x:e.clientX,y:e.clientY};});
+  ecran.addEventListener("pointerup",e=>{if(!dep)return;const sx=e.clientX-dep.x,sy=e.clientY-dep.y;dep=null;if(Math.hypot(sx,sy)<18)return;
+    if(Math.abs(sx)>Math.abs(sy))bouge(Math.sign(sx),0);else bouge(0,Math.sign(sy));});
+
+  // ---------- dessin ----------
+  const M=8,bas=document.createElement("canvas");bas.width=W*16;bas.height=H*16+(mode==="A"?M:0);const bc=bas.getContext("2d");
+  function cadre(){const r=can.getBoundingClientRect(),d=devicePixelRatio||1;const w=Math.round(r.width*d),h=Math.round(r.height*d);if(can.width!==w||can.height!==h){can.width=w;can.height=h;}return{w,h};}
+  function lisse(o,dt){const v=Math.min(1,dt*14);o.ax+=(o.x-o.ax)*v;o.ay+=(o.y-o.ay)*v;}
+  const enMvt=()=>Math.abs(p.x-p.ax)+Math.abs(p.y-p.ay)>.05;
+  function agrandit(w,h,fond,grilleLCD){ctx.fillStyle=fond;ctx.fillRect(0,0,w,h);ctx.imageSmoothingEnabled=false;
+    const s=Math.max(1,Math.floor(Math.min(w/bas.width,h/bas.height))),X=Math.round((w-bas.width*s)/2),Y=Math.round((h-bas.height*s)/2);
+    ctx.drawImage(bas,X,Y,bas.width*s,bas.height*s);
+    if(grilleLCD&&s>=3){ctx.fillStyle="#9bbc0f55";for(let i=0;i<=bas.width;i++)ctx.fillRect(X+i*s,Y,1,bas.height*s);for(let j=0;j<=bas.height;j++)ctx.fillRect(X,Y+j*s,bas.width*s,1);}}
+  let prec=performance.now();
+  function frame(now){const dt=Math.min(.05,(now-prec)/1000);prec=now;lisse(p,dt);caisses.forEach(c=>lisse(c,dt));
+    poussiere.forEach(q=>{q.x+=q.vx*dt;q.y+=q.vy*dt;q.vx*=.9;q.vy*=.9;q.v-=dt*2.2;});poussiere=poussiere.filter(q=>q.v>0);
+    const {w,h}=cadre();if(w&&h){ctx.setTransform(1,0,0,1,0,0);if(mode==="A")dessinA(w,h,now);else if(mode==="B")dessinB(w,h,now);else dessinC(w,h,now);}
+    requestAnimationFrame(frame);}
+
+  // A : pixel art 3/4, on voit le dessus et le devant des volumes
+  function dessinA(w,h,now){const c=bc;c.fillStyle="#1a1410";c.fillRect(0,0,bas.width,bas.height);
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const X=x*16,Y=y*16+M,q=k(x,y);if(murs.has(q))continue;
+      if(glace.has(q)){c.fillStyle="#9fd8f0";c.fillRect(X,Y,16,16);c.fillStyle="#7cbfe0";c.fillRect(X,Y+15,16,1);c.fillStyle="#effbff";c.fillRect(X+3,Y+11,1,1);c.fillRect(X+4,Y+10,1,1);c.fillRect(X+5,Y+9,1,1);c.fillRect(X+10,Y+5,1,1);c.fillRect(X+11,Y+4,1,1);}
+      else{c.fillStyle="#8a8274";c.fillRect(X,Y,16,16);c.fillStyle="#766e62";c.fillRect(X+15,Y,1,16);c.fillRect(X,Y+15,16,1);c.fillStyle="#9a9284";c.fillRect(X,Y,15,1);
+        c.fillStyle="#7a7266";if(hash(x,y,1)>.4)c.fillRect(X+2+Math.floor(hash(x,y,2)*10),Y+3+Math.floor(hash(x,y,3)*9),2,1);}
+      if(murs.has(k(x,y-1))){c.fillStyle="#0005";c.fillRect(X,Y,16,4);}
+      if(marques.has(q)){c.fillStyle="#f5c542";[[2,2],[11,2],[2,11],[11,11]].forEach(([a,b])=>{c.fillRect(X+a,Y+b,3,1);c.fillRect(X+a+(a>8?2:0),Y+b,1,3);c.fillRect(X+a,Y+b+(b>8?2:0),3,1);});c.fillRect(X+7,Y+7,2,2);}}
+    const objets=[];
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(murs.has(k(x,y)))objets.push({y,f:()=>{const X=x*16,Y=y*16+M,bas=!murs.has(k(x,y+1));
+      c.fillStyle="#b07a52";c.fillRect(X,Y-6,16,bas?14:22);c.fillStyle="#c99068";c.fillRect(X,Y-6,16,1);
+      c.fillStyle="#966444";c.fillRect(X+((x+y)%2?3:9),Y-2,4,1);
+      if(bas){c.fillStyle="#7a4632";c.fillRect(X,Y+8,16,8);c.fillStyle="#4a2a1e";c.fillRect(X,Y+8,16,1);c.fillRect(X,Y+12,16,1);c.fillRect(X+((x)%2?4:11),Y+8,1,4);c.fillRect(X+((x)%2?11:4),Y+12,1,4);c.fillStyle="#0d0906";c.fillRect(X,Y+15,16,1);}}});
+    caisses.forEach(o=>objets.push({y:o.ay+.01,f:()=>{const X=Math.round(o.ax*16),Y=Math.round(o.ay*16)+M,ok=marques.has(k(o.x,o.y))&&!enMvtC(o);
+      c.fillStyle="#0006";c.fillRect(X+2,Y+13,13,3);c.fillStyle="#0d0906";c.fillRect(X+1,Y-4,14,19);
+      c.fillStyle=ok?"#9ad86a":"#e0a85a";c.fillRect(X+2,Y-3,12,9);c.fillStyle=ok?"#bdf08e":"#f0c27c";c.fillRect(X+2,Y-3,12,1);
+      c.fillStyle=ok?"#6aa84a":"#b88040";c.fillRect(X+2,Y,12,1);c.fillRect(X+2,Y+3,12,1);
+      c.fillStyle=ok?"#4f9a3a":"#a8672e";c.fillRect(X+2,Y+6,12,8);c.fillStyle=ok?"#2f6a22":"#6e3e18";c.fillRect(X+2,Y+6,12,1);c.fillRect(X+3,Y+7,1,6);c.fillRect(X+12,Y+7,1,6);c.fillRect(X+4,Y+9,8,1);}}));
+    objets.push({y:p.ay+.02,f:()=>{const b=enMvt()&&Math.floor(now/90)%2?1:0;c.fillStyle="#0006";c.fillRect(Math.round(p.ax*16)+3,Math.round(p.ay*16)+M+13,10,3);sprite(c,PAL_A,p.ax*16+2,p.ay*16+M-3-b);}});
+    objets.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
+    agrandit(w,h,"#1a1410");}
+  const enMvtC=o=>Math.abs(o.x-o.ax)+Math.abs(o.y-o.ay)>.05;
+
+  // B : dessin animé plat, vectoriel à la résolution de l'écran
+  function dessinB(w,h,now){const c=ctx,d=devicePixelRatio||1,t=now/1000;
+    c.fillStyle="#ffd7a8";c.fillRect(0,0,w,h);
+    const T=Math.floor(Math.min(w/(W+.3),h/(H+.3))),ox=(w-W*T)/2,oy=(h-H*T)/2,L=Math.max(2,T*.07);
+    const P=(x,y)=>[ox+x*T,oy+y*T];
+    // ombre portée de tout le plateau
+    c.fillStyle="#e8a874";for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(murs.has(k(x,y))){const [X,Y]=P(x,y);rrect(c,X+2,Y+T*.12,T-4,T-4,T*.22);c.fill();}
+    for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const q=k(x,y);if(murs.has(q))continue;const [X,Y]=P(x,y);
+      c.fillStyle=glace.has(q)?"#bfe9ff":((x+y)%2?"#fff3df":"#ffe9c6");c.fillRect(X,Y,T,T);
+      if(glace.has(q)){c.strokeStyle="#ffffffcc";c.lineWidth=L;c.lineCap="round";c.beginPath();c.moveTo(X+T*.2,Y+T*.7);c.lineTo(X+T*.45,Y+T*.45);c.moveTo(X+T*.55,Y+T*.35);c.lineTo(X+T*.68,Y+T*.22);c.stroke();}
+      if(marques.has(q)){c.strokeStyle="#ff6b5c";c.lineWidth=L;c.setLineDash([T*.12,T*.09]);c.lineDashOffset=-t*T*.3;c.beginPath();c.arc(X+T/2,Y+T/2,T*.3,0,7);c.stroke();c.setLineDash([]);}}
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(murs.has(k(x,y))){const [X,Y]=P(x,y);
+      c.fillStyle="#2f4f56";rrect(c,X+2,Y+2,T-4,T-4,T*.22);c.fill();c.fillStyle="#477178";rrect(c,X+2+T*.08,Y+2+T*.06,T-4-T*.16,T*.32,T*.14);c.fill();}
+    // poussière
+    poussiere.forEach(q=>{c.fillStyle="rgba(255,255,255,"+(q.v*.9)+")";c.beginPath();c.arc(ox+q.x*T,oy+q.y*T,T*(.08+.1*(1-q.v)),0,7);c.fill();});
+    caisses.forEach(o=>{const [X,Y]=P(o.ax,o.ay),ok=marques.has(k(o.x,o.y))&&!enMvtC(o),e=Math.max(0,1-(t-o.t)/.35),f=Math.sin(e*Math.PI)*.18*e+(e>0?.0:0);
+      const sx=1-f*Math.abs(o.dx)+f*.6*Math.abs(o.dy),sy=1-f*Math.abs(o.dy)+f*.6*Math.abs(o.dx);
+      c.save();c.translate(X+T/2,Y+T/2);c.scale(sx,sy);const r=T*.42;
+      c.fillStyle="#0002";rrect(c,-r,-r+T*.08,2*r,2*r,T*.16);c.fill();
+      c.fillStyle=ok?"#5ccf8a":"#ff9f43";c.strokeStyle=ok?"#1e6b40":"#7a3e10";c.lineWidth=L;rrect(c,-r,-r,2*r,2*r,T*.16);c.fill();c.stroke();
+      c.strokeStyle=ok?"#b8f5cf":"#ffd29a";c.lineWidth=L*1.6;c.beginPath();c.moveTo(-r*.55,-r*.55);c.lineTo(r*.55,r*.55);c.moveTo(r*.55,-r*.55);c.lineTo(-r*.55,r*.55);c.stroke();
+      if(ok){c.fillStyle="#fff";c.beginPath();c.arc(r*.62,-r*.62,T*.13,0,7);c.fill();c.strokeStyle="#1e6b40";c.lineWidth=L*.8;c.beginPath();c.moveTo(r*.54,-r*.62);c.lineTo(r*.61,-r*.55);c.lineTo(r*.72,-r*.7);c.stroke();}
+      c.restore();});
+    // magasinier
+    const [X,Y]=P(p.ax,p.ay),saut=enMvt()?Math.abs(Math.sin(t*18))*T*.08:Math.sin(t*3)*T*.015,cx=X+T/2,cy=Y+T*.55-saut,r=T*.3;
+    c.fillStyle="#0002";c.beginPath();c.ellipse(X+T/2,Y+T*.86,T*.26,T*.08,0,0,7);c.fill();
+    c.lineWidth=L;c.strokeStyle="#1b3136";
+    c.fillStyle="#4b7bec";c.beginPath();c.arc(cx,cy,r,0,7);c.fill();c.stroke();
+    c.fillStyle="#ffcfa0";c.beginPath();c.arc(cx,cy-r*.15,r*.72,0,7);c.fill();c.stroke();
+    c.fillStyle="#ffd43b";c.beginPath();c.arc(cx,cy-r*.35,r*.8,Math.PI,0);c.closePath();c.fill();c.stroke();
+    c.fillRect(cx-r*.95,cy-r*.4,r*1.9,r*.14);c.strokeRect(cx-r*.95,cy-r*.4,r*1.9,r*.14);
+    const ex=p.dx*r*.18,ey=p.dy*r*.12;
+    [-1,1].forEach(s=>{c.fillStyle="#fff";c.beginPath();c.ellipse(cx+s*r*.28+ex*.5,cy+r*.02+ey*.5,r*.17,r*.2,0,0,7);c.fill();c.fillStyle="#1b3136";c.beginPath();c.arc(cx+s*r*.28+ex,cy+r*.04+ey,r*.09,0,7);c.fill();});
+    c.fillStyle="#ff8a7a";c.beginPath();c.arc(cx,cy+r*.36,r*.08,0,7);c.fill();}
+
+  // C : Game Boy, quatre verts, grille de cristaux liquides
+  function dessinC(w,h,now){const c=bc,V=["#0f380f","#306230","#8bac0f","#9bbc0f"];c.fillStyle=V[3];c.fillRect(0,0,bas.width,bas.height);
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const X=x*16,Y=y*16,q=k(x,y);
+      if(murs.has(q)){c.fillStyle=V[1];c.fillRect(X,Y,16,16);c.fillStyle=V[0];for(let r=0;r<4;r++){c.fillRect(X,Y+r*4+3,16,1);c.fillRect(X+(r%2?4:12),Y+r*4,1,3);}c.fillStyle=V[2];c.fillRect(X,Y,16,1);continue;}
+      if(glace.has(q)){c.fillStyle=V[2];c.fillRect(X,Y,16,16);c.fillStyle=V[3];for(let i=0;i<4;i++){c.fillRect(X+3+i,Y+11-i,1,1);c.fillRect(X+9+i,Y+6-i,1,1);}}
+      else{c.fillStyle=V[2];if((x+y)%2)c.fillRect(X+4,Y+4,1,1);else c.fillRect(X+11,Y+11,1,1);}
+      if(marques.has(q)){c.fillStyle=V[0];for(let i=0;i<12;i+=2){c.fillRect(X+2+i,Y+2,1,1);c.fillRect(X+2+i,Y+13,1,1);c.fillRect(X+2,Y+2+i,1,1);c.fillRect(X+13,Y+2+i,1,1);}c.fillRect(X+7,Y+7,2,2);}}
+    caisses.forEach(o=>{const X=Math.round(o.ax*16),Y=Math.round(o.ay*16),ok=marques.has(k(o.x,o.y))&&!enMvtC(o);
+      c.fillStyle=V[0];c.fillRect(X+1,Y+1,14,14);c.fillStyle=ok?V[1]:V[2];c.fillRect(X+2,Y+2,12,12);
+      c.fillStyle=ok?V[3]:V[1];c.fillRect(X+2,Y+7,12,2);c.fillRect(X+7,Y+2,2,12);if(!ok){c.fillStyle=V[3];c.fillRect(X+2,Y+2,12,1);}});
+    const b=enMvt()&&Math.floor(now/120)%2?1:0;sprite(c,PAL_C,p.ax*16+2,p.ay*16-b);
+    agrandit(w,h,V[3],true);}
+
+  const api={bouge,annule};init();requestAnimationFrame(frame);return api;
+}
+let actif=null;
+const jeux=["A","B","C"].map(m=>Jeu(document.querySelector(".dir."+m),m));actif=jeux[0];
+addEventListener("keydown",e=>{const d={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key];if(d&&actif){e.preventDefault();actif.bouge(d[0],d[1]);}if(e.key==="z"&&actif)actif.annule();});
+</script>
