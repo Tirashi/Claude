@@ -177,5 +177,16 @@ Maquette validée le 19/10 (`maquettes/escadrille-avions.html`) : les 6 nouveaux
 - **Dessins** (`escadrille/avions.js`) : 6 avions × 4 familles (furtif à facettes, hélices et poutres, canonnière blindée).
 - **Accueil** : description, nouveauté, records « Avions x/10 », palmarès dans le transfert `LUDO1-`.
 - **Tests** : `outils/fumee.js` (onglet AVIONS, chaque nouveau pouvoir, 6 parties simulées).
-- **Pas fait** : le lot 1 (hauteur qui suit l'écran, polices, missile en deux gestes) ; l'artefact (l'ancienne version, 190 Ko,
+- **Pas fait** : l'artefact (l'ancienne version, 190 Ko,
   doit être relue avant d'être remplacée).
+
+## 11. Bilan du lot 1 (19/10, après le lot 2)
+Repris d'Amiral ! (§ 9, lot 1) :
+- **Hauteur qui suit l'écran** (480 à 620, `LH`, `layout()` : `BY_BAR`, `BAR_H`, miniature, panneau ennemi, `MSG_Y` ; la boîte
+  des messages prend toute la place qui reste) ; titre et hangar dessinés pour 480 et centrés (`OY` ; `MENU_OY` décale les touchers).
+- **Polices** : Press Start 2P pour les logos, Rajdhani 700 pour tout le reste (`polices/nebula.css`, lien Google pour l'artefact) ;
+  la petite police au pixel 3 × 5 est retirée ; `tiny(…, maxW)` resserre un texte trop large.
+- **Pouvoirs en ligne en deux gestes** (missile, caméra) : toucher une case, puis la flèche à gauche de sa ligne ou au-dessus
+  de sa colonne ; les boutons LIGNE / COLONNE sont retirés.
+- **FEU !** : dès que la cible est choisie, la plaque du pouvoir devient FEU ! (radar, bombes, détection, esquive, réparation,
+  et déjà roquettes, ballons, leurres) ; toucher encore la case marche toujours.
