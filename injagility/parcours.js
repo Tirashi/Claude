@@ -82,8 +82,8 @@ function levelPlan(n){
   const fresh = n === 2 ? "pneu" : n === 3 ? "tunnel" : n === 4 ? "slalom" : n === 5 ? "passerelle" : null;
   return {count: Math.min(3 + Math.floor((n - 1) / 2), 9), types, fresh};
 }
-function generate(n){
-  const rng = mulberry32(n * 7919 + 17), plan = levelPlan(n);
+function generate(n, salt = 0){
+  const rng = mulberry32(n * 7919 + 17 + salt * 104729), plan = levelPlan(n);
   for (let attempt = 0; attempt < 300; attempt++){
     const want = attempt < 200 ? plan.count : plan.count - 1 - Math.floor((attempt - 200) / 50);   // plan B : un obstacle de moins
     const path = walk(rng); if (!path) continue;
@@ -128,7 +128,8 @@ function generate(n){
     if (n >= 2 && plain.length) puddles.add(plain[Math.floor(rng() * plain.length)]);   // une flaque sur le chemin prévu : à éviter… ou pas
     return {n, objs, cell, bushes, bones, puddles, solution: path};
   }
-  return null;
+  // aucun parcours trouvé avec cette graine (parcours 34 et 127) : on essaie la suivante
+  return salt < 5 ? generate(n, salt + 1) : null;
 }
 
 /* ---------- état d'une partie ---------- */

@@ -2,6 +2,9 @@
    déboguer : la CI le fait à chaque push) :
    - grilles du jour des 60 prochains jours : Sudoku et Queens (une seule solution, générées vite),
      Pont stellaire (une seule solution), Calculator (20 calculs justes, les mêmes pour tous) ;
+   - Lignée : arbres du jour (classique et royal) avec une seule solution ;
+   - Alunissage : chaque site de la mission du jour a ses 3 aires et un vent plus faible que les réacteurs ;
+   - Injagility Parcours : les 200 premiers parcours se génèrent et leur chemin prévu est praticable ;
    - Picross Dex : chaque dessin se résout ligne par ligne, sans deviner (donc une seule solution) ;
    - Yams : points de chaque case pour des mains connues, bonus de 35 ;
    - accueil : transfert de sauvegarde LUDO1- (exporter, vider, importer : tout revient).
@@ -55,6 +58,38 @@ const TESTS = {
     }
     return out;
   }, D),
+  'lignee/index.html': async (p, D) => p.evaluate(D => {
+    const out = [];
+    for (const { k } of D) for (const md of 'CR') {
+      const code = `${md}2-J${k.toString(36).toUpperCase()}`, g = Engine.generate(Engine.hashStr(code), 2);
+      if (!g) out.push(`arbre ${code} : pas d'arbre`);
+      else if (Engine.countSolutions(g.P, g.rel, g.clues, g.sexKnown) !== 1) out.push(`arbre ${code} : plusieurs solutions`);
+    }
+    return out;
+  }, D),
+  'alunissage/index.html': async (p, D) => p.evaluate(D => {
+    const out = [];
+    for (const { k } of D) for (let n = 0; n < 20; n++) {
+      const s = Alunissage.makeSite(k, n);
+      if (s.pads.length !== 3) out.push(`mission du ${k}, site ${n + 1} : ${s.pads.length} aires`);
+      if (s.pads.some(q => q.x1 - q.x0 < 16)) out.push(`mission du ${k}, site ${n + 1} : aire trop étroite`);
+      if (Math.abs(s.wind) >= SIDE * .9 || s.g >= THRUST * 1.5) out.push(`mission du ${k}, site ${n + 1} : vent ${s.wind}, gravité ${s.g}`);
+      if (JSON.stringify(s) !== JSON.stringify(Alunissage.makeSite(k, n))) out.push(`mission du ${k} : pas la même à chaque fois`);
+    }
+    return out;
+  }, D),
+  'injagility/parcours.html#test': async p => p.evaluate(() => {
+    const out = [], W = 8;
+    for (let n = 1; n <= 200; n++) {
+      const g = window.__parcours.gen(n); if (!g) { out.push(`parcours ${n} : pas de parcours`); continue; }
+      const sol = g.solution;
+      if (g.objs.length < 3) out.push(`parcours ${n} : ${g.objs.length} obstacles`);
+      sol.forEach((c, i) => { if (i && Math.abs(c % W - sol[i - 1] % W) + Math.abs(Math.floor(c / W) - Math.floor(sol[i - 1] / W)) !== 1) out.push(`parcours ${n} : chemin coupé en ${i}`); });
+      if (sol.some(c => g.bushes.has(c) || g.bones.has(c))) out.push(`parcours ${n} : buisson ou os sur le chemin`);
+      if (g.objs.some(o => o.cells.some(c => !sol.includes(c)))) out.push(`parcours ${n} : obstacle hors du chemin`);
+    }
+    return out;
+  }),
   'picross/index.html': async p => p.evaluate(() => {
     const { PUZZLES, filled, clueOf } = window.Picross, out = [];
     // une ligne : -1 inconnu, 0 vide, 1 plein ; renvoie ce que les indices imposent (null si impossible)

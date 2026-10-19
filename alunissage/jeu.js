@@ -38,14 +38,20 @@ function makeSite(seed, n) {
   for (let i = 0; i <= N; i++) { y = clamp(y + (R() - .5) * 46 * rough, GROUND_TOP + 10, GROUND_BOT - 8); pts.push([i * LW / N, y]); }
   // aires d'atterrissage : plus elles sont étroites, plus elles rapportent
   const pads = [], specs = [[5, 3 + (lvl > 6 ? 0 : 1)], [3, 5], [2, 7 - Math.min(2, lvl >> 2)]];
-  for (const [mul, segs] of specs) {
-    for (let tries = 0; tries < 40; tries++) {
-      const i0 = 1 + Math.floor(R() * (N - segs - 2));
-      if (pads.some(p => i0 < p.i1 + 2 && i0 + segs > p.i0 - 2)) continue;
-      const py = Math.round(clamp(pts[i0][1], GROUND_TOP + 20, GROUND_BOT - 12));
-      for (let k = i0; k <= i0 + segs; k++) pts[k][1] = py;
-      pads.push({ i0, i1: i0 + segs, x0: pts[i0][0], x1: pts[i0 + segs][0], y: py, mul }); break;
+  const free = (i0, segs) => !pads.some(p => i0 < p.i1 + 2 && i0 + segs > p.i0 - 2);
+  for (let [mul, segs] of specs) {
+    let i0 = -1;
+    for (let tries = 0; tries < 40 && i0 < 0; tries++) { const k = 1 + Math.floor(R() * (N - segs - 2)); if (free(k, segs)) i0 = k; }
+    // le hasard n'a pas trouvé de place (1 site sur 40) : la première place libre, pour avoir toujours 3 aires,
+    // et s'il n'y a plus assez de place, une aire un peu plus courte
+    while (i0 < 0 && segs >= 2) {
+      for (let k = 1; i0 < 0 && k <= N - segs - 2; k++) if (free(k, segs)) i0 = k;
+      if (i0 < 0) segs--;
     }
+    if (i0 < 0) continue;
+    const py = Math.round(clamp(pts[i0][1], GROUND_TOP + 20, GROUND_BOT - 12));
+    for (let k = i0; k <= i0 + segs; k++) pts[k][1] = py;
+    pads.push({ i0, i1: i0 + segs, x0: pts[i0][0], x1: pts[i0 + segs][0], y: py, mul });
   }
   const windDir = R() < .5 ? -1 : 1;
   return { world: w, pts, pads, g: w.g * (1 + lvl * .03), wind: w.wind * windDir * (1 + lvl * .05), x0: 40 + R() * 192, vx0: (R() - .5) * 30, n };

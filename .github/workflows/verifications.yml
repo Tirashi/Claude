@@ -22,17 +22,20 @@ jobs:
       - run: npm install -g typescript@5.8.3
       - run: node outils/verifications.js
   navigateur:
-    name: Chaque jeu s'ouvre sans erreur, logique des jeux (Chromium)
+    name: Chaque jeu s'ouvre sans erreur, analyse du code, logique des jeux (Chromium)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-save --no-package-lock playwright@1.56.1 && npx playwright install --with-deps chromium
+      - run: npm install --no-save --no-package-lock playwright@1.56.1 eslint@10.1.0 && npx playwright install --with-deps chromium
       - run: python3 -m http.server 8765 >/dev/null 2>&1 & sleep 1
       - name: Chaque jeu s'ouvre (fumee.js)
         run: mkdir -p captures && node outils/fumee.js captures
+      - name: Analyse du code (lint.js, ESLint)
+        if: success() || failure()
+        run: node outils/lint.js
       - name: Logique des jeux (logique.js)
         if: success() || failure()
         run: node outils/logique.js ${{ github.event_name == 'schedule' && '365' || '60' }}

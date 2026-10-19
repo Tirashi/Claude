@@ -152,6 +152,7 @@ let S = {tour: 0, lancers: 0, feuille: {}, vals: [1, 2, 3, 4, 5], garde: [false,
 
 function vider(o){ o.traverse(m => { if (m.geometry) m.geometry.dispose(); if (m.material) [].concat(m.material).forEach(x => { if (x.map) x.map.dispose(); x.dispose(); }); }); }
 function construire(cle){
+  bouge();
   if (scene) vider(scene);
   cleStyle = cle; st = STYLES[cle];
   const r = document.documentElement.style, noms = ['--fond', '--carte', '--texte', '--doux', '--bouton', '--bt', '--ombre', '--accent', '--ligne', '--rayon'];
@@ -194,6 +195,7 @@ function poser(d, x, z, val){
   d.corps.position.copy(d.m.position); d.corps.quaternion.copy(d.m.quaternion); d.corps.velocity.set(0, 0, 0); d.corps.angularVelocity.set(0, 0, 0);
 }
 function placerDes(){ // remet les dés d'après S (valeurs, dés gardés)
+  bouge();
   let g = 0, l = 0;
   des.forEach((d, i) => { enleve(d.corps); d.cible = null; d.m.visible = true;
     if (S.garde[i]){ poser(d, -2.4 + g * 1.2, ZG, S.vals[i]); d.m.position.y = .6; g++; }
@@ -203,6 +205,7 @@ const valeur = d => { let best = -2, v = 1; AXES.forEach((a, i) => { const y = n
 const penche = d => Math.max(...AXES.map(a => new THREE.Vector3(...a).applyQuaternion(d.m.quaternion).y)) < .95;
 
 function taille(){
+  bouge();
   const r = jeu.getBoundingClientRect(); if (!r.width) return;
   rendu.setSize(r.width, r.height, false); cam.aspect = r.width / r.height; cam.fov = 40;
   // recule la caméra pour que la piste (7 de large) tienne dans la largeur, avec la place du haut et du bas
@@ -239,6 +242,7 @@ function lance(force, dx){
   maj();
 }
 function arrete(){ // les dés sont immobiles : on lit les faces
+  bouge();
   etat = 'pret'; S.vals = des.map(valeur); sauver();
   const c = combinaison(S.vals); $('combi').textContent = c; $('combi').classList.add('pop'); setTimeout(() => $('combi').classList.remove('pop'), 220);
   if (c === 'Yams !') notes([523, 659, 784, 1047]);
@@ -353,9 +357,18 @@ cv.addEventListener('pointerup', e => {
 cv.addEventListener('pointercancel', () => { dep = null; if (etat === 'secoue'){ etat = 'verse'; verse = performance.now(); } });
 
 // ---------- boucle ----------
-let prec = performance.now();
+// au repos (dés posés, feuille ouverte…), on ne redessine pas : la batterie dure plus longtemps.
+// Un toucher, un changement d'écran ou de taille réveille l'affichage un moment ; la lumière animée
+// d'un style (bougie, néons) se contente alors de 20 images par seconde.
+let prec = performance.now(), reveil = 0, dernier = 0;
+const bouge = (ms = 800) => { reveil = Math.max(reveil, performance.now() + ms); };
+['pointerdown', 'pointerup', 'click', 'keydown'].forEach(t => addEventListener(t, () => bouge(), true));
 function frame(now){
-  const dt = Math.min(.05, (now - prec) / 1000); prec = now; if (anime) anime(now / 1000);
+  const dt = Math.min(.05, (now - prec) / 1000); prec = now;
+  const actif = etat === 'secoue' || etat === 'verse' || etat === 'roule' || now < reveil
+    || des.some(d => d.cible && d.m.position.distanceToSquared(d.cible) > 1e-6);
+  if (!actif && !(anime && now - dernier > 50)){ requestAnimationFrame(frame); return; }
+  dernier = now; if (anime) anime(now / 1000);
   if (etat === 'secoue'){ const k = (now - secoue) / 1000; gob.position.set(Math.sin(k * 38) * .25, 1.6 + Math.abs(Math.sin(k * 30)) * .2, 1.2 + Math.cos(k * 31) * .15); gob.rotation.z = Math.sin(k * 40) * .12;
     if (now - rattle > 90){ rattle = now; clic(.2 + Math.random() * .2); } }
   if (etat === 'verse'){ const k = Math.min(1, (now - verse) / 220); gob.rotation.x = -k * 1.9; gob.position.set(0, 1.6 + k * .5, 1.2 - k * .4);
