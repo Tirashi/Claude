@@ -68,7 +68,7 @@ Queens (`queens/`), Picross Dex (`picross/`), Lignée (`lignee/`), Injagility (`
 Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/suivi.md) (à tenir à jour avec la ligne d'ici).
 - **Revue du code** (19/10) : faite, [`specs/revue-code.md`](specs/revue-code.md). Reste : moteur commun Amiral ! / Escadrille ! à faire avec le lot 2 d'Escadrille.
 - **Amiral !** : sessions 1 et 2 faites (mines, fumée, leurre, déblocages, bataille du jour) ; à essayer sur le téléphone. [`specs/amiral.md`](specs/amiral.md)
-- **Escadrille !** : sessions 1 et 2 faites ; reprise des changements d'Amiral ! (lot 1 facile, lot 2 gros, maintenant possible), rien de décidé. [`specs/escadrille.md`](specs/escadrille.md) § 9
+- **Escadrille !** : sessions 1, 2 et **lot 2 faits** (19/10 : 10 avions au hangar, 6 à débloquer, 4 familles) ; à essayer sur le téléphone ; **lot 1 fait** (19/10 : hauteur, polices, flèches, FEU !) ; artefact pas republié (190 Ko à relire). [`specs/escadrille.md`](specs/escadrille.md) § 10
 - **Le Thé des Jarls** : maquette 4 validée (style A, 45 soldats) ; prochaine étape session 2 (règles, ordinateur, duel), Opus. [`specs/the-des-jarls.md`](specs/the-des-jarls.md)
 - **Le Magasinier** : maquette validée (19/10) : HD-2D façon Octopath, entrepôt au soleil + le docker (`maquettes/magasinier-5.html`) ; prochaine étape cahier des charges puis jeu, opusplan.
 - **Armada** : cahier des charges **à relire par l'utilisateur** (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)

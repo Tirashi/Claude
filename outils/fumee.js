@@ -134,9 +134,24 @@ const shots = process.argv[2];
         cv.dispatchEvent(new PointerEvent('pointerdown', { clientX: b.left + (BX + 4.5 * CS) / LW * b.width, clientY: b.top + (BY + 4.5 * CS) / LH * b.height, bubbles: true, pointerType: 'touch' }));
         await wait(1000); if (!S.enemy.shots[4][4]) return 'le toucher ne largue pas de bombe en E5';
         for (let k = 0; k < 40 && !(S.turn === 'player' && !S.busy); k++) await wait(200);
-        if (S.turn !== 'player' || !S.player.shots.flat().some(v => v) && !S.player.intel.flat().some(v => v) && !S.enemy.cd.esquive) return "l'ordinateur ne riposte pas";
+        if (S.turn !== 'player' || !S.player.shots.flat().some(v => v) && !S.player.intel.flat().some(v => v) && !Object.values(S.enemy.cd).some(v => v > 0)) return "l'ordinateur ne riposte pas";
         if (S.stats.turns !== 1) return 'compte des tours faux';
-        S.phase = 'hangar'; await wait(300); if (!BTN.some(b => b.w === 124)) return 'le hangar ne montre pas les escadrilles';
+        S.phase = 'hangar'; S.tab = 'familles'; await wait(300); if (!BTN.some(b => b.w === 124)) return 'le hangar ne montre pas les escadrilles';
+        S.tab = 'avions'; await wait(300); if (BTN.filter(b => b.w === 61).length !== 4) return "l'onglet AVIONS ne montre pas les 4 places";
+        // lot 2 : les nouveaux pouvoirs (roquettes, réparation, détection, caméra, ballons et DCA, leurres)
+        S.fast = true; S.player = makeBoard(['ravito', 'patrouille', 'ballons', 'drone']); S.enemy = makeBoard(['attaque', 'brouilleur', 'jet', 'heli']); randomFleet(S.player); randomFleet(S.enemy);
+        const cells = cellsOf(S.player.planes[0]).slice(0, 4);
+        let r = await act('ai', { w: 'roquettes', c: 0, r: 0, cells }); if (r.hits.length !== 4) return 'roquettes : 4 touchés attendus';
+        await act('player', { w: 'reparation', c: cells[0][0], r: cells[0][1] }); if (S.player.planes[0].hits) return "réparation : l'avion n'est pas remis à neuf";
+        r = await act('player', { w: 'detection', c: 3, r: 5 }); if (!r.counts || r.counts.length !== 2) return 'détection : ligne et colonne attendues';
+        const free = flakTargets(S.player).slice(0, 2); await act('player', { w: 'flak', c: 0, r: 0, cells: free });
+        const hits0 = S.enemy.planes.reduce((a, q) => a + q.hits, 0); r = await act('ai', { w: 'tir', c: free[0][0], r: free[0][1] }); await ripostes('ai', r);
+        if (S.enemy.planes.reduce((a, q) => a + q.hits, 0) !== hits0 + 2) return 'ballon crevé : la DCA doit toucher 2 fois';
+        S.player.planes[1].def = PLANES.brouilleur; S.player.cd.leurres = 0; await act('player', { w: 'leurres', c: 0, r: 0 });
+        r = await act('ai', { w: 'tir', c: 0, r: 0 }); if (!r.deflected) return 'leurres : le coup ennemi doit être détourné';
+        S.fast = false;
+        for (const [a, b] of [[['attaque', 'patrouille', 'ballons', 'drone'], ['ravito', 'brouilleur', 'jet', 'heli']], [['ravito', 'brouilleur', 'ballons', 'drone'], ['bomb', 'radar', 'jet', 'heli']]])
+          for (const d of ['easy', 'normal', 'hard']) { const g = await simulate(a, b, d); if (!g.winner) return `partie simulée sans vainqueur (${d})`; }
         return 'ok';
       });
       if (r !== 'ok') errs.push('Escadrille ! : ' + r);

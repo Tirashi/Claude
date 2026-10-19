@@ -118,6 +118,16 @@ Reprise presque mot pour mot d'Amiral ! (même structure de fichier) :
    sur un seul écran (onglets FAMILLES / AVIONS) pour que l'enfant s'y retrouve.
 6. **Pas de bataille du jour** : décision du 17/10 (« pas de ciel du jour ») ; à reconfirmer si on veut des flottes imposées.
 
+### Lot 2 lancé (19/10) : maquette, en attente de validation
+Maquette `maquettes/escadrille-avions.html` (https://claude.ai/artifact/JCF7jhxKLJdxVa8AtpBbdn) : planche des 10 avions
+(4 de départ, 6 nouveaux dessinés dans la famille A, en joueur et en pirate) et deux directions pour les choisir
+(1 : hangar à onglets FAMILLES / AVIONS ; 2 : flèches ◀ ▶ sur la rangée de l'écran de placement).
+Places : gros 8, moyen 5, moyen 4, petit 2 (19 cases, comme aujourd'hui). Formes proposées (nez en haut) :
+attaque ROQUETTES `.X./XXX/XXX/.X.`, ravitailleur REPARATION `..X../XXXXX/..X../..X..`, patrouille DETECTION `XXX/.X./.X.`,
+brouilleur LEURRES `XXX/X.X`, ballons de barrage FLAK `XX/XX`, drone CAMERA `X/X`. Déblocages et recharges proposés sur les cartes.
+À décider par l'utilisateur : formes, nombre d'avions (6, ou les 4 dont le pouvoir existe déjà dans Amiral !), une famille ou
+quatre pour les nouveaux, direction 1 ou 2, conditions. Rappel : lot 1 et session 2 d'Amiral ! pas encore faits.
+
 ### Moteur commun aux deux jeux ?
 Déconseillé pour l'instant : grille 8 × 8 contre 9 × 9, lignes contre formes, sol qui défile, familles. Porter par copie,
 fonction par fonction, et noter chaque reprise dans les deux cahiers des charges.
@@ -128,3 +138,55 @@ fonction par fonction, et noter chaque reprise dans les deux cahiers des charges
    (mines, fumée et leurre compris).
 3. Lot 2 en commençant par une **maquette** : les nouveaux avions dans une seule famille pour juger les formes, puis décider du
    nombre d'avions et de familles.
+
+## 10. Bilan du lot 2 (19/10) : choisir ses avions
+Maquette validée le 19/10 (`maquettes/escadrille-avions.html`) : les 6 nouveaux avions, dans les 4 familles, direction 1
+(hangar à onglets). Conditions de déblocage laissées au choix de Claude. Fait :
+- **Moteur** (`escadrille/jeu.js`) : catalogue `PLANES` (formes en texte, nez en haut ; `ORIENTS` = sens vraiment différents
+  pour l'IA), `POWERS` (`own` : vise son ciel ; `dir` : ligne ou colonne ; `multi` : plusieurs cases puis FEU ! ; `instant` :
+  FEU ! tout de suite), `makeBoard(flotte)`, `planeOf(b, pouvoir)`, `blocked(side, p)` (`down`, `cd`, `hit`, `stuck`, `intact`,
+  `full`). L'IA d'Amiral ! est reprise **à deux camps** (`aiKnow(side)`, `aiChoose(side)`), d'où `Escadrille.simulate`.
+- **Les 10 avions** (places 8 / 5 / 4 / 2 cases) :
+
+  | Place | Avion | Pouvoir | Effet | Recharge | Déblocage |
+  |---|---|---|---|---|---|
+  | 8 | Bombardier | BOMBES | 5 bombes en croix | 4 | départ |
+  | 8 | Bombardier d'attaque `.X./XXX/XXX/.X.` | ROQUETTES | 4 tirs sur 4 cases au choix, puis FEU ! | 4 | gagner en moins de 25 tours |
+  | 8 | Ravitailleur `..X../XXXXX/..X../..X..` | REPARATION | remet un avion à neuf (ses cases touchées retournent dans les nuages) | 6 | 6 victoires |
+  | 5 | Avion radar | RADAR | zone 3 × 3 | 3 | départ |
+  | 5 | Avion de patrouille `XXX/.X./.X.` | DETECTION | compte les cases d'avion pas touchées de la ligne **et** de la colonne d'une case ; badges au bord, déductions (`lineDeduce`) | 3 | 4 victoires |
+  | 5 | Brouilleur `XXX/X.X` | LEURRES | le prochain coup ennemi (tir ou pouvoir, pas la DCA) part sur les leurres | 4 | 2 victoires en AS |
+  | 4 | Chasseur | MISSILE | ligne ou colonne jusqu'au premier avion | 3 | départ |
+  | 4 | Ballons de barrage `XX/XX` | FLAK | 2 ballons dans son ciel libre (4 au plus) ; l'ennemi qui en crève un prend 2 tirs de DCA qui touchent à coup sûr | 5 | gagner sans perdre d'avion |
+  | 2 | Hélicoptère | ESQUIVE | s'échappe de 2 cases | 4 | départ |
+  | 2 | Drone | CAMERA | révèle 4 cases d'une ligne ou d'une colonne | 2 | 2 victoires |
+- **Réglages** (parties simulées en AS, chaque avion à la place de celui de départ, contre l'escadrille classique, 2 × 400
+  parties en alternant qui commence ; classique 0,49) : attaque 0,44, ravitailleur 0,59, patrouille 0,48, brouilleur 0,53,
+  ballons 0,44, drone 0,48 (en PILOTE : 0,40 à 0,62). Essais écartés : 3 roquettes (0,33) ; réparer une case (0,14) ou
+  2 cases (0,24) ; réparation complète en 4 tours (0,89) ou 7 (0,44) ; détection d'une seule ligne (0,39) ; ballons avec une
+  DCA à 1 touché (0,28 à 0,37) ; **leurres en zone brouillée** 3 × 3 (les résultats cachés pendant 2 ou 3 coups, comme la
+  fumée d'Amiral !) : 0,18 à 0,41, moins qu'un avion sans pouvoir (0,43), d'où la règle plus simple du coup détourné.
+  L'IA répare à 2 cases touchées, lâche ses ballons près d'un avion touché, ses leurres quand on la chasse.
+- **Hangar** : onglets FAMILLES (inchangé) et AVIONS : les 4 places en haut, les avions de la place en dessous (forme,
+  pouvoir, silhouette et cadenas avec la condition, NOUVEAU ! jusqu'au RETOUR, `escadrille.vus`). `escadrille.flotte`
+  (un avion encore verrouillé redevient celui de départ, `loadFleet`). Écran titre : les 4 pouvoirs de l'escadrille choisie.
+- **Ennemi** : l'escadrille classique en RECRUE, tirée dans tout le catalogue en PILOTE et AS (aussi des avions pas encore
+  débloqués par le joueur, comme Amiral !).
+- **Fin de partie** : « NOUVEL AVION DEBLOQUE ! » (et la famille, s'il y en a une aussi). `escadrille.palmares`
+  (victoires par niveau, `rapide` < 25 tours, `intacte`) ; les anciens records comptent (un record en AS = une victoire en AS).
+- **Dessins** (`escadrille/avions.js`) : 6 avions × 4 familles (furtif à facettes, hélices et poutres, canonnière blindée).
+- **Accueil** : description, nouveauté, records « Avions x/10 », palmarès dans le transfert `LUDO1-`.
+- **Tests** : `outils/fumee.js` (onglet AVIONS, chaque nouveau pouvoir, 6 parties simulées).
+- **Pas fait** : l'artefact (l'ancienne version, 190 Ko,
+  doit être relue avant d'être remplacée).
+
+## 11. Bilan du lot 1 (19/10, après le lot 2)
+Repris d'Amiral ! (§ 9, lot 1) :
+- **Hauteur qui suit l'écran** (480 à 620, `LH`, `layout()` : `BY_BAR`, `BAR_H`, miniature, panneau ennemi, `MSG_Y` ; la boîte
+  des messages prend toute la place qui reste) ; titre et hangar dessinés pour 480 et centrés (`OY` ; `MENU_OY` décale les touchers).
+- **Polices** : Press Start 2P pour les logos, Rajdhani 700 pour tout le reste (`polices/nebula.css`, lien Google pour l'artefact) ;
+  la petite police au pixel 3 × 5 est retirée ; `tiny(…, maxW)` resserre un texte trop large.
+- **Pouvoirs en ligne en deux gestes** (missile, caméra) : toucher une case, puis la flèche à gauche de sa ligne ou au-dessus
+  de sa colonne ; les boutons LIGNE / COLONNE sont retirés.
+- **FEU !** : dès que la cible est choisie, la plaque du pouvoir devient FEU ! (radar, bombes, détection, esquive, réparation,
+  et déjà roquettes, ballons, leurres) ; toucher encore la case marche toujours.

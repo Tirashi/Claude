@@ -26,7 +26,7 @@ const GAMES = [
   {k: "amiral/index.html", n: "AMIRAL !", s: "AMIRAL !", ic: "anchor", fam: "32", lb: "linear-gradient(#1c579c, #0a1c40)", lt: "#ffd23f", sh: "#1c579c", rank: "amiral",
    d: "La bataille navale où chaque navire a un pouvoir : compose ta flotte au chantier naval parmi 11 navires (avion, salve, torpille, sonar, mines, fumée, leurre...), et chaque jour une bataille imposée.", tags: ["3 NIVEAUX", "DU JOUR"]},
   {k: "escadrille/index.html", n: "ESCADRILLE !", s: "ESCADRILLE", ic: "fighter", fam: "32", lb: "linear-gradient(#3a7cc4, #0f2850)", lt: "#ffd23f", sh: "#3a7cc4", rank: "escadrille",
-   d: "La bataille aérienne où chaque avion a un pouvoir : radar, bombes en croix, missile et esquive de l'hélicoptère. Abats l'escadrille pirate cachée dans les nuages, gagne des escadrilles au hangar.", tags: ["3 NIVEAUX", "4 ESCADRILLES"]},
+   d: "La bataille aérienne où chaque avion a un pouvoir : radar, bombes en croix, missile, esquive, roquettes, leurres, ballons de barrage… Choisis tes 4 avions au hangar parmi 10, abats l'escadrille pirate cachée dans les nuages, gagne des avions et des escadrilles.", tags: ["3 NIVEAUX", "10 AVIONS", "4 ESCADRILLES"]},
   {k: "club/index.html", n: "LE CLUB D'AGILITY", s: "CLUB AGILITY", ic: "cup", fam: "32", lb: "linear-gradient(#3f8a37, #173a1a)", lt: "#ffd23f", sh: "#3f8a37", rank: "club",
    d: "Recrute des chiens, entraîne-les semaine après semaine et mène ton club jusqu'au Championnat de France.", tags: ["6 RACES"]},
   {k: "orbite/index.html", n: "ORBITE", s: "ORBITE", ic: "planet", fam: "32", lb: "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt: "#6fd8ff", sh: "#5a3ab8", rank: "orbite",
@@ -66,7 +66,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
   "yams/index.html": {added: "2026-10-17", genres: ["HASARD"]},
-  "escadrille/index.html": {added: "2026-10-17", updated: "2026-10-17", genres: ["TACTIQUE"]},
+  "escadrille/index.html": {added: "2026-10-17", updated: "2026-10-19", genres: ["TACTIQUE"]},
   "amiral/index.html": {updated: "2026-10-19", genres: ["TACTIQUE", "DU JOUR"]},
   "odyssee/index.html": {added: "2026-10-17", genres: ["ADRESSE", "DU JOUR"]},
   "empilage/index.html": {added: "2026-10-16", genres: ["ADRESSE", "DU JOUR"]},
@@ -90,6 +90,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-19", "Escadrille ! : choisis tes avions au hangar (onglet AVIONS). Six nouveaux avions à débloquer, dans les quatre familles : le bombardier d'attaque et ses roquettes, le ravitailleur qui remet un avion à neuf, l'avion de patrouille qui compte une ligne et une colonne, le brouilleur et ses leurres, les ballons de barrage et leur DCA, le drone et sa caméra. Les pirates s'en servent aussi en Pilote et en As."],
   ["2026-10-19", "Amiral ! : trois navires à débloquer au chantier naval (le mouilleur et ses mines qui ripostent, le brouilleur et son écran de fumée, la vedette et son faux navire gonflable) et la bataille du jour, avec ses flottes imposées et son classement."],
   ["2026-10-17", "Défi du jour : un rond jaune sur la cartouche quand il reste à jouer, un rond sombre avec ✓ quand c'est fait (Queens, Sudoku, Pont stellaire, Lignée, Alunissage, Nebula, Calculator, Empilage, Odyssée)."],
   ["2026-10-17", "Nouveau jeu : Yams, le troisième jeu en 3D. De vrais dés qui roulent et rebondissent, lancés d'un geste ou secoués dans un gobelet, la feuille de marque classique en 13 cases, et six styles de dés à débloquer (taverne, casino de nuit, gros pixels rétro, sur la Lune…)."],
@@ -202,7 +203,10 @@ const RECS = {
     const nav = 8 + (p.normal > 0) + (p.hard > 0) + (p.victoires >= 10);
     return [["easy", "Mousse"], ["normal", "Capitaine"], ["hard", "Amiral"]].map(([k, l]) => [l, num(b[k], "tours")])
       .concat([["Victoires", num(p.victoires)], ["Navires au chantier", nav + " / 11"], ["Batailles du jour", num(count(rk("amiral.daily", {})))]]); },
-  "escadrille/index.html": () => { const b = rk("escadrille.best", {}) || {}; return [["easy", "Recrue"], ["normal", "Pilote"], ["hard", "As"]].map(([k, l]) => [l, num(b[k], "tours")]).concat([["Victoires", num(rk("escadrille.victoires", 0), "")], ["Escadrilles", `${Math.max(1, (rk("escadrille.skins", ["a"]) || ["a"]).length)}/4`]]); },
+  "escadrille/index.html": () => { const b = rk("escadrille.best", {}) || {}; return [["easy", "Recrue"], ["normal", "Pilote"], ["hard", "As"]].map(([k, l]) => [l, num(b[k], "tours")]).concat([["Victoires", num(rk("escadrille.victoires", 0), "")], ["Escadrilles", `${Math.max(1, (rk("escadrille.skins", ["a"]) || ["a"]).length)}/4`],
+    // avions débloqués au hangar (mêmes conditions que escadrille/jeu.js : PLANES[..].need)
+    ["Avions", (() => { const v = Number(rk("escadrille.victoires", 0)) || 0, p = rk("escadrille.palmares", {}) || {}, rap = p.rapide || Object.values(b).some(x => x > 0 && x < 25), as = Math.max(Number(p.hard) || 0, b.hard ? 1 : 0);
+      return `${4 + (v >= 2) + (v >= 4) + (v >= 6) + !!rap + !!p.intacte + (as >= 2)}/10`; })()]]); },
   "club/index.html": () => { const g = rk("club.save", null) || {};
     return [["Réputation", num(Math.max(g.rep || 0, g.bestRep || 0))], ["Champion de France en", num(g.champion, "semaines")], ["Partie en cours", g.week > 1 ? "semaine " + g.week : null]]; },
   "lune-rover/index.html": () => { const s = rk("lunerover.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },
@@ -795,7 +799,7 @@ function collectSaves(){
   const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
   const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
   const ap = {p: readKey("amiral.palmares", {}) || {}, d: readKey("amiral.daily", {}) || {}}; if (Object.keys(ap.p).length || Object.keys(ap.d).length) g.amiralPal = ap;
-  const es = {b: readKey("escadrille.best", {}) || {}, v: Number(readKey("escadrille.victoires", 0)) || 0, s: readKey("escadrille.skins", []) || [], k: readKey("escadrille.skin", null)}; if (Object.keys(es.b).length || es.v) g.escadrille = es;
+  const es = {b: readKey("escadrille.best", {}) || {}, v: Number(readKey("escadrille.victoires", 0)) || 0, s: readKey("escadrille.skins", []) || [], k: readKey("escadrille.skin", null), p: readKey("escadrille.palmares", {}) || {}}; if (Object.keys(es.b).length || es.v) g.escadrille = es;
   const ob = readKey("orbite.stars", {}); if (ob && Object.keys(ob).length) g.orbite = ob;
   const lr = readKey("lunerover.stars", {}); if (lr && Object.keys(lr).length) g.lunerover = lr;
   const al = {b: Number(readKey("alunissage.best", 0)) || 0, s: Number(readKey("alunissage.sites", 0)) || 0, d: readKey("alunissage.daily", {}) || {}};
@@ -950,7 +954,12 @@ function mergeSaves(g){
     const mySk = readKey("escadrille.skins", ["a"]) || ["a"], sk = ["a", "b", "c", "d"].filter(k => mySk.includes(k) || (Array.isArray(g.escadrille.s) && g.escadrille.s.includes(k)));
     const newSk = sk.length > mySk.length; if (newSk) writeKey("escadrille.skins", sk);
     if (!readKey("escadrille.skin", null) && /^[abcd]$/.test(g.escadrille.k || "") && sk.includes(g.escadrille.k)) writeKey("escadrille.skin", g.escadrille.k);
-    if (n || vic > myVic || newSk) done.push(`Escadrille ! : ${n ? n + " record" + (n > 1 ? "s" : "") : vic > myVic ? "victoires" : "escadrilles"}`);
+    // palmarès (avions débloqués au hangar) : le plus grand de chaque compte
+    const ep = readKey("escadrille.palmares", {}) || {}; let np = 0;
+    for (const k of ["easy", "normal", "hard"]) { const v = Math.round(Number((g.escadrille.p || {})[k]) || 0); if (v > (ep[k] || 0)){ ep[k] = v; np++; } }
+    for (const k of ["rapide", "intacte"]) if ((g.escadrille.p || {})[k] === true && !ep[k]){ ep[k] = true; np++; }
+    if (np) writeKey("escadrille.palmares", ep);
+    if (n || vic > myVic || newSk || np) done.push(`Escadrille ! : ${n ? n + " record" + (n > 1 ? "s" : "") : vic > myVic ? "victoires" : newSk ? "escadrilles" : "avions"}`);
   }
   if (g.alunissage && typeof g.alunissage === "object"){
     const a = g.alunissage; let n = 0;
