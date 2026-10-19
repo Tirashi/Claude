@@ -75,7 +75,7 @@ Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/su
 - **Nebula** : sessions 1 à 4 faites ; prochain chantier possible « l'Empire des étoiles ». [`specs/nebula.md`](specs/nebula.md)
 - **À essayer sur le téléphone** : Yams (geste, physique, affichage au repos), Odyssée, Escadrille !, Amiral !, Calculator, Lune-Rover (niveaux 22 à 30), marque du défi du jour sur l'accueil ; Orbite : niveaux 12, 23, 25, 28, 30 peut-être trop durs.
 - **Classements à confirmer avec un vrai record** : Escadrille !, Odyssée, Calculator, Lune-Rover, Orbite, Pont stellaire, Sudoku, Queens (grille du jour), Nebula (`daily`, `victoires`), Empilage.
-- **Artefacts** pas republiés après le retour au menu (rien de visible) : le faire à leur prochaine vraie modification.
+- **Artefacts** pas republiés après le retour au menu (rien de visible) : le faire à leur prochaine vraie modification. **Yams** : artefact pas republié après l'affichage au repos du 19/10 (760 Ko à relire, trop cher) : à republier avec sa prochaine vraie modification.
 
 ## Idées et maquettes
 Les jeux futurs, les maquettes de style et le classement des idées par quantité de travail sont dans [`IDEES.md`](IDEES.md).
