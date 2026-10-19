@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fabrique la copie d'un jeu à publier en artefact claude.ai.
    python3 outils/artefact.py orbite/index.html /chemin/sortie.html
-- intègre tous les scripts locaux de la page (<script src="…"> : chiens32.js, nebula/vaisseaux.js,
+- intègre les feuilles de style locales (`style.css`, `accueil.css`…, pas les polices) et tous les scripts locaux de la page (<script src="…"> : chiens32.js, nebula/vaisseaux.js,
   nebula/regles.js…), car l'artefact ne peut pas les charger ;
 - garde la police Google Fonts de la page (Press Start 2P par défaut) ; une feuille de polices du dépôt
   (`polices/…css`) est remplacée par son lien Google (attribut data-google) ;
@@ -18,10 +18,13 @@ src, out = sys.argv[1], sys.argv[2]
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 s = open(os.path.join(root, src), encoding='utf-8').read()
 title = re.search(r'<title>.*?</title>', s, re.S).group(0)
-styles = ''.join(re.findall(r'<style>.*?</style>', s[:s.index('</head>')], re.S))
+here = os.path.dirname(os.path.join(root, src))
+def css(m):   # feuille de style du jeu (pas les polices du dépôt, remplacées par leur lien Google plus bas)
+    return '<style>\n' + open(os.path.normpath(os.path.join(here, m.group(1))), encoding='utf-8').read() + '\n</style>'
+head = re.sub(r'<link rel="stylesheet" href="(?!https?:|//)(?![^"]*polices/)([^"]+\.css)">', css, s[:s.index('</head>')])
+styles = ''.join(re.findall(r'<style>.*?</style>', head, re.S))
 body = s[s.index('<body>') + 6:s.rindex('</body>')]
 body = re.sub(r'<script src="(?:\.\./)?ludo-scores\.js"></script>\n?', '', body)
-here = os.path.dirname(os.path.join(root, src))
 inlined = []
 def inline(m):
     inlined.append(m.group(1))

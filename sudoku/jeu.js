@@ -1,0 +1,594 @@
+'use strict';
+/* =====================================================================
+   SUDOKU : le jardin des chiffres, en 32 bits.
+   - Chaque ligne, chaque colonne et chaque bloc contient une seule fois
+     chaque chiffre (1 à 4, 1 à 6 ou 1 à 9).
+   - Grilles 4×4 et 6×6 pour débuter, 9×9 en trois niveaux.
+   - Les grilles sont générées à partir d'une graine : on remplit une grille
+     complète, puis on retire des chiffres tant qu'un solveur « humain »
+     sait la finir avec les techniques du niveau (ce qui garantit aussi
+     une solution unique).
+       FACILE    : chiffres seuls (singletons), beaucoup de chiffres donnés
+       MOYEN     : chiffres seuls, peu de chiffres donnés
+       DIFFICILE : il faut aussi les candidats bloqués et les paires
+   - Grille du jour 9×9 (graine = date ; facile lundi et mardi, moyenne du
+     mercredi au vendredi, difficile le week-end) : une seule tentative
+     classée par jour.
+   - Records : le meilleur temps (+30 s par indice) par taille et niveau.
+   L'écran est dessiné en 272×480 pixels logiques puis agrandi sans lissage.
+   ===================================================================== */
+const LW = 272, LH = 480, TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace', OUT = '#0b0614';
+const LEVELS = [null, 'FACILE', 'MOYEN', 'DIFFICILE'];
+const HINT_MS = 30000;
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem('sudoku.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('sudoku.' + k, JSON.stringify(v)); } catch (e) {} },
+};
+const now = () => performance.now();
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const todayKey = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+const dailyLevel = () => [3, 1, 1, 2, 2, 2, 3][new Date().getDay()];
+const fmtTime = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
+const recKey = (N, lvl) => N === 9 ? '9-' + lvl : String(N);
+const bits = m => { let n = 0; while (m) { m &= m - 1; n++; } return n; };
+const digitOf = m => 32 - Math.clz32(m);          // masque à un seul bit → chiffre
+function shuffle(a, rand) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* =========================================================
+   GRILLE : lignes, colonnes, blocs (2×2, 2×3 ou 3×3)
+   ========================================================= */
+const TOPO = {};
+function topo(N) {
+  if (TOPO[N]) return TOPO[N];
+  const bh = N === 9 ? 3 : 2, bw = N === 4 ? 2 : 3, units = [], cellUnits = [...Array(N * N)].map(() => []);
+  for (let r = 0; r < N; r++) units.push([...Array(N)].map((_, c) => r * N + c));
+  for (let c = 0; c < N; c++) units.push([...Array(N)].map((_, r) => r * N + c));
+  for (let br = 0; br < N / bh; br++) for (let bc = 0; bc < N / bw; bc++) {
+    const u = []; for (let r = 0; r < bh; r++) for (let c = 0; c < bw; c++) u.push((br * bh + r) * N + bc * bw + c); units.push(u);
+  }
+  units.forEach((u, k) => u.forEach(i => cellUnits[i].push(k)));
+  const peers = cellUnits.map((us, i) => [...new Set(us.flatMap(k => units[k]))].filter(j => j !== i));
+  return TOPO[N] = { N, bh, bw, units, cellUnits, peers, full: (1 << N) - 1 };
+}
+
+/* =========================================================
+   SOLVEUR « HUMAIN » : niveau 1 = chiffres seuls (une seule possibilité
+   dans la case, ou une seule place dans une ligne, colonne ou bloc) ;
+   niveau 2 = en plus, candidats bloqués et paires.
+   Renvoie { solved, level } : level = la technique la plus dure utilisée.
+   ========================================================= */
+function logicSolve(N, grid, maxLevel) {
+  const T = topo(N), v = grid.slice(), cand = v.map(d => d ? 0 : T.full);
+  let left = 0, used = 0, bad = false;
+  const place = (i, d) => { v[i] = d; cand[i] = 0; left--; const m = ~(1 << (d - 1)); for (const p of T.peers[i]) cand[p] &= m; };
+  for (let i = 0; i < N * N; i++) if (v[i]) { const m = ~(1 << (v[i] - 1)); for (const p of T.peers[i]) cand[p] &= m; } else left++;
+  for (let i = 0; i < N * N; i++) if (!v[i] && !cand[i]) return { solved: false, level: 0, v };
+  while (left > 0 && !bad) {
+    let prog = false;
+    for (let i = 0; i < N * N; i++) if (!v[i]) {
+      if (!cand[i]) { bad = true; break; }
+      if (bits(cand[i]) === 1) { place(i, digitOf(cand[i])); prog = true; }
+    }
+    if (bad) break;
+    if (prog) { used = Math.max(used, 1); continue; }
+    for (const u of T.units) for (let d = 1; d <= N; d++) {
+      const b = 1 << (d - 1); let at = -1, n = 0;
+      for (const i of u) if (cand[i] & b) { n++; at = i; }
+      if (n === 1) { place(at, d); prog = true; }
+    }
+    if (prog) { used = Math.max(used, 1); continue; }
+    if (maxLevel < 2) break;
+    if (eliminate(T, cand)) { used = 2; continue; }
+    break;
+  }
+  return { solved: left === 0 && !bad, level: used, v };
+}
+// candidats bloqués (dans un bloc, un chiffre n'a de place que sur une ligne → on l'enlève du reste de la ligne, et l'inverse) et paires
+function eliminate(T, cand) {
+  const { N, units } = T; let changed = false;
+  const box0 = 2 * N;
+  for (let k = 0; k < units.length; k++) {
+    const u = units[k];
+    for (let d = 1; d <= N; d++) {
+      const b = 1 << (d - 1), at = u.filter(i => cand[i] & b);
+      if (at.length < 2) continue;
+      // les autres unités qui contiennent toutes ces cases
+      const shared = T.cellUnits[at[0]].filter(o => o !== k && at.every(i => T.cellUnits[i].includes(o)));
+      for (const o of shared) {
+        if ((k >= box0) === (o >= box0)) continue;   // ligne/colonne ↔ bloc seulement
+        for (const j of units[o]) if (!u.includes(j) && (cand[j] & b)) { cand[j] &= ~b; changed = true; }
+      }
+    }
+    // paires nues : deux cases qui n'ont plus que les deux mêmes candidats
+    for (let a = 0; a < u.length; a++) {
+      const m = cand[u[a]]; if (bits(m) !== 2) continue;
+      for (let c = a + 1; c < u.length; c++) if (cand[u[c]] === m) {
+        for (const j of u) if (j !== u[a] && j !== u[c] && (cand[j] & m)) { cand[j] &= ~m; changed = true; }
+      }
+    }
+    if (changed) return true;
+  }
+  return changed;
+}
+// compte les solutions (s'arrête à limit) : pour les tests
+function countSolutions(N, grid, limit = 2) {
+  const T = topo(N), v = grid.slice(); let count = 0;
+  function rec() {
+    if (count >= limit) return;
+    let best = -1, bm = 0, bn = 99;
+    for (let i = 0; i < N * N; i++) if (!v[i]) {
+      let m = T.full; for (const p of T.peers[i]) if (v[p]) m &= ~(1 << (v[p] - 1));
+      const n = bits(m); if (n === 0) return; if (n < bn) { bn = n; best = i; bm = m; if (n === 1) break; }
+    }
+    if (best < 0) { count++; return; }
+    for (let d = 1; d <= N; d++) if (bm & (1 << (d - 1))) { v[best] = d; rec(); v[best] = 0; if (count >= limit) return; }
+  }
+  rec(); return count;
+}
+
+/* =========================================================
+   GÉNÉRATEUR : grille complète au hasard, puis on retire des chiffres
+   (par paires symétriques) tant que le solveur du niveau sait la finir.
+   ========================================================= */
+function fillGrid(N, rand) {
+  const T = topo(N), v = new Array(N * N).fill(0);
+  function rec(i) {
+    if (i === N * N) return true;
+    for (const d of shuffle([...Array(N)].map((_, k) => k + 1), rand)) {
+      if (T.peers[i].some(p => v[p] === d)) continue;
+      v[i] = d; if (rec(i + 1)) return true;
+    }
+    v[i] = 0; return false;
+  }
+  rec(0); return v;
+}
+const DIG = { 4: { min: 4, tech: 1 }, 6: { min: 10, tech: 1 }, '9-1': { min: 36, tech: 1 }, '9-2': { min: 25, tech: 1 }, '9-3': { min: 21, tech: 2 } };
+function generate(N, lvl, seed) {
+  const rand = mulberry(seed), conf = DIG[recKey(N, lvl)], NN = N * N;
+  let last = null;
+  for (let tries = 0; tries < 40; tries++) {
+    const sol = fillGrid(N, rand), puz = sol.slice();
+    let givens = NN;
+    for (const i of shuffle([...Array(Math.ceil(NN / 2))].map((_, k) => k), rand)) {
+      if (givens <= conf.min) break;
+      const j = NN - 1 - i, a = puz[i], b = puz[j];
+      puz[i] = 0; puz[j] = 0;
+      if (logicSolve(N, puz, conf.tech).solved) givens -= i === j ? 1 : 2; else { puz[i] = a; puz[j] = b; }
+    }
+    last = { N, lvl, seed, puz, sol, givens };
+    // une grille difficile doit vraiment demander plus que les chiffres seuls
+    if (conf.tech === 2 && logicSolve(N, puz, 1).solved) continue;
+    return last;
+  }
+  return last;
+}
+
+/* =========================================================
+   AUDIO (petits bruitages WebAudio, sons de koto)
+   ========================================================= */
+const AC = { ctx: null, out: null, on: store.get('sfx', true) };
+function audioInit() {
+  if (AC.ctx) { if (AC.ctx.state === 'suspended') AC.ctx.resume(); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  AC.ctx = new Ctx(); AC.out = AC.ctx.createGain(); AC.out.gain.value = .45; AC.out.connect(AC.ctx.destination);
+}
+function tone(f, d, type = 'triangle', vol = .2, slide = 0, delay = 0) {
+  if (!AC.on || !AC.ctx) return;
+  const t = AC.ctx.currentTime + delay, o = AC.ctx.createOscillator(), g = AC.ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+  o.connect(g); g.connect(AC.out); o.start(t); o.stop(t + d + .02);
+}
+const PENTA = [392, 440, 523, 587, 659, 784, 880, 1047, 1175];      // gamme pentatonique
+const SFX = {
+  click: () => tone(660, .05, 'square', .07),
+  select: () => tone(880, .04, 'sine', .1),
+  put: d => tone(PENTA[(d - 1) % PENTA.length], .25, 'triangle', .16, -4),
+  note: () => tone(1320, .04, 'sine', .07),
+  unit: k => tone(PENTA[k % PENTA.length] * 2, .3, 'sine', .1, 0, .08),
+  error: () => tone(160, .15, 'square', .1),
+  win: () => [523, 587, 659, 784, 880, 1047, 1319].forEach((f, i) => tone(f, .4, 'triangle', .14, 0, i * .09)),
+};
+
+/* =========================================================
+   GRAPHISMES : nuit au jardin (dégradé tramé, lune, montagnes, pétales)
+   ========================================================= */
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function buildBg() {
+  const [c, g] = mk(LW, LH), img = g.createImageData(LW, LH), rand = mulberry(4242);
+  const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  const stops = [[0, [18, 10, 42]], [.45, [52, 22, 72]], [.8, [96, 38, 78]], [1, [40, 16, 46]]];
+  for (let y = 0; y < LH; y++) {
+    const p = y / LH; let a = stops[0], b = stops[1];
+    for (let k = 0; k < stops.length - 1; k++) if (p >= stops[k][0]) { a = stops[k]; b = stops[k + 1]; }
+    const u = (p - a[0]) / (b[0] - a[0]);
+    for (let x = 0; x < LW; x++) {
+      const q = Math.floor(u * 6 + bayer[(y & 3) * 4 + (x & 3)] / 16) / 6;
+      const k = (y * LW + x) * 4;
+      for (let ch = 0; ch < 3; ch++) img.data[k + ch] = a[1][ch] + (b[1][ch] - a[1][ch]) * q;
+      img.data[k + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  for (let i = 0; i < 90; i++) { const x = Math.floor(rand() * LW), y = Math.floor(rand() * 200), s = rand(); g.fillStyle = s > .7 ? '#f0e4ff' : '#8a72b8'; g.fillRect(x, y, 1, 1); }
+  // la lune, pleine et tramée
+  const mx = 214, my = 58, mr = 22;
+  for (let y = -mr - 6; y <= mr + 6; y++) for (let x = -mr - 6; x <= mr + 6; x++) {
+    const d = Math.hypot(x, y);
+    if (d <= mr) { const l = (-x * .5 - y * .6) / mr; g.fillStyle = d > mr - 1 ? '#c8a878' : l > .35 ? '#fffbe8' : l > -.2 ? '#fff0c4' : ((x + y) & 1) ? '#f0d89a' : '#fff0c4'; g.fillRect(mx + x, my + y, 1, 1); }
+    else if (d < mr + 5 && ((x + y) & 1) && d < mr + 2 + ((x * 7 + y * 3) & 3)) { g.fillStyle = 'rgba(255,230,180,.25)'; g.fillRect(mx + x, my + y, 1, 1); }
+  }
+  for (const [x, y, r] of [[206, 52, 3], [222, 66, 2], [212, 70, 2]]) { g.fillStyle = '#ead6a2'; g.fillRect(x, y, r, r); }
+  // montagnes en deux plans
+  const ridge = (base, amp, f, col, ph) => { g.fillStyle = col; for (let x = 0; x < LW; x++) { const h = base - Math.abs(Math.sin(x * f + ph)) * amp - Math.sin(x * f * 3.1 + ph) * amp * .25; g.fillRect(x, Math.round(h), 1, LH - Math.round(h)); } };
+  ridge(430, 60, .018, '#2a1440', 1.2); ridge(458, 34, .03, '#1a0c2c', 0.3);
+  // une branche de cerisier en haut à gauche
+  g.fillStyle = '#2a1424';
+  for (let x = 0; x < 120; x++) { const y = 18 + Math.round(Math.sin(x * .05) * 6 + x * .12); g.fillRect(x, y, 1, x < 60 ? 3 : 2); if (x % 23 === 11) for (let k = 0; k < 10; k++) g.fillRect(x + k, y - Math.round(k * .7), 1, 1); }
+  const flower = (x, y) => { g.fillStyle = '#ffb8d0'; g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); g.fillStyle = '#ff7aa8'; g.fillRect(x, y, 1, 1); };
+  for (let i = 0; i < 26; i++) { const x = Math.floor(rand() * 130), y = 12 + Math.round(Math.sin(x * .05) * 6 + x * .12) + Math.floor(rand() * 12) - 6; flower(x, y); }
+  return c;
+}
+
+/* =========================================================
+   ÉTAT
+   ========================================================= */
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+let K = 1, T = 0, BTN = [], BG = null;
+const S = {
+  phase: 'title', P: null, v: [], notes: [], hist: [], sel: -1, pencil: false, t0: 0, elapsed: 0, hints: 0, daily: false, offRank: false,
+  best: store.get('best', {}) || {}, dailyDone: store.get('daily', {}) || {}, wins: store.get('wins', 0) || 0, errMode: store.get('err', 1),
+  winT: 0, rankText: '', record: false, flash: [], parts: [], petals: [], msg: '', msgT: 0, clearArm: 0,
+};
+function layout(N) { const cs = N === 9 ? 28 : N === 6 ? 40 : 56, size = cs * N; return { cs, size, ox: Math.floor((LW - size) / 2), oy: 48 + Math.floor((256 - size) / 2) }; }
+/* grille du jour : une seule tentative classée. Elle est sauvegardée à part (sudoku.dailyRun, chrono compris) :
+   quitter puis revenir la reprend au même temps. Une fois réussie, la grille du jour se rejoue hors classement. */
+function dailyRun() { const r = store.get('dailyRun', null); return r && r.day === todayKey() ? r : null; }
+function startDaily() {
+  const d = todayKey(), run = dailyRun();
+  if (!(S.dailyDone[d] > 0) && run && resumeGame(run)) return;
+  startPuzzle(9, dailyLevel(), true);
+}
+function setup(P) {
+  S.P = P; S.hist = []; S.sel = -1; S.pencil = false; S.flash = []; S.parts = []; S.msg = ''; S.rankText = ''; S.record = false; S.phase = 'play'; S.t0 = now();
+}
+function startPuzzle(N, lvl, daily) {
+  const seed = daily ? todayKey() * 13 + 5 : (Math.random() * 2 ** 31) | 0;
+  setup(generate(N, lvl, seed));
+  S.v = S.P.puz.slice(); S.notes = new Array(N * N).fill(0); S.hints = 0; S.daily = daily; S.elapsed = 0;
+  S.offRank = daily && S.dailyDone[todayKey()] > 0;
+  saveGame();
+}
+function saveGame() {
+  const ranked = S.daily && !S.offRank, slot = ranked ? 'dailyRun' : 'game';
+  if (!S.P || S.phase !== 'play') { if (!S.daily) store.set('game', null); return; }
+  if (S.daily && !ranked) return;   // la grille du jour rejouée hors classement ne se sauvegarde pas
+  store.set(slot, { N: S.P.N, lvl: S.P.lvl, seed: S.P.seed, daily: S.daily, day: S.daily ? todayKey() : 0, v: S.v, n: S.notes, el: S.elapsed + (now() - S.t0), h: S.hints });
+}
+function resumeGame(saved) {
+  const s = saved || store.get('game', null);
+  if (!s || !DIG[recKey(s.N, s.lvl)] || (s.daily && s.day !== todayKey())) return false;
+  const P = generate(s.N, s.lvl, s.seed);
+  if (!P || !Array.isArray(s.v) || s.v.length !== P.puz.length || P.puz.some((d, i) => d && s.v[i] !== d)) return false;
+  setup(P);
+  S.v = s.v.slice(); S.notes = Array.isArray(s.n) && s.n.length === s.v.length ? s.n.slice() : new Array(s.v.length).fill(0);
+  S.hints = s.h || 0; S.daily = !!s.daily; S.offRank = false; S.elapsed = s.el || 0;
+  return true;
+}
+const elapsed = () => S.elapsed + (S.phase === 'play' ? now() - S.t0 : 0);
+const score = () => Math.round(elapsed() + S.hints * HINT_MS);
+const isGiven = i => S.P.puz[i] > 0;
+function conflict(i) { const d = S.v[i]; return d > 0 && topo(S.P.N).peers[i].some(p => S.v[p] === d); }
+
+/* =========================================================
+   COUPS
+   ========================================================= */
+function say(m) { S.msg = m; S.msgT = now(); }
+function snap() { S.hist.push({ v: S.v.slice(), n: S.notes.slice() }); if (S.hist.length > 300) S.hist.shift(); }
+function undo() { const h = S.hist.pop(); if (!h) return; S.v = h.v; S.notes = h.n; SFX.click(); saveGame(); }
+// pose (ou enlève) un chiffre, ou une note au crayon, dans la case i
+function setCell(i, d, pencil = S.pencil) {
+  if (S.phase !== 'play' || i < 0 || isGiven(i)) { if (i >= 0 && S.phase === 'play') SFX.error(); return; }
+  const T = topo(S.P.N), b = 1 << (d - 1);
+  if (pencil) {
+    if (S.v[i]) { say('Efface d\'abord le chiffre pour prendre des notes.'); SFX.error(); return; }
+    snap(); S.notes[i] ^= b; SFX.note(); saveGame(); return;
+  }
+  snap();
+  if (S.v[i] === d) { S.v[i] = 0; SFX.click(); saveGame(); return; }
+  S.v[i] = d; S.notes[i] = 0;
+  for (const p of T.peers[i]) S.notes[p] &= ~b;   // la note devient inutile chez les voisines
+  SFX.put(d);
+  // une ligne, une colonne ou un bloc juste complété : petite vague de lumière
+  T.cellUnits[i].forEach((k, q) => { const u = T.units[k]; if (u.every(j => S.v[j] && !conflict(j))) { S.flash.push([u, now(), i]); SFX.unit(q + d); } });
+  checkWin(); saveGame();
+}
+function erase(i) {
+  if (i < 0 || isGiven(i) || (!S.v[i] && !S.notes[i])) return;
+  snap(); S.v[i] = 0; S.notes[i] = 0; SFX.click(); saveGame();
+}
+// indice : corrige un chiffre faux, sinon remplit la case choisie (ou la plus facile) : 30 s de pénalité
+function hint() {
+  const P = S.P, T = topo(P.N);
+  let i = S.v.findIndex((d, k) => d && d !== P.sol[k]), wrong = i >= 0;
+  if (!wrong) {
+    if (S.sel >= 0 && !S.v[S.sel]) i = S.sel;
+    else { let bn = 99; S.v.forEach((d, k) => { if (d) return; let m = T.full; for (const p of T.peers[k]) if (S.v[p]) m &= ~(1 << (S.v[p] - 1)); const n = bits(m); if (n < bn) { bn = n; i = k; } }); }
+  }
+  if (i < 0) return;
+  S.hints++; S.sel = i;
+  say(wrong ? 'Indice : ce chiffre était faux (+30 s).' : 'Indice : un chiffre de la solution (+30 s).');
+  setCell(i, P.sol[i], false);
+}
+function checkWin() {
+  const P = S.P;
+  if (S.v.some((d, i) => d !== P.sol[i])) return;
+  S.elapsed = elapsed(); S.phase = 'won'; S.winT = now(); S.sel = -1; store.set(S.daily ? 'dailyRun' : 'game', null);
+  SFX.win();
+  const sc = score(), key = recKey(P.N, P.lvl);
+  S.wins++; store.set('wins', S.wins);
+  if (S.offRank) S.rankText = 'DEJA JOUE AUJOURD\'HUI : HORS CLASSEMENT';
+  else if (S.daily) {
+    const d = todayKey(); S.dailyDone[d] = sc; store.set('daily', S.dailyDone);
+    if (window.LudoScores) LudoScores.submit('sudoku', 'daily:' + d, sc, true).then(r => { if (r) S.rankText = 'GRILLE DU JOUR : ' + LudoScores.rankText(r).toUpperCase(); });
+  }
+  if (!S.offRank && (!(S.best[key] > 0) || sc < S.best[key])) { S.best[key] = sc; store.set('best', S.best); S.record = true;
+    if (window.LudoScores && !S.daily) LudoScores.submit('sudoku', 'best:' + key, sc, true).then(r => { if (r) S.rankText = 'CLASSEMENT : ' + LudoScores.rankText(r).toUpperCase(); }); }
+  if (window.LudoScores) LudoScores.submit('sudoku', 'grilles', S.wins, false);
+  const Lo = layout(P.N);
+  for (let k = 0; k < 24; k++) setTimeout(() => burst(Lo.ox + Math.random() * Lo.size, Lo.oy + Math.random() * Lo.size), k * 45);
+}
+function burst(x, y) {
+  for (let i = 0; i < 8; i++) { const a = Math.random() * TAU, v = 15 + Math.random() * 35;
+    S.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 10, t: 0, life: .6 + Math.random() * .5, c: ['#ffd0e0', '#ff8ab0', '#fff2c4'][i % 3] }); }
+}
+
+/* =========================================================
+   DESSIN
+   ========================================================= */
+const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function text(s, x, y, col, align = 'left', size = 8, shadow = '#05030c') {
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
+  if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+function wrap(s, max) { const out = []; let line = ''; for (const w of s.split(' ')) { if ((line + ' ' + w).trim().length > max) { out.push(line); line = w; } else line = (line + ' ' + w).trim(); } if (line) out.push(line); return out; }
+function logo(s, x, y, size) {
+  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
+  g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, '#fff6fa'); gr.addColorStop(.5, '#ffb8d0'); gr.addColorStop(1, '#e0507e');
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function panel(x, y, w, h, warm) {
+  R(x - 2, y - 2, w + 4, h + 4, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, warm ? '#6a2a48' : '#2c1a50'); gr.addColorStop(1, warm ? '#2a0e20' : '#120a2a');
+  g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x, y, w, 1, warm ? '#ffb8d0' : '#a890e0'); R(x, y, 1, h, warm ? '#ffb8d0' : '#a890e0');
+  R(x, y + h - 1, w, 1, warm ? '#4a1630' : '#1a1040'); R(x + w - 1, y, 1, h, warm ? '#4a1630' : '#1a1040');
+}
+function button(x, y, w, h, label, act, opts = {}) {
+  BTN.push({ x, y, w, h, act });
+  R(x - 1, y - 1, w + 2, h + 2, OUT);
+  const top = opts.gold ? '#ffb8d0' : opts.on ? '#ffd76a' : opts.off ? '#3a2f4c' : '#6a46b8', bot = opts.gold ? '#c0406e' : opts.on ? '#c2861a' : opts.off ? '#221a30' : '#34206e';
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x + 1, y + 1, w - 2, 1, opts.gold ? '#fff0f6' : opts.on ? '#fff2b0' : opts.off ? '#4a3f5c' : '#b8a0f0');
+  const dark = opts.gold || opts.on;
+  text(label, x + w / 2, y + Math.round((h - (opts.size || 8)) / 2) + 1, dark ? '#2a0818' : opts.off ? '#8a80a0' : '#f6f0ff', 'center', opts.size || 8, dark ? null : '#05030c');
+}
+function drawBg(t) {
+  g.drawImage(BG, 0, 0);
+  // pétales qui tombent
+  if (S.petals.length < 14 && Math.random() < .03) S.petals.push({ x: Math.random() * LW * 1.2 - 20, y: -4, vx: 6 + Math.random() * 8, vy: 10 + Math.random() * 10, p: Math.random() * TAU });
+  for (const p of S.petals) {
+    const w = Math.sin(t * 2 + p.p);
+    R(Math.round(p.x), Math.round(p.y), w > 0 ? 2 : 1, 1, '#ffb8d0'); R(Math.round(p.x) + (w > 0 ? 1 : 0), Math.round(p.y) + 1, 1, 1, '#e0608a');
+  }
+}
+function drawBoard(t) {
+  const P = S.P, N = P.N, Tp = topo(N), Lo = layout(N), { cs, ox, oy, size } = Lo, won = S.phase === 'won';
+  // ombre et cadre de bois
+  R(ox - 5, oy - 5, size + 10, size + 10, OUT); R(ox - 4, oy - 4, size + 8, size + 8, '#6a3a1e'); R(ox - 4, oy - 4, size + 8, 1, '#a8683a'); R(ox - 4, oy - 4, 1, size + 8, '#a8683a');
+  R(ox - 2, oy - 2, size + 4, size + 4, '#3a1e0e');
+  const sel = S.sel, sd = sel >= 0 ? S.v[sel] : 0, peers = sel >= 0 ? new Set(Tp.peers[sel]) : null;
+  const fs = N === 9 ? 12 : N === 6 ? 16 : 24;
+  for (let i = 0; i < N * N; i++) {
+    const r = Math.floor(i / N), c = i % N, x = ox + c * cs, y = oy + r * cs, d = S.v[i];
+    const bad = S.errMode && conflict(i) && !isGiven(i);
+    let bg = ((Math.floor(r / Tp.bh) + Math.floor(c / Tp.bw)) & 1) ? '#f3e7c9' : '#efdfba';
+    if (peers && peers.has(i)) bg = '#e2cfa4';
+    if (sd && d === sd) bg = '#f4c27e';
+    if (bad) bg = '#f2a898';
+    if (i === sel) bg = '#ffd76a';
+    // vague de lumière sur une ligne, colonne ou bloc complété
+    for (const [u, t0, from] of S.flash) if (u.includes(i)) { const k = (now() - t0) / 500 - Math.abs(u.indexOf(i) - u.indexOf(from)) * .08; if (k > 0 && k < 1) bg = k < .5 ? '#fff6d8' : '#fde6a8'; }
+    if (won) { const w = Math.sin(t * 4 - (r + c) * .5); if (w > .7) bg = '#fff2c8'; }
+    R(x, y, cs, cs, bg);
+    if (d) {
+      const col = isGiven(i) ? '#22182e' : bad ? '#b0201a' : '#2b54c8';
+      text(String(d), x + cs / 2 + 1, y + Math.round((cs - fs) / 2) + 1, col, 'center', fs, null);
+    } else if (S.notes[i]) {
+      const nc = N === 9 ? 3 : N === 6 ? 3 : 2, nr = Math.ceil(N / nc), sw = cs / nc, sh = cs / nr, nf = N === 9 ? 6 : 8;
+      for (let k = 1; k <= N; k++) if (S.notes[i] & (1 << (k - 1))) {
+        const q = k - 1, nx = x + (q % nc) * sw + sw / 2 + 1, ny = y + Math.floor(q / nc) * sh + Math.round((sh - nf) / 2) + 1;
+        text(String(k), nx, ny, k === sd ? '#c0406e' : '#6a5a7a', 'center', nf, null);
+      }
+    }
+  }
+  // traits : fins entre les cases, épais entre les blocs
+  for (let k = 1; k < N; k++) {
+    const thickC = k % Tp.bw === 0, thickR = k % Tp.bh === 0;
+    R(ox + k * cs - (thickC ? 1 : 0), oy, thickC ? 2 : 1, size, thickC ? '#4a3420' : '#c3ac80');
+    R(ox, oy + k * cs - (thickR ? 1 : 0), size, thickR ? 2 : 1, thickR ? '#4a3420' : '#c3ac80');
+  }
+  if (sel >= 0) { const x = ox + (sel % N) * cs, y = oy + Math.floor(sel / N) * cs; g.strokeStyle = '#c0406e'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, cs - 2, cs - 2); }
+  S.flash = S.flash.filter(q => now() - q[1] < 1500);
+}
+function drawPlay(t) {
+  drawBg(t);
+  const P = S.P, N = P.N;
+  R(0, 0, LW, 40, 'rgba(12,6,28,.88)'); R(0, 40, LW, 1, '#5a3a8a');
+  const name = N === 9 ? '9x9 ' + LEVELS[P.lvl] : `${N}x${N}`;
+  text(S.daily ? (S.offRank ? 'DU JOUR (HORS CL.)' : 'GRILLE DU JOUR') : name, 8, 8, '#ffb8d0', 'left', S.daily && S.offRank ? 7 : 8);
+  text(fmtTime(elapsed()) + (S.hints ? ` +${S.hints * 30}s` : '') + (S.daily ? '  ' + LEVELS[P.lvl] : ''), 8, 24, '#e8dcf8', 'left', S.daily ? 7 : 8);
+  const best = S.best[recKey(N, P.lvl)];
+  if (best && !S.daily) text('RECORD ' + fmtTime(best), 264, 26, '#b8a0d8', 'right', 6);
+  button(LW - 60, 6, 54, 14, 'MENU', () => { saveGame(); S.phase = 'title'; SFX.click(); }, { size: 6 });
+  drawBoard(t);
+  for (const p of S.parts) R(Math.round(p.x), Math.round(p.y), 2, 2, p.c);
+  if (S.phase === 'won') return drawWin(t);
+  // pavé de chiffres : un chiffre posé N fois est grisé
+  const count = new Array(N + 1).fill(0); S.v.forEach(d => count[d]++);
+  const gap = 4, bw = Math.floor((252 - gap * (N - 1)) / N), x0 = Math.floor((LW - (bw * N + gap * (N - 1))) / 2), py = 312;
+  for (let d = 1; d <= N; d++) {
+    const x = x0 + (d - 1) * (bw + gap), done = count[d] >= N;
+    button(x, py, bw, 30, String(d), () => { if (S.sel < 0) { say('Touche d\'abord une case de la grille.'); SFX.error(); return; } setCell(S.sel, d); }, { size: N === 9 ? 10 : 12, off: done, on: !done && S.pencil });
+    if (!done && N > 4) text(String(N - count[d]), x + bw - 2, py + 22, S.pencil ? '#5a3a10' : '#cbb8f0', 'right', 5, null);
+  }
+  const ty = 350;
+  button(8, ty, 60, 24, 'CRAYON', () => { S.pencil = !S.pencil; SFX.click(); say(S.pencil ? 'Crayon : les chiffres deviennent des notes.' : 'Crayon rangé.'); }, { size: 6, on: S.pencil });
+  button(74, ty, 60, 24, 'GOMME', () => erase(S.sel), { size: 6 });
+  button(140, ty, 60, 24, 'ANNULER', undo, { size: 6 });
+  button(206, ty, 58, 24, 'INDICE', hint, { size: 6 });
+  const filled = S.v.filter(d => d).length;
+  text(`CASES : ${filled} / ${N * N}`, 136, 386, '#ffd76a', 'center', 7);
+  const msg = S.msg && now() - S.msgT < 3500 ? S.msg : S.sel < 0 ? 'Touche une case, puis un chiffre en bas. Le crayon sert à noter les possibilités.' :
+    S.pencil ? 'Crayon : touche un chiffre pour l\'ajouter ou l\'enlever des notes.' : `Un chiffre par ligne, par colonne et par bloc ${Topo(N)}.`;
+  wrap(msg, 32).slice(0, 4).forEach((l, i) => text(l, 136, 404 + i * 12, '#e8dcf8', 'center', 7));
+}
+const Topo = N => N === 9 ? '3x3' : N === 6 ? '2x3' : '2x2';
+function drawWin(t) {
+  const k = Math.min(1, (now() - S.winT) / 1200), y = 314, P = S.P;
+  panel(18, y, 236, 156, true);
+  text('GRILLE TERMINEE', 136, y + 10, '#fff0f6', 'center');
+  text(P.N === 9 ? '9x9 ' + LEVELS[P.lvl] : `${P.N}x${P.N}`, 136, y + 26, '#ffb8d0', 'center', 7);
+  text(`TEMPS : ${fmtTime(score())}` + (S.hints ? ` (${S.hints} INDICE${S.hints > 1 ? 'S' : ''})` : ''), 136, y + 44, '#f2e2ec', 'center', 7);
+  if (S.record && k >= 1 && !S.daily) text('NOUVEAU RECORD !', 136, y + 58, '#7ff0b0', 'center', 7);
+  if (S.rankText) text(S.rankText, 136, y + 72, '#ffd76a', 'center', 6);
+  if (S.daily) button(34, y + 90, 204, 22, 'GRILLE AU HASARD', () => { SFX.click(); startPuzzle(9, P.lvl, false); }, { gold: true, size: 7 });
+  else button(34, y + 90, 204, 22, 'NOUVELLE GRILLE', () => { SFX.click(); startPuzzle(P.N, P.lvl, false); }, { gold: true });
+  button(34, y + 120, 98, 20, 'MENU', () => { SFX.click(); S.phase = 'title'; }, { size: 7 });
+  button(140, y + 120, 98, 20, 'CLASSEMENT', () => { location.href = '../classements/index.html#sudoku'; }, { size: 7 });
+}
+// petite grille décorative de l'écran titre : les chiffres apparaissent un à un
+const DECO = [5, 3, 0, 0, 7, 0, 6, 0, 0, 1, 9, 5, 0, 9, 8, 0, 6, 0];
+function drawTitle(t) {
+  drawBg(t);
+  logo('SUDOKU', 136, 72, 26);
+  text('LE JARDIN DES CHIFFRES', 136, 108, '#f2dcf0', 'center', 7);
+  // ruban de 9 cases sous le titre
+  const k = Math.floor(t * 2) % 14;
+  for (let i = 0; i < 9; i++) {
+    const x = 37 + i * 22, y = 124; R(x - 1, y - 1, 22, 22, OUT); R(x, y, 20, 20, i === k % 9 ? '#ffd76a' : '#f3e7c9');
+    const d = (i + Math.floor(t / 7)) % 9 + 1;
+    if (i <= k) text(String(d), x + 11, y + 6, i % 3 === 1 ? '#2b54c8' : '#22182e', 'center', 8, null);
+  }
+  let y = 160;
+  const d = todayKey(), dd = S.dailyDone[d], saved = store.get('game', null), lv = dailyLevel();
+  if (saved && !saved.daily) {
+    const nm = saved.N === 9 ? '9x9 ' + LEVELS[saved.lvl] : `${saved.N}x${saved.N}`;
+    button(46, y, 180, 24, 'REPRENDRE ' + nm, () => { SFX.click(); if (!resumeGame()) startPuzzle(9, 1, false); }, { gold: true, size: 7 }); y += 30;
+  }
+  const run = !dd && dailyRun();
+  button(46, y, 180, 26, dd ? 'DU JOUR  ' + fmtTime(dd) : run ? 'DU JOUR · REPRENDRE' : 'GRILLE DU JOUR', () => { SFX.click(); startDaily(); }, { gold: !saved, size: dd || run ? 7 : 8 });
+  text(dd ? 'REJOUER : HORS CLASSEMENT' : '9x9 ' + LEVELS[lv] + ' AUJOURD\'HUI', 136, y + 29, '#c8b0e0', 'center', 5);
+  y += 40;
+  for (let lvl = 1; lvl <= 3; lvl++) {
+    const b = S.best['9-' + lvl];
+    button(46, y, 180, 24, '9x9 ' + LEVELS[lvl], () => { SFX.click(); startPuzzle(9, lvl, false); });
+    if (b) text(fmtTime(b), 232, y + 9, '#c8b0e0', 'left', 6);
+    y += 29;
+  }
+  for (const [N, x] of [[4, 46], [6, 140]]) {
+    button(x, y, 86, 22, `${N}x${N}`, () => { SFX.click(); startPuzzle(N, 1, false); }, { size: 7 });
+    const b = S.best[String(N)]; if (b) text(fmtTime(b), x + 43, y + 25, '#c8b0e0', 'center', 5);
+  }
+  y += 36;
+  button(46, y, 86, 20, 'CLASSEMENT', () => { location.href = '../classements/index.html#sudoku'; }, { size: 6 });
+  button(140, y, 86, 20, 'AIDE', () => { SFX.click(); S.phase = 'help'; }, { size: 7 });
+  y += 26;
+  button(46, y, 86, 18, AC.on ? 'SON : OUI' : 'SON : NON', () => { AC.on = !AC.on; store.set('sfx', AC.on); SFX.click(); }, { off: !AC.on, size: 6 });
+  button(140, y, 86, 18, S.errMode ? 'DOUBLONS : OUI' : 'DOUBLONS : NON', () => { S.errMode = S.errMode ? 0 : 1; store.set('err', S.errMode); SFX.click(); }, { off: !S.errMode, size: 5 });
+  if (!window.ludoArtefact) button(46, y + 24, 180, 18, '◀ LUDOTHEQUE', () => { location.href = '../index.html'; }, { size: 6 });
+  if (S.wins) text(`${S.wins} GRILLE${S.wins > 1 ? 'S' : ''} TERMINEE${S.wins > 1 ? 'S' : ''}`, 136, 466, '#c8b0e0', 'center', 6);
+}
+function drawHelp(t) {
+  drawBg(t);
+  panel(12, 26, 248, 428);
+  logo('LES REGLES', 136, 40, 12);
+  const lines = [
+    ['#ffb8d0', 'Remplis la grille : chaque ligne, chaque colonne et chaque bloc contient une seule fois chaque chiffre.'],
+    ['#e8dcf8', 'Touche une case, puis un chiffre en bas. Retouche le même chiffre pour l\'enlever.'],
+    ['#ffd76a', 'Le crayon note les chiffres possibles dans une case. Ils s\'effacent tout seuls quand tu poses le chiffre ailleurs dans la ligne, la colonne ou le bloc.'],
+    ['#e8dcf8', 'Les chiffres en double sont en rouge (réglable au menu : DOUBLONS).'],
+    ['#7ff0b0', 'Facile et moyen se résolvent pas à pas ; difficile demande de raisonner sur les notes.'],
+    ['#ff9a8a', 'Un indice coûte 30 secondes. Grille du jour : une seule tentative classée.'],
+  ];
+  let y = 66;
+  for (const [c, s] of lines) { for (const l of wrap(s, 29)) { text(l, 24, y, c, 'left', 7); y += 11; } y += 6; }
+  button(76, 418, 120, 22, 'OK', () => { SFX.click(); S.phase = 'title'; }, { gold: true });
+}
+
+/* =========================================================
+   BOUCLE
+   ========================================================= */
+function frame(ts) {
+  const t = ts / 1000, dt = Math.min(.05, t - (T || t)); T = t;
+  for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 40 * dt; p.vx *= .97; }
+  S.parts = S.parts.filter(p => p.t < p.life);
+  for (const p of S.petals) { p.x += (p.vx + Math.sin(t * 1.5 + p.p) * 8) * dt; p.y += p.vy * dt; }
+  S.petals = S.petals.filter(p => p.y < LH + 4 && p.x < LW + 10);
+  BTN = [];
+  g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
+  if (S.phase === 'title') drawTitle(t);
+  else if (S.phase === 'help') drawHelp(t);
+  else drawPlay(t);
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   COMMANDES
+   ========================================================= */
+function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); audioInit();
+  const [x, y] = logical(e);
+  for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { b.act(); return; } }
+  if (S.phase !== 'play') return;
+  const Lo = layout(S.P.N), c = Math.floor((x - Lo.ox) / Lo.cs), r = Math.floor((y - Lo.oy) / Lo.cs);
+  if (c >= 0 && r >= 0 && c < S.P.N && r < S.P.N) { const i = r * S.P.N + c; S.sel = S.sel === i ? -1 : i; SFX.select(); }
+  else S.sel = -1;
+});
+document.addEventListener('keydown', e => {
+  if (S.phase !== 'play') return;
+  const N = S.P.N;
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { undo(); return; }
+  const d = parseInt(e.key, 10);
+  if (d >= 1 && d <= N && S.sel >= 0) { setCell(S.sel, d); return; }
+  if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { erase(S.sel); return; }
+  if (e.key === 'n' || e.key === 'N') { S.pencil = !S.pencil; return; }
+  const mv = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (mv) { e.preventDefault(); const i = S.sel < 0 ? 0 : S.sel, c = (i % N + mv[0] + N) % N, r = (Math.floor(i / N) + mv[1] + N) % N; S.sel = r * N + c; }
+});
+document.addEventListener('visibilitychange', () => {
+  if (S.phase !== 'play') return;
+  // sauvegarder avant de geler le chrono
+  if (document.hidden) { S.elapsed = elapsed(); S.t0 = now(); saveGame(); S.t0 = Infinity; } else S.t0 = now();
+});
+// le chrono est aussi sauvegardé régulièrement (grille du jour : on ne peut pas repartir de zéro en quittant le jeu)
+setInterval(() => { if (S.phase === 'play' && !document.hidden) saveGame(); }, 3000);
+function resize() {
+  const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
+  const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);
+  const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
+  cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
+  cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
+  K = Math.max(1, Math.ceil(sc * dpr - .05));
+  cv.width = LW * K; cv.height = LH * K;
+}
+window.addEventListener('resize', resize);
+window.Sudoku = { generate, logicSolve, countSolutions, topo, S, startPuzzle, startDaily, setCell, hint, undo };   // pour les tests
+
+BG = buildBg();
+setTimeout(resize, 0); resize();
+(document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));

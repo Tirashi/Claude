@@ -1,0 +1,604 @@
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem("injagility."+k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem("injagility."+k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------- son ---------- */
+let actx = null, soundOn = store.get("sound", true);
+function tone(notes, type = "square", dur = .06, vol = .05, slide = 0){
+  if (!soundOn) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    let t = actx.currentTime;
+    for (const f of notes){ const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(f * slide, t + dur);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur); t += dur * .9; }
+  }catch(e){}
+}
+const SFX = {
+  step: () => tone([660], "square", .03, .025), no: () => tone([196, 147], "square", .08, .05), jump: () => tone([380], "square", .12, .04, 2),
+  bone: () => tone([988, 1319], "square", .05, .04), splash: () => tone([300, 200], "triangle", .08, .05), tunnel: () => tone([220, 260, 300], "triangle", .07, .05),
+  ok: () => tone([784], "square", .04, .04), bad: () => tone([150], "sawtooth", .12, .05), bark: () => tone([520, 390], "sawtooth", .07, .05),
+  win: () => tone([523, 659, 784, 1047, 784, 1047, 1319], "square", .09, .045), buy: () => tone([659, 784, 988, 1319], "square", .07, .045),
+};
+
+/* ---------- races de chiens ---------- */
+const DOGS = [
+  {id: "bernois", name: "BOUVIER BERNOIS", price: 0,   perk: "Le chien de la maison : solide et motivé, sans talent particulier."},
+  {id: "jack",    name: "JACK RUSSELL",    price: 300, perk: "Slalom : des séquences plus courtes et plus de temps pour les taper."},
+  {id: "golden",  name: "GOLDEN RETRIEVER", price: 450, perk: "Flair : chaque os rapporte le double."},
+  {id: "border",  name: "BORDER COLLIE",   price: 600, perk: "Vitesse : court 30 % plus vite, donc plus de bonus de temps."},
+  {id: "aussie",  name: "BERGER AUSTRALIEN", price: 750, perk: "Sauteur : les haies et les pneus ne le ralentissent pas."},
+  {id: "sheltie", name: "BERGER DES SHETLAND", price: 900, perk: "Équilibre : passerelle plus facile, et les flaques ne lui font rien."},
+];
+const dogById = id => DOGS.find(d => d.id === id) || DOGS[0];
+
+
+/* ---------- sauvegarde ---------- */
+const SAVE_KEY = "parcours";
+let save = Object.assign({unlocked: 1, best: {}, wallet: 0, owned: ["bernois"], dog: "bernois"}, store.get(SAVE_KEY, {}));
+const persist = () => store.set(SAVE_KEY, save);
+
+/* ---------- génération d'un parcours ---------- */
+const W = 8, H = 11, CS = 32;   // cases de 32 px : terrain de 256 × 352
+function mulberry32(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const idx = (x, y) => y * W + x, cx = c => c % W, cy = c => Math.floor(c / W);
+const DIRS = {U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0]};
+const dirOf = (a, b) => { const dx = cx(b) - cx(a), dy = cy(b) - cy(a); return dx === 1 ? "R" : dx === -1 ? "L" : dy === 1 ? "D" : "U"; };
+const adjacent = (a, b) => Math.abs(cx(a) - cx(b)) + Math.abs(cy(a) - cy(b)) === 1;
+
+function walk(rng){
+  // un chemin sans boucle du bas vers le haut, qui serpente
+  for (let t = 0; t < 400; t++){
+    const start = idx(Math.floor(rng() * W), H - 1), path = [start, start - W], seen = new Set(path);
+    let stuck = false;
+    while (cy(path[path.length - 1]) > 0){
+      const c = path[path.length - 1], opts = [];
+      for (const [d, [dx, dy]] of Object.entries(DIRS)){
+        const x = cx(c) + dx, y = cy(c) + dy;
+        if (x < 0 || x >= W || y < 0 || y > H - 2) continue;
+        const n = idx(x, y); if (seen.has(n)) continue;
+        if (y === 0 && path.length < 14) continue;          // pas d'arrivée trop tôt
+        if (y > 0 && [...seen].some(s => s !== c && adjacent(s, n))) { if (rng() < .85) continue; }   // évite de se coller à lui-même
+        const prev = path.length > 1 ? dirOf(path[path.length - 2], c) : "U";
+        opts.push([n, (d === "U" ? 3 : d === "D" ? .9 : 2.2) * (d === prev ? 2.4 : 1)]);   // de l'élan : des lignes droites pour slalom et passerelle
+      }
+      if (!opts.length){ stuck = true; break; }
+      let r = rng() * opts.reduce((s, o) => s + o[1], 0), n = opts[0][0];
+      for (const [o, w] of opts){ r -= w; if (r <= 0){ n = o; break; } }
+      path.push(n); seen.add(n);
+      if (path.length > 44){ stuck = true; break; }
+    }
+    if (!stuck && path.length >= 16) return path;
+  }
+  return null;
+}
+function levelPlan(n){
+  const types = ["haie"]; if (n >= 2) types.push("pneu"); if (n >= 3) types.push("tunnel"); if (n >= 4) types.push("slalom"); if (n >= 5) types.push("passerelle");
+  const fresh = n === 2 ? "pneu" : n === 3 ? "tunnel" : n === 4 ? "slalom" : n === 5 ? "passerelle" : null;
+  return {count: Math.min(3 + Math.floor((n - 1) / 2), 9), types, fresh};
+}
+function generate(n){
+  const rng = mulberry32(n * 7919 + 17), plan = levelPlan(n);
+  for (let attempt = 0; attempt < 300; attempt++){
+    const want = attempt < 200 ? plan.count : plan.count - 1 - Math.floor((attempt - 200) / 50);   // plan B : un obstacle de moins
+    const path = walk(rng); if (!path) continue;
+    const L = path.length, dirAt = i => dirOf(path[i - 1], path[i]);
+    const used = new Array(L).fill(false), objs = [];
+    const free = (i, j) => { for (let k = Math.max(1, i - 1); k <= Math.min(L - 2, j + 1); k++) if (used[k]) return false; return i >= 2 && j <= L - 3; };
+    const tryPlace = type => {
+      const cands = [];
+      for (let i = 2; i < L - 2; i++){
+        if (type === "haie" || type === "pneu"){ if (free(i, i) && dirAt(i) === dirAt(i + 1)) cands.push([i, i]); }
+        else if (type === "slalom" || type === "passerelle"){ if (i + 2 < L - 2 && free(i, i + 2) && [i, i + 1, i + 2, i + 3].every(k => dirAt(k) === dirAt(i))) cands.push([i, i + 2]); }
+        else if (type === "tunnel"){ for (const len of [3, 4, 5]){ const j = i + len - 1; if (j >= L - 2 || !free(i, j)) continue;
+          let turns = 0; for (let k = i + 1; k < j; k++) if (dirAt(k) !== dirAt(k + 1)) turns++;   // deux virages : un U ou un S
+          if (turns >= 2) cands.push([i, j]); } }
+      }
+      if (!cands.length) return false;
+      const [i, j] = cands[Math.floor(rng() * cands.length)];
+      for (let k = i; k <= j; k++) used[k] = true;
+      objs.push({type, i, j, cells: path.slice(i, j + 1), orient: (type === "haie" || type === "pneu") ? ("UD".includes(dirAt(i)) ? "h" : "v") : null});
+      return true;
+    };
+    if (plan.fresh) tryPlace(plan.fresh);
+    // types répartis équitablement : on essaie d'abord les moins utilisés
+    let guard = 0;
+    while (objs.length < want && guard++ < 40){
+      const use = t => objs.filter(o => o.type === t).length;
+      const order = plan.types.slice().sort((a, b) => use(a) - use(b) || rng() - .5);
+      if (!order.some(t => tryPlace(t))) break;
+    }
+    if (objs.length < want) continue;
+    objs.sort((a, b) => a.i - b.i); objs.forEach((o, k) => o.n = k + 1);
+    // décor : buissons, os et flaques hors du chemin prévu (quelques flaques dessus, à contourner)
+    const onPath = new Set(path), cell = new Array(W * H).fill(null);
+    for (const o of objs) for (const c of o.cells) cell[c] = o;
+    const freeCells = [...Array(W * H).keys()].filter(c => !onPath.has(c) && cy(c) > 0 && cy(c) < H - 1);
+    const pickFree = () => { const k = Math.floor(rng() * freeCells.length); return freeCells.splice(k, 1)[0]; };
+    const bushes = new Set(), bones = new Set(), puddles = new Set();
+    const nb = Math.min(freeCells.length - 6, 6 + Math.floor(n * 1.2)); for (let k = 0; k < Math.min(nb, 18); k++) bushes.add(pickFree());
+    for (let k = 0; k < 3 + (n % 2); k++) bones.add(pickFree());
+    for (let k = 0; k < 1 + Math.min(2, Math.floor(n / 3)); k++) puddles.add(pickFree());
+    const plain = path.filter((c, i) => i > 1 && i < L - 2 && !cell[c]);
+    if (n >= 2 && plain.length) puddles.add(plain[Math.floor(rng() * plain.length)]);   // une flaque sur le chemin prévu : à éviter… ou pas
+    return {n, objs, cell, bushes, bones, puddles, solution: path};
+  }
+  return null;
+}
+
+/* ---------- état d'une partie ---------- */
+let G = null, path = [], phase = "map", drawing = false, run = null;
+const cv = $("field"); let ctx = cv.getContext("2d"); cv.width = W * CS; cv.height = H * CS; ctx.imageSmoothingEnabled = false;
+const setMsg = h => { $("msg").innerHTML = h; };
+const objAt = c => G.cell[c];
+const doneCount = () => { const seen = new Set(); for (const c of path){ const o = objAt(c); if (o) seen.add(o.n); } return seen.size; };
+const nextNum = () => doneCount() + 1;
+
+/* ---------- tracé au doigt ---------- */
+function tryAdd(c){
+  const last = path[path.length - 1];
+  if (c === last) return true;
+  // revenir d'un pas : seule l'avant-dernière case recule (un obstacle long recule en entier) ;
+  // repasser ailleurs sur son tracé, ou suivre du doigt un tunnel déjà tracé, ne change rien
+  const k = path.indexOf(c);
+  if (k >= 0){
+    const lo = objAt(last);
+    if (lo && lo.cells.length > 1){
+      const start = path.length - lo.cells.length;
+      if (k === start - 1){ path = path.slice(0, start); SFX.step(); }
+      return false;
+    }
+    if (k === path.length - 2){ path.pop(); SFX.step(); }
+    return false;
+  }
+  if (!path.length){
+    if (cy(c) !== H - 1){ setMsg(`Commence sur la ligne de <span class="hl">DÉPART</span>, en bas.`); return false; }
+    path = [c]; SFX.step(); return true;
+  }
+  if (!adjacent(last, c)) return false;
+  if (G.bushes.has(c)){ SFX.no(); setMsg(`Un <span class="bad">buisson</span> bloque le passage.`); return false; }
+  const d = dirOf(last, c), lo = objAt(last);
+  // on ressort d'une haie ou d'un pneu tout droit
+  if (lo && lo.cells.length === 1 && path.length > 1 && dirOf(path[path.length - 2], last) !== d){ SFX.no(); setMsg(`On ressort ${lo.type === "haie" ? "de la haie" : "du pneu"} tout droit.`); return false; }
+  const o = objAt(c);
+  if (o){
+    if (o.n !== nextNum()){ SFX.no(); setMsg(o.n < nextNum() ? `L'obstacle ${o.n} est déjà passé.` : `D'abord l'obstacle <span class="hl">${nextNum()}</span> !`); return false; }
+    if (o.cells.length === 1){
+      if ((o.orient === "h") !== "UD".includes(d)){ SFX.no(); setMsg(`Prends ${o.type === "haie" ? "la haie" : "le pneu"} de face, barre en travers.`); return false; }
+      path.push(c);
+    } else {
+      const first = o.cells[0], lastC = o.cells[o.cells.length - 1];
+      if (c !== first && c !== lastC){ SFX.no(); setMsg(`Entre dans ${o.type === "tunnel" ? "le tunnel" : o.type === "slalom" ? "le slalom" : "la passerelle"} par un bout.`); return false; }
+      const seq = c === first ? o.cells : o.cells.slice().reverse();
+      if ((o.type !== "tunnel") && dirOf(last, seq[0]) !== dirOf(seq[0], seq[1])){ SFX.no(); setMsg(`Aborde ${o.type === "slalom" ? "le slalom" : "la passerelle"} dans l'axe.`); return false; }
+      path.push(...seq); if (o.type === "tunnel") SFX.tunnel();
+    }
+    SFX.step(); setMsg(nextNum() > G.objs.length ? `Tous les obstacles sont passés : file vers l'<span class="hl">ARRIVÉE</span> !` : `Obstacle <span class="hl">${o.n}</span> passé. Au suivant !`);
+    return true;
+  }
+  if (cy(c) === H - 1){ SFX.no(); return false; }
+  path.push(c); SFX.step();
+  if (cy(c) === 0) setMsg(nextNum() > G.objs.length ? `Parcours complet ! Appuie sur <span class="hl">PARTIR</span>.` : `Il manque encore l'obstacle <span class="hl">${nextNum()}</span>…`);
+  return true;
+}
+// un doigt rapide saute des cases : on avance case par case vers la case visée
+function dragTo(c){
+  for (let guard = 0; guard < 20; guard++){
+    const last = path[path.length - 1];
+    if (last === undefined || c === last || path.includes(c) || adjacent(last, c)){ tryAdd(c); return; }
+    const dx = Math.sign(cx(c) - cx(last)), dy = Math.sign(cy(c) - cy(last));
+    const step = Math.abs(cx(c) - cx(last)) >= Math.abs(cy(c) - cy(last)) ? idx(cx(last) + dx, cy(last)) : idx(cx(last), cy(last) + dy);
+    if (!tryAdd(step) || path[path.length - 1] === last) return;
+  }
+}
+const cellFromEvent = e => { const r = cv.getBoundingClientRect(); const x = Math.floor((e.clientX - r.left) / r.width * W), y = Math.floor((e.clientY - r.top) / r.height * H);
+  return x >= 0 && x < W && y >= 0 && y < H ? idx(x, y) : -1; };
+cv.addEventListener("pointerdown", e => {
+  if (phase !== "draw") return; e.preventDefault(); const c = cellFromEvent(e); if (c < 0) return;
+  const last = path[path.length - 1];
+  // on ne trace qu'en partant du départ (tracé vide) ou du bout du tracé ; un appui ailleurs ne touche à rien
+  const ok = !path.length || c === last || (adjacent(last, c) && !path.includes(c));
+  if (!ok){ setMsg(`Pour continuer, pars du <span class="hl">bout du tracé</span> (la case qui clignote). EFFACER pour tout recommencer.`); return; }
+  drawing = true; try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+  tryAdd(c);
+});
+cv.addEventListener("pointermove", e => { if (!drawing || phase !== "draw") return; const c = cellFromEvent(e); if (c >= 0) dragTo(c); });
+const stopDraw = () => { drawing = false; };
+cv.addEventListener("pointerup", stopDraw); cv.addEventListener("pointercancel", stopDraw);
+
+/* ---------- dessin du terrain (32 bits, vu du dessus) ---------- */
+// cases de 32 px ; lumière en haut à gauche, ombres portées vers le bas à droite
+const C32 = window.Chiens32, OUT = C32.OUT;
+const COL = {white: "#f4efe6", red: "#d6312a", yellow: "#ffd23f"};
+const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+const SHADOW = "rgba(20,40,20,.32)";
+const RAMPS = {
+  red: ["#ff8a76", "#e04a3c", "#a8302a", "#6e1d1d"], white: ["#ffffff", "#f1ece2", "#d3cbbd", "#ab9f8e"], yellow: ["#fff2a8", "#ffd23f", "#d09a1c", "#8f6410"],
+  blue: ["#a8d0f4", "#4a8fd4", "#2f6fb0", "#1a3f6a"], wood: ["#f0c890", "#d39a5c", "#a46a32", "#6e4420"], leaf: ["#9ed07c", "#6aab57", "#4a8a47", "#2f5f34"],
+  water: ["#d6ecfb", "#7fbbeb", "#3f86c8", "#225a94"], tyre: ["#5a5468", "#3a3548", "#262233", "#17131e"],
+};
+// une forme ombrée en volume (même moteur que les chiens), posée sur le terrain
+function shaded(x0, y0, w, h, shapes){
+  const C = C32.Canvas(w, h);
+  for (const [shape, ramp, opt] of shapes){ C32.RAMP._p = ramp; C.draw(shape, Object.assign({mat: "_p", id: 1, fur: false}, opt || {})); }
+  ctx.drawImage(C.toCanvas(), x0, y0);
+}
+// pelouse tondue en bandes, avec un léger damier pour bien voir les cases
+function grass(g){
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    const base = y % 2 ? ["#5cae4a", "#56a645"] : ["#64b752", "#5daf4b"];
+    g.fillStyle = base[x % 2]; g.fillRect(x * CS, y * CS, CS, CS);
+  }
+  // brins d'herbe
+  const rng = mulberry32(G.n * 977 + 13);
+  for (let i = 0; i < W * H * 5; i++){ const x = Math.floor(rng() * W * CS), y = Math.floor(rng() * H * CS);
+    g.fillStyle = rng() < .5 ? "#479a3b" : "#7fcc66"; g.fillRect(x, y, 1, 2); }
+}
+let fieldCache = null, fieldFor = null;
+function buildField(){
+  const off = document.createElement("canvas"); off.width = W * CS; off.height = H * CS;
+  const g = off.getContext("2d"); g.imageSmoothingEnabled = false;
+  const realCtx = ctx; ctx = g;   // les fonctions de dessin écrivent dans le cache
+  grass(g);
+  // ligne de départ : bande plus claire et trait de craie
+  R(0, (H - 1) * CS, W * CS, CS, "rgba(255,255,255,.12)");
+  R(0, (H - 1) * CS, W * CS, 3, COL.white); R(0, (H - 1) * CS + 3, W * CS, 1, "rgba(0,0,0,.18)");
+  // arrivée : damier en relief
+  for (let x = 0; x < W * CS; x += 8) for (let y = 0; y < CS; y += 8){
+    const dark = ((x + y) / 8) % 2; R(x, y, 8, 8, dark ? "#2a2533" : "#f4efe6");
+    R(x, y, 8, 1, dark ? "#4a4459" : "#ffffff"); R(x, y + 7, 8, 1, dark ? "#17131e" : "#c9c0b0");
+  }
+  R(0, CS - 3, W * CS, 3, OUT);
+  // textes
+  for (const [txt, y] of [["ARRIVÉE", CS / 2], ["DÉPART", (H - .5) * CS + 1]]){
+    g.font = "600 20px 'Pixelify Sans', monospace"; g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
+    g.lineWidth = 5; g.strokeStyle = OUT; g.strokeText(txt, W * CS / 2, y); g.fillStyle = y < CS ? "#ffd23f" : COL.white; g.fillText(txt, W * CS / 2, y);
+  }
+  for (const c of G.puddles) puddle(cx(c) * CS, cy(c) * CS);
+  for (const c of G.bushes) bush(cx(c) * CS, cy(c) * CS, c);
+  for (const o of G.objs) drawObj(o);
+  ctx = realCtx; fieldCache = off; fieldFor = G;
+}
+function bush(x, y, c){
+  const r = mulberry32(c * 31 + 7);
+  ctx.fillStyle = SHADOW; ctx.beginPath(); ctx.ellipse(x + 18, y + 22, 13, 8, 0, 0, 7); ctx.fill();
+  shaded(x, y, CS, CS, [[C32.ell(11, 14, 8, 7.5), RAMPS.leaf], [C32.ell(21, 13, 8.5, 8), RAMPS.leaf], [C32.ell(16, 20, 9, 7), RAMPS.leaf], [C32.ell(15, 9, 7, 6), RAMPS.leaf]]);
+  for (let k = 0; k < 3; k++){ const fx = x + 8 + Math.floor(r() * 16), fy = y + 7 + Math.floor(r() * 14); R(fx, fy, 2, 2, k % 2 ? "#ffd23f" : "#ff8fb0"); R(fx, fy, 1, 1, "#ffffff"); }
+}
+function puddle(x, y){
+  shaded(x, y, CS, CS, [[C32.ell(16, 18, 13, 8), RAMPS.water, {flat: true}]]);
+  R(x + 8, y + 15, 6, 1, "#ffffff"); R(x + 18, y + 20, 4, 1, "#d6ecfb");
+}
+// petits sprites mis en cache (os, plot de départ)
+function sprite32(w, h, shapes){ const C = C32.Canvas(w, h); for (const [shape, ramp, opt] of shapes){ C32.RAMP._p = ramp; C.draw(shape, Object.assign({mat: "_p", id: 1, fur: false}, opt || {})); } return C.toCanvas(); }
+let boneImg = null, startImg = null;
+function bone(x, y, t){
+  boneImg = boneImg || sprite32(CS, CS, [[C32.cap(10, 16, 22, 16, 2.2), RAMPS.white], [C32.ell(9, 13.5, 2.8, 2.8), RAMPS.white], [C32.ell(9, 18.5, 2.8, 2.8), RAMPS.white],
+    [C32.ell(23, 13.5, 2.8, 2.8), RAMPS.white], [C32.ell(23, 18.5, 2.8, 2.8), RAMPS.white]]);
+  const b = Math.round(Math.sin(t * 4 + x) * 1.5);
+  ctx.fillStyle = SHADOW; ctx.beginPath(); ctx.ellipse(x + 17, y + 22, 9, 3, 0, 0, 7); ctx.fill();
+  ctx.drawImage(boneImg, x, y - 2 + b);
+}
+// montant vu du dessus : un plot rond
+function stand(px, py, ramp){ ctx.fillStyle = SHADOW; ctx.fillRect(px - 2, py, 7, 5); shaded(px - 5, py - 5, 10, 10, [[C32.ell(5, 5, 3.4, 3.4), ramp]]); }
+// barre rayée, en travers de la case
+function barTop(x0, y0, x1, y1, r1, r2){
+  const n = Math.round(Math.hypot(x1 - x0, y1 - y0) / 2);
+  const W2 = Math.max(x1 - x0, 4) + 8, H2 = Math.max(y1 - y0, 4) + 8, ox = Math.min(x0, x1) - 4, oy = Math.min(y0, y1) - 4;
+  ctx.fillStyle = SHADOW; ctx.fillRect(ox + 4 + 3, oy + 4 + 4, Math.max(x1 - x0, 3), Math.max(y1 - y0, 3));
+  const shapes = [];
+  for (let k = 0; k < n; k++){ const f0 = k / n, f1 = (k + 1) / n;
+    shapes.push([C32.cap(x0 - ox + (x1 - x0) * f0, y0 - oy + (y1 - y0) * f0, x0 - ox + (x1 - x0) * f1, y0 - oy + (y1 - y0) * f1, 1.8), Math.floor(k / 3) % 2 ? r2 : r1, {flat: true}]); }
+  shaded(ox, oy, W2, H2, shapes);
+}
+function drawObj(o){
+  const c0 = o.cells[0], x = cx(c0) * CS, y = cy(c0) * CS, h = o.orient === "h";
+  if (o.type === "haie"){
+    if (h){ barTop(x + 4, y + 16, x + 28, y + 16, RAMPS.red, RAMPS.white); stand(x + 4, y + 16, RAMPS.white); stand(x + 28, y + 16, RAMPS.white); }
+    else { barTop(x + 16, y + 4, x + 16, y + 28, RAMPS.red, RAMPS.white); stand(x + 16, y + 4, RAMPS.white); stand(x + 16, y + 28, RAMPS.white); }
+  } else if (o.type === "pneu"){
+    // portique jaune et pneu vu de dessus (un anneau aplati)
+    if (h){ barTop(x + 2, y + 16, x + 30, y + 16, RAMPS.yellow, RAMPS.yellow); ctx.fillStyle = SHADOW; ctx.fillRect(x + 9, y + 21, 16, 6);
+      shaded(x, y, CS, CS, [[C32.ell(16, 16, 9, 5), RAMPS.red], [C32.ell(16, 16, 5, 2), RAMPS.tyre, {flat: true}]]); stand(x + 2, y + 16, RAMPS.yellow); stand(x + 30, y + 16, RAMPS.yellow); }
+    else { barTop(x + 16, y + 2, x + 16, y + 30, RAMPS.yellow, RAMPS.yellow); ctx.fillStyle = SHADOW; ctx.fillRect(x + 20, y + 9, 6, 16);
+      shaded(x, y, CS, CS, [[C32.ell(16, 16, 5, 9), RAMPS.red], [C32.ell(16, 16, 2, 5), RAMPS.tyre, {flat: true}]]); stand(x + 16, y + 2, RAMPS.yellow); stand(x + 16, y + 30, RAMPS.yellow); }
+  } else if (o.type === "tunnel"){
+    // un tube de toile bleue, avec ses cerceaux, qui suit les cases
+    const pts = o.cells.map(c => [cx(c) * CS + 16, cy(c) * CS + 16]);
+    const minX = Math.min(...pts.map(p => p[0])) - 16, minY = Math.min(...pts.map(p => p[1])) - 16;
+    const w = Math.max(...pts.map(p => p[0])) - minX + 17, hh = Math.max(...pts.map(p => p[1])) - minY + 17;
+    ctx.save(); ctx.strokeStyle = SHADOW; ctx.lineWidth = 22; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.beginPath();
+    pts.forEach(([X, Y], k) => k ? ctx.lineTo(X + 3, Y + 5) : ctx.moveTo(X + 3, Y + 5)); ctx.stroke(); ctx.restore();
+    const shapes = [];
+    for (let k = 1; k < pts.length; k++) shapes.push([C32.cap(pts[k - 1][0] - minX, pts[k - 1][1] - minY, pts[k][0] - minX, pts[k][1] - minY, 11), RAMPS.blue, {flat: true}]);
+    shaded(minX, minY, w, hh, shapes);
+    // cerceaux : une bande claire toutes les demi-cases
+    for (let k = 1; k < pts.length; k++){ const [a, b] = [pts[k - 1], pts[k]], vert = a[0] === b[0];
+      for (const f of [.25, .75]){ const px = a[0] + (b[0] - a[0]) * f, py = a[1] + (b[1] - a[1]) * f;
+        if (vert) { R(px - 10, py, 20, 2, "#a8d0f4"); R(px - 10, py + 2, 20, 1, "#1a3f6a"); } else { R(px, py - 10, 2, 20, "#a8d0f4"); R(px + 2, py - 10, 1, 20, "#1a3f6a"); } } }
+    // entrées sombres avec leur cerceau blanc
+    for (const [k, k2] of [[0, 1], [pts.length - 1, pts.length - 2]]){ const [a, b] = [pts[k], pts[k2]], dx = Math.sign(a[0] - b[0]), dy = Math.sign(a[1] - b[1]);
+      const ex = a[0] + dx * 9, ey = a[1] + dy * 9;
+      if (dx){ R(ex - 2, ey - 11, 5, 22, OUT); R(ex - 1, ey - 10, 3, 20, "#0b0a10"); R(ex + (dx > 0 ? -3 : 3), ey - 11, 2, 22, COL.white); }
+      else { R(ex - 11, ey - 2, 22, 5, OUT); R(ex - 10, ey - 1, 20, 3, "#0b0a10"); R(ex - 11, ey + (dy > 0 ? -3 : 3), 22, 2, COL.white); } }
+  } else if (o.type === "slalom"){
+    const a = o.cells[0], b = o.cells[2], dx = Math.sign(cx(b) - cx(a)), dy = Math.sign(cy(b) - cy(a));
+    const sx = cx(a) * CS + 16 - dx * 12, sy = cy(a) * CS + 16 - dy * 12, ex = cx(b) * CS + 16 + dx * 12, ey = cy(b) * CS + 16 + dy * 12;
+    for (let k = 0; k < 6; k++){
+      const f = (k + .5) / 6, off = k % 2 ? 6 : -6;
+      const px = Math.round(sx + (ex - sx) * f + (dy ? off : 0)), py = Math.round(sy + (ey - sy) * f + (dx ? off : 0));
+      ctx.fillStyle = SHADOW; ctx.fillRect(px - 1, py + 1, 8, 4);
+      shaded(px - 5, py - 5, 10, 10, [[C32.ell(5, 5, 3.2, 3.2), k % 2 ? RAMPS.red : RAMPS.white]]);
+    }
+  } else if (o.type === "passerelle"){
+    const a = o.cells[0], b = o.cells[2], X0 = Math.min(cx(a), cx(b)) * CS, Y0 = Math.min(cy(a), cy(b)) * CS, horiz = cy(a) === cy(b);
+    const L = 3 * CS;
+    if (horiz){ ctx.fillStyle = SHADOW; ctx.fillRect(X0 + 5, Y0 + 15, L - 4, 13);
+      R(X0 + 1, Y0 + 9, L - 2, 14, OUT); R(X0 + 2, Y0 + 10, L - 4, 12, RAMPS.wood[1]); R(X0 + 2, Y0 + 10, L - 4, 2, RAMPS.wood[0]); R(X0 + 2, Y0 + 20, L - 4, 2, RAMPS.wood[2]);
+      for (let i = 20; i < L - 18; i += 8) R(X0 + i, Y0 + 10, 1, 12, RAMPS.wood[3]);
+      for (const zx of [X0 + 2, X0 + L - 18]){ R(zx, Y0 + 10, 16, 12, RAMPS.yellow[1]); R(zx, Y0 + 10, 16, 2, RAMPS.yellow[0]); R(zx, Y0 + 20, 16, 2, RAMPS.yellow[2]); } }
+    else { ctx.fillStyle = SHADOW; ctx.fillRect(X0 + 15, Y0 + 5, 13, L - 4);
+      R(X0 + 9, Y0 + 1, 14, L - 2, OUT); R(X0 + 10, Y0 + 2, 12, L - 4, RAMPS.wood[1]); R(X0 + 10, Y0 + 2, 2, L - 4, RAMPS.wood[0]); R(X0 + 20, Y0 + 2, 2, L - 4, RAMPS.wood[2]);
+      for (let i = 20; i < L - 18; i += 8) R(X0 + 10, Y0 + i, 12, 1, RAMPS.wood[3]);
+      for (const zy of [Y0 + 2, Y0 + L - 18]){ R(X0 + 10, zy, 12, 16, RAMPS.yellow[1]); R(X0 + 10, zy, 2, 16, RAMPS.yellow[0]); R(X0 + 20, zy, 2, 16, RAMPS.yellow[2]); } }
+  }
+}
+function drawField(){
+  if (fieldFor !== G) buildField();
+  ctx.drawImage(fieldCache, 0, 0);
+  const t = performance.now() / 1000;
+  for (const c of G.bones){ if (run && run.got.has(c)) continue; bone(cx(c) * CS, cy(c) * CS, t); }
+}
+// pastilles numérotées, placées en haut à droite de la première case de chaque obstacle
+function buildBadges(){
+  const box = $("badges"); box.innerHTML = "";
+  for (const o of G.objs){
+    const c = o.cells[0], s = document.createElement("span"); s.className = "nb"; s.textContent = o.n;
+    s.style.left = ((cx(c) + .78) / W * 100) + "%"; s.style.top = ((cy(c) + .22) / H * 100) + "%";
+    box.appendChild(s); o.badge = s;
+  }
+}
+function updateBadges(){
+  for (const o of G.objs){
+    let done;
+    if (run){ const last = Math.max(...o.cells.map(c => path.indexOf(c))); done = run.i >= last; }
+    else done = o.n < nextNum();
+    const cls = "nb" + (done ? " done" : !run && o.n === nextNum() ? " next" : "");
+    if (o.badge && o.badge.className !== cls) o.badge.className = cls;
+  }
+}
+// le tracé : un ruban doré bordé de sombre
+function drawPath(){
+  if (!path.length) return;
+  const pts = path.map(c => [cx(c) * CS + 16, cy(c) * CS + 16]);
+  const line = (w, col) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.beginPath(); pts.forEach(([X, Y], i) => i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y)); ctx.stroke(); };
+  ctx.globalAlpha = run ? .45 : 1;
+  line(8, "rgba(31,27,38,.7)"); line(5, "#ffd23f"); line(1, "#fff6c2");
+  ctx.globalAlpha = 1;
+  startImg = startImg || sprite32(16, 16, [[C32.ell(8, 8, 5, 5), RAMPS.yellow]]);
+  const [sx, sy] = pts[0]; ctx.drawImage(startImg, sx - 8, sy - 8);
+  if (!run && Math.floor(performance.now() / 400) % 2){ const [ex, ey] = pts[pts.length - 1];
+    ctx.strokeStyle = OUT; ctx.lineWidth = 4; ctx.strokeRect(ex - 14, ey - 14, 28, 28); ctx.strokeStyle = COL.white; ctx.lineWidth = 2; ctx.strokeRect(ex - 14, ey - 14, 28, 28); }
+}
+let dogTop = null;
+function drawDog(){
+  if (!run) return;
+  const {x, y, ang, hop, hidden} = run.pose; if (hidden) return;
+  const fr = dogTop[Math.floor(run.time * (run.boost > 0 ? 14 : 9)) % 4];
+  // ombre au sol, qui s'éloigne pendant un saut
+  ctx.fillStyle = SHADOW; ctx.beginPath(); ctx.ellipse(x + 2 + hop * 5, y + 3 + hop * 6, 9, 13, ang, 0, 7); ctx.fill();
+  ctx.save(); ctx.translate(Math.round(x), Math.round(y)); ctx.rotate(ang); const s = 1 + hop * .3; ctx.scale(s, s);
+  if (run.boost > 0){ for (let k = 0; k < 4; k++){ ctx.fillStyle = k % 2 ? "rgba(255,210,63,.85)" : "rgba(255,255,255,.8)"; ctx.fillRect(-7 + k * 4, 18 + (k % 2) * 3 + Math.round(Math.random() * 3), 2, 5); } }
+  ctx.drawImage(fr, -C32.TW / 2, -C32.TH / 2); ctx.restore();
+}
+function render(){
+  if (!G) return;
+  drawField(); drawPath(); drawDog(); updateBadges();
+  if (run && run.qte){ const q = run.qte, cx0 = W * CS / 2, cy0 = H * CS / 2;
+    // plaque biseautée, comme les menus du mode Infini
+    R(8, cy0 - 40, W * CS - 16, 80, OUT);
+    const g = ctx.createLinearGradient(0, cy0 - 38, 0, cy0 + 38); g.addColorStop(0, "rgba(48,70,104,.97)"); g.addColorStop(1, "rgba(16,26,44,.97)");
+    ctx.fillStyle = g; ctx.fillRect(10, cy0 - 38, W * CS - 20, 76);
+    R(11, cy0 - 37, W * CS - 22, 1, "rgba(160,200,240,.6)");
+    ctx.font = "600 20px 'Pixelify Sans', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+    ctx.lineWidth = 5; ctx.strokeStyle = OUT; ctx.strokeText(q.title, cx0, cy0 - 20); ctx.fillStyle = COL.yellow; ctx.fillText(q.title, cx0, cy0 - 20);
+    const ARW = {L: "◀", R: "▶", U: "▲", D: "▼"};
+    ctx.font = "22px Arial";
+    const span = Math.min(28, (W * CS - 32) / q.seq.length);
+    q.seq.forEach((k, i) => { ctx.fillStyle = i < q.pos ? "#8ee05a" : i === q.pos ? COL.white : "#6a6f8a"; ctx.fillText(ARW[k], cx0 + (i - (q.seq.length - 1) / 2) * span, cy0 + 6); });
+    R(20, cy0 + 26, W * CS - 40, 6, OUT);
+    R(21, cy0 + 27, (W * CS - 42) * Math.max(0, q.left / q.limit), 4, q.left < q.limit * .3 ? COL.red : COL.yellow);
+  }
+}
+
+/* ---------- la course ---------- */
+function startRun(){
+  if (!path.length || cy(path[path.length - 1]) !== 0 || nextNum() <= G.objs.length){
+    SFX.no(); setMsg(nextNum() <= G.objs.length ? `Il manque l'obstacle <span class="hl">${nextNum()}</span>.` : `Le tracé doit finir sur la ligne d'<span class="hl">ARRIVÉE</span>.`); return; }
+  const D = dogById(save.dog);
+  phase = "run"; dogTop = C32.topFrames(D.id);
+  run = {i: 0, t: 0, time: 0, boost: 0, got: new Set(), wet: 0, faults: 0, qteDone: new Set(), qte: null, wait: 0, pose: {x: 0, y: 0, ang: 0, hop: 0, hidden: false}, dog: D, done: false};
+  run.pose.x = cx(path[0]) * CS + CS / 2; run.pose.y = cy(path[0]) * CS + CS / 2;
+  $("drawTools").hidden = true; setMsg(""); SFX.bark();
+}
+const speed = () => (run.dog.id === "border" ? 1.3 : 1) / .26;   // cases par seconde
+const BOOST_STEPS = 4, BOOST = .55;   // après un os : 4 cases presque deux fois plus vite
+function stepDur(i){   // durée pour aller de path[i] à path[i+1]
+  let d = 1 / speed() * (run.boost > 0 ? BOOST : 1);
+  const o = objAt(path[i + 1]);
+  if (o && (o.type === "haie" || o.type === "pneu") && run.dog.id !== "aussie") d += o.type === "pneu" ? .28 : .2;
+  if (o && o.type === "tunnel") d *= 1.25;
+  if (G.puddles.has(path[i + 1]) && run.dog.id !== "sheltie") d += .3;
+  return d;
+}
+function startQte(o){
+  const D = run.dog, rng = Math.random;
+  if (o.type === "slalom"){ const n = D.id === "jack" ? 4 : 6, s = rng() < .5 ? "L" : "R";
+    run.qte = {o, title: "SLALOM !", seq: Array.from({length: n}, (_, k) => k % 2 ? (s === "L" ? "R" : "L") : s), pos: 0, limit: D.id === "jack" ? 5 : 3.6}; }
+  else { const n = D.id === "sheltie" ? 3 : 4, K = ["L", "R", "U", "D"];
+    run.qte = {o, title: "PASSERELLE !", seq: Array.from({length: n}, () => K[Math.floor(rng() * 4)]), pos: 0, limit: D.id === "sheltie" ? 5.5 : 4}; }
+  run.qte.left = run.qte.limit; $("qte").hidden = false; SFX.bark(); fitField();
+}
+function qteKey(k){
+  if (!run || !run.qte) return;
+  const q = run.qte;
+  if (q.seq[q.pos] === k){ q.pos++; SFX.ok(); if (q.pos >= q.seq.length) endQte(); }
+  else { run.faults++; SFX.bad(); flash = .3; }
+}
+function endQte(){ run.qteDone.add(run.qte.o.n); run.qte = null; $("qte").hidden = true; fitField(); }
+let flash = 0;
+function update(dt){
+  if (!run || run.done) return;
+  run.time += dt;
+  if (run.qte){ run.qte.left -= dt; $("pTime").textContent = run.time.toFixed(1); if (run.qte.left <= 0){ run.faults++; SFX.bad(); endQte(); } return; }
+  const i = run.i;
+  if (i >= path.length - 1){ finish(); return; }
+  // arrivé à l'entrée d'un slalom ou d'une passerelle : épreuve de boutons
+  const o = objAt(path[i]);
+  if (o && (o.type === "slalom" || o.type === "passerelle") && !run.qteDone.has(o.n) && o.cells.includes(path[i]) && run.t === 0){ startQte(o); return; }
+  const dur = stepDur(i);
+  run.t += dt;
+  const a = path[i], b = path[i + 1], f = Math.min(1, run.t / dur);
+  run.pose.x = (cx(a) + (cx(b) - cx(a)) * f + .5) * CS; run.pose.y = (cy(a) + (cy(b) - cy(a)) * f + .5) * CS;
+  run.pose.ang = {U: 0, R: Math.PI / 2, D: Math.PI, L: -Math.PI / 2}[dirOf(a, b)];
+  const ob = objAt(b), oa = objAt(a), jumpy = o => o && (o.type === "haie" || o.type === "pneu"), tun = o => o && o.type === "tunnel";
+  // le saut culmine au-dessus de la barre (au milieu de la case de l'obstacle) : on monte en y entrant, on redescend en sortant
+  run.pose.hop = jumpy(ob) ? Math.sin(f * Math.PI / 2) : jumpy(oa) ? Math.cos(f * Math.PI / 2) : 0;
+  if (jumpy(ob) && run.jumpFor !== i){ run.jumpFor = i; SFX.jump(); }
+  // dans le tunnel, le chien disparaît dès qu'il a passé l'entrée et réapparaît à la sortie
+  run.pose.hidden = (tun(oa) && tun(ob)) || (!tun(oa) && tun(ob) && f > .5) || (tun(oa) && !tun(ob) && f < .5);
+  if (f >= 1){
+    run.i++; run.t = 0; if (run.boost > 0) run.boost--;
+    if (!jumpy(ob)) SFX.step();
+    if (G.bones.has(b) && !run.got.has(b)){ run.got.add(b); run.boost = BOOST_STEPS; SFX.bone(); tone([523, 784, 1047], "square", .04, .03); }
+    if (G.puddles.has(b)){ run.wet++; SFX.splash(); }
+  }
+  $("pTime").textContent = run.time.toFixed(1);
+}
+function par(){   // temps de référence : le chemin prévu par le générateur
+  const sol = G.solution; let t = 0;
+  for (let i = 0; i < sol.length - 1; i++){ t += .26; const o = G.cell[sol[i + 1]]; if (o && (o.type === "haie" || o.type === "pneu")) t += .25; if (o && o.type === "tunnel") t += .065; }
+  return t + G.objs.filter(o => o.type === "slalom" || o.type === "passerelle").length * 2.2;
+}
+function finish(){
+  run.done = true; phase = "result";
+  const D = run.dog, obs = G.objs.length;
+  const lines = [[`${obs} obstacle${obs > 1 ? "s" : ""} franchi${obs > 1 ? "s" : ""}`, obs * 30]];
+  if (run.got.size) lines.push([`${run.got.size} os ramassé${run.got.size > 1 ? "s" : ""}${D.id === "golden" ? " (flair)" : ""}`, run.got.size * (D.id === "golden" ? 30 : 15)]);
+  if (run.wet && D.id !== "sheltie") lines.push([`${run.wet} flaque${run.wet > 1 ? "s" : ""}`, -run.wet * 10]);
+  if (run.faults) lines.push([`${run.faults} faute${run.faults > 1 ? "s" : ""} aux boutons`, -run.faults * 10]);
+  const bonus = Math.max(0, Math.round((par() * 1.15 - run.time) * 12));
+  lines.push([`Temps ${run.time.toFixed(1)} s (réf. ${par().toFixed(1)} s)`, bonus]);
+  const total = Math.max(0, lines.reduce((s, l) => s + l[1], 0));
+  const prev = save.best[G.n] || 0;
+  save.best[G.n] = Math.max(prev, total); save.wallet += total; if (save.unlocked <= G.n) save.unlocked = G.n + 1; persist();
+  $("rTitle").innerHTML = run.faults === 0 && !run.wet ? "SANS FAUTE !" : "PARCOURS TERMINÉ !";
+  $("rTable").innerHTML = lines.map(([l, v]) => `<tr><td>${l}</td><td>${v > 0 ? "+" : ""}${v}</td></tr>`).join("") +
+    `<tr class="tot"><td>Points gagnés${total > prev ? " · record !" : ""}</td><td>+${total}</td></tr>`;
+  $("result").hidden = false; $("qte").hidden = true; setMsg(`Tu as <span class="hl">${save.wallet}</span> points au total.`);
+  // classement familial : les points du parcours et le total des meilleurs scores partent tout seuls
+  if (window.LudoScores && total > 0){
+    const sum = Object.values(save.best).reduce((s, v) => s + (Number(v) || 0), 0), n = G.n;
+    LudoScores.submit("parcours", "lvl:" + n, total, false).then(r => {
+      if (r && G && G.n === n) setMsg(`Tu as <span class="hl">${save.wallet}</span> points au total · parcours ${n} : <span class="hl">${LudoScores.rankText(r)}</span> au classement.`); });
+    if (sum > 0) LudoScores.submit("parcours", "total", sum, false);
+  }
+  SFX.win(); fitField();   // le panneau de résultat est plus haut que les outils : on refait la place
+}
+
+/* ---------- écrans ---------- */
+function show(id){ for (const s of ["map", "play", "kennel"]) $(s).hidden = s !== id; document.body.classList.toggle("playing", id === "play"); window.scrollTo(0, 0); if (id === "play") fitField(); }
+// la hauteur du terrain s'adapte à l'écran : le chrono, le message et les boutons (ou les flèches) restent visibles
+function fitField(){
+  const box = document.querySelector(".fieldbox"); if ($("play").hidden) return;
+  box.style.width = ""; cv.style.width = "100%";
+  const full = box.parentElement.clientWidth, canvasH = cv.getBoundingClientRect().height;
+  // place prise par le reste, en comptant la plus haute des deux barres du bas (outils ou flèches)
+  const rest = $("play").getBoundingClientRect().height - canvasH + Math.max(0, 70 - $("drawTools").getBoundingClientRect().height);
+  const avail = window.innerHeight - rest - 16;
+  const w = Math.max(200, Math.min(full, avail * W / H));
+  box.style.width = w + "px";
+}
+window.addEventListener("resize", () => { if (phase !== "map") fitField(); });
+function renderMap(){
+  $("wallet").textContent = save.wallet; const D = dogById(save.dog);
+  $("curDog").innerHTML = `Chien : <b>${D.name.toLowerCase()}</b>.`;
+  const box = $("levels"); box.innerHTML = "";
+  const max = Math.max(save.unlocked + 2, 12);
+  for (let n = 1; n <= max; n++){
+    const b = document.createElement("button"); b.type = "button"; const open = n <= save.unlocked;
+    b.className = "btn lvl " + (open ? (save.best[n] ? "alt" : "") : "locked"); b.disabled = !open;
+    b.innerHTML = `${n}<small>${save.best[n] ? save.best[n] + " pts" : open ? "à faire" : "verrouillé"}</small>`;
+    b.onclick = () => openLevel(n); box.appendChild(b);
+  }
+  show("map");
+}
+function openLevel(n){
+  G = generate(n); if (!G) return;
+  path = []; run = null; phase = "draw";
+  buildBadges();
+  $("pNum").textContent = n; $("pTime").textContent = "0.0"; $("result").hidden = true; $("qte").hidden = true; $("drawTools").hidden = false;
+  const plan = levelPlan(n);
+  setMsg(plan.fresh ? `Nouveau : <span class="hl">${plan.fresh.toUpperCase()}</span> ! Trace ton chemin du départ à l'arrivée, obstacles dans l'ordre.`
+                    : `Trace ton chemin du <span class="hl">DÉPART</span> à l'<span class="hl">ARRIVÉE</span>, obstacles dans l'ordre.`);
+  show("play");
+}
+function renderKennel(){
+  $("wallet2").textContent = save.wallet;
+  const box = $("dogs"); box.innerHTML = "";
+  for (const D of DOGS){
+    const own = save.owned.includes(D.id), cur = save.dog === D.id;
+    const el = document.createElement("div"); el.className = "dog" + (cur ? " cur" : "");
+    // le chien en 32 bits, debout (Chiens32 est partagé avec le mode Infini)
+    const c = document.createElement("canvas"); c.width = 82; c.height = 58;
+    c.getContext("2d").drawImage(window.Chiens32.frames(D.id).stand, -2, -4); el.appendChild(c);
+    const t = document.createElement("div"); t.innerHTML = `<h3>${D.name}</h3><p>${D.perk}</p>`; el.appendChild(t);
+    const b = document.createElement("button"); b.type = "button"; b.className = "btn " + (cur ? "wood" : own ? "alt" : "");
+    b.textContent = cur ? "EN PISTE" : own ? "CHOISIR" : `${D.price} PTS`;
+    b.disabled = cur || (!own && save.wallet < D.price);
+    b.onclick = () => {
+      if (!own){ if (save.wallet < D.price) return; save.wallet -= D.price; save.owned.push(D.id); SFX.buy(); }
+      else SFX.bark();
+      save.dog = D.id; persist(); renderKennel();
+    };
+    el.appendChild(b); box.appendChild(el);
+  }
+  show("kennel");
+}
+
+/* ---------- boutons ---------- */
+$("kennelBtn").onclick = renderKennel;
+$("kennelBack").onclick = renderMap;
+$("backBtn").onclick = () => { phase = "map"; G = null; run = null; renderMap(); };
+$("undoBtn").onclick = () => { if (phase === "draw"){ path = []; SFX.no(); setMsg("Tracé effacé."); } };
+$("goBtn").onclick = startRun;
+$("rMap").onclick = () => { phase = "map"; G = null; run = null; renderMap(); };
+$("rAgain").onclick = () => { const n = G.n; openLevel(n); };
+$("rNext").onclick = () => openLevel(G.n + 1);
+document.querySelectorAll("#qte .btn").forEach(b => b.addEventListener("pointerdown", e => { e.preventDefault(); qteKey(b.dataset.k); }));
+document.addEventListener("keydown", e => {
+  const k = {ArrowLeft: "L", ArrowRight: "R", ArrowUp: "U", ArrowDown: "D"}[e.key];
+  if (k && run && run.qte){ e.preventDefault(); qteKey(k); }
+});
+function syncSound(){ $("soundBtn").setAttribute("aria-pressed", soundOn); $("soundBtn").textContent = "SON : " + (soundOn ? "OUI" : "NON"); }
+$("soundBtn").onclick = () => { soundOn = !soundOn; store.set("sound", soundOn); syncSound(); };
+
+/* ---------- boucle ---------- */
+let lastT = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+  if (phase === "run") update(dt);
+  if (G){ render(); if (flash > 0){ flash -= dt; R(0, 0, W * CS, H * CS, "rgba(214,49,42,.25)"); } if (phase === "draw") $("pNext").textContent = nextNum() > G.objs.length ? "✓" : nextNum(); }
+  requestAnimationFrame(frame);
+}
+if (location.hash === "#test") window.__parcours = { gen: generate, get G(){ return G; }, get run(){ return run; }, get path(){ return path; }, set path(p){ path = p; }, open: openLevel, save: () => save };
+syncSound(); renderMap(); requestAnimationFrame(frame);
+// la police des textes ARRIVÉE / DÉPART arrive parfois après le premier dessin : on redessine le terrain
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fieldFor = null; });
+})();

@@ -1,0 +1,577 @@
+'use strict';
+/* =====================================================================
+   ORBITE : on lance une sonde, la gravité des planètes courbe sa route,
+   il faut atteindre la balise dorée.
+   - Viser : tirer vers l'arrière n'importe où sur l'écran, puis lâcher
+     (comme un lance-pierre). Le début de la trajectoire s'affiche.
+   - 3 essais par niveau : réussi au 1er essai = 3 étoiles, au 2e = 2, au 3e = 1.
+   - Planètes (attirent, on s'y écrase), trous noirs (attirent très fort,
+     avalent tout), astéroïdes (fixes ou en orbite), portails (on entre
+     dans l'un, on ressort par l'autre avec la même vitesse).
+   - Le vol est calculé d'un coup au lancement (pas fixe), puis rejoué à
+     l'écran : la même visée donne toujours la même trajectoire.
+   - Classement familial : le total d'étoiles (90 au maximum).
+   L'écran est dessiné en 272×480 pixels logiques puis agrandi sans lissage.
+   ===================================================================== */
+const LW = 272, LH = 480, TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace';
+const OUT = '#0b0614';
+const TOP = 34, BOT = 446;                         // zone de jeu entre le bandeau du haut et celui du bas
+const DT = 1 / 200, TMAX = 9, VMAX = 230, PULL = 72, G = 45000, HOLE_M = 14, TR = 13;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const now = () => performance.now();
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem('orbite.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('orbite.' + k, JSON.stringify(v)); } catch (e) {} },
+};
+
+/* =========================================================
+   NIVEAUX
+   s : départ, t : balise, p : planètes [x, y, rayon, type, masse?],
+   h : trous noirs [x, y], a : astéroïdes fixes [x, y, rayon],
+   m : astéroïdes en orbite [cx, cy, R, vitesse (rad/s), phase, rayon],
+   o : portails [ax, ay, bx, by], txt : la consigne qui s'affiche.
+   ========================================================= */
+const wall = (y, x0, x1, step = 13, r = 6) => { const a = []; for (let x = x0; x <= x1; x += step) a.push([x, y + ((x / step) % 2 ? 2 : -2), r]); return a; };
+const LEVELS = [
+  { s: [136, 410], t: [136, 110], txt: "Tire vers l'arrière n'importe où, puis lâche pour lancer la sonde." },
+  { s: [136, 410], t: [196, 100], p: [[96, 250, 22, 'roc']], txt: 'Les planètes attirent la sonde : sa route se courbe.' },
+  { s: [136, 410], t: [128, 116], p: [[136, 250, 28, 'gaz']], txt: 'Contourne la planète !' },
+  { s: [60, 410], t: [196, 144], p: [[150, 236, 20, 'glace'], [70, 170, 14, 'roc']] },
+  { s: [40, 400], t: [232, 400], p: [[136, 300, 26, 'lave']], txt: "Sers-toi de l'attraction pour faire le tour." },
+  { s: [136, 410], t: [110, 92], a: wall(250, 8, 100).concat(wall(250, 152, 264)), txt: 'Gare aux astéroïdes !' },
+  { s: [50, 410], t: [198, 116], p: [[136, 250, 24, 'anneau']], a: [[40, 250, 6], [232, 250, 6], [70, 160, 5], [200, 330, 5]] },
+  { s: [136, 420], t: [76, 124], p: [[184, 186, 22, 'gaz'], [86, 296, 16, 'roc']] },
+  { s: [232, 410], t: [40, 410], p: [[136, 340, 20, 'jungle'], [136, 186, 24, 'glace']], txt: 'Passe par-dessus...' },
+  { s: [136, 420], t: [136, 102], p: [[136, 246, 34, 'anneau']], a: [[56, 246, 6], [216, 246, 6], [36, 186, 5], [236, 186, 5], [30, 306, 5], [242, 306, 5]] },
+  { s: [136, 420], t: [96, 134], p: [[98, 226, 18, 'roc'], [174, 266, 18, 'glace']] },
+  { s: [40, 420], t: [188, 90], p: [[98, 310, 16, 'lave'], [176, 210, 17, 'jungle']], a: [[110, 140, 6], [60, 200, 5]] },
+  { s: [136, 420], t: [60, 104], h: [[136, 250]], txt: 'Trou noir : il attire très fort et avale tout ce qui le frôle.' },
+  { s: [40, 420], t: [236, 420], h: [[136, 330]], p: [[136, 150, 20, 'gaz']] },
+  { s: [136, 420], t: [136, 122], h: [[88, 250], [184, 250]] },
+  { s: [56, 420], t: [192, 86], h: [[150, 210]], a: wall(330, 120, 262) },
+  { s: [236, 420], t: [88, 128], p: [[152, 306, 22, 'lave'], [86, 196, 18, 'glace']], a: [[150, 150, 6], [200, 220, 6]] },
+  { s: [136, 420], t: [136, 136], p: [[136, 200, 22, 'jungle']], h: [[60, 320], [212, 320]], a: [[136, 300, 7]] },
+  { s: [136, 420], t: [136, 92], a: wall(250, 8, 264), o: [[136, 330, 136, 176]], txt: "Les portails sont reliés : entre dans l'un, ressors par l'autre." },
+  { s: [40, 420], t: [200, 96], a: wall(260, 8, 264), o: [[200, 370, 70, 190]], p: [[136, 130, 16, 'roc']] },
+  { s: [136, 420], t: [236, 410], a: wall(300, 160, 264).concat(wall(300, 8, 112)), o: [[50, 200, 220, 340]], p: [[136, 196, 20, 'gaz']] },
+  { s: [136, 420], t: [136, 86], o: [[40, 300, 232, 190]], h: [[136, 250]], a: [[136, 150, 7], [110, 150, 6], [162, 150, 6]] },
+  { s: [40, 420], t: [16, 86], p: [[136, 250, 30, 'anneau']], o: [[232, 330, 232, 170]], a: wall(250, 8, 96) },
+  { s: [136, 420], t: [128, 86], p: [[136, 250, 22, 'glace']], m: [[136, 250, 50, 1.4, 0, 6], [136, 250, 50, 1.4, Math.PI, 6]], txt: 'Certains astéroïdes tournent autour des planètes.' },
+  { s: [40, 420], t: [250, 134], p: [[100, 300, 18, 'roc'], [176, 180, 20, 'lave']], m: [[176, 180, 44, -1.6, 0, 5], [100, 300, 38, 1.8, 1, 5]] },
+  { s: [136, 420], t: [176, 140], p: [[136, 200, 18, 'jungle']], m: [[136, 200, 40, 2, 0, 5], [136, 200, 40, 2, TAU / 3, 5], [136, 200, 40, 2, 2 * TAU / 3, 5]], h: [[60, 300]] },
+  { s: [232, 420], t: [64, 126], h: [[136, 260]], m: [[136, 260, 60, 1.2, 0, 6], [136, 260, 60, 1.2, Math.PI, 6]], p: [[200, 150, 16, 'glace']] },
+  { s: [136, 420], t: [104, 134], a: wall(330, 8, 264), o: [[40, 380, 232, 290]], p: [[136, 200, 20, 'gaz']], m: [[136, 200, 46, -1.5, 0, 5]] },
+  { s: [40, 420], t: [236, 300], p: [[110, 200, 22, 'anneau'], [200, 380, 14, 'roc']], h: [[220, 160]], o: [[40, 300, 150, 110]], a: wall(250, 120, 264) },
+  { s: [136, 430], t: [112, 112], p: [[70, 330, 16, 'lave'], [200, 260, 18, 'glace'], [90, 170, 16, 'jungle']], h: [[190, 120]], m: [[200, 260, 42, 1.6, 0, 5], [90, 170, 38, -1.8, 1, 5]], a: [[136, 220, 6]], txt: 'Dernière mission : bon vol, commandant !' },
+];
+
+/* =========================================================
+   PHYSIQUE (pas fixe, déterministe)
+   ========================================================= */
+const pmass = p => p[4] != null ? p[4] : G * Math.pow(p[2] / 10, 3);
+function sim(L, ang, pow, tmax = TMAX, keep = true) {
+  let x = L.s[0], y = L.s[1], vx = Math.cos(ang) * VMAX * pow, vy = Math.sin(ang) * VMAX * pow, cool = 0;
+  const path = keep ? [[x, y]] : null, P = L.p || [], H = L.h || [], A = L.a || [], M = L.m || [], O = L.o || [];
+  const steps = Math.round(tmax / DT);
+  for (let i = 1; i <= steps; i++) {
+    const t = i * DT;
+    let ax = 0, ay = 0;
+    for (const p of P) {
+      const dx = p[0] - x, dy = p[1] - y, d2 = dx * dx + dy * dy;
+      if (d2 < p[2] * p[2]) return { r: 'crash', path, i, x, y };
+      const f = pmass(p) / (d2 * Math.sqrt(d2)); ax += dx * f; ay += dy * f;
+    }
+    for (const h of H) {
+      const dx = h[0] - x, dy = h[1] - y, d2 = dx * dx + dy * dy;
+      if (d2 < 64) return { r: 'hole', path, i, x: h[0], y: h[1] };
+      const f = G * HOLE_M / (Math.max(d2, 100) * Math.sqrt(d2)); ax += dx * f; ay += dy * f;
+    }
+    vx += ax * DT; vy += ay * DT; x += vx * DT; y += vy * DT;
+    if (cool > 0) cool -= DT;
+    else for (const o of O) {
+      for (const [fx, fy, tx, ty] of [[o[0], o[1], o[2], o[3]], [o[2], o[3], o[0], o[1]]]) {
+        if ((fx - x) ** 2 + (fy - y) ** 2 < 81) { x = tx; y = ty; cool = .35; if (keep) path.push(null); break; }
+      }
+      if (cool > 0) break;
+    }
+    if (keep && i % 2 === 0) path.push([x, y]);
+    for (const a of A) if ((a[0] - x) ** 2 + (a[1] - y) ** 2 < (a[2] + 2) ** 2) return { r: 'crash', path, i, x, y };
+    for (const m of M) {
+      const mx = m[0] + Math.cos(m[4] + m[3] * t) * m[2], my = m[1] + Math.sin(m[4] + m[3] * t) * m[2];
+      if ((mx - x) ** 2 + (my - y) ** 2 < (m[5] + 2) ** 2) return { r: 'crash', path, i, x, y };
+    }
+    if ((L.t[0] - x) ** 2 + (L.t[1] - y) ** 2 < TR * TR) return { r: 'win', path, i, x, y };
+    if (x < -30 || x > LW + 30 || y < TOP - 40 || y > BOT + 30) return { r: 'lost', path, i, x, y };
+  }
+  return { r: 'time', path, i: steps, x, y };
+}
+const moonPos = (m, t) => [m[0] + Math.cos(m[4] + m[3] * t) * m[2], m[1] + Math.sin(m[4] + m[3] * t) * m[2]];
+
+/* =========================================================
+   AUDIO (petits bruitages WebAudio)
+   ========================================================= */
+const AC = { ctx: null, out: null, on: store.get('sfx', true) };
+function audioInit() {
+  if (AC.ctx) { if (AC.ctx.state === 'suspended') AC.ctx.resume(); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  AC.ctx = new Ctx(); AC.out = AC.ctx.createGain(); AC.out.gain.value = .5; AC.out.connect(AC.ctx.destination);
+}
+function tone(f, d, type = 'square', vol = .2, slide = 0, delay = 0) {
+  if (!AC.on || !AC.ctx) return;
+  const t = AC.ctx.currentTime + delay, o = AC.ctx.createOscillator(), g = AC.ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+  o.connect(g); g.connect(AC.out); o.start(t); o.stop(t + d + .02);
+}
+function noise(d, vol = .3, delay = 0) {
+  if (!AC.on || !AC.ctx) return;
+  const t = AC.ctx.currentTime + delay, n = Math.floor(AC.ctx.sampleRate * d), b = AC.ctx.createBuffer(1, n, AC.ctx.sampleRate), c = b.getChannelData(0);
+  for (let i = 0; i < n; i++) c[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const s = AC.ctx.createBufferSource(), g = AC.ctx.createGain(), f = AC.ctx.createBiquadFilter();
+  f.type = 'lowpass'; f.frequency.value = 900; s.buffer = b; g.gain.value = vol; s.connect(f); f.connect(g); g.connect(AC.out); s.start(t);
+}
+const SFX = {
+  click: () => tone(660, .05, 'square', .1),
+  launch: () => { noise(.35, .25); tone(180, .35, 'sawtooth', .12, 500); },
+  portal: () => { tone(400, .15, 'sine', .25, 900); tone(900, .15, 'sine', .15, -500, .08); },
+  crash: () => { noise(.6, .5); tone(120, .4, 'square', .15, -80); },
+  hole: () => tone(500, .9, 'sine', .3, -460),
+  lost: () => tone(300, .5, 'triangle', .2, -200),
+  win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .18, 'square', .14, 0, i * .09)),
+  star: i => tone(880 + i * 220, .12, 'triangle', .2),
+};
+
+/* =========================================================
+   GRAPHISMES : volumes ombrés pixel par pixel (lumière en haut à gauche)
+   ========================================================= */
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const LIGHT = (() => { const v = [-.55, -.7, .55], n = Math.hypot(...v); return v.map(x => x / n); })();
+const PAL = {
+  roc:    ['#efe2c8', '#c9ab84', '#9a7a5a', '#6b4e3a', '#3e2a22'],
+  gaz:    ['#ffe7b0', '#f2b562', '#d97c3a', '#a24a28', '#5e2418'],
+  glace:  ['#ffffff', '#c6f1ff', '#7fc8f0', '#4a86c8', '#25467e'],
+  lave:   ['#ffd28a', '#e2603a', '#a8322a', '#6a1c22', '#36101a'],
+  jungle: ['#d8ffb0', '#6ed06a', '#2f9a5c', '#1c6458', '#123a40'],
+  anneau: ['#fff4d8', '#e8cf95', '#c39a62', '#8a6444', '#4c3428'],
+  rock:   ['#d8d2cc', '#a39a92', '#756c68', '#4c4448', '#2a2430'],
+};
+// texture propre à chaque type : décale la nuance (bandes, cratères, continents…)
+function texture(type, x, y, r, R) {
+  switch (type) {
+    case 'gaz': case 'anneau': { const b = Math.sin(y / r * 7 + Math.sin(x / r * 3) * .6); return b > .55 ? -.25 : b < -.6 ? .2 : 0; }
+    case 'roc': { let d = 0; for (const [cx, cy, cr] of R.craters) { const q = Math.hypot(x - cx, y - cy); if (q < cr) d += q > cr - 1.2 ? -.25 : .22; } return d; }
+    case 'glace': return (Math.sin(x * .9 + y * .4) + Math.sin(y * 1.3 - x * .2)) > 1.5 ? -.3 : 0;
+    case 'jungle': return R.land(x, y) ? .05 : .45;
+    case 'lave': return Math.abs(Math.sin(x * .45 + Math.sin(y * .3) * 2) * Math.cos(y * .38)) < .12 ? 'glow' : 0;
+    default: return 0;
+  }
+}
+function planetSprite(r, type, seed = 7) {
+  const pad = type === 'anneau' ? Math.round(r * .9) : 3, W = r * 2 + 1 + pad * 2, [c, g] = mk(W, r * 2 + 7);
+  const ox = W / 2, oy = r + 3, pal = PAL[type], img = g.createImageData(c.width, c.height), rand = rnd(seed * 97 + r);
+  const R = { craters: [], land: null };
+  for (let i = 0; i < 5 + r / 4; i++) R.craters.push([(rand() * 2 - 1) * r * .7, (rand() * 2 - 1) * r * .7, 1.5 + rand() * r * .22]);
+  const blobs = []; for (let i = 0; i < 7; i++) blobs.push([(rand() * 2 - 1) * r, (rand() * 2 - 1) * r, r * (.25 + rand() * .3)]);
+  R.land = (x, y) => blobs.some(([bx, by, br]) => (x - bx) ** 2 + (y - by) ** 2 < br * br);
+  const put = (x, y, col) => { if (x < 0 || y < 0 || x >= c.width || y >= c.height) return; const k = (y * c.width + x) * 4, n = parseInt(col.slice(1), 16);
+    img.data[k] = n >> 16; img.data[k + 1] = (n >> 8) & 255; img.data[k + 2] = n & 255; img.data[k + 3] = 255; };
+  const ringPix = (back) => {
+    if (type !== 'anneau') return;
+    for (let y = -r; y <= r; y++) for (let x = -r - pad; x <= r + pad; x++) {
+      const e = (x / (r * 1.75)) ** 2 + (y / (r * .42)) ** 2, e2 = (x / (r * 1.3)) ** 2 + (y / (r * .3)) ** 2;
+      if (e <= 1 && e2 >= 1 && (y < 0) === back) put(Math.round(ox + x), Math.round(oy + y), e > .8 ? '#8a6444' : (x + y) % 3 ? '#e8cf95' : '#c39a62');
+    }
+  };
+  ringPix(true);
+  for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+    const d2 = x * x + y * y; if (d2 > r * r) continue;
+    const nx = x / r, ny = y / r, nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+    let l = nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2];
+    const tx = texture(type, x, y, r, R);
+    if (tx === 'glow') { put(Math.round(ox + x), Math.round(oy + y), l > .2 ? '#ffd28a' : '#ff9a3a'); continue; }
+    l += tx + (((x + y) & 1) ? .04 : -.04);
+    const idx = l > .82 ? 0 : l > .5 ? 1 : l > .18 ? 2 : l > -.15 ? 3 : 4;
+    put(Math.round(ox + x), Math.round(oy + y), d2 > (r - 1) * (r - 1) && idx > 2 ? OUT : pal[idx]);
+  }
+  ringPix(false);
+  g.putImageData(img, 0, 0);
+  // contour sombre autour de la planète
+  const [c2, g2] = mk(c.width, c.height);
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) g2.drawImage(c, dx, dy);
+  g2.globalCompositeOperation = 'source-in'; g2.fillStyle = OUT; g2.fillRect(0, 0, c.width, c.height);
+  g2.globalCompositeOperation = 'source-over'; g2.drawImage(c, 0, 0);
+  return { img: c2, ox, oy };
+}
+function rockSprite(r, seed) {
+  const s = planetSprite(r, 'rock', seed), rand = rnd(seed * 13 + 5), [c, g] = mk(s.img.width, s.img.height);
+  g.drawImage(s.img, 0, 0);
+  // bosses : on grignote un peu le bord pour un caillou irrégulier
+  g.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 3; i++) { const a = rand() * TAU; g.fillRect(Math.round(s.ox + Math.cos(a) * (r + .5)) - 1, Math.round(s.oy + Math.sin(a) * (r + .5)) - 1, 2, 2); }
+  return { img: c, ox: s.ox, oy: s.oy };
+}
+// fond : nébuleuse tramée et étoiles fixes
+function buildSky() {
+  const [c, g] = mk(LW, LH), img = g.createImageData(LW, LH), rand = rnd(4242);
+  const blobs = [[60, 140, 120, [70, 30, 120]], [220, 330, 140, [20, 60, 130]], [150, 460, 110, [90, 24, 90]], [240, 60, 90, [20, 80, 110]]];
+  const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) {
+    let r = 6, gg = 7, b = 22;
+    for (const [bx, by, br, col] of blobs) {
+      const d = Math.hypot(x - bx, (y - by) * 1.2) / br, w = Math.max(0, 1 - d) + Math.sin(x * .05 + y * .03) * .08;
+      const q = Math.floor(w * 4 + bayer[(y & 3) * 4 + (x & 3)] / 16) / 4;
+      r += col[0] * q * .5; gg += col[1] * q * .5; b += col[2] * q * .5;
+    }
+    const k = (y * LW + x) * 4; img.data[k] = r; img.data[k + 1] = gg; img.data[k + 2] = b; img.data[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const stars = [];
+  for (let i = 0; i < 170; i++) {
+    const x = Math.floor(rand() * LW), y = Math.floor(rand() * LH), s = rand();
+    if (s > .93) stars.push([x, y, rand() * TAU]);
+    else { g.fillStyle = s > .6 ? '#c8d0ff' : s > .3 ? '#7880b8' : '#4a4e80'; g.fillRect(x, y, 1, 1); }
+  }
+  return { img: c, stars };
+}
+
+/* =========================================================
+   ÉTAT
+   ========================================================= */
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
+let K = 1, T = 0, BTN = [];
+const S = {
+  phase: 'title', lvl: 0, tries: 0, shots: [], fly: null, aim: null, drag: null, parts: [], shake: 0,
+  stars: store.get('stars', {}) || {}, rankText: '', result: null, msgT: 0, sprites: null, levelPage: 0,
+};
+const totalStars = () => Object.values(S.stars).reduce((s, v) => s + (v | 0), 0);
+const unlocked = () => { let n = 0; while (n < LEVELS.length && S.stars[n + 1] > 0) n++; return Math.min(n, LEVELS.length - 1); };
+let SKY = null;
+function levelSprites(L) {
+  const sp = { p: [], a: [], m: [] };
+  (L.p || []).forEach((p, i) => sp.p.push(planetSprite(p[2], p[3], i + 3)));
+  (L.a || []).forEach((a, i) => sp.a.push(rockSprite(a[2], i + 11)));
+  (L.m || []).forEach((m, i) => sp.m.push(rockSprite(m[5], i + 31)));
+  return sp;
+}
+function startLevel(i) {
+  S.lvl = i; S.tries = 0; S.shots = []; S.fly = null; S.aim = null; S.drag = null; S.parts = []; S.result = null; S.rankText = '';
+  S.sprites = levelSprites(LEVELS[i]); S.phase = 'play'; S.msgT = now();
+}
+
+/* =========================================================
+   DESSIN
+   ========================================================= */
+const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function text(s, x, y, col, align = 'left', size = 8, shadow = '#05030c') {
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
+  if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+function wrap(s, max) {
+  const out = []; let line = '';
+  for (const w of s.split(' ')) { if ((line + ' ' + w).trim().length > max) { out.push(line); line = w; } else line = (line + ' ' + w).trim(); }
+  if (line) out.push(line); return out;
+}
+function logo(s, x, y, size) {
+  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
+  g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, '#e6fbff'); gr.addColorStop(.5, '#6fd8ff'); gr.addColorStop(1, '#6a5cff');
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function panel(x, y, w, h, gold) {
+  R(x - 2, y - 2, w + 4, h + 4, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, gold ? '#5a3c10' : '#1e2a5c'); gr.addColorStop(1, gold ? '#2a1606' : '#0c1030');
+  g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x, y, w, 1, gold ? '#ffe28a' : '#8fb0ff'); R(x, y, 1, h, gold ? '#ffe28a' : '#8fb0ff');
+  R(x, y + h - 1, w, 1, gold ? '#8a5a18' : '#2a3a7a'); R(x + w - 1, y, 1, h, gold ? '#8a5a18' : '#2a3a7a');
+}
+function button(x, y, w, h, label, act, opts = {}) {
+  BTN.push({ x, y, w, h, act });
+  R(x - 1, y - 1, w + 2, h + 2, OUT);
+  const top = opts.gold ? '#ffd23f' : opts.off ? '#3a3f5c' : '#3f63d8', bot = opts.gold ? '#c27a12' : opts.off ? '#22263a' : '#1d2f86';
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(x, y, w, h);
+  R(x + 1, y + 1, w - 2, 1, opts.gold ? '#fff2b0' : '#9fb8ff');
+  text(label, x + w / 2, y + Math.round((h - 8) / 2) + 1, opts.gold ? '#2a1600' : '#f2f4ff', 'center', 8, opts.gold ? null : '#05030c');
+}
+function star(x, y, on, big) {
+  const m = ['...y...', '...y...', '..yyy..', 'yyyyyyy', '.yyyyy.', '..yyy..', '.yy.yy.', '.y...y.'];
+  const s = big ? 3 : 1;
+  m.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'y') R(x + c * s, y + r * s, s, s, on ? (r < 2 ? '#fff2a8' : '#ffc21f') : '#3a3f5c'); }));
+}
+function drawSky(t) {
+  g.drawImage(SKY.img, 0, 0);
+  for (const [x, y, p] of SKY.stars) {
+    const tw = Math.sin(t * 2 + p) > .3;
+    R(x, y, 1, 1, '#ffffff'); if (tw) { R(x - 1, y, 3, 1, 'rgba(200,220,255,.7)'); R(x, y - 1, 1, 3, 'rgba(200,220,255,.7)'); }
+  }
+}
+function drawHole(x, y, t) {
+  for (let i = 0; i < 26; i++) {
+    const a = i / 26 * TAU + t * (1.5 + (i % 3) * .3), rr = 9 + (i % 4) * 2.2 + Math.sin(t * 3 + i) * .8;
+    R(Math.round(x + Math.cos(a) * rr), Math.round(y + Math.sin(a) * rr * .55), 2, 1, ['#ffefa0', '#ff9a3a', '#c04aff', '#6a5cff'][i % 4]);
+  }
+  g.fillStyle = 'rgba(120,60,200,.25)'; g.beginPath(); g.arc(x, y, 14, 0, TAU); g.fill();
+  g.fillStyle = '#000'; g.beginPath(); g.arc(x, y, 7, 0, TAU); g.fill();
+  R(x - 8, y - 1, 1, 2, '#ffefa0'); R(x + 7, y - 1, 1, 2, '#ffefa0');
+}
+function drawPortal(x, y, t, hue) {
+  const cols = hue ? ['#5cf2ff', '#2a8aff', '#d8fbff'] : ['#ff7af2', '#a03aff', '#ffe0fb'];
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * TAU + t * 3 * (hue ? 1 : -1), rr = 8 + Math.sin(t * 5 + i) * .8;
+    R(Math.round(x + Math.cos(a) * rr), Math.round(y + Math.sin(a) * rr), 2, 2, cols[i % 3]);
+  }
+  g.fillStyle = hue ? 'rgba(40,120,255,.35)' : 'rgba(170,40,255,.35)'; g.beginPath(); g.arc(x, y, 6, 0, TAU); g.fill();
+  R(x - 1, y - 1, 2, 2, cols[2]);
+}
+function drawBeacon(x, y, t) {
+  g.strokeStyle = 'rgba(255,210,63,.25)'; g.lineWidth = 1; g.beginPath(); g.arc(x + .5, y + .5, 13 + Math.sin(t * 4) * 2, 0, TAU); g.stroke();
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * TAU + t * 1.2;
+    R(Math.round(x + Math.cos(a) * 10) - 1, Math.round(y + Math.sin(a) * 10) - 1, 3, 3, OUT);
+    R(Math.round(x + Math.cos(a) * 10), Math.round(y + Math.sin(a) * 10), 1, 1, i % 2 ? '#ffd23f' : '#fff2a8');
+  }
+  R(x - 3, y - 3, 7, 7, OUT); R(x - 2, y - 2, 5, 5, '#c27a12'); R(x - 2, y - 2, 4, 4, '#ffd23f'); R(x - 1, y - 1, 2, 2, '#fff6c2');
+  if (Math.sin(t * 6) > 0) R(x, y - 6, 1, 2, '#ff5050');
+}
+function drawProbe(x, y, a, t, flame) {
+  x = Math.round(x); y = Math.round(y);
+  const cx = Math.cos(a), sy = Math.sin(a);
+  if (flame) for (let i = 2; i < 6; i++) R(Math.round(x - cx * i), Math.round(y - sy * i), 2, 2, i < 4 ? '#fff2a8' : (t * 20 | 0) % 2 ? '#ff9a3a' : '#e2603a');
+  // panneaux solaires perpendiculaires au vol
+  for (let s = -1; s <= 1; s += 2) for (let i = 3; i <= 5; i++) R(Math.round(x - sy * i * s), Math.round(y + cx * i * s), 2, 2, i === 3 ? '#9aa4c0' : '#3a7ae0');
+  R(x - 2, y - 2, 5, 5, OUT); R(x - 1, y - 1, 3, 3, '#c8d0e0'); R(x - 1, y - 1, 2, 2, '#ffffff');
+  R(Math.round(x + cx * 3), Math.round(y + sy * 3), 1, 1, '#ff5050');
+}
+function drawPad(x, y) {
+  R(x - 8, y + 5, 17, 4, OUT); R(x - 7, y + 5, 15, 2, '#6a7290'); R(x - 7, y + 7, 15, 1, '#3a3f5c');
+  R(x - 9, y + 8, 3, 3, OUT); R(x + 7, y + 8, 3, 3, OUT);
+}
+function drawLevel(t) {
+  const L = LEVELS[S.lvl], sp = S.sprites, ft = S.fly ? S.fly.k * DT : 0;
+  (L.o || []).forEach(o => { drawPortal(o[0], o[1], t, (L.o.indexOf(o)) % 2); drawPortal(o[2], o[3], t, (L.o.indexOf(o)) % 2); });
+  (L.h || []).forEach(h => drawHole(h[0], h[1], t));
+  (L.p || []).forEach((p, i) => g.drawImage(sp.p[i].img, Math.round(p[0] - sp.p[i].ox), Math.round(p[1] - sp.p[i].oy)));
+  (L.a || []).forEach((a, i) => g.drawImage(sp.a[i].img, Math.round(a[0] - sp.a[i].ox), Math.round(a[1] - sp.a[i].oy)));
+  (L.m || []).forEach((m, i) => {
+    // pointillés de l'orbite, puis le caillou à sa place (figé au départ, il tourne pendant le vol)
+    for (let k = 0; k < 40; k++) { const a = k / 40 * TAU; if (k % 2) R(Math.round(m[0] + Math.cos(a) * m[2]), Math.round(m[1] + Math.sin(a) * m[2]), 1, 1, 'rgba(160,170,220,.35)'); }
+    const [x, y] = moonPos(m, ft); g.drawImage(sp.m[i].img, Math.round(x - sp.m[i].ox), Math.round(y - sp.m[i].oy));
+  });
+  drawBeacon(L.t[0], L.t[1], t);
+  drawPad(L.s[0], L.s[1]);
+}
+function drawPath(path, upto, col, step = 1) {
+  if (!path) return;
+  for (let i = 0; i < Math.min(upto, path.length); i += step) { const p = path[i]; if (p) R(Math.round(p[0]), Math.round(p[1]), 1, 1, col); }
+}
+
+function drawPlay(t) {
+  const L = LEVELS[S.lvl];
+  g.save();
+  if (S.shake > 0) { g.translate(Math.round((Math.random() * 2 - 1) * S.shake), Math.round((Math.random() * 2 - 1) * S.shake)); }
+  drawSky(t); drawLevel(t);
+  // essais précédents en pâle, pour corriger le tir
+  S.shots.forEach((s, i) => { if (s !== S.fly) drawPath(s.res.path, s.res.path.length, i === S.shots.length - 1 ? 'rgba(150,200,255,.55)' : 'rgba(150,200,255,.25)', 2); });
+  // visée : le début de la trajectoire
+  if (S.aim && !S.fly) {
+    const pv = sim(L, S.aim.ang, S.aim.pow, .5);
+    for (let i = 0; i < pv.path.length; i += 3) { const p = pv.path[i]; if (p) R(Math.round(p[0]) - 1, Math.round(p[1]) - 1, 2, 2, (i / 3) % 2 ? '#ffd23f' : '#fff6c2'); }
+  }
+  if (S.fly) {
+    const f = S.fly, idx = Math.min(f.res.path.length - 1, Math.floor(f.k / 2));
+    drawPath(f.res.path, idx, 'rgba(255,240,180,.8)');
+    let p = f.res.path[idx], j = idx; while (!p && j > 0) p = f.res.path[--j];
+    let q = null; j = idx - 1; while (j > 0 && !(q = f.res.path[j])) j--;
+    if (p && !f.done) drawProbe(p[0], p[1], q ? Math.atan2(p[1] - q[1], p[0] - q[0]) : f.ang, t, f.k < 60);
+  } else if (S.phase === 'play') drawProbe(L.s[0], L.s[1], S.aim ? S.aim.ang : -Math.PI / 2, t, false);
+  for (const p of S.parts) R(Math.round(p.x), Math.round(p.y), p.s, p.s, p.c);
+  g.restore();
+  // bandeau du haut
+  R(0, 0, LW, TOP, 'rgba(6,8,24,.92)'); R(0, TOP, LW, 1, '#2a3a7a');
+  text(`NIVEAU ${S.lvl + 1}`, 6, 6, '#e6fbff');
+  text('ESSAIS', 6, 20, '#8fa0d0', 'left', 6);
+  for (let i = 0; i < 3; i++) { const used = i < S.tries; R(46 + i * 10, 19, 7, 7, OUT); R(47 + i * 10, 20, 5, 5, used ? '#3a3f5c' : '#5cf2ff'); }
+  const best = S.stars[S.lvl + 1] | 0; for (let i = 0; i < 3; i++) star(100 + i * 10, 19, i < best);
+  button(LW - 58, 7, 52, 20, 'MENU', () => { S.phase = 'levels'; S.levelPage = Math.floor(S.lvl / 15); SFX.click(); });
+  // bandeau du bas : consigne ou puissance
+  R(0, BOT, LW, LH - BOT, 'rgba(6,8,24,.92)'); R(0, BOT, LW, 1, '#2a3a7a');
+  if (S.aim && !S.fly) {
+    text('PUISSANCE', 8, BOT + 8, '#8fa0d0', 'left', 6);
+    R(8, BOT + 18, 160, 8, OUT); R(9, BOT + 19, Math.round(158 * S.aim.pow), 6, S.aim.pow > .85 ? '#ff7a3a' : '#5cf2ff');
+    text(`${Math.round(S.aim.pow * 100)} %`, 176, BOT + 18, '#e6fbff', 'left', 8);
+  } else {
+    const msg = S.fly ? '' : S.note || L.txt || 'Tire vers l\'arrière pour viser, lâche pour lancer.';
+    wrap(msg, 33).slice(0, 3).forEach((l, i) => text(l, 6, BOT + 6 + i * 10, '#c8d4f4', 'left', 7));
+  }
+  if (S.phase === 'won' || S.phase === 'failed') drawResult(t);
+}
+function drawResult(t) {
+  const won = S.phase === 'won', y = 150;
+  g.fillStyle = 'rgba(4,5,14,.55)'; g.fillRect(0, TOP + 1, LW, BOT - TOP - 1);
+  panel(30, y, 212, won ? 170 : 130, won);
+  if (won) {
+    text(S.lvl === LEVELS.length - 1 ? 'MISSION ACCOMPLIE' : 'BALISE ATTEINTE !', 136, y + 12, '#fff2a8', 'center');
+    const k = (now() - S.result.t0) / 300;
+    for (let i = 0; i < 3; i++) star(94 + i * 32, y + 30, i < Math.min(S.result.stars, Math.floor(k)), true);
+    text(S.result.stars === 3 ? 'Du premier coup !' : S.result.stars === 2 ? 'Au deuxième essai.' : 'Au troisième essai.', 136, y + 58, '#e8d8b0', 'center', 7);
+    text(`TOTAL : ${totalStars()} / ${LEVELS.length * 3}`, 136, y + 74, '#ffd23f', 'center', 7);
+    if (S.rankText) text(S.rankText, 136, y + 88, '#5cff8a', 'center', 7);
+    if (S.lvl < LEVELS.length - 1) button(50, y + 104, 172, 22, 'NIVEAU SUIVANT', () => { SFX.click(); startLevel(S.lvl + 1); }, { gold: true });
+    else button(50, y + 104, 172, 22, 'CLASSEMENT', () => { location.href = '../classements/index.html#orbite'; }, { gold: true });
+    button(50, y + 134, 82, 22, 'REJOUER', () => { SFX.click(); startLevel(S.lvl); });
+    button(140, y + 134, 82, 22, 'NIVEAUX', () => { SFX.click(); S.phase = 'levels'; S.levelPage = Math.floor(S.lvl / 15); });
+  } else {
+    text('PLUS D\'ESSAIS', 136, y + 14, '#ff9a8a', 'center');
+    wrap('Les trois sondes sont perdues. On repart avec trois sondes neuves ?', 30).forEach((l, i) => text(l, 136, y + 36 + i * 11, '#d8d8f0', 'center', 7));
+    button(50, y + 74, 172, 22, 'REESSAYER', () => { SFX.click(); startLevel(S.lvl); }, { gold: true });
+    button(50, y + 102, 172, 20, 'NIVEAUX', () => { SFX.click(); S.phase = 'levels'; S.levelPage = Math.floor(S.lvl / 15); });
+  }
+}
+let TITLE_SP = null;
+function drawTitle(t) {
+  drawSky(t);
+  if (!TITLE_SP) TITLE_SP = { a: planetSprite(34, 'anneau', 2), b: planetSprite(14, 'glace', 5), c: planetSprite(9, 'lave', 8) };
+  g.drawImage(TITLE_SP.a.img, 136 - TITLE_SP.a.ox, 210 - TITLE_SP.a.oy);
+  const a = t * .7, bx = 136 + Math.cos(a) * 92, by = 210 + Math.sin(a) * 40;
+  g.drawImage(TITLE_SP.b.img, Math.round(bx - TITLE_SP.b.ox), Math.round(by - TITLE_SP.b.oy));
+  g.drawImage(TITLE_SP.c.img, 36 - TITLE_SP.c.ox, 140 - TITLE_SP.c.oy);
+  const pa = -t * 1.1, px = 136 + Math.cos(pa) * 60, py = 210 + Math.sin(pa) * 70;
+  drawProbe(px, py, pa - Math.PI / 2, t, true);
+  logo('ORBITE', 136, 56, 32);
+  text('LA GRAVITE EST TON ALLIEE', 136, 100, '#c8d4f4', 'center', 7);
+  const tot = totalStars(), cont = unlocked();
+  star(92, 286, true, true); text(`${tot} / ${LEVELS.length * 3}`, 118, 294, '#ffd23f', 'left', 8);
+  button(56, 318, 160, 26, tot ? `JOUER (NIV. ${cont + 1})` : 'JOUER', () => { SFX.click(); startLevel(cont); }, { gold: true });
+  button(56, 352, 160, 22, 'NIVEAUX', () => { SFX.click(); S.phase = 'levels'; S.levelPage = Math.floor(cont / 15); });
+  button(56, 382, 160, 22, 'CLASSEMENT', () => { location.href = '../classements/index.html#orbite'; });
+  button(56, 412, 76, 20, AC.on ? 'SON OUI' : 'SON NON', () => { AC.on = !AC.on; store.set('sfx', AC.on); SFX.click(); }, { off: !AC.on });
+  button(140, 412, 76, 20, 'AIDE', () => { SFX.click(); S.phase = 'help'; });
+  if (!window.ludoArtefact) button(56, 442, 160, 20, '◀ LUDOTHEQUE', () => { location.href = '../index.html'; });
+}
+function drawHelp(t) {
+  drawSky(t);
+  panel(14, 40, 244, 390);
+  logo('COMMENT JOUER', 136, 54, 12);
+  const lines = [
+    ['#ffd23f', 'Atteins la balise dorée avec ta sonde.'],
+    ['#c8d4f4', "Viser : pose le doigt n'importe où, tire vers l'arrière comme un lance-pierre, puis lâche. Plus tu tires, plus la sonde part vite."],
+    ['#c8d4f4', 'Le début de la trajectoire s\'affiche ; les essais ratés restent en pâle.'],
+    ['#9fd3ff', 'Planètes : elles attirent la sonde. Ne les touche pas !'],
+    ['#c04aff', 'Trous noirs : ils attirent très fort et avalent tout.'],
+    ['#ff7af2', 'Portails : entre dans l\'un, tu ressors par l\'autre.'],
+    ['#ffd23f', '3 essais par niveau : 3 étoiles du premier coup, 2 au deuxième, 1 au troisième.'],
+  ];
+  let y = 80;
+  for (const [c, s] of lines) { for (const l of wrap(s, 28)) { text(l, 26, y, c, 'left', 7); y += 11; } y += 6; }
+  button(76, 396, 120, 22, 'OK', () => { SFX.click(); S.phase = 'title'; }, { gold: true });
+}
+function drawLevels(t) {
+  drawSky(t);
+  logo('NIVEAUX', 136, 22, 16);
+  text(`${totalStars()} / ${LEVELS.length * 3} ETOILES`, 136, 50, '#ffd23f', 'center', 7);
+  const page = S.levelPage, cont = unlocked();
+  for (let k = 0; k < 15; k++) {
+    const i = page * 15 + k; if (i >= LEVELS.length) break;
+    const x = 22 + (k % 3) * 80, y = 74 + Math.floor(k / 3) * 66, open = i <= cont, st = S.stars[i + 1] | 0;
+    panel(x, y, 68, 54, st === 3);
+    if (open) BTN.push({ x, y, w: 68, h: 54, act: () => { SFX.click(); startLevel(i); } });
+    text(open ? String(i + 1) : '?', x + 34, y + 10, open ? '#e6fbff' : '#4a5080', 'center', 12);
+    for (let s = 0; s < 3; s++) star(x + 13 + s * 15, y + 36, s < st);
+  }
+  if (page > 0) button(22, 412, 60, 22, '<', () => { S.levelPage--; SFX.click(); });
+  if ((page + 1) * 15 < LEVELS.length) button(190, 412, 60, 22, '>', () => { S.levelPage++; SFX.click(); });
+  button(96, 412, 80, 22, 'RETOUR', () => { SFX.click(); S.phase = 'title'; });
+}
+
+/* =========================================================
+   VOL ET RÉSULTAT
+   ========================================================= */
+function burst(x, y, cols, n = 26, sp = 60) {
+  for (let i = 0; i < n; i++) { const a = Math.random() * TAU, v = sp * (.3 + Math.random());
+    S.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: .5 + Math.random() * .6, c: cols[i % cols.length], s: Math.random() < .3 ? 2 : 1 }); }
+}
+function launch(ang, pow) {
+  if (pow < .08) return;
+  const L = LEVELS[S.lvl], res = sim(L, ang, pow);
+  S.fly = { ang, pow, res, k: 0, done: false, portals: res.path.reduce((a, p, i) => (p === null && a.push(i), a), []) };
+  S.shots.push(S.fly); S.tries++; S.note = ''; SFX.launch();
+}
+function endFlight() {
+  const f = S.fly, r = f.res; f.done = true;
+  if (r.r === 'win') {
+    SFX.win(); burst(r.x, r.y, ['#fff2a8', '#ffd23f', '#5cf2ff'], 40, 80);
+    const stars = 4 - S.tries, key = S.lvl + 1, before = totalStars();
+    if (stars > (S.stars[key] | 0)) { S.stars[key] = stars; store.set('stars', S.stars); }
+    S.result = { stars, t0: now() + 500 }; S.rankText = '';
+    for (let i = 0; i < stars; i++) setTimeout(() => SFX.star(i), 800 + i * 300);
+    if (totalStars() > before && window.LudoScores) LudoScores.submit('orbite', 'etoiles', totalStars(), false).then(res => {
+      if (res && S.phase === 'won') S.rankText = 'CLASSEMENT : ' + LudoScores.rankText(res).toUpperCase(); });
+    setTimeout(() => { S.phase = 'won'; S.fly = null; }, 600);
+    return;
+  }
+  if (r.r === 'crash') { SFX.crash(); burst(r.x, r.y, ['#ffd28a', '#ff9a3a', '#e2603a', '#6a7290']); S.shake = 4; S.note = 'Boum ! La sonde s\'est écrasée.'; }
+  else if (r.r === 'hole') { SFX.hole(); burst(r.x, r.y, ['#c04aff', '#6a5cff'], 16, 30); S.note = 'Avalée par le trou noir...'; }
+  else { SFX.lost(); S.note = r.r === 'time' ? 'La sonde tourne en rond : perdue.' : 'La sonde s\'est perdue dans l\'espace.'; }
+  setTimeout(() => { S.fly = null; if (S.tries >= 3) S.phase = 'failed'; }, 700);
+}
+
+/* =========================================================
+   BOUCLE
+   ========================================================= */
+function frame(ts) {
+  const t = ts / 1000, dt = Math.min(.05, t - (T || t)); T = t;
+  for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .97; p.vy *= .97; }
+  S.parts = S.parts.filter(p => p.t < p.life); S.shake = Math.max(0, S.shake - dt * 12);
+  if (S.fly && !S.fly.done) {
+    const before = S.fly.k; S.fly.k = Math.min(S.fly.res.i, S.fly.k + dt / DT);
+    for (const pi of S.fly.portals) if (pi * 2 > before && pi * 2 <= S.fly.k) SFX.portal();
+    if (S.fly.k >= S.fly.res.i) endFlight();
+  }
+  BTN = [];
+  g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
+  if (S.phase === 'title') drawTitle(t);
+  else if (S.phase === 'help') drawHelp(t);
+  else if (S.phase === 'levels') drawLevels(t);
+  else drawPlay(t);
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   COMMANDES : lance-pierre au doigt ou à la souris
+   ========================================================= */
+function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
+function aimFrom(x, y) {
+  const d = S.drag, dx = d.x - x, dy = d.y - y, len = Math.hypot(dx, dy);
+  S.aim = len < 4 ? null : { ang: Math.atan2(dy, dx), pow: clamp(len / PULL, 0, 1) };
+}
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); audioInit();
+  const [x, y] = logical(e);
+  for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { b.act(); return; } }
+  if (S.phase === 'play' && !S.fly && S.tries < 3 && y > TOP && y < BOT) { S.drag = { x, y, id: e.pointerId }; S.aim = null; try { cv.setPointerCapture(e.pointerId); } catch (_) {} }
+});
+cv.addEventListener('pointermove', e => { if (!S.drag || e.pointerId !== S.drag.id) return; const [x, y] = logical(e); aimFrom(x, y); });
+cv.addEventListener('pointerup', e => {
+  if (!S.drag || e.pointerId !== S.drag.id) return;
+  const [x, y] = logical(e); aimFrom(x, y); const a = S.aim; S.drag = null; S.aim = null;
+  if (a && S.phase === 'play') launch(a.ang, a.pow);
+});
+cv.addEventListener('pointercancel', () => { S.drag = null; S.aim = null; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.phase === 'play') S.phase = 'levels'; });
+function resize() {
+  const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
+  const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);
+  const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
+  cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
+  cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
+  K = Math.max(1, Math.ceil(sc * dpr - .05));
+  cv.width = LW * K; cv.height = LH * K;
+}
+window.addEventListener('resize', resize);
+window.Orbite = { LEVELS, sim, S, startLevel, launch };   // pour les tests
+
+SKY = buildSky();
+setTimeout(resize, 0); resize();
+(document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));

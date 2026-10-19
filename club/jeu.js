@@ -1,0 +1,1084 @@
+'use strict';
+/* =====================================================================
+   LE CLUB D'AGILITY : un jeu de gestion au tour par tour (une semaine par tour).
+   On recrute des chiens, on choisit leur activité de la semaine (agrès, repos,
+   câlins), on les inscrit aux concours du week-end, et on fait grandir le club
+   (agrès, chenil, buvette, tribunes) jusqu'au Championnat de France.
+   Écran logique de 272×480, dessiné à la résolution de l'écran (×K pair) ;
+   le décor du club, dessiné en 480×240, y est affiché à moitié de sa taille.
+   ===================================================================== */
+const C32 = window.Chiens32, OUT = C32.OUT, RAMP = C32.RAMP;
+const LW = 272, LH = 480, TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace';
+const $ = s => document.querySelector(s);
+const rand = n => Math.floor(Math.random() * n);
+const rf = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[rand(a.length)];
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const now = () => performance.now();
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem('club.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('club.' + k, JSON.stringify(v)); } catch (e) {} },
+};
+
+/* =========================================================
+   RÈGLES
+   ========================================================= */
+const BREEDS = {
+  bernois: { name: 'Bouvier bernois',   m: { vit: .75, saut: .75, obe: 1.05 }, price: 120 },
+  jack:    { name: 'Jack Russell',      m: { vit: 1.15, saut: .95, obe: .8 },  price: 180 },
+  golden:  { name: 'Golden retriever',  m: { vit: .9, saut: .9, obe: 1.15 },   price: 200 },
+  sheltie: { name: 'Shetland',          m: { vit: 1.05, saut: 1, obe: 1.05 },  price: 260 },
+  aussie:  { name: 'Berger australien', m: { vit: 1.05, saut: 1.05, obe: 1.05 }, price: 320 },
+  border:  { name: 'Border collie',     m: { vit: 1.15, saut: 1.1, obe: 1.15 }, price: 450 },
+};
+const BREED_IDS = Object.keys(BREEDS);
+const STATS = [['vit', 'VITESSE', '#4a8fd4', '#a8d0f4'], ['saut', 'SAUT', '#ffd23f', '#fff2a8'], ['obe', 'OBEISSANCE', '#5cbf4a', '#d6ffb0']];
+const NAMES = ['Pixel', 'Biscuit', 'Caramel', 'Filou', 'Gribouille', 'Nala', 'Oslo', 'Praline', 'Rocky', 'Saphir', 'Tango', 'Uno', 'Vanille', 'Ziggy',
+  'Moka', 'Pépite', 'Chips', 'Loulou', 'Plume', 'Sushi', 'Taz', 'Hercule', 'Indy', 'Kiwi', 'Lucky', 'Maya', 'Nouky', 'Olaf', 'Pirate', 'Réglisse',
+  'Gaufre', 'Cookie', 'Domino', 'Eclair', 'Flocon', 'Givre', 'Hibou', 'Jazz', 'Kenzo', 'Lila', 'Mango', 'Noisette', 'Oreo', 'Pistache', 'Ruby', 'Scout', 'Toffee', 'Volt'];
+// activités de la semaine : agrès (gains) ou repos
+const ACTS = {
+  haies:     { name: 'HAIES',     gain: { saut: 6 },          desc: 'SAUT' },
+  tunnel:    { name: 'TUNNEL',    gain: { vit: 6 },           desc: 'VITESSE' },
+  slalom:    { name: 'SLALOM',    gain: { obe: 6 },           desc: 'OBEISSANCE' },
+  pneu:      { name: 'PNEU',      gain: { saut: 7, vit: 2.5 }, desc: 'SAUT ++' },
+  passerelle:{ name: 'PASSERELLE', gain: { vit: 6.5, obe: 3 }, desc: 'VITESSE ++' },
+  palissade: { name: 'PALISSADE', gain: { obe: 5.5, saut: 3.5 }, desc: 'OBEI. + SAUT' },
+  repos:     { name: 'REPOS',     gain: {},                   desc: 'FORME ++' },
+  calins:    { name: 'CALINS',    gain: {},                   desc: 'HUMEUR ++' },
+};
+const ACT_ORDER = ['haies', 'tunnel', 'slalom', 'pneu', 'passerelle', 'palissade', 'repos', 'calins'];
+const SHOP = [
+  { id: 'pneu',      name: 'PNEU',        desc: 'Gros progres en saut',         price: 350 },
+  { id: 'passerelle', name: 'PASSERELLE', desc: 'Gros progres en vitesse',      price: 550 },
+  { id: 'palissade', name: 'PALISSADE',   desc: 'Obeissance et saut',           price: 800 },
+  { id: 'chenil',    name: 'CHENIL',      desc: 'Une place de plus',            price: [200, 450, 800, 1300] },
+  { id: 'buvette',   name: 'BUVETTE',     desc: '+40 pieces par semaine',       price: 500 },
+  { id: 'tribunes',  name: 'TRIBUNES',    desc: 'Reputation x1,5 en concours',  price: 900 },
+  { id: 'terrain',   name: 'GAZON PRO',   desc: '+25% d\'entrainement',         price: 1500 },
+];
+const TIERS = [
+  { name: 'VILLAGE',     full: 'Concours du village',     fee: 10,  prize: [150, 90, 50],      rep: [30, 18, 9],     d: 24 },
+  { name: 'REGIONAL',    full: 'Concours régional',       fee: 30,  prize: [300, 180, 100],    rep: [65, 40, 20],    d: 38 },
+  { name: 'NATIONAL',    full: 'Concours national',       fee: 60,  prize: [700, 400, 220],    rep: [130, 80, 40],   d: 50 },
+  { name: 'GRAND PRIX',  full: 'Grand Prix',              fee: 120, prize: [1500, 900, 500],   rep: [250, 150, 80],  d: 61 },
+  { name: 'CHAMPIONNAT', full: 'Championnat de France',   fee: 200, prize: [4000, 2000, 1000], rep: [500, 300, 150], d: 72 },
+];
+const LEVELS = [0, 80, 250, 550, 1000];
+const level = rep => LEVELS.filter(x => rep >= x).length;   // 1 à 5
+const OBST = [ // le parcours de concours, le long de la boucle du terrain
+  { d: 56, kind: 'haie', name: 'HAIE 1' }, { d: 130, kind: 'haie', name: 'HAIE 2' }, { d: 214, kind: 'tunnel', name: 'TUNNEL' },
+  { d: 316, kind: 'slalom', name: 'SLALOM' }, { d: 524, kind: 'pneu', name: 'PNEU' },
+];
+
+/* ---------- la partie ---------- */
+let G = null;   // l'état sauvegardé
+function newDog(breed, lvl, free) {
+  const b = BREEDS[breed], dog = { id: (G ? G.nextId++ : 1), breed, name: pick(NAMES), st: {}, pot: {}, forme: 90, humeur: 80, act: 'haies', enter: false, comps: 0, podiums: 0, wins: 0 };
+  for (const [k] of STATS) {
+    dog.pot[k] = Math.round(clamp(100 * b.m[k] * rf(.8, .97), 40, 100));
+    dog.st[k] = Math.round(clamp((18 + rand(12) + (lvl - 1) * 8) * b.m[k], 8, dog.pot[k] - 10));
+  }
+  dog.price = free ? 0 : Math.round(b.price * (1 + .2 * (lvl - 1)) * (0.85 + (dog.st.vit + dog.st.saut + dog.st.obe) / 300) / 10) * 10;
+  return dog;
+}
+function freshGame() {
+  G = { v: 1, week: 1, coins: 250, rep: 0, kennel: 2, owned: { haies: 1, tunnel: 1, slalom: 1 }, dogs: [], tier: 0, champion: 0, nextId: 1, cands: [], candWeek: 0, trophies: [], log: [], bestRep: 0 };
+  const d = newDog(pick(['jack', 'golden', 'sheltie', 'bernois']), 1, true); d.id = G.nextId++;
+  G.dogs.push(d);
+  refreshCands();
+  save();
+}
+function refreshCands() {
+  if (G.candWeek === G.week) return;
+  const lvl = level(G.rep), pool = BREED_IDS.filter((b, i) => i < 3 + lvl);
+  G.cands = [0, 1, 2].map(() => { const d = newDog(pick(pool), lvl); d.id = G.nextId++; return d; });
+  G.candWeek = G.week;
+}
+function save() { store.set('save', G); }
+function load() {
+  const g = store.get('save', null);
+  if (!g || g.v !== 1 || !Array.isArray(g.dogs)) return false;
+  G = g; return true;
+}
+const owns = id => !!(G.owned && G.owned[id]);
+const clubName = () => (G && G.clubName) || 'MON CLUB';
+// petite fenêtre de saisie en HTML par-dessus le jeu (prompt() est bloqué dans certains cadres)
+function askText(title, value, max, done) {
+  const box = document.getElementById('ask'), inp = document.getElementById('askInput');
+  document.getElementById('askTitle').textContent = title;
+  inp.value = value || ''; inp.maxLength = max; box.hidden = false;
+  setTimeout(() => { inp.focus(); inp.select(); }, 30);
+  const close = ok => { box.hidden = true; document.getElementById('askOk').onclick = document.getElementById('askNo').onclick = inp.onkeydown = null;
+    if (ok && inp.value.trim()) done(inp.value.trim().slice(0, max)); };
+  document.getElementById('askOk').onclick = () => close(true);
+  document.getElementById('askNo').onclick = () => close(false);
+  inp.onkeydown = e => { if (e.key === 'Enter') close(true); else if (e.key === 'Escape') close(false); };
+}
+function renameClub() {
+  askText('NOM DU CLUB', G.clubName || '', 20, n => { G.clubName = n; save(); SFX.select(); toast(`Bienvenue au club « ${G.clubName} » !`); });
+}
+function shopPrice(it) {
+  if (it.id === 'chenil') return G.kennel >= 6 ? 0 : it.price[G.kennel - 2];
+  return it.price;
+}
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+const AC = { ctx: null, master: null, sfx: null, mus: null, noiseBuf: null, sfxOn: true, musicOn: true };
+function audioInit() {
+  if (AC.ctx) { if (AC.ctx.state === 'suspended') AC.ctx.resume(); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  AC.ctx = new Ctx();
+  AC.master = AC.ctx.createGain(); AC.master.gain.value = .8; AC.master.connect(AC.ctx.destination);
+  AC.sfx = AC.ctx.createGain(); AC.sfx.gain.value = AC.sfxOn ? .9 : 0; AC.sfx.connect(AC.master);
+  AC.mus = AC.ctx.createGain(); AC.mus.gain.value = .35; AC.mus.connect(AC.master);
+  const len = AC.ctx.sampleRate; AC.noiseBuf = AC.ctx.createBuffer(1, len, len);
+  const d = AC.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+}
+function tone({ f, f2, d = .1, type = 'square', v = .12, t = 0, at, dest }) {
+  if (!AC.ctx) return;
+  const t0 = at !== undefined ? at : AC.ctx.currentTime + t, o = AC.ctx.createOscillator(), g = AC.ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + d);
+  g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+  o.connect(g); g.connect(dest || AC.sfx); o.start(t0); o.stop(t0 + d + .02);
+}
+function noise({ d = .3, v = .3, freq = 1000, f2, q = 1, type = 'lowpass', t = 0, at, dest }) {
+  if (!AC.ctx) return;
+  const t0 = at !== undefined ? at : AC.ctx.currentTime + t, s = AC.ctx.createBufferSource(); s.buffer = AC.noiseBuf;
+  const fl = AC.ctx.createBiquadFilter(); fl.type = type; fl.Q.value = q; fl.frequency.setValueAtTime(freq, t0); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t0 + d);
+  const g = AC.ctx.createGain(); g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+  s.connect(fl); fl.connect(g); g.connect(dest || AC.sfx); s.start(t0, Math.random() * .5); s.stop(t0 + d + .02);
+}
+const seq = (notes, step, opts = {}) => notes.forEach((f, i) => f && tone({ f, d: step * 1.1, t: i * step, ...opts }));
+const SFX = {
+  click()  { tone({ f: 880, d: .05, v: .07 }); },
+  select() { tone({ f: 660, d: .05, v: .07 }); tone({ f: 990, d: .07, v: .07, t: .05 }); },
+  error()  { tone({ f: 140, d: .12, v: .1 }); tone({ f: 110, d: .15, v: .1, t: .1 }); },
+  buy()    { seq([784, 988, 1175, 1568], .06, { v: .08 }); },
+  coin()   { tone({ f: 988, d: .06, v: .07 }); tone({ f: 1319, d: .12, v: .07, t: .06 }); },
+  bark()   { noise({ d: .12, v: .25, freq: 900, f2: 500, type: 'bandpass', q: 3 }); tone({ f: 420, f2: 300, d: .1, v: .1, type: 'sawtooth' }); },
+  jump()   { tone({ f: 300, f2: 700, d: .15, v: .06 }); },
+  fault()  { noise({ d: .25, v: .2, freq: 400 }); tone({ f: 200, f2: 120, d: .2, v: .08 }); },
+  whistle(){ tone({ f: 2200, d: .25, v: .06, type: 'sine' }); tone({ f: 2600, d: .2, v: .05, type: 'sine', t: .25 }); },
+  week()   { seq([523, 659, 784, 1047], .07, { v: .08 }); },
+  win()    { seq([523, 523, 523, 659, 0, 587, 659, 784, 0, 1047], .11, { v: .1 }); seq([131, 0, 196, 0, 165, 0, 196, 0, 262], .12, { type: 'triangle', v: .2 }); },
+  clap()   { for (let i = 0; i < 14; i++) noise({ d: .05, v: .15, freq: 2500 + rand(2000), type: 'bandpass', q: 2, t: i * .07 + Math.random() * .04 }); },
+};
+const MUSIC = {
+  timer: null, step: 0, next: 0, dur: .15,
+  lead: [72,0,76,79, 81,79,76,0, 74,0,77,81, 79,0,0,0, 72,0,76,79, 84,83,81,79, 77,76,74,72, 74,0,0,0,
+         76,0,79,0, 81,0,79,77, 76,0,72,0, 74,76,77,0, 79,0,76,0, 74,0,71,74, 72,0,67,0, 72,0,0,0],
+  roots: [48, 48, 53, 53, 50, 50, 55, 55, 52, 52, 53, 53, 55, 55, 48, 48],
+  start() { if (!AC.ctx || this.timer || !AC.musicOn) return; this.step = 0; this.next = AC.ctx.currentTime + .1; this.timer = setInterval(() => this.schedule(), 40); },
+  stop() { clearInterval(this.timer); this.timer = null; },
+  schedule() {
+    const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+    if (this.next < AC.ctx.currentTime) this.next = AC.ctx.currentTime + .05;
+    while (this.next < AC.ctx.currentTime + .15) {
+      const s = this.step % this.lead.length, at = this.next, dest = AC.mus, n = this.lead[s];
+      if (n) tone({ f: mf(n), d: this.dur * .9, v: .04, type: 'triangle', at, dest }), tone({ f: mf(n), d: this.dur * .5, v: .02, at, dest });
+      const root = this.roots[Math.floor(s / 4) % this.roots.length];
+      tone({ f: mf(root - 12 + (s % 4 === 2 ? 7 : 0)), d: this.dur * .9, v: .14, type: 'triangle', at, dest });
+      if (s % 4 === 0) tone({ f: 140, f2: 45, d: .1, v: .16, at, dest });
+      if (s % 2 === 1) noise({ d: .04, v: .05, freq: 6000, type: 'highpass', at, dest });
+      this.next += this.dur; this.step++;
+    }
+  },
+};
+
+/* =========================================================
+   GRAPHISMES
+   ========================================================= */
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
+function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function spr(w, h, list, outline = true) {
+  const C = C32.Canvas(w, h);
+  list.forEach(([shape, ramp, opt], k) => { RAMP['_clb' + k] = ramp; C.draw(shape, Object.assign({ mat: '_clb' + k, id: k + 1, fur: false }, opt || {})); });
+  return C.toCanvas(outline);
+}
+function text(g, s, x, y, col, align = 'left', size = 8, shadow = '#0c0f0a') {
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
+  if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+const GOLD = ['#fff6c2', '#ffd23f', '#e0782a'];
+function logo(g, s, x, y, size) {
+  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
+  g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, GOLD[0]); gr.addColorStop(.5, GOLD[1]); gr.addColorStop(1, GOLD[2]);
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function plate(g, x, y, w, h, tone_) {
+  const top = tone_ === 'gold' ? ['rgba(120,86,20,.97)', 'rgba(60,36,8,.97)'] : tone_ === 'red' ? ['rgba(112,40,44,.96)', 'rgba(44,14,20,.96)']
+            : tone_ === 'dim' ? ['rgba(44,48,44,.94)', 'rgba(20,24,20,.94)'] : tone_ === 'blue' ? ['rgba(48,70,104,.96)', 'rgba(16,26,44,.96)']
+            : ['rgba(52,84,52,.96)', 'rgba(20,38,22,.96)'];
+  R(g, x + 2, y - 2, w - 4, h + 4, OUT); R(g, x - 2, y + 2, w + 4, h - 4, OUT); R(g, x, y, w, h, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top[0]); gr.addColorStop(1, top[1]);
+  g.fillStyle = gr; g.fillRect(x + 1, y + 1, w - 2, h - 2);
+  const hl = tone_ === 'gold' ? 'rgba(255,230,140,.7)' : tone_ === 'red' ? 'rgba(255,170,160,.55)' : tone_ === 'blue' ? 'rgba(160,200,240,.55)' : 'rgba(180,230,160,.5)';
+  R(g, x + 2, y + 1, w - 4, 1, hl); R(g, x + 1, y + 2, 1, h - 4, hl);
+  R(g, x + 2, y + h - 2, w - 4, 1, 'rgba(0,0,0,.45)'); R(g, x + w - 2, y + 2, 1, h - 4, 'rgba(0,0,0,.45)');
+}
+const TINY = {
+  A:'010101111101101',B:'110101110101110',C:'011100100100011',D:'110101101101110',E:'111100110100111',F:'111100110100100',
+  G:'011100101101011',H:'101101111101101',I:'111010010010111',J:'001001001101010',K:'101101110101101',L:'100100100100111',
+  M:'101111111101101',N:'110101101101101',O:'010101101101010',P:'110101110100100',Q:'010101101110011',R:'110101110101101',
+  S:'011100010001110',T:'111010010010010',U:'101101101101111',V:'101101101101010',W:'101101111111101',X:'101101010101101',
+  Y:'101101010010010',Z:'111001010100111',0:'010101101101010',1:'010110010010111',2:'110001010100111',3:'110001010001110',
+  4:'101101111001001',5:'111100110001110',6:'011100110101010',7:'111001010010010',8:'010101010101010',9:'010101011001110',
+  '.':'000000000000010','!':'010010010000010','-':'000000111000000',':':'000010000010000','/':'001001010100100','+':'000010111010000',
+  "'":'010010000000000','%':'101001010100101','x':'000101010101000','<':'001010100010001','>':'100010001010100','(':'010100100100010',')':'010001001001010',',':'000000000010100',
+};
+function tiny(g, s, x, y, col, align) {
+  s = String(s).toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  if (align === 'center') x -= Math.floor((s.length * 4 - 1) / 2); else if (align === 'right') x -= s.length * 4 - 1;
+  for (const pass of [0, 1]) { let cx = x;
+    for (const ch of s) { const b = TINY[ch]; if (b) for (let k = 0; k < 15; k++) if (b[k] === '1') R(g, cx + k % 3 + (pass ? 0 : 1), y + (k / 3 | 0) + (pass ? 0 : 1), 1, 1, pass ? col : '#0c0f0a'); cx += 4; } }
+}
+let BTN = [], T = 0;
+function button(x, y, w, h, label, opts = {}) {
+  plate(g, x, y, w, h, opts.disabled ? 'dim' : opts.gold ? 'gold' : opts.red ? 'red' : opts.blue ? 'blue' : null);
+  if (opts.sel) { const c = Math.floor(T * 4) % 2 ? '#ffd23f' : '#fff6c2'; R(g, x - 1, y - 1, w + 2, 1, c); R(g, x - 1, y + h, w + 2, 1, c); R(g, x - 1, y - 1, 1, h + 2, c); R(g, x + w, y - 1, 1, h + 2, c); }
+  if (label) {
+    const col = opts.disabled ? '#7d867a' : opts.gold ? '#fff6c2' : '#ffffff';
+    if (opts.tiny) tiny(g, label, x + w / 2, y + Math.floor(h / 2) - 2, col, 'center');
+    else text(g, label, x + w / 2, y + Math.floor((h - 8) / 2) + 1, col, 'center');
+  }
+  if (opts.act) BTN.push({ x, y, w, h, act: opts.act });
+}
+function bar(x, y, w, h, v, max, c0, c1, pot) {
+  R(g, x - 1, y - 1, w + 2, h + 2, OUT); R(g, x, y, w, h, '#1c2a1c');
+  const f = Math.round(w * clamp(v / max, 0, 1)); R(g, x, y, f, h, c0); R(g, x, y, f, 1, c1);
+  if (pot) { const p = Math.round(w * clamp(pot / max, 0, 1)); R(g, x + p - 1, y - 1, 1, h + 2, '#ffffff'); }
+}
+function star(g, x, y, fill) {
+  const rows = [[3, 1], [3, 1], [0, 7], [1, 5], [2, 3], [1, 5], [0, 2, 5, 2]];
+  rows.forEach((r, i) => { for (let k = 0; k < r.length; k += 2) R(g, x + r[k] - 1, y + i - 1, r[k + 1] + 2, 3, OUT); });
+  rows.forEach((r, i) => { for (let k = 0; k < r.length; k += 2) for (let j = 0; j < r[k + 1]; j++) {
+    const xx = r[k] + j, on = xx < fill * 7; R(g, x + xx, y + i, 1, 1, on ? (i < 2 ? '#fff2a8' : i > 4 ? '#d09a1c' : '#ffd23f') : '#3a4a38'); } });
+}
+
+/* ---------- le décor du club (480×240, repris de la maquette) ---------- */
+const VW = 480, VH = 240, SHADOW = 'rgba(20,40,20,.32)';
+const F = { x0: 186, y0: 90, x1: 420, y1: 212 };
+const PATH = [[206, 106], [402, 106], [402, 194], [206, 194]];
+const RAMPS = {
+  red: ['#ff8a76', '#e04a3c', '#a8302a', '#6e1d1d'], white: ['#ffffff', '#f1ece2', '#d3cbbd', '#ab9f8e'], yellow: ['#fff2a8', '#ffd23f', '#d09a1c', '#8f6410'],
+  blue: ['#a8d0f4', '#4a8fd4', '#2f6fb0', '#1a3f6a'], wood: ['#f0c890', '#d39a5c', '#a46a32', '#6e4420'], leaf: ['#9ed07c', '#6aab57', '#4a8a47', '#2f5f34'],
+  leaf2: ['#b4dc84', '#7bbd5e', '#559a4a', '#356b38'], tyre: ['#5a5468', '#3a3548', '#262233', '#17131e'], water: ['#d6ecfb', '#7fbbeb', '#3f86c8', '#225a94'],
+  skin: ['#ffdcbc', '#f0b48c', '#c8805e', '#8a5040'], navy: ['#6a7ab8', '#3f4f8a', '#2c3866', '#1c2444'],
+};
+function stext(g, s, x, y, size, col, align = 'left') { g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top'; g.fillStyle = col; g.fillText(s, x, y); }
+function shaded(g, x0, y0, w, h, shapes) { g.drawImage(spr(w, h, shapes.map(([s, r, o]) => [s, r, Object.assign({ id: 1 }, o || {})])), x0, y0); }
+function stand(g, px, py, ramp) { R(g, px - 2, py, 7, 5, SHADOW); shaded(g, px - 5, py - 5, 10, 10, [[C32.ell(5, 5, 3.4, 3.4), ramp]]); }
+function barTop(g, x0, y0, x1, y1, r1, r2) {
+  const n = Math.round(Math.hypot(x1 - x0, y1 - y0) / 2);
+  const W2 = Math.max(x1 - x0, 4) + 8, H2 = Math.max(y1 - y0, 4) + 8, ox = Math.min(x0, x1) - 4, oy = Math.min(y0, y1) - 4;
+  R(g, ox + 7, oy + 8, Math.max(x1 - x0, 3), Math.max(y1 - y0, 3), SHADOW);
+  const shapes = [];
+  for (let k = 0; k < n; k++) { const f0 = k / n, f1 = (k + 1) / n;
+    shapes.push([C32.cap(x0 - ox + (x1 - x0) * f0, y0 - oy + (y1 - y0) * f0, x0 - ox + (x1 - x0) * f1, y0 - oy + (y1 - y0) * f1, 1.8), Math.floor(k / 3) % 2 ? r2 : r1, { flat: true }]); }
+  shaded(g, ox, oy, W2, H2, shapes);
+}
+function hurdleV(g, x, y) { barTop(g, x, y - 13, x, y + 13, RAMPS.red, RAMPS.white); stand(g, x, y - 13, RAMPS.white); stand(g, x, y + 13, RAMPS.white); }
+function tyreBack(g, x, y) { barTop(g, x - 15, y, x + 15, y, RAMPS.yellow, RAMPS.yellow); R(g, x - 7, y + 5, 16, 6, SHADOW); }
+function tyreFront(g, x, y) {
+  shaded(g, x - 16, y - 16, 32, 32, [[C32.ell(16, 16, 10, 5.5), RAMPS.red], [C32.ell(16, 16, 5.5, 2.2), RAMPS.tyre, { flat: true }]]);
+  stand(g, x - 15, y, RAMPS.yellow); stand(g, x + 15, y, RAMPS.yellow);
+}
+function tunnelV(g, x, y0, y1) {
+  R(g, x - 8, y0 + 4, 22, y1 - y0, SHADOW);
+  shaded(g, x - 12, y0 - 12, 24, y1 - y0 + 24, [[C32.cap(12, 12, 12, 12 + y1 - y0, 11), RAMPS.blue, { flat: true }]]);
+  for (let y = y0 + 6; y < y1 - 2; y += 10) { R(g, x - 10, y, 20, 2, '#a8d0f4'); R(g, x - 10, y + 2, 20, 1, '#1a3f6a'); }
+  for (const [ey, d] of [[y0 - 9, -1], [y1 + 9, 1]]) { R(g, x - 11, ey - 2, 22, 5, OUT); R(g, x - 10, ey - 1, 20, 3, '#0b0a10'); R(g, x - 11, ey + (d > 0 ? -3 : 3), 22, 2, '#f4efe6'); }
+}
+function weave(g, x0, x1, y) {
+  for (let k = 0; k < 8; k++) { const px = Math.round(x0 + (x1 - x0) * (k + .5) / 8);
+    R(g, px - 1, y + 1, 8, 4, SHADOW); shaded(g, px - 5, y - 5, 10, 10, [[C32.ell(5, 5, 3, 3), k % 2 ? RAMPS.red : RAMPS.white]]); }
+  R(g, x0, y, x1 - x0, 1, 'rgba(255,255,255,.35)');
+}
+function aframe(g, x, y) {
+  const L = 70, Hh = 16;
+  R(g, x - L / 2 + 6, y - Hh / 2 + 7, L, Hh, SHADOW); R(g, x - L / 2 - 1, y - Hh / 2 - 1, L + 2, Hh + 2, OUT);
+  for (let i = 0; i < L; i++) {
+    const half = i < L / 2, xx = x - L / 2 + i, zone = i < 16 || i >= L - 16, ramp = zone ? RAMPS.yellow : RAMPS.wood, lit = half ? 1 : 2;
+    R(g, xx, y - Hh / 2, 1, Hh, ramp[lit]); R(g, xx, y - Hh / 2, 1, 2, ramp[lit - 1]); R(g, xx, y + Hh / 2 - 2, 1, 2, ramp[lit + 1]);
+    if (!zone && i % 6 === 0) R(g, xx, y - Hh / 2, 1, Hh, RAMPS.wood[3]);
+  }
+  R(g, x - 1, y - Hh / 2, 2, Hh, '#fff6c2'); R(g, x + 1, y - Hh / 2, 1, Hh, RAMPS.wood[3]);
+}
+function grass(g) {
+  for (let y = 0; y < VH; y++) for (let x = 0; x < VW; x++) {
+    const inF = x >= F.x0 && x < F.x1 && y >= F.y0 && y < F.y1;
+    R(g, x, y, 1, 1, inF ? (Math.floor((x - F.x0) / 16) % 2 ? (owns('terrain') ? '#56b44a' : '#5cae4a') : (owns('terrain') ? '#62c056' : '#66b853')) : (Math.floor((x + y * .5) / 20) % 2 ? '#4f9a40' : '#549f44'));
+  }
+  const r = rnd(13);
+  for (let i = 0; i < 900; i++) { const x = Math.floor(r() * VW), y = Math.floor(r() * VH); R(g, x, y, 1, 2, r() < .5 ? '#3f8a37' : '#7fcc66'); }
+  for (let i = 0; i < 26; i++) { const x = Math.floor(r() * VW), y = 100 + Math.floor(r() * 140);
+    if (x > F.x0 - 4 && x < F.x1 + 4 && y > F.y0 - 4 && y < F.y1 + 4) continue;
+    R(g, x, y, 2, 2, r() < .5 ? '#fff2a8' : '#ffffff'); R(g, x, y, 1, 1, '#ffd23f'); }
+}
+function fieldLines(g) {
+  const L = (x, y, w, h) => { R(g, x + 1, y + 1, w, h, 'rgba(0,0,0,.18)'); R(g, x, y, w, h, '#f4efe6'); };
+  L(F.x0, F.y0, F.x1 - F.x0, 2); L(F.x0, F.y1 - 2, F.x1 - F.x0, 2); L(F.x0, F.y0, 2, F.y1 - F.y0); L(F.x1 - 2, F.y0, 2, F.y1 - F.y0);
+  for (const [x, y] of [[F.x0, F.y0], [F.x1, F.y0], [F.x0, F.y1], [F.x1, F.y1]]) {
+    R(g, x - 2, y + 1, 8, 3, SHADOW);
+    shaded(g, x - 5, y - 6, 10, 10, [[C32.ell(5, 6, 3.6, 3), ['#ffc08a', '#ff8a3c', '#c85a1c', '#7a3410']], [C32.ell(5, 5, 1.6, 1.4), RAMPS.white, { on: [1] }]]);
+  }
+}
+function gravel(g) {
+  const r = rnd(3);
+  const inPath = (x, y) => (x > 76 && x < 104 && y > 104 && y < 176) || (x > 76 && x < F.x0 && y > 140 && y < 162) || (owns('buvette') && x > 410 && x < 476 && y > 116 && y < 170 && ((x - 443) / 34) ** 2 + ((y - 143) / 28) ** 2 < 1);
+  for (let y = 100; y < VH; y++) for (let x = 0; x < VW; x++) {
+    if (!inPath(x, y)) continue;
+    const edge = !inPath(x - 1, y) || !inPath(x + 1, y) || !inPath(x, y - 1) || !inPath(x, y + 1);
+    R(g, x, y, 1, 1, edge ? '#a8916a' : (r() < .12 ? '#c9b58a' : r() < .08 ? '#fff2d4' : '#e6d4a8'));
+  }
+}
+function clubhouse(g) {
+  const x0 = 10, x1 = 170, rt = 24, rb = 60, fb = 104;
+  R(g, x0 + 6, fb, x1 - x0, 6, SHADOW); R(g, x1, rt + 10, 6, fb - rt - 4, SHADOW);
+  R(g, x0 - 1, rb, x1 - x0 + 2, fb - rb + 1, OUT);
+  for (let y = rb; y < fb; y++) { const k = (y - rb) % 5; R(g, x0, y, x1 - x0, 1, k === 4 ? '#7a4e2c' : k === 0 ? '#e8b47a' : '#c98e56'); }
+  for (const px of [x0, x1 - 4]) { R(g, px, rb, 4, fb - rb, '#8a5a32'); R(g, px, rb, 1, fb - rb, '#b07a46'); }
+  R(g, x0, rb, x1 - x0, 4, 'rgba(30,20,20,.45)');
+  R(g, 80, 72, 22, fb - 72, OUT); R(g, 82, 74, 18, fb - 74, '#3f7a5a'); R(g, 82, 74, 18, 2, '#6aaa80'); R(g, 90, 74, 1, fb - 74, '#2c5a40'); R(g, 86, 88, 2, 2, '#ffd23f'); R(g, 94, 88, 2, 2, '#ffd23f');
+  R(g, 76, fb, 30, 3, '#b8b0a0'); R(g, 76, fb, 30, 1, '#e8e2d4'); R(g, 78, fb + 3, 26, 3, '#9a9282'); R(g, 78, fb + 3, 26, 1, '#d0c8b8');
+  R(g, 70, 62, 42, 11, OUT); R(g, 71, 63, 40, 9, '#6e4420'); R(g, 71, 63, 40, 1, '#a46a32');
+  stext(g, 'CLUB', 75, 64, 8, '#ffd23f');
+  // vitrine aux trophées : une coupe par victoire (jusqu'à 6)
+  const wx = 18, wy = 68, ww = 50, wh = 24;
+  R(g, wx - 2, wy - 2, ww + 4, wh + 4, OUT); R(g, wx - 1, wy - 1, ww + 2, wh + 2, '#f4efe6');
+  R(g, wx, wy, ww, wh, '#4a3a52'); R(g, wx, wy, ww, 4, '#5e4a64');
+  R(g, wx, wy + 15, ww, 2, '#8a5a32'); R(g, wx, wy + 15, ww, 1, '#c98e56'); R(g, wx, wy + 22, ww, 2, '#8a5a32');
+  const cup = (x, y, big, col) => { const w = big ? 7 : 5;
+    R(g, x - 1, y - 1, w + 2, 6, OUT); R(g, x, y, w, 4, col[1]); R(g, x, y, 2, 3, col[0]); R(g, x + w - 1, y, 1, 4, col[2]);
+    R(g, x - 2, y, 1, 3, col[2]); R(g, x + w + 1, y, 1, 3, col[2]); R(g, x + (w >> 1), y + 4, 1, 3, col[2]); R(g, x + (w >> 1) - 2, y + 7, 5, 1, col[2]); };
+  const tro = (G.trophies || []).slice(-5);
+  const TC = [['#fff2a8', '#ffd23f', '#d09a1c'], ['#ffffff', '#d6dbe3', '#8a94a4'], ['#ffd0a0', '#e0904a', '#a05a20']];
+  tro.forEach((tr, i) => cup(22 + i * 9, wy + 6 + (tr.t >= 3 ? -1 : 0), tr.t >= 3, TC[clamp(tr.rank - 1, 0, 2)]));
+  R(g, wx + 1, wy + 1, 2, 10, 'rgba(255,255,255,.25)');
+  const fx = 118, fy = 70;
+  R(g, fx - 2, fy - 2, 40, 24, OUT); R(g, fx - 1, fy - 1, 38, 22, '#f4efe6'); R(g, fx, fy, 36, 20, '#8ac8f0'); R(g, fx, fy, 36, 6, '#c4e4fa');
+  R(g, fx, fy, 7, 20, '#e04a3c'); R(g, fx + 29, fy, 7, 20, '#e04a3c'); R(g, fx, fy, 2, 20, '#ff8a76'); R(g, fx + 34, fy, 2, 20, '#a8302a'); R(g, fx + 17, fy, 2, 20, '#f4efe6');
+  for (const [bx, bw] of [[wx - 2, ww + 4], [fx - 2, 40]]) {
+    R(g, bx - 1, 95, bw + 2, 7, OUT); R(g, bx, 96, bw, 5, '#a46a32'); R(g, bx, 96, bw, 1, '#d39a5c');
+    for (let x = bx + 1; x < bx + bw - 1; x += 3) { const c = ['#ff5a7a', '#ffd23f', '#ff8ad0', '#ffffff'][(x * 7) % 4];
+      R(g, x, 92 + (x % 2), 3, 3, '#3f8a37'); R(g, x, 91 + (x % 2), 2, 2, c); R(g, x, 91 + (x % 2), 1, 1, '#ffffff'); }
+  }
+  R(g, x0 - 5, rt - 1, x1 - x0 + 10, rb - rt + 3, OUT);
+  for (let y = rt; y <= rb; y++) { const row = Math.floor((y - rt) / 5), k = (y - rt) % 5, off = row % 2 ? 4 : 0;
+    for (let x = x0 - 4; x < x1 + 4; x++) { const tx = (x + off) % 8;
+      let c = k === 4 ? '#7a2e1a' : tx === 0 ? '#9a3a20' : k === 0 ? '#ffa070' : tx < 3 ? '#f08a52' : '#e0703c'; if (k === 3 && tx > 4) c = '#b04a28'; R(g, x, y, 1, 1, c); } }
+  R(g, x0 - 4, rt, x1 - x0 + 8, 3, '#b04a28'); R(g, x0 - 4, rt, x1 - x0 + 8, 1, '#ff9a6a'); R(g, x0 - 4, rb, x1 - x0 + 8, 1, '#5a2414');
+  R(g, 141, 11, 16, 20, OUT);
+  for (let y = 12; y < 30; y++) for (let x = 142; x < 156; x++) { const b = (y % 4 === 3) || ((x + (Math.floor(y / 4) % 2) * 3) % 6 === 0); R(g, x, y, 1, 1, b ? '#8a4a3a' : x < 146 ? '#d8805e' : '#b85e44'); }
+  R(g, 140, 10, 18, 3, '#6a6378'); R(g, 140, 10, 18, 1, '#a8a2b8');
+}
+function bleachers(g) {
+  const x0 = 222, x1 = 392;
+  R(g, x0 + 4, 80, x1 - x0, 6, SHADOW);
+  for (let i = 0; i < 3; i++) { const ty = 36 + i * 14;
+    R(g, x0 - 1, ty - 1, x1 - x0 + 2, 15, OUT);
+    R(g, x0, ty, x1 - x0, 5, RAMPS.wood[1]); R(g, x0, ty, x1 - x0, 1, RAMPS.wood[0]); R(g, x0, ty + 4, x1 - x0, 1, RAMPS.wood[2]);
+    for (let x = x0 + 20; x < x1; x += 24) R(g, x, ty, 1, 5, RAMPS.wood[3]);
+    for (let x = x0; x < x1; x++) R(g, x, ty + 5, 1, 8, x % 6 === 0 ? '#3e2a1a' : '#6e4420');
+    R(g, x0, ty + 5, x1 - x0, 1, '#2a1a10'); }
+  for (const x of [x0 - 4, x1]) { R(g, x - 1, 32, 6, 50, OUT); R(g, x, 33, 4, 48, '#9aa3b1'); R(g, x, 33, 1, 48, '#d6dbe3'); R(g, x + 3, 33, 1, 48, '#6a7383'); }
+  R(g, 262, 82, 92, 10, OUT); R(g, 263, 83, 90, 8, '#3a7fc8'); R(g, 263, 83, 90, 1, '#7fb6ea');
+  stext(g, 'ALLEZ !', 280, 83, 8, '#ffffff');
+}
+function buvette(g) {
+  const x0 = 422, x1 = 476;
+  R(g, x0 + 5, 118, x1 - x0, 5, SHADOW); R(g, x0 - 1, 72, x1 - x0 + 2, 47, OUT);
+  for (let y = 73; y < 118; y++) R(g, x0, y, x1 - x0, 1, (y - 73) % 5 === 4 ? '#7a4e2c' : (y - 73) % 5 === 0 ? '#f0c890' : '#d39a5c');
+  R(g, x0 + 4, 80, x1 - x0 - 8, 20, OUT); R(g, x0 + 5, 81, x1 - x0 - 10, 18, '#3a2e40'); R(g, x0 + 5, 81, x1 - x0 - 10, 4, '#4e3e52');
+  R(g, x0 + 2, 99, x1 - x0 - 4, 4, OUT); R(g, x0 + 3, 99, x1 - x0 - 6, 3, '#f4efe6'); R(g, x0 + 3, 101, x1 - x0 - 6, 1, '#c9c0b0');
+  for (const [bx, c] of [[x0 + 8, '#e04a3c'], [x0 + 12, '#ffd23f'], [x0 + 40, '#8ee05a'], [x0 + 44, '#3a7fc8']]) { R(g, bx - 1, 92, 4, 8, OUT); R(g, bx, 93, 2, 6, c); R(g, bx, 93, 1, 2, '#ffffff'); }
+  R(g, x0 - 4, 58, x1 - x0 + 8, 18, OUT);
+  for (let y = 59; y < 74; y++) for (let x = x0 - 3; x < x1 + 3; x++) {
+    const st = Math.floor((x - x0 + 3) / 6) % 2, scal = y >= 71 && ((x - x0 + 3) % 6 === 0 || (y === 73 && (x - x0 + 3) % 6 !== 3));
+    if (scal) { R(g, x, y, 1, 1, OUT); continue; }
+    R(g, x, y, 1, 1, st ? (y < 61 ? '#ffffff' : y > 68 ? '#c9c0b0' : '#f4efe6') : (y < 61 ? '#ff8a76' : y > 68 ? '#a8302a' : '#e04a3c'));
+  }
+  R(g, x0 - 6, 46, x1 - x0 + 12, 13, OUT); R(g, x0 - 5, 47, x1 - x0 + 10, 11, '#6e4420'); R(g, x0 - 5, 47, x1 - x0 + 10, 1, '#a46a32');
+  stext(g, 'BUVETTE', (x0 + x1) / 2 + 1, 49, 8, '#ffffff', 'center');
+}
+function tree(g, x, y, s, ramp) {
+  R(g, x - s * .6 + 6, y + s * .4, s * 1.6, s * .7, SHADOW); R(g, x - 1, y, 4, 8, '#4a3324');
+  C32.blob(g, [[x, y - s * .5, s * .9], [x - s * .6, y - s * .1, s * .62], [x + s * .6, y - s * .05, s * .66], [x, y - s * 1.1, s * .6]], ramp, '#24492b');
+}
+function hedgeRow(g) {
+  const r = rnd(21);
+  for (let x = 170; x < VW + 20; x += 18 + Math.floor(r() * 10)) { const s = 11 + r() * 6;
+    C32.blob(g, [[x, 16 - r() * 4, s], [x + s * .7, 22, s * .7], [x - s * .6, 22, s * .6]], r() < .5 ? RAMPS.leaf : RAMPS.leaf2, '#24492b'); }
+  for (let x = 0; x < 180; x += 16) C32.blob(g, [[x + 8, 12, 10], [x, 16, 8]], RAMPS.leaf, '#24492b');
+}
+function bench(g, x, y) {
+  R(g, x + 3, y + 8, 30, 3, SHADOW); R(g, x - 1, y - 1, 32, 10, OUT);
+  for (let k = 0; k < 3; k++) { R(g, x, y + k * 3, 30, 2, RAMPS.wood[k === 0 ? 0 : 1]); R(g, x, y + k * 3 + 2, 30, 1, RAMPS.wood[3]); }
+  R(g, x + 2, y + 8, 2, 3, '#3a3548'); R(g, x + 26, y + 8, 2, 3, '#3a3548');
+}
+// décor fixe : reconstruit seulement quand le club change ; `full` : tout l'équipement (jour de concours)
+function buildBase(full) {
+  const [c, g] = mk(VW, VH);
+  grass(g); gravel(g); fieldLines(g); hedgeRow(g); clubhouse(g);
+  if (full || owns('tribunes')) bleachers(g);
+  if (owns('buvette')) buvette(g);
+  else { tree(g, 448, 92, 14, RAMPS.leaf2); }
+  bench(g, 116, 118);
+  shaded(g, 112, 128, 16, 12, [[C32.ell(8, 6, 6, 3.5), RAMPS.blue], [C32.ell(8, 5.5, 4, 2), RAMPS.water, { flat: true }]]);
+  for (const [px, py] of [[36, 118], [36, 150]]) {
+    R(g, px + 3, py + 10, 30, 3, SHADOW); R(g, px - 1, py + 3, 32, 9, OUT); R(g, px, py + 4, 30, 7, '#a46a32'); R(g, px, py + 4, 30, 1, '#d39a5c'); R(g, px, py + 10, 30, 1, '#6e4420');
+    for (let x = px + 1; x < px + 29; x += 3) { const c2 = ['#ff5a7a', '#ffd23f', '#b48aff', '#ffffff'][(x * 5) % 4]; R(g, x, py + 1 + (x % 2), 3, 3, '#3f8a37'); R(g, x, py + (x % 2), 2, 2, c2); R(g, x, py + (x % 2), 1, 1, '#fff'); }
+  }
+  if (full || owns('haies')) { hurdleV(g, 262, 106); hurdleV(g, 336, 106); }
+  if (full || owns('slalom')) weave(g, 274, 370, 194);
+  if (full || owns('pneu')) tyreBack(g, 206, 150);
+  if (full || owns('palissade')) aframe(g, 300, 150);
+  return c;
+}
+const IMG = {};
+function buildStatic() {
+  const [tc, tg] = mk(VW, VH); tree(tg, 452, 214, 15, RAMPS.leaf); tree(tg, 190, 64, 12, RAMPS.leaf2); IMG.top = tc;
+  IMG.trainer = spr(24, 28, [
+    [C32.cap(9, 18, 9, 25, 2.4), RAMPS.navy], [C32.cap(15, 18, 15, 25, 2.4), RAMPS.navy], [C32.ell(12, 15, 6.5, 5.5), RAMPS.red],
+    [C32.cap(17, 13, 22, 9, 2, 1.6), RAMPS.red], [C32.ell(22.5, 8.5, 1.8, 1.8), RAMPS.skin], [C32.cap(7, 13, 5, 19, 2, 1.6), RAMPS.red], [C32.ell(5, 20, 1.8, 1.8), RAMPS.skin],
+    [C32.ell(12, 8, 4.2, 4.2), RAMPS.skin], [C32.ell(12, 6.5, 4.4, 3.2), RAMPS.blue], [C32.cap(12, 4, 16, 3, 1.6), RAMPS.blue]]);
+  const C = C32.Canvas(40, 40); RAMP._py = RAMPS.yellow; RAMP._pw = RAMPS.white; RAMP._pc = RAMPS.blue;
+  C.draw(C32.ell(5, 30, 4, 3.5), { mat: '_pc', id: 3, fur: false }); C.draw(C32.ell(34, 32, 4, 3.5), { mat: '_pc', id: 3, fur: false });
+  C.draw(C32.ell(20, 19, 15, 13), { mat: (s, x, y) => Math.floor((Math.atan2(y - 19, x - 20) + Math.PI) / (TAU / 8)) % 2 ? '_py' : '_pw', id: 1, fur: false });
+  C.draw(C32.ell(20, 19, 2, 2), { mat: '_pw', id: 2, fur: false });
+  IMG.parasol = C.toCanvas();
+  IMG.coin = spr(10, 10, [[C32.ell(5, 5, 4, 4), RAMPS.yellow], [C32.ell(5, 5, 1.6, 2.4), RAMPS.yellow, { on: [1], flat: true }]]);
+  IMG.vendor = spr(14, 14, [[C32.ell(7, 10, 5, 3.5), RAMPS.white], [C32.ell(7, 6, 3.4, 3.4), RAMPS.skin], [C32.ell(7, 4.4, 3.6, 2.2), ['#8a5a3a', '#64402a', '#462c1c', '#2c1c12']]]);
+  IMG.cup = spr(16, 18, [[C32.cap(8, 13, 8, 16, 1.4), RAMPS.yellow], [C32.ell(8, 17, 4.5, 1.6), RAMPS.yellow], [C32.ell(8, 6, 6, 6.5), RAMPS.yellow], [C32.ell(8, 3, 5, 1.6), RAMPS.yellow, { on: [3], flat: true }]]);
+  [IMG.scene, IMG.sceneG] = mk(VW, VH);
+  IMG.top4 = {}; IMG.stand = {}; IMG.side = {};
+  for (const b of BREED_IDS) { IMG.top4[b] = C32.topFrames(b); const fr = C32.frames(b); IMG.side[b] = fr; IMG.stand[b] = fr.stand; }
+}
+let BASE = null, BASE_FULL = null;
+function dirtyBase() { BASE = null; }
+
+/* ---------- les chiens sur la boucle du terrain ---------- */
+const SEGS = PATH.map((p, i) => { const q = PATH[(i + 1) % PATH.length]; return { a: p, b: q, len: Math.hypot(q[0] - p[0], q[1] - p[1]) }; });
+const PERIM = SEGS.reduce((s, x) => s + x.len, 0);
+function along(d) {
+  d = ((d % PERIM) + PERIM) % PERIM;
+  for (const s of SEGS) { if (d <= s.len) { const u = d / s.len; return { x: s.a[0] + (s.b[0] - s.a[0]) * u, y: s.a[1] + (s.b[1] - s.a[1]) * u, dx: Math.sign(s.b[0] - s.a[0]), dy: Math.sign(s.b[1] - s.a[1]) }; } d -= s.len; }
+  return { x: PATH[0][0], y: PATH[0][1], dx: 1, dy: 0 };
+}
+function drawDogAt(g, frames, d, t, k, opts = {}) {
+  const p = along(d), full = opts.full;
+  let x = p.x, y = p.y, hop = 0;
+  if ((full || owns('haies')) && p.dy === 0 && p.dx > 0) for (const hx of [262, 336]) { const q = (x - hx) / 14; if (Math.abs(q) < 1) hop = Math.cos(q * Math.PI / 2); }
+  if ((full || owns('pneu')) && p.dx === 0 && p.dy < 0) { const q = (y - 150) / 14; if (Math.abs(q) < 1) hop = Math.cos(q * Math.PI / 2); }
+  if ((full || owns('slalom')) && p.dy === 0 && p.dx < 0 && x > 270 && x < 374) y += Math.round(6 * Math.sin((x - 274) / 12 * Math.PI));
+  if (opts.bump) hop = Math.max(hop, opts.bump);
+  const inTunnel = (full || owns('tunnel')) && p.dx === 0 && p.dy > 0 && y > 118 && y < 182;
+  if (inTunnel) return { x: Math.round(x), y: Math.round(y) };
+  const fr = frames[opts.still ? 0 : Math.floor(t * 9 + k) % 4], rot = p.dx > 0 ? Math.PI / 2 : p.dx < 0 ? -Math.PI / 2 : p.dy > 0 ? Math.PI : 0;
+  g.fillStyle = SHADOW; const sw = p.dx ? 16 : 8, sh = p.dx ? 7 : 15;
+  g.fillRect(Math.round(x - sw / 2 + 3), Math.round(y - sh / 2 + 4), sw, sh);
+  g.save(); g.translate(Math.round(x), Math.round(y - hop * 6)); g.rotate(rot); g.drawImage(fr, -C32.TW / 2, -C32.TH / 2); g.restore();
+  return { x: Math.round(x), y: Math.round(y - hop * 6) };
+}
+function person(g, x, y, c, hair, cheer, i) {
+  const body = [[1, 6], [0, 8], [0, 8], [0, 8], [0, 8], [0, 8]], head = [[1, 4], [0, 6], [0, 6], [0, 6], [0, 6], [1, 4]], hy = y - 6;
+  body.forEach(([a, w], r) => R(g, x + a - 1, y + r - 1, w + 2, 3, OUT)); head.forEach(([a, w], r) => R(g, x + 1 + a - 1, hy + r - 1, w + 2, 3, OUT));
+  if (cheer) { R(g, x - 3, y - 7, 3, 9, OUT); R(g, x + 8, y - 7, 3, 9, OUT); }
+  body.forEach(([a, w], r) => { R(g, x + a, y + r, w, 1, c); R(g, x + a, y + r, 2, 1, 'rgba(255,255,255,.35)'); R(g, x + a + w - 2, y + r, 2, 1, 'rgba(0,0,0,.25)'); });
+  head.forEach(([a, w], r) => R(g, x + 1 + a, hy + r, w, 1, r < 2 ? hair : '#f0b48c'));
+  R(g, x + 1, hy + 2, 1, 2, hair); R(g, x + 6, hy + 2, 1, 2, hair); R(g, x + 2, hy + 2, 1, 1, '#ffdcbc');
+  if (cheer) { R(g, x - 2, y - 6, 1, 7, c); R(g, x + 9, y - 6, 1, 7, c); R(g, x - 2, y - 7, 1, 1, '#f0b48c'); R(g, x + 9, y - 7, 1, 1, '#f0b48c');
+    if (i % 3 === 0) { R(g, x + 9, y - 12, 5, 4, OUT); R(g, x + 10, y - 11, 3, 2, '#ffd23f'); } }
+}
+// dessine le club (ou le terrain de concours) dans le calque 480×240
+function drawScene(t, run) {
+  const g = IMG.sceneG, full = !!run;
+  if (!full && !BASE) BASE = buildBase(false);
+  if (full && !BASE_FULL) BASE_FULL = buildBase(true);
+  g.drawImage(full ? BASE_FULL : BASE, 0, 0);
+  for (let k = 0; k < 4; k++) { const q = (t / 3 + k / 4) % 1, x = Math.round(149 + q * 10 + Math.sin(q * 5 + k) * 2), y = Math.round(8 - q * 14);
+    g.globalAlpha = (1 - q) * .8; R(g, x - 2, y - 2, 5, 5, '#e8ecf2'); R(g, x - 1, y - 3, 3, 1, '#ffffff'); g.globalAlpha = 1; }
+  // public : selon la réputation (ou plein les jours de concours)
+  if (full || owns('tribunes')) {
+    const COLS = ['#e04a3c', '#3a7fc8', '#ffd23f', '#8ee05a', '#ff8ad0', '#f4efe6', '#b48aff', '#ff9a3c'], HAIR = ['#64402a', '#2a2230', '#e8c070', '#a8502a', '#d6dbe3'];
+    const n = full ? 18 : 4 + level(G.rep) * 3;
+    for (let i = 0; i < 18 && i < n; i++) {
+      const tier = Math.floor(i / 6), x = 230 + (i % 6) * 26 + (tier % 2 ? 13 : 3) + ((i * 7) % 5), ty = 36 + tier * 14;
+      if ((i * 5) % 7 === 3) continue;
+      const cheer = Math.floor(t * 3 + i * .7) % 6 < 1 + (i % 2) + (run && run.cheer ? 3 : 0);
+      person(g, x, ty - 3 - (cheer ? 1 : 0), COLS[i % COLS.length], HAIR[(i * 3) % HAIR.length], cheer, i);
+    }
+  }
+  if (run) {
+    drawDogAt(g, IMG.top4[run.dog.breed], run.d, t, 0, { full: true, still: run.stop, bump: run.bump });
+  } else {
+    // les chiens qui s'entraînent tournent sur la boucle ; ceux au repos attendent près du banc
+    const active = G.dogs.filter(d => d.act !== 'repos' && d.act !== 'calins'), idle = G.dogs.filter(d => d.act === 'repos' || d.act === 'calins');
+    const sp = PERIM / 12;
+    const order = active.map((d, k) => ({ d, k, off: k * PERIM / Math.max(1, active.length) })).sort((a, b) => along(t * sp + a.off).y - along(t * sp + b.off).y);
+    for (const o of order) drawDogAt(g, IMG.top4[o.d.breed], t * sp + o.off, t, o.k);
+    idle.forEach((d, i) => { const fr = IMG.top4[d.breed][0], x = 124 + i * 16, y = 146;
+      g.fillStyle = SHADOW; g.fillRect(x - 5, y - 2, 12, 10);
+      g.save(); g.translate(x, y); g.rotate(Math.PI); g.drawImage(fr, -C32.TW / 2, -C32.TH / 2); g.restore();
+      if (d.act === 'calins' && Math.floor(t * 2 + i) % 2) { R(g, x + 4, y - 22, 5, 4, '#ff5a7a'); R(g, x + 3, y - 21, 7, 2, '#ff5a7a'); R(g, x + 5, y - 18, 3, 1, '#ff5a7a'); } });
+  }
+  if (full || owns('pneu')) tyreFront(g, 206, 150);
+  if (full || owns('tunnel')) tunnelV(g, 402, 124, 176);
+  if (!run) { R(g, 228, 128, 16, 6, SHADOW); g.drawImage(IMG.trainer, 224, 108 + (Math.floor(t * 2) % 2)); }
+  if (owns('buvette')) {
+    g.drawImage(IMG.vendor, 442, 82 + (Math.floor(t * 1.5) % 2));
+    const q = (t % 3) / 3; g.globalAlpha = q < .8 ? 1 : (1 - q) * 5; g.drawImage(IMG.coin, 434, Math.round(104 - q * 24)); g.globalAlpha = 1;
+    g.drawImage(IMG.parasol, 424, 124);
+  }
+  g.drawImage(IMG.top, 0, 0);
+}
+
+/* =========================================================
+   ÉCRANS
+   ========================================================= */
+const cv = $('#cv'), g = cv.getContext('2d');
+let K = 2;
+const UI = { screen: 'title', dog: null, modal: null, toast: null, run: null, confirm: 0, scrollShop: 0 };
+function toast(s) { UI.toast = { s, t0: now() }; }
+function modal(title, lines, btn, onClose, opts = {}) { UI.modal = { title, lines, btn: btn || 'OK', onClose, gold: opts.gold, t0: now() }; }
+
+function bgFill(t) {
+  const gr = g.createLinearGradient(0, 0, 0, LH); gr.addColorStop(0, '#203a22'); gr.addColorStop(1, '#0f1a12'); g.fillStyle = gr; g.fillRect(0, 0, LW, LH);
+  for (let y = 0; y < LH; y += 6) R(g, 0, y, LW, 1, 'rgba(255,255,255,.025)');
+}
+function hud() {
+  plate(g, 4, 4, LW - 8, 22);
+  button(8, 7, 34, 16, 'MENU', { tiny: true, act: () => { UI.screen = 'title'; SFX.click(); } });
+  text(g, `SEM. ${G.week}`, 48, 11, '#ffffff');
+  g.drawImage(IMG.coin, 122, 10); text(g, fmt(G.coins), 135, 11, '#ffd23f');
+  const lv = level(G.rep), next = LEVELS[lv] || 0, prev = LEVELS[lv - 1], prog = lv >= 5 ? 1 : (G.rep - prev) / (next - prev);
+  for (let k = 0; k < 5; k++) star(g, 207 + k * 11, 10, k < lv ? 1 : k === lv ? prog : 0);
+}
+function sceneBox(t, y, run) {
+  drawScene(t, run);
+  const x = 16, w = 240, h = 120;
+  R(g, x - 4, y - 4, w + 8, h + 8, OUT); R(g, x - 3, y - 3, w + 6, h + 6, '#8a5a32'); R(g, x - 3, y - 3, w + 6, 1, '#d39a5c'); R(g, x - 2, y - 2, w + 4, h + 4, OUT);
+  g.drawImage(IMG.scene, x, y, w, h);
+}
+function portrait(d, x, y, scale, clipW, clipH) {
+  const im = IMG.stand[d.breed];
+  g.save(); g.beginPath(); g.rect(x, y, clipW, clipH); g.clip();
+  g.drawImage(im, x + (clipW - im.width * scale) / 2, y + clipH - (C32.GROUND + 3) * scale, im.width * scale, im.height * scale);
+  g.restore();
+}
+function canEnter(d) { const tier = TIERS[G.tier]; return G.coins >= tier.fee * (G.dogs.filter(x => x.enter && x !== d).length + 1); }
+
+function drawClub(t) {
+  bgFill(t); hud();
+  sceneBox(t, 34, null);
+  // le nom du club, sur une plaque en bas du décor : on la touche pour le changer
+  { const nm = clubName().toUpperCase(), w = Math.min(232, nm.length * 4 + 22);
+    plate(g, 20, 138, w, 13, 'gold'); tiny(g, nm, 26, 142, '#fff6c2');
+    for (let k = 0; k < 5; k++) R(g, 20 + w - 12 + k, 145 - k, 2, 1, k === 4 ? '#ff8a76' : '#fff6c2');   // petit crayon
+    R(g, 20 + w - 13, 146, 1, 1, '#fff6c2');
+    BTN.push({ x: 16, y: 34, w: 240, h: 120, act: renameClub }); }
+  // concours du week-end
+  const lv = level(G.rep), tier = TIERS[G.tier];
+  plate(g, 4, 160, LW - 8, 22, 'blue');
+  button(8, 163, 18, 16, '<', { tiny: true, disabled: G.tier === 0, act: () => { if (G.tier > 0) { G.tier--; SFX.click(); clearEntries(); save(); } } });
+  button(LW - 26, 163, 18, 16, '>', { tiny: true, disabled: G.tier + 1 >= lv, act: () => {
+    if (G.tier + 1 < lv) { G.tier++; SFX.click(); clearEntries(); save(); } else { SFX.error(); toast(G.tier >= 4 ? 'C\'est le plus grand concours !' : `Il faut ${lv + 1} étoiles pour le concours suivant.`); } } });
+  text(g, tier.name, LW / 2, 165, '#ffd23f', 'center');
+  tiny(g, `INSCRIPTION ${tier.fee} / CHIEN - 1ER : ${tier.prize[0]}`, LW / 2, 175, '#cfe6ff', 'center');
+  // les chiens du chenil
+  for (let i = 0; i < G.kennel; i++) {
+    const y = 188 + i * 33, d = G.dogs[i];
+    if (!d) {
+      plate(g, 4, y, LW - 8, 30, 'dim'); tiny(g, 'PLACE LIBRE AU CHENIL', LW / 2 - 30, y + 9, '#9fb09a', 'center');
+      button(LW - 76, y + 5, 68, 20, 'RECRUTER', { tiny: true, act: () => { UI.screen = 'recruit'; SFX.click(); } });
+      continue;
+    }
+    plate(g, 4, y, LW - 8, 30);
+    R(g, 7, y + 3, 42, 24, '#9bd1f4'); R(g, 7, y + 18, 42, 9, '#5cae4a');
+    portrait(d, 7, y + 3, .5, 42, 24);
+    text(g, d.name.slice(0, 9), 54, y + 4, '#ffffff');
+    const a = ACTS[d.act]; tiny(g, `${a.name} - ${a.desc}`, 54, y + 17, d.act === 'repos' || d.act === 'calins' ? '#ff9ad0' : '#ffd23f');
+    STATS.forEach(([k, , c0, c1], j) => bar(140, y + 4 + j * 6, 52, 3, d.st[k], 100, c0, c1));
+    bar(140, y + 22, 52, 3, d.forme, 100, d.forme < 35 ? '#e04a3c' : '#ff8ad0', '#ffd0ec');
+    // inscription au concours
+    const on = d.enter;
+    button(200, y + 4, 62, 22, on ? 'INSCRIT' : 'CONCOURS', { tiny: true, gold: on, act: () => {
+      if (!d.enter && !canEnter(d)) { SFX.error(); toast('Pas assez de pièces pour l\'inscription.'); return; }
+      if (!d.enter && G.dogs.filter(x => x.enter).length >= 2) { SFX.error(); toast('Deux chiens au plus par concours.'); return; }
+      d.enter = !d.enter; SFX.select(); save(); } });
+    BTN.push({ x: 4, y, w: 194, h: 30, act: () => { UI.dog = d.id; UI.screen = 'dog'; UI.confirm = 0; SFX.click(); } });
+  }
+  const yb = 188 + G.kennel * 33 + 2;
+  button(4, yb, 130, 28, 'BOUTIQUE', { act: () => { UI.screen = 'shop'; SFX.click(); } });
+  button(138, yb, 130, 28, 'RECRUTER', { act: () => { UI.screen = 'recruit'; SFX.click(); } });
+  const n = G.dogs.filter(d => d.enter).length;
+  button(4, 428, LW - 8, 44, n ? `SEMAINE SUIVANTE + CONCOURS` : 'SEMAINE SUIVANTE', { gold: true, tiny: !!n, act: () => nextWeek() });
+}
+function clearEntries() { for (const d of G.dogs) d.enter = false; }
+
+function drawDog(t) {
+  const d = G.dogs.find(x => x.id === UI.dog); if (!d) { UI.screen = 'club'; return; }
+  bgFill(t);
+  button(6, 6, 64, 20, '< CLUB', { tiny: true, act: () => { UI.screen = 'club'; SFX.click(); } });
+  logo(g, d.name, LW / 2, 34, 12);
+  button(LW / 2 - 40, 52, 80, 16, 'RENOMMER', { tiny: true, act: () => {
+    askText('NOM DU CHIEN', d.name, 10, n => { d.name = n; save(); SFX.select(); }); } });
+  // portrait
+  const px = 56, py = 74, pw = 160, ph = 72;
+  R(g, px - 3, py - 3, pw + 6, ph + 6, OUT);
+  const gr = g.createLinearGradient(0, py, 0, py + ph); gr.addColorStop(0, '#9bd1f4'); gr.addColorStop(.6, '#d4ecf9'); gr.addColorStop(.61, '#6fbf5a'); gr.addColorStop(1, '#4a9440');
+  g.fillStyle = gr; g.fillRect(px, py, pw, ph);
+  const fr = IMG.side[d.breed], im = d.act === 'repos' ? fr.stand : fr.run[Math.floor(t * 10) % 8];
+  g.drawImage(im, px + (pw - im.width) / 2, py + ph - C32.GROUND - 4);
+  tiny(g, BREEDS[d.breed].name, LW / 2, py + ph + 6, '#cfe6ff', 'center');
+  // flèches : chien précédent / suivant du club
+  if (G.dogs.length > 1) {
+    const i = G.dogs.indexOf(d), n = G.dogs.length;
+    const go = k => () => { UI.dog = G.dogs[(i + k + n) % n].id; UI.confirm = 0; SFX.click(); };
+    button(6, py, 42, ph, '<', { act: go(-1) });
+    button(LW - 48, py, 42, ph, '>', { act: go(1) });
+  }
+  // qualités
+  const rows = [...STATS.map(([k, l, c0, c1]) => [l, d.st[k], c0, c1, d.pot[k]]), ['FORME', d.forme, '#ff8ad0', '#ffd0ec'], ['HUMEUR', d.humeur, '#ff9a3c', '#ffd0a0']];
+  rows.forEach(([l, v, c0, c1, pot], i) => { const y = 166 + i * 15;
+    text(g, l, 8, y, '#cfe6ff'); bar(104, y + 1, 128, 6, v, 100, c0, c1, pot); text(g, String(Math.round(v)), 266, y, '#ffffff', 'right'); });
+  tiny(g, 'LE TRAIT BLANC : LE MEILLEUR NIVEAU QU\'IL PEUT ATTEINDRE', LW / 2, 243, '#8fa88a', 'center');
+  tiny(g, `CONCOURS ${d.comps}  -  PODIUMS ${d.podiums}  -  VICTOIRES ${d.wins}`, LW / 2, 252, '#ffd23f', 'center');
+  text(g, 'ACTIVITE DE LA SEMAINE', LW / 2, 264, '#ffffff', 'center');
+  ACT_ORDER.forEach((id, i) => {
+    const a = ACTS[id], x = 4 + (i % 2) * 134, y = 278 + Math.floor(i / 2) * 32, have = id === 'repos' || id === 'calins' || owns(id);
+    button(x, y, 130, 28, '', { sel: d.act === id, gold: d.act === id, disabled: !have, act: () => {
+      if (!have) { SFX.error(); toast(`Achète ${a.name.toLowerCase()} à la boutique.`); return; }
+      d.act = id; SFX.select(); save(); } });
+    text(g, a.name, x + 65, y + 5, have ? '#ffffff' : '#7d867a', 'center');
+    tiny(g, have ? a.desc : 'A LA BOUTIQUE', x + 65, y + 18, have ? (d.act === id ? '#fff6c2' : '#ffd23f') : '#7d867a', 'center');
+  });
+  const lastY = 278 + Math.ceil(ACT_ORDER.length / 2) * 32;
+  button(4, lastY + 4, 130, 26, d.enter ? 'INSCRIT AU CONCOURS' : 'INSCRIRE AU CONCOURS', { tiny: true, gold: d.enter, act: () => {
+    if (!d.enter && !canEnter(d)) { SFX.error(); toast('Pas assez de pièces pour l\'inscription.'); return; }
+    if (!d.enter && G.dogs.filter(x => x.enter).length >= 2) { SFX.error(); toast('Deux chiens au plus par concours.'); return; }
+    d.enter = !d.enter; SFX.select(); save(); } });
+  const arm = UI.confirm && now() - UI.confirm < 2500;
+  button(138, lastY + 4, 130, 26, arm ? 'SUR ? TOUCHE ENCORE' : 'CONFIER A UNE FAMILLE', { tiny: true, red: true, act: () => {
+    if (G.dogs.length <= 1) { SFX.error(); toast('Il faut garder au moins un chien !'); return; }
+    if (!arm) { UI.confirm = now(); SFX.click(); return; }
+    G.dogs = G.dogs.filter(x => x !== d); G.rep += 5; save(); UI.screen = 'club'; SFX.bark();
+    toast(`${d.name} part vivre dans une famille adorable. +5 réputation.`); } });
+  // séance guidée : en option, une fois par semaine, sur un agrès
+  const rest = d.act === 'repos' || d.act === 'calins', did = d.guided === G.week;
+  button(4, lastY + 36, LW - 8, 30, did ? `SEANCE FAITE : PROGRES x${(d.boost || 1).toFixed(1).replace('.', ',')}` : 'SEANCE GUIDEE (EN OPTION)', { tiny: true, blue: !rest && !did, disabled: rest || did, act: () => {
+    if (rest) { SFX.error(); toast('Choisis d\'abord un agrès pour la séance.'); return; }
+    if (did) { SFX.error(); toast('Une seule séance guidée par semaine.'); return; }
+    UI.run = null; startRun('train', d); } });
+}
+
+function drawShop(t) {
+  bgFill(t);
+  button(6, 6, 64, 20, '< CLUB', { tiny: true, act: () => { UI.screen = 'club'; SFX.click(); } });
+  logo(g, 'BOUTIQUE', LW / 2 + 20, 8, 12);
+  g.drawImage(IMG.coin, 186, 34); text(g, fmt(G.coins), 200, 35, '#ffd23f');
+  text(g, 'PIECES :', 120, 35, '#cfe6ff');
+  SHOP.forEach((it, i) => {
+    const y = 50 + i * 45, price = shopPrice(it), done = it.id === 'chenil' ? G.kennel >= 6 : owns(it.id);
+    plate(g, 4, y, LW - 8, 41, done ? 'dim' : null);
+    text(g, it.name + (it.id === 'chenil' ? ` ${G.kennel}/6` : ''), 10, y + 7, done ? '#9fb09a' : '#ffffff');
+    tiny(g, it.desc, 10, y + 22, done ? '#7d867a' : '#cfe6ff');
+    if (done) { tiny(g, it.id === 'chenil' ? 'COMPLET' : 'ACHETE', LW - 40, y + 18, '#8ee05a', 'center'); return; }
+    const ok = G.coins >= price;
+    button(LW - 76, y + 8, 66, 24, fmt(price), { gold: ok, disabled: !ok, act: () => {
+      if (G.coins < price) { SFX.error(); toast('Pas assez de pièces... Gagne des concours !'); return; }
+      G.coins -= price; if (it.id === 'chenil') G.kennel++; else G.owned[it.id] = 1;
+      dirtyBase(); save(); SFX.buy(); toast(`${it.name} : c'est installé au club !`); } });
+  });
+}
+
+function drawRecruit(t) {
+  bgFill(t); refreshCands();
+  button(6, 6, 64, 20, '< CLUB', { tiny: true, act: () => { UI.screen = 'club'; SFX.click(); } });
+  logo(g, 'RECRUTER', LW / 2 + 20, 8, 12);
+  g.drawImage(IMG.coin, 186, 34); text(g, fmt(G.coins), 200, 35, '#ffd23f');
+  tiny(g, `CHENIL ${G.dogs.length}/${G.kennel}`, 10, 37, '#cfe6ff');
+  tiny(g, 'DE NOUVEAUX CHIENS ARRIVENT CHAQUE SEMAINE', LW / 2, 50, '#8fa88a', 'center');
+  if (!G.cands.length) text(g, 'Revenez la semaine', LW / 2, 120, '#ffffff', 'center'), text(g, 'prochaine !', LW / 2, 134, '#ffffff', 'center');
+  G.cands.forEach((d, i) => {
+    const y = 60 + i * 136;
+    plate(g, 4, y, LW - 8, 130);
+    R(g, 10, y + 8, 104, 70, OUT); R(g, 11, y + 9, 102, 50, '#9bd1f4'); R(g, 11, y + 59, 102, 18, '#5cae4a');
+    const im = IMG.stand[d.breed]; g.drawImage(im, 11 + (102 - im.width) / 2, y + 77 - C32.GROUND - 2);
+    text(g, d.name, 122, y + 10, '#ffd23f');
+    tiny(g, BREEDS[d.breed].name, 122, y + 24, '#cfe6ff');
+    STATS.forEach(([k, l, c0, c1], j) => { tiny(g, l, 122, y + 36 + j * 12, '#cfe6ff'); bar(176, y + 36 + j * 12, 82, 4, d.st[k], 100, c0, c1, d.pot[k]); });
+    tiny(g, 'TALENT : ' + '*'.repeat(0) + ['', 'BON', 'TRES BON', 'EXCEPTIONNEL'][clamp(Math.floor(((d.pot.vit + d.pot.saut + d.pot.obe) / 3 - 60) / 12) + 1, 1, 3)], 122, y + 74, '#ffd0a0');
+    const full = G.dogs.length >= G.kennel, ok = !full && G.coins >= d.price;
+    button(10, y + 90, 248, 30, full ? 'CHENIL PLEIN' : `ADOPTER POUR ${fmt(d.price)}`, { gold: ok, disabled: !ok, tiny: false, act: () => {
+      if (full) { SFX.error(); toast('Le chenil est plein : agrandis-le à la boutique.'); return; }
+      if (G.coins < d.price) { SFX.error(); toast('Pas assez de pièces.'); return; }
+      G.coins -= d.price; d.act = owns('haies') ? 'haies' : 'repos'; G.dogs.push(d); G.cands = G.cands.filter(x => x !== d);
+      save(); SFX.bark(); toast(`Bienvenue au club, ${d.name} !`); } });
+  });
+}
+
+/* =========================================================
+   LA SEMAINE ET LES CONCOURS
+   ========================================================= */
+function train(d) {
+  const a = ACTS[d.act], out = [];
+  const wasTired = d.forme < 20;
+  if (d.act === 'repos') { d.forme += 30; d.humeur += 3; out.push('repos : forme ++'); }
+  else if (d.act === 'calins') { d.forme += 12; d.humeur += 22; out.push('câlins : humeur ++'); }
+  else {
+    for (const [k, base] of Object.entries(a.gain)) {
+      const room = Math.max(0, d.pot[k] - d.st[k]) / d.pot[k];
+      let v = 1.4 * base * BREEDS[d.breed].m[k] * (.35 + .65 * d.forme / 100) * (.8 + .4 * d.humeur / 100) * Math.pow(room, .5) * (owns('terrain') ? 1.25 : 1) * rf(.8, 1.2);
+      if (wasTired) v *= .4;
+      v *= d.boost || 1;   // séance guidée réussie
+      v = Math.min(v, d.pot[k] - d.st[k]);
+      d.st[k] = Math.round((d.st[k] + v) * 10) / 10;
+      if (v >= .5) out.push(`+${Math.round(v)} ${STATS.find(s => s[0] === k)[1].toLowerCase()}`);
+    }
+    if (!out.length) out.push('ne progresse plus ici');
+    d.forme -= 11; d.humeur -= 4;
+    if (d.boost > 1) out.push(`séance guidée x${d.boost.toFixed(1).replace('.', ',')}`);
+    if (wasTired) out.push('trop fatigué !');
+  }
+  d.forme = clamp(d.forme + 6, 0, 100); d.humeur = clamp(d.humeur, 0, 100); d.boost = 0;
+  return out.join(', ');
+}
+function nextWeek() {
+  audioInit(); MUSIC.start();
+  const lines = [];
+  for (const d of G.dogs) lines.push(`${d.name} : ${train(d)}`);
+  const food = 8 * G.dogs.length, bar_ = owns('buvette') ? (owns('tribunes') ? 80 : 40) : 0, spons = 20 + 10 * level(G.rep);
+  G.coins = Math.max(0, G.coins - food + bar_ + spons);
+  lines.push(`Sponsor du club : +${spons} pièces`, `Croquettes : -${food} pièces`);
+  if (bar_) lines.push(`Buvette : +${bar_} pièces`);
+  G.week++; G.cands = []; G.candWeek = 0; refreshCands();
+  save(); SFX.week();
+  const entrants = G.dogs.filter(d => d.enter);
+  modal(`SEMAINE ${G.week - 1} : BILAN`, lines, entrants.length ? 'AU CONCOURS !' : 'CONTINUER', () => { if (entrants.length) startCompetition(entrants); });
+}
+// la performance d'un chien sur le parcours de concours
+function perform(st, forme, humeur, D) {
+  const ev = [];
+  for (const o of OBST) {
+    const s = o.kind === 'slalom' ? st.obe : o.kind === 'tunnel' ? st.vit : st.saut;
+    let pf = clamp(.28 + (D - s) / 110 + (forme < 40 ? .08 : 0), .02, .65); if (o.kind === 'tunnel') pf *= .3;
+    const pr = clamp(.1 + (D - st.obe) / 170 + (humeur < 30 ? .06 : 0), .01, .4);
+    const fault = Math.random() < pf, refus = !fault && Math.random() < pr;
+    ev.push(fault ? 'faute' : refus ? 'refus' : 'ok');
+  }
+  const base = 38 * (1.5 - st.vit / 100 * .75) * (1.06 - forme / 100 * .12) + rf(-1.5, 1.5);
+  const pen = ev.filter(e => e !== 'ok').length * 5;
+  return { ev, time: Math.round(base * 100) / 100, pen, total: Math.round((base + pen) * 100) / 100 };
+}
+const AI_NAMES = ['Tornade', 'Flash', 'Duchesse', 'Rex', 'Bandit', 'Choupette', 'Météore', 'Sultan', 'Fripouille', 'Zorro', 'Bella', 'Comète', 'Gamin', 'Iris', 'Java', 'Kaïa', 'Rafale', 'Usain'];
+const AI_CLUBS = ['Les Pattes Agiles', 'Canicross 44', 'Club des Vosges', 'Agility Breizh', 'Les Truffes Volantes', 'Club de Provence', 'Toutous Express'];
+function startCompetition(entrants) {
+  const tier = TIERS[G.tier], D = tier.d;
+  G.coins = Math.max(0, G.coins - tier.fee * entrants.length);
+  const field = entrants.map(d => ({ mine: true, dog: d, name: d.name, breed: d.breed, club: clubName().toUpperCase(), res: null }));
+  const used = new Set();
+  while (field.length < 8) {
+    let n; do n = pick(AI_NAMES); while (used.has(n)); used.add(n);
+    const st = { vit: clamp(D - 14 + rand(25), 10, 99), saut: clamp(D - 14 + rand(25), 10, 99), obe: clamp(D - 14 + rand(25), 10, 99) };
+    field.push({ mine: false, name: n, breed: pick(BREED_IDS), club: pick(AI_CLUBS), res: perform(st, 70 + rand(30), 60 + rand(40), D) });
+  }
+  for (const d of entrants) d.comps++;
+  UI.run = { tier, field, queue: field.filter(f => f.mine), idx: 0 };
+  startRun('comp', entrants[0]);
+  save();
+}
+function finishCompetition() {
+  const R0 = UI.run, tier = R0.tier, lines = [];
+  let money = 0, rep = 0, champ = false;
+  for (const f of R0.field.filter(f => f.mine)) {
+    const d = f.dog, i = f.rank - 1;
+    d.forme = clamp(d.forme - 14, 0, 100);   // la fatigue du concours
+    const pr = i < 3 ? tier.prize[i] : 0, rp = Math.round(((i < 3 ? tier.rep[i] : 2 + G.tier * 2)) * (owns('tribunes') ? 1.5 : 1));
+    money += pr; rep += rp;
+    if (i < 3) { d.podiums++; G.trophies.push({ t: G.tier, rank: f.rank, w: G.week, dog: d.name }); dirtyBase(); }
+    if (i === 0) { d.wins++; d.humeur = clamp(d.humeur + 15, 0, 100); if (G.tier === 4) champ = true; } else d.humeur = clamp(d.humeur - 5, 0, 100);
+    lines.push(`${d.name} : ${f.rank}${f.rank === 1 ? 'er' : 'e'} sur 8${pr ? ', +' + fmt(pr) + ' pièces' : ''}, +${rp} réputation`);
+  }
+  const lvBefore = level(G.rep);
+  G.coins += money; G.rep += rep;
+  for (const d of G.dogs) d.enter = false;
+  if (level(G.rep) > lvBefore) lines.push(`Le club gagne une étoile ! (${level(G.rep)}/5)`, `Nouveau concours : ${TIERS[level(G.rep) - 1].name}`);
+  if (G.rep > (G.bestRep || 0)) { G.bestRep = G.rep; if (window.LudoScores) LudoScores.submit('club', 'rep', G.rep); }
+  const first = champ && !G.champion;
+  if (first) { G.champion = G.week; if (window.LudoScores) LudoScores.submit('club', 'champion', G.week, true); }
+  save();
+  UI.screen = 'club'; UI.run = null;
+  if (money) SFX.coin();
+  modal('RESULTATS', lines, 'CONTINUER', () => {
+    if (first) { SFX.win(); modal('CHAMPION DE FRANCE !', [`Ton club a gagné le Championnat de France en ${G.week} semaines !`, 'Tu peux continuer à jouer pour battre ton record de réputation.'], 'BRAVO !', null, { gold: true }); }
+  }, { gold: money > 0 });
+}
+
+/* ---------- la course jouable : le joueur guide le chien au bon moment ---------- */
+// actions attendues le long de la boucle : un appui par haie, pneu ou tunnel, quatre en rythme au slalom
+function runActions() {
+  const out = [];
+  OBST.forEach((o, i) => {
+    if (o.kind === 'slalom') for (let j = 0; j < 4; j++) out.push({ obs: i, at: o.d + 6 + j * 24, beat: j });
+    else out.push({ obs: i, at: o.d - 8 });
+  });
+  return out;
+}
+// demi-largeur de la zone verte (en pixels du terrain) selon la qualité utile et la forme
+function zoneOf(dog, kind) {
+  const st = kind === 'slalom' || kind === 'tunnel' ? dog.st.obe : dog.st.saut;
+  return (8 + st * .14) * (.6 + .4 * dog.forme / 100);
+}
+function baseTime(dog) { return 38 * (1.5 - dog.st.vit / 100 * .75) * (1.06 - dog.forme / 100 * .12) + rf(-1, 1); }
+function startRun(mode, dog, extra) {
+  const base = baseTime(dog), DUR = 7 * (base / 38);
+  UI.run = Object.assign(UI.run || {}, extra || {}, {
+    mode, dog, base, speed: PERIM / DUR, d: 0, last: 0, pause: 0, acts: runActions(), k: 0,
+    res: OBST.map(() => null), beats: [], pops: [], finished: 0, started: now() + 900, elapsed: 0, pens: 0, stop: false, bump: 0,
+  });
+  UI.screen = 'run'; SFX.whistle();
+}
+function resolveAct(run, ok, early) {
+  const a = run.acts[run.k], o = OBST[a.obs];
+  run.k++;
+  const pos = along(o.d);
+  if (o.kind === 'slalom') {
+    run.beats[a.beat] = ok;
+    if (ok) SFX.click(); else SFX.fault();
+    if (a.beat === 3 || !ok) {
+      if (!ok) { run.res[a.obs] = 'faute'; run.pens++; while (run.k < run.acts.length && run.acts[run.k].obs === a.obs) run.k++; }
+      else run.res[a.obs] = 'ok';
+      run.pops.push({ x: pos.x, y: pos.y, s: ok ? 'BRAVO !' : 'FAUTE !', ok, t0: now() });
+    }
+    return;
+  }
+  if (ok) { run.res[a.obs] = 'ok'; SFX.jump(); run.pops.push({ x: pos.x, y: pos.y, s: o.kind === 'tunnel' ? 'TUNNEL !' : 'HOP !', ok: true, t0: now() }); return; }
+  run.pens++;
+  if (o.kind === 'tunnel') { run.res[a.obs] = 'refus'; run.pause = .9; SFX.bark(); run.pops.push({ x: pos.x, y: pos.y, s: 'REFUS !', ok: false, t0: now() }); }
+  else { run.res[a.obs] = 'faute'; SFX.fault(); run.pops.push({ x: pos.x, y: pos.y, s: early ? 'TROP TOT !' : 'FAUTE !', ok: false, t0: now() }); }
+}
+function hop() {
+  const run = UI.run; if (!run || run.finished || now() < run.started) return;
+  const a = run.acts[run.k]; if (!a) return;
+  const o = OBST[a.obs], hw = zoneOf(run.dog, o.kind), dd = run.d - a.at;
+  if (dd < -hw * 2.6) return;                       // trop loin : on ignore l'appui
+  resolveAct(run, Math.abs(dd) <= hw, dd < 0);
+}
+function stepRun(dt) {
+  const run = UI.run; if (!run || run.finished || now() < run.started) return;
+  if (run.pause > 0) { run.pause -= dt; run.stop = true; run.elapsed += dt; return; }
+  run.stop = false; run.elapsed += dt;
+  run.d += run.speed * dt;
+  // action manquée : la zone est dépassée sans appui
+  const a = run.acts[run.k];
+  if (a && run.d - a.at > zoneOf(run.dog, OBST[a.obs].kind)) resolveAct(run, false, false);
+  // petit saut visuel aux haies et au pneu réussis
+  if (run.d >= PERIM) { run.d = PERIM; run.finished = now(); SFX.clap(); endRun(run); }
+}
+function endRun(run) {
+  const succ = run.res.filter(r => r === 'ok').length;
+  if (run.mode === 'comp') {
+    const f = run.queue[run.idx];
+    f.res = { ev: run.res.map(r => r || 'ok'), time: Math.round(run.base * 100) / 100, pen: run.pens * 5, total: Math.round((run.base + run.pens * 5) * 100) / 100 };
+  } else {
+    run.boost = 1 + .12 * succ;   // jusqu'à x1,6 pour un parcours parfait
+  }
+}
+function drawRun(t) {
+  const run = UI.run, f = run.mode === 'comp' ? run.queue[run.idx] : null, dog = run.dog;
+  const dt = Math.min(.05, run.last ? t - run.last : 0); run.last = t; stepRun(dt);
+  bgFill(t);
+  logo(g, run.mode === 'comp' ? run.tier.name : 'SEANCE GUIDEE', LW / 2, 8, 12);
+  tiny(g, run.mode === 'comp' ? run.tier.full : 'CHAQUE OBSTACLE REUSSI FAIT MIEUX PROGRESSER', LW / 2, 26, '#cfe6ff', 'center');
+  // saut visuel : juste après une haie ou le pneu réussis
+  let bump = 0;
+  OBST.forEach((o, i) => { if ((o.kind === 'haie' || o.kind === 'pneu') && run.res[i] === 'ok') { const q = (run.d - (o.d - 10)) / 22; if (q > 0 && q < 1) bump = Math.sin(q * Math.PI); } });
+  run.bump = bump; run.cheer = !!run.finished;
+  sceneBox(t, 38, run);
+  // bulles au-dessus du terrain
+  run.pops = run.pops.filter(p => now() - p.t0 < 900);
+  for (const p of run.pops) { const q = (now() - p.t0) / 900, x = 16 + p.x / 2, y = 38 + p.y / 2 - 10 - q * 12;
+    g.globalAlpha = q > .7 ? (1 - q) / .3 : 1; text(g, p.s, x, y, p.ok ? '#8ee05a' : '#ff6a5a', 'center', 8, OUT); g.globalAlpha = 1; }
+  // chrono
+  plate(g, 4, 166, LW - 8, 24);
+  text(g, dog.name, 10, 174, '#ffd23f');
+  const DUR = PERIM / run.speed, shown = run.finished ? run.base + run.pens * 5 : Math.min(run.base, run.elapsed * run.base / DUR) + run.pens * 5;
+  if (run.mode === 'comp') text(g, shown.toFixed(2) + ' s', LW - 10, 174, '#ffffff', 'right');
+  // la jauge de l'action en cours
+  const a = run.acts[run.k];
+  plate(g, 4, 196, LW - 8, 58, 'blue');
+  if (now() < run.started) { text(g, 'PRET ?', LW / 2, 210, '#ffd23f', 'center'); tiny(g, 'TOUCHE L\'ECRAN QUAND LE CHIEN ARRIVE DANS LE VERT', LW / 2, 230, '#cfe6ff', 'center'); }
+  else if (a && !run.finished) {
+    const o = OBST[a.obs], hw = zoneOf(dog, o.kind), span = 70, x0 = 14, w = LW - 28;
+    const toX = dd => x0 + Math.round(clamp((dd + span) / (span + 24), 0, 1) * w);
+    text(g, o.kind === 'slalom' ? `SLALOM ${a.beat + 1}/4` : o.name, 12, 202, '#ffffff');
+    tiny(g, o.kind === 'tunnel' ? 'APPELLE TON CHIEN !' : o.kind === 'slalom' ? 'EN RYTHME !' : 'HOP AU BON MOMENT !', LW - 12, 204, '#ffd23f', 'right');
+    R(g, x0 - 1, 219, w + 2, 14, OUT); R(g, x0, 220, w, 12, '#1c2236');
+    R(g, toX(-hw), 220, toX(hw) - toX(-hw), 12, '#3fa84a'); R(g, toX(-hw), 220, toX(hw) - toX(-hw), 2, '#8ee05a');
+    R(g, toX(0), 218, 1, 16, '#fff6c2');
+    const cx = toX(run.d - a.at);
+    R(g, cx - 3, 216, 7, 20, OUT); R(g, cx - 2, 217, 5, 18, '#ffd23f'); R(g, cx - 2, 217, 5, 2, '#fff6c2');
+    if (o.kind === 'slalom') for (let j = 0; j < 4; j++) { const v = run.beats[j]; R(g, LW / 2 - 30 + j * 16, 240, 10, 8, OUT); R(g, LW / 2 - 29 + j * 16, 241, 8, 6, v === true ? '#8ee05a' : v === false ? '#e04a3c' : j === a.beat ? '#ffd23f' : '#3a4a58'); }
+    else tiny(g, 'TOUCHE N\'IMPORTE OU SUR L\'ECRAN', LW / 2, 242, '#8fa0b8', 'center');
+  } else if (run.finished) {
+    const succ = run.res.filter(r => r === 'ok').length;
+    if (run.mode === 'comp') { text(g, `TOTAL : ${(run.base + run.pens * 5).toFixed(2)} s`, LW / 2, 206, '#ffd23f', 'center'); text(g, run.pens ? `${run.pens} PENALITE${run.pens > 1 ? 'S' : ''}` : 'SANS FAUTE !', LW / 2, 224, run.pens ? '#ffb4a8' : '#8ee05a', 'center'); }
+    else { text(g, `${succ}/${OBST.length} OBSTACLES REUSSIS`, LW / 2, 206, '#ffd23f', 'center'); text(g, `PROGRES x${run.boost.toFixed(1).replace('.', ',')}`, LW / 2, 224, '#8ee05a', 'center'); }
+  }
+  // la liste des obstacles
+  OBST.forEach((o, i) => { const y = 262 + i * 22, e = run.res[i];
+    plate(g, 4, y, LW - 8, 18, e ? (e === 'ok' ? null : 'red') : 'dim');
+    tiny(g, o.name, 12, y + 7, e ? '#ffffff' : '#7d867a');
+    if (e) tiny(g, e === 'ok' ? 'PARFAIT' : e === 'faute' ? 'FAUTE ! +5 S' : 'REFUS ! +5 S', LW - 12, y + 7, e === 'ok' ? '#8ee05a' : '#ffb4a8', 'right'); });
+  if (!run.finished) { BTN.push({ x: 0, y: 0, w: LW, h: LH, act: hop }); return; }
+  if (now() - run.finished < 600) return;
+  if (run.mode === 'train') {
+    button(36, 420, 200, 36, 'TERMINER', { gold: true, act: () => {
+      dog.boost = run.boost; dog.guided = G.week; save(); UI.run = null; UI.screen = 'dog'; SFX.select();
+      toast(`Séance terminée : les progrès de ${dog.name} seront multipliés par ${run.boost.toFixed(1).replace('.', ',')} cette semaine.`); } });
+    return;
+  }
+  const last = run.idx >= run.queue.length - 1;
+  button(36, 420, 200, 36, last ? 'CLASSEMENT' : 'CHIEN SUIVANT', { gold: true, act: () => {
+    if (!last) { run.idx++; startRun('comp', run.queue[run.idx].dog); return; }
+    run.field.sort((x, y) => x.res.total - y.res.total); run.field.forEach((x, i) => x.rank = i + 1);
+    UI.screen = 'results'; SFX.select();
+  } });
+}
+function drawResults(t) {
+  const run = UI.run;
+  bgFill(t);
+  logo(g, 'CLASSEMENT', LW / 2, 8, 12);
+  tiny(g, run.tier.full, LW / 2, 26, '#cfe6ff', 'center');
+  run.field.forEach((f, i) => {
+    const y = 40 + i * 44;
+    plate(g, 4, y, LW - 8, 40, f.mine ? 'gold' : null);
+    text(g, String(f.rank), 14, y + 15, i < 3 ? ['#ffd23f', '#e4e8ee', '#e0904a'][i] : '#cfe6ff');
+    R(g, 32, y + 6, 40, 28, '#9bd1f4'); R(g, 32, y + 24, 40, 10, '#5cae4a');
+    const im = IMG.stand[f.breed]; g.save(); g.beginPath(); g.rect(32, y + 6, 40, 28); g.clip(); g.drawImage(im, 32 + (40 - im.width / 2) / 2, y + 34 - (C32.GROUND + 2) / 2, im.width / 2, im.height / 2); g.restore();
+    text(g, f.name.slice(0, 10), 80, y + 8, f.mine ? '#fff6c2' : '#ffffff');
+    tiny(g, f.club, 80, y + 22, '#cfe6ff');
+    text(g, f.res.total.toFixed(2), LW - 10, y + 8, '#ffffff', 'right');
+    tiny(g, f.res.pen ? `${f.res.pen / 5} FAUTE${f.res.pen > 5 ? 'S' : ''}` : 'SANS FAUTE', LW - 10, y + 24, f.res.pen ? '#ffb4a8' : '#8ee05a', 'right');
+  });
+  button(36, 400, 200, 34, 'CONTINUER', { gold: true, act: () => finishCompetition() });
+}
+
+function drawTitle(t) {
+  bgFill(t);
+  // décor d'un club bien équipé en fond (préparé une seule fois)
+  const prevG = G, prevB = BASE;
+  G = TITLE_G; BASE = IMG.titleBase || (IMG.titleBase = buildBase(false));
+  sceneBox(t, 96, null);
+  G = prevG; BASE = prevB;
+  logo(g, 'LE CLUB', LW / 2, 22, 20);
+  logo(g, "D'AGILITY", LW / 2, 50, 20);
+  tiny(g, 'ENTRAINE TES CHIENS, GAGNE LES CONCOURS', LW / 2, 80, '#cfe6ff', 'center');
+  const has = !!store.get('save', null);
+  let y = 236;
+  if (has) {
+    const s = store.get('save', {});
+    button(36, y, 200, 38, 'CONTINUER', { gold: true, act: () => { audioInit(); load(); dirtyBase(); UI.screen = 'club'; MUSIC.start(); } });
+    tiny(g, `SEMAINE ${s.week} - ${(s.dogs || []).length} CHIEN${(s.dogs || []).length > 1 ? 'S' : ''} - REPUTATION ${s.rep || 0}`, LW / 2, y + 44, '#ffd23f', 'center');
+    y += 58;
+  }
+  const arm = UI.confirm && now() - UI.confirm < 2500;
+  button(36, y, 200, 30, has ? (arm ? 'EFFACER LA PARTIE ?' : 'NOUVELLE PARTIE') : 'NOUVELLE PARTIE', { gold: !has, red: has && arm, act: () => {
+    if (has && !arm) { UI.confirm = now(); SFX.click(); toast('Touche encore pour recommencer : la partie en cours sera effacée.'); return; }
+    audioInit(); UI.confirm = 0; freshGame(); dirtyBase(); UI.screen = 'club'; MUSIC.start(); SFX.bark();
+    const d = G.dogs[0];
+    modal('BIENVENUE !', [`Voici ${d.name}, ton premier chien (${BREEDS[d.breed].name}).`, 'Choisis son activité de la semaine en touchant sa fiche.', 'Touche le décor du club pour lui donner un nom.',
+      'Inscris-le aux concours pour gagner des pièces et de la réputation.', 'Pendant la course, touche l\'écran quand ton chien arrive dans la zone verte !', 'Objectif : le Championnat de France !'], "C'EST PARTI");
+  } });
+  y += 42;
+  button(36, y, 200, 28, 'CLASSEMENT', { act: () => { location.href = '../classements/index.html#club'; } });
+  y += 40;
+  button(36, y, 96, 24, AC.sfxOn ? 'SON' : 'SON OFF', { tiny: true, disabled: !AC.sfxOn, act: () => { AC.sfxOn = !AC.sfxOn; if (AC.sfx) AC.sfx.gain.value = AC.sfxOn ? .9 : 0; saveOpts(); } });
+  button(140, y, 96, 24, AC.musicOn ? 'MUSIQUE' : 'MUSIQUE OFF', { tiny: true, disabled: !AC.musicOn, act: () => { AC.musicOn = !AC.musicOn; if (!AC.musicOn) MUSIC.stop(); saveOpts(); } });
+  y += 32;
+  if (!window.ludoArtefact) button(36, y, 200, 24, '< LUDOTHEQUE', { tiny: true, act: () => { location.href = '../index.html'; } });
+}
+const TITLE_G = { owned: { haies: 1, tunnel: 1, slalom: 1, pneu: 1, palissade: 1, tribunes: 1, buvette: 1 }, rep: 800,
+  dogs: [{ breed: 'border', act: 'haies' }, { breed: 'jack', act: 'haies' }, { breed: 'golden', act: 'haies' }, { breed: 'sheltie', act: 'repos' }],
+  trophies: [{ t: 3, rank: 1 }, { t: 2, rank: 2 }, { t: 1, rank: 1 }, { t: 0, rank: 3 }] };
+function saveOpts() { store.set('opts', { sfx: AC.sfxOn, music: AC.musicOn }); }
+
+function wrap(s, n) {
+  const words = s.split(' '), lines = []; let cur = '';
+  for (const w of words) { if ((cur + ' ' + w).trim().length > n) { lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }
+  if (cur.trim()) lines.push(cur.trim());
+  return lines;
+}
+function drawModal(t) {
+  const m = UI.modal; BTN = [];
+  g.fillStyle = 'rgba(4,10,6,.66)'; g.fillRect(0, 0, LW, LH);
+  const lines = m.lines.flatMap(l => wrap(l, 30).concat(['']));
+  const h = 70 + lines.length * 11, y = Math.max(20, (LH - h) / 2);
+  plate(g, 8, y, LW - 16, h, m.gold ? 'gold' : null);
+  logo(g, m.title, LW / 2, y + 10, m.title.length > 14 ? 10 : 12);
+  lines.forEach((l, i) => text(g, l, 16, y + 34 + i * 11, '#ffffff'));
+  button(LW / 2 - 70, y + h - 32, 140, 24, m.btn, { gold: true, tiny: true, act: () => { UI.modal = null; SFX.click(); m.onClose && m.onClose(); } });
+}
+function drawToast() {
+  const tt = UI.toast; if (!tt) return;
+  const a = (now() - tt.t0) / 1000; if (a > 3) { UI.toast = null; return; }
+  const lines = wrap(tt.s, 30), h = 10 + lines.length * 11, y = 380 - h;
+  g.globalAlpha = a > 2.6 ? (3 - a) / .4 : 1;
+  plate(g, 10, y, LW - 20, h, 'blue');
+  lines.forEach((l, i) => text(g, l, 16, y + 6 + i * 11, '#ffffff'));
+  g.globalAlpha = 1;
+}
+
+function frame(ts) {
+  const t = ts / 1000; T = t;
+  BTN = [];
+  g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
+  const s = UI.screen;
+  if (s === 'title' || !G) drawTitle(t);
+  else if (s === 'club') drawClub(t);
+  else if (s === 'dog') drawDog(t);
+  else if (s === 'shop') drawShop(t);
+  else if (s === 'recruit') drawRecruit(t);
+  else if (s === 'run') drawRun(t);
+  else if (s === 'results') drawResults(t);
+  if (UI.modal) drawModal(t);
+  drawToast();
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   COMMANDES
+   ========================================================= */
+function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); audioInit();
+  const [x, y] = logical(e);
+  for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { b.act(); return; } }
+});
+function resize() {
+  const top = cv.getBoundingClientRect().top + window.scrollY - (parseFloat(cv.style.marginTop) || 0);
+  const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top);
+  const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
+  cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
+  cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
+  // facteur pair : le décor affiché à moitié de sa taille reste net
+  K = Math.max(2, 2 * Math.ceil(sc * dpr / 2 - .02));
+  cv.width = LW * K; cv.height = LH * K;
+}
+window.addEventListener('resize', resize);
+document.addEventListener('visibilitychange', () => { if (document.hidden) MUSIC.stop(); else if (AC.musicOn && AC.ctx && UI.screen !== 'title') MUSIC.start(); });
+
+{ const o = store.get('opts', {}) || {}; if (o.sfx === false) AC.sfxOn = false; if (o.music === false) AC.musicOn = false; }
+buildStatic();
+setTimeout(resize, 0); resize();
+(document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => { BASE = null; BASE_FULL = null; requestAnimationFrame(frame); });

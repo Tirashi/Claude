@@ -1,0 +1,58 @@
+/* Layout: one wide arcade screen in a wooden frame, big touch buttons under it, short rules below. */
+:root{
+  color-scheme: dark;
+  --night:#14212b;        /* page */
+  --night-2:#1d3040;      /* dither */
+  --wood:#9a6233;         /* frame */
+  --wood-hi:#c98a4f;
+  --wood-lo:#5a3418;
+  --ink:#1f1b26;
+  --snow:#f4efe6;         /* text */
+  --snow-dim:#a8bccb;
+  --swiss:#d6312a;        /* accent */
+  --swiss-lo:#8e1a16;
+  --tan:#c8652c;
+  --f-display:"Press Start 2P", "Courier New", monospace;
+  --f-body:"Pixelify Sans", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{min-height:100%}
+body{margin:0; background-color:var(--night); color:var(--snow); font-family:var(--f-body); font-size:17px; line-height:1.4;
+  background-image:radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size:4px 4px;
+  padding-inline:16px; padding-block:20px 40px}
+.wrap{max-width:860px; margin:0 auto; display:flex; flex-direction:column; gap:16px}
+header{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px,5.4vw,34px); letter-spacing:2px; color:var(--snow);
+  text-shadow:3px 3px 0 var(--swiss), 6px 6px 0 #000}
+h1 span{color:var(--swiss); text-shadow:3px 3px 0 var(--snow), 6px 6px 0 #000}
+.sub{font-family:var(--f-display); font-size:8px; letter-spacing:1px; color:var(--snow-dim); line-height:1.8}
+.frame{background:var(--wood); border:4px solid var(--ink); border-radius:6px; padding:10px;
+  box-shadow: inset 3px 3px 0 var(--wood-hi), inset -4px -4px 0 var(--wood-lo), 6px 6px 0 #000}
+canvas{display:block; width:100%; height:auto; aspect-ratio:2/1; max-width:100%; image-rendering:pixelated; image-rendering:crisp-edges;
+  border:3px solid var(--ink); background:#8cc6e8; touch-action:none; cursor:pointer}
+canvas:focus{outline:none}
+canvas:focus-visible{outline:3px dashed var(--snow); outline-offset:3px}
+.pads{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.btn{font-family:var(--f-display); font-size:11px; letter-spacing:1px; color:var(--snow); background:var(--swiss);
+  border:4px solid var(--ink); border-radius:10px; padding:16px 10px; cursor:pointer; touch-action:none; user-select:none; -webkit-user-select:none;
+  box-shadow: inset 3px 3px 0 rgba(255,255,255,.25), inset -3px -3px 0 var(--swiss-lo), 4px 4px 0 #000}
+.btn.alt{background:#2f6fb0; box-shadow: inset 3px 3px 0 rgba(255,255,255,.25), inset -3px -3px 0 #1a3f6a, 4px 4px 0 #000}
+.btn:active,.btn.on{transform:translate(3px,3px); box-shadow: inset 3px 3px 0 rgba(0,0,0,.25), 1px 1px 0 #000}
+.btn:focus-visible{outline:3px dashed var(--snow); outline-offset:3px}
+.btn small{display:block; font-size:7px; margin-top:8px; opacity:.8}
+/* 32 bits : reflet bombé sur les boutons et les onglets */
+.btn, .mini, .tabs a, .tabs span{background-image:linear-gradient(to bottom, rgba(255,255,255,.28), rgba(255,255,255,.08) 48%, rgba(0,0,0,0) 52%, rgba(0,0,0,.18))}
+.mini{font-size:8px; padding:8px 10px; background:var(--wood-lo); border-width:3px; box-shadow:3px 3px 0 #000}
+.info{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:16px}
+.card{background:#1a2a36; border:3px solid var(--ink); padding:14px; box-shadow:4px 4px 0 #000; min-width:0}
+.card h2{margin:0 0 10px; font-family:var(--f-display); font-weight:400; font-size:10px; letter-spacing:1px; color:var(--tan)}
+.card p{margin:0 0 6px; max-width:65ch}
+.card dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 12px}
+.card dt{font-family:var(--f-display); font-size:8px; color:var(--snow); padding-top:4px}
+.card dd{margin:0; color:var(--snow-dim)}
+kbd{font-family:var(--f-display); font-size:8px; background:#000; border:2px solid var(--snow-dim); padding:1px 4px}
+.tabs{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.tabs a, .tabs span{font-family:var(--f-display); font-size:9px; letter-spacing:1px; padding:9px 10px; border:3px solid var(--ink); border-radius:6px;
+  text-decoration:none; color:var(--snow); background:var(--wood-lo); box-shadow:3px 3px 0 #000}
+.tabs span{background:#ffd23f; color:var(--ink)}

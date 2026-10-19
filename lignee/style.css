@@ -1,0 +1,119 @@
+:root{
+  color-scheme: dark;
+  --f-display:"Press Start 2P", "Courier New", monospace;
+  --f-body:"VT323", "Courier New", monospace;
+  --bg:#1a1220; --bg2:#241a2c;
+  --paper:#efe0bd; --paper2:#e2cc9c; --ink:#3b2414; --ink-soft:#7a5a3a;
+  --accent:#2f7a48; --accent-hi:#4fa86a; --gold:#e0a83a; --bad:#c83a2a; --good:#2f7a48;
+  --frame:#8a5a2a; --btn:#6b3f1f; --btn-hi:#8a5a2a; --btn-text:#fff3d6;
+}
+body.royal{
+  --bg:#120f24; --bg2:#1b1636;
+  --paper:#e9e2f4; --paper2:#d4c8ea; --ink:#2a1a48; --ink-soft:#5e4c86;
+  --accent:#5a3aa0; --accent-hi:#7c5cc8; --gold:#e8b830; --frame:#b08a1c; --btn:#3a2470; --btn-hi:#55389a;
+}
+body.cine{
+  --bg:#160a0c; --bg2:#22100f;
+  --paper:#f6efe0; --paper2:#e6d8bc; --ink:#2a1414; --ink-soft:#6a4a3a;
+  --accent:#a8202c; --accent-hi:#c83040; --gold:#e8b830; --frame:#c8a040; --btn:#6a1420; --btn-hi:#8a2030;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0}
+body{background-color:var(--bg); background-image:radial-gradient(var(--bg2) 1px, transparent 1.5px); background-size:4px 4px;
+  color:var(--paper); font-family:var(--f-body); font-size:19px; line-height:1.25; padding:14px 12px 40px; min-height:100vh}
+body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:60;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.06) 0 1px, transparent 1px 3px)}
+.wrap{max-width:720px; margin:0 auto}
+h1{font-family:var(--f-display); font-weight:400; margin:0; font-size:clamp(22px,7vw,34px); letter-spacing:3px; color:var(--gold);
+  text-shadow:3px 3px 0 #000; text-align:center}
+.sub{text-align:center; font-family:var(--f-display); font-size:8px; letter-spacing:1px; color:var(--paper2); margin:10px 0 0}
+.btn{font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--btn-text); background:var(--btn); border:3px solid #000;
+  border-radius:6px; padding:11px 12px; cursor:pointer; box-shadow:3px 3px 0 #000; -webkit-tap-highlight-color:transparent}
+.btn:hover{background:var(--btn-hi)}
+.btn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 #000}
+.btn:focus-visible{outline:3px dashed var(--gold); outline-offset:3px}
+.btn[aria-pressed="true"]{background:var(--gold); color:#2a1a08}
+.btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+.panel{background:var(--paper); color:var(--ink); border:4px solid #000; border-radius:6px; box-shadow:inset 0 0 0 3px var(--frame), 5px 5px 0 #000; padding:14px}
+.panel h2{font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; margin:0 0 10px; color:var(--ink)}
+
+/* ---------- menu ---------- */
+.logo{display:flex; justify-content:center; margin:6px 0 10px}
+.logo canvas{width:96px; height:96px; image-rendering:pixelated}
+.modes{display:flex; gap:10px; margin:18px 0 14px}
+.modes .btn{flex:1 1 0; font-size:10px; padding:14px 4px; letter-spacing:0}
+.modes small{display:block; font-family:var(--f-body); font-size:15px; letter-spacing:0; margin-top:6px; text-transform:none}
+.lvlpick{display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:12px}
+.lvlpick .btn{font-size:8px; padding:10px 2px; letter-spacing:0}
+.sagas{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.saga{display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 6px; text-align:center}
+.saga b{font-weight:400; font-size:10px; line-height:1.5}
+.saga small{font-family:var(--f-body); font-size:16px; letter-spacing:0}
+.saga i{font-style:normal; font-family:var(--f-body); font-size:15px; opacity:.85}
+.levels{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.lvl{display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 8px}
+.lvl b{font-weight:400; font-size:11px}
+.lvl small{font-family:var(--f-body); font-size:16px; letter-spacing:0; opacity:.95}
+.row{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
+.row .btn{flex:1 1 auto}
+a.btn{text-decoration:none; text-align:center}
+.code{display:flex; gap:8px; margin-top:12px}
+.code input{flex:1; min-width:0; font-family:var(--f-display); font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:10px;
+  border:3px solid #000; border-radius:6px; background:#fffaf0; color:#2a1a08}
+.rules{margin-top:14px}
+.rules p, .rules li{margin:0 0 6px; font-size:18px}
+.rules ul{margin:0; padding-left:20px}
+.rules b{color:var(--accent)}
+.msgline{font-family:var(--f-display); font-size:8px; line-height:1.9; min-height:1.9em; margin-top:10px; color:var(--paper2)}
+
+/* ---------- partie ---------- */
+.bar{display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; align-items:center; font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:var(--paper2); margin-bottom:10px}
+.bar b{font-weight:400; color:var(--gold)}
+.treebox{overflow-x:auto; padding:10px 4px 6px}
+.tree{position:relative; margin:0 auto}
+.tree svg{position:absolute; inset:0; overflow:visible; pointer-events:none}
+.tree svg line{stroke:var(--ink); stroke-width:3; stroke-linecap:square}
+.tree svg line.couple{stroke:var(--accent); stroke-width:4}
+.tree svg line.half{stroke-dasharray:5 4}
+.slot{position:absolute; padding:0; border:3px solid var(--ink); border-radius:5px; background:var(--paper2); cursor:pointer; display:flex; flex-direction:column; align-items:center;
+  -webkit-tap-highlight-color:transparent; box-shadow:2px 2px 0 rgba(0,0,0,.35)}
+.slot canvas{image-rendering:pixelated; display:block; margin-top:2px}
+.slot .nm{font-family:var(--f-body); color:var(--ink); white-space:nowrap; line-height:1; margin-top:1px}
+.slot.empty canvas{opacity:.5}
+.slot.filled{background:#fffaf0; border-color:var(--frame)}
+.slot.ok{border-color:var(--gold); background:#fff6d6; animation:pop .4s steps(3) both}
+@keyframes pop{0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)}}
+.msg{font-family:var(--f-display); font-size:9px; line-height:1.9; text-align:center; min-height:2em; margin:6px 0 8px; color:var(--ink)}
+.msg .hl{color:var(--bad)}
+.tray{display:grid; grid-template-columns:repeat(auto-fill, minmax(76px, 1fr)); gap:8px; min-height:40px}
+.card{border:3px solid var(--ink); border-radius:5px; background:#fffaf0; padding:6px 2px 4px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer;
+  font-family:var(--f-body); font-size:17px; color:var(--ink); -webkit-tap-highlight-color:transparent; box-shadow:2px 2px 0 rgba(0,0,0,.35)}
+.card canvas{width:44px; height:44px; image-rendering:pixelated}
+.card.sel{background:var(--gold); outline:3px dashed var(--bad); outline-offset:2px}
+.trayhint{font-size:17px; color:var(--ink-soft); margin:0 0 6px}
+.clues{margin:0; padding:0; list-style:none}
+.clues li{position:relative; padding:5px 6px 5px 34px; border-bottom:2px dotted var(--paper2); font-size:19px; color:var(--ink)}
+/* chaque indice garde son numéro, même quand il descend en bas de la liste */
+.clues li::before{content:attr(data-n); position:absolute; left:4px; top:6px; font-family:var(--f-display); font-size:9px; color:var(--ink-soft)}
+.clues li b{font-weight:400; color:var(--accent)}
+.clues li.done{opacity:.5; cursor:default}
+.clues li.done::after{content:"✓"; position:absolute; right:6px; top:4px; color:var(--good); font-family:Arial, sans-serif}
+.clues li.sep{border-top:3px dashed var(--paper2)}
+.slot.nope{animation:nope .45s steps(6) both; border-color:var(--bad); background:#ffe0d8}
+@keyframes nope{0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)}}
+.lives{font-family:Arial, "Segoe UI Symbol", sans-serif; font-size:15px; letter-spacing:2px; color:var(--bad)}
+.lives i{font-style:normal; color:#b9ad95}
+.lives.hit{animation:pop .4s steps(3) both}
+#win.lost h2{color:var(--bad)}
+.gamegrid{display:flex; flex-direction:column; gap:12px}
+.tools{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+.win{text-align:center}
+.win h2{font-size:13px; line-height:1.7; color:var(--accent)}
+.win p{margin:6px 0; font-size:19px}
+.win .row{justify-content:center}
+.small{font-size:16px; color:var(--ink-soft)}
+#winBoard{margin:4px auto 8px; max-width:280px; text-align:left}
+#winBoard ol{margin:4px 0 0; padding-left:26px}
+#winBoard li{font-size:18px; color:var(--ink)}
+#winBoard li.me{color:var(--accent); font-weight:700}

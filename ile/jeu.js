@@ -1,0 +1,678 @@
+'use strict';
+const TS = 32, WW = MW * TS, WH = MH * TS, VW = 640, VH = 292, DRW = 214;
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem('ile.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('ile.' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('ile.' + k); } catch (e) {} },
+};
+let run = null, isle = null;
+// état de l'affichage (jamais sauvegardé)
+const V = { sel: null, panel: null, drawer: false, zoom: 1.25, cam: { x: 0, y: 0 }, floats: [], sheet: null, confirmed: false, report: [], busy: false, rotDismissed: false, demo: null, active: 0 };
+
+/* =================== le terrain, pixel par pixel =================== */
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const SP = s => ({ // couleurs de chaque terrain selon la saison : [sombre, moyen, clair]
+  mead: [['#3f9a3a', '#5cbf4a', '#7ad65a'], ['#6a9a30', '#8cc04a', '#a8d45a'], ['#8a7a30', '#b0a848', '#c8bc5a'], ['#c0d0dc', '#e2eaf0', '#f8fbfd']][s],
+  forg: [['#2f7a2f', '#3f8f3a', '#4fa046'], ['#4f7a2a', '#628a32', '#749a3c'], ['#6a5a28', '#7f6a30', '#8f7a3a'], ['#b8c8d4', '#d4e0e8', '#eef4f8']][s],
+  hill: [['#6a8a40', '#7f9c4a', '#93ae58'], ['#88883e', '#9c9c48', '#b0b058'], ['#8a7a40', '#9c8c4a', '#ae9e58'], ['#c8d4dc', '#e0e8ee', '#f6f9fb']][s],
+  rock: [['#6e6e64', '#86867a', '#a0a094'], ['#6e6e64', '#86867a', '#a0a094'], ['#6e6a60', '#86827a', '#a09c94'], ['#b4bec6', '#d0d8de', '#eef2f6']][s],
+  sand: s === 3 ? ['#cfcabc', '#e4e0d4', '#f4f2ea'] : ['#d4b878', '#e8d090', '#f4e2a8'],
+  wet: s === 3 ? '#b0b4b0' : '#b89a5c',
+  marsh: s === 3 ? ['#a8bcb4', '#c4d4cc', '#dce8e2'] : ['#3a6a48', '#4a7a50', '#5c8c5a'],
+  sea: s === 3 ? ['#123e60', '#16486e', '#1f5a80'] : ['#0f4e7c', '#145a8a', '#1a6a9e'],
+  shallow: s === 3 ? ['#2a6a8a', '#347a9a', '#3f88a8'] : ['#2478aa', '#2a88bc', '#3498ca'],
+  riv: s === 3 ? ['#a8cce0', '#c4e0f0', '#e4f2fa'] : ['#2a88c8', '#3fa0e0', '#6ab8ea'],
+  bank: s === 3 ? '#9aa8a8' : '#8a7a4a', foam: [236, 248, 255],
+});
+const season = () => dateOf(run).season;
+let groundCv, terrainCv, fogCv, staticCv, groundKey = '', sceneryKey = '', staticDirty = true;
+function riverSegs() { return isle.river.map(i => [(i % MW + .5) * TS, ((i / MW | 0) + .5) * TS]); }
+// le sol (ne change qu'avec l'île et la saison)
+function buildGround() {
+  const key = isle.seed + ':' + season(); if (key === groundKey) return; groundKey = key; sceneryKey = '';
+  groundCv = groundCv || document.createElement('canvas'); groundCv.width = WW; groundCv.height = WH;
+  const g2 = groundCv.getContext('2d'), img = g2.createImageData(WW, WH), d = img.data, s = season();
+  const r = mulberry32(isle.seed ^ 0x5bd1e995), wA = noise(r, 11, WW, WH), wB = noise(r, 11, WW, WH), n1 = noise(r, 3, WW, WH), n2 = noise(r, 8, WW, WH), n3 = noise(r, 20, WW, WH);
+  const P = SP(s), C3 = {}; for (const k in P) C3[k] = Array.isArray(P[k]) ? (typeof P[k][0] === 'string' ? P[k].map(hex) : P[k]) : hex(P[k]);
+  const tAt = (x, y) => isle.t[Math.min(MH - 1, Math.max(0, y / TS | 0)) * MW + Math.min(MW - 1, Math.max(0, x / TS | 0))];
+  const landF = isle.t.map(v => v === T.SEA ? 0 : 1), hF = isle.t.map((v, i) => v === T.SEA ? .35 : Math.max(.4, Math.min(1.25, isle.h[i])));
+  const smp = (arr, x, y) => { const u = Math.max(0, Math.min(MW - 1.001, x / TS - .5)), v = Math.max(0, Math.min(MH - 1.001, y / TS - .5)), i = u | 0, j = v | 0; let a = u - i, b = v - j; a = a * a * (3 - 2 * a); b = b * b * (3 - 2 * b);
+    return (arr[j * MW + i] * (1 - a) + arr[j * MW + i + 1] * a) * (1 - b) + (arr[(j + 1) * MW + i] * (1 - a) + arr[(j + 1) * MW + i + 1] * a) * b; };
+  const segs = riverSegs(), nearRiv = isle.t.map((_, i) => { const x = i % MW, y = i / MW | 0; return N8.concat([[0, 0]]).some(([dx, dy]) => inside(x + dx, y + dy) && isle.t[(y + dy) * MW + x + dx] === T.RIV); });
+  const rDist = (x, y) => { let m = 1e9; for (let k = 0; k < segs.length - 1; k++) { const [ax, ay] = segs[k], [bx, by] = segs[k + 1], vx = bx - ax, vy = by - ay, l = vx * vx + vy * vy, tt = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / l)), dx = x - ax - vx * tt, dy = y - ay - vy * tt, dd = dx * dx + dy * dy; if (dd < m) m = dd; } return Math.sqrt(m); };
+  const pick = (arr, v) => v < .4 ? arr[0] : v > .62 ? arr[2] : arr[1];
+  for (let y = 0; y < WH; y++) for (let x = 0; x < WW; x++) {
+    const ox = (wA(x, y) - .5) * 18, oy = (wB(x, y) - .5) * 18, sx = x + ox, sy = y + oy, ti = Math.min(MH - 1, Math.max(0, sy / TS | 0)) * MW + Math.min(MW - 1, Math.max(0, sx / TS | 0));
+    let t = isle.t[ti]; const hsh = ((x * 374761393 + y * 668265263) ^ 0x27d4eb2d) >>> 0, dn = ((hsh % 1000) / 1000 - .5) * .12;
+    const tex = n1(x, y) * .55 + n2(x, y) * .45 + dn;
+    let c, light = 1;
+    const tix = x / TS | 0, tiy = y / TS | 0, rd = nearRiv[tiy * MW + tix] ? rDist(x + ox * .45, y + oy * .45) : 1e9, rw = 5.5 + n3(x, y) * 3;
+    if (t === T.SEA && rd > rw) {
+      const coast = tAt(sx + 3, sy) !== T.SEA || tAt(sx - 3, sy) !== T.SEA || tAt(sx, sy + 3) !== T.SEA || tAt(sx, sy - 3) !== T.SEA;
+      c = coast && tex > .35 ? C3.foam : pick(smp(landF, x, y) > .22 ? C3.shallow : C3.sea, tex);
+    } else if (rd <= rw) { c = pick(C3.riv, tex + (Math.sin((x + y) * .35) > .85 ? .3 : 0)); }
+    else {
+      if (t === T.RIV) t = T.MEAD;
+      const relief = (smp(hF, x - 5, y - 5) - smp(hF, x + 5, y + 5)) * 2.6;
+      if (rd <= rw + 2.2) c = C3.bank;
+      else if (t === T.SAND) { const wet = tAt(sx + 4, sy) === T.SEA || tAt(sx - 4, sy) === T.SEA || tAt(sx, sy + 4) === T.SEA || tAt(sx, sy - 4) === T.SEA; c = wet ? C3.wet : pick(C3.sand, tex); light = 1 + relief * .4; }
+      else if (t === T.MEAD) { c = pick(C3.mead, tex); light = 1 + relief; if (s < 2 && hsh % 997 === 0) c = hex(['#ffe86a', '#ff9ad0', '#ffffff'][hsh % 3]); if (isle.berge[ti] && s < 3) light *= .94; }
+      else if (isForest(t)) { c = pick(C3.forg, tex - (t === T.DFOR ? .1 : 0)); light = 1 + relief; }
+      else if (t === T.HILL || t === T.MOUNT) { c = pick(C3.hill, tex); light = 1 + relief * 1.6; }
+      else if (t === T.ROCK) { c = pick(tex > .5 ? C3.rock : C3.hill, tex); light = 1 + relief * 1.6; }
+      else if (t === T.MARSH) { c = tex > .6 ? C3.riv[1] : pick(C3.marsh, tex); }
+      else c = pick(C3.sand, tex);
+    }
+    light = Math.round(Math.max(.72, Math.min(1.25, light)) * 14) / 14; // paliers : rendu « peint en pixels »
+    const o = (y * WW + x) * 4; d[o] = Math.min(255, c[0] * light); d[o + 1] = Math.min(255, c[1] * light); d[o + 2] = Math.min(255, c[2] * light); d[o + 3] = 255;
+  }
+  g2.putImageData(img, 0, 0);
+}
+// arbres (selon le bois qui reste), rochers et sommets, par-dessus le sol
+const treesOn = i => { const m = WOOD_MAX(isle.t[i]); return m ? Math.round((isle.t[i] === T.DFOR ? 7 : 4) * run.wood[i] / m) : 0; };
+function buildTerrain() {
+  buildGround();
+  const key = groundKey + ':' + isle.t.map((_, i) => treesOn(i)).join('');
+  if (key === sceneryKey) return; sceneryKey = key; staticDirty = true;
+  terrainCv = terrainCv || document.createElement('canvas'); terrainCv.width = WW; terrainCv.height = WH;
+  const g2 = terrainCv.getContext('2d'); g2.drawImage(groundCv, 0, 0); drawScenery(g2);
+}
+function pdisc(g, cx, cy, r, col) { g.fillStyle = col; for (let y = -r; y <= r; y++) { const w = Math.round(Math.sqrt(r * r - y * y)); g.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2 + 1, 1); } }
+function drawScenery(g) {
+  const s = season(), items = [], segs = riverSegs();
+  const nearWater = (x, y) => segs.some(([ax, ay]) => Math.hypot(ax - x, ay - y) < 15);
+  for (let ty = 0; ty < MH; ty++) for (let tx = 0; tx < MW; tx++) {
+    const i = ty * MW + tx, t = isle.t[i], r = mulberry32(tx * 9301 + ty * 49297 + isle.seed), X = tx * TS, Y = ty * TS;
+    if (isForest(t)) { const n = t === T.DFOR ? 7 : 4, keep = treesOn(i); for (let k = 0; k < n; k++) { const x = X + 4 + r() * 24, y = Y + 6 + r() * 24, con = t === T.DFOR || r() < .25, v = r();
+      if (nearWater(x, y)) continue; if (k < keep) items.push([y, 'tree', x, y, con, v]); else items.push([y, 'stump', x, y]); } }
+    if (t === T.MEAD && r() < .12) items.push([Y + 20, 'tree', X + 8 + r() * 16, Y + 10 + r() * 14, false, r()]);
+    if (t === T.ROCK) for (let k = 0; k < 3; k++) { const x = X + 5 + r() * 22, y = Y + 8 + r() * 20; items.push([y, 'rock', x, y, 3 + r() * 3 | 0]); }
+    if (t === T.MOUNT) items.push([Y + 30, 'peak', X + 16 + (r() - .5) * 8, Y + 30, 34 + r() * 14, 34 + r() * 10]);
+    if ((t === T.MEAD || t === T.HILL) && s < 3) for (let k = 0; k < 3; k++) items.push([Y + r() * 32, 'tuft', X + r() * 30, Y + r() * 30]);
+  }
+  items.sort((a, b) => a[0] - b[0]);
+  const OL = '#1c2a14';
+  items.forEach(([, kind, x, y, a, b]) => {
+    if (kind === 'tuft') { g.fillStyle = s === 2 ? '#8a7a30' : '#3f8a30'; g.fillRect(x | 0, y | 0, 1, 2); g.fillRect((x | 0) + 2, (y | 0) - 1, 1, 3); return; }
+    if (kind === 'stump') { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(Math.round(x - 1), Math.round(y + 2), 5, 1); g.fillStyle = '#4a2e16'; g.fillRect(Math.round(x - 1), Math.round(y), 4, 2); g.fillStyle = s === 3 ? '#ffffff' : '#c8a070'; g.fillRect(Math.round(x - 1), Math.round(y - 1), 4, 1); return; }
+    if (kind === 'rock') { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(x - a + 1, y + a - 1, a * 2 + 1, 2); pdisc(g, x, y, a + 1, '#3a3a36'); pdisc(g, x, y, a, s === 3 ? '#c8d0d8' : '#8a8a84'); pdisc(g, x - 1, y - 1, Math.max(1, a - 2), s === 3 ? '#ffffff' : '#b0b0a8'); return; }
+    if (kind === 'peak') {
+      const w = a, h = b, top = y - h; g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.moveTo(x - w / 2 + 6, y + 2); g.lineTo(x + w / 2 + 8, y + 2); g.lineTo(x + 6, top + 6); g.fill();
+      g.fillStyle = '#2a2a30'; g.beginPath(); g.moveTo(x - w / 2 - 1, y + 1); g.lineTo(x, top - 1); g.lineTo(x + w / 2 + 1, y + 1); g.fill();
+      g.fillStyle = '#8a8a96'; g.beginPath(); g.moveTo(x - w / 2, y); g.lineTo(x, top); g.lineTo(x + 2, y); g.fill();
+      g.fillStyle = '#5c5c68'; g.beginPath(); g.moveTo(x, top); g.lineTo(x + w / 2, y); g.lineTo(x + 2, y); g.fill();
+      const sn = s === 3 ? .7 : .38; g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(x - w / 2 * sn, top + h * sn); g.lineTo(x, top); g.lineTo(x + w / 2 * sn, top + h * sn);
+      g.lineTo(x + w / 6 * sn, top + h * sn * .8); g.lineTo(x - w / 8 * sn, top + h * sn * 1.05); g.fill();
+      g.fillStyle = '#d4e0ec'; g.beginPath(); g.moveTo(x, top); g.lineTo(x + w / 2 * sn, top + h * sn); g.lineTo(x + w / 6 * sn, top + h * sn * .8); g.fill(); return;
+    }
+    // un arbre : conifère ou feuillu, avec contour, trois tons et son ombre
+    const conifer = a, v = b; g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(Math.round(x - 3), Math.round(y + 5), 9, 2);
+    g.fillStyle = '#4a2e16'; g.fillRect(Math.round(x), Math.round(y + 1), 2, 5);
+    if (conifer) {
+      const leaf = s === 3 ? ['#1c3a28', '#2a5a3a', '#ffffff'] : s === 2 ? ['#1c4a28', '#2a6a3a', '#3f8a4a'] : ['#1c5a2a', '#2f7a3a', '#4aa04a'];
+      for (let k = 0; k < 4; k++) { const w = 1 + k * 1.6, yy = y - 12 + k * 3.2; g.fillStyle = OL; g.fillRect(Math.round(x + 1 - w - 1), Math.round(yy), Math.round(w * 2 + 2), 4); }
+      for (let k = 0; k < 4; k++) { const w = 1 + k * 1.6, yy = y - 12 + k * 3.2; g.fillStyle = leaf[1]; g.fillRect(Math.round(x + 1 - w), Math.round(yy + 1), Math.round(w * 2), 3); g.fillStyle = leaf[2]; g.fillRect(Math.round(x + 1 - w), Math.round(yy + 1), Math.max(1, Math.round(w * .8)), 1); g.fillStyle = leaf[0]; g.fillRect(Math.round(x + 1 + w * .2), Math.round(yy + 3), Math.round(w * .8), 1); }
+    } else {
+      if (s === 3) { g.fillStyle = '#5a3a20'; g.fillRect(Math.round(x - 3), Math.round(y - 5), 1, 4); g.fillRect(Math.round(x + 4), Math.round(y - 6), 1, 5); g.fillRect(Math.round(x - 2), Math.round(y - 3), 6, 1); g.fillRect(Math.round(x), Math.round(y - 8), 2, 9); g.fillStyle = '#ffffff'; g.fillRect(Math.round(x - 3), Math.round(y - 6), 2, 1); g.fillRect(Math.round(x + 3), Math.round(y - 7), 2, 1); return; }
+      const leaf = s === 2 ? (v > .5 ? ['#8a3a18', '#c86a28', '#f0a040'] : ['#8a6a18', '#c8a030', '#f0d060']) : s === 1 ? ['#2a6a24', '#3f8a32', '#62b04a'] : ['#2f7a2a', '#4aa040', '#7ad060'];
+      pdisc(g, x + 1, y - 5, 6, OL); pdisc(g, x + 1, y - 5, 5, leaf[1]); pdisc(g, x + 2, y - 3, 3, leaf[0]); pdisc(g, x - 1, y - 7, 2, leaf[2]);
+      if (s === 0 && v > .7) { g.fillStyle = '#ffd0e8'; g.fillRect(Math.round(x - 2), Math.round(y - 6), 1, 1); g.fillRect(Math.round(x + 3), Math.round(y - 4), 1, 1); }
+    }
+  });
+}
+let fogKey = '';
+function buildFog() {
+  const key = run.seen.join('') + season(); if (key === fogKey) return; fogKey = key; staticDirty = true;
+  fogCv = fogCv || document.createElement('canvas'); fogCv.width = WW; fogCv.height = WH;
+  const g2 = fogCv.getContext('2d'); g2.clearRect(0, 0, WW, WH);
+  const F = season() === 3 ? ['#8a9cb0', 'rgba(170,186,204,1)', 'rgba(140,158,178,1)', 'rgba(140,158,178,.9)', 'rgba(140,158,178,0)'] : ['#d0dce4', 'rgba(244,248,250,1)', 'rgba(220,230,238,1)', 'rgba(214,226,234,.9)', 'rgba(214,226,234,0)']; // l'hiver, un brouillard plus sombre que la neige
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { if (run.seen[y * MW + x]) continue; const r = mulberry32(x * 31 + y * 977);
+    const full = N8.every(([dx, dy]) => !inside(x + dx, y + dy) || !run.seen[(y + dy) * MW + x + dx]);
+    if (full) { g2.fillStyle = F[0]; g2.fillRect(x * TS, y * TS, TS, TS); }
+    for (let k = 0; k < 4; k++) { const cx = x * TS + 6 + r() * 20, cy = y * TS + 6 + r() * 20, rr = 14 + r() * 8, gr = g2.createRadialGradient(cx, cy, 2, cx, cy, rr);
+      gr.addColorStop(0, k % 2 ? F[1] : F[2]); gr.addColorStop(.7, F[3]); gr.addColorStop(1, F[4]); g2.fillStyle = gr; g2.beginPath(); g2.arc(cx, cy, rr, 0, 7); g2.fill(); } }
+}
+// le décor (sol, arbres, brouillard) agrandi une fois à la taille réelle de l'écran : à chaque image, on le recopie sans l'agrandir
+let staticK = 0;
+function buildStatic() {
+  const k = S * V.zoom; if (!staticDirty && k === staticK) return; staticDirty = false; staticK = k;
+  staticCv = staticCv || document.createElement('canvas'); staticCv.width = Math.ceil(WW * k); staticCv.height = Math.ceil(WH * k);
+  const g2 = staticCv.getContext('2d'); g2.imageSmoothingEnabled = false; g2.drawImage(terrainCv, 0, 0, WW * k, WH * k); g2.drawImage(fogCv, 0, 0, WW * k, WH * k);
+}
+function refreshWorld() { buildTerrain(); buildFog(); buildStatic(); }
+
+/* =================== les bâtiments, en 32 × 32 =================== */
+function drawB(g, b, X, Y, now = 0) {
+  const R = (a, c, w, h, col) => { g.fillStyle = col; g.fillRect(X + a, Y + c, w, h); }, s = run ? season() : 0, snow = s === 3, t = b.done === false ? 'chantier' : b.type, OL = '#24160c';
+  const shadow = (a, c, w) => R(a + 2, c, w, 3, 'rgba(0,0,0,.28)');
+  const house = (x, y, w, h, wall, roof, o = {}) => {
+    const rh = Math.round(h * .45); shadow(x, y + h, w);
+    R(x - 1, y + rh - 1, w + 2, h - rh + 2, OL); R(x, y + rh, w, h - rh, wall[1]); R(x + w - 3, y + rh, 3, h - rh, wall[0]); R(x, y + rh, w, 1, wall[2]);
+    for (let yy = y + rh + 3; yy < y + h; yy += 3) R(x, yy, w - 3, 1, 'rgba(0,0,0,.08)');
+    R(x - 3, y - 1, w + 6, rh + 2, OL); R(x - 2, y, w + 4, rh, roof[1]); for (let yy = y + 2; yy < y + rh; yy += 3) R(x - 2, yy, w + 4, 1, roof[0]);
+    R(x - 2, y, w + 4, 1, roof[2]); R(x + w - 1, y, 3, rh, 'rgba(0,0,0,.15)');
+    if (snow) { R(x - 2, y, w + 4, 3, '#ffffff'); R(x, y + 3, 2, 1, '#ffffff'); R(x + w - 4, y + 3, 2, 2, '#e8f0f8'); }
+    const dw = o.door || 4, dx = Math.round(x + (w - dw) / 2); R(dx - 1, y + h - 7, dw + 2, 7, OL); R(dx, y + h - 6, dw, 6, '#5a3418'); R(dx, y + h - 6, 1, 6, '#7a4a24');
+    const lit = snow || s === 2 ? '#ffd870' : '#bfe0f0';
+    if (w >= 14 && !o.noWin) [x + 2, x + w - 6].forEach(wx => { R(wx - 1, y + rh + 2, 5, 5, OL); R(wx, y + rh + 3, 3, 3, lit); R(wx, y + rh + 3, 1, 1, '#ffffff'); });
+  };
+  switch (t) {
+    case 'epave': shadow(3, 25, 26); R(3, 17, 26, 8, OL); R(4, 18, 24, 6, '#7a5230'); R(4, 18, 24, 1, '#a07040'); for (let k = 0; k < 5; k++) R(6 + k * 5, 18, 1, 6, '#5a3820'); R(4, 23, 24, 1, '#4a2e18');
+      R(28, 15, 3, 6, '#7a5230'); for (let k = 0; k < 13; k++) R(Math.round(17 - k * .6), 4 + k, 2, 1, '#4a2e18'); R(17, 5, 9, 9, OL); R(18, 6, 7, 7, '#efe6cc'); R(18, 6, 2, 7, '#d8ccaa'); R(21, 10, 4, 3, '#c8bc98'); if (snow) R(4, 17, 24, 1, '#ffffff'); break;
+    case 'tente': shadow(5, 26, 22); for (let k = 0; k < 16; k++) { R(16 - k - 1, 9 + k, 2 * k + 3, 1, OL); R(16 - k, 9 + k, 2 * k + 1, 1, k % 4 < 2 ? '#f0e2c4' : '#e0c89e'); } R(14, 17, 5, 9, '#4a3420'); R(15, 7, 2, 3, '#7a5230'); if (snow) R(12, 10, 9, 2, '#ffffff'); break;
+    case 'habitation': house(7, 7, 18, 19, ['#a06a38', '#c08a50', '#d8a868'], ['#7a2a1a', '#a0402a', '#c8603a']); R(21, 3, 3, 6, OL); R(22, 4, 1, 5, '#7a5a4a'); break;
+    case 'ecole': house(4, 8, 24, 18, ['#b08a58', '#d0aa70', '#e8c890'], ['#2a4a3a', '#3f6a50', '#5a8a68'], { door: 6 }); R(14, 1, 4, 8, OL); R(15, 2, 2, 6, '#7a5a3a'); R(14, 4, 4, 3, '#ffd23f'); break;
+    case 'bibliotheque': house(2, 6, 28, 20, ['#8a8a92', '#a8a8b0', '#c8c8d0'], ['#1a2a5a', '#2a3f7a', '#3f5a9a'], { door: 6 }); R(12, 18, 8, 2, '#c8a060'); R(13, 13, 6, 4, OL); R(14, 14, 2, 2, '#efe6cc'); R(16, 14, 2, 2, '#efe6cc'); break;
+    case 'grenier': house(5, 5, 22, 22, ['#8a4a28', '#b0603a', '#c87a4a'], ['#5a2a1a', '#7a3a2a', '#9a4a30'], { door: 8, noWin: true }); R(12, 21, 8, 1, '#c08a50'); R(15, 12, 2, 2, '#ffd870'); break;
+    case 'entrepot': house(2, 9, 28, 17, ['#6a6a72', '#8a8a92', '#a8a8b0'], ['#3a3a44', '#5a5a64', '#7a7a84'], { door: 10, noWin: true }); R(5, 23, 5, 2, '#a07040'); R(23, 22, 4, 3, '#8a8a92'); break;
+    case 'bucheron': house(2, 6, 15, 17, ['#7a5230', '#9a6a3a', '#b88a50'], ['#4a2a18', '#6a3a24', '#8a4a2a']);
+      shadow(18, 25, 12); R(18, 18, 12, 7, OL); for (let k = 0; k < 3; k++) { R(19, 19 + k * 2, 10, 2, k % 2 ? '#8a5a2a' : '#a06a30'); R(19, 19 + k * 2, 1, 2, '#e0b070'); R(28, 19 + k * 2, 1, 2, '#e0b070'); }
+      R(21, 27, 6, 3, '#6a4a2a'); R(21, 27, 6, 1, '#c8a060'); R(25, 23, 1, 5, '#7a5a3a'); R(24, 23, 3, 2, '#c0c8d0'); break;
+    case 'cueilleur': house(2, 6, 15, 17, ['#7a5230', '#9a6a3a', '#b88a50'], ['#2a5a2a', '#3f7a3a', '#5a9a4a']);
+      [[19, 20], [25, 23]].forEach(([bx, by]) => { shadow(bx, by + 6, 7); R(bx - 1, by, 8, 7, OL); R(bx, by + 1, 6, 5, '#b08a48'); R(bx, by + 3, 6, 1, '#8a6a30'); R(bx + 1, by - 1, 4, 2, s === 3 ? '#8a6a5a' : '#e0405a'); R(bx + 1, by - 1, 1, 1, '#ff9aa8'); }); break;
+    case 'pecherie': shadow(0, 24, 32); R(0, 18, 32, 6, OL); R(0, 19, 32, 4, '#a07a44'); for (let k = 0; k < 8; k++) R(k * 4, 19, 1, 4, '#6a4a28'); R(3, 23, 2, 6, '#4a2e18'); R(26, 23, 2, 6, '#4a2e18');
+      house(3, 2, 14, 15, ['#a06a38', '#c08a50', '#d8a868'], ['#2a4a6a', '#3f6a8a', '#5a8aaa']); R(20, 8, 10, 1, '#6a4a28'); R(21, 9, 1, 4, '#c0c8d0'); R(24, 9, 1, 5, '#c0c8d0'); R(27, 9, 1, 3, '#c0c8d0');
+      R(19, 26, 11, 4, OL); R(20, 26, 9, 3, '#c0503a'); R(20, 26, 9, 1, '#e07050'); break;
+    case 'port': shadow(0, 26, 32); R(0, 20, 32, 6, OL); R(0, 21, 32, 4, '#a07a44'); for (let k = 0; k < 8; k++) R(k * 4, 21, 1, 4, '#6a4a28'); for (let k = 0; k < 4; k++) R(2 + k * 9, 25, 2, 6, '#4a2e18');
+      house(2, 2, 16, 16, ['#8a8a92', '#a8a8b0', '#c8c8d0'], ['#2a4a6a', '#3f6a8a', '#5a8aaa']);
+      R(20, 13, 11, 5, OL); R(21, 14, 9, 3, '#7a4a2a'); R(21, 14, 9, 1, '#a06a3a'); R(25, 3, 1, 11, '#4a2e18'); R(26, 4, 5, 7, '#efe6cc'); R(26, 4, 5, 1, '#ffffff'); break;
+    case 'chasseur': house(3, 6, 16, 17, ['#6a4a28', '#8a6a3a', '#a8844a'], ['#3a2a18', '#5a3a1a', '#7a4a24']); R(21, 14, 9, 9, OL); R(22, 15, 7, 7, '#c89a68'); R(23, 16, 5, 5, '#b08050'); R(21, 10, 1, 4, '#efe6cc'); R(29, 10, 1, 4, '#efe6cc'); R(20, 10, 2, 1, '#efe6cc'); R(29, 10, 2, 1, '#efe6cc'); break;
+    case 'champ': {
+      R(0, 0, 32, 32, OL); if (b.flooded) { R(1, 1, 30, 30, '#2a88bc'); for (let k = 0; k < 6; k++) { R(3 + k * 4, 5 + k * 4, 7, 1, '#bfe6ff'); R(5 + k * 4, 8 + k * 3, 1, 3, '#7a8a40'); } break; }
+      const soil = snow ? ['#cfd8de', '#e8eef2'] : ['#5a3a20', '#7a5230'], leg = b.crop === 'legumes', crop = [['#3f9a3a', '#7ad65a'], ['#3f8a2a', '#6ab83a'], leg ? ['#3f8a2a', '#e06a3a'] : ['#c8962a', '#f0cc50'], ['#cfd8de', '#ffffff']][s];
+      const grown = s === 0 ? (b.sown || 0) / SOW_MAX : s === 1 ? ((b.sown || 0) > 0 ? 1 : 0) : s === 2 ? ((b.ripe || 0) > 0 ? 1 : 0) : 0;
+      R(1, 1, 30, 30, soil[1]); for (let yy = 3; yy < 31; yy += 5) { R(1, yy, 30, 2, soil[0]);
+        if (s === 0) for (let xx = 3; xx < 3 + 27 * grown; xx += 4) { R(xx, yy - 1, 1, 2, crop[0]); R(xx + 1, yy - 2, 1, 1, crop[1]); }
+        if ((s === 1 || s === 2) && grown) for (let xx = 2; xx < 30; xx += 2) { R(xx, yy - 3, 1, 4, crop[0]); R(xx, yy - 3, 1, 1, crop[1]); if (s === 2 && xx % 4 === 0) R(xx - 1, yy - 4, 3, 2, crop[1]); } }
+      [[0, 0], [30, 0], [0, 30], [30, 30]].forEach(([a, c]) => R(a, c, 2, 2, '#a07a44')); break; }
+    case 'carriere': shadow(3, 27, 26); R(2, 12, 28, 16, OL); R(3, 13, 26, 14, '#8a8a84'); R(3, 13, 26, 2, '#b8b8b0'); R(3, 20, 26, 1, '#6a6a64');
+      [[5, 6, 9, 7], [17, 8, 8, 6]].forEach(([a, c, w, h]) => { R(a - 1, c - 1, w + 2, h + 2, OL); R(a, c, w, h, '#b0b0a8'); R(a, c, w, 2, '#d8d8d0'); R(a + w - 2, c, 2, h, '#8a8a84'); });
+      R(22, 22, 1, 7, '#7a5a3a'); R(20, 21, 6, 2, '#c0c8d0'); if (run && onFilon(run, b)) { R(6, 22, 4, 3, '#b0502a'); R(13, 23, 3, 2, '#c8603a'); } break;
+    case 'scierie': house(2, 6, 18, 18, ['#8a5a30', '#b07a40', '#c8945a'], ['#4a2a1a', '#6a3a2a', '#8a4a30']); R(21, 9, 10, 17, OL); R(22, 10, 8, 15, '#6a4a28'); for (let k = 0; k < 4; k++) R(22, 11 + k * 4, 8, 1, '#a07a44'); R(25, 10, 2, 15, '#4a2e18'); break;
+    case 'elevage': R(1, 4, 30, 1, '#a07a44'); R(1, 28, 30, 1, '#a07a44'); R(1, 4, 1, 25, '#a07a44'); R(30, 4, 1, 25, '#a07a44'); for (let k = 0; k < 8; k++) { R(1 + k * 4, 3, 1, 3, '#6a4a28'); R(1 + k * 4, 27, 1, 3, '#6a4a28'); }
+      [[7, 11], [18, 17], [10, 21]].forEach(([a, c], n) => { const dx = Math.round(Math.sin(now / 900 + n * 2) * 2); shadow(a + dx, c + 4, 6); R(a + dx - 1, c - 1, 8, 6, OL); R(a + dx, c, 6, 4, '#f4f4f0'); R(a + dx, c, 6, 1, '#ffffff'); R(a + dx + 5, c - 1, 3, 3, '#3a3a3a'); }); break;
+    case 'forge': house(4, 7, 22, 19, ['#5a5a64', '#74747e', '#8a8a94'], ['#2a2a32', '#3a3a44', '#55555f'], { noWin: true }); R(13, 19, 6, 7, (now / 250 | 0) % 2 ? '#ffa040' : '#ff7020'); R(22, 2, 4, 7, OL); R(23, 3, 2, 6, '#5a5a64'); break;
+    case 'puits': shadow(8, 26, 16); R(8, 17, 16, 9, OL); R(9, 18, 14, 7, '#9a9aa2'); R(9, 18, 14, 2, '#c0c0c8'); R(11, 18, 10, 2, '#2a6a9a'); R(9, 6, 2, 12, '#6a4a28'); R(21, 6, 2, 12, '#6a4a28'); R(7, 4, 18, 4, OL); R(8, 5, 16, 2, '#9a4a30'); if (snow) R(8, 4, 16, 1, '#ffffff'); break;
+    case 'tour': shadow(10, 28, 12); R(11, 6, 10, 22, OL); R(12, 7, 8, 21, '#a07a44'); R(12, 7, 2, 21, '#c09a60'); for (let yy = 10; yy < 28; yy += 4) R(12, yy, 8, 1, '#7a5a34'); R(8, 2, 16, 6, OL); R(9, 3, 14, 4, '#7a3a24'); R(14, 12, 4, 4, '#2a1a10'); break;
+    case 'taverne': house(3, 6, 26, 20, ['#a87840', '#d0a060', '#e8bc78'], ['#5a2a1a', '#7a3a2a', '#9a4a30'], { door: 6 }); R(26, 16, 5, 5, OL); R(27, 17, 3, 3, '#ffd23f'); break;
+    case 'guerisseur': house(5, 6, 22, 20, ['#c8c8c0', '#e8e8e0', '#ffffff'], ['#5a2a1a', '#7a3a2a', '#9a4a30']); R(14, 2, 4, 9, '#e0404a'); R(12, 4, 8, 4, '#e0404a'); break;
+    case 'tailleur': house(4, 6, 20, 20, ['#a06a38', '#c08a50', '#d8a868'], ['#2a3a6a', '#3f4a8a', '#5a6aaa']); pdisc(g, X + 27, Y + 24, 3, OL); pdisc(g, X + 27, Y + 24, 2, '#e8a0ff'); break;
+    case 'digue': R(0, 11, 32, 11, OL); R(0, 12, 32, 9, '#8a8a92'); R(0, 12, 32, 2, '#c0c0c8'); for (let k = 0; k < 4; k++) { R(k * 8 + 3, 16, 1, 5, '#6a6a72'); R(k * 8 + 7, 14, 1, 3, '#6a6a72'); } break;
+    case 'chantier': {
+      const p = b.p / b.max, lv = Math.max(4, Math.round(20 * p));
+      R(3, 26, 26, 3, '#8a8a84'); R(3, 26, 26, 1, '#b8b8b0'); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.setLineDash([2, 2]); g.strokeRect(X + 4.5, Y + 5.5, 23, 20); g.setLineDash([]);
+      for (let k = 0; k < 4; k++) { R(5 + k * 7, 26 - lv, 2, lv, OL); R(5 + k * 7, 26 - lv, 1, lv, '#a07a44'); }
+      for (let yy = 25; yy > 26 - lv; yy -= 5) { R(4, yy, 24, 2, OL); R(4, yy, 24, 1, '#d0a060'); }
+      R(23, 27, 8, 4, OL); R(24, 27, 6, 1, '#d0a060'); R(24, 29, 6, 1, '#b08040'); break; }
+  }
+}
+// les lieux découverts, dessinés sur leur case
+function drawLieu(g, k, X, Y) {
+  const R = (a, c, w, h, col) => { g.fillStyle = col; g.fillRect(X + a, Y + c, w, h); }, OL = '#1a1208';
+  if (k === 'ruines') { [[5, 10, 9], [13, 14, 6], [21, 8, 11]].forEach(([a, c, h]) => { R(a - 1, c - 1, 6, h + 2, OL); R(a, c, 4, h, '#c8c0a8'); R(a, c, 1, h, '#e8e0c8'); }); R(3, 24, 26, 3, OL); R(4, 24, 24, 2, '#a8a090'); }
+  else if (k === 'grotte') { pdisc(g, X + 16, Y + 18, 11, OL); pdisc(g, X + 16, Y + 18, 10, '#6a6a64'); pdisc(g, X + 16, Y + 20, 6, '#0a0806'); R(6, 24, 20, 4, '#6a6a64'); }
+  else if (k === 'source') { pdisc(g, X + 16, Y + 18, 8, OL); pdisc(g, X + 16, Y + 18, 7, '#3fa0e0'); pdisc(g, X + 14, Y + 16, 2, '#bfe6ff'); [[7, 12], [24, 22], [9, 25]].forEach(([a, c]) => { R(a, c, 3, 3, OL); R(a, c, 2, 2, '#9a9aa2'); }); }
+  else if (k === 'epave') { R(4, 18, 24, 7, OL); R(5, 19, 22, 5, '#6a4a2a'); for (let q = 0; q < 4; q++) R(7 + q * 6, 19, 1, 5, '#4a2e18'); R(14, 6, 2, 13, '#4a2e18'); R(16, 8, 7, 6, '#d8ccaa'); }
+  else if (k === 'filon') { [[6, 10, 6], [16, 14, 7], [10, 20, 5]].forEach(([a, c, r]) => { pdisc(g, X + a + 3, Y + c + 3, r, OL); pdisc(g, X + a + 3, Y + c + 3, r - 1, '#7a6a5a'); pdisc(g, X + a + 2, Y + c + 2, 2, '#c8603a'); }); }
+}
+function iconOf(b) { const c = document.createElement('canvas'); c.width = 32; c.height = 32; const g2 = c.getContext('2d');
+  if (b === 'ecl') { g2.fillStyle = '#24160c'; g2.fillRect(9, 3, 3, 26); g2.fillStyle = '#7a5230'; g2.fillRect(10, 4, 1, 24); g2.fillStyle = '#24160c'; g2.fillRect(11, 3, 16, 11); g2.fillStyle = '#e0404a'; g2.fillRect(12, 4, 14, 9); g2.fillStyle = '#ff7a80'; g2.fillRect(12, 4, 14, 2); g2.fillStyle = '#3f9a3a'; g2.fillRect(3, 27, 16, 3); }
+  else drawB(g2, b, 0, 0); return c; }
+const iconType = type => iconOf({ type, done: true });
+function lieuIcon(k) { const c = document.createElement('canvas'); c.width = 32; c.height = 32; drawLieu(c.getContext('2d'), k, 0, 0); return c; }
+const SKIN = [['#ffd8b8', '#e8b090'], ['#e8b084', '#c08060'], ['#b07850', '#8a5a38'], ['#7a4a2a', '#5a3218']], HAIR = ['#2a1a10', '#6a3a1a', '#c08a3a', '#e8c86a', '#b84a2a', '#3a3a44'];
+function faceCanvas(c) { const k = document.createElement('canvas'); k.width = 16; k.height = 16; const g2 = k.getContext('2d'), R = (x, y, w, h, col) => { g2.fillStyle = col; g2.fillRect(x, y, w, h); };
+  const [sk, sd] = SKIN[c.skin], hr = c.age === 'ancien' ? '#d8d8e0' : HAIR[c.hair], kid = c.age === 'enfant';
+  R(0, 0, 16, 16, '#2a5a4a'); R(3, 12, 10, 4, '#5a7aa0');
+  if (kid) { R(4, 5, 8, 8, sk); R(11, 6, 1, 7, sd); R(3, 4, 10, 3, hr); R(3, 6, 1, c.long ? 7 : 2, hr); R(12, 6, 1, c.long ? 7 : 2, hr); R(5, 8, 2, 2, '#ffffff'); R(9, 8, 2, 2, '#ffffff'); R(6, 9, 1, 1, '#1a1010'); R(10, 9, 1, 1, '#1a1010'); R(7, 11, 2, 1, '#c0504a'); return k; }
+  R(4, 3, 8, 10, sk); R(11, 4, 1, 9, sd); R(4, 12, 8, 1, sd);
+  R(3, 2, 10, 3, hr); R(3, 4, 1, c.long ? 9 : 4, hr); R(12, 4, 1, c.long ? 9 : 4, hr); R(5, 2, 4, 1, 'rgba(255,255,255,.25)');
+  R(5, 7, 2, 2, '#ffffff'); R(9, 7, 2, 2, '#ffffff'); R(6, 8, 1, 1, '#1a1010'); R(10, 8, 1, 1, '#1a1010'); R(7, 10, 2, 1, '#c0504a'); return k; }
+// icônes des ressources, 12 × 12
+const ICO = {
+  food: ['............', '...kkkk.....', '..kNNNNk....', '.kNnNNNNk...', '.kNNNNnNk...', '.kNNnNNNk...', '..kNNNNk....', '...kkkWWk...', '......kWWk..', '.......kWWk.', '........kWk.', '.........k..'],
+  bois: ['............', '.kkkkkkkkkk.', 'kennnnnnnnek', 'kEnNnnnnnnEk', '.kkkkkkkkkk.', '..kkkkkkkkkk', '.kennnnnnnne', '.kEnnnNnnnnE', '..kkkkkkkkkk', '............', '............', '............'],
+  pierre: ['............', '....kkkk....', '...kWWssk...', '..kWssssSk..', '.kWssssssSk.', '.kssssssSSk.', 'kssssssSSSSk', 'kSSSSSSSSSSk', '.kkkkkkkkkk.', '............', '............', '............'],
+  planches: ['............', 'kkkkkkkkkkkk', 'kNNNNNNNNNNk', 'knnnnnnnnnnk', 'kkkkkkkkkkkk', 'kNNNNNNNNNNk', 'knnnnnnnnnnk', 'kkkkkkkkkkkk', 'kNNNNNNNNNNk', 'knnnnnnnnnnk', 'kkkkkkkkkkkk', '............'],
+  outils: ['..kkkk......', '.kWsssk.....', 'kWsssssk....', '.kkksnnk....', '....knnk....', '.....knnk...', '......knnk..', '.......knnk.', '........knnk', '.........kk.', '............', '............'],
+  vetements: ['............', '..kkk..kkk..', '.kpppkkpppk.', 'kpPpppppppPk', 'kpppppppppk.', '.kkpppppppk.', '..kpppppppk.', '..kpPpppppk.', '..kpppppppk.', '..kkkkkkkkk.', '............', '............'],
+  colons: ['....kkkk....', '...kHHHHk...', '...kRRRRk...', '...kRRRRk...', '....kkkk....', '..kbbbbbbk..', '.kbBbbbbbbk.', '.kbbbbbbbbk.', '.kbbbbbbbbk.', '..kbbkkbbk..', '..kkk..kkk..', '............'],
+  joie: ['...kkkkkk...', '..kyyyyyyk..', '.kyYyyyyyyk.', 'kyyykyykyyyk', 'kyyykyykyyyk', 'kyyyyyyyyyyk', 'kykyyyyyykyk', 'kyykkkkkkyyk', '.kyyyyyyyyk.', '..kyyyyyyk..', '...kkkkkk...', '............'],
+  eau: ['.....kk.....', '.....kbk....', '....kbbk....', '...kbWbbk...', '...kWbbbk...', '..kbWbbbbk..', '..kbbbbbbk..', '.kbbbbbbbbk.', '.kbbbbbbbBk.', '..kbbbbbBk..', '...kkkkkk...', '............'],
+  savoir: ['............', '.kkkk..kkkk.', 'kWWWWkkWWWWk', 'kWssWkkWssWk', 'kWWWWkkWWWWk', 'kWssWkkWssWk', 'kWWWWkkWWWWk', 'kWssWkkWssWk', 'kWWWWkkWWWWk', '.kkkkkkkkkk.', '....kkkk....', '............'],
+};
+const PAL = { k: '#1a1208', W: '#f4f4f0', N: '#d89a58', n: '#a8683a', e: '#e8d090', E: '#c8a870', s: '#a8a8b0', S: '#74747e', p: '#6ab0ea', P: '#9ad0ff', R: '#ffd8b8', H: '#6a3a1a', b: '#3f8ac0', B: '#2a6a9a', y: '#ffd23f', Y: '#fff2a8' };
+const RESICON = { poisson: 'food', viande: 'food', baies: 'food', cereales: 'food', legumes: 'food', oeufs: 'food', bois: 'bois', pierre: 'pierre', planches: 'planches', fer: 'pierre', outils: 'outils', peaux: 'vetements', laine: 'vetements', vetements: 'vetements', savoir: 'savoir' };
+function ico(name) { const c = document.createElement('canvas'); c.width = 12; c.height = 12; const g2 = c.getContext('2d');
+  (ICO[name] || []).forEach((row, y) => [...row].forEach((ch, x) => { if (PAL[ch]) { g2.fillStyle = PAL[ch]; g2.fillRect(x, y, 1, 1); } })); return c; }
+const ICOC = {}; for (const k in ICO) ICOC[k] = ico(k);
+function bigIcon(name) { const k = document.createElement('canvas'); k.width = 24; k.height = 24; const g2 = k.getContext('2d'); g2.imageSmoothingEnabled = false; g2.drawImage(ICOC[name], 0, 0, 24, 24); return k; }
+function seasonIcon(s) { const k = document.createElement('canvas'); k.width = 24; k.height = 24; const g2 = k.getContext('2d');
+  if (s === 0) { pdisc(g2, 12, 15, 6, '#1a1208'); pdisc(g2, 12, 15, 5, '#5cbf4a'); pdisc(g2, 12, 8, 4, '#1a1208'); pdisc(g2, 12, 8, 3, '#ff9ad0'); pdisc(g2, 12, 8, 1, '#ffe86a'); }
+  else if (s === 1) { pdisc(g2, 12, 12, 7, '#1a1208'); pdisc(g2, 12, 12, 6, '#ffd23f'); pdisc(g2, 10, 10, 2, '#fff2a8'); }
+  else if (s === 2) { pdisc(g2, 12, 12, 7, '#1a1208'); pdisc(g2, 12, 12, 6, '#e07a2a'); g2.fillStyle = '#8a3a18'; g2.fillRect(11, 6, 2, 13); }
+  else { g2.fillStyle = '#1a1208'; g2.fillRect(10, 3, 4, 18); g2.fillRect(3, 10, 18, 4); g2.fillStyle = '#e8f4ff'; g2.fillRect(11, 4, 2, 16); g2.fillRect(4, 11, 16, 2); g2.fillRect(7, 7, 2, 2); g2.fillRect(15, 15, 2, 2); g2.fillRect(15, 7, 2, 2); g2.fillRect(7, 15, 2, 2); }
+  return k; }
+function cardIcon(ic) {
+  if (ic.b) return iconType(ic.b);
+  if (ic.l) return lieuIcon(ic.l);
+  if (ic.s !== undefined) return seasonIcon(ic.s);
+  if (ic.c) { const c = ic.face || run.C.find(q => q.id === ic.c); if (c) return faceCanvas(c); }
+  return bigIcon(ic.i && ICOC[ic.i] ? ic.i : 'joie');
+}
+
+/* =================== la carte : caméra, dessin, toucher =================== */
+const cv = $('map'), g = cv.getContext('2d');
+const Z0 = Math.min(VW / WW, VH / WH), Z1 = 1.25;
+let S = 1;
+const viewW = () => VW - (V.drawer ? DRW : 0);
+function clampCam() {
+  const vw = VW / V.zoom, vh = VH / V.zoom, extra = V.drawer ? DRW / V.zoom : 0;
+  V.cam.x = WW <= vw ? (WW - vw) / 2 : Math.max(0, Math.min(WW - vw + extra, V.cam.x));
+  V.cam.y = WH <= vh ? (WH - vh) / 2 : Math.max(0, Math.min(WH - vh, V.cam.y));
+}
+function centerOn(tx, ty) { V.cam.x = tx * TS - viewW() / V.zoom / 2; V.cam.y = ty * TS - VH / V.zoom / 2; clampCam(); }
+function focusTile(x, y) { // garder la case visible à gauche du volet
+  const sx = (x * TS - V.cam.x) * V.zoom, sy = (y * TS - V.cam.y) * V.zoom, tile = TS * V.zoom;
+  if (sx < 10 || sx + tile > viewW() - 10 || sy < 10 || sy + tile > VH - 10) centerOn(x + .5, y + .5);
+}
+function setZoom(z, fx = viewW() / 2, fy = VH / 2) {
+  const wx = V.cam.x + fx / V.zoom, wy = V.cam.y + fy / V.zoom; V.zoom = z; V.cam.x = wx - fx / z; V.cam.y = wy - fy / z; clampCam();
+  $('zin').disabled = z === Z1; $('zout').disabled = z === Z0; buildStatic(); wake();
+}
+const UIF = (px, w = 700) => `${w} ${px}px Signika, "Segoe UI", sans-serif`;
+function pill(x, y, w, h, col) { g.fillStyle = col; g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, h / 2); else g.rect(x, y, w, h); g.fill(); }
+function txt(s, x, y, col, al = 'center', px = 11) { g.font = UIF(px); g.textAlign = al; g.textBaseline = 'middle'; g.fillStyle = 'rgba(0,0,0,.7)'; g.fillText(s, x + .6, y + .8); g.fillStyle = col; g.fillText(s, x, y); }
+const FLOATC = { ok: '#6cf09a', gold: '#ffd23f', sci: '#8ac8ff', dim: '#f4f1e6', bad: '#ff7a6a' };
+// colons au travail : un geste par poste
+const ACT = { bucheron: 'axe', carriere: 'pick', chantier: 'hammer', champ: 'hoe', pecherie: 'rod', port: 'rod', ecole: 'read', bibliotheque: 'read', forge: 'hammer', scierie: 'axe' };
+const POSTCOL = { pecherie: ['#4a9ad0', '#2a6a9a'], port: ['#4a9ad0', '#2a6a9a'], cueilleur: ['#d0505a', '#9a3040'], chasseur: ['#9a6a3a', '#6a4520'], bucheron: ['#c08040', '#8a5a2a'], carriere: ['#a0a0aa', '#6a6a74'],
+  champ: ['#e8c040', '#b08a20'], chantier: ['#f09a30', '#b06a10'], ecl: ['#e0d050', '#a09020'], elevage: ['#f0f0f0', '#b8b8c0'], scierie: ['#c08a50', '#8a5a2a'], ecole: ['#6a8ae0', '#3a5ab0'],
+  bibliotheque: ['#6a8ae0', '#3a5ab0'], forge: ['#5a5a64', '#3a3a44'], tailleur: ['#c070e0', '#8a40b0'], guerisseur: ['#f4f4f0', '#c0c0c8'], taverne: ['#e0a040', '#a87020'], tour: ['#a07a44', '#7a5a34'] };
+// où porter ce qu'un bâtiment produit : grenier (nourriture), entrepôt (le reste), sinon l'épave
+function storeFor(b) {
+  const out = PROD[b.type] && Object.keys(PROD[b.type].out)[0], food = b.type === 'champ' || FOODS.some(([k]) => k === out);
+  const list = run.B.filter(q => q.done && q.type === (food ? 'grenier' : 'entrepot')), all = list.length ? list : run.B.filter(q => q.type === 'epave');
+  return all.sort((p, q) => Math.hypot(p.x - b.x, p.y - b.y) - Math.hypot(q.x - b.x, q.y - b.y))[0];
+}
+let lastDraw = 0;
+const wake = () => { V.active = performance.now(); };
+function draw(now) {
+  requestAnimationFrame(draw);
+  if (!run) return;
+  const idle = now - V.active > 15000 && !V.floats.length, fps = idle ? 10 : 30;   // moins d'images au repos, pour la batterie
+  if (now - lastDraw < 1000 / fps - 2) return; lastDraw = now;
+  const t0 = now / 1000, z = V.zoom, k = S * z, s = season();
+  g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.fillStyle = SP(s).sea[1]; g.fillRect(0, 0, cv.width, cv.height);
+  if (staticK !== k) buildStatic();
+  g.drawImage(staticCv, Math.round(-V.cam.x * k), Math.round(-V.cam.y * k));
+  g.setTransform(k, 0, 0, k, -V.cam.x * k, -V.cam.y * k);
+  // reflets sur la mer et la rivière
+  const x0 = Math.max(0, V.cam.x / TS | 0), x1 = Math.min(MW, Math.ceil((V.cam.x + VW / z) / TS)), y0 = Math.max(0, V.cam.y / TS | 0), y1 = Math.min(MH, Math.ceil((V.cam.y + VH / z) / TS));
+  g.fillStyle = 'rgba(220,245,255,.55)';
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const i = y * MW + x, tt = isle.t[i]; if ((tt !== T.SEA && tt !== T.RIV) || !run.seen[i]) continue;
+    for (let q = 0; q < 2; q++) { const ph = (x * 7 + y * 13 + q * 5) % 10; if (((t0 * 1.1 + ph * .7) % 4) < 1.4) g.fillRect(x * TS + (ph * 3 + q * 11) % 26, y * TS + (ph * 5 + q * 13) % 28, 5, 1); } }
+  isle.lieux.forEach(l => { if (run.found.includes(l.id) && !bAt(run, l.x, l.y)) drawLieu(g, l.k, l.x * TS, l.y * TS); });
+  // bâtiments et colons, de haut en bas
+  const sorted = [...run.B].sort((a, b) => a.y - b.y), hs = housing(run);
+  sorted.forEach(b => { drawB(g, b, b.x * TS, b.y * TS, now);
+    const key = keyOf(b), act = ACT[key] || 'idle';
+    workers(run, b.id).forEach((c, n) => {
+      if (key === 'champ') drawColonist(c, b.x * TS + 3 + ((t0 * 3 + n * 13) % 24), b.y * TS + 12 + n * 12, t0, n, s === 0 || s === 2 ? 'hoe' : 'idle', key);
+      else drawColonist(c, b.x * TS + [3, 24, 13, 27][n % 4], b.y * TS + [22, 22, 30, 10][n % 4], t0, n, act, key);
+    });
+  });
+  // porteurs : un par bâtiment qui produit, qui va et vient vers le grenier ou l'entrepôt, les bras chargés
+  sorted.forEach(b => {
+    if (!b.done || !PROD[b.type] || b.type === 'ecole' || b.type === 'bibliotheque') return; const w = workers(run, b.id); if (!w.length) return;
+    if (b.type === 'champ' && s !== 2) return; if (PROD[b.type].s[s] === 0) return;
+    const st = storeFor(b); if (!st || st === b) return;
+    const ax = b.x * TS + 16, ay = b.y * TS + 28, bx = st.x * TS + 16, by = st.y * TS + 28, d = Math.hypot(bx - ax, by - ay), per = 3 + d / 22, p = ((t0 + b.id * 1.37) % per) / per;
+    const go = p < .5, q = go ? p * 2 : 2 - p * 2, x = ax + (bx - ax) * q, y = ay + (by - ay) * q;
+    drawColonist(w[0], x - 3, y, t0, b.id, go ? 'carry' : 'walk', keyOf(b), Object.keys(PROD[b.type].out)[0] || 'cereales');
+  });
+  // les enfants jouent près de leur maison
+  run.C.filter(c => c.age === 'enfant').forEach((c, n) => { const h = hs.where.get(c.id) || run.B[0], a = t0 * .8 + n * 2.1;
+    drawColonist(c, h.x * TS + 13 + Math.cos(a) * 12, h.y * TS + 30 + Math.sin(a) * 4, t0, n, 'walk', 'enfant'); });
+  // fumée des cheminées (plus forte l'hiver) et de la forge
+  sorted.filter(b => b.done && (b.type === 'habitation' || b.type === 'forge') && (b.type === 'forge' ? workers(run, b.id).length : hs.where.size && [...hs.where.values()].includes(b))).forEach(b => {
+    const n = s === 3 || b.type === 'forge' ? 4 : 2, cx = b.x * TS + (b.type === 'forge' ? 24 : 22.5), cy = b.y * TS + 3;
+    for (let q = 0; q < n; q++) { const p = (t0 * .6 + q / n + b.id * .13) % 1; g.fillStyle = `rgba(235,235,245,${.7 - p * .7})`; g.beginPath(); g.arc(cx + Math.sin(p * 6 + q) * 2, cy - p * 14, 1 + p * 2.5, 0, 7); g.fill(); }
+  });
+  if (s === 3) { g.fillStyle = 'rgba(255,255,255,.85)'; for (let q = 0; q < 220; q++) { const x = (q * 97.3 + Math.sin(t0 + q) * 8) % WW, y = (q * 53.7 + t0 * 18 * (1 + q % 3) * .5) % WH; g.fillRect(x, y, q % 4 ? 1 : 2, q % 4 ? 1 : 2); } }
+  if (run.target) { const [x, y] = run.target, X = x * TS, Y = y * TS, wave = Math.sin(t0 * 4) > 0 ? 1 : 0;
+    g.fillStyle = '#24160c'; g.fillRect(X + 14, Y + 4, 2, 22); g.fillStyle = '#e0404a'; g.fillRect(X + 16, Y + 4, 11, 7 + wave); g.fillStyle = '#ff7a80'; g.fillRect(X + 16, Y + 4, 11, 2);
+    workers(run, 'ecl').forEach((c, n) => drawColonist(c, X + 4 + n * 18, Y + 28, t0, n, 'walk', 'ecl')); }
+  // la case choisie : quatre coins dorés
+  if (V.sel) { const X = V.sel.x * TS, Y = V.sel.y * TS, p = 1 + (Math.sin(t0 * 5) + 1), L = 8; g.fillStyle = '#ffd23f';
+    [[X - p, Y - p, 1, 1], [X + TS + p, Y - p, -1, 1], [X - p, Y + TS + p, 1, -1], [X + TS + p, Y + TS + p, -1, -1]].forEach(([a, c, sx, sy]) => { g.fillRect(sx > 0 ? a : a - L, sy > 0 ? c : c - 2, L, 2); g.fillRect(sx > 0 ? a : a - 2, sy > 0 ? c : c - L, 2, L); }); }
+  // ---- en pixels logiques, à la résolution de l'écran : étiquettes, barres, nombres qui s'envolent ----
+  g.setTransform(S, 0, 0, S, 0, 0);
+  const sx = wx => (wx - V.cam.x) * z, sy = wy => (wy - V.cam.y) * z, tile = TS * z, P = production(run);
+  run.B.forEach(b => {
+    const X = sx(b.x * TS), Y = sy(b.y * TS); if (X < -80 || X > VW + 80 || Y < -40 || Y > VH + 30) return;
+    if (!b.done) {
+      const p = b.p / b.max, nx = Math.min(1, (b.p + chGain(run, b)) / b.max), bw = Math.max(tile, 46), bx = X + tile / 2 - bw / 2, by = Y + tile + 2;
+      pill(bx - 4, by - 2, bw + 8, z >= Z1 ? 26 : 12, 'rgba(6,16,12,.82)');
+      pill(bx, by + 1, bw, 6, '#08201a'); g.fillStyle = '#ffd23f'; g.fillRect(bx + 1, by + 2, (bw - 2) * p, 4);
+      for (let x = Math.round((bw - 2) * p); x < Math.round((bw - 2) * nx); x++) if ((x + (now / 120 | 0)) % 4 < 2) { g.fillStyle = '#fff2a8'; g.fillRect(bx + 1 + x, by + 2, 1, 4); }
+      if (z >= Z1) txt(`${BUILD[b.target].n} ${b.p}/${b.max}`, X + tile / 2, by + 16, '#ffd23f');
+      return;
+    }
+    let lab = null, col = '#6cf09a', ic = null; const w = workers(run, b.id).length;
+    if (b.type === 'champ') { const f = P.fields[b.id], hv = f && f.harvest; lab = hv ? `+${hv}` : w || s === 1 ? fieldState(b) : null; col = hv ? '#6cf09a' : '#f4f1e6'; ic = hv ? 'food' : null; }
+    else if (PROD[b.type]) { const p = P.by[b.id] || {}, k2 = Object.keys(p).find(q => p[q] > 0); if (k2) { lab = `+${Math.round(Object.entries(p).filter(([, v]) => v > 0).reduce((a, [, v]) => a + v, 0) * 10) / 10}`; ic = RESICON[k2]; col = k2 === 'savoir' ? '#8ac8ff' : col; }
+      else if (w) { lab = s === 3 && PROD[b.type].s[3] === 0 ? 'hiver' : '0'; col = '#f4f1e6'; } }
+    if (!lab) return;
+    g.font = UIF(11); const lw = g.measureText(lab).width + (ic ? 15 : 0) + 12, lx = X + tile / 2 - lw / 2, ly = Y + tile - 6;
+    pill(lx, ly, lw, 15, 'rgba(6,16,12,.8)'); g.imageSmoothingEnabled = false; if (ic) g.drawImage(ICOC[ic], lx + 5, ly + 1.5, 12, 12);
+    txt(lab, lx + (ic ? 19 : 6), ly + 8, col, 'left');
+  });
+  V.floats = V.floats.filter(f => now - f.t < 1600);
+  V.floats.forEach(f => { const p = (now - f.t) / 1600, X = sx(f.x * TS) + tile / 2, Y = sy(f.y * TS) - p * 30; g.globalAlpha = 1 - p * p;
+    if (f.k && RESICON[f.k]) g.drawImage(ICOC[RESICON[f.k]], X - 20, Y - 7, 14, 14); txt(f.s, X - 3, Y, FLOATC[f.c] || '#fff', 'left', 14); g.globalAlpha = 1; });
+}
+// un colon, 7 × 13 pixels : cheveux, visage, chemise de la couleur de son poste, et son geste
+function drawColonist(c, X, Y, t0, n, act, key, load) {
+  X = Math.round(X); Y = Math.round(Y);
+  const moving = act === 'walk' || act === 'carry', step = moving ? Math.sin(t0 * 7 + n * 1.7) : 0, bob = moving && step > .6 ? 1 : 0, kid = c.age === 'enfant';
+  const R = (a, b, w, h, col) => { g.fillStyle = col; g.fillRect(X + a, Y + b - bob + (kid ? 3 : 0), w, h); };
+  const pc = POSTCOL[key] || ['#8a8aa0', '#5a5a70'], hr = c.age === 'ancien' ? '#d8d8e0' : HAIR[c.hair], [sk, sd] = SKIN[c.skin];
+  g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(X - 1, Y, 9, 2);
+  if (kid) { R(0, -10, 7, 9, '#1a1208'); R(1, -9, 5, 2, hr); R(1, -7, 5, 2, sk); R(2, -7, 1, 1, '#1a1010'); R(4, -7, 1, 1, '#1a1010'); R(1, -5, 5, 3, pc[0]); R(1, -2, 2, step > 0 ? 2 : 1, '#3a3046'); R(4, -2, 2, step > 0 ? 1 : 2, '#3a3046'); return; }
+  R(0, -13, 7, 12, '#1a1208'); R(1, -12, 5, 2, hr); R(1, -10, 5, 3, sk); R(5, -10, 1, 3, sd); R(2, -9, 1, 1, '#1a1010'); R(4, -9, 1, 1, '#1a1010');
+  if (c.long) R(1, -10, 1, 4, hr);
+  R(1, -7, 5, 4, pc[0]); R(5, -7, 1, 4, pc[1]); R(0, -6, 1, 3, sk);
+  R(1, -3, 2, step > 0 ? 3 : 2, '#3a3046'); R(4, -3, 2, step > 0 ? 2 : 3, '#3a3046');
+  const up = Math.sin(t0 * 6 + n * 1.3) > 0;
+  if (act === 'axe' || act === 'pick' || act === 'hammer' || act === 'hoe') {
+    const head = act === 'axe' ? '#c0c8d0' : act === 'pick' ? '#9a9aa2' : act === 'hammer' ? '#6a6a74' : '#8a8a92';
+    if (up) { R(6, -12, 1, 7, '#7a5a3a'); R(6, -14, act === 'pick' ? 4 : 3, 2, head); if (act === 'pick') R(4, -14, 2, 1, head); }
+    else { R(6, -6, 4, 1, '#7a5a3a'); R(9, -7, 2, act === 'hoe' ? 4 : 3, head); }
+    R(6, -6, 1, 2, sk);
+  } else if (act === 'rod') { R(6, -6, 1, 2, sk); g.fillStyle = '#7a5a3a'; for (let q = 0; q < 6; q++) g.fillRect(X + 6 + q, Y - 7 - q, 1, 1); g.fillStyle = 'rgba(255,255,255,.7)'; g.fillRect(X + 12, Y - 12, 1, 9); g.fillStyle = '#e0404a'; g.fillRect(X + 12, Y - 3 + (up ? 1 : 0), 2, 2); }
+  else if (act === 'read') { R(0, -6, 7, 3, '#7a2a1a'); R(1, -6, 5, 2, '#efe6cc'); }
+  else if (act === 'carry') { const col = { bois: '#a06a30', pierre: '#a8a8b0', planches: '#d0a060', poisson: '#6ab0ea', baies: '#e0405a', viande: '#c05a4a', oeufs: '#f4f4f0', fer: '#b0502a', outils: '#c0c8d0', vetements: '#c070e0' }[load] || '#e8c040';
+    R(0, -17, 7, 4, '#1a1208'); R(1, -16, 5, 2, col); R(6, -13, 1, 3, sk); }
+  else R(6, -6, 1, 3, sk);
+}
+let drag = null, lastTap = 0;
+cv.addEventListener('pointerdown', e => { wake(); drag = { x: e.clientX, y: e.clientY, cx: V.cam.x, cy: V.cam.y, moved: false }; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { if (!drag) return; const r = cv.getBoundingClientRect(), f = VW / r.width, dx = (e.clientX - drag.x) * f, dy = (e.clientY - drag.y) * f;
+  if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true; if (drag.moved) { V.cam.x = drag.cx - dx / V.zoom; V.cam.y = drag.cy - dy / V.zoom; clampCam(); wake(); } });
+cv.addEventListener('pointerup', e => { if (!drag) return; const moved = drag.moved; drag = null; if (moved || !run) return;
+  const r = cv.getBoundingClientRect(), lx = (e.clientX - r.left) * VW / r.width, ly = (e.clientY - r.top) * VH / r.height, now = performance.now();
+  if (now - lastTap < 320) { setZoom(V.zoom === Z1 ? Z0 : Z1, lx, ly); lastTap = 0; return; } lastTap = now;
+  const x = Math.floor((V.cam.x + lx / V.zoom) / TS), y = Math.floor((V.cam.y + ly / V.zoom) / TS);
+  if (!inside(x, y)) return; selectTile(x, y); });
+cv.addEventListener('pointercancel', () => { drag = null; });
+function selectTile(x, y) { V.sel = { x, y }; V.panel = null; V.demo = null; setDrawer(true); focusTile(x, y); renderPanel(); }
+$('zin').onclick = () => setZoom(Z1);
+$('zout').onclick = () => setZoom(Z0);
+
+/* =================== barre du haut, volet, barre du bas =================== */
+const sign = v => { v = Math.round(v); return v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '±0'; };
+const fl = v => Math.floor(v);
+const fieldState = b => { const s = season(); return s === 0 ? `semis ${b.sown || 0}/${SOW_MAX}` : s === 1 ? ((b.sown || 0) ? 'ça pousse' : 'rien de semé') : s === 2 ? ((b.ripe || 0) ? `à récolter ${b.ripe}` : 'récolté') : 'repos'; };
+function setDrawer(open) { V.drawer = open; $('drawer').classList.toggle('shut', !open); $('harrow').textContent = open ? '›' : '‹'; clampCam(); }
+$('handle').onclick = () => { setDrawer(!V.drawer); if (V.drawer && V.sel) focusTile(V.sel.x, V.sel.y); renderPanel(); };
+function renderTop() {
+  const f = forecast(run), top = $('top'), d = dateOf(run); top.innerHTML = '';
+  const m = document.createElement('button'); m.className = 'menu'; m.textContent = '☰'; m.setAttribute('aria-label', 'Menu'); m.onclick = () => openSheet('menu'); top.append(m);
+  const dt = document.createElement('div'); dt.className = 'date'; dt.innerHTML = `<b>${SEASONS[d.season]}</b><small>semaine ${d.week} · an ${d.year}</small>`; top.append(dt);
+  const vals = { food: [foodTotal(run), f.food], bois: [run.res.bois, f.bois], pierre: [run.res.pierre, f.pierre], planches: [run.res.planches, f.planches], outils: [run.res.outils, f.outils], vetements: [run.res.vetements, f.vetements] };
+  const names = { food: 'Nourriture', bois: 'Bois', pierre: 'Pierre', planches: 'Planches', outils: 'Outils', vetements: 'Vêtements' };
+  Object.keys(vals).forEach(k => { const [v, dv] = vals[k], el = document.createElement('button'); el.className = 'res'; el.title = names[k]; el.setAttribute('aria-label', names[k]);
+    if ((k === 'food' || k === 'bois') && dv < 0 && v / -dv <= 4) el.classList.add('hot');
+    el.append(ico(k)); el.insertAdjacentHTML('beforeend', `<b>${fl(v)}</b><i class="${dv > 0 ? 'up' : dv < 0 ? 'dn' : ''}">${sign(dv)}</i>`);
+    el.onclick = () => { V.panel = k === 'food' ? 'food' : 'stock'; V.sel = null; setDrawer(true); renderPanel(); };
+    top.append(el); });
+  const sp = document.createElement('div'); sp.className = 'spacer'; top.append(sp);
+  const h = housing(run), pop = document.createElement('button'); pop.className = 'res'; pop.title = 'Colons'; pop.append(ico('colons')); pop.insertAdjacentHTML('beforeend', `<b>${run.C.length}</b><i class="${h.out ? 'dn' : ''}">${h.beds} lits</i>`); pop.onclick = () => openSheet('colons'); top.append(pop);
+  const jo = document.createElement('button'); jo.className = 'res'; jo.title = 'Bonheur'; jo.append(ico('joie')); jo.insertAdjacentHTML('beforeend', `<b>${run.happy}</b><i class="${run.happy >= 60 ? 'up' : run.happy < 40 ? 'dn' : ''}">bonheur</i>`); jo.onclick = () => { V.sel = null; V.panel = null; setDrawer(true); renderPanel(); }; top.append(jo);
+}
+const RN = k => RESNAME[k] || k;
+function costTxt(cost) { return Object.entries(cost).map(([k, v]) => `<span class="${run.res[k] < v ? 'bad' : ''}">${v} ${RN(k)}</span>`).join(' · '); }
+function postesBlock(b) {
+  const w = workers(run, postId(b)), mx = maxOf(b);
+  const el = document.createElement('div'); el.className = 'pm';
+  el.innerHTML = `<button data-a="minus" ${w.length ? '' : 'disabled'} aria-label="Un colon de moins">−</button><span>${w.length} / ${mx}</span><button data-a="plus" ${w.length < mx && freeWorkers(run).length ? '' : 'disabled'} aria-label="Un colon de plus">+</button>`;
+  el.querySelector('[data-a=minus]').onclick = () => { removeWorker(run, b); changed(); };
+  el.querySelector('[data-a=plus]').onclick = () => { addWorker(run, b); changed(); };
+  const who = document.createElement('div'); who.className = 'who';
+  w.forEach(c => { const s = document.createElement('span'); s.append(faceCanvas(c)); s.insertAdjacentHTML('beforeend', `${c.n}${c.tal && TALENT_FOR[keyOf(b)] === c.tal ? ' ★' : ''}`); who.append(s); });
+  return [el, who];
+}
+const prodTxt = p => Object.entries(p || {}).filter(([, v]) => v).map(([k, v]) => `<span class="${k === 'savoir' ? 'sci' : v > 0 ? 'good' : 'bad'}">${v > 0 ? '+' : '−'}${Math.abs(Math.round(v * 10) / 10)} ${RN(k)}</span>`).join(', ');
+function renderPanel() {
+  const P = $('panel'); P.innerHTML = ''; if (!run) return;
+  const add = html => P.insertAdjacentHTML('beforeend', html);
+  const head = (title, icon) => { add(`<h3><span>${title}</span><button data-close aria-label="Fermer">✕</button></h3>`); P.querySelector('[data-close]').onclick = () => { V.sel = null; V.panel = null; setDrawer(false); renderPanel(); };
+    if (icon) { const hero = document.createElement('div'); hero.className = 'hero'; hero.append(icon); P.append(hero); return hero; } return null; };
+  const heroText = (hero, html) => hero ? hero.insertAdjacentHTML('beforeend', `<p>${html}</p>`) : add(`<p>${html}</p>`);
+  const button = (label, cls, fn, dis) => { const bt = document.createElement('button'); bt.className = 'btn ' + cls; bt.style.height = '28px'; bt.textContent = label; bt.disabled = !!dis; bt.onclick = fn; P.append(bt); return bt; };
+  const f = forecast(run);
+  if (V.panel === 'food') {
+    head('Nourriture');
+    FOODS.forEach(([k, n]) => add(`<p>${n} : <b class="num">${fl(run.res[k])}</b>${f.d[k] ? ` <span class="good">+${f.d[k]}</span>` : ''}</p>`));
+    const kinds = FOODS.filter(([k]) => run.res[k] > 0).length;
+    add(`<p>Les colons mangent <b>${f.eat}</b> par semaine.${f.spoil ? ` <span class="bad">${f.spoil} se gâte.</span>` : ''}</p><p>Réserve sûre : <b>${foodCap(run)}</b> (50 à l'épave, 200 par grenier) ; au-delà, la nourriture se gâte un peu.</p>`);
+    add(`<p class="${kinds >= 3 ? 'good' : 'warn'}">${kinds} sorte${kinds > 1 ? 's' : ''} : ${kinds >= 3 ? 'nourriture variée, les colons sont contents.' : 'trop peu variée, le bonheur baisse.'}</p>`); return;
+  }
+  if (V.panel === 'stock') {
+    head('Réserves');
+    ['bois', 'pierre', 'planches', 'fer', 'outils', 'peaux', 'laine', 'vetements'].forEach(k => add(`<p>${RN(k)[0].toUpperCase() + RN(k).slice(1)} : <b class="num">${fl(run.res[k])}</b>${f.d[k] ? ` ${prodTxt({ [k]: f.d[k] })}` : ''}</p>`));
+    add(`<p>Bois, pierre et planches : <b>${matCap(run)}</b> places de chaque (l'épave, plus 200 par entrepôt).</p>`);
+    add(`<p>Outils : ils s'usent au travail. Sans outils, tout va moitié moins vite.</p><p>Vêtements : un par colon chaque hiver.</p>`); return;
+  }
+  if (!V.sel) {
+    const ad = run.C.filter(c => c.age === 'adulte').length, m = moodParts(run); head('La colonie');
+    add(`<p><b>${run.C.length}</b> colons : ${ad} adultes, ${run.C.filter(c => c.age === 'enfant').length} enfants, ${run.C.filter(c => c.age === 'ancien').length} à la retraite.</p>`);
+    add(`<p>Logement : <b class="num">${run.C.length} / ${housing(run).beds}</b> lits</p><p>Bonheur : <b class="num">${run.happy}</b> → ${m.target}</p><div class="bar"><span style="width:${run.happy}%"></span></div>`);
+    add(`<div class="mood">${m.parts.map(([v, t]) => `<span><em style="font-style:normal">${t}</em><b class="${v > 0 ? 'good' : 'bad'}">${sign(v)}</b></span>`).join('')}</div>`);
+    add(`<p>Sans poste : <b>${freeWorkers(run).length}</b></p><p class="hint">Touche une case de la carte pour construire, ou un bâtiment pour régler ses postes.</p>`); return;
+  }
+  const { x, y } = V.sel, i = y * MW + x, t = isle.t[i], b = bAt(run, x, y), lieu = isle.lieux.find(l => l.x === x && l.y === y && run.found.includes(l.id));
+  if (!run.seen[i]) {
+    head('Terre inconnue'); add(`<p>Personne n'est encore allé voir. L'éclaireur dévoile la carte peu à peu et trouve des lieux : source, grotte, ruines…</p>`);
+    const isT = run.target && run.target[0] === x && run.target[1] === y;
+    button(isT ? 'L\'éclaireur y va' : 'Envoyer l\'éclaireur', '', () => { run.target = [x, y]; changed(); }, isT);
+    add('<p class="lbl">Éclaireurs</p>'); P.append(...postesBlock('ecl')); return;
+  }
+  if (b && !b.done) {
+    const gn = chGain(run, b), left = gn ? Math.ceil((b.max - b.p) / gn) : null, hero = head(`Chantier : ${BUILD[b.target].n}`, iconType(b.target));
+    heroText(hero, BUILD[b.target].d);
+    add(`<div class="bar"><span style="width:${b.p / b.max * 100}%"></span><em style="left:${b.p / b.max * 100}%; width:${Math.min(b.max - b.p, gn) / b.max * 100}%"></em></div>`);
+    add(`<p><b class="num">${b.p} / ${b.max}</b> · <span class="good">+${gn}</span> cette semaine · ${left ? `fini dans <b>${left} sem.</b>` : '<span class="bad">personne ne construit</span>'}</p><p class="lbl">Bâtisseurs</p>`);
+    P.append(...postesBlock(b));
+    button('Annuler le chantier', 'red', () => { cancelBuilding(run, b); changed(); }); return;
+  }
+  if (b) {
+    const D = BUILD[b.type], hero = head(D.n, iconOf(b)); heroText(hero, D.d);
+    const pr = f.p.by[b.id], w = workers(run, b.id).length, s = season();
+    if (b.type === 'champ') {
+      const fd = f.p.fields[b.id];
+      add(`<p>État : <b>${fieldState(b)}</b>${fd && fd.sow ? ` · <span class="good">+${fd.sow} semé</span>` : ''}${fd && fd.harvest ? ` · <span class="good">+${fd.harvest} ${RN(b.crop || 'cereales')}</span>` : ''}</p>`);
+      add(`<p>${['Au printemps, on sème (jusqu\'à ' + SOW_MAX + ').', 'L\'été, ça pousse tout seul : les bras peuvent aller ailleurs.', 'À l\'automne, on récolte : ce qui reste pourrit sous la neige.', 'L\'hiver, le champ se repose.'][s]}${s < 2 ? ` Récolte prévue : <b>${Math.round(((b.sown || 0) + (fd ? fd.sow : 0)) * 2.5 * (isle.berge[i] ? 1.5 : 1))}</b>.` : ''}</p>`);
+      if (isle.berge[i]) add(`<p class="warn">Berges : récolte ×1,5, mais la crue peut tout noyer au printemps.</p>`);
+      const seg = document.createElement('div'); seg.className = 'seg';
+      [['cereales', 'Céréales'], ['legumes', 'Légumes']].forEach(([k, l]) => { const bt = document.createElement('button'); bt.className = 'btn blue' + ((b.crop || 'cereales') === k ? ' on' : ''); bt.textContent = l;
+        bt.onclick = () => { b.crop = k; changed(); }; seg.append(bt); });
+      add('<p class="lbl">Culture</p>'); P.append(seg);
+    } else if (PROD[b.type]) add(`<p>Par semaine : ${prodTxt(pr) || '<b>rien</b>'}${s === 3 && PROD[b.type].s[3] === 0 ? ' (l\'hiver, rien ne pousse)' : ''}${w ? '' : ' · <span class="warn">personne au travail</span>'}</p>`);
+    if (b.type === 'bucheron') add(`<p>Bois sur pied autour : <b>${woodAround(run, b)}</b>. Les arbres repoussent si on ne coupe pas trop.</p>`);
+    if (b.type === 'chasseur') add(`<p>Gibier : <b>${b.game ?? gameCap(run, b)} / ${gameCap(run, b)}</b>. Il revient à chaque saison.</p>`);
+    if (b.type === 'carriere' && onFilon(run, b)) add(`<p class="good">Sur un filon : du fer en plus de la pierre.</p>`);
+    if (b.type === 'habitation' || b.type === 'tente') { const who = run.C.filter(c => housing(run).where.get(c.id) === b);
+      add(`<p>Lits : <b>${who.length} / ${b.type === 'tente' ? 8 : 4}</b>${s === 3 ? ` · chauffage <span class="bad">−${HEAT[b.type]} bois</span>` : ''}</p>`);
+      const wl = document.createElement('div'); wl.className = 'who'; who.forEach(c => { const sp = document.createElement('span'); sp.append(faceCanvas(c)); sp.append(c.n); wl.append(sp); }); P.append(wl); }
+    if (b.type === 'epave') add(`<p>On y range <b>150</b> de bois, de pierre et de planches, et 50 de nourriture à l'abri ; au-delà, elle se gâte un peu sans grenier.</p>`);
+    if (D.postes) { add('<p class="lbl">Postes</p>'); P.append(...postesBlock(b)); }
+    if (lieu) add(`<p class="hint"><b>${LIEUX[lieu.k].n}</b> : ${LIEUX[lieu.k].d}</p>`);
+    if (b.type !== 'epave' && b.type !== 'tente') {
+      if (V.demo === b.id) { add(`<p class="warn">Démolir ${D.n.toLowerCase()} ? On récupère la moitié des matériaux.</p>`); button('Oui, démolir', 'red', () => { demolish(run, b); V.demo = null; changed(); }); button('Non', 'blue', () => { V.demo = null; renderPanel(); }); }
+      else button('Démolir', 'red', () => { V.demo = b.id; renderPanel(); });
+    }
+    return;
+  }
+  head(lieu ? LIEUX[lieu.k].n : TNAME[t]);
+  if (lieu) add(`<p>${LIEUX[lieu.k].d}</p>`);
+  const facts = []; if (isle.berge[i]) facts.push('<span class="warn">berges : très fertile, inondable</span>');
+  if (isForest(t)) facts.push(`bois sur pied : <b>${run.wood[i]}</b>, gibier, baies`); if (t === T.MEAD) facts.push(`fertilité : <b>${isle.berge[i] ? 'très bonne' : 'bonne'}</b>`);
+  if (t === T.HILL || t === T.ROCK) facts.push(`pierre : <b>${t === T.ROCK ? 'beaucoup' : 'un peu'}</b>`); if (N4.some(([dx, dy]) => inside(x + dx, y + dy) && [T.SEA, T.RIV].includes(isle.t[(y + dy) * MW + x + dx]))) facts.push('poisson à côté');
+  if (facts.length) add(`<p>${facts.join(' · ')}</p>`);
+  const list = buildOptions(run, x, y);
+  if (!list.length) { add(`<p>${t === T.SEA || t === T.RIV ? 'On ne construit pas sur l\'eau.' : t === T.MOUNT ? 'Montagne : infranchissable.' : t === T.MARSH ? 'Marais : on ne peut rien y bâtir.' : 'Rien à construire ici.'}</p>`); return; }
+  add('<p class="lbl">Construire</p>');
+  list.sort((a, c) => (a[1] === 'plan') - (c[1] === 'plan')).forEach(([k2, why]) => { const D = BUILD[k2], bt = document.createElement('button'); bt.className = 'build' + (why === 'plan' ? ' lock' : ''); bt.disabled = why === 'cout';
+    bt.append(iconType(k2)); bt.insertAdjacentHTML('beforeend', `<b>${D.n}</b><small>${why === 'plan' ? `plan à rechercher · ${TREE[k2].cost} savoir` : costTxt(costOf(k2)) + (D.postes ? ` · ${D.postes} pers.` : '')}</small>`);
+    bt.title = D.d; bt.onclick = () => { if (why === 'plan') { openSheet('recherche'); return; } const nb = placeBuilding(run, k2, x, y); if (nb) { addWorker(run, nb); addWorker(run, nb); } changed(); };
+    P.append(bt); });
+}
+function renderBottom() {
+  const bt = $('bottom'), al = alerts(run), first = al.find(a => a[0] === 'danger') || al.find(a => a[0] === 'warn') || al[0];
+  bt.innerHTML = '';
+  const a = document.createElement('button'); a.className = 'alert ' + (first ? first[0] : 'calm');
+  a.innerHTML = first ? `<span>${first[0] === 'info' ? '' : '⚠ '}${first[1]}</span>${al.length > 1 ? `<em>+${al.length - 1}</em>` : ''}` : '<span>Tout va bien</span>'; a.onclick = () => openSheet('alerts'); bt.append(a);
+  const ready = Object.keys(TREE).some(k => researchState(run, k) === 'pret');
+  const sc = document.createElement('button'); sc.className = 'cmd sci' + (ready ? ' ready' : ''); sc.textContent = `Savoir ${fl(run.res.savoir)}`; sc.onclick = () => openSheet('recherche'); bt.append(sc);
+  [['Postes', 'postes'], ['Colons', 'colons']].forEach(([l, s]) => { const b = document.createElement('button'); b.className = 'cmd'; b.textContent = l; b.onclick = () => openSheet(s); bt.append(b); });
+  const go = document.createElement('button'); go.className = 'cmd go'; go.textContent = 'Semaine ▶'; go.disabled = V.busy || run.over;
+  go.onclick = () => { if (run.over) return; if (!V.confirmed && alerts(run).some(a2 => a2[0] === 'danger')) openSheet('confirm'); else nextWeek(); }; bt.append(go);
+}
+function refresh() { renderTop(); renderPanel(); renderBottom(); if (!$('sheet').hidden && V.sheet !== 'report') openSheet(V.sheet); }
+// après une commande du joueur : sauvegarde et nouvel affichage
+function changed() { V.confirmed = false; save(); refresh(); wake(); }
+function save() { if (run) store.set('run', run); }
+
+/* =================== fenêtres =================== */
+let colonSel = null;
+function openSheet(kind) {
+  V.sheet = kind; const sh = $('sheet'); sh.hidden = false; sh.innerHTML = '<div class="box"></div>'; const box = sh.firstChild;
+  const close = () => { sh.hidden = true; V.sheet = null; colonSel = null; if (kind === 'report' && run.over) openSheet('fin'); };
+  const head = (title, btn = 'Fermer') => { box.insertAdjacentHTML('beforeend', `<h2><span>${title}</span>${btn ? `<button>${btn}</button>` : ''}</h2>`); if (btn) box.querySelector('h2 button').onclick = close; };
+  const wide = (label, fn, cls = '') => { const b = document.createElement('button'); b.className = 'wide ' + cls; b.textContent = label; b.onclick = fn; return b; };
+  if (kind === 'postes') {
+    const fr = freeWorkers(run).length; head(`Postes · ${fr} colon${fr > 1 ? 's' : ''} sans poste`);
+    const grid = document.createElement('div'); grid.className = 'posts'; box.append(grid); const P = production(run);
+    posts(run).forEach(b => { const el = document.createElement('div'); el.className = 'post'; el.append(b === 'ecl' ? iconOf('ecl') : b.done ? iconOf(b) : iconType(b.target));
+      let y = ''; if (b === 'ecl') y = workers(run, 'ecl').length ? 'dévoile la carte' : 'à l\'arrêt'; else if (!b.done) y = `+${chGain(run, b)} au chantier`;
+      else if (b.type === 'champ') { const fd = P.fields[b.id]; y = fd && fd.harvest ? `+${fd.harvest} ${RN(b.crop || 'cereales')}` : fd && fd.sow ? `+${fd.sow} semé` : fieldState(b); }
+      else y = Object.entries(P.by[b.id] || {}).filter(([, v]) => v > 0).map(([k2, v]) => `+${v} ${RN(k2)}`).join(' ') || '—';
+      el.insertAdjacentHTML('beforeend', `<b>${nameOf(b)}</b><small>${y}</small>`); const [pm] = postesBlock(b); el.append(pm); grid.append(el); });
+    return;
+  }
+  if (kind === 'colons') {
+    head(`Colons · ${run.C.length}`);
+    const grid = document.createElement('div'); grid.className = 'colons'; box.append(grid);
+    const postName = c => c.age === 'enfant' ? 'joue au village' : c.age === 'ancien' ? 'à la retraite' : c.post === null ? 'sans poste' : nameOf(c.post === 'ecl' ? 'ecl' : run.B.find(b => b.id === c.post)).toLowerCase();
+    const state = c => c.faim >= 2 ? '<span class="bad">a faim</span>' : c.froid >= 3 ? '<span class="bad">a froid</span>' : c.age === 'enfant' ? `enfant · adulte dans ${ADULT_AT - c.grow} sem.` : `${c.years} ans`;
+    run.C.forEach(c => { const el = document.createElement('button'); el.className = 'colon' + (colonSel === c ? ' on' : ''); el.append(faceCanvas(c));
+      el.insertAdjacentHTML('beforeend', `<b>${c.n}</b><small>${c.tal ? TAL[c.tal] : 'sans talent'} · ${CAR[c.car]}</small><small class="job">${postName(c)} · ${state(c)}</small>`);
+      el.disabled = c.age !== 'adulte'; el.onclick = () => { colonSel = c; openSheet('colons'); }; grid.append(el); });
+    if (colonSel) { box.insertAdjacentHTML('beforeend', `<h2><span>Envoyer ${colonSel.n} :</span></h2>`); const ch = document.createElement('div'); ch.className = 'chips'; box.append(ch);
+      [...posts(run), null].forEach(b => { const bt = document.createElement('button'), id = b === null ? null : postId(b);
+        bt.textContent = b === null ? 'Sans poste' : nameOf(b) + (b !== null && colonSel.tal && TALENT_FOR[keyOf(b)] === colonSel.tal ? ' ★' : ''); bt.disabled = colonSel.post === id;
+        bt.onclick = () => { moveColon(run, colonSel, b); colonSel = null; changed(); };
+        ch.append(bt); }); }
+    return;
+  }
+  if (kind === 'alerts' || kind === 'confirm') {
+    const al = alerts(run); head(kind === 'confirm' ? 'Avant de finir la semaine' : 'Alertes');
+    const l = document.createElement('div'); l.className = 'alerts'; box.append(l);
+    if (!al.length) l.innerHTML = '<p class="info"><b>Rien à signaler.</b></p>';
+    al.forEach(([lv, t, d]) => l.insertAdjacentHTML('beforeend', `<p class="${lv}"><b>${t}</b>${d}</p>`));
+    if (kind === 'confirm') box.append(wide('Semaine suivante quand même', () => { V.confirmed = true; close(); nextWeek(); }));
+    return;
+  }
+  if (kind === 'recherche') {
+    const gain = forecast(run).savoir; head(`Recherche · ${fl(run.res.savoir)} points de savoir${gain ? ` (+${gain} par semaine)` : ''}`);
+    if (!gain) box.insertAdjacentHTML('beforeend', `<p>Personne n'étudie : place des colons à l'<b>école</b> (on la construit dès le départ). Découvertes et grandes étapes donnent aussi des points.</p>`);
+    const tree = document.createElement('div'); tree.className = 'tree'; box.append(tree);
+    BRANCHES.forEach(([br, label]) => { const col = document.createElement('div'); col.className = 'branch'; col.innerHTML = `<b>${label}</b>`; tree.append(col);
+      Object.entries(TREE).filter(([, R]) => R.br === br).forEach(([k, R]) => { const st = researchState(run, k), el = document.createElement('button'); el.className = 'plan ' + st;
+        el.append(iconType(k));
+        const why = st === 'fait' ? 'débloqué' : st === 'pret' ? `rechercher · ${R.cost}` : st === 'cher' ? `${R.cost} points` : R.req && !run.unlocked.includes(R.req) ? `après : ${BUILD[R.req].n.toLowerCase()}` : `il faut une ${BUILD[R.needB].n.toLowerCase()}`;
+        el.insertAdjacentHTML('beforeend', `<b>${BUILD[k].n}</b><small>${why}</small>`); el.title = BUILD[k].d; el.disabled = st !== 'pret';
+        el.onclick = () => { if (research(run, k)) { changed(); } }; col.append(el); }); });
+    box.insertAdjacentHTML('beforeend', `<p>Dès le départ : ${START.map(k => BUILD[k].n.toLowerCase()).join(', ')}. Chaque plan demande le précédent de sa branche.</p>`);
+    return;
+  }
+  if (kind === 'report') {
+    const d = dateOf(run); head(`${SEASONS[d.season]} · semaine ${d.week} · an ${d.year}`, null);
+    const cards = document.createElement('div'); cards.className = 'cards'; box.append(cards);
+    if (!V.report.length) box.insertAdjacentHTML('beforeend', '<p style="text-align:center">Une semaine tranquille.</p>');
+    V.report.slice(0, 8).forEach(([cls, ic, t, dd], n) => { const el = document.createElement('div'); el.className = 'card ' + cls; el.style.animationDelay = `${n * .1}s`; el.append(cardIcon(ic)); el.insertAdjacentHTML('beforeend', `<b>${t}</b><p>${dd}</p>`); cards.append(el); });
+    box.append(wide('Continuer', close));
+    return;
+  }
+  if (kind === 'menu') {
+    const best = store.get('best', {}), d = dateOf(run); head('La colonie');
+    box.insertAdjacentHTML('beforeend', `<div class="stats"><div><b>${yearsHeld(run)}</b><small>an${yearsHeld(run) > 1 ? 's' : ''} tenu${yearsHeld(run) > 1 ? 's' : ''} (an ${d.year} en cours)</small></div><div><b>${run.stats.maxPop}</b><small>colons au plus fort</small></div><div><b>${scoreOf(run)}</b><small>score${best.score ? ` · record ${best.score}` : ''}</small></div></div>`);
+    const row = document.createElement('div'); row.className = 'row'; box.append(row);
+    row.append(wide('Comment jouer', () => openSheet('aide'), 'blue'), wide('Nouvelle île', () => openSheet('nouvelle'), 'blue'), wide('Retour à la Ludothèque', () => { save(); location.href = '../index.html'; }, 'blue'));
+    return;
+  }
+  if (kind === 'nouvelle') {
+    head('Nouvelle île ?');
+    box.insertAdjacentHTML('beforeend', '<p>La colonie en cours sera abandonnée (son score compte déjà pour les records). Une nouvelle île, tirée au hasard, attend 8 naufragés.</p>');
+    const row = document.createElement('div'); row.className = 'row'; box.append(row);
+    row.append(wide('Oui, une nouvelle île', () => { close(); startRun(newRun((Date.now() % 1e9) | 0)); }), wide('Non', close, 'blue'));
+    return;
+  }
+  if (kind === 'aide') {
+    head('Comment jouer');
+    box.insertAdjacentHTML('beforeend', `<p><b>But</b> : faire vivre la colonie le plus longtemps possible. Pas de morts : un colon qui a trop faim, trop froid ou qui est malheureux quitte l'île. La partie s'arrête quand le dernier est parti.</p>
+      <p><b>Chaque tour est une semaine</b> ; une année fait 4 saisons de 4 semaines. On sème au printemps, on récolte à l'automne, on se chauffe l'hiver (bois, habitations, un vêtement par colon).</p>
+      <p><b>Construire</b> : touche une case libre de la carte, puis un bâtiment. Les colons le bâtissent sur place. <b>Postes</b> : avec + et −, le plus doué (★) y va en premier.</p>
+      <p><b>Recherche</b> : à l'école, les colons gagnent des points de savoir qui débloquent les plans (bouton Savoir). Les découvertes de l'éclaireur en rapportent aussi.</p>
+      <p><b>Explorer</b> : touche une case dans le brouillard pour y envoyer l'éclaireur : ruines, grotte, source, filon de fer, autre épave…</p>
+      <p>Lis la <b>prévision</b> sous chaque ressource et les <b>alertes</b> en bas avant de toucher Semaine ▶.</p>`);
+    return;
+  }
+  if (kind === 'fin') {
+    head('L\'île est déserte', null);
+    const best = store.get('best', {});
+    box.insertAdjacentHTML('beforeend', `<p>Le dernier colon a quitté l'île. Voici ce que la colonie a accompli :</p><div class="stats"><div><b>${yearsHeld(run)}</b><small>années tenues</small></div><div><b>${run.stats.maxPop}</b><small>colons au plus fort</small></div><div><b>${scoreOf(run)}</b><small>score · record ${best.score || scoreOf(run)}</small></div></div>`);
+    const row = document.createElement('div'); row.className = 'row'; box.append(row);
+    row.append(wide('Une nouvelle île', () => { close(); startRun(newRun((Date.now() % 1e9) | 0)); }), wide('Retour à la Ludothèque', () => { location.href = '../index.html'; }, 'blue'));
+  }
+}
+
+/* =================== la semaine passe =================== */
+function nextWeek() {
+  if (V.busy || run.over) return;
+  const res = endWeek(run), now = performance.now();
+  V.floats = res.floats.map(f => ({ ...f, t: now })); V.report = res.rep; V.confirmed = false; V.busy = true; wake();
+  const best = store.get('best', {}), sc = scoreOf(run);
+  store.set('best', { score: Math.max(best.score || 0, sc), annees: Math.max(best.annees || 0, yearsHeld(run)), population: Math.max(best.population || 0, run.stats.maxPop) });
+  if (run.over) store.del('run'); else save();
+  refreshWorld(); refresh(); $('bottom').querySelector('.go').disabled = true;
+  setTimeout(() => { V.busy = false; renderBottom(); openSheet('report'); }, 1000);
+}
+
+/* =================== démarrage et mise à l'échelle =================== */
+$('anyway').onclick = () => { $('rotate').hidden = true; V.rotDismissed = true; fit(); };
+function fit() {
+  const W = window.innerWidth - 16, Hh = window.innerHeight - 16, s = Math.max(.4, Math.min(W / 640, Hh / 360, 2.4));
+  $('fit').style.width = `${640 * s}px`; $('fit').style.height = `${360 * s}px`; $('screen').style.transform = `scale(${s})`;
+  S = Math.min(3, s * Math.min(2, window.devicePixelRatio || 1)); cv.width = Math.round(VW * S); cv.height = Math.round(VH * S);
+  if (!V.rotDismissed) $('rotate').hidden = !(window.innerHeight > window.innerWidth && window.innerWidth < 700);
+  if (run) buildStatic(); wake();
+}
+window.addEventListener('resize', fit);
+function startRun(r) {
+  run = r; isle = isleOf(run); V.sel = null; V.panel = null; V.floats = []; V.report = []; V.busy = false; V.confirmed = false;
+  sceneryKey = ''; fogKey = ''; staticDirty = true; refreshWorld(); setDrawer(false); setZoom(Z1);
+  const [wx, wy] = isle.wreck; centerOn(wx + .5, wy + .5); save(); refresh(); wake();
+  if (run.turn === 0) { V.report = [['', { b: 'epave' }, 'Naufragés !', 'Huit naufragés ont gagné la plage avec ce qu\'ils ont pu sauver de l\'épave. Ils vont fonder une colonie.'],
+    ['', { b: 'ecole' }, 'Par où commencer ?', 'Une pêcherie et un cueilleur pour manger, un bûcheron pour le bois de l\'hiver, une école pour la recherche.'],
+    ['', { i: 'savoir' }, 'Toucher une case', 'Touche une case libre pour y construire, un bâtiment pour régler ses postes, le brouillard pour explorer.']]; openSheet('report'); }
+}
+window.Ile = Object.assign({}, ILE_API, { V, nextWeek, openSheet, startRun, selectTile, refresh });
+Object.defineProperty(window.Ile, 'run', { get: () => run });
+fit();
+startRun(migrate(store.get('run', null)) || newRun((Date.now() % 1e9) | 0));
+requestAnimationFrame(draw);
+Promise.all(['700 12px Signika', '400 12px Signika', '800 12px "Alegreya Sans SC"'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : 0)).then(() => { refresh(); wake(); });
