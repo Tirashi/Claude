@@ -193,6 +193,8 @@
     Object.keys(tc).forEach(function (k){ if (/^(classic|arsenal):(easy|normal|hard)$/.test(k)) lo("touchecoule", "best:" + k, tc[k]); });
     var am = readKey("amiral.best", {}) || {};
     Object.keys(am).forEach(function (k){ if (/^(easy|normal|hard)$/.test(k)) lo("amiral", "best:" + k, am[k]); });
+    var amd = readKey("amiral.daily", {}) || {};
+    Object.keys(amd).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("amiral", "daily:" + k, amd[k]); });
     var es = readKey("escadrille.best", {}) || {};
     Object.keys(es).forEach(function (k){ if (/^(easy|normal|hard)$/.test(k)) lo("escadrille", "best:" + k, es[k]); });
     var ob = readKey("orbite.stars", {}) || {}, stars = 0;
@@ -235,7 +237,7 @@
 
   window.addEventListener("online", function (){ flush(); });
   // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 6 : avec Nebula)
-  var SYNC = 16;
+  var SYNC = 17;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();
