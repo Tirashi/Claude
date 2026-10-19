@@ -1,0 +1,426 @@
+<title>Ludothèque façon Dragon Quest 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Maquette 2 : les fenêtres bleues de B et le volet en combat de C, poussés dans trois sens :
+   1 un monstre par jeu, 2 des lieux et des personnages (château, église), 3 le joueur en héros qui monte de niveau.
+   Trois téléphones côte à côte, trois écrans chacun. Une seule ambiance sombre, voulue. */
+:root{
+  color-scheme: dark;
+  --page:#0b0918; --page-2:#1a1533; --ink:#f2f0ff; --ink-dim:#a9a6d8; --gold:#ffd23f;
+  --win:linear-gradient(#2c42c4, #0e1a6e); --tagbg:#2c42c4; --wtxt:#fff; --wdim:#b5bcff; --wbd:#fff;
+  --wsh:inset 0 0 0 2px #6a76d8, 0 0 0 2px #000, 3px 3px 0 2px rgba(0,0,0,.6); --hi:#ffe14a; --me:#7dffa0; --hurt:#ff6b6b;
+  --f-pix:"Press Start 2P", "Courier New", monospace;
+  --f-txt:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0; background:var(--page); color:var(--ink); font-family:var(--f-txt); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(var(--page-2) 1px, transparent 1.5px); background-size:4px 4px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+@keyframes blink{50%{opacity:0}}
+@keyframes bob{to{transform:translateY(-4px)}}
+@keyframes hit{0%,100%{transform:none; filter:none} 20%,60%{transform:translateX(-6px); filter:brightness(3)} 40%,80%{transform:translateX(6px)}}
+@keyframes flash{50%{background:#fff}}
+@media (prefers-reduced-motion: reduce){ *{animation:none !important} }
+
+.top{max-width:1180px; margin:0 auto 18px; display:flex; flex-direction:column; gap:10px}
+.top h1{margin:0; font-family:var(--f-pix); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-wrap:balance; text-shadow:3px 3px 0 #000}
+.top p{margin:0; max-width:68ch; color:var(--ink-dim)}
+.bar{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center}
+.bar button{font-family:var(--f-pix); font-size:9px; letter-spacing:1px; padding:8px 10px 8px 22px; position:relative; border:2px solid #fff; border-radius:7px; background:var(--win); box-shadow:inset 0 0 0 2px #6a76d8; color:var(--wdim)}
+.bar button[aria-pressed="true"]{color:#fff}
+.bar button[aria-pressed="true"]::before{content:"▶"; position:absolute; left:7px; color:#fff; animation:blink 1s steps(1) infinite}
+.bar button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+
+.phones{max-width:1180px; margin:0 auto; display:flex; flex-wrap:wrap; gap:28px 22px; justify-content:center}
+.col{display:flex; flex-direction:column; gap:10px; width:360px; max-width:100%}
+.col h2{margin:0; font-family:var(--f-pix); font-weight:400; font-size:11px; line-height:1.6; color:var(--gold)}
+.col h2 + p{margin:0; color:var(--ink-dim); font-size:18px; min-height:4.8em}
+.phone{width:100%; height:740px; border-radius:30px; padding:12px; background:#1b1b22; box-shadow:inset 0 0 0 2px #3a3a48, 0 10px 30px rgba(0,0,0,.6)}
+.screen{position:relative; width:100%; height:100%; border-radius:20px; overflow:hidden;
+  background:radial-gradient(#141c55 1px, transparent 1.5px) 0 0 / 5px 5px, linear-gradient(#0a0f33, #050716)}
+.scr{position:absolute; inset:0; overflow-y:auto; padding:16px 12px 20px; display:flex; flex-direction:column; gap:14px; scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+.scr[hidden]{display:none}
+
+/* ---------- fenêtres bleues ---------- */
+.win{position:relative; background:var(--win); color:var(--wtxt); border:3px solid var(--wbd); border-radius:9px; box-shadow:var(--wsh);
+  padding:12px 10px 10px; font-size:19px; text-shadow:1px 1px 0 #000a; min-width:0}
+.win > .tag{position:absolute; top:-9px; left:12px; padding:0 5px; background:var(--tagbg); font-family:var(--f-pix); font-size:8px; line-height:14px; color:var(--hi); letter-spacing:1px}
+.win p{margin:0}
+.pix{font-family:var(--f-pix); font-size:8px; letter-spacing:1px; line-height:1.9}
+.dim{color:var(--wdim)}
+.hi{color:var(--hi)}
+.type::after{content:"▼"; display:inline-block; margin-left:6px; font-size:12px; color:#fff; animation:blink 1s steps(1) infinite; visibility:hidden}
+.type.done::after{visibility:visible}
+
+.cmds{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:2px 14px}
+.cmds.v{flex-direction:column; gap:4px}
+.cmds.g2{display:grid; grid-template-columns:1fr 1fr; gap:4px 10px}
+.cmds button{font-family:var(--f-pix); font-size:8px; letter-spacing:1px; line-height:2.2; color:var(--wdim); padding-left:14px; position:relative; text-align:left}
+.cmds button.on{color:#fff}
+.cmds button.on::before{content:"▶"; position:absolute; left:0; color:#fff; animation:blink 1s steps(1) infinite}
+.cmds button:focus-visible{outline:2px dashed var(--hi); outline-offset:2px}
+
+h3.logo{margin:4px 0 0; text-align:center; font-family:var(--f-pix); font-weight:400; font-size:15px; line-height:1.5; color:var(--hi);
+  text-shadow:2px 0 0 #c0561a, 0 2px 0 #c0561a, 2px 2px 0 #c0561a, 4px 4px 0 #000}
+
+/* étagère de cartouches (simplifiée : elle ne change pas) */
+.rack{display:grid; grid-template-columns:repeat(3, 1fr); padding:8px 4px 0;
+  background:linear-gradient(transparent calc(100% - 12px), #b77a48 calc(100% - 12px) calc(100% - 10px), #7a4a24 calc(100% - 10px) calc(100% - 2px), #0d0a18 calc(100% - 2px)) 0 0 / 100% 104px;
+  border:3px solid #0d0a18; box-shadow:0 0 0 2px #6a76d8; background-color:#140f28}
+.cart{position:relative; height:104px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:14px}
+.cart > span{display:flex; flex-direction:column; justify-content:flex-end; width:62px; height:76px; border-radius:4px 4px 2px 2px; background:var(--c);
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.25), 3px 3px 0 #000; padding:5px; transition:transform .15s}
+.cart > span i{display:block; font-style:normal; font-family:var(--f-pix); font-size:5px; line-height:1.6; text-align:center; color:#fff; background:rgba(0,0,0,.55); padding:4px 2px; border-radius:2px}
+.cart em{position:absolute; top:4px; right:6px; font-style:normal; font-family:var(--f-pix); font-size:6px; color:var(--hi); background:#0e1a6e; border:1px solid #fff; border-radius:3px; padding:2px 3px}
+.cart:hover > span, .cart:focus-visible > span{transform:translateY(-4px)}
+.cart:focus-visible{outline:none}
+.cart:focus-visible > span{outline:2px solid var(--hi); outline-offset:2px}
+
+.stats{display:grid; gap:2px}
+.stats div{display:flex; align-items:baseline; gap:6px}
+.stats div::after{content:""; order:1; flex:1; border-bottom:2px dotted var(--wdim); opacity:.6; transform:translateY(-4px)}
+.stats b{order:2; font-weight:400; font-variant-numeric:tabular-nums}
+.stats .me, .stats .me b{color:var(--me)}
+.code{font-family:var(--f-pix); font-size:8px; line-height:1.8; word-break:break-all; color:var(--hi); background:rgba(0,0,0,.35); padding:6px; border:1px dashed var(--wdim); border-radius:3px; margin-top:8px}
+.paste{width:100%; margin-top:8px; min-height:60px; resize:none; font-family:var(--f-pix); font-size:8px; line-height:1.8; color:#fff; background:rgba(0,0,0,.35); border:1px dashed var(--wdim); border-radius:3px; padding:6px}
+.paste::placeholder{color:var(--wdim)}
+
+/* ---------- le combat (volet du jeu) ---------- */
+.arena{position:relative; height:200px; border-radius:9px; overflow:hidden; display:grid; place-items:end center; padding-bottom:18px; flex:none;
+  background:linear-gradient(color-mix(in srgb, var(--c) 30%, #050716) 0 56%, color-mix(in srgb, var(--c) 18%, #1d2a18) 56%);
+  border:3px solid #fff; box-shadow:inset 0 0 0 2px #6a76d8, 0 0 0 2px #000}
+.arena::before{content:""; position:absolute; left:0; right:0; top:56%; height:3px; background:color-mix(in srgb, var(--c) 45%, #fff)}
+.arena::after{content:""; position:absolute; left:50%; bottom:12px; width:120px; height:14px; transform:translateX(-50%); border-radius:50%; background:rgba(0,0,0,.45)}
+.arena canvas{position:relative; z-index:1; image-rendering:pixelated; animation:bob 1.2s steps(2) infinite alternate}
+.arena canvas.hit{animation:hit .5s steps(1)}
+.arena .nm{position:absolute; z-index:1; top:10px; left:0; right:0; text-align:center; font-family:var(--f-pix); font-size:8px; color:#fff; text-shadow:2px 2px 0 #000}
+.arena.flash{animation:flash .12s steps(1) 2}
+.hpbar{position:absolute; z-index:1; top:26px; left:50%; transform:translateX(-50%); width:150px; display:flex; flex-direction:column; gap:3px; align-items:center}
+.hpbar small{font-family:var(--f-pix); font-size:6px; color:#fff; text-shadow:1px 1px 0 #000}
+.gauge{width:100%; height:8px; border:2px solid #fff; background:#000; border-radius:2px; overflow:hidden}
+.gauge i{display:block; height:100%; width:var(--v); background:var(--gc, var(--me)); transition:width .6s}
+.battle{display:grid; grid-template-columns:auto 1fr; gap:8px}
+.hp{display:flex; gap:12px; justify-content:space-around; text-align:center}
+
+/* ---------- personnages et lieux (direction 2) ---------- */
+.sage{display:flex; gap:10px; align-items:flex-end}
+.sage canvas{flex:none; image-rendering:pixelated}
+.sage .win{flex:1}
+.scene{position:relative; height:190px; flex:none; border-radius:9px; overflow:hidden; border:3px solid #fff; box-shadow:inset 0 0 0 2px #6a76d8, 0 0 0 2px #000; display:grid; place-items:end center; padding-bottom:22px}
+.scene canvas{position:relative; z-index:1; image-rendering:pixelated}
+.throne{background:
+  linear-gradient(90deg, transparent 0 14%, #3b3a52 14% 20%, transparent 20% 80%, #3b3a52 80% 86%, transparent 86%),
+  linear-gradient(transparent 62%, #6b1020 62%),
+  repeating-linear-gradient(90deg, #26253a 0 22px, #1d1c2e 22px 24px), #26253a}
+.throne::before{content:""; position:absolute; left:50%; bottom:0; width:70px; height:62%; transform:translateX(-50%); background:linear-gradient(#b0182e, #6b1020); clip-path:polygon(35% 0, 65% 0, 100% 100%, 0 100%)}
+.throne::after{content:""; position:absolute; left:50%; bottom:18px; width:86px; height:110px; transform:translateX(-50%); border-radius:30px 30px 4px 4px; background:linear-gradient(#ffd23f, #b8862a); box-shadow:inset 0 0 0 6px #8a5a1a}
+.church{background:
+  radial-gradient(circle at 50% 30%, #6fd0ff 0 8%, #ff7ad0 8% 13%, #ffd23f 13% 17%, #3a5fd8 17% 22%, transparent 22.5%),
+  linear-gradient(transparent 66%, #3a3550 66%),
+  repeating-linear-gradient(0deg, #2a2840 0 16px, #222035 16px 18px)}
+.church::after{content:""; position:absolute; left:50%; bottom:14px; width:120px; height:28px; transform:translateX(-50%); background:#e8e2d0; box-shadow:inset 0 -6px 0 #b8b098}
+
+/* ---------- le héros (direction 3) ---------- */
+.hero{display:grid; grid-template-columns:auto 1fr; gap:4px 10px; align-items:center}
+.hero canvas{grid-row:span 3; image-rendering:pixelated}
+.party{display:grid; gap:6px}
+.party div{display:grid; grid-template-columns:5.5em 3.2em 1fr; gap:6px; align-items:center}
+.party .me{color:var(--me)}
+.slot{display:flex; justify-content:space-between; gap:8px}
+
+.note{max-width:1180px; margin:22px auto 0; color:var(--ink-dim); font-size:18px}
+.note b{color:var(--ink); font-weight:400}
+</style>
+
+<div class="top">
+  <h1>LA LUDOTHEQUE FACON DRAGON QUEST · 2</h1>
+  <p>Les fenêtres bleues de B et le volet en combat de C, poussés dans trois sens. Touche une cartouche pour ouvrir le combat, puis JOUER, RECORDS ou CLASSEMENT. Records et classements : exemples.</p>
+  <div class="bar">
+    <button type="button" data-all="home" aria-pressed="true">ACCUEIL</button>
+    <button type="button" data-all="volet" aria-pressed="false">VOLET DU JEU</button>
+    <button type="button" data-all="save" aria-pressed="false">TRANSFERT</button>
+    <button type="button" id="snd" aria-pressed="true">BIPS : OUI</button>
+  </div>
+</div>
+
+<div class="phones" id="phones"></div>
+
+<p class="note"><b>Peut se mélanger :</b> les monstres de 1 servent aussi dans 2 et 3, le château et l'église de 2 peuvent accueillir la fiche du héros de 3. Les jeux eux-mêmes ne changent pas.</p>
+
+<script>
+const GAMES = [
+  {id:"yams", n:"YAMS", c:"#c0392b", f:["adresse"], m:"die", d:"Le Yams classique avec de vrais dés : secoue, lance, garde les bons.", p:[287, 375, "POINTS"],
+    r:[["MEILLEUR SCORE","287"],["YAMS REUSSIS","6"],["PARTIES","41"]], k:[["PAPA",312],["TOI",287],["LEA",254],["MAMIE",198]]},
+  {id:"picross", n:"PICROSS DEX", c:"#3aa655", f:["logique","fav"], m:"blob", d:"Des grilles à noircir pour dévoiler et capturer les 151 Pokémon.", p:[97, 151, "POKEMON"],
+    r:[["POKEMON","97 / 151"],["MEILLEUR 15X15","4:12"],["GRILLES","133"]], k:[["TOI","97"],["LEA","64"],["PAPA","22"]]},
+  {id:"nebula", n:"NEBULA", c:"#6c4bd8", f:["tactique","cours","fav"], m:"ship", d:"Commande une flotte à travers dix secteurs, recrute, améliore tes vaisseaux.", p:[2, 10, "SECTEURS"],
+    r:[["SECTEUR ATTEINT","2 / 10"],["VICTOIRES","3"],["DEFI DU JOUR","1 840"]], k:[["PAPA","5 VICT."],["TOI","3 VICT."],["LEA","1 VICT."]]},
+  {id:"orbite", n:"ORBITE", c:"#2a8fd8", f:["adresse"], m:"planet", d:"Lance ta sonde et laisse les planètes courber sa route jusqu'à la cible.", p:[24, 30, "NIVEAUX"],
+    r:[["NIVEAUX","24 / 30"],["ETOILES","61"],["DEFI DU JOUR","0:48"]], k:[["LEA","28"],["TOI","24"],["PAPA","19"]]},
+  {id:"sudoku", n:"SUDOKU", c:"#d8a12a", f:["logique"], m:"blob", d:"Le classique 9×9, notes au crayon et grille du jour pour toute la famille.", p:[58, 100, "GRILLES"],
+    r:[["GRILLE DU JOUR","6:31"],["EXPERT","14:02"],["GRILLES","58"]], k:[["MAMIE","5:10"],["TOI","6:31"],["PAPA","8:44"]]},
+  {id:"lune", n:"LUNE-ROVER", c:"#8a8f99", f:["adresse","cours"], m:"planet", d:"Pilote le rover sur les cratères sans le retourner, trente niveaux.", p:[21, 30, "NIVEAUX"],
+    r:[["NIVEAUX","21 / 30"],["MEILLEUR TEMPS","1:07"],["CHUTES","112"]], k:[["TOI","21"],["PAPA","17"]]},
+  {id:"queens", n:"QUEENS", c:"#d84a8f", f:["logique","fav"], m:"blob", d:"Une reine par ligne, par colonne et par couleur, jamais côte à côte.", p:[9, 30, "JOURS"],
+    r:[["GRILLE DU JOUR","1:54"],["SERIE","9 JOURS"]], k:[["LEA","1:21"],["TOI","1:54"],["MAMIE","2:40"]]},
+  {id:"tetris", n:"TETRIS", c:"#1fb5a8", f:["arcade"], m:"blob", d:"Les pièces tombent, les lignes disparaissent, la vitesse monte.", p:[96, 200, "LIGNES"],
+    r:[["RECORD","48 210"],["LIGNES","96"]], k:[["PAPA","61 300"],["TOI","48 210"]]},
+  {id:"snake", n:"SNAKE", c:"#4fbf3a", f:["arcade"], m:"blob", d:"Mange, grandis, et ne te mords pas la queue.", p:[132, 200, "LONGUEUR"],
+    r:[["RECORD","132"]], k:[["LEA","158"],["TOI","132"]]},
+];
+const FILTERS = [["tous","TOUS"],["fav","FAVORIS"],["cours","EN COURS"],["logique","LOGIQUE"],["adresse","ADRESSE"],["arcade","ARCADE"]];
+const SAYS = {
+  tous:"Bienvenue, voyageur ! Vingt-trois jeux t'attendent sur ces planches. Lequel veux-tu affronter ?",
+  fav:"Voici tes jeux favoris. Je les garde bien au chaud pour toi.",
+  cours:"Tu as laissé Nebula au secteur 2 et le rover au niveau 21. On reprend l'aventure ?",
+  logique:"Des casse-têtes pour les esprits affûtés. Prends ton temps, rien ne presse.",
+  adresse:"Il te faudra des doigts agiles et un peu de chance !",
+  arcade:"Les grands classiques. Ton record t'attend, il ne bougera pas tout seul.",
+};
+const KING_SAYS = {
+  tous:"Ah, te voilà ! Mon royaume compte vingt-trois jeux. Choisis ta prochaine quête.",
+  fav:"Ce sont les quêtes que tu préfères. Le royaume s'en souviendra.",
+  cours:"Deux quêtes t'attendent encore : Nebula, secteur 2, et le rover, niveau 21.",
+  logique:"Ces énigmes ont résisté à mes meilleurs sages. Montre-leur !",
+  adresse:"Mes chevaliers n'ont pas tes réflexes. Va, et reviens couvert de gloire.",
+  arcade:"Les épreuves les plus anciennes du royaume. Bats ton propre record !",
+};
+const DIRS = [
+  {k:1, t:"1 · UN MONSTRE PAR JEU", p:"Le plus simple : B pour tout le site, et chaque jeu a son monstre dans le volet (un dé pour le Yams, un vaisseau pour Nebula, une planète pour Orbite…), sur un décor à sa couleur. Le gardien parle depuis son coin."},
+  {k:2, t:"2 · LE CHATEAU ET L'EGLISE", p:"Chaque écran devient un lieu. L'accueil est la salle du trône et c'est le roi qui parle ; le volet est le combat ; le transfert se fait à l'église, où le prêtre consigne tes exploits (OUI / NON)."},
+  {k:3, t:"3 · TOI, LE HEROS", p:"Le joueur monte de niveau avec ses records. La barre de PV du monstre montre ce qu'il reste à faire dans le jeu, la famille devient ton groupe d'aventuriers, et le transfert se fait dans les trois journaux d'aventure."},
+];
+
+/* ---------- petits bips (carré, très courts) ---------- */
+let AC = null, sound = true;
+function bip(f, d, g = .05, when = 0){
+  if(!sound) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime + when, o = AC.createOscillator(), v = AC.createGain();
+    o.type = "square"; o.frequency.value = f; v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(v).connect(AC.destination); o.start(t); o.stop(t + d + .02);
+  }catch(e){}
+}
+const sCur = () => bip(1320, .035, .03);
+const sOk = () => { bip(784, .07); bip(1175, .1, .05, .07); };
+const sSave = () => { [523, 659, 784, 1047].forEach((f, i) => bip(f, .12, .05, i * .1)); };
+const sFight = () => { [196, 233, 196, 262].forEach((f, i) => bip(f, .09, .06, i * .08)); };
+const sHit = () => { bip(110, .12, .08); bip(80, .15, .08, .1); };
+const sLevel = () => { [523, 523, 523, 659, 784, 659, 784, 1047].forEach((f, i) => bip(f, .11, .05, i * .11)); };
+
+/* ---------- texte lettre par lettre ---------- */
+function type(el, text, then){
+  clearInterval(el._t); el.classList.remove("done"); el.textContent = "";
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = text; el.classList.add("done"); then && then(); return; }
+  let i = 0;
+  el._t = setInterval(() => {
+    el.textContent = text.slice(0, ++i);
+    if(i % 3 === 0 && text[i - 1] !== " ") bip(1700, .012, .012);
+    if(i >= text.length){ clearInterval(el._t); el.classList.add("done"); then && then(); }
+  }, 30);
+}
+
+/* ---------- sprites en pixels ---------- */
+function sprite(rows, pal, s){
+  const c = document.createElement("canvas"); c.width = rows[0].length * s; c.height = rows.length * s;
+  const x = c.getContext("2d");
+  rows.forEach((r, y) => [...r].forEach((ch, i) => { if(pal[ch]){ x.fillStyle = pal[ch]; x.fillRect(i * s, y * s, s, s); } }));
+  return c;
+}
+const SAGE = [
+  ".....hh.....o.", "....hhhh...ooo", "...hhhhhh...r.", "..hhddddhh..r.", "..hdssssdh..r.", "..hdkssksd..r.", "..hdsssssd..r.", "...dbbbbd..sr.",
+  "..hhbbbbhhhhr.", ".hhhhbbhhhh.r.", ".hhhhhhhhh..r.", ".hhhhghhhh..r.", ".hhhhghhhh..r.", "..hhhhhhh...r.", "..dd...dd...r.",
+];
+const SAGE_PAL = {h:"#6b3fa0", d:"#3d2266", s:"#f0c090", k:"#000", b:"#fff", r:"#a0703a", o:"#5cf", g:"#ffd23f"};
+const KING = [
+  "..y.y.y.y...", "..yyyyyyy...", "..yryyyry...", "..sssssss...", "..sksssks...", "..sssssss...", "..bbbbbbb...", ".rrbbbbbrr..",
+  "rrrrbbbrrrr.", "rrwrrrrrwrr.", "rrwrrrrrwrr.", "rrwrrrrrwrr.", ".rrrrrrrrr..", ".pp.....pp..",
+];
+const KING_PAL = {y:"#ffd23f", r:"#c0182e", s:"#f0c090", k:"#000", b:"#fff", w:"#fff", p:"#5a2a8a"};
+const PRIEST = [
+  "....bbb.....", "...bbbbb....", "...sssss....", "...sksks....", "...sssss....", "..bbbybbb...", ".bbbbybbbb..", ".bbyyyyybb..",
+  ".bbbbybbbb..", ".bbbbybbbb..", ".bbbbbbbbb..", ".bbbbbbbbb..", "..bb...bb...",
+];
+const PRIEST_PAL = {b:"#3a5fd8", y:"#ffd23f", s:"#f0c090", k:"#000"};
+const HERO = [
+  "...hhhh...", "..hhhhhh..", "..hssssh..", "..skssks..", "..ssssss..", "...ssss...", ".ccbbbbcc.", "cc.bbbb.cc", "s..bbbb..s", "...bbbb...", "...b..b...", "..kk..kk..",
+];
+const HERO_PAL = {h:"#3b2a1a", s:"#f0c090", k:"#000", b:"#2c7ad8", c:"#c0182e"};
+const MONSTERS = {
+  blob:["......ll......", ".....lool.....", "....looooo....", "...looooooo...", "..lowwoowwoo..", "..owkwoowkwo..", ".oowkwoowkwoo.", ".oooooooooooo.",
+        "ooooommmmooooo", "oooooommoooooo", ".oooooooooooo.", "..dddddddddd.."],
+  die:["..wwwwwwwwww..", ".wwwwwwwwwwwg.", ".wkwwwwwwwkwg.", ".wwwwwwwwwwwg.", ".wwkkwwwwkkwg.", ".wwkkwwwwkkwg.", ".wwwwwwwwwwwg.", ".wwwwmmmmwwwg.",
+       ".wkwwwmmwwwkg.", ".wwwwwwwwwwwg.", "..gggggggggg..", "..k........k..", ".kk........kk."],
+  ship:["......ww......", ".....oooo.....", "....oooooo....", "...oowwwwoo...", "...owkwwkwo...", "..ooowwwwooo..", ".oooooooooooo.", "oo.oooooooo.oo",
+        "o..ooyyyyoo..o", "....y....y....", "...y......y..."],
+  planet:["....oooooo....", "...oooooooo...", "..oowwoowwoo..", "yyowkwoowkwoyy", "y.oooooooooo.y", ".yyooommmooyy.", "...yyyyyyyy...", "...oooooooo...", "....oooooo...."],
+};
+const mpal = c => ({o:c, l:"color-mix(in srgb, " + c + " 55%, #fff)", w:"#fff", g:"#b8b8c8", k:"#000", m:"#5a0f1a", y:"#ffd23f", d:"color-mix(in srgb, " + c + " 50%, #000)"});
+
+/* ---------- outils ---------- */
+const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
+const win = (tag, inner, cls = "") => '<div class="win ' + cls + '">' + (tag ? '<span class="tag">' + tag + '</span>' : "") + inner + '</div>';
+const cmds = (list, cls = "") => '<ul class="cmds ' + cls + '">' + list.map(([v, l], i) => '<li><button type="button" data-v="' + v + '"' + (i ? "" : ' class="on"') + '>' + l + '</button></li>').join("") + '</ul>';
+const gauge = (v, col) => '<div class="gauge"><i style="--v:' + v + '%' + (col ? "; --gc:" + col : "") + '"></i></div>';
+// le curseur suit le doigt (ou la souris), un bip à chaque déplacement
+function wire(list, act){
+  list.querySelectorAll("button").forEach(b => {
+    const move = () => { if(b.classList.contains("on")) return; list.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); sCur(); };
+    b.addEventListener("pointerenter", move); b.addEventListener("focus", move);
+    b.addEventListener("click", () => { move(); act(b.dataset.v, b); });
+  });
+}
+const LV = {toi:23, exp:68};
+const lvOf = (g, i) => Math.max(3, 31 - i * 6 - g.id.length);
+
+/* ---------- un téléphone ---------- */
+function phone(D){
+  const col = el("div", "col");
+  col.append(el("h2", "", D.t), el("p", "", D.p));
+  const ph = el("div", "phone"), scr = el("div", "screen");
+  ph.append(scr); col.append(ph);
+  const st = {dir:D.k, game:GAMES[0], filter:"tous", scr};
+  ["home", "volet", "save"].forEach(n => scr.append(el("div", "scr " + n)));
+  st.show = name => {
+    scr.querySelectorAll(".scr").forEach(s => s.hidden = !s.classList.contains(name));
+    ({home, volet, save})[name](st);
+    scr.querySelector("." + name).scrollTop = 0;
+  };
+  return {col, st};
+}
+
+function home(st){
+  const s = st.scr.querySelector(".home"), D = st.dir;
+  let top = "";
+  if(D === 3) top = win("TOI", '<div class="hero"><span></span><div class="pix">NIVEAU <span class="hi">' + LV.toi + '</span> · AVENTURIER</div>' +
+    '<div class="pix dim">EXP ' + LV.exp + ' %</div>' + gauge(LV.exp, "#ffe14a") + '</div>');
+  s.innerHTML = '<h3 class="logo">LUDOTHEQUE<br>16 BITS</h3>' + top +
+    (D === 2 ? '<div class="scene throne"></div>' + win("LE ROI", '<p class="say type"></p>') : "") +
+    win(D === 2 ? "QUETES" : "COMMANDES", cmds(FILTERS)) +
+    (D === 1 ? '<div class="sage"></div>' : D === 3 ? win("LE GARDIEN", '<p class="say type"></p>') : "") +
+    '<div class="rack"></div>' +
+    win(D === 2 ? "L'EGLISE" : "JOURNAL D'AVENTURE", '<p class="dim" style="font-size:17px">' + (D === 2 ? "Le prêtre peut consigner tes exploits pour un autre navigateur." : "Tes records restent dans ce navigateur. Pour les emporter ailleurs :") + '</p>' +
+      cmds([["save", D === 2 ? "ALLER A L'EGLISE" : "OUVRIR LE JOURNAL"]]), "j");
+  if(D === 1){ const sg = s.querySelector(".sage"); sg.append(sprite(SAGE, SAGE_PAL, 5)); sg.insertAdjacentHTML("beforeend", win("LE GARDIEN", '<p class="say type"></p>')); }
+  if(D === 2) s.querySelector(".throne").append(sprite(KING, KING_PAL, 6));
+  if(D === 3) s.querySelector(".hero span").replaceWith(sprite(HERO, HERO_PAL, 5));
+  const lines = D === 2 ? KING_SAYS : SAYS, say = s.querySelector(".say"), rack = s.querySelector(".rack");
+  const fill = () => {
+    rack.innerHTML = "";
+    GAMES.filter(g => st.filter === "tous" || g.f.includes(st.filter)).forEach(g => {
+      const b = el("button", "cart", '<span style="--c:' + g.c + '"><i>' + g.n + '</i></span>' + (D === 3 ? '<em>NV ' + lvOf(g, g.k.findIndex(k => k[0] === "TOI")) + '</em>' : ""));
+      b.type = "button"; b.setAttribute("aria-label", g.n);
+      b.onclick = () => { st.game = g; sFight(); st.show("volet"); };
+      rack.append(b);
+    });
+  };
+  fill(); type(say, lines[st.filter]);
+  wire(s.querySelectorAll(".cmds")[0], v => { st.filter = v; fill(); type(say, lines[v]); });
+  wire(s.querySelector(".j .cmds"), () => { sOk(); st.show("save"); });
+}
+
+function volet(st){
+  const s = st.scr.querySelector(".volet"), g = st.game, D = st.dir;
+  const left = Math.max(0, g.p[1] - g.p[0]);
+  const top = D === 3
+    ? win("", '<div class="hp pix"><div><span class="dim">TOI</span><br>NV ' + lvOf(g, g.k.findIndex(k => k[0] === "TOI")) + '</div><div><span class="dim">RANG</span><br>' + (g.k.findIndex(k => k[0] === "TOI") + 1) + ' / ' + g.k.length + '</div><div><span class="dim">EXP</span><br>' + LV.exp + ' %</div></div>')
+    : win("", '<div class="hp pix">' + g.r.slice(0, 3).map(([n, v]) => '<div><span class="dim">' + n.split(" ")[0] + '</span><br>' + v + '</div>').join("") + '</div>');
+  s.innerHTML = top +
+    '<div class="arena" style="--c:' + g.c + '"><span class="nm">' + g.n + '</span>' +
+      (D === 3 ? '<div class="hpbar"><small>PV ' + left + ' / ' + g.p[1] + ' · ' + g.p[2] + ' A FAIRE</small>' + gauge(left / g.p[1] * 100, left / g.p[1] < .3 ? "var(--hurt)" : "") + '</div>' : "") + '</div>' +
+    '<div class="battle">' + win("TOI", cmds([["play", "JOUER"], ["rec", "RECORDS"], ["rank", D === 3 ? "GROUPE" : "CLASSEMENT"], ["fav", "FAVORI"], ["back", "FUIR"]], "v")) +
+    win("", '<p class="type d"></p>') + '</div>' + (D === 3 ? '<div class="pt"></div>' : "");
+  const mon = sprite(MONSTERS[g.m], mpal(g.c), 7), arena = s.querySelector(".arena"), d = s.querySelector(".d");
+  arena.append(mon);
+  const intro = D === 2 ? "Tu entres dans le donjon de " + g.n + ". " + g.d
+    : D === 3 ? "Un " + g.n + " apparaît ! Il lui reste " + left + " PV : encore " + left + " " + g.p[2].toLowerCase() + " à vaincre."
+    : "Un " + g.n + " sauvage apparaît ! " + g.d;
+  type(d, intro);
+  const party = () => win("LE GROUPE", '<div class="party">' + g.k.map(([n], i) => '<div class="' + (n === "TOI" ? "me" : "") + '"><span class="pix">' + n + '</span><span class="pix">NV ' + lvOf(g, i) + '</span>' + gauge(lvOf(g, i) / 35 * 100, "#ffe14a") + '</div>').join("") + '</div>');
+  wire(s.querySelector(".cmds.v"), v => {
+    const pt = s.querySelector(".pt"); if(pt) pt.innerHTML = "";
+    if(v === "back"){ sOk(); type(d, "Tu prends la fuite !", () => setTimeout(() => st.show("home"), 400)); return; }
+    if(v === "fav"){ const on = !g.f.includes("fav"); g.f = on ? [...g.f, "fav"] : g.f.filter(x => x !== "fav"); sOk(); type(d, on ? g.n + " rejoint tes favoris !" : g.n + " quitte tes favoris."); return; }
+    if(v === "rec"){ sOk(); type(d, "Tes records : " + g.r.map(([n, x]) => n.toLowerCase() + " " + x).join(", ") + "."); return; }
+    if(v === "rank"){
+      sOk();
+      if(D === 3){ pt.innerHTML = party(); type(d, "Ton groupe dans " + g.n + " : tu es " + (g.k.findIndex(k => k[0] === "TOI") + 1) + "e."); }
+      else type(d, "Classement : " + g.k.map(([n, x], i) => (i + 1) + ". " + n + " " + x).join(", ") + ".");
+      return;
+    }
+    // JOUER : le monstre encaisse, puis (ici) le jeu se lancerait
+    sHit(); arena.classList.remove("flash"); void arena.offsetWidth; arena.classList.add("flash");
+    mon.classList.remove("hit"); void mon.offsetWidth; mon.classList.add("hit");
+    if(D !== 3){ type(d, "Tu attaques " + g.n + " ! (Ici, le jeu se lance.)"); return; }
+    type(d, "Tu attaques ! (Ici, le jeu se lance… et à ton retour :)", () => setTimeout(() => {
+      sLevel(); type(d, "Victoire ! Tu gagnes 120 points d'expérience. Tu passes au niveau " + (LV.toi + 1) + " !");
+    }, 700));
+  });
+}
+
+function save(st){
+  const s = st.scr.querySelector(".save"), D = st.dir;
+  if(D === 3){
+    s.innerHTML = '<h3 class="logo">JOURNAUX<br>D\'AVENTURE</h3>' +
+      win("", cmds([["j1", "JOURNAL 1"], ["j2", "JOURNAL 2"], ["j3", "JOURNAL 3"]], "v") +
+        '<div class="pix dim" style="margin-top:6px">1 : CE NAVIGATEUR · NV ' + LV.toi + '<br>2 : VIDE<br>3 : VIDE</div>') +
+      win("LE GARDIEN", '<p class="type d"></p>') + '<div class="out"></div>';
+    const d = s.querySelector(".d"), out = s.querySelector(".out");
+    type(d, "Le journal 1 est celui de ce navigateur. Choisis-le pour le copier, ou un journal vide pour en importer un.");
+    wire(s.querySelector(".cmds.v"), v => {
+      if(v === "j1"){
+        sOk(); out.innerHTML = win("JOURNAL 1 · NV " + LV.toi, '<div class="stats"><div>JEUX AVEC RECORDS<b>14</b></div><div>QUETES EN COURS<b>2</b></div><div>POKEMON CAPTURES<b>97</b></div></div>' + cmds([["copy", "COPIER"], ["back", "RETOUR"]], "g2"));
+        wire(out.querySelector(".cmds"), w => {
+          if(w === "back"){ sOk(); st.show("home"); return; }
+          sSave(); out.querySelector(".win").insertAdjacentHTML("beforeend", '<div class="code">LUDO1-8F2K-Q7ZX-M3PA-91LC-…</div>');
+          type(d, "Ton aventure est copiée ! Dans l'autre navigateur, choisis un journal vide et colle ce code.");
+        });
+        type(d, "Journal 1 : ton aventure dans ce navigateur.");
+        return;
+      }
+      sOk(); out.innerHTML = win("JOURNAL " + v[1] + " · VIDE", '<textarea class="paste" id="paste3' + v + '" placeholder="COLLE ICI LE CODE LUDO1-"></textarea>' + cmds([["imp", "IMPORTER"], ["back", "RETOUR"]], "g2"));
+      wire(out.querySelector(".cmds"), w => { if(w === "back"){ sOk(); st.show("home"); return; } sSave(); type(d, "Rien n'est effacé : on garde le meilleur de chaque côté."); });
+      type(d, "Colle le code d'un autre navigateur dans ce journal.");
+    });
+    return;
+  }
+  s.innerHTML = (D === 2 ? '<div class="scene church"></div>' : '<h3 class="logo">JOURNAL<br>D\'AVENTURE</h3>') +
+    win(D === 2 ? "LE PRETRE" : "LE GARDIEN", '<p class="type d"></p>') +
+    win("RESUME", '<div class="stats"><div>JEUX AVEC RECORDS<b>14</b></div><div>PARTIES EN COURS<b>2</b></div><div>POKEMON CAPTURES<b>97</b></div></div>') +
+    win("", (D === 2 ? cmds([["copy", "OUI, CONSIGNER"], ["imp", "J'APPORTE UN CODE"], ["back", "NON, PARTIR"]], "v") : cmds([["copy", "COPIER MES EXPLOITS"], ["imp", "IMPORTER UN JOURNAL"], ["back", "RETOUR"]], "v")) + '<div class="out"></div>');
+  if(D === 2) s.querySelector(".church").append(sprite(PRIEST, PRIEST_PAL, 6));
+  const d = s.querySelector(".d"), out = s.querySelector(".out");
+  type(d, D === 2 ? "Bienvenue, mon enfant. Veux-tu que je consigne tes exploits, pour les retrouver dans un autre navigateur ?"
+                  : "Veux-tu inscrire tes exploits dans le journal, pour les emporter dans un autre navigateur ?");
+  wire(s.querySelectorAll(".cmds.v")[0], v => {
+    if(v === "back"){ sOk(); type(d, D === 2 ? "Que la chance soit avec toi !" : "À bientôt !", () => setTimeout(() => st.show("home"), 400)); return; }
+    if(v === "copy"){
+      sSave(); out.innerHTML = '<div class="code">LUDO1-8F2K-Q7ZX-M3PA-91LC-…</div>';
+      type(d, D === 2 ? "C'est fait. Montre ce code à l'église de l'autre navigateur, et tes exploits t'y attendront." : "Ton journal a bien été copié. Colle ce code dans l'autre navigateur, puis choisis IMPORTER.");
+      return;
+    }
+    sOk(); out.innerHTML = '<textarea class="paste" id="paste' + D + '" placeholder="COLLE ICI LE CODE LUDO1-"></textarea>';
+    type(d, "Colle le code de ton journal. Rien n'est effacé : on garde le meilleur de chaque côté.");
+  });
+}
+
+/* ---------- mise en place ---------- */
+const P = DIRS.map(phone);
+P.forEach(p => document.getElementById("phones").append(p.col));
+P.forEach(p => p.st.show("home"));
+document.querySelectorAll("[data-all]").forEach(b => b.onclick = () => {
+  document.querySelectorAll("[data-all]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  sCur(); P.forEach(p => p.st.show(b.dataset.all));
+});
+document.getElementById("snd").onclick = e => {
+  sound = !sound; e.currentTarget.setAttribute("aria-pressed", sound); e.currentTarget.textContent = "BIPS : " + (sound ? "OUI" : "NON"); sCur();
+};
+</script>
