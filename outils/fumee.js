@@ -95,8 +95,10 @@ const shots = process.argv[2];
         await turn({ w: 'projecteur', c: 4, r: 2, h: false });
         A.YARD.fleet = ['tender', 'battle', 'sub', 'torp']; A.newGame(); A.startBattle();
         const b = S.player, s = b.ships[0]; b.shots[s.r][s.c] = 2; s.hits = 1;
-        await turn({ w: 'reparation', c: s.c, r: s.r, h: true });
+        // vérifiée dès la fin de l'action, avant la riposte (l'ennemi peut retoucher le navire réparé)
+        S.busy = false; S.turn = 'player'; await A.playerAct({ w: 'reparation', c: s.c, r: s.r, h: true });
         if (s.hits !== 0 || b.shots[s.r][s.c]) return 'la réparation ne répare pas';
+        for (let k = 0; k < 80 && (S.turn !== 'player' || S.busy) && S.phase === 'play'; k++) await wait(100);
         const all = ['carrier', 'cruiser', 'tender'].flatMap(a => ['battle', 'destroyer'].flatMap(m => [[a, m, 'sub', 'torp'], [a, 'sub', m, 'coast']]));
         for (const f of all) for (const d of ['easy', 'normal', 'hard']) { const g = await A.simulate(f, all[(all.indexOf(f) + 3) % all.length], d); if (!g.winner) return 'partie simulée sans vainqueur : ' + f; }
         return 'ok';

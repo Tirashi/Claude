@@ -406,17 +406,6 @@ function drawFx(){
 }
 /* ---------- l'astronaute et le drapeau, après un alunissage réussi ---------- */
 function drawAstronaut(a){
-  const t = a.t; if (t < .9) return;
-  const d = a.side, walk = clamp((t - .9) / 1, 0, 1), x = Math.round(a.x + d * (9 + walk * 9)), y = a.gy - 1, step = walk < 1 ? (Math.floor(t * 6) % 2) : 0;
-  if (t > 2.1){ const fx = x + d * 4, wave = Math.sin(t * 5) > 0 ? 1 : 0;
-    R_(fx, y - 11, 1, 11, '#d8dce4');
-    for (let k = 0; k < 3; k++) R_(fx + (d > 0 ? 1 + k * 2 : -2 - k * 2), y - 11 + (k === 1 ? wave : 0), 2, 4, ['#2a5ad8', '#ffffff', '#e8264d'][d > 0 ? k : 2 - k]); }
-  R_(x - 1, y - 7, 3, 2, '#ffffff'); R_(x + (d > 0 ? 1 : -1), y - 6, 1, 1, '#ffd23f');
-  R_(x - 1, y - 5, 3, 3, '#e8ecf2'); R_(x - d * 2, y - 5, 1, 2, '#8a909c');
-  R_(x - 1, y - 2, 1, 2 - step, '#c8ccd4'); R_(x + 1, y - 2, 1, 1 + step, '#c8ccd4');
-}
-
-function drawAstronaut(a){
   const t = T - a.t0; if (t < .9) return;
   const d = a.side, walk = clamp((t - .9) / 1, 0, 1), x = Math.round(a.x + d * (9 + walk * 9)), y = a.gy - 1, step = walk < 1 ? (Math.floor(t * 6) % 2) : 0;
   if (t > 2.1){ const fx = x + d * 4, wave = Math.sin(t * 5) > 0 ? 1 : 0;

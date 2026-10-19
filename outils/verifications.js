@@ -7,7 +7,9 @@
    5. Nebula : simulateur de combats et de parties (reproductibilité, migrate()) ;
    6. Nebula : types de regles.js (// @ts-check + JSDoc) vérifiés par tsc, sans rien compiler ;
    7. Lune-Rover : chaque niveau est gagné par sa solution de référence ;
-   8. Odyssée : chaque plateau est traversé par le pilote automatique, sous le temps cible.
+   8. Odyssée : chaque plateau est traversé par le pilote automatique, sous le temps cible ;
+   9. classements : chaque record envoyé par un jeu (LudoScores.submit) a son tableau dans le volet de
+      l'accueil (RANKS), est repris en rejoignant (registerExisting) et son jeu sert à vérifier les pseudos.
    Code de sortie 1 si quelque chose ne va pas. */
 const fs = require('fs'), path = require('path'), vm = require('vm'), { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
@@ -81,6 +83,25 @@ catch (e) { bad('Lune-Rover : niveaux\n' + (e.stdout || '') + (e.stderr || ''));
 // 8. Odyssée : chaque plateau est traversé par le pilote automatique
 try { execFileSync(process.execPath, [path.join(__dirname, 'odyssee.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Odyssée : chaque plateau est faisable, sous le temps cible'); }
 catch (e) { bad('Odyssée : plateaux\n' + (e.stdout || '') + (e.stderr || '')); }
+
+// 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
+{
+  const pre = new Map(), idx = read('index.html'), ls = read('ludo-scores.js');
+  for (const f of files.filter(f => /\.(html|js)$/.test(f) && !/^(maquettes|outils|lib)\//.test(f) && f !== 'ludo-scores.js'))
+    for (const m of read(f).matchAll(/\.submit\(\s*(['"])([a-z]+)\1\s*,\s*(?:(['"`])([A-Za-z]+)|\w+)/g))
+      if (m[4]) pre.set(m[2] + ' ' + m[4], f);   // tableau calculé (Calculator : serie/chrono) : non vérifié
+  const at = idx.indexOf('const RANKS = {'), ranks = idx.slice(at, idx.indexOf('\n};', at));
+  const shown = new Set([...ranks.matchAll(/game: "([a-z]+)", board: (?:\(\) => ["`]([A-Za-z]+)|daily)/g)].map(m => m[1] + ' ' + (m[2] || 'daily')));
+  const resent = new Set([...ls.matchAll(/\b(?:hi|lo)\("([a-z]+)", "([A-Za-z]+)/g)].map(m => m[1] + ' ' + m[2]));
+  const pseudo = new Set([...ls.matchAll(/\["([a-z]+)", "[^"]+"\]/g)].map(m => m[1]));
+  if (!at || !pre.size || !resent.size) bad('classements : RANKS, submit ou registerExisting introuvables (format changé ?)');
+  for (const [k, f] of pre) {
+    if (!shown.has(k)) bad(`classements : ${f} envoie « ${k.replace(' ', ' / ')} » mais le volet de l'accueil (RANKS) ne l'affiche pas`);
+    if (!resent.has(k)) bad(`classements : « ${k.replace(' ', ' / ')} » (${f}) n'est pas repris en rejoignant (registerExisting de ludo-scores.js)`);
+    if (!pseudo.has(k.split(' ')[0])) bad(`classements : le jeu ${k.split(' ')[0]} manque à PSEUDO_BOARDS (ludo-scores.js)`);
+  }
+  ok(`classements : ${pre.size} tableaux envoyés, tous affichés et repris en rejoignant`);
+}
 
 console.log(fail ? `\n${fail} problème(s)` : '\nTout est bon.');
 process.exit(fail ? 1 : 0);

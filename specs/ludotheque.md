@@ -24,7 +24,7 @@ Détails sortis de `CLAUDE.md` le 16/10 pour l'alléger (il est relu à chaque m
 5. **Classement dans le volet** `index.html` : une entrée dans `RANKS` (vues, réglages `ctl`, format `fmt` ; `T` = temps en ms) et `rank` dans `GAMES`. Le bouton CLASSEMENT du jeu peut viser `../index.html#<jeu>` (ou `../classements/index.html#<jeu>`, qui redirige).
 6. **`sw.js`** : ajouter le fichier à `FILES` et changer `VERSION`.
 7. **Docs** : `README.md`, `CLAUDE.md` (liste des jeux, lien d'artefact), ce mémo (tableau détaillé des jeux), `IDEES.md` (✅).
-8. **Tests** (`outils/`), commit, push sur la branche, **artefact** publié et noté ci-dessous.
+8. **Tests** (`outils/` ; jeu à défi du jour : ajouter sa grille du jour à `outils/logique.js`), commit, push sur la branche, **artefact** publié et noté ci-dessous.
 
 ## Leçons apprises (toutes)
 - **Défis du jour** (règle de l'utilisateur, 15/10) : une seule tentative classée par jour, contre la triche en rejouant une grille dont on connaît la solution. Puzzles (Queens, Pont stellaire, Sudoku) : la tentative du jour est sauvegardée à part avec son chrono (`queens16.dailyRun`, `pontstellaire.dailyRun`, `sudoku.dailyRun`) et reprise au même temps ; une fois réussie, le jour se rejoue hors classement. Missions (Alunissage `alunissage.dailyTry`, Nebula `nebula.dailyTry`) : la tentative compte dès le départ. Lignée : un arbre déjà reconstitué se rejoue hors classement. À appliquer à tout nouveau défi du jour.

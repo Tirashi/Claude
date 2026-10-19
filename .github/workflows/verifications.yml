@@ -1,12 +1,15 @@
 # Vérifications à chaque push (branches main, claude/* et ccr-*) : rien n'est publié ni modifié,
 # aucun secret n'est utilisé. Un push cassé apparaît en rouge dans l'onglet « Actions »
 # avant de mettre main à jour. Mêmes commandes en local (voir outils/README.md).
+# Chaque lundi, la logique des jeux est aussi vérifiée sur les grilles du jour d'une année entière.
 name: Vérifications
 on:
   push:
     branches: [main, "claude/**", "ccr-*"]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * 1"
 jobs:
   rapides:
     name: Syntaxe, service worker, sécurité, icônes, simulateur et types Nebula
@@ -19,7 +22,7 @@ jobs:
       - run: npm install -g typescript@5.8.3
       - run: node outils/verifications.js
   navigateur:
-    name: Chaque jeu s'ouvre sans erreur (Chromium)
+    name: Chaque jeu s'ouvre sans erreur, logique des jeux (Chromium)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,11 +30,12 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-save --no-package-lock playwright@1.56.1 && npx playwright install --with-deps chromium
-      - run: |
-          python3 -m http.server 8765 >/dev/null 2>&1 &
-          sleep 1
-          mkdir -p captures
-          node outils/fumee.js captures
+      - run: python3 -m http.server 8765 >/dev/null 2>&1 & sleep 1
+      - name: Chaque jeu s'ouvre (fumee.js)
+        run: mkdir -p captures && node outils/fumee.js captures
+      - name: Logique des jeux (logique.js)
+        if: success() || failure()
+        run: node outils/logique.js ${{ github.event_name == 'schedule' && '365' || '60' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

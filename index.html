@@ -1511,6 +1511,7 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localh
     if (ios && !installed){ installBox.hidden = false; iosHelp.hidden = false; }
   }).catch(() => {});
 }
+window.Accueil = { collectSaves, decodeSaves, mergeSaves };   // pour les tests (outils/logique.js)
 })();
 </script>
 </body>
