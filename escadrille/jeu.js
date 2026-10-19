@@ -1,11 +1,9 @@
 'use strict';
 /* =====================================================================
    ESCADRILLE ! : la bataille aérienne où chaque avion a un pouvoir (petite sœur d'Amiral !).
-   Ciel de 9×9 (cases de 23 px), quatre avions en forme d'avion :
-     bombardier (8)  : BOMBES, cinq bombes en croix
-     avion radar (5) : RADAR, révèle une zone de 3×3 sans tirer
-     chasseur (4)    : MISSILE, file sur une ligne ou une colonne jusqu'au premier avion
-     hélicoptère (2) : ESQUIVE, s'échappe de 2 cases au plus (s'il n'est pas touché)
+   Ciel de 9×9 (cases de 23 px), quatre avions en forme d'avion choisis au HANGAR (un par place : 8, 5, 4 et 2 cases)
+   parmi les 10 du catalogue PLANES, chacun avec son pouvoir (POWERS) : bombes, roquettes, réparation ; radar, détection,
+   leurres ; missile, ballons de barrage ; esquive, caméra.
    À chaque tour : un tir OU un pouvoir prêt. Un avion abattu (toutes ses cases touchées) perd son pouvoir.
    Record : la victoire en le moins de tours, par niveau de l'ordinateur (RECRUE, PILOTE, AS).
    Base logique de 272×480 ; interface au pixel comme Amiral !, avions en relief (moteur de Nebula) dessinés lissés.
@@ -13,30 +11,53 @@
    ===================================================================== */
 const C32 = window.Chiens32, OUT = C32.OUT, RAMP = C32.RAMP;
 const { NV, STYLES, AVIONS, SIZE, rotBuilder } = window.EscAvions;
-const LW = 272, LH = 480, N = 9, CS = 23, BS = CS * N, BX = 40, BY = 58, TAU = Math.PI * 2;
-const FONT = '"Press Start 2P", monospace';
+const LW = 272, MAXH = 620, N = 9, CS = 23, BS = CS * N, BX = 40, BY = 58, TAU = Math.PI * 2;
+let LH = 480, OY = 0, MENU_OY = 0;          // hauteur logique (suit l'écran) ; décalage des écrans de menus centrés (et celui de la dernière image, pour les touchers)
+// polices (comme Amiral !) : Press Start 2P pour les logos, Rajdhani 700 pour le reste
+const FONT_TEXT = z => `700 ${Math.round(z * 1.6)}px Rajdhani, sans-serif`, FONT_LOGO = z => `${z}px "Press Start 2P", monospace`;
+const FONT_TINY = '700 10px Rajdhani, sans-serif';
 const COLS = 'ABCDEFGHI';
-const FLEET = [
-  { id: 'bomb',  name: 'Bombardier',  le: 'Le bombardier',  power: 'bombes',  w: 3, h: 4, cells: [[1,0],[0,1],[1,1],[2,1],[1,2],[0,3],[1,3],[2,3]] },
-  { id: 'radar', name: 'Avion radar', le: "L'avion radar",  power: 'radar',   w: 3, h: 3, cells: [[1,0],[0,1],[1,1],[2,1],[1,2]] },
-  { id: 'jet',   name: 'Chasseur',    le: 'Le chasseur',    power: 'missile', w: 3, h: 2, cells: [[1,0],[0,1],[1,1],[2,1]] },
-  { id: 'heli',  name: 'Hélicoptère', le: "L'hélicoptère",  power: 'esquive', w: 1, h: 2, cells: [[0,0],[0,1]] },
-];
-const POWERS = {
-  tir:     { name: 'TIR',     ship: -1, cd: 0 },
-  radar:   { name: 'RADAR',   ship: 1,  cd: 3 },
-  bombes:  { name: 'BOMBES',  ship: 0,  cd: 4 },
-  missile: { name: 'MISSILE', ship: 2,  cd: 3 },
-  esquive: { name: 'ESQUIVE', ship: 3,  cd: 4 },
+// le catalogue : 10 avions, 4 places (un gros de 8 cases, un moyen de 5, un moyen de 4, un petit de 2) ; formes nez en haut
+const PLANES = {
+  bomb:       { name: 'Bombardier',            le: 'Le bombardier',            slot: 0, power: 'bombes',     shape: ['.X.', 'XXX', '.X.', 'XXX'], base: true },
+  attaque:    { name: "Bombardier d'attaque",  le: "Le bombardier d'attaque",  slot: 0, power: 'roquettes',  shape: ['.X.', 'XXX', 'XXX', '.X.'], cond: 'GAGNER EN MOINS DE 25 TOURS', need: pm => pm.rapide },
+  ravito:     { name: 'Ravitailleur',          le: 'Le ravitailleur',          slot: 0, power: 'reparation', shape: ['..X..', 'XXXXX', '..X..', '..X..'], cond: '6 VICTOIRES', need: pm => pm.victoires >= 6 },
+  radar:      { name: 'Avion radar',           le: "L'avion radar",            slot: 1, power: 'radar',      shape: ['.X.', 'XXX', '.X.'], base: true },
+  patrouille: { name: 'Avion de patrouille',   le: "L'avion de patrouille",    slot: 1, power: 'detection',  shape: ['XXX', '.X.', '.X.'], cond: '4 VICTOIRES', need: pm => pm.victoires >= 4 },
+  brouilleur: { name: 'Brouilleur',            le: 'Le brouilleur',            slot: 1, power: 'leurres',    shape: ['XXX', 'X.X'], cond: '2 VICTOIRES EN AS', need: pm => pm.hard >= 2 },
+  jet:        { name: 'Chasseur',              le: 'Le chasseur',              slot: 2, power: 'missile',    shape: ['.X.', 'XXX'], base: true },
+  ballons:    { name: 'Ballons de barrage',    le: 'Les ballons de barrage',   slot: 2, power: 'flak',       shape: ['XX', 'XX'], pl: true, cond: 'GAGNER SANS PERDRE D\'AVION', need: pm => pm.intacte },
+  heli:       { name: 'Hélicoptère',           le: "L'hélicoptère",            slot: 3, power: 'esquive',    shape: ['X', 'X'], base: true },
+  drone:      { name: 'Drone',                 le: 'Le drone',                 slot: 3, power: 'camera',     shape: ['X', 'X'], cond: '2 VICTOIRES', need: pm => pm.victoires >= 2 },
 };
-const BAR = ['tir', 'radar', 'bombes', 'missile', 'esquive'];
+for (const [id, d] of Object.entries(PLANES)) {
+  d.id = id; d.w = d.shape[0].length; d.h = d.shape.length; d.cells = [];
+  d.shape.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'X') d.cells.push([x, y]); }));
+}
+const CATALOG = Object.values(PLANES);
+const SLOTS = [['GROS', 8], ['MOYEN', 5], ['MOYEN', 4], ['PETIT', 2]];
+const CLASSIC = ['bomb', 'radar', 'jet', 'heli'];                // l'escadrille de départ
+// own : vise son propre ciel ; dir : en ligne ou en colonne ; multi : plusieurs cases à choisir, puis FEU ! ; instant : sans cible, FEU ! tout de suite
+const POWERS = {
+  tir:        { name: 'TIR',        cd: 0, desc: 'Une bombe sur un nuage' },
+  radar:      { name: 'RADAR',      cd: 3, desc: 'Révèle une zone 3x3' },
+  bombes:     { name: 'BOMBES',     cd: 4, desc: 'Cinq bombes en croix' },
+  missile:    { name: 'MISSILE',    cd: 3, desc: "File jusqu'au 1er avion", dir: true },
+  esquive:    { name: 'ESQUIVE',    cd: 4, desc: "L'hélico s'échappe", own: true },
+  roquettes:  { name: 'ROQUETTES',  cd: 4, desc: '4 tirs, 4 cases au choix', multi: 4 },
+  detection:  { name: 'DETECTION',  cd: 3, desc: 'Compte ligne et colonne' },
+  camera:     { name: 'CAMERA',     cd: 2, desc: 'Révèle une ligne de 4 cases', dir: true },
+  reparation: { name: 'REPARATION', cd: 6, desc: 'Remet un avion à neuf', own: true },
+  flak:       { name: 'FLAK',       cd: 5, desc: '2 ballons : la DCA riposte', own: true, multi: 2 },
+  leurres:    { name: 'LEURRES',    cd: 4, desc: 'Détourne un coup ennemi', own: true, instant: true },
+};
 const DIFFS = [['easy', 'RECRUE'], ['normal', 'PILOTE'], ['hard', 'AS']];
-const HELI = 3;
 const $ = s => document.querySelector(s);
 const rand = n => Math.floor(Math.random() * n);
 const pick = a => a[rand(a.length)];
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const cellName = (c, r) => COLS[c] + (r + 1);
+const upper = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();   // les petites polices n'ont pas de majuscules accentuées
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const ease = u => u < 0 ? 0 : u > 1 ? 1 : u * u * (3 - 2 * u);
 const now = () => performance.now();
@@ -107,6 +128,12 @@ const SFX = {
   missile() { noise({ d: 0.9, v: 0.3, freq: 3000, f2: 500, type: 'bandpass', q: 0.9 }); tone({ f: 220, f2: 90, d: 0.8, v: 0.07, type: 'sawtooth' }); },
   esquive() { for (let i = 0; i < 12; i++) noise({ d: 0.05, v: 0.22, freq: 380, type: 'lowpass', t: i * 0.075 }); tone({ f: 300, f2: 700, d: 0.9, v: 0.04, type: 'triangle' }); },
   ready()   { seq([880, 1175], 0.06, { v: 0.06 }); },
+  rocket()  { for (let i = 0; i < 3; i++) { noise({ d: 0.35, v: 0.2, freq: 2600, f2: 600, type: 'bandpass', q: 1, t: i * 0.22 }); tone({ f: 500, f2: 160, d: 0.3, v: 0.04, type: 'sawtooth', t: i * 0.22 }); } },
+  detect()  { [0, .3, .6, .9].forEach(t => tone({ f: 620, f2: 600, d: 0.22, v: 0.06, type: 'sine', t })); },
+  camera()  { tone({ f: 2400, d: 0.03, v: 0.05 }); tone({ f: 1800, d: 0.04, v: 0.05, t: 0.05 }); noise({ d: 0.9, v: 0.04, freq: 3500, type: 'highpass', t: 0.1 }); },
+  repair()  { for (let i = 0; i < 5; i++) tone({ f: 900 + (i % 2) * 300, d: 0.04, v: 0.06, t: i * 0.12 }); seq([523, 659, 784], 0.07, { v: 0.06, t: 0.65 }); },
+  balloon() { tone({ f: 200, f2: 520, d: 0.6, v: 0.06, type: 'triangle' }); noise({ d: 0.6, v: 0.06, freq: 700, type: 'lowpass' }); },
+  jam()     { for (let i = 0; i < 8; i++) tone({ f: 300 + Math.random() * 1500, d: 0.06, v: 0.04, type: 'square', t: i * 0.07 }); noise({ d: 0.8, v: 0.06, freq: 1800, type: 'bandpass', q: 2 }); },
   chute()   { noise({ d: 0.3, v: 0.12, freq: 2200, f2: 900, type: 'bandpass', q: 0.8 }); tone({ f: 520, f2: 820, d: 0.18, v: 0.05, type: 'sine', t: 0.05 }); },
   unlock()  { seq([523, 659, 784, 1047, 0, 784, 1047, 1319], 0.09, { v: 0.08, type: 'triangle' }); },
   win()     { seq([523, 523, 523, 659, 0, 587, 659, 784, 0, 1047], 0.11, { v: 0.1 }); seq([131, 0, 196, 0, 165, 0, 196, 0, 262], 0.12, { type: 'triangle', v: 0.2 }); },
@@ -155,13 +182,13 @@ function tint(img, col) { const [c, g] = mk(img.width, img.height); g.drawImage(
 function over(img, col) { const [c, g] = mk(img.width, img.height); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-atop'; R(g, 0, 0, c.width, c.height, col); return c; }
 function rot(img) { const [c, g] = mk(img.height, img.width); g.translate(img.height, 0); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0); return c; }
 function text(g, s, x, y, col, align = 'left', size = 8, shadow = '#060a18') {
-  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = 'top';
+  g.font = FONT_TEXT(size); g.textAlign = align; g.textBaseline = 'top'; y -= 2;
   if (shadow) { g.fillStyle = shadow; g.fillText(s, x + 1, y + 1); }
   g.fillStyle = col; g.fillText(s, x, y);
 }
 const GOLD = ['#fff6c2', '#ffd23f', '#e0782a'];
 function logo(g, s, x, y, size) {
-  g.font = `${size}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.font = FONT_LOGO(size); g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
   g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
   g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
   const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, GOLD[0]); gr.addColorStop(.5, GOLD[1]); gr.addColorStop(1, GOLD[2]);
@@ -177,27 +204,13 @@ function plate(g, x, y, w, h, tone_) {
   R(g, x + 2, y + 1, w - 4, 1, hl); R(g, x + 1, y + 2, 1, h - 4, hl);
   R(g, x + 2, y + h - 2, w - 4, 1, 'rgba(0,0,0,.45)'); R(g, x + w - 2, y + 2, 1, h - 4, 'rgba(0,0,0,.45)');
 }
-const TINY = {
-  A:'010101111101101',B:'110101110101110',C:'011100100100011',D:'110101101101110',E:'111100110100111',F:'111100110100100',
-  G:'011100101101011',H:'101101111101101',I:'111010010010111',J:'001001001101010',K:'101101110101101',L:'100100100100111',
-  M:'101111111101101',N:'110101101101101',O:'010101101101010',P:'110101110100100',Q:'010101101110011',R:'110101110101101',
-  S:'011100010001110',T:'111010010010010',U:'101101101101111',V:'101101101101010',W:'101101111111101',X:'101101010101101',
-  Y:'101101010010010',Z:'111001010100111',0:'010101101101010',1:'010110010010111',2:'110001010100111',3:'110001010001110',
-  4:'101101111001001',5:'111100110001110',6:'011100110101010',7:'111001010010010',8:'010101010101010',9:'010101011001110',
-  '.':'000000000000010','!':'010010010000010','-':'000000111000000',':':'000010000010000','/':'001001010100100','+':'000010111010000',
-  "'":'010010000000000','?':'110001010000010','>':'100010001010100','<':'001010100010001',
-};
-function tiny(g, s, x, y, col, align) {
+// petites étiquettes (Rajdhani 700 10 px, en majuscules) ; un texte trop large pour maxW se resserre
+function tiny(g, s, x, y, col, align, maxW) {
   s = String(s).toUpperCase();
-  if (align === 'center') x -= Math.floor((s.length * 4 - 1) / 2); else if (align === 'right') x -= s.length * 4 - 1;
-  for (const pass of [0, 1]) {
-    let cx = x;
-    for (const ch of s) {
-      const b = TINY[ch];
-      if (b) for (let k = 0; k < 15; k++) if (b[k] === '1') R(g, cx + k % 3 + (pass ? 0 : 1), y + (k / 3 | 0) + (pass ? 0 : 1), 1, 1, pass ? col : '#060a18');
-      cx += 4;
-    }
-  }
+  g.font = FONT_TINY;
+  if (maxW && g.measureText(s).width > maxW) g.font = '700 9px Rajdhani, sans-serif';
+  g.textAlign = align || 'left'; g.textBaseline = 'top';
+  g.fillStyle = '#060a18'; g.fillText(s, x + 1, y - 2); g.fillStyle = col; g.fillText(s, x, y - 3);
 }
 const P = {
   steel: ['#e4e8ee', '#a9b1bc', '#727b8a', '#474e5c'], gun: ['#c8d0dc', '#8a94a4', '#5e6878', '#3a4150'],
@@ -261,14 +274,14 @@ function buildLueurs() {
     gr.addColorStop(0, a); gr.addColorStop(.35, b); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); LUEUR.push(c);
   }
 }
-const PLANES = {};
+const ART = {}, SEEDS = { bomb: 3, radar: 7, jet: 11, heli: 13, attaque: 4, ravito: 6, patrouille: 8, brouilleur: 10, ballons: 12, drone: 14 };
 function plane(st, side, id, d) {
-  const key = st + side + id + d; if (PLANES[key]) return PLANES[key];
+  const key = st + side + id + d; if (ART[key]) return ART[key];
   const m = STYLES[st][side], [w, h] = SIZE[id], R = rotBuilder(w, h, d);
-  const an = AVIONS[st][id](R, m, w / 2);
+  const an = (AVIONS[st][id] || AVIONS.a[id])(R, m, w / 2);
   if (m.pirate) { R.paint(w * .2, h * .52, w * .14, h * .12, 'scrap'); R.paint(w * .62, h * .28, w * .1, h * .1, 'hazard'); R.greebles(8, 99, [0, 0, w, h]); }
-  const s = NV.render(R.B, { seed: { bomb: 3, radar: 7, jet: 11, heli: 13 }[id] + (side === 'foe' ? 20 : 0) });
-  return PLANES[key] = { img: s.img, w: s.w, h: s.h, engines: s.engines, lueur: LUEUR[m.lueur],
+  const s = NV.render(R.B, { seed: SEEDS[id] + (side === 'foe' ? 20 : 0) });
+  return ART[key] = { img: s.img, w: s.w, h: s.h, engines: s.engines, lueur: LUEUR[m.lueur],
     sh: tint(s.img, 'rgba(4,16,44,.36)'), dead: over(s.img, 'rgba(20,16,24,.6)'), spot: tint(s.img, '#ffd23f'), sil: tint(s.img, '#0c1222'),
     anims: an.map(([k, x, y, ...r]) => [k, ...R.T([x, y]), ...r]) };
 }
@@ -368,6 +381,19 @@ function buildIcons() {
   { const g = I.missile.getContext('2d'); R(g, 0, 9, 2, 3, '#ff9a3c'); R(g, 1, 10, 1, 1, '#fff2a8'); }
   I.esquive = spr(20, 20, [[C32.cap(10, 9, 10, 18, 1.4, 1), P.navy], [C32.ell(10, 7, 4.4, 5), P.navy], [C32.ell(10, 4.5, 2.6, 2), P.blue, { on: [2] }]]);
   { const g = I.esquive.getContext('2d'); for (let k = -6; k <= 6; k++) { R(g, 10 + k, 7, 1, 1, '#14161d'); } R(g, 15, 13, 3, 3, OUT); R(g, 16, 12, 1, 5, '#8ee05a'); R(g, 14, 14, 5, 1, '#8ee05a'); }
+  // les pouvoirs des nouveaux avions, dessinés au pixel (contour, couleur, reflet)
+  const icon = f => { const [c, g] = mk(20, 20); f(g); return c; };
+  I.roquettes = icon(g => { for (const [x, y] of [[2, 11], [7, 6], [12, 1]]) { R(g, x, y + 3, 7, 4, OUT); R(g, x + 1, y + 4, 5, 2, '#c8d0dc'); R(g, x + 5, y + 4, 2, 2, '#e04a3c'); R(g, x - 1, y + 4, 2, 2, '#ff9a3c'); } });
+  I.detection = icon(g => { R(g, 1, 12, 18, 6, OUT); for (let k = 0; k < 4; k++) R(g, 2 + k * 4, 13, 3, 4, k === 2 ? '#ffd23f' : '#5a7aa8');
+    for (const r of [3, 6, 9]) for (let a = -6; a <= 6; a++) { const x = 10 + Math.round(Math.sin(a / 6) * r), y = 11 - Math.round(Math.cos(a / 6) * r); R(g, x, y, 1, 1, '#8ff0ff'); } });
+  I.camera = icon(g => { R(g, 2, 6, 16, 11, OUT); R(g, 3, 7, 14, 9, '#5e6878'); R(g, 3, 7, 14, 1, '#9aa3b1'); R(g, 6, 4, 6, 3, OUT); R(g, 7, 5, 4, 2, '#5e6878');
+    R(g, 7, 8, 7, 7, OUT); R(g, 8, 9, 5, 5, '#2a4a7a'); R(g, 9, 10, 2, 2, '#8ff0ff'); R(g, 14, 8, 2, 2, '#e04a3c'); });
+  I.reparation = icon(g => { for (let k = 0; k < 10; k++) { R(g, 4 + k, 14 - k, 3, 3, OUT); } for (let k = 0; k < 10; k++) R(g, 5 + k, 14 - k, 1, 1, '#d8ffb0');
+    R(g, 12, 2, 6, 6, OUT); R(g, 13, 3, 4, 4, '#8ee05a'); R(g, 15, 2, 3, 3, OUT); R(g, 2, 13, 5, 5, OUT); R(g, 3, 14, 3, 3, '#8ee05a'); });
+  I.flak = icon(g => { g.fillStyle = OUT; g.beginPath(); g.ellipse(10, 8, 6, 7.5, 0, 0, TAU); g.fill(); g.fillStyle = '#b8c0cc'; g.beginPath(); g.ellipse(10, 8, 5, 6.5, 0, 0, TAU); g.fill();
+    R(g, 7, 4, 2, 4, '#eef2f8'); R(g, 6, 14, 8, 2, OUT); R(g, 7, 14, 6, 1, '#d6a050'); R(g, 9, 16, 2, 4, '#d6a050'); for (const [x, y] of [[2, 2], [17, 4], [16, 15]]) { R(g, x, y, 2, 2, '#ff9a3c'); } });
+  I.leurres = icon(g => { for (const [x, y, c] of [[4, 4, '#fff6c2'], [13, 3, '#e8d8ff'], [9, 10, '#ffd23f'], [3, 14, '#e8d8ff'], [15, 13, '#fff6c2']]) {
+    R(g, x - 1, y - 1, 5, 5, OUT); R(g, x, y + 1, 3, 1, c); R(g, x + 1, y, 1, 3, c); R(g, x + 1, y + 1, 1, 1, '#ffffff'); } });
   // le pilote, à la place de l'amiral : casque de cuir, lunettes et écharpe
   const A = spr(36, 40, [
     [C32.ell(18, 38, 15, 8), P.brown], [C32.cap(10, 31, 26, 31, 3), P.white], [C32.cap(25, 31, 31, 38, 2, 1.4), P.white],
@@ -409,26 +435,34 @@ function buildFoePilot() { // le pilote pirate : casque sombre, lunettes rouges,
 /* =========================================================
    ÉTAT DU JEU
    ========================================================= */
-function makeBoard() {
+function makeBoard(fleet = CLASSIC) {
+  const planes = fleet.map(id => ({ def: PLANES[id], placed: false, c: 0, r: 0, d: 0, hits: 0, down: false }));
   return {
-    planes: FLEET.map(def => ({ def, placed: false, c: 0, r: 0, d: 0, hits: 0, down: false })),
+    planes,
     grid: Array.from({ length: N }, () => Array(N).fill(-1)),
     shots: Array.from({ length: N }, () => Array(N).fill(0)),  // 0 inconnu, 1 dans le vide, 2 touché
     intel: Array.from({ length: N }, () => Array(N).fill(0)),  // ce que l'adversaire a repéré : 1 vide, 2 avion
-    cd: { radar: 0, bombes: 0, missile: 0, esquive: 0 },       // tours d'attente des pouvoirs de ce camp
+    cd: Object.fromEntries(planes.map(p => [p.def.power, 0])), // tours d'attente des pouvoirs de ce camp
+    lines: [],                                                 // lignes comptées par la détection adverse : { h, i, n } (n : cases d'avion pas encore touchées)
+    flak: [],                                                  // ballons de barrage posés dans son ciel : [c, r]
+    decoy: 0,                                                  // leurres en l'air : le prochain coup adverse part dessus
   };
 }
 const S = {
   phase: 'title', diff: 'normal', view: 'enemy', prevView: null, viewT0: 0,
-  weapon: 'tir', missH: true, aim: null, armed: null,
+  weapon: 'tir', aim: null, armed: null, marks: [], fast: false, tab: 'familles', slot: 0,
   player: makeBoard(), enemy: makeBoard(), sel: 0, busy: false, turn: 'player',
   stats: { turns: 0, shots: 0, hits: 0, aiShots: 0, aiHits: 0 },
   fx: [], parts: [], msg: '', msgT0: 0, quitArm: 0, endInfo: null, rankText: '',
 };
 const boardOf = side => side === 'player' ? S.player : S.enemy;   // l'escadrille de ce camp
 const foeOf = side => side === 'player' ? S.enemy : S.player;     // l'escadrille visée par ce camp
+const other = side => side === 'player' ? 'ai' : 'player';
 const keyOf = b => b === S.player ? 'player' : 'enemy';
 const inb = ([x, y]) => x >= 0 && y >= 0 && x < N && y < N;
+const planeIdx = (b, p) => b.planes.findIndex(q => q.def.power === p);   // l'avion qui porte ce pouvoir (-1 : aucun)
+const planeOf = (b, p) => b.planes[planeIdx(b, p)] || null;
+const powersOf = b => b.planes.map(p => p.def.power);
 
 // la forme d'un avion tourné d quarts de tour (sens horaire), nez en haut pour d = 0
 function shapeOf(def, d) {
@@ -436,9 +470,15 @@ function shapeOf(def, d) {
   for (let k = 0; k < d; k++) { cells = cells.map(([x, y]) => [h - 1 - y, x]); [w, h] = [h, w]; }
   return { cells, w, h };
 }
+// les sens vraiment différents d'une forme (le carré n'en a qu'un, l'hélicoptère deux) : pour les probabilités de l'IA
+const ORIENTS = {};
+for (const d of CATALOG) {
+  const seen = new Set(); ORIENTS[d.id] = [];
+  for (let k = 0; k < 4; k++) { const sh = shapeOf(d, k), key = sh.cells.map(([x, y]) => y * 9 + x).sort((a, b) => a - b).join(','); if (!seen.has(key)) { seen.add(key); ORIENTS[d.id].push(sh); } }
+}
 const cellsOf = (p, c = p.c, r = p.r, d = p.d) => shapeOf(p.def, d).cells.map(([x, y]) => [c + x, r + y]);
 function fits(b, i, c, r, d, avoidShots) {
-  return cellsOf(b.planes[i], c, r, d).every(([x, y]) => inb([x, y]) && (b.grid[y][x] < 0 || b.grid[y][x] === i) && !(avoidShots && b.shots[y][x]));
+  return cellsOf(b.planes[i], c, r, d).every(([x, y]) => inb([x, y]) && (b.grid[y][x] < 0 || b.grid[y][x] === i) && !(avoidShots && (b.shots[y][x] || flakAt(b, x, y))));
 }
 function put(b, i, c, r, d) {
   const p = b.planes[i];
@@ -450,7 +490,7 @@ function randomFleet(b) {
   for (;;) {
     b.grid.forEach(row => row.fill(-1)); b.planes.forEach(p => { p.placed = false; });
     let ok = true;
-    for (let i = 0; i < FLEET.length && ok; i++) {
+    for (let i = 0; i < b.planes.length && ok; i++) {
       let n = 0, c, r, d;
       do { d = rand(4); c = rand(N); r = rand(N); n++; } while (!fits(b, i, c, r, d) && n < 400);
       if (n >= 400) ok = false; else put(b, i, c, r, d);
@@ -459,42 +499,87 @@ function randomFleet(b) {
   }
 }
 const allDown = b => b.planes.every(p => p.down);
-function ready(side, p) {
-  if (p === 'tir') return true;
-  const b = boardOf(side), pl = b.planes[POWERS[p].ship];
-  if (pl.down || b.cd[p] > 0) return false;
-  if (p === 'esquive' && (pl.hits > 0 || !dodgeTargets(b).length)) return false;
-  return true;
+// pourquoi ce pouvoir ne peut pas servir maintenant (null : il est prêt)
+function blocked(side, p) {
+  if (p === 'tir') return null;
+  const b = boardOf(side), pl = planeOf(b, p);
+  if (!pl) return 'absent';
+  if (pl.down) return 'down';
+  if (b.cd[p] > 0) return 'cd';
+  if (p === 'esquive' && pl.hits > 0) return 'hit';
+  if (p === 'esquive' && !dodgeTargets(b).length) return 'stuck';
+  if (p === 'reparation' && !repairTargets(b).length) return 'intact';
+  if (p === 'flak' && b.flak.length >= MAX_FLAK) return 'full';
+  if (p === 'flak' && !flakTargets(b).length) return 'stuck';
+  return null;
 }
-// où l'hélicoptère peut s'échapper : 2 cases au plus, même sens, jamais sur une case déjà visée
+const ready = (side, p) => !blocked(side, p);
+// où l'hélicoptère peut s'échapper : 2 cases au plus, même sens, jamais sur une case déjà visée ni sur un ballon
 function dodgeTargets(b) {
-  const p = b.planes[HELI], out = [];
-  if (p.down || p.hits) return out;
+  const i = planeIdx(b, 'esquive'), p = b.planes[i], out = [];
+  if (!p || p.down || p.hits) return out;
   for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
     if (!dc && !dr) continue;
-    if (fits(b, HELI, p.c + dc, p.r + dr, p.d, true)) out.push([p.c + dc, p.r + dr]);
+    if (fits(b, i, p.c + dc, p.r + dr, p.d, true)) out.push([p.c + dc, p.r + dr]);
   }
   return out;
+}
+// les cases que le ravitailleur peut réparer : touchées, sur un avion encore en vol
+function repairTargets(b) {
+  const out = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (b.shots[r][c] === 2 && !b.planes[b.grid[r][c]].down) out.push([c, r]);
+  return out;
+}
+// ballons de barrage : dans son propre ciel, sur un ciel libre que l'adversaire ne connaît pas
+const MAX_FLAK = 4;
+// réglés par parties simulées (specs/escadrille.md) : l'IA répare un avion à 2 cases touchées (ou près de tomber), attend souvent
+// un avion touché pour lâcher ses ballons ; la DCA d'un ballon crevé touche 2 fois
+const REPAIR_MIN = 2, FLAK_WAIT = .6, FLAK_HITS = 2;
+const flakAt = (b, c, r) => b.flak.some(m => m[0] === c && m[1] === r);
+const freeSky = (b, c, r) => inb([c, r]) && b.grid[r][c] < 0 && !b.shots[r][c] && !b.intel[r][c] && !flakAt(b, c, r);
+function flakTargets(b) { const out = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (freeSky(b, c, r)) out.push([c, r]); return out; }
+// les cases que chaque pouvoir « chez soi » peut viser
+function ownTargets(b, w) {
+  if (w === 'esquive') return dodgeTargets(b);
+  if (w === 'reparation') return repairTargets(b);
+  if (w === 'flak') return flakTargets(b);
+  const out = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) out.push([c, r]); return out;
 }
 
 /* ---------- cases touchées par chaque arme ---------- */
 function zoneOf(c, r) { return [clamp(c - 1, 0, N - 3), clamp(r - 1, 0, N - 3)]; }
+// la caméra du drone filme 4 cases autour de la case visée, dans le sens choisi
+function beamCells(c, r, h) { const s = clamp((h ? c : r) - 1, 0, N - 4); return Array.from({ length: 4 }, (_, i) => h ? [s + i, r] : [c, s + i]); }
+const lineCells = (c, r, h) => Array.from({ length: N }, (_, i) => h ? [i, r] : [c, i]);
 function weaponCells(w, c, r, h) {
   if (w === 'radar') { const [c0, r0] = zoneOf(c, r), o = []; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) o.push([c0 + x, r0 + y]); return o; }
   if (w === 'bombes') return [[c, r], [c - 1, r], [c + 1, r], [c, r - 1], [c, r + 1]].filter(inb);
-  if (w === 'missile') return Array.from({ length: N }, (_, i) => h ? [i, r] : [c, i]);
+  if (w === 'missile') return lineCells(c, r, h);
+  if (w === 'detection') return [...lineCells(c, r, true), ...lineCells(c, r, false).filter(([x, y]) => y !== r)];
+  if (w === 'camera') return beamCells(c, r, h);
   return [[c, r]];
 }
-function canUse(b, w, c, r, h) {
-  if (w === 'radar') return weaponCells(w, c, r, h).some(([x, y]) => !b.shots[y][x] && !b.intel[y][x]);
+function canUse(b, w, c, r, h, cells) {
+  if (w === 'roquettes') return !!cells && cells.length > 0 && cells.every(([x, y]) => !b.shots[y][x]) && new Set(cells.map(([x, y]) => y * N + x)).size === cells.length;
+  if (w === 'radar' || w === 'camera') return weaponCells(w, c, r, h).some(([x, y]) => !b.shots[y][x] && !b.intel[y][x]);
   return weaponCells(w, c, r, h).some(([x, y]) => !b.shots[y][x]);
 }
+// détection : ce qu'on déduit d'une ligne comptée (0 : tout est vide ; autant que de cases inconnues : tout est avion)
+function lineDeduce(b) {
+  for (const q of b.lines) {
+    const free = lineCells(q.h ? 0 : q.i, q.h ? q.i : 0, q.h).filter(([x, y]) => !b.shots[y][x]);
+    if (q.n === 0) for (const [x, y] of free) { if (!b.intel[y][x]) b.intel[y][x] = 1; }
+    else if (q.n === free.length) for (const [x, y] of free) b.intel[y][x] = 2;
+  }
+  b.lines = b.lines.filter(q => lineCells(q.h ? 0 : q.i, q.h ? q.i : 0, q.h).some(([x, y]) => !b.shots[y][x]));
+}
+const onLine = (q, c, r) => q.h ? r === q.i : c === q.i;
 
 /* =========================================================
-   IA (celle d'Amiral !, pour des avions en forme : toutes les positions dans les 4 sens)
+   IA (celle d'Amiral !, pour des avions en forme ; side : le camp qui joue, elle sait jouer les deux)
    ========================================================= */
-function aiKnow() {
-  const b = S.player, sh = b.shots, unknown = [], openHits = [], detected = [];
+function aiKnow(side) {
+  const b = foeOf(side), sh = b.shots, unknown = [], openHits = [], detected = [];
   const blocked = Array.from({ length: N }, () => Array(N).fill(false));
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     if (sh[r][c] === 0) {
@@ -504,16 +589,15 @@ function aiKnow() {
     else if (b.planes[b.grid[r][c]].down) blocked[r][c] = true;
     else openHits.push([c, r]);
   }
-  return { unknown, openHits, detected, blocked };
+  return { side, b, unknown, openHits, detected, blocked };
 }
 // pour chaque case : combien de positions possibles des avions encore en vol la couvrent
 function density(K) {
-  const b = S.player, known = new Set([...K.openHits, ...K.detected].map(([c, r]) => r * N + c));
+  const b = K.b, known = new Set([...K.openHits, ...K.detected].map(([c, r]) => r * N + c));
   const score = Array.from({ length: N }, () => Array(N).fill(0));
   for (const p of b.planes) {
     if (p.down) continue;
-    for (let d = 0; d < (p.def.id === 'radar' ? 1 : 4); d++) {
-      const sh = shapeOf(p.def, d);
+    for (const sh of ORIENTS[p.def.id]) {
       for (let r = 0; r <= N - sh.h; r++) for (let c = 0; c <= N - sh.w; c++) {
         let ok = true, cover = 0;
         for (const [x, y] of sh.cells) { const xx = c + x, yy = r + y; if (K.blocked[yy][xx]) { ok = false; break; } if (known.has(yy * N + xx)) cover++; }
@@ -523,10 +607,17 @@ function density(K) {
       }
     }
   }
+  // les lignes comptées : plus il reste de cases d'avion pour peu de cases inconnues, plus elles sont chaudes
+  if (S.diff !== 'easy') for (const q of b.lines) {
+    if (!q.n) continue;
+    const free = lineCells(q.h ? 0 : q.i, q.h ? q.i : 0, q.h).filter(([x, y]) => !b.shots[y][x] && b.intel[y][x] !== 1);
+    const f = 1 + 2 * q.n / Math.max(1, free.length);
+    for (const [x, y] of free) score[y][x] *= f;
+  }
   return score;
 }
 function aiNear(K) { // une case libre à côté d'un avion touché
-  const sh = S.player.shots, near = [];
+  const sh = K.b.shots, near = [];
   for (const [c, r] of K.openHits) for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     const cc = c + dc, rr = r + dr;
     if (inb([cc, rr]) && sh[rr][cc] === 0 && !K.blocked[rr][cc]) near.push([cc, rr]);
@@ -541,17 +632,25 @@ function aiPick(K) {
     const nb = K.openHits.length && Math.random() < .5 ? aiNear(K) : null;
     return nb || pick(K.unknown);
   }
-  if (S.diff === 'normal' && !K.openHits.length) { const par = K.unknown.filter(([c, r]) => (c + r) % 2 === 0); return pick(par.length && Math.random() < .6 ? par : K.unknown); }
+  if (S.diff === 'normal' && !K.openHits.length && !K.b.lines.some(q => q.n)) { const par = K.unknown.filter(([c, r]) => (c + r) % 2 === 0); return pick(par.length && Math.random() < .6 ? par : K.unknown); }
   const score = density(K);
   let best = -1, cands = [];
   for (const [c, r] of K.unknown) { const v = score[r][c]; if (v > best) { best = v; cands = [[c, r]]; } else if (v === best) cands.push([c, r]); }
   return cands.length ? pick(cands) : pick(K.unknown);
 }
 function aiAim(w, K) {
-  const b = S.player;
+  const b = K.b;
+  if (w === 'roquettes') {
+    // les cases repérées d'abord, puis les plus probables
+    const D = S.diff === 'easy' ? null : density(K), list = K.unknown.map(([c, r]) => ({ c, r, v: (b.intel[r][c] === 2 ? 1e6 : 0) + (D ? D[r][c] : 0) + Math.random() }));
+    list.sort((p, q) => q.v - p.v);
+    const m = POWERS.roquettes.multi, top = S.diff === 'hard' ? list.slice(0, m) : S.diff === 'normal' ? list.slice(0, m * 2).sort(() => Math.random() - .5).slice(0, m) : list.sort(() => Math.random() - .5).slice(0, m);
+    return top.length ? { w, c: top[0].c, r: top[0].r, h: true, cells: top.map(q => [q.c, q.r]) } : null;
+  }
   if (S.diff === 'easy') { const [c, r] = pick(K.unknown); return { w, c, r, h: Math.random() < .5 }; }
   const D = density(K);
   const val = (c, r) => (inb([c, r]) && b.shots[r][c] === 0 && b.intel[r][c] !== 1) ? D[r][c] + .01 : 0;
+  const fresh = (x, y) => !b.shots[y][x] && !b.intel[y][x];
   let best = { s: -1 };
   const consider = (s, plan) => { s += Math.random() * .001; if (s > best.s) best = { s, plan }; };
   if (w === 'missile') {
@@ -561,35 +660,42 @@ function aiAim(w, K) {
       for (let j = 0; j < N; j++) { sr += val(j, i) * (1 - j / (N * 2)); sc += val(i, j) * (1 - j / (N * 2)); }
       consider(sr, { w, c: 0, r: i, h: true }); consider(sc, { w, c: i, r: 0, h: false });
     }
-  } else if (w === 'radar') {
-    for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++)
-      consider(weaponCells(w, c, r, true).reduce((a, [x, y]) => a + (b.shots[y][x] || b.intel[y][x] ? 0 : D[y][x] + .3), 0), { w, c, r, h: true });
+  } else if (w === 'detection') {
+    // la croisée la plus prometteuse : une ligne et une colonne pas encore comptées, avec des cases inconnues
+    const lineVal = (i, h) => b.lines.some(q => q.h === h && q.i === i) ? 0 : lineCells(h ? 0 : i, h ? i : 0, h).filter(([x, y]) => fresh(x, y)).reduce((a, [x, y]) => a + D[y][x] + .2, 0);
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) consider(lineVal(r, true) + lineVal(c, false), { w, c, r, h: true });
+  } else if (w === 'radar' || w === 'camera') {
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) for (const h of w === 'radar' ? [true] : [true, false]) {
+      if (w === 'radar' && (r < 1 || c < 1 || r > N - 2 || c > N - 2)) continue;
+      consider(weaponCells(w, c, r, h).reduce((a, [x, y]) => a + (fresh(x, y) ? D[y][x] + .3 : 0), 0), { w, c, r, h });
+    }
   } else {
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++)
       consider(weaponCells(w, c, r, true).reduce((a, [x, y]) => a + val(x, y), 0), { w, c, r, h: true });
   }
-  return best.plan;
+  return best.plan || null;
 }
-// l'hélicoptère d'un camp est-il menacé ? (repéré au radar, ou des tirs tombent tout près)
+// l'hélicoptère d'un camp est-il menacé ? (repéré, ou des tirs tombent tout près, ou sa ligne a été comptée)
 function heliThreat(side) {
-  const b = boardOf(side), p = b.planes[HELI];
-  if (p.down || p.hits) return 0;
+  const b = boardOf(side), p = planeOf(b, 'esquive');
+  if (!p || p.down || p.hits) return 0;
   let th = 0;
   for (const [c, r] of cellsOf(p)) {
     if (b.intel[r][c] === 2) th += 3;
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = c + dx, y = r + dy; if (inb([x, y]) && b.shots[y][x]) th += .5; }
   }
+  if (b.lines.some(q => q.n && cellsOf(p).some(([c, r]) => onLine(q, c, r)))) th += 1;
   return th;
 }
-function aiDodge() {
-  const b = S.enemy, T = dodgeTargets(b);
+function aiDodge(side) {
+  const b = boardOf(side), T = dodgeTargets(b), p = planeOf(b, 'esquive');
   if (!T.length) return null;
   if (S.diff === 'easy') { const [c, r] = pick(T); return { w: 'esquive', c, r }; }
-  // l'endroit le plus calme : loin des tirs et des cases repérées par le joueur
+  // l'endroit le plus calme : loin des tirs et des cases repérées par l'adversaire
   let best = null, bs = -1e9;
   for (const [c, r] of T) {
     let s = Math.random() * .1;
-    for (const [x, y] of cellsOf(b.planes[HELI], c, r)) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+    for (const [x, y] of cellsOf(p, c, r)) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
       const xx = x + dx, yy = y + dy; if (!inb([xx, yy])) continue;
       if (b.shots[yy][xx]) s -= 1 / (1 + Math.abs(dx) + Math.abs(dy));
       if (b.intel[yy][xx]) s -= .5 / (1 + Math.abs(dx) + Math.abs(dy));
@@ -598,20 +704,65 @@ function aiDodge() {
   }
   return { w: 'esquive', c: best[0], r: best[1] };
 }
-function aiPlan() {
-  const K = aiKnow(), p = { easy: .3, normal: .6, hard: .95 }[S.diff];
-  const th = heliThreat('ai');
-  if (ready('ai', 'esquive') && th >= (S.diff === 'hard' ? 2 : 3) && Math.random() < p) { const d = aiDodge(); if (d) return d; }
-  const hunting = !K.openHits.length && !K.detected.length;
-  if (!hunting) {
-    if (ready('ai', 'bombes') && K.openHits.length && S.diff !== 'easy' && Math.random() < p) return aiAim('bombes', K);
-  } else {
-    if (ready('ai', 'radar') && Math.random() < p) return aiAim('radar', K);
-    if (ready('ai', 'missile') && Math.random() < p * .8) return aiAim('missile', K);
-    if (ready('ai', 'bombes') && Math.random() < p * .5) return aiAim('bombes', K);
+// réparer dès qu'un avion est touché ; d'abord celui qui va tomber, ou l'hélicoptère (il pourra de nouveau s'échapper)
+function aiRepair(side) {
+  const b = boardOf(side);
+  let best = null, bs = 0;
+  for (const [c, r] of repairTargets(b)) {
+    const p = b.planes[b.grid[r][c]], n = p.def.cells.length;
+    let v = p.hits >= n - 1 ? 2 + p.hits : p.hits;
+    if (p.def.power === 'esquive' && p.hits === 1 && S.diff === 'hard') v += 1;
+    if (S.diff !== 'easy') v += Math.random() * .1;
+    if (v > bs) { bs = v; best = [c, r]; }
   }
+  return best && bs >= (S.diff === 'easy' ? 1 : REPAIR_MIN) ? { w: 'reparation', c: best[0], r: best[1], h: true } : null;
+}
+// ballons : là où l'adversaire va tirer, à côté de nos avions touchés (il cherche la suite), puis de nos avions
+function aiFlak(side) {
+  const b = boardOf(side), T = flakTargets(b), need = Math.min(POWERS.flak.multi, MAX_FLAK - b.flak.length, T.length);
+  if (need <= 0) return null;
+  const live = (x, y) => b.grid[y][x] >= 0 && !b.planes[b.grid[y][x]].down;
+  const near = (c, r, f) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => inb([c + dx, r + dy]) && f(c + dx, r + dy));
+  const list = T.map(([c, r]) => ({ c, r, v: Math.random() + (S.diff === 'easy' ? 0 : near(c, r, (x, y) => live(x, y) && b.shots[y][x] === 2) ? 4 : near(c, r, live) ? 1.5 : 0) }));
+  list.sort((p, q) => q.v - p.v);
+  if (S.diff !== 'easy' && list[0].v < 4 && Math.random() < FLAK_WAIT) return null;   // mieux vaut attendre un avion touché
+  const cells = list.slice(0, need).map(q => [q.c, q.r]);
+  return { w: 'flak', c: cells[0][0], r: cells[0][1], h: true, cells };
+}
+// leurres : quand l'adversaire est sur la piste d'un de nos avions (touché, ou repéré)
+function aiDecoy(side) {
+  const b = boardOf(side);
+  if (b.decoy) return null;
+  const chased = b.planes.some(p => !p.down && (p.hits || cellsOf(p).some(([x, y]) => !b.shots[y][x] && b.intel[y][x] === 2)));
+  return chased || S.diff === 'easy' ? { w: 'leurres', c: 0, r: 0, h: true } : null;
+}
+function aiPlan(side) {
+  const K = aiKnow(side), p = { easy: .3, normal: .6, hard: .95 }[S.diff], has = w => ready(side, w) && Math.random() < p;
+  if (ready(side, 'esquive') && heliThreat(side) >= (S.diff === 'hard' ? 2 : 3) && Math.random() < p) { const d = aiDodge(side); if (d) return d; }
+  if (has('reparation')) { const d = aiRepair(side); if (d) return d; }
+  if (has('leurres')) { const d = aiDecoy(side); if (d) return d; }
+  if (has('flak')) { const d = aiFlak(side); if (d) return d; }
+  const hunting = !K.openHits.length && !K.detected.length, aim = w => aiAim(w, K);
+  let plan = null;
+  if (!hunting) {
+    if (S.diff !== 'easy' && K.openHits.length && has('bombes')) plan = aim('bombes');
+    if (!plan && S.diff !== 'easy' && has('roquettes')) plan = aim('roquettes');
+  } else {
+    // d'abord repérer, puis n'importe quelle arme prête vaut mieux qu'une bombe seule
+    for (const [w, k] of [['radar', 1], ['camera', 1], ['detection', .8], ['missile', .8], ['roquettes', 1], ['bombes', .5]])
+      if (!plan && ready(side, w) && Math.random() < p * k) plan = aim(w);
+  }
+  if (plan) return plan;
   const [c, r] = aiPick(K);
   return { w: 'tir', c, r, h: true };
+}
+// le coup de l'IA, avec une bombe simple si le pouvoir choisi ne sert à rien
+function aiChoose(side) {
+  let plan = aiPlan(side);
+  if (!POWERS[plan.w].own && plan.w !== 'tir' && !canUse(foeOf(side), plan.w, plan.c, plan.r, plan.h, plan.cells)) {
+    const [c, r] = aiPick(aiKnow(side)); plan = { w: 'tir', c, r, h: true };
+  }
+  return plan;
 }
 
 /* =========================================================
@@ -619,94 +770,195 @@ function aiPlan() {
    ========================================================= */
 const cx = c => c * CS + CS / 2, cy = r => r * CS + CS / 2;
 function burst(key, x, y, kind, count) {
-  const cols = kind === 'boom' ? ['#fff4a0', '#ffd84a', '#ff8a2a', '#ff3b1f', '#c21a0a', '#4a4a55'] : ['#ffffff', '#eef6ff', '#d6e8fa', '#b4d2f0'];
+  if (S.fast) return;
+  const cols = kind === 'boom' ? ['#fff4a0', '#ffd84a', '#ff8a2a', '#ff3b1f', '#c21a0a', '#4a4a55'] : kind === 'fix' ? ['#8ee05a', '#d8ffb0', '#ffffff', '#ffd23f'] : ['#ffffff', '#eef6ff', '#d6e8fa', '#b4d2f0'];
   for (let i = 0; i < count; i++) {
     const a = Math.random() * TAU, sp = kind === 'boom' ? 20 + Math.random() * 70 : 8 + Math.random() * 26;
-    S.parts.push({ key, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * (kind === 'boom' ? 1 : .6),
-      g: kind === 'boom' ? 40 : -6, life: .4 + Math.random() * .5, t: 0, col: pick(cols), sz: Math.random() < .3 ? 2 : 1 });
+    S.parts.push({ key, x, y, vx: Math.cos(a) * sp, vy: kind === 'fix' ? -10 - Math.random() * 20 : Math.sin(a) * sp * (kind === 'boom' ? 1 : .6),
+      g: kind === 'boom' ? 40 : kind === 'fix' ? -10 : -6, life: .4 + Math.random() * .5, t: 0, col: pick(cols), sz: Math.random() < .3 ? 2 : 1 });
   }
 }
-function fx(o) { return new Promise(res => { o.t0 = now(); o.done = res; S.fx.push(o); }); }
-const drop = (key, c, r) => { SFX.drop(); return fx({ type: 'drop', key, c, r, dur: 500 }); };
+function fx(o) { if (S.fast) return Promise.resolve(); return new Promise(res => { o.t0 = now(); o.done = res; S.fx.push(o); }); }
+const sfx = k => { if (!S.fast) SFX[k](); };
+const drop = (key, c, r) => { sfx('drop'); return fx({ type: 'drop', key, c, r, dur: 500 }); };
+const CREW = { bomb: 2, attaque: 2, ravito: 3 };   // pilotes qui sautent en parachute
 
-function resolveShot(key, c, r) {
+// opts.noFlak : tir en retour d'un ballon (pas de ballons en chaîne)
+function resolveShot(key, c, r, opts = {}) {
   const b = S[key], idx = b.grid[r][c], x = cx(c), y = cy(r);
   if (b.shots[r][c]) return { hit: false, again: true };
-  if (idx < 0) { b.shots[r][c] = 1; b.intel[r][c] = 1; burst(key, x, y, 'puff', 14); SFX.miss(); return { hit: false }; }
+  const boom = n => { burst(key, x, y, 'boom', n); if (!S.fast) { S.fx.push({ type: 'boom', key, x, y, t0: now(), dur: 480 }); S.shake = now(); } sfx('boom'); };
+  if (idx < 0) {
+    b.shots[r][c] = 1; b.intel[r][c] = 1;
+    if (flakAt(b, c, r)) {
+      // un ballon de barrage : il éclate (et la DCA riposte, sauf sous un tir en retour)
+      b.flak = b.flak.filter(m => m[0] !== c || m[1] !== r);
+      boom(22); lineDeduce(b);
+      return { hit: false, flak: !opts.noFlak };
+    }
+    burst(key, x, y, 'puff', 14); sfx('miss'); lineDeduce(b);
+    return { hit: false };
+  }
   b.shots[r][c] = 2; b.intel[r][c] = 2;
+  for (const q of b.lines) if (onLine(q, c, r)) q.n--;
+  lineDeduce(b);
   const p = b.planes[idx]; p.hits++;
-  burst(key, x, y, 'boom', 26); S.fx.push({ type: 'boom', key, x, y, t0: now(), dur: 480 }); SFX.boom(); S.shake = now();
+  boom(26);
   if (p.hits >= p.def.cells.length) {
-    p.down = true; SFX.down();
+    p.down = true; sfx('down');
     const cells = cellsOf(p);
+    if (S.fast) return { hit: true, down: p };
     cells.forEach(([cc, rr], i) => setTimeout(() => { burst(key, cx(cc), cy(rr), 'boom', 12); S.fx.push({ type: 'boom', key, x: cx(cc), y: cy(rr), t0: now(), dur: 480 }); }, 120 * i));
-    // le pilote saute en parachute (deux pour le bombardier)
+    // les pilotes sautent en parachute
     const mx = cells.reduce((a, [x]) => a + cx(x), 0) / cells.length, my = cells.reduce((a, [, y]) => a + cy(y), 0) / cells.length;
     setTimeout(() => {
       if (S.phase === 'title') return;
       SFX.chute();
-      for (let k = 0; k < (p.def.id === 'bomb' ? 2 : 1); k++)
+      for (let k = 0; k < (CREW[p.def.id] || 1); k++)
         S.fx.push({ type: 'para', key, x: mx, y: my, dx: (k ? 1 : -1) * (.5 + Math.random() * .5) * (Math.random() < .5 ? 1 : -1), dy: .4 + Math.random() * .5, ph: Math.random() * TAU, t0: now() + k * 250, dur: 3800, done() {} });
     }, 120 * cells.length + 150);
     return { hit: true, down: p };
   }
   return { hit: true };
 }
-
 // exécute une action du camp `side` ; renvoie le bilan
 async function act(side, plan) {
-  const { w, c, r, h } = plan, foe = foeOf(side), key = keyOf(foe), out = { fired: 0, hits: [], down: [], found: 0, stop: null };
-  const apply = (cc, rr) => { const res = resolveShot(key, cc, rr); if (res.again) return; out.fired++; if (res.hit) out.hits.push([cc, rr]); if (res.down) out.down.push(res.down); };
+  const { w, c, r, h } = plan, foe = foeOf(side), key = keyOf(foe);
+  const out = { fired: 0, hits: [], flak: [], down: [], found: 0, stop: null, count: 0, plane: null, deflected: false };
+  const apply = (cc, rr) => {
+    const res = resolveShot(key, cc, rr, { noFlak: plan.riposte }); if (res.again) return;
+    out.fired++; if (res.hit) out.hits.push([cc, rr]);
+    if (res.flak) out.flak.push([cc, rr]); if (res.down) out.down.push(res.down);
+  };
   const me = boardOf(side);
+  // ce qu'un pouvoir de repérage découvre (les cases déjà visées ne changent pas)
+  const spot = cells => { for (const [x, y] of cells) { if (foe.shots[y][x]) continue; const pl = foe.grid[y][x] >= 0; foe.intel[y][x] = pl ? 2 : 1; if (pl) out.found++; } };
   if (w !== 'tir') me.cd[w] = POWERS[w].cd + 1;
+  // les leurres de l'adversaire attirent ce coup : il part dans le vide
+  if (foe.decoy > 0 && !POWERS[w].own && !plan.riposte) { foe.decoy--; out.deflected = true; sfx('miss'); await fx({ type: 'flares', key, dur: 1300 }); return out; }
   if (w === 'tir') { await drop(key, c, r); apply(c, r); }
-  else if (w === 'bombes') {
-    const cells = weaponCells(w, c, r, h).filter(([x, y]) => !foe.shots[y][x]);
-    await Promise.all(cells.map(([x, y], i) => wait(i * 120).then(() => drop(key, x, y)).then(() => apply(x, y))));
+  else if (w === 'bombes' || w === 'roquettes') {
+    const cells = (w === 'roquettes' ? plan.cells : weaponCells(w, c, r, h)).filter(([x, y]) => !foe.shots[y][x]);
+    if (w === 'roquettes') sfx('rocket');
+    await Promise.all(cells.map(([x, y], i) => wait(S.fast ? 0 : i * (w === 'roquettes' ? 220 : 120)).then(() => w === 'roquettes' ? fx({ type: 'rocket', key, c: x, r: y, dur: 650 }) : drop(key, x, y)).then(() => apply(x, y))));
   } else if (w === 'radar') {
     const [c0, r0] = zoneOf(c, r);
-    SFX.radar();
+    sfx('radar');
     await fx({ type: 'sweep', key, zx: c0, zy: r0, dur: 1400 });
-    for (const [x, y] of weaponCells(w, c, r, h)) {
-      if (foe.shots[y][x]) continue;
-      const pl = foe.grid[y][x] >= 0; foe.intel[y][x] = pl ? 2 : 1; if (pl) out.found++;
-    }
-    S.fx.push({ type: 'scan', key, zx: c0, zy: r0, t0: now(), dur: 1000 });
+    spot(weaponCells(w, c, r, h));
+    if (!S.fast) S.fx.push({ type: 'scan', key, zx: c0, zy: r0, t0: now(), dur: 1000 });
+  } else if (w === 'camera') {
+    sfx('camera');
+    const cells = beamCells(c, r, h);
+    await fx({ type: 'film', key, cells, dur: 1200 });
+    spot(cells);
+    if (!S.fast) S.fx.push({ type: 'lit', key, cells, t0: now(), dur: 900 });
+  } else if (w === 'detection') {
+    sfx('detect');
+    await fx({ type: 'ping', key, c, r, dur: 1400 });
+    out.counts = [true, false].map(hh => {
+      const i = hh ? r : c, n = lineCells(c, r, hh).filter(([x, y]) => foe.grid[y][x] >= 0 && foe.shots[y][x] !== 2).length;
+      foe.lines = foe.lines.filter(q => !(q.h === hh && q.i === i));
+      foe.lines.push({ h: hh, i, n });
+      return n;
+    });
+    lineDeduce(foe);
   } else if (w === 'missile') {
     let stop = N;
     for (let i = 0; i < N; i++) { const x = h ? i : c, y = h ? r : i; if (foe.grid[y][x] >= 0 && foe.shots[y][x] !== 2) { stop = i; break; } }
-    SFX.missile();
+    sfx('missile');
     await fx({ type: 'missile', key, h, line: h ? r : c, stop: Math.min(stop, N - 1), dur: 300 + (Math.min(stop, N - 1) + 1) * 80 });
     for (let i = 0; i < stop; i++) { const x = h ? i : c, y = h ? r : i; if (!foe.shots[y][x]) foe.intel[y][x] = 1; }
-    if (stop < N) { const x = h ? stop : c, y = h ? r : stop; out.stop = [x, y]; apply(x, y); } else SFX.miss();
+    if (stop < N) { const x = h ? stop : c, y = h ? r : stop; out.stop = [x, y]; apply(x, y); } else sfx('miss');
+    lineDeduce(foe);
   } else if (w === 'esquive') {
-    const p = me.planes[HELI], k = keyOf(me), old = cellsOf(p);
-    SFX.esquive();
+    const i = planeIdx(me, 'esquive'), p = me.planes[i], k = keyOf(me), old = cellsOf(p);
+    sfx('esquive');
     for (const [x, y] of old) burst(k, cx(x), cy(y), 'puff', 8);
-    await fx({ type: 'dodge', key: k, from: [p.c, p.r], d: p.d, to: [c, r], dur: 1000 });
-    put(me, HELI, c, r, p.d);
-    // ce que l'adversaire savait de ces cases ne vaut plus rien
-    for (const [x, y] of [...old, ...cellsOf(p)]) if (!me.shots[y][x]) me.intel[y][x] = 0;
+    await fx({ type: 'dodge', key: k, i, from: [p.c, p.r], d: p.d, to: [c, r], dur: 1000 });
+    put(me, i, c, r, p.d);
+    // ce que l'adversaire savait de ces cases ne vaut plus rien (repérages, lignes comptées)
+    const moved = [...old, ...cellsOf(p)];
+    for (const [x, y] of moved) if (!me.shots[y][x]) me.intel[y][x] = 0;
+    me.lines = me.lines.filter(q => !moved.some(([x, y]) => onLine(q, x, y)));
+  } else if (w === 'reparation') {
+    // tout l'avion est remis à neuf : ses cases touchées retournent dans les nuages
+    const k = keyOf(me), p = me.planes[me.grid[r][c]], fixed = cellsOf(p).filter(([x, y]) => me.shots[y][x] === 2);
+    sfx('repair');
+    await fx({ type: 'repair', key: k, c, r, dur: 1100 });
+    for (const [x, y] of fixed) {
+      me.shots[y][x] = 0; me.intel[y][x] = 0;
+      for (const q of me.lines) if (onLine(q, x, y)) q.n++;
+      burst(k, cx(x), cy(y), 'fix', 10);
+    }
+    p.hits -= fixed.length; out.plane = p; out.count = fixed.length;
+  } else if (w === 'flak') {
+    const k = keyOf(me), cells = plan.cells.filter(([x, y]) => freeSky(me, x, y)).slice(0, MAX_FLAK - me.flak.length);
+    sfx('balloon');
+    await fx({ type: 'balloons', key: k, cells, dur: 900 });
+    me.flak.push(...cells.map(a => a.slice()));
+    out.count = cells.length;
+  } else if (w === 'leurres') {
+    sfx('jam');
+    me.decoy = 1;
+    await fx({ type: 'flares', key: keyOf(me), dur: 1000 });
   }
   return out;
 }
+// les ballons touchés par le camp `side` : la DCA d'en face riposte, et touche à coup sûr un avion du tireur
+async function ripostes(side, res) {
+  const owner = other(side), txt = [], b = boardOf(side);
+  for (const m of res.flak.flatMap(m => Array(FLAK_HITS).fill(m))) {
+    const T = []; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (b.grid[r][c] >= 0 && !b.shots[r][c]) T.push([c, r]);
+    if (!T.length) break;
+    const [c, r] = pick(T);
+    if (!S.fast) {
+      setMsg(side === 'player' ? `BOUM ! Un ballon de barrage en ${cellName(...m)} ! La DCA ennemie riposte...` : `L'ennemi a crevé notre ballon en ${cellName(...m)} ! Notre DCA riposte...`);
+      await wait(1100); setView(side === 'player' ? 'player' : 'enemy');
+    }
+    const rr = await act(owner, { w: 'tir', c, r, h: true, riposte: true });
+    if (owner === 'player') { S.stats.shots += rr.fired; S.stats.hits += rr.hits.length; } else { S.stats.aiShots += rr.fired; S.stats.aiHits += rr.hits.length; }
+    txt.push(`${side === 'player' ? 'Ballon ennemi' : 'Notre ballon'} en ${cellName(...m)} : la DCA touche ${cellName(c, r)} !${rr.down.length ? ' ' + downTxt(owner, rr.down) : ''}`);
+    if (!S.fast) { setMsg(txt[txt.length - 1]); await wait(1200); }
+  }
+  return txt.join(' ');
+}
+// « Notre chasseur est abattu ! » vu du camp qui tire (side) : ses victimes sont dans l'autre camp
+function downTxt(side, list) {
+  return list.map(p => side === 'ai' ? (p.def.pl ? `Nos ${p.def.name.toLowerCase()} sont abattus !` : `Notre ${p.def.name.toLowerCase()} est abattu !`)
+                                     : (p.def.pl ? `${p.def.le} ennemis sont abattus !` : `${p.def.le} ennemi est abattu !`)).join(' ');
+}
 function describe(side, w, c, r, h, res) {
-  const ai = side === 'ai', nm = cellName(c, r), n = res.hits.length;
-  const down = res.down.map(p => ai ? `Notre ${p.def.name.toLowerCase()} est abattu !` : `${p.def.le} ennemi est abattu !`).join(' ');
-  const tail = down ? ' ' + down : '';
+  const ai = side === 'ai', nm = cellName(c, r);
+  if (res.deflected) return ai ? `${{ tir: 'La bombe', bombes: 'Les bombes', roquettes: 'Les roquettes', missile: 'Le missile' }[w] || 'Le coup'} de l'ennemi part sur nos leurres : raté !`
+                                 : 'Nos tirs partent sur les leurres ennemis : raté !';
+  const n = res.hits.length, down = downTxt(side, res.down);
+  const tail = (down ? ' ' + down : '') + (res.flak.length && w !== 'tir' ? ' Un ballon !' : '');
+  const lbl = h ? `ligne ${r + 1}` : `colonne ${COLS[c]}`;
   switch (w) {
     case 'tir':
-      if (ai) return res.down.length ? `Tir ennemi en ${nm}. ${down}` : n ? `Tir ennemi en ${nm} : touché !` : `Tir ennemi en ${nm} : raté !`;
+      if (ai) return res.down.length ? `Bombe ennemie en ${nm}. ${down}` : n ? `Bombe ennemie en ${nm} : touché !` : `Bombe ennemie en ${nm} : raté !`;
+      if (res.flak.length) return `${nm} : un ballon de barrage !`;
       return res.down.length ? `${nm} : touché... abattu ! ${down}` : n ? `${nm} : touché ! Il est en feu.` : `${nm} : rien dans ce nuage.`;
     case 'bombes': return `${ai ? 'Bombes ennemies' : 'Bombes'} sur ${nm} : ${n ? n + ' touché' + (n > 1 ? 's' : '') + ' !' : 'rien en dessous.'}${tail}`;
+    case 'roquettes': return `${ai ? 'Roquettes ennemies' : 'Roquettes'} : ${n ? n + ' touché' + (n > 1 ? 's' : '') + ' sur ' + res.fired + ' !' : 'aucune ne touche.'}${tail}`;
     case 'radar':
       if (ai) return res.found ? `Le radar ennemi a repéré ${res.found} case${res.found > 1 ? 's' : ''} de notre escadrille !` : "Le radar ennemi n'a rien vu.";
       return res.found ? `Radar : ${res.found} case${res.found > 1 ? 's' : ''} d'avion repérée${res.found > 1 ? 's' : ''} !` : 'Radar : ciel vide dans cette zone.';
-    case 'missile': {
-      const lbl = h ? `ligne ${r + 1}` : `colonne ${COLS[c]}`;
-      return res.stop ? `${ai ? 'Missile ennemi' : 'Missile'} ${lbl} : impact en ${cellName(...res.stop)} !${tail}` : `${ai ? 'Missile ennemi' : 'Missile'} ${lbl} : il a traversé le ciel sans rien toucher.`;
+    case 'camera':
+      if (ai) return res.found ? `Un drone ennemi a filmé ${res.found} case${res.found > 1 ? 's' : ''} de notre escadrille !` : "Le drone ennemi n'a filmé que des nuages.";
+      return res.found ? `Caméra : ${res.found} case${res.found > 1 ? 's' : ''} d'avion filmée${res.found > 1 ? 's' : ''} !` : "Caméra : que des nuages.";
+    case 'detection': {
+      const [a, b] = res.counts, nb = k => k ? k + ' case' + (k > 1 ? 's' : '') + " d'avion" : 'rien';
+      if (ai) return `La détection ennemie compte notre ligne ${r + 1} : ${nb(a)}, et notre colonne ${COLS[c]} : ${nb(b)}.`;
+      return `Détection : ligne ${r + 1}, ${nb(a)} ; colonne ${COLS[c]}, ${nb(b)}.`;
     }
+    case 'missile':
+      return res.stop ? `${ai ? 'Missile ennemi' : 'Missile'} ${lbl} : impact en ${cellName(...res.stop)} !${tail}` : `${ai ? 'Missile ennemi' : 'Missile'} ${lbl} : il a traversé le ciel sans rien toucher.`;
     case 'esquive': return ai ? "L'hélicoptère ennemi s'est échappé ! Il n'est plus là où on l'avait vu." : "L'hélicoptère s'est échappé plus loin !";
+    case 'reparation': return ai ? `Le ravitailleur ennemi remet un avion à neuf : ${res.count} case${res.count > 1 ? 's' : ''} retournent dans les nuages !` : `${res.plane.def.le} ${res.plane.def.pl ? 'sont remis' : 'est remis'} à neuf !`;
+    case 'flak': return ai ? "L'ennemi lâche des ballons de barrage dans son ciel : gare à la DCA !" : `${res.count} ballon${res.count > 1 ? 's' : ''} de barrage dans notre ciel : l'ennemi qui tire dessus prendra un tir de DCA.`;
+    case 'leurres': return ai ? "L'ennemi lâche des leurres : notre prochain coup partira dessus !" : 'Leurres lancés : le prochain coup ennemi partira dessus.';
   }
   return '';
 }
@@ -720,12 +972,34 @@ function tickCd(side) {
   const b = boardOf(side);
   for (const p of Object.keys(b.cd)) if (b.cd[p] > 0) { b.cd[p]--; if (!b.cd[p] && side === 'player' && ready('player', p)) S.newReady = p; }
 }
+// palmarès (escadrille.palmares) : victoires par niveau, victoire rapide, victoire sans perte ; le total reste dans escadrille.victoires
+function palmares() {
+  const pm = store.get('palmares', null) || {}, best = store.get('best', {}) || {};
+  pm.victoires = Number(store.get('victoires', 0)) || 0;
+  for (const k of ['easy', 'normal', 'hard']) pm[k] = Math.max(Number(pm[k]) || 0, best[k] ? 1 : 0);
+  if (Object.values(best).some(v => v > 0 && v < 25)) pm.rapide = true;
+  return pm;
+}
+const unlockedPlane = (id, pm = palmares()) => !!PLANES[id] && (PLANES[id].base || !!PLANES[id].need(pm));
+// l'escadrille choisie au hangar (escadrille.flotte), un avion par place
+let FLEET = CLASSIC.slice();
+function loadFleet() {
+  const f = store.get('flotte', null), pm = palmares();
+  FLEET = CLASSIC.map((id, i) => Array.isArray(f) && PLANES[f[i]] && PLANES[f[i]].slot === i && unlockedPlane(f[i], pm) ? f[i] : id);
+}
+// l'escadrille ennemie : la classique en RECRUE, tirée dans tout le catalogue en PILOTE et AS
+function enemyFleet() {
+  if (S.diff === 'easy') return CLASSIC.slice();
+  return SLOTS.map((_, i) => pick(CATALOG.filter(d => d.slot === i)).id);
+}
 function newGame() {
-  S.player = makeBoard(); S.enemy = makeBoard(); SOL = SOLS[rand(3)];
+  loadFleet();
+  S.player = makeBoard(FLEET); S.enemy = makeBoard(enemyFleet()); SOL = SOLS[rand(3)];
+  for (const id of S.enemy.planes.map(p => p.def.id)) for (let d = 0; d < 4; d++) WARM.push([STYLE, 'foe', id, d]);
   randomFleet(S.player);
   S.phase = 'place'; S.sel = null; S.busy = false; S.turn = 'player'; S.view = 'player'; S.prevView = null;
   S.stats = { turns: 0, shots: 0, hits: 0, aiShots: 0, aiHits: 0 };
-  S.fx = []; S.parts = []; S.endInfo = null; S.rankText = ''; S.weapon = 'tir'; S.missH = true; S.aim = null; S.armed = null; S.quitArm = 0;
+  S.fx = []; S.parts = []; S.endInfo = null; S.rankText = ''; resetAim(); S.quitArm = 0;
   setMsg("Touchez un avion puis une case pour le placer ; touchez-le encore pour le tourner.");
   MUSIC.start();
 }
@@ -735,19 +1009,39 @@ function startBattle() {
   setView('enemy'); SFX.start();
   setMsg("Escadrille ennemie en vue ! Touchez un nuage pour tirer, ou choisissez un pouvoir.");
 }
+function resetAim() { S.weapon = 'tir'; S.aim = null; S.armed = null; S.marks = []; }
+const LAUNCH = {
+  tir: p => `Bombe larguée sur ${cellName(p.c, p.r)} !`, bombes: p => `Bombes en croix sur ${cellName(p.c, p.r)} !`, radar: () => 'Le radar balaie la zone...',
+  missile: p => `Missile lancé ${p.h ? 'ligne ' + (p.r + 1) : 'colonne ' + COLS[p.c]} !`, esquive: () => "L'hélicoptère s'échappe !",
+  roquettes: () => 'Salve de roquettes !', detection: p => `La détection compte la ligne ${p.r + 1} et la colonne ${COLS[p.c]}...`,
+  camera: () => 'Le drone filme le ciel ennemi...', reparation: () => 'Le ravitailleur fait le plein et répare...',
+  flak: () => 'Les ballons de barrage montent...', leurres: () => 'Le brouilleur lâche ses leurres...',
+};
+const AI_LAUNCH = {
+  tir: p => `L'ennemi largue une bombe sur ${cellName(p.c, p.r)}...`, bombes: () => "L'ennemi largue des bombes en croix !", radar: () => 'Le radar ennemi balaie notre ciel !',
+  missile: () => "Alerte ! L'ennemi lance un missile !", esquive: () => "L'ennemi manoeuvre...", roquettes: () => 'Alerte ! Roquettes ennemies en approche !',
+  detection: () => 'La détection ennemie nous cherche...', camera: () => 'Un drone ennemi survole notre escadrille !', reparation: () => "L'ennemi s'affaire sur un avion touché...",
+  flak: () => "L'ennemi manoeuvre...", leurres: () => 'Le brouilleur ennemi lâche des leurres !',
+};
 async function playerAct(plan) {
   if (S.phase !== 'play' || S.busy || S.turn !== 'player') return;
   const { w, c, r, h } = plan;
   if (!ready('player', w)) { SFX.error(); return; }
-  if (w !== 'esquive' && !canUse(S.enemy, w, c, r, h)) { SFX.error(); setMsg(w === 'tir' ? 'Déjà tiré ici : choisissez un autre nuage.' : 'Rien à découvrir ici : visez ailleurs.'); return; }
-  S.busy = true; S.stats.turns++; S.aim = null; S.armed = null;
-  setMsg({ tir: `Bombe larguée sur ${cellName(c, r)} !`, bombes: `Bombes en croix sur ${cellName(c, r)} !`, radar: 'Le radar balaie la zone...',
-           missile: `Missile lancé ${h ? 'ligne ' + (r + 1) : 'colonne ' + COLS[c]} !`, esquive: "L'hélicoptère s'échappe !" }[w]);
+  if (!POWERS[w].own && !canUse(S.enemy, w, c, r, h, plan.cells)) { SFX.error(); setMsg(w === 'tir' ? 'Déjà tiré ici : choisissez un autre nuage.' : 'Rien à découvrir ici : visez ailleurs.'); return; }
+  if (w === 'flak' && !(plan.cells || []).length) { SFX.error(); return; }
+  S.busy = true; S.stats.turns++; S.aim = null; S.armed = null; S.marks = [];
+  setMsg(LAUNCH[w](plan));
   const res = await act('player', plan);
   S.stats.shots += res.fired; S.stats.hits += res.hits.length;
   S.weapon = 'tir';
-  setMsg(describe('player', w, c, r, h, res));
+  let txt = describe('player', w, c, r, h, res);
+  setMsg(txt);
   if (allDown(S.enemy)) return gameOver(true);
+  if (res.flak.length) {
+    await wait(1100);
+    txt = await ripostes('player', res);
+    if (allDown(S.player)) { setMsg(txt + ' Notre dernier avion est abattu !'); return gameOver(false); }
+  }
   S.turn = 'ai';
   await wait(res.down.length ? 1700 : w === 'tir' ? 1000 : 1300);
   aiTurn();
@@ -755,46 +1049,74 @@ async function playerAct(plan) {
 async function aiTurn() {
   if (S.phase !== 'play') return;
   tickCd('ai');
-  let plan = aiPlan();
-  if (plan.w !== 'tir' && plan.w !== 'esquive' && !canUse(S.player, plan.w, plan.c, plan.r, plan.h)) { const [c0, r0] = aiPick(aiKnow()); plan = { w: 'tir', c: c0, r: r0, h: true }; }
-  const { w, c, r, h } = plan;
-  if (w !== 'esquive') setView('player');
-  setMsg({ tir: `L'ennemi largue une bombe sur ${cellName(c, r)}...`, bombes: "L'ennemi largue des bombes en croix !", radar: 'Le radar ennemi balaie notre ciel !',
-           missile: "Alerte ! L'ennemi lance un missile !", esquive: "L'ennemi manoeuvre..." }[w]);
+  const plan = aiChoose('ai'), { w, c, r, h } = plan;
+  if (!POWERS[w].own) setView('player');
+  setMsg(AI_LAUNCH[w](plan));
   await wait(w === 'tir' ? 700 : 1000);
   const res = await act('ai', plan);
   S.stats.aiShots += res.fired; S.stats.aiHits += res.hits.length;
-  const txt = describe('ai', w, c, r, h, res);
-  if (allDown(S.player)) { setMsg(`${describe('ai', w, c, r, h, { ...res, down: [] }).replace(/ : .*/, '')} : notre dernier avion est abattu !`); return gameOver(false); }
+  let txt = describe('ai', w, c, r, h, res);
+  if (allDown(S.player)) { setMsg(`${txt} C'était notre dernier avion !`); return gameOver(false); }
   setMsg(txt);
+  if (res.flak.length) {
+    await wait(1100);
+    txt = await ripostes('ai', res);
+    if (allDown(S.enemy)) return gameOver(true);
+  }
   await wait(res.down.length ? 1600 : 1100);
   if (S.phase !== 'play') return;
   tickCd('player');
-  S.turn = 'player'; S.busy = false; S.weapon = 'tir'; setView('enemy');
+  S.turn = 'player'; S.busy = false; resetAim(); setView('enemy');
   if (S.newReady) { setMsg(`${txt} ${POWERS[S.newReady].name} est de nouveau prêt !`); SFX.ready(); S.newReady = null; }
   else setMsg(txt + ' A vous !');
 }
 function gameOver(win) {
   S.phase = 'over'; S.busy = true; MUSIC.stop();
+  let fresh = [];
+  if (win) {
+    // palmarès : les avions à débloquer au hangar ; un nouvel avion est annoncé à la fin
+    const pm0 = palmares(), before = CATALOG.filter(d => unlockedPlane(d.id, pm0)).map(d => d.id);
+    const pm = Object.assign({}, pm0, { victoires: pm0.victoires + 1, [S.diff]: (pm0[S.diff] || 0) + 1 });
+    if (S.stats.turns < 25) pm.rapide = true;
+    if (S.player.planes.every(p => !p.down)) pm.intacte = true;
+    store.set('victoires', pm.victoires); delete pm.victoires; store.set('palmares', pm);
+    fresh = CATALOG.filter(d => unlockedPlane(d.id) && !before.includes(d.id)).map(d => d.id);
+  }
   setTimeout(() => {
     win ? SFX.win() : SFX.lose();
     const st = S.stats, best = store.get('best', {}) || {};
     let rec = false;
-    if (win) {
-      rec = !best[S.diff] || st.turns < best[S.diff]; if (rec) { best[S.diff] = st.turns; store.set('best', best); }
-      store.set('victoires', (store.get('victoires', 0) || 0) + 1);
-    }
+    if (win) { rec = !best[S.diff] || st.turns < best[S.diff]; if (rec) { best[S.diff] = st.turns; store.set('best', best); } }
     // une nouvelle famille d'avions débloquée ?
-    const before = store.get('skins', ['a']) || ['a'], after = unlockedSkins(), fresh = after.filter(k => !before.includes(k));
+    const before = store.get('skins', ['a']) || ['a'], after = unlockedSkins(), freshSkin = after.filter(k => !before.includes(k));
     store.set('skins', after);
-    S.endInfo = { win, rec, best: best[S.diff] || 0, unlock: fresh[0] || null };
-    if (fresh.length) setTimeout(() => SFX.unlock(), 1400);
+    S.endInfo = { win, rec, best: best[S.diff] || 0, unlock: freshSkin[0] || null, planes: fresh };
+    if (freshSkin.length || fresh.length) setTimeout(() => SFX.unlock(), 1400);
     if (!win) setView('enemy');
     S.rankText = rec ? 'NOUVEAU RECORD !' : '';
     if (win && rec && window.LudoScores) LudoScores.submit('escadrille', 'best:' + S.diff, st.turns, true).then(r => {
       if (r && S.phase === 'over') S.rankText = `RECORD ! ${LudoScores.rankText(r).toUpperCase()}`; });
     S.endT0 = now();
   }, 1500);
+}
+// partie simulée IA contre IA, sans animation (tests et réglages : Escadrille.simulate)
+async function simulate(fleetA, fleetB, diff = 'hard') {
+  const keep = { diff: S.diff, phase: S.phase, player: S.player, enemy: S.enemy };
+  S.fast = true; S.diff = diff;
+  S.player = makeBoard(fleetA); S.enemy = makeBoard(fleetB); randomFleet(S.player); randomFleet(S.enemy);
+  const used = {}; let side = 'player', turns = 0, winner = null;
+  try {
+    while (turns < 400) {
+      tickCd(side); S.newReady = null;
+      const plan = aiChoose(side); used[plan.w] = (used[plan.w] || 0) + 1;
+      const res = await act(side, plan);
+      if (side === 'player') turns++;
+      if (allDown(foeOf(side))) { winner = side; break; }
+      if (res.flak.length) { used.riposte = (used.riposte || 0) + res.flak.length; await ripostes(side, res); if (allDown(boardOf(side))) { winner = other(side); break; } }
+      side = other(side);
+    }
+  } finally { Object.assign(S, keep); S.fast = false; }
+  return { winner, turns, used };
 }
 
 /* =========================================================
@@ -854,7 +1176,7 @@ function drawBoard(g, key, ox, oy, t, main) {
   // les avions (ombre portée loin dessous : ils volent haut)
   b.planes.forEach((p, i) => {
     if (!p.placed || !(mine || p.down || reveal)) return;
-    if (i === HELI && S.fx.some(f => f.type === 'dodge' && f.key === key)) return;
+    if (S.fx.some(f => f.type === 'dodge' && f.key === key && f.i === i)) return;
     const art = artOf(key, p), x = p.c * CS, y = p.r * CS;
     const bob = p.down ? 0 : Math.round(Math.sin(t * 2 + i * 1.7) * 1);
     drawPlane(g, art, x, y + bob, t, i, p.d, !p.down);
@@ -893,6 +1215,20 @@ function drawBoard(g, key, ox, oy, t, main) {
       if (main) smoke(g, cx(c), cy(r) - 2, t, c * 3 + r, .8);
     } else if (main && (c + r) % 2 === 0) smoke(g, cx(c), cy(r), t, c * 3 + r, .45);
   }
+  // mes ballons de barrage, et les leurres en l'air (des étincelles qui tombent sur tout le ciel)
+  if (mine || reveal) for (const [c, r] of b.flak) balloon(g, cx(c), cy(r), t, c + r);
+  if (b.decoy) {
+    for (let k = 0; k < 16; k++) { const q = (t * .35 + k / 16) % 1, x = (k * 53 + Math.sin(t + k) * 8) % BS, y = q * BS;
+      g.globalAlpha = 1 - q * .7; R(g, Math.round(x), Math.round(y), 2, 2, k % 3 ? '#fff6c2' : '#ffb070'); R(g, Math.round(x), Math.round(y) - 4, 1, 3, 'rgba(255,240,200,.5)'); }
+    g.globalAlpha = 1;
+    plate(g, BS / 2 - 30, 2, 60, 12, 'gold'); tiny(g, 'LEURRES', BS / 2, 5, '#fff6c2', 'center');
+  }
+  // les lignes comptées par la détection : leur nombre au bord
+  if (!mine || S.phase !== 'place') for (const q of b.lines) {
+    const x = q.h ? 0 : q.i * CS, y = q.h ? q.i * CS : 0;
+    R(g, x + 1, y + 1, 10, 9, OUT); R(g, x + 2, y + 2, 8, 7, q.n ? '#3a6ab0' : '#3a4250');
+    tiny(g, String(q.n), x + 6, y + 3, '#ffffff', 'center');
+  }
   if (main) drawAim(g, key, t);
   // effets en cours
   if (main) for (const f of S.fx) if (f.key === key) drawFx(g, f, t);
@@ -907,32 +1243,54 @@ function drawBoard(g, key, ox, oy, t, main) {
 // visée : aperçu des cases que l'arme choisie va toucher
 function drawAim(g, key, t) {
   if (S.phase !== 'play' || S.turn !== 'player' || S.busy) return;
-  const w = S.weapon;
-  if (w === 'esquive') {
+  const w = S.weapon, blink = Math.floor(t * 6) % 2 ? '#ffffff' : '#ffd23f';
+  const dot = (c, r, col) => { const x = c * CS, y = r * CS; R(g, x + 9, y + 9, 5, 5, OUT); R(g, x + 10, y + 10, 3, 3, col); };
+  if (POWERS[w].own) {
     if (key !== 'player') return;
-    const T2 = dodgeTargets(S.player), p = S.player.planes[HELI];
-    for (const [c, r] of T2) { const x = c * CS, y = r * CS, on = Math.floor(t * 3 + c + r) % 2;
-      R(g, x + 9, y + 9, 5, 5, OUT); R(g, x + 10, y + 10, 3, 3, on ? '#8ee05a' : '#d8ffb0'); }
-    if (S.aim && T2.some(([c, r]) => c === S.aim.c && r === S.aim.r)) {
-      const art = artOf('player', p), sh = shapeOf(p.def, p.d);
-      g.globalAlpha = .55 + .2 * Math.sin(t * 6); drawPlane(g, art, S.aim.c * CS, S.aim.r * CS, t, HELI, p.d, true); g.globalAlpha = 1;
-      corners(g, S.aim.c * CS + 1, S.aim.r * CS + 1, sh.w * CS - 1, sh.h * CS - 1, '#8ee05a');
+    const T2 = ownTargets(S.player, w), on = (c, r) => Math.floor(t * 3 + c + r) % 2 ? '#8ee05a' : '#d8ffb0';
+    if (w === 'esquive') {
+      const p = planeOf(S.player, 'esquive');
+      for (const [c, r] of T2) dot(c, r, on(c, r));
+      if (S.aim && T2.some(([c, r]) => c === S.aim.c && r === S.aim.r)) {
+        const art = artOf('player', p), sh = shapeOf(p.def, p.d);
+        g.globalAlpha = .55 + .2 * Math.sin(t * 6); drawPlane(g, art, S.aim.c * CS, S.aim.r * CS, t, 3, p.d, true); g.globalAlpha = 1;
+        corners(g, S.aim.c * CS + 1, S.aim.r * CS + 1, sh.w * CS - 1, sh.h * CS - 1, '#8ee05a');
+      }
+    } else if (w === 'reparation') {
+      for (const [c, r] of T2) corners(g, c * CS + 2, r * CS + 2, CS - 3, CS - 3, on(c, r));
+      if (S.aim) { const x = S.aim.c * CS, y = S.aim.r * CS; R(g, x + 7, y + 11, 10, 2, '#8ee05a'); R(g, x + 11, y + 7, 2, 10, '#8ee05a'); }
+    } else if (w === 'flak') {
+      if (S.marks.length < flakRoom()) for (const [c, r] of T2) if (!S.marks.some(m => m[0] === c && m[1] === r)) dot(c, r, on(c, r));
+      g.globalAlpha = .75 + .2 * Math.sin(t * 6); for (const [c, r] of S.marks) balloon(g, cx(c), cy(r), t, c + r); g.globalAlpha = 1;
     }
     return;
   }
-  if (key !== 'enemy' || !S.aim) return;
-  const { c, r } = S.aim, cells = weaponCells(w, c, r, S.missH), armed = S.armed && S.armed.c === c && S.armed.r === r;
-  const col = w === 'radar' ? '90,230,255' : '255,214,63';
-  for (const [x, y] of cells) { g.fillStyle = `rgba(${col},${(armed ? .32 : .18) + .1 * Math.sin(t * 8)})`; g.fillRect(x * CS + 1, y * CS + 1, CS - 1, CS - 1); }
-  if (w === 'missile') { // flèche de départ, au bord du ciel
-    for (let k = 0; k < 4; k++) {
-      if (S.missH) { R(g, 1 + k, r * CS + 11 - (3 - k) - 1, 3, (3 - k) * 2 + 3, OUT); R(g, 2 + k, r * CS + 11 - (3 - k), 1, (3 - k) * 2 + 1, '#fff6c2'); }
-      else { R(g, c * CS + 11 - (3 - k) - 1, 1 + k, (3 - k) * 2 + 3, 3, OUT); R(g, c * CS + 11 - (3 - k), 2 + k, (3 - k) * 2 + 1, 1, '#fff6c2'); }
+  if (key !== 'enemy') return;
+  if (w === 'roquettes') {
+    for (const [c, r] of S.marks) {
+      const x = c * CS, y = r * CS; g.fillStyle = `rgba(255,214,63,${.3 + .1 * Math.sin(t * 8)})`; g.fillRect(x + 1, y + 1, CS - 1, CS - 1);
+      corners(g, x + 1, y + 1, CS - 1, CS - 1, blink); R(g, x + 7, y + 11, 10, 2, '#ffffff'); R(g, x + 11, y + 7, 2, 10, '#ffffff');
     }
+    return;
   }
+  if (!S.aim) return;
+  const { c, r } = S.aim, cells = POWERS[w].dir ? [...weaponCells(w, c, r, true), ...weaponCells(w, c, r, false)] : weaponCells(w, c, r, true), armed = S.armed && S.armed.c === c && S.armed.r === r;
+  const col = w === 'radar' || w === 'camera' || w === 'detection' ? '90,230,255' : '255,214,63';
+  for (const [x, y] of cells) { g.fillStyle = `rgba(${col},${(armed ? .32 : .18) + .1 * Math.sin(t * 8)})`; g.fillRect(x * CS + 1, y * CS + 1, CS - 1, CS - 1); }
   const x = c * CS, y = r * CS;
-  corners(g, x + 1, y + 1, CS - 1, CS - 1, Math.floor(t * 6) % 2 ? '#ffffff' : '#ffd23f');
+  corners(g, x + 1, y + 1, CS - 1, CS - 1, blink);
   if (armed) { R(g, x + 7, y + 11, 10, 2, '#ffffff'); R(g, x + 11, y + 7, 2, 10, '#ffffff'); }
+}
+// combien de ballons on peut encore lâcher ce tour-ci
+const flakRoom = () => Math.min(POWERS.flak.multi, MAX_FLAK - S.player.flak.length);
+// un ballon de barrage vu de dessus : enveloppe argentée, ailerons, câble
+function balloon(g, x, y, t, k) {
+  const bob = Math.sin(t * 2 + k) * 1;
+  g.fillStyle = 'rgba(4,16,44,.3)'; g.beginPath(); g.ellipse(x + 3, y + 5, 4, 6, 0, 0, TAU); g.fill();
+  g.fillStyle = OUT; g.beginPath(); g.ellipse(x, y + bob, 5, 7.5, 0, 0, TAU); g.fill();
+  g.fillStyle = '#b8c0cc'; g.beginPath(); g.ellipse(x, y + bob, 4, 6.5, 0, 0, TAU); g.fill();
+  g.fillStyle = '#e8eef6'; g.beginPath(); g.ellipse(x - 1.4, y - 2 + bob, 1.6, 3, 0, 0, TAU); g.fill();
+  R(g, Math.round(x) - 4, Math.round(y + 5 + bob), 8, 1, '#d6a050'); R(g, Math.round(x) - .5, Math.round(y + 6 + bob), 1, 3, '#d6a050');
 }
 function drawFx(g, f, t) {
   const u = clamp((now() - f.t0) / f.dur, 0, 1);
@@ -983,11 +1341,38 @@ function drawFx(g, f, t) {
     g.globalAlpha = 1;
   } else if (f.type === 'dodge') { // l'hélicoptère file vers sa nouvelle place (caché dans le ciel ennemi)
     if (f.key === 'player') {
-      const q = ease(u), p = S.player.planes[HELI], art = artOf('player', p, f.d);
+      const q = ease(u), p = S.player.planes[f.i], art = artOf('player', p, f.d);
       const x = (f.from[0] + (f.to[0] - f.from[0]) * q) * CS, y = (f.from[1] + (f.to[1] - f.from[1]) * q) * CS - Math.sin(u * Math.PI) * 6;
-      drawPlane(g, art, x, y, t, HELI, f.d, true);
+      drawPlane(g, art, x, y, t, f.i, f.d, true);
     }
     if (Math.random() < .25 && u < .5) burst(f.key, cx(f.from[0]) + rand(10) - 5, cy(f.from[1]) + rand(16) - 4, 'puff', 1);
+  } else if (f.type === 'rocket') { // une roquette arrive en biais du bas de l'écran, avec sa traînée
+    const x1 = cx(f.c), y1 = cy(f.r), x0 = x1 - 60, y0 = y1 + 90, q = ease(u), hx = x0 + (x1 - x0) * q, hy = y0 + (y1 - y0) * q;
+    for (let k = 0; k < 10; k++) { const v = q - k * .04; if (v < 0) break; g.globalAlpha = .7 - k * .07; R(g, Math.round(x0 + (x1 - x0) * v), Math.round(y0 + (y1 - y0) * v), 2, 2, '#eef2fb'); }
+    g.globalAlpha = 1; R(g, Math.round(hx) - 2, Math.round(hy) - 2, 4, 4, OUT); R(g, Math.round(hx) - 1, Math.round(hy) - 1, 2, 2, '#ff9a3c');
+  } else if (f.type === 'film' || f.type === 'lit') { // la caméra du drone : un cadre qui balaie les 4 cases
+    const [a, b] = [f.cells[0], f.cells[f.cells.length - 1]], x0 = a[0] * CS, y0 = a[1] * CS, w = (b[0] - a[0] + 1) * CS, h = (b[1] - a[1] + 1) * CS;
+    g.globalAlpha = f.type === 'lit' ? 1 - u : 1; g.fillStyle = 'rgba(90,230,255,.18)'; g.fillRect(x0 + 1, y0 + 1, w - 1, h - 1);
+    if (f.type === 'film') { const k = Math.floor(u * f.cells.length * 2) % f.cells.length, [c, r] = f.cells[k]; corners(g, c * CS + 1, r * CS + 1, CS - 1, CS - 1, '#bff6ff'); if (Math.floor(t * 4) % 2) R(g, x0 + 3, y0 + 3, 3, 3, '#ff4a3c'); }
+    corners(g, x0 + 1, y0 + 1, w - 1, h - 1, '#bff6ff'); g.globalAlpha = 1;
+  } else if (f.type === 'ping') { // la détection : des ondes partent de la case le long de sa ligne et de sa colonne
+    const L = N * CS, d = ease(u) * L, x0 = f.c * CS, y0 = f.r * CS;
+    g.fillStyle = 'rgba(90,230,255,.14)'; g.fillRect(0, y0 + 1, L, CS - 1); g.fillRect(x0 + 1, 0, CS - 1, L);
+    for (let k = 0; k < 3; k++) { const p = d - k * 14; if (p < 0) continue; g.globalAlpha = 1 - k * .3;
+      for (const sg of [-1, 1]) { R(g, Math.round(x0 + CS / 2 + sg * p), y0 + 3, 2, CS - 5, '#bff6ff'); R(g, x0 + 3, Math.round(y0 + CS / 2 + sg * p), CS - 5, 2, '#bff6ff'); } }
+    g.globalAlpha = 1;
+  } else if (f.type === 'repair') { // le ravitailleur : une clé qui tourne au-dessus de la case
+    const x = cx(f.c), y = cy(f.r) - 4 - Math.sin(u * Math.PI) * 6;
+    g.save(); g.translate(x, y); g.rotate(u * TAU * 2);
+    R(g, -1, -6, 3, 12, OUT); R(g, 0, -5, 1, 10, '#d8ffb0'); R(g, -3, -7, 7, 3, OUT); R(g, -2, -6, 5, 1, '#8ee05a');
+    g.restore();
+  } else if (f.type === 'balloons') { // les ballons montent et se gonflent
+    g.globalAlpha = Math.min(1, u * 2); for (const [c, r] of f.cells) { g.save(); g.translate(cx(c), cy(r) + (1 - u) * 12); g.scale(.4 + .6 * u, .4 + .6 * u); balloon(g, 0, 0, t, c + r); g.restore(); }
+    g.globalAlpha = 1;
+  } else if (f.type === 'flares') { // les leurres : des étincelles qui jaillissent et retombent en gerbes
+    for (let k = 0; k < 24; k++) { const a = k / 24 * TAU, sp = 40 + (k * 17) % 50, x = BS / 2 + Math.cos(a) * sp * u * 1.6, y = BS / 2 + Math.sin(a) * sp * u * 1.2 + u * u * 60;
+      g.globalAlpha = 1 - u; R(g, Math.round(x), Math.round(y), 3, 3, OUT); R(g, Math.round(x), Math.round(y), 2, 2, k % 3 ? '#fff6c2' : '#ff9a3c'); }
+    g.globalAlpha = 1;
   }
   if (u >= 1 && !f.ended) { f.ended = true; if (f.done) f.done(); }
 }
@@ -1004,18 +1389,20 @@ function button(x, y, w, h, label, opts = {}) {
   }
   if (opts.act) BTN.push({ x, y, w, h, act: opts.act });
 }
-function wrap(s, n) {
+// coupe un texte en lignes d'après la largeur mesurée (police déjà choisie)
+function wrapW(s, W) {
   const words = s.split(' '), lines = []; let cur = '';
-  for (const w of words) { if ((cur + ' ' + w).trim().length > n) { lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }
-  if (cur.trim()) lines.push(cur.trim());
+  for (const w of words) { const nx = cur ? cur + ' ' + w : w; if (g.measureText(nx).width > W && cur) { lines.push(cur); cur = w; } else cur = nx; }
+  if (cur) lines.push(cur);
   return lines;
 }
 function drawMsg(y) {
-  plate(g, 4, y, LW - 8, 44);
+  const h = Math.max(44, LH - y - 6);
+  plate(g, 4, y, LW - 8, h);
   const shown = Math.min(S.msg.length, Math.floor((now() - S.msgT0) / 16));
   if (shown !== S.msgShown) { if (shown < S.msg.length && shown % 5 === 0 && AC.sfxOn) SFX.tick(); S.msgShown = shown; }
-  const lines = wrap(S.msg, 31); let left = shown;
-  lines.slice(0, 3).forEach((l, i) => { const part = l.slice(0, Math.max(0, left)); left -= l.length + 1; text(g, part, 9, y + 7 + i * 12, '#f2f0ff'); });
+  g.font = FONT_TEXT(8); const lines = wrapW(S.msg, LW - 22); let left = shown;
+  lines.slice(0, Math.max(3, Math.floor((h - 8) / 13))).forEach((l, i) => { const part = l.slice(0, Math.max(0, left)); left -= l.length + 1; text(g, part, 9, y + 7 + i * 13, '#f2f0ff'); });
 }
 // le sol de la partie (campagne, forêts et montagnes, désert et canyon : escadrille/sol.js), tiré au hasard à chaque partie
 const SOLS = ['a', 'b', 'c'];
@@ -1025,8 +1412,8 @@ function ground(gg, x0, y0, w, h, t, speed) { // le sol qui défile vers le bas,
   for (let y = -EscSol.H + oy; y < h; y += EscSol.H) for (let x = 0; x < w; x += EscSol.W) gg.drawImage(tile, x0 + x, y0 + y);
 }
 function bg(t) {
-  ground(g, 0, 0, LW, LH, t, 5);
-  g.fillStyle = 'rgba(6,14,36,.62)'; g.fillRect(0, 0, LW, LH);
+  ground(g, 0, -OY, LW, LH, t, 5);
+  g.fillStyle = 'rgba(6,14,36,.62)'; g.fillRect(0, -OY, LW, LH);
 }
 const rankUrl = () => `../classements/index.html#escadrille-0-${S.diff}`;
 function drawTitle(t) {
@@ -1034,8 +1421,8 @@ function drawTitle(t) {
   logo(g, 'ESCADRILLE !', LW / 2, 26, 20);
   tiny(g, 'LA BATAILLE AERIENNE DES POUVOIRS', LW / 2, 56, '#cfe6ff', 'center');
   plate(g, 8, 72, LW - 16, 154);
-  const rows = [['radar', 'RADAR', 'Révèle une zone 3x3', 'AVION RADAR'], ['bombes', 'BOMBES', 'Cinq bombes en croix', 'BOMBARDIER'],
-                ['missile', 'MISSILE', 'File jusqu\'au 1er avion', 'CHASSEUR'], ['esquive', 'ESQUIVE', 'L\'hélico s\'échappe', 'HELICOPTERE']];
+  // les pouvoirs de l'escadrille choisie au hangar
+  const rows = FLEET.map(id => { const d = PLANES[id], pw = POWERS[d.power]; return [d.power, pw.name, pw.desc, upper(d.name)]; });
   rows.forEach(([ic, name, d, who], i) => {
     const y = 80 + i * 36;
     g.drawImage(G.icon[ic], 16, y + 4);
@@ -1061,11 +1448,11 @@ function drawTitle(t) {
   plate(g, 50, 438, LW - 58, 32);
   text(g, 'Abattez l\'escadrille', 58, 444, '#f2f0ff'); text(g, 'en moins de tours !', 58, 456, '#f2f0ff');
 }
-// une rangée des 4 avions d'une famille, réduits (k), nez en haut ; en silhouette si la famille est bloquée
+// une rangée des 4 avions de départ d'une famille, réduits (k), nez en haut ; en silhouette si la famille est bloquée
 function familyRow(st, side, x, y, k, t, locked) {
   let px = x;
-  FLEET.forEach((def, i) => {
-    const art = plane(st, side, def.id, 0);
+  CLASSIC.forEach((id, i) => {
+    const art = plane(st, side, id, 0);
     g.save(); g.translate(px, y); g.scale(k, k);
     if (locked) { g.imageSmoothingEnabled = true; g.drawImage(art.sil, 0, 0, art.w, art.h); g.imageSmoothingEnabled = false; }
     else drawPlane(g, art, 0, 0, t, i, 0, true);
@@ -1073,14 +1460,39 @@ function familyRow(st, side, x, y, k, t, locked) {
     px += Math.round(art.w * k) + 4;
   });
 }
-const rowWidth = k => FLEET.reduce((a, def) => a + Math.round(SIZE[def.id][0] * k) + 4, -4);
+const rowWidth = k => CLASSIC.reduce((a, id) => a + Math.round(SIZE[id][0] * k) + 4, -4);
+// un avion réduit pour tenir dans une boîte (nez en haut) ; en silhouette s'il est à débloquer
+function planeFit(id, x, y, bw, bh, t, locked, maxK = 1, k = 0) {
+  const art = plane(STYLE, 'mine', id, 0), sc = Math.min(bw / art.w, bh / art.h, maxK);
+  g.save(); g.translate(Math.round(x + (bw - art.w * sc) / 2), Math.round(y + (bh - art.h * sc) / 2)); g.scale(sc, sc);
+  if (locked) { g.imageSmoothingEnabled = true; g.drawImage(art.sil, 0, 0, art.w, art.h); g.imageSmoothingEnabled = false; }
+  else drawPlane(g, art, 0, 0, t, k, 0, true);
+  g.restore();
+}
+function padlock(x, y) { R(g, x + 1, y, 6, 2, '#c9d2e4'); R(g, x + 1, y, 2, 5, '#c9d2e4'); R(g, x + 5, y, 2, 5, '#c9d2e4'); R(g, x, y + 4, 8, 7, OUT); R(g, x + 1, y + 5, 6, 5, '#c9d2e4'); R(g, x + 3, y + 7, 2, 2, OUT); }
+// avions débloqués que le joueur n'a pas encore vus au hangar (badge NOUVEAU !)
+const unseen = () => { const v = store.get('vus', []) || [], pm = palmares(); return CATALOG.filter(d => !d.base && unlockedPlane(d.id, pm) && !v.includes(d.id)).map(d => d.id); };
 function drawHangar(t) {
   bg(t);
-  logo(g, 'HANGAR', LW / 2, 12, 18);
-  tiny(g, 'CHOISISSEZ VOTRE ESCADRILLE', LW / 2, 38, '#cfe6ff', 'center');
+  logo(g, 'HANGAR', LW / 2, 10, 18);
+  const fresh = unseen();
+  button(8, 36, 124, 20, 'FAMILLES', { tiny: true, gold: S.tab === 'familles', act: () => { S.tab = 'familles'; SFX.select(); } });
+  button(140, 36, 124, 20, 'AVIONS', { tiny: true, gold: S.tab === 'avions', act: () => { S.tab = 'avions'; SFX.select(); } });
+  if (fresh.length && S.tab !== 'avions') { plate(g, 226, 30, 40, 11, 'red'); tiny(g, 'NOUVEAU', 246, 33, '#fff6c2', 'center'); }
+  if (S.tab === 'avions') drawFleetTab(t, fresh); else drawFamilies(t);
+  button(86, 412, 100, 26, 'RETOUR', { tiny: true, act: () => { SFX.click(); store.set('vus', CATALOG.filter(d => !d.base && unlockedPlane(d.id)).map(d => d.id)); S.phase = 'title'; } });
+  if (S.tab === 'avions') {
+    tiny(g, 'UN AVION PAR PLACE, AVEC LE MEME NOMBRE DE CASES :', LW / 2, 446, '#8fb3e0', 'center');
+    tiny(g, 'LA DIFFICULTE NE CHANGE PAS', LW / 2, 456, '#8fb3e0', 'center');
+  } else {
+    tiny(g, 'LES FAMILLES NE CHANGENT QUE LE DESSIN', LW / 2, 446, '#8fb3e0', 'center');
+    tiny(g, 'LES ENNEMIS SONT LES PIRATES DE LA MEME FAMILLE', LW / 2, 456, '#8fb3e0', 'center');
+  }
+}
+function drawFamilies(t) {
   const sk = unlockedSkins(), v = Number(store.get('victoires', 0)) || 0, K2 = .42, rw = rowWidth(K2);
   SKINS.forEach(([st, name], i) => {
-    const x = 8 + (i % 2) * 132, y = 50 + Math.floor(i / 2) * 176, w = 124, h = 168, ok = sk.includes(st), sel = STYLE === st;
+    const x = 8 + (i % 2) * 132, y = 64 + Math.floor(i / 2) * 172, w = 124, h = 164, ok = sk.includes(st), sel = STYLE === st;
     plate(g, x, y, w, h, sel ? 'gold' : ok ? null : 'dim');
     if (sel) { const c = Math.floor(t * 4) % 2 ? '#ffd23f' : '#fff6c2'; R(g, x - 1, y - 1, w + 2, 1, c); R(g, x - 1, y + h, w + 2, 1, c); R(g, x - 1, y - 1, 1, h + 2, c); R(g, x + w, y - 1, 1, h + 2, c); }
     text(g, `${st.toUpperCase()}. ${name}`, x + w / 2, y + 7, ok ? (sel ? '#fff6c2' : '#ffd23f') : '#7d8698', 'center');
@@ -1093,29 +1505,84 @@ function drawHangar(t) {
     g.restore();
     R(g, wx - 1, wy - 1, ww + 2, 1, OUT); R(g, wx - 1, wy + wh, ww + 2, 1, OUT); R(g, wx - 1, wy, 1, wh, OUT); R(g, wx + ww, wy, 1, wh, OUT);
     tiny(g, 'VOUS', wx + 3, wy + 3, '#cfe6ff'); tiny(g, 'PIRATES', wx + 3, wy + 49, '#ffd6cc');
-    if (ok) tiny(g, sel ? 'EN SERVICE' : 'TOUCHEZ POUR CHOISIR', x + w / 2, y + 128, sel ? '#8ee05a' : '#ffffff', 'center');
+    if (ok) tiny(g, sel ? 'EN SERVICE' : 'TOUCHEZ POUR CHOISIR', x + w / 2, y + 126, sel ? '#8ee05a' : '#ffffff', 'center');
     else {
-      tiny(g, 'BLOQUEE', x + w / 2, y + 126, '#ff8a76', 'center');
-      tiny(g, SKIN_HOW[st], x + w / 2, y + 138, '#cfe6ff', 'center');
-      if (st === 'c') tiny(g, `${Math.min(v, 10)}/10`, x + w / 2, y + 150, '#ffd23f', 'center');
+      tiny(g, 'BLOQUEE', x + w / 2, y + 124, '#ff8a76', 'center');
+      tiny(g, SKIN_HOW[st], x + w / 2, y + 136, '#cfe6ff', 'center');
+      if (st === 'c') tiny(g, `${Math.min(v, 10)}/10`, x + w / 2, y + 148, '#ffd23f', 'center');
     }
     BTN.push({ x, y, w, h, act: () => {
       if (!ok) { SFX.error(); return; }
       if (STYLE !== st) { STYLE = st; store.set('skin', st); warm(st, true); SFX.select(); }
     } });
   });
-  button(86, 410, 100, 26, 'RETOUR', { tiny: true, act: () => { SFX.click(); S.phase = 'title'; } });
-  tiny(g, 'LES FAMILLES NE CHANGENT QUE LE DESSIN', LW / 2, 446, '#8fb3e0', 'center');
-  tiny(g, 'LES ENNEMIS SONT LES PIRATES DE LA MEME FAMILLE', LW / 2, 456, '#8fb3e0', 'center');
 }
-function setMissile(h) {
-  if (S.missH === h) return;
-  S.missH = h; S.armed = null; SFX.rotate();
-  setMsg(h ? 'Missile en ligne : il part du bord gauche. Touchez une ligne.' : 'Missile en colonne : il part du haut. Touchez une colonne.');
+// l'onglet AVIONS : les 4 places de mon escadrille, puis les avions qui peuvent prendre la place choisie
+function drawFleetTab(t, fresh) {
+  const pm = palmares(), sl = S.slot;
+  tiny(g, 'MON ESCADRILLE : TOUCHEZ UNE PLACE', LW / 2, 62, '#cfe6ff', 'center');
+  SLOTS.forEach(([nm, n], i) => {
+    const x = 8 + i * 65, y = 72, w = 61, h = 72, d = PLANES[FLEET[i]], on = sl === i;
+    plate(g, x, y, w, h, on ? 'gold' : null);
+    if (on) { const c = Math.floor(t * 4) % 2 ? '#ffd23f' : '#fff6c2'; R(g, x - 1, y - 1, w + 2, 1, c); R(g, x - 1, y + h, w + 2, 1, c); R(g, x - 1, y - 1, 1, h + 2, c); R(g, x + w, y - 1, 1, h + 2, c); }
+    tiny(g, `${nm} ${n}`, x + w / 2, y + 4, on ? '#fff6c2' : '#cfe6ff', 'center');
+    planeFit(d.id, x + 5, y + 12, w - 10, 44, t, false, .6, i);
+    tiny(g, POWERS[d.power].name, x + w / 2, y + 61, '#ffd23f', 'center');
+    if (CATALOG.some(c => c.slot === i && fresh.includes(c.id)) && !on) { plate(g, x + w - 9, y - 7, 12, 12, 'red'); tiny(g, '!', x + w - 3, y - 4, '#fff6c2', 'center'); }
+    BTN.push({ x, y, w, h, act: () => { S.slot = i; SFX.select(); } });
+  });
+  tiny(g, `${SLOTS[sl][0]} - ${SLOTS[sl][1]} CASES : CHOISISSEZ L'AVION`, LW / 2, 152, '#ffd23f', 'center');
+  CATALOG.filter(d => d.slot === sl).forEach((d, k) => {
+    const x = 8, y = 162 + k * 80, w = LW - 16, h = 74, ok = unlockedPlane(d.id, pm), on = FLEET[sl] === d.id, pw = POWERS[d.power];
+    plate(g, x, y, w, h, on ? 'gold' : ok ? null : 'dim');
+    g.save(); g.beginPath(); g.rect(x + 4, y + 4, 64, h - 8); g.clip();
+    ground(g, x - 20, y + 4, 110, h - 8, t, 6); g.fillStyle = ok ? 'rgba(150,190,230,.2)' : 'rgba(6,14,36,.6)'; g.fillRect(x + 4, y + 4, 64, h - 8);
+    planeFit(d.id, x + 6, y + 6, 60, h - 12, t, !ok, .72, k);
+    g.restore();
+    if (!ok) padlock(x + 32, y + 30);
+    text(g, upper(d.name), x + 76, y + 7, ok ? '#ffffff' : '#9aa3b8');
+    text(g, pw.name, x + 76, y + 21, ok ? '#ffd23f' : '#8a7a4a');
+    if (ok) tiny(g, upper(pw.desc), x + 76, y + 36, '#cfe6ff');
+    else { tiny(g, 'A DEBLOQUER :', x + 76, y + 36, '#ff8a76'); tiny(g, d.cond, x + 76, y + 46, '#ffd6cc'); }
+    // la forme (cases occupées)
+    d.shape.forEach((row, r) => [...row].forEach((ch, c) => R(g, x + 76 + c * 4, y + h - 20 + r * 4 - (d.h > 3 ? 4 : 0), 3, 3, ch === 'X' ? '#ffd23f' : 'rgba(255,255,255,.12)')));
+    if (ok && fresh.includes(d.id) && !on) tiny(g, 'NOUVEAU !', x + 80 + d.w * 4, y + h - 14, Math.floor(t * 3) % 2 ? '#ffd23f' : '#fff6c2');
+    if (on) tiny(g, 'EN SERVICE', x + w - 10, y + h - 14, '#8ee05a', 'right');
+    else if (ok) button(x + w - 70, y + h - 24, 62, 18, 'CHOISIR', { tiny: true });
+    BTN.push({ x, y, w, h, act: () => {
+      if (!ok) { SFX.error(); return; }
+      if (on) return;
+      FLEET[sl] = d.id; store.set('flotte', FLEET); SFX.place(); warm(STYLE, true);
+    } });
+  });
+}
+// flèches des pouvoirs en ligne (missile, caméra) : à gauche de la ligne, au-dessus de la colonne de la case choisie
+function arrowsOn() { return S.phase === 'play' && S.view === 'enemy' && POWERS[S.weapon].dir && S.armed && S.turn === 'player' && !S.busy; }
+function arrowGlyph(x, y, dir, col) {
+  for (let k = 0; k < 6; k++) {
+    if (dir === 'r') { R(g, x + k, y - 6 + k, 2, (6 - k) * 2 + 1, OUT); R(g, x + k, y - 5 + k, 1, (6 - k) * 2 - 1, col); }
+    else { R(g, x - 6 + k, y + k, (6 - k) * 2 + 1, 2, OUT); R(g, x - 5 + k, y + k, (6 - k) * 2 - 1, 1, col); }
+  }
+}
+function drawArrows(t) {
+  if (!arrowsOn()) return;
+  const { c, r } = S.armed, w = S.weapon, bl = Math.floor(t * 4) % 2 ? '#ffd23f' : '#fff6c2';
+  const fireH = h => playerAct({ w, c, r, h });
+  button(4, BY + r * CS + 1, 22, CS - 2, '', { gold: true, act: () => fireH(true) });
+  arrowGlyph(11, BY + r * CS + CS / 2, 'r', bl);
+  button(BX + c * CS + 1, 22, CS - 2, 22, '', { gold: true, act: () => fireH(false) });
+  arrowGlyph(BX + c * CS + CS / 2, 29, 'd', bl);
 }
 function saveOpts() { store.set('opts', { sfx: AC.sfxOn, music: AC.musicOn }); }
 
-const BY_BAR = 284, MINI = { x: 8, y: 340, s: 88 };
+// la place gagnée sur un écran plus haut que 480 va à la barre des pouvoirs, à la miniature et aux messages
+let BY_BAR = 284, BAR_H = 46, MSG_Y = 434; const MINI = { x: 8, y: 340, s: 88 };
+function layout() {
+  const ex = LH - 480;
+  BY_BAR = 284 + Math.round(ex * .1); BAR_H = 46 + Math.min(18, Math.round(ex * .16));
+  MINI.y = BY_BAR + BAR_H + 8; MINI.s = 88 + Math.min(22, Math.round(ex * .3));
+  MSG_Y = MINI.y + MINI.s + 12;
+}
 function drawHud(t) {
   logo(g, 'ESCADRILLE!', 62, 8, 10);
   const place = S.phase === 'place', armedQuit = S.quitArm && now() - S.quitArm < 2500;
@@ -1129,52 +1596,63 @@ function drawHud(t) {
     text(g, `TOUR ${S.stats.turns + (S.turn === 'player' && !S.busy ? 1 : 0)}`, 161, 11, '#ffd23f', 'center');
   }
   const mine = S.view === 'player';
-  const ttl = place ? 'PLACEZ VOTRE ESCADRILLE' : mine ? (S.turn === 'ai' ? "L'ENNEMI ATTAQUE !" : S.weapon === 'esquive' ? "CHOISISSEZ OU S'ECHAPPER" : 'VOTRE ESCADRILLE')
+  const OWN_TTL = { esquive: "CHOISISSEZ OU S'ECHAPPER", reparation: 'CHOISISSEZ L\'AVION A REPARER', flak: 'OU LACHER LES BALLONS ?' };
+  const ttl = place ? 'PLACEZ VOTRE ESCADRILLE' : mine ? (S.turn === 'ai' ? "L'ENNEMI ATTAQUE !" : OWN_TTL[S.weapon] || 'VOTRE ESCADRILLE')
             : S.phase === 'over' ? 'CIEL ENNEMI' : (S.turn === 'player' ? 'CIEL ENNEMI : A VOUS' : 'CIEL ENNEMI');
-  if (!mine && S.weapon === 'missile' && S.phase === 'play' && S.turn === 'player' && !S.busy) {
-    // le missile : un bouton pour choisir son sens, bien visible au-dessus de la grille
-    tiny(g, 'MISSILE :', 62, 33, '#ffb4a8', 'right');
-    button(68, 27, 92, 16, 'LIGNE  >', { tiny: true, gold: S.missH, act: () => setMissile(true) });
-    button(164, 27, 92, 16, 'COLONNE  V', { tiny: true, gold: !S.missH, act: () => setMissile(false) });
-  } else tiny(g, ttl, LW / 2, 32, mine ? '#9fd3ff' : '#ffb4a8', 'center');
+  if (!arrowsOn()) tiny(g, ttl, LW / 2, 32, mine ? '#9fd3ff' : '#ffb4a8', 'center');
 }
 function drawBar(t) {
   if (S.phase === 'place') {
-    button(6, BY_BAR, 82, 42, 'PIVOTER', { tiny: true, disabled: S.sel == null, act: () => rotateSel() });
-    button(95, BY_BAR, 82, 42, 'HASARD', { tiny: true, act: () => { randomFleet(S.player); S.sel = null; SFX.rotate(); } });
-    button(184, BY_BAR, 82, 42, 'DECOLLAGE !', { gold: true, tiny: true, act: () => { audioInit(); startBattle(); } });
+    button(6, BY_BAR, 82, BAR_H - 4, 'PIVOTER', { tiny: true, disabled: S.sel == null, act: () => rotateSel() });
+    button(95, BY_BAR, 82, BAR_H - 4, 'HASARD', { tiny: true, act: () => { randomFleet(S.player); S.sel = null; SFX.rotate(); } });
+    button(184, BY_BAR, 82, BAR_H - 4, 'DECOLLAGE !', { gold: true, tiny: true, act: () => { audioInit(); startBattle(); } });
     return;
   }
-  const myTurn = S.phase === 'play' && S.turn === 'player' && !S.busy;
-  BAR.forEach((p, i) => {
-    const x = 6 + i * 52, y = BY_BAR, w = 48, h = 46, b = S.player, pl = POWERS[p].ship >= 0 ? b.planes[POWERS[p].ship] : null;
-    const ok = ready('player', p), sel = S.weapon === p;
-    plate(g, x, y, w, h, sel ? 'gold' : ok ? null : 'dim');
+  const myTurn = S.phase === 'play' && S.turn === 'player' && !S.busy, b = S.player;
+  ['tir', ...powersOf(b)].forEach((p, i) => {
+    const x = 6 + i * 52, y = BY_BAR, w = 48, h = BAR_H, pl = p === 'tir' ? null : planeOf(b, p), why = blocked('player', p);
+    const ok = !why, sel = S.weapon === p, multi = POWERS[p].multi;
+    const fire = sel && myTurn && p !== 'tir' && (multi ? S.marks.length > 0 : POWERS[p].instant || !!S.armed);   // la cible est choisie : FEU ! (ou une flèche pour les pouvoirs en ligne)
+    plate(g, x, y, w, h, fire && !POWERS[p].dir ? 'red' : sel ? 'gold' : ok ? null : 'dim');
     if (sel) { const c = Math.floor(T * 4) % 2 ? '#ffd23f' : '#fff6c2'; R(g, x - 1, y - 1, w + 2, 1, c); R(g, x - 1, y + h, w + 2, 1, c); R(g, x - 1, y - 1, 1, h + 2, c); R(g, x + w, y - 1, 1, h + 2, c); }
     if (!ok) g.globalAlpha = .4;
-    g.drawImage(G.icon[p], x + 14, y + 5);
+    g.drawImage(G.icon[p], x + 14, y + 5 + Math.round((h - 46) / 3));
     g.globalAlpha = 1;
-    tiny(g, p === 'missile' && sel ? (S.missH ? 'LIGNE' : 'COLONNE') : POWERS[p].name, x + w / 2, y + 31, ok ? '#ffffff' : '#7d8698', 'center');
-    if (pl && pl.down) { for (let k = 0; k < 14; k++) { R(g, x + 17 + k, y + 6 + k, 2, 2, '#ff4040'); R(g, x + 30 - k, y + 6 + k, 2, 2, '#ff4040'); } }
-    else if (p !== 'tir' && b.cd[p] > 0) { plate(g, x + 30, y + 3, 15, 13, 'red'); text(g, String(b.cd[p]), x + 38, y + 6, '#ffffff', 'center'); }
-    else if (p === 'esquive' && pl.hits) tiny(g, 'TOUCHE', x + w / 2, y + 38, '#ff8a76', 'center');
-    else if (p !== 'tir') tiny(g, ok ? 'PRET' : 'BLOQUE', x + w / 2, y + 38, ok ? '#8ee05a' : '#7d8698', 'center');
+    tiny(g, fire ? (POWERS[p].dir ? 'UNE FLECHE' : 'FEU !') : POWERS[p].name, x + w / 2, y + h - 17, ok ? '#ffffff' : '#7d8698', 'center', w - 4);
+    if (why === 'down') { for (let k = 0; k < 14; k++) { R(g, x + 17 + k, y + 6 + k, 2, 2, '#ff4040'); R(g, x + 30 - k, y + 6 + k, 2, 2, '#ff4040'); } }
+    else if (why === 'cd') { plate(g, x + 30, y + 3, 15, 13, 'red'); text(g, String(b.cd[p]), x + 38, y + 6, '#ffffff', 'center'); }
+    else if (fire && multi) tiny(g, `${S.marks.length}/${p === 'flak' ? flakRoom() : multi}`, x + w / 2, y + h - 8, '#fff6c2', 'center');
+    else if (why === 'hit') tiny(g, 'TOUCHE', x + w / 2, y + h - 8, '#ff8a76', 'center');
+    else if (p !== 'tir') tiny(g, ok ? 'PRET' : why === 'full' ? 'PLEIN' : 'BLOQUE', x + w / 2, y + h - 8, ok ? '#8ee05a' : '#7d8698', 'center');
     BTN.push({ x, y, w, h, act: () => {
       if (!myTurn) return;
       if (!ok) {
         SFX.error();
-        setMsg(pl && pl.down ? `${pl.def.le} est abattu : plus de ${POWERS[p].name.toLowerCase()} !` : p === 'esquive' && pl.hits ? "L'hélicoptère est touché : il ne peut plus s'échapper."
-          : b.cd[p] > 0 ? `${POWERS[p].name} sera prêt dans ${b.cd[p]} tour${b.cd[p] > 1 ? 's' : ''}.` : "L'hélicoptère n'a nulle part où s'échapper.");
+        setMsg(why === 'down' ? `${pl.def.le} ${pl.def.pl ? 'sont abattus' : 'est abattu'} : plus de ${POWERS[p].name.toLowerCase()} !`
+          : why === 'cd' ? `${POWERS[p].name} sera prêt dans ${b.cd[p]} tour${b.cd[p] > 1 ? 's' : ''}.`
+          : why === 'hit' ? "L'hélicoptère est touché : il ne peut plus s'échapper."
+          : why === 'intact' ? 'Aucun avion touché : rien à réparer.'
+          : why === 'full' ? `Déjà ${MAX_FLAK} ballons dans notre ciel.`
+          : p === 'esquive' ? "L'hélicoptère n'a nulle part où s'échapper." : 'Plus de place dans notre ciel.');
         return;
       }
-      if (p === 'missile' && S.weapon === 'missile') { setMissile(!S.missH); return; }
-      S.weapon = p; S.aim = null; S.armed = null; SFX.select();
-      setView(p === 'esquive' ? 'player' : 'enemy');
+      if (fire) {
+        if (POWERS[p].dir) { SFX.error(); setMsg('Touchez une flèche : à gauche pour la ligne, en haut pour la colonne.'); return; }
+        playerAct(multi ? { w: p, c: S.marks[0][0], r: S.marks[0][1], h: true, cells: S.marks.slice() } : POWERS[p].instant ? { w: p, c: 0, r: 0, h: true } : { w: p, c: S.armed.c, r: S.armed.r, h: true }); return;
+      }
+      S.weapon = p; S.aim = null; S.armed = null; S.marks = []; SFX.select();
+      setView(POWERS[p].own && !POWERS[p].instant ? 'player' : S.view);
       setMsg({ tir: 'Touchez un nuage du ciel ennemi pour larguer une bombe.',
-               radar: 'Radar : touchez le centre de la zone, puis encore pour la balayer.',
-               bombes: 'Bombes : touchez le centre de la croix, puis encore pour larguer.',
-               missile: 'Missile : choisissez LIGNE ou COLONNE en haut, touchez le ciel, puis encore pour tirer.',
-               esquive: "Esquive : choisissez un point vert pour l'hélicoptère, puis touchez encore." }[p]);
+               radar: 'Radar : touchez le centre de la zone, puis FEU !',
+               bombes: 'Bombes : touchez le centre de la croix, puis FEU !',
+               missile: 'Missile : touchez une case, puis une flèche : à gauche pour sa ligne, en haut pour sa colonne.',
+               esquive: "Esquive : choisissez un point vert pour l'hélicoptère, puis FEU !",
+               roquettes: 'Roquettes : touchez 3 nuages du ciel ennemi, puis FEU ! sur la plaque.',
+               detection: "Détection : touchez une case, puis FEU ! : elle compte les cases d'avion cachées sur sa ligne et sa colonne.",
+               camera: 'Caméra : touchez une case, puis une flèche : le drone filme 4 cases autour, en ligne ou en colonne.',
+               reparation: 'Réparation : touchez un avion en feu de votre escadrille, puis FEU ! : il est remis à neuf.',
+               flak: `Ballons : touchez ${flakRoom() > 1 ? '2 cases' : 'une case'} de ciel libre chez vous, puis FEU ! L'ennemi qui tire dessus prend un tir de DCA.`,
+               leurres: 'Leurres : touchez FEU ! sur la plaque. Le prochain coup ennemi partira dessus.' }[p]);
     } });
   });
 }
@@ -1189,20 +1667,20 @@ function drawBottom(t) {
   tiny(g, other === 'player' ? 'MON ESCADRILLE' : 'ENNEMI', m.x + m.s / 2, m.y + m.s + 6, other === 'player' ? '#9fd3ff' : '#ffb4a8', 'center');
   if (S.phase === 'play' && S.turn === 'player' && !S.busy) BTN.push({ x: m.x, y: m.y, w: m.s, h: m.s, act: () => {
     SFX.click();
-    if (S.weapon === 'esquive') S.weapon = 'tir';
+    if (POWERS[S.weapon].own) { S.weapon = 'tir'; S.marks = []; }
     setView(S.view === 'player' ? 'enemy' : 'player'); S.aim = null; S.armed = null;
   } });
   // escadrille ennemie : ce qu'il reste à abattre et ses pouvoirs
-  const x0 = 104, y0 = 336, W2 = LW - x0 - 6;
-  plate(g, x0, y0, W2, 92, 'red');
-  text(g, 'ESCADRILLE ENNEMIE', x0 + 6, y0 + 5, '#ffd6cc', 'left', 6);
+  const x0 = MINI.x + MINI.s + 8, y0 = MINI.y - 4, W2 = LW - x0 - 6, H2 = MINI.s + 4, st = Math.floor((H2 - 20) / 4);
+  plate(g, x0, y0, W2, H2, 'red');
+  text(g, 'ESCADRILLE ENNEMIE', x0 + 6, y0 + 5, '#ffd6cc');
   S.enemy.planes.forEach((p, i) => {
-    const y = y0 + 17 + i * 18, pw = p.def.power, n = p.def.cells.length;
-    for (let k = 0; k < n; k++) { R(g, x0 + 6 + k * 5, y + 3, 5, 6, OUT); R(g, x0 + 7 + k * 5, y + 4, 3, 4, p.down ? '#5a4a52' : '#a9b1bc'); if (p.down) R(g, x0 + 7 + k * 5, y + 4, 3, 1, '#ff5a46'); }
-    text(g, p.down ? 'ABATTU' : POWERS[pw].name, x0 + 50, y + 3, p.down ? '#ff8a76' : '#f2f0ff');
+    const y = y0 + 17 + i * st, pw = p.def.power, n = p.def.cells.length;
+    for (let k = 0; k < n; k++) { R(g, x0 + 6 + k * 4, y + 3, 4, 6, OUT); R(g, x0 + 7 + k * 4, y + 4, 2, 4, p.down ? '#5a4a52' : '#a9b1bc'); if (p.down) R(g, x0 + 7 + k * 4, y + 4, 2, 1, '#ff5a46'); }
+    text(g, p.down ? 'ABATTU' : POWERS[pw].name, x0 + 41, y + 3, p.down ? '#ff8a76' : '#f2f0ff');
     if (!p.down) {
       // le compteur ennemi baisse au début de son tour : à 1, le pouvoir sera prêt dès son prochain coup
-      const cd = S.enemy.cd[pw], okp = cd <= 1 && !(pw === 'esquive' && p.hits);
+      const cd = S.enemy.cd[pw], okp = cd <= 1 && !(pw === 'esquive' && p.hits);   // (les autres conditions ne se voient pas d'ici)
       text(g, okp ? 'PRET' : pw === 'esquive' && p.hits ? '-' : (cd - 1) + 'T', x0 + W2 - 6, y + 3, okp ? '#ffd23f' : '#8fa0b8', 'right');
     }
   });
@@ -1219,14 +1697,14 @@ function drawPlay(t) {
     R(g, BX - 12 + Math.floor((BS + 24) * ease(tr)), BY - 12, 2, BS + 24, '#ffffff');
   } else drawBoard(g, v, BX + sh, BY, t, true);
   BTN.push({ x: BX, y: BY, w: BS, h: BS, board: true });
-  drawHud(t); drawBar(t); drawBottom(t); drawMsg(434);
+  drawHud(t); drawBar(t); drawBottom(t); drawMsg(MSG_Y); drawArrows(t);
 }
 function drawOver(t) {
   drawPlay(t); BTN = [];
   if (!S.endInfo) return;
   const e = S.endInfo, st = S.stats, a = Math.min(1, (now() - S.endT0) / 400);
   g.fillStyle = `rgba(4,8,20,${.6 * a})`; g.fillRect(0, 0, LW, LH);
-  const y = 96;
+  const y = 96 + Math.floor((LH - 480) / 2);
   plate(g, 16, y, LW - 32, 250, e.win ? 'gold' : 'red');
   logo(g, e.win ? 'VICTOIRE !' : 'DEFAITE...', LW / 2, y + 14, 16);
   g.drawImage(e.win ? G.pilot : G.foePilot, LW / 2 - 18, y + 40);
@@ -1238,30 +1716,47 @@ function drawOver(t) {
   button(32, y + 184, 100, 26, 'REJOUER', { gold: true, tiny: true, act: () => { newGame(); } });
   button(140, y + 184, 100, 26, 'CLASSEMENT', { tiny: true, act: () => { location.href = rankUrl(); } });
   button(86, y + 216, 100, 22, 'MENU', { tiny: true, act: () => { S.phase = 'title'; S.fx = []; S.parts = []; } });
-  if (e.unlock) { // une nouvelle famille d'avions : on la montre sous le tableau
-    const uy = y + 258, name = SKINS.find(x => x[0] === e.unlock)[1], K2 = .42;
-    plate(g, 16, uy, LW - 32, 74, 'gold');
+  let uy = y + 258;
+  if (e.planes && e.planes.length) { // un nouvel avion : on le montre sous le tableau
+    const id = e.planes[0], d = PLANES[id];
+    plate(g, 16, uy, LW - 32, e.unlock ? 52 : 74, 'gold');
+    tiny(g, e.planes.length > 1 ? 'NOUVEAUX AVIONS DEBLOQUES !' : 'NOUVEL AVION DEBLOQUE !', LW / 2, uy + 6, Math.floor(t * 3) % 2 ? '#ffd23f' : '#fff6c2', 'center');
+    planeFit(id, 24, uy + 14, 52, e.unlock ? 34 : 56, t, false, .7);
+    text(g, upper(d.name), 84, uy + 18, '#fff6c2'); text(g, POWERS[d.power].name, 84, uy + 31, '#ffd23f');
+    if (e.planes.length > 1) tiny(g, '+ ' + e.planes.slice(1).map(k => upper(PLANES[k].name)).join(', '), 84, uy + 43, '#ffffff');
+    else tiny(g, 'A CHOISIR AU HANGAR', 84, uy + 44, '#ffffff');
+    uy += e.unlock ? 58 : 80;
+  }
+  if (e.unlock) { // une nouvelle famille d'avions
+    const name = SKINS.find(x => x[0] === e.unlock)[1], K2 = .42, hh = e.planes && e.planes.length ? 56 : 74;
+    plate(g, 16, uy, LW - 32, hh, 'gold');
     tiny(g, 'NOUVELLE ESCADRILLE DEBLOQUEE !', LW / 2, uy + 6, Math.floor(t * 3) % 2 ? '#ffd23f' : '#fff6c2', 'center');
-    familyRow(e.unlock, 'mine', 24, uy + 17, K2, t, false);
-    text(g, `${e.unlock.toUpperCase()}. ${name}`, 24 + rowWidth(K2) + 8, uy + 28, '#fff6c2');
-    tiny(g, 'A CHOISIR', 24 + rowWidth(K2) + 8, uy + 44, '#ffffff'); tiny(g, 'AU HANGAR', 24 + rowWidth(K2) + 8, uy + 52, '#ffffff');
+    familyRow(e.unlock, 'mine', 24, uy + 15, hh < 70 ? .36 : K2, t, false);
+    const tx = 24 + rowWidth(hh < 70 ? .36 : K2) + 8;
+    text(g, `${e.unlock.toUpperCase()}. ${name}`, tx, uy + 22, '#fff6c2');
+    tiny(g, 'A CHOISIR AU HANGAR', tx, uy + 38, '#ffffff');
   }
 }
 
 // les avions sont fabriqués à la demande ; on prépare ceux de la famille en cours un par image, sur l'écran titre
 const WARM = [];
-function warm(st, allDirs) { for (const side of ['mine', 'foe']) for (const def of FLEET) for (let d = 0; d < (allDirs ? 4 : 1); d++) WARM.push([st, side, def.id, d]); }
+function warm(st, allDirs) { for (const side of ['mine', 'foe']) for (const id of new Set([...FLEET, ...CLASSIC])) for (let d = 0; d < (allDirs ? 4 : 1); d++) WARM.push([st, side, id, d]); }
 function frame(ts) {
   const t = ts / 1000, dt = Math.min(.05, t - (T || t)); T = t;
-  if (WARM.length && (S.phase === 'title' || S.phase === 'hangar')) { const [st, side, id, d] = WARM.shift(); plane(st, side, id, d); }
+  if (WARM.length && (S.phase === 'title' || S.phase === 'hangar' || S.phase === 'place')) { const [st, side, id, d] = WARM.shift(); plane(st, side, id, d); }
   for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; }
   S.parts = S.parts.filter(p => p.t < p.life);
   BTN = [];
   g.setTransform(K, 0, 0, K, 0, 0); g.imageSmoothingEnabled = false;
+  // écrans de menus : dessinés pour 480 de haut, centrés dans la hauteur de l'écran (les zones touchables sont décalées d'autant)
+  const centred = S.phase === 'title' || S.phase === 'hangar';
+  OY = MENU_OY = centred ? Math.floor((LH - 480) / 2) : 0;
+  if (centred) g.setTransform(K, 0, 0, K, 0, K * OY);
   if (S.phase === 'title') drawTitle(t);
   else if (S.phase === 'hangar') drawHangar(t);
   else if (S.phase === 'over') drawOver(t);
   else drawPlay(t);
+  OY = 0;
   // un effet se termine même s'il n'est pas à l'écran (vue basculée)
   for (const f of S.fx) if (!f.ended && now() - f.t0 >= f.dur) { f.ended = true; f.done && f.done(); }
   S.fx = S.fx.filter(f => !f.ended);
@@ -1283,7 +1778,7 @@ function boardCell(x, y) { const c = Math.floor((x - BX) / CS), r = Math.floor((
 function onBoard(cell, mouse) {
   if (S.phase === 'place') {
     const i = S.player.grid[cell.r][cell.c];
-    if (i >= 0) { if (S.sel === i) rotateSel(); else { S.sel = i; SFX.select(); setMsg(`${FLEET[i].le} : touchez une case pour le déplacer, ou encore l'avion pour le tourner.`); } return; }
+    if (i >= 0) { if (S.sel === i) rotateSel(); else { S.sel = i; SFX.select(); setMsg(`${S.player.planes[i].def.le} : touchez une case pour le déplacer, ou encore l'avion pour le tourner.`); } return; }
     if (S.sel == null) return;
     const p = S.player.planes[S.sel], sh = shapeOf(p.def, p.d);
     const c = clamp(cell.c - (sh.w >> 1), 0, N - sh.w), r = clamp(cell.r - (sh.h >> 1), 0, N - sh.h);
@@ -1291,23 +1786,43 @@ function onBoard(cell, mouse) {
     return;
   }
   if (S.phase !== 'play' || S.turn !== 'player' || S.busy) return;
-  const w = S.weapon;
+  const w = S.weapon, same = S.armed && S.armed.c === cell.c && S.armed.r === cell.r;
+  const toggle = max => {   // roquettes et ballons : toucher une case la choisit, la toucher encore la retire
+    const k = S.marks.findIndex(m => m[0] === cell.c && m[1] === cell.r);
+    if (k >= 0) { S.marks.splice(k, 1); SFX.click(); return; }
+    if (S.marks.length >= max) { SFX.error(); setMsg('Assez de cases : touchez FEU ! sur la plaque (ou une case choisie pour la retirer).'); return; }
+    S.marks.push([cell.c, cell.r]); SFX.click();
+    setMsg(S.marks.length >= max ? 'Touchez FEU ! sur la plaque pour lancer.' : `${S.marks.length} case${S.marks.length > 1 ? 's' : ''} sur ${max}. Encore, ou FEU ! sur la plaque.`);
+  };
   if (S.view === 'player') {
-    if (w !== 'esquive') return;
-    if (!dodgeTargets(S.player).some(([c, r]) => c === cell.c && r === cell.r)) { SFX.error(); return; }
-    if (mouse || (S.armed && S.armed.c === cell.c && S.armed.r === cell.r)) { playerAct({ w, c: cell.c, r: cell.r, h: true }); return; }
-    S.aim = S.armed = cell; SFX.click(); setMsg("Touchez encore le point vert pour s'échapper."); return;
+    if (!POWERS[w].own) return;
+    if (!ownTargets(S.player, w).some(([c, r]) => c === cell.c && r === cell.r)) {
+      SFX.error();
+      if (w === 'flak') setMsg('Un ballon se pose sur du ciel libre, que l\'ennemi ne connaît pas encore.');
+      else if (w === 'reparation') setMsg('Touchez une case en feu d\'un avion encore en vol.');
+      return;
+    }
+    if (w === 'flak') { toggle(flakRoom()); return; }
+    if (mouse || same) { playerAct({ w, c: cell.c, r: cell.r, h: true }); return; }
+    S.aim = S.armed = cell; SFX.click();
+    setMsg({ esquive: "Touchez FEU ! (ou encore le point vert) pour s'échapper.", reparation: `Touchez FEU ! (ou encore ${cellName(cell.c, cell.r)}) pour réparer cet avion.` }[w]);
+    return;
   }
-  if (w === 'esquive') return;
-  if (w === 'tir' || mouse || (S.armed && S.armed.c === cell.c && S.armed.r === cell.r)) { S.aim = cell; playerAct({ w, c: cell.c, r: cell.r, h: S.missH }); return; }
+  if (POWERS[w].own) return;
+  if (w === 'roquettes') {
+    if (S.enemy.shots[cell.r][cell.c]) { SFX.error(); setMsg('Déjà tiré ici : choisissez un autre nuage.'); return; }
+    toggle(3); return;
+  }
+  if (w === 'tir' || (!POWERS[w].dir && (mouse || same))) { S.aim = cell; playerAct({ w, c: cell.c, r: cell.r, h: true }); return; }
   S.aim = S.armed = cell; SFX.click();
-  setMsg(`${POWERS[w].name} vise ${w === 'missile' ? (S.missH ? 'la ligne ' + (cell.r + 1) : 'la colonne ' + COLS[cell.c]) : cellName(cell.c, cell.r)}. Touchez encore pour lancer.`);
+  setMsg(POWERS[w].dir ? `${POWERS[w].name} depuis ${cellName(cell.c, cell.r)} : touchez la flèche de gauche (ligne ${cell.r + 1}) ou celle du haut (colonne ${COLS[cell.c]}).`
+                       : `${POWERS[w].name} vise ${cellName(cell.c, cell.r)}. Touchez FEU ! (ou encore la case).`);
 }
 function logical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH]; }
 cv.addEventListener('pointerdown', e => {
   e.preventDefault(); audioInit();
   if (AC.musicOn && S.phase !== 'title' && S.phase !== 'over') MUSIC.start(); else if (!AC.musicOn) MUSIC.stop();
-  const [x, y] = logical(e);
+  const [x, y0] = logical(e), y = y0 - MENU_OY;
   for (let i = BTN.length - 1; i >= 0; i--) {
     const b = BTN[i];
     if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) {
@@ -1320,7 +1835,7 @@ cv.addEventListener('pointerdown', e => {
 cv.addEventListener('pointermove', e => {
   if (e.pointerType !== 'mouse' || S.phase !== 'play') return;
   const [x, y] = logical(e), cell = boardCell(x, y);
-  if (S.turn === 'player' && !S.busy) S.aim = cell;
+  if (S.turn === 'player' && !S.busy && !(S.armed && POWERS[S.weapon].dir)) S.aim = cell;
 });
 document.addEventListener('keydown', e => {
   if (S.phase === 'place' && (e.key === 'r' || e.key === 'R')) rotateSel();
@@ -1331,6 +1846,7 @@ function resize() {
   const probe = document.createElement('div'); probe.style.cssText = 'position:fixed;height:env(safe-area-inset-bottom,0px);visibility:hidden';
   document.body.append(probe); const safe = probe.offsetHeight; probe.remove();
   const aw = window.innerWidth, ah = Math.max(200, window.innerHeight - top - safe - 14);
+  LH = clamp(Math.round(LW * ah / aw), 480, MAXH); layout();
   const sc = Math.min(aw / LW, ah / LH), dpr = window.devicePixelRatio || 1;
   cv.style.width = Math.floor(LW * sc) + 'px'; cv.style.height = Math.floor(LH * sc) + 'px';
   cv.style.marginTop = Math.max(0, Math.floor((ah - LH * sc) / 2)) + 'px';
@@ -1345,11 +1861,12 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) MUSIC
   const o = store.get('opts', {}) || {};
   if (o.sfx === false) AC.sfxOn = false; if (o.music === false) AC.musicOn = false;
   const d = store.get('diff', 'normal'); if (DIFFS.some(x => x[0] === d)) S.diff = d;
-  const sk = unlockedSkins(); store.set('skins', sk);
+  const sk = unlockedSkins(); store.set('skins', sk); loadFleet();
   const k = store.get('skin', 'a'); if (sk.includes(k)) STYLE = k;
   warm(STYLE, true); for (const [st] of SKINS) if (st !== STYLE) warm(st, false);
 }
 buildAll();
-window.Escadrille = { S, unlockedSkins, get style() { return STYLE; }, set style(v) { STYLE = v; }, get sol() { return SOL; }, set sol(v) { SOL = v; }, FLEET, newGame, startBattle, playerAct, aiPlan, gameOver, randomFleet, shapeOf, cellsOf, store };
+window.Escadrille = { S, unlockedSkins, get style() { return STYLE; }, set style(v) { STYLE = v; }, get sol() { return SOL; }, set sol(v) { SOL = v; }, get FLEET() { return FLEET; },
+  PLANES, POWERS, CATALOG, palmares, unlockedPlane, loadFleet, newGame, startBattle, playerAct, act, aiPlan, aiChoose, gameOver, randomFleet, shapeOf, cellsOf, simulate, store };
 setTimeout(resize, 0); resize();
 (document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));

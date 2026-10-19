@@ -7,6 +7,7 @@
    - Injagility Parcours : les 200 premiers parcours se génèrent et leur chemin prévu est praticable ;
    - Picross Dex : chaque dessin se résout ligne par ligne, sans deviner (donc une seule solution) ;
    - Yams : points de chaque case pour des mains connues, bonus de 35 ;
+   - Amiral ! : bataille du jour (flottes complètes, mêmes flottes et même placement ennemi pour tous) ;
    - accueil : transfert de sauvegarde LUDO1- (exporter, vider, importer : tout revient).
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/logique.js [jours]   (code de sortie 1 en cas d'erreur) */
@@ -142,10 +143,22 @@ const TESTS = {
     if (totaux({ u6: 30, u5: 25, u4: 4 }).bonus !== 0) out.push('bonus de 35 donné sous 63');
     return out;
   }),
+  'amiral/index.html': async (p, D) => p.evaluate(D => {
+    const A = window.Amiral, S = A.S, out = [], key = b => JSON.stringify(b.grid);
+    for (const { k } of D) {
+      const a = A.dailyOf(k), b = A.dailyOf(k);
+      for (const f of [a.fleet, a.foe]) if (f.length !== 4 || new Set(f).size !== 4 || f.some((id, i) => A.SHIPS[id].len !== [4, 3, 3, 2][i])) out.push(`${k} : flotte incomplète ${f}`);
+      if (JSON.stringify(a) !== JSON.stringify(b)) out.push(`${k} : deux tirages différents`);
+      A.newGame(k); const g1 = key(S.enemy); A.newGame(k); if (key(S.enemy) !== g1) out.push(`${k} : placement ennemi différent`);
+    }
+    S.phase = 'title';
+    return out;
+  }, D.map(d => ({ k: d.k }))),
   'index.html': async p => p.evaluate(() => {
     // des records dans plusieurs jeux, exportés en LUDO1-, effacés, puis réimportés
     const recs = { 'tetris16.best': 1234, 'queens16.best': { 6: 41000 }, 'sudoku.best': { '9-2': 300000 }, 'orbite.stars': { 3: 2 }, 'yams.best': 250, 'escadrille.best': { normal: 12 },
-      'odyssee.stars': { '1-2': 3 }, 'nebula.best': 900, 'lunerover.stars': { 4: 3 }, 'amiral.best': { hard: 30 }, 'pontstellaire.best': { 9: 90000 } };
+      'odyssee.stars': { '1-2': 3 }, 'nebula.best': 900, 'lunerover.stars': { 4: 3 }, 'amiral.best': { hard: 30 }, 'pontstellaire.best': { 9: 90000 },
+      'amiral.palmares': { victoires: 3, normal: 1 }, 'amiral.daily': { 20261019: 24 } };
     const A = window.Accueil, keep = { ...localStorage }; localStorage.clear();
     for (const [k, v] of Object.entries(recs)) localStorage.setItem(k, JSON.stringify(v));
     const code = 'LUDO1-' + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, g: A.collectSaves() }))));

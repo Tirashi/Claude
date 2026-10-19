@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escadrille, nouveaux avions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@600;700&display=swap">
+<style>
+  :root { --bg: #0b1222; --ink: #e8ecf6; --dim: #9aa3b8; --gold: #ffd23f; --plate: #1c2a44; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 600 16px/1.35 Rajdhani, sans-serif; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 12px 16px 40px; }
+  h1 { font: 12px/1.6 "Press Start 2P", monospace; color: var(--gold); margin: 4px 0 8px; text-align: center; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tabs button, .opts button { flex: 1; font: 700 15px Rajdhani, sans-serif; color: var(--ink); background: var(--plate); border: 2px solid #34476e; border-radius: 6px; padding: 6px 4px; cursor: pointer; }
+  .tabs button.on { border-color: var(--gold); color: var(--gold); }
+  .opts { display: flex; gap: 6px; margin: 8px 0; }
+  .opts button.on { border-color: var(--gold); color: var(--gold); }
+  canvas { display: block; width: 100%; max-width: 408px; margin: 0 auto; border-radius: 10px; background: #0a1430; touch-action: manipulation; }
+  section { margin-top: 16px; background: #121c33; border-radius: 10px; padding: 10px 14px; }
+  section h2 { font: 700 18px Rajdhani, sans-serif; color: var(--gold); margin: 4px 0; }
+  li { margin: 4px 0; } b { color: #fff; } .dim { color: var(--dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>ESCADRILLE ! LOT 2</h1>
+<div class="tabs">
+  <button data-v="planche" class="on">Planche des avions</button>
+  <button data-v="hangar">Direction 1 : le hangar</button>
+  <button data-v="place">Direction 2 : au placement</button>
+</div>
+<canvas id="c"></canvas>
+<div class="opts">
+  <button id="pir">Voir les pirates</button>
+  <button id="unl">Tout débloquer</button>
+</div>
+<section>
+  <h2>La règle des places</h2>
+  <p>Toujours <b>4 avions</b> : un <b>gros (8 cases)</b>, un <b>moyen de 5</b>, un <b>moyen de 4</b> et un <b>petit (2)</b>.
+  Un nouvel avion remplace un ancien <b>du même nombre de cases</b> : le ciel garde 19 cases d'avions, la difficulté ne bouge pas.
+  Les formes changent (c'est ce qu'il faut juger sur la planche).</p>
+  <p class="dim">Dessins : les 6 nouveaux avions sont faits ici dans la famille A (escadre) seulement, avec le même moteur que le jeu.
+  Le dirigeable (FAUX AVION) reste écarté.</p>
+</section>
+<section>
+  <h2>Les deux directions pour choisir</h2>
+  <ul>
+    <li><b>1. Le hangar à onglets</b> : FAMILLES (les dessins, comme aujourd'hui) et AVIONS (les 4 places). On touche une place, puis l'avion qui la prend. Comme le chantier naval d'Amiral !.</li>
+    <li><b>2. Au placement</b> : pas d'écran de plus ; sur la rangée des avions à placer, les flèches ◀ ▶ changent l'avion d'une place. Le hangar ne garde que les familles, plus une page de collection.</li>
+  </ul>
+</section>
+<section>
+  <h2>À décider</h2>
+  <ul>
+    <li><b>Les formes</b> des 6 nouveaux avions (planche).</li>
+    <li><b>Combien d'avions</b> : les 6, ou seulement les 4 dont le pouvoir existe déjà dans Amiral ! (ROQUETTES, DETECTION, CAMERA, REPARATION ; FLAK et LEURRES attendront la session 2 d'Amiral !).</li>
+    <li><b>Combien de familles</b> pour les nouveaux : une seule (escadre, pour tout le monde : 6 dessins) ou les 4 (24 dessins, cohérent avec le hangar).</li>
+    <li><b>La direction</b> pour choisir (1 ou 2).</li>
+    <li>Les <b>conditions de déblocage</b> proposées (sur chaque carte) et les recharges.</li>
+  </ul>
+</section>
+</div>
+
+<script src="../nebula/vaisseaux.js"></script>
+<script src="../escadrille/avions.js"></script>
+<script src="../escadrille/sol.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   ESCADRILLE ! lot 2 (maquette) : choisir ses avions.
+   6 nouveaux avions dessinés dans la famille A avec le moteur de Nebula (escadrille/avions.js),
+   planche, et deux directions d'écran pour les choisir (hangar à onglets, ou au placement).
+   ===================================================================== */
+const { NV, STYLES, AVIONS, SIZE, rotBuilder } = window.EscAvions;
+const half = NV.half, TAU = Math.PI * 2, OUT = '#060a18', CELL = 23;
+const W = 272, H = 520;
+const FONT_LOGO = s => `${s}px "Press Start 2P", monospace`, FONT_TEXT = s => `700 ${s}px Rajdhani, sans-serif`;
+
+/* ---------- les 6 nouveaux avions (famille A, nez en haut) ---------- */
+const NEW = {
+  // bombardier d'attaque (8) : grande aile trapèze, paniers de roquettes, réacteurs à l'arrière
+  attaque: (R, m, c) => {
+    R.poly(half(c, [[0, 26], [33, 44], [33, 58], [0, 62]]), 5, 3, m.hull);
+    for (const s of [-1, 1]) {
+      R.poly([[c + s * 33, 44], [c + s * 28, 41.2], [c + s * 28, 58.3], [c + s * 33, 58]], 6, 1, m.mark, 4);
+      for (const e of [13, 22]) { const x = c + s * e; R.box(x - 2.6, 38, 5.2, 15, 7, 1.6, m.hull2, 4); R.dome(x, 39.5, 2, 1.5, 6.5, 7.6, 'black'); R.box(x - 2.6, 47, 5.2, 1.4, 7.4, .4, m.mark, 6); }
+      R.poly([[c + s * 7, 60], [c + s * 13, 60], [c + s * 13, 76], [c + s * 7, 76]], 8, 2.5, m.hull, 5); R.dome(c + s * 10, 61.5, 2.6, 1.4, 7.4, 8.6, 'black');
+      R.box(c + s * 16 - 1, 79, 2, 11, 7, .6, m.hull2, 3);
+    }
+    R.poly(half(c, [[0, 80], [16, 84], [16, 89], [0, 88]]), 4, 2, m.hull);
+    R.poly(half(c, [[0, 2], [4, 7], [6.5, 18], [6.5, 70], [4.5, 86], [0, 90]]), 7, 4, m.hull);
+    R.poly(half(c, [[0, 22], [3, 24], [3, 56], [0, 58]]), 9.5, 2, m.deck, 7);
+    R.dome(c, 12, 3.5, 5.5, 7, 10.5, 'glass'); R.box(c - .6, 0, 1.2, 4, 7, .4, m.hull2, 5);
+    R.greebles(20, 5, [10, 50, 49, 8]);
+    R.lights([[c - 32, 57], [c + 32, 57], [c, 88]], m.feu);
+    R.engines([[c - 10, 76.6, 2.6], [c + 10, 76.6, 2.6]]);
+    return [];
+  },
+  // ravitailleur (8, 5 de large) : long avion de ligne à quatre réacteurs, nacelles de ravitaillement, perche
+  ravito: (R, m, c) => {
+    R.poly(half(c, [[0, 26], [56, 34], [56, 40], [0, 44]]), 5, 3, m.hull);
+    for (const s of [-1, 1]) {
+      R.poly([[c + s * 56, 34], [c + s * 51, 33.3], [c + s * 51, 40.4], [c + s * 56, 40]], 6, 1, m.mark, 4);
+      for (const e of [19, 35]) { const x = c + s * e; R.poly([[x - 2.5, 22], [x + 2.5, 22], [x + 3.2, 26], [x + 3.2, 36], [x - 3.2, 36], [x - 3.2, 26]], 7.5, 2.5, m.hull2, 4); R.dome(x, 23.5, 1.9, 1.2, 6.6, 7.6, 'black'); }
+      R.box(c + s * 46 - 2, 31, 4, 10, 6.6, 1.2, m.mark, 4);
+    }
+    R.poly(half(c, [[0, 74], [11, 78], [11, 83], [0, 82]]), 4, 2, m.hull);
+    R.poly(half(c, [[0, 2], [5, 6], [7.5, 16], [7.5, 74], [5, 86], [0, 88]]), 7, 4, m.hull);
+    R.poly(half(c, [[0, 15], [4, 17], [4, 68], [0, 70]]), 9, 1.5, m.deck, 7);
+    R.box(c - 1, 72, 2, 14, 10, .6, m.hull2, 7);
+    R.box(c - 1, 84, 2, 7.5, 5, .5, m.mark, 3); R.dome(c, 90.5, 1.6, 1, 4, 5, 'black');
+    R.dome(c, 8, 4, 3.5, 7, 10, 'glass');
+    R.greebles(26, 9, [c - 4, 20, 8, 46]);
+    R.lights([[c - 55, 39], [c + 55, 39], [c, 50], [c, 30]], m.feu);
+    R.engines([[c - 35, 36.6, 2.2], [c - 19, 36.6, 2.4], [c + 19, 36.6, 2.4], [c + 35, 36.6, 2.2]]);
+    return [];
+  },
+  // avion de patrouille (5, en T) : aile droite devant, deux hélices, dôme de détection, perche arrière
+  patrouille: (R, m, c) => {
+    R.poly(half(c, [[0, 7], [33, 10], [33, 17], [0, 20]]), 5, 2.6, m.hull);
+    for (const s of [-1, 1]) {
+      R.poly([[c + s * 33, 10], [c + s * 29, 9.6], [c + s * 29, 17.3], [c + s * 33, 17]], 6, 1, m.mark, 4);
+      const x = c + s * 16; R.poly([[x - 2.5, 3], [x + 2.5, 3], [x + 3, 6], [x + 3, 22], [x - 3, 22], [x - 3, 6]], 7.5, 2.5, m.hull2, 4);
+    }
+    R.poly(half(c, [[0, 56], [10, 59], [10, 63], [0, 62]]), 4, 2, m.hull);
+    R.poly(half(c, [[0, 0], [4, 3], [5.5, 10], [5.5, 48], [3.5, 62], [0, 64]]), 7, 4, m.hull);
+    R.box(c - 1, 53, 2, 11, 9, .6, m.hull2, 6); R.box(c - .8, 63, 1.6, 6, 6, .5, m.mark, 3);
+    R.dome(c, 5, 3, 3.5, 7, 10, 'glass'); R.dome(c, 32, 4, 5.5, 7, 10, m.hull2);
+    R.greebles(10, 21, [c - 4, 40, 8, 12]);
+    R.lights([[c - 32, 16], [c + 32, 16], [c, 24]], m.feu);
+    return [['helice', c - 16, 2, 7.5, -1], ['helice', c + 16, 2, 7.5, 1]];
+  },
+  // avion brouilleur (5, en U) : aile volante devant, deux poutres et leurs nacelles, antenne qui tourne
+  brouilleur: (R, m, c) => {
+    R.poly(half(c, [[0, 3], [10, 7], [33, 12], [33, 20], [10, 22], [0, 20]]), 6, 3, m.hull);
+    for (const s of [-1, 1]) {
+      const x = c + s * 23;
+      R.poly([[x - 3, 9], [x + 3, 9], [x + 3, 40], [x + 1.5, 45], [x - 1.5, 45], [x - 3, 40]], 6.5, 2.5, m.hull2, 4);
+      R.dome(x, 29, 2.6, 5, 6.5, 9, m.mark); R.box(x - 7, 39, 14, 2.6, 5, .6, m.hull, 3);
+      R.box(c + s * 31 - 1, 9, 2, 7, 7.4, .5, 'black', 5);
+    }
+    R.poly(half(c, [[0, 0], [4, 4], [6, 10], [6, 21], [0, 23]]), 8, 3, m.hull);
+    R.dome(c, 7, 2.8, 3.4, 8, 11, 'glass');
+    R.greebles(10, 31, [12, 12, 45, 6]);
+    R.lights([[c - 23, 22], [c + 23, 22], [c - 32, 18], [c + 32, 18]], m.feu);
+    R.engines([[c - 23, 45.6, 2], [c + 23, 45.6, 2]]);
+    return [['antenne', c, 15, 8]];
+  },
+  // ballons de barrage (4, carré) : deux ballons côte à côte, ailerons en croix, treuil entre les deux
+  ballons: (R, m, c) => {
+    R.box(c - 4, 20, 8, 8, 3, 1, m.hull2, 0);
+    for (const s of [-1, 1]) {
+      const x = c + s * 11.5;
+      for (const k of [-1, 1]) R.poly([[x, 33], [x + k * 7, 40], [x + k * 7, 44], [x, 41]], 5, 1.2, m.mark, 3);
+      R.box(x - .7, 34, 1.4, 11, 7, .3, m.hull2, 4);
+      R.dome(x, 20, 8.6, 17, 0, 12, m.hull);
+      R.paint(x - 8, 14, 16, 2.4, m.mark);
+    }
+    R.lights([[c - 11.5, 4], [c + 11.5, 4], [c, 24]], m.feu);
+    return [];
+  },
+  // drone de reconnaissance (2) : longue aile fine, empennage en V, boule caméra, hélice propulsive
+  drone: (R, m, c) => {
+    R.poly(half(c, [[0, 14], [11, 16], [11, 19.5], [0, 21]]), 4, 1.5, m.hull);
+    for (const s of [-1, 1]) { R.poly([[c, 35], [c + s * 8, 40], [c + s * 8, 42.5], [c, 39]], 4.5, 1, m.hull2, 3); R.box(c + s * 10 - 1, 15.6, 2, 3.6, 4.6, .4, m.mark, 3.6); }
+    R.poly(half(c, [[0, 2], [2.5, 5], [3, 12], [3, 34], [1.5, 41], [0, 42]]), 6, 2.5, m.hull);
+    R.dome(c, 8, 2.6, 2.6, 5, 8, 'black'); R.dome(c, 8.5, 1.3, 1.3, 7.6, 8.8, 'glass');
+    R.box(c - 1.2, 22, 2.4, 6, 7, .5, m.hull2, 5.5);
+    R.lights([[c - 10, 18], [c + 10, 18]], m.feu);
+    return [['helice', c, 43, 4.5, 1]];
+  },
+};
+const NSIZE = { attaque: [69, 92], ravito: [115, 92], patrouille: [69, 69], brouilleur: [69, 46], ballons: [46, 46], drone: [23, 46] };
+const SEED = { bomb: 3, radar: 7, jet: 11, heli: 13, attaque: 4, ravito: 6, patrouille: 8, brouilleur: 10, ballons: 12, drone: 14 };
+
+/* ---------- les avions : 4 de départ, 6 nouveaux ; les places ---------- */
+const CATS = [['GROS', 8], ['MOYEN', 5], ['MOYEN', 4], ['PETIT', 2]];
+const AV = [
+  { id: 'bomb', cat: 0, name: 'BOMBARDIER', pw: 'BOMBES', eff: '5 bombes en croix.', cd: 4, shape: ['.X.', 'XXX', '.X.', 'XXX'] },
+  { id: 'attaque', cat: 0, name: 'ATTAQUE', full: "Bombardier d'attaque", pw: 'ROQUETTES', eff: '3 tirs sur 3 cases au choix.', cd: 5, lock: 'Victoire en moins de 25 tours', shape: ['.X.', 'XXX', 'XXX', '.X.'] },
+  { id: 'ravito', cat: 0, name: 'RAVITAILLEUR', pw: 'REPARATION', eff: "Répare une case touchée d'un avion pas abattu.", cd: 5, lock: '5 victoires', shape: ['..X..', 'XXXXX', '..X..', '..X..'] },
+  { id: 'radar', cat: 1, name: 'AVION RADAR', pw: 'RADAR', eff: 'Révèle une zone de 3 × 3 sans tirer.', cd: 3, shape: ['.X.', 'XXX', '.X.'] },
+  { id: 'patrouille', cat: 1, name: 'PATROUILLE', full: 'Avion de patrouille', pw: 'DETECTION', eff: "Compte les cases d'avion d'une ligne ou d'une colonne.", cd: 3, lock: 'Une victoire', shape: ['XXX', '.X.', '.X.'] },
+  { id: 'brouilleur', cat: 1, name: 'BROUILLEUR', full: 'Avion brouilleur', pw: 'LEURRES', eff: 'Pendant 2 tours, dans une zone de 3 × 3, les tirs ennemis ne disent plus « touché » ni « manqué ».', cd: 5, lock: 'Victoire en AS', shape: ['XXX', 'X.X'] },
+  { id: 'jet', cat: 2, name: 'CHASSEUR', pw: 'MISSILE', eff: "File sur une ligne ou une colonne jusqu'au premier avion.", cd: 3, shape: ['.X.', 'XXX'] },
+  { id: 'ballons', cat: 2, name: 'BALLONS', full: 'Ballons de barrage', pw: 'FLAK', eff: "Pose 2 pièges dans son ciel : l'ennemi qui tire dessus prend un tir en retour.", cd: 5, lock: "Victoire sans perdre d'avion", shape: ['XX', 'XX'] },
+  { id: 'heli', cat: 3, name: 'HELICOPTERE', pw: 'ESQUIVE', eff: "S'échappe de 2 cases au plus (s'il n'est pas touché).", cd: 4, shape: ['X', 'X'] },
+  { id: 'drone', cat: 3, name: 'DRONE', full: 'Drone de reconnaissance', pw: 'CAMERA', eff: 'Révèle une ligne de 4 cases.', cd: 3, lock: '3 victoires', shape: ['X', 'X'] },
+];
+const BYID = Object.fromEntries(AV.map(a => [a.id, a]));
+let pirate = false, allOpen = false, view = 'planche';
+const isOpen = a => !a.lock || allOpen || a.id === 'patrouille' || a.id === 'drone';   // la maquette fait comme si 2 nouveaux étaient déjà gagnés
+const choice = [0, 3, 6, 8].map(i => AV[i].id);
+
+/* ---------- sprites ---------- */
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
+function tint(img, col) { const [c, g] = mk(img.width, img.height); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height); return c; }
+const CACHE = {};
+function sprite(id, side, d, st = 'a') {
+  const key = st + side + id + d; if (CACHE[key]) return CACHE[key];
+  const m = STYLES[st][side], [w, h] = NSIZE[id] || SIZE[id], R = rotBuilder(w, h, d);
+  const an = (NEW[id] || AVIONS[st][id])(R, m, w / 2);
+  if (m.pirate) { R.paint(w * .2, h * .52, w * .14, h * .12, 'scrap'); R.paint(w * .62, h * .28, w * .1, h * .1, 'hazard'); R.greebles(8, 99, [0, 0, w, h]); }
+  const s = NV.render(R.B, { seed: SEED[id] + (side === 'foe' ? 20 : 0) });
+  return CACHE[key] = { img: s.img, w: s.w, h: s.h, engines: s.engines, sh: tint(s.img, 'rgba(4,16,44,.36)'), sil: tint(s.img, '#0c1222'),
+    anims: an.map(([k, x, y, ...r]) => [k, ...R.T([x, y]), ...r]) };
+}
+const LUEUR = (() => { const [c, g] = mk(64, 64), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,170,110,.95)'); gr.addColorStop(.35, 'rgba(255,90,40,.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return c; })();
+function rotorL(g, r, t, sens) { const a = t * 14 * sens;
+  g.globalAlpha = .14; g.fillStyle = '#dfe8f0'; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+  g.globalAlpha = .85; g.strokeStyle = '#22262e'; g.lineWidth = 1.3; g.lineCap = 'round';
+  for (const da of [0, Math.PI / 2]) { g.beginPath(); g.moveTo(Math.cos(a + da) * r, Math.sin(a + da) * r); g.lineTo(-Math.cos(a + da) * r, -Math.sin(a + da) * r); g.stroke(); }
+  g.globalAlpha = 1; }
+function heliceL(g, r, t, sens) { const a = t * 26 * sens;
+  g.globalAlpha = .2; g.fillStyle = '#e8eef4'; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+  g.globalAlpha = .75; g.strokeStyle = '#1c2028'; g.lineWidth = 1.4; g.lineCap = 'round';
+  for (let k = 0; k < 3; k++) { const b = a + k * TAU / 3; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(b) * r, Math.sin(b) * r); g.stroke(); }
+  g.globalAlpha = 1; }
+function antenneL(g, len, t) { g.rotate(t * 1.6);
+  g.fillStyle = '#3a404c'; g.fillRect(-len, -1.6, len * 2, 3.2); g.fillStyle = '#9aa3b1'; g.fillRect(-len, -1.6, len * 2, 1);
+  g.fillStyle = '#d6a050'; g.fillRect(-len, -1.6, 2.4, 3.2); g.fillRect(len - 2.4, -1.6, 2.4, 3.2);
+  g.fillStyle = '#5e6878'; g.beginPath(); g.arc(0, 0, 2.4, 0, TAU); g.fill(); }
+// un avion à l'échelle k, coin en (x, y) ; locked : silhouette
+function drawPlane(g, id, d, x, y, k, t, locked) {
+  const art = sprite(id, pirate ? 'foe' : 'mine', d);
+  g.save(); g.translate(x, y); g.scale(k, k); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  if (locked) { g.globalAlpha = .9; g.drawImage(art.sil, 0, 0, art.w, art.h); g.restore(); return; }
+  g.drawImage(art.sh, 4, 6, art.w, art.h);
+  g.globalCompositeOperation = 'lighter';
+  for (const [ex, ey, er] of art.engines) { const L = er * 3.4 * (1 + Math.sin(t * 23 + ex) * .12); g.drawImage(LUEUR, ex - L, ey - L, L * 2, L * 2); }
+  g.globalCompositeOperation = 'source-over';
+  g.drawImage(art.img, 0, 0, art.w, art.h);
+  for (const [kind, ax, ay, r, sens] of art.anims) { g.save(); g.translate(ax, ay); kind === 'rotor' ? rotorL(g, r, t, sens) : kind === 'helice' ? heliceL(g, r, t, sens) : antenneL(g, r, t); g.restore(); }
+  g.restore();
+}
+function fitPlane(g, id, x, y, bw, bh, t, locked, maxK = 1) {
+  const [w, h] = NSIZE[id] || SIZE[id], k = Math.min(bw / w, bh / h, maxK);
+  drawPlane(g, id, 0, x + (bw - w * k) / 2, y + (bh - h * k) / 2, k, t, locked);
+}
+
+/* ---------- l'interface au pixel (reprise du jeu) ---------- */
+const Rf = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+function plate(g, x, y, w, h, tone) {
+  const top = tone === 'gold' ? ['rgba(120,86,20,.97)', 'rgba(60,36,8,.97)'] : tone === 'dim' ? ['rgba(36,44,60,.92)', 'rgba(16,20,30,.92)'] : ['rgba(48,70,104,.96)', 'rgba(16,26,44,.96)'];
+  Rf(g, x + 2, y - 2, w - 4, h + 4, OUT); Rf(g, x - 2, y + 2, w + 4, h - 4, OUT); Rf(g, x, y, w, h, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, top[0]); gr.addColorStop(1, top[1]); g.fillStyle = gr; g.fillRect(x + 1, y + 1, w - 2, h - 2);
+  const hl = tone === 'gold' ? 'rgba(255,230,140,.7)' : 'rgba(160,200,240,.55)';
+  Rf(g, x + 2, y + 1, w - 4, 1, hl); Rf(g, x + 1, y + 2, 1, h - 4, hl);
+  Rf(g, x + 2, y + h - 2, w - 4, 1, 'rgba(0,0,0,.45)'); Rf(g, x + w - 2, y + 2, 1, h - 4, 'rgba(0,0,0,.45)');
+}
+function text(g, s, x, y, col, align = 'left', size = 11) {
+  g.font = FONT_TEXT(size); g.textAlign = align; g.textBaseline = 'top';
+  g.fillStyle = OUT; g.fillText(s, x + 1, y + 1); g.fillStyle = col; g.fillText(s, x, y);
+}
+function wrap(g, s, maxW, size) { g.font = FONT_TEXT(size); const out = []; let line = '';
+  for (const w of s.split(' ')) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; }
+  if (line) out.push(line); return out; }
+function para(g, s, x, y, maxW, col, size = 11, lh = 12) { for (const l of wrap(g, s, maxW, size)) { text(g, l, x, y, col, 'left', size); y += lh; } return y; }
+const GOLD = ['#fff6c2', '#ffd23f', '#e0782a'];
+function logo(g, s, x, y, size) {
+  g.font = FONT_LOGO(size); g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3); g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, GOLD[0]); gr.addColorStop(.5, GOLD[1]); gr.addColorStop(1, GOLD[2]); g.fillStyle = gr; g.fillText(s, x, y);
+}
+function shapeIcon(g, a, x, y, s = 3, col = '#ffd23f') { a.shape.forEach((row, r) => [...row].forEach((ch, c) => { Rf(g, x + c * (s + 1), y + r * (s + 1), s, s, ch === 'X' ? col : 'rgba(255,255,255,.12)'); })); }
+function padlock(g, x, y) { g.strokeStyle = '#c9d2e4'; g.lineWidth = 1.6; g.beginPath(); g.arc(x + 4, y + 4, 3, Math.PI, 0); g.stroke(); Rf(g, x, y + 4, 8, 6, '#c9d2e4'); Rf(g, x + 3, y + 6, 2, 2, '#1a2236'); }
+function button(g, s, x, y, w, h, tone, fn) { plate(g, x, y, w, h, tone); text(g, s, x + w / 2, y + (h - 13) / 2, tone === 'gold' ? '#fff6c2' : '#ffffff', 'center', 13); zone(x, y, w, h, fn); }
+function bg(g, t) { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#13234a'); gr.addColorStop(1, '#070d1f'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+
+/* ---------- zones touchables ---------- */
+let ZONES = [];
+const zone = (x, y, w, h, fn) => ZONES.push({ x, y, w, h, fn });
+
+/* ---------- planche ---------- */
+let sel = 'attaque';
+function drawPlanche(g, t) {
+  bg(g, t); logo(g, 'LES AVIONS', W / 2, 8, 12);
+  text(g, 'Cartes grises : de départ. Bleues : les 6 nouveaux.', W / 2, 26, '#9aa3b8', 'center', 10);
+  let y = 42;
+  CATS.forEach(([nm, n], ci) => {
+    text(g, `${nm} · ${n} CASES`, 8, y, '#ffd23f', 'left', 10); y += 12;
+    const list = AV.filter(a => a.cat === ci), cw = 84, ch = ci === 0 ? 66 : ci === 3 ? 46 : 50;
+    list.forEach((a, i) => {
+      const x = 8 + i * (cw + 4); plate(g, x, y, cw, ch, sel === a.id ? 'gold' : a.lock ? 'blue' : 'dim');
+      fitPlane(g, a.id, x + 18, y + 3, cw - 22, ch - 18, t, false, .8);
+      shapeIcon(g, a, x + 4, y + 4, 2);
+      text(g, a.name, x + cw / 2, y + ch - 14, '#ffffff', 'center', 10);
+      zone(x, y, cw, ch, () => { sel = a.id; });
+    });
+    y += ch + 6;
+  });
+  // fiche de l'avion choisi
+  const a = BYID[sel]; y += 2; plate(g, 8, y, W - 16, H - y - 8, 'blue');
+  fitPlane(g, a.id, 14, y + 8, 84, 92, t, false, 1);
+  text(g, (a.full || a.name).toUpperCase(), 104, y + 8, '#ffffff', 'left', 14);
+  text(g, `${a.pw} · recharge ${a.cd} tours`, 104, y + 24, '#ffd23f', 'left', 12);
+  let yy = para(g, a.eff, 104, y + 40, W - 124, '#dfe6f2', 11, 12);
+  shapeIcon(g, a, 104, yy + 4, 5); text(g, `${CATS[a.cat][1]} cases`, 104 + a.shape[0].length * 6 + 8, yy + 6, '#9aa3b8', 'left', 10);
+  yy += a.shape.length * 6 + 10;
+  para(g, a.lock ? 'À débloquer : ' + a.lock : 'Avion de départ', 104, Math.max(yy, y + 92), W - 124, a.lock ? '#ffb070' : '#8fd18f', 11, 12);
+}
+
+/* ---------- direction 1 : le hangar à onglets ---------- */
+let tab = 'avions', slot = 0;
+function drawHangar(g, t) {
+  bg(g, t); logo(g, 'HANGAR', W / 2, 8, 14);
+  button(g, 'FAMILLES', 10, 30, 122, 22, tab === 'familles' ? 'gold' : 'dim', () => { tab = 'familles'; });
+  button(g, 'AVIONS', 140, 30, 122, 22, tab === 'avions' ? 'gold' : 'dim', () => { tab = 'avions'; });
+  if (tab === 'familles') {
+    [['a', 'ESCADRE', 'Départ'], ['b', 'FURTIF', 'Victoire en PILOTE'], ['c', 'HELICES', '10 victoires'], ['d', 'CANONNIERE', 'Victoire en AS']].forEach(([st, nm, cond], i) => {
+      const x = 10 + (i % 2) * 130, y = 64 + (i >> 1) * 150; plate(g, x, y, 122, 140, i ? 'blue' : 'gold');
+      const art = sprite('bomb', pirate ? 'foe' : 'mine', 0, st); g.save(); g.imageSmoothingEnabled = true; g.drawImage(art.img, x + 26, y + 8, art.w, art.h); g.restore();
+      text(g, nm, x + 61, y + 104, '#ffffff', 'center', 13); text(g, cond, x + 61, y + 120, '#9aa3b8', 'center', 10);
+    });
+    para(g, "Les familles ne changent que le dessin. Si les nouveaux avions n'existent que dans l'escadre, ils gardent ce dessin dans toutes les familles.", 12, 372, W - 24, '#9aa3b8', 11, 13);
+  } else {
+    text(g, 'MON ESCADRILLE : touchez une place', 10, 60, '#9aa3b8', 'left', 11);
+    CATS.forEach(([nm, n], i) => {
+      const x = 10 + i * 64, y = 74, a = BYID[choice[i]];
+      plate(g, x, y, 60, 74, slot === i ? 'gold' : 'blue');
+      text(g, `${nm} ${n}`, x + 30, y + 3, slot === i ? '#fff6c2' : '#9aa3b8', 'center', 9);
+      fitPlane(g, a.id, x + 4, y + 14, 52, 42, t, false, .6);
+      text(g, a.pw, x + 30, y + 59, '#ffd23f', 'center', 10);
+      zone(x, y, 60, 74, () => { slot = i; });
+    });
+    text(g, `${CATS[slot][0]} · ${CATS[slot][1]} CASES : choisir l'avion`, 10, 158, '#ffd23f', 'left', 11);
+    let y = 172;
+    AV.filter(a => a.cat === slot).forEach(a => {
+      const open = isOpen(a), on = choice[slot] === a.id, h = 82;
+      plate(g, 10, y, W - 20, h, on ? 'gold' : open ? 'blue' : 'dim');
+      fitPlane(g, a.id, 16, y + 6, 62, 70, t, !open, .75);
+      if (!open) padlock(g, 43, y + 36);
+      text(g, (a.full || a.name).toUpperCase(), 84, y + 6, open ? '#ffffff' : '#9aa3b8', 'left', 12);
+      text(g, a.pw, 84, y + 20, open ? '#ffd23f' : '#8a7a4a', 'left', 11);
+      para(g, open ? a.eff : 'À débloquer : ' + a.lock, 84, y + 34, 120, open ? '#dfe6f2' : '#ffb070', 10, 11);
+      if (on) text(g, 'CHOISI', W - 18, y + 6, '#fff6c2', 'right', 11);
+      else if (open) button(g, 'PRENDRE', W - 76, y + 50, 58, 22, 'blue', () => { choice[slot] = a.id; });
+      shapeIcon(g, a, W - 18 - a.shape[0].length * 4, y + 24, 3);
+      y += h + 6;
+    });
+  }
+  button(g, 'RETOUR', 10, H - 36, 100, 26, 'dim', () => {});
+  button(g, 'AU COMBAT !', 120, H - 36, 142, 26, 'gold', () => { view = 'place'; syncTabs(); newFleet(); });
+}
+
+/* ---------- direction 2 : choisir au placement ---------- */
+const GX = 32, GY = 40, N = 9;
+let fleet = [], msg = 'Touchez les flèches pour changer un avion (même nombre de cases), puis placez-les.';
+let solTile = null;
+function cellsOf(a, d) {
+  let cs = []; a.shape.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'X') cs.push([c, r]); }));
+  let w = a.shape[0].length, h = a.shape.length;
+  for (let k = 0; k < d; k++) { cs = cs.map(([x, y]) => [h - 1 - y, x]); [w, h] = [h, w]; }
+  return { cs, w, h };
+}
+function placeOne(id, occ) {
+  const a = BYID[id];
+  for (let tries = 0; tries < 500; tries++) {
+    const d = Math.random() * 4 | 0, { cs, w, h } = cellsOf(a, d), c = Math.random() * (N - w + 1) | 0, r = Math.random() * (N - h + 1) | 0;
+    if (cs.every(([x, y]) => !occ.has((c + x) + ',' + (r + y)))) { cs.forEach(([x, y]) => occ.add((c + x) + ',' + (r + y))); return { id, d, c, r }; }
+  }
+  return null;
+}
+function newFleet() { const occ = new Set(); fleet = choice.map(id => placeOne(id, occ)); }
+function swapPlane(i, id) {
+  const occ = new Set(); fleet.forEach((p, j) => { if (j !== i && p) cellsOf(BYID[p.id], p.d).cs.forEach(([x, y]) => occ.add((p.c + x) + ',' + (p.r + y))); });
+  fleet[i] = placeOne(id, occ);
+}
+const showing = [0, 3, 6, 8].map(i => AV[i].id);   // l'avion montré dans chaque place (peut être verrouillé)
+function drawPlace(g, t) {
+  bg(g, t);
+  text(g, 'PLACEZ VOTRE ESCADRILLE', W / 2, 10, '#ffd23f', 'center', 13);
+  if (!solTile) solTile = window.EscSol.build('a');
+  const S = N * CELL; g.save(); g.beginPath(); g.rect(GX, GY, S, S); g.clip();
+  const oy = Math.floor((t * 6) % window.EscSol.H); for (let y = -window.EscSol.H + oy; y < S; y += window.EscSol.H) g.drawImage(solTile, GX, GY + y);
+  Rf(g, GX, GY, S, S, 'rgba(10,30,70,.25)');
+  g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 1;
+  for (let k = 0; k <= N; k++) { g.beginPath(); g.moveTo(GX + k * CELL + .5, GY); g.lineTo(GX + k * CELL + .5, GY + S); g.moveTo(GX, GY + k * CELL + .5); g.lineTo(GX + S, GY + k * CELL + .5); g.stroke(); }
+  fleet.forEach(p => { if (p) drawPlane(g, p.id, p.d, GX + p.c * CELL, GY + p.r * CELL, 1, t, false); });
+  g.restore();
+  for (let k = 0; k < N; k++) { text(g, 'ABCDEFGHI'[k], GX + k * CELL + 11, GY - 12, '#9aa3b8', 'center', 9); text(g, String(k + 1), GX - 6, GY + k * CELL + 6, '#9aa3b8', 'right', 9); }
+  // la rangée des 4 places, avec les flèches
+  const y = GY + S + 10;
+  CATS.forEach(([nm, n], i) => {
+    const x = 6 + i * 66, a = BYID[showing[i]], open = isOpen(a);
+    plate(g, x, y, 62, 92, open ? 'blue' : 'dim');
+    text(g, `${nm} ${n}`, x + 31, y + 3, '#9aa3b8', 'center', 9);
+    fitPlane(g, a.id, x + 6, y + 15, 50, 40, t, !open, .6);
+    if (!open) padlock(g, x + 27, y + 30);
+    text(g, a.pw, x + 31, y + 58, open ? '#ffd23f' : '#8a7a4a', 'center', 10);
+    const list = AV.filter(b => b.cat === i), k = list.indexOf(a);
+    const go = dk => () => {
+      const b = list[(k + dk + list.length) % list.length]; showing[i] = b.id;
+      if (isOpen(b)) { choice[i] = b.id; swapPlane(i, b.id); msg = `${b.full || b.name} : ${b.pw}. ${b.eff}`; }
+      else msg = `${b.full || b.name} (${b.pw}) : à débloquer. ${b.lock}.`;
+    };
+    plate(g, x + 3, y + 72, 26, 16, 'dim'); text(g, '◀', x + 16, y + 73, '#ffffff', 'center', 12); zone(x, y + 66, 31, 26, go(-1));
+    plate(g, x + 33, y + 72, 26, 16, 'dim'); text(g, '▶', x + 46, y + 73, '#ffffff', 'center', 12); zone(x + 31, y + 66, 31, 26, go(1));
+  });
+  const my = y + 102; plate(g, 8, my, W - 16, 52, 'blue'); para(g, msg, 14, my + 6, W - 28, '#ffffff', 11, 13);
+  button(g, 'AU HASARD', 10, H - 36, 110, 26, 'blue', newFleet);
+  button(g, 'COMBAT !', 130, H - 36, 132, 26, 'gold', () => { msg = "Maquette : le combat n'est pas joué ici."; });
+}
+
+/* ---------- boucle ---------- */
+const cv = document.getElementById('c'), DPR = 2; cv.width = W * DPR; cv.height = H * DPR; cv.style.aspectRatio = W + ' / ' + H;
+const g = cv.getContext('2d');
+function frame(ms) {
+  const t = ms / 1000; ZONES = [];
+  g.setTransform(DPR, 0, 0, DPR, 0, 0); g.imageSmoothingEnabled = false;
+  (view === 'planche' ? drawPlanche : view === 'hangar' ? drawHangar : drawPlace)(g, t);
+  requestAnimationFrame(frame);
+}
+cv.addEventListener('pointerdown', e => {
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
+  for (let i = ZONES.length - 1; i >= 0; i--) { const z = ZONES[i]; if (x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h) { z.fn(); break; } }
+});
+function syncTabs() { document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === view)); }
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { view = b.dataset.v; syncTabs(); if (view === 'place') newFleet(); });
+document.getElementById('pir').onclick = e => { pirate = !pirate; e.target.classList.toggle('on', pirate); e.target.textContent = pirate ? 'Voir mon escadrille' : 'Voir les pirates'; };
+document.getElementById('unl').onclick = e => { allOpen = !allOpen; e.target.classList.toggle('on', allOpen); };
+newFleet();
+window.Maquette = { AV, NEW, cellsOf, sprite };
+Promise.all(['12px "Press Start 2P"', '700 11px Rajdhani'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : null)).then(() => requestAnimationFrame(frame));
+</script>
+</body>
+</html>
