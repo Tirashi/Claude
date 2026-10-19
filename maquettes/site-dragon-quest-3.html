@@ -1,0 +1,390 @@
+<title>Ludothèque façon Dragon Quest 3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Maquette 3 : seulement la DA (fenêtres bleues, menus à curseur, texte lettre par lettre, bips), sans histoire.
+   Trois mises en page : 1 fenêtres empilées, 2 commandes + message, 3 menus en cascade.
+   Trois téléphones côte à côte, trois écrans chacun. Une seule ambiance sombre, voulue. */
+:root{
+  color-scheme: dark;
+  --page:#0b0918; --page-2:#1a1533; --ink:#f2f0ff; --ink-dim:#a9a6d8; --gold:#ffd23f;
+  --win:linear-gradient(#2c42c4, #0e1a6e); --tagbg:#2c42c4; --wtxt:#fff; --wdim:#b5bcff; --wbd:#fff;
+  --wsh:inset 0 0 0 2px #6a76d8, 0 0 0 2px #000, 3px 3px 0 2px rgba(0,0,0,.6); --hi:#ffe14a; --me:#7dffa0;
+  --f-pix:"Press Start 2P", "Courier New", monospace;
+  --f-txt:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0; background:var(--page); color:var(--ink); font-family:var(--f-txt); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(var(--page-2) 1px, transparent 1.5px); background-size:4px 4px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+@keyframes blink{50%{opacity:0}}
+@keyframes pop{from{transform:scale(.6); opacity:0}}
+@keyframes turn{0%,100%{transform:perspective(260px) rotateY(-22deg)} 50%{transform:perspective(260px) rotateY(22deg)}}
+@media (prefers-reduced-motion: reduce){ *{animation:none !important} }
+
+.top{max-width:1180px; margin:0 auto 18px; display:flex; flex-direction:column; gap:10px}
+.top h1{margin:0; font-family:var(--f-pix); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-wrap:balance; text-shadow:3px 3px 0 #000}
+.top p{margin:0; max-width:68ch; color:var(--ink-dim)}
+.bar{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center}
+.bar button{font-family:var(--f-pix); font-size:9px; letter-spacing:1px; padding:8px 10px 8px 22px; position:relative; border:2px solid #fff; border-radius:7px; background:var(--win); box-shadow:inset 0 0 0 2px #6a76d8; color:var(--wdim)}
+.bar button[aria-pressed="true"]{color:#fff}
+.bar button[aria-pressed="true"]::before{content:"▶"; position:absolute; left:7px; color:#fff; animation:blink 1s steps(1) infinite}
+.bar button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+
+.phones{max-width:1180px; margin:0 auto; display:flex; flex-wrap:wrap; gap:28px 22px; justify-content:center}
+.col{display:flex; flex-direction:column; gap:10px; width:360px; max-width:100%}
+.col h2{margin:0; font-family:var(--f-pix); font-weight:400; font-size:11px; line-height:1.6; color:var(--gold)}
+.col h2 + p{margin:0; color:var(--ink-dim); font-size:18px; min-height:3.6em}
+.phone{width:100%; height:740px; border-radius:30px; padding:12px; background:#1b1b22; box-shadow:inset 0 0 0 2px #3a3a48, 0 10px 30px rgba(0,0,0,.6)}
+.screen{position:relative; width:100%; height:100%; border-radius:20px; overflow:hidden;
+  background:radial-gradient(#141c55 1px, transparent 1.5px) 0 0 / 5px 5px, linear-gradient(#0a0f33, #050716)}
+.scr{position:absolute; inset:0; overflow-y:auto; padding:16px 12px 20px; display:flex; flex-direction:column; gap:14px; scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+.scr[hidden]{display:none}
+
+/* ---------- fenêtres bleues ---------- */
+.win{position:relative; background:var(--win); color:var(--wtxt); border:3px solid var(--wbd); border-radius:9px; box-shadow:var(--wsh);
+  padding:12px 10px 10px; font-size:19px; text-shadow:1px 1px 0 #000a; min-width:0}
+.win > .tag{position:absolute; top:-9px; left:12px; padding:0 5px; background:var(--tagbg); font-family:var(--f-pix); font-size:8px; line-height:14px; color:var(--hi); letter-spacing:1px}
+.win p{margin:0}
+.pix{font-family:var(--f-pix); font-size:8px; letter-spacing:1px; line-height:1.9}
+.dim{color:var(--wdim)}
+.type::after{content:"▼"; display:inline-block; margin-left:6px; font-size:12px; color:#fff; animation:blink 1s steps(1) infinite; visibility:hidden}
+.type.done::after{visibility:visible}
+
+.cmds{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:2px 14px}
+.cmds.v{flex-direction:column; gap:4px}
+.cmds.g2{display:grid; grid-template-columns:1fr 1fr; gap:4px 10px}
+.cmds button{font-family:var(--f-pix); font-size:8px; letter-spacing:1px; line-height:2.2; color:var(--wdim); padding-left:14px; position:relative; text-align:left}
+.cmds button.on{color:#fff}
+.cmds button.on::before{content:"▶"; position:absolute; left:0; color:#fff; animation:blink 1s steps(1) infinite}
+.cmds button:focus-visible{outline:2px dashed var(--hi); outline-offset:2px}
+
+h3.logo{margin:4px 0 0; text-align:center; font-family:var(--f-pix); font-weight:400; font-size:15px; line-height:1.5; color:var(--hi);
+  text-shadow:2px 0 0 #c0561a, 0 2px 0 #c0561a, 2px 2px 0 #c0561a, 4px 4px 0 #000}
+
+/* étagère de cartouches (simplifiée : elle ne change pas) */
+.rack{display:grid; grid-template-columns:repeat(3, 1fr); padding:8px 4px 0;
+  background:linear-gradient(transparent calc(100% - 12px), #b77a48 calc(100% - 12px) calc(100% - 10px), #7a4a24 calc(100% - 10px) calc(100% - 2px), #0d0a18 calc(100% - 2px)) 0 0 / 100% 104px;
+  border:3px solid #0d0a18; box-shadow:0 0 0 2px #6a76d8; background-color:#140f28}
+.cart{height:104px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:14px}
+.cart > span{display:flex; flex-direction:column; justify-content:flex-end; width:62px; height:76px; border-radius:4px 4px 2px 2px; background:var(--c);
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.25), 3px 3px 0 #000; padding:5px; transition:transform .15s}
+.cart > span i{display:block; font-style:normal; font-family:var(--f-pix); font-size:5px; line-height:1.6; text-align:center; color:#fff; background:rgba(0,0,0,.55); padding:4px 2px; border-radius:2px}
+.cart:hover > span, .cart:focus-visible > span{transform:translateY(-4px)}
+.cart:focus-visible{outline:none}
+.cart:focus-visible > span{outline:2px solid var(--hi); outline-offset:2px}
+.tools{display:flex; gap:8px; flex-wrap:wrap}
+.tools .win{flex:1 1 auto; padding:9px 8px 7px}
+
+.box{flex:none; width:70px; height:92px; border-radius:3px; background:linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 55%, #000));
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.35), 6px 0 0 color-mix(in srgb, var(--c) 40%, #000), 6px 4px 0 #000; display:grid; place-items:center; padding:4px;
+  font-family:var(--f-pix); font-size:6px; line-height:1.6; text-align:center; color:#fff; text-shadow:1px 1px 0 #000; transform:perspective(200px) rotateY(-14deg)}
+.head{display:flex; gap:12px; align-items:flex-start}
+.head > div:not(.box){min-width:0; flex:1}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+.chips span{font-family:var(--f-pix); font-size:6px; letter-spacing:1px; padding:4px 5px; border:1px solid var(--wdim); color:var(--wdim); border-radius:2px}
+.stats{display:grid; gap:2px}
+.stats div{display:flex; align-items:baseline; gap:6px}
+.stats div::after{content:""; order:1; flex:1; border-bottom:2px dotted var(--wdim); opacity:.6; transform:translateY(-4px)}
+.stats b{order:2; font-weight:400; font-variant-numeric:tabular-nums}
+.stats .me, .stats .me b{color:var(--me)}
+.code{font-family:var(--f-pix); font-size:8px; line-height:1.8; word-break:break-all; color:var(--hi); background:rgba(0,0,0,.35); padding:6px; border:1px dashed var(--wdim); border-radius:3px; margin-top:8px}
+.paste{width:100%; margin-top:8px; min-height:60px; resize:none; font-family:var(--f-pix); font-size:8px; line-height:1.8; color:#fff; background:rgba(0,0,0,.35); border:1px dashed var(--wdim); border-radius:3px; padding:6px}
+.paste::placeholder{color:var(--wdim)}
+
+/* ---------- 2 : vitrine + commandes à gauche, message à droite ---------- */
+.show{position:relative; height:180px; flex:none; border-radius:9px; display:grid; place-items:center;
+  background:radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--c) 45%, transparent), transparent 65%), linear-gradient(#0a0f33, #050716);
+  border:3px solid #fff; box-shadow:inset 0 0 0 2px #6a76d8, 0 0 0 2px #000}
+.show .box{width:92px; height:122px; font-size:8px; animation:turn 6s ease-in-out infinite}
+.show .nm{position:absolute; top:10px; left:0; right:0; text-align:center; font-family:var(--f-pix); font-size:8px; color:var(--hi); text-shadow:2px 2px 0 #000}
+.duo{display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:start}
+.duo .msg{min-height:150px}
+
+/* ---------- 3 : fenêtres en cascade, chacune décalée sur la précédente ---------- */
+.stack{position:relative; display:flex; flex-direction:column}
+.stack > .win + .win{margin-top:-6px; margin-left:calc(var(--n) * 22px); z-index:var(--n); animation:pop .14s steps(3)}
+.stack > .win:first-child{z-index:0}
+
+.note{max-width:1180px; margin:22px auto 0; color:var(--ink-dim); font-size:18px}
+.note b{color:var(--ink); font-weight:400}
+</style>
+
+<div class="top">
+  <h1>LA LUDOTHEQUE FACON DRAGON QUEST · 3</h1>
+  <p>Seulement l'habillage : fenêtres bleues, menus à curseur, texte qui s'écrit lettre par lettre, petits bips. Pas d'histoire autour. Trois façons de ranger les fenêtres. Touche une cartouche, puis les commandes. Records et classements : exemples.</p>
+  <div class="bar">
+    <button type="button" data-all="home" aria-pressed="true">ACCUEIL</button>
+    <button type="button" data-all="volet" aria-pressed="false">VOLET DU JEU</button>
+    <button type="button" data-all="save" aria-pressed="false">TRANSFERT</button>
+    <button type="button" id="snd" aria-pressed="true">BIPS : OUI</button>
+  </div>
+</div>
+
+<div class="phones" id="phones"></div>
+
+<p class="note"><b>Dans les trois :</b> le gardien reste une simple fenêtre de texte, comme aujourd'hui. Les cartouches et les jeux ne changent pas.</p>
+
+<script>
+const GAMES = [
+  {n:"YAMS", c:"#c0392b", f:["adresse"], d:"Le Yams classique avec de vrais dés : secoue, lance, garde les bons. Six styles de dés à débloquer.", t:["ADRESSE","3D","DEFI DU JOUR"],
+    r:[["MEILLEUR SCORE","287"],["YAMS REUSSIS","6"],["PARTIES","41"]], k:[["PAPA",312],["TOI",287],["LEA",254],["MAMIE",198]]},
+  {n:"PICROSS DEX", c:"#3aa655", f:["logique","fav"], d:"Des grilles à noircir pour dévoiler et capturer les 151 Pokémon.", t:["LOGIQUE","COLLECTION"],
+    r:[["POKEMON","97 / 151"],["MEILLEUR 15X15","4:12"],["GRILLES","133"]], k:[["TOI","97"],["LEA","64"],["PAPA","22"]]},
+  {n:"NEBULA", c:"#6c4bd8", f:["cours","fav"], d:"Commande une flotte à travers dix secteurs, recrute, améliore tes vaisseaux.", t:["TACTIQUE","CAMPAGNE","EN COURS"],
+    r:[["SECTEUR ATTEINT","2 / 10"],["VICTOIRES","3"],["DEFI DU JOUR","1 840"]], k:[["PAPA","5 VICT."],["TOI","3 VICT."],["LEA","1 VICT."]]},
+  {n:"ORBITE", c:"#2a8fd8", f:["adresse"], d:"Lance ta sonde et laisse les planètes courber sa route jusqu'à la cible.", t:["ADRESSE","32 BITS"],
+    r:[["NIVEAUX","24 / 30"],["ETOILES","61"],["DEFI DU JOUR","0:48"]], k:[["LEA","28"],["TOI","24"],["PAPA","19"]]},
+  {n:"SUDOKU", c:"#d8a12a", f:["logique"], d:"Le classique 9×9, notes au crayon et grille du jour pour toute la famille.", t:["LOGIQUE","GRILLE DU JOUR"],
+    r:[["GRILLE DU JOUR","6:31"],["EXPERT","14:02"],["GRILLES","58"]], k:[["MAMIE","5:10"],["TOI","6:31"],["PAPA","8:44"]]},
+  {n:"LUNE-ROVER", c:"#8a8f99", f:["adresse","cours"], d:"Pilote le rover sur les cratères sans le retourner, trente niveaux.", t:["ADRESSE","EN COURS"],
+    r:[["NIVEAUX","21 / 30"],["MEILLEUR TEMPS","1:07"],["CHUTES","112"]], k:[["TOI","21"],["PAPA","17"]]},
+  {n:"QUEENS", c:"#d84a8f", f:["logique","fav"], d:"Une reine par ligne, par colonne et par couleur, jamais côte à côte.", t:["LOGIQUE","GRILLE DU JOUR"],
+    r:[["GRILLE DU JOUR","1:54"],["SERIE","9 JOURS"]], k:[["LEA","1:21"],["TOI","1:54"],["MAMIE","2:40"]]},
+  {n:"TETRIS", c:"#1fb5a8", f:["arcade"], d:"Les pièces tombent, les lignes disparaissent, la vitesse monte.", t:["ARCADE","16 BITS"],
+    r:[["RECORD","48 210"],["LIGNES","96"]], k:[["PAPA","61 300"],["TOI","48 210"]]},
+  {n:"SNAKE", c:"#4fbf3a", f:["arcade"], d:"Mange, grandis, et ne te mords pas la queue.", t:["ARCADE","16 BITS"],
+    r:[["RECORD","132"]], k:[["LEA","158"],["TOI","132"]]},
+];
+const FILTERS = [["tous","TOUS"],["fav","FAVORIS"],["cours","EN COURS"],["logique","LOGIQUE"],["adresse","ADRESSE"],["arcade","ARCADE"]];
+const SAYS = {
+  tous:"Bienvenue ! Vingt-trois jeux t'attendent sur ces planches. Lequel veux-tu essayer ?",
+  fav:"Voici tes jeux favoris.",
+  cours:"Tu as laissé Nebula au secteur 2 et le rover au niveau 21. On reprend ?",
+  logique:"Des casse-têtes pour les esprits affûtés. Prends ton temps.",
+  adresse:"Il te faudra des doigts agiles !",
+  arcade:"Les grands classiques. Ton record t'attend.",
+};
+const DIRS = [
+  {k:1, t:"1 · FENETRES EMPILEES", p:"Le site d'aujourd'hui, habillé : chaque bloc devient une fenêtre bleue, l'une sous l'autre. On fait défiler, rien ne se cache."},
+  {k:2, t:"2 · COMMANDES ET MESSAGE", p:"La mise en page de C sans le combat : la boîte du jeu tourne dans une vitrine, les commandes à gauche, et la fenêtre de message à droite répond."},
+  {k:3, t:"3 · MENUS EN CASCADE", p:"Chaque commande ouvre une petite fenêtre décalée par-dessus la précédente, comme les sous-menus des RPG ; RETOUR referme la dernière."},
+];
+
+/* ---------- petits bips (carré, très courts) ---------- */
+let AC = null, sound = true;
+function bip(f, d, g = .05, when = 0){
+  if(!sound) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime + when, o = AC.createOscillator(), v = AC.createGain();
+    o.type = "square"; o.frequency.value = f; v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(v).connect(AC.destination); o.start(t); o.stop(t + d + .02);
+  }catch(e){}
+}
+const sCur = () => bip(1320, .035, .03);
+const sOk = () => { bip(784, .07); bip(1175, .1, .05, .07); };
+const sBack = () => { bip(990, .06); bip(660, .08, .05, .06); };
+const sSave = () => { [523, 659, 784, 1047].forEach((f, i) => bip(f, .12, .05, i * .1)); };
+
+/* ---------- texte lettre par lettre ---------- */
+function type(el, text){
+  clearInterval(el._t); el.classList.remove("done"); el.textContent = "";
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = text; el.classList.add("done"); return; }
+  let i = 0;
+  el._t = setInterval(() => {
+    el.textContent = text.slice(0, ++i);
+    if(i % 3 === 0 && text[i - 1] !== " ") bip(1700, .012, .012);
+    if(i >= text.length){ clearInterval(el._t); el.classList.add("done"); }
+  }, 30);
+}
+
+/* ---------- outils ---------- */
+const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; };
+const win = (tag, inner, cls = "") => '<div class="win ' + cls + '">' + (tag ? '<span class="tag">' + tag + '</span>' : "") + inner + '</div>';
+const cmds = (list, cls = "") => '<ul class="cmds ' + cls + '">' + list.map(([v, l], i) => '<li><button type="button" data-v="' + v + '"' + (i ? "" : ' class="on"') + '>' + l + '</button></li>').join("") + '</ul>';
+const recs = g => '<div class="stats">' + g.r.map(([n, v]) => '<div>' + n + '<b>' + v + '</b></div>').join("") + '</div>';
+const rank = g => '<div class="stats">' + g.k.map(([n, v], i) => '<div class="' + (n === "TOI" ? "me" : "") + '">' + (i + 1) + '. ' + n + '<b>' + v + '</b></div>').join("") + '</div>';
+const SUM = '<div class="stats"><div>JEUX AVEC RECORDS<b>14</b></div><div>PARTIES EN COURS<b>2</b></div><div>POKEMON CAPTURES<b>97</b></div></div>';
+const CODE = '<div class="code">LUDO1-8F2K-Q7ZX-M3PA-91LC-…</div>';
+// le curseur suit le doigt (ou la souris), un bip à chaque déplacement
+function wire(list, act){
+  list.querySelectorAll("button").forEach(b => {
+    const move = () => { if(b.classList.contains("on")) return; list.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); sCur(); };
+    b.addEventListener("pointerenter", move); b.addEventListener("focus", move);
+    b.addEventListener("click", () => { move(); act(b.dataset.v, b); });
+  });
+}
+const favLabel = g => g.f.includes("fav") ? "★ FAVORI" : "☆ FAVORI";
+const toggleFav = g => { const on = !g.f.includes("fav"); g.f = on ? [...g.f, "fav"] : g.f.filter(x => x !== "fav"); return on; };
+
+// direction 3 : une pile de fenêtres ; push en ajoute une décalée, pop referme la dernière
+function cascade(stack){
+  return {
+    push(html, onWire){
+      const n = stack.children.length;
+      stack.insertAdjacentHTML("beforeend", html);
+      const w = stack.lastElementChild; w.style.setProperty("--n", n);
+      onWire && onWire(w);
+      return w;
+    },
+    pop(){ if(stack.children.length > 1){ stack.lastElementChild.remove(); sBack(); return true; } return false; },
+    reset(){ while(stack.children.length > 1) stack.lastElementChild.remove(); },
+  };
+}
+
+/* ---------- un téléphone ---------- */
+function phone(D){
+  const col = el("div", "col");
+  col.append(el("h2", "", D.t), el("p", "", D.p));
+  const ph = el("div", "phone"), scr = el("div", "screen");
+  ph.append(scr); col.append(ph);
+  const st = {dir:D.k, game:GAMES[0], filter:"tous", sort:"A-Z", scr};
+  ["home", "volet", "save"].forEach(n => scr.append(el("div", "scr " + n)));
+  st.show = name => {
+    scr.querySelectorAll(".scr").forEach(s => s.hidden = !s.classList.contains(name));
+    ({home, volet, save})[name](st);
+    scr.querySelector("." + name).scrollTop = 0;
+  };
+  return {col, st};
+}
+
+function home(st){
+  const s = st.scr.querySelector(".home"), D = st.dir;
+  const tools = D === 3
+    ? '<div class="stack t">' + win("", cmds([["sort", "TRIER"], ["find", "CHERCHER"], ["surp", "SURPRENDS-MOI"], ["save", "SAUVEGARDES"]], "g2")) + '</div>'
+    : '<div class="tools">' + win("", '<span class="pix">▶ TRIER : A-Z</span>') + win("", '<span class="pix">▶ SURPRENDS-MOI</span>') + '</div>' +
+      win("SAUVEGARDES", '<p class="dim" style="font-size:17px">Tes records restent dans ce navigateur. Pour les emporter ailleurs :</p>' + cmds([["save", "TRANSFERER"]]), "j");
+  s.innerHTML = '<h3 class="logo">LUDOTHEQUE<br>16 BITS</h3>' + win("", cmds(FILTERS)) + win("LE GARDIEN", '<p class="say type"></p>') +
+    '<div class="rack"></div>' + tools;
+  const say = s.querySelector(".say"), rack = s.querySelector(".rack");
+  const fill = () => {
+    rack.innerHTML = "";
+    GAMES.filter(g => st.filter === "tous" || g.f.includes(st.filter)).forEach(g => {
+      const b = el("button", "cart", '<span style="--c:' + g.c + '"><i>' + g.n + '</i></span>');
+      b.type = "button"; b.setAttribute("aria-label", g.n);
+      b.onclick = () => { st.game = g; sOk(); st.show("volet"); };
+      rack.append(b);
+    });
+  };
+  fill(); type(say, SAYS[st.filter]);
+  wire(s.querySelector(".cmds"), v => { st.filter = v; fill(); type(say, SAYS[v]); });
+  if(D !== 3){ wire(s.querySelector(".j .cmds"), () => { sOk(); st.show("save"); }); return; }
+  const c = cascade(s.querySelector(".stack.t"));
+  wire(s.querySelector(".stack.t .cmds"), v => {
+    c.reset();
+    if(v === "save"){ sOk(); st.show("save"); return; }
+    sOk();
+    if(v === "sort") c.push(win("TRIER", cmds([["A-Z", "A-Z"], ["REC", "RECENTS"], ["JOUES", "LES PLUS JOUES"], ["back", "RETOUR"]], "v")), w =>
+      wire(w.querySelector(".cmds"), x => { if(x === "back") return c.pop(); sOk(); c.pop(); type(say, "Les jeux sont rangés : " + x.toLowerCase().replace("rec", "les plus récents").replace("joues", "les plus joués") + "."); }));
+    if(v === "find") c.push(win("CHERCHER", '<p class="pix">NOM DU JEU : <span class="dim">YA_</span></p>' + cmds([["back", "RETOUR"]])), w => wire(w.querySelector(".cmds"), () => c.pop()));
+    if(v === "surp") c.push(win("SURPRENDS-MOI", '<p>Le gardien a choisi… <b style="font-weight:400; color:var(--hi)">ORBITE</b> !</p>' + cmds([["go", "Y ALLER"], ["back", "RETOUR"]], "g2")), w =>
+      wire(w.querySelector(".cmds"), x => { if(x === "back") return c.pop(); st.game = GAMES[3]; sOk(); st.show("volet"); }));
+  });
+}
+
+function volet(st){
+  const s = st.scr.querySelector(".volet"), g = st.game, D = st.dir;
+  const head = '<div class="head"><div class="box" style="--c:' + g.c + '">' + g.n + '</div><div><p class="type d"></p><div class="chips">' + g.t.map(t => '<span>' + t + '</span>').join("") + '</div></div></div>';
+  if(D === 1){
+    s.innerHTML = win(g.n, head) + win("MES RECORDS", recs(g)) + win("CLASSEMENT DE LA FAMILLE", rank(g)) +
+      win("", cmds([["play", "JOUER"], ["fav", favLabel(g)], ["back", "RETOUR"]], "v") + '<p class="msg type" style="margin-top:6px; min-height:1.2em"></p>');
+    type(s.querySelector(".d"), g.d);
+    const msg = s.querySelector(".msg");
+    wire(s.querySelector(".cmds"), (v, b) => {
+      if(v === "back"){ sBack(); st.show("home"); return; }
+      if(v === "fav"){ sOk(); const on = toggleFav(g); b.textContent = favLabel(g); type(msg, on ? "Ajouté à tes favoris." : "Retiré de tes favoris."); return; }
+      sSave(); type(msg, g.n + " commence ! (Ici, le jeu se lance.)");
+    });
+    return;
+  }
+  if(D === 2){
+    s.innerHTML = '<div class="show" style="--c:' + g.c + '"><span class="nm">' + g.n + '</span><div class="box" style="--c:' + g.c + '">' + g.n + '</div></div>' +
+      '<div class="duo">' + win("", cmds([["play", "JOUER"], ["info", "INFOS"], ["rec", "RECORDS"], ["rank", "CLASSEMENT"], ["fav", favLabel(g)], ["back", "RETOUR"]], "v")) +
+      win("", '<div class="body"></div>', "msg") + '</div>';
+    const body = s.querySelector(".body");
+    const show = (title, html, text) => { body.innerHTML = (title ? '<p class="pix" style="color:var(--hi); margin-bottom:6px">' + title + '</p>' : "") + (html || "") + (text != null ? '<p class="type t"></p>' : ""); if(text != null) type(body.querySelector(".t"), text); };
+    const info = () => show("", '<div class="chips" style="margin:0 0 8px">' + g.t.map(t => '<span>' + t + '</span>').join("") + '</div>', g.d);
+    info();
+    wire(s.querySelector(".cmds"), (v, b) => {
+      if(v === "back"){ sBack(); st.show("home"); return; }
+      if(v === "info"){ sOk(); info(); return; }
+      if(v === "rec"){ sOk(); show("MES RECORDS", recs(g)); return; }
+      if(v === "rank"){ sOk(); show("CLASSEMENT", rank(g)); return; }
+      if(v === "fav"){ sOk(); const on = toggleFav(g); b.textContent = favLabel(g); show("", "", on ? "Ajouté à tes favoris." : "Retiré de tes favoris."); return; }
+      sSave(); show("", "", g.n + " commence ! (Ici, le jeu se lance.)");
+    });
+    return;
+  }
+  s.innerHTML = win(g.n, head) + '<div class="stack v">' + win("", cmds([["play", "JOUER"], ["rec", "RECORDS"], ["rank", "CLASSEMENT"], ["fav", favLabel(g)], ["back", "RETOUR"]], "g2")) + '</div>' +
+    win("", '<p class="type m"></p>');
+  type(s.querySelector(".d"), g.d);
+  const c = cascade(s.querySelector(".stack.v")), m = s.querySelector(".m");
+  type(m, "Que veux-tu faire ?");
+  const closeOnly = w => wire(w.querySelector(".cmds"), () => c.pop());
+  wire(s.querySelector(".stack.v .cmds"), (v, b) => {
+    c.reset();
+    if(v === "back"){ sBack(); st.show("home"); return; }
+    sOk();
+    if(v === "rec"){ c.push(win("MES RECORDS", recs(g) + cmds([["back", "RETOUR"]])), closeOnly); type(m, "Voici tes records."); }
+    if(v === "rank"){ c.push(win("CLASSEMENT", rank(g) + cmds([["back", "RETOUR"]])), closeOnly); type(m, "Tu es " + (g.k.findIndex(k => k[0] === "TOI") + 1) + "e dans la famille."); }
+    if(v === "fav"){ const on = toggleFav(g); b.textContent = favLabel(g); type(m, on ? "Ajouté à tes favoris." : "Retiré de tes favoris."); }
+    if(v === "play") c.push(win("JOUER", cmds([["new", "NOUVELLE PARTIE"], ["day", "DEFI DU JOUR"], ["back", "RETOUR"]], "v")), w =>
+      wire(w.querySelector(".cmds"), x => { if(x === "back") return c.pop(); sSave(); type(m, (x === "day" ? "Défi du jour : une seule tentative classée. " : "") + g.n + " commence ! (Ici, le jeu se lance.)"); }));
+  });
+}
+
+function save(st){
+  const s = st.scr.querySelector(".save"), D = st.dir;
+  if(D === 3){
+    s.innerHTML = '<h3 class="logo">SAUVEGARDES</h3>' + win("RESUME", SUM) +
+      '<div class="stack s">' + win("", cmds([["copy", "COPIER"], ["imp", "IMPORTER"], ["back", "RETOUR"]], "v")) + '</div>' + win("", '<p class="type d"></p>');
+    const d = s.querySelector(".d"), c = cascade(s.querySelector(".stack.s"));
+    type(d, "Copie tes sauvegardes ici, puis importe-les dans l'autre navigateur.");
+    wire(s.querySelector(".stack.s .cmds"), v => {
+      c.reset();
+      if(v === "back"){ sBack(); st.show("home"); return; }
+      if(v === "copy"){
+        sOk(); c.push(win("COPIER", '<p>Tout copier d\'un coup ?</p>' + cmds([["yes", "OUI"], ["no", "NON"]], "g2")), w =>
+          wire(w.querySelector(".cmds"), x => { if(x === "no") return c.pop(); sSave(); w.querySelector(".cmds").outerHTML = CODE; type(d, "C'est copié. Colle ce code dans l'autre navigateur."); }));
+        return;
+      }
+      sOk(); c.push(win("IMPORTER", '<textarea class="paste" id="paste3" placeholder="COLLE ICI LE CODE LUDO1-"></textarea>' + cmds([["imp", "IMPORTER"], ["back", "RETOUR"]], "g2")), w =>
+        wire(w.querySelector(".cmds"), x => { if(x === "back") return c.pop(); sSave(); type(d, "Rien n'est effacé : on garde le meilleur de chaque côté."); }));
+      type(d, "Colle le code qui commence par LUDO1-.");
+    });
+    return;
+  }
+  if(D === 2){
+    s.innerHTML = '<h3 class="logo">SAUVEGARDES</h3>' + win("RESUME", SUM) +
+      '<div class="duo">' + win("", cmds([["copy", "COPIER"], ["imp", "IMPORTER"], ["back", "RETOUR"]], "v")) + win("", '<div class="body"><p class="type t"></p></div>', "msg") + '</div>';
+    const body = s.querySelector(".body");
+    const say = (html, text) => { body.innerHTML = '<p class="type t"></p>' + html; type(body.querySelector(".t"), text); };
+    say("", "Copie tes sauvegardes ici, puis importe-les dans l'autre navigateur. Rien n'est effacé.");
+    wire(s.querySelector(".cmds"), v => {
+      if(v === "back"){ sBack(); st.show("home"); return; }
+      if(v === "copy"){ sSave(); say(CODE, "C'est copié !"); return; }
+      sOk(); say('<textarea class="paste" id="paste2" placeholder="COLLE ICI LE CODE LUDO1-"></textarea>', "Colle le code :");
+    });
+    return;
+  }
+  s.innerHTML = '<h3 class="logo">SAUVEGARDES</h3>' + win("", '<p class="type d"></p>') + win("RESUME", SUM) +
+    win("", cmds([["copy", "COPIER MES SAUVEGARDES"], ["imp", "IMPORTER"], ["back", "RETOUR"]], "v") + '<div class="out"></div>');
+  const d = s.querySelector(".d"), out = s.querySelector(".out");
+  type(d, "Copie tes sauvegardes ici, puis importe-les dans l'autre navigateur.");
+  wire(s.querySelector(".cmds.v"), v => {
+    if(v === "back"){ sBack(); st.show("home"); return; }
+    if(v === "copy"){ sSave(); out.innerHTML = CODE; type(d, "C'est copié. Colle ce code dans l'autre navigateur, puis choisis IMPORTER."); return; }
+    sOk(); out.innerHTML = '<textarea class="paste" id="paste1" placeholder="COLLE ICI LE CODE LUDO1-"></textarea>';
+    type(d, "Colle le code. Rien n'est effacé : on garde le meilleur de chaque côté.");
+  });
+}
+
+/* ---------- mise en place ---------- */
+const P = DIRS.map(phone);
+P.forEach(p => document.getElementById("phones").append(p.col));
+P.forEach(p => p.st.show("home"));
+document.querySelectorAll("[data-all]").forEach(b => b.onclick = () => {
+  document.querySelectorAll("[data-all]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  sCur(); P.forEach(p => p.st.show(b.dataset.all));
+});
+document.getElementById("snd").onclick = e => {
+  sound = !sound; e.currentTarget.setAttribute("aria-pressed", sound); e.currentTarget.textContent = "BIPS : " + (sound ? "OUI" : "NON"); sCur();
+};
+</script>
