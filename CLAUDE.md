@@ -70,7 +70,7 @@ Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/su
 - **Amiral !** : sessions 1 et 2 faites (mines, fumée, leurre, déblocages, bataille du jour) ; à essayer sur le téléphone. [`specs/amiral.md`](specs/amiral.md)
 - **Escadrille !** : sessions 1, 2 et **lot 2 faits** (19/10 : 10 avions au hangar, 6 à débloquer, 4 familles) ; à essayer sur le téléphone ; **lot 1 fait** (19/10 : hauteur, polices, flèches, FEU !) ; artefact pas republié (190 Ko à relire). [`specs/escadrille.md`](specs/escadrille.md) § 10
 - **Le Thé des Jarls** : maquette 4 validée (style A, 45 soldats) ; prochaine étape session 2 (règles, ordinateur, duel), Opus. [`specs/the-des-jarls.md`](specs/the-des-jarls.md)
-- **Le Magasinier** : maquette validée (entrepôt au soleil + le docker) ; cahier des charges écrit, **points du § 13 à confirmer**, puis session 1, opusplan. [`specs/magasinier.md`](specs/magasinier.md)
+- **Le Magasinier** : maquette validée (entrepôt au soleil + le docker) ; cahier des charges écrit et validé (19/10) ; prochaine étape **session 1** (le moteur), opusplan. [`specs/magasinier.md`](specs/magasinier.md)
 - **Armada** : cahier des charges **à relire par l'utilisateur** (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)
 - **Défense orbitale** : maquette 4 validée (direction A, réaliste) ; cahier des charges écrit et validé (19/10) ; prochaine étape **session 1** (le combat), Opus. [`specs/defense-orbitale.md`](specs/defense-orbitale.md)
 - **La colonie** : moteur fait ; reste la nature, l'île du jour et l'intégration (pas encore sur l'accueil). [`specs/colonie.md`](specs/colonie.md)
