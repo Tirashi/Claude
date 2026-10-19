@@ -29,18 +29,21 @@
     <p class="ios-help" id="iosHelp" hidden>Pour installer la Ludothèque sur ton iPhone : touche <b>Partager</b> en bas de Safari, puis <b>Sur l'écran d'accueil</b>.</p>
   </div>
 
-  <div class="menu"><div class="cmds" id="filters" role="toolbar" aria-label="Filtrer les jeux"></div><div class="say"><b>LE GARDIEN</b><span id="gardien" aria-live="polite"></span></div></div>
-  <nav class="rack" id="rack" aria-label="Jeux"></nav>
-  <p class="shelf-empty" id="shelfEmpty" hidden></p>
-  <div class="tools"><button class="dq sort" id="sort" type="button"></button><label class="dq find"><span>?</span><input id="find" type="search" placeholder="Chercher un jeu…" autocomplete="off" spellcheck="false" aria-label="Chercher un jeu"></label><button class="dq surp" id="surprise" type="button">SURPRENDS-MOI</button></div>
+  <div class="menu"><div class="cmds" id="filters" role="toolbar" aria-label="Filtrer les jeux"></div><div class="say"><b>LE GARDIEN</b><span id="gardien" aria-live="polite"></span></div>
+    <div class="legend" aria-hidden="true"><span><i class="dj"></i>défi du jour</span><span><i class="dj fait">✓</i>fait</span><span><i class="fv">★</i>favori</span><span><i class="crown">♛</i>record de la famille</span></div></div>
 
   <section class="une" id="une" hidden></section>
 
+  <div class="tools"><label class="dq find"><span>?</span><input id="find" type="search" placeholder="Chercher un jeu…" autocomplete="off" spellcheck="false" aria-label="Chercher un jeu"></label><button class="dq sort" id="sort" type="button"></button><button class="dq surp" id="surprise" type="button">AU HASARD</button></div>
+  <nav class="rack" id="rack" aria-label="Jeux"></nav>
+  <p class="shelf-empty" id="shelfEmpty" hidden></p>
+
   <p class="fbnote" id="fbNote" hidden>Tu joues dans le <b>navigateur de Facebook</b> : tes sauvegardes restent ici. Pour les retrouver dans Chrome ou l'appli, utilise <b>Transférer mes sauvegardes</b> plus bas.</p>
 
+  <div class="foot">
   <section class="player" id="player" aria-label="Classement de la famille"></section>
 
-  <div class="saves-open"><button class="saves-btn" id="savesBtn" type="button" aria-expanded="false" aria-controls="saves">TRANSFERER MES SAUVEGARDES</button></div>
+  <div class="saves-open"><button class="saves-btn tile" id="savesBtn" type="button" aria-expanded="false" aria-controls="saves">SAUVEGARDES<small>Les emporter dans un autre navigateur</small></button></div>
   <section class="saves" id="saves" hidden aria-label="Transfert de sauvegardes">
     <h2>1. COPIER</h2>
     <p>Dans le navigateur où tu as joué, copie toutes tes sauvegardes d'un coup : records, grilles du jour, parties en cours du Club et de Nebula, Pokémon du Picross Dex… Le <b>Jeu de la Vie</b> n'enregistre rien.</p>
@@ -53,6 +56,7 @@
     <div class="row"><button class="saves-btn" id="pasteAll" type="button">COLLER</button><button class="saves-btn" id="importAll" type="button">IMPORTER</button></div>
     <div class="res" id="savesRes" aria-live="polite"></div>
   </section>
+  </div>
 
   <div class="status" id="status"><kbd>FLECHES</kbd> CHOISIR · <kbd>ENTREE</kbd> OUVRIR · <kbd>ECHAP</kbd> FERMER</div>
 </div>

@@ -90,6 +90,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-19", "Accueil retouché : le nom de chaque jeu sous sa cartouche, une légende des marques sous le gardien, le jeu à la une en bandeau, un volet plus léger (titre qui reste en haut, JOUER dans sa barre, le classement se rejoint en bas de l'accueil)."],
   ["2026-10-19", "Escadrille ! : choisis tes avions au hangar (onglet AVIONS). Six nouveaux avions à débloquer, dans les quatre familles : le bombardier d'attaque et ses roquettes, le ravitailleur qui remet un avion à neuf, l'avion de patrouille qui compte une ligne et une colonne, le brouilleur et ses leurres, les ballons de barrage et leur DCA, le drone et sa caméra. Les pirates s'en servent aussi en Pilote et en As."],
   ["2026-10-19", "Amiral ! : trois navires à débloquer au chantier naval (le mouilleur et ses mines qui ripostent, le brouilleur et son écran de fumée, la vedette et son faux navire gonflable) et la bataille du jour, avec ses flottes imposées et son classement."],
   ["2026-10-17", "Défi du jour : un rond jaune sur la cartouche quand il reste à jouer, un rond sombre avec ✓ quand c'est fait (Queens, Sudoku, Pont stellaire, Lignée, Alunissage, Nebula, Calculator, Empilage, Odyssée)."],
@@ -249,7 +250,7 @@ function cart(g, i){
   else if (st === "D"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "disc"), el("i", "spine"), lab, el("span", "tag3d", "3D")); }
   else { lab.append(art(g)); front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip")); }
   ["back", "left", "right", "top", "bottom"].forEach(f => body.append(el("div", "f " + f)));
-  body.append(front); b.append(body);
+  body.append(front); b.append(body, el("b", "nm", g.n));   // le nom, sous la cartouche, sur la planche
   return b;
 }
 function spin(b){
@@ -285,7 +286,7 @@ let filter = "TOUS"; try { filter = sessionStorage.getItem("ludo.filter") || "TO
 if (!FILTERS.includes(filter)) filter = "TOUS";
 const fbar = $("filters");
 const setFilter = f => { filter = f; try { sessionStorage.setItem("ludo.filter", f); } catch (e) {} arrange(); };
-FILTERS.forEach(f => { const b = el("button", "", f.replace("★ ", "")); b.type = "button"; b.dataset.f = f; b.addEventListener("click", () => setFilter(f)); fbar.appendChild(b); });
+FILTERS.forEach(f => { const b = el("button", "", f.replace("★ ", "").replace("NOUVEAU", "NEUF")); b.type = "button"; b.dataset.f = f; b.addEventListener("click", () => setFilter(f)); fbar.appendChild(b); });
 fbar.addEventListener("keydown", e => {
   const d = {ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1}[e.key]; if (!d) return;
   e.preventDefault(); e.stopPropagation(); const f = FILTERS[(FILTERS.indexOf(filter) + d + FILTERS.length) % FILTERS.length];
@@ -299,7 +300,7 @@ let query = "";
 findBox.addEventListener("input", () => { query = plain(findBox.value.trim()); arrange(); });
 findBox.addEventListener("keydown", e => { if (e.key === "Enter"){ const g = GAMES.find(g => !g.el.hidden); if (g) openVolet(g); } else if (e.key === "Escape"){ findBox.value = ""; query = ""; arrange(); } });
 // tri : favoris d'abord (ordre d'origine), nouveautés, nom, dernière partie (notée quand on lance un jeu depuis l'accueil)
-const SORTS = [["fav", "FAVORIS D'ABORD"], ["new", "NOUVEAUTES"], ["az", "NOM A-Z"], ["last", "DERNIERE PARTIE"]];
+const SORTS = [["fav", "FAVORIS D'ABORD", "FAVORIS"], ["new", "NOUVEAUTES", "NOUVEAUX"], ["az", "NOM A-Z", "A-Z"], ["last", "DERNIERE PARTIE", "DERNIERS"]];
 let sortBy = "fav"; try { sortBy = localStorage.getItem("ludo.sort") || "fav"; } catch (e) {}
 if (!SORTS.some(x => x[0] === sortBy)) sortBy = "fav";
 let played = {}; try { played = JSON.parse(localStorage.getItem("ludo.played")) || {}; } catch (e) {}
@@ -325,14 +326,15 @@ function say(t){
 }
 function arrange(){
   GAMES.slice().sort(compare).forEach(g => { g.el.hidden = !shows(g); rack.appendChild(g.el); });
-  sortBtn.innerHTML = `TRI ▶ <b>${SORTS.find(x => x[0] === sortBy)[1]}</b>`; sortBtn.setAttribute("aria-label", "Changer le tri (actuel : " + SORTS.find(x => x[0] === sortBy)[1].toLowerCase() + ")");
+  sortBtn.innerHTML = `TRI <b>${SORTS.find(x => x[0] === sortBy)[2]}</b>`; sortBtn.setAttribute("aria-label", "Changer le tri (actuel : " + SORTS.find(x => x[0] === sortBy)[1].toLowerCase() + ")");
   [...fbar.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.f === filter));
   const vis = GAMES.filter(g => !g.el.hidden), n = vis.length, jeux = n > 1 ? "jeux" : "jeu";
   rack.hidden = !n;
   const empty = $("shelfEmpty"); empty.hidden = !!n;
   empty.textContent = filter === "★ FAVORIS" && !query ? "Aucun favori pour l'instant. Touche une cartouche, puis ☆ FAVORI dans son volet." : "Aucune cartouche ici.";
+  const left = GAMES.filter(g => dailyState(g) === false).length;
   if (query) say(n ? `${n} ${jeux} ${n > 1 ? "répondent" : "répond"} à « ${findBox.value.trim()} ».` : `Aucun jeu ne répond à « ${findBox.value.trim()} ». Essaie un autre mot !`);
-  else say(filter === "TOUS" ? `Bienvenue ! Voici toute la Ludothèque : ${n} cartouches. Touche-en une !`
+  else say(filter === "TOUS" ? `Bienvenue ! ${n} cartouches sur l'étagère` + (left ? `, et ${left > 1 ? left + " défis du jour t'attendent" : "un défi du jour t'attend"} encore.` : " : tous les défis du jour sont faits, bravo !")
     : filter === "★ FAVORIS" ? (n ? `Voici tes ${n} ${n > 1 ? "jeux préférés" : "jeu préféré"}.` : "Tu n'as pas encore de favori. Touche une cartouche, puis l'étoile de son volet.")
     : filter === "NOUVEAU" ? (n ? `${n} ${n > 1 ? "jeux tout neufs ou mis à jour" : "jeu tout neuf ou mis à jour"} !` : "Rien de neuf ces trois derniers jours. Reviens bientôt !")
     : filter === "EN COURS" ? (n ? `${n > 1 ? n + " parties t'attendent" : "Une partie t'attend"} : ${(l => l.slice(0, 3).join(", ") + (l.length > 3 ? ` et ${l.length - 3} autre${l.length > 4 ? "s" : ""}` : ""))(vis.map(g => (NICE[g.k] || g.n) + " (" + inProgress(g).toLowerCase() + ")"))}.` : "Aucune partie en cours. Choisis un jeu et lance-toi !")
@@ -561,7 +563,9 @@ function renderVolet(){
   const g = cur, m = metaOf(g), now = inProgress(g);
   vBody.textContent = "";
   // la boîte, le titre, la description, les étiquettes et l'étoile des favoris
-  const head = el("div", "head"), txt = el("div"), h = el("h3", "", g.n); h.id = "vTitle";
+  // en haut, le titre et ✕ restent visibles quand on fait défiler
+  const bar = el("div", "vbar"), h = el("h3", "", g.n); h.id = "vTitle"; bar.append(h, $("vClose"));
+  const head = el("div", "head"), txt = el("div");
   const tags = el("div", "tags");
   [...(m.genres || []), ...g.tags].forEach(t => tags.append(el("span", "", t)));
   if (recent(m.added)) tags.append(el("span", "", "NOUVEAU")); else if (recent(m.updated)) tags.append(el("span", "", "MIS A JOUR"));
@@ -570,19 +574,19 @@ function renderVolet(){
   const paintFav = () => { fav.textContent = isFav(g) ? "★ FAVORI" : "☆ FAVORI"; fav.setAttribute("aria-pressed", isFav(g)); };
   fav.addEventListener("click", () => { favs = isFav(g) ? favs.filter(x => x !== g.k) : favs.concat(g.k); try { localStorage.setItem(favKey, JSON.stringify(favs)); } catch (e) {} paintFav(); paintMarks(); arrange(); });
   paintFav();
-  txt.append(h, el("p", "", g.d), tags, fav);
+  txt.append(el("p", "", g.d), tags, fav);
   head.append(box(g, 104, 146, 26), txt);
   // mes records sur ce téléphone
   const mine = el("div", "blk"); mine.append(el("b", "", "MES RECORDS"));
   const recs = myRecords(g);
   if (recs.length) recs.forEach(([k, v]) => { const r = el("div", "ln"); r.append(el("span", "", k), el("span", "", v)); mine.append(r); });
-  else mine.append(el("p", "", g.rank ? "Pas encore de record sur cet appareil." : "Pas de record : un bac à sable."));
+  else mine.append(el("p", "", g.rank ? "Ton premier record s'inscrira ici à la fin de ta première partie." : "Pas de record : un bac à sable."));
   // le classement de la famille, puis JOUER
   const fam = el("div", "blk");
   const play = el("div", "vplay");
   play.append(link("play", g.play || "JOUER ▶", g.k, g.k));
   (g.more || []).forEach(([t, href]) => play.append(link("sec", t, href, g.k)));
-  vBody.append(head, mine);
+  vBody.append(bar, head, mine);
   if (g.rank) vBody.append(fam);
   vBody.append(play);
   if (g.rank) renderFamily(fam);
@@ -594,8 +598,11 @@ function renderFamily(box){
   const title = el("b", "", "FAMILLE"); box.append(title);
   if (!L){ box.append(el("p", "", "Les classements de la famille sont sur le site de la Ludothèque (tirashi.github.io/Claude).")); F = null; return; }
   if (!L.joined()){
-    box.append(el("p", "", "Rejoins le classement de la famille pour comparer tes records."));
-    box.append(joinForm(() => { renderFamily(box); crowns(true); paintPlayer(); }));
+    // une seule ligne : le formulaire est en bas de l'accueil, sous les cartouches
+    const row = el("div", "joinrow"), go = el("button", "sec", "REJOINDRE ▶"); go.type = "button";
+    go.addEventListener("click", () => { closeVolet(); setTimeout(() => { const b = $("player").querySelector(".tile"); if (b) b.click(); const f = $("player"); f.scrollIntoView({block: "center", behavior: still() ? "auto" : "smooth"}); const i = f.querySelector("input"); if (i) i.focus({preventScroll: true}); }, 80); });
+    row.append(el("p", "", "Compare tes records avec la famille."), go);
+    box.append(row);
     F = null; return;
   }
   F = {box, title, views: el("div", "views"), ctl: el("div", "ctl"), list: el("ol", "list"), mine: el("div", "mine"), note: el("p", "note"), res: el("div", "res")};
@@ -745,7 +752,7 @@ function paintPlayer(){
     btns.append(acc, ch);
     p.append(who, btns, box);
   } else {
-    const open = el("button", "saves-btn", "REJOINDRE LE CLASSEMENT DE LA FAMILLE"); open.type = "button";
+    const open = el("button", "saves-btn tile", "FAMILLE"); open.type = "button"; open.append(el("small", "", "Rejoindre le classement"));
     open.addEventListener("click", () => { open.replaceWith(joinForm(() => { paintPlayer(); crowns(true); })); });
     p.append(open);
     if (L.pseudo()) open.click();   // déjà venu : le formulaire directement, pseudo rempli
