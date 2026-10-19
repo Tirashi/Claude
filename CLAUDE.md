@@ -70,6 +70,7 @@ Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/su
 - **Amiral !** : session 1 faite ; **session 2** à faire (mines, fumée, leurre, déblocages, bataille du jour, classements `daily:`, transfert, artefact), Opus. [`specs/amiral.md`](specs/amiral.md)
 - **Escadrille !** : sessions 1 et 2 faites ; reprise des changements d'Amiral ! (lot 1 facile, lot 2 gros, après la session 2 d'Amiral !), rien de décidé. [`specs/escadrille.md`](specs/escadrille.md) § 9
 - **Le Thé des Jarls** : maquette 4 validée (style A, 45 soldats) ; prochaine étape session 2 (règles, ordinateur, duel), Opus. [`specs/the-des-jarls.md`](specs/the-des-jarls.md)
+- **Le Magasinier** : maquette validée (19/10) : HD-2D façon Octopath, entrepôt au soleil + le docker (`maquettes/magasinier-5.html`) ; prochaine étape cahier des charges puis jeu, opusplan.
 - **Armada** : cahier des charges **à relire par l'utilisateur** (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)
 - **La colonie** : moteur fait ; reste la nature, l'île du jour et l'intégration (pas encore sur l'accueil). [`specs/colonie.md`](specs/colonie.md)
 - **Nebula** : sessions 1 à 4 faites ; prochain chantier possible « l'Empire des étoiles ». [`specs/nebula.md`](specs/nebula.md)
