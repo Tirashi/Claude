@@ -84,3 +84,18 @@ Gain : une installation de Playwright et un serveur de moins par chantier, quelq
 | Picross : dessins dans `picross/dessins.js` (n° 4) | 1–2 % |
 | Moteur commun Amiral ! / Escadrille ! (n° 3), avec la session 2 d'Amiral ! ou le lot 2 d'Escadrille | 4–8 % |
 | Tests de Lignée, Alunissage et Parcours dans `logique.js` | 2–3 % |
+
+## 7. Suites faites le 19/10 (décision de l'utilisateur : « faire toutes les suites »)
+| Suite | Résultat |
+|---|---|
+| `fumee.js` laissé à la CI | Règle changée dans `CLAUDE.md` : en local, seulement `verifications.js` ; `fumee.js`, `logique.js` et `lint.js` tournent dans la CI. |
+| Gros fichiers (n° 4) | 21 pages découpées en `index.html` + `jeu.js` (+ `style.css` au-delà de 2 Ko) ; accueil : `accueil.js`, `accueil.css` ; Picross : dessins dans `picross/dessins.js`. Le HTML d'Amiral !, de Nebula ou du Picross fait maintenant 1 à 8 Ko : on ne lit plus que ce qu'on modifie. `artefact.py` intègre aussi les CSS (artefacts identiques, vérifié). `verifications.js` contrôle que chaque script et chaque CSS d'une page existe et est dans `FILES` (`sw.js` v39). |
+| Yams au repos (n° 2) | ✅ Rien n'est redessiné quand rien ne bouge (vérifié : 0 image par seconde au repos). La lumière des styles A (bougie) et C (néons) tourne à 20 images par seconde. Un toucher réveille l'affichage pendant 0,8 s. |
+| ESLint en CI | ✅ `outils/lint.js` (page par page, avec ses scripts) ; vérifié sur une faute de frappe volontaire. |
+| `CLAUDE.md` allégé | ✅ 16 Ko → 10,6 Ko : « En cours » réduit à une ligne par chantier, les détails dans `specs/suivi.md`. |
+| Tests de Lignée, Alunissage et Parcours | ✅ Dans `logique.js`. Ils ont trouvé **deux vrais bugs, corrigés** (détail ci-dessous). |
+| Moteur commun Amiral ! / Escadrille ! (n° 3) | **Pas fait, volontairement.** Mesuré : 26 fonctions identiques (4 Ko seulement) contre 69 fonctions qui ont déjà divergé (74 Ko). Un moteur commun reviendrait à réécrire Escadrille ! sur le moteur d'Amiral !, c'est-à-dire le lot 2 d'Escadrille (`specs/escadrille.md` § 9). Le faire maintenant, juste avant la session 2 d'Amiral !, casserait deux jeux pour rien. **À faire pendant le lot 2**, après la session 2 d'Amiral !. |
+
+Les deux bugs corrigés :
+- **Alunissage** : 1 site sur 40 n'avait que 2 aires d'atterrissage au lieu de 3, faute de place après 40 essais au hasard. Désormais la première place libre, et en dernier recours une aire un peu plus courte. Les autres sites ne changent pas.
+- **Injagility Parcours** : les parcours **34** et **127** ne se créaient pas. Toucher le niveau ne faisait rien, et un joueur arrivé au 34 restait bloqué. Désormais, en secours, le jeu essaie la graine suivante. Les autres parcours ne changent pas.
