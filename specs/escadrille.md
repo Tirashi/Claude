@@ -118,6 +118,16 @@ Reprise presque mot pour mot d'Amiral ! (même structure de fichier) :
    sur un seul écran (onglets FAMILLES / AVIONS) pour que l'enfant s'y retrouve.
 6. **Pas de bataille du jour** : décision du 17/10 (« pas de ciel du jour ») ; à reconfirmer si on veut des flottes imposées.
 
+### Lot 2 lancé (19/10) : maquette, en attente de validation
+Maquette `maquettes/escadrille-avions.html` (https://claude.ai/artifact/JCF7jhxKLJdxVa8AtpBbdn) : planche des 10 avions
+(4 de départ, 6 nouveaux dessinés dans la famille A, en joueur et en pirate) et deux directions pour les choisir
+(1 : hangar à onglets FAMILLES / AVIONS ; 2 : flèches ◀ ▶ sur la rangée de l'écran de placement).
+Places : gros 8, moyen 5, moyen 4, petit 2 (19 cases, comme aujourd'hui). Formes proposées (nez en haut) :
+attaque ROQUETTES `.X./XXX/XXX/.X.`, ravitailleur REPARATION `..X../XXXXX/..X../..X..`, patrouille DETECTION `XXX/.X./.X.`,
+brouilleur LEURRES `XXX/X.X`, ballons de barrage FLAK `XX/XX`, drone CAMERA `X/X`. Déblocages et recharges proposés sur les cartes.
+À décider par l'utilisateur : formes, nombre d'avions (6, ou les 4 dont le pouvoir existe déjà dans Amiral !), une famille ou
+quatre pour les nouveaux, direction 1 ou 2, conditions. Rappel : lot 1 et session 2 d'Amiral ! pas encore faits.
+
 ### Moteur commun aux deux jeux ?
 Déconseillé pour l'instant : grille 8 × 8 contre 9 × 9, lignes contre formes, sol qui défile, familles. Porter par copie,
 fonction par fonction, et noter chaque reprise dans les deux cahiers des charges.

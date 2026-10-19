@@ -68,7 +68,7 @@ Queens (`queens/`), Picross Dex (`picross/`), Lignée (`lignee/`), Injagility (`
 Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/suivi.md) (à tenir à jour avec la ligne d'ici).
 - **Revue du code** (19/10) : faite, [`specs/revue-code.md`](specs/revue-code.md). Reste : moteur commun Amiral ! / Escadrille ! à faire avec le lot 2 d'Escadrille.
 - **Amiral !** : session 1 faite ; **session 2** à faire (mines, fumée, leurre, déblocages, bataille du jour, classements `daily:`, transfert, artefact), Opus. [`specs/amiral.md`](specs/amiral.md)
-- **Escadrille !** : sessions 1 et 2 faites ; reprise des changements d'Amiral ! (lot 1 facile, lot 2 gros, après la session 2 d'Amiral !), rien de décidé. [`specs/escadrille.md`](specs/escadrille.md) § 9
+- **Escadrille !** : sessions 1 et 2 faites ; lot 1 (ergonomie, polices) pas fait ; **lot 2 lancé le 19/10 : maquette des 6 nouveaux avions à valider** (https://claude.ai/artifact/JCF7jhxKLJdxVa8AtpBbdn). [`specs/escadrille.md`](specs/escadrille.md) § 9
 - **Le Thé des Jarls** : maquette 4 validée (style A, 45 soldats) ; prochaine étape session 2 (règles, ordinateur, duel), Opus. [`specs/the-des-jarls.md`](specs/the-des-jarls.md)
 - **Armada** : cahier des charges **à relire par l'utilisateur** (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)
 - **La colonie** : moteur fait ; reste la nature, l'île du jour et l'intégration (pas encore sur l'accueil). [`specs/colonie.md`](specs/colonie.md)
