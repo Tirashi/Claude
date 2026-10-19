@@ -138,3 +138,44 @@ fonction par fonction, et noter chaque reprise dans les deux cahiers des charges
    (mines, fumée et leurre compris).
 3. Lot 2 en commençant par une **maquette** : les nouveaux avions dans une seule famille pour juger les formes, puis décider du
    nombre d'avions et de familles.
+
+## 10. Bilan du lot 2 (19/10) : choisir ses avions
+Maquette validée le 19/10 (`maquettes/escadrille-avions.html`) : les 6 nouveaux avions, dans les 4 familles, direction 1
+(hangar à onglets). Conditions de déblocage laissées au choix de Claude. Fait :
+- **Moteur** (`escadrille/jeu.js`) : catalogue `PLANES` (formes en texte, nez en haut ; `ORIENTS` = sens vraiment différents
+  pour l'IA), `POWERS` (`own` : vise son ciel ; `dir` : ligne ou colonne ; `multi` : plusieurs cases puis FEU ! ; `instant` :
+  FEU ! tout de suite), `makeBoard(flotte)`, `planeOf(b, pouvoir)`, `blocked(side, p)` (`down`, `cd`, `hit`, `stuck`, `intact`,
+  `full`). L'IA d'Amiral ! est reprise **à deux camps** (`aiKnow(side)`, `aiChoose(side)`), d'où `Escadrille.simulate`.
+- **Les 10 avions** (places 8 / 5 / 4 / 2 cases) :
+
+  | Place | Avion | Pouvoir | Effet | Recharge | Déblocage |
+  |---|---|---|---|---|---|
+  | 8 | Bombardier | BOMBES | 5 bombes en croix | 4 | départ |
+  | 8 | Bombardier d'attaque `.X./XXX/XXX/.X.` | ROQUETTES | 4 tirs sur 4 cases au choix, puis FEU ! | 4 | gagner en moins de 25 tours |
+  | 8 | Ravitailleur `..X../XXXXX/..X../..X..` | REPARATION | remet un avion à neuf (ses cases touchées retournent dans les nuages) | 6 | 6 victoires |
+  | 5 | Avion radar | RADAR | zone 3 × 3 | 3 | départ |
+  | 5 | Avion de patrouille `XXX/.X./.X.` | DETECTION | compte les cases d'avion pas touchées de la ligne **et** de la colonne d'une case ; badges au bord, déductions (`lineDeduce`) | 3 | 4 victoires |
+  | 5 | Brouilleur `XXX/X.X` | LEURRES | le prochain coup ennemi (tir ou pouvoir, pas la DCA) part sur les leurres | 4 | 2 victoires en AS |
+  | 4 | Chasseur | MISSILE | ligne ou colonne jusqu'au premier avion | 3 | départ |
+  | 4 | Ballons de barrage `XX/XX` | FLAK | 2 ballons dans son ciel libre (4 au plus) ; l'ennemi qui en crève un prend 2 tirs de DCA qui touchent à coup sûr | 5 | gagner sans perdre d'avion |
+  | 2 | Hélicoptère | ESQUIVE | s'échappe de 2 cases | 4 | départ |
+  | 2 | Drone | CAMERA | révèle 4 cases d'une ligne ou d'une colonne | 2 | 2 victoires |
+- **Réglages** (parties simulées en AS, chaque avion à la place de celui de départ, contre l'escadrille classique, 2 × 400
+  parties en alternant qui commence ; classique 0,49) : attaque 0,44, ravitailleur 0,59, patrouille 0,48, brouilleur 0,53,
+  ballons 0,44, drone 0,48 (en PILOTE : 0,40 à 0,62). Essais écartés : 3 roquettes (0,33) ; réparer une case (0,14) ou
+  2 cases (0,24) ; réparation complète en 4 tours (0,89) ou 7 (0,44) ; détection d'une seule ligne (0,39) ; ballons avec une
+  DCA à 1 touché (0,28 à 0,37) ; **leurres en zone brouillée** 3 × 3 (les résultats cachés pendant 2 ou 3 coups, comme la
+  fumée d'Amiral !) : 0,18 à 0,41, moins qu'un avion sans pouvoir (0,43), d'où la règle plus simple du coup détourné.
+  L'IA répare à 2 cases touchées, lâche ses ballons près d'un avion touché, ses leurres quand on la chasse.
+- **Hangar** : onglets FAMILLES (inchangé) et AVIONS : les 4 places en haut, les avions de la place en dessous (forme,
+  pouvoir, silhouette et cadenas avec la condition, NOUVEAU ! jusqu'au RETOUR, `escadrille.vus`). `escadrille.flotte`
+  (un avion encore verrouillé redevient celui de départ, `loadFleet`). Écran titre : les 4 pouvoirs de l'escadrille choisie.
+- **Ennemi** : l'escadrille classique en RECRUE, tirée dans tout le catalogue en PILOTE et AS (aussi des avions pas encore
+  débloqués par le joueur, comme Amiral !).
+- **Fin de partie** : « NOUVEL AVION DEBLOQUE ! » (et la famille, s'il y en a une aussi). `escadrille.palmares`
+  (victoires par niveau, `rapide` < 25 tours, `intacte`) ; les anciens records comptent (un record en AS = une victoire en AS).
+- **Dessins** (`escadrille/avions.js`) : 6 avions × 4 familles (furtif à facettes, hélices et poutres, canonnière blindée).
+- **Accueil** : description, nouveauté, records « Avions x/10 », palmarès dans le transfert `LUDO1-`.
+- **Tests** : `outils/fumee.js` (onglet AVIONS, chaque nouveau pouvoir, 6 parties simulées).
+- **Pas fait** : le lot 1 (hauteur qui suit l'écran, polices, missile en deux gestes) ; l'artefact (l'ancienne version, 190 Ko,
+  doit être relue avant d'être remplacée).
