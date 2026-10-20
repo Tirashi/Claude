@@ -1,0 +1,568 @@
+<title>Le Mot d'or</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
+<style>
+/* Maquette du Mot d'or, d'après la scène de la planche 32 bits : trois tables de jeu, chacune sur un écran de téléphone jouable.
+   Page sombre unique, comme les autres maquettes. */
+:root{
+  --fond:#120d16; --texte:#f3eadb; --doux:#b4a6b8; --or:#ffd23f; --cadre:#050307; --ligne:#2e2436;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--f-texte);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000;text-wrap:balance}
+header p{margin:10px 0 0;color:var(--doux);max-width:70ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px 20px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.tel{width:100%;max-width:340px;aspect-ratio:216/384;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated;cursor:pointer}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);max-width:320px;font-size:15px;text-align:center}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0}
+section.q ol{margin:0;padding-left:22px;max-width:74ch;display:flex;flex-direction:column;gap:6px}
+section.q li span{color:var(--doux)}
+</style>
+
+<div class="page">
+<header>
+  <h1>LE MOT D'OR</h1>
+  <p>Trois tables de jeu tirées de la scène de la planche 32 bits : tuiles en relief, lettres gravées, retournement tuile par tuile, reflets et paillettes sur l'or. Chaque écran est jouable : tapez sur le clavier de l'écran (ou celui de l'ordinateur), validez avec la flèche coudée. Deux essais sont déjà posés. Une fois la partie finie, touchez la grille pour un autre mot.</p>
+</header>
+
+<div class="grille">
+  <div class="dir">
+    <div class="tel"><canvas data-theme="table" width="648" height="1152"></canvas></div>
+    <h2>A · LA TABLE DE JEU</h2>
+    <p>Celle de la planche : table en noyer, tapis de feutre vert cousu d'or, tuiles en bois façon Scrabble avec leurs points, clavier dans un plateau. Plein jour, poussière d'or qui flotte.</p>
+  </div>
+  <div class="dir">
+    <div class="tel"><canvas data-theme="bureau" width="648" height="1152"></canvas></div>
+    <h2>B · LE BUREAU DU SOIR</h2>
+    <p>Le soir sous la lampe : sous-main en cuir bordeaux doré au fer, tuiles en ivoire, pénombre autour du cercle de lumière, poussière dans le faisceau. Plus calme, plus « rituel du soir ».</p>
+  </div>
+  <div class="dir">
+    <div class="tel"><canvas data-theme="riviere" width="648" height="1152"></canvas></div>
+    <h2>C · LA RIVIERE D'OR</h2>
+    <p>Chez les chercheurs d'or : la grille est un tamis en bois dans le courant, les tuiles sont du bois flotté, les lettres absentes deviennent des galets, les bonnes des pépites. Le clavier est une dalle de pierre.</p>
+  </div>
+</div>
+
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ol>
+    <li>Quelle table : A, B ou C ? <span>(on peut aussi mélanger, par ex. la table A avec les tuiles en ivoire de B)</span></li>
+    <li>Les accents : on les ignore (ÉTÉ s'écrit ETE), comme dans la plupart des jeux de ce genre en français ? <span>(plus simple, et la police n'a pas de majuscules accentuées)</span></li>
+    <li>Seulement le mot du jour (une tentative classée par jour, même mot pour toute la famille), ou aussi un mode libre pour rejouer autant qu'on veut ?</li>
+    <li>Les points des lettres sur les tuiles en bois (comme au Scrabble) : on les garde pour le décor ?</li>
+  </ol>
+</section>
+</div>
+
+<script>
+(function(){
+"use strict";
+const LW = 216, LH = 384, OUT = "#120c16", FONT = '"Press Start 2P", monospace';
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x | 0, y | 0, w | 0, h | 0); };
+const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const fontReady = () => document.fonts && document.fonts.check('8px "Press Start 2P"');
+const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+
+// ---------- géométrie de l'écran (216 × 384, agrandi ×3)
+const GX = 14, GY = 50, STEP = 32, TW = 28, TF = 25, TD = 3;
+const KEYS = ["AZERTYUIOP", "QSDFGHJKLM", ">WXCVBN<"], KW = 18, KF = 18, KD = 2, KY = 273, KSTEP = 26;
+const PTS = {A:1,E:1,I:1,L:1,N:1,O:1,R:1,S:1,T:1,U:1,D:2,G:2,M:2,B:3,C:3,P:3,F:4,H:4,V:4,J:8,Q:8,K:10,W:10,X:10,Y:10,Z:10};
+const MOTS = ["SOLEIL","MAISON","JARDIN","CHATON","BATEAU","MOUTON","CERISE","ORANGE","GIRAFE","CASTOR","PIRATE","TRESOR","BOUGIE","CITRON","PEPITE","CHEVAL","LAPINS","NUAGES","FLEURS","GATEAU"];
+
+// ---------- texte
+function text(g, s, x, y, size, col, align = "left", sh = OUT){
+  g.font = size + "px " + FONT; g.textBaseline = "top"; g.textAlign = "left";
+  const x0 = Math.round(align === "right" ? x - s.length * size : align === "center" ? x - s.length * size / 2 : x);
+  if (sh){ g.fillStyle = sh; g.fillText(s, x0 + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x0, y);
+}
+function logo(g, s, x, y, size, ramp){
+  g.font = size + "px " + FONT; g.textAlign = "left"; g.textBaseline = "top"; g.lineJoin = "round";
+  g.fillStyle = OUT; g.fillText(s, x + 1, y + 2);
+  g.lineWidth = 3; g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, ramp[0]); gr.addColorStop(.5, ramp[1]); gr.addColorStop(1, ramp[2]);
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function plate(g, x, y, w, h, tint){
+  R(g, x + 2, y - 2, w - 4, h + 4, OUT); R(g, x - 2, y + 2, w + 4, h - 4, OUT); R(g, x, y, w, h, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h);
+  gr.addColorStop(0, tint ? "rgba(92,58,30,.94)" : "rgba(40,58,86,.9)"); gr.addColorStop(1, tint ? "rgba(36,20,10,.95)" : "rgba(14,22,38,.92)");
+  g.fillStyle = gr; g.fillRect(x + 1, y + 1, w - 2, h - 2);
+  const hi = tint ? "rgba(255,214,150,.5)" : "rgba(160,200,240,.55)";
+  R(g, x + 2, y + 1, w - 4, 1, hi); R(g, x + 1, y + 2, 1, h - 4, hi);
+  R(g, x + 2, y + h - 2, w - 4, 1, "rgba(0,0,0,.45)"); R(g, x + w - 2, y + 2, 1, h - 4, "rgba(0,0,0,.45)");
+}
+function spark(g, x, y, s, c1 = "#ffffff", c2 = "#ffe066"){
+  x = Math.round(x); y = Math.round(y);
+  if (s <= 0) return;
+  if (s === 1){ R(g, x, y, 1, 1, c1); return; }
+  R(g, x - s, y, s * 2 + 1, 1, c2); R(g, x, y - s, 1, s * 2 + 1, c2);
+  R(g, x - 1, y, 3, 1, c1); R(g, x, y - 1, 1, 3, c1);
+}
+function flame(g, x, y, t){
+  const f = Math.floor(t * 8) % 3, j = f === 1 ? 1 : f === 2 ? -1 : 0;
+  const rows = [[3, 1], [2, 3], [2, 4], [1, 5], [1, 6], [0, 7], [0, 8], [1, 7], [2, 5]];
+  rows.forEach(([o, w], i) => R(g, x + o + (i < 3 ? j : 0) - 1, y + i, w + 2, 1, OUT));
+  rows.forEach(([o, w], i) => { const jj = i < 3 ? j : 0; R(g, x + o + jj, y + i, w, 1, i < 4 ? "#ffd23f" : "#ff7a2a"); if (i > 3) R(g, x + o + jj + w - 2, y + i, 2, 1, "#d8401c"); });
+  R(g, x + 3, y + 5, 2, 2, "#fff6c2");
+}
+
+/* =====================================================================
+   Les trois tables
+   ===================================================================== */
+const GOLD = ["#fff8c8", "#ffd23f", "#e09a1c", "#9a5a0c"], SILVER = ["#ffffff", "#d9e0ea", "#a6b2c4", "#646f84"];
+
+// planches de bois (table, bureau) : veines ondulées, joints, nœuds
+function planks(d, W, H, pal, seed){
+  const PL = 30;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    const p = Math.floor(y / PL), yy = y % PL;
+    const gr = Math.sin(y * .9 + 3.2 * Math.sin(x * .021 + p * 2.3 + seed) + 1.6 * Math.sin(x * .057 + p)) + (hash(p, 7 + seed) - .5) * .4;
+    let k = gr > .82 ? 2 : gr < -.9 ? 0 : 1;
+    if (hash(x >> 2, y * 31 + p) < .05) k = Math.min(3, k + 1);
+    if (yy === 0) k = 4; else if (yy === 1) k = 0; else if (yy === PL - 1) k = 3;
+    const j = 30 + Math.floor(hash(p, 1 + seed) * 150);
+    if (x === j) k = 4; else if (x === j + 1) k = 0;
+    const kx = 40 + hash(p, 9) * 140, ky = p * PL + 15, dd = Math.hypot((x - kx) / 2.2, y - ky);
+    if (p % 3 === 1 && dd < 4) k = dd < 1.5 ? 4 : dd < 3 ? 3 : 2;
+    let [r, g, b] = pal[k];
+    const tint = (hash(p, 3) - .5) * 16; r += tint; g += tint * .7; b += tint * .4;
+    const i = (y * W + x) * 4; d[i] = r; d[i + 1] = g; d[i + 2] = b; d[i + 3] = 255;
+  }
+}
+function vignette(d, W, H, cx, cy, rx, ry, start, step, levels){
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    const v = Math.max(0, Math.hypot((x - cx) / rx, (y - cy) / ry) - start);
+    const lvl = Math.min(levels, Math.floor(v * 7 + BAYER[(y & 3) * 4 + (x & 3)] / 16)), f = 1 - lvl * step, i = (y * W + x) * 4;
+    d[i] *= f; d[i + 1] *= f; d[i + 2] *= f;
+  }
+}
+function noiseRect(g, x0, y0, w, h, pal, pick){
+  const img = g.getImageData(x0, y0, w, h), d = img.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    const k = pick(x, y, hash(x + x0, y * 7 + y0)), [r, gg, b] = pal[k], i = (y * w + x) * 4;
+    d[i] = r; d[i + 1] = gg; d[i + 2] = b; d[i + 3] = 255;
+  }
+  g.putImageData(img, x0, y0);
+}
+// couture dorée en pointillé
+function stitch(g, x, y, w, h, c1, c2){
+  for (let xx = x + 4; xx < x + w - 4; xx += 5){ R(g, xx, y + 3, 3, 1, c1); R(g, xx, y + h - 4, 3, 1, c2); }
+  for (let yy = y + 5; yy < y + h - 4; yy += 5){ R(g, x + 3, yy, 1, 3, c1); R(g, x + w - 4, yy, 1, 3, c2); }
+}
+function slots(g, deep, dark, light){
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++){
+    const x = GX + c * STEP, y = GY + r * STEP;
+    R(g, x, y, TW, TF + TD, deep); R(g, x, y, TW, 2, dark); R(g, x, y, 2, TF + TD, dark);
+    R(g, x + 1, y + TF + TD - 1, TW - 1, 1, light); R(g, x + TW - 1, y + 1, 1, TF + TD - 1, light);
+  }
+}
+
+const THEMES = {
+  /* ---------- A : la table de jeu (la planche) ---------- */
+  table: {
+    mats: {wood: ["#fff0c8", "#efd29a", "#cfa868", "#8f6534"], gold: GOLD, silver: SILVER, grey: ["#a39cb4", "#7f7994", "#635d78", "#433d55"]},
+    ink: {wood: ["#6a4420", "#fff6dc"], gold: ["#7a4208", "#fff6c8"], silver: ["#3a4256", "#ffffff"], grey: ["#262232", "#aaa4bc"]},
+    grain: {wood: "veines", grey: "veines"}, points: true, keyMat: "wood", tint: false,
+    shadow: "rgba(10,30,18,.55)", cursor: "#8fd0a2", dust: ["#fff6c2", "#e0a83a"],
+    bg(){
+      const c = mk(LW, LH), g = c.getContext("2d"), img = g.createImageData(LW, LH);
+      planks(img.data, LW, LH, [[0xd2, 0x96, 0x5c], [0xb4, 0x76, 0x42], [0x96, 0x5c, 0x32], [0x74, 0x44, 0x24], [0x4a, 0x2a, 0x16]], 0);
+      vignette(img.data, LW, LH, LW / 2, LH / 2, LW / 2, LH / 2, .62, .1, 4);
+      g.putImageData(img, 0, 0);
+      // tapis de feutre sous la grille
+      const fx = 6, fy = 44, fw = 204, fh = 198;
+      R(g, fx + 3, fy + 3, fw, fh, "rgba(30,14,6,.55)");
+      const FE = [[0x45, 0x94, 0x60], [0x36, 0x80, 0x52], [0x2b, 0x6c, 0x45]];
+      noiseRect(g, fx, fy, fw, fh, FE, (x, y, n) => { const k = Math.hypot((x - fw * .35) / fw, (y - fh * .3) / fh) < .4 ? (n < .2 ? 0 : 1) : (n < .25 ? 2 : 1); return n > .93 ? 2 : k; });
+      R(g, fx, fy, fw, 1, "#1e5234"); R(g, fx, fy + fh - 1, fw, 1, "#163e28"); R(g, fx, fy, 1, fh, "#1e5234"); R(g, fx + fw - 1, fy, 1, fh, "#163e28");
+      R(g, fx + 1, fy + 1, fw - 2, 1, "#5aa874");
+      stitch(g, fx, fy, fw, fh, "#d9b860", "#b8963e");
+      slots(g, "#1d4a30", "#123422", "#4f9c68");
+      // plateau du clavier : cadre en bois sombre, fond de feutre
+      const tx = 3, ty = 266, tw = 210, th = 84;
+      R(g, tx + 3, ty + 3, tw, th, "rgba(30,14,6,.55)"); R(g, tx - 1, ty - 1, tw + 2, th + 2, OUT);
+      R(g, tx, ty, tw, th, "#7a4a26"); R(g, tx, ty, tw, 1, "#c08a52"); R(g, tx, ty, 1, th, "#c08a52"); R(g, tx, ty + th - 1, tw, 1, "#4a2a16"); R(g, tx + tw - 1, ty, 1, th, "#4a2a16");
+      R(g, tx + 3, ty + 3, tw - 6, th - 6, "#2b6c45"); R(g, tx + 3, ty + 3, tw - 6, 2, "#1e5234"); R(g, tx + 3, ty + 3, 2, th - 6, "#1e5234");
+      for (let y = ty + 5; y < ty + th - 3; y++) for (let x = tx + 5; x < tx + tw - 3; x++) if (hash(x, y) < .14) R(g, x, y, 1, 1, "#367f52");
+      return c;
+    },
+  },
+
+  /* ---------- B : le bureau du soir ---------- */
+  bureau: {
+    mats: {wood: ["#fffdf2", "#efe4c8", "#cdbb96", "#7e6c4c"], gold: GOLD, silver: SILVER, grey: ["#8e8478", "#6c6258", "#544a42", "#382f2a"]},
+    ink: {wood: ["#4a2c1a", "#ffffff"], gold: ["#7a4208", "#fff6c8"], silver: ["#3a4256", "#ffffff"], grey: ["#1e1814", "#9a9084"]},
+    grain: {wood: "ivoire", grey: "ivoire"}, points: false, keyMat: "wood", tint: true,
+    shadow: "rgba(24,4,6,.6)", cursor: "#e0a070", dust: ["#ffe7b8", "#c8863a"],
+    bg(){
+      const c = mk(LW, LH), g = c.getContext("2d"), img = g.createImageData(LW, LH);
+      planks(img.data, LW, LH, [[0x9a, 0x4a, 0x2e], [0x7c, 0x36, 0x22], [0x62, 0x28, 0x1a], [0x48, 0x1c, 0x12], [0x2a, 0x0e, 0x0a]], 4);
+      g.putImageData(img, 0, 0);
+      // sous-main en cuir bordeaux, coins plus sombres, filets dorés au fer
+      const fx = 6, fy = 44, fw = 204, fh = 198;
+      R(g, fx + 3, fy + 3, fw, fh, "rgba(10,2,2,.6)");
+      const LE = [[0x9c, 0x2e, 0x36], [0x84, 0x22, 0x2c], [0x6c, 0x1a, 0x24], [0x52, 0x12, 0x1a]];
+      noiseRect(g, fx, fy, fw, fh, LE, (x, y, n) => n < .08 ? 0 : n > .9 ? 2 : 1);
+      const LC = [[0x5a, 0x24, 0x18], [0x46, 0x1a, 0x10], [0x34, 0x12, 0x0a]];
+      for (const [ox, oy, sx, sy] of [[0, 0, 1, 1], [fw, 0, -1, 1], [0, fh, 1, -1], [fw, fh, -1, -1]])
+        for (let i = 0; i < 26; i++) for (let j = 0; j < 26 - i; j++){
+          const x = fx + ox + sx * i - (sx < 0 ? 1 : 0), y = fy + oy + sy * j - (sy < 0 ? 1 : 0), k = i + j === 25 ? 2 : hash(x, y) < .1 ? 0 : 1;
+          R(g, x, y, 1, 1, "rgb(" + LC[k].join(",") + ")");
+        }
+      R(g, fx, fy, fw, 1, "#3a0c10"); R(g, fx, fy + fh - 1, fw, 1, "#2a080c"); R(g, fx, fy, 1, fh, "#3a0c10"); R(g, fx + fw - 1, fy, 1, fh, "#2a080c");
+      for (const k of [3, 5]){ R(g, fx + k, fy + k, fw - 2 * k, 1, "#d8a84a"); R(g, fx + k, fy + fh - k - 1, fw - 2 * k, 1, "#a87a2a"); R(g, fx + k, fy + k, 1, fh - 2 * k, "#d8a84a"); R(g, fx + fw - k - 1, fy + k, 1, fh - 2 * k, "#a87a2a"); }
+      slots(g, "#561420", "#3a0c14", "#a8404a");
+      // clavier : écritoire en cuir sur cadre d'acajou
+      const tx = 3, ty = 266, tw = 210, th = 84;
+      R(g, tx + 3, ty + 3, tw, th, "rgba(10,2,2,.6)"); R(g, tx - 1, ty - 1, tw + 2, th + 2, OUT);
+      R(g, tx, ty, tw, th, "#5a2416"); R(g, tx, ty, tw, 1, "#a8603a"); R(g, tx, ty, 1, th, "#a8603a"); R(g, tx, ty + th - 1, tw, 1, "#2a0e08"); R(g, tx + tw - 1, ty, 1, th, "#2a0e08");
+      noiseRect(g, tx + 3, ty + 3, tw - 6, th - 6, LE, (x, y, n) => n < .06 ? 1 : n > .9 ? 3 : 2);
+      R(g, tx + 5, ty + 5, tw - 10, 1, "#c8983a"); R(g, tx + 5, ty + th - 6, tw - 10, 1, "#a87a2a");
+      // le cercle de lumière de la lampe, pénombre tramée autour
+      const im2 = g.getImageData(0, 0, LW, LH);
+      vignette(im2.data, LW, LH, 108, 150, 150, 210, .42, .12, 5);
+      g.putImageData(im2, 0, 0);
+      return c;
+    },
+    // poussière qui danse dans la lumière de la lampe
+    top(g, t){
+      for (let i = 0; i < 18; i++){
+        const sp = 3 + hash(i, 1) * 4, py = 50 + ((t * sp + hash(i, 2) * 200) % 200), px = 40 + hash(i, 3) * 140 + Math.sin(t * .6 + i) * 5;
+        if ((Math.sin(t * 2 + i * 1.3) + 1) / 2 > .4) R(g, Math.round(px), Math.round(py), 1, 1, "rgba(255,231,184,.8)");
+      }
+    },
+  },
+
+  /* ---------- C : la rivière d'or ---------- */
+  riviere: {
+    mats: {wood: ["#f6efe0", "#d8cbb0", "#b0a284", "#6e6452"], gold: GOLD, silver: SILVER, grey: ["#a8aeb6", "#80868f", "#62676f", "#3e4249"]},
+    ink: {wood: ["#4a3e2c", "#ffffff"], gold: ["#7a4208", "#fff6c8"], silver: ["#3a4256", "#ffffff"], grey: ["#24272c", "#b8bec6"]},
+    grain: {wood: "veines", grey: "galet"}, points: false, keyMat: "wood", tint: false, pebble: true,
+    shadow: "rgba(30,24,10,.45)", cursor: "#bfe8f0", dust: null,
+    bg(){
+      // l'eau seule : le tamis et la dalle sont dans « over »
+      const c = mk(LW, LH), g = c.getContext("2d");
+      const WA = [[0x5c, 0xb8, 0xc8], [0x3c, 0x98, 0xb0], [0x2c, 0x7c, 0x98], [0x22, 0x60, 0x7c]];
+      noiseRect(g, 0, 0, LW, LH, WA, (x, y, n) => { const w = Math.sin(y * .35 + Math.sin(x * .09) * 2.4); return w > .9 ? 0 : w < -.7 ? 2 : n < .05 ? 3 : 1; });
+      // galets au fond et rive de sable sur les bords
+      for (let i = 0; i < 40; i++){ const x = hash(i, 5) * LW, y = hash(i, 6) * LH, r = 2 + hash(i, 7) * 4;
+        g.fillStyle = "rgba(20,60,70,.35)"; g.beginPath(); g.ellipse(x, y, r * 1.3, r, 0, 0, 7); g.fill(); }
+      const im = g.getImageData(0, 0, LW, LH); vignette(im.data, LW, LH, LW / 2, LH / 2, LW / 2, LH / 2, .6, .08, 4); g.putImageData(im, 0, 0);
+      return c;
+    },
+    over(){
+      const c = mk(LW, LH), g = c.getContext("2d");
+      // tamis : cadre en planches, fond de sable, barrettes entre les lignes
+      const fx = 6, fy = 44, fw = 204, fh = 198;
+      R(g, fx + 3, fy + 4, fw, fh, "rgba(10,40,50,.5)");
+      const PW = [[0xb8, 0x8a, 0x56], [0x96, 0x6a, 0x3c], [0x74, 0x4e, 0x2a], [0x4c, 0x30, 0x18]];
+      noiseRect(g, fx - 1, fy - 1, fw + 2, fh + 2, PW, (x, y, n) => { const g2 = Math.sin(y * .7 + x * .05); return g2 > .85 ? 0 : n < .08 ? 2 : 1; });
+      R(g, fx - 2, fy - 2, fw + 4, 1, OUT); R(g, fx - 2, fy + fh + 1, fw + 4, 1, OUT); R(g, fx - 2, fy - 2, 1, fh + 4, OUT); R(g, fx + fw + 1, fy - 2, 1, fh + 4, OUT);
+      const SA = [[0xf2, 0xd8, 0x9e], [0xe0, 0xc0, 0x80], [0xc4, 0xa0, 0x62], [0xa0, 0x80, 0x48]];
+      noiseRect(g, fx + 5, fy + 5, fw - 10, fh - 10, SA, (x, y, n) => n < .1 ? 0 : n > .86 ? 2 : n > .97 ? 3 : 1);
+      for (const [px, py] of [[fx, fy], [fx + fw - 3, fy], [fx, fy + fh - 3], [fx + fw - 3, fy + fh - 3]]){ R(g, px, py, 3, 3, "#4a4e56"); R(g, px + 1, py + 1, 1, 1, "#c8ccd4"); }
+      for (let r = 1; r < 6; r++){ const y = GY + r * STEP - 3; R(g, fx + 5, y, fw - 10, 2, "#7a5230"); R(g, fx + 5, y, fw - 10, 1, "#b88a56"); }
+      // une pellicule d'eau qui glisse sur le sable
+      g.fillStyle = "rgba(120,200,220,.18)"; g.fillRect(fx + 5, fy + 5, fw - 10, fh - 10);
+      slots(g, "#b8965a", "#94743e", "#f6e2b0");
+      // dalle de pierre pour le clavier
+      const tx = 3, ty = 266, tw = 210, th = 84;
+      g.fillStyle = "rgba(10,40,50,.5)"; g.fillRect(tx + 3, ty + 4, tw, th);
+      const ST = [[0xb0, 0xb4, 0xb0], [0x8c, 0x92, 0x8e], [0x70, 0x76, 0x74], [0x52, 0x58, 0x58]];
+      noiseRect(g, tx, ty, tw, th, ST, (x, y, n) => { if ((x < 3 || y < 3 || x > tw - 4 || y > th - 4) && hash(x, y) < .5) return 3; return n < .1 ? 0 : n > .88 ? 2 : 1; });
+      for (let x = tx; x < tx + tw; x++){ if (hash(x, 3) < .6) R(g, x, ty, 1, 1 + (hash(x, 4) * 3 | 0), "#5e9a4a"); }
+      for (const [x0, y0] of [[tx, ty], [tx + tw - 2, ty], [tx, ty + th - 2], [tx + tw - 2, ty + th - 2]]) g.clearRect(x0, y0, 2, 2);
+      return c;
+    },
+    // courant : stries claires qui descendent, paillettes d'or dans l'eau
+    under(g, t){
+      for (let i = 0; i < 46; i++){
+        const x = Math.floor(hash(i, 1) * LW), sp = 18 + hash(i, 2) * 22, y = ((t * sp + hash(i, 3) * 500) % (LH + 30)) - 20, L = 4 + (hash(i, 4) * 10 | 0);
+        R(g, x, y, 1, L, "rgba(210,245,250,.55)"); R(g, x + 1, y + 2, 1, L - 3, "rgba(160,225,235,.35)");
+      }
+      for (let i = 0; i < 12; i++){
+        const x = hash(i, 8) * LW, y = ((t * 12 + hash(i, 9) * 400) % (LH + 10)) - 5, tw = (Math.sin(t * 4 + i * 2.1) + 1) / 2;
+        if (tw > .55) spark(g, x, y, tw > .9 ? 2 : 1, "#ffffff", "#ffd23f");
+      }
+    },
+  },
+};
+
+/* =====================================================================
+   Tuiles et touches (mises en cache par table)
+   ===================================================================== */
+function tileBody(g, x, y, w, f, d, P, grain, seed, pebble){
+  R(g, x, y - 1, w, f + d + 2, OUT); R(g, x - 1, y, w + 2, f + d, OUT);
+  R(g, x, y + f, w, d, P[3]); R(g, x + 1, y + f, w - 2, 1, P[2]);
+  R(g, x, y, w, f, P[1]);
+  R(g, x + 1, y + f - 6, w - 2, 5, P[2]);
+  for (let i = 1; i < w - 1; i += 2) R(g, x + i + (f & 1), y + f - 7, 1, 1, P[2]);
+  if (grain === "veines") for (let k = 0; k < 4; k++){
+    const yy = y + 3 + Math.floor(hash(seed, k) * (f - 9)), left = k % 2 === 0, L = 2 + Math.floor(hash(seed, k + 3) * 3);
+    R(g, left ? x + 2 : x + w - 3 - L, yy, L, 1, P[2]);
+  }
+  if (grain === "galet") for (let k = 0; k < 9; k++) R(g, x + 2 + hash(seed, k) * (w - 4), y + 2 + hash(seed, k + 20) * (f - 6), 1, 1, k % 2 ? P[0] : P[3]);
+  if (grain === "ivoire"){ R(g, x + 2, y + Math.floor(f / 2) - 1, 1, 2, P[2]); R(g, x + w - 3, y + Math.floor(f / 2) - 1, 1, 2, P[2]); }
+  if (grain === "argent") for (let yy = y + 3; yy < y + f - 7; yy += 3) R(g, x + 3, yy, w - 6, 1, "#e9eef4");
+  R(g, x + 1, y, w - 2, 1, P[0]); R(g, x, y + 1, 1, f - 2, P[0]); R(g, x + 1, y + 1, w - 3, 1, P[0]);
+  R(g, x + w - 1, y + 1, 1, f - 1, P[2]); R(g, x + 1, y + f - 1, w - 1, 1, P[2]);
+  if (grain === "or"){ R(g, x + 3, y + 3, 3, 1, "#ffffff"); R(g, x + 3, y + 4, 1, 2, "#ffffff"); }
+  R(g, x, y, 1, 1, OUT); R(g, x + w - 1, y, 1, 1, OUT);
+  if (pebble){ // coins bien arrondis : galets, pépites
+    for (const [cx, cy] of [[x, y], [x + w - 1, y], [x, y + f + d - 1], [x + w - 1, y + f + d - 1]]) R(g, cx, cy, 1, 1, OUT);
+    for (const [cx, cy] of [[x - 1, y], [x + w, y], [x - 1, y + f + d - 1], [x + w, y + f + d - 1], [x, y - 1], [x + w - 1, y - 1]]) g.clearRect(cx, cy + 1, 1, 1);
+  }
+}
+const grainOf = (T, mat) => mat === "gold" ? "or" : mat === "silver" ? "argent" : T.grain[mat];
+function tileImg(T, mat, ch){
+  T.cache = T.cache || {};
+  const key = "t" + mat + ch; if (T.cache[key]) return T.cache[key];
+  const c = mk(TW + 2, TF + TD + 2), g = c.getContext("2d");
+  tileBody(g, 1, 1, TW, TF, TD, T.mats[mat], grainOf(T, mat), ch.charCodeAt(0) * 7 + mat.length, T.pebble && mat !== "wood");
+  g.font = "16px " + FONT; g.textAlign = "left"; g.textBaseline = "top";
+  const [ink, lip] = T.ink[mat];
+  g.fillStyle = lip; g.fillText(ch, 8, 7); g.fillStyle = ink; g.fillText(ch, 7, 6);
+  if (T.points && mat === "wood"){ const p = String(PTS[ch] || 1); g.font = "8px " + FONT; g.fillStyle = T.mats.wood[3]; g.fillText(p.length > 1 ? "+" : p, 21, 18); }
+  if (fontReady()) T.cache[key] = c;
+  return c;
+}
+function keyImg(T, mat, ch, w){
+  T.cache = T.cache || {};
+  const key = "k" + mat + ch + w; if (T.cache[key]) return T.cache[key];
+  const c = mk(w + 2, KF + KD + 2), g = c.getContext("2d"), P = T.mats[mat];
+  R(g, 1, 0, w, KF + KD + 2, OUT); R(g, 0, 1, w + 2, KF + KD, OUT);
+  R(g, 1, 1 + KF, w, KD, P[3]); R(g, 1, 1, w, KF, P[1]); R(g, 2, KF - 3, w - 2, 3, P[2]);
+  R(g, 2, 1, w - 2, 1, P[0]); R(g, 1, 2, 1, KF - 2, P[0]); R(g, w, 2, 1, KF - 1, P[2]);
+  R(g, 1, 1, 1, 1, OUT); R(g, w, 1, 1, 1, OUT);
+  if (T.pebble){ g.clearRect(0, 1, 1, 1); g.clearRect(w + 1, 1, 1, 1); g.clearRect(0, KF + KD, 1, 1); g.clearRect(w + 1, KF + KD, 1, 1); R(g, 1, 1, 1, 1, OUT); R(g, w, 1, 1, 1, OUT); R(g, 1, KF + KD, 1, 1, OUT); R(g, w, KF + KD, 1, 1, OUT); }
+  const [ink, lip] = T.ink[mat];
+  if (ch === "<"){
+    for (let k = 0; k < 4; k++) R(g, w / 2 - 5 + k, 10 - k, 1, k * 2 + 1, ink);
+    R(g, w / 2 - 1, 9, 8, 3, ink);
+  } else if (ch === ">"){
+    R(g, w / 2 + 4, 5, 3, 7, ink); R(g, w / 2 - 4, 10, 10, 2, ink);
+    for (let k = 0; k < 4; k++) R(g, w / 2 - 7 + k, 11 - k, 1, k * 2 + 1, ink);
+  } else {
+    g.font = "8px " + FONT; g.textAlign = "left"; g.textBaseline = "top";
+    g.fillStyle = lip; g.fillText(ch, Math.floor(w / 2) - 2, 7); g.fillStyle = ink; g.fillText(ch, Math.floor(w / 2) - 3, 6);
+  }
+  if (fontReady()) T.cache[key] = c;
+  return c;
+}
+
+/* =====================================================================
+   La partie
+   ===================================================================== */
+function evaluate(guess, secret){
+  const res = Array(6).fill("grey"), left = {};
+  for (let i = 0; i < 6; i++){ if (guess[i] === secret[i]) res[i] = "gold"; else left[secret[i]] = (left[secret[i]] || 0) + 1; }
+  for (let i = 0; i < 6; i++) if (res[i] !== "gold" && left[guess[i]] > 0){ res[i] = "silver"; left[guess[i]]--; }
+  return res;
+}
+const FLIPGAP = .22, FLIPLEN = .36, REVEAL = 5 * FLIPGAP + FLIPLEN;
+const RANK = {grey: 1, silver: 2, gold: 3};
+
+function Phone(canvas){
+  const T = THEMES[canvas.dataset.theme], g = canvas.getContext("2d");
+  const low = mk(LW, LH), lg = low.getContext("2d");
+  let BG = null, OVER = null, keys = [];
+  const S = {secret: "", rows: [], cur: "", reveal: null, over: null, overT: 0, shakeT: -9, popT: -9, msg: "", msgT: -9, serie: 7};
+  const DEPART = {table: ["SOLEIL", "MAISON", "SOURIS"], bureau: ["BOUGIE", "MOUTON", "BOUCLE"], riviere: ["PEPITE", "TRESOR", "PIRATE"]}[canvas.dataset.theme];
+  function start(secret, pre){
+    S.secret = secret; S.rows = (pre || []).map(w => ({w, res: evaluate(w, secret)})); S.cur = ""; S.reveal = null; S.over = null; S.msg = "";
+  }
+  start(DEPART[0], DEPART.slice(1));
+  const now = () => performance.now() / 1000;
+
+  function keyStates(){
+    const st = {};
+    S.rows.forEach((row, r) => { if (S.reveal && S.reveal.row === r) return;
+      for (let i = 0; i < 6; i++){ const ch = row.w[i], m = row.res[i]; if (!st[ch] || RANK[m] > RANK[st[ch]]) st[ch] = m; } });
+    return st;
+  }
+  function say(m){ S.msg = m; S.msgT = now(); }
+  function press(ch){
+    const t = now();
+    if (S.over){ if (t - S.overT > .6) start(MOTS.filter(m => m !== S.secret)[Math.floor(Math.random() * (MOTS.length - 1))]); return; }
+    if (S.reveal) return;
+    if (ch === "<"){ S.cur = S.cur.slice(0, -1); return; }
+    if (ch === ">"){
+      if (S.cur.length < 6){ S.shakeT = t; say("IL FAUT 6 LETTRES"); return; }
+      S.rows.push({w: S.cur, res: evaluate(S.cur, S.secret)}); S.reveal = {row: S.rows.length - 1, t0: t}; S.cur = ""; return;
+    }
+    if (/^[A-Z]$/.test(ch) && S.cur.length < 6){ S.cur += ch; S.popT = t; }
+  }
+  this.press = press;
+  canvas.addEventListener("pointerdown", e => {
+    Phone.active = this;
+    const r = canvas.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * LW, y = (e.clientY - r.top) / r.height * LH;
+    if (S.over && y < 262){ press(""); return; }
+    for (const k of keys) if (x >= k.x - 1 && x < k.x + k.w + 1 && y >= k.y - 2 && y < k.y + KF + KD + 2){ this.press(k.ch); return; }
+  });
+
+  this.draw = function(t){
+    if (!BG){ BG = T.bg(); if (T.over) OVER = T.over(); }
+    // fin du retournement
+    if (S.reveal && t - S.reveal.t0 > REVEAL){
+      const row = S.rows[S.reveal.row]; S.reveal = null;
+      if (row.w === S.secret){ S.over = "win"; S.overT = t; S.serie++; say(["", "INCROYABLE !", "MAGNIFIQUE !", "SUPERBE !", "BRAVO !", "BIEN JOUE !", "OUF !"][S.rows.length]); }
+      else if (S.rows.length === 6){ S.over = "lose"; S.overT = t; S.serie = 0; say("C'ETAIT : " + S.secret); }
+    }
+    const g2 = lg;
+    g2.drawImage(BG, 0, 0);
+    if (T.under) T.under(g2, t);
+    if (OVER) g2.drawImage(OVER, 0, 0);
+
+    // ---------- grille
+    const golds = [];
+    for (let r = 0; r < 6; r++){
+      const row = S.rows[r];
+      if (row){
+        for (let c = 0; c < 6; c++){
+          const x = GX + c * STEP, y = GY + r * STEP;
+          let mat = row.res[c], sc = 1, lift = 0;
+          if (S.reveal && S.reveal.row === r){
+            const p = (t - S.reveal.t0 - c * FLIPGAP) / FLIPLEN;
+            if (p < .5) mat = "wood";
+            if (p > 0 && p < 1){ sc = Math.abs(Math.cos(p * Math.PI)); lift = 2; }
+          }
+          let hop = 0;
+          if (S.over === "win" && r === S.rows.length - 1){ const hp = t - S.overT - c * .09; if (hp > 0 && hp < .36) hop = Math.round(Math.sin(hp / .36 * Math.PI) * 7); }
+          const img = tileImg(T, mat, row.w[c]), h = Math.max(2, Math.round(img.height * sc));
+          R(g2, x + 2, y + TF + TD + 1, TW, 2, T.shadow); R(g2, x + TW + 1, y + 2, 2, TF + TD, T.shadow);
+          g2.drawImage(img, 0, 0, img.width, img.height, x - 1, y - 1 + Math.round((img.height - h) / 2) - lift - hop, img.width, h);
+          if (mat === "gold" && sc === 1) golds.push([x, y]);
+        }
+      } else if (r === S.rows.length && !S.over){
+        const sh = t - S.shakeT < .4 ? Math.round(Math.sin((t - S.shakeT) * 50) * 3 * (1 - (t - S.shakeT) / .4)) : 0;
+        for (let c = 0; c < S.cur.length; c++){
+          const x = GX + c * STEP + sh, y = GY + r * STEP, pop = c === S.cur.length - 1 && t - S.popT < .12 ? 2 : 0;
+          R(g2, x + 2, y + TF + TD + 1, TW, 2, T.shadow);
+          g2.drawImage(tileImg(T, "wood", S.cur[c]), x - 1, y - 1 - pop);
+        }
+        if (Math.floor(t * 2) % 2 === 0 && S.cur.length < 6 && !S.reveal) R(g2, GX + S.cur.length * STEP + 4, GY + r * STEP + TF - 2, TW - 8, 2, T.cursor);
+      }
+    }
+    // reflet qui balaie l'or, et étincelles
+    const sweep = (t * 70) % 360 - 60;
+    for (const [x, y] of golds){ const lx = sweep - (x - GX) - (y - GY) * .3;
+      for (let yy = 1; yy < TF - 1; yy++){ const xx = Math.round(lx - yy); if (xx >= 1 && xx < TW - 2) R(g2, x + xx, y + yy, 2, 1, "rgba(255,255,240,.7)"); } }
+    for (let i = 0; i < 6 && golds.length; i++){
+      const ph = (t * .9 + i * .37) % 1, cyc = Math.floor(t * .9 + i * .37), k = golds[Math.floor(hash(i, cyc) * golds.length)];
+      const s = ph < .5 ? Math.round(ph * 6) : Math.round((1 - ph) * 6);
+      spark(g2, k[0] + 3 + hash(i, cyc + 5) * 22, k[1] + 2 + hash(i, cyc + 9) * 12, Math.min(3, s));
+    }
+    // gerbe d'or quand le mot est trouvé
+    const burst = S.over === "win" ? t - S.overT : -1;
+    if (burst > 0 && burst < 2.2) for (let i = 0; i < 26; i++){
+      const a = hash(i, 2) * Math.PI * 2, sp = 26 + hash(i, 3) * 44, bx = GX + (hash(i, 4) * 6 | 0) * STEP + 14, by = GY + (S.rows.length - 1) * STEP + 12;
+      const x = bx + Math.cos(a) * sp * burst, y = by + Math.sin(a) * sp * burst * .8 + 22 * burst * burst;
+      if (burst < 1.1) spark(g2, x, y, i % 3 === 0 ? 2 : 1, "#ffffff", "#ffd23f"); else R(g2, Math.round(x), Math.round(y), 1, 1, i % 2 ? "#ffd23f" : "#e09a1c");
+    }
+
+    // ---------- en-tête
+    plate(g2, 4, 4, 208, 34, T.tint);
+    const mx = 9, my = 9;
+    R(g2, mx + 2, my - 1, 14, 20, OUT); R(g2, mx, my + 1, 18, 16, OUT); R(g2, mx + 1, my, 16, 18, OUT);
+    R(g2, mx + 1, my + 2, 16, 14, "#e09a1c"); R(g2, mx + 2, my + 1, 14, 16, "#e09a1c"); R(g2, mx + 3, my + 1, 12, 14, "#ffd23f"); R(g2, mx + 2, my + 3, 13, 11, "#ffd23f");
+    R(g2, mx + 3, my + 2, 5, 1, "#fff8c8"); R(g2, mx + 2, my + 3, 1, 5, "#fff8c8"); R(g2, mx + 14, my + 8, 2, 8, "#9a5a0c"); R(g2, mx + 5, my + 16, 10, 1, "#9a5a0c");
+    text(g2, "M", mx + 6, my + 6, 8, "#fff8c8", "left", null); text(g2, "M", mx + 5, my + 5, 8, "#9a5a0c", "left", null);
+    logo(g2, "LE MOT D'OR", 32, 9, 10, ["#fff6c2", "#ffd23f", "#e0782a"]);
+    const d = new Date(), dd = String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+    text(g2, "DEFI DU " + dd, 32, 25, 8, T.tint ? "#ffe7b8" : "#cfe0f4");
+    // badge de série
+    const bx = 166, by = 8;
+    R(g2, bx, by - 1, 40, 14, OUT); R(g2, bx - 1, by, 42, 12, OUT);
+    R(g2, bx, by, 40, 12, "#b8401c"); R(g2, bx, by, 40, 6, "#d8582a"); R(g2, bx + 1, by, 38, 1, "#ff9a5a"); R(g2, bx + 1, by + 11, 39, 1, "#7a2410");
+    flame(g2, bx + 3, by + 2, t);
+    text(g2, String(S.serie), bx + 36, by + 3, 8, "#fff6dc", "right");
+    // essais : six pastilles
+    const done = S.rows.length - (S.reveal ? 1 : 0);
+    for (let i = 0; i < 6; i++){ const x = 155 + i * 9, on = i < done, nx = i === done && !S.over;
+      R(g2, x - 1, 24, 8, 8, OUT); R(g2, x, 25, 6, 6, on ? "#ffd23f" : nx ? (Math.floor(t * 3) % 2 ? "#cfa868" : "#8f6534") : "#2a3448");
+      if (on){ R(g2, x, 25, 6, 1, "#fff8c8"); R(g2, x, 30, 6, 1, "#9a5a0c"); } }
+
+    // ---------- ligne de message, sinon la légende
+    const my2 = 248;
+    if (S.msg && (S.over || t - S.msgT < 1.6)){
+      let m = S.msg;
+      if (S.over && Math.floor((t - S.overT) / 1.8) % 2 === 1) m = "TOUCHER LA GRILLE";
+      const w = m.length * 8 + 12;
+      plate(g2, 108 - w / 2, my2 - 4, w, 15, T.tint);
+      text(g2, m, 108, my2, 8, S.over === "win" ? "#ffd23f" : "#ffffff", "center");
+    } else {
+      const leg = (x, mat, s) => { const P = T.mats[mat]; R(g2, x - 1, my2 - 1, 9, 9, OUT); R(g2, x, my2, 7, 7, P[1]); R(g2, x, my2, 7, 1, P[0]); R(g2, x, my2, 1, 7, P[0]); R(g2, x + 1, my2 + 6, 6, 1, P[3]); text(g2, s, x + 11, my2, 8, "#f4ead8"); };
+      leg(30, "gold", "BIEN"); leg(84, "silver", "MAL"); leg(130, "grey", "ABSENT");
+    }
+
+    // ---------- clavier AZERTY
+    const ks = keyStates(); keys = [];
+    KEYS.forEach((row, r) => {
+      const widths = [...row].map(ch => ch === ">" || ch === "<" ? 28 : KW), tot = widths.reduce((a, b) => a + b, 0) + (row.length - 1) * 2;
+      let x = Math.floor((LW - tot) / 2);
+      [...row].forEach((ch, i) => {
+        const mat = ks[ch] || T.keyMat, y = KY + r * KSTEP, k = {ch, x, y, w: widths[i]};
+        const old = (this.keyT || {})[ch] || -9, down = t - old < .1 ? 1 : 0;
+        keys.push(k);
+        R(g2, x + 2, y + KF + KD + 1, widths[i], 1, "rgba(8,14,10,.55)");
+        g2.drawImage(keyImg(T, mat, ch, widths[i]), x - 1, y - 1 + down);
+        x += widths[i] + 2;
+      });
+    });
+
+    // ---------- compte à rebours du prochain mot
+    plate(g2, 4, 356, 208, 22, true);
+    const mid = new Date(); mid.setHours(24, 0, 0, 0);
+    const left = Math.max(0, Math.floor((mid - Date.now()) / 1000)), z = n => String(n).padStart(2, "0");
+    const hx = 11, hy = 361;
+    R(g2, hx - 1, hy - 1, 10, 14, OUT); R(g2, hx, hy, 8, 2, "#e0b070"); R(g2, hx, hy + 10, 8, 2, "#e0b070");
+    R(g2, hx + 1, hy + 2, 6, 3, "#d8eef8"); R(g2, hx + 3, hy + 5, 2, 2, "#d8eef8"); R(g2, hx + 1, hy + 7, 6, 3, "#d8eef8");
+    const sand = Math.floor((t % 3) / 3 * 3);
+    R(g2, hx + 1 + sand, hy + 3 + sand, 6 - sand * 2, 1, "#ffd23f"); R(g2, hx + 1, hy + 9 - sand, 6, 1 + sand, "#ffd23f");
+    text(g2, "PROCHAIN MOT", 24, 363, 8, "#ffe7b8");
+    text(g2, z(Math.floor(left / 3600)) + ":" + z(Math.floor(left / 60) % 60) + ":" + z(left % 60), 208, 363, 8, "#ffd23f", "right");
+
+    // ---------- ambiance
+    if (T.top) T.top(g2, t);
+    if (T.dust) for (let i = 0; i < 14; i++){
+      const sp = 6 + hash(i, 1) * 8, py = (LH + 10) - ((t * sp + hash(i, 2) * 300) % (LH + 20)), px = hash(i, 3) * LW + Math.sin(t * .8 + i) * 6;
+      const tw = (Math.sin(t * 3 + i * 1.7) + 1) / 2;
+      R(g2, Math.round(px), Math.round(py), 1, 1, tw > .6 ? T.dust[0] : T.dust[1]);
+      if (tw > .93) spark(g2, px, py, 2, "#ffffff", "#ffd23f");
+    }
+
+    g.imageSmoothingEnabled = false;
+    g.drawImage(low, 0, 0, canvas.width, canvas.height);
+  };
+  // retenir l'instant où une touche est enfoncée, pour l'enfoncer à l'écran
+  const press0 = press;
+  this.press = ch => { (this.keyT = this.keyT || {})[ch] = now(); press0(ch); };
+}
+
+const phones = [...document.querySelectorAll("canvas[data-theme]")].map(c => new Phone(c));
+Phone.active = phones[0];
+document.addEventListener("keydown", e => {
+  const k = e.key;
+  let ch = null;
+  if (k === "Enter") ch = ">"; else if (k === "Backspace") ch = "<"; else if (/^[a-zA-Z]$/.test(k)) ch = k.toUpperCase();
+  if (ch && Phone.active){ e.preventDefault(); Phone.active.press(ch); }
+});
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function frame(){
+  const t = performance.now() / 1000;
+  for (const p of phones) p.draw(reduce ? Math.floor(t) : t);
+  requestAnimationFrame(frame);
+}
+(document.fonts ? document.fonts.load('8px "Press Start 2P"') : Promise.resolve()).catch(() => {}).then(() => requestAnimationFrame(frame));
+})();
+</script>
