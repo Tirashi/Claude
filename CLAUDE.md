@@ -60,6 +60,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 | Escadrille ! | https://claude.ai/artifact/SUuAXS5scLnstbth9eZ7zV |
 | Yams | https://claude.ai/artifact/L4nurJpT9pb8BqpJTmvyZ3 |
 | Le Magasinier | https://claude.ai/artifact/Uahoa9oJi7L8KFbNxj9TPX |
+| Capitaine du port | https://claude.ai/artifact/7vRaNExcDvmDWeWGLeFsyq |
 
 Queens, Sudoku, Touché Coulé, Tetris, Snake, Asteroids, Solitaire, le Jeu de la vie et Odyssée **n'ont pas d'artefact** : on les joue sur le site. Ne pas en créer sans demande.
 
@@ -71,7 +72,7 @@ Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/su
 - **Amiral !** : sessions 1 et 2 faites (mines, fumée, leurre, déblocages, bataille du jour) ; à essayer sur le téléphone. [`specs/amiral.md`](specs/amiral.md)
 - **Escadrille !** : sessions 1, 2 et **lot 2 faits** (19/10 : 10 avions au hangar, 6 à débloquer, 4 familles) ; à essayer sur le téléphone ; **lot 1 fait** (19/10 : hauteur, polices, flèches, FEU !) ; artefact pas republié (190 Ko à relire). [`specs/escadrille.md`](specs/escadrille.md) § 10
 - **Le Thé des Jarls** : maquette 4 validée (style A, 45 soldats) ; prochaine étape session 2 (règles, ordinateur, duel), Opus. [`specs/the-des-jarls.md`](specs/the-des-jarls.md)
-- **Capitaine du port** : maquette dans la DA 32 bits de la planche des coups de cœur, plein jour choisi, polices d'Amiral ! (20/10, https://claude.ai/artifact/GXnCqj89iVvxUbDfcr3urg), **validée** (remorqueur décoratif, 7 × 7 au dernier port) ; **fini** (20/10, sessions 1 et 2 : 60 bassins en 5 ports, bassin du jour, sons, classements, accueil) ; à essayer sur le téléphone ; artefact à créer (lien à demander). [`specs/capitaine-du-port.md`](specs/capitaine-du-port.md)
+- **Capitaine du port** : maquette dans la DA 32 bits de la planche des coups de cœur, plein jour choisi, polices d'Amiral ! (20/10, https://claude.ai/artifact/GXnCqj89iVvxUbDfcr3urg), **validée** (remorqueur décoratif, 7 × 7 au dernier port) ; **fini** (20/10, sessions 1 et 2 : 60 bassins en 5 ports, bassin du jour, sons, classements, accueil) ; à essayer sur le téléphone ; artefact créé (https://claude.ai/artifact/7vRaNExcDvmDWeWGLeFsyq). [`specs/capitaine-du-port.md`](specs/capitaine-du-port.md)
 - **Le Mot d'or** : **fini** (20/10 : maquette 2 validée, 718 mots du jour, entraînement, dictionnaire de 13 900 mots, classements, accueil) ; à essayer sur le téléphone ; artefact à créer (lien à demander). [`specs/mot-d-or.md`](specs/mot-d-or.md)
 - **Le Magasinier** : **fini** (20/10 : 60 niveaux, grille du jour, classements, accueil) ; à essayer sur le téléphone ; artefact créé (Three.js chargé depuis cdnjs, voir le mémo). [`specs/magasinier.md`](specs/magasinier.md)
 - **Armada** : cahier des charges **à relire par l'utilisateur** (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)

@@ -6,7 +6,7 @@ const CAP_PORTS = [
   { nom: 'PORT DE COMMERCE', court: 'COMMERCE', debut: 12, n: 12, pret: true },
   { nom: 'LA MARINA', court: 'MARINA', debut: 24, n: 12, pret: true },
   { nom: 'LE CHANTIER NAVAL', court: 'CHANTIER', debut: 36, n: 12, pret: true },
-  { nom: 'LE GRAND PORT', court: 'GRAND PORT', debut: 48, n: 0, pret: false },
+  { nom: 'LE GRAND PORT', court: 'GRAND PORT', debut: 48, n: 12, pret: true },
 ];
 const CAP_NIVEAUX = [
   // port de pêche (optimum 3 à 12)
@@ -61,5 +61,18 @@ const CAP_NIVEAUX = [
   { plan: ['.FFEE.', 'HHHHC.', 'IIIKCJ', 'AAGKCJ', '.DG...', '.DBB..'], sortie: 1, opt: 22, sol: '2:4 5:0 4:2 3:0 6:4 9:0 10:4 1:4 0:3 6:3 10:2 2:0 6:4 10:4 1:2 3:3 8:2 9:2 4:4 5:2 7:2 0:0' },
   { plan: ['...EEE', 'LGHJJA', 'LGHCCA', '.BBDIA', 'KK.DIA', 'FF..I.'], sortie: 3, opt: 24, sol: '2:0 4:2 1:0 6:0 7:3 9:2 11:0 3:0 0:2 7:2 8:1 5:4 10:4 0:4 7:4 2:2 3:2 6:4 2:0 3:1 9:1 11:1 4:0 0:0' },
   { plan: ['.E.FF.', 'BEAAA.', 'BKKHG.', 'BJJHG.', 'B.DII.', '..DCC.'], sortie: 2, opt: 26, sol: '2:0 3:4 5:2 8:4 7:4 9:2 10:2 4:2 1:1 6:0 9:4 10:4 0:2 7:2 3:0 8:0 0:4 7:4 9:2 10:2 6:4 1:3 5:3 9:3 10:3 0:0' },
+  // le grand port : 7 × 7, tout mélangé (optimum 20 à 35)
+  { plan: ['..KKFNN', '...BFCP', 'EE.BFCP', 'LL..IMP', '.DJJIMA', '.D.HGGA', '...H..A'], sortie: 1, opt: 20, sol: '10:0 2:0 4:2 11:2 0:1 9:0 11:0 7:3 6:0 7:5 8:5 12:5 9:4 11:4 0:3 4:0 2:3 4:2 10:2 0:0' },
+  { plan: ['FKLLLG.', 'FKQQ.G.', '.NNHHA.', 'C.BDIA.', 'C.BDIJJ', 'MMEEE..', '....PP.'], sortie: 3, opt: 22, sol: '4:4 0:5 2:5 13:0 7:2 8:1 9:1 0:3 8:3 7:3 13:1 3:2 9:0 2:3 4:2 14:0 1:5 6:3 7:4 11:4 15:4 0:0' },
+  { plan: ['.EHHKKK', '.EoDI..', 'JJ.DI.C', 'MM..I.C', '.GGGAAC', 'FFF..BC', 'LLL..B.'], sortie: 3, opt: 24, sol: '3:1 6:0 1:3 2:1 1:4 5:4 11:4 0:5 9:2 4:1 7:0 10:2 3:0 1:5 6:2 12:2 4:5 6:0 1:4 3:1 9:0 10:4 12:0 0:0' },
+  { plan: ['EEGGGC.', 'NNN.KC.', 'HHPPKMo', 'J.FFKM.', 'JAAD..I', 'LBBDQQI', 'L......'], sortie: 3, opt: 25, sol: '5:1 0:3 8:3 12:3 3:1 6:4 4:1 13:1 15:5 10:3 14:3 7:1 9:0 7:0 11:3 2:0 14:2 10:1 15:2 10:3 12:5 3:3 13:4 14:4 0:0' },
+  { plan: ['.HHHMMN', 'IC....N', 'ICFFFLL', '.BBB.A.', 'KKJD.AG', '..JD.AG', '.EE..A.'], sortie: 3, opt: 27, sol: '0:5 2:2 4:0 7:0 9:5 10:2 3:3 8:4 5:0 11:3 12:3 1:0 10:4 0:4 9:4 4:4 0:5 3:5 2:0 9:5 10:1 0:3 4:3 1:3 11:4 12:4 0:0' },
+  { plan: ['NHHHHIM', 'NKKFFIM', 'N.LEEI.', 'JJL..B.', '.AAA.B.', '.D.Go..', '.D.GCCC'], sortie: 1, opt: 28, sol: '1:0 6:4 3:2 2:5 8:2 7:2 12:2 5:5 10:3 11:1 9:3 11:2 10:1 5:3 8:1 2:4 3:4 6:5 1:2 0:2 1:0 6:4 3:0 2:5 8:2 5:4 10:2 0:0' },
+  { plan: ['CEE.MMM', 'CoLLLG.', 'BBBD.G.', '..JD.NN', '..J.AAA', 'KKHHF.I', '....F.I'], sortie: 3, opt: 29, sol: '0:3 2:1 3:1 4:0 12:2 6:0 2:4 0:2 9:2 1:0 0:3 2:3 13:4 8:0 13:5 5:3 7:5 0:5 5:5 1:4 3:3 9:4 2:0 13:1 6:2 8:2 11:4 12:4 0:0' },
+  { plan: ['..H..KK', 'BBHAAGC', 'FFJJ.GC', 'QD..I.C', 'QDPPI.o', 'EEMMI..', '..LLNN.'], sortie: 1, opt: 30, sol: '6:3 8:2 12:5 4:2 0:5 8:3 9:3 13:5 11:3 15:5 14:0 7:3 1:2 9:2 8:0 4:3 7:5 14:3 0:3 7:3 15:3 4:0 7:5 14:2 8:3 1:4 2:2 9:4 5:2 0:0' },
+  { plan: ['..IIHH.', 'FFFG...', '.J.G...', '.JCCKK.', 'oJLL.Do', '..AB.D.', 'EEAB...'], sortie: 5, opt: 31, sol: '0:5 8:0 7:2 11:4 1:4 2:4 4:2 9:4 3:0 6:2 5:4 1:1 6:1 3:2 9:1 4:0 2:5 11:1 0:4 2:4 4:4 2:5 11:2 9:4 3:0 1:2 6:2 5:0 6:1 10:3 0:0' },
+  { plan: ['...CCCC', '.BH.AAL', '.BHFFFL', 'PPH.DKL', '.GGJDK.', '.MMJ.E.', 'IIINNE.'], sortie: 4, opt: 32, sol: '0:4 1:3 6:0 7:0 11:3 12:0 14:3 7:3 3:0 5:2 10:0 4:4 5:4 7:1 13:5 8:2 14:4 9:2 6:2 12:2 2:5 6:0 9:3 5:3 11:0 14:5 0:3 12:3 7:3 1:0 5:0 0:0' },
+  { plan: ['.IIHH..', '..KGG.A', 'o.KCQQA', 'LLLC.BE', '.MFFFBE', '.MP.DNo', 'JJP.DN.'], sortie: 4, opt: 34, sol: '1:0 6:4 3:1 8:0 7:2 11:2 12:1 5:0 11:0 3:3 6:3 15:3 2:0 15:5 0:2 3:2 5:3 14:4 9:3 14:5 5:0 13:4 9:5 0:5 3:5 5:2 11:3 10:2 12:5 5:0 6:0 10:1 11:0 0:0' },
+  { plan: ['GHHKCN.', 'G..KCN.', 'EEF.C..', '..FBBBB', 'MMF.I.L', '.DAAI.L', '.D.JJ.L'], sortie: 1, opt: 35, sol: '5:1 9:2 8:5 10:1 12:3 0:3 1:0 5:3 4:1 6:3 4:0 7:0 5:0 1:2 0:4 6:4 2:0 9:0 11:0 12:5 8:3 1:5 8:4 2:3 5:4 2:0 3:1 11:1 13:1 7:5 3:0 2:2 10:0 4:2 0:0' },
 ];
 if (typeof module !== 'undefined') module.exports = { CAP_PORTS, CAP_NIVEAUX };
