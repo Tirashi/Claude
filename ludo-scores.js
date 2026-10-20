@@ -218,8 +218,8 @@
     var cn = readKey("capitaine.niveaux", {}) || {}, cns = 0;
     Object.keys(cn).forEach(function (k){ if (/^\d{1,2}$/.test(k) && cn[k]) cns += Math.min(3, Number(cn[k].etoiles) || 0); });
     hi("capitaine", "etoiles", cns);
-    var cd = readKey("capitaine.daily", {}) || {};
-    Object.keys(cd).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("capitaine", "daily:" + k, cd[k]); });
+    var cpd = readKey("capitaine.daily", {}) || {};
+    Object.keys(cpd).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("capitaine", "daily:" + k, cpd[k]); });
     var mn = readKey("magasinier.niveaux", {}) || {}, mns = 0;
     Object.keys(mn).forEach(function (k){ if (/^\d{1,2}$/.test(k) && mn[k]) mns += Math.min(3, Number(mn[k].etoiles) || 0); });
     hi("magasinier", "etoiles", mns);
