@@ -94,6 +94,9 @@ catch (e) { bad('Odyssée : plateaux\n' + (e.stdout || '') + (e.stderr || '')); 
 // 8 bis. Le Magasinier : chaque niveau est gagné par sa solution notée (l'optimum complet : magasinier-solveur.js --optimum)
 try { execFileSync(process.execPath, [path.join(__dirname, 'magasinier-solveur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Le Magasinier : chaque niveau est gagné par sa solution notée'); }
 catch (e) { bad('Le Magasinier : niveaux\n' + (e.stdout || '') + (e.stderr || '')); }
+// 8 ter. Capitaine du port : chaque bassin est gagné par sa solution notée (l'optimum complet : capitaine-solveur.js --optimum)
+try { execFileSync(process.execPath, [path.join(__dirname, 'capitaine-solveur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Capitaine du port : chaque bassin est gagné par sa solution notée'); }
+catch (e) { bad('Capitaine du port : bassins\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {

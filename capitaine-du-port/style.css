@@ -1,0 +1,36 @@
+/* Capitaine du port : plaques bleu nuit à double liseré (comme celles dessinées dans le canvas),
+   Press Start 2P pour les titres, Rajdhani 700 pour le reste (comme Amiral ! et Escadrille !). */
+[hidden] { display: none !important; }
+:root { --haut: #304668; --bas: #0e1626; --liseré: #a0c8f0; --contour: #120c16; --texte: #ffffff; --doux: #a8d0f4; --or: #ffd23f; }
+html, body { height: 100%; margin: 0; background: #163f66; color: var(--texte); font-family: Rajdhani, sans-serif; font-weight: 700; overflow: hidden;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#jeu { position: relative; height: 100%; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; }
+#cv { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: block; touch-action: none; }
+.plaque { background: linear-gradient(var(--haut), var(--bas)); color: var(--texte); border: 2px solid var(--contour); border-radius: 3px;
+  box-shadow: inset 1px 1px 0 rgba(160, 200, 240, .55), inset -1px -1px 0 rgba(0, 0, 0, .45), 0 2px 0 var(--contour); }
+button, .lien { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:active, .lien:active { transform: translateY(2px); }
+button:focus-visible, .lien:focus-visible { outline: 2px solid var(--or); outline-offset: 2px; }
+.bulle { position: absolute; left: 50%; transform: translateX(-50%); width: min(300px, calc(100% - 24px)); box-sizing: border-box;
+  padding: 10px 14px; font-size: 17px; line-height: 1.25; text-align: center; pointer-events: none; }
+.ecranMenu { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; background: #0a142266; z-index: 5; }
+.carte { width: 100%; max-width: 330px; box-sizing: border-box; padding: 22px 18px; display: flex; flex-direction: column; align-items: stretch; gap: 12px; text-align: center; }
+.carte > button, .carte > .lien { font-size: 20px; padding: 10px; text-decoration: none; display: block; letter-spacing: .04em; }
+.carte p { margin: 0; font-size: 18px; line-height: 1.25; }
+h1, .titre2 { font-family: "Press Start 2P", monospace; font-weight: normal; color: var(--or); text-shadow: 2px 2px 0 var(--contour); }
+h1 { margin: 0 0 4px; font-size: 20px; line-height: 1.5; }
+.titre2 { font-size: 13px !important; line-height: 1.6 !important; }
+.petit { font-size: 16px !important; color: var(--doux); }
+.etoiles { font-size: 34px; letter-spacing: 6px; color: #3a4060; }
+.etoiles b { color: var(--or); font-weight: normal; display: inline-block; animation: tombe .5s ease-out both; }
+.etoiles b:nth-child(2) { animation-delay: .25s; } .etoiles b:nth-child(3) { animation-delay: .5s; }
+@keyframes tombe { from { transform: translateY(-30px) scale(1.6); opacity: 0; } to { transform: none; opacity: 1; } }
+.onglets { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.onglets button { font-size: 15px; padding: 6px 8px; }
+.onglets button.actif { color: var(--or); }
+.onglets button:disabled { opacity: .45; }
+.grilleNiv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.grilleNiv button { font-size: 20px; padding: 6px 0 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.grilleNiv button small { font-size: 14px; color: var(--or); letter-spacing: 1px; min-height: 14px; }
+.grilleNiv button:disabled { opacity: .4; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

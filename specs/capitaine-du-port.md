@@ -82,6 +82,18 @@ Bruitages synthétisés en Web Audio (sans fichier), discrets : moteur du remorq
 
 Coût estimé : **5 à 7 % de la semaine** (jeu moyen en 2D, dessin déjà fait dans la maquette ; le plus long est de choisir et d'habiller 60 bassins).
 
+## 14. Bilan de la session 1 (20/10)
+Fait (dossier `capitaine-du-port/`, jouable par son adresse ; pas encore sur l'accueil) :
+- **`regles.js`** (logique pure, aussi sous Node) : lecture d'un bassin (`capLire`, lettres et `o`), butées (`capLimites`), coup (`capCoup`), victoire, solveur en largeur (`capResoudre`), étoiles (`capSeuil3` = optimum + 10 % arrondi au-dessus et au moins + 1 ; `capSeuil2` = + 50 % et au moins + 3), générateur à graine (`capHasard`, `capGenerer` : pose au hasard sans bateau debout dans la colonne de la passe, explore toute la composante des états atteignables, calcule la distance à la victoire depuis les états gagnés, garde l'état le plus difficile dans la plage voulue).
+- **`niveaux.js`** : les 24 bassins des ports 1 et 2 (`CAP_PORTS`, `CAP_NIVEAUX` avec `plan`, `sortie`, `opt`, `sol`), fabriqués par `outils/capitaine-generateur.js` (un par optimum visé : pêche 3 à 12, commerce 10 à 20) ; les ports 3 à 5 sont annoncés (`pret: false`).
+- **`outils/capitaine-solveur.js`** : chaque bassin est gagné par sa solution en `opt` coups ; `--optimum` vérifie que c'est le minimum (les 24 le sont). Lancé par `verifications.js` (§ 8 ter).
+- **`decor.js`** : le moteur de la maquette, paramétré par la géométrie du bassin (`geo(w, sortie, VH)` : taille de case, passe, capitainerie et phare placés à l'écart de la passe, lampadaires) ; la hauteur de la scène suit celle de l'écran (384 px au moins, la mer et le quai s'allongent) ; quai du bas différent par port (casiers, caisses de poissons et filet à la pêche ; conteneurs et grue au commerce) ; sprites par longueur et par port, sens de la proue tiré de la position.
+- **`jeu.js`** : glisser un bateau (il suit le doigt entre ses butées, le remorqueur pousse), ANNULER, REJOUER, pause (Échap), Z/R au clavier, sortie du navire doré, « A QUAI ! », écran de fin (étoiles, SUIVANT, REJOUER, PORTS), écran titre (CONTINUER, JOUER, retour à la Ludothèque), choix du port et des bassins (8 bassins finis ouvrent le port suivant), bulles d'aide sur les 3 premiers bassins. Sauvegardes `capitaine.niveaux` et `capitaine.partie` ; `window.Capitaine` pour les tests.
+- Menus en HTML (plaques bleu nuit, Press Start 2P pour les titres, Rajdhani 700 pour le reste) par-dessus le canvas, comme Le Magasinier ; le retour à la Ludothèque est un lien `ludo-retour`.
+- `sw.js` : les 6 fichiers ajoutés, cache `ludotheque-v42`.
+
+Reste pour la session 2 : obstacles fixes (marina), bateaux de 4 cases (chantier), 7 × 7 (grand port, sprites à la case de 26 px), les 36 autres bassins et leurs décors, sons et musique, bassin du jour, classements, accueil, transfert, tests (`fumee.js`, `logique.js`), README, artefact.
+
 ## 13. Points confirmés par l'utilisateur (20/10)
 1. Nouveautés des 5 ports : **d'accord** (pêche, commerce, marina avec obstacles fixes, chantier naval avec bateaux de 4 cases, grand port en 7 × 7).
 2. Étoiles : **3 étoiles jusqu'à l'optimum + 10 %** (« il y a des enfants qui jouent »), pas à l'optimum exact.

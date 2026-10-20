@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Capitaine du port</title>
+<meta name="description" content="Capitaine du port : déplace les bateaux du bassin pour ouvrir la passe au navire doré.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#163f66">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../polices/nebula.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="jeu">
+  <canvas id="cv" aria-label="Le bassin du port : les bateaux et le navire doré"></canvas>
+  <div class="bulle plaque" id="bulle" hidden></div>
+
+  <div class="ecranMenu" id="eTitre">
+    <div class="plaque carte">
+      <h1>CAPITAINE<br>DU PORT</h1>
+      <p>Glisse les bateaux dans leur longueur pour ouvrir la passe au navire doré.</p>
+      <button class="plaque" id="bContinuer" hidden>CONTINUER</button>
+      <button class="plaque" id="bJouer">JOUER</button>
+      <p class="petit" id="tEtoiles"></p>
+      <a class="plaque lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="eNiveaux" hidden>
+    <div class="plaque carte">
+      <div class="onglets" id="onglets"></div>
+      <p class="titre2" id="nPort"></p>
+      <p class="petit" id="nInfo"></p>
+      <div class="grilleNiv" id="grilleNiv"></div>
+      <button class="plaque" id="bTitre">◀ TITRE</button>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="ePause" hidden>
+    <div class="plaque carte">
+      <p class="titre2">PAUSE</p>
+      <button class="plaque" id="bReprendre">REPRENDRE</button>
+      <button class="plaque" id="bRejouerP">REJOUER</button>
+      <button class="plaque" id="bNiveauxP">PORTS</button>
+      <a class="plaque lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="eFin" hidden>
+    <div class="plaque carte">
+      <p class="titre2">A QUAI !</p>
+      <div class="etoiles" id="fEtoiles"></div>
+      <p id="fCoups"></p>
+      <p class="petit" id="fObjectif"></p>
+      <button class="plaque" id="bSuivant">SUIVANT</button>
+      <button class="plaque" id="bRejouer">REJOUER</button>
+      <button class="plaque" id="bNiveauxF">PORTS</button>
+    </div>
+  </div>
+</div>
+<script src="regles.js"></script>
+<script src="niveaux.js"></script>
+<script src="decor.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
