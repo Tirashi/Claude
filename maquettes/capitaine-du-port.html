@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>Capitaine du port</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@700&family=Fredoka:wght@400;600&display=swap">
 <style>
 /* Maquette 2 de Capitaine du port, dans la DA 32 bits de la planche des coups de cœur (scène du port) :
    le même bassin jouable, en portrait, à trois heures de la journée. Page sombre comme les autres maquettes. */
@@ -20,10 +20,10 @@ body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;
 .page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
 h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000;text-wrap:balance}
 header p{margin:10px 0 0;color:var(--doux);max-width:68ch}
-.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px 24px}
+.grille{display:flex;justify-content:center}
 .dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
-.tel{width:100%;max-width:324px;aspect-ratio:216/384;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
-.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated;cursor:grab}
+.tel{width:100%;max-width:360px;aspect-ratio:216/384;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.tel canvas{width:100%;height:100%;display:block;cursor:grab}
 .dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
 .dir p{margin:0;color:var(--doux);max-width:310px;font-size:15px;text-align:center}
 section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px}
@@ -36,31 +36,21 @@ section.q li span{color:var(--doux)}
 <div class="page">
 <header>
   <h1>CAPITAINE DU PORT</h1>
-  <p>Le style de la scène du port de la planche « 32 bits » : bateaux en volume vus du dessus, quais en granit, grue, capitainerie, phare et mouettes. Le bassin est jouable : glissez les bateaux dans leur longueur pour ouvrir la passe au navire doré, en haut. Pendant qu'on glisse, le remorqueur rouge vient pousser. 11 coups au minimum. Les trois écrans sont la même scène à trois heures de la journée (une idée pour distinguer les ports).</p>
+  <p>Le style de la scène du port de la planche « 32 bits » : bateaux en volume vus du dessus, quais en granit, grue, capitainerie, phare et mouettes. Le bassin est jouable : glissez les bateaux dans leur longueur pour ouvrir la passe au navire doré, en haut. Pendant qu'on glisse, le remorqueur rouge vient pousser. 11 coups au minimum. Version retenue : plein jour, avec les polices d'Amiral ! et d'Escadrille !.</p>
 </header>
 
 <div class="grille">
   <div class="dir">
-    <div class="tel"><canvas data-heure="jour" width="216" height="384"></canvas></div>
-    <h2>A · PLEIN JOUR</h2>
-    <p>La scène d'origine, telle quelle : soleil, eau turquoise, conteneurs de toutes les couleurs.</p>
-  </div>
-  <div class="dir">
-    <div class="tel"><canvas data-heure="soir" width="216" height="384"></canvas></div>
-    <h2>B · COUCHER DE SOLEIL</h2>
-    <p>Lumière orangée, soleil bas sur la mer, les premières lampes s'allument sur les quais.</p>
-  </div>
-  <div class="dir">
-    <div class="tel"><canvas data-heure="nuit" width="216" height="384"></canvas></div>
-    <h2>C · LA NUIT</h2>
-    <p>Port bleu nuit, lampadaires et fenêtres allumés, faisceau du phare qui tourne.</p>
+    <div class="tel"><canvas data-heure="jour" width="648" height="1152"></canvas></div>
+    <h2>PLEIN JOUR · POLICES D'AMIRAL !</h2>
+    <p>Press Start 2P pour les logos (BASSIN 3, A QUAI !), Rajdhani 700 pour tout le reste, affiché net par-dessus le pixel art, comme dans Amiral ! et Escadrille !.</p>
   </div>
 </div>
 
 <section class="q">
   <h2>QUESTIONS</h2>
   <ol>
-    <li>Ce style est-il le bon ? <span>Laquelle des trois heures préférez-vous, ou une heure par port (5 ports : matin, plein jour, soir, nuit, tempête…) ?</span></li>
+    <li>Les polices vous conviennent-elles ainsi ?</li>
     <li>Le remorqueur : décor qui pousse pendant qu'on glisse (comme ici), ou on le pilote vraiment, case par case ? <span>(plus original, mais plus long à jouer)</span></li>
     <li>Grille de 6 × 6 partout, ou 7 × 7 pour le dernier port ?</li>
   </ol>
@@ -74,6 +64,8 @@ section.q li span{color:var(--doux)}
    (planche des coups de cœur), mis en portrait 216 × 384.
    ===================================================================== */
 const OUT = "#120c16", TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace';
+const FONT_TEXT = z => `700 ${z}px Rajdhani, sans-serif`;   // comme Amiral ! : Rajdhani 700 pour tout sauf les logos
+const K = 3;                                                   // la toile affichée est 3 fois plus fine que le pixel art
 const VW = 216, VH = 384, CS = 30, GX = 18, GY = 96;      // grille 6 × 6
 const BX0 = 12, BX1 = 204, BY0 = 90, BY1 = 282;           // le bassin
 const SORTIE = 2;                                         // colonne de la passe, en haut
@@ -88,8 +80,8 @@ const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (
 function hex2(c){ const v = parseInt(c.slice(1), 16); return [v >> 16, v >> 8 & 255, v & 255]; }
 function mix(a, b, f){ const A = hex2(a), B = hex2(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * f).toString(16).padStart(2, "0")).join(""); }
 function text(g, s, x, y, size, col, align = "left", sh = OUT){
-  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = "top";
-  if (sh){ g.fillStyle = sh; g.fillText(s, x + 1, y + 1); }
+  g.font = FONT_TEXT(size); g.textAlign = align; g.textBaseline = "top";
+  if (sh){ g.fillStyle = sh; g.fillText(s, x + .7, y + .7); }
   g.fillStyle = col; g.fillText(s, x, y);
 }
 function logo(g, s, x, y, size, ramp, align = "left"){
@@ -565,8 +557,7 @@ const BOUTONS = [{x: 6, y: 344, w: 62, h: 34, a: "annuler"}, {x: 74, y: 344, w: 
 
 /* ---------- un téléphone ---------- */
 function Tel(cv){
-  const g = cv.getContext("2d"), heure = cv.dataset.heure;
-  g.imageSmoothingEnabled = false;
+  const gt = cv.getContext("2d"), heure = cv.dataset.heure, [buf, g] = mk(VW, VH);
   const st = {ps: [], coups: 0, hist: [], prise: null, gagne: 0, appui: null};
   function neuf(){ st.ps = NIVEAU.map(([c, r, n, h]) => ({c, r, n, h: !!h, v: h ? c : r})); st.coups = 0; st.hist = []; st.prise = null; st.gagne = 0; }
   neuf();
@@ -601,7 +592,11 @@ function Tel(cv){
     if (q.i === 0 && p.r === 0) st.gagne = performance.now();
   };
   cv.addEventListener("pointerup", lacher); cv.addEventListener("pointercancel", lacher);
-  return t => dessiner(g, st, t, heure);
+  return t => {
+    dessiner(g, st, t, heure);
+    gt.setTransform(1, 0, 0, 1, 0, 0); gt.imageSmoothingEnabled = false; gt.drawImage(buf, 0, 0, VW * K, VH * K);
+    gt.setTransform(K, 0, 0, K, 0, 0); textes(gt, st, t);
+  };
 }
 
 /* ---------- le dessin d'une image ---------- */
@@ -679,25 +674,29 @@ function dessiner(g, st, now, heure){
   if (heure === "nuit"){ g.save(); g.globalCompositeOperation = "lighter"; g.globalAlpha = .2 + .15 * glow; g.drawImage(SPR[0].glow[1], gp[1] - 3, gp[2] - 3); g.restore(); }
 
   // ---------- l'interface
-  plate(g, 4, 6, 108, 32);
-  logo(g, "BASSIN 3", 11, 11, 9, ["#fff6c2", "#ffd23f", "#e0782a"]);
-  text(g, "BUT : " + MIN + " COUPS", 11, 26, 6, "#a8d0f4");
+  plate(g, 4, 6, 108, 34);
   const appui = st.appui && now - st.appui.t < 160 ? st.appui.a : null;
   for (const b of BOUTONS){
     const ic = b.a === "reco" ? ICON_RE : ICON_UNDO;
     plate(g, b.x, b.y, b.w, b.h);
     if (appui === b.a) R(g, b.x + 2, b.y + 2, b.w - 4, b.h - 4, "rgba(255,210,63,.25)");
     g.drawImage(ic, b.x + b.w / 2 - (ic.width >> 1), b.y + 4);
-    text(g, b.a === "reco" ? "REJOUER" : "ANNULER", b.x + b.w / 2, b.y + 21, 7, "#ffffff", "center");
   }
   const etoiles = !st.gagne ? 0 : st.coups <= MIN ? 3 : st.coups <= MIN + 4 ? 2 : 1;
   plate(g, 142, 344, 70, 34);
-  text(g, "COUPS " + st.coups, 177, 348, 7, "#ffffff", "center");
-  for (let k = 0; k < 3; k++) g.drawImage(k < etoiles ? STAR : STAR0, 147 + k * 21, 359);
+  for (let k = 0; k < 3; k++) g.drawImage(k < etoiles ? STAR : STAR0, 147 + k * 21, 360);
+  if (st.gagne && now - st.gagne > 1200) plate(g, 22, 150, 172, 64);
+}
+// les textes, sur la toile fine : logos en Press Start 2P, le reste en Rajdhani 700
+function textes(g, st, now){
+  logo(g, "BASSIN 3", 11, 11, 9, ["#fff6c2", "#ffd23f", "#e0782a"]);
+  text(g, "Objectif : " + MIN + " coups", 11, 24, 11, "#a8d0f4");
+  for (const b of BOUTONS) text(g, b.a === "reco" ? "REJOUER" : "ANNULER", b.x + b.w / 2, b.y + 19, 12, "#ffffff", "center");
+  text(g, "COUPS " + st.coups, 177, 345, 12, "#ffffff", "center");
   if (st.gagne && now - st.gagne > 1200){
-    plate(g, 22, 150, 172, 64);
-    logo(g, "A QUAI !", VW / 2, 162, 16, ["#fff6c2", "#ffd23f", "#e0782a"], "center");
-    text(g, st.coups + " COUPS", VW / 2, 190, 8, "#ffffff", "center");
+    logo(g, "A QUAI !", VW / 2, 160, 16, ["#fff6c2", "#ffd23f", "#e0782a"], "center");
+    const e = st.coups <= MIN ? 3 : st.coups <= MIN + 4 ? 2 : 1;
+    text(g, st.coups + " coups · " + e + (e > 1 ? " étoiles" : " étoile"), VW / 2, 186, 14, "#ffffff", "center");
   }
 }
 
@@ -742,7 +741,7 @@ function ambiance(g, heure, lt){
 /* ---------- démarrage ---------- */
 let tels = [];
 function boucle(t){ tels.forEach(f => f(t)); requestAnimationFrame(boucle); }
-(document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => {
+Promise.all(['8px "Press Start 2P"', '700 10px Rajdhani'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : null)).then(() => {
   prepare();
   tels = [...document.querySelectorAll(".tel canvas")].map(Tel);
   requestAnimationFrame(boucle);
