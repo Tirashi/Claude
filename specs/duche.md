@@ -1,8 +1,8 @@
 # Duché — cahier des charges
 
-Petit jeu de gestion et de conquête au tour par tour. Le joueur dirige un duché médiéval sur une carte de 6 × 6 terres : il le développe, conquiert les terres de trois seigneurs rivaux et vise la couronne laissée vacante par le roi. **Duché du jour** commun à la famille (même carte, mêmes rivaux, mêmes événements), avec classement.
+Petit jeu de gestion et de conquête au tour par tour. Le joueur dirige un duché médiéval sur une carte de **37 terres hexagonales** : il le développe, conquiert les terres de trois seigneurs rivaux et vise la couronne laissée vacante par le roi. **Duché du jour** commun à la famille (même carte, mêmes rivaux, mêmes événements), avec classement.
 
-Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la Ludothèque** (voir § 1). Remplace l'idée « Le Petit Royaume » d'`IDEES.md`, qui en était très proche.
+Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la Ludothèque** (voir § 1). Remplace l'idée « Le Petit Royaume » d'`IDEES.md` (confirmé le 20/10). **4X minimaliste** : carte en hexagones (choix de l'utilisateur du 20/10, après le refus de la maquette 1 en cases carrées).
 
 ## 1. Ce qui change par rapport au cahier des charges d'origine
 
@@ -12,7 +12,7 @@ Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la 
 | Table Supabase `scores` à créer, pseudo saisi en fin de partie | **`ludo-scores.js`** (jeu `duche`, tableaux `daily:AAAAMMJJ` et `best`) ; le joueur est celui du **code familial** de l'accueil | Tous les jeux partagent ces classements ; pas de nouveau SQL, pas de nouvelle clé |
 | Graine = date **UTC** `YYYY-MM-DD` | Date **locale** `AAAAMMJJ`, comme tous les défis du jour | Le jour change à minuit pour toute la famille, comme les autres jeux |
 | Mode du jour rejouable | **Une seule tentative classée par jour** (règle du 15/10) : partie du jour sauvegardée à part (`duche.dailyRun`) et reprise où on l'a laissée ; `duche.dailyTry` posé dès le premier tour ; une fois finie, le jour se rejoue hors classement | Contre la triche (rejouer une carte connue) |
-| Emojis, grille CSS, desktop d'abord | **Pixel art 32 bits** (DA de la planche des coups de cœur), canvas en **portrait** sur le téléphone ; textes en Press Start 2P (titres, sans accents) et Rajdhani 700 | Style de la Ludothèque ; le site est une appli installée sur Android |
+| Emojis, grille CSS 6 × 6, desktop d'abord | Carte en **hexagones**, dessin **vectoriel minimaliste** sur un canvas en **portrait** (direction à choisir dans `maquettes/duche-2.html`) | Choix de l'utilisateur (20/10) ; le site est une appli installée sur Android |
 | Pas de sons en v1 | Bruitages et musique **discrets**, synthétisés en Web Audio (`sons.js`), coupables | Standard des derniers jeux (Capitaine du port, Magasinier) |
 | Événement au milieu du tour, conquête après l'IA | Ordre revu (§ 5) : **événement en début de tour**, attaques parmi les décisions du joueur | Le choix de l'événement éclaire les décisions ; une seule phase où le joueur agit |
 | Classement top 50 + onglet historique | Volet de l'accueil : classement du jour et meilleur score (`best`) | Déjà fourni par l'accueil |
@@ -21,16 +21,16 @@ Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la 
 ## 2. Principe
 
 - **Partie** : 30 tours au plus (un tour = une saison, l'an 1 au printemps ; 30 tours = 7 ans et demi).
-- **Modes** : **Duché du jour** (graine = date, classé, une tentative) et **Partie libre** (graine au hasard, non classée, meilleur score gardé dans `duche.best` et envoyé au tableau `best` ? → à confirmer, § 15).
+- **Modes** : **Duché du jour** (graine = date, classé, une tentative) et **Partie libre** (graine au hasard, non classée au jour ; son meilleur score va au tableau `best`, confirmé le 20/10).
 - **Défaite** : château du joueur pris ; ou plus aucun soldat ni or ni moyen d'en produire ; ou **révolte générale** (légitimité à 0).
 - **Victoires anticipées** : **conquête** (toutes les terres non neutres et tous les châteaux) ou **couronne** (majorité des votes de la noblesse, § 9).
 - **Fin normale** : après le tour 30, calcul du score.
 
 ## 3. La carte
 
-- **6 × 6 terres** (36), tirées de la graine (§ 7). Chaque terre : **terrain**, **qualité** 1 à 3 (petits épis ou pierres dessinés), **propriétaire** (joueur, rival 1 à 3, neutre), **bâtiment** (un au plus), **garnison** (soldats).
-- Le joueur commence dans un **coin** (en bas à gauche), château sur une **plaine**, + 2 terres voisines. Les 3 rivaux dans les autres coins, château + 2 terres. Le reste est neutre ; 4 à 7 terres neutres tiennent une **bande de brigands** (garnison 2 à 6).
-- Voisinage : les 4 voisins (haut, bas, gauche, droite).
+- **37 terres hexagonales** (un grand hexagone de 4 terres de côté, coordonnées axiales q, r ; pointe en haut), tirées de la graine (§ 7). Peut-être 61 terres (5 de côté), à décider. Chaque terre : **terrain**, **qualité** 1 à 3 (petits épis ou pierres dessinés), **propriétaire** (joueur, rival 1 à 3, neutre), **bâtiment** (un au plus), **garnison** (soldats).
+- Le joueur commence dans un **coin** de l'hexagone (en bas à gauche), château sur une **plaine**, + 2 terres voisines. Les 3 rivaux dans trois autres coins (en haut, en haut à droite, à droite), château + 2 terres. Le reste est neutre ; 4 à 7 terres neutres tiennent une **bande de brigands** (garnison 2 à 6).
+- Voisinage : les **6 voisines** de chaque hexagone.
 
 ### Terrains (rendement de base × qualité, par tour)
 
@@ -147,24 +147,25 @@ Paquet mélangé par la graine, sans répétition avant épuisement, **tirage po
 ## 13. Technique
 
 - `duche/regles.js` : état + règles pures (`ducNouvelle(graine)`, `ducRevenus`, `ducConstruire`, `ducRecruter`, `ducDeplacer`, `ducAttaquer`, `ducChance`, `ducFinTour`, `ducScore`, `ducVictoire`), `duche/ia.js` (`ducIaJouer(etat, rival)`), `duche/evenements.js` (`DUC_EVENEMENTS`, `ducTirerEvenement`, `ducRepondre`). Toutes **fonctions pures** sur un état JSON (`RUN_V` + `migrate`), rien sur le DOM ; aussi chargées par Node.
-- `duche/decor.js` (sprites pixel art des terrains, bâtiments, bannières, soldats), `duche/sons.js` (`DucSons`), `duche/jeu.js` (affichage, gestes, écrans, sauvegarde, classements ; `window.Duche` pour les tests).
-- Canvas pixel art 216 × (384 à 468) agrandi sans lissage, textes écrits sur la toile fine (comme Capitaine du port) ; menus en HTML (`.plaque`).
+- `duche/decor.js` (dessins vectoriels des terrains, bâtiments, frontières, pions), `duche/sons.js` (`DucSons`), `duche/jeu.js` (affichage, gestes, écrans, sauvegarde, classements ; `window.Duche` pour les tests).
+- Canvas vectoriel net en portrait (360 × 640 logiques, à la densité de l'écran) ; menus en HTML.
 - Sauvegardes : `duche.run` (partie libre), `duche.dailyRun`, `duche.dailyTry`, `duche.daily` {AAAAMMJJ: score}, `duche.best`, `duche.opts`, `duche.tuto`. Transfert `LUDO1-` : `daily`, `best`.
 - Accueil : `GAMES`, `META` en tête, `NEWS`, `PROGRESS`, `TODAY`, `RECS`, `RANKS` ; `PSEUDO_BOARDS` ; `sw.js` ; icône 16×16 (un donjon) ; `outils/verifications.js`, `fumee.js`, `logique.js`.
 
 ## 14. Plan de travail (Opus : moteur emmêlé avec IA)
 
-0. **Maquette** (cette conversation) : 3 directions sur un écran de téléphone, à valider.
+0. **Maquette** : maquette 1 en cases carrées (`maquettes/duche.html`) refusée ; maquette 2 en hexagones (`maquettes/duche-2.html`, https://claude.ai/artifact/SgpYQ8KUEtrnrsGQKkPBLY : A plateau, B table du stratège, C tuiles en relief) **à valider**.
 1. **Session 1 — Règles et IA** : `regles.js`, `ia.js`, `evenements.js`, simulateur Node (déterminisme, équilibrage : une partie dure ~30 tours, le joueur automatique gagne parfois, les rivaux ne s'effondrent pas tous seuls).
 2. **Session 2 — Le jeu** : `decor.js`, `jeu.js`, écrans, combat animé, événements, sauvegarde, partie libre.
 3. **Session 3 — Duché du jour et finitions** : jour, classements, sons, accueil, tests, artefact, équilibrage après les premières parties.
 
 ## 15. Points à confirmer par l'utilisateur
 
-1. La partie libre envoie-t-elle son meilleur score au tableau `best` (comme les autres jeux), ou rien du tout (comme dans le cahier d'origine) ?
-2. 30 tours, c'est 15 à 25 minutes : d'accord, ou une partie plus courte (20 tours) ?
-3. Duché remplace bien l'idée « Le Petit Royaume » ?
-4. La direction graphique (maquette).
+Réglé le 20/10 : la partie libre envoie son meilleur score (`best`) ; Duché remplace Le Petit Royaume ; carte en hexagones, 4X minimaliste.
+
+1. La direction de la maquette 2 (A, B ou C).
+2. 37 terres ou 61 ?
+3. 30 tours (15 à 25 minutes) ou 20 ?
 
 ## 16. Critères d'acceptation
 
