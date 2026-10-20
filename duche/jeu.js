@@ -39,8 +39,16 @@
     if (!etat.fin) { ecrire(cle, etat); return; }
     const sc = ducScore(etat).total;
     infoFin = '';
-    if (cle === 'dailyRun') { const d = lire('daily', {}); d[etat.graine] = sc; ecrire('daily', d); infoFin = `Duché du jour du ${dateJour(etat.graine).toLowerCase()} : ${sc}.`; }
-    if (etat.niveau === 'normal' && etat.mode !== 'rejeu') { const b = lire('best', 0); if (sc > b) { ecrire('best', sc); infoFin += ' Nouveau record !'; } }
+    const LS = window.LudoScores, rang = (txt, r) => { if (r) { const el = $('fRang'); el.textContent = txt + LS.rankText(r); el.hidden = false; } };
+    if (cle === 'dailyRun') {
+      const d = lire('daily', {}); d[etat.graine] = sc; ecrire('daily', d); infoFin = `Duché du jour du ${dateJour(etat.graine).toLowerCase()} : ${sc}.`;
+      if (LS) LS.submit('duche', 'daily:' + etat.graine, sc, false).then(r => rang('Duché du jour : ', r)).catch(() => {});
+    }
+    if (etat.niveau === 'normal' && etat.mode !== 'rejeu') {
+      const b = lire('best', 0); if (sc > b) { ecrire('best', sc); infoFin += ' Nouveau record !'; }
+      if (LS && cle !== 'dailyRun') LS.submit('duche', 'best', sc, false).then(r => rang('Meilleur score : ', r)).catch(() => {});
+      else if (LS) LS.submit('duche', 'best', sc, false).catch(() => {});
+    }
     ecrire(cle, null); cle = null;
   }
   const dire = m => { msg = m; msgT = tNow; };
@@ -78,6 +86,17 @@
     if (!apercu || apercu.graine !== j) { apercu = ducNouvelle(j, 'jour', 'normal'); base = null; }
     montrer('eTitre');
   }
+  // ---------- sons ----------
+  const opts = Object.assign({ bruit: true, musique: true }, lire('opts', {}));
+  function majSons() {
+    DucSons.bruitages(opts.bruit); DucSons.musique(opts.musique);
+    ['bBruitT', 'bBruit'].forEach(id => { $(id).textContent = 'BRUITAGES : ' + (opts.bruit ? 'OUI' : 'NON'); });
+    ['bMusiqueT', 'bMusique'].forEach(id => { $(id).textContent = 'MUSIQUE : ' + (opts.musique ? 'OUI' : 'NON'); });
+    ecrire('opts', opts);
+  }
+  ['bBruitT', 'bBruit'].forEach(id => { $(id).onclick = () => { opts.bruit = !opts.bruit; majSons(); }; });
+  ['bMusiqueT', 'bMusique'].forEach(id => { $(id).onclick = () => { opts.musique = !opts.musique; majSons(); }; });
+  majSons();
   $('bContinuer').onclick = continuer;
   $('bJour').onclick = ducheDuJour;
   $('bLibre').onclick = () => montrer('eNiveau');
@@ -109,7 +128,9 @@
     $('fLignes').innerHTML = sc.lignes.map(([l, p]) => `<tr><td>${l}</td><td>${p >= 0 ? '' : '−'}${Math.abs(p)}</td></tr>`).join('') + `<tr class="total"><td>SCORE</td><td>${sc.total}</td></tr>`;
     const st = etat.stats;
     $('fFaits').textContent = `${st.prises} terre${st.prises > 1 ? 's' : ''} prise${st.prises > 1 ? 's' : ''} · ${st.rivauxTombes} rival${st.rivauxTombes > 1 ? 'aux' : ''} tombé${st.rivauxTombes > 1 ? 's' : ''} · légitimité au plus haut : ${st.picLeg} · tour ${f.tour}`;
+    $('fRang').hidden = true;
     sauver();
+    DucSons.jouer(f.type === 'couronne' ? 'couronne' : f.type === 'conquete' ? 'victoire' : f.type === 'defaite' || f.type === 'rival' ? 'defaite' : 'cloche');
     $('fInfo').textContent = (infoFin || (etat.mode === 'rejeu' ? 'Partie hors classement.' : '')).trim();
     $('bRejouer').hidden = etat.mode !== 'libre';
     montrer('eFin');
@@ -129,6 +150,7 @@
     return out;
   }
   function alerte() {
+    if (etat.tour === 1 && !lire('tuto', false)) return ['Touchez une terre voisine pour l\'attaquer, votre château pour recruter.', '#8ee070'];
     const p = ducProduction(etat, 0);
     if (J().nour + p.nour - p.entretien < 0) return ['Famine au prochain tour : nourrissez l\'armée !', '#f07060'];
     if (J().leg < 10) return ['Le peuple gronde : légitimité très basse.', '#f07060'];
@@ -223,7 +245,7 @@
       if (mode === 'recruter') {
         const max = ducRecruesMax(etat, 0, i), c = ducCoutRecrues(etat, 0, nb);
         T(max ? `Recruter ${nb} : −${c.nour} nourriture, −${c.or} or` : ducSoldats(etat, 0) >= ducPlafond(etat, 0) ? 'Plafond atteint : bâtissez une caserne.' : 'Pas assez de nourriture ou d\'or.', 10, y0 + 45, { s: 8.5, c: '#f1e6d0' });
-        if (max) { moinsPlus(10, ay, nb, 1, max, v => { nb = v; }); btn(98, ay, 108, 20, 'fort', () => { if (agir(ducRecruter(etat, 0, i, nb), `${nb} recrue${nb > 1 ? 's' : ''} au ${t.bat === 'chateau' ? 'château' : 'quartier'}.`)) mode = null; }, 'RECRUTER'); }
+        if (max) { moinsPlus(10, ay, nb, 1, max, v => { nb = v; }); btn(98, ay, 108, 20, 'fort', () => { if (agir(ducRecruter(etat, 0, i, nb), `${nb} recrue${nb > 1 ? 's' : ''} au ${t.bat === 'chateau' ? 'château' : 'quartier'}.`, 'recruter')) mode = null; }, 'RECRUTER'); }
         btn(10, y0 + 84, 196, 22, 'normal', () => { mode = null; }, 'RETOUR');
         return;
       }
@@ -263,7 +285,7 @@
     T(`${J().bois} bois · ${J().or} or`, 206, y0 + 10, { s: 8.5, a: 'right', c: '#c8b08a' });
     ORDRE_BAT.forEach((b, j) => {
       const x = 10 + (j % 2) * 100, y = y0 + 18 + Math.floor(j / 2) * 21, c = ducCoutBat(etat, b), ok = !ducPeutConstruire(etat, 0, i, b), B = DUC_BATIMENTS[b];
-      btn(x, y, 96, 19, 'normal', ok ? () => { if (agir(ducConstruire(etat, 0, i, b), `${B.nom} bâti${b === 'ferme' || b === 'scierie' || b === 'mine' || b === 'caserne' || b === 'tour' ? 'e' : ''}.`)) mode = null; } : null);
+      btn(x, y, 96, 19, 'normal', ok ? () => { if (agir(ducConstruire(etat, 0, i, b), `${B.nom} bâti${b === 'ferme' || b === 'scierie' || b === 'mine' || b === 'caserne' || b === 'tour' ? 'e' : ''}.`, 'batir')) mode = null; } : null);
       T(B.nom, x + 5, y + 6, { s: 8, c: ok ? '#fff' : '#8a7a68' });
       T(`${c.bois} bois${c.or ? ' ' + c.or + ' or' : ''}`, x + 91, y + 6, { s: 7, a: 'right', c: ok ? '#f0c24a' : '#8a7a68' });
       T(B.effet.split(',')[0], x + 5, y + 13.5, { s: 6.5, c: ok ? '#e8d8b8' : '#7a6a58' });
@@ -275,13 +297,13 @@
     T(`${DUC_CHANGES - J().change} échange${DUC_CHANGES - J().change > 1 ? 's' : ''} ce tour`, 206, y0 + 10, { s: 8.5, a: 'right', c: '#c8b08a' });
     T(`${J().bois} bois · ${J().or} or`, 10, y0 + 24, { s: 8.5, c: '#f1e6d0' });
     const reste = J().change < DUC_CHANGES;
-    btn(10, y0 + 40, 96, 30, 'normal', reste && J().bois >= 2 ? () => agir(ducChanger(etat, 0, 'or'), 'Vendu : 2 bois pour 1 or.') : null, 'VENDRE', '2 bois → 1 or');
-    btn(110, y0 + 40, 96, 30, 'normal', reste && J().or >= 1 ? () => agir(ducChanger(etat, 0, 'bois'), 'Acheté : 2 bois pour 1 or.') : null, 'ACHETER', '1 or → 2 bois');
+    btn(10, y0 + 40, 96, 30, 'normal', reste && J().bois >= 2 ? () => agir(ducChanger(etat, 0, 'or'), 'Vendu : 2 bois pour 1 or.', 'pieces') : null, 'VENDRE', '2 bois → 1 or');
+    btn(110, y0 + 40, 96, 30, 'normal', reste && J().or >= 1 ? () => agir(ducChanger(etat, 0, 'bois'), 'Acheté : 2 bois pour 1 or.', 'pieces') : null, 'ACHETER', '1 or → 2 bois');
     btn(10, y0 + 84, 196, 22, 'normal', () => { mode = null; }, 'RETOUR');
   }
-  function agir(res, texte) {
+  function agir(res, texte, son) {
     if (!res || !res.ok) { dire(res ? res.raison : 'Impossible.'); return false; }
-    dire(texte); sauver();
+    dire(texte); DucSons.jouer(son || 'clic'); sauver();
     if (etat.fin) finir();
     return true;
   }
@@ -291,7 +313,8 @@
     const t = etat.terres[i], avant = { terrain: t.t, def: t.prop, brig: t.brig || t.prop < 0, garnison: t.gar, defense: ducDefense(etat, i) };
     const res = ducAttaquer(etat, 0, i, sourcesPour(i, n));
     if (!res.ok) { dire(res.raison); return; }
-    combat = Object.assign({ i, t0: tNow, res, saison: ducSaison(etat.tour) }, avant);
+    combat = Object.assign({ i, t0: tNow, res, saison: ducSaison(etat.tour), passeSon: 0 }, avant);
+    DucSons.jouer('tambour');
     sel = i; mode = null; ecran = 'combat'; sauver();
   }
   function finCombat() {
@@ -307,6 +330,8 @@
   function dessinerCombat() {
     const c = combat, t = tNow - c.t0, R = c.res, fini = t >= 6.2;
     const passe = t < 1.6 ? 0 : Math.min(3, 1 + Math.floor((t - 1.6) / 1.5)), ph = t < 1.6 ? 0 : ((t - 1.6) % 1.5) / 1.5;
+    if (passe > c.passeSon && !fini) { c.passeSon = passe; DucSons.jouer('epee'); }
+    if (fini && c.passeSon < 9) { c.passeSon = 9; DucSons.jouer(R.gagne ? 'victoire' : 'defaite'); }
     const na = R.n - Math.round(R.pertesA * passe / 3), nd = c.garnison - Math.round(R.pertesD * passe / 3);
     D.plaque(L, 0, 0, W, H); hud(); D.plaque(L, 3, 240, 210, 104);
     const bar = (x, y, w, n, max, col, dir) => { r(L, x, y, w, 9, '#120c08'); r(L, x + 1, y + 1, w - 2, 7, '#2a1a10'); const ww = Math.round((w - 2) * n / Math.max(1, max)); r(L, dir > 0 ? x + 1 : x + w - 1 - ww, y + 1, ww, 7, col); r(L, dir > 0 ? x + 1 : x + w - 1 - ww, y + 1, ww, 1, 'rgba(255,255,255,.4)'); };
@@ -364,6 +389,7 @@
   // ---------- fin du tour : les rivaux jouent ----------
   function finTour() {
     if (etat.evt) { ecran = 'evenement'; return; }
+    DucSons.jouer('tambour'); if (etat.tour === 1) ecrire('tuto', true);
     const n0 = etat.journal.length, tour = etat.tour;
     ducFinTour(etat);
     sel = -1; mode = null; marche = null;
@@ -386,7 +412,7 @@
     ecran = 'carte';
     if (etat.fin) { finir(); return; }
     dire(neufs.length ? neufs[neufs.length - 1].txt : `${ducSaison(etat.tour)[0].toUpperCase() + ducSaison(etat.tour).slice(1)} de l'an ${ducAn(etat.tour)}.`);
-    if (etat.evt) ecran = 'evenement';
+    if (etat.evt) { ecran = 'evenement'; DucSons.jouer('cloche', 0.3); }
   }
 
   // ---------- événement ----------
@@ -494,6 +520,7 @@
   }
   const polices = document.fonts ? Promise.all(["10px 'Press Start 2P'", '700 10px Rajdhani', '500 10px Rajdhani'].map(x => document.fonts.load(x))).catch(() => {}) : Promise.resolve();
   taille(); titre();
+  if (location.hash === '#jour') ducheDuJour();
   polices.then(() => requestAnimationFrame(boucle));
   document.addEventListener('visibilitychange', () => { if (document.hidden) sauver(); });
 

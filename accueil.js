@@ -47,6 +47,8 @@ const GAMES = [
    d: "Le Yams classique avec de vrais dés en 3D : lance-les d'un geste, garde les bons et remplis les 13 cases de la feuille. Six styles de dés à débloquer, de la taverne à la Lune.", tags: ["3D", "DÉS", "6 STYLES"]},
   {k: "odyssee/index.html", n: "ODYSSEE", s: "ODYSSEE", ic: "galere", fam: "3d", lb: "linear-gradient(#9fdcff, #1fb0c9)", lt: "#13506e", sh: "#2bb3cf", rank: "odyssee",
    d: "Penche le téléphone pour ramener la galère d'Ulysse de Troie à Ithaque : Polyphème, Éole, Circé, les Sirènes, Charybde et Scylla… 30 plateaux en 3D et un plateau du jour pour toute la famille.", tags: ["3D", "PLATEAU DU JOUR"]},
+  {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
+   d: "Un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtis, recrute, conquiers les terres de trois seigneurs rivaux et gagne la couronne en 30 saisons. Combats en scènes HD-2D, événements, un Duché du jour pour toute la famille.", tags: ["STRATEGIE", "30 TOURS", "DUCHE DU JOUR"]},
   {k: "mot-d-or/index.html", n: "LE MOT D'OR", s: "MOT D'OR", ic: "motdor", fam: "32", lb: "linear-gradient(#7a2a20, #2a0e0a)", lt: "#ffd23f", sh: "#b0402c", rank: "motdor",
    d: "Un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe. Or : bien placée ; argent : mal placée. Le même mot pour toute la famille, et un entraînement pour rejouer.", tags: ["MOTS", "MOT DU JOUR"]},
   {k: "capitaine-du-port/index.html", n: "CAPITAINE DU PORT", s: "CAPITAINE", ic: "remorqueur", fam: "32", lb: "linear-gradient(#2a7c97, #163f66)", lt: "#ffd23f", sh: "#2a7c97", rank: "capitaine",
@@ -71,6 +73,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "duche/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "DU JOUR"]},
   "mot-d-or/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
   "capitaine-du-port/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
   "magasinier/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
@@ -99,6 +102,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-21", "Nouveau jeu : Duché, un petit 4X au tour par tour sur 37 terres hexagonales. Bâtis, recrute, prends les terres des trois seigneurs rivaux et gagne la couronne quand le vieux roi meurt : un grand électeur vote un tour sur deux. Combats en scènes HD-2D, événements illustrés, partie libre (facile ou normal) et un Duché du jour pour toute la famille, une seule tentative classée."],
   ["2026-10-20", "Nouveau jeu : Le Mot d'or, un mot de 6 lettres par jour à trouver en 6 essais. Les tuiles se retournent en or (bien placée), en argent (mal placée) ou en gris (absente). Le même mot pour toute la famille, une seule tentative classée, une série de jours à faire durer, et un entraînement pour rejouer autant qu'on veut."],
   ["2026-10-20", "Nouveau jeu : Capitaine du port, un casse-tête de bateaux en pixel art 32 bits. Glisse les bateaux du bassin pour ouvrir la passe au navire doré, dans 60 bassins et 5 ports (bouées, épaves, grands navires de 4 cases, grand port en 7 × 7), et tente le bassin du jour : une seule tentative classée, au plus petit nombre de coups."],
   ["2026-10-20", "Nouveau jeu : Le Magasinier, un Sokoban en HD-2D façon Octopath Traveler. Pousse les caisses sur les marques dans 60 niveaux et 5 entrepôts (glace, tapis roulants, caisses en fonte), et tente la grille du jour : une seule tentative classée, au plus petit nombre de coups."],
@@ -166,6 +170,7 @@ const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))
 const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
 // ce qui attend d'être repris (null si rien)
 const PROGRESS = {
+  "duche/index.html": () => { const d = rk("duche.dailyRun", null), r = rk("duche.run", null); return d && d.graine === dayNum() ? "DUCHE DU JOUR" : r && r.tour ? `TOUR ${r.tour}/30` : null; },
   "mot-d-or/index.html": () => { const j = rk("motdor.jour", null); return j && j.j === dayNum() && !j.fini && (j.rows || []).length ? "MOT DU JOUR" : null; },
   "capitaine-du-port/index.html": () => { const d = rk("capitaine.dailyRun", null), p = rk("capitaine.partie", null);
     return d && d.j === dayNum() ? "BASSIN DU JOUR" : p && p.coups ? "BASSIN " + (p.n + 1) : null; },
@@ -186,6 +191,7 @@ const PROGRESS = {
 };
 // défi du jour : null = pas de défi du jour, false = à faire, true = joué (puzzles : réussi ; missions : tentative commencée)
 const TODAY = {
+  "duche/index.html": () => { const t = rk("duche.dailyTry", null); return !!(t && t.j === dayNum()); },
   "mot-d-or/index.html": () => { const j = rk("motdor.jour", null); return !!(j && j.j === dayNum() && j.fini); },
   "capitaine-du-port/index.html": () => !!(rk("capitaine.daily", {}) || {})[dayNum()],
   "queens/index.html": () => !!(rk("queens16.daily", {}) || {})[dayNum()],
@@ -205,6 +211,7 @@ const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catc
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
 const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
 const RECS = {
+  "duche/index.html": () => [["Meilleur score (normal)", num(rk("duche.best", 0), "pts")], ["Duchés du jour", num(count(rk("duche.daily", {})))]],
   "mot-d-or/index.html": () => { const s = rk("motdor.stats", {}) || {};
     return [["Mots du jour trouvés", num(s.gagnees)], ["Meilleure série", num(s.record, s.record > 1 ? "jours" : "jour")], ["Parties", num(s.parties)]]; },
   "capitaine-du-port/index.html": () => { const f = rk("capitaine.niveaux", {}) || {}, n = Object.values(f).reduce((a, v) => a + (Number(v && v.etoiles) || 0), 0);
@@ -513,6 +520,11 @@ const RANKS = {
      empty: () => st.back ? "Personne n'a trouvé le mot ce jour-là." : "Personne n'a encore trouvé le mot du jour : à toi !"},
     {label: "SERIE", game: "motdor", board: () => "serie", fmt: v => N(v) + (v > 1 ? " jours" : " jour"), title: () => "MEILLEURE SERIE",
      note: "Le plus de jours d'affilée avec le mot du jour trouvé."}],
+  duche: [{label: "MEILLEUR SCORE", game: "duche", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEUR REGNE",
+     note: "Le meilleur score d'une partie en normal (Duché du jour compris) : terres ×100, or, bois ÷ 2, bâtiments ×20, légitimité ×5, votes ×50, primes de victoire."},
+    {label: "DUCHE DU JOUR", ctl: ["day"], game: "duche", board: daily, fmt: v => N(v) + " pts", title: () => "DUCHE DU JOUR",
+     note: "La même carte, les mêmes rivaux et les mêmes événements pour toute la famille, en normal. Une seule tentative classée par jour.",
+     empty: () => st.back ? "Personne n'a régné sur le duché ce jour-là." : "Personne n'a encore joué le Duché du jour : à toi !"}],
   capitaine: [{label: "ETOILES", game: "capitaine", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
      note: "Par bassin : 3 étoiles jusqu'à 10 % au-dessus du minimum de coups (au moins un coup de marge), 2 jusqu'à 50 % au-dessus, sinon 1 (180 au maximum)."},
     {label: "BASSIN DU JOUR", ctl: ["day"], game: "capitaine", board: daily, fmt: v => N(v) + (v > 1 ? " coups" : " coup"), title: () => "BASSIN DU JOUR",
@@ -866,6 +878,8 @@ function collectSaves(){
   if (ya.b || ya.p) g.yams = ya;
   const od = {s: readKey("odyssee.stars", {}) || {}, b: readKey("odyssee.best", {}) || {}, d: readKey("odyssee.daily", {}) || {}};
   if (Object.keys(od.s).length || Object.keys(od.d).length) g.odyssee = od;
+  const du = {b: Number(readKey("duche.best", 0)) || 0, d: readKey("duche.daily", {}) || {}};
+  if (du.b || Object.keys(du.d).length) g.duche = du;
   const mg = {n: readKey("magasinier.niveaux", {}) || {}, d: readKey("magasinier.daily", {}) || {}};
   if (Object.keys(mg.n).length || Object.keys(mg.d).length) g.magasinier = mg;
   const mo = {s: readKey("motdor.stats", null), d: readKey("motdor.daily", {}) || {}};
@@ -904,6 +918,7 @@ function describeSaves(g){
   if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
   if (g.lunerover){ const n = Object.values(g.lunerover).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Lune-Rover : ${n} étoile${n > 1 ? "s" : ""}`); }
   if (g.odyssee){ const n = Object.values(g.odyssee.s || {}).reduce((s, v) => s + (Number(v) || 0), 0); out.push(`Odyssée : ${n} étoile${n > 1 ? "s" : ""}`); }
+  if (g.duche){ const d = Object.keys(g.duche.d || {}).length; out.push(`Duché : meilleur score ${g.duche.b || 0}${d ? `, ${d} duché${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.magasinier){ const n = Object.values(g.magasinier.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.magasinier.d || {}).length;
     out.push(`Le Magasinier : ${n} étoile${n > 1 ? "s" : ""}${d ? `, ${d} grille${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.motdor && g.motdor.s){ const s = g.motdor.s; out.push(`Le Mot d'or : ${s.gagnees || 0} mot${s.gagnees > 1 ? "s" : ""} du jour trouvé${s.gagnees > 1 ? "s" : ""}, meilleure série ${s.record || 0}`); }
@@ -1049,6 +1064,13 @@ function mergeSaves(g){
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
     writeKey("odyssee.best", best);
     if (n){ writeKey("odyssee.stars", stars); writeKey("odyssee.daily", daily); done.push(`Odyssée : ${n} plateau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
+  }
+  if (g.duche && typeof g.duche === "object"){
+    // fusion : le meilleur score, et pour chaque Duché du jour le plus haut
+    const a = g.duche, daily = readKey("duche.daily", {}) || {}; let n = 0;
+    if (Number(a.b) > (Number(readKey("duche.best", 0)) || 0)){ writeKey("duche.best", Math.round(a.b)); n++; }
+    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
+    if (n){ writeKey("duche.daily", daily); done.push(`Duché : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.magasinier && typeof g.magasinier === "object"){
     // fusion : pour chaque niveau, le moins de coups et le plus d'étoiles ; pour chaque grille du jour, le moins de coups

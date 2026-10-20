@@ -23,6 +23,8 @@ h1 { margin: 0 0 4px; font-size: 30px; line-height: 1.4; letter-spacing: 2px; }
 .titre2 { font-size: 13px !important; line-height: 1.6 !important; }
 .petit { font-size: 15px !important; color: var(--doux); }
 p.or { color: var(--or); }
+.rang { display: flex; gap: 8px; }
+.rang button { flex: 1; font-size: 15px; padding: 8px 4px; }
 .aide .texte { text-align: left; display: flex; flex-direction: column; gap: 8px; }
 .aide .texte p { font-size: 15px; font-weight: 500; line-height: 1.3; }
 .aide .texte b { color: var(--or); font-weight: 700; }

@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html',
   'mot-d-or/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -95,6 +95,26 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Le Magasinier : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-magasinier.png` });
+    }
+    if (url === 'duche/index.html') {
+      // Duché : une partie libre, une attaque jouée jusqu'au bout, un tour des rivaux, un événement répondu, abdiquer → écran de fin ; le Duché du jour se charge
+      const r = await p.evaluate(async () => {
+        const U = Duche, wait = ms => new Promise(r => setTimeout(r, ms));
+        U.libre('normal'); const e = U.etat(); if (!e || e.tour !== 1) return 'pas de partie libre';
+        const c = e.terres.findIndex((t, i) => t.prop !== 0 && !ducPeutAttaquer(e, 0, i));
+        if (c < 0) return 'aucune terre à attaquer';
+        U.choisir(c); U.attaquer(c, 1); if (U.ecran() !== 'combat') return 'pas de scène de combat';
+        await wait(300); U.finCombat(); if (U.ecran() !== 'carte') return 'le combat ne rend pas la carte';
+        for (let n = 0; n < 4; n++) { U.finTour(); U.passerRivaux(); if (U.etat().evt) { const ch = ducChoix(U.etat()).find(x => x.ok); U.repondre(ch.k); } }
+        if (U.etat().tour !== 5) return 'les tours n\'avancent pas (' + U.etat().tour + ')';
+        if (!localStorage.getItem('duche.run')) return 'partie pas sauvegardée';
+        document.getElementById('bAbandon').click(); document.getElementById('bAbandon').click();
+        await wait(100); if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        U.jour(); if (!U.etat() || U.etat().mode !== 'jour' || U.etat().niveau !== 'normal') return 'pas de Duché du jour';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Duché : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-duche.png` });
     }
     if (url === 'capitaine-du-port/index.html') {
       // Capitaine du port : un bassin gagné par sa solution, écran de fin ; annuler revient en arrière ; le bassin du jour se charge

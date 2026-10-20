@@ -27,6 +27,7 @@
       <button class="plaque" id="bAide">COMMENT JOUER</button>
       <p class="petit" id="tRecord"></p>
       <a class="plaque lien" href="../index.html#duche">CLASSEMENT</a>
+      <div class="rang"><button class="plaque" id="bBruitT">BRUITAGES : OUI</button><button class="plaque" id="bMusiqueT">MUSIQUE : OUI</button></div>
       <a class="plaque lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
     </div>
   </div>
@@ -45,6 +46,7 @@
       <p class="titre2">PAUSE</p>
       <button class="plaque" id="bReprendre">REPRENDRE</button>
       <button class="plaque" id="bAideP">COMMENT JOUER</button>
+      <div class="rang"><button class="plaque" id="bBruit">BRUITAGES : OUI</button><button class="plaque" id="bMusique">MUSIQUE : OUI</button></div>
       <button class="plaque" id="bTitreP">◀ TITRE</button>
       <button class="plaque rouge" id="bAbandon">ABDIQUER</button>
       <a class="plaque lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
@@ -74,6 +76,7 @@
       <table class="lignes" id="fLignes"></table>
       <p class="petit" id="fFaits"></p>
       <p class="petit or" id="fInfo"></p>
+      <p class="petit" id="fRang" hidden></p>
       <button class="plaque or" id="bRejouer">REJOUER</button>
       <button class="plaque" id="bTitreF">◀ TITRE</button>
     </div>
@@ -83,6 +86,8 @@
 <script src="evenements.js"></script>
 <script src="ia.js"></script>
 <script src="decor.js"></script>
+<script src="sons.js"></script>
+<script src="../ludo-scores.js"></script>
 <script src="jeu.js"></script>
 <script>
 /* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :

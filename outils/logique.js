@@ -166,6 +166,18 @@ const TESTS = {
     }
     return out;
   }, D),
+  'duche/index.html': async (p, D) => p.evaluate(D => {
+    // Duché du jour : même graine = même carte, mêmes rivaux, même paquet ; deux jours qui se suivent diffèrent
+    const out = [], cartes = new Set();
+    for (const { k } of D.slice(0, 10)) {
+      const a = ducNouvelle(k, 'jour', 'normal'), b = ducNouvelle(k, 'jour', 'normal');
+      if (JSON.stringify(a) !== JSON.stringify(b)) out.push(`duché du ${k} : deux tirages différents`);
+      if (a.terres.length !== 37 || a.seigneurs.some((S, s) => a.terres[S.chateau].prop !== s)) out.push(`duché du ${k} : carte abîmée`);
+      cartes.add(a.terres.map(t => t.t[0] + t.qual).join('') + a.seigneurs.map(S => S.traits.join()).join());
+    }
+    if (cartes.size < Math.min(10, D.length)) out.push('deux jours ont la même carte');
+    return out;
+  }, D),
   'mot-d-or/index.html': async (p, D) => p.evaluate(D => {
     const { motDuJour, evaluate, solutions, accepte } = window.MotDor, out = [], vus = new Set();
     for (const { k } of D) {
@@ -184,7 +196,7 @@ const TESTS = {
     const recs = { 'tetris16.best': 1234, 'queens16.best': { 6: 41000 }, 'sudoku.best': { '9-2': 300000 }, 'orbite.stars': { 3: 2 }, 'yams.best': 250, 'escadrille.best': { normal: 12 },
       'odyssee.stars': { '1-2': 3 }, 'nebula.best': 900, 'lunerover.stars': { 4: 3 }, 'amiral.best': { hard: 30 }, 'pontstellaire.best': { 9: 90000 },
       'amiral.palmares': { victoires: 3, normal: 1 }, 'amiral.daily': { 20261019: 24 }, 'magasinier.niveaux': { 0: { coups: 7, etoiles: 2 }, 13: { coups: 9, etoiles: 3 } },
-      'magasinier.daily': { 20261020: 41 }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 },
+      'magasinier.daily': { 20261020: 41 }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 }, 'duche.best': 3120, 'duche.daily': { 20261020: 2800 },
       'motdor.stats': { parties: 5, gagnees: 4, serie: 2, record: 3, dernier: 20261019, dist: [0, 1, 2, 1, 0, 0] }, 'motdor.daily': { 20261019: 3 } };
     const A = window.Accueil, keep = { ...localStorage }; localStorage.clear();
     for (const [k, v] of Object.entries(recs)) localStorage.setItem(k, JSON.stringify(v));
