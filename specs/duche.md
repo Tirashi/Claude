@@ -12,7 +12,7 @@ Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la 
 | Table Supabase `scores` à créer, pseudo saisi en fin de partie | **`ludo-scores.js`** (jeu `duche`, tableaux `daily:AAAAMMJJ` et `best`) ; le joueur est celui du **code familial** de l'accueil | Tous les jeux partagent ces classements ; pas de nouveau SQL, pas de nouvelle clé |
 | Graine = date **UTC** `YYYY-MM-DD` | Date **locale** `AAAAMMJJ`, comme tous les défis du jour | Le jour change à minuit pour toute la famille, comme les autres jeux |
 | Mode du jour rejouable | **Une seule tentative classée par jour** (règle du 15/10) : partie du jour sauvegardée à part (`duche.dailyRun`) et reprise où on l'a laissée ; `duche.dailyTry` posé dès le premier tour ; une fois finie, le jour se rejoue hors classement | Contre la triche (rejouer une carte connue) |
-| Emojis, grille CSS 6 × 6, desktop d'abord | Carte en **hexagones**, dessinée et **animée** (eau, drapeaux, moulins, fumée, moutons, ombres des nuages) sur un canvas en **portrait** (direction à choisir dans `maquettes/duche-3.html`) | Choix de l'utilisateur (20/10) ; le site est une appli installée sur Android |
+| Emojis, grille CSS 6 × 6, desktop d'abord | Carte en **hexagones**, dessinée et **animée** (eau, drapeaux, moulins, fumée, moutons, ombres des nuages) sur un canvas en **portrait** (direction A, **pixel art 32 bits**, retenue le 20/10 ; écrans dans `maquettes/duche-4.html`) | Choix de l'utilisateur (20/10) ; le site est une appli installée sur Android |
 | Pas de sons en v1 | Bruitages et musique **discrets**, synthétisés en Web Audio (`sons.js`), coupables | Standard des derniers jeux (Capitaine du port, Magasinier) |
 | Événement au milieu du tour, conquête après l'IA | Ordre revu (§ 5) : **événement en début de tour**, attaques parmi les décisions du joueur | Le choix de l'événement éclaire les décisions ; une seule phase où le joueur agit |
 | Classement top 50 + onglet historique | Volet de l'accueil : classement du jour et meilleur score (`best`) | Déjà fourni par l'accueil |
@@ -154,7 +154,7 @@ Paquet mélangé par la graine, sans répétition avant épuisement, **tirage po
 
 ## 14. Plan de travail (Opus : moteur emmêlé avec IA)
 
-0. **Maquette** : maquette 1 en cases carrées (`maquettes/duche.html`) refusée ; maquette 2 en hexagones vectoriels (`maquettes/duche-2.html`) jugée trop minimale graphiquement ; maquette 3 animée (`maquettes/duche-3.html`, https://claude.ai/artifact/L61tL9g7EwNQ9YXUryuqTg : A pixel art 32 bits, B illustré en relief) **à valider**.
+0. **Maquette** : maquette 1 en cases carrées (`maquettes/duche.html`) refusée ; maquette 2 en hexagones vectoriels (`maquettes/duche-2.html`) jugée trop minimale graphiquement ; maquette 3 animée (`maquettes/duche-3.html`) : **direction A (pixel art 32 bits) retenue**, animations jugées « pas trop mal » ; maquette 4 (`maquettes/duche-4.html`, https://claude.ai/artifact/DGTYKbMsBAhPhgncMyTxK3) creuse A sur trois écrans : carte (rivière qui coule de terre en terre, écume sur la côte, champs de blé, pins et chênes, oiseaux, petits soldats sur les garnisons, troupe qui marche), événement (parchemin illustré et animé, réponses avec leur prix), combat (petite scène en 3 passes, barres, terre qui passe à l'or) **à valider**.
 1. **Session 1 — Règles et IA** : `regles.js`, `ia.js`, `evenements.js`, simulateur Node (déterminisme, équilibrage : une partie dure ~30 tours, le joueur automatique gagne parfois, les rivaux ne s'effondrent pas tous seuls).
 2. **Session 2 — Le jeu** : `decor.js`, `jeu.js`, écrans, combat animé, événements, sauvegarde, partie libre.
 3. **Session 3 — Duché du jour et finitions** : jour, classements, sons, accueil, tests, artefact, équilibrage après les premières parties.
@@ -165,8 +165,9 @@ Réglé le 20/10 : la partie libre envoie son meilleur score (`best`) ; Duché r
 
 Réglé aussi : 30 tours, 37 terres.
 
-1. La direction de la maquette 3 (A ou B).
-2. La quantité d'animations.
+1. La maquette 4 suffit-elle pour lancer la programmation ?
+2. Combat en petite scène (maquette 4) ou seulement sur la carte ?
+3. Écran titre avec le château du joueur et la carte du jour en fond ?
 
 ## 16. Critères d'acceptation
 
