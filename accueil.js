@@ -564,7 +564,7 @@ function crowns(force){
 }
 
 /* ---------- le volet du jeu ---------- */
-const ov = $("ov"), vBody = $("vBody");
+const ov = $("ov"), vBody = $("vBody"), vClose = $("vClose");   // ✕ passe dans la barre du volet : le garder sous la main (sortie du document, $("vClose") rendait null)
 let cur = null, F = null, ticket = 0, pokeList = [];
 const ovOpen = () => ov.classList.contains("on");
 // la boîte de jeu en 3D : face avant, tranches
@@ -586,7 +586,7 @@ function openVolet(g, view){
   renderVolet();
   ov.classList.add("on"); document.body.classList.add("lock");
   $("volet").scrollTop = 0;
-  $("vClose").focus({preventScroll: true});
+  vClose.focus({preventScroll: true});
   // le bouton retour du téléphone ferme le volet au lieu de quitter l'accueil
   if (first) try { if (!(history.state && history.state.volet)) history.pushState({volet: g.k}, ""); } catch (e) {}
 }
@@ -597,7 +597,7 @@ function hideVolet(){
 }
 function closeVolet(){ try { if (history.state && history.state.volet){ history.back(); return; } } catch (e) {} hideVolet(); }
 addEventListener("popstate", () => { if (!(history.state && history.state.volet)) hideVolet(); });
-$("vClose").addEventListener("click", closeVolet);
+vClose.addEventListener("click", closeVolet);
 ov.addEventListener("click", e => { if (e.target === ov) closeVolet(); });
 
 function renderVolet(){
@@ -605,7 +605,7 @@ function renderVolet(){
   vBody.textContent = "";
   // la boîte, le titre, la description, les étiquettes et l'étoile des favoris
   // en haut, le titre et ✕ restent visibles quand on fait défiler
-  const bar = el("div", "vbar"), h = el("h3", "", g.n); h.id = "vTitle"; bar.append(h, $("vClose"));
+  const bar = el("div", "vbar"), h = el("h3", "", g.n); h.id = "vTitle"; bar.append(h, vClose);
   const head = el("div", "head"), txt = el("div");
   const tags = el("div", "tags");
   [...(m.genres || []), ...g.tags].forEach(t => tags.append(el("span", "", t)));
