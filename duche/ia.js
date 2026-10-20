@@ -39,6 +39,16 @@ function ducValeurTerre(etat, s, i, V) {
   return v;
 }
 
+// le seigneur qui mène : le plus de votes, puis le plus de terres
+function ducMeneur(etat) {
+  let best = -1, bk = null;
+  for (let s = 0; s < 4; s++) {
+    if (!etat.seigneurs[s].vivant) continue;
+    const k = etat.seigneurs[s].votes * 100 + ducTerresDe(etat, s).length;
+    if (bk === null || k > bk) { best = s; bk = k; }
+  }
+  return best;
+}
 // intérêt d'attaquer la terre c (0 si interdit ou sans intérêt)
 function ducIaValeurCible(etat, s, c, traits, V) {
   const t = etat.terres[c];
@@ -49,12 +59,13 @@ function ducIaValeurCible(etat, s, c, traits, V) {
   val *= ducA(traits, 'agressif') ? 1.4 : ducA(traits, 'marchand') ? 0.5 : 0.9;
   if (t.bat === 'chateau' && etat.seigneurs[t.prop].chateau === c) val += 12;
   if (t.prop === 0 && etat.roiMort && etat.seigneurs[0].votes >= 3) val += 4;   // freiner le joueur près de la couronne
+  if (t.prop === 0 && s > 0 && ducMeneur(etat) === 0) val += ducNiveau(etat).viseMeneur;   // mode normal : on s'en prend au joueur qui mène
   return val;
 }
 
 function ducIaAttaques(etat, s, traits, R, V) {
   const S = etat.seigneurs[s], bonus = ducBonus(etat, s);
-  const ratio = ducA(traits, 'agressif') ? 1.2 : ducA(traits, 'marchand') ? 2 : 1.5;
+  const ratio = (ducA(traits, 'agressif') ? 1.2 : ducA(traits, 'marchand') ? 2 : 1.5) - (s > 0 ? ducNiveau(etat).ratioIa : 0);
   for (let essai = 0; essai < 12 && !etat.fin && S.vivant; essai++) {
     let best = null, bs = 0;
     for (let c = 0; c < etat.terres.length; c++) {
@@ -147,7 +158,7 @@ function ducIaBatir(etat, s, traits, R, V) {
         if (b !== 'caserne' && libres <= 2 && !ducNbBat(etat, s, 'caserne') && sold >= plafond * 0.6) v *= 0.4;   // garder une place pour la caserne
         if (ducA(traits, 'batisseur')) v *= 1.3;
         v += interieur && b !== 'tour' ? 0.4 : 0;
-        const cout = (B.cout.bois * V.bois + B.cout.or * V.or) / 12;
+        const c = ducCoutBat(etat, b), cout = (c.bois * V.bois + c.or * V.or) / 12;
         const sc = v - cout + R() * 0.5;
         if (sc > bs) { bs = sc; best = { i, b }; }
       }

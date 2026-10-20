@@ -25,13 +25,13 @@ function jouerTour(e, style) {
   ducIaJouer(e, 0, style);
   if (!e.fin) ducFinTour(e);
 }
-function partie(graine, style, coupe) {
-  let e = ducNouvelle(graine, 'libre');
+function partie(graine, style, coupe, niveau) {
+  let e = ducNouvelle(graine, 'libre', niveau);
   const traces = {};
   for (let n = 0; n < 40 && !e.fin; n++) {
     if (coupe && e.tour === coupe) e = ducMigrer(JSON.parse(JSON.stringify(e)));   // sauvegarde et rechargement
     jouerTour(e, style || STYLE);
-    if ([10, 20, 30].includes(e.tour)) traces[e.tour] = [0, 1, 2, 3].map(s => ducTerresDe(e, s).length);
+    if ([10, 20, 30].includes(e.tour)) traces[e.tour] = [0, 1, 2, 3].map(s => ducTerresDe(e, s).length).concat(e.seigneurs[0].nour);
   }
   return { e, traces };
 }
@@ -53,7 +53,7 @@ function partie(graine, style, coupe) {
 
 // 2. règles de base
 {
-  const e = ducNouvelle(7), J = e.seigneurs[0], c = J.chateau;
+  const e = ducNouvelle(7, 'libre', 'facile'), J = e.seigneurs[0], c = J.chateau;
   e.evt = null; J.nour = 100; J.or = 100; J.bois = 100;
   const v = ducTerresDe(e, 0).find(i => i !== c);
   check(ducDeplacer(e, 0, c, v, 2).ok && !ducDeplacer(e, 0, v, c, 2).ok, 'déplacer : une fois par soldat et par tour');
@@ -70,34 +70,37 @@ function partie(graine, style, coupe) {
   check(sc.total === ducTerresDe(e, 0).length * 100 + J.or + Math.floor(J.bois / 2) + 20 * e.terres.filter(t => t.prop === 0 && t.bat && t.bat !== 'chateau').length + J.leg * 5, 'score : terres, or, bois, bâtiments, légitimité');
 }
 
-// 3. équilibrage
-const fins = {}, rivaux = { 10: 0, 20: 0, 30: 0 }, terres = { 10: [0, 0], 20: [0, 0], 30: [0, 0] };
-let tours = 0, score = 0, tombesSeuls = 0, maxScore = 0, erreurs = 0, evts = 0, combats = 0;
-for (let k = 0; k < K; k++) {
-  const g = 1000 + k * 7919;
-  let r;
-  try { r = partie(g); } catch (err) { erreurs++; if (erreurs < 3) console.log(g, err.stack); continue; }
-  const { e, traces } = r, f = e.fin ? e.fin.type : 'aucune';
-  fins[f] = (fins[f] || 0) + 1;
-  tours += e.fin ? e.fin.tour : 99;
-  const sc = ducScore(e).total; score += sc; maxScore = Math.max(maxScore, sc);
-  combats += e.stats.combats;
-  evts += e.journal.length;
-  for (const t of [10, 20, 30]) if (traces[t]) { terres[t][0] += traces[t][0]; terres[t][1] += (traces[t][1] + traces[t][2] + traces[t][3]) / 3; rivaux[t]++; }
-  // un rival tombé avant le tour 10 sans que personne l'ait attaqué au château ? (on compte juste les chutes très tôt)
-  tombesSeuls += e.seigneurs.slice(1).filter(S => !S.vivant && S.tombe < 8).length;
-  if (detail) console.log(g, f, e.fin && e.fin.tour, sc, e.seigneurs.map(S => `${S.vivant ? '' : '†'}${S.leg}/${S.votes}`).join(' '));
-}
+// 3. équilibrage, pour chaque difficulté
 const pc = x => Math.round(100 * (x || 0) / K) + ' %';
-console.log(`${K} parties · fins : ` + Object.entries(fins).map(([k, v]) => `${k} ${pc(v)}`).join(', '));
-console.log(`tour moyen de la fin ${(tours / K).toFixed(1)} · score moyen ${Math.round(score / K)} (max ${maxScore}) · combats du joueur ${(combats / K).toFixed(1)}`);
-for (const t of [10, 20, 30]) if (rivaux[t]) console.log(`tour ${t} (${rivaux[t]} parties) : terres du joueur ${(terres[t][0] / rivaux[t]).toFixed(1)}, d'un rival ${(terres[t][1] / rivaux[t]).toFixed(1)}`);
-check(erreurs === 0, `aucune erreur (${erreurs})`);
+const bilan = {};
+for (const niveau of ['facile', 'normal']) {
+  const fins = {}, vus2 = { 10: 0, 20: 0, 30: 0 }, terres = { 10: [0, 0, 0], 20: [0, 0, 0], 30: [0, 0, 0] };
+  let tours = 0, score = 0, tombesSeuls = 0, maxScore = 0, erreurs = 0, combats = 0, famines = 0;
+  for (let k = 0; k < K; k++) {
+    const g = 1000 + k * 7919;
+    let r;
+    try { r = partie(g, null, 0, niveau); } catch (err) { erreurs++; if (erreurs < 3) console.log(g, err.stack); continue; }
+    const { e, traces } = r, f = e.fin ? e.fin.type : 'aucune';
+    fins[f] = (fins[f] || 0) + 1;
+    tours += e.fin ? e.fin.tour : 99;
+    const sc = ducScore(e).total; score += sc; maxScore = Math.max(maxScore, sc);
+    combats += e.stats.combats; famines += e.stats.famines;
+    for (const t of [10, 20, 30]) if (traces[t]) { terres[t][0] += traces[t][0]; terres[t][1] += (traces[t][1] + traces[t][2] + traces[t][3]) / 3; terres[t][2] += traces[t][4]; vus2[t]++; }
+    tombesSeuls += e.seigneurs.slice(1).filter(S => !S.vivant && S.tombe < 8).length;
+    if (detail) console.log(niveau, g, f, e.fin && e.fin.tour, sc, e.seigneurs.map(S => `${S.vivant ? '' : '†'}${S.leg}/${S.votes}`).join(' '));
+  }
+  console.log(`— ${niveau} · ${K} parties · fins : ` + Object.entries(fins).map(([k, v]) => `${k} ${pc(v)}`).join(', '));
+  console.log(`tour moyen de la fin ${(tours / K).toFixed(1)} · score moyen ${Math.round(score / K)} (max ${maxScore}) · combats du joueur ${(combats / K).toFixed(1)} · famines ${(famines / K).toFixed(2)}`);
+  for (const t of [10, 20, 30]) if (vus2[t]) console.log(`tour ${t} (${vus2[t]} parties) : terres du joueur ${(terres[t][0] / vus2[t]).toFixed(1)}, d'un rival ${(terres[t][1] / vus2[t]).toFixed(1)}, nourriture du joueur ${Math.round(terres[t][2] / vus2[t])}`);
+  check(erreurs === 0, `${niveau} : aucune erreur (${erreurs})`);
+  const gagnees = (fins.conquete || 0) + (fins.couronne || 0);
+  bilan[niveau] = { gagnees, defaites: fins.defaite || 0 };
+  check(gagnees > 0 && gagnees < K * 0.8, `${niveau} : le joueur automatique gagne parfois, pas toujours (${pc(gagnees)})`);
+  check((fins.defaite || 0) < K * 0.5, `${niveau} : le joueur automatique ne perd pas une partie sur deux (${pc(fins.defaite)})`);
+  check(tours / K > 20, `${niveau} : une partie dure longtemps (tour moyen ${(tours / K).toFixed(1)})`);
+  check(tombesSeuls < K * 0.3, `${niveau} : les rivaux ne s'effondrent pas tout de suite (${tombesSeuls} chutes avant le tour 8)`);
+}
+check(bilan.normal.gagnees < bilan.facile.gagnees, `le mode normal est plus dur que le facile (${pc(bilan.facile.gagnees)} → ${pc(bilan.normal.gagnees)} de victoires)`);
 const manquent = Object.keys(DUC_EVENEMENTS).filter(k => !vus[k]);
 check(!manquent.length, `chaque événement sort au moins une fois (${manquent.join(', ') || Object.keys(vus).length + ' sortes'})`);
-const gagnees = (fins.conquete || 0) + (fins.couronne || 0);
-check(gagnees > 0 && gagnees < K * 0.8, `le joueur automatique gagne parfois, pas toujours (${pc(gagnees)})`);
-check((fins.defaite || 0) < K * 0.5, `le joueur automatique ne perd pas une partie sur deux (${pc(fins.defaite)})`);
-check(tours / K > 20, `une partie dure longtemps (tour moyen ${(tours / K).toFixed(1)})`);
-check(tombesSeuls < K * 0.3, `les rivaux ne s'effondrent pas tout de suite (${tombesSeuls} chutes avant le tour 8)`);
 process.exit(fail ? 1 : 0);

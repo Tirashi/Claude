@@ -67,6 +67,12 @@ const DUC_ELECTEURS = [
 ];
 const DUC_CRITERES = { leg: 'la légitimité', soldats: 'la plus grande armée', terres: 'le plus de terres', or: 'le trésor le plus riche', batiments: 'le plus de bâtiments' };
 const DUC_CHANGES = 5;   // échanges au marché par tour
+// difficulté : facile = les règles de base ; normal (le Duché du jour, et le seul classé) = entretien plus cher,
+// hiver chaque année, bâtiments plus chers, rivaux plus mordants (ia.js)
+const DUC_NIVEAUX = {
+  facile: { nom: 'Facile', entretien: 10, hiver: 1, coutBat: 1, ratioIa: 0, viseMeneur: 0 },
+  normal: { nom: 'Normal', entretien: 5, hiver: 0.5, coutBat: 1.5, ratioIa: 0.2, viseMeneur: 3 },
+};
 
 /* ---------- hasard à graine ---------- */
 // mulberry32, le même que les autres jeux (ne pas le modifier : les graines du jour en dépendent)
@@ -100,7 +106,7 @@ function ducCarte(graine) {
   return terres;
 }
 
-function ducNouvelle(graine, mode) {
+function ducNouvelle(graine, mode, niveau) {
   const terres = ducCarte(graine), R = ducRng(graine, 'carte', 1);
   // les rivaux : nom, couleur, 2 traits compatibles
   const noms = ducMelanger(R, DUC_NOMS.slice()), cles = Object.keys(DUC_TRAITS);
@@ -122,19 +128,22 @@ function ducNouvelle(graine, mode) {
   const loin = neutres.filter(i => DUC_COINS.every(c => ducDist(i, c) >= 2));
   for (const i of ducMelanger(R, loin).slice(0, ducEntre(R, 4, 7))) Object.assign(terres[i], { gar: ducEntre(R, 2, 6), brig: true });
   const etat = {
-    v: DUC_RUN_V, graine, mode: mode || 'libre', tour: 1, terres, seigneurs,
+    v: DUC_RUN_V, graine, mode: mode || 'libre', niveau: DUC_NIVEAUX[niveau] ? niveau : 'normal', tour: 1, terres, seigneurs,
     paquet: [], cycle: 0, evt: null, alliances: {}, electeurs: 0, ordreElecteurs: ducMelanger(R, DUC_ELECTEURS.map((x, i) => i)), roiMort: false, nCombat: 0,
     fin: null, journal: [], coups: [], marchand: 0,
-    stats: { prises: 0, perdues: 0, rivauxTombes: 0, picLeg: 20, combats: 0, victoires: 0 },
+    stats: { prises: 0, perdues: 0, rivauxTombes: 0, picLeg: 20, combats: 0, victoires: 0, famines: 0 },
   };
   ducDebutTour(etat);
   return etat;
 }
 
 // une sauvegarde d'une version plus ancienne → la version actuelle (rien à faire en v1)
-function ducMigrer(etat) { if (!etat || typeof etat !== 'object' || !Array.isArray(etat.terres)) return null; etat.v = DUC_RUN_V; return etat; }
+function ducMigrer(etat) { if (!etat || typeof etat !== 'object' || !Array.isArray(etat.terres)) return null; if (!DUC_NIVEAUX[etat.niveau]) etat.niveau = 'normal'; if (etat.stats && etat.stats.famines == null) etat.stats.famines = 0; etat.v = DUC_RUN_V; return etat; }
 
 /* ---------- lectures ---------- */
+const ducNiveau = etat => DUC_NIVEAUX[etat.niveau] || DUC_NIVEAUX.normal;
+// prix d'un bâtiment selon la difficulté (arrondi à 5 au-dessus)
+const ducCoutBat = (etat, b) => { const c = DUC_BATIMENTS[b].cout, k = ducNiveau(etat).coutBat; return { bois: Math.ceil(c.bois * k / 5) * 5, or: Math.ceil(c.or * k / 5) * 5 }; };
 const ducSaison = tour => DUC_SAISONS[(tour - 1) % 4];
 const ducAn = tour => Math.floor((tour - 1) / 4) + 1;
 const ducTerresDe = (etat, s) => etat.terres.map((t, i) => i).filter(i => etat.terres[i].prop === s);
@@ -163,7 +172,8 @@ function ducProduction(etat, s) {
   if (S.traits.includes('pieux')) p.leg += 1;
   if (s > 0 && etat.tour % 3 === 0) p.leg += 1;   // la cour des rivaux (ils n'ont pas d'événements) : +1 tous les 3 tours
   if (S.hiver > 0) p.nour = Math.floor(p.nour * S.hiverPct);
-  p.entretien = Math.ceil(ducSoldats(etat, s) / 10);
+  if (ducSaison(etat.tour) === 'hiver') p.nour = Math.floor(p.nour * ducNiveau(etat).hiver);   // l'hiver de chaque année (mode normal)
+  p.entretien = Math.ceil(ducSoldats(etat, s) / ducNiveau(etat).entretien);
   return p;
 }
 
@@ -182,6 +192,7 @@ function ducRevenus(etat, s) {
     famine = Math.ceil(ducSoldats(etat, s) * 0.1);
     ducRetirerSoldats(etat, s, famine);
     S.leg = Math.max(0, S.leg - 2); S.nour = 0;
+    if (s === 0) etat.stats.famines++;
     if (s === 0) ducNoter(etat, `Famine : ${famine} soldat${famine > 1 ? 's' : ''} désertent, −2 légitimité.`, 0);
   }
   if (S.hiver > 0) S.hiver--;
@@ -244,14 +255,15 @@ function ducPeutConstruire(etat, s, i, b) {
   if (!t || t.prop !== s) return 'Cette terre n\'est pas à vous.';
   if (t.bat) return 'Il y a déjà un bâtiment.';
   if (B.terrains && !B.terrains.includes(t.t)) return 'Seulement sur une colline ou une montagne.';
-  if (S.bois < B.cout.bois || S.or < B.cout.or) return 'Pas assez de ressources.';
+  const c = ducCoutBat(etat, b);
+  if (S.bois < c.bois || S.or < c.or) return 'Pas assez de ressources.';
   return '';
 }
 function ducConstruire(etat, s, i, b) {
   const err = ducLibre(etat, s) || ducPeutConstruire(etat, s, i, b);
   if (err) return ducNon(err);
-  const S = etat.seigneurs[s], B = DUC_BATIMENTS[b];
-  S.bois -= B.cout.bois; S.or -= B.cout.or; etat.terres[i].bat = b;
+  const S = etat.seigneurs[s], c = ducCoutBat(etat, b);
+  S.bois -= c.bois; S.or -= c.or; etat.terres[i].bat = b;
   return { ok: true };
 }
 
