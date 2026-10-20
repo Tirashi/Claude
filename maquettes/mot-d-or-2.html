@@ -1,0 +1,556 @@
+<title>Le Mot d'or, bureau du soir</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;500;600&family=Rajdhani:wght@600;700&display=swap">
+<style>
+/* Maquette 2 du Mot d'or : la table B (bureau du soir) retenue, avec une police d'interface nette
+   tracée en haute définition par-dessus le pixel art. Deux polices comparées sur le même écran. */
+:root{
+  --fond:#120d16; --texte:#f3eadb; --doux:#b4a6b8; --or:#ffd23f; --cadre:#050307; --ligne:#2e2436; --bouton:#2a1f30;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--f-texte);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000;text-wrap:balance}
+header p{margin:10px 0 0;color:var(--doux);max-width:70ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:28px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.tel{width:100%;max-width:360px;aspect-ratio:216/384;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.tel canvas{width:100%;height:100%;display:block;cursor:pointer}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);max-width:340px;font-size:15px;text-align:center}
+.raccourcis{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.raccourcis button{font:500 14px var(--f-texte);color:var(--texte);background:var(--bouton);border:1px solid var(--ligne);border-radius:8px;padding:6px 12px;cursor:pointer}
+.raccourcis button:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0}
+section.q ul, section.q ol{margin:0;padding-left:22px;max-width:74ch;display:flex;flex-direction:column;gap:6px}
+section.q li span{color:var(--doux)}
+</style>
+
+<div class="page">
+<header>
+  <h1>LE MOT D'OR · B</h1>
+  <p>Le bureau du soir, retenu. Le décor et les tuiles restent en pixel art. Tout ce qu'on touche ou qu'on lit (clavier, boutons, messages, fenêtres) est écrit dans une vraie police, nette à toutes les tailles. Les deux écrans sont identiques, seule la police change. Ils sont jouables : le clavier, les boutons <b>?</b> et <b>statistiques</b> en haut, et on peut toucher une tuile de la ligne en cours pour y placer le curseur.</p>
+</header>
+
+<div class="grille">
+  <div class="dir">
+    <div class="tel"><canvas data-police="fredoka" width="648" height="1152"></canvas></div>
+    <h2>POLICE 1 · FREDOKA</h2>
+    <p>Ronde, douce et très lisible. Elle va bien avec le cuir et la lampe.</p>
+    <div class="raccourcis"><button type="button" data-i="0" data-a="gagner">Voir une victoire</button><button type="button" data-i="0" data-a="perdre">Voir une défaite</button></div>
+  </div>
+  <div class="dir">
+    <div class="tel"><canvas data-police="rajdhani" width="648" height="1152"></canvas></div>
+    <h2>POLICE 2 · RAJDHANI</h2>
+    <p>Celle d'Amiral ! et de Capitaine du port : plus étroite et plus nerveuse. Elle donne une Ludothèque plus homogène.</p>
+    <div class="raccourcis"><button type="button" data-i="1" data-a="gagner">Voir une victoire</button><button type="button" data-i="1" data-a="perdre">Voir une défaite</button></div>
+  </div>
+</div>
+
+<section class="q">
+  <h2>CE QUI A ÉTÉ SOIGNÉ</h2>
+  <ul>
+    <li><b>Grandes touches</b> : le clavier prend toute la largeur, chaque touche est presque deux fois plus haute qu'avant. VALIDER et EFFACER sont deux fois plus larges que les lettres.</li>
+    <li><b>VALIDER s'allume</b> dès que les 6 lettres sont posées. Avant, la touche est éteinte.</li>
+    <li><b>Le clavier se colore en même temps que les tuiles</b>, au fil du retournement. Les lettres absentes restent lisibles, sur fond assombri.</li>
+    <li><b>Curseur libre</b> : on touche une case de la ligne en cours pour corriger une lettre au milieu sans tout effacer.</li>
+    <li><b>Rappel des lettres d'or</b> : dans la ligne en cours, les lettres déjà trouvées à leur place sont rappelées en filigrane.</li>
+    <li><b>Messages courts</b> en haut de la grille (« Il manque 2 lettres »), avec un tremblement de la ligne. Ils ne cachent jamais le clavier.</li>
+    <li><b>Petite vibration</b> à chaque touche (sur Android).</li>
+    <li><b>Fin de partie</b> : la fenêtre des statistiques s'ouvre d'elle-même avec la série, la répartition des essais (la barre du jour en or), le compte à rebours et <b>PARTAGER</b>, qui copie la grille en carrés de couleur pour la famille.</li>
+    <li><b>Aide</b> en une page avec des tuiles d'exemple. Elle s'ouvre seule à la toute première partie.</li>
+  </ul>
+  <h2>QUESTIONS</h2>
+  <ol>
+    <li>Quelle police : Fredoka ou Rajdhani ?</li>
+    <li>Le rappel des lettres d'or en filigrane : on le garde ? <span>(c'est une aide ; certains préfèrent s'en passer)</span></li>
+    <li>Le partage en carrés de couleur (🟨⬜⬛) vous plaît-il ?</li>
+  </ol>
+</section>
+</div>
+
+<script>
+(function(){
+"use strict";
+const LW = 216, LH = 384, K = 3, OUT = "#120c16", PIX = '"Press Start 2P", monospace';
+const POLICES = {
+  fredoka:  {fam: '"Fredoka", system-ui, sans-serif', w: 600, wl: 500, z: 1},
+  rajdhani: {fam: '"Rajdhani", system-ui, sans-serif', w: 700, wl: 600, z: 1.18},
+};
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x | 0, y | 0, w | 0, h | 0); };
+const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const pixReady = () => document.fonts && document.fonts.check('8px "Press Start 2P"');
+
+// ---------- géométrie (216 × 384 en pixels du jeu, affichés ×3)
+const TW = 26, TF = 23, TD = 3, STEP = 29, GX = 22, GY = 58;
+const KEYS = ["AZERTYUIOP", "QSDFGHJKLM", ">WXCVBN<"], KY = 246, KSTEP = 44, KF = 34, KD = 3;
+const MOTS = ["SOLEIL","MAISON","JARDIN","CHATON","BATEAU","MOUTON","CERISE","ORANGE","GIRAFE","CASTOR","PIRATE","TRESOR","BOUGIE","CITRON","PEPITE","CHEVAL","NUAGES","FLEURS","GATEAU","PLUMES"];
+const MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+
+// matières : [reflet, base, ombre, profond]
+const M = {
+  wood:   ["#fffdf2", "#efe4c8", "#cdbb96", "#7e6c4c"],   // ivoire
+  gold:   ["#fff8c8", "#ffd23f", "#e09a1c", "#9a5a0c"],
+  silver: ["#ffffff", "#d9e0ea", "#a6b2c4", "#646f84"],
+  grey:   ["#7a7068", "#5c534c", "#463e38", "#2c2622"],
+  off:    ["#b8ab90", "#9a8e76", "#7c705a", "#4e4436"],   // VALIDER éteint
+};
+const INK = {wood: "#3e2616", gold: "#6a3606", silver: "#2e3648", grey: "#e2d8cc", off: "#4a3e30"};
+const TINK = {wood: ["#4a2c1a", "#ffffff"], gold: ["#7a4208", "#fff6c8"], silver: ["#3a4256", "#ffffff"], grey: ["#1e1814", "#9a9084"]};
+
+/* =====================================================================
+   Décor : bureau d'acajou, sous-main en cuir, cercle de lumière
+   ===================================================================== */
+function noiseRect(g, x0, y0, w, h, pal, pick){
+  const img = g.getImageData(x0, y0, w, h), d = img.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    const [r, gg, b] = pal[pick(x, y, hash(x + x0, y * 7 + y0))], i = (y * w + x) * 4;
+    d[i] = r; d[i + 1] = gg; d[i + 2] = b; d[i + 3] = 255;
+  }
+  g.putImageData(img, x0, y0);
+}
+function buildBG(){
+  const c = mk(LW, LH), g = c.getContext("2d"), img = g.createImageData(LW, LH), d = img.data;
+  const PAL = [[0x9a, 0x4a, 0x2e], [0x7c, 0x36, 0x22], [0x62, 0x28, 0x1a], [0x48, 0x1c, 0x12], [0x2a, 0x0e, 0x0a]], PL = 30;
+  for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++){
+    const p = Math.floor(y / PL), yy = y % PL;
+    const gr = Math.sin(y * .9 + 3.2 * Math.sin(x * .021 + p * 2.3 + 4) + 1.6 * Math.sin(x * .057 + p));
+    let k = gr > .82 ? 2 : gr < -.9 ? 0 : 1;
+    if (hash(x >> 2, y * 31 + p) < .05) k = Math.min(3, k + 1);
+    if (yy === 0) k = 4; else if (yy === 1) k = 0; else if (yy === PL - 1) k = 3;
+    const j = 30 + Math.floor(hash(p, 5) * 150); if (x === j) k = 4; else if (x === j + 1) k = 0;
+    let [r, gg, b] = PAL[k]; const tint = (hash(p, 3) - .5) * 16;
+    const i = (y * LW + x) * 4; d[i] = r + tint; d[i + 1] = gg + tint * .7; d[i + 2] = b + tint * .4; d[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  // sous-main en cuir bordeaux, coins plus sombres, filets dorés au fer
+  const fx = 12, fy = 50, fw = 192, fh = 184;
+  R(g, fx + 3, fy + 3, fw, fh, "rgba(10,2,2,.6)");
+  const LE = [[0x9c, 0x2e, 0x36], [0x84, 0x22, 0x2c], [0x6c, 0x1a, 0x24], [0x52, 0x12, 0x1a]];
+  noiseRect(g, fx, fy, fw, fh, LE, (x, y, n) => n < .08 ? 0 : n > .9 ? 2 : 1);
+  const LC = ["#5a2418", "#461a10", "#34120a"];
+  for (const [ox, oy, sx, sy] of [[0, 0, 1, 1], [fw, 0, -1, 1], [0, fh, 1, -1], [fw, fh, -1, -1]])
+    for (let i = 0; i < 22; i++) for (let j = 0; j < 22 - i; j++){
+      const x = fx + ox + sx * i - (sx < 0 ? 1 : 0), y = fy + oy + sy * j - (sy < 0 ? 1 : 0);
+      R(g, x, y, 1, 1, LC[i + j === 21 ? 2 : hash(x, y) < .1 ? 0 : 1]);
+    }
+  R(g, fx, fy, fw, 1, "#3a0c10"); R(g, fx, fy + fh - 1, fw, 1, "#2a080c"); R(g, fx, fy, 1, fh, "#3a0c10"); R(g, fx + fw - 1, fy, 1, fh, "#2a080c");
+  for (const k of [3, 5]){ R(g, fx + k, fy + k, fw - 2 * k, 1, "#d8a84a"); R(g, fx + k, fy + fh - k - 1, fw - 2 * k, 1, "#a87a2a"); R(g, fx + k, fy + k, 1, fh - 2 * k, "#d8a84a"); R(g, fx + fw - k - 1, fy + k, 1, fh - 2 * k, "#a87a2a"); }
+  // cases creusées
+  for (let r = 0; r < 6; r++) for (let c2 = 0; c2 < 6; c2++){
+    const x = GX + c2 * STEP, y = GY + r * STEP;
+    R(g, x, y, TW, TF + TD, "#561420"); R(g, x, y, TW, 2, "#3a0c14"); R(g, x, y, 2, TF + TD, "#3a0c14");
+    R(g, x + 1, y + TF + TD - 1, TW - 1, 1, "#a8404a"); R(g, x + TW - 1, y + 1, 1, TF + TD - 1, "#a8404a");
+  }
+  // écritoire du clavier
+  const tx = 2, ty = 238, tw = 212, th = 142;
+  R(g, tx + 2, ty + 3, tw, th, "rgba(10,2,2,.6)"); R(g, tx - 1, ty - 1, tw + 2, th + 2, OUT);
+  R(g, tx, ty, tw, th, "#5a2416"); R(g, tx, ty, tw, 1, "#a8603a"); R(g, tx, ty, 1, th, "#a8603a"); R(g, tx, ty + th - 1, tw, 1, "#2a0e08"); R(g, tx + tw - 1, ty, 1, th, "#2a0e08");
+  noiseRect(g, tx + 2, ty + 2, tw - 4, th - 4, LE, (x, y, n) => n < .06 ? 1 : n > .9 ? 3 : 2);
+  R(g, tx + 3, ty + 3, tw - 6, 1, "#c8983a"); R(g, tx + 3, ty + th - 4, tw - 6, 1, "#a87a2a");
+  // pénombre tramée autour du cercle de lumière de la lampe
+  const im = g.getImageData(0, 0, LW, LH), dd = im.data;
+  for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++){
+    const v = Math.max(0, Math.hypot((x - 108) / 150, (y - 150) / 210) - .42);
+    const f = 1 - Math.min(5, Math.floor(v * 7 + BAYER[(y & 3) * 4 + (x & 3)] / 16)) * .12, i = (y * LW + x) * 4;
+    dd[i] *= f; dd[i + 1] *= f; dd[i + 2] *= f;
+  }
+  g.putImageData(im, 0, 0);
+  return c;
+}
+
+/* =====================================================================
+   Éléments en pixel art : plaques, tuiles, touches, boutons
+   ===================================================================== */
+function plate(g, x, y, w, h){
+  R(g, x + 2, y - 2, w - 4, h + 4, OUT); R(g, x - 2, y + 2, w + 4, h - 4, OUT); R(g, x, y, w, h, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, "rgba(92,58,30,.96)"); gr.addColorStop(1, "rgba(36,20,10,.97)");
+  g.fillStyle = gr; g.fillRect(x + 1, y + 1, w - 2, h - 2);
+  R(g, x + 2, y + 1, w - 4, 1, "rgba(255,214,150,.5)"); R(g, x + 1, y + 2, 1, h - 4, "rgba(255,214,150,.5)");
+  R(g, x + 2, y + h - 2, w - 4, 1, "rgba(0,0,0,.45)"); R(g, x + w - 2, y + 2, 1, h - 4, "rgba(0,0,0,.45)");
+}
+function block(g, x, y, w, f, d, P){
+  R(g, x, y - 1, w, f + d + 2, OUT); R(g, x - 1, y, w + 2, f + d, OUT);
+  R(g, x, y + f, w, d, P[3]); R(g, x + 1, y + f, w - 2, 1, P[2]);
+  R(g, x, y, w, f, P[1]); R(g, x + 1, y + f - 5, w - 2, 4, P[2]);
+  R(g, x + 1, y, w - 2, 1, P[0]); R(g, x, y + 1, 1, f - 2, P[0]); R(g, x + 1, y + 1, w - 3, 1, P[0]);
+  R(g, x + w - 1, y + 1, 1, f - 1, P[2]); R(g, x + 1, y + f - 1, w - 1, 1, P[2]);
+  R(g, x, y, 1, 1, OUT); R(g, x + w - 1, y, 1, 1, OUT);
+}
+const CACHE = {};
+function tileImg(mat, ch){
+  const key = "t" + mat + ch; if (CACHE[key]) return CACHE[key];
+  const c = mk(TW + 2, TF + TD + 2), g = c.getContext("2d"), P = M[mat];
+  block(g, 1, 1, TW, TF, TD, P);
+  if (mat === "silver") for (let yy = 4; yy < TF - 5; yy += 3) R(g, 4, yy, TW - 6, 1, "#e9eef4");
+  if (mat === "gold"){ R(g, 4, 4, 3, 1, "#ffffff"); R(g, 4, 5, 1, 2, "#ffffff"); }
+  if (ch && ch !== " "){
+    g.font = "16px " + PIX; g.textAlign = "left"; g.textBaseline = "top";
+    const [ink, lip] = TINK[mat];
+    g.fillStyle = lip; g.fillText(ch, 7, 6); g.fillStyle = ink; g.fillText(ch, 6, 5);
+  }
+  if (pixReady()) CACHE[key] = c;
+  return c;
+}
+function keyImg(mat, w){
+  const key = "k" + mat + w; if (CACHE[key]) return CACHE[key];
+  const c = mk(w + 2, KF + KD + 2), g = c.getContext("2d");
+  block(g, 1, 1, w, KF, KD, M[mat]);
+  return CACHE[key] = c;
+}
+// petit bouton de cuir à icône dorée (retour, aide, statistiques)
+function iconButton(g, x, y, s, icon, down){
+  y += down;
+  R(g, x, y - 1, s, s + 3, OUT); R(g, x - 1, y, s + 2, s + 1, OUT);
+  R(g, x, y + s - 1, s, 2, "#3a1208"); R(g, x, y, s, s - 1, "#7a3420"); R(g, x + 1, y, s - 2, 1, "#c06a44"); R(g, x, y + 1, 1, s - 3, "#c06a44"); R(g, x + 1, y + s - 3, s - 2, 1, "#5a2414");
+  const c = "#ffd23f", cx = x + (s >> 1), cy = y + (s >> 1) - 1;
+  if (icon === "retour"){ for (let k = 0; k < 5; k++) R(g, cx - 4 + k, cy - k, 1, k * 2 + 1, c); R(g, cx + 1, cy - 1, 5, 3, c); }
+  if (icon === "aide"){ R(g, cx - 3, cy - 6, 6, 2, c); R(g, cx + 2, cy - 5, 2, 4, c); R(g, cx - 4, cy - 5, 2, 2, c); R(g, cx, cy - 2, 2, 3, c); R(g, cx, cy + 3, 2, 2, c); }
+  if (icon === "stats"){ R(g, cx - 5, cy + 1, 3, 5, c); R(g, cx - 1, cy - 6, 3, 12, c); R(g, cx + 3, cy - 2, 3, 8, c); }
+}
+function spark(g, x, y, s, c1 = "#ffffff", c2 = "#ffe066"){
+  x = Math.round(x); y = Math.round(y);
+  if (s <= 0) return; if (s === 1){ R(g, x, y, 1, 1, c1); return; }
+  R(g, x - s, y, s * 2 + 1, 1, c2); R(g, x, y - s, 1, s * 2 + 1, c2); R(g, x - 1, y, 3, 1, c1); R(g, x, y - 1, 1, 3, c1);
+}
+function flame(g, x, y, t){
+  const f = Math.floor(t * 8) % 3, j = f === 1 ? 1 : f === 2 ? -1 : 0;
+  const rows = [[3, 1], [2, 3], [2, 4], [1, 5], [1, 6], [0, 7], [0, 8], [1, 7], [2, 5]];
+  rows.forEach(([o, w], i) => R(g, x + o + (i < 3 ? j : 0) - 1, y + i, w + 2, 1, OUT));
+  rows.forEach(([o, w], i) => { const jj = i < 3 ? j : 0; R(g, x + o + jj, y + i, w, 1, i < 4 ? "#ffd23f" : "#ff7a2a"); if (i > 3) R(g, x + o + jj + w - 2, y + i, 2, 1, "#d8401c"); });
+  R(g, x + 3, y + 5, 2, 2, "#fff6c2");
+}
+function logo(g, s, x, y, size){
+  g.font = size + "px " + PIX; g.textAlign = "center"; g.textBaseline = "top"; g.lineJoin = "round";
+  g.fillStyle = OUT; g.fillText(s, x + 1, y + 2); g.lineWidth = 3; g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, "#fff6c2"); gr.addColorStop(.5, "#ffd23f"); gr.addColorStop(1, "#e0782a");
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+
+/* =====================================================================
+   La partie
+   ===================================================================== */
+function evaluate(guess, secret){
+  const res = Array(6).fill("grey"), left = {};
+  for (let i = 0; i < 6; i++){ if (guess[i] === secret[i]) res[i] = "gold"; else left[secret[i]] = (left[secret[i]] || 0) + 1; }
+  for (let i = 0; i < 6; i++) if (res[i] !== "gold" && left[guess[i]] > 0){ res[i] = "silver"; left[guess[i]]--; }
+  return res;
+}
+const FLIPGAP = .24, FLIPLEN = .38, REVEAL = 5 * FLIPGAP + FLIPLEN;
+const RANK = {grey: 1, silver: 2, gold: 3};
+const z2 = n => String(n).padStart(2, "0");
+
+function Phone(canvas, idx){
+  const F = POLICES[canvas.dataset.police], g = canvas.getContext("2d");
+  const low = mk(LW, LH), lg = low.getContext("2d"), top = mk(LW, LH), tg = top.getContext("2d");
+  let BG = null, hits = [];
+  const S = {secret: "BOUGIE", rows: [], cur: Array(6).fill(""), pos: 0, reveal: null, over: null, overT: 0,
+    shakeT: -9, popT: -9, popC: -1, toast: "", toastT: -9, toastLong: false, panel: null, panelT: 0, down: {},
+    stats: {parties: 23, gagnees: 21, serie: 7, record: 12, dist: [0, 2, 6, 8, 4, 1]}, firstHelp: idx === 0};
+  const now = () => performance.now() / 1000;
+  ["MOUTON", "BOUCLE"].forEach(w => S.rows.push({w, res: evaluate(w, S.secret)}));
+
+  // ---------- texte net (haute définition)
+  function ui(s, x, y, size, col, o = {}){
+    const fz = size * F.z * K;
+    g.font = (o.light ? F.wl : F.w) + " " + fz + "px " + F.fam; g.textAlign = o.align || "left"; g.textBaseline = "middle";
+    if (o.shadow !== false){ g.fillStyle = o.shadow || "rgba(18,12,22,.85)"; g.fillText(s, x * K + 2, y * K + 2); }
+    g.fillStyle = col; g.fillText(s, x * K, y * K);
+  }
+  function wrap(s, size, maxW, light){
+    g.font = (light ? F.wl : F.w) + " " + size * F.z * K + "px " + F.fam;
+    const out = []; let line = "";
+    for (const w of s.split(" ")){ const t = line ? line + " " + w : w; if (g.measureText(t).width > maxW * K && line){ out.push(line); line = w; } else line = t; }
+    if (line) out.push(line); return out;
+  }
+  const textW = (s, size) => { g.font = F.w + " " + size * F.z * K + "px " + F.fam; return g.measureText(s).width / K; };
+
+  // ---------- actions
+  const filled = () => S.cur.filter(Boolean).length;
+  function toast(m, long){ S.toast = m; S.toastT = now(); S.toastLong = !!long; }
+  function buzz(ms){ try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+  function newGame(){
+    S.secret = MOTS.filter(m => m !== S.secret)[Math.floor(Math.random() * (MOTS.length - 1))];
+    S.rows = []; S.cur = Array(6).fill(""); S.pos = 0; S.reveal = null; S.over = null; S.panel = null; S.toast = "";
+  }
+  function submit(){
+    const t = now(), n = filled();
+    if (n < 6){ S.shakeT = t; buzz([30, 40, 30]); toast(n === 5 ? "Il manque 1 lettre" : "Il manque " + (6 - n) + " lettres"); return; }
+    const w = S.cur.join("");
+    S.rows.push({w, res: evaluate(w, S.secret)}); S.reveal = {row: S.rows.length - 1, t0: t};
+    S.cur = Array(6).fill(""); S.pos = 0;
+  }
+  function type(ch){
+    if (S.over || S.reveal || S.panel) return;
+    const t = now();
+    if (ch === ">") return submit();
+    if (ch === "<"){
+      if (S.cur[S.pos]) S.cur[S.pos] = "";
+      else if (S.pos > 0){ S.pos--; S.cur[S.pos] = ""; }
+      return;
+    }
+    S.cur[S.pos] = ch; S.popT = t; S.popC = S.pos;
+    // le curseur saute à la prochaine case vide
+    let p = S.pos + 1; while (p < 6 && S.cur[p]) p++;
+    if (p >= 6){ p = S.cur.indexOf(""); if (p < 0) p = 5; }
+    S.pos = p;
+  }
+  function finish(kind){
+    const t = now(); S.over = kind; S.overT = t;
+    const st = S.stats; st.parties++;
+    if (kind === "win"){ st.gagnees++; st.serie++; st.record = Math.max(st.record, st.serie); st.dist[S.rows.length - 1]++;
+      toast(["Incroyable !", "Magnifique !", "Superbe !", "Bravo !", "Bien joué !", "Ouf, de justesse !"][S.rows.length - 1]); buzz([20, 60, 20, 60, 40]); }
+    else { st.serie = 0; toast(S.secret, true); }
+  }
+  this.demo = kind => {
+    S.panel = null; S.reveal = null; S.over = null; S.secret = "BOUGIE"; S.cur = Array(6).fill(""); S.pos = 0;
+    S.rows = ["MOUTON", "BOUCLE", "BOUGIE"].map(w => ({w, res: evaluate(w, "BOUGIE")}));
+    if (kind === "perdre") S.rows = ["MOUTON", "BOUCLE", "BOUSSE", "BOUTON", "BOULET", "BOUGIR"].map(w => ({w, res: evaluate(w, "BOUGIE")}));
+    const last = S.rows.pop(); S.rows.push(last); S.reveal = {row: S.rows.length - 1, t0: now()};
+  };
+  function share(){
+    const d = new Date(), ico = {gold: "🟨", silver: "⬜", grey: "⬛"};
+    const txt = "Le Mot d'or · " + d.getDate() + " " + MOIS[d.getMonth()] + " · " + (S.over === "win" ? S.rows.length : "X") + "/6\n" + S.rows.map(r => r.res.map(m => ico[m]).join("")).join("\n");
+    const ok = () => toast("Résultat copié !"), ko = () => toast("Copie impossible ici");
+    try { navigator.clipboard.writeText(txt).then(ok, ko); } catch (e) { ko(); }
+  }
+
+  // ---------- toucher
+  canvas.addEventListener("pointerdown", e => {
+    Phone.active = this;
+    const r = canvas.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * LW, y = (e.clientY - r.top) / r.height * LH;
+    for (let i = hits.length - 1; i >= 0; i--){ const h = hits[i];
+      if (x >= h.x - h.pad && x < h.x + h.w + h.pad && y >= h.y - h.pad && y < h.y + h.h + h.pad){ S.down[h.id] = now(); buzz(8); h.fn(); return; } }
+    if (S.panel && !S.panelLock) S.panel = null;
+  });
+  this.key = ch => { if (S.panel){ if (ch === ">" || ch === "ESC") S.panel = null; return; } S.down["k" + ch] = now(); type(ch); };
+
+  // ---------- dessin
+  this.draw = function(t){
+    if (!BG) BG = buildBG();
+    if (S.firstHelp && t > .4){ S.firstHelp = false; S.panel = "aide"; S.panelT = t; }
+    // retournement : fin de ligne
+    if (S.reveal && t - S.reveal.t0 > REVEAL){
+      const row = S.rows[S.reveal.row]; S.reveal = null;
+      if (row.w === S.secret) finish("win"); else if (S.rows.length === 6) finish("lose");
+    }
+    if (S.over && !S.panel && !S.panelShown && t - S.overT > (S.over === "win" ? 1.9 : 2.4)){ S.panel = "stats"; S.panelT = t; S.panelShown = true; }
+    if (!S.over) S.panelShown = false;
+    hits = [];
+    const hit = (id, x, y, w, h, fn, pad = 0) => hits.push({id, x, y, w, h, fn, pad});
+    const isDown = id => t - (S.down[id] || -9) < .11 ? 1 : 0;
+    const L = lg; L.drawImage(BG, 0, 0);
+    const late = [];   // textes nets à poser après l'agrandissement
+
+    // ---------- en-tête
+    plate(L, 4, 4, 208, 42);
+    iconButton(L, 8, 8, 24, "retour", isDown("retour")); hit("retour", 8, 8, 24, 24, () => toast("Retour à la Ludothèque"), 3);
+    iconButton(L, 158, 8, 24, "aide", isDown("aide")); hit("aide", 158, 8, 24, 24, () => { S.panel = "aide"; S.panelT = now(); }, 2);
+    iconButton(L, 184, 8, 24, "stats", isDown("stats")); hit("stats", 184, 8, 24, 24, () => { S.panel = "stats"; S.panelT = now(); }, 2);
+    logo(L, "LE MOT D'OR", 95, 15, 10);
+    const d = new Date(), done = S.rows.length - (S.reveal ? 1 : 0);
+    late.push(() => ui("Défi du " + d.getDate() + " " + MOIS[d.getMonth()], 10, 38, 7.5, "#ffe7b8"));
+    late.push(() => ui(S.over ? (S.over === "win" ? "trouvé en " + S.rows.length : "pas trouvé") : "essai " + Math.min(6, done + 1) + " sur 6", 206, 38, 7.5, "#ffd23f", {align: "right"}));
+
+    // ---------- grille
+    const golds = [], known = Array(6).fill("");
+    S.rows.forEach((row, r) => { if (S.reveal && S.reveal.row === r) return; row.res.forEach((m, c) => { if (m === "gold") known[c] = row.w[c]; }); });
+    const keyState = {};
+    for (let r = 0; r < 6; r++){
+      const row = S.rows[r];
+      if (row){
+        for (let c = 0; c < 6; c++){
+          const x = GX + c * STEP, y = GY + r * STEP;
+          let mat = row.res[c], sc = 1, lift = 0, seen = true;
+          if (S.reveal && S.reveal.row === r){
+            const p = (t - S.reveal.t0 - c * FLIPGAP) / FLIPLEN;
+            if (p < .5){ mat = "wood"; seen = false; }
+            if (p > 0 && p < 1){ sc = Math.abs(Math.cos(p * Math.PI)); lift = 2; }
+          }
+          if (seen){ const ch = row.w[c]; if (!keyState[ch] || RANK[row.res[c]] > RANK[keyState[ch]]) keyState[ch] = row.res[c]; }
+          let hop = 0;
+          if (S.over === "win" && r === S.rows.length - 1){ const hp = t - S.overT - c * .09; if (hp > 0 && hp < .36) hop = Math.round(Math.sin(hp / .36 * Math.PI) * 6); }
+          const img = tileImg(mat, row.w[c]), h = Math.max(2, Math.round(img.height * sc));
+          R(L, x + 2, y + TF + TD + 1, TW, 2, "rgba(24,4,6,.6)"); R(L, x + TW + 1, y + 2, 2, TF + TD, "rgba(24,4,6,.6)");
+          L.drawImage(img, 0, 0, img.width, img.height, x - 1, y - 1 + Math.round((img.height - h) / 2) - lift - hop, img.width, h);
+          if (mat === "gold" && sc === 1) golds.push([x, y]);
+        }
+      } else if (r === S.rows.length && !S.over){
+        const st = t - S.shakeT, sh = st < .4 ? Math.round(Math.sin(st * 50) * 3 * (1 - st / .4)) : 0;
+        for (let c = 0; c < 6; c++){
+          const x = GX + c * STEP + sh, y = GY + r * STEP, ch = S.cur[c];
+          if (ch){
+            const pop = c === S.popC && t - S.popT < .1 ? 2 : 0;
+            R(L, x + 2, y + TF + TD + 1, TW, 2, "rgba(24,4,6,.6)");
+            L.drawImage(tileImg("wood", ch), x - 1, y - 1 - pop);
+          } else if (known[c]){
+            // rappel en filigrane des lettres d'or déjà trouvées
+            late.push(() => ui(known[c], x + TW / 2, y + TF / 2 + 1, 11, "rgba(255,210,63,.32)", {align: "center", shadow: false}));
+          }
+          if (!S.reveal && !S.panel) hit("case" + c, x, y, TW, TF + TD, () => { S.pos = c; }, 1);
+        }
+        // curseur : cadre doré qui respire autour de la case active
+        if (!S.reveal){
+          const x = GX + S.pos * STEP + sh - 2, y = GY + r * STEP - 2, a = .55 + .45 * Math.sin(t * 5);
+          L.globalAlpha = a; R(L, x, y, TW + 4, 1, "#ffd23f"); R(L, x, y + TF + TD + 3, TW + 4, 1, "#ffd23f"); R(L, x, y, 1, TF + TD + 4, "#ffd23f"); R(L, x + TW + 3, y, 1, TF + TD + 4, "#ffd23f"); L.globalAlpha = 1;
+        }
+      }
+    }
+    // reflet et étincelles sur l'or
+    const sweep = (t * 70) % 340 - 60;
+    for (const [x, y] of golds){ const lx = sweep - (x - GX) - (y - GY) * .3;
+      for (let yy = 1; yy < TF - 1; yy++){ const xx = Math.round(lx - yy); if (xx >= 1 && xx < TW - 2) R(L, x + xx, y + yy, 2, 1, "rgba(255,255,240,.7)"); } }
+    for (let i = 0; i < 5 && golds.length; i++){
+      const ph = (t * .9 + i * .37) % 1, cyc = Math.floor(t * .9 + i * .37), k = golds[Math.floor(hash(i, cyc) * golds.length)];
+      spark(L, k[0] + 3 + hash(i, cyc + 5) * 20, k[1] + 2 + hash(i, cyc + 9) * 12, Math.min(3, ph < .5 ? Math.round(ph * 6) : Math.round((1 - ph) * 6)));
+    }
+    const burst = S.over === "win" ? t - S.overT : -1;
+    if (burst > 0 && burst < 2) for (let i = 0; i < 26; i++){
+      const a = hash(i, 2) * Math.PI * 2, sp = 26 + hash(i, 3) * 44, bx = GX + (hash(i, 4) * 6 | 0) * STEP + 13, by = GY + (S.rows.length - 1) * STEP + 12;
+      const x = bx + Math.cos(a) * sp * burst, y = by + Math.sin(a) * sp * burst * .8 + 22 * burst * burst;
+      if (burst < 1) spark(L, x, y, i % 3 === 0 ? 2 : 1, "#ffffff", "#ffd23f"); else R(L, Math.round(x), Math.round(y), 1, 1, i % 2 ? "#ffd23f" : "#e09a1c");
+    }
+    // poussière dans la lumière de la lampe
+    for (let i = 0; i < 16; i++){
+      const sp = 3 + hash(i, 1) * 4, py = 56 + ((t * sp + hash(i, 2) * 180) % 180), px = 30 + hash(i, 3) * 156 + Math.sin(t * .6 + i) * 5;
+      if ((Math.sin(t * 2 + i * 1.3) + 1) / 2 > .45) R(L, Math.round(px), Math.round(py), 1, 1, "rgba(255,231,184,.75)");
+    }
+
+    // ---------- clavier
+    const ready = filled() === 6 && !S.reveal && !S.over;
+    KEYS.forEach((row, r) => {
+      const widths = [...row].map(ch => ch === ">" || ch === "<" ? 40 : 19);
+      let x = 4;
+      [...row].forEach((ch, i) => {
+        const w = widths[i], y = KY + r * KSTEP, id = "k" + ch, dn = isDown(id) ? 2 : 0;
+        let mat = keyState[ch] || "wood";
+        if (ch === ">") mat = ready ? "gold" : "off";
+        if (ch === "<") mat = "wood";
+        R(L, x + 1, y + KF + KD + 1, w, 1, "rgba(10,2,2,.6)");
+        L.drawImage(keyImg(mat, w), x - 1, y - 1 + dn);
+        if (ch === ">" && ready){ const a = .35 + .35 * Math.sin(t * 6); L.globalAlpha = a; R(L, x - 2, y - 3, w + 4, 1, "#fff6c2"); R(L, x - 2, y + KF + KD + 2, w + 4, 1, "#fff6c2"); R(L, x - 3, y - 2, 1, KF + KD + 4, "#fff6c2"); R(L, x + w + 2, y - 2, 1, KF + KD + 4, "#fff6c2"); L.globalAlpha = 1; }
+        const cx = x + w / 2, cy = y + KF / 2 + dn;
+        if (ch === ">") late.push(() => ui("VALIDER", cx, cy, 8, INK[mat], {align: "center", shadow: false}));
+        else if (ch === "<") late.push(() => backIcon(cx, cy, INK.wood));
+        else late.push(() => ui(ch, cx, cy, 12.5, INK[mat], {align: "center", shadow: false}));
+        hit(id, x, y, w, KF + KD, () => type(ch), 1);
+        x += w + 2;
+      });
+    });
+    function backIcon(cx, cy, col){
+      const s = K, w = 15, h = 11, x0 = cx - w / 2 + 1, y0 = cy - h / 2;
+      g.save(); g.fillStyle = col; g.strokeStyle = col; g.lineWidth = 1.6 * s; g.lineJoin = "round";
+      g.beginPath(); g.moveTo(x0 * s, cy * s); g.lineTo((x0 + 4) * s, y0 * s); g.lineTo((x0 + w) * s, y0 * s); g.lineTo((x0 + w) * s, (y0 + h) * s); g.lineTo((x0 + 4) * s, (y0 + h) * s); g.closePath(); g.stroke();
+      g.beginPath(); g.moveTo((x0 + 7) * s, (cy - 2.5) * s); g.lineTo((x0 + 12) * s, (cy + 2.5) * s); g.moveTo((x0 + 12) * s, (cy - 2.5) * s); g.lineTo((x0 + 7) * s, (cy + 2.5) * s); g.stroke(); g.restore();
+    }
+
+    // ---------- message en haut de la grille
+    const tt = t - S.toastT, life = S.toastLong ? 1e9 : 1.5;
+    if (S.toast && tt < life && !S.panel){
+      const w = Math.min(196, Math.ceil(textW(S.toast, S.toastLong ? 11 : 9)) + 22), h = S.toastLong ? 24 : 18, y = GY - 4 + (tt < .12 ? Math.round((1 - tt / .12) * -6) : 0);
+      plate(L, 108 - w / 2, y, w, h);
+      late.push(() => ui(S.toast, 108, y + h / 2 + .5, S.toastLong ? 11 : 9, S.toastLong ? "#ffd23f" : "#fff6dc", {align: "center"}));
+    }
+
+    // ---------- on agrandit, puis les textes nets
+    g.imageSmoothingEnabled = false; g.drawImage(low, 0, 0, canvas.width, canvas.height);
+    late.forEach(f => f());
+
+    // ---------- fenêtres (aide, statistiques)
+    if (S.panel){
+      hits = hits.filter(h => false);
+      const a = Math.min(1, (t - S.panelT) / .15);
+      g.fillStyle = "rgba(10,4,8," + (.6 * a) + ")"; g.fillRect(0, 0, canvas.width, canvas.height);
+      tg.clearRect(0, 0, LW, LH);
+      const px = 12, pw = 192, py = S.panel === "aide" ? 52 : 58, ph = S.panel === "aide" ? 290 : 280, dy = Math.round((1 - a) * 12);
+      plate(tg, px, py + dy, pw, ph);
+      const lateP = [], Y = y => y + dy;
+      // fermer
+      iconButtonX(tg, px + pw - 22, Y(py + 6), isDown("fermer")); hit("fermer", px + pw - 22, py + 6, 16, 16, () => { S.panel = null; }, 4);
+      if (S.panel === "aide"){
+        logo(tg, "COMMENT JOUER", 108, Y(py + 10), 8);
+        let y = py + 34;
+        for (const l of wrap("Trouvez le mot de 6 lettres en 6 essais. Après chaque essai, les tuiles se retournent :", 9, pw - 24, true)){ const yy = y; lateP.push(() => ui(l, px + 12, Y(yy), 9, "#f4ead8", {light: true})); y += 13; }
+        y += 4;
+        const ex = [["gold", "B", "La lettre est à la bonne place."], ["silver", "O", "Elle est dans le mot, mais ailleurs."], ["grey", "X", "Elle n'est pas dans le mot."]];
+        for (const [mat, ch, s] of ex){
+          tg.drawImage(tileImg(mat, ch), px + 11, Y(y) - 1);
+          const lines = wrap(s, 9, pw - 60, true), yy = y;
+          lines.forEach((l, i) => lateP.push(() => ui(l, px + 44, Y(yy + 13 + (i - (lines.length - 1) / 2) * 12), 9, "#f4ead8", {light: true})));
+          y += 32;
+        }
+        y += 2;
+        for (const l of wrap("Un nouveau mot chaque jour à minuit, le même pour toute la famille. Les accents ne comptent pas : ÉTÉ s'écrit ETE.", 9, pw - 24, true)){ const yy = y; lateP.push(() => ui(l, px + 12, Y(yy), 9, "#d8c8b0", {light: true})); y += 13; }
+        bigButton(tg, lateP, "aJouer", px + 46, Y(py + ph - 36), pw - 92, 26, "JOUER", "gold", () => { S.panel = null; });
+      } else {
+        const st = S.stats, title = S.over === "win" ? "BRAVO !" : S.over === "lose" ? "DOMMAGE" : "STATISTIQUES";
+        logo(tg, title, 108, Y(py + 10), S.over ? 12 : 8);
+        let y = py + 34;
+        if (S.over){ const s = S.over === "win" ? "Trouvé en " + S.rows.length + " essai" + (S.rows.length > 1 ? "s" : "") : "Le mot était " + S.secret, yy = Y(y); lateP.push(() => ui(s, 108, yy, 9.5, "#fff6dc", {align: "center"})); y += 18; }
+        const nums = [[st.parties, "parties"], [Math.round(st.gagnees / st.parties * 100) + " %", "gagnées"], [st.serie, "série"], [st.record, "record"]];
+        nums.forEach(([v, l], i) => { const cx = px + 24 + i * 48, y1 = Y(y + 8), y2 = Y(y + 22);
+          lateP.push(() => ui(String(v), cx, y1, 15, "#ffd23f", {align: "center"}));
+          lateP.push(() => ui(l, cx, y2, 7.5, "#d8c8b0", {align: "center", light: true})); });
+        if (st.serie > 0) flame(tg, px + 24 + 2 * 48 + 11, Y(y + 2), t);
+        y += 36;
+        { const yy = Y(y); lateP.push(() => ui("Répartition des essais", px + 12, yy, 8.5, "#f4ead8")); }
+        y += 10;
+        const mx = Math.max(...st.dist, 1);
+        st.dist.forEach((n, i) => {
+          const yy = y + i * 15, bw = Math.max(14, Math.round(n / mx * 140)), cur = S.over === "win" && S.rows.length === i + 1;
+          lateP.push(() => ui(String(i + 1), px + 16, Y(yy + 6), 8.5, "#d8c8b0", {align: "center"}));
+          const P = cur ? M.gold : M.wood;
+          R(tg, px + 25, Y(yy), bw + 2, 13, OUT); R(tg, px + 26, Y(yy + 1), bw, 11, P[1]); R(tg, px + 26, Y(yy + 1), bw, 1, P[0]); R(tg, px + 26, Y(yy + 10), bw, 2, P[2]);
+          lateP.push(() => ui(String(n), px + 26 + bw - 4, Y(yy + 6.5), 8, cur ? INK.gold : INK.wood, {align: "right", shadow: false}));
+        });
+        y += 96;
+        const mid = new Date(); mid.setHours(24, 0, 0, 0);
+        const left = Math.max(0, Math.floor((mid - Date.now()) / 1000));
+        { const y1 = Y(y), y2 = Y(y + 14);
+        lateP.push(() => ui("Prochain mot dans", 108, y1, 8.5, "#d8c8b0", {align: "center", light: true}));
+        lateP.push(() => ui(z2(Math.floor(left / 3600)) + ":" + z2(Math.floor(left / 60) % 60) + ":" + z2(left % 60), 108, y2, 13, "#ffd23f", {align: "center"})); }
+        if (S.over){
+          bigButton(tg, lateP, "partager", px + 12, Y(py + ph - 36), 82, 26, "PARTAGER", "gold", share);
+          bigButton(tg, lateP, "rejouer", px + 98, Y(py + ph - 36), 82, 26, "AUTRE MOT", "wood", newGame);
+        } else bigButton(tg, lateP, "sFermer", px + 46, Y(py + ph - 36), pw - 92, 26, "FERMER", "wood", () => { S.panel = null; });
+      }
+      g.drawImage(top, 0, 0, canvas.width, canvas.height);
+      lateP.forEach(f => f());
+      // message par-dessus la fenêtre (copie du résultat)
+      if (S.toast && t - S.toastT < 1.5 && !S.toastLong && S.over){ const w = textW(S.toast, 9) + 22; g.fillStyle = OUT; plateHi(108 - w / 2, py + ph - 58, w, 18); ui(S.toast, 108, py + ph - 49, 9, "#fff6dc", {align: "center"}); }
+    }
+    function plateHi(x, y, w, h){ tg.clearRect(0, 0, LW, LH); plate(tg, Math.round(x), Math.round(y), Math.round(w), h); g.drawImage(top, 0, 0, canvas.width, canvas.height); }
+    function iconButtonX(gg, x, y, dn){
+      y += dn;
+      R(gg, x, y - 1, 16, 18, OUT); R(gg, x - 1, y, 18, 16, OUT); R(gg, x, y, 16, 15, "#7a3420"); R(gg, x + 1, y, 14, 1, "#c06a44"); R(gg, x, y + 14, 16, 2, "#3a1208");
+      for (let k = 0; k < 8; k++){ R(gg, x + 4 + k, y + 3 + k, 2, 1, "#ffd23f"); R(gg, x + 11 - k, y + 3 + k, 2, 1, "#ffd23f"); }
+    }
+    function bigButton(gg, lst, id, x, y, w, h, label, mat, fn){
+      const dn = isDown(id) ? 2 : 0;
+      block(gg, x, y + dn, w, h - 3, 3, M[mat]);
+      lst.push(() => ui(label, x + w / 2, y + dn + (h - 3) / 2, 9, INK[mat], {align: "center", shadow: false}));
+      hit(id, x, y, w, h, fn, 2);
+    }
+  };
+}
+
+const phones = [...document.querySelectorAll("canvas[data-police]")].map((c, i) => new Phone(c, i));
+Phone.active = phones[0];
+document.querySelectorAll(".raccourcis button").forEach(b => b.addEventListener("click", () => { Phone.active = phones[+b.dataset.i]; phones[+b.dataset.i].demo(b.dataset.a); }));
+document.addEventListener("keydown", e => {
+  const k = e.key; let ch = null;
+  if (k === "Enter") ch = ">"; else if (k === "Backspace") ch = "<"; else if (k === "Escape") ch = "ESC"; else if (/^[a-zA-Z]$/.test(k)) ch = k.toUpperCase();
+  if (ch && Phone.active && !(e.target instanceof HTMLButtonElement && ch === ">")){ e.preventDefault(); Phone.active.key(ch); }
+});
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function frame(){ const t = performance.now() / 1000; for (const p of phones) p.draw(reduce ? Math.floor(t * 4) / 4 : t); requestAnimationFrame(frame); }
+Promise.all(['8px "Press Start 2P"', '600 12px "Fredoka"', '500 12px "Fredoka"', '700 12px "Rajdhani"', '600 12px "Rajdhani"'].map(f => document.fonts ? document.fonts.load(f).catch(() => {}) : 0))
+  .then(() => requestAnimationFrame(frame));
+})();
+</script>
