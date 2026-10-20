@@ -93,7 +93,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["capitaine", "etoiles"], ["yams", "best"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["escadrille", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["magasinier", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"], ["odyssee", "etoiles"]];
+    ["parcours", "total"], ["capitaine", "etoiles"], ["motdor", "serie"], ["yams", "best"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["escadrille", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["magasinier", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"], ["odyssee", "etoiles"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
