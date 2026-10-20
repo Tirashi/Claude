@@ -215,6 +215,9 @@
     hi("odyssee", "etoiles", oss);
     var od = readKey("odyssee.daily", {}) || {};
     Object.keys(od).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("odyssee", "daily:" + k, od[k]); });
+    var mos = readKey("motdor.stats", {}) || {}; hi("motdor", "serie", Number(mos.record) || 0);
+    var mod = readKey("motdor.daily", {}) || {};
+    Object.keys(mod).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("motdor", "daily:" + k, mod[k]); });
     var cn = readKey("capitaine.niveaux", {}) || {}, cns = 0;
     Object.keys(cn).forEach(function (k){ if (/^\d{1,2}$/.test(k) && cn[k]) cns += Math.min(3, Number(cn[k].etoiles) || 0); });
     hi("capitaine", "etoiles", cns);
@@ -247,7 +250,7 @@
 
   window.addEventListener("online", function (){ flush(); });
   // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 6 : avec Nebula)
-  var SYNC = 19;
+  var SYNC = 20;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();

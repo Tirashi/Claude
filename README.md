@@ -18,6 +18,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
 - [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
+- [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
@@ -217,6 +218,15 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
 
+## Le Mot d'or
+Un mot de 6 lettres par jour à trouver en 6 essais, façon « Wordle », en pixel art 32 bits : un bureau d'acajou le soir, un sous-main en cuir bordeaux doré au fer, des tuiles en ivoire sous la lampe.
+
+- **La règle** : on tape un mot de 6 lettres, puis VALIDER. Les tuiles se retournent : **or**, la lettre est à la bonne place ; **argent**, elle est dans le mot mais ailleurs ; **gris**, elle n'y est pas. Une lettre en double ne compte qu'autant de fois qu'elle est dans le mot. Les accents ne comptent pas (ÉTÉ s'écrit ETE), et seuls les vrais mots sont acceptés (près de 14 000 mots de 6 lettres).
+- **Confort** : grand clavier AZERTY qui se colore au fil des essais, VALIDER qui s'allume quand la ligne est pleine, curseur qu'on place en touchant une case pour corriger une lettre, rappel en filigrane des lettres d'or déjà trouvées, petite vibration à chaque touche. Sur ordinateur : le clavier, Entrée, Retour arrière et les flèches.
+- **Mot du jour** : le même pour toute la famille, un nouveau à minuit (718 mots courants, choisis à la main). **Une seule tentative classée**, sauvegardée après chaque essai. Statistiques : parties, pourcentage de victoires, **série de jours** (avec sa flamme), record et répartition des essais. **PARTAGER** copie la grille en carrés de couleur (🟨 ⬜ ⬛), sans les lettres.
+- **Entraînement** : après le mot du jour, AUTRE MOT donne un mot au hasard, non classé, autant qu'on veut.
+- **Sons** discrets (toc du bois, clochette de l'or), qu'on coupe dans l'aide (bouton ?).
+
 ## Capitaine du port
 Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32 bits : quais en granit, capitainerie, phare, grue et mouettes. Le bassin est encombré de bateaux ; il faut ouvrir la passe au **navire doré** pour qu'il rejoigne la mer.
 
@@ -300,6 +310,7 @@ Les classements sont dans le **volet de chaque jeu**, sur l'accueil : des classe
 - **Le Club d'agility** : la plus grande réputation, et le Championnat de France gagné en le moins de semaines.
 - **Amiral !** : la victoire en le moins de tours, par niveau de l'ordinateur (Mousse, Capitaine, Amiral).
 - **Escadrille !** : la victoire en le moins de tours, par niveau de l'ordinateur (Recrue, Pilote, As).
+- **Le Mot d'or** : le mot du jour trouvé en le moins d'essais, et la meilleure série de jours.
 - **Orbite** : le total d'étoiles gagnées sur les 30 niveaux.
 - **Lune-Rover** : le total d'étoiles gagnées sur les 30 niveaux.
 - **Alunissage** : la meilleure mission et la mission du jour.

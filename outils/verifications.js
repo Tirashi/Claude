@@ -94,6 +94,15 @@ catch (e) { bad('Odyssée : plateaux\n' + (e.stdout || '') + (e.stderr || '')); 
 // 8 bis. Le Magasinier : chaque niveau est gagné par sa solution notée (l'optimum complet : magasinier-solveur.js --optimum)
 try { execFileSync(process.execPath, [path.join(__dirname, 'magasinier-solveur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Le Magasinier : chaque niveau est gagné par sa solution notée'); }
 catch (e) { bad('Le Magasinier : niveaux\n' + (e.stdout || '') + (e.stderr || '')); }
+// 8 quater. Le Mot d'or : les mots (6 lettres A à Z, sans doublon, chaque solution est un essai accepté)
+try {
+  const MO = require(path.join(__dirname, '..', 'mot-d-or', 'mots.js')), sol = MO.solutions.split(' '), acc = new Set(MO.acceptes.split(' '));
+  const mauvais = sol.concat([...acc]).filter(w => !/^[A-Z]{6}$/.test(w)), absents = sol.filter(w => !acc.has(w));
+  if (mauvais.length || absents.length || new Set(sol).size !== sol.length || !/^\d{4}-\d{2}-\d{2}$/.test(MO.debut))
+    bad(`Le Mot d'or : mots.js abîmé (${mauvais.slice(0, 5).join(' ')} ${absents.slice(0, 5).join(' ')})`);
+  else ok(`Le Mot d'or : ${sol.length} solutions et ${acc.size} essais acceptés, tous de 6 lettres`);
+} catch (e) { bad("Le Mot d'or : mots.js illisible (" + e.message + ')'); }
+
 // 8 ter. Capitaine du port : chaque bassin est gagné par sa solution notée (l'optimum complet : capitaine-solveur.js --optimum)
 try { execFileSync(process.execPath, [path.join(__dirname, 'capitaine-solveur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Capitaine du port : chaque bassin est gagné par sa solution notée'); }
 catch (e) { bad('Capitaine du port : bassins\n' + (e.stdout || '') + (e.stderr || '')); }

@@ -1,0 +1,91 @@
+# Le Mot d'or : les mots à trouver (solutions), écrits à la main.
+# Mots courants que toute la famille connaît : noms au singulier, adjectifs au masculin singulier, verbes à l'infinitif.
+# Pas de noms propres, de pluriels, de verbes conjugués, de mots grossiers ou rares.
+# Plusieurs mots par ligne, accents permis (ils sont enlevés). Les mots qui n'ont pas 6 lettres ou que le
+# dictionnaire ne connaît pas sont écartés par outils/mot-d-or-mots.js, qui fabrique mot-d-or/mots.js.
+# ATTENTION : changer cette liste change l'ordre des mots du jour à venir (pas les jours passés, dont le mot est gardé
+# dans mots.js : voir l'outil).
+
+# animaux
+chaton cheval castor girafe limace mouton cochon canard agneau chèvre requin homard saumon tortue lézard faisan
+pigeon jaguar renard fourmi frelon mouche cigale carlin bichon bélier brebis dindon poulet oiseau pinson ourson
+lionne chacal loutre têtard méduse corail oursin poulpe calmar truite perche goujon rouget merlan hareng dragon
+condor faucon cobaye souris toucan canari pivert phoque coucou
+
+# nourriture
+gâteau bonbon cerise fraise orange citron banane ananas raisin mangue amande tomate oignon piment poivre
+céleri salade laitue endive courge patate yaourt jambon gaufre tisane potage farine levure persil gouter beurre
+nougat sorbet menthe
+
+# maison et objets
+maison chaise canapé tiroir miroir bougie rideau balcon jardin garage douche lavabo panier valise carton flacon
+crayon cahier agrafe feutre papier timbre dessin camera ballon poupée toupie puzzle domino coffre trésor
+pépite comète étoile soleil glaçon éclair saison soirée minute siècle montre réveil bureau
+bouton boucle ciseau
+
+# nature
+racine écorce tulipe rosier muguet pensée mousse rocher vallée plaine fleuve marais volcan désert jungle
+savane grotte source canyon érable roseau lierre bambou cactus graine pollen nectar pétale verger
+
+# corps
+visage narine bouche langue cheveu épaule orteil poumon ventre muscle regard menton cuisse mollet
+
+# vêtements et bijoux
+bonnet basket tricot pyjama bottes
+
+# transports
+bateau navire radeau pédalo barque camion moteur volant pédale chemin tunnel virage cabine police
+
+# gens et métiers
+enfant garçon parent cousin amiral pilote acteur soldat prince voisin invité copain copine patron berger
+mineur nageur skieur joueur public équipe voleur bandit espion maître
+
+# lieux
+classe palais église cinéma cirque mairie marché banque moulin cabane chalet hangar prison temple refuge
+square manège
+
+# jeux, musique, divers
+cadeau violon grelot tennis karaté course énigme secret lettre phrase parole signal rythme cercle nombre
+calcul trente quinze treize moitié double triple amitié espoir projet voyage hasard destin beauté chance
+colère blague humour pensée savoir esprit nature argent cuivre bronze saphir marbre granit brique
+
+# adjectifs
+joyeux gentil rapide solide triste facile timide bavard mignon énorme étroit humide propre sombre orange
+violet marron pointu entier simple unique ancien récent proche voisin secret normal génial malade vivant
+tenace docile fidèle humble ardent exquis précis occupé absent rêveur sévère strict amical
+tendre
+
+# verbes
+manger parler sauter courir dormir danser lancer pêcher rouler porter couper coller écrire
+cacher sentir goûter brûler fondre broder coudre ranger rincer sécher passer
+vendre prêter donner offrir partir entrer sortir monter tomber bouger ramper camper gagner perdre
+lutter penser croire savoir devoir valoir adorer garder sauver guérir battre
+casser fermer ouvrir sonner piquer mordre lécher bercer élever goûter souper avaler mâcher
+bondir agiter remuer verser tenter régner guider suivre piéger
+conter causer
+
+# deuxième fournée (20/10)
+alpaga béluga coyote fennec gibbon iguane impala martre ocelot vipère python cafard animal lièvre turbot dorade
+pirate panais cassis litchi papaye goyave croûte miette paella tajine ragoût gratin quiche fondue boudin cornet
+buffet cadran casier casque cintre compas éponge gourde grille louche manche masque pagaie pioche râteau rasoir
+tampon torche treuil verrou chaîne bobine aimant armure flèche blouse corset turban moufle
+aurore zénith orbite averse rafale climat rivage lagune sommet massif bocage jasmin bleuet dahlia mimosa trèfle
+lichen mélèze cyprès baobab copeau quartz argile cendre braise flamme reflet
+bambin jumeau adulte madame auteur sultan viking client prêtre ermite zombie ennemi intrus hanche organe tendon
+artère frange tresse
+campus crèche donjon écurie enclos étable grange manoir marina pagode parvis porche remise ruelle écluse bassin
+ponton escale office palier avenue
+billet ticket carnet agenda paquet examen dictée indice pantin ballet accord rayure damier quille régate
+rallye podium record hockey corner sprint relais pétard parade défilé festin potion élixir topaze ivoire acajou
+paille alerte ardeur audace avenir bêtise danger délice effort faveur fierté gaieté gloire humeur loisir malice
+métier moment raison regret retard retour risque succès talent vérité
+adroit brutal fameux féroce fleuri habile humain intime jaloux jovial maigre neutre obscur pesant rigide sonore
+souple stable subtil tardif valide vivace vorace
+aboyer amuser bouder briser broyer calmer choyer clouer cocher couver douter éclore filmer foncer forcer forger
+frôler glaner graver hacher hanter hisser hurler imiter marier moudre palper panser parier percer planer pondre
+puiser racler régler rendre rester ronger rougir saluer signer sonder souder surfer tarder tisser tondre tordre
+tracer venger vernir voguer
+anneau archet aviron bagage carafe cordon fanion flocon fuseau galion gibier guidon hameau harpon hochet hublot
+lavoir menhir museau parfum peigne perron pilier piston poteau poudre prisme rameau trappe trompe vallon vapeur
+arcade caille charme chimie combat coteau couple douane essaim étoffe figure grappe groupe levier menace minuit
+niveau palace patrie pompon presse profil région remède réseau rouage trajet troupe valeur zigzag
