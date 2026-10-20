@@ -359,7 +359,7 @@ function ducAttaquer(etat, s, cible, sources) {
     }
   } else {
     res.pertesA = n;
-    res.pertesD = Math.min(t.gar, Math.round(attaque * 0.5));
+    res.pertesD = Math.min(t.gar, Math.floor(attaque * 0.5));   // arrondi en dessous : 1 contre 1, le défenseur tient
     t.gar -= res.pertesD; t.pret = Math.min(t.pret, t.gar);
   }
   if (s === 0) etat.stats.combats++;
