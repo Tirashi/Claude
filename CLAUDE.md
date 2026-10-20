@@ -34,6 +34,7 @@
 - **Défis du jour** (règle de l'utilisateur, 15/10) : une seule tentative classée par jour ; tentative sauvegardée à part et reprise au même temps (puzzles) ou comptée dès le départ (missions). Détails par jeu dans le mémo. À appliquer à tout nouveau défi du jour.
 - La police **Press Start 2P n'a pas de majuscules accentuées** : écrire les textes en MAJUSCULES sans accent (ETOILES, REESSAYER…).
 - **Supabase n'est pas joignable** depuis l'environnement de Claude (proxy 403) : tester avec `outils/faux-classements.js`, puis demander un essai réel sur le téléphone.
+- **Tests instables** : un test qui joue contre une IA au hasard vérifie juste après l'action du joueur, pas après le tour de l'ordinateur (détails dans le mémo, leçon d'Amiral ! du 20/10).
 - Playwright : changer seulement l'ancre (`#…`) ne recharge pas la page (repasser par `about:blank`) ; dans `page.evaluate`, les `const` et fonctions de haut niveau d'un jeu sont accessibles.
 
 ## Artefacts des jeux
