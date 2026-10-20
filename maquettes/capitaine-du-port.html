@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>Capitaine du port</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
 <style>
-/* Maquette de Capitaine du port : le même bassin jouable dans trois directions, côte à côte sur des téléphones.
-   Page sombre volontairement (un port la nuit, comme les autres maquettes de la Ludothèque). */
+/* Maquette 2 de Capitaine du port, dans la DA 32 bits de la planche des coups de cœur (scène du port) :
+   le même bassin jouable, en portrait, à trois heures de la journée. Page sombre comme les autres maquettes. */
 :root{
-  --fond:#0a1820; --texte:#eef3f1; --doux:#9fb6b8; --or:#ffcf4a; --cadre:#02070a; --ligne:#1d3640;
+  --fond:#0b1622; --texte:#eef3f6; --doux:#a3b6c8; --or:#ffd23f; --cadre:#02060a; --ligne:#1e3346;
   --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif;
   color-scheme:dark;
 }
@@ -19,371 +19,734 @@ body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
 .page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
 h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000;text-wrap:balance}
-header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
+header p{margin:10px 0 0;color:var(--doux);max-width:68ch}
 .grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px 24px}
 .dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.tel{width:100%;max-width:324px;aspect-ratio:216/384;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated;cursor:grab}
 .dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
-.dir p{margin:0;color:var(--doux);max-width:300px;font-size:15px;text-align:center}
-
-/* le téléphone : canvas plein cadre + bandeau du haut et boutons du bas en HTML */
-.tel{position:relative;width:100%;max-width:300px;aspect-ratio:272/480;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
-.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.hud{position:absolute;left:0;right:0;top:0;padding:4.5% 6% 0;display:flex;flex-direction:column;gap:2px;pointer-events:none}
-.hud .t{font-size:clamp(9px,3.4vw,13px)}
-.hud .l{display:flex;justify-content:space-between;gap:8px;font-size:clamp(8px,3vw,11px)}
-.bas{position:absolute;left:0;right:0;bottom:0;padding:0 6% 6%;display:flex;gap:8px}
-.bas button{flex:1;font:inherit;cursor:pointer}
-.bas button:focus-visible{outline:3px solid var(--or);outline-offset:2px}
-
-/* A : port en pixels 16 bits */
-.A{font-family:var(--f-titre)}
-.A canvas{image-rendering:pixelated}
-.A .hud{color:#fff;text-shadow:2px 2px 0 #0b1830}
-.A .hud .t{color:#ffd84a}
-.A .bas button{font-size:clamp(7px,2.6vw,10px);padding:10px 4px;background:#2a2340;color:#fff;border:3px solid #fff;box-shadow:inset -3px -3px 0 #120d22,inset 3px 3px 0 #4c4170}
-.A .bas button:active{box-shadow:inset 3px 3px 0 #120d22}
-
-/* B : bateaux-jouets dans un bassin */
-.B{font-family:var(--f-texte)}
-.B .hud{color:#2b2340}
-.B .hud .t{font-weight:700;font-size:clamp(14px,5vw,19px);letter-spacing:.01em}
-.B .hud .l{font-weight:600;font-size:clamp(11px,3.8vw,14px)}
-.B .bas button{font-weight:700;font-size:clamp(12px,4vw,15px);padding:9px 4px;background:#ff8a5c;color:#2b2340;border:3px solid #2b2340;border-radius:14px;box-shadow:0 4px 0 #2b2340}
-.B .bas button+button{background:#fff3d6}
-.B .bas button:active{transform:translateY(3px);box-shadow:0 1px 0 #2b2340}
-
-/* C : carte marine */
-.C{font-family:"IM Fell English",Georgia,serif}
-.C .hud{color:#2c3a40}
-.C .hud .t{font-family:"IM Fell English SC",Georgia,serif;font-size:clamp(13px,4.6vw,18px);letter-spacing:.06em}
-.C .hud .l{font-style:italic;font-size:clamp(11px,3.8vw,14px)}
-.C .bas button{font-family:"IM Fell English SC",Georgia,serif;font-size:clamp(12px,4vw,15px);letter-spacing:.06em;padding:7px 4px;background:#f6efd8;color:#2c3a40;border:1.5px solid #2c3a40;border-radius:2px;box-shadow:3px 3px 0 rgba(44,58,64,.35)}
-.C .bas button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(44,58,64,.35)}
-
+.dir p{margin:0;color:var(--doux);max-width:310px;font-size:15px;text-align:center}
 section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px}
 section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0}
-section.q ol{margin:0;padding-left:22px;color:var(--texte);max-width:72ch;display:flex;flex-direction:column;gap:6px}
+section.q ol{margin:0;padding-left:22px;max-width:74ch;display:flex;flex-direction:column;gap:6px}
 section.q li span{color:var(--doux)}
-@media (prefers-reduced-motion:reduce){.B .bas button:active,.C .bas button:active{transform:none}}
 </style>
 </head>
 <body>
 <div class="page">
 <header>
   <h1>CAPITAINE DU PORT</h1>
-  <p>Trois directions pour le même bassin, jouables. Glissez les bateaux dans leur longueur (pendant qu'on glisse, le remorqueur vient pousser) et amenez le navire doré à son quai, à droite. Ce bassin se fait en 11 coups au minimum ; un coup = un bateau déplacé, quelle que soit la distance.</p>
+  <p>Le style de la scène du port de la planche « 32 bits » : bateaux en volume vus du dessus, quais en granit, grue, capitainerie, phare et mouettes. Le bassin est jouable : glissez les bateaux dans leur longueur pour ouvrir la passe au navire doré, en haut. Pendant qu'on glisse, le remorqueur rouge vient pousser. 11 coups au minimum. Les trois écrans sont la même scène à trois heures de la journée (une idée pour distinguer les ports).</p>
 </header>
 
 <div class="grille">
   <div class="dir">
-    <div class="tel A" data-style="A">
-      <canvas width="136" height="240"></canvas>
-      <div class="hud"><div class="t">CAPITAINE DU PORT</div><div class="l"><span>BASSIN 1-3</span><span class="c">COUPS 0</span></div></div>
-      <div class="bas"><button type="button" data-a="annuler">ANNULER</button><button type="button" data-a="reco">RECOMMENCER</button></div>
-    </div>
-    <h2>A · LE PORT EN PIXELS</h2>
-    <p>16 bits comme Amiral ! : eau tramée qui scintille, quais en planches, bittes d'amarrage, police de la Ludothèque.</p>
+    <div class="tel"><canvas data-heure="jour" width="216" height="384"></canvas></div>
+    <h2>A · PLEIN JOUR</h2>
+    <p>La scène d'origine, telle quelle : soleil, eau turquoise, conteneurs de toutes les couleurs.</p>
   </div>
-
   <div class="dir">
-    <div class="tel B" data-style="B">
-      <canvas width="544" height="960"></canvas>
-      <div class="hud"><div class="t">Capitaine du port</div><div class="l"><span>Port 1 · bassin 3</span><span class="c">0 coup</span></div></div>
-      <div class="bas"><button type="button" data-a="annuler">Annuler</button><button type="button" data-a="reco">Recommencer</button></div>
-    </div>
-    <h2>B · LES BATEAUX-JOUETS</h2>
-    <p>Des jouets peints qui flottent dans un bassin en bois, gros contours comme Lune-Rover. Ils dansent un peu sur l'eau.</p>
+    <div class="tel"><canvas data-heure="soir" width="216" height="384"></canvas></div>
+    <h2>B · COUCHER DE SOLEIL</h2>
+    <p>Lumière orangée, soleil bas sur la mer, les premières lampes s'allument sur les quais.</p>
   </div>
-
   <div class="dir">
-    <div class="tel C" data-style="C">
-      <canvas width="544" height="960"></canvas>
-      <div class="hud"><div class="t">Capitaine du port</div><div class="l"><span>Planche I · bassin 3</span><span class="c">0 manœuvre</span></div></div>
-      <div class="bas"><button type="button" data-a="annuler">Annuler</button><button type="button" data-a="reco">Recommencer</button></div>
-    </div>
-    <h2>C · LA CARTE MARINE</h2>
-    <p>Le bassin vu sur la carte du capitaine : sondes en brasses, rose des vents, navires à l'encre. Plus calme, plus « réflexion ».</p>
+    <div class="tel"><canvas data-heure="nuit" width="216" height="384"></canvas></div>
+    <h2>C · LA NUIT</h2>
+    <p>Port bleu nuit, lampadaires et fenêtres allumés, faisceau du phare qui tourne.</p>
   </div>
 </div>
 
 <section class="q">
   <h2>QUESTIONS</h2>
   <ol>
-    <li>Quelle direction : A, B ou C ? <span>(ou un mélange)</span></li>
-    <li>Le remorqueur : on garde la version de la maquette (on glisse les bateaux, le remorqueur vient juste pousser pour le décor) ? <span>Ou alors on pilote vraiment le remorqueur case par case et il pousse ou tire les bateaux : plus original mais plus long à jouer, plutôt comme Le Magasinier.</span></li>
-    <li>Grille de 6 × 6 partout, ou 7 × 7 pour le dernier port ? <span>(60 niveaux en 5 ports, vérifiés par le solveur, et un bassin du jour, comme prévu)</span></li>
+    <li>Ce style est-il le bon ? <span>Laquelle des trois heures préférez-vous, ou une heure par port (5 ports : matin, plein jour, soir, nuit, tempête…) ?</span></li>
+    <li>Le remorqueur : décor qui pousse pendant qu'on glisse (comme ici), ou on le pilote vraiment, case par case ? <span>(plus original, mais plus long à jouer)</span></li>
+    <li>Grille de 6 × 6 partout, ou 7 × 7 pour le dernier port ?</li>
   </ol>
 </section>
 </div>
 
 <script>
-/* ---------- le bassin (logique commune aux trois directions) ---------- */
-const W = 6, H = 6, SORTIE = 2;           // la sortie est à droite de la 3e rangée
-// [type, x, y, longueur, horizontal, sens de la proue (+1 droite/bas, -1 gauche/haut)]
-const NIVEAU = [["or",0,2,2,1,1],["cargo",2,0,3,0,1],["peniche",4,2,2,0,-1],["ferry",1,4,3,1,-1],["peniche",3,0,2,1,1],
-  ["cargo",5,1,3,0,-1],["peniche",4,5,2,1,1],["peniche",0,4,2,0,1],["peniche",0,0,2,0,-1],["peniche",1,3,2,1,-1]];
-const MIN = 11;
-// géométrie logique d'un téléphone (272 × 480), bassin de 6 × 38 au milieu
-const G = {w:272, h:480, x0:12, y0:118, c:38};
+"use strict";
+/* =====================================================================
+   Moteur de pixel art repris de la scène « port » de la planche 32 bits
+   (planche des coups de cœur), mis en portrait 216 × 384.
+   ===================================================================== */
+const OUT = "#120c16", TAU = Math.PI * 2, FONT = '"Press Start 2P", monospace';
+const VW = 216, VH = 384, CS = 30, GX = 18, GY = 96;      // grille 6 × 6
+const BX0 = 12, BX1 = 204, BY0 = 90, BY1 = 282;           // le bassin
+const SORTIE = 2;                                         // colonne de la passe, en haut
+const CH = {x0: GX + SORTIE * CS, x1: GX + SORTIE * CS + CS, y0: 40, y1: BY0};   // la passe
+const SEAY = 44;                                          // la mer au-dessus de cette ligne
+const LH = {x: 184, y: 64};                               // le phare, au bout de la jetée
 
-function grille(ps, sauf){
-  const g = Array.from({length:H}, () => Array(W).fill(-1));
-  ps.forEach((p,i) => { if (i === sauf) return; for (let k = 0; k < p.n; k++) g[p.h ? p.y : p.y + k][p.h ? p.x + k : p.x] = i; });
+function mk(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.imageSmoothingEnabled = false; return [c, g]; }
+function rnd(seed){ return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function hex2(c){ const v = parseInt(c.slice(1), 16); return [v >> 16, v >> 8 & 255, v & 255]; }
+function mix(a, b, f){ const A = hex2(a), B = hex2(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * f).toString(16).padStart(2, "0")).join(""); }
+function text(g, s, x, y, size, col, align = "left", sh = OUT){
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = "top";
+  if (sh){ g.fillStyle = sh; g.fillText(s, x + 1, y + 1); }
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+function logo(g, s, x, y, size, ramp, align = "left"){
+  g.font = `${size}px ${FONT}`; g.textAlign = align; g.textBaseline = "top"; g.lineJoin = "round";
+  g.fillStyle = OUT; g.fillText(s, x + 2, y + 3);
+  g.lineWidth = Math.max(3, size / 4); g.strokeStyle = OUT; g.strokeText(s, x, y);
+  const gr = g.createLinearGradient(0, y, 0, y + size); gr.addColorStop(0, ramp[0]); gr.addColorStop(.5, ramp[1]); gr.addColorStop(1, ramp[2]);
+  g.fillStyle = gr; g.fillText(s, x, y);
+}
+function plate(g, x, y, w, h){
+  R(g, x + 2, y - 2, w - 4, h + 4, OUT); R(g, x - 2, y + 2, w + 4, h - 4, OUT); R(g, x, y, w, h, OUT);
+  const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, "rgba(48,70,104,.94)"); gr.addColorStop(1, "rgba(14,22,38,.94)");
+  g.fillStyle = gr; g.fillRect(x + 1, y + 1, w - 2, h - 2);
+  R(g, x + 2, y + 1, w - 4, 1, "rgba(160,200,240,.55)"); R(g, x + 1, y + 2, 1, h - 4, "rgba(160,200,240,.55)");
+  R(g, x + 2, y + h - 2, w - 4, 1, "rgba(0,0,0,.45)"); R(g, x + w - 2, y + 2, 1, h - 4, "rgba(0,0,0,.45)");
+}
+function silhouette(img, col, grow = 0){
+  const [c, g] = mk(img.width + grow * 2, img.height + grow * 2);
+  for (let dy = -grow; dy <= grow; dy++) for (let dx = -grow; dx <= grow; dx++) if (Math.abs(dx) + Math.abs(dy) <= grow) g.drawImage(img, grow + dx, grow + dy);
+  g.globalCompositeOperation = "source-in"; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height); return c;
+}
+// des boules ombrées (rochers), avec un contour
+function blob(g, shapes, ramp){
+  for (const [cx, cy, r] of shapes){
+    for (let y = -r - 1; y <= r + 1; y++) for (let x = -r - 1; x <= r + 1; x++){
+      const d = Math.hypot(x, y); if (d > r + 1) continue;
+      if (d > r){ R(g, cx + x, cy + y, 1, 1, OUT); continue; }
+      const l = (-x - y) / (r * 1.4) - (d / r) * .2;
+      R(g, cx + x, cy + y, 1, 1, ramp[l > .45 ? 0 : l > -.05 ? 1 : l > -.5 ? 2 : 3]);
+    }
+  }
+}
+
+/* ---------- palettes (4 nuances, lumière en haut à gauche) ---------- */
+const P = {
+  gold:   ["#fff6c2", "#ffd23f", "#e0a020", "#9a6410"],
+  cream:  ["#ffffff", "#f4ecda", "#d6c8aa", "#a8977a"],
+  teak:   ["#f0c088", "#c48a52", "#9a6236", "#6a4020"],
+  navy:   ["#7a9ee0", "#3458a0", "#243f78", "#16274e"],
+  steel:  ["#dfe4ea", "#a3acb9", "#6f7888", "#454c5c"],
+  red:    ["#ff8a76", "#e04a3c", "#a8302a", "#6e1d1d"],
+  rust:   ["#eea474", "#c06a3a", "#8e4624", "#5a2a14"],
+  sand:   ["#fff0b8", "#ecc878", "#c49a4c", "#8a6430"],
+  teal:   ["#8ae0d0", "#3fa898", "#2c7870", "#1c4a48"],
+  blue:   ["#9ad4ff", "#3f8fe0", "#2a64b0", "#1a3f7a"],
+  orange: ["#ffc274", "#f08a28", "#c05e14", "#7a3a0c"],
+  green:  ["#b8e27c", "#6fae45", "#457f2e", "#2a5220"],
+  black:  ["#5e5870", "#3a3548", "#262233", "#17131e"],
+  glass:  ["#e0f8ff", "#7ccaf0", "#3a86c0", "#22507a"],
+  white:  ["#ffffff", "#eef2f6", "#c8d0dc", "#8e98aa"],
+  yellow: ["#fff2a8", "#ffd23f", "#d09a1c", "#8f6410"],
+  pink:   ["#ffc0d8", "#f07aa8", "#c04e7e", "#80304e"],
+};
+const WATER = ["#1c5c78", "#226c88", "#2a7c97", "#3790aa"];
+const SEA = ["#163f66", "#1a4d78", "#205d8a", "#2a6f9c"];
+
+/* ---------- petit moteur de sprites vus du dessus ---------- */
+function Buf(w, h){
+  const col = new Array(w * h).fill(null);
+  const B = {w, h, col,
+    shape(ins, ramp, o = {}){
+      const m = new Uint8Array(w * h);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (ins(x + .5, y + .5)) m[y * w + x] = 1;
+      const M = (x, y) => x >= 0 && y >= 0 && x < w && y < h && m[y * w + x] === 1;
+      if (o.shadow){
+        const sh = new Uint8Array(w * h);
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (m[y * w + x]) for (let k = 1; k <= o.shadow; k++){ const xx = x + k, yy = y + k; if (xx < w && yy < h && !M(xx, yy)) sh[yy * w + xx] = 1; }
+        for (let i = 0; i < w * h; i++) if (sh[i] && col[i] && col[i] !== OUT) col[i] = mix(col[i], "#10102a", .38);
+      }
+      if (o.outline) for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+        if (M(x, y)) continue;
+        if (M(x - 1, y) || M(x + 1, y) || M(x, y - 1) || M(x, y + 1)) col[y * w + x] = OUT;
+      }
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+        if (!m[y * w + x]) continue;
+        const tl = !M(x - 1, y) || !M(x, y - 1), br = !M(x + 1, y) || !M(x, y + 1);
+        let k = o.flat ? 1 : o.inset ? (tl ? 2 : br ? 0 : 1) : (br ? 2 : tl ? 0 : 1);
+        if (o.tex) k = o.tex(x + .5, y + .5, k);
+        if (k < 0) continue;
+        col[y * w + x] = typeof k === "string" ? k : ramp[Math.max(0, Math.min(3, k))];
+      }
+      return B;
+    },
+    toCanvas(){
+      const [c, g] = mk(w, h), img = g.createImageData(w, h);
+      for (let i = 0; i < w * h; i++) if (col[i]){ const [r, gg, b] = hex2(col[i]); img.data.set([r, gg, b, 255], i * 4); }
+      g.putImageData(img, 0, 0); return c;
+    }};
+  return B;
+}
+
+/* ---------- les bateaux (a le long du bateau : 0 = poupe, L = proue ; dir = direction de la proue) ---------- */
+const PAD = 2;
+function hullHW(L, W, bow, stern = 3, pow = 1.6){
+  return a => {
+    if (a < 0 || a > L) return -1;
+    let h = W / 2;
+    if (a > L - bow){ const t = (a - (L - bow)) / bow; h *= Math.pow(Math.max(0, 1 - Math.pow(t, pow)), .55); }
+    if (a < stern){ const t = (stern - a) / stern; h -= stern * (1 - Math.sqrt(Math.max(0, 1 - t * t))); }
+    return h;
+  };
+}
+function makeBoat(dir, L, W, build){
+  const horiz = dir === "E" || dir === "W", bw = (horiz ? L : W) + PAD * 2, bh = (horiz ? W : L) + PAD * 2;
+  const B = Buf(bw, bh);
+  const loc = (x, y) => {
+    x -= PAD; y -= PAD;
+    if (dir === "E") return [x, y - W / 2];
+    if (dir === "W") return [L - x, y - W / 2];
+    if (dir === "N") return [L - y, x - W / 2];
+    return [y, W / 2 - x];
+  };
+  const api = {
+    S(f, ramp, o = {}){ const o2 = Object.assign({}, o); if (o.ltex) o2.tex = (x, y, k) => o.ltex(...loc(x, y), k); B.shape((x, y) => f(...loc(x, y)), ramp, o2); },
+    box: (a0, a1, b0, b1) => (a, b) => a >= a0 && a <= a1 && b >= b0 && b <= b1,
+    circ: (ac, bc, r) => (a, b) => (a - ac) ** 2 + (b - bc) ** 2 <= r * r,
+  };
+  build(api);
+  return B.toCanvas();
+}
+function hullDeck(A, hw, hull, deck, deckTex){
+  A.S((a, b) => Math.abs(b) <= hw(a), hull, {outline: true});
+  A.S((a, b) => a >= 2 && Math.abs(b) <= hw(a) - 2, deck, {inset: true, ltex: deckTex});
+}
+const planks = (a, b, k) => (Math.floor(b + 40) % 3 === 0 ? Math.max(k, 2) : (Math.floor(a + Math.floor(b + 40) * 7) % 13 === 0 ? 2 : k));
+
+const boatGold = dir => makeBoat(dir, 54, 20, A => {
+  const hw = hullHW(54, 20, 18, 4, 1.5);
+  hullDeck(A, hw, P.gold, P.teak, planks);
+  A.S((a, b) => Math.abs(b) <= hw(a) - 1 && Math.abs(b) > hw(a) - 2 && a > 3, P.red, {flat: true});
+  A.S(A.box(12, 34, -6, 6), P.white, {outline: true, shadow: 2});
+  A.S(A.box(14, 32, -4, 4), P.cream, {});
+  A.S((a, b) => A.box(12, 34, -6, 6)(a, b) && (a > 32 || (Math.abs(b) > 5 && Math.floor(a) % 3 !== 0)), P.glass, {flat: true});
+  A.S(A.circ(20, 0, 3.2), P.red, {outline: true, shadow: 1});
+  A.S(A.circ(20, 0, 1.4), P.black, {flat: true});
+  A.S(A.circ(28, 0, 1.5), P.steel, {outline: true});
+  A.S((a, b) => { const da = a - 43, r = Math.hypot(da, b), th = Math.atan2(b, da); return r < 2.2 + 1.6 * Math.cos(5 * th) ** 2 && r < 3.6; }, P.yellow, {outline: true});
+  A.S(A.circ(6, 0, 2), P.steel, {outline: true});
+});
+const boatCargo = dir => makeBoat(dir, 84, 24, A => {
+  const hw = hullHW(84, 24, 20, 4, 1.4);
+  hullDeck(A, hw, P.navy, P.steel, (a, b, k) => (Math.floor(a) % 6 === 0 ? 2 : k));
+  const cols = [P.red, P.blue, P.green, P.orange, P.teal, P.yellow, P.red, P.green, P.blue, P.orange];
+  let n = 0;
+  for (let i = 0; i < 5; i++) for (const s of [-1, 1]){
+    const a0 = 15 + i * 10, b0 = s < 0 ? -9 : 1;
+    A.S(A.box(a0, a0 + 8, b0, b0 + 7), cols[n++ % cols.length], {outline: true, shadow: 1, ltex: (a, b, k) => (k === 1 && Math.floor(a) % 2 === 0 ? 2 : k)});
+  }
+  A.S(A.box(2, 11, -10, 10), P.white, {outline: true, shadow: 2});
+  A.S((a, b) => A.box(2, 11, -10, 10)(a, b) && a > 10 && Math.floor(b + 20) % 3 !== 0, P.glass, {flat: true});
+  A.S(A.circ(5, 0, 3), P.orange, {outline: true, shadow: 1});
+  A.S(A.circ(5, 0, 1.5), P.black, {flat: true});
+  for (const s of [-4, 4]) A.S(A.circ(72, s, 1.8), P.steel, {outline: true});
+});
+const boatBarge = dir => makeBoat(dir, 54, 22, A => {
+  const hw = hullHW(54, 22, 6, 4, 2.5);
+  hullDeck(A, hw, P.rust, P.rust, null);
+  A.S(A.box(6, 48, -7, 7), P.black, {inset: true});
+  A.S((a, b) => ((a - 27) / 20) ** 2 + (b / 6.4) ** 2 <= 1, P.sand, {ltex: (a, b, k) => {
+    if (Math.abs(b + .5) < .8 && Math.abs(a - 27) < 16) return 0;
+    return hash(Math.floor(a * 3), Math.floor(b * 5)) < .12 ? Math.min(3, k + 1) : (b > 2 ? Math.max(k, 2) : k); }});
+  for (const s of [-8.5, 8.5]) for (const a of [3, 51]) A.S(A.circ(a, s, 1.2), P.steel, {outline: true});
+});
+const boatFerry = dir => makeBoat(dir, 84, 24, A => {
+  const hw = hullHW(84, 24, 16, 4, 1.6);
+  hullDeck(A, hw, P.blue, P.white, null);
+  A.S((a, b) => a > 2 && a < 11 && Math.abs(b) < 8 && Math.floor(b + 20) % 4 === 0, P.yellow, {flat: true});
+  A.S(A.box(12, 68, -9, 9), P.white, {outline: true, shadow: 2});
+  A.S((a, b) => A.box(12, 68, -9, 9)(a, b) && (Math.abs(b) > 8 || a > 67) && Math.floor(a) % 3 !== 0, P.glass, {flat: true});
+  A.S(A.box(15, 64, -6, 6), P.cream, {});
+  for (const a0 of [18, 50]) for (const s of [-1, 1]) A.S(A.box(a0, a0 + 9, s < 0 ? -7 : 4, s < 0 ? -4 : 7), P.orange, {outline: true, shadow: 1});
+  A.S(A.box(36, 44, -3, 3), P.blue, {outline: true, shadow: 2});
+  A.S(A.box(36, 44, -1, 1), P.white, {flat: true});
+  A.S(A.circ(72, 0, 2), P.red, {outline: true});
+});
+const boatFisher = (dir, hull, roof) => makeBoat(dir, 54, 18, A => {
+  const hw = hullHW(54, 18, 18, 4, 1.4);
+  hullDeck(A, hw, hull, P.teak, planks);
+  A.S(A.box(4, 11, -6, 6), P.green, {outline: true, shadow: 1, ltex: (a, b, k) => (Math.floor(a) % 2 ? Math.max(1, k) : 2)});
+  A.S(A.box(26, 36, -5, 5), roof, {outline: true, shadow: 2});
+  A.S((a, b) => A.box(26, 36, -5, 5)(a, b) && a > 35, P.glass, {flat: true});
+  A.S(A.box(15, 20, -6, -2), P.blue, {outline: true, shadow: 1});
+  A.S(A.box(15, 20, 2, 6), P.white, {outline: true, shadow: 1});
+  A.S((a, b) => A.box(16, 19, 3, 5)(a, b) && (Math.floor(a) + Math.floor(b)) % 2 === 0, P.steel, {flat: true});
+  for (const s of [-5, 5]) A.S(A.circ(41, s, 1.6), P.orange, {outline: true});
+  A.S(A.circ(31, 0, 1.4), P.steel, {outline: true});
+});
+const boatSail = dir => makeBoat(dir, 54, 16, A => {
+  const hw = hullHW(54, 16, 24, 4, 1.3);
+  hullDeck(A, hw, P.white, P.teak, planks);
+  A.S(A.box(4, 15, -4, 4), P.teak, {inset: true});
+  A.S(A.box(17, 31, -4.5, 4.5), P.cream, {outline: true, shadow: 1});
+  A.S(A.box(12, 34, -1.2, 1.2), P.blue, {outline: true, shadow: 2});
+  A.S(A.circ(34, 0, 1.6), P.steel, {outline: true});
+  A.S(A.circ(47, 0, 1), P.steel, {outline: true});
+});
+const boatPilot = dir => makeBoat(dir, 54, 18, A => {
+  const hw = hullHW(54, 18, 16, 5, 1.6);
+  A.S((a, b) => Math.abs(b) <= hw(a), P.black, {outline: true});
+  A.S((a, b) => a >= 2 && Math.abs(b) <= hw(a) - 2, P.orange, {});
+  A.S((a, b) => a >= 4 && Math.abs(b) <= hw(a) - 4, P.steel, {inset: true});
+  A.S(A.box(18, 36, -6, 6), P.white, {outline: true, shadow: 2});
+  A.S((a, b) => A.box(18, 36, -6, 6)(a, b) && a > 35, P.glass, {flat: true});
+  A.S(A.box(21, 31, -3, 3), P.orange, {});
+  A.S(A.circ(26, 0, 1.2), P.blue, {flat: true});
+});
+const boatPeniche = dir => makeBoat(dir, 84, 20, A => {
+  const hw = hullHW(84, 20, 9, 5, 2.2);
+  hullDeck(A, hw, P.black, P.teak, planks);
+  A.S(A.box(18, 66, -6, 6), P.green, {outline: true, shadow: 2, ltex: (a, b, k) => (Math.floor(a) % 4 === 0 ? 3 : Math.abs(b) < 1 ? 0 : k)});
+  A.S(A.box(4, 14, -7, 7), P.white, {outline: true, shadow: 2});
+  A.S(A.box(5, 13, -5, 5), P.red, {});
+  A.S((a, b) => A.box(4, 14, -7, 7)(a, b) && a > 13, P.glass, {flat: true});
+  for (let i = 0; i < 4; i++) for (const s of [-7.5, 7.5]) A.S(A.circ(69 + i * 3, s, 1.3), i % 2 ? P.pink : P.yellow, {outline: true});
+  A.S(A.circ(75, 0, 2.3), P.green, {outline: true});
+});
+const boatTug = dir => makeBoat(dir, 24, 16, A => {
+  const hw = hullHW(24, 16, 9, 4, 2);
+  A.S((a, b) => Math.abs(b) <= hw(a) + .8, P.black, {outline: true});
+  A.S((a, b) => Math.abs(b) <= hw(a) - 1.2 && a > 1.5 && a < 22.5, P.red, {});
+  A.S((a, b) => a >= 3 && Math.abs(b) <= hw(a) - 3, P.steel, {inset: true});
+  A.S(A.box(9, 17, -5, 5), P.white, {outline: true, shadow: 1});
+  A.S((a, b) => A.box(9, 17, -5, 5)(a, b) && a > 16, P.glass, {flat: true});
+  A.S(A.circ(6, 0, 2.6), P.yellow, {outline: true, shadow: 1});
+  A.S(A.circ(6, 0, 1.2), P.black, {flat: true});
+});
+
+/* ---------- le bassin : 10 bateaux, vérifié par un solveur (11 coups au minimum) ---------- */
+// [col, rangée, longueur, horizontal, fabrique du sprite] ; le premier est le navire doré
+const NIVEAU = [
+  [2, 4, 2, 0, () => boatGold("N")],
+  [0, 3, 3, 1, () => boatCargo("W")],
+  [2, 1, 2, 1, () => boatFisher("E", P.teal, P.red)],
+  [4, 2, 3, 0, () => boatFerry("S")],
+  [0, 1, 2, 0, () => boatSail("N")],
+  [1, 0, 3, 1, () => boatPeniche("W")],
+  [5, 0, 2, 0, () => boatPilot("S")],
+  [4, 5, 2, 1, () => boatFisher("W", P.red, P.blue)],
+  [0, 5, 2, 1, () => boatBarge("E")],
+  [3, 3, 2, 0, () => boatFisher("N", P.orange, P.teal)],
+];
+const MIN = 11;
+
+/* ---------- le décor fixe ---------- */
+const inBasin = (x, y) => x >= BX0 && x < BX1 && y >= BY0 && y < BY1;
+const inChan = (x, y) => x >= CH.x0 && x < CH.x1 && y >= CH.y0 && y < CH.y1;
+const inSea = (x, y) => y < SEAY && !(Math.hypot(x - LH.x, (y - LH.y) * 1.25) < 17);
+function paving(g){
+  const STONE = ["#c4b8a0", "#bcb098", "#b4a890"];
+  for (let y = 0; y < VH; y++) for (let x = 0; x < VW; x++){
+    const row = Math.floor(y / 12), off = Math.floor(hash(row, 5) * 24), cx = Math.floor((x + off) / 24);
+    const jx = (x + off) % 24, jy = y % 12;
+    let c = STONE[Math.floor(hash(cx, row) * 3)];
+    if (jx === 0 || jy === 0) c = "#9a8e78";
+    else if (jx === 1 || jy === 1) c = mix(c, "#fff8e8", .22);
+    else if (jx === 23 || jy === 11) c = mix(c, "#5a5040", .18);
+    else if (hash(x, y) < .05) c = mix(c, "#6a6050", .25);
+    R(g, x, y, 1, 1, c);
+  }
+}
+function waterPix(g, x, y, pal, shade){
+  const v = Math.sin(x * .07 + Math.sin(y * .05) * 2) * .5 + Math.sin(y * .11 + x * .02) * .4 + Math.sin((x + y) * .19) * .2;
+  const bay = [[0, 2], [3, 1]][y % 2][x % 2];
+  const f = (v + 1.1) / 2.2 * 3 + (bay - 1.5) * .3 - shade;
+  R(g, x, y, 1, 1, pal[Math.max(0, Math.min(3, Math.floor(f)))]);
+}
+function wallFace(g, x0, x1, y0, h){
+  for (let y = 0; y < h; y++) for (let x = x0; x < x1; x++){
+    const brick = Math.floor((x + (y % 4 < 2 ? 0 : 5)) / 10), j = (x + (y % 4 < 2 ? 0 : 5)) % 10 === 0 || y === 2;
+    let c = y >= h - 2 ? (y === h - 1 ? "#2c3a34" : "#3f5a48") : hash(brick, y > 2 ? 1 : 0) < .5 ? "#857a68" : "#77705f";
+    if (j && y < h - 2) c = "#544c40";
+    if (y === 0) c = "#e8dec8";
+    R(g, x, y0 + y, 1, 1, c);
+  }
+  R(g, x0, y0 - 1, x1 - x0, 1, OUT);
+}
+function coping(g, x, y, w, h){
+  R(g, x, y, w, h, "#e2d8c2");
+  if (w > h){ R(g, x, y + h - 1, w, 1, "#a69a84"); R(g, x, y + h, w, 1, OUT); }
+  else R(g, x + w - 1, y, 1, h, "#a69a84");
+}
+function bollard(g, x, y){
+  R(g, x - 1, y + 3, 6, 2, "rgba(30,24,16,.3)");
+  R(g, x - 2, y - 1, 5, 5, OUT); R(g, x - 3, y - 3, 7, 3, OUT); R(g, x - 2, y - 4, 5, 1, OUT);
+  R(g, x - 1, y, 3, 3, "#3a3548"); R(g, x - 1, y, 1, 3, "#5e5870");
+  R(g, x - 2, y - 3, 5, 2, "#4a4459"); R(g, x - 1, y - 3, 2, 1, "#9a94b0");
+}
+function container(g, x, y, w, d, h, ramp, doors){
+  R(g, x - 1, y - 1, w + 2, d + h + 2, OUT);
+  for (let yy = 0; yy < d; yy++) R(g, x, y + yy, w, 1, yy === 0 ? ramp[0] : yy % 2 ? ramp[1] : mix(ramp[1], ramp[0], .4));
+  R(g, x, y, 1, d, ramp[0]);
+  for (let xx = 0; xx < w; xx++) R(g, x + xx, y + d, 1, h, xx % 2 ? ramp[2] : ramp[3]);
+  R(g, x, y + d, w, 1, mix(ramp[2], ramp[3], .5));
+  if (doors){ R(g, x + w - 7, y + d + 1, 1, h - 1, OUT); R(g, x + w - 4, y + d + 2, 1, h - 3, ramp[0]); R(g, x + w - 2, y + d + 2, 1, h - 3, ramp[0]); }
+}
+function buildContainers(g){
+  // les piles de conteneurs du quai sud, de l'arrière vers l'avant
+  const cols = [P.red, P.blue, P.green, P.orange, P.teal, P.yellow, P.pink, P.navy], r = rnd(42), stacks = [];
+  for (let c = 0; c < 3; c++) stacks.push({x: 6 + c * 34, base: 322, tiers: 1 + Math.floor(r() * 3), k: Math.floor(r() * 99)});
+  for (const s of stacks){ const top = s.base - 9 - 7 * s.tiers; g.fillStyle = "rgba(40,30,20,.3)"; g.fillRect(s.x + 31, top + 3, 3, s.base - top - 1); g.fillRect(s.x + 3, s.base + 1, 31, 2); }
+  for (const s of stacks) for (let t = 0; t < s.tiers; t++) container(g, s.x, s.base - 9 - 7 * (t + 1), 30, 9, 7, cols[(s.k + t * 3) % cols.length], t === 0);
+  for (let x = 4; x < 108; x++) if (x % 6 < 3) R(g, x, 328, 1, 1, "#e8c040");
+}
+const WINDOWS = [[20, 70], [36, 70], [62, 70]];
+function buildBuilding(g){
+  // la capitainerie, sur le quai nord : murs crépis, volets bleus, toit d'ardoise
+  const x0 = 14, x1 = 74, roofY = 50, wallY = 66, groundY = 86;
+  R(g, x0 + 4, groundY, x1 - x0, 3, "rgba(40,30,20,.3)"); R(g, x1, roofY + 8, 5, groundY - roofY - 6, "rgba(40,30,20,.3)");
+  R(g, x0 - 1, roofY - 1, x1 - x0 + 2, groundY - roofY + 2, OUT);
+  for (let y = wallY; y < groundY; y++) for (let x = x0; x < x1; x++) R(g, x, y, 1, 1, y === groundY - 1 ? "#b8ab90" : (hash(x, y) < .08 ? "#e8dcc4" : "#f4ead6"));
+  for (const [wx, wy] of WINDOWS){ R(g, wx - 1, wy - 1, 8, 9, OUT); R(g, wx, wy, 6, 7, "#3a86c0"); R(g, wx, wy, 6, 2, "#7ccaf0"); R(g, wx + 2, wy, 1, 7, "#e0f8ff"); R(g, wx - 3, wy, 2, 7, "#3458a0"); R(g, wx + 7, wy, 2, 7, "#3458a0"); }
+  R(g, 47, 70, 9, 16, OUT); R(g, 48, 71, 7, 15, "#8e4624"); R(g, 48, 71, 7, 1, "#c06a3a"); R(g, 53, 78, 1, 2, "#ffd23f");
+  for (let y = roofY; y < wallY; y++) for (let x = x0 - 2; x < x1 + 2; x++){
+    const ry = y - roofY, row = Math.floor(ry / 3), sl = (x + (row % 2) * 3) % 6 === 0;
+    let c = ry < 2 ? "#a8b4c8" : ry < 8 ? "#6f7c94" : "#56627a";
+    if (ry % 3 === 2 || sl) c = mix(c, "#202838", .35);
+    if (ry === 8) c = "#8a98b0";
+    R(g, x, y, 1, 1, c);
+  }
+  R(g, x0 - 3, wallY, x1 - x0 + 6, 1, OUT); R(g, x0 - 3, roofY - 1, x1 - x0 + 6, 1, OUT); R(g, x0 - 3, roofY, 1, wallY - roofY, OUT); R(g, x1 + 2, roofY, 1, wallY - roofY, OUT);
+  R(g, 62, roofY - 7, 8, 12, OUT); R(g, 63, roofY - 6, 6, 10, "#c06a3a"); R(g, 63, roofY - 6, 6, 2, "#eea474"); R(g, 67, roofY - 4, 2, 8, "#8e4624");
+}
+function buildLighthouse(){
+  const [c, g] = mk(30, 66), cx = 15, base = 62, top = 16;
+  for (let y = top; y < base; y++){
+    const f = (y - top) / (base - top), hw = Math.round(5 + f * 3), band = Math.floor((y - top) / 8) % 2;
+    R(g, cx - hw - 1, y, hw * 2 + 3, 1, OUT);
+    for (let x = -hw; x <= hw; x++){ const s = x / hw, k = s < -.55 ? 0 : s < .25 ? 1 : s < .7 ? 2 : 3; R(g, cx + x, y, 1, 1, (band ? P.red : P.white)[k]); }
+  }
+  R(g, cx - 9, base - 1, 19, 4, OUT); R(g, cx - 8, base - 1, 17, 2, "#a49c8e"); R(g, cx - 8, base - 1, 6, 1, "#d6d0c4");
+  R(g, cx - 2, base - 9, 5, 8, OUT); R(g, cx - 1, base - 8, 3, 7, "#3458a0"); R(g, cx - 1, 34, 3, 3, OUT); R(g, cx, 35, 1, 1, "#fff2a8");
+  R(g, cx - 9, top - 2, 19, 5, OUT); R(g, cx - 8, top - 1, 17, 2, "#454c5c"); R(g, cx - 8, top - 1, 17, 1, "#a3acb9");
+  for (let x = -8; x <= 8; x += 2) R(g, cx + x, top - 4, 1, 3, "#262233");
+  R(g, cx - 5, top - 11, 11, 9, OUT); R(g, cx - 4, top - 10, 9, 7, "#fff2a8"); R(g, cx - 4, top - 10, 2, 7, "#ffffff"); R(g, cx + 2, top - 10, 2, 7, "#ffd23f"); R(g, cx - 1, top - 10, 1, 7, "#3a3548");
+  R(g, cx - 5, top - 15, 11, 5, OUT); R(g, cx - 4, top - 14, 9, 3, P.red[1]); R(g, cx - 3, top - 14, 3, 1, P.red[0]); R(g, cx + 2, top - 13, 2, 2, P.red[2]); R(g, cx, top - 17, 1, 2, OUT);
+  return c;
+}
+// lampadaires des quais (allumés le soir et la nuit)
+const LAMPS = [[6, 130], [6, 240], [210, 150], [210, 250], [118, 62], [150, 300], [206, 300]];
+function lamp(g, x, y){
+  R(g, x - 1, y - 14, 3, 15, OUT); R(g, x, y - 13, 1, 13, "#5e5870");
+  R(g, x - 3, y - 18, 7, 5, OUT); R(g, x - 2, y - 17, 5, 3, "#d8d0b8");
+  R(g, x - 2, y + 1, 5, 2, "rgba(30,24,16,.3)");
+}
+function buildBG(){
+  const [c, g] = mk(VW, VH);
+  paving(g);
+  for (let y = 0; y < VH; y++) for (let x = 0; x < VW; x++){
+    if (inBasin(x, y) || inChan(x, y)){
+      const sh = (y < BY0 + 5 && !inChan(x, y)) || (inChan(x, y) && y < CH.y0 + 5) ? 1.2 : (x < BX0 + 4 || (inChan(x, y) && x < CH.x0 + 4) ? .9 : 0);
+      waterPix(g, x, y, WATER, sh);
+    } else if (inSea(x, y)) waterPix(g, x, y, SEA, 0);
+  }
+  // la passe se fond dans la mer
+  for (let y = CH.y0; y < CH.y0 + 10; y++) for (let x = CH.x0; x < CH.x1; x++) if (hash(x, y) < 1 - (y - CH.y0) / 10) waterPix(g, x, y, SEA, 0);
+  // faces des quais (vues de face) et margelles
+  wallFace(g, 0, CH.x0, SEAY, 6); wallFace(g, CH.x1, VW, SEAY, 6);
+  wallFace(g, BX0 - 3, CH.x0, BY0 - 6, 6); wallFace(g, CH.x1, BX1 + 3, BY0 - 6, 6);
+  coping(g, CH.x0 - 3, SEAY + 6, 3, BY0 - SEAY - 12); coping(g, CH.x1, SEAY + 6, 3, BY0 - SEAY - 12);
+  R(g, CH.x0 - 4, SEAY + 6, 1, BY0 - SEAY - 12, OUT); R(g, CH.x1 + 3, SEAY + 6, 1, BY0 - SEAY - 12, OUT);
+  coping(g, BX0 - 4, BY0 - 6, 4, BY1 - BY0 + 10); coping(g, BX1, BY0, 3, BY1 - BY0);
+  coping(g, BX0 - 4, BY1, BX1 - BX0 + 7, 3);
+  R(g, BX0 - 1, BY0, 1, BY1 - BY0, OUT); R(g, BX1 + 3, BY0, 1, BY1 - BY0, OUT);
+  for (let x = BX0; x < BX1; x += 3) if (!inChan(x, BY0 - 1)) R(g, x, BY0 + (x % 2), 2, 1, "#4ea2b8");
+  // la grille : pointillés discrets
+  for (let k = 0; k <= 6; k++) for (let i = 0; i < 180; i += 3){
+    const cc = k === 0 || k === 6 ? "rgba(170,230,240,.45)" : "rgba(150,215,230,.28)";
+    R(g, GX + k * CS - (k === 6 ? 1 : 0), GY + i, 1, 1, cc); R(g, GX + i, GY + k * CS - (k === 6 ? 1 : 0), 1, 1, cc);
+  }
+  for (let i = 0; i <= 6; i++) for (let j = 0; j <= 6; j++){ const x = GX + i * CS - (i === 6), y = GY + j * CS - (j === 6); R(g, x - 1, y, 3, 1, "rgba(200,245,250,.5)"); R(g, x, y - 1, 1, 3, "rgba(200,245,250,.5)"); }
+  // rochers et plateforme du phare
+  blob(g, [[150, 46, 5], [160, 50, 6], [170, 44, 5], [198, 46, 6], [208, 40, 4], [168, 64, 5], [196, 66, 5]], ["#d6d0c4", "#a49c8e", "#7a7466", "#4e4a42"]);
+  for (let y = 36; y < 80; y++) for (let x = 160; x < 206; x++){ const d = Math.hypot(x - LH.x, (y - LH.y) * 1.25); if (d < 15) R(g, x, y, 1, 1, d > 13 ? ((x - LH.x) + (y - LH.y) < 0 ? "#efe6d2" : "#7a7060") : (Math.floor(Math.atan2(y - LH.y, x - LH.x) * 4) % 2 ? "#c9bea8" : "#bdb19a")); else if (d < 16) R(g, x, y, 1, 1, OUT); }
+  buildBuilding(g);
+  buildContainers(g);
+  // rails et pieds de la grue
+  R(g, 108, 300, 30, 1, "#6f7888"); R(g, 108, 312, 30, 1, "#6f7888");
+  for (const [dx, dy] of [[-8, -2], [6, -2], [-8, 8], [6, 8]]){ const x = 122, y = 304; R(g, x + dx - 1, y + dy - 8, 5, 11, OUT); R(g, x + dx, y + dy - 7, 3, 9, "#f0b030"); R(g, x + dx, y + dy - 7, 1, 9, "#ffe080"); }
+  // bittes d'amarrage
+  for (let k = 0; k < 6; k++) if (k !== SORTIE) bollard(g, GX + 15 + k * CS, BY0 - 11);
+  for (const y of [160, 210]) bollard(g, 6, y);
+  for (const y of [120, 220]) bollard(g, 209, y);
+  // bouée de sauvetage et caisses
+  R(g, 182, 314, 12, 12, OUT); for (let a = 0; a < 40; a++){ const an = a / 40 * TAU, x = Math.round(188 + Math.cos(an) * 4.5), y = Math.round(320 + Math.sin(an) * 4.5); R(g, x - 1, y - 1, 2, 2, Math.floor(a / 5) % 2 ? "#ffffff" : "#f04a3c"); }
+  R(g, 186, 318, 4, 4, "#bdb19a");
+  for (const [x, y] of [[156, 314], [168, 316]]){ R(g, x - 1, y - 1, 12, 12, OUT); R(g, x, y, 10, 4, P.teak[0]); R(g, x, y + 4, 10, 6, P.teak[2]); R(g, x, y + 6, 10, 1, P.teak[3]); R(g, x + 4, y + 4, 1, 6, P.teak[3]); }
+  for (const [x, y] of LAMPS) lamp(g, x, y);
+  // amarres vers les bateaux du haut
+  const rope = (x0, y0, x1, y1, sag) => { for (let k = 0; k <= 30; k++){ const u = k / 30; R(g, Math.round(x0 + (x1 - x0) * u), Math.round(y0 + (y1 - y0) * u + Math.sin(Math.PI * u) * sag), 1, 1, "#e8d8a8"); } };
+  rope(GX + 15, BY0 - 11, GX + 12, GY + 8, 2); rope(GX + 165, BY0 - 11, GX + 160, GY + 8, 2);
+  return c;
+}
+
+/* ---------- la grue et les mouettes ---------- */
+function drawCrane(g, bx, by, ang, len, lt, h){
+  const dx = Math.cos(ang), dy = Math.sin(ang), nx = -dy, ny = dx;
+  const tipX = bx + dx * len, tipY = by + dy * len * .8;
+  g.fillStyle = "rgba(40,30,20,.2)";
+  for (let s = 8; s < len; s++){ const x = bx + dx * s + 7, y = by + dy * s * .8 - h + 12; g.fillRect(Math.round(x - 1), Math.round(y - 1), 3, 3); }
+  const sway = Math.round(Math.sin(TAU * lt / 5) * 1.5), lh = 12 + Math.round(4 * Math.sin(TAU * lt / 10));
+  const lx = Math.round(tipX) + sway, ly = Math.round(tipY - lh);
+  R(g, lx - 2, Math.round(tipY) + 2, 24, 4, "rgba(40,30,20,.28)");
+  const pts = [];
+  for (let s = 0; s <= len; s++){ const w = 2.6 - s / len * 1.2; pts.push([bx + dx * s, by + dy * s * .8 - h, w, s]); }
+  for (const [x, y, w] of pts) for (const sd of [-1, 1]) R(g, Math.round(x + nx * w * sd) - 1, Math.round(y + ny * w * sd * .8) - 1, 3, 3, OUT);
+  for (const [x, y, w, s] of pts){
+    for (const sd of [-1, 1]) R(g, Math.round(x + nx * w * sd), Math.round(y + ny * w * sd * .8), 1, 1, sd < 0 ? "#ffe080" : "#e0a020");
+    if (s % 5 === 0) for (let q = -w; q <= w; q += .5) R(g, Math.round(x + nx * q), Math.round(y + ny * q * .8), 1, 1, "#f0b030");
+  }
+  for (let y = Math.round(tipY - h) + 1; y < ly - 1; y++) R(g, lx, y, 1, 1, y % 2 ? "#262233" : "#5e5870");
+  R(g, lx - 3, ly - 2, 7, 2, OUT);
+  container(g, lx - 12, ly, 24, 8, 6, P.orange, false);
+  const cx = Math.round(bx), cy = Math.round(by - h);
+  R(g, cx - 6, cy - 6, 13, 12, OUT); R(g, cx - 5, cy - 5, 11, 10, "#f0b030"); R(g, cx - 5, cy - 5, 11, 2, "#ffe080"); R(g, cx + 4, cy - 3, 1, 8, "#c08010");
+  R(g, cx - 3, cy - 2, 6, 4, "#3a86c0"); R(g, cx - 3, cy - 2, 2, 1, "#e0f8ff");
+  R(g, cx - 3, cy + 6, 7, h - 4, OUT); for (let y = cy + 6; y < cy + h + 1; y++) R(g, cx - 2, y, 5, 1, y % 4 === 0 ? "#c08010" : "#f0b030");
+}
+const GULL_A = [".....kk........", ".....ggk.......", "......ggk......", "......gggg.....", "......wwwgg....", ".ttwwwwwwwwwhhb", "......wwwgg....", "......gggg.....", "......ggk......", ".....ggk.......", ".....kk........"];
+const GULL_B = ["...............", "...............", "...............", "......kgg......", "......wwwg.....", ".ttwwwwwwwwwhhb", "......wwwg.....", "......kgg......", "...............", "...............", "..............."];
+function gullSprite(map, flip){
+  const w = map[0].length + 2, h = map.length + 2, [c, g] = mk(w, h);
+  const C = {k: "#2a2638", g: "#a8b0c0", w: "#ffffff", t: "#d8dee8", h: "#ffffff", b: "#ffb020"};
+  const at = (i, j) => { const row = map[j]; if (!row) return "."; return row[flip ? row.length - 1 - i : i] || "."; };
+  for (let j = 0; j < map.length; j++) for (let i = 0; i < map[0].length; i++) if (at(i, j) !== ".") R(g, i, j, 3, 3, OUT);
+  for (let j = 0; j < map.length; j++) for (let i = 0; i < map[0].length; i++){ const ch = at(i, j); if (ch !== ".") R(g, i + 1, j + 1, 1, 1, C[ch]); }
+  return c;
+}
+
+/* ---------- préparation (une fois pour les trois téléphones) ---------- */
+let BG, LIGHT, GULL, STAR, STAR0, ICON_UNDO, ICON_RE;
+const TUG = {}, TUGSIL = {}, WAVES = [], SEAW = [], SPR = [];
+function prepare(){
+  BG = buildBG(); LIGHT = buildLighthouse();
+  for (const n of NIVEAU){
+    const img = n[4]();
+    SPR.push({img, sil: silhouette(img, "rgba(6,30,48,.42)"), foam: silhouette(img, "#c8f0f4", 1)});
+  }
+  SPR[0].glow = [silhouette(SPR[0].img, "#fff2a8", 2), silhouette(SPR[0].img, "#ffd23f", 3)];
+  for (const d of ["N", "S", "E", "W"]){ TUG[d] = boatTug(d); TUGSIL[d] = silhouette(TUG[d], "rgba(6,30,48,.42)"); }
+  GULL = {a: [gullSprite(GULL_A, 0), gullSprite(GULL_A, 1)], b: [gullSprite(GULL_B, 0), gullSprite(GULL_B, 1)]};
+  GULL.sh = [silhouette(GULL.a[0], "rgba(10,20,40,.3)"), silhouette(GULL.b[0], "rgba(10,20,40,.3)")];
+  const r = rnd(321);
+  while (WAVES.length < 70) WAVES.push({x: BX0 + r() * (BX1 - BX0), y: BY0 + 6 + r() * (BY1 - BY0 - 8), len: 2 + Math.floor(r() * 4), ph: r(), m: 1 + Math.floor(r() * 2)});
+  while (SEAW.length < 22){ const x = r() * VW, y = 2 + r() * (SEAY - 6); if (inSea(Math.round(x), Math.round(y)) && !inChan(Math.round(x), Math.round(y))) SEAW.push({x, y, len: 3 + Math.floor(r() * 5), ph: r()}); }
+  const star = fill => { const [c, g] = mk(15, 15);
+    const ins = (x, y) => { const dx = x - 7, dy = y - 7.6, rr = Math.hypot(dx, dy), th = Math.atan2(dx, -dy); return rr < 3 + 4.4 * Math.pow(Math.abs(Math.cos(th * 2.5)), 3); };
+    for (let y = 0; y < 15; y++) for (let x = 0; x < 15; x++){ const i = ins(x + .5, y + .5); if (!i && (ins(x - .5, y + .5) || ins(x + 1.5, y + .5) || ins(x + .5, y - .5) || ins(x + .5, y + 1.5))) R(g, x, y, 1, 1, OUT); }
+    for (let y = 0; y < 15; y++) for (let x = 0; x < 15; x++) if (ins(x + .5, y + .5)) R(g, x, y, 1, 1, fill ? (x + y < 12 ? "#fff6c2" : x + y < 17 ? "#ffd23f" : "#e0a020") : (x + y < 14 ? "#3a4060" : "#262a44"));
+    return c; };
+  STAR = star(true); STAR0 = star(false);
+  const icon = map => { const [c, g] = mk(map[0].length + 2, map.length + 2);
+    for (let j = 0; j < map.length; j++) for (let i = 0; i < map[0].length; i++) if (map[j][i] === "x") R(g, i, j, 3, 3, OUT);
+    for (let j = 0; j < map.length; j++) for (let i = 0; i < map[0].length; i++) if (map[j][i] === "x") R(g, i + 1, j + 1, 1, 1, j < map.length / 2 ? "#ffffff" : "#d8e8f8");
+    return c; };
+  ICON_UNDO = icon(["...x........", "..xx........", ".xxxxxxxx...", "xxxxxxxxxx..", ".xxx.....xx.", "..xx......xx", "...x......xx", "..........xx", ".........xx.", "...xxxxxxx.."]);
+  ICON_RE = icon(["....xxxx....", "..xxxxxxx.x.", ".xx.....xxx.", ".x.....xxxx.", "xx..........", "xx..........", "xx........xx", "xx........xx", ".x.......xx.", ".xx.....xx..", "..xxxxxxx...", "....xxx....."]);
+}
+
+/* ---------- la règle du jeu ---------- */
+function occupation(ps, sauf){
+  const g = Array.from({length: 6}, () => Array(6).fill(-1));
+  ps.forEach((p, i) => { if (i === sauf) return; for (let k = 0; k < p.n; k++) g[p.h ? p.r : p.r + k][p.h ? p.c + k : p.c] = i; });
   return g;
 }
 function limites(ps, i){
-  const p = ps[i], g = grille(ps, i), libre = v => p.h ? g[p.y][v] === -1 : g[v][p.x] === -1;
-  let a = p.h ? p.x : p.y, b = a;
+  const p = ps[i], g = occupation(ps, i), libre = v => p.h ? g[p.r][v] === -1 : g[v][p.c] === -1;
+  let a = p.h ? p.c : p.r, b = a;
   while (a - 1 >= 0 && libre(a - 1)) a--;
-  while (b + p.n < (p.h ? W : H) && libre(b + p.n)) b++;
+  while (b + p.n < 6 && libre(b + p.n)) b++;
   return [a, b];
 }
+const BOUTONS = [{x: 6, y: 344, w: 62, h: 34, a: "annuler"}, {x: 74, y: 344, w: 62, h: 34, a: "reco"}];
 
 /* ---------- un téléphone ---------- */
-function Tel(el){
-  const cv = el.querySelector("canvas"), ctx = cv.getContext("2d"), style = el.dataset.style;
-  const k = cv.width / G.w, compte = el.querySelector(".c");
-  const R = {A: dessinA, B: dessinB, C: dessinC}[style];
-  const st = {ps: [], coups: 0, hist: [], prise: null, fini: 0, gagne: false};
-  function neuf(){
-    st.ps = NIVEAU.map(([t,x,y,n,h,b]) => ({t, x, y, n, h, b, v: h ? x : y}));
-    st.coups = 0; st.hist = []; st.prise = null; st.fini = 0; st.gagne = false; maj();
-  }
-  function maj(){
-    const n = st.coups;
-    compte.textContent = style === "A" ? "COUPS " + n : style === "B" ? n + (n > 1 ? " coups" : " coup") : n + (n > 1 ? " manœuvres" : " manœuvre");
-  }
-  function pos(e){ const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * G.w, (e.clientY - r.top) / r.height * G.h]; }
+function Tel(cv){
+  const g = cv.getContext("2d"), heure = cv.dataset.heure;
+  g.imageSmoothingEnabled = false;
+  const st = {ps: [], coups: 0, hist: [], prise: null, gagne: 0, appui: null};
+  function neuf(){ st.ps = NIVEAU.map(([c, r, n, h]) => ({c, r, n, h: !!h, v: h ? c : r})); st.coups = 0; st.hist = []; st.prise = null; st.gagne = 0; }
+  neuf();
+  const pos = e => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * VW, (e.clientY - b.top) / b.height * VH]; };
   cv.addEventListener("pointerdown", e => {
+    const [mx, my] = pos(e);
+    for (const b of BOUTONS) if (mx >= b.x && mx < b.x + b.w && my >= b.y && my < b.y + b.h){
+      st.appui = {a: b.a, t: performance.now()};
+      if (b.a === "reco") neuf();
+      else if (!st.gagne && st.hist.length){ const [i, v] = st.hist.pop(), p = st.ps[i]; if (p.h) p.c = v; else p.r = v; p.v = v; st.coups--; }
+      return;
+    }
     if (st.gagne) return;
-    const [mx, my] = pos(e), cx = Math.floor((mx - G.x0) / G.c), cy = Math.floor((my - G.y0) / G.c);
-    if (cx < 0 || cy < 0 || cx >= W || cy >= H) return;
-    const i = grille(st.ps)[cy][cx]; if (i < 0) return;
+    const c = Math.floor((mx - GX) / CS), r = Math.floor((my - GY) / CS);
+    if (c < 0 || r < 0 || c > 5 || r > 5) return;
+    const i = occupation(st.ps)[r][c]; if (i < 0) return;
     const p = st.ps[i], [a, b] = limites(st.ps, i);
-    st.prise = {i, d: p.h ? mx : my, v0: p.h ? p.x : p.y, a, b};
+    st.prise = {i, d: p.h ? mx : my, v0: p.h ? p.c : p.r, a, b};
     cv.setPointerCapture(e.pointerId);
   });
   cv.addEventListener("pointermove", e => {
     if (!st.prise) return;
     const q = st.prise, p = st.ps[q.i], [mx, my] = pos(e);
-    p.v = Math.max(q.a, Math.min(q.b, q.v0 + ((p.h ? mx : my) - q.d) / G.c));
+    p.v = Math.max(q.a, Math.min(q.b, q.v0 + ((p.h ? mx : my) - q.d) / CS));
   });
   const lacher = () => {
     if (!st.prise) return;
     const q = st.prise, p = st.ps[q.i], v = Math.round(p.v);
-    if (v !== q.v0){ st.hist.push([q.i, q.v0]); st.coups++; maj(); }
-    if (p.h) p.x = v; else p.y = v;
+    if (v !== q.v0){ st.hist.push([q.i, q.v0]); st.coups++; }
+    if (p.h) p.c = v; else p.r = v;
     p.v = v; st.prise = null;
-    if (p.t === "or" && p.x === W - p.n){ st.gagne = true; st.fini = performance.now(); }
+    if (q.i === 0 && p.r === 0) st.gagne = performance.now();
   };
   cv.addEventListener("pointerup", lacher); cv.addEventListener("pointercancel", lacher);
-  el.querySelector('[data-a="reco"]').onclick = neuf;
-  el.querySelector('[data-a="annuler"]').onclick = () => {
-    if (st.gagne || !st.hist.length) return;
-    const [i, v] = st.hist.pop(), p = st.ps[i];
-    if (p.h) p.x = v; else p.y = v; p.v = v; st.coups--; maj();
-  };
-  neuf();
-  return t => { ctx.setTransform(k, 0, 0, k, 0, 0); R(ctx, st, t, k); };
+  return t => dessiner(g, st, t, heure);
 }
 
-/* ---------- outils de dessin ---------- */
-// centre, longueur et largeur d'un bateau en coordonnées logiques (+ glissement de sortie du navire doré)
-function cadre(p, sortie){
-  const x = p.h ? p.v : p.x, y = p.h ? p.y : p.v;
-  const L = p.n * G.c, l = G.c;
-  return {cx: G.x0 + x * G.c + (p.h ? L : l) / 2 + (sortie || 0), cy: G.y0 + y * G.c + (p.h ? l : L) / 2, L, l,
-    a: p.h ? (p.b > 0 ? 0 : Math.PI) : (p.b > 0 ? Math.PI / 2 : -Math.PI / 2)};
-}
-// coque pointue vers +x dans un repère local centré
-function coque(ctx, L, l, m){
-  const g = -L / 2 + m, d = L / 2 - m, h = l / 2 - m, pr = Math.min(l * .75, L * .35);
-  ctx.beginPath(); ctx.moveTo(g + 3, -h); ctx.lineTo(d - pr, -h);
-  ctx.quadraticCurveTo(d - pr * .15, -h, d, 0); ctx.quadraticCurveTo(d - pr * .15, h, d - pr, h);
-  ctx.lineTo(g + 3, h); ctx.quadraticCurveTo(g, h, g, h - 3); ctx.lineTo(g, -h + 3); ctx.quadraticCurveTo(g, -h, g + 3, -h); ctx.closePath();
-}
-function bateaux(ctx, st, t, dessin){
-  const sortie = st.gagne ? Math.min(1, (t - st.fini) / 1400) : 0;
-  st.ps.forEach((p, i) => {
-    const f = cadre(p, p.t === "or" ? sortie * sortie * 70 : 0);
-    // le remorqueur pousse le bateau qu'on glisse
-    if (st.prise && st.prise.i === i && Math.abs(p.v - st.prise.v0) > .05){
-      const s = Math.sign(p.v - st.prise.v0), r = .62 * G.c;
-      const dx = p.h ? -s * (f.L / 2 + r / 2) : 0, dy = p.h ? 0 : -s * (f.L / 2 + r / 2);
-      ctx.save(); ctx.translate(f.cx + dx, f.cy + dy); ctx.rotate(p.h ? (s > 0 ? 0 : Math.PI) : (s > 0 ? Math.PI / 2 : -Math.PI / 2));
-      dessin(ctx, "remorqueur", r, G.c * .62, t, i); ctx.restore();
-    }
-    ctx.save(); ctx.translate(f.cx, f.cy); ctx.rotate(f.a); dessin(ctx, p.t, f.L, f.l, t, i, st.prise && st.prise.i === i); ctx.restore();
+/* ---------- le dessin d'une image ---------- */
+function dessiner(g, st, now, heure){
+  const lt = now / 1000, ph = (lt % 10) / 10;
+  g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
+  g.drawImage(BG, 0, 0);
+  for (const w of WAVES){
+    const q = (ph * w.m + w.ph) % 1; if (q > .7) continue;
+    const x = Math.round(w.x + Math.sin(TAU * (ph + w.ph)) * 2), y = Math.round(w.y);
+    R(g, x, y, w.len, 1, q < .35 ? "#6cc0d4" : "#4ea2b8"); R(g, x + 1, y + 1, Math.max(1, w.len - 2), 1, "#1a5470");
+  }
+  for (const w of SEAW){
+    const q = (ph * 2 + w.ph) % 1; if (q > .75) continue;
+    const x = Math.round(w.x - q * 6), y = Math.round(w.y);
+    R(g, x, y, w.len, 1, q < .4 ? "#8ac8ec" : "#5aa0d0"); R(g, x + 1, y + 1, w.len - 1, 1, "#103a5c");
+  }
+  // la passe dorée, au bout de la colonne du navire doré
+  const glow = .5 + .5 * Math.sin(TAU * lt / 2);
+  g.globalAlpha = .16 + .14 * glow; R(g, CH.x0 + 2, CH.y0 + 6, CS - 4, BY0 - CH.y0 - 4, "#ffd23f"); g.globalAlpha = 1;
+  for (let y = CH.y0 + 6; y < BY0 + 2; y++) if ((y + Math.floor(lt * 8)) % 6 < 3){ R(g, CH.x0 + 1, y, 1, 1, "#ffe680"); R(g, CH.x1 - 2, y, 1, 1, "#ffe680"); }
+  for (let k = 0; k < 2; k++){ const y = BY0 - 8 - ((Math.floor(ph * 140) + k * 18) % 36), x = CH.x0 + 10;
+    for (let j = 0; j < 5; j++){ R(g, x + j, y + 4 - j, 1, 2, k ? "#ffffff" : "#ffe680"); R(g, x + 9 - j, y + 4 - j, 1, 2, k ? "#ffffff" : "#ffe680"); } }
+
+  // positions des bateaux (en pixels)
+  const sortie = st.gagne ? Math.min(1, (now - st.gagne) / 1600) : 0;
+  const bat = st.ps.map((p, i) => {
+    const img = SPR[i].img, c = p.h ? p.v : p.c, r = p.h ? p.r : p.v;
+    const w = p.h ? p.n * CS : CS, h = p.h ? CS : p.n * CS;
+    const x = Math.round(GX + c * CS + w / 2 - img.width / 2);
+    let y = Math.round(GY + r * CS + h / 2 - img.height / 2);
+    if (i === 0) y -= Math.round(sortie * sortie * 110);
+    return [i, x, y];
   });
-}
-
-/* ---------- A : le port en pixels ---------- */
-const PA = {eau:"#1c5878", eau2:"#226a8c", ecume:"#7fd0e0", quai:"#8a5a32", quai2:"#6b4224", quai3:"#a87444", noir:"#160f22", blanc:"#f4f1e8"};
-function px(ctx, x, y, w, h, c){ ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
-function dessinA(ctx, st, t){
-  ctx.imageSmoothingEnabled = false;
-  px(ctx, 0, 0, G.w, G.h, PA.quai);
-  for (let y = 0; y < G.h; y += 8) px(ctx, 0, y, G.w, 2, PA.quai2);           // planches
-  for (let y = 0; y < G.h; y += 16) for (let x = (y / 16 % 2) * 24; x < G.w; x += 48) px(ctx, x, y + 2, 2, 6, PA.quai2);
-  px(ctx, 0, 0, G.w, 96, "#2a3c66");                                           // ciel du bandeau
-  for (let i = 0; i < 18; i++) px(ctx, (i * 53) % G.w, 30 + (i * 37) % 60, 2, 2, i % 3 ? "#8fa4d8" : "#fff");
-  const bx = G.x0, by = G.y0, bw = W * G.c, bh = H * G.c;
-  px(ctx, bx - 6, by - 6, bw + 12, bh + 12, PA.noir);
-  px(ctx, bx - 4, by - 4, bw + 8, bh + 8, PA.quai3);
-  px(ctx, bx, by, bw, bh, PA.eau);
-  for (let y = 0; y < bh; y += 4) for (let x = ((y / 4) % 2) * 2; x < bw; x += 4) px(ctx, bx + x, by + y, 2, 2, PA.eau2);  // trame
-  for (let i = 0; i < 26; i++){                                                // reflets qui scintillent
-    const ph = (t / 600 + i * .37) % 1; if (ph > .5) continue;
-    px(ctx, bx + (i * 71) % (bw - 8), by + (i * 43) % (bh - 4), 6, 2, PA.ecume);
+  // le remorqueur pousse le bateau qu'on glisse
+  let tug = null;
+  if (st.prise && Math.abs(st.ps[st.prise.i].v - st.prise.v0) > .04){
+    const q = st.prise, p = st.ps[q.i], s = Math.sign(p.v - q.v0), [, bx, by] = bat[q.i], img = SPR[q.i].img;
+    const d = p.h ? (s > 0 ? "E" : "W") : (s > 0 ? "S" : "N"), t = TUG[d];
+    const x = p.h ? (s > 0 ? bx - t.width + 3 : bx + img.width - 3) : Math.round(bx + img.width / 2 - t.width / 2);
+    const y = p.h ? Math.round(by + img.height / 2 - t.height / 2) : (s > 0 ? by - t.height + 3 : by + img.height - 3);
+    tug = {d, x, y};
   }
-  // la sortie et le quai doré
-  const sy = by + SORTIE * G.c;
-  px(ctx, bx + bw, sy, G.w - bx - bw, G.c, PA.eau);
-  for (let x = bx + bw; x < G.w; x += 4) px(ctx, x, sy + ((x / 4) % 2) * 2 + 10, 2, 2, PA.eau2);
-  px(ctx, bx + bw, sy - 4, 4, 4, PA.noir); px(ctx, bx + bw, sy + G.c, 4, 4, PA.noir);
-  px(ctx, G.w - 8, sy - 2, 8, G.c + 4, "#e2b23a"); px(ctx, G.w - 8, sy - 2, 2, G.c + 4, "#9c7314");
-  for (const yy of [by - 14, by + bh + 6]) for (let x = bx + 10; x < bx + bw; x += 46){ px(ctx, x, yy, 6, 6, PA.noir); px(ctx, x + 1, yy + 1, 4, 2, "#5a5a6a"); }
-  bateaux(ctx, st, t, (c, ty, L, l, t2, i, pris) => bateauA(c, ty, L, l, pris));
-  if (st.gagne && t - st.fini > 900){
-    const ok = st.coups <= MIN;
-    px(ctx, 24, 196, 224, 74, PA.noir); px(ctx, 28, 200, 216, 66, "#2a2340");
-    ctx.fillStyle = "#ffd84a"; ctx.font = "16px 'Press Start 2P'"; ctx.textAlign = "center"; ctx.fillText("A QUAI !", 136, 228);
-    ctx.fillStyle = "#fff"; ctx.font = "8px 'Press Start 2P'";
-    ctx.fillText(st.coups + " COUPS  " + (ok ? "★★★" : st.coups <= MIN + 4 ? "★★" : "★"), 136, 250);
+  for (const [i, x, y] of bat) g.drawImage(SPR[i].sil, x + 3, y + 3);
+  if (tug) g.drawImage(TUGSIL[tug.d], tug.x + 3, tug.y + 3);
+  bat.forEach(([i, x, y]) => { const q = .5 + .5 * Math.sin(TAU * ph * 2 + i * 1.7); g.globalAlpha = .18 + .3 * q; g.drawImage(SPR[i].foam, x - 1 + (q > .7 ? 1 : 0), y - 1); });
+  g.globalAlpha = 1;
+  if (tug){
+    // remous derrière le remorqueur
+    const fr = Math.floor(lt * 10), t = TUG[tug.d], cx = tug.x + t.width / 2, cy = tug.y + t.height / 2;
+    const bk = {N: [0, 1], S: [0, -1], E: [-1, 0], W: [1, 0]}[tug.d];
+    for (let k = 0; k < 18; k++){ const dd = 8 + hash(k, fr) * 14, w = (hash(k, fr + 7) - .5) * (4 + dd * .4);
+      R(g, Math.round(cx + bk[0] * dd + bk[1] * w), Math.round(cy + bk[1] * dd + bk[0] * w), hash(k, fr + 2) < .5 ? 2 : 1, 1, dd < 14 ? "#ffffff" : "#bfe6f6"); }
   }
-}
-function bateauA(ctx, ty, L, l, pris){
-  const g = -L / 2, h = l / 2;
-  const coul = {or:["#ffcc2e","#c48a12"], cargo:["#c8423a","#7c2124"], ferry:["#eef1f4","#9aa4b2"], peniche:["#3f7d4f","#24502f"], remorqueur:["#e46a2e","#8c3a14"]}[ty];
-  // coque en marches d'escalier (pixels), proue à droite
-  const m = 4, d = L / 2 - m;
-  px(ctx, g + m - 2, -h + m - 2, L - 2 * m - 4 + 4, l - 2 * m + 4, PA.noir);
-  px(ctx, d - 6, -h + m + 2, 6, l - 2 * m - 4, PA.noir); px(ctx, d - 2, -h + m + 6, 4, l - 2 * m - 12, PA.noir);
-  px(ctx, g + m, -h + m, L - 2 * m - 6, l - 2 * m, coul[0]);
-  px(ctx, d - 6, -h + m + 4, 4, l - 2 * m - 8, coul[0]);
-  px(ctx, g + m, h - m - 4, L - 2 * m - 6, 4, coul[1]);
-  if (pris) px(ctx, g + m, -h + m, L - 2 * m - 6, 2, "#fff");
-  if (ty === "or"){ px(ctx, -12, -8, 18, 16, PA.blanc); px(ctx, -10, -6, 14, 2, "#9aa4b2"); px(ctx, 0, -4, 4, 8, "#d8382c"); px(ctx, -30, -2, 10, 4, "#c48a12"); }
-  if (ty === "cargo") for (let x = g + 10; x < d - 16; x += 14){ px(ctx, x, -9, 12, 8, ["#3a7bd5","#f2a33a","#5fae5a","#e8e2d0"][Math.abs(x | 0) % 4]); px(ctx, x, 1, 12, 8, ["#f2a33a","#e8e2d0","#3a7bd5","#5fae5a"][Math.abs(x | 0) % 4]); }
-  if (ty === "ferry"){ px(ctx, g + 10, -8, L - 40, 16, "#d0d6de"); for (let x = g + 12; x < d - 34; x += 8) px(ctx, x, -6, 4, 4, "#3a6ea8"); px(ctx, g + 10, 4, L - 40, 2, "#2f6fb0"); px(ctx, -4, -4, 6, 8, "#d8382c"); }
-  if (ty === "peniche"){ px(ctx, g + 10, -7, L - 34, 14, "#5b4630"); px(ctx, g + 14, -4, L - 42, 8, "#c9a463"); px(ctx, g + 6, -5, 6, 10, PA.blanc); }
-  if (ty === "remorqueur"){ px(ctx, -4, -5, 8, 10, PA.blanc); px(ctx, -2, -2, 4, 4, PA.noir); }
-}
+  // halo du navire doré
+  const gp = bat[0];
+  g.globalAlpha = .25 + .35 * glow; g.drawImage(SPR[0].glow[1], gp[1] - 3, gp[2] - 3); g.globalAlpha = .4 + .4 * glow; g.drawImage(SPR[0].glow[0], gp[1] - 2, gp[2] - 2); g.globalAlpha = 1;
+  for (const [i, x, y] of bat){
+    if (st.prise && st.prise.i === i){ g.globalAlpha = .7; g.drawImage(SPR[i].foam, x - 1, y - 1); g.globalAlpha = 1; }
+    g.drawImage(SPR[i].img, x, y);
+  }
+  if (tug) g.drawImage(TUG[tug.d], tug.x, tug.y);
+  { const s = Math.floor(lt * 1.6) % 4, sp = [[5, 14], [4, 40], [12, 50], [17, 26]][s], q = (lt * 1.6) % 1;
+    if (q < .5){ const x = gp[1] + sp[0], y = gp[2] + sp[1], r = q < .25 ? 1 : 2; R(g, x - r, y, r * 2 + 1, 1, "#ffffff"); R(g, x, y - r, 1, r * 2 + 1, "#ffffff"); } }
 
-/* ---------- B : les bateaux-jouets ---------- */
-const PB = {eau:"#8fd8e8", eau2:"#b5ecf3", bois:"#e7ad6c", bois2:"#c98a4a", encre:"#2b2340", fond:"#fff3d6"};
-function dessinB(ctx, st, t){
-  ctx.fillStyle = PB.fond; ctx.fillRect(0, 0, G.w, G.h);
-  ctx.fillStyle = "#ffe2a8"; for (let i = 0; i < 9; i++){ ctx.beginPath(); ctx.arc((i * 61) % G.w, 40 + (i * 29) % 50, 18, 0, 7); ctx.fill(); }
-  const bx = G.x0, by = G.y0, bw = W * G.c, bh = H * G.c, sy = by + SORTIE * G.c;
-  // bassin en bois : rebord épais, ouverture à droite
-  ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = PB.encre;
-  ctx.fillStyle = PB.bois; rond(ctx, bx - 10, by - 10, bw + 20, bh + 20, 16); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = PB.eau; rond(ctx, bx, by, bw, bh, 8); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = PB.eau; ctx.fillRect(bx + bw - 2, sy + 2, G.w - bx - bw + 2, G.c - 4);
-  ctx.beginPath(); ctx.moveTo(bx + bw, sy + 1.5); ctx.lineTo(G.w, sy + 1.5); ctx.moveTo(bx + bw, sy + G.c - 1.5); ctx.lineTo(G.w, sy + G.c - 1.5); ctx.stroke();
-  ctx.fillStyle = PB.bois2; for (let x = bx + 6; x < bx + bw; x += 30){ ctx.fillRect(x, by - 7, 14, 3); ctx.fillRect(x + 8, by + bh + 4, 14, 3); }
-  // drapeau d'arrivée
-  ctx.fillStyle = PB.encre; ctx.fillRect(G.w - 9, sy - 26, 2.5, 26);
-  ctx.fillStyle = "#ffcf4a"; ctx.beginPath(); ctx.moveTo(G.w - 7, sy - 26); ctx.lineTo(G.w - 20, sy - 21); ctx.lineTo(G.w - 7, sy - 16); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
-  // ronds dans l'eau
-  ctx.save(); rond(ctx, bx, by, bw + 60, bh, 8); ctx.clip();
-  ctx.strokeStyle = PB.eau2; ctx.lineWidth = 2;
-  for (let i = 0; i < 7; i++){ const r = ((t / 40 + i * 37) % 60); ctx.globalAlpha = 1 - r / 60; ctx.beginPath(); ctx.arc(bx + (i * 83) % bw, by + (i * 59) % bh, r, 0, 7); ctx.stroke(); }
-  ctx.restore(); ctx.globalAlpha = 1;
-  bateaux(ctx, st, t, (c, ty, L, l, t2, i, pris) => bateauB(c, ty, L, l, t2, i, pris));
-  if (st.gagne){
-    const e = (t - st.fini) / 1000;
-    for (let i = 0; i < 40; i++){ const a = i * 2.4, v = 40 + (i * 17) % 60, x = 200 + Math.cos(a) * v * e, y = 210 + Math.sin(a) * v * e + 60 * e * e;
-      if (e > 2.6) break; ctx.fillStyle = ["#ff8a5c","#ffcf4a","#5fc9a8","#7a8cff"][i % 4]; ctx.save(); ctx.translate(x, y); ctx.rotate(e * 6 + i); ctx.fillRect(-3, -2, 6, 4); ctx.restore(); }
-    if (e > .9){
-      ctx.lineWidth = 3; ctx.strokeStyle = PB.encre; ctx.fillStyle = "#fff"; rond(ctx, 36, 186, 200, 80, 18); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = PB.encre; ctx.textAlign = "center"; ctx.font = "700 26px Fredoka"; ctx.fillText("À quai !", 136, 222);
-      ctx.font = "600 15px Fredoka"; ctx.fillText(st.coups + " coups · " + (st.coups <= MIN ? "★★★" : st.coups <= MIN + 4 ? "★★" : "★"), 136, 248);
-    }
+  // la grue, le phare, les mouettes
+  drawCrane(g, 122, 304, Math.PI - .2 + .2 * Math.sin(TAU * lt / 10), 54, lt, 26);
+  g.drawImage(LIGHT, LH.x - 15, LH.y - 58);
+  const gullAt = (x, y, k, flip, sh) => { const f = Math.floor(lt * 6 + k) % 3 === 0 ? "b" : "a";
+    g.drawImage(GULL.sh[f === "a" ? 0 : 1], Math.round(x - 8 + sh * .6), Math.round(y - 6 + sh)); g.drawImage(GULL[f][flip ? 1 : 0], Math.round(x - 8), Math.round(y - 6)); };
+  { const a = TAU * ph, x = 108 + Math.cos(a) * 70, y = 190 + Math.sin(a) * 60; gullAt(x, y, 1, Math.sin(a) > 0, 26); }
+  { const a = TAU * ph * 2 + 2.4, x = 40 + Math.cos(-a) * 30, y = 30 + Math.sin(-a) * 10; gullAt(x, y, 2, Math.sin(-a) < 0, 20); }
+
+  ambiance(g, heure, lt);
+  if (heure === "nuit"){ g.save(); g.globalCompositeOperation = "lighter"; g.globalAlpha = .2 + .15 * glow; g.drawImage(SPR[0].glow[1], gp[1] - 3, gp[2] - 3); g.restore(); }
+
+  // ---------- l'interface
+  plate(g, 4, 6, 108, 32);
+  logo(g, "BASSIN 3", 11, 11, 9, ["#fff6c2", "#ffd23f", "#e0782a"]);
+  text(g, "BUT : " + MIN + " COUPS", 11, 26, 6, "#a8d0f4");
+  const appui = st.appui && now - st.appui.t < 160 ? st.appui.a : null;
+  for (const b of BOUTONS){
+    const ic = b.a === "reco" ? ICON_RE : ICON_UNDO;
+    plate(g, b.x, b.y, b.w, b.h);
+    if (appui === b.a) R(g, b.x + 2, b.y + 2, b.w - 4, b.h - 4, "rgba(255,210,63,.25)");
+    g.drawImage(ic, b.x + b.w / 2 - (ic.width >> 1), b.y + 4);
+    text(g, b.a === "reco" ? "REJOUER" : "ANNULER", b.x + b.w / 2, b.y + 21, 7, "#ffffff", "center");
+  }
+  const etoiles = !st.gagne ? 0 : st.coups <= MIN ? 3 : st.coups <= MIN + 4 ? 2 : 1;
+  plate(g, 142, 344, 70, 34);
+  text(g, "COUPS " + st.coups, 177, 348, 7, "#ffffff", "center");
+  for (let k = 0; k < 3; k++) g.drawImage(k < etoiles ? STAR : STAR0, 147 + k * 21, 359);
+  if (st.gagne && now - st.gagne > 1200){
+    plate(g, 22, 150, 172, 64);
+    logo(g, "A QUAI !", VW / 2, 162, 16, ["#fff6c2", "#ffd23f", "#e0782a"], "center");
+    text(g, st.coups + " COUPS", VW / 2, 190, 8, "#ffffff", "center");
   }
 }
-function rond(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
-function bateauB(ctx, ty, L, l, t, i, pris){
-  ctx.translate(0, Math.sin(t / 500 + i * 1.3) * .8);   // ils dansent sur l'eau
-  const coul = {or:"#ffcf4a", cargo:"#ff6f61", ferry:"#7a8cff", peniche:"#5fc9a8", remorqueur:"#ff8a5c"}[ty];
-  ctx.fillStyle = "rgba(43,35,64,.18)"; coque(ctx, L, l, 4); ctx.save(); ctx.translate(2, 3); ctx.fill(); ctx.restore();
-  ctx.lineWidth = pris ? 3.5 : 2.5; ctx.strokeStyle = PB.encre; ctx.lineJoin = "round";
-  ctx.fillStyle = coul; coque(ctx, L, l, 4); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,.45)"; ctx.fillRect(-L / 2 + 8, -l / 2 + 7, L - 30, 3);
-  ctx.lineWidth = 2;
-  const boite = (x, y, w, h, c) => { ctx.fillStyle = c; rond(ctx, x, y, w, h, 3); ctx.fill(); ctx.stroke(); };
-  if (ty === "or"){ boite(-14, -9, 20, 18, "#fff"); ctx.fillStyle = PB.encre; ctx.beginPath(); ctx.arc(-4, 0, 3, 0, 7); ctx.fill(); boite(-26, -4, 8, 8, "#ff6f61"); }
-  if (ty === "cargo") for (let x = -L / 2 + 10, j = 0; x < L / 2 - 26; x += 16, j++) boite(x, -9, 13, 18, ["#7a8cff","#fff3d6","#5fc9a8"][j % 3]);
-  if (ty === "ferry"){ boite(-L / 2 + 10, -9, L - 40, 18, "#fff"); ctx.fillStyle = PB.encre; for (let x = -L / 2 + 16; x < L / 2 - 34; x += 9){ ctx.beginPath(); ctx.arc(x, 0, 2.2, 0, 7); ctx.fill(); } }
-  if (ty === "peniche"){ boite(-L / 2 + 8, -7, 10, 14, "#fff"); boite(-L / 2 + 22, -8, L - 46, 16, "#e7ad6c"); }
-  if (ty === "remorqueur"){ boite(-6, -6, 10, 12, "#fff"); }
-}
 
-/* ---------- C : la carte marine ---------- */
-const PC = {papier:"#f4ecd2", terre:"#efd98f", hach:"#c9ae5a", eau:"#fbf8ee", eau2:"#d5e9ee", encre:"#2c3a40", rouge:"#a8322a", or:"#b98a24"};
-const SONDES = Array.from({length:36}, (_, i) => [(i * 7) % 6, Math.floor(i / 6), 2 + (i * 5) % 9]);
-function dessinC(ctx, st, t){
-  ctx.fillStyle = PC.papier; ctx.fillRect(0, 0, G.w, G.h);
-  const bx = G.x0, by = G.y0, bw = W * G.c, bh = H * G.c, sy = by + SORTIE * G.c;
-  // terre (quais) hachurée
-  ctx.fillStyle = PC.terre; ctx.fillRect(0, by - 22, G.w, bh + 44);
-  ctx.strokeStyle = PC.hach; ctx.lineWidth = .6; ctx.beginPath();
-  for (let x = -bh; x < G.w; x += 5){ ctx.moveTo(x, by - 22); ctx.lineTo(x + bh + 44, by + bh + 22); } ctx.stroke();
-  // eau : isobathes pâles, puis blanc
-  ctx.fillStyle = PC.eau2; ctx.fillRect(bx, by, bw, bh); ctx.fillRect(bx + bw, sy, G.w - bx - bw, G.c);
-  ctx.fillStyle = PC.eau; ctx.fillRect(bx + 7, by + 7, bw - 14, bh - 14); ctx.fillRect(bx + bw - 8, sy + 7, G.w - bx - bw + 8, G.c - 14);
-  ctx.strokeStyle = PC.encre; ctx.lineWidth = 1.2; ctx.strokeRect(bx, by, bw, bh);
-  ctx.fillStyle = PC.eau2; ctx.fillRect(bx + bw - 1, sy + 1, G.w - bx - bw + 1, G.c - 2);
-  ctx.fillStyle = PC.eau; ctx.fillRect(bx + bw - 8, sy + 7, G.w - bx - bw + 8, G.c - 14);
-  // quadrillage en pointillés et sondes
-  ctx.setLineDash([2, 3]); ctx.strokeStyle = "rgba(44,58,64,.28)"; ctx.lineWidth = .7; ctx.beginPath();
-  for (let k = 1; k < 6; k++){ ctx.moveTo(bx + k * G.c, by); ctx.lineTo(bx + k * G.c, by + bh); ctx.moveTo(bx, by + k * G.c); ctx.lineTo(bx + bw, by + k * G.c); }
-  ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle = "rgba(44,58,64,.55)"; ctx.font = "italic 9px 'IM Fell English'"; ctx.textAlign = "center";
-  for (const [x, y, d] of SONDES) ctx.fillText(d, bx + x * G.c + 9 + (y * 13) % 18, by + y * G.c + 13 + (x * 7) % 16);
-  // le quai d'arrivée
-  ctx.fillStyle = PC.rouge; ctx.font = "9px 'IM Fell English SC'"; ctx.textAlign = "center"; ctx.fillText("Quai", 257, sy - 14); ctx.fillText("d'or", 257, sy - 5);
-  ctx.textAlign = "left"; ctx.fillStyle = PC.encre; ctx.fillText("Bassin du Levant", bx, by - 8);
-  ctx.font = "italic 9px 'IM Fell English'"; ctx.fillText("Sondes en brasses", bx, by + bh + 16);
-  rose(ctx, 232, 404, 20);
-  bateaux(ctx, st, t, (c, ty, L, l, t2, i, pris) => bateauC(c, ty, L, l, i, pris));
-  if (st.gagne && t - st.fini > 900){
-    ctx.save(); ctx.translate(136, 232); ctx.rotate(-.14);
-    ctx.strokeStyle = PC.rouge; ctx.lineWidth = 3; ctx.strokeRect(-86, -30, 172, 60); ctx.lineWidth = 1; ctx.strokeRect(-81, -25, 162, 50);
-    ctx.fillStyle = PC.rouge; ctx.textAlign = "center"; ctx.font = "24px 'IM Fell English SC'"; ctx.fillText("Amarré", 0, 4);
-    ctx.font = "italic 11px 'IM Fell English'"; ctx.fillText("en " + st.coups + " manœuvres · " + (st.coups <= MIN ? "★★★" : st.coups <= MIN + 4 ? "★★" : "★"), 0, 20);
-    ctx.restore();
+/* ---------- les trois heures de la journée ---------- */
+const FEUX = () => [...LAMPS.map(([x, y]) => [x, y - 15, 15]), ...WINDOWS.map(([x, y]) => [x + 3, y + 3, 10]), [LH.x, LH.y - 48, 24]];
+function ambiance(g, heure, lt){
+  if (heure === "jour") return;
+  const nuit = heure === "nuit";
+  g.save();
+  g.globalCompositeOperation = "multiply";
+  const gr = g.createLinearGradient(0, 0, 0, VH);
+  if (nuit){ gr.addColorStop(0, "#34447e"); gr.addColorStop(1, "#28346a"); }
+  else { gr.addColorStop(0, "#ffb07a"); gr.addColorStop(.5, "#f4b08c"); gr.addColorStop(1, "#c88aa0"); }
+  g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
+  g.globalCompositeOperation = "screen";
+  if (!nuit){
+    // le soleil bas sur la mer, en haut à gauche, et ses reflets
+    const s = g.createRadialGradient(10, 6, 2, 10, 6, 150); s.addColorStop(0, "rgba(255,170,80,.55)"); s.addColorStop(1, "rgba(255,120,60,0)");
+    g.fillStyle = s; g.fillRect(0, 0, VW, VH);
+    for (let k = 0; k < 13; k++){ const y = 4 + k * 3, w = 6 + Math.round(4 * Math.sin(lt * 2 + k)); R(g, 30 - w / 2 + Math.sin(lt + k) * 3, y, w, 1, "rgba(255,210,140,.7)"); }
   }
-}
-function rose(ctx, x, y, r){
-  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = PC.encre; ctx.lineWidth = .8;
-  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, r * .8, 0, 7); ctx.stroke();
-  for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4, lg = k % 2 ? r * .55 : r * .95;
-    ctx.fillStyle = k % 2 ? PC.encre : (k === 0 ? PC.rouge : PC.encre);
-    ctx.beginPath(); ctx.moveTo(Math.sin(a) * lg, -Math.cos(a) * lg); ctx.lineTo(Math.sin(a + .35) * 4, -Math.cos(a + .35) * 4); ctx.lineTo(Math.sin(a - .35) * 4, -Math.cos(a - .35) * 4); ctx.fill(); }
-  ctx.fillStyle = PC.encre; ctx.font = "8px 'IM Fell English SC'"; ctx.textAlign = "center"; ctx.fillText("N", 0, -r - 3);
-  ctx.restore();
-}
-function bateauC(ctx, ty, L, l, i, pris){
-  const or = ty === "or";
-  ctx.fillStyle = or ? PC.or : ty === "remorqueur" ? PC.rouge : PC.encre;
-  coque(ctx, L, l, 6); ctx.fill();
-  if (pris){ ctx.strokeStyle = PC.rouge; ctx.lineWidth = 1.5; ctx.setLineDash([3, 2]); coque(ctx, L + 8, l + 8, 6); ctx.stroke(); ctx.setLineDash([]); }
-  ctx.strokeStyle = PC.papier; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(-L / 2 + 6, -4); ctx.lineTo(-L / 2 + 6, 4); ctx.stroke();
-  if (ty === "remorqueur") return;
-  // numéro de coque, toujours lisible
-  ctx.save();
-  const m = ctx.getTransform(), ang = Math.atan2(m.b, m.a); ctx.rotate(-ang);
-  ctx.fillStyle = PC.papier; ctx.font = (or ? "11px" : "9px") + " 'IM Fell English SC'"; ctx.textAlign = "center";
-  ctx.fillText(or ? "Doré" : ["", "C1", "P2", "F3", "P4", "C5", "P6", "P7", "P8", "P9"][i], 0, 3.5);
-  ctx.restore();
+  // halos des lampes, des fenêtres et de la lanterne du phare
+  const f = nuit ? 1 : .5;
+  for (const [x, y, r] of FEUX()){
+    const a = f * (.75 + .1 * Math.sin(lt * 3 + x));
+    const h = g.createRadialGradient(x, y, 1, x, y, r); h.addColorStop(0, `rgba(255,214,120,${a * .7})`); h.addColorStop(1, "rgba(255,214,120,0)");
+    g.fillStyle = h; g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  if (nuit){
+    // le faisceau du phare qui tourne
+    const a = lt * 1.2, lx = LH.x, ly = LH.y - 48;
+    const b = g.createRadialGradient(lx, ly, 2, lx, ly, 160); b.addColorStop(0, "rgba(255,244,190,.5)"); b.addColorStop(1, "rgba(255,244,190,0)");
+    g.fillStyle = b; g.beginPath(); g.moveTo(lx, ly); g.arc(lx, ly, 160, a - .16, a + .16); g.closePath(); g.fill();
+  }
+  g.restore();
+  // les feux eux-mêmes, en pleine lumière
+  for (const [x, y] of LAMPS) R(g, x - 2, y - 17, 5, 3, nuit ? "#fff6c2" : "#ffe9a0");
+  for (const [x, y] of WINDOWS){ R(g, x, y, 6, 7, nuit ? "#ffd27a" : "#ffc77a"); R(g, x + 2, y, 1, 7, "#ffe9b0"); }
+  if (nuit) R(g, LH.x - 4, LH.y - 52, 9, 7, "#fff6c2");
 }
 
-/* ---------- boucle ---------- */
-const tels = [...document.querySelectorAll(".tel")].map(Tel);
+/* ---------- démarrage ---------- */
+let tels = [];
 function boucle(t){ tels.forEach(f => f(t)); requestAnimationFrame(boucle); }
-requestAnimationFrame(boucle);
+(document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => {
+  prepare();
+  tels = [...document.querySelectorAll(".tel canvas")].map(Tel);
+  requestAnimationFrame(boucle);
+});
 </script>
 </body>
 </html>
