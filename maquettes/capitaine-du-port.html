@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Capitaine du port</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<style>
+/* Maquette de Capitaine du port : le même bassin jouable dans trois directions, côte à côte sur des téléphones.
+   Page sombre volontairement (un port la nuit, comme les autres maquettes de la Ludothèque). */
+:root{
+  --fond:#0a1820; --texte:#eef3f1; --doux:#9fb6b8; --or:#ffcf4a; --cadre:#02070a; --ligne:#1d3640;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000;text-wrap:balance}
+header p{margin:10px 0 0;color:var(--doux);max-width:66ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);max-width:300px;font-size:15px;text-align:center}
+
+/* le téléphone : canvas plein cadre + bandeau du haut et boutons du bas en HTML */
+.tel{position:relative;width:100%;max-width:300px;aspect-ratio:272/480;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;left:0;right:0;top:0;padding:4.5% 6% 0;display:flex;flex-direction:column;gap:2px;pointer-events:none}
+.hud .t{font-size:clamp(9px,3.4vw,13px)}
+.hud .l{display:flex;justify-content:space-between;gap:8px;font-size:clamp(8px,3vw,11px)}
+.bas{position:absolute;left:0;right:0;bottom:0;padding:0 6% 6%;display:flex;gap:8px}
+.bas button{flex:1;font:inherit;cursor:pointer}
+.bas button:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+
+/* A : port en pixels 16 bits */
+.A{font-family:var(--f-titre)}
+.A canvas{image-rendering:pixelated}
+.A .hud{color:#fff;text-shadow:2px 2px 0 #0b1830}
+.A .hud .t{color:#ffd84a}
+.A .bas button{font-size:clamp(7px,2.6vw,10px);padding:10px 4px;background:#2a2340;color:#fff;border:3px solid #fff;box-shadow:inset -3px -3px 0 #120d22,inset 3px 3px 0 #4c4170}
+.A .bas button:active{box-shadow:inset 3px 3px 0 #120d22}
+
+/* B : bateaux-jouets dans un bassin */
+.B{font-family:var(--f-texte)}
+.B .hud{color:#2b2340}
+.B .hud .t{font-weight:700;font-size:clamp(14px,5vw,19px);letter-spacing:.01em}
+.B .hud .l{font-weight:600;font-size:clamp(11px,3.8vw,14px)}
+.B .bas button{font-weight:700;font-size:clamp(12px,4vw,15px);padding:9px 4px;background:#ff8a5c;color:#2b2340;border:3px solid #2b2340;border-radius:14px;box-shadow:0 4px 0 #2b2340}
+.B .bas button+button{background:#fff3d6}
+.B .bas button:active{transform:translateY(3px);box-shadow:0 1px 0 #2b2340}
+
+/* C : carte marine */
+.C{font-family:"IM Fell English",Georgia,serif}
+.C .hud{color:#2c3a40}
+.C .hud .t{font-family:"IM Fell English SC",Georgia,serif;font-size:clamp(13px,4.6vw,18px);letter-spacing:.06em}
+.C .hud .l{font-style:italic;font-size:clamp(11px,3.8vw,14px)}
+.C .bas button{font-family:"IM Fell English SC",Georgia,serif;font-size:clamp(12px,4vw,15px);letter-spacing:.06em;padding:7px 4px;background:#f6efd8;color:#2c3a40;border:1.5px solid #2c3a40;border-radius:2px;box-shadow:3px 3px 0 rgba(44,58,64,.35)}
+.C .bas button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(44,58,64,.35)}
+
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0}
+section.q ol{margin:0;padding-left:22px;color:var(--texte);max-width:72ch;display:flex;flex-direction:column;gap:6px}
+section.q li span{color:var(--doux)}
+@media (prefers-reduced-motion:reduce){.B .bas button:active,.C .bas button:active{transform:none}}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <h1>CAPITAINE DU PORT</h1>
+  <p>Trois directions pour le même bassin, jouables. Glissez les bateaux dans leur longueur (pendant qu'on glisse, le remorqueur vient pousser) et amenez le navire doré à son quai, à droite. Ce bassin se fait en 11 coups au minimum ; un coup = un bateau déplacé, quelle que soit la distance.</p>
+</header>
+
+<div class="grille">
+  <div class="dir">
+    <div class="tel A" data-style="A">
+      <canvas width="136" height="240"></canvas>
+      <div class="hud"><div class="t">CAPITAINE DU PORT</div><div class="l"><span>BASSIN 1-3</span><span class="c">COUPS 0</span></div></div>
+      <div class="bas"><button type="button" data-a="annuler">ANNULER</button><button type="button" data-a="reco">RECOMMENCER</button></div>
+    </div>
+    <h2>A · LE PORT EN PIXELS</h2>
+    <p>16 bits comme Amiral ! : eau tramée qui scintille, quais en planches, bittes d'amarrage, police de la Ludothèque.</p>
+  </div>
+
+  <div class="dir">
+    <div class="tel B" data-style="B">
+      <canvas width="544" height="960"></canvas>
+      <div class="hud"><div class="t">Capitaine du port</div><div class="l"><span>Port 1 · bassin 3</span><span class="c">0 coup</span></div></div>
+      <div class="bas"><button type="button" data-a="annuler">Annuler</button><button type="button" data-a="reco">Recommencer</button></div>
+    </div>
+    <h2>B · LES BATEAUX-JOUETS</h2>
+    <p>Des jouets peints qui flottent dans un bassin en bois, gros contours comme Lune-Rover. Ils dansent un peu sur l'eau.</p>
+  </div>
+
+  <div class="dir">
+    <div class="tel C" data-style="C">
+      <canvas width="544" height="960"></canvas>
+      <div class="hud"><div class="t">Capitaine du port</div><div class="l"><span>Planche I · bassin 3</span><span class="c">0 manœuvre</span></div></div>
+      <div class="bas"><button type="button" data-a="annuler">Annuler</button><button type="button" data-a="reco">Recommencer</button></div>
+    </div>
+    <h2>C · LA CARTE MARINE</h2>
+    <p>Le bassin vu sur la carte du capitaine : sondes en brasses, rose des vents, navires à l'encre. Plus calme, plus « réflexion ».</p>
+  </div>
+</div>
+
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ol>
+    <li>Quelle direction : A, B ou C ? <span>(ou un mélange)</span></li>
+    <li>Le remorqueur : on garde la version de la maquette (on glisse les bateaux, le remorqueur vient juste pousser pour le décor) ? <span>Ou alors on pilote vraiment le remorqueur case par case et il pousse ou tire les bateaux : plus original mais plus long à jouer, plutôt comme Le Magasinier.</span></li>
+    <li>Grille de 6 × 6 partout, ou 7 × 7 pour le dernier port ? <span>(60 niveaux en 5 ports, vérifiés par le solveur, et un bassin du jour, comme prévu)</span></li>
+  </ol>
+</section>
+</div>
+
+<script>
+/* ---------- le bassin (logique commune aux trois directions) ---------- */
+const W = 6, H = 6, SORTIE = 2;           // la sortie est à droite de la 3e rangée
+// [type, x, y, longueur, horizontal, sens de la proue (+1 droite/bas, -1 gauche/haut)]
+const NIVEAU = [["or",0,2,2,1,1],["cargo",2,0,3,0,1],["peniche",4,2,2,0,-1],["ferry",1,4,3,1,-1],["peniche",3,0,2,1,1],
+  ["cargo",5,1,3,0,-1],["peniche",4,5,2,1,1],["peniche",0,4,2,0,1],["peniche",0,0,2,0,-1],["peniche",1,3,2,1,-1]];
+const MIN = 11;
+// géométrie logique d'un téléphone (272 × 480), bassin de 6 × 38 au milieu
+const G = {w:272, h:480, x0:12, y0:118, c:38};
+
+function grille(ps, sauf){
+  const g = Array.from({length:H}, () => Array(W).fill(-1));
+  ps.forEach((p,i) => { if (i === sauf) return; for (let k = 0; k < p.n; k++) g[p.h ? p.y : p.y + k][p.h ? p.x + k : p.x] = i; });
+  return g;
+}
+function limites(ps, i){
+  const p = ps[i], g = grille(ps, i), libre = v => p.h ? g[p.y][v] === -1 : g[v][p.x] === -1;
+  let a = p.h ? p.x : p.y, b = a;
+  while (a - 1 >= 0 && libre(a - 1)) a--;
+  while (b + p.n < (p.h ? W : H) && libre(b + p.n)) b++;
+  return [a, b];
+}
+
+/* ---------- un téléphone ---------- */
+function Tel(el){
+  const cv = el.querySelector("canvas"), ctx = cv.getContext("2d"), style = el.dataset.style;
+  const k = cv.width / G.w, compte = el.querySelector(".c");
+  const R = {A: dessinA, B: dessinB, C: dessinC}[style];
+  const st = {ps: [], coups: 0, hist: [], prise: null, fini: 0, gagne: false};
+  function neuf(){
+    st.ps = NIVEAU.map(([t,x,y,n,h,b]) => ({t, x, y, n, h, b, v: h ? x : y}));
+    st.coups = 0; st.hist = []; st.prise = null; st.fini = 0; st.gagne = false; maj();
+  }
+  function maj(){
+    const n = st.coups;
+    compte.textContent = style === "A" ? "COUPS " + n : style === "B" ? n + (n > 1 ? " coups" : " coup") : n + (n > 1 ? " manœuvres" : " manœuvre");
+  }
+  function pos(e){ const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * G.w, (e.clientY - r.top) / r.height * G.h]; }
+  cv.addEventListener("pointerdown", e => {
+    if (st.gagne) return;
+    const [mx, my] = pos(e), cx = Math.floor((mx - G.x0) / G.c), cy = Math.floor((my - G.y0) / G.c);
+    if (cx < 0 || cy < 0 || cx >= W || cy >= H) return;
+    const i = grille(st.ps)[cy][cx]; if (i < 0) return;
+    const p = st.ps[i], [a, b] = limites(st.ps, i);
+    st.prise = {i, d: p.h ? mx : my, v0: p.h ? p.x : p.y, a, b};
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!st.prise) return;
+    const q = st.prise, p = st.ps[q.i], [mx, my] = pos(e);
+    p.v = Math.max(q.a, Math.min(q.b, q.v0 + ((p.h ? mx : my) - q.d) / G.c));
+  });
+  const lacher = () => {
+    if (!st.prise) return;
+    const q = st.prise, p = st.ps[q.i], v = Math.round(p.v);
+    if (v !== q.v0){ st.hist.push([q.i, q.v0]); st.coups++; maj(); }
+    if (p.h) p.x = v; else p.y = v;
+    p.v = v; st.prise = null;
+    if (p.t === "or" && p.x === W - p.n){ st.gagne = true; st.fini = performance.now(); }
+  };
+  cv.addEventListener("pointerup", lacher); cv.addEventListener("pointercancel", lacher);
+  el.querySelector('[data-a="reco"]').onclick = neuf;
+  el.querySelector('[data-a="annuler"]').onclick = () => {
+    if (st.gagne || !st.hist.length) return;
+    const [i, v] = st.hist.pop(), p = st.ps[i];
+    if (p.h) p.x = v; else p.y = v; p.v = v; st.coups--; maj();
+  };
+  neuf();
+  return t => { ctx.setTransform(k, 0, 0, k, 0, 0); R(ctx, st, t, k); };
+}
+
+/* ---------- outils de dessin ---------- */
+// centre, longueur et largeur d'un bateau en coordonnées logiques (+ glissement de sortie du navire doré)
+function cadre(p, sortie){
+  const x = p.h ? p.v : p.x, y = p.h ? p.y : p.v;
+  const L = p.n * G.c, l = G.c;
+  return {cx: G.x0 + x * G.c + (p.h ? L : l) / 2 + (sortie || 0), cy: G.y0 + y * G.c + (p.h ? l : L) / 2, L, l,
+    a: p.h ? (p.b > 0 ? 0 : Math.PI) : (p.b > 0 ? Math.PI / 2 : -Math.PI / 2)};
+}
+// coque pointue vers +x dans un repère local centré
+function coque(ctx, L, l, m){
+  const g = -L / 2 + m, d = L / 2 - m, h = l / 2 - m, pr = Math.min(l * .75, L * .35);
+  ctx.beginPath(); ctx.moveTo(g + 3, -h); ctx.lineTo(d - pr, -h);
+  ctx.quadraticCurveTo(d - pr * .15, -h, d, 0); ctx.quadraticCurveTo(d - pr * .15, h, d - pr, h);
+  ctx.lineTo(g + 3, h); ctx.quadraticCurveTo(g, h, g, h - 3); ctx.lineTo(g, -h + 3); ctx.quadraticCurveTo(g, -h, g + 3, -h); ctx.closePath();
+}
+function bateaux(ctx, st, t, dessin){
+  const sortie = st.gagne ? Math.min(1, (t - st.fini) / 1400) : 0;
+  st.ps.forEach((p, i) => {
+    const f = cadre(p, p.t === "or" ? sortie * sortie * 70 : 0);
+    // le remorqueur pousse le bateau qu'on glisse
+    if (st.prise && st.prise.i === i && Math.abs(p.v - st.prise.v0) > .05){
+      const s = Math.sign(p.v - st.prise.v0), r = .62 * G.c;
+      const dx = p.h ? -s * (f.L / 2 + r / 2) : 0, dy = p.h ? 0 : -s * (f.L / 2 + r / 2);
+      ctx.save(); ctx.translate(f.cx + dx, f.cy + dy); ctx.rotate(p.h ? (s > 0 ? 0 : Math.PI) : (s > 0 ? Math.PI / 2 : -Math.PI / 2));
+      dessin(ctx, "remorqueur", r, G.c * .62, t, i); ctx.restore();
+    }
+    ctx.save(); ctx.translate(f.cx, f.cy); ctx.rotate(f.a); dessin(ctx, p.t, f.L, f.l, t, i, st.prise && st.prise.i === i); ctx.restore();
+  });
+}
+
+/* ---------- A : le port en pixels ---------- */
+const PA = {eau:"#1c5878", eau2:"#226a8c", ecume:"#7fd0e0", quai:"#8a5a32", quai2:"#6b4224", quai3:"#a87444", noir:"#160f22", blanc:"#f4f1e8"};
+function px(ctx, x, y, w, h, c){ ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function dessinA(ctx, st, t){
+  ctx.imageSmoothingEnabled = false;
+  px(ctx, 0, 0, G.w, G.h, PA.quai);
+  for (let y = 0; y < G.h; y += 8) px(ctx, 0, y, G.w, 2, PA.quai2);           // planches
+  for (let y = 0; y < G.h; y += 16) for (let x = (y / 16 % 2) * 24; x < G.w; x += 48) px(ctx, x, y + 2, 2, 6, PA.quai2);
+  px(ctx, 0, 0, G.w, 96, "#2a3c66");                                           // ciel du bandeau
+  for (let i = 0; i < 18; i++) px(ctx, (i * 53) % G.w, 30 + (i * 37) % 60, 2, 2, i % 3 ? "#8fa4d8" : "#fff");
+  const bx = G.x0, by = G.y0, bw = W * G.c, bh = H * G.c;
+  px(ctx, bx - 6, by - 6, bw + 12, bh + 12, PA.noir);
+  px(ctx, bx - 4, by - 4, bw + 8, bh + 8, PA.quai3);
+  px(ctx, bx, by, bw, bh, PA.eau);
+  for (let y = 0; y < bh; y += 4) for (let x = ((y / 4) % 2) * 2; x < bw; x += 4) px(ctx, bx + x, by + y, 2, 2, PA.eau2);  // trame
+  for (let i = 0; i < 26; i++){                                                // reflets qui scintillent
+    const ph = (t / 600 + i * .37) % 1; if (ph > .5) continue;
+    px(ctx, bx + (i * 71) % (bw - 8), by + (i * 43) % (bh - 4), 6, 2, PA.ecume);
+  }
+  // la sortie et le quai doré
+  const sy = by + SORTIE * G.c;
+  px(ctx, bx + bw, sy, G.w - bx - bw, G.c, PA.eau);
+  for (let x = bx + bw; x < G.w; x += 4) px(ctx, x, sy + ((x / 4) % 2) * 2 + 10, 2, 2, PA.eau2);
+  px(ctx, bx + bw, sy - 4, 4, 4, PA.noir); px(ctx, bx + bw, sy + G.c, 4, 4, PA.noir);
+  px(ctx, G.w - 8, sy - 2, 8, G.c + 4, "#e2b23a"); px(ctx, G.w - 8, sy - 2, 2, G.c + 4, "#9c7314");
+  for (const yy of [by - 14, by + bh + 6]) for (let x = bx + 10; x < bx + bw; x += 46){ px(ctx, x, yy, 6, 6, PA.noir); px(ctx, x + 1, yy + 1, 4, 2, "#5a5a6a"); }
+  bateaux(ctx, st, t, (c, ty, L, l, t2, i, pris) => bateauA(c, ty, L, l, pris));
+  if (st.gagne && t - st.fini > 900){
+    const ok = st.coups <= MIN;
+    px(ctx, 24, 196, 224, 74, PA.noir); px(ctx, 28, 200, 216, 66, "#2a2340");
+    ctx.fillStyle = "#ffd84a"; ctx.font = "16px 'Press Start 2P'"; ctx.textAlign = "center"; ctx.fillText("A QUAI !", 136, 228);
+    ctx.fillStyle = "#fff"; ctx.font = "8px 'Press Start 2P'";
+    ctx.fillText(st.coups + " COUPS  " + (ok ? "★★★" : st.coups <= MIN + 4 ? "★★" : "★"), 136, 250);
+  }
+}
+function bateauA(ctx, ty, L, l, pris){
+  const g = -L / 2, h = l / 2;
+  const coul = {or:["#ffcc2e","#c48a12"], cargo:["#c8423a","#7c2124"], ferry:["#eef1f4","#9aa4b2"], peniche:["#3f7d4f","#24502f"], remorqueur:["#e46a2e","#8c3a14"]}[ty];
+  // coque en marches d'escalier (pixels), proue à droite
+  const m = 4, d = L / 2 - m;
+  px(ctx, g + m - 2, -h + m - 2, L - 2 * m - 4 + 4, l - 2 * m + 4, PA.noir);
+  px(ctx, d - 6, -h + m + 2, 6, l - 2 * m - 4, PA.noir); px(ctx, d - 2, -h + m + 6, 4, l - 2 * m - 12, PA.noir);
+  px(ctx, g + m, -h + m, L - 2 * m - 6, l - 2 * m, coul[0]);
+  px(ctx, d - 6, -h + m + 4, 4, l - 2 * m - 8, coul[0]);
+  px(ctx, g + m, h - m - 4, L - 2 * m - 6, 4, coul[1]);
+  if (pris) px(ctx, g + m, -h + m, L - 2 * m - 6, 2, "#fff");
+  if (ty === "or"){ px(ctx, -12, -8, 18, 16, PA.blanc); px(ctx, -10, -6, 14, 2, "#9aa4b2"); px(ctx, 0, -4, 4, 8, "#d8382c"); px(ctx, -30, -2, 10, 4, "#c48a12"); }
+  if (ty === "cargo") for (let x = g + 10; x < d - 16; x += 14){ px(ctx, x, -9, 12, 8, ["#3a7bd5","#f2a33a","#5fae5a","#e8e2d0"][Math.abs(x | 0) % 4]); px(ctx, x, 1, 12, 8, ["#f2a33a","#e8e2d0","#3a7bd5","#5fae5a"][Math.abs(x | 0) % 4]); }
+  if (ty === "ferry"){ px(ctx, g + 10, -8, L - 40, 16, "#d0d6de"); for (let x = g + 12; x < d - 34; x += 8) px(ctx, x, -6, 4, 4, "#3a6ea8"); px(ctx, g + 10, 4, L - 40, 2, "#2f6fb0"); px(ctx, -4, -4, 6, 8, "#d8382c"); }
+  if (ty === "peniche"){ px(ctx, g + 10, -7, L - 34, 14, "#5b4630"); px(ctx, g + 14, -4, L - 42, 8, "#c9a463"); px(ctx, g + 6, -5, 6, 10, PA.blanc); }
+  if (ty === "remorqueur"){ px(ctx, -4, -5, 8, 10, PA.blanc); px(ctx, -2, -2, 4, 4, PA.noir); }
+}
+
+/* ---------- B : les bateaux-jouets ---------- */
+const PB = {eau:"#8fd8e8", eau2:"#b5ecf3", bois:"#e7ad6c", bois2:"#c98a4a", encre:"#2b2340", fond:"#fff3d6"};
+function dessinB(ctx, st, t){
+  ctx.fillStyle = PB.fond; ctx.fillRect(0, 0, G.w, G.h);
+  ctx.fillStyle = "#ffe2a8"; for (let i = 0; i < 9; i++){ ctx.beginPath(); ctx.arc((i * 61) % G.w, 40 + (i * 29) % 50, 18, 0, 7); ctx.fill(); }
+  const bx = G.x0, by = G.y0, bw = W * G.c, bh = H * G.c, sy = by + SORTIE * G.c;
+  // bassin en bois : rebord épais, ouverture à droite
+  ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = PB.encre;
+  ctx.fillStyle = PB.bois; rond(ctx, bx - 10, by - 10, bw + 20, bh + 20, 16); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = PB.eau; rond(ctx, bx, by, bw, bh, 8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = PB.eau; ctx.fillRect(bx + bw - 2, sy + 2, G.w - bx - bw + 2, G.c - 4);
+  ctx.beginPath(); ctx.moveTo(bx + bw, sy + 1.5); ctx.lineTo(G.w, sy + 1.5); ctx.moveTo(bx + bw, sy + G.c - 1.5); ctx.lineTo(G.w, sy + G.c - 1.5); ctx.stroke();
+  ctx.fillStyle = PB.bois2; for (let x = bx + 6; x < bx + bw; x += 30){ ctx.fillRect(x, by - 7, 14, 3); ctx.fillRect(x + 8, by + bh + 4, 14, 3); }
+  // drapeau d'arrivée
+  ctx.fillStyle = PB.encre; ctx.fillRect(G.w - 9, sy - 26, 2.5, 26);
+  ctx.fillStyle = "#ffcf4a"; ctx.beginPath(); ctx.moveTo(G.w - 7, sy - 26); ctx.lineTo(G.w - 20, sy - 21); ctx.lineTo(G.w - 7, sy - 16); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+  // ronds dans l'eau
+  ctx.save(); rond(ctx, bx, by, bw + 60, bh, 8); ctx.clip();
+  ctx.strokeStyle = PB.eau2; ctx.lineWidth = 2;
+  for (let i = 0; i < 7; i++){ const r = ((t / 40 + i * 37) % 60); ctx.globalAlpha = 1 - r / 60; ctx.beginPath(); ctx.arc(bx + (i * 83) % bw, by + (i * 59) % bh, r, 0, 7); ctx.stroke(); }
+  ctx.restore(); ctx.globalAlpha = 1;
+  bateaux(ctx, st, t, (c, ty, L, l, t2, i, pris) => bateauB(c, ty, L, l, t2, i, pris));
+  if (st.gagne){
+    const e = (t - st.fini) / 1000;
+    for (let i = 0; i < 40; i++){ const a = i * 2.4, v = 40 + (i * 17) % 60, x = 200 + Math.cos(a) * v * e, y = 210 + Math.sin(a) * v * e + 60 * e * e;
+      if (e > 2.6) break; ctx.fillStyle = ["#ff8a5c","#ffcf4a","#5fc9a8","#7a8cff"][i % 4]; ctx.save(); ctx.translate(x, y); ctx.rotate(e * 6 + i); ctx.fillRect(-3, -2, 6, 4); ctx.restore(); }
+    if (e > .9){
+      ctx.lineWidth = 3; ctx.strokeStyle = PB.encre; ctx.fillStyle = "#fff"; rond(ctx, 36, 186, 200, 80, 18); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = PB.encre; ctx.textAlign = "center"; ctx.font = "700 26px Fredoka"; ctx.fillText("À quai !", 136, 222);
+      ctx.font = "600 15px Fredoka"; ctx.fillText(st.coups + " coups · " + (st.coups <= MIN ? "★★★" : st.coups <= MIN + 4 ? "★★" : "★"), 136, 248);
+    }
+  }
+}
+function rond(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+function bateauB(ctx, ty, L, l, t, i, pris){
+  ctx.translate(0, Math.sin(t / 500 + i * 1.3) * .8);   // ils dansent sur l'eau
+  const coul = {or:"#ffcf4a", cargo:"#ff6f61", ferry:"#7a8cff", peniche:"#5fc9a8", remorqueur:"#ff8a5c"}[ty];
+  ctx.fillStyle = "rgba(43,35,64,.18)"; coque(ctx, L, l, 4); ctx.save(); ctx.translate(2, 3); ctx.fill(); ctx.restore();
+  ctx.lineWidth = pris ? 3.5 : 2.5; ctx.strokeStyle = PB.encre; ctx.lineJoin = "round";
+  ctx.fillStyle = coul; coque(ctx, L, l, 4); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,.45)"; ctx.fillRect(-L / 2 + 8, -l / 2 + 7, L - 30, 3);
+  ctx.lineWidth = 2;
+  const boite = (x, y, w, h, c) => { ctx.fillStyle = c; rond(ctx, x, y, w, h, 3); ctx.fill(); ctx.stroke(); };
+  if (ty === "or"){ boite(-14, -9, 20, 18, "#fff"); ctx.fillStyle = PB.encre; ctx.beginPath(); ctx.arc(-4, 0, 3, 0, 7); ctx.fill(); boite(-26, -4, 8, 8, "#ff6f61"); }
+  if (ty === "cargo") for (let x = -L / 2 + 10, j = 0; x < L / 2 - 26; x += 16, j++) boite(x, -9, 13, 18, ["#7a8cff","#fff3d6","#5fc9a8"][j % 3]);
+  if (ty === "ferry"){ boite(-L / 2 + 10, -9, L - 40, 18, "#fff"); ctx.fillStyle = PB.encre; for (let x = -L / 2 + 16; x < L / 2 - 34; x += 9){ ctx.beginPath(); ctx.arc(x, 0, 2.2, 0, 7); ctx.fill(); } }
+  if (ty === "peniche"){ boite(-L / 2 + 8, -7, 10, 14, "#fff"); boite(-L / 2 + 22, -8, L - 46, 16, "#e7ad6c"); }
+  if (ty === "remorqueur"){ boite(-6, -6, 10, 12, "#fff"); }
+}
+
+/* ---------- C : la carte marine ---------- */
+const PC = {papier:"#f4ecd2", terre:"#efd98f", hach:"#c9ae5a", eau:"#fbf8ee", eau2:"#d5e9ee", encre:"#2c3a40", rouge:"#a8322a", or:"#b98a24"};
+const SONDES = Array.from({length:36}, (_, i) => [(i * 7) % 6, Math.floor(i / 6), 2 + (i * 5) % 9]);
+function dessinC(ctx, st, t){
+  ctx.fillStyle = PC.papier; ctx.fillRect(0, 0, G.w, G.h);
+  const bx = G.x0, by = G.y0, bw = W * G.c, bh = H * G.c, sy = by + SORTIE * G.c;
+  // terre (quais) hachurée
+  ctx.fillStyle = PC.terre; ctx.fillRect(0, by - 22, G.w, bh + 44);
+  ctx.strokeStyle = PC.hach; ctx.lineWidth = .6; ctx.beginPath();
+  for (let x = -bh; x < G.w; x += 5){ ctx.moveTo(x, by - 22); ctx.lineTo(x + bh + 44, by + bh + 22); } ctx.stroke();
+  // eau : isobathes pâles, puis blanc
+  ctx.fillStyle = PC.eau2; ctx.fillRect(bx, by, bw, bh); ctx.fillRect(bx + bw, sy, G.w - bx - bw, G.c);
+  ctx.fillStyle = PC.eau; ctx.fillRect(bx + 7, by + 7, bw - 14, bh - 14); ctx.fillRect(bx + bw - 8, sy + 7, G.w - bx - bw + 8, G.c - 14);
+  ctx.strokeStyle = PC.encre; ctx.lineWidth = 1.2; ctx.strokeRect(bx, by, bw, bh);
+  ctx.fillStyle = PC.eau2; ctx.fillRect(bx + bw - 1, sy + 1, G.w - bx - bw + 1, G.c - 2);
+  ctx.fillStyle = PC.eau; ctx.fillRect(bx + bw - 8, sy + 7, G.w - bx - bw + 8, G.c - 14);
+  // quadrillage en pointillés et sondes
+  ctx.setLineDash([2, 3]); ctx.strokeStyle = "rgba(44,58,64,.28)"; ctx.lineWidth = .7; ctx.beginPath();
+  for (let k = 1; k < 6; k++){ ctx.moveTo(bx + k * G.c, by); ctx.lineTo(bx + k * G.c, by + bh); ctx.moveTo(bx, by + k * G.c); ctx.lineTo(bx + bw, by + k * G.c); }
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = "rgba(44,58,64,.55)"; ctx.font = "italic 9px 'IM Fell English'"; ctx.textAlign = "center";
+  for (const [x, y, d] of SONDES) ctx.fillText(d, bx + x * G.c + 9 + (y * 13) % 18, by + y * G.c + 13 + (x * 7) % 16);
+  // le quai d'arrivée
+  ctx.fillStyle = PC.rouge; ctx.font = "9px 'IM Fell English SC'"; ctx.textAlign = "center"; ctx.fillText("Quai", 257, sy - 14); ctx.fillText("d'or", 257, sy - 5);
+  ctx.textAlign = "left"; ctx.fillStyle = PC.encre; ctx.fillText("Bassin du Levant", bx, by - 8);
+  ctx.font = "italic 9px 'IM Fell English'"; ctx.fillText("Sondes en brasses", bx, by + bh + 16);
+  rose(ctx, 232, 404, 20);
+  bateaux(ctx, st, t, (c, ty, L, l, t2, i, pris) => bateauC(c, ty, L, l, i, pris));
+  if (st.gagne && t - st.fini > 900){
+    ctx.save(); ctx.translate(136, 232); ctx.rotate(-.14);
+    ctx.strokeStyle = PC.rouge; ctx.lineWidth = 3; ctx.strokeRect(-86, -30, 172, 60); ctx.lineWidth = 1; ctx.strokeRect(-81, -25, 162, 50);
+    ctx.fillStyle = PC.rouge; ctx.textAlign = "center"; ctx.font = "24px 'IM Fell English SC'"; ctx.fillText("Amarré", 0, 4);
+    ctx.font = "italic 11px 'IM Fell English'"; ctx.fillText("en " + st.coups + " manœuvres · " + (st.coups <= MIN ? "★★★" : st.coups <= MIN + 4 ? "★★" : "★"), 0, 20);
+    ctx.restore();
+  }
+}
+function rose(ctx, x, y, r){
+  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = PC.encre; ctx.lineWidth = .8;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, r * .8, 0, 7); ctx.stroke();
+  for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4, lg = k % 2 ? r * .55 : r * .95;
+    ctx.fillStyle = k % 2 ? PC.encre : (k === 0 ? PC.rouge : PC.encre);
+    ctx.beginPath(); ctx.moveTo(Math.sin(a) * lg, -Math.cos(a) * lg); ctx.lineTo(Math.sin(a + .35) * 4, -Math.cos(a + .35) * 4); ctx.lineTo(Math.sin(a - .35) * 4, -Math.cos(a - .35) * 4); ctx.fill(); }
+  ctx.fillStyle = PC.encre; ctx.font = "8px 'IM Fell English SC'"; ctx.textAlign = "center"; ctx.fillText("N", 0, -r - 3);
+  ctx.restore();
+}
+function bateauC(ctx, ty, L, l, i, pris){
+  const or = ty === "or";
+  ctx.fillStyle = or ? PC.or : ty === "remorqueur" ? PC.rouge : PC.encre;
+  coque(ctx, L, l, 6); ctx.fill();
+  if (pris){ ctx.strokeStyle = PC.rouge; ctx.lineWidth = 1.5; ctx.setLineDash([3, 2]); coque(ctx, L + 8, l + 8, 6); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.strokeStyle = PC.papier; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(-L / 2 + 6, -4); ctx.lineTo(-L / 2 + 6, 4); ctx.stroke();
+  if (ty === "remorqueur") return;
+  // numéro de coque, toujours lisible
+  ctx.save();
+  const m = ctx.getTransform(), ang = Math.atan2(m.b, m.a); ctx.rotate(-ang);
+  ctx.fillStyle = PC.papier; ctx.font = (or ? "11px" : "9px") + " 'IM Fell English SC'"; ctx.textAlign = "center";
+  ctx.fillText(or ? "Doré" : ["", "C1", "P2", "F3", "P4", "C5", "P6", "P7", "P8", "P9"][i], 0, 3.5);
+  ctx.restore();
+}
+
+/* ---------- boucle ---------- */
+const tels = [...document.querySelectorAll(".tel")].map(Tel);
+function boucle(t){ tels.forEach(f => f(t)); requestAnimationFrame(boucle); }
+requestAnimationFrame(boucle);
+</script>
+</body>
+</html>
