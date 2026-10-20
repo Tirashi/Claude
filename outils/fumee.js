@@ -86,36 +86,41 @@ const shots = process.argv[2];
       const r = await p.evaluate(async () => {
         const A = Amiral, S = A.S, wait = ms => new Promise(r => setTimeout(r, ms));
         A.openYard(); A.YARD.fleet = ['cruiser', 'destroyer', 'sub', 'coast']; A.newGame(); A.startBattle();
-        const turn = async plan => { S.busy = false; S.turn = 'player'; await A.playerAct(plan); for (let k = 0; k < 80 && (S.turn !== 'player' || S.busy) && S.phase === 'play'; k++) await wait(100); };
-        await turn({ w: 'missiles', c: 0, r: 0, h: true, cells: [[0, 0], [7, 7], [3, 4]] });
-        if (S.stats.shots !== 3) return 'les missiles ne tirent pas 3 fois';
+        // un tour du joueur puis la riposte ; `check` est vérifiée dès la fin de l'action, avant que l'ordinateur (flotte et coups au hasard) ne joue
+        const turn = async (plan, check) => { S.busy = false; S.turn = 'player'; await A.playerAct(plan); const e = check ? check() : null; for (let k = 0; k < 150 && (S.turn !== 'player' || S.busy) && S.phase === 'play'; k++) await wait(100); return e; };
+        let e = await turn({ w: 'missiles', c: 0, r: 0, h: true, cells: [[0, 0], [7, 7], [3, 4]] }, () => S.stats.shots !== 3 ? 'les missiles ne tirent pas 3 fois' : null);
+        if (e) return e;
         if (S.turn !== 'player') return "l'ennemi ne rend pas la main";
-        await turn({ w: 'sonar', c: 0, r: 5, h: true });
-        if (!S.enemy.sonar.some(q => q.h && q.i === 5)) return 'le sonar ne note pas la ligne';
+        e = await turn({ w: 'sonar', c: 0, r: 5, h: true }, () => !S.enemy.sonar.some(q => q.h && q.i === 5) ? 'le sonar ne note pas la ligne' : null);
+        if (e) return e;
         await turn({ w: 'projecteur', c: 4, r: 2, h: false });
         A.YARD.fleet = ['tender', 'battle', 'sub', 'torp']; A.newGame(); A.startBattle();
         const b = S.player, s = b.ships[0]; b.shots[s.r][s.c] = 2; s.hits = 1;
-        // vérifiée dès la fin de l'action, avant la riposte (l'ennemi peut retoucher le navire réparé)
-        S.busy = false; S.turn = 'player'; await A.playerAct({ w: 'reparation', c: s.c, r: s.r, h: true });
-        if (s.hits !== 0 || b.shots[s.r][s.c]) return 'la réparation ne répare pas';
-        for (let k = 0; k < 80 && (S.turn !== 'player' || S.busy) && S.phase === 'play'; k++) await wait(100);
-        // mines, fumée, leurre ; une mine ennemie touchée riposte
+        e = await turn({ w: 'reparation', c: s.c, r: s.r, h: true }, () => s.hits !== 0 || b.shots[s.r][s.c] ? 'la réparation ne répare pas' : null);
+        if (e) return e;
+        // mines, fumée, leurre : chacun dès le premier tour d'une nouvelle partie (l'ordinateur n'a pas encore pu couler le navire) ; une mine ennemie touchée riposte
         localStorage.setItem('amiral.palmares', JSON.stringify({ victoires: 10, normal: 1, hard: 1 }));
-        A.YARD.fleet = ['carrier', 'layer', 'jammer', 'launch']; A.newGame(); A.startBattle();
-        const me = S.player, water = []; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (me.grid[r][c] < 0) water.push([c, r]);
-        await turn({ w: 'mines', c: water[0][0], r: water[0][1], h: true, cells: [water[0], water[9]] });
-        if (me.mines.length !== 2) return 'les mines ne sont pas posées';
+        A.YARD.fleet = ['carrier', 'layer', 'jammer', 'launch'];
+        const waterOf = bd => { const w = []; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (bd.grid[r][c] < 0) w.push([c, r]); return w; };
+        A.newGame(); A.startBattle();
+        let me = S.player, water = waterOf(me);
+        e = await turn({ w: 'mines', c: water[0][0], r: water[0][1], h: true, cells: [water[0], water[9]] }, () => me.mines.length !== 2 ? 'les mines ne sont pas posées' : null);
+        if (e) return e;
+        A.newGame(); A.startBattle(); me = S.player;
         await turn({ w: 'fumee', c: 3, r: 3, h: true });
         if (!me.smoke || me.smoke.left !== 1) return "la fumée ne s'use pas au coup ennemi";
-        const spot = water.flatMap(([c, r]) => [[c, r, true], [c, r, false]]).find(([c, r, h]) => [[c, r], h ? [c + 1, r] : [c, r + 1]].every(([x, y]) => x < 8 && y < 8 && me.grid[y][x] < 0 && !me.shots[y][x] && !me.intel[y][x] && !me.mines.some(m => m[0] === x && m[1] === y)));
-        await turn({ w: 'leurre', c: spot[0], r: spot[1], h: spot[2] });
-        if (me.decoys.length !== 1 && !me.shots[spot[1]][spot[0]]) return "le leurre n'est pas à l'eau";
-        const foe = S.enemy, wc = []; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (foe.grid[r][c] < 0 && !foe.shots[r][c]) wc.push([c, r]);
-        foe.mines.push(wc[0].slice()); const hits0 = me.ships.reduce((a, s) => a + s.hits, 0), my0 = S.stats.aiShots;
-        await turn({ w: 'tir', c: wc[0][0], r: wc[0][1], h: true });
+        A.newGame(); A.startBattle(); me = S.player; water = waterOf(me);
+        const spot = water.flatMap(([c, r]) => [[c, r, true], [c, r, false]]).find(([c, r, h]) => [[c, r], h ? [c + 1, r] : [c, r + 1]].every(([x, y]) => x < 8 && y < 8 && me.grid[y][x] < 0));
+        e = await turn({ w: 'leurre', c: spot[0], r: spot[1], h: spot[2] }, () => me.decoys.length !== 1 ? "le leurre n'est pas à l'eau" : null);
+        if (e) return e;
+        // cases d'eau ennemies libres : ni visées, ni mine, ni leurre de l'ordinateur
+        const foe = S.enemy, trap = (c, r) => foe.mines.some(m => m[0] === c && m[1] === r) || foe.decoys.some(d => d.cells.some(([x, y]) => x === c && y === r));
+        const free = () => waterOf(foe).filter(([c, r]) => !foe.shots[r][c] && !trap(c, r));
+        const wc = free()[0]; foe.mines.push(wc.slice()); const hits0 = me.ships.reduce((a, s) => a + s.hits, 0);
+        await turn({ w: 'tir', c: wc[0], r: wc[1], h: true });
         if (me.ships.reduce((a, s) => a + s.hits, 0) <= hits0 && S.phase === 'play') return "la mine ennemie ne riposte pas";
-        foe.smoke = { c0: 0, r0: 0, left: 2 }; const sc = wc.find(([c, r]) => c < 3 && r < 3 && !foe.shots[r][c]) || [0, 0];
-        if (!foe.shots[sc[1]][sc[0]]) { await turn({ w: 'tir', c: sc[0], r: sc[1], h: true }); if (!foe.veil[sc[1]][sc[0]] && S.phase === 'play') return 'le tir dans la fumée ennemie se voit'; }
+        foe.smoke = { c0: 0, r0: 0, left: 2 }; const sc = free().find(([c, r]) => c < 3 && r < 3);
+        if (sc && S.phase === 'play') { e = await turn({ w: 'tir', c: sc[0], r: sc[1], h: true }, () => !foe.veil[sc[1]][sc[0]] && S.phase === 'play' ? 'le tir dans la fumée ennemie se voit' : null); if (e) return e; }
         // bataille du jour
         const d = A.todayKey(); A.newGame(d); if (!S.daily || S.diff !== 'normal' || S.player.ships[0].def.id !== A.dailyOf(d).fleet[0]) return 'la bataille du jour ne prend pas les flottes du jour';
         A.openYard(); if (S.daily) return 'le chantier ne quitte pas la bataille du jour';
