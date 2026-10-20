@@ -14,7 +14,7 @@ Casse-tête façon « Rush Hour » dans un port, vu du dessus en pixel art 32 bi
 - Le **navire doré** (2 cases) est toujours posé en long, dans la colonne de la **passe** (une ouverture dans le quai du haut) ; le bassin est gagné quand il arrive à la passe (la case du haut de sa colonne) : il sort alors tout seul vers la mer.
 - La colonne de la passe change d'un bassin à l'autre (elle fait partie du niveau).
 - Pas de limite de coups ni de temps : **annuler sans limite** (↶) et **recommencer** (⟲).
-- Nouveautés par port (à confirmer, § 13) :
+- Nouveautés par port (confirmées le 20/10) :
   1. **Le port de pêche** : les bases (chalutiers, voiliers de 2 cases, quelques cargos de 3) ; les 3 premiers bassins servent de tutoriel.
   2. **Le port de commerce** : plus de grands bateaux de 3 (cargos, ferries, péniches), bassins plus encombrés.
   3. **La marina** : des **obstacles fixes** d'une case (bouée d'amarrage, pilier de ponton, épave) qui ne bougent jamais.
@@ -44,7 +44,7 @@ Reprendre le code de la maquette (`maquettes/capitaine-du-port.html`, lui-même 
 - Un port se débloque quand on a fini 8 bassins du précédent ; dans un port, on joue les bassins débloqués dans l'ordre qu'on veut (le suivant de chaque bassin fini).
 
 ## 6. Étoiles et score
-- À la fin d'un bassin : **3 étoiles** si le nombre de coups est au plus l'optimum, **2 étoiles** au plus l'optimum + 50 % (au moins + 3), sinon **1 étoile**. Les annulations ne comptent pas (seul le chemin final compte).
+- À la fin d'un bassin : **3 étoiles** si le nombre de coups est au plus l'optimum + 10 % (arrondi au-dessus, donc au moins + 1 : des enfants jouent, décision du 20/10), **2 étoiles** au plus l'optimum + 50 % (au moins + 3), sinon **1 étoile**. Les annulations ne comptent pas (seul le chemin final compte).
 - On garde pour chaque bassin le meilleur nombre de coups et les étoiles. Total sur 180.
 - Écran de fin : le navire doré sort vers la mer, « A QUAI ! », étoiles qui tombent une à une, coups et objectif, boutons SUIVANT, REJOUER, PORTS.
 
@@ -62,7 +62,7 @@ Reprendre le code de la maquette (`maquettes/capitaine-du-port.html`, lui-même 
 - **Réglages** : bruitages, musique.
 
 ## 9. Sons
-Bruitages synthétisés en Web Audio (sans fichier), discrets : moteur du remorqueur pendant le glissement, « toc » de butée contre un bateau ou un quai, clapotis quand un bateau se cale, cri de mouette de temps en temps, corne de brume quand le navire doré sort, petite fanfare et cloche de port à la victoire, bips des menus. Musique d'ambiance discrète et coupable à part (à confirmer, § 13).
+Bruitages synthétisés en Web Audio (sans fichier), discrets : moteur du remorqueur pendant le glissement, « toc » de butée contre un bateau ou un quai, clapotis quand un bateau se cale, cri de mouette de temps en temps, corne de brume quand le navire doré sort, petite fanfare et cloche de port à la victoire, bips des menus. **Musique d'ambiance discrète** (décision du 20/10) : générative, synthétisée en Web Audio comme celle du Magasinier, calme et ensoleillée (accordéon ou guitare doux, petite mélodie espacée), mixée nettement sous les bruitages ; bruitages et musique coupables à part dans les réglages.
 
 ## 10. Technique
 - Dossier **`capitaine-du-port/`** : `index.html` (canvas et styles), `jeu.js` (écrans, commandes, boucle), **`regles.js`** (logique pure, partagée avec Node : bassin, coups, butées, annulation, victoire, générateur à graine, solveur ; pas de DOM, pas de `localStorage`, pas de `Math.random`), **`niveaux.js`** (les 60 bassins et leur optimum), **`decor.js`** (sprites des bateaux et décor des 5 ports, repris de la maquette), **`sons.js`**. Charge `../ludo-scores.js`. Scripts classiques, sans build.
@@ -82,9 +82,9 @@ Bruitages synthétisés en Web Audio (sans fichier), discrets : moteur du remorq
 
 Coût estimé : **5 à 7 % de la semaine** (jeu moyen en 2D, dessin déjà fait dans la maquette ; le plus long est de choisir et d'habiller 60 bassins).
 
-## 13. Points à confirmer par l'utilisateur
-1. **Les nouveautés des 5 ports** (§ 2) : pêche (bases), commerce (grands bateaux), marina (obstacles fixes), chantier naval (bateaux de 4 cases), grand port (7 × 7, tout mélangé). D'accord, ou une autre idée (marée, pont levant…) ?
-2. **Étoiles** (§ 6) : 3 étoiles seulement à l'optimum exact (plus exigeant que le Magasinier, où l'on a + 10 %) ?
-3. **Bassin du jour** (§ 7) : score = tous les coups joués, annulations comprises, comme la grille du jour du Magasinier ?
-4. **Musique d'ambiance** discrète (comme Le Magasinier), ou seulement les bruitages du port ?
-5. **Nom du dossier** : `capitaine-du-port/` ?
+## 13. Points confirmés par l'utilisateur (20/10)
+1. Nouveautés des 5 ports : **d'accord** (pêche, commerce, marina avec obstacles fixes, chantier naval avec bateaux de 4 cases, grand port en 7 × 7).
+2. Étoiles : **3 étoiles jusqu'à l'optimum + 10 %** (« il y a des enfants qui jouent »), pas à l'optimum exact.
+3. Bassin du jour : **tous les coups comptent**, annulations comprises.
+4. **Bruitages et musique discrète.**
+5. Dossier **`capitaine-du-port/`**.
