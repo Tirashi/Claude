@@ -35,11 +35,13 @@ function rebours(N, marques, plafond = Infinity, limite = 2e6) {
   return meilleur;
 }
 
-function plan(N, d, caisses, marques) {
+// plan d'un niveau : les nl premières caisses sont lourdes (jamais sur la glace) ; rien n'est posé sur un tapis
+const TAPIS = { H: '^', B: 'v', G: '<', D: '>' };
+function plan(N, d, caisses, marques, nl = 0) {
   const out = [];
   for (let y = 0; y < N.h; y++) { let l = '';
-    for (let x = 0; x < N.w; x++) { const p = y * N.w + x, c = caisses.includes(p), m = marques.includes(p), g = N.glace[p];
-      l += N.mur[p] ? '#' : p === d ? (m ? '+' : g ? 'a' : '@') : c ? (m ? '*' : g ? 'c' : '$') : m ? '.' : g ? '~' : ' '; }
+    for (let x = 0; x < N.w; x++) { const p = y * N.w + x, i = caisses.indexOf(p), c = i >= 0, m = marques.includes(p), g = N.glace[p];
+      l += N.mur[p] ? '#' : N.tapis[p] ? TAPIS[N.tapis[p]] : p === d ? (m ? '+' : g ? 'a' : '@') : c && i < nl ? (m ? 'H' : 'h') : c ? (m ? '*' : g ? 'c' : '$') : m ? '.' : g ? '~' : ' '; }
     out.push(l.replace(/\s+$/, '')); }
   return out;
 }
@@ -48,30 +50,35 @@ const SALLES = require('./magasinier-salles.js');
 const [n = '0', essais = '40', graine = '1'] = process.argv.slice(2);
 const S = SALLES[+n], rnd = alea(+graine);
 // un docker fictif dans la salle (première case après le premier mur de la 2e rangée) pour calculer l'intérieur
-const x1 = S.salle[1].search(/#[^#]/) + 1;
+let x1 = S.salle[1].indexOf(' ', S.salle[1].indexOf('#')); if (x1 < 0) x1 = S.salle[1].search(/#[^#]/) + 1;
 const base = R.magLire(S.salle.map((l, y) => y === 1 ? l.slice(0, x1) + (l[x1] === '~' ? 'a' : '@') + l.slice(x1 + 1) : l));
 // la salle est lue avec un docker fictif pour calculer l'intérieur ; les marques sont posées ensuite
 const libres = [], sol = [];
-for (let p = 0; p < base.mur.length; p++) if (base.dedans[p] && !base.mur[p]) { libres.push(p); if (!base.glace[p]) sol.push(p); }
-const glacee = S.salle.some(l => l.includes('~'));
-// évalue une disposition : marques m ; avec glace, caisses c et docker d (sans glace, la recherche à rebours les choisit)
+for (let p = 0; p < base.mur.length; p++) if (base.dedans[p] && !base.mur[p] && !base.tapis[p]) { libres.push(p); if (!base.glace[p]) sol.push(p); }
+// avec glace ou tapis, la recherche à rebours ne marche pas : essais au hasard puis améliorations
+const glacee = S.salle.some(l => /[~^v<>]/.test(l)), NL = S.lourdes || 0, tapisSalle = S.salle.some(l => /[\^v<>]/.test(l));
+// évalue une disposition : marques m ; avec glace ou tapis, caisses c et docker d (sinon la recherche à rebours les choisit)
 function evalue(m, c, d) {
   if (!glacee) {
     const r = rebours(base, m, S.max || Infinity); if (!r) return null;
     const bons = r.etats.filter(([d2, c2]) => c2.every(p => !m.includes(p)) && !m.includes(d2)), choix = (bons.length ? bons : r.etats)[Math.floor(rnd() * (bons.length || r.etats.length))];
     d = choix[0]; c = choix[1];
   }
-  const p = plan(base, d, c, m); let N; try { N = R.magLire(p); } catch (e) { return null; }
+  const p = plan(base, d, c, m, NL); let N; try { N = R.magLire(p); } catch (e) { return null; }
   const s = R.magResoudre(N, glacee ? 4e5 : 3e6); if (!s || (S.max && s.coups > S.max)) return null;
   // note : poussées et changements de direction comptent plus que la longueur (pas de longues marches à vide)
-  let pou = 0, chg = 0, prec = null, E = { d: N.depart.d, c: N.depart.c };
-  for (const dir of s.chemin) { const r = R.magCoup(N, E, dir); if (r.pousse >= 0) { pou++; if (prec !== null && prec !== dir) chg++; prec = dir; } E = r.E; }
-  return { note: 2 * pou + 4 * chg + 0.3 * s.coups, coups: s.coups, pou, chg, plan: p, m, c, d };
+  let pou = 0, chg = 0, prec = null, meca = 0, lou = 0, E = { d: N.depart.d, c: N.depart.c };
+  for (const dir of s.chemin) { const r = R.magCoup(N, E, dir); if (r.pousse >= 0) { pou++; if (prec !== null && prec !== dir) chg++; prec = dir; if (E.c[r.pousse].l) lou++; }
+    if (r.mvt.some(v => v.tapis || v.glisse)) meca++; E = r.E; }
+  // les tapis et les caisses lourdes doivent servir dans la solution
+  if (tapisSalle && !(() => { let F = { d: N.depart.d, c: N.depart.c }; for (const dir of s.chemin) { const r = R.magCoup(N, F, dir); if (r.mvt.some(v => v.tapis)) return true; F = r.E; } return false; })()) return null;
+  if (NL && !lou) return null;
+  return { note: 2 * pou + 4 * chg + 0.3 * s.coups + 1.5 * Math.min(meca, 10), coups: s.coups, pou, chg, plan: p, m, c, d };
 }
 const tire = (l, sauf) => { let p; do p = l[Math.floor(rnd() * l.length)]; while (sauf.includes(p)); return p; };
 function hasard() {
   const m = []; while (m.length < S.caisses) m.push(tire(sol, m));
-  const c = []; if (glacee) while (c.length < S.caisses) { const p = tire(libres, [...c, ...m]); if (!base.mort[p]) c.push(p); }
+  const c = []; if (glacee) while (c.length < S.caisses) { const p = tire(c.length < NL ? sol : libres, [...c, ...m]); if (!base.mort[p]) c.push(p); }
   return evalue(m, c, glacee ? tire(libres, c) : 0);
 }
 let top = null;
@@ -80,7 +87,7 @@ for (let e = 0; e < +essais; e++) { const r = hasard(); if (r && (!top || r.note
 for (let e = 0; top && e < +essais; e++) {
   const m = top.m.slice(), c = top.c.slice(); let d = top.d; const quoi = glacee ? Math.floor(rnd() * 3) : 0;
   if (quoi === 0) { const i = Math.floor(rnd() * m.length); m[i] = tire(sol, [...m, ...c, d]); }
-  else if (quoi === 1) { const i = Math.floor(rnd() * c.length); const p = tire(libres, [...m, ...c, d]); if (base.mort[p]) continue; c[i] = p; }
+  else if (quoi === 1) { const i = Math.floor(rnd() * c.length); const p = tire(i < NL ? sol : libres, [...m, ...c, d]); if (base.mort[p]) continue; c[i] = p; }
   else d = tire(libres, c);
   const r = evalue(m, c, d); if (r && r.note >= top.note) top = r;
 }

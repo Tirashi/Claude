@@ -22,6 +22,13 @@ const PEINT={
 };
 const texCaisse=(p)=>texPix(16,(g,n)=>{R(g,0,0,n,n,p.f);for(let i=0;i<3;i++){R(g,2,2+i*4,12,4,i%2?p.c:p.l);R(g,2,5+i*4,12,1,p.g);}
   for(let i=0;i<10;i++){R(g,3+i,12-i,2,2,p.f);R(g,3+i,11-i,1,1,p.l);}R(g,0,0,n,1,p.l);R(g,0,0,1,n,p.l);R(g,1,1,1,1,"#2a1a10");R(g,14,1,1,1,"#2a1a10");R(g,1,14,1,1,"#2a1a10");R(g,14,14,1,1,"#2a1a10");});
+// caisse lourde : fonte gris-bleu cerclée de fer, rivets
+const texFonte=()=>texPix(16,(g,n)=>{R(g,0,0,n,n,"#3a414c");R(g,2,2,12,12,"#5a6472");R(g,2,2,12,1,"#7a8696");R(g,2,6,12,1,"#48505c");R(g,2,10,12,1,"#48505c");R(g,2,13,12,1,"#434a55");
+  [[1,1],[14,1],[1,14],[14,14],[7,1],[7,14],[1,7],[14,7]].forEach(([x,y])=>{R(g,x,y,1,1,"#b8c0cc");R(g,x+1>15?x:x+1,y+1>15?y:y+1,1,1,"#2a2f38");});R(g,5,4,6,1,"#8e9aaa");R(g,4,8,8,1,"#6a7484");});
+// tapis roulant : bande sombre à lattes, chevrons jaunes vers +x (la texture défile, le maillage est tourné selon le sens)
+const texTapis=()=>{const t=texPix(16,(g,n)=>{R(g,0,0,n,n,"#2e2c2a");for(let x=0;x<n;x+=4){R(g,x,0,1,n,"#3e3a36");R(g,x+3,0,1,n,"#1e1c1a");}
+  [2,10].forEach(x0=>{for(let i=0;i<4;i++){R(g,x0+i,4+i,2,1,"#f0bf2a");R(g,x0+i,11-i,2,1,"#f0bf2a");}});R(g,0,0,n,1,"#55504a");R(g,0,n-1,n,1,"#151312");});
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;};
 const texGlace=()=>texPix(16,(g,n)=>{const r=alea(21);R(g,0,0,n,n,"#9fd6ee");for(let k=0;k<40;k++)R(g,Math.floor(r()*n),Math.floor(r()*n),1,1,r()<.5?"#b8e4f6":"#86c4e2");
   for(let i=0;i<5;i++){R(g,2+i,10-i,1,1,"#ffffff");R(g,9+i,6-i,1,1,"#eafaff");}R(g,4,12,3,1,"#6aa8cc");R(g,6,13,1,1,"#6aa8cc");R(g,12,9,1,3,"#6aa8cc");});
 const texMarque=(col)=>texPix(16,(g,n)=>{[[1,1],[11,1],[1,11],[11,11]].forEach(([x,y])=>{R(g,x,y+(y>8?3:0),4,1,col);R(g,x+(x>8?3:0),y,1,4,col);});R(g,7,5,2,1,col);R(g,6,6,4,1,col);R(g,5,7,6,2,col);R(g,6,9,4,1,col);R(g,7,10,2,1,col);R(g,7,7,2,2,"#ffffff");});
@@ -78,7 +85,7 @@ function creer(can, ecoute) {
   scene.add(soleil, soleil.target);
 
   // textures (une fois)
-  const T = { sol: texPix(16, LIEU.sol), ext: texPix(16, LIEU.solExt, [1, 1]), mur: texPix(16, LIEU.mur), dessus: texPix(16, LIEU.dessus), glace: texGlace(),
+  const T = { fonte: texFonte(), tapis: texTapis(), sol: texPix(16, LIEU.sol), ext: texPix(16, LIEU.solExt, [1, 1]), mur: texPix(16, LIEU.mur), dessus: texPix(16, LIEU.dessus), glace: texGlace(),
     marque: texMarque(LIEU.marque), caisse: texCaisse(LIEU.caisse), tonneau: texTonneau(), sac: texSac(), halo: TEX_HALO(), ombre: TEX_OMBRE(), fumee: TEX_FUMEE() };
   const mat = (t, o) => new THREE.MeshLambertMaterial(Object.assign({ map: t }, o || {}));
   const M = { sol: mat(T.sol), ext: mat(T.ext), mur: mat(T.mur), dessus: mat(T.dessus), glace: new THREE.MeshPhongMaterial({ map: T.glace, shininess: 40, specular: 0x2a3a4a }),
@@ -118,14 +125,22 @@ function creer(can, ecoute) {
     const sol = new THREE.Mesh(dalles(N, p => N.dedans[p], 0), M.sol); sol.receiveShadow = true; groupe.add(sol);
     const gl = new THREE.Mesh(dalles(N, p => N.glace[p] && N.dedans[p], .008), M.glace); gl.receiveShadow = true; groupe.add(gl);
     groupe.add(new THREE.Mesh(dalles(N, p => N.marque[p], .016), M.marque));
+    // tapis roulants : une bande par case, tournée dans le sens du tapis, avec ses deux rebords
+    const mTapis = new THREE.MeshLambertMaterial({ map: T.tapis }), mRebord = new THREE.MeshLambertMaterial({ color: 0x6a6e78 }), ANGLE = { D: 0, G: Math.PI, H: Math.PI / 2, B: -Math.PI / 2 };
+    for (let p = 0; p < w * h; p++) if (N.tapis[p]) {
+      const g = new THREE.Group(); g.position.set(p % w, 0, (p - p % w) / w); g.rotation.y = ANGLE[N.tapis[p]]; groupe.add(g);
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(1, .86), mTapis); b.rotation.x = -Math.PI / 2; b.position.y = .02; b.receiveShadow = true; g.add(b);
+      [-1, 1].forEach(sg => { const r = new THREE.Mesh(new THREE.BoxGeometry(1, .08, .07), mRebord); r.position.set(0, .04, sg * .465); r.castShadow = r.receiveShadow = true; g.add(r); });
+    }
+    animes.push(t => { T.tapis.offset.x = -(t * .8) % 1; });
     for (let p = 0; p < w * h; p++) if (N.mur[p]) {
       const x = p % w, y = (p - x) / w, bas = y > 0 && N.dedans[p - w], ht = bas ? .45 : 1.05;   // mur bas s'il cacherait une case derrière lui
       const m = new THREE.Mesh(new THREE.BoxGeometry(1, ht, 1), [M.mur, M.mur, M.dessus, M.mur, M.mur, M.mur]); m.position.set(x, ht / 2, y); m.castShadow = m.receiveShadow = true; groupe.add(m);
     }
     // caisses
-    ent = E.c.map(k => { const m = new THREE.Mesh(new THREE.BoxGeometry(.84, .84, .84), new THREE.MeshLambertMaterial({ map: T.caisse, emissive: 0x40ff80, emissiveIntensity: 0 }));
+    ent = E.c.map(k => { const hh = k.l ? .7 : .84, m = new THREE.Mesh(new THREE.BoxGeometry(k.l ? .88 : .84, hh, k.l ? .88 : .84), new THREE.MeshLambertMaterial({ map: k.l ? T.fonte : T.caisse, emissive: 0x40ff80, emissiveIntensity: 0 }));
       m.castShadow = m.receiveShadow = true; groupe.add(m); const l = new THREE.PointLight(0x5cff9a, 0, 2.6, 2); groupe.add(l);
-      return { m, l, p: k.p, x: k.p % w, y: (k.p - k.p % w) / w, file: [], ph: 0, flash: 0, lourde: k.l }; });
+      return { m, l, p: k.p, x: k.p % w, y: (k.p - k.p % w) / w, file: [], ph: 0, flash: 0, lourde: k.l, h: hh / 2 }; });
     dk = { x: E.d % w, y: (E.d - E.d % w) / w, file: [], dx: 0, dy: -1, marche: 0, pousse: false, glisse: false, bump: -9, repos: 0 };
     // l'entrepôt autour : mur du fond à fenêtres, rayonnages, accessoires devant, suspensions, rayons, poussière
     const L2 = w + 12, mf = mat(texPix(16, LIEU.mur, [L2, 4]));
@@ -174,7 +189,7 @@ function creer(can, ecoute) {
     r.mvt.forEach(m => { const e = m.qui < 0 ? dk : ent[m.qui]; e.file.push({ x: m.a % w, y: (m.a - m.a % w) / w, v: m.glisse ? VITESSE.glisse : m.tapis ? VITESSE.tapis : VITESSE.pas, glisse: !!m.glisse, tapis: !!m.tapis }); });
     r.E.c.forEach((k, i) => { ent[i].p = k.p; });
     inactif = false;
-    if (ecoute.son) ecoute.son(dk.pousse ? "pousse" : "pas");
+    if (ecoute.son) { ecoute.son(dk.pousse ? "pousse" : "pas"); if (r.mvt.some(m => m.glisse)) ecoute.son("glisse", .12); if (r.mvt.some(m => m.tapis)) ecoute.son("tapis", .3); }
   }
   function bute(dir) { const [dx, dy] = MAG_DIRS[dir]; dk.dx = dx; dk.dy = dy; dk.repos = 0; dk.bump = performance.now() / 1000; if (ecoute.son) ecoute.son("mur"); }
   const bouge = e => e.file.length > 0;
@@ -213,7 +228,7 @@ function creer(can, ecoute) {
         for (let n = 0; n < 14; n++) { const a = n / 14 * Math.PI * 2; particule(c.x + Math.cos(a) * .45, .3, c.y + Math.sin(a) * .45, { col: 0x7cffb0, t: .12, halo: true, vx: Math.cos(a) * .9, vy: 1.2 + Math.random(), vz: Math.sin(a) * .9, g: -3, dv: 1.4 }); }
         c.flash = t; if (ecoute.son) ecoute.son("marque"); }
       const ok = N.marque[c.p] && !bouge(c), tang = bouge(c) && !surGlace(c) && !c.file[0].tapis ? Math.sin(c.ph) * .06 : 0;
-      M2.position.set(c.x, .42 + Math.abs(tang) * .15, c.y); M2.rotation.set(0, 0, 0); if (Math.abs(c.x - Math.round(c.x)) > .01) M2.rotation.z = tang; else M2.rotation.x = tang;
+      M2.position.set(c.x, c.h + Math.abs(tang) * .15, c.y); M2.rotation.set(0, 0, 0); if (Math.abs(c.x - Math.round(c.x)) > .01) M2.rotation.z = tang; else M2.rotation.x = tang;
       const fl = c.flash ? Math.max(0, 1 - (t - c.flash) / .6) : 0;
       M2.material.emissiveIntensity = ok ? .22 + .1 * Math.sin(t * 3 + i) + fl * .6 : 0; c.l.intensity = ok ? 1.2 + .3 * Math.sin(t * 3 + i) + fl * 2 : 0; c.l.position.set(c.x, 1, c.y);
     });

@@ -9,7 +9,7 @@
    - Le cache HTTP du navigateur est contourné (préchargement en « reload », réseau en « no-cache ») :
      une page neuve ne doit jamais tourner avec un script partagé resté ancien.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v40";
+const VERSION = "ludotheque-v41";
 const NET_WAIT = 2500;
 let slowUntil = 0;   // réseau jugé lent : pendant 10 s, les copies en cache sont servies sans attendre
 const FONTS = "ludotheque-fonts";
@@ -23,7 +23,7 @@ const FILES = [
   "./empilage/index.html", "./lib/three.min.js", "./polices/empilage.css",
   "./odyssee/index.html", "./odyssee/regles.js", "./odyssee/sons.js",
   "./yams/index.html", "./lib/cannon.min.js",
-  "./magasinier/index.html", "./magasinier/style.css", "./magasinier/regles.js", "./magasinier/niveaux.js", "./magasinier/docker.js", "./magasinier/scene.js", "./magasinier/jeu.js",
+  "./magasinier/index.html", "./magasinier/style.css", "./magasinier/regles.js", "./magasinier/niveaux.js", "./magasinier/sons.js", "./magasinier/docker.js", "./magasinier/scene.js", "./magasinier/jeu.js",
   "./accueil.css", "./accueil.js", "./alunissage/jeu.js", "./amiral/jeu.js", "./calculator/jeu.js", "./calculator/style.css", "./club/jeu.js", "./escadrille/jeu.js", "./ile/jeu.js", "./ile/style.css", "./injagility/jeu.js", "./injagility/parcours.css", "./injagility/parcours.js", "./injagility/style.css", "./lignee/jeu.js", "./lignee/style.css", "./lune-rover/jeu.js", "./nebula/jeu.js", "./odyssee/jeu.js", "./odyssee/style.css", "./orbite/jeu.js", "./picross/dessins.js", "./picross/jeu.js", "./picross/style.css", "./pont-stellaire/jeu.js", "./queens/jeu.js", "./queens/style.css", "./solitaire/jeu.js", "./solitaire/style.css", "./sudoku/jeu.js", "./touche-coule/jeu.js", "./touche-coule/style.css", "./yams/jeu.js", "./yams/style.css"
 ];
 

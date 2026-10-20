@@ -1,14 +1,14 @@
 /* Le Magasinier : écrans, commandes et sauvegardes. Les règles sont dans regles.js, les niveaux dans niveaux.js,
    la scène 3D dans scene.js et le docker dans docker.js.
    Sauvegardes : magasinier.niveaux { n° : { coups, etoiles } }, magasinier.partie { n, chemin } (niveau en cours),
-   magasinier.opts { croix, effets }. */
+   magasinier.opts { croix, effets, bruit, musique }. */
 (function () {
   const $ = id => document.getElementById(id);
   const lire = (k, d) => { try { const v = JSON.parse(localStorage.getItem("magasinier." + k)); return v == null ? d : v; } catch (e) { return d; } };
   const ecrire = (k, v) => { try { localStorage.setItem("magasinier." + k, JSON.stringify(v)); } catch (e) { /* stockage plein ou interdit */ } };
-  let faits = lire("niveaux", {}), opts = Object.assign({ croix: true, effets: true }, lire("opts", {}));
+  let faits = lire("niveaux", {}), opts = Object.assign({ croix: true, effets: true, bruit: true, musique: true }, lire("opts", {}));
 
-  const scene = MagScene.creer($("cv"), { fini: apresAnimation, son: nom => { if (window.MagSons) window.MagSons.jouer(nom); } });
+  const scene = MagScene.creer($("cv"), { fini: apresAnimation, son: (nom, delai) => MagSons.jouer(nom, delai) });
   scene.effets(opts.effets);
 
   // ---------- état de la partie ----------
@@ -115,9 +115,13 @@
   $("bTitre").onclick = titre;
   $("bSuivant").onclick = () => { charger(n + 1); montrer(null); };
   $("bRejouer").onclick = () => { charger(n); montrer(null); };
-  const majOpts = () => { $("bCroix").textContent = "CROIX : " + (opts.croix ? "OUI" : "NON"); $("bEffets").textContent = "EFFETS : " + (opts.effets ? "COMPLETS" : "LEGERS");
+  const majOpts = () => { $("bCroix").textContent = "CROIX : " + (opts.croix ? "OUI" : "NON"); $("bBruit").textContent = "BRUITAGES : " + (opts.bruit ? "OUI" : "NON"); $("bMusique").textContent = "MUSIQUE : " + (opts.musique ? "OUI" : "NON"); $("bEffets").textContent = "EFFETS : " + (opts.effets ? "COMPLETS" : "LEGERS");
     $("cmd").classList.toggle("sansCroix", !opts.croix); ecrire("opts", opts); };
   $("bCroix").onclick = () => { opts.croix = !opts.croix; majOpts(); };
+  $("bBruit").onclick = () => { opts.bruit = !opts.bruit; MagSons.bruitages(opts.bruit); majOpts(); };
+  $("bMusique").onclick = () => { opts.musique = !opts.musique; MagSons.musique(opts.musique); majOpts(); };
+  MagSons.bruitages(opts.bruit); MagSons.musique(opts.musique);
+  document.addEventListener("click", e => { if (e.target.closest(".ecranMenu button")) MagSons.jouer("bip"); });
   $("bEffets").onclick = () => { opts.effets = !opts.effets; scene.effets(opts.effets); majOpts(); };
   majOpts();
   // glisser le doigt sur l'écran
