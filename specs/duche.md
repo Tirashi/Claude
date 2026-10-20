@@ -29,7 +29,7 @@ Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la 
 ## 3. La carte
 
 - **37 terres hexagonales** (un grand hexagone de 4 terres de côté, coordonnées axiales q, r ; pointe en haut), tirées de la graine (§ 7). 37 terres confirmées le 20/10 (61 possibles plus tard). Chaque terre : **terrain**, **qualité** 1 à 3 (petits épis ou pierres dessinés), **propriétaire** (joueur, rival 1 à 3, neutre), **bâtiment** (un au plus), **garnison** (soldats).
-- Le joueur commence dans un **coin** de l'hexagone (en bas à gauche), château sur une **plaine**, + 2 terres voisines. Les 3 rivaux dans trois autres coins (en haut, en haut à droite, à droite), château + 2 terres. Le reste est neutre ; 4 à 7 terres neutres tiennent une **bande de brigands** (garnison 2 à 6).
+- Le joueur commence dans un **coin** de l'hexagone (en bas à gauche), château sur une **plaine** (5 soldats), + 2 terres voisines (1 soldat chacune) ; réserves de départ : 20 nourriture, 30 bois, 20 or, 20 légitimité. Les 3 rivaux dans trois autres coins (en haut à gauche, en haut à droite, à droite ; à 6 terres du joueur, à 3 les uns des autres), pareil. Le reste est neutre, gardé par une **milice de 0 à 1 homme** (ajout de la session 1 : sans elle, tout se prend en 3 tours) ; 4 à 7 terres neutres, à 2 terres au moins des châteaux, tiennent une **bande de brigands** (garnison 2 à 6).
 - Voisinage : les **6 voisines** de chaque hexagone.
 
 ### Terrains (rendement de base × qualité, par tour)
@@ -60,7 +60,7 @@ Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la 
 - **Nourriture, bois, or, soldats** (posés sur les terres), **légitimité** (0 à 100, départ 20).
 - **Revenus** au début du tour : somme des terres possédées (terrain × qualité + bâtiment).
 - **Entretien** : 1 nourriture par 10 soldats (arrondi au-dessus). Nourriture négative → **famine** : −10 % des soldats (arrondi au-dessus, pris sur la plus grosse garnison), −2 légitimité, nourriture remise à 0.
-- **Recrutement** sur le château ou une caserne : 1 soldat = 2 nourriture + 2 or (1,6 + 1,6 avec au moins une caserne ; on arrondit le total au-dessus). **Plafond** : 10 soldats + 5 par caserne, pour tout le duché.
+- **Recrutement** sur le château ou une caserne : 1 soldat = 2 nourriture + 2 or (1,6 + 1,6 avec au moins une caserne ; on arrondit le total au-dessus). **Plafond** : 10 soldats + 5 par caserne, pour tout le duché. Les recrues n'agissent qu'au tour suivant.
 - **Change** (s'il y a un marché) : 2 bois → 1 or ou 1 or → 2 bois, 5 échanges par tour.
 
 ## 5. Un tour (ordre exact)
@@ -77,8 +77,8 @@ Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la 
 - **Attaque** = soldats engagés × (1 + bonus) ; bonus : trait Agressif +0,2 pour un rival.
 - **Défense** = garnison + défense du terrain + défense du bâtiment.
 - **Chance de victoire** = attaque / (attaque + défense), **affichée en pourcentage** avant de confirmer.
-- Résolution : tirage du PRNG de combat (§ 7), montrée en **3 passes** (barres qui baissent, chocs d'épées). Le perdant perd **tous** ses soldats engagés (défenseur : toute la garnison). Le vainqueur perd `arrondi(défense × 0,5)` soldats, au plus engagés − 1 ; les survivants occupent la terre.
-- La terre change de main, **bâtiment intact**. Prise d'un **château rival** : le seigneur est éliminé, +30 légitimité, ses autres terres deviennent neutres avec 1 à 3 brigands.
+- Résolution : tirage du PRNG de combat (§ 7), montrée en **3 passes** (barres qui baissent, chocs d'épées). Le perdant perd **tous** ses soldats engagés (défenseur : toute la garnison). L'attaquant vainqueur perd `arrondi(défense × 0,5)` soldats, au plus engagés − 1 ; les survivants occupent la terre (et n'agissent plus ce tour). Le défenseur vainqueur perd `arrondi(attaque × 0,5)`, au plus sa garnison.
+- La terre change de main, **bâtiment intact**. Prise d'un **château rival** : le seigneur est éliminé, +30 légitimité, ses autres terres deviennent neutres avec 1 à 3 brigands. (Château du joueur pris : défaite, il garde ses terres pour le score.)
 - Les terres neutres ne contre-attaquent jamais.
 
 ## 7. Graine et hasard
@@ -105,9 +105,9 @@ Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la 
 
 ## 9. Légitimité et couronne
 
-- Jauge 0 à 100, toujours visible. Gains : +1 par marché et par tour, +5 événement de cour bien résolu, +2 alliance, +10 tournoi gagné, +30 château rival pris. Pertes : −2 famine, −15 révolte.
-- **Tour 15 : « Le roi est mort sans héritier »** (événement scripté, toujours tiré). À la fin de chaque tour suivant, **un des 9 grands électeurs** vote pour le duché (joueur ou rival) **le plus légitime** (égalité : celui qui a le plus de terres, puis le joueur).
-- **5 votes = couronne** : victoire anticipée (au plus tôt au tour 19). Sinon, au tour 30, chaque vote compte dans le score (§ 11).
+- Jauge 0 à 100, toujours visible. Gains : +1 par marché et par tour, +5 événement de cour bien résolu, +2 alliance, +10 tournoi gagné, +30 château rival pris ; les rivaux, qui n'ont pas d'événements, gagnent +1 tous les 3 tours (« leur cour »). Pertes : −2 famine, −15 révolte.
+- **Tour 11 : « Le roi est mort sans héritier »** (événement scripté, toujours tiré). À la fin des tours 11, 13, 15… 27 (un tour sur deux), **un des 9 grands électeurs** vote. Chacun a son critère (ordre tiré de la graine, annoncé au joueur) : 5 regardent la **légitimité** (archevêque, évêque, abbesse, comte palatin, reine mère), le connétable l'**armée**, le maréchal les **terres**, le trésorier l'**or**, le grand architecte les **bâtiments**. Il vote pour le meilleur selon son critère (égalité : le plus légitime, puis le plus de terres, puis le joueur), **parmi les seigneurs d'au moins 40 de légitimité** ; s'il n'y en a pas, il s'abstient.
+- **5 votes = couronne** : victoire anticipée (au plus tôt au tour 19). **Un rival couronné** met fin à la partie (score normal, sans prime). Sinon, au tour 30, chaque vote compte dans le score (§ 11).
 - Un rival éliminé perd ses votes (ils ne sont pas redonnés).
 
 ## 10. Événements (paquet de 14 cartes au départ)
@@ -120,14 +120,16 @@ Paquet mélangé par la graine, sans répétition avant épuisement, **tirage po
 4. **Offre d'alliance** — un rival propose : +2 légitimité, pas d'attaque entre vous pendant 10 tours (un Traître peut rompre).
 5. **Tournoi** — miser 2 à 6 soldats ou 10 à 30 or ; chance selon la mise ; gagné = +10 légitimité.
 6. **Relique** — la vendre (25 or) ou l'exposer (+5 légitimité).
-7. **Impôt royal** — payer 15 or ou perdre 5 légitimité (avant le tour 15 seulement).
+7. **Impôt royal** — payer 15 or ou perdre 5 légitimité (avant la mort du roi seulement).
 8. **Belle récolte** — +2 nourriture par plaine (au moins 4 plaines pour qu'elle sorte).
 9. **Marchand ambulant** — un échange avantageux ce tour (3 bois → 2 or, ou 1 or → 3 bois).
 10. **Mariage** — marier sa fille à un rival (alliance forte de 15 tours, +5 légitimité) ou refuser (+2).
 11. **Hiver précoce** — nourriture −50 % pendant 2 tours, ou brûler 15 bois pour en garder la moitié.
 12. **Pèlerins** — loger (−5 nourriture, +5 légitimité) ou fermer les portes.
 13. **Mercenaires** — 5 soldats pour 20 or, au-delà du plafond pour 5 tours.
-14. **Le roi est mort** (tour 15, scripté, hors paquet) — ouvre la course à la couronne.
+14. **Le roi est mort** (tour 11, scripté, hors paquet) — ouvre la course à la couronne.
+
+Précisions de la session 1 : révolte réprimée = combat de la garnison de la terre et des terres voisines à soi contre les révoltés (chance affichée ; victoire : pertes = moitié des révoltés ; échec : −15 légitimité et autant de soldats que de révoltés) ; terre cédée = neutre, tenue par les révoltés, ses soldats rentrent au château ; tournoi : chance 25 % + 10 % par soldat misé (2 à 6) ou + 2 % par or misé (10 à 30), mise perdue en cas d'échec ; belle récolte : stocker (+2 par plaine) ou fête (+1 par plaine, +3 légitimité) ; marchand : jusqu'à 3 échanges d'un coup ; hiver : brûler 15 bois → −25 % au lieu de −50 %.
 
 ## 11. Score
 
@@ -155,7 +157,7 @@ Paquet mélangé par la graine, sans répétition avant épuisement, **tirage po
 ## 14. Plan de travail (Opus : moteur emmêlé avec IA)
 
 0. **Maquette** : maquette 1 en cases carrées (`maquettes/duche.html`) refusée ; maquette 2 en hexagones vectoriels (`maquettes/duche-2.html`) jugée trop minimale graphiquement ; maquette 3 animée (`maquettes/duche-3.html`) : **direction A (pixel art 32 bits) retenue**, animations jugées « pas trop mal » ; maquette 4 (`maquettes/duche-4.html`, https://claude.ai/artifact/DGTYKbMsBAhPhgncMyTxK3) creuse A sur trois écrans : carte (rivière qui coule de terre en terre, écume sur la côte, champs de blé, pins et chênes, oiseaux, petits soldats sur les garnisons, troupe qui marche), événement (parchemin illustré et animé, réponses avec leur prix), combat (petite scène en 3 passes, barres, terre qui passe à l'or). Retour : scènes de combat appréciées mais **pas assez détaillées, à faire comme Le Thé des Jarls** ; la carte doit être **claire et lisible**. Maquette 5 **validée** (`maquettes/duche-5.html`, https://claude.ai/artifact/DBUtVjbVaptU8485abFrVv) : carte plus lisible (teinte des seigneurs plus forte, grands écussons, plus de figurines sur les garnisons) ; scènes HD-2D reprises du Thé des Jarls (décor peint en couches floues, soldats 28 × 30 détourés et éclairés : `spriteD`, tabard et écu aux couleurs du seigneur, brigands à capuche et hache ; bannières, rayons, herbe floue devant ; 1 soldat = 3 figurines) **validée le 20/10**, pixel art à améliorer un peu (§ 15).
-1. **Session 1 — Règles et IA** : `regles.js`, `ia.js`, `evenements.js`, simulateur Node (déterminisme, équilibrage : une partie dure ~30 tours, le joueur automatique gagne parfois, les rivaux ne s'effondrent pas tous seuls).
+1. **Session 1 — Règles et IA** : **faite le 20/10**. `duche/regles.js` (carte, économie, combat, tour, votes, score), `duche/evenements.js` (14 événements, tirage pondéré), `duche/ia.js` (IA à scores d'utilité : attaques, ralliement des soldats vers la prochaine cible, recrues, bâtiments, change ; aussi le joueur automatique), `outils/duche-simulateur.js` (lancé par `verifications.js`). Sur 300 parties, joueur automatique « expansionniste » : couronne 41 %, rival couronné 34 %, fin du règne 20 %, défaite 5 %, conquête 0 % ; fin en moyenne au tour 23,6 ; le joueur a 10 terres au tour 10 et 15 au tour 20, un rival 6 ; ~25 combats du joueur par partie. Même graine = même partie, aussi après sauvegarde et rechargement.
 2. **Session 2 — Le jeu** : `decor.js`, `jeu.js`, écrans, combat animé, événements, sauvegarde, partie libre.
 3. **Session 3 — Duché du jour et finitions** : jour, classements, sons, accueil, tests, artefact, équilibrage après les premières parties.
 
@@ -168,6 +170,8 @@ Réglé aussi : 30 tours, 37 terres.
 Réglé aussi : combat en scène (style du Thé des Jarls).
 
 **Maquette 5 validée le 20/10** (« ça me va très bien »), avec une demande : **améliorer un peu le pixel art** pendant la programmation (session 2). Pistes : terrains plus fouillés (herbe en touffes, rochers, ombres portées des arbres et des montagnes sur les tuiles voisines), bâtiments un peu plus grands et plus détaillés (fenêtres, tuiles du toit, palissade du château), écussons et bannières plus fins, bord des tuiles moins net (transition herbe/terre), soldats des scènes avec plus de variantes (casques, barbes, écus). Écran titre (château du joueur, carte du jour en fond) et décors par terrain et par saison prévus en session 2.
+
+**Changements de la session 1 (équilibrage, à valider par l'utilisateur)** : le roi meurt au **tour 11** et les électeurs votent **un tour sur deux** (au lieu du tour 15 et de chaque tour : sinon la couronne tombait presque toujours au tour 19) ; les électeurs ont des **critères variés** et exigent **40 de légitimité** ; un **rival couronné** termine la partie ; **milice** de 0 à 1 homme sur les terres neutres ; **cour des rivaux** (+1 légitimité tous les 3 tours). À noter : avec les rendements du § 3, la **nourriture et le bois s'entassent** en milieu de partie (le plafond de soldats limite les dépenses) ; à revoir après les premières vraies parties (entretien plus cher, ou bâtiments qui coûtent plus) si la famine ne menace jamais.
 
 ## 16. Critères d'acceptation
 
