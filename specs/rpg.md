@@ -283,7 +283,7 @@ Comme le reste de la Ludothèque : **scripts classiques**, sans build, sans modu
 - Dans `fumee.js` : le jeu se charge, on nomme le héros, on fait un combat.
 
 ## 13. Direction artistique
-**Maquette (20/10)** : `maquettes/la-derniere-lanterne.html` (https://claude.ai/artifact/DniPR4j2u1FEJXJWY7wuuo), les trois pistes ci-dessous sur la carte, le combat et le dialogue. Retour : C retenue mais à retravailler (combat de profil animé, personnages et décor façon Octopath Traveler sans HD-2D). **Maquette 2 (20/10)** : `maquettes/la-derniere-lanterne-2.html` (https://claude.ai/artifact/TLds9VrVmtsNQTv8RD4TeM), trois lumières sur le même dessin. À valider.
+**Maquette (20/10)** : `maquettes/la-derniere-lanterne.html` (https://claude.ai/artifact/DniPR4j2u1FEJXJWY7wuuo), les trois pistes ci-dessous sur la carte, le combat et le dialogue. Retour : C retenue mais à retravailler (combat de profil animé, personnages et décor façon Octopath Traveler sans HD-2D). **Maquette 2 (20/10)** : `maquettes/la-derniere-lanterne-2.html` (https://claude.ai/artifact/TLds9VrVmtsNQTv8RD4TeM), trois lumières sur le même dessin. Retour : lumière 1 mais en plein jour, personnages à revoir. **Maquette 3 (20/10)** : `maquettes/la-derniere-lanterne-3.html` (https://claude.ai/artifact/C82S25sKWRxf6cxCvFsne7), plein jour, personnages redessinés, proportions héroïque (1) ou conte (2). À valider.
 
 À choisir **sur maquette** (règle du 16/10) : 2 ou 3 directions sur un écran de téléphone, chacune avec **un écran de carte**, **un combat** et **une fenêtre de dialogue**. Pistes :
 - **A — Gothique façon *Vampire Survivors*** (idée du 15/10) : pixel art sombre, contrastes forts, petits sprites expressifs.
