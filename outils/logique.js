@@ -9,6 +9,7 @@
    - Yams : points de chaque case pour des mains connues, bonus de 35 ;
    - Amiral ! : bataille du jour (flottes complètes, mêmes flottes et même placement ennemi pour tous) ;
    - Capitaine du port : bassin du jour des 20 prochains jours (optimum de 12 à 30 coups, vérifié par le solveur, le même pour tous, vite généré) ;
+   - Le Mot d'or : mot du jour des prochains jours (le même pour tous, dans la liste, sans répétition), couleurs des lettres doubles ;
    - accueil : transfert de sauvegarde LUDO1- (exporter, vider, importer : tout revient).
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/logique.js [jours]   (code de sortie 1 en cas d'erreur) */
@@ -165,12 +166,26 @@ const TESTS = {
     }
     return out;
   }, D),
+  'mot-d-or/index.html': async (p, D) => p.evaluate(D => {
+    const { motDuJour, evaluate, solutions, accepte } = window.MotDor, out = [], vus = new Set();
+    for (const { k } of D) {
+      const m = motDuJour(k);
+      if (!solutions.includes(m) || !accepte(m)) out.push(`mot du ${k} : ${m} hors liste`);
+      if (vus.has(m)) out.push(`mot du ${k} : ${m} déjà sorti`); vus.add(m);
+      if (motDuJour(k) !== m) out.push(`mot du ${k} : deux tirages différents`);
+    }
+    const cas = [['SOLEIL', 'LIASSE', 'silver silver grey silver grey silver'], ['SOLEIL', 'SOLEIL', 'gold gold gold gold gold gold'],
+      ['BOUGIE', 'BOUBOU', 'gold gold gold grey grey grey'], ['MOUTON', 'OOOOOO', 'grey gold grey grey gold grey']];
+    for (const [sec, ess, att] of cas) { const r = evaluate(ess, sec).join(' '); if (r !== att) out.push(`${ess} contre ${sec} : ${r} au lieu de ${att}`); }
+    return out;
+  }, D),
   'index.html': async p => p.evaluate(() => {
     // des records dans plusieurs jeux, exportés en LUDO1-, effacés, puis réimportés
     const recs = { 'tetris16.best': 1234, 'queens16.best': { 6: 41000 }, 'sudoku.best': { '9-2': 300000 }, 'orbite.stars': { 3: 2 }, 'yams.best': 250, 'escadrille.best': { normal: 12 },
       'odyssee.stars': { '1-2': 3 }, 'nebula.best': 900, 'lunerover.stars': { 4: 3 }, 'amiral.best': { hard: 30 }, 'pontstellaire.best': { 9: 90000 },
       'amiral.palmares': { victoires: 3, normal: 1 }, 'amiral.daily': { 20261019: 24 }, 'magasinier.niveaux': { 0: { coups: 7, etoiles: 2 }, 13: { coups: 9, etoiles: 3 } },
-      'magasinier.daily': { 20261020: 41 }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 } };
+      'magasinier.daily': { 20261020: 41 }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 },
+      'motdor.stats': { parties: 5, gagnees: 4, serie: 2, record: 3, dernier: 20261019, dist: [0, 1, 2, 1, 0, 0] }, 'motdor.daily': { 20261019: 3 } };
     const A = window.Accueil, keep = { ...localStorage }; localStorage.clear();
     for (const [k, v] of Object.entries(recs)) localStorage.setItem(k, JSON.stringify(v));
     const code = 'LUDO1-' + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, g: A.collectSaves() }))));
