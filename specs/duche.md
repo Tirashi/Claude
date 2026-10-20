@@ -154,7 +154,7 @@ Paquet mélangé par la graine, sans répétition avant épuisement, **tirage po
 
 ## 14. Plan de travail (Opus : moteur emmêlé avec IA)
 
-0. **Maquette** : maquette 1 en cases carrées (`maquettes/duche.html`) refusée ; maquette 2 en hexagones vectoriels (`maquettes/duche-2.html`) jugée trop minimale graphiquement ; maquette 3 animée (`maquettes/duche-3.html`) : **direction A (pixel art 32 bits) retenue**, animations jugées « pas trop mal » ; maquette 4 (`maquettes/duche-4.html`, https://claude.ai/artifact/DGTYKbMsBAhPhgncMyTxK3) creuse A sur trois écrans : carte (rivière qui coule de terre en terre, écume sur la côte, champs de blé, pins et chênes, oiseaux, petits soldats sur les garnisons, troupe qui marche), événement (parchemin illustré et animé, réponses avec leur prix), combat (petite scène en 3 passes, barres, terre qui passe à l'or) **à valider**.
+0. **Maquette** : maquette 1 en cases carrées (`maquettes/duche.html`) refusée ; maquette 2 en hexagones vectoriels (`maquettes/duche-2.html`) jugée trop minimale graphiquement ; maquette 3 animée (`maquettes/duche-3.html`) : **direction A (pixel art 32 bits) retenue**, animations jugées « pas trop mal » ; maquette 4 (`maquettes/duche-4.html`, https://claude.ai/artifact/DGTYKbMsBAhPhgncMyTxK3) creuse A sur trois écrans : carte (rivière qui coule de terre en terre, écume sur la côte, champs de blé, pins et chênes, oiseaux, petits soldats sur les garnisons, troupe qui marche), événement (parchemin illustré et animé, réponses avec leur prix), combat (petite scène en 3 passes, barres, terre qui passe à l'or). Retour : scènes de combat appréciées mais **pas assez détaillées, à faire comme Le Thé des Jarls** ; la carte doit être **claire et lisible**. Maquette 5 (`maquettes/duche-5.html`, https://claude.ai/artifact/DBUtVjbVaptU8485abFrVv) : carte plus lisible (teinte des seigneurs plus forte, grands écussons, plus de figurines sur les garnisons) ; scènes HD-2D reprises du Thé des Jarls (décor peint en couches floues, soldats 28 × 30 détourés et éclairés : `spriteD`, tabard et écu aux couleurs du seigneur, brigands à capuche et hache ; bannières, rayons, herbe floue devant ; 1 soldat = 3 figurines) **à valider**.
 1. **Session 1 — Règles et IA** : `regles.js`, `ia.js`, `evenements.js`, simulateur Node (déterminisme, équilibrage : une partie dure ~30 tours, le joueur automatique gagne parfois, les rivaux ne s'effondrent pas tous seuls).
 2. **Session 2 — Le jeu** : `decor.js`, `jeu.js`, écrans, combat animé, événements, sauvegarde, partie libre.
 3. **Session 3 — Duché du jour et finitions** : jour, classements, sons, accueil, tests, artefact, équilibrage après les premières parties.
@@ -165,8 +165,10 @@ Réglé le 20/10 : la partie libre envoie son meilleur score (`best`) ; Duché r
 
 Réglé aussi : 30 tours, 37 terres.
 
-1. La maquette 4 suffit-elle pour lancer la programmation ?
-2. Combat en petite scène (maquette 4) ou seulement sur la carte ?
+Réglé aussi : combat en scène (style du Thé des Jarls).
+
+1. Les scènes de la maquette 5 sont-elles assez détaillées ? (un décor par terrain et par saison est prévu)
+2. La carte est-elle assez claire ?
 3. Écran titre avec le château du joueur et la carte du jour en fond ?
 
 ## 16. Critères d'acceptation
