@@ -4,9 +4,9 @@
 const MAG_ENTREPOTS = [
   { nom: "LE QUAI", court: "QUAI", debut: 0, n: 12, pret: true },
   { nom: "LA CHAMBRE FROIDE", court: "FROID", debut: 12, n: 12, pret: true },
-  { nom: "L'ATELIER", court: "ATELIER", debut: 24, n: 0, pret: false },
-  { nom: "LA FONDERIE", court: "FONDERIE", debut: 24, n: 0, pret: false },
-  { nom: "LE GRAND ENTREPOT", court: "GRAND", debut: 24, n: 0, pret: false },
+  { nom: "L'ATELIER", court: "ATELIER", debut: 24, n: 12, pret: true },
+  { nom: "LA FONDERIE", court: "FONDERIE", debut: 36, n: 12, pret: true },
+  { nom: "LE GRAND ENTREPOT", court: "GRAND", debut: 48, n: 12, pret: true },
 ];
 const MAG_NIVEAUX = [
   // ---- le quai ----
@@ -35,6 +35,45 @@ const MAG_NIVEAUX = [
   { opt: 43, sol: "BBDBGHHDHGHGBDHGGGBGBBDHGHHDDBGHGBDHGGGGBGH", plan: ["########", "#.   $ #", "# ~~~~ #", "#+c##~ #", "#.~##c #", "# ~~~~ #", "#      #", "########"] },
   { opt: 71, sol: "DDDBBGDBBGGHBGHDHDBGBBGGHHDDGBBDDDDDHHBBGGGHHDBBHHGGGBBDBBGGGGGDHHHDDDB", plan: ["#########", "#@  ~   #", "# # ~$# #", "#~~~c~~~#", "#.# c #.#", "#.  ~   #", "#########"] },
   { opt: 67, sol: "BBBBDDDDDHHHBGHHGGHHDBGHDBGBDBGGGBBDDDHBDHGGGDDDHGHGBDBGGGGHGHHDBDD", plan: ["#########", "#@  ~~  #", "#.# ~~ ##", "#   cc  #", "#~~  .c~#", "# .## ~ #", "#       #", "#########"] },
+  // ---- l'atelier ----
+  { opt: 11, sol: "HHHGGGBDDDB", plan: ["#######", "#     #", "# $   #", "# >>> #", "#    +#", "#######"], aide: "Les tapis roulants emportent les caisses d'une case à chaque coup. Le docker, lui, marche dessus sans glisser." },
+  { opt: 16, sol: "BGGGGHDBBBDHHDGG", plan: ["#######", "# $v @#", "#. v  #", "#     #", "#     #", "#######"] },
+  { opt: 24, sol: "BBBDDDDHGGHGHGBBBDHHHGBB", plan: ["########", "#@ #   #", "# <<<< #", "#   $$ #", "#.>>>> #", "#.  #  #", "########"] },
+  { opt: 18, sol: "DDHHBBDDHBHHDGDBDH", plan: ["#########", "#   #   #", "# >>>>v.#", "# ^$# v #", "# ^<<<< #", "#@ $  . #", "#########"] },
+  { opt: 26, sol: "BBGBBGHHDDDBGDBGGHHDDHDHGG", plan: ["########", "#  .@  #", "# >>>v #", "#    v #", "# $ $v.#", "#      #", "########"] },
+  { opt: 27, sol: "HDDBDBBGDHGGGHHDBDGHDDGGGBB", plan: ["#######", "#    .#", "#@^$v #", "# ^ v #", "#.^$v #", "#     #", "#######"] },
+  { opt: 26, sol: "HGHDDDBDBDHHHBGGGGGBDBHDHG", plan: [" #######", " #  > .#", "## #v# #", "#.$ v$ #", "# <<<$ #", "#.@ #  #", "########"] },
+  { opt: 44, sol: "BBBDDHDDDGHHDDBBBBGGGGGGHDDDBHBHHDHBDDHHGGGG", plan: ["#########", "#@.     #", "# >>>v# #", "# #$ v$ #", "# ^  v# #", "# ^<<<$ #", "#   .  .#", "#########"] },
+  { opt: 55, sol: "HGGHHDBHDDBHDDBBBGGGGHDDHBHHGGBHDDBBGBDDGGGGHDHBGHHBBBD", plan: ["#########", "#.      #", "# >>>>> #", "# $#$#$ #", "# <<<<< #", "#  +  . #", "#########"] },
+  { opt: 61, sol: "BBBBDDHHDHHDDDBHGGBBGGGGHHDDBHGGBBDDBDDHHGHDBBBBDDHHGGBHHBDDH", plan: ["#########", "#@$ v...#", "# # v #$#", "#   >>> #", "# #$  # #", "#       #", "#########"] },
+  { opt: 53, sol: "HHHGGBDBDBGGGGGHHHHDBGBBDDDHHGGBHDDDGDBDGHHDBBHGGBDGD", plan: ["#########", "#   #   #", "# v$ $^ #", "# v #$^.#", "# >>>>^.#", "#.     @#", "#########"] },
+  { opt: 66, sol: "HDDDHHDDHGGBBBBDDHHBGGGGGHHDDDHDDBGGHBBHGGHDDDBDBBGBGGGGHDDDHBDBGG", plan: ["########", "#    $.#", "# $>>> #", "# ## # #", "#  <<<$#", "#@.   .#", "########"] },
+  // ---- la fonderie ----
+  { opt: 11, sol: "HHDDBBDBGGG", plan: ["#######", "#     #", "#   h #", "# ~~~ #", "#.@   #", "#######"], aide: "Les caisses en fonte sont lourdes : elles ne glissent pas sur la glace et les tapis ne les portent pas." },
+  { opt: 17, sol: "BGHDHGBDDDDBGDDHH", plan: ["########", "#     .#", "# ~~~~ #", "# h   @#", "#  . $ #", "########"] },
+  { opt: 18, sol: "HGGGBDHHBDBDHHGHHD", plan: ["#######", "#  ~. #", "#  ~. #", "#~c~~~#", "# h~ @#", "#  ~  #", "#######"] },
+  { opt: 29, sol: "HHHHGGGBDDDBGGGHGBGBDDDGHGGBB", plan: ["########", "#   ~~ #", "#h  ~~ #", "# ~~ $ #", "# ~~   #", "#.   .@#", "########"] },
+  { opt: 27, sol: "BBDHGGBDDDHDDBGBGHDHBHDHGGG", plan: ["########", "# . @  #", "# >>>> #", "#  ~~  #", "#  ~~$ #", "# h  . #", "########"] },
+  { opt: 22, sol: "BGGGGHDBDGBBGHDDHDDBGB", plan: ["#########", "#~~~ ~~a#", "#~~~hc~~#", "#   h  .#", "#~~~.~~~#", "#~~~.~~~#", "#########"] },
+  { opt: 31, sol: "BGHGBGHHBDHHGGHGBGBDHGBBBHDBDDD", plan: ["#########", "#       #", "# ~~~ca #", "# ~# #~ #", "#h~~~~~ #", "#.    . #", "#########"] },
+  { opt: 34, sol: "BBDDHHGGBBDDDDDHHDBGGHDDBDDGGGBGHH", plan: ["#########", "# $ v@  #", "#.~~v~~ #", "# ~~v~~.#", "#   >> h#", "# h    .#", "#########"] },
+  { opt: 38, sol: "GBBBBDDDDHDDHHBGHHDDHDBHDBBBBHGBDDDDHB", plan: ["#########", "#       #", "# ~~ac~ #", "# ~###~ #", "# ~~~~~h#", "#   <<< #", "# h  ...#", "#########"] },
+  { opt: 33, sol: "DBBGGGBDHGGBBGBDBDDDHGHBDHHBBBGGG", plan: [" ########", " #  ~~@.#", "## #~~#$#", "#   ~~$ #", "#h>>>>> #", "#.. ~~  #", "#########"] },
+  { opt: 39, sol: "HHGDHHGGGBBDDHDBBHGHGBBGGHHDDBGBGGDDHHD", plan: ["#########", "#  ~~~ .#", "# #c~~# #", "# $   h #", "# #~~~# #", "#. ~~~.@#", "#########"] },
+  { opt: 50, sol: "GGBGBDDDBDDHGHBGHDDBGBGBDDDBDHHGHDDBDBGGGBDDHDGBBB", plan: ["########", "#~~c~ +#", "#~##~ .#", "#~~~~h##", "#   $  #", "#. #   #", "########"] },
+  // ---- le grand entrepôt ----
+  { opt: 39, sol: "BBBBGBGBGGHDHBDDDHHHGGGHGBHDDBGDDDBDHDB", plan: ["#########", "#   #  @#", "# ~~h>v #", "#.~~# vh#", "#. .<<< #", "##$# ~~ #", "#  $ ~~ #", "#   #  .#", "#########"], aide: "Le grand entrepôt mélange tout : glace, tapis roulants et caisses en fonte. Bon courage !" },
+  { opt: 37, sol: "BHGGGGBBGBDBGDDBGGGGHHBGHHHDGBDHHDBBB", plan: ["#########", "# v  $^@#", "# v.# ^$#", "#.v   ^ #", "#  ~~~  #", "#  ~~c  #", "#.    h.#", "#########"] },
+  { opt: 44, sol: "HHHHGGGGGGBDGBDHHHDGBDHHDDBBDBDHHHHGGBHBDBDH", plan: ["#########", "#   #. .#", "# >>>>v.#", "# h   v #", "#~c~  v #", "#~~c    #", "#   #  @#", "#########"] },
+  { opt: 39, sol: "HDHDBDBGBGHDDHGGGGBGHDBBGGGGHBBGBDGGHHH", plan: ["#########", "# . #   #", "# ~c~~~ #", "#.  # h$#", "#@>>>>> #", "#   #  .#", "#h~~~~~ #", "#   .   #", "#########"] },
+  { opt: 55, sol: "HDBBBGGHGGHGHDDDDGGGBBGBDDDDBDHHHGHHDBBDBGGGGGBGHDDDBGG", plan: ["#########", "# h    .#", "#~c #@~~#", "#~~ .$~~#", "#. ###  #", "#  <<<  #", "#.   $  #", "#########"] },
+  { opt: 50, sol: "DDDDHDHGDHHGGGBBBBBBDDDHGHBDHHHBGGHGBGHHBBDBBGBDDD", plan: ["#########", "#. v $  #", "#  v ##.#", "#h v ~~ #", "#    ~~ #", "## # $  #", "#@  >>>h#", "#    .. #", "#########"] },
+  { opt: 64, sol: "HHDBBBBGGHHHDHGHDBBGBDDGHDBBHGBDDDDGBBGHGDBGDDHGHDBBDDHHHGBDGHDB", plan: ["#########", "#   #   #", "# ~~~~~.#", "# c$# ~ #", "#@  v   #", "# # v #.#", "# . v h #", "#########"] },
+  { opt: 60, sol: "HHHDDBHHHGBDDGBBBDDHHHDBGDDBBDHHHHGGBBDGGBBDDHHHBGGBGBDBDHHH", plan: ["#########", "#~~ #  .#", "#~c   #.#", "#h  ^   #", "# #$^ # #", "#   ^ ~~#", "#+  # ~~#", "#########"] },
+  { opt: 62, sol: "HDDDBBDBBGBGHHGHHGBDBHDBGDBGHGBBBBGBDDDDDHGHHGHGBBBDHDBBDBGGGH", plan: ["#########", "#   ~~  #", "#@#$~c ##", "#  >>>  #", "#~~.  # #", "#~~ # h #", "# .    .#", "#########"] },
+  { opt: 82, sol: "BGBBGBDBBDDDGGGGHHHHDHDDBGHGBGBDGHDHHGHGBGBDHGBBBDDBBGDBGHGDBDHGHHGBDBBDDHDDDGHHDB", plan: ["#########", "#    # @#", "# ~c~c  #", "# ~##~ ##", "# ~~~~  #", "#h >>>v #", "#. # .v.#", "#  h .  #", "#########"] },
+  { opt: 122, sol: "GHHBBDDBDDHHHGGDDHHGGGBBBHGGGBBBDDDDHGHHHHGGGBBDDDDDDBBGGBGHHBGGHDBDHHHHBGGGHHDDDDGBBBBGHDDHHGGGBHHBGGGHHDDDBBDDDBBBGHGGHH", plan: ["#########", "#    .. #", "#.## ## #", "#$ >>>h #", "# ## ## #", "# @~~~$ #", "# $  .  #", "#########"] },
+  { opt: 83, sol: "HGGGGHHDDDDGGHGBDHDBDGBBHDDDDDDHHGGBGBDDDBBGHGDBDHHHBBGGBGGHDDHDDBBGHHGDBBGGGHDDDHH", plan: ["#########", "#~~~#  .#", "#~c~$ #.#", "#h $  v #", "# ##  v #", "#.  ~~v #", "#.  ~~ @#", "#########"] },
 ];
 
 if (typeof module !== 'undefined') module.exports = { MAG_NIVEAUX, MAG_ENTREPOTS };

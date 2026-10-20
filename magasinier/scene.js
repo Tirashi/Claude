@@ -23,7 +23,7 @@ const PEINT={
 const texCaisse=(p)=>texPix(16,(g,n)=>{R(g,0,0,n,n,p.f);for(let i=0;i<3;i++){R(g,2,2+i*4,12,4,i%2?p.c:p.l);R(g,2,5+i*4,12,1,p.g);}
   for(let i=0;i<10;i++){R(g,3+i,12-i,2,2,p.f);R(g,3+i,11-i,1,1,p.l);}R(g,0,0,n,1,p.l);R(g,0,0,1,n,p.l);R(g,1,1,1,1,"#2a1a10");R(g,14,1,1,1,"#2a1a10");R(g,1,14,1,1,"#2a1a10");R(g,14,14,1,1,"#2a1a10");});
 // caisse lourde : fonte gris-bleu cerclée de fer, rivets
-const texFonte=()=>texPix(16,(g,n)=>{R(g,0,0,n,n,"#3a414c");R(g,2,2,12,12,"#5a6472");R(g,2,2,12,1,"#7a8696");R(g,2,6,12,1,"#48505c");R(g,2,10,12,1,"#48505c");R(g,2,13,12,1,"#434a55");
+const texFonte=()=>texPix(16,(g,n)=>{R(g,0,0,n,n,"#3a414c");R(g,2,2,12,12,"#76839a");R(g,2,2,12,1,"#9aa8bc");R(g,2,6,12,1,"#5c6880");R(g,2,10,12,1,"#5c6880");R(g,2,13,12,1,"#525c70");
   [[1,1],[14,1],[1,14],[14,14],[7,1],[7,14],[1,7],[14,7]].forEach(([x,y])=>{R(g,x,y,1,1,"#b8c0cc");R(g,x+1>15?x:x+1,y+1>15?y:y+1,1,1,"#2a2f38");});R(g,5,4,6,1,"#8e9aaa");R(g,4,8,8,1,"#6a7484");});
 // tapis roulant : bande sombre à lattes, chevrons jaunes vers +x (la texture défile, le maillage est tourné selon le sens)
 const texTapis=()=>{const t=texPix(16,(g,n)=>{R(g,0,0,n,n,"#2e2c2a");for(let x=0;x<n;x+=4){R(g,x,0,1,n,"#3e3a36");R(g,x+3,0,1,n,"#1e1c1a");}
