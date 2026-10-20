@@ -103,7 +103,7 @@ Fait :
 - **Intégration** : classements `capitaine` (`etoiles`, `daily:AAAAMMJJ`), `ludo-scores.js` (`registerExisting`, `PSEUDO_BOARDS`, `SYNC` 19) ; accueil (cartouche 32 bits, icône `remorqueur`, `META` en tête, `NEWS`, `RECS`, `RANKS`, `PROGRESS`, `TODAY`) ; transfert `LUDO1-` ; tests (`fumee.js` : un bassin gagné, annuler, écran de fin, 7 × 7, bassin du jour ; `logique.js` : bassin du jour des 20 prochains jours, transfert) ; README ; mémo.
 - Écart au cahier des charges : les menus (titre, ports, pause, fin) sont en HTML par-dessus le canvas, comme Le Magasinier ; le retour à la Ludothèque est donc un lien `ludo-retour`.
 
-Reste : essais sur le téléphone (taille des bateaux sous le doigt, difficulté, sons, temps de préparation du bassin du jour), classements à confirmer avec un vrai record, **artefact** (lien à demander à l'utilisateur).
+Reste : essais sur le téléphone (taille des bateaux sous le doigt, difficulté, sons, temps de préparation du bassin du jour), classements à confirmer avec un vrai record, artefact : créé le 20/10, https://claude.ai/artifact/7vRaNExcDvmDWeWGLeFsyq (copie de `outils/artefact.py`, 95 Ko, puis le lien CLASSEMENT pointé vers le site publié, comme pour Le Magasinier).
 
 ## 13. Points confirmés par l'utilisateur (20/10)
 1. Nouveautés des 5 ports : **d'accord** (pêche, commerce, marina avec obstacles fixes, chantier naval avec bateaux de 4 cases, grand port en 7 × 7).
