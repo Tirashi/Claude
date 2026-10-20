@@ -283,6 +283,8 @@ Comme le reste de la Ludothèque : **scripts classiques**, sans build, sans modu
 - Dans `fumee.js` : le jeu se charge, on nomme le héros, on fait un combat.
 
 ## 13. Direction artistique
+**Maquette (20/10)** : `maquettes/la-derniere-lanterne.html` (https://claude.ai/artifact/DniPR4j2u1FEJXJWY7wuuo), les trois pistes ci-dessous sur la carte, le combat et le dialogue. À valider.
+
 À choisir **sur maquette** (règle du 16/10) : 2 ou 3 directions sur un écran de téléphone, chacune avec **un écran de carte**, **un combat** et **une fenêtre de dialogue**. Pistes :
 - **A — Gothique façon *Vampire Survivors*** (idée du 15/10) : pixel art sombre, contrastes forts, petits sprites expressifs.
 - **B — 16 bits façon Link's Awakening DX et Dragon Quest** : couleurs douces, fenêtres bleues à double bord (celles que l'utilisateur a aimées dans les maquettes Dragon Quest du 19/10).
