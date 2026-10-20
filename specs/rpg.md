@@ -10,6 +10,7 @@ Titre validé (20/10). Dossier prévu : `lanterne/` pour le jeu, `moteur-rpg/` p
 - **Pas de classement.**
 - **Coquillages et troc** : on les garde pour le moment, mais **cela copie trop Zelda**. Il faut s'en inspirer, pas les reproduire, et les remplacer par des idées propres au jeu (§ 8.4).
 - Ton mélancolique et fin douce-amère : sans objection.
+- **Ensuite (20/10)** : d'accord avec toutes les propositions : **monstres visibles sur la carte**, **l'équipe** du § 5.1, et **remplacement tout de suite** des larmes et du troc par les lanternes oubliées et les quêtes des compagnons (§ 8.4).
 
 ## 1. Demande de l'utilisateur (20/10)
 - Un **petit RPG** de **5 à 10 heures**, **très simple**, avec **4 classes de base**.
@@ -86,7 +87,7 @@ Le joueur ne choisit pas les classes : chaque compagnon a la sienne et **sa prop
 - **Mère Ysolde** : vieille veilleuse de Clairfond, qui a élevé le héros. Bourrue et tendre. Elle sait plus qu'elle ne dit.
 - **Isée** : une jeune fille qui apparaît à l'orée de la brume, toujours là où on ne l'attend pas, et parle par énigmes. C'est **la dernière Brumienne éveillée** (rebondissement 2). C'est elle qui joue le rôle de Marine et du hibou de Link's Awakening.
 - **Le Prieur Vaast** : doux, savant, rassurant. C'est **Aubrin** (rebondissement 3).
-- **Gaspard le colporteur** et son âne Biscotte : le marchand qu'on croise partout, même dans les donjons, et le comique du jeu. Il tient la chaîne de troc (§ 8.4).
+- **Gaspard le colporteur** et son âne Biscotte : le marchand qu'on croise partout, même dans les donjons, et le comique du jeu.
 - **Les Chevaliers de cendre** : la garde de l'abbaye, en armures vides, qui apparaissent à partir de l'acte 3.
 
 ## 6. Scénario
@@ -146,7 +147,7 @@ Chaque outil sert **dans son donjon** puis **ouvre des chemins** sur la carte, c
 | 4 | **Cloche d'Isée** | Révèle les passages fantômes et réveille les statues |
 
 ### 8.3 Rencontres
-On recommande des **monstres visibles sur la carte** plutôt que des combats au hasard (à confirmer, § 16) :
+**Monstres visibles sur la carte**, pas de combats au hasard (décision du 20/10) :
 - ils errent, on peut les éviter, et les toucher lance le combat ;
 - si on le touche par derrière, c'est **nous qui commençons** ; s'il nous surprend, c'est lui ;
 - quand on est beaucoup plus fort qu'eux, ils fuient : plus de combats inutiles en revenant en arrière ;
@@ -155,9 +156,8 @@ On recommande des **monstres visibles sur la carte** plutôt que des combats au 
 ### 8.4 Les à-côtés
 - **12 pages du journal d'Aubrin** (lore, et scène bonus).
 - **Quêtes des compagnons** (une par compagnon, § 5.1) : le registre d'ELOI, les carnets du maître de VERENE, l'écharpe du frère de MAUD. Chacune se termine par la **meilleure arme** du compagnon.
-- *Provisoire, trop proche de Zelda (décision du 20/10, à remplacer)* : **20 larmes de brume** à rapporter à l'arbre-mémoire (comme les coquillages) et une **chaîne de troc avec Gaspard** (8 échanges). Remplacements proposés, propres au jeu :
-  - **Les lanternes oubliées** (à la place des larmes) : 20 vieilles lanternes éteintes, cachées dans la vallée. En rallumer une montre un **souvenir de brume** (une scène muette du passé, donc du lore) et éclaire pour de bon un coin de la carte. Tout est rallumé à la fin : une vallée constellée.
-  - **Les veillées et les quêtes des compagnons** (à la place du troc) : elles font déjà le travail du troc, des petites histoires qui mènent à une belle récompense, mais à partir de nos personnages.
+- **Les lanternes oubliées** : 20 vieilles lanternes éteintes, cachées dans la vallée. En rallumer une montre un **souvenir de brume** (une scène muette du passé, donc du lore) et éclaire pour de bon un coin de la carte. Récompenses à 5, 10, 15 et 20 (chez Mère Ysolde). Tout est rallumé à la fin : une vallée constellée.
+- *Les larmes de brume et la chaîne de troc ont été retirées le 20/10* : trop proches des coquillages et du troc de Zelda. Les lanternes oubliées et les quêtes des compagnons les remplacent.
 - **Coffres cachés** et quelques **habitants à aider** (5 ou 6 petites quêtes : un chat perdu, une cloche à rapporter…).
 - **Le Puits sans fond**, donjon facultatif ouvert après la fin, avec un boss secret.
 
@@ -300,10 +300,7 @@ Bips de texte, effets de combat, petite fanfare de passage de niveau et de coffr
 - Artefact : lien à demander à l'utilisateur au premier publish.
 
 ## 16. Points à confirmer avec l'utilisateur
-Réglés le 20/10 : titre, équipe, tour par tour, défaite et sauvegardes, pas de classement, ton (§ 0). Il reste :
-1. **Monstres visibles sur la carte** (recommandé) ou **combats au hasard** façon Dragon Quest ?
-2. **L'équipe** du § 5.1 (ELOI, VERENE, MAUD, et le héros LAME) vous plaît-elle ?
-3. **Remplacer les larmes et le troc** (§ 8.4) par les lanternes oubliées et les quêtes des compagnons : maintenant ou plus tard ?
+Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape : la maquette (session 0).
 
 ## 17. Plan de travail proposé (une conversation par session)
 | Session | Contenu | Modèle |
