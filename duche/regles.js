@@ -67,11 +67,11 @@ const DUC_ELECTEURS = [
 ];
 const DUC_CRITERES = { leg: 'la légitimité', soldats: 'la plus grande armée', terres: 'le plus de terres', or: 'le trésor le plus riche', batiments: 'le plus de bâtiments' };
 const DUC_CHANGES = 5;   // échanges au marché par tour
-// difficulté : facile = les règles de base ; normal (le Duché du jour, et le seul classé) = entretien plus cher,
+// difficulté (plaine : nourriture par qualité) : facile = les règles de base ; normal (le Duché du jour, et le seul classé) = entretien plus cher,
 // hiver chaque année, bâtiments plus chers, rivaux plus mordants (ia.js)
 const DUC_NIVEAUX = {
-  facile: { nom: 'Facile', entretien: 10, hiver: 1, coutBat: 1, ratioIa: 0, viseMeneur: 0 },
-  normal: { nom: 'Normal', entretien: 5, hiver: 0.5, coutBat: 1.5, ratioIa: 0.2, viseMeneur: 3 },
+  facile: { nom: 'Facile', plaine: 2, entretien: 10, hiver: 1, coutBat: 1, ratioIa: 0, viseMeneur: 0 },
+  normal: { nom: 'Normal', plaine: 1, entretien: 5, hiver: 0.5, coutBat: 1.5, ratioIa: 0.2, viseMeneur: 3 },
 };
 
 /* ---------- hasard à graine ---------- */
@@ -166,7 +166,7 @@ function ducProduction(etat, s) {
   const S = etat.seigneurs[s], p = { nour: 0, bois: 0, or: 0, leg: 0, entretien: 0 };
   for (const t of etat.terres) if (t.prop === s) {
     const T = DUC_TERRAINS[t.t];
-    p.nour += T.nour * t.qual; p.bois += T.bois * t.qual; p.or += T.or * t.qual;
+    p.nour += (t.t === 'plaine' ? ducNiveau(etat).plaine : T.nour) * t.qual; p.bois += T.bois * t.qual; p.or += T.or * t.qual;
     if (t.bat) for (const k in DUC_BATIMENTS[t.bat].prod) p[k] += DUC_BATIMENTS[t.bat].prod[k];
   }
   if (S.traits.includes('pieux')) p.leg += 1;
