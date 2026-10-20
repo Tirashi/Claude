@@ -90,6 +90,7 @@ const shots = process.argv[2];
         M.jouer(MAG_NIVEAUX[14].sol); await wait(200);
         if (!M.etat().fini) return 'la solution ne gagne pas le niveau';
         if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        M.jour(); const g = M.etat().grille; if (!g || !g.plan || !(g.opt >= 25)) return 'pas de grille du jour';
         return 'ok';
       });
       if (r !== 'ok') errs.push('Le Magasinier : ' + r);

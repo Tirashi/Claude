@@ -18,6 +18,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
 - [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
+- [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
@@ -214,6 +215,16 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - **Plateau du jour** : le même plateau (parfois en miroir) et les mêmes dangers pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) : le temps, plus 5 secondes par naufrage.
 - **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
+
+## Le Magasinier
+Un Sokoban dans un entrepôt en HD-2D (façon Octopath Traveler) : un petit diorama en relief habillé de pixel art, avec la lumière du soleil qui entre par les fenêtres, et un docker en pixel art (casquette, foulard rouge, gilet de cuir) qui marche, pousse, glisse et se retourne vers toi quand il attend.
+
+- **La règle** : pousser toutes les caisses sur les marques jaunes. On ne peut que pousser, une caisse à la fois, jamais tirer. ANNULER sans limite et RECOMMENCER.
+- **Commandes** : glisser le doigt sur l'écran, ou la croix (qu'on peut masquer dans la pause) ; sur ordinateur, les flèches, Z pour annuler, R pour recommencer.
+- **60 niveaux en 5 entrepôts** de 12 : le quai (le Sokoban de base), la chambre froide (sur la **glace**, caisses et docker glissent jusqu'au premier obstacle), l'atelier (les **tapis roulants** emportent les caisses d'une case à chaque coup ; le docker marche dessus sans glisser), la fonderie (les **caisses en fonte** ne glissent pas et les tapis ne les portent pas) et le grand entrepôt (tout mélangé). L'entrepôt suivant s'ouvre quand on a fini 8 niveaux du précédent.
+- **Étoiles** : 3 étoiles en au plus 10 % de coups de plus que le minimum, 2 en au plus 50 % de plus, sinon 1 (180 en tout). Chaque niveau a été vérifié par un solveur, qui connaît le minimum.
+- **Grille du jour** : la même pour toute la famille, tirée de la date (un jour sur trois avec de la glace). **Une seule tentative classée** : le moins de coups gagne, et chaque pas compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussie, la grille se rejoue hors classement. Lien direct : `magasinier/index.html#jour`.
+- **Sons** : bruitages et musique d'ambiance discrète, chacun réglable dans la pause ; EFFETS LEGERS pour les téléphones lents (sans ombres ni flou).
 
 ## Empilage
 

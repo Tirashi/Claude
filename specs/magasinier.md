@@ -122,3 +122,12 @@ Fait :
 - `sw.js` : `sons.js`, version `ludotheque-v41`.
 
 Reste pour la session 3 : grille du jour (générateur à graine dans `regles.js`, tentative unique), classements (`etoiles`, `daily:`), accueil, transfert `LUDO1-`, `logique.js`, README, artefact (demander le lien d'abord).
+
+## 16. Bilan de la session 3 (20/10)
+Fait :
+- **Grille du jour** (`regles.js` : `magGrilleDuJour(AAAAMMJJ)`) : salle tirée de la date (7 à 9 cases de côté avec les murs, quelques blocs de murs, une seule zone libre), 3 marques, recherche à rebours exacte jusqu'à 80 coups, départ le plus lointain entre 25 et 80 coups ; un jour sur trois (jour divisible par 3), quelques cases de glace, alors vérifiées par le solveur (25 à 90 coups). ~0,1 s sous Node ; la grille est gardée pour la journée (`magasinier.jour`). Une seule tentative classée : `magasinier.dailyRun { j, coups, chemin }` reprise au même point ; score = tous les coups joués (annuler et recommencer ne les rendent pas) ; `magasinier.daily { AAAAMMJJ : coups }` ; ensuite la grille se rejoue hors classement. Bouton GRILLE DU JOUR au titre (« FAITE » une fois réussie), lien `#jour`.
+- **Classements** `magasinier` : `etoiles` (total, le plus haut gagne, envoyé quand les étoiles montent) et `daily:AAAAMMJJ` (le moins de coups gagne). `ludo-scores.js` : `registerExisting`, `PSEUDO_BOARDS`, `SYNC` 18. Bouton CLASSEMENT au titre (`../index.html#magasinier`).
+- **Accueil** : cartouche de la famille 3D (icône `caisse`), `META` en tête (sorti le 20/10, LOGIQUE et DU JOUR), `NEWS`, `RECS` (étoiles sur 180, niveaux réussis, grilles du jour), `RANKS`, `PROGRESS` (grille du jour ou niveau en cours), `TODAY`. **Transfert** `LUDO1-` (`magasinier.niveaux` : moins de coups et plus d'étoiles de chaque côté ; `magasinier.daily` : moins de coups).
+- **Tests** : `magasinier-solveur.js` vérifie aussi 3 grilles du jour (60 avec `--optimum`) ; `fumee.js` lance la grille du jour ; `logique.js` fait passer des records du Magasinier par le transfert. README.
+
+Reste : l'**artefact** (demander d'abord à l'utilisateur s'il a un lien) ; essais sur le téléphone (fluidité, difficulté, sons) ; classements à confirmer avec un vrai record.

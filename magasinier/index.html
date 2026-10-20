@@ -31,7 +31,9 @@
       <p class="petit">Pousse les caisses sur les marques. On ne peut que pousser, jamais tirer.</p>
       <button class="fenetre" id="bContinuer" hidden>CONTINUER</button>
       <button class="fenetre" id="bJouer">JOUER</button>
+      <button class="fenetre" id="bJour">GRILLE DU JOUR</button>
       <p class="petit" id="tEtoiles"></p>
+      <a class="fenetre lien" href="../index.html#magasinier">CLASSEMENT</a>
       <a class="fenetre lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
     </div>
   </div>
@@ -65,6 +67,7 @@
       <div class="etoiles" id="fEtoiles"></div>
       <p id="fCoups"></p>
       <p class="petit" id="fObjectif"></p>
+      <p class="petit" id="fRang"></p>
       <button class="fenetre" id="bSuivant">SUIVANT</button>
       <button class="fenetre" id="bRejouer">REJOUER</button>
       <button class="fenetre" id="bNiveauxF">NIVEAUX</button>
@@ -77,6 +80,7 @@
 <script src="sons.js"></script>
 <script src="docker.js"></script>
 <script src="scene.js"></script>
+<script src="../ludo-scores.js"></script>
 <script src="jeu.js"></script>
 <script>
 /* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
