@@ -4,9 +4,9 @@
 const CAP_PORTS = [
   { nom: 'PORT DE PECHE', court: 'PECHE', debut: 0, n: 12, pret: true },
   { nom: 'PORT DE COMMERCE', court: 'COMMERCE', debut: 12, n: 12, pret: true },
-  { nom: 'LA MARINA', court: 'MARINA', debut: 24, n: 0, pret: false },
-  { nom: 'LE CHANTIER NAVAL', court: 'CHANTIER', debut: 24, n: 0, pret: false },
-  { nom: 'LE GRAND PORT', court: 'GRAND PORT', debut: 24, n: 0, pret: false },
+  { nom: 'LA MARINA', court: 'MARINA', debut: 24, n: 12, pret: true },
+  { nom: 'LE CHANTIER NAVAL', court: 'CHANTIER', debut: 36, n: 12, pret: true },
+  { nom: 'LE GRAND PORT', court: 'GRAND PORT', debut: 48, n: 0, pret: false },
 ];
 const CAP_NIVEAUX = [
   // port de pêche (optimum 3 à 12)
@@ -35,5 +35,31 @@ const CAP_NIVEAUX = [
   { plan: ['JJ.KK.', 'HHH.CF', 'BBD.CF', 'A.DGG.', 'ALL...', 'IIEEE.'], sortie: 2, opt: 19, sol: '4:3 5:2 7:1 9:1 11:3 0:3 2:1 1:0 2:0 0:2 11:0 0:4 6:0 3:3 2:3 1:1 7:3 9:0 0:0' },
   { plan: ['M.BBGH', 'M..KGH', 'IAAKGL', 'IDEEFL', 'ID.CFL', '...CJJ'], sortie: 1, opt: 20, sol: '2:1 10:0 1:2 0:1 4:1 3:3 9:0 3:4 4:2 0:3 1:1 5:4 6:1 10:1 11:3 7:1 2:4 10:0 1:2 0:0' },
   { plan: ['LEEE.H', 'L.GIIH', 'FFG.AA', '.JG.CC', '.J.KD.', 'BB.KD.'], sortie: 4, opt: 20, sol: '1:3 3:3 7:4 1:4 3:4 4:3 6:0 8:4 10:1 2:2 9:4 3:0 0:3 2:3 6:3 4:1 10:3 1:2 8:1 0:0' },
+  // la marina : obstacles fixes (optimum 12 à 24)
+  { plan: ['AI.FFH', 'AI.oBH', 'AJJEBo', 'GGDEB.', '..DCC.', '......'], sortie: 2, opt: 12, sol: '0:4 3:4 4:4 5:2 2:0 6:3 1:3 9:2 8:3 5:0 9:0 0:0' },
+  { plan: ['FFAAB.', 'K.o.B.', 'KHHEIo', 'KCCEIJ', 'oD...J', '.DGGG.'], sortie: 1, opt: 13, sol: '4:1 3:2 0:3 6:0 8:4 2:1 1:4 5:2 9:4 3:4 4:3 7:2 0:0' },
+  { plan: ['FGEECC', 'FGHKKB', 'J.H..B', 'J.MA.B', '.oMADL', 'IIIADL'], sortie: 4, opt: 14, sol: '0:2 1:2 6:1 9:3 5:1 4:0 3:2 2:0 11:3 8:3 12:4 7:2 10:2 0:0' },
+  { plan: ['CCC.BJ', '.EEoBJ', 'o...FF', '.ADGHH', '.ADGII', '......'], sortie: 2, opt: 15, sol: '0:2 1:2 4:0 6:2 8:0 0:4 6:4 5:2 7:2 2:4 5:3 7:3 9:1 3:3 0:0' },
+  { plan: ['JJJ...', 'EEEFF.', 'CHHH..', 'CIIAA.', 'CoGD..', 'BBGD..'], sortie: 3, opt: 16, sol: '1:4 0:3 5:4 4:1 9:1 3:0 8:0 6:3 2:3 6:4 8:1 3:3 4:0 7:0 9:0 0:0' },
+  { plan: ['AJJCCB', 'AKKKIB', 'HH..IB', '..GoI.', '.DGEE.', '.DFFF.'], sortie: 1, opt: 17, sol: '0:3 2:2 3:4 5:0 7:1 1:3 7:0 6:2 4:2 8:3 9:0 10:3 6:0 7:3 6:1 9:2 0:0' },
+  { plan: ['...FBB', 'o..FHJ', '..CCHJ', 'oAAAHo', '.DGGG.', '.DIIEE'], sortie: 1, opt: 18, sol: '3:0 5:1 2:0 5:0 3:2 7:0 1:2 0:1 1:1 6:0 8:0 4:2 7:3 9:0 3:4 5:1 2:2 0:0' },
+  { plan: ['..HHMM', '.LL..K', 'CGoIIK', 'CG.DBB', 'E..DJJ', 'EAAAFF'], sortie: 3, opt: 19, sol: '3:0 4:2 1:0 7:1 11:2 6:1 12:3 10:0 8:4 0:2 9:0 0:4 2:1 8:3 10:3 8:4 11:4 12:4 0:0' },
+  { plan: ['CCCE.K', 'LBBEoK', 'LoGGH.', 'L.AAH.', 'FFD..I', '..DJJI'], sortie: 2, opt: 20, sol: '1:1 7:3 6:4 4:3 6:3 10:1 3:3 11:0 1:0 0:2 9:0 0:4 4:4 7:4 1:3 0:2 5:1 11:2 2:0 0:0' },
+  { plan: ['.I.CCJ', '.I.BBJ', 'LL.FF.', 'AAGGE.', 'HoD.EK', 'H.DMMK'], sortie: 2, opt: 22, sol: '2:2 3:2 5:2 4:0 5:3 6:3 1:1 11:1 7:0 1:0 0:3 11:0 5:2 12:0 0:4 6:2 4:4 2:3 3:3 5:3 6:3 0:0' },
+  { plan: ['BB.G..', 'FC.GJJ', 'FCHHH.', 'oAA.I.', '..D.I.', '..DEE.'], sortie: 2, opt: 23, sol: '1:2 2:1 3:4 1:1 5:0 7:0 6:2 2:3 9:1 6:1 8:1 1:3 0:3 3:3 4:0 0:4 1:2 8:4 1:4 6:3 7:3 9:3 0:0' },
+  { plan: ['B..EE.', 'BJJ.II', 'BGo.DK', '.GCCDK', 'FFFA..', '...AHH'], sortie: 4, opt: 24, sol: '4:1 9:2 6:1 3:0 1:2 7:0 0:4 1:4 10:4 3:4 6:2 9:1 1:0 3:2 0:2 5:2 2:2 7:2 6:4 3:1 1:2 9:0 8:2 0:0' },
+  // le chantier naval : bateaux de 4 cases (optimum 15 à 26)
+  { plan: ['..EE..', 'GG.HH.', 'AFBBK.', 'AFIIK.', 'A..DKC', 'AJJD.C'], sortie: 3, opt: 15, sol: '3:0 4:0 7:2 10:0 8:4 0:3 9:4 0:4 5:4 2:1 8:1 3:2 10:2 7:4 0:0' },
+  { plan: ['CCC..I', '.....I', 'JG.AA.', 'JGBBH.', 'JFD.H.', 'JFDEE.'], sortie: 2, opt: 16, sol: '1:2 6:1 5:3 7:0 2:3 0:3 8:1 9:1 4:0 0:4 2:2 7:4 1:3 2:3 3:3 0:0' },
+  { plan: ['GAA.JJ', 'GHH.F.', 'GCIIFE', 'GCBB.E', '.CDK..', '.CDKLL'], sortie: 2, opt: 17, sol: '4:1 2:4 0:3 6:1 1:0 7:2 3:1 10:3 11:0 0:4 10:4 2:2 5:4 2:3 7:3 8:3 0:0' },
+  { plan: ['EEECB.', '.KKCB.', 'G.HCFF', 'GDH..J', 'GDHIIJ', 'GAA...'], sortie: 1, opt: 18, sol: '0:2 1:4 10:0 7:1 8:1 3:3 5:3 9:0 5:4 3:0 8:4 3:3 7:3 5:2 2:1 4:2 10:2 0:0' },
+  { plan: ['CGGGII', 'C.KKHH', 'CFF..E', 'C.AJJE', '.BAD..', '.BADLL'], sortie: 3, opt: 18, sol: '2:3 3:1 5:3 1:2 6:0 10:1 7:3 4:1 9:4 0:3 11:0 0:4 9:3 4:4 5:4 7:4 9:4 0:0' },
+  { plan: ['FFF.J.', 'GICCJH', 'GIA..H', '..AEEH', '..AD.H', 'BB.D..'], sortie: 3, opt: 19, sol: '2:1 6:4 7:2 8:2 3:0 9:1 5:3 1:0 4:2 9:4 4:3 1:2 3:4 1:0 8:1 4:0 1:1 5:0 0:0' },
+  { plan: ['EGII.H', 'EG.A.H', 'ECCA.H', 'E.DBBB', 'J.DF..', 'J..F..'], sortie: 2, opt: 20, sol: '0:4 2:1 7:3 8:4 1:0 3:4 1:1 6:1 8:1 1:0 3:3 7:0 2:3 0:1 2:1 7:3 3:4 1:1 8:3 0:0' },
+  { plan: ['FFIIA.', 'JJJ.A.', 'C.D..B', 'C.DEEB', 'CHH..B', 'GGG..B'], sortie: 2, opt: 20, sol: '1:1 2:0 6:3 7:3 0:4 8:3 5:1 9:1 3:0 4:0 0:2 1:2 6:0 2:2 9:3 0:1 4:1 3:1 5:0 0:0' },
+  { plan: ['...EE.', 'AAAA..', 'FFGCC.', 'BJGII.', 'BJ..D.', 'BJHHD.'], sortie: 4, opt: 21, sol: '1:2 3:4 4:2 6:3 5:2 2:0 9:0 7:0 6:4 8:0 0:3 6:3 7:3 6:4 8:2 2:3 9:3 1:0 5:0 3:2 0:0' },
+  { plan: ['.FFEE.', 'HHHHC.', 'IIIKCJ', 'AAGKCJ', '.DG...', '.DBB..'], sortie: 1, opt: 22, sol: '2:4 5:0 4:2 3:0 6:4 9:0 10:4 1:4 0:3 6:3 10:2 2:0 6:4 10:4 1:2 3:3 8:2 9:2 4:4 5:2 7:2 0:0' },
+  { plan: ['...EEE', 'LGHJJA', 'LGHCCA', '.BBDIA', 'KK.DIA', 'FF..I.'], sortie: 3, opt: 24, sol: '2:0 4:2 1:0 6:0 7:3 9:2 11:0 3:0 0:2 7:2 8:1 5:4 10:4 0:4 7:4 2:2 3:2 6:4 2:0 3:1 9:1 11:1 4:0 0:0' },
+  { plan: ['.E.FF.', 'BEAAA.', 'BKKHG.', 'BJJHG.', 'B.DII.', '..DCC.'], sortie: 2, opt: 26, sol: '2:0 3:4 5:2 8:4 7:4 9:2 10:2 4:2 1:1 6:0 9:4 10:4 0:2 7:2 3:0 8:0 0:4 7:4 9:2 10:2 6:4 1:3 5:3 9:3 10:3 0:0' },
 ];
 if (typeof module !== 'undefined') module.exports = { CAP_PORTS, CAP_NIVEAUX };

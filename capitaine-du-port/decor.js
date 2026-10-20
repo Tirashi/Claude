@@ -107,11 +107,13 @@ function hullHW(L, W, bow, stern = 3, pow = 1.6){
     return h;
   };
 }
+// ECH : rapport entre la case de 30 px pour laquelle les bateaux sont dessinés et la case du bassin (26 px en 7 × 7)
+let ECH = 1;
 function makeBoat(dir, L, W, build){
-  const horiz = dir === "E" || dir === "W", bw = (horiz ? L : W) + PAD * 2, bh = (horiz ? W : L) + PAD * 2;
+  const k = ECH, horiz = dir === "E" || dir === "W", bw = Math.round((horiz ? L : W) / k) + PAD * 2, bh = Math.round((horiz ? W : L) / k) + PAD * 2;
   const B = Buf(bw, bh);
   const loc = (x, y) => {
-    x -= PAD; y -= PAD;
+    x = (x - PAD) * k; y = (y - PAD) * k;
     if (dir === "E") return [x, y - W / 2];
     if (dir === "W") return [L - x, y - W / 2];
     if (dir === "N") return [L - y, x - W / 2];
@@ -233,6 +235,32 @@ const boatTug = dir => makeBoat(dir, 24, 16, A => {
 });
 
 
+// bateaux de 4 cases : le pétrolier et le paquebot
+const boatTanker = dir => makeBoat(dir, 114, 26, A => {
+  const hw = hullHW(114, 26, 20, 4, 1.5);
+  hullDeck(A, hw, P.rust, P.green, (a, b, k) => (Math.floor(a) % 8 === 0 ? 2 : k));
+  // la conduite le long du pont et les vannes
+  A.S(A.box(18, 92, -1.5, 1.5), P.steel, {outline: true, shadow: 1});
+  for (const a0 of [30, 50, 70]) for (const s of [-1, 1]) A.S(A.circ(a0, s * 5, 2.2), P.red, {outline: true, shadow: 1});
+  A.S(A.box(56, 62, -9, 9), P.steel, {outline: true, shadow: 1});
+  // le château à la poupe
+  A.S(A.box(2, 15, -11, 11), P.white, {outline: true, shadow: 2});
+  A.S((a, b) => A.box(2, 15, -11, 11)(a, b) && a > 14 && Math.floor(b + 20) % 3 !== 0, P.glass, {flat: true});
+  A.S(A.box(5, 10, -4, 4), P.black, {outline: true, shadow: 1});
+  for (const s of [-5, 5]) A.S(A.circ(102, s, 1.8), P.steel, {outline: true});
+});
+const boatLiner = dir => makeBoat(dir, 114, 26, A => {
+  const hw = hullHW(114, 26, 24, 5, 1.5);
+  hullDeck(A, hw, P.navy, P.white, null);
+  A.S(A.box(10, 90, -10, 10), P.white, {outline: true, shadow: 2});
+  A.S((a, b) => A.box(10, 90, -10, 10)(a, b) && Math.abs(b) > 9 && Math.floor(a) % 3 !== 0, P.glass, {flat: true});
+  A.S(A.box(13, 87, -7, 7), P.cream, {});
+  A.S(A.box(56, 70, -4, 4), P.blue, {inset: true});
+  for (const a0 of [24, 40]) { A.S(A.circ(a0, 0, 4.2), P.red, {outline: true, shadow: 2}); A.S(A.circ(a0, 0, 2), P.black, {flat: true}); }
+  for (const a0 of [16, 32, 48, 78]) for (const s of [-1, 1]) A.S(A.box(a0, a0 + 6, s < 0 ? -12 : 10, s < 0 ? -10 : 12), P.orange, {outline: true});
+  A.S(A.circ(100, 0, 2), P.gold, {outline: true});
+});
+
 /* ---------- les sprites d'un bassin : un modèle par longueur, selon le port ---------- */
 const MODELES = [
   // port de pêche
@@ -241,32 +269,81 @@ const MODELES = [
   // port de commerce
   { 2: [boatBarge, boatPilot, d => boatFisher(d, P.teal, P.red), boatSail, d => boatFisher(d, P.red, P.blue)],
     3: [boatCargo, boatFerry, boatPeniche] },
+  // la marina : surtout des voiliers
+  { 2: [boatSail, d => boatFisher(d, P.white, P.blue), boatSail, boatPilot, d => boatFisher(d, P.pink, P.teal)],
+    3: [boatPeniche, boatFerry] },
+  // le chantier naval
+  { 2: [boatBarge, d => boatFisher(d, P.orange, P.steel), boatPilot, boatBarge],
+    3: [boatCargo, boatPeniche, boatFerry], 4: [boatTanker, boatLiner] },
+  // le grand port : un peu de tout
+  { 2: [boatBarge, boatPilot, d => boatFisher(d, P.teal, P.red), boatSail, d => boatFisher(d, P.red, P.blue), d => boatFisher(d, P.orange, P.teal)],
+    3: [boatCargo, boatFerry, boatPeniche], 4: [boatLiner, boatTanker] },
 ];
 const CACHE = {};
 function sprite(cle, fab){
   if (!CACHE[cle]){ const img = fab(); CACHE[cle] = {img, sil: silhouette(img, "rgba(6,30,48,.42)"), foam: silhouette(img, "#c8f0f4", 1)}; }
   return CACHE[cle];
 }
-function sprites(N, port){
-  const M = MODELES[Math.min(port, MODELES.length - 1)], compte = {2: 0, 3: 0};
-  return N.bateaux.map((b, i) => {
-    if (i === 0){ const s = sprite("or", () => boatGold("N")); if (!s.glow) s.glow = [silhouette(s.img, "#fff2a8", 2), silhouette(s.img, "#ffd23f", 3)]; return s; }
-    const liste = M[b.n] || M[3], k = compte[b.n]++ % liste.length;
+function sprites(N, port, CS){
+  const M = MODELES[Math.min(port, MODELES.length - 1)], compte = {2: 0, 3: 0, 4: 0}, e = 30 / CS;
+  ECH = e;
+  const res = N.bateaux.map((b, i) => {
+    if (i === 0){ const s = sprite("or" + CS, () => boatGold("N")); if (!s.glow) s.glow = [silhouette(s.img, "#fff2a8", 2), silhouette(s.img, "#ffd23f", 3)]; return s; }
+    const liste = M[b.n] || MODELES[4][b.n], k = compte[b.n]++ % liste.length;
     // le sens de la proue : tiré de la position, pour varier sans changer d'une partie à l'autre
     const d = b.h ? (hash(b.x, b.y) < .5 ? "E" : "W") : (hash(b.y, b.x) < .5 ? "N" : "S");
-    return sprite(`${port}-${b.n}-${k}-${d}`, () => liste[k](d));
+    return sprite(`${port}-${b.n}-${k}-${d}-${CS}`, () => liste[k](d));
   });
+  ECH = 1;
+  return res;
 }
 const TUG = {}, TUGSIL = {};
-function remorqueur(d){ if (!TUG[d]){ TUG[d] = boatTug(d); TUGSIL[d] = silhouette(TUG[d], "rgba(6,30,48,.42)"); } return {img: TUG[d], sil: TUGSIL[d]}; }
+function remorqueur(d, CS){
+  const k = d + CS;
+  if (!TUG[k]){ ECH = 30 / CS; TUG[k] = boatTug(d); ECH = 1; TUGSIL[k] = silhouette(TUG[k], "rgba(6,30,48,.42)"); }
+  return {img: TUG[k], sil: TUGSIL[k]};
+}
+// les obstacles fixes d'une case : bouée d'amarrage (marina), pieux (chantier), épave (grand port)
+function obstacle(g, port, x, y, CS, k){
+  const cx = x + CS / 2, cy = y + CS / 2, rr = CS * .3;
+  R(g, cx - rr + 3, cy - rr + 4, rr * 2, rr * 2, "rgba(6,30,48,.35)");
+  if (port === 2 || (port === 4 && k % 3 === 0)){
+    // bouée d'amarrage rouge et blanche, avec son anneau
+    for (let yy = -rr - 1; yy <= rr + 1; yy++) for (let xx = -rr - 1; xx <= rr + 1; xx++){
+      const d = Math.hypot(xx, yy); if (d > rr + 1) continue;
+      if (d > rr){ R(g, cx + xx, cy + yy, 1, 1, OUT); continue; }
+      const ramp = (Math.atan2(yy, xx) + Math.PI) % (Math.PI / 2) < Math.PI / 4 ? P.red : P.white, l = (-xx - yy) / (rr * 1.4);
+      R(g, cx + xx, cy + yy, 1, 1, ramp[l > .4 ? 0 : l > -.2 ? 1 : 2]);
+    }
+    ring(g, cx, cy, 2.5, "#dfe4ea", "#6f7888");
+  } else if (port === 3 || (port === 4 && k % 3 === 1)){
+    // trois pieux de bois cerclés
+    for (const [dx, dy] of [[-4, -4], [4, -3], [0, 4]]){
+      const px = cx + dx, py = cy + dy;
+      for (let yy = -4; yy <= 4; yy++) for (let xx = -4; xx <= 4; xx++){
+        const d = Math.hypot(xx, yy); if (d > 4) continue;
+        R(g, px + xx, py + yy, 1, 1, d > 3.2 ? OUT : P.teak[(xx + yy < -2) ? 0 : d > 2 ? 2 : 1]);
+      }
+      ring(g, px, py, 2, P.teak[3], P.teak[3]);
+    }
+  } else {
+    // épave rouillée, à moitié coulée
+    for (let yy = -rr; yy <= rr; yy++) for (let xx = -rr - 2; xx <= rr + 2; xx++){
+      const u = (xx + yy) / (rr * 1.4), v = (xx - yy) / (rr * .9);
+      if (u * u + v * v > 1) continue;
+      R(g, cx + xx, cy + yy, 1, 1, u * u + v * v > .7 ? OUT : P.rust[hash(xx + 9, yy + 9) < .3 ? 2 : (xx < 0 ? 0 : 1)]);
+    }
+    for (let k2 = -4; k2 <= 4; k2 += 2) R(g, cx + k2, cy - k2, 2, 1, "#2a1a10");
+  }
+}
 
 /* ---------- la géométrie : le bassin au milieu, la mer en haut, le quai en bas ---------- */
 function geo(w, sortie, VH){
   const CS = w === 7 ? 26 : 30, DY = Math.max(0, Math.floor((VH - 384) / 2));
   const GX = (VW - w * CS) / 2, GY = 96 + DY, BX0 = GX - 6, BX1 = GX + w * CS + 6, BY0 = GY - 6, BY1 = GY + w * CS + 6;
   const CH = {x0: GX + sortie * CS, x1: GX + sortie * CS + CS, y0: 40 + DY, y1: BY0};
-  const BAT = CH.x0 < 80 ? 92 : 14;                                     // la capitainerie, à l'écart de la passe
-  const LH = {x: CH.x1 > 166 ? 196 : 184, y: 64 + DY};                  // le phare, au bout de la jetée
+  const BAT = CH.x0 >= 80 ? 14 : CH.x1 + 14;                            // la capitainerie, à l'écart de la passe
+  const LH = {x: CH.x1 > 166 ? 196 : Math.max(184, BAT + 76), y: 64 + DY};   // le phare, au bout de la jetée
   const libre = x => (x < CH.x0 - 8 || x > CH.x1 + 8) && (x < BAT - 6 || x > BAT + 66) && Math.abs(x - LH.x) > 20;
   const haut = [30, 90, 160, 120].find(libre);
   const LAMPS = [[5, GY + 34], [5, GY + 144], [VW - 5, GY + 54], [VW - 5, GY + 154], [150, BY1 + 18], [206, BY1 + 18]];
@@ -384,7 +461,7 @@ const inSea = (G, x, y) => y < G.SEAY && !(Math.hypot(x - G.LH.x, (y - G.LH.y) *
 const inChan = (G, x, y) => x >= G.CH.x0 && x < G.CH.x1 && y >= G.CH.y0 && y < G.CH.y1;
 const inBasin = (G, x, y) => x >= G.BX0 && x < G.BX1 && y >= G.BY0 && y < G.BY1;
 
-function fond(G, port){
+function fond(G, port, N){
   const [c, g] = mk(VW, G.VH), {GX, GY, CS, BX0, BX1, BY0, BY1, CH, SEAY, w} = G;
   paving(g, G.VH);
   for (let y = 0; y < G.VH; y++) for (let x = 0; x < VW; x++){
@@ -410,12 +487,14 @@ function fond(G, port){
     R(g, GX + k * CS - (k === w ? 1 : 0), GY + i, 1, 1, cc); R(g, GX + i, GY + k * CS - (k === w ? 1 : 0), 1, 1, cc);
   }
   for (let i = 0; i <= w; i++) for (let j = 0; j <= w; j++){ const x = GX + i * CS - (i === w), y = GY + j * CS - (j === w); R(g, x - 1, y, 3, 1, "rgba(200,245,250,.5)"); R(g, x, y - 1, 1, 3, "rgba(200,245,250,.5)"); }
+  // les obstacles fixes
+  N.fixes.forEach((p, k) => obstacle(g, port, GX + (p % w) * CS, GY + Math.floor(p / w) * CS, CS, k));
   // rochers et plateforme du phare
   const lx = G.LH.x, ly = G.LH.y;
   blob(g, [[lx - 34, ly - 18, 5], [lx - 24, ly - 14, 6], [lx - 14, ly - 20, 5], [lx + 14, ly - 18, 6], [lx + 22, ly - 24, 4], [lx - 16, ly, 5], [lx + 12, ly + 2, 5]], ["#d6d0c4", "#a49c8e", "#7a7466", "#4e4a42"]);
   for (let y = ly - 20; y < ly + 16; y++) for (let x = lx - 22; x < lx + 22; x++){ const d = Math.hypot(x - lx, (y - ly) * 1.25); if (d < 15) R(g, x, y, 1, 1, d > 13 ? ((x - lx) + (y - ly) < 0 ? "#efe6d2" : "#7a7060") : (Math.floor(Math.atan2(y - ly, x - lx) * 4) % 2 ? "#c9bea8" : "#bdb19a")); else if (d < 16) R(g, x, y, 1, 1, OUT); }
   buildBuilding(g, G);
-  // le quai du bas : casiers et caisses de poissons au port de pêche, conteneurs et grue ailleurs
+  // le quai du bas : casiers et poissons à la pêche, voiliers à la marina, coque en chantier, conteneurs et grue au commerce et au grand port
   const qy = BY1 + 40;
   if (port === 0){
     for (const [x, y] of [[8, qy - 26], [24, qy - 24], [8, qy - 14], [26, qy - 12], [42, qy - 20]]) casier(g, x, y);
@@ -423,6 +502,24 @@ function fond(G, port){
     // filet de pêche étendu et rouleau d'amarre
     for (let y = 0; y < 14; y++) for (let x = 0; x < 26; x++) if ((x + y) % 4 === 0 || (x - y + 40) % 4 === 0) R(g, 128 + x, qy - 26 + y, 1, 1, (x + y) % 8 ? "#4a7a6a" : "#ffb030");
     ring(g, 140, qy - 4, 5, "#e8d8a8", "#b8a070"); ring(g, 140, qy - 4, 3, "#e8d8a8", "#b8a070");
+  } else if (port === 2){
+    // la marina : deux voiliers sur leur remorque, des fanions
+    for (const [x, y] of [[8, qy - 30], [62, qy - 18]]){
+      const v = boatSail("E");
+      R(g, x + 4, y + v.height - 1, v.width - 8, 3, "rgba(40,30,20,.3)");
+      R(g, x + 6, y + v.height - 3, v.width - 12, 2, "#454c5c"); for (const dx of [10, v.width - 16]) { R(g, x + dx - 1, y + v.height - 3, 5, 5, OUT); R(g, x + dx, y + v.height - 2, 3, 3, "#262233"); }
+      g.drawImage(v, x, y);
+    }
+    for (let x = 4; x < 130; x++){ const yy = qy - 36 + Math.round(Math.sin(x / 14) * 2); R(g, x, yy, 1, 1, "#5e5870"); if (x % 8 === 0){ const c = [P.red, P.yellow, P.blue, P.green][(x / 8) % 4]; R(g, x - 2, yy + 1, 5, 2, c[1]); R(g, x - 1, yy + 3, 3, 2, c[1]); R(g, x, yy + 5, 1, 1, c[2]); } }
+  } else if (port === 3){
+    // le chantier naval : une coque sur ses tins, entourée d'échafaudages
+    const c = boatTanker("E");
+    R(g, 6, qy - 32, c.width + 6, c.height + 10, "rgba(40,30,20,.25)");
+    for (const dx of [14, 44, 74, 100]) { R(g, 4 + dx, qy - 32 + c.height - 2, 8, 6, OUT); R(g, 5 + dx, qy - 31 + c.height - 2, 6, 4, P.teak[1]); }
+    g.drawImage(c, 4, qy - 36);
+    for (let x = 2; x < c.width + 8; x += 12) { R(g, x, qy - 40, 1, c.height + 8, "#8e98aa"); }
+    for (const y of [qy - 40, qy - 36 + c.height + 4]) R(g, 2, y, c.width + 7, 1, "#c8d0dc");
+    for (let k = 0; k < 6; k++) R(g, 10 + k * 18 + (k % 2) * 4, qy - 40 + (k % 3) * 9, 2, 2, "#ffd23f");
   } else {
     const cols = [P.red, P.blue, P.green, P.orange, P.teal, P.yellow, P.pink, P.navy], r = rnd(42 + port);
     const stacks = [0, 1, 2].map(k => ({x: 6 + k * 34, base: qy, tiers: 1 + Math.floor(r() * 3), k: Math.floor(r() * 99)}));
@@ -513,7 +610,7 @@ function scene(g, G, port, fondImg, bat, tug, lt){
   for (let k = 0; k < 2; k++){ const y = BY0 - 8 - ((Math.floor(ph * 140) + k * 18) % 36), x = CH.x0 + CS / 2 - 5;
     for (let j = 0; j < 5; j++){ R(g, x + j, y + 4 - j, 1, 2, k ? "#ffffff" : "#ffe680"); R(g, x + 9 - j, y + 4 - j, 1, 2, k ? "#ffffff" : "#ffe680"); } }
   // ombres, écume, remous du remorqueur
-  const T = tug ? remorqueur(tug.d) : null;
+  const T = tug ? remorqueur(tug.d, CS) : null;
   for (const [s, x, y] of bat) g.drawImage(s.sil, x + 3, y + 3);
   if (T) g.drawImage(T.sil, tug.x + 3, tug.y + 3);
   bat.forEach(([s, x, y], i) => { const q = .5 + .5 * Math.sin(TAU * ph * 2 + i * 1.7); g.globalAlpha = .18 + .3 * q; g.drawImage(s.foam, x - 1 + (q > .7 ? 1 : 0), y - 1); });
@@ -535,7 +632,7 @@ function scene(g, G, port, fondImg, bat, tug, lt){
   { const k = Math.floor(lt * 1.6) % 4, sp = [[5, 14], [4, 40], [12, 50], [17, 26]][k], q = (lt * 1.6) % 1;
     if (q < .5){ const x = gx + sp[0], y = gy + sp[1], r = q < .25 ? 1 : 2; R(g, x - r, y, r * 2 + 1, 1, "#ffffff"); R(g, x, y - r, 1, r * 2 + 1, "#ffffff"); } }
   // la grue (sauf au port de pêche), le phare, les mouettes
-  if (port !== 0) drawCrane(g, 122, G.BY1 + 22, Math.PI - .2 + .2 * Math.sin(TAU * lt / 10), 54, lt, 26);
+  if (port === 1 || port === 4) drawCrane(g, 122, G.BY1 + 22, Math.PI - .2 + .2 * Math.sin(TAU * lt / 10), 54, lt, 26);
   g.drawImage(LIGHT, G.LH.x - 15, G.LH.y - 58);
   const gullAt = (x, y, k, flip, sh) => { const f = Math.floor(lt * 6 + k) % 3 === 0 ? "b" : "a";
     g.drawImage(GULL.sh[f === "a" ? 0 : 1], Math.round(x - 8 + sh * .6), Math.round(y - 6 + sh)); g.drawImage(GULL[f][flip ? 1 : 0], Math.round(x - 8), Math.round(y - 6)); };
@@ -544,8 +641,8 @@ function scene(g, G, port, fondImg, bat, tug, lt){
 }
 
 // le remorqueur derrière le bateau qu'on glisse : s = sens du glissement (+1 vers la droite ou le bas)
-function placeRemorqueur(s, horiz, bx, by, img){
-  const d = horiz ? (s > 0 ? "E" : "W") : (s > 0 ? "S" : "N"), t = remorqueur(d).img;
+function placeRemorqueur(s, horiz, bx, by, img, CS){
+  const d = horiz ? (s > 0 ? "E" : "W") : (s > 0 ? "S" : "N"), t = remorqueur(d, CS).img;
   const x = horiz ? (s > 0 ? bx - t.width + 3 : bx + img.width - 3) : Math.round(bx + img.width / 2 - t.width / 2);
   const y = horiz ? Math.round(by + img.height / 2 - t.height / 2) : (s > 0 ? by - t.height + 3 : by + img.height - 3);
   return {d, x, y};

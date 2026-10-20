@@ -24,7 +24,10 @@
       <p>Glisse les bateaux dans leur longueur pour ouvrir la passe au navire doré.</p>
       <button class="plaque" id="bContinuer" hidden>CONTINUER</button>
       <button class="plaque" id="bJouer">JOUER</button>
+      <button class="plaque" id="bJour">BASSIN DU JOUR</button>
       <p class="petit" id="tEtoiles"></p>
+      <a class="plaque lien" href="../index.html#capitaine">CLASSEMENT</a>
+      <div class="rang"><button class="plaque" id="bBruitT">BRUITAGES : OUI</button><button class="plaque" id="bMusiqueT">MUSIQUE : OUI</button></div>
       <a class="plaque lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
     </div>
   </div>
@@ -45,6 +48,7 @@
       <button class="plaque" id="bReprendre">REPRENDRE</button>
       <button class="plaque" id="bRejouerP">REJOUER</button>
       <button class="plaque" id="bNiveauxP">PORTS</button>
+      <div class="rang"><button class="plaque" id="bBruit">BRUITAGES : OUI</button><button class="plaque" id="bMusique">MUSIQUE : OUI</button></div>
       <a class="plaque lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
     </div>
   </div>
@@ -55,6 +59,7 @@
       <div class="etoiles" id="fEtoiles"></div>
       <p id="fCoups"></p>
       <p class="petit" id="fObjectif"></p>
+      <p class="petit" id="fRang"></p>
       <button class="plaque" id="bSuivant">SUIVANT</button>
       <button class="plaque" id="bRejouer">REJOUER</button>
       <button class="plaque" id="bNiveauxF">PORTS</button>
@@ -64,6 +69,8 @@
 <script src="regles.js"></script>
 <script src="niveaux.js"></script>
 <script src="decor.js"></script>
+<script src="sons.js"></script>
+<script src="../ludo-scores.js"></script>
 <script src="jeu.js"></script>
 <script>
 /* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :

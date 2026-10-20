@@ -18,6 +18,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
 - [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
+- [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
@@ -215,6 +216,16 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - **Plateau du jour** : le même plateau (parfois en miroir) et les mêmes dangers pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) : le temps, plus 5 secondes par naufrage.
 - **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
+
+## Capitaine du port
+Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32 bits : quais en granit, capitainerie, phare, grue et mouettes. Le bassin est encombré de bateaux ; il faut ouvrir la passe au **navire doré** pour qu'il rejoigne la mer.
+
+- **La règle** : un bateau ne glisse que dans le sens de sa longueur, d'autant de cases libres qu'on veut ; **un coup = un bateau déplacé**. Le bassin est gagné quand le navire doré arrive à la passe, en haut. ANNULER sans limite et REJOUER.
+- **Commandes** : glisser un bateau du doigt (le petit remorqueur rouge vient le pousser) ; sur ordinateur, à la souris, Z pour annuler, R pour rejouer, Échap pour la pause.
+- **60 bassins en 5 ports** de 12 : le port de pêche (les bases, les 3 premiers expliqués), le port de commerce (plus de grands bateaux), la marina (bouées, pieux et épaves **qui ne bougent jamais**), le chantier naval (pétroliers et paquebots de **4 cases**) et le grand port (**7 × 7**, tout mélangé). Le port suivant s'ouvre quand on a fini 8 bassins du précédent.
+- **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
+- **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
+- **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
 
 ## Le Magasinier
 Un Sokoban dans un entrepôt en HD-2D (façon Octopath Traveler) : un petit diorama en relief habillé de pixel art, avec la lumière du soleil qui entre par les fenêtres, et un docker en pixel art (casquette, foulard rouge, gilet de cuir) qui marche, pousse, glisse et se retourne vers toi quand il attend.

@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'magasinier/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html',
   'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -95,6 +95,21 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Le Magasinier : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-magasinier.png` });
+    }
+    if (url === 'capitaine-du-port/index.html') {
+      // Capitaine du port : un bassin gagné par sa solution, écran de fin ; annuler revient en arrière ; le bassin du jour se charge
+      const r = await p.evaluate(async () => {
+        const C = Capitaine, wait = ms => new Promise(r => setTimeout(r, ms)), sol = capSolLire(CAP_NIVEAUX[5].sol);
+        C.charger(5); C.jouer([sol[0]]); if (C.etat().coups !== 1) return 'le bateau ne bouge pas';
+        C.annuler(); if (C.etat().coups !== 0) return "ANNULER ne revient pas en arrière";
+        C.jouer(sol); if (!C.etat().gagne) return 'la solution ne gagne pas le bassin';
+        await wait(2000); if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        if (CAP_PORTS[4].n) { C.charger(CAP_PORTS[4].debut); if (C.bassin().w !== 7) return 'le grand port n\'est pas en 7 × 7'; }
+        C.jour(); const b = C.niveau(); if (!b || !b.plan || !(b.opt >= 12)) return 'pas de bassin du jour';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Capitaine du port : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-capitaine.png` });
     }
     if (url === 'amiral/index.html') {
       // Amiral ! : le chantier naval (flotte des nouveaux navires), un coup de chaque nouveau pouvoir, la riposte, puis des parties simulées

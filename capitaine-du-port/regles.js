@@ -179,4 +179,17 @@ function capGenerer(r, o) {
   return { plan: P.map(l => l.join('')), sortie, opt: bd };
 }
 
-if (typeof module !== 'undefined') module.exports = { capLire, capDepart, capOccupation, capLimites, capCoup, capGagne, capResoudre, capEtoiles, capSeuil3, capSeuil2, capSolTexte, capSolLire, capHasard, capGenerer };
+/* ---------- le bassin du jour : tiré de la date (AAAAMMJJ), le même pour toute la famille ----------
+   6 × 6, 9 à 12 bateaux (petites composantes seulement, pour rester rapide sur le téléphone : ~0,5 s sous Node) ; un jour sur trois un bateau de 4 cases peut sortir, un jour sur quatre une bouée.
+   Gardé seulement si l'optimum tombe entre 12 et 30 coups. */
+function capBassinDuJour(j) {
+  const r = capHasard(j * 7919 + 13);
+  for (let essai = 0; essai < 400; essai++) {
+    const o = { w: 6, sorties: [1, 2, 3, 4], bateaux: 9 + Math.floor(r() * 4), p3: .45, p4: j % 3 === 0 ? .1 : 0, fixes: j % 4 === 0 ? 1 : 0, min: 12, max: 30, maxEtats: 8000 };
+    const g = capGenerer(r, o);
+    if (g) return g;
+  }
+  return { plan: ['......', '......', '..AA..', '......', '..D...', '..D...'], sortie: 2, opt: 1 };   // secours (jamais atteint en pratique)
+}
+
+if (typeof module !== 'undefined') module.exports = { capLire, capDepart, capOccupation, capLimites, capCoup, capGagne, capResoudre, capEtoiles, capSeuil3, capSeuil2, capSolTexte, capSolLire, capHasard, capGenerer, capBassinDuJour };

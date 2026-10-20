@@ -47,6 +47,8 @@ const GAMES = [
    d: "Le Yams classique avec de vrais dés en 3D : lance-les d'un geste, garde les bons et remplis les 13 cases de la feuille. Six styles de dés à débloquer, de la taverne à la Lune.", tags: ["3D", "DÉS", "6 STYLES"]},
   {k: "odyssee/index.html", n: "ODYSSEE", s: "ODYSSEE", ic: "galere", fam: "3d", lb: "linear-gradient(#9fdcff, #1fb0c9)", lt: "#13506e", sh: "#2bb3cf", rank: "odyssee",
    d: "Penche le téléphone pour ramener la galère d'Ulysse de Troie à Ithaque : Polyphème, Éole, Circé, les Sirènes, Charybde et Scylla… 30 plateaux en 3D et un plateau du jour pour toute la famille.", tags: ["3D", "PLATEAU DU JOUR"]},
+  {k: "capitaine-du-port/index.html", n: "CAPITAINE DU PORT", s: "CAPITAINE", ic: "remorqueur", fam: "32", lb: "linear-gradient(#2a7c97, #163f66)", lt: "#ffd23f", sh: "#2a7c97", rank: "capitaine",
+   d: "Le port est encombré : glisse les bateaux dans leur longueur pour ouvrir la passe au navire doré. 60 bassins en 5 ports (pêche, commerce, marina, chantier naval, grand port), en pixel art 32 bits, et un bassin du jour pour toute la famille.", tags: ["PUZZLE", "60 BASSINS", "DU JOUR"]},
   {k: "magasinier/index.html", n: "LE MAGASINIER", s: "MAGASINIER", ic: "caisse", fam: "3d", lb: "linear-gradient(#f6d39a, #a8683a)", lt: "#3a2414", sh: "#e8963a", rank: "magasinier",
    d: "Pousse les caisses sur les marques, dans un entrepôt baigné de soleil en HD-2D. 60 niveaux en 5 entrepôts, avec de la glace, des tapis roulants et des caisses en fonte, et une grille du jour pour toute la famille.", tags: ["3D", "PUZZLE", "GRILLE DU JOUR"]},
   {k: "nebula/index.html", n: "NEBULA", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
@@ -67,6 +69,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "capitaine-du-port/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
   "magasinier/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
   "yams/index.html": {added: "2026-10-17", genres: ["HASARD"]},
   "escadrille/index.html": {added: "2026-10-17", updated: "2026-10-19", genres: ["TACTIQUE"]},
@@ -93,6 +96,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-20", "Nouveau jeu : Capitaine du port, un casse-tête de bateaux en pixel art 32 bits. Glisse les bateaux du bassin pour ouvrir la passe au navire doré, dans 60 bassins et 5 ports (bouées, épaves, grands navires de 4 cases, grand port en 7 × 7), et tente le bassin du jour : une seule tentative classée, au plus petit nombre de coups."],
   ["2026-10-20", "Nouveau jeu : Le Magasinier, un Sokoban en HD-2D façon Octopath Traveler. Pousse les caisses sur les marques dans 60 niveaux et 5 entrepôts (glace, tapis roulants, caisses en fonte), et tente la grille du jour : une seule tentative classée, au plus petit nombre de coups."],
   ["2026-10-19", "Accueil retouché : le nom de chaque jeu sous sa cartouche, une légende des marques sous le gardien, le jeu à la une en bandeau, un volet plus léger (titre qui reste en haut, JOUER dans sa barre, le classement se rejoint en bas de l'accueil)."],
   ["2026-10-19", "Escadrille ! : choisis tes avions au hangar (onglet AVIONS). Six nouveaux avions à débloquer, dans les quatre familles : le bombardier d'attaque et ses roquettes, le ravitailleur qui remet un avion à neuf, l'avion de patrouille qui compte une ligne et une colonne, le brouilleur et ses leurres, les ballons de barrage et leur DCA, le drone et sa caméra. Les pirates s'en servent aussi en Pilote et en As."],
@@ -158,6 +162,8 @@ const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))
 const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
 // ce qui attend d'être repris (null si rien)
 const PROGRESS = {
+  "capitaine-du-port/index.html": () => { const d = rk("capitaine.dailyRun", null), p = rk("capitaine.partie", null);
+    return d && d.j === dayNum() ? "BASSIN DU JOUR" : p && p.coups ? "BASSIN " + (p.n + 1) : null; },
   "magasinier/index.html": () => { const d = rk("magasinier.dailyRun", null), p = rk("magasinier.partie", null);
     return d && d.j === dayNum() ? "GRILLE DU JOUR" : p && p.chemin ? "NIVEAU " + (p.n + 1) : null; },
   "yams/index.html": () => { const p = rk("yams.partie", null); return p && p.tour < 13 ? `TOUR ${p.tour + 1}/13` : null; },
@@ -175,6 +181,7 @@ const PROGRESS = {
 };
 // défi du jour : null = pas de défi du jour, false = à faire, true = joué (puzzles : réussi ; missions : tentative commencée)
 const TODAY = {
+  "capitaine-du-port/index.html": () => !!(rk("capitaine.daily", {}) || {})[dayNum()],
   "queens/index.html": () => !!(rk("queens16.daily", {}) || {})[dayNum()],
   "sudoku/index.html": () => !!(rk("sudoku.daily", {}) || {})[dayNum()],
   "pont-stellaire/index.html": () => !!(rk("pontstellaire.daily", {}) || {})[dayNum()],
@@ -192,6 +199,8 @@ const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catc
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
 const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
 const RECS = {
+  "capitaine-du-port/index.html": () => { const f = rk("capitaine.niveaux", {}) || {}, n = Object.values(f).reduce((a, v) => a + (Number(v && v.etoiles) || 0), 0);
+    return [["Étoiles", n ? n + " / 180" : null], ["Bassins réussis", num(count(f))], ["Bassins du jour", num(count(rk("capitaine.daily", {})))]]; },
   "tetris/index.html": () => [["Meilleur score", num(rk("tetris16.best", 0))]],
   "snake/index.html": () => [["Meilleur score", num(rk("snakeBestScore", 0))]],
   "asteroids/index.html": () => [["Meilleur score", num(rk("asteroids16.best", 0))]],
@@ -491,6 +500,11 @@ const RANKS = {
      title: () => `60 SECONDES · ${CCLVL.find(m => m[0] === st.cclvl)[1]} · ${CCOP.find(m => m[0] === st.ccop)[1]}`, note: "Le plus de bonnes réponses en une minute."}],
   lunerover: [{label: "ETOILES", game: "lunerover", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
      note: "Par niveau : 3 étoiles pour le programme le plus court, 2 avec jusqu'à 2 instructions de plus, 1 sinon (90 au maximum)."}],
+  capitaine: [{label: "ETOILES", game: "capitaine", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
+     note: "Par bassin : 3 étoiles jusqu'à 10 % au-dessus du minimum de coups (au moins un coup de marge), 2 jusqu'à 50 % au-dessus, sinon 1 (180 au maximum)."},
+    {label: "BASSIN DU JOUR", ctl: ["day"], game: "capitaine", board: daily, fmt: v => N(v) + (v > 1 ? " coups" : " coup"), title: () => "BASSIN DU JOUR",
+     note: "Le même bassin pour toute la famille ; le moins de coups gagne, en comptant ceux qu'on annule et ceux d'avant un recommencement. Une seule tentative classée par jour.",
+     empty: () => st.back ? "Aucun navire doré n'est rentré au port ce jour-là." : "Personne n'a encore tenté le bassin du jour : à toi !"}],
   magasinier: [{label: "ETOILES", game: "magasinier", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
      note: "Par niveau : 3 étoiles au plus 10 % au-dessus du minimum de coups, 2 au plus 50 % au-dessus, sinon 1 (180 au maximum)."},
     {label: "GRILLE DU JOUR", ctl: ["day"], game: "magasinier", board: daily, fmt: v => N(v) + (v > 1 ? " coups" : " coup"), title: () => "GRILLE DU JOUR",
@@ -841,6 +855,8 @@ function collectSaves(){
   if (Object.keys(od.s).length || Object.keys(od.d).length) g.odyssee = od;
   const mg = {n: readKey("magasinier.niveaux", {}) || {}, d: readKey("magasinier.daily", {}) || {}};
   if (Object.keys(mg.n).length || Object.keys(mg.d).length) g.magasinier = mg;
+  const cp = {n: readKey("capitaine.niveaux", {}) || {}, d: readKey("capitaine.daily", {}) || {}};
+  if (Object.keys(cp.n).length || Object.keys(cp.d).length) g.capitaine = cp;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
   return g;
@@ -875,6 +891,8 @@ function describeSaves(g){
   if (g.odyssee){ const n = Object.values(g.odyssee.s || {}).reduce((s, v) => s + (Number(v) || 0), 0); out.push(`Odyssée : ${n} étoile${n > 1 ? "s" : ""}`); }
   if (g.magasinier){ const n = Object.values(g.magasinier.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.magasinier.d || {}).length;
     out.push(`Le Magasinier : ${n} étoile${n > 1 ? "s" : ""}${d ? `, ${d} grille${d > 1 ? "s" : ""} du jour` : ""}`); }
+  if (g.capitaine){ const n = Object.values(g.capitaine.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.capitaine.d || {}).length;
+    out.push(`Capitaine du port : ${n} étoile${n > 1 ? "s" : ""}${d ? `, ${d} bassin${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
   return out;
 }
@@ -1024,6 +1042,15 @@ function mergeSaves(g){
       if (!m || v.coups < m.coups || et > m.etoiles){ niv[k] = {coups: Math.round(m ? Math.min(m.coups, v.coups) : v.coups), etoiles: Math.max(et, m ? m.etoiles : 0)}; n++; } }
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
     if (n){ writeKey("magasinier.niveaux", niv); writeKey("magasinier.daily", daily); done.push(`Le Magasinier : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.capitaine && typeof g.capitaine === "object"){
+    // fusion : pour chaque bassin, le moins de coups et le plus d'étoiles ; pour chaque bassin du jour, le moins de coups
+    const a = g.capitaine, niv = readKey("capitaine.niveaux", {}) || {}, daily = readKey("capitaine.daily", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(a.n || {})) { if (!/^\d{1,2}$/.test(k) || !v || !(v.coups > 0)) continue;
+      const m = niv[k], et = Math.min(3, Math.max(1, Math.round(v.etoiles) || 1));
+      if (!m || v.coups < m.coups || et > m.etoiles){ niv[k] = {coups: Math.round(m ? Math.min(m.coups, v.coups) : v.coups), etoiles: Math.max(et, m ? m.etoiles : 0)}; n++; } }
+    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
+    if (n){ writeKey("capitaine.niveaux", niv); writeKey("capitaine.daily", daily); done.push(`Capitaine du port : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.pontstellaire && typeof g.pontstellaire === "object"){
     const p = g.pontstellaire, best = readKey("pontstellaire.best", {}) || {}, daily = readKey("pontstellaire.daily", {}) || {}; let n = 0;

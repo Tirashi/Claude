@@ -8,6 +8,7 @@
    - Picross Dex : chaque dessin se résout ligne par ligne, sans deviner (donc une seule solution) ;
    - Yams : points de chaque case pour des mains connues, bonus de 35 ;
    - Amiral ! : bataille du jour (flottes complètes, mêmes flottes et même placement ennemi pour tous) ;
+   - Capitaine du port : bassin du jour des 20 prochains jours (optimum de 12 à 30 coups, vérifié par le solveur, le même pour tous, vite généré) ;
    - accueil : transfert de sauvegarde LUDO1- (exporter, vider, importer : tout revient).
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/logique.js [jours]   (code de sortie 1 en cas d'erreur) */
@@ -154,12 +155,22 @@ const TESTS = {
     S.phase = 'title';
     return out;
   }, D.map(d => ({ k: d.k }))),
+  'capitaine-du-port/index.html': async (p, D) => p.evaluate(D => {
+    const out = [];
+    for (const { k } of D.slice(0, 20)) {
+      const t0 = performance.now(), b = capBassinDuJour(k), dt = performance.now() - t0, s = capResoudre(capLire(b));
+      if (!s || s.coups !== b.opt || b.opt < 12 || b.opt > 30) out.push(`bassin du ${k} : optimum ${s ? s.coups : '?'} pour ${b.opt} annoncé`);
+      if (JSON.stringify(capBassinDuJour(k)) !== JSON.stringify(b)) out.push(`bassin du ${k} : deux tirages différents`);
+      if (dt > 6000) out.push(`bassin du ${k} : ${Math.round(dt)} ms pour le générer`);
+    }
+    return out;
+  }, D),
   'index.html': async p => p.evaluate(() => {
     // des records dans plusieurs jeux, exportés en LUDO1-, effacés, puis réimportés
     const recs = { 'tetris16.best': 1234, 'queens16.best': { 6: 41000 }, 'sudoku.best': { '9-2': 300000 }, 'orbite.stars': { 3: 2 }, 'yams.best': 250, 'escadrille.best': { normal: 12 },
       'odyssee.stars': { '1-2': 3 }, 'nebula.best': 900, 'lunerover.stars': { 4: 3 }, 'amiral.best': { hard: 30 }, 'pontstellaire.best': { 9: 90000 },
       'amiral.palmares': { victoires: 3, normal: 1 }, 'amiral.daily': { 20261019: 24 }, 'magasinier.niveaux': { 0: { coups: 7, etoiles: 2 }, 13: { coups: 9, etoiles: 3 } },
-      'magasinier.daily': { 20261020: 41 } };
+      'magasinier.daily': { 20261020: 41 }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 } };
     const A = window.Accueil, keep = { ...localStorage }; localStorage.clear();
     for (const [k, v] of Object.entries(recs)) localStorage.setItem(k, JSON.stringify(v));
     const code = 'LUDO1-' + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, g: A.collectSaves() }))));
