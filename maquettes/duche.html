@@ -1,0 +1,366 @@
+<title>Duché</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@600;700&family=Cinzel:wght@700&family=Fredoka:wght@400;600&display=swap">
+<style>
+/* Maquette de Duché : la même situation (tour 7, été de l'an 2) dans trois directions, sur un écran de téléphone.
+   Page sombre comme les autres maquettes ; chaque écran : pixel art 216 × 384 agrandi sans lissage + textes sur la toile fine. */
+:root{
+  --fond:#14110d; --texte:#f1ebe0; --doux:#b4a993; --or:#f0c24a; --cadre:#050403; --ligne:#2c261d;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000;text-wrap:balance}
+header p{margin:10px 0 0;color:var(--doux);max-width:70ch}
+header b{color:var(--texte);font-weight:600}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px 24px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%}
+.tel{width:100%;max-width:340px;aspect-ratio:216/384;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;box-sizing:content-box;max-width:min(340px,calc(100% - 18px))}
+.tel canvas{width:100%;height:100%;display:block;cursor:pointer;touch-action:manipulation}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);max-width:320px;font-size:15px;text-align:center}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0}
+section.q ol{margin:0;padding-left:22px;max-width:74ch;display:flex;flex-direction:column;gap:6px}
+section.q li span{color:var(--doux)}
+</style>
+
+<div class="page">
+<header>
+  <h1>DUCHE</h1>
+  <p>Votre duché (bannière <b>or</b>, en bas à gauche) contre trois seigneurs : <b>Baron Corvin</b> (rouge), <b>Dame Ysolde</b> (bleu) et <b>Comte Aldric</b> (violet). Tour 7, été de l'an 2. <b>Touchez une terre</b> pour voir son panneau : une de vos terres propose de construire ou de recruter ; une terre voisine, d'attaquer, avec la chance de victoire. Les plaines voisines tenues par des brigands sont de bonnes premières cibles.</p>
+</header>
+
+<div class="grille">
+  <div class="dir">
+    <div class="tel"><canvas data-dir="A" width="648" height="1152" aria-label="Direction A : carte vue de dessus en pixel art 32 bits"></canvas></div>
+    <h2>A · DIORAMA 32 BITS</h2>
+    <p>Vue de dessus façon planche des coups de cœur : arbres en volume, montagnes enneigées, rivière qui scintille. Frontières de la couleur de chaque seigneur, plaques de bois et polices d'Amiral !.</p>
+  </div>
+  <div class="dir">
+    <div class="tel"><canvas data-dir="B" width="648" height="1152" aria-label="Direction B : carte enluminée sur parchemin"></canvas></div>
+    <h2>B · CARTE ENLUMINEE</h2>
+    <p>La carte du chambellan : parchemin, terrains dessinés à l'encre, lavis de couleur pour chaque seigneur, sceaux de cire pour les garnisons. Titres en capitales gravées.</p>
+  </div>
+  <div class="dir">
+    <div class="tel"><canvas data-dir="C" width="648" height="1152" aria-label="Direction C : petit diorama isométrique"></canvas></div>
+    <h2>C · DIORAMA ISOMETRIQUE</h2>
+    <p>Les 36 terres en losanges, en relief : montagnes plus hautes, châteaux debout. Plus vivant, mais les terres sont plus petites sous le doigt, d'où un panneau plus grand.</p>
+  </div>
+</div>
+
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ol>
+    <li>Quelle direction : A, B ou C ? <span>(ou un mélange, par exemple la carte de A avec les panneaux de B)</span></li>
+    <li>La partie libre envoie-t-elle son meilleur score au classement, comme les autres jeux, ou rien ?</li>
+    <li>30 tours (15 à 25 minutes) vous vont, ou une partie plus courte de 20 tours ?</li>
+    <li>Duché remplace bien l'idée « Le Petit Royaume » ?</li>
+  </ol>
+</section>
+</div>
+
+<script>
+(function(){
+const W=216,H=384,K=3;
+// ---------- la situation montrée ----------
+const TER=["ffcmmc","pfrcmf","pprpcf","sprpfp","pfrpsp","pprfpp"];
+const NOMT={p:"PLAINE",f:"FORET",m:"MONTAGNE",c:"COLLINE",s:"MARAIS",r:"RIVIERE"};
+const DEF={p:0,f:1,m:3,c:2,s:1,r:0};
+const REND={p:"2 nourriture",f:"2 bois",m:"2 or",c:"1 bois, 1 or",s:"1 nourriture",r:"1 nourriture, 1 or"};
+const QUAL=["232132","121312","312221","123132","231213","213122"];
+const SEIG={J:{nom:"VOTRE DUCHE",c:"#f2c230",f:"#8a6410"},R:{nom:"BARON CORVIN",c:"#d8403a",f:"#7a1a18",t:"Agressif · Traître"},B:{nom:"DAME YSOLDE",c:"#4a86e0",f:"#1c3c78",t:"Marchande · Pieuse"},V:{nom:"COMTE ALDRIC",c:"#a05ad0",f:"#4a2468",t:"Bâtisseur · Isolationniste"}};
+const PROP=["BB..RR","B....R","......","J.....","JJ...V","JJ..VV"];
+const BAT={"0,0":"chateau","1,0":"marche","5,0":"chateau","4,0":"mine","5,1":"tour","0,5":"chateau","1,5":"ferme","0,4":"caserne","1,4":"scierie","5,5":"chateau","4,5":"ferme"};
+const NOMB={chateau:"Château",marche:"Marché",mine:"Mine",tour:"Tour de guet",ferme:"Ferme",caserne:"Caserne",scierie:"Scierie"};
+const DEFB={chateau:5,tour:2};
+const GARN={"0,0":5,"5,0":8,"5,1":3,"0,5":6,"0,4":4,"1,4":4,"0,3":1,"5,5":5,"3,2":4,"4,3":3,"1,3":3,"2,1":2};
+const prop=(x,y)=>PROP[y][x]==="."?null:PROP[y][x];
+const garn=(x,y)=>GARN[x+","+y]||0;
+function voisinJoueur(x,y){return [[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>{const X=x+a,Y=y+b;return X>=0&&Y>=0&&X<6&&Y<6&&prop(X,Y)==="J";});}
+function attaquants(x,y){let n=0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const X=x+a,Y=y+b;if(X>=0&&Y>=0&&X<6&&Y<6&&prop(X,Y)==="J")n+=garn(X,Y);});return n;}
+
+// ---------- outils de dessin ----------
+function hasard(s){return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+function P(g){return{r:(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),w,h);},g};}
+const ICO={
+  ble:["...y...",".y.y.y.","..yyy..",".y.y.y.","..yyy..","...g...","...g..."],
+  bois:[".......","bbbbbb.","BbbbbbO","bbbbbb.","BbbbbbO","bbbbbb.","......."],
+  or:["..ooo..",".oOOOo.","oOoooOo","oOoooOo","oOoooOo",".oOOOo.","..ooo.."],
+  epee:["......w","....ww.","...ww..","h.ww...",".hw....","hhh....","h.h...."],
+  couronne:["y..y..y","yy.y.yy","yyyyyyy","yrYbYry","yyyyyyy",".......","......."],
+};
+const ICOC={y:"#f2d250",g:"#6aa040",b:"#a06a34",B:"#6a4020",O:"#d8a060",o:"#f0c030",O_:"",w:"#e8eef4",h:"#8a5a28",r:"#d03030",Y:"#fff0a0"};
+ICOC.O="#a06a34";
+function icone(p,nom,x,y,col){const m=ICO[nom];m.forEach((l,j)=>[...l].forEach((c,i)=>{if(c===".")return;let k=ICOC[c];if(nom==="or")k=c==="O"?"#c88a10":"#f8d040";if(nom==="bois")k=c==="B"?"#6a4020":c==="O"?"#e0b070":"#a06a34";if(col)k=col;p.r(x+i,y+j,1,1,k);}));}
+
+// ---------- terrains vus de dessus (A) ----------
+function herbe(p,x,y,s,base,cl,fo,rnd){p.r(x,y,s,s,base);for(let i=0;i<26;i++){p.r(x+rnd()*s,y+rnd()*s,1,1,rnd()<.5?cl:fo);}}
+function arbre(p,x,y,r){p.r(x-r+1,y+r-1,r*2,2,"rgba(0,0,0,.25)");for(let j=-r;j<=r;j++){const w=Math.round(Math.sqrt(r*r-j*j));p.r(x-w,y+j,w*2,1,j<-r/3?"#5fae44":j<r/3?"#3d8a32":"#2a6624");}p.r(x-1,y-r+1,2,1,"#8fd060");}
+function terrainA(p,t,x,y,s,q,rnd){
+  if(t==="p"){herbe(p,x,y,s,"#78b04c","#94c860","#5e963c",rnd);for(let i=0;i<q*2;i++){const a=x+4+rnd()*(s-8),b=y+4+rnd()*(s-8);p.r(a,b,1,3,"#d8c060");p.r(a-1,b,3,1,"#f0d878");}}
+  else if(t==="f"){herbe(p,x,y,s,"#4e8a3a","#5e9c44","#3c7030",rnd);const pts=[[8,9],[21,7],[13,18],[26,19],[7,26],[19,28],[28,29]];pts.slice(0,4+q).forEach(([a,b])=>arbre(p,x+a,y+b,4+(rnd()<.4?1:0)));}
+  else if(t==="m"){herbe(p,x,y,s,"#8a9a6a","#9aaa78","#6e7e56",rnd);const pic=(cx,by,h)=>{for(let j=0;j<h;j++){const w=Math.round(j*.95);p.r(cx-w,by-h+j,w,1,"#a8a8b0");p.r(cx,by-h+j,w+1,1,"#6c6c7a");if(j<h*.32){p.r(cx-w,by-h+j,w,1,"#f4f6fa");p.r(cx,by-h+j,w+1,1,"#c4cad8");}}};pic(x+12,y+24,15);pic(x+23,y+30,17);if(q>2)pic(x+7,y+32,9);}
+  else if(t==="c"){herbe(p,x,y,s,"#82a850","#98bc60","#668a40",rnd);const bosse=(cx,cy,r)=>{for(let j=-r;j<=0;j++){const w=Math.round(Math.sqrt(r*r-j*j)*1.4);p.r(cx-w,cy+j,w*2,1,j<-r*.6?"#b0cc70":"#94b85c");}p.r(cx-r*1.4,cy,r*2.8,1,"#5a7a38");};bosse(x+11,y+15,7);bosse(x+23,y+27,8);for(let i=0;i<q;i++)p.r(x+20+i*3,y+9,2,2,"#9a8a70");}
+  else if(t==="s"){herbe(p,x,y,s,"#64824c","#748e58","#4e6a3c",rnd);[[5,8,10],[17,14,12],[7,22,9],[20,27,10]].forEach(([a,b,w])=>{p.r(x+a,y+b,w,3,"#4a7a7e");p.r(x+a+1,y+b,w-3,1,"#7ab0b0");});for(let i=0;i<8;i++){const a=x+3+rnd()*(s-6),b=y+3+rnd()*(s-8);p.r(a,b,1,4,"#3a5a28");p.r(a,b,1,1,"#8a6030");}}
+  else if(t==="r"){herbe(p,x,y,s,"#74aa4a","#8cc05c","#5a903c",rnd);p.r(x+11,y,13,s,"#c8b880");p.r(x+12,y,11,s,"#2f78c0");p.r(x+14,y,6,s,"#3f8fd8");}
+}
+function riviereRides(p,x,y,s,f){for(let i=0;i<4;i++){const b=(y+((i*9+f*2)%s));p.r(x+14+(i%2)*3,b,3,1,"#a8e0f8");}}
+
+// ---------- bâtiments (petits sprites, ~16 px) ----------
+function sprite(p,b,cx,cy,coul,ink){
+  const r=p.r;
+  if(b==="chateau"){
+    r(cx-10,cy-2,20,12,ink?"rgba(0,0,0,0)":"rgba(0,0,0,.25)");
+    const mur=ink?"#e8d4a6":"#b8b0a4",om=ink?"#5a3b1e":"#7c7468",cl=ink?"#5a3b1e":"#d8d2c8";
+    r(cx-9,cy-6,18,12,mur);r(cx-9,cy+5,18,1,om);r(cx-9,cy-6,1,12,om);r(cx+8,cy-6,1,12,om);
+    for(let i=0;i<5;i++)r(cx-9+i*4,cy-8,2,2,mur);
+    [-11,8].forEach(d=>{r(cx+d,cy-11,4,17,mur);r(cx+d,cy-11,4,1,cl);r(cx+d+3,cy-11,1,17,om);r(cx+d-1,cy-13,6,2,ink?"#5a3b1e":"#6a6460");});
+    r(cx-2,cy,4,5,ink?"#5a3b1e":"#3a2a1a");r(cx-2,cy-1,4,1,om);
+    r(cx-4,cy-14,6,12,mur);r(cx-4,cy-16,2,2,mur);r(cx,cy-16,2,2,mur);r(cx+1,cy-14,1,12,om);
+    r(cx-1,cy-24,1,9,ink?"#3a2410":"#4a3a2a");r(cx,cy-24,7,5,coul);r(cx,cy-20,6,1,"rgba(0,0,0,.3)");
+  } else if(b==="ferme"){
+    r(cx-8,cy+2,16,6,ink?"#c9b27a":"#d8c060");for(let i=0;i<4;i++)r(cx-7+i*4,cy+3,1,4,ink?"#7a5a2a":"#b09030");
+    r(cx-6,cy-6,10,8,ink?"#e8d4a6":"#c03828");r(cx-7,cy-7,12,2,ink?"#5a3b1e":"#e05a40");r(cx-2,cy-2,3,4,ink?"#5a3b1e":"#5a2a14");r(cx-6,cy+1,10,1,ink?"#5a3b1e":"#7a2014");
+  } else if(b==="scierie"){
+    r(cx-7,cy-5,9,8,ink?"#e8d4a6":"#9a6a3a");r(cx-8,cy-7,11,3,ink?"#5a3b1e":"#6a4020");
+    for(let i=0;i<3;i++){r(cx+2,cy+i*3-1,8,2,ink?"#7a5a2a":"#b07a40");r(cx+9,cy+i*3-1,1,2,ink?"#5a3b1e":"#e0b070");}
+  } else if(b==="caserne"){
+    for(let i=0;i<9;i++){r(cx-9+i*2,cy-4,1,10,ink?"#5a3b1e":"#8a5a2a");r(cx-9+i*2,cy-5,1,1,ink?"#5a3b1e":"#c08a50");}
+    r(cx-5,cy-9,10,7,coul);r(cx-6,cy-9,12,1,"rgba(255,255,255,.4)");r(cx,cy-9,1,7,"rgba(0,0,0,.3)");r(cx-1,cy-12,1,3,ink?"#3a2410":"#4a3a2a");
+  } else if(b==="marche"){
+    r(cx-8,cy-2,16,8,ink?"#e8d4a6":"#a87a48");for(let i=0;i<8;i++)r(cx-9+i*2,cy-7,2,5,i%2?(ink?"#e8d4a6":"#f0ece0"):coul);
+    r(cx-6,cy+1,3,3,"#e0b030");r(cx+2,cy+1,4,3,"#80b040");
+  } else if(b==="tour"){
+    r(cx-4,cy-12,8,18,ink?"#e8d4a6":"#a8a29a");r(cx+3,cy-12,1,18,ink?"#5a3b1e":"#6a645c");r(cx-5,cy-14,10,3,ink?"#5a3b1e":"#c8c2b8");r(cx-1,cy-8,2,3,ink?"#5a3b1e":"#2a2018");
+  } else if(b==="mine"){
+    r(cx-7,cy-4,14,10,ink?"#c9b27a":"#6a5a4a");r(cx-4,cy-1,8,7,ink?"#3a2410":"#1a120c");r(cx-5,cy-2,10,1,ink?"#5a3b1e":"#8a6a40");
+    r(cx+5,cy+4,5,3,ink?"#5a3b1e":"#5a5a62");r(cx+6,cy+3,3,1,"#f0c030");
+  }
+}
+
+// ---------- texte (sur la toile fine) ----------
+function T(g,txt,x,y,o){o=o||{};g.font=(o.w||"700")+" "+(o.s||8)*K+"px "+(o.f||"Rajdhani, sans-serif");g.textAlign=o.a||"left";g.textBaseline="middle";
+  if(o.ombre!==false){g.fillStyle=o.o||"#120c08";g.fillText(txt,x*K+K*.7,y*K+K*.7);}g.fillStyle=o.c||"#fff";g.fillText(txt,x*K,y*K);}
+const PS="'Press Start 2P', monospace",RJ="Rajdhani, sans-serif",CZ="Cinzel, Georgia, serif";
+
+// ---------- panneau de la terre choisie (commun, habillé selon la direction) ----------
+function infos(x,y){
+  const t=TER[y][x],q=+QUAL[y][x],o=prop(x,y),b=BAT[x+","+y],g=garn(x,y);
+  const def=g+DEF[t]+(DEFB[b]||0);
+  const qui=o?SEIG[o]:null;
+  let titre=NOMT[t]+" "+"★".repeat(q),sous=o?qui.nom:(g?"BRIGANDS":"TERRE LIBRE");
+  let ligne1=(b?NOMB[b]+" · ":"")+"rend "+REND[t]+(q>1?" ×"+q:""),ligne2=g?g+" soldats · défense "+def:"aucune garnison · défense "+def;
+  let act;
+  if(o==="J")act={k:"moi",b:!b};
+  else if(voisinJoueur(x,y)){const a=attaquants(x,y);act={k:"att",a,def,ch:Math.round(100*a/(a+def))};}
+  else act={k:"loin"};
+  return{t,q,o,b,g,titre,sous,ligne1,ligne2,act,traits:qui&&qui.t,coul:qui?qui.c:"#c8c0b0"};
+}
+
+// ================= A =================
+function dessinerA(p,G,sel,f){
+  const r=p.r,S=34,X0=6,Y0=40;
+  // fond bois
+  r(0,0,W,H,"#2a1c12");for(let j=0;j<H;j+=3)r(0,j,W,1,"rgba(0,0,0,.12)");
+  // barre du haut
+  plaque(r,3,3,210,32,"#5a3a20","#3a2412","#a87a40");
+  // carte
+  r(X0-3,Y0-3,S*6+6,S*6+6,"#1a100a");r(X0-2,Y0-2,S*6+4,S*6+4,"#8a6a3a");
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const rnd=hasard(x*13+y*71+5);terrainA(p,TER[y][x],X0+x*S,Y0+y*S,S,+QUAL[y][x],rnd);if(TER[y][x]==="r")riviereRides(p,X0+x*S,Y0+y*S,S,f);}
+  // teinte et frontières
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const o=prop(x,y);if(!o)continue;const c=SEIG[o].c,px=X0+x*S,py=Y0+y*S;
+    G.globalAlpha=.16;r(px,py,S,S,c);G.globalAlpha=1;
+    const bord=(X,Y)=>X<0||Y<0||X>5||Y>5||prop(X,Y)!==o;
+    if(bord(x,y-1)){r(px,py,S,2,c);for(let i=0;i<S;i+=4)r(px+i,py+2,2,1,SEIG[o].f);}
+    if(bord(x,y+1)){r(px,py+S-2,S,2,c);}
+    if(bord(x-1,y)){r(px,py,2,S,c);}
+    if(bord(x+1,y)){r(px+S-2,py,2,S,c);}
+  }
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const b=BAT[x+","+y];if(b)sprite(p,b,X0+x*S+17,Y0+y*S+(b==="chateau"?20:18),SEIG[prop(x,y)]?SEIG[prop(x,y)].c:"#ccc");}
+  // écussons de garnison
+  const ecus=[];
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const g=garn(x,y);if(!g)continue;const o=prop(x,y),c=o?SEIG[o].c:"#8a8478",px=X0+x*S+S-12,py=Y0+y*S+S-12;
+    r(px,py,10,10,"#120c08");r(px+1,py+1,8,7,c);r(px+2,py+8,6,1,c);r(px+3,py+9,4,1,c);r(px+1,py+1,8,1,"rgba(255,255,255,.35)");ecus.push([px+5,py+5,g]);}
+  // sélection
+  if(sel){const px=X0+sel[0]*S,py=Y0+sel[1]*S,c=f%2?"#fff6c0":"#f0c24a";[[0,0],[S-5,0],[0,S-5],[S-5,S-5]].forEach(([a,b])=>{r(px+a,py+b,5,1,c);r(px+a,py+b+4,5,1,c);r(px+a,py+b,1,5,c);r(px+a+4,py+b,1,5,c);});r(px,py,S,1,c);r(px,py+S-1,S,1,c);r(px,py,1,S,c);r(px+S-1,py,1,S,c);}
+  // journal
+  plaque(r,3,250,210,14,"#3a2614","#24160c","#6a4a28");
+  // panneau
+  plaque(r,3,267,210,114,"#5a3a20","#3a2412","#a87a40");
+  return {X0,Y0,S,ecus};
+}
+function plaque(r,x,y,w,h,haut,bas,lis){r(x,y,w,h,"#120c08");r(x+1,y+1,w-2,h-2,bas);r(x+1,y+1,w-2,Math.floor(h/2),haut);r(x+2,y+2,w-4,1,lis);r(x+2,y+2,1,h-4,lis);r(x+w-3,y+2,1,h-4,"rgba(0,0,0,.4)");r(x+2,y+h-3,w-4,1,"rgba(0,0,0,.4)");}
+function bouton(r,x,y,w,h,c1,c2,lis){r(x,y,w,h,"#120c08");r(x+1,y+1,w-2,h-2,c2);r(x+1,y+1,w-2,Math.floor((h-2)/2),c1);r(x+2,y+2,w-4,1,lis);}
+function hudA(p,G,d){
+  const r=p.r;
+  [["ble",8,"34"],["bois",46,"22"],["or",80,"17"],["epee",112,"12/15"]].forEach(([n,x])=>icone(p,n,x,8));
+  icone(p,"couronne",8,23);r(19,23,62,7,"#120c08");r(20,24,60,5,"#2a1a10");r(20,24,Math.round(60*.38),5,"#e0b030");r(20,24,Math.round(60*.38),1,"#fff0a0");
+}
+function textesA(g,d,inf){
+  T(g,"34",17,11.5,{s:9});T(g,"22",55,11.5,{s:9});T(g,"17",89,11.5,{s:9});T(g,"12/15",121,11.5,{s:9});
+  T(g,"38",85,26.5,{s:9,c:"#f0c24a"});T(g,"LEGITIMITE",101,26.5,{s:7,c:"#d8c09a"});
+  T(g,"TOUR 7/30",208,12,{f:PS,s:6,a:"right",c:"#f0c24a",w:"400"});T(g,"ÉTÉ · AN 2",208,26,{s:8,a:"right",c:"#d8c09a"});
+  d.ecus.forEach(([x,y,n])=>T(g,String(n),x,y+.5,{s:8,a:"center",w:"700",o:"#000"}));
+  T(g,"Dame Ysolde a bâti un marché. Les brigands rôdent à l'est.",8,257,{s:7.5,c:"#e8d8b8",ombre:false});
+  panneauTexte(g,inf,{t1:{f:PS,s:6.5,c:"#f0c24a",w:"400"},y:268,c:"#f1e6d0",d:"#c8b08a"});
+}
+function boutonsPanneau(p,inf,y,st){
+  const r=p.r;
+  if(inf.act.k==="att"){
+    st.btn(10,y+56,22,20,"−");st.btn(70,y+56,22,20,"+");
+    st.btn(98,y+56,108,20,"ATTAQUER",true);
+  } else if(inf.act.k==="moi"){
+    st.btn(10,y+56,96,20,inf.act.b?"CONSTRUIRE":"AMÉLIORER");st.btn(110,y+56,96,20,"RECRUTER");
+  }
+  st.btn(10,y+84,196,22,"FIN DU TOUR",true);
+}
+function panneauTexte(g,inf,o){
+  const y=o.y;
+  T(g,inf.titre.replace(/★/g,""),10,y+9,o.t1);
+  const nT=inf.titre.replace(/★/g,"").length;
+  g.font="400 "+6.5*K+"px "+PS;const wt=g.measureText(inf.titre.replace(/★/g,"")).width/K;
+  T(g,"★".repeat(inf.q),12+wt,y+9,{s:8,c:"#f0c24a"});
+  g.fillStyle=inf.coul;T(g,inf.sous,206,y+9,{s:8.5,a:"right",c:o.ombre===false&&!inf.o?"#6a4a28":inf.coul,ombre:o.ombre});
+  T(g,inf.ligne1,10,y+21,{s:8,c:o.c,ombre:o.ombre});
+  T(g,inf.ligne2+(inf.traits?" · "+inf.traits:""),10,y+31,{s:8,c:o.d,ombre:o.ombre});
+  if(inf.act.k==="att"){T(g,inf.act.a+" soldats contre "+inf.act.def,10,y+44,{s:8.5,c:o.c,ombre:o.ombre});T(g,"CHANCE "+inf.act.ch+" %",206,y+44,{s:9,a:"right",c:(o.ch||["#8ee070","#f0c24a","#f07060"])[inf.act.ch>=60?0:inf.act.ch>=40?1:2],ombre:o.ombre});
+    T(g,String(inf.act.a),51,y+66,{f:PS,s:7,a:"center",c:o.c,w:"400",ombre:o.ombre});}
+  else if(inf.act.k==="loin")T(g,"Trop loin : attaquez une terre voisine de la vôtre.",10,y+44,{s:8,c:o.d,ombre:o.ombre});
+  else T(g,"Votre terre : bâtir, recruter ou déplacer des soldats.",10,y+44,{s:8,c:o.d,ombre:o.ombre});
+}
+
+// ================= B =================
+function dessinerB(p,G,sel,f){
+  const r=p.r,S=34,X0=6,Y0=40,rnd=hasard(99);
+  r(0,0,W,H,"#e6d2a2");for(let i=0;i<1600;i++)r(rnd()*W,rnd()*H,1,1,rnd()<.5?"#d8c08c":"#efdcae");
+  for(let i=0;i<10;i++){G.globalAlpha=.05+i*.012;r(0,0,W,10-i,"#6a4a20");r(0,H-10+i,W,10-i,"#6a4a20");r(0,0,10-i,H,"#6a4a20");r(W-10+i,0,10-i,H,"#6a4a20");}G.globalAlpha=1;
+  const encre="#5a3b1e";
+  // lavis des seigneurs
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const o=prop(x,y);if(!o)continue;G.globalAlpha=.32;r(X0+x*S,Y0+y*S,S,S,SEIG[o].c);G.globalAlpha=1;}
+  // cadre de la carte
+  r(X0-2,Y0-2,S*6+4,1,encre);r(X0-2,Y0+S*6+1,S*6+4,1,encre);r(X0-2,Y0-2,1,S*6+4,encre);r(X0+S*6+1,Y0-2,1,S*6+4,encre);
+  r(X0-4,Y0-4,S*6+8,1,encre);r(X0-4,Y0+S*6+3,S*6+8,1,encre);r(X0-4,Y0-4,1,S*6+8,encre);r(X0+S*6+3,Y0-4,1,S*6+8,encre);
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const t=TER[y][x],px=X0+x*S,py=Y0+y*S,q=+QUAL[y][x],rr=hasard(x*7+y*31);
+    if(t==="p"){for(let i=0;i<3+q*2;i++){const a=px+4+rr()*(S-10),b=py+5+rr()*(S-10);r(a,b,1,2,encre);r(a+2,b-1,1,3,encre);r(a+4,b,1,2,encre);}}
+    if(t==="f"){[[8,10],[20,8],[14,19],[26,20],[8,27],[21,28]].slice(0,3+q).forEach(([a,b])=>{const cx=px+a,cy=py+b;for(let j=-3;j<=2;j++){const w=Math.round(Math.sqrt(9-j*j)+.3);r(cx-w,cy+j,1,1,encre);r(cx+w,cy+j,1,1,encre);}r(cx-2,cy-4,5,1,encre);r(cx,cy+3,1,3,encre);r(cx-1,cy-1,2,2,"#7a9a48");});}
+    if(t==="m"){const pic=(cx,by,h)=>{for(let j=0;j<h;j++){const w=Math.round(j*.9);r(cx-w,by-h+j,1,1,encre);r(cx+w,by-h+j,1,1,encre);if(j%2===0&&j>2)r(cx+1,by-h+j,w-1,1,"#8a6a40");}r(cx-h,by,h*2+1,1,encre);};pic(px+12,py+22,13);pic(px+23,py+30,14);}
+    if(t==="c"){[[11,16,8],[23,27,9]].forEach(([a,b,w])=>{for(let i=-w;i<=w;i++){const yy=Math.round(Math.sqrt(1-(i/w)**2)*w*.55);r(px+a+i,py+b-yy,1,1,encre);}});}
+    if(t==="s"){for(let i=0;i<5;i++){const a=px+4+rr()*(S-14),b=py+5+i*6;r(a,b,8,1,encre);r(a+2,b-3,1,3,encre);r(a+5,b-2,1,2,encre);}}
+    if(t==="r"){for(let j=0;j<S;j++){const o=Math.round(Math.sin((py+j)/5)*2);r(px+14+o,py+j,1,1,"#3a6aa0");r(px+19+o,py+j,1,1,"#3a6aa0");r(px+15+o,py+j,4,1,"#9ab8c8");}}
+    if(q>2)r(px+3,py+3,2,2,"#b07a20");
+  }
+  // frontières à l'encre de couleur (pointillés)
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const o=prop(x,y);if(!o)continue;const c=SEIG[o].f,px=X0+x*S,py=Y0+y*S;const bord=(X,Y)=>X<0||Y<0||X>5||Y>5||prop(X,Y)!==o;
+    for(let i=0;i<S;i+=3){if(bord(x,y-1))r(px+i,py+1,2,1,c);if(bord(x,y+1))r(px+i,py+S-2,2,1,c);if(bord(x-1,y))r(px+1,py+i,1,2,c);if(bord(x+1,y))r(px+S-2,py+i,1,2,c);}}
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const b=BAT[x+","+y];if(b)sprite(p,b,X0+x*S+17,Y0+y*S+(b==="chateau"?20:18),SEIG[prop(x,y)]?SEIG[prop(x,y)].c:"#ccc",true);}
+  // sceaux de cire
+  const ecus=[];
+  for(let y=0;y<6;y++)for(let x=0;x<6;x++){const g=garn(x,y);if(!g)continue;const o=prop(x,y),c=o?SEIG[o].f:"#4a4038",cx=X0+x*S+S-7,cy=Y0+y*S+S-7;
+    for(let j=-5;j<=5;j++){const w=Math.round(Math.sqrt(30-j*j));r(cx-w,cy+j,w*2,1,c);}r(cx-3,cy-4,4,1,"rgba(255,255,255,.35)");ecus.push([cx,cy,g]);}
+  // rose des vents
+  if(sel){const px=X0+sel[0]*S,py=Y0+sel[1]*S;G.globalAlpha=f%2?.9:.6;for(let i=0;i<S;i+=2){r(px+i,py,1,2,"#b01818");r(px+i,py+S-2,1,2,"#b01818");r(px,py+i,2,1,"#b01818");r(px+S-2,py+i,2,1,"#b01818");}G.globalAlpha=1;}
+  // filets et panneau
+  r(6,36,204,1,encre);r(6,252,204,1,encre);
+  r(4,268,208,1,encre);r(4,380,208,1,encre);r(4,268,1,113,encre);r(211,268,1,113,encre);
+  return {X0,Y0,S,ecus};
+}
+function hudB(p){const r=p.r,e="#5a3b1e";[["ble",8],["bois",46],["or",80],["epee",112]].forEach(([n,x])=>icone(p,n,x,6));icone(p,"couronne",8,21);r(19,21,62,7,e);r(20,22,60,5,"#efdcae");r(20,22,Math.round(60*.38),5,"#b07a20");}
+function textesB(g,d,inf){
+  const e="#3e2610",o={ombre:false};
+  T(g,"34",17,9.5,{s:9,c:e,ombre:false});T(g,"22",55,9.5,{s:9,c:e,ombre:false});T(g,"17",89,9.5,{s:9,c:e,ombre:false});T(g,"12/15",121,9.5,{s:9,c:e,ombre:false});
+  T(g,"38",85,24.5,{s:9,c:"#8a4a10",ombre:false});T(g,"légitimité",101,24.5,{s:8,c:"#6a4a28",ombre:false});
+  T(g,"TOUR VII",208,10,{f:CZ,s:9,a:"right",c:"#7a1a10",ombre:false});T(g,"Été de l'an II",208,24,{s:8,a:"right",c:"#6a4a28",ombre:false,w:"600"});
+  d.ecus.forEach(([x,y,n])=>T(g,String(n),x,y+.5,{s:8,a:"center",c:"#fff2d8",ombre:false}));
+  T(g,"Dame Ysolde a bâti un marché. Les brigands rôdent à l'est.",8,260,{s:7.5,c:"#6a4a28",ombre:false,w:"600"});
+  panneauTexte(g,inf,{t1:{f:CZ,s:9,c:"#7a1a10",ombre:false},y:270,c:e,d:"#6a4a28",ombre:false,ch:["#2e6a18","#8a5a08","#a01810"]});
+}
+
+// ================= C =================
+function dessinerC(p,G,sel,f){
+  const r=p.r,TW=34,TH=17,CX=108,CY=92;
+  // ciel et brume
+  for(let j=0;j<H;j++)r(0,j,W,1,j<200?`rgb(${150+j*.25|0},${196+j*.12|0},${226})`:"#2a1c12");
+  for(let i=0;i<5;i++){r(20+i*40,20+(i%2)*8,22,4,"rgba(255,255,255,.55)");r(26+i*40,17+(i%2)*8,12,3,"rgba(255,255,255,.55)");}
+  const COUL={p:["#78b04c","#5e963c"],f:["#4e8a3a","#3c7030"],m:["#8a9a6a","#6e7e56"],c:["#82a850","#668a40"],s:["#64824c","#4e6a3c"],r:["#3f8fd8","#2f78c0"]};
+  const pos=(x,y)=>[CX+(x-y)*TW/2,CY+(x+y)*TH/2];
+  const losange=(cx,ty,c,c2,bord)=>{for(let j=0;j<TH;j++){const w=Math.round((j<TH/2?j:TH-1-j)*2+1);r(cx-w,ty+j,w*2,1,j%3===0?c2:c);}};
+  const ordre=[];for(let s=0;s<11;s++)for(let x=0;x<6;x++){const y=s-x;if(y>=0&&y<6)ordre.push([x,y]);}
+  // socle
+  const ecus=[];
+  for(const [x,y] of ordre){const [cx,ty]=pos(x,y),t=TER[y][x],[c,c2]=COUL[t];
+    // côtés
+    for(let j=0;j<6;j++){r(cx-TW/2+j*0,ty+TH/2+j,TW/2,1,"#8a6a40");r(cx,ty+TH/2+j,TW/2,1,"#6a4a28");}
+    for(let j=0;j<TH;j++){const w=Math.round((j<TH/2?j:TH-1-j)*2+1);r(cx-w,ty+j,w*2,1,c);if((j+x)%4===0)r(cx-w+3,ty+j,Math.max(0,w*2-6),1,c2);}
+    const o=prop(x,y);if(o){for(let j=0;j<TH;j++){const w=Math.round((j<TH/2?j:TH-1-j)*2+1);r(cx-w,ty+j,1,1,SEIG[o].c);r(cx+w-1,ty+j,1,1,SEIG[o].c);}G.globalAlpha=.18;for(let j=0;j<TH;j++){const w=Math.round((j<TH/2?j:TH-1-j)*2+1);r(cx-w,ty+j,w*2,1,SEIG[o].c);}G.globalAlpha=1;}
+    if(t==="r"){r(cx-3,ty+5+(f%3),3,1,"#a8e0f8");r(cx+2,ty+9+(f%2),3,1,"#a8e0f8");}
+    if(t==="f"){[[-7,8],[4,6],[-1,11],[8,10]].forEach(([a,b])=>{r(cx+a-1,ty+b-6,1,6,"#5a3a1a");for(let j=0;j<7;j++){const w=Math.round(j/2)+1;r(cx+a-w,ty+b-12+j,w*2,1,j<3?"#5fae44":"#2f6b2a");}});}
+    if(t==="m"){for(let j=0;j<16;j++){const w=Math.round(j*.75);r(cx-w,ty+8-16+j,w,1,"#b0b0b8");r(cx,ty+8-16+j,w+1,1,"#6c6c7a");if(j<5){r(cx-w,ty+8-16+j,w,1,"#f4f6fa");r(cx,ty+8-16+j,w+1,1,"#c4cad8");}}}
+    if(t==="c"){for(let j=0;j<5;j++){const w=6-j;r(cx-w*2,ty+8-j,w*4,1,j>2?"#b0cc70":"#94b85c");}}
+    if(t==="s"){r(cx-6,ty+6,6,2,"#4a7a7e");r(cx+2,ty+9,7,2,"#4a7a7e");r(cx-4,ty+4,1,3,"#3a5a28");r(cx+6,ty+6,1,3,"#3a5a28");}
+    if(t==="p"){for(let i=0;i<+QUAL[y][x]*2;i++)r(cx-8+i*3,ty+7+(i%2)*3,1,2,"#d8c060");}
+    const b=BAT[x+","+y];if(b)sprite(p,b,cx,ty+(b==="chateau"?6:7),o?SEIG[o].c:"#ccc");
+    const gg=garn(x,y);if(gg){const c3=o?SEIG[o].c:"#8a8478",ex=cx+9,ey=ty+9;r(ex-4,ey-4,9,9,"#120c08");r(ex-3,ey-3,7,6,c3);r(ex-2,ey+3,5,1,c3);ecus.push([ex+.5,ey,gg]);}
+    if(sel&&sel[0]===x&&sel[1]===y){const cc=f%2?"#fff6c0":"#f0c24a";for(let j=0;j<TH;j++){const w=Math.round((j<TH/2?j:TH-1-j)*2+1);r(cx-w,ty+j,2,1,cc);r(cx+w-2,ty+j,2,1,cc);}}
+  }
+  plaque(r,3,3,210,32,"#5a3a20","#3a2412","#a87a40");
+  plaque(r,3,214,210,14,"#3a2614","#24160c","#6a4a28");
+  plaque(r,3,231,210,150,"#5a3a20","#3a2412","#a87a40");
+  return {CX,CY,TW,TH,ecus};
+}
+function textesC(g,d,inf){
+  T(g,"34",17,11.5,{s:9});T(g,"22",55,11.5,{s:9});T(g,"17",89,11.5,{s:9});T(g,"12/15",121,11.5,{s:9});
+  T(g,"38",85,26.5,{s:9,c:"#f0c24a"});T(g,"LEGITIMITE",101,26.5,{s:7,c:"#d8c09a"});
+  T(g,"TOUR 7/30",208,12,{f:PS,s:6,a:"right",c:"#f0c24a",w:"400"});T(g,"ÉTÉ · AN 2",208,26,{s:8,a:"right",c:"#d8c09a"});
+  d.ecus.forEach(([x,y,n])=>T(g,String(n),x,y+.5,{s:7,a:"center",o:"#000"}));
+  T(g,"Dame Ysolde a bâti un marché. Les brigands rôdent à l'est.",8,221,{s:7.5,c:"#e8d8b8",ombre:false});
+  panneauTexte(g,inf,{t1:{f:PS,s:6.5,c:"#f0c24a",w:"400"},y:236,c:"#f1e6d0",d:"#c8b08a"});
+  // résumé des seigneurs (place en plus)
+  const ls=[["B","Dame Ysolde","34"],["R","Baron Corvin","21"],["V","Comte Aldric","29"]];
+  ls.forEach(([k,n,l],i)=>{T(g,n,24,348+i*10,{s:8,c:SEIG[k].c});T(g,"légitimité "+l,206,348+i*10,{s:8,a:"right",c:"#c8b08a"});});
+}
+
+// ---------- montage d'un écran ----------
+function ecran(cv){
+  const dir=cv.dataset.dir,low=document.createElement("canvas");low.width=W;low.height=H;
+  const G=low.getContext("2d"),p=P(G),g=cv.getContext("2d");
+  let sel=dir==="C"?[1,3]:[1,3],f=0,geo=null;
+  function rendu(){
+    G.clearRect(0,0,W,H);
+    geo=dir==="A"?dessinerA(p,G,sel,f):dir==="B"?dessinerB(p,G,sel,f):dessinerC(p,G,sel,f);
+    if(dir==="A")hudA(p,G,geo);if(dir==="B")hudB(p);if(dir==="C")hudA(p,G,geo);
+    const inf=infos(sel[0],sel[1]);
+    const y=dir==="C"?236:dir==="B"?270:268;
+    const st={btn:(x,yy,w,h,txt,fort)=>{
+      if(dir==="B"){p.r(x,yy,w,h,"#5a3b1e");p.r(x+1,yy+1,w-2,h-2,fort?"#a8321e":"#efdcae");}
+      else bouton(p.r,x,yy,w,h,fort?"#7a9a3a":"#7a5430",fort?"#4a6a1e":"#4a3018",fort?"#c0e080":"#c89a60");
+      boutons.push([x,yy,w,h,txt,fort]);}};
+    const boutons=[];
+    boutonsPanneau(p,inf,y,st);
+    g.imageSmoothingEnabled=false;g.clearRect(0,0,W*K,H*K);g.drawImage(low,0,0,W*K,H*K);
+    if(dir==="A")textesA(g,geo,inf);else if(dir==="B")textesB(g,geo,inf);else textesC(g,geo,inf);
+    boutons.forEach(([x,yy,w,h,txt,fort])=>{
+      if(txt==="ATTAQUER")txt="ATTAQUER  "+inf.act.ch+" %";
+      const c=dir==="B"?(fort?"#fff2d8":"#3e2610"):"#fff";
+      T(g,txt,x+w/2,yy+h/2+.5,dir==="B"?{f:CZ,s:7.5,a:"center",c,ombre:false}:{f:PS,s:5.5,a:"center",c,w:"400"});
+    });
+  }
+  function choisir(e){
+    const b=cv.getBoundingClientRect(),mx=(e.clientX-b.left)/b.width*W,my=(e.clientY-b.top)/b.height*H;
+    let t=null;
+    if(dir!=="C"){const x=Math.floor((mx-geo.X0)/geo.S),y=Math.floor((my-geo.Y0)/geo.S);if(x>=0&&y>=0&&x<6&&y<6)t=[x,y];}
+    else{const u=(mx-geo.CX)/(geo.TW/2),v=(my-geo.CY-geo.TH/2)/(geo.TH/2);const x=Math.round((u+v)/2),y=Math.round((v-u)/2);if(x>=0&&y>=0&&x<6&&y<6)t=[x,y];}
+    if(t){sel=t;rendu();}
+  }
+  cv.addEventListener("click",choisir);
+  rendu();
+  const lent=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!lent)setInterval(()=>{f++;rendu();},450);
+}
+const pret=document.fonts?Promise.all([document.fonts.load("10px 'Press Start 2P'"),document.fonts.load("700 10px Rajdhani"),document.fonts.load("700 10px Cinzel")]).catch(()=>{}):Promise.resolve();
+pret.then(()=>document.querySelectorAll("canvas[data-dir]").forEach(ecran));
+})();
+</script>
