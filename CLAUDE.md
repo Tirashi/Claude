@@ -59,6 +59,7 @@ Republier au **même lien** : publier avec `url` = le lien ci-dessous (lire l'ar
 | Empilage | https://claude.ai/artifact/B7BHw4hC7rLzf9tT5kjuaB |
 | Escadrille ! | https://claude.ai/artifact/SUuAXS5scLnstbth9eZ7zV |
 | Yams | https://claude.ai/artifact/L4nurJpT9pb8BqpJTmvyZ3 |
+| Le Magasinier | https://claude.ai/artifact/Uahoa9oJi7L8KFbNxj9TPX |
 
 Queens, Sudoku, Touché Coulé, Tetris, Snake, Asteroids, Solitaire, le Jeu de la vie et Odyssée **n'ont pas d'artefact** : on les joue sur le site. Ne pas en créer sans demande.
 
@@ -71,7 +72,7 @@ Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/su
 - **Amiral !** : sessions 1 et 2 faites (mines, fumée, leurre, déblocages, bataille du jour) ; à essayer sur le téléphone. [`specs/amiral.md`](specs/amiral.md)
 - **Escadrille !** : sessions 1, 2 et **lot 2 faits** (19/10 : 10 avions au hangar, 6 à débloquer, 4 familles) ; à essayer sur le téléphone ; **lot 1 fait** (19/10 : hauteur, polices, flèches, FEU !) ; artefact pas republié (190 Ko à relire). [`specs/escadrille.md`](specs/escadrille.md) § 10
 - **Le Thé des Jarls** : maquette 4 validée (style A, 45 soldats) ; prochaine étape session 2 (règles, ordinateur, duel), Opus. [`specs/the-des-jarls.md`](specs/the-des-jarls.md)
-- **Le Magasinier** : **fini** (20/10 : 60 niveaux, grille du jour, classements, accueil) ; à essayer sur le téléphone ; **artefact pas encore créé** (lien à demander). [`specs/magasinier.md`](specs/magasinier.md)
+- **Le Magasinier** : **fini** (20/10 : 60 niveaux, grille du jour, classements, accueil) ; à essayer sur le téléphone ; artefact créé (Three.js chargé depuis cdnjs, voir le mémo). [`specs/magasinier.md`](specs/magasinier.md)
 - **Armada** : cahier des charges **à relire par l'utilisateur** (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)
 - **Défense orbitale** : maquette 4 validée (direction A, réaliste) ; cahier des charges écrit et validé (19/10) ; prochaine étape **session 1** (le combat), Opus. [`specs/defense-orbitale.md`](specs/defense-orbitale.md)
 - **La colonie** : moteur fait ; reste la nature, l'île du jour et l'intégration (pas encore sur l'accueil). [`specs/colonie.md`](specs/colonie.md)

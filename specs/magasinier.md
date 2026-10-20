@@ -130,4 +130,4 @@ Fait :
 - **Accueil** : cartouche de la famille 3D (icône `caisse`), `META` en tête (sorti le 20/10, LOGIQUE et DU JOUR), `NEWS`, `RECS` (étoiles sur 180, niveaux réussis, grilles du jour), `RANKS`, `PROGRESS` (grille du jour ou niveau en cours), `TODAY`. **Transfert** `LUDO1-` (`magasinier.niveaux` : moins de coups et plus d'étoiles de chaque côté ; `magasinier.daily` : moins de coups).
 - **Tests** : `magasinier-solveur.js` vérifie aussi 3 grilles du jour (60 avec `--optimum`) ; `fumee.js` lance la grille du jour ; `logique.js` fait passer des records du Magasinier par le transfert. README.
 
-Reste : l'**artefact** (demander d'abord à l'utilisateur s'il a un lien) ; essais sur le téléphone (fluidité, difficulté, sons) ; classements à confirmer avec un vrai record.
+Artefact créé le 20/10 : https://claude.ai/artifact/Uahoa9oJi7L8KFbNxj9TPX (copie de `outils/artefact.py`, puis le bloc de `lib/three.min.js` remplacé par le même Three.js r128 chargé depuis cdnjs et le lien CLASSEMENT pointé vers le site : 84 Ko au lieu de 674). Reste : essais sur le téléphone (fluidité, difficulté, sons) ; classements à confirmer avec un vrai record.
