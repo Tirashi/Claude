@@ -23,10 +23,30 @@
       <h1>LE THÉ<br>DES JARLS</h1>
       <p>Six dés, trois lancers, deux armées. Chaque face envoie tes soldats à l'assaut, et les dieux s'en mêlent.</p>
       <button id="bContinuer" hidden>CONTINUER LE DUEL</button>
-      <button class="or" id="bSolo">DÉFIER UN DIEU</button>
+      <button class="or" id="bCampagne">LA ROUTE DU FJORD<small id="sCampagne"></small></button>
+      <button id="bJour">DÉFI DU JOUR<small id="sJour"></small></button>
+      <button id="bLibre">DUEL LIBRE<small>Contre le dieu de ton choix</small></button>
       <button id="bDuo">À DEUX SUR CE TÉLÉPHONE<small>Posé à plat entre les deux joueurs</small></button>
-      <button id="bAide">COMMENT JOUER</button>
+      <div class="rang"><button id="bGuide">APPRENDRE</button><button id="bLivre">LE LIVRE</button></div>
+      <div class="rang"><button id="bSons">SONS : OUI</button><a class="lien ludo-retour" href="../index.html#jarls">CLASSEMENT</a></div>
       <a class="lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecran plein" id="eCampagne" hidden>
+    <div class="plein-tete"><button id="bCampRetour">◀</button><p class="titre2">LA ROUTE DU FJORD</p><button id="bArmee">ARMÉE</button></div>
+    <p class="petit centre" id="tCampagne"></p>
+    <div class="route" id="route"></div>
+    <div class="fiche" id="ficheTav" hidden></div>
+  </div>
+
+  <div class="ecran" id="eArmee" hidden>
+    <div class="carte large">
+      <p class="titre2">TON ARMÉE</p>
+      <p class="petit">Les couleurs se gagnent aux tavernes de Thor, d'Idunn et de Vidar ; une unité tous les cinq dieux battus.</p>
+      <div class="couleurs" id="couleurs"></div>
+      <div class="unites" id="unites"></div>
+      <button id="bArmeeOk">◀ RETOUR</button>
     </div>
   </div>
 
@@ -39,22 +59,44 @@
     </div>
   </div>
 
-  <div class="ecran" id="eFaveurs" hidden>
-    <div class="carte large" id="carteFaveurs">
-      <p class="titre2" id="tFaveurs">TES TROIS FAVEURS</p>
-      <p class="petit" id="sFaveurs"></p>
+  <div class="ecran plein" id="eFaveurs" hidden>
+    <div class="conseil" id="carteFaveurs">
+      <p class="titre2 centre" id="tFaveurs">LE CONSEIL DES JARLS</p>
+      <p class="petit centre" id="sFaveurs"></p>
+      <div class="slots" id="slots"></div>
+      <div class="decks" id="decks"></div>
+      <p class="sep">ou compose ta propre main</p>
       <div class="liste" id="listeFaveurs"></div>
-      <div class="rang"><button id="bFaveursRetour">◀ RETOUR</button><button class="or" id="bFaveursOk" disabled>AU COMBAT</button></div>
+      <div class="rang bas"><button id="bFaveursRetour">◀ RETOUR</button><button class="or" id="bFaveursOk" disabled>AU COMBAT</button></div>
     </div>
+  </div>
+
+  <div class="ecran" id="eIntro" hidden>
+    <div class="carte" id="carteIntro"></div>
   </div>
 
   <div class="ecran" id="ePause" hidden>
     <div class="carte">
       <p class="titre2">PAUSE</p>
       <button id="bReprendre">REPRENDRE</button>
-      <button id="bAideP">COMMENT JOUER</button>
+      <button id="bRappelP">RAPPEL DES FACES</button>
+      <button id="bLivreP">LE LIVRE DU SKALDE</button>
+      <button id="bSonsP">SONS : OUI</button>
       <button class="rouge" id="bAbandon">ABANDONNER LE DUEL</button>
       <a class="lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecran" id="eRappel" hidden>
+    <div class="carte large" id="carteRappel"></div>
+  </div>
+
+  <div class="ecran" id="eLivre" hidden>
+    <div class="carte livre">
+      <p class="titre2">LE LIVRE DU SKALDE</p>
+      <div class="pageL" id="pageL"></div>
+      <div class="puces" id="puces"></div>
+      <div class="rang"><button id="bLivrePrec">‹ AVANT</button><button class="or" id="bLivreSuiv">SUITE ›</button></div>
     </div>
   </div>
 
@@ -62,24 +104,10 @@
     <div class="carte" id="carteFin">
       <h1 id="tFin">VICTOIRE</h1>
       <p id="sFin"></p>
-      <button class="or" id="bRevanche">REVANCHE</button>
-      <button id="bFinTitre">◀ TITRE</button>
-    </div>
-  </div>
-
-  <div class="ecran" id="eAide" hidden>
-    <div class="carte large aide">
-      <p class="titre2">COMMENT JOUER</p>
-      <div class="texte">
-        <p><b>Le but :</b> faire tomber les 15 PV de l'armée adverse (3 soldats par PV).</p>
-        <p><b>Les dés.</b> Chacun son tour, on lance ses 6 dés, trois fois au plus. Touche un dé pour le garder avant de relancer les autres ; <b>TOUT GARDER</b> arrête tes lancers. Au troisième lancer, tout est gardé.</p>
-        <p><b>Les faces.</b> <b>Hache</b> : les fantassins chargent, un casque adverse en pare une. <b>Flèche</b> : les archers tirent, un bouclier adverse en pare une. <b>Casque</b> et <b>bouclier</b> : la défense. <b>Main</b> : un éclaireur vole un jeton à l'adversaire. Les faces <b>dorées</b> rapportent chacune un jeton de faveur.</p>
-        <p><b>Les faveurs.</b> Avant le duel, on emporte trois faveurs des dieux. Après les lancers, chacun peut en invoquer une, au niveau I, II ou III, en payant ses jetons (touche une faveur pour changer de niveau). Les faveurs « après la bataille » (Thor, Idunn, Odin) se paient après le vol des éclaireurs : si on t'a volé tes jetons, elles ratent.</p>
-        <p><b>L'ordre de la bataille :</b> jetons des faces dorées, faveurs d'avant la bataille, flèches, haches, vols, faveurs d'après la bataille. Le premier joueur change à chaque manche.</p>
-        <p><b>L'hiver.</b> À partir de la manche 10, chaque armée perd 1 PV à la fin de la manche, puis 2, puis 3… Si les deux armées tombent ensemble, celle qui tombe le moins bas gagne.</p>
-        <p><b>À deux.</b> Pose le téléphone à plat entre vous : chacun ses dés de son côté, la bataille au milieu.</p>
-      </div>
-      <button id="bAideOk">J'AI COMPRIS</button>
+      <div id="gainsFin"></div>
+      <p class="petit or" id="rangFin" hidden></p>
+      <button class="or" id="bFin1">REVANCHE</button>
+      <button id="bFin2">◀ TITRE</button>
     </div>
   </div>
 </div>
@@ -87,7 +115,11 @@
 <script src="../ludo-scores.js"></script>
 <script src="regles.js"></script>
 <script src="ia.js"></script>
+<script src="campagne.js"></script>
 <script src="decor.js"></script>
+<script src="dieux.js"></script>
+<script src="sons.js"></script>
+<script src="guide.js"></script>
 <script src="jeu.js"></script>
 <script>
 /* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :

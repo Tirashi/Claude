@@ -30,8 +30,18 @@ const CORPS_GUERRIER=["....kHH.....","...khhhH....","...hhhhhH...","..HHHHHhH...
 const CORPS_ARCHER=["....TTT.....","...TtttT....","..TttttTT...","..TtTssss...","..Ttssses...","..TtsssssS..","..TTsbbbb...","...TTbbB....","..wwTtttt...","..wwtttttt..","..wWttttttt.","..wWtttttTt.","..WWllyllll.","...WtttttTt.","...tttTtTT..","....pp.pP...","....pp.pP...","....PP.PP...","...LLl.LLl..","............"];
 const EQUIPES=[{t:'#3f73d6',T:'#27498f',c:'#8a6440',C:'#5a3e26',r:'#f2ead8'},{t:'#c23a2e',T:'#7c2019',c:'#77706a',C:'#47423e',r:'#1e1a18'}];
 const BARBES=[['#d9822b','#a85a18'],['#e6c66a','#b8963a'],['#8a4a20','#5e3012'],['#cfc6b6','#9a9284']];
-function palette(s,v){const e=EQUIPES[s],b=BARBES[(v+s*2)%4];return{k:'#f2f6f8',h:v%3===2?'#c9a25a':'#b8c0c8',H:v%3===2?'#8a6a30':'#7d8590',s:'#f0c08e',S:'#c98f62',e:'#2a1a10',b:b[0],B:b[1],
-  t:e.t,T:e.T,c:e.c,C:e.C,l:'#6a4424',L:'#3a2412',y:'#f2c94c',p:'#4c3d2e',P:'#2f251b',w:'#8a5a2e',W:'#5a3a1c',m:'#d8dde2',M:'#8a929a',f:'#f4efe4',r:e.r}}
+// apparence d'une armée (réglée par jeu.js) : ARMEES[s] = { cle, coul: { t, T, c, C, r, b, B }, unites: [ids] } ; null = couleurs de la maquette
+const ARMEES=[null,null];
+const equipe=s=>(ARMEES[s]&&ARMEES[s].coul)||EQUIPES[s];
+function palette(s,v,rang){const e=equipe(s),b=BARBES[(v+s*2)%4],u=(ARMEES[s]&&ARMEES[s].unites)||[];
+  const P={k:'#f2f6f8',h:v%3===2?'#c9a25a':'#b8c0c8',H:v%3===2?'#8a6a30':'#7d8590',s:'#f0c08e',S:'#c98f62',e:'#2a1a10',b:b[0],B:b[1],
+  t:e.t,T:e.T,c:e.c,C:e.C,l:'#6a4424',L:'#3a2412',y:'#f2c94c',p:'#4c3d2e',P:'#2f251b',w:'#8a5a2e',W:'#5a3a1c',m:'#d8dde2',M:'#8a929a',f:'#f4efe4',r:e.r};
+  // unités gagnées en campagne : garde (casques dorés), berserkers (1er rang en peau d'ours), skjaldmö (2e rang, tresses blondes), chasseurs (archers en capuchon vert)
+  if(u.includes('garde')){P.h='#e8c060';P.H='#9a7020';P.k='#fff4c0'}
+  if(rang===0&&u.includes('berserkers')){P.h='#7a5a3a';P.H='#4a3420';P.k='#a8805a';P.c='#6a4a2a';P.C='#3a2814'}
+  if(rang===1&&u.includes('skjaldmo')){P.h='#e6c66a';P.H='#b8963a';P.k='#fff0b0';P.b=P.s;P.B=P.S}
+  if(rang===2&&u.includes('chasseurs')){P.T='#2e5a30';P.w='#6a4a24'}
+  return P}
 function tracer(px,x0,y0,x1,y1,col){const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0));for(let i=0;i<=n;i++)px(Math.round(x0+(x1-x0)*i/n),Math.round(y0+(y1-y0)*i/n),col)}
 function bouclierCote(px,ox,Q,v){ // bouclier de profil (ellipse 5×11), motif selon v
   for(let y=0;y<11;y++)for(let x=0;x<5;x++){if((y===0||y===10)&&(x===0||x===4))continue;
@@ -41,8 +51,8 @@ function bouclierCote(px,ox,Q,v){ // bouclier de profil (ellipse 5×11), motif s
   px(ox+2,18,Q.y)}
 const CACHE_A=new Map();
 function spriteA(s,kind,pose,v,pr=4){
-  const cle=[s,kind,pose,v,pr].join("|");if(CACHE_A.has(cle))return CACHE_A.get(cle);
-  const W=28,H=30,c=mk(W,H),g=c.getContext('2d'),Q=palette(s,v);
+  const cle=[s,kind,pose,v,pr,ARMEES[s]?ARMEES[s].cle:""].join("|");if(CACHE_A.has(cle))return CACHE_A.get(cle);
+  const W=28,H=30,c=mk(W,H),g=c.getContext('2d'),Q=palette(s,v,kind);
   const px=(x,y,col)=>{if(x<0||y<0||x>=W||y>=H)return;g.fillStyle=col;g.fillRect(x,y,1,1)};
   const corps=kind===2?CORPS_ARCHER:CORPS_GUERRIER;
   // arrière : arme dans le dos
@@ -147,7 +157,7 @@ function drakkar(g,x,y,t){
   g.drawImage(DRAKKAR,Math.round(x),Math.round(y-17+Math.sin(t*1.3)*.6))}
 const CORBEAU=["..##..",".####.","######","..##..",".#..#.","#....#"],LOUP=["#....#","##..##","######","#.##.#",".####.","..##.."];
 function banniere(g,x,y,s,t){g.fillStyle='#3a2410';g.fillRect(x,y-36,1,36);g.fillStyle='#f2c94c';g.fillRect(x-1,y-37,3,1);
-  const coul=s?'#8a1e18':'#1e3a7a',bord=s?'#5a120e':'#122a5a',em=s?LOUP:CORBEAU,dir=s?-1:1;
+  const E=equipe(s),coul=E.b||(s?'#8a1e18':'#1e3a7a'),bord=E.B||(s?'#5a120e':'#122a5a'),em=s?LOUP:CORBEAU,dir=s?-1:1;
   for(let k=0;k<10;k++){const o=Math.round(Math.sin(t*4-k*.7)*1.2*(k/10)),cx=dir>0?x+1+k:x-1-k;g.fillStyle=k===9?bord:coul;g.fillRect(cx,y-35+o,1,k>8?10:12);
     if(k>=2&&k<8)em.forEach((l,j)=>{if(l[k-2]==='#'){g.fillStyle='#f2ead8';g.fillRect(cx,y-32+j+o,1,1)}})}}
 

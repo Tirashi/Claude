@@ -178,6 +178,21 @@ const TESTS = {
     if (cartes.size < Math.min(10, D.length)) out.push('deux jours ont la même carte');
     return out;
   }, D),
+  'the-des-jarls/index.html': async (p, D) => p.evaluate(D => {
+    // défi du jour : même dieu, mêmes faveurs, mêmes dés pour un jour donné ; les jours varient
+    const out = [], dieux = new Set();
+    for (const { k } of D.slice(0, 10)) {
+      const a = jarDuJour(k), b = jarDuJour(k);
+      if (JSON.stringify(a) !== JSON.stringify(b)) out.push(`défi du ${k} : deux tirages différents`);
+      if (!JAR_FAVEURS[a.dieu] || new Set(a.faveurs).size !== 3 || a.faveurs.some(f => !JAR_FAVEURS[f])) out.push(`défi du ${k} : dieu ou faveurs abîmés`);
+      const e1 = jarNouvelle(k, [{ nom: 'Toi', faveurs: a.faveurs }, jarAdversaire(a.dieu, 2)]), e2 = jarNouvelle(k, [{ nom: 'Toi', faveurs: a.faveurs }, jarAdversaire(a.dieu, 2)]);
+      jarLancer(e1, e1.tour); jarLancer(e2, e2.tour);
+      if (JSON.stringify(e1) !== JSON.stringify(e2)) out.push(`défi du ${k} : deux premiers lancers différents`);
+      dieux.add(a.dieu);
+    }
+    if (dieux.size < Math.min(4, D.length)) out.push('le défi du jour change trop peu de dieu');
+    return out;
+  }, D),
   'mot-d-or/index.html': async (p, D) => p.evaluate(D => {
     const { motDuJour, evaluate, solutions, accepte } = window.MotDor, out = [], vus = new Set();
     for (const { k } of D) {
@@ -197,7 +212,8 @@ const TESTS = {
       'odyssee.stars': { '1-2': 3 }, 'nebula.best': 900, 'lunerover.stars': { 4: 3 }, 'amiral.best': { hard: 30 }, 'pontstellaire.best': { 9: 90000 },
       'amiral.palmares': { victoires: 3, normal: 1 }, 'amiral.daily': { 20261019: 24 }, 'magasinier.niveaux': { 0: { coups: 7, etoiles: 2 }, 13: { coups: 9, etoiles: 3 } },
       'magasinier.daily': { 20261020: 41 }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 }, 'duche.best': 3120, 'duche.daily': { 20261020: 2800 },
-      'motdor.stats': { parties: 5, gagnees: 4, serie: 2, record: 3, dernier: 20261019, dist: [0, 1, 2, 1, 0, 0] }, 'motdor.daily': { 20261019: 3 } };
+      'motdor.stats': { parties: 5, gagnees: 4, serie: 2, record: 3, dernier: 20261019, dist: [0, 1, 2, 1, 0, 0] }, 'motdor.daily': { 20261019: 3 },
+      'jarls.campagne': { etoiles: { heimdall: 3, idunn: 2 } }, 'jarls.daily': { 20261021: 1290 } };
     const A = window.Accueil, keep = { ...localStorage }; localStorage.clear();
     for (const [k, v] of Object.entries(recs)) localStorage.setItem(k, JSON.stringify(v));
     const code = 'LUDO1-' + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, g: A.collectSaves() }))));

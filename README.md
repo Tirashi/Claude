@@ -18,6 +18,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
 - [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
+- [`the-des-jarls/index.html`](the-des-jarls/index.html) : **Le Thé des Jarls**, un duel de dés viking façon Orlog : six dés, trois lancers, chaque face lance une armée de 45 soldats à l'assaut ; 20 dieux nordiques et leurs faveurs, la route du fjord (campagne de 20 tavernes), un duel guidé pour apprendre, le duel à deux sur un téléphone posé à plat et un défi du jour.
 - [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
@@ -218,6 +219,16 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - **Plateau du jour** : le même plateau (parfois en miroir) et les mêmes dangers pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) : le temps, plus 5 secondes par naufrage.
 - **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
+
+## Le Thé des Jarls
+
+Un duel de dés viking, sur les règles de l'Orlog : deux armées de **45 soldats** (3 par PV) se font face sur un fjord en HD-2D, et chaque face de dé lance une action de l'armée.
+
+- **Les dés** : six dés, trois lancers au plus, chacun son tour ; on garde les dés qu'on veut. **Hache** : les fantassins chargent (un casque adverse en pare une) ; **flèche** : les archers tirent (un bouclier en pare une) ; **main** : un éclaireur vole un jeton ; les faces **dorées** rapportent un jeton de faveur.
+- **Les faveurs des dieux** : on emporte trois faveurs parmi 20 (Thor, Idunn, Vidar, Loki, Freyja, Odin…), à invoquer au niveau I, II ou III contre des jetons. Celles d'après la bataille ratent si on s'est fait voler ses jetons. À partir de la manche 10, l'hiver mord les deux armées.
+- **La route du fjord** : 20 tavernes, du plus faible des dieux au plus fort ; battre un dieu gagne sa faveur, des étoiles (selon les PV gardés), des couleurs et des unités pour son armée (berserkers, skjaldmö, chasseurs, garde du jarl).
+- **Apprendre** : un premier duel guidé avec Sigrid la skalde, le livre du skalde (7 pages), un bouton « ? » en jeu et des astuces pendant les trois premières parties.
+- **Duel libre** contre le dieu de son choix (facile, normal, difficile), **à deux** sur un téléphone posé à plat, et **défi du jour** : le même dieu, les mêmes faveurs et les mêmes dés pour toute la famille, une seule tentative classée. Classements : étoiles de la campagne et défi du jour.
 
 ## Duché
 

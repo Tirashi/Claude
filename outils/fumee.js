@@ -144,6 +144,25 @@ const shots = process.argv[2];
         if (localStorage.getItem('jarls.run')) return 'partie finie encore sauvegardée';
         J.duel({ duo: true, graine: 3 }); const t = E().tour; J.lancer(t);
         if (E().camps[t].lancers !== 1 || E().tour === t) return 'à deux : le lancer ne passe pas la main';
+        // le duel guidé de Sigrid, étape par étape, jusqu'à la fin de la première manche
+        J.lancerGuide();
+        for (let n = 0; n < 200 && J.guide(); n++) {
+          const k = J.guide().k, e = GUIDE_ETAPES[k], s = E();
+          if (J.vue().anim) J.accelerer();
+          else if (e.a === 'ok') J.guideOk();
+          else if (s.tour === 0 && e.a === 'lancer') J.lancer(0);
+          else if (s.tour === 0 && e.a === 'garder') [0, 1, 3].forEach(j => J.garder(0, j));
+          else if (s.tour === 0 && e.a === 'finir') J.finir(0);
+          else if (s.tour === 0 && e.a === 'faveur') J.faveur(0, 'thor', 1);
+          await wait(e.a === 'tour' ? 200 : 60);
+        }
+        if (J.guide()) return 'duel guidé bloqué à l\'étape ' + (J.guide().k + 1);
+        if (E().manche !== 2 || E().camps[0].pv !== 12 || E().camps[1].pv !== 11) return `duel guidé : manche ${E().manche}, PV ${E().camps.map(c => c.pv)} au lieu de 12 contre 11`;
+        // la route du fjord et le défi du jour s'ouvrent
+        localStorage.setItem('jarls.guide', 'true'); J.ecranCampagne();
+        if (document.getElementById('eCampagne').hidden || document.querySelectorAll('#route .tav').length !== 20) return 'route du fjord absente';
+        J.defiDuJour(); document.getElementById('bIntroJour').click();
+        if (!E() || E().mode !== 'jour' || !localStorage.getItem('jarls.dailyTry')) return 'défi du jour pas lancé';
         return 'ok';
       });
       if (r !== 'ok') errs.push('Le Thé des Jarls : ' + r);

@@ -8,8 +8,8 @@
    faveurs jouées. Code de sortie 1 si une vérification échoue (outils/verifications.js). */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
-for (const f of ['regles.js', 'ia.js']) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '..', 'the-des-jarls', f), 'utf8'), { filename: 'the-des-jarls/' + f });
-/* global jarNouvelle, jarLancer, jarGarder, jarFinir, jarChoisir, jarBataille, jarSuivante, jarMigrer, jarIaJouer, jarAdversaire, jarPeutLancer, jarRng, JAR_DES, JAR_IDS, JAR_FAVEURS, JAR_DIEUX, JAR_PV */
+for (const f of ['regles.js', 'ia.js', 'campagne.js', 'guide.js']) vm.runInThisContext(fs.readFileSync(path.join(__dirname, '..', 'the-des-jarls', f), 'utf8'), { filename: 'the-des-jarls/' + f });
+/* global jarCampagne, jarVictoire, jarOuverte, jarProchaine, jarFaveursGagnees, jarApparences, jarUnites, jarDuJour, jarScoreJour, jarTotalEtoiles, JAR_TAVERNES, JAR_DEPART, GUIDE_IMPOSES, GUIDE_THORGRIM, GUIDE_FAVEURS, GUIDE_GRAINE, jarNouvelle, jarLancer, jarGarder, jarFinir, jarChoisir, jarBataille, jarSuivante, jarMigrer, jarIaJouer, jarAdversaire, jarPeutLancer, jarRng, JAR_DES, JAR_IDS, JAR_FAVEURS, JAR_DIEUX, JAR_PV */
 
 const K = Number(process.argv[2]) || 200, detail = process.argv.includes('--detail');
 let fail = 0;
@@ -107,6 +107,39 @@ check(r.e.fin && r.e.fin.gagnant === -1 && r.pv[0] === 0, 'les deux à 0 en mêm
 r = bataille([H, H, H, H, H, H], [H, H, H, H, C, '-'], { pv: [3, 3] });
 check(r.e.fin && r.e.fin.gagnant === 0, 'les deux à 0 en même temps : celle qui tombe le moins bas gagne (−1 contre −2)');
 check(JAR_IDS.length === 20 && JAR_IDS.every(id => JAR_DIEUX[id] && JAR_DIEUX[id].deck.length === 3 && JAR_DIEUX[id].deck[0] === id && JAR_DIEUX[id].deck.every(x => JAR_FAVEURS[x])), '20 faveurs, 20 dieux avec chacun trois faveurs dont la sienne');
+
+/* ---------- 1 bis. campagne, défi du jour, manche guidée ---------- */
+{
+  check(JAR_TAVERNES.length === 20 && new Set(JAR_TAVERNES.map(t => t.dieu)).size === 20 && JAR_TAVERNES.every(t => JAR_FAVEURS[t.dieu]), '20 tavernes, une par dieu');
+  check(JAR_TAVERNES.map(t => t.niveau).join('') === '11111112222222333333', 'facile aux tavernes 1 à 7, normal de 8 à 14, difficile de 15 à 20');
+  const c = jarCampagne({ etoiles: { heimdall: 9, inconnu: 2, var: -1 }, couleur: 'pommier' });
+  check(c.etoiles.heimdall === 3 && !('inconnu' in c.etoiles) && !('var' in c.etoiles) && c.couleur === 'bleu', 'une campagne abîmée est nettoyée (couleur pas gagnée → bleu)');
+  const k = jarCampagne(null);
+  check(jarFaveursGagnees(k).sort().join() === JAR_DEPART.slice().sort().join() && jarProchaine(k) === 0 && !jarOuverte(k, 1), 'au départ : Thor, Idunn, Vidar ; seule la première taverne est ouverte');
+  let r = jarVictoire(k, 0, 12);
+  check(r.etoiles === 3 && r.faveur === 'heimdall' && jarFaveursGagnees(k).includes('heimdall') && jarOuverte(k, 1), 'battre Heimdall avec 12 PV : 3 étoiles, sa faveur, la taverne suivante');
+  r = jarVictoire(k, 0, 3);
+  check(!r.mieux && k.etoiles.heimdall === 3 && !r.faveur, 'rejouer moins bien ne fait pas perdre d\'étoiles');
+  r = jarVictoire(k, 1, 8);
+  check(r.etoiles === 2 && r.apparence === 'pommier' && jarApparences(k).includes('pommier'), 'la taverne d\'Idunn donne des couleurs (faveur déjà connue)');
+  for (let i = 2; i < 5; i++) r = jarVictoire(k, i, 1);
+  check(r.unite === 'berserkers' && jarUnites(k).length === 1 && jarTotalEtoiles(k) === 3 + 2 + 3, 'cinquième dieu battu : les berserkers');
+  const d1 = jarDuJour(20261021), d2 = jarDuJour(20261021), d3 = jarDuJour(20261022);
+  check(JSON.stringify(d1) === JSON.stringify(d2) && new Set(d1.faveurs).size === 3 && JSON.stringify(d1) !== JSON.stringify(d3), 'défi du jour : même dieu et mêmes faveurs pour tous, un autre le lendemain');
+  const e = jarNouvelle(20261021, [{ nom: 'Toi', faveurs: d1.faveurs }, jarAdversaire(d1.dieu, 2)]);
+  e.camps[0].pv = 7; e.fin = { gagnant: 0, manche: 6 };
+  check(jarScoreJour(e) === 1000 + 350 - 60, 'score du jour en cas de victoire');
+  e.fin.gagnant = 1; e.camps[1].pv = 4;
+  check(jarScoreJour(e) === 220, 'score du jour en cas de défaite : 20 par PV pris');
+  // la manche guidée : les gestes que demande Sigrid donnent la bataille prévue
+  const gd = jarNouvelle(GUIDE_GRAINE, [{ nom: 'Toi', faveurs: GUIDE_FAVEURS }, GUIDE_THORGRIM], 'guide', { premier: 0, imposes: GUIDE_IMPOSES });
+  jarLancer(gd, 0); jarIaJouer(gd); [0, 1, 3].forEach(j => jarGarder(gd, 0, j)); jarLancer(gd, 0); jarIaJouer(gd); jarFinir(gd, 0);
+  for (let n = 0; n < 5 && gd.phase !== 'faveur'; n++) jarIaJouer(gd);
+  const ok1 = gd.phase === 'faveur' && gd.tour === 0;
+  jarChoisir(gd, 0, 'thor', 1); jarIaJouer(gd);
+  const evG = jarBataille(gd), thor = evG.find(x => x.t === 'faveur' && x.id === 'thor');
+  check(ok1 && thor && thor.ok && gd.camps[0].pv === 12 && gd.camps[1].pv === 11 && !gd.camps[1].choix, `manche guidée : Thor payé, Thorgrim sans faveur, PV 12 contre 11 (${gd.camps.map(c => c.pv)})`);
+}
 
 /* ---------- 2. duels complets ---------- */
 const vusF = {};

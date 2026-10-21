@@ -73,14 +73,17 @@ function jarRng(graine, usage, a, b) {
 }
 
 /* ---------- nouvelle partie ----------
-   joueurs : [{ nom, faveurs: [3 ids], ia: null | { dieu, niveau } }, …] ; le camp 0 est en bas de l'écran. */
-function jarNouvelle(graine, joueurs, mode) {
-  const premier = jarRng(graine, 'premier')() < 0.5 ? 0 : 1;
+   joueurs : [{ nom, faveurs: [3 ids], ia: null | { dieu, niveau } }, …] ; le camp 0 est en bas de l'écran.
+   o (facultatif) : { premier: 0 | 1, imposes: { 'manche-camp-lancer': [6 faces] } } pour le duel guidé. */
+function jarNouvelle(graine, joueurs, mode, o) {
+  o = o || {};
+  const premier = o.premier != null ? o.premier : jarRng(graine, 'premier')() < 0.5 ? 0 : 1;
   const etat = {
     v: JAR_RUN_V, graine, mode: mode || 'libre', manche: 1, premier, tour: premier, phase: 'lancer',
     camps: joueurs.map(j => ({ nom: j.nom, ia: j.ia || null, faveurs: j.faveurs.slice(0, 3), pv: JAR_PV, jetons: 0, des: JAR_DES.map(() => ({ k: -1, garde: false })), lancers: 0, fini: false, choix: undefined })),
     journal: [], fin: null,
   };
+  if (o.imposes) etat.imposes = o.imposes;
   return etat;
 }
 const jarAutre = i => 1 - i;
@@ -91,7 +94,9 @@ function jarPeutLancer(etat, i) { const c = etat.camps[i]; return etat.phase ===
 function jarLancer(etat, i) {
   if (!jarPeutLancer(etat, i)) return false;
   const c = etat.camps[i], R = jarRng(etat.graine, 'de', etat.manche * 2 + i, c.lancers);
-  c.des.forEach(d => { const x = Math.floor(R() * 6); if (!d.garde) d.k = x; });   // on tire toujours 6 nombres : garder un dé ne change pas les autres
+  // dés arrangés (duel guidé) : etat.imposes['manche-camp-lancer'] = les 6 faces (n° dans JAR_DES[j]) ; sinon le hasard à graine
+  const imp = etat.imposes && etat.imposes[`${etat.manche}-${i}-${c.lancers}`];
+  c.des.forEach((d, j) => { const x = Math.floor(R() * 6); if (!d.garde) d.k = imp ? imp[j] : x; });   // on tire toujours 6 nombres : garder un dé ne change pas les autres
   c.lancers++;
   if (c.lancers >= JAR_LANCERS) jarClore(etat, i); else jarPasser(etat, i);
   return true;
