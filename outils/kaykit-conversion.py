@@ -2,6 +2,9 @@
 # Usage : python3 outils/kaykit-conversion.py <dossier gltf/glb> <sortie.js> nom1,nom2,… [VARIABLE] [echelle] [decalage y] [atlas.png]
 # (Kenney Hexagon Kit : KENNEY 2 -0.4 « GLB format/Textures/colormap.png », pour avoir des tuiles de 2 comme KayKit)
 # Sortie : window.KAYKIT = {nom: [sommets, indices, base64]} et window.KAYKIT_TEX (atlas PNG) ; lecture : maquettes/duche-kaykit.html.
+import json, sys, os, base64, struct, math
+src = sys.argv[1]; out = sys.argv[2]; names = sys.argv[3].split(',')
+VAR = sys.argv[4] if len(sys.argv) > 4 else 'KAYKIT'; ECH = float(sys.argv[5]) if len(sys.argv) > 5 else 1; DY = float(sys.argv[6]) if len(sys.argv) > 6 else 0
 IMG = sys.argv[7] if len(sys.argv) > 7 else None
 idx = {}
 for d, _, fs in os.walk(src):
