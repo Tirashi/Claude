@@ -297,7 +297,10 @@ Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire
 
 ## Solitaire
 
-Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
+Le Klondike tel qu'il était livré avec Windows XP, avec des cartes faites pour être lues sur un téléphone.
+
+- Table bord à bord, gros chiffre et enseigne sur une seule ligne en haut de chaque carte ; MENU et ANNULER en bas, sous le pouce.
+- Le **MENU** regroupe la nouvelle donne, la pioche, le son, le classement, le retour à la Ludothèque et la personnalisation : 4 styles de cartes (NET par défaut, CHIFFRE GEANT, QUATRE COULEURS, et l'ancien PIXEL), 6 dos en pixel art et 4 tapis, gardés d'une partie à l'autre.
 
 - Pioche de 3 cartes par défaut, comme sous XP, ou d'une seule carte (changer de mode redistribue les cartes).
 - Barème « standard » de Windows : +10 par carte posée sur une pile, +5 par carte posée de la défausse vers une colonne ou retournée, −15 pour reprendre une carte d'une pile, −2 toutes les 10 secondes, −100 (pioche 1) ou −20 (pioche 3) à chaque tour de pioche, et un bonus de vitesse à la victoire (700 000 ÷ secondes, au-delà de 30 s).
