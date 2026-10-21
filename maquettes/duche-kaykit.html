@@ -1428,14 +1428,14 @@ function image(s, bloc, anim, k) {
   t.offset.set(((k % 4) + (m ? 1 : 0)) * 0.125, 1 - (l + 1) * 32 / 448);
 }
 let bataille = null;
-// rendu « pixel » : la bataille est dessinée en petit (⅓ ou ¼ de l'écran) puis agrandie sans lissage,
+// rendu « pixel » : la bataille est dessinée en petit (¼ ou ⅕ de l'écran) puis agrandie sans lissage,
 // pour que la 3D et les guerriers en pixel art aient les mêmes pixels
 let rtB = null, pixelB = true;
 const ecranB = new THREE.Scene(), camEcran = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 const quadB = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ depthTest: false }));
 ecranB.add(quadB);
 function tailleB() {
-  const k = innerWidth >= 700 ? 4 : 3, w = Math.round(innerWidth / k), h = Math.round(innerHeight / k);
+  const k = innerWidth >= 700 ? 5 : 4, w = Math.round(innerWidth / k), h = Math.round(innerHeight / k);
   if (!rtB || rtB.width !== w || rtB.height !== h) {
     if (rtB) rtB.dispose();
     rtB = new THREE.WebGLRenderTarget(w, h, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
@@ -1447,7 +1447,7 @@ function tailleB() {
 // rangs de profil : colonnes de 3 guerriers en profondeur, la première colonne face à l'ennemi
 function formation(n, x0, sens) {
   const p = [];
-  for (let k = 0; k < n; k++) { const c = Math.floor(k / 3), r = k % 3; p.push([x0 + sens * c * 0.72 + (r === 1 ? sens * 0.22 : 0), [1.2, 0.4, -0.4][r]]); }
+  for (let k = 0; k < n; k++) { const c = Math.floor(k / 3), r = k % 3; p.push([x0 + sens * c * 0.5 + (r === 1 ? sens * 0.18 : 0), [1.2, 0.45, -0.3][r]]); }
   return p;
 }
 function composition(n, coul, brig, neutre) {
@@ -1481,7 +1481,7 @@ function lancerBataille(av, r) {
     // décor : rien devant (rangées 0 et 1), un peu de terrain derrière (une tuile sur deux), puis la mer à l'horizon
     if (rr >= 0 || mer || sol !== 'hex_grass' || (q + rr) % 2) continue;
     const nom = FOND[T.t][Math.abs(q * 7 + rr * 3) % 3];
-    if (!nom || (rr === -2 && Math.abs(x) > 1 && Math.abs(Math.abs(x) - 1.3) < 1.2 && (x > 0 ? droite : gauche).bat)) continue;   // la place du bâtiment
+    if (!nom || (rr === -2 && Math.abs(x) > 1 && Math.abs(Math.abs(x) - 1.0) < 1.2 && (x > 0 ? droite : gauche).bat)) continue;   // la place du bâtiment
     const d = objet(nom); d.position.set(x, 0, z); d.rotation.y = (q * 2 + rr) * Math.PI / 3; sceneB.add(d);
   }
   // le bâtiment de la terre attaquée (ou le vôtre) se dresse au fond de son côté, à sa vraie taille
@@ -1489,7 +1489,7 @@ function lancerBataille(av, r) {
     if (!terre.bat) return;
     const Sx = terre.prop >= 0 ? etat.seigneurs[terre.prop] : null, C = Sx && COUL[Sx.coul];
     const o = objet('building_' + BAT_MODELE[terre.bat] + '_' + (C ? C.k : 'blue'), C ? C.mat : matGris);
-    o.position.set(cote * 1.3, 0, -3.46);   // au fond, en grand : c'est le décor de la bataille
+    o.position.set(cote * 1.0, 0, -3.46);   // au fond, en grand : c'est le décor de la bataille
     sceneB.add(o);
   };
   batiment(droite, 1); batiment(gauche, -1);
@@ -1501,8 +1501,8 @@ function lancerBataille(av, r) {
   const coulD = Sd ? Sd.coul : 'neutre';
   const attaquants = composition(vusA, J.coul).map(cl => guerrier(cl, J.coul));
   const defenseurs = composition(vusD, coulD, av.t.brig && !Sd, !Sd && !av.t.brig).map(cl => guerrier(cl, coulD));
-  formation(vusA, -0.75, -1).forEach(([x, z], k) => { attaquants[k].position.set(x, 0.02, z); });
-  formation(vusD, 0.7, 1).forEach(([x, z], k) => { defenseurs[k].position.set(x, 0.02, z); defenseurs[k].userData.miroir = true; });
+  formation(vusA, -0.55, -1).forEach(([x, z], k) => { attaquants[k].position.set(x, 0.02, z); });
+  formation(vusD, 0.5, 1).forEach(([x, z], k) => { defenseurs[k].position.set(x, 0.02, z); defenseurs[k].userData.miroir = true; });
   [...attaquants, ...defenseurs].forEach(s => { s.scale.set(1, 1, 1); s.userData.bloc = 0;   // 1 unité = 32 pixels du rendu : un pixel de guerrier = un pixel de décor
     s.material.color.setHex(S.teinte); s.userData.x0 = s.position.x; s.userData.z0 = s.position.z; sceneB.add(s); });
   // qui tombe, et à quelle passe
@@ -1514,7 +1514,7 @@ function lancerBataille(av, r) {
   const coups = [];
   for (let k = 0; k < 2; k++) { const c = new THREE.Sprite(new THREE.SpriteMaterial({ map: planches.coup.clone(), transparent: true, depthTest: false })); c.material.map.needsUpdate = true; c.material.map.repeat.set(0.25, 1); c.scale.set(0.5, 0.5, 1); c.visible = false; c.renderOrder = 15; sceneB.add(c); coups.push(c); }
   // la caméra : de profil, un peu en hauteur ; 32 pixels du rendu par unité, le sol un peu sous le milieu de l'écran
-  const [bw, bh] = tailleB(), W = bw / 32, H = bh / 32, a = 24 * Math.PI / 180, cy = 0.25 + H * 0.13;
+  const [bw, bh] = tailleB(), W = bw / 32, H = bh / 32, a = 24 * Math.PI / 180, cy = 0.25 + H * 0.2;
   Object.assign(cameraB, { left: -W / 2, right: W / 2, top: H / 2, bottom: -H / 2 });
   cameraB.position.set(0, cy + Math.sin(a) * 30, Math.cos(a) * 30); cameraB.lookAt(0, cy, 0); cameraB.updateProjectionMatrix();
   const nomD = Sd ? sansAccent(Sd.nom) : av.t.brig ? 'BRIGANDS' : 'MILICE';
@@ -1547,8 +1547,8 @@ function animerBataille(now) {
     image(s, 0, anim, anim === 2 ? Math.min(3, Math.floor((f - fAtt[0]) / ((fAtt[1] - fAtt[0]) / 4))) : fr(170 + k * 9));
     if (u.passe === p && f > 0.75 && p < 3) u.mortA = now;
   });
-  bouger(B.attaquants, 1, 0.5, [0.3, 0.7]);
-  bouger(B.defenseurs, -1, 0.2, [0.4, 0.8]);
+  bouger(B.attaquants, 1, 0.3, [0.3, 0.7]);
+  bouger(B.defenseurs, -1, 0.1, [0.4, 0.8]);
   // les flèches : une courbe de l'archer à sa cible, la pointe dans le sens de la course
   B.fleches = B.fleches.filter(fl => {
     const k = (now - fl.debut) / (600 * (window.lenteurFleches || 1));   // lenteurFleches : pour les captures de test
