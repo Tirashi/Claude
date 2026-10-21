@@ -487,7 +487,7 @@ function scene(now, UH, ph) {
     const cx = thor ? (s ? 48 : UW - 48) : (s ? UW - 48 : 48), a = Math.min(1, u * 3) * Math.min(1, (1 - u) * 4);
     if (thor) { g.fillStyle = `rgba(10,14,40,${0.45 * a})`; g.fillRect(0, 0, UW, UH); for (let k = 0; k < 6; k++) { g.fillStyle = `rgba(40,46,70,${0.8 * a})`; g.beginPath(); g.ellipse(cx - 40 + k * 16, 10 + Math.sin(k * 2) * 4, 16, 6, 0, 0, 7); g.fill(); } }
     const rg = g.createRadialGradient(cx, 30, 2, cx, 30, 44); rg.addColorStop(0, thor ? `rgba(160,210,255,${0.6 * a})` : `rgba(255,230,140,${0.6 * a})`); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.fillRect(cx - 50, -20, 100, 100);
-    if (thor || idunn) { g.globalAlpha = a; g.drawImage(DIEUX[thor ? 0 : 1], Math.round(cx - 22), 4); g.globalAlpha = 1; }
+    if (thor || idunn) { if (!DIEUX.length) DIEUX.push(spriteDieu(true), spriteDieu(false)); g.globalAlpha = a; g.drawImage(DIEUX[thor ? 0 : 1], Math.round(cx - 22), 4); g.globalAlpha = 1; }
     else {
       // les autres dieux (en attendant leurs portraits, session 3) : une pierre runique qui s'illumine
       g.globalAlpha = a; g.fillStyle = '#2a2a3a'; g.fillRect(cx - 7, 10, 14, 34); g.fillStyle = '#4a4a5c'; g.fillRect(cx - 7, 10, 3, 34);
@@ -522,7 +522,11 @@ function dessiner(now) {
 function boucle() {
   const now = horloge();
   try { if (E && !pause) { majBataille(now); tourIa(now); } dessiner(now); }
-  catch (e) { console.error(e); }
+  catch (e) {
+    // une erreur au milieu du dessin laisse des save() sans restore() : on repart d'un contexte propre (sinon tout s'empile, image après image)
+    console.error(e);
+    if (g.reset) g.reset(); else { g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.filter = 'none'; }
+  }
   requestAnimationFrame(boucle);
 }
 

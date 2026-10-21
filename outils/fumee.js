@@ -122,6 +122,13 @@ const shots = process.argv[2];
         const J = Jarls, wait = ms => new Promise(r => setTimeout(r, ms)), E = () => J.etat();
         J.duel({ dieu: 'loki', niveau: 2, graine: 7 });
         if (!localStorage.getItem('jarls.run')) return 'partie pas sauvegardée';
+        // chaque effet de la bataille se dessine (21/10 : le portrait de Thor manquait et cassait tout le dessin, HUD et dés compris)
+        const t0 = performance.now() / 1000;
+        for (const nom of ['dieu', 'foudre', 'soin', 'fleches', 'haches', 'mains', 'hiver']) for (const id of ['thor', 'idunn', 'loki']) {
+          J.vue().anim = { t0: t0 - 1, fin: t0 + 5, ph: [{ nom, id, qui: 0, att: [2, 2], def: [1, 1], t: 0, d: 2, coup: 9, txt: 'ESSAI' }] };
+          try { dessiner(t0); } catch (e) { J.vue().anim = null; return `dessin de « ${nom} » (${id}) : ${e.message}`; }
+        }
+        J.vue().anim = null;
         let batailles = 0;
         for (let n = 0; n < 600 && !E().fin; n++) {
           if (J.vue().anim) { batailles++; J.accelerer(); await wait(40); continue; }
