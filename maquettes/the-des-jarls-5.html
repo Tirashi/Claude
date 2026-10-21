@@ -1,0 +1,488 @@
+<title>Thé des Jarls, session 3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@400;500;600&display=swap">
+<style>
+/* Maquette 5 du Thé des Jarls (21/10) : avant la session 3, trois écrans à choisir.
+   1. choisir ses trois faveurs (A autel des runes, B cartes des dieux, C conseil des jarls) ;
+   2. apprendre à jouer (T1 duel guidé, T2 livre du skalde) ;
+   3. la campagne des tavernes (K1 route du fjord, K2 livre des sagas).
+   Couleurs et polices du jeu : nuit bleue, bois, Cinzel pour les titres, Fredoka pour lire. */
+:root{--fond:#0b0e1c;--nuit:#121628;--texte:#f2ede4;--doux:#c8bfae;--or:#f3d58c;--or2:#f0c24a;--bois1:#80502a;--bois2:#4a2a14;--cadre:#050404;
+  --att:#d0573e;--def:#4f86e8;--jet:#e2ad2c;--ruse:#a274dc;color-scheme:dark;--titre:Cinzel,Georgia,serif;--lire:Fredoka,system-ui,sans-serif}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--lire);font-size:16px;line-height:1.5;padding:24px max(16px,env(safe-area-inset-left,0px)) 48px}
+.page{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--titre);font-weight:900;font-size:clamp(20px,4.4vw,30px);color:var(--or);margin:0;letter-spacing:.04em}
+h2.sec{font-family:var(--titre);font-weight:900;font-size:20px;color:var(--or);margin:12px 0 0;border-top:1px solid #2a3256;padding-top:22px}
+header p,.texte p{margin:8px 0 0;color:var(--doux);max-width:75ch}
+b{color:var(--texte);font-weight:600}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:30px 24px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%}
+.dir h3{font-family:var(--titre);font-weight:900;font-size:15px;color:var(--or);margin:0;text-align:center;letter-spacing:.04em}
+.dir ul{margin:0;padding-left:18px;color:var(--doux);font-size:14px;max-width:40ch}
+.tel{width:100%;max-width:310px;aspect-ratio:272/560;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;position:relative;background:var(--nuit);box-shadow:0 10px 30px #0008;display:flex;flex-direction:column}
+button{font-family:var(--titre);font-weight:900;letter-spacing:.04em;color:#ffe0a0;background:linear-gradient(var(--bois1),var(--bois2));border:0;border-radius:7px;
+  box-shadow:inset 0 1px 0 #c58a4a,0 2px 0 #000,0 0 0 2px #2a1a0c;cursor:pointer;padding:9px 10px;font-size:13px}
+button.or{background:linear-gradient(#c8902c,#7a4c10);color:#fff4c8;box-shadow:inset 0 1px 0 #ffd27a,0 2px 0 #000,0 0 0 2px #2a1a0c}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,.pierre:focus-visible{outline:2px solid var(--or2);outline-offset:2px}
+.titreTel{font-family:var(--titre);font-weight:900;color:var(--or);text-align:center;font-size:15px;padding:12px 8px 4px;letter-spacing:.05em}
+/* médaillon d'un dieu : couleur de sa famille + initiale gravée */
+.med{--c:var(--att);width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--titre);font-weight:900;color:#fff4dc;font-size:19px;
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 55%,#fff) ,var(--c) 45%,color-mix(in srgb,var(--c) 45%,#000));box-shadow:inset 0 -3px 0 #0005,0 0 0 2px #1a1208,0 0 0 3px color-mix(in srgb,var(--c) 60%,#000);text-shadow:0 1px 0 #0008}
+.att{--c:var(--att)}.def{--c:var(--def)}.jet{--c:var(--jet)}.ruse{--c:var(--ruse)}
+/* emplacements des trois faveurs */
+.slots{display:flex;justify-content:center;gap:12px;padding:6px 0 8px}
+.slot{width:48px;height:48px;border-radius:50%;border:2px dashed #4a5480;display:grid;place-items:center;color:#4a5480;font-size:20px;position:relative}
+.slot .med{width:48px;height:48px;font-size:20px}
+.slot small{position:absolute;top:52px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--doux);white-space:nowrap}
+.bas{padding:8px 10px 12px;display:flex;gap:8px;margin-top:auto;background:linear-gradient(#0000,#0b0e1c 30%)}
+.bas button{flex:1}
+/* A : autel des runes */
+.filtres{display:flex;gap:5px;justify-content:center;padding:14px 6px 6px;flex-wrap:wrap}
+.filtres span{font-size:11px;padding:3px 8px;border-radius:20px;background:#1e2442;color:var(--doux);cursor:pointer;border:1px solid #2e3660}
+.filtres span.on{background:#3a4478;color:#fff;border-color:#6a78c0}
+.autel{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:8px 2px;padding:4px 8px 10px;align-content:start}
+.pierre{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:10.5px;color:var(--doux);position:relative;padding:2px 0}
+.pierre.pris .med{box-shadow:inset 0 -3px 0 #0005,0 0 0 2px #ffd36b,0 0 12px #ffd36b88}
+.pierre.pris::after{content:"✓";position:absolute;top:0;right:12px;color:#ffd36b;font-size:12px;font-weight:600}
+.feuille{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#2a1c10,#1a1008);border-top:2px solid #c8902c;border-radius:16px 16px 0 0;padding:12px 14px 14px;
+  transform:translateY(105%);transition:transform .22s ease;box-shadow:0 -10px 30px #000a;z-index:3}
+.feuille.ouverte{transform:none}
+.ftete{display:flex;gap:10px;align-items:center}
+.ftete b{font-family:var(--titre);font-weight:900;color:var(--or);font-size:15px;line-height:1.15;display:block}
+.ftete i{font-style:normal;font-size:12px;color:var(--doux)}
+.niv{margin:10px 0;display:flex;flex-direction:column;gap:5px}
+.niv div{display:grid;grid-template-columns:28px 34px 1fr;gap:4px;font-size:12.5px;line-height:1.25;align-items:center;background:#0006;border-radius:6px;padding:5px 6px}
+.niv em{font-style:normal;font-family:var(--titre);font-weight:900;color:var(--or)}
+.niv span.c{color:#ffd36b;font-weight:600}
+.quand{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:10px;background:#3a2a50;color:#e0ccff;margin-top:2px}
+.quand.av{background:#203a50;color:#cce6ff}
+/* B : cartes des dieux */
+.scene{flex:1;display:flex;align-items:center;justify-content:center;position:relative;touch-action:pan-y}
+.carte{width:78%;height:88%;border-radius:14px;background:linear-gradient(170deg,#3a2614,#1c120a);box-shadow:0 0 0 2px #c8902c,0 12px 30px #000c;display:flex;flex-direction:column;align-items:center;padding:14px 12px;gap:6px;box-sizing:border-box;transition:transform .2s}
+.carte .med{width:84px;height:84px;font-size:38px}
+.carte b{font-family:var(--titre);font-weight:900;color:var(--or);font-size:16px;text-align:center;line-height:1.15}
+.carte .dieuN{font-size:12px;color:var(--doux);margin-top:-4px}
+.carte .niv{width:100%;margin:4px 0 0}
+.carte.prise{box-shadow:0 0 0 3px #ffd36b,0 0 24px #ffd36b66,0 12px 30px #000c}
+.fl{position:absolute;top:50%;transform:translateY(-50%);background:#0008;border:0;color:var(--or);font-size:22px;width:30px;height:46px;padding:0;box-shadow:none;border-radius:8px}
+.fl.g{left:4px}.fl.d{right:4px}
+.points{text-align:center;font-size:11px;color:var(--doux)}
+.fam{font-size:11px;padding:1px 8px;border-radius:10px;background:color-mix(in srgb,var(--c) 35%,#000);color:#fff}
+/* C : conseil */
+.decks{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 10px}
+.deck{background:#1e2442;border:1px solid #2e3660;border-radius:9px;padding:6px 7px;cursor:pointer}
+.deck.on{border-color:#ffd36b;background:#3a3420}
+.deck b{font-family:var(--titre);font-weight:900;font-size:11.5px;color:var(--or);display:block}
+.deck span{font-size:10.5px;color:var(--doux);line-height:1.2;display:block}
+.deck .mini{display:flex;gap:3px;margin:3px 0}
+.deck .mini .med{width:20px;height:20px;font-size:10px;box-shadow:none}
+.sep{font-size:11px;color:#8a8aa8;text-align:center;padding:2px 0 4px}
+.liste{flex:1;overflow-y:auto;padding:0 8px 8px;display:flex;flex-direction:column;gap:4px}
+.ligne{display:flex;align-items:center;gap:8px;background:#161b34;border-radius:8px;padding:5px 7px;cursor:pointer;border:1px solid transparent}
+.ligne .med{width:30px;height:30px;font-size:14px}
+.ligne div{flex:1;min-width:0}
+.ligne b{font-family:var(--titre);font-weight:900;font-size:12px;color:var(--or);display:block}
+.ligne span{font-size:11px;color:var(--doux);display:block;line-height:1.25}
+.ligne .coche{width:20px;height:20px;border-radius:5px;border:2px solid #4a5480;flex:none;display:grid;place-items:center;color:#1a1208;font-weight:700;font-size:13px}
+.ligne.pris{border-color:#c8902c;background:#2a2414}
+.ligne.pris .coche{background:#ffd36b;border-color:#ffd36b}
+.ligne .med,.saga .med{flex:none}
+.ligne .det{display:none;font-size:11px;color:#e8d8b8;margin-top:3px}
+.ligne.ouverte .det{display:block}
+.famT{font-family:var(--titre);font-weight:900;font-size:11px;color:#8a92c0;padding:6px 2px 0;letter-spacing:.06em}
+/* jeu factice (apprentissage) */
+.jeu{flex:1;display:flex;flex-direction:column;position:relative}
+.hud{display:flex;justify-content:space-between;padding:6px 8px;font-family:var(--titre);font-weight:900;color:var(--or);font-size:11px}
+.pips{display:flex;gap:2px;margin-top:2px}.pips i{width:5px;height:6px;background:#c9d0d8;border-radius:2px 2px 1px 1px}
+.champ{height:38%;position:relative;background:linear-gradient(#141c3c,#4b5c90 30%,#d8968a 45%,#f6c08a 47%,#56628f 48%,#4d6a34 52%,#2a4220);overflow:hidden}
+.armee{position:absolute;bottom:8%;width:34%;height:40%;background:repeating-linear-gradient(90deg,var(--a) 0 4px,#0000 4px 6px),repeating-linear-gradient(#0000 0 5px,#0004 5px 7px);border-radius:3px;opacity:.95}
+.armee.b{left:4%;--a:#3f73d6}.armee.r{right:4%;--a:#c23a2e}
+.msgJ{position:absolute;top:8px;left:0;right:0;text-align:center;font-family:var(--titre);font-weight:900;color:#ffe3a0;font-size:12px;text-shadow:0 1px 3px #000}
+.plateau{flex:1;background:linear-gradient(#6a4224,#3a2210);display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 8px}
+.des{display:grid;grid-template-columns:repeat(3,40px);gap:9px}
+.de{width:40px;height:40px;border-radius:8px;background:linear-gradient(#fbf4e2,#d8c49a);display:grid;place-items:center;font-size:19px;box-shadow:0 3px 0 #0006;color:#4a2a14}
+.de.g{box-shadow:0 0 0 2px #ffd36b,0 3px 0 #0006;transform:translateY(-4px)}
+.de.o{background:linear-gradient(#fff0a8,#e8b440)}
+.favs{display:flex;gap:5px;width:100%}
+.favs div{flex:1;background:#1c140cd0;border:1px solid #f3d58c40;border-radius:6px;font-family:var(--titre);font-weight:900;color:var(--or);font-size:10px;text-align:center;padding:5px 0}
+.btns{display:flex;gap:6px;width:100%}.btns button{flex:1;font-size:11px;padding:8px 4px}
+/* projecteur du duel guidé */
+.voile{position:absolute;inset:0;z-index:4;pointer-events:none}
+.spot{position:absolute;border-radius:10px;box-shadow:0 0 0 999px #000a,0 0 0 2px #ffd36b,0 0 18px #ffd36b;transition:all .3s ease}
+.bulle{position:absolute;left:10px;right:10px;z-index:5;background:linear-gradient(#2a1c10,#1a1008);border:2px solid #c8902c;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.35;transition:top .3s ease}
+.bulle .qui{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.bulle .qui .med{width:30px;height:30px;font-size:14px}
+.bulle .qui b{font-family:var(--titre);font-weight:900;color:var(--or);font-size:12px}
+.bulle .nav{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11px;color:var(--doux)}
+.bulle .nav button{font-size:11px;padding:6px 12px}
+/* livre du skalde */
+.livre{flex:1;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 20%,#3a2a18,#1a1008);padding:12px 14px;gap:8px;position:relative}
+.pageL{flex:1;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.pageL h4{font-family:var(--titre);font-weight:900;color:var(--or);margin:4px 0 0;font-size:17px}
+.pageL p{margin:0;font-size:13px;line-height:1.4;color:#eadcc4}
+.ill{width:100%;min-height:120px;border-radius:10px;background:#0006;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:8px;box-sizing:border-box}
+.face{display:grid;grid-template-columns:34px 1fr;gap:6px;align-items:center;text-align:left;font-size:12px;width:100%}
+.face .de{width:32px;height:32px;font-size:16px}
+.chrono{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;font-size:12px}
+.chrono div{display:flex;gap:7px;align-items:center}
+.chrono span.n{width:20px;height:20px;border-radius:50%;background:#c8902c;color:#1a1008;display:grid;place-items:center;font-weight:700;font-size:11px;flex:none}
+.puces{display:flex;gap:5px;justify-content:center}.puces i{width:7px;height:7px;border-radius:50%;background:#5a4430}.puces i.on{background:#ffd36b}
+/* K1 route du fjord */
+.route{flex:1;overflow-y:auto;position:relative;background:linear-gradient(#1b2a3a,#22402a 40%,#2a4a24 70%,#3a5a2a)}
+.route svg{position:absolute;left:0;top:0;width:100%}
+.tav{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:600;color:#fff4dc;cursor:pointer;text-shadow:0 1px 2px #000,0 0 4px #000}
+.maison{width:30px;height:24px;position:relative}
+.maison::before{content:"";position:absolute;left:3px;right:3px;bottom:0;height:13px;background:#6e5a62;border:2px solid #2a1a0c;border-top:0}
+.maison::after{content:"";position:absolute;left:-1px;right:-1px;top:0;height:12px;background:#4e6058;clip-path:polygon(50% 0,100% 100%,0 100%);}
+.tav.fait .maison::before{background:#a8804a}.tav.fait .maison::after{background:#7a5a2a}
+.tav.ici .maison{animation:pulse 1.2s infinite}
+.tav.ferme{opacity:.45}
+@keyframes pulse{50%{transform:scale(1.15);filter:drop-shadow(0 0 6px #ffd36b)}}
+.etoiles{color:#ffd36b;font-size:9px;letter-spacing:1px}
+.fiche{position:absolute;left:8px;right:8px;bottom:8px;background:linear-gradient(#2a1c10,#1a1008);border:2px solid #c8902c;border-radius:12px;padding:10px 12px;font-size:12.5px;z-index:3}
+.fiche b{font-family:var(--titre);font-weight:900;color:var(--or)}
+.fiche .ftete{margin-bottom:6px}
+.fiche button{width:100%;margin-top:8px}
+/* K2 livre des sagas */
+.chap{font-family:var(--titre);font-weight:900;color:#8a92c0;font-size:12px;padding:10px 12px 4px;letter-spacing:.06em;display:flex;justify-content:space-between}
+.chap span{font-family:var(--lire);font-weight:500;font-size:11px;color:#6a7098;letter-spacing:0}
+.saga{display:flex;align-items:center;gap:9px;margin:0 8px 5px;padding:6px 8px;border-radius:9px;background:linear-gradient(#5a3a20,#3a2412);box-shadow:inset 0 1px 0 #a87a40;cursor:pointer}
+.saga .med{width:34px;height:34px;font-size:15px}
+.saga div{flex:1;min-width:0}
+.saga b{font-family:var(--titre);font-weight:900;font-size:12.5px;color:#ffe0a0;display:block}
+.saga span{font-size:11px;color:#e0c8a0;display:block;line-height:1.2}
+.saga.ferme{filter:grayscale(1) brightness(.6)}
+.saga.ici{box-shadow:inset 0 1px 0 #a87a40,0 0 0 2px #ffd36b}
+.texte h2{font-family:var(--titre);font-weight:900;font-size:16px;color:var(--or);margin:0}
+.texte ul{color:var(--doux);margin:8px 0 0;padding-left:20px;max-width:80ch}
+.texte li{margin:3px 0}
+</style>
+
+<div class="page">
+<header>
+  <h1>LE THÉ DES JARLS · 5</h1>
+  <p>Avant la session 3 : <b>trois écrans à choisir</b>. Tout est manipulable (touche les pierres, les cartes, les flèches, SUIVANT…). Les faveurs sont les vraies, avec leurs coûts du jeu. Les médaillons à initiale remplacent pour l'instant les portraits des dieux (ils viendront en pixel art, comme Thor et Idunn).</p>
+  <p>Couleur d'un médaillon = sa <b>famille</b> : <span style="color:var(--att)">●</span> attaque, <span style="color:var(--def)">●</span> défense et soins, <span style="color:var(--jet)">●</span> jetons, <span style="color:var(--ruse)">●</span> ruse.</p>
+</header>
+
+<h2 class="sec">1 · CHOISIR SES TROIS FAVEURS</h2>
+<div class="grille">
+  <section class="dir">
+    <div class="tel" id="telA">
+      <div class="titreTel">TES TROIS FAVEURS</div>
+      <div class="slots" data-slots></div>
+      <div class="filtres" id="filtresA"></div>
+      <div class="autel" id="autel"></div>
+      <div class="bas"><button class="or" data-ok disabled>AU COMBAT</button></div>
+      <div class="feuille" id="feuilleA"></div>
+    </div>
+    <h3>A · L'AUTEL DES RUNES</h3>
+    <ul><li>Les <b>20 dieux d'un coup d'œil</b>, en pierres rangées par famille, avec un filtre.</li><li>Toucher une pierre ouvre <b>sa fiche en bas</b> (les 3 niveaux, avant ou après la bataille) avec PRENDRE.</li><li>Les trois emplacements en haut se remplissent ; toucher un emplacement le vide.</li></ul>
+  </section>
+  <section class="dir">
+    <div class="tel" id="telB">
+      <div class="titreTel">TES TROIS FAVEURS</div>
+      <div class="scene" id="sceneB"><button class="fl g" aria-label="précédent">‹</button><div class="carte" id="carteB"></div><button class="fl d" aria-label="suivant">›</button></div>
+      <div class="points" id="pointsB"></div>
+      <div class="slots" data-slots></div>
+      <div class="bas"><button id="prendreB">EMPORTER</button><button class="or" data-ok disabled>AU COMBAT</button></div>
+    </div>
+    <h3>B · LES CARTES DES DIEUX</h3>
+    <ul><li>Une <b>grande carte par dieu</b>, on les fait défiler du doigt (ou avec les flèches).</li><li>Tout est lisible sans rien ouvrir : portrait, famille, les 3 niveaux.</li><li>Plus lent pour comparer, mais le plus beau et le plus clair pour un débutant.</li></ul>
+  </section>
+  <section class="dir">
+    <div class="tel" id="telC">
+      <div class="titreTel">LE CONSEIL DES JARLS</div>
+      <div class="slots" data-slots></div>
+      <div class="decks" id="decks"></div>
+      <div class="sep">ou compose ta propre main</div>
+      <div class="liste" id="listeC"></div>
+      <div class="bas"><button class="or" data-ok disabled>AU COMBAT</button></div>
+    </div>
+    <h3>C · LE CONSEIL DES JARLS</h3>
+    <ul><li><b>Quatre mains toutes prêtes</b> (La foudre, Le bouclier, Le voleur, La horde) : on choisit en un toucher.</li><li>Dessous, une <b>liste courte</b> par famille : une ligne par dieu, son effet résumé ; toucher la ligne déplie le détail, la case coche.</li><li>La dernière main jouée est proposée la fois suivante.</li></ul>
+  </section>
+</div>
+
+<h2 class="sec">2 · APPRENDRE À JOUER</h2>
+<div class="grille">
+  <section class="dir">
+    <div class="tel" id="telT1">
+      <div class="jeu">
+        <div class="hud"><div>TOI<div class="pips">${PIPS}</div></div><div style="text-align:right">THORGRIM<div class="pips" style="justify-content:flex-end">${PIPS}</div></div></div>
+        <div class="champ" data-z="champ"><div class="armee b"></div><div class="armee r"></div><div class="msgJ">MANCHE 1</div></div>
+        <div class="plateau">
+          <div class="des" data-z="des">${DES}</div>
+          <div class="favs" data-z="favs"><div>THOR</div><div>IDUNN</div><div>VIDAR</div></div>
+          <div class="btns"><button class="or" data-z="lancer">LANCER 1/3</button><button data-z="garder">TOUT GARDER</button></div>
+        </div>
+        <div class="voile"><div class="spot" id="spot"></div></div>
+        <div class="bulle" id="bulle"></div>
+      </div>
+    </div>
+    <h3>T1 · LE PREMIER DUEL GUIDÉ</h3>
+    <ul><li>Un <b>vrai duel</b> contre Thorgrim, un vieux jarl très faible, avec <b>Sigrid la skalde</b> qui explique pas à pas et éclaire ce dont elle parle.</li><li>Les dés sont <b>arrangés</b> : la première bataille montre chaque face, une faveur dorée tombe à point, Thor frappe.</li><li>Proposé au premier lancement, rejouable depuis le titre (APPRENDRE À JOUER).</li></ul>
+  </section>
+  <section class="dir">
+    <div class="tel" id="telT2">
+      <div class="titreTel">LE LIVRE DU SKALDE</div>
+      <div class="livre"><div class="pageL" id="pageL"></div><div class="puces" id="puces"></div>
+        <div style="display:flex;gap:8px"><button id="precL" style="flex:1">‹ AVANT</button><button class="or" id="suivL" style="flex:1">SUITE ›</button></div></div>
+    </div>
+    <h3>T2 · LE LIVRE DU SKALDE</h3>
+    <ul><li><b>Sept pages illustrées</b>, une idée par page, qu'on tourne du doigt : le but, les faces, garder et relancer, l'or, les faveurs, l'ordre de la bataille, l'hiver.</li><li>Remplace l'aide actuelle (un long texte).</li><li>Rapide à lire, mais on apprend sans jouer.</li></ul>
+  </section>
+  <section class="dir">
+    <div class="texte" style="max-width:310px">
+      <h2>COMMUN AUX DEUX</h2>
+      <ul>
+        <li>En jeu, un petit bouton <b>?</b> à côté de la pause montre <b>le rappel des faces</b> (hache → charge contre casque, flèche → volée contre bouclier, main → vol d'un jeton, doré → +1 jeton) et l'ordre de la bataille.</li>
+        <li>Pendant les <b>trois premières parties</b>, des <b>astuces</b> en une ligne au bon moment : « Tu as 3 haches et lui aucun casque : garde-les ! », « Thor te volerait 2 jetons : choisis une faveur d'avant la bataille ».</li>
+        <li>Mon conseil : <b>T1</b> pour le premier lancement (on apprend en jouant), et <b>T2</b> comme aide à relire (COMMENT JOUER) : les deux se complètent, le livre coûte peu.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<h2 class="sec">3 · LA CAMPAGNE DES TAVERNES</h2>
+<div class="grille">
+  <section class="dir">
+    <div class="tel" id="telK1">
+      <div class="titreTel">LA ROUTE DU FJORD</div>
+      <div class="route" id="route"></div>
+    </div>
+    <h3>K1 · LA ROUTE DU FJORD</h3>
+    <ul><li>Une <b>carte qu'on remonte</b> : 20 tavernes le long du fjord, du plus faible des dieux (Heimdall) au plus fort (Hel).</li><li>Taverne faite : toit doré et étoiles ; la suivante <b>pulse</b> ; les autres attendent, grisées.</li><li>Toucher une taverne ouvre sa fiche : le dieu, sa faveur à gagner, DÉFIER.</li></ul>
+  </section>
+  <section class="dir">
+    <div class="tel" id="telK2">
+      <div class="titreTel">LE LIVRE DES SAGAS</div>
+      <div class="liste" id="sagas" style="padding:0 0 8px"></div>
+    </div>
+    <h3>K2 · LE LIVRE DES SAGAS</h3>
+    <ul><li><b>Quatre chapitres de cinq dieux</b> (Midgard, Vanaheim, Jötunheim, Asgard), en planches de bois.</li><li>Chaque planche dit tout : le dieu, son style, la faveur gagnée, les étoiles.</li><li>Plus sobre que la carte, plus rapide à lire.</li></ul>
+  </section>
+  <section class="dir">
+    <div class="texte" style="max-width:310px">
+      <h2>LES RÈGLES DE LA CAMPAGNE (PROPOSITION)</h2>
+      <ul>
+        <li>On commence avec <b>Thor, Idunn et Vidar</b>. Battre un dieu <b>gagne sa faveur</b> et ouvre la taverne suivante.</li>
+        <li>Ordre du plus faible au plus fort, d'après le simulateur ; niveau de l'ordinateur <b>FACILE</b> aux tavernes 1 à 7, <b>NORMAL</b> de 8 à 14, <b>DIFFICILE</b> de 15 à 20.</li>
+        <li><b>Étoiles</b> : ★ victoire, ★★ en gardant 8 PV, ★★★ en gardant 12 PV. Rejouer une taverne pour les étoiles.</li>
+        <li>Les tavernes de Thor, Idunn et Vidar (faveurs déjà connues) donnent une <b>apparence</b> ; tous les 5 dieux battus, une <b>unité</b> (berserkers, cavaliers, porte-bannière, skjaldmö) ou des bannières pour son armée.</li>
+        <li>Le <b>duel libre</b> (choisir son dieu) et le <b>défi du jour</b> restent à côté de la campagne ; en duel libre, on n'emporte que des faveurs gagnées.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<section class="texte">
+  <h2>À DIRE</h2>
+  <ul>
+    <li>Quel écran pour les faveurs : <b>A</b>, <b>B</b> ou <b>C</b> (ou un mélange, par exemple C avec les fiches de A) ?</li>
+    <li>Pour apprendre : <b>T1</b>, <b>T2</b>, ou les deux comme je le conseille ?</li>
+    <li>Pour la campagne : <b>K1</b> ou <b>K2</b> ? Et les règles proposées te vont-elles ?</li>
+  </ul>
+</section>
+</div>
+
+<script>
+"use strict";
+// [id, dieu, nom de la faveur, avant/après, [[coût, effet] × 3]] : tiré de the-des-jarls/regles.js
+const FAV = [["thrymr","Thrymr","Larcin de Thrymr","avant",[[3,"La faveur adverse perd 1 niveau."],[6,"La faveur adverse perd 2 niveaux."],[9,"La faveur adverse perd 3 niveaux."]]],["var","Var","Serment de Var","avant",[[6,"+1 PV par jeton que l'adversaire dépense."],[9,"+2 PV par jeton que l'adversaire dépense."],[12,"+3 PV par jeton que l'adversaire dépense."]]],["freyja","Freyja","Abondance de Freyja","avant",[[2,"Lance 1 dé de plus pour la bataille."],[4,"Lance 2 dés de plus pour la bataille."],[6,"Lance 3 dés de plus pour la bataille."]]],["frigg","Frigg","Regard de Frigg","avant",[[2,"Relance les 2 meilleurs dés adverses."],[3,"Relance les 3 meilleurs dés adverses."],[4,"Relance les 4 meilleurs dés adverses."]]],["loki","Loki","Ruse de Loki","avant",[[3,"Écarte 1 dé adverse (les plus dangereux)."],[6,"Écarte 2 dés adverses (les plus dangereux)."],[9,"Écarte 3 dés adverses (les plus dangereux)."]]],["tyr","Tyr","Gage de Tyr","avant",[[4,"Sacrifie 1 PV : l'adversaire perd 2 jetons."],[6,"Sacrifie 1 PV : l'adversaire perd 3 jetons."],[8,"Sacrifie 1 PV : l'adversaire perd 4 jetons."]]],["vidar","Vidar","Puissance de Vidar","avant",[[2,"Retire 2 casques à l'adversaire."],[4,"Retire 4 casques à l'adversaire."],[6,"Retire 6 casques à l'adversaire."]]],["ullr","Ullr","Visée d'Ullr","avant",[[2,"2 flèches passent les boucliers."],[3,"3 flèches passent les boucliers."],[4,"6 flèches passent les boucliers."]]],["baldr","Baldr","Invulnérabilité de Baldr","avant",[[2,"+1 défense par dé casque ou bouclier."],[4,"+2 défense par dé casque ou bouclier."],[6,"+3 défense par dé casque ou bouclier."]]],["brunhild","Brunhild","Fureur de Brunhild","avant",[[5,"Haches ×1,5 (arrondi au-dessus)."],[8,"Haches ×2 (arrondi au-dessus)."],[14,"Haches ×3 (arrondi au-dessus)."]]],["freyr","Freyr","Présent de Freyr","avant",[[4,"+2 à la face la plus nombreuse."],[6,"+3 à la face la plus nombreuse."],[8,"+4 à la face la plus nombreuse."]]],["skadi","Skadi","Chasse de Skadi","avant",[[6,"+1 flèche par dé flèche."],[10,"+2 flèches par dé flèche."],[14,"+3 flèches par dé flèche."]]],["heimdall","Heimdall","Veille de Heimdall","avant",[[4,"+1 PV par attaque parée."],[7,"+2 PV par attaque parée."],[10,"+3 PV par attaque parée."]]],["hel","Hel","Étreinte de Hel","avant",[[5,"+1 PV par blessure de hache infligée."],[9,"+2 PV par blessure de hache infligée."],[14,"+3 PV par blessure de hache infligée."]]],["mimir","Mimir","Sagesse de Mimir","avant",[[3,"+1 jeton par PV perdu dans la bataille."],[5,"+2 jetons par PV perdu dans la bataille."],[7,"+3 jetons par PV perdu dans la bataille."]]],["bragi","Bragi","Verve de Bragi","avant",[[4,"+2 jetons par dé main."],[8,"+3 jetons par dé main."],[12,"+4 jetons par dé main."]]],["skuld","Skuld","Dette de Skuld","avant",[[4,"L'adversaire perd 2 jetons par dé flèche."],[6,"L'adversaire perd 3 jetons par dé flèche."],[8,"L'adversaire perd 4 jetons par dé flèche."]]],["thor","Thor","Foudre de Thor","apres",[[4,"2 blessures après la bataille."],[8,"5 blessures après la bataille."],[12,"8 blessures après la bataille."]]],["idunn","Idunn","Pommes d'Idunn","apres",[[4,"+2 PV après la bataille."],[7,"+4 PV après la bataille."],[10,"+6 PV après la bataille."]]],["odin","Odin","Sacrifice d'Odin","apres",[[2,"Sacrifie 3 PV (jamais le dernier) : +3 jetons par PV."],[3,"Sacrifie 3 PV (jamais le dernier) : +4 jetons par PV."],[4,"Sacrifie 3 PV (jamais le dernier) : +5 jetons par PV."]]]];
+const FAM = { thor: 'att', brunhild: 'att', skadi: 'att', ullr: 'att', vidar: 'att', freyr: 'att', idunn: 'def', baldr: 'def', heimdall: 'def', hel: 'def', var: 'def',
+  bragi: 'jet', mimir: 'jet', odin: 'jet', skuld: 'jet', tyr: 'jet', loki: 'ruse', frigg: 'ruse', freyja: 'ruse', thrymr: 'ruse' };
+const FAM_NOM = { att: 'ATTAQUE', def: 'DÉFENSE', jet: 'JETONS', ruse: 'RUSE' };
+const COURT = { thor: '2 / 5 / 8 blessures après la bataille', brunhild: 'haches ×1,5 / ×2 / ×3', skadi: '+1 / 2 / 3 flèches par dé flèche', ullr: '2 / 3 / 6 flèches passent les boucliers',
+  vidar: 'retire 2 / 4 / 6 casques adverses', freyr: '+2 / 3 / 4 à ta face la plus nombreuse', idunn: '+2 / 4 / 6 PV après la bataille', baldr: '+1 / 2 / 3 défense par casque et bouclier',
+  heimdall: '+1 / 2 / 3 PV par attaque parée', hel: '+1 / 2 / 3 PV par blessure de hache', var: '+1 / 2 / 3 PV par jeton dépensé en face', bragi: '+2 / 3 / 4 jetons par main',
+  mimir: '+1 / 2 / 3 jetons par PV perdu', odin: '3 PV contre 9 / 12 / 15 jetons', skuld: 'en face : −2 / 3 / 4 jetons par flèche', tyr: '1 PV contre −2 / 3 / 4 jetons en face',
+  loki: 'écarte 1 / 2 / 3 dés adverses', frigg: 'relance 2 / 3 / 4 dés adverses', freyja: '1 / 2 / 3 dés de plus', thrymr: 'la faveur adverse perd 1 / 2 / 3 niveaux' };
+const PAR = Object.fromEntries(FAV.map(f => [f[0], f]));
+const ORDRE_FAM = ['att', 'def', 'jet', 'ruse'];
+const triFam = FAV.map(f => f[0]).sort((a, b) => ORDRE_FAM.indexOf(FAM[a]) - ORDRE_FAM.indexOf(FAM[b]));
+const med = (id, cl = '') => `<div class="med ${FAM[id]} ${cl}">${PAR[id][1][0]}</div>`;
+const niveaux = id => `<div class="niv">${PAR[id][4].map((n, k) => `<div><em>${['I', 'II', 'III'][k]}</em><span class="c">${n[0]} ●</span><span>${n[1]}</span></div>`).join('')}</div>`;
+const quand = id => PAR[id][3] === 'apres' ? '<span class="quand">après la bataille</span>' : '<span class="quand av">avant la bataille</span>';
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+// remplissages du jeu factice
+document.querySelectorAll('.tel').forEach(t => { t.innerHTML = t.innerHTML.replace(/\$\{PIPS\}/g, '<i></i>'.repeat(15)).replace(/\$\{DES\}/g, ['🪓', '🪓', '🏹', '⛑', '🛡', '✋'].map((x, k) => `<div class="de${k === 2 ? ' o' : ''}">${x}</div>`).join('')); });
+
+/* ---------- les trois emplacements, communs à A, B, C ---------- */
+function Choix(tel, maj) {
+  const o = { pris: [], tel, maj };
+  o.basculer = id => { if (o.pris.includes(id)) o.pris = o.pris.filter(x => x !== id); else if (o.pris.length < 3) o.pris.push(id); else { o.pris.shift(); o.pris.push(id); } o.dessiner(); };
+  o.dessiner = () => {
+    tel.querySelector('[data-slots]').innerHTML = [0, 1, 2].map(k => { const id = o.pris[k]; return id ? `<div class="slot" data-id="${id}">${med(id)}<small>${PAR[id][1]}</small></div>` : '<div class="slot">+</div>'; }).join('');
+    const ok = tel.querySelector('[data-ok]'); ok.disabled = o.pris.length !== 3; ok.textContent = o.pris.length === 3 ? 'AU COMBAT' : `${o.pris.length} / 3`;
+    maj();
+  };
+  tel.querySelector('[data-slots]').addEventListener('click', e => { const s = e.target.closest('.slot[data-id]'); if (s) o.basculer(s.dataset.id); });
+  return o;
+}
+
+/* ---------- A : autel des runes ---------- */
+{
+  const tel = document.getElementById('telA'); let filtre = 'tout', ouvert = null;
+  const A = Choix(tel, () => { dessiner(); if (ouvert) fiche(ouvert); });
+  A.pris = ['thor', 'idunn'];
+  const filtres = document.getElementById('filtresA'), autel = document.getElementById('autel'), feuille = document.getElementById('feuilleA');
+  function dessiner() {
+    filtres.innerHTML = [['tout', 'TOUTES'], ...ORDRE_FAM.map(f => [f, FAM_NOM[f]])].map(([k, n]) => `<span data-f="${k}" class="${k === filtre ? 'on' : ''}">${n}</span>`).join('');
+    autel.innerHTML = triFam.filter(id => filtre === 'tout' || FAM[id] === filtre).map(id => `<div class="pierre ${A.pris.includes(id) ? 'pris' : ''}" data-id="${id}" tabindex="0">${med(id)}${PAR[id][1]}</div>`).join('');
+  }
+  function fiche(id) {
+    ouvert = id; const pris = A.pris.includes(id);
+    feuille.innerHTML = `<div class="ftete">${med(id)}<div><b>${esc(PAR[id][2])}</b><i>${PAR[id][1]} · ${FAM_NOM[FAM[id]].toLowerCase()}</i><br>${quand(id)}</div></div>${niveaux(id)}
+      <div style="display:flex;gap:8px"><button data-x style="flex:1">FERMER</button><button class="or" data-p style="flex:2">${pris ? 'RETIRER' : A.pris.length === 3 ? 'PRENDRE (remplace ' + PAR[A.pris[0]][1] + ')' : 'PRENDRE'}</button></div>`;
+    feuille.classList.add('ouverte');
+  }
+  filtres.addEventListener('click', e => { const s = e.target.closest('[data-f]'); if (s) { filtre = s.dataset.f; dessiner(); } });
+  autel.addEventListener('click', e => { const p = e.target.closest('.pierre'); if (p) fiche(p.dataset.id); });
+  feuille.addEventListener('click', e => {
+    if (e.target.closest('[data-x]')) { feuille.classList.remove('ouverte'); ouvert = null; }
+    if (e.target.closest('[data-p]')) { A.basculer(ouvert); feuille.classList.remove('ouverte'); ouvert = null; }
+  });
+  A.dessiner();
+}
+
+/* ---------- B : cartes des dieux ---------- */
+{
+  const tel = document.getElementById('telB'); let k = 0;
+  const B = Choix(tel, () => dessiner());
+  const carte = document.getElementById('carteB'), points = document.getElementById('pointsB'), prendre = document.getElementById('prendreB');
+  function dessiner() {
+    const id = triFam[k], pris = B.pris.includes(id);
+    carte.className = 'carte' + (pris ? ' prise' : '');
+    carte.innerHTML = `${med(id)}<b>${esc(PAR[id][2])}</b><div class="dieuN">${PAR[id][1]}</div><span class="fam ${FAM[id]}">${FAM_NOM[FAM[id]].toLowerCase()}</span>${quand(id)}${niveaux(id)}`;
+    points.textContent = `${k + 1} / 20 · ${FAM_NOM[FAM[id]]}`;
+    prendre.textContent = pris ? 'LAISSER' : 'EMPORTER';
+  }
+  const aller = d => { k = (k + d + 20) % 20; dessiner(); };
+  tel.querySelector('.fl.g').onclick = () => aller(-1); tel.querySelector('.fl.d').onclick = () => aller(1);
+  prendre.onclick = () => B.basculer(triFam[k]);
+  let x0 = null; const sc = document.getElementById('sceneB');
+  sc.addEventListener('pointerdown', e => { x0 = e.clientX; });
+  sc.addEventListener('pointerup', e => { if (x0 !== null && Math.abs(e.clientX - x0) > 40) aller(e.clientX < x0 ? 1 : -1); x0 = null; });
+  B.dessiner();
+}
+
+/* ---------- C : conseil des jarls ---------- */
+{
+  const tel = document.getElementById('telC'), DECKS = [
+    ['LA FOUDRE', ['thor', 'vidar', 'idunn'], 'Frappe fort, se soigne'],
+    ['LE BOUCLIER', ['baldr', 'heimdall', 'idunn'], 'Tient la ligne, se relève'],
+    ['LE VOLEUR', ['loki', 'bragi', 'thor'], 'Vole les jetons, puis Thor'],
+    ['LA HORDE', ['brunhild', 'hel', 'vidar'], 'Haches, haches, haches']];
+  let ouvert = null;
+  const C = Choix(tel, () => dessiner());
+  C.pris = DECKS[0][1].slice();
+  const decks = document.getElementById('decks'), liste = document.getElementById('listeC');
+  function dessiner() {
+    decks.innerHTML = DECKS.map((d, i) => `<div class="deck ${d[1].every(x => C.pris.includes(x)) && C.pris.length === 3 ? 'on' : ''}" data-i="${i}"><b>${d[0]}</b><div class="mini">${d[1].map(x => med(x)).join('')}</div><span>${d[2]}</span></div>`).join('');
+    let h = '', f0 = '';
+    for (const id of triFam) {
+      if (FAM[id] !== f0) { f0 = FAM[id]; h += `<div class="famT">${FAM_NOM[f0]}</div>`; }
+      h += `<div class="ligne ${C.pris.includes(id) ? 'pris' : ''} ${ouvert === id ? 'ouverte' : ''}" data-id="${id}">${med(id)}<div><b>${PAR[id][1]}</b><span>${COURT[id]}</span>
+        <div class="det">${PAR[id][4].map((n, k) => `${['I', 'II', 'III'][k]} · ${n[0]} jetons : ${n[1]}`).join('<br>')}<br>${PAR[id][3] === 'apres' ? 'Après la bataille.' : 'Avant la bataille.'}</div></div><div class="coche" data-c>${C.pris.includes(id) ? '✓' : ''}</div></div>`;
+    }
+    const y = liste.scrollTop; liste.innerHTML = h; liste.scrollTop = y;
+  }
+  decks.addEventListener('click', e => { const d = e.target.closest('.deck'); if (d) { C.pris = DECKS[d.dataset.i][1].slice(); C.dessiner(); } });
+  liste.addEventListener('click', e => { const l = e.target.closest('.ligne'); if (!l) return; if (e.target.closest('[data-c]')) C.basculer(l.dataset.id); else { ouvert = ouvert === l.dataset.id ? null : l.dataset.id; dessiner(); } });
+  C.dessiner();
+}
+
+/* ---------- T1 : duel guidé ---------- */
+{
+  const tel = document.getElementById('telT1'), spot = document.getElementById('spot'), bulle = document.getElementById('bulle');
+  const ETAPES = [
+    ['champ', 'Bienvenue au Thé des Jarls ! Ton armée, ce sont les <b>bleus</b> à gauche. En face, le vieux Thorgrim. Fais tomber ses 15 PV : chaque PV, ce sont 3 soldats.', 'bas'],
+    ['lancer', 'Commence par <b>lancer tes six dés</b>. Tu as droit à trois lancers par manche, chacun ton tour avec Thorgrim.', 'haut'],
+    ['des', 'Chaque face lance ton armée : <b>hache</b> = tes fantassins chargent, <b>flèche</b> = tes archers tirent. <b>Casque</b> et <b>bouclier</b> les parent. <b>Main</b> = un éclaireur vole un jeton.', 'haut'],
+    ['des', 'Touche un dé pour le <b>garder</b> : il ne sera pas relancé. Garde tes deux haches, Thorgrim n\'a qu\'un casque ! Le dé <b>doré</b> te rapportera un jeton.', 'haut'],
+    ['garder', 'Content de tes dés ? <b>TOUT GARDER</b> arrête tes lancers. Sinon, relance les autres.', 'haut'],
+    ['favs', 'Avec tes jetons, tu peux invoquer <b>un dieu</b> après les lancers. Thor coûte 4 jetons : la foudre fait 2 blessures après la bataille. Touche une faveur pour lire ce qu\'elle fait.', 'haut'],
+    ['champ', 'Puis vient <b>la bataille</b> : les jetons de l\'or, les dieux d\'avant, les flèches, les haches, les vols, les dieux d\'après. Regarde bien… À toi de jouer !', 'bas']];
+  let k = 0;
+  function montrer() {
+    const [z, txt, ou] = ETAPES[k], cible = tel.querySelector(`[data-z="${z}"]`), r = cible.getBoundingClientRect(), R = tel.querySelector('.jeu').getBoundingClientRect();
+    spot.style.left = (r.left - R.left - 4) + 'px'; spot.style.top = (r.top - R.top - 4) + 'px'; spot.style.width = (r.width + 8) + 'px'; spot.style.height = (r.height + 8) + 'px';
+    bulle.innerHTML = `<div class="qui"><div class="med jet">S</div><b>SIGRID LA SKALDE</b></div>${txt}<div class="nav"><span>${k + 1} / ${ETAPES.length}</span><span><button data-p ${k ? '' : 'disabled'}>‹</button> <button class="or" data-n>${k < ETAPES.length - 1 ? 'SUIVANT' : 'RECOMMENCER'}</button></span></div>`;
+    bulle.style.top = ou === 'bas' ? (r.bottom - R.top + 12) + 'px' : Math.max(6, r.top - R.top - bulle.offsetHeight - 12) + 'px';
+    tel.querySelectorAll('.de').forEach((d, j) => d.classList.toggle('g', k >= 3 && j < 2));
+    tel.querySelector('[data-z="lancer"]').textContent = k >= 2 ? 'LANCER 2/3' : 'LANCER 1/3';
+  }
+  bulle.addEventListener('click', e => { if (e.target.closest('[data-n]')) { k = (k + 1) % ETAPES.length; montrer(); } if (e.target.closest('[data-p]') && k) { k--; montrer(); } });
+  new ResizeObserver(() => montrer()).observe(tel);
+}
+
+/* ---------- T2 : livre du skalde ---------- */
+{
+  const de = (x, o) => `<div class="de${o ? ' o' : ''}">${x}</div>`;
+  const PAGES = [
+    ['LE BUT', `<div class="ill"><div class="armee b" style="position:static;width:40%;height:60px"></div><b style="font-family:var(--titre);color:var(--or)">contre</b><div class="armee r" style="position:static;width:40%;height:60px"></div></div>`, 'Deux armées de 45 soldats. <b>Fais tomber les 15 PV</b> de l\'adversaire : à chaque blessure, 3 de ses soldats tombent.'],
+    ['LES FACES', `<div class="ill" style="flex-direction:column;align-items:stretch">${[['🪓', 'Hache : tes fantassins chargent.'], ['🏹', 'Flèche : tes archers tirent.'], ['⛑', 'Casque : pare une hache.'], ['🛡', 'Bouclier : pare une flèche.'], ['✋', 'Main : vole un jeton.']].map(([x, t]) => `<div class="face">${de(x)}<span>${t}</span></div>`).join('')}</div>`, ''],
+    ['GARDER, RELANCER', `<div class="ill">${de('🪓')}${de('🪓')}${de('🏹', 1)}<span style="font-size:22px">→</span>${['🛡', '✋', '🪓'].map(x => de(x)).join('')}</div>`, 'Trois lancers au plus, chacun son tour. <b>Touche un dé pour le garder</b> ; les autres repartent. Au troisième lancer, tout est gardé.'],
+    ['L\'OR DES DIEUX', `<div class="ill">${de('🏹', 1)}<span style="font-size:22px">=</span><div class="med jet" style="width:40px;height:40px">1</div></div>`, 'Chaque face <b>dorée</b> rapporte un jeton. Les éclaireurs (mains) en volent aussi. Les jetons paient les faveurs des dieux.'],
+    ['LES FAVEURS', `<div class="ill">${med('thor')}${med('idunn')}${med('vidar')}</div>`, 'Avant le duel, tu emportes <b>trois faveurs</b>. Après les lancers, invoques-en une au niveau I, II ou III. Celles <b>d\'après la bataille</b> ratent si on t\'a volé tes jetons.'],
+    ['L\'ORDRE DE LA BATAILLE', `<div class="ill"><div class="chrono">${['Les faces dorées rapportent leurs jetons.', 'Les dieux d\'avant la bataille.', 'Les flèches, puis les haches.', 'Les éclaireurs volent.', 'Les dieux d\'après la bataille.'].map((t, i) => `<div><span class="n">${i + 1}</span>${t}</div>`).join('')}</div></div>`, 'Le premier joueur change à chaque manche.'],
+    ['L\'HIVER', `<div class="ill" style="font-size:40px">❄</div>`, 'À partir de la <b>manche 10</b>, l\'hiver mord : chaque armée perd 1 PV, puis 2, puis 3… Si les deux tombent ensemble, celle qui tombe le moins bas gagne.']];
+  let k = 0;
+  const P = document.getElementById('pageL'), pu = document.getElementById('puces');
+  function montrer() {
+    const [t, ill, txt] = PAGES[k];
+    P.innerHTML = `<h4>${t}</h4>${ill}<p>${txt}</p>`;
+    pu.innerHTML = PAGES.map((_, i) => `<i class="${i === k ? 'on' : ''}"></i>`).join('');
+    document.getElementById('precL').disabled = !k; document.getElementById('suivL').textContent = k < PAGES.length - 1 ? 'SUITE ›' : 'AU COMBAT';
+  }
+  document.getElementById('precL').onclick = () => { if (k) { k--; montrer(); } };
+  document.getElementById('suivL').onclick = () => { k = (k + 1) % PAGES.length; montrer(); };
+  let x0 = null; P.addEventListener('pointerdown', e => { x0 = e.clientX; });
+  P.addEventListener('pointerup', e => { if (x0 !== null && Math.abs(e.clientX - x0) > 40) { k = Math.max(0, Math.min(PAGES.length - 1, k + (e.clientX < x0 ? 1 : -1))); montrer(); } x0 = null; });
+  montrer();
+}
+
+/* ---------- campagne (K1, K2) ---------- */
+// du plus faible au plus fort (simulateur, 21/10)
+const CAMP = ['heimdall', 'idunn', 'var', 'thrymr', 'bragi', 'brunhild', 'odin', 'skadi', 'loki', 'skuld', 'frigg', 'mimir', 'baldr', 'freyja', 'tyr', 'ullr', 'vidar', 'thor', 'freyr', 'hel'];
+const STYLE = { thrymr: 'le voleur de faveurs', var: 'se nourrit de tes dépenses', freyja: 'des dés en plus', frigg: 'relance tes dés', loki: 'le tricheur', tyr: 'le sacrifice', vidar: 'brise les casques', ullr: "l'archer", baldr: "l'invulnérable", brunhild: 'la furie des haches', freyr: 'la moisson', skadi: 'la chasseresse', heimdall: 'le gardien', hel: 'boit tes blessures', mimir: 'la sagesse', bragi: 'le beau parleur', skuld: 'la dette', thor: 'la foudre', idunn: 'les pommes de jouvence', odin: 'le père de tous' };
+const TAV = ['du Corbeau', 'de la Corne', 'du Sanglier', 'de l\'Ancre', 'du Loup gris', 'de la Hache', 'du Chaudron', 'de l\'Ours', 'du Serpent', 'de la Lune', 'du Rouet', 'du Puits', 'de la Lumière', 'du Chat', 'du Pacte', 'de l\'Arc', 'du Silence', 'du Tonnerre', 'de la Moisson', 'des Brumes'];
+const FAIT = 6, ETOILES = [3, 2, 3, 1, 2, 3];
+const recompense = i => ['thor', 'idunn', 'vidar'].includes(CAMP[i]) ? 'une apparence (faveur déjà connue)' : `la faveur « ${PAR[CAMP[i]][2]} »`;
+const niveauTav = i => i < 7 ? 'FACILE' : i < 14 ? 'NORMAL' : 'DIFFICILE';
+function ficheTav(cont, i) {
+  let f = cont.querySelector('.fiche'); if (!f) { f = document.createElement('div'); f.className = 'fiche'; cont.parentElement.appendChild(f); }
+  const id = CAMP[i], etat = i < FAIT ? '★'.repeat(ETOILES[i]) + '☆'.repeat(3 - ETOILES[i]) : i === FAIT ? 'à défier' : 'fermée';
+  f.innerHTML = `<div class="ftete">${med(id)}<div><b>Taverne ${TAV[i]}</b><br><span style="color:var(--doux)">${PAR[id][1]}, ${STYLE[id]} · ${niveauTav(i).toLowerCase()} · ${etat}</span></div></div>
+    À gagner : ${recompense(i)}.${i % 5 === 4 ? ' <b>Et une unité pour ton armée.</b>' : ''}<button class="or" ${i > FAIT ? 'disabled' : ''}>${i < FAIT ? 'REJOUER POUR LES ÉTOILES' : i === FAIT ? 'DÉFIER ' + PAR[id][1].toUpperCase() : 'BATS D\'ABORD ' + PAR[CAMP[i - 1]][1].toUpperCase()}</button>`;
+}
+{
+  const route = document.getElementById('route'), H = 20 * 74 + 80;
+  const pos = i => ({ x: 50 + 30 * Math.sin(i * 1.15), y: H - 50 - i * 74 });
+  let svg = `<svg viewBox="0 0 100 ${H}" preserveAspectRatio="none" style="height:${H}px"><path d="M${pos(0).x} ${pos(0).y}`;
+  for (let i = 1; i < 20; i++) { const a = pos(i - 1), b = pos(i); svg += ` C${a.x} ${a.y - 37} ${b.x} ${b.y + 37} ${b.x} ${b.y}`; }
+  svg += `" fill="none" stroke="#c8a870" stroke-width="2.2" stroke-dasharray="3 2" vector-effect="non-scaling-stroke" style="stroke-width:4px"/></svg>`;
+  let h = `<div style="position:relative;height:${H}px">${svg}`;
+  for (let i = 0; i < 20; i++) { const p = pos(i); h += `<div class="tav ${i < FAIT ? 'fait' : i === FAIT ? 'ici' : 'ferme'}" data-i="${i}" style="left:${p.x}%;top:${p.y}px"><div class="maison"></div>${PAR[CAMP[i]][1]}${i < FAIT ? `<span class="etoiles">${'★'.repeat(ETOILES[i])}${'☆'.repeat(3 - ETOILES[i])}</span>` : ''}</div>`; }
+  for (const [y, t] of [[H - 50 - 2 * 74 - 37, 'MIDGARD'], [H - 50 - 7 * 74 - 37, 'VANAHEIM'], [H - 50 - 12 * 74 - 37, 'JÖTUNHEIM'], [H - 50 - 17 * 74 - 37, 'ASGARD']]) h += `<div style="position:absolute;right:6px;top:${y}px;font-family:var(--titre);font-weight:900;font-size:10px;color:#ffffff60">${t}</div>`;
+  route.innerHTML = h + '</div>';
+  route.addEventListener('click', e => { const t = e.target.closest('.tav'); if (t) ficheTav(route, Number(t.dataset.i)); });
+  setTimeout(() => { route.scrollTop = pos(FAIT).y - route.clientHeight * 0.3; ficheTav(route, FAIT); }, 50);
+}
+{
+  const s = document.getElementById('sagas'); let h = '';
+  ['MIDGARD', 'VANAHEIM', 'JÖTUNHEIM', 'ASGARD'].forEach((c, ci) => {
+    const faits = Math.max(0, Math.min(5, FAIT - ci * 5));
+    h += `<div class="chap">${['I', 'II', 'III', 'IV'][ci]} · ${c}<span>${faits} / 5 · ${['facile', 'facile puis normal', 'normal puis difficile', 'difficile'][ci]}</span></div>`;
+    for (let i = ci * 5; i < ci * 5 + 5; i++) {
+      const id = CAMP[i];
+      h += `<div class="saga ${i > FAIT ? 'ferme' : ''} ${i === FAIT ? 'ici' : ''}" data-i="${i}">${med(id)}<div><b>${PAR[id][1]} · ${STYLE[id]}</b><span>Taverne ${TAV[i]} · gagne ${['thor', 'idunn', 'vidar'].includes(id) ? 'une apparence' : PAR[id][2]}${i % 5 === 4 ? ' + une unité' : ''}</span></div><span class="etoiles" style="font-size:12px">${i < FAIT ? '★'.repeat(ETOILES[i]) + '☆'.repeat(3 - ETOILES[i]) : i === FAIT ? '⚔' : '🔒'}</span></div>`;
+    }
+  });
+  s.innerHTML = h;
+  s.addEventListener('click', e => { const t = e.target.closest('.saga'); if (t) ficheTav(s, Number(t.dataset.i)); });
+}
+</script>
