@@ -82,9 +82,12 @@ for(const k in T){const i=new Image();i.onload=()=>{if(--restant===0)document.fo
 /* ---------- Sons ---------- */
 let actx=null,sonOn=false,tampons={},musique=null,musiqueNom=null,musiqueVoulue='m_village';
 async function initSon(){
-  actx=new (window.AudioContext||window.webkitAudioContext)();
   for(const k in SONS){
-    try{const b=await (await fetch(SONS[k])).arrayBuffer();tampons[k]=await actx.decodeAudioData(b);}catch(e){}
+    try{
+      const bin=atob(SONS[k].split(',')[1]),u=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+      tampons[k]=await new Promise((ok,ko)=>actx.decodeAudioData(u.buffer,ok,ko));
+    }catch(e){console.warn('son',k,e);}
   }
 }
 function son(k,vol=.6){
@@ -99,10 +102,16 @@ function jouerMusique(nom){
   musique=s;musiqueNom=nom;
 }
 document.getElementById('son').onclick=async e=>{
-  if(!actx)await initSon();
+  const bouton=e.currentTarget;
+  if(!actx){
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    // un son vide joué tout de suite, pendant le geste, débloque l'audio sur téléphone
+    const vide=actx.createBufferSource();vide.buffer=actx.createBuffer(1,1,22050);vide.connect(actx.destination);vide.start();
+    bouton.textContent='⏳ Chargement…';await initSon();
+  }
   sonOn=!sonOn;
-  e.target.textContent=sonOn?'🔊 Son activé':'🔇 Son coupé';
-  if(sonOn){actx.resume();musiqueNom=null;jouerMusique(musiqueVoulue);son('ok');}
+  bouton.textContent=sonOn?'🔊 Son activé':'🔇 Son coupé';
+  if(sonOn){await actx.resume();musiqueNom=null;jouerMusique(musiqueVoulue);son('ok');}
   else if(musique){musique.stop();musique=null;musiqueNom=null;}
 };
 
@@ -385,7 +394,7 @@ function creerCombat(){
   for(const [x,z] of [[-5.6,4.2],[6,4.4],[-4.4,5.2]]){const a=panneau(arbres[(x>0)+2],2.4,2.4);a.position.set(x,0,z);scene.add(a);}
   C.acteurs={};
   HEROS.forEach((h,i)=>{const a=acteur(h.k,1);a.m.scale.set(1.5,1.5,1);a.m.position.set(h.x,0,h.z);scene.add(a.m);C.acteurs['h'+i]=a;h.a=a;});
-  MONS.forEach((m,i)=>{const a=acteur(m.k,1);a.m.scale.set(1.5,1.5,1);a.m.position.set(m.x,0,m.z);scene.add(a.m);C.acteurs['m'+i]=a;m.a=a;});
+  MONS.forEach((m,i)=>{const a=acteur(m.k,-1);a.m.scale.set(1.5,1.5,1);a.m.position.set(m.x,0,m.z);scene.add(a.m);C.acteurs['m'+i]=a;m.a=a;});
   C.fx={givre:effet(texImg('givre'),.9),fleche:effet(texImg('fleche'),.8),feu:effet(texImg('flamme0'),1),gros:effet(texImg('flamme0'),1.6),eclat:effet(texImg('eclat0'),1.6)};
   for(const k in C.fx)scene.add(C.fx[k]);
   C.flammes=['flamme0','flamme1','flamme2'].map(texImg);C.eclats=['eclat0','eclat1'].map(texImg);
