@@ -88,3 +88,4 @@ Demande de l'utilisateur : revoir l'apprentissage du jeu et le choix des trois f
 - Plus tard : duel en famille à distance (Supabase, script SQL à lancer par l'utilisateur).
 
 - **Retouche (21/10, retour de l'utilisateur)** : le manche de la lance du deuxième rang passait entre les jambes des soldats ; il est maintenant tenu devant le soldat, talon posé à côté des pieds (`spriteA`, `decor.js`).
+- **Retouche (21/10, retour de l'utilisateur)** : dans le bandeau du haut, le nombre de jetons s'écrivait par-dessus la fin de la rangée de PV ; il est maintenant de l'autre côté de la pièce (`pips ● 12` à gauche, `7 ● pips` à droite).

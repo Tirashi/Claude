@@ -400,7 +400,7 @@ function hudSolo() {
     const d = i === 1, x = d ? W - 10 : 10;
     texte(i === 0 ? 'Toi' : E.camps[1].nom, x, y + 11, { align: d ? 'right' : 'left', taille: 13, max: W / 2 - 90 });
     pips(x, y + 21, V.show[i].pv, d);
-    jeton(d ? W - 88 : 88, y + 29, V.show[i].jetons, !d);
+    jeton(d ? W - 84 : 84, y + 29, V.show[i].jetons, d);   // la pièce juste après les PV, le nombre de l'autre côté (pas sur les casques)
   }
   petitsBoutons();
 }
