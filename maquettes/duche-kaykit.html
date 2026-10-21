@@ -50,16 +50,71 @@
   #issue h2 { font-size:9px; font-weight:normal; }
   #issue button { font-size:8px; padding:6px 16px; margin-top:6px; }
 </style>
-<style>.cadre { border:16px solid transparent; border-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAABGdBTUEAALGPC/xhBQAAAHJQTFRFUF9qUV1pUF9qUF9qUF9rUF5qbUoma0smAAAAb2ddXWJl3MCZan2NoXVIiG5TepGjdmlb7uDD0sas4ta6Y2RjlXJOgm1WfGtYxaBzmWk3h10wjnBQV2BoX3B+aHuLd42flK/GbUsnUV9ro3A6tHtB//HSP7m+1QAAAAl0Uk5Trz/P3+9vn18AzwTf2AAAAbNJREFUWMPtl12XQzAQhnW16Id+KKUom0n6///iziQUUSVrL/bCe+GUvu9zQubkzFgrC1qyVt6IdL/1BR19jQF0P/K+K5UoANfzXIZy5bUvAPLVGVyDDhhMfgScaDVFWRawSxlLBSqV1752yoc6NYCTep8Cn98Gk5VuylcRKgAA/pPRs7MY1Zl8Gf5QyQYgYoBYTFDt0wDcUBrANwf4L0BZPvClOA+uzwElnCft+2vAOX6yB227BCAh53wwj4Ske3/lPKf8C1AQ4GkgAhQNgPbfFHCTlYcAG9T+mwJUPYBtbdYAeSzMASLOAdYby/MYo7IwB4g7czxvBkDm5wBS5s4DKEILsDcFCMY6gGQu4LkAFsACWADmgP1cQPLPvoHD7vMAruzrlkKaAaD+fxv9BhBtW/NCZg7IXvNC3SeaAd70iaZtXq9PvEzPX972icFkwiVo9YmqZT6aN9vHv233qSyOYRhNGThqnw7w61FmRHL//S7goIaoB9bDpzXc6dyIlI90aMY+SXhQPYQf8oxOnlD5VP7t4Dksx5k0uQ7n6fTrA+zuMG2PDd+6X84LjdabMYDu/wFDkxLp+9UVYgAAAABJRU5ErkJggg==') 20 fill / 16px; background:none; box-shadow:none; image-rendering:pixelated; }
-#res.cadre { border-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAABGdBTUEAALGPC/xhBQAAADlQTFRFbUona0ohbUomZkQibEombUslbUwmAAAAbUsmbEsnr3g/nWw4q3U9elQrom86o3A6bUsntHtB//HSpQh0XQAAAAp0Uk5T3x+fD6+PLwDvvw++7ZYAAABxSURBVFjD7dfBEYAgEEPRRRBYEAz2X6y04OKMB/PvefdI8rsqTKnuPknMWChHCWi1D1O9NgQBjmHuACYwFnoPOA29DVwPI0CAAAECBAgQIECAwH+Arx/Ll69N0O37PvcbWrHuS8Mmbu18O0lR7XuN6QZqDhKIQv3i5gAAAABJRU5ErkJggg==') 16 fill / 12px; border-width:12px; }
-button { border:8px solid transparent; border-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAYCAMAAACLI47uAAAABGdBTUEAALGPC/xhBQAAAEJQTFRFbUombUonbUslZkQibkonbEomAAAAbEombUwmbEsnbUsmom867NOt+unIelQrnWw4q3U9h10wmWk3tHtBbUsn//HS9emmsQAAAAt0Uk5Tn9+PD09/AK8vv+8o51UPAAAAgElEQVQ4y+2UOxKAIAxE4w8IKh+z3v+qoiOOFdDZ+KpMZl+6LKmhZ8aJHkeNEsz9oMjYZ2EtalhDGs7PchKBKCVm76AJCHkRy/lEAJIgsuxNLCK3sDfyC7/wvbC25ddL6OBrb7NtefLoiOBCJQ/cRnCgdwk0kEpAGa6FpikfZaMO+7RZD0HnG/YAAAAASUVORK5CYII=') 8 fill / 8px; background:none; box-shadow:none; image-rendering:pixelated; }
-button:active { transform:translateY(1px); box-shadow:none; }
-button:disabled { background:none; filter:grayscale(1) opacity(.6); }
-.boutons #fin { border-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAYCAMAAACLI47uAAAABGdBTUEAALGPC/xhBQAAADlQTFRFjj84jDo6jT84iDMzjT83jT43jTw2AAAAjj83jj841F9V1mFW0F5Tn0c/zlxS4GRa7Gpfjj84z15TAGVcNgAAAAp0Uk5T3x+fD6+PLwDvvw++7ZYAAABjSURBVDjL7ZRBEoAgDAOrIrVCoeH/j5VxfEA8eXHPu8dEdNvNQGG2byr5wAuOLAnezqA4myMJ0IOmAzOIKIOiRDzBIPmDP/g+qJxf70DQ+AG16a9wenLdscry7gQW0Wy8b1kvkAVMfcLLMIQAAAAASUVORK5CYII=') 8 fill / 8px; background:none; }
-.banniere { background:url('data:image/png;base64,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') center / 100% 100% no-repeat; image-rendering:pixelated; }
-.jauge i { border:6px solid transparent; border-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAgCAMAAAAsVwj+AAAABGdBTUEAALGPC/xhBQAAAGxQTFRFuFNJAAAAUSQfAAAA72tfbjEsAAAAAAAAz11TAAAAAAAA6GhcAAAA+3BkAAAAxFhPAAAAAAAA9W5iAAAAAAAALBUSAAAAAAAA7Gpf5Wdc9W5i/XJl+3Fk52hd42Zb62pe+XBj6Wld/3Nm4mZbRa8WnwAAABh0Uk5TmkJiBN1tPRewHBPSDvMvpQk06Ec5VwBMjQwwEwAAAKJJREFUKM/tkUkCgyAUQ7/zUFFQIR2c+Nz/jgW03fYCfaskyzwynq6fPX0XMvk642LuwpAl0HTzkEaS+UEhFRwRKZShFjrn527t/eBco6UeAx+b8zxePKCnCSPvLrLziIkAZnfBDPyHX0O40J7dxgvV9+Tt8CcrqqAFL6tz68JCoyJTohhPUWOB0puTE3Qdeq0xySBbqo9sJaN9Y5rof25CfgNXxjec9ciIPgAAAABJRU5ErkJggg==') 7 fill / 6px; }
-.jauge.bleu i { border-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAgCAMAAAAsVwj+AAAABGdBTUEAALGPC/xhBQAAAGxQTFRFS4S4AAAAIjxRAAAAYazvLFBuAAAAVJXPAAAAAAAAAAAAX6joAAAAZrT7AAAAUI7EAAAAAAAAZLH1AAAAAAAAEiAsAAAAAAAAYKrrZLH1XaTjZ7b9ZrX7XqblXKPhX6jpZbP5X6fnaLj/XKLgGetqxQAAABh0Uk5TmkJiBN1tPbAXHBPSDvMvpQk06Ec5VwBMj4rbtgAAAKJJREFUKM/tkUkCgyAUQ7/zUFFQIR2c+Nz/jgW03fYCfaskyzwynq6fPX0XMvk642LuwpAl0HTzkEaS+UEhFRwRKZShFjrnx27t/eBco6UeAx+b8zxfPKCnCSPvLrLziIkAZnfBDPyHX0O40J7dxgvV9+Tt8CcrqqEFL6tz68JCoyZTohhPUWOB0puTE3QVeqUxySBbqo9sJaN9Y5rof25CfgNX9Dec5Em9LwAAAABJRU5ErkJggg==') 7 fill / 6px; }
-</style>
+<script>
+// ---------- l'interface en pixel art, dessinée ici (cadres, boutons, bannière) ----------
+// chaque motif est dessiné en petit sur un canvas, puis posé en « border-image » agrandi ×3 sans lissage
+(function () {
+  const K = 3, css = [];
+  function motif(w, h, peindre) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d'), px = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const col = peindre(x, y, Math.min(x, y, w - 1 - x, h - 1 - y)); if (col) px(x, y, col); }
+    return c.toDataURL();
+  }
+  const coin = (x, y, w, h, n) => (x < n || x > w - 1 - n) && (y < n || y > h - 1 - n) && Math.min(x, w - 1 - x) + Math.min(y, h - 1 - y) < n;
+  // le parchemin : contour sombre, cadre de bois à deux tons, filet sombre, papier (un peu plus clair en haut), coins coupés
+  const parchemin = motif(24, 24, (x, y, d) => {
+    if (coin(x, y, 24, 24, 2)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (d === 1) return y < 12 ? '#c98f4a' : '#a86c32';
+    if (d === 2) return '#7a4a22';
+    if (d === 3) return '#2b1d0e';
+    if (d === 4) return '#fff6dc';
+    return y < 8 ? '#f6e7bf' : '#efdcab';
+  });
+  // le bandeau du haut : même chose, plus fin
+  const bandeau = motif(16, 16, (x, y, d) => {
+    if (coin(x, y, 16, 16, 1)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (d === 1) return '#a86c32';
+    if (d === 2) return '#2b1d0e';
+    return y < 6 ? '#f6e7bf' : '#efdcab';
+  });
+  // boutons de bois (ou rouges) : reflet en haut, ombre en bas
+  const bouton = (clair, fond, ombre, sombre) => motif(12, 12, (x, y, d) => {
+    if (coin(x, y, 12, 12, 1)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (y === 1) return clair;
+    if (y >= 9) return y === 10 ? sombre : ombre;
+    return fond;
+  });
+  const bois = bouton('#f3d08e', '#e0b064', '#b07c3a', '#7a4a22'), rouge = bouton('#f28a6c', '#d0482c', '#9c2c1a', '#6a1a10');
+  const boisAppui = bouton('#b07c3a', '#c99450', '#c99450', '#7a4a22');
+  // la bannière : un ruban rouge aux bouts fendus
+  const banniere = motif(32, 14, (x, y) => {
+    const bout = Math.min(x, 31 - x);
+    if (bout < 4 && (y < 2 || y > 11 || Math.abs(y - 6.5) < 3 - bout)) return null;   // la fente des bouts
+    if (y < 2 || y > 11) return null;
+    if (y === 2 || y === 11 || (bout === 0)) return '#2b1d0e';
+    if (bout < 4) return y < 7 ? '#9c2c1a' : '#7a1e12';   // les bouts, plus sombres (derrière)
+    if (bout === 4) return '#2b1d0e';
+    if (y === 3) return '#f28a6c';
+    if (y >= 9) return '#a8301c';
+    return '#d0482c';
+  });
+  css.push(`.cadre { border:${8 * K}px solid transparent; border-image:url(${parchemin}) 8 fill / ${8 * K}px; background:none; box-shadow:0 ${K}px 0 rgba(0,0,0,.25); image-rendering:pixelated; }`);
+  css.push(`#res.cadre { border-width:${4 * K}px; border-image:url(${bandeau}) 5 fill / ${4 * K}px; }`);
+  css.push(`button { border:${4 * K}px solid transparent; border-image:url(${bois}) 4 fill / ${4 * K}px; background:none; box-shadow:none; image-rendering:pixelated; }`);
+  css.push(`button:active { border-image:url(${boisAppui}) 4 fill / ${4 * K}px; transform:translateY(${K}px); box-shadow:none; }`);
+  css.push(`button:disabled { filter:grayscale(1) opacity(.55); }`);
+  css.push(`.boutons #fin { border-image:url(${rouge}) 4 fill / ${4 * K}px; color:#fff6e0; }`);
+  css.push(`.banniere { border:solid transparent; border-width:${2 * K}px ${6 * K}px; border-image:url(${banniere}) 2 6 fill / ${2 * K}px ${6 * K}px; background:none; image-rendering:pixelated; }`);
+  css.push(`.jauge { border:${K}px solid #2b1d0e; background:#4a3420; box-shadow:inset 0 ${K}px 0 #2b1d0e; height:${4 * K}px; }`);
+  css.push(`.jauge i { border:0; background:#d0482c; box-shadow:inset 0 ${K}px 0 #f28a6c, inset 0 -${K}px 0 #9c2c1a; }`);
+  css.push(`.jauge.bleu i { background:#3a7ad8; box-shadow:inset 0 ${K}px 0 #8ab8f2, inset 0 -${K}px 0 #24508f; }`);
+  const s = document.createElement('style'); s.textContent = css.join('\n'); document.head.append(s);
+})();
+</script>
 </head>
 <body>
 <div id="res" class="cadre"></div>
@@ -5343,7 +5398,7 @@ function batirTerre(i, anime) {
     const coul = S ? S.coul : 'neutre', n = t.gar >= 4 ? 2 : 1;
     [[0.42, 0.5], [-0.1, 0.68]].slice(0, n).forEach(([x, z], k) => {
       const ty = t.brig && !S ? (k ? 'voleur' : 'barbare') : !S ? 'voleur' : k === 0 && (t.bat === 'chateau' || t.bat === 'caserne') ? 'champion' : hasardTerre(i, 9 + k) < 0.3 ? 'archer' : 'soldat';
-      const s = aventurier(ty, coul, 0.62);
+      const s = aventurier(ty, coul, 0.8);
       s.position.set(x, 0, z); s.rotation.y = -0.5 + (hasardTerre(i, 11 + k) - 0.5) * 0.8;
       jouer(s, TYPES[ty].repos).time = hasardTerre(i, 13 + k) * 2;
       g.add(s); u.soldats.push(s);
@@ -5557,9 +5612,9 @@ const TYPES = {
   barbare: { perso: 'Barbarian', droite: 'axe_1handed', attaques: ['Melee_1H_Attack_Chop'], repos: 'Idle_A' },
 };
 const TEXTURE_ARME = { sword_1handed: 'Knight', sword_2handed_color: 'Knight', shield_badge_color: 'Knight', bow_withString: 'Ranger', arrow_bow: 'Ranger', axe_1handed: 'Barbarian', dagger: 'Rogue_Hooded' };
-// la couleur d'équipe : le rouge du chevalier (cape, plumet, blason du bouclier), le vert de la rôdeuse
+// la couleur d'équipe : le rouge du chevalier (cape, plumet, blason du bouclier), le bleu de l'archer (écharpe, cape)
 const TEINTES = { or: [44, 1.25], rouge: [0, 1], bleu: [218, 1], violet: [282, 0.95] };
-const EQUIPE = { Knight: hh => hh > 330 || hh < 20, Ranger: hh => hh > 70 && hh < 170 };
+const EQUIPE = { Knight: hh => hh > 330 || hh < 20, Ranger: hh => hh > 185 && hh < 245 };
 async function preparerAventuriers() {
   const chargeur = new THREE.GLTFLoader();
   const lire = src => new Promise((ok, ko) => chargeur.parse(src, '', ok, ko));
@@ -5596,6 +5651,7 @@ function aventurier(type, coul, haut) {
     if (!nom) return;
     const w = AV.armes[nom].clone(), mw = (AV.mats[TEXTURE_ARME[nom]][coul] || AV.mats[TEXTURE_ARME[nom]].neutre).fixe;
     w.traverse(x => { if (x.isMesh) { x.material = mw; x.castShadow = true; } });
+    if (nom === 'bow_withString') w.rotation.z = Math.PI;   // sinon la corde est tournée vers la cible
     o.getObjectByName(os).add(w);
   };
   arme(T.droite, 'handslotr'); arme(T.gauche, 'handslotl');   // « handslot.r » : le chargeur retire les points des noms
@@ -5671,8 +5727,11 @@ function lancerBataille(av, r) {
   const defenseurs = composition(vusD, av.t.brig && !Sd, !Sd && !av.t.brig).map(ty => aventurier(ty, coulD, 1.1));
   const placer = (liste, x0, sens) => formation(liste.length, x0, sens).forEach(([x, z], k) => {
     const g = liste[k], u = g.userData;
-    g.position.set(x, 0, z); g.rotation.y = sens > 0 ? -Math.PI / 2 : Math.PI / 2;   // face à l'ennemi (les modèles regardent vers +z)
-    Object.assign(u, { x0: x, sens: -sens, pas: u.T.archer ? 0.1 : sens > 0 ? 0.2 : 0.45, attaque: u.T.attaques[k % Math.max(1, u.T.attaques.length)] });
+    g.position.set(x, 0, z);
+    // face à l'ennemi (les modèles regardent vers +z) ; pour tirer à l'arc, ils se tournent d'un quart de tour (on vise sur sa gauche)
+    const rot = sens > 0 ? -Math.PI / 2 : Math.PI / 2;
+    g.rotation.y = rot;
+    Object.assign(u, { x0: x, sens: -sens, rot, rotTir: rot - Math.PI / 2, rotVise: rot, vitesse: sens > 0 ? 0.6 : 1.1, attaque: u.T.attaques[k % Math.max(1, u.T.attaques.length)] });
     jouer(g, u.T.repos).time = Math.random();
     sceneB.add(g);
   });
@@ -5704,32 +5763,44 @@ function animerBataille(now, dt) {
   const une = (u, cle) => (u.faits[cle] ? false : (u.faits[cle] = true));   // vrai la première fois seulement
   const tous = [...B.attaquants, ...B.defenseurs];
   tous.forEach((g, k) => {
-    const u = g.userData, T = u.T;
+    const u = g.userData, T = u.T, amis = B.attaquants.includes(g), ennemis = (amis ? B.defenseurs : B.attaquants).filter(e => !e.userData.mort);
     u.mixer.update(dt);
     if (u.mort) return;
-    // la charge
-    if (t < 1) { g.position.x = u.x0 + u.sens * u.pas * Math.min(1, t); if (u.pas > 0.15 && une(u, 'charge')) jouer(g, 'Running_A', false, 1.2); return; }
-    if (une(u, 'en place')) jouer(g, T.repos);
+    g.rotation.y += (u.rotVise - g.rotation.y) * Math.min(1, dt * 10);
     if (p >= 3) {
-      const gagnant = (B.attaquants.includes(g)) === r.gagne;
-      if (une(u, 'fin')) jouer(g, gagnant ? 'Cheering' : T.repos);
+      if (une(u, 'fin')) jouer(g, amis === r.gagne ? 'Cheering' : T.repos);
       return;
     }
-    // chaque passe : coup d'épée (ou de hache, de dague), parade, tir à l'arc
-    if (T.archer) {
-      if (f > 0.05 && une(u, 'bande' + p)) jouer(g, 'Ranged_Bow_Draw', true);
-      if (f > 0.45 && une(u, 'tire' + p)) { jouer(g, 'Ranged_Bow_Release', true); tirer(g, B.attaquants.includes(g) ? B.defenseurs : B.attaquants, now); }
-      if (f > 0.8 && une(u, 'repos' + p)) jouer(g, T.repos);
-    } else {
-      const decal = (k % 3) * 0.08;
-      if (f > 0.1 + decal && une(u, 'frappe' + p)) jouer(g, u.passe !== p && k % 4 === 3 ? 'Melee_Block' : u.attaque, true, 1.15);
-      if (f > 0.75 && u.passe !== p && une(u, 'repos' + p)) jouer(g, T.repos);
-    }
     // les blessés de la passe : un coup reçu, puis la chute
-    if (u.passe === p) {
+    if (u.passe === p && p >= 0) {
       if (f > 0.55 && une(u, 'touche')) jouer(g, 'Hit_A', true);
-      if (f > 0.72 && une(u, 'tombe')) { jouer(g, 'Death_A', true); u.mort = true; u.anneau.visible = false; }
+      if (f > 0.72 && une(u, 'tombe')) { jouer(g, 'Death_A', true); u.mort = true; u.anneau.visible = false; return; }
     }
+    if (T.archer) {
+      // l'archer reste derrière et tire à chaque passe : il bande, se tourne vers sa cible, lâche
+      if (t > 0.5 && une(u, 'en place')) jouer(g, T.repos);
+      if (p < 0 || !ennemis.length) return;
+      if (f > 0.05 && une(u, 'bande' + p)) { jouer(g, 'Ranged_Bow_Draw', true); u.rotVise = u.rotTir; }
+      if (f > 0.45 && une(u, 'tire' + p)) { jouer(g, 'Ranged_Bow_Release', true); tirer(g, ennemis, now); }
+      if (f > 0.8 && une(u, 'repos' + p)) { jouer(g, T.repos); u.rotVise = u.rot; }
+      return;
+    }
+    // le fantassin va au contact de l'ennemi vivant le plus proche, et ne frappe qu'au contact
+    let cible = null, dmin = 1e9;
+    ennemis.forEach(e => { const d = Math.abs(e.position.x - g.position.x) + Math.abs(e.position.z - g.position.z) * 0.6; if (d < dmin) { dmin = d; cible = e; } });
+    if (!cible) { if (une(u, 'seul')) jouer(g, T.repos); return; }
+    const voulu = cible.position.x - u.sens * 0.6, ecart = voulu - g.position.x;
+    const enCours = u.courant && u.courant.loop === THREE.LoopOnce && u.courant.isRunning();   // une attaque ou une parade pas finie
+    if (Math.abs(ecart) > 0.08 && !enCours) {
+      g.position.x += Math.sign(ecart) * Math.min(Math.abs(ecart), u.vitesse * dt);
+      jouer(g, 'Running_A', false, 1.2);
+      u.rotVise = u.rot;   // toujours tourné vers l'ennemi, même s'il recule d'un pas
+      return;
+    }
+    if (p < 0) { if (!enCours) jouer(g, T.repos); return; }
+    const decal = (k % 3) * 0.08;
+    if (f > 0.1 + decal && une(u, 'frappe' + p)) jouer(g, u.passe !== p && k % 4 === 3 ? 'Melee_Block' : u.attaque, true, 1.15);
+    else if (!enCours && u.courant !== u.actions[T.repos]) jouer(g, T.repos);
   });
   // les flèches : une courbe de l'archer à sa cible, la pointe dans le sens de la course
   B.fleches = B.fleches.filter(fl => {
@@ -5766,7 +5837,8 @@ function tirer(archer, cibles, now) {
   o.scale.setScalar(0.7 * 1.1 / AV.haut * 2.2);
   sceneB.add(o);
   const cible = vivants[Math.floor(Math.random() * Math.min(3, vivants.length))];
-  bataille.fleches.push({ o, debut: now, a: archer.position.clone().add(new THREE.Vector3(archer.userData.sens * 0.2, 0.7, 0)), b: cible.position.clone().add(new THREE.Vector3(0, 0.5, 0)) });
+  const main = new THREE.Vector3(); archer.getObjectByName('handslotl').getWorldPosition(main);
+  bataille.fleches.push({ o, debut: now, a: main, b: cible.position.clone().add(new THREE.Vector3(0, 0.5, 0)) });
 }
 function finBataille() {
   const i = bataille.av.i;

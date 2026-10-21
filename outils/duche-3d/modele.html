@@ -50,7 +50,71 @@
   #issue h2 { font-size:9px; font-weight:normal; }
   #issue button { font-size:8px; padding:6px 16px; margin-top:6px; }
 </style>
-<style>/*UI_CSS*/</style>
+<script>
+// ---------- l'interface en pixel art, dessinée ici (cadres, boutons, bannière) ----------
+// chaque motif est dessiné en petit sur un canvas, puis posé en « border-image » agrandi ×3 sans lissage
+(function () {
+  const K = 3, css = [];
+  function motif(w, h, peindre) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d'), px = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const col = peindre(x, y, Math.min(x, y, w - 1 - x, h - 1 - y)); if (col) px(x, y, col); }
+    return c.toDataURL();
+  }
+  const coin = (x, y, w, h, n) => (x < n || x > w - 1 - n) && (y < n || y > h - 1 - n) && Math.min(x, w - 1 - x) + Math.min(y, h - 1 - y) < n;
+  // le parchemin : contour sombre, cadre de bois à deux tons, filet sombre, papier (un peu plus clair en haut), coins coupés
+  const parchemin = motif(24, 24, (x, y, d) => {
+    if (coin(x, y, 24, 24, 2)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (d === 1) return y < 12 ? '#c98f4a' : '#a86c32';
+    if (d === 2) return '#7a4a22';
+    if (d === 3) return '#2b1d0e';
+    if (d === 4) return '#fff6dc';
+    return y < 8 ? '#f6e7bf' : '#efdcab';
+  });
+  // le bandeau du haut : même chose, plus fin
+  const bandeau = motif(16, 16, (x, y, d) => {
+    if (coin(x, y, 16, 16, 1)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (d === 1) return '#a86c32';
+    if (d === 2) return '#2b1d0e';
+    return y < 6 ? '#f6e7bf' : '#efdcab';
+  });
+  // boutons de bois (ou rouges) : reflet en haut, ombre en bas
+  const bouton = (clair, fond, ombre, sombre) => motif(12, 12, (x, y, d) => {
+    if (coin(x, y, 12, 12, 1)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (y === 1) return clair;
+    if (y >= 9) return y === 10 ? sombre : ombre;
+    return fond;
+  });
+  const bois = bouton('#f3d08e', '#e0b064', '#b07c3a', '#7a4a22'), rouge = bouton('#f28a6c', '#d0482c', '#9c2c1a', '#6a1a10');
+  const boisAppui = bouton('#b07c3a', '#c99450', '#c99450', '#7a4a22');
+  // la bannière : un ruban rouge aux bouts fendus
+  const banniere = motif(32, 14, (x, y) => {
+    const bout = Math.min(x, 31 - x);
+    if (bout < 4 && (y < 2 || y > 11 || Math.abs(y - 6.5) < 3 - bout)) return null;   // la fente des bouts
+    if (y < 2 || y > 11) return null;
+    if (y === 2 || y === 11 || (bout === 0)) return '#2b1d0e';
+    if (bout < 4) return y < 7 ? '#9c2c1a' : '#7a1e12';   // les bouts, plus sombres (derrière)
+    if (bout === 4) return '#2b1d0e';
+    if (y === 3) return '#f28a6c';
+    if (y >= 9) return '#a8301c';
+    return '#d0482c';
+  });
+  css.push(`.cadre { border:${8 * K}px solid transparent; border-image:url(${parchemin}) 8 fill / ${8 * K}px; background:none; box-shadow:0 ${K}px 0 rgba(0,0,0,.25); image-rendering:pixelated; }`);
+  css.push(`#res.cadre { border-width:${4 * K}px; border-image:url(${bandeau}) 5 fill / ${4 * K}px; }`);
+  css.push(`button { border:${4 * K}px solid transparent; border-image:url(${bois}) 4 fill / ${4 * K}px; background:none; box-shadow:none; image-rendering:pixelated; }`);
+  css.push(`button:active { border-image:url(${boisAppui}) 4 fill / ${4 * K}px; transform:translateY(${K}px); box-shadow:none; }`);
+  css.push(`button:disabled { filter:grayscale(1) opacity(.55); }`);
+  css.push(`.boutons #fin { border-image:url(${rouge}) 4 fill / ${4 * K}px; color:#fff6e0; }`);
+  css.push(`.banniere { border:solid transparent; border-width:${2 * K}px ${6 * K}px; border-image:url(${banniere}) 2 6 fill / ${2 * K}px ${6 * K}px; background:none; image-rendering:pixelated; }`);
+  css.push(`.jauge { border:${K}px solid #2b1d0e; background:#4a3420; box-shadow:inset 0 ${K}px 0 #2b1d0e; height:${4 * K}px; }`);
+  css.push(`.jauge i { border:0; background:#d0482c; box-shadow:inset 0 ${K}px 0 #f28a6c, inset 0 -${K}px 0 #9c2c1a; }`);
+  css.push(`.jauge.bleu i { background:#3a7ad8; box-shadow:inset 0 ${K}px 0 #8ab8f2, inset 0 -${K}px 0 #24508f; }`);
+  const s = document.createElement('style'); s.textContent = css.join('\n'); document.head.append(s);
+})();
+</script>
 </head>
 <body>
 <div id="res" class="cadre"></div>
@@ -287,7 +351,7 @@ function batirTerre(i, anime) {
     const coul = S ? S.coul : 'neutre', n = t.gar >= 4 ? 2 : 1;
     [[0.42, 0.5], [-0.1, 0.68]].slice(0, n).forEach(([x, z], k) => {
       const ty = t.brig && !S ? (k ? 'voleur' : 'barbare') : !S ? 'voleur' : k === 0 && (t.bat === 'chateau' || t.bat === 'caserne') ? 'champion' : hasardTerre(i, 9 + k) < 0.3 ? 'archer' : 'soldat';
-      const s = aventurier(ty, coul, 0.62);
+      const s = aventurier(ty, coul, 0.8);
       s.position.set(x, 0, z); s.rotation.y = -0.5 + (hasardTerre(i, 11 + k) - 0.5) * 0.8;
       jouer(s, TYPES[ty].repos).time = hasardTerre(i, 13 + k) * 2;
       g.add(s); u.soldats.push(s);
@@ -501,9 +565,9 @@ const TYPES = {
   barbare: { perso: 'Barbarian', droite: 'axe_1handed', attaques: ['Melee_1H_Attack_Chop'], repos: 'Idle_A' },
 };
 const TEXTURE_ARME = { sword_1handed: 'Knight', sword_2handed_color: 'Knight', shield_badge_color: 'Knight', bow_withString: 'Ranger', arrow_bow: 'Ranger', axe_1handed: 'Barbarian', dagger: 'Rogue_Hooded' };
-// la couleur d'équipe : le rouge du chevalier (cape, plumet, blason du bouclier), le vert de la rôdeuse
+// la couleur d'équipe : le rouge du chevalier (cape, plumet, blason du bouclier), le bleu de l'archer (écharpe, cape)
 const TEINTES = { or: [44, 1.25], rouge: [0, 1], bleu: [218, 1], violet: [282, 0.95] };
-const EQUIPE = { Knight: hh => hh > 330 || hh < 20, Ranger: hh => hh > 70 && hh < 170 };
+const EQUIPE = { Knight: hh => hh > 330 || hh < 20, Ranger: hh => hh > 185 && hh < 245 };
 async function preparerAventuriers() {
   const chargeur = new THREE.GLTFLoader();
   const lire = src => new Promise((ok, ko) => chargeur.parse(src, '', ok, ko));
@@ -540,6 +604,7 @@ function aventurier(type, coul, haut) {
     if (!nom) return;
     const w = AV.armes[nom].clone(), mw = (AV.mats[TEXTURE_ARME[nom]][coul] || AV.mats[TEXTURE_ARME[nom]].neutre).fixe;
     w.traverse(x => { if (x.isMesh) { x.material = mw; x.castShadow = true; } });
+    if (nom === 'bow_withString') w.rotation.z = Math.PI;   // sinon la corde est tournée vers la cible
     o.getObjectByName(os).add(w);
   };
   arme(T.droite, 'handslotr'); arme(T.gauche, 'handslotl');   // « handslot.r » : le chargeur retire les points des noms
@@ -615,8 +680,11 @@ function lancerBataille(av, r) {
   const defenseurs = composition(vusD, av.t.brig && !Sd, !Sd && !av.t.brig).map(ty => aventurier(ty, coulD, 1.1));
   const placer = (liste, x0, sens) => formation(liste.length, x0, sens).forEach(([x, z], k) => {
     const g = liste[k], u = g.userData;
-    g.position.set(x, 0, z); g.rotation.y = sens > 0 ? -Math.PI / 2 : Math.PI / 2;   // face à l'ennemi (les modèles regardent vers +z)
-    Object.assign(u, { x0: x, sens: -sens, pas: u.T.archer ? 0.1 : sens > 0 ? 0.2 : 0.45, attaque: u.T.attaques[k % Math.max(1, u.T.attaques.length)] });
+    g.position.set(x, 0, z);
+    // face à l'ennemi (les modèles regardent vers +z) ; pour tirer à l'arc, ils se tournent d'un quart de tour (on vise sur sa gauche)
+    const rot = sens > 0 ? -Math.PI / 2 : Math.PI / 2;
+    g.rotation.y = rot;
+    Object.assign(u, { x0: x, sens: -sens, rot, rotTir: rot - Math.PI / 2, rotVise: rot, vitesse: sens > 0 ? 0.6 : 1.1, attaque: u.T.attaques[k % Math.max(1, u.T.attaques.length)] });
     jouer(g, u.T.repos).time = Math.random();
     sceneB.add(g);
   });
@@ -648,32 +716,44 @@ function animerBataille(now, dt) {
   const une = (u, cle) => (u.faits[cle] ? false : (u.faits[cle] = true));   // vrai la première fois seulement
   const tous = [...B.attaquants, ...B.defenseurs];
   tous.forEach((g, k) => {
-    const u = g.userData, T = u.T;
+    const u = g.userData, T = u.T, amis = B.attaquants.includes(g), ennemis = (amis ? B.defenseurs : B.attaquants).filter(e => !e.userData.mort);
     u.mixer.update(dt);
     if (u.mort) return;
-    // la charge
-    if (t < 1) { g.position.x = u.x0 + u.sens * u.pas * Math.min(1, t); if (u.pas > 0.15 && une(u, 'charge')) jouer(g, 'Running_A', false, 1.2); return; }
-    if (une(u, 'en place')) jouer(g, T.repos);
+    g.rotation.y += (u.rotVise - g.rotation.y) * Math.min(1, dt * 10);
     if (p >= 3) {
-      const gagnant = (B.attaquants.includes(g)) === r.gagne;
-      if (une(u, 'fin')) jouer(g, gagnant ? 'Cheering' : T.repos);
+      if (une(u, 'fin')) jouer(g, amis === r.gagne ? 'Cheering' : T.repos);
       return;
     }
-    // chaque passe : coup d'épée (ou de hache, de dague), parade, tir à l'arc
-    if (T.archer) {
-      if (f > 0.05 && une(u, 'bande' + p)) jouer(g, 'Ranged_Bow_Draw', true);
-      if (f > 0.45 && une(u, 'tire' + p)) { jouer(g, 'Ranged_Bow_Release', true); tirer(g, B.attaquants.includes(g) ? B.defenseurs : B.attaquants, now); }
-      if (f > 0.8 && une(u, 'repos' + p)) jouer(g, T.repos);
-    } else {
-      const decal = (k % 3) * 0.08;
-      if (f > 0.1 + decal && une(u, 'frappe' + p)) jouer(g, u.passe !== p && k % 4 === 3 ? 'Melee_Block' : u.attaque, true, 1.15);
-      if (f > 0.75 && u.passe !== p && une(u, 'repos' + p)) jouer(g, T.repos);
-    }
     // les blessés de la passe : un coup reçu, puis la chute
-    if (u.passe === p) {
+    if (u.passe === p && p >= 0) {
       if (f > 0.55 && une(u, 'touche')) jouer(g, 'Hit_A', true);
-      if (f > 0.72 && une(u, 'tombe')) { jouer(g, 'Death_A', true); u.mort = true; u.anneau.visible = false; }
+      if (f > 0.72 && une(u, 'tombe')) { jouer(g, 'Death_A', true); u.mort = true; u.anneau.visible = false; return; }
     }
+    if (T.archer) {
+      // l'archer reste derrière et tire à chaque passe : il bande, se tourne vers sa cible, lâche
+      if (t > 0.5 && une(u, 'en place')) jouer(g, T.repos);
+      if (p < 0 || !ennemis.length) return;
+      if (f > 0.05 && une(u, 'bande' + p)) { jouer(g, 'Ranged_Bow_Draw', true); u.rotVise = u.rotTir; }
+      if (f > 0.45 && une(u, 'tire' + p)) { jouer(g, 'Ranged_Bow_Release', true); tirer(g, ennemis, now); }
+      if (f > 0.8 && une(u, 'repos' + p)) { jouer(g, T.repos); u.rotVise = u.rot; }
+      return;
+    }
+    // le fantassin va au contact de l'ennemi vivant le plus proche, et ne frappe qu'au contact
+    let cible = null, dmin = 1e9;
+    ennemis.forEach(e => { const d = Math.abs(e.position.x - g.position.x) + Math.abs(e.position.z - g.position.z) * 0.6; if (d < dmin) { dmin = d; cible = e; } });
+    if (!cible) { if (une(u, 'seul')) jouer(g, T.repos); return; }
+    const voulu = cible.position.x - u.sens * 0.6, ecart = voulu - g.position.x;
+    const enCours = u.courant && u.courant.loop === THREE.LoopOnce && u.courant.isRunning();   // une attaque ou une parade pas finie
+    if (Math.abs(ecart) > 0.08 && !enCours) {
+      g.position.x += Math.sign(ecart) * Math.min(Math.abs(ecart), u.vitesse * dt);
+      jouer(g, 'Running_A', false, 1.2);
+      u.rotVise = u.rot;   // toujours tourné vers l'ennemi, même s'il recule d'un pas
+      return;
+    }
+    if (p < 0) { if (!enCours) jouer(g, T.repos); return; }
+    const decal = (k % 3) * 0.08;
+    if (f > 0.1 + decal && une(u, 'frappe' + p)) jouer(g, u.passe !== p && k % 4 === 3 ? 'Melee_Block' : u.attaque, true, 1.15);
+    else if (!enCours && u.courant !== u.actions[T.repos]) jouer(g, T.repos);
   });
   // les flèches : une courbe de l'archer à sa cible, la pointe dans le sens de la course
   B.fleches = B.fleches.filter(fl => {
@@ -710,7 +790,8 @@ function tirer(archer, cibles, now) {
   o.scale.setScalar(0.7 * 1.1 / AV.haut * 2.2);
   sceneB.add(o);
   const cible = vivants[Math.floor(Math.random() * Math.min(3, vivants.length))];
-  bataille.fleches.push({ o, debut: now, a: archer.position.clone().add(new THREE.Vector3(archer.userData.sens * 0.2, 0.7, 0)), b: cible.position.clone().add(new THREE.Vector3(0, 0.5, 0)) });
+  const main = new THREE.Vector3(); archer.getObjectByName('handslotl').getWorldPosition(main);
+  bataille.fleches.push({ o, debut: now, a: main, b: cible.position.clone().add(new THREE.Vector3(0, 0.5, 0)) });
 }
 function finBataille() {
   const i = bataille.av.i;
