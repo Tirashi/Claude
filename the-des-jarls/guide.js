@@ -25,7 +25,7 @@ const GUIDE_ETAPES = [
   { z: 'b1', a: 'lancer', t: "Chacun son tour, on lance ses six dés, trois fois au plus. À toi : touche LANCER !" },
   { z: 'des', a: 'ok', t: "Chaque face envoie ton armée. Hache : tes fantassins chargent. Flèche : tes archers tirent. Casque et bouclier parent les coups. Main : un éclaireur vole un jeton. Les faces dorées rapportent un jeton chacune." },
   { z: 'desIA', a: 'tour', t: "Thorgrim lance à son tour. Ses dés s'affichent ici, au-dessus de la bataille." },
-  { z: 'des', a: 'garder', t: "À toi ! Garde tes trois haches : touche-les. Un dé gardé (cerclé d'or) ne sera pas relancé." },
+  { z: 'des', a: 'garder', t: "À toi ! Garde tes trois haches : touche-les. Un dé gardé file sur la planche de feutre du haut : il ne sera pas relancé." },
   { z: 'b1', a: 'lancer', t: "Relance les dés que tu n'as pas gardés." },
   { z: 'desIA', a: 'tour', t: "Thorgrim relance…" },
   { z: 'b2', a: 'finir', t: "Belle main : quatre haches et quatre faces dorées ! TOUT GARDER arrête tes lancers." },
@@ -38,7 +38,7 @@ const GUIDE_ETAPES = [
 const LIVRE = [
   ['LE BUT', { armees: 1 }, "Deux armées de 45 soldats. <b>Fais tomber les 15 PV</b> de l'adversaire : à chaque blessure, 3 de ses soldats tombent."],
   ['LES FACES', { faces: 1 }, "Six dés de six faces : deux haches, une flèche, un casque, un bouclier, une main."],
-  ['GARDER, RELANCER', { des: ['hache', 'hache', 'fleche*', '→', 'bouclier', 'main', 'hache'] }, "Trois lancers au plus, chacun son tour. <b>Touche un dé pour le garder</b> ; les autres repartent. TOUT GARDER arrête tes lancers ; au troisième, tout est gardé."],
+  ['GARDER, RELANCER', { des: ['hache', 'hache', 'fleche*', '→', 'bouclier', 'main', 'hache'] }, "Trois lancers au plus, chacun son tour. <b>Touche un dé pour le garder</b> : il file sur la planche de feutre ; les autres repartent. TOUT GARDER arrête tes lancers ; au troisième, tout est gardé."],
   ["L'OR DES DIEUX", { des: ['fleche*', '=', 'jeton'] }, "Chaque face <b>dorée</b> rapporte un jeton. Les éclaireurs (mains) en volent un chacun. Les jetons paient les faveurs des dieux."],
   ['LES FAVEURS', { med: ['thor', 'idunn', 'vidar'] }, "Avant le duel, tu emportes <b>trois faveurs</b>. Après les lancers, invoques-en une au niveau I, II ou III. Celles <b>d'après la bataille</b> (Thor, Idunn, Odin) ratent si on t'a volé tes jetons."],
   ["L'ORDRE DE LA BATAILLE", { ordre: ['Les faces dorées rapportent leurs jetons.', "Les dieux d'avant la bataille.", 'Les flèches contre les boucliers, puis les haches contre les casques.', 'Les éclaireurs volent.', "Les dieux d'après la bataille."] }, 'Le premier joueur change à chaque manche.'],

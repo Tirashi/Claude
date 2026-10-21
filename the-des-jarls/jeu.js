@@ -54,7 +54,7 @@ JarSons.actif(lire('sons', true));
 
 function nouvelleVue() {
   V = { sold: [0, 1].map(() => Array.from({ length: 45 }, () => ({ mort: null, rel: -9 }))), desT: [[], []], show: E.camps.map(c => ({ pv: c.pv, jetons: c.jetons })),
-    anim: null, sel: [null, null], info: null, iaT: 0, cle: '', flash: null, rappelT: 0 };
+    anim: null, sel: [null, null], info: null, iaT: 0, cle: '', flash: null, rappelT: 0, pos: [null, null], tDes: 0 };
   for (const i of [0, 1]) { const vivants = Math.min(45, 3 * E.camps[i].pv); V.sold[i].forEach((s, k) => { if (k >= vivants) s.mort = -9; }); }
 }
 const cleSauve = () => cfg.mode === 'jour' ? 'dailyRun' : cfg.mode === 'guide' || cfg.mode === 'rejeu' ? null : 'run';
@@ -119,10 +119,17 @@ function zones(h, duo) {
   if (duo) { z.hud = { x: 0, y: 0, w: W, h: 26 }; y = 30; }
   const BH = 42, FH = 52;
   if (duo) {
-    const s = Math.max(30, Math.min(50, (W - 7 * 8) / 6, h - y - FH - BH - 3 * gap - 6)), x0 = (W - 6 * s - 5 * 8) / 2;
+    // à deux : une seule rangée ; les dés gardés glissent à gauche, sur un feutre (positions calculées par cibleDe)
+    const s = Math.max(30, Math.min(48, (W - 7 * 8 - 14) / 6, h - y - FH - BH - 3 * gap - 6)), x0 = (W - 6 * s - 5 * 8) / 2;
     z.des = Array.from({ length: 6 }, (_, i) => ({ x: x0 + i * (s + 8), y: y + 6, s }));
+    z.rang = { y: y + 6, s };
     y += s + 12 + gap;
   } else {
+    // seul : la planche de feutre des dés gardés, puis les dés à lancer en 3 × 2
+    const s2 = Math.max(26, Math.min(40, (W - 24 - 5 * 8 - 16) / 6)), xt = (W - 6 * s2 - 5 * 8) / 2;
+    z.tray = { x: 10, y: y + 2, w: W - 20, h: s2 + 16 };
+    z.trayDes = Array.from({ length: 6 }, (_, i) => ({ x: xt + i * (s2 + 8), y: y + 8, s: s2 }));
+    y += s2 + 16 + 6;
     const s = Math.max(34, Math.min(62, (W - 4 * 14) / 3, (h - y - FH - BH - 3 * gap - 22) / 2)), x0 = (W - 3 * s - 2 * 14) / 2;
     z.des = Array.from({ length: 6 }, (_, i) => ({ x: x0 + (i % 3) * (s + 14), y: y + 10 + Math.floor(i / 3) * (s + 12), s }));
     y += 2 * s + 12 + 18 + gap;
@@ -280,7 +287,7 @@ function zoneGuide(z) {
   if (z === 'champ') return { x: 0, y: L.champ.y, w: W, h: L.champ.h };
   if (z === 'hud') return { x: 0, y: 0, w: W, h: L.hud.h };
   if (z === 'desIA') return { x: W - 6 * 21 - 16, y: L.champ.y + 2, w: 6 * 21 + 12, h: 30 };
-  if (z === 'des') { const a = Z.des[0], b = Z.des[5]; return { x: a.x - 8, y: P.y + a.y - 10, w: b.x + b.s - a.x + 16, h: b.y + b.s - a.y + 20 }; }
+  if (z === 'des') { const a = Z.des[0], b = Z.des[5], top = Z.tray ? Z.tray.y : a.y - 10; return { x: 6, y: P.y + top - 2, w: W - 12, h: b.y + b.s - top + 12 }; }
   if (z === 'fav') { const a = Z.fav[0], b = Z.fav[2]; return { x: a.x - 4, y: P.y + a.y - 4, w: b.x + b.w - a.x + 8, h: a.h + 8 }; }
   const r = Z[z]; return { x: r.x - 4, y: P.y + r.y - 4, w: r.w + 8, h: r.h + 8 };
 }
@@ -341,8 +348,12 @@ cv.addEventListener('pointerdown', e => {
 function toucherPanneau(i, z, x, y) {
   if (V.info && V.info.qui === i) { V.info = null; return; }
   const c = E.camps[i], tour = E.tour === i && !V.anim && !E.fin;
+  for (let k = 0; k < 3; k++) {
+    const r = z.fav[k];
+    if (Math.hypot(x - (r.x + r.w - 11), y - (r.y + 11)) < 14) { V.info = { qui: i, id: c.faveurs[k] }; return; }   // le « ? » d'une faveur : sa fiche, à tout moment
+  }
   for (let j = 0; j < 6; j++) {
-    const d = z.des[j];
+    const d = (V.pos[i] && V.pos[i][j]) || z.des[j];
     if (dans(x, y, { x: d.x, y: d.y, w: d.s, h: d.s }, 6)) { if (tour && E.phase === 'lancer' && guidePermet('garder', j)) garder(i, j); return; }
   }
   for (let k = 0; k < 3; k++) {
@@ -431,7 +442,11 @@ function carteFaveur(r, id, i, now) {
   if (ph && !choisi) { g.fillStyle = `rgba(255,214,120,${0.06 + 0.05 * Math.sin(now * 4)})`; rrect(r.x, r.y, r.w, r.h, 7); g.fill(); }
   // petite tête du dieu à gauche du nom
   g.save(); g.beginPath(); g.arc(r.x + 13, r.y + 13, 9, 0, 7); g.fillStyle = JAR_COUL_FAM[JAR_FAM[id]]; g.fill(); g.clip(); g.imageSmoothingEnabled = false; g.drawImage(portrait(id), 10, 2, 22, 20, r.x + 3, r.y + 4, 21, 19); g.restore();
-  texte(F.dieu, r.x + r.w / 2 + 8, r.y + 13, { taille: 13, max: r.w - 30, coul: choisi ? '#fff4c8' : '#f3d58c' });
+  texte(F.dieu, r.x + r.w / 2 + 2, r.y + 13, { taille: 13, max: r.w - 50, coul: choisi ? '#fff4c8' : '#f3d58c' });
+  // le « ? » : la fiche de la faveur
+  g.fillStyle = 'rgba(243,213,140,.16)'; g.beginPath(); g.arc(r.x + r.w - 11, r.y + 11, 7.5, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(243,213,140,.6)'; g.lineWidth = 1; g.stroke();
+  texte('?', r.x + r.w - 11, r.y + 12, { taille: 11, police: FRED, poids: 600, coul: '#f3d58c', ombre: false });
   const cw = (r.w - 10) / 3;
   for (let n = 1; n <= 3; n++) {
     const x = r.x + 5 + (n - 1) * cw + cw / 2, y = r.y + r.h - 15, cout = jarCout(id, n), sur = (choisi && s.niv === n) || (engage && c.choix.niv === n);
@@ -439,6 +454,20 @@ function carteFaveur(r, id, i, now) {
     texte(ROMAIN[n], x - 7, y, { taille: 10, coul: sur ? '#3a2008' : '#c8b088', ombre: !sur });
     texte(String(cout), x + 6, y, { taille: 12, police: FRED, poids: 600, coul: sur ? '#3a2008' : cout <= dispo ? '#f3e6c8' : '#8a7458', ombre: !sur });
   }
+}
+// où doit être le dé j du camp i (les dés glissent vers cette place)
+function cibleDe(i, z, gardes, j) {
+  if (z.tray) {
+    // seul : les gardés serrés et centrés sur le feutre ; les autres resserrés dans la grille (dernière ligne centrée)
+    const g0 = [0, 1, 2, 3, 4, 5].filter(k => gardes[k]), l0 = [0, 1, 2, 3, 4, 5].filter(k => !gardes[k]);
+    if (gardes[j]) { const t = z.trayDes, s = t[0].s, n = g0.length, x0 = (W - n * s - (n - 1) * 8) / 2; return { x: x0 + g0.indexOf(j) * (s + 8), y: t[0].y, s }; }
+    const r = l0.indexOf(j), ligne = Math.floor(r / 3), dansL = Math.min(3, l0.length - ligne * 3), a = z.des[0], s = a.s, pas = z.des[1].x - a.x;
+    const x0 = W / 2 - (dansL * s + (dansL - 1) * (pas - s)) / 2;
+    return { x: x0 + (r % 3) * pas, y: z.des[ligne * 3].y, s };
+  }
+  const ord = [0, 1, 2, 3, 4, 5].filter(k => gardes[k]).concat([0, 1, 2, 3, 4, 5].filter(k => !gardes[k])), n = ord.filter(k => gardes[k]).length;
+  const s = z.rang.s, ecart = n && n < 6 ? 14 : 0, x0 = (W - 6 * s - 5 * 8 - ecart) / 2, p = ord.indexOf(j);
+  return { x: x0 + p * (s + 8) + (p >= n ? ecart : 0), y: z.rang.y, s };
 }
 function panneau(i, P, now) {
   const z = P.z, c = E.camps[i];
@@ -455,7 +484,24 @@ function panneau(i, P, now) {
     jeton(W - 34, 15, V.show[i].jetons, true);
   }
   const tour = E.tour === i && !V.anim && !E.fin;
-  c.des.forEach((d, j) => { const p = z.des[j], t = V.desT[i][j] || -9; deA(g, p.x, p.y, p.s, jarFace(j, d), d.garde && !c.fini, now - t < 0.5, now); });
+  // les dés gardés sont mis de côté : seul, sur la planche de feutre du haut ; à deux, à gauche de la rangée
+  const gardes = c.des.map(d => d.garde && !c.fini && c.lancers > 0), nG = gardes.filter(Boolean).length;
+  if (z.tray) {
+    g.fillStyle = '#1e3326'; rrect(z.tray.x, z.tray.y, z.tray.w, z.tray.h, 9); g.fill();
+    g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 2; rrect(z.tray.x + 1, z.tray.y + 1, z.tray.w - 2, z.tray.h - 2, 8); g.stroke();
+    g.strokeStyle = '#a87a40'; g.lineWidth = 1; rrect(z.tray.x - 0.5, z.tray.y - 0.5, z.tray.w + 1, z.tray.h + 1, 9.5); g.stroke();
+    if (!nG) texte(c.fini ? '' : 'DÉS GARDÉS', W / 2, z.tray.y + z.tray.h / 2 + 1, { taille: 11, coul: 'rgba(200,230,200,.28)', ombre: false });
+  } else if (nG && nG < 6) {
+    const a = cibleDe(i, z, gardes, c.des.findIndex((d, j) => gardes[j])), ord = c.des.map((d, j) => j).filter(j => gardes[j]), b = cibleDe(i, z, gardes, ord[ord.length - 1]);
+    g.fillStyle = '#1e3326'; rrect(a.x - 5, a.y - 5, b.x + b.s - a.x + 10, a.s + 10, 8); g.fill(); g.strokeStyle = '#a87a40'; g.lineWidth = 1; rrect(a.x - 5.5, a.y - 5.5, b.x + b.s - a.x + 11, a.s + 11, 8); g.stroke();
+  }
+  const now2 = now, dt = Math.min(0.1, now2 - (V.tDes || now2)); V.tDes = now2;
+  if (!V.pos[i]) V.pos[i] = [];
+  c.des.forEach((d, j) => {
+    const vise = cibleDe(i, z, gardes, j), p = V.pos[i][j] || (V.pos[i][j] = Object.assign({}, vise)), k = Math.min(1, dt * 14);
+    p.x += (vise.x - p.x) * k; p.y += (vise.y - p.y) * k; p.s += (vise.s - p.s) * k;
+    const t = V.desT[i][j] || -9; deA(g, p.x, p.y, p.s, jarFace(j, d), false, now - t < 0.5, now);
+  });
   c.faveurs.forEach((id, k) => carteFaveur(z.fav[k], id, i, now));
   if (E.phase === 'faveur' && tour) {
     const s = V.sel[i];
