@@ -1,12 +1,13 @@
 # Convertit des modèles glTF du pack KayKit (CC0, Kay Lousberg) en tableaux compacts pour Three.js.
-# Usage : python3 outils/kaykit-conversion.py <dossier gltf du pack> <sortie.js> nom1,nom2,…
+# Usage : python3 outils/kaykit-conversion.py <dossier gltf/glb> <sortie.js> nom1,nom2,… [VARIABLE] [echelle] [decalage y] [atlas.png]
+# (Kenney Hexagon Kit : KENNEY 2 -0.4 « GLB format/Textures/colormap.png », pour avoir des tuiles de 2 comme KayKit)
 # Sortie : window.KAYKIT = {nom: [sommets, indices, base64]} et window.KAYKIT_TEX (atlas PNG) ; lecture : maquettes/duche-kaykit.html.
-import json, sys, os, base64, struct, math
-src = sys.argv[1]; out = sys.argv[2]; names = sys.argv[3].split(',')
+IMG = sys.argv[7] if len(sys.argv) > 7 else None
 idx = {}
 for d, _, fs in os.walk(src):
     for f in fs:
         if f.endswith('.gltf'): idx[f[:-5]] = os.path.join(d, f)
+        if f.endswith('.glb'): idx[f[:-4]] = os.path.join(d, f)
 def matmul(a, b):
     return [sum(a[r+4*k]*b[k+4*c] for k in range(4)) for c in range(4) for r in range(4)][::1] if False else [sum(a[k*4+r]*b[c*4+k] for k in range(4)) for c in range(4) for r in range(4)]
 def node_mat(n):
@@ -22,8 +23,12 @@ def node_mat(n):
     return r
 res = {}
 for nm in names:
-    p = idx[nm]; g = json.load(open(p)); d = os.path.dirname(p)
-    bufs = [open(os.path.join(d, b['uri']), 'rb').read() for b in g['buffers']]
+    p = idx[nm]; d = os.path.dirname(p)
+    if p.endswith('.glb'):
+        raw = open(p, 'rb').read(); l = struct.unpack_from('<I', raw, 12)[0]
+        g = json.loads(raw[20:20+l]); bufs = [raw[20+l+8:]]
+    else:
+        g = json.load(open(p)); bufs = [open(os.path.join(d, b['uri']), 'rb').read() for b in g['buffers']]
     def acc(i):
         a = g['accessors'][i]; v = g['bufferViews'][a['bufferView']]
         n = {'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4}[a['type']]
@@ -45,7 +50,7 @@ for nm in names:
                 U.extend(acc(pr['attributes']['TEXCOORD_0']))
                 I.extend(base+i[0] for i in acc(pr['indices']))
         for c in n.get('children', []): walk(c, W)
-    I4 = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
+    I4 = [ECH,0,0,0,0,ECH,0,0,0,0,ECH,0,0,DY,0,1]
     for r in g['scenes'][g.get('scene',0)]['nodes']: walk(r, I4)
     # positions/normals en Int16 (pos × 4096 ; normales × 32767), uv en Uint16 (× 65535)
     q = lambda v,s: max(-32768,min(32767,round(v*s)))
@@ -54,6 +59,6 @@ for nm in names:
     ub = struct.pack('<%dH'%(len(U)*2), *[max(0,min(65535,round(c*65535))) for v in U for c in v])
     ib = struct.pack(('<%dH' if len(P)<65536 else '<%dI')%len(I), *I)
     res[nm] = [len(P), len(I), base64.b64encode(pb+nb+ub+ib).decode()]
-img = os.path.join(src, '..', '..', 'Textures', 'hexagons_medieval.png')
-js = 'window.KAYKIT=' + json.dumps(res, separators=(',',':')) + ';\nwindow.KAYKIT_TEX="data:image/png;base64,' + base64.b64encode(open(img,'rb').read()).decode() + '";\n'
+img = IMG or os.path.join(src, '..', '..', 'Textures', 'hexagons_medieval.png')
+js = 'window.'+VAR+'=' + json.dumps(res, separators=(',',':')) + ';\nwindow.'+VAR+'_TEX="data:image/png;base64,' + base64.b64encode(open(img,'rb').read()).decode() + '";\n'
 open(out,'w').write(js); print(len(js), {k:v[0] for k,v in res.items()})
