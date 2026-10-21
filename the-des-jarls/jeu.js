@@ -364,7 +364,11 @@ function toucherPanneau(i, z, x, y) {
   }
   for (let j = 0; j < 6; j++) {
     const d = (V.pos[i] && V.pos[i][j]) || z.des[j];
-    if (dans(x, y, { x: d.x, y: d.y, w: d.s, h: d.s }, 6)) { if (tour && E.phase === 'lancer' && guidePermet('garder', j)) garder(i, j); return; }
+    if (dans(x, y, { x: d.x, y: d.y, w: d.s, h: d.s }, 6)) {
+      if (tour && E.phase === 'lancer' && c.des[j].verrou && !c.fini) { V.flash = { txt: 'DÉ VERROUILLÉ\nJUSQU\'À LA BATAILLE', t: horloge() }; return; }
+      if (tour && E.phase === 'lancer' && guidePermet('garder', j)) garder(i, j);
+      return;
+    }
   }
   for (let k = 0; k < 3; k++) {
     if (!dans(x, y, z.fav[k], 3)) continue;
@@ -413,11 +417,13 @@ function pips(x, y, pv, droite) {
 function jeton(x, y, n, droite, plus) {
   const gr = g.createRadialGradient(x - 1.5, y - 1.5, 0.5, x, y, 5.5); gr.addColorStop(0, '#fff3b0'); gr.addColorStop(0.55, '#e8b030'); gr.addColorStop(1, '#9a6a10');
   g.fillStyle = gr; g.beginPath(); g.arc(x, y, 5.5, 0, 7); g.fill();
+  // toujours « 3 +2 » dans le sens de lecture, à gauche comme à droite de la pièce
   const t = String(n), x1 = droite ? x - 10 : x + 10;
-  texte(t, x1, y + 1, { align: droite ? 'right' : 'left', taille: 13, police: FRED, poids: 600, coul: '#f3d58c' });
-  if (!plus) return;
-  g.font = `600 13px ${FRED}`; const w = g.measureText(t).width;
-  texte('+' + plus, droite ? x1 - w - 4 : x1 + w + 4, y + 1, { align: droite ? 'right' : 'left', taille: 12, police: FRED, poids: 600, coul: '#9fe07a' });
+  g.font = `600 12px ${FRED}`; const wp = plus ? g.measureText('+' + plus).width + 4 : 0;
+  g.font = `600 13px ${FRED}`; const wn = g.measureText(t).width;
+  const xn = droite ? x1 - wp - wn : x1;
+  texte(t, xn, y + 1, { align: 'left', taille: 13, police: FRED, poids: 600, coul: '#f3d58c' });
+  if (plus) texte('+' + plus, xn + wn + 4, y + 1, { align: 'left', taille: 12, police: FRED, poids: 600, coul: '#9fe07a' });
 }
 // jetons à venir du camp i : les faces dorées sur la table (pendant les lancers et le choix des faveurs)
 const aVenir = i => !V.anim && !E.fin && (E.phase === 'lancer' || E.phase === 'faveur') && E.camps[i].lancers ? jarOrDe(E.camps[i]) : 0;
@@ -472,6 +478,12 @@ function carteFaveur(r, id, i, now) {
     texte(String(cout), x + 6, y, { taille: 12, police: FRED, poids: 600, coul: sur ? '#3a2008' : cout <= dispo ? '#f3e6c8' : '#8a7458', ombre: !sur });
   }
 }
+// petit cadenas : ce dé gardé ne se relance plus avant la bataille
+function cadenas(x, y) {
+  g.strokeStyle = '#2a1a0c'; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y + 1, 3.2, Math.PI, 0); g.stroke();
+  g.strokeStyle = '#d8dde2'; g.lineWidth = 1.4; g.beginPath(); g.arc(x, y + 1, 3.2, Math.PI, 0); g.stroke();
+  g.fillStyle = '#2a1a0c'; g.fillRect(x - 5, y + 1, 10, 8); g.fillStyle = '#e8b030'; g.fillRect(x - 4, y + 2, 8, 6); g.fillStyle = '#5a3a10'; g.fillRect(x - 0.5, y + 3.5, 1.5, 2.5);
+}
 // où doit être le dé j du camp i (les dés glissent vers cette place)
 function cibleDe(i, z, gardes, j) {
   if (z.tray) {
@@ -518,6 +530,7 @@ function panneau(i, P, now) {
     const vise = cibleDe(i, z, gardes, j), p = V.pos[i][j] || (V.pos[i][j] = Object.assign({}, vise)), k = Math.min(1, dt * 14);
     p.x += (vise.x - p.x) * k; p.y += (vise.y - p.y) * k; p.s += (vise.s - p.s) * k;
     const t = V.desT[i][j] || -9; deA(g, p.x, p.y, p.s, jarFace(j, d), false, now - t < 0.5, now);
+    if (d.verrou && !c.fini) cadenas(p.x + p.s - 4, p.y - 3);
   });
   c.faveurs.forEach((id, k) => carteFaveur(z.fav[k], id, i, now));
   // le compte des jetons pour la bataille (les faces dorées comptent)
@@ -593,13 +606,29 @@ function champ(now) {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (cfg.mode !== 'duo') {
     // les dés du dieu, assez grands pour être lus ; ses dés gardés sur un feutre
-    const e = E.camps[1], ps = Math.round(Math.max(20, Math.min(30, (W - 150) / 6 - 4))), ex = W - 6 * (ps + 4) - 10, y = Cz.y + 4;
-    L.desIA = { x: ex - 8, y: y - 2, w: 6 * (ps + 4) + 14, h: ps + 14 };
-    g.fillStyle = 'rgba(20,12,6,.62)'; rrect(ex - 6, y, 6 * (ps + 4) + 10, ps + 10, 7); g.fill();
+    // ses dés gardés glissent à gauche, sur un feutre « GARDÉS », avec un éclat doré quand il en met un de côté
+    const e = E.camps[1], ps = Math.round(Math.max(20, Math.min(30, (W - 160) / 6 - 4))), ecart = 8, ex = W - 6 * (ps + 4) - ecart - 10, y = Cz.y + 4;
+    L.desIA = { x: ex - 8, y: y - 2, w: 6 * (ps + 4) + ecart + 14, h: ps + 24 };
+    g.fillStyle = 'rgba(20,12,6,.62)'; rrect(ex - 6, y, 6 * (ps + 4) + ecart + 10, ps + 10, 7); g.fill();
+    const gd = e.des.map(d => d.garde && !e.fini && e.lancers > 0), ord = [0, 1, 2, 3, 4, 5].filter(j => gd[j]).concat([0, 1, 2, 3, 4, 5].filter(j => !gd[j])), nG = gd.filter(Boolean).length;
+    const posIA = j => { const p = ord.indexOf(j); return ex + p * (ps + 4) + (nG && nG < 6 && p >= nG ? ecart : 0); };
+    if (!V.iaGarde) V.iaGarde = [];
+    if (nG) {
+      const fx = posIA(ord[0]) - 3, fw = nG * (ps + 4) + 2;
+      g.fillStyle = '#1e3326'; rrect(fx, y + 1, fw, ps + 8, 5); g.fill(); g.strokeStyle = '#a87a40'; g.lineWidth = 1; rrect(fx - 0.5, y + 0.5, fw + 1, ps + 9, 5.5); g.stroke();
+      texte('GARDÉS', fx + fw / 2, y + ps + 17, { taille: 9, coul: '#c8e0c0' });
+    }
+    if (!V.pos[1]) V.pos[1] = [];
+    const dtIA = Math.min(0.1, now - (V.tIA || now)); V.tIA = now;
     e.des.forEach((dd, j) => {
-      const t = V.desT[1][j] || -9, gx = ex + j * (ps + 4);
-      if (dd.garde && !e.fini && e.lancers) { g.fillStyle = '#1e3326'; rrect(gx - 2, y + 2, ps + 4, ps + 6, 4); g.fill(); }
-      deA(g, gx, y + 4, ps, jarFace(j, dd), false, now - t < 0.5, now, ps < 24);
+      if (gd[j] && !V.iaGarde[j]) V.iaEclat = Object.assign(V.iaEclat || {}, { [j]: now });
+      V.iaGarde[j] = gd[j];
+      const vx = posIA(j), p = V.pos[1][j] || (V.pos[1][j] = { x: vx });
+      if (typeof p.ia !== 'boolean') { p.ia = true; p.x = vx; }
+      p.x += (vx - p.x) * Math.min(1, dtIA * 12);
+      const t = V.desT[1][j] || -9, ec = V.iaEclat && V.iaEclat[j] ? now - V.iaEclat[j] : 9;
+      if (ec < 0.9) { g.save(); g.globalAlpha = 1 - ec / 0.9; g.strokeStyle = '#ffd36b'; g.lineWidth = 3; rrect(p.x - 3, y + 1, ps + 6, ps + 6, 6); g.stroke(); g.restore(); }
+      deA(g, p.x, y + 4, ps, jarFace(j, dd), false, now - t < 0.5, now, ps < 24);
     });
     if (e.choix && !V.anim) texte(`${JAR_FAVEURS[e.choix.id].dieu} ${ROMAIN[e.choix.niv]}`, ex - 12, y + 5 + ps / 2, { align: 'right', taille: 12 });
   }

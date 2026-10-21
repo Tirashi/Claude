@@ -55,8 +55,8 @@ function jarIaLancer(etat, i) {
     const seuil = 1.15 + (niv === 1 ? 0.3 : 0);
     let gardes = 0;
     c.des.forEach((d, j) => {
-      const v = jarIaValeur(etat, i, jarFace(j, d)) + (niv === 1 ? (R() - 0.5) * 1.2 : niv === 2 ? (R() - 0.5) * 0.4 : 0);
-      d.garde = v >= seuil; if (d.garde) gardes++;
+      const v = jarIaValeur(etat, i, jarFace(j, d)) + (niv === 1 ? (R() - 0.5) * 1.7 : niv === 2 ? (R() - 0.5) * 0.4 : 0);
+      d.garde = d.verrou || v >= seuil; if (d.garde) gardes++;   // un dé verrouillé reste gardé
     });
     if (gardes === 6) return jarFinir(etat, i);
   }
@@ -83,7 +83,7 @@ function jarIaFaveur(etat, i) {
   let pick = notes[0].ch;
   if (niv < 3) {
     const R = jarRng(etat.graine, 'ia', etat.manche * 2 + i, 9);
-    if (R() < (niv === 1 ? 0.45 : 0.15)) pick = notes[Math.min(notes.length - 1, 1 + Math.floor(R() * 2))].ch;
+    if (R() < (niv === 1 ? 0.55 : 0.15)) pick = notes[Math.min(notes.length - 1, 1 + Math.floor(R() * 2))].ch;
   }
   return jarChoisir(etat, i, pick && pick.id, pick && pick.niv);
 }

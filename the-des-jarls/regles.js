@@ -97,14 +97,16 @@ function jarLancer(etat, i) {
   // dés arrangés (duel guidé) : etat.imposes['manche-camp-lancer'] = les 6 faces (n° dans JAR_DES[j]) ; sinon le hasard à graine
   const imp = etat.imposes && etat.imposes[`${etat.manche}-${i}-${c.lancers}`];
   c.des.forEach((d, j) => { const x = Math.floor(R() * 6); if (!d.garde) d.k = imp ? imp[j] : x; });   // on tire toujours 6 nombres : garder un dé ne change pas les autres
+  // comme dans l'Orlog, un dé mis de côté y reste jusqu'à la bataille : les dés gardés avant ce lancer sont verrouillés
+  c.des.forEach(d => { if (d.garde) d.verrou = true; });
   c.lancers++;
   if (c.lancers >= JAR_LANCERS) jarClore(etat, i); else jarPasser(etat, i);
   return true;
 }
-// garder ou relâcher un dé (avant de relancer)
+// garder ou relâcher un dé (avant de relancer ; un dé verrouillé par un lancer précédent ne se relâche plus)
 function jarGarder(etat, i, j) {
   const c = etat.camps[i];
-  if (etat.phase !== 'lancer' || etat.tour !== i || c.fini || c.lancers === 0) return false;
+  if (etat.phase !== 'lancer' || etat.tour !== i || c.fini || c.lancers === 0 || c.des[j].verrou) return false;
   c.des[j].garde = !c.des[j].garde;
   return true;
 }
@@ -284,7 +286,7 @@ function jarSuivante(etat) {
   if (etat.phase !== 'bilan') return false;
   etat.manche++;
   etat.premier = jarAutre(etat.premier); etat.tour = etat.premier; etat.phase = 'lancer';
-  for (const c of etat.camps) { c.lancers = 0; c.fini = false; c.choix = undefined; c.des.forEach(d => { d.k = -1; d.garde = false; }); }
+  for (const c of etat.camps) { c.lancers = 0; c.fini = false; c.choix = undefined; c.des.forEach(d => { d.k = -1; d.garde = false; d.verrou = false; }); }
   return true;
 }
 // une partie sauvegardée par une ancienne version

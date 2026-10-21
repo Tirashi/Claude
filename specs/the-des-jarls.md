@@ -96,3 +96,7 @@ Demande de l'utilisateur : revoir l'apprentissage du jeu et le choix des trois f
   - **duel guidé** : une étape avant la bataille donne l'ordre de résolution en 6 points, la bulle de Sigrid suit ensuite chaque moment de la bataille (`GUIDE_PHASES`), la bataille guidée est 1,8 fois plus lente, l'ordinateur attend pendant les explications (14 étapes) ;
   - **dés du dieu** plus grands (environ 30 px, ses dés gardés sur un feutre), le message descend en dessous ;
   - **jetons à venir** : « 3 +2 » dans le bandeau (faces dorées sur la table), et au-dessus des faveurs « 3 jetons + 2 dorés = 5 pour la bataille » ; les coûts des faveurs s'allument selon ce total dès les lancers.
+- **Retouches (21/10, retours de l'utilisateur)** :
+  - **dés verrouillés** (règle de l'Orlog) : tant qu'on n'a pas relancé, on peut relâcher un dé gardé ; dès qu'on relance, les dés gardés sont verrouillés jusqu'à la bataille (`d.verrou`, `jarLancer`, `jarGarder`), petit cadenas sur le dé, « DÉ VERROUILLÉ JUSQU'À LA BATAILLE » si on le touche ; l'ordinateur suit la même règle. Niveau FACILE un peu plus maladroit pour garder l'écart (le DIFFICILE le bat 73 % du temps) ;
+  - **dés gardés du dieu** : dans sa rangée du haut, ils glissent à gauche sur un feutre « GARDÉS », avec un éclat doré quand il en met un de côté ;
+  - bandeau : « 0 +1 » dans le sens de lecture des deux côtés.

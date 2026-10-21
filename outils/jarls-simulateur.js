@@ -108,6 +108,13 @@ r = bataille([H, H, H, H, H, H], [H, H, H, H, C, '-'], { pv: [3, 3] });
 check(r.e.fin && r.e.fin.gagnant === 0, 'les deux à 0 en même temps : celle qui tombe le moins bas gagne (−1 contre −2)');
 check(JAR_IDS.length === 20 && JAR_IDS.every(id => JAR_DIEUX[id] && JAR_DIEUX[id].deck.length === 3 && JAR_DIEUX[id].deck[0] === id && JAR_DIEUX[id].deck.every(x => JAR_FAVEURS[x])), '20 faveurs, 20 dieux avec chacun trois faveurs dont la sienne');
 
+{ // un dé gardé puis relancé autour de lui est verrouillé jusqu'à la bataille (comme dans l'Orlog)
+  const e = jarNouvelle(9, [{ nom: 'A', faveurs: JAR_IDS.slice(0, 3) }, { nom: 'B', faveurs: JAR_IDS.slice(0, 3) }], 'libre', { premier: 0 });
+  jarLancer(e, 0); jarLancer(e, 1);
+  const ok1 = jarGarder(e, 0, 2) && jarGarder(e, 0, 2) && jarGarder(e, 0, 2);   // avant de relancer, on peut changer d'avis
+  const k = e.camps[0].des[2].k; jarLancer(e, 0); jarLancer(e, 1);
+  check(ok1 && !jarGarder(e, 0, 2) && e.camps[0].des[2].garde && e.camps[0].des[2].k === k, 'un dé gardé puis relancé autour de lui ne se relâche plus (verrouillé)');
+}
 /* ---------- 1 bis. campagne, défi du jour, manche guidée ---------- */
 {
   check(JAR_TAVERNES.length === 20 && new Set(JAR_TAVERNES.map(t => t.dieu)).size === 20 && JAR_TAVERNES.every(t => JAR_FAVEURS[t.dieu]), '20 tavernes, une par dieu');
