@@ -13,42 +13,42 @@
   html, body { height:100%; overflow:hidden; background:var(--fond); font-family:'Press Start 2P', monospace; color:var(--encre); touch-action:none; user-select:none; -webkit-user-select:none; }
   canvas { display:block; position:fixed; inset:0; }
   .cadre { background:var(--papier); border:3px solid var(--bord); box-shadow:3px 3px 0 rgba(0,0,0,.25); }
-  #res { position:fixed; left:12px; right:12px; top:10px; padding:7px 8px; font-size:8px; line-height:1.9; display:grid; grid-template-columns:repeat(3, 1fr); gap:0 6px; pointer-events:none; }
+  #res { position:fixed; left:12px; right:12px; top:10px; padding:4px 4px; font-size:7px; line-height:1.9; display:grid; grid-template-columns:repeat(3, 1fr); gap:0 6px; pointer-events:none; }
   #res b { font-weight:normal; color:var(--rouge); }
   #res .tour { grid-column:1 / -1; display:flex; justify-content:space-between; border-top:2px dotted var(--gris); margin-top:3px; padding-top:3px; }
-  #fiche { position:fixed; left:12px; right:12px; bottom:62px; padding:9px 10px; font-size:8px; line-height:1.8; }
-  #fiche .titre { font-size:10px; color:var(--rouge); margin-bottom:2px; }
+  #fiche { position:fixed; left:12px; right:12px; bottom:62px; padding:2px 2px; font-size:7px; line-height:1.8; overflow-wrap:anywhere; }
+  #fiche .titre { font-size:9px; color:var(--rouge); margin-bottom:2px; }
   #fiche .actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
   #fiche .journal { color:#5a4630; }
-  button { font:inherit; color:var(--encre); background:var(--or); border:3px solid var(--bord); box-shadow:0 3px 0 var(--bord); cursor:pointer; }
+  button { white-space:normal; line-height:1.5; overflow-wrap:anywhere; font:inherit; color:var(--encre); background:var(--or); border:3px solid var(--bord); box-shadow:0 3px 0 var(--bord); cursor:pointer; }
   button:active { transform:translateY(2px); box-shadow:0 1px 0 var(--bord); }
   button:disabled { background:#d8c9a6; color:#8b7a5c; box-shadow:none; }
-  #fiche .actions button { font-size:8px; padding:8px 6px; flex:1 1 auto; }
+  #fiche .actions button { font-size:7px; padding:4px 4px; flex:1 1 auto; }
   .boutons { position:fixed; left:12px; right:12px; bottom:12px; display:flex; gap:8px; }
-  .boutons button { flex:1; font-size:8px; padding:11px 2px; }
+  .boutons button { flex:1; font-size:7px; padding:6px 0; }
   .boutons #fin { flex:1.6; background:#c94f2c; color:#fff6e0; }
   #voile { position:fixed; inset:0; background:rgba(30,20,8,.45); display:flex; align-items:center; justify-content:center; padding:16px; }
   #voile.cache, #fiche.cache { display:none; }
-  #boite { width:100%; max-width:360px; padding:14px; font-size:8px; line-height:1.9; max-height:80vh; overflow:auto; }
-  #boite h2 { font-size:11px; font-weight:normal; color:var(--rouge); margin-bottom:8px; }
+  #boite { width:100%; max-width:360px; padding:4px; font-size:7px; overflow-wrap:anywhere; line-height:1.9; max-height:80vh; overflow:auto; }
+  #boite h2 { font-size:9px; font-weight:normal; color:var(--rouge); margin-bottom:8px; }
   #boite p { margin-bottom:10px; }
-  #boite button { display:block; width:100%; font-size:8px; padding:9px 6px; margin-top:7px; text-align:left; line-height:1.7; }
-  #boite button small { display:block; font-size:7px; color:#6b4a20; }
-  #toast { position:fixed; left:50%; top:96px; transform:translateX(-50%); font-size:9px; padding:8px 10px; white-space:nowrap; transition:opacity .3s; pointer-events:none; }
+  #boite button { display:block; width:100%; font-size:7px; padding:4px 4px; margin-top:7px; text-align:left; line-height:1.7; }
+  #boite button small { display:block; font-size:6px; color:#6b4a20; }
+  #toast { position:fixed; left:16px; right:16px; top:96px; text-align:center; font-size:7px; line-height:1.6; padding:2px; transition:opacity .3s; pointer-events:none; }
   #toast.cache { opacity:0; }
   .credit { position:fixed; right:14px; top:92px; font-size:6px; color:#20415a; opacity:.75; }
-  #boite h2.banniere, #bataille .banniere { color:#fff6e0; text-align:center; padding:12px 8px 16px; text-shadow:0 2px 0 #7a2a18; }
+  #boite h2.banniere, #bataille .banniere, #issue h2.banniere { color:#fff6e0; text-align:center; font-size:8px; padding:11px 22px 15px; text-shadow:0 2px 0 #7a2a18; }
   /* la bataille */
   body.en-bataille #fiche, body.en-bataille .boutons, body.en-bataille #res, body.en-bataille .credit { display:none; }
-  #bataille { position:fixed; left:12px; right:12px; top:10px; font-size:8px; line-height:1.8; }
+  #bataille { position:fixed; left:12px; right:12px; top:10px; font-size:7px; line-height:1.8; overflow-wrap:anywhere; }
   #bataille.cache, #issue.cache { display:none; }
   #bataille .camps { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
   #bataille .camp b { font-weight:normal; color:var(--rouge); }
   .jauge { height:16px; background:#3b2a18; border:2px solid #2b1d0e; margin:3px 0; position:relative; }
   .jauge i { position:absolute; left:0; top:0; bottom:0; transition:width .5s; min-width:0; box-sizing:border-box; }
-  #issue { position:fixed; left:12px; right:12px; bottom:14px; text-align:center; font-size:8px; line-height:1.9; }
-  #issue h2 { font-size:12px; font-weight:normal; }
-  #issue button { font-size:9px; padding:8px 18px; margin-top:6px; }
+  #issue { position:fixed; left:12px; right:12px; bottom:14px; text-align:center; font-size:7px; line-height:1.9; overflow-wrap:anywhere; }
+  #issue h2 { font-size:9px; font-weight:normal; }
+  #issue button { font-size:8px; padding:6px 16px; margin-top:6px; }
 </style>
 <style>.cadre { border:16px solid transparent; border-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAABGdBTUEAALGPC/xhBQAAAHJQTFRFUF9qUV1pUF9qUF9qUF9rUF5qbUoma0smAAAAb2ddXWJl3MCZan2NoXVIiG5TepGjdmlb7uDD0sas4ta6Y2RjlXJOgm1WfGtYxaBzmWk3h10wjnBQV2BoX3B+aHuLd42flK/GbUsnUV9ro3A6tHtB//HSP7m+1QAAAAl0Uk5Trz/P3+9vn18AzwTf2AAAAbNJREFUWMPtl12XQzAQhnW16Id+KKUom0n6///iziQUUSVrL/bCe+GUvu9zQubkzFgrC1qyVt6IdL/1BR19jQF0P/K+K5UoANfzXIZy5bUvAPLVGVyDDhhMfgScaDVFWRawSxlLBSqV1752yoc6NYCTep8Cn98Gk5VuylcRKgAA/pPRs7MY1Zl8Gf5QyQYgYoBYTFDt0wDcUBrANwf4L0BZPvClOA+uzwElnCft+2vAOX6yB227BCAh53wwj4Ske3/lPKf8C1AQ4GkgAhQNgPbfFHCTlYcAG9T+mwJUPYBtbdYAeSzMASLOAdYby/MYo7IwB4g7czxvBkDm5wBS5s4DKEILsDcFCMY6gGQu4LkAFsACWADmgP1cQPLPvoHD7vMAruzrlkKaAaD+fxv9BhBtW/NCZg7IXvNC3SeaAd70iaZtXq9PvEzPX972icFkwiVo9YmqZT6aN9vHv233qSyOYRhNGThqnw7w61FmRHL//S7goIaoB9bDpzXc6dyIlI90aMY+SXhQPYQf8oxOnlD5VP7t4Dksx5k0uQ7n6fTrA+zuMG2PDd+6X84LjdabMYDu/wFDkxLp+9UVYgAAAABJRU5ErkJggg==') 20 fill / 16px; background:none; box-shadow:none; image-rendering:pixelated; }
 #res.cadre { border-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAABGdBTUEAALGPC/xhBQAAADlQTFRFbUona0ohbUomZkQibEombUslbUwmAAAAbUsmbEsnr3g/nWw4q3U9elQrom86o3A6bUsntHtB//HSpQh0XQAAAAp0Uk5T3x+fD6+PLwDvvw++7ZYAAABxSURBVFjD7dfBEYAgEEPRRRBYEAz2X6y04OKMB/PvefdI8rsqTKnuPknMWChHCWi1D1O9NgQBjmHuACYwFnoPOA29DVwPI0CAAAECBAgQIECAwH+Arx/Ll69N0O37PvcbWrHuS8Mmbu18O0lR7XuN6QZqDhKIQv3i5gAAAABJRU5ErkJggg==') 16 fill / 12px; border-width:12px; }
@@ -1382,12 +1382,12 @@ $('nouvelle').onclick = () => nouvellePartie(Math.floor(Math.random() * 1e9));
 // planches de 256 × 448 : images de 32 × 32, 4 par ligne ; blocs de 4 lignes (repos, marche, attaque, mort) :
 // lignes 0 à 3 de côté (vers la gauche), 5 à 8 de face, 10 à 13 de dos
 const sceneB = new THREE.Scene();
-const cameraB = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+const cameraB = new THREE.OrthographicCamera(-4, 4, 8, -8, 0.1, 100);   // vue de profil, sans perspective
 const cielB = new THREE.HemisphereLight(0xdff1ff, 0x5a7040, 0.8), soleilB = new THREE.DirectionalLight(0xfff1d6, 1.0);
 soleilB.position.set(-4, 9, 5); soleilB.castShadow = true; soleilB.shadow.mapSize.set(1024, 1024);
-Object.assign(soleilB.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 30 });
+Object.assign(soleilB.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 });
 sceneB.add(cielB, soleilB);
-sceneB.background = new THREE.Color(0x8fc6e8); sceneB.fog = new THREE.Fog(0x8fc6e8, 14, 30);
+sceneB.background = new THREE.Color(0x8fc6e8); sceneB.fog = new THREE.Fog(0x8fc6e8, 26, 44);
 // planches recolorées : l'or vient du rouge, le violet du bleu (les pixels d'équipe sont ceux qui diffèrent entre les deux)
 const planches = {};
 function chargerImage(src) { return new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = src; }); }
@@ -1421,11 +1421,17 @@ function guerrier(cl, coul) {
   s.userData = { cl, t, bloc: 0, anim: 0, debut: 0, mort: 0 };
   return s;
 }
-function image(s, bloc, anim, k) { const t = s.userData.t, l = bloc * 5 + anim; t.offset.set((k % 4) * 0.125, 1 - (l + 1) * 32 / 448); }
+// une image de la planche ; « miroir » retourne l'image (les vues de côté regardent vers la gauche)
+function image(s, bloc, anim, k) {
+  const t = s.userData.t, l = bloc * 5 + anim, m = s.userData.miroir;
+  t.repeat.x = m ? -0.125 : 0.125;
+  t.offset.set(((k % 4) + (m ? 1 : 0)) * 0.125, 1 - (l + 1) * 32 / 448);
+}
 let bataille = null;
-function formation(n, cx, cz, sens) {
-  const p = [], par = n <= 4 ? 2 : 3;
-  for (let k = 0; k < n; k++) { const r = Math.floor(k / par), c = k % par; p.push([cx + (c - (Math.min(par, n - r * par) - 1) / 2) * 0.5 + (r % 2) * 0.12, cz + r * 0.36 * sens]); }
+// rangs de profil : colonnes de 3 guerriers en profondeur, la première colonne face à l'ennemi
+function formation(n, x0, sens) {
+  const p = [];
+  for (let k = 0; k < n; k++) { const c = Math.floor(k / 3), r = k % 3; p.push([x0 + sens * c * 0.58 + (r === 1 ? sens * 0.2 : 0), [1.25, 0.35, -0.55][r]]); }
   return p;
 }
 function composition(n, coul, brig, neutre) {
@@ -1435,60 +1441,71 @@ function composition(n, coul, brig, neutre) {
   if (n >= 4) c[0] = 'cavalier';
   return c;
 }
+const matTerre = new THREE.MeshLambertMaterial({ color: new THREE.Color(0x7a5534).convertSRGBToLinear() }), matRoche = new THREE.MeshLambertMaterial({ color: new THREE.Color(0x5e4a3a).convertSRGBToLinear() });
+// décor d'arrière-plan d'un terrain (pour les tuiles du fond)
+const FOND = { plaine: ['building_grain', 'tree_single_A', 0], foret: ['trees_A_large', 'trees_B_large', 'trees_A_medium'], colline: ['hills_B', 'hill_single_A', 'hills_C_trees'],
+  montagne: ['mountain_B_grass', 'mountain_C_grass', 'mountain_A_grass_trees'], marais: ['waterplant_A', 'waterlily_A', 'waterplant_B'], riviere: ['tree_single_B', 0, 'rock_single_A'] };
 function lancerBataille(av, r) {
   document.body.classList.add('en-bataille');
   while (sceneB.children.length > 2) sceneB.remove(sceneB.children[2]);
   const S = SAISONS[ducSaison(etat.tour)];
   sceneB.background.setHex(S.ciel); sceneB.fog.color.setHex(S.ciel); soleilB.color.setHex(S.soleil); cielB.groundColor.setHex(S.sol);
-  // le diorama : votre terre devant, la terre attaquée derrière, quelques terres autour
-  const A = [-0.6, 1.1], D = [0.6, -1.0];
-  const poser = (terre, [x, z], fond) => {
-    const g = new THREE.Group(); g.position.set(x, 0, z); sceneB.add(g);
-    g.add(objet(terre.t === 'marais' && !terre.bat ? 'hex_water' : terre.t === 'riviere' && terre.bat !== 'chateau' ? 'hex_river_A' : 'hex_grass', matBase, false));
-    const faux = { terres: etat.terres.map((t, j) => (j === terre.j ? terre : t)), seigneurs: etat.seigneurs };
-    decor(faux, terre.j).forEach(([nom, dx, dz, mat, ro]) => {
-      if (nom.startsWith('flag')) return;
-      const o = objet(nom, mat); o.rotation.y = ro || 0;
-      // derrière : le décor de la terre attaquée ; devant : celui de votre terre, petit et sur le côté pour ne rien cacher
-      const k = fond ? (nom.startsWith('building_castle') ? 0.6 : 0.75) : (nom.startsWith('building_castle') ? 0.32 : 0.45);
-      o.scale.setScalar(k); o.position.set(fond ? dx * 0.5 : -0.62 + dx * 0.2, 0, fond ? -0.55 + dz * 0.3 : -0.35 + dz * 0.2);
-      g.add(o);
-    });
-    return g;
+  // le sol : des rangées de tuiles sur la grille de la carte (elles s'emboîtent), votre terrain à gauche, celui de la terre attaquée à droite
+  const gauche = av.source, droite = av.t;
+  for (let rr = -4; rr <= 1; rr++) for (let q = -8; q <= 8; q++) {
+    const x = px(q, rr), z = pz(q, rr);
+    if (Math.abs(x) > 9) continue;
+    const T = x < 0 ? gauche : droite, fond = rr <= -2, horizon = rr <= -3;
+    let sol = 'hex_grass', rot = 0;
+    if (rr === -1 && T.t === 'riviere') { sol = 'hex_river_A'; }   // la rivière coule derrière l'armée
+    if (rr <= -1 && T.t === 'marais' && (q + rr) % 2) sol = 'hex_water';
+    const o = objet(sol, matBase, false); o.position.set(x, horizon ? -0.35 : 0, z); o.rotation.y = rot; sceneB.add(o);
+    // sous les rangées de devant : l'épaisseur de terre, comme une tranche de diorama
+    if (rr >= 0) for (let y = 1; y <= (rr === 1 ? 4 : 1); y++) { const s = new THREE.Mesh(geo('hex_grass'), y === 1 ? matTerre : matRoche); s.position.set(x, -y, z); sceneB.add(s); }
+    // décor : rien devant (rangées 0 et 1), le terrain derrière, une ligne de collines et de forêts à l'horizon
+    if (rr >= 0 || sol !== 'hex_grass' && sol !== 'hex_water') continue;
+    const k = Math.abs(q * 7 + rr * 3) % 3, liste = horizon ? ['hills_C_trees', 'trees_B_large', 'mountain_C_grass'] : FOND[T.t];
+    const nom = liste[k];
+    if (!nom || (rr === -1 && Math.abs(x) < 1.5)) continue;
+    const d = objet(nom); d.position.set(x, horizon ? -0.35 : 0, z); d.rotation.y = (q * 2 + rr) * Math.PI / 3; sceneB.add(d);
+  }
+  // le bâtiment de la terre attaquée (ou le vôtre) se dresse au fond de son côté
+  const batiment = (terre, cote) => {
+    if (!terre.bat) return;
+    const Sx = terre.prop >= 0 ? etat.seigneurs[terre.prop] : null, C = Sx && COUL[Sx.coul];
+    const o = objet('building_' + BAT_MODELE[terre.bat] + '_' + (C ? C.k : 'blue'), C ? C.mat : matGris);
+    o.position.set(cote * (terre.bat === 'chateau' ? 2.0 : 2.1), 0, -1.73); o.scale.setScalar(terre.bat === 'chateau' ? 0.75 : 0.9);
+    sceneB.add(o);
   };
-  poser({ ...av.source, j: etat.terres.findIndex(t => t.q === av.source.q && t.r === av.source.r) }, A, false);
-  poser({ ...av.t, j: av.i }, D, true);
-  // les terres autour : décorées seulement sur les côtés et derrière, pour ne pas cacher les armées
-  [[-2.6, 1.1, 0], [1.4, 2.6, 0], [2.6, -0.6, 'trees_A_medium'], [-1.4, -2.4, 'hills_B'], [-2.0, -0.7, 'tree_single_A'], [2.0, 1.0, 0], [0.0, -3.0, 'trees_B_medium'], [-0.6, 3.2, 0]].forEach(([x, z, deco], k) => {
-    const o = objet(k % 3 === 0 ? 'hex_water' : 'hex_grass', matBase, false); o.position.set(x, -0.15, z); sceneB.add(o);
-    if (deco) { const a = objet(deco); a.scale.setScalar(0.7); a.position.set(x, -0.15, z - 0.3); sceneB.add(a); }
-  });
+  batiment(droite, 1); batiment(gauche, -1);
+  // nuages
+  [[-5, 4.2, -9], [3, 4.8, -10], [7, 3.8, -8]].forEach(([x, y, z], k) => { const c = objet(k % 2 ? 'cloud_small' : 'cloud_big'); c.position.set(x, y, z); sceneB.add(c); });
   // les deux armées (9 guerriers au plus de chaque côté ; chacun compte pour plusieurs si l'armée est grande)
   const J = etat.seigneurs[0], Sd = av.prop >= 0 ? etat.seigneurs[av.prop] : null;
   const vusA = Math.min(9, av.n), vusD = Math.min(9, av.gar);
   const coulD = Sd ? Sd.coul : 'neutre';
-  const attaquants = composition(vusA, J.coul).map((cl, k) => guerrier(cl, J.coul));
+  const attaquants = composition(vusA, J.coul).map(cl => guerrier(cl, J.coul));
   const defenseurs = composition(vusD, coulD, av.t.brig && !Sd, !Sd && !av.t.brig).map(cl => guerrier(cl, coulD));
-  formation(vusA, A[0] + 0.15, A[1] + 0.1, 1).forEach(([x, z], k) => { attaquants[k].position.set(x, 0.02, z); attaquants[k].userData.bloc = 2; });
-  formation(vusD, D[0] - 0.05, D[1] + 0.55, -1).forEach(([x, z], k) => { defenseurs[k].position.set(x, 0.02, z); defenseurs[k].userData.bloc = 1; });
-  [...attaquants, ...defenseurs].forEach(s => { s.userData.x0 = s.position.x; s.userData.z0 = s.position.z; sceneB.add(s); });
+  formation(vusA, -1.15, -1).forEach(([x, z], k) => { const u = attaquants[k].userData; attaquants[k].position.set(x, 0.02, z); u.miroir = true; });
+  formation(vusD, 0.95, 1).forEach(([x, z], k) => { defenseurs[k].position.set(x, 0.02, z); });
+  [...attaquants, ...defenseurs].forEach(s => { s.scale.set(1.0, 1.0, 1); s.userData.bloc = 0; s.userData.x0 = s.position.x; s.userData.z0 = s.position.z; sceneB.add(s); });
   // qui tombe, et à quelle passe
   const mortsA = Math.min(vusA, Math.round(vusA * r.pertesA / Math.max(1, av.n)));
   const mortsD = r.gagne ? vusD : Math.min(vusD, Math.round(vusD * r.pertesD / Math.max(1, av.gar)));
   const passe = (n, k) => Math.floor(k * 3 / Math.max(1, n));
-  attaquants.slice(vusA - mortsA).forEach((s, k) => { s.userData.passe = passe(mortsA, k); });
+  attaquants.slice(0, mortsA).forEach((s, k) => { s.userData.passe = passe(mortsA, k); });   // la première colonne tombe d'abord
   defenseurs.slice(0, mortsD).forEach((s, k) => { s.userData.passe = passe(mortsD, k); });
   const coups = [];
-  for (let k = 0; k < 2; k++) { const c = new THREE.Sprite(new THREE.SpriteMaterial({ map: planches.coup.clone(), transparent: true, depthTest: false })); c.material.map.needsUpdate = true; c.material.map.repeat.set(0.25, 1); c.scale.set(0.32, 0.32, 1); c.visible = false; sceneB.add(c); coups.push(c); }
-  // la caméra : devant votre terre, un peu en hauteur
-  // assez loin pour que les deux terres tiennent dans la largeur (4,3 unités) en portrait
-  const d = Math.max(7, 4.3 / (2 * Math.tan(17 * Math.PI / 180) * Math.min(1.2, cameraB.aspect)));
-  cameraB.position.set(0.5, d * 0.55, d * 0.83); cameraB.lookAt(0, 0.1, 0.05);
+  for (let k = 0; k < 2; k++) { const c = new THREE.Sprite(new THREE.SpriteMaterial({ map: planches.coup.clone(), transparent: true, depthTest: false })); c.material.map.needsUpdate = true; c.material.map.repeat.set(0.25, 1); c.scale.set(0.5, 0.5, 1); c.visible = false; sceneB.add(c); coups.push(c); }
+  // la caméra : de profil, un peu en hauteur ; 5,2 unités de large, le sol un peu sous le milieu de l'écran
+  const W = 5.2, H = W * innerHeight / innerWidth, a = 24 * Math.PI / 180, cy = 0.25 + H * 0.06;
+  Object.assign(cameraB, { left: -W / 2, right: W / 2, top: H / 2, bottom: -H / 2 });
+  cameraB.position.set(0, cy + Math.sin(a) * 30, Math.cos(a) * 30); cameraB.lookAt(0, cy, 0); cameraB.updateProjectionMatrix();
   const nomD = Sd ? sansAccent(Sd.nom) : av.t.brig ? 'BRIGANDS' : 'MILICE';
   const bonus = DUC_TERRAINS[av.t.t].def + (av.t.bat ? DUC_BATIMENTS[av.t.bat].def : 0);
   $('bataille').innerHTML = `<div class="banniere">BATAILLE : ${sansAccent(DUC_TERRAINS[av.t.t].nom)}</div>` +
     `<div class="camps"><div class="camp">VOUS<br><b id="nA">${av.n}</b> SOLDATS<div class="jauge bleu"><i id="jA" style="width:100%"></i></div></div>` +
-    `<div class="camp">${nomD}<br><b id="nD">${av.gar}</b> + ${bonus} DEFENSE<div class="jauge"><i id="jD" style="width:100%"></i></div></div></div>` +
+    `<div class="camp">${nomD}<br><b id="nD">${av.gar}</b> SOLDATS +${bonus} DEF.<div class="jauge"><i id="jD" style="width:100%"></i></div></div></div>` +
     `<div style="text-align:center">CHANCE ${Math.round(av.chance * 100)} %</div>`;
   $('bataille').classList.remove('cache'); $('issue').classList.add('cache');
   bataille = { debut: performance.now(), av, r, attaquants, defenseurs, coups, mortsA, mortsD, fini: false, passeVue: -1 };
@@ -1498,28 +1515,25 @@ function animerBataille(now) {
   const B = bataille, t = (now - B.debut) / 1000, av = B.av, r = B.r;
   const p = t < 0.8 ? -1 : Math.min(3, Math.floor((t - 0.8) / 1.3)), f = t < 0.8 ? t / 0.8 : ((t - 0.8) % 1.3) / 1.3;
   const fr = k => Math.floor(now / k) % 4;
-  B.attaquants.forEach((s, k) => {
+  // approche : les deux lignes marchent l'une vers l'autre ; ensuite on se bat sur place
+  const marche = Math.min(1, t / 0.8);
+  const bouger = (liste, sens, pas, fAtt) => liste.forEach((s, k) => {
     const u = s.userData;
-    if (u.mortA) { const m = Math.min(3, Math.floor((now - u.mortA) / 130)); image(s, u.bloc, 3, m); s.material.opacity = Math.max(0, 1 - (now - u.mortA - 900) / 600); return; }
-    let avance = t < 0.8 ? 0 : Math.min(1, (t - 0.8) / 1.3) * 0.25 + Math.min(p, 2) * 0.05;
-    if (p >= 3) avance = 0.4;
-    s.position.set(u.x0 + avance * 0.55, 0.02, u.z0 - avance * 1.0);
-    const anim = p < 0 ? 1 : p >= 3 ? 0 : f < 0.35 ? 1 : f < 0.75 ? 2 : 0;
-    image(s, u.bloc, anim, anim === 2 ? Math.min(3, Math.floor((f - 0.35) / 0.1)) : fr(160 + k * 7));
-    if (u.passe === p && f > 0.75 && !u.mortA && p < 3) u.mortA = now;
-  });
-  B.defenseurs.forEach((s, k) => {
-    const u = s.userData;
-    if (u.mortA) { const m = Math.min(3, Math.floor((now - u.mortA) / 130)); image(s, u.bloc, 3, m); s.material.opacity = Math.max(0, 1 - (now - u.mortA - 900) / 600); return; }
-    const anim = p < 0 || p >= 3 ? 0 : f > 0.4 && f < 0.8 ? 2 : 0;
-    image(s, u.bloc, anim, anim === 2 ? Math.min(3, Math.floor((f - 0.4) / 0.1)) : fr(200 + k * 11));
+    if (u.mortA) { image(s, 0, 3, Math.min(3, Math.floor((now - u.mortA) / 130))); s.material.opacity = Math.max(0, 1 - (now - u.mortA - 900) / 600); return; }
+    // les survivants comblent les vides : chacun avance d'autant que la passe a fait tomber de colonnes devant lui
+    const recul = p >= 0 && p < 3 && f > fAtt[0] && f < fAtt[1] ? Math.sin((f - fAtt[0]) / (fAtt[1] - fAtt[0]) * Math.PI) * 0.12 : 0;
+    s.position.set(u.x0 + sens * (marche * pas + recul), 0.02, u.z0);
+    const anim = p < 0 ? 1 : p >= 3 ? 0 : f > fAtt[0] && f < fAtt[1] ? 2 : 0;
+    image(s, 0, anim, anim === 2 ? Math.min(3, Math.floor((f - fAtt[0]) / ((fAtt[1] - fAtt[0]) / 4))) : fr(170 + k * 9));
     if (u.passe === p && f > 0.75 && p < 3) u.mortA = now;
   });
+  bouger(B.attaquants, 1, 0.75, [0.3, 0.7]);
+  bouger(B.defenseurs, -1, 0.3, [0.4, 0.8]);
   // éclats des coups au milieu de chaque passe
   B.coups.forEach((c, k) => {
     const vis = p >= 0 && p < 3 && f > 0.4 && f < 0.75;
     c.visible = vis;
-    if (vis) { const cible = (k % 2 ? B.defenseurs : B.attaquants)[(k * 3 + p) % Math.max(1, (k % 2 ? B.defenseurs : B.attaquants).length)]; if (cible) c.position.set(cible.position.x, 0.45, cible.position.z); else c.visible = false; c.material.map.offset.x = Math.min(3, Math.floor((f - 0.4) / 0.09)) * 0.25; }
+    if (vis) { const cible = (k % 2 ? B.defenseurs : B.attaquants)[(k * 3 + p) % Math.max(1, (k % 2 ? B.defenseurs : B.attaquants).length)]; if (cible) c.position.set(cible.position.x, 0.5, cible.position.z + 0.1); else c.visible = false; c.material.map.offset.x = Math.min(3, Math.floor((f - 0.4) / 0.09)) * 0.25; }
   });
   // jauges : elles baissent passe après passe
   if (p !== B.passeVue && p >= 0) {
