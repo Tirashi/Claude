@@ -57,7 +57,8 @@ function spriteA(s,kind,pose,v,pr=4){
   const corps=kind===2?CORPS_ARCHER:CORPS_GUERRIER;
   // arrière : arme dans le dos
   if(kind===0&&pose!=='charge'){tracer(px,12,22,7,8,Q.w);for(const[x,y]of[[5,7],[6,7],[4,8],[5,8],[6,8],[4,9],[5,9],[6,9],[4,10],[5,10],[6,10],[5,11],[6,11]])px(x,y,Q.m);for(let y=8;y<=10;y++)px(4,y,Q.k)}
-  if(kind===1){tracer(px,13,28,13,3,Q.w);px(13,0,Q.m);px(13,1,Q.m);px(12,2,Q.M);px(13,2,Q.m);px(14,2,Q.M)}
+  // lance : le manche passe devant le soldat, le talon à côté des pieds (pas entre les jambes, retour du 21/10)
+  if(kind===1){tracer(px,21,28,21,3,Q.w);px(21,0,Q.m);px(21,1,Q.m);px(20,2,Q.M);px(21,2,Q.m);px(22,2,Q.M)}
   if(kind===2&&pose!=='tir'){px(11,10,Q.w);for(let y=11;y<=20;y++)px(10,y,Q.w);px(11,21,Q.w)}
   corps.forEach((l,y)=>{for(let x=0;x<12;x++)if(l[x]!=='.')px(8+x,6+y,Q[l[x]])});
   if(kind===2){px(9,13,Q.f);px(10,12,Q.f);px(9,12,'#c23a2e')}

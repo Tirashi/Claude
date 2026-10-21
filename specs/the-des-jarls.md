@@ -86,3 +86,5 @@ Demande de l'utilisateur : revoir l'apprentissage du jeu et le choix des trois f
 - Grand écran : le plateau du bas ne dépasse plus 330 px (la bataille prend le reste).
 - **À essayer sur le téléphone** : le duel guidé, le conseil des jarls, la route du fjord, le rythme et l'équilibre (dieux de 30 à 70 % de victoires contre les autres en DIFFICILE), les classements (étoiles, défi du jour) avec un vrai record.
 - Plus tard : duel en famille à distance (Supabase, script SQL à lancer par l'utilisateur).
+
+- **Retouche (21/10, retour de l'utilisateur)** : le manche de la lance du deuxième rang passait entre les jambes des soldats ; il est maintenant tenu devant le soldat, talon posé à côté des pieds (`spriteA`, `decor.js`).
