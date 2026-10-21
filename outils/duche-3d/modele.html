@@ -36,8 +36,21 @@
   #boite button small { display:block; font-size:7px; color:#6b4a20; }
   #toast { position:fixed; left:50%; top:96px; transform:translateX(-50%); font-size:9px; padding:8px 10px; white-space:nowrap; transition:opacity .3s; pointer-events:none; }
   #toast.cache { opacity:0; }
-  .credit { position:fixed; right:14px; top:84px; font-size:6px; color:#20415a; opacity:.75; }
+  .credit { position:fixed; right:14px; top:92px; font-size:6px; color:#20415a; opacity:.75; }
+  #boite h2.banniere, #bataille .banniere { color:#fff6e0; text-align:center; padding:12px 8px 16px; text-shadow:0 2px 0 #7a2a18; }
+  /* la bataille */
+  body.en-bataille #fiche, body.en-bataille .boutons, body.en-bataille #res, body.en-bataille .credit { display:none; }
+  #bataille { position:fixed; left:12px; right:12px; top:10px; font-size:8px; line-height:1.8; }
+  #bataille.cache, #issue.cache { display:none; }
+  #bataille .camps { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+  #bataille .camp b { font-weight:normal; color:var(--rouge); }
+  .jauge { height:16px; background:#3b2a18; border:2px solid #2b1d0e; margin:3px 0; position:relative; }
+  .jauge i { position:absolute; left:0; top:0; bottom:0; transition:width .5s; min-width:0; box-sizing:border-box; }
+  #issue { position:fixed; left:12px; right:12px; bottom:14px; text-align:center; font-size:8px; line-height:1.9; }
+  #issue h2 { font-size:12px; font-weight:normal; }
+  #issue button { font-size:9px; padding:8px 18px; margin-top:6px; }
 </style>
+<style>/*UI_CSS*/</style>
 </head>
 <body>
 <div id="res" class="cadre"></div>
@@ -50,7 +63,10 @@
   <button id="tourner">TOURNE NON</button>
 </div>
 <div id="voile" class="cache"><div id="boite" class="cadre"></div></div>
+<div id="bataille" class="cadre cache"></div>
+<div id="issue" class="cadre cache"></div>
 <script>/*MODELES*/</script>
+<script>/*GUERRIERS*/</script>
 <script>/*REGLES*/</script>
 <script>/*IA*/</script>
 <script>/*EVENEMENTS*/</script>
@@ -264,6 +280,17 @@ function batirTerre(i, anime) {
       g.add(b);
     });
   }
+  // quelques guerriers devant la terre (1 à 3 selon la garnison), en plus de la bannière
+  u.soldats = [];
+  if (t.gar > 0 && planches.epee) {
+    const coul = S ? S.coul : 'neutre', n = t.gar >= 6 ? 3 : t.gar >= 3 ? 2 : 1;
+    const cl = composition(n, coul, t.brig && !S, !S && !t.brig);
+    if (t.bat === 'caserne' || (t.bat === 'chateau' && t.gar >= 4)) cl[0] = 'cavalier';
+    [[0.38, 0.58], [-0.08, 0.72], [0.72, 0.2]].slice(0, n).forEach(([x, z], k) => {
+      const s = guerrier(cl[k], coul); s.scale.set(1.1, 1.1, 1); s.position.set(x, 0.02, z); s.userData.bloc = 1; s.userData.ph = k * 3 + i;
+      g.add(s); u.soldats.push(s);
+    });
+  }
   // garnison
   if (t.gar > 0) {
     const e = etiquette(t.gar, S ? COUL[S.coul].hex : 0x8a8170, t.brig && !S);
@@ -368,14 +395,17 @@ function agir(fn, msg) {
   majTout(); return r;
 }
 function attaquer(i, src) {
+  // ce que la bataille montre : la terre et sa garnison avant le combat
+  const t = etat.terres[i], de = src.reduce((a, s) => (s.n > a.n ? s : a), src[0]).i;
+  const av = { i, t: { ...t }, prop: t.prop, gar: t.gar, defense: ducDefense(etat, i), n: src.reduce((a, s) => a + s.n, 0),
+    source: { ...etat.terres[de] }, chance: ducApercu(etat, 0, i, src.reduce((a, s) => a + s.n, 0)).chance };
   const r = ducAttaquer(etat, 0, i, src);
   if (!r.ok) { toast(r.raison); return; }
-  toast(r.gagne ? `Victoire ! (−${r.pertesA})` : `Defaite : ${r.pertesA} perdus.`);
-  groupes[i].userData.choc = performance.now();
-  majTout();
+  choisie = -1;
+  lancerBataille(av, r);
 }
 function menuConstruire(i) {
-  const b = $('boite'); b.innerHTML = `<h2>CONSTRUIRE</h2><p>${sansAccent(DUC_TERRAINS[etat.terres[i].t].nom)} · UN BATIMENT PAR TERRE.</p>`;
+  const b = $('boite'); b.innerHTML = `<h2 class="banniere">CONSTRUIRE</h2><p>${sansAccent(DUC_TERRAINS[etat.terres[i].t].nom)} · UN BATIMENT PAR TERRE.</p>`;
   for (const k in DUC_BATIMENTS) {
     if (!DUC_BATIMENTS[k].cout) continue;
     const c = ducCoutBat(etat, k), err = ducPeutConstruire(etat, 0, i, k);
@@ -388,7 +418,7 @@ const fermer = () => $('voile').classList.add('cache');
 function montrerEvenement() {
   if (!etat.evt) return false;
   const E = DUC_EVENEMENTS[etat.evt.id], b = $('boite');
-  b.innerHTML = `<h2>${sansAccent(E.titre)}</h2><p>${sansAccent(E.texte)}</p>`;
+  b.innerHTML = `<h2 class="banniere">${sansAccent(E.titre)}</h2><p>${sansAccent(E.texte)}</p>`;
   ducChoix(etat).forEach(c => b.append(bouton(c.txt, () => { const r = ducRepondre(etat, c.k); fermer(); if (r.ok) toast(r.msg); majTout(); }, c.ok, c.detail)));
   $('voile').classList.remove('cache');
   return true;
@@ -396,7 +426,7 @@ function montrerEvenement() {
 function montrerFin() {
   const b = $('boite'), f = etat.fin, sc = ducScore(etat);
   const titres = { conquete: 'VICTOIRE', couronne: 'COURONNE', defaite: 'DEFAITE', regne: 'FIN DU REGNE' };
-  b.innerHTML = `<h2>${titres[f.type] || 'FIN'}</h2><p>${sc.lignes.map(([n, v]) => `${sansAccent(n)} : ${v}`).join('<br>')}<br><br>SCORE ${sc.total}</p>`;
+  b.innerHTML = `<h2 class="banniere">${titres[f.type] || 'FIN'}</h2><p>${sc.lignes.map(([n, v]) => `${sansAccent(n)} : ${v}`).join('<br>')}<br><br>SCORE ${sc.total}</p>`;
   b.append(bouton('NOUVELLE PARTIE', () => { fermer(); nouvellePartie(Math.floor(Math.random() * 1e9)); }));
   $('voile').classList.remove('cache');
 }
@@ -422,11 +452,191 @@ function nouvellePartie(graine) {
 $('fin').onclick = finDuTour;
 $('nouvelle').onclick = () => nouvellePartie(Math.floor(Math.random() * 1e9));
 
+// ---------- la bataille : deux tuiles en diorama, des guerriers en pixel art (Fantasy Battle Pack) ----------
+// planches de 256 × 448 : images de 32 × 32, 4 par ligne ; blocs de 4 lignes (repos, marche, attaque, mort) :
+// lignes 0 à 3 de côté (vers la gauche), 5 à 8 de face, 10 à 13 de dos
+const sceneB = new THREE.Scene();
+const cameraB = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+const cielB = new THREE.HemisphereLight(0xdff1ff, 0x5a7040, 0.8), soleilB = new THREE.DirectionalLight(0xfff1d6, 1.0);
+soleilB.position.set(-4, 9, 5); soleilB.castShadow = true; soleilB.shadow.mapSize.set(1024, 1024);
+Object.assign(soleilB.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 30 });
+sceneB.add(cielB, soleilB);
+sceneB.background = new THREE.Color(0x8fc6e8); sceneB.fog = new THREE.Fog(0x8fc6e8, 14, 30);
+// planches recolorées : l'or vient du rouge, le violet du bleu (les pixels d'équipe sont ceux qui diffèrent entre les deux)
+const planches = {};
+function chargerImage(src) { return new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = src; }); }
+async function preparerGuerriers() {
+  for (const cl in GUERRIERS) {
+    const [r, b, v] = await Promise.all(['red', 'blue', 'green'].map(c => chargerImage(GUERRIERS[cl][c])));
+    const lire = i => { const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const g = c.getContext('2d'); g.drawImage(i, 0, 0); return [c, g, g.getImageData(0, 0, c.width, c.height)]; };
+    const [cr, , dr] = lire(r), [cb, , db] = lire(b), [cv] = lire(v);
+    const teint = (src, dh, ds, dv) => {
+      const [c, g, d] = lire(src === 'r' ? r : b), autre = src === 'r' ? db : dr;
+      for (let k = 0; k < d.data.length; k += 4) {
+        if (d.data[k + 3] === 0) continue;
+        if (Math.abs(d.data[k] - autre.data[k]) + Math.abs(d.data[k + 1] - autre.data[k + 1]) + Math.abs(d.data[k + 2] - autre.data[k + 2]) < 30) continue;
+        const [h, s, vv] = teinte(d.data[k], d.data[k + 1], d.data[k + 2]);
+        [d.data[k], d.data[k + 1], d.data[k + 2]] = rgb((h + dh + 360) % 360, Math.min(1, s * ds), Math.min(1, vv * dv));
+      }
+      g.putImageData(d, 0, 0); return c;
+    };
+    const tex = c => { const t = new THREE.CanvasTexture(c); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.encoding = THREE.sRGBEncoding; return t; };
+    planches[cl] = { rouge: tex(cr), bleu: tex(cb), neutre: tex(cv), or: tex(teint('r', 42, 1, 1.25)), violet: tex(teint('b', 55, 0.9, 1)) };
+  }
+  const coup = await chargerImage(EFFET_COUP);
+  planches.coup = new THREE.CanvasTexture(coup); planches.coup.magFilter = planches.coup.minFilter = THREE.NearestFilter;
+}
+// un guerrier : un sprite qui lit une image de sa planche
+function guerrier(cl, coul) {
+  const t = planches[cl][coul].clone(); t.needsUpdate = true;
+  t.repeat.set(0.125, 32 / 448);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, alphaTest: 0.5 }));
+  s.center.set(0.5, 0.12); s.scale.set(0.9, 0.9, 1);
+  s.userData = { cl, t, bloc: 0, anim: 0, debut: 0, mort: 0 };
+  return s;
+}
+function image(s, bloc, anim, k) { const t = s.userData.t, l = bloc * 5 + anim; t.offset.set((k % 4) * 0.125, 1 - (l + 1) * 32 / 448); }
+let bataille = null;
+function formation(n, cx, cz, sens) {
+  const p = [], par = n <= 4 ? 2 : 3;
+  for (let k = 0; k < n; k++) { const r = Math.floor(k / par), c = k % par; p.push([cx + (c - (Math.min(par, n - r * par) - 1) / 2) * 0.5 + (r % 2) * 0.12, cz + r * 0.36 * sens]); }
+  return p;
+}
+function composition(n, coul, brig, neutre) {
+  if (brig) return Array.from({ length: n }, (_, k) => (k % 3 === 2 ? 'hache' : 'voleur'));
+  if (neutre) return Array.from({ length: n }, () => 'lance');
+  const c = Array.from({ length: n }, (_, k) => ['epee', 'lance', 'epee', 'archer'][k % 4]);
+  if (n >= 4) c[0] = 'cavalier';
+  return c;
+}
+function lancerBataille(av, r) {
+  document.body.classList.add('en-bataille');
+  while (sceneB.children.length > 2) sceneB.remove(sceneB.children[2]);
+  const S = SAISONS[ducSaison(etat.tour)];
+  sceneB.background.setHex(S.ciel); sceneB.fog.color.setHex(S.ciel); soleilB.color.setHex(S.soleil); cielB.groundColor.setHex(S.sol);
+  // le diorama : votre terre devant, la terre attaquée derrière, quelques terres autour
+  const A = [-0.6, 1.1], D = [0.6, -1.0];
+  const poser = (terre, [x, z], fond) => {
+    const g = new THREE.Group(); g.position.set(x, 0, z); sceneB.add(g);
+    g.add(objet(terre.t === 'marais' && !terre.bat ? 'hex_water' : terre.t === 'riviere' && terre.bat !== 'chateau' ? 'hex_river_A' : 'hex_grass', matBase, false));
+    const faux = { terres: etat.terres.map((t, j) => (j === terre.j ? terre : t)), seigneurs: etat.seigneurs };
+    decor(faux, terre.j).forEach(([nom, dx, dz, mat, ro]) => {
+      if (nom.startsWith('flag')) return;
+      const o = objet(nom, mat); o.rotation.y = ro || 0;
+      // derrière : le décor de la terre attaquée ; devant : celui de votre terre, petit et sur le côté pour ne rien cacher
+      const k = fond ? (nom.startsWith('building_castle') ? 0.6 : 0.75) : (nom.startsWith('building_castle') ? 0.32 : 0.45);
+      o.scale.setScalar(k); o.position.set(fond ? dx * 0.5 : -0.62 + dx * 0.2, 0, fond ? -0.55 + dz * 0.3 : -0.35 + dz * 0.2);
+      g.add(o);
+    });
+    return g;
+  };
+  poser({ ...av.source, j: etat.terres.findIndex(t => t.q === av.source.q && t.r === av.source.r) }, A, false);
+  poser({ ...av.t, j: av.i }, D, true);
+  // les terres autour : décorées seulement sur les côtés et derrière, pour ne pas cacher les armées
+  [[-2.6, 1.1, 0], [1.4, 2.6, 0], [2.6, -0.6, 'trees_A_medium'], [-1.4, -2.4, 'hills_B'], [-2.0, -0.7, 'tree_single_A'], [2.0, 1.0, 0], [0.0, -3.0, 'trees_B_medium'], [-0.6, 3.2, 0]].forEach(([x, z, deco], k) => {
+    const o = objet(k % 3 === 0 ? 'hex_water' : 'hex_grass', matBase, false); o.position.set(x, -0.15, z); sceneB.add(o);
+    if (deco) { const a = objet(deco); a.scale.setScalar(0.7); a.position.set(x, -0.15, z - 0.3); sceneB.add(a); }
+  });
+  // les deux armées (9 guerriers au plus de chaque côté ; chacun compte pour plusieurs si l'armée est grande)
+  const J = etat.seigneurs[0], Sd = av.prop >= 0 ? etat.seigneurs[av.prop] : null;
+  const vusA = Math.min(9, av.n), vusD = Math.min(9, av.gar);
+  const coulD = Sd ? Sd.coul : 'neutre';
+  const attaquants = composition(vusA, J.coul).map((cl, k) => guerrier(cl, J.coul));
+  const defenseurs = composition(vusD, coulD, av.t.brig && !Sd, !Sd && !av.t.brig).map(cl => guerrier(cl, coulD));
+  formation(vusA, A[0] + 0.15, A[1] + 0.1, 1).forEach(([x, z], k) => { attaquants[k].position.set(x, 0.02, z); attaquants[k].userData.bloc = 2; });
+  formation(vusD, D[0] - 0.05, D[1] + 0.55, -1).forEach(([x, z], k) => { defenseurs[k].position.set(x, 0.02, z); defenseurs[k].userData.bloc = 1; });
+  [...attaquants, ...defenseurs].forEach(s => { s.userData.x0 = s.position.x; s.userData.z0 = s.position.z; sceneB.add(s); });
+  // qui tombe, et à quelle passe
+  const mortsA = Math.min(vusA, Math.round(vusA * r.pertesA / Math.max(1, av.n)));
+  const mortsD = r.gagne ? vusD : Math.min(vusD, Math.round(vusD * r.pertesD / Math.max(1, av.gar)));
+  const passe = (n, k) => Math.floor(k * 3 / Math.max(1, n));
+  attaquants.slice(vusA - mortsA).forEach((s, k) => { s.userData.passe = passe(mortsA, k); });
+  defenseurs.slice(0, mortsD).forEach((s, k) => { s.userData.passe = passe(mortsD, k); });
+  const coups = [];
+  for (let k = 0; k < 2; k++) { const c = new THREE.Sprite(new THREE.SpriteMaterial({ map: planches.coup.clone(), transparent: true, depthTest: false })); c.material.map.needsUpdate = true; c.material.map.repeat.set(0.25, 1); c.scale.set(0.32, 0.32, 1); c.visible = false; sceneB.add(c); coups.push(c); }
+  // la caméra : devant votre terre, un peu en hauteur
+  // assez loin pour que les deux terres tiennent dans la largeur (4,3 unités) en portrait
+  const d = Math.max(7, 4.3 / (2 * Math.tan(17 * Math.PI / 180) * Math.min(1.2, cameraB.aspect)));
+  cameraB.position.set(0.5, d * 0.55, d * 0.83); cameraB.lookAt(0, 0.1, 0.05);
+  const nomD = Sd ? sansAccent(Sd.nom) : av.t.brig ? 'BRIGANDS' : 'MILICE';
+  const bonus = DUC_TERRAINS[av.t.t].def + (av.t.bat ? DUC_BATIMENTS[av.t.bat].def : 0);
+  $('bataille').innerHTML = `<div class="banniere">BATAILLE : ${sansAccent(DUC_TERRAINS[av.t.t].nom)}</div>` +
+    `<div class="camps"><div class="camp">VOUS<br><b id="nA">${av.n}</b> SOLDATS<div class="jauge bleu"><i id="jA" style="width:100%"></i></div></div>` +
+    `<div class="camp">${nomD}<br><b id="nD">${av.gar}</b> + ${bonus} DEFENSE<div class="jauge"><i id="jD" style="width:100%"></i></div></div></div>` +
+    `<div style="text-align:center">CHANCE ${Math.round(av.chance * 100)} %</div>`;
+  $('bataille').classList.remove('cache'); $('issue').classList.add('cache');
+  bataille = { debut: performance.now(), av, r, attaquants, defenseurs, coups, mortsA, mortsD, fini: false, passeVue: -1 };
+}
+// le déroulé : 0,8 s d'approche, 3 passes de 1,3 s (charge, coups, chutes), puis le résultat
+function animerBataille(now) {
+  const B = bataille, t = (now - B.debut) / 1000, av = B.av, r = B.r;
+  const p = t < 0.8 ? -1 : Math.min(3, Math.floor((t - 0.8) / 1.3)), f = t < 0.8 ? t / 0.8 : ((t - 0.8) % 1.3) / 1.3;
+  const fr = k => Math.floor(now / k) % 4;
+  B.attaquants.forEach((s, k) => {
+    const u = s.userData;
+    if (u.mortA) { const m = Math.min(3, Math.floor((now - u.mortA) / 130)); image(s, u.bloc, 3, m); s.material.opacity = Math.max(0, 1 - (now - u.mortA - 900) / 600); return; }
+    let avance = t < 0.8 ? 0 : Math.min(1, (t - 0.8) / 1.3) * 0.25 + Math.min(p, 2) * 0.05;
+    if (p >= 3) avance = 0.4;
+    s.position.set(u.x0 + avance * 0.55, 0.02, u.z0 - avance * 1.0);
+    const anim = p < 0 ? 1 : p >= 3 ? 0 : f < 0.35 ? 1 : f < 0.75 ? 2 : 0;
+    image(s, u.bloc, anim, anim === 2 ? Math.min(3, Math.floor((f - 0.35) / 0.1)) : fr(160 + k * 7));
+    if (u.passe === p && f > 0.75 && !u.mortA && p < 3) u.mortA = now;
+  });
+  B.defenseurs.forEach((s, k) => {
+    const u = s.userData;
+    if (u.mortA) { const m = Math.min(3, Math.floor((now - u.mortA) / 130)); image(s, u.bloc, 3, m); s.material.opacity = Math.max(0, 1 - (now - u.mortA - 900) / 600); return; }
+    const anim = p < 0 || p >= 3 ? 0 : f > 0.4 && f < 0.8 ? 2 : 0;
+    image(s, u.bloc, anim, anim === 2 ? Math.min(3, Math.floor((f - 0.4) / 0.1)) : fr(200 + k * 11));
+    if (u.passe === p && f > 0.75 && p < 3) u.mortA = now;
+  });
+  // éclats des coups au milieu de chaque passe
+  B.coups.forEach((c, k) => {
+    const vis = p >= 0 && p < 3 && f > 0.4 && f < 0.75;
+    c.visible = vis;
+    if (vis) { const cible = (k % 2 ? B.defenseurs : B.attaquants)[(k * 3 + p) % Math.max(1, (k % 2 ? B.defenseurs : B.attaquants).length)]; if (cible) c.position.set(cible.position.x, 0.45, cible.position.z); else c.visible = false; c.material.map.offset.x = Math.min(3, Math.floor((f - 0.4) / 0.09)) * 0.25; }
+  });
+  // jauges : elles baissent passe après passe
+  if (p !== B.passeVue && p >= 0) {
+    B.passeVue = p; const k = Math.min(3, p + 1) / 3;
+    const nA = Math.round(av.n - r.pertesA * k), nD = Math.round(av.gar - (r.gagne ? av.gar : r.pertesD) * k);
+    $('nA').textContent = nA; $('nD').textContent = nD;
+    $('jA').style.width = (100 * nA / Math.max(1, av.n)) + '%'; $('jD').style.width = (100 * nD / Math.max(1, av.gar)) + '%';
+    if (p < 3) son();
+  }
+  if (p >= 3 && !B.fini) {
+    B.fini = true;
+    $('issue').innerHTML = `<h2 class="banniere">${r.gagne ? 'VICTOIRE !' : 'DEFAITE'}</h2>` +
+      `<div>${r.gagne ? `LA TERRE EST A VOUS. PERTES : ${r.pertesA}` : `${r.pertesA} SOLDATS PERDUS. LA GARNISON EN PERD ${r.pertesD}.`}</div>`;
+    const b = bouton('CONTINUER', finBataille); $('issue').append(b);
+    $('issue').classList.remove('cache');
+  }
+  rendu.render(sceneB, cameraB);
+}
+function finBataille() {
+  const i = bataille.av.i;
+  bataille = null;
+  document.body.classList.remove('en-bataille'); $('bataille').classList.add('cache'); $('issue').classList.add('cache');
+  groupes[i].userData.choc = performance.now();
+  majTout();
+}
+// un petit choc d'épées (WebAudio, pas de fichier)
+let audio = null;
+function son() {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const n = audio.sampleRate * 0.12, buf = audio.createBuffer(1, n, audio.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n / 6)) * (0.6 + 0.4 * Math.sin(i * 0.9));
+    const s = audio.createBufferSource(), g = audio.createGain(), f = audio.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 3200; g.gain.value = 0.25;
+    s.buffer = buf; s.connect(f); f.connect(g); g.connect(audio.destination); s.start();
+  } catch (e) {}
+}
+
 // ---------- caméra et toucher ----------
 let angle = -0.5, auto = false;   // face au duché du joueur (coin en bas à gauche)
 function cadrer() {
   const w = innerWidth, h = innerHeight;
-  rendu.setSize(w, h); camera.aspect = w / h;
+  rendu.setSize(w, h); camera.aspect = w / h; cameraB.aspect = w / h; cameraB.updateProjectionMatrix();
   camera.userData.d = Math.max(19.5, 24 / Math.min(1, camera.aspect * 1.25));
   camera.updateProjectionMatrix();
 }
@@ -439,7 +649,7 @@ addEventListener('pointermove', e => {
   if (Math.abs(dx) > 6) touche.bouge = true;
   if (touche.bouge) { angle = touche.a - dx * 0.008; auto = false; majBouton(); }
 });
-addEventListener('pointerup', e => { if (touche && !touche.bouge) choisir(e.clientX, e.clientY); touche = null; });
+addEventListener('pointerup', e => { if (touche && !touche.bouge && !bataille) choisir(e.clientX, e.clientY); touche = null; });
 const rayon = new THREE.Raycaster();
 function choisir(x, y) {
   rayon.setFromCamera({ x: x / innerWidth * 2 - 1, y: -y / innerHeight * 2 + 1 }, camera);
@@ -472,6 +682,7 @@ function boucle(now) {
     if (u.choc && now > u.choc) { const f = (now - u.choc) / 450; if (f < 1) g.position.x = u.x + Math.sin(f * 40) * 0.08 * (1 - f); else u.choc = 0; }
     g.position.y = y;
     g.visible = k > 0;
+    if (u.soldats) u.soldats.forEach(s => image(s, 1, 0, (Math.floor(now / 220) + s.userData.ph) % 4));
     // construction : l'échafaudage, puis le bâtiment qui sort de terre
     if (u.pop) {
       const f = (now - u.pop) / 1100;
@@ -484,14 +695,14 @@ function boucle(now) {
   const s = now / 1000;
   mer.forEach(m => { m.position.y = -0.05 + Math.sin(s * 1.4 + m.userData.ph) * 0.04; });
   nuages.forEach((c, i) => { c.position.x += dt * (0.25 + i * 0.05); if (c.position.x > 14) c.position.x = -14; });
-  rendu.render(scene, camera);
+  if (bataille) animerBataille(now); else rendu.render(scene, camera);
   requestAnimationFrame(boucle);
 }
 
 // le duché du jour
 const auj = new Date();
 const police = document.fonts ? document.fonts.load("10px 'Press Start 2P'").catch(() => {}) : Promise.resolve();
-police.then(() => { nouvellePartie(auj.getFullYear() * 10000 + (auj.getMonth() + 1) * 100 + auj.getDate()); requestAnimationFrame(boucle); });
+Promise.all([police, preparerGuerriers()]).then(() => { nouvellePartie(auj.getFullYear() * 10000 + (auj.getMonth() + 1) * 100 + auj.getDate()); requestAnimationFrame(boucle); });
 </script>
 </body>
 </html>
