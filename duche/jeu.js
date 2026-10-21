@@ -328,8 +328,8 @@
   const ordreC = n => [...Array(n).keys()].sort((i, j) => posC(0, i).a - posC(0, j).a || D.hash(i) - D.hash(j));
   const OA = ordreC(15);
   function dessinerCombat() {
-    const c = combat, t = tNow - c.t0, R = c.res, fini = t >= 6.2;
-    const passe = t < 1.6 ? 0 : Math.min(3, 1 + Math.floor((t - 1.6) / 1.5)), ph = t < 1.6 ? 0 : ((t - 1.6) % 1.5) / 1.5;
+    const c = combat, t = tNow - c.t0, R = c.res, vide = c.defense <= 0, FIN = vide ? 1.9 : 6.2, fini = t >= FIN;
+    const passe = vide || t < 1.6 ? 0 : Math.min(3, 1 + Math.floor((t - 1.6) / 1.5)), ph = t < 1.6 ? 0 : ((t - 1.6) % 1.5) / 1.5;
     if (passe > c.passeSon && !fini) { c.passeSon = passe; DucSons.jouer('epee'); }
     if (fini && c.passeSon < 9) { c.passeSon = 9; DucSons.jouer(R.gagne ? 'victoire' : 'defaite'); }
     const na = R.n - Math.round(R.pertesA * passe / 3), nd = c.garnison - Math.round(R.pertesD * passe / 3);
@@ -337,8 +337,8 @@
     const bar = (x, y, w, n, max, col, dir) => { r(L, x, y, w, 9, '#120c08'); r(L, x + 1, y + 1, w - 2, 7, '#2a1a10'); const ww = Math.round((w - 2) * n / Math.max(1, max)); r(L, dir > 0 ? x + 1 : x + w - 1 - ww, y + 1, ww, 7, col); r(L, dir > 0 ? x + 1 : x + w - 1 - ww, y + 1, ww, 1, 'rgba(255,255,255,.4)'); };
     const colD = c.def > 0 ? SEIG[c.def].c : '#a09888', mx = Math.max(R.n, c.garnison, 1);
     bar(10, 262, 94, na, mx, SEIG[0].c, 1); bar(112, 262, 94, nd, mx, colD, -1);
-    for (let j = 0; j < 3; j++) { r(L, 84 + j * 18, 300, 10, 10, '#120c08'); r(L, 85 + j * 18, 301, 8, 8, j < passe ? '#f0c24a' : '#4a3018'); }
-    btn(10, 350, 196, 22, fini ? 'fort' : 'normal', fini ? finCombat : () => { c.t0 = tNow - 6.2; }, fini ? 'CONTINUER' : 'PASSER');
+    if (!vide) for (let j = 0; j < 3; j++) { r(L, 84 + j * 18, 300, 10, 10, '#120c08'); r(L, 85 + j * 18, 301, 8, 8, j < passe ? '#f0c24a' : '#4a3018'); }
+    btn(10, 350, 196, 22, fini ? 'fort' : 'normal', fini ? finCombat : () => { c.t0 = tNow - FIN; }, fini ? 'CONTINUER' : 'PASSER');
     // la scène, à pleine résolution
     g.imageSmoothingEnabled = false; g.drawImage(low, 0, 0, W * k, H * k);
     const fond = D.fondCombat(UW, UH, 3, c.terrain, c.saison), avantPlan = D.avantCombat(UW, UH, 3, c.saison);
@@ -346,23 +346,26 @@
     g.save(); g.beginPath(); g.rect(0, SY * k, W * k, UH * k); g.clip(); g.translate(0, SY * k); g.scale(k, k); g.imageSmoothingEnabled = false;
     const ta = lent ? 3.9 : tNow;
     g.save(); g.globalCompositeOperation = 'lighter'; for (let j = 0; j < 3; j++) { g.fillStyle = `rgba(255,236,190,${0.045 + 0.025 * Math.sin(ta * 0.7 + j * 2)})`; g.beginPath(); g.moveTo(UW * 0.8, UH * 0.12); g.lineTo(UW * (0.02 + j * 0.22), UH); g.lineTo(UW * (0.12 + j * 0.22), UH); g.fill(); } g.restore();
-    let av; if (t < 1.6) av = t / 1.6; else if (fini) av = 1; else av = 0.82 + 0.18 * Math.cos(ph * Math.PI * 2);
+    let av; if (t < 1.6) av = t / 1.6; else if (fini || vide) av = 1; else av = 0.82 + 0.18 * Math.cos(ph * Math.PI * 2);
     const dec = av * 15, gagneA = fini && R.gagne, gagneD = fini && !R.gagne;
-    // 1 soldat = 3 figurines (15 au plus de chaque côté)
-    const figA = Math.min(15, R.n * 3), figD = Math.min(15, c.garnison * 3);
-    const vivA = Math.round(figA * na / Math.max(1, R.n)), vivD = c.garnison ? Math.round(figD * nd / c.garnison) : 0;
-    const typeD = c.def > 0 ? 'soldat' : 'brigand', SD = c.def > 0 ? SEIG[c.def] : null;
+    // 1 soldat = 3 figurines (15 au plus de chaque côté). En face : la garnison, puis les habitants qui défendent
+    // leur terre (la défense du terrain et des murs : 2 figurines par point), pour qu'il y ait toujours quelqu'un si la défense n'est pas nulle
+    const figA = Math.min(15, R.n * 3), figS = Math.min(15, c.garnison * 3), figH = Math.min(15 - figS, Math.round((c.defense - c.garnison) * 2)), figD = figS + figH;
+    const vivA = Math.round(figA * na / Math.max(1, R.n)), vivS = c.garnison ? Math.round(figS * nd / c.garnison) : 0;
+    const vivH = R.gagne ? Math.round(figH * (1 - passe / 3)) : figH, typeD = c.def > 0 ? 'soldat' : 'brigand', SD = c.def > 0 ? SEIG[c.def] : null;
+    // les bannières restent plantées derrière les rangs
     [0, 1].forEach(s => {
       const p = posC(s, 12);
-      if (s === 0 && !gagneD) D.banniereD(g, p.x - 6 + dec * 0.6, p.y - 4, 1, SEIG[0].c, SEIG[0].f, 'couronne', '#7a1a10', ta, false);
-      if (s === 1 && figD && !gagneA) { if (SD) D.banniereD(g, p.x + 6 - dec * 0.6, p.y - 4, -1, SD.c, SD.f, SD.em, SD.emc, ta + 1, false); else D.banniereD(g, p.x + 6 - dec * 0.6, p.y - 4, -1, '#3a3430', '#1a1614', 'crane', '#e8e0d0', ta + 1, true); }
+      if (s === 0 && !gagneD) D.banniereD(g, p.x - 8, p.y - 4, 1, SEIG[0].c, SEIG[0].f, 'couronne', '#7a1a10', ta, false);
+      if (s === 1 && figD && !gagneA) { if (SD) D.banniereD(g, p.x + 8, p.y - 4, -1, SD.c, SD.f, SD.em, SD.emc, ta + 1, false); else D.banniereD(g, p.x + 8, p.y - 4, -1, '#3a3430', '#1a1614', 'crane', '#e8e0d0', ta + 1, true); }
     });
-    const items = [], OD = ordreC(figD);
+    const items = [], OD = ordreC(figD), rangD = j => OD.indexOf(j);
     for (let j = 0; j < figA; j++) items.push({ s: 0, i: j, vivant: OA.indexOf(j) < vivA, ...posC(0, j) });
-    for (let j = 0; j < figD; j++) items.push({ s: 1, i: j, vivant: OD.indexOf(j) < vivD, ...posC(1, j) });
+    // les soldats tiennent le premier rang, les habitants derrière
+    for (let j = 0; j < figD; j++) { const k2 = rangD(j), sold = k2 < figS; items.push({ s: 1, i: j, hab: !sold, vivant: sold ? k2 >= figS - vivS : k2 - figS >= figH - vivH, ...posC(1, j) }); }
     items.sort((a, b) => a.y - b.y);
     items.forEach(it => {
-      const dir = it.s ? -1 : 1, type = it.s ? typeD : 'soldat', col = it.s ? (SD ? SD.c : '#888') : SEIG[0].c, colf = it.s ? (SD ? SD.f : '#444') : SEIG[0].f;
+      const dir = it.s ? -1 : 1, type = it.s ? (it.hab ? 'brigand' : typeD) : 'soldat', col = it.s ? (SD ? SD.c : '#888') : SEIG[0].c, colf = it.s ? (SD ? SD.f : '#444') : SEIG[0].f;
       let x = it.x + dir * (it.vivant ? dec : 15), y = it.y;
       if (!it.vivant) { g.drawImage(D.spriteD(it.s, type, 'mort', it.i % 6, col, colf), Math.round(x - 15), Math.round(y - 12)); return; }
       if (t < 1.6 || (!fini && ph > 0.3)) y -= Math.floor(ta * 7 + it.i) % 2;
@@ -370,7 +373,7 @@
       const pose = fini ? 'garde' : (it.a === 0 && av > 0.85 ? 'charge' : 'garde');
       g.drawImage(D.spriteD(it.s, type, pose, it.i % 6, col, colf), Math.round(x - 14), Math.round(y - 26));
     });
-    if (!fini && t >= 1.6 && ph < 0.3) {
+    if (!fini && !vide && t >= 1.6 && ph < 0.3) {
       const kk = ph / 0.3;
       for (let j = 0; j < 14; j++) { const yy = UH * (0.58 + (j % 5) * 0.085) - 14, a = D.hash(j + Math.floor(ta * 10)) * 6.28, Rr = 2 + kk * 12; g.fillStyle = j % 2 ? '#fff6c0' : '#ffb040'; g.fillRect(UW / 2 + Math.cos(a) * Rr, yy + Math.sin(a) * Rr * 0.6, 1, 1); }
       g.save(); g.filter = 'blur(2px)'; for (let j = 0; j < 5; j++) { g.fillStyle = `rgba(200,180,140,${0.45 * (1 - kk)})`; g.beginPath(); g.arc(UW / 2 + (j - 2) * 8, UH * (0.62 + j * 0.07) - kk * 8, 4 + kk * 8, 0, 7); g.fill(); } g.restore();
@@ -378,12 +381,12 @@
     g.restore();
     g.drawImage(avantPlan, 0, SY * k, W * k, UH * k);
     const nomD = c.def > 0 ? etat.seigneurs[c.def].nom.toUpperCase() : c.garnison ? (c.brig ? 'BRIGANDS' : 'MILICE') : 'TERRE LIBRE';
-    T(fini ? (R.gagne ? 'VICTOIRE !' : 'DEFAITE...') : 'ATTAQUE · ' + sansAccent(DUC_TERRAINS[c.terrain].nom), 108, 48, { f: PS, s: fini ? 8 : 6, a: 'center', c: fini && !R.gagne ? '#f07060' : '#f0c24a', w: '400' });
+    T(vide ? 'OCCUPATION' : fini ? (R.gagne ? 'VICTOIRE !' : 'DEFAITE...') : 'ATTAQUE · ' + sansAccent(DUC_TERRAINS[c.terrain].nom), 108, 48, { f: PS, s: fini ? 8 : 6, a: 'center', c: fini && !R.gagne ? '#f07060' : '#f0c24a', w: '400' });
     T('VOTRE DUCHE', 10, 252, { s: 8.5, c: SEIG[0].c }); T(String(na), 104, 252, { f: PS, s: 7, a: 'right', w: '400' });
     T(nomD, 206, 252, { s: 8.5, a: 'right', c: c.def > 0 ? colD : '#c8c0b0' }); T(String(nd), 112, 252, { f: PS, s: 7, w: '400' });
-    T(`${R.n} soldat${R.n > 1 ? 's' : ''} contre ${c.garnison} + défense de la terre (${c.defense - c.garnison})`, 108, 282, { s: 8, a: 'center', c: '#c8b08a' });
-    T(fini ? (R.gagne ? `TERRE PRISE · PERTES ${R.pertesA}` : `REPOUSSES · PERTES ${R.n}`) : passe ? `PASSE ${passe}/3` : `CHANCE ${Math.round(R.chance * 100)} %`, 108, 320, { f: PS, s: 5, a: 'center', c: '#d8c09a', w: '400' });
-    T(fini && R.elimine > 0 ? `${etat.seigneurs[R.elimine].nom} est tombé ! +30 légitimité` : 'Le perdant perd tous ses soldats engagés.', 108, 334, { s: 7.5, a: 'center', c: fini && R.elimine > 0 ? '#8ee070' : '#a8906a' });
+    T(vide ? 'Personne ne défend cette terre.' : `${R.n} soldat${R.n > 1 ? 's' : ''} contre ${c.garnison} + ${c.defense - c.garnison} de défense (habitants, terrain, murs)`, 108, 282, { s: 8, a: 'center', c: '#c8b08a' });
+    T(vide ? 'TERRE OCCUPEE SANS COMBAT' : fini ? (R.gagne ? `TERRE PRISE · PERTES ${R.pertesA}` : `REPOUSSES · PERTES ${R.n}`) : passe ? `PASSE ${passe}/3` : `CHANCE ${Math.round(R.chance * 100)} %`, 108, 320, { f: PS, s: 5, a: 'center', c: '#d8c09a', w: '400' });
+    T(fini && R.elimine > 0 ? `${etat.seigneurs[R.elimine].nom} est tombé ! +30 légitimité` : vide ? 'Vos soldats s\'installent sur la terre.' : 'Le perdant perd tous ses soldats engagés.', 108, 334, { s: 7.5, a: 'center', c: fini && R.elimine > 0 ? '#8ee070' : '#a8906a' });
   }
 
   // ---------- fin du tour : les rivaux jouent ----------
