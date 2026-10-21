@@ -25,13 +25,13 @@ const auj = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.ge
 const STYLE_DIEU = {
   thrymr: 'le voleur de faveurs', var: 'se nourrit de tes dépenses', freyja: 'des dés en plus', frigg: 'relance tes dés', loki: 'le tricheur',
   tyr: 'le sacrifice', vidar: 'brise les casques', ullr: "l'archer", baldr: "l'invulnérable", brunhild: 'la furie des haches', freyr: 'la moisson',
-  skadi: 'la chasseresse', heimdall: 'le gardien', hel: 'boit tes blessures', mimir: 'la sagesse', bragi: 'le beau parleur', skuld: 'la dette',
+  skadi: 'la chasseresse', heimdall: 'le gardien', hel: 'boit tes PV', mimir: 'la sagesse', bragi: 'le beau parleur', skuld: 'la dette',
   thor: 'la foudre', idunn: 'les pommes de jouvence', odin: 'le père de tous',
 };
 // effet résumé des trois niveaux (liste du conseil des jarls)
-const COURT = { thor: '2 / 5 / 8 blessures après la bataille', brunhild: 'haches ×1,5 / ×2 / ×3', skadi: '+1 / 2 / 3 flèches par dé flèche', ullr: '2 / 3 / 6 flèches passent les boucliers',
+const COURT = { thor: '−2 / 5 / 8 PV à l\'adversaire après la bataille', brunhild: 'haches ×1,5 / ×2 / ×3', skadi: '+1 / 2 / 3 flèches par dé flèche', ullr: '2 / 3 / 6 flèches passent les boucliers',
   vidar: 'retire 2 / 4 / 6 casques adverses', freyr: '+2 / 3 / 4 à ta face la plus nombreuse', idunn: '+2 / 4 / 6 PV après la bataille', baldr: '+1 / 2 / 3 défense par casque et bouclier',
-  heimdall: '+1 / 2 / 3 PV par attaque parée', hel: '+1 / 2 / 3 PV par blessure de hache', var: '+1 / 2 / 3 PV par jeton dépensé en face', bragi: '+2 / 3 / 4 jetons par main',
+  heimdall: '+1 / 2 / 3 PV par attaque parée', hel: '+1 / 2 / 3 PV par PV que tes haches font perdre', var: '+1 / 2 / 3 PV par jeton dépensé en face', bragi: '+2 / 3 / 4 jetons par main',
   mimir: '+1 / 2 / 3 jetons par PV perdu', odin: '3 PV contre 9 / 12 / 15 jetons', skuld: 'en face : −2 / 3 / 4 jetons par flèche', tyr: '1 PV contre −2 / 3 / 4 jetons en face',
   loki: 'écarte 1 / 2 / 3 dés adverses', frigg: 'relance 2 / 3 / 4 dés adverses', freyja: '1 / 2 / 3 dés de plus', thrymr: 'la faveur adverse perd 1 / 2 / 3 niveaux' };
 // les quatre mains toutes prêtes du conseil des jarls
@@ -161,7 +161,8 @@ const SON_PHASE = { jetons: 'jeton', dieu: 'dieu', fleches: 'fleches', haches: '
 function lancerBataille(now) {
   const ev = jarBataille(E), ph = [];
   let t = 0.35;
-  const add = (o, d, coup) => { o.t = t; o.d = d; o.coup = coup == null ? d * 0.5 : coup; ph.push(o); t += d; };
+  const lent = G ? 1.8 : 1;   // la bataille du duel guidé va plus lentement, le temps de lire Sigrid
+  const add = (o, d, coup) => { d *= lent; coup = coup == null ? d * 0.5 : coup * lent; o.t = t; o.d = d; o.coup = coup; ph.push(o); t += d; };
   const N = i => nomCamp(i), faces = l => l.map(f => f.toUpperCase()).join(' · ').replace(/FLECHE/g, 'FLÈCHE');
   for (const e of ev) {
     const F = e.id && JAR_FAVEURS[e.id];
@@ -240,6 +241,7 @@ function choisirFaveur(i) {
 function tourIa(now) {
   if (pause || V.anim || E.fin || (E.phase !== 'lancer' && E.phase !== 'faveur')) return;
   const c = E.camps[E.tour]; if (!c || !c.ia) return;
+  if (G && etapeGuide() && etapeGuide().a === 'ok') return;   // il attend que Sigrid ait fini d'expliquer
   const cle = E.phase + E.tour + c.lancers;
   if (cle !== V.cle) { V.cle = cle; V.iaT = now + (E.phase === 'faveur' ? 1.0 : c.lancers ? 0.9 : 0.7); return; }
   if (now < V.iaT) return;
@@ -286,7 +288,7 @@ function zoneGuide(z) {
   const P = L.pan[0], Z = P.z;
   if (z === 'champ') return { x: 0, y: L.champ.y, w: W, h: L.champ.h };
   if (z === 'hud') return { x: 0, y: 0, w: W, h: L.hud.h };
-  if (z === 'desIA') return { x: W - 6 * 21 - 16, y: L.champ.y + 2, w: 6 * 21 + 12, h: 30 };
+  if (z === 'desIA') return L.desIA || { x: W - 140, y: L.champ.y + 2, w: 136, h: 34 };
   if (z === 'des') { const a = Z.des[0], b = Z.des[5], top = Z.tray ? Z.tray.y : a.y - 10; return { x: 6, y: P.y + top - 2, w: W - 12, h: b.y + b.s - top + 12 }; }
   if (z === 'fav') { const a = Z.fav[0], b = Z.fav[2]; return { x: a.x - 4, y: P.y + a.y - 4, w: b.x + b.w - a.x + 8, h: a.h + 8 }; }
   const r = Z[z]; return { x: r.x - 4, y: P.y + r.y - 4, w: r.w + 8, h: r.h + 8 };
@@ -297,7 +299,15 @@ function dessinerGuide(now) {
   if (voile) { g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.rect(0, 0, W, H); rrect(z.x, z.y, z.w, z.h, 10); g.fill('evenodd'); }
   g.strokeStyle = `rgba(255,211,107,${0.7 + 0.3 * Math.sin(now * 5)})`; g.lineWidth = 2.5; rrect(z.x, z.y, z.w, z.h, 10); g.stroke();
   // la bulle de Sigrid, au-dessus ou au-dessous de la zone
-  const bw = W - 24, lignesT = enveloppe(e.t, bw - 28, 14, FRED), bh = 46 + lignesT.length * 18 + (e.a === 'ok' ? 30 : 8);
+  let txt = e.t;
+  if (e.a === 'bataille' && V.anim) {
+    const ph = phaseEnCours(now), n = ph && ph.p.nom;
+    if (n === 'dieu') txt = JAR_FAVEURS[ph.p.id].quand === 'apres' ? GUIDE_PHASES.apres : GUIDE_PHASES.avant;
+    else if (n && GUIDE_PHASES[n]) txt = GUIDE_PHASES[n];
+    else if (G.txt) txt = G.txt;
+    G.txt = txt;
+  }
+  const bw = W - 24, lignesT = txt.split('\n').flatMap(l => enveloppe(l, bw - 28, 14, FRED)), bh = 46 + lignesT.length * 18 + (e.a === 'ok' ? 30 : 8);
   let by = z.y + z.h / 2 < H / 2 ? z.y + z.h + 12 : z.y - bh - 12;
   if (e.z === 'champ') by = e.a === 'ok' && G.k === 0 ? L.champ.y + L.champ.h - bh - 8 : L.champ.y + L.champ.h + 8;
   by = Math.max(6, Math.min(H - bh - 6, by));
@@ -399,11 +409,18 @@ function pips(x, y, pv, droite) {
     if (k < pv) { g.fillStyle = '#6d7580'; g.fillRect(px, py + 5, 6, 2); }
   }
 }
-function jeton(x, y, n, droite) {
+// une pièce et le nombre de jetons ; plus : les jetons à venir des faces dorées (« 3 +2 »)
+function jeton(x, y, n, droite, plus) {
   const gr = g.createRadialGradient(x - 1.5, y - 1.5, 0.5, x, y, 5.5); gr.addColorStop(0, '#fff3b0'); gr.addColorStop(0.55, '#e8b030'); gr.addColorStop(1, '#9a6a10');
   g.fillStyle = gr; g.beginPath(); g.arc(x, y, 5.5, 0, 7); g.fill();
-  texte(String(n), droite ? x - 10 : x + 10, y + 1, { align: droite ? 'right' : 'left', taille: 13, police: FRED, poids: 600, coul: '#f3d58c' });
+  const t = String(n), x1 = droite ? x - 10 : x + 10;
+  texte(t, x1, y + 1, { align: droite ? 'right' : 'left', taille: 13, police: FRED, poids: 600, coul: '#f3d58c' });
+  if (!plus) return;
+  g.font = `600 13px ${FRED}`; const w = g.measureText(t).width;
+  texte('+' + plus, droite ? x1 - w - 4 : x1 + w + 4, y + 1, { align: droite ? 'right' : 'left', taille: 12, police: FRED, poids: 600, coul: '#9fe07a' });
 }
+// jetons à venir du camp i : les faces dorées sur la table (pendant les lancers et le choix des faveurs)
+const aVenir = i => !V.anim && !E.fin && (E.phase === 'lancer' || E.phase === 'faveur') && E.camps[i].lancers ? jarOrDe(E.camps[i]) : 0;
 function hudSolo() {
   const y = L.hud.y, h = L.hud.h, gr = g.createLinearGradient(0, y, 0, y + h);
   gr.addColorStop(0, '#0b0e1c'); gr.addColorStop(1, '#121628'); g.fillStyle = gr; g.fillRect(0, y, W, h);
@@ -411,7 +428,7 @@ function hudSolo() {
     const d = i === 1, x = d ? W - 10 : 10;
     texte(i === 0 ? 'Toi' : E.camps[1].nom, x, y + 11, { align: d ? 'right' : 'left', taille: 13, max: W / 2 - 90 });
     pips(x, y + 21, V.show[i].pv, d);
-    jeton(d ? W - 84 : 84, y + 29, V.show[i].jetons, d);   // la pièce juste après les PV, le nombre de l'autre côté (pas sur les casques)
+    jeton(d ? W - 84 : 84, y + 29, V.show[i].jetons, d, aVenir(i));   // la pièce juste après les PV, le nombre de l'autre côté (pas sur les casques)
   }
   petitsBoutons();
 }
@@ -435,7 +452,7 @@ function bouton(r, label, actif, dore) {
 function carteFaveur(r, id, i, now) {
   const F = JAR_FAVEURS[id], c = E.camps[i], s = V.sel[i], choisi = s && s.id === id, ph = E.phase === 'faveur' && E.tour === i && !V.anim;
   const engage = E.phase !== 'lancer' && c.choix && c.choix.id === id;
-  const dispo = c.jetons + (E.phase === 'faveur' ? jarOrDe(c) : 0);
+  const dispo = c.jetons + (E.phase === 'faveur' || E.phase === 'lancer' ? jarOrDe(c) : 0);
   g.fillStyle = choisi || engage ? 'rgba(90,60,14,.92)' : 'rgba(28,20,12,.82)'; rrect(r.x, r.y, r.w, r.h, 7); g.fill();
   g.strokeStyle = choisi ? '#ffd36b' : engage ? '#c8902c' : ph ? 'rgba(243,213,140,.55)' : 'rgba(243,213,140,.22)'; g.lineWidth = choisi ? 2 : 1.2;
   rrect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1, 7); g.stroke();
@@ -481,7 +498,7 @@ function panneau(i, P, now) {
   if (z.hud) {
     texte(NOMS_DUO[i], 10, 15, { align: 'left', taille: 13, coul: i ? '#ff9a8a' : '#9ab8ff' });
     pips(116, 8, V.show[i].pv, false);
-    jeton(W - 34, 15, V.show[i].jetons, true);
+    jeton(W - 34, 15, V.show[i].jetons, true, aVenir(i));
   }
   const tour = E.tour === i && !V.anim && !E.fin;
   // les dés gardés sont mis de côté : seul, sur la planche de feutre du haut ; à deux, à gauche de la rangée
@@ -503,6 +520,11 @@ function panneau(i, P, now) {
     const t = V.desT[i][j] || -9; deA(g, p.x, p.y, p.s, jarFace(j, d), false, now - t < 0.5, now);
   });
   c.faveurs.forEach((id, k) => carteFaveur(z.fav[k], id, i, now));
+  // le compte des jetons pour la bataille (les faces dorées comptent)
+  if (c.lancers && !E.fin && !V.anim && (E.phase === 'lancer' || E.phase === 'faveur')) {
+    const n = c.jetons, o = jarOrDe(c), t = `${n} jeton${n > 1 ? 's' : ''}${o ? ` + ${o} doré${o > 1 ? 's' : ''} = ${n + o}` : ''} pour la bataille`;
+    texte(t, W / 2, z.fav[0].y - 9, { police: FRED, poids: 600, taille: 12, coul: o ? '#f3e6c8' : 'rgba(243,230,200,.6)' });
+  }
   if (E.phase === 'faveur' && tour) {
     const s = V.sel[i];
     bouton(z.b1, 'AUCUNE', !G, false);
@@ -570,17 +592,23 @@ function champ(now) {
   g.restore();
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (cfg.mode !== 'duo') {
-    const e = E.camps[1], ps = 18, ex = W - 6 * (ps + 3) - 8, y = Cz.y + 4;
-    g.fillStyle = 'rgba(20,12,6,.55)'; rrect(ex - 6, y, 6 * (ps + 3) + 10, ps + 8, 6); g.fill();
-    e.des.forEach((dd, j) => { const t = V.desT[1][j] || -9; deA(g, ex + j * (ps + 3), y + 4, ps, jarFace(j, dd), false, now - t < 0.5, now, true); });
-    if (e.choix && !V.anim) texte(`${JAR_FAVEURS[e.choix.id].dieu} ${ROMAIN[e.choix.niv]}`, ex - 12, y + 4 + ps / 2, { align: 'right', taille: 12 });
+    // les dés du dieu, assez grands pour être lus ; ses dés gardés sur un feutre
+    const e = E.camps[1], ps = Math.round(Math.max(20, Math.min(30, (W - 150) / 6 - 4))), ex = W - 6 * (ps + 4) - 10, y = Cz.y + 4;
+    L.desIA = { x: ex - 8, y: y - 2, w: 6 * (ps + 4) + 14, h: ps + 14 };
+    g.fillStyle = 'rgba(20,12,6,.62)'; rrect(ex - 6, y, 6 * (ps + 4) + 10, ps + 10, 7); g.fill();
+    e.des.forEach((dd, j) => {
+      const t = V.desT[1][j] || -9, gx = ex + j * (ps + 4);
+      if (dd.garde && !e.fini && e.lancers) { g.fillStyle = '#1e3326'; rrect(gx - 2, y + 2, ps + 4, ps + 6, 4); g.fill(); }
+      deA(g, gx, y + 4, ps, jarFace(j, dd), false, now - t < 0.5, now, ps < 24);
+    });
+    if (e.choix && !V.anim) texte(`${JAR_FAVEURS[e.choix.id].dieu} ${ROMAIN[e.choix.niv]}`, ex - 12, y + 5 + ps / 2, { align: 'right', taille: 12 });
   }
   const m = message(now);
   if (m) {
     if (cfg.mode === 'duo') {
       lignes(m, W / 2, Cz.y + Cz.h - 40, { taille: 14 });
       g.save(); g.translate(W / 2, Cz.y + 22); g.rotate(Math.PI); lignes(m, 0, -18 * (m.split('\n').length - 1), { taille: 14 }); g.restore();
-    } else lignes(m, W / 2, Cz.y + 44, { taille: 14 });
+    } else lignes(m, W / 2, Cz.y + (L.desIA ? L.desIA.h + 18 : 44), { taille: 14 });
   }
   // l'astuce du moment (trois premières parties)
   const a = astuce();
@@ -599,6 +627,15 @@ function scene(now, UH, ph) {
   for (let k = 0; k < 7; k++) { const q = ((now * 0.25 + k / 7) % 1); g.fillStyle = `rgba(200,200,210,${0.35 * (1 - q)})`; g.beginPath(); g.arc(UW / 2 - 19 + Math.sin(q * 6 + k) * 2 + q * 6, UH * 0.47 - 11 - q * 20, 0.8 + q * 2.2, 0, 7); g.fill(); }
   for (let k = 0; k < 3; k++) { const bx = ((now * 7 + k * 40) % (UW + 40)) - 20, by = 18 + k * 6 + Math.sin(now * 2 + k) * 2, a = Math.floor(now * 6 + k) % 2; g.fillStyle = '#1a1a2a'; g.fillRect(bx, by, 1, 1); g.fillRect(bx - 1, by - 1 + a, 1, 1); g.fillRect(bx + 1, by - 1 + a, 1, 1); }
   for (const s of [0, 1]) for (const c of [0, 1, 2]) { const p = posA(s, c * 15 + 5, UH); banniere(g, p.x + (s ? -1 : 1) * -4, p.y - 2, s, now + c); }
+  // qui charge et qui tire : le rang vivant le plus avancé charge, le plus en arrière tire (les premiers rangs tombent d'abord sous les haches)
+  const vivRang = s => [0, 1, 2].filter(r => V.sold[s].some((sd, i) => sd.mort === null && Math.floor(i / 15) === r));
+  const rangs = [0, 1].map(vivRang), front = rangs.map(l => l.length ? l[0] : -1), tir = rangs.map(l => l.length ? l[l.length - 1] : -1);
+  const frontX = s => front[s] < 0 ? UW / 2 : posA(s, front[s] * 15 + 2, UH).x;
+  // la charge : deux camps qui chargent se rencontrent au milieu ; un seul court jusqu'à la ligne ennemie
+  let contact = UW / 2;
+  const charge = [0, 1].map(s => !!(ph && ph.p.nom === 'haches' && ph.p.att[s] && front[s] >= 0));
+  if (charge[0] !== charge[1]) { const s = charge[0] ? 0 : 1; contact = frontX(1 - s) + (s ? 7 : -7); }
+  const course = [0, 1].map(s => charge[s] ? Math.abs(contact - frontX(s)) - 3 : 0);
   const items = [];
   for (const s of [0, 1]) V.sold[s].forEach((sd, i) => { if (sd.mort !== null && now - sd.mort > 30) return; items.push(Object.assign({ s, i, sd }, posA(s, i, UH))); });
   items.sort((a, b) => a.y - b.y);
@@ -608,9 +645,9 @@ function scene(now, UH, ph) {
     // les poses et déplacements ne s'appliquent qu'aux soldats vivants (leçon de la maquette 4)
     if (ph && sd.mort === null) {
       const { p, u } = ph;
-      if (p.nom === 'haches' && p.att[s] && r === 0) { x += dir * Math.sin(Math.min(1, u * 1.6) * Math.PI) * 24; pose = 'charge'; }
+      if (p.nom === 'haches' && charge[s] && r === front[s]) { x += dir * Math.sin(Math.min(1, u * 1.6) * Math.PI) * course[s]; pose = 'charge'; }
       if (p.nom === 'haches' && p.att[o] && p.def[s] && r < 2 && !pose) pose = 'garde';
-      if (p.nom === 'fleches' && p.att[s] && r === 2 && u < 0.7) pose = 'tir';
+      if (p.nom === 'fleches' && p.att[s] && r === tir[s] && u < 0.7) pose = 'tir';
       if (p.nom === 'fleches' && p.att[o] && p.def[s] && r < 2 && u > 0.1) pose = 'bouclier';
     }
     if (sd.mort !== null) { const q = sd.mort < 0 ? 1 : Math.min(1, (now - sd.mort) / 0.4); ang = q * Math.PI / 2; if (q < 1) y -= Math.sin(q * Math.PI) * 4; }
@@ -627,7 +664,8 @@ function scene(now, UH, ph) {
       const n = Math.min(18, p.att[s] * 3);
       for (let j = 0; j < n; j++) {
         const v = Math.min(1, (sec - 0.15 - j * 0.06) / 0.7); if (v < 0) continue;
-        const a = posA(s, 30 + (j * 4) % 15, UH), bb = posA(1 - s, (j * 7) % 45, UH), tx = bb.x + (hash(j + s * 9) - 0.5) * 10, ty = bb.y + 2 + hash(j + 3) * 3;
+        if (tir[s] < 0) break;
+        const a = posA(s, tir[s] * 15 + (j * 4) % 15, UH), bb = posA(1 - s, (j * 7) % 45, UH), tx = bb.x + (hash(j + s * 9) - 0.5) * 10, ty = bb.y + 2 + hash(j + 3) * 3;
         const pt = w => ({ x: a.x + (tx - a.x) * w, y: a.y - 11 + (ty - a.y + 11) * w - Math.sin(w * Math.PI) * 34 });
         const q0 = pt(Math.max(0, v - 0.05)), q1 = pt(v), dx = q1.x - q0.x, dy = q1.y - q0.y, l = Math.hypot(dx, dy) || 1;
         g.strokeStyle = '#3a2412'; g.lineWidth = 0.7; g.beginPath(); g.moveTo(q1.x - dx / l * 6, q1.y - dy / l * 6); g.lineTo(q1.x, q1.y); g.stroke();
@@ -635,9 +673,10 @@ function scene(now, UH, ph) {
       }
     }
   }
-  if (p.nom === 'haches' && u > 0.22 && u < 0.6) {
-    for (let k = 0; k < 8; k++) { const q = (u - 0.22) / 0.38, an = k / 8 * 6.28; g.fillStyle = `rgba(190,170,130,${0.5 * (1 - q)})`; g.beginPath(); g.arc(UW / 2 + Math.cos(an) * q * 14, gy - 3 + Math.sin(an) * q * 4, 2 + q * 4, 0, 7); g.fill(); }
-    if (u < 0.45) { const k = Math.floor(now * 24) % 2; g.fillStyle = k ? '#fff6c0' : '#ffd040'; for (let j = 0; j < 5; j++) { const yy = gy - 20 + j * 5; g.fillRect(UW / 2 - 1 + (k ? -2 : 2), yy, 3, 1); g.fillRect(UW / 2 + (k ? 2 : -2), yy - 1, 1, 3); } }
+  if (p.nom === 'haches' && (charge[0] || charge[1]) && u > 0.22 && u < 0.6) {
+    // poussière et étincelles là où les armées se touchent
+    for (let k = 0; k < 8; k++) { const q = (u - 0.22) / 0.38, an = k / 8 * 6.28; g.fillStyle = `rgba(190,170,130,${0.5 * (1 - q)})`; g.beginPath(); g.arc(contact + Math.cos(an) * q * 14, gy - 3 + Math.sin(an) * q * 4, 2 + q * 4, 0, 7); g.fill(); }
+    if (u < 0.45) { const k = Math.floor(now * 24) % 2; g.fillStyle = k ? '#fff6c0' : '#ffd040'; for (let j = 0; j < 5; j++) { const yy = gy - 20 + j * 5; g.fillRect(contact - 1 + (k ? -2 : 2), yy, 3, 1); g.fillRect(contact + (k ? 2 : -2), yy - 1, 1, 3); } }
   }
   if (p.nom === 'mains') for (const s of [0, 1]) {
     if (!p.att[s]) continue;

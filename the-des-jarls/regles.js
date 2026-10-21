@@ -50,11 +50,11 @@ const JAR_FAVEURS = {
   freyr:    { dieu: 'Freyr',    nom: 'Présent de Freyr',      cout: [4, 6, 8],    val: [2, 3, 4], quand: 'avant', prio: 4, txt: n => `+${n} à la face la plus nombreuse.` },
   skadi:    { dieu: 'Skadi',    nom: 'Chasse de Skadi',       cout: [6, 10, 14],  val: [1, 2, 3], quand: 'avant', prio: 4, txt: n => `+${n} flèche${n > 1 ? 's' : ''} par dé flèche.` },
   heimdall: { dieu: 'Heimdall', nom: 'Veille de Heimdall',    cout: [4, 7, 10],   val: [1, 2, 3], quand: 'avant', prio: 4, txt: n => `+${n} PV par attaque parée.` },
-  hel:      { dieu: 'Hel',      nom: 'Étreinte de Hel',       cout: [5, 9, 14]  ,  val: [1, 2, 3], quand: 'avant', prio: 4, txt: n => `+${n} PV par blessure de hache infligée.` },
+  hel:      { dieu: 'Hel',      nom: 'Étreinte de Hel',       cout: [5, 9, 14]  ,  val: [1, 2, 3], quand: 'avant', prio: 4, txt: n => `+${n} PV pour toi par PV que tes haches font perdre.` },
   mimir:    { dieu: 'Mimir',    nom: 'Sagesse de Mimir',      cout: [3, 5, 7],    val: [1, 2, 3], quand: 'avant', prio: 4, txt: n => `+${n} jeton${n > 1 ? 's' : ''} par PV perdu dans la bataille.` },
   bragi:    { dieu: 'Bragi',    nom: 'Verve de Bragi',        cout: [4, 8, 12],   val: [2, 3, 4], quand: 'avant', prio: 4, txt: n => `+${n} jetons par dé main.` },
   skuld:    { dieu: 'Skuld',    nom: 'Dette de Skuld',        cout: [4, 6, 8],    val: [2, 3, 4], quand: 'avant', prio: 4, txt: n => `L'adversaire perd ${n} jetons par dé flèche.` },
-  thor:     { dieu: 'Thor',     nom: 'Foudre de Thor',        cout: [4, 8, 12],   val: [2, 5, 8], quand: 'apres', prio: 6, txt: n => `${n} blessures après la bataille.` },
+  thor:     { dieu: 'Thor',     nom: 'Foudre de Thor',        cout: [4, 8, 12],   val: [2, 5, 8], quand: 'apres', prio: 6, txt: n => `L'adversaire perd ${n} PV après la bataille.` },
   idunn:    { dieu: 'Idunn',    nom: 'Pommes d\'Idunn',       cout: [4, 7, 10],   val: [2, 4, 6], quand: 'apres', prio: 7, txt: n => `+${n} PV après la bataille.` },
   odin:     { dieu: 'Odin',     nom: 'Sacrifice d\'Odin',     cout: [2, 3, 4],    val: [3, 4, 5], quand: 'apres', prio: 7, txt: n => `Sacrifie 3 PV (jamais le dernier) : +${n} jetons par PV.` },
 };
