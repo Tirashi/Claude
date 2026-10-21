@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le Thé des Jarls</title>
+<meta name="description" content="Le Thé des Jarls : duel de dés viking. Chaque face lance votre armée à l'assaut, et les dieux s'en mêlent.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#121628">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../polices/empilage.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="jeu">
+  <canvas id="cv" aria-label="Le champ de bataille et les dés"></canvas>
+
+  <div class="ecran" id="eTitre">
+    <div class="carte">
+      <h1>LE THÉ<br>DES JARLS</h1>
+      <p>Six dés, trois lancers, deux armées. Chaque face envoie tes soldats à l'assaut, et les dieux s'en mêlent.</p>
+      <button id="bContinuer" hidden>CONTINUER LE DUEL</button>
+      <button class="or" id="bSolo">DÉFIER UN DIEU</button>
+      <button id="bDuo">À DEUX SUR CE TÉLÉPHONE<small>Posé à plat entre les deux joueurs</small></button>
+      <button id="bAide">COMMENT JOUER</button>
+      <a class="lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecran" id="eDieu" hidden>
+    <div class="carte large">
+      <p class="titre2">QUEL DIEU DÉFIER ?</p>
+      <div class="rang" id="niveaux"><button data-n="1">FACILE</button><button data-n="2">NORMAL</button><button data-n="3">DIFFICILE</button></div>
+      <div class="grille" id="listeDieux"></div>
+      <button id="bDieuRetour">◀ RETOUR</button>
+    </div>
+  </div>
+
+  <div class="ecran" id="eFaveurs" hidden>
+    <div class="carte large" id="carteFaveurs">
+      <p class="titre2" id="tFaveurs">TES TROIS FAVEURS</p>
+      <p class="petit" id="sFaveurs"></p>
+      <div class="liste" id="listeFaveurs"></div>
+      <div class="rang"><button id="bFaveursRetour">◀ RETOUR</button><button class="or" id="bFaveursOk" disabled>AU COMBAT</button></div>
+    </div>
+  </div>
+
+  <div class="ecran" id="ePause" hidden>
+    <div class="carte">
+      <p class="titre2">PAUSE</p>
+      <button id="bReprendre">REPRENDRE</button>
+      <button id="bAideP">COMMENT JOUER</button>
+      <button class="rouge" id="bAbandon">ABANDONNER LE DUEL</button>
+      <a class="lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecran" id="eFin" hidden>
+    <div class="carte" id="carteFin">
+      <h1 id="tFin">VICTOIRE</h1>
+      <p id="sFin"></p>
+      <button class="or" id="bRevanche">REVANCHE</button>
+      <button id="bFinTitre">◀ TITRE</button>
+    </div>
+  </div>
+
+  <div class="ecran" id="eAide" hidden>
+    <div class="carte large aide">
+      <p class="titre2">COMMENT JOUER</p>
+      <div class="texte">
+        <p><b>Le but :</b> faire tomber les 15 PV de l'armée adverse (3 soldats par PV).</p>
+        <p><b>Les dés.</b> Chacun son tour, on lance ses 6 dés, trois fois au plus. Touche un dé pour le garder avant de relancer les autres ; <b>TOUT GARDER</b> arrête tes lancers. Au troisième lancer, tout est gardé.</p>
+        <p><b>Les faces.</b> <b>Hache</b> : les fantassins chargent, un casque adverse en pare une. <b>Flèche</b> : les archers tirent, un bouclier adverse en pare une. <b>Casque</b> et <b>bouclier</b> : la défense. <b>Main</b> : un éclaireur vole un jeton à l'adversaire. Les faces <b>dorées</b> rapportent chacune un jeton de faveur.</p>
+        <p><b>Les faveurs.</b> Avant le duel, on emporte trois faveurs des dieux. Après les lancers, chacun peut en invoquer une, au niveau I, II ou III, en payant ses jetons (touche une faveur pour changer de niveau). Les faveurs « après la bataille » (Thor, Idunn, Odin) se paient après le vol des éclaireurs : si on t'a volé tes jetons, elles ratent.</p>
+        <p><b>L'ordre de la bataille :</b> jetons des faces dorées, faveurs d'avant la bataille, flèches, haches, vols, faveurs d'après la bataille. Le premier joueur change à chaque manche.</p>
+        <p><b>L'hiver.</b> À partir de la manche 10, chaque armée perd 1 PV à la fin de la manche, puis 2, puis 3… Si les deux armées tombent ensemble, celle qui tombe le moins bas gagne.</p>
+        <p><b>À deux.</b> Pose le téléphone à plat entre vous : chacun ses dés de son côté, la bataille au milieu.</p>
+      </div>
+      <button id="bAideOk">J'AI COMPRIS</button>
+    </div>
+  </div>
+</div>
+
+<script src="../ludo-scores.js"></script>
+<script src="regles.js"></script>
+<script src="ia.js"></script>
+<script src="decor.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

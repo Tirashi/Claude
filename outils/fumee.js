@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html', 'the-des-jarls/index.html',
   'mot-d-or/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -115,6 +115,32 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Duché : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-duche.png` });
+    }
+    if (url === 'the-des-jarls/index.html') {
+      // Le Thé des Jarls : un duel contre un dieu joué jusqu'au bout (batailles accélérées), partie sauvegardée puis effacée, écran de fin ; le duel à deux démarre
+      const r = await p.evaluate(async () => {
+        const J = Jarls, wait = ms => new Promise(r => setTimeout(r, ms)), E = () => J.etat();
+        J.duel({ dieu: 'loki', niveau: 2, graine: 7 });
+        if (!localStorage.getItem('jarls.run')) return 'partie pas sauvegardée';
+        let batailles = 0;
+        for (let n = 0; n < 600 && !E().fin; n++) {
+          if (J.vue().anim) { batailles++; J.accelerer(); await wait(40); continue; }
+          const e = E();
+          if (e.tour === 0 && e.phase === 'lancer') J.lancer(0);
+          else if (e.tour === 0 && e.phase === 'faveur') J.faveur(0, e.camps[0].jetons >= 4 ? 'thor' : null, 1);
+          await wait(e.tour === 0 ? 20 : 150);
+        }
+        if (!E().fin) return 'le duel ne finit pas (manche ' + E().manche + ')';
+        if (!batailles) return 'aucune bataille montrée';
+        await wait(60); J.accelerer();   // la dernière bataille est encore montrée
+        await wait(1000); if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        if (localStorage.getItem('jarls.run')) return 'partie finie encore sauvegardée';
+        J.duel({ duo: true, graine: 3 }); const t = E().tour; J.lancer(t);
+        if (E().camps[t].lancers !== 1 || E().tour === t) return 'à deux : le lancer ne passe pas la main';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Le Thé des Jarls : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-jarls.png` });
     }
     if (url === 'capitaine-du-port/index.html') {
       // Capitaine du port : un bassin gagné par sa solution, écran de fin ; annuler revient en arrière ; le bassin du jour se charge
