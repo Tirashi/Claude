@@ -24,7 +24,7 @@ def node_mat(n):
         for k in range(3): r[c*4+k] *= s[c]
     r[12],r[13],r[14] = t
     return r
-res = {}
+res = {}; formes = {}
 for nm in names:
     p = idx[nm]; d = os.path.dirname(p)
     if p.endswith('.glb'):
@@ -61,7 +61,10 @@ for nm in names:
     nb = struct.pack('<%db'%(len(N)*3), *[max(-127,min(127,round(c*127))) for v in N for c in v])
     ub = struct.pack('<%dH'%(len(U)*2), *[max(0,min(65535,round(c*65535))) for v in U for c in v])
     ib = struct.pack(('<%dH' if len(P)<65536 else '<%dI')%len(I), *I)
-    res[nm] = [len(P), len(I), base64.b64encode(pb+nb+ub+ib).decode()]
+    # même forme qu'un modèle déjà converti (variantes de couleur) : on ne garde que les uv
+    cle = pb + nb + ib
+    if cle in formes: res[nm] = [formes[cle], base64.b64encode(ub).decode()]
+    else: formes[cle] = nm; res[nm] = [len(P), len(I), base64.b64encode(pb+nb+ub+ib).decode()]
 img = IMG or os.path.join(src, '..', '..', 'Textures', 'hexagons_medieval.png')
 js = 'window.'+VAR+'=' + json.dumps(res, separators=(',',':')) + ';\nwindow.'+VAR+'_TEX="data:image/png;base64,' + base64.b64encode(open(img,'rb').read()).decode() + '";\n'
 open(out,'w').write(js); print(len(js), {k:v[0] for k,v in res.items()})
