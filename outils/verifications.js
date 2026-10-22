@@ -123,6 +123,10 @@ catch (e) { bad('Le Thé des Jarls : simulateur\n' + (e.stdout || '') + (e.stder
 try { execFileSync(process.execPath, [path.join(__dirname, 'bannieres-simulateur.js'), '20'], { stdio: 'pipe', encoding: 'utf8' }); ok('Bannières : simulateur (parties reproductibles, règles, équilibrage)'); }
 catch (e) { bad('Bannières : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// 8 sexies. Romet : physique et règles (tas reproductible, sauvegarde et reprise, pièces endormies, fin de partie)
+try { execFileSync(process.execPath, [path.join(__dirname, 'romet-simulateur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Romet : simulateur (tas reproductible, reprise, mise au repos, fin de partie)'); }
+catch (e) { bad('Romet : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
   const pre = new Map(), idx = read('accueil.js'), ls = read('ludo-scores.js');

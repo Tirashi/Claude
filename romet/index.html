@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Romet</title>
+<meta name="description" content="Romet : un coin pusher en 3D, une suite de machines à finir, de la foire à l'horloger.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#2a140a">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rye&family=Chewy&family=Fredoka:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="m-foire">
+<div id="jeu">
+  <div class="hud"><div class="cpt"><small id="hRes">Pièces</small><b id="hBourse">0</b></div><div class="logo">Romet</div><div class="cpt"><small id="hBut">Butin</small><b id="hButin">0</b></div></div>
+  <div id="ecran"><div id="combi"></div><div id="aide"></div></div>
+  <div class="bas"><div id="tresors"></div><button id="bPause" aria-label="Pause">❚❚</button></div>
+</div>
+
+<div class="voile" id="eTitre" hidden>
+  <div class="carte">
+    <h1>Romet</h1>
+    <p class="sous">Fais tomber les pièces, gagne les 6 trésors de chaque machine.</p>
+    <button class="bouton" id="bJouer">JOUER</button>
+    <button class="bouton" id="bMachines">MACHINES</button>
+    <a class="bouton lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+  </div>
+</div>
+
+<div class="voile" id="eMachines" hidden>
+  <div class="carte large">
+    <h2>Les machines</h2>
+    <div id="liste"></div>
+    <button class="bouton" id="bRetourTitre">◀ RETOUR</button>
+  </div>
+</div>
+
+<div class="voile" id="ePause" hidden>
+  <div class="carte">
+    <h2>Pause</h2>
+    <button class="bouton" id="bReprendre">REPRENDRE</button>
+    <button class="bouton" id="bPauseMachines">MACHINES</button>
+    <button class="bouton" id="bSons">SONS : OUI</button>
+    <button class="bouton" id="bVibr">VIBRATIONS : OUI</button>
+    <a class="bouton lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+  </div>
+</div>
+
+<div class="voile" id="eFin" hidden>
+  <div class="carte">
+    <h2 id="fTitre">Plus de pièces !</h2>
+    <p class="grand">Butin : <b id="fButin">0</b></p>
+    <p id="fMeilleur"></p>
+    <div class="gemmes" id="fTresors"></div>
+    <p id="fTexte"></p>
+    <button class="bouton" id="bRejouer">REJOUER</button>
+    <button class="bouton" id="bFinMachines">MACHINES</button>
+  </div>
+</div>
+
+<div class="voile" id="eFinie" hidden>
+  <div class="carte">
+    <h2>Machine terminée !</h2>
+    <div class="gemmes brille" id="nTresors"></div>
+    <p id="nTexte"></p>
+    <button class="bouton" id="bContinuer">CONTINUER</button>
+    <button class="bouton" id="bFinieMachines">MACHINES</button>
+  </div>
+</div>
+
+<script src="../lib/three.min.js"></script>
+<script src="physique.js"></script>
+<script src="machines.js"></script>
+<script src="decors.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Le retour à la Ludothèque est dans les menus du jeu (titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

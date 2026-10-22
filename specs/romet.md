@@ -34,7 +34,7 @@ La maquette 1 (pixel 3D rétro) peut servir de **machine secrète** (bonus à la
 ## 4. Bonus (communs à toutes les machines)
 Repris de la maquette, habillés selon le monde :
 - **Pièce géante** : vaut 10 pièces.
-- **Mur** : ferme les côtés pendant 20 secondes (plus de pertes).
+- **Mur** : ferme les côtés pendant 12 secondes (plus de pertes ; 20 s au départ, trop généreux au simulateur).
 - **Pluie** : 10 pièces gratuites tombent d'un coup.
 - **Trésor** : un des 6 trésors de la machine (on ne retombe pas sur un trésor déjà gagné tant qu'il en manque).
 - Pas de secousse (décision du 22/10).
@@ -44,6 +44,7 @@ Repris de la maquette, habillés selon le monde :
 - La machine rend un peu moins qu'on ne lâche (environ 8 à 9 pièces sur 10 en régime, à régler machine par machine) : la bourse finit par se vider. Les bonus (pièce géante, pluie, cascades) font les bons moments.
 - **Fin de partie** : bourse vide et plus rien ne bouge pendant 3 secondes → écran de fin (butin de la partie, trésors gagnés, meilleur butin), puis REJOUER (nouveau tas, nouvelle bourse) ou MACHINES.
 - Bourse de départ selon la machine, de plus en plus petite : foire 60, ruche 55, épave 50, casino 45, foire de nuit 40, horloger 40, machine secrète 30 (à régler en jouant, avec un petit simulateur Node).
+- **Réglages de la session 1** (simulateur, joueur au hasard, une pièce toutes les 0,4 s) : chaque bonus de pièces (géante, pluie, mur) vaut environ 8 pièces, donc les bonus doivent rester rares : un tous les 10 lâchers rendait 130 % et la bourse ne se vidait jamais. Foire : bonus tous les 30 lâchers, mur de 12 s, parois jusqu'à z = 1,7 → rendement 86 %, environ 420 lâchers par bourse, 4,5 trésors par partie, finie en 2 à 4 parties. Ruche : bonus tous les 35, parois jusqu'à 1,5, miel → 73 %, 200 lâchers, 1,8 trésor par partie.
 - **Butin** d'une partie = toutes les pièces tombées dans le bac (une pièce rejouée puis regagnée compte encore).
 
 ## 6. Score et classements
@@ -71,13 +72,13 @@ Bruitages synthétisés en Web Audio : pièce lâchée, tintement des pièces qu
 - Polices : celles des mondes retenus (Rye, Monoton, Chewy, Pirata One, Cinzel : Google Fonts, licence OFL) à copier dans `polices/` pour le hors connexion et à citer dans `credits/`.
 
 ## 10. Sauvegarde, classements, intégration
-- Sauvegardes (préfixe `romet.`) : `romet.machines` (par machine : trésors, meilleur butin), `romet.partie` (machine, tas, bourse, butin de la partie en cours), `romet.opts`. Dans le transfert `LUDO1-` (fusion : le plus de trésors et le meilleur butin).
+- Sauvegardes (préfixe `romet.`) : `romet.machines` (par machine : trésors, meilleur butin), `romet.partie` (la partie en cours **de chaque machine** : tas, bourse, butin ; on peut changer de machine sans perdre son tas), `romet.opts`. Dans le transfert `LUDO1-` (fusion : le plus de trésors et le meilleur butin).
 - Classements `romet` : voir § 6.
 - Accueil : famille 3D (comme le Yams et Le Magasinier), icône 16×16 (une pièce frappée d'un R), `META`, `NEWS`, `RECS`, `RANKS`, `PROGRESS` (pas de `TODAY` tant qu'il n'y a pas de défi du jour).
 - Liste de contrôle « Ajouter un nouveau jeu » de `specs/ludotheque.md` ; artefact à créer (demander le lien à l'utilisateur).
 
 ## 11. Plan de travail (opusplan)
-1. **Session 1, le moteur et 2 machines** : `physique.js` (reprise des maquettes, mise au repos, sauvegarde du tas), rendu, bonus, bourse et fin de partie, trésors, simulateur, la foire et la ruche jouables du début à la fin.
+1. **Session 1, le moteur et 2 machines** (**faite le 22/10**, détails dans `specs/suivi.md`) : `physique.js` (reprise des maquettes, mise au repos, sauvegarde du tas), rendu, bonus, bourse et fin de partie, trésors, simulateur, la foire et la ruche jouables du début à la fin.
 2. **Session 2, les 4 autres machines et la secrète** : l'épave, le casino, la foire de nuit, l'horloger, la machine secrète, avec leurs règles et leurs décors ; écran des machines, déblocages ; réglage des bourses au simulateur.
 3. **Session 3, finitions et intégration** : titre, pause, sons et ambiances, classements, accueil, transfert, crédits, tests, docs, artefact.
 
