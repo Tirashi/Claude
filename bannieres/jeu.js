@@ -10,7 +10,7 @@
 const CLE = 'bannieres.';
 const lire = (k, d) => { try { const v = localStorage.getItem(CLE + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
 const ecrire = (k, v) => { try { if (v == null) localStorage.removeItem(CLE + k); else localStorage.setItem(CLE + k, JSON.stringify(v)); } catch (e) {} };
-const opts = Object.assign({ sons: true, niveau: 'facile', rayon: 3 }, lire('opts', {}));
+const opts = Object.assign({ sons: true, niveau: 'facile', rayon: 3, coul: 'or' }, lire('opts', {}));
 Sons.actif = opts.sons;
 let ecran = 'chargement', occupe = false, chemins = null;
 const sauver = () => ecrire('run', etat && !etat.fin && !etat.demo ? etat : null);
@@ -234,7 +234,7 @@ function montrerFin() {
 
 // ---------- les écrans du menu ----------
 function nouvellePartie(niveau, rayon, graine) {
-  etat = banNouvelle(graine == null ? Math.floor(Date.now() % 1e9) : graine, niveau, rayon);
+  etat = banNouvelle(graine == null ? Math.floor(Date.now() % 1e9) : graine, niveau, rayon, opts.coul);
   opts.niveau = etat.niveau; opts.rayon = etat.rayon; ecrire('opts', opts);
   commencer();
   if (!lire('tuto', false)) { ecrire('tuto', true); setTimeout(() => aide(0), 2600); }
@@ -258,7 +258,21 @@ function montrerTitre() {
 $('bContinuer').onclick = () => { const run = banMigrer(lire('run', null)); if (!run) return; etat = run; commencer(); };
 $('bNouvelle').onclick = () => {
   const carte = () => `CARTE : ${opts.rayon === 4 ? 'GRANDE (61 CASES)' : 'PETITE (37 CASES)'}`;
-  const choix = () => boite('NOUVELLE PARTIE', '<p>CHOISIS TON NIVEAU.</p>', [
+  // la couleur de ta bannière : 4 pastilles ; les autres seigneurs prennent les 3 autres couleurs
+  const couleurs = () => {
+    const d = document.createElement('div'); d.className = 'couleurs';
+    BAN_COULEURS.forEach(c => {
+      const b = document.createElement('button'); b.className = 'pastille' + (opts.coul === c ? ' choisie' : '');
+      b.style.setProperty('--c', '#' + COUL[c].hex.toString(16).padStart(6, '0'));
+      b.innerHTML = `<i></i>${{ or: 'OR', rouge: 'ROUGE', bleu: 'BLEU', violet: 'VIOLET' }[c]}`;
+      b.onclick = () => { opts.coul = c; ecrire('opts', opts); Sons.toc(); choix(); };
+      d.append(b);
+    });
+    return d;
+  };
+  const choix = () => boite('NOUVELLE PARTIE', '<p>TA COULEUR :</p>', [
+    couleurs(),
+    (() => { const p = document.createElement('p'); p.innerHTML = 'CHOISIS TON NIVEAU.'; p.style.marginTop = '10px'; return p; })(),
     bouton('FACILE', () => { fermer(); nouvellePartie('facile', opts.rayon); }, true, 'Les autres seigneurs sont gentils.', 'vert'),
     bouton('NORMAL', () => { fermer(); nouvellePartie('normal', opts.rayon); }, true, 'Ils attaquent plus souvent.'),
     bouton(carte(), () => { opts.rayon = opts.rayon === 4 ? 3 : 4; ecrire('opts', opts); choix(); }),

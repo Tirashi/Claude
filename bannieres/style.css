@@ -53,3 +53,9 @@ body.en-bataille #fiche, body.en-bataille .boutons, body.en-bataille #res { disp
 #issue .tactiques button { flex:1; font-size:8px; padding:4px 0; margin:0; line-height:1.7; }
 #issue .etoiles { font-size:11px; letter-spacing:1px; }
 #issue .renoncer { font-size:8px; padding:3px 10px; margin-top:4px; }
+/* le choix de la couleur (NOUVELLE PARTIE) */
+#boite .couleurs { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
+#boite .couleurs .pastille { margin:0; padding:5px 0; text-align:center; font-size:7px; line-height:1.6; }
+#boite .pastille i { display:block; width:26px; height:26px; margin:0 auto 4px; background:var(--c); border:3px solid #2b1d0e; box-shadow:inset 0 3px 0 rgba(255,255,255,.35); }
+#boite .pastille.choisie { filter:brightness(1.12); }
+#boite .pastille.choisie i { outline:3px solid #fff6e0; outline-offset:2px; }

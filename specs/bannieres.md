@@ -29,7 +29,7 @@ Né de l'essai « Duché en 3D » du 21/10. **Duché reste tel quel** ; Bannièr
 ## 3. La carte
 
 - **37 cases** hexagonales (réglable à 61 si c'est trop petit), tirées au hasard : herbe, forêt, colline, montagne, marais, une rivière. Pas de brouillard (mode possible plus tard).
-- 4 seigneurs dans 4 coins : toi (**jaune**), et le rouge, le bleu, le violet.
+- 4 seigneurs dans 4 coins : toi, et les trois autres. **Tu choisis ta couleur** (or, rouge, bleu ou violet) dans NOUVELLE PARTIE (demande de l'utilisateur du 22/10) ; les rivaux prennent les trois autres. Ton château reste en bas à gauche.
 - Des **camps de brigands** (barbares, voleurs) et des **ruines hantées** (squelettes) gardent un **trésor**.
 - Une case à toi a **ta couleur sur ses bords**.
 

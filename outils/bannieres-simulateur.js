@@ -57,6 +57,7 @@ function partie(graine, niveau, coupe, rayon) {
   const g = banNouvelle(42, 'normal', 4);
   check(g.terres.length === 61 && banGrille(4).coins.every((c, s) => g.terres[c].prop === s) && g.terres.filter(t => t.camp).length === 3, 'grande carte : 61 cases, 3 camps');
   check(new Set(e.seigneurs.slice(1).map(S => S.car)).size === 3, 'les 3 rivaux ont 3 caractères différents');
+  { const v = banNouvelle(42, 'facile', 3, 'violet'); check(v.seigneurs[0].coul === 'violet' && new Set(v.seigneurs.map(S => S.coul)).size === 4 && JSON.stringify(v.terres.map(t => t.t)) === JSON.stringify(e.terres.map(t => t.t)), 'couleur choisie : le joueur est violet, les rivaux ont les 3 autres, même carte'); }
   const src = ['regles.js', 'surprises.js', 'ia.js'].map(f => fs.readFileSync(path.join(DOSSIER, f), 'utf8')).join('\n').replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
   check(!/Math\.random/.test(src), 'aucun Math.random() dans les règles');
 }

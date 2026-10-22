@@ -104,12 +104,14 @@ function banCarte(graine, rayon) {
   return terres;
 }
 
-function banNouvelle(graine, niveau, rayon) {
+// coul : la couleur choisie par le joueur (or, rouge, bleu, violet) ; les rivaux prennent les trois autres, dans l'ordre
+function banNouvelle(graine, niveau, rayon, coul) {
   niveau = BAN_NIVEAUX[niveau] ? niveau : 'facile'; rayon = rayon === 4 ? 4 : 3;
+  const couleurs = BAN_COULEURS.includes(coul) ? [coul, ...BAN_COULEURS.filter(c => c !== coul)] : BAN_COULEURS;
   const G = banGrille(rayon), R = banRng(graine, 'depart');
   const terres = banCarte(graine, rayon).map(t => ({ ...t, prop: -1, bat: null, grand: false, decos: [], camp: false, ruine: false }));
   const car = banMelanger(R, BAN_CARACTERES.slice());
-  const seigneurs = BAN_NOMS.map((nom, s) => ({ nom, coul: BAN_COULEURS[s], car: s ? car[s - 1] : null, pieces: s ? 10 : BAN_NIVEAUX[niveau].pieces, blesse: 0, tombe: false }));
+  const seigneurs = BAN_NOMS.map((nom, s) => ({ nom, coul: couleurs[s], car: s ? car[s - 1] : null, pieces: s ? 10 : BAN_NIVEAUX[niveau].pieces, blesse: 0, tombe: false }));
   const etat = { v: BAN_V, graine, rayon, niveau, tour: 1, terres, seigneurs, armees: [], id: 1, nb: 0, pluie: false, surprise: null, fin: null };
   const armee = (s, terre, l) => etat.armees.push({ id: etat.id++, s, terre, pts: s >= 0 ? BAN_POINTS : 0, combat: false, unites: l.map(t => banUnite(etat, t, s)) });
   const DEPART = { costaud: ['champion', 'fantassin', 'lancier', 'archer', 'archer'], batisseur: ['fantassin', 'lancier', 'archer', 'archer'], malin: ['fantassin', 'lancier', 'archer', 'archer', 'mage'] };
