@@ -7,7 +7,7 @@ LANTERNE.cartes = {
     nom: 'Maison de Mère Ysolde', musique: 'village',
     plan: [
       'WWWWWWWWW',
-      'wBP___Kqw',
+      'wBP_H_Kqw',
       'w_______w',
       'wL______w',
       'w_______w',
@@ -15,6 +15,7 @@ LANTERNE.cartes = {
       'w_______w',
       'vvvv_vvvv'
     ],
+    ornements: [{ type: 'tapis', x: 3, y: 3 }, { type: 'fenetre', x: 3, y: 0 }, { type: 'fenetre', x: 6, y: 0 }, { type: 'etagere', x: 7, y: 0 }],
     pnj: [{ id: 'ysolde', perso: 'ysolde', x: 5, y: 3, evenement: 'ysolde' }],
     objets: [{ type: 'deco', x: 2, y: 1, bloque: true, evenement: 'pupitre_ysolde' }],
     sorties: [{ x: 4, y: 7, vers: 'clairfond', a: [3, 6], dir: 'bas' }]
@@ -45,9 +46,9 @@ LANTERNE.cartes = {
       'TTTTTTTTTTTTTTTTTTTTTTTT'
     ],
     maisons: [
-      { x: 2, y: 3, l: 4, p: 3, mur: 'mur_lierre', toit: 'toit', porte: 1 },
-      { x: 16, y: 3, l: 5, p: 3, mur: 'mur_brique', toit: 'toit', porte: 2 },
-      { x: 2, y: 10, l: 4, p: 3, mur: 'mur_pierre', toit: 'toit_ardoise', porte: 1 }
+      { x: 2, y: 3, l: 4, p: 3, mur: 'mur_lierre', toit: 'toit', porte: 1, fenetres: [2.5] },
+      { x: 16, y: 3, l: 5, p: 3, mur: 'mur_brique', toit: 'toit', porte: 2, fenetres: [.5, 3.5] },
+      { x: 2, y: 10, l: 4, p: 3, mur: 'mur_pierre', toit: 'toit_ardoise', porte: 1, fenetres: [2.5] }
     ],
     objets: [
       { type: 'lanterne', x: 13, y: 10, evenement: 'lanterne_clairfond' },
@@ -82,7 +83,7 @@ LANTERNE.cartes = {
     nom: 'Auberge du Lys', musique: 'village',
     plan: [
       'WWWWWWWWWWW',
-      'wOO______Ow',
+      'wOO___H__Ow',
       'wKKKK_____w',
       'w______K__w',
       'w_________w',
@@ -90,6 +91,7 @@ LANTERNE.cartes = {
       'w_________w',
       'vvvvv_vvvvv'
     ],
+    ornements: [{ type: 'tapis', x: 2, y: 4 }, { type: 'fenetre', x: 3, y: 0 }, { type: 'tableau', x: 4, y: 0 }, { type: 'bouclier', x: 8, y: 0 }, { type: 'fenetre', x: 9, y: 0 }],
     pnj: [
       { id: 'aubergiste', perso: 'aubergiste', x: 3, y: 3, evenement: 'aubergiste' },
       { id: 'voyageur', perso: 'vaast', x: 8, y: 4, evenement: 'voyageur' }
@@ -165,6 +167,7 @@ LANTERNE.cartes = {
       'jaaaaaaaaaaaj',
       'kkkkkkakkkkkk'
     ],
+    ornements: [{ type: 'tapis_long', x: 6, y: 3 }, { type: 'vitrail', x: 2, y: 0 }, { type: 'vitrail', x: 4, y: 0 }, { type: 'vitrail', x: 8, y: 0 }, { type: 'vitrail', x: 10, y: 0 }, { type: 'tapisserie', x: 5, y: 0 }, { type: 'tapisserie', x: 7, y: 0 }],
     objets: [
       { type: 'grande_lanterne', x: 6, y: 1, evenement: 'grande_lanterne' },
       { type: 'lanterne', x: 11, y: 8 }
@@ -236,6 +239,7 @@ LANTERNE.cartes = {
       'ZnnnnnGnnnnnZ',
       'zzzzzzzzzzzzz'
     ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 9, y: 0 }],
     objets: [
       { type: 'grille', id: 'crypte_grille', x: 6, y: 1, ouvertSi: 'levier_crypte', texte: 'Une grille rouillée, prise dans les racines. Un mécanisme doit l\'ouvrir.' },
       { type: 'levier', id: 'crypte_levier', x: 1, y: 3, drapeau: 'levier_crypte', texte: 'Le levier grince… Au fond de la salle, la grille remonte dans un nuage de poussière.' },
@@ -264,6 +268,7 @@ LANTERNE.cartes = {
       'ZnnnnnnnnnnnnnZ',
       'zzzzzzznzzzzzzz'
     ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 10, y: 0 }],
     objets: [
       { type: 'nappe', id: 'crypte_nappe', x: 7, y: 1, outil: 'lanterne' },
       { type: 'porte_cle', id: 'crypte_porte', x: 1, y: 6, cle: 'cle_crypte' },
@@ -293,6 +298,7 @@ LANTERNE.cartes = {
       'ZnnnnnnnZ',
       'zzzzzzzzz'
     ],
+    ornements: [{ type: 'torche', x: 2, y: 0 }, { type: 'torche', x: 6, y: 0 }],
     objets: [
       { type: 'coffre', id: 'tresor', x: 4, y: 1, evenement: 'tresor_meche' },
       { type: 'coffre', id: 'tresor_fioles', x: 1, y: 6, contenu: { objet: 'fiole', n: 2 } }
@@ -315,6 +321,7 @@ LANTERNE.cartes = {
       'ZnnnnnnnnnZ',
       'zzzzznzzzzz'
     ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 7, y: 0 }],
     objets: [{ type: 'fresque', x: 5, y: 1, evenement: 'fresque_racines' }],
     pnj: [{ id: 'roi', perso: 'roi_aulnes', x: 5, y: 3, evenement: 'roi_parle', si: '!roi_vaincu' }],
     sorties: [{ x: 5, y: 10, vers: 'crypte_racines', a: [7, 2], dir: 'bas' }],

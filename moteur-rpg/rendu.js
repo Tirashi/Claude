@@ -8,7 +8,8 @@
      sols:    { nom: { tuiles: […], semis: { tuiles: […], sur: 7 } } ou { bordure: { centre, n, s, e, w, ne, nw, se, sw } } }
      decors:  { nom: { type: 'panneau', tuiles: […], taille } | { type: 'bloc', tuile, hauteur }
               | { type: 'meuble', pieces: [{ boite: [l, h, p] | cylindre: [rayon, h], pos: [x, y, z], dessus, face, cote }] } | { type: 'plat', tuiles: […] } }
-     objets:  { type: { tuile, tuileOuverte, taille, lumiere: { couleur, intensite, portee, hauteur } } }
+     objets:  { type: { tuile, tuileOuverte, taille, lumiere: { couleur, intensite, portee, hauteur } } | { pieces: [… comme un meuble] } }
+     ornements: { type: { tuile, l, h, haut, sol, brille, lumiere } }   tapis et décorations murales (carte.ornements)
      exterieur: { sol: [tuiles], decor: 'arbre' }   sol et arbres autour des cartes d'extérieur */
 (function (M) {
   const FRAG = `
@@ -140,22 +141,27 @@ void main(){
         const porte = new THREE.Mesh(new THREE.PlaneGeometry(.9, .95), new THREE.MeshLambertMaterial({ map: tex('porte'), alphaTest: .5 }));
         porte.position.set(m.x + m.porte + .5, .48, m.y + m.p + .01); scene.add(porte); mats.push(porte.material);
       }
+      for (const f of m.fenetres || []) {
+        const v = new THREE.Mesh(new THREE.PlaneGeometry(.62, .62), new THREE.MeshLambertMaterial({ map: tex('fenetre_ext'), alphaTest: .5 }));
+        v.position.set(m.x + f + .5, .78, m.y + m.p + .012); scene.add(v); mats.push(v.material);
+      }
       masquable(mats, m.x, m.x + m.l, m.y, m.y + m.p, hm + .9);
     }
 
     function objet(o) {
       const s = style.objets[o.type] || {};
+      const lum = o.lumiere || s.lumiere;
+      if (lum) flamme(lum, o.x + .5, o.y + .8);
+      if (s.pieces) {   // objet en volume (coffre, panneau) : les pièces marquées si: 'ouvert' / 'ferme' changent à l'ouverture
+        const pieces = meuble(s, o.x, o.y); objets.set(o, { pieces, s });
+        for (const p of pieces) if (p.si === 'ouvert') p.m.visible = false;
+        return;
+      }
       const nom = o.tuile || s.tuile;
       if (!nom) return;
       const m = panneau(tex(nom), s.taille || 1, s.taille || 1);
       m.position.set(o.x + .5, 0, o.y + .5); scene.add(m);
       objets.set(o, { m, s });
-      const lum = o.lumiere || s.lumiere;
-      if (lum) {
-        const p = new THREE.PointLight(lum.couleur, lum.intensite, lum.portee, 1.5);
-        p.position.set(o.x + .5, lum.hauteur || .9, o.y + .8); scene.add(p);
-        vacillent.push({ p, base: lum.intensite, dec: Math.random() * 9 });
-      }
     }
 
     function brume(force) {
@@ -223,20 +229,47 @@ void main(){
       } else eau = null;
       for (const m of def.maisons || []) maison(m);
       for (const o of def.objets || []) objet(o);
+      for (const o of def.ornements || []) ornement(o);
       if (brumeForce) brume(brumeForce);
       if (interieur) { const p = new THREE.PointLight(0xffc880, .9, Math.max(c.l, c.h) * 1.2, 1.2); p.position.set(c.l / 2, 2.4, c.h / 2 + 1); scene.add(p); }
     }
 
     // un meuble en volume (lit, table, tonneau) : des boîtes et des cylindres texturés, face par face
+    // pièce : { boite: [l, h, p] | cylindre: [rayon, h], pos: [x, y, z], rot: [rx, ry, rz], dessus, face, cote,
+    //          si: 'ouvert' | 'ferme' (pour un coffre) } ; d.lumiere : une flamme qui vacille (cheminée)
     function meuble(d, x, y) {
-      const mat = n => new THREE.MeshLambertMaterial({ map: tex(n) });
+      const mat = n => new THREE.MeshLambertMaterial({ map: tex(n) }), faites = [];
       for (const p of d.pieces) {
         const [px, py, pz] = p.pos || [0, 0, 0], dessus = mat(p.dessus || p.face), face = mat(p.face), cote = mat(p.cote || p.face);
         let m, h;
         if (p.cylindre) { h = p.cylindre[1]; m = new THREE.Mesh(new THREE.CylinderGeometry(p.cylindre[0], p.cylindre[0], h, 14), [face, dessus, dessus]); }
         else { h = p.boite[1]; m = new THREE.Mesh(new THREE.BoxGeometry(p.boite[0], h, p.boite[2]), [cote, cote, dessus, dessus, face, face]); }
-        m.position.set(x + .5 + px, py + h / 2, y + .5 + pz); m.castShadow = m.receiveShadow = true; scene.add(m);
+        m.position.set(x + .5 + px, py + h / 2, y + .5 + pz); m.castShadow = m.receiveShadow = true;
+        if (p.rot) m.rotation.set(p.rot[0], p.rot[1] || 0, p.rot[2] || 0);
+        scene.add(m); faites.push({ m, si: p.si });
       }
+      if (d.lumiere) flamme(d.lumiere, x + .5, y + .8);
+      return faites;
+    }
+    function flamme(lum, x, z) {
+      const p = new THREE.PointLight(lum.couleur, lum.intensite, lum.portee, 1.5);
+      p.position.set(x, lum.hauteur || .9, z); scene.add(p);
+      vacillent.push({ p, base: lum.intensite, dec: Math.random() * 9 });
+    }
+
+    // ornements d'une carte : tapis posés au sol, décorations accrochées au mur du fond (fenêtre, tapisserie, torche…)
+    // style.ornements[type] = { tuile, l, h, haut (hauteur du bas de l'image), sol: true, brille: true, lumiere }
+    // carte : ornements: [{ type, x, y, l, h }] ; au mur, (x, y) est la case du mur, l'ornement est posé sur sa face avant
+    function ornement(o) {
+      const s = (style.ornements || {})[o.type]; if (!s) return;
+      const l = o.l || s.l || 1, h = o.h || s.h || 1;
+      const mat = new THREE.MeshLambertMaterial({ map: tex(o.tuile || s.tuile), transparent: true, alphaTest: .5 });
+      if (s.brille) { mat.emissive = new THREE.Color(0xffffff); mat.emissiveMap = mat.map; mat.emissiveIntensity = .35; }
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(l, h), mat);
+      if (s.sol) { m.rotation.x = -Math.PI / 2; m.position.set(o.x + l / 2, .012, o.y + h / 2); m.receiveShadow = true; }
+      else m.position.set(o.x + .5 + (l > 1 ? (l - 1) / 2 : 0), (s.haut || .6) + h / 2, o.y + 1.012);
+      scene.add(m);
+      if (s.lumiere) flamme(s.lumiere, o.x + .5, o.y + 1.3);
     }
 
     // ce qui peut cacher l'équipe : de x0 à x1, de l'arrière (zb) à l'avant (zf), hauteur h
@@ -260,6 +293,7 @@ void main(){
     // un objet qui change : coffre ouvert, levier baissé (tuileOuverte), grille ou nappe disparue (cacheOuvert)
     function majObjet(o, ouvert) {
       const x = objets.get(o); if (!x) return;
+      if (x.pieces) { for (const p of x.pieces) p.m.visible = x.s.cacheOuvert ? !ouvert : p.si === 'ouvert' ? !!ouvert : p.si === 'ferme' ? !ouvert : true; return; }
       if (x.s.cacheOuvert) { x.m.visible = !ouvert; return; }
       if (!x.s.tuileOuverte) return;
       const t = tex(ouvert ? x.s.tuileOuverte : (o.tuile || x.s.tuile));

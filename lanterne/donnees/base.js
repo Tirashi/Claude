@@ -79,7 +79,7 @@ LANTERNE.legende = {
   'W': { sol: 'vide', decor: 'mur_haut', bloque: true }, 'w': { sol: 'vide', decor: 'mur_cote', bloque: true }, 'v': { sol: 'vide', decor: 'mur_bas', bloque: true },
   'L': { sol: 'parquet', decor: 'lit', bloque: true }, 'K': { sol: 'parquet', decor: 'table', bloque: true },
   'B': { sol: 'parquet', decor: 'livres', bloque: true }, 'P': { sol: 'parquet', decor: 'pupitre', bloque: true },
-  'O': { sol: 'parquet', decor: 'tonneau', bloque: true }, 'q': { sol: 'parquet', decor: 'pot', bloque: true },
+  'H': { sol: 'parquet', decor: 'cheminee', bloque: true }, 'O': { sol: 'parquet', decor: 'tonneau', bloque: true }, 'q': { sol: 'parquet', decor: 'pot', bloque: true },
   // l'abbaye de Saint-Cendre
   'a': { sol: 'marbre' }, 'A': { sol: 'vide', decor: 'mur_blanc_haut', bloque: true }, 'j': { sol: 'vide', decor: 'mur_blanc_cote', bloque: true },
   'k': { sol: 'vide', decor: 'mur_blanc_bas', bloque: true }, 'l': { sol: 'marbre', decor: 'colonne', bloque: true },
@@ -105,7 +105,8 @@ LANTERNE.style = {
     sapin: { type: 'panneau', tuiles: ['sapin', 'sapin2', 'sapin', 'sapin2', 'arbre1', 'arbre_mort'], taille: 1.9 },
     buisson: { type: 'panneau', tuiles: ['buisson', 'buisson2'], taille: 1 },
     massif: { type: 'plat', tuiles: ['massif0', 'massif1', 'massif2'] },
-    barriere: { type: 'panneau', tuiles: ['barriere'], taille: 1 },
+    barriere: { type: 'meuble', pieces: [{ boite: [.1, .62, .1], pos: [-.42, 0, 0], face: 'bois_sombre' }, { boite: [.1, .62, .1], pos: [.42, 0, 0], face: 'bois_sombre' },
+      { boite: [1, .08, .06], pos: [0, .24, 0], face: 'bois' }, { boite: [1, .08, .06], pos: [0, .48, 0], face: 'bois' }] },
     statue: { type: 'panneau', tuiles: ['statue_aubrin'], taille: 1.6 },
     fontaine: { type: 'panneau', tuiles: ['fontaine'], taille: 1.15, alterne: ['fontaine', 'fontaine2'] },
     tonneau: { type: 'meuble', pieces: [{ cylindre: [.28, .62], face: 'tonneau_cote', dessus: 'tonneau_dessus' }] },
@@ -114,22 +115,31 @@ LANTERNE.style = {
       { boite: [.88, .7, .08], pos: [0, 0, -.43], face: 'lit_tete', cote: 'bois', dessus: 'bois' }] },
     table: { type: 'meuble', pieces: [{ boite: [.9, .07, .68], pos: [0, .46, 0], dessus: 'table_dessus', face: 'bois' },
       { boite: [.07, .46, .07], pos: [-.38, 0, -.27], face: 'bois_sombre' }, { boite: [.07, .46, .07], pos: [-.38, 0, .27], face: 'bois_sombre' }, { boite: [.07, .46, .07], pos: [.38, 0, -.27], face: 'bois_sombre' }, { boite: [.07, .46, .07], pos: [.38, 0, .27], face: 'bois_sombre' }] },
-    livres: { type: 'panneau', tuiles: ['livres'], taille: .9 },
-    pupitre: { type: 'panneau', tuiles: ['pupitre'], taille: .9 },
+    livres: { type: 'meuble', pieces: [{ boite: [.9, 1.4, .34], pos: [0, 0, -.3], face: 'etagere_face', cote: 'bois', dessus: 'bois' }] },
+    pupitre: { type: 'meuble', pieces: [{ boite: [.3, .05, .3], face: 'bois_sombre' }, { boite: [.1, .62, .1], face: 'bois_sombre' },
+      { boite: [.5, .06, .38], pos: [0, .6, 0], rot: [.35, 0, 0], dessus: 'livre_ouvert', face: 'bois' }] },
+    cheminee: { type: 'meuble', pieces: [{ boite: [1.1, 1.3, .42], pos: [0, 0, -.29], face: 'cheminee_face', cote: 'calcaire0', dessus: 'calcaire0' }],
+      lumiere: { couleur: 0xff8030, intensite: 1.3, portee: 4.5, hauteur: .5 } },
     mur_haut: { type: 'bloc', tuile: 'mur_brique', hauteur: 1.8 },
     mur_cote: { type: 'bloc', tuile: 'mur_brique', hauteur: .9 },
     mur_bas: { type: 'bloc', tuile: 'mur_brique', hauteur: .35 },
     mur_abbaye: { type: 'bloc', tuile: 'mur_eglise', hauteur: 2.4 },
     mur_blanc_haut: { type: 'bloc', tuile: 'mur_blanc', hauteur: 2.2 }, mur_blanc_cote: { type: 'bloc', tuile: 'mur_blanc', hauteur: .9 }, mur_blanc_bas: { type: 'bloc', tuile: 'mur_blanc', hauteur: .35 },
-    colonne: { type: 'panneau', tuiles: ['colonne'], taille: 1.7 },
+    colonne: { type: 'meuble', pieces: [{ boite: [.56, .16, .56], face: 'marbre0' }, { cylindre: [.2, 1.45], pos: [0, .16, 0], face: 'colonne_fut', dessus: 'marbre0' },
+      { boite: [.56, .16, .56], pos: [0, 1.61, 0], face: 'marbre0' }] },
     mur_crypte_haut: { type: 'bloc', tuile: 'mur_crypte', hauteur: 1.8 }, mur_crypte_cote: { type: 'bloc', tuile: 'mur_crypte', hauteur: .9 }, mur_crypte_bas: { type: 'bloc', tuile: 'mur_crypte', hauteur: .35 },
-    colonne_sombre: { type: 'panneau', tuiles: ['colonne_sombre'], taille: 1.5 }, sarcophage: { type: 'panneau', tuiles: ['sarcophage'], taille: 1.1 },
+    colonne_sombre: { type: 'meuble', pieces: [{ boite: [.52, .14, .52], face: 'sol_crypte0' }, { cylindre: [.19, 1.2], pos: [0, .14, 0], face: 'colonne_fut_sombre', dessus: 'sol_crypte0' },
+      { boite: [.52, .14, .52], pos: [0, 1.34, 0], face: 'sol_crypte0' }] },
+    sarcophage: { type: 'meuble', pieces: [{ boite: [.72, .42, .96], face: 'pierre_sculptee', cote: 'pierre_sculptee', dessus: 'sarco_dessus' }] },
     toile: { type: 'plat', tuiles: ['toile'] }, escalier_bas: { type: 'plat', tuiles: ['escalier_bas'] }, escalier_haut: { type: 'plat', tuiles: ['escalier_haut'] },
     racines: { type: 'panneau', tuiles: ['buisson2', 'arbre_mort'], taille: 1.3 }
   },
   objets: {
-    coffre: { tuile: 'coffre', tuileOuverte: 'coffre_ouvert', taille: .9 },
-    panneau: { tuile: 'panneau', taille: .9 },
+    coffre: { tuile: 'coffre', pieces: [
+      { boite: [.74, .36, .52], face: 'coffre_face', cote: 'coffre_cote', dessus: 'coffre_or' },
+      { boite: [.78, .14, .56], pos: [0, .36, 0], face: 'coffre_cote', cote: 'coffre_cote', dessus: 'coffre_couvercle', si: 'ferme' },
+      { boite: [.78, .52, .08], pos: [0, .36, -.3], rot: [-.3, 0, 0], face: 'bois', cote: 'coffre_cote', dessus: 'bois', si: 'ouvert' }] },
+    panneau: { tuile: 'panneau', pieces: [{ boite: [.09, .8, .09], face: 'bois_sombre' }, { boite: [.72, .38, .07], pos: [0, .42, .05], face: 'panneau_face', cote: 'bois', dessus: 'bois' }] },
     lanterne: { tuile: 'lanterne_pierre', taille: 1.1, lumiere: { couleur: 0xffa040, intensite: 1.4, portee: 4, hauteur: .9 } },
     lanterne_oubliee: { tuile: 'lanterne_pierre', taille: 1.1, allumee: { couleur: 0xffb860, intensite: 1.2, portee: 3.5, hauteur: .9 } },
     deco: { taille: 1 },
@@ -137,6 +147,15 @@ LANTERNE.style = {
     nappe: { tuile: 'nappe', taille: 1.25, cacheOuvert: true }, levier: { tuile: 'levier', tuileOuverte: 'levier_baisse', taille: .8 },
     fresque: { tuile: 'fresque', taille: 1.3 },
     grande_lanterne: { tuile: 'lanterne_pierre', taille: 2.4, lumiere: { couleur: 0xffe0a0, intensite: 1.1, portee: 7, hauteur: 2 } }
+  },
+  // tapis et décorations murales (carte.ornements)
+  ornements: {
+    tapis: { tuile: 'tapis', l: 3, h: 2, sol: true }, tapis_bleu: { tuile: 'tapis_bleu', l: 2, h: 2, sol: true },
+    tapis_long: { tuile: 'tapis_long', l: 1, h: 6, sol: true },
+    fenetre: { tuile: 'fenetre', l: .62, h: .74, haut: .55, brille: true }, vitrail: { tuile: 'vitrail', l: .8, h: 1.38, haut: .55, brille: true },
+    tapisserie: { tuile: 'tapisserie', l: .5, h: 1, haut: .45 }, tableau: { tuile: 'tableau', l: .56, h: .4, haut: .8 },
+    bouclier: { tuile: 'bouclier_mur', l: .5, h: .5, haut: .75 }, etagere: { tuile: 'etagere_murale', l: .8, h: .46, haut: .7 },
+    torche: { tuile: 'torche', l: .3, h: .68, haut: .65, brille: true, lumiere: { couleur: 0xff9a40, intensite: .9, portee: 3.5, hauteur: 1.1 } }
   },
   exterieur: { sol: ['herbe0', 'herbe1', 'herbe2', 'herbe3', 'herbe4', 'herbe5'], decor: 'arbre' }
 };
