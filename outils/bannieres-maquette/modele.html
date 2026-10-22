@@ -576,7 +576,7 @@ function majRes() {
   const mes = etat.armees.filter(a => a.s === 0), n = mes.reduce((t, a) => t + a.unites.length, 0);
   const chateaux = etat.terres.filter(t => t.bat === 'chateau' && t.prop === 0).length;
   $('res').innerHTML = `<span>${I('piece')} <b>${etat.pieces}</b></span><span>${I('drapeau')} <b>${etat.terres.filter(t => t.prop === 0).length}</b></span><span>${I('chateau')} <b>${chateaux}/4</b></span>` +
-    `<span class="tour"><span>TOUR ${etat.tour}</span><span>${sansAccent(ducSaison(etat.tour))}</span></span>`;
+    `<span class="tour"><span>TOUR ${Math.min(etat.tour, DERNIER_TOUR)}/${DERNIER_TOUR}</span><span>${sansAccent(ducSaison(etat.tour))}</span></span>`;
 }
 let toastT = 0;
 function toast(txt) { const e = $('toast'); e.textContent = sansAccent(txt); e.classList.remove('cache'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.add('cache'), 2600); }
@@ -741,7 +741,9 @@ async function finDuTour() {
   }
   etat.armees.forEach(a => { if (a.objet) a.objet.userData.sig = null; majArmee(a); });
   appliquerSaison(); majRes(); majFiche(); occupe = false;
-  verifierFin(); if (!etat.fini) surprise();
+  verifierFin();
+  if (!etat.fini && etat.tour === DERNIER_TOUR - 2) { const b = $('boite'); b.innerHTML = `<h2 class="banniere">PLUS QUE 3 TOURS !</h2><p>APRES LE TOUR ${DERNIER_TOUR}, ON COMPTE LES DRAPEAUX. TU EN AS ${drapeaux(0)} ${I('drapeau')}.</p>`; b.append(bouton('OK !', () => { fermer(); })); $('voile').classList.remove('cache'); }
+  else if (!etat.fini) surprise();
 }
 // ---------- le village et le château ----------
 const fermer = () => $('voile').classList.add('cache');
@@ -797,12 +799,22 @@ function surprise() {
   b.append(bouton('SUPER !', () => { fermer(); majRes(); majFiche(); }));
   $('voile').classList.remove('cache');
 }
+const DERNIER_TOUR = 25;   // au bout de 25 tours, on compte les drapeaux (choix de l'utilisateur du 22/10)
+const drapeaux = s => etat.terres.filter(t => t.prop === s).length;
 function verifierFin() {
   if (etat.fini) return;
   const miens = etat.terres.filter(t => t.bat === 'chateau' && t.prop === 0).length;
   const b = $('boite');
   if (miens === 4) { etat.fini = true; b.innerHTML = `<h2 class="banniere">VICTOIRE !</h2><p>TU AS PRIS LES 3 CHATEAUX. TU ES LE ROI DES BANNIERES !</p>`; }
   else if (etat.terres[DUC_COINS[0]].prop !== 0) { etat.fini = true; b.innerHTML = `<h2 class="banniere">OH NON...</h2><p>ON T'A PRIS TON CHATEAU.</p>`; }
+  else if (etat.tour > DERNIER_TOUR) {
+    // on compte les drapeaux de chacun, du plus grand au plus petit
+    etat.fini = true;
+    const l = etat.seigneurs.map((S, s) => ({ s, nom: s ? sansAccent(S.nom) : 'TOI', n: drapeaux(s) })).sort((a, c) => c.n - a.n);
+    const premier = l[0].s === 0 || l[0].n === drapeaux(0);
+    b.innerHTML = `<h2 class="banniere">${premier ? 'TU AS GAGNE !' : 'FINI !'}</h2><p>25 TOURS SONT PASSES. ON COMPTE LES DRAPEAUX :</p>` +
+      `<p>${l.map((x, k) => `${k + 1}. ${x.nom} : ${x.n} ${I('drapeau')}`).join('<br>')}</p>` + (premier ? '' : `<p>LA PROCHAINE FOIS, PRENDS PLUS DE CASES !</p>`);
+  }
   else return;
   b.append(bouton('REJOUER', () => { fermer(); nouvellePartie(Math.floor(Math.random() * 1e9)); }));
   $('voile').classList.remove('cache');

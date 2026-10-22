@@ -14,17 +14,17 @@ Né de l'essai « Duché en 3D » du 21/10. **Duché reste tel quel** ; Bannièr
 | Points de vie « 17/17 » | **Des cœurs** au-dessus des guerriers | On les voit disparaître |
 | Chance « 62 % » | **Des étoiles** : ★★★ facile, ★★ ça peut marcher, ★ difficile | Pas de pourcentage à 7 ans |
 | Charger / Tenir / Harceler | **FONCER**, **TIRER D'ABORD**, **PRUDENT** (gros boutons avec un dessin) | Le mot dit ce qui se passe |
-| Couronne, 9 électeurs, votes | **Prendre les 3 châteaux** (§ 2) | Un seul but, visible |
+| Couronne, 9 électeurs, votes | **25 tours, puis on compte les drapeaux** ; ou prendre les 3 châteaux (§ 2) | Un but visible |
 | 6 bâtiments à effets fins | **Le village** : 6 bâtiments, une phrase chacun, et des **décorations** pour faire joli (§ 6) | Il aime aménager son village |
 | Événements avec des coûts | **Petites surprises** sans calcul (§ 9) | Que du plaisir |
-| 24 tours, simulateur d'équilibrage | Pas de limite de tours (une partie = 20 à 30 minutes) ; niveau **facile** où les rivaux sont gentils | On ne perd pas parce qu'il est tard |
+| 24 tours, simulateur d'équilibrage | **25 tours** (une partie = 20 à 30 minutes) ; niveau **facile** où les rivaux sont gentils | Une fin claire |
 
 ## 2. Le but
 
-- **Gagner** : prendre les **3 châteaux** des autres seigneurs. Chaque château pris : grande fête, les drapeaux changent de couleur.
+- **La partie dure 25 tours** (choix de l'utilisateur du 22/10). **Après le tour 25, on compte les drapeaux** (les cases de chacun) : celui qui en a le plus gagne. Trois tours avant la fin, un message le rappelle (« PLUS QUE 3 TOURS ! »).
+- **Gagner tout de suite** : prendre les **3 châteaux** des autres seigneurs. Chaque château pris : grande fête, les drapeaux changent de couleur.
 - **Perdre** : seulement si on te prend ton château. Ton seigneur, lui, ne meurt jamais : s'il tombe, il est **blessé** et rentre au château pour 2 tours.
 - **Niveaux** : **FACILE** (les rivaux attaquent rarement, et seulement s'ils sont bien plus forts ; plus de pièces), **NORMAL**.
-- Variante possible (à choisir par l'utilisateur) : celui qui a **le plus de drapeaux au bout de 20 tours** gagne.
 
 ## 3. La carte
 
@@ -98,14 +98,14 @@ Une carte en parchemin, un dessin, une phrase, un bouton **SUPER !** : « Un mar
 ## 10. Écrans (portrait, téléphone)
 
 1. **Titre** : la carte qui tourne derrière le logo, CONTINUER, NOUVELLE PARTIE (FACILE / NORMAL), COMMENT JOUER (3 images), sons, ◀ LUDOTHEQUE.
-2. **Carte** : en haut, les **pièces** (dessin de pièce) et le **tour** ; la carte ; en bas, ce qu'on a touché et ses boutons (BOUGER, ACHETER, CONSTRUIRE, DECORER) ; FIN DU TOUR.
+2. **Carte** : en haut, les **pièces**, les **drapeaux**, les **châteaux** (petites icônes) et le **tour** (« TOUR 7/25 ») ; la carte ; en bas, ce qu'on a touché et ses boutons (BOUGER, ACHETER, CONSTRUIRE, DECORER) ; FIN DU TOUR.
 3. **Bataille** : avant (étoiles, 3 boutons), pendant (cœurs), après (BRAVO / DOMMAGE).
 4. **Surprise**, **fin** (VICTOIRE ! avec feu d'artifice, ou château perdu : REESSAYER), **pause**.
 - **Textes** : courts, en MAJUSCULES sans accent (police Press Start 2P), **assez gros** (9 px au moins) ; à vérifier avec lui qu'il les lit (sinon : plus d'icônes, ou une police plus lisible).
 
 ## 11. Hasard
 
-Graine (mulberry32) pour la carte, les batailles et les surprises ; **aucun `Math.random()` dans la logique**. Pas de partie du jour, pas de classement obligatoire (un meilleur score `best` possible : cases × 10 + pièces).
+Graine (mulberry32) pour la carte, les batailles et les surprises ; **aucun `Math.random()` dans la logique**. Pas de partie du jour, pas de classement obligatoire (un meilleur score `best` possible : drapeaux à la fin).
 
 ## 12. Sauvegarde
 
@@ -128,10 +128,9 @@ La partie est sauvegardée à chaque action ; CONTINUER la reprend.
 
 ## 15. Points à confirmer par l'utilisateur
 
-- **La fin** : les 3 châteaux (proposé) ou le plus de drapeaux au bout de 20 tours ?
 - Les **prix** et les **bâtiments** du § 6 (on ajustera en jouant).
-- La **lisibilité** des textes pour lui (police pixel, taille).
-- Réglé le 22/10 : pas de brouillard ; le seigneur ne meurt pas ; pas de cheval pour l'instant (cheval Quaternius CC0 noté dans `IDEES.md`) ; pas de partie classée du jour ; le mage ; les 3 façons de se battre (renommées pour 7 ans) ; des bâtiments à aménager.
+- La **lisibilité** : « ça devrait aller, on verra à l'usage » (22/10).
+- Réglé le 22/10 : **25 tours puis on compte les drapeaux** (ou les 3 châteaux) ; pas de brouillard ; le seigneur ne meurt pas ; pas de cheval pour l'instant (cheval Quaternius CC0 noté dans `IDEES.md`) ; pas de partie classée du jour ; le mage ; les 3 façons de se battre (renommées pour 7 ans) ; des bâtiments à aménager.
 
 ## 16. Maquettes
 
