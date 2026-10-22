@@ -134,7 +134,8 @@ LANTERNE.cartes = {
     objets: [
       { type: 'lanterne', x: 9, y: 4 },
       { type: 'lanterne_oubliee', id: 'route', x: 10, y: 19, evenement: 'lanterne_oubliee_route' },
-      { type: 'coffre', id: 'route_souche', x: 3, y: 22, contenu: { objet: 'fiole', n: 1 } }
+      { type: 'coffre', id: 'route_souche', x: 3, y: 22, contenu: { objet: 'fiole', n: 1 } },
+      { type: 'coffre', id: 'route_cuir', x: 11, y: 21, contenu: { objet: 'cuir', n: 1 } }
     ],
     pnj: [{ id: 'isee', perso: 'isee', x: 7, y: 13, evenement: 'isee_route', cache: true }],
     monstres: [

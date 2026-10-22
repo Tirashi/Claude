@@ -9,8 +9,8 @@
   const h = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
   const attendre = ms => new Promise(r => setTimeout(r, ms));
   // places à l'écran : monstres à gauche, héros à droite (selon leur nombre)
-  const PLACES_H = { 1: [[1.9, .3]], 2: [[1.6, -.5], [2.3, .9]], 3: [[1.5, -1], [2.4, .1], [1.6, 1.2]], 4: [[1.4, -1.3], [2.4, -.3], [1.5, .8], [2.5, 1.8]] };
-  const PLACES_M = { 1: [[-1.9, .2]], 2: [[-1.6, -.7], [-2.2, .9]], 3: [[-1.5, -1.1], [-2.4, .1], [-1.5, 1.3]], 4: [[-1.4, -1.3], [-2.4, -.3], [-1.5, .8], [-2.5, 1.8]] };
+  const PLACES_H = { 1: [[1.9, .3]], 2: [[1.6, -.8], [2.4, 1.1]], 3: [[1.5, -1.5], [2.5, .1], [1.6, 1.7]], 4: [[1.4, -1.8], [2.5, -.5], [1.5, .9], [2.6, 2.2]] };
+  const PLACES_M = { 1: [[-1.9, .2]], 2: [[-1.6, -1], [-2.3, 1.1]], 3: [[-1.5, -1.5], [-2.5, .1], [-1.5, 1.7]], 4: [[-1.4, -1.8], [-2.5, -.5], [-1.5, .9], [-2.6, 2.2]] };
   // effets : son, image du projectile et de l'impact, couleur de la lumière
   const EFFETS = {
     coup: { son: 'coup', impact: '_arc' }, morsure: { son: 'morsure', impact: '_arc' }, fleche: { son: 'fleche', projectile: 'fleche', impact: '_arc' },

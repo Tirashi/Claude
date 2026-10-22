@@ -221,7 +221,7 @@ Il n'y a pas de stat cachée. Il n'y a pas non plus de chance ni de résistance 
 - **3 états seulement** : **Poison** (perd des PV à chaque tour et sur la carte), **Sommeil** (passe ses tours, se réveille si on le frappe), **Silence** (pas de sorts).
 
 ## 10. Combats
-- **Au tour par tour**, à la Dragon Quest : les monstres sur un décor de la région, et le héros vu de dos ou en petit portrait (à trancher à la maquette).
+- **Au tour par tour**, à la Dragon Quest : les monstres sur un décor de la région. **Fait (session 2)** : vue de côté en HD-2D comme la maquette validée, monstres à gauche, équipe à droite, décor du lieu (`combat` dans la carte, sinon le décor d'extérieur).
 - **Strictement au tour par tour** : au début de chaque tour, on choisit l'action de **chaque héros**, puis tout le monde agit dans l'ordre de la Vitesse. Rien ne presse : on peut réfléchir aussi longtemps qu'on veut.
 - **1 à 4 monstres** par combat, contre l'équipe de 1 à 4 héros.
 - Un héros à 0 PV est **à terre** : il ne joue plus et ne gagne pas d'expérience jusqu'à ce qu'on le relève (sort Relève, objet Plume de phénix, ou une lanterne). Si **toute l'équipe** tombe, c'est la défaite.
@@ -293,9 +293,13 @@ Comme le reste de la Ludothèque : **scripts classiques**, sans build, sans modu
 | `rendu.js` | HD-2D (Three.js r128) : sol en une image, panneaux debout qui font de l'ombre, blocs, maisons à toit, eau, brume, lanternes qui vacillent, flou de profondeur + lueur (shader maison), caméra qui suit, **maisons et arbres transparents quand ils cachent l'équipe**. |
 | `interface.js`, `menu.js` | Dialogue lettre par lettre avec portrait, choix ▶, message « Sauvegarde… », fondu ; menu ÉQUIPE / OBJETS / JOURNAL / OPTIONS + retour à la Ludothèque. |
 | `entrees.js`, `sons.js` | Croix, A, B, MENU et clavier ; sons et musiques WebAudio (coupés en arrière-plan). |
-| `partie.js` | La partie sur la carte : déplacement case par case, file, habitants et monstres qui errent, A pour parler ou utiliser (coffre, panneau, lanterne), sorties, déclencheurs, sauvegardes, menu. Le combat est un crochet (`o.combat`) : en attendant la session 2, le monstre s'enfuit. |
+| `combat.js` (session 2) | Le combat au tour par tour, sans DOM (Node) : `creer`, `intro`, `resoudre(c, choix)` → liste d'événements à montrer, `terminer` (PV, PM, expérience, écus, butin écrits dans la partie), `choixAuto` et `simuler` (équilibrage). Défense, Protection et Rempart passent en premier ; esquive, critique, éléments, poison, sommeil, silence, buffs ; boss : grand coup annoncé un tour avant (`prepare`), pas de fuite. |
+| `combat-ui.js` (session 2) | L'écran de combat : messages, cartes de l'équipe, menus ATTAQUE / TALENTS / OBJETS / DÉFENSE / FUITE au curseur ▶ (croix, A, B), cible marquée ▼, pas en avant, projectiles, impacts, lumière colorée, chiffres, sons, récapitulatif de victoire avec les passages de niveau (avant → après, nouveaux talents). |
+| `partie.js` | La partie sur la carte : déplacement case par case, file, habitants et monstres qui errent, A pour parler ou utiliser (coffre, panneau, lanterne), sorties, déclencheurs, sauvegardes, menu. Le combat est un crochet (`o.combat`) branché par le jeu sur `combat-ui.js` ; un monstre de 6 niveaux de moins que le chef fuit au contact. |
 
-Jeu (`lanterne/`) : `index.html`, `style.css`, `jeu.js` (titre, 3 emplacements, nom, boucle), `tuiles.png` + `donnees/tuiles.js` (fabriqués par `outils/lanterne-tuiles.py` d'après `outils/lanterne-tuiles.json`), `donnees/base.js` (classes, héros, objets, monstres, légende, style), `donnees/cartes.js` (maison d'Ysolde, Clairfond, auberge, route de l'abbaye), `donnees/evenements.js` (début du prologue), `sons/`.
+Jeu (`lanterne/`) : `index.html`, `style.css`, `jeu.js` (titre, 3 emplacements, nom, boucle), `tuiles.png` + `donnees/tuiles.js` (fabriqués par `outils/lanterne-tuiles.py` d'après `outils/lanterne-tuiles.json`), `donnees/base.js` (classes, héros, légende, style), `donnees/combat.js` (objets et équipement, 27 talents, monstres, rencontres), `donnees/cartes.js` (maison d'Ysolde, Clairfond, auberge, route de l'abbaye), `donnees/evenements.js` (début du prologue), `sons/`.
+
+**Session 2 (22/10), précisions :** équipement porté visible dans le menu ÉQUIPE (toucher un emplacement, flèches ▲ vertes et ▼ rouges) ; les objets de soin s'utilisent aussi hors combat (menu OBJETS) ; partie en version 2 (`etat.js` : `migrer` ajoute l'équipement de départ). Monstres de la région de la forêt : feu follet, corbeau de brume, crapaud-cloche (endort au gong), gelée de cire, loup gris ; le **Grand Cerf** est déjà dans les données pour l'équilibrage, avec l'image provisoire de l'« âne » Biscotte (pas de cerf dans Dungeon Crawl : à dessiner ou choisir à la session 3). Équilibrage chiffré par `outils/lanterne-combats.js` (6 cas, du héros seul niveau 1 au boss de l'acte 1).
 
 ### 12.3 Vérifications automatiques (dans `outils/`)
 - Dans `verifications.js` : **cohérence des données**. Chaque objet, monstre ou carte cités existent ; chaque sortie d'écran mène quelque part ; chaque drapeau lu est écrit quelque part.
@@ -338,7 +342,7 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 |---|---|---|
 | 0 | **Maquette** : 2 ou 3 directions (carte, combat, dialogue) puis validation | Sonnet, ou Opus pour la décision |
 | 1 | ✅ (22/10) Moteur **monde** : écrans, déplacement, équipe en file, collisions, PNJ, dialogues, événements, drapeaux, sauvegardes ; Clairfond jouable | Opus |
-| 2 | Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
+| 2 | ✅ (22/10) Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
 | 3 | Contenu **prologue et acte 1** (Bois, Crypte, Grand Cerf) ; solveur d'accessibilité | opusplan |
 | 4 | **Actes 2 et 3** (marais, moulin, Hameau caché, mines) | opusplan |
 | 5 | **Acte 4, final, fin**, scène bonus, à-côtés (pages, quêtes des compagnons, lanternes oubliées), donjon facultatif | opusplan |

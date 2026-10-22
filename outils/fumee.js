@@ -82,7 +82,7 @@ const shots = process.argv[2];
       if (shots) await p.screenshot({ path: `${shots}/fumee-odyssee.png` });
     }
     if (url === 'lanterne/index.html') {
-      // La Dernière Lanterne : nouvelle partie, dialogue d'Ysolde au clavier, un pas sur la carte, sauvegarde
+      // La Dernière Lanterne : nouvelle partie, dialogue d'Ysolde au clavier, un pas sur la carte, sauvegarde, un combat
       const r = await p.evaluate(async () => {
         const L = Lanterne, wait = ms => new Promise(r => setTimeout(r, ms));
         const espace = () => dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
@@ -96,6 +96,13 @@ const shots = process.argv[2];
         L.entrees.lacherTout(); await wait(600);
         if (L.etat.x !== x + 1) return "le héros n'avance pas";
         if (!L.sauvegardes.resume(3)) return 'pas de sauvegarde automatique';
+        // un combat entier contre un feu follet, en appuyant sur A (Attaque, puis la cible)
+        L.etat.heros.heros.pv = L.etat.heros.heros.pvMax; const xp = L.etat.heros.heros.xp + L.etat.heros.heros.niveau * 100;
+        L.partie.jouer([{ combat: ['feu_follet'] }]); await wait(300);
+        if (!L.combat) return 'le combat ne commence pas';
+        for (let i = 0; i < 400 && L.combat; i++) { L.combat.touche('A'); await wait(80); }
+        if (L.combat) return 'le combat ne finit pas';
+        if (L.etat.heros.heros.xp + L.etat.heros.heros.niveau * 100 <= xp) return "pas d'expérience après la victoire";
         return 'ok';
       });
       if (r !== 'ok') errs.push('La Dernière Lanterne : ' + r);

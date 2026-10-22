@@ -85,6 +85,15 @@ html, body { margin: 0; height: 100%; background: #14110c; color: #f4ecd8; font-
 .rpg-ecus { color: #f2c45a; margin-bottom: 8px; }
 .rpg-objet { padding: 8px 0; border-bottom: 1px solid #3a3456; display: flex; flex-direction: column; }
 .rpg-objet small, .rpg-vide { color: #b9b0d0; font-size: 14px; }
+.rpg-equip { margin-top: 8px; display: grid; gap: 3px; }
+.rpg-equip-ligne { display: flex; justify-content: space-between; gap: 8px; font: inherit; font-size: 14px; padding: 5px 8px; background: #2a2440; color: #f4ecd8; border: 1px solid #4a4068; border-radius: 4px; text-align: left; }
+.rpg-equip-ligne span { color: #b9b0d0; } .rpg-equip-ligne.ouvert { border-color: #c9a75a; }
+.rpg-equip-choix { display: grid; gap: 3px; margin: 2px 0 4px 10px; }
+.rpg-equip-option { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font: inherit; font-size: 14px; padding: 5px 8px; background: #191530; color: #f4ecd8; border: 1px solid #c9a75a; border-radius: 4px; text-align: left; }
+.rpg-equip-option.non { opacity: .4; }
+.rpg-equip-option i { font-style: normal; font-size: 12px; } .rpg-equip-option i.plus { color: #7ef08a; } .rpg-equip-option i.moins { color: #ff7a6a; }
+.rpg-fiche-talents { margin-top: 6px; font-size: 13px; color: #b9b0d0; }
+.rpg-bouton.petit { font-size: 13px; padding: 3px 10px; margin-top: 4px; align-self: flex-start; }
 .rpg-journal-quete { padding: 10px; background: #221e36; border-left: 4px solid #c9a75a; border-radius: 4px; font-size: 17px; }
 
 /* écran titre */
