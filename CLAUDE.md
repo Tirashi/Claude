@@ -3,7 +3,7 @@
 ## Le projet
 - Dépôt GitHub : **Tirashi/Claude**. Site publié : **https://tirashi.github.io/Claude/** (installé en appli PWA sur Android).
 - Jeux en HTML **sans build** (le fichier poussé est celui que joue le téléphone), un dossier par jeu ; `index.html` = l'accueil (menu aux cartouches, volet de chaque jeu avec ses records et son classement). Un gros jeu peut se répartir en **scripts classiques** (`<script src>`, pas de modules ES ni de npm).
-- Service worker `sw.js` : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v51` au moment d'écrire ces lignes).
+- Service worker `sw.js` : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v52` au moment d'écrire ces lignes).
 - Fichiers partagés : `ludo-scores.js` (classements Supabase), `icones.js` (icônes 16×16), `injagility/chiens32.js` (chiens 32 bits), `nebula/vaisseaux.js`, `nebula/regles.js`, `nebula/sons.js`, `ile/regles.js` (règles de la colonie), `lib/three.min.js` (Three.js r128, pour les jeux en 3D), `lib/cannon.min.js` (cannon.js 0.6.2, physique des dés du Yams), polices dans `polices/`, **`moteur-rpg/`** (moteur RPG réutilisable, `window.MoteurRPG`, cahier des charges [`specs/rpg.md`](specs/rpg.md) § 12).
 - **Mémo technique : [`specs/ludotheque.md`](specs/ludotheque.md)** — architecture détaillée (accueil, classements, code de compte, transfert `LUDO1-`), **liste de contrôle pour ajouter un jeu**, leçons propres à chaque jeu, détails de chaque jeu. **Le lire avant** d'ajouter un jeu, de toucher à l'accueil, aux classements ou à un fichier partagé, ou de reprendre un jeu.
 
