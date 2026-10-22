@@ -52,7 +52,13 @@
   function drapeau(e, nom, valeur = true) { if (valeur === false || valeur === null) delete e.drapeaux[nom]; else e.drapeaux[nom] = valeur; }
   function lireDrapeau(e, nom) { return e.drapeaux[nom]; }
 
-  function rejoindre(e, id) { if (!e.equipe.includes(id)) e.equipe.push(id); }
+  // un compagnon rejoint l'équipe au niveau du chef de file, pour ne jamais être à la traîne (§ 5.1)
+  function rejoindre(e, id, jeu) {
+    if (e.equipe.includes(id)) return;
+    const chef = e.heros[e.equipe[0]], h = e.heros[id];
+    if (jeu && chef && h && h.niveau < chef.niveau) e.heros[id] = Object.assign(M.Regles.creerHeros(jeu, id, chef.niveau), { equipement: h.equipement });
+    e.equipe.push(id);
+  }
   function quitter(e, id) { e.equipe = e.equipe.filter(x => x !== id); }
 
   // soigne toute l'équipe (lanterne) : PV et PM au maximum, les héros à terre se relèvent

@@ -100,7 +100,7 @@ Quelques habitants peuvent rappeler des héros d'autres RPG, **toujours discrèt
 | Acte | Durée | Ce qui se passe |
 |---|---|---|
 | **Prologue** | 20 min | Clairfond. La lanterne du village vacille. Mère Ysolde envoie le héros à l'abbaye de Saint-Cendre. Le Prieur explique que la Grande Lanterne faiblit et qu'il faut rallumer ses quatre flammes, dispersées dans des sanctuaires à cause de la brume. Il lui confie une lanterne de veilleur et le novice **ELOI** (CLERC), qui rejoint l'équipe. Première rencontre avec Isée : « Tu portes la lumière… Sais-tu ce qu'elle mange ? » |
-| **Acte 1** | 1 h | Bois Murmurant, où l'on tire **VERENE** (ARCANISTE) des griffes de créatures : elle rejoint l'équipe. Puis **Sanctuaire 1, la Crypte des racines** : on y gagne la Flamme rouge. Le boss, le Grand Cerf de brume, murmure en tombant : « Encore… tu nous enfermes encore. » **Premier doute.** |
+| **Acte 1** | 1 h | Bois Murmurant, où l'on tire **VERENE** (ARCANISTE) des griffes de créatures : elle rejoint l'équipe. Puis **Sanctuaire 1, la Crypte des racines** : on y gagne la Flamme rouge. Le boss, **le Roi des aulnes** (choix de l'utilisateur, 22/10, au lieu du Grand Cerf), murmure en tombant : « Encore… tu nous enfermes encore. » **Premier doute.** |
 | **Acte 2** | 1 h 15 | Village de Port-Gris, où **MAUD** (RODEUR) accepte de guider l'équipe dans la brume (l'équipe est complète), Marais des cloches, puis **Sanctuaire 2, le Moulin noyé** : on y gagne la Flamme bleue. La fresque montre des silhouettes de brume qui portent des lanternes ; VERENE commence à comprendre. |
 | **Rebondissement 2** (milieu du jeu) | | Au sortir du moulin, Isée est blessée par des créatures, et l'équipe la voit **se dissoudre en brume**, puis se reformer. Elle avoue être une Brumienne. Elle conduit l'équipe au **Hameau caché** des Brumiens endormis, statues de brume figées. MAUD y trouve l'écharpe de son frère. Elle ne demande pas d'arrêter la quête : « Rapporte les flammes. Mais ne les donne à personne avant d'avoir lu la fin de l'histoire. » |
 | **Acte 3** | 1 h 15 | Hautes-Roches, puis **Sanctuaire 3, les Mines de sel** : on y gagne la Flamme d'or. Les **Chevaliers de cendre** apparaissent : le Prieur « s'inquiète » et envoie son escorte. Une page du journal porte le sceau de l'abbaye, et ELOI reconnaît l'écriture du Prieur. |
@@ -229,13 +229,13 @@ Il n'y a pas de stat cachée. Il n'y a pas non plus de chance ni de résistance 
 - Textes courts lettre par lettre (« LE CRAPAUD-CLOCHE PERD 12 PV ! »), qu'on peut accélérer d'un toucher.
 - **Fin du combat** : expérience, écus, parfois un objet.
 - **Défaite** : on reprend à la **sauvegarde la plus récente** (§ 11.1), sans autre perte.
-- **Boss** : 2 phases pour certains, avec un **signal clair** avant une grosse attaque (« LE CERF BAISSE SES BOIS… ») : on apprend à Défendre ou à utiliser Protection et Rempart au bon moment.
+- **Boss** : 2 phases pour certains, avec un **signal clair** avant une grosse attaque (« Le Roi des aulnes plonge ses racines dans le sol… ») : on apprend à Défendre ou à utiliser Protection et Rempart au bon moment.
 
 ### 10.1 Bestiaire (ordre de grandeur)
 Environ **25 monstres**, 5 par région, avec quelques variantes de couleur plus fortes dans le donjon facultatif (comme Dragon Quest).
 - *Exemples* : Feu follet, Corbeau de brume, Crapaud-cloche, Gelée de cire, Loup gris, Squelette lanternier, Armure vide, Chevalier de cendre, Spectre du clocher…
 - **Boss** :
-  1. le Grand Cerf de brume ;
+  1. le Roi des aulnes (Crypte des racines) ;
   2. la Dame du moulin ;
   3. le Golem de sel ;
   4. le Sonneur ;
@@ -301,6 +301,8 @@ Jeu (`lanterne/`) : `index.html`, `style.css`, `jeu.js` (titre, 3 emplacements, 
 
 **Session 2 (22/10), précisions :** équipement porté visible dans le menu ÉQUIPE (toucher un emplacement, flèches ▲ vertes et ▼ rouges) ; les objets de soin s'utilisent aussi hors combat (menu OBJETS) ; partie en version 2 (`etat.js` : `migrer` ajoute l'équipement de départ). Monstres de la région de la forêt : feu follet, corbeau de brume, crapaud-cloche (endort au gong), gelée de cire, loup gris ; le **Grand Cerf** est déjà dans les données pour l'équilibrage, avec l'image provisoire de l'« âne » Biscotte (pas de cerf dans Dungeon Crawl : à dessiner ou choisir à la session 3). Équilibrage chiffré par `outils/lanterne-combats.js` (6 cas, du héros seul niveau 1 au boss de l'acte 1).
 
+**Session 3 (22/10), précisions :** le boss de l'acte 1 est **le Roi des aulnes** (tuile `alderking` de Dungeon Crawl ; le cerf n'existe pas dans le pack). Prologue : abbaye (Grande Lanterne, prieur Vaast, Eloi rejoint l'équipe). Acte 1 : Clairfond s'ouvre à l'est vers le **Bois Murmurant** (après la mission des flammes) ; Vérène attaquée par un loup et un corbeau (combat forcé, gagnable au niveau 1) puis rejoint l'équipe ; lanterne oubliée ; **Crypte des racines** en 4 salles : levier qui ouvre une grille, coffre de la **Lanterne du veilleur** (premier outil, bouton **B** : dissipe les nappes de brume), clé de la crypte et porte fermée, cœur avec la fresque et le Roi des aulnes (racines annoncées un tour avant) ; en tombant : « Encore… tu nous enfermes encore. » ; fin de l'acte 1 (Flamme rouge, retour à l'abbaye). Nouveautés du moteur : objets ouvrables (`grille` + `ouvertSi`, `porte_cle` + `cle`, `nappe` + `outil`, `levier` + `drapeau`), outils (`LANTERNE.outils`, drapeaux `outil:<id>`), monstres trop faibles qui fuient (6 niveaux d'écart), habitants cachés et montrés par les événements. `LANTERNE.fin` : drapeaux que le solveur doit atteindre.
+
 ### 12.3 Vérifications automatiques (dans `outils/`)
 - Dans `verifications.js` : **cohérence des données**. Chaque objet, monstre ou carte cités existent ; chaque sortie d'écran mène quelque part ; chaque drapeau lu est écrit quelque part.
 - **Solveur d'accessibilité** : à partir du début, en suivant les outils et les clés obtenus, on doit atteindre la fin et chaque coffre. Cela garantit qu'aucun objet n'est perdu et qu'on ne se retrouve jamais bloqué.
@@ -343,7 +345,7 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 | 0 | **Maquette** : 2 ou 3 directions (carte, combat, dialogue) puis validation | Sonnet, ou Opus pour la décision |
 | 1 | ✅ (22/10) Moteur **monde** : écrans, déplacement, équipe en file, collisions, PNJ, dialogues, événements, drapeaux, sauvegardes ; Clairfond jouable | Opus |
 | 2 | ✅ (22/10) Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
-| 3 | Contenu **prologue et acte 1** (Bois, Crypte, Grand Cerf) ; solveur d'accessibilité | opusplan |
+| 3 | ✅ (22/10) Contenu **prologue et acte 1** (abbaye et Eloi, Bois Murmurant et Vérène, Crypte des racines, Roi des aulnes) ; solveur d'accessibilité jusqu'à la fin de l'acte 1 | opusplan |
 | 4 | **Actes 2 et 3** (marais, moulin, Hameau caché, mines) | opusplan |
 | 5 | **Acte 4, final, fin**, scène bonus, à-côtés (pages, quêtes des compagnons, lanternes oubliées), donjon facultatif | opusplan |
 | 6 | Équilibrage, sons et musique, accueil, `sw.js`, artefact | Sonnet |

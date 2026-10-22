@@ -28,7 +28,7 @@ LANTERNE.persos = {
   gaspard: { nom: 'Gaspard', perso: 'gaspard' }, forgeron: { nom: 'Bertin le forgeron', perso: 'forgeron' }, aubergiste: { nom: 'Margot', perso: 'aubergiste' },
   enfant: { nom: 'Petit Lou', perso: 'enfant' }, ancien: { nom: 'Le vieux Aimé', perso: 'ancien' }, paysanne: { nom: 'Jeanne', perso: 'paysanne' },
   pecheur: { nom: 'Fulbert', perso: 'pecheur' }, moine: { nom: 'Un moine', perso: 'vaast' },
-  nuage: { nom: 'Nuage', perso: 'nuage' }, garde: { nom: 'Le garde', perso: 'garde' }, garcon_vert: { nom: 'Le garçon en vert', perso: 'garcon_vert' }
+  nuage: { nom: 'Nuage', perso: 'nuage' }, roi: { nom: 'Roi des aulnes', perso: 'roi_aulnes' }, garde: { nom: 'Le garde', perso: 'garde' }, garcon_vert: { nom: 'Le garçon en vert', perso: 'garcon_vert' }
 };
 
 LANTERNE.statistiques = [
@@ -42,13 +42,26 @@ LANTERNE.statistiques = [
 
 // objets, équipement, talents et monstres : donnees/combat.js
 
+// outils (B, devant soi) : drapeau « outil:<id> » quand on l'a
+LANTERNE.outils = {
+  lanterne: { nom: 'Lanterne du veilleur', aide: 'Appuie sur B pour la dissiper avec la lanterne.', texte: 'La flamme de la lanterne dissipe la brume !', son: 'lanterne' }
+};
+
+// drapeaux à atteindre pour finir cette version (vérifié par outils/lanterne-tests.js)
+LANTERNE.fin = ['vaast_vu', 'verene_rejoint', 'outil:lanterne', 'roi_vaincu', 'acte1_fini'];
+
 LANTERNE.depart = { carte: 'maison_ysolde', x: 2, y: 4, dir: 'bas', equipe: ['heros'], niveau: 1, ecus: 0, chapitre: 'Prologue' };
 
 // la quête en cours, en une phrase (menu, onglet Journal)
-LANTERNE.journal = e =>
-  !e.drapeaux.mission ? 'Parler à Mère Ysolde.'
-  : !e.drapeaux.porte_abbaye ? 'Aller à l\'abbaye de Saint-Cendre, au nord de Clairfond, par la route de la forêt.'
-  : 'Les portes de l\'abbaye sont devant toi. La suite de l\'histoire arrive bientôt.';
+LANTERNE.journal = e => {
+  const d = e.drapeaux;
+  if (!d.mission) return 'Parler à Mère Ysolde.';
+  if (!d.vaast_vu) return 'Aller à l\'abbaye de Saint-Cendre, au nord de Clairfond, par la route de la forêt.';
+  if (!d.verene_rejoint) return 'Trouver la Crypte des racines, au cœur du Bois Murmurant, à l\'est de Clairfond.';
+  if (!d['outil:lanterne']) return 'Explorer la Crypte des racines, dans le Bois Murmurant. Une grille, une porte fermée… et de la brume.';
+  if (!d.roi_vaincu) return 'La lanterne brille : dissiper la brume au fond de la crypte et trouver la Flamme rouge.';
+  return 'La Flamme rouge est dans la lanterne. La suite (Port-Gris et le Marais des cloches) arrive bientôt.';
+};
 
 /* Légende commune des cartes : une lettre par case.
    sol : dessin du sol ; decor : ce qui se dresse dessus ; bloque : on ne peut pas y marcher. */
@@ -66,7 +79,14 @@ LANTERNE.legende = {
   'W': { sol: 'vide', decor: 'mur_haut', bloque: true }, 'w': { sol: 'vide', decor: 'mur_cote', bloque: true }, 'v': { sol: 'vide', decor: 'mur_bas', bloque: true },
   'L': { sol: 'parquet', decor: 'lit', bloque: true }, 'K': { sol: 'parquet', decor: 'table', bloque: true },
   'B': { sol: 'parquet', decor: 'livres', bloque: true }, 'P': { sol: 'parquet', decor: 'pupitre', bloque: true },
-  'O': { sol: 'parquet', decor: 'tonneau', bloque: true }, 'q': { sol: 'parquet', decor: 'pot', bloque: true }
+  'O': { sol: 'parquet', decor: 'tonneau', bloque: true }, 'q': { sol: 'parquet', decor: 'pot', bloque: true },
+  // l'abbaye de Saint-Cendre
+  'a': { sol: 'marbre' }, 'A': { sol: 'vide', decor: 'mur_blanc_haut', bloque: true }, 'j': { sol: 'vide', decor: 'mur_blanc_cote', bloque: true },
+  'k': { sol: 'vide', decor: 'mur_blanc_bas', bloque: true }, 'l': { sol: 'marbre', decor: 'colonne', bloque: true },
+  // la Crypte des racines
+  'm': { sol: 'mousse' }, 'n': { sol: 'crypte' }, 'C': { sol: 'vide', decor: 'mur_crypte_haut', bloque: true }, 'Z': { sol: 'vide', decor: 'mur_crypte_cote', bloque: true },
+  'z': { sol: 'vide', decor: 'mur_crypte_bas', bloque: true }, 'Q': { sol: 'crypte', decor: 'colonne_sombre', bloque: true }, 'R': { sol: 'crypte', decor: 'sarcophage', bloque: true },
+  'g': { sol: 'mousse', decor: 'toile' }, 'E': { sol: 'crypte', decor: 'escalier_bas' }, 'G': { sol: 'crypte', decor: 'escalier_haut' }, 'r': { sol: 'mousse', decor: 'racines', bloque: true }
 };
 
 LANTERNE.style = {
@@ -77,6 +97,7 @@ LANTERNE.style = {
     paves: { tuiles: ['calcaire0', 'calcaire1', 'calcaire2'] },
     eau: { tuiles: ['eau'], eau: true },
     parquet: { tuiles: ['parquet'] }, calcaire: { tuiles: ['calcaire0', 'calcaire1', 'calcaire2'] },
+    marbre: { tuiles: ['marbre0', 'marbre1'] }, mousse: { tuiles: ['mousse0', 'mousse1', 'mousse2'] }, crypte: { tuiles: ['sol_crypte0', 'sol_crypte1'] },
     vide: null
   },
   decors: {
@@ -96,14 +117,24 @@ LANTERNE.style = {
     mur_haut: { type: 'bloc', tuile: 'mur_brique', hauteur: 1.8 },
     mur_cote: { type: 'bloc', tuile: 'mur_brique', hauteur: .9 },
     mur_bas: { type: 'bloc', tuile: 'mur_brique', hauteur: .35 },
-    mur_abbaye: { type: 'bloc', tuile: 'mur_eglise', hauteur: 2.4 }
+    mur_abbaye: { type: 'bloc', tuile: 'mur_eglise', hauteur: 2.4 },
+    mur_blanc_haut: { type: 'bloc', tuile: 'mur_blanc', hauteur: 2.2 }, mur_blanc_cote: { type: 'bloc', tuile: 'mur_blanc', hauteur: .9 }, mur_blanc_bas: { type: 'bloc', tuile: 'mur_blanc', hauteur: .35 },
+    colonne: { type: 'panneau', tuiles: ['colonne'], taille: 1.7 },
+    mur_crypte_haut: { type: 'bloc', tuile: 'mur_crypte', hauteur: 1.8 }, mur_crypte_cote: { type: 'bloc', tuile: 'mur_crypte', hauteur: .9 }, mur_crypte_bas: { type: 'bloc', tuile: 'mur_crypte', hauteur: .35 },
+    colonne_sombre: { type: 'panneau', tuiles: ['colonne_sombre'], taille: 1.5 }, sarcophage: { type: 'panneau', tuiles: ['sarcophage'], taille: 1.1 },
+    toile: { type: 'plat', tuiles: ['toile'] }, escalier_bas: { type: 'plat', tuiles: ['escalier_bas'] }, escalier_haut: { type: 'plat', tuiles: ['escalier_haut'] },
+    racines: { type: 'panneau', tuiles: ['buisson2', 'arbre_mort'], taille: 1.3 }
   },
   objets: {
     coffre: { tuile: 'coffre', tuileOuverte: 'coffre_ouvert', taille: .9 },
     panneau: { tuile: 'panneau', taille: .9 },
     lanterne: { tuile: 'lanterne_pierre', taille: 1.1, lumiere: { couleur: 0xffa040, intensite: 1.4, portee: 4, hauteur: .9 } },
     lanterne_oubliee: { tuile: 'lanterne_pierre', taille: 1.1, allumee: { couleur: 0xffb860, intensite: 1.2, portee: 3.5, hauteur: .9 } },
-    deco: { taille: 1 }
+    deco: { taille: 1 },
+    grille: { tuile: 'grille', taille: 1, cacheOuvert: true }, porte_cle: { tuile: 'porte_cloutee', taille: 1, cacheOuvert: true },
+    nappe: { tuile: 'nappe', taille: 1.25, cacheOuvert: true }, levier: { tuile: 'levier', tuileOuverte: 'levier_baisse', taille: .8 },
+    fresque: { tuile: 'fresque', taille: 1.3 },
+    grande_lanterne: { tuile: 'lanterne_pierre', taille: 2.4, lumiere: { couleur: 0xffe0a0, intensite: 1.1, portee: 7, hauteur: 2 } }
   },
   exterieur: { sol: ['herbe0', 'herbe1', 'herbe2', 'herbe3', 'herbe4', 'herbe5'], decor: 'arbre' }
 };

@@ -23,7 +23,8 @@ const CAS = [
   { nom: 'Prologue : héros seul niv. 2 contre un crapaud-cloche', equipe: ['heros'], niveau: 2, monstres: ['crapaud'], objets: { herbe: 2 }, cible: { victoire: .9, tours: [2, 5] } },
   { nom: 'Prologue : héros seul niv. 2 contre deux corbeaux', equipe: ['heros'], niveau: 2, monstres: ['corbeau', 'corbeau'], objets: { herbe: 2 }, cible: { victoire: .85, tours: [2.5, 6] } },
   { nom: 'Acte 1 : héros + Eloi niv. 3 contre deux loups', equipe: ['heros', 'eloi'], niveau: 3, monstres: ['loup', 'loup'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2.5, 6] } },
-  { nom: 'Acte 1, boss : héros + Eloi + Vérène niv. 6 contre le Grand Cerf', equipe: ['heros', 'eloi', 'verene'], niveau: 6, monstres: ['grand_cerf'], objets: { herbe: 4, fiole: 2 }, cible: { victoire: .8, tours: [5, 10] } }
+  { nom: 'Acte 1 : héros + Eloi + Vérène niv. 4 contre deux ronces-griffes', equipe: ['heros', 'eloi', 'verene'], niveau: 4, monstres: ['ronce', 'ronce'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2, 5] } },
+  { nom: 'Acte 1, boss : héros + Eloi + Vérène niv. 5 contre le Roi des aulnes', equipe: ['heros', 'eloi', 'verene'], niveau: 5, monstres: ['roi_aulnes'], objets: { herbe: 4, fiole: 2 }, cible: { victoire: .8, tours: [5, 10] } }
 ];
 
 function jouerCas(M, J, cas, n, graine = 1) {

@@ -81,6 +81,27 @@ def dessines():
     for y in (11, 14): d.line([8, y, 23, y], fill=BOIS[0])
     t['panneau'] = im
 
+    # clés (petite et grande)
+    for nom, coul, grand in (('cle', (210, 180, 90), False), ('grande_cle', (236, 196, 70), True)):
+        im = neuf(); d = ImageDraw.Draw(im); f = (90, 64, 20)
+        r = 6 if grand else 4; cx, cy = 11, 12
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=f, fill=coul); d.ellipse([cx - r + 3, cy - r + 3, cx + r - 3, cy + r - 3], fill=(0, 0, 0, 0), outline=f)
+        d.rectangle([cx + r - 1, cy - 1, 27, cy + 1], fill=coul, outline=f)
+        for x in (21, 25): d.rectangle([x, cy + 1, x + 1, cy + 5 + (2 if grand else 0)], fill=coul, outline=f)
+        t[nom] = im
+    # nappe de brume (bloque le passage tant que la lanterne ne l'a pas dissipée)
+    im = neuf(); d = ImageDraw.Draw(im)
+    for (x, y, rx, ry, a) in ((16, 20, 14, 9, 150), (10, 16, 9, 7, 170), (22, 15, 9, 7, 170), (16, 11, 8, 6, 190)):
+        d.ellipse([x - rx, y - ry, x + rx, y + ry], fill=(226, 232, 242, a))
+    t['nappe'] = im
+    # levier
+    im = neuf(); d = ImageDraw.Draw(im)
+    d.rectangle([8, 22, 23, 28], fill=(110, 110, 120), outline=(50, 50, 60)); d.line([16, 23, 22, 9], fill=(70, 44, 24), width=3); d.ellipse([19, 6, 25, 12], fill=(190, 50, 40), outline=(90, 20, 20))
+    t['levier'] = im
+    im = neuf(); d = ImageDraw.Draw(im)
+    d.rectangle([8, 22, 23, 28], fill=(110, 110, 120), outline=(50, 50, 60)); d.line([16, 23, 10, 9], fill=(70, 44, 24), width=3); d.ellipse([7, 6, 13, 12], fill=(60, 170, 70), outline=(20, 80, 30))
+    t['levier_baisse'] = im
+
     # tuiles de toit (texture qui se répète)
     im = Image.new('RGBA', (32, 32), (90, 42, 32, 255)); d = ImageDraw.Draw(im)
     nuances = [(126, 58, 42), (116, 52, 38), (136, 66, 47)]

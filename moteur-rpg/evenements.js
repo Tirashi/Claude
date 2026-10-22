@@ -57,7 +57,7 @@
       else if (c.donner !== undefined) { const n = E().donner(etat, c.donner, c.n || 1); if (actions.recu) await actions.recu(c.donner, n); }
       else if (c.prendre !== undefined) E().prendre(etat, c.prendre, c.n || 1);
       else if (c.ecus !== undefined) { etat.ecus = Math.max(0, etat.ecus + c.ecus); if (actions.recu && c.ecus > 0) await actions.recu('ecus', c.ecus); }
-      else if (c.rejoindre !== undefined) { E().rejoindre(etat, c.rejoindre); if (actions.equipe) await actions.equipe(); }
+      else if (c.rejoindre !== undefined) { E().rejoindre(etat, c.rejoindre, ctx.jeu); if (actions.equipe) await actions.equipe(); }
       else if (c.quitter !== undefined) { E().quitter(etat, c.quitter); if (actions.equipe) await actions.equipe(); }
       else if (c.soigner) { E().soigner(etat); if (actions.soigner) await actions.soigner(); }
       else if (c.chapitre !== undefined) etat.chapitre = c.chapitre;

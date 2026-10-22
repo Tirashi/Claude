@@ -243,8 +243,11 @@ void main(){
     }
 
     // un coffre ouvert change d'image
+    // un objet qui change : coffre ouvert, levier baissé (tuileOuverte), grille ou nappe disparue (cacheOuvert)
     function majObjet(o, ouvert) {
-      const x = objets.get(o); if (!x || !x.s.tuileOuverte) return;
+      const x = objets.get(o); if (!x) return;
+      if (x.s.cacheOuvert) { x.m.visible = !ouvert; return; }
+      if (!x.s.tuileOuverte) return;
       const t = tex(ouvert ? x.s.tuileOuverte : (o.tuile || x.s.tuile));
       x.m.material.map = t; x.m.customDepthMaterial.map = t; x.m.material.needsUpdate = true;
     }

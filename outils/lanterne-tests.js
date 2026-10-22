@@ -98,7 +98,7 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   let ev = Combat.resoudre(c, { heros: { action: 'talent', talent: 'protection' }, eloi: { action: 'defense' } });
   if (!ev.some(x => x.t === 'message' && x.texte.includes('protège Eloi'))) bad('Protection : les coups sur Eloi vont à la Lame');
   if (c.heros[1].pv !== c.heros[1].pvMax) bad('Protection : Eloi ne doit rien recevoir');
-  c = Combat.creer(J, ec, { monstres: ['grand_cerf'] }, fixe(.01));
+  c = Combat.creer(J, ec, { monstres: ['roi_aulnes'] }, fixe(.01));
   ev = Combat.resoudre(c, { fuite: true });
   if (!ev.some(x => x.texte === 'Impossible de fuir !') || c.fin) bad('on ne fuit pas un boss');
   c = Combat.creer(J, ec, { monstres: ['feu_follet'] }, fixe(.01));
@@ -132,7 +132,8 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   for (const id in J.cartes) {
     try { cartes[id] = Monde.preparer(Object.assign({ id }, J.cartes[id]), J.legende); } catch (err) { bad(err.message); }
   }
-  const evenementsCites = [], quiCites = [], objetsCites = [], drapeauxLus = new Set(), drapeauxEcrits = new Set(['coffre:', 'pnj:']);
+  const evenementsCites = [], quiCites = [], objetsCites = [], drapeauxLus = new Set(), drapeauxEcrits = new Set(['coffre:', 'pnj:', 'ouvert:']);
+  for (const d of Object.values(J.cartes)) for (const o of d.objets || []) { if (o.drapeau) drapeauxEcrits.add(o.drapeau); if (o.ouvertSi) Evenements.drapeauxLus(o.ouvertSi).forEach(f => drapeauxLus.add(f)); }
   const citer = (ev, ou) => { if (typeof ev === 'string') { if (!J.evenements[ev]) bad(`${ou} : événement inconnu « ${ev} »`); } else if (Array.isArray(ev)) evenementsCites.push([ev, ou]); };
   for (const id in cartes) {
     const c = cartes[id], d = J.cartes[id], libre = (x, y) => x >= 0 && y >= 0 && x < c.l && y < c.h && !c.bloque[y][x];
@@ -162,7 +163,7 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
       if (o.evenement) citer(o.evenement, `${id} (objet ${o.type})`);
       if (o.type === 'coffre') {
         if (!o.id || coffres.has(o.id)) bad(`${id} : coffre sans nom ou en double`); coffres.add(o.id);
-        if (!o.contenu || (!o.contenu.ecus && !J.objets[o.contenu.objet])) bad(`${id} : contenu du coffre ${o.id} inconnu`);
+        if (!o.evenement && (!o.contenu || (!o.contenu.ecus && !J.objets[o.contenu.objet]))) bad(`${id} : contenu du coffre ${o.id} inconnu`);
       }
       if (o.type === 'panneau' && !o.texte && !o.evenement) bad(`${id} : panneau sans texte`);
     }
@@ -218,16 +219,58 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   if (fail === avant) ok(`données : ${Object.keys(cartes).length} cartes, ${Object.keys(J.evenements).length} événements, ${drapeauxLus.size} drapeaux lus, tout est cohérent`);
 
   // ---------- 3. accessibilité ----------
-  const avant3 = fail, atteint = {}, file = [[J.depart.carte, J.depart.x, J.depart.y]];
-  const cle = (c, x, y) => `${c}:${x},${y}`;
-  const visites = new Set();
-  while (file.length) {
-    const [id, x, y] = file.pop(), k = cle(id, x, y);
-    if (visites.has(k)) continue; visites.add(k);
-    (atteint[id] = atteint[id] || new Set()).add(x + ',' + y);
-    const c = cartes[id], s = Monde.sortieEn(c, x, y);
-    if (s) { file.push([s.vers, s.a[0], s.a[1]]); continue; }
-    for (const dir in Monde.DIRS) { const [nx, ny] = Monde.devant(x, y, dir); if (!Monde.estBloque(c, nx, ny)) file.push([id, nx, ny]); }
+  /* Un solveur optimiste : on explore depuis le départ ; tout ce qu'on peut atteindre est utilisé (coffres, leviers,
+     habitants et déclencheurs dont l'événement donne des drapeaux ou des objets, portes avec la clé, nappes avec l'outil),
+     puis on recommence avec les nouveaux drapeaux, jusqu'à ne plus rien gagner. */
+  const avant3 = fail, flags = {}, sac = {}, utilise = new Set();
+  const etatTest = () => ({ drapeaux: flags, objets: sac, ecus: 1e6, equipe: Object.keys(J.heros), nom: 'X' });
+  const test = cond => Evenements.condition(cond, etatTest());
+  const donnerScript = (script, vus = new Set()) => {
+    if (typeof script === 'string') { if (vus.has(script)) return; vus.add(script); script = J.evenements[script]; }
+    Evenements.parcourir(script, c => {
+      if (c.drapeau !== undefined && c.valeur !== false && !('si' in c)) flags[c.drapeau] = true;
+      if (c.donner) sac[c.donner] = (sac[c.donner] || 0) + (c.n || 1);
+      if (c.prendre) sac[c.prendre] = Math.max(0, (sac[c.prendre] || 0) - (c.n || 1));
+      if (c.evenement) donnerScript(c.evenement, vus);
+    });
+  };
+  let atteint = {};
+  for (let tour = 0; tour < 30; tour++) {
+    const cartesT = {};
+    for (const id in J.cartes) cartesT[id] = Monde.preparer(Object.assign({ id }, J.cartes[id]), J.legende, test);
+    atteint = {};
+    const file = [[J.depart.carte, J.depart.x, J.depart.y]], visites = new Set();
+    while (file.length) {
+      const [id, x, y] = file.pop(), k = `${id}:${x},${y}`;
+      if (visites.has(k)) continue; visites.add(k);
+      (atteint[id] = atteint[id] || new Set()).add(x + ',' + y);
+      const c = cartesT[id], s = Monde.sortieEn(c, x, y);
+      if (s && (!s.si || test(s.si))) { file.push([s.vers, s.a[0], s.a[1]]); continue; }
+      for (const dir in Monde.DIRS) { const [nx, ny] = Monde.devant(x, y, dir); if (!Monde.estBloque(c, nx, ny)) file.push([id, nx, ny]); }
+    }
+    const pres = (id, x, y) => Object.values(Monde.DIRS).some(([dx, dy]) => atteint[id] && atteint[id].has((x + dx) + ',' + (y + dy)));
+    const avantFlags = JSON.stringify([flags, sac]);
+    for (const id in atteint) {
+      const d = J.cartes[id];
+      if (d.entree && !utilise.has('e:' + id)) { utilise.add('e:' + id); donnerScript(d.entree); }
+      for (const o of d.objets || []) {
+        if (!pres(id, o.x, o.y)) continue;
+        const cle = `o:${id}:${o.x},${o.y}`;
+        if (o.type === 'coffre' && !utilise.has(cle)) { utilise.add(cle); flags['coffre:' + o.id] = true; if (o.contenu && o.contenu.objet) sac[o.contenu.objet] = (sac[o.contenu.objet] || 0) + (o.contenu.n || 1); }
+        if (o.evenement && !utilise.has(cle + 'e')) { utilise.add(cle + 'e'); donnerScript(o.evenement); }
+        if (o.type === 'levier') flags[o.drapeau] = true;
+        if (o.type === 'porte_cle' && !flags['ouvert:' + o.id] && (sac[o.cle] || 0) > 0) { sac[o.cle]--; flags['ouvert:' + o.id] = true; }
+        if (o.type === 'nappe' && flags['outil:' + o.outil]) flags['ouvert:' + o.id] = true;
+      }
+      for (const p of d.pnj || []) if (p.evenement && !p.cache && (!p.si || test(p.si)) && pres(id, p.x, p.y) && !utilise.has('p:' + p.id)) { utilise.add('p:' + p.id); donnerScript(p.evenement); }
+      for (const dc of d.declencheurs || []) {
+        const xs = [].concat(dc.x), ys = [].concat(dc.y);
+        let ok = false;
+        for (let x = xs[0]; x <= xs[xs.length - 1]; x++) for (let y = ys[0]; y <= ys[ys.length - 1]; y++) if (atteint[id].has(x + ',' + y)) ok = true;
+        if (ok && !utilise.has('d:' + id + dc.evenement)) { utilise.add('d:' + id + dc.evenement); donnerScript(dc.evenement); }
+      }
+    }
+    if (JSON.stringify([flags, sac]) === avantFlags) break;
   }
   const voisinAtteint = (id, x, y) => Object.values(Monde.DIRS).some(([dx, dy]) => atteint[id] && atteint[id].has((x + dx) + ',' + (y + dy)));
   for (const id in cartes) {
@@ -241,7 +284,8 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
       if (!cases.some(k => atteint[id].has(k))) bad(`${id} : déclencheur ${dc.evenement} hors d'atteinte`);
     }
   }
-  if (fail === avant3) ok(`accessibilité : les ${Object.keys(cartes).length} cartes, leurs objets, habitants et déclencheurs sont atteignables depuis le départ`);
+  for (const f of J.fin || []) if (!flags[f]) bad(`la fin de cette version n'est pas atteignable : drapeau ${f} jamais obtenu`);
+  if (fail === avant3) ok(`accessibilité : les ${Object.keys(cartes).length} cartes, leurs objets, habitants et déclencheurs sont atteignables depuis le départ (clés, leviers et outils compris)${(J.fin || []).length ? ', jusqu\'à ' + J.fin.join(', ') : ''}`);
 
   process.exit(fail ? 1 : 0);
 })().catch(err => { console.log('ÉCHEC ' + (err.stack || err)); process.exit(1); });

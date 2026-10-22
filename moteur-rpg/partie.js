@@ -27,7 +27,7 @@
     function entrer(id, x, y, dir, auto = true) {
       const def = jeu.cartes[id];
       if (!def) throw new Error('carte inconnue : ' + id);
-      carte = W.preparer(def, jeu.legende);
+      carte = W.preparer(def, jeu.legende, c => Ev.condition(c, etat));
       Object.assign(etat, { carte: id, x, y, dir: dir || etat.dir, lieu: def.nom || '' });
       rendu.chargerCarte(carte);
       vaincus = new Set();
@@ -40,14 +40,23 @@
         });
       monstres = (def.monstres || []).map((m, i) => ({ def: m, id: 'mon:' + i, aid: 'mon:' + i, i, x: m.x, y: m.y, ox: m.x, oy: m.y, rayon: m.rayon || 2, dir: 'bas', de: [m.x, m.y], t: 1, sens: 1, prochain: Math.random() * 1.5 }));
       monstres.forEach(m => rendu.acteur(m.id, (jeu.monstres[m.def.type] || {}).tuile || m.def.type, { taille: (jeu.monstres[m.def.type] || {}).taille || 1 }));
-      for (const ob of def.objets || []) if (ob.type === 'coffre' && etat.drapeaux['coffre:' + ob.id]) rendu.majObjet(ob, true);
-      lanternes();
+      objetsOuverts();
       rendu.viser(x, y, true);
       sons.musique(def.musique || null);
       if (auto) o.sauvegardes.ecrire(o.emplacement, 'reprise', etat);
       dessiner(0);
     }
 
+    // l'état des objets qui changent (coffres ouverts, leviers, grilles, portes, nappes) ; la carte est relue pour les passages
+    function objetsOuverts() {
+      carte = W.preparer(carte.def, jeu.legende, c => Ev.condition(c, etat));
+      for (const ob of carte.def.objets || []) {
+        if (ob.type === 'coffre') rendu.majObjet(ob, !!etat.drapeaux['coffre:' + ob.id]);
+        else if (ob.type === 'levier') rendu.majObjet(ob, !!etat.drapeaux[ob.drapeau]);
+        else if (W.OUVRABLES.includes(ob.type)) rendu.majObjet(ob, W.estOuvert(ob, c => Ev.condition(c, etat)));
+      }
+      lanternes();
+    }
     // lanternes oubliées déjà rallumées (drapeau « oubliee:<id> »)
     function lanternes() { for (const ob of carte.def.objets || []) if (ob.type === 'lanterne_oubliee' && etat.drapeaux['oubliee:' + ob.id]) rendu.allumer(ob); }
 
@@ -165,6 +174,33 @@
           : [{ donner: c.objet, n: c.n || 1 }, { dire: `{HEROS} trouve ${(c.n || 1) > 1 ? c.n + ' × ' : ''}${nomObjet(c.objet)}.` }]);
       }
       if (ob.type === 'lanterne') return jouer(jeu.evenements.lanterne ? 'lanterne' : [{ soigner: true }, { sauver: 'main' }]);
+      const ouvert = W.estOuvert(ob, c => Ev.condition(c, etat));
+      if (ob.type === 'levier') {
+        if (etat.drapeaux[ob.drapeau]) return jouer([{ dire: 'Le levier est déjà baissé.' }]);
+        etat.drapeaux[ob.drapeau] = true; sons.effet('porte', .6);
+        return jouer([{ dire: ob.texte || 'Le levier grince… Quelque part, un mécanisme se met en marche.' }]);
+      }
+      if (ob.type === 'porte_cle' && !ouvert) {
+        if ((etat.objets[ob.cle] || 0) < 1) return jouer([{ dire: `La porte est fermée à clé. Il faudrait : ${nomObjet(ob.cle)}.` }]);
+        M.Etat.prendre(etat, ob.cle, 1); etat.drapeaux['ouvert:' + ob.id] = true; sons.effet('porte', .7);
+        return jouer([{ dire: `${nomObjet(ob.cle)} tourne dans la serrure. La porte s'ouvre.` }]);
+      }
+      if (ob.type === 'nappe' && !ouvert) {
+        const outil = jeu.outils && jeu.outils[ob.outil];
+        return jouer([{ dire: etat.drapeaux['outil:' + ob.outil] ? `Une nappe de brume épaisse. ${outil ? outil.aide : ''}` : 'Une nappe de brume, épaisse comme un mur. Impossible de passer sans lumière.' }]);
+      }
+      if (ob.type === 'grille' && !ouvert) return jouer([{ dire: ob.texte || 'Une lourde grille barre le passage.' }]);
+    }
+
+    // B : l'outil sur ce qui est devant soi (une nappe de brume et la lanterne, par exemple)
+    function outil() {
+      const [fx, fy] = W.devant(chef.x, chef.y, chef.dir), ob = W.objetEn(carte, fx, fy);
+      if (ob && ob.outil && etat.drapeaux['outil:' + ob.outil] && !W.estOuvert(ob, c => Ev.condition(c, etat))) {
+        const o2 = jeu.outils && jeu.outils[ob.outil];
+        etat.drapeaux['ouvert:' + ob.id] = true; sons.effet(o2 && o2.son || 'lanterne', .7);
+        objetsOuverts();
+        if (o2 && o2.texte) ui.message(o2.texte, 1800);
+      }
     }
 
     async function jouer(script) {
@@ -173,7 +209,7 @@
       try { await Ev.jouer(script, ctx()); }
       catch (e) { console.error(e); ui.message('Erreur : ' + e.message, 4000); }
       occupe = false;
-      lanternes();
+      objetsOuverts();
       if (ensuite) { const s = ensuite; ensuite = null; await jouer(s); }
     }
 
@@ -246,6 +282,7 @@
       if (menuOuvert) { if (t === 'MENU') fermerMenu(); return; }
       if (occupe) return;
       if (t === 'A' && !mouvement) interagir();
+      if (t === 'B' && !mouvement) outil();
       if (t === 'MENU') ouvrirMenu();
     });
 

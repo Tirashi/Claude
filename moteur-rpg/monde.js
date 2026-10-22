@@ -20,7 +20,13 @@
 
   const dans = (v, a) => Array.isArray(a) ? v >= a[0] && v <= a[1] : v === a;
 
-  function preparer(def, legendeCommune) {
+  /* Objets qui s'ouvrent : une grille (ouverte quand la condition ouvertSi est vraie), une porte à clé (porte_cle),
+     une nappe de brume (nappe, dissipée par un outil) : ouverts, ils ne bloquent plus. Le drapeau « ouvert:<id> » note
+     qu'une porte ou une nappe a été ouverte. test(condition) : voir Evenements.condition. */
+  const OUVRABLES = ['grille', 'porte_cle', 'nappe'];
+  const estOuvert = (o, test) => o.ouvertSi ? test(o.ouvertSi) : !!o.id && test('ouvert:' + o.id);
+
+  function preparer(def, legendeCommune, test = () => false) {
     const legende = Object.assign({}, legendeCommune, def.legende || {});
     const h = def.plan.length, l = def.plan[0].length;
     const cases = [], bloque = [];
@@ -38,7 +44,7 @@
       for (let y = m.y; y < m.y + m.p; y++) for (let x = m.x; x < m.x + m.l; x++) if (bloque[y]) bloque[y][x] = true;
       if (m.porte !== undefined) { const px = m.x + m.porte, py = m.y + m.p - 1; bloque[py][px] = false; portes.push([px, py]); }
     }
-    for (const o of def.objets || []) if (o.bloque !== false) bloque[o.y][o.x] = true;
+    for (const o of def.objets || []) if (o.bloque !== false && !(OUVRABLES.includes(o.type) && estOuvert(o, test))) bloque[o.y][o.x] = true;
     return { id: def.id, def, l, h, cases, bloque, portes };
   }
 
@@ -80,6 +86,6 @@
     return dirChef === dirMonstre ? 'monstre' : 'normal';
   }
 
-  M.Monde = { DIRS, OPPOSE, preparer, estBloque, sortieEn, declencheurEn, objetEn, devant, avancerFile, fileGroupee, pasErrant, initiative };
+  M.Monde = { DIRS, OPPOSE, OUVRABLES, estOuvert, preparer, estBloque, sortieEn, declencheurEn, objetEn, devant, avancerFile, fileGroupee, pasErrant, initiative };
   if (typeof module !== 'undefined') module.exports = M;
 })(typeof window !== 'undefined' ? (window.MoteurRPG = window.MoteurRPG || {}) : (globalThis.MoteurRPG = globalThis.MoteurRPG || {}));
