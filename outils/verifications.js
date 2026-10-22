@@ -107,6 +107,13 @@ try {
 try { execFileSync(process.execPath, [path.join(__dirname, 'capitaine-solveur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Capitaine du port : chaque bassin est gagné par sa solution notée'); }
 catch (e) { bad('Capitaine du port : bassins\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// 8 quater. Duché : règles, IA et événements (déterminisme, sauvegarde, règles de base, équilibrage grossier)
+try { execFileSync(process.execPath, [path.join(__dirname, 'duche-simulateur.js'), '60'], { stdio: 'pipe', encoding: 'utf8' }); ok('Duché : simulateur (parties reproductibles, règles, équilibrage)'); }
+catch (e) { bad('Duché : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+// 8 quinquies. Le Thé des Jarls : chaque faveur, déterminisme, ordinateur, équilibre entre les dieux
+try { execFileSync(process.execPath, [path.join(__dirname, 'jarls-simulateur.js'), '60'], { stdio: 'pipe', encoding: 'utf8' }); ok('Le Thé des Jarls : simulateur (20 faveurs, duels reproductibles, ordinateur, équilibre)'); }
+catch (e) { bad('Le Thé des Jarls : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
   const pre = new Map(), idx = read('accueil.js'), ls = read('ludo-scores.js');

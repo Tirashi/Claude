@@ -18,22 +18,20 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<link rel="preload" href="../polices/rajdhani-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrap">
-  <h1>SOLI<span>TAIRE</span></h1>
-  <section class="win hud" aria-label="Partie">
-    <div><div class="k">SCORE</div><div class="v gold" id="score">0</div></div>
-    <div><div class="k">TEMPS</div><div class="v" id="time">00:00</div></div>
-    <div><div class="k">PIOCHE</div><div class="v" id="drawLbl">3</div></div>
-    <div><div class="k">RECORD</div><div class="v" id="best">0</div></div>
-  </section>
+<div class="jeu">
+  <header class="haut">
+    <span class="t">SOLI<span>TAIRE</span></span>
+    <span class="chiffres"><span>SCORE <em id="score">0</em></span><span><em id="time">00:00</em></span><span>REC <em id="best">0</em></span></span>
+  </header>
   <div class="frame">
-    <canvas id="table" width="256" height="340" tabindex="0" aria-label="Table de jeu du solitaire"></canvas>
+    <canvas id="table" width="360" height="540" tabindex="0" aria-label="Table de jeu du solitaire"></canvas>
     <div class="overlay" id="overlay" hidden>
       <div class="win">
-        <h2>GAGNÉ !</h2>
+        <h2>GAGNE !</h2>
         <div class="stats" id="winStats"></div>
         <button class="btn go" id="againBtn" type="button">NOUVELLE DONNE</button>
         <a class="btn" href="../classements/index.html#solitaire" style="text-decoration:none">CLASSEMENT</a>
@@ -42,15 +40,29 @@
     </div>
   </div>
   <div class="msg" id="msg" aria-live="polite"></div>
-  <div class="row">
-    <button class="btn" id="newBtn" type="button">NOUVELLE DONNE</button>
+  <nav class="bas">
+    <button class="btn" id="menuBtn" type="button">MENU</button>
     <button class="btn" id="undoBtn" type="button">ANNULER</button>
-    <button class="btn" id="drawBtn" type="button">PIOCHER 1</button>
     <button class="btn go" id="autoBtn" type="button" hidden>TOUT RANGER</button>
-    <button class="btn" id="soundBtn" type="button">SON : OUI</button>
-    <a class="btn ludo-retour" href="../index.html" style="text-decoration:none">◀ LUDOTHEQUE</a>
+  </nav>
+</div>
+
+<div class="voile" id="menu" hidden>
+  <div class="feuille" role="dialog" aria-label="Menu">
+    <div class="titre"><span>MENU</span><button class="btn" id="closeMenu" type="button">FERMER</button></div>
+    <div class="actions">
+      <button class="btn" id="newBtn" type="button">NOUVELLE DONNE</button>
+      <button class="btn" id="drawBtn" type="button">PIOCHE : 3</button>
+      <button class="btn" id="soundBtn" type="button">SON : OUI</button>
+      <a class="btn" href="../classements/index.html#solitaire" style="text-decoration:none">CLASSEMENT</a>
+      <a class="btn ludo-retour" href="../index.html" style="text-decoration:none">◀ LUDOTHEQUE</a>
+    </div>
+    <div class="msg" id="menuMsg" aria-live="polite"></div>
+    <div class="lab">CARTES</div><div class="rangee" id="skins"></div>
+    <div class="lab">DOS</div><div class="rangee" id="backs"></div>
+    <div class="lab">TAPIS</div><div class="rangee" id="felts"></div>
+    <p class="help">Range toutes les cartes sur les quatre piles en haut à droite, de l'<b>As</b> au <b>Roi</b>, par couleur. Dans les colonnes, descends d'une valeur en alternant rouge et noir ; seul un <b>Roi</b> va sur une colonne vide. <b>Touche</b> une carte pour l'envoyer à la meilleure place, ou <b>glisse-la</b> où tu veux. Clavier : <b>Espace</b> piocher, <b>Z</b> annuler, <b>N</b> nouvelle donne, <b>M</b> menu.</p>
   </div>
-  <p class="help">Range toutes les cartes sur les quatre piles en haut à droite, de l'<b>As</b> au <b>Roi</b>, par couleur. Dans les colonnes, descends d'une valeur en alternant rouge et noir ; seul un <b>Roi</b> va sur une colonne vide. <b>Touche</b> une carte pour l'envoyer à la meilleure place, ou <b>glisse-la</b> où tu veux. Clavier : <b>Espace</b> piocher, <b>Z</b> annuler, <b>N</b> nouvelle donne.</p>
 </div>
 
 <script src="../ludo-scores.js"></script>

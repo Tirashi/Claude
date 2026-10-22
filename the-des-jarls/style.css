@@ -1,0 +1,143 @@
+/* Le Thé des Jarls : couleurs de la maquette 4 (nuit bleue du fjord, boutons de bois cerclés,
+   Cinzel pour les titres et les boutons, Fredoka pour les textes à lire). */
+[hidden] { display: none !important; }
+:root { --nuit: #121628; --nuit2: #0b0e1c; --texte: #f2ede4; --doux: #c8bfae; --or: #f3d58c; --or2: #f0c24a; --bois1: #80502a; --bois2: #4a2a14; --contour: #2a1a0c; }
+html, body { height: 100%; margin: 0; background: var(--nuit2); color: var(--texte); font-family: Fredoka, system-ui, sans-serif; overflow: hidden;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#jeu { position: relative; height: 100%; max-width: 520px; margin: 0 auto; background: var(--nuit); }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+button, .lien { font-family: Cinzel, Georgia, serif; font-weight: 900; letter-spacing: .05em; cursor: pointer; color: #ffe0a0; text-decoration: none; text-align: center;
+  background: linear-gradient(var(--bois1), var(--bois2)); border: 0; border-radius: 7px; box-shadow: inset 0 1px 0 #c58a4a, 0 2px 0 #000, 0 0 0 2px var(--contour); }
+button.or { background: linear-gradient(#c8902c, #7a4c10); color: #fff4c8; box-shadow: inset 0 1px 0 #ffd27a, 0 2px 0 #000, 0 0 0 2px var(--contour); }
+button.rouge { background: linear-gradient(#8a3024, #4a140e); }
+button:disabled { opacity: .4; cursor: default; }
+button:active:not(:disabled), .lien:active { transform: translateY(2px); }
+button:focus-visible, .lien:focus-visible { outline: 2px solid var(--or2); outline-offset: 3px; }
+.ecran { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; z-index: 5;
+  background: radial-gradient(ellipse at 50% 30%, #2a3460cc, #0b0e1cee); }
+.ecran.retourne .carte { transform: rotate(180deg); }
+.carte { width: 100%; max-width: 340px; max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 22px 18px; display: flex; flex-direction: column; gap: 11px; text-align: center;
+  background: linear-gradient(#1a2038f0, #0e1222f0); border-radius: 12px; box-shadow: 0 0 0 2px #3a4470, 0 10px 30px #000a; }
+.carte.large { max-width: 420px; }
+.carte > button, .carte > .lien { font-size: 17px; padding: 11px 10px; display: block; }
+.carte button small { display: block; font-family: Fredoka, sans-serif; font-weight: 400; font-size: 13px; color: #e8c890; letter-spacing: 0; margin-top: 3px; }
+.carte p { margin: 0; font-size: 16px; line-height: 1.35; color: var(--doux); }
+h1, .titre2 { font-family: Cinzel, Georgia, serif; font-weight: 900; color: var(--or); text-shadow: 0 0 10px #000, 0 2px 0 #000; margin: 0; }
+h1 { font-size: 32px; line-height: 1.15; letter-spacing: .06em; }
+.titre2 { font-size: 19px !important; letter-spacing: .06em; color: var(--or) !important; }
+.petit { font-size: 14px !important; }
+.rang { display: flex; gap: 8px; }
+.rang button { flex: 1; font-size: 13px; padding: 9px 4px; }
+.rang button.choisi { background: linear-gradient(#c8902c, #7a4c10); color: #fff4c8; }
+.grille { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grille button { font-size: 14px; padding: 8px 4px 7px; position: relative; }
+.grille button small { font-size: 12px; }
+.grille button.vaincu::after { content: "✓"; position: absolute; top: 3px; right: 6px; color: #9fe07a; font-family: Fredoka, sans-serif; }
+.liste { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; text-align: left; }
+.aide .texte { text-align: left; display: flex; flex-direction: column; gap: 9px; }
+.aide .texte p { font-size: 14.5px; line-height: 1.35; }
+.aide .texte b { color: var(--or); font-weight: 600; }
+
+/* ----- session 3 : médaillons, route du fjord, armée, conseil des jarls, livre, fin ----- */
+.centre { text-align: center; }
+.med { width: 40px; height: 40px; border-radius: 50%; flex: none; image-rendering: pixelated; display: block; }
+.med.petit { width: 34px; height: 34px; }
+.med.moyen { width: 56px; height: 56px; }
+.medGrand { width: 84px; height: 84px; border-radius: 50%; image-rendering: pixelated; margin: 0 auto; display: block; }
+.grille button { display: flex; align-items: center; gap: 7px; text-align: left; padding: 6px 8px; }
+.grille button span { display: flex; flex-direction: column; min-width: 0; }
+.ecran.plein { padding: 0; align-items: stretch; flex-direction: column; justify-content: flex-start; background: #0e1222; }
+.plein-tete { display: flex; align-items: center; gap: 8px; padding: max(10px, env(safe-area-inset-top, 0px)) 10px 4px; }
+.plein-tete .titre2 { flex: 1; text-align: center; margin: 0; font-size: 17px !important; }
+.plein-tete button { font-size: 12px; padding: 8px 10px; }
+.ecran.plein > .petit { margin: 0 0 6px; color: var(--doux); }
+/* la route du fjord */
+.route { flex: 1; overflow-y: auto; position: relative; background: linear-gradient(#1b2a3a, #22402a 40%, #2a4a24 70%, #3a5a2a); }
+.carteRoute { position: relative; }
+.carteRoute svg { position: absolute; left: 0; top: 0; width: 100%; }
+.tav { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 1px; background: none; box-shadow: none;
+  padding: 0; font-family: Fredoka, sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0; color: #fff4dc; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+.tav .med { width: 44px; height: 44px; box-shadow: 0 0 0 2px #2a1a0c, 0 3px 0 #0008; }
+.tav em { font-style: normal; color: #ffd36b; font-size: 10px; letter-spacing: 1px; }
+.tav.ferme { opacity: .45; } .tav.ferme .med { filter: grayscale(1); }
+.tav.ici .med { animation: pulse 1.2s infinite; box-shadow: 0 0 0 2px #ffd36b, 0 0 14px #ffd36b; }
+.tav.vue .med { box-shadow: 0 0 0 3px #fff4c8, 0 3px 0 #0008; }
+@keyframes pulse { 50% { transform: scale(1.12); } }
+.chapitre { position: absolute; right: 8px; transform: translateY(-50%); font-family: Cinzel, serif; font-weight: 900; font-size: 11px; color: #ffffff55; letter-spacing: .1em; }
+.fiche { margin: 0 8px max(8px, env(safe-area-inset-bottom, 0px)); background: linear-gradient(#2a1c10, #1a1008); border: 2px solid #c8902c; border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.fiche p { margin: 6px 0; color: var(--texte); line-height: 1.3; }
+.fiche button { width: 100%; font-size: 15px; }
+.ftete { display: flex; gap: 10px; align-items: center; }
+.ftete b { font-family: Cinzel, serif; font-weight: 900; color: var(--or); display: block; }
+.ftete span { font-size: 13px; color: var(--doux); }
+/* l'armée */
+.couleurs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.couleurs button { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; padding: 8px 4px; }
+.couleurs button.choisi { box-shadow: inset 0 1px 0 #c58a4a, 0 0 0 3px #ffd36b; }
+.nuance { width: 36px; height: 22px; border-radius: 4px; display: inline-block; background: linear-gradient(90deg, var(--c) 60%, var(--d, var(--c)) 60%); box-shadow: 0 0 0 2px #1a1208; flex: none; }
+.unites { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.unite { background: #1e2442; border-radius: 8px; padding: 6px 10px; }
+.unite b { font-family: Cinzel, serif; font-weight: 900; color: var(--or); display: block; font-size: 14px; }
+.unite span { font-size: 13px; color: var(--doux); }
+.unite.ferme { opacity: .55; }
+/* le conseil des jarls */
+.conseil { flex: 1; display: flex; flex-direction: column; min-height: 0; max-width: 460px; width: 100%; margin: 0 auto; padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px)); box-sizing: border-box; gap: 6px; }
+.conseil .titre2 { margin: 0; }
+.conseil .petit { margin: 0; color: var(--doux); }
+.ecran.retourne .conseil { transform: rotate(180deg); }
+.slots { display: flex; justify-content: center; gap: 18px; padding: 4px 0 14px; }
+.slot { width: 50px; height: 50px; border-radius: 50%; padding: 0; position: relative; background: none; box-shadow: none; }
+.slot .med { width: 50px; height: 50px; box-shadow: 0 0 0 2px #ffd36b, 0 0 10px #ffd36b66; }
+.slot small { position: absolute; top: 53px; left: 50%; transform: translateX(-50%); font-family: Fredoka, sans-serif; font-weight: 500; font-size: 11px; color: var(--doux); white-space: nowrap; letter-spacing: 0; }
+.slot.vide { border: 2px dashed #4a5480; display: grid; place-items: center; color: #4a5480; font-size: 22px; box-sizing: border-box; }
+.decks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.deck { text-align: left; padding: 6px 8px; display: flex; flex-direction: column; gap: 2px; background: #1e2442; box-shadow: 0 0 0 1px #2e3660; }
+.deck b { font-size: 12px; color: var(--or); }
+.deck span { font-family: Fredoka, sans-serif; font-weight: 400; font-size: 11.5px; letter-spacing: 0; color: var(--doux); line-height: 1.2; }
+.deck .mini { display: flex; gap: 3px; }
+.deck .mini .med { width: 22px; height: 22px; }
+.deck.on { background: #3a3420; box-shadow: 0 0 0 2px #ffd36b; }
+.deck:disabled { opacity: .55; }
+.sep { font-size: 12px !important; color: #8a8aa8 !important; text-align: center; margin: 2px 0 !important; }
+.liste .famT { font-family: Cinzel, serif; font-weight: 900; font-size: 11px; color: #8a92c0; margin: 6px 2px 0; letter-spacing: .08em; }
+.ligne { display: flex; align-items: center; gap: 9px; background: #161b34; border-radius: 9px; padding: 6px 8px; cursor: pointer; border: 1px solid transparent; }
+.ligne .med { width: 34px; height: 34px; }
+.ligne .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ligne .txt b { font-family: Cinzel, serif; font-weight: 900; font-size: 13px; color: var(--or); }
+.ligne .txt span { font-size: 12.5px; color: var(--doux); line-height: 1.25; }
+.ligne .det { display: none; color: #e8d8b8 !important; margin-top: 4px; }
+.ligne.ouverte .det { display: block; }
+.ligne.pris { border-color: #c8902c; background: #2a2414; }
+.ligne.ferme { opacity: .5; } .ligne.ferme .med { filter: grayscale(1); }
+.coche { width: 30px; height: 30px; border-radius: 7px; padding: 0; flex: none; background: #0e1222; box-shadow: 0 0 0 2px #4a5480; color: #1a1208; font-family: Fredoka, sans-serif; font-size: 17px; }
+.ligne.pris .coche { background: #ffd36b; box-shadow: 0 0 0 2px #ffd36b; }
+.rang.bas { padding-top: 4px; }
+.rang.bas button { font-size: 15px; padding: 11px 4px; }
+/* intro (défi du jour, premier duel) */
+.mainJour { display: flex; justify-content: center; gap: 14px; }
+.mainJour span { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: var(--doux); gap: 2px; }
+/* le livre du skalde et le rappel */
+.carte.livre { max-width: 380px; }
+.pageL { display: flex; flex-direction: column; align-items: center; gap: 10px; min-height: 300px; touch-action: pan-y; }
+.pageL h2 { font-family: Cinzel, serif; font-weight: 900; color: var(--or); margin: 0; font-size: 19px; }
+.pageL p { color: #eadcc4 !important; font-size: 15px !important; }
+.armees { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 0; }
+.armees .a { width: 38%; height: 70px; border-radius: 4px; background: repeating-linear-gradient(90deg, var(--a) 0 4px, #0000 4px 6px), repeating-linear-gradient(#0000 0 6px, #0004 6px 8px); }
+.armees .b { --a: #3f73d6; } .armees .r { --a: #c23a2e; }
+.armees b { font-family: Cinzel, serif; color: var(--or); }
+.facesL { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; }
+.facesL div { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #eadcc4; }
+.facesL img { flex: none; }
+.desL { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; padding: 8px 0; }
+.desL b { font-size: 24px; color: var(--or); }
+.jetonL { width: 34px; height: 34px; border-radius: 50%; display: inline-block; background: radial-gradient(circle at 35% 35%, #fff3b0, #e8b030 55%, #9a6a10); }
+.ordreL { text-align: left; margin: 0; padding-left: 22px; color: #eadcc4; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+.hiverL { font-size: 64px; line-height: 1; color: #e8f4ff; padding: 10px; }
+.puces { display: flex; gap: 6px; justify-content: center; }
+.puces i { width: 8px; height: 8px; border-radius: 50%; background: #3a4470; } .puces i.on { background: #ffd36b; }
+/* fin du duel */
+.etoilesFin { font-size: 30px !important; color: #ffd36b !important; letter-spacing: 4px; margin: 0; }
+.gain { display: flex; align-items: center; gap: 10px; text-align: left; background: #0006; border-radius: 10px; padding: 8px 10px; margin: 4px 0; font-size: 14px; color: var(--texte); }
+.gain b { color: var(--or); }
+#gainsFin { display: flex; flex-direction: column; gap: 4px; }
+.rang .lien { flex: 1; font-size: 13px; padding: 9px 4px; display: flex; align-items: center; justify-content: center; }

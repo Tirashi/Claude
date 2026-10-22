@@ -1,9 +1,9 @@
-/* Layout: a green card table in a wooden frame; score window on top, command row under the table. */
+/* Mise en page : la table bord à bord, une barre de chiffres en haut, les commandes en bas sous le pouce ;
+   le MENU s'ouvre par-dessus (partie, son, retour, personnalisation des cartes, du dos et du tapis). */
+@font-face { font-family: 'Rajdhani'; font-style: normal; font-weight: 700; font-display: swap; src: url(../polices/rajdhani-700.woff2) format('woff2'); }
 :root{
   color-scheme: dark;
-  --night:#0b1f14; --night-2:#123020;
-  --wood:#7a4a22; --wood-hi:#b07440; --wood-lo:#43260e;
-  --win-top:#1d4f86; --win-bot:#0c2350; --frame:#f2f0ff; --frame-shadow:#6a86c8; --ink:#05060c;
+  --night:#0b1f14; --night-2:#123020; --bar:#0d1a2e; --bar-line:#2a4a78; --frame:#f2f0ff; --ink:#05060c;
   --text:#f2f0ff; --dim:#a9bfd8; --gold:#ffd23f; --red:#ff6b7a;
   --f-display:"Press Start 2P","Courier New",monospace; --f-body:"VT323","Lucida Console",monospace;
 }
@@ -12,39 +12,55 @@
 html,body{min-height:100%}
 body{margin:0; background-color:var(--night); color:var(--text); font-family:var(--f-body); font-size:20px;
   background-image:radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size:4px 4px;
-  padding-inline:16px; padding-block:14px 30px}
-body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:50; background:repeating-linear-gradient(to bottom, rgba(0,0,0,.06) 0 1px, transparent 1px 3px)}
-.wrap{max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:12px; align-items:center}
-h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(20px,6vw,32px); letter-spacing:3px; color:var(--gold);
-  text-shadow:3px 3px 0 #8a4a00, 6px 6px 0 #000}
-h1 span{color:var(--red); text-shadow:3px 3px 0 #6a0a18, 6px 6px 0 #000}
-.win{background:linear-gradient(var(--win-top), var(--win-bot)); border:3px solid var(--frame); border-radius:5px;
-  box-shadow:0 0 0 3px var(--ink), inset 0 0 0 2px var(--frame-shadow), 5px 5px 0 3px #000; padding:8px 12px}
-.hud{width:100%; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; text-align:center}
-.hud .k{font-family:var(--f-display); font-size:7px; letter-spacing:1px; color:var(--dim)}
-.hud .v{font-family:var(--f-display); font-size:clamp(10px,3vw,13px); margin-top:6px; font-variant-numeric:tabular-nums}
-.hud .v.gold{color:var(--gold)}
-.frame{background:var(--wood); border:4px solid var(--ink); border-radius:6px; padding:8px; position:relative;
-  box-shadow:inset 3px 3px 0 var(--wood-hi), inset -4px -4px 0 var(--wood-lo), 6px 6px 0 #000;
-  width:min(100%, calc((100vh - 230px) * 256 / 340 + 24px)); min-width:min(100%, 300px)}
-canvas{display:block; width:100%; height:auto; aspect-ratio:256/340; image-rendering:pixelated; image-rendering:crisp-edges; border:3px solid var(--ink); touch-action:none; cursor:pointer}
-canvas:focus{outline:none}
-.row{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
-.btn{font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:var(--text); background:linear-gradient(#2d6cb0,#163e7a); border:3px solid var(--frame); border-radius:4px;
-  padding:10px 11px; cursor:pointer; box-shadow:0 0 0 2px var(--ink), 3px 3px 0 2px #000; touch-action:manipulation}
+  padding:env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)}
+.jeu{width:min(100%, 560px, calc((100dvh - 118px) * 360 / 540)); min-width:min(100%, 300px); margin:0 auto; display:flex; flex-direction:column}
+.haut{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; background:var(--bar); border-bottom:2px solid var(--bar-line)}
+.haut .t{font-family:var(--f-display); font-size:10px; color:var(--gold); letter-spacing:1px}
+.haut .t span{color:var(--red)}
+.chiffres{display:flex; gap:10px; font-family:var(--f-display); font-size:8px; color:var(--dim); font-variant-numeric:tabular-nums; white-space:nowrap}
+.chiffres em{font-style:normal; color:var(--text)}
+.frame{position:relative}
+canvas#table{display:block; width:100%; height:auto; aspect-ratio:360/540; touch-action:none; cursor:pointer}
+canvas#table:focus{outline:none}
+.msg{font-family:var(--f-display); font-size:8px; line-height:1.9; text-align:center; color:var(--dim)}
+.msg:empty{display:none}
+.jeu > .msg{padding:4px 8px; background:var(--bar)}
+.msg b{color:var(--gold); font-weight:400}
+.bas{display:flex; gap:6px; padding:8px; background:var(--bar); border-top:2px solid var(--bar-line)}
+.bas .btn{flex:1}
+.btn{font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:var(--text); background:linear-gradient(#2d6cb0,#163e7a); border:2px solid var(--frame); border-radius:4px;
+  padding:12px 6px; cursor:pointer; box-shadow:0 0 0 2px var(--ink), 2px 2px 0 2px #000; touch-action:manipulation; text-align:center}
 .btn:hover{color:var(--gold)}
-.btn:active{transform:translate(2px,2px); box-shadow:0 0 0 2px var(--ink), 1px 1px 0 2px #000}
+.btn:active{transform:translate(2px,2px); box-shadow:0 0 0 2px var(--ink), 0 0 0 2px #000}
 .btn:focus-visible{outline:3px dashed var(--gold); outline-offset:3px}
-.btn.warn{background:linear-gradient(#c0392b,#7a1a12)}
 .btn.go{background:linear-gradient(#ffd23f,#d08a10); color:#2a1600; border-color:#fff6cc}
 .btn[disabled]{opacity:.45; cursor:not-allowed}
-.msg{font-family:var(--f-display); font-size:8px; line-height:1.9; min-height:1.9em; text-align:center; color:var(--dim)}
-.msg b{color:var(--gold); font-weight:400}
-.overlay{position:absolute; inset:8px; display:grid; place-items:center; background:rgba(4,12,8,.55); padding:12px}
-.overlay .win{display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; padding:16px}
-.overlay h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:18px; color:var(--gold); text-shadow:3px 3px 0 #000}
-.overlay .stats{font-family:var(--f-display); font-size:9px; line-height:2.1}
-.overlay .stats .new{color:var(--gold)}
-.help{max-width:62ch; color:var(--dim); font-size:18px; line-height:1.25; text-align:center}
+/* victoire */
+.overlay{position:absolute; inset:0; display:grid; place-items:center; background:rgba(4,12,8,.55); padding:12px}
+.win{background:linear-gradient(#1d4f86,#0c2350); border:3px solid var(--frame); border-radius:5px; box-shadow:0 0 0 3px var(--ink), 5px 5px 0 3px #000;
+  display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; padding:16px}
+.win h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:18px; color:var(--gold); text-shadow:3px 3px 0 #000}
+.win .stats{font-family:var(--f-display); font-size:9px; line-height:2.1}
+.win .stats .new{color:var(--gold)}
+/* menu */
+.voile{position:fixed; inset:0; z-index:20; background:rgba(3,6,14,.6); display:flex; align-items:flex-end; justify-content:center}
+.feuille{width:min(100%, 560px); max-height:92dvh; overflow-y:auto; background:var(--bar); border-top:3px solid var(--gold);
+  padding:12px max(12px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  display:flex; flex-direction:column; gap:10px}
+.feuille .titre{display:flex; justify-content:space-between; align-items:center; font-family:var(--f-display); font-size:12px; color:var(--gold)}
+.feuille .titre .btn{padding:8px 10px; font-size:8px}
+.feuille .actions{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.feuille .actions .btn{font-size:8px; padding:11px 4px}
+.feuille .lab{font-family:var(--f-display); font-size:8px; color:var(--dim); margin-top:4px}
+.rangee{display:flex; flex-wrap:wrap; gap:8px}
+.tuile{all:unset; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; padding:4px; border:2px solid transparent; border-radius:5px}
+.tuile[aria-pressed="true"]{border-color:var(--gold); background:rgba(255,210,63,.08)}
+.tuile:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.tuile span{font-family:var(--f-display); font-size:6px; color:var(--dim); text-align:center; max-width:76px; line-height:1.5}
+.tuile[aria-pressed="true"] span{color:var(--gold)}
+#skins canvas{width:47px; height:auto}
+#backs canvas{width:38px; height:auto}
+#felts canvas{width:56px; height:30px; border-radius:3px}
+.help{margin:4px 0 0; color:var(--dim); font-size:18px; line-height:1.25}
 .help b{color:var(--text); font-weight:400}
 @media (prefers-reduced-motion: reduce){ *{animation:none !important} }

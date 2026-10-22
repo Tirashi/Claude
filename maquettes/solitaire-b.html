@@ -1,0 +1,339 @@
+<title>Solitaire, direction B</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Planche : en haut les deux faces B1/B2 dans des téléphones à taille réelle ; dessous, les cartes en gros, les dos et les tapis à choisir. */
+:root{
+  color-scheme: dark;
+  --night:#0b1f14; --night-2:#123020; --wood:#7a4a22; --wood-hi:#b07440; --wood-lo:#43260e;
+  --win-top:#1d4f86; --win-bot:#0c2350; --frame:#f2f0ff; --ink:#05060c;
+  --text:#f2f0ff; --dim:#a9bfd8; --gold:#ffd23f; --red:#ff6b7a; --ok:#7ee08a;
+  --f-display:"Press Start 2P","Courier New",monospace; --f-body:"VT323","Lucida Console",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--night); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size:4px 4px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 40px}
+.page{max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:26px}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,4vw,22px); color:var(--gold); text-shadow:3px 3px 0 #000; text-wrap:balance}
+h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:12px; letter-spacing:1px; color:var(--gold)}
+p{margin:0; max-width:68ch; color:var(--dim)}
+b{color:var(--text); font-weight:400}
+section{display:flex; flex-direction:column; gap:12px}
+.grille{display:flex; flex-wrap:wrap; gap:28px; justify-content:center; align-items:flex-start}
+.choix{width:min(100%, 360px); display:flex; flex-direction:column; gap:10px}
+.tag{font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--ink); background:var(--gold); padding:6px 8px; align-self:flex-start}
+.tel{width:100%; background:#000; border-radius:26px; padding:14px 0 18px; box-shadow:0 0 0 3px #2a2a33, 8px 8px 0 #000}
+.ecran{display:flex; flex-direction:column; gap:8px; align-items:center; padding:0 8px}
+.ecran .t{font-family:var(--f-display); font-size:16px; color:var(--gold); letter-spacing:2px; text-shadow:2px 2px 0 #8a4a00}
+.ecran .t span{color:var(--red); text-shadow:2px 2px 0 #6a0a18}
+.hud{width:100%; display:grid; grid-template-columns:repeat(4,1fr); gap:4px; text-align:center;
+  background:linear-gradient(var(--win-top), var(--win-bot)); border:2px solid var(--frame); border-radius:4px; padding:5px 4px}
+.hud .k{font-family:var(--f-display); font-size:6px; color:var(--dim)}
+.hud .v{font-family:var(--f-display); font-size:10px; margin-top:4px; font-variant-numeric:tabular-nums}
+.hud .v.gold{color:var(--gold)}
+.cadre{width:100%; background:var(--wood); border:2px solid var(--ink); border-radius:5px; padding:2px;
+  box-shadow:inset 2px 2px 0 var(--wood-hi), inset -2px -2px 0 var(--wood-lo)}
+canvas{display:block; image-rendering:pixelated; max-width:100%}
+.cadre canvas{width:100%; height:auto; border:2px solid var(--ink)}
+.btns{display:flex; gap:6px; flex-wrap:wrap; justify-content:center}
+.btns i{font-style:normal; font-family:var(--f-display); font-size:7px; padding:7px 7px; background:linear-gradient(#2d6cb0,#163e7a); border:2px solid var(--frame); border-radius:3px}
+.avis{color:var(--dim); font-size:19px}
+.avis ul{margin:4px 0 0; padding-left:18px}
+.avis li{margin:2px 0}
+.avis .p::marker{content:"+ "; color:var(--ok)}
+.avis .m::marker{content:"– "; color:var(--red)}
+.zoom{display:flex; flex-wrap:wrap; gap:10px}
+.zoom canvas{width:96px; height:132px}
+.ligne{display:flex; flex-direction:column; gap:6px}
+.ligne .nom{font-family:var(--f-display); font-size:8px; color:var(--dim)}
+.tuiles{display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:12px; max-width:760px}
+.tuile{all:unset; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; padding:8px 4px; border:3px solid transparent; border-radius:6px}
+.tuile canvas{width:96px; height:132px}
+.tuile span{font-family:var(--f-display); font-size:7px; color:var(--dim); text-align:center; line-height:1.6}
+.tuile[aria-pressed="true"]{border-color:var(--gold); background:rgba(255,210,63,.08)}
+.tuile[aria-pressed="true"] span{color:var(--gold)}
+.tuile:focus-visible{outline:3px dashed var(--gold); outline-offset:2px}
+.tapis .tuile canvas{width:96px; height:60px}
+</style>
+
+<div class="page">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>SOLITAIRE : LA DIRECTION B</h1>
+    <p>Cartes fines en 32 bits, avec le gros chiffre et l'enseigne <b>sur la même ligne</b> en haut de chaque carte. Deux façons de remplir le reste de la carte (B1 et B2), puis <b>six dos</b> et <b>trois tapis</b> : <b>touche</b> un dos ou un tapis plus bas, les deux téléphones changent aussitôt. Les téléphones sont à taille réelle.</p>
+  </header>
+
+  <div class="grille" id="tels"></div>
+
+  <section>
+    <h2>LES CARTES EN GROS (×2)</h2>
+    <div id="zoom" class="ligne"></div>
+  </section>
+
+  <section>
+    <h2>LES DOS</h2>
+    <p>Dans le jeu, on le choisirait dans un petit menu « DOS » (et on garde le choix pour les parties suivantes).</p>
+    <div class="tuiles" id="dos"></div>
+  </section>
+
+  <section class="tapis">
+    <h2>LE TAPIS</h2>
+    <div class="tuiles" id="tapis"></div>
+  </section>
+</div>
+
+<script>
+"use strict";
+/* ---------- partie d'exemple (s : 0 pique, 1 cœur, 2 trèfle, 3 carreau) ---------- */
+const PARTIE = {
+  waste: [[5,1],[4,2],[11,3]],
+  found: [[1,0],[2,1],[1,2],null],
+  tab: [
+    {down:0, up:[[13,0],[12,1],[11,2],[10,3]]},
+    {down:1, up:[[9,0],[8,1],[7,2]]},
+    {down:2, up:[[12,3],[11,0]]},
+    {down:3, up:[[6,1],[5,0],[4,3],[3,2]]},
+    {down:4, up:[[13,1]]},
+    {down:5, up:[[10,2],[9,1],[8,2],[7,3],[6,0]]},
+    {down:6, up:[[2,0]]},
+  ],
+};
+
+/* ---------- motifs pixel ---------- */
+const SUIT7 = [
+  ["...x...", "..xxx..", ".xxxxx.", "xxxxxxx", "xxxxxxx", "..x.x..", ".xxxxx."],
+  [".xx.xx.", "xxxxxxx", "xxxxxxx", "xxxxxxx", ".xxxxx.", "..xxx..", "...x..."],
+  ["..xxx..", "..xxx..", "xx.x.xx", "xxxxxxx", "xx.x.xx", "...x...", "..xxx.."],
+  ["...x...", "..xxx..", ".xxxxx.", "xxxxxxx", ".xxxxx.", "..xxx..", "...x..."],
+];
+const SUIT9 = [
+  ["....x....", "...xxx...", "..xxxxx..", ".xxxxxxx.", "xxxxxxxxx", "xxxxxxxxx", ".xx.x.xx.", "....x....", "..xxxxx.."],
+  [".xx...xx.", "xxxx.xxxx", "xxxxxxxxx", "xxxxxxxxx", ".xxxxxxx.", "..xxxxx..", "...xxx...", "....x....", "........."],
+  ["...xxx...", "..xxxxx..", "...xxx...", ".xx.x.xx.", "xxxxxxxxx", "xxxxxxxxx", ".xx.x.xx.", "....x....", "..xxxxx.."],
+  ["....x....", "...xxx...", "..xxxxx..", ".xxxxxxx.", "xxxxxxxxx", ".xxxxxxx.", "..xxxxx..", "...xxx...", "....x...."],
+];
+const G5 = {
+  A: [".xxx.", "xx.xx", "xx.xx", "xxxxx", "xx.xx", "xx.xx", "xx.xx"],
+  2: [".xxx.", "xx.xx", "...xx", "..xx.", ".xx..", "xx...", "xxxxx"],
+  3: ["xxxx.", "...xx", "...xx", ".xxx.", "...xx", "...xx", "xxxx."],
+  4: ["..xx.", ".xxx.", "xx.x.", "xx.x.", "xxxxx", "...x.", "...x."],
+  5: ["xxxxx", "xx...", "xxxx.", "...xx", "...xx", "xx.xx", ".xxx."],
+  6: [".xxx.", "xx...", "xx...", "xxxx.", "xx.xx", "xx.xx", ".xxx."],
+  7: ["xxxxx", "...xx", "..xx.", "..xx.", ".xx..", ".xx..", ".xx.."],
+  8: [".xxx.", "xx.xx", "xx.xx", ".xxx.", "xx.xx", "xx.xx", ".xxx."],
+  9: [".xxx.", "xx.xx", "xx.xx", ".xxxx", "...xx", "...xx", ".xxx."],
+  1: [".xx", "xxx", ".xx", ".xx", ".xx", ".xx", ".xx"],
+  0: [".xx.", "xxxx", "x..x", "x..x", "x..x", "xxxx", ".xx."],
+  J: ["..xxx", "...xx", "...xx", "...xx", "xx.xx", "xx.xx", ".xxx."],
+  Q: [".xxx.", "xx.xx", "xx.xx", "xx.xx", "xx.xx", ".xxx.", "...xx"],
+  K: ["xx..x", "xx.xx", "xxxx.", "xxx..", "xxxx.", "xx.xx", "xx..x"],
+};
+const CROWN = {
+  K: ["y...y...y", "yy.yyy.yy", "yyyyyyyyy", "ycyycyycy", "yyyyyyyyy"],
+  Q: ["....y....", "...ycy...", ".yyyyyyy.", "yywyywyyy", ".yyyyyyy."],
+  J: [".......cw", "......cw.", "..ccccc..", ".ccccccc.", "yyyyyyyyy"],
+};
+// portraits 16×16 (×2) des figures de B2 ; c = couleur de la carte, h = cheveux
+const PORTRAIT = {
+  K: { h: "#6b3a1e", m: [
+    "..y...y..y...y..", "..yy..yyyy..yy..", "..yyyyyyyyyyyy..", "..yycyyyyyycyy..",
+    "..hhhhhhhhhhhh..", ".hhsssssssssshh.", ".hsskksssskkssh.", ".hssssssssssssh.",
+    ".hhwwsssssswwhh.", "..wwwwwkkwwwww..", "..wwwwwwwwwwww..", "...wwwwwwwwww...",
+    ".cccywwwwwwyccc.", "cccccywwwwyccccc", "cccccccyyccccccc", "cccccccyyccccccc"] },
+  Q: { h: "#c8902a", m: [
+    ".......yy.......", "......yccy......", "....yyyyyyyy....", "...hhhhhhhhhh...",
+    "..hhsssssssshh..", ".hhsskksskksshh.", ".hhsssssssssshh.", ".hhssssrrsssshh.",
+    ".hhhsssssssshhh.", ".hhhhwwwwwwhhhh.", "hhhcccwwwwccchhh", "hhccccywwycccchh",
+    ".ccccccyycccccc.", "cccccccyyccccccc", "cccccywwwwyccccc", "cccccccyyccccccc"] },
+  J: { h: "#2a1a10", m: [
+    "...........cw...", "..........cw....", "....ccccccccc...", "...ccccccccccc..",
+    "..yyyyyyyyyyyy..", "...hssssssssh...", "...sskksskkss...", "...ssssssssss...",
+    "...sssshhssss...", "....ssssssss....", ".....wwwwww.....", "..cccwwwwwwccc..",
+    ".cccccywwyccccc.", "ccccccyyyycccccc", "ccccccywwycccccc", "ccccccyyyycccccc"] },
+};
+const RANKS = [null, "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+function px(g, map, x, y, col, k = 1, flip = false){
+  const h = map.length;
+  map.forEach((row, r) => [...row].forEach((ch, c) => {
+    if (ch === ".") return;
+    g.fillStyle = typeof col === "string" ? col : col[ch] || "#000";
+    g.fillRect(x + c * k, y + (flip ? h - 1 - r : r) * k, k, k);
+  }));
+}
+const wOf = m => m[0].length;
+function rankW(r, k){ return RANKS[r] === "10" ? (wOf(G5[1]) + 1 + wOf(G5[0])) * k : wOf(G5[RANKS[r]]) * k; }
+function rank(g, r, x, y, col, k){
+  const s = RANKS[r];
+  if (s === "10"){ px(g, G5[1], x, y, col, k); px(g, G5[0], x + (wOf(G5[1]) + 1) * k, y, col, k); }
+  else px(g, G5[s], x, y, col, k);
+}
+function canvas(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; }
+function shape(g, w, h, col){ g.fillStyle = col; g.fillRect(1, 0, w - 2, h); g.fillRect(0, 1, w, h - 2); }
+
+/* ---------- faces 48×66 ---------- */
+const CW = 48, CH = 66, PAPER = "#fbfaf2", OUT = "#16161e", STRIP = 25, PAD = 3;
+const COL = ["#16161e", "#d0182e", "#16161e", "#d0182e"];
+function coin(g, r, s){
+  const col = COL[s];
+  rank(g, r, PAD, 2, col, 3);
+  px(g, SUIT7[s], CW - PAD - 14, 5, col, 2);
+}
+// B1 : une grande enseigne au milieu, figures simples
+function faceB1(r, s){
+  const col = COL[s], [c, g] = canvas(CW, CH);
+  shape(g, CW, CH, OUT); g.fillStyle = PAPER; g.fillRect(1, 1, CW - 2, CH - 2);
+  coin(g, r, s);
+  const by = STRIP + 3, bh = CH - by - PAD;
+  if (r > 10){
+    const x = PAD + 1, w = CW - 2 * PAD - 2, L = RANKS[r];
+    g.fillStyle = col; g.fillRect(x, by, w, bh); g.fillStyle = "#f6e7b0"; g.fillRect(x + 2, by + 2, w - 4, bh - 4);
+    px(g, CROWN[L], x + Math.floor((w - 18) / 2), by + 4, {y: "#e0a020", c: col, w: "#ffffff"}, 2);
+    px(g, G5[L], x + Math.floor((w - 10) / 2), by + 16, col, 2);
+  } else px(g, SUIT9[s], Math.floor((CW - 27) / 2), by + Math.floor((bh - 27) / 2), col, 3);
+  return c;
+}
+// B2 : les points rangés comme sur une vraie carte, portraits pour les figures
+const PL = 8, PM = 20, PR = 33, R0 = 0, R1 = 9, R2 = 14, R3 = 18, R4 = 28; // colonnes et rangées des points (corps de 35 px)
+const PIPS = {
+  2: [[PM,R0],[PM,R4]], 3: [[PM,R0],[PM,R2],[PM,R4]],
+  4: [[PL,R0],[PR,R0],[PL,R4],[PR,R4]], 5: [[PL,R0],[PR,R0],[PM,R2],[PL,R4],[PR,R4]],
+  6: [[PL,R0],[PR,R0],[PL,R2],[PR,R2],[PL,R4],[PR,R4]],
+  7: [[PL,R0],[PR,R0],[PM,7],[PL,R2],[PR,R2],[PL,R4],[PR,R4]],
+  8: [[PL,R0],[PR,R0],[PM,7],[PL,R2],[PR,R2],[PM,21],[PL,R4],[PR,R4]],
+  9: [[PL,R0],[PR,R0],[PL,R1],[PR,R1],[PM,R2],[PL,R3+1],[PR,R3+1],[PL,R4],[PR,R4]],
+  10: [[PL,R0],[PR,R0],[PM,5],[PL,R1],[PR,R1],[PL,R3+1],[PR,R3+1],[PM,23],[PL,R4],[PR,R4]],
+};
+function faceB2(r, s){
+  const col = COL[s], [c, g] = canvas(CW, CH);
+  shape(g, CW, CH, OUT); g.fillStyle = PAPER; g.fillRect(1, 1, CW - 2, CH - 2);
+  coin(g, r, s);
+  const by = STRIP + 3;
+  if (r === 1){ px(g, SUIT9[s], Math.floor((CW - 27) / 2), by + 3, col, 3); }
+  else if (r <= 10){ for (const [x, y] of PIPS[r]) px(g, SUIT7[s], x, by + y, col, 1, y > 17); }
+  else {
+    const P = PORTRAIT[RANKS[r]], x = 4, w = CW - 8, h = CH - by - 2;
+    g.fillStyle = col; g.fillRect(x, by - 1, w, h); g.fillStyle = "#f6e7b0"; g.fillRect(x + 1, by, w - 2, h - 2);
+    px(g, P.m, x + 4, by + 1, {y: "#e0a020", c: col, w: "#ffffff", s: "#f2c69a", k: OUT, h: P.h, r: "#d0182e"}, 2);
+  }
+  return c;
+}
+
+/* ---------- dos ---------- */
+function dos(peindre){
+  const [c, g] = canvas(CW, CH);
+  shape(g, CW, CH, OUT); g.fillStyle = "#f4f4ff"; g.fillRect(1, 1, CW - 2, CH - 2);
+  for (let y = 3; y < CH - 3; y++) for (let x = 3; x < CW - 3; x++){ g.fillStyle = peindre(x - 3, y - 3, CW - 6, CH - 6); g.fillRect(x, y, 1, 1); }
+  return c;
+}
+let graine = 7; const hasard = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+const ETOILES = Array.from({length: 26}, () => [Math.floor(hasard() * 42), Math.floor(hasard() * 60), hasard() < .25]);
+const DOS = [
+  { nom: "LOSANGES BLEUS", f: (x, y) => { const X = x >> 1, Y = y >> 1, l = (X + Y) % 6 === 0 || (X - Y + 60) % 6 === 0;
+      return l ? "#6fa0ff" : ((X + Y) % 2 ? "#1f3fa8" : "#2449b8"); } },
+  { nom: "TARTAN ROUGE", f: (x, y) => { const a = x % 12 < 3, b = y % 12 < 3;
+      if (x % 12 === 7 || y % 12 === 7) return "#e8c060";
+      return a && b ? "#3c0610" : a || b ? "#6a0e1c" : (x + y) % 2 ? "#a01828" : "#ac1e2e"; } },
+  { nom: "VAGUES", f: (x, y) => {
+      let col = "#1b2f6b";
+      for (let row = 0; row <= 12; row++) for (let i = -1; i <= 4; i++){
+        const cx = i * 12 + (row % 2) * 6, cy = row * 5, d = Math.hypot(x - cx, y - cy);
+        if (d < 6.5 && y <= cy) col = d < 1.5 ? "#1b2f6b" : Math.floor(d) % 2 ? "#f4f4ff" : "#2f5fb0";
+      }
+      return col; } },
+  { nom: "ART DECO", f: (x, y, w, h) => {
+      const cx = w / 2 - .5, cy = h / 2 - .5, dx = Math.abs(x - cx), dy = Math.abs(y - cy);
+      if (x === 2 || y === 2 || x === w - 3 || y === h - 3) return "#d8a838";
+      if (dx + dy < 7) return dx + dy < 4 ? "#141018" : "#d8a838";
+      const a = Math.atan2(y - cy, x - cx); if (Math.floor((a + Math.PI) * 16 / Math.PI) % 2 && dx + dy < 26) return "#6a4c14";
+      return "#141018"; } },
+  { nom: "COUCHANT", f: (x, y, w, h) => {
+      const sol = 38;
+      if (y >= sol){ const t = y - sol, gx = (x - w / 2) * (6 / (t + 6));
+        return t % Math.max(2, Math.floor(t / 3) + 2) === 0 || Math.round(gx) % 5 === 0 ? "#ff4fa8" : "#2a0f3e"; }
+      const d = Math.hypot(x - w / 2 + .5, y - 28);
+      if (d < 13 && !(y > 22 && (y % 4) < 1 + (y - 22) / 6)) return y < 20 ? "#ffd23f" : "#ff8a3c";
+      return y < 12 ? "#3b1a6b" : y < 22 ? "#6a2386" : y < 32 ? "#a4307f" : "#d8486e"; } },
+  { nom: "NUIT ETOILEE", f: (x, y) => {
+      for (const [sx, sy, gros] of ETOILES){ if (x === sx && y === sy) return gros ? "#ffe680" : "#ffffff";
+        if (gros && Math.abs(x - sx) + Math.abs(y - sy) === 1) return "#8a90d8"; }
+      const d = Math.hypot(x - 30, y - 12), d2 = Math.hypot(x - 33, y - 10);
+      if (d < 7 && d2 >= 6) return "#f6e7b0";
+      return y < 20 ? "#0e1440" : y < 40 ? "#121a52" : "#182266"; } },
+].map(d => ({...d, img: dos(d.f)}));
+
+/* ---------- tapis ---------- */
+const TAPIS = [
+  { nom: "VERT", fond: "#1f7a3c", grain: "#1c7037", creux: "#17602e" },
+  { nom: "BLEU NUIT", fond: "#1d4a7c", grain: "#1a4372", creux: "#13355e" },
+  { nom: "BORDEAUX", fond: "#6e1f2e", grain: "#651c2a", creux: "#521622" },
+];
+
+/* ---------- table ---------- */
+const W = 364, H = 520, GX = 52, X0 = 2, TOP = 6, TABY = 82, DU = 25, DD = 8, FAN = 22;
+let choixDos = 0, choixTapis = 0;
+function drawTable(face, cible){
+  const g = cible.getContext("2d"), T = TAPIS[choixTapis], back = DOS[choixDos].img, X = i => X0 + i * GX;
+  g.fillStyle = T.fond; g.fillRect(0, 0, W, H);
+  g.fillStyle = T.grain; for (let y = 0; y < H; y++) for (let x = (y & 1); x < W; x += 2) if ((x * 7 + y * 13) % 5 === 0) g.fillRect(x, y, 1, 1);
+  const slot = (x, y) => { g.fillStyle = T.creux; g.fillRect(x + 1, y, CW - 2, CH); g.fillRect(x, y + 1, CW, CH - 2); g.fillStyle = T.fond; g.fillRect(x + 2, y + 2, CW - 4, CH - 4); };
+  const card = (rs, x, y) => g.drawImage(face(rs[0], rs[1]), x, y);
+  g.drawImage(back, X(0) + 1, TOP + 1); g.drawImage(back, X(0), TOP);
+  PARTIE.waste.forEach((rs, i) => card(rs, X(1) + i * FAN, TOP));
+  PARTIE.found.forEach((rs, f) => { slot(X(3 + f), TOP); if (rs) card(rs, X(3 + f), TOP); });
+  PARTIE.tab.forEach((p, j) => {
+    let y = TABY;
+    for (let i = 0; i < p.down; i++){ g.drawImage(back, X(j), y); y += DD; }
+    p.up.forEach(rs => { card(rs, X(j), y); y += DU; });
+  });
+}
+
+const VARIANTES = [
+  { tag: "B1 · GRANDE ENSEIGNE", face: faceB1,
+    plus: ["Le milieu de la carte se lit de loin, même la dernière d'une colonne.", "Dessin simple, très « jeu vidéo »."],
+    moins: ["On ne compte pas les points comme sur une vraie carte."] },
+  { tag: "B2 · VRAIES CARTES", face: faceB2,
+    plus: ["Points rangés comme sur un jeu de cartes, et un vrai portrait pour le Roi, la Dame et le Valet.", "Le coin reste aussi gros qu'en B1 : c'est lui qu'on lit dans les colonnes."],
+    moins: ["Les petits points (7 pixels) sont du décor : ils ne servent pas à lire la carte."] },
+];
+const tels = document.getElementById("tels"), tables = [];
+for (const V of VARIANTES){
+  const el = document.createElement("section"); el.className = "choix";
+  el.innerHTML = `<div class="tag">${V.tag}</div>
+    <div class="tel"><div class="ecran">
+      <div class="t">SOLI<span>TAIRE</span></div>
+      <div class="hud"><div><div class="k">SCORE</div><div class="v gold">245</div></div><div><div class="k">TEMPS</div><div class="v">03:12</div></div><div><div class="k">PIOCHE</div><div class="v">3</div></div><div><div class="k">RECORD</div><div class="v">1180</div></div></div>
+      <div class="cadre"><canvas width="${W}" height="${H}"></canvas></div>
+      <div class="btns"><i>NOUVELLE</i><i>ANNULER</i><i>PIOCHER 1</i><i>DOS</i><i>SON</i></div>
+    </div></div>
+    <div class="avis"><ul>${V.plus.map(t => `<li class="p">${t}</li>`).join("")}${V.moins.map(t => `<li class="m">${t}</li>`).join("")}</ul></div>`;
+  tels.appendChild(el); tables.push([V.face, el.querySelector("canvas")]);
+}
+const redessiner = () => tables.forEach(([f, c]) => drawTable(f, c));
+
+// cartes en gros
+const MONTRE = [[13,0],[12,1],[11,2],[10,3],[7,1],[1,0]];
+const zoom = document.getElementById("zoom");
+for (const V of VARIANTES){
+  const l = document.createElement("div"); l.className = "ligne";
+  l.innerHTML = `<div class="nom">${V.tag}</div><div class="zoom"></div>`;
+  MONTRE.forEach(([r, s]) => l.querySelector(".zoom").appendChild(V.face(r, s)));
+  zoom.appendChild(l);
+}
+
+// choix des dos et du tapis
+function tuiles(id, liste, dessin, get, set){
+  const box = document.getElementById(id);
+  liste.forEach((it, i) => {
+    const b = document.createElement("button"); b.className = "tuile"; b.type = "button"; b.id = id + "-" + i;
+    b.appendChild(dessin(it)); const n = document.createElement("span"); n.textContent = it.nom; b.appendChild(n);
+    b.addEventListener("click", () => { set(i); box.querySelectorAll(".tuile").forEach((t, j) => t.setAttribute("aria-pressed", String(j === i))); redessiner(); });
+    b.setAttribute("aria-pressed", String(i === get()));
+    box.appendChild(b);
+  });
+}
+tuiles("dos", DOS, d => { const [c, g] = canvas(CW, CH); g.drawImage(d.img, 0, 0); return c; }, () => choixDos, i => choixDos = i);
+tuiles("tapis", TAPIS, t => { const [c, g] = canvas(48, 30); g.fillStyle = t.fond; g.fillRect(0, 0, 48, 30);
+  g.fillStyle = t.grain; for (let y = 0; y < 30; y++) for (let x = (y & 1); x < 48; x += 2) if ((x * 7 + y * 13) % 5 === 0) g.fillRect(x, y, 1, 1); return c; },
+  () => choixTapis, i => choixTapis = i);
+redessiner();
+</script>

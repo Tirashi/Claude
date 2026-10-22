@@ -1,0 +1,379 @@
+<title>Duché, pixel art</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@500;700&family=Fredoka:wght@400;600&display=swap">
+<style>
+/* Maquette 4 de Duché : la direction A (pixel art 32 bits) creusée, sur trois écrans animés :
+   la carte, un événement (les pèlerins), un combat en 3 passes. 216 × 384 agrandi sans lissage, textes sur la toile fine. */
+:root{
+  --fond:#14110d; --texte:#f1ebe0; --doux:#b4a993; --or:#f0c24a; --cadre:#050403; --ligne:#2c261d;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000;text-wrap:balance}
+header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
+header b{color:var(--texte);font-weight:600}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px 24px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%}
+.tel{width:100%;max-width:min(340px,calc(100% - 18px));aspect-ratio:216/384;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;box-sizing:content-box}
+.tel canvas{width:100%;height:100%;display:block;cursor:pointer;touch-action:manipulation}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);max-width:320px;font-size:15px;text-align:center}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0}
+section.q ol{margin:0;padding-left:22px;max-width:74ch;display:flex;flex-direction:column;gap:6px}
+section.q li span{color:var(--doux)}
+</style>
+
+<div class="page">
+<header>
+  <h1>DUCHE · PIXEL ART</h1>
+  <p>La direction A, creusée. <b>La carte</b> : une vraie rivière qui traverse le duché, l'écume sur la côte, des champs de blé, des pins et des chênes, de petits soldats sur chaque garnison et une troupe qui marche d'une terre à l'autre. Touchez une terre pour changer de panneau. <b>L'événement</b> : une carte de parchemin illustrée et animée, deux réponses avec leur prix. <b>Le combat</b> : les deux troupes se rencontrent en 3 passes, les barres baissent, puis la terre change de couleur.</p>
+</header>
+
+<div class="grille">
+  <div class="dir">
+    <div class="tel"><canvas data-scene="carte" width="648" height="1152" aria-label="La carte du duché"></canvas></div>
+    <h2>1 · LA CARTE</h2>
+    <p>Tour 7, été de l'an 2. Votre troupe se déplace de la caserne vers la ferme de l'est.</p>
+  </div>
+  <div class="dir">
+    <div class="tel"><canvas data-scene="evenement" width="648" height="1152" aria-label="Un événement : les pèlerins"></canvas></div>
+    <h2>2 · UN EVENEMENT</h2>
+    <p>Au début du tour, une carte du paquet. Ici les pèlerins passent devant la chapelle, la cloche sonne.</p>
+  </div>
+  <div class="dir">
+    <div class="tel"><canvas data-scene="combat" width="648" height="1152" aria-label="Un combat en trois passes"></canvas></div>
+    <h2>3 · UN COMBAT</h2>
+    <p>5 soldats contre 3 brigands (chance 63 %). Le combat dure 5 secondes, puis la plaine passe à l'or.</p>
+  </div>
+</div>
+
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ol>
+    <li>Cette direction vous va-t-elle pour lancer la programmation ? <span>(sinon : ce qu'il faut changer)</span></li>
+    <li>Le combat en petite scène comme ici, ou seulement sur la carte (les soldats avancent sur la terre attaquée) ? <span>(la petite scène est plus lisible, la carte plus rapide)</span></li>
+    <li>Un écran titre avec le château du joueur et la carte du jour en fond, ça vous va ?</li>
+  </ol>
+</section>
+</div>
+
+<script>
+(function(){
+// =============== la situation (commune aux trois écrans) ===============
+const CASES=[];for(let q=-3;q<=3;q++)for(let r=-3;r<=3;r++)if(Math.abs(q+r)<=3)CASES.push([q,r]);
+CASES.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
+const cle=(q,r)=>q+","+r;
+const rd=(()=>{let s=2026;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};})();
+const TER={},QUAL={};
+CASES.forEach(([q,r])=>{const x=rd();TER[cle(q,r)]=x<.3?"p":x<.55?"f":x<.68?"m":x<.86?"c":"s";});
+CASES.forEach(([q,r])=>QUAL[cle(q,r)]=1+Math.floor(rd()*3));
+// la rivière : du nord à la mer du sud
+const RIV=[[0,-3],[0,-2],[-1,-1],[-1,0],[-1,1],[0,1],[0,2],[0,3]];
+RIV.forEach(([q,r])=>TER[cle(q,r)]="r");
+const SEIG={J:{nom:"VOTRE DUCHE",c:"#f0bc28",f:"#8a6410"},R:{nom:"BARON CORVIN",c:"#d8443a",f:"#7a1a18",t:"Agressif · Traître"},B:{nom:"DAME YSOLDE",c:"#4282e0",f:"#1c3c78",t:"Marchande · Pieuse"},V:{nom:"COMTE ALDRIC",c:"#9a58cc",f:"#4a2468",t:"Bâtisseur · Isolationniste"}};
+const PROP={},BAT={},GARN={};
+function domaine(k,c,autres,g){PROP[cle(...c)]=k;BAT[cle(...c)]="chateau";TER[cle(...c)]="p";GARN[cle(...c)]=g;autres.forEach(a=>PROP[cle(...a)]=k);}
+domaine("J",[-3,3],[[-2,2],[-3,2],[-2,3],[-1,2]],6);
+domaine("B",[0,-3],[[1,-3],[-1,-2],[0,-2]],5);
+domaine("R",[3,-3],[[2,-3],[3,-2],[2,-2]],8);
+domaine("V",[3,0],[[2,0],[3,-1],[2,1]],5);
+Object.assign(BAT,{"-2,2":"caserne","-3,2":"ferme","-1,2":"ferme","1,-3":"marche","2,-3":"mine","3,-2":"tour","2,1":"ferme"});
+Object.assign(GARN,{"-2,2":4,"-1,2":2,"-3,2":1,"3,-2":3,"2,-2":2,"1,0":4,"-2,1":3,"1,1":3,"1,-1":2});
+Object.assign(TER,{"-2,3":"f","2,-3":"m","-2,1":"p","-3,2":"p","-1,2":"p","2,1":"p","-2,2":"c","1,-3":"p","3,-2":"c","-3,1":"f","-3,0":"f"});
+const NOMT={p:"PLAINE",f:"FORET",m:"MONTAGNE",c:"COLLINE",s:"MARAIS",r:"RIVIERE"};
+const DEF={p:0,f:1,m:3,c:2,s:1,r:0},DEFB={chateau:5,tour:2};
+const REND={p:"2 nourriture",f:"2 bois",m:"2 or",c:"1 bois, 1 or",s:"1 nourriture",r:"1 nourriture, 1 or"};
+const NOMB={chateau:"Château",marche:"Marché",mine:"Mine",tour:"Tour de guet",ferme:"Ferme",caserne:"Caserne"};
+const VOIS=[[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]];   // côté i : normale à 60·i degrés (y vers le bas)
+const prop=(q,r)=>PROP[cle(q,r)]||null,garn=(q,r)=>GARN[cle(q,r)]||0,dans=(q,r)=>Math.abs(q)<=3&&Math.abs(r)<=3&&Math.abs(q+r)<=3;
+function infos(q,r){
+  const k=cle(q,r),t=TER[k],o=prop(q,r),b=BAT[k],g=garn(q,r),def=g+DEF[t]+(DEFB[b]||0),qui=o?SEIG[o]:null;
+  let act,de=[];
+  if(o==="J")act={k:"moi"};
+  else{let a=0;VOIS.forEach(([dq,dr])=>{const Q=q+dq,R=r+dr;if(dans(Q,R)&&prop(Q,R)==="J"&&garn(Q,R)){de.push([Q,R]);a+=garn(Q,R);}});act=de.length?{k:"att",a,def,ch:Math.round(100*a/(a+def))}:{k:"loin"};}
+  return{t,q:QUAL[k],o,b,g,def,act,de,titre:NOMT[t],sous:o?qui.nom:(g?"BRIGANDS":"TERRE LIBRE"),coul:qui?qui.c:null,traits:qui&&qui.t,
+    l1:(b?NOMB[b]+" · ":"")+"rend "+REND[t]+(QUAL[k]>1?" × "+QUAL[k]:""),l2:(g?g+" soldats":"aucun soldat")+" · défense "+def};
+}
+const hh=(a,b)=>{let h=(a*374761393+b*668265263)>>>0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296;};
+const PS="'Press Start 2P', monospace";
+
+// =============== moteur pixel art ===============
+const W=216,H=384,K=3,S=17,CX=108,CY=150,A3=Math.sqrt(3)/2;
+const COS=[0,1,2,3,4,5].map(i=>[Math.cos(i*Math.PI/3),Math.sin(i*Math.PI/3)]);
+const centre=(q,rr)=>[Math.round(CX+S*Math.sqrt(3)*(q+rr/2)),Math.round(CY+S*1.5*rr)];
+function pixHex(cx,cy,s,fn){const ap=s*A3-.5;for(let dy=-s;dy<=s;dy++)for(let dx=-Math.ceil(ap);dx<=Math.ceil(ap);dx++){let m=1e9,mi=0;for(let i=0;i<6;i++){const d=ap-(dx*COS[i][0]+dy*COS[i][1]);if(d<m){m=d;mi=i;}}if(m>=0)fn(cx+dx,cy+dy,dx,dy,m,mi);}}
+function versCase(x,y){const q=((x-CX)*Math.sqrt(3)/3-(y-CY)/3)/S,r=(y-CY)*2/3/S;let X=q,Z=r,Y=-X-Z,rx=Math.round(X),ry=Math.round(Y),rz=Math.round(Z);const dx=Math.abs(rx-X),dy=Math.abs(ry-Y),dz=Math.abs(rz-Z);if(dx>dy&&dx>dz)rx=-ry-rz;else if(dy<=dz)rz=-rx-ry;return dans(rx,rz)?[rx,rz]:null;}
+// segments de la rivière : pour chaque terre, côté d'entrée et côté de sortie
+const RIVSEG={};
+RIV.forEach(([q,r],i)=>{const dir=(a,b)=>VOIS.findIndex(([dq,dr])=>dq===b[0]-a[0]&&dr===b[1]-a[1]);
+  const ent=i?dir([q,r],RIV[i-1]):4,sor=i<RIV.length-1?dir([q,r],RIV[i+1]):1;RIVSEG[cle(q,r)]=[ent,sor];});
+function distSeg(px,py,ax,ay,bx,by){const vx=bx-ax,vy=by-ay,l=vx*vx+vy*vy,t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/l));return Math.hypot(px-ax-t*vx,py-ay-t*vy);}
+// chemin de la rivière en points (pour les reflets animés)
+const RIVPTS=[];RIV.forEach(([q,r])=>{const[x,y]=centre(q,r),[e,s]=RIVSEG[cle(q,r)],ap=S*A3;RIVPTS.push([x+COS[e][0]*ap,y+COS[e][1]*ap],[x,y]);if(q===0&&r===3)RIVPTS.push([x+COS[s][0]*ap,y+COS[s][1]*ap]);});
+
+const r=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h);};
+const TC={p:["#7ab24c","#8cc45a","#689a40"],f:["#4e8a3a","#5e9c44","#3c7030"],m:["#8a9070","#9aa07c","#727a5c"],c:["#86aa52","#9cbe62","#6c8e42"],s:["#66844e","#76905a","#506c3e"],r:["#74aa4a","#86bc58","#629640"]};
+function chene(B,x,y,R){r(B,x-R+1,y+R-1,R*2,2,"rgba(0,0,0,.25)");r(B,x,y+R-2,1,3,"#5a3a1a");for(let j=-R;j<=R;j++){const w=Math.round(Math.sqrt(R*R-j*j));r(B,x-w,y+j,w*2,1,j<-R/3?"#62b046":j<R/3?"#3d8a32":"#2a6624");}r(B,x-1,y-R+1,2,1,"#9ad866");r(B,x-R+1,y-1,1,1,"#7cc456");}
+function pin(B,x,y){r(B,x-3,y+1,7,2,"rgba(0,0,0,.25)");r(B,x,y,1,2,"#5a3a1a");for(let j=0;j<9;j++){const w=Math.floor(j/2)+1-(j===4||j===6?1:0);r(B,x-w,y-9+j,w,1,"#3a7a3a");r(B,x,y-9+j,w+1,1,"#245a2c");}r(B,x,y-10,1,1,"#5aa050");}
+function pic(B,cx,by,h){for(let j=0;j<h;j++){const w=Math.round(j*.9);r(B,cx-w,by-h+j,w,1,"#b0b0b8");r(B,cx,by-h+j,w+1,1,"#6c6c7a");if(j<h*.35){r(B,cx-w,by-h+j,w,1,"#f6f8fc");r(B,cx,by-h+j,w+1,1,"#c8cedc");}}r(B,cx-h*.9,by,h*1.8,1,"rgba(0,0,0,.2)");}
+function sprite(B,b,cx,cy){
+  if(b==="chateau"){r(B,cx-9,cy+5,18,2,"rgba(0,0,0,.25)");const m="#bcb4a8",o="#7c7468";r(B,cx-8,cy-5,16,11,m);r(B,cx-8,cy+5,16,1,o);r(B,cx+7,cy-5,1,11,o);for(let i=0;i<4;i++)r(B,cx-8+i*4,cy-7,2,2,m);
+    for(let i=0;i<3;i++)r(B,cx-6+i*5,cy-2+(i%2),2,1,"#a49c90");
+    [-10,7].forEach(d=>{r(B,cx+d,cy-10,4,16,m);r(B,cx+d+3,cy-10,1,16,o);r(B,cx+d-1,cy-12,6,2,"#6a6460");r(B,cx+d+1,cy-6,1,2,"#2a2018");});
+    r(B,cx-2,cy+1,4,5,"#3a2a1a");r(B,cx-2,cy+1,4,1,"#5a4430");r(B,cx-3,cy-13,6,9,m);r(B,cx-3,cy-15,2,2,m);r(B,cx+1,cy-15,2,2,m);r(B,cx+2,cy-13,1,9,o);r(B,cx-1,cy-10,1,2,"#2a2018");r(B,cx-1,cy-22,1,8,"#4a3a2a");}
+  if(b==="ferme"){r(B,cx-8,cy+2,9,5,"#d8c060");for(let i=0;i<3;i++)r(B,cx-7+i*3,cy+3,1,3,"#b09030");r(B,cx+1,cy-4,7,8,"#e8dcc0");r(B,cx,cy-6,9,2,"#c03828");r(B,cx+1,cy-7,7,1,"#e05a40");r(B,cx+3,cy,2,4,"#5a2a14");r(B,cx+6,cy-9,2,3,"#8a4a30");
+    r(B,cx-6,cy-6,3,9,"#d8d0c0");r(B,cx-6,cy-7,3,1,"#a03020");r(B,cx-4,cy-6,1,9,"#a8a090");}
+  if(b==="caserne"){for(let i=0;i<8;i++){r(B,cx-8+i*2,cy-3,1,9,"#8a5a2a");r(B,cx-8+i*2,cy-4,1,1,"#c08a50");}r(B,cx-4,cy-8,9,7,"#e8e0d0");r(B,cx,cy-8,1,7,"#b0a898");r(B,cx,cy-11,1,3,"#4a3a2a");}
+  if(b==="marche"){r(B,cx-8,cy-1,16,7,"#a87a48");for(let i=0;i<8;i++)r(B,cx-9+i*2,cy-6,2,5,i%2?"#f0ece0":"#4282e0");r(B,cx-6,cy+1,3,3,"#e0b030");r(B,cx+2,cy+1,4,3,"#80b040");}
+  if(b==="tour"){r(B,cx-4,cy-11,8,17,"#a8a29a");r(B,cx+3,cy-11,1,17,"#6a645c");r(B,cx-5,cy-13,10,3,"#c8c2b8");r(B,cx-1,cy-7,2,3,"#2a2018");r(B,cx-1,cy-20,1,7,"#4a3a2a");}
+  if(b==="mine"){pic(B,cx+3,cy+6,14);r(B,cx-6,cy-1,9,7,"#6a5a4a");r(B,cx-4,cy+1,5,5,"#1a120c");r(B,cx-5,cy,7,1,"#8a6a40");r(B,cx+3,cy+4,5,3,"#5a5a62");r(B,cx+4,cy+3,3,1,"#f0c030");}
+}
+// petits personnages (5 × 9) : soldat, brigand, pèlerin
+function perso(L,x,y,type,col,pas){
+  const jamb=pas?[[0,0],[2,1]]:[[1,0],[1,1]];
+  if(type==="soldat"){r(L,x+1,y,3,1,"#c8ccd4");r(L,x,y+1,5,1,"#9aa0a8");r(L,x+1,y+2,3,1,"#f0c8a0");r(L,x+1,y+3,3,3,col);r(L,x,y+3,1,2,"#7a5a30");r(L,x+1,y+3,3,1,"rgba(255,255,255,.3)");r(L,x+4,y-2,1,8,"#8a6a40");r(L,x+4,y-3,1,1,"#e8eef4");}
+  if(type==="brigand"){r(L,x+1,y,3,2,"#4a3a2a");r(L,x+1,y+2,3,1,"#e0b890");r(L,x+1,y+3,3,3,"#5a5a52");r(L,x,y+3,1,2,"#5a5a52");r(L,x+4,y+1,1,5,"#8a8a90");}
+  if(type==="pelerin"){r(L,x+1,y,3,2,"#7a5a3a");r(L,x+2,y+2,2,1,"#f0c8a0");r(L,x,y+2,5,5,"#8a6a48");r(L,x+1,y+2,1,4,"#a8845c");r(L,x+5,y-1,1,9,"#6a4a28");}
+  const jc=type==="soldat"?"#4a3020":"#3a3028";
+  if(type!=="pelerin"){r(L,x+1,y+6,1,2+(pas?1:0),jc);r(L,x+3,y+6,1,3-(pas?1:0),jc);}else{r(L,x+1+(pas?0:1),y+7,1,2,jc);r(L,x+3,y+7,1,2,jc);}
+}
+function plaque(B,x,y,w,h,sombre){r(B,x,y,w,h,"#120c08");r(B,x+1,y+1,w-2,h-2,sombre?"#24160c":"#3a2412");r(B,x+1,y+1,w-2,Math.floor(h/2),sombre?"#3a2614":"#5a3a20");r(B,x+2,y+2,w-4,1,sombre?"#6a4a28":"#a87a40");r(B,x+2,y+2,1,h-4,sombre?"#6a4a28":"#a87a40");r(B,x+w-3,y+2,1,h-4,"rgba(0,0,0,.4)");r(B,x+2,y+h-3,w-4,1,"rgba(0,0,0,.4)");}
+function parchemin(B,x,y,w,h){r(B,x,y,w,h,"#120c08");r(B,x+1,y+1,w-2,h-2,"#6a4424");r(B,x+3,y+3,w-6,h-6,"#e8d4a4");for(let i=0;i<w*h/14;i++){const a=x+4+hh(i,x)*(w-8),b=y+4+hh(y,i)*(h-8);r(B,a,b,1,1,hh(i,i)<.5?"#dcc690":"#f0e0b8");}
+  r(B,x+3,y+3,w-6,1,"#f8ecc8");r(B,x+3,y+h-4,w-6,1,"#c8ac78");[[x+1,y+1],[x+w-4,y+1],[x+1,y+h-4],[x+w-4,y+h-4]].forEach(([a,b])=>r(B,a,b,3,3,"#c89a40"));}
+const ICO={ble:["...y...",".y.y.y.","..yyy..",".y.y.y.","..yyy..","...g...","...g..."],bois:[".......","bbbbbb.","BbbbbbO","bbbbbb.","BbbbbbO","bbbbbb.","......."],or:["..ooo..",".oOOOo.","oOoooOo","oOoooOo","oOoooOo",".oOOOo.","..ooo.."],epee:["......w","....ww.","...ww..","h.ww...",".hw....","hhh....","h.h...."],couronne:["y..y..y","yy.y.yy","yyyyyyy","yrYbYry","yyyyyyy"]};
+const IC={y:"#f2d250",g:"#6aa040",b:"#a06a34",B:"#6a4020",O:"#e0b070",o:"#f8d040",w:"#e8eef4",h:"#8a5a28",r:"#d03030",Y:"#fff0a0"};
+function icone(B,n,x,y){ICO[n].forEach((l,j)=>[...l].forEach((c,i)=>{if(c===".")return;let k=IC[c];if(n==="or"&&c==="O")k="#c88a10";r(B,x+i,y+j,1,1,k);}));}
+
+// ---- la carte fixe (une seule fois) ----
+const ECUME=[];
+function carteFixe(prise){
+  const cv=document.createElement("canvas");cv.width=W;cv.height=H;const B=cv.getContext("2d");
+  const P=Object.assign({},PROP);if(prise)P[cle(...prise)]="J";
+  const pr=(q,rr)=>P[cle(q,rr)]||null;
+  r(B,0,0,W,H,"#2a1c12");for(let j=0;j<H;j+=3)r(B,0,j,W,1,"rgba(0,0,0,.12)");
+  for(let j=38;j<248;j++)r(B,0,j,W,1,j%4?"#1e5a8a":"#22629a");
+  for(let i=0;i<70;i++)r(B,hh(i,9)*W,40+hh(9,i)*206,2,1,"#2a6ea8");
+  CASES.forEach(([q,rr])=>{const[x,y]=centre(q,rr);pixHex(x,y+4,S,(X,Y)=>r(B,X,Y,1,1,"#4a3018"));pixHex(x,y+2,S,(X,Y,dx,dy)=>r(B,X,Y,1,1,(X+Y)%5===0?"#6a4628":"#8a6038"));});
+  const remplir=!ECUME.length;
+  CASES.forEach(([q,rr])=>{const[x,y]=centre(q,rr),k=cle(q,rr),t=TER[k],o=pr(q,rr),c=TC[t],seg=RIVSEG[k],ap=S*A3;
+    pixHex(x,y,S,(X,Y,dx,dy,m,mi)=>{const n=hh(X,Y);let col=n<.12?c[1]:n>.9?c[2]:c[0];
+      if(t==="p"&&!BAT[k]&&m>3){const bande=Math.floor((dy+dx*.5+40)/3)%2;col=bande?(n<.2?"#f0d878":"#d8b850"):(n<.3?"#c8a840":"#b89838");}
+      if(seg){const d=Math.min(distSeg(dx,dy,0,0,COS[seg[0]][0]*ap,COS[seg[0]][1]*ap),distSeg(dx,dy,0,0,COS[seg[1]][0]*ap,COS[seg[1]][1]*ap));if(d<3.2)col=d<1.4?"#3f8ad4":"#2f78c0";else if(d<4.4)col="#c8b880";}
+      if(m<1&&(mi===4||mi===5||mi===3))col=col==="#3f8ad4"||col==="#2f78c0"?col:"#a8d870";
+      r(B,X,Y,1,1,col);
+      if(o){const[dq,dr]=VOIS[mi];if(m<2.2&&!(dans(q+dq,rr+dr)&&pr(q+dq,rr+dr)===o))r(B,X,Y,1,1,m<1.1?SEIG[o].f:SEIG[o].c);}
+      if(remplir&&m<1){const[dq,dr]=VOIS[mi];if(!dans(q+dq,rr+dr))ECUME.push([X+Math.round(COS[mi][0]*2),Y+Math.round(COS[mi][1]*2)+(COS[mi][1]>.1?4:0),hh(X,Y)*6.28]);}
+    });
+    if(o){B.globalAlpha=.12;pixHex(x,y,S-2,(X,Y)=>r(B,X,Y,1,1,SEIG[o].c));B.globalAlpha=1;}
+    const b=BAT[k];
+    if(t==="f"&&!b){const pts=[[-6,-6],[5,-7],[-1,0],[7,2],[-8,4],[1,8],[-4,-12]].slice(0,4+QUAL[k]).sort((a,b2)=>a[1]-b2[1]);pts.forEach(([a,bb],i)=>(hh(i,q+7)<.45?pin(B,x+a,y+bb+3):chene(B,x+a,y+bb,4)));}
+    if(t==="m"&&!b){pic(B,x-3,y+6,14);pic(B,x+6,y+10,10);if(QUAL[k]>2)pic(B,x-8,y+11,7);}
+    if(t==="c"&&!b){const bosse=(cx,cy,R)=>{for(let j=-R;j<=0;j++){const w=Math.round(Math.sqrt(R*R-j*j)*1.4);r(B,cx-w,cy+j,w*2,1,j<-R*.6?"#b4d074":"#9cbe62");}r(B,cx-R*1.4,cy,R*2.8,1,"#5a7a38");};bosse(x-4,y-2,5);bosse(x+5,y+6,6);r(B,x+6,y-6,3,2,"#9a8a70");}
+    if(t==="s"&&!b){[[-8,-4,8],[1,1,9],[-5,7,7]].forEach(([a,bb,w])=>{r(B,x+a,y+bb,w,2,"#4a7a7e");r(B,x+a+1,y+bb,w-3,1,"#7ab0b0");});for(let i=0;i<6;i++){const a=x-9+hh(i,x)*18,bb=y-8+hh(y,i)*14;r(B,a,bb,1,4,"#3a5a28");r(B,a,bb,1,1,"#8a6030");}}
+    if(t==="r"&&!b){const s2=RIVSEG[k],cote=(s2[0]+3)%6===s2[1]?2:5;const vx=Math.round(COS[(s2[0]+2)%6][0]*8),vy=Math.round(COS[(s2[0]+2)%6][1]*8);chene(B,x+vx,y+vy,3);r(B,x-vx-1,y-vy,1,3,"#3a5a28");r(B,x-vx+1,y-vy+1,1,2,"#3a5a28");}
+    if(b)sprite(B,b,x,y+(b==="chateau"?2:1));
+  });
+  return cv;
+}
+function hud(B){plaque(B,3,3,210,32);[["ble",8],["bois",46],["or",80],["epee",112]].forEach(([n,x])=>icone(B,n,x,8));icone(B,"couronne",8,23);r(B,19,23,62,7,"#120c08");r(B,20,24,60,5,"#2a1a10");r(B,20,24,23,5,"#e0b030");r(B,20,24,23,1,"#fff0a0");
+  plaque(B,3,250,210,13,1);plaque(B,3,266,210,115);}
+
+// ---- ce qui bouge sur la carte ----
+function carteAnimee(L,t,sel,o){
+  o=o||{};
+  // vaguelettes et écume
+  for(let i=0;i<40;i++){const x=((hh(i,1)*W+t*4*(i%2?1:-1))%W+W)%W,y=42+hh(i,2)*200;if(Math.sin(t*2+i)>.3)r(L,x,y,3,1,"#4a8ac0");}
+  ECUME.forEach(([x,y,ph],i)=>{const v=Math.sin(t*2.2+ph+x*.2);if(v>.55)r(L,x,y,1,1,v>.85?"#ffffff":"#bfe0f4");});
+  // reflets qui descendent la rivière
+  let tot=0;const L2=[];for(let i=1;i<RIVPTS.length;i++){const l=Math.hypot(RIVPTS[i][0]-RIVPTS[i-1][0],RIVPTS[i][1]-RIVPTS[i-1][1]);L2.push(l);tot+=l;}
+  for(let k=0;k<16;k++){let d=((t*9+k*tot/16)%tot),i=0;while(d>L2[i]){d-=L2[i];i++;}const a=RIVPTS[i],b=RIVPTS[i+1],u=d/L2[i],x=a[0]+(b[0]-a[0])*u+(k%3-1),y=a[1]+(b[1]-a[1])*u;r(L,x,y,k%2?2:1,1,"#a8e0f8");}
+  CASES.forEach(([q,rr])=>{const[x,y]=centre(q,rr),k=cle(q,rr),t2=TER[k],ow=(o.prise&&o.prise[0]===q&&o.prise[1]===rr)?"J":prop(q,rr),b=BAT[k];
+    if(t2==="s"){const ph=(t*.7+hh(q,rr))%1;if(ph<.6){const R=Math.round(ph*5);r(L,x-3-R,y+2,1,1,"#bfe6f0");r(L,x-3+R,y+2,1,1,"#bfe6f0");}}
+    if(t2==="c"&&!b){for(let i=0;i<2;i++){const sx=x-6+i*7+Math.round(Math.sin(t*.4+i*2+q)*3),sy=y+1+i*4,dir=Math.cos(t*.4+i*2+q)>0;r(L,sx,sy,3,2,"#f4f4ee");r(L,sx+(dir?3:-1),sy,1,1,"#3a3a3a");r(L,sx,sy+2,1,1,"#3a3a3a");r(L,sx+2,sy+2,1,1,"#3a3a3a");}}
+    if(t2==="p"&&!b&&!BAT[k]){const s=Math.sin(t*1.6+x*.15);if(s>.7)for(let i=0;i<5;i++)r(L,x-9+i*4,y-6+((i*5)%11),1,1,"#fff0a0");}
+    if(t2==="f"&&!b&&hh(q,rr)<.5){const ph=(t*.3+hh(rr,q)*3)%3;if(ph<1){const bx=x-6+ph*14,by=y-8-Math.sin(ph*3)*4,a=Math.sin(t*14)>0;r(L,bx-1,by-(a?1:0),1,1,"#2a2a2a");r(L,bx+1,by-(a?1:0),1,1,"#2a2a2a");r(L,bx,by,1,1,"#2a2a2a");}}
+    if((b==="chateau"||b==="tour")&&ow){const fx=x,fy=y+(b==="chateau"?-20:-19);for(let i=0;i<7;i++){const dy=Math.round(Math.sin(t*6-i*.9)*1);r(L,fx+i,fy+dy,1,5-(i>4?1:0),i===0?SEIG[ow].f:SEIG[ow].c);}}
+    if(b==="ferme"){for(let i=0;i<3;i++){const ph=(t*.5+i/3)%1;L.globalAlpha=1-ph;r(L,x+6+Math.round(Math.sin(ph*6+i)*2),y-11-ph*12,2+Math.round(ph*2),2,"#e8e8e8");}L.globalAlpha=1;
+      const a=t*2.5;for(let i=0;i<4;i++){const an=a+i*Math.PI/2;for(let k2=1;k2<=5;k2++)r(L,x-5+Math.round(Math.cos(an)*k2),y-7+Math.round(Math.sin(an)*k2),1,1,k2>2?"#f0ece0":"#8a6a40");}}
+    if(b==="caserne")r(L,x,y-11+Math.round(Math.sin(t*5)),3,2,SEIG[ow].c);
+    if(b==="mine"){const ph=(t*.4)%1;r(L,x-4+Math.round(ph*6),y+5,3,2,"#5a5a62");r(L,x-3+Math.round(ph*6),y+4,1,1,"#f0c030");}
+  });
+  // nuages et oiseaux
+  L.save();L.beginPath();L.rect(0,38,W,210);L.clip();
+  [[(t*6)%(W+160)-80,40,70,30],[(t*4.2+W*.6)%(W+200)-100,110,90,36]].forEach(([x,y,w,h2])=>{L.globalAlpha=.16;for(let j=0;j<h2/2;j++){const ww=Math.round(Math.sqrt(Math.max(0,1-((j-h2/4)/(h2/4))**2))*w/2);r(L,x-ww+(j%3),y+j*2,ww*2,2,"#06121a");}});
+  L.globalAlpha=1;const bx=(t*14)%(W+40)-20,by=70+Math.sin(t*.5)*8;for(let i=0;i<3;i++){const ax=bx-i*7,ay=by+i*3,ail=Math.sin(t*10+i)>0?1:0;r(L,ax-2,ay-ail,2,1,"#1a1a1a");r(L,ax+1,ay-ail,2,1,"#1a1a1a");r(L,ax,ay,1,1,"#1a1a1a");}
+  L.restore();
+  // garnisons : un petit soldat et un écusson
+  const ecus=[];
+  CASES.forEach(([q,rr])=>{let gg=garn(q,rr);if(o.garn&&o.garn[cle(q,rr)]!==undefined)gg=o.garn[cle(q,rr)];if(!gg)return;const[x,y]=centre(q,rr),ow=(o.prise&&o.prise[0]===q&&o.prise[1]===rr)?"J":prop(q,rr),c=ow?SEIG[ow].c:"#8a8478",px=x+5,py=y+5;
+    perso(L,x-11,y+3+(Math.sin(t*3+q*2)>.6?-1:0),ow?"soldat":"brigand",c,false);
+    r(L,px,py,10,10,"#120c08");r(L,px+1,py+1,8,7,c);r(L,px+2,py+8,6,1,c);r(L,px+3,py+9,4,1,c);r(L,px+1,py+1,8,1,"rgba(255,255,255,.35)");ecus.push([px+5,py+4.5,gg]);});
+  // une troupe qui marche (déplacement de la caserne vers la ferme de l'est)
+  if(o.marche){const[ax,ay]=centre(-2,2),[bx2,by2]=centre(-1,2),ph=(t%4)/3;if(ph<1)for(let i=0;i<3;i++){const u=Math.max(0,Math.min(1,ph-i*.08));perso(L,ax-2+(bx2-ax)*u-i*3,ay-4+(by2-ay)*u+i*2,"soldat",SEIG.J.c,Math.floor(t*6+i)%2);}}
+  // sélection et flèches
+  let inf=null;
+  if(sel){inf=infos(...sel);const[sx,sy]=centre(...sel),bl=Math.floor(t*3)%2;pixHex(sx,sy,S,(X,Y,dx,dy,m)=>{if(m<1)r(L,X,Y,1,1,bl?"#fff6c0":"#f0c24a");});
+    if(inf.act.k==="att")inf.de.forEach(([q,rr])=>{const[ax,ay]=centre(q,rr);for(let i=0;i<3;i++){const ph=((t*1.2+i/3)%1),px=ax+(sx-ax)*(.25+ph*.5),py=ay+(sy-ay)*(.25+ph*.5);r(L,px-1,py-1,3,3,"#120c08");r(L,px,py,1,1,"#f0c24a");}});}
+  return{ecus,inf};
+}
+
+// ---- textes sur la toile fine ----
+function Tx(g,txt,x,y,o){o=o||{};g.font=(o.w||"700")+" "+(o.s||8)*K+"px "+(o.f||"Rajdhani, sans-serif");g.textAlign=o.a||"left";g.textBaseline="middle";if(o.ombre!==false){g.fillStyle=o.o||"#120c08";g.fillText(txt,x*K+2,y*K+2);}g.fillStyle=o.c||"#fff";g.fillText(txt,x*K,y*K);}
+function texteHud(g){
+  Tx(g,"34",17,11.5,{s:9});Tx(g,"22",55,11.5,{s:9});Tx(g,"17",89,11.5,{s:9});Tx(g,"12/15",121,11.5,{s:9});
+  Tx(g,"38",85,26.5,{s:9,c:"#f0c24a"});Tx(g,"LEGITIMITE",101,26.5,{s:7,c:"#d8c09a"});
+  Tx(g,"TOUR 7/30",208,12,{f:PS,s:6,a:"right",c:"#f0c24a",w:"400"});Tx(g,"ÉTÉ · AN 2",208,26,{s:8,a:"right",c:"#d8c09a"});
+}
+function bouton(L,x,y,w,h,fort,couleur){r(L,x,y,w,h,"#120c08");const c=couleur||(fort?["#7a9a3a","#4a6a1e","#c0e080"]:["#7a5430","#4a3018","#c89a60"]);r(L,x+1,y+1,w-2,h-2,c[1]);r(L,x+1,y+1,w-2,Math.floor((h-2)/2),c[0]);r(L,x+2,y+2,w-4,1,c[2]);}
+
+// =============== écran 1 : la carte ===============
+function ecranCarte(cv){
+  const g=cv.getContext("2d"),base=carteFixe();hud(base.getContext("2d"));
+  const low=document.createElement("canvas");low.width=W;low.height=H;const L=low.getContext("2d");
+  let sel=[-2,1];
+  cv.addEventListener("click",e=>{const b=cv.getBoundingClientRect(),c=versCase((e.clientX-b.left)/b.width*W,(e.clientY-b.top)/b.height*H);if(c)sel=c;});
+  return t=>{
+    L.drawImage(base,0,0);
+    const{ecus,inf}=carteAnimee(L,t,sel,{marche:true});
+    const y0=266;
+    if(inf.act.k==="att"){bouton(L,10,y0+56,22,20);bouton(L,70,y0+56,22,20);bouton(L,98,y0+56,108,20,true);}
+    else if(inf.act.k==="moi"){bouton(L,10,y0+56,96,20);bouton(L,110,y0+56,96,20);}
+    bouton(L,10,y0+84,196,22,inf.act.k!=="att");
+    g.imageSmoothingEnabled=false;g.drawImage(low,0,0,W*K,H*K);texteHud(g);
+    ecus.forEach(([x,y,n])=>Tx(g,String(n),x,y+.5,{s:8,a:"center"}));
+    Tx(g,"Votre troupe marche vers la ferme de l'est.",8,256.5,{s:7.5,c:"#e8d8b8"});
+    Tx(g,inf.titre,10,y0+10,{f:PS,s:6.5,c:"#f0c24a",w:"400"});
+    g.font="400 "+6.5*K+"px "+PS;const wt=g.measureText(inf.titre).width/K;Tx(g,"★".repeat(inf.q),13+wt,y0+10,{s:8,c:"#f0c24a"});
+    Tx(g,inf.sous,206,y0+10,{s:8.5,a:"right",c:inf.coul||"#c8b08a"});
+    Tx(g,inf.l1,10,y0+22,{s:8,c:"#f1e6d0"});Tx(g,inf.l2+(inf.traits?" · "+inf.traits:""),10,y0+32,{s:8,c:"#c8b08a"});
+    if(inf.act.k==="att"){Tx(g,inf.act.a+" soldats contre "+inf.act.def,10,y0+45,{s:8.5,c:"#f1e6d0"});Tx(g,"CHANCE "+inf.act.ch+" %",206,y0+45,{s:9,a:"right",c:inf.act.ch>=60?"#8ee070":inf.act.ch>=40?"#f0c24a":"#f07060"});
+      Tx(g,"−",21,y0+66.5,{f:PS,s:6,a:"center",w:"400"});Tx(g,String(inf.act.a),51,y0+66.5,{f:PS,s:7,a:"center",w:"400"});Tx(g,"+",81,y0+66.5,{f:PS,s:6,a:"center",w:"400"});Tx(g,"ATTAQUER",152,y0+66.5,{f:PS,s:5.5,a:"center",w:"400"});}
+    else if(inf.act.k==="moi"){Tx(g,"Votre terre : bâtir, recruter, déplacer.",10,y0+45,{s:8,c:"#c8b08a"});Tx(g,inf.b?"RECRUTER":"CONSTRUIRE",58,y0+66.5,{f:PS,s:5.5,a:"center",w:"400"});Tx(g,"DEPLACER",158,y0+66.5,{f:PS,s:5.5,a:"center",w:"400"});}
+    else Tx(g,"Trop loin : attaquez une terre qui touche la vôtre.",10,y0+45,{s:8,c:"#c8b08a"});
+    Tx(g,"FIN DU TOUR",108,y0+95.5,{f:PS,s:5.5,a:"center",w:"400"});
+  };
+}
+
+// =============== écran 2 : un événement ===============
+function ecranEvenement(cv){
+  const g=cv.getContext("2d"),base=carteFixe();hud(base.getContext("2d"));
+  const fond=document.createElement("canvas");fond.width=W;fond.height=H;const F=fond.getContext("2d");
+  const low=document.createElement("canvas");low.width=W;low.height=H;const L=low.getContext("2d");
+  // illustration fixe : ciel, collines, route, chapelle
+  const IX=26,IY=78,IW=164,IH=82;
+  function illustration(){
+    for(let j=0;j<IH;j++)r(F,IX,IY+j,IW,1,j<40?`rgb(${150+j},${196+j*.6|0},${230})`:"#78b04c");
+    for(let i=0;i<IW;i++){const h1=Math.round(Math.sin(i*.05)*5+Math.sin(i*.13)*3);r(F,IX+i,IY+30+h1,1,10-h1,"#5e9c44");}
+    for(let i=0;i<IW;i+=1){const yy=IY+58+Math.round(Math.sin(i*.04)*2);r(F,IX+i,yy,1,9,"#c8a870");r(F,IX+i,yy,1,1,"#e0c890");}
+    for(let i=0;i<60;i++)r(F,IX+hh(i,3)*IW,IY+44+hh(3,i)*36,1,1,hh(i,7)<.5?"#8cc45a":"#5e9c44");
+    // chapelle
+    const cx=IX+122,cy=IY+56;r(F,cx-14,cy-14,24,16,"#e8dcc4");r(F,cx+4,cy-14,6,16,"#c8bca4");r(F,cx-16,cy-18,28,4,"#a83828");r(F,cx-15,cy-19,26,1,"#c84a38");
+    r(F,cx-6,cy-30,9,16,"#e8dcc4");r(F,cx,cy-30,3,16,"#c8bca4");r(F,cx-7,cy-34,11,4,"#a83828");r(F,cx-2,cy-40,1,6,"#6a4a28");r(F,cx-4,cy-38,5,1,"#6a4a28");
+    r(F,cx-4,cy-26,5,5,"#3a2a1a");r(F,cx-4,cy-6,4,8,"#5a3a22");r(F,cx-11,cy-10,3,4,"#6a8ab0");r(F,cx+5,cy-10,3,4,"#6a8ab0");
+    chene(F,IX+20,IY+48,6);chene(F,IX+36,IY+52,5);pin(F,IX+150,IY+56);
+    r(F,IX-1,IY-1,IW+2,1,"#5a3a1e");r(F,IX-1,IY+IH,IW+2,1,"#5a3a1e");r(F,IX-1,IY,1,IH,"#5a3a1e");r(F,IX+IW,IY,1,IH,"#5a3a1e");
+  }
+  return t=>{
+    L.drawImage(base,0,0);carteAnimee(L,t,null,{});
+    L.globalAlpha=.6;r(L,0,0,W,H,"#0a0604");L.globalAlpha=1;
+    parchemin(L,14,52,188,290);
+    if(!fond._fait){illustration();fond._fait=1;}
+    L.drawImage(fond,0,0);
+    // cloche qui se balance
+    const cx=IX+122,cy=IY+56,bal=Math.round(Math.sin(t*4)*1.4);r(L,cx-3+bal,cy-25,3,3,"#d8a830");r(L,cx-2+bal,cy-22,1,1,"#8a6010");
+    // nuages
+    for(let i=0;i<2;i++){const x=IX+((t*5+i*90)%(IW+30))-15,y=IY+8+i*10;L.save();L.beginPath();L.rect(IX,IY,IW,IH);L.clip();r(L,x,y,16,3,"#ffffff");r(L,x+4,y-2,8,2,"#ffffff");L.restore();}
+    // les pèlerins avancent vers la chapelle
+    for(let i=0;i<3;i++){const ph=((t*.08+i*.1)%1),x=IX+4+ph*104,y=IY+50+Math.round(Math.sin((x-IX)*.04)*2);if(x<IX+IW-8)perso(L,x,y-i%2,"pelerin",null,Math.floor(t*4+i)%2);}
+    // boutons
+    bouton(L,24,236,168,30,true);bouton(L,24,272,168,30,false,["#8a4a30","#5a2a18","#d89070"]);bouton(L,24,308,168,22,false);
+    g.imageSmoothingEnabled=false;g.drawImage(low,0,0,W*K,H*K);texteHud(g);
+    Tx(g,"EVENEMENT · TOUR 7",108,63,{f:PS,s:5,a:"center",c:"#8a5a20",w:"400",ombre:false});
+    Tx(g,"LES PELERINS",108,72,{f:PS,s:7.5,a:"center",c:"#5a2a10",w:"400",ombre:false});
+    Tx(g,"Une troupe de pèlerins en route pour la",108,172,{s:8.5,a:"center",c:"#3e2610",ombre:false,w:"700"});
+    Tx(g,"chapelle demande le gîte pour la nuit.",108,182,{s:8.5,a:"center",c:"#3e2610",ombre:false,w:"700"});
+    Tx(g,"Le peuple saura ce que vous ferez.",108,196,{s:8,a:"center",c:"#7a5a30",ombre:false,w:"500"});
+    Tx(g,"Dame Ysolde (Pieuse) les a déjà reçus.",108,214,{s:7.5,a:"center",c:"#3f6ab0",ombre:false,w:"700"});
+    Tx(g,"LES LOGER",108,246,{f:PS,s:6,a:"center",w:"400"});Tx(g,"−5 nourriture   +5 légitimité",108,257,{s:8,a:"center",c:"#e8f4d0"});
+    Tx(g,"FERMER LES PORTES",108,282,{f:PS,s:5.5,a:"center",w:"400"});Tx(g,"−2 légitimité",108,293,{s:8,a:"center",c:"#f4d8c8"});
+    Tx(g,"VOIR LA CARTE",108,319.5,{f:PS,s:5,a:"center",w:"400",c:"#e8d8b8"});
+  };
+}
+
+// =============== écran 3 : un combat ===============
+function ecranCombat(cv){
+  const g=cv.getContext("2d"),avant=carteFixe(),apres=carteFixe([-2,1]);hud(avant.getContext("2d"));hud(apres.getContext("2d"));
+  const low=document.createElement("canvas");low.width=W;low.height=H;const L=low.getContext("2d");
+  const ATT=[5,4,4,3],DEF=[3,2,1,0],DUREE=9;
+  const SX=22,SY=72,SW=172,SH=74;
+  return T=>{
+    const t=T%DUREE,fini=t>5.6;
+    L.drawImage(fini?apres:avant,0,0);
+    const garnApres=fini?{"-2,1":3,"-2,2":0,"-3,2":0}:{};
+    const{ecus}=carteAnimee(L,T,fini?[-2,1]:null,{prise:fini?[-2,1]:null,garn:garnApres});
+    // la terre prise clignote à l'or
+    if(fini&&t<7.4){const[x,y]=centre(-2,1);L.globalAlpha=.55*Math.abs(Math.sin((t-5.6)*6));pixHex(x,y,S,(X,Y)=>r(L,X,Y,1,1,"#ffe070"));L.globalAlpha=1;}
+    const passe=t<1.2?0:Math.min(3,1+Math.floor((t-1.2)/1.4));
+    if(!fini){
+      L.globalAlpha=.55;r(L,0,0,W,H,"#0a0604");L.globalAlpha=1;
+      plaque(L,10,46,196,200);
+      // la petite scène
+      for(let j=0;j<SH;j++)r(L,SX,SY+j,SW,1,j<22?`rgb(${140+j*2},${190+j},${226})`:j<26?"#5e9c44":(j%5?"#7ab24c":"#6aa040"));
+      for(let i=0;i<30;i++){const x=SX+hh(i,5)*SW,y=SY+28+hh(5,i)*44;r(L,x,y,1,3,"#d8c060");r(L,x-1,y,3,1,"#f0d878");}
+      chene(L,SX+12,SY+20,6);pin(L,SX+SW-12,SY+26);
+      r(L,SX-1,SY-1,SW+2,1,"#120c08");r(L,SX-1,SY+SH,SW+2,1,"#120c08");r(L,SX-1,SY,1,SH,"#120c08");r(L,SX+SW,SY,1,SH,"#120c08");
+      // les troupes : avancent, se heurtent, reculent un peu
+      const cyc=t<1.2?t/1.2:((t-1.2)%1.4)/1.4,av=t<1.2?cyc:(cyc<.35?1:cyc<.6?1-(cyc-.35)*1.2:.7+(cyc-.6)*.75);
+      const na=ATT[passe],nd=DEF[passe],choc=t>=1.2&&cyc<.25;
+      const FORM=[[0,0],[-11,-12],[-11,12],[-22,0],[-22,-22]],gros=(x,y,ty,c,p)=>{L.save();L.translate(Math.round(x),Math.round(y));L.scale(2,2);perso(L,0,0,ty,c,p);L.restore();};
+      const rangs=[];
+      for(let i=0;i<na;i++)rangs.push([SX+12+av*34+FORM[i][0]+22,SY+30+FORM[i][1]*.5+(i===4?22:0),"soldat",SEIG.J.c,Math.floor(T*6+i)%2]);
+      for(let i=0;i<nd;i++)rangs.push([SX+SW-24-av*34-FORM[i][0]-22,SY+30+FORM[i][1]*.5,"brigand",null,Math.floor(T*6+i+1)%2]);
+      rangs.sort((a,b)=>a[1]-b[1]).forEach(([x,y,ty,c,p])=>gros(x,y,ty,c,p));
+      // soldats tombés à cette passe
+      if(t>=1.2){const pa=ATT[passe-1]-na,pd=DEF[passe-1]-nd;for(let i=0;i<pa;i++)r(L,SX+50-i*12,SY+64,10,3,"#8a7020");for(let i=0;i<pd;i++)r(L,SX+SW-60+i*12,SY+64,10,3,"#4a4a42");}
+      if(choc){const cx=SX+SW/2,cy=SY+46;for(let i=0;i<8;i++){const a=i*Math.PI/4+T*9,R=4+cyc*30;r(L,cx+Math.cos(a)*R,cy+Math.sin(a)*R*.7,2,2,i%2?"#fff6c0":"#f0a030");}r(L,cx-1,cy-1,3,3,"#ffffff");}
+      // barres
+      const bar=(y,n,max,c)=>{r(L,SX,y,SW,9,"#120c08");r(L,SX+1,y+1,SW-2,7,"#2a1a10");r(L,SX+1,y+1,Math.round((SW-2)*n/max),7,c);r(L,SX+1,y+1,Math.round((SW-2)*n/max),1,"rgba(255,255,255,.4)");};
+      bar(SY+SH+18,na,5,SEIG.J.c);bar(SY+SH+44,nd,5,"#8a8478");
+      // pastilles des passes
+      for(let i=0;i<3;i++){r(L,84+i*18,SY+SH+64,10,10,"#120c08");r(L,85+i*18,SY+SH+65,8,8,i<passe?"#f0c24a":"#4a3018");}
+    } else {
+      // bandeau de victoire
+      const k=Math.min(1,(t-5.6)*3);plaque(L,20,108-Math.round((1-k)*20),176,38);
+    }
+    bouton(L,10,350,196,22,true);
+    g.imageSmoothingEnabled=false;g.drawImage(low,0,0,W*K,H*K);texteHud(g);
+    if(fini)ecus.forEach(([x,y,n])=>Tx(g,String(n),x,y+.5,{s:8,a:"center"}));
+    if(!fini){
+      Tx(g,"ATTAQUE · PLAINE",108,57,{f:PS,s:6,a:"center",c:"#f0c24a",w:"400"});
+      Tx(g,"VOTRE TROUPE",SX,SY+SH+12,{s:8,c:"#f1e6d0"});Tx(g,String(ATT[passe]),SX+SW,SY+SH+12,{s:9,a:"right",c:SEIG.J.c});
+      Tx(g,"BRIGANDS (+ TERRAIN)",SX,SY+SH+38,{s:8,c:"#f1e6d0"});Tx(g,String(DEF[passe]),SX+SW,SY+SH+38,{s:9,a:"right",c:"#c8c0b0"});
+      Tx(g,passe?"PASSE "+passe+"/3":"CHANCE 63 %",108,SY+SH+86,{f:PS,s:5,a:"center",c:"#d8c09a",w:"400"});
+    } else {
+      const k=Math.min(1,(t-5.6)*3),dy=-Math.round((1-k)*20);
+      Tx(g,"VICTOIRE !",108,121+dy,{f:PS,s:9,a:"center",c:"#f0c24a",w:"400"});
+      Tx(g,"La plaine est à vous. 3 soldats l'occupent.",108,136+dy,{s:8,a:"center",c:"#f1e6d0"});
+    }
+    Tx(g,fini?"La plaine de l'ouest rejoint votre duché.":"Vos soldats chargent les brigands...",8,256.5,{s:7.5,c:"#e8d8b8"});
+    if(!fini){Tx(g,"5 soldats engagés : caserne 4, ferme 1",10,278,{s:8.5,c:"#f1e6d0"});Tx(g,"Défense : 3 brigands + plaine (0)",10,290,{s:8.5,c:"#c8b08a"});Tx(g,"Le perdant perd tous ses soldats engagés.",10,306,{s:8,c:"#c8b08a"});Tx(g,"Le vainqueur en perd la moitié de la défense.",10,316,{s:8,c:"#c8b08a"});}
+    else{Tx(g,"PLAINE ★★★ PRISE",10,278,{f:PS,s:6,c:"#f0c24a",w:"400"});Tx(g,"+1 terre · rend 6 nourriture par tour",10,292,{s:8.5,c:"#f1e6d0"});Tx(g,"Pertes : 2 soldats · brigands chassés",10,304,{s:8.5,c:"#c8b08a"});Tx(g,"Score : +100 (terre)",10,316,{s:8.5,c:"#8ee070"});}
+    Tx(g,fini?"CONTINUER":"PASSER",108,361.5,{f:PS,s:5.5,a:"center",w:"400"});
+  };
+}
+
+const pret=document.fonts?Promise.all(["10px 'Press Start 2P'","700 10px Rajdhani","500 10px Rajdhani"].map(x=>document.fonts.load(x))).catch(()=>{}):Promise.resolve();
+pret.then(()=>{
+  const ecrans=[...document.querySelectorAll("canvas[data-scene]")].map(cv=>({carte:ecranCarte,evenement:ecranEvenement,combat:ecranCombat})[cv.dataset.scene](cv));
+  const lent=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let dernier=0;const t0=performance.now();
+  function boucle(now){if(now-dernier>45){dernier=now;const t=(now-t0)/1000;ecrans.forEach(f=>f(t));}requestAnimationFrame(boucle);}
+  if(lent)ecrans.forEach(f=>f(3.9));else requestAnimationFrame(boucle);
+});
+})();
+</script>

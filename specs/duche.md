@@ -1,0 +1,183 @@
+# Duché — cahier des charges
+
+Petit jeu de gestion et de conquête au tour par tour. Le joueur dirige un duché médiéval sur une carte de **37 terres hexagonales** : il le développe, conquiert les terres de trois seigneurs rivaux et vise la couronne laissée vacante par le roi. **Duché du jour** commun à la famille (même carte, mêmes rivaux, mêmes événements), avec classement.
+
+Cahier des charges fourni par l'utilisateur le 20/10, **remis au standard de la Ludothèque** (voir § 1). Remplace l'idée « Le Petit Royaume » d'`IDEES.md` (confirmé le 20/10). **4X minimaliste dans le concept** (peu de ressources, règles courtes) mais **riche graphiquement**, avec de petites animations ; carte en hexagones (choix de l'utilisateur du 20/10).
+
+## 1. Ce qui change par rapport au cahier des charges d'origine
+
+| Origine | Ici | Pourquoi |
+|---|---|---|
+| Modules ES, `src/*.js`, `styles/` | **Scripts classiques** dans `duche/` (`regles.js`, `ia.js`, `evenements.js`, `decor.js`, `sons.js`, `jeu.js`, `index.html`, `style.css`) | Règle du dépôt : pas de modules, pas de build ; `regles.js` + `ia.js` + `evenements.js` = logique pure, aussi chargée par Node pour les tests |
+| Table Supabase `scores` à créer, pseudo saisi en fin de partie | **`ludo-scores.js`** (jeu `duche`, tableaux `daily:AAAAMMJJ` et `best`) ; le joueur est celui du **code familial** de l'accueil | Tous les jeux partagent ces classements ; pas de nouveau SQL, pas de nouvelle clé |
+| Graine = date **UTC** `YYYY-MM-DD` | Date **locale** `AAAAMMJJ`, comme tous les défis du jour | Le jour change à minuit pour toute la famille, comme les autres jeux |
+| Mode du jour rejouable | **Une seule tentative classée par jour** (règle du 15/10) : partie du jour sauvegardée à part (`duche.dailyRun`) et reprise où on l'a laissée ; `duche.dailyTry` posé dès le premier tour ; une fois finie, le jour se rejoue hors classement | Contre la triche (rejouer une carte connue) |
+| Emojis, grille CSS 6 × 6, desktop d'abord | Carte en **hexagones**, dessinée et **animée** (eau, drapeaux, moulins, fumée, moutons, ombres des nuages) sur un canvas en **portrait** (direction A, **pixel art 32 bits**, retenue le 20/10 ; écrans dans `maquettes/duche-4.html`) | Choix de l'utilisateur (20/10) ; le site est une appli installée sur Android |
+| Pas de sons en v1 | Bruitages et musique **discrets**, synthétisés en Web Audio (`sons.js`), coupables | Standard des derniers jeux (Capitaine du port, Magasinier) |
+| Événement au milieu du tour, conquête après l'IA | Ordre revu (§ 5) : **événement en début de tour**, attaques parmi les décisions du joueur | Le choix de l'événement éclaire les décisions ; une seule phase où le joueur agit |
+| Classement top 50 + onglet historique | Volet de l'accueil : classement du jour et meilleur score (`best`) | Déjà fourni par l'accueil |
+| Partie de 20 à 30 min | 30 tours visés **en 15 à 25 min** ; partie sauvegardée à chaque action | Jeu sur téléphone, souvent par morceaux |
+
+## 2. Principe
+
+- **Partie** : 30 tours au plus (un tour = une saison, l'an 1 au printemps ; 30 tours = 7 ans et demi).
+- **Modes** : **Duché du jour** (graine = date, classé, une tentative) et **Partie libre** (graine au hasard, non classée au jour ; son meilleur score va au tableau `best`, confirmé le 20/10).
+- **Défaite** : château du joueur pris ; ou plus aucun soldat ni or ni moyen d'en produire ; ou **révolte générale** (légitimité à 0).
+- **Victoires anticipées** : **conquête** (toutes les terres non neutres et tous les châteaux) ou **couronne** (majorité des votes de la noblesse, § 9).
+- **Fin normale** : après le tour 30, calcul du score.
+
+## 3. La carte
+
+- **37 terres hexagonales** (un grand hexagone de 4 terres de côté, coordonnées axiales q, r ; pointe en haut), tirées de la graine (§ 7). 37 terres confirmées le 20/10 (61 possibles plus tard). Chaque terre : **terrain**, **qualité** 1 à 3 (petits épis ou pierres dessinés), **propriétaire** (joueur, rival 1 à 3, neutre), **bâtiment** (un au plus), **garnison** (soldats).
+- Le joueur commence dans un **coin** de l'hexagone (en bas à gauche), château sur une **plaine** (5 soldats), + 2 terres voisines (1 soldat chacune) ; réserves de départ : 20 nourriture, 30 bois, 20 or, 20 légitimité. Les 3 rivaux dans trois autres coins (en haut à gauche, en haut à droite, à droite ; à 6 terres du joueur, à 3 les uns des autres), pareil. Le reste est neutre, gardé par une **milice de 0 à 1 homme** (ajout de la session 1 : sans elle, tout se prend en 3 tours) ; 4 à 7 terres neutres, à 2 terres au moins des châteaux, tiennent une **bande de brigands** (garnison 2 à 6).
+- Voisinage : les **6 voisines** de chaque hexagone.
+
+### Terrains (rendement de base × qualité, par tour)
+
+| Terrain | Nourriture | Bois | Or | Défense |
+|---|---|---|---|---|
+| Plaine | 2 | — | — | +0 |
+| Forêt | — | 2 | — | +1 |
+| Montagne | — | — | 2 | +3 |
+| Colline | — | 1 | 1 | +2 |
+| Marais | 1 | — | — | +1 |
+| Rivière | 1 | — | 1 | +0 |
+
+### Bâtiments (un par terre)
+
+| Bâtiment | Coût | Effet |
+|---|---|---|
+| Ferme | 20 bois | +2 nourriture |
+| Scierie | 10 bois | +2 bois |
+| Mine | 30 bois | +2 or (colline ou montagne seulement) |
+| Marché | 20 bois, 20 or | +1 or, +1 légitimité par tour ; ouvre le **change** |
+| Caserne | 20 bois, 10 or | +5 au plafond de soldats, recrutement à −20 % ; on peut recruter sur cette terre |
+| Tour de guet | 15 bois, 15 or | +2 défense de la terre |
+| Château | départ seulement | +5 défense, +1 nourriture, +1 or, on y recrute ; indestructible |
+
+## 4. Ressources et économie
+
+- **Nourriture, bois, or, soldats** (posés sur les terres), **légitimité** (0 à 100, départ 20).
+- **Revenus** au début du tour : somme des terres possédées (terrain × qualité + bâtiment).
+- **Entretien** : 1 nourriture par 10 soldats (arrondi au-dessus). Nourriture négative → **famine** : −10 % des soldats (arrondi au-dessus, pris sur la plus grosse garnison), −2 légitimité, nourriture remise à 0.
+- **Recrutement** sur le château ou une caserne : 1 soldat = 2 nourriture + 2 or (1,6 + 1,6 avec au moins une caserne ; on arrondit le total au-dessus). **Plafond** : 10 soldats + 5 par caserne, pour tout le duché. Les recrues n'agissent qu'au tour suivant.
+- **Change** (s'il y a un marché) : 2 bois → 1 or ou 1 or → 2 bois, 5 échanges par tour.
+
+## 5. Un tour (ordre exact)
+
+1. **Revenus** : production, entretien, famine éventuelle ; alertes (famine au prochain tour, révolte proche).
+2. **Événement** : une carte du paquet (§ 10), choix entre 2 ou 3 réponses. (Certains tours n'en ont pas : environ 2 tours sur 3 en ont un.)
+3. **Décisions du joueur**, autant qu'il veut tant qu'il en a les moyens : construire, recruter, déplacer des soldats entre deux terres voisines à lui (une fois par soldat et par tour), changer au marché, **attaquer** une terre voisine (§ 6 ; chaque soldat n'attaque qu'une fois par tour).
+4. **FIN DU TOUR** → les rivaux jouent l'un après l'autre (§ 8), leurs attaques sont montrées brièvement.
+5. **Bilan** : victoire, défaite, votes de la noblesse (dès le tour 15), tour suivant. Sauvegarde.
+
+## 6. Combat
+
+- On attaque une terre **voisine de son territoire**, avec les soldats d'**une ou plusieurs terres à soi voisines** de la cible (choix du nombre avec − / +).
+- **Attaque** = soldats engagés × (1 + bonus) ; bonus : trait Agressif +0,2 pour un rival.
+- **Défense** = garnison + défense du terrain + défense du bâtiment.
+- **Chance de victoire** = attaque / (attaque + défense), **affichée en pourcentage** avant de confirmer.
+- Résolution : tirage du PRNG de combat (§ 7), montrée en **3 passes** (barres qui baissent, chocs d'épées). Le perdant perd **tous** ses soldats engagés (défenseur : toute la garnison). L'attaquant vainqueur perd `arrondi(défense × 0,5)` soldats, au plus engagés − 1 ; les survivants occupent la terre (et n'agissent plus ce tour). Le défenseur vainqueur perd `attaque × 0,5` arrondi **en dessous** (session 2 : sinon, à 1 contre 1, tout le monde mourait), au plus sa garnison.
+- La terre change de main, **bâtiment intact**. Prise d'un **château rival** : le seigneur est éliminé, +30 légitimité, ses autres terres deviennent neutres avec 1 à 3 brigands. (Château du joueur pris : défaite, il garde ses terres pour le score.)
+- Les terres neutres ne contre-attaquent jamais.
+
+## 7. Graine et hasard
+
+- PRNG à graine (mulberry32, celui des autres jeux). **Aucun `Math.random()` dans la logique** (les effets visuels, eux, peuvent).
+- **Graine du jour** = date locale AAAAMMJJ ; l'écran titre affiche « DUCHE DU JOUR · 20 OCTOBRE ».
+- La graine fixe : la carte, les traits des rivaux, l'**ordre du paquet d'événements**, les tirages internes des événements.
+- **Flux séparés** pour que les choix du joueur ne changent pas ce qui est tiré ensuite : un PRNG par usage, dérivé de (graine, usage, tour, n° de l'action dans le tour) : `carte`, `paquet`, `evenement`, `combat`, `ia`. Une même attaque rejouée après rechargement donne le même résultat (la partie est de toute façon sauvegardée à chaque action, on ne peut pas « relancer le dé »).
+
+## 8. Les rivaux
+
+- 3 seigneurs, chacun avec un **nom**, une **couleur** (rouge, bleu, violet ; le joueur est or) et **2 traits** parmi : Agressif, Marchand, Isolationniste, Expansionniste, Traître, Pieux, Bâtisseur.
+- IA à **scores d'utilité** : chaque action possible (construire X ici, recruter, déplacer, attaquer telle terre, ne rien faire) reçoit un score selon la situation (manque de nourriture, menace du joueur, cibles faibles) et les poids des traits ; le rival prend les meilleures tant qu'il a les moyens.
+  - **Agressif** : recrute tôt, attaque quand sa force > 1,2 × la défense de la cible, +0,2 à l'attaque.
+  - **Marchand** : marchés et or d'abord, attaque peu.
+  - **Isolationniste** : défend ses frontières, ne prend que des terres neutres.
+  - **Expansionniste** : prend les terres neutres en priorité.
+  - **Traître** : peut rompre une alliance (avec une chance tirée de la graine) ; perd 10 légitimité quand il le fait.
+  - **Pieux** : +1 légitimité par tour, événements du clergé plus favorables.
+  - **Bâtisseur** : bâtit beaucoup, armée plus petite.
+- Les rivaux se battent aussi **entre eux** et contre les brigands ; pas d'alliances entre rivaux.
+- Toucher un château ou une terre rivale montre le **blason** du seigneur, ses 2 traits (petites icônes + mot), sa légitimité et ses soldats.
+- `outils/duche-simulateur.js` joue des parties complètes (joueur automatique simple contre l'IA) pour l'équilibrage et vérifie que la même graine donne la même partie.
+
+## 9. Légitimité et couronne
+
+- Jauge 0 à 100, toujours visible. Gains : +1 par marché et par tour, +5 événement de cour bien résolu, +2 alliance, +10 tournoi gagné, +30 château rival pris ; les rivaux, qui n'ont pas d'événements, gagnent +1 tous les 3 tours (« leur cour »). Pertes : −2 famine, −15 révolte.
+- **Tour 11 : « Le roi est mort sans héritier »** (événement scripté, toujours tiré). À la fin des tours 11, 13, 15… 27 (un tour sur deux), **un des 9 grands électeurs** vote. Chacun a son critère (ordre tiré de la graine, annoncé au joueur) : 5 regardent la **légitimité** (archevêque, évêque, abbesse, comte palatin, reine mère), le connétable l'**armée**, le maréchal les **terres**, le trésorier l'**or**, le grand architecte les **bâtiments**. Il vote pour le meilleur selon son critère (égalité : le plus légitime, puis le plus de terres, puis le joueur), **parmi les seigneurs d'au moins 40 de légitimité** ; s'il n'y en a pas, il s'abstient.
+- **5 votes = couronne** : victoire anticipée (au plus tôt au tour 19). **Un rival couronné** met fin à la partie (score normal, sans prime). Sinon, au tour 30, chaque vote compte dans le score (§ 11).
+- Un rival éliminé perd ses votes (ils ne sont pas redonnés).
+
+## 10. Événements (paquet de 14 cartes au départ)
+
+Paquet mélangé par la graine, sans répétition avant épuisement, **tirage pondéré par la situation** (on regarde les 3 cartes du dessus et on prend la plus adaptée : famine → récoltes ; grosse armée → provocations ; légitimité < 30 → révolte).
+
+1. **Mauvaise récolte** — perdre 30 % de la nourriture, ou payer 10 or pour en importer.
+2. **Révolte paysanne** (seulement si légitimité < 30) — payer 20 or, céder une terre (la plus éloignée du château), ou réprimer (combat contre 3 à 6 révoltés sur une terre ; défaite = −15 légitimité).
+3. **Brigands** — une terre neutre voisine reçoit 4 brigands, ou payer 10 or.
+4. **Offre d'alliance** — un rival propose : +2 légitimité, pas d'attaque entre vous pendant 10 tours (un Traître peut rompre).
+5. **Tournoi** — miser 2 à 6 soldats ou 10 à 30 or ; chance selon la mise ; gagné = +10 légitimité.
+6. **Relique** — la vendre (25 or) ou l'exposer (+5 légitimité).
+7. **Impôt royal** — payer 15 or ou perdre 5 légitimité (avant la mort du roi seulement).
+8. **Belle récolte** — +2 nourriture par plaine (au moins 4 plaines pour qu'elle sorte).
+9. **Marchand ambulant** — un échange avantageux ce tour (3 bois → 2 or, ou 1 or → 3 bois).
+10. **Mariage** — marier sa fille à un rival (alliance forte de 15 tours, +5 légitimité) ou refuser (+2).
+11. **Hiver précoce** — nourriture −50 % pendant 2 tours, ou brûler 15 bois pour en garder la moitié.
+12. **Pèlerins** — loger (−5 nourriture, +5 légitimité) ou fermer les portes.
+13. **Mercenaires** — 5 soldats pour 20 or, au-delà du plafond pour 5 tours.
+14. **Le roi est mort** (tour 11, scripté, hors paquet) — ouvre la course à la couronne.
+
+Précisions de la session 1 : révolte réprimée = combat de la garnison de la terre et des terres voisines à soi contre les révoltés (chance affichée ; victoire : pertes = moitié des révoltés ; échec : −15 légitimité et autant de soldats que de révoltés) ; terre cédée = neutre, tenue par les révoltés, ses soldats rentrent au château ; tournoi : chance 25 % + 10 % par soldat misé (2 à 6) ou + 2 % par or misé (10 à 30), mise perdue en cas d'échec ; belle récolte : stocker (+2 par plaine) ou fête (+1 par plaine, +3 légitimité) ; marchand : jusqu'à 3 échanges d'un coup ; hiver : brûler 15 bois → −25 % au lieu de −50 %.
+
+## 11. Score
+
+- **Score = terres × 100 + or + bois ÷ 2 + bâtiments × 20 + légitimité × 5 + votes × 50 + prime**.
+- Prime **conquête** : (30 − tour de la victoire) × 50 + 500 ; prime **couronne** : (30 − tour) × 80 + 500.
+- Défaite : score calculé normalement, divisé par 2 (on garde le mérite d'avoir tenu).
+- Classements `duche` : `daily:AAAAMMJJ` (le plus haut gagne, partie du jour seulement) ; `best` (meilleur score toutes parties confondues, partie libre comprise — à confirmer).
+
+## 12. Écrans (portrait, téléphone d'abord)
+
+1. **Titre** : DUCHE en logo, CONTINUER (s'il y a une partie libre en cours), DUCHE DU JOUR (avec la date, « REPRENDRE » si commencé, « FAIT » si fini), PARTIE LIBRE, comment jouer, CLASSEMENT (volet de l'accueil), bruitages / musique, ◀ LUDOTHÈQUE.
+2. **Jeu** : en haut la barre des ressources (nourriture, bois, or, soldats/plafond, légitimité, TOUR 7/30, saison) ; au milieu la **carte 6 × 6** en pixel art (terrains, bâtiments, bannières de couleur du propriétaire, nombre de soldats sur chaque terre) ; en bas le **panneau de la terre touchée** (description, CONSTRUIRE, RECRUTER, DEPLACER, ATTAQUER avec la chance en %) et le bouton **FIN DU TOUR** ; journal du tour (3 lignes, qui défilent) ; pause (reprendre, comment jouer, sons, abandonner, ◀ LUDOTHÈQUE).
+3. **Événement** : fenêtre façon parchemin avec une petite illustration et 2 ou 3 réponses (coût et effet écrits sur chaque bouton).
+4. **Combat** : fenêtre avec les deux bannières, 3 passes de barres, résultat ; la terre prise **clignote** à la couleur du nouveau seigneur.
+5. **Fin** : VICTOIRE / COURONNE / DEFAITE / FIN DU REGNE, score détaillé ligne par ligne, rang du jour, quelques faits marquants (terres prises, rivaux tombés, pic de légitimité), REJOUER (libre), ◀ TITRE.
+
+## 13. Technique
+
+- `duche/regles.js` : état + règles pures (`ducNouvelle(graine)`, `ducRevenus`, `ducConstruire`, `ducRecruter`, `ducDeplacer`, `ducAttaquer`, `ducChance`, `ducFinTour`, `ducScore`, `ducVictoire`), `duche/ia.js` (`ducIaJouer(etat, rival)`), `duche/evenements.js` (`DUC_EVENEMENTS`, `ducTirerEvenement`, `ducRepondre`). Toutes **fonctions pures** sur un état JSON (`RUN_V` + `migrate`), rien sur le DOM ; aussi chargées par Node.
+- `duche/decor.js` (terrains, bâtiments, frontières, pions, animations : eau, drapeaux, moulins, fumée, moutons, nuages, flèches d'attaque, soldats qui marchent), `duche/sons.js` (`DucSons`), `duche/jeu.js` (affichage, gestes, écrans, sauvegarde, classements ; `window.Duche` pour les tests).
+- Canvas en portrait (pixel art 216 × 384 agrandi, ou dessin net 360 × 640, selon la direction) ; décor fixe dessiné une fois dans une toile cachée, animations par-dessus (~20 images/s, au repos si `prefers-reduced-motion`) ; menus en HTML.
+- Sauvegardes : `duche.run` (partie libre), `duche.dailyRun`, `duche.dailyTry`, `duche.daily` {AAAAMMJJ: score}, `duche.best`, `duche.opts`, `duche.tuto`. Transfert `LUDO1-` : `daily`, `best`.
+- Accueil : `GAMES`, `META` en tête, `NEWS`, `PROGRESS`, `TODAY`, `RECS`, `RANKS` ; `PSEUDO_BOARDS` ; `sw.js` ; icône 16×16 (un donjon) ; `outils/verifications.js`, `fumee.js`, `logique.js`.
+
+## 14. Plan de travail (Opus : moteur emmêlé avec IA)
+
+0. **Maquette** : maquette 1 en cases carrées (`maquettes/duche.html`) refusée ; maquette 2 en hexagones vectoriels (`maquettes/duche-2.html`) jugée trop minimale graphiquement ; maquette 3 animée (`maquettes/duche-3.html`) : **direction A (pixel art 32 bits) retenue**, animations jugées « pas trop mal » ; maquette 4 (`maquettes/duche-4.html`, https://claude.ai/artifact/DGTYKbMsBAhPhgncMyTxK3) creuse A sur trois écrans : carte (rivière qui coule de terre en terre, écume sur la côte, champs de blé, pins et chênes, oiseaux, petits soldats sur les garnisons, troupe qui marche), événement (parchemin illustré et animé, réponses avec leur prix), combat (petite scène en 3 passes, barres, terre qui passe à l'or). Retour : scènes de combat appréciées mais **pas assez détaillées, à faire comme Le Thé des Jarls** ; la carte doit être **claire et lisible**. Maquette 5 **validée** (`maquettes/duche-5.html`, https://claude.ai/artifact/DBUtVjbVaptU8485abFrVv) : carte plus lisible (teinte des seigneurs plus forte, grands écussons, plus de figurines sur les garnisons) ; scènes HD-2D reprises du Thé des Jarls (décor peint en couches floues, soldats 28 × 30 détourés et éclairés : `spriteD`, tabard et écu aux couleurs du seigneur, brigands à capuche et hache ; bannières, rayons, herbe floue devant ; 1 soldat = 3 figurines) **validée le 20/10**, pixel art à améliorer un peu (§ 15).
+1. **Session 1 — Règles et IA** : **faite le 20/10**. `duche/regles.js` (carte, économie, combat, tour, votes, score), `duche/evenements.js` (14 événements, tirage pondéré), `duche/ia.js` (IA à scores d'utilité : attaques, ralliement des soldats vers la prochaine cible, recrues, bâtiments, change ; aussi le joueur automatique), `outils/duche-simulateur.js` (lancé par `verifications.js`). Sur 300 parties, joueur automatique « expansionniste » : couronne 41 %, rival couronné 34 %, fin du règne 20 %, défaite 5 %, conquête 0 % ; fin en moyenne au tour 23,6 ; le joueur a 10 terres au tour 10 et 15 au tour 20, un rival 6 ; ~25 combats du joueur par partie. Même graine = même partie, aussi après sauvegarde et rechargement.
+2. **Session 2 — Le jeu** : **faite le 20/10**. `duche/decor.js` (carte pixel art tirée de l'état : rivière qui suit les terres de rivière, saisons — feuillages d'automne, neige, champs —, touffes et rochers, palissade du château, scierie dessinée ; scènes HD-2D selon le terrain et la saison, soldats à casques et barbes variés, bannières à l'emblème de chaque seigneur ; illustration de chaque événement avec ses figurants), `duche/jeu.js` (titre sur la carte du jour, partie libre facile ou normale, Duché du jour en normal avec `dailyRun` / `dailyTry` / `daily`, panneau de la terre touchée : construire, recruter, déplacer, changer, attaquer avec la chance ; combat en 3 passes ; événements ; tour des rivaux montré coup par coup ; pause, abdiquer, comment jouer ; fin avec le score détaillé ; sauvegarde à chaque action, score enregistré dès la fin), `index.html`, `style.css` ; `sw.js` v45. Pas encore sur l'accueil.
+3. **Session 3 — Finitions** : **faite le 21/10** (`sons.js` : bruitages et musique au luth, coupables ; classements `best` et `daily:` envoyés à la fin, `registerExisting`, `PSEUDO_BOARDS`, `SYNC` 21 ; accueil : cartouche au donjon, volet, records, EN COURS, défi du jour, transfert `LUDO1-` ; aide au premier tour ; lien `#jour` ; tests `logique.js` et `fumee.js` ; `sw.js` v46). Artefact créé le 21/10 (https://claude.ai/artifact/5Ad2yYzProUEqpSx7Q3ook ; police Rajdhani ajoutée au lien Google de la page pour l'artefact, lien CLASSEMENT pointé vers le site). Reste : équilibrage après les premières vraies parties. Prévu au départ : classements (`ludo-scores.js` : `daily:AAAAMMJJ`, `best`), sons, accueil (cartouche, volet, icône), tests (`logique.js`, `fumee.js`), artefact, petite aide au premier tour, équilibrage après les premières parties.
+
+## 15. Points à confirmer par l'utilisateur
+
+Réglé le 20/10 : la partie libre envoie son meilleur score (`best`) ; Duché remplace Le Petit Royaume ; carte en hexagones, 4X minimaliste.
+
+Réglé aussi : 30 tours, 37 terres.
+
+Réglé aussi : combat en scène (style du Thé des Jarls).
+
+**Maquette 5 validée le 20/10** (« ça me va très bien »), avec une demande : **améliorer un peu le pixel art** pendant la programmation (session 2). Pistes : terrains plus fouillés (herbe en touffes, rochers, ombres portées des arbres et des montagnes sur les tuiles voisines), bâtiments un peu plus grands et plus détaillés (fenêtres, tuiles du toit, palissade du château), écussons et bannières plus fins, bord des tuiles moins net (transition herbe/terre), soldats des scènes avec plus de variantes (casques, barbes, écus). Écran titre (château du joueur, carte du jour en fond) et décors par terrain et par saison prévus en session 2.
+
+**Changements de la session 1 (équilibrage, à valider par l'utilisateur)** : le roi meurt au **tour 11** et les électeurs votent **un tour sur deux** (au lieu du tour 15 et de chaque tour : sinon la couronne tombait presque toujours au tour 19) ; les électeurs ont des **critères variés** et exigent **40 de légitimité** ; un **rival couronné** termine la partie ; **milice** de 0 à 1 homme sur les terres neutres ; **cour des rivaux** (+1 légitimité tous les 3 tours). À noter : avec les rendements du § 3, la **nourriture et le bois s'entassent** en milieu de partie (le plafond de soldats limite les dépenses) ; à revoir après les premières vraies parties (entretien plus cher, ou bâtiments qui coûtent plus) si la famine ne menace jamais.
+
+**Deux difficultés** (demande de l'utilisateur du 20/10, `DUC_NIVEAUX` dans `regles.js`) : **facile** = les règles ci-dessus ; **normal** = **plaines à 1 nourriture par qualité** (au lieu de 2), entretien 1 nourriture pour **5** soldats, **hiver chaque année** (nourriture −50 % à la saison d'hiver), **bâtiments 50 % plus chers** (arrondis à 5), **rivaux plus mordants** (attaquent dès 1,3 × la défense au lieu de 1,5, et +3 d'intérêt pour les terres du joueur quand il mène). Le **Duché du jour est toujours en normal** ; la partie libre laisse choisir ; seules les parties en normal envoient leur score à `best`. Simulateur (300 parties chacun, joueur automatique) : facile 41 % de victoires, 5 % de défaites ; normal 28 % de victoires, 5 % de défaites, 28 % de fins au tour 30, fin moyenne au tour 24,3. L'entretien seul ne rendait pas la nourriture rare (essayé 1 pour 5, 3, 2 soldats, et +1 par 2 terres) : c'est la **production des plaines** qui a été baissée (choix de l'utilisateur du 20/10). Effet : réserve au tour 20 de 204 (facile) à 78 (normal), et le joueur automatique bâtit presque deux fois plus de fermes (243 contre 133 sur 100 parties) ; il ne connaît pas la famine, car il recrute prudemment, mais un joueur qui néglige ses fermes la verra.
+
+## 16. Critères d'acceptation
+
+- Une partie complète se joue sans blocage sur le téléphone, interrompue et reprise à tout moment.
+- Même graine → même carte, mêmes rivaux, mêmes événements (vérifié par le simulateur et `logique.js`).
+- Le score du jour n'est envoyé qu'une fois, et seulement pour le Duché du jour.
+- Trois graines différentes donnent des parties nettement différentes (terrains, traits, ordre des événements).

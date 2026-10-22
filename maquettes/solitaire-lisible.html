@@ -1,0 +1,236 @@
+<title>Solitaire, lisibilité d'abord</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Rajdhani:wght@700&display=swap">
+<style>
+/* Planche : quatre téléphones à taille réelle (trois coins de carte + le menu), table bord à bord, commandes en bas sous le pouce. */
+:root{
+  color-scheme: dark;
+  --night:#0b1f14; --night-2:#123020; --ink:#05060c; --bar:#0d1a2e; --bar-line:#2a4a78;
+  --text:#f2f0ff; --dim:#a9bfd8; --gold:#ffd23f; --red:#ff6b7a; --ok:#7ee08a;
+  --f-display:"Press Start 2P","Courier New",monospace; --f-body:"VT323","Lucida Console",monospace; --f-rank:"Rajdhani","Arial Narrow",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--night); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size:4px 4px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 40px}
+.page{max-width:1600px; margin:0 auto; display:flex; flex-direction:column; gap:24px}
+h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,4vw,22px); color:var(--gold); text-shadow:3px 3px 0 #000; text-wrap:balance}
+h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:12px; color:var(--gold)}
+p{margin:0; max-width:70ch; color:var(--dim)}
+b{color:var(--text); font-weight:400}
+.regles{margin:0; padding-left:20px; color:var(--dim); max-width:80ch}
+.regles li{margin:3px 0}
+.grille{display:flex; flex-wrap:wrap; gap:26px; justify-content:center; align-items:flex-start}
+.choix{width:min(100%, 360px); display:flex; flex-direction:column; gap:10px}
+.tag{font-family:var(--f-display); font-size:10px; letter-spacing:1px; color:var(--ink); background:var(--gold); padding:6px 8px; align-self:flex-start}
+.tel{width:100%; background:#000; border-radius:26px; padding:12px 0 14px; box-shadow:0 0 0 3px #2a2a33, 8px 8px 0 #000; overflow:hidden}
+.ecran{position:relative; display:flex; flex-direction:column}
+.haut{display:flex; align-items:center; justify-content:space-between; gap:6px; padding:6px 10px; background:var(--bar); border-bottom:2px solid var(--bar-line)}
+.haut .t{font-family:var(--f-display); font-size:9px; color:var(--gold)}
+.haut .chiffres{display:flex; gap:10px; font-family:var(--f-display); font-size:8px; color:var(--dim); font-variant-numeric:tabular-nums}
+.haut .chiffres em{font-style:normal; color:var(--text)}
+canvas.table{display:block; width:100%; height:auto}
+.bas{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:8px; background:var(--bar); border-top:2px solid var(--bar-line)}
+.bas i{font-style:normal; text-align:center; font-family:var(--f-display); font-size:8px; padding:12px 4px; background:linear-gradient(#2d6cb0,#163e7a); border:2px solid #f2f0ff; border-radius:4px}
+.bas i.go{background:linear-gradient(#ffd23f,#d08a10); color:#2a1600}
+.avis{color:var(--dim); font-size:19px}
+.avis ul{margin:4px 0 0; padding-left:18px}
+.avis li{margin:2px 0}
+.avis .p::marker{content:"+ "; color:var(--ok)}
+.avis .m::marker{content:"– "; color:var(--red)}
+.mesure{font-family:var(--f-display); font-size:8px; color:var(--gold); line-height:1.8}
+/* le menu ouvert par-dessus la table */
+.voile{position:absolute; inset:0; background:rgba(3,6,14,.55); display:flex; align-items:flex-end}
+.feuille{width:100%; background:var(--bar); border-top:3px solid var(--gold); padding:12px 10px 10px; display:flex; flex-direction:column; gap:10px}
+.feuille .titre{font-family:var(--f-display); font-size:10px; color:var(--gold)}
+.feuille .lab{font-family:var(--f-display); font-size:7px; color:var(--dim)}
+.rangee{display:flex; gap:6px; flex-wrap:wrap}
+.choixdos{all:unset; cursor:pointer; border:2px solid transparent; border-radius:5px; padding:2px; line-height:0}
+.choixdos canvas{width:38px; height:52px; image-rendering:pixelated}
+.choixtapis{all:unset; cursor:pointer; width:56px; height:30px; border:2px solid transparent; border-radius:5px}
+.choixdos[aria-pressed="true"], .choixtapis[aria-pressed="true"]{border-color:var(--gold)}
+.choixdos:focus-visible, .choixtapis:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.feuille .actions{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+.feuille .actions i{font-style:normal; text-align:center; font-family:var(--f-display); font-size:7px; padding:10px 4px; background:linear-gradient(#2d6cb0,#163e7a); border:2px solid #f2f0ff; border-radius:4px}
+</style>
+
+<div class="page">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>SOLITAIRE : LISIBLE D'ABORD</h1>
+    <p>On oublie le pixel art pour les cartes : elles sont dessinées <b>nettes, à la résolution du téléphone</b>, avec une police épaisse et étroite (Rajdhani, déjà dans <b>polices/</b>). Le décor (titre, boutons, dos de cartes) garde le style 16 bits. Téléphones à <b>taille réelle</b> : regarde cette page sur le tien.</p>
+    <ul class="regles">
+      <li><b>Table bord à bord</b> : plus de cadre en bois ni de marges, les cartes font 47 px de large au lieu de 36.</li>
+      <li><b>Chiffre et enseigne sur une seule ligne</b>, tout en haut de la carte : c'est la seule partie visible dans une colonne.</li>
+      <li><b>Cartes retournées serrées</b> (6 px) pour laisser la place aux cartes visibles (28 à 33 px chacune).</li>
+      <li><b>Commandes en bas</b>, sous le pouce, et un seul bouton <b>MENU</b> pour le reste (nouvelle donne, pioche 1 ou 3, dos, tapis, son, retour à la Ludothèque).</li>
+    </ul>
+  </header>
+  <div class="grille" id="tels"></div>
+</div>
+
+<script>
+"use strict";
+/* ---------- partie d'exemple (s : 0 pique, 1 cœur, 2 trèfle, 3 carreau) ---------- */
+const PARTIE = {
+  waste: [[5,1],[4,2],[11,3]],
+  found: [[1,0],[2,1],[1,2],null],
+  tab: [
+    {down:0, up:[[13,0],[12,1],[11,2],[10,3]]},
+    {down:1, up:[[9,0],[8,1],[7,2]]},
+    {down:2, up:[[12,3],[11,0]]},
+    {down:3, up:[[6,1],[5,0],[4,3],[3,2]]},
+    {down:4, up:[[13,1]]},
+    {down:5, up:[[10,2],[9,1],[8,2],[7,3],[6,0]]},
+    {down:6, up:[[2,0]]},
+  ],
+};
+const RANKS = [null, "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const ROUGE_NOIR = ["#14141c", "#d3162c", "#14141c", "#d3162c"];
+const QUATRE = ["#14141c", "#d3162c", "#0f7d36", "#1857cc"];
+
+/* ---------- enseignes en vecteurs (pas de caractères ♠♥ : Android les dessine en émojis) ---------- */
+function enseigne(g, s, cx, cy, r){
+  g.beginPath();
+  const rond = (x, y, k) => { g.moveTo(x + k, y); g.arc(x, y, k, 0, Math.PI * 2); };
+  if (s === 3){ g.moveTo(cx, cy - r); g.lineTo(cx + r * .78, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r * .78, cy); g.closePath(); }
+  else if (s === 1){ rond(cx - r * .5, cy - r * .3, r * .52); rond(cx + r * .5, cy - r * .3, r * .52);
+    g.moveTo(cx - r * 1.0, cy - r * .18); g.lineTo(cx + r * 1.0, cy - r * .18); g.lineTo(cx, cy + r); g.closePath(); }
+  else if (s === 0){ rond(cx - r * .5, cy + r * .2, r * .5); rond(cx + r * .5, cy + r * .2, r * .5);
+    g.moveTo(cx - r * .98, cy + r * .1); g.lineTo(cx + r * .98, cy + r * .1); g.lineTo(cx, cy - r); g.closePath();
+    g.moveTo(cx, cy + r * .2); g.lineTo(cx + r * .38, cy + r); g.lineTo(cx - r * .38, cy + r); g.closePath(); }
+  else { rond(cx, cy - r * .48, r * .42); rond(cx - r * .5, cy + r * .12, r * .42); rond(cx + r * .5, cy + r * .12, r * .42);
+    g.moveTo(cx, cy); g.lineTo(cx + r * .38, cy + r); g.lineTo(cx - r * .38, cy + r); g.closePath(); }
+  g.fill();
+}
+function carteVide(g, x, y, w, h, fond, bord){
+  g.beginPath(); g.roundRect(x + .5, y + .5, w - 1, h - 1, 4); g.fillStyle = fond; g.fill(); g.strokeStyle = bord; g.lineWidth = 1; g.stroke();
+}
+
+/* ---------- les trois coins ---------- */
+const COINS = [
+  { tag: "1 · NET", cols: ROUGE_NOIR, du: 28, taille: 24, mesure: "CHIFFRE : 17 PX DE HAUT (AUJOURD'HUI : 6 PX)",
+    plus: ["Chiffre et enseigne côte à côte, en gras, sur du blanc pur.", "Au milieu, une grande enseigne pour la dernière carte."],
+    moins: ["Rouge et noir seulement : il faut lire l'enseigne pour distinguer cœur et carreau."] },
+  { tag: "2 · CHIFFRE GEANT", cols: ROUGE_NOIR, du: 33, taille: 32, mesure: "CHIFFRE : 23 PX DE HAUT",
+    plus: ["Le chiffre remplit toute la hauteur visible : il se lit même téléphone posé sur la table.", "La couleur du chiffre suffit à savoir rouge ou noir."],
+    moins: ["Les colonnes sont plus longues : au-delà de 12 cartes visibles, on les tasse (comme aujourd'hui)."] },
+  { tag: "3 · QUATRE COULEURS", cols: QUATRE, du: 28, taille: 24, mesure: "COMME 1, ENSEIGNES EN 4 COULEURS",
+    plus: ["Cœur rouge, carreau bleu, trèfle vert, pique noir : on reconnaît l'enseigne sans la regarder.", "Pratique pour les fondations."],
+    moins: ["La règle reste rouge contre noir : le bleu compte comme rouge, le vert comme noir. Mieux en option du menu."] },
+];
+function dessinerCarte(g, C, r, s, x, y, w, h){
+  const col = C.cols[s], petit = C.taille > 28;
+  g.save(); g.shadowColor = "rgba(0,0,0,.35)"; g.shadowOffsetY = 1; g.shadowBlur = 1.5;
+  carteVide(g, x, y, w, h, "#ffffff", "#8c93a3"); g.restore();
+  g.fillStyle = col; g.textBaseline = "alphabetic";
+  g.font = `700 ${C.taille}px Rajdhani, "Arial Narrow", sans-serif`;
+  const txt = RANKS[r], ty = y + C.taille * .78 + (petit ? 0 : 1);
+  g.save(); if (txt === "10"){ g.translate(x + 2, 0); g.scale(.82, 1); g.fillText(txt, 0, ty); } else g.fillText(txt, x + 3, ty); g.restore();
+  // enseigne du coin
+  const er = petit ? 6 : 7.5;
+  enseigne(g, s, x + w - er - 3.5, y + (petit ? er + 4 : C.taille * .45 + 1), er);
+  // le corps
+  const top = y + C.du - 2, bas = y + h - 4, cy = (top + bas) / 2;
+  if (r > 10){
+    g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.roundRect(x + 6, top + 2, w - 12, bas - top - 3, 3); g.stroke();
+    g.font = `700 20px Rajdhani, "Arial Narrow", sans-serif`; g.textAlign = "center"; g.fillText(RANKS[r], x + w / 2, cy + 8); g.textAlign = "left";
+    // petite couronne
+    g.beginPath(); const cx = x + w / 2, k = cy - 10; g.moveTo(cx - 7, k + 3); g.lineTo(cx - 7, k - 3); g.lineTo(cx - 3.5, k); g.lineTo(cx, k - 5); g.lineTo(cx + 3.5, k); g.lineTo(cx + 7, k - 3); g.lineTo(cx + 7, k + 3); g.closePath(); g.fillStyle = "#e0a020"; g.fill();
+  } else enseigne(g, s, x + w / 2, cy, Math.min(13, (bas - top) / 2 - 2));
+}
+
+/* ---------- dos (pixel art 16 bits, ce n'est pas eux qu'on lit) ---------- */
+const DW = 48, DH = 66;
+function dosPix(peindre){
+  const c = document.createElement("canvas"); c.width = DW; c.height = DH; const g = c.getContext("2d");
+  g.fillStyle = "#f4f4ff"; g.fillRect(0, 0, DW, DH);
+  for (let y = 3; y < DH - 3; y++) for (let x = 3; x < DW - 3; x++){ g.fillStyle = peindre(x - 3, y - 3, DW - 6, DH - 6); g.fillRect(x, y, 1, 1); }
+  return c;
+}
+let graine = 7; const hasard = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+const ETOILES = Array.from({length: 26}, () => [Math.floor(hasard() * 42), Math.floor(hasard() * 60), hasard() < .25]);
+const DOS = [
+  (x, y) => { const X = x >> 1, Y = y >> 1, l = (X + Y) % 6 === 0 || (X - Y + 60) % 6 === 0; return l ? "#6fa0ff" : ((X + Y) % 2 ? "#1f3fa8" : "#2449b8"); },
+  (x, y) => { const a = x % 12 < 3, b = y % 12 < 3; if (x % 12 === 7 || y % 12 === 7) return "#e8c060"; return a && b ? "#3c0610" : a || b ? "#6a0e1c" : (x + y) % 2 ? "#a01828" : "#ac1e2e"; },
+  (x, y) => { let col = "#1b2f6b"; for (let row = 0; row <= 12; row++) for (let i = -1; i <= 4; i++){ const cx = i * 12 + (row % 2) * 6, cy = row * 5, d = Math.hypot(x - cx, y - cy);
+      if (d < 6.5 && y <= cy) col = d < 1.5 ? "#1b2f6b" : Math.floor(d) % 2 ? "#f4f4ff" : "#2f5fb0"; } return col; },
+  (x, y, w, h) => { const cx = w / 2 - .5, cy = h / 2 - .5, dx = Math.abs(x - cx), dy = Math.abs(y - cy);
+      if (x === 2 || y === 2 || x === w - 3 || y === h - 3) return "#d8a838"; if (dx + dy < 7) return dx + dy < 4 ? "#141018" : "#d8a838";
+      const a = Math.atan2(y - cy, x - cx); if (Math.floor((a + Math.PI) * 16 / Math.PI) % 2 && dx + dy < 26) return "#6a4c14"; return "#141018"; },
+  (x, y, w) => { const sol = 38; if (y >= sol){ const t = y - sol, gx = (x - w / 2) * (6 / (t + 6));
+        return t % Math.max(2, Math.floor(t / 3) + 2) === 0 || Math.round(gx) % 5 === 0 ? "#ff4fa8" : "#2a0f3e"; }
+      const d = Math.hypot(x - w / 2 + .5, y - 28); if (d < 13 && !(y > 22 && (y % 4) < 1 + (y - 22) / 6)) return y < 20 ? "#ffd23f" : "#ff8a3c";
+      return y < 12 ? "#3b1a6b" : y < 22 ? "#6a2386" : y < 32 ? "#a4307f" : "#d8486e"; },
+  (x, y) => { for (const [sx, sy, gros] of ETOILES){ if (x === sx && y === sy) return gros ? "#ffe680" : "#ffffff"; if (gros && Math.abs(x - sx) + Math.abs(y - sy) === 1) return "#8a90d8"; }
+      const d = Math.hypot(x - 30, y - 12), d2 = Math.hypot(x - 33, y - 10); if (d < 7 && d2 >= 6) return "#f6e7b0"; return y < 20 ? "#0e1440" : y < 40 ? "#121a52" : "#182266"; },
+].map(dosPix);
+const TAPIS = [["#1f7a3c", "#17602e"], ["#1d4a7c", "#13355e"], ["#6e1f2e", "#521622"], ["#2c2f38", "#1e2027"]];
+let choixDos = 0, choixTapis = 0;
+
+/* ---------- la table ---------- */
+const TW = 360, TH = 540, GUT = 3, GAP = 4, CW = (TW - 2 * GUT - 6 * GAP) / 7, CH = Math.round(CW * 1.38), TOP = 6, TABY = TOP + CH + 12, DD = 6;
+function dessinerTable(cv, C){
+  const dpr = Math.max(2, window.devicePixelRatio || 1);
+  cv.width = TW * dpr; cv.height = TH * dpr;
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const [fond, creux] = TAPIS[choixTapis], X = i => GUT + i * (CW + GAP);
+  const grad = g.createRadialGradient(TW / 2, TH * .4, 40, TW / 2, TH * .4, TW); grad.addColorStop(0, fond); grad.addColorStop(1, creux);
+  g.fillStyle = grad; g.fillRect(0, 0, TW, TH);
+  const dos = (x, y) => { g.save(); g.beginPath(); g.roundRect(x, y, CW, CH, 4); g.clip(); g.imageSmoothingEnabled = false; g.drawImage(DOS[choixDos], x, y, CW, CH); g.restore();
+    g.beginPath(); g.roundRect(x + .5, y + .5, CW - 1, CH - 1, 4); g.strokeStyle = "rgba(0,0,0,.6)"; g.lineWidth = 1; g.stroke(); };
+  const vide = (x, y, s) => { g.beginPath(); g.roundRect(x + 1, y + 1, CW - 2, CH - 2, 4); g.strokeStyle = "rgba(255,255,255,.28)"; g.lineWidth = 1.5; g.setLineDash([3, 3]); g.stroke(); g.setLineDash([]);
+    if (s != null){ g.fillStyle = "rgba(255,255,255,.18)"; enseigne(g, s, x + CW / 2, y + CH / 2, 10); } };
+  const carte = (rs, x, y) => dessinerCarte(g, C, rs[0], rs[1], x, y, CW, CH);
+  dos(X(0), TOP);
+  PARTIE.waste.forEach((rs, i) => carte(rs, X(1) + i * 16, TOP));
+  PARTIE.found.forEach((rs, f) => rs ? carte(rs, X(3 + f), TOP) : vide(X(3 + f), TOP, 3));
+  PARTIE.tab.forEach((p, j) => {
+    let y = TABY;
+    for (let i = 0; i < p.down; i++){ dos(X(j), y); y += DD; }
+    p.up.forEach(rs => { carte(rs, X(j), y); y += C.du; });
+  });
+}
+
+/* ---------- les téléphones ---------- */
+const tels = document.getElementById("tels"), tables = [];
+function telephone(tag, C, menu){
+  const el = document.createElement("section"); el.className = "choix";
+  el.innerHTML = `<div class="tag">${tag}</div>
+    <div class="tel"><div class="ecran">
+      <div class="haut"><span class="t">SOLITAIRE</span><span class="chiffres"><span>SCORE <em>245</em></span><span>03:12</span><span>REC <em>1180</em></span></span></div>
+      <canvas class="table" style="aspect-ratio:${TW}/${TH}"></canvas>
+      <div class="bas"><i>MENU</i><i>ANNULER</i><i class="go">INDICE</i></div>
+    </div></div>`;
+  tels.appendChild(el);
+  const cv = el.querySelector("canvas"); tables.push([cv, C]);
+  if (menu){
+    const v = document.createElement("div"); v.className = "voile";
+    v.innerHTML = `<div class="feuille"><div class="titre">MENU</div>
+      <div class="actions"><i>NOUVELLE DONNE</i><i>PIOCHE : 3</i><i>SON : OUI</i><i>◀ LUDOTHEQUE</i></div>
+      <div class="lab">DOS DES CARTES</div><div class="rangee" id="m-dos"></div>
+      <div class="lab">TAPIS</div><div class="rangee" id="m-tapis"></div></div>`;
+    el.querySelector(".ecran").appendChild(v);
+    const rd = v.querySelector("#m-dos"), rt = v.querySelector("#m-tapis");
+    DOS.forEach((d, i) => { const b = document.createElement("button"); b.className = "choixdos"; b.type = "button"; b.id = "dos-" + i;
+      const c = document.createElement("canvas"); c.width = DW; c.height = DH; c.getContext("2d").drawImage(d, 0, 0); b.appendChild(c);
+      b.onclick = () => { choixDos = i; maj(); }; rd.appendChild(b); });
+    TAPIS.forEach((t, i) => { const b = document.createElement("button"); b.className = "choixtapis"; b.type = "button"; b.id = "tapis-" + i;
+      b.style.background = `radial-gradient(${t[0]}, ${t[1]})`; b.onclick = () => { choixTapis = i; maj(); }; rt.appendChild(b); });
+    el.insertAdjacentHTML("beforeend", `<div class="avis"><div class="mesure">TOUCHE UN DOS OU UN TAPIS</div><ul>
+      <li class="p">Les trois autres téléphones changent aussi.</li>
+      <li class="p">Le choix est gardé pour les parties suivantes.</li>
+      <li class="p">INDICE (en bas à droite) montre un coup possible : utile quand on est bloqué.</li></ul></div>`);
+  } else {
+    el.insertAdjacentHTML("beforeend", `<div class="avis"><div class="mesure">${C.mesure}</div><ul>${C.plus.map(t => `<li class="p">${t}</li>`).join("")}${C.moins.map(t => `<li class="m">${t}</li>`).join("")}</ul></div>`);
+  }
+}
+COINS.forEach(C => telephone(C.tag, C, false));
+telephone("LE MENU", COINS[0], true);
+function maj(){
+  tables.forEach(([cv, C]) => dessinerTable(cv, C));
+  document.querySelectorAll(".choixdos").forEach((b, i) => b.setAttribute("aria-pressed", String(i === choixDos)));
+  document.querySelectorAll(".choixtapis").forEach((b, i) => b.setAttribute("aria-pressed", String(i === choixTapis)));
+}
+document.fonts.load('700 24px Rajdhani').then(maj, maj);
+maj();
+</script>

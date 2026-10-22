@@ -18,6 +18,8 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
 - [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
+- [`the-des-jarls/index.html`](the-des-jarls/index.html) : **Le Thé des Jarls**, un duel de dés viking façon Orlog : six dés, trois lancers, chaque face lance une armée de 45 soldats à l'assaut ; 20 dieux nordiques et leurs faveurs, la route du fjord (campagne de 20 tavernes), un duel guidé pour apprendre, le duel à deux sur un téléphone posé à plat et un défi du jour.
+- [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
@@ -218,6 +220,27 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
 
+## Le Thé des Jarls
+
+Un duel de dés viking, sur les règles de l'Orlog : deux armées de **45 soldats** (3 par PV) se font face sur un fjord en HD-2D, et chaque face de dé lance une action de l'armée.
+
+- **Les dés** : six dés, trois lancers au plus, chacun son tour ; on garde les dés qu'on veut. **Hache** : les fantassins chargent (un casque adverse en pare une) ; **flèche** : les archers tirent (un bouclier en pare une) ; **main** : un éclaireur vole un jeton ; les faces **dorées** rapportent un jeton de faveur.
+- **Les faveurs des dieux** : on emporte trois faveurs parmi 20 (Thor, Idunn, Vidar, Loki, Freyja, Odin…), à invoquer au niveau I, II ou III contre des jetons. Celles d'après la bataille ratent si on s'est fait voler ses jetons. À partir de la manche 10, l'hiver mord les deux armées.
+- **La route du fjord** : 20 tavernes, du plus faible des dieux au plus fort ; battre un dieu gagne sa faveur, des étoiles (selon les PV gardés), des couleurs et des unités pour son armée (berserkers, skjaldmö, chasseurs, garde du jarl).
+- **Apprendre** : un premier duel guidé avec Sigrid la skalde, le livre du skalde (7 pages), un bouton « ? » en jeu et des astuces pendant les trois premières parties.
+- **Duel libre** contre le dieu de son choix (facile, normal, difficile), **à deux** sur un téléphone posé à plat, et **défi du jour** : le même dieu, les mêmes faveurs et les mêmes dés pour toute la famille, une seule tentative classée. Classements : étoiles de la campagne et défi du jour.
+
+## Duché
+
+Un petit 4X au tour par tour, en pixel art 32 bits : **37 terres hexagonales** (plaines, forêts, montagnes, collines, marais, rivière), votre duché en bas à gauche, trois seigneurs rivaux dans les autres coins, et des brigands entre les deux. Un tour = une saison ; la carte change avec elles (blés, feuilles d'automne, neige).
+
+- **Chez vous** : bâtir (ferme, scierie, mine, marché, caserne, tour de guet ; un bâtiment par terre), recruter au château ou à la caserne, déplacer des soldats, changer du bois contre de l'or au marché.
+- **Ailleurs** : attaquer une terre voisine avec la chance de victoire affichée ; le combat se joue en 3 passes dans une scène HD-2D (décor selon le terrain et la saison).
+- **Événements** : récoltes, révoltes, tournois, mariages, mercenaires… chacun sur un parchemin illustré, avec 2 ou 3 réponses.
+- **La couronne** : le vieux roi meurt au tour 11 ; un tour sur deux, un grand électeur vote pour le meilleur seigneur selon son critère (légitimité, armée, terres, trésor, bâtiments), s'il a au moins 40 de légitimité. Cinq votes font un roi.
+- **Fin** : victoire par conquête ou par la couronne, défaite si votre château tombe ; sinon le règne s'achève au tour 30. Score : terres, or, bois, bâtiments, légitimité, votes, primes.
+- **Partie libre** en facile ou en normal (hivers rudes, bâtiments chers, rivaux mordants) ; **Duché du jour** en normal, le même pour toute la famille, une seule tentative classée. Classements : meilleur score (normal) et Duché du jour. Lien direct : `duche/index.html#jour`.
+
 ## Le Mot d'or
 Un mot de 6 lettres par jour à trouver en 6 essais, façon « Wordle », en pixel art 32 bits : un bureau d'acajou le soir, un sous-main en cuir bordeaux doré au fer, des tuiles en ivoire sous la lampe.
 
@@ -285,7 +308,10 @@ Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire
 
 ## Solitaire
 
-Le Klondike tel qu'il était livré avec Windows XP, en pixel art 16 bits.
+Le Klondike tel qu'il était livré avec Windows XP, avec des cartes faites pour être lues sur un téléphone.
+
+- Table bord à bord, gros chiffre et enseigne sur une seule ligne en haut de chaque carte ; MENU et ANNULER en bas, sous le pouce.
+- Le **MENU** regroupe la nouvelle donne, la pioche, le son, le classement, le retour à la Ludothèque et la personnalisation : 4 styles de cartes (NET par défaut, CHIFFRE GEANT, QUATRE COULEURS, et l'ancien PIXEL), 6 dos en pixel art et 4 tapis, gardés d'une partie à l'autre.
 
 - Pioche de 3 cartes par défaut, comme sous XP, ou d'une seule carte (changer de mode redistribue les cartes).
 - Barème « standard » de Windows : +10 par carte posée sur une pile, +5 par carte posée de la défausse vers une colonne ou retournée, −15 pour reprendre une carte d'une pile, −2 toutes les 10 secondes, −100 (pioche 1) ou −20 (pioche 3) à chaque tour de pioche, et un bonus de vitesse à la victoire (700 000 ÷ secondes, au-delà de 30 s).

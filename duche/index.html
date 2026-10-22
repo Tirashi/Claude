@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duché</title>
+<meta name="description" content="Duché : développez votre duché, conquérez les terres de trois seigneurs rivaux et gagnez la couronne.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#2a1c12">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../polices/nebula.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="jeu">
+  <canvas id="cv" aria-label="La carte du duché"></canvas>
+
+  <div class="ecranMenu" id="eTitre">
+    <div class="plaque carte">
+      <h1>DUCHE</h1>
+      <p>Trente saisons pour agrandir votre duché, abattre vos rivaux et gagner la couronne.</p>
+      <button class="plaque" id="bContinuer" hidden>CONTINUER</button>
+      <button class="plaque or" id="bJour">DUCHE DU JOUR</button>
+      <button class="plaque" id="bLibre">PARTIE LIBRE</button>
+      <button class="plaque" id="bAide">COMMENT JOUER</button>
+      <p class="petit" id="tRecord"></p>
+      <a class="plaque lien" href="../index.html#duche">CLASSEMENT</a>
+      <div class="rang"><button class="plaque" id="bBruitT">BRUITAGES : OUI</button><button class="plaque" id="bMusiqueT">MUSIQUE : OUI</button></div>
+      <a class="plaque lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="eNiveau" hidden>
+    <div class="plaque carte">
+      <p class="titre2">PARTIE LIBRE</p>
+      <button class="plaque" id="bFacile">FACILE<small>Récoltes abondantes, rivaux prudents.</small></button>
+      <button class="plaque or" id="bNormal">NORMAL<small>Hivers rudes, bâtiments chers, rivaux mordants. Seul le normal compte pour le record.</small></button>
+      <button class="plaque" id="bNiveauRetour">◀ RETOUR</button>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="ePause" hidden>
+    <div class="plaque carte">
+      <p class="titre2">PAUSE</p>
+      <button class="plaque" id="bReprendre">REPRENDRE</button>
+      <button class="plaque" id="bAideP">COMMENT JOUER</button>
+      <div class="rang"><button class="plaque" id="bBruit">BRUITAGES : OUI</button><button class="plaque" id="bMusique">MUSIQUE : OUI</button></div>
+      <button class="plaque" id="bTitreP">◀ TITRE</button>
+      <button class="plaque rouge" id="bAbandon">ABDIQUER</button>
+      <a class="plaque lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="eAide" hidden>
+    <div class="plaque carte aide">
+      <p class="titre2">COMMENT JOUER</p>
+      <div class="texte">
+        <p><b>Un tour = une saison.</b> Au début du tour, vos terres rapportent nourriture, bois et or ; l'armée mange (1 nourriture pour 10 soldats, 5 en normal).</p>
+        <p><b>Touchez une terre.</b> Chez vous : construire (un bâtiment par terre), recruter (au château ou à la caserne), déplacer des soldats vers une terre voisine. Ailleurs : attaquer depuis vos terres voisines, avec la chance de victoire affichée.</p>
+        <p><b>Combat.</b> Le perdant perd tous ses soldats engagés ; le vainqueur perd la moitié de la défense adverse. Chaque soldat agit une fois par tour ; les recrues attendent le tour suivant.</p>
+        <p><b>Bâtiments.</b> Ferme +2 nourriture · Scierie +2 bois · Mine +2 or (colline, montagne) · Marché +1 or, +1 légitimité, change · Caserne +5 soldats au plafond, recrues moins chères · Tour de guet +2 défense.</p>
+        <p><b>La couronne.</b> Le vieux roi meurt au tour 11. Puis, un tour sur deux, un grand électeur vote pour le meilleur seigneur selon son critère (légitimité, armée, terres, trésor, bâtiments), à condition d'avoir 40 de légitimité. Cinq votes font un roi : vous, ou un rival.</p>
+        <p><b>Fin.</b> Victoire en prenant les trois châteaux rivaux ou la couronne ; défaite si votre château tombe ou si la légitimité tombe à 0. Sinon, le règne s'achève au tour 30. Score : terres, or, bois, bâtiments, légitimité, votes.</p>
+        <p><b>Duché du jour.</b> Même carte, mêmes rivaux et mêmes événements pour toute la famille, en normal ; une seule tentative classée, reprise où vous l'avez laissée.</p>
+      </div>
+      <button class="plaque" id="bAideRetour">◀ RETOUR</button>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="eFin" hidden>
+    <div class="plaque carte">
+      <p class="titre2" id="fTitre">FIN</p>
+      <p id="fRaison"></p>
+      <table class="lignes" id="fLignes"></table>
+      <p class="petit" id="fFaits"></p>
+      <p class="petit or" id="fInfo"></p>
+      <p class="petit" id="fRang" hidden></p>
+      <button class="plaque or" id="bRejouer">REJOUER</button>
+      <button class="plaque" id="bTitreF">◀ TITRE</button>
+    </div>
+  </div>
+</div>
+<script src="regles.js"></script>
+<script src="evenements.js"></script>
+<script src="ia.js"></script>
+<script src="decor.js"></script>
+<script src="sons.js"></script>
+<script src="../ludo-scores.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
