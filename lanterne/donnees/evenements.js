@@ -89,6 +89,21 @@ LANTERNE.evenements = {
     { dire: ['La forge est fermée : le charbon n\'arrive plus, les charrettes ne passent plus par les marais.',
       'Reviens me voir plus tard. Je te trouverai une lame digne d\'un veilleur.'], qui: 'forgeron' }
   ],
+  // deux voyageurs qui rappellent quelqu'un (clins d'œil discrets à d'autres RPG)
+  nuage: [
+    { si: 'nuage_vu',
+      alors: [{ dire: ['Quoi ? Non, je n\'ai jamais été soldat. Enfin… je crois pas.', 'Bref. Elle sera grande. Très grande.'], qui: 'nuage' }],
+      sinon: [
+        { dire: ['Bertin m\'a dit non. Encore.',
+          'Je veux l\'épée la plus grande du monde. Si grande qu\'on la porte dans le dos, et qu\'elle fasse peur rien qu\'à la regarder.',
+          'Il dit qu\'aucun bras ne pourrait la soulever. Il ne connaît pas mes bras.'], qui: 'nuage' },
+        { drapeau: 'nuage_vu' }
+      ] }
+  ],
+  garcon_vert: [
+    { dire: 'Hyaa !', qui: 'garcon_vert' },
+    { dire: 'Il tranche une touffe d\'herbe d\'un grand revers, fouille dedans, puis repart, l\'air déçu.' }
+  ],
   forge_fermee: [{ dire: 'La porte de la forge est fermée. Dehors, Bertin ronchonne contre le charbon.' }],
   pecheur: [
     { dire: ['Ça ne mord plus. Même les poissons ont peur de la brume.',

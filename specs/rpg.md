@@ -90,6 +90,12 @@ Le joueur ne choisit pas les classes : chaque compagnon a la sienne et **sa prop
 - **Gaspard le colporteur** et son âne Biscotte : le marchand qu'on croise partout, même dans les donjons, et le comique du jeu.
 - **Les Chevaliers de cendre** : la garde de l'abbaye, en armures vides, qui apparaissent à partir de l'acte 3.
 
+### 5.3 Clins d'œil à d'autres RPG (idée de l'utilisateur, 22/10)
+Quelques habitants peuvent rappeler des héros d'autres RPG, **toujours discrètement** : jamais le vrai nom, seulement un détail qu'un connaisseur reconnaîtra.
+- **Nuage** (Clairfond, session 1) : jeune homme blond qui veut faire forger « l'épée la plus grande du monde » et jure n'avoir « jamais été soldat… enfin, je crois pas » (Cloud, Final Fantasy VII).
+- **Le garçon en vert** (Clairfond, session 1) : oreilles pointues, chapeau pointu vert, il tranche l'herbe en criant « Hyaa ! » et fouille dedans, déçu (Link, Zelda).
+- Idées pour la suite : un dresseur de petits monstres à Port-Gris, un héros endormi qui attend « son tour » depuis mille ans dans le Hameau caché, un marchand qui répète « Merci de votre visite ! » dans les marais.
+
 ## 6. Scénario
 | Acte | Durée | Ce qui se passe |
 |---|---|---|

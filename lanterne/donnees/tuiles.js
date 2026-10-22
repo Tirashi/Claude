@@ -102,6 +102,10 @@ LANTERNE.tuiles = {
   "ancien_c": [32, 192, 32, 32],
   "ancien_a": [64, 192, 32, 32],
   "paysanne_c": [96, 192, 32, 32],
-  "pecheur_c": [128, 192, 32, 32]
+  "nuage_c": [128, 192, 32, 32],
+  "nuage_a": [160, 192, 32, 32],
+  "garcon_vert_c": [192, 192, 32, 32],
+  "garcon_vert_a": [224, 192, 32, 32],
+  "pecheur_c": [256, 192, 32, 32]
 };
-LANTERNE.prises = {"heros": [8, 19], "eloi": [7, 19], "verene": [8, 21], "maud": [8, 24], "gaspard": [8, 20], "ysolde": [7, 20], "forgeron": [8, 20], "ancien": [8, 20]};
+LANTERNE.prises = {"heros": [8, 19], "eloi": [7, 19], "verene": [8, 21], "maud": [8, 24], "gaspard": [8, 20], "ysolde": [7, 20], "forgeron": [8, 20], "ancien": [8, 20], "nuage": [7, 20], "garcon_vert": [8, 20]};

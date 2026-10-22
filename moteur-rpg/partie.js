@@ -83,7 +83,8 @@
       for (const n of pnjs.concat(monstres)) {
         n.t = Math.min(1, n.t + (t - (n.dernier || t)) / (PAS * 1.6)); n.dernier = t;
         const [x, y] = lisse(n, n.t), bouge = n.t < 1;
-        rendu.placer(n.aid, x, y, bouge ? 'marche' : 'repos', bouge ? (n.t * 2) % 1 : 0, n.sens);
+        const anim = !bouge && n.def && n.def.anim;   // un habitant peut avoir son geste à lui (par ex. 'attaque')
+        rendu.placer(n.aid, x, y, bouge ? 'marche' : anim || 'repos', bouge ? (n.t * 2) % 1 : anim ? (t * .7 + (n.def.x || 0)) % 1 : 0, n.sens);
       }
       const [cx, cy] = lisse(chef, k);
       rendu.viser(cx, cy);

@@ -64,7 +64,9 @@ LANTERNE.cartes = {
       { id: 'ancien', perso: 'ancien', x: 9, y: 11, evenement: 'ancien' },
       { id: 'paysanne', perso: 'paysanne', x: 6, y: 8, evenement: 'paysanne', erre: 2 },
       { id: 'forgeron', perso: 'forgeron', x: 5, y: 14, evenement: 'forgeron' },
-      { id: 'pecheur', perso: 'pecheur', x: 15, y: 15, evenement: 'pecheur' }
+      { id: 'pecheur', perso: 'pecheur', x: 15, y: 15, evenement: 'pecheur' },
+      { id: 'nuage', perso: 'nuage', x: 8, y: 13, evenement: 'nuage' },
+      { id: 'garcon_vert', perso: 'garcon_vert', x: 20, y: 11, evenement: 'garcon_vert', erre: 2, anim: 'attaque' }
     ],
     sorties: [
       { x: [11, 12], y: 0, vers: 'route_abbaye', a: [6, 28], dir: 'haut', si: 'mission', refus: 'pas_encore' },

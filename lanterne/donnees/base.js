@@ -27,7 +27,8 @@ LANTERNE.persos = {
   ysolde: { nom: 'Mère Ysolde', perso: 'ysolde' }, isee: { nom: 'Isée', perso: 'isee' }, vaast: { nom: 'Prieur Vaast', perso: 'vaast' },
   gaspard: { nom: 'Gaspard', perso: 'gaspard' }, forgeron: { nom: 'Bertin le forgeron', perso: 'forgeron' }, aubergiste: { nom: 'Margot', perso: 'aubergiste' },
   enfant: { nom: 'Petit Lou', perso: 'enfant' }, ancien: { nom: 'Le vieux Aimé', perso: 'ancien' }, paysanne: { nom: 'Jeanne', perso: 'paysanne' },
-  pecheur: { nom: 'Fulbert', perso: 'pecheur' }, moine: { nom: 'Un moine', perso: 'vaast' }
+  pecheur: { nom: 'Fulbert', perso: 'pecheur' }, moine: { nom: 'Un moine', perso: 'vaast' },
+  nuage: { nom: 'Nuage', perso: 'nuage' }, garcon_vert: { nom: 'Le garçon en vert', perso: 'garcon_vert' }
 };
 
 LANTERNE.statistiques = [

@@ -8,7 +8,8 @@
        maisons:   [{ x, y, l, p, h, mur, toit, porte: dx }]  la porte est sur la rangée du bas, à x + dx
        objets:    [{ type: 'coffre' | 'panneau' | 'lanterne' | 'deco', x, y, … }]  (bloquent le passage)
        pnj:       [{ id, perso, x, y, evenement, erre, si, cache }]   erre : rayon de promenade (0 : immobile) ;
-                  cache : n'apparaît que par la commande { pnj, montrer } d'un événement
+                  cache : n'apparaît que par la commande { pnj, montrer } d'un événement ;
+                  anim : son geste quand il ne marche pas (ex. 'attaque'), sinon il respire
        sorties:   [{ x, y, vers, a: [x, y], dir }]   x peut être un intervalle [x1, x2]
        declencheurs: [{ x, y, evenement, si }]       lancé quand le chef de file arrive sur la case
        monstres:  [{ type, x, y, rayon }]

@@ -41,6 +41,8 @@
     "enfant":  ["base/halfling_m", "legs/pants_short_brown", "body/shirt_white1", "hair/short_red"],
     "ancien":  ["base/human_m", "boots/short_brown", "body/robe_gray2", "hand1/stick", "beard/full_white", "hair/short_white"],
     "paysanne": ["base/human_f", "boots/middle_brown", "body/skirt_onep_grey", "head/straw", "hair/long_yellow"],
+    "nuage":   ["base/human_m", "boots/middle_brown", "legs/pants_black", "body/shirt_black", "gloves/glove_black", "hand1/great_sword", "hair/curly_yellow"],
+    "garcon_vert": ["base/elf_m", "boots/middle_brown", "legs/pants_l_white", "body/leather_green", "hand1/short_sword_slant", "hand2/buckler_round", "hair/elf_yellow", "head/wizard_darkgreen"],
     "pecheur": ["base/human2_m", "boots/long_red", "legs/trouser_green", "body/shirt_check", "head/cap_blue", "beard/stubble_brown"]
   }
 }
