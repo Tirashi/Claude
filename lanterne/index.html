@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La Dernière Lanterne</title>
+<meta name="description" content="La Dernière Lanterne : un petit RPG au tour par tour en HD-2D, dans une vallée prisonnière de la brume.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#14110c">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../polices/lanterne.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="jeu">
+  <div id="vue">
+    <canvas id="scene"></canvas>
+    <div id="fenetres"></div>
+  </div>
+  <div id="commandes">
+    <div class="croix">
+      <button data-t="haut" class="h">▲</button><button data-t="gauche" class="g">◀</button>
+      <button data-t="droite" class="d">▶</button><button data-t="bas" class="b">▼</button>
+    </div>
+    <button data-t="MENU" class="menu">MENU</button>
+    <div class="ab"><button data-t="B" class="bb">B</button><button data-t="A" class="ba">A</button></div>
+  </div>
+  <div id="titre">
+    <div class="titre-haut">
+      <div class="titre-lueur"></div>
+      <h1>La Dernière<br>Lanterne</h1>
+      <p class="titre-sous">Un petit RPG au tour par tour</p>
+    </div>
+    <div id="emplacements"></div>
+    <div id="nommer" class="cache">
+      <p>Comment s'appelle l'apprenti veilleur ?</p>
+      <input id="nom" maxlength="8" autocomplete="off" spellcheck="false" value="Alden">
+      <div class="rangee"><button id="nomRetour" class="bouton">Retour</button><button id="nomOk" class="bouton fort">Commencer</button></div>
+    </div>
+    <a class="bouton ludo-retour" href="../index.html">◀ Ludothèque</a>
+    <p class="credits">Graphismes : Dungeon Crawl Stone Soup (CC0) · Sons : Ninja Adventure (CC0), Leohpaz « RPG Essentials », Kenney (CC0) · Police : Pixelify Sans · <a class="ludo-retour" href="../credits/index.html">tous les crédits</a></p>
+  </div>
+</div>
+<script src="../lib/three.min.js"></script>
+<script src="../moteur-rpg/regles.js"></script>
+<script src="../moteur-rpg/etat.js"></script>
+<script src="../moteur-rpg/monde.js"></script>
+<script src="../moteur-rpg/evenements.js"></script>
+<script src="../moteur-rpg/combat.js"></script>
+<script src="../moteur-rpg/poupees.js"></script>
+<script src="../moteur-rpg/rendu.js"></script>
+<script src="../moteur-rpg/interface.js"></script>
+<script src="../moteur-rpg/menu.js"></script>
+<script src="../moteur-rpg/entrees.js"></script>
+<script src="../moteur-rpg/sons.js"></script>
+<script src="../moteur-rpg/partie.js"></script>
+<script src="../moteur-rpg/combat-ui.js"></script>
+<script src="donnees/tuiles.js"></script>
+<script src="donnees/base.js"></script>
+<script src="donnees/combat.js"></script>
+<script src="donnees/cartes.js"></script>
+<script src="donnees/evenements.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, menu). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

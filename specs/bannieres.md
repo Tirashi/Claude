@@ -117,6 +117,7 @@ La partie est sauvegardée à chaque action ; CONTINUER la reprend.
 - `lib/three.min.js`, `lib/GLTFLoader.js`, `lib/SkeletonUtils.js` (r128).
 - Modèles **KayKit** (Kay Lousberg, CC0) : Medieval Hexagon (cases, bâtiments, décorations), Adventurers 2.0 et Character Animations 1.1 (personnages, animations), Skeletons (revenants), Dungeon (bannières, murs, caisses, torches), Fantasy Weapons (lance), Forest (buissons). Conversion : `outils/kaykit-conversion.py`, `outils/duche-3d/aventuriers.js`. Données dans des fichiers à part (environ 6 Mo), **mises en cache** par `sw.js` ; écran de chargement.
 - **Leçon** : dans un artefact, pas d'image glTF en `data:` (mémo technique).
+- **Crédits** : les packs KayKit et les modules de Three.js sont cités dans `credits/index.html` (22/10) ; tout nouveau pack s'y ajoute dès qu'on le prend.
 - Performance : un seul personnage animé par armée sur la carte.
 
 ## 14. Plan de travail
@@ -128,7 +129,7 @@ La partie est sauvegardée à chaque action ; CONTINUER la reprend.
 
 ## 15. Points à confirmer par l'utilisateur
 
-- **Les pièces s'entassent** (session 1) : avec 1 pièce par case, le joueur a 15 à 20 pièces par tour vers le tour 10, et le joueur automatique en a 200 au tour 20 (loin des « petits nombres »). Pistes : un **coffre plein à 30 pièces** (« dépense-les ! »), ou **1 pièce pour 2 cases**. À trancher en jouant.
+- Réglé le 22/10 : **les pièces s'entassaient** (200 au tour 20 au simulateur, sans rien à acheter après le tour 9 : les plafonds freinent, pas l'argent ; moitié moins de revenus ne rendait pas le jeu plus dur). Choix de l'utilisateur : les 4 règles du § 17 (coffre, bâtiments améliorés, soins, remparts).
 
 - Les **prix** et les **bâtiments** du § 6 (on ajustera en jouant).
 - La **lisibilité** : « ça devrait aller, on verra à l'usage » (22/10).
@@ -148,4 +149,11 @@ La partie est sauvegardée à chaque action ; CONTINUER la reprend.
 - **Prendre le château d'origine d'un seigneur** le fait tomber : ses cases (avec bâtiments et décorations) passent au vainqueur, ses armées s'en vont. Reprendre un château qui avait déjà changé de main ne fait tomber personne.
 - **En facile**, les rivaux ne prennent pas les châteaux des autres rivaux (sinon l'un d'eux grossit jusqu'à dépasser l'enfant).
 - Les **caractères** des 3 rivaux sont tirés au hasard ; le bâtisseur commence avec 4 pièces de plus et une armée un peu plus petite.
-- **Au simulateur** (100 parties par niveau, joueur automatique « malin ») : en **facile**, le joueur gagne 77 % des parties (presque toujours aux drapeaux, en moyenne 16 drapeaux contre 7 par rival) et **ne perd jamais son château** ; en **normal**, 47 % de victoires et 4 % de châteaux perdus. Environ 9 batailles livrées et 6 subies par partie ; une partie va presque toujours jusqu'au tour 25.
+- **Pour que l'argent serve jusqu'au bout** (validé par l'utilisateur le 22/10) :
+  - **le coffre est plein à 30 pièces** : au-delà, on ne gagne plus rien (« TON COFFRE EST PLEIN : DEPENSE-LES ! ») ; vrai pour tout le monde ;
+  - **améliorer un bâtiment, une fois**, au prix du bâtiment : grande maison, grand moulin, grand marché (+1 pièce de plus chacun), grande forge (les champions aussi ont 1 cœur de plus), grande caserne (le champion coûte 5 pièces), grande tour (les archers tirent encore une fois de plus) ;
+  - **soigner une armée au château** : 1 pièce, tous ses cœurs reviennent ;
+  - **les remparts** (château à 6 bâtiments) : **8 guerriers par armée** au lieu de 6 (une armée qui perd ses remparts garde ses guerriers, mais n'en prend plus).
+- **Au château, la garde se bat toujours avec l'armée qui y est** (derrière elle) : une petite armée au château le rendait plus fragile qu'un château vide.
+- **En normal**, les rivaux sont plus hardis (ils attaquent avec un peu moins de chances) et gagnent 1 pièce de plus par tour.
+- **Au simulateur** (100 parties par niveau, joueur automatique « malin ») : en **facile**, le joueur gagne 85 % des parties (presque toujours aux drapeaux, en moyenne 17 drapeaux contre 6 par rival) et ne perd son château qu'une fois sur 100 ; en **normal**, 61 % de victoires et 9 % de châteaux perdus. Environ 9 batailles livrées et 6 subies par partie ; une partie va presque toujours jusqu'au tour 25 ; le coffre est presque toujours plein (28 pièces en moyenne).

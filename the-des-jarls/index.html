@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le Thé des Jarls</title>
+<meta name="description" content="Le Thé des Jarls : duel de dés viking. Chaque face lance votre armée à l'assaut, et les dieux s'en mêlent.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#121628">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<!-- Fredoka : copie dans le dépôt (hors connexion) ; le lien Google sert aussi à l'artefact (outils/artefact.py n'en garde qu'un) -->
+<link rel="stylesheet" href="../polices/empilage.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Fredoka:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="jeu">
+  <canvas id="cv" aria-label="Le champ de bataille et les dés"></canvas>
+
+  <div class="ecran" id="eTitre">
+    <div class="carte">
+      <h1>LE THÉ<br>DES JARLS</h1>
+      <p>Six dés, trois lancers, deux armées. Chaque face envoie tes soldats à l'assaut, et les dieux s'en mêlent.</p>
+      <button id="bContinuer" hidden>CONTINUER LE DUEL</button>
+      <button class="or" id="bCampagne">LA ROUTE DU FJORD<small id="sCampagne"></small></button>
+      <button id="bJour">DÉFI DU JOUR<small id="sJour"></small></button>
+      <button id="bLibre">DUEL LIBRE<small>Contre le dieu de ton choix</small></button>
+      <button id="bDuo">À DEUX SUR CE TÉLÉPHONE<small>Posé à plat entre les deux joueurs</small></button>
+      <div class="rang"><button id="bGuide">APPRENDRE</button><button id="bLivre">LE LIVRE</button></div>
+      <div class="rang"><button id="bSons">SONS : OUI</button><a class="lien ludo-retour" href="../index.html#jarls">CLASSEMENT</a></div>
+      <a class="lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecran plein" id="eCampagne" hidden>
+    <div class="plein-tete"><button id="bCampRetour">◀</button><p class="titre2">LA ROUTE DU FJORD</p><button id="bArmee">ARMÉE</button></div>
+    <p class="petit centre" id="tCampagne"></p>
+    <div class="route" id="route"></div>
+    <div class="fiche" id="ficheTav" hidden></div>
+  </div>
+
+  <div class="ecran" id="eArmee" hidden>
+    <div class="carte large">
+      <p class="titre2">TON ARMÉE</p>
+      <p class="petit">Les couleurs se gagnent aux tavernes de Thor, d'Idunn et de Vidar ; une unité tous les cinq dieux battus.</p>
+      <div class="couleurs" id="couleurs"></div>
+      <div class="unites" id="unites"></div>
+      <button id="bArmeeOk">◀ RETOUR</button>
+    </div>
+  </div>
+
+  <div class="ecran" id="eDieu" hidden>
+    <div class="carte large">
+      <p class="titre2">QUEL DIEU DÉFIER ?</p>
+      <div class="rang" id="niveaux"><button data-n="1">FACILE</button><button data-n="2">NORMAL</button><button data-n="3">DIFFICILE</button></div>
+      <div class="grille" id="listeDieux"></div>
+      <button id="bDieuRetour">◀ RETOUR</button>
+    </div>
+  </div>
+
+  <div class="ecran plein" id="eFaveurs" hidden>
+    <div class="conseil" id="carteFaveurs">
+      <p class="titre2 centre" id="tFaveurs">LE CONSEIL DES JARLS</p>
+      <p class="petit centre" id="sFaveurs"></p>
+      <div class="slots" id="slots"></div>
+      <div class="decks" id="decks"></div>
+      <p class="sep">ou compose ta propre main</p>
+      <div class="liste" id="listeFaveurs"></div>
+      <div class="rang bas"><button id="bFaveursRetour">◀ RETOUR</button><button class="or" id="bFaveursOk" disabled>AU COMBAT</button></div>
+    </div>
+  </div>
+
+  <div class="ecran" id="eIntro" hidden>
+    <div class="carte" id="carteIntro"></div>
+  </div>
+
+  <div class="ecran" id="ePause" hidden>
+    <div class="carte">
+      <p class="titre2">PAUSE</p>
+      <button id="bReprendre">REPRENDRE</button>
+      <button id="bRappelP">RAPPEL DES FACES</button>
+      <button id="bLivreP">LE LIVRE DU SKALDE</button>
+      <button id="bSonsP">SONS : OUI</button>
+      <button class="rouge" id="bAbandon">ABANDONNER LE DUEL</button>
+      <a class="lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
+    </div>
+  </div>
+
+  <div class="ecran" id="eRappel" hidden>
+    <div class="carte large" id="carteRappel"></div>
+  </div>
+
+  <div class="ecran" id="eLivre" hidden>
+    <div class="carte livre">
+      <p class="titre2">LE LIVRE DU SKALDE</p>
+      <div class="pageL" id="pageL"></div>
+      <div class="puces" id="puces"></div>
+      <div class="rang"><button id="bLivrePrec">‹ AVANT</button><button class="or" id="bLivreSuiv">SUITE ›</button></div>
+    </div>
+  </div>
+
+  <div class="ecran" id="eFin" hidden>
+    <div class="carte" id="carteFin">
+      <h1 id="tFin">VICTOIRE</h1>
+      <p id="sFin"></p>
+      <div id="gainsFin"></div>
+      <p class="petit or" id="rangFin" hidden></p>
+      <button class="or" id="bFin1">REVANCHE</button>
+      <button id="bFin2">◀ TITRE</button>
+    </div>
+  </div>
+</div>
+
+<script src="../ludo-scores.js"></script>
+<script src="regles.js"></script>
+<script src="ia.js"></script>
+<script src="campagne.js"></script>
+<script src="decor.js"></script>
+<script src="dieux.js"></script>
+<script src="sons.js"></script>
+<script src="guide.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

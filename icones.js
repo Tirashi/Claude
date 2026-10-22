@@ -5,6 +5,23 @@
 (function (){
 "use strict";
 const ICONS = {
+  lanterne: {pal:{o:"#1a0f2e", m:"#4a4a58", M:"#7a7a8a", y:"#ffd23f", h:"#fff6c2", d:"#d98a1c"}, map:[
+    "......oooo......",
+    ".....oMmmMo.....",
+    "......oooo......",
+    "....oooooooo....",
+    "...oMmmmmmmMo...",
+    "....oyyyyyyo....",
+    "....oyhhhhyo....",
+    "....oyhhhhyo....",
+    "....oyhhhhyo....",
+    "....oyyhhyyo....",
+    "....odyyyydo....",
+    "...oMmmmmmmMo...",
+    "....oooooooo....",
+    ".....oMmmMo.....",
+    "......oooo......",
+    "................"]},
   tree: {pal:{o:"#1a0f2e", g:"#4fa86a", G:"#2f7a48", b:"#8a5a2a"}, map:[
     "................",
     ".....oooooo.....",
@@ -124,6 +141,23 @@ const ICONS = {
     "acaaaaaaaaaaacaa",
     "aaaaacaaaaaacaaa",
     "aaaaaaaaaaaaaaaa"]},
+  jarl: {pal:{k:"#120c08", S:"#c8d0d8", s:"#7d8590", w:"#ffffff", y:"#f0c24a", Y:"#a87a20"}, map:[
+    "................",
+    "................",
+    ".....kkkkkk.....",
+    "...kkSSSSSskk...",
+    "..kSSwSSSSSssk..",
+    "..kSwSSSSSSssk..",
+    ".kSSSSSSSSSsssk.",
+    ".kSSSSSSSSSsssk.",
+    ".kyyyyyyyyyYYYk.",
+    ".kYYYYkyykYYYYk.",
+    ".kk..kkyykk..kk.",
+    "......kyyk......",
+    "......kyyk......",
+    ".......kk.......",
+    "................",
+    "................"]},
   donjon: {pal:{k:"#120c08", S:"#c8c0b4", s:"#8a8478", w:"#2a2018", d:"#5a3a1c", y:"#f0bc28", g:"#6aa040", G:"#4a8030"}, map:[
     "........kk......",
     "........kyyy....",

@@ -90,11 +90,17 @@ Le joueur ne choisit pas les classes : chaque compagnon a la sienne et **sa prop
 - **Gaspard le colporteur** et son âne Biscotte : le marchand qu'on croise partout, même dans les donjons, et le comique du jeu.
 - **Les Chevaliers de cendre** : la garde de l'abbaye, en armures vides, qui apparaissent à partir de l'acte 3.
 
+### 5.3 Clins d'œil à d'autres RPG (idée de l'utilisateur, 22/10)
+Quelques habitants peuvent rappeler des héros d'autres RPG, **toujours discrètement** : jamais le vrai nom, seulement un détail qu'un connaisseur reconnaîtra.
+- **Nuage** (Clairfond, session 1) : jeune homme blond qui veut faire forger « l'épée la plus grande du monde » et jure n'avoir « jamais été soldat… enfin, je crois pas » (Cloud, Final Fantasy VII).
+- **Le garçon en vert** (Clairfond, session 1) : oreilles pointues, chapeau pointu vert, il tranche l'herbe en criant « Hyaa ! » et fouille dedans, déçu (Link, Zelda).
+- Idées pour la suite : un dresseur de petits monstres à Port-Gris, un héros endormi qui attend « son tour » depuis mille ans dans le Hameau caché, un marchand qui répète « Merci de votre visite ! » dans les marais.
+
 ## 6. Scénario
 | Acte | Durée | Ce qui se passe |
 |---|---|---|
 | **Prologue** | 20 min | Clairfond. La lanterne du village vacille. Mère Ysolde envoie le héros à l'abbaye de Saint-Cendre. Le Prieur explique que la Grande Lanterne faiblit et qu'il faut rallumer ses quatre flammes, dispersées dans des sanctuaires à cause de la brume. Il lui confie une lanterne de veilleur et le novice **ELOI** (CLERC), qui rejoint l'équipe. Première rencontre avec Isée : « Tu portes la lumière… Sais-tu ce qu'elle mange ? » |
-| **Acte 1** | 1 h | Bois Murmurant, où l'on tire **VERENE** (ARCANISTE) des griffes de créatures : elle rejoint l'équipe. Puis **Sanctuaire 1, la Crypte des racines** : on y gagne la Flamme rouge. Le boss, le Grand Cerf de brume, murmure en tombant : « Encore… tu nous enfermes encore. » **Premier doute.** |
+| **Acte 1** | 1 h | Bois Murmurant, où l'on tire **VERENE** (ARCANISTE) des griffes de créatures : elle rejoint l'équipe. Puis **Sanctuaire 1, la Crypte des racines** : on y gagne la Flamme rouge. Le boss, **le Roi des aulnes** (choix de l'utilisateur, 22/10, au lieu du Grand Cerf), murmure en tombant : « Encore… tu nous enfermes encore. » **Premier doute.** |
 | **Acte 2** | 1 h 15 | Village de Port-Gris, où **MAUD** (RODEUR) accepte de guider l'équipe dans la brume (l'équipe est complète), Marais des cloches, puis **Sanctuaire 2, le Moulin noyé** : on y gagne la Flamme bleue. La fresque montre des silhouettes de brume qui portent des lanternes ; VERENE commence à comprendre. |
 | **Rebondissement 2** (milieu du jeu) | | Au sortir du moulin, Isée est blessée par des créatures, et l'équipe la voit **se dissoudre en brume**, puis se reformer. Elle avoue être une Brumienne. Elle conduit l'équipe au **Hameau caché** des Brumiens endormis, statues de brume figées. MAUD y trouve l'écharpe de son frère. Elle ne demande pas d'arrêter la quête : « Rapporte les flammes. Mais ne les donne à personne avant d'avoir lu la fin de l'histoire. » |
 | **Acte 3** | 1 h 15 | Hautes-Roches, puis **Sanctuaire 3, les Mines de sel** : on y gagne la Flamme d'or. Les **Chevaliers de cendre** apparaissent : le Prieur « s'inquiète » et envoie son escorte. Une page du journal porte le sceau de l'abbaye, et ELOI reconnaît l'écriture du Prieur. |
@@ -131,7 +137,7 @@ Les talents de la LAME et du RODEUR coûtent aussi des PM : **une seule ressourc
 ## 8. Exploration
 ### 8.1 La carte
 - Sur la carte, seul le chef de file est dessiné, et les autres le suivent en file (comme Dragon Quest) ; on se déplace librement, mais **rien ne se joue en temps réel**.
-- Vue de dessus, **écran par écran**, comme Link's Awakening : on passe d'un écran au suivant par un glissement. Écran en portrait d'environ **10 × 12 tuiles** de 16 px, agrandies au pixel près.
+- ~~Vue de dessus, écran par écran, comme Link's Awakening, environ 10 × 12 tuiles de 16 px.~~ **Fait autrement (session 1, 22/10)** : avec la DA validée (Dungeon Crawl 32 × 32 en HD-2D), la **caméra suit l'équipe** dans des cartes de toutes tailles (une carte = un lieu : village, route, maison), et on passe d'une carte à l'autre par un fondu au noir. Environ 8 tuiles de large à l'écran. À changer si l'utilisateur préfère l'écran par écran.
 - **Monde** : environ **60 écrans** en 5 régions (Clairfond, Bois Murmurant, Marais des cloches avec Port-Gris, Hautes-Roches, Cimetière des cloches), plus le Hameau caché et l'abbaye.
 - **Donjons** : 12 à 20 salles chacun, avec une carte du donjon, une boussole (coffres restants), des petites clés et une grande clé pour la salle du boss, comme Zelda.
 - **Énigmes** simples : leviers, blocs à pousser, salles sombres, interrupteurs à activer dans l'ordre, ennemis à vaincre pour ouvrir la porte.
@@ -215,7 +221,7 @@ Il n'y a pas de stat cachée. Il n'y a pas non plus de chance ni de résistance 
 - **3 états seulement** : **Poison** (perd des PV à chaque tour et sur la carte), **Sommeil** (passe ses tours, se réveille si on le frappe), **Silence** (pas de sorts).
 
 ## 10. Combats
-- **Au tour par tour**, à la Dragon Quest : les monstres sur un décor de la région, et le héros vu de dos ou en petit portrait (à trancher à la maquette).
+- **Au tour par tour**, à la Dragon Quest : les monstres sur un décor de la région. **Fait (session 2)** : vue de côté en HD-2D comme la maquette validée, monstres à gauche, équipe à droite, décor du lieu (`combat` dans la carte, sinon le décor d'extérieur).
 - **Strictement au tour par tour** : au début de chaque tour, on choisit l'action de **chaque héros**, puis tout le monde agit dans l'ordre de la Vitesse. Rien ne presse : on peut réfléchir aussi longtemps qu'on veut.
 - **1 à 4 monstres** par combat, contre l'équipe de 1 à 4 héros.
 - Un héros à 0 PV est **à terre** : il ne joue plus et ne gagne pas d'expérience jusqu'à ce qu'on le relève (sort Relève, objet Plume de phénix, ou une lanterne). Si **toute l'équipe** tombe, c'est la défaite.
@@ -223,13 +229,13 @@ Il n'y a pas de stat cachée. Il n'y a pas non plus de chance ni de résistance 
 - Textes courts lettre par lettre (« LE CRAPAUD-CLOCHE PERD 12 PV ! »), qu'on peut accélérer d'un toucher.
 - **Fin du combat** : expérience, écus, parfois un objet.
 - **Défaite** : on reprend à la **sauvegarde la plus récente** (§ 11.1), sans autre perte.
-- **Boss** : 2 phases pour certains, avec un **signal clair** avant une grosse attaque (« LE CERF BAISSE SES BOIS… ») : on apprend à Défendre ou à utiliser Protection et Rempart au bon moment.
+- **Boss** : 2 phases pour certains, avec un **signal clair** avant une grosse attaque (« Le Roi des aulnes plonge ses racines dans le sol… ») : on apprend à Défendre ou à utiliser Protection et Rempart au bon moment.
 
 ### 10.1 Bestiaire (ordre de grandeur)
 Environ **25 monstres**, 5 par région, avec quelques variantes de couleur plus fortes dans le donjon facultatif (comme Dragon Quest).
 - *Exemples* : Feu follet, Corbeau de brume, Crapaud-cloche, Gelée de cire, Loup gris, Squelette lanternier, Armure vide, Chevalier de cendre, Spectre du clocher…
 - **Boss** :
-  1. le Grand Cerf de brume ;
+  1. le Roi des aulnes (Crypte des racines) ;
   2. la Dame du moulin ;
   3. le Golem de sel ;
   4. le Sonneur ;
@@ -240,7 +246,7 @@ Environ **25 monstres**, 5 par région, avec quelques variantes de couleur plus 
 - **Carte** : la carte en haut, avec en bas une **croix** virtuelle, un bouton **A** (parler, ouvrir, agir), un bouton **B** (outil choisi) et **MENU**.
 - **Menu** : EQUIPE (stats de chacun, expliquées ; ordre de la file), OBJETS, EQUIPEMENT, OUTILS, JOURNAL (quête en cours en une phrase, pages trouvées, bestiaire), CARTE, OPTIONS, et **RETOUR A LA LUDOTHEQUE** (règle du 17/10, pas de bouton ajouté par-dessus le jeu).
 - **Dialogues** : fenêtre en bas, texte lettre par lettre, ▼ pour continuer, choix OUI / NON.
-- Le texte respecte la police Press Start 2P : majuscules sans accent dans le jeu.
+- Police **Pixelify Sans** (DA du 22/10, hébergée dans `polices/`) : textes normaux, avec accents (la règle des majuscules sans accent ne valait que pour Press Start 2P). Nom du héros : 8 lettres au plus, en majuscules.
 
 ### 11.1 Sauvegardes (décision du 20/10)
 - **Sauvegardes automatiques aux moments clés** : arrivée dans un village, entrée d'un donjon, porte d'un boss, après chaque événement du scénario et chaque boss vaincu. Il n'y a jamais plus d'environ **15 minutes** de jeu entre deux sauvegardes. Un petit « SAUVEGARDE… » s'affiche dans un coin.
@@ -276,6 +282,27 @@ Comme le reste de la Ludothèque : **scripts classiques**, sans build, sans modu
 | `donnees/dialogues.js`, `evenements.js` | Textes et scripts du scénario |
 | `sprites.js` | Pixel art (comme `icones.js`) |
 
+### 12.2 bis Ce qui existe après la session 1 (22/10)
+| Fichier (`moteur-rpg/`) | Rôle |
+|---|---|
+| `regles.js` | Stats d'une classe à un niveau, expérience par niveau (la session 2 y ajoute dégâts, éléments, états, fuite). Node. |
+| `etat.js` | État de la partie (JSON, `VERSION` + `migrer`), objets plafonnés à 8, drapeaux, équipe ; `Sauvegardes(stockage, prefixe)` : 3 emplacements × copies `auto`, `main`, `reprise` (`pourDefaite` : la plus récente des deux vraies ; `pourReprendre` : la plus récente des trois). Node. |
+| `monde.js` | Cartes en grilles de lettres + légende, maisons, objets, habitants (`erre`, `si`, `cache`), sorties (`si` + `refus`), déclencheurs, file de l'équipe, pas des monstres, initiative. Node. |
+| `evenements.js` | Langage des événements (`dire`, `choix`, `si`, `drapeau`, `donner`, `ecus`, `rejoindre`, `teleporter`, `combat`, `pnj`, `sauver`, `son`, `musique`, `attendre`, `chapitre`, `evenement`, `stop`), conditions composées, `{HEROS}`. Node. |
+| `poupees.js` | Découpe des tuiles, personnages en poupée (corps + arme qui tourne autour de sa prise) et leurs 6 animations, portrait des dialogues. |
+| `rendu.js` | HD-2D (Three.js r128) : sol en une image, panneaux debout qui font de l'ombre, blocs, maisons à toit, eau, brume, lanternes qui vacillent, flou de profondeur + lueur (shader maison), caméra qui suit, **maisons et arbres transparents quand ils cachent l'équipe**. |
+| `interface.js`, `menu.js` | Dialogue lettre par lettre avec portrait, choix ▶, message « Sauvegarde… », fondu ; menu ÉQUIPE / OBJETS / JOURNAL / OPTIONS + retour à la Ludothèque. |
+| `entrees.js`, `sons.js` | Croix, A, B, MENU et clavier ; sons et musiques WebAudio (coupés en arrière-plan). |
+| `combat.js` (session 2) | Le combat au tour par tour, sans DOM (Node) : `creer`, `intro`, `resoudre(c, choix)` → liste d'événements à montrer, `terminer` (PV, PM, expérience, écus, butin écrits dans la partie), `choixAuto` et `simuler` (équilibrage). Défense, Protection et Rempart passent en premier ; esquive, critique, éléments, poison, sommeil, silence, buffs ; boss : grand coup annoncé un tour avant (`prepare`), pas de fuite. |
+| `combat-ui.js` (session 2) | L'écran de combat : messages, cartes de l'équipe, menus ATTAQUE / TALENTS / OBJETS / DÉFENSE / FUITE au curseur ▶ (croix, A, B), cible marquée ▼, pas en avant, projectiles, impacts, lumière colorée, chiffres, sons, récapitulatif de victoire avec les passages de niveau (avant → après, nouveaux talents). |
+| `partie.js` | La partie sur la carte : déplacement case par case, file, habitants et monstres qui errent, A pour parler ou utiliser (coffre, panneau, lanterne), sorties, déclencheurs, sauvegardes, menu. Le combat est un crochet (`o.combat`) branché par le jeu sur `combat-ui.js` ; un monstre de 6 niveaux de moins que le chef fuit au contact. |
+
+Jeu (`lanterne/`) : `index.html`, `style.css`, `jeu.js` (titre, 3 emplacements, nom, boucle), `tuiles.png` + `donnees/tuiles.js` (fabriqués par `outils/lanterne-tuiles.py` d'après `outils/lanterne-tuiles.json`), `donnees/base.js` (classes, héros, légende, style), `donnees/combat.js` (objets et équipement, 27 talents, monstres, rencontres), `donnees/cartes.js` (maison d'Ysolde, Clairfond, auberge, route de l'abbaye), `donnees/evenements.js` (début du prologue), `sons/`.
+
+**Session 2 (22/10), précisions :** équipement porté visible dans le menu ÉQUIPE (toucher un emplacement, flèches ▲ vertes et ▼ rouges) ; les objets de soin s'utilisent aussi hors combat (menu OBJETS) ; partie en version 2 (`etat.js` : `migrer` ajoute l'équipement de départ). Monstres de la région de la forêt : feu follet, corbeau de brume, crapaud-cloche (endort au gong), gelée de cire, loup gris ; le **Grand Cerf** est déjà dans les données pour l'équilibrage, avec l'image provisoire de l'« âne » Biscotte (pas de cerf dans Dungeon Crawl : à dessiner ou choisir à la session 3). Équilibrage chiffré par `outils/lanterne-combats.js` (6 cas, du héros seul niveau 1 au boss de l'acte 1).
+
+**Session 3 (22/10), précisions :** le boss de l'acte 1 est **le Roi des aulnes** (tuile `alderking` de Dungeon Crawl ; le cerf n'existe pas dans le pack). Prologue : abbaye (Grande Lanterne, prieur Vaast, Eloi rejoint l'équipe). Acte 1 : Clairfond s'ouvre à l'est vers le **Bois Murmurant** (après la mission des flammes) ; Vérène attaquée par un loup et un corbeau (combat forcé, gagnable au niveau 1) puis rejoint l'équipe ; lanterne oubliée ; **Crypte des racines** en 4 salles : levier qui ouvre une grille, coffre de la **Lanterne du veilleur** (premier outil, bouton **B** : dissipe les nappes de brume), clé de la crypte et porte fermée, cœur avec la fresque et le Roi des aulnes (racines annoncées un tour avant) ; en tombant : « Encore… tu nous enfermes encore. » ; fin de l'acte 1 (Flamme rouge, retour à l'abbaye). Nouveautés du moteur : objets ouvrables (`grille` + `ouvertSi`, `porte_cle` + `cle`, `nappe` + `outil`, `levier` + `drapeau`), outils (`LANTERNE.outils`, drapeaux `outil:<id>`), monstres trop faibles qui fuient (6 niveaux d'écart), habitants cachés et montrés par les événements. `LANTERNE.fin` : drapeaux que le solveur doit atteindre.
+
 ### 12.3 Vérifications automatiques (dans `outils/`)
 - Dans `verifications.js` : **cohérence des données**. Chaque objet, monstre ou carte cités existent ; chaque sortie d'écran mène quelque part ; chaque drapeau lu est écrit quelque part.
 - **Solveur d'accessibilité** : à partir du début, en suivant les outils et les clés obtenus, on doit atteindre la fin et chaque coffre. Cela garantit qu'aucun objet n'est perdu et qu'on ne se retrouve jamais bloqué.
@@ -283,6 +310,14 @@ Comme le reste de la Ludothèque : **scripts classiques**, sans build, sans modu
 - Dans `fumee.js` : le jeu se charge, on nomme le héros, on fait un combat.
 
 ## 13. Direction artistique
+**Décision (21-22/10) — DA retenue** : tuiles **Dungeon Crawl Stone Soup 32 × 32** (CC0 ; prendre le zip d'OpenGameArt pour la vraie version) affichées en **HD-2D** avec Three.js r128 (sol et maisons en relief, arbres et personnages en panneaux qui projettent leur ombre, flou de profondeur et lueur par un petit shader maison, poussières dans la lumière, éclairs colorés des sorts). Référence : `maquettes/la-derniere-lanterne-hd2d.html` (https://claude.ai/artifact/HtaCGnYudqSPyiqTZEeJNn), fabriquée à partir des tuiles par `construire.py` (brouillon de la session du 21/10 ; à ranger dans `outils/` au moment du moteur). Avis de l'utilisateur : « incroyable », « tous les graphismes sont cohérents », « la HD-2D donne un petit côté original ».
+- **Personnages** : poupées de Dungeon Crawl (corps + tenue + arme superposés dans l'ordre cape, corps, bottes, jambes, armure, gants, arme, bouclier, cheveux, barbe, tête) ; **l'équipement porté se voit sur le héros**. Les compositions actuelles sont gardées (« bien déjà ») : recettes dans `maquettes/la-derniere-lanterne-atelier.html` (boutons Alden, Eloi, Verene, Maud, Isée, Gaspard ; https://claude.ai/artifact/StNMGsAUALcSSQEenvs2H2). Monstres et habitants : les 1 129 tuiles du pack, **retournées** pour faire face aux héros (elles regardent vers la gauche).
+- **Animations** faites par le code, une image par personnage : respiration, marche balancée, arme qui tourne autour de sa prise (calculée automatiquement), sort avec aura, flash quand touché, saut de victoire. Attaque calmée le 21/10 (la première version faisait une « pirouette »).
+- **Police** : Pixelify Sans (Google Fonts).
+- Pistes précédentes (Ninja Adventure 16 × 16, maquettes 1 à 5 dessinées) : abandonnées.
+
+**Maquette (20/10)** : `maquettes/la-derniere-lanterne.html` (https://claude.ai/artifact/DniPR4j2u1FEJXJWY7wuuo), les trois pistes ci-dessous sur la carte, le combat et le dialogue. Retour : C retenue mais à retravailler (combat de profil animé, personnages et décor façon Octopath Traveler sans HD-2D). **Maquette 2 (20/10)** : `maquettes/la-derniere-lanterne-2.html` (https://claude.ai/artifact/TLds9VrVmtsNQTv8RD4TeM), trois lumières sur le même dessin. Retour : lumière 1 mais en plein jour, personnages à revoir. **Maquette 3 (20/10)** : `maquettes/la-derniere-lanterne-3.html` (https://claude.ai/artifact/C82S25sKWRxf6cxCvFsne7), plein jour, personnages redessinés, proportions héroïque (1) ou conte (2). Retour : références de sprites d'Octopath Traveler. **Maquette 4 (20/10)** : `maquettes/la-derniere-lanterne-4.html` (https://claude.ai/artifact/1jUkewXd353fDwNWAk5vbp), héros dessinés pixel par pixel, contour noir ou doux : refusée. **Maquette 5 (20/10)** : `maquettes/la-derniere-lanterne-5.html` (https://claude.ai/artifact/TNkaxKCqaAMe2Tsa7Rs36J), DA repartie de zéro d'après les sprites de référence (18 × 34 px, 3 à 4 nuances, contour sombre teinté). À valider avant décor, monstres et combat.
+
 À choisir **sur maquette** (règle du 16/10) : 2 ou 3 directions sur un écran de téléphone, chacune avec **un écran de carte**, **un combat** et **une fenêtre de dialogue**. Pistes :
 - **A — Gothique façon *Vampire Survivors*** (idée du 15/10) : pixel art sombre, contrastes forts, petits sprites expressifs.
 - **B — 16 bits façon Link's Awakening DX et Dragon Quest** : couleurs douces, fenêtres bleues à double bord (celles que l'utilisateur a aimées dans les maquettes Dragon Quest du 19/10).
@@ -291,6 +326,8 @@ Comme le reste de la Ludothèque : **scripts classiques**, sans build, sans modu
 Quel que soit le style, la **brume** et la **lumière des lanternes** doivent être belles : c'est le cœur du jeu (halo qui repousse la brume autour du héros).
 
 ## 14. Sons et musique
+**Choix de l'utilisateur (22/10)**, sur le banc des sons de la maquette HD-2D : coup d'épée `Sword2` (Ninja Adventure) ; touché `15_Impact_flesh_02`, givre `13_Ice_explosion_01`, flamme `04_Fire_explosion_04_medium`, soin `02_Heal_02`, flèche `35_Miss_Evade_02`, morsure `03_Claw_03`, victoire `16_Atk_buff_04` (Leohpaz « RPG Essentials SFX Free », itch.io : usage libre même commercial, crédit apprécié, **interdit de redistribuer le pack** ; le créditer dans le jeu). Musiques de Ninja Adventure (CC0) : « Calm Village » au village, « Fight » au combat (« la musique est pas mal »). Sons convertis en ogg mono.
+
 Bips de texte, effets de combat, petite fanfare de passage de niveau et de coffre. Musique chiptune courte en boucle : village, carte, donjon, combat, boss, fin. Réglages musique et effets séparés.
 
 ## 15. Intégration à la Ludothèque
@@ -306,9 +343,9 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 | Session | Contenu | Modèle |
 |---|---|---|
 | 0 | **Maquette** : 2 ou 3 directions (carte, combat, dialogue) puis validation | Sonnet, ou Opus pour la décision |
-| 1 | Moteur **monde** : écrans, déplacement, équipe en file, collisions, PNJ, dialogues, événements, drapeaux, sauvegardes ; Clairfond jouable | Opus |
-| 2 | Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
-| 3 | Contenu **prologue et acte 1** (Bois, Crypte, Grand Cerf) ; solveur d'accessibilité | opusplan |
+| 1 | ✅ (22/10) Moteur **monde** : écrans, déplacement, équipe en file, collisions, PNJ, dialogues, événements, drapeaux, sauvegardes ; Clairfond jouable | Opus |
+| 2 | ✅ (22/10) Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
+| 3 | ✅ (22/10) Contenu **prologue et acte 1** (abbaye et Eloi, Bois Murmurant et Vérène, Crypte des racines, Roi des aulnes) ; solveur d'accessibilité jusqu'à la fin de l'acte 1 | opusplan |
 | 4 | **Actes 2 et 3** (marais, moulin, Hameau caché, mines) | opusplan |
 | 5 | **Acte 4, final, fin**, scène bonus, à-côtés (pages, quêtes des compagnons, lanternes oubliées), donjon facultatif | opusplan |
 | 6 | Équilibrage, sons et musique, accueil, `sw.js`, artefact | Sonnet |

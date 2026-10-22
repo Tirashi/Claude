@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>La Dernière Lanterne 5</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Spectral:wght@400;600&display=swap">
+<style>
+/* Maquette 5 de La Dernière Lanterne : planche de personnages repartie de zéro d'après les sprites de référence
+   (18 x 34 pixels, grosse tête, corps étroit, 3 à 4 nuances par matière, contour sombre teinté). Fond clair comme les planches. */
+:root{
+  --fond:#f2f0ec; --carte:#ffffff; --texte:#25212b; --doux:#6b6574; --ligne:#dcd8d0; --accent:#8a5a1e;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Spectral", Georgia, serif;
+  color-scheme:light;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:17px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--f-titre);font-size:clamp(14px,3.4vw,22px);line-height:1.5;margin:0;color:var(--texte);text-wrap:balance}
+header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
+.planche{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px}
+.perso{background:var(--carte);border:1px solid var(--ligne);display:flex;flex-direction:column;align-items:center;padding:14px 10px 16px;gap:8px;min-width:0}
+.perso canvas{width:100%;max-width:200px;aspect-ratio:1;image-rendering:pixelated}
+.perso .vrai{width:96px;max-width:96px}
+.perso h2{font-family:var(--f-titre);font-size:11px;margin:0;letter-spacing:.04em}
+.perso .classe{font-family:var(--f-titre);font-size:8px;color:var(--accent);letter-spacing:.06em}
+.perso p{margin:0;font-size:14.5px;color:var(--doux);text-align:center}
+.notes{color:var(--doux);border-top:1px solid var(--ligne);padding-top:16px;max-width:76ch;display:flex;flex-direction:column;gap:8px}
+.notes b{color:var(--texte)}
+.notes p{margin:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>LA DERNIERE LANTERNE — LES HEROS</h1>
+    <p>Repartis de zéro d'après vos planches : 18 pixels de large sur 34 de haut, grosse chevelure, petit visage, corps étroit, bras le long du corps, jambes séparées, 3 à 4 nuances par matière et contour sombre teinté. Chaque héros respire, marche puis fait son geste, en boucle. Les petits sprites du bas sont à leur taille réelle sur le téléphone.</p>
+  </header>
+  <div class="planche" id="planche"></div>
+  <div class="notes">
+    <p><b>A me dire :</b> si ces héros vont dans le sens de vos planches, et ce qu'il faut changer pour chacun (coiffure, tenue, couleurs, visage). Une fois les héros validés, je referai dans le même style les monstres, le décor et l'écran de combat.</p>
+  </div>
+</div>
+
+<script>
+const S=1;
+function hx(c){c=c.replace('#','');return[parseInt(c.slice(0,2),16),parseInt(c.slice(2,4),16),parseInt(c.slice(4,6),16)];}
+class PB{
+  constructor(w,h){this.w=w;this.h=h;this.d=new Uint8ClampedArray(w*h*4);}
+  set(x,y,c){x=Math.floor(x);y=Math.floor(y);if(x<0||y<0||x>=this.w||y>=this.h)return;const[r,g,b]=hx(c),i=(y*this.w+x)*4;this.d[i]=r;this.d[i+1]=g;this.d[i+2]=b;this.d[i+3]=255;}
+  ell(cx,cy,rx,ry,c){for(let y=Math.floor(cy-ry);y<=Math.ceil(cy+ry);y++)for(let x=Math.floor(cx-rx);x<=Math.ceil(cx+rx);x++)if(((x+.5-cx)/rx)**2+((y+.5-cy)/ry)**2<=1)this.set(x,y,c);}
+  seg(x0,y0,x1,y1,w,c){const n=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)*1.5));for(let i=0;i<=n;i++)this.ell(x0+(x1-x0)*i/n,y0+(y1-y0)*i/n,w/2,w/2,c);}
+  rect(x,y,w,h,c){for(let j=Math.round(y);j<Math.round(y+h);j++)for(let i=Math.round(x);i<Math.round(x+w);i++)this.set(i,j,c);}
+  a(x,y){return x<0||y<0||x>=this.w||y>=this.h?0:this.d[(y*this.w+x)*4+3];}
+  // contour : presque noir, teinté par la couleur voisine (comme les sprites de référence)
+  outline(){const{w,h,d}=this,o=new Uint8ClampedArray(d);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;if(d[i+3])continue;
+      for(const[dx,dy]of[[0,1],[1,0],[-1,0],[0,-1]])if(this.a(x+dx,y+dy)){const n=((y+dy)*w+x+dx)*4;o[i]=d[n]*.22+14;o[i+1]=d[n+1]*.22+10;o[i+2]=d[n+2]*.22+12;o[i+3]=255;break;}}
+    this.d=o;return this;}
+  canvas(){const cv=document.createElement('canvas');cv.width=this.w;cv.height=this.h;cv.getContext('2d').putImageData(new ImageData(this.d,this.w,this.h),0,0);return cv;}
+}
+const SKIN={S:'#eac4a0',s:'#c49a78',t:'#946c50',e:'#1c1614'};
+/* chaque héros : grille de 18 colonnes, lettres = nuances (clair → sombre) ; couleurs éteintes, terreuses */
+const H={
+ alden:{name:'ALDEN',cls:'LAME',txt:'Apprenti veilleur. Cheveux en bataille, tunique bleu gris, baudrier de cuir, cape rouge passé, épée.',
+  leg:27,arm:[0,3,16,23],hand:[1.5,23],weapon:'sword',
+  pal:{...SKIN,a:'#9a7a54',b:'#6e5236',c:'#4a3622',d:'#2c2016','1':'#8496b0','2':'#5e7090','3':'#42506a','4':'#2a3446',
+   '6':'#8a4640','7':'#62302c',M:'#d8d8d4',m:'#a0a2a4',n:'#6a6c70',L:'#9a7a58',l:'#6e5438',k:'#46341f',G:'#c8a860',P:'#7a7466',p:'#58534a',q:'#3a3630'},
+  rows:[
+  "......cccc........",
+  ".....cbbbbcc......",
+  "....cbaabbbbc.....",
+  "...cbaabbbbbbc....",
+  "...cbabbbbbbbbc...",
+  "...cbbbbcbbbbbc...",
+  "...cbbcSSbcbbbcc..",
+  "...ccSSSSSSSbbc...",
+  "...cbSeSSSeSsbc...",
+  "...cbSeSSSeSsbc...",
+  "....csSSSSSsstc...",
+  "....ctsSSttSstc...",
+  ".....cttsssttc6...",
+  "...6MMntttt7766...",
+  "..6MMmn1222337766.",
+  "..MmmnL1122233766.",
+  ".12231L222223376..",
+  ".122312L22222376..",
+  ".1223122L2222376..",
+  ".12231222L222376..",
+  ".122312222L22376..",
+  ".1223122222L2376..",
+  ".SsklllllGlllllks.",
+  ".Sst122222222233s.",
+  "..tt1222222222333.",
+  "...12222222223333.",
+  "...22334..33344...",
+  "....PPpq..PPpq....",
+  "....PPpq..PPpq....",
+  "....PPpq..Ppqq....",
+  "....Ppqq..Ppqq....",
+  "....LLlk..LLlk....",
+  "....LLlk..LLlk....",
+  "...LLLlk..LLLlk...",
+  "...LLllk..LLllkk..",
+  "...kkkkk..kkkkkk.."]},
+ eloi:{name:'ELOI',cls:'CLERC',txt:'Novice de l\'abbaye. Coupe au bol blond paille, robe écrue, étole bleu ardoise à croix d\'or, livre.',
+  leg:34,arm:[0,3,14,22],hand:[1.5,22],weapon:'book',
+  pal:{...SKIN,a:'#d8c08a',b:'#b49a64',c:'#86703f',d:'#544428','1':'#ece6d6','2':'#cfc6b0','3':'#a49a84','4':'#6e6656',
+   '5':'#6a7e9a','6':'#4a5a74','7':'#36425a',G:'#c0a060',L:'#7a6448',l:'#5a4832',k:'#382c1e'},
+  rows:[
+  "......dddd........",
+  ".....dbbbbdd......",
+  "....dbaabbbbd.....",
+  "...dbaabbbbbbd....",
+  "...dbabbbbbbbbd...",
+  "...dbbbbbbbbbbd...",
+  "...dbccccccccbdd..",
+  "...dbSSSSSSSSbd...",
+  "...dbSeSSSeSsbd...",
+  "...dbSeSSSeSsbd...",
+  "....dsSSSSSsstd...",
+  "....dtsSSttSstd...",
+  ".....dttsssttd....",
+  "...2112ttttt2233..",
+  "..21115665222333..",
+  ".2111156G65222333.",
+  ".121115GGG5222333.",
+  ".12111566G6522333.",
+  ".1211156666522333.",
+  ".1211156666522333.",
+  ".1211156666522333.",
+  ".SsGGGGGGGGGGGGs3.",
+  ".Sst1156666522t3..",
+  "..t11156666522333.",
+  "..111156666522333.",
+  "..111157777522333.",
+  "..111112222222333.",
+  "..111122222222333.",
+  ".1111222222222333.",
+  ".1111222222222333.",
+  ".11112222222223333",
+  "111112222222223333",
+  "111122222222223333",
+  "GGGGGGGGGGGGGGGGGG",
+  "...LLlk...LLlk....",
+  "...kkkk...kkkk...."]},
+ verene:{name:'VERENE',cls:'ARCANISTE',txt:'Savante de la brume. Grand chapeau pointu, cheveux roux sombres, robe prune à liseré d\'or, bâton à cristal.',
+  leg:36,arm:[0,3,19,26],hand:[2,25.5],weapon:'staff',
+  pal:{...SKIN,a:'#b06a4a',b:'#8a4a32',c:'#5e3020',d:'#3a1c14','1':'#7e6a8e','2':'#5e4e70','3':'#423650','4':'#282034',
+   '5':'#6e607e','6':'#504462','7':'#362e44',G:'#c0a060',k:'#2a221e',L:'#5a4a40'},
+  rows:[
+  "...........44.....",
+  "..........4234....",
+  ".........41234....",
+  "........411234....",
+  ".......4112334....",
+  "......41122334....",
+  ".....GGGGGGGG4....",
+  "...4411122222334..",
+  ".44111222222223344",
+  "..444dcbbbbbbc444.",
+  "...dcbaSSbSSbbcd..",
+  "...dbSSSSSSSSbcd..",
+  "...dbSeSSSeSsbcd..",
+  "...dbSeSSSeSsbcd..",
+  "...dbsSSSSSsstcd..",
+  "...dbtsSSttSstbcd.",
+  "..dbbdttsssttdbcd.",
+  "..db6GG55555G6bcd.",
+  "..d66555666666bcd.",
+  ".66555566666667cd.",
+  ".6556566G6666677d.",
+  ".6556566G6666677d.",
+  ".6556566G66666777.",
+  ".655GGGGGGGGGGG77.",
+  ".6556566G66666777.",
+  ".SsS566G666666777.",
+  ".tst566G666666777.",
+  "..5556G6666666777.",
+  "..5556G6666666777.",
+  "..556G66666666777.",
+  ".5556G66666666777.",
+  ".556G666666666777.",
+  ".556G6666666667777",
+  "556G66666666667777",
+  "56G666666666667777",
+  "GGGGGGGGGGGGGGGGGG",
+  "...kLk.....kLk....",
+  "...kkk.....kkk...."]},
+ maud:{name:'MAUD',cls:'RODEUR',txt:'Contrebandière des marais. Capuche vert mousse, frange brune, écharpe rouille, gilet de cuir, dague.',
+  leg:25,arm:[0,2,15,22],hand:[1.5,22],weapon:'dagger',
+  pal:{...SKIN,S:'#e2b892',s:'#b88e6c','1':'#7a8a5a','2':'#5a6a40','3':'#3e4a2c','4':'#262e1c',R:'#a04a3e',r:'#743228',x:'#4e2018',
+   L:'#a07a54',l:'#7a5a3a',k:'#4e3a24',G:'#c0a060',P:'#5e5e50',p:'#44443a',q:'#2c2c26',c:'#3e2e22',d:'#241a12'},
+  rows:[
+  "......4444........",
+  ".....412234.......",
+  "....41122234......",
+  "...4112222234.....",
+  "...41222222234....",
+  "...412222222334...",
+  "...412cccccc2334..",
+  "...41cdSScSc2334..",
+  "...41cSSSSSSs234..",
+  "...41SeSSSeSs234..",
+  "...41SeSSSeSs234..",
+  "...42sSSSSSsst34..",
+  "...42tsSttSst334..",
+  "...4RRRRRRRRRR34..",
+  "...RRRRrrrrrrRxx..",
+  "..1rrrrrrrrrr3Rx..",
+  ".12LLLLlllllk3Rx..",
+  ".12LLLLlllllk33x..",
+  ".123LLLllllk333...",
+  ".123LLLllllk333...",
+  ".123LLLllllk333...",
+  ".SskkkkGkkkkk3s...",
+  ".Sst2222222233ts..",
+  "..t122222223334...",
+  "...12222.22.334...",
+  "....PPpq..PPpq....",
+  "....PPpq..PPpq....",
+  "....PPpq..PPpq....",
+  "....Ppqq..Ppqq....",
+  "....Ppqq..Ppqq....",
+  "....LLlk..LLlk....",
+  "....LLlk..LLlk....",
+  "...LLLlk..LLLlk...",
+  "...LLllk..LLllk...",
+  "...kkkkk..kkkkk..."]},
+ isee:{name:'ISEE',cls:'?',txt:'La jeune fille de la brume. Longs cheveux argentés, robe gris perle, pieds nus. Un peu transparente.',
+  leg:31,arm:null,hand:null,weapon:null,ghost:true,
+  pal:{S:'#f0dcd0',s:'#d0b4a6',t:'#a88c80',e:'#2a3040',a:'#e4e2ea',b:'#bcbccc',c:'#8e90a6',d:'#5c5e74','1':'#e2e4ec','2':'#bcc0d0','3':'#9094aa','4':'#606478'},
+  rows:[
+  "......dddd........",
+  ".....dbbbbdd......",
+  "....dbaabbbbd.....",
+  "...dbaabbbbbbd....",
+  "...dbabbbbbbbbd...",
+  "...dbbbbbbbbbbbd..",
+  "...dbbcbbbcbbbbd..",
+  "...dbcSSSSSSbbbd..",
+  "...dbSeSSSeSsbbd..",
+  "...dbSeSSSeSsbbd..",
+  "...dbsSSSSSsstbd..",
+  "...dbtsSttSstbbd..",
+  "...dbbdtssstdbbbd.",
+  "...db211111112bbd.",
+  "..dbS11111112Sbbd.",
+  "..dbS11111122sbbd.",
+  "..dbS11111122sbbd.",
+  "..dbs11111222sbd..",
+  "..dcs11111222scd..",
+  "..dcS1111222tscd..",
+  "...c11111222223c..",
+  "...1111112222233..",
+  "...1111112222233..",
+  "..11111122222333..",
+  "..11111122222333..",
+  "..111111222223333.",
+  ".1111112222223333.",
+  ".1111112222223333.",
+  ".11111122222233333",
+  "111111222222233333",
+  "111112222222233334",
+  ".33.4334.3433.433.",
+  "....SS.....SS....."]}
+};
+for(const k in H)H[k].rows=H[k].rows.map(r=>r.replace(/ /g,'').padEnd(18,'.').slice(0,18));
+const limb=(x,y,l,a)=>[x-Math.sin(a)*l,y+Math.cos(a)*l];
+function weapon(pb,h,hand,w){
+  if(h.weapon==='sword'){const T=limb(hand[0],hand[1],13,w),P=limb(hand[0],hand[1],2.5,w+Math.PI),g1=limb(hand[0],hand[1],2.4,w+Math.PI/2),g2=limb(hand[0],hand[1],2.4,w-Math.PI/2);
+    pb.seg(P[0],P[1],hand[0],hand[1],1.4,'#4a3424');pb.seg(hand[0],hand[1],T[0],T[1],1.8,'#8a8e94');pb.seg(hand[0],hand[1],T[0],T[1],.8,'#d8dadc');pb.seg(g1[0],g1[1],g2[0],g2[1],1.4,'#b09050');pb.ell(hand[0],hand[1],1.3,1.3,h.pal.S);}
+  else if(h.weapon==='staff'){const T=limb(hand[0],hand[1],14,w),B=limb(hand[0],hand[1],9,w+Math.PI);pb.seg(B[0],B[1],T[0],T[1],1.6,'#6a4628');pb.seg(B[0],B[1],T[0],T[1],.5,'#9a7048');
+    pb.ell(T[0],T[1],2.2,2.8,'#7aa4bc');pb.ell(T[0]-.5,T[1]-.7,1.1,1.3,'#d4e6ee');pb.ell(hand[0],hand[1],1.3,1.3,h.pal.S);}
+  else if(h.weapon==='dagger'){const T=limb(hand[0],hand[1],6,w);pb.seg(hand[0],hand[1],T[0],T[1],1.4,'#dfe6ee');pb.ell(hand[0],hand[1],1.3,1.3,h.pal.S);}
+  else if(h.weapon==='book'){pb.rect(hand[0]-3,hand[1]-2,4,5,'#6a3c2c');pb.rect(hand[0]-3,hand[1]-2,1,5,'#c0a060');pb.rect(hand[0]-1.5,hand[1],2,1,'#c0a060');}
+}
+const W0={sword:.3,staff:Math.PI,dagger:.55,book:0};
+function draw(id,anim,f){
+  const h=H[id],R=h.rows,N=R.length,ox=15,oy=45-N;const pb=new PB(48,48);
+  let bob=0,lean=0,crouch=0,legA=0,arm=null,w=W0[h.weapon];
+  if(anim==='idle')bob=f%4<2?0:1;
+  else if(anim==='walk'){legA=[0,1,0,-1][f%4];bob=f%2;}
+  else if(anim==='action'){
+    if(id==='alden'){const k=f%4;if(k<2){arm=[-2.4,.2];w=Math.PI+1;lean=1;crouch=1;}else{arm=[1.4,.05];w=1.65;lean=-2;crouch=1;legA=1;}}
+    else if(id==='verene'){arm=[2.3,.15];w=Math.PI-.3;}
+    else if(id==='eloi'){arm=[.95,1.45];}
+    else if(id==='maud'){const k=f%4;if(k<2){crouch=1;lean=-1;}else{arm=[1.5,0];w=1.55;lean=-2;crouch=1;legA=1;}}
+    else bob=Math.round(Math.sin(f*.8));
+  }
+  R.forEach((r,y)=>{for(let x=0;x<18;x++){const c=r[x];if(c==='.')continue;
+    if(arm&&h.arm&&x>=h.arm[0]&&x<=h.arm[1]&&y>=h.arm[2]&&y<=h.arm[3])continue;
+    let px=ox+x,py=oy+y;
+    if(y<h.leg){px+=lean;py+=bob+crouch;}
+    else if(legA){const left=x<9;px+=left?-legA:legA;if((left&&legA<0)||(!left&&legA>0))py-=1;}
+    pb.set(px,py,h.pal[c]||'#ff00ff');}});
+  if(h.weapon){let hand;
+    if(arm){const sh=[ox+h.arm[0]+2+lean,oy+h.arm[2]+bob+crouch],E=limb(sh[0],sh[1],4.5,arm[0]),Hn=limb(E[0],E[1],4,arm[0]+arm[1]);
+      const c1=id==='verene'?h.pal['6']:h.pal['2'],c2=id==='verene'?h.pal['7']:h.pal['3'];pb.seg(sh[0],sh[1],E[0],E[1],3,c1);pb.seg(E[0],E[1],Hn[0],Hn[1],2.6,c2);pb.ell(Hn[0],Hn[1],1.5,1.5,h.pal.S);hand=Hn;}
+    else hand=[ox+h.hand[0]+lean,oy+h.hand[1]+bob+crouch];
+    weapon(pb,h,hand,w);}
+  return pb.outline().canvas();
+}
+const CACHE={};const get=(id,a,f)=>CACHE[id+a+f]||(CACHE[id+a+f]=draw(id,a,f));
+const cards=[];
+for(const id of['alden','eloi','verene','maud','isee']){const h=H[id];
+  const el=document.createElement('section');el.className='perso';
+  el.innerHTML=`<canvas width="48" height="48"></canvas><canvas class="vrai" width="48" height="48"></canvas><h2>${h.name}</h2><div class="classe">${h.cls}</div><p>${h.txt}</p>`;
+  document.getElementById('planche').appendChild(el);const[a,b]=el.querySelectorAll('canvas');cards.push({id,a:a.getContext('2d'),b:b.getContext('2d'),ghost:h.ghost});}
+function frame(now){const t=now/1000;
+  cards.forEach((cd,i)=>{const ph=(t+i*.7)%7;let an='idle',f=Math.floor(t*3)%4;
+    if(ph>2&&ph<4)an='walk',f=Math.floor(t*7)%4;else if(ph>=4&&ph<5.6)an='action',f=Math.floor((ph-4)*2.5)%4;
+    const cv=get(cd.id,an,f);
+    for(const c of[cd.a,cd.b]){c.clearRect(0,0,48,48);c.fillStyle='rgba(0,0,0,.12)';c.fillRect(17,44,14,1);c.fillRect(19,45,10,1);
+      c.globalAlpha=cd.ghost?.78+.12*Math.sin(t*2):1;c.drawImage(cv,0,0);c.globalAlpha=1;}});
+  requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+window.Maquette={H,get};
+</script>
+</body>
+</html>

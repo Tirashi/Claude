@@ -8,6 +8,7 @@
    6. Nebula : types de regles.js (// @ts-check + JSDoc) vérifiés par tsc, sans rien compiler ;
    7. Lune-Rover : chaque niveau est gagné par sa solution de référence ;
    8. Odyssée : chaque plateau est traversé par le pilote automatique, sous le temps cible ;
+   8 ter. La Dernière Lanterne : moteur RPG, données et accessibilité (outils/lanterne-tests.js) ;
    9. classements : chaque record envoyé par un jeu (LudoScores.submit) a son tableau dans le volet de
       l'accueil (RANKS, accueil.js), est repris en rejoignant (registerExisting) et son jeu sert à vérifier les pseudos.
    Code de sortie 1 si quelque chose ne va pas. */
@@ -91,6 +92,10 @@ catch (e) { bad('Lune-Rover : niveaux\n' + (e.stdout || '') + (e.stderr || ''));
 try { execFileSync(process.execPath, [path.join(__dirname, 'odyssee.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Odyssée : chaque plateau est faisable, sous le temps cible'); }
 catch (e) { bad('Odyssée : plateaux\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// 8 ter. La Dernière Lanterne : moteur RPG, cohérence des données, tout est atteignable depuis le départ
+try { execFileSync(process.execPath, [path.join(__dirname, 'lanterne-tests.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('La Dernière Lanterne : moteur, données et accessibilité'); }
+catch (e) { bad('La Dernière Lanterne\n' + (e.stdout || '') + (e.stderr || '')); }
+
 // 8 bis. Le Magasinier : chaque niveau est gagné par sa solution notée (l'optimum complet : magasinier-solveur.js --optimum)
 try { execFileSync(process.execPath, [path.join(__dirname, 'magasinier-solveur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Le Magasinier : chaque niveau est gagné par sa solution notée'); }
 catch (e) { bad('Le Magasinier : niveaux\n' + (e.stdout || '') + (e.stderr || '')); }
@@ -110,6 +115,9 @@ catch (e) { bad('Capitaine du port : bassins\n' + (e.stdout || '') + (e.stderr |
 // 8 quater. Duché : règles, IA et événements (déterminisme, sauvegarde, règles de base, équilibrage grossier)
 try { execFileSync(process.execPath, [path.join(__dirname, 'duche-simulateur.js'), '60'], { stdio: 'pipe', encoding: 'utf8' }); ok('Duché : simulateur (parties reproductibles, règles, équilibrage)'); }
 catch (e) { bad('Duché : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+// 8 quinquies. Le Thé des Jarls : chaque faveur, déterminisme, ordinateur, équilibre entre les dieux
+try { execFileSync(process.execPath, [path.join(__dirname, 'jarls-simulateur.js'), '60'], { stdio: 'pipe', encoding: 'utf8' }); ok('Le Thé des Jarls : simulateur (20 faveurs, duels reproductibles, ordinateur, équilibre)'); }
+catch (e) { bad('Le Thé des Jarls : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 8 quinquies. Bannières : règles, rivaux et surprises (déterminisme, sauvegarde, règles de base, équilibrage grossier)
 try { execFileSync(process.execPath, [path.join(__dirname, 'bannieres-simulateur.js'), '20'], { stdio: 'pipe', encoding: 'utf8' }); ok('Bannières : simulateur (parties reproductibles, règles, équilibrage)'); }

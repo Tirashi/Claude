@@ -286,9 +286,11 @@
     ORDRE_BAT.forEach((b, j) => {
       const x = 10 + (j % 2) * 100, y = y0 + 18 + Math.floor(j / 2) * 21, c = ducCoutBat(etat, b), ok = !ducPeutConstruire(etat, 0, i, b), B = DUC_BATIMENTS[b];
       btn(x, y, 96, 19, 'normal', ok ? () => { if (agir(ducConstruire(etat, 0, i, b), `${B.nom} bâti${b === 'ferme' || b === 'scierie' || b === 'mine' || b === 'caserne' || b === 'tour' ? 'e' : ''}.`, 'batir')) mode = null; } : null);
-      T(B.nom, x + 5, y + 6, { s: 8, c: ok ? '#fff' : '#8a7a68' });
-      T(`${c.bois} bois${c.or ? ' ' + c.or + ' or' : ''}`, x + 91, y + 6, { s: 7, a: 'right', c: ok ? '#f0c24a' : '#8a7a68' });
-      T(B.effet.split(',')[0], x + 5, y + 13.5, { s: 6.5, c: ok ? '#e8d8b8' : '#7a6a58' });
+      // la miniature du bâtiment, comme sur la carte
+      L.save(); L.beginPath(); L.rect(x + 2, y + 2, 19, 15); L.clip(); D.batiment(L, b, x + 12, y + 11); L.restore();
+      T(b === 'tour' ? 'Tour' : B.nom, x + 22, y + 6, { s: 8, c: ok ? '#fff' : '#8a7a68' });
+      T(`${c.bois} bois${c.or ? ' ' + c.or + ' or' : ''}`, x + 92, y + 6, { s: 6.5, a: 'right', c: ok ? '#f0c24a' : '#8a7a68' });
+      T(B.effet.split(',')[0], x + 22, y + 13.5, { s: 6.5, c: ok ? '#e8d8b8' : '#7a6a58' });
     });
     btn(10, y0 + 84, 196, 22, 'normal', () => { mode = null; }, 'RETOUR');
   }
@@ -324,10 +326,9 @@
     if (etat.fin) finir();
   }
   const UW = W, UH = 200, SY = 37;
-  const posC = (s, i) => { const j = i % 15, a = Math.floor(j / 5), d = j % 5, x = UW / 2 - (32 + a * 13 + (d % 2) * 4) * (0.84 + d * 0.04); return { x: Math.round(s ? UW - x : x), y: Math.round(UH * (0.58 + d * 0.085)), a, d }; };
+  const posC = (s, i) => { const j = i % 15, a = Math.floor(j / 5), d = j % 5, x = UW / 2 - (38 + a * 14 + (d % 2) * 4) * (0.84 + d * 0.04); return { x: Math.round(s ? UW - x : x), y: Math.round(UH * (0.58 + d * 0.085)), a, d }; };
   const ordreC = n => [...Array(n).keys()].sort((i, j) => posC(0, i).a - posC(0, j).a || D.hash(i) - D.hash(j));
-  const OA = ordreC(15);
-  function dessinerCombat() {
+    function dessinerCombat() {
     const c = combat, t = tNow - c.t0, R = c.res, vide = c.defense <= 0, FIN = vide ? 1.9 : 6.2, fini = t >= FIN;
     const passe = vide || t < 1.6 ? 0 : Math.min(3, 1 + Math.floor((t - 1.6) / 1.5)), ph = t < 1.6 ? 0 : ((t - 1.6) % 1.5) / 1.5;
     if (passe > c.passeSon && !fini) { c.passeSon = passe; DucSons.jouer('epee'); }
@@ -347,7 +348,7 @@
     const ta = lent ? 3.9 : tNow;
     g.save(); g.globalCompositeOperation = 'lighter'; for (let j = 0; j < 3; j++) { g.fillStyle = `rgba(255,236,190,${0.045 + 0.025 * Math.sin(ta * 0.7 + j * 2)})`; g.beginPath(); g.moveTo(UW * 0.8, UH * 0.12); g.lineTo(UW * (0.02 + j * 0.22), UH); g.lineTo(UW * (0.12 + j * 0.22), UH); g.fill(); } g.restore();
     let av; if (t < 1.6) av = t / 1.6; else if (fini || vide) av = 1; else av = 0.82 + 0.18 * Math.cos(ph * Math.PI * 2);
-    const dec = av * 15, gagneA = fini && R.gagne, gagneD = fini && !R.gagne;
+    const dec = av * 12, gagneA = fini && R.gagne, gagneD = fini && !R.gagne;
     // 1 soldat = 3 figurines (15 au plus de chaque côté). En face : la garnison, puis les habitants qui défendent
     // leur terre (la défense du terrain et des murs : 2 figurines par point), pour qu'il y ait toujours quelqu'un si la défense n'est pas nulle
     const figA = Math.min(15, R.n * 3), figS = Math.min(15, c.garnison * 3), figH = Math.min(15 - figS, Math.round((c.defense - c.garnison) * 2)), figD = figS + figH;
@@ -360,7 +361,7 @@
       if (s === 1 && figD && !gagneA) { if (SD) D.banniereD(g, p.x + 8, p.y - 4, -1, SD.c, SD.f, SD.em, SD.emc, ta + 1, false); else D.banniereD(g, p.x + 8, p.y - 4, -1, '#3a3430', '#1a1614', 'crane', '#e8e0d0', ta + 1, true); }
     });
     const items = [], OD = ordreC(figD), rangD = j => OD.indexOf(j);
-    for (let j = 0; j < figA; j++) items.push({ s: 0, i: j, vivant: OA.indexOf(j) < vivA, ...posC(0, j) });
+    for (let j = 0; j < figA; j++) items.push({ s: 0, i: j, vivant: ordreC(figA).indexOf(j) >= figA - vivA, ...posC(0, j) });   // le premier rang tombe d'abord
     // les soldats tiennent le premier rang, les habitants derrière
     for (let j = 0; j < figD; j++) { const k2 = rangD(j), sold = k2 < figS; items.push({ s: 1, i: j, hab: !sold, vivant: sold ? k2 >= figS - vivS : k2 - figS >= figH - vivH, ...posC(1, j) }); }
     items.sort((a, b) => a.y - b.y);

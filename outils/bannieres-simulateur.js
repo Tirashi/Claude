@@ -11,7 +11,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const DOSSIER = path.join(__dirname, '..', 'bannieres');
 for (const f of ['regles.js', 'surprises.js', 'ia.js']) vm.runInThisContext(fs.readFileSync(path.join(DOSSIER, f), 'utf8'), { filename: 'bannieres/' + f });
-/* global banNouvelle, banMigrer, banIaJouer, banFinTour, banChances, banDeplacer, banAtteignables, banAcheter, banConstruire, banDecorer, banResoudre, banApercu, banArmeeSur, banArmeesDe, banArmee, banChateau, banVoisins, banDrapeaux, banChateaux, banNbBat, banEtapeChateau, banRevenu, banSimuler, banVerifierFin, banUnite, banGrille, BAN_DERNIER_TOUR, BAN_SURPRISES, BAN_UNITES, BAN_POINTS */
+/* global banMaxUnites, banAmeliorer, banSoigner, banGagner, banPrix, BAN_COFFRE, banNouvelle, banMigrer, banIaJouer, banFinTour, banChances, banDeplacer, banAtteignables, banAcheter, banConstruire, banDecorer, banResoudre, banApercu, banArmeeSur, banArmeesDe, banArmee, banChateau, banVoisins, banDrapeaux, banChateaux, banNbBat, banEtapeChateau, banRevenu, banCoeursMax, banSimuler, banVerifierFin, banUnite, banGrille, BAN_DERNIER_TOUR, BAN_SURPRISES, BAN_UNITES, BAN_POINTS */
 
 const K = Number(process.argv[2]) || 200, detail = process.argv.includes('--detail');
 let fail = 0;
@@ -22,8 +22,9 @@ const defense = (e, id, i) => { const ch = banChances(e, id, i, 1); return ch.te
 const vus = {};
 let anomalies = 0;
 function controler(e) {   // ce qui ne doit jamais arriver
-  for (let s = 0; s < 4; s++) if (banArmeesDe(e, s).length > 3 || e.seigneurs[s].pieces < 0) anomalies++;
-  if (e.armees.some(a => a.unites.length > 6 || !a.unites.length || a.unites.some(u => u.pv <= 0))) anomalies++;
+  for (let s = 0; s < 4; s++) if (banArmeesDe(e, s).length > 3 || e.seigneurs[s].pieces < 0) { anomalies++; if (anomalies < 4) console.log('armées', s, banArmeesDe(e, s).length, e.seigneurs[s].pieces); }
+  if (e.seigneurs.some(S => S.pieces > 30)) { anomalies++; if (anomalies < 4) console.log('coffre', e.seigneurs.map(S => S.pieces)); }
+  if (e.armees.some(a => a.unites.length > 8 || !a.unites.length || a.unites.some(u => u.pv <= 0))) anomalies++;
   if (new Set(e.armees.map(a => a.terre)).size !== e.armees.length) anomalies++;
 }
 function jouerTour(e, stats) {
@@ -86,6 +87,25 @@ function partie(graine, niveau, coupe, rayon) {
   check(!g.ok, 'construire : seulement sur une case à soi');
   f.terres.forEach((t, i) => { if (!t.bat && t.prop < 0 && !t.camp && !t.ruine && banNbBat(f, 0) < 6) { t.prop = 0; const x = banConstruire(f, 0, i, 'maison'); if (banNbBat(f, 0) === 3 || banNbBat(f, 0) === 6) check(x.grandit, `le château grandit à ${banNbBat(f, 0)} bâtiments`); } });
   check(banEtapeChateau(f, 0) === 2, 'château : drapeaux à 3 bâtiments, remparts à 6');
+  check(banMaxUnites(f, 0) === 8 && banMaxUnites(e, 0) === 6, 'remparts : 8 guerriers par armée au lieu de 6');
+  // améliorer un bâtiment, une fois
+  const mais = f.terres.findIndex(t => t.prop === 0 && t.bat === 'maison'), rev = banRevenu(f, 0), p0 = f.seigneurs[0].pieces;
+  check(banAmeliorer(f, 0, mais).ok && banRevenu(f, 0) === rev + 1 && f.seigneurs[0].pieces === p0 - 4 && !banAmeliorer(f, 0, mais).ok, 'améliorer : une grande maison (+1 pièce de plus), une seule fois, au prix du bâtiment');
+  const cas = f.terres.findIndex(t => t.prop === 0 && t.bat === 'caserne');
+  check(banPrix(f, 0, 'champion') === 6 && banAmeliorer(f, 0, cas).ok && banPrix(f, 0, 'champion') === 5, 'grande caserne : le champion coûte 1 pièce de moins');
+  const tg = f.terres.findIndex(t => t.prop < 0 && !t.bat && !t.camp && !t.ruine); f.terres[tg].prop = 0; banConstruire(f, 0, tg, 'tour');
+  f.armees.push({ id: 901, s: 0, terre: tg, pts: 0, combat: false, unites: [banUnite(f, 'archer', 0)] });
+  const tirs = gr => { f.terres[tg].grand = gr; const x = { id: 900, s: 1, terre: banVoisins(f, tg).find(i => !banArmeeSur(f, i)), pts: 2, combat: false, unites: [banUnite(f, 'fantassin', 1)] }; f.armees.push(x); const ap2 = banApercu(f, 900, tg); f.armees.splice(f.armees.indexOf(x), 1); return ap2 && ap2.tourDef; };
+  check(tirs(false) === 1 && tirs(true) === 2, 'tour : 1 volée de plus, 2 avec une grande tour');
+  f.armees.splice(f.armees.findIndex(a => a.id === 901), 1);
+  // le coffre plein à 30
+  f.seigneurs[0].pieces = 28;
+  check(banGagner(f, 0, 5) === 2 && f.seigneurs[0].pieces === BAN_COFFRE && banGagner(f, 0, 3) === 0, 'coffre : plein à 30 pièces');
+  // soigner au château
+  const gar = banArmeeSur(f, banChateau(f, 0)); gar.unites[0].pv = 1; f.seigneurs[0].pieces = 5;
+  check(banSoigner(f, 0, gar.id).ok && gar.unites.every(u => u.pv === banCoeursMax(f, u.type, 0)) && f.seigneurs[0].pieces === 4 && !banSoigner(f, 0, gar.id).ok, 'soigner : 1 pièce au château, tous les cœurs reviennent');
+  const dehors = banArmeesDe(f, 0).find(a => a.terre !== banChateau(f, 0)); dehors.unites[0].pv = 1;
+  check(!banSoigner(f, 0, dehors.id).ok, 'soigner : seulement au château');
   // une bataille : la règle est la même pour les étoiles et pour le combat
   const A = ['fantassin', 'fantassin', 'archer'].map(t => banUnite(f, t, 0)), D = ['barbare', 'voleur'].map(t => banUnite(f, t, -1));
   check(JSON.stringify(banSimuler(A, D, 'charger', 'charger', 'plaine', false, 5)) === JSON.stringify(banSimuler(A, D, 'charger', 'charger', 'plaine', false, 5)), 'bataille : même graine, même bataille');
@@ -96,7 +116,9 @@ function partie(graine, niveau, coupe, rayon) {
   const fort = { id: 500, s: 0, terre: v, pts: 2, combat: false, unites: ['seigneur', 'champion', 'champion', 'fantassin', 'fantassin', 'archer'].map(t => banUnite(h, t, 0)) };
   h.armees.push(fort);
   const ap = banApercu(h, 500, c1);
-  check(ap && ap.garde && ap.D.length === 4, 'un château sans armée se défend avec sa garde (4 guerriers)');
+  check(ap && ap.garde === 4 && ap.D.length === 4, 'un château sans armée se défend avec sa garde (4 guerriers)');
+  { const z2 = banNouvelle(9, 'facile'), c0 = banChateau(z2, 0), r1 = z2.armees.find(x => x.s === 1); r1.terre = banVoisins(z2, c0).find(i => !banArmeeSur(z2, i)); const ap0 = banApercu(z2, r1.id, c0);
+    check(ap0 && ap0.nArmee === 4 && ap0.D.length === 9, 'au château, la garde (5 en facile) se bat avec l\'armée qui y est'); }
   const deplace = banDeplacer(h, 500, c1);
   check(deplace.ok && deplace.bataille && fort.terre === v, 'attaquer : l\'armée s\'arrête devant le château');
   let res = null;

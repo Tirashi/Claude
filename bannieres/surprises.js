@@ -6,10 +6,10 @@
    ===================================================================== */
 'use strict';
 const BAN_SURPRISES = {
-  marchand: { titre: 'Un marchand passe', texte: '+3 pièces !', effet: e => { e.seigneurs[0].pieces += 3; } },
-  recolte: { titre: 'La récolte est bonne', texte: '+2 pièces !', effet: e => { e.seigneurs[0].pieces += 2; } },
+  marchand: { titre: 'Un marchand passe', texte: '+3 pièces !', effet: e => { banGagner(e, 0, 3); } },
+  recolte: { titre: 'La récolte est bonne', texte: '+2 pièces !', effet: e => { banGagner(e, 0, 2); } },
   // s'il n'y a pas de place au château, il laisse 3 pièces
-  chevalier: { titre: 'Un chevalier arrive', texte: 'Il rejoint ton armée au château.', effet: e => { if (!banRenfort(e, 0, 'fantassin')) { e.seigneurs[0].pieces += 3; return 'Pas de place : il te donne 3 pièces.'; } return null; } },
+  chevalier: { titre: 'Un chevalier arrive', texte: 'Il rejoint ton armée au château.', effet: e => { if (!banRenfort(e, 0, 'fantassin')) { banGagner(e, 0, 3); return 'Pas de place : il te donne 3 pièces.'; } return null; } },
   pluie: { titre: 'Il pleut', texte: 'Les armées ne bougent que d\'1 pas ce tour.', effet: e => { e.pluie = true; e.armees.forEach(a => { if (a.s >= 0) a.pts = Math.min(a.pts, 1); }); } },
   dragon: { titre: 'Un dragon passe dans le ciel…', texte: 'Il ne fait rien. Il est juste beau.', effet: () => null },
 };

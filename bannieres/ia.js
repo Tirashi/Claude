@@ -28,7 +28,8 @@ const banIaVeutBatir = (car, tour, nb) => (car === 'batisseur' ? nb < 2 + tour /
 function banIaGerer(etat, s, car) {
   const S = etat.seigneurs[s]; car = car || S.car || 'malin';
   if (S.tombe || etat.fin) return;
-  const c = banChateau(etat, s);
+  const c = banChateau(etat, s), ici = banArmeeSur(etat, c);
+  if (ici && ici.s === s && ici.unites.reduce((n, u) => n + banCoeursMax(etat, u.type, s) - u.pv, 0) >= 2) banSoigner(etat, s, ici.id);   // soigner la garnison
   for (let k = 0; k < 8; k++) {
     let fait = false;
     const nb = banNbBat(etat, s);
@@ -36,6 +37,10 @@ function banIaGerer(etat, s, car) {
       const b = BAN_IA_BATIR[car][nb % BAN_IA_BATIR[car].length];
       const libres = etat.terres.map((t, i) => i).filter(i => etat.terres[i].prop === s && !etat.terres[i].bat).sort((x, y) => banDist(etat, x, c) - banDist(etat, y, c) || x - y);
       if (libres.length && banConstruire(etat, s, libres[0], b).ok) fait = true;
+      else if (!libres.length) {   // plus de case libre : il agrandit un bâtiment
+        const g = etat.terres.map((t, i) => i).find(i => etat.terres[i].prop === s && etat.terres[i].bat && etat.terres[i].bat !== 'chateau' && !etat.terres[i].grand);
+        if (g !== undefined && banAmeliorer(etat, s, g).ok) fait = true;
+      }
       else if (car === 'batisseur' && libres.length && S.pieces < BAN_BATIMENTS[b].prix) break;   // le bâtisseur économise
     }
     if (!fait) {
@@ -65,7 +70,7 @@ function banIaCoup(etat, a, car) {
   const proche = j => (cibles.length ? Math.min(...cibles.map(i => banDist(etat, i, j))) : 0);
   const place = j => (car === 'costaud' ? -0.4 * proche(j) : car === 'batisseur' ? -0.6 * Math.max(0, banDist(etat, j, chez) - 2) - 0.1 * proche(j) : -0.25 * proche(j) - 0.3 * Math.max(0, banDist(etat, j, chez) - 3));
   let mieux = null, note = place(a.terre) + (garnison ? 4 : 0);   // rester sur place ; la garnison ne sort que pour attaquer (ou quand elle est pleine)
-  if (garnison && a.unites.length >= BAN_MAX_UNITES && S.pieces >= 6) note -= 5;   // pleine et riche : elle sort, d'autres guerriers la remplaceront
+  if (garnison && a.unites.length >= banMaxUnites(etat, a.s) && S.pieces >= 6) note -= 5;   // pleine et riche : elle sort, d'autres guerriers la remplaceront
   m.forEach((v, j) => {
     const t = etat.terres[j], o = banArmeeSur(etat, j);
     let n;
@@ -73,7 +78,7 @@ function banIaCoup(etat, a, car) {
       const sDef = o ? o.s : t.prop;
       if (sDef === 0 && etat.tour < niv.premierTour) return;
       if (a.s > 0 && sDef > 0 && t.bat === 'chateau' && !niv.chateauxRivaux) return;
-      const seuil = Math.max(BAN_IA_SEUIL[car], sDef === 0 ? niv.seuil : 0);
+      const seuil = Math.max(BAN_IA_SEUIL[car] - (a.s > 0 && niv.audace || 0), sDef === 0 ? niv.seuil : 0);
       const { tac, chance } = banIaTactique(etat, a.id, j);
       if (chance <= seuil) return;
       n = 10 + 2 * chance + (t.bat === 'chateau' ? 5 : 0) + (t.camp || t.ruine ? 2 : 0);

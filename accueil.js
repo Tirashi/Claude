@@ -47,8 +47,12 @@ const GAMES = [
    d: "Le Yams classique avec de vrais dés en 3D : lance-les d'un geste, garde les bons et remplis les 13 cases de la feuille. Six styles de dés à débloquer, de la taverne à la Lune.", tags: ["3D", "DÉS", "6 STYLES"]},
   {k: "odyssee/index.html", n: "ODYSSEE", s: "ODYSSEE", ic: "galere", fam: "3d", lb: "linear-gradient(#9fdcff, #1fb0c9)", lt: "#13506e", sh: "#2bb3cf", rank: "odyssee",
    d: "Penche le téléphone pour ramener la galère d'Ulysse de Troie à Ithaque : Polyphème, Éole, Circé, les Sirènes, Charybde et Scylla… 30 plateaux en 3D et un plateau du jour pour toute la famille.", tags: ["3D", "PLATEAU DU JOUR"]},
+  {k: "the-des-jarls/index.html", n: "LE THE DES JARLS", s: "JARLS", ic: "jarl", fam: "32", lb: "linear-gradient(#2c3c70, #0e1428)", lt: "#f3d58c", sh: "#3a4a8a", rank: "jarls",
+   d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
   {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
    d: "Un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtis, recrute, conquiers les terres de trois seigneurs rivaux et gagne la couronne en 30 saisons. Combats en scènes HD-2D, événements, un Duché du jour pour toute la famille.", tags: ["STRATEGIE", "30 TOURS", "DUCHE DU JOUR"]},
+  {k: "lanterne/index.html", n: "LA DERNIERE LANTERNE", s: "LANTERNE", ic: "lanterne", fam: "32", lb: "linear-gradient(#2e4a34, #0e1a12)", lt: "#ffd27a", sh: "#4a6a3a", demo: true,
+   d: "Démo d'un RPG au tour par tour en HD-2D : avec ton équipe, rallume les lanternes qui retiennent la brume. Le prologue et l'acte 1 sont jouables : Clairfond, l'abbaye, le Bois Murmurant et la Crypte des racines, jusqu'au Roi des aulnes. La suite arrive.", tags: ["RPG", "DEMO", "ACTE 1"]},
   {k: "mot-d-or/index.html", n: "LE MOT D'OR", s: "MOT D'OR", ic: "motdor", fam: "32", lb: "linear-gradient(#7a2a20, #2a0e0a)", lt: "#ffd23f", sh: "#b0402c", rank: "motdor",
    d: "Un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe. Or : bien placée ; argent : mal placée. Le même mot pour toute la famille, et un entraînement pour rejouer.", tags: ["MOTS", "MOT DU JOUR"]},
   {k: "capitaine-du-port/index.html", n: "CAPITAINE DU PORT", s: "CAPITAINE", ic: "remorqueur", fam: "32", lb: "linear-gradient(#2a7c97, #163f66)", lt: "#ffd23f", sh: "#2a7c97", rank: "capitaine",
@@ -73,6 +77,8 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "lanterne/index.html": {added: "2026-10-22", genres: ["AVENTURE"]},
+  "the-des-jarls/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "HASARD", "DU JOUR"]},
   "duche/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "DU JOUR"]},
   "mot-d-or/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
   "capitaine-du-port/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
@@ -102,6 +108,8 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-22", "Démo : La Dernière Lanterne, un RPG au tour par tour en HD-2D. Avec ton équipe (lame, clerc, arcaniste), traverse Clairfond, l'abbaye et le Bois Murmurant, rallume les lanternes oubliées et descends dans la Crypte des racines affronter le Roi des aulnes. Le prologue et l'acte 1 sont jouables, la suite arrive."],
+  ["2026-10-21", "Nouveau jeu : Le Thé des Jarls, un duel de dés viking. Six dés, trois lancers, et chaque face envoie ton armée de 45 soldats à l'assaut : charge des haches, volée de flèches, éclaireurs qui volent les jetons. Invoque les faveurs de 20 dieux nordiques, apprends avec Sigrid la skalde, remonte la route du fjord de taverne en taverne (étoiles, couleurs, unités à gagner), joue à deux sur le même téléphone posé à plat, et tente le défi du jour."],
   ["2026-10-21", "Nouveau jeu : Duché, un petit 4X au tour par tour sur 37 terres hexagonales. Bâtis, recrute, prends les terres des trois seigneurs rivaux et gagne la couronne quand le vieux roi meurt : un grand électeur vote un tour sur deux. Combats en scènes HD-2D, événements illustrés, partie libre (facile ou normal) et un Duché du jour pour toute la famille, une seule tentative classée."],
   ["2026-10-20", "Nouveau jeu : Le Mot d'or, un mot de 6 lettres par jour à trouver en 6 essais. Les tuiles se retournent en or (bien placée), en argent (mal placée) ou en gris (absente). Le même mot pour toute la famille, une seule tentative classée, une série de jours à faire durer, et un entraînement pour rejouer autant qu'on veut."],
   ["2026-10-20", "Nouveau jeu : Capitaine du port, un casse-tête de bateaux en pixel art 32 bits. Glisse les bateaux du bassin pour ouvrir la passe au navire doré, dans 60 bassins et 5 ports (bouées, épaves, grands navires de 4 cases, grand port en 7 × 7), et tente le bassin du jour : une seule tentative classée, au plus petit nombre de coups."],
@@ -170,6 +178,7 @@ const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))
 const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
 // ce qui attend d'être repris (null si rien)
 const PROGRESS = {
+  "the-des-jarls/index.html": () => { const d = rk("jarls.dailyRun", null), r = rk("jarls.run", null); return d && d.E && d.E.graine === dayNum() ? "DEFI DU JOUR" : r && r.E ? `MANCHE ${r.E.manche}` : null; },
   "duche/index.html": () => { const d = rk("duche.dailyRun", null), r = rk("duche.run", null); return d && d.graine === dayNum() ? "DUCHE DU JOUR" : r && r.tour ? `TOUR ${r.tour}/30` : null; },
   "mot-d-or/index.html": () => { const j = rk("motdor.jour", null); return j && j.j === dayNum() && !j.fini && (j.rows || []).length ? "MOT DU JOUR" : null; },
   "capitaine-du-port/index.html": () => { const d = rk("capitaine.dailyRun", null), p = rk("capitaine.partie", null);
@@ -191,6 +200,7 @@ const PROGRESS = {
 };
 // défi du jour : null = pas de défi du jour, false = à faire, true = joué (puzzles : réussi ; missions : tentative commencée)
 const TODAY = {
+  "the-des-jarls/index.html": () => { const t = rk("jarls.dailyTry", null); return !!(t && t.j === dayNum()); },
   "duche/index.html": () => { const t = rk("duche.dailyTry", null); return !!(t && t.j === dayNum()); },
   "mot-d-or/index.html": () => { const j = rk("motdor.jour", null); return !!(j && j.j === dayNum() && j.fini); },
   "capitaine-du-port/index.html": () => !!(rk("capitaine.daily", {}) || {})[dayNum()],
@@ -211,6 +221,8 @@ const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catc
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
 const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
 const RECS = {
+  "the-des-jarls/index.html": () => { const e = (rk("jarls.campagne", {}) || {}).etoiles || {}, v = Object.values(e).map(Number).filter(x => x > 0);
+    return [["Étoiles de la campagne", num(v.reduce((a, b) => a + b, 0), "/ 60")], ["Dieux battus", num(v.length, "/ 20")], ["Défis du jour", num(count(rk("jarls.daily", {})))]]; },
   "duche/index.html": () => [["Meilleur score (normal)", num(rk("duche.best", 0), "pts")], ["Duchés du jour", num(count(rk("duche.daily", {})))]],
   "mot-d-or/index.html": () => { const s = rk("motdor.stats", {}) || {};
     return [["Mots du jour trouvés", num(s.gagnees)], ["Meilleure série", num(s.record, s.record > 1 ? "jours" : "jour")], ["Parties", num(s.parties)]]; },
@@ -304,7 +316,7 @@ function paintMarks(){
   GAMES.forEach(g => {
     g.el.querySelectorAll(".stk, .fv, .crown, .dj").forEach(e => e.remove());
     const m = metaOf(g), cur = inProgress(g);
-    const st = recent(m.added) ? ["NEUF", ""] : cur ? ["EN COURS", "cours"] : recent(m.updated) ? ["MAJ", "maj"] : null;
+    const st = g.demo ? ["DEMO", "demo"] : recent(m.added) ? ["NEUF", ""] : cur ? ["EN COURS", "cours"] : recent(m.updated) ? ["MAJ", "maj"] : null;
     if (st) g.el.append(el("span", "stk " + st[1], st[0]));
     const dj = dailyState(g);
     if (dj !== null) g.el.append(el("i", "dj" + (dj ? " fait" : ""), dj ? "✓" : ""));
@@ -378,7 +390,7 @@ function arrange(){
 /* ---------- jeu à la une : le dernier sorti, présenté dans sa boîte ---------- */
 (function une(){
   const keys = Object.keys(META), rank = g => keys.indexOf(g.k);   // à date égale, le premier de META l'emporte
-  const g = GAMES.filter(g => metaOf(g).added).sort((a, b) => metaOf(b).added.localeCompare(metaOf(a).added) || rank(a) - rank(b))[0];
+  const g = GAMES.filter(g => metaOf(g).added && !g.demo).sort((a, b) => metaOf(b).added.localeCompare(metaOf(a).added) || rank(a) - rank(b))[0];
   if (!g) return;
   const m = metaOf(g), box = $("une");
   box.style.setProperty("--lb", g.lb); box.style.setProperty("--lt", g.lt);
@@ -520,6 +532,11 @@ const RANKS = {
      empty: () => st.back ? "Personne n'a trouvé le mot ce jour-là." : "Personne n'a encore trouvé le mot du jour : à toi !"},
     {label: "SERIE", game: "motdor", board: () => "serie", fmt: v => N(v) + (v > 1 ? " jours" : " jour"), title: () => "MEILLEURE SERIE",
      note: "Le plus de jours d'affilée avec le mot du jour trouvé."}],
+  jarls: [{label: "ETOILES", game: "jarls", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "LA ROUTE DU FJORD",
+     note: "Les étoiles de la campagne des tavernes : par dieu battu, 1 étoile, 2 en gardant 8 PV, 3 en gardant 12 PV (60 au maximum)."},
+    {label: "DEFI DU JOUR", ctl: ["day"], game: "jarls", board: daily, fmt: v => N(v) + " pts", title: () => "DEFI DU JOUR",
+     note: "Le même dieu, les mêmes faveurs et les mêmes dés pour toute la famille, en normal. Victoire : 1000 + 50 par PV gardé − 10 par manche ; défaite : 20 par PV pris au dieu. Une seule tentative classée par jour.",
+     empty: () => st.back ? "Personne n'a défié le dieu ce jour-là." : "Personne n'a encore relevé le défi du jour : à toi !"}],
   duche: [{label: "MEILLEUR SCORE", game: "duche", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEUR REGNE",
      note: "Le meilleur score d'une partie en normal (Duché du jour compris) : terres ×100, or, bois ÷ 2, bâtiments ×20, légitimité ×5, votes ×50, primes de victoire."},
     {label: "DUCHE DU JOUR", ctl: ["day"], game: "duche", board: daily, fmt: v => N(v) + " pts", title: () => "DUCHE DU JOUR",
@@ -878,6 +895,8 @@ function collectSaves(){
   if (ya.b || ya.p) g.yams = ya;
   const od = {s: readKey("odyssee.stars", {}) || {}, b: readKey("odyssee.best", {}) || {}, d: readKey("odyssee.daily", {}) || {}};
   if (Object.keys(od.s).length || Object.keys(od.d).length) g.odyssee = od;
+  const ja = {e: (readKey("jarls.campagne", {}) || {}).etoiles || {}, d: readKey("jarls.daily", {}) || {}};
+  if (Object.keys(ja.e).length || Object.keys(ja.d).length) g.jarls = ja;
   const du = {b: Number(readKey("duche.best", 0)) || 0, d: readKey("duche.daily", {}) || {}};
   if (du.b || Object.keys(du.d).length) g.duche = du;
   const mg = {n: readKey("magasinier.niveaux", {}) || {}, d: readKey("magasinier.daily", {}) || {}};
@@ -918,6 +937,8 @@ function describeSaves(g){
   if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
   if (g.lunerover){ const n = Object.values(g.lunerover).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Lune-Rover : ${n} étoile${n > 1 ? "s" : ""}`); }
   if (g.odyssee){ const n = Object.values(g.odyssee.s || {}).reduce((s, v) => s + (Number(v) || 0), 0); out.push(`Odyssée : ${n} étoile${n > 1 ? "s" : ""}`); }
+  if (g.jarls){ const v = Object.values(g.jarls.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.jarls.d || {}).length;
+    out.push(`Le Thé des Jarls : ${v.length} dieu${v.length > 1 ? "x" : ""} battu${v.length > 1 ? "s" : ""}, ${v.reduce((a, b) => a + b, 0)} étoiles${d ? `, ${d} défi${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.duche){ const d = Object.keys(g.duche.d || {}).length; out.push(`Duché : meilleur score ${g.duche.b || 0}${d ? `, ${d} duché${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.magasinier){ const n = Object.values(g.magasinier.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.magasinier.d || {}).length;
     out.push(`Le Magasinier : ${n} étoile${n > 1 ? "s" : ""}${d ? `, ${d} grille${d > 1 ? "s" : ""} du jour` : ""}`); }
@@ -1064,6 +1085,13 @@ function mergeSaves(g){
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
     writeKey("odyssee.best", best);
     if (n){ writeKey("odyssee.stars", stars); writeKey("odyssee.daily", daily); done.push(`Odyssée : ${n} plateau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
+  }
+  if (g.jarls && typeof g.jarls === "object"){
+    // fusion : pour chaque dieu, le plus d'étoiles ; pour chaque défi du jour, le plus haut score
+    const a = g.jarls, camp = readKey("jarls.campagne", {}) || {}, et = Object.assign({}, camp.etoiles || {}), daily = readKey("jarls.daily", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(a.e || {})) if (/^[a-z]{2,10}$/.test(k) && v >= 1 && v <= 3 && !(et[k] >= v)){ et[k] = Math.round(v); n++; }
+    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v >= 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
+    if (n){ writeKey("jarls.campagne", Object.assign({}, camp, {etoiles: et})); writeKey("jarls.daily", daily); done.push(`Le Thé des Jarls : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.duche && typeof g.duche === "object"){
     // fusion : le meilleur score, et pour chaque Duché du jour le plus haut

@@ -5,8 +5,8 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html',
-  'mot-d-or/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html', 'the-des-jarls/index.html',
+  'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
   const { browser, ctx } = await phone(); let fail = 0;
@@ -81,6 +81,33 @@ const shots = process.argv[2];
       if (r !== 'ok') errs.push('Odyssée : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-odyssee.png` });
     }
+    if (url === 'lanterne/index.html') {
+      // La Dernière Lanterne : nouvelle partie, dialogue d'Ysolde au clavier, un pas sur la carte, sauvegarde, un combat
+      const r = await p.evaluate(async () => {
+        const L = Lanterne, wait = ms => new Promise(r => setTimeout(r, ms));
+        const espace = () => dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+        L.sauvegardes.effacer(3); L.nouvelle(3, 'FUMEE'); await wait(1500);
+        if (L.etat.carte !== 'maison_ysolde') return 'la partie ne commence pas chez Ysolde';
+        if (!document.querySelector('.rpg-dialogue.on')) return "pas de dialogue d'Ysolde";
+        for (let i = 0; i < 60 && (document.querySelector('.rpg-dialogue.on') || L.partie.occupe); i++) { espace(); await wait(120); }
+        if (!L.etat.drapeaux.mission) return "le dialogue d'Ysolde ne donne pas la mission";
+        const x = L.etat.x; L.entrees.simuler('droite', 5000);
+        for (let i = 0; i < 50 && L.etat.x === x; i++) await wait(100);
+        L.entrees.lacherTout(); await wait(600);
+        if (L.etat.x !== x + 1) return "le héros n'avance pas";
+        if (!L.sauvegardes.resume(3)) return 'pas de sauvegarde automatique';
+        // un combat entier contre un feu follet, en appuyant sur A (Attaque, puis la cible)
+        L.etat.heros.heros.pv = L.etat.heros.heros.pvMax; const xp = L.etat.heros.heros.xp + L.etat.heros.heros.niveau * 100;
+        L.partie.jouer([{ combat: ['feu_follet'] }]); await wait(300);
+        if (!L.combat) return 'le combat ne commence pas';
+        for (let i = 0; i < 400 && L.combat; i++) { L.combat.touche('A'); await wait(80); }
+        if (L.combat) return 'le combat ne finit pas';
+        if (L.etat.heros.heros.xp + L.etat.heros.heros.niveau * 100 <= xp) return "pas d'expérience après la victoire";
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('La Dernière Lanterne : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-lanterne.png` });
+    }
     if (url === 'magasinier/index.html') {
       // Le Magasinier : un niveau avec de la glace gagné par sa solution, écran de fin ; annuler revient en arrière
       const r = await p.evaluate(async () => {
@@ -115,6 +142,58 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Duché : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-duche.png` });
+    }
+    if (url === 'the-des-jarls/index.html') {
+      // Le Thé des Jarls : un duel contre un dieu joué jusqu'au bout (batailles accélérées), partie sauvegardée puis effacée, écran de fin ; le duel à deux démarre
+      const r = await p.evaluate(async () => {
+        const J = Jarls, wait = ms => new Promise(r => setTimeout(r, ms)), E = () => J.etat();
+        J.duel({ dieu: 'loki', niveau: 2, graine: 7 });
+        if (!localStorage.getItem('jarls.run')) return 'partie pas sauvegardée';
+        // chaque effet de la bataille se dessine (21/10 : le portrait de Thor manquait et cassait tout le dessin, HUD et dés compris)
+        const t0 = performance.now() / 1000;
+        for (const nom of ['dieu', 'foudre', 'soin', 'fleches', 'haches', 'mains', 'hiver']) for (const id of ['thor', 'idunn', 'loki']) {
+          J.vue().anim = { t0: t0 - 1, fin: t0 + 5, ph: [{ nom, id, qui: 0, att: [2, 2], def: [1, 1], t: 0, d: 2, coup: 9, txt: 'ESSAI' }] };
+          try { dessiner(t0); } catch (e) { J.vue().anim = null; return `dessin de « ${nom} » (${id}) : ${e.message}`; }
+        }
+        J.vue().anim = null;
+        let batailles = 0;
+        for (let n = 0; n < 600 && !E().fin; n++) {
+          if (J.vue().anim) { batailles++; J.accelerer(); await wait(40); continue; }
+          const e = E();
+          if (e.tour === 0 && e.phase === 'lancer') J.lancer(0);
+          else if (e.tour === 0 && e.phase === 'faveur') J.faveur(0, e.camps[0].jetons >= 4 ? 'thor' : null, 1);
+          await wait(e.tour === 0 ? 20 : 150);
+        }
+        if (!E().fin) return 'le duel ne finit pas (manche ' + E().manche + ')';
+        if (!batailles) return 'aucune bataille montrée';
+        await wait(60); J.accelerer();   // la dernière bataille est encore montrée
+        await wait(1000); if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        if (localStorage.getItem('jarls.run')) return 'partie finie encore sauvegardée';
+        J.duel({ duo: true, graine: 3 }); const t = E().tour; J.lancer(t);
+        if (E().camps[t].lancers !== 1 || E().tour === t) return 'à deux : le lancer ne passe pas la main';
+        // le duel guidé de Sigrid, étape par étape, jusqu'à la fin de la première manche
+        J.lancerGuide();
+        for (let n = 0; n < 200 && J.guide(); n++) {
+          const k = J.guide().k, e = GUIDE_ETAPES[k], s = E();
+          if (J.vue().anim) J.accelerer();
+          else if (e.a === 'ok') J.guideOk();
+          else if (s.tour === 0 && e.a === 'lancer') J.lancer(0);
+          else if (s.tour === 0 && e.a === 'garder') [0, 1, 3].forEach(j => J.garder(0, j));
+          else if (s.tour === 0 && e.a === 'finir') J.finir(0);
+          else if (s.tour === 0 && e.a === 'faveur') J.faveur(0, 'thor', 1);
+          await wait(e.a === 'tour' ? 200 : 60);
+        }
+        if (J.guide()) return 'duel guidé bloqué à l\'étape ' + (J.guide().k + 1);
+        if (E().manche !== 2 || E().camps[0].pv !== 12 || E().camps[1].pv !== 11) return `duel guidé : manche ${E().manche}, PV ${E().camps.map(c => c.pv)} au lieu de 12 contre 11`;
+        // la route du fjord et le défi du jour s'ouvrent
+        localStorage.setItem('jarls.guide', 'true'); J.ecranCampagne();
+        if (document.getElementById('eCampagne').hidden || document.querySelectorAll('#route .tav').length !== 20) return 'route du fjord absente';
+        J.defiDuJour(); document.getElementById('bIntroJour').click();
+        if (!E() || E().mode !== 'jour' || !localStorage.getItem('jarls.dailyTry')) return 'défi du jour pas lancé';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Le Thé des Jarls : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-jarls.png` });
     }
     if (url === 'capitaine-du-port/index.html') {
       // Capitaine du port : un bassin gagné par sa solution, écran de fin ; annuler revient en arrière ; le bassin du jour se charge
