@@ -100,7 +100,8 @@ async function initSon(){
   }
 }
 // le son retenu pour chaque action (modifiable dans le banc des sons)
-const VARIANTES={coup:['coup_l','coup_n','coup_n2','coup_k'],touche:['touche_l','touche_l2','touche_n','touche_k'],givre:['givre_l','givre_n','givre_k'],feu:['feu_l','feu_n','feu_n2'],soin:['soin_l','soin_l2','soin_n'],fleche:['fleche_l','fleche_n','fleche_n2'],morsure:['morsure_l','morsure_l2','morsure_n'],victoire:['victoire_l','victoire_n']};
+// le premier de chaque liste est le choix de l'utilisateur (22/10)
+const VARIANTES={coup:['coup_n2','coup_l','coup_n','coup_k'],touche:['touche_l','touche_l2','touche_n','touche_k'],givre:['givre_l','givre_n','givre_k'],feu:['feu_l','feu_n','feu_n2'],soin:['soin_l','soin_l2','soin_n'],fleche:['fleche_l','fleche_n','fleche_n2'],morsure:['morsure_l2','morsure_l','morsure_n'],victoire:['victoire_l','victoire_n']};
 const NOMS_ACTIONS={coup:'Coup d\'épée',touche:'Touché',givre:'Givre',feu:'Flamme',soin:'Soin',fleche:'Flèche',morsure:'Morsure',victoire:'Victoire'};
 const SOURCES={l:'Leohpaz',n:'Ninja',k:'Kenney'};
 let CHOIX={};for(const a in VARIANTES)CHOIX[a]=VARIANTES[a][0];
