@@ -5,11 +5,11 @@
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const [adv, ani, sortie] = process.argv.slice(2);
-const PERSOS = ['Knight', 'Ranger', 'Rogue_Hooded', 'Barbarian'];
-const ARMES = ['sword_1handed', 'sword_2handed_color', 'shield_badge_color', 'bow_withString', 'arrow_bow', 'axe_1handed', 'dagger'];
+const PERSOS = ['Knight', 'Ranger', 'Rogue_Hooded', 'Barbarian', 'Mage'];
+const ARMES = ['sword_1handed', 'sword_2handed_color', 'shield_badge_color', 'bow_withString', 'arrow_bow', 'axe_1handed', 'dagger', 'staff'];
 const CLIPS = { General: ['Idle_A', 'Hit_A', 'Death_A', 'Death_A_Pose'], MovementBasic: ['Walking_A', 'Running_A'],
   CombatMelee: ['Melee_1H_Attack_Chop', 'Melee_1H_Attack_Stab', 'Melee_2H_Attack_Chop', 'Melee_Block', 'Melee_2H_Idle'],
-  CombatRanged: ['Ranged_Bow_Draw', 'Ranged_Bow_Release', 'Ranged_Bow_Idle'], Simulation: ['Cheering'] };
+  CombatRanged: ['Ranged_Bow_Draw', 'Ranged_Bow_Release', 'Ranged_Bow_Idle', 'Ranged_Magic_Shoot', 'Ranged_Magic_Spellcasting'], Simulation: ['Cheering'] };
 const trouver = (dossier, nom) => { for (const f of fs.readdirSync(dossier, { recursive: true })) if (path.basename(f) === nom) return path.join(dossier, f); throw new Error(nom); };
 (async () => {
   const persos = {}, armes = {};

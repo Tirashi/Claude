@@ -20,7 +20,7 @@ Né de l'essai « Duché en 3D » du 21/10 (`maquettes/duche-kaykit.html`, https
 ## 2. Principe
 
 - **Partie** : 24 tours (un tour = une saison, l'an 1 au printemps).
-- **Modes** : **Campagne du jour** (graine = date locale AAAAMMJJ, classée, **une seule tentative**, règle du 15/10 : sauvegardée à part et reprise où on l'a laissée) et **Partie libre** (graine au hasard, son meilleur score va au tableau `best`).
+- **Modes** : **Partie libre** seulement (graine au hasard ; facile ou normal). **Pas de partie classée du jour** (choix du 22/10) ; le meilleur score peut aller au tableau `best` de l'accueil.
 - **Victoire anticipée** : prendre les **3 châteaux rivaux** (conquête) ou recevoir **5 votes** des grands électeurs (couronne, § 9).
 - **Défaite** : votre château pris ; ou plus d'armée, plus d'or et plus de quoi en lever.
 - **Fin normale** : après le tour 24, calcul du score (§ 12).
@@ -75,6 +75,7 @@ Chaque guerrier est **un personnage** sur la carte et en bataille (pas de « 1 f
 | **Fantassin** (chevalier, épée et bouclier) | 10 or | 1 vivre | 3 | 1 | pare un coup sur trois en tactique « Tenir » |
 | **Archer** (archer à l'arc) | 12 or | 1 vivre | 2 | 1 | tire **avant le contact** (1 volée, 2 sur colline ou en tour) ; faible au corps à corps (attaque 0 au contact s'il est en première ligne) |
 | **Champion** (chevalier à l'épée à deux mains) | 25 or, caserne | 2 vivres | 4 | 2 | ne peut être levé qu'à la caserne ; frappe deux ennemis voisins |
+| **Mage** (le mage du pack, bâton) — ajouté le 22/10 | 20 or, caserne | 1 vivre | 2 | 1 | lance une **boule de feu** à la première volée : 1 dégât sur 2 ennemis de la première ligne ; faible au contact, comme l'archer ; reste derrière |
 | **Seigneur** (vous, un seul) | — | — | 5 | 2 | donne +1 en attaque à son armée ; gagne des **niveaux** (§ 7) ; **ne meurt jamais** (confirmé le 22/10) : s'il tombe, il n'est que **blessé** et rentre au château (2 tours sans combattre) |
 
 - **Vétérans** : un guerrier qui survit à 2 batailles gagne +1 point de vie (petite étoile sur sa bannière).
@@ -129,11 +130,11 @@ PRNG mulberry32, **aucun `Math.random()` dans la logique** (les effets visuels, 
 
 ## 12. Score
 
-Terres × 100, châteaux pris × 300, or, gloire × 5, votes × 50, niveau du seigneur × 50, guerriers vivants × 10 ; prime de conquête ou de couronne selon le tour (comme Duché) ; défaite : moitié. Tableaux `daily:AAAAMMJJ` et `best`.
+Terres × 100, châteaux pris × 300, or, gloire × 5, votes × 50, niveau du seigneur × 50, guerriers vivants × 10 ; prime de conquête ou de couronne selon le tour (comme Duché) ; défaite : moitié. Tableau `best` seulement (pas de partie du jour).
 
 ## 13. Écrans (portrait, téléphone d'abord)
 
-1. **Titre** : la carte en 3D qui tourne lentement derrière le logo, CONTINUER, CAMPAGNE DU JOUR (avec la date, REPRENDRE / FAIT), PARTIE LIBRE (facile / normal), comment jouer, CLASSEMENT, sons, ◀ LUDOTHÈQUE.
+1. **Titre** : la carte en 3D qui tourne lentement derrière le logo, CONTINUER, NOUVELLE PARTIE (facile / normal), comment jouer, CLASSEMENT, sons, ◀ LUDOTHÈQUE.
 2. **Carte** : barre du haut (or, vivres, gloire, votes, tour et saison) ; la carte 3D ; les armées en personnages sur leur terre (le porte-étendard devant, une bannière avec le nombre de guerriers) ; panneau du bas selon ce qu'on touche (terre : bâtir, lever ; armée : composition, DEPLACER, séparer) ; FIN DU TOUR ; journal (3 lignes).
 3. **Déplacement** : les terres atteignables s'éclairent (avec le coût) ; on touche la destination ; l'armée y marche (animation de marche).
 4. **Bataille** : préparation, combat, bilan (§ 6), vue de profil sur les tuiles comme la maquette du 21/10.
@@ -147,7 +148,7 @@ Terres × 100, châteaux pris × 300, or, gloire × 5, votes × 50, niveau du se
 - **Bibliothèques** : `lib/three.min.js`, `lib/GLTFLoader.js`, `lib/SkeletonUtils.js` (r128, déjà dans le dépôt).
 - **Modèles** : tuiles et bâtiments KayKit Medieval Hexagon (CC0) convertis par `outils/kaykit-conversion.py` ; personnages KayKit Adventurers 2.0 et animations KayKit Character Animations 1.1 (CC0) préparés par `outils/duche-3d/aventuriers.js`. Fichiers de données à part (`bannieres/modeles.js`, `bannieres/personnages.js`), **environ 4 Mo**, mis en cache par le service worker (`sw.js` : `FILES` et `VERSION`). Écran de chargement avec une barre.
 - **Performance** (Android moyen) : 30 images par seconde visées ; **un seul personnage animé par armée sur la carte** (le porte-étendard), pas un par guerrier ; les animations de la carte tournent à 30 images par seconde ; ombres sur la seule lumière du soleil ; option « graphismes légers » (sans ombres, demi-résolution).
-- **Classements** : `ludo-scores.js` (jeu `bannieres`, tableaux `daily:` et `best`), accueil (cartouche, volet), comme les autres jeux ; liste de contrôle du mémo `specs/ludotheque.md`.
+- **Classements** : `ludo-scores.js` (jeu `bannieres`, tableau `best`), accueil (cartouche, volet), comme les autres jeux ; liste de contrôle du mémo `specs/ludotheque.md`.
 - **Tests** : `fumee.js` (la page s'ouvre), `logique.js` (une partie simulée, même graine = même partie, bataille déterministe), simulateur d'équilibrage.
 - Objet `window.Bannieres` pour les tests (état, actions), comme les autres jeux.
 
@@ -165,7 +166,9 @@ Terres × 100, châteaux pris × 300, or, gloire × 5, votes × 50, niveau du se
 
 **Cavalerie plus tard** : le pack gratuit **Quaternius « LowPoly Animated Animals »** (CC0, itch.io) a un **cheval animé** (repos, pas, trot, galop, saut, mort), et aussi des moutons et des vaches (pour animer les champs). Essai du 22/10 : il va, mais ses **proportions sont réalistes** (grandes jambes, facettes) à côté des personnages KayKit à grosse tête, et KayKit n'a pas d'animation de cavalier (on pourrait asseoir le chevalier avec « Sit_Chair_Idle »). À reprendre si l'on veut un cavalier, en rapetissant le cheval. Les chevaux payants trouvés (Warhorse, modèles réalistes à 5–15 $) jurent encore plus.
 
-**Encore à confirmer** : les **3 tactiques** (Charger, Tenir, Harceler, § 6 avec un exemple) ; le mage du pack comme 5ᵉ guerrier plus tard (soigneur ou feu) ; la campagne du jour classée avec **une tentative par jour**.
+**Réglé aussi le 22/10** : les **3 tactiques** ; **pas de partie classée du jour** ; le **mage** devient le 5ᵉ guerrier (boule de feu).
+
+**Maquette des nouveautés** (22/10) : `maquettes/bannieres.html`, https://claude.ai/artifact/WjSLr1Tx1CPvWEWGmGzyUQ — armées-personnages sur la carte (chef, drapeau, bannière avec le nombre), déplacement à 2 points (terres éclairées, rouges pour une bataille, marche animée, terres prises en passant), préparation (les deux armées face à face, effets du terrain, **chance de chaque tactique** calculée en jouant 60 fois la même règle), bataille réglée par la règle du § 6 puis rejouée (volées, boules de feu, assauts, parades, chutes, fuite, acclamations), rivaux qui avancent et attaquent à la FIN DU TOUR, seigneur blessé qui revient. Pas d'économie ni d'événements (ce n'est pas l'objet de la maquette). **À valider.**
 
 ## 17. Propositions de noms
 
