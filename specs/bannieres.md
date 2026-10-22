@@ -140,7 +140,7 @@ La partie est sauvegardée à chaque action ; CONTINUER la reprend.
 - Maquette 1 et 2 : `maquettes/bannieres.html`, https://claude.ai/artifact/WjSLr1Tx1CPvWEWGmGzyUQ (22/10). Maquette 3 : même lien.
 - Packs KayKit gratuits passés en revue le 22/10 : retenus Dungeon (bannières → étendards, murs → remparts, caisses, tonneaux, torches), Skeletons (revenants), Fantasy Weapons (lance ; hallebarde et marteaux en réserve), Forest (buissons, pierres) ; vus et pas retenus : Board Game Bits, Resource Bits, Prototype, Furniture, City Builder, Space Base ; les « Mystery Monthly » n'ont pas de version gratuite.
 
-## 17. Règles ajoutées en session 1 (22/10, à valider)
+## 17. Règles ajoutées en session 1 (22/10, validées par l'utilisateur)
 
 - **La garde du château** : un château sans armée se défend avec sa garde (2 chevaliers et 2 archers ; en facile, celle du joueur a en plus un lancier). Sans elle, un château vide se prenait en marchant dessus.
 - **Au château**, comme avec une tour, les archers de celui qui défend tirent une fois de plus.
@@ -154,6 +154,6 @@ La partie est sauvegardée à chaque action ; CONTINUER la reprend.
   - **améliorer un bâtiment, une fois**, au prix du bâtiment : grande maison, grand moulin, grand marché (+1 pièce de plus chacun), grande forge (les champions aussi ont 1 cœur de plus), grande caserne (le champion coûte 5 pièces), grande tour (les archers tirent encore une fois de plus) ;
   - **soigner une armée au château** : 1 pièce, tous ses cœurs reviennent ;
   - **les remparts** (château à 6 bâtiments) : **8 guerriers par armée** au lieu de 6 (une armée qui perd ses remparts garde ses guerriers, mais n'en prend plus).
-- **Au château, la garde se bat toujours avec l'armée qui y est** (derrière elle) : une petite armée au château le rendait plus fragile qu'un château vide.
-- **En normal**, les rivaux sont plus hardis (ils attaquent avec un peu moins de chances) et gagnent 1 pièce de plus par tour.
+- **Au château, la garde se bat toujours avec l'armée qui y est** (derrière elle) : une petite armée au château le rendait plus fragile qu'un château vide (validé le 22/10).
+- **En normal**, les rivaux sont plus hardis (ils attaquent avec un peu moins de chances) et gagnent 1 pièce de plus par tour (validé le 22/10).
 - **Au simulateur** (100 parties par niveau, joueur automatique « malin ») : en **facile**, le joueur gagne 85 % des parties (presque toujours aux drapeaux, en moyenne 17 drapeaux contre 6 par rival) et ne perd son château qu'une fois sur 100 ; en **normal**, 61 % de victoires et 9 % de châteaux perdus. Environ 9 batailles livrées et 6 subies par partie ; une partie va presque toujours jusqu'au tour 25 ; le coffre est presque toujours plein (28 pièces en moyenne).
