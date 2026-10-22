@@ -68,8 +68,8 @@ On touche **une case à soi**, on appuie sur **CONSTRUIRE**, on choisit un bâti
 | **Moulin** | 6 pièces | +2 pièces à chaque tour. |
 | **Marché** | 10 pièces | +3 pièces à chaque tour. |
 | **Forge** | 8 pièces | Tes chevaliers et lanciers ont 1 cœur de plus. |
-| **Caserne** | 8 pièces | Tu peux acheter des champions. |
-| **Tour** | 6 pièces | Si on t'attaque sur cette case, tes archers tirent une fois de plus. |
+| **Caserne** | 8 pièces | Tu peux acheter des champions. Elle a une petite garde ; grande : elle soigne la moitié des cœurs perdus (§ 18). |
+| **Tour** | 6 pièces | Elle a une petite garde ; tes archers y tirent une fois de plus ; grande : une **garnison** peut y rester (§ 18). |
 
 - **Décorer** : sur une case à toi, **DECORER** pose une décoration (**1 pièce**) : puits, brouette, tonneaux, caisses, cible de tir, seau, palette de bois. **3 au plus par case**, à des places fixes autour du bâtiment. Elles ne servent qu'à faire joli (et c'est très bien).
 - **Le château grandit** : à **3 bâtiments**, des drapeaux de ta couleur poussent autour du château ; à **6 bâtiments**, des remparts (pack KayKit, § 13) ; le château lui-même devient plus grand.
@@ -166,8 +166,11 @@ Corrigé :
 - **La fête** : les vainqueurs couraient vers leur place dans les rangs au lieu de fêter ; ils fêtent maintenant sur place.
 - Équilibrage revu au simulateur : la **garde du château grandit avec lui** (un archer de plus avec les drapeaux, un champion de plus avec les remparts ; pour le joueur, en facile seulement) ; en facile, un rival n'attaque le château du joueur qu'à coup presque sûr (9 chances sur 10) ; en normal, les rivaux commencent avec un archer et 6 pièces de plus. Facile : 80 % de victoires, aucun château perdu sur 100 parties ; normal : 72 %, 6 %.
 
-À décider (propositions faites à l'utilisateur le 22/10) :
-- **Tours et casernes plus solides** : la caserne et la tour ont une petite garde (moins forte que celle du château) ; la grande caserne soigne chaque tour la moitié des cœurs perdus de l'armée qui y est ; la grande tour accueille une **garnison** pour toujours (une armée qui y entre y reste), qui défend avec ses volées en plus, avec l'armée posée dessus s'il y en a une.
-- **PARTIR** : choisir la façon de se battre **avant** que l'armée coure (les étoiles s'affichent dès qu'on touche une case rouge) ; PARTIR n'enlève alors rien.
-- **Voir ses bonus** : une fenêtre MON ROYAUME (en touchant le haut de l'écran) ; une seule forge et une seule caserne utiles (le bouton dit « TU EN AS DEJA UNE ») ; les cœurs en plus affichés à part dans ACHETER.
-- **Acheter** : l'armée du château affichée en haut de la fenêtre ACHETER, avec ses guerriers, leurs cœurs et la place qui reste.
+Ajouté (propositions validées par l'utilisateur le 22/10) :
+- **Caserne et tour gardées** : une petite garde (caserne : un chevalier et un archer ; tour : deux archers), qui se bat avec l'armée posée dessus ; on ne les prend plus en marchant dessus. La **grande caserne soigne** chaque tour la moitié des cœurs perdus de l'armée qui y est (même après une bataille) ; elle ne baisse plus le prix du champion.
+- **Garnison** : sur une grande tour, RESTER DANS LA TOUR fait entrer l'armée pour toujours (le seigneur reste dehors ; 6 guerriers au plus) ; elle ne compte plus dans les 3 armées, se repose (+1 cœur par tour) et défend la tour avec la garde, derrière l'armée posée dessus ; sa bannière montre son nombre au-dessus de la tour. Vaincue, elle s'enfuit. Un seigneur qui tombe perd ses garnisons.
+- **PARTIR** : toucher une case rouge ouvre d'abord la fenêtre « A L'ATTAQUE ! » (qui est en face, la garde, l'eau, les étoiles des 3 façons de se battre) ; l'armée ne court qu'après le choix ; PARTIR ne change rien (elle garde ses pas).
+- **MON ROYAUME** (toucher le haut de l'écran) : pièces par tour et d'où elles viennent, coffre, armées, guerriers par armée, garde du château, bonus actifs (étoile pleine) ou à gagner (étoile vide).
+- **Une seule forge, une seule caserne** (« TU EN AS DEJA UNE » dans CONSTRUIRE).
+- **ACHETER** : l'armée du château (chaque guerrier et ses cœurs, la place qui reste) ou « LES NOUVEAUX FORMENT UNE NOUVELLE ARMEE (2/3) » ; les cœurs de la forge à part (+♥ FORGE).
+- **Simulations** (100 parties par niveau, joueur automatique) : facile 86 % de victoires (avant : 80 %), aucun château perdu ; normal 75 % (avant : 72 %), 3 % de châteaux perdus (avant : 6 %) ; **deux fois plus de batailles** (environ 17 livrées et 13 subies par partie, contre 9 et 6), parce que casernes et tours se gagnent en bataille. Avec un joueur qui met ses armées en garnison dès qu'il a une grande tour (60 parties) : facile 90 %, normal 53 % (les guerriers en garnison ne prennent plus de cases) : la garnison est un choix, pas un bonus gratuit.

@@ -39,7 +39,8 @@ function majFiche(i) {
   if (a) {
     f.innerHTML = `<div class="titre">${nomCamp(0)}</div><div>${compo(a.unites)}</div><div>${I('coeur')} ${coeurs(a.unites)}</div>` +
       `<div class="journal">TOUCHE UNE CASE QUI BRILLE. EN ROUGE : BATAILLE !</div>`;
-    f.append(actions(bouton('ANNULER', () => { deselectionner(); majFiche(); })));
+    const gar = banPeutGarnison(etat, 0, a.id).ok && bouton('RESTER DANS LA TOUR', () => menuGarnison(a.id));
+    f.append(actions(bouton('ANNULER', () => { deselectionner(); majFiche(); }), gar));
     return;
   }
   if (i != null && i >= 0) {
@@ -47,6 +48,7 @@ function majFiche(i) {
     f.innerHTML = `<div class="titre">${NOM_CASE(t)}</div>` +
       `<div>${t.prop >= 0 ? (t.prop === 0 ? 'A TOI' : 'A ' + nomSeigneur(t.prop)) : 'A PERSONNE'}${B ? ' · ' + sansAccent(B.phrase) + (t.grand ? ' ' + sansAccent(B.plus) : '') : ''}</div>` +
       (o ? `<div>${nomCamp(o.s)} : ${compo(o.unites)} ${I('coeur')} ${coeurs(o.unites)}</div>` : '') +
+      (t.garnison && t.garnison.length ? `<div>GARNISON : ${compo(t.garnison)} ${I('coeur')} ${coeurs(t.garnison)}</div>` : '') +
       `<div class="journal">${EFFETS[t.t]}${t.decos.length ? ' · ' + t.decos.length + '/' + BAN_DECOS_PAR_CASE + ' DECORATIONS' : ''}</div>`;
     if (t.prop !== 0) return;
     const deco = t.decos.length < BAN_DECOS_PAR_CASE && bouton(`DECORER · ${BAN_PRIX_DECO} ${I('piece')}`, () => decorer(i), banPeutDecorer(etat, 0, i).ok);
@@ -84,6 +86,13 @@ function choisir(x, y) {
 }
 async function deplacerJoueur(id, i) {
   const a = banArmee(etat, id); if (!a) return;
+  // une bataille : on choisit comment se battre AVANT que l'armée coure ; PARTIR n'enlève rien (elle garde ses pas)
+  let tac = null;
+  if (chemins && chemins.get(i) && chemins.get(i).combat) {
+    const ch = banChemin(chemins, i), depuis = ch.length > 1 ? ch[ch.length - 2] : a.terre;
+    tac = await choisirTactique(id, i, depuis);
+    if (!tac) { majFiche(); return; }
+  }
   occupe = true; deselectionner();
   const depart = a.terre, r = banDeplacer(etat, id, i);
   if (!r.ok) { toast(r.raison); occupe = false; majFiche(); return; }
@@ -91,22 +100,32 @@ async function deplacerJoueur(id, i) {
   majScene();
   if (r.fusion) toast("Les deux armées n'en font plus qu'une !");
   if (r.pris.length) Sons.piece();
-  if (r.bataille) await combattre(id, i, null);
+  if (r.bataille) await combattre(id, i, null, tac);
   occupe = false; majTout(); sauver();
   if (etat.fin) montrerFin();
 }
 
 // ---------- la bataille ----------
-// tacIA : la tactique de l'attaquant quand c'est l'ordinateur qui attaque le joueur
-async function combattre(attId, i, tacIA) {
+// avant d'attaquer : qui est en face, et les étoiles de chaque façon de se battre (null : PARTIR)
+function choisirTactique(id, i, depuis) {
+  const ap = banApercu(etat, id, i, depuis), ch = banChances(etat, id, i, 0, depuis), t = etat.terres[i];
+  const effets = [EFFETS[t.t]];
+  if (ap.garde) effets.push(`LA GARDE ${t.bat === 'chateau' ? 'DU CHATEAU' : t.bat === 'tour' ? 'DE LA TOUR' : 'DE LA CASERNE'} SE BAT AUSSI.`);
+  if (ap.nGarnison) effets.push('LA GARNISON DE LA TOUR SE BAT AUSSI.');
+  if (banEau(etat.terres[depuis].t)) effets.push("TU ATTAQUES DEPUIS L'EAU : TU TE PROTEGES MAL.");
+  return demander("A L'ATTAQUE !", `<p>EN FACE : ${nomCamp(ap.sDef)}<br><b>${compo(ap.D)}</b> ${I('coeur')} ${coeurs(ap.D)}</p><p class="petit">${effets.join('<br>')}</p><p>COMMENT VEUX-TU TE BATTRE ? <span class="etoiles">${I('etoile').repeat(3)}</span> = FACILE</p>`,
+    Object.keys(ch).map(k => [`${TACTIQUES[k][0]} <span class="etoiles">${etoilesHtml(ch[k])}</span>`, k, TACTIQUES[k][1]]).concat([['PARTIR', null, "L'armée ne bouge pas.", 'rouge']]));
+}
+// tacIA : la tactique de l'attaquant quand c'est l'ordinateur qui attaque le joueur ; tacJoueur : déjà choisie (le joueur attaque)
+async function combattre(attId, i, tacIA, tacJoueur) {
   const ap = banApercu(etat, attId, i); if (!ap) return null;
   const joueurAttaque = ap.att.s === 0, source = ap.att.terre;
   secouer(i);
   ouvrirBataille(ap, source, i);
   ecran = 'bataille';
   // avant : les étoiles de chaque façon de se battre
-  const ch = banChances(etat, attId, i, joueurAttaque ? 0 : 1);
-  const tac = await new Promise(ok => {
+  const ch = tacJoueur ? null : banChances(etat, attId, i, joueurAttaque ? 0 : 1);
+  const tac = tacJoueur || await new Promise(ok => {
     const p = $('issue');
     p.innerHTML = `<h2 class="banniere">${joueurAttaque ? "A L'ATTAQUE !" : "ON T'ATTAQUE !"}</h2><div class="petit">COMMENT VEUX-TU TE BATTRE ? <span class="etoiles">${I('etoile').repeat(3)}</span> = FACILE</div>`;
     const rang = document.createElement('div'); rang.className = 'tactiques'; p.append(rang);
@@ -146,15 +165,19 @@ $('vite').onclick = () => { vitesseB = vitesseB > 1 ? 1 : 2.5; $('vite').textCon
 // ---------- le château et le village ----------
 function menuAcheter(i) {
   const place = banPlaceAuChateau(etat, 0), caserne = banNbBat(etat, 0, 'caserne');
-  boite('ACHETER', `<p>TU AS ${pieces()} ${I('piece')}. ${place ? 'LES NOUVEAUX ATTENDENT AU CHATEAU.' : `PLUS DE PLACE AU CHATEAU (${banMaxUnites(etat, 0)} PAR ARMEE, 3 ARMEES).`}</p>`,
+  const ici = banArmeeSur(etat, banChateau(etat, 0)), max = banMaxUnites(etat, 0), nA = banArmeesDe(etat, 0).length;
+  const armee = ici ? `<p>AU CHATEAU : ${ici.unites.map(u => sansAccent(BAN_UNITES[u.type].nom) + ' ' + I('coeur') + u.pv).join(', ')}<br>PLACE : ${ici.unites.length}/${max}</p>`
+    : `<p>PAS D'ARMEE AU CHATEAU : LES NOUVEAUX FORMENT UNE NOUVELLE ARMEE (${nA}/${BAN_MAX_ARMEES} ARMEES).</p>`;
+  boite('ACHETER', `<p>TU AS ${pieces()} ${I('piece')}.</p>${armee}${place ? '' : `<p>PLUS DE PLACE (${max} PAR ARMEE, ${BAN_MAX_ARMEES} ARMEES).</p>`}`,
     BAN_ACHATS.map(ty => {
       const U = BAN_UNITES[ty], p = banPeutAcheter(etat, 0, ty);
-      return bouton(`${sansAccent(U.nom)} · ${banPrix(etat, 0, ty)} ${I('piece')} · ${I('coeur').repeat(banCoeursMax(etat, ty, 0))}`, () => { if (banAcheter(etat, 0, ty).ok) { Sons.piece(); majTout(i); sauver(); menuAcheter(i); } }, p.ok, U.caserne && !caserne ? 'Il faut une caserne.' : POUVOIRS[ty]);
+      const base = BAN_UNITES[ty].pv, plus = banCoeursMax(etat, ty, 0) - base;
+      return bouton(`${sansAccent(U.nom)} · ${banPrix(etat, 0, ty)} ${I('piece')} · ${I('coeur').repeat(base)}${plus ? ` +${I('coeur').repeat(plus)} FORGE` : ''}`, () => { if (banAcheter(etat, 0, ty).ok) { Sons.piece(); majTout(i); sauver(); menuAcheter(i); } }, p.ok, U.caserne && !caserne ? 'Il faut une caserne.' : POUVOIRS[ty]);
     }).concat([bouton('FINI', () => { fermer(); majFiche(i); }, true, '', 'vert')]));
 }
 function menuConstruire(i) {
   boite('CONSTRUIRE', `<p>TU AS ${pieces()} ${I('piece')}. UN BATIMENT PAR CASE.</p>`,
-    Object.keys(BAN_BATIMENTS).map(k => { const B = BAN_BATIMENTS[k]; return bouton(`${sansAccent(B.nom)} · ${B.prix} ${I('piece')}`, () => { fermer(); construire(i, k); }, banPeutConstruire(etat, 0, i, k).ok, B.phrase); })
+    Object.keys(BAN_BATIMENTS).map(k => { const B = BAN_BATIMENTS[k], p = banPeutConstruire(etat, 0, i, k); return bouton(`${sansAccent(B.nom)} · ${B.prix} ${I('piece')}`, () => { fermer(); construire(i, k); }, p.ok, p.ok || p.raison === 'Pas assez de pièces.' ? B.phrase : p.raison); })
       .concat([bouton('RETOUR', () => { fermer(); majFiche(i); })]));
 }
 function construire(i, k) {
@@ -169,6 +192,30 @@ function menuAgrandir(i) {
     bouton('RETOUR', () => { fermer(); majFiche(i); }),
   ]);
 }
+// RESTER DANS LA TOUR : l'armée devient la garnison de la grande tour, pour toujours
+function menuGarnison(id) {
+  const a = banArmee(etat, id), t = a && etat.terres[a.terre]; if (!a) return;
+  boite('RESTER DANS LA TOUR', `<p>TES GUERRIERS ENTRENT DANS LA TOUR ET Y RESTENT POUR TOUJOURS. ILS LA DEFENDENT AVEC LA GARDE.</p><p class="petit">${BAN_GARNISON_MAX} AU PLUS (DEJA ${(t.garnison || []).length}). LE SEIGNEUR RESTE DEHORS.</p>`, [
+    bouton('ILS RESTENT', () => { fermer(); const r = banGarnison(etat, 0, id); if (r.ok) { Sons.batir(); deselectionner(); majTout(a.terre); sauver(); toast(r.n + ' guerrier' + (r.n > 1 ? 's' : '') + ' dans la tour !'); } }, true, '', 'vert'),
+    bouton('RETOUR', fermer),
+  ]);
+}
+// MON ROYAUME (toucher le haut de l'écran) : ce qu'on gagne, ce qu'on peut avoir, les bonus
+function monRoyaume() {
+  if (ecran !== 'carte' || occupe || bataille) return;
+  const n = banDrapeaux(etat, 0), bats = etat.terres.filter(t => t.prop === 0 && t.bat && BAN_BATIMENTS[t.bat]);
+  const gainBat = bats.reduce((x, t) => x + (BAN_BATIMENTS[t.bat].gain ? BAN_BATIMENTS[t.bat].gain + (t.grand ? 1 : 0) : 0), 0), bonus = banNiveau(etat).bonus;
+  const a = (b, txt) => `<li>${I(b ? 'etoile' : 'vide')} ${txt}</li>`, forge = banNbBat(etat, 0, 'forge'), caserne = banNbBat(etat, 0, 'caserne'), etape = banEtapeChateau(etat, 0);
+  const tours = etat.terres.filter(t => t.prop === 0 && t.bat === 'tour'), garnison = tours.reduce((x, t) => x + (t.garnison || []).length, 0);
+  const garde = (etat.niveau === 'facile' ? banNiveau(etat).garde : BAN_GARDE).length + (etat.niveau === 'facile' ? etape : 0);
+  boite('MON ROYAUME', `<p>${I('piece')} CHAQUE TOUR : +${banRevenu(etat, 0)}<br>(${n} CASES${gainBat ? ` + ${gainBat} BATIMENTS` : ''}${bonus ? ` + ${bonus} FACILE` : ''}). COFFRE : ${pieces()}/${BAN_COFFRE}</p>` +
+    `<p>ARMEES : ${banArmeesDe(etat, 0).length}/${BAN_MAX_ARMEES} · ${banMaxUnites(etat, 0)} GUERRIERS PAR ARMEE${etape >= 2 ? ' (REMPARTS)' : ''}<br>GARDE DU CHATEAU : ${garde} GUERRIERS</p>` +
+    `<ul class="bonus">${a(etape >= 1, 'DRAPEAUX AU CHATEAU (3 BATIMENTS)' + (etat.niveau === 'facile' ? ' : +1 ARCHER DE GARDE' : ''))}${a(etape >= 2, 'REMPARTS (6 BATIMENTS) : 8 GUERRIERS PAR ARMEE' + (etat.niveau === 'facile' ? ', +1 CHAMPION DE GARDE' : ''))}` +
+    `${a(forge, 'FORGE : +1 ' + I('coeur') + ' CHEVALIERS ET LANCIERS' + (banGrand(etat, 0, 'forge') ? ', CHAMPIONS AUSSI' : ''))}${a(caserne, 'CASERNE : CHAMPIONS' + (banGrand(etat, 0, 'caserne') ? ', SOIGNE LA MOITIE DES COEURS' : ''))}` +
+    `${a(tours.length, `TOURS : ${tours.length}${garnison ? `, ${garnison} EN GARNISON` : ''}`)}${etat.seigneurs[0].blesse ? `<li>${I('coeur')} TON SEIGNEUR REVIENT AU TOUR ${etat.seigneurs[0].blesse}</li>` : ''}</ul>` +
+    `<p class="petit">UNE SEULE FORGE ET UNE SEULE CASERNE : ELLES NE S'ADDITIONNENT PAS.</p>`, [bouton('OK', fermer, true, '', 'vert')]);
+}
+$('res').onclick = monRoyaume;
 function decorer(i) { const r = banDecorer(etat, 0, i); if (!r.ok) { toast(r.raison); return; } Sons.toc(); majTout(i); sauver(); }
 function soigner(id, i) { if (banSoigner(etat, 0, id).ok) { Sons.piece(); majTout(i); sauver(); toast('Tous les cœurs sont revenus !'); } }
 
@@ -293,7 +340,7 @@ $('bSons').onclick = () => { opts.sons = !opts.sons; Sons.actif = opts.sons; ecr
 const AIDE = [
   ['BOUGE TES ARMEES', `<p>${I('drapeau')} TOUCHE UNE ARMEE, PUIS UNE CASE QUI BRILLE. ELLE Y COURT ET LES CASES DEVIENNENT A TOI.</p><p>UNE ARMEE BOUGE UNE FOIS PAR TOUR, DE 2 PAS. L'HERBE = 1 PAS ; LA FORET, LA COLLINE, LE MARAIS, LA RIVIERE = 2 PAS. LA MONTAGNE T'ARRETE.</p>`],
   ['LES BATAILLES', `<p>UNE CASE ROUGE = UNE BATAILLE. CHOISIS COMMENT TE BATTRE : FONCER, TIRER D'ABORD OU PRUDENT.</p><p><span class="etoiles">${I('etoile').repeat(3)}</span> FACILE · <span class="etoiles">${I('etoile').repeat(2)}${I('vide')}</span> CA PEUT MARCHER · <span class="etoiles">${I('etoile')}${I('vide').repeat(2)}</span> DIFFICILE</p><p>LES ${I('coeur')} AU-DESSUS DES GUERRIERS DISPARAISSENT QUAND ILS SONT TOUCHES.</p>`],
-  ['TON VILLAGE', `<p>${I('piece')} CHAQUE TOUR, CHAQUE CASE A TOI DONNE 1 PIECE. TON COFFRE EST PLEIN A ${BAN_COFFRE} : DEPENSE-LES !</p><p>AU ${I('chateau')} : ACHETE DES GUERRIERS ET SOIGNE TON ARMEE. SUR TES CASES : CONSTRUIS, AGRANDIS ET DECORE TON VILLAGE.</p>`],
+  ['TON VILLAGE', `<p>${I('piece')} CHAQUE TOUR, CHAQUE CASE A TOI DONNE 1 PIECE. TON COFFRE EST PLEIN A ${BAN_COFFRE} : DEPENSE-LES !</p><p>AU ${I('chateau')} : ACHETE DES GUERRIERS ET SOIGNE TON ARMEE. SUR TES CASES : CONSTRUIS, AGRANDIS ET DECORE TON VILLAGE.</p><p>TOUCHE LE HAUT DE L'ECRAN POUR VOIR TON ROYAUME ET TES BONUS.</p>`],
   ['GAGNER', `<p>${I('chateau')} PRENDS LES 3 CHATEAUX DES AUTRES : TU ES LE ROI !</p><p>${I('drapeau')} SINON, APRES LE TOUR ${BAN_DERNIER_TOUR}, ON COMPTE LES DRAPEAUX : CELUI QUI EN A LE PLUS GAGNE.</p><p>GARDE BIEN TON CHATEAU !</p>`],
 ];
 function aide(n) {

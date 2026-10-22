@@ -5,7 +5,7 @@ html, body { height:100%; overflow:hidden; background:var(--fond); font-family:'
 canvas { display:block; position:fixed; inset:0; }
 .cadre { background:var(--papier); border:3px solid var(--bord); }
 .cache, [hidden] { display:none !important; }
-#res { position:fixed; left:12px; right:12px; top:calc(10px + env(safe-area-inset-top)); padding:4px; font-size:10px; line-height:1.9; display:grid; grid-template-columns:repeat(3, 1fr); gap:0 6px; pointer-events:none; }
+#res { position:fixed; left:12px; right:12px; top:calc(10px + env(safe-area-inset-top)); padding:4px; font-size:10px; line-height:1.9; display:grid; grid-template-columns:repeat(3, 1fr); gap:0 6px; cursor:pointer; }
 #res b { font-weight:normal; color:var(--rouge); }
 #res small { font-size:6px; color:var(--rouge); }
 #res .tour { grid-column:1 / -1; display:flex; justify-content:space-between; border-top:2px dotted var(--gris); margin-top:3px; padding-top:3px; }
@@ -59,3 +59,5 @@ body.en-bataille #fiche, body.en-bataille .boutons, body.en-bataille #res { disp
 #boite .pastille i { display:block; width:26px; height:26px; margin:0 auto 4px; background:var(--c); border:3px solid #2b1d0e; box-shadow:inset 0 3px 0 rgba(255,255,255,.35); }
 #boite .pastille.choisie { filter:brightness(1.12); }
 #boite .pastille.choisie i { outline:3px solid #fff6e0; outline-offset:2px; }
+#boite ul.bonus { list-style:none; margin:0 0 10px; }
+#boite ul.bonus li { margin-bottom:4px; }

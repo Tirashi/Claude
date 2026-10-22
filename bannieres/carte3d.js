@@ -187,7 +187,7 @@ const matPlaque = new THREE.MeshBasicMaterial({ color: 0xfff27a, transparent: tr
 const matCible = new THREE.MeshBasicMaterial({ color: 0xff5a3c, transparent: true, opacity: 0.5, depthWrite: false });
 function batirTerre(i) {
   const g = groupes[i], t = etat.terres[i], u = g.userData, S = t.prop >= 0 ? etat.seigneurs[t.prop] : null;
-  const sig = JSON.stringify([t.prop, t.camp, t.ruine, t.bat, t.grand, t.decos, t.bat === 'chateau' && t.prop >= 0 ? banEtapeChateau(etat, t.prop) : 0, banVoisins(etat, i).map(v => etat.terres[v].prop)]);
+  const sig = JSON.stringify([t.prop, t.camp, t.ruine, t.bat, t.grand, t.decos, t.bat === 'chateau' && t.prop >= 0 ? banEtapeChateau(etat, t.prop) : 0, (t.garnison || []).length, banVoisins(etat, i).map(v => etat.terres[v].prop)]);
   if (sig === u.sig) return;
   if (u.sig && u.prop !== t.prop) u.flash = performance.now();
   if (u.sig && t.bat && (u.bat !== t.bat || u.grand !== t.grand)) u.pop = performance.now();   // un bâtiment sort de terre
@@ -204,6 +204,8 @@ function batirTerre(i) {
     if (bat) { u.batiments.push(o); o.userData.ech = ech || 1; }
     g.add(o);
   });
+  // la garnison d'une tour : sa bannière, avec le nombre de guerriers, au-dessus de la tour
+  if (t.garnison && t.garnison.length && S) { const e = etiquette(t.garnison.length, COUL[S.coul].hex, false); e.position.set(0, 2.3, -0.12); e.scale.multiplyScalar(0.8); g.add(e); }
   if (u.pop) { const e = objet('building_scaffolding'); e.position.set(0, 0, -0.12); g.add(e); u.echaf = e; }
   if (S) {
     const C = COUL[S.coul];
