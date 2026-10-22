@@ -1,8 +1,8 @@
-# Nouveau jeu de conquête en 3D (nom à choisir) — cahier des charges
+# Bannières — cahier des charges
 
 Petit jeu de conquête au tour par tour, **en 3D**, sur une carte de terres hexagonales. Le joueur est un seigneur : il lève des **armées qu'on voit sur la carte**, les déplace de terre en terre et livre des **batailles qu'on regarde**, jusqu'à prendre les châteaux rivaux ou gagner la couronne.
 
-Né de l'essai « Duché en 3D » du 21/10 (`maquettes/duche-kaykit.html`, https://claude.ai/artifact/VdnZY9whbwAsM2xMjwvbHC) : l'utilisateur trouve que la 3D « rend beaucoup mieux » avec les personnages KayKit, mais que les règles de Duché, faites pour une carte 2D rapide, ne mettent pas les batailles en valeur. **Duché reste tel quel** (pixel art, classements, défi du jour) ; ce jeu-ci est **un autre jeu**, qui reprend ce qui marche dans Duché. Cahier des charges proposé le 22/10, **à valider par l'utilisateur**, ainsi que le nom (§ 17).
+Né de l'essai « Duché en 3D » du 21/10 (`maquettes/duche-kaykit.html`, https://claude.ai/artifact/VdnZY9whbwAsM2xMjwvbHC) : l'utilisateur trouve que la 3D « rend beaucoup mieux » avec les personnages KayKit, mais que les règles de Duché, faites pour une carte 2D rapide, ne mettent pas les batailles en valeur. **Duché reste tel quel** (pixel art, classements, défi du jour) ; ce jeu-ci est **un autre jeu**, qui reprend ce qui marche dans Duché. Cahier des charges proposé le 22/10 ; **nom choisi le 22/10 : Bannières** (BANNIERES à l'écran), dossier `bannieres/`. Réponses de l'utilisateur du 22/10 intégrées (§ 16) ; reste à valider l'ensemble, puis la maquette des nouveautés.
 
 ## 1. Ce qu'on reprend, ce qui change
 
@@ -28,11 +28,12 @@ Né de l'essai « Duché en 3D » du 21/10 (`maquettes/duche-kaykit.html`, https
 
 ## 3. La carte
 
-- **37 terres hexagonales** (un grand hexagone de 4 terres de côté, pointe en haut), tirées de la graine comme dans Duché : plaine, forêt, colline, montagne, marais, **une rivière** qui traverse la carte. Taille portable à **61 terres** plus tard (§ 16).
+- **37 terres hexagonales** pour commencer (un grand hexagone de 4 terres de côté, pointe en haut), tirées de la graine comme dans Duché : plaine, forêt, colline, montagne, marais, **une rivière** qui traverse la carte.
+- **La taille dépend du déplacement** (inquiétude de l'utilisateur du 22/10, fondée) : sur 37 terres, deux châteaux voisins sont à **6 terres** l'un de l'autre ; avec 3 points de déplacement par tour, une armée y serait en 3 tours. D'où : **2 points par tour** (§ 8) et une carte **réglable** dans `regles.js` (rayon 3 = 37 terres, rayon 4 = **61 terres**, châteaux voisins à 8 terres). Le simulateur mesure le **tour de la première bataille contre un rival** (visé : 5 à 7) et celui du **premier château pris** (visé : 12 à 18) ; si 37 terres est trop petit, on passe à 61 sans rien d'autre à changer.
 - **4 seigneurs** dans quatre coins : vous (or, en bas à gauche) et 3 rivaux (rouge, bleu, violet). Château de départ + 2 terres voisines.
 - **Terres neutres** : villages libres (on les prend en y entrant, pas de combat) et **4 à 6 camps de brigands** (barbares et voleurs) qui gardent un trésor.
 - La caméra regarde votre duché, se tourne d'un doigt, **zoome à deux doigts** ; toucher une terre l'éclaire et ouvre son panneau.
-- **Brouillard** léger : les armées ennemies ne se voient qu'à 2 terres des vôtres (leur taille exacte à 1 terre). À confirmer (§ 16).
+- **Pas de brouillard** (choix du 22/10) : on voit toute la carte et toutes les armées. Un mode « brouillard » pourra venir plus tard (`IDEES.md`).
 
 ### Terrains (production par tour et effet en bataille)
 
@@ -41,7 +42,7 @@ Né de l'essai « Duché en 3D » du 21/10 (`maquettes/duche-kaykit.html`, https
 | Plaine | — | 2 | aucun effet | 1 |
 | Forêt | 1 | 1 | flèches **à moitié** contre ceux qui y sont | 2 |
 | Colline | 1 | — | archers du défenseur **+1 volée** | 2 |
-| Montagne | 2 | — | défense **+2** ; on n'y entre qu'à pied (pas de chariot) | 3 |
+| Montagne | 2 | — | défense **+2** | 2, et l'armée s'y arrête |
 | Marais | — | 1 | attaquant **−1** au premier assaut | 2 |
 | Rivière | 1 | 1 | attaquant **−1** au premier assaut (il traverse) ; un **pont** l'annule | 2 (1 avec pont) |
 
@@ -74,7 +75,7 @@ Chaque guerrier est **un personnage** sur la carte et en bataille (pas de « 1 f
 | **Fantassin** (chevalier, épée et bouclier) | 10 or | 1 vivre | 3 | 1 | pare un coup sur trois en tactique « Tenir » |
 | **Archer** (archer à l'arc) | 12 or | 1 vivre | 2 | 1 | tire **avant le contact** (1 volée, 2 sur colline ou en tour) ; faible au corps à corps (attaque 0 au contact s'il est en première ligne) |
 | **Champion** (chevalier à l'épée à deux mains) | 25 or, caserne | 2 vivres | 4 | 2 | ne peut être levé qu'à la caserne ; frappe deux ennemis voisins |
-| **Seigneur** (vous, un seul) | — | — | 5 | 2 | donne +1 en attaque à son armée ; gagne des **niveaux** (§ 7) ; s'il tombe, il n'est que **blessé** et rentre au château (2 tours sans combattre) |
+| **Seigneur** (vous, un seul) | — | — | 5 | 2 | donne +1 en attaque à son armée ; gagne des **niveaux** (§ 7) ; **ne meurt jamais** (confirmé le 22/10) : s'il tombe, il n'est que **blessé** et rentre au château (2 tours sans combattre) |
 
 - **Vétérans** : un guerrier qui survit à 2 batailles gagne +1 point de vie (petite étoile sur sa bannière).
 - **Blessés** : les points de vie perdus reviennent d'un point par tour au repos sur une terre à soi (2 au château).
@@ -89,6 +90,7 @@ Une bataille a lieu quand une armée entre sur une terre gardée par une armée 
    - **Tenir** : pas d'avance, les fantassins parent un coup sur trois, +1 volée d'archers ;
    - **Harceler** : les archers tirent deux volées, puis l'armée **se retire** si elle a perdu plus de la moitié de ses guerriers (elle recule sur la terre d'où elle vient).
    Il peut aussi **renoncer** (l'armée reste où elle était, son mouvement est perdu).
+   **Exemple** : vos 3 fantassins et 3 archers attaquent 5 fantassins rouges sur une colline. En **Charger**, vos archers tirent une volée (3 flèches) puis tout le monde court au contact avec +1 au premier assaut : c'est fort contre une armée sans archers, mais les archers rouges, s'il y en avait, tireraient deux fois sur la colline. En **Tenir**, vous ne bougez pas : vos archers tirent deux volées (6 flèches) avant que les rouges n'arrivent, et vos fantassins parent un coup sur trois : c'est le bon choix quand on a beaucoup d'archers ou qu'on défend. En **Harceler**, vos archers tirent deux volées puis votre armée recule si elle a perdu plus de la moitié de ses guerriers : on affaiblit l'ennemi sans risquer toute l'armée. L'aperçu de chance change selon la tactique choisie, avant de confirmer.
 2. **Combat** (6 à 10 s, regardé ; boutons **×2** et **PASSER**) :
    - **les volées** : chaque archer vivant tire, chaque flèche touche un ennemi de la première ligne (1 dégât, ou ½ en forêt) ;
    - **3 assauts** : chaque guerrier de première ligne frappe l'ennemi en face (attaque = dégâts) ; les morts sont remplacés par la ligne de derrière ;
@@ -107,7 +109,7 @@ Les batailles **entre rivaux** ne sont pas montrées : un éclair et un nuage de
 
 1. **Revenus** : production, entretien, famine éventuelle, guérison ; alertes.
 2. **Événement** (environ 2 tours sur 3) : une carte en parchemin, 2 ou 3 réponses (repris de Duché, adaptés : mauvaise récolte, mercenaires à louer, révolte, tournoi, mariage, peste, marchand…).
-3. **Ordres du joueur**, dans l'ordre qu'il veut : bâtir, lever, **déplacer chaque armée** (points de déplacement selon le terrain, § 3 ; 3 points par tour), fusionner ou séparer des armées sur une même terre, attaquer en entrant sur une terre gardée.
+3. **Ordres du joueur**, dans l'ordre qu'il veut : bâtir, lever, **déplacer chaque armée** (points de déplacement selon le terrain, § 3 ; **2 points par tour** ; une plaine coûte 1, la plupart des autres terrains 2, § 3), fusionner ou séparer des armées sur une même terre, attaquer en entrant sur une terre gardée.
 4. **FIN DU TOUR** → les rivaux jouent l'un après l'autre ; leurs armées **se déplacent sous vos yeux** (brièvement) ; s'ils vous attaquent, vous choisissez votre tactique de défense et la bataille est montrée.
 5. **Bilan** : victoire, défaite, votes (dès la mort du roi), tour suivant. Sauvegarde.
 
@@ -119,7 +121,7 @@ Comme Duché : le roi meurt au **tour 9** (scène en parchemin) ; à la fin des 
 
 - 3 seigneurs avec un nom, une couleur et **2 traits** (repris de Duché : agressif, marchand, prudent, conquérant, traître, pieux, bâtisseur).
 - IA à **scores d'utilité** comme Duché, mais sur des armées : pour chaque armée, cibles possibles (terre neutre, camp de brigands, terre ou armée ennemie, château) notées selon la chance de victoire (même simulation que l'aperçu), la valeur de la terre, la menace sur son propre château et les traits ; levée et construction selon les besoins.
-- Un **simulateur** (`outils/<jeu>-simulateur.js`, comme celui de Duché) joue des parties complètes pour l'équilibrage et vérifie qu'une même graine donne la même partie.
+- Un **simulateur** (`outils/bannieres-simulateur.js`, comme celui de Duché) joue des parties complètes pour l'équilibrage et vérifie qu'une même graine donne la même partie.
 
 ## 11. Graine et hasard
 
@@ -141,13 +143,13 @@ Terres × 100, châteaux pris × 300, or, gloire × 5, votes × 50, niveau du se
 
 ## 14. Technique
 
-- Dossier `<jeu>/`, **scripts classiques** : `regles.js` (carte, économie, armées, tour, couronne, score ; logique pure), `bataille.js` (règle de bataille pure et déterministe, partagée par l'aperçu, l'IA et l'écran), `ia.js`, `evenements.js`, `carte3d.js` (la carte, les armées, la caméra), `bataille3d.js` (la scène de bataille), `interface.js` (panneaux en pixel art dessinés par la page), `sons.js`, `jeu.js`, `index.html`.
+- Dossier `bannieres/`, **scripts classiques** : `regles.js` (carte, économie, armées, tour, couronne, score ; logique pure), `bataille.js` (règle de bataille pure et déterministe, partagée par l'aperçu, l'IA et l'écran), `ia.js`, `evenements.js`, `carte3d.js` (la carte, les armées, la caméra), `bataille3d.js` (la scène de bataille), `interface.js` (panneaux en pixel art dessinés par la page), `sons.js`, `jeu.js`, `index.html`.
 - **Bibliothèques** : `lib/three.min.js`, `lib/GLTFLoader.js`, `lib/SkeletonUtils.js` (r128, déjà dans le dépôt).
-- **Modèles** : tuiles et bâtiments KayKit Medieval Hexagon (CC0) convertis par `outils/kaykit-conversion.py` ; personnages KayKit Adventurers 2.0 et animations KayKit Character Animations 1.1 (CC0) préparés par `outils/duche-3d/aventuriers.js`. Fichiers de données à part (`<jeu>/modeles.js`, `<jeu>/personnages.js`), **environ 4 Mo**, mis en cache par le service worker (`sw.js` : `FILES` et `VERSION`). Écran de chargement avec une barre.
+- **Modèles** : tuiles et bâtiments KayKit Medieval Hexagon (CC0) convertis par `outils/kaykit-conversion.py` ; personnages KayKit Adventurers 2.0 et animations KayKit Character Animations 1.1 (CC0) préparés par `outils/duche-3d/aventuriers.js`. Fichiers de données à part (`bannieres/modeles.js`, `bannieres/personnages.js`), **environ 4 Mo**, mis en cache par le service worker (`sw.js` : `FILES` et `VERSION`). Écran de chargement avec une barre.
 - **Performance** (Android moyen) : 30 images par seconde visées ; **un seul personnage animé par armée sur la carte** (le porte-étendard), pas un par guerrier ; les animations de la carte tournent à 30 images par seconde ; ombres sur la seule lumière du soleil ; option « graphismes légers » (sans ombres, demi-résolution).
-- **Classements** : `ludo-scores.js` (jeu `<jeu>`, tableaux `daily:` et `best`), accueil (cartouche, volet), comme les autres jeux ; liste de contrôle du mémo `specs/ludotheque.md`.
+- **Classements** : `ludo-scores.js` (jeu `bannieres`, tableaux `daily:` et `best`), accueil (cartouche, volet), comme les autres jeux ; liste de contrôle du mémo `specs/ludotheque.md`.
 - **Tests** : `fumee.js` (la page s'ouvre), `logique.js` (une partie simulée, même graine = même partie, bataille déterministe), simulateur d'équilibrage.
-- Objet `window.<Jeu>` pour les tests (état, actions), comme les autres jeux.
+- Objet `window.Bannieres` pour les tests (état, actions), comme les autres jeux.
 
 ## 15. Plan de travail
 
@@ -159,13 +161,11 @@ Terres × 100, châteaux pris × 300, or, gloire × 5, votes × 50, niveau du se
 
 ## 16. Points à confirmer par l'utilisateur
 
-- **Le nom** (§ 17).
-- **37 terres** pour commencer (61 plus tard), et **24 tours** ?
-- **Brouillard** (on ne voit les armées ennemies qu'à 2 terres) : oui ou non ?
-- **Le seigneur** qui combat lui-même et ne meurt pas (blessé seulement) : d'accord ?
-- **Tactiques** : trois choix avant chaque bataille, c'est assez ? (On peut en ajouter, ou au contraire n'en garder aucune.)
-- **Pas de cavalerie** : le pack gratuit KayKit n'a pas de chevaux. Le mage du pack pourrait devenir un 5ᵉ guerrier plus tard (soigneur ou feu).
-- La partie du jour reste classée comme Duché : **une tentative par jour**.
+**Réglé le 22/10** : 37 terres et 24 tours pour commencer, mais carte réglable (61 terres) si le simulateur la trouve trop petite (§ 3) ; **pas de brouillard** (mode possible plus tard) ; **le seigneur ne meurt pas** ; **pas de cavalerie** pour l'instant ; nom **Bannières**.
+
+**Cavalerie plus tard** : le pack gratuit **Quaternius « LowPoly Animated Animals »** (CC0, itch.io) a un **cheval animé** (repos, pas, trot, galop, saut, mort), et aussi des moutons et des vaches (pour animer les champs). Essai du 22/10 : il va, mais ses **proportions sont réalistes** (grandes jambes, facettes) à côté des personnages KayKit à grosse tête, et KayKit n'a pas d'animation de cavalier (on pourrait asseoir le chevalier avec « Sit_Chair_Idle »). À reprendre si l'on veut un cavalier, en rapetissant le cheval. Les chevaux payants trouvés (Warhorse, modèles réalistes à 5–15 $) jurent encore plus.
+
+**Encore à confirmer** : les **3 tactiques** (Charger, Tenir, Harceler, § 6 avec un exemple) ; le mage du pack comme 5ᵉ guerrier plus tard (soigneur ou feu) ; la campagne du jour classée avec **une tentative par jour**.
 
 ## 17. Propositions de noms
 
@@ -180,4 +180,4 @@ Titres en MAJUSCULES sans accent (police Press Start 2P).
 | **Hexarque** | HEXARQUE | jeu de mots hexagone + monarque ; moderne |
 | **Ban et Arrière-ban** | BAN ET ARRIERE-BAN | l'appel aux armes des vassaux ; savant mais long |
 
-Préférence de Claude : **L'Ost** (court, médiéval, propre à ce jeu) ou **Bannières** (le plus clair).
+**Choisi le 22/10 : Bannières.**
