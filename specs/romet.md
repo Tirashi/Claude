@@ -29,7 +29,14 @@ Chaque machine reprend le décor de sa maquette et ajoute **une règle à elle**
 | 5 | **La foire de nuit** | C de la maquette 2 | **clous** sous la fente, comme un flipper japonais : la pièce rebondit et ne tombe pas toujours où l'on vise | visée moins sûre |
 | 6 | **L'horloger** | C de la maquette 3 | **deux étages** : un premier poussoir en haut fait tomber les pièces sur le plateau du bas ; le mécanisme est visible | le plus long à faire tomber |
 
-La maquette 1 (pixel 3D rétro) peut servir de **machine secrète** (bonus à la fin), si on veut.
+La maquette 1 (pixel 3D rétro) sert de **machine secrète** (bonus à la fin) : couloirs et clous à la fois, parois très courtes, bourse de 30.
+
+Réalisation (session 2, 22/10) :
+- **Courant** (épave) : toutes les 10 à 18 s, pendant 2 s, tout ce qui est posé reçoit une poussée latérale (pièces endormies réveillées) ; reflets, bulles, algues et poissons partent du même côté ; message « ◀ Courant ! ».
+- **Couloirs** (casino) : 7 couloirs au bord avant, un seul allumé, qui change toutes les 5 s ; bande au sol et barre lumineuse sur la façade ; une pièce (ou une géante) qui tombe dans le couloir allumé compte double.
+- **Clous** (foire de nuit) : 4 rangées de clous sous la fente ; chaque rangée dévie la pièce de 0,3 à gauche ou à droite pendant sa chute (petits « tic »).
+- **Deux étages** (horloger) : étagère à y = 1,3 (bord avant z = -3), avec son propre poussoir qui va et vient à l'opposé du grand ; les pièces sont lâchées sur l'étagère et tombent sur le poussoir du bas.
+- Rendements en partie (simulateur, 4 parties) : épave 78 % (finie en 3 à 6 parties), casino 88 % (4), foire de nuit ~80 % (3 à 4), horloger 60 à 80 % (5 à 6), machine secrète 79 % (6 à 7).
 
 ## 4. Bonus (communs à toutes les machines)
 Repris de la maquette, habillés selon le monde :
@@ -43,7 +50,7 @@ Repris de la maquette, habillés selon le monde :
 - On commence chaque partie avec **une bourse de pièces** ; **pas de recharge**. Les pièces qui tombent dans le bac reviennent dans la bourse et se rejouent.
 - La machine rend un peu moins qu'on ne lâche (environ 8 à 9 pièces sur 10 en régime, à régler machine par machine) : la bourse finit par se vider. Les bonus (pièce géante, pluie, cascades) font les bons moments.
 - **Fin de partie** : bourse vide et plus rien ne bouge pendant 3 secondes → écran de fin (butin de la partie, trésors gagnés, meilleur butin), puis REJOUER (nouveau tas, nouvelle bourse) ou MACHINES.
-- Bourse de départ selon la machine, de plus en plus petite : foire 60, ruche 55, épave 50, casino 45, foire de nuit 40, horloger 40, machine secrète 30 (à régler en jouant, avec un petit simulateur Node).
+- Bourse de départ selon la machine, de plus en plus petite : foire 60, ruche 55, épave 50, casino 45, foire de nuit 40, horloger 40 (**50 depuis la session 2** : l'étage du haut garde une trentaine de pièces), machine secrète 30 (à régler en jouant, avec un petit simulateur Node).
 - **Réglages de la session 1** (simulateur, joueur au hasard, une pièce toutes les 0,4 s) : chaque bonus de pièces (géante, pluie, mur) vaut environ 8 pièces, donc les bonus doivent rester rares : un tous les 10 lâchers rendait 130 % et la bourse ne se vidait jamais. Foire : bonus tous les 30 lâchers, mur de 12 s, parois jusqu'à z = 1,7 → rendement 86 %, environ 420 lâchers par bourse, 4,5 trésors par partie, finie en 2 à 4 parties. Ruche : bonus tous les 35, parois jusqu'à 1,5, miel → 73 %, 200 lâchers, 1,8 trésor par partie.
 - **Butin** d'une partie = toutes les pièces tombées dans le bac (une pièce rejouée puis regagnée compte encore).
 
@@ -79,7 +86,7 @@ Bruitages synthétisés en Web Audio : pièce lâchée, tintement des pièces qu
 
 ## 11. Plan de travail (opusplan)
 1. **Session 1, le moteur et 2 machines** (**faite le 22/10**, détails dans `specs/suivi.md`) : `physique.js` (reprise des maquettes, mise au repos, sauvegarde du tas), rendu, bonus, bourse et fin de partie, trésors, simulateur, la foire et la ruche jouables du début à la fin.
-2. **Session 2, les 4 autres machines et la secrète** : l'épave, le casino, la foire de nuit, l'horloger, la machine secrète, avec leurs règles et leurs décors ; écran des machines, déblocages ; réglage des bourses au simulateur.
+2. **Session 2, les 4 autres machines et la secrète** (**faite le 22/10**, détails dans `specs/suivi.md`) : l'épave, le casino, la foire de nuit, l'horloger, la machine secrète, avec leurs règles et leurs décors ; écran des machines, déblocages ; réglage des bourses au simulateur.
 3. **Session 3, finitions et intégration** : titre, pause, sons et ambiances, classements, accueil, transfert, crédits, tests, docs, artefact.
 
 Coût estimé : **10 à 15 % de la semaine** (le moteur et les décors existent déjà dans les maquettes ; le plus long est de faire 6 règles et de régler la difficulté).

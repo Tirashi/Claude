@@ -49,6 +49,26 @@ const foire = M.machine('foire');
   // ruche : le miel colle
   const ru = M.machine('ruche'), pr = jouer(ru, [0, 0, 0, 0, 0, 0].map(Boolean), 9, 600);
   verif(pr.p.pl.objets.every(o => isFinite(o.x) && isFinite(o.y)), 'ruche : positions finies');
+  // les règles des autres machines : chaque machine prête tourne 15 s sans NaN et rend des pièces
+  for (const m of M.MACHINES.filter(m => m.pret && m.id !== 'foire' && m.id !== 'ruche')) {
+    const r = jouer(m, m.tresors.map(() => false), 3, 900);
+    verif(r.p.pl.objets.every(o => isFinite(o.x) && isFinite(o.y) && isFinite(o.z)), m.id + ' : positions finies');
+    verif(r.p.butin > 0, m.id + ' : des pièces tombent dans le bac');
+    verif(m.tresors.length === 6 && m.textes && m.bourse > 0, m.id + ' : 6 trésors, textes, bourse');
+  }
+  // épave : le courant pousse le tas de côté
+  { const p = new M.Partie(M.machine('epave'), Array(6).fill(false), null, 4); p.courantT = 0; const x0 = p.pl.objets.reduce((a, o) => a + o.x, 0) / p.pl.objets.length;
+    for (let i = 0; i < 100; i++) p.pas(); const x1 = p.pl.objets.reduce((a, o) => a + o.x, 0) / p.pl.objets.length;
+    verif(Math.sign(x1 - x0) === p.sens && Math.abs(x1 - x0) > .02, `épave : le courant pousse le tas (${(x1 - x0).toFixed(3)})`); }
+  // casino : un couloir allumé, une pièce qui y tombe compte double
+  { const p = new M.Partie(M.machine('casino'), Array(6).fill(false), null, 4); p.pas(); verif(p.couloirs.filter(Boolean).length === 1, 'casino : un couloir allumé');
+    const i = p.couloirs.indexOf(true), x = -2.6 + 5.2 / 7 * (i + .5); p.pl.ajouter('piece', x, .05, 3.45).vz = 3; let v = 0;
+    for (let k = 0; k < 120 && !v; k++) { p.pas(); for (const e of p.evts) if (e.t === 'gain' && e.double) v = e.v; p.evts.length = 0; }
+    verif(v === 2, 'casino : une pièce dans le couloir allumé compte double'); }
+  // foire de nuit : les clous dévient la pièce
+  { const p = new M.Partie(M.machine('nuit'), Array(6).fill(false), null, 4); let d = 0;
+    for (let k = 0; k < 20; k++) { p.lacher(0); const o = p.pl.objets[p.pl.objets.length - 1]; d += Math.abs(o.gx * o.gn); }
+    verif(d > 2, 'foire de nuit : les clous dévient les pièces'); }
 }
 
 // 2. équilibrage (si on donne un nombre de parties)

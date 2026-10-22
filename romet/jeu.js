@@ -66,11 +66,24 @@ function construire() {
   const phong = o => new THREE.MeshPhongMaterial(o);
   V.mat = { geante: D.geante, mur: phong({ color: 0x35e0ff, emissive: 0x0a4a60, shininess: 80 }), pluie: phong({ color: 0x5a8cff, emissive: 0x14244a, shininess: 80 }),
     tresors: m.tresors.map(l => phong({ color: l[1], emissive: new THREE.Color(l[1]).multiplyScalar(.25), specular: 0xffffff, shininess: 100, flatShading: true })) };
-  V.viseur = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, D.segPiece || 20), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .35 })); V.viseur.position.set(0, 2.4, -4.6); s.add(V.viseur);
+  V.viseur = new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, D.segPiece || 20), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .35 })); V.viseur.position.set(0, 2.4, m.zLacher || -4.6); s.add(V.viseur);
   // étincelles : 60 points en mélange additif, recyclés
   const ge = new THREE.BufferGeometry(); V.etP = new Float32Array(60 * 3).fill(-100); V.etV = []; for (let i = 0; i < 60; i++) V.etV.push({ vx: 0, vy: 0, vz: 0, t: 0 });
   ge.setAttribute('position', new THREE.BufferAttribute(V.etP, 3)); V.etincelles = new THREE.Points(ge, new THREE.PointsMaterial({ color: D.etincelle, size: .14, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
   V.etincelles.frustumCulled = false; s.add(V.etincelles); V.etI = 0;
+  // règles visibles : couloirs du casino (bandes au bord avant), clous de la foire de nuit (sous la fente), étage de l'horloger
+  const basic = o => new THREE.MeshBasicMaterial(o);
+  if (m.couloirs) { const n = m.couloirs.n, l = 5.2 / n; V.couloirs = [];
+    // une bande sur le plancher au bord avant, et une barre lumineuse sur la façade (visible même sous les pièces)
+    for (let i = 0; i < n; i++) { const mat = basic({ color: D.couloirEteint, transparent: true, opacity: .85 }), x = -2.6 + l * (i + .5);
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(l - .08, .5), mat); b.rotation.x = -Math.PI / 2; b.position.set(x, .014, 3.2); s.add(b);
+      visuel(l - .12, .1, .3, x, -.2, 3.78, mat); V.couloirs.push(b); }
+    V.cAllume = new THREE.Color(D.couloirAllume); V.cEteint = new THREE.Color(D.couloirEteint); V.kCoul = ''; }
+  if (m.clous) { const c = m.clous, pos = []; for (let k = 0; k < c.rangs; k++) for (let x = -2.4 + (k % 2) * .3; x <= 2.41; x += .6) pos.push([x, 2.15 - k * .22]);
+    const cl = new THREE.InstancedMesh(new THREE.SphereGeometry(.065, 8, 6), D.clou, pos.length); pos.forEach((p, i) => { dummy.position.set(p[0], p[1], m.zLacher || -4.6); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); cl.setMatrixAt(i, dummy.matrix); }); s.add(cl); }
+  if (m.etage) { const e = m.etage, pf = e.bord + 5.45; visuel(5.2, .1, pf, 0, e.y - .05, e.bord - pf / 2, D.etagere);
+    V.haut = visuel(5, .45, 1.4, 0, e.y + .225, -5, D.poussoirHaut); }
+  pr = D.pixel || Math.min(devicePixelRatio || 1, 1.5); rendu.setPixelRatio(pr);
   taille();
 }
 function taille() { const w = ecran.clientWidth, h = ecran.clientHeight; if (!w || !h) return; rendu.setSize(w, h, false); const a = w / h;
@@ -96,7 +109,7 @@ function dessiner() {
     if (tout || k !== o.k) { o.k = k; dummy.position.set(o.x, o.y + H / 2, o.z); dummy.rotation.set(o.ax, o.ay, o.az); dummy.updateMatrix(); inst.setMatrixAt(n, dummy.matrix); if (n < lo) lo = n; hi = n; }
     n++; }
   if (hi >= 0) { const a = inst.instanceMatrix; a.updateRange.offset = lo * 16; a.updateRange.count = (hi - lo + 1) * 16; a.needsUpdate = true; }
-  inst.count = n; V.modif = pl.modif; V.poussoir.position.z = pl.zp;
+  inst.count = n; V.modif = pl.modif; V.poussoir.position.z = pl.zp; if (V.haut) V.haut.position.z = pl.zHaut() - .7;
   const mur = partie.murT > 0; if (V.mursBonus[0].visible !== mur) V.mursBonus.forEach(x => x.visible = mur);
   rendu.render(scene, cam);
 }
@@ -110,7 +123,8 @@ function animer(dt, t) {
   if (et) V.etincelles.geometry.attributes.position.needsUpdate = true;
   // ampoules : on ne change les couleurs que quand le motif change
   if (V.ampoules) { const k = Math.floor(t * D.vitesseAmp); if (k !== V.kAmp) { V.kAmp = k; for (let i = 0; i < V.ampoules.count; i++) V.ampoules.setColorAt(i, D.clignote(i, k) ? V.cAllumee : V.cEteinte); V.ampoules.instanceColor.needsUpdate = true; } }
-  D.animer(t, partie.pl);
+  if (V.couloirs) { const k = partie.couloirs.join(); if (k !== V.kCoul) { V.kCoul = k; V.couloirs.forEach((b, i) => b.material.color.copy(partie.couloirs[i] ? V.cAllume : V.cEteint)); } }
+  D.animer(t, partie);
 }
 
 // --- bandeau, messages, trésors ---
@@ -155,7 +169,7 @@ function finDePartie() {
 function machineFinie() {
   const i = MS.MACHINES.indexOf(m), suiv = MS.MACHINES[i + 1];
   montrer('eFinie', () => { gemmes($('nTresors'), progres(m).t);
-    $('nTexte').textContent = suiv && !suiv.secrete ? (suiv.pret ? suiv.nom + ' est ouverte !' : suiv.nom + ' arrive bientôt.') : 'Toutes les machines sont terminées !'; });
+    $('nTexte').textContent = !suiv ? 'Toutes les machines sont terminées, même la secrète !' : suiv.secrete ? (ouverte(i + 1) ? 'Une machine secrète est apparue dans la liste…' : 'Toutes les machines sont terminées !') : suiv.nom + ' est ouverte !'; });
   carillon(); vibrer([30, 60, 30]);
 }
 
@@ -178,7 +192,10 @@ function evenements() {
     case 'tombe': if (e.o.m) { scene.remove(e.o.m); e.o.m = null; } break;
     case 'lache': son(500, .05, 'square', .04); break;
     case 'bonus': message(e.type === 'tresor' ? 'Un trésor !' : 'Bonus !'); son(880, .12, 'triangle', .07); setTimeout(() => son(1320, .15, 'triangle', .06), 90); break;
-    case 'gain': versBac(e.x, true); gainAff += e.v; gainT = .5; tinte(); vibrer(12); if (e.type === 'geante') message('+10 !'); break;
+    case 'gain': versBac(e.x, true); gainAff += e.v; gainT = .5; tinte(); vibrer(12); if (e.double) { message(m.textes.double); setTimeout(tinte, 90); } else if (e.type === 'geante') message('+10 !'); break;
+    case 'courant': message((e.sens < 0 ? '◀ ' : '') + m.textes.courant + (e.sens > 0 ? ' ▶' : '')); son(180, .9, 'sawtooth', .03); vibrer(60); break;
+    case 'couloirs': son(1200, .06, 'square', .03); break;
+    case 'clous': for (let k = 1; k <= e.n; k++) setTimeout(() => son(1800 + Math.random() * 600, .03, 'square', .025), k * 70); break;
     case 'perte': if (e.type !== 'piece') message('Perdu…'); break;
     case 'mur': versBac(e.x); message('Mur !'); son(700, .3, 'sawtooth', .05); break;
     case 'finMur': son(400, .2, 'sawtooth', .04); break;
@@ -230,11 +247,11 @@ function boucle(t) {
   tDecor += dt; animer(dt, tDecor); dessiner(); hud();
   // si le téléphone tombe sous 50 images/s deux secondes de suite, on baisse la résolution d'un cran (jusqu'à 1)
   images++; if ((seconde += dt) >= 1) { const fps = images / seconde; images = 0; seconde = 0;
-    if (fps < 50) lent++; else lent = 0; if (lent >= 2 && pr > 1) { pr = Math.max(1, pr - .25); rendu.setPixelRatio(pr); taille(); lent = 0; } }
+    if (fps < 50) lent++; else lent = 0; if (lent >= 2 && pr > 1 && !D.pixel) { pr = Math.max(1, pr - .25); rendu.setPixelRatio(pr); taille(); lent = 0; } }
 }
 
 // les enseignes et les faces des pièces sont dessinées avec Rye et Chewy : on attend les polices (au plus 2,5 s)
-Promise.race([Promise.all(['120px Rye', '92px Chewy'].map(f => document.fonts.load(f))).catch(() => {}), new Promise(r => setTimeout(r, 2500))]).then(() => {
+Promise.race([Promise.all(['120px Rye', '92px Chewy', "96px 'Pirata One'", '110px Monoton', '700 24px Cinzel', "8px 'Press Start 2P'"].map(f => document.fonts.load(f))).catch(() => {}), new Promise(r => setTimeout(r, 2500))]).then(() => {
   const i = MS.MACHINES.findIndex(x => x.id === opts.derniere);
   ouvrir(MS.MACHINES[i >= 0 && ouverte(i) ? i : 0]);
   montrer('eTitre'); requestAnimationFrame(boucle);

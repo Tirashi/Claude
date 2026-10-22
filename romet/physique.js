@@ -10,6 +10,10 @@
    qui va et vient (avant entre -1.5 et -0.3) ; mur du fond au-dessus du
    poussoir (z -5.35) ; parois latérales jusqu'à z = finCotes, ensuite les
    côtés sont ouverts (pertes).
+   Règles de certaines machines : courant (épave : une vague pousse tout le
+   tas vers un côté), pièce guidée (foire de nuit : déviée par les clous en
+   tombant, gx et gn), étage (horloger : une étagère en haut, avec son propre
+   poussoir, d'où les pièces tombent sur le plateau du bas).
    Mise au repos : une pièce posée qui ne bouge plus s'endort ; elle ne coûte
    presque plus rien jusqu'à ce qu'on la pousse ou que son appui bouge.
    Tout l'aléatoire passe par un générateur à graine (état sauvegardable).
@@ -28,9 +32,10 @@ const REPOS = 2e-4, CALME = 20;   // une pièce qui bouge de moins de 0,2 mm par
 function Hasard(a) { this.a = a >>> 0; }
 Hasard.prototype.n = function () { let t = this.a = (this.a + 0x6D2B79F5) >>> 0; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 
-// opts : finCotes (fin des parois latérales), grimpe (pièce trop serrée qui grimpe, en rayons), miel ([z0, z1] bande collante ou null)
+// opts : finCotes (fin des parois latérales), grimpe (pièce trop serrée qui grimpe, en rayons), miel ([z0, z1] bande collante ou null),
+// etage ({ y, bord, avance, amp } : hauteur de l'étagère, son bord avant, milieu et amplitude de l'avant de son poussoir, ou null)
 function Plateau(opts, graine) {
-  this.finCotes = opts.finCotes || 2; this.grimpe = opts.grimpe || 1.3; this.miel = opts.miel || null;
+  this.finCotes = opts.finCotes || 2; this.grimpe = opts.grimpe || 1.3; this.miel = opts.miel || null; this.etage = opts.etage || null; this.courant = 0;
   this.h = new Hasard(graine == null ? 1 : graine);
   this.objets = []; this.t = 0; this.zp = ZM; this.murs = false; this.modif = 0; this.cases = new Map();
 }
@@ -48,26 +53,31 @@ Plateau.prototype.autour = function (o, f) {
   const cx = Math.floor(o.x / CASE), cz = Math.floor(o.z / CASE);
   for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const l = this.cases.get((cx + i) * 1000 + cz + j); if (l) for (const n of l) if (n !== o) f(n); }
 };
+// avant du poussoir de l'étage (il va et vient à l'opposé du grand poussoir)
+Plateau.prototype.zHaut = function (t) { const e = this.etage; return e.avance + e.amp * Math.sin(2 * Math.PI * (t == null ? this.t : t) / PERIODE + Math.PI); };
 Plateau.prototype.dansMiel = function (o) { const m = this.miel; return !!m && !o.chute && o.y < .05 && o.z > m[0] && o.z < m[1]; };
 Plateau.prototype.pas = function () {
   const zp = ZM + AMP * Math.sin(2 * Math.PI * (this.t + DT) / PERIODE), dzp = zp - this.zp; this.zp = zp; this.t += DT;
-  const av = zp + 2.5, ar = zp - 2.5, murs = this.murs, fc = this.finCotes, h = this.h;
+  const av = zp + 2.5, ar = zp - 2.5, murs = this.murs, fc = this.finCotes, h = this.h, et = this.etage, zu = et ? this.zHaut() : 0, cour = this.courant;
   // copie triée par hauteur : this.objets garde son ordre, donc chaque pièce garde sa place dans l'InstancedMesh
   const os = this.objets.slice().sort((a, b) => a.y - b.y); this.voisins();
   // 1. transport par l'appui, inertie, gravité, appui
   for (const c of os) {
     c.px = c.x; c.pz = c.z; c.py = c.y; c.tx = c.tz = 0; c.pen = 0; c.colle = this.dansMiel(c);
-    if (c.dort) { if (c.sup === 'sol' || c.sup.dort) continue; c.dort = false; c.calme = 0; }
+    if (c.dort) { if (!cour && (c.sup === 'sol' || c.sup === 'e' || c.sup.dort)) continue; c.dort = false; c.calme = 0; }
     const py = c.y; let tx = 0, tz = 0;
-    if (c.sup === 'p') tz = dzp; else if (c.sup && c.sup !== 'sol') { tx = c.sup.dx * .85; tz = c.sup.dz * .85; }
+    if (c.sup === 'p') tz = dzp; else if (c.sup && typeof c.sup === 'object') { tx = c.sup.dx * .85; tz = c.sup.dz * .85; }
     // une pièce posée en déséquilibre sur une autre glisse vers l'extérieur (les tas s'étalent)
     // (écart au centre des pièces qui la portent, mesuré au pas précédent)
     if (c.sup && c.sup.kg) { const ex = c.ex, ez = c.ez, e = Math.sqrt(ex * ex + ez * ez); if (e > .22) { c.vx += ex / e * 2.5 * DT; c.vz += ez / e * 2.5 * DT; } }
+    if (c.gn > 0) { c.gn--; tx += c.gx; }   // pièce déviée par les clous pendant sa chute
+    if (cour && c.sup) c.vx += cour * DT;   // le courant pousse tout ce qui est posé
     c.tx = tx; c.tz = tz; c.x += tx + c.vx * DT; c.z += tz + c.vz * DT;
     c.vy -= 15 * DT; c.y += c.vy * DT;
     let s = -1e9, sup = null;
     if (Math.abs(c.x) < 2.6 && c.z < BORD && c.z > -7) { s = 0; sup = 'sol'; }
     if (Math.abs(c.x) < 2.55 && c.z > ar && c.z < av && py > .5) { s = .6; sup = 'p'; }
+    if (et && Math.abs(c.x) < 2.55 && c.z > -5.4 && c.z < et.bord && py > et.y - .05) { s = et.y; sup = 'e'; }
     let sx = 0, sz = 0, ns = 0;
     this.autour(c, n => { if (n.chute) return; const t = n.y + n.h; if (t > py + .03) return; const dx = n.x - c.x, dz = n.z - c.z, lim = (c.r + n.r) * .62; if (dx * dx + dz * dz >= lim * lim) return;
       if (t > s + .03) { s = t; sup = n; sx = n.x; sz = n.z; ns = 1; } else if (t > s - .03) { sx += n.x; sz += n.z; ns++; if (t > s) { s = t; sup = n; } } });
@@ -86,7 +96,8 @@ Plateau.prototype.pas = function () {
       if (!c.chute) {
         const x0 = c.x, z0 = c.z;
         if (c.y < .55) { if (c.z - c.r < av && c.z > ar) { c.z = av + c.r; c.cale = true; } }
-        else if (c.z - c.r < -5.35) { c.z = -5.35 + c.r; c.cale = true; }
+        else { if (c.z - c.r < -5.35) { c.z = -5.35 + c.r; c.cale = true; }
+          if (et && c.y > et.y - .05 && c.z - c.r < zu) { c.z = zu + c.r; c.cale = true; } }
         if (c.z < fc || murs || c.y >= .55) { const lim = 2.6 - c.r; if (c.x > lim) c.x = lim; else if (c.x < -lim) c.x = -lim; }
         if (c.dort && (c.x !== x0 || c.z !== z0)) { c.dort = false; c.calme = 0; }
       }
@@ -104,10 +115,10 @@ Plateau.prototype.pas = function () {
     const ret = c.colle ? 0 : .2;
     c.vx = (c.x - c.px - c.tx) / DT * ret; c.vz = (c.z - c.pz - c.tz) / DT * ret; c.dx = c.x - c.px; c.dz = c.z - c.pz;
     if (c.chute) { c.ax += c.bx * DT * 7; c.az += c.bz * DT * 7; continue; }
-    if (!c.sup || c.sup === 'p' || c.sup === 'sol') { c.ax *= .8; c.az *= .8; }
+    if (!c.sup || typeof c.sup === 'string') { c.ax *= .8; c.az *= .8; }
     if (c.pen > c.r * this.grimpe && c.type === 'piece') { let haut = null; this.autour(c, n => { if (!n.chute && Math.abs(n.y - c.y) < .06 && (!haut || n.pen < haut.pen)) { const dx = n.x - c.x, dz = n.z - c.z; if (dx * dx + dz * dz < (c.r + n.r) ** 2) haut = n; } });
       if (haut) { c.y = haut.y + haut.h + .01; c.ax = (h.n() - .5) * .2; c.az = (h.n() - .5) * .2; c.calme = 0; continue; } }
-    if ((c.sup === 'sol' || (c.sup && c.sup.dort)) && Math.abs(c.dx) + Math.abs(c.dz) + Math.abs(c.y - c.py) < REPOS) {
+    if ((c.sup === 'sol' || c.sup === 'e' || (c.sup && c.sup.dort)) && Math.abs(c.dx) + Math.abs(c.dz) + Math.abs(c.y - c.py) < REPOS) {
       if (++c.calme >= CALME) { c.dort = true; c.vx = c.vz = c.vy = 0; } } else c.calme = 0;
   }
 };
@@ -130,6 +141,7 @@ Plateau.prototype.remplir = function (nb, extras) {
   const nSol = Math.round(nb * .7);
   let reste = 0; for (let i = 0; i < nSol; i++) if (!poser(-2.2, 2.2, -.55, 3.15, 0)) reste++;
   for (let i = nSol - reste; i < nb; i++) poser(-2.15, 2.15, -4.95, -1.75, .6);
+  if (this.etage) { const e = this.etage; for (let i = 0; i < Math.round(nb * .22); i++) poser(-2.15, 2.15, e.avance + e.amp + .45, e.bord - .4, e.y); }
   for (const e of extras || []) this.ajouter(e[0], e[1], 1.2, e[2], e[3]);
   for (let i = 0; i < 480; i++) { this.pas(); if (i % 30 === 0) this.retirer(); }
   this.retirer();

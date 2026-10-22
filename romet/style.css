@@ -1,5 +1,5 @@
 /* Romet : la machine en plein écran (bandeau, plateau 3D, rangée des trésors) et les menus.
-   Le style suit la machine en cours (classe m-foire, m-ruche… sur body), repris des maquettes. */
+   Le style suit la machine en cours (classe m-foire, m-ruche, m-epave, m-casino, m-nuit, m-horloger, m-secrete sur body), repris des maquettes. */
 :root { --f-texte: "Fredoka", system-ui, sans-serif; --f-machine: "Rye", Georgia, serif; color-scheme: dark; }
 html, body { margin: 0; height: 100%; background: #2a140a; color: #fff3dc; font-family: var(--f-texte); overflow: hidden; }
 body { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
@@ -79,5 +79,95 @@ body { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user
 .m-ruche .carte h1, .m-ruche .carte h2 { color: #ffcf4a; text-shadow: 0 3px 0 #2a1404; }
 .m-ruche .bouton { background: linear-gradient(#ffcf4a, #f0a81e); color: #5a3208; border: 0; box-shadow: 0 3px 0 #2a1404; }
 .m-ruche .mach { background: #7a4a10; color: #fff3c8; border: 2px solid #f0a81e; }
+
+/* L'épave : bois noyé, laiton vert-de-gris, or des doublons, Pirata One */
+.m-epave { background: #062330; --f-machine: "Pirata One", Georgia, serif; }
+.m-epave .hud { background: linear-gradient(#2a2016, #1a140e); border-bottom: 3px solid #8a7a3a; }
+.m-epave .cpt { width: 52px; height: 52px; min-width: 0; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #2e7d86, #0c3640); border: 4px solid #b08d3c; box-shadow: inset 0 0 6px #000a; }
+.m-epave .cpt small { font-family: "Pirata One", serif; font-size: 11px; color: #cfe9e4; }
+.m-epave .cpt b { font-family: "Pirata One", serif; font-size: 19px; color: #ffd970; text-shadow: 1px 1px 0 #000; }
+.m-epave .logo { font-family: "Pirata One", serif; font-size: 36px; color: #f2c95c; text-shadow: 2px 2px 0 #3a2508, 0 0 10px #00000088; }
+.m-epave #combi { font-family: "Pirata One", serif; font-size: 34px; color: #ffd970; text-shadow: 2px 2px 0 #3a2508; }
+.m-epave #aide { font-family: "Pirata One", serif; font-size: 19px; color: #cfe9e4; text-shadow: 1px 1px 0 #000; }
+.m-epave .bas { background: #1a140e; border-top: 3px solid #8a7a3a; }
+.m-epave .gemme { border-radius: 50%; transform: none; }
+.m-epave .gemme.neuf { animation-name: gemmeRond; }
+@keyframes gemmeRond { 50% { transform: scale(1.8); } }
+.m-epave #bPause { background: #b08d3c; color: #1a140e; border: 0; }
+.m-epave .carte { background: #1a140e; border: 4px solid #b08d3c; box-shadow: 0 12px 30px #000a; color: #cfe9e4; }
+.m-epave .carte h1, .m-epave .carte h2 { color: #f2c95c; text-shadow: 2px 2px 0 #3a2508; }
+.m-epave .bouton { background: #0c3640; color: #ffd970; border: 2px solid #b08d3c; box-shadow: 0 3px 0 #000; font-size: 22px; }
+.m-epave .mach { background: #0c3640; color: #cfe9e4; border: 2px solid #8a7a3a; }
+
+/* Le casino : néon rose et cyan, Monoton et Press Start 2P */
+.m-casino { background: #07051a; --f-machine: "Press Start 2P", monospace; }
+.m-casino .hud { background: linear-gradient(#140d33, #07051a); border-bottom: 2px solid #35e0ff; box-shadow: 0 2px 12px #35e0ff55; }
+.m-casino .cpt small { font-family: "Press Start 2P", monospace; color: #7af0ff; font-size: 8px; margin-bottom: 4px; }
+.m-casino .cpt b { font-family: "Press Start 2P", monospace; font-size: 15px; color: #ff7ac0; text-shadow: 0 0 6px #ff2d87; }
+.m-casino .logo { font-family: "Monoton", sans-serif; font-size: 28px; color: #e9fdff; text-shadow: 0 0 4px #35e0ff, 0 0 12px #35e0ff; }
+.m-casino #combi { font-family: "Press Start 2P", monospace; font-size: 16px; color: #ff7ac0; text-shadow: 0 0 8px #ff2d87; }
+.m-casino #aide { font-family: "Press Start 2P", monospace; font-size: 9px; line-height: 1.8; color: #7af0ff; }
+.m-casino .bas { background: #07051a; border-top: 2px solid #ff3fa4; box-shadow: 0 -2px 12px #ff3fa455; }
+.m-casino #bPause { background: #07051a; color: #35e0ff; border: 2px solid #35e0ff; }
+.m-casino .carte { background: #0c0820; border: 2px solid #ff3fa4; box-shadow: 0 0 18px #ff3fa4aa; color: #c9f6ff; }
+.m-casino .carte h1, .m-casino .carte h2 { font-family: "Monoton", sans-serif; color: #e9fdff; text-shadow: 0 0 6px #35e0ff, 0 0 14px #35e0ff; }
+.m-casino .carte p { font-size: 14px; }
+.m-casino .bouton { background: #07051a; color: #ff7ac0; border: 2px solid #35e0ff; font-size: 12px; padding: 14px 8px; text-shadow: 0 0 6px #ff2d87; }
+.m-casino .mach { background: #140d33; color: #c9f6ff; border: 2px solid #35e0ff; }
+.m-casino .mach .nom { font-size: 11px; }
+
+/* La foire de nuit : laque bordeaux, laiton, lueurs roses, Rye */
+.m-nuit { background: #120a1c; }
+.m-nuit .hud { background: #1c0f24; border-bottom: 3px solid #c9973a; }
+.m-nuit .cpt small { font-family: "Rye", serif; font-size: 11px; color: #ffb6dc; letter-spacing: .04em; }
+.m-nuit .cpt b { font-family: "Rye", serif; font-size: 20px; color: #ffe2a0; text-shadow: 0 0 8px #ffb04a; }
+.m-nuit .logo { font-family: "Rye", serif; font-size: 30px; color: #fff0f8; text-shadow: 0 0 4px #ff3fa4, 0 0 14px #ff3fa4; }
+.m-nuit #combi { font-family: "Rye", serif; font-size: 28px; color: #ffe2a0; text-shadow: 0 0 10px #ff3fa4, 2px 2px 0 #3a0a20; }
+.m-nuit #aide { font-family: "Rye", serif; font-size: 14px; color: #ffd0ea; text-shadow: 0 0 6px #ff3fa4; }
+.m-nuit .bas { background: #1c0f24; border-top: 3px solid #c9973a; }
+.m-nuit #bPause { background: #2a0c26; color: #ffd0ea; border: 2px solid #c9973a; }
+.m-nuit .carte { background: #2a0c26; border: 3px solid #c9973a; box-shadow: 0 0 22px #ff3fa477, 0 12px 30px #000a; color: #ffd0ea; }
+.m-nuit .carte h1, .m-nuit .carte h2 { color: #fff0f8; text-shadow: 0 0 6px #ff3fa4, 0 0 16px #ff3fa4; }
+.m-nuit .bouton { background: #7a1e2a; color: #ffe2a0; border: 2px solid #c9973a; box-shadow: 0 3px 0 #000; }
+.m-nuit .mach { background: #3a1430; color: #ffd0ea; border: 2px solid #c9973a; }
+
+/* L'horloger : cuir vert, noyer, laiton poli, Cinzel */
+.m-horloger { background: #0e1712; --f-machine: "Cinzel", Georgia, serif; }
+.m-horloger .hud { background: #2a1a10; border-bottom: 3px solid #c9a35a; }
+.m-horloger .cpt { width: 56px; height: 56px; min-width: 0; border-radius: 50%; background: #f3e9d2; border: 3px solid #c9a35a; }
+.m-horloger .cpt small { font-family: "Cinzel", serif; font-size: 8px; font-weight: 700; color: #5a3a20; letter-spacing: .04em; }
+.m-horloger .cpt b { font-family: "Cinzel", serif; font-size: 17px; font-weight: 700; color: #2a1a10; }
+.m-horloger .logo { font-family: "Cinzel", serif; font-weight: 700; font-size: 26px; letter-spacing: .12em; color: #e6c47a; text-shadow: 0 1px 0 #000; }
+.m-horloger #combi { font-family: "Cinzel", serif; font-weight: 700; font-size: 24px; color: #ffe2a0; text-shadow: 0 2px 0 #000, 0 0 8px #000; }
+.m-horloger #aide { font-family: "Cinzel", serif; font-weight: 600; font-size: 14px; color: #e6c47a; text-shadow: 0 1px 0 #000; }
+.m-horloger .bas { background: #2a1a10; border-top: 3px solid #c9a35a; }
+.m-horloger #bPause { background: #f3e9d2; color: #2a1a10; border: 2px solid #c9a35a; }
+.m-horloger .carte { background: #2a1a10; border: 3px solid #c9a35a; box-shadow: 0 12px 30px #000a; color: #f3e9d2; }
+.m-horloger .carte h1, .m-horloger .carte h2 { font-weight: 700; color: #e6c47a; letter-spacing: .06em; }
+.m-horloger .carte h1 { font-size: 44px; }
+.m-horloger .bouton { background: #1d3a2a; color: #e6c47a; border: 2px solid #c9a35a; font-weight: 700; font-size: 17px; letter-spacing: .06em; }
+.m-horloger .mach { background: #1d3a2a; color: #f3e9d2; border: 2px solid #c9a35a; }
+.m-horloger .mach .nom { font-size: 17px; font-weight: 700; }
+
+/* La machine secrète : pixel 3D rétro, Press Start 2P */
+.m-secrete { background: #2b1b5a; --f-machine: "Press Start 2P", monospace; }
+.m-secrete #ecran canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+.m-secrete .hud { background: #3b2470; border-bottom: 4px solid #000; }
+.m-secrete .cpt small { font-family: "Press Start 2P", monospace; font-size: 8px; color: #c9b8ff; margin-bottom: 4px; }
+.m-secrete .cpt b { font-family: "Press Start 2P", monospace; font-size: 15px; color: #ffe14a; text-shadow: 2px 2px 0 #000; }
+.m-secrete .logo { font-family: "Press Start 2P", monospace; font-size: 18px; color: #fff; text-shadow: 3px 3px 0 #000; }
+.m-secrete #combi { font-family: "Press Start 2P", monospace; font-size: 16px; color: #ffe14a; text-shadow: 3px 3px 0 #000; }
+.m-secrete #aide { font-family: "Press Start 2P", monospace; font-size: 9px; line-height: 1.8; color: #c9b8ff; text-shadow: 2px 2px 0 #000; }
+.m-secrete .bas { background: #3b2470; border-top: 4px solid #000; }
+.m-secrete .gemme { transform: none; border-radius: 0; border: 2px solid #000; }
+.m-secrete .gemme.neuf { animation-name: gemmeRond; }
+.m-secrete #bPause { background: #ffe14a; color: #000; border: 3px solid #000; box-shadow: 3px 3px 0 #000; border-radius: 0; }
+.m-secrete .carte { background: #3b2470; border: 4px solid #000; box-shadow: 6px 6px 0 #000; border-radius: 0; color: #fff; }
+.m-secrete .carte h1, .m-secrete .carte h2 { color: #ffe14a; text-shadow: 3px 3px 0 #000; line-height: 1.4; }
+.m-secrete .carte h1 { font-size: 30px; } .m-secrete .carte h2 { font-size: 16px; }
+.m-secrete .carte p { font-size: 14px; }
+.m-secrete .bouton { background: #ffe14a; color: #000; border: 3px solid #000; box-shadow: 3px 3px 0 #000; border-radius: 0; font-size: 12px; padding: 14px 8px; }
+.m-secrete .mach { background: #2b1b5a; color: #fff; border: 3px solid #000; border-radius: 0; }
+.m-secrete .mach .nom { font-size: 10px; line-height: 1.5; }
 
 @media (prefers-reduced-motion: reduce) { #combi { transition: none; } .gemme.neuf, .gemmes.brille .gemme.on { animation: none; } }
