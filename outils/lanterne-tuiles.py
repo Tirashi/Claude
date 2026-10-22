@@ -271,6 +271,11 @@ def dessines():
     d.rectangle([0, 0, 15, 13], outline=PIERRE[0]); d.rectangle([3, 2, 12, 11], fill=(255, 214, 110), outline=PIERRE[0])
     d.rectangle([5, 4, 10, 9], fill=(255, 246, 200)); d.line([7, 2, 7, 11], fill=(200, 140, 50)); d.line([3, 6, 12, 6], fill=(200, 140, 50))
     t['lanterne_face'] = im
+    im = Image.new('RGBA', (16, 14), PIERRE[1]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 15, 13], outline=PIERRE[0]); d.rectangle([3, 2, 12, 11], fill=(34, 36, 44), outline=PIERRE[0])
+    d.line([7, 2, 7, 11], fill=PIERRE[0]); d.line([3, 6, 12, 6], fill=PIERRE[0]); d.point((5, 4), fill=(80, 84, 96))
+    for (x, y) in ((1, 12), (2, 12), (14, 1), (13, 12), (0, 7)): d.point((x, y), fill=(70, 110, 60))
+    t['lanterne_face_eteinte'] = im
     # tapis (32 px par case) : grand tapis de 3 × 2 cases, chemin de tapis rouge, tapis rond de 2 × 2
     def tapis(w, h, fond, motif, bord):
         im = Image.new('RGBA', (w, h), fond); d = ImageDraw.Draw(im)

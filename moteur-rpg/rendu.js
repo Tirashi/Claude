@@ -154,7 +154,7 @@ void main(){
       if (lum) flamme(lum, o.x + .5, o.y + .8);
       if (s.pieces) {   // objet en volume (coffre, panneau) : les pièces marquées si: 'ouvert' / 'ferme' changent à l'ouverture
         const pieces = meuble(s, o.x, o.y); objets.set(o, { pieces, s });
-        for (const p of pieces) if (p.si === 'ouvert') p.m.visible = false;
+        for (const p of pieces) if (p.si === 'ouvert' || p.si === 'allumee') p.m.visible = false;
         return;
       }
       const nom = o.tuile || s.tuile;
@@ -236,7 +236,7 @@ void main(){
 
     // un meuble en volume (lit, table, tonneau) : des boîtes et des cylindres texturés, face par face
     // pièce : { boite: [l, h, p] | cylindre: [rayon, h] | cone: [rayon, h, côtés], brille: true, pos: [x, y, z], rot: [rx, ry, rz], dessus, face, cote,
-    //          si: 'ouvert' | 'ferme' (pour un coffre) } ; d.lumiere : une flamme qui vacille (cheminée)
+    //          si: 'ouvert' | 'ferme' (coffre), 'allumee' | 'eteinte' (lanterne oubliée) } ; d.lumiere : une flamme qui vacille (cheminée)
     function meuble(d, x, y) {
       const mat = n => new THREE.MeshLambertMaterial({ map: tex(n) }), faites = [];
       for (const p of d.pieces) {
@@ -286,6 +286,8 @@ void main(){
       const s = style.objets[o.type] || {}, lum = s.allumee;
       if (!lum || allumees.has(o)) return;
       allumees.add(o);
+      const x = objets.get(o);   // en volume : la tête allumée remplace la tête éteinte
+      if (x && x.pieces) for (const p of x.pieces) if (p.si === 'allumee' || p.si === 'eteinte') p.m.visible = p.si === 'allumee';
       const p = new THREE.PointLight(lum.couleur, lum.intensite, lum.portee, 1.5);
       p.position.set(o.x + .5, lum.hauteur || .9, o.y + .8); scene.add(p);
       vacillent.push({ p, base: lum.intensite, dec: Math.random() * 9 });
@@ -295,7 +297,7 @@ void main(){
     // un objet qui change : coffre ouvert, levier baissé (tuileOuverte), grille ou nappe disparue (cacheOuvert)
     function majObjet(o, ouvert) {
       const x = objets.get(o); if (!x) return;
-      if (x.pieces) { for (const p of x.pieces) p.m.visible = x.s.cacheOuvert ? !ouvert : p.si === 'ouvert' ? !!ouvert : p.si === 'ferme' ? !ouvert : true; return; }
+      if (x.pieces) { for (const p of x.pieces) p.m.visible = x.s.cacheOuvert ? !ouvert : p.si === 'ouvert' ? !!ouvert : p.si === 'ferme' ? !ouvert : p.m.visible; return; }
       if (x.s.cacheOuvert) { x.m.visible = !ouvert; return; }
       if (!x.s.tuileOuverte) return;
       const t = tex(ouvert ? x.s.tuileOuverte : (o.tuile || x.s.tuile));
