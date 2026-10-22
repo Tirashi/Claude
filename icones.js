@@ -5,6 +5,23 @@
 (function (){
 "use strict";
 const ICONS = {
+  lanterne: {pal:{o:"#1a0f2e", m:"#4a4a58", M:"#7a7a8a", y:"#ffd23f", h:"#fff6c2", d:"#d98a1c"}, map:[
+    "......oooo......",
+    ".....oMmmMo.....",
+    "......oooo......",
+    "....oooooooo....",
+    "...oMmmmmmmMo...",
+    "....oyyyyyyo....",
+    "....oyhhhhyo....",
+    "....oyhhhhyo....",
+    "....oyhhhhyo....",
+    "....oyyhhyyo....",
+    "....odyyyydo....",
+    "...oMmmmmmmMo...",
+    "....oooooooo....",
+    ".....oMmmMo.....",
+    "......oooo......",
+    "................"]},
   tree: {pal:{o:"#1a0f2e", g:"#4fa86a", G:"#2f7a48", b:"#8a5a2a"}, map:[
     "................",
     ".....oooooo.....",

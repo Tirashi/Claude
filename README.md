@@ -241,6 +241,14 @@ Un petit 4X au tour par tour, en pixel art 32 bits : **37 terres hexagonales** (
 - **Fin** : victoire par conquête ou par la couronne, défaite si votre château tombe ; sinon le règne s'achève au tour 30. Score : terres, or, bois, bâtiments, légitimité, votes, primes.
 - **Partie libre** en facile ou en normal (hivers rudes, bâtiments chers, rivaux mordants) ; **Duché du jour** en normal, le même pour toute la famille, une seule tentative classée. Classements : meilleur score (normal) et Duché du jour. Lien direct : `duche/index.html#jour`.
 
+## La Dernière Lanterne (démo)
+Un RPG au tour par tour en HD-2D (tuiles 32 × 32 de Dungeon Crawl posées dans un décor en relief, ombres, flou de profondeur). Dans la vallée de Clairfond, la brume revient : avec ton équipe, rallume les lanternes qui la retiennent.
+
+- **Jouable aujourd'hui** : le prologue et l'acte 1 (Clairfond, la route et l'abbaye, le Bois Murmurant, la Crypte des racines et son boss, le Roi des aulnes). La suite arrive par actes.
+- **Combats** au tour par tour à trois puis quatre héros (lame, clerc, arcaniste, rôdeuse), talents, objets, équipement ; les monstres sont visibles sur la carte.
+- **Outils** : la Lanterne du veilleur (bouton B) dissipe les nappes de brume.
+- **Sauvegardes** automatiques aux moments clés et à la main aux lanternes, 3 emplacements. Pas de classement.
+
 ## Le Mot d'or
 Un mot de 6 lettres par jour à trouver en 6 essais, façon « Wordle », en pixel art 32 bits : un bureau d'acajou le soir, un sous-main en cuir bordeaux doré au fer, des tuiles en ivoire sous la lampe.
 

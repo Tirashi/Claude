@@ -51,6 +51,8 @@ const GAMES = [
    d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
   {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
    d: "Un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtis, recrute, conquiers les terres de trois seigneurs rivaux et gagne la couronne en 30 saisons. Combats en scènes HD-2D, événements, un Duché du jour pour toute la famille.", tags: ["STRATEGIE", "30 TOURS", "DUCHE DU JOUR"]},
+  {k: "lanterne/index.html", n: "LA DERNIERE LANTERNE", s: "LANTERNE", ic: "lanterne", fam: "32", lb: "linear-gradient(#2e4a34, #0e1a12)", lt: "#ffd27a", sh: "#4a6a3a", demo: true,
+   d: "Démo d'un RPG au tour par tour en HD-2D : avec ton équipe, rallume les lanternes qui retiennent la brume. Le prologue et l'acte 1 sont jouables : Clairfond, l'abbaye, le Bois Murmurant et la Crypte des racines, jusqu'au Roi des aulnes. La suite arrive.", tags: ["RPG", "DEMO", "ACTE 1"]},
   {k: "mot-d-or/index.html", n: "LE MOT D'OR", s: "MOT D'OR", ic: "motdor", fam: "32", lb: "linear-gradient(#7a2a20, #2a0e0a)", lt: "#ffd23f", sh: "#b0402c", rank: "motdor",
    d: "Un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe. Or : bien placée ; argent : mal placée. Le même mot pour toute la famille, et un entraînement pour rejouer.", tags: ["MOTS", "MOT DU JOUR"]},
   {k: "capitaine-du-port/index.html", n: "CAPITAINE DU PORT", s: "CAPITAINE", ic: "remorqueur", fam: "32", lb: "linear-gradient(#2a7c97, #163f66)", lt: "#ffd23f", sh: "#2a7c97", rank: "capitaine",
@@ -75,6 +77,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "lanterne/index.html": {added: "2026-10-22", genres: ["AVENTURE"]},
   "the-des-jarls/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "HASARD", "DU JOUR"]},
   "duche/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "DU JOUR"]},
   "mot-d-or/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
@@ -105,6 +108,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-22", "Démo : La Dernière Lanterne, un RPG au tour par tour en HD-2D. Avec ton équipe (lame, clerc, arcaniste), traverse Clairfond, l'abbaye et le Bois Murmurant, rallume les lanternes oubliées et descends dans la Crypte des racines affronter le Roi des aulnes. Le prologue et l'acte 1 sont jouables, la suite arrive."],
   ["2026-10-21", "Nouveau jeu : Le Thé des Jarls, un duel de dés viking. Six dés, trois lancers, et chaque face envoie ton armée de 45 soldats à l'assaut : charge des haches, volée de flèches, éclaireurs qui volent les jetons. Invoque les faveurs de 20 dieux nordiques, apprends avec Sigrid la skalde, remonte la route du fjord de taverne en taverne (étoiles, couleurs, unités à gagner), joue à deux sur le même téléphone posé à plat, et tente le défi du jour."],
   ["2026-10-21", "Nouveau jeu : Duché, un petit 4X au tour par tour sur 37 terres hexagonales. Bâtis, recrute, prends les terres des trois seigneurs rivaux et gagne la couronne quand le vieux roi meurt : un grand électeur vote un tour sur deux. Combats en scènes HD-2D, événements illustrés, partie libre (facile ou normal) et un Duché du jour pour toute la famille, une seule tentative classée."],
   ["2026-10-20", "Nouveau jeu : Le Mot d'or, un mot de 6 lettres par jour à trouver en 6 essais. Les tuiles se retournent en or (bien placée), en argent (mal placée) ou en gris (absente). Le même mot pour toute la famille, une seule tentative classée, une série de jours à faire durer, et un entraînement pour rejouer autant qu'on veut."],
@@ -312,7 +316,7 @@ function paintMarks(){
   GAMES.forEach(g => {
     g.el.querySelectorAll(".stk, .fv, .crown, .dj").forEach(e => e.remove());
     const m = metaOf(g), cur = inProgress(g);
-    const st = recent(m.added) ? ["NEUF", ""] : cur ? ["EN COURS", "cours"] : recent(m.updated) ? ["MAJ", "maj"] : null;
+    const st = g.demo ? ["DEMO", "demo"] : recent(m.added) ? ["NEUF", ""] : cur ? ["EN COURS", "cours"] : recent(m.updated) ? ["MAJ", "maj"] : null;
     if (st) g.el.append(el("span", "stk " + st[1], st[0]));
     const dj = dailyState(g);
     if (dj !== null) g.el.append(el("i", "dj" + (dj ? " fait" : ""), dj ? "✓" : ""));
@@ -386,7 +390,7 @@ function arrange(){
 /* ---------- jeu à la une : le dernier sorti, présenté dans sa boîte ---------- */
 (function une(){
   const keys = Object.keys(META), rank = g => keys.indexOf(g.k);   // à date égale, le premier de META l'emporte
-  const g = GAMES.filter(g => metaOf(g).added).sort((a, b) => metaOf(b).added.localeCompare(metaOf(a).added) || rank(a) - rank(b))[0];
+  const g = GAMES.filter(g => metaOf(g).added && !g.demo).sort((a, b) => metaOf(b).added.localeCompare(metaOf(a).added) || rank(a) - rank(b))[0];
   if (!g) return;
   const m = metaOf(g), box = $("une");
   box.style.setProperty("--lb", g.lb); box.style.setProperty("--lt", g.lt);

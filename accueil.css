@@ -95,6 +95,7 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
   padding:3px 4px; background:var(--gold); color:#2a1600; border:2px solid #000; box-shadow:2px 2px 0 #000; white-space:nowrap}
 .c3 .stk.cours{background:#5cff8a; color:#06280f}
 .c3 .stk.maj{background:#5ce1ff; color:#05222a}
+.c3 .stk.demo{background:#ff9f43; color:#2a1200}
 .c3 .dj{position:absolute; z-index:3; right:calc(-7px * var(--k)); bottom:calc(14px * var(--k)); width:calc(17px * var(--k)); height:calc(17px * var(--k)); border-radius:50%; box-sizing:border-box;
   border:calc(2px * var(--k)) solid #000; box-shadow:2px 2px 0 #000; display:grid; place-items:center; font-style:normal; font-family:"Segoe UI Symbol","Noto Sans Symbols",sans-serif; font-weight:700;
   font-size:calc(10px * var(--k)); line-height:1; background:radial-gradient(circle, #fff6a8 0 30%, var(--gold) 31% 100%); box-shadow:2px 2px 0 #000, 0 0 8px 2px rgba(255,210,63,.7)}
