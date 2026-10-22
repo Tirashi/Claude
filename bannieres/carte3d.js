@@ -139,7 +139,8 @@ function decor(i) {
     d.push(['building_castle_' + k3, 0, 0, mat3, 0, true]);
     const n = S ? banEtapeChateau(etat, t.prop) : 0;   // le château grandit avec le village
     if (n >= 1 && C) d.push(['flag_' + C.k, -0.72, 0.42, C.mat, 0], ['flag_' + C.k, 0.72, 0.42, C.mat, 0]);
-    if (n >= 2) d.push(['fence_wood_straight', 0, 0.85, matBase, 0], ['fence_wood_straight', -0.75, -0.45, matBase, Math.PI / 3], ['fence_wood_straight', 0.75, -0.45, matBase, -Math.PI / 3]);
+    // les remparts : le modèle de palissade est un bord d'hexagone (côté ouest) ; posé au centre et tourné, il longe un bord de la case
+    if (n >= 2) [0, 1, 2, 3].forEach(k => d.push(['fence_wood_straight', 0, 0, matBase, k * Math.PI / 3, false, 0.93]));
     decos();
     return d;
   }

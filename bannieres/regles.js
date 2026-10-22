@@ -28,8 +28,8 @@ const BAN_NOMS = ['Ta bannière', 'Baron Aldric', 'Comtesse Ysolde', 'Sire Gauva
 const BAN_CARACTERES = ['costaud', 'batisseur', 'malin'];   // § 8 : il attaque / il construit / il attend d'être plus fort
 const BAN_NIVEAUX = {
   // facile : les rivaux n'attaquent le joueur qu'avec ★★★, jamais avant le tour 5, et ne prennent pas les châteaux des autres rivaux
-  facile: { pieces: 12, bonus: 1, seuil: 0.75, premierTour: 5, chateauxRivaux: false, garde: ['fantassin', 'fantassin', 'lancier', 'archer', 'archer'] },
-  normal: { pieces: 10, bonus: 0, seuil: 0, premierTour: 2, chateauxRivaux: true, audace: 0.12, bonusRivaux: 1 },   // seuil 0 : celui du caractère, moins l'audace ; +1 pièce par tour aux rivaux
+  facile: { pieces: 12, bonus: 1, seuil: 0.75, seuilChateau: 0.9, premierTour: 5, chateauxRivaux: false, garde: ['fantassin', 'fantassin', 'lancier', 'archer', 'archer'] },
+  normal: { pieces: 10, bonus: 0, seuil: 0, premierTour: 2, chateauxRivaux: true, audace: 0.12, bonusRivaux: 1, renfortRivaux: true },   // seuil 0 : celui du caractère, moins l'audace ; +1 pièce par tour aux rivaux
 };
 const BAN_UNITES = {
   seigneur: { nom: 'Seigneur', pv: 5, att: 2 },
@@ -121,9 +121,10 @@ function banNouvelle(graine, niveau, rayon, coul) {
     v.forEach(j => { terres[j].prop = s; if (terres[j].t === 'montagne') terres[j].t = 'colline'; });
     if (s === 0) { armee(0, c, ['seigneur', 'fantassin', 'archer', 'mage']); armee(0, v[0], ['lancier', 'fantassin', 'archer']); }
     else {
-      armee(s, c, DEPART[seigneurs[s].car]);
+      armee(s, c, DEPART[seigneurs[s].car].concat(BAN_NIVEAUX[niveau].renfortRivaux ? ['archer'] : []));   // en normal, un archer de plus
       armee(s, v[1], ['fantassin', 'fantassin', 'archer']);
       if (seigneurs[s].car === 'batisseur') seigneurs[s].pieces += 4;
+      if (BAN_NIVEAUX[niveau].renfortRivaux) seigneurs[s].pieces += 6;
     }
   }
   // des camps de brigands et des ruines hantées sur des cases libres, loin des châteaux (2 + 2, ou 3 + 3 sur la grande carte)
@@ -211,8 +212,9 @@ function banDeplacer(etat, id, vers) {
 const banDerriere = t => (BAN_UNITES[t].tir || BAN_UNITES[t].feu ? 1 : 0);
 function banRangs(liste) { return liste.map((u, k) => k).filter(k => liste[k].pv > 0).sort((a, b) => banDerriere(liste[a].type) - banDerriere(liste[b].type) || a - b); }
 // A attaque D ; tactiques : charger (FONCER), tenir (TIRER D'ABORD), harceler (PRUDENT, l'attaquant seulement) ;
-// tourDef : volées de plus du défenseur (1 au château ou avec une tour, 2 avec une grande tour). Renvoie le journal (pour la rejouer), l'issue et les survivants.
-function banSimuler(A, D, tacA, tacD, terrain, chateau, graine, tourDef) {
+// tourDef : volées de plus du défenseur (1 au château ou avec une tour, 2 avec une grande tour) ;
+// terrainA : la case d'où vient l'attaquant (dans l'eau, on se protège mal, qu'on attaque ou qu'on défende). Renvoie le journal (pour la rejouer), l'issue et les survivants.
+function banSimuler(A, D, tacA, tacD, terrain, chateau, graine, tourDef, terrainA) {
   const R = banMulberry(graine), a = A.map(u => ({ ...u })), d = D.map(u => ({ ...u })), journal = [];
   const cotes = [a, d], vivants = l => l.filter(u => u.pv > 0).length, n0 = [a.length, d.length];
   const front = c => banRangs(cotes[c]).slice(0, 3);
@@ -258,7 +260,7 @@ function banSimuler(A, D, tacA, tacD, terrain, chateau, graine, tourDef) {
           let deg = U.tir || U.feu ? (R() < 0.5 ? 1 : 0) : U.att;   // un archer ou un mage au contact frappe mal
           if (n === 0 && tac === 'charger') deg += 1;
           if (n === 0 && U.contre && etac === 'charger') deg += 1;   // le lancier attend la charge
-          if (n === 0 && c === 0 && (terrain === 'marais' || terrain === 'riviere')) deg = Math.max(0, deg - 1);
+          if (n === 0 && deg > 0 && banEau(e ? terrain : terrainA)) deg += 1;   // dans l'eau (rivière, marais), on se protège mal : le premier coup reçu fait 1 de plus
           const V = BAN_UNITES[cotes[e][t].type];
           const pare = Math.min(0.6, (etac === 'tenir' && V.pare ? 0.33 : 0) + (e === 1 && terrain === 'montagne' ? 0.25 : 0) + (e === 1 && chateau ? 0.25 : 0));
           const p = deg > 0 && R() < pare;
@@ -273,13 +275,14 @@ function banSimuler(A, D, tacA, tacD, terrain, chateau, graine, tourDef) {
   return fin('tenu');   // personne n'a cédé : le défenseur garde sa case
 }
 // la chance de victoire de l'attaquant : la même règle, jouée 60 fois (les étoiles)
+const banEau = t => t === 'marais' || t === 'riviere';
 const banMemo = new Map();   // la même question revient souvent pendant le tour de l'ordinateur
-function banChance(A, D, tacA, tacD, terrain, chateau, tourDef) {
-  const cle = A.map(u => u.type + u.pv).join() + '|' + D.map(u => u.type + u.pv).join() + '|' + tacA + tacD + terrain + !!chateau + (+tourDef || 0);
+function banChance(A, D, tacA, tacD, terrain, chateau, tourDef, terrainA) {
+  const cle = A.map(u => u.type + u.pv).join() + '|' + D.map(u => u.type + u.pv).join() + '|' + tacA + tacD + terrain + (terrainA || '') + !!chateau + (+tourDef || 0);
   if (banMemo.has(cle)) return banMemo.get(cle);
   if (banMemo.size > 5000) banMemo.clear();
   let g = 0;
-  for (let k = 0; k < 60; k++) if (banSimuler(A, D, tacA, tacD, terrain, chateau, 1000 + k * 7919, tourDef).issue === 'victoire') g++;
+  for (let k = 0; k < 60; k++) if (banSimuler(A, D, tacA, tacD, terrain, chateau, 1000 + k * 7919, tourDef, terrainA).issue === 'victoire') g++;
   banMemo.set(cle, g / 60);
   return g / 60;
 }
@@ -293,16 +296,19 @@ function banApercu(etat, attId, i) {
   const a = banArmee(etat, attId), t = etat.terres[i], o = banArmeeSur(etat, i);
   if (!a || !banEnnemiSur(etat, a.s, i)) return null;
   const sDef = o ? o.s : t.prop, chezLui = t.bat === 'chateau' && sDef === t.prop;
-  const garde = chezLui ? (sDef === 0 && banNiveau(etat).garde || BAN_GARDE).map(ty => banUnite(etat, ty, sDef)) : [];
+  // la garde grandit avec le château : un archer de plus avec les drapeaux (3 bâtiments), un champion de plus avec les remparts (6) ;
+  // (pour le joueur, en facile seulement : en normal, à lui de garder une armée au château)
+  const etape = chezLui && (sDef > 0 || etat.niveau === 'facile') ? banEtapeChateau(etat, sDef) : 0, renforts = ['archer', 'champion'].slice(0, etape);
+  const garde = chezLui ? (sDef === 0 && banNiveau(etat).garde || BAN_GARDE).concat(renforts).map(ty => banUnite(etat, ty, sDef)) : [];
   const D = (o ? o.unites : []).concat(garde);   // au château, la garde se bat avec l'armée qui y est (derrière elle)
-  return { att: a, def: o || null, garde: garde.length, nArmee: o ? o.unites.length : 0, sDef: o ? o.s : t.prop, A: a.unites, D, terrain: t.t, chateau: t.bat === 'chateau', tourDef: (t.bat === 'tour' || t.bat === 'chateau') && (o ? o.s : t.prop) === t.prop ? 1 + (t.bat === 'tour' && t.grand ? 1 : 0) : 0 };   // au château aussi, les archers tirent une fois de plus
+  return { att: a, def: o || null, garde: garde.length, nArmee: o ? o.unites.length : 0, sDef: o ? o.s : t.prop, A: a.unites, D, terrain: t.t, chateau: t.bat === 'chateau', terrainA: etat.terres[a.terre].t, tourDef: (t.bat === 'tour' || t.bat === 'chateau') && (o ? o.s : t.prop) === t.prop ? 1 + (t.bat === 'tour' && t.grand ? 1 : 0) : 0 };   // au château aussi, les archers tirent une fois de plus
 }
 // les chances de chaque tactique pour un camp (0 = l'attaquant, 1 = le défenseur), l'autre camp jouant comme l'ordinateur
 function banChances(etat, attId, i, cote) {
   const b = banApercu(etat, attId, i); if (!b) return null;
   const res = {};
-  if (cote === 0) { const tD = banTactiqueIA(b.D, b.sDef < 0); BAN_TACTIQUES_ATTAQUE.forEach(tac => { res[tac] = banChance(b.A, b.D, tac, tD, b.terrain, b.chateau, b.tourDef); }); }
-  else { const tA = banTactiqueIA(b.A, false); BAN_TACTIQUES_DEFENSE.forEach(tac => { res[tac] = 1 - banChance(b.A, b.D, tA, tac, b.terrain, b.chateau, b.tourDef); }); }
+  if (cote === 0) { const tD = banTactiqueIA(b.D, b.sDef < 0); BAN_TACTIQUES_ATTAQUE.forEach(tac => { res[tac] = banChance(b.A, b.D, tac, tD, b.terrain, b.chateau, b.tourDef, b.terrainA); }); }
+  else { const tA = banTactiqueIA(b.A, false); BAN_TACTIQUES_DEFENSE.forEach(tac => { res[tac] = 1 - banChance(b.A, b.D, tA, tac, b.terrain, b.chateau, b.tourDef, b.terrainA); }); }
   return res;
 }
 // livrer la bataille et en appliquer le bilan ; renvoie le résultat (journal à rejouer, issue, trésor, château pris…)
@@ -311,7 +317,7 @@ function banResoudre(etat, attId, i, tacA, tacD) {
   if (!BAN_TACTIQUES_ATTAQUE.includes(tacA)) tacA = 'charger';
   if (!BAN_TACTIQUES_DEFENSE.includes(tacD)) tacD = banTactiqueIA(b.D, b.sDef < 0);
   const graine = Math.floor(banRng(etat.graine, 'bataille', etat.tour, etat.nb++)() * 1e9);
-  const res = banSimuler(b.A, b.D, tacA, tacD, b.terrain, b.chateau, graine, b.tourDef);
+  const res = banSimuler(b.A, b.D, tacA, tacD, b.terrain, b.chateau, graine, b.tourDef, b.terrainA);
   const out = { ...res, att: attId, terre: i, sAtt: b.att.s, sDef: b.sDef, garde: b.garde, tacA, tacD, tresor: 0, chateau: false, tombe: null, blesses: [] };
   const t = etat.terres[i], a = b.att;
   // les survivants ; le seigneur ne meurt jamais : blessé, il rentre au château dans 2 tours

@@ -125,7 +125,7 @@ function cadrerBataille() {
   const asp = innerWidth / innerHeight, d = Math.max(8, 5.6 / (2 * Math.tan(15 * Math.PI / 180) * Math.min(1.2, asp)));
   cameraB.aspect = asp; cameraB.position.set(0, 0.5 + d * Math.sin(0.2), d * Math.cos(0.2)); cameraB.lookAt(0, 0.35 + d * 0.035, 0); cameraB.updateProjectionMatrix();
 }
-const EFFETS = { foret: 'FORET : LES FLECHES PASSENT MAL.', colline: 'COLLINE : CELUI QUI DEFEND TIRE UNE FOIS DE PLUS.', montagne: 'MONTAGNE : CELUI QUI DEFEND SE PROTEGE MIEUX.', marais: 'MARAIS : CELUI QUI ATTAQUE FRAPPE MOINS FORT.', riviere: 'RIVIERE : CELUI QUI ATTAQUE FRAPPE MOINS FORT.', plaine: 'HERBE : RIEN DE SPECIAL.' };
+const EFFETS = { foret: 'FORET : LES FLECHES PASSENT MAL.', colline: 'COLLINE : CELUI QUI DEFEND TIRE UNE FOIS DE PLUS.', montagne: 'MONTAGNE : CELUI QUI DEFEND SE PROTEGE MIEUX.', marais: "MARAIS : DANS L'EAU, ON SE PROTEGE MAL.", riviere: "RIVIERE : DANS L'EAU, ON SE PROTEGE MAL.", plaine: 'HERBE : RIEN DE SPECIAL.' };
 const NOM_TERRAIN = { plaine: 'HERBE', foret: 'FORET', colline: 'COLLINE', montagne: 'MONTAGNE', marais: 'MARAIS', riviere: 'RIVIERE' };
 // ap : l'aperçu de la bataille (banApercu) ; source : la case d'où vient l'attaquant ; i : la case attaquée
 function ouvrirBataille(ap, source, i) {
@@ -174,6 +174,7 @@ function ouvrirBataille(ap, source, i) {
   [0, 1].forEach(c => rangsVivants(c).forEach((k, slot) => { const [x, z] = placeRang(c, slot); figures[c][k].position.set(x, 0, z); }));
   cadrerBataille();
   const effets = [EFFETS[terre.t]];
+  if (banEau(gauche.t)) effets.push("L'ATTAQUANT EST DANS L'EAU : IL SE PROTEGE MAL.");
   if (terre.bat === 'chateau') effets.push('CHATEAU : CELUI QUI DEFEND SE PROTEGE MIEUX ET TIRE UNE FOIS DE PLUS.');
   else if (ap.tourDef) effets.push('TOUR : CELUI QUI DEFEND TIRE UNE FOIS DE PLUS.');
   if (ap.garde) effets.push('LA GARDE DU CHATEAU SE BAT AUSSI.');
@@ -238,6 +239,7 @@ function animerBataille(now, dtReel) {
   B.figures.flat().forEach(g => {
     const u = g.userData; u.mixer.update(dt);
     if (u.mort) return;
+    if (u.fete) { if (u.courant !== u.actions.Cheering) jouer(g, 'Cheering'); return; }   // les vainqueurs fêtent sur place
     g.rotation.y += (u.rotVise - g.rotation.y) * Math.min(1, dt * 10);
     // chacun rejoint sa place dans les rangs (la mêlée au contact après le premier assaut), en courant
     const s = u.c ? 1 : -1;

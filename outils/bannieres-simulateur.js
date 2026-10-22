@@ -167,7 +167,8 @@ for (const niveau of ['facile', 'normal']) {
   check((fins.defaite || 0) < K * (niveau === 'facile' ? 0.1 : 0.35), `${niveau} : il perd rarement son château (${pc(fins.defaite)})`);
 }
 check(anomalies === 0, `jamais plus de 3 armées, de 6 guerriers, de pièces en négatif, ni deux armées sur une case (${anomalies})`);
-check(bilan.normal.ok < bilan.facile.ok, `le niveau normal est plus dur que le facile (${pc(bilan.facile.ok)} → ${pc(bilan.normal.ok)} de victoires)`);
+// plus dur = moins de victoires, ou plus de châteaux perdus (victoires moins châteaux perdus)
+check(bilan.normal.ok - bilan.normal.defaites < bilan.facile.ok - bilan.facile.defaites, `le niveau normal est plus dur que le facile (victoires ${pc(bilan.facile.ok)} → ${pc(bilan.normal.ok)}, châteaux perdus ${pc(bilan.facile.defaites)} → ${pc(bilan.normal.defaites)})`);
 const manquent = Object.keys(BAN_SURPRISES).filter(k => !vus[k]);
 check(!manquent.length, `chaque surprise sort au moins une fois (${manquent.join(', ') || Object.keys(vus).length + ' sortes'})`);
 { let err = 0; for (let k = 0; k < 10; k++) { try { partie(500 + k, 'normal', 0, 4); } catch (x) { err++; if (err < 2) console.log(x.stack); } } check(!err, `grande carte (61 cases) : 10 parties sans erreur (${err})`); }

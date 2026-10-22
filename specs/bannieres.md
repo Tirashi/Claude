@@ -84,7 +84,7 @@ On touche **une case à soi**, on appuie sur **CONSTRUIRE**, on choisit un bâti
    On peut aussi **PARTIR** (l'armée reste où elle était).
 2. **Pendant** (une dizaine de secondes, bouton **VITE**) : les flèches, les boules de feu, puis trois corps à corps. Les **cœurs** au-dessus des guerriers disparaissent quand ils sont touchés ; un guerrier sans cœur tombe.
 3. **Après** : **BRAVO !** (la case est à toi, le trésor s'il y en a un : « +5 pièces ») ou **DOMMAGE…** (ton armée recule). Les guerriers tombés sont perdus.
-- Le terrain compte (une phrase à l'écran) : **forêt** = les flèches passent mal ; **colline** = celui qui défend tire une fois de plus ; **marais, rivière** = celui qui attaque frappe moins fort au premier coup ; **château** = celui qui défend se protège mieux.
+- Le terrain compte (une phrase à l'écran) : **forêt** = les flèches passent mal ; **colline** = celui qui défend tire une fois de plus ; **marais, rivière** = **celui qui est dans l'eau se protège mal**, qu'il attaque ou qu'il défende : le premier coup qu'il reçoit fait 1 de plus (retour de l'utilisateur du 22/10 ; avant : l'attaquant frappait moins fort) ; **château** = celui qui défend se protège mieux.
 - La règle exacte (dégâts, parades) reste celle de la maquette : un calcul tiré d'une graine, le même pour les étoiles et pour la bataille ; les chiffres restent cachés à l'enfant.
 
 ## 8. Les rivaux
@@ -157,3 +157,17 @@ La partie est sauvegardée à chaque action ; CONTINUER la reprend.
 - **Au château, la garde se bat toujours avec l'armée qui y est** (derrière elle) : une petite armée au château le rendait plus fragile qu'un château vide (validé le 22/10).
 - **En normal**, les rivaux sont plus hardis (ils attaquent avec un peu moins de chances) et gagnent 1 pièce de plus par tour (validé le 22/10).
 - **Au simulateur** (100 parties par niveau, joueur automatique « malin ») : en **facile**, le joueur gagne 85 % des parties (presque toujours aux drapeaux, en moyenne 17 drapeaux contre 6 par rival) et ne perd son château qu'une fois sur 100 ; en **normal**, 61 % de victoires et 9 % de châteaux perdus. Environ 9 batailles livrées et 6 subies par partie ; une partie va presque toujours jusqu'au tour 25 ; le coffre est presque toujours plein (28 pièces en moyenne).
+
+## 18. Retours après les premiers essais (22/10)
+
+Corrigé :
+- **L'eau** : celui qui est dans une rivière ou un marais se protège mal (§ 7), qu'il attaque ou qu'il défende ; l'écran de bataille le dit.
+- **Les remparts** : la palissade sortait de la case (dans l'eau) ; le modèle est un bord d'hexagone : posé au centre de la case et tourné, il longe 4 bords.
+- **La fête** : les vainqueurs couraient vers leur place dans les rangs au lieu de fêter ; ils fêtent maintenant sur place.
+- Équilibrage revu au simulateur : la **garde du château grandit avec lui** (un archer de plus avec les drapeaux, un champion de plus avec les remparts ; pour le joueur, en facile seulement) ; en facile, un rival n'attaque le château du joueur qu'à coup presque sûr (9 chances sur 10) ; en normal, les rivaux commencent avec un archer et 6 pièces de plus. Facile : 80 % de victoires, aucun château perdu sur 100 parties ; normal : 72 %, 6 %.
+
+À décider (propositions faites à l'utilisateur le 22/10) :
+- **Tours et casernes plus solides** : la caserne et la tour ont une petite garde (moins forte que celle du château) ; la grande caserne soigne chaque tour la moitié des cœurs perdus de l'armée qui y est ; la grande tour accueille une **garnison** pour toujours (une armée qui y entre y reste), qui défend avec ses volées en plus, avec l'armée posée dessus s'il y en a une.
+- **PARTIR** : choisir la façon de se battre **avant** que l'armée coure (les étoiles s'affichent dès qu'on touche une case rouge) ; PARTIR n'enlève alors rien.
+- **Voir ses bonus** : une fenêtre MON ROYAUME (en touchant le haut de l'écran) ; une seule forge et une seule caserne utiles (le bouton dit « TU EN AS DEJA UNE ») ; les cœurs en plus affichés à part dans ACHETER.
+- **Acheter** : l'armée du château affichée en haut de la fenêtre ACHETER, avec ses guerriers, leurs cœurs et la place qui reste.
