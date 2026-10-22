@@ -293,7 +293,7 @@ async function marcher(id, depart, ch) {
   jouer(fig, 'Running_A', false, 1.1);
   for (const j of ch) {
     const [x1, z1] = placeArmee(j), x0 = g.position.x, z0 = g.position.z;
-    fig.rotation.y = Math.atan2(x1 - x0, z1 - z0);
+    fig.rotation.y = Math.atan2(x1 - x0, z1 - z0); Sons.pas();
     const t0 = performance.now(), duree = vite ? 160 : 420;
     await new Promise(ok => { const pas = () => { const k = Math.min(1, (performance.now() - t0) / duree); g.position.x = x0 + (x1 - x0) * k; g.position.z = z0 + (z1 - z0) * k; if (k < 1) requestAnimationFrame(pas); else ok(); }; pas(); });
   }

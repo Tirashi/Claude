@@ -93,7 +93,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["duche", "best"], ["jarls", "etoiles"], ["capitaine", "etoiles"], ["motdor", "serie"], ["yams", "best"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["escadrille", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["magasinier", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"], ["odyssee", "etoiles"]];
+    ["parcours", "total"], ["duche", "best"], ["bannieres", "best"], ["jarls", "etoiles"], ["capitaine", "etoiles"], ["motdor", "serie"], ["yams", "best"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["escadrille", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["magasinier", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"], ["odyssee", "etoiles"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -224,6 +224,7 @@
     var jd = readKey("jarls.daily", {}) || {};
     Object.keys(jd).forEach(function (k){ if (/^\d{8}$/.test(k)) hi("jarls", "daily:" + k, jd[k]); });
     hi("duche", "best", readKey("duche.best", 0));
+    hi("bannieres", "best", readKey("bannieres.best", 0));
     var dud = readKey("duche.daily", {}) || {};
     Object.keys(dud).forEach(function (k){ if (/^\d{8}$/.test(k)) hi("duche", "daily:" + k, dud[k]); });
     var cn = readKey("capitaine.niveaux", {}) || {}, cns = 0;
@@ -258,7 +259,7 @@
 
   window.addEventListener("online", function (){ flush(); });
   // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 6 : avec Nebula)
-  var SYNC = 22;
+  var SYNC = 23;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();

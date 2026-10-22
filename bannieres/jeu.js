@@ -131,6 +131,7 @@ async function combattre(attId, i, tacIA) {
   if (res.chateau && joueurAttaque) extra += '<br>UN CHATEAU DE PLUS !';
   if (res.blesses.includes(0)) extra += '<br>TON SEIGNEUR EST BLESSE : IL REVIENT AU CHATEAU DANS 2 TOURS.';
   if (gagne) Sons.fanfare(); else Sons.triste();
+  if (res.chateau && joueurAttaque) feuArtifice();   // un château de plus : grande fête
   await new Promise(ok => {
     $('issue').innerHTML = `<h2 class="banniere">${gagne ? 'BRAVO !' : 'DOMMAGE...'}</h2><div>${phrase}<br>TU PERDS ${morts(moi)} GUERRIER${morts(moi) > 1 ? 'S' : ''}, EUX ${morts(1 - moi)}.${extra}</div>`;
     $('issue').append(bouton('CONTINUER', ok, true, '', 'vert'));
@@ -220,13 +221,19 @@ $('fin').onclick = () => { if (occupe) { vite = !vite; vitesseB = vite ? 2.5 : 1
 
 // ---------- la fin de la partie ----------
 function montrerFin() {
+  if (ecran === 'fin') return;
   const F = etat.fin; ecran = 'fin';
-  const best = Math.max(lire('best', 0), banScore(etat)); ecrire('best', best); ecrire('run', null);
+  // le record et le classement : les drapeaux à la fin, sur la petite carte seulement (la grande en donne plus)
+  const classee = etat.rayon === 3, sc = banScore(etat), best = classee ? Math.max(lire('best', 0), sc) : lire('best', 0);
+  const st = lire('stats', {}); st.parties = (st.parties || 0) + 1; if (F.gagne) st.gagnees = (st.gagnees || 0) + 1; ecrire('stats', st);
+  ecrire('best', best); ecrire('run', null);
+  const LS = window.LudoScores;
+  if (classee && LS && sc > 0) LS.submit('bannieres', 'best', sc, false).catch(() => {});
   const titre = F.issue === 'victoire' ? 'VICTOIRE !' : F.issue === 'defaite' ? 'OH NON...' : F.gagne ? 'TU AS GAGNE !' : 'FINI !';
   const texte = F.issue === 'victoire' ? 'TU AS PRIS LES 3 CHATEAUX. TU ES LE ROI DES BANNIERES !' : F.issue === 'defaite' ? "ON T'A PRIS TON CHATEAU." : `${BAN_DERNIER_TOUR} TOURS SONT PASSES. ON COMPTE LES DRAPEAUX :`;
   const liste = F.classement.map((x, k) => `${k + 1}. ${nomSeigneur(x.s)} : ${x.n} ${I('drapeau')}`).join('<br>');
-  if (F.gagne) Sons.fanfare(); else Sons.triste();
-  boite(titre, `<p>${texte}</p><p>${liste}</p>${F.issue === 'drapeaux' && !F.gagne ? '<p>LA PROCHAINE FOIS, PRENDS PLUS DE CASES !</p>' : ''}<p class="petit">RECORD : ${best} ${I('drapeau')}</p>`, [
+  if (F.gagne) { Sons.victoire(); feuArtifice(); } else Sons.triste();
+  boite(titre, `<p>${texte}</p><p>${liste}</p>${F.issue === 'drapeaux' && !F.gagne ? '<p>LA PROCHAINE FOIS, PRENDS PLUS DE CASES !</p>' : ''}<p class="petit">${classee ? `RECORD : ${best} ${I('drapeau')}` : 'GRANDE CARTE : PAS DE RECORD.'}</p>`, [
     bouton('REJOUER', () => { fermer(); nouvellePartie(opts.niveau, opts.rayon); }, true, '', 'vert'),
     bouton('TITRE', () => { fermer(); montrerTitre(); }),
   ]);

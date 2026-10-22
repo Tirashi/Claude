@@ -114,3 +114,23 @@ const ouverte = () => !$('voile').classList.contains('cache');
 function demander(titre, html, choix) {
   return new Promise(ok => boite(titre, html, choix.map(([txt, val, petit, classe]) => bouton(txt, () => { fermer(); ok(val); }, true, petit, classe))));
 }
+
+// un feu d'artifice par-dessus l'écran (victoire) : des gerbes de pixels qui retombent, 4 secondes
+function feuArtifice() {
+  const c = document.createElement('canvas'), k = 3;
+  c.width = Math.ceil(innerWidth / k); c.height = Math.ceil(innerHeight / k);
+  c.style.cssText = `position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:25;image-rendering:pixelated`;
+  document.body.append(c);
+  const g = c.getContext('2d'), parts = [], couleurs = ['#f2c230', '#d8322a', '#2f6fe0', '#9b4fd6', '#6cb84a', '#fff6e0'], t0 = performance.now();
+  let graine = 12345; const hasard = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+  const gerbe = () => { const x = c.width * (0.15 + hasard() * 0.7), y = c.height * (0.12 + hasard() * 0.3), col = couleurs[Math.floor(hasard() * couleurs.length)];
+    for (let n = 0; n < 36; n++) { const a = n / 36 * Math.PI * 2, v = 0.6 + hasard() * 0.9; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vie: 1, col }); } };
+  let prochaine = 0;
+  (function image(now) {
+    const t = now - t0;
+    if (t < 2800 && t >= prochaine) { gerbe(); prochaine += 450; }
+    g.clearRect(0, 0, c.width, c.height);
+    parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.025; p.vie -= 0.012; if (p.vie > 0) { g.globalAlpha = Math.min(1, p.vie * 1.5); g.fillStyle = p.col; g.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); } });
+    if (t < 4200) requestAnimationFrame(image); else c.remove();
+  })(t0);
+}
