@@ -11,7 +11,8 @@ const ARMES = ['sword_1handed', 'sword_2handed_color', 'shield_badge_color', 'bo
 const GARDER = ['spear_A'];   // armes d'un autre pack : elles gardent leur propre texture
 const CLIPS = { General: ['Idle_A', 'Hit_A', 'Death_A', 'Death_A_Pose'], MovementBasic: ['Walking_A', 'Running_A'],
   CombatMelee: ['Melee_1H_Attack_Chop', 'Melee_1H_Attack_Stab', 'Melee_2H_Attack_Chop', 'Melee_Block', 'Melee_2H_Idle'],
-  CombatRanged: ['Ranged_Bow_Draw', 'Ranged_Bow_Release', 'Ranged_Bow_Idle', 'Ranged_Magic_Shoot', 'Ranged_Magic_Spellcasting'], Simulation: ['Cheering'] };
+  CombatRanged: ['Ranged_Bow_Draw', 'Ranged_Bow_Release', 'Ranged_Bow_Idle', 'Ranged_Magic_Shoot', 'Ranged_Magic_Spellcasting'], Simulation: ['Cheering'],
+  Special: ['Skeletons_Death'] };   // les squelettes s'effondrent en tas d'os (Bannières)
 const trouver = (dossier, nom) => { for (const f of fs.readdirSync(dossier, { recursive: true })) if (path.basename(f) === nom) return path.join(dossier, f); throw new Error(nom); };
 (async () => {
   const persos = {}, armes = {}, texArmes = {};

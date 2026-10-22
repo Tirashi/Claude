@@ -92,10 +92,13 @@ const sansAccent = s => String(s).replace(/<[^>]*>|[^<]+/g, x => (x[0] === '<' ?
 const I = n => `<img class="ico" src="${ICO[n]}" alt="">`;
 const etoilesHtml = c => { const n = banEtoiles(c); return I('etoile').repeat(n) + I('vide').repeat(3 - n); };
 const motEtoiles = c => ['', 'DIFFICILE', 'CA PEUT MARCHER', 'FACILE'][banEtoiles(c)];
+// une boîte qui vient de s'ouvrir ignore les touchers pendant un instant : le doigt qui a touché la carte
+// ne doit pas appuyer, en se levant, sur le bouton apparu dessous (une attaque partait sans qu'on choisisse)
+let boiteOuverte = 0;
 function bouton(txt, action, ok = true, petit = '', classe = '') {
   const b = document.createElement('button');
   b.innerHTML = sansAccent(txt) + (petit ? `<small>${sansAccent(petit)}</small>` : '');
-  b.disabled = !ok; b.onclick = action; if (classe) b.className = classe;
+  b.disabled = !ok; b.onclick = e => { if (performance.now() - boiteOuverte < 400 && b.closest('#boite')) return; action(e); }; if (classe) b.className = classe;
   return b;
 }
 let toastT = 0;
@@ -105,6 +108,7 @@ function boite(titre, html, boutons) {
   const b = $('boite');
   b.innerHTML = (titre ? `<h2 class="banniere">${sansAccent(titre)}</h2>` : '') + (html || '');
   (boutons || []).forEach(x => b.append(x));
+  if ($('voile').classList.contains('cache')) boiteOuverte = performance.now();
   $('voile').classList.remove('cache');
   b.scrollTop = 0;
 }
