@@ -13,34 +13,34 @@
   html, body { height:100%; overflow:hidden; background:var(--fond); font-family:'Press Start 2P', monospace; color:var(--encre); touch-action:none; user-select:none; -webkit-user-select:none; }
   canvas { display:block; position:fixed; inset:0; }
   .cadre { background:var(--papier); border:3px solid var(--bord); box-shadow:3px 3px 0 rgba(0,0,0,.25); }
-  #res { position:fixed; left:12px; right:12px; top:10px; padding:4px 4px; font-size:7px; line-height:1.9; display:grid; grid-template-columns:repeat(3, 1fr); gap:0 6px; pointer-events:none; }
+  #res { position:fixed; left:12px; right:12px; top:10px; padding:4px 4px; font-size:10px; line-height:1.9; display:grid; grid-template-columns:repeat(3, 1fr); gap:0 6px; pointer-events:none; }
   #res b { font-weight:normal; color:var(--rouge); }
   #res .tour { grid-column:1 / -1; display:flex; justify-content:space-between; border-top:2px dotted var(--gris); margin-top:3px; padding-top:3px; }
-  #fiche { position:fixed; left:12px; right:12px; bottom:62px; padding:2px 2px; font-size:7px; line-height:1.8; overflow-wrap:anywhere; }
-  #fiche .titre { font-size:9px; color:var(--rouge); margin-bottom:2px; }
+  #fiche { position:fixed; left:12px; right:12px; bottom:64px; padding:2px 2px; font-size:9px; line-height:1.8; overflow-wrap:anywhere; }
+  #fiche .titre { font-size:11px; color:var(--rouge); margin-bottom:2px; }
   #fiche .actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
   #fiche .journal { color:#5a4630; }
   button { white-space:normal; line-height:1.5; overflow-wrap:anywhere; font:inherit; color:var(--encre); background:var(--or); border:3px solid var(--bord); box-shadow:0 3px 0 var(--bord); cursor:pointer; }
   button:active { transform:translateY(2px); box-shadow:0 1px 0 var(--bord); }
   button:disabled { background:#d8c9a6; color:#8b7a5c; box-shadow:none; }
-  #fiche .actions button { font-size:7px; padding:4px 4px; flex:1 1 auto; }
+  #fiche .actions button { font-size:9px; padding:5px 4px; flex:1 1 auto; }
   .boutons { position:fixed; left:12px; right:12px; bottom:12px; display:flex; gap:8px; }
-  .boutons button { flex:1; font-size:7px; padding:6px 0; }
+  .boutons button { flex:1; font-size:9px; padding:6px 0; }
   .boutons #fin { flex:1.6; background:#c94f2c; color:#fff6e0; }
   #voile { position:fixed; inset:0; background:rgba(30,20,8,.45); display:flex; align-items:center; justify-content:center; padding:16px; }
   #voile.cache, #fiche.cache { display:none; }
-  #boite { width:100%; max-width:360px; padding:4px; font-size:7px; overflow-wrap:anywhere; line-height:1.9; max-height:80vh; overflow:auto; }
+  #boite { width:100%; max-width:360px; padding:4px; font-size:9px; overflow-wrap:anywhere; line-height:1.9; max-height:80vh; overflow:auto; }
   #boite h2 { font-size:9px; font-weight:normal; color:var(--rouge); margin-bottom:8px; }
   #boite p { margin-bottom:10px; }
-  #boite button { display:block; width:100%; font-size:7px; padding:4px 4px; margin-top:7px; text-align:left; line-height:1.7; }
-  #boite button small { display:block; font-size:6px; color:#6b4a20; }
-  #toast { position:fixed; left:16px; right:16px; top:96px; text-align:center; font-size:7px; line-height:1.6; padding:2px; transition:opacity .3s; pointer-events:none; }
+  #boite button { display:block; width:100%; font-size:9px; padding:5px 4px; margin-top:7px; text-align:left; line-height:1.7; }
+  #boite button small { display:block; font-size:7px; color:#6b4a20; }
+  #toast { position:fixed; left:16px; right:16px; top:76px; text-align:center; font-size:10px; line-height:1.6; padding:2px; transition:opacity .3s; pointer-events:none; }
   #toast.cache { opacity:0; }
   .credit { position:fixed; right:14px; top:92px; font-size:6px; color:#20415a; opacity:.75; }
   #boite h2.banniere, #bataille .banniere, #issue h2.banniere { color:#fff6e0; text-align:center; font-size:8px; padding:11px 22px 15px; text-shadow:0 2px 0 #7a2a18; }
   /* la bataille */
   body.en-bataille #fiche, body.en-bataille .boutons, body.en-bataille #res, body.en-bataille .credit { display:none; }
-  #bataille { position:fixed; left:12px; right:12px; top:10px; font-size:7px; line-height:1.8; overflow-wrap:anywhere; }
+  #bataille { position:fixed; left:12px; right:12px; top:10px; font-size:8px; line-height:1.8; overflow-wrap:anywhere; }
   #bataille.cache, #issue.cache { display:none; }
   #bataille .camps { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
   #bataille .camp b { font-weight:normal; color:var(--rouge); }
@@ -50,9 +50,11 @@
   #issue h2 { font-size:9px; font-weight:normal; }
   #issue button { font-size:8px; padding:6px 16px; margin-top:6px; }
   #issue .tactiques { display:flex; gap:4px; margin-top:4px; }
-  #issue .tactiques button { flex:1; font-size:7px; padding:3px 0; margin:0; line-height:1.6; }
-  #issue button small { display:block; font-size:5px; line-height:1.6; color:#6b4a20; }
-  #issue .renoncer { font-size:6px; padding:2px 8px; margin-top:4px; }
+  #issue .tactiques button { flex:1; font-size:8px; padding:4px 0; margin:0; line-height:1.7; }
+  #issue .etoiles { color:#e8a020; font-size:11px; letter-spacing:1px; }
+  #issue button small { display:block; font-size:6px; line-height:1.6; color:#6b4a20; }
+  .coeur { color:#d8322a; } .piece { color:#c98a10; }
+  #issue .renoncer { font-size:8px; padding:3px 10px; margin-top:4px; }
 </style>
 <script>
 // ---------- l'interface en pixel art, dessinée ici (cadres, boutons, bannière) ----------
@@ -116,6 +118,19 @@
   css.push(`.jauge { border:${K}px solid #2b1d0e; background:#4a3420; box-shadow:inset 0 ${K}px 0 #2b1d0e; height:${4 * K}px; }`);
   css.push(`.jauge i { border:0; background:#d0482c; box-shadow:inset 0 ${K}px 0 #f28a6c, inset 0 -${K}px 0 #9c2c1a; }`);
   css.push(`.jauge.bleu i { background:#3a7ad8; box-shadow:inset 0 ${K}px 0 #8ab8f2, inset 0 -${K}px 0 #24508f; }`);
+  // les icônes : pièce, drapeau, château, cœur, étoile (pleine ou vide)
+  const icone = (lignes, couleurs) => { const c = document.createElement('canvas'); c.width = lignes[0].length; c.height = lignes.length; const g = c.getContext('2d');
+    lignes.forEach((l, y) => [...l].forEach((ch, x) => { if (couleurs[ch]) { g.fillStyle = couleurs[ch]; g.fillRect(x, y, 1, 1); } })); return c.toDataURL(); };
+  window.ICO = {
+    piece: icone(['..kkkk..', '.kyyyyk.', 'kyYyyyyk', 'kyYyyoyk', 'kyyyyoyk', 'kyyyoyyk', '.kyoooyk', '..kkkk..'], { k: '#6a3c10', y: '#f2c230', Y: '#fff2a0', o: '#c98a10' }),
+    drapeau: icone(['k.......', 'krrrr...', 'krRrrr..', 'krrrrrr.', 'krrrr...', 'k.......', 'k.......', 'kk......'], { k: '#4a3020', r: '#d8322a', R: '#ff8a70' }),
+    chateau: icone(['g.g..g.g', 'gggggggg', '.gwggwg.', '.gggggg.', '.ggddgg.', '.ggddgg.', '.ggddgg.', 'kkkkkkkk'], { g: '#9aa4ae', w: '#4a5560', d: '#5a3a20', k: '#3a3a3a' }),
+    coeur: icone(['.rr.rr.', 'rWrrrrr', 'rrrrrrr', '.rrrrr.', '..rrr..', '...r...'], { r: '#e0302a', W: '#ffb0a0' }),
+    etoile: icone(['...y...', '...y...', '..yyy..', 'yyyYyyy', '.yyyyy.', '..yyy..', '.yy.yy.', 'y.....y'], { y: '#f2b020', Y: '#fff0a0' }),
+    vide: icone(['...g...', '...g...', '..ggg..', 'ggggggg', '.ggggg.', '..ggg..', '.gg.gg.', 'g.....g'], { g: '#b8a888' }),
+  };
+  css.push(`.ico { height:1.2em; width:auto; image-rendering:pixelated; vertical-align:-0.2em; }`);
+  css.push(`.etoiles .ico { height:1.7em; margin:0 1px; }`);
   const s = document.createElement('style'); s.textContent = css.join('\n'); document.head.append(s);
 })();
 </script>
@@ -259,14 +274,26 @@ const COUL = {
   violet: { k: 'blue', hex: 0x9b4fd6, mat: matViolet, nom: 'VIOLET' },
 };
 const BAT_MODELE = { chateau: 'castle', ferme: 'windmill', scierie: 'lumbermill', mine: 'mine', marche: 'market', caserne: 'barracks', tour: 'tower_A' };
-const sansAccent = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const sansAccent = s => String(s).replace(/<[^>]*>|[^<]+/g, x => (x[0] === '<' ? x : x.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()));   // le texte seulement, pas les balises des icônes
+const I = n => `<img class="ico" src="${ICO[n]}">`;
 
 // ---------- décor d'une terre ----------
 function hasardTerre(i, k) { let x = (i + 1) * 9301 + k * 49297; x = (x * 233280 + 12345) % 2147483647; return (x % 1000) / 1000; }
 function decor(etat, i) {
   const t = etat.terres[i], S = t.prop >= 0 ? etat.seigneurs[t.prop] : null, C = S && COUL[S.coul];
   const d = [], rot = k => Math.floor(hasardTerre(i, k) * 6) * Math.PI / 3;
-  if (t.bat === 'chateau') { d.push(['building_castle_' + (C ? C.k : 'blue'), 0, 0, C ? C.mat : matGris, 0, true]); return d; }
+  if (t.bat === 'chateau') {
+    d.push(['building_castle_' + (C ? C.k : 'blue'), 0, 0, C ? C.mat : matGris, 0, true]);
+    const n = S ? nbBatiments(t.prop) : 0;   // le château grandit avec le village
+    if (n >= 3 && C) d.push(['flag_' + C.k, -0.72, 0.42, C.mat, 0], ['flag_' + C.k, 0.72, 0.42, C.mat, 0]);
+    if (n >= 6) d.push(['fence_wood_straight', 0, 0.85, matBase, 0]);
+    return d;
+  }
+  if (t.bat && BATIMENTS[t.bat]) {
+    d.push(['building_' + BATIMENTS[t.bat].modele + '_' + (C ? C.k : 'blue'), 0, -0.12, C ? C.mat : matGris, rot(1), true]);
+    (t.decos || []).forEach((n, k) => d.push([n.endsWith('_') ? n + (C ? C.k : 'blue') : n, PLACES_DECO[k][0], PLACES_DECO[k][1], n.endsWith('_') && C ? C.mat : matBase, rot(4 + k)]));
+    return d;
+  }
   if (t.camp) { d.push(['tent', -0.35, -0.35, matBase, rot(1)], ['weaponrack', 0.5, -0.45, matBase, rot(2)], ['barrel_small_stack', -0.7, 0.3, null, rot(3)]); return d; }
   if (t.ruine) { d.push(['wall_broken', -0.1, -0.55, null, 0], ['pillar', 0.6, -0.2, null, 0], ['rubble_half', -0.55, 0.25, null, rot(2)], ['torch_lit', 0.25, -0.5, null, 0]); return d; }
   const q = t.qual;
@@ -276,6 +303,7 @@ function decor(etat, i) {
   else if (t.t === 'montagne') d.push([['mountain_C_grass', 'mountain_B_grass', 'mountain_A_grass_trees'][q - 1], 0, -0.1, matBase, rot(1)]);
   else if (t.t === 'marais') d.push(['waterplant_A', -0.45, 0.3, matBase, rot(1)], ['waterplant_B', 0.4, -0.35, matBase, rot(2)], ['waterlily_A', 0.3, 0.45, matBase, rot(3)], ['waterplant_C', 0.05, -0.1, matBase, rot(5)]);
   else if (t.t === 'plaine') d.push([q >= 2 ? 'building_grain' : 'tree_single_A', q >= 2 ? 0 : -0.5, q >= 2 ? 0 : -0.4, matBase, rot(1)]);
+  (t.decos || []).forEach((n, k) => d.push([n.endsWith('_') ? n + (C ? C.k : 'blue') : n, PLACES_DECO[k][0], PLACES_DECO[k][1], n.endsWith('_') && C ? C.mat : matBase, rot(4 + k)]));
   return d;
 }
 // étiquette de garnison : le nombre de soldats sur une bannière de la couleur du seigneur
@@ -302,16 +330,19 @@ const matPlaque = new THREE.MeshBasicMaterial({ color: 0xfff27a, transparent: tr
 const matCible = new THREE.MeshBasicMaterial({ color: 0xff5a3c, transparent: true, opacity: 0.5, depthWrite: false });
 function batirTerre(i) {
   const g = groupes[i], t = etat.terres[i], u = g.userData, S = t.prop >= 0 ? etat.seigneurs[t.prop] : null;
-  const sig = JSON.stringify([t.prop, t.camp, t.ruine, DUC_VOISINS[i].map(v => etat.terres[v].prop)]);
+  const sig = JSON.stringify([t.prop, t.camp, t.ruine, t.bat, t.decos, t.bat === 'chateau' ? nbBatiments(t.prop) : 0, DUC_VOISINS[i].map(v => etat.terres[v].prop)]);
   if (sig === u.sig) return;
   if (u.sig && u.prop !== t.prop) u.flash = performance.now();
+  if (u.sig && t.bat && u.bat !== t.bat) u.pop = performance.now();   // un bâtiment sort de terre
+  u.bat = t.bat;
   u.sig = sig; u.prop = t.prop;
   while (g.children.length) g.remove(g.children[0]);
   let sol;
   if (t.t === 'riviere' && t.bat !== 'chateau') { const r = tuileRiviere(cotesRiviere(etat, i)); sol = objet(r.nom, matBase, false); sol.rotation.y = r.rot; }
   else sol = objet(t.t === 'marais' ? 'hex_water' : 'hex_grass', matBase, false);
   g.add(sol);
-  decor(etat, i).forEach(([nom, dx, dz, mat, r]) => { const o = objet(nom, mat); o.position.set(dx, 0, dz); o.rotation.y = r || 0; if (DONJON[nom]) o.scale.setScalar(0.75); g.add(o); });
+  u.batiments = [];
+  decor(etat, i).forEach(([nom, dx, dz, mat, r, bat]) => { const o = objet(nom, mat); o.position.set(dx, 0, dz); o.rotation.y = r || 0; if (DONJON[nom]) o.scale.setScalar(0.75); if (bat) u.batiments.push(o); g.add(o); });
   if (S) {
     const C = COUL[S.coul];
     liseres[S.coul] = liseres[S.coul] || new THREE.MeshBasicMaterial({ color: new THREE.Color(C.hex).convertSRGBToLinear() });
@@ -396,19 +427,23 @@ function appliquerSaison() {
 // ---------- les guerriers : règle (§ 5 du cahier) et apparence ----------
 const UNITES = {
   seigneur: { nom: 'Seigneur', pv: 5, att: 2 },
-  fantassin: { nom: 'Fantassin', pv: 3, att: 1, pare: true },
-  archer: { nom: 'Archer', pv: 2, att: 1, tir: true },
-  champion: { nom: 'Champion', pv: 4, att: 2, double: true },
-  mage: { nom: 'Mage', pv: 2, att: 1, feu: true },
+  fantassin: { nom: 'Chevalier', pv: 3, att: 1, pare: true, prix: 3 },
+  archer: { nom: 'Archer', pv: 2, att: 1, tir: true, prix: 3 },
+  champion: { nom: 'Champion', pv: 4, att: 2, double: true, prix: 6, caserne: true },
+  mage: { nom: 'Mage', pv: 2, att: 1, feu: true, prix: 5 },
   barbare: { nom: 'Barbare', pv: 3, att: 1 },
   voleur: { nom: 'Voleur', pv: 2, att: 1, fuit: true },
-  lancier: { nom: 'Lancier', pv: 3, att: 1, contre: true },   // +1 au premier assaut contre une armée qui charge
+  lancier: { nom: 'Lancier', pv: 3, att: 1, contre: true, prix: 3 },   // +1 au premier assaut contre une armée qui charge
   squelette: { nom: 'Squelette', pv: 2, att: 1, os: true },   // les flèches passent une fois sur deux entre les os
   sbire: { nom: 'Sbire', pv: 2, att: 1, os: true },
   necromancien: { nom: 'Necromancien', pv: 2, att: 1, feu: true, os: true },
 };
 const VUE = { seigneur: 'seigneur', fantassin: 'soldat', archer: 'archer', champion: 'champion', mage: 'mage', barbare: 'barbare', voleur: 'voleur', lancier: 'lancier', squelette: 'squelette', sbire: 'sbire', necromancien: 'necromancien' };
-const unite = type => ({ type, pv: UNITES[type].pv });
+const POUVOIRS = { fantassin: 'Il est solide : son bouclier arrete des coups.', archer: 'Il tire de loin, avant les autres.', lancier: 'Il arrete ceux qui foncent sur lui.', mage: 'Il lance du feu sur deux ennemis.', champion: 'Il frappe tres fort, deux ennemis a la fois.' };
+// les cœurs d'un guerrier : ceux de sa sorte, +1 avec une forge pour les chevaliers et les lanciers
+const forges = s => (etat ? etat.terres.filter(t => t.prop === s && t.bat === 'forge').length : 0);
+const coeursMax = (type, s) => UNITES[type].pv + ((type === 'fantassin' || type === 'lancier') && s >= 0 && forges(s) ? 1 : 0);
+const unite = (type, s = -1) => ({ type, pv: coeursMax(type, s) });
 const COUT = { plaine: 1, foret: 2, colline: 2, montagne: 2, marais: 2, riviere: 2 };
 const POINTS = 2;   // points de déplacement par tour (§ 3 : la carte est petite)
 
@@ -416,14 +451,14 @@ const POINTS = 2;   // points de déplacement par tour (§ 3 : la carte est peti
 // l'ordre de combat : la mêlée devant, archers et mages derrière ; la première ligne, ce sont les 3 premiers vivants
 const DERRIERE = t => (UNITES[t].tir || UNITES[t].feu ? 1 : 0);
 function rangs(liste) { return liste.map((u, k) => k).filter(k => liste[k].pv > 0).sort((a, b) => DERRIERE(liste[a].type) - DERRIERE(liste[b].type) || a - b); }
-function simuler(A, D, tacA, tacD, terrain, chateau, graine) {
+function simuler(A, D, tacA, tacD, terrain, chateau, graine, tour) {
   const R = ducMulberry(graine), a = A.map(u => ({ ...u })), d = D.map(u => ({ ...u })), journal = [];
   const cotes = [a, d], vivants = l => l.filter(u => u.pv > 0).length, n0 = [a.length, d.length];
   const front = c => rangs(cotes[c]).slice(0, 3);
   const cible = c => { const f = front(c); return f.length ? f[Math.floor(R() * f.length)] : -1; };
   const frapper = (c, k, deg, coups) => { const u = cotes[c][k]; if (u.pv <= 0) return; u.pv = Math.max(0, u.pv - deg); coups.push({ c, k, deg, mort: u.pv === 0 }); };
   // 1. les volées : 1 volée en Charger, 2 en Tenir ou Harceler, +1 pour le défenseur sur une colline ; une boule de feu par mage
-  const volees = c => 1 + ((c ? tacD : tacA) !== 'charger' ? 1 : 0) + (c === 1 && terrain === 'colline' ? 1 : 0);
+  const volees = c => 1 + ((c ? tacD : tacA) !== 'charger' ? 1 : 0) + (c === 1 && terrain === 'colline' ? 1 : 0) + (c === 1 && tour ? 1 : 0);
   for (let v = 0; v < Math.max(volees(0), volees(1)); v++) {
     const tirs = [], coups = [];
     for (const c of [0, 1]) {
@@ -477,14 +512,16 @@ function simuler(A, D, tacA, tacD, terrain, chateau, graine) {
   return fin('tenu');   // personne n'a cédé : le défenseur garde sa terre
 }
 // chance de victoire de l'attaquant : la même règle, jouée 60 fois
-function chance(A, D, tacA, tacD, terrain, chateau) {
+function chance(A, D, tacA, tacD, terrain, chateau, tour) {
   let g = 0;
-  for (let k = 0; k < 60; k++) if (simuler(A, D, tacA, tacD, terrain, chateau, 1000 + k * 7919).issue === 'victoire') g++;
+  for (let k = 0; k < 60; k++) if (simuler(A, D, tacA, tacD, terrain, chateau, 1000 + k * 7919, tour).issue === 'victoire') g++;
   return g / 60;
 }
 // la tactique de l'ordinateur : beaucoup de tireurs → Tenir ; brigands → Charger ; sinon Charger
 const tacIA = (l, brig) => (brig ? 'charger' : l.filter(u => UNITES[u.type].tir || UNITES[u.type].feu).length * 2 >= l.length ? 'tenir' : 'charger');
-const TACTIQUES = { charger: ['CHARGER', '1 volee, +1 au 1er assaut'], tenir: ['TENIR', '2 volees, on pare'], harceler: ['HARCELER', '2 volees, repli si besoin'] };
+const TACTIQUES = { charger: ['FONCER', 'on court tout de suite'], tenir: ["TIRER D'ABORD", 'les archers tirent 2 fois'], harceler: ['PRUDENT', 'on recule si ca va mal'] };
+const etoiles = c => { const n = c >= 0.75 ? 3 : c >= 0.45 ? 2 : 1; return I('etoile').repeat(n) + I('vide').repeat(3 - n); };
+const motEtoiles = c => (c >= 0.75 ? 'FACILE' : c >= 0.45 ? 'CA PEUT MARCHER' : 'DIFFICILE');
 
 // ---------- la partie (maquette : pas d'économie, seulement les armées) ----------
 function nouvellePartie(graine) {
@@ -493,12 +530,12 @@ function nouvellePartie(graine) {
   const seigneurs = ['Votre bannière', 'Baron Aldric', 'Comtesse Ysolde', 'Sire Gauvain'].map((nom, s) => ({ nom, coul: DUC_COULEURS[s] }));
   const armees = []; let id = 1;
   const R = ducRng(graine, 'carte', 2);
-  const armee = (s, terre, l) => armees.push({ id: id++, s, terre, pts: s >= 0 ? POINTS : 0, unites: l.map(unite), objet: null });
+  const armee = (s, terre, l) => armees.push({ id: id++, s, terre, pts: s >= 0 ? POINTS : 0, unites: l.map(t => unite(t, s)), objet: null });
   for (let s = 0; s < 4; s++) {
     const c = DUC_COINS[s]; Object.assign(terres[c], { t: 'plaine', prop: s, bat: 'chateau' });
     const v = ducMelanger(R, DUC_VOISINS[c].slice()).slice(0, 2);
     v.forEach(j => { terres[j].prop = s; if (terres[j].t === 'montagne') terres[j].t = 'colline'; });
-    if (s === 0) { armee(0, c, ['seigneur', 'fantassin', 'lancier', 'archer', 'archer', 'mage']); armee(0, v[0], ['lancier', 'fantassin', 'fantassin', 'archer']); }
+    if (s === 0) { armee(0, c, ['seigneur', 'fantassin', 'archer', 'mage']); armee(0, v[0], ['lancier', 'fantassin', 'archer']); }
     else {
       armee(s, c, [['champion', 'fantassin', 'lancier', 'archer', 'archer'], ['fantassin', 'lancier', 'archer', 'archer', 'archer'], ['champion', 'fantassin', 'lancier', 'fantassin', 'mage']][s - 1]);
       armee(s, v[1], ['fantassin', 'fantassin', 'archer']);
@@ -510,7 +547,7 @@ function nouvellePartie(graine) {
     if (k < 2) { terres[i].camp = true; armee(-1, i, k ? ['barbare', 'barbare', 'barbare', 'voleur'] : ['barbare', 'barbare', 'voleur', 'voleur', 'barbare']); }
     else { terres[i].ruine = true; armee(-2, i, k === 2 ? ['squelette', 'squelette', 'sbire', 'necromancien'] : ['squelette', 'sbire', 'sbire', 'squelette', 'necromancien']); }   // les revenants
   });
-  etat = { graine, tour: 1, terres, seigneurs, armees, nb: 0, or: 40, blesse: null };
+  etat = { graine, tour: 1, terres, seigneurs, armees, nb: 0, pieces: 10, niveau: 'facile', blesse: null, pluie: false, fini: false };
   choix = { armee: null, chemins: null };
   nouvelleScene(); appliquerSaison(); majRes(); majFiche();
 }
@@ -537,8 +574,9 @@ const $ = id => document.getElementById(id);
 let choix = { armee: null, chemins: null };
 function majRes() {
   const mes = etat.armees.filter(a => a.s === 0), n = mes.reduce((t, a) => t + a.unites.length, 0);
-  $('res').innerHTML = `<span>OR <b>${etat.or}</b></span><span>ARMEES <b>${mes.length}</b></span><span>GUERRIERS <b>${n}</b></span>` +
-    `<span class="tour"><span>TOUR ${etat.tour}/24</span><span>${sansAccent(ducSaison(etat.tour))} AN ${ducAn(etat.tour)}</span></span>`;
+  const chateaux = etat.terres.filter(t => t.bat === 'chateau' && t.prop === 0).length;
+  $('res').innerHTML = `<span>${I('piece')} <b>${etat.pieces}</b></span><span>${I('drapeau')} <b>${etat.terres.filter(t => t.prop === 0).length}</b></span><span>${I('chateau')} <b>${chateaux}/4</b></span>` +
+    `<span class="tour"><span>TOUR ${etat.tour}</span><span>${sansAccent(ducSaison(etat.tour))}</span></span>`;
 }
 let toastT = 0;
 function toast(txt) { const e = $('toast'); e.textContent = sansAccent(txt); e.classList.remove('cache'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.add('cache'), 2600); }
@@ -548,27 +586,48 @@ function bouton(txt, action, ok = true, petit = '') {
   b.disabled = !ok; b.onclick = action;
   return b;
 }
-const compo = l => { const n = {}; l.forEach(u => { n[u.type] = (n[u.type] || 0) + 1; }); return Object.entries(n).map(([t, k]) => (k > 1 ? k + ' ' : '') + UNITES[t].nom.toUpperCase() + (k > 1 ? 'S' : '')).join(', '); };
+const compo = l => { const n = {}; l.forEach(u => { n[u.type] = (n[u.type] || 0) + 1; }); return Object.entries(n).map(([t, k]) => (k > 1 ? k + ' ' : '') + sansAccent(UNITES[t].nom) + (k > 1 ? 'S' : '')).join(', '); };
 const pv = l => l.reduce((t, u) => t + u.pv, 0) + '/' + l.reduce((t, u) => t + UNITES[u.type].pv, 0);
+// les revenus du tour : 1 pièce par case, plus les bâtiments
+const BATIMENTS = {
+  maison: { nom: 'Maison', prix: 4, gain: 1, modele: 'home_A', phrase: '+1 piece a chaque tour.' },
+  moulin: { nom: 'Moulin', prix: 6, gain: 2, modele: 'windmill', phrase: '+2 pieces a chaque tour.' },
+  marche: { nom: 'Marche', prix: 10, gain: 3, modele: 'market', phrase: '+3 pieces a chaque tour.' },
+  forge: { nom: 'Forge', prix: 8, gain: 0, modele: 'blacksmith', phrase: 'Tes chevaliers et lanciers ont 1 coeur de plus.' },
+  caserne: { nom: 'Caserne', prix: 8, gain: 0, modele: 'barracks', phrase: 'Tu peux acheter des champions.' },
+  tour: { nom: 'Tour', prix: 6, gain: 0, modele: 'tower_A', phrase: 'Ici, tes archers tirent une fois de plus.' },
+};
+const DECORS = ['building_well_', 'wheelbarrow', 'barrel', 'crate_A_big', 'target', 'bucket_water', 'pallet', 'sack'];
+const PLACES_DECO = [[-0.62, 0.28], [0.66, -0.3], [-0.42, -0.62]];
+const revenu = s => etat.terres.reduce((n, t) => n + (t.prop === s ? 1 + (t.bat && BATIMENTS[t.bat] ? BATIMENTS[t.bat].gain : 0) : 0), 0) + (etat.niveau === 'facile' && s === 0 ? 1 : 0);
+const nbBatiments = s => etat.terres.filter(t => t.prop === s && t.bat && t.bat !== 'chateau').length;
 const nomArmee = a => (a.s >= 0 ? (a.s === 0 ? 'VOTRE ARMEE' : sansAccent(etat.seigneurs[a.s].nom)) : a.s === -2 ? 'REVENANTS' : 'BRIGANDS');
-const EFFETS = { foret: 'EN BATAILLE : LES FLECHES Y PORTENT A MOITIE.', colline: 'EN BATAILLE : LE DEFENSEUR TIRE UNE VOLEE DE PLUS.', montagne: 'EN BATAILLE : LE DEFENSEUR PARE PLUS SOUVENT.', marais: "EN BATAILLE : L'ATTAQUANT FRAPPE MOINS FORT AU PREMIER ASSAUT.", riviere: "EN BATAILLE : L'ATTAQUANT TRAVERSE ET FRAPPE MOINS FORT AU PREMIER ASSAUT.", plaine: 'EN BATAILLE : AUCUN EFFET.' };
+const EFFETS = { foret: 'FORET : LES FLECHES PASSENT MAL.', colline: 'COLLINE : CELUI QUI DEFEND TIRE UNE FOIS DE PLUS.', montagne: 'MONTAGNE : ON S\'Y ARRETE. CELUI QUI DEFEND SE PROTEGE MIEUX.', marais: 'MARAIS : CELUI QUI ATTAQUE FRAPPE MOINS FORT.', riviere: 'RIVIERE : CELUI QUI ATTAQUE FRAPPE MOINS FORT.', plaine: 'HERBE : RIEN DE SPECIAL.' };
 function majFiche(i) {
   const f = $('fiche'), a = choix.armee;
   if (a) {
-    f.innerHTML = `<div class="titre">${nomArmee(a)}</div><div>${compo(a.unites)}</div><div>VIE ${pv(a.unites)} · DEPLACEMENT ${a.pts}/${POINTS}</div>` +
-      `<div class="journal">${a.pts ? 'TOUCHEZ UNE TERRE ECLAIREE (EN ROUGE : BATAILLE).' : 'PLUS DE DEPLACEMENT CE TOUR.'}</div>`;
+    f.innerHTML = `<div class="titre">${nomArmee(a)}</div><div>${compo(a.unites)}</div><div>${I('coeur')} ${a.unites.reduce((t, u) => t + u.pv, 0)}</div>` +
+      `<div class="journal">${a.pts ? 'TOUCHE UNE CASE QUI BRILLE. EN ROUGE : BATAILLE !' : 'ELLE A DEJA BOUGE CE TOUR.'}</div>`;
     const b = document.createElement('div'); b.className = 'actions'; b.append(bouton('ANNULER', () => { deselectionner(); majFiche(); })); f.append(b);
     return;
   }
   if (i != null && i >= 0) {
     const t = etat.terres[i], o = armeeSur(i);
-    f.innerHTML = `<div class="titre">${sansAccent(DUC_TERRAINS[t.t].nom)}${t.bat ? ' · CHATEAU' : t.camp ? ' · CAMP' : t.ruine ? ' · RUINES' : ''}</div>` +
-      `<div>${t.prop >= 0 ? (t.prop === 0 ? 'A VOUS' : sansAccent(etat.seigneurs[t.prop].nom)) : 'TERRE LIBRE'} · DEPLACEMENT ${COUT[t.t]}${t.t === 'montagne' ? " (ON S'Y ARRETE)" : ''}</div>` +
-      (o ? `<div>${nomArmee(o)} : ${compo(o.unites)} (VIE ${pv(o.unites)})</div>` : '') + `<div class="journal">${EFFETS[t.t]}</div>`;
+    const nomBat = t.bat === 'chateau' ? 'CHATEAU' : t.bat ? BATIMENTS[t.bat].nom.toUpperCase() : t.camp ? 'CAMP DE BRIGANDS' : t.ruine ? 'RUINES HANTEES' : sansAccent(DUC_TERRAINS[t.t].nom);
+    f.innerHTML = `<div class="titre">${nomBat}</div>` +
+      `<div>${t.prop >= 0 ? (t.prop === 0 ? 'A TOI' : sansAccent(etat.seigneurs[t.prop].nom)) : 'A PERSONNE'}${t.bat && BATIMENTS[t.bat] ? ' · ' + BATIMENTS[t.bat].phrase.toUpperCase() : ''}</div>` +
+      (o && o.s !== 0 ? `<div>${nomArmee(o)} : ${compo(o.unites)} ${I('coeur')} ${o.unites.reduce((t, u) => t + u.pv, 0)}</div>` : '') + `<div class="journal">${EFFETS[t.t]}</div>`;
+    // à toi : acheter au château ; construire et décorer ailleurs
+    if (t.prop === 0) {
+      const b = document.createElement('div'); b.className = 'actions';
+      if (t.bat === 'chateau') b.append(bouton('ACHETER', () => menuAcheter(i)));
+      else { if (!t.bat) b.append(bouton('CONSTRUIRE', () => menuConstruire(i))); if ((t.decos || []).length < 3) b.append(bouton(`DECORER · 1 ${I('piece')}`, () => decorer(i), etat.pieces >= 1)); }
+      f.append(b);
+    }
     return;
   }
   const n = etat.armees.filter(x => x.s === 0 && x.pts).length;
-  f.innerHTML = `<div class="titre">VOTRE BANNIERE</div><div class="journal">TOUCHEZ UNE DE VOS ARMEES POUR LA DEPLACER (${n} PEUT/PEUVENT ENCORE BOUGER), OU UNE TERRE POUR LA DECRIRE.</div>`;
+  f.innerHTML = `<div class="titre">A TOI DE JOUER !</div><div class="journal">TOUCHE UNE ARMEE POUR LA FAIRE BOUGER, OU UNE CASE A TOI POUR CONSTRUIRE. CHAQUE TOUR : +${revenu(0)} ${I('piece')}</div>`;
 }
 function selectionner(a) {
   deselectionner();
@@ -614,18 +673,18 @@ function combattre(att, def, i) {
     const tacEnnemi = joueurAttaque ? tacIA(def.unites, def.s === -1) : tacIA(att.unites, false);
     preparerBataille(att, def, t, etat.terres[att.terre]);
     const panneau = $('issue');
-    panneau.innerHTML = `<h2 class="banniere">${joueurAttaque ? 'VOTRE TACTIQUE' : 'ON VOUS ATTAQUE !'}</h2><div style="font-size:6px">CHANCE DE L'EMPORTER SELON LA TACTIQUE</div>`;
+    panneau.innerHTML = `<h2 class="banniere">${joueurAttaque ? 'A L\'ATTAQUE !' : 'ON T\'ATTAQUE !'}</h2><div style="font-size:7px">COMMENT VEUX-TU TE BATTRE ? <span class="etoiles">${etoiles(1)}</span> = FACILE</div>`;
     const rang = document.createElement('div'); rang.className = 'tactiques'; panneau.append(rang);
     (joueurAttaque ? ['charger', 'tenir', 'harceler'] : ['charger', 'tenir']).forEach(tac => {
       const tA = joueurAttaque ? tac : tacEnnemi, tD = joueurAttaque ? tacEnnemi : tac;
-      const c = chance(att.unites, def.unites, tA, tD, t.t, chateau), moi = joueurAttaque ? c : 1 - c;
-      rang.append(bouton(`${TACTIQUES[tac][0]}<br>${Math.round(moi * 100)} %`, () => lancer(tA, tD), true, TACTIQUES[tac][1]));
+      const c = chance(att.unites, def.unites, tA, tD, t.t, chateau, t.bat === 'tour'), moi = joueurAttaque ? c : 1 - c;
+      rang.append(bouton(`${TACTIQUES[tac][0]}<br><span class="etoiles">${etoiles(moi)}</span>`, () => lancer(tA, tD), true, TACTIQUES[tac][1]));
     });
-    if (joueurAttaque) { const r = bouton('RENONCER', () => { finirBataille(); ok(); }); r.className = 'renoncer'; panneau.append(r); }
+    if (joueurAttaque) { const r = bouton('PARTIR', () => { finirBataille(); ok(); }); r.className = 'renoncer'; panneau.append(r); }
     panneau.classList.remove('cache');
     function lancer(tA, tD) {
       panneau.classList.add('cache');
-      const res = simuler(att.unites, def.unites, tA, tD, t.t, chateau, Math.floor(ducRng(etat.graine, 'bataille', etat.tour, etat.nb++)() * 1e9));
+      const res = simuler(att.unites, def.unites, tA, tD, t.t, chateau, Math.floor(ducRng(etat.graine, 'bataille', etat.tour, etat.nb++)() * 1e9), t.bat === 'tour');
       jouerBataille(res, () => {
         // bilan : les survivants, le seigneur blessé (il ne meurt jamais), la terre prise
         const appliquer = (armee, l) => {
@@ -636,10 +695,11 @@ function combattre(att, def, i) {
         appliquer(att, res.A); appliquer(def, res.D);
         if (res.issue === 'victoire' && etat.armees.includes(att)) {
           att.terre = i; poserArmee(att.objet, i); if (att.s >= 0) t.prop = att.s;
-          if (t.camp || t.ruine) { if (att.s === 0) { etat.or += t.ruine ? 40 : 30; toast(t.ruine ? 'Le tresor des ruines : +40 or !' : 'Le tresor des brigands : +30 or !'); } t.camp = t.ruine = false; }
+          if (t.camp || t.ruine) { if (att.s === 0) { etat.pieces += t.ruine ? 6 : 5; toast(t.ruine ? 'Le tresor des ruines : +6 pieces !' : 'Le tresor des brigands : +5 pieces !'); } t.camp = t.ruine = false; }
+          if (t.bat === 'chateau' && att.s === 0) toast('Un chateau de plus !');
         }
         etat.armees.forEach(a => { if (a.objet) a.objet.userData.sig = null; majArmee(a); });
-        majScene(); majRes(); finirBataille(); ok();
+        majScene(); majRes(); finirBataille(); verifierFin(); ok();
       });
     }
   });
@@ -656,7 +716,7 @@ async function finDuTour() {
     m.forEach((v, j) => {
       const o = armeeSur(j);
       let n = -Math.min(9, ...miennes.map(x => ducDist(j, x.terre))) - v.cout * 0.1 + (etat.terres[j].prop !== a.s ? 0.5 : 0);
-      if (o) { const c = chance(a.unites, o.unites, tacIA(a.unites), tacIA(o.unites, o.s === -1), etat.terres[j].t, etat.terres[j].bat === 'chateau'); n = c > 0.6 ? 10 + c : -99; }
+      if (o) { const c = chance(a.unites, o.unites, tacIA(a.unites), tacIA(o.unites, o.s === -1), etat.terres[j].t, etat.terres[j].bat === 'chateau', etat.terres[j].bat === 'tour'); const seuil = etat.niveau === 'facile' ? (o.s === 0 ? (etat.tour < 5 ? 2 : 0.85) : 0.6) : 0.6; n = c > seuil ? 10 + c : -99; }
       if (n > note) { note = n; mieux = j; }
     });
     const auChateau = a.terre === DUC_COINS[a.s];
@@ -667,8 +727,12 @@ async function finDuTour() {
     if (pas.length) await marcher(a, pas);
     if (cible) await combattre(a, cible, mieux);
   }
-  etat.tour++;
-  etat.armees.forEach(a => { if (a.s >= 0) { a.pts = POINTS; a.unites.forEach(u => { u.pv = Math.min(UNITES[u.type].pv, u.pv + 1); }); } });   // repos : +1 point de vie
+  // les rivaux construisent un peu (les maisons de leur village se voient sur la carte)
+  for (let s = 1; s < 4; s++) { const libres = etat.terres.map((t, i) => i).filter(i => etat.terres[i].prop === s && !etat.terres[i].bat); if (libres.length && ducRng(etat.graine, 'ia', etat.tour, s)() < 0.3) etat.terres[libres[0]].bat = ['maison', 'moulin', 'tour'][(etat.tour + s) % 3]; }
+  majScene();
+  etat.tour++; etat.pluie = false;
+  etat.armees.forEach(a => { if (a.s >= 0) { a.pts = POINTS; a.unites.forEach(u => { u.pv = Math.min(coeursMax(u.type, a.s), u.pv + 1); }); } });   // repos : +1 cœur
+  const gain = revenu(0); etat.pieces += gain; toast('+' + gain + ' pieces !');
   if (etat.blesse && etat.tour >= etat.blesse.retour) {
     const c = DUC_COINS[0], la = armeeSur(c);
     if (la && la.s === 0) la.unites.unshift(unite('seigneur'));
@@ -677,6 +741,71 @@ async function finDuTour() {
   }
   etat.armees.forEach(a => { if (a.objet) a.objet.userData.sig = null; majArmee(a); });
   appliquerSaison(); majRes(); majFiche(); occupe = false;
+  verifierFin(); if (!etat.fini) surprise();
+}
+// ---------- le village et le château ----------
+const fermer = () => $('voile').classList.add('cache');
+function menuAcheter(i) {
+  const b = $('boite'), ici = armeeSur(i), place = ici ? ici.s === 0 && ici.unites.length < 6 : etat.armees.filter(a => a.s === 0).length < 3;
+  b.innerHTML = `<h2 class="banniere">ACHETER</h2><p>TU AS ${etat.pieces} ${I('piece')}. ${place ? 'LES NOUVEAUX ATTENDENT AU CHATEAU.' : 'PLUS DE PLACE AU CHATEAU (6 AU PLUS).'}</p>`;
+  const caserne = etat.terres.some(t => t.prop === 0 && t.bat === 'caserne');
+  ['fantassin', 'archer', 'lancier', 'mage', 'champion'].forEach(ty => {
+    const U = UNITES[ty], ok = place && etat.pieces >= U.prix && (!U.caserne || caserne);
+    b.append(bouton(`${sansAccent(U.nom)} · ${U.prix} ${I('piece')} · ${I('coeur').repeat(coeursMax(ty, 0))}`, () => { acheter(i, ty); menuAcheter(i); }, ok, U.caserne && !caserne ? 'Il faut une caserne.' : POUVOIRS[ty]));
+  });
+  b.append(bouton('FINI', () => { fermer(); majFiche(i); }));
+  $('voile').classList.remove('cache');
+}
+function acheter(i, ty) {
+  const U = UNITES[ty]; etat.pieces -= U.prix;
+  let a = armeeSur(i);
+  if (!a) { a = { id: Date.now(), s: 0, terre: i, pts: 0, unites: [], objet: null }; etat.armees.push(a); }
+  a.unites.push(unite(ty, 0)); if (a.objet) a.objet.userData.sig = null; majArmee(a); majRes();
+}
+function menuConstruire(i) {
+  const b = $('boite');
+  b.innerHTML = `<h2 class="banniere">CONSTRUIRE</h2><p>TU AS ${etat.pieces} ${I('piece')}. UN BATIMENT PAR CASE.</p>`;
+  for (const k in BATIMENTS) { const B = BATIMENTS[k]; b.append(bouton(`${B.nom.toUpperCase()} · ${B.prix} ${I('piece')}`, () => { fermer(); construire(i, k); }, etat.pieces >= B.prix, B.phrase)); }
+  b.append(bouton('RETOUR', fermer));
+  $('voile').classList.remove('cache');
+}
+function construire(i, k) {
+  etat.pieces -= BATIMENTS[k].prix; etat.terres[i].bat = k;
+  if (k === 'forge') etat.armees.filter(a => a.s === 0).forEach(a => a.unites.forEach(u => { if (u.type === 'fantassin' || u.type === 'lancier') u.pv++; }));
+  majScene(); majRes(); majFiche(i); toast(BATIMENTS[k].nom + ' construit' + (k === 'maison' ? 'e' : '') + ' !');
+  const n = nbBatiments(0); if (n === 3 || n === 6) toast(n === 3 ? 'Ton chateau a des drapeaux !' : 'Ton chateau a une palissade !');
+}
+function decorer(i) {
+  const t = etat.terres[i]; t.decos = t.decos || [];
+  const libres = DECORS.filter(d => !t.decos.includes(d));
+  t.decos.push(libres[Math.floor(Math.random() * libres.length)]); etat.pieces -= 1;
+  majScene(); majRes(); majFiche(i);
+}
+// les petites surprises, sans calcul
+const SURPRISES = [
+  ['UN MARCHAND PASSE', '+3 pieces !', () => { etat.pieces += 3; }],
+  ['LA RECOLTE EST BONNE', '+2 pieces !', () => { etat.pieces += 2; }],
+  ['UN CHEVALIER ARRIVE', 'Il rejoint ton armee au chateau.', () => { const c = DUC_COINS[0], a = armeeSur(c); if (a && a.s === 0 && a.unites.length < 6) { a.unites.push(unite('fantassin', 0)); a.objet.userData.sig = null; majArmee(a); } else etat.pieces += 3; }],
+  ['IL PLEUT', 'Les armees ne bougent que d\'1 pas ce tour.', () => { etat.pluie = true; etat.armees.forEach(a => { if (a.s === 0) a.pts = 1; }); }],
+  ['UN DRAGON PASSE DANS LE CIEL...', 'Il ne fait rien. Il est juste beau.', () => {}],
+];
+function surprise() {
+  if (etat.tour < 3 || ducRng(etat.graine, 'surprise', etat.tour)() > 0.34) return;
+  const [titre, texte, effet] = SURPRISES[Math.floor(ducRng(etat.graine, 'surprise', etat.tour, 1)() * SURPRISES.length)];
+  effet();
+  const b = $('boite'); b.innerHTML = `<h2 class="banniere">${titre}</h2><p>${sansAccent(texte)}</p>`;
+  b.append(bouton('SUPER !', () => { fermer(); majRes(); majFiche(); }));
+  $('voile').classList.remove('cache');
+}
+function verifierFin() {
+  if (etat.fini) return;
+  const miens = etat.terres.filter(t => t.bat === 'chateau' && t.prop === 0).length;
+  const b = $('boite');
+  if (miens === 4) { etat.fini = true; b.innerHTML = `<h2 class="banniere">VICTOIRE !</h2><p>TU AS PRIS LES 3 CHATEAUX. TU ES LE ROI DES BANNIERES !</p>`; }
+  else if (etat.terres[DUC_COINS[0]].prop !== 0) { etat.fini = true; b.innerHTML = `<h2 class="banniere">OH NON...</h2><p>ON T'A PRIS TON CHATEAU.</p>`; }
+  else return;
+  b.append(bouton('REJOUER', () => { fermer(); nouvellePartie(Math.floor(Math.random() * 1e9)); }));
+  $('voile').classList.remove('cache');
 }
 $('fin').onclick = finDuTour;
 $('nouvelle').onclick = () => nouvellePartie(Math.floor(Math.random() * 1e9));
@@ -857,9 +986,10 @@ function preparerBataille(att, def, terre, source) {
     const g = aventurier(VUE[u.type], coulArmee(armee), u.type === 'seigneur' ? 1.25 : 1.1), gu = g.userData;
     gu.c = c; gu.k = k; gu.rot = c ? -Math.PI / 2 : Math.PI / 2; gu.rotVise = gu.rot; g.rotation.y = gu.rot;
     jouer(g, gu.T.repos).time = Math.random();
+    gu.max = coeursMax(u.type, armee.s); gu.coeurs = coeursSprite(u.pv, gu.max); gu.coeurs.position.y = u.type === 'seigneur' ? 1.6 : 1.45; g.add(gu.coeurs);
     sceneB.add(g); return g;
   }));
-  bataille = { figures, fleches: [], feux: [], vie: [att, def].map(a => a.unites.map(u => u.pv)), vie0: [att, def].map(a => a.unites.reduce((t, u) => t + UNITES[u.type].pv, 0)), file: [], temps: null };
+  bataille = { joueur: att.s === 0 ? 0 : def.s === 0 ? 1 : -1, figures, fleches: [], feux: [], vie: [att, def].map(a => a.unites.map(u => u.pv)), vie0: [att, def].map(a => a.unites.reduce((t, u) => t + UNITES[u.type].pv, 0)), file: [], temps: null };
   [0, 1].forEach(c => rangsVivants(c).forEach((k, slot) => { const [x, z] = placeRang(c, slot); figures[c][k].position.set(x, 0, z); }));
   const asp = innerWidth / innerHeight, d = Math.max(8, 5.6 / (2 * Math.tan(15 * Math.PI / 180) * Math.min(1.2, asp)));
   cameraB.aspect = asp; cameraB.position.set(0, 0.5 + d * Math.sin(0.2), d * Math.cos(0.2)); cameraB.lookAt(0, 0.35 + d * 0.035, 0); cameraB.updateProjectionMatrix();
@@ -881,8 +1011,22 @@ function decorBataille(t, cote) {
   } else if (t.ruine) {
     poser('wall_broken', 2.4, -1.4, 1, 0); poser('pillar', 0.9, -1.3); poser('pillar', 4.0, -1.5); poser('rubble_large', 3.2, -0.6, 0.6, 1); poser('torch_lit', 1.6, -0.8); poser('torch_lit', 3.0, -0.9);
   } else {   // les provisions de l'armée, des buissons et des pierres sur les côtés
-    poser('box_stacked', 3.6, -1.1, 1, 0.4); poser('keg', 2.9, -1.4, 1, 0); poser('Bush_1_A_Color1', 4.4, -0.3, 1.6); poser('Rock_1_A_Color1', 1.5, -1.7, 1.1, 0.7); poser('Bush_2_C_Color1', 0.8, -1.9, 1.2); poser('Bush_4_A_Color1', 2.1, -1.9, 1.5);
+    poser('box_stacked', 3.6, -1.1, 1, 0.4); poser('keg', 2.9, -1.4, 1, 0); poser('Bush_1_A_Color1', 4.4, -0.3, 0.45); poser('Rock_1_A_Color1', 1.5, -1.7, 1.1, 0.7); poser('Bush_2_C_Color1', 0.8, -1.9, 0.4); poser('Bush_4_A_Color1', 2.1, -1.9, 0.45);
   }
+}
+// des cœurs en pixel art (rouges, ou gris quand ils sont perdus), au-dessus d'un guerrier
+function dessinerCoeurs(s, n, max) {
+  const c = s.userData.canvas, g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height);
+  const motif = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
+  for (let k = 0; k < max; k++) motif.forEach((l, y) => [...l].forEach((ch, x) => { if (ch === 'X') { g.fillStyle = k < n ? (y === 1 && x === 1 ? '#ff9c8a' : '#e0302a') : '#6a5a50'; g.fillRect(k * 8 + x, y + 1, 1, 1); } }));
+  s.material.map.needsUpdate = true;
+}
+function coeursSprite(n, max) {
+  const c = document.createElement('canvas'); c.width = max * 8; c.height = 8;
+  const t = new THREE.CanvasTexture(c); t.magFilter = t.minFilter = THREE.NearestFilter;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false })); s.renderOrder = 12;
+  s.scale.set(max * 0.13, 0.13, 1); s.userData.canvas = c; dessinerCoeurs(s, n, max);
+  return s;
 }
 // le combat rejoué : chaque « temps » du journal (volée, assaut, fin) devient une petite scène d'environ 1,5 s
 function jouerBataille(res, apres) {
@@ -898,8 +1042,8 @@ function jouerBataille(res, apres) {
 function vieJauges() { const B = bataille; [0, 1].forEach(c => { const v = B.vie[c].reduce((t, x) => t + Math.max(0, x), 0); $(c ? 'jD' : 'jA').style.width = (100 * v / Math.max(1, B.vie0[c])) + '%'; }); }
 function toucher(c, k, deg, mort) {
   const B = bataille, g = B.figures[c][k]; if (!g || g.userData.mort) return;
-  B.vie[c][k] -= deg; vieJauges();
-  if (mort) { jouer(g, 'Death_A', true); g.userData.mort = true; g.userData.anneau.visible = false; }
+  B.vie[c][k] -= deg; vieJauges(); dessinerCoeurs(g.userData.coeurs, Math.max(0, B.vie[c][k]), g.userData.max);
+  if (mort) { jouer(g, 'Death_A', true); g.userData.mort = true; g.userData.anneau.visible = false; g.userData.coeurs.visible = false; }
   else jouer(g, deg ? 'Hit_A' : 'Melee_Block', true);
 }
 function animerBataille(now, dt) {
@@ -966,7 +1110,8 @@ function animerBataille(now, dt) {
   if (pixelB) { rendu.setRenderTarget(rtB); rendu.render(sceneB, cameraB); rendu.setRenderTarget(null); rendu.render(ecranB, camEcran); }
   else rendu.render(sceneB, cameraB);
 }
-const TITRES = { victoire: "L'ATTAQUANT L'EMPORTE", defaite: "L'ATTAQUANT EST BATTU", retraite: "L'ATTAQUANT SE REPLIE", tenu: 'LE DEFENSEUR TIENT' };
+// le résultat, du point de vue de l'enfant
+const titre = (issue, joueurAttaque) => { const gagne = (issue === 'victoire') === joueurAttaque; return gagne ? 'BRAVO !' : 'DOMMAGE...'; };
 function finCombat(issue) {
   const B = bataille, F = B.figures, gagnant = issue === 'victoire' ? 0 : 1;
   if (issue === 'retraite') F[0].forEach(g => { g.userData.fuite = true; g.userData.versContact = false; });
@@ -974,7 +1119,9 @@ function finCombat(issue) {
   F[gagnant].forEach(g => { if (!g.userData.mort) { g.userData.fete = true; jouer(g, 'Cheering'); } });
   const morts = c => (c ? B.res.D : B.res.A).filter(u => u.pv === 0).length;
   setTimeout(() => {
-    $('issue').innerHTML = `<h2 class="banniere">${TITRES[issue]}</h2><div>PERTES : ${morts(0)} A ${morts(1)}</div>`;
+    const j = B.joueur, moi = j === 0 ? 0 : 1, gagne = (issue === 'victoire') === (j === 0);
+    const phrase = gagne ? (issue === 'victoire' ? 'LA CASE EST A TOI !' : 'TU AS TENU BON !') : (j === 0 ? 'TON ARMEE RECULE.' : 'ILS ONT PRIS LA CASE.');
+    $('issue').innerHTML = `<h2 class="banniere">${gagne ? 'BRAVO !' : 'DOMMAGE...'}</h2><div>${phrase}<br>TU PERDS ${morts(moi)} GUERRIER${morts(moi) > 1 ? 'S' : ''}, EUX ${morts(1 - moi)}.</div>`;
     $('issue').append(bouton('CONTINUER', () => B.apres()));
     $('issue').classList.remove('cache');
   }, 1300);
@@ -1074,7 +1221,6 @@ function boucle(now) {
       const f = (now - u.pop) / 1100;
       const s = f < 0.45 ? 0.001 : Math.min(1, rebond(Math.min(1, (f - 0.45) / 0.55)));
       u.batiments.forEach(o => o.scale.set(1, s, 1));
-      if (u.echaf) u.echaf.visible = f < 0.6;
       if (f >= 1) { u.pop = 0; if (u.echaf) { g.remove(u.echaf); u.echaf = null; } }
     }
   });
