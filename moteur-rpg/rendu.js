@@ -235,14 +235,16 @@ void main(){
     }
 
     // un meuble en volume (lit, table, tonneau) : des boîtes et des cylindres texturés, face par face
-    // pièce : { boite: [l, h, p] | cylindre: [rayon, h], pos: [x, y, z], rot: [rx, ry, rz], dessus, face, cote,
+    // pièce : { boite: [l, h, p] | cylindre: [rayon, h] | cone: [rayon, h, côtés], brille: true, pos: [x, y, z], rot: [rx, ry, rz], dessus, face, cote,
     //          si: 'ouvert' | 'ferme' (pour un coffre) } ; d.lumiere : une flamme qui vacille (cheminée)
     function meuble(d, x, y) {
       const mat = n => new THREE.MeshLambertMaterial({ map: tex(n) }), faites = [];
       for (const p of d.pieces) {
         const [px, py, pz] = p.pos || [0, 0, 0], dessus = mat(p.dessus || p.face), face = mat(p.face), cote = mat(p.cote || p.face);
         let m, h;
+        if (p.brille) for (const x of [face, dessus, cote]) { x.emissive = new THREE.Color(0xffffff); x.emissiveMap = x.map; x.emissiveIntensity = .8; }
         if (p.cylindre) { h = p.cylindre[1]; m = new THREE.Mesh(new THREE.CylinderGeometry(p.cylindre[0], p.cylindre[0], h, 14), [face, dessus, dessus]); }
+        else if (p.cone) { h = p.cone[1]; m = new THREE.Mesh(new THREE.CylinderGeometry(0, p.cone[0], h, p.cone[2] || 4), [face, dessus, dessus]); m.rotation.y = Math.PI / 4; }
         else { h = p.boite[1]; m = new THREE.Mesh(new THREE.BoxGeometry(p.boite[0], h, p.boite[2]), [cote, cote, dessus, dessus, face, face]); }
         m.position.set(x + .5 + px, py + h / 2, y + .5 + pz); m.castShadow = m.receiveShadow = true;
         if (p.rot) m.rotation.set(p.rot[0], p.rot[1] || 0, p.rot[2] || 0);

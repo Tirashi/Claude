@@ -167,13 +167,13 @@ LANTERNE.cartes = {
       'jaaaaaaaaaaaj',
       'kkkkkkakkkkkk'
     ],
-    ornements: [{ type: 'tapis_long', x: 6, y: 3 }, { type: 'vitrail', x: 2, y: 0 }, { type: 'vitrail', x: 4, y: 0 }, { type: 'vitrail', x: 8, y: 0 }, { type: 'vitrail', x: 10, y: 0 }, { type: 'tapisserie', x: 5, y: 0 }, { type: 'tapisserie', x: 7, y: 0 }],
+    ornements: [{ type: 'tapis_long', x: 6, y: 4, h: 5 }, { type: 'vitrail', x: 2, y: 0 }, { type: 'vitrail', x: 4, y: 0 }, { type: 'vitrail', x: 8, y: 0 }, { type: 'vitrail', x: 10, y: 0 }, { type: 'tapisserie', x: 5, y: 0 }, { type: 'tapisserie', x: 7, y: 0 }],
     objets: [
-      { type: 'grande_lanterne', x: 6, y: 1, evenement: 'grande_lanterne' },
+      { type: 'grande_lanterne', x: 6, y: 3, evenement: 'grande_lanterne' },
       { type: 'lanterne', x: 11, y: 8 }
     ],
     pnj: [
-      { id: 'vaast', perso: 'vaast', x: 6, y: 3, evenement: 'vaast' },
+      { id: 'vaast', perso: 'vaast', x: 5, y: 5, evenement: 'vaast' },
       { id: 'eloi', perso: 'eloi', x: 8, y: 4, evenement: 'eloi_abbaye', si: '!eloi_rejoint' }
     ],
     sorties: [{ x: 6, y: 9, vers: 'route_abbaye', a: [6, 3], dir: 'bas' }]

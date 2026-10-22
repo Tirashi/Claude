@@ -266,6 +266,11 @@ def dessines():
         d.rectangle([x, y, x + 3, y + 3], fill=vit[(i * 3) % 5])
     d.rectangle([11, 12, 14, 30], fill=(255, 230, 140)); d.rectangle([8, 17, 17, 19], fill=(255, 230, 140))
     t['vitrail'] = im
+    # tête de la Grande Lanterne : cadre de pierre et vitres allumées
+    im = Image.new('RGBA', (16, 14), PIERRE[2]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 15, 13], outline=PIERRE[0]); d.rectangle([3, 2, 12, 11], fill=(255, 214, 110), outline=PIERRE[0])
+    d.rectangle([5, 4, 10, 9], fill=(255, 246, 200)); d.line([7, 2, 7, 11], fill=(200, 140, 50)); d.line([3, 6, 12, 6], fill=(200, 140, 50))
+    t['lanterne_face'] = im
     # tapis (32 px par case) : grand tapis de 3 × 2 cases, chemin de tapis rouge, tapis rond de 2 × 2
     def tapis(w, h, fond, motif, bord):
         im = Image.new('RGBA', (w, h), fond); d = ImageDraw.Draw(im)

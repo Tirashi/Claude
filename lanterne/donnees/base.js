@@ -146,7 +146,11 @@ LANTERNE.style = {
     grille: { tuile: 'grille', taille: 1, cacheOuvert: true }, porte_cle: { tuile: 'porte_cloutee', taille: 1, cacheOuvert: true },
     nappe: { tuile: 'nappe', taille: 1.25, cacheOuvert: true }, levier: { tuile: 'levier', tuileOuverte: 'levier_baisse', taille: .8 },
     fresque: { tuile: 'fresque', taille: 1.3 },
-    grande_lanterne: { tuile: 'lanterne_pierre', taille: 2.4, lumiere: { couleur: 0xffe0a0, intensite: 1.1, portee: 7, hauteur: 2 } }
+    grande_lanterne: { tuile: 'lanterne_pierre', pieces: [
+      { cylindre: [.82, .12], face: 'marbre0' }, { cylindre: [.7, .3], pos: [0, .12, 0], face: 'pierre_sculptee', dessus: 'eau' },
+      { cylindre: [.13, 1.05], pos: [0, .42, 0], face: 'colonne_fut', dessus: 'marbre0' }, { boite: [.62, .08, .62], pos: [0, 1.47, 0], face: 'marbre0' },
+      { boite: [.46, .44, .46], pos: [0, 1.55, 0], face: 'lanterne_face', dessus: 'marbre0', brille: true },
+      { cone: [.5, .42], pos: [0, 1.99, 0], face: 'marbre0' }, { cylindre: [.05, .14], pos: [0, 2.41, 0], face: 'marbre0' }], lumiere: { couleur: 0xffe0a0, intensite: 1.1, portee: 7, hauteur: 1.8 } }
   },
   // tapis et décorations murales (carte.ornements)
   ornements: {
