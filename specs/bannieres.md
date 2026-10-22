@@ -75,6 +75,7 @@ Chaque guerrier est **un personnage** sur la carte et en bataille (pas de « 1 f
 | **Fantassin** (chevalier, épée et bouclier) | 10 or | 1 vivre | 3 | 1 | pare un coup sur trois en tactique « Tenir » |
 | **Archer** (archer à l'arc) | 12 or | 1 vivre | 2 | 1 | tire **avant le contact** (1 volée, 2 sur colline ou en tour) ; faible au corps à corps (attaque 0 au contact s'il est en première ligne) |
 | **Champion** (chevalier à l'épée à deux mains) | 25 or, caserne | 2 vivres | 4 | 2 | ne peut être levé qu'à la caserne ; frappe deux ennemis voisins |
+| **Lancier** (chevalier à la lance, pack Fantasy Weapons) — ajouté le 22/10 | 12 or | 1 vivre | 3 | 1 | +1 au premier assaut contre une armée qui **charge** |
 | **Mage** (le mage du pack, bâton) — ajouté le 22/10 | 20 or, caserne | 1 vivre | 2 | 1 | lance une **boule de feu** à la première volée : 1 dégât sur 2 ennemis de la première ligne ; faible au contact, comme l'archer ; reste derrière |
 | **Seigneur** (vous, un seul) | — | — | 5 | 2 | donne +1 en attaque à son armée ; gagne des **niveaux** (§ 7) ; **ne meurt jamais** (confirmé le 22/10) : s'il tombe, il n'est que **blessé** et rentre au château (2 tours sans combattre) |
 
@@ -169,6 +170,13 @@ Terres × 100, châteaux pris × 300, or, gloire × 5, votes × 50, niveau du se
 **Réglé aussi le 22/10** : les **3 tactiques** ; **pas de partie classée du jour** ; le **mage** devient le 5ᵉ guerrier (boule de feu).
 
 **Maquette des nouveautés** (22/10) : `maquettes/bannieres.html`, https://claude.ai/artifact/WjSLr1Tx1CPvWEWGmGzyUQ — armées-personnages sur la carte (chef, drapeau, bannière avec le nombre), déplacement à 2 points (terres éclairées, rouges pour une bataille, marche animée, terres prises en passant), préparation (les deux armées face à face, effets du terrain, **chance de chaque tactique** calculée en jouant 60 fois la même règle), bataille réglée par la règle du § 6 puis rejouée (volées, boules de feu, assauts, parades, chutes, fuite, acclamations), rivaux qui avancent et attaquent à la FIN DU TOUR, seigneur blessé qui revient. Pas d'économie ni d'événements (ce n'est pas l'objet de la maquette). **À valider.**
+
+**Maquette 2** (22/10, même lien) : archers de **trois quarts** en bandant l'arc (−30° : visage et arc vers l'ennemi ; avant, −90°, ils faisaient face au joueur) ; **autres packs KayKit gratuits (CC0)** passés en revue et utilisés :
+- **Dungeon Pack** : **bannières** aux couleurs (étendard de chaque armée sur la carte : hampe, fleuron doré, bannière à motif ; violet recoloré depuis le bleu), **murs** (remparts avec herse devant un château attaqué), tonneaux, caisses, coffre, torches, colonnes, gravats (camps, ruines, provisions) ;
+- **Skeletons** (version gratuite : guerrier, sbire, mage, voleur et leurs armes, même squelette d'animation) : nouvelle faction neutre, les **revenants**, qui gardent 2 **ruines hantées** (trésor de 40 or) ; règle : **les flèches leur passent une fois sur deux entre les os** ; le nécromancien lance des boules de feu ;
+- **Fantasy Weapons Bits** (lance, hallebarde, marteaux, haches, épées, boucliers) : nouvelle classe **lancier** (chevalier à la lance et au bouclier, PV 3, attaque 1, **+1 au premier assaut contre une armée qui charge**) ; hallebarde et marteaux en réserve pour d'autres classes ;
+- **Forest Nature Pack** : buissons et pierres du champ de bataille.
+Vus mais pas retenus : Board Game Bits (drapeaux sur socle de pion), Resource Bits, Prototype, Furniture, City Builder, Space Base ; les « Mystery Monthly » n'ont pas de version gratuite. Page de 7 Mo (personnages surtout) : à alléger pour le vrai jeu (personnages chargés à part, mis en cache).
 
 ## 17. Propositions de noms
 

@@ -1,25 +1,31 @@
 // Prépare les personnages animés de la bataille de Duché 3D (KayKit Adventurers 2.0 et KayKit Character Animations 1.1,
-// Kay Lousberg, CC0, itch.io) : node outils/duche-3d/aventuriers.js <pack Adventurers> <pack Animations> <sortie.js>
+// Kay Lousberg, CC0, itch.io) : node outils/duche-3d/aventuriers.js <pack Adventurers> <pack Animations> <sortie.js> [<pack Skeletons> <pack Fantasy Weapons Bits>]
+// (avec les deux derniers : squelettes et lance, pour Bannières)
 // Sortie : window.AVENTURIERS = { persos: {nom: GLB en base64}, armes: {nom: glTF (JSON, tampon intégré, sans texture)},
 // clips: [animations au format THREE.AnimationClip.toJSON, valeurs arrondies] }. Les chargeurs viennent de lib/.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
-const [adv, ani, sortie] = process.argv.slice(2);
-const PERSOS = ['Knight', 'Ranger', 'Rogue_Hooded', 'Barbarian', 'Mage'];
-const ARMES = ['sword_1handed', 'sword_2handed_color', 'shield_badge_color', 'bow_withString', 'arrow_bow', 'axe_1handed', 'dagger', 'staff'];
+const [adv, ani, sortie, squ, armesF] = process.argv.slice(2);
+const PERSOS = ['Knight', 'Ranger', 'Rogue_Hooded', 'Barbarian', 'Mage'].concat(squ ? ['Skeleton_Warrior', 'Skeleton_Minion', 'Skeleton_Mage'] : []);
+const ARMES = ['sword_1handed', 'sword_2handed_color', 'shield_badge_color', 'bow_withString', 'arrow_bow', 'axe_1handed', 'dagger', 'staff'].concat(squ ? ['Skeleton_Blade', 'Skeleton_Axe', 'Skeleton_Staff', 'Skeleton_Shield_Small_A', 'spear_A'] : []);
+const GARDER = ['spear_A'];   // armes d'un autre pack : elles gardent leur propre texture
 const CLIPS = { General: ['Idle_A', 'Hit_A', 'Death_A', 'Death_A_Pose'], MovementBasic: ['Walking_A', 'Running_A'],
   CombatMelee: ['Melee_1H_Attack_Chop', 'Melee_1H_Attack_Stab', 'Melee_2H_Attack_Chop', 'Melee_Block', 'Melee_2H_Idle'],
   CombatRanged: ['Ranged_Bow_Draw', 'Ranged_Bow_Release', 'Ranged_Bow_Idle', 'Ranged_Magic_Shoot', 'Ranged_Magic_Spellcasting'], Simulation: ['Cheering'] };
 const trouver = (dossier, nom) => { for (const f of fs.readdirSync(dossier, { recursive: true })) if (path.basename(f) === nom) return path.join(dossier, f); throw new Error(nom); };
 (async () => {
   const persos = {}, armes = {};
-  for (const p of PERSOS) persos[p] = fs.readFileSync(trouver(adv, p + '.glb')).toString('base64');
+  const dossiers = [adv, squ, armesF].filter(Boolean), chercher = nom => { for (const d of dossiers) { try { return trouver(d, nom); } catch (e) {} } throw new Error(nom); };
+  for (const p of PERSOS) persos[p] = fs.readFileSync(chercher(p + '.glb')).toString('base64');
   for (const a of ARMES) {
-    const f = trouver(path.join(adv, 'Assets', 'gltf'), a + '.gltf'), g = JSON.parse(fs.readFileSync(f, 'utf8'));
+    const f = chercher(a + '.gltf'), g = JSON.parse(fs.readFileSync(f, 'utf8'));
     g.buffers.forEach(b => { b.uri = 'data:application/octet-stream;base64,' + fs.readFileSync(path.join(path.dirname(f), b.uri)).toString('base64'); });
-    // la texture est celle du personnage (recolorée à la couleur du duché) : on la remet à l'exécution
-    delete g.images; delete g.textures; delete g.samplers;
-    g.materials.forEach(m => { if (m.pbrMetallicRoughness) delete m.pbrMetallicRoughness.baseColorTexture; });
+    if (GARDER.includes(a)) (g.images || []).forEach(im => { im.uri = 'data:image/png;base64,' + fs.readFileSync(path.join(path.dirname(f), im.uri)).toString('base64'); });
+    else {
+      // la texture est celle du personnage (recolorée à la couleur du duché) : on la remet à l'exécution
+      delete g.images; delete g.textures; delete g.samplers;
+      g.materials.forEach(m => { if (m.pbrMetallicRoughness) delete m.pbrMetallicRoughness.baseColorTexture; });
+    }
     armes[a] = JSON.stringify(g);
   }
   const b = await chromium.launch(); const page = await b.newPage();
