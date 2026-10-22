@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html', 'the-des-jarls/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html', 'bannieres/index.html', 'the-des-jarls/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -142,6 +142,24 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Duché : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-duche.png` });
+    }
+    if (url === 'bannieres/index.html') {
+      // Bannières : le titre (après le chargement des personnages), une partie facile, une armée qui bouge, une maison, un tour des rivaux, la sauvegarde
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let n = 0; n < 60 && Bannieres.ecran !== 'titre'; n++) await wait(500);
+        if (Bannieres.ecran !== 'titre') return "pas d'écran titre (" + Bannieres.ecran + ')';
+        localStorage.setItem('bannieres.tuto', 'true'); Bannieres.nouvelle('facile', 3, 42);
+        const e = Bannieres.etat; if (!e || e.tour !== 1 || Bannieres.ecran !== 'carte') return 'pas de partie';
+        const a = banArmeesDe(e, 0)[1], j = [...banAtteignables(e, a).keys()].find(k => !banEnnemiSur(e, 0, k) && !banArmeeSur(e, k));
+        await Bannieres.deplacer(a.id, j); if (a.terre !== j || a.pts) return "l'armée n'a pas bougé";
+        const i = e.terres.findIndex(t => t.prop === 0 && !t.bat); Bannieres.construire(i, 'maison'); if (e.terres[i].bat !== 'maison') return 'pas de maison';
+        await Bannieres.finTour(); if (Bannieres.etat.tour !== 2 || Bannieres.occupe) return "le tour n'avance pas";
+        if (!JSON.parse(localStorage.getItem('bannieres.run') || 'null')) return 'partie pas sauvegardée';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Bannières : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-bannieres.png` });
     }
     if (url === 'the-des-jarls/index.html') {
       // Le Thé des Jarls : un duel contre un dieu joué jusqu'au bout (batailles accélérées), partie sauvegardée puis effacée, écran de fin ; le duel à deux démarre

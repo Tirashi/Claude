@@ -1,0 +1,55 @@
+/* Bannières : l'interface (les cadres, boutons et icônes en pixel art sont dessinés par interface.js) */
+:root { --fond:#8fc6e8; --encre:#2b1d0e; --papier:#f3e2b8; --bord:#7a5228; --or:#e8b23a; --rouge:#a8401c; --gris:#b9a57c; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { height:100%; overflow:hidden; background:var(--fond); font-family:'Press Start 2P', monospace; color:var(--encre); touch-action:none; user-select:none; -webkit-user-select:none; }
+canvas { display:block; position:fixed; inset:0; }
+.cadre { background:var(--papier); border:3px solid var(--bord); }
+.cache, [hidden] { display:none !important; }
+#res { position:fixed; left:12px; right:12px; top:calc(10px + env(safe-area-inset-top)); padding:4px; font-size:10px; line-height:1.9; display:grid; grid-template-columns:repeat(3, 1fr); gap:0 6px; pointer-events:none; }
+#res b { font-weight:normal; color:var(--rouge); }
+#res small { font-size:6px; color:var(--rouge); }
+#res .tour { grid-column:1 / -1; display:flex; justify-content:space-between; border-top:2px dotted var(--gris); margin-top:3px; padding-top:3px; }
+#fiche { position:fixed; left:12px; right:12px; bottom:calc(64px + env(safe-area-inset-bottom)); padding:2px; font-size:9px; line-height:1.8; overflow-wrap:anywhere; }
+#fiche .titre { font-size:11px; color:var(--rouge); margin-bottom:2px; }
+#fiche .actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+#fiche .journal { color:#5a4630; }
+button, .bouton { white-space:normal; line-height:1.5; overflow-wrap:anywhere; font:inherit; color:var(--encre); cursor:pointer; text-decoration:none; text-align:center; }
+#fiche .actions button { font-size:9px; padding:5px 4px; flex:1 1 auto; }
+.boutons { position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); display:flex; gap:8px; }
+.boutons button { flex:1; font-size:9px; padding:6px 0; }
+.boutons #fin { flex:1.8; }
+#voile { position:fixed; inset:0; background:rgba(30,20,8,.45); display:flex; align-items:center; justify-content:center; padding:16px; z-index:20; }
+#boite { width:100%; max-width:360px; padding:4px; font-size:9px; overflow-wrap:anywhere; line-height:1.9; max-height:84vh; overflow:auto; }
+#boite p { margin-bottom:10px; }
+#boite button, #boite .bouton { display:block; width:100%; font-size:9px; padding:5px 4px; margin-top:7px; text-align:left; line-height:1.7; }
+#boite button small, #issue button small { display:block; font-size:7px; color:#6b4a20; }
+.petit { font-size:7px; color:#5a4630; }
+#toast { position:fixed; left:16px; right:16px; top:calc(76px + env(safe-area-inset-top)); text-align:center; font-size:10px; line-height:1.6; padding:2px; transition:opacity .3s; pointer-events:none; z-index:15; }
+#toast.cache { display:block !important; opacity:0; }
+h1.banniere, h2.banniere, .banniere { color:#fff6e0; text-align:center; font-size:8px; font-weight:normal; padding:11px 22px 15px; text-shadow:0 2px 0 #7a2a18; margin-bottom:8px; }
+h1.banniere { font-size:16px; padding:14px 26px 18px; }
+/* l'écran titre et le chargement */
+#titre, #chargement { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:16px; z-index:10; }
+#chargement { background:var(--fond); z-index:30; }
+#chargement .cadre { padding:8px; font-size:9px; text-align:center; line-height:2; }
+#titre .carte { width:100%; max-width:340px; padding:6px; font-size:9px; line-height:1.9; text-align:center; }
+#titre .carte > p { margin-bottom:8px; }
+#titre button, #titre .bouton { display:block; width:100%; font-size:10px; padding:7px 4px; margin-top:8px; }
+#titre .credit { font-size:6px; margin-top:10px; color:#5a4630; }
+#titre .credit a { color:#7a2a18; }
+body.au-titre #res, body.au-titre #fiche, body.au-titre .boutons { display:none; }
+/* la bataille */
+body.en-bataille #fiche, body.en-bataille .boutons, body.en-bataille #res { display:none; }
+#bataille { position:fixed; left:12px; right:12px; top:calc(10px + env(safe-area-inset-top)); font-size:8px; line-height:1.8; overflow-wrap:anywhere; }
+#bataille .camps { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+#bataille .camp b { font-weight:normal; color:var(--rouge); }
+#bataille .effets { font-size:6px; line-height:1.7; }
+#vite { position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); font-size:8px; padding:4px 10px; z-index:5; }
+.jauge { height:16px; background:#3b2a18; border:2px solid #2b1d0e; margin:3px 0; position:relative; }
+.jauge i { position:absolute; left:0; top:0; bottom:0; transition:width .5s; }
+#issue { position:fixed; left:12px; right:12px; bottom:calc(14px + env(safe-area-inset-bottom)); text-align:center; font-size:8px; line-height:1.9; overflow-wrap:anywhere; }
+#issue button { font-size:8px; padding:6px 16px; margin-top:6px; }
+#issue .tactiques { display:flex; gap:4px; margin-top:4px; }
+#issue .tactiques button { flex:1; font-size:8px; padding:4px 0; margin:0; line-height:1.7; }
+#issue .etoiles { font-size:11px; letter-spacing:1px; }
+#issue .renoncer { font-size:8px; padding:3px 10px; margin-top:4px; }
