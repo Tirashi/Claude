@@ -1,6 +1,6 @@
 /* La Dernière Lanterne — branche le moteur (moteur-rpg/) aux données du jeu (donnees/) :
    écran titre, trois emplacements de partie, choix du nom, boucle d'affichage.
-   Les combats arrivent avec la session 2 du moteur : en attendant, toucher un monstre le fait fuir.
+   Toucher un monstre lance un combat (moteur-rpg/combat-ui.js) contre un des groupes prévus pour lui.
    window.Lanterne : pour les tests (nouvelle partie, état, commandes simulées). */
 (function () {
   const MR = window.MoteurRPG, J = window.LANTERNE;
@@ -14,9 +14,9 @@
   let reglages = { musique: true, effets: true };
   try { Object.assign(reglages, JSON.parse(stockage.getItem('lanterne.reglages') || '{}')); } catch (e) { /* réglages par défaut */ }
   const enregistrerReglages = () => { try { stockage.setItem('lanterne.reglages', JSON.stringify(reglages)); } catch (e) { /* rien */ } };
-  const sauvegardes = MR.Etat.Sauvegardes(stockage, 'lanterne');
+  const sauvegardes = MR.Etat.Sauvegardes(stockage, 'lanterne', undefined, J);
 
-  let poupees, rendu, ui, entrees, sons, partie = null, emplacement = 1, choisi = 1;
+  let poupees, rendu, ui, entrees, sons, partie = null, emplacement = 1, choisi = 1, combatEnCours = null;
 
   const atlas = new Image();
   atlas.onload = demarrer;
@@ -28,12 +28,14 @@
     rendu = MR.Rendu.Rendu($('scene'), poupees, J.style);
     ui = MR.Interface.Interface($('fenetres'), { persos: J.persos, poupees, sons });
     entrees = MR.Entrees.Entrees($('commandes'));
+    entrees.on(t => { if (combatEnCours) combatEnCours.touche(t); });
     titre();
     let avant = performance.now();
     (function boucle(maintenant) {
       const dt = Math.min(.05, (maintenant - avant) / 1000); avant = maintenant;
       const t = maintenant / 1000;
-      if (partie) { partie.pas(dt, t); rendu.rendre(t); }
+      if (combatEnCours) combatEnCours.pas(t); else if (partie) partie.pas(dt, t);
+      if (partie) rendu.rendre(t);
       requestAnimationFrame(boucle);
     })(avant);
   }
@@ -93,21 +95,27 @@
     if (neuve) partie.jouer('debut');
   }
 
-  // en attendant le moteur de combat (session 2) : le monstre s'enfuit
+  // un combat : les monstres donnés, ou un des groupes du monstre touché ; le décor vient du lieu
   async function combat(info) {
-    const m = J.monstres[info.type] || { nom: 'Un monstre' };
-    sons.effet('rencontre', .5);
-    const debut = info.initiative === 'heros' ? 'Tu surprends' : info.initiative === 'monstre' ? 'Tu es surpris par' : 'Tu tombes sur';
-    await ui.dire(null, [`${debut} : ${m.nom} !`, `${m.nom} se dissout dans la brume. (Les combats arrivent avec la prochaine version.)`]);
-    return 'victoire';
+    const carte = J.cartes[partie.etat.carte], t = J.monstres[info.type] || {};
+    const groupes = t.groupes || [[info.type]];
+    const monstres = info.monstres || groupes[Math.floor(Math.random() * groupes.length)];
+    const decor = carte.combat || (carte.exterieur ? { sol: J.style.exterieur.sol, decor: J.style.exterieur.decor, brume: carte.brume }
+      : { sol: J.style.sols.calcaire.tuiles, decor: 'mur_haut', interieur: true });
+    combatEnCours = MR.CombatUI.Combattre({ jeu: J, etat: partie.etat, rencontre: { monstres, initiative: info.initiative, boss: info.boss }, decor, rendu, racine: $('fenetres'), sons });
+    const r = await combatEnCours.promesse;
+    combatEnCours = null;
+    sons.musique(carte.musique || null);
+    return r.fin;
   }
+  // défaite : on reprend à la sauvegarde la plus récente (automatique ou à une lanterne), sans rien perdre d'autre
   function defaite() {
     const e = sauvegardes.pourDefaite(emplacement);
-    if (e) lancer(emplacement, e, false); else titre();
+    if (e) { lancer(emplacement, e, false); ui.message('Tu reprends à la dernière sauvegarde.', 2500); } else titre();
   }
 
   window.Lanterne = {
-    get partie() { return partie; }, get etat() { return partie && partie.etat; }, get entrees() { return entrees; },
+    get partie() { return partie; }, get etat() { return partie && partie.etat; }, get entrees() { return entrees; }, get combat() { return combatEnCours; },
     sauvegardes, nouvelle, continuer, titre
   };
 })();

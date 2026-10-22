@@ -104,6 +104,15 @@ LANTERNE.evenements = {
     { dire: 'Hyaa !', qui: 'garcon_vert' },
     { dire: 'Il tranche une touffe d\'herbe d\'un grand revers, fouille dedans, puis repart, l\'air déçu.' }
   ],
+  garde: [
+    { si: 'garde_vu',
+      alors: [{ dire: 'Depuis, je garde la route. Ça ne demande pas beaucoup de genou.', qui: 'garde' }],
+      sinon: [
+        { dire: ['Halte ! … Ah, c\'est toi, l\'apprenti d\'Ysolde. Tu montes à l\'abbaye ?',
+          'Moi aussi, j\'étais veilleur, comme toi. Et puis j\'ai pris une flèche dans le genou.'], qui: 'garde' },
+        { drapeau: 'garde_vu' }
+      ] }
+  ],
   forge_fermee: [{ dire: 'La porte de la forge est fermée. Dehors, Bertin ronchonne contre le charbon.' }],
   pecheur: [
     { dire: ['Ça ne mord plus. Même les poissons ont peur de la brume.',

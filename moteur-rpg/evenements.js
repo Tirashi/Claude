@@ -6,7 +6,7 @@
      { drapeau: 'nom', valeur: true }                  (valeur false : efface le drapeau)
      { donner: 'objet', n: 1 }   { prendre: 'objet', n: 1 }   { ecus: 50 }   (ecus négatif : payer)
      { rejoindre: 'eloi' }   { quitter: 'eloi' }   { soigner: true }   { sauver: 'auto' }
-     { teleporter: 'carte', x, y, dir }   { combat: 'groupe' }   { pnj: 'id', cacher | montrer | aller: [x, y] }
+     { teleporter: 'carte', x, y, dir }   { combat: ['monstre', …], boss }   { pnj: 'id', cacher | montrer | aller: [x, y] }
      { son: 'nom' }   { musique: 'nom' }   { attendre: 0.5 }   { chapitre: 'Acte 1' }   { evenement: 'autre' }
      { stop: true }                                    arrête l'événement
    Conditions : 'drapeau', '!drapeau', { drapeau, egal }, { objet, min }, { ecus }, { equipe: 'id' },

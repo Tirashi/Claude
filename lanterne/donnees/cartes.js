@@ -66,6 +66,7 @@ LANTERNE.cartes = {
       { id: 'forgeron', perso: 'forgeron', x: 5, y: 14, evenement: 'forgeron' },
       { id: 'pecheur', perso: 'pecheur', x: 15, y: 15, evenement: 'pecheur' },
       { id: 'nuage', perso: 'nuage', x: 8, y: 13, evenement: 'nuage' },
+      { id: 'garde', perso: 'garde', x: 10, y: 3, evenement: 'garde' },
       { id: 'garcon_vert', perso: 'garcon_vert', x: 20, y: 11, evenement: 'garcon_vert', erre: 2, anim: 'attaque' }
     ],
     sorties: [
@@ -96,7 +97,8 @@ LANTERNE.cartes = {
   },
 
   route_abbaye: {
-    nom: 'Route de la forêt', musique: 'foret', exterieur: true, brume: .6, sauvegardeAuto: true, entree: 'route_entree',
+    nom: 'Route de la forêt', musique: 'foret', exterieur: true, brume: .6,
+    combat: { sol: ['herbe_sombre0', 'herbe_sombre1', 'herbe_sombre2'], decor: 'sapin', brume: .6 }, sauvegardeAuto: true, entree: 'route_entree',
     plan: [
       'YMMMMMMMMMMMMY',
       'YMMMMMMMMMMMMY',

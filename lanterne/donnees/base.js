@@ -7,7 +7,7 @@ LANTERNE.classes = {
     depart: { pv: 30, pm: 4, for: 9, def: 8, mag: 2, vit: 5 }, gain: { pv: 6, pm: 1, for: 2, def: 2, mag: .5, vit: 1 } },
   ARCANISTE: { nom: 'Arcaniste', phrase: 'Brûle, gèle, foudroie.',
     depart: { pv: 18, pm: 12, for: 3, def: 4, mag: 9, vit: 6 }, gain: { pv: 3, pm: 3, for: .5, def: 1, mag: 2.5, vit: 1 } },
-  RODEUR: { nom: 'Rôdeur', phrase: 'Frappe en premier, frappe juste.',
+  RODEUR: { nom: 'Rôdeur', phrase: 'Frappe en premier, frappe juste.', critique: 1 / 6,
     depart: { pv: 22, pm: 6, for: 7, def: 5, mag: 3, vit: 9 }, gain: { pv: 4, pm: 1.5, for: 1.5, def: 1, mag: .5, vit: 2 } },
   CLERC: { nom: 'Clerc', phrase: 'Soigne et chasse la brume.',
     depart: { pv: 24, pm: 10, for: 5, def: 6, mag: 7, vit: 4 }, gain: { pv: 5, pm: 2.5, for: 1, def: 1.5, mag: 2, vit: .5 } }
@@ -15,10 +15,10 @@ LANTERNE.classes = {
 
 // nomJoueur : ce héros porte le nom choisi par le joueur
 LANTERNE.heros = {
-  heros: { nom: 'Le héros', classe: 'LAME', perso: 'heros', nomJoueur: true },
-  eloi: { nom: 'Eloi', classe: 'CLERC', perso: 'eloi' },
-  verene: { nom: 'Vérène', classe: 'ARCANISTE', perso: 'verene' },
-  maud: { nom: 'Maud', classe: 'RODEUR', perso: 'maud' }
+  heros: { nom: 'Le héros', classe: 'LAME', perso: 'heros', nomJoueur: true, equipement: { arme: 'epee_courte', armure: 'tunique' } },
+  eloi: { nom: 'Eloi', classe: 'CLERC', perso: 'eloi', equipement: { arme: 'masse', armure: 'robe_novice' } },
+  verene: { nom: 'Vérène', classe: 'ARCANISTE', perso: 'verene', equipement: { arme: 'baton', armure: 'robe_savante' } },
+  maud: { nom: 'Maud', classe: 'RODEUR', perso: 'maud', effetAttaque: 'fleche', equipement: { arme: 'arc_court', armure: 'cuir' } }
 };
 
 // qui parle dans les dialogues : nom affiché et personnage du portrait
@@ -28,7 +28,7 @@ LANTERNE.persos = {
   gaspard: { nom: 'Gaspard', perso: 'gaspard' }, forgeron: { nom: 'Bertin le forgeron', perso: 'forgeron' }, aubergiste: { nom: 'Margot', perso: 'aubergiste' },
   enfant: { nom: 'Petit Lou', perso: 'enfant' }, ancien: { nom: 'Le vieux Aimé', perso: 'ancien' }, paysanne: { nom: 'Jeanne', perso: 'paysanne' },
   pecheur: { nom: 'Fulbert', perso: 'pecheur' }, moine: { nom: 'Un moine', perso: 'vaast' },
-  nuage: { nom: 'Nuage', perso: 'nuage' }, garcon_vert: { nom: 'Le garçon en vert', perso: 'garcon_vert' }
+  nuage: { nom: 'Nuage', perso: 'nuage' }, garde: { nom: 'Le garde', perso: 'garde' }, garcon_vert: { nom: 'Le garçon en vert', perso: 'garcon_vert' }
 };
 
 LANTERNE.statistiques = [
@@ -40,18 +40,7 @@ LANTERNE.statistiques = [
   { cle: 'vit', nom: 'VIT', aide: 'Vitesse : qui joue en premier, fuir, esquiver.' }
 ];
 
-LANTERNE.objets = {
-  herbe: { nom: 'Herbe', description: 'Une herbe amère qui rend des PV.' },
-  fiole: { nom: 'Fiole bleue', description: 'Rend des PM.' },
-  meche: { nom: 'Mèche', description: 'Ranime une lanterne de sauvegarde éteinte.' }
-};
-
-LANTERNE.monstres = {
-  feu_follet: { nom: 'Feu follet', tuile: 'feu_follet', taille: .85 },
-  corbeau: { nom: 'Corbeau de brume', tuile: 'corbeau', taille: .9 },
-  crapaud: { nom: 'Crapaud-cloche', tuile: 'crapaud', taille: .9 },
-  gelee: { nom: 'Gelée de cire', tuile: 'gelee', taille: .9 }
-};
+// objets, équipement, talents et monstres : donnees/combat.js
 
 LANTERNE.depart = { carte: 'maison_ysolde', x: 2, y: 4, dir: 'bas', equipe: ['heros'], niveau: 1, ecus: 0, chapitre: 'Prologue' };
 
@@ -121,6 +110,9 @@ LANTERNE.style = {
 
 LANTERNE.effets = {
   bip: 'sons/bip.ogg', ok: 'sons/ok.ogg', coffre: 'sons/coffre.ogg', soin: 'sons/soin.ogg',
-  porte: 'sons/porte.ogg', rencontre: 'sons/rencontre.ogg', lanterne: 'sons/lanterne.ogg'
+  porte: 'sons/porte.ogg', rencontre: 'sons/rencontre.ogg', lanterne: 'sons/lanterne.ogg',
+  // combat (sons choisis par l'utilisateur sur le banc des sons, 22/10)
+  coup: 'sons/coup.ogg', touche: 'sons/touche.ogg', givre: 'sons/givre.ogg', feu: 'sons/feu.ogg', fleche: 'sons/fleche.ogg',
+  morsure: 'sons/morsure.ogg', victoire: 'sons/victoire.ogg', foudre: 'sons/foudre.ogg', fuite: 'sons/fuite.ogg', vaincu: 'sons/vaincu.ogg', niveau: 'sons/niveau.ogg'
 };
-LANTERNE.musiques = { village: 'sons/village.ogg', foret: 'sons/foret.ogg' };
+LANTERNE.musiques = { village: 'sons/village.ogg', foret: 'sons/foret.ogg', combat: 'sons/combat.ogg' };

@@ -22,9 +22,9 @@
     "statue_aubrin": "dngn/statues/statue_polearm.png", "tombe": "dngn/vaults/gravestone_writing1.png",
     "livres": "dngn/vaults/stacked_books_1.png", "pupitre": "dngn/vaults/lectern.png", "pot_fleurs": "dngn/vaults/flower_pot_1.png", "pot_fleurs2": "dngn/vaults/flower_pot_2.png",
     "gelee": "mon/amorphous/jelly.png", "feu_follet": "mon/nonliving/will_o_the_wisp.png", "corbeau": "mon/animals/raven.png",
-    "crapaud": "mon/animals/bullfrog.png", "chacal": "mon/animals/jackal.png", "rat": "mon/animals/rat.png",
+    "crapaud": "mon/animals/bullfrog.png", "chacal": "mon/animals/jackal.png", "loup": "mon/animals/wolf.png", "rat": "mon/animals/rat.png",
     "biscotte": "mon/animals/yak.png",
-    "givre": "effect/frost0.png", "eclat0": "effect/cloud_glimmer0.png", "eclat1": "effect/cloud_glimmer1.png",
+    "givre": "effect/frost0.png", "flamme": "effect/flame0.png", "explosion": "effect/bolt04.png", "givre_impact": "effect/iceblast0.png", "foudre": "effect/electric_blast0.png", "rayon": "effect/light_beam0.png", "poison_nuage": "effect/cloud_poison0.png", "fleche": "effect/arrow0.png", "sommeil_nuage": "effect/cloud_magic_trail0.png", "buff": "effect/chaos_buff0.png", "dard": "effect/magic_dart0.png", "eclat0": "effect/cloud_glimmer0.png", "eclat1": "effect/cloud_glimmer1.png",
     "o_herbe": "item/food/apple.png", "o_fiole": "item/potion/brilliant_blue.png", "o_or": "item/gold/05.png", "o_lanterne": "item/misc/misc_lantern.png"
   },
   "persos": {
@@ -43,6 +43,7 @@
     "paysanne": ["base/human_f", "boots/middle_brown", "body/skirt_onep_grey", "head/straw", "hair/long_yellow"],
     "nuage":   ["base/human_m", "boots/middle_brown", "legs/pants_black", "body/shirt_black", "gloves/glove_black", "hand1/great_sword", "hair/curly_yellow"],
     "garcon_vert": ["base/elf_m", "boots/middle_brown", "legs/pants_l_white", "body/leather_green", "hand1/short_sword_slant", "hand2/buckler_round", "hair/elf_yellow", "head/wizard_darkgreen"],
+    "garde":   ["base/human_m", "boots/middle_gray", "legs/metal_gray", "body/chainmail3", "hand1/spear", "hand2/kite_shield_knight_gray", "beard/stubble_brown", "head/iron1"],
     "pecheur": ["base/human2_m", "boots/long_red", "legs/trouser_green", "body/shirt_check", "head/cap_blue", "beard/stubble_brown"]
   }
 }

@@ -1,7 +1,7 @@
 /* Moteur RPG — personnages animés par le code (navigateur).
    Chaque personnage n'a qu'une image : un « corps » (et une arme à part, qui tourne autour de sa prise).
    On le dessine dans un petit canevas de 64 × 48 pixels, pieds en bas au centre, avec une animation :
-   repos (respiration), marche (balancement), attaque, sort, touche (flash), victoire (saut).
+   repos (respiration), marche (balancement), attaque, sort, touche (flash), victoire (saut), ko (couché).
    sens : 1 regarde vers la gauche (sens des tuiles de Dungeon Crawl), -1 vers la droite. */
 (function (M) {
   const L = 64, H = 48;
@@ -40,6 +40,7 @@
     }
     else if (etat === 'sort') { const k = Math.sin(Math.min(1, q / .85) * Math.PI); dy = -3 * k; armeA = .25 * k; sy = 1 + .04 * k; aura = k; }
     else if (etat === 'touche') { const k = 1 - q; dx = Math.sin(q * 45) * 2 * k + 3 * k; flash = k; rot = .08 * k; }
+    else if (etat === 'ko') { rot = -Math.PI / 2 * .92; dy = -2; dx = -6; flash = 0; }
     else if (etat === 'victoire') { const k = Math.abs(Math.sin(q * Math.PI)); dy = -9 * k; armeA = .3; sy = 1 + .06 * k; sx = 1 - .03 * k; }
     g.save(); g.translate(L / 2, H); g.scale(sens, 1);
     if (aura && p.aura) {

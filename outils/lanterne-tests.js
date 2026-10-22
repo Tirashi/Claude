@@ -17,11 +17,12 @@ const egal = (a, b, m) => { if (JSON.stringify(a) !== JSON.stringify(b)) bad(`${
 const ctx = { console };
 ctx.window = ctx.globalThis = ctx;   // comme dans la page : window est l'objet global
 vm.createContext(ctx);
-for (const f of ['moteur-rpg/regles.js', 'moteur-rpg/etat.js', 'moteur-rpg/monde.js', 'moteur-rpg/evenements.js',
-  'lanterne/donnees/tuiles.js', 'lanterne/donnees/base.js', 'lanterne/donnees/cartes.js', 'lanterne/donnees/evenements.js'])
+for (const f of ['moteur-rpg/regles.js', 'moteur-rpg/etat.js', 'moteur-rpg/monde.js', 'moteur-rpg/evenements.js', 'moteur-rpg/combat.js',
+  'lanterne/donnees/tuiles.js', 'lanterne/donnees/base.js', 'lanterne/donnees/combat.js', 'lanterne/donnees/cartes.js', 'lanterne/donnees/evenements.js'])
   vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f });
 const M = ctx.window.MoteurRPG, J = ctx.window.LANTERNE;
-const { Etat, Monde, Evenements } = M;
+const { Etat, Monde, Evenements, Combat, Regles } = M;
+const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tirages imposés
 
 (async () => {
   // ---------- 1. le moteur ----------
@@ -68,6 +69,61 @@ const { Etat, Monde, Evenements } = M;
   egal(e2.drapeaux.apres, undefined, 'rien après { stop }');
   egal(Evenements.condition({ tous: ['mission', { non: 'rien' }, { objet: 'herbe', min: 2 }] }, e2), true, 'conditions composées');
   if (!fail) ok('moteur : sauvegardes, objets, file, initiative, monstres, événements');
+
+  // ---------- 1 bis. règles et combat ----------
+  const avantC = fail;
+  egal([Regles.degatsArme(20, 12, () => 0), Regles.degatsArme(20, 12, () => .5), Regles.degatsArme(20, 12, () => .999)], [13, 14, 15], 'FOR 20 contre DEF 12 : 13 à 15 (§ 9.2)');
+  egal(Regles.degatsArme(3, 40, () => .5), 1, 'une attaque fait au moins 1');
+  egal([Regles.degatsSort(10, 16, () => .5), Regles.degatsSort(10, 16, () => .5, 1.5)], [18, 27], 'Étincelle avec MAG 16 : 18, et 27 sur un monstre faible au feu (§ 9.2)');
+  egal(Regles.degatsArme(20, 12, () => .5, true), 30, 'coup critique : ignore la Défense, × 1,5');
+  egal([Regles.chanceEsquive(10, 10), Regles.chanceEsquive(40, 1)], [.03, .25], 'esquive : 3 %, plafond 25 %');
+  egal(Regles.chanceFuite(10, 8), .6, 'fuite : 50 % + 5 % par point de VIT');
+  const hx = Regles.creerHeros(J, 'heros', 1);
+  const pass = Regles.gagnerXp(J, hx, 8 + 32);
+  egal([hx.niveau, hx.xp, pass.length, pass[0].apres.for - pass[0].avant.for], [3, 0, 2, 2], 'expérience : 8 × niveau² par niveau, gains fixes');
+  egal(Regles.talentsConnus(J.talents, 'LAME', 4), ['coup_puissant', 'cri'], 'talents connus de la Lame au niveau 4');
+  egal([hx.pv, hx.pm], [hx.pvMax, hx.pmMax], 'un passage de niveau remplit PV et PM');
+  egal(Regles.statsEquipees(J, Regles.creerHeros(J, 'heros', 1)).for, J.classes.LAME.depart.for + J.objets.epee_courte.equip.for, 'l\'épée courte compte dans la Force');
+  const ee = Etat.nouvellePartie(J, 'X'); Etat.donner(ee, 'epee_longue', 1);
+  egal([Etat.equiper(ee, J, 'heros', 'arme', 'epee_longue'), ee.heros.heros.equipement.arme, ee.objets.epee_courte, ee.objets.epee_longue], [true, 'epee_longue', 1, undefined], 'changer d\'arme : l\'ancienne revient dans le sac');
+  egal(Etat.equiper(ee, J, 'heros', 'arme', 'baton'), false, 'la Lame ne prend pas le bâton de l\'Arcaniste');
+  const vieille = { v: 1, nom: 'V', equipe: ['heros'], heros: { heros: { id: 'heros', classe: 'LAME', niveau: 1 } }, objets: {}, drapeaux: {} };
+  egal(Etat.migrer(vieille, J).heros.heros.equipement.arme, 'epee_courte', 'une partie de la version 1 reçoit son équipement de départ');
+
+  // un combat réglé à la main : Défense, Protection, fuite, fin
+  const ec = Etat.nouvellePartie(J, 'TEST'); ec.equipe = ['heros', 'eloi'];
+  for (const id of ec.equipe) Object.assign(ec.heros[id], Regles.creerHeros(J, id, 8));
+  let c = Combat.creer(J, ec, { monstres: ['loup', 'loup'] }, fixe(.5));
+  egal(c.monstres.map(m => m.nom), ['Loup gris A', 'Loup gris B'], 'monstres de même nom : A, B');
+  let ev = Combat.resoudre(c, { heros: { action: 'talent', talent: 'protection' }, eloi: { action: 'defense' } });
+  if (!ev.some(x => x.t === 'message' && x.texte.includes('protège Eloi'))) bad('Protection : les coups sur Eloi vont à la Lame');
+  if (c.heros[1].pv !== c.heros[1].pvMax) bad('Protection : Eloi ne doit rien recevoir');
+  c = Combat.creer(J, ec, { monstres: ['grand_cerf'] }, fixe(.01));
+  ev = Combat.resoudre(c, { fuite: true });
+  if (!ev.some(x => x.texte === 'Impossible de fuir !') || c.fin) bad('on ne fuit pas un boss');
+  c = Combat.creer(J, ec, { monstres: ['feu_follet'] }, fixe(.01));
+  ev = Combat.resoudre(c, { fuite: true }); egal(c.fin, 'fuite', 'fuite réussie');
+  c = Combat.creer(J, ec, { monstres: ['feu_follet'], initiative: 'heros' }, fixe(.5));
+  ev = Combat.resoudre(c, { heros: { action: 'attaque', cible: 'm0' }, eloi: { action: 'attaque', cible: 'm0' } });
+  if (ev.some(x => x.t === 'action' && x.de === 'm0')) bad('surprise : le monstre ne joue pas au premier tour');
+  if (!c.fin) Combat.resoudre(c, { heros: { action: 'attaque', cible: 'm0' }, eloi: { action: 'attaque', cible: 'm0' } });
+  egal(c.fin, 'victoire', 'le feu follet tombe en deux tours');
+  const ecusAvant = ec.ecus, r = Combat.terminer(c);
+  egal([r.xp, ec.ecus - ecusAvant, ec.heros.heros.pv === c.heros[0].pv], [J.monstres.feu_follet.xp, J.monstres.feu_follet.ecus, true], 'fin du combat : expérience, écus, PV écrits dans la partie');
+  // l'herbe en combat
+  ec.objets = { herbe: 1 }; ec.heros.eloi.pv = 5;
+  c = Combat.creer(J, ec, { monstres: ['feu_follet'], initiative: 'heros' }, fixe(.5));
+  Combat.resoudre(c, { heros: { action: 'objet', objet: 'herbe', cible: 'eloi' }, eloi: { action: 'defense' } });
+  egal([c.heros[1].pv, ec.objets.herbe], [Math.min(c.heros[1].pvMax, 35), undefined], 'l\'herbe rend 30 PV et disparaît du sac');
+
+  // équilibrage : les mêmes cas que outils/lanterne-combats.js, sur moins de combats
+  const LC = require('./lanterne-combats.js');
+  for (const cas of LC.CAS) {
+    const x = LC.jouerCas(M, J, cas, 150, 3), cb = cas.cible;
+    if (x.victoire < cb.victoire - .06 || x.tours < cb.tours[0] - .5 || x.tours > cb.tours[1] + .5)
+      bad(`équilibrage : ${cas.nom} : ${Math.round(x.victoire * 100)} %, ${x.tours.toFixed(1)} tours (voir outils/lanterne-combats.js)`);
+  }
+  if (fail === avantC) ok(`règles et combats : formules du § 9.2, niveaux, équipement, Protection, fuite, surprise, objets ; équilibrage des ${LC.CAS.length} cas`);
 
   // ---------- 2. les données ----------
   const avant = fail;
@@ -123,7 +179,22 @@ const { Etat, Monde, Evenements } = M;
   }
   for (const [nom, d] of Object.entries(J.style.decors)) for (const t of [].concat(d.tuiles || [], d.tuile || [], d.alterne || [])) if (!tuile(t)) bad(`décor ${nom} : tuile inconnue ${t}`);
   for (const [nom, s] of Object.entries(J.style.sols)) if (s) for (const t of [].concat(s.tuiles || [], s.semis ? s.semis.tuiles : [], s.bordure ? Object.values(s.bordure) : [])) if (!tuile(t)) bad(`sol ${nom} : tuile inconnue ${t}`);
-  for (const id in J.heros) if (!perso(J.heros[id].perso)) bad(`héros ${id} : personnage inconnu`);
+  for (const id in J.heros) {
+    if (!perso(J.heros[id].perso)) bad(`héros ${id} : personnage inconnu`);
+    for (const [emp, o] of Object.entries(J.heros[id].equipement || {})) if (!J.objets[o] || J.objets[o].equip.emplacement !== emp || !Regles.peutPorter(J, { classe: J.heros[id].classe }, o)) bad(`héros ${id} : équipement de départ ${o} impossible`);
+  }
+  for (const [id, t] of Object.entries(J.talents)) {
+    if (!J.classes[t.classe]) bad(`talent ${id} : classe inconnue`);
+    if (!['ennemi', 'ennemis', 'allie', 'allies', 'soi', 'allie_ko'].includes(t.cible)) bad(`talent ${id} : cible inconnue ${t.cible}`);
+  }
+  for (const c0 of Object.keys(J.classes)) if (Regles.talentsConnus(J.talents, c0, 30).length < 6) bad(`classe ${c0} : moins de 6 talents`);
+  for (const [id, m] of Object.entries(J.monstres)) {
+    if (!tuile(m.tuile)) bad(`monstre ${id} : tuile inconnue ${m.tuile}`);
+    for (const g of m.groupes || []) for (const t of g) if (!J.monstres[t]) bad(`monstre ${id} : groupe avec un monstre inconnu ${t}`);
+    for (const b of (m.butin || []).map(b => b.objet).concat(m.vol || [])) if (!J.objets[b]) bad(`monstre ${id} : objet inconnu ${b}`);
+    if (!(m.pv > 0) || !(m.xp >= 0)) bad(`monstre ${id} : PV ou expérience manquants`);
+  }
+  for (const [id, o] of Object.entries(J.objets)) if (o.equip && o.equip.classes) for (const c0 of o.equip.classes) if (!J.classes[c0]) bad(`objet ${id} : classe inconnue ${c0}`);
   for (const id in J.persos) if (!perso(J.persos[id].perso)) bad(`dialogues : personnage inconnu ${J.persos[id].perso}`);
   for (const f of Object.values(J.effets).concat(Object.values(J.musiques))) if (!fs.existsSync(path.join(ROOT, 'lanterne', f))) bad(`son absent : lanterne/${f}`);
   if (!cartes[J.depart.carte] || cartes[J.depart.carte].bloque[J.depart.y][J.depart.x]) bad('départ sur une carte inconnue ou une case bloquée');

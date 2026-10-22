@@ -271,6 +271,68 @@ void main(){
 
     function viser(x, y, tout) { voulue.set(x + .5, 0, y + .5); if (tout) cible.copy(voulue); }
 
+    // ---------- l'écran de combat : une autre scène ; celle de la carte est mise de côté puis revient ----------
+    // o : { sol: [tuiles], decor: nom d'un décor « panneau » (arbres au fond), brume, interieur }
+    // Les combattants se placent en coordonnées du monde (placerMonde) : monstres à gauche, héros à droite.
+    let combat = null;
+    function chargerCombat(o) {
+      const sauve = { scene, carte, soleil, acteurs, objets, vacillent, alternent, eau, brumes, masquables, interieur };
+      scene = new THREE.Scene();
+      acteurs = new Map(); objets = new Map(); vacillent = []; alternent = []; eau = null; brumes = []; masquables = []; interieur = !!o.interieur;
+      const ciel = new THREE.Color(interieur ? 0x14100c : 0xa9d1ee), b = o.brume || 0;
+      scene.background = ciel;
+      scene.fog = new THREE.Fog(b ? 0xd6dde6 : ciel, b ? 10 : 15, b ? 26 - b * 6 : 36);
+      lumieres(interieur);
+      const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) g.drawImage(poupees.decoupe(choisir(o.sol, x + 11, y)), x * 32, y * 32);
+      const ts = lointain(cv); ts.wrapS = ts.wrapT = THREE.RepeatWrapping; ts.repeat.set(10, 7);
+      const sol = new THREE.Mesh(new THREE.PlaneGeometry(40, 28), new THREE.MeshPhongMaterial({ map: ts, shininess: 0, specular: 0 }));
+      sol.rotation.x = -Math.PI / 2; sol.receiveShadow = true; scene.add(sol);
+      const d = o.decor && style.decors[o.decor];
+      if (d && d.type === 'panneau') {
+        for (let x = -11; x <= 11; x += .9) for (let rang = 0; rang < 3; rang++) {
+          const hh = hasard(Math.round(x * 10) + 500, rang), a = panneau(tex(choisir(d.tuiles, Math.round(x * 10), rang)), d.taille * 1.15, d.taille * 1.15);
+          a.position.set(x + (hh % 7) * .05, 0, -3.6 - rang * 1.2 - (hh % 3) * .2); scene.add(a);
+        }
+        for (const [x, z] of [[-6.2, 4.6], [6.6, 4.8], [-5, 5.6]]) { const a = panneau(tex(choisir(d.tuiles, Math.round(x), 9)), d.taille * 1.3, d.taille * 1.3); a.position.set(x, 0, z); scene.add(a); }
+      } else if (d && d.type === 'bloc') {
+        const t = tex(d.tuile).clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(24, 3);
+        const mur = new THREE.Mesh(new THREE.BoxGeometry(24, 3, 1), new THREE.MeshLambertMaterial({ map: t })); mur.position.set(0, 1.5, -3.8); mur.receiveShadow = true; scene.add(mur);
+      }
+      const eclair = new THREE.PointLight(0xffffff, 0, 7, 1.5); scene.add(eclair);
+      combat = { sauve, eclair, effets: new Map() };
+    }
+    function quitterCombat() {
+      if (!combat) return;
+      ({ scene, carte, soleil, acteurs, objets, vacillent, alternent, eau, brumes, masquables, interieur } = combat.sauve);
+      combat = null;
+    }
+    function placerMonde(id, x, z, etat = 'repos', q = 0, sens) {
+      const a = acteurs.get(id); if (!a) return;
+      a.m.position.set(x, 0, z); a.etat = etat; a.q = q; if (sens) a.sens = sens;
+    }
+    // un effet visible (projectile, impact) : cle, { tuile, x, y, z, taille, rot, op } ; null le cache
+    function effet(cle, o) {
+      if (!combat) return;
+      let m = combat.effets.get(cle);
+      if (!o) { if (m) m.visible = false; return; }
+      if (!m) { m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })); scene.add(m); combat.effets.set(cle, m); }
+      const t = o.tuile === '_arc' ? arc() : tex(o.tuile);
+      if (m.material.map !== t) { m.material.map = t; m.material.needsUpdate = true; }
+      m.visible = true; m.position.set(o.x, o.y, o.z); m.scale.set(o.taille || 1, o.taille || 1, 1); m.rotation.z = o.rot || 0; m.material.opacity = o.op === undefined ? 1 : o.op;
+    }
+    // l'arc blanc d'un coup d'épée (dessiné une fois)
+    function arc() {
+      if (textures._arc) return textures._arc;
+      const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+      g.strokeStyle = '#fff'; g.lineWidth = 6; g.lineCap = 'round'; g.beginPath(); g.arc(32, 32, 24, -2.6, -.4); g.stroke();
+      g.strokeStyle = 'rgba(180,220,255,.8)'; g.lineWidth = 2; g.beginPath(); g.arc(32, 32, 19, -2.4, -.6); g.stroke();
+      return (textures._arc = new THREE.CanvasTexture(c));
+    }
+    function eclair(couleur, intensite, x, y, z) { if (!combat) return; combat.eclair.color.set(couleur); combat.eclair.intensity = intensite; combat.eclair.position.set(x, y, z); }
+    // position à l'écran (pixels CSS, depuis le coin du canevas) d'un point du monde
+    function projeter(x, y, z) { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2 * canvas.clientWidth, (1 - v.y) / 2 * canvas.clientHeight]; }
+
     function rendre(t) {
       if (!scene) return;
       const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -280,6 +342,14 @@ void main(){
       for (const x of alternent) { const k = x.tuiles[Math.floor(t * 3) % x.tuiles.length]; if (x.a.material.map !== k) { x.a.material.map = k; x.a.customDepthMaterial.map = k; } }
       if (eau) eau.opacity = .3 + Math.sin(t * 2) * .08;
       for (const b of brumes) { b.m.position.x += b.v * .016; if (b.m.position.x < -3) b.m.position.x = carte.l + 3; if (b.m.position.x > carte.l + 3) b.m.position.x = -3; }
+      if (combat) {
+        // assez de recul pour voir les deux camps, même sur un écran étroit (téléphone en portrait)
+        const d = Math.min(17, Math.max(9.5, 3.6 / (Math.tan(camera.fov * Math.PI / 360) * camera.aspect)));
+        camera.position.set(0, d * .36, d); camera.lookAt(0, -.15 - d * .02, 0);
+        soleil.position.set(-6, 10, 5); soleil.target.position.set(0, 0, 0);
+        r.setRenderTarget(rt); r.render(scene, camera); r.setRenderTarget(null); r.render(scPost, camPost);
+        return;
+      }
       // caméra : suit le chef de file sans montrer trop de vide autour de la carte
       const recul = interieur ? 10.5 : 12.5, haut = interieur ? 8.5 : 9.5;
       const demi = Math.tan(camera.fov * Math.PI / 360) * Math.hypot(recul, haut) * camera.aspect;
@@ -298,7 +368,8 @@ void main(){
       r.setRenderTarget(rt); r.render(scene, camera); r.setRenderTarget(null); r.render(scPost, camPost);
     }
 
-    return { chargerCarte, majObjet, allumer, acteur, placer, retirer, montrer, viser, rendre, get carte() { return carte; } };
+    return { chargerCarte, majObjet, allumer, acteur, placer, retirer, montrer, viser, rendre, chargerCombat, quitterCombat, placerMonde, effet, eclair, projeter,
+      get carte() { return carte; }, get enCombat() { return !!combat; } };
   }
 
   M.Rendu = { Rendu };

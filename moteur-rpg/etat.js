@@ -6,7 +6,7 @@
      - « reprise » : copie gardée à chaque changement de carte, seulement pour rouvrir le jeu là où on l'a quitté.
    Après une défaite, on repart de la plus récente entre « auto » et « main » (jamais de « reprise »). */
 (function (M) {
-  const VERSION = 1;
+  const VERSION = 2;   // 2 : équipement et états des héros
   const MAX_OBJET = 8;   // on ne porte pas plus de 8 exemplaires d'un même objet
 
   const copie = o => JSON.parse(JSON.stringify(o));
@@ -24,9 +24,14 @@
     return e;
   }
 
-  // ajoute les champs des versions suivantes à une vieille partie
-  function migrer(e) {
-    if (!e || typeof e !== 'object') return null;
+  // ajoute les champs des versions suivantes à une vieille partie (jeu : pour l'équipement de départ)
+  function migrer(e, jeu) {
+    if (!e || typeof e !== 'object' || !e.heros) return null;
+    if ((e.v || 1) < 2) for (const id in e.heros) {
+      const h = e.heros[id];
+      h.equipement = h.equipement || Object.assign({ arme: null, armure: null, accessoire: null }, (jeu && jeu.heros[id] && jeu.heros[id].equipement) || {});
+      h.etats = h.etats || {};
+    }
     e.v = VERSION;
     return e;
   }
@@ -51,17 +56,26 @@
   function quitter(e, id) { e.equipe = e.equipe.filter(x => x !== id); }
 
   // soigne toute l'équipe (lanterne) : PV et PM au maximum, les héros à terre se relèvent
-  function soigner(e) { for (const id of e.equipe) { const h = e.heros[id]; h.pv = h.pvMax; h.pm = h.pmMax; } }
+  function soigner(e) { for (const id of e.equipe) { const h = e.heros[id]; h.pv = h.pvMax; h.pm = h.pmMax; h.etats = {}; } }
+
+  // porter un objet : l'ancien revient dans le sac ; id null : enlever
+  function equiper(e, jeu, heros, emplacement, id) {
+    const h = e.heros[heros], ancien = h.equipement[emplacement];
+    if (id && (!M.Regles.peutPorter(jeu, h, id) || !prendre(e, id, 1))) return false;
+    if (ancien) donner(e, ancien, 1);
+    h.equipement[emplacement] = id || null;
+    return true;
+  }
 
   /* Sauvegardes. stockage : localStorage ou tout objet avec getItem / setItem / removeItem.
      prefixe : par exemple « lanterne » (clés lanterne.partie1, lanterne.partie2, lanterne.partie3). */
-  function Sauvegardes(stockage, prefixe, maintenant = () => Date.now()) {
+  function Sauvegardes(stockage, prefixe, maintenant = () => Date.now(), jeu = null) {
     const cle = n => `${prefixe}.partie${n}`;
     const lire = n => {
       let p = null;
       try { p = JSON.parse(stockage.getItem(cle(n)) || 'null'); } catch (err) { p = null; }
       if (!p || typeof p !== 'object') return { auto: null, main: null, reprise: null };
-      for (const k of ['auto', 'main', 'reprise']) if (p[k] && !migrer(p[k].etat)) p[k] = null;
+      for (const k of ['auto', 'main', 'reprise']) if (p[k] && !migrer(p[k].etat, jeu)) p[k] = null;
       return { auto: p.auto || null, main: p.main || null, reprise: p.reprise || null };
     };
     const ecrire = (n, type, etat) => {
@@ -87,6 +101,6 @@
     };
   }
 
-  M.Etat = { VERSION, MAX_OBJET, nouvellePartie, migrer, copie, donner, prendre, combien, drapeau, lireDrapeau, rejoindre, quitter, soigner, Sauvegardes };
+  M.Etat = { VERSION, MAX_OBJET, nouvellePartie, migrer, copie, donner, prendre, combien, drapeau, lireDrapeau, rejoindre, quitter, soigner, equiper, Sauvegardes };
   if (typeof module !== 'undefined') module.exports = M;
 })(typeof window !== 'undefined' ? (window.MoteurRPG = window.MoteurRPG || {}) : (globalThis.MoteurRPG = globalThis.MoteurRPG || {}));

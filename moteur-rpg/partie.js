@@ -198,7 +198,10 @@
       if (occupe) return;
       occupe = true; entrees.lacherTout();
       rendu.retirer(m.id); monstres = monstres.filter(x => x !== m); vaincus.add(m.i);
-      const r = await o.combat({ type: m.def.type, groupe: m.def.groupe, initiative });
+      // un monstre bien plus faible que l'équipe s'enfuit (§ 8.3 : plus de combats inutiles)
+      const t = jeu.monstres[m.def.type] || {}, chef = etat.heros[etat.equipe[0]];
+      if (!t.boss && t.niveau && chef.niveau >= t.niveau + 6) { ui.message(`${t.nom} s'enfuit.`); occupe = false; return; }
+      const r = await o.combat({ type: m.def.type, monstres: m.def.groupe, initiative });
       occupe = false;
       if (r === 'defaite') o.defaite();
     }
@@ -206,7 +209,7 @@
     const actions = {
       sauver: c => sauver(c.sauver === 'main' ? 'main' : 'auto'),
       teleporter: c => passer(c.teleporter, c.x, c.y, c.dir),
-      combat: async c => { const r = await o.combat({ groupe: c.combat, initiative: 'normal' }); if (r === 'defaite') { o.defaite(); return; } },
+      combat: async c => { const r = await o.combat({ monstres: [].concat(c.combat), boss: c.boss, initiative: 'normal' }); if (r === 'defaite') { o.defaite(); return; } },
       pnj: c => {
         if (c.cacher || c.montrer) {
           etat.drapeaux['pnj:' + c.pnj] = c.cacher ? 'cache' : 'montre';
