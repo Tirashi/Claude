@@ -1,10 +1,11 @@
-# Le Refuge — cahier des charges (à valider)
+# Doggy Saga — cahier des charges
 
-Un « trois en ligne » façon Candy Crush avec des **portraits de chiens** : on échange deux chiens voisins pour en aligner trois ou plus ; chaque chien aligné reçoit un **câlin**, et quand un chien a reçu assez de câlins, il **trouve une famille**. Des niveaux à la suite (les journées au refuge), avec des étoiles, et une grille du jour. Jeu bien dynamique : animations, effets, sons.
+Un « trois en ligne » façon Candy Crush avec des **portraits de chiens**, **pour toute la famille**, dans un refuge pour chiens : on échange deux chiens voisins pour en aligner trois ou plus ; chaque chien aligné reçoit un **câlin**, et quand un chien a reçu assez de câlins, il **trouve une famille**. Des niveaux à la suite (les journées au refuge), avec des étoiles, et une grille du jour. Jeu bien dynamique : animations, effets, sons.
 
 ## 1. Décisions de l'utilisateur
 - 22/10, maquette 1 (`maquettes/bonbons.html`, https://claude.ai/artifact/6VgviU7PYUgeK26wpE5cLZ : Confiserie, Pixel 32 bits, Néon) : « autre chose que des bonbons ou des trucs 32 bits ».
 - 22/10, maquette 2 (`maquettes/bonbons-2.html`, https://claude.ai/artifact/NHjS2wtFiwviNf7C2HZWEF : le Refuge, le Héros, la Fresque) : **le Refuge retenu** (« vraiment cool »).
+- 22/10, réponses aux questions du cahier des charges : nom **Doggy Saga** ; objectifs et chapitres (§ 3 et 5) **d'accord** ; **pas** les chiens de la famille d'Injagility ; jeu **pour toute la famille** (début doux, mots simples) ; journée du jour **d'accord** ; sons : **chercher de vrais sons** libres de droits, sinon les fabriquer.
 - Ce qui est donc acquis : la DA de la maquette (portraits ronds de chiens dessinés en vectoriel sur des médaillons pastel, couverture cousue, mur aux pattes, plancher, police Baloo 2), les chiens qui clignent des yeux, penchent la tête et sourient, les cœurs qui s'envolent vers le portrait, les pièces spéciales (bandana, nœud, balle de tennis), les petits « ouaf ».
 
 ## 2. Principe et règles (comme la maquette)
@@ -30,7 +31,12 @@ Chaque niveau a un ou deux objectifs, affichés en haut à la place des portrait
 - Les 6 de la maquette (Biscotte le beagle, Neige la husky, Kumo le shiba, Domino le dalmatien, Praline la caniche, Réglisse la border collie), plus d'autres qui arrivent au fil des chapitres, par exemple : golden retriever, teckel, carlin, bouvier bernois, jack russell, berger australien, berger des Shetland, bouledogue français, chihuahua, lévrier.
 - Chaque niveau utilise **5 ou 6 races** (5 = plus facile, pour le début et les petits).
 - **Album des familles** : chaque chien adopté une première fois rejoint un album (son portrait, son nom, sa race, un petit mot de sa nouvelle famille). C'est la collection qu'on remplit en jouant.
-- Question : y mettre aussi **les chiens de la famille** (ceux d'Injagility : bouvier bernois, jack russell, golden, border collie, berger australien, berger des Shetland) ? Par exemple comme bénévoles du refuge, ou en chiens à débloquer à la fin.
+- Les chiens de la famille d'Injagility n'y sont **pas** (décision du 22/10) : les races qui leur ressemblent (bernois, golden…) restent possibles, mais avec d'autres noms et d'autres robes.
+
+### Pour toute la famille
+- Textes courts et simples, sans mot difficile ; chiffres et icônes plutôt que des phrases.
+- Chapitre 1 très doux (beaucoup de coups, 5 races, pas d'échec possible sur les 3 premiers niveaux) ; on peut rejouer un niveau raté autant qu'on veut, sans vies ni attente.
+- Rien d'effrayant ni de triste : un chien pas encore adopté « attend sa famille », il ne lui arrive rien.
 
 ## 5. Les niveaux (proposition)
 - **60 niveaux en 5 chapitres** de 12, comme les autres jeux à niveaux :
@@ -48,7 +54,7 @@ Chaque niveau a un ou deux objectifs, affichés en haut à la place des portrait
 - Proposition : 20 coups, on fait le plus de câlins possible ; classement `daily:` sur les câlins.
 
 ## 7. Écrans
-- **Écran titre** : le logo, un chien qui remue la tête, JOUER, LA JOURNEE DU JOUR, L'ALBUM, et le retour au menu de la Ludothèque (classe `ludo-retour`).
+- **Écran titre** : le logo DOGGY SAGA, un chien qui remue la tête, JOUER, LA JOURNEE DU JOUR, L'ALBUM, et le retour au menu de la Ludothèque (classe `ludo-retour`).
 - **Carte des niveaux**, **partie** (en haut : objectifs et coups ; la grille ; en bas : le plancher), **pause** (reprendre, recommencer, carte, son), **fin de niveau** (étoiles, chiens adoptés, suivant), **album**.
 
 ## 8. Rendu et effets
@@ -57,11 +63,18 @@ Chaque niveau a un ou deux objectifs, affichés en haut à la place des portrait
 - À ajouter : la boue qui s'en va en éclaboussures, les chiots qui sautent dans leur panier, un petit feu d'artifice de cœurs à l'adoption.
 
 ## 9. Sons
-- Sons synthétisés comme la maquette (pop qui monte pendant les cascades, « ouaf », couinement de la balle). Proposition : chercher aussi de **vrais aboiements libres de droits** (CC0) pour quelques moments (adoption) ; dans ce cas, les citer dans `credits/`.
+- Décision du 22/10 : **chercher de vrais sons** libres de droits ; sinon, les fabriquer (synthèse comme la maquette : pop qui monte pendant les cascades, « ouaf », couinement de la balle).
+- Pistes trouvées le 22/10 sur OpenGameArt (le site est joignable depuis l'environnement de Claude) :
+  - [Dog sounds](https://opengameart.org/content/dog-sounds) (pauliuw, **CC0**, 9 sons : aboiements, grognements, jappements ; archive `dog.7z` ; qualité inégale) ;
+  - [80 CC0 creature SFX](https://opengameart.org/content/80-cc0-creature-sfx) (rubberduck, **CC0**, dont 2 aboiements) ;
+  - [dog barking mono](https://opengameart.org/content/dog-barking-mono) (licence à vérifier : OGA-BY 3.0 et CC0 affichées) ;
+  - Dog-O SFX (troutsneeze, licence à vérifier fichier par fichier).
+- En session 3 : un **banc d'écoute** (petite page, comme pour Nebula) qui met côte à côte les vrais sons retenus et les sons fabriqués ; l'utilisateur choisit. Tout son gardé est cité dans `credits/` (nom, créateur, licence, lien, jeu).
 
 ## 10. Technique
-- Dossier `refuge/` : `index.html`, `jeu.js` (écrans, rendu, animations), `regles.js` (le trois en ligne sans affichage, testable : grille, alignements, spéciaux, gravité, objectifs, hasard réglable), `niveaux.js`, `chiens.js` (dessin des portraits), `sons.js` ; objet `window.Refuge` pour les tests.
-- Simulateur `outils/refuge-simulateur.js` (un joueur automatique qui joue chaque niveau des centaines de fois et donne le taux de réussite).
+- Dossier `doggy-saga/` : `index.html`, `jeu.js` (écrans, rendu, animations), `regles.js` (le trois en ligne sans affichage, testable : grille, alignements, spéciaux, gravité, objectifs, hasard réglable), `niveaux.js`, `chiens.js` (dessin des portraits), `sons.js` ; objet `window.DoggySaga` pour les tests.
+- Police **Baloo 2** (SIL OFL) copiée dans `polices/` et citée dans `credits/`.
+- Simulateur `outils/doggy-saga-simulateur.js` (un joueur automatique qui joue chaque niveau des centaines de fois et donne le taux de réussite).
 - Sauvegarde locale : niveaux finis, étoiles, album, réglages.
 
 ## 11. Classements et intégration
@@ -74,9 +87,4 @@ Chaque niveau a un ou deux objectifs, affichés en haut à la place des portrait
 3. **Session 3** : sons, journée du jour, classements, accueil, tests, artefact.
 
 ## 13. Questions pour l'utilisateur
-1. Le nom : **Le Refuge**, **Le Refuge des Quatre Pattes**, ou autre ?
-2. Les objectifs et les chapitres (§ 3 et 5) te conviennent-ils ?
-3. Les chiens de la famille d'Injagility dans le jeu (§ 4) ?
-4. Pour qui : toi, ou aussi l'enfant de 7 ans (alors chapitre 1 plus doux et mots simples) ?
-5. La journée du jour (§ 6) : d'accord ?
-6. Sons : rester en synthèse, ou chercher de vrais aboiements libres de droits ?
+Toutes tranchées le 22/10 (voir § 1).
