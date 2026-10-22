@@ -20,20 +20,20 @@ const MAXBAC = 80;
 const lire = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
 const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 const prog = lire('romet.machines', {}), parties = lire('romet.partie', {});
-const opts = Object.assign({ sons: true, vibr: true, derniere: 'foire' }, lire('romet.opts', {}));
+const opts = Object.assign({ sons: true, ambiance: true, vibr: true, derniere: 'foire' }, lire('romet.opts', {}));
 function progres(mc) { let p = prog[mc.id]; if (!p || !Array.isArray(p.t)) p = prog[mc.id] = { t: mc.tresors.map(() => false), butin: 0, parties: 0 }; return p; }
 const finie = mc => mc.tresors.length > 0 && progres(mc).t.every(Boolean);
 function ouverte(i) { const mc = MS.MACHINES[i]; if (!mc.pret) return false; if (mc.secrete) return MS.MACHINES.filter(x => !x.secrete).every(finie); return i === 0 || finie(MS.MACHINES[i - 1]); }
 const sauverProg = () => ecrire('romet.machines', prog);
 function sauverPartie() { if (!partie) return; if (partie.fini) delete parties[m.id]; else parties[m.id] = partie.sauver(); ecrire('romet.partie', parties); }
 
-// --- sons (Web Audio, après le premier toucher) et vibrations ---
-let ac = null;
-function son(f, dur, type, vol) { if (!ac || !opts.sons) return; const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime; o.type = type || 'triangle'; o.frequency.setValueAtTime(f, t);
-  g.gain.setValueAtTime(vol || .12, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur); }
-const tinte = () => { son(2100 + Math.random() * 500, .12); setTimeout(() => son(2900, .08, 'sine', .06), 40); };
-const carillon = () => { son(1600, .3, 'sine', .1); setTimeout(() => son(2400, .4, 'sine', .08), 120); setTimeout(() => son(3200, .5, 'sine', .06), 260); };
+// --- sons (sons.js, après le premier toucher), vibrations, classements ---
+const S = window.RometSons;
 function vibrer(ms) { if (opts.vibr && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) {} }
+// classements de la famille (romet) : total des trésors, toutes machines ; meilleur butin en une partie, toutes machines
+const totalTresors = () => MS.MACHINES.reduce((a, mc) => a + (prog[mc.id] && Array.isArray(prog[mc.id].t) ? prog[mc.id].t.filter(Boolean).length : 0), 0);
+const meilleurButin = () => MS.MACHINES.reduce((a, mc) => Math.max(a, prog[mc.id] && prog[mc.id].butin || 0), 0);
+function envoyer(tableau, v, el) { if (!window.LudoScores || !(v > 0)) return; LudoScores.submit('romet', tableau, v, false).then(r => { if (r && el) el.textContent = LudoScores.rankText(r); }).catch(() => {}); }
 
 // --- rendu ---
 const ecran = $('ecran'), rendu = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
@@ -158,7 +158,8 @@ function liste() {
   });
 }
 function finDePartie() {
-  const p = progres(m), record = partie.butin > p.butin; p.parties++; if (record) p.butin = partie.butin; sauverProg(); sauverPartie();
+  const p = progres(m), record = partie.butin > p.butin; p.parties++; if (record) p.butin = partie.butin; sauverProg(); sauverPartie(); S.fin();
+  $('fRang').textContent = ''; envoyer('butin', meilleurButin(), $('fRang'));
   montrer('eFin', () => {
     $('fTitre').textContent = 'Plus de ' + m.textes.piece + 's !'; $('fButin').textContent = partie.butin;
     $('fMeilleur').textContent = record && p.parties > 1 ? 'Nouveau record !' : 'Meilleur butin : ' + p.butin;
@@ -170,13 +171,13 @@ function machineFinie() {
   const i = MS.MACHINES.indexOf(m), suiv = MS.MACHINES[i + 1];
   montrer('eFinie', () => { gemmes($('nTresors'), progres(m).t);
     $('nTexte').textContent = !suiv ? 'Toutes les machines sont terminées, même la secrète !' : suiv.secrete ? (ouverte(i + 1) ? 'Une machine secrète est apparue dans la liste…' : 'Toutes les machines sont terminées !') : suiv.nom + ' est ouverte !'; });
-  carillon(); vibrer([30, 60, 30]);
+  S.finie(); vibrer([30, 60, 30]);
 }
 
 // --- la partie ---
 function ouvrir(mc) {
   if (partie) { sauverPartie(); for (const o of partie.pl.objets) o.m = null; }
-  m = mc; opts.derniere = m.id; ecrire('romet.opts', opts); document.body.className = 'm-' + m.id;
+  m = mc; opts.derniere = m.id; ecrire('romet.opts', opts); S.monde(m.id); document.body.className = 'm-' + m.id;
   $('hRes').textContent = m.textes.reserve; $('hBut').textContent = m.textes.butin; aff = {};
   construire(); partie = null;
   const s = parties[m.id]; if (s && !s.fini) try { partie = new MS.Partie(m, progres(m).t, s); } catch (e) { partie = null; }
@@ -190,17 +191,17 @@ function nouvelle() {
 function evenements() {
   for (const e of partie.evts) switch (e.t) {
     case 'tombe': if (e.o.m) { scene.remove(e.o.m); e.o.m = null; } break;
-    case 'lache': son(500, .05, 'square', .04); break;
-    case 'bonus': message(e.type === 'tresor' ? 'Un trésor !' : 'Bonus !'); son(880, .12, 'triangle', .07); setTimeout(() => son(1320, .15, 'triangle', .06), 90); break;
-    case 'gain': versBac(e.x, true); gainAff += e.v; gainT = .5; tinte(); vibrer(12); if (e.double) { message(m.textes.double); setTimeout(tinte, 90); } else if (e.type === 'geante') message('+10 !'); break;
-    case 'courant': message((e.sens < 0 ? '◀ ' : '') + m.textes.courant + (e.sens > 0 ? ' ▶' : '')); son(180, .9, 'sawtooth', .03); vibrer(60); break;
-    case 'couloirs': son(1200, .06, 'square', .03); break;
-    case 'clous': for (let k = 1; k <= e.n; k++) setTimeout(() => son(1800 + Math.random() * 600, .03, 'square', .025), k * 70); break;
+    case 'lache': S.lache(); break;
+    case 'bonus': message(e.type === 'tresor' ? 'Un trésor !' : 'Bonus !'); S.bonus(); break;
+    case 'gain': versBac(e.x, true); gainAff += e.v; gainT = .5; S.tinte(); vibrer(12); if (e.double) { message(m.textes.double); setTimeout(S.tinte, 90); } else if (e.type === 'geante') message('+10 !'); break;
+    case 'courant': message((e.sens < 0 ? '◀ ' : '') + m.textes.courant + (e.sens > 0 ? ' ▶' : '')); S.courant(); vibrer(60); break;
+    case 'couloirs': S.couloirs(); break;
+    case 'clous': S.clous(e.n); break;
     case 'perte': if (e.type !== 'piece') message('Perdu…'); break;
-    case 'mur': versBac(e.x); message('Mur !'); son(700, .3, 'sawtooth', .05); break;
-    case 'finMur': son(400, .2, 'sawtooth', .04); break;
+    case 'mur': versBac(e.x); message('Mur !'); S.mur(); break;
+    case 'finMur': S.finMur(); break;
     case 'pluie': versBac(e.x); message('Pluie !'); break;
-    case 'tresor': versBac(e.x); message(m.tresors[e.lot][0]); carillon(); vibrer(40); if (e.nouveau) { sauverProg(); gemmes($('tresors'), progres(m).t, e.lot); } break;
+    case 'tresor': versBac(e.x); message(m.tresors[e.lot][0]); S.carillon(); vibrer(40); if (e.nouveau) { sauverProg(); gemmes($('tresors'), progres(m).t, e.lot); envoyer('tresors', totalTresors()); } break;
     case 'finie': setTimeout(machineFinie, 1500); break;
     case 'fin': finDePartie(); break;
     case 'plein': message('Plateau plein'); break;
@@ -213,13 +214,14 @@ let doigt = null;
 const xDoigt = e => { const r = ecran.getBoundingClientRect(); return Math.max(-2.1, Math.min(2.1, ((e.clientX - r.left) / r.width - .5) * 5.6)); };
 function lacher(x) { if (partie.fini) return; if (partie.bourse <= 0) { message('Plus de ' + m.textes.piece + 's'); return; } partie.lacher(x); }
 ecran.addEventListener('pointerdown', e => { e.preventDefault(); if (menu) return;
-  if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} }
+  S.init();
   const x = xDoigt(e); V.viseur.position.x = x; doigt = { x, t: .3, id: e.pointerId }; lacher(x); });
 ecran.addEventListener('pointermove', e => { const x = xDoigt(e); V.viseur.position.x = x; if (doigt && doigt.id === e.pointerId) doigt.x = x; });
 for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) ecran.addEventListener(ev, () => { doigt = null; });
 
 // --- boutons ---
-const majOpts = () => { $('bSons').textContent = 'SONS : ' + (opts.sons ? 'OUI' : 'NON'); $('bVibr').textContent = 'VIBRATIONS : ' + (opts.vibr ? 'OUI' : 'NON'); ecrire('romet.opts', opts); };
+const majOpts = () => { $('bSons').textContent = 'BRUITAGES : ' + (opts.sons ? 'OUI' : 'NON'); $('bAmb').textContent = 'AMBIANCE : ' + (opts.ambiance ? 'OUI' : 'NON');
+  $('bVibr').textContent = 'VIBRATIONS : ' + (opts.vibr ? 'OUI' : 'NON'); ecrire('romet.opts', opts); S.regler({ sons: opts.sons, ambiance: opts.ambiance }); };
 $('bJouer').onclick = () => { if (partie.fini) nouvelle(); cacher(); };
 $('bMachines').onclick = $('bPauseMachines').onclick = $('bFinMachines').onclick = $('bFinieMachines').onclick = () => aller('eMachines', liste);
 $('bRetourTitre').onclick = () => aller('eTitre');
@@ -227,8 +229,9 @@ $('bPause').onclick = () => montrer('ePause', majOpts);
 $('bReprendre').onclick = $('bContinuer').onclick = cacher;
 $('bRejouer').onclick = () => { nouvelle(); cacher(); };
 $('bSons').onclick = () => { opts.sons = !opts.sons; majOpts(); };
+$('bAmb').onclick = () => { opts.ambiance = !opts.ambiance; majOpts(); };
 $('bVibr').onclick = () => { opts.vibr = !opts.vibr; majOpts(); };
-document.addEventListener('visibilitychange', () => { if (document.hidden) { sauverPartie(); if (!menu && partie && !partie.fini) montrer('ePause', majOpts); } });
+document.addEventListener('visibilitychange', () => { S.pause(document.hidden); if (document.hidden) { sauverPartie(); if (!menu && partie && !partie.fini) montrer('ePause', majOpts); } });
 addEventListener('pagehide', sauverPartie);
 
 // --- la boucle ---
@@ -244,7 +247,7 @@ function boucle(t) {
   }
   if (gainT > 0 && (gainT -= dt) <= 0 && gainAff) { if (gainAff > 1 || !msgT) message('+' + gainAff); gainAff = 0; }
   if (msgT > 0 && (msgT -= dt) <= 0) $('combi').textContent = '';
-  tDecor += dt; animer(dt, tDecor); dessiner(); hud();
+  S.tic(); tDecor += dt; animer(dt, tDecor); dessiner(); hud();
   // si le téléphone tombe sous 50 images/s deux secondes de suite, on baisse la résolution d'un cran (jusqu'à 1)
   images++; if ((seconde += dt) >= 1) { const fps = images / seconde; images = 0; seconde = 0;
     if (fps < 50) lent++; else lent = 0; if (lent >= 2 && pr > 1 && !D.pixel) { pr = Math.max(1, pr - .25); rendu.setPixelRatio(pr); taille(); lent = 0; } }
@@ -257,5 +260,6 @@ Promise.race([Promise.all(['120px Rye', '92px Chewy', "96px 'Pirata One'", '110p
   montrer('eTitre'); requestAnimationFrame(boucle);
 });
 
-window.Romet = { get partie() { return partie; }, get machine() { return m; }, get menu() { return menu; }, prog, ouvrir, nouvelle, lacher: x => lacher(x), MACHINES: MS.MACHINES };
+S.regler({ sons: opts.sons, ambiance: opts.ambiance });
+window.Romet = { sauvegardes: () => ({ prog, parties }), totalTresors, meilleurButin, get partie() { return partie; }, get machine() { return m; }, get menu() { return menu; }, prog, ouvrir, nouvelle, lacher: x => lacher(x), MACHINES: MS.MACHINES };
 })();

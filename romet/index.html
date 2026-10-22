@@ -9,7 +9,8 @@
 <meta name="theme-color" content="#2a140a">
 <link rel="icon" href="../icons/icon-192.png">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rye&family=Chewy&family=Pirata+One&family=Monoton&family=Cinzel:wght@600;700&family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
+<!-- polices dans le dépôt (hors connexion) ; data-google : le lien utilisé par l'artefact (outils/artefact.py) -->
+<link rel="stylesheet" href="../polices/romet.css" data-google="https://fonts.googleapis.com/css2?family=Rye&family=Chewy&family=Pirata+One&family=Monoton&family=Cinzel:wght@600;700&family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="m-foire">
@@ -25,6 +26,7 @@
     <p class="sous">Fais tomber les pièces, gagne les 6 trésors de chaque machine.</p>
     <button class="bouton" id="bJouer">JOUER</button>
     <button class="bouton" id="bMachines">MACHINES</button>
+    <a class="bouton lien" href="../index.html#romet">CLASSEMENT</a>
     <a class="bouton lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
   </div>
 </div>
@@ -42,7 +44,8 @@
     <h2>Pause</h2>
     <button class="bouton" id="bReprendre">REPRENDRE</button>
     <button class="bouton" id="bPauseMachines">MACHINES</button>
-    <button class="bouton" id="bSons">SONS : OUI</button>
+    <button class="bouton" id="bSons">BRUITAGES : OUI</button>
+    <button class="bouton" id="bAmb">AMBIANCE : OUI</button>
     <button class="bouton" id="bVibr">VIBRATIONS : OUI</button>
     <a class="bouton lien ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>
   </div>
@@ -55,6 +58,7 @@
     <p id="fMeilleur"></p>
     <div class="gemmes" id="fTresors"></div>
     <p id="fTexte"></p>
+    <p id="fRang"></p>
     <button class="bouton" id="bRejouer">REJOUER</button>
     <button class="bouton" id="bFinMachines">MACHINES</button>
   </div>
@@ -74,6 +78,8 @@
 <script src="physique.js"></script>
 <script src="machines.js"></script>
 <script src="decors.js"></script>
+<script src="sons.js"></script>
+<script src="../ludo-scores.js"></script>
 <script src="jeu.js"></script>
 <script>
 /* Ludothèque : mode hors connexion. Le retour à la Ludothèque est dans les menus du jeu (titre, pause). */

@@ -22,6 +22,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`romet/index.html`](romet/index.html) : **Romet**, un coin pusher en 3D en hommage à Mynthos : six machines à finir (et une secrète), chacune dans son monde et avec sa règle.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
@@ -267,6 +268,17 @@ Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32
 - **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
 - **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
 - **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
+
+## Romet
+Un coin pusher en 3D, en hommage à Mynthos qui a popularisé le genre : on touche l'écran pour lâcher une pièce, le poussoir va et vient et fait tomber les autres. Ce qui tombe à l'avant arrive dans le bac et se rejoue ; ce qui tombe sur les côtés est perdu.
+
+- **La bourse** : chaque partie commence avec une bourse de pièces, sans recharge. La machine rend un peu moins qu'on ne lâche : quand la bourse est vide et que plus rien ne tombe, la partie s'arrête et on compte le butin.
+- **Les trésors** : chaque machine a 6 trésors qui tombent de temps en temps avec les pièces ; il faut les amener jusqu'au bord. Ils restent gagnés d'une partie à l'autre. Les 6 trésors finissent la machine et ouvrent la suivante.
+- **Les machines**, de plus en plus dures : la foire (pour apprendre), la ruche (pièces hexagonales et coulée de miel collante), l'épave (un courant pousse le tas vers un côté), le casino (un couloir lumineux compte double), la foire de nuit (des clous font rebondir la pièce), l'horloger (deux étages, le mécanisme est visible)… et une machine secrète en pixel 3D quand les six sont finies.
+- **Bonus** : pièce géante (10 pièces), mur (ferme les côtés 12 secondes), pluie (10 pièces gratuites).
+- **Doigt posé** : une pièce toutes les 0,3 seconde.
+- **Classements de la famille** : le total des trésors, et le meilleur butin en une partie.
+- **Sons** : bruitages et ambiance de chaque monde (orgue de foire, essaim, houle, tic-tac…), réglables dans la pause avec les vibrations.
 
 ## Le Magasinier
 Un Sokoban dans un entrepôt en HD-2D (façon Octopath Traveler) : un petit diorama en relief habillé de pixel art, avec la lumière du soleil qui entre par les fenêtres, et un docker en pixel art (casquette, foulard rouge, gilet de cuir) qui marche, pousse, glisse et se retourne vers toi quand il attend.
