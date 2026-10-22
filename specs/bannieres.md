@@ -122,17 +122,30 @@ La partie est sauvegardée à chaque action ; CONTINUER la reprend.
 ## 14. Plan de travail
 
 0. **Maquettes** : maquette 1 (armées, déplacement, tactiques) et 2 (étendards, lancier, revenants, décors) du 22/10 ; **maquette 3** (version 7 ans : pièces, cœurs, étoiles, gros boutons, village, achat de guerriers), **à valider** (idéalement en la faisant essayer à l'enfant).
-1. **Session 1 — Règles** (Opus) : `regles.js` (armées, village, bataille), `ia.js`, `surprises.js`, tests de logique.
+1. **Session 1 — Règles** (Opus) : **faite le 22/10**. `bannieres/regles.js` (grille de rayon 3 ou 4, carte, armées, pas, achat, village, décorations, bataille reprise de la maquette, tour, fin ; état JSON, hasard par flux `banRng(graine, usage, a, b)`), `bannieres/surprises.js` (les 5 surprises), `bannieres/ia.js` (rivaux à caractère : achats, bâtiments, où va chaque armée, meilleure tactique ; aussi le joueur automatique), `outils/bannieres-simulateur.js` (lancé par `verifications.js`, 20 parties). Voir § 17.
 2. **Session 2 — La 3D et l'interface** (opusplan) : reprise du code de la maquette en fichiers, titre, sauvegarde, comment jouer.
 3. **Session 3 — Finitions** : sons, fin de partie, accueil (cartouche), artefact, mémo, tests.
 
 ## 15. Points à confirmer par l'utilisateur
 
+- **Les pièces s'entassent** (session 1) : avec 1 pièce par case, le joueur a 15 à 20 pièces par tour vers le tour 10, et le joueur automatique en a 200 au tour 20 (loin des « petits nombres »). Pistes : un **coffre plein à 30 pièces** (« dépense-les ! »), ou **1 pièce pour 2 cases**. À trancher en jouant.
+
 - Les **prix** et les **bâtiments** du § 6 (on ajustera en jouant).
 - La **lisibilité** : « ça devrait aller, on verra à l'usage » (22/10).
-- Réglé le 22/10 : **25 tours puis on compte les drapeaux** (ou les 3 châteaux) ; pas de brouillard ; le seigneur ne meurt pas ; pas de cheval pour l'instant (cheval Quaternius CC0 noté dans `IDEES.md`) ; pas de partie classée du jour ; le mage ; les 3 façons de se battre (renommées pour 7 ans) ; des bâtiments à aménager.
+- Réglé le 22/10 : **session 1 faite** (§ 17) ; **25 tours puis on compte les drapeaux** (ou les 3 châteaux) ; pas de brouillard ; le seigneur ne meurt pas ; pas de cheval pour l'instant (cheval Quaternius CC0 noté dans `IDEES.md`) ; pas de partie classée du jour ; le mage ; les 3 façons de se battre (renommées pour 7 ans) ; des bâtiments à aménager.
 
 ## 16. Maquettes
 
 - Maquette 1 et 2 : `maquettes/bannieres.html`, https://claude.ai/artifact/WjSLr1Tx1CPvWEWGmGzyUQ (22/10). Maquette 3 : même lien.
 - Packs KayKit gratuits passés en revue le 22/10 : retenus Dungeon (bannières → étendards, murs → remparts, caisses, tonneaux, torches), Skeletons (revenants), Fantasy Weapons (lance ; hallebarde et marteaux en réserve), Forest (buissons, pierres) ; vus et pas retenus : Board Game Bits, Resource Bits, Prototype, Furniture, City Builder, Space Base ; les « Mystery Monthly » n'ont pas de version gratuite.
+
+## 17. Règles ajoutées en session 1 (22/10, à valider)
+
+- **La garde du château** : un château sans armée se défend avec sa garde (2 chevaliers et 2 archers ; en facile, celle du joueur a en plus un lancier). Sans elle, un château vide se prenait en marchant dessus.
+- **Au château**, comme avec une tour, les archers de celui qui défend tirent une fois de plus.
+- **Deux armées à soi** qui se rejoignent n'en font plus qu'une (6 guerriers au plus) : les guerriers achetés au château peuvent ainsi rejoindre l'armée du seigneur.
+- **Une armée bouge une fois par tour** (même s'il lui reste un pas).
+- **Prendre le château d'origine d'un seigneur** le fait tomber : ses cases (avec bâtiments et décorations) passent au vainqueur, ses armées s'en vont. Reprendre un château qui avait déjà changé de main ne fait tomber personne.
+- **En facile**, les rivaux ne prennent pas les châteaux des autres rivaux (sinon l'un d'eux grossit jusqu'à dépasser l'enfant).
+- Les **caractères** des 3 rivaux sont tirés au hasard ; le bâtisseur commence avec 4 pièces de plus et une armée un peu plus petite.
+- **Au simulateur** (100 parties par niveau, joueur automatique « malin ») : en **facile**, le joueur gagne 77 % des parties (presque toujours aux drapeaux, en moyenne 16 drapeaux contre 7 par rival) et **ne perd jamais son château** ; en **normal**, 47 % de victoires et 4 % de châteaux perdus. Environ 9 batailles livrées et 6 subies par partie ; une partie va presque toujours jusqu'au tour 25.

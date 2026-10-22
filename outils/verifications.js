@@ -111,6 +111,10 @@ catch (e) { bad('Capitaine du port : bassins\n' + (e.stdout || '') + (e.stderr |
 try { execFileSync(process.execPath, [path.join(__dirname, 'duche-simulateur.js'), '60'], { stdio: 'pipe', encoding: 'utf8' }); ok('Duché : simulateur (parties reproductibles, règles, équilibrage)'); }
 catch (e) { bad('Duché : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// 8 quinquies. Bannières : règles, rivaux et surprises (déterminisme, sauvegarde, règles de base, équilibrage grossier)
+try { execFileSync(process.execPath, [path.join(__dirname, 'bannieres-simulateur.js'), '20'], { stdio: 'pipe', encoding: 'utf8' }); ok('Bannières : simulateur (parties reproductibles, règles, équilibrage)'); }
+catch (e) { bad('Bannières : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
   const pre = new Map(), idx = read('accueil.js'), ls = read('ludo-scores.js');
