@@ -6,7 +6,7 @@
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
   'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html', 'the-des-jarls/index.html',
-  'mot-d-or/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
+  'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
   const { browser, ctx } = await phone(); let fail = 0;
@@ -80,6 +80,26 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Odyssée : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-odyssee.png` });
+    }
+    if (url === 'lanterne/index.html') {
+      // La Dernière Lanterne : nouvelle partie, dialogue d'Ysolde au clavier, un pas sur la carte, sauvegarde
+      const r = await p.evaluate(async () => {
+        const L = Lanterne, wait = ms => new Promise(r => setTimeout(r, ms));
+        const espace = () => dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+        L.sauvegardes.effacer(3); L.nouvelle(3, 'FUMEE'); await wait(1500);
+        if (L.etat.carte !== 'maison_ysolde') return 'la partie ne commence pas chez Ysolde';
+        if (!document.querySelector('.rpg-dialogue.on')) return "pas de dialogue d'Ysolde";
+        for (let i = 0; i < 60 && (document.querySelector('.rpg-dialogue.on') || L.partie.occupe); i++) { espace(); await wait(120); }
+        if (!L.etat.drapeaux.mission) return "le dialogue d'Ysolde ne donne pas la mission";
+        const x = L.etat.x; L.entrees.simuler('droite', 5000);
+        for (let i = 0; i < 50 && L.etat.x === x; i++) await wait(100);
+        L.entrees.lacherTout(); await wait(600);
+        if (L.etat.x !== x + 1) return "le héros n'avance pas";
+        if (!L.sauvegardes.resume(3)) return 'pas de sauvegarde automatique';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('La Dernière Lanterne : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-lanterne.png` });
     }
     if (url === 'magasinier/index.html') {
       // Le Magasinier : un niveau avec de la glace gagné par sa solution, écran de fin ; annuler revient en arrière

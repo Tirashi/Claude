@@ -8,6 +8,7 @@
    6. Nebula : types de regles.js (// @ts-check + JSDoc) vérifiés par tsc, sans rien compiler ;
    7. Lune-Rover : chaque niveau est gagné par sa solution de référence ;
    8. Odyssée : chaque plateau est traversé par le pilote automatique, sous le temps cible ;
+   8 ter. La Dernière Lanterne : moteur RPG, données et accessibilité (outils/lanterne-tests.js) ;
    9. classements : chaque record envoyé par un jeu (LudoScores.submit) a son tableau dans le volet de
       l'accueil (RANKS, accueil.js), est repris en rejoignant (registerExisting) et son jeu sert à vérifier les pseudos.
    Code de sortie 1 si quelque chose ne va pas. */
@@ -90,6 +91,10 @@ catch (e) { bad('Lune-Rover : niveaux\n' + (e.stdout || '') + (e.stderr || ''));
 // 8. Odyssée : chaque plateau est traversé par le pilote automatique
 try { execFileSync(process.execPath, [path.join(__dirname, 'odyssee.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Odyssée : chaque plateau est faisable, sous le temps cible'); }
 catch (e) { bad('Odyssée : plateaux\n' + (e.stdout || '') + (e.stderr || '')); }
+
+// 8 ter. La Dernière Lanterne : moteur RPG, cohérence des données, tout est atteignable depuis le départ
+try { execFileSync(process.execPath, [path.join(__dirname, 'lanterne-tests.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('La Dernière Lanterne : moteur, données et accessibilité'); }
+catch (e) { bad('La Dernière Lanterne\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 8 bis. Le Magasinier : chaque niveau est gagné par sa solution notée (l'optimum complet : magasinier-solveur.js --optimum)
 try { execFileSync(process.execPath, [path.join(__dirname, 'magasinier-solveur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Le Magasinier : chaque niveau est gagné par sa solution notée'); }

@@ -131,7 +131,7 @@ Les talents de la LAME et du RODEUR coûtent aussi des PM : **une seule ressourc
 ## 8. Exploration
 ### 8.1 La carte
 - Sur la carte, seul le chef de file est dessiné, et les autres le suivent en file (comme Dragon Quest) ; on se déplace librement, mais **rien ne se joue en temps réel**.
-- Vue de dessus, **écran par écran**, comme Link's Awakening : on passe d'un écran au suivant par un glissement. Écran en portrait d'environ **10 × 12 tuiles** de 16 px, agrandies au pixel près.
+- ~~Vue de dessus, écran par écran, comme Link's Awakening, environ 10 × 12 tuiles de 16 px.~~ **Fait autrement (session 1, 22/10)** : avec la DA validée (Dungeon Crawl 32 × 32 en HD-2D), la **caméra suit l'équipe** dans des cartes de toutes tailles (une carte = un lieu : village, route, maison), et on passe d'une carte à l'autre par un fondu au noir. Environ 8 tuiles de large à l'écran. À changer si l'utilisateur préfère l'écran par écran.
 - **Monde** : environ **60 écrans** en 5 régions (Clairfond, Bois Murmurant, Marais des cloches avec Port-Gris, Hautes-Roches, Cimetière des cloches), plus le Hameau caché et l'abbaye.
 - **Donjons** : 12 à 20 salles chacun, avec une carte du donjon, une boussole (coffres restants), des petites clés et une grande clé pour la salle du boss, comme Zelda.
 - **Énigmes** simples : leviers, blocs à pousser, salles sombres, interrupteurs à activer dans l'ordre, ennemis à vaincre pour ouvrir la porte.
@@ -240,7 +240,7 @@ Environ **25 monstres**, 5 par région, avec quelques variantes de couleur plus 
 - **Carte** : la carte en haut, avec en bas une **croix** virtuelle, un bouton **A** (parler, ouvrir, agir), un bouton **B** (outil choisi) et **MENU**.
 - **Menu** : EQUIPE (stats de chacun, expliquées ; ordre de la file), OBJETS, EQUIPEMENT, OUTILS, JOURNAL (quête en cours en une phrase, pages trouvées, bestiaire), CARTE, OPTIONS, et **RETOUR A LA LUDOTHEQUE** (règle du 17/10, pas de bouton ajouté par-dessus le jeu).
 - **Dialogues** : fenêtre en bas, texte lettre par lettre, ▼ pour continuer, choix OUI / NON.
-- Le texte respecte la police Press Start 2P : majuscules sans accent dans le jeu.
+- Police **Pixelify Sans** (DA du 22/10, hébergée dans `polices/`) : textes normaux, avec accents (la règle des majuscules sans accent ne valait que pour Press Start 2P). Nom du héros : 8 lettres au plus, en majuscules.
 
 ### 11.1 Sauvegardes (décision du 20/10)
 - **Sauvegardes automatiques aux moments clés** : arrivée dans un village, entrée d'un donjon, porte d'un boss, après chaque événement du scénario et chaque boss vaincu. Il n'y a jamais plus d'environ **15 minutes** de jeu entre deux sauvegardes. Un petit « SAUVEGARDE… » s'affiche dans un coin.
@@ -275,6 +275,21 @@ Comme le reste de la Ludothèque : **scripts classiques**, sans build, sans modu
 | `donnees/cartes.js` | Cartes en **grilles de caractères** (une lettre par tuile), lisibles et faciles à comparer dans git |
 | `donnees/dialogues.js`, `evenements.js` | Textes et scripts du scénario |
 | `sprites.js` | Pixel art (comme `icones.js`) |
+
+### 12.2 bis Ce qui existe après la session 1 (22/10)
+| Fichier (`moteur-rpg/`) | Rôle |
+|---|---|
+| `regles.js` | Stats d'une classe à un niveau, expérience par niveau (la session 2 y ajoute dégâts, éléments, états, fuite). Node. |
+| `etat.js` | État de la partie (JSON, `VERSION` + `migrer`), objets plafonnés à 8, drapeaux, équipe ; `Sauvegardes(stockage, prefixe)` : 3 emplacements × copies `auto`, `main`, `reprise` (`pourDefaite` : la plus récente des deux vraies ; `pourReprendre` : la plus récente des trois). Node. |
+| `monde.js` | Cartes en grilles de lettres + légende, maisons, objets, habitants (`erre`, `si`, `cache`), sorties (`si` + `refus`), déclencheurs, file de l'équipe, pas des monstres, initiative. Node. |
+| `evenements.js` | Langage des événements (`dire`, `choix`, `si`, `drapeau`, `donner`, `ecus`, `rejoindre`, `teleporter`, `combat`, `pnj`, `sauver`, `son`, `musique`, `attendre`, `chapitre`, `evenement`, `stop`), conditions composées, `{HEROS}`. Node. |
+| `poupees.js` | Découpe des tuiles, personnages en poupée (corps + arme qui tourne autour de sa prise) et leurs 6 animations, portrait des dialogues. |
+| `rendu.js` | HD-2D (Three.js r128) : sol en une image, panneaux debout qui font de l'ombre, blocs, maisons à toit, eau, brume, lanternes qui vacillent, flou de profondeur + lueur (shader maison), caméra qui suit, **maisons et arbres transparents quand ils cachent l'équipe**. |
+| `interface.js`, `menu.js` | Dialogue lettre par lettre avec portrait, choix ▶, message « Sauvegarde… », fondu ; menu ÉQUIPE / OBJETS / JOURNAL / OPTIONS + retour à la Ludothèque. |
+| `entrees.js`, `sons.js` | Croix, A, B, MENU et clavier ; sons et musiques WebAudio (coupés en arrière-plan). |
+| `partie.js` | La partie sur la carte : déplacement case par case, file, habitants et monstres qui errent, A pour parler ou utiliser (coffre, panneau, lanterne), sorties, déclencheurs, sauvegardes, menu. Le combat est un crochet (`o.combat`) : en attendant la session 2, le monstre s'enfuit. |
+
+Jeu (`lanterne/`) : `index.html`, `style.css`, `jeu.js` (titre, 3 emplacements, nom, boucle), `tuiles.png` + `donnees/tuiles.js` (fabriqués par `outils/lanterne-tuiles.py` d'après `outils/lanterne-tuiles.json`), `donnees/base.js` (classes, héros, objets, monstres, légende, style), `donnees/cartes.js` (maison d'Ysolde, Clairfond, auberge, route de l'abbaye), `donnees/evenements.js` (début du prologue), `sons/`.
 
 ### 12.3 Vérifications automatiques (dans `outils/`)
 - Dans `verifications.js` : **cohérence des données**. Chaque objet, monstre ou carte cités existent ; chaque sortie d'écran mène quelque part ; chaque drapeau lu est écrit quelque part.
@@ -316,7 +331,7 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 | Session | Contenu | Modèle |
 |---|---|---|
 | 0 | **Maquette** : 2 ou 3 directions (carte, combat, dialogue) puis validation | Sonnet, ou Opus pour la décision |
-| 1 | Moteur **monde** : écrans, déplacement, équipe en file, collisions, PNJ, dialogues, événements, drapeaux, sauvegardes ; Clairfond jouable | Opus |
+| 1 | ✅ (22/10) Moteur **monde** : écrans, déplacement, équipe en file, collisions, PNJ, dialogues, événements, drapeaux, sauvegardes ; Clairfond jouable | Opus |
 | 2 | Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
 | 3 | Contenu **prologue et acte 1** (Bois, Crypte, Grand Cerf) ; solveur d'accessibilité | opusplan |
 | 4 | **Actes 2 et 3** (marais, moulin, Hameau caché, mines) | opusplan |

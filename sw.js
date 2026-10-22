@@ -9,7 +9,7 @@
    - Le cache HTTP du navigateur est contourné (préchargement en « reload », réseau en « no-cache ») :
      une page neuve ne doit jamais tourner avec un script partagé resté ancien.
    - Changer VERSION quand on ajoute ou renomme des fichiers, pour refaire le préchargement. */
-const VERSION = "ludotheque-v49";
+const VERSION = "ludotheque-v50";
 const NET_WAIT = 2500;
 let slowUntil = 0;   // réseau jugé lent : pendant 10 s, les copies en cache sont servies sans attendre
 const FONTS = "ludotheque-fonts";
@@ -24,6 +24,7 @@ const FILES = [
   "./odyssee/index.html", "./odyssee/regles.js", "./odyssee/sons.js",
   "./yams/index.html", "./lib/cannon.min.js",
   "./mot-d-or/index.html", "./mot-d-or/mots.js", "./mot-d-or/jeu.js", "./capitaine-du-port/index.html", "./capitaine-du-port/style.css", "./capitaine-du-port/regles.js", "./capitaine-du-port/niveaux.js", "./capitaine-du-port/decor.js", "./capitaine-du-port/jeu.js", "./capitaine-du-port/sons.js", "./magasinier/index.html", "./magasinier/style.css", "./magasinier/regles.js", "./magasinier/niveaux.js", "./magasinier/sons.js", "./magasinier/docker.js", "./magasinier/scene.js", "./magasinier/jeu.js",
+  "./lanterne/index.html", "./lanterne/style.css", "./lanterne/jeu.js", "./lanterne/tuiles.png", "./lanterne/donnees/tuiles.js", "./lanterne/donnees/base.js", "./lanterne/donnees/cartes.js", "./lanterne/donnees/evenements.js", "./lanterne/sons/bip.ogg", "./lanterne/sons/coffre.ogg", "./lanterne/sons/foret.ogg", "./lanterne/sons/lanterne.ogg", "./lanterne/sons/ok.ogg", "./lanterne/sons/porte.ogg", "./lanterne/sons/rencontre.ogg", "./lanterne/sons/soin.ogg", "./lanterne/sons/village.ogg", "./moteur-rpg/regles.js", "./moteur-rpg/etat.js", "./moteur-rpg/monde.js", "./moteur-rpg/evenements.js", "./moteur-rpg/poupees.js", "./moteur-rpg/rendu.js", "./moteur-rpg/interface.js", "./moteur-rpg/menu.js", "./moteur-rpg/entrees.js", "./moteur-rpg/sons.js", "./moteur-rpg/partie.js", "./polices/lanterne.css", "./polices/pixelify-sans.woff2",
   "./accueil.css", "./accueil.js", "./alunissage/jeu.js", "./amiral/jeu.js", "./calculator/jeu.js", "./calculator/style.css", "./club/jeu.js", "./escadrille/jeu.js", "./ile/jeu.js", "./ile/style.css", "./injagility/jeu.js", "./injagility/parcours.css", "./injagility/parcours.js", "./injagility/style.css", "./lignee/jeu.js", "./lignee/style.css", "./lune-rover/jeu.js", "./nebula/jeu.js", "./odyssee/jeu.js", "./odyssee/style.css", "./orbite/jeu.js", "./picross/dessins.js", "./picross/jeu.js", "./picross/style.css", "./pont-stellaire/jeu.js", "./queens/jeu.js", "./queens/style.css", "./solitaire/jeu.js", "./solitaire/style.css", "./sudoku/jeu.js", "./touche-coule/jeu.js", "./touche-coule/style.css", "./yams/jeu.js", "./yams/style.css"
 ];
 
