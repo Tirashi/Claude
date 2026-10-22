@@ -160,6 +160,7 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
       if (o.x < 0 || o.y < 0 || o.x >= c.l || o.y >= c.h) { bad(`${id} : objet hors de la carte`); continue; }
       if (!J.style.objets[o.type]) bad(`${id} : type d'objet inconnu ${o.type}`);
       const t = o.tuile || (J.style.objets[o.type] || {}).tuile; if (t && !tuile(t)) bad(`${id} : tuile inconnue ${t}`);
+      for (const p of (J.style.objets[o.type] || {}).pieces || []) for (const t of [p.dessus, p.face, p.cote].filter(Boolean)) if (!tuile(t)) bad(`objet ${o.type} : tuile inconnue ${t}`);
       if (o.evenement) citer(o.evenement, `${id} (objet ${o.type})`);
       if (o.type === 'coffre') {
         if (!o.id || coffres.has(o.id)) bad(`${id} : coffre sans nom ou en double`); coffres.add(o.id);
@@ -177,6 +178,10 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
       if (!(k.sol in J.style.sols)) bad(`${id} : sol inconnu ${k.sol}`);
       if (k.decor && !J.style.decors[k.decor]) bad(`${id} : décor inconnu ${k.decor}`);
     }
+  }
+  for (const [id, c] of Object.entries(J.cartes)) for (const o of c.ornements || []) {
+    const s = (J.style.ornements || {})[o.type];
+    if (!s) bad(`${id} : ornement inconnu ${o.type}`); else if (!tuile(o.tuile || s.tuile)) bad(`${id} : tuile inconnue ${o.tuile || s.tuile}`);
   }
   for (const [nom, d] of Object.entries(J.style.decors)) for (const t of [].concat(d.tuiles || [], d.tuile || [], d.alterne || [], ...(d.pieces || []).map(p => [p.dessus, p.face, p.cote].filter(Boolean)))) if (!tuile(t)) bad(`décor ${nom} : tuile inconnue ${t}`);
   for (const [nom, s] of Object.entries(J.style.sols)) if (s) for (const t of [].concat(s.tuiles || [], s.semis ? s.semis.tuiles : [], s.bordure ? Object.values(s.bordure) : [])) if (!tuile(t)) bad(`sol ${nom} : tuile inconnue ${t}`);

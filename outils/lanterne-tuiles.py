@@ -151,6 +151,144 @@ def dessines():
     for x in (6, 11): d.line([x, 2, x, 15], fill=BOIS[1])
     t['tonneau_dessus'] = im
 
+    PIERRE = [(52, 50, 56), (92, 88, 92), (122, 118, 120), (152, 148, 146)]
+    FER = [(50, 50, 60), (110, 110, 120), (160, 160, 170)]
+    OR = [(120, 90, 20), (217, 160, 40), (255, 214, 80)]
+    # bibliothèque : façade de rayonnages pleins de livres
+    im = Image.new('RGBA', (29, 45), BOIS[0]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 28, 44], fill=BOIS[1], outline=BOIS[0]); d.rectangle([1, 1, 27, 2], fill=BOIS[3])
+    couleurs = [(150, 40, 40), (40, 80, 140), (60, 120, 60), (170, 130, 50), (110, 60, 120), (200, 180, 140), (90, 50, 30)]
+    for r, y0 in enumerate((4, 18, 32)):
+        d.rectangle([2, y0, 26, y0 + 10], fill=(34, 20, 12))
+        x, i = 3, r * 3
+        while x < 25:
+            w = 2 + (i * 7 % 3); h = 7 + (i * 5 % 4); c = couleurs[i % len(couleurs)]
+            if (i * 11) % 9 == 4: x += 2; i += 1; continue
+            d.rectangle([x, y0 + 10 - h, min(25, x + w - 1), y0 + 9], fill=c)
+            d.line([x, y0 + 10 - h, x, y0 + 9], fill=tuple(min(255, v + 40) for v in c))
+            x += w; i += 1
+        d.rectangle([1, y0 + 11, 27, y0 + 12], fill=BOIS[2]); d.line([1, y0 + 13, 27, y0 + 13], fill=BOIS[0])
+    t['etagere_face'] = im
+    # livre ouvert (dessus du pupitre)
+    im = Image.new('RGBA', (18, 13), BOIS[1]); d = ImageDraw.Draw(im)
+    d.rectangle([1, 1, 16, 11], fill=(120, 40, 34)); d.rectangle([2, 2, 8, 10], fill=(236, 226, 196)); d.rectangle([9, 2, 15, 10], fill=(226, 214, 180))
+    for y in (4, 6, 8): d.line([3, y, 7, y], fill=(120, 110, 90)); d.line([10, y, 14, y], fill=(120, 110, 90))
+    t['livre_ouvert'] = im
+    # coffre : façade (bandes de fer et serrure), côté, couvercle, intérieur doré
+    im = Image.new('RGBA', (26, 13), BOIS[2]); d = ImageDraw.Draw(im)
+    for y in (3, 8): d.line([0, y, 25, y], fill=BOIS[1])
+    for x in (3, 21): d.rectangle([x, 0, x + 1, 12], fill=FER[1]); d.line([x + 1, 0, x + 1, 12], fill=FER[0])
+    d.rectangle([11, 0, 14, 5], fill=OR[1], outline=OR[0]); d.point((12, 3), fill=(30, 20, 10))
+    d.rectangle([0, 0, 25, 12], outline=BOIS[0]); t['coffre_face'] = im
+    im = Image.new('RGBA', (19, 13), BOIS[1]); d = ImageDraw.Draw(im)
+    for y in (3, 8): d.line([0, y, 18, y], fill=BOIS[0])
+    d.rectangle([0, 0, 18, 12], outline=BOIS[0]); t['coffre_cote'] = im
+    im = Image.new('RGBA', (26, 19), BOIS[3]); d = ImageDraw.Draw(im)
+    for y in (5, 11, 17): d.line([0, y, 25, y], fill=BOIS[2])
+    for x in (3, 21): d.rectangle([x, 0, x + 1, 18], fill=FER[1])
+    d.rectangle([0, 0, 25, 18], outline=BOIS[0]); t['coffre_couvercle'] = im
+    im = Image.new('RGBA', (26, 19), (40, 24, 12)); d = ImageDraw.Draw(im)
+    for i, (x, y) in enumerate(((5, 5), (11, 8), (17, 4), (8, 12), (15, 12), (20, 10))):
+        d.ellipse([x - 3, y - 2, x + 3, y + 2], fill=OR[1], outline=OR[0]); d.point((x - 1, y - 1), fill=OR[2])
+    d.rectangle([0, 0, 25, 18], outline=BOIS[0]); t['coffre_or'] = im
+    # panneau indicateur en volume : la planche
+    im = Image.new('RGBA', (23, 13), BOIS[2]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 22, 12], outline=BOIS[0]); d.line([1, 1, 21, 1], fill=BOIS[3])
+    for y in (4, 7, 10): d.line([4, y, 18 - (y % 3) * 2, y], fill=BOIS[0])
+    t['panneau_face'] = im
+    # sarcophage couché : couvercle sculpté (un gisant) et flancs de pierre
+    im = Image.new('RGBA', (23, 31), PIERRE[2]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 22, 30], outline=PIERRE[0]); d.rectangle([1, 1, 21, 29], outline=PIERRE[3])
+    d.ellipse([8, 3, 14, 9], fill=PIERRE[3], outline=PIERRE[1])
+    d.polygon([(6, 10), (16, 10), (15, 26), (7, 26)], fill=PIERRE[3], outline=PIERRE[1])
+    d.line([11, 12, 11, 24], fill=PIERRE[1]); d.line([8, 15, 14, 15], fill=PIERRE[1])
+    t['sarco_dessus'] = im
+    im = Image.new('RGBA', (32, 14), PIERRE[1]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 31, 13], outline=PIERRE[0]); d.line([1, 1, 30, 1], fill=PIERRE[3])
+    for x in range(3, 30, 6): d.rectangle([x, 4, x + 3, 10], outline=PIERRE[0], fill=PIERRE[2])
+    t['pierre_sculptee'] = im
+    # fûts de colonne cannelés (blanc pour l'abbaye, sombre pour la crypte)
+    for nom, pal in (('colonne_fut', [(150, 146, 140), (200, 196, 188), (232, 228, 220)]), ('colonne_fut_sombre', [(30, 30, 36), (58, 58, 66), (84, 84, 94)])):
+        im = Image.new('RGBA', (40, 48), pal[1]); d = ImageDraw.Draw(im)
+        for x in range(0, 40, 5): d.line([x, 0, x, 47], fill=pal[0]); d.line([x + 2, 0, x + 2, 47], fill=pal[2])
+        t[nom] = im
+    # cheminée : pierres et foyer avec ses flammes
+    im = Image.new('RGBA', (38, 40), PIERRE[1]); d = ImageDraw.Draw(im)
+    for r, y in enumerate(range(0, 40, 6)):
+        for x in range(-(r % 2) * 4, 38, 8): d.rectangle([x, y, x + 7, y + 5], fill=PIERRE[1 + (x // 8 + r) % 3], outline=PIERRE[0])
+    d.rectangle([0, 10, 37, 13], fill=BOIS[1], outline=BOIS[0])
+    d.rectangle([8, 18, 29, 39], fill=(20, 12, 10)); d.pieslice([8, 13, 29, 25], 180, 360, fill=(20, 12, 10))
+    for x, h, c in ((12, 12, (230, 90, 30)), (17, 16, (250, 160, 40)), (22, 11, (230, 90, 30)), (15, 8, (255, 230, 120)), (20, 9, (255, 230, 120))):
+        d.polygon([(x - 3, 38), (x + 3, 38), (x, 38 - h)], fill=c)
+    d.rectangle([10, 36, 27, 38], fill=BOIS[0])
+    t['cheminee_face'] = im
+    # décorations murales
+    im = Image.new('RGBA', (20, 24), BOIS[1]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 19, 23], outline=BOIS[0]); d.rectangle([2, 2, 17, 19], fill=(150, 200, 236))
+    d.rectangle([2, 12, 17, 19], fill=(120, 176, 120)); d.ellipse([11, 4, 15, 8], fill=(255, 244, 200))
+    d.line([10, 2, 10, 19], fill=BOIS[1], width=2); d.line([2, 10, 17, 10], fill=BOIS[1], width=2)
+    d.rectangle([0, 20, 19, 23], fill=BOIS[2], outline=BOIS[0])
+    t['fenetre'] = im
+    im = Image.new('RGBA', (22, 22)); d = ImageDraw.Draw(im)
+    d.rectangle([5, 2, 16, 19], fill=(150, 200, 236), outline=(60, 50, 40)); d.line([10, 2, 10, 19], fill=(60, 50, 40)); d.line([5, 10, 16, 10], fill=(60, 50, 40))
+    for x0 in (0, 17): d.rectangle([x0, 2, x0 + 4, 19], fill=(60, 110, 70), outline=(30, 60, 36)); d.line([x0 + 2, 4, x0 + 2, 17], fill=(40, 80, 50))
+    d.rectangle([4, 19, 17, 21], fill=(150, 140, 130), outline=(70, 60, 50)); d.point((8, 18), fill=(220, 80, 90)); d.point((13, 18), fill=(240, 200, 60))
+    t['fenetre_ext'] = im
+    im = Image.new('RGBA', (16, 32)); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 15, 1], fill=BOIS[1])
+    d.polygon([(1, 2), (14, 2), (14, 28), (8, 31), (1, 28)], fill=(140, 36, 40), outline=(70, 16, 20))
+    d.rectangle([3, 4, 12, 26], outline=OR[1])
+    d.rectangle([7, 9, 9, 10], fill=OR[1]); d.rectangle([6, 11, 10, 18], fill=OR[2], outline=OR[0]); d.rectangle([7, 13, 9, 16], fill=(255, 150, 60)); d.rectangle([6, 19, 10, 19], fill=OR[0])
+    t['tapisserie'] = im
+    im = Image.new('RGBA', (18, 13), OR[1]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 17, 12], outline=OR[0]); d.rectangle([2, 2, 15, 10], fill=(140, 190, 230))
+    d.polygon([(2, 10), (7, 5), (11, 10)], fill=(90, 110, 90)); d.polygon([(8, 10), (12, 6), (15, 10)], fill=(70, 90, 80)); d.rectangle([2, 9, 15, 10], fill=(90, 150, 80))
+    t['tableau'] = im
+    im = Image.new('RGBA', (17, 17)); d = ImageDraw.Draw(im)
+    d.line([1, 1, 15, 15], fill=FER[2], width=2); d.line([15, 1, 1, 15], fill=FER[2], width=2)
+    d.polygon([(3, 3), (13, 3), (13, 9), (8, 15), (3, 9)], fill=(40, 70, 140), outline=(20, 30, 60)); d.line([8, 4, 8, 13], fill=OR[1]); d.line([4, 7, 12, 7], fill=OR[1])
+    t['bouclier_mur'] = im
+    im = Image.new('RGBA', (26, 15)); d = ImageDraw.Draw(im)
+    d.rectangle([0, 11, 25, 13], fill=BOIS[2], outline=BOIS[0]); d.line([3, 14, 3, 14], fill=BOIS[0]); d.line([22, 14, 22, 14], fill=BOIS[0])
+    d.rectangle([2, 4, 6, 10], fill=(150, 90, 50), outline=(80, 40, 20)); d.ellipse([9, 3, 15, 10], fill=(220, 220, 210), outline=(90, 80, 70))
+    d.rectangle([18, 6, 21, 10], fill=(80, 130, 90), outline=(30, 60, 40)); d.rectangle([19, 4, 20, 5], fill=(80, 130, 90))
+    t['etagere_murale'] = im
+    im = Image.new('RGBA', (8, 18)); d = ImageDraw.Draw(im)
+    d.rectangle([3, 7, 4, 17], fill=BOIS[1], outline=BOIS[0]); d.rectangle([1, 6, 6, 8], fill=FER[1], outline=FER[0])
+    d.polygon([(1, 6), (6, 6), (4, 0)], fill=(250, 150, 40)); d.polygon([(2, 6), (5, 6), (4, 2)], fill=(255, 230, 120))
+    t['torche'] = im
+    im = Image.new('RGBA', (26, 45)); d = ImageDraw.Draw(im)
+    d.rectangle([0, 10, 25, 44], fill=PIERRE[1]); d.pieslice([0, 0, 25, 22], 180, 360, fill=PIERRE[1])
+    d.rectangle([3, 11, 22, 42], fill=(40, 60, 120)); d.pieslice([3, 3, 22, 20], 180, 360, fill=(40, 60, 120))
+    vit = [(200, 50, 50), (60, 110, 200), (240, 200, 60), (70, 160, 90), (150, 70, 170)]
+    for i, (x, y) in enumerate((x, y) for y in range(8, 42, 5) for x in range(4, 22, 5)):
+        if y < 11 and (x < 8 or x > 16): continue
+        d.rectangle([x, y, x + 3, y + 3], fill=vit[(i * 3) % 5])
+    d.rectangle([11, 12, 14, 30], fill=(255, 230, 140)); d.rectangle([8, 17, 17, 19], fill=(255, 230, 140))
+    t['vitrail'] = im
+    # tête de la Grande Lanterne : cadre de pierre et vitres allumées
+    im = Image.new('RGBA', (16, 14), PIERRE[2]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 15, 13], outline=PIERRE[0]); d.rectangle([3, 2, 12, 11], fill=(255, 214, 110), outline=PIERRE[0])
+    d.rectangle([5, 4, 10, 9], fill=(255, 246, 200)); d.line([7, 2, 7, 11], fill=(200, 140, 50)); d.line([3, 6, 12, 6], fill=(200, 140, 50))
+    t['lanterne_face'] = im
+    im = Image.new('RGBA', (16, 14), PIERRE[1]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 15, 13], outline=PIERRE[0]); d.rectangle([3, 2, 12, 11], fill=(34, 36, 44), outline=PIERRE[0])
+    d.line([7, 2, 7, 11], fill=PIERRE[0]); d.line([3, 6, 12, 6], fill=PIERRE[0]); d.point((5, 4), fill=(80, 84, 96))
+    for (x, y) in ((1, 12), (2, 12), (14, 1), (13, 12), (0, 7)): d.point((x, y), fill=(70, 110, 60))
+    t['lanterne_face_eteinte'] = im
+    # tapis (32 px par case) : grand tapis de 3 × 2 cases, chemin de tapis rouge, tapis rond de 2 × 2
+    def tapis(w, h, fond, motif, bord):
+        im = Image.new('RGBA', (w, h), fond); d = ImageDraw.Draw(im)
+        d.rectangle([0, 0, w - 1, h - 1], outline=bord); d.rectangle([2, 2, w - 3, h - 3], outline=motif); d.rectangle([3, 3, w - 4, h - 4], outline=bord)
+        for y in range(8, h - 6, 8):
+            for x in range(8, w - 6, 8):
+                d.polygon([(x, y - 3), (x + 3, y), (x, y + 3), (x - 3, y)], outline=motif)
+        for x in range(0, w, 3): d.point((x, 0), fill=motif); d.point((x, h - 1), fill=motif)
+        return im
+    t['tapis'] = tapis(96, 64, (120, 40, 44), (220, 170, 70), (60, 20, 24))
+    t['tapis_bleu'] = tapis(64, 64, (40, 60, 110), (210, 200, 160), (20, 30, 60))
+    t['tapis_long'] = tapis(32, 192, (150, 30, 36), (230, 190, 80), (80, 16, 20))
+
     # tuiles de toit (texture qui se répète)
     im = Image.new('RGBA', (32, 32), (90, 42, 32, 255)); d = ImageDraw.Draw(im)
     nuances = [(126, 58, 42), (116, 52, 38), (136, 66, 47)]
