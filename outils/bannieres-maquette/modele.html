@@ -741,7 +741,8 @@ async function preparerAventuriers() {
   const chargeur = new THREE.GLTFLoader();
   const lire = src => new Promise((ok, ko) => chargeur.parse(src, '', ok, ko));
   for (const p in AVENTURIERS.persos) {
-    const g = await lire(Uint8Array.from(atob(AVENTURIERS.persos[p]), c => c.charCodeAt(0)).buffer);
+    let g;
+    try { g = await lire(Uint8Array.from(atob(AVENTURIERS.persos[p]), c => c.charCodeAt(0)).buffer); } catch (e) { console.error('personnage', p, e); continue; }   // un personnage en moins n'empêche pas de jouer
     AV.modeles[p] = g.scene;
     let carte = null; g.scene.traverse(o => { if (o.isMesh && !carte) carte = o.material.map; });
     AV.mats[p] = {};
@@ -760,17 +761,25 @@ async function preparerAventuriers() {
       AV.mats[p][coul] = { peau: new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0, skinning: true }), fixe: new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0 }) };
     }
   }
-  for (const a in AVENTURIERS.armes) AV.armes[a] = (await lire(AVENTURIERS.armes[a])).scene;
+  for (const a in AVENTURIERS.armes) {
+    try { AV.armes[a] = (await lire(AVENTURIERS.armes[a])).scene; } catch (e) { console.error('arme', a, e); continue; }
+    // une arme d'un autre pack (la lance) : sa texture est chargée à part, comme les atlas du décor
+    if (AVENTURIERS.texArmes && AVENTURIERS.texArmes[a]) {
+      const t = new THREE.TextureLoader().load(AVENTURIERS.texArmes[a]); t.flipY = false; t.encoding = THREE.sRGBEncoding;
+      const m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0 });
+      AV.armes[a].traverse(x => { if (x.isMesh) x.material = m; });
+    }
+  }
   AVENTURIERS.clips.forEach(j => { AV.clips[j.name] = THREE.AnimationClip.parse(j); });
   const b = new THREE.Box3().setFromObject(AV.modeles.Knight); AV.haut = b.max.y - b.min.y;
 }
 const geoAnneau = new THREE.RingGeometry(0.16, 0.36, 24), matsAnneau = {};
 // un guerrier : le personnage cloné avec son squelette, ses armes dans les mains, son mélangeur d'animations
 function aventurier(type, coul, haut) {
-  const T = TYPES[type], o = THREE.SkeletonUtils.clone(AV.modeles[T.perso]), m = AV.mats[T.perso][coul] || AV.mats[T.perso].neutre;
+  const T = TYPES[type], perso = AV.modeles[T.perso] ? T.perso : 'Knight', o = THREE.SkeletonUtils.clone(AV.modeles[perso]), m = AV.mats[perso][coul] || AV.mats[perso].neutre;
   o.traverse(x => { if (x.isMesh) { x.material = m.peau; x.castShadow = true; x.frustumCulled = false; } });
   const arme = (nom, os) => {
-    if (!nom) return;
+    if (!nom || !AV.armes[nom]) return;
     const w = AV.armes[nom].clone(), src = TEXTURE_ARME[nom], mw = src && (AV.mats[src][coul] || AV.mats[src].neutre).fixe;
     w.traverse(x => { if (x.isMesh) { if (mw) x.material = mw; x.castShadow = true; } });
     if (nom === 'bow_withString') w.rotation.z = Math.PI;   // sinon la corde est tournée vers la cible
@@ -1082,7 +1091,7 @@ function boucle(now) {
 // le duché du jour
 const auj = new Date();
 const police = document.fonts ? document.fonts.load("10px 'Press Start 2P'").catch(() => {}) : Promise.resolve();
-Promise.all([police, preparerAventuriers()]).then(() => { nouvellePartie(auj.getFullYear() * 10000 + (auj.getMonth() + 1) * 100 + auj.getDate()); requestAnimationFrame(boucle); });
+Promise.all([police, preparerAventuriers().catch(e => console.error('personnages', e))]).then(() => { nouvellePartie(auj.getFullYear() * 10000 + (auj.getMonth() + 1) * 100 + auj.getDate()); requestAnimationFrame(boucle); });
 </script>
 </body>
 </html>

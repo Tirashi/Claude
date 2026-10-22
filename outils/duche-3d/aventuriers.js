@@ -14,14 +14,16 @@ const CLIPS = { General: ['Idle_A', 'Hit_A', 'Death_A', 'Death_A_Pose'], Movemen
   CombatRanged: ['Ranged_Bow_Draw', 'Ranged_Bow_Release', 'Ranged_Bow_Idle', 'Ranged_Magic_Shoot', 'Ranged_Magic_Spellcasting'], Simulation: ['Cheering'] };
 const trouver = (dossier, nom) => { for (const f of fs.readdirSync(dossier, { recursive: true })) if (path.basename(f) === nom) return path.join(dossier, f); throw new Error(nom); };
 (async () => {
-  const persos = {}, armes = {};
+  const persos = {}, armes = {}, texArmes = {};
   const dossiers = [adv, squ, armesF].filter(Boolean), chercher = nom => { for (const d of dossiers) { try { return trouver(d, nom); } catch (e) {} } throw new Error(nom); };
   for (const p of PERSOS) persos[p] = fs.readFileSync(chercher(p + '.glb')).toString('base64');
   for (const a of ARMES) {
     const f = chercher(a + '.gltf'), g = JSON.parse(fs.readFileSync(f, 'utf8'));
     g.buffers.forEach(b => { b.uri = 'data:application/octet-stream;base64,' + fs.readFileSync(path.join(path.dirname(f), b.uri)).toString('base64'); });
-    if (GARDER.includes(a)) (g.images || []).forEach(im => { im.uri = 'data:image/png;base64,' + fs.readFileSync(path.join(path.dirname(f), im.uri)).toString('base64'); });
-    else {
+    // une arme d'un autre pack garde sa texture, mais à part (texArmes) : le chargeur glTF lirait une image « data: » avec fetch,
+    // ce que la page d'un artefact interdit ; la page la charge comme ses autres atlas, avec une simple Image
+    if (GARDER.includes(a)) { const im = (g.images || [])[0]; if (im) texArmes[a] = 'data:image/png;base64,' + fs.readFileSync(path.join(path.dirname(f), im.uri)).toString('base64'); }
+    {
       // la texture est celle du personnage (recolorée à la couleur du duché) : on la remet à l'exécution
       delete g.images; delete g.textures; delete g.samplers;
       g.materials.forEach(m => { if (m.pbrMetallicRoughness) delete m.pbrMetallicRoughness.baseColorTexture; });
@@ -51,7 +53,7 @@ const trouver = (dossier, nom) => { for (const f of fs.readdirSync(dossier, { re
     }, [b64, noms]));
   }
   await b.close();
-  const js = 'window.AVENTURIERS=' + JSON.stringify({ persos, armes, clips }) + ';\n';
+  const js = 'window.AVENTURIERS=' + JSON.stringify({ persos, armes, texArmes, clips }) + ';\n';
   fs.writeFileSync(sortie, js);
   console.log('clips', clips.map(c => c.name).join(' '), '|', Math.round(js.length / 1024), 'Ko');
 })();
