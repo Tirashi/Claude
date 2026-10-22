@@ -10,6 +10,7 @@
          reglages, enregistrerReglages(), defaite() } */
 (function (M) {
   const PAS = .2;   // secondes pour avancer d'une case
+  const CADENCE = 2.4;   // cycles de marche par seconde (deux petits rebonds par cycle)
   const SENS = { gauche: 1, droite: -1 };
 
   function Partie(o) {
@@ -85,15 +86,16 @@
     const lisse = (s, k) => [s.de[0] + (s.x - s.de[0]) * k, s.de[1] + (s.y - s.de[1]) * k];
     function dessiner(t) {
       const k = mouvement ? Math.min(1, mouvement.t) : 1;
-      for (const s of [chef, ...suiveurs]) {
+      // le pas suit l'horloge (et pas l'avancée dans la case) : un balancement doux, même en avançant vite
+      [chef, ...suiveurs].forEach((s, i) => {
         const [x, y] = lisse(s, k), bouge = mouvement && (s.x !== s.de[0] || s.y !== s.de[1]);
-        rendu.placer(s.id, x, y, bouge ? 'marche' : 'repos', bouge ? (k * 2) % 1 : 0, s.sens);
-      }
+        rendu.placer(s.id, x, y, bouge ? 'marche' : 'repos', bouge ? (t * CADENCE + i * .3) % 1 : 0, s.sens);
+      });
       for (const n of pnjs.concat(monstres)) {
         n.t = Math.min(1, n.t + (t - (n.dernier || t)) / (PAS * 1.6)); n.dernier = t;
         const [x, y] = lisse(n, n.t), bouge = n.t < 1;
         const anim = !bouge && n.def && n.def.anim;   // un habitant peut avoir son geste à lui (par ex. 'attaque')
-        rendu.placer(n.aid, x, y, bouge ? 'marche' : anim || 'repos', bouge ? (n.t * 2) % 1 : anim ? (t * .7 + (n.def.x || 0)) % 1 : 0, n.sens);
+        rendu.placer(n.aid, x, y, bouge ? 'marche' : anim || 'repos', bouge ? (t * CADENCE * .8 + (n.def && n.def.x || 0) * .37) % 1 : anim ? (t * .7 + (n.def.x || 0)) % 1 : 0, n.sens);
       }
       const [cx, cy] = lisse(chef, k);
       rendu.viser(cx, cy);

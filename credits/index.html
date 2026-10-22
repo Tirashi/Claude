@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d0820">
+<title>Crédits — Ludothèque 16 bits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+  /* Page des crédits : à compléter dès qu'on ajoute une ressource venue d'ailleurs (règle du 22/10, voir CLAUDE.md). */
+  :root { --fond: #0d0820; --carte: #1b1238; --bord: #ffffff; --or: #ffd23f; --texte: #ece6ff; --doux: #a99fd0; --lien: #5ce1ff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 21px/1.25 "VT323", monospace; }
+  main { max-width: 760px; margin: 0 auto; padding: 18px 16px 40px; }
+  h1 { font: 18px/1.5 "Press Start 2P", monospace; color: var(--or); margin: 10px 0 4px; }
+  h2 { font: 12px/1.6 "Press Start 2P", monospace; color: var(--or); margin: 26px 0 8px; }
+  p { margin: 6px 0; }
+  .intro { color: var(--doux); }
+  .res { background: var(--carte); border: 3px solid var(--bord); box-shadow: 4px 4px 0 #000; border-radius: 4px; padding: 8px 12px; margin: 10px 0; }
+  .res b { color: #fff; }
+  .res .lic { display: inline-block; font: 8px/1 "Press Start 2P", monospace; background: var(--or); color: #2a1600; padding: 4px 5px; margin-left: 6px; vertical-align: 2px; }
+  .res .jeux { color: var(--doux); }
+  a { color: var(--lien); word-break: break-word; }
+  .retour { display: inline-block; font: 10px/1 "Press Start 2P", monospace; color: #000; background: var(--or); border: 3px solid #000; padding: 10px 12px; text-decoration: none; box-shadow: 3px 3px 0 #000; }
+  ul { margin: 4px 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="retour ludo-retour" href="../index.html">&#9664; LUDOTHEQUE</a>
+  <h1>CREDITS</h1>
+  <p class="intro">Les jeux de la Ludothèque sont faits pour la famille, sans but commercial. La plupart des graphismes et des sons sont dessinés ou synthétisés par le code. Voici tout ce qui vient d'ailleurs, avec un grand merci à leurs créateurs.</p>
+
+  <h2>GRAPHISMES</h2>
+  <div class="res"><b>Dungeon Crawl Stone Soup, tuiles 32 × 32</b><span class="lic">CC0</span>
+    <p>Par l'équipe et les contributeurs de Dungeon Crawl Stone Soup.</p>
+    <p><a href="https://opengameart.org/content/dungeon-crawl-32x32-tiles">opengameart.org/content/dungeon-crawl-32x32-tiles</a> · <a href="https://github.com/crawl/crawl">github.com/crawl/crawl</a></p>
+    <p class="jeux">La Dernière Lanterne : personnages, monstres, décors.</p></div>
+
+  <h2>SONS ET MUSIQUES</h2>
+  <div class="res"><b>Ninja Adventure</b><span class="lic">CC0</span>
+    <p>Par Pixel-boy et AAA.</p>
+    <p><a href="https://pixel-boy.itch.io/ninja-adventure-asset-pack">pixel-boy.itch.io/ninja-adventure-asset-pack</a></p>
+    <p class="jeux">La Dernière Lanterne : musiques (« Calm Village », « Fight »…) et bruitages.</p></div>
+  <div class="res"><b>RPG Essentials SFX — Free!</b><span class="lic">LIBRE, CREDIT</span>
+    <p>Par Leohpaz.</p>
+    <p><a href="https://leohpaz.itch.io/rpg-essentials-sfx-free">leohpaz.itch.io/rpg-essentials-sfx-free</a></p>
+    <p class="jeux">La Dernière Lanterne : bruitages des combats (touché, givre, flamme, soin, flèche, morsure, victoire).</p></div>
+  <div class="res"><b>Kenney</b><span class="lic">CC0</span>
+    <p>Par Kenney Vleugels.</p>
+    <p><a href="https://kenney.nl/assets">kenney.nl/assets</a></p>
+    <p class="jeux">La Dernière Lanterne : quelques bruitages.</p></div>
+
+  <h2>BIBLIOTHEQUES</h2>
+  <div class="res"><b>Three.js r128</b><span class="lic">MIT</span>
+    <p>Par Ricardo Cabello (mrdoob) et les contributeurs de three.js.</p>
+    <p><a href="https://threejs.org">threejs.org</a></p>
+    <p class="jeux">Les jeux en 3D et en HD-2D : Empilage, Odyssée, Yams, Le Magasinier, La Dernière Lanterne.</p></div>
+  <div class="res"><b>cannon.js 0.6.2</b><span class="lic">MIT</span>
+    <p>Par Stefan Hedman.</p>
+    <p><a href="https://github.com/schteppe/cannon.js">github.com/schteppe/cannon.js</a></p>
+    <p class="jeux">Yams : la physique des dés.</p></div>
+  <div class="res"><b>an-array-of-french-words</b><span class="lic">MIT</span>
+    <p>Par Titus Wormer, d'après la liste de mots de Letterpress.</p>
+    <p><a href="https://www.npmjs.com/package/an-array-of-french-words">npmjs.com/package/an-array-of-french-words</a></p>
+    <p class="jeux">Le Mot d'or : le dictionnaire des essais.</p></div>
+
+  <h2>POLICES</h2>
+  <div class="res"><b>Google Fonts</b><span class="lic">SIL OFL</span>
+    <ul>
+      <li>Press Start 2P (CodeMan38) et VT323 (Peter Hull) : l'accueil et la plupart des jeux.</li>
+      <li>Pixelify Sans (Stefie Justprince) : La Dernière Lanterne.</li>
+      <li>Fredoka, Rajdhani, Michroma, Share Tech Mono, Luckiest Guy, Cinzel, DotGothic16, Patrick Hand, Rubik, Schoolbell, Signika, Alegreya Sans SC : les autres jeux.</li>
+    </ul>
+    <p><a href="https://fonts.google.com">fonts.google.com</a></p></div>
+
+  <h2>SERVICES</h2>
+  <div class="res"><b>Supabase</b> pour les classements de la famille (<a href="https://supabase.com">supabase.com</a>), <b>GitHub Pages</b> pour l'hébergement du site (<a href="https://pages.github.com">pages.github.com</a>).</div>
+
+  <h2>MARQUES</h2>
+  <div class="res">Picross Dex est un jeu de fan, personnel et non commercial : Pokémon est une marque de Nintendo, Creatures Inc. et GAME FREAK inc. Les autres jeux s'inspirent de classiques (Tetris, Snake, Asteroids, Sokoban, Rush Hour, Wordle, Orlog…) sans en reprendre les images ni les sons.</div>
+</main>
+</body>
+</html>

@@ -6,7 +6,8 @@
 
    style (données du jeu) :
      sols:    { nom: { tuiles: […], semis: { tuiles: […], sur: 7 } } ou { bordure: { centre, n, s, e, w, ne, nw, se, sw } } }
-     decors:  { nom: { type: 'panneau', tuiles: […], taille } | { type: 'bloc', tuile, hauteur } | { type: 'plat', tuiles: […] } }
+     decors:  { nom: { type: 'panneau', tuiles: […], taille } | { type: 'bloc', tuile, hauteur }
+              | { type: 'meuble', pieces: [{ boite: [l, h, p] | cylindre: [rayon, h], pos: [x, y, z], dessus, face, cote }] } | { type: 'plat', tuiles: […] } }
      objets:  { type: { tuile, tuileOuverte, taille, lumiere: { couleur, intensite, portee, hauteur } } }
      exterieur: { sol: [tuiles], decor: 'arbre' }   sol et arbres autour des cartes d'extérieur */
 (function (M) {
@@ -209,7 +210,8 @@ void main(){
           a.position.set(x + .5 + (d.taille > 1.2 ? (hasard(x, y) % 5 - 2) * .05 : 0), 0, y + .5); scene.add(a);
           if (d.taille > 1.2) masquable([a.material], x - .1, x + 1.1, y + .5, y + .5, d.taille);
           if (d.alterne) alternent.push({ a, tuiles: d.alterne.map(tex) });
-        } else if (d.type === 'bloc') {
+        } else if (d.type === 'meuble') meuble(d, x, y);
+        else if (d.type === 'bloc') {
           const t = tex(d.tuile), hb = d.hauteur || 1.2;
           const b = new THREE.Mesh(new THREE.BoxGeometry(1, hb, 1), new THREE.MeshLambertMaterial({ map: t }));
           b.position.set(x + .5, hb / 2, y + .5); b.castShadow = b.receiveShadow = true; scene.add(b);
@@ -223,6 +225,18 @@ void main(){
       for (const o of def.objets || []) objet(o);
       if (brumeForce) brume(brumeForce);
       if (interieur) { const p = new THREE.PointLight(0xffc880, .9, Math.max(c.l, c.h) * 1.2, 1.2); p.position.set(c.l / 2, 2.4, c.h / 2 + 1); scene.add(p); }
+    }
+
+    // un meuble en volume (lit, table, tonneau) : des boîtes et des cylindres texturés, face par face
+    function meuble(d, x, y) {
+      const mat = n => new THREE.MeshLambertMaterial({ map: tex(n) });
+      for (const p of d.pieces) {
+        const [px, py, pz] = p.pos || [0, 0, 0], dessus = mat(p.dessus || p.face), face = mat(p.face), cote = mat(p.cote || p.face);
+        let m, h;
+        if (p.cylindre) { h = p.cylindre[1]; m = new THREE.Mesh(new THREE.CylinderGeometry(p.cylindre[0], p.cylindre[0], h, 14), [face, dessus, dessus]); }
+        else { h = p.boite[1]; m = new THREE.Mesh(new THREE.BoxGeometry(p.boite[0], h, p.boite[2]), [cote, cote, dessus, dessus, face, face]); }
+        m.position.set(x + .5 + px, py + h / 2, y + .5 + pz); m.castShadow = m.receiveShadow = true; scene.add(m);
+      }
     }
 
     // ce qui peut cacher l'équipe : de x0 à x1, de l'arrière (zb) à l'avant (zf), hauteur h

@@ -32,7 +32,7 @@
     let sx = 1, sy = 1, rot = 0, dx = 0, dy = 0, armeA = 0, flash = 0, aura = 0;
     const respire = Math.sin(t * 3 + p.dec);
     if (etat === 'repos') { sy = 1 + .03 * respire; sx = 1 - .015 * respire; armeA = .04 * respire; }
-    else if (etat === 'marche') { const s = Math.sin(q * Math.PI * 2); rot = .06 * s; dy = -Math.abs(s) * 2.5; sy = 1 - .05 * Math.abs(Math.cos(q * Math.PI * 2)); armeA = .1 * s; }
+    else if (etat === 'marche') { const s = Math.sin(q * Math.PI * 2); rot = .05 * s; dy = -Math.abs(s) * 2; sy = 1 - .05 * Math.abs(Math.cos(q * Math.PI * 2)); armeA = .1 * s; }
     else if (etat === 'attaque') {
       if (q < .4) { const k = ease(q / .4); armeA = .35 * k; rot = .04 * k; dx = 1.5 * k; dy = -k; }
       else if (q < .6) { const k = ease((q - .4) / .2); armeA = .35 - .9 * k; rot = .04 - .1 * k; dx = 1.5 - 5 * k; dy = -1 + k; }

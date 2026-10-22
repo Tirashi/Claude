@@ -102,6 +102,55 @@ def dessines():
     d.rectangle([8, 22, 23, 28], fill=(110, 110, 120), outline=(50, 50, 60)); d.line([16, 23, 10, 9], fill=(70, 44, 24), width=3); d.ellipse([7, 6, 13, 12], fill=(60, 170, 70), outline=(20, 80, 30))
     t['levier_baisse'] = im
 
+    # meubles en volume (decor « meuble ») : une texture par face, 32 px par case pour garder la même finesse
+    def planches(w, h, horiz=True, teintes=(1, 2)):
+        im = Image.new('RGBA', (w, h), BOIS[teintes[0]]); d = ImageDraw.Draw(im)
+        if horiz:
+            for i, y in enumerate(range(0, h, 5)):
+                d.rectangle([0, y, w - 1, y + 4], fill=BOIS[teintes[i % 2]]); d.line([0, y + 4, w - 1, y + 4], fill=BOIS[0])
+                x = (i * 13) % max(1, w); d.point((x, y + 2), fill=BOIS[0])
+        else:
+            for i, x in enumerate(range(0, w, 6)):
+                d.rectangle([x, 0, x + 5, h - 1], fill=BOIS[teintes[i % 2]]); d.line([x + 5, 0, x + 5, h - 1], fill=BOIS[0])
+        return im
+    t['bois'] = planches(32, 32)
+    t['bois_sombre'] = planches(32, 32, teintes=(0, 1))
+    ROUGE = [(90, 30, 26), (150, 48, 42), (176, 60, 52), (204, 86, 72)]; DRAP = [(170, 160, 140), (214, 206, 186), (236, 230, 214)]
+    # lit vu de dessus (le haut de l'image = la tête du lit) : oreiller, drap rabattu, couverture
+    im = Image.new('RGBA', (26, 30), ROUGE[2]); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 25, 9], fill=DRAP[2]); d.rounded_rectangle([3, 1, 22, 7], 2, fill=DRAP[2], outline=DRAP[0]); d.line([5, 6, 20, 6], fill=DRAP[1])
+    d.rectangle([0, 9, 25, 12], fill=DRAP[1]); d.line([0, 12, 25, 12], fill=DRAP[0])
+    for y in (17, 23): d.line([0, y, 25, y], fill=ROUGE[1])
+    d.line([0, 13, 25, 13], fill=ROUGE[3]); d.rectangle([0, 0, 0, 29], fill=ROUGE[1]); d.rectangle([25, 0, 25, 29], fill=ROUGE[1])
+    t['lit_dessus'] = im
+    # côté et pied du matelas : la couverture qui tombe, le cadre de bois en bas
+    for nom, w in (('lit_cote', 30), ('lit_pied', 26)):
+        im = Image.new('RGBA', (w, 12), ROUGE[2]); d = ImageDraw.Draw(im)
+        d.line([0, 0, w - 1, 0], fill=ROUGE[3]); d.rectangle([0, 6, w - 1, 6], fill=ROUGE[1])
+        d.rectangle([0, 7, w - 1, 11], fill=BOIS[1]); d.line([0, 7, w - 1, 7], fill=BOIS[3]); d.line([0, 11, w - 1, 11], fill=BOIS[0])
+        t[nom] = im
+    # tête de lit : panneau sculpté
+    im = planches(28, 22, horiz=False); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 27, 21], outline=BOIS[0]); d.rectangle([0, 0, 27, 2], fill=BOIS[3], outline=BOIS[0])
+    d.rounded_rectangle([5, 6, 22, 17], 3, outline=BOIS[0]); d.rounded_rectangle([6, 7, 21, 16], 3, outline=BOIS[3])
+    t['lit_tete'] = im
+    # dessus de table : planches, une écuelle et un gobelet
+    im = planches(29, 22); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 28, 21], outline=BOIS[0])
+    d.ellipse([6, 7, 14, 13], fill=(220, 220, 210), outline=(90, 80, 70)); d.ellipse([8, 9, 12, 11], fill=(196, 150, 90))
+    d.ellipse([19, 5, 23, 9], fill=(150, 150, 160), outline=(60, 60, 70)); d.point((21, 7), fill=(120, 40, 50))
+    t['table_dessus'] = im
+    # tonneau : douelles et cercles de fer (tout autour), couvercle vu de dessus
+    im = Image.new('RGBA', (56, 20), BOIS[1]); d = ImageDraw.Draw(im)
+    for i, x in enumerate(range(0, 56, 4)):
+        d.rectangle([x, 0, x + 3, 19], fill=BOIS[1 + (i % 2)]); d.line([x + 3, 0, x + 3, 19], fill=BOIS[0])
+    for y in (2, 16): d.rectangle([0, y, 55, y + 1], fill=(120, 120, 130)); d.line([0, y + 1, 55, y + 1], fill=(70, 70, 80))
+    t['tonneau_cote'] = im
+    im = Image.new('RGBA', (18, 18)); d = ImageDraw.Draw(im)
+    d.ellipse([0, 0, 17, 17], fill=(120, 120, 130)); d.ellipse([1, 1, 16, 16], fill=BOIS[2], outline=BOIS[0])
+    for x in (6, 11): d.line([x, 2, x, 15], fill=BOIS[1])
+    t['tonneau_dessus'] = im
+
     # tuiles de toit (texture qui se répète)
     im = Image.new('RGBA', (32, 32), (90, 42, 32, 255)); d = ImageDraw.Draw(im)
     nuances = [(126, 58, 42), (116, 52, 38), (136, 66, 47)]

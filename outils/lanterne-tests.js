@@ -178,7 +178,7 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
       if (k.decor && !J.style.decors[k.decor]) bad(`${id} : décor inconnu ${k.decor}`);
     }
   }
-  for (const [nom, d] of Object.entries(J.style.decors)) for (const t of [].concat(d.tuiles || [], d.tuile || [], d.alterne || [])) if (!tuile(t)) bad(`décor ${nom} : tuile inconnue ${t}`);
+  for (const [nom, d] of Object.entries(J.style.decors)) for (const t of [].concat(d.tuiles || [], d.tuile || [], d.alterne || [], ...(d.pieces || []).map(p => [p.dessus, p.face, p.cote].filter(Boolean)))) if (!tuile(t)) bad(`décor ${nom} : tuile inconnue ${t}`);
   for (const [nom, s] of Object.entries(J.style.sols)) if (s) for (const t of [].concat(s.tuiles || [], s.semis ? s.semis.tuiles : [], s.bordure ? Object.values(s.bordure) : [])) if (!tuile(t)) bad(`sol ${nom} : tuile inconnue ${t}`);
   for (const id in J.heros) {
     if (!perso(J.heros[id].perso)) bad(`héros ${id} : personnage inconnu`);
