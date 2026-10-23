@@ -63,10 +63,10 @@ Idée de départ : `IDEES.md` (jeux de gestion, 15/10). Maquettes : `maquettes/b
 | Le joueur de tournoi | Les cartes fortes de la méta | Vient surtout s'il y a un tournoi |
 | Le collectionneur | Une carte précise (rare et mieux) | Paie cher ; rencontre : « Vous auriez un VOLTAX ? » |
 | Le marchand | Acheter en lot, à bas prix | Rencontre : il négocie (trois offres, on accepte ou non) |
-| Le vendeur de collection | Vendre ses cartes | Rencontre : un lot à un prix ; parfois des **fausses cartes** |
+| Le vendeur de collection | Vendre ses cartes | Rencontre : un lot à un prix (on voit les cartes et leur cote, on accepte ou on refuse) |
 
 - **Affluence** = base de la semaine × réputation × **attrait** de la boutique (chaque meuble en donne : vitrines, tables, plantes, lampes) × événements. La taille de la boutique limite le nombre de clients en même temps.
-- **Fausses cartes** : dans un lot à vendre, on peut retourner chaque carte et la regarder à la **loupe** ; une fausse a un défaut visible (mauvais cadre pour sa rareté, couleur de fond qui ne va pas avec l'élément, numéro qui dépasse 40, nom mal écrit). Une fausse vaut 0 ; en remettre une en vitrine fait baisser la réputation si un client s'en aperçoit.
+- Pas de fausses cartes (décision du 23/10) : un lot à vendre est une bonne ou une mauvaise affaire selon son prix et les cotes.
 
 ## 8. Aménager et agrandir (comme la maquette 2)
 - Meubles : rayon de boosters 80 €, vitrine basse 120 €, grande vitrine 220 €, table de tournoi 150 €, étagère à classeurs 60 €, plante 15 €, lampadaire 25 € ; la caisse est fixe dans le catalogue (on peut la déplacer, pas la vendre). D'autres meubles débloqués en cours d'année (borne d'arcade, présentoir de figurines, tapis de jeu, affiche géante), à fixer en session 1.
@@ -115,7 +115,7 @@ Bruitages Kenney (CC0, déjà utilisés : clics, caisse, cartes), un petit jingl
 - Simulateur `outils/boutique-simulateur.js` (parties automatiques avec plusieurs stratégies : tout vendre fermé, tout ouvrir, mélange ; pour régler les prix, les cotes et le prêt), ajouté à `verifications.js`.
 - Le temps de la semaine est réglé par les règles (liste d'achats tirée d'avance) puis **rejoué** en 3D : la 3D ne décide rien, comme la bataille de Bannières.
 - Sauvegardes `boutique.run`, `boutique.best`, `boutique.opts`, `boutique.tuto`. Objet de test `window.Boutique`.
-- Classement `boutique` : `best` (valeur à la semaine 52). Défi du jour : à décider (§ 17).
+- Classement `boutique` : `best` (valeur à la semaine 52). **Pas de défi du jour** (§ 17).
 - Crédits : Kenney (Mini Market, Mini Characters, Furniture Kit), Dungeon Crawl Stone Soup, Pixel Card Assets (déjà dans `credits/`).
 
 ## 16. Plan de travail
@@ -125,8 +125,8 @@ Bruitages Kenney (CC0, déjà utilisés : clics, caisse, cartes), un petit jingl
 | 2 | La boutique en 3D : outil des modèles, monde, aménagement, agrandissements, clients qui rejouent la semaine | opusplan |
 | 3 | Écrans (lundi, grossiste, vitrines, classeur, rencontres, bilan), boosters, sons, sauvegarde, classement, accueil, artefact | opusplan |
 
-## 17. Points à confirmer par l'utilisateur
-1. Durée : **52 semaines** (environ une heure) ou une année plus courte (26 semaines, prêt à la semaine 13) ?
-2. **Défi du jour** : une « semaine du jour » (même boutique de départ et mêmes clients pour toute la famille, score = recettes de la semaine) ? Ou pas de défi du jour ?
-3. **Faillite** possible (§ 11) ou on la retire pour garder le jeu détendu ?
-4. Les **fausses cartes** : à la loupe (§ 7) comme prévu ?
+## 17. Points confirmés par l'utilisateur (23/10)
+1. Durée : **52 semaines**, prêt à rembourser à la semaine 26.
+2. **Pas de défi du jour** : « ça ne s'y prête pas ».
+3. **Faillite** gardée (§ 11).
+4. **Pas de fausses cartes** (§ 7).
