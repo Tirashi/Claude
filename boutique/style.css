@@ -196,3 +196,13 @@ body.au-titre #haut, body.au-titre #tourner, body.au-titre .barre, body.au-titre
 #boite .score b { display: block; font: 40px 'Luckiest Guy', sans-serif; color: var(--vert-f); padding-top: 4px; }
 #boite .score small { font: 15px 'Luckiest Guy', sans-serif; color: var(--or-f); }
 #boite .boutons { flex-wrap: wrap; }
+
+/* ---------- la première semaine guidée (guide.js) ---------- */
+#guide { position: fixed; left: 10px; right: 64px; top: calc(66px + var(--haut)); z-index: 32; background: var(--panneau); border-radius: 14px; padding: 8px 12px 6px; box-shadow: 0 4px 0 #0005; border: 3px solid var(--or); animation: entre .3s; }
+#guide.haut { top: calc(8px + var(--haut)); }
+#guide .qui { font: 15px 'Luckiest Guy', sans-serif; color: var(--or-f); padding-top: 2px; display: block; }
+#guide p { margin: 2px 0 4px; font-size: 14px; line-height: 1.3; }
+#guide .gb { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#guide .gb button.vert { margin-left: auto; padding: 7px 14px; font-size: 14px; }
+.guide-cible { animation: guide-clignote 1s infinite !important; position: relative; z-index: 2; }
+@keyframes guide-clignote { 0%, 100% { box-shadow: 0 0 0 3px var(--or), 0 0 14px 4px #f5b82eaa; } 50% { box-shadow: 0 0 0 5px #fff, 0 0 22px 8px #f5b82e; } }

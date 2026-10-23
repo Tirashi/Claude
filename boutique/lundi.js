@@ -11,7 +11,7 @@ function BouLundi(ctx) {
   const $ = id => document.getElementById(id), euros = ctx.euros;
   const RCOUL = ['#e8e3f0', '#7fd67f', '#5ab4ff', '#c58cff', '#ffcf3d'];
   const PAS = { booster: 6, presentoir: 1, coffret: 2, pochettes: 10, classeur: 2, figurine: 2 };
-  let e = null, courant = null, ouvertA = 0, message = '';
+  let e = null, courant = null, ouvertA = 0, message = '', nomEcran = null;
 
   /* ---------- outils ---------- */
   const images = new Map();
@@ -327,8 +327,9 @@ function BouLundi(ctx) {
 
   const ECRANS = { grossiste: ['LE GROSSISTE', grossiste], rayons: ['RAYONS ET PRIX', rayons], vitrines: ['LES VITRINES', vitrines], boosters: ['LES BOOSTERS', boosters], classeur: ['LE CLASSEUR', classeur], tournoi: ['LE TOURNOI', tournoi] };
   return {
-    ouvrir: nom => { sel = null; ouvrir(...ECRANS[nom]); },
+    ouvrir: nom => { sel = null; nomEcran = nom; ouvrir(...ECRANS[nom]); },
     fermer, banque,
     get ouvert() { return !!courant || !B.hidden; },
+    get ecran() { return courant ? nomEcran : null; }, get booster() { return !B.hidden; },
   };
 }
