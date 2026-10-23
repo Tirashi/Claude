@@ -111,7 +111,7 @@ Idée de départ : `IDEES.md` (jeux de gestion, 15/10). Maquettes : `maquettes/b
 Bruitages Kenney (CC0, déjà utilisés : clics, caisse, cartes), un petit jingle d'ouverture de booster, une musique de boutique douce (à choisir dans un banc d'écoute, comme pour La Dernière Lanterne). À valider au moment de la session 3.
 
 ## 15. Technique
-- Dossier `boutique/` : `index.html`, `regles.js` (état JSON et règles pures, hasard par flux à la graine, aussi chargé sous Node), `cartes.js` (génération des extensions, cotes), `clients.js` (affluence, types, rencontres, fausses cartes), `modeles.js` (GLB Kenney en base64 et atlas, fabriqué par un outil), `images.js` (planche des monstres et des cadres), `monde3d.js` (boutique, meubles, clients, caméra), `dessin-cartes.js`, `interface.js`, `sons.js`, `jeu.js`.
+- Dossier `boutique/` : `index.html`, `regles.js` (état JSON et règles pures, hasard par flux à la graine, aussi chargé sous Node), `cartes.js` (génération des extensions, cotes), `clients.js` (affluence, types, rencontres), `modeles.js` (GLB Kenney en base64 et atlas, fabriqué par un outil), `images.js` (planche des monstres et des cadres), `monde3d.js` (boutique, meubles, clients, caméra), `dessin-cartes.js`, `interface.js`, `sons.js`, `jeu.js`.
 - Simulateur `outils/boutique-simulateur.js` (parties automatiques avec plusieurs stratégies : tout vendre fermé, tout ouvrir, mélange ; pour régler les prix, les cotes et le prêt), ajouté à `verifications.js`.
 - Le temps de la semaine est réglé par les règles (liste d'achats tirée d'avance) puis **rejoué** en 3D : la 3D ne décide rien, comme la bataille de Bannières.
 - Sauvegardes `boutique.run`, `boutique.best`, `boutique.opts`, `boutique.tuto`. Objet de test `window.Boutique`.
