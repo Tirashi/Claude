@@ -117,3 +117,4 @@ Toutes tranchées le 22/10 (voir § 1).
 - **Artefact** : https://claude.ai/artifact/6BHJa8xeXP91zKLkf1GiN6 (sans classement, comme les autres).
 - Service worker `ludotheque-v58`.
 - **Aboiements choisis par l'utilisateur** (23/10, au banc d'écoute) : alignements et bandana = `ouaf-e` (rubberduck, barking_01), joie = son fabriqué, petit chien = `mignon-05` (rubberduck, cute_05), plus de coups = son fabriqué. Les 11 autres candidats sont retirés de `sons-chiens.js` (128 Ko → 17 Ko) ; « Dog sounds » de pauliuw n'est plus utilisé (retiré des crédits). Service worker `ludotheque-v60`.
+- **Correction (23/10)** : après un changement d'appli sur le téléphone, la grille restait vide (Android vide les sprites préparés en arrière-plan) ; les sprites sont maintenant redessinés au retour (`visibilitychange`, `pageshow`, `contextrestored`). Service worker `ludotheque-v61`.

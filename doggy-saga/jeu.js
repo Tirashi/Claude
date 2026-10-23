@@ -481,6 +481,7 @@
     const g = c.getContext('2d');
     g.scale(px / L, px / L); g.translate(L / 2, L / 2);
     DogDessin.piece(g, v, CELL * 0.46, humeur, P.couleurs[v.t]);
+    c.addEventListener('contextrestored', () => { sprites = {}; });
     return (sprites[cle] = c);
   }
   function dessinerPiece(g, v, cx, cy, sx, sy, rot, alpha, humeur) {
@@ -784,6 +785,12 @@
     requestAnimationFrame(boucle);
   }
   if (window.ResizeObserver) new ResizeObserver(taille).observe(cv); else addEventListener('resize', taille);
+  // Android vide parfois les toiles hors écran quand l'appli passe en arrière-plan (les chiens préparés deviennent
+  // transparents) : au retour, on les redessine.
+  const refaire = () => { sprites = {}; taille(); };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refaire(); });
+  addEventListener('pageshow', refaire);
+  cv.addEventListener('contextrestored', refaire);
   taille();
   titre();
   if (location.hash === '#jour') introJour();
