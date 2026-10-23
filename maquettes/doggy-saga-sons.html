@@ -27,7 +27,7 @@
 <body>
 <main>
   <h1>Sons de Doggy Saga</h1>
-  <p>Écoute les sons du jeu, puis choisis l'aboiement de chaque moment. Les vrais aboiements viennent de deux paquets libres (CC0) d'OpenGameArt ; « fabriqué » est le petit « ouaf » synthétisé de la maquette.</p>
+  <p>Les sons du jeu, avec les aboiements choisis le 23/10. Les vrais sons viennent d'un paquet libre (CC0) d'OpenGameArt ; « fabrique » est le petit « ouaf » synthétisé de la maquette. Les autres candidats ont été retirés du jeu.</p>
 
   <h2>Les sons du jeu</h2>
   <p>Avec les aboiements choisis plus bas.</p>
@@ -47,10 +47,10 @@
     fete: 'C\'est la fête !', gagne: 'Niveau gagné', perdu: 'Plus de coups', melange: 'Mélange', clic: 'Bouton'
   };
   const ROLES = {
-    ouaf: ['Aboiement des alignements et du bandana', ['ouaf-a', 'ouaf-b', 'ouaf-c', 'ouaf-d', 'ouaf-e', 'ouaf-f', 'fabrique']],
-    joie: ['Aboiement de joie (adoption, victoire, balle)', ['ouaf-a', 'ouaf-b', 'ouaf-c', 'ouaf-d', 'ouaf-e', 'ouaf-f', 'hurle', 'fabrique']],
-    petit: ['Petit chien (chiot sauvé, grosses cascades)', ['mignon-01', 'mignon-04', 'mignon-05', 'mignon-07', 'mignon-09', 'ouaf-b', 'fabrique']],
-    triste: ['Plus de coups', ['triste', 'fabrique']]
+    ouaf: ['Aboiement des alignements et du bandana', ['ouaf-e', 'fabrique']],
+    joie: ['Aboiement de joie (adoption, victoire, balle)', ['ouaf-e', 'fabrique']],
+    petit: ['Petit chien (chiot sauvé, grosses cascades)', ['mignon-05', 'fabrique']],
+    triste: ['Plus de coups', ['fabrique']]
   };
   const SOURCE = { 'ouaf-a': 'pauliuw', 'ouaf-b': 'pauliuw', 'ouaf-c': 'pauliuw', 'ouaf-d': 'pauliuw', 'ouaf-e': 'rubberduck', 'ouaf-f': 'rubberduck', triste: 'pauliuw', hurle: 'rubberduck' };
   const jeu = document.getElementById('jeu');
@@ -63,7 +63,7 @@
   const roles = document.getElementById('roles');
   function afficherChoix() {
     document.getElementById('choix').textContent = 'Ton choix : ' + Object.keys(ROLES).map(r => ROLES[r][0].split(' (')[0] + ' = ' + DogSons.choix[r]).join(' · ')
-      + '. Dis-le à Claude pour le garder dans le jeu.';
+      + '.';
   }
   for (const [r, [titre, liste]] of Object.entries(ROLES)) {
     const d = document.createElement('div'); d.className = 'role';

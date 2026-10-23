@@ -116,3 +116,4 @@ Toutes tranchées le 22/10 (voir § 1).
 - **Tests** : `logique.js` (30 journées du jour : même grille pour tous, 6 races, des coups possibles, pas d'alignement tout fait, grilles différentes ; transfert des sauvegardes) et `fumee.js` (niveau 1 joué jusqu'au bout sans décalage de la grille visible, journée du jour lancée).
 - **Artefact** : https://claude.ai/artifact/6BHJa8xeXP91zKLkf1GiN6 (sans classement, comme les autres).
 - Service worker `ludotheque-v58`.
+- **Aboiements choisis par l'utilisateur** (23/10, au banc d'écoute) : alignements et bandana = `ouaf-e` (rubberduck, barking_01), joie = son fabriqué, petit chien = `mignon-05` (rubberduck, cute_05), plus de coups = son fabriqué. Les 11 autres candidats sont retirés de `sons-chiens.js` (128 Ko → 17 Ko) ; « Dog sounds » de pauliuw n'est plus utilisé (retiré des crédits). Service worker `ludotheque-v60`.

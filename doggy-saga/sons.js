@@ -6,11 +6,12 @@
   'use strict';
   let AC = null, SORTIE = null;
   const TAMPONS = {}, ENCOURS = {}, DERNIER = {};
-  // Choix par défaut (à confirmer au banc d'écoute) : quel vrai son pour quel rôle.
-  const CHOIX = { ouaf: 'ouaf-c', joie: 'ouaf-a', petit: 'mignon-04', triste: 'triste', hurle: 'hurle' };
+  // Quel son pour quel rôle (choix de l'utilisateur au banc d'écoute, 23/10) ; « fabrique » = son synthétisé.
+  const CHOIX = { ouaf: 'ouaf-e', joie: 'fabrique', petit: 'mignon-05', triste: 'fabrique' };
   let actif = true;
   try { actif = localStorage.getItem('doggysaga.son') !== '0'; } catch (e) { /* stockage bloqué */ }
-  try { Object.assign(CHOIX, JSON.parse(localStorage.getItem('doggysaga.sons') || '{}')); } catch (e) { /* idem */ }
+  // choix faits au banc d'écoute sur le site (on ignore un son qui n'existe plus)
+  try { const c = JSON.parse(localStorage.getItem('doggysaga.sons') || '{}'); for (const r in c) if (r in CHOIX && (c[r] === 'fabrique' || (window.DOG_SONS_DATA || {})[c[r]])) CHOIX[r] = c[r]; } catch (e) { /* idem */ }
 
   function contexte() {
     if (!AC) {
