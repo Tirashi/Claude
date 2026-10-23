@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Duché en 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root { --fond:#8fc6e8; --encre:#2b1d0e; --papier:#f3e2b8; --bord:#7a5228; --or:#e8b23a; --rouge:#a8401c; --gris:#b9a57c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --fond:#8fc6e8; } }
+  :root[data-theme="dark"] { --fond:#8fc6e8; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; overflow:hidden; background:var(--fond); font-family:'Press Start 2P', monospace; color:var(--encre); touch-action:none; user-select:none; -webkit-user-select:none; }
+  canvas { display:block; position:fixed; inset:0; }
+  .cadre { background:var(--papier); border:3px solid var(--bord); box-shadow:3px 3px 0 rgba(0,0,0,.25); }
+  #res { position:fixed; left:12px; right:12px; top:10px; padding:4px 4px; font-size:7px; line-height:1.9; display:grid; grid-template-columns:repeat(3, 1fr); gap:0 6px; pointer-events:none; }
+  #res b { font-weight:normal; color:var(--rouge); }
+  #res .tour { grid-column:1 / -1; display:flex; justify-content:space-between; border-top:2px dotted var(--gris); margin-top:3px; padding-top:3px; }
+  #fiche { position:fixed; left:12px; right:12px; bottom:62px; padding:2px 2px; font-size:7px; line-height:1.8; overflow-wrap:anywhere; }
+  #fiche .titre { font-size:9px; color:var(--rouge); margin-bottom:2px; }
+  #fiche .actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+  #fiche .journal { color:#5a4630; }
+  button { white-space:normal; line-height:1.5; overflow-wrap:anywhere; font:inherit; color:var(--encre); background:var(--or); border:3px solid var(--bord); box-shadow:0 3px 0 var(--bord); cursor:pointer; }
+  button:active { transform:translateY(2px); box-shadow:0 1px 0 var(--bord); }
+  button:disabled { background:#d8c9a6; color:#8b7a5c; box-shadow:none; }
+  #fiche .actions button { font-size:7px; padding:4px 4px; flex:1 1 auto; }
+  .boutons { position:fixed; left:12px; right:12px; bottom:12px; display:flex; gap:8px; }
+  .boutons button { flex:1; font-size:7px; padding:6px 0; }
+  .boutons #fin { flex:1.6; background:#c94f2c; color:#fff6e0; }
+  #voile { position:fixed; inset:0; background:rgba(30,20,8,.45); display:flex; align-items:center; justify-content:center; padding:16px; }
+  #voile.cache, #fiche.cache { display:none; }
+  #boite { width:100%; max-width:360px; padding:4px; font-size:7px; overflow-wrap:anywhere; line-height:1.9; max-height:80vh; overflow:auto; }
+  #boite h2 { font-size:9px; font-weight:normal; color:var(--rouge); margin-bottom:8px; }
+  #boite p { margin-bottom:10px; }
+  #boite button { display:block; width:100%; font-size:7px; padding:4px 4px; margin-top:7px; text-align:left; line-height:1.7; }
+  #boite button small { display:block; font-size:6px; color:#6b4a20; }
+  #toast { position:fixed; left:16px; right:16px; top:96px; text-align:center; font-size:7px; line-height:1.6; padding:2px; transition:opacity .3s; pointer-events:none; }
+  #toast.cache { opacity:0; }
+  .credit { position:fixed; right:14px; top:92px; font-size:6px; color:#20415a; opacity:.75; }
+  #boite h2.banniere, #bataille .banniere, #issue h2.banniere { color:#fff6e0; text-align:center; font-size:8px; padding:11px 22px 15px; text-shadow:0 2px 0 #7a2a18; }
+  /* la bataille */
+  body.en-bataille #fiche, body.en-bataille .boutons, body.en-bataille #res, body.en-bataille .credit { display:none; }
+  #bataille { position:fixed; left:12px; right:12px; top:10px; font-size:7px; line-height:1.8; overflow-wrap:anywhere; }
+  #bataille.cache, #issue.cache { display:none; }
+  #bataille .camps { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+  #bataille .camp b { font-weight:normal; color:var(--rouge); }
+  .jauge { height:16px; background:#3b2a18; border:2px solid #2b1d0e; margin:3px 0; position:relative; }
+  .jauge i { position:absolute; left:0; top:0; bottom:0; transition:width .5s; min-width:0; box-sizing:border-box; }
+  #issue { position:fixed; left:12px; right:12px; bottom:14px; text-align:center; font-size:7px; line-height:1.9; overflow-wrap:anywhere; }
+  #issue h2 { font-size:9px; font-weight:normal; }
+  #issue button { font-size:8px; padding:6px 16px; margin-top:6px; }
+</style>
+<script>
+// ---------- l'interface en pixel art, dessinée ici (cadres, boutons, bannière) ----------
+// chaque motif est dessiné en petit sur un canvas, puis posé en « border-image » agrandi ×3 sans lissage
+(function () {
+  const K = 3, css = [];
+  function motif(w, h, peindre) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d'), px = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const col = peindre(x, y, Math.min(x, y, w - 1 - x, h - 1 - y)); if (col) px(x, y, col); }
+    return c.toDataURL();
+  }
+  const coin = (x, y, w, h, n) => (x < n || x > w - 1 - n) && (y < n || y > h - 1 - n) && Math.min(x, w - 1 - x) + Math.min(y, h - 1 - y) < n;
+  // le parchemin : contour sombre, cadre de bois à deux tons, filet sombre, papier (un peu plus clair en haut), coins coupés
+  const parchemin = motif(24, 24, (x, y, d) => {
+    if (coin(x, y, 24, 24, 2)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (d === 1) return y < 12 ? '#c98f4a' : '#a86c32';
+    if (d === 2) return '#7a4a22';
+    if (d === 3) return '#2b1d0e';
+    if (d === 4) return '#fff6dc';
+    return y < 8 ? '#f6e7bf' : '#efdcab';
+  });
+  // le bandeau du haut : même chose, plus fin
+  const bandeau = motif(16, 16, (x, y, d) => {
+    if (coin(x, y, 16, 16, 1)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (d === 1) return '#a86c32';
+    if (d === 2) return '#2b1d0e';
+    return y < 6 ? '#f6e7bf' : '#efdcab';
+  });
+  // boutons de bois (ou rouges) : reflet en haut, ombre en bas
+  const bouton = (clair, fond, ombre, sombre) => motif(12, 12, (x, y, d) => {
+    if (coin(x, y, 12, 12, 1)) return null;
+    if (d === 0) return '#2b1d0e';
+    if (y === 1) return clair;
+    if (y >= 9) return y === 10 ? sombre : ombre;
+    return fond;
+  });
+  const bois = bouton('#f3d08e', '#e0b064', '#b07c3a', '#7a4a22'), rouge = bouton('#f28a6c', '#d0482c', '#9c2c1a', '#6a1a10');
+  const boisAppui = bouton('#b07c3a', '#c99450', '#c99450', '#7a4a22');
+  // la bannière : un ruban rouge aux bouts fendus
+  const banniere = motif(32, 14, (x, y) => {
+    const bout = Math.min(x, 31 - x);
+    if (bout < 4 && (y < 2 || y > 11 || Math.abs(y - 6.5) < 3 - bout)) return null;   // la fente des bouts
+    if (y < 2 || y > 11) return null;
+    if (y === 2 || y === 11 || (bout === 0)) return '#2b1d0e';
+    if (bout < 4) return y < 7 ? '#9c2c1a' : '#7a1e12';   // les bouts, plus sombres (derrière)
+    if (bout === 4) return '#2b1d0e';
+    if (y === 3) return '#f28a6c';
+    if (y >= 9) return '#a8301c';
+    return '#d0482c';
+  });
+  css.push(`.cadre { border:${8 * K}px solid transparent; border-image:url(${parchemin}) 8 fill / ${8 * K}px; background:none; box-shadow:0 ${K}px 0 rgba(0,0,0,.25); image-rendering:pixelated; }`);
+  css.push(`#res.cadre { border-width:${4 * K}px; border-image:url(${bandeau}) 5 fill / ${4 * K}px; }`);
+  css.push(`button { border:${4 * K}px solid transparent; border-image:url(${bois}) 4 fill / ${4 * K}px; background:none; box-shadow:none; image-rendering:pixelated; }`);
+  css.push(`button:active { border-image:url(${boisAppui}) 4 fill / ${4 * K}px; transform:translateY(${K}px); box-shadow:none; }`);
+  css.push(`button:disabled { filter:grayscale(1) opacity(.55); }`);
+  css.push(`.boutons #fin { border-image:url(${rouge}) 4 fill / ${4 * K}px; color:#fff6e0; }`);
+  css.push(`.banniere { border:solid transparent; border-width:${2 * K}px ${6 * K}px; border-image:url(${banniere}) 2 6 fill / ${2 * K}px ${6 * K}px; background:none; image-rendering:pixelated; }`);
+  css.push(`.jauge { border:${K}px solid #2b1d0e; background:#4a3420; box-shadow:inset 0 ${K}px 0 #2b1d0e; height:${4 * K}px; }`);
+  css.push(`.jauge i { border:0; background:#d0482c; box-shadow:inset 0 ${K}px 0 #f28a6c, inset 0 -${K}px 0 #9c2c1a; }`);
+  css.push(`.jauge.bleu i { background:#3a7ad8; box-shadow:inset 0 ${K}px 0 #8ab8f2, inset 0 -${K}px 0 #24508f; }`);
+  const s = document.createElement('style'); s.textContent = css.join('\n'); document.head.append(s);
+})();
+</script>
+</head>
+<body>
+<div id="res" class="cadre"></div>
+<div class="credit">MODELES KAYKIT (CC0)</div>
+<div id="toast" class="cadre cache"></div>
+<div id="fiche" class="cadre"></div>
+<div class="boutons">
+  <button id="fin">FIN DU TOUR</button>
+  <button id="nouvelle">NOUVELLE</button>
+  <button id="tourner">TOURNE NON</button>
+</div>
+<div id="voile" class="cache"><div id="boite" class="cadre"></div></div>
+<div id="bataille" class="cadre cache"></div>
+<div id="issue" class="cadre cache"></div>
+<script>/*MODELES*/</script>
+<script>/*AVENTURIERS*/</script>
+<script>/*REGLES*/</script>
+<script>/*IA*/</script>
+<script>/*EVENEMENTS*/</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/*GLTF*/</script>
+<script>
+// Maquette : une vraie partie de Duché (duche/regles.js, ia.js, evenements.js tels quels) dessinée avec les modèles KayKit.
+
+// ---------- géométries KayKit converties ----------
+// [sommets, indices, base64(pos Int16 ×4096, normales Int8, uv Uint16, indices)] ou, pour une variante de couleur, [modèle de même forme, base64(uv)]
+const geos = {};
+const octets = b64 => { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return new DataView(u.buffer); };
+function geo(nom) {
+  if (geos[nom]) return geos[nom];
+  const e = KAYKIT[nom];
+  if (typeof e[0] === 'string') {
+    const base = geo(e[0]), n = base.attributes.position.count, dv = octets(e[1]), uv = new Float32Array(n * 2);
+    for (let i = 0; i < n * 2; i++) uv[i] = dv.getUint16(i * 2, true) / 65535;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', base.attributes.position); g.setAttribute('normal', base.attributes.normal);
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(base.index);
+    g.computeBoundingBox();
+    return geos[nom] = g;
+  }
+  const [n, ni, b64] = e, dv = octets(b64);
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2);
+  let o = 0;
+  for (let i = 0; i < n * 3; i++, o += 2) pos[i] = dv.getInt16(o, true) / 4096;
+  for (let i = 0; i < n * 3; i++, o += 1) nor[i] = dv.getInt8(o) / 127;
+  for (let i = 0; i < n * 2; i++, o += 2) uv[i] = dv.getUint16(o, true) / 65535;
+  const grand = n >= 65536, idx = grand ? new Uint32Array(ni) : new Uint16Array(ni);
+  for (let i = 0; i < ni; i++, o += grand ? 4 : 2) idx[i] = grand ? dv.getUint32(o, true) : dv.getUint16(o, true);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  g.setIndex(new THREE.BufferAttribute(idx, 1));
+  g.computeBoundingBox();
+  return geos[nom] = g;
+}
+
+// ---------- rendu ----------
+const rendu = new THREE.WebGLRenderer({ antialias: true });
+rendu.setPixelRatio(Math.min(devicePixelRatio, 2));
+rendu.outputEncoding = THREE.sRGBEncoding;
+rendu.shadowMap.enabled = true;
+rendu.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(rendu.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8fc6e8);
+scene.fog = new THREE.Fog(0x8fc6e8, 30, 60);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
+const ciel = new THREE.HemisphereLight(0xdff1ff, 0x5a7040, 0.75);
+scene.add(ciel);
+const soleil = new THREE.DirectionalLight(0xfff1d6, 1.0);
+soleil.position.set(-8, 16, 6);
+soleil.castShadow = true;
+soleil.shadow.mapSize.set(2048, 2048);
+Object.assign(soleil.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 50 });
+soleil.shadow.bias = -0.0008;
+scene.add(soleil);
+
+// L'atlas KayKit, et deux copies retouchées : le violet (le bleu de l'atlas tourné vers le violet, KayKit n'a pas de violet)
+// et le gris (bâtiments d'une terre redevenue neutre)
+function matiere(retouche) {
+  const tex = new THREE.Texture();
+  tex.flipY = false; tex.encoding = THREE.sRGBEncoding;
+  const img = new Image();
+  img.onload = () => {
+    if (!retouche) tex.image = img;
+    else {
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height);
+      for (let i = 0; i < d.data.length; i += 4) retouche(d.data, i);
+      g.putImageData(d, 0, 0); tex.image = c;
+    }
+    tex.needsUpdate = true;
+  };
+  img.src = KAYKIT_TEX;
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, metalness: 0 });
+}
+function teinte(r, g, b) { const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; if (!d) return [0, 0, mx / 255]; let h = mx === r ? (g - b) / d % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, d / mx, mx / 255]; }
+function rgb(h, s, v) { const f = n => { const k = (n + h / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); }; return [f(5), f(3), f(1)]; }
+const matBase = matiere();
+const matViolet = matiere((p, i) => { const [h, s, v] = teinte(p[i], p[i + 1], p[i + 2]); if (h > 195 && h < 250 && s > 0.3) [p[i], p[i + 1], p[i + 2]] = rgb(h + 65, s * 0.9, v * 0.95); });
+const matGris = matiere((p, i) => { const m = (p[i] + p[i + 1] + p[i + 2]) / 3; for (let k = 0; k < 3; k++) p[i + k] = Math.round(p[i + k] * 0.35 + m * 0.65); });
+
+function objet(nom, mat = matBase, ombre = true) {
+  const m = new THREE.Mesh(geo(nom), mat);
+  m.castShadow = ombre; m.receiveShadow = true;
+  return m;
+}
+
+// ---------- la carte : coordonnées et côtés ----------
+const px = (q, r) => 2 * (q + r / 2), pz = (q, r) => Math.sqrt(3) * r;
+const COTES = DUC_VOIS;   // 0 = est, puis dans le sens des aiguilles d'une montre vu du ciel (1 = sud-est… 5 = nord-est)
+// tuiles de rivière KayKit : côtés reliés quand la tuile n'est pas tournée ; tourner de n × 60° fait passer le côté k au côté k − n
+const RIVIERES = { hex_river_A: [0, 3], hex_river_A_curvy: [0, 3], hex_river_B: [3, 5], hex_river_C: [3, 4], hex_river_D: [1, 3, 5], hex_river_E: [0, 3, 5], hex_river_F: [0, 1, 3], hex_river_G: [2, 3, 4] };
+function tuileRiviere(cotes) {
+  const voulu = [...cotes].sort().join();
+  for (const [nom, c] of Object.entries(RIVIERES))
+    for (let n = 0; n < 6; n++) if (c.map(k => (k - n + 6) % 6).sort().join() === voulu) return { nom, rot: n * Math.PI / 3 };
+  return { nom: 'hex_river_A', rot: 0 };
+}
+function cotesRiviere(etat, i) {
+  const [q, r] = DUC_CASES[i], c = [];
+  COTES.forEach(([dq, dr], k) => { const j = ducCase(q + dq, r + dr); if (j >= 0 && etat.terres[j].t === 'riviere') c.push(k); });
+  if (c.length === 1) c.push((c[0] + 3) % 6);   // bout de rivière : elle file tout droit vers la mer (ou sous le château)
+  if (!c.length) c.push(0, 3);
+  return c.slice(0, 3);
+}
+
+// ---------- couleurs des seigneurs ----------
+const COUL = {
+  or: { k: 'yellow', hex: 0xf2c230, mat: matBase, nom: 'OR' },
+  rouge: { k: 'red', hex: 0xd8322a, mat: matBase, nom: 'ROUGE' },
+  bleu: { k: 'blue', hex: 0x2f6fe0, mat: matBase, nom: 'BLEU' },
+  violet: { k: 'blue', hex: 0x9b4fd6, mat: matViolet, nom: 'VIOLET' },
+};
+const BAT_MODELE = { chateau: 'castle', ferme: 'windmill', scierie: 'lumbermill', mine: 'mine', marche: 'market', caserne: 'barracks', tour: 'tower_A' };
+const sansAccent = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+
+// ---------- décor d'une terre ----------
+function hasardTerre(i, k) { let x = (i + 1) * 9301 + k * 49297; x = (x * 233280 + 12345) % 2147483647; return (x % 1000) / 1000; }
+function decor(etat, i) {
+  const t = etat.terres[i], S = t.prop >= 0 ? etat.seigneurs[t.prop] : null, C = S && COUL[S.coul];
+  const d = [];   // [nom, dx, dz, matière, rotation?, bâtiment?]
+  const rot = k => Math.floor(hasardTerre(i, k) * 6) * Math.PI / 3;
+  if (t.bat) {
+    const m = 'building_' + BAT_MODELE[t.bat] + '_' + (C ? C.k : 'blue');
+    d.push([m, 0, 0, C ? C.mat : matGris, t.bat === 'chateau' ? 0 : rot(1), true]);
+    if (t.t === 'foret') d.push([hasardTerre(i, 2) < 0.5 ? 'tree_single_A' : 'tree_single_B', 0.62, -0.38, matBase, rot(3)]);
+    if (t.t === 'colline' || t.t === 'montagne') d.push(['rock_single_C', -0.6, 0.35, matBase, rot(3)]);
+    return d;
+  }
+  if (t.brig) {   // camp de brigands
+    d.push(['tent', -0.3, 0.2, matBase, rot(1)], ['weaponrack', 0.45, -0.15, matBase, rot(2)]);
+    if (t.t === 'foret' || t.t === 'colline' || t.t === 'montagne') d.push(['tree_single_B', 0.1, -0.6, matBase, rot(3)]);
+    return d;
+  }
+  const q = t.qual;
+  if (t.t === 'foret') d.push([['trees_A_medium', 'trees_B_large', 'trees_A_large'][q - 1], 0, 0, matBase, rot(1)]);
+  else if (t.t === 'colline') d.push([['hill_single_A', 'hills_B', 'hills_C_trees'][q - 1], 0, 0, matBase, rot(1)]);
+  else if (t.t === 'montagne') d.push([['mountain_C_grass', 'mountain_B_grass', 'mountain_A_grass_trees'][q - 1], 0, 0, matBase, rot(1)]);
+  else if (t.t === 'marais') d.push(['waterplant_A', -0.45, 0.3, matBase, rot(1)], ['waterplant_B', 0.4, -0.35, matBase, rot(2)], ['waterlily_A', 0.3, 0.45, matBase, rot(3)], ['waterlily_B', -0.35, -0.4, matBase, rot(4)], ['waterplant_C', 0.05, 0, matBase, rot(5)]);
+  else if (t.t === 'plaine') {
+    if (q >= 2) d.push(['building_grain', 0, 0, matBase, rot(1)]);
+    else d.push([hasardTerre(i, 2) < 0.5 ? 'tree_single_A' : 'rock_single_A', 0.5, -0.3, matBase, rot(1)]);
+  }
+  if (S && t.gar > 0) d.push(['flag_' + C.k, 0.62, 0.36, C.mat, 0]);
+  return d;
+}
+
+// étiquette de garnison : le nombre de soldats sur une bannière de la couleur du seigneur
+function etiquette(n, couleur, brig) {
+  const c = document.createElement('canvas'); c.width = 96; c.height = 48;
+  const g = c.getContext('2d');
+  g.fillStyle = '#2b1d0e'; g.fillRect(8, 4, 80, 34); g.fillRect(40, 38, 16, 8);
+  g.fillStyle = brig ? '#5b2a1e' : '#' + couleur.toString(16).padStart(6, '0'); g.fillRect(12, 8, 72, 26);
+  g.fillStyle = '#fff6e0'; g.font = "18px 'Press Start 2P', monospace"; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText((brig ? 'B' : '') + n, 48, 22);
+  const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
+  s.scale.set(1.1, 0.55, 1); s.renderOrder = 10;
+  return s;
+}
+
+// ---------- la scène de la partie ----------
+const groupes = [], mer = [], nuages = [];
+const geoLisere = new THREE.BoxGeometry(1.06, 0.12, 0.2), liseres = {};
+let etat = null, choisie = -1, debut = 0;
+
+function batirTerre(i, anime) {
+  const g = groupes[i], t = etat.terres[i], u = g.userData;
+  const S = t.prop >= 0 ? etat.seigneurs[t.prop] : null;
+  const sig = JSON.stringify([t.t, t.qual, t.prop, t.bat, t.brig, t.gar, DUC_VOISINS[i].map(v => etat.terres[v].prop)]);
+  if (sig === u.sig) return;
+  const avant = u.etat || {};
+  if (anime && t.bat && avant.bat !== t.bat) u.pop = performance.now();
+  if (anime && avant.prop !== undefined && avant.prop !== t.prop) u.flash = performance.now() + (u.retard || 0);
+  u.sig = sig; u.etat = { bat: t.bat, prop: t.prop };
+  while (g.children.length) g.remove(g.children[0]);
+  // le sol
+  let sol;
+  if (t.t === 'riviere' && t.bat !== 'chateau') { const r = tuileRiviere(cotesRiviere(etat, i)); sol = objet(r.nom, matBase, false); sol.rotation.y = r.rot; }
+  else sol = objet(t.t === 'marais' && !t.bat ? 'hex_water' : 'hex_grass', matBase, false);
+  g.add(sol);
+  // le décor
+  let haut = 0.6;
+  u.batiments = [];
+  decor(etat, i).forEach(([nom, dx, dz, mat, r, bat]) => {
+    const o = objet(nom, mat);
+    o.position.set(dx, 0, dz); o.rotation.y = r || 0;
+    if (nom.startsWith('flag')) o.scale.setScalar(1.4);
+    g.add(o);
+    if (bat) u.batiments.push(o);
+    if (Math.abs(dx) < 0.4) haut = Math.max(haut, geo(nom).boundingBox.max.y);
+  });
+  // échafaudage pendant la construction
+  if (u.pop) { const e = objet('building_scaffolding'); e.userData.echaf = true; g.add(e); u.echaf = e; }
+  // frontières
+  if (S) {
+    const C = COUL[S.coul];
+    liseres[S.coul] = liseres[S.coul] || new THREE.MeshBasicMaterial({ color: new THREE.Color(C.hex).convertSRGBToLinear() });
+    COTES.forEach(([dq, dr], k) => {
+      const j = ducCase(t.q + dq, t.r + dr);
+      if (j >= 0 && etat.terres[j].prop === t.prop) return;
+      const a = k * Math.PI / 3, b = new THREE.Mesh(geoLisere, liseres[S.coul]);
+      b.position.set(Math.cos(a) * 0.89, 0.06, Math.sin(a) * 0.89);
+      b.rotation.y = Math.PI / 2 - a;
+      g.add(b);
+    });
+  }
+  // un ou deux guerriers devant la terre (selon la garnison), en plus de la bannière
+  u.soldats = [];
+  if (t.gar > 0 && AV.modeles.Knight) {
+    const coul = S ? S.coul : 'neutre', n = t.gar >= 4 ? 2 : 1;
+    [[0.42, 0.5], [-0.1, 0.68]].slice(0, n).forEach(([x, z], k) => {
+      const ty = t.brig && !S ? (k ? 'voleur' : 'barbare') : !S ? 'voleur' : k === 0 && (t.bat === 'chateau' || t.bat === 'caserne') ? 'champion' : hasardTerre(i, 9 + k) < 0.3 ? 'archer' : 'soldat';
+      const s = aventurier(ty, coul, 0.8);
+      s.position.set(x, 0, z); s.rotation.y = -0.5 + (hasardTerre(i, 11 + k) - 0.5) * 0.8;
+      jouer(s, TYPES[ty].repos).time = hasardTerre(i, 13 + k) * 2;
+      g.add(s); u.soldats.push(s);
+    });
+  }
+  // garnison
+  if (t.gar > 0) {
+    const e = etiquette(t.gar, S ? COUL[S.coul].hex : 0x8a8170, t.brig && !S);
+    e.position.set(0, haut + 0.55, 0);
+    g.add(e);
+  }
+}
+
+function nouvelleScene() {
+  [...groupes, ...mer, ...nuages].forEach(o => scene.remove(o));
+  groupes.length = mer.length = nuages.length = 0;
+  etat.terres.forEach((t, i) => {
+    const g = new THREE.Group();
+    g.userData = { i, x: px(t.q, t.r), z: pz(t.q, t.r), lev: 0, delai: ducDist(i, ducCase(0, 0)) * 160 + hasardTerre(i, 7) * 220 };
+    g.position.set(g.userData.x, 0, g.userData.z);
+    scene.add(g); groupes.push(g);
+    batirTerre(i, false);
+  });
+  for (let q = -7; q <= 7; q++) for (let r = -7; r <= 7; r++) {
+    const d = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
+    if (d < 4 || d > 7) continue;
+    const m = objet('hex_water', matBase, false);
+    m.position.set(px(q, r), -0.05, pz(q, r)); m.userData.ph = q * 0.7 + r * 1.3;
+    scene.add(m); mer.push(m);
+  }
+  [['cloud_big', -6, 7, -4], ['cloud_small', 5, 6.5, 2], ['cloud_big', 2, 7.5, -9], ['cloud_small', -9, 6, 6]].forEach(([n, x, y, z]) => {
+    const c = objet(n); c.position.set(x, y, z); c.receiveShadow = false; scene.add(c); nuages.push(c);
+  });
+  debut = performance.now();
+}
+const majScene = () => etat.terres.forEach((t, i) => batirTerre(i, true));
+
+// saisons : lumière, ciel et un voile blanc l'hiver
+const SAISONS = {
+  printemps: { ciel: 0x8fc6e8, soleil: 0xfff1d6, sol: 0x5a7040, teinte: 0xffffff },
+  'été': { ciel: 0x7cc0ee, soleil: 0xfff0c0, sol: 0x6a7a3a, teinte: 0xfffbea },
+  automne: { ciel: 0xb9c7cf, soleil: 0xffc890, sol: 0x7a5a30, teinte: 0xffe6c8 },
+  hiver: { ciel: 0xc9d8e6, soleil: 0xe4ecff, sol: 0x8090a8, teinte: 0xe2ebf8 },
+};
+function appliquerSaison() {
+  const S = SAISONS[ducSaison(etat.tour)];
+  scene.background.setHex(S.ciel); scene.fog.color.setHex(S.ciel); document.body.style.background = '#' + S.ciel.toString(16).padStart(6, '0');
+  soleil.color.setHex(S.soleil); ciel.groundColor.setHex(S.sol);
+  [matBase, matViolet, matGris].forEach(m => m.color.setHex(S.teinte));
+}
+
+// ---------- interface ----------
+const $ = id => document.getElementById(id);
+const fmt = n => Math.floor(n);
+function majRes() {
+  const J = etat.seigneurs[0];
+  $('res').innerHTML = `<span>NOUR <b>${fmt(J.nour)}</b></span><span>BOIS <b>${fmt(J.bois)}</b></span><span>OR <b>${fmt(J.or)}</b></span>` +
+    `<span>SOLD <b>${ducSoldats(etat, 0)}/${ducPlafond(etat, 0)}</b></span><span>LEG <b>${J.leg}</b></span><span>VOTES <b>${J.votes}</b></span>` +
+    `<span class="tour"><span>TOUR ${etat.tour}/${DUC_TOURS}</span><span>${sansAccent(ducSaison(etat.tour))} AN ${ducAn(etat.tour)}</span></span>`;
+}
+let toastT = 0;
+function toast(txt) { const e = $('toast'); e.textContent = sansAccent(txt); e.classList.remove('cache'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.add('cache'), 2200); }
+function bouton(txt, action, ok = true, petit = '') {
+  const b = document.createElement('button');
+  b.innerHTML = sansAccent(txt) + (petit ? `<small>${sansAccent(petit)}</small>` : '');
+  b.disabled = !ok; b.onclick = action;
+  return b;
+}
+function sourcesAttaque(i) { return DUC_VOISINS[i].filter(v => etat.terres[v].prop === 0 && etat.terres[v].pret > 0).map(v => ({ i: v, n: etat.terres[v].pret })); }
+function production(t) {
+  const T = DUC_TERRAINS[t.t], p = { nour: T.nour * t.qual, bois: T.bois * t.qual, or: T.or * t.qual };
+  if (t.bat) for (const k in DUC_BATIMENTS[t.bat].prod) p[k] = (p[k] || 0) + DUC_BATIMENTS[t.bat].prod[k];
+  return [['nour', 'NOUR'], ['bois', 'BOIS'], ['or', 'OR'], ['leg', 'LEG']].filter(([k]) => p[k]).map(([k, n]) => `+${p[k]} ${n}`).join(' ') || 'RIEN';
+}
+function majFiche() {
+  const f = $('fiche');
+  if (choisie < 0) {
+    const lignes = etat.journal.filter(j => j.tour >= etat.tour - 1).slice(-3).map(j => sansAccent(j.txt));
+    f.innerHTML = `<div class="titre">${sansAccent(etat.seigneurs[0].nom)}</div><div class="journal">${lignes.join('<br>') || 'TOUCHEZ UNE TERRE.'}</div>`;
+    return;
+  }
+  const t = etat.terres[choisie], S = t.prop >= 0 ? etat.seigneurs[t.prop] : null;
+  let qui = t.prop === 0 ? 'A VOUS' : S ? `${sansAccent(S.nom)} (${COUL[S.coul].nom}) · ${S.traits.map(k => sansAccent(DUC_TRAITS[k].nom)).join(', ')}` : t.brig ? 'BRIGANDS' : 'TERRE NEUTRE';
+  f.innerHTML = `<div class="titre">${sansAccent(DUC_TERRAINS[t.t].nom)} <span style="font-size:7px;color:#6b4a20">QUALITE ${t.qual}/3</span></div>` +
+    `<div>${qui}</div><div>${t.bat ? sansAccent(DUC_BATIMENTS[t.bat].nom) + ' · ' : ''}SOLDATS ${t.gar} · DEFENSE ${ducDefense(etat, choisie)}</div>` +
+    (t.prop === 0 ? `<div>PRODUIT ${production(t)}</div>` : '');
+  const a = document.createElement('div'); a.className = 'actions';
+  const i = choisie;
+  if (t.prop === 0) {
+    if (t.bat === 'chateau' || t.bat === 'caserne') {
+      const max = ducRecruesMax(etat, 0, i), c = ducCoutRecrues(etat, 0, 1);
+      a.append(bouton(`RECRUTER 1 (${c.nour} NOUR ${c.or} OR)`, () => agir(() => ducRecruter(etat, 0, i, 1), 'Une recrue arrive.'), max >= 1));
+      if (max > 1) a.append(bouton(`RECRUTER ${max}`, () => agir(() => ducRecruter(etat, 0, i, max), `${max} recrues arrivent.`)));
+    }
+    if (!t.bat) a.append(bouton('CONSTRUIRE...', () => menuConstruire(i)));
+  } else if (!ducPeutAttaquer(etat, 0, i)) {
+    const src = sourcesAttaque(i), n = src.reduce((s, x) => s + x.n, 0);
+    if (n) { const ap = ducApercu(etat, 0, i, n); a.append(bouton(`ATTAQUER AVEC ${n} · ${Math.round(ap.chance * 100)} %`, () => attaquer(i, src))); }
+    else a.append(bouton('AUCUN SOLDAT PRET A COTE', null, false));
+  }
+  if (a.children.length) f.append(a);
+}
+function agir(fn, msg) {
+  const r = fn();
+  if (!r.ok) { toast(r.raison); return r; }
+  if (msg) toast(msg);
+  majTout(); return r;
+}
+function attaquer(i, src) {
+  // ce que la bataille montre : la terre et sa garnison avant le combat
+  const t = etat.terres[i], de = src.reduce((a, s) => (s.n > a.n ? s : a), src[0]).i;
+  const av = { i, t: { ...t }, prop: t.prop, gar: t.gar, defense: ducDefense(etat, i), n: src.reduce((a, s) => a + s.n, 0),
+    source: { ...etat.terres[de] }, chance: ducApercu(etat, 0, i, src.reduce((a, s) => a + s.n, 0)).chance };
+  const r = ducAttaquer(etat, 0, i, src);
+  if (!r.ok) { toast(r.raison); return; }
+  choisie = -1;
+  lancerBataille(av, r);
+}
+function menuConstruire(i) {
+  const b = $('boite'); b.innerHTML = `<h2 class="banniere">CONSTRUIRE</h2><p>${sansAccent(DUC_TERRAINS[etat.terres[i].t].nom)} · UN BATIMENT PAR TERRE.</p>`;
+  for (const k in DUC_BATIMENTS) {
+    if (!DUC_BATIMENTS[k].cout) continue;
+    const c = ducCoutBat(etat, k), err = ducPeutConstruire(etat, 0, i, k);
+    b.append(bouton(`${DUC_BATIMENTS[k].nom} · ${c.bois} BOIS${c.or ? ' ' + c.or + ' OR' : ''}`, () => { fermer(); agir(() => ducConstruire(etat, 0, i, k), `${DUC_BATIMENTS[k].nom} en construction.`); }, !err, err || DUC_BATIMENTS[k].effet));
+  }
+  b.append(bouton('RETOUR', fermer));
+  $('voile').classList.remove('cache');
+}
+const fermer = () => $('voile').classList.add('cache');
+function montrerEvenement() {
+  if (!etat.evt) return false;
+  const E = DUC_EVENEMENTS[etat.evt.id], b = $('boite');
+  b.innerHTML = `<h2 class="banniere">${sansAccent(E.titre)}</h2><p>${sansAccent(E.texte)}</p>`;
+  ducChoix(etat).forEach(c => b.append(bouton(c.txt, () => { const r = ducRepondre(etat, c.k); fermer(); if (r.ok) toast(r.msg); majTout(); }, c.ok, c.detail)));
+  $('voile').classList.remove('cache');
+  return true;
+}
+function montrerFin() {
+  const b = $('boite'), f = etat.fin, sc = ducScore(etat);
+  const titres = { conquete: 'VICTOIRE', couronne: 'COURONNE', defaite: 'DEFAITE', regne: 'FIN DU REGNE' };
+  b.innerHTML = `<h2 class="banniere">${titres[f.type] || 'FIN'}</h2><p>${sc.lignes.map(([n, v]) => `${sansAccent(n)} : ${v}`).join('<br>')}<br><br>SCORE ${sc.total}</p>`;
+  b.append(bouton('NOUVELLE PARTIE', () => { fermer(); nouvellePartie(Math.floor(Math.random() * 1e9)); }));
+  $('voile').classList.remove('cache');
+}
+function majTout() { majScene(); majRes(); majFiche(); if (etat.fin) montrerFin(); }
+
+function finDuTour() {
+  if (etat.evt) { montrerEvenement(); return; }
+  choisie = -1;
+  ducFinTour(etat);
+  // les coups des rivaux, l'un après l'autre
+  (etat.coupsRivaux || []).forEach((c, k) => { groupes[c.cible].userData.retard = k * 380; groupes[c.cible].userData.choc = performance.now() + k * 380; });
+  appliquerSaison(); majTout();
+  groupes.forEach(g => g.userData.retard = 0);
+  if (!etat.fin) setTimeout(montrerEvenement, Math.min(2400, 400 + (etat.coupsRivaux || []).length * 380));
+}
+
+function nouvellePartie(graine) {
+  etat = ducNouvelle(graine, 'libre', 'normal');
+  choisie = -1;
+  nouvelleScene(); appliquerSaison(); majRes(); majFiche();
+  setTimeout(montrerEvenement, 1800);
+}
+$('fin').onclick = finDuTour;
+$('nouvelle').onclick = () => nouvellePartie(Math.floor(Math.random() * 1e9));
+
+// ---------- la bataille : vue de profil, personnages 3D animés ----------
+// personnages : KayKit Adventurers 2.0 ; animations : KayKit Character Animations 1.1 (Kay Lousberg, CC0)
+const sceneB = new THREE.Scene();
+const cameraB = new THREE.PerspectiveCamera(30, 1, 0.1, 200);
+const cielB = new THREE.HemisphereLight(0xdff1ff, 0x5a7040, 0.8), soleilB = new THREE.DirectionalLight(0xfff1d6, 1.0);
+soleilB.position.set(-4, 9, 5); soleilB.castShadow = true; soleilB.shadow.mapSize.set(1024, 1024);
+Object.assign(soleilB.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 });
+sceneB.add(cielB, soleilB);
+sceneB.background = new THREE.Color(0x8fc6e8); sceneB.fog = new THREE.Fog(0x8fc6e8, 30, 60);
+let bataille = null;
+// rendu « pixel » (bouton) : la bataille dessinée en petit puis agrandie sans lissage
+let rtB = null, pixelB = false;
+const ecranB = new THREE.Scene(), camEcran = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const quadB = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ depthTest: false }));
+ecranB.add(quadB);
+function tailleB() {
+  const k = innerWidth >= 700 ? 5 : 4, w = Math.round(innerWidth / k), h = Math.round(innerHeight / k);
+  if (!rtB || rtB.width !== w || rtB.height !== h) {
+    if (rtB) rtB.dispose();
+    rtB = new THREE.WebGLRenderTarget(w, h, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
+    rtB.texture.encoding = THREE.sRGBEncoding;
+    quadB.material.map = rtB.texture; quadB.material.needsUpdate = true;
+  }
+  return [w, h];
+}
+// rangs de profil : colonnes de 3 guerriers en profondeur, la première colonne face à l'ennemi
+function formation(n, x0, sens) {
+  const p = [];
+  for (let k = 0; k < n; k++) { const c = Math.floor(k / 3), r = k % 3; p.push([x0 + sens * c * 0.5 + (r === 1 ? sens * 0.18 : 0), [1.2, 0.45, -0.3][r]]); }
+  return p;
+}
+const matTerre = new THREE.MeshLambertMaterial({ color: new THREE.Color(0x7a5534).convertSRGBToLinear() }), matRoche = new THREE.MeshLambertMaterial({ color: new THREE.Color(0x5e4a3a).convertSRGBToLinear() });
+// décor d'arrière-plan d'un terrain (pour les tuiles du fond)
+const FOND = { plaine: ['building_grain', 'tree_single_A', 0], foret: ['trees_A_large', 'trees_B_large', 'trees_A_medium'], colline: ['hills_B', 'hill_single_A', 'hills_C_trees'],
+  montagne: ['mountain_B_grass', 'mountain_C_grass', 'mountain_A_grass_trees'], marais: ['waterplant_A', 'waterlily_A', 'waterplant_B'], riviere: ['tree_single_B', 0, 'rock_single_A'] };
+
+// ---------- les personnages : modèles, textures recolorées par duché, animations ----------
+const AV = { modeles: {}, clips: {}, armes: {}, mats: {}, haut: 1 };
+// types de guerriers : personnage, armes (main droite, main gauche), attaques, repos
+const TYPES = {
+  soldat: { perso: 'Knight', droite: 'sword_1handed', gauche: 'shield_badge_color', attaques: ['Melee_1H_Attack_Chop', 'Melee_1H_Attack_Stab'], repos: 'Idle_A' },
+  champion: { perso: 'Knight', droite: 'sword_2handed_color', attaques: ['Melee_2H_Attack_Chop'], repos: 'Melee_2H_Idle' },
+  archer: { perso: 'Ranger', gauche: 'bow_withString', attaques: [], repos: 'Ranged_Bow_Idle', archer: true },
+  voleur: { perso: 'Rogue_Hooded', droite: 'dagger', attaques: ['Melee_1H_Attack_Stab'], repos: 'Idle_A' },
+  barbare: { perso: 'Barbarian', droite: 'axe_1handed', attaques: ['Melee_1H_Attack_Chop'], repos: 'Idle_A' },
+};
+const TEXTURE_ARME = { sword_1handed: 'Knight', sword_2handed_color: 'Knight', shield_badge_color: 'Knight', bow_withString: 'Ranger', arrow_bow: 'Ranger', axe_1handed: 'Barbarian', dagger: 'Rogue_Hooded' };
+// la couleur d'équipe : le rouge du chevalier (cape, plumet, blason du bouclier), le bleu de l'archer (écharpe, cape)
+const TEINTES = { or: [44, 1.25], rouge: [0, 1], bleu: [218, 1], violet: [282, 0.95] };
+const EQUIPE = { Knight: hh => hh > 330 || hh < 20, Ranger: hh => hh > 185 && hh < 245 };
+async function preparerAventuriers() {
+  const chargeur = new THREE.GLTFLoader();
+  const lire = src => new Promise((ok, ko) => chargeur.parse(src, '', ok, ko));
+  for (const p in AVENTURIERS.persos) {
+    const g = await lire(Uint8Array.from(atob(AVENTURIERS.persos[p]), c => c.charCodeAt(0)).buffer);
+    AV.modeles[p] = g.scene;
+    let carte = null; g.scene.traverse(o => { if (o.isMesh && !carte) carte = o.material.map; });
+    AV.mats[p] = {};
+    for (const coul of ['or', 'rouge', 'bleu', 'violet', 'neutre']) {
+      // atlas de dégradés : 256 pixels suffisent
+      const c = document.createElement('canvas'); c.width = c.height = 256; const ctx = c.getContext('2d'); ctx.drawImage(carte.image, 0, 0, 256, 256);
+      if (EQUIPE[p] && TEINTES[coul]) {
+        const d = ctx.getImageData(0, 0, 256, 256), [cible, lum] = TEINTES[coul];
+        for (let k = 0; k < d.data.length; k += 4) {
+          const [hh, s, v] = teinte(d.data[k], d.data[k + 1], d.data[k + 2]);
+          if (s > 0.35 && EQUIPE[p](hh)) [d.data[k], d.data[k + 1], d.data[k + 2]] = rgb(cible, Math.min(1, s), Math.min(1, v * lum));
+        }
+        ctx.putImageData(d, 0, 0);
+      }
+      const t = new THREE.CanvasTexture(c); t.flipY = false; t.encoding = THREE.sRGBEncoding;
+      AV.mats[p][coul] = { peau: new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0, skinning: true }), fixe: new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0 }) };
+    }
+  }
+  for (const a in AVENTURIERS.armes) AV.armes[a] = (await lire(AVENTURIERS.armes[a])).scene;
+  AVENTURIERS.clips.forEach(j => { AV.clips[j.name] = THREE.AnimationClip.parse(j); });
+  const b = new THREE.Box3().setFromObject(AV.modeles.Knight); AV.haut = b.max.y - b.min.y;
+}
+const geoAnneau = new THREE.RingGeometry(0.16, 0.36, 24), matsAnneau = {};
+// un guerrier : le personnage cloné avec son squelette, ses armes dans les mains, son mélangeur d'animations
+function aventurier(type, coul, haut) {
+  const T = TYPES[type], o = THREE.SkeletonUtils.clone(AV.modeles[T.perso]), m = AV.mats[T.perso][coul] || AV.mats[T.perso].neutre;
+  o.traverse(x => { if (x.isMesh) { x.material = m.peau; x.castShadow = true; x.frustumCulled = false; } });
+  const arme = (nom, os) => {
+    if (!nom) return;
+    const w = AV.armes[nom].clone(), mw = (AV.mats[TEXTURE_ARME[nom]][coul] || AV.mats[TEXTURE_ARME[nom]].neutre).fixe;
+    w.traverse(x => { if (x.isMesh) { x.material = mw; x.castShadow = true; } });
+    if (nom === 'bow_withString') w.rotation.z = Math.PI;   // sinon la corde est tournée vers la cible
+    o.getObjectByName(os).add(w);
+  };
+  arme(T.droite, 'handslotr'); arme(T.gauche, 'handslotl');   // « handslot.r » : le chargeur retire les points des noms
+  o.scale.setScalar(haut / AV.haut);
+  const g = new THREE.Group(); g.add(o);
+  // un cercle à la couleur du duché sous les pieds : on voit d'un coup d'œil qui est qui
+  const C = COUL[coul], anneau = new THREE.Mesh(geoAnneau, matsAnneau[coul] || (matsAnneau[coul] = new THREE.MeshBasicMaterial({ color: new THREE.Color(C ? C.hex : 0x8a8170).convertSRGBToLinear(), transparent: true, opacity: 0.95 })));
+  anneau.rotation.x = -Math.PI / 2; anneau.position.y = 0.015; anneau.scale.setScalar(haut / 1.1); g.add(anneau);
+  g.userData = { type, T, coul, mixer: new THREE.AnimationMixer(o), actions: {}, courant: null, faits: {}, anneau };
+  return g;
+}
+// lance une animation (en boucle, ou une fois en restant sur la dernière image), avec un fondu
+function jouer(g, nom, une = false, vitesse = 1) {
+  const u = g.userData;
+  const a = u.actions[nom] || (u.actions[nom] = u.mixer.clipAction(AV.clips[nom]));
+  if (u.courant === a && !une) return a;
+  a.reset(); a.setLoop(une ? THREE.LoopOnce : THREE.LoopRepeat, Infinity); a.clampWhenFinished = une; a.timeScale = vitesse;
+  if (u.courant && u.courant !== a) u.courant.fadeOut(0.15);
+  a.fadeIn(0.15).play(); u.courant = a;
+  return a;
+}
+// rangs de profil : colonnes de 3 guerriers en profondeur, la première colonne face à l'ennemi
+function formation(n, x0, sens) {
+  const p = [];
+  for (let k = 0; k < n; k++) { const c = Math.floor(k / 3), r = k % 3; p.push([x0 + sens * c * 0.85 + (r === 1 ? sens * 0.25 : 0), [1.15, 0.4, -0.35][r]]); }
+  return p;
+}
+function composition(n, brig, neutre) {
+  if (brig) return Array.from({ length: n }, (_, k) => (k % 2 ? 'voleur' : 'barbare'));
+  if (neutre) return Array.from({ length: n }, () => 'voleur');
+  const c = Array.from({ length: n }, (_, k) => ['soldat', 'soldat', 'archer'][k % 3]);
+  if (n >= 4) c[0] = 'champion';
+  return c.sort((a, b) => (a === 'archer') - (b === 'archer'));   // les archers derrière (la formation va de l'avant vers l'arrière)
+}
+function lancerBataille(av, r) {
+  document.body.classList.add('en-bataille');
+  while (sceneB.children.length > 2) sceneB.remove(sceneB.children[2]);
+  const S = SAISONS[ducSaison(etat.tour)];
+  sceneB.background.setHex(S.ciel); sceneB.fog.color.setHex(S.ciel); soleilB.color.setHex(S.soleil); cielB.groundColor.setHex(S.sol);
+  // le sol : des rangées de tuiles sur la grille de la carte (elles s'emboîtent), votre terrain à gauche, celui de la terre attaquée à droite
+  const gauche = av.source, droite = av.t;
+  for (let rr = -4; rr <= 1; rr++) for (let q = -8; q <= 8; q++) {
+    const x = px(q, rr), z = pz(q, rr);
+    if (Math.abs(x) > 9) continue;
+    const T = x < 0 ? gauche : droite, mer = rr <= -3;
+    let sol = mer ? 'hex_water' : 'hex_grass', rot = 0;
+    if (rr === -1 && T.t === 'riviere') { sol = 'hex_river_A'; }   // la rivière coule derrière l'armée
+    if (rr <= -1 && T.t === 'marais' && (q + rr) % 2) sol = 'hex_water';
+    const o = objet(sol, matBase, false); o.position.set(x, 0, z); o.rotation.y = rot; sceneB.add(o);
+    // sous les rangées de devant : l'épaisseur de terre, comme une tranche de diorama
+    if (rr >= 0) for (let y = 1; y <= (rr === 1 ? 4 : 1); y++) { const s = new THREE.Mesh(geo('hex_grass'), y === 1 ? matTerre : matRoche); s.position.set(x, -y, z); sceneB.add(s); }
+    // décor : rien devant (rangées 0 et 1), un peu de terrain derrière (une tuile sur deux), puis la mer à l'horizon
+    if (rr >= 0 || mer || sol !== 'hex_grass' || (q + rr) % 2) continue;
+    const nom = FOND[T.t][Math.abs(q * 7 + rr * 3) % 3];
+    if (!nom || (rr === -2 && Math.abs(x) > 1 && Math.abs(Math.abs(x) - 1.0) < 1.2 && (x > 0 ? droite : gauche).bat)) continue;   // la place du bâtiment
+    const d = objet(nom); d.position.set(x, 0, z); d.rotation.y = (q * 2 + rr) * Math.PI / 3; sceneB.add(d);
+  }
+  // le bâtiment de la terre attaquée (ou le vôtre) se dresse au fond de son côté, à sa vraie taille
+  const batiment = (terre, cote) => {
+    if (!terre.bat) return;
+    const Sx = terre.prop >= 0 ? etat.seigneurs[terre.prop] : null, C = Sx && COUL[Sx.coul];
+    const o = objet('building_' + BAT_MODELE[terre.bat] + '_' + (C ? C.k : 'blue'), C ? C.mat : matGris);
+    o.position.set(cote * 1.0, 0, -3.46);   // au fond, en grand : c'est le décor de la bataille
+    sceneB.add(o);
+  };
+  batiment(droite, 1); batiment(gauche, -1);
+  // nuages
+  [[-5, 4.2, -9], [3, 4.8, -10], [7, 3.8, -8]].forEach(([x, y, z], k) => { const c = objet(k % 2 ? 'cloud_small' : 'cloud_big'); c.position.set(x, y, z); sceneB.add(c); });
+  // les deux armées (6 guerriers au plus de chaque côté ; les jauges donnent les vrais nombres)
+  const J = etat.seigneurs[0], Sd = av.prop >= 0 ? etat.seigneurs[av.prop] : null;
+  const vusA = Math.min(6, av.n), vusD = Math.min(6, av.gar), coulD = Sd ? Sd.coul : 'neutre';
+  const attaquants = composition(vusA).map(ty => aventurier(ty, J.coul, 1.1));
+  const defenseurs = composition(vusD, av.t.brig && !Sd, !Sd && !av.t.brig).map(ty => aventurier(ty, coulD, 1.1));
+  const placer = (liste, x0, sens) => formation(liste.length, x0, sens).forEach(([x, z], k) => {
+    const g = liste[k], u = g.userData;
+    g.position.set(x, 0, z);
+    // face à l'ennemi (les modèles regardent vers +z) ; pour tirer à l'arc, ils se tournent d'un quart de tour (on vise sur sa gauche)
+    const rot = sens > 0 ? -Math.PI / 2 : Math.PI / 2;
+    g.rotation.y = rot;
+    Object.assign(u, { x0: x, sens: -sens, rot, rotTir: rot - Math.PI / 2, rotVise: rot, vitesse: sens > 0 ? 0.6 : 1.1, attaque: u.T.attaques[k % Math.max(1, u.T.attaques.length)] });
+    jouer(g, u.T.repos).time = Math.random();
+    sceneB.add(g);
+  });
+  placer(attaquants, -0.8, -1); placer(defenseurs, 0.8, 1);
+  // qui tombe, et à quelle passe (la première colonne d'abord)
+  const mortsA = Math.min(vusA, Math.round(vusA * r.pertesA / Math.max(1, av.n)));
+  const mortsD = r.gagne ? vusD : Math.min(vusD, Math.round(vusD * r.pertesD / Math.max(1, av.gar)));
+  const passe = (n, k) => Math.floor(k * 3 / Math.max(1, n));
+  attaquants.slice(0, mortsA).forEach((g, k) => { g.userData.passe = passe(mortsA, k); });
+  defenseurs.slice(0, mortsD).forEach((g, k) => { g.userData.passe = passe(mortsD, k); });
+  // la caméra : de profil, un peu en hauteur, assez loin pour que les deux armées tiennent dans la largeur
+  const asp = innerWidth / innerHeight, d = Math.max(8, 4.6 / (2 * Math.tan(15 * Math.PI / 180) * Math.min(1.2, asp)));
+  cameraB.aspect = asp; cameraB.position.set(0, 0.5 + d * Math.sin(0.2), d * Math.cos(0.2)); cameraB.lookAt(0, 0.35 + d * 0.035, 0); cameraB.updateProjectionMatrix();
+  if (pixelB) tailleB();
+  const nomD = Sd ? sansAccent(Sd.nom) : av.t.brig ? 'BRIGANDS' : 'MILICE';
+  const bonus = DUC_TERRAINS[av.t.t].def + (av.t.bat ? DUC_BATIMENTS[av.t.bat].def : 0);
+  $('bataille').innerHTML = `<div class="banniere">BATAILLE : ${sansAccent(DUC_TERRAINS[av.t.t].nom)}</div>` +
+    `<div class="camps"><div class="camp">VOUS<br><b id="nA">${av.n}</b> SOLDATS<div class="jauge bleu"><i id="jA" style="width:100%"></i></div></div>` +
+    `<div class="camp">${nomD}<br><b id="nD">${av.gar}</b> SOLDATS +${bonus} DEF.<div class="jauge"><i id="jD" style="width:100%"></i></div></div></div>` +
+    `<div style="display:flex;justify-content:space-between;align-items:center">CHANCE ${Math.round(av.chance * 100)} %<button id="bPixel" style="font-size:6px;padding:2px 4px">${pixelB ? 'RENDU PIXEL' : 'RENDU LISSE'}</button></div>`;
+  $('bPixel').onclick = () => { pixelB = !pixelB; if (pixelB) tailleB(); $('bPixel').textContent = pixelB ? 'RENDU PIXEL' : 'RENDU LISSE'; };
+  $('bataille').classList.remove('cache'); $('issue').classList.add('cache');
+  bataille = { debut: performance.now(), av, r, attaquants, defenseurs, fleches: [], fini: false, passeVue: -1 };
+}
+// le déroulé : 1 s de charge, 3 passes de 1,5 s (coups, flèches, chutes), puis le résultat
+function animerBataille(now, dt) {
+  const B = bataille, t = (now - B.debut) / 1000, av = B.av, r = B.r;
+  const p = t < 1 ? -1 : Math.min(3, Math.floor((t - 1) / 1.5)), f = t < 1 ? t : ((t - 1) % 1.5) / 1.5;
+  const une = (u, cle) => (u.faits[cle] ? false : (u.faits[cle] = true));   // vrai la première fois seulement
+  const tous = [...B.attaquants, ...B.defenseurs];
+  tous.forEach((g, k) => {
+    const u = g.userData, T = u.T, amis = B.attaquants.includes(g), ennemis = (amis ? B.defenseurs : B.attaquants).filter(e => !e.userData.mort);
+    u.mixer.update(dt);
+    if (u.mort) return;
+    g.rotation.y += (u.rotVise - g.rotation.y) * Math.min(1, dt * 10);
+    if (p >= 3) {
+      if (une(u, 'fin')) jouer(g, amis === r.gagne ? 'Cheering' : T.repos);
+      return;
+    }
+    // les blessés de la passe : un coup reçu, puis la chute
+    if (u.passe === p && p >= 0) {
+      if (f > 0.55 && une(u, 'touche')) jouer(g, 'Hit_A', true);
+      if (f > 0.72 && une(u, 'tombe')) { jouer(g, 'Death_A', true); u.mort = true; u.anneau.visible = false; return; }
+    }
+    if (T.archer) {
+      // l'archer reste derrière et tire à chaque passe : il bande, se tourne vers sa cible, lâche
+      if (t > 0.5 && une(u, 'en place')) jouer(g, T.repos);
+      if (p < 0 || !ennemis.length) return;
+      if (f > 0.05 && une(u, 'bande' + p)) { jouer(g, 'Ranged_Bow_Draw', true); u.rotVise = u.rotTir; }
+      if (f > 0.45 && une(u, 'tire' + p)) { jouer(g, 'Ranged_Bow_Release', true); tirer(g, ennemis, now); }
+      if (f > 0.8 && une(u, 'repos' + p)) { jouer(g, T.repos); u.rotVise = u.rot; }
+      return;
+    }
+    // le fantassin va au contact de l'ennemi vivant le plus proche, et ne frappe qu'au contact
+    let cible = null, dmin = 1e9;
+    ennemis.forEach(e => { const d = Math.abs(e.position.x - g.position.x) + Math.abs(e.position.z - g.position.z) * 0.6; if (d < dmin) { dmin = d; cible = e; } });
+    if (!cible) { if (une(u, 'seul')) jouer(g, T.repos); return; }
+    const voulu = cible.position.x - u.sens * 0.6, ecart = voulu - g.position.x;
+    const enCours = u.courant && u.courant.loop === THREE.LoopOnce && u.courant.isRunning();   // une attaque ou une parade pas finie
+    if (Math.abs(ecart) > 0.08 && !enCours) {
+      g.position.x += Math.sign(ecart) * Math.min(Math.abs(ecart), u.vitesse * dt);
+      jouer(g, 'Running_A', false, 1.2);
+      u.rotVise = u.rot;   // toujours tourné vers l'ennemi, même s'il recule d'un pas
+      return;
+    }
+    if (p < 0) { if (!enCours) jouer(g, T.repos); return; }
+    const decal = (k % 3) * 0.08;
+    if (f > 0.1 + decal && une(u, 'frappe' + p)) jouer(g, u.passe !== p && k % 4 === 3 ? 'Melee_Block' : u.attaque, true, 1.15);
+    else if (!enCours && u.courant !== u.actions[T.repos]) jouer(g, T.repos);
+  });
+  // les flèches : une courbe de l'archer à sa cible, la pointe dans le sens de la course
+  B.fleches = B.fleches.filter(fl => {
+    const k = (now - fl.debut) / (600 * (window.lenteurFleches || 1));   // lenteurFleches : pour les captures de test
+    if (k >= 1) { sceneB.remove(fl.o); return false; }
+    const pos = k2 => new THREE.Vector3(fl.a.x + (fl.b.x - fl.a.x) * k2, fl.a.y + (fl.b.y - fl.a.y) * k2 + Math.sin(k2 * Math.PI) * 1.0, fl.a.z + (fl.b.z - fl.a.z) * k2);
+    fl.o.position.copy(pos(k)); fl.o.lookAt(pos(Math.min(1, k + 0.02)));
+    return true;
+  });
+  // jauges : elles baissent passe après passe
+  if (p !== B.passeVue && p >= 0) {
+    B.passeVue = p; const k = Math.min(3, p + 1) / 3;
+    const nA = Math.round(av.n - r.pertesA * k), nD = Math.round(av.gar - (r.gagne ? av.gar : r.pertesD) * k);
+    $('nA').textContent = nA; $('nD').textContent = nD;
+    $('jA').style.width = (100 * nA / Math.max(1, av.n)) + '%'; $('jD').style.width = (100 * nD / Math.max(1, av.gar)) + '%';
+    if (p < 3) son();
+  }
+  if (p >= 3 && !B.fini) {
+    B.fini = true;
+    $('issue').innerHTML = `<h2 class="banniere">${r.gagne ? 'VICTOIRE !' : 'DEFAITE'}</h2>` +
+      `<div>${r.gagne ? `LA TERRE EST A VOUS. PERTES : ${r.pertesA}` : `${r.pertesA} SOLDATS PERDUS. LA GARNISON EN PERD ${r.pertesD}.`}</div>`;
+    const b = bouton('CONTINUER', finBataille); $('issue').append(b);
+    $('issue').classList.remove('cache');
+  }
+  if (pixelB) { rendu.setRenderTarget(rtB); rendu.render(sceneB, cameraB); rendu.setRenderTarget(null); rendu.render(ecranB, camEcran); }
+  else rendu.render(sceneB, cameraB);
+}
+// une flèche (le modèle de la rôdeuse), tirée vers un ennemi des premières colonnes
+function tirer(archer, cibles, now) {
+  const vivants = cibles.filter(c => !c.userData.mort);
+  if (!vivants.length) return;
+  const o = AV.armes.arrow_bow.clone(), m = (AV.mats.Ranger[archer.userData.coul] || AV.mats.Ranger.neutre).fixe;
+  o.traverse(x => { if (x.isMesh) x.material = m; });
+  o.scale.setScalar(0.7 * 1.1 / AV.haut * 2.2);
+  sceneB.add(o);
+  const cible = vivants[Math.floor(Math.random() * Math.min(3, vivants.length))];
+  const main = new THREE.Vector3(); archer.getObjectByName('handslotl').getWorldPosition(main);
+  bataille.fleches.push({ o, debut: now, a: main, b: cible.position.clone().add(new THREE.Vector3(0, 0.5, 0)) });
+}
+function finBataille() {
+  const i = bataille.av.i;
+  bataille = null;
+  document.body.classList.remove('en-bataille'); $('bataille').classList.add('cache'); $('issue').classList.add('cache');
+  groupes[i].userData.choc = performance.now();
+  majTout();
+}
+// un petit choc d'épées (WebAudio, pas de fichier)
+let audio = null;
+function son() {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const n = audio.sampleRate * 0.12, buf = audio.createBuffer(1, n, audio.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n / 6)) * (0.6 + 0.4 * Math.sin(i * 0.9));
+    const s = audio.createBufferSource(), g = audio.createGain(), f = audio.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 3200; g.gain.value = 0.25;
+    s.buffer = buf; s.connect(f); f.connect(g); g.connect(audio.destination); s.start();
+  } catch (e) {}
+}
+
+// ---------- caméra et toucher ----------
+let angle = -0.5, auto = false;   // face au duché du joueur (coin en bas à gauche)
+function cadrer() {
+  const w = innerWidth, h = innerHeight;
+  rendu.setSize(w, h); camera.aspect = w / h; cameraB.aspect = w / h; cameraB.updateProjectionMatrix();
+  camera.userData.d = Math.max(19.5, 24 / Math.min(1, camera.aspect * 1.25));
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', cadrer); cadrer();
+let touche = null;
+rendu.domElement.addEventListener('pointerdown', e => { touche = { x: e.clientX, y: e.clientY, a: angle, bouge: false }; });
+addEventListener('pointermove', e => {
+  if (!touche) return;
+  const dx = e.clientX - touche.x;
+  if (Math.abs(dx) > 6) touche.bouge = true;
+  if (touche.bouge) { angle = touche.a - dx * 0.008; auto = false; majBouton(); }
+});
+addEventListener('pointerup', e => { if (touche && !touche.bouge && !bataille) choisir(e.clientX, e.clientY); touche = null; });
+const rayon = new THREE.Raycaster();
+function choisir(x, y) {
+  rayon.setFromCamera({ x: x / innerWidth * 2 - 1, y: -y / innerHeight * 2 + 1 }, camera);
+  const hit = rayon.intersectObjects(groupes, true)[0];
+  let g = hit && hit.object; while (g && !groupes.includes(g)) g = g.parent;
+  choisie = g && g.userData.i !== choisie ? g.userData.i : -1;
+  majFiche();
+}
+const bTourner = $('tourner');
+const majBouton = () => bTourner.textContent = 'TOURNE ' + (auto ? 'OUI' : 'NON');
+bTourner.onclick = () => { auto = !auto; majBouton(); };
+
+// ---------- animation ----------
+const rebond = x => { const n = 7.5625, d = 2.75; if (x < 1 / d) return n * x * x; if (x < 2 / d) return n * (x -= 1.5 / d) * x + 0.75; if (x < 2.5 / d) return n * (x -= 2.25 / d) * x + 0.9375; return n * (x -= 2.625 / d) * x + 0.984375; };
+let avant = performance.now();
+function boucle(now) {
+  const dt = Math.min(0.05, (now - avant) / 1000); avant = now;
+  if (auto) angle += dt * 0.1;
+  const d = camera.userData.d;
+  camera.position.set(Math.sin(angle) * d * 0.72, d * 0.72, Math.cos(angle) * d * 0.72);
+  camera.lookAt(Math.sin(angle) * 2.2, -0.6, Math.cos(angle) * 2.2);   // la carte remonte au-dessus du panneau du bas
+  groupes.forEach(g => {
+    const u = g.userData;
+    const k = Math.min(1, Math.max(0, (now - debut - u.delai) / 700));
+    u.lev += ((u.i === choisie ? 0.45 : 0) - u.lev) * Math.min(1, dt * 12);
+    let y = (1 - rebond(k)) * 14 + u.lev;
+    // terre qui change de seigneur : un bond ; terre attaquée : un tremblement
+    if (u.flash && now > u.flash) { const f = (now - u.flash) / 600; if (f < 1) y += Math.sin(f * Math.PI) * 0.8; else u.flash = 0; }
+    g.position.x = u.x;
+    if (u.choc && now > u.choc) { const f = (now - u.choc) / 450; if (f < 1) g.position.x = u.x + Math.sin(f * 40) * 0.08 * (1 - f); else u.choc = 0; }
+    g.position.y = y;
+    g.visible = k > 0;
+    if (u.soldats) u.soldats.forEach(s => s.userData.mixer.update(dt));
+    // construction : l'échafaudage, puis le bâtiment qui sort de terre
+    if (u.pop) {
+      const f = (now - u.pop) / 1100;
+      const s = f < 0.45 ? 0.001 : Math.min(1, rebond(Math.min(1, (f - 0.45) / 0.55)));
+      u.batiments.forEach(o => o.scale.set(1, s, 1));
+      if (u.echaf) u.echaf.visible = f < 0.6;
+      if (f >= 1) { u.pop = 0; if (u.echaf) { g.remove(u.echaf); u.echaf = null; } }
+    }
+  });
+  const s = now / 1000;
+  mer.forEach(m => { m.position.y = -0.05 + Math.sin(s * 1.4 + m.userData.ph) * 0.04; });
+  nuages.forEach((c, i) => { c.position.x += dt * (0.25 + i * 0.05); if (c.position.x > 14) c.position.x = -14; });
+  if (bataille) animerBataille(now, dt); else rendu.render(scene, camera);
+  requestAnimationFrame(boucle);
+}
+
+// le duché du jour
+const auj = new Date();
+const police = document.fonts ? document.fonts.load("10px 'Press Start 2P'").catch(() => {}) : Promise.resolve();
+Promise.all([police, preparerAventuriers()]).then(() => { nouvellePartie(auj.getFullYear() * 10000 + (auj.getMonth() + 1) * 100 + auj.getDate()); requestAnimationFrame(boucle); });
+</script>
+</body>
+</html>

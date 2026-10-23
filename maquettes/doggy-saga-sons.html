@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sons de Doggy Saga</title>
+<link rel="stylesheet" href="../polices/doggy-saga.css">
+<style>
+  :root { --mur: #ffe9d2; --creme: #fff6ea; --brun: #7a3e1d; --brun2: #a0623a; --orange: #e8784f; --orange2: #d4572e; --rose: #ff6b8a; color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--mur); color: var(--brun); font: 600 16px/1.35 'Baloo 2', system-ui, sans-serif; padding: 16px; }
+  main { max-width: 520px; margin: 0 auto; }
+  h1 { font: 800 34px/1 'Baloo 2', sans-serif; color: var(--orange2); margin: 6px 0 4px; }
+  h2 { font: 800 22px/1.1 'Baloo 2', sans-serif; color: var(--orange2); margin: 22px 0 6px; }
+  p { margin: 4px 0 10px; color: var(--brun2); }
+  .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+  button { font: 700 15px/1.1 'Baloo 2', sans-serif; color: var(--brun); background: var(--creme); border: 3px solid var(--orange); border-radius: 14px; padding: 8px 6px; cursor: pointer; }
+  button:active { transform: scale(.96); }
+  button small { display: block; font-size: 12px; font-weight: 600; color: var(--brun2); }
+  .role { background: var(--creme); border-radius: 18px; padding: 10px 12px; margin-bottom: 10px; }
+  .role h3 { margin: 0 0 6px; font-size: 17px; }
+  .role .grille button.choisi { background: var(--orange); color: #fff; border-color: var(--orange2); }
+  .role .grille button.choisi small { color: #ffe9d2; }
+  #choix { background: #fff; border: 2px dashed #e8b48f; border-radius: 14px; padding: 8px 12px; font-size: 15px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sons de Doggy Saga</h1>
+  <p>Écoute les sons du jeu, puis choisis l'aboiement de chaque moment. Les vrais aboiements viennent de deux paquets libres (CC0) d'OpenGameArt ; « fabriqué » est le petit « ouaf » synthétisé de la maquette.</p>
+
+  <h2>Les sons du jeu</h2>
+  <p>Avec les aboiements choisis plus bas.</p>
+  <div class="grille" id="jeu"></div>
+
+  <h2>Choisir les aboiements</h2>
+  <div id="roles"></div>
+  <p id="choix"></p>
+</main>
+<script src="../doggy-saga/sons-chiens.js"></script>
+<script src="../doggy-saga/sons.js"></script>
+<script>
+(function () {
+  const NOMS = {
+    debut: 'Début du niveau', glisse: 'Échange', non: 'Coup refusé', pop: 'Alignement (cascade 1)', cascade: 'Cascade', rayon: 'Bandana', noeud: 'Nœud',
+    balle: 'Balle de tennis', bonus: 'Bonus créé', boue: 'Boue lavée', niche: 'Niche ouverte', sauve: 'Chiot au panier', adopte: 'Adoption',
+    fete: 'C\'est la fête !', gagne: 'Niveau gagné', perdu: 'Plus de coups', melange: 'Mélange', clic: 'Bouton'
+  };
+  const ROLES = {
+    ouaf: ['Aboiement des alignements et du bandana', ['ouaf-a', 'ouaf-b', 'ouaf-c', 'ouaf-d', 'ouaf-e', 'ouaf-f', 'fabrique']],
+    joie: ['Aboiement de joie (adoption, victoire, balle)', ['ouaf-a', 'ouaf-b', 'ouaf-c', 'ouaf-d', 'ouaf-e', 'ouaf-f', 'hurle', 'fabrique']],
+    petit: ['Petit chien (chiot sauvé, grosses cascades)', ['mignon-01', 'mignon-04', 'mignon-05', 'mignon-07', 'mignon-09', 'ouaf-b', 'fabrique']],
+    triste: ['Plus de coups', ['triste', 'fabrique']]
+  };
+  const SOURCE = { 'ouaf-a': 'pauliuw', 'ouaf-b': 'pauliuw', 'ouaf-c': 'pauliuw', 'ouaf-d': 'pauliuw', 'ouaf-e': 'rubberduck', 'ouaf-f': 'rubberduck', triste: 'pauliuw', hurle: 'rubberduck' };
+  const jeu = document.getElementById('jeu');
+  for (const k of DogSons.cles) {
+    const b = document.createElement('button');
+    b.textContent = NOMS[k] || k;
+    b.onclick = () => DogSons.jouer(k, k === 'pop' ? 1 : 2);
+    jeu.appendChild(b);
+  }
+  const roles = document.getElementById('roles');
+  function afficherChoix() {
+    document.getElementById('choix').textContent = 'Ton choix : ' + Object.keys(ROLES).map(r => ROLES[r][0].split(' (')[0] + ' = ' + DogSons.choix[r]).join(' · ')
+      + '. Dis-le à Claude pour le garder dans le jeu.';
+  }
+  for (const [r, [titre, liste]] of Object.entries(ROLES)) {
+    const d = document.createElement('div'); d.className = 'role';
+    d.innerHTML = `<h3>${titre}</h3><div class="grille"></div>`;
+    const g = d.querySelector('.grille');
+    for (const nom of liste) {
+      const b = document.createElement('button');
+      b.innerHTML = nom + `<small>${nom === 'fabrique' ? 'synthèse' : SOURCE[nom] || 'rubberduck'}</small>`;
+      if (DogSons.choix[r] === nom) b.classList.add('choisi');
+      b.onclick = () => {
+        g.querySelectorAll('button').forEach(x => x.classList.remove('choisi')); b.classList.add('choisi');
+        DogSons.regler({ [r]: nom });
+        try { localStorage.setItem('doggysaga.sons', JSON.stringify(DogSons.choix)); } catch (e) { /* stockage bloqué */ }
+        afficherChoix();
+        if (nom === 'fabrique') DogSons.jouer(r === 'triste' ? 'perdu' : 'debut'); else DogSons.vrai(nom);
+      };
+      g.appendChild(b);
+    }
+    roles.appendChild(d);
+  }
+  afficherChoix();
+})();
+</script>
+</body>
+</html>

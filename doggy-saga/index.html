@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Doggy Saga</title>
+<meta name="description" content="Doggy Saga : aligne les chiens du refuge pour leur faire des câlins et leur trouver une famille.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#ffd5bb">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<!-- polices dans le dépôt (hors connexion) ; data-google : le lien utilisé par l'artefact (outils/artefact.py) -->
+<link rel="stylesheet" href="../polices/doggy-saga.css" data-google="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="jeu">
+  <canvas id="cv" aria-label="La grille du refuge : les chiens à aligner"></canvas>
+
+  <div class="ecran" id="eTitre">
+    <div class="titre">
+      <img id="tChien" alt="">
+      <h1>Doggy<br>Saga</h1>
+      <p>Aligne les chiens du refuge pour leur faire des câlins et leur trouver une famille.</p>
+      <button class="gros" id="bJouer">Jouer</button>
+      <button id="bJour" class="jour">La journée du jour</button>
+      <button id="bAlbum">L'album des familles</button>
+      <button class="bSon petitbouton">Son</button>
+      <p class="petit" id="tBilan"></p>
+      <a class="lien ludo-retour" href="../index.html">◀ Ludothèque</a>
+    </div>
+  </div>
+
+  <div class="ecran plein" id="eCarte" hidden>
+    <div class="barre"><button class="rond" id="bCarteRetour" aria-label="Retour">◀</button><span id="cEtoiles"></span></div>
+    <div class="carte" id="carte"></div>
+  </div>
+
+  <div class="ecran plein" id="eAlbum" hidden>
+    <div class="barre"><button class="rond" id="bAlbumRetour" aria-label="Retour">◀</button><span id="aCompte"></span></div>
+    <h2 class="tAlbum">L'album des familles</h2>
+    <div class="album" id="album"></div>
+  </div>
+
+  <div class="ecran voile" id="eFiche" hidden>
+    <div class="fiche" id="fiche"></div>
+  </div>
+
+  <div class="ecran voile" id="eIntro" hidden>
+    <div class="fiche">
+      <p class="sur" id="iChapitre"></p>
+      <h2 id="iTitre"></h2>
+      <div class="objectifs" id="iObj"></div>
+      <p class="aide" id="iAide" hidden></p>
+      <p class="petit" id="iCoups"></p>
+      <button class="gros" id="bPartir">C'est parti !</button>
+      <button id="bIntroCarte">La carte</button>
+    </div>
+  </div>
+
+  <div class="ecran voile" id="ePause" hidden>
+    <div class="fiche">
+      <h2>Pause</h2>
+      <button class="gros" id="bReprendre">Reprendre</button>
+      <button id="bRecommencer">Recommencer</button>
+      <button id="bPauseCarte">La carte</button>
+      <button class="bSon">Son</button>
+      <a class="lien ludo-retour" href="../index.html">◀ Ludothèque</a>
+    </div>
+  </div>
+
+  <div class="ecran voile" id="eFin" hidden>
+    <div class="fiche" id="fin"></div>
+  </div>
+</div>
+<script src="regles.js"></script>
+<script src="niveaux.js"></script>
+<script src="chiens.js"></script>
+<script src="sons-chiens.js"></script>
+<script src="sons.js"></script>
+<script src="../ludo-scores.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

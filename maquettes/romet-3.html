@@ -1,0 +1,489 @@
+<title>Romet, trois mondes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&family=Pirata+One&family=Chewy&family=Cinzel:wght@600;700&display=swap">
+<style>
+/* Romet, maquette 3 : trois mondes loin du casino et de la foire. Three.js r128 et la physique maison des pièces.
+   Page sombre volontairement, comme les autres maquettes de la Ludothèque. */
+:root{ --fond:#0f0d10; --texte:#f3eef6; --doux:#b4a9bd; --or:#f5c542; --cadre:#050405; color-scheme:dark;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Fredoka", system-ui, sans-serif;
+  --f-pirate:"Pirata One", Georgia, serif; --f-miel:"Chewy", "Fredoka", sans-serif; --f-horloge:"Cinzel", Georgia, serif; }
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(18px,5vw,28px);line-height:1.3;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:70ch}
+header b{color:var(--texte);font-weight:600}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:36px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.tel{width:100%;max-width:300px;aspect-ratio:272/560;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 10px 30px #0008}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:10px 12px 8px;position:relative;z-index:2}
+.cpt{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
+.cpt b{font-variant-numeric:tabular-nums;font-weight:400}
+.logo{text-align:center;line-height:1}
+.ecran{flex:1;position:relative;min-height:0;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.ecran canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+.combi{position:absolute;left:0;right:0;top:12px;text-align:center;pointer-events:none;transition:transform .2s;z-index:2}
+.combi.pop{transform:scale(1.3)}
+.aide{position:absolute;left:0;right:0;top:46px;text-align:center;pointer-events:none;z-index:2}
+.bas{display:flex;justify-content:center;align-items:center;gap:12px;padding:10px 10px 14px;position:relative;z-index:2}
+.gemme{width:12px;height:12px;transform:rotate(45deg);background:var(--c);opacity:.2;border:2px solid #0008;transition:opacity .3s,box-shadow .3s}
+.gemme.on{opacity:1;box-shadow:0 0 10px var(--c)}
+.perf{font-size:13px;color:var(--doux);font-variant-numeric:tabular-nums;margin:-6px 0 0;text-align:center}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;margin:0;color:var(--or);text-align:center}
+.dir p{margin:0;color:var(--doux);font-size:15px;max-width:34ch}
+.dir ul{margin:0;padding-left:18px;color:var(--doux);font-size:14px;max-width:34ch}
+.dir li b{color:var(--texte);font-weight:600}
+/* A · l'épave : bois noyé, laiton vert-de-gris, or des doublons */
+.A .tel{background:#062330}
+.A .hud{background:linear-gradient(#2a2016,#1a140e);border-bottom:3px solid #8a7a3a}
+.A .cpt{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#2e7d86,#0c3640);border:4px solid #b08d3c;box-shadow:inset 0 0 6px #000a;justify-self:center}
+.A .cpt small{font-family:var(--f-pirate);font-size:10px;color:#cfe9e4}
+.A .cpt b{font-family:var(--f-pirate);font-size:18px;color:#ffd970;text-shadow:1px 1px 0 #000}
+.A .logo{font-family:var(--f-pirate);font-size:32px;color:#f2c95c;text-shadow:2px 2px 0 #3a2508,0 0 10px #00000088}
+.A .combi{font-family:var(--f-pirate);font-size:30px;color:#ffd970;text-shadow:2px 2px 0 #3a2508}
+.A .aide{font-family:var(--f-pirate);font-size:17px;color:#cfe9e4;text-shadow:1px 1px 0 #000}
+.A .bas{background:#1a140e;border-top:3px solid #8a7a3a}
+.A .gemme{border-radius:50%;transform:none}
+/* B · la ruche : miel, cire, alvéoles */
+.B .tel{background:#3a2208}
+.B .hud{background:linear-gradient(#ffcf4a,#f0a81e);border-bottom:4px solid #7a4a10}
+.B .cpt{width:52px;height:46px;background:#5a3208;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);justify-self:center}
+.B .cpt small{font-family:var(--f-miel);font-size:11px;color:#ffd970}
+.B .cpt b{font-family:var(--f-miel);font-size:19px;color:#fff3c8}
+.B .logo{font-family:var(--f-miel);font-size:32px;color:#5a3208;text-shadow:0 2px 0 #fff3c0}
+.B .combi{font-family:var(--f-miel);font-size:30px;color:#fff3c8;text-shadow:0 3px 0 #7a4a10,0 0 8px #000}
+.B .aide{font-family:var(--f-miel);font-size:16px;color:#fff3c8;text-shadow:0 2px 0 #7a4a10}
+.B .bas{background:#5a3208;border-top:4px solid #f0a81e}
+.B .gemme{clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);transform:none;width:15px;border:0}
+/* C · l'horloger : cuir vert, noyer, laiton poli */
+.C .tel{background:#0e1712}
+.C .hud{background:#2a1a10;border-bottom:3px solid #c9a35a}
+.C .cpt{width:48px;height:48px;border-radius:50%;background:#f3e9d2;border:3px solid #c9a35a;justify-self:center}
+.C .cpt small{font-family:var(--f-horloge);font-size:8px;font-weight:700;color:#5a3a20;letter-spacing:.06em}
+.C .cpt b{font-family:var(--f-horloge);font-size:16px;font-weight:700;color:#2a1a10}
+.C .logo{font-family:var(--f-horloge);font-weight:700;font-size:24px;letter-spacing:.12em;color:#e6c47a;text-shadow:0 1px 0 #000}
+.C .combi{font-family:var(--f-horloge);font-weight:700;font-size:24px;color:#ffe2a0;text-shadow:0 2px 0 #000,0 0 8px #000}
+.C .aide{font-family:var(--f-horloge);font-weight:600;font-size:13px;color:#e6c47a;text-shadow:0 1px 0 #000}
+.C .bas{background:#2a1a10;border-top:3px solid #c9a35a}
+@media (prefers-reduced-motion:reduce){.combi{transition:none}}
+</style>
+
+<div class="page">
+<header>
+  <h1>ROMET · TROIS MONDES</h1>
+  <p>Troisième tour, loin du casino et de la foire : <b>la machine change de monde, et les pièces avec</b>. Chaque monde a ses propres pièces, son propre décor qui bouge et ses propres trésors à collectionner. La physique et les optimisations sont celles de la maquette 2.</p>
+  <p>Le jeu reste le même : on touche l'écran pour lâcher une pièce, le poussoir fait tomber les autres dans le bac. Ces mondes pourraient aussi devenir <b>des machines à débloquer</b> les unes après les autres, plutôt qu'un choix unique.</p>
+</header>
+<div class="grille">
+  <section class="dir A" data-style="A">
+    <div class="tel"><div class="hud"><div class="cpt"><small>Pièces</small><b class="j">30</b></div><div class="logo">Romet</div><div class="cpt"><small>Butin</small><b class="g">0</b></div></div><div class="ecran"><div class="combi"></div><div class="aide">Touche pour lâcher un doublon</div></div><div class="bas"></div></div>
+    <p class="perf">En attente…</p>
+    <h2>A · L'EPAVE</h2>
+    <p>La machine est le pont d'un galion englouti. Doublons frappés d'une croix, reflets de l'eau qui dansent sur le bois, bulles, algues qui ondulent, poissons qui passent au-dessus du nom du navire. Le bac est un coffre au trésor. On collectionne des perles et des pierres.</p>
+    <ul><li><b>Pour</b> : très vivant, une ambiance qu'on n'attend pas.</li><li><b>Contre</b> : le bleu de l'eau adoucit l'or des pièces.</li></ul>
+  </section>
+  <section class="dir B" data-style="B">
+    <div class="tel"><div class="hud"><div class="cpt"><small>Miel</small><b class="j">30</b></div><div class="logo">Romet</div><div class="cpt"><small>Récolte</small><b class="g">0</b></div></div><div class="ecran"><div class="combi"></div><div class="aide">Touche pour lâcher une goutte</div></div><div class="bas"></div></div>
+    <p class="perf">En attente…</p>
+    <h2>B · LA RUCHE</h2>
+    <p>Des pièces de miel <b>hexagonales</b>, frappées d'une abeille, poussées par un bloc de cire sur un plateau d'alvéoles. Des abeilles volent au-dessus du tas. On collectionne la gelée royale, le pollen, la propolis…</p>
+    <ul><li><b>Pour</b> : chaud, doux, original ; les pièces à six côtés s'empilent joliment.</li><li><b>Contre</b> : les abeilles restent petites sur un écran de téléphone.</li></ul>
+  </section>
+  <section class="dir C" data-style="C">
+    <div class="tel"><div class="hud"><div class="cpt"><small>RESSORTS</small><b class="j">30</b></div><div class="logo">ROMET</div><div class="cpt"><small>ROUAGES</small><b class="g">0</b></div></div><div class="ecran"><div class="combi"></div><div class="aide">Touche pour lâcher un rouage</div></div><div class="bas"></div></div>
+    <p class="perf">En attente…</p>
+    <h2>C · L'HORLOGER</h2>
+    <p>L'établi d'un horloger : les pièces sont des <b>rouages en laiton</b> sur un cuir vert. On <b>voit le mécanisme</b> qui fait avancer le poussoir : une roue et sa manivelle sur le côté. Au fond, un cadran ROMET dont les aiguilles tournent, et de grands engrenages. On collectionne les rubis de la montre.</p>
+    <ul><li><b>Pour</b> : le plus original, la mécanique fait partie du spectacle.</li><li><b>Contre</b> : plus sombre, plus « adulte ».</li></ul>
+  </section>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+// Machine : plancher x ±2.6, z de -7 à 3.5 (bord avant) ; poussoir de 5 × 5 qui va et vient (avant entre -1.5 et -0.3) ;
+// mur du fond au-dessus du poussoir (z -5.45) ; parois latérales jusqu'à z = 2, ensuite les côtés sont ouverts (pertes) ;
+// bac devant la machine (z 4 à 5, y -1.9) où l'on voit les pièces gagnées.
+const R=0.36,H=0.1,DT=1/60,ZM=-3.4,AMP=0.6,PERIODE=2.6,MAXP=300,BORD=3.5,MAXBAC=80;
+
+function toile(w,h,f){const c=document.createElement("canvas");c.width=w;c.height=h;f(c.getContext("2d"),w,h);return c;}
+function tex(c,rx,ry){const t=new THREE.CanvasTexture(c);if(rx){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);}return t;}
+const phong=o=>new THREE.MeshPhongMaterial(o), basic=o=>new THREE.MeshBasicMaterial(o);
+const face3=(cote,c,spec,shin)=>{const f=phong({map:c,specular:spec,shininess:shin});return [cote,f,f];};
+function grain(g,w,h,c,n,a){g.globalAlpha=a;g.fillStyle=c;for(let j=0;j<n;j++)g.fillRect(Math.random()*w,Math.random()*h,1,10+Math.random()*40);g.globalAlpha=1;}
+function planches(a,b,c,vert,rx,ry){return tex(toile(256,256,(g,w)=>{for(let i=0;i<8;i++){g.fillStyle=i%2?a:b;if(vert)g.fillRect(i*32,0,32,w);else g.fillRect(0,i*32,w,32);g.fillStyle=c;if(vert)g.fillRect(i*32+30,0,2,w);else g.fillRect(0,i*32+30,w,2);}
+  grain(g,w,w,c,120,.2);}),rx,ry);}
+// motif d'alvéoles (hexagones à pointe en haut), qui se répète sans couture
+function alveoles(g,w,h,s,remp,trait,ep){const dx=s*Math.sqrt(3),dy=s*1.5;g.lineWidth=ep;
+  for(let r=-1;r*dy<h+s;r++)for(let q=-1;q*dx<w+dx;q++){const cx=q*dx+(r%2?dx/2:0),cy=r*dy;g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/6+k*Math.PI/3;g.lineTo(cx+Math.cos(a)*s,cy+Math.sin(a)*s);}g.closePath();
+    if(remp){g.fillStyle=typeof remp==="function"?remp():remp;g.fill();}g.strokeStyle=trait;g.stroke();}}
+function engrenage(g,cx,cy,r,dents,coul,sombre,trou){g.fillStyle=coul;g.beginPath();for(let k=0;k<dents*2;k++){const a0=k*Math.PI/dents,rr=k%2?r*.84:r;g.lineTo(cx+Math.cos(a0-.08)*rr,cy+Math.sin(a0-.08)*rr);g.lineTo(cx+Math.cos(a0+Math.PI/dents*.6)*rr,cy+Math.sin(a0+Math.PI/dents*.6)*rr);}g.closePath();g.fill();
+  g.fillStyle=sombre;for(let k=0;k<5;k++){const a=k*Math.PI*2/5;g.beginPath();g.arc(cx+Math.cos(a)*r*.5,cy+Math.sin(a)*r*.5,r*.17,0,7);g.fill();}
+  g.beginPath();g.arc(cx,cy,r*.13,0,7);g.fillStyle=trou||sombre;g.fill();g.strokeStyle=sombre;g.lineWidth=r*.04;g.beginPath();g.arc(cx,cy,r*.7,0,7);g.stroke();}
+function texte(g,t,police,x,y,remp,contour,ep){g.font=police;g.textAlign="center";g.textBaseline="middle";if(contour){g.lineWidth=ep||8;g.strokeStyle=contour;g.lineJoin="round";g.strokeText(t,x,y);}g.fillStyle=remp;g.fillText(t,x,y);}
+
+// --- A · L'épave ---
+function causTex(){return tex(toile(256,256,(g,w)=>{g.fillStyle="#000";g.fillRect(0,0,w,w);g.strokeStyle="rgba(150,235,255,.6)";g.lineWidth=3;if("filter" in g)g.filter="blur(1.4px)";
+  for(let i=0;i<60;i++){const x=Math.random()*w,y=Math.random()*w,r=10+Math.random()*24,ry=r*(.45+Math.random()*.5),a=Math.random()*3;
+    for(const ox of[-w,0,w])for(const oy of[-w,0,w]){g.beginPath();g.ellipse(x+ox,y+oy,r,ry,a,0,7);g.stroke();}}}),3,6);}
+function coqueTex(){return tex(toile(512,256,(g,w,h)=>{for(let i=0;i<8;i++){g.fillStyle=i%2?"#3a2a1a":"#33241a";g.fillRect(0,i*32,w,32);g.fillStyle="#1a120a";g.fillRect(0,i*32+30,w,2);}grain(g,w,h,"#140c06",200,.25);
+  for(const x of[70,442]){g.fillStyle="#b08d3c";g.beginPath();g.arc(x,128,52,0,7);g.fill();const v=g.createRadialGradient(x-12,116,4,x,128,42);v.addColorStop(0,"#bff6ff");v.addColorStop(1,"#0a5866");g.fillStyle=v;g.beginPath();g.arc(x,128,40,0,7);g.fill();
+    g.fillStyle="#6a5420";for(let k=0;k<8;k++){const a=k*Math.PI/4;g.beginPath();g.arc(x+Math.cos(a)*46,128+Math.sin(a)*46,3.5,0,7);g.fill();}}
+  g.fillStyle="#17352f";g.fillRect(140,70,232,116);g.strokeStyle="#c9a24a";g.lineWidth=6;g.strokeRect(140,70,232,116);
+  texte(g,"Romet","96px 'Pirata One', Georgia, serif",256,132,"#f2c95c","#3a2508",8);}));}
+function doublon(){return tex(toile(128,128,(g,w)=>{g.fillStyle="#e8a838";g.fillRect(0,0,w,w);g.fillStyle="#f6be4a";g.beginPath();for(let k=0;k<14;k++){const a=k*Math.PI/7,r=w*(.4+Math.random()*.04);g.lineTo(w/2+Math.cos(a)*r,w/2+Math.sin(a)*r);}g.fill();
+  g.strokeStyle="#9a6e1c";g.lineWidth=7;g.beginPath();g.moveTo(w/2,26);g.lineTo(w/2,102);g.moveTo(26,w/2);g.lineTo(102,w/2);g.stroke();g.lineWidth=4;
+  for(const [x,y] of[[w/2,26],[w/2,102],[26,w/2],[102,w/2]]){g.beginPath();if(x===w/2){g.moveTo(x-9,y);g.lineTo(x+9,y);}else{g.moveTo(x,y-9);g.lineTo(x,y+9);}g.stroke();}
+  g.fillStyle="#9a6e1c";for(const [x,y] of[[46,46],[82,46],[46,82],[82,82]]){g.beginPath();g.arc(x,y,5,0,7);g.fill();}}));}
+function algueTex(){const t=tex(toile(64,256,(g,w,h)=>{g.clearRect(0,0,w,h);g.fillStyle="#2f8a5a";g.beginPath();g.moveTo(w/2-5,h);for(let y=h;y>0;y-=8)g.lineTo(w/2+Math.sin(y*.06)*14-6,y);for(let y=0;y<h;y+=8)g.lineTo(w/2+Math.sin(y*.06)*14+6,y);g.fill();
+  g.fillStyle="#3fae70";for(let y=20;y<h;y+=26){g.beginPath();g.ellipse(w/2+Math.sin(y*.06)*14+12,y,12,5,-.5,0,7);g.ellipse(w/2+Math.sin(y*.06)*14-12,y+12,12,5,.5,0,7);g.fill();}}));return t;}
+function poisson(c){const s=new THREE.Shape();s.absellipse(0,0,.28,.13,0,Math.PI*2);const q=new THREE.Shape();q.moveTo(-.22,0);q.lineTo(-.45,.14);q.lineTo(-.45,-.14);q.lineTo(-.22,0);
+  const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.ShapeGeometry(s),basic({color:c,side:THREE.DoubleSide,fog:false})));g.add(new THREE.Mesh(new THREE.ShapeGeometry(q),basic({color:c,side:THREE.DoubleSide,fog:false})));
+  const o=new THREE.Mesh(new THREE.CircleGeometry(.03,8),basic({color:0x000000}));o.position.set(.16,.03,.001);g.add(o);return g;}
+
+// --- B · La ruche ---
+function cireTex(rx,ry,clair){return tex(toile(256,256,(g,w,h)=>{g.fillStyle=clair?"#f7df8c":"#4a2806";g.fillRect(0,0,w,h);
+  alveoles(g,w,h,256/(Math.sqrt(3)*6),clair?()=>["#f9e49a","#f3d478","#f6dc8a"][Math.floor(Math.random()*3)]:()=>["#8a4a0c","#7a400a","#94520e","#6e3808"][Math.floor(Math.random()*4)],clair?"#d9b250":"#3e2004",clair?4:6);}),rx,ry);}
+function rayonTex(){return tex(toile(512,256,(g,w,h)=>{g.fillStyle="#a8620e";g.fillRect(0,0,w,h);alveoles(g,w,h,22,()=>["#f0a820","#e89818","#f6b42c","#ffc94a"][Math.floor(Math.random()*4)],"#7a4208",5);
+  g.fillStyle="#ffcf4a";g.fillRect(0,0,w,18);for(let x=10;x<w;x+=34+Math.random()*20){const l=20+Math.random()*50;g.beginPath();g.moveTo(x-8,0);g.lineTo(x-6,l);g.arc(x,l,7,Math.PI,0,true);g.lineTo(x+8,0);g.fill();}
+  g.fillStyle="#fff1c2";g.beginPath();g.ellipse(256,140,150,64,0,0,7);g.fill();g.strokeStyle="#7a4208";g.lineWidth=6;g.stroke();
+  texte(g,"Romet","92px Chewy, 'Fredoka', sans-serif",256,146,"#5a3208",null);}));}
+function abeilleFace(){return tex(toile(128,128,(g,w)=>{g.fillStyle="#f2b02a";g.fillRect(0,0,w,w);g.strokeStyle="#c07a10";g.lineWidth=5;g.beginPath();for(let k=0;k<6;k++){const a=k*Math.PI/3;g.lineTo(64+Math.cos(a)*50,64+Math.sin(a)*50);}g.closePath();g.stroke();
+  g.fillStyle="#fff3d0";g.globalAlpha=.85;g.beginPath();g.ellipse(52,46,16,10,-.6,0,7);g.ellipse(76,46,16,10,.6,0,7);g.fill();g.globalAlpha=1;
+  g.fillStyle="#ffd84a";g.beginPath();g.ellipse(64,70,15,22,0,0,7);g.fill();g.fillStyle="#4a2a06";for(const y of[62,74])g.fillRect(49,y,30,6);g.beginPath();g.arc(64,46,8,0,7);g.fill();}));}
+function abeille(){const g=new THREE.Group(),c=tex(toile(64,32,(x,w,h)=>{x.fillStyle="#ffd23a";x.fillRect(0,0,w,h);x.fillStyle="#2a1a06";for(let i=0;i<4;i++)x.fillRect(10+i*14,0,6,h);}));
+  const corps=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8),phong({map:c,shininess:30}));corps.scale.set(1.5,1,1);corps.rotation.y=Math.PI/2;g.add(corps);
+  const ail=basic({color:0xffffff,transparent:true,opacity:.6,side:THREE.DoubleSide,depthWrite:false});g.ailes=[-1,1].map(s=>{const a=new THREE.Mesh(new THREE.PlaneGeometry(.16,.1),ail);a.position.set(s*.08,.08,0);g.add(a);return a;});return g;}
+
+// --- C · L'horloger ---
+function cuirTex(){return tex(toile(256,256,(g,w,h)=>{g.fillStyle="#1d3a2a";g.fillRect(0,0,w,h);for(let i=0;i<2500;i++){g.fillStyle=Math.random()<.5?"#24452f":"#183325";g.fillRect(Math.random()*w,Math.random()*h,2,2);}
+  g.strokeStyle="#b8934a";g.lineWidth=2;g.setLineDash([6,6]);g.strokeRect(8,8,w-16,h-16);g.setLineDash([]);}),2,4);}
+function cadranTex(){return tex(toile(512,256,(g,w,h)=>{g.fillStyle="#3a2414";g.fillRect(0,0,w,h);for(let i=0;i<16;i++){g.fillStyle=i%2?"#3a2414":"#432a17";g.fillRect(i*32,0,32,h);}grain(g,w,h,"#1e120a",160,.3);
+  g.fillStyle="#c9a35a";g.beginPath();g.arc(256,128,116,0,7);g.fill();g.fillStyle="#f3e9d2";g.beginPath();g.arc(256,128,104,0,7);g.fill();
+  const ch=["XII","I","II","III","IIII","V","VI","VII","VIII","IX","X","XI"];g.fillStyle="#2a1a10";g.font="700 20px Cinzel, Georgia, serif";g.textAlign="center";g.textBaseline="middle";
+  ch.forEach((t,i)=>{const a=-Math.PI/2+i*Math.PI/6;g.fillText(t,256+Math.cos(a)*84,128+Math.sin(a)*84);});
+  for(let i=0;i<60;i++){const a=i*Math.PI/30,r1=i%5?100:96;g.strokeStyle="#2a1a10";g.lineWidth=i%5?1:3;g.beginPath();g.moveTo(256+Math.cos(a)*r1,128+Math.sin(a)*r1);g.lineTo(256+Math.cos(a)*104,128+Math.sin(a)*104);g.stroke();}
+  texte(g,"ROMET","700 24px Cinzel, Georgia, serif",256,166,"#7a1e1e",null);
+  for(const x of[60,452]){engrenage(g,x,128,46,14,"#a8843c","#3a2414");}}));}
+function rouageFace(){return tex(toile(128,128,(g,w)=>{g.fillStyle="#6a4a18";g.fillRect(0,0,w,w);
+  g.fillStyle="#d9b25a";g.beginPath();for(let k=0;k<32;k++){const a=k*Math.PI/16,rr=k%2?54:63;g.lineTo(64+Math.cos(a-.1)*rr,64+Math.sin(a-.1)*rr);g.lineTo(64+Math.cos(a+.1)*rr,64+Math.sin(a+.1)*rr);}g.fill();
+  g.fillStyle="#7a5418";for(let k=0;k<4;k++){const a=k*Math.PI/2+.22;g.beginPath();g.arc(64,64,42,a,a+Math.PI/2-.44);g.arc(64,64,17,a+Math.PI/2-.44,a,true);g.closePath();g.fill();}
+  g.strokeStyle="#f6dc94";g.lineWidth=3;g.beginPath();g.arc(64,64,48,0,7);g.stroke();g.fillStyle="#f6dc94";g.beginPath();g.arc(64,64,11,0,7);g.fill();g.fillStyle="#3a2408";g.beginPath();g.arc(64,64,4,0,7);g.fill();}));}
+function grandRouage(c,s){const t=tex(toile(256,256,(g,w)=>{g.clearRect(0,0,w,w);engrenage(g,128,128,124,18,c,s);}));return t;}
+
+// Chaque style fournit ses matériaux, ses lumières, ses trésors et son décor animé (animer(t, machine)).
+const STYLES={
+  A:{fond:0x04202c,brume:[0x0a3a4c,11,28],lots:[["Perle blanche",0xf4f0e8],["Corail",0xff6a4a],["Perle noire",0x5a5a7a],["Aigue-marine",0x5fe0d0],["Rubis",0xff2a4a],["Émeraude",0x2fe08a]],
+    habiller(s){
+    s.add(new THREE.HemisphereLight(0x6fc8e0,0x02161e,.6));const d=new THREE.DirectionalLight(0xfff0d0,.95);d.position.set(1,10,3);s.add(d);
+    const bois=phong({map:planches("#3d2f20","#36291c","#1a120a",1,1,1),shininess:10}),laiton=phong({color:0x9a8a4a,specular:0x88ffee,shininess:50}),or=phong({color:0xd88a1c,specular:0xb08040,shininess:50});
+    const caus=causTex(),causM=basic({map:caus,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.85});
+    const c1=new THREE.Mesh(new THREE.PlaneGeometry(5.2,7),causM);c1.rotation.x=-Math.PI/2;c1.position.set(0,.012,0);s.add(c1);
+    const coque=phong({map:coqueTex(),shininess:10}),coffre=phong({color:0x5a3a1c,shininess:20});
+    // bulles
+    const nb=40,bp=new Float32Array(nb*3);for(let i=0;i<nb;i++){bp[i*3]=(Math.random()-.5)*7;bp[i*3+1]=Math.random()*6-1;bp[i*3+2]=-6+Math.random()*9;}
+    const bg=new THREE.BufferGeometry();bg.setAttribute("position",new THREE.BufferAttribute(bp,3));const bulles=new THREE.Points(bg,new THREE.PointsMaterial({color:0xc8f6ff,size:.11,transparent:true,opacity:.7,depthWrite:false}));s.add(bulles);
+    // algues de part et d'autre, poissons qui passent au-dessus du nom du navire
+    const am=basic({map:algueTex(),transparent:true,alphaTest:.4,side:THREE.DoubleSide}),algues=[];
+    for(const [x,z,hh] of[[-3.2,1.6,2.6],[3.25,.4,2.2],[-3.3,-1.2,2.8],[3.3,2.6,2.4]]){const a=new THREE.Mesh(new THREE.PlaneGeometry(.7,hh),am);a.position.set(x,hh/2-.6,z);s.add(a);algues.push(a);}
+    const poissons=[[0xffa62a,1],[0xffe14a,-1],[0xff6a8a,1]].map(([c,sens],i)=>{const p=poisson(c);p.userData={sens,y:3.95+i*.18,v:.5+i*.25,x:(Math.random()-.5)*8};p.position.z=-5.7;s.add(p);return p;});
+    let t0=0;
+    return {sol:phong({map:planches("#4a3a28","#433424","#1f170f",1,2,3),shininess:12}),poussoir:bois,bandePoussoir:laiton,fond:[bois,bois,bois,bois,coque,bois],
+      murs:bois,bandeMurs:laiton,facade:[coffre,coffre,coffre,coffre,phong({map:tex(toile(512,128,(g,w,h)=>{g.fillStyle="#3a2414";g.fillRect(0,0,w,h);g.fillStyle="#b08d3c";g.fillRect(0,0,w,10);g.fillRect(0,h-10,w,10);texte(g,"Trésor","72px 'Pirata One', Georgia, serif",w/2,h/2+4,"#f2c95c","#1a0e04",6);})),shininess:10}),coffre],
+      bac:coffre,levre:laiton,piece:face3(or,doublon(),0x9a7a3a,50),geante:face3(or,doublon(),0x9a7a3a,50),segPiece:20,
+      murBonus:phong({color:0x5fe0d0,emissive:0x0a4a50,transparent:true,opacity:.45}),etincelle:0xc8f6ff,
+      animer(t,m){const dt=Math.min(.1,t-t0);t0=t;caus.offset.set(Math.sin(t*.3)*.08,t*.05);
+        for(let i=0;i<nb;i++){bp[i*3+1]+=dt*(.6+(i%5)*.15);bp[i*3]+=Math.sin(t*2+i)*dt*.1;if(bp[i*3+1]>5.5){bp[i*3+1]=-1;bp[i*3]=(Math.random()-.5)*7;}}bg.attributes.position.needsUpdate=true;
+        algues.forEach((a,i)=>{a.rotation.z=Math.sin(t*1.2+i)*.12;});
+        poissons.forEach(p=>{const u=p.userData;u.x+=u.v*u.sens*dt;if(Math.abs(u.x)>5){u.sens*=-1;}p.position.x=u.x;p.position.y=u.y+Math.sin(t*1.5+u.v*5)*.06;p.scale.x=u.sens;});}};}},
+  B:{fond:0x2a1806,brume:[0x3a2208,18,38],lots:[["Gelée royale",0xfff2c0],["Pollen",0xffd23a],["Propolis",0xb05a18],["Nectar",0xff9a3a],["Lavande",0xa070ff],["Trèfle",0xff7ab0]],
+    habiller(s){
+    s.add(new THREE.HemisphereLight(0xffe6a0,0x4a2a08,.65));const d=new THREE.DirectionalLight(0xfff0c0,.8);d.position.set(-2,9,6);s.add(d);
+    const cire=phong({map:cireTex(2,2,true),specular:0x806020,shininess:40}),cadre=phong({map:planches("#c89a5a","#bb8e50","#7a5a2a",0,1,2),shininess:15});
+    const miel=phong({color:0xf0a818,specular:0xfff0b0,shininess:90});
+    const abeilles=[];for(let i=0;i<6;i++){const a=abeille();a.userData={ph:Math.random()*6,r:1+Math.random()*1.4,cz:-2.5+Math.random()*4,v:.6+Math.random()*.6};s.add(a);abeilles.push(a);}
+    return {sol:phong({map:cireTex(5,10),specular:0x805020,shininess:50}),poussoir:cire,bandePoussoir:miel,fond:[cadre,cadre,cadre,cadre,phong({map:rayonTex(),shininess:30}),cadre],
+      murs:cadre,bandeMurs:miel,facade:[cadre,cadre,cadre,cadre,phong({map:tex(toile(512,128,(g,w,h)=>{g.fillStyle="#7a4a10";g.fillRect(0,0,w,h);alveoles(g,w,h,14,"#8a5414","#6a3a08",3);texte(g,"Récolte !","64px Chewy, sans-serif",w/2,h/2+4,"#ffd970","#4a2a06",8);})),shininess:20}),cadre],
+      bac:cadre,levre:miel,piece:face3(miel,abeilleFace(),0xffe0a0,80),geante:face3(miel,abeilleFace(),0xffe0a0,80),segPiece:6,
+      murBonus:phong({color:0xffcf4a,emissive:0x4a2a00,transparent:true,opacity:.5}),etincelle:0xffe08a,
+      animer(t){abeilles.forEach((a,i)=>{const u=a.userData,ang=t*u.v+u.ph;a.position.set(Math.cos(ang)*u.r*1.6,2.1+Math.sin(ang*2.3)*.4+i*.08,u.cz+Math.sin(ang)*u.r);
+        a.rotation.y=-ang+(Math.cos(ang)>0?0:0);a.ailes.forEach((w,k)=>{w.rotation.z=(k?1:-1)*(.3+Math.sin(t*60+i)*.5);});});}};}},
+  C:{fond:0x0e1712,brume:[0x0e1712,18,38],lots:[["Rubis",0xff3b5c],["Saphir",0x3b7bff],["Émeraude",0x2fe08a],["Topaze",0xffc23b],["Améthyste",0xb45cff],["Diamant",0xe8f4ff]],
+    habiller(s){
+    s.add(new THREE.HemisphereLight(0xfff0d0,0x102018,.65));const d=new THREE.DirectionalLight(0xffe8c0,.75);d.position.set(3,9,5);s.add(d);
+    const lampe=new THREE.PointLight(0xffd090,.6,16);lampe.position.set(2.5,4,0);s.add(lampe);
+    const noyer=phong({map:planches("#4a2e18","#432a16","#1e120a",1,1,2),shininess:30}),laiton=phong({color:0xc9a35a,specular:0xfff0c0,shininess:100}),sombre=phong({color:0x2a1a10,shininess:20}),laitonP=phong({color:0xb8913c,specular:0x8a7040,shininess:40});
+    const cadran=phong({map:cadranTex(),shininess:20});
+    // aiguilles du cadran (le centre du cadran est au milieu du mur du fond)
+    const aig=(l,e,c)=>{const g=new THREE.Group(),m=new THREE.Mesh(new THREE.BoxGeometry(e,l,.02),basic({color:c}));m.position.y=l/2-.08;g.add(m);g.position.set(0,2.12,-5.33);s.add(g);return g;};
+    const heures=aig(.55,.07,0x2a1a10),minutes=aig(.8,.045,0x2a1a10),secondes=aig(.85,.02,0xb0201a);
+    // grands engrenages qui dépassent du haut du mur
+    const g1=new THREE.Mesh(new THREE.PlaneGeometry(2.4,2.4),phong({map:grandRouage("#b08a3a","#3a2414"),transparent:true,alphaTest:.5,side:THREE.DoubleSide,shininess:60}));g1.position.set(-1.5,3.7,-5.65);s.add(g1);
+    const g2=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.7),phong({map:grandRouage("#c9a35a","#3a2414"),transparent:true,alphaTest:.5,side:THREE.DoubleSide,shininess:60}));g2.position.set(.42,3.95,-5.7);s.add(g2);
+    const g3=new THREE.Mesh(new THREE.PlaneGeometry(1.2,1.2),phong({map:grandRouage("#9a7a32","#3a2414"),transparent:true,alphaTest:.5,side:THREE.DoubleSide,shininess:60}));g3.position.set(1.75,3.6,-5.68);s.add(g3);
+    // le mécanisme : roue et manivelle à gauche, devant, coulisse fixée au poussoir (le maneton tourne avec la roue et entraîne la coulisse)
+    const ZC=ZM+2,roue=new THREE.Group();roue.position.set(-3.1,1.3,ZC);s.add(roue);
+    const disque=new THREE.Mesh(new THREE.CylinderGeometry(.72,.72,.1,28),[laiton,phong({map:grandRouage("#c9a35a","#5a3a18"),transparent:true,alphaTest:.5,shininess:80}),laiton]);disque.rotation.z=Math.PI/2;roue.add(disque);
+    const maneton=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.3,10),laiton);maneton.rotation.z=Math.PI/2;maneton.position.set(-.12,.6,0);roue.add(maneton);
+    const axe=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.5,12),sombre);axe.rotation.z=Math.PI/2;roue.add(axe);
+    const coulisse=new THREE.Mesh(new THREE.BoxGeometry(.08,1.7,.16),laiton);s.add(coulisse);
+    const bras=new THREE.Mesh(new THREE.BoxGeometry(.5,.1,.1),laiton);s.add(bras);
+    const pied=new THREE.Mesh(new THREE.BoxGeometry(.18,1.2,.3),sombre);pied.position.set(-3.1,.2,ZC);s.add(pied);
+    return {sol:phong({map:cuirTex(),shininess:8}),poussoir:laiton,bandePoussoir:sombre,fond:[noyer,noyer,noyer,noyer,cadran,noyer],
+      murs:noyer,bandeMurs:laiton,facade:[noyer,noyer,noyer,noyer,phong({map:tex(toile(512,128,(g,w,h)=>{g.fillStyle="#2a1a10";g.fillRect(0,0,w,h);g.strokeStyle="#c9a35a";g.lineWidth=6;g.strokeRect(10,10,w-20,h-20);texte(g,"ÉCHAPPEMENT","700 40px Cinzel, Georgia, serif",w/2,h/2+3,"#e6c47a",null);})),shininess:30}),noyer],
+      bac:laiton,levre:sombre,piece:face3(laitonP,rouageFace(),0x8a7040,40),geante:face3(laitonP,rouageFace(),0x8a7040,40),segPiece:20,
+      murBonus:phong({color:0xc9a35a,emissive:0x3a2a08,transparent:true,opacity:.5}),etincelle:0xffe8a0,
+      animer(t,m){const th=2*Math.PI*t/PERIODE;roue.rotation.x=th;const zp=m.zp,zt=ZC+.6*Math.sin(th);
+        coulisse.position.set(-3.24,1.3,zt);bras.position.set(-2.95,.45,zt);
+        secondes.rotation.z=-Math.floor(t)*Math.PI/30;minutes.rotation.z=-t*Math.PI/300;heures.rotation.z=-t*Math.PI/3600-1;
+        g1.rotation.z=t*.4;g2.rotation.z=-t*.4*18/14-.1;g3.rotation.z=t*.4*18/10;}};}}
+};
+
+// --- Sons (WebAudio, après le premier toucher) ---
+let ac=null;
+function son(f,dur,type,vol){if(!ac)return;const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;o.type=type||"triangle";o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(vol||.12,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur);}
+const tinte=()=>{son(2100+Math.random()*500,.12);setTimeout(()=>son(2900,.08,"sine",.06),40);};
+
+function Machine(sec){
+  this.sec=sec;this.st=STYLES[sec.dataset.style];this.cle=sec.dataset.style;this.ecran=sec.querySelector(".ecran");
+  this.elJ=sec.querySelector(".j");this.elG=sec.querySelector(".g");this.elC=sec.querySelector(".combi");this.elA=sec.querySelector(".aide");this.elP=sec.querySelector(".perf");
+  const bas=sec.querySelector(".bas");this.gemmes=this.st.lots.map(l=>{const e=document.createElement("span");e.className="gemme";e.title=l[0];e.style.setProperty("--c","#"+l[1].toString(16).padStart(6,"0"));bas.appendChild(e);return e;});
+  this.aideBase=this.elA.innerHTML;this.nb=150;this.pret=false;this.visible=false;this.lent=0;
+}
+Machine.prototype.txt=function(maj,min){return min;};
+Machine.prototype.construire=function(){
+  const st=this.st,rendu=this.rendu=new THREE.WebGLRenderer({antialias:true,powerPreference:"low-power"});
+  this.pr=Math.min(devicePixelRatio||1,1.5);rendu.setPixelRatio(this.pr);this.ecran.prepend(rendu.domElement);
+  const s=this.scene=new THREE.Scene();s.background=new THREE.Color(st.fond);if(st.brume)s.fog=new THREE.Fog(...st.brume);
+  this.cam=new THREE.PerspectiveCamera(52,1,.1,60);this.cam.position.set(0,10,9.6);this.cam.lookAt(0,0,-.3);
+  const M=this.M=st.habiller(s);
+  const visuel=(sx,sy,sz,x,y,z,m)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m);o.position.set(x,y,z);s.add(o);return o;};
+  visuel(5.2,.5,10.5,0,-.25,-1.75,M.sol);visuel(5.4,3,.2,0,2.12,-5.45,M.fond);
+  for(const sx of[-1,1]){visuel(.2,1.9,9,sx*2.7,.65,-2.5,M.murs);visuel(.08,.08,9,sx*2.62,1.6,-2.5,M.bandeMurs);}
+  visuel(6,1.6,.25,0,-1.05,3.8,M.facade);
+  // bac des gains : fond, côtés et lèvre avant
+  visuel(5.8,.12,1.2,0,-1.96,4.5,M.bac);visuel(5.8,.4,.1,0,-1.75,5.1,M.levre);for(const sx of[-1,1])visuel(.1,.4,1.2,sx*2.9,-1.75,4.5,M.bac);
+  if(M.auvent){const a=new THREE.Mesh(new THREE.PlaneGeometry(6,1.1),phong({map:M.auvent,transparent:true,alphaTest:.5,side:THREE.DoubleSide,shininess:10}));a.position.set(0,4.05,-5.0);a.rotation.x=-.5;s.add(a);}
+  if(M.ampoules){const n=M.ampoules.length,am=this.ampoules=new THREE.InstancedMesh(new THREE.SphereGeometry(.07,8,6),basic({color:0xffffff}),n),d=new THREE.Object3D(),c=new THREE.Color(M.allumee);
+    M.ampoules.forEach((p,i)=>{d.position.set(p[0],p[1],p[2]);d.updateMatrix();am.setMatrixAt(i,d.matrix);am.setColorAt(i,c);});s.add(am);this.cAllumee=c;this.cEteinte=new THREE.Color(M.eteinte);this.kAmp=-1;}
+  this.mursBonus=[-1,1].map(sx=>visuel(.2,1.9,1.5,sx*2.7,.65,2.75,M.murBonus));
+  this.mPoussoir=visuel(5,.6,5,0,.3,ZM,M.poussoir);const bande=new THREE.Mesh(new THREE.BoxGeometry(5,.08,.08),M.bandePoussoir);bande.position.set(0,.26,2.5);this.mPoussoir.add(bande);
+  const geoPiece=new THREE.CylinderGeometry(R,R,H,M.segPiece||20);
+  this.inst=new THREE.InstancedMesh(geoPiece,M.piece,MAXP);this.inst.frustumCulled=false;this.inst.count=0;s.add(this.inst);
+  this.bac=new THREE.InstancedMesh(geoPiece,M.piece,MAXBAC);this.bac.frustumCulled=false;this.bac.count=0;s.add(this.bac);this.bacP=[];this.bacI=0;
+  this.geo={geante:new THREE.CylinderGeometry(.65,.65,.16,24),mur:new THREE.BoxGeometry(.6,.3,.6),pluie:new THREE.CylinderGeometry(.3,.3,.3,16),lot:new THREE.OctahedronGeometry(.3,0)};
+  this.matMur=phong({color:0x35e0ff,emissive:0x0a4a60,shininess:80});this.matPluie=phong({color:0x5a8cff,emissive:0x14244a,shininess:80});
+  this.matLots=this.st.lots.map(l=>phong({color:l[1],emissive:new THREE.Color(l[1]).multiplyScalar(.25),specular:0xffffff,shininess:100,flatShading:true}));
+  this.viseur=new THREE.Mesh(new THREE.CylinderGeometry(R,R,H,20),basic({color:0xffffff,transparent:true,opacity:.35}));this.viseur.position.set(0,2.4,-4.6);s.add(this.viseur);
+  // étincelles : 60 points en mélange additif, recyclés
+  const ge=new THREE.BufferGeometry();this.etP=new Float32Array(60*3).fill(-100);this.etV=[];for(let i=0;i<60;i++)this.etV.push({vx:0,vy:0,vz:0,t:0});
+  ge.setAttribute("position",new THREE.BufferAttribute(this.etP,3));this.etincelles=new THREE.Points(ge,new THREE.PointsMaterial({color:M.etincelle,size:.14,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  this.etincelles.frustumCulled=false;s.add(this.etincelles);this.etI=0;
+  this.dummy=new THREE.Object3D();
+  this.ecran.addEventListener("pointerdown",e=>{e.preventDefault();if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(_){}}this.lacher(this.xDoigt(e),false);});
+  this.ecran.addEventListener("pointermove",e=>{this.viseur.position.x=this.xDoigt(e);});
+  new ResizeObserver(()=>this.taille()).observe(this.ecran);this.taille();
+  this.pret=true;this.remplir();
+};
+Machine.prototype.xDoigt=function(e){const r=this.ecran.getBoundingClientRect();return Math.max(-2.1,Math.min(2.1,((e.clientX-r.left)/r.width-.5)*5.6));};
+Machine.prototype.taille=function(){const w=this.ecran.clientWidth,h=this.ecran.clientHeight;if(!w||!h)return;this.rendu.setSize(w,h,false);const a=w/h;
+  this.cam.aspect=a;this.cam.fov=Math.max(52,Math.min(75,2*Math.atan(3.5/(a*11.7))*180/Math.PI));this.cam.updateProjectionMatrix();};
+
+// --- Physique maison des pièces ---
+// Chaque objet est un disque posé à plat (x, z, y = hauteur du dessous) qui repose sur le plus haut appui sous son centre :
+// le plancher, le dessus du poussoir ou une autre pièce. Les disques d'une même couche se repoussent ; un disque trop serré
+// grimpe sur son voisin (les tas se forment comme dans une vraie machine). Sans appui, il tombe en basculant.
+const FIN_COTES=2;
+const FORMES={piece:[R,H,1],geante:[.65,.16,4],mur:[.36,.3,1.5],pluie:[.3,.3,1.5],lot:[.3,.5,1.5]},CASE=1.05;
+Machine.prototype.ajouter=function(type,x,y,z){
+  const f=FORMES[type],o={type,x,y,z,r:f[0],h:f[1],kg:f[2],vx:0,vy:0,vz:0,dx:0,dz:0,sup:null,chute:false,
+    ax:(Math.random()-.5)*.12,ay:Math.random()*6.3,az:(Math.random()-.5)*.12,bx:0,bz:0,k:NaN};
+  if(type!=="piece"){let mat=type==="geante"?this.M.geante:type==="mur"?this.matMur:type==="pluie"?this.matPluie:null;
+    if(type==="lot"){o.lot=Math.floor(Math.random()*this.st.lots.length);mat=this.matLots[o.lot];}
+    o.m=new THREE.Mesh(this.geo[type],mat);this.scene.add(o.m);}
+  else this.sale=true;
+  this.objets.push(o);return o;
+};
+Machine.prototype.voisins=function(){
+  const g=this.cases=new Map();
+  for(const o of this.objets){if(o.chute&&o.y<-.3)continue;const k=Math.floor(o.x/CASE)*1000+Math.floor(o.z/CASE);let l=g.get(k);if(!l)g.set(k,l=[]);l.push(o);}
+};
+Machine.prototype.autour=function(o,f){const cx=Math.floor(o.x/CASE),cz=Math.floor(o.z/CASE);
+  for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=this.cases.get((cx+i)*1000+cz+j);if(l)for(const n of l)if(n!==o)f(n);}};
+Machine.prototype.pas=function(){
+  const zp=ZM+AMP*Math.sin(2*Math.PI*(this.t+DT)/PERIODE),dzp=zp-this.zp;this.zp=zp;this.t+=DT;
+  const av=zp+2.5,ar=zp-2.5,murs=this.murT>0;
+  // copie triée par hauteur : this.objets garde son ordre, donc chaque pièce garde sa place dans l'InstancedMesh
+  const os=this.objets.slice().sort((a,b)=>a.y-b.y);this.voisins();
+  // 1. transport par l'appui, inertie, gravité, appui
+  for(const c of os){
+    c.px=c.x;c.pz=c.z;const py=c.y;let tx=0,tz=0;
+    if(c.sup==="p")tz=dzp;else if(c.sup&&c.sup!=="sol"){tx=c.sup.dx*.85;tz=c.sup.dz*.85;}
+    // une pièce posée en déséquilibre sur une autre glisse vers l'extérieur (les tas s'étalent)
+    // (écart au centre des pièces qui la portent, mesuré au pas précédent)
+    if(c.sup&&c.sup.kg){const ex=c.ex,ez=c.ez,e=Math.sqrt(ex*ex+ez*ez);if(e>.22){c.vx+=ex/e*2.5*DT;c.vz+=ez/e*2.5*DT;}}
+    c.tx=tx;c.tz=tz;c.x+=tx+c.vx*DT;c.z+=tz+c.vz*DT;
+    c.vy-=15*DT;c.y+=c.vy*DT;
+    let s=-1e9,sup=null;
+    if(Math.abs(c.x)<2.6&&c.z<BORD&&c.z>-7){s=0;sup="sol";}
+    if(Math.abs(c.x)<2.55&&c.z>ar&&c.z<av&&py>.5){s=.6;sup="p";}
+    let sx=0,sz=0,ns=0;
+    this.autour(c,n=>{if(n.chute)return;const t=n.y+n.h;if(t>py+.03)return;const dx=n.x-c.x,dz=n.z-c.z,lim=(c.r+n.r)*.62;if(dx*dx+dz*dz>=lim*lim)return;
+      if(t>s+.03){s=t;sup=n;sx=n.x;sz=n.z;ns=1;}else if(t>s-.03){sx+=n.x;sz+=n.z;ns++;if(t>s){s=t;sup=n;}}});
+    if(ns){c.ex=c.x-sx/ns;c.ez=c.z-sz/ns;}else c.ex=c.ez=0;
+    if(c.y<=s){c.y=s;c.vy=c.vy<-4?-c.vy*.12:0;c.sup=sup;c.chute=false;}
+    else{c.sup=null;if(s<-1e8&&!c.chute){c.chute=true;c.bx=c.z>=BORD?1:0;c.bz=c.z>=BORD?0:-Math.sign(c.x);if(c.bx)c.vz+=.6;else c.vx+=Math.sign(c.x)*.6;}}
+    c.pen=0;
+  }
+  // 2. les disques d'une même couche se repoussent. On les parcourt d'arrière en avant : un disque calé par le poussoir
+  // (ou par un disque calé) ne recule pas et pousse tout son voisin, donc la poussée traverse le tas d'un seul passage.
+  const parZ=os.slice().sort((a,b)=>a.z-b.z);
+  for(let it=0;it<2;it++){
+    for(const c of parZ)c.cale=false;
+    for(const c of parZ){
+      if(!c.chute){
+        if(c.y<.55){if(c.z-c.r<av&&c.z>ar){c.z=av+c.r;c.cale=true;}}
+        else if(c.z-c.r<-5.35){c.z=-5.35+c.r;c.cale=true;}
+        if(c.z<FIN_COTES||murs||c.y>=.55){const lim=2.6-c.r;if(c.x>lim)c.x=lim;else if(c.x<-lim)c.x=-lim;}
+      }
+      this.autour(c,n=>{if(n.z<c.z||(n.z===c.z&&n.x<=c.x))return;
+        if(Math.abs((c.y+c.h/2)-(n.y+n.h/2))>=(c.h+n.h)*.42)return;
+        const dx=n.x-c.x,dz=n.z-c.z,m=c.r+n.r,d2=dx*dx+dz*dz;if(d2>=m*m||d2<1e-8)return;
+        const d=Math.sqrt(d2),p=(m-d),ux=dx/d,uz=dz/d,wc=c.cale?0:n.kg/(c.kg+n.kg),wn=1-wc;
+        c.x-=ux*p*wc;c.z-=uz*p*wc;n.x+=ux*p*wn;n.z+=uz*p*wn;if(c.cale&&uz>.3)n.cale=true;if(it===1){c.pen+=p;n.pen+=p;}});
+    }
+  }
+  // 3. vitesses, déplacement transmis aux pièces posées dessus, pièces trop serrées qui grimpent
+  for(const c of os){
+    c.vx=(c.x-c.px-c.tx)/DT*.2;c.vz=(c.z-c.pz-c.tz)/DT*.2;c.dx=c.x-c.px;c.dz=c.z-c.pz;
+    if(c.chute){c.ax+=c.bx*DT*7;c.az+=c.bz*DT*7;continue;}
+    if(c.sup&&c.sup!=="p"&&c.sup!=="sol"){}else{c.ax*=.8;c.az*=.8;}
+    if(c.pen>c.r*1.3&&c.type==="piece"){let haut=null;this.autour(c,n=>{if(!n.chute&&Math.abs(n.y-c.y)<.06&&(!haut||n.pen<haut.pen)){const dx=n.x-c.x,dz=n.z-c.z;if(dx*dx+dz*dz<(c.r+n.r)**2)haut=n;}});
+      if(haut){c.y=haut.y+haut.h+.01;c.ax=(Math.random()-.5)*.2;c.az=(Math.random()-.5)*.2;}}
+  }
+};
+Machine.prototype.remplir=function(){
+  if(this.objets)this.objets.forEach(o=>{if(o.m)this.scene.remove(o.m);});
+  this.objets=[];this.jetons=30;this.gains=0;this.lachers=0;this.recharge=0;this.murT=0;this.pluie=0;this.pluieT=0;this.lots=new Set();
+  this.t=0;this.zp=ZM;this.acc=0;this.gainAff=0;this.gainT=0;this.msgT=0;this.sale=true;this.bacP=[];this.bacI=0;this.bac.count=0;
+  // on lâche les pièces une à une à des endroits au hasard : chacune se pose sur le tas déjà là, sans chevaucher sa couche
+  const poser=(x0,x1,z0,z1,base)=>{let best=null;for(let k=0;k<25;k++){const x=x0+Math.random()*(x1-x0),z=z0+Math.random()*(z1-z0);let y=base,ok=true;
+      for(const o of this.objets){const dx=o.x-x,dz=o.z-z,d2=dx*dx+dz*dz;if(d2<.2&&o.y+o.h>y)y=o.y+o.h;}
+      for(const o of this.objets){const dx=o.x-x,dz=o.z-z;if(Math.abs(o.y-y)<.06&&dx*dx+dz*dz<.5){ok=false;break;}}
+      if(ok&&(!best||y<best[1]))best=[x,y,z];}
+    if(best&&best[1]<base+.36)this.ajouter("piece",best[0],best[1],best[2]);return !!best&&best[1]<base+.36;};
+  const nSol=Math.round(this.nb*.7);
+  let reste=0;for(let i=0;i<nSol;i++)if(!poser(-2.2,2.2,-.55,3.15,0))reste++;
+  for(let i=nSol-reste;i<this.nb;i++)poser(-2.15,2.15,-4.95,-1.75,.6);
+  this.ajouter("geante",.3,1.2,2.2);this.ajouter("lot",-.8,1.2,2.5);
+  // la machine tourne 8 secondes à vide pour trouver son équilibre (ce qui tombe alors ne compte pas)
+  for(let i=0;i<480;i++){this.pas();if(i%30===0)this.nettoyer(true);}
+  this.nettoyer(true);this.hud();this.dessiner();
+};
+Machine.prototype.lacher=function(x,gratuit){
+  if(!this.pret)return;
+  if(!gratuit){if(this.jetons<=0){this.message(this.txt("PLUS DE JETONS","Plus de jetons"));return;}}
+  if(this.objets.length>=MAXP-4){this.message(this.txt("PLATEAU PLEIN","Plateau plein"));return;}
+  if(!gratuit){this.jetons--;this.lachers++;this.aideBase="";}
+  const o=this.ajouter("piece",x+(Math.random()-.5)*.1,2.4,-4.6);o.vy=-2;son(500,.05,"square",.04);
+  if(!gratuit&&this.lachers%12===0){const t=["geante","mur","pluie","lot","lot"][Math.floor(Math.random()*5)];
+    setTimeout(()=>{const b=this.ajouter(t,(Math.random()-.5)*3,2.6,-4.4);b.vy=-2;this.message(this.txt("BONUS !","Bonus !"));},300);}
+  this.hud();
+};
+Machine.prototype.message=function(t){this.elC.textContent=t;this.elC.classList.add("pop");this.msgT=1.4;setTimeout(()=>this.elC.classList.remove("pop"),180);};
+// une pièce gagnée réapparaît dans le bac (les plus anciennes laissent la place) et lance quelques étincelles
+Machine.prototype.versBac=function(x){
+  const i=this.bacI++%MAXBAC,bx=Math.max(-2.5,Math.min(2.5,x+(Math.random()-.5)*.8)),bz=4.1+Math.random()*.8;let haut=-1.9;
+  for(const p of this.bacP)if(p&&(p.x-bx)**2+(p.z-bz)**2<.25&&p.repos+H>haut)haut=p.repos+H;
+  this.bacP[i]={x:bx,z:bz,y:-.6,vy:0,repos:Math.min(haut,-1.6),ax:(Math.random()-.5)*.3,ay:Math.random()*6.3,az:(Math.random()-.5)*.3,bouge:true};
+  this.bac.count=Math.min(this.bacI,MAXBAC);
+  for(let k=0;k<5;k++){const j=this.etI++%60,v=this.etV[j];this.etP[j*3]=x+(Math.random()-.5)*.4;this.etP[j*3+1]=.1;this.etP[j*3+2]=3.45;
+    v.vx=(Math.random()-.5)*1.5;v.vy=1.5+Math.random()*2;v.vz=.4+Math.random()*.8;v.t=.6+Math.random()*.4;}
+};
+Machine.prototype.nettoyer=function(silence){
+  for(let i=this.objets.length-1;i>=0;i--){const o=this.objets[i];if(o.y>-1.2)continue;
+    const gagne=o.z>BORD-.05&&Math.abs(o.x)<2.65;if(o.m)this.scene.remove(o.m);else this.sale=true;this.objets.splice(i,1);
+    if(silence)continue;
+    if(!gagne){if(o.type!=="piece")this.message(this.txt("PERDU...","Perdu…"));continue;}
+    this.versBac(o.x);
+    if(o.type==="piece"||o.type==="geante"){const v=o.type==="geante"?10:1;this.gains+=v;this.jetons+=v;this.gainAff+=v;this.gainT=.5;tinte();if(navigator.vibrate)try{navigator.vibrate(12);}catch(_){}}
+    else if(o.type==="mur"){this.murT=20;this.message(this.txt("MUR !","Mur !"));}
+    else if(o.type==="pluie"){this.pluie+=10;this.message(this.txt("PLUIE !","Pluie !"));}
+    else{this.lots.add(o.lot);this.message(this.st.lots[o.lot][0]);son(1600,.3,"sine",.1);setTimeout(()=>son(2400,.4,"sine",.08),120);}
+  }
+};
+Machine.prototype.hud=function(){
+  if(this.jAff!==this.jetons){this.jAff=this.jetons;this.elJ.textContent=this.jetons;}
+  if(this.gAff!==this.gains){this.gAff=this.gains;this.elG.textContent=this.gains;}
+  const a=this.murT>0?this.txt("MUR ","Mur ")+Math.ceil(this.murT)+" s":this.aideBase;
+  if(this.aAff!==a){this.aAff=a;this.elA.innerHTML=a;}
+  this.gemmes.forEach((g,i)=>g.classList.toggle("on",this.lots.has(i)));
+};
+// Optimisation : une pièce immobile ne recalcule pas sa matrice, et seule la plage de pièces qui ont bougé est envoyée à la carte graphique.
+Machine.prototype.dessiner=function(){
+  let n=0,lo=1e9,hi=-1;const d=this.dummy,tout=this.sale,inst=this.inst;
+  for(const o of this.objets){
+    if(o.type!=="piece"){o.m.position.set(o.x,o.y+o.h/2,o.z);o.m.rotation.set(o.ax,o.ay,o.az);continue;}
+    const k=o.x+o.y*3.1+o.z*7.3+o.ax*11+o.az*13;
+    if(tout||k!==o.k){o.k=k;d.position.set(o.x,o.y+H/2,o.z);d.rotation.set(o.ax,o.ay,o.az);d.updateMatrix();inst.setMatrixAt(n,d.matrix);if(n<lo)lo=n;hi=n;}
+    n++;}
+  if(hi>=0){const a=inst.instanceMatrix;a.updateRange.offset=lo*16;a.updateRange.count=(hi-lo+1)*16;a.needsUpdate=true;}
+  this.mouvantes=hi>=0?hi-lo+1:0;inst.count=n;this.sale=false;this.mPoussoir.position.z=this.zp;
+  this.mursBonus.forEach(m=>m.visible=this.murT>0);
+  this.rendu.render(this.scene,this.cam);
+};
+Machine.prototype.animer=function(dt){
+  // pièces qui tombent dans le bac
+  let bacSale=false;
+  this.bacP.forEach((p,i)=>{if(!p||!p.bouge)return;p.vy-=15*dt;p.y+=p.vy*dt;if(p.y<=p.repos){p.y=p.repos;if(p.vy<-3)p.vy*=-.25;else{p.vy=0;p.bouge=false;}}
+    this.dummy.position.set(p.x,p.y+H/2,p.z);this.dummy.rotation.set(p.ax,p.ay,p.az);this.dummy.updateMatrix();this.bac.setMatrixAt(i,this.dummy.matrix);bacSale=true;});
+  if(bacSale)this.bac.instanceMatrix.needsUpdate=true;
+  // étincelles
+  let et=false;for(let j=0;j<60;j++){const v=this.etV[j];if(v.t<=0)continue;v.t-=dt;v.vy-=6*dt;this.etP[j*3]+=v.vx*dt;this.etP[j*3+1]+=v.vy*dt;this.etP[j*3+2]+=v.vz*dt;if(v.t<=0)this.etP[j*3+1]=-100;et=true;}
+  if(et)this.etincelles.geometry.attributes.position.needsUpdate=true;
+  // ampoules : on ne change les couleurs que quand le motif change
+  if(this.ampoules){const k=this.cle==="B"?Math.floor(this.t*6):Math.floor(this.t*2.5);if(k!==this.kAmp){this.kAmp=k;const n=this.ampoules.count;
+    for(let i=0;i<n;i++)this.ampoules.setColorAt(i,this.cle==="B"?((i+k)%3===0?this.cEteinte:this.cAllumee):(((i*7+k*3)%11)===0?this.cEteinte:this.cAllumee));
+    this.ampoules.instanceColor.needsUpdate=true;}}
+  this.M.animer(this.t,this);
+};
+Machine.prototype.image=function(dt){
+  this.acc+=Math.min(dt,.1);let k=0;const t0=performance.now();
+  while(this.acc>=DT&&k<4){this.pas();this.acc-=DT;k++;}
+  if(k===4)this.acc=0;
+  this.msPhys=(this.msPhys||0)+performance.now()-t0;
+  this.nettoyer(false);
+  if(this.gainT>0){this.gainT-=dt;if(this.gainT<=0&&this.gainAff){this.message("+"+this.gainAff);this.gainAff=0;}}
+  if(this.msgT>0){this.msgT-=dt;if(this.msgT<=0)this.elC.textContent="";}
+  if(this.murT>0){this.murT=Math.max(0,this.murT-dt);}
+  if(this.pluie>0){this.pluieT-=dt;if(this.pluieT<=0){this.pluie--;this.pluieT=.15;this.lacher((Math.random()-.5)*4,true);}}
+  if(this.jetons<30){this.recharge+=dt;if(this.recharge>=4){this.recharge=0;this.jetons++;}}else this.recharge=0;
+  this.animer(dt);this.dessiner();this.hud();
+};
+// Optimisation : si le téléphone tombe sous 50 images/s deux secondes de suite, on baisse la résolution d'un cran (jusqu'à 1).
+Machine.prototype.bilan=function(fps){
+  if(fps<50)this.lent++;else this.lent=0;
+  if(this.lent>=2&&this.pr>1){this.pr=Math.max(1,this.pr-.25);this.rendu.setPixelRatio(this.pr);this.taille();this.lent=0;}
+};
+const machines=[...document.querySelectorAll(".dir")].map(s=>new Machine(s));
+window.romet=machines; // pour les essais
+// les enseignes sont dessinées avec Pirata One, Chewy et Cinzel : on attend les polices (au plus 2,5 s)
+const polices=Promise.race([Promise.all(["96px 'Pirata One'","92px Chewy","700 24px Cinzel"].map(f=>document.fonts.load(f))).catch(()=>{}),new Promise(r=>setTimeout(r,2500))]);
+polices.then(()=>{
+  const io=new IntersectionObserver(es=>es.forEach(e=>{const m=machines.find(x=>x.sec===e.target);m.visible=e.isIntersecting;if(m.visible&&!m.pret)m.construire();}),{threshold:.25});
+  machines.forEach(m=>io.observe(m.sec));
+});
+let avant=performance.now(),seconde=0,images=new Map();
+function boucle(t){const dt=(t-avant)/1000;avant=t;seconde+=dt;
+  for(const m of machines)if(m.visible&&m.pret){m.image(dt);images.set(m,(images.get(m)||0)+1);}
+  if(seconde>=1){for(const m of machines){if(!m.pret)continue;
+      const ni=images.get(m)||0,fps=Math.round(ni/seconde);if(m.visible)m.bilan(fps);
+      m.elP.textContent=m.visible?fps+" images/s · "+m.objets.length+" pièces · physique "+(ni?(m.msPhys/ni).toFixed(1):"0")+" ms · résolution ×"+m.pr:"En pause (hors de l'écran)";m.msPhys=0;}
+    images.clear();seconde=0;}
+  requestAnimationFrame(boucle);}
+requestAnimationFrame(boucle);
+})();
+</script>

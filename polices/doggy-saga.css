@@ -1,0 +1,4 @@
+/* Polices de Doggy Saga, hébergées dans le dépôt (sous-ensemble latin de Google Fonts) :
+   affichage correct dès la première ouverture hors connexion, sans appel à un site tiers.
+   Baloo 2 (police variable 600 à 800, SIL Open Font License 1.1, Ek Type). */
+@font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 600 800; font-display: swap; src: url(baloo2.woff2) format('woff2'); }

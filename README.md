@@ -18,10 +18,13 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
 - [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
+- [`doggy-saga/index.html`](doggy-saga/index.html) : **Doggy Saga**, un trois en ligne pour toute la famille : aligner les chiens du refuge pour leur faire des câlins et leur trouver une famille, en 60 niveaux, avec la journée du jour.
 - [`the-des-jarls/index.html`](the-des-jarls/index.html) : **Le Thé des Jarls**, un duel de dés viking façon Orlog : six dés, trois lancers, chaque face lance une armée de 45 soldats à l'assaut ; 20 dieux nordiques et leurs faveurs, la route du fjord (campagne de 20 tavernes), un duel guidé pour apprendre, le duel à deux sur un téléphone posé à plat et un défi du jour.
+- [`bannieres/index.html`](bannieres/index.html) : **Bannières**, un jeu de conquête en 3D pour les enfants : faire courir ses armées sur les cases, construire et décorer son village, regarder les batailles, et avoir le plus de drapeaux après 25 tours.
 - [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`romet/index.html`](romet/index.html) : **Romet**, un coin pusher en 3D en hommage à Mynthos : six machines à finir (et une secrète), chacune dans son monde et avec sa règle.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
@@ -241,6 +244,16 @@ Un petit 4X au tour par tour, en pixel art 32 bits : **37 terres hexagonales** (
 - **Fin** : victoire par conquête ou par la couronne, défaite si votre château tombe ; sinon le règne s'achève au tour 30. Score : terres, or, bois, bâtiments, légitimité, votes, primes.
 - **Partie libre** en facile ou en normal (hivers rudes, bâtiments chers, rivaux mordants) ; **Duché du jour** en normal, le même pour toute la famille, une seule tentative classée. Classements : meilleur score (normal) et Duché du jour. Lien direct : `duche/index.html#jour`.
 
+## Bannières
+
+Un jeu de conquête au tour par tour **en 3D**, pensé pour un enfant de 7 ans : des mots simples, des petits nombres, des dessins partout. Les modèles sont ceux de KayKit (Kay Lousberg, CC0).
+
+- **Ta bannière** : choisis ta couleur (or, rouge, bleu ou violet) ; ton château est en bas à gauche, trois autres seigneurs dans les autres coins, des brigands et des ruines hantées gardent des trésors.
+- **Bouger** : touche une armée, puis une case qui brille ; elle y court et les cases traversées deviennent à toi (en rouge : une bataille).
+- **Le village** : au château, achète des chevaliers, archers, lanciers, mages et champions, et soigne ton armée ; sur tes cases, construis (maison, moulin, marché, forge, caserne, tour), agrandis une fois et décore. Le château grandit avec le village (drapeaux, puis remparts). Le coffre est plein à 30 pièces : dépense-les !
+- **Les batailles** : choisis FONCER, TIRER D'ABORD ou PRUDENT, avec des étoiles pour dire si c'est facile ; puis regarde le combat, les cœurs au-dessus des guerriers. Le seigneur ne meurt jamais : blessé, il rentre au château.
+- **Gagner** : prends les 3 châteaux des autres, ou aie le plus de drapeaux après 25 tours. Niveaux FACILE et NORMAL, petite ou grande carte ; petites surprises en chemin. Classement : le plus de drapeaux (petite carte).
+
 ## La Dernière Lanterne (démo)
 Un RPG au tour par tour en HD-2D (tuiles 32 × 32 de Dungeon Crawl posées dans un décor en relief, ombres, flou de profondeur). Dans la vallée de Clairfond, la brume revient : avec ton équipe, rallume les lanternes qui la retiennent.
 
@@ -258,6 +271,16 @@ Un mot de 6 lettres par jour à trouver en 6 essais, façon « Wordle », en pix
 - **Entraînement** : après le mot du jour, AUTRE MOT donne un mot au hasard, non classé, autant qu'on veut.
 - **Sons** discrets (toc du bois, clochette de l'or), qu'on coupe dans l'aide (bouton ?).
 
+## Doggy Saga
+Un trois en ligne façon Candy Crush, pour toute la famille, dans un refuge pour chiens : chaque chien aligné reçoit un câlin, et un chien qui a reçu assez de câlins trouve une famille.
+
+- **La règle** : glisser un chien vers son voisin (ou toucher l'un puis l'autre) pour aligner au moins 3 chiens pareils. Un coup qui n'aligne rien est annulé et ne compte pas. Les chiens tombent, de nouveaux arrivent par le haut, et les cascades rapportent de plus en plus.
+- **Bonus** : 4 alignés font un **bandana** (vide sa ligne ou sa colonne), un L ou un T fait un **nœud** (vide les cases autour), 5 alignés font une **balle de tennis** (échangée avec un chien, toute sa race part jouer). On peut échanger deux bonus entre eux pour de très gros effets. Les coups qui restent à la fin deviennent des bandanas : c'est la fête !
+- **Objectifs** : des câlins pour certains chiens, laver la **boue**, faire descendre les **chiots** jusqu'à leur panier. Obstacles : les **niches** (à ouvrir en alignant à côté), les **gamelles** (à renverser), les chiens **en laisse** (qui ne bougent pas).
+- **60 niveaux en 5 chapitres**, 16 chiens (dont Nounours, le bouvier bernois), étoiles selon les points (180 en tout), et **l'album des familles** avec un petit mot de chaque nouvelle famille. Les 3 premiers niveaux montrent les gestes avec une main ; un indice apparaît si on attend.
+- **Journée du jour** : la même grille pour toute la famille, 20 coups, le plus de câlins possible. **Une seule tentative classée**, comptée dès le départ ; ensuite, on rejoue pour le plaisir. Lien direct : `doggy-saga/index.html#jour`.
+- **Sons** : vrais aboiements (libres de droits) et petits sons qui montent pendant les cascades ; on coupe le son au titre ou dans la pause.
+
 ## Capitaine du port
 Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32 bits : quais en granit, capitainerie, phare, grue et mouettes. Le bassin est encombré de bateaux ; il faut ouvrir la passe au **navire doré** pour qu'il rejoigne la mer.
 
@@ -267,6 +290,17 @@ Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32
 - **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
 - **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
 - **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
+
+## Romet
+Un coin pusher en 3D, en hommage à Mynthos qui a popularisé le genre : on touche l'écran pour lâcher une pièce, le poussoir va et vient et fait tomber les autres. Ce qui tombe à l'avant arrive dans le bac et se rejoue ; ce qui tombe sur les côtés est perdu.
+
+- **La bourse** : chaque partie commence avec une bourse de pièces, sans recharge. La machine rend un peu moins qu'on ne lâche : quand la bourse est vide et que plus rien ne tombe, la partie s'arrête et on compte le butin.
+- **Les trésors** : chaque machine a 6 trésors qui tombent de temps en temps avec les pièces ; il faut les amener jusqu'au bord. Ils restent gagnés d'une partie à l'autre. Les 6 trésors finissent la machine et ouvrent la suivante.
+- **Les machines**, de plus en plus dures : la foire (pour apprendre), la ruche (pièces hexagonales et coulée de miel collante), l'épave (un courant pousse le tas vers un côté), le casino (un couloir lumineux compte double), la foire de nuit (des clous font rebondir la pièce), l'horloger (deux étages, le mécanisme est visible)… et une machine secrète en pixel 3D quand les six sont finies.
+- **Bonus** : pièce géante (10 pièces), mur (ferme les côtés 12 secondes), pluie (10 pièces gratuites).
+- **Doigt posé** : une pièce toutes les 0,3 seconde.
+- **Classements de la famille** : le total des trésors, et le meilleur butin en une partie.
+- **Sons** : bruitages et ambiance de chaque monde (orgue de foire, essaim, houle, tic-tac…), réglables dans la pause avec les vibrations.
 
 ## Le Magasinier
 Un Sokoban dans un entrepôt en HD-2D (façon Octopath Traveler) : un petit diorama en relief habillé de pixel art, avec la lumière du soleil qui entre par les fenêtres, et un docker en pixel art (casquette, foulard rouge, gilet de cuir) qui marche, pousse, glisse et se retourne vers toi quand il attend.

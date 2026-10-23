@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Bannières</title>
+<meta name="description" content="Bannières : déplace tes armées, construis ton village et prends les châteaux des autres seigneurs. Un jeu en 3D pour les enfants.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#8fc6e8">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script src="interface.js"></script>
+<script>document.body.classList.add("au-titre");</script>
+<div id="chargement"><div class="cadre"><h1 class="banniere">BANNIERES</h1><p>LES CHEVALIERS SE PREPARENT...</p></div></div>
+<div id="res" class="cadre"></div>
+<div id="toast" class="cadre cache"></div>
+<div id="fiche" class="cadre"></div>
+<div class="boutons">
+  <button id="menu">MENU</button>
+  <button id="fin">FIN DU TOUR</button>
+</div>
+<div id="bataille" class="cadre cache"></div>
+<button id="vite" class="cache">VITE</button>
+<div id="issue" class="cadre cache"></div>
+<div id="titre" class="cache">
+  <div class="cadre carte">
+    <h1 class="banniere">BANNIERES</h1>
+    <p>BOUGE TES ARMEES, CONSTRUIS TON VILLAGE ET PRENDS LES CHATEAUX&nbsp;!</p>
+    <button id="bContinuer" class="vert" hidden>CONTINUER</button>
+    <button id="bNouvelle">NOUVELLE PARTIE</button>
+    <button id="bAide">COMMENT JOUER</button>
+    <button id="bSons">SONS : OUI</button>
+    <p class="petit" id="tRecord"></p>
+    <a class="bouton" href="../index.html#bannieres">CLASSEMENT</a>
+    <a class="bouton ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
+    <p class="credit">MODELES 3D : KAYKIT (KAY LOUSBERG, CC0) · <a href="../credits/index.html">CREDITS</a></p>
+  </div>
+</div>
+<div id="voile" class="cache"><div id="boite" class="cadre"></div></div>
+<script src="regles.js"></script>
+<script src="surprises.js"></script>
+<script src="ia.js"></script>
+<script src="modeles.js"></script>
+<script src="personnages.js"></script>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/GLTFLoader.js"></script>
+<script src="../lib/SkeletonUtils.js"></script>
+<script src="sons.js"></script>
+<script src="carte3d.js"></script>
+<script src="bataille3d.js"></script>
+<script src="../ludo-scores.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, MENU). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
