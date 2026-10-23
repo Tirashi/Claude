@@ -280,8 +280,9 @@
     g.beginPath(); g.ellipse(0, 0, S * 0.42, S * 0.08, 0, 0, 7); g.fillStyle = '#ff9cc2'; g.fill();
   }
   // portrait seul (album, objectifs) : médaillon à la couleur de la race
-  function carte(g, t, R, humeur, gris) {
-    medaillon(g, R, gris ? '#e9dfd6' : MEDAILLONS[t % 6], false);
+  // couleur : celle du médaillon dans la grille du niveau (sinon la couleur propre au chien, pour l'album)
+  function carte(g, t, R, humeur, gris, couleur) {
+    medaillon(g, R, gris ? '#e9dfd6' : couleur || MEDAILLONS[t % 6], false);
     if (gris) {
       g.save(); g.globalAlpha = 0.28; portrait(g, LOOKS[t], R, 1, t); g.restore();
       g.fillStyle = '#b39a86'; g.font = '800 ' + Math.round(R * 0.9) + 'px "Baloo 2", system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 0, R * 0.08);
