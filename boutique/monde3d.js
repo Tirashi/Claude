@@ -14,8 +14,10 @@ const BouMonde = (() => {
   let rendu, scene, cam, canvas, soleil, etat = null;
   const coque = new THREE.Group(), meublesG = new THREE.Group(), terrainG = new THREE.Group(), clientsG = new THREE.Group();
   const murs = [], objets = new Map();
+  let portes = null;   // les deux battants de la porte : ils s'ouvrent quand un client approche
   let niveauConstruit = -1, grille = null, panneau = null;
   const SIEGE = 0.22, DOS = 0;   // joueurs de la table : hauteur de l'assise, recul vers le dossier
+  const SENS_PORTE = 1;   // les battants s'ouvrent vers l'intérieur
   let azimut = Math.PI * 0.3, vise = azimut, zoom = 1;
   let fantome = null, selection = null, vitesse = 1, enPause = false;
   const ecoute = { meuble() {}, terrain() {}, vide() {}, fantome() {}, vente() {} };
@@ -209,6 +211,8 @@ const BouMonde = (() => {
     const mur = (n, x, z, r, nx, nz) => { const o = modele(n); o.position.set(x, 0, z); o.rotation.y = r * Math.PI / 2; coque.add(o); murs.push({ o, nx, nz }); };
     for (let x = 0; x < L; x++) mur(x % 3 === 2 ? 'wall-window' : 'wall', x, -0.5, 0, 0, -1);
     for (let x = 0; x < L; x++) mur(x === BOU_PORTE ? 'wall-door-rotate' : x % 3 === 0 ? 'wall-window' : 'wall', x, P - 0.5, 2, 0, 1);
+    const pm = murs.find(m => m.o.getObjectByName('door-left'));
+    portes = pm ? { g: pm.o.getObjectByName('door-left'), d: pm.o.getObjectByName('door-right'), x: BOU_PORTE, z: P - 0.5, a: 0 } : null;
     for (let z = 0; z < P; z++) mur(z % 3 === 1 ? 'wall-window' : 'wall', -0.5, z, 1, -1, 0);
     for (let z = 0; z < P; z++) mur(z % 3 === 1 ? 'wall-window' : 'wall', L - 0.5, z, 3, 1, 0);
     const ens = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.35), new THREE.MeshBasicMaterial({ map: texte2d(512, 128, c => {
@@ -450,6 +454,13 @@ const BouMonde = (() => {
     for (const p of animes) p.mixer.update(t);
     coque.children.forEach(o => { if (o.userData.pousse !== undefined) { o.userData.pousse += dt * 2.5; const s = Math.min(1, o.userData.pousse); o.scale.setScalar(s < 1 ? s * (1.25 - 0.25 * s) : 1); if (s >= 1) delete o.userData.pousse; } });
     avancerClients(t);
+    if (portes) {
+      // ouverte tant qu'un client est à moins d'une case et demie de la porte
+      const cible = enJeu.some(c => Math.hypot(c.p.o.position.x - portes.x, c.p.o.position.z - portes.z) < 1.5) ? 1 : 0;
+      portes.a += (cible - portes.a) * Math.min(1, dt * 7 * (enJeu.length ? vitesse : 1));
+      if (portes.g) portes.g.rotation.y = portes.a * SENS_PORTE * 1.45;
+      if (portes.d) portes.d.rotation.y = -portes.a * SENS_PORTE * 1.45;
+    }
     placerCamera();
     rendu.render(scene, cam);
   }
@@ -482,7 +493,7 @@ const BouMonde = (() => {
     init, maj, vignettes, tourner, amenager, commencerFantome, bougerFantome, tournerFantome, finFantome, caseLibre, selectionner, rejouer, ecran,
     ecouter: (n, f) => { ecoute[n] = f; },
     vitesse: v => { vitesse = v; }, pause: p => { enPause = p; },
-    get fantome() { return fantome; }, get occupe() { return enJeu.length > 0; },
+    get fantome() { return fantome; }, get occupe() { return enJeu.length > 0; }, get porte() { return portes ? portes.a : null; },
     texCarte, M,
   };
 })();
