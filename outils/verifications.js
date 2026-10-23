@@ -9,6 +9,7 @@
    7. Lune-Rover : chaque niveau est gagné par sa solution de référence ;
    8. Odyssée : chaque plateau est traversé par le pilote automatique, sous le temps cible ;
    8 ter. La Dernière Lanterne : moteur RPG, données et accessibilité (outils/lanterne-tests.js) ;
+   8 sexies. Doggy Saga : règles, obstacles, reproductibilité et 60 niveaux (outils/doggy-saga-simulateur.js) ;
    9. classements : chaque record envoyé par un jeu (LudoScores.submit) a son tableau dans le volet de
       l'accueil (RANKS, accueil.js), est repris en rejoignant (registerExisting) et son jeu sert à vérifier les pseudos.
    Code de sortie 1 si quelque chose ne va pas. */
@@ -122,6 +123,10 @@ catch (e) { bad('Le Thé des Jarls : simulateur\n' + (e.stdout || '') + (e.stder
 // 8 quinquies. Bannières : règles, rivaux et surprises (déterminisme, sauvegarde, règles de base, équilibrage grossier)
 try { execFileSync(process.execPath, [path.join(__dirname, 'bannieres-simulateur.js'), '20'], { stdio: 'pipe', encoding: 'utf8' }); ok('Bannières : simulateur (parties reproductibles, règles, équilibrage)'); }
 catch (e) { bad('Bannières : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+
+// 8 sexies. Doggy Saga : règles du trois en ligne sur grilles préparées, grille toujours saine, reproductibilité, 60 niveaux
+try { execFileSync(process.execPath, [path.join(__dirname, 'doggy-saga-simulateur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Doggy Saga : simulateur (règles, bonus, obstacles, parties reproductibles, 60 niveaux)'); }
+catch (e) { bad('Doggy Saga : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
