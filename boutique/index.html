@@ -21,7 +21,7 @@
   <div class="pastille"><span id="hSemaine">SEMAINE 1 · LUNDI</span><small id="hInfo"></small></div>
   <div class="pastille argent" id="hArgent"><small>EN CAISSE</small><b id="hCaisse">0 €</b></div>
 </div>
-<div id="tourner"><button id="gauche" aria-label="Tourner à gauche">⟲</button><button id="droite" aria-label="Tourner à droite">⟳</button></div>
+<div id="tourner"><button id="bMenu" aria-label="Menu">☰</button><button id="gauche" aria-label="Tourner à gauche">⟲</button><button id="droite" aria-label="Tourner à droite">⟳</button></div>
 <div id="journal"></div>
 
 <!-- le lundi -->
@@ -86,6 +86,14 @@
   </div>
 </div>
 
+<!-- l'écran titre -->
+<div id="titre" hidden>
+  <div class="logo"><small>LA BOUTIQUE</small>DE CARTES</div>
+  <p class="sous">Un an pour faire de ta petite boutique<br>le repaire des collectionneurs</p>
+  <div id="tBoutons"></div>
+  <p id="tRecord"></p>
+</div>
+
 <!-- fenêtres (rencontres, bilan, agrandissement) -->
 <div id="voile" hidden><div id="boite"></div></div>
 
@@ -95,11 +103,13 @@
 <script src="clients.js"></script>
 <script src="images.js"></script>
 <script src="modeles.js"></script>
+<script src="../ludo-scores.js"></script>
 <script src="../lib/three.min.js"></script>
 <script src="../lib/GLTFLoader.js"></script>
 <script src="../lib/SkeletonUtils.js"></script>
 <script src="dessin-cartes.js"></script>
 <script src="monde3d.js"></script>
+<script src="sons.js"></script>
 <script src="lundi.js"></script>
 <script src="jeu.js"></script>
 <script>

@@ -20,6 +20,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
 - [`the-des-jarls/index.html`](the-des-jarls/index.html) : **Le Thé des Jarls**, un duel de dés viking façon Orlog : six dés, trois lancers, chaque face lance une armée de 45 soldats à l'assaut ; 20 dieux nordiques et leurs faveurs, la route du fjord (campagne de 20 tavernes), un duel guidé pour apprendre, le duel à deux sur un téléphone posé à plat et un défi du jour.
 - [`bannieres/index.html`](bannieres/index.html) : **Bannières**, un jeu de conquête en 3D pour les enfants : faire courir ses armées sur les cases, construire et décorer son village, regarder les batailles, et avoir le plus de drapeaux après 25 tours.
+- [`boutique/index.html`](boutique/index.html) : **La Boutique de cartes**, une année à la tête d'une boutique de cartes à collectionner, en 3D : commander, ouvrir des boosters, remplir les vitrines et le classeur, aménager, et finir l'année avec la plus belle boutique.
 - [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
@@ -251,6 +252,15 @@ Un jeu de conquête au tour par tour **en 3D**, pensé pour un enfant de 7 ans :
 - **Le village** : au château, achète des chevaliers, archers, lanciers, mages et champions, et soigne ton armée ; sur tes cases, construis (maison, moulin, marché, forge, caserne, tour), agrandis une fois et décore. Le château grandit avec le village (drapeaux, puis remparts). Le coffre est plein à 30 pièces : dépense-les !
 - **Les batailles** : choisis FONCER, TIRER D'ABORD ou PRUDENT, avec des étoiles pour dire si c'est facile ; puis regarde le combat, les cœurs au-dessus des guerriers. Le seigneur ne meurt jamais : blessé, il rentre au château.
 - **Gagner** : prends les 3 châteaux des autres, ou aie le plus de drapeaux après 25 tours. Niveaux FACILE et NORMAL, petite ou grande carte ; petites surprises en chemin. Classement : le plus de drapeaux (petite carte).
+
+## La Boutique de cartes
+Un jeu de gestion **en 3D** : tu tiens une boutique de cartes à collectionner (le jeu inventé « CRÉATURES », 5 éléments, 5 raretés) pendant **52 semaines**. Les modèles sont ceux de Kenney (CC0), les monstres ceux de Dungeon Crawl (CC0), les cadres des cartes ceux de Pixel Card Assets (CC0).
+
+- **Le lundi** (la boutique est fermée) : commande au **grossiste** (livré lundi prochain), choisis les produits des **rayons** et leurs prix, ouvre des **boosters** (fermés, ils se vendent sans risque ; ouverts, ils donnent des cartes, parfois une légendaire), range les cartes dans les **vitrines** avec leur prix, complète ton **classeur**, **aménage** (rayons, vitrines, tables, plantes, borne d'arcade…) et **agrandis** la boutique.
+- **Du mardi au samedi** : les clients entrent, vont aux meubles, achètent et passent à la caisse (×1, ×2, ×4, pause). Des visiteurs t'arrêtent : un client qui vend sa collection, un collectionneur, un marchand qui négocie. Le samedi, le **tournoi** (il faut une table).
+- **Le dimanche** : le bilan (ventes, loyer, cotes qui montent et qui baissent). Une nouvelle extension sort toutes les 10 semaines ; événements (vidéo d'un vidéaste, carte interdite, rupture, concurrent, vacances, Noël).
+- **La banque** t'a prêté 2 000 € : rends-les avant la semaine 26 (touche la caisse le lundi), sinon elle prend 20 % de plus. Deux dimanches sous zéro : faillite.
+- **Score** : la valeur de la boutique au bout de l'année (caisse, stock, cartes, meubles, classeurs complets). Classement : la meilleure boutique.
 
 ## La Dernière Lanterne (démo)
 Un RPG au tour par tour en HD-2D (tuiles 32 × 32 de Dungeon Crawl posées dans un décor en relief, ombres, flou de profondeur). Dans la vallée de Clairfond, la brume revient : avec ton équipe, rallume les lanternes qui la retiennent.

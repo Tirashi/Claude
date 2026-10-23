@@ -183,3 +183,10 @@ La session 3 a été coupée en deux (3a : les écrans du lundi ; 3b : titre, so
 - **Banque** : toucher la caisse le lundi pour rendre 500 € ou tout ce qu'on peut (rappel dans le bilan du dimanche).
 
 Vérifié avec Playwright (commande, booster animé, tout ouvrir, vitrines, classeur, tournoi, rayons, puis une semaine jusqu'au bilan).
+
+## 21. Bilan de la session 3b (23/10)
+- **Écran titre** (par-dessus la boutique 3D qui tourne lentement) : CONTINUER · SEMAINE n (si une partie est sauvegardée), NOUVELLE PARTIE (confirmation si une partie existe), COMMENT JOUER, CLASSEMENT et ◀ LUDOTHÈQUE (classe `ludo-retour`), record et nombre de parties.
+- **Menu** (bouton ☰ au-dessus de ⟲ ⟳) : SONS, MUSIQUE (réglages `boutique.opts`), TITRE (le lundi seulement), REPRENDRE ; pendant la semaine, il met la boutique en pause.
+- **Sons** (`boutique/sons.js`, `BouSons`) : synthétisés en WebAudio, sans fichier (choix pour garder la session courte : les bruitages Kenney et le banc d'écoute du § 14 restent possibles plus tard). « Toc » des boutons, tiroir-caisse à chaque vente, meuble posé, booster déchiré, carte retournée, éclat d'une rare (plus long pour une épique, une légendaire), jingle du dimanche, fanfare de fin d'année, petit air triste de la faillite ; musique de boutique douce (quatre accords lents, une note de mélodie de temps en temps, très bas), lancée au premier toucher.
+- **Fin** : fenêtre avec le bilan, la valeur, les clients, les boosters ouverts, les classeurs complets, la meilleure carte et le **score** (nouveau record ou rappel du record) ; TITRE ou NOUVELLE PARTIE. Record `boutique.best`, stats `boutique.stats`, envoi `LudoScores.submit('boutique', 'best', score)`.
+- **Accueil** : cartouche 3D violette (icône `boutique`), à la une, genre SIMULATION, EN COURS « SEMAINE n/52 », records, classement « LA MEILLEURE BOUTIQUE », transfert de sauvegarde ; `ludo-scores.js` (`PSEUDO_BOARDS`, `registerExisting`, `SYNC` 24) ; test de fumée (titre, partie, commande, écrans du lundi, booster, sauvegarde).

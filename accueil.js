@@ -51,6 +51,8 @@ const GAMES = [
    d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
   {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
    d: "Un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtis, recrute, conquiers les terres de trois seigneurs rivaux et gagne la couronne en 30 saisons. Combats en scènes HD-2D, événements, un Duché du jour pour toute la famille.", tags: ["STRATEGIE", "30 TOURS", "DUCHE DU JOUR"]},
+  {k: "boutique/index.html", n: "LA BOUTIQUE DE CARTES", s: "BOUTIQUE", ic: "boutique", fam: "3d", lb: "linear-gradient(#8a63d2, #2b2838)", lt: "#ffd84d", sh: "#8a63d2", rank: "boutique",
+   d: "Tiens une boutique de cartes à collectionner pendant un an, en 3D. Commande au grossiste, ouvre des boosters (vendre fermé ou ouvrir ? c'est tout le pari), remplis tes vitrines et ton classeur, aménage et agrandis la boutique, organise le tournoi du samedi, et regarde les clients acheter. Cinq extensions sortent dans l'année, les cotes bougent chaque dimanche.", tags: ["3D", "GESTION", "52 SEMAINES"]},
   {k: "bannieres/index.html", n: "BANNIERES", s: "BANNIERES", ic: "banniere", fam: "3d", lb: "linear-gradient(#9fd4f2, #5a9a3a)", lt: "#fff6e0", sh: "#d0482c", rank: "bannieres",
    d: "Un jeu de conquête en 3D pour les enfants : choisis ta couleur, fais courir tes chevaliers, archers et mages sur les cases, construis et décore ton village autour du château, et regarde les batailles. Des pièces, des cœurs, des étoiles et des mots simples. Après 25 tours, on compte les drapeaux !", tags: ["3D", "POUR LES ENFANTS", "25 TOURS"]},
   {k: "lanterne/index.html", n: "LA DERNIERE LANTERNE", s: "LANTERNE", ic: "lanterne", fam: "32", lb: "linear-gradient(#2e4a34, #0e1a12)", lt: "#ffd27a", sh: "#4a6a3a", demo: true,
@@ -79,6 +81,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "boutique/index.html": {added: "2026-10-23", genres: ["SIMULATION"]},
   "bannieres/index.html": {added: "2026-10-22", genres: ["TACTIQUE"]},
   "lanterne/index.html": {added: "2026-10-22", genres: ["AVENTURE"]},
   "the-des-jarls/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "HASARD", "DU JOUR"]},
@@ -111,6 +114,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-23", "Nouveau jeu : La Boutique de cartes, une année à la tête d'une boutique de cartes à collectionner, en 3D. Le lundi, commande au grossiste, fixe tes prix, ouvre des boosters et range les meilleures cartes en vitrine ou dans ton classeur ; du mardi au samedi, regarde les clients entrer et acheter ; le dimanche, fais tes comptes. Aménage, agrandis, organise des tournois et rembourse la banque avant la semaine 26 !"],
   ["2026-10-22", "Nouveau jeu : Bannières, un jeu de conquête en 3D pensé pour les enfants. Choisis ta couleur, fais courir tes armées de chevaliers, d'archers, de lanciers et de mages sur la carte, achète des guerriers au château, construis, agrandis et décore ton village, et regarde les batailles avec les cœurs au-dessus des guerriers. Des étoiles disent si une bataille est facile. Prends les 3 châteaux des autres seigneurs, ou aie le plus de drapeaux après 25 tours !"],
   ["2026-10-22", "Démo : La Dernière Lanterne, un RPG au tour par tour en HD-2D. Avec ton équipe (lame, clerc, arcaniste), traverse Clairfond, l'abbaye et le Bois Murmurant, rallume les lanternes oubliées et descends dans la Crypte des racines affronter le Roi des aulnes. Le prologue et l'acte 1 sont jouables, la suite arrive."],
   ["2026-10-21", "Nouveau jeu : Le Thé des Jarls, un duel de dés viking. Six dés, trois lancers, et chaque face envoie ton armée de 45 soldats à l'assaut : charge des haches, volée de flèches, éclaireurs qui volent les jetons. Invoque les faveurs de 20 dieux nordiques, apprends avec Sigrid la skalde, remonte la route du fjord de taverne en taverne (étoiles, couleurs, unités à gagner), joue à deux sur le même téléphone posé à plat, et tente le défi du jour."],
@@ -184,6 +188,7 @@ const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null
 const PROGRESS = {
   "the-des-jarls/index.html": () => { const d = rk("jarls.dailyRun", null), r = rk("jarls.run", null); return d && d.E && d.E.graine === dayNum() ? "DEFI DU JOUR" : r && r.E ? `MANCHE ${r.E.manche}` : null; },
   "duche/index.html": () => { const d = rk("duche.dailyRun", null), r = rk("duche.run", null); return d && d.graine === dayNum() ? "DUCHE DU JOUR" : r && r.tour ? `TOUR ${r.tour}/30` : null; },
+  "boutique/index.html": () => { const r = rk("boutique.run", null); return r && r.semaine && !r.fin ? `SEMAINE ${r.semaine}/52` : null; },
   "bannieres/index.html": () => { const r = rk("bannieres.run", null); return r && r.tour && !r.fin ? `TOUR ${Math.min(r.tour, 25)}/25` : null; },
   "mot-d-or/index.html": () => { const j = rk("motdor.jour", null); return j && j.j === dayNum() && !j.fini && (j.rows || []).length ? "MOT DU JOUR" : null; },
   "capitaine-du-port/index.html": () => { const d = rk("capitaine.dailyRun", null), p = rk("capitaine.partie", null);
@@ -229,6 +234,7 @@ const RECS = {
   "the-des-jarls/index.html": () => { const e = (rk("jarls.campagne", {}) || {}).etoiles || {}, v = Object.values(e).map(Number).filter(x => x > 0);
     return [["Étoiles de la campagne", num(v.reduce((a, b) => a + b, 0), "/ 60")], ["Dieux battus", num(v.length, "/ 20")], ["Défis du jour", num(count(rk("jarls.daily", {})))]]; },
   "duche/index.html": () => [["Meilleur score (normal)", num(rk("duche.best", 0), "pts")], ["Duchés du jour", num(count(rk("duche.daily", {})))]],
+  "boutique/index.html": () => { const s = rk("boutique.stats", {}) || {}; return [["Meilleure boutique", num(rk("boutique.best", 0), "pts")], ["Années finies", num(s.finies)], ["Parties", num(s.parties)]]; },
   "bannieres/index.html": () => { const s = rk("bannieres.stats", {}) || {}; return [["Le plus de drapeaux", num(rk("bannieres.best", 0), "drapeaux")], ["Parties gagnées", num(s.gagnees)], ["Parties", num(s.parties)]]; },
   "mot-d-or/index.html": () => { const s = rk("motdor.stats", {}) || {};
     return [["Mots du jour trouvés", num(s.gagnees)], ["Meilleure série", num(s.record, s.record > 1 ? "jours" : "jour")], ["Parties", num(s.parties)]]; },
@@ -543,6 +549,8 @@ const RANKS = {
     {label: "DEFI DU JOUR", ctl: ["day"], game: "jarls", board: daily, fmt: v => N(v) + " pts", title: () => "DEFI DU JOUR",
      note: "Le même dieu, les mêmes faveurs et les mêmes dés pour toute la famille, en normal. Victoire : 1000 + 50 par PV gardé − 10 par manche ; défaite : 20 par PV pris au dieu. Une seule tentative classée par jour.",
      empty: () => st.back ? "Personne n'a défié le dieu ce jour-là." : "Personne n'a encore relevé le défi du jour : à toi !"}],
+  boutique: [{label: "MEILLEURE BOUTIQUE", game: "boutique", board: () => "best", fmt: v => N(v) + " pts", title: () => "LA MEILLEURE BOUTIQUE",
+     note: "Le score à la fin des 52 semaines : la valeur de la boutique (caisse, stock, cartes à leur cote, meubles, agrandissements, classeurs complets, moins le prêt). En cas de faillite, la moitié."}],
   bannieres: [{label: "DRAPEAUX", game: "bannieres", board: () => "best", fmt: v => N(v) + (v > 1 ? " drapeaux" : " drapeau"), title: () => "LE PLUS DE DRAPEAUX",
      note: "Les drapeaux (les cases à toi) à la fin d'une partie sur la petite carte (37 cases), en facile ou en normal."}],
   duche: [{label: "MEILLEUR SCORE", game: "duche", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEUR REGNE",
@@ -905,6 +913,8 @@ function collectSaves(){
   if (Object.keys(od.s).length || Object.keys(od.d).length) g.odyssee = od;
   const ja = {e: (readKey("jarls.campagne", {}) || {}).etoiles || {}, d: readKey("jarls.daily", {}) || {}};
   if (Object.keys(ja.e).length || Object.keys(ja.d).length) g.jarls = ja;
+  const bo = {b: Number(readKey("boutique.best", 0)) || 0, s: readKey("boutique.stats", {}) || {}};
+  if (bo.b || bo.s.parties) g.boutique = bo;
   const bn = {b: Number(readKey("bannieres.best", 0)) || 0, s: readKey("bannieres.stats", {}) || {}};
   if (bn.b || bn.s.parties) g.bannieres = bn;
   const du = {b: Number(readKey("duche.best", 0)) || 0, d: readKey("duche.daily", {}) || {}};
@@ -949,6 +959,7 @@ function describeSaves(g){
   if (g.odyssee){ const n = Object.values(g.odyssee.s || {}).reduce((s, v) => s + (Number(v) || 0), 0); out.push(`Odyssée : ${n} étoile${n > 1 ? "s" : ""}`); }
   if (g.jarls){ const v = Object.values(g.jarls.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.jarls.d || {}).length;
     out.push(`Le Thé des Jarls : ${v.length} dieu${v.length > 1 ? "x" : ""} battu${v.length > 1 ? "s" : ""}, ${v.reduce((a, b) => a + b, 0)} étoiles${d ? `, ${d} défi${d > 1 ? "s" : ""} du jour` : ""}`); }
+  if (g.boutique){ const s = g.boutique.s || {}; out.push(`La Boutique de cartes : meilleure boutique ${g.boutique.b || 0} pts${s.finies ? `, ${s.finies} année${s.finies > 1 ? "s" : ""} finie${s.finies > 1 ? "s" : ""}` : ""}`); }
   if (g.bannieres){ const s = g.bannieres.s || {}; out.push(`Bannières : ${g.bannieres.b || 0} drapeaux au mieux${s.gagnees ? `, ${s.gagnees} partie${s.gagnees > 1 ? "s" : ""} gagnée${s.gagnees > 1 ? "s" : ""}` : ""}`); }
   if (g.duche){ const d = Object.keys(g.duche.d || {}).length; out.push(`Duché : meilleur score ${g.duche.b || 0}${d ? `, ${d} duché${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.magasinier){ const n = Object.values(g.magasinier.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.magasinier.d || {}).length;
@@ -1103,6 +1114,13 @@ function mergeSaves(g){
     for (const [k, v] of Object.entries(a.e || {})) if (/^[a-z]{2,10}$/.test(k) && v >= 1 && v <= 3 && !(et[k] >= v)){ et[k] = Math.round(v); n++; }
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v >= 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
     if (n){ writeKey("jarls.campagne", Object.assign({}, camp, {etoiles: et})); writeKey("jarls.daily", daily); done.push(`Le Thé des Jarls : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.boutique && typeof g.boutique === "object"){
+    // fusion : la meilleure boutique, et le plus grand nombre de parties (jouées, finies, faillites)
+    const a = g.boutique, s = readKey("boutique.stats", {}) || {}; let n = 0;
+    if (Number(a.b) > (Number(readKey("boutique.best", 0)) || 0)){ writeKey("boutique.best", Math.round(a.b)); n++; }
+    for (const k of ["parties", "finies", "faillites"]) if (Number((a.s || {})[k]) > (Number(s[k]) || 0)){ s[k] = Math.round(a.s[k]); n++; }
+    if (n){ writeKey("boutique.stats", s); done.push(`La Boutique de cartes : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.bannieres && typeof g.bannieres === "object"){
     // fusion : le plus de drapeaux, et le plus grand nombre de parties (jouées, gagnées)

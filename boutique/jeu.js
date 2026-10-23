@@ -2,8 +2,9 @@
    LA BOUTIQUE DE CARTES · le JEU : la page par-dessus le monde 3D.
    La semaine (lundi → cinq jours rejoués en 3D → bilan du dimanche),
    aménager et agrandir, les rencontres, la sauvegarde ; les écrans du
-   lundi sont dans lundi.js (session 3a). Le titre, les sons et le
-   classement viennent en session 3b (specs § 16).
+   lundi sont dans lundi.js (session 3a) ; écran titre, menu, sons
+   (sons.js), fin d'année, record boutique.best et classement « best »
+   (session 3b).
    ===================================================================== */
 'use strict';
 const Boutique = (() => {
@@ -13,7 +14,11 @@ const Boutique = (() => {
   const euros = v => (Math.round(v * 100) / 100).toLocaleString('fr-FR', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }) + ' €';
   const attendre = ms => new Promise(ok => setTimeout(ok, ms));
 
-  /* ---------- sauvegarde ---------- */
+  /* ---------- sauvegarde, réglages, record ---------- */
+  const lire = (k, d) => { try { const v = JSON.parse(localStorage.getItem('boutique.' + k)); return v === null ? d : v; } catch (err) { return d; } };
+  const ecrire = (k, v) => { try { if (v === null) localStorage.removeItem('boutique.' + k); else localStorage.setItem('boutique.' + k, JSON.stringify(v)); } catch (err) { /* tant pis */ } };
+  const opts = Object.assign({ sons: true, musique: true }, lire('opts', {}));
+  BouSons.sons = opts.sons; BouSons.musique = opts.musique;
   function sauver() { try { localStorage.setItem(CLE, JSON.stringify(e)); } catch (err) { /* stockage plein ou interdit : la partie continue */ } }
   function relire() { try { return bouMigrer(JSON.parse(localStorage.getItem(CLE))); } catch (err) { return null; } }
   function nouvelle() { e = bouNouvelle('b' + Date.now().toString(36)); sauver(); }
@@ -63,6 +68,7 @@ const Boutique = (() => {
       $('sJour').textContent = j.nom; $('sClients').textContent = j.visites.length + ' clients';
       $('hSemaine').textContent = 'SEMAINE ' + e.semaine + ' · ' + j.nom;
       await BouMonde.rejouer(j, 9);
+      if (e.semaine === BOU_SEMAINES && j.nom === 'SAMEDI') BouSons.jingle();
       caisseVue = e.caisse; majHaut();
       if (j.tournoi) journal('Tournoi : ' + j.tournoi.inscrits + ' joueurs, ' + euros(j.tournoi.recette) + ' d\'inscriptions');
       while (e.rencontre) await rencontre();
@@ -95,22 +101,84 @@ const Boutique = (() => {
   async function dimanche() {
     const b = bouDimanche(e);
     if (!b) return;
+    if (!b.fin) BouSons.jingle();
     const c = b.compte, lignes = [['Ventes', c.ventes], ['Tournoi', c.tournoi], ['Rencontres', c.rencontres], ['Borne d\'arcade', c.arcade], ['Commandes', -c.achats], ['Meubles et travaux', -c.meubles], ['Loyer', -c.loyer]].filter(l => l[1]);
     const hausse = Object.values(b.cotes).filter(([a, n]) => n > a).length, baisse = Object.values(b.cotes).filter(([a, n]) => n < a).length;
     let html = '<h2>BILAN DE LA SEMAINE ' + b.semaine + '</h2><table>' + lignes.map(l => '<tr><td>' + l[0] + '</td><td>' + (l[1] > 0 ? '+' : '') + euros(l[1]) + '</td></tr>').join('') + '</table>';
     html += '<p>' + c.clients + ' clients · réputation ' + Math.round(e.reputation) + (hausse + baisse ? ' · cotes de tes cartes : ' + hausse + ' ▲ ' + baisse + ' ▼' : '') + '</p>';
     if (b.banque) html += '<p>La banque a pris <b>' + euros(b.banque) + '</b> (le prêt et 20 %).</p>';
-    if (b.fin) {
-      html += b.fin.raison === 'faillite' ? '<p><b>FAILLITE !</b> La boutique ferme. Score : ' + b.fin.score + '</p>' : '<p><b>L\'ANNÉE EST FINIE !</b> Valeur de la boutique : ' + euros(b.fin.valeur) + '</p>';
-      await boite(html, [{ texte: 'NOUVELLE PARTIE', valeur: 1 }]);
-      nouvelle(); BouMonde.maj(e); majHaut(); return;
-    }
+    if (b.fin) return finAnnee(html, b.fin);
     html += '<p>Valeur de la boutique : <b>' + euros(b.valeur) + '</b>' + (e.pret ? ' · prêt à rendre : ' + euros(e.pret) + ' (semaine ' + BOU_ECHEANCE + ', touche la caisse pour rembourser)' : '') + '</p>';
     if (b.evenement) html += '<p>Cette semaine : <b>' + b.evenement.nom + '</b></p>';
     const X = bouCatalogue(e.graine).extensions.find(x => x.sortie === e.semaine);
     if (X && X.n > 1) html += '<p>Sortie de l\'extension <b>' + X.nom + '</b> !</p>';
     await boite(html, [{ texte: 'SEMAINE ' + e.semaine, valeur: 1 }]);
     sauver(); BouMonde.maj(e); majHaut();
+  }
+
+  // la fin : l'année finie (semaine 52) ou la faillite ; le score va au record et au classement
+  async function finAnnee(html, F) {
+    const best = Math.max(lire('best', 0), F.score), st = lire('stats', {});
+    st.parties = (st.parties || 0) + 1; st[F.raison === 'faillite' ? 'faillites' : 'finies'] = (st[F.raison === 'faillite' ? 'faillites' : 'finies'] || 0) + 1;
+    ecrire('best', best); ecrire('stats', st); ecrire('run', null);
+    const LS = window.LudoScores;
+    if (LS && F.score > 0) LS.submit('boutique', 'best', F.score, false).catch(() => {});
+    if (F.raison === 'faillite') BouSons.triste(); else BouSons.fanfare();
+    const m = e.stats.meilleure;
+    html += F.raison === 'faillite'
+      ? '<h2>FAILLITE !</h2><p>La boutique ferme à la semaine ' + F.semaine + '. Le score est la moitié de sa valeur.</p>'
+      : '<h2>L\'ANNÉE EST FINIE !</h2>';
+    html += '<table><tr><td>Valeur de la boutique</td><td>' + euros(F.valeur) + '</td></tr><tr><td>Clients servis</td><td>' + e.stats.clients + '</td></tr><tr><td>Boosters ouverts</td><td>' + e.stats.boostersOuverts + '</td></tr><tr><td>Classeurs complets</td><td>' + e.complets.length + ' / 5</td></tr>' +
+      (m ? '<tr><td>Meilleure carte ouverte</td><td>' + bouCarte(e, m).nom + '</td></tr>' : '') + '</table>' +
+      '<p class="score">SCORE <b>' + F.score.toLocaleString('fr-FR') + '</b>' + (F.score >= best && F.score > 0 ? '<br><small>NOUVEAU RECORD !</small>' : '<br><small>record : ' + best.toLocaleString('fr-FR') + '</small>') + '</p>';
+    const v = await boite(html, [{ texte: 'TITRE', classe: 'gris', valeur: 'titre' }, { texte: 'NOUVELLE PARTIE', valeur: 'nouvelle' }]);
+    if (v === 'nouvelle') { nouvelle(); BouMonde.maj(e); majHaut(); } else titre();
+  }
+
+  /* ---------- l'écran titre et le menu ---------- */
+  let ecran = 'charge', tourne = null;
+  function sauvee() { const r = relire(); return r && !r.fin && r.phase === 'lundi' ? r : null; }
+  function titre() {
+    ecran = 'titre'; const r = sauvee();
+    e = r || bouNouvelle('titre'); BouMonde.maj(e); majHaut();
+    const b = $('tBoutons'); b.innerHTML = '';
+    const ajouter = (texte, classe, fn) => { const x = document.createElement('button'); x.textContent = texte; x.className = classe; x.onclick = fn; b.appendChild(x); return x; };
+    if (r) ajouter('CONTINUER · SEMAINE ' + r.semaine, 'vert', () => jouer(r));
+    ajouter('NOUVELLE PARTIE', r ? 'jaune' : 'vert', async () => {
+      if (r && !await boite('<h2>NOUVELLE PARTIE ?</h2><p>La boutique en cours (semaine ' + r.semaine + ') sera perdue.</p>', [{ texte: 'NON', classe: 'gris', valeur: 0 }, { texte: 'OUI', valeur: 1 }])) return;
+      nouvelle(); jouer(e);
+    });
+    ajouter('COMMENT JOUER', 'gris', aide);
+    const l = document.createElement('div'); l.className = 'liens';
+    l.innerHTML = '<a class="ludo-retour" href="../index.html#boutique">CLASSEMENT</a><a class="ludo-retour" href="../index.html">◀ LUDOTHÈQUE</a>';
+    b.appendChild(l);
+    const best = lire('best', 0), st = lire('stats', {});
+    $('tRecord').textContent = best ? 'Record : ' + best.toLocaleString('fr-FR') + ' · ' + (st.parties || 0) + ' partie' + (st.parties > 1 ? 's' : '') : '';
+    $('titre').hidden = false; document.body.classList.add('au-titre');
+    clearInterval(tourne); tourne = setInterval(() => BouMonde.tourner(1), 5000);
+  }
+  function jouer(etat) {
+    e = etat; ecran = 'jeu'; clearInterval(tourne);
+    $('titre').hidden = true; document.body.classList.remove('au-titre');
+    BouMonde.maj(e); majHaut();
+  }
+  function aide() {
+    return boite('<h2>COMMENT JOUER</h2>' +
+      '<p><b>Le lundi</b>, la boutique est fermée : commande au <b>grossiste</b> (livré lundi prochain), range les <b>rayons</b> et fixe les prix, ouvre des <b>boosters</b> pour remplir les <b>vitrines</b> et ton <b>classeur</b>, <b>aménage</b> et agrandis.</p>' +
+      '<p><b>Du mardi au samedi</b>, les clients entrent et achètent : regarde-les, réponds aux vendeurs, collectionneurs et marchands. Le samedi, le tournoi (il faut une table).</p>' +
+      '<p><b>Le dimanche</b>, le bilan : loyer, ventes, cotes qui bougent.</p>' +
+      '<p>La banque t\'a prêté ' + euros(BOU_PRET) + ' : rends-les avant la semaine ' + BOU_ECHEANCE + ' (touche la caisse le lundi), sinon elle prend 20 % de plus. Deux dimanches sous zéro : faillite.</p>' +
+      '<p>Au bout de <b>52 semaines</b>, le score est la valeur de ta boutique : caisse, stock, cartes, meubles, classeurs complets.</p>',
+      [{ texte: 'COMPRIS', valeur: 1 }]);
+  }
+  async function menu() {
+    const lundiCalme = e.phase === 'lundi' && !lundi.ouvert && !amen;
+    if (e.phase === 'semaine' && !pause) $('bPause').click();
+    const v = await boite('<h2>MENU</h2>' + (lundiCalme ? '<p>La partie est sauvegardée chaque lundi.</p>' : '<p>Le retour au titre est possible le lundi.</p>'),
+      [{ texte: 'SONS : ' + (opts.sons ? 'OUI' : 'NON'), classe: 'gris', valeur: 'sons' }, { texte: 'MUSIQUE : ' + (opts.musique ? 'OUI' : 'NON'), classe: 'gris', valeur: 'musique' }]
+        .concat(lundiCalme ? [{ texte: 'TITRE', classe: 'gris', valeur: 'titre' }] : [], [{ texte: 'REPRENDRE', valeur: 0 }]));
+    if (v === 'sons' || v === 'musique') { opts[v] = !opts[v]; BouSons[v] = opts[v]; ecrire('opts', opts); return menu(); }
+    if (v === 'titre') { sauver(); titre(); }
   }
 
   /* ---------- aménager ---------- */
@@ -163,7 +231,7 @@ const Boutique = (() => {
     const { type, x, z, r, deplace } = f;
     BouMonde.finFantome();
     if (deplace) bouDeplacer(e, deplace, x, z, r);
-    else { const res = bouPoser(e, type, x, z, r); if (res.ok) { journal(BOU_MEUBLES[type].nom + ' : −' + euros(BOU_MEUBLES[type].prix)); if (type === 'rayon') bouRanger(e, res.meuble.id, 0, 'booster:' + bouDerniere(e).n); } }
+    else { const res = bouPoser(e, type, x, z, r); if (res.ok) { BouSons.poser(); journal(BOU_MEUBLES[type].nom + ' : −' + euros(BOU_MEUBLES[type].prix)); if (type === 'rayon') bouRanger(e, res.meuble.id, 0, 'booster:' + bouDerniere(e).n); } }
     BouMonde.maj(e); sauver(); majHaut(); majCatalogue(); feuille('fCatalogue');
   };
   BouMonde.ecouter('meuble', m => {
@@ -177,7 +245,7 @@ const Boutique = (() => {
   BouMonde.ecouter('vide', () => { if (amen && choisi) { choisi = null; BouMonde.selectionner(null); feuille('fCatalogue'); } });
   BouMonde.ecouter('terrain', () => { if (e.phase === 'lundi') proposerAgrandir(); });
   BouMonde.ecouter('vente', (total, x, y) => {
-    caisseVue += total; $('hCaisse').textContent = euros(caisseVue);
+    caisseVue += total; $('hCaisse').textContent = euros(caisseVue); BouSons.caisse();
     const d = document.createElement('div'); d.className = 'gain'; d.textContent = '+' + euros(total); d.style.left = x + 'px'; d.style.top = y + 'px';
     document.body.appendChild(d); setTimeout(() => d.remove(), 1400);
   });
@@ -200,6 +268,9 @@ const Boutique = (() => {
   document.querySelectorAll('[data-ecran]').forEach(b => b.onclick = () => lundi.ouvrir(b.dataset.ecran));
   $('bTournoi').onclick = () => lundi.ouvrir('tournoi');
   $('hArgent').onclick = () => lundi.banque();
+  $('bMenu').onclick = () => menu();
+  // le « toc » de tous les boutons
+  document.addEventListener('click', ev => { if (ev.target.closest('button, .objet, [data-act]')) BouSons.toc(); }, true);
   $('gauche').onclick = () => BouMonde.tourner(-1);
   $('droite').onclick = () => BouMonde.tourner(1);
   $('bVitesse').onclick = () => { vitesse = vitesse === 4 ? 1 : vitesse * 2; BouMonde.vitesse(vitesse); $('bVitesse').textContent = '×' + vitesse; };
@@ -210,11 +281,14 @@ const Boutique = (() => {
     await Promise.all(['22px "Luckiest Guy"', '600 13px Fredoka', '700 20px "Pixelify Sans"'].map(f => document.fonts.load(f).catch(() => {})));
     await BouCartes.charger();
     await BouMonde.init($('scene'));
-    e = relire();
-    if (!e || e.fin || e.phase !== 'lundi') nouvelle();   // on ne sauve que le lundi : une semaine interrompue n'est jamais enregistrée
-    BouMonde.maj(e);
+    // on ne sauve que le lundi : une semaine interrompue n'est jamais enregistrée et reprend au lundi
+    titre();
     vignettes = BouMonde.vignettes();
-    $('chargement').remove(); majHaut();
+    $('chargement').remove();
   })();
-  return { get etat() { return e; }, set etat(v) { e = v; BouMonde.maj(e); majHaut(); }, ouvrirBoutique, amenager, poser, lundi, nouvelle: () => { nouvelle(); BouMonde.maj(e); majHaut(); } };
+  return {
+    get etat() { return e; }, set etat(v) { e = v; BouMonde.maj(e); majHaut(); }, get ecran() { return ecran; },
+    ouvrirBoutique, amenager, poser, lundi, titre, menu,
+    nouvelle: () => { nouvelle(); jouer(e); }, continuer: () => { const r = sauvee(); if (r) jouer(r); return !!r; },
+  };
 })();

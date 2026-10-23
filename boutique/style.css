@@ -178,3 +178,21 @@ img.mc { display: block; width: 100%; aspect-ratio: 100 / 128; image-rendering: 
 .bilan .boutons { display: flex; gap: 8px; }
 .bilan .boutons button { flex: 1; font-size: 13px; padding: 9px 4px; }
 @media (prefers-reduced-motion: reduce) { .holo, .rayons, .paquet .face::after, #booster .aide { animation: none; } }
+
+/* ---------- l'écran titre ---------- */
+body.au-titre #haut, body.au-titre #tourner, body.au-titre .barre, body.au-titre #journal { display: none !important; }
+#titre { position: fixed; inset: 0; z-index: 35; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 10px;
+  padding: 20px 20px calc(24px + var(--bas)); background: linear-gradient(#2b283800 25%, #2b2838cc 55%, #2b2838f2); }
+#titre .logo { position: absolute; top: calc(48px + var(--haut)); left: 0; right: 0; text-align: center; font: 52px/0.95 'Luckiest Guy', sans-serif; color: var(--or);
+  text-shadow: 0 4px 0 #a8650a, 0 8px 0 #2d2a3e, 0 0 24px #0008; transform: rotate(-3deg); }
+#titre .logo small { display: block; font-size: 30px; color: #fff; text-shadow: 0 3px 0 var(--violet), 0 6px 0 #2d2a3e; }
+#titre .sous { color: #e9e4f5; text-align: center; margin: 0 0 6px; font-weight: 500; font-size: 15px; text-shadow: 0 2px 4px #000a; }
+#tBoutons { display: flex; flex-direction: column; gap: 10px; width: min(100%, 320px); }
+#tBoutons button { font-size: 18px; padding: 13px; }
+#tBoutons .liens { display: flex; gap: 10px; }
+#tBoutons .liens a { flex: 1; text-align: center; color: #fff; font-weight: 600; font-size: 14px; text-decoration: none; padding: 10px; border-radius: 12px; background: #ffffff1f; }
+#tRecord { color: var(--or); font-weight: 600; margin: 2px 0 0; min-height: 1em; }
+#boite .score { text-align: center; font-weight: 600; color: var(--doux); }
+#boite .score b { display: block; font: 40px 'Luckiest Guy', sans-serif; color: var(--vert-f); padding-top: 4px; }
+#boite .score small { font: 15px 'Luckiest Guy', sans-serif; color: var(--or-f); }
+#boite .boutons { flex-wrap: wrap; }

@@ -218,7 +218,7 @@ function BouLundi(ctx) {
     if (paquet.classList.contains('ouvert') || performance.now() - ouvertA < 400) return;
     idsB = bouOuvrir(e, cleB); if (!idsB) return;
     ctx.sauver(); rendre();
-    paquet.classList.add('tremble'); setTimeout(() => paquet.classList.add('ouvert'), 350);
+    BouSons.dechire(); paquet.classList.add('tremble'); setTimeout(() => paquet.classList.add('ouvert'), 350);
     // la meilleure carte est tout en dessous de la pile : on la découvre en dernier
     idsB.sort((a, b) => bouCarte(e, a).rar - bouCarte(e, b).rar || bouCote(e, a) - bouCote(e, b));
     setTimeout(() => {
@@ -242,7 +242,8 @@ function BouLundi(ctx) {
     const d = cs[cs.length - 1 - prochaine], c = bouCarte(e, idsB[prochaine]);
     cs.forEach(x => { if (x.dataset.vue) { const n = +x.dataset.vue; Object.assign(x.style, { left: (-178 + (n - 1) * 68) + 'px', top: '-292px', width: '96px', height: '123px', transform: 'rotateY(180deg) rotateZ(' + ((n - 2.5) * 5) + 'deg)' }); x.querySelector('.rang').style.display = 'none'; } });
     d.dataset.vue = ++prochaine; d.classList.add('retournee'); d.style.transform = 'rotateY(180deg) scale(1.08)'; d.style.zIndex = 10;
-    if (c.rar >= 2) eclats(c.rar >= 3 ? 26 : 12);
+    BouSons.carte();
+    if (c.rar >= 2) { eclats(c.rar >= 3 ? 26 : 12); setTimeout(() => BouSons.eclat(c.rar), 200); }
     if (c.rar >= 3) $('rayons').classList.add('on');
     if (prochaine === cs.length) {
       $('bAide').hidden = true;
