@@ -171,14 +171,16 @@ const Boutique = (() => {
       '<p>Au bout de <b>52 semaines</b>, le score est la valeur de ta boutique : caisse, stock, cartes, meubles, classeurs complets.</p>',
       [{ texte: 'COMPRIS', valeur: 1 }]);
   }
-  async function menu() {
+  // pendant la semaine, le menu met la boutique en pause et REPRENDRE la relance (sauf si le joueur l'avait déjà mise en pause)
+  async function menu(pauseMenu) {
     const lundiCalme = e.phase === 'lundi' && !lundi.ouvert && !amen;
-    if (e.phase === 'semaine' && !pause) $('bPause').click();
+    if (pauseMenu === undefined) { pauseMenu = e.phase === 'semaine' && !pause; if (pauseMenu) $('bPause').click(); }
     const v = await boite('<h2>MENU</h2>' + (lundiCalme ? '<p>La partie est sauvegardée chaque lundi.</p>' : '<p>Le retour au titre est possible le lundi.</p>'),
       [{ texte: 'SONS : ' + (opts.sons ? 'OUI' : 'NON'), classe: 'gris', valeur: 'sons' }, { texte: 'MUSIQUE : ' + (opts.musique ? 'OUI' : 'NON'), classe: 'gris', valeur: 'musique' }]
         .concat(lundiCalme ? [{ texte: 'TITRE', classe: 'gris', valeur: 'titre' }] : [], [{ texte: 'REPRENDRE', valeur: 0 }]));
-    if (v === 'sons' || v === 'musique') { opts[v] = !opts[v]; BouSons[v] = opts[v]; ecrire('opts', opts); return menu(); }
+    if (v === 'sons' || v === 'musique') { opts[v] = !opts[v]; BouSons[v] = opts[v]; ecrire('opts', opts); return menu(pauseMenu); }
     if (v === 'titre') { sauver(); titre(); }
+    else if (pauseMenu && pause) $('bPause').click();
   }
 
   /* ---------- aménager ---------- */
