@@ -1,0 +1,629 @@
+<title>Boutique de cartes</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap">
+<style>
+/* Maquette de La Boutique de cartes (22/10) : la boutique en 3D avec les modèles Kenney (Mini Market, Mini Characters,
+   Furniture Kit, CC0), deux directions pour l'écran principal et le moment clé commun :
+   A. la boutique vue d'en haut (gestion : on voit tout, les clients circulent) ;
+   B. derrière le comptoir (tout se joue face au client, la boutique en fond) ;
+   C. l'ouverture d'un booster (cartes en CSS 3D qui se retournent, reflets holo). */
+:root {
+  --fond: #2b2838; --panneau: #fffaf0; --encre: #2d2a3e; --doux: #6d6884; --ligne: #e7dfcf;
+  --vert: #2fae7a; color-scheme: dark; --vert-f: #1f8a5e; --rouge: #e5534b; --or: #f5b82e; --bleu: #4a8fe7; --violet: #8a63d2;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fond); color: var(--encre); font-family: 'Fredoka', sans-serif; user-select: none; }
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#onglets { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; background: rgba(20,18,30,.75); padding: 4px; border-radius: 14px; z-index: 30; }
+#onglets button { font: 600 13px 'Fredoka'; color: #cfc8e6; background: none; border: 0; padding: 7px 11px; border-radius: 10px; }
+#onglets button.on { background: var(--panneau); color: var(--encre); }
+#legende { position: fixed; left: 10px; right: 10px; top: 54px; z-index: 40; font-size: 13px; line-height: 1.3; color: #fff; background: #1d1a2bee; border-radius: 12px; padding: 8px 10px; text-align: center; pointer-events: none; transition: opacity .6s; }
+#legende.cache { opacity: 0; }
+.vue { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: none; }
+.vue.on { display: block; }
+.vue * { pointer-events: auto; }
+#chargement { position: fixed; inset: 0; display: grid; place-items: center; color: #fff; font: 600 18px 'Fredoka'; z-index: 50; background: var(--fond); }
+
+/* ---- A : la boutique vue d'en haut ---- */
+.barre { position: absolute; left: 10px; right: 10px; top: 76px; display: flex; gap: 6px; }
+.pastille { background: var(--panneau); border-radius: 12px; padding: 6px 10px; box-shadow: 0 3px 0 #0003; font-weight: 600; font-size: 14px; line-height: 1.15; }
+.pastille small { display: block; font-weight: 500; font-size: 11px; color: var(--doux); }
+.pastille.argent { margin-left: auto; text-align: right; }
+.pastille.argent b { font-size: 19px; color: var(--vert-f); }
+.jour { height: 6px; background: var(--ligne); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+.jour i { display: block; height: 100%; width: 40%; background: var(--or); border-radius: 3px; }
+.pret { position: absolute; left: 10px; top: 128px; background: #fff3; color: #fff; border-radius: 10px; padding: 4px 9px; font-size: 12px; font-weight: 500; backdrop-filter: blur(2px); }
+.pret b { color: #ffd77a; }
+.bulle-info { position: absolute; left: 50%; transform: translateX(-50%); bottom: 116px; width: calc(100% - 28px); max-width: 380px; background: var(--panneau); border-radius: 14px; padding: 9px 12px; display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 0 #0003; font-size: 14px; }
+.bulle-info .ico { width: 34px; height: 34px; border-radius: 50%; background: var(--or); display: grid; place-items: center; font: 20px 'Luckiest Guy'; color: #fff; flex: none; padding-top: 3px; }
+.bulle-info button { margin-left: auto; flex: none; }
+.actions { position: absolute; left: 8px; right: 8px; bottom: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.actions button { background: var(--panneau); border: 0; border-radius: 14px; padding: 8px 2px 7px; font: 600 12.5px 'Fredoka'; color: var(--encre); box-shadow: 0 4px 0 #0004; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.actions button:active, .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0004; }
+.actions svg { width: 30px; height: 30px; }
+.actions .badge { position: absolute; }
+.btn { border: 0; border-radius: 12px; padding: 9px 14px; font: 600 15px 'Fredoka'; color: #fff; background: var(--vert); box-shadow: 0 4px 0 var(--vert-f); }
+.btn.gris { background: #d9d2c2; color: var(--encre); box-shadow: 0 4px 0 #b4ab98; }
+.btn.rouge { background: var(--rouge); box-shadow: 0 4px 0 #b83a33; }
+.etiquette { position: absolute; transform: translate(-50%, -100%); pointer-events: none; }
+.etiquette span { display: block; background: var(--panneau); border-radius: 10px; padding: 3px 7px; font: 600 12px 'Fredoka'; white-space: nowrap; box-shadow: 0 2px 0 #0003; position: relative; }
+.etiquette span::after { content: ''; position: absolute; left: 50%; bottom: -5px; margin-left: -5px; border: 5px solid transparent; border-bottom: 0; border-top-color: var(--panneau); }
+.etiquette.veut span { background: var(--or); color: #fff; }
+.etiquette.veut span::after { border-top-color: var(--or); }
+
+/* ---- B : derrière le comptoir ---- */
+.dialogue { position: absolute; left: 0; right: 0; bottom: 0; background: var(--panneau); border-radius: 22px 22px 0 0; padding: 12px 14px 14px; box-shadow: 0 -4px 0 #0002; }
+.qui { display: flex; align-items: baseline; gap: 8px; }
+.qui b { font: 22px 'Luckiest Guy'; letter-spacing: .5px; color: var(--violet); padding-top: 3px; }
+.qui span { font-size: 12.5px; color: var(--doux); }
+.qui .bourse { margin-left: auto; font-weight: 600; font-size: 13px; background: #f1ead9; border-radius: 8px; padding: 2px 7px; }
+.parole { font-size: 16.5px; line-height: 1.3; margin: 6px 0 10px; min-height: 43px; }
+.offres { display: flex; gap: 8px; justify-content: center; }
+.offre { flex: 0 0 auto; width: 84px; text-align: center; border-radius: 10px; padding: 4px; border: 3px solid transparent; transition: transform .15s; }
+.offre.choisie { border-color: var(--or); background: #fff3d3; transform: translateY(-4px); }
+.offre canvas { width: 72px; height: 101px; border-radius: 5px; display: block; margin: 0 auto 3px; box-shadow: 0 2px 4px #0003; }
+.offre small { display: block; font-size: 11px; color: var(--doux); }
+.prix { display: flex; align-items: center; gap: 8px; margin: 10px 0 8px; }
+.prix .pm { width: 42px; height: 42px; border-radius: 50%; border: 0; background: #ece4d2; font: 700 24px 'Fredoka'; color: var(--encre); box-shadow: 0 3px 0 #c9bfa9; }
+.prix .val { flex: 1; text-align: center; }
+.prix .val b { font: 30px 'Luckiest Guy'; display: block; line-height: 1; padding-top: 4px; }
+.prix .val small { font-size: 12px; color: var(--doux); }
+.humeur { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--vert) 0 55%, var(--or) 55% 78%, var(--rouge) 78%); position: relative; margin: 0 4px 10px; }
+.humeur i { position: absolute; top: -5px; width: 6px; height: 18px; border-radius: 3px; background: var(--encre); transition: left .2s; }
+.boutonsB { display: flex; gap: 8px; }
+.boutonsB .btn { flex: 1; }
+.loupe { position: absolute; right: 12px; top: 80px; }
+.hautB { position: absolute; left: 10px; right: 10px; top: 76px; display: flex; gap: 6px; }
+
+/* ---- C : l'ouverture d'un booster (CSS 3D) ---- */
+#booster { position: fixed; inset: 0; z-index: 20; display: none; background: radial-gradient(ellipse at 50% 45%, #3d3466ee, #120f1ef5 70%); perspective: 900px; overflow: hidden; }
+#booster.on { display: block; }
+#booster .titre { position: absolute; top: 84px; left: 0; right: 0; text-align: center; color: #fff; font: 24px 'Luckiest Guy'; letter-spacing: 1px; }
+#booster .titre small { display: block; font: 500 13px 'Fredoka'; color: #cfc8e6; letter-spacing: 0; }
+.paquet { position: absolute; left: 50%; top: 50%; width: 170px; height: 270px; margin: -150px 0 0 -85px; transform-style: preserve-3d; transition: transform .5s, opacity .4s; cursor: pointer; }
+.paquet .face { position: absolute; inset: 0; border-radius: 10px 10px 14px 14px; overflow: hidden;
+  background: linear-gradient(160deg, #ff8a3d, #e5464b 45%, #7d2fb8); box-shadow: 0 12px 30px #0008, inset 0 0 0 3px #fff4; }
+.paquet .face::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, #fff0 0 18px, #fff2 18px 22px); }
+.paquet .face::after { content: ''; position: absolute; inset: -40%; background: linear-gradient(105deg, #fff0 40%, #fff8 50%, #fff0 60%); animation: reflet 2.6s infinite; }
+.paquet .bande { position: absolute; left: 0; right: 0; top: 0; height: 26px; border-radius: 10px 10px 0 0; background: repeating-linear-gradient(90deg, #c9c2d8 0 6px, #e8e3f0 6px 12px); transition: transform .5s, opacity .5s; z-index: 2; }
+.paquet .logo { position: absolute; top: 46px; left: 0; right: 0; text-align: center; font: 32px/1 'Luckiest Guy'; color: #fff; text-shadow: 0 3px 0 #7d2fb8, 0 0 12px #fff8; z-index: 1; }
+.paquet .logo small { display: block; font: 600 12px 'Fredoka'; letter-spacing: 1px; text-shadow: none; margin-top: 6px; }
+.paquet .bete { position: absolute; left: 25px; right: 25px; bottom: 30px; height: 110px; z-index: 1; }
+.paquet .nb { position: absolute; bottom: 9px; right: 10px; font: 600 11px 'Fredoka'; color: #fffc; z-index: 1; }
+.paquet.tremble { animation: tremble .35s; }
+.paquet.ouvert .bande { transform: translate(60px, -60px) rotate(25deg); opacity: 0; }
+.paquet.vide { transform: translateY(260px) rotateX(30deg); opacity: 0; pointer-events: none; }
+@keyframes reflet { from { transform: translateX(-60%); } to { transform: translateX(60%); } }
+@keyframes tremble { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+.pile { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.carte3d { position: absolute; width: 180px; height: 252px; left: -90px; top: -150px; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3,1.3,.5,1), left .5s, top .5s, width .5s, height .5s; }
+.carte3d .dos, .carte3d .avant { position: absolute; inset: 0; border-radius: 10px; backface-visibility: hidden; overflow: hidden; box-shadow: 0 8px 18px #0007; }
+.carte3d .dos { background: radial-gradient(circle at 50% 50%, #ffd06b 0 18%, #e5464b 19% 30%, #3b2a7a 31%); border: 7px solid #f1ead9; }
+.carte3d .dos::after { content: 'C'; position: absolute; inset: 0; display: grid; place-items: center; font: 46px 'Luckiest Guy'; color: #fff; padding-top: 8px; }
+.carte3d .avant { transform: rotateY(180deg); }
+.carte3d .avant canvas { width: 100%; height: 100%; display: block; }
+.carte3d .holo { position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .7; pointer-events: none;
+  background: linear-gradient(var(--angle, 120deg), #ff00 20%, #ff4fd8aa 35%, #4ff2ffaa 45%, #fff95caa 55%, #ff00 70%); background-size: 250% 250%; background-position: var(--px, 50%) var(--py, 50%); }
+.carte3d.retournee { transform: rotateY(180deg); }
+.carte3d .rang { position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%) rotateY(180deg); white-space: nowrap; font: 600 13px 'Fredoka'; color: #fff; backface-visibility: hidden; }
+.eclat { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #fff6b0; box-shadow: 0 0 8px #ffd700; pointer-events: none; animation: eclat .9s ease-out forwards; }
+@keyframes eclat { to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+.rayons { position: absolute; left: 50%; top: 50%; width: 600px; height: 600px; margin: -330px 0 0 -300px; pointer-events: none; opacity: 0; transition: opacity .5s;
+  background: repeating-conic-gradient(#ffd96b33 0 8deg, #ffd96b00 8deg 20deg); border-radius: 50%; animation: tourne 12s linear infinite; mask: radial-gradient(#000 20%, #0000 65%); -webkit-mask: radial-gradient(#000 20%, #0000 65%); }
+.rayons.on { opacity: 1; }
+@keyframes tourne { to { transform: rotate(360deg); } }
+#booster .aide { position: absolute; bottom: 150px; left: 0; right: 0; text-align: center; color: #fff; font-size: 15px; animation: clignote 1.4s infinite; }
+@keyframes clignote { 50% { opacity: .45; } }
+.bilan { position: absolute; left: 12px; right: 12px; bottom: 12px; background: var(--panneau); border-radius: 18px; padding: 12px 14px; transform: translateY(130%); transition: transform .45s cubic-bezier(.3,1.3,.5,1); }
+.bilan.on { transform: none; }
+.bilan .total { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: var(--doux); }
+.bilan .total b { font: 28px 'Luckiest Guy'; color: var(--vert-f); padding-top: 4px; }
+.bilan .ligne { font-size: 13px; margin: 2px 0 10px; }
+.bilan .boutons { display: flex; gap: 8px; }
+.bilan .boutons .btn { flex: 1; font-size: 14px; padding: 9px 6px; }
+#booster .fermer { position: absolute; top: 54px; right: 12px; z-index: 3; }
+#booster .titre { transition: opacity .4s; }
+#booster.ouvre .titre { opacity: 0; }
+</style>
+<canvas id="scene"></canvas>
+<div id="chargement">La boutique ouvre…</div>
+<div id="onglets">
+  <button data-vue="A" class="on">A · LA BOUTIQUE</button>
+  <button data-vue="B">B · LE COMPTOIR</button>
+  <button data-vue="C">C · UN BOOSTER</button>
+</div>
+<div id="legende"></div>
+
+<!-- A : vue d'en haut -->
+<div class="vue on" id="vueA">
+  <div class="barre">
+    <div class="pastille">SEMAINE 3 · MARDI<small>14 h · 6 clients aujourd'hui</small><div class="jour"><i></i></div></div>
+    <div class="pastille argent"><small>EN CAISSE</small><b id="caisseA">1 240 €</b></div>
+  </div>
+  <div class="pret">Prêt de la banque : <b>1 760 €</b> à rendre avant la semaine 26</div>
+  <div class="bulle-info"><div class="ico">!</div><div><b>Léo</b> attend à la caisse.<br><small style="color:var(--doux)">Il cherche une carte FOUDRE.</small></div><button class="btn" id="allerB">SERVIR</button></div>
+  <div class="actions">
+    <button id="bGrossiste"><svg viewBox="0 0 32 32"><rect x="4" y="12" width="24" height="16" rx="2" fill="#c98a4b"/><rect x="4" y="9" width="24" height="5" rx="1" fill="#e0a764"/><rect x="13" y="9" width="6" height="19" fill="#f2d28b"/></svg>GROSSISTE</button>
+    <button id="bVitrine"><svg viewBox="0 0 32 32"><rect x="3" y="8" width="26" height="18" rx="3" fill="#8ec9e8"/><rect x="7" y="11" width="6" height="9" rx="1" fill="#e5534b"/><rect x="14" y="11" width="6" height="9" rx="1" fill="#f5b82e"/><rect x="21" y="11" width="5" height="9" rx="1" fill="#4a8fe7"/><rect x="3" y="24" width="26" height="4" rx="1" fill="#6d6884"/></svg>VITRINE</button>
+    <button id="bOuvrir"><svg viewBox="0 0 32 32"><path d="M8 6h16l-1 22H9z" fill="#e5464b"/><path d="M8 6h16v4H8z" fill="#cfc8e6"/><circle cx="16" cy="18" r="4" fill="#ffd06b"/></svg>BOOSTERS</button>
+    <button id="bTournoi"><svg viewBox="0 0 32 32"><path d="M9 5h14v6a7 7 0 0 1-14 0z" fill="#f5b82e"/><path d="M9 7H5a4 4 0 0 0 4 6M23 7h4a4 4 0 0 1-4 6" stroke="#f5b82e" stroke-width="2" fill="none"/><rect x="14" y="17" width="4" height="6" fill="#d99a1e"/><rect x="10" y="23" width="12" height="4" rx="1" fill="#6d6884"/></svg>TOURNOI</button>
+  </div>
+</div>
+
+<!-- B : derrière le comptoir -->
+<div class="vue" id="vueB">
+  <div class="hautB">
+    <div class="pastille">MARDI · 14 h<small>Client 4 sur 6</small></div>
+    <div class="pastille argent"><small>EN CAISSE</small><b id="caisseB">1 240 €</b></div>
+  </div>
+  <div class="dialogue">
+    <div class="qui"><b id="nomB">LÉO</b><span id="ageB">9 ans · joue au tournoi</span><span class="bourse" id="bourseB">Budget : 12 €</span></div>
+    <div class="parole" id="paroleB"></div>
+    <div class="offres" id="offresB"></div>
+    <div class="prix"><button class="pm" id="moins">−</button><div class="val"><b id="prixB">8 €</b><small id="coteB">cote : 6 €</small></div><button class="pm" id="plus">+</button></div>
+    <div class="humeur"><i id="humeurB"></i></div>
+    <div class="boutonsB"><button class="btn gris" id="refuserB">NON MERCI</button><button class="btn" id="vendreB">PROPOSER</button></div>
+  </div>
+</div>
+
+<!-- C : ouverture d'un booster -->
+<div id="booster">
+  <button class="btn gris fermer" id="fermerC">FERMER</button>
+  <div class="titre">VOLCANS D'ÉTÉ<small>extension n° 2 · booster de 5 cartes · payé 4 €</small></div>
+  <div class="rayons" id="rayons"></div>
+  <div class="paquet" id="paquet">
+    <div class="face"><div class="bande"></div><div class="logo">CRÉATURES<small>VOLCANS D'ÉTÉ</small></div><canvas class="bete" id="betePaquet" width="240" height="220"></canvas><div class="nb">5 CARTES</div></div>
+  </div>
+  <div class="pile" id="pile"></div>
+  <div class="aide" id="aideC">Touche le booster pour l'ouvrir</div>
+  <div class="bilan" id="bilan">
+    <div class="total">Valeur des 5 cartes <b id="totalC">0 €</b></div>
+    <div class="ligne" id="ligneC"></div>
+    <div class="boutons"><button class="btn gris" id="classeurC">AU CLASSEUR</button><button class="btn" id="vitrineC">EN VITRINE</button><button class="btn rouge" id="encoreC">UN AUTRE</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/*GLTF*/</script>
+<script>window.KENNEY = /*MODELES*/null; window.ATLAS = /*ATLAS*/null;</script>
+<script>
+'use strict';
+// ---------- hasard reproductible ----------
+function graine(s) { return () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const choix = (r, l) => l[Math.floor(r() * l.length)];
+
+// ---------- les créatures : fabriquées à partir de morceaux ----------
+const ELEMENTS = {
+  FEU:    { c: '#ff7a3d', f: '#c63c1e', fond: ['#ffd28a', '#ff8a5b'], deb: ['Flam', 'Brais', 'Pyr', 'Cendr', 'Tison'], sym: '▲' },
+  EAU:    { c: '#4aa8ff', f: '#1f66c2', fond: ['#bfe8ff', '#5fb4f0'], deb: ['Aqu', 'Ond', 'Marin', 'Goutt', 'Bulb'], sym: '●' },
+  PLANTE: { c: '#5cc96b', f: '#2c8a3d', fond: ['#dff5b8', '#86d47a'], deb: ['Mouss', 'Feuill', 'Sylv', 'Ronc', 'Gland'], sym: '♣' },
+  FOUDRE: { c: '#ffcf2e', f: '#c99400', fond: ['#fff6b8', '#ffd84d'], deb: ['Volt', 'Zap', 'Eclair', 'Statik', 'Orag'], sym: '✦' },
+  OMBRE:  { c: '#8a6cff', f: '#4b2fb0', fond: ['#d9cfff', '#8f7ad8'], deb: ['Nyx', 'Ombr', 'Spectr', 'Brum', 'Noct'], sym: '◆' },
+};
+const FINS = ['on', 'ix', 'aurus', 'ette', 'ard', 'elle', 'o', 'ouille', 'ax', 'in'];
+const RARETES = [
+  { n: 'COMMUNE', c: '#b9b2a4', cote: [0.2, 0.6] }, { n: 'PEU COMMUNE', c: '#46b37a', cote: [0.5, 1.5] },
+  { n: 'RARE', c: '#3f86e0', cote: [2, 6] }, { n: 'ÉPIQUE', c: '#8a52d6', cote: [8, 20] }, { n: 'LÉGENDAIRE', c: '#f0a91c', cote: [40, 90] },
+];
+function creature(seed, rarete) {
+  const r = graine(seed * 7919 + 13), el = choix(r, Object.keys(ELEMENTS)), E = ELEMENTS[el];
+  const nom = (choix(r, E.deb) + choix(r, FINS)).toUpperCase();
+  const R = RARETES[rarete], cote = Math.round((R.cote[0] + r() * (R.cote[1] - R.cote[0])) * 2) / 2;
+  return { seed, el, E, nom, rarete, R, cote, atk: 1 + Math.floor(r() * 5) + rarete, pv: 2 + Math.floor(r() * 6) + rarete * 2,
+    corps: Math.floor(r() * 3), tete: Math.floor(r() * 4), dos: Math.floor(r() * 4), queue: Math.floor(r() * 3), yeux: Math.floor(r() * 3), pois: r() < .5 };
+}
+// dessine la bête seule (aussi sur le booster)
+function dessinerBete(ctx, b, x, y, t) {
+  const { c, f } = b.E;
+  ctx.save(); ctx.translate(x, y); ctx.scale(t, t); ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = '#2d2a3e';
+  const forme = (fn, coul) => { ctx.beginPath(); fn(); ctx.fillStyle = coul; ctx.fill(); ctx.stroke(); };
+  // queue
+  if (b.queue === 0) forme(() => { ctx.moveTo(30, 20); ctx.quadraticCurveTo(75, 10, 70, -25); ctx.quadraticCurveTo(60, 5, 25, 5); }, f);
+  if (b.queue === 1) forme(() => { ctx.moveTo(30, 18); ctx.lineTo(78, 0); ctx.lineTo(62, 30); ctx.closePath(); }, f);
+  if (b.queue === 2) { forme(() => { ctx.arc(52, 12, 14, 0, 7); }, f); }
+  // dos : ailes, piquants, carapace
+  if (b.dos === 0) forme(() => { ctx.moveTo(-10, -20); ctx.quadraticCurveTo(-60, -75, -70, -20); ctx.quadraticCurveTo(-45, -30, -20, -5); }, '#fff');
+  if (b.dos === 0) forme(() => { ctx.moveTo(10, -20); ctx.quadraticCurveTo(60, -75, 70, -20); ctx.quadraticCurveTo(45, -30, 20, -5); }, '#fff');
+  if (b.dos === 1) for (let k = -2; k <= 2; k++) forme(() => { ctx.moveTo(k * 16 - 9, -30 + Math.abs(k) * 6); ctx.lineTo(k * 18, -58 + Math.abs(k) * 10); ctx.lineTo(k * 16 + 9, -30 + Math.abs(k) * 6); }, f);
+  // corps
+  if (b.corps === 0) forme(() => ctx.ellipse(0, 10, 42, 38, 0, 0, 7), c);
+  if (b.corps === 1) forme(() => { ctx.moveTo(-40, 45); ctx.quadraticCurveTo(-48, -35, 0, -38); ctx.quadraticCurveTo(48, -35, 40, 45); ctx.closePath(); }, c);
+  if (b.corps === 2) forme(() => { ctx.roundRect ? ctx.roundRect(-40, -30, 80, 76, 22) : ctx.rect(-40, -30, 80, 76); }, c);
+  if (b.dos === 2) forme(() => { ctx.arc(0, 0, 30, Math.PI * 1.05, Math.PI * 1.95); ctx.closePath(); }, f);
+  // ventre
+  ctx.beginPath(); ctx.ellipse(0, 24, 24, 18, 0, 0, 7); ctx.fillStyle = '#fff8'; ctx.fill();
+  if (b.pois) { ctx.fillStyle = f; for (const [px, py] of [[-28, 0], [26, -8], [30, 22]]) { ctx.beginPath(); ctx.arc(px, py, 5, 0, 7); ctx.fill(); } }
+  // pattes
+  forme(() => { ctx.ellipse(-22, 46, 12, 8, 0, 0, 7); }, f); forme(() => { ctx.ellipse(22, 46, 12, 8, 0, 0, 7); }, f);
+  // tête : cornes, oreilles, antennes, crête
+  if (b.tete === 0) { forme(() => { ctx.moveTo(-22, -28); ctx.lineTo(-30, -62); ctx.lineTo(-10, -34); }, '#fff2c4'); forme(() => { ctx.moveTo(22, -28); ctx.lineTo(30, -62); ctx.lineTo(10, -34); }, '#fff2c4'); }
+  if (b.tete === 1) { forme(() => ctx.ellipse(-26, -36, 10, 18, -0.5, 0, 7), c); forme(() => ctx.ellipse(26, -36, 10, 18, 0.5, 0, 7), c); }
+  if (b.tete === 2) { ctx.beginPath(); ctx.moveTo(-8, -34); ctx.quadraticCurveTo(-20, -60, -6, -66); ctx.moveTo(8, -34); ctx.quadraticCurveTo(20, -60, 6, -66); ctx.stroke(); forme(() => ctx.arc(-6, -68, 6, 0, 7), b.E.fond[1]); forme(() => ctx.arc(6, -68, 6, 0, 7), b.E.fond[1]); }
+  if (b.tete === 3) forme(() => { ctx.moveTo(-14, -34); ctx.lineTo(-8, -54); ctx.lineTo(0, -40); ctx.lineTo(8, -56); ctx.lineTo(14, -34); }, f);
+  // yeux et bouche
+  const oeil = (ox) => {
+    if (b.yeux === 2) { ctx.beginPath(); ctx.arc(ox, -8, 8, Math.PI, 0); ctx.stroke(); return; }
+    ctx.beginPath(); ctx.arc(ox, -8, b.yeux ? 12 : 9, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ox + 2, -7, b.yeux ? 6 : 4.5, 0, 7); ctx.fillStyle = '#2d2a3e'; ctx.fill();
+    ctx.beginPath(); ctx.arc(ox + 4, -10, 2, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+  };
+  oeil(-15); oeil(15);
+  ctx.beginPath(); ctx.arc(0, 6, 9, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+  ctx.restore();
+}
+// la carte entière (250 × 350)
+function dessinerCarte(b, cv) {
+  cv = cv || document.createElement('canvas'); cv.width = 250; cv.height = 350;
+  const ctx = cv.getContext('2d'), E = b.E, R = b.R;
+  const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
+  rr(0, 0, 250, 350, 16); ctx.fillStyle = R.c; ctx.fill();
+  if (b.rarete === 4) { const g = ctx.createLinearGradient(0, 0, 250, 350); g.addColorStop(0, '#ffe58a'); g.addColorStop(.5, '#f0a91c'); g.addColorStop(1, '#ffd65c'); ctx.fillStyle = g; ctx.fill(); }
+  rr(9, 9, 232, 332, 10); ctx.fillStyle = '#fffaf0'; ctx.fill();
+  // en-tête : nom et coût
+  ctx.fillStyle = E.c; rr(16, 16, 218, 34, 8); ctx.fill();
+  ctx.font = '22px "Luckiest Guy"'; ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.lineWidth = 4; ctx.strokeStyle = E.f;
+  ctx.strokeText(b.nom, 24, 35); ctx.fillText(b.nom, 24, 35);
+  ctx.beginPath(); ctx.arc(214, 33, 13, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.fillStyle = E.f; ctx.font = '600 16px Fredoka'; ctx.textAlign = 'center'; ctx.fillText(E.sym, 214, 34); ctx.textAlign = 'left';
+  // l'image
+  const g = ctx.createLinearGradient(0, 58, 0, 210); g.addColorStop(0, E.fond[0]); g.addColorStop(1, E.fond[1]);
+  rr(16, 56, 218, 154, 8); ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = E.f; ctx.stroke();
+  ctx.save(); rr(16, 56, 218, 154, 8); ctx.clip();
+  ctx.fillStyle = '#ffffff55'; for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(30 + k * 50, 200 - (k % 2) * 14, 26, 0, 7); ctx.fill(); }
+  dessinerBete(ctx, b, 125, 132, 1.05); ctx.restore();
+  // type et rareté
+  ctx.font = '600 12px Fredoka'; ctx.fillStyle = '#6d6884'; ctx.fillText('CRÉATURE · ' + b.el, 18, 224);
+  ctx.textAlign = 'right'; ctx.fillStyle = R.c; ctx.fillText('★'.repeat(b.rarete + 1), 232, 224); ctx.textAlign = 'left';
+  // texte
+  ctx.font = '500 13px Fredoka'; ctx.fillStyle = '#2d2a3e';
+  const pouvoirs = ['Quand elle arrive, pioche une carte.', 'Gagne +1 ATK si tu as une autre carte ' + b.el + '.', 'Ne peut pas être attaquée au premier tour.', 'Soigne 2 PV à une créature amie.', 'Inflige 1 dégât à toutes les créatures.'];
+  const tx = pouvoirs[b.seed % pouvoirs.length].split(' '); let l = '', yy = 248;
+  for (const m of tx) { if (ctx.measureText(l + m).width > 210) { ctx.fillText(l, 20, yy); l = ''; yy += 17; } l += m + ' '; } ctx.fillText(l, 20, yy);
+  // ATK / PV
+  const pastille = (x, txt, coul) => { rr(x, 302, 62, 28, 14); ctx.fillStyle = coul; ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '20px "Luckiest Guy"'; ctx.textAlign = 'center'; ctx.fillText(txt, x + 31, 318); ctx.textAlign = 'left'; };
+  pastille(18, '⚔' + b.atk, '#e5534b'); pastille(170, '♥' + b.pv, '#2fae7a');
+  ctx.font = '500 10px Fredoka'; ctx.fillStyle = '#9a94ad'; ctx.textAlign = 'center'; ctx.fillText('VOLCANS D\'ÉTÉ  ' + (b.seed % 120 + 1) + '/120', 125, 318); ctx.textAlign = 'left';
+  return cv;
+}
+
+// ---------- la scène 3D ----------
+const canvas = document.getElementById('scene');
+const rendu = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+rendu.setPixelRatio(Math.min(2, devicePixelRatio)); rendu.outputEncoding = THREE.sRGBEncoding;
+rendu.shadowMap.enabled = true; rendu.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xfff4e6, 0x6b5f8a, 0.75));
+const soleil = new THREE.DirectionalLight(0xffffff, 0.85); soleil.position.set(6, 10, 7); soleil.castShadow = true;
+soleil.shadow.mapSize.set(1024, 1024); Object.assign(soleil.shadow.camera, { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 30 }); soleil.shadow.bias = -0.0015;
+soleil.target.position.set(3.5, 0, 2.5); scene.add(soleil, soleil.target);
+const camA = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
+const camB = new THREE.PerspectiveCamera(50, 1, 0.05, 100);
+let vue = 'A';
+
+const M = {}, CLIPS = {};
+async function charger() {
+  // l'atlas commun des trois packs, en blob: (un artefact interdit fetch sur une adresse data:)
+  const urlAtlas = URL.createObjectURL(new Blob([Uint8Array.from(atob(ATLAS.split(',')[1]), c => c.charCodeAt(0))], { type: 'image/png' }));
+  const gestion = new THREE.LoadingManager(); gestion.setURLModifier(u => /colormap\.png$/.test(u) ? urlAtlas : u);
+  const chargeur = new THREE.GLTFLoader(gestion);
+  for (const n in KENNEY) {
+    try {
+      const g = await new Promise((ok, ko) => chargeur.parse(Uint8Array.from(atob(KENNEY[n]), c => c.charCodeAt(0)).buffer, '', ok, ko));
+      M[n] = g.scene; if (g.animations.length) CLIPS[n] = g.animations;
+      g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    } catch (e) { console.error('modèle', n, e); }
+  }
+}
+// pose un modèle (x, z en cases ; r en quarts de tour)
+function poser(n, x, z, r = 0, ech = 1, y = 0) {
+  if (!M[n]) return new THREE.Group();
+  const o = M[n].clone(); o.position.set(x, y, z); o.rotation.y = r * Math.PI / 2; o.scale.setScalar(ech); scene.add(o); return o;
+}
+const W = 8, P = 6;   // la boutique : 8 cases de large, 6 de profondeur
+const murs = { fond: [], gauche: [], devant: [], droite: [] };
+const texturesCartes = [];
+function texCarte(b) { const t = new THREE.CanvasTexture(dessinerCarte(b)); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; texturesCartes.push(t); return t; }
+const geoCarte = new THREE.PlaneGeometry(0.14, 0.196);
+function carte3D(b, x, y, z, rx = -Math.PI / 2, ry = 0, ech = 1) {
+  const m = new THREE.Mesh(geoCarte, new THREE.MeshStandardMaterial({ map: texCarte(b), roughness: 0.45 }));
+  m.position.set(x, y, z); m.rotation.set(rx, ry, 0, 'YXZ'); m.scale.setScalar(ech); m.castShadow = true; scene.add(m); return m;
+}
+// les boosters sur les rayons : petits paquets brillants
+function texBooster(el) {
+  const cv = document.createElement('canvas'); cv.width = 64; cv.height = 96; const ctx = cv.getContext('2d'), E = ELEMENTS[el];
+  const g = ctx.createLinearGradient(0, 0, 64, 96); g.addColorStop(0, E.fond[1]); g.addColorStop(1, E.f); ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 96);
+  ctx.fillStyle = '#e8e3f0'; ctx.fillRect(0, 0, 64, 10); ctx.fillStyle = '#fff'; ctx.font = '15px "Luckiest Guy"'; ctx.textAlign = 'center'; ctx.fillText('CRÉA', 32, 34);
+  ctx.beginPath(); ctx.arc(32, 62, 14, 0, 7); ctx.fillStyle = E.c; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return t;
+}
+const geoBooster = new THREE.BoxGeometry(0.11, 0.16, 0.025);
+const matsBooster = {};
+function booster(el, x, y, z, ry = 0, rx = 0) {
+  const m = matsBooster[el] || (matsBooster[el] = [0, 0, 0, 0, 1, 1].map(k => k ? new THREE.MeshStandardMaterial({ map: texBooster(el), roughness: 0.3, metalness: 0.25 }) : new THREE.MeshStandardMaterial({ color: ELEMENTS[el].f, roughness: 0.4 })));
+  const b = new THREE.Mesh(geoBooster, m); b.position.set(x, y, z); b.rotation.set(rx, ry, 0); b.castShadow = true; scene.add(b); return b;
+}
+
+// ---------- les gens ----------
+const gens = [];
+function personne(n, x, z, r = 0) {
+  if (!M[n]) return null;
+  const o = THREE.SkeletonUtils.clone(M[n]); o.position.set(x, 0, z); o.rotation.y = r;
+  o.traverse(c => { if (c.isMesh) { c.castShadow = true; c.frustumCulled = false; } });
+  scene.add(o);
+  const p = { o, mixer: new THREE.AnimationMixer(o), clips: CLIPS[n], act: null, chemin: null, k: 0, attente: 0 };
+  gens.push(p); return p;
+}
+function jouer(p, nom, une = false) {
+  if (!p) return; const clip = p.clips.find(c => c.name === nom); if (!clip) return;
+  const a = p.mixer.clipAction(clip); if (p.act === a && !une) return;
+  a.reset(); a.setLoop(une ? THREE.LoopOnce : THREE.LoopRepeat, Infinity); a.clampWhenFinished = une;
+  if (p.act && p.act !== a) p.act.fadeOut(0.2); a.fadeIn(0.2).play(); p.act = a;
+}
+function suivre(p, chemin, boucle = true) { if (!p) return; p.chemin = chemin; p.k = 0; p.boucle = boucle; p.attente = 0; }
+
+let vendeuse, leo, client2, client3, joueurs = [];
+const etiquettes = [];
+function etiquette(p, txt, veut) {
+  const d = document.createElement('div'); d.className = 'etiquette' + (veut ? ' veut' : ''); d.innerHTML = '<span>' + txt + '</span>';
+  document.getElementById('vueA').appendChild(d); etiquettes.push({ p, d }); return d;
+}
+
+function construire() {
+  // sol (avec un tapis de jeu sous les tables de tournoi)
+  for (let x = 0; x < W; x++) for (let z = 0; z < P; z++) poser('floor', x, z);
+  const tapis = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.9), new THREE.MeshStandardMaterial({ color: 0x3f8f6b, roughness: 1 }));
+  tapis.rotation.x = -Math.PI / 2; tapis.position.set(1.6, 0.03, 4.1); tapis.receiveShadow = true; scene.add(tapis);
+  const bord = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.1), new THREE.MeshStandardMaterial({ color: 0xf5b82e, roughness: 1 }));
+  bord.rotation.x = -Math.PI / 2; bord.position.set(1.6, 0.028, 4.1); scene.add(bord);
+  // murs : fond (z = -0.5), gauche (x = -0.5), devant (z = P - 0.5) avec la porte, droite
+  for (let x = 0; x < W; x++) murs.fond.push(poser(x === 2 || x === 3 ? 'wall-window' : 'wall', x, -0.5, 0));
+  for (let z = 0; z < P; z++) murs.gauche.push(poser(z === 2 ? 'wall-window' : 'wall', -0.5, z, 1));
+  for (let x = 0; x < W; x++) murs.devant.push(poser(x === 6 ? 'wall-door-rotate' : (x === 1 || x === 2 || x === 4) ? 'wall-window' : 'wall', x, P - 0.5, 2));
+  for (let z = 0; z < P; z++) murs.droite.push(poser(z === 3 ? 'wall-window' : 'wall', W - 0.5, z, 3));
+  murs.gauche.push(poser('wall-corner', -0.5, -0.5, 0));
+  // affiches de cartes géantes au mur du fond
+  const affiche = (b, x, y) => { const m = carte3D(b, x, y, -0.18, 0, 0, 3.4); m.castShadow = false; murs.fond.push(m); };
+  affiche(creature(7, 4), 0.55, 0.62); affiche(creature(31, 3), 5.0, 0.62);
+  // pancarte « CRÉATURES » au-dessus du comptoir
+  const cvP = document.createElement('canvas'); cvP.width = 512; cvP.height = 128; const cp = cvP.getContext('2d');
+  cp.fillStyle = '#2d2a3e'; cp.beginPath(); cp.roundRect ? cp.roundRect(0, 0, 512, 128, 30) : cp.rect(0, 0, 512, 128); cp.fill();
+  cp.font = '70px "Luckiest Guy"'; cp.textAlign = 'center'; cp.fillStyle = '#ffcf2e'; cp.fillText('LE REPAIRE', 256, 92);
+  const tP = new THREE.CanvasTexture(cvP); tP.encoding = THREE.sRGBEncoding;
+  const pancarte = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: tP, transparent: true }));
+  pancarte.position.set(6.5, 0.78, -0.19); scene.add(pancarte); murs.fond.push(pancarte);
+
+  // le comptoir et la caisse (la vendeuse = le joueur)
+  poser('cash-register', 6, 0.9, 2); poser('freezer', 7, 0.9, 2);
+  const tapisCaisse = poser('freezer', 5, 0.9, 2);
+  for (let k = 0; k < 4; k++) booster(['FEU', 'EAU', 'FOUDRE', 'OMBRE'][k], 4.78 + k * 0.15, 0.43, 0.9, 0, -0.35);
+  vendeuse = personne('character-employee', 6.1, 0.2, 0); jouer(vendeuse, 'idle');
+  // vitrines réfrigérées → vitrines de cartes (cartes posées dessus, sous une vitre)
+  const verre = new THREE.MeshStandardMaterial({ color: 0xd8f2ff, transparent: true, opacity: 0.25, roughness: 0.05, metalness: 0.2 });
+  for (const [vx, vz] of [[3.5, 2.4], [4.5, 2.4]]) {
+    poser('freezer', vx, vz, 0);
+    const v = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.12, 0.56), verre); v.position.set(vx, 0.42, vz); scene.add(v);
+  }
+  let s = 100;
+  for (let i = 0; i < 2; i++) for (let j = 0; j < 4; j++) for (let k = 0; k < 2; k++) {
+    const rar = (s * 37) % 11 === 0 ? 3 : (s * 13) % 5 === 0 ? 2 : 1;
+    carte3D(creature(s++, rar), 3.22 + i + j * 0.18 - (j > 1 ? 0.04 : 0), 0.375, 2.27 + k * 0.26, -Math.PI / 2 + 0.25);
+  }
+  // grande vitrine murale des cartes de valeur
+  poser('freezers-standing', 3.5, 0.0, 0);
+  for (let k = 0; k < 4; k++) carte3D(creature(200 + k, 2 + (k === 1 ? 2 : k % 2)), 3.2 + k * 0.2, 0.55 + (k % 2) * 0.22, 0.32, 0, 0, 1.2);
+  // les rayons de boosters (on remplace les cartons du pack par des boosters)
+  const ELS = Object.keys(ELEMENTS);
+  [[0.2, 1.4, 1], [0.2, 2.6, 1], [1.6, 0.25, 0]].forEach(([x, z, r], i) => {
+    const o = poser('shelf-boxes', x, z, r);
+    const places = [];
+    o.traverse(c => { if (/carton/i.test(c.name)) places.push(c); });
+    o.updateMatrixWorld(true);
+    places.forEach((c, j) => {
+      const p = new THREE.Vector3(); c.getWorldPosition(p); c.visible = false;
+      for (let q = 0; q < 3; q++) {
+        const off = (q - 1) * 0.12, d = r === 1 ? new THREE.Vector3(0, 0, off) : new THREE.Vector3(off, 0, 0);
+        booster(ELS[(i + j + q) % 5], p.x + d.x, p.y + 0.02, p.z + d.z, r * Math.PI / 2, -0.12);
+      }
+    });
+  });
+  poser('shelf-end', 0.2, 0.25, 1);
+  // tables de tournoi (Furniture Kit) avec deux joueurs assis
+  const ETAB = 1.5;
+  [[0.6, 4.1], [2.4, 4.1]].forEach(([x, z], i) => {
+    poser('table', x - 0.42 * ETAB, z + 0.22 * ETAB, 0, ETAB);
+    poser('chair', x + 0.16, z - 0.62, 0, ETAB); poser('chair', x - 0.16, z + 0.62, 2, ETAB);
+    const a = personne(['character-male-c', 'character-female-d'][i], x + 0.0, z - 0.52, 0), b = personne(['character-female-b', 'character-male-a'][i], x, z + 0.52, Math.PI);
+    [a, b].forEach(p => { if (p) { p.o.position.y = 0.02; jouer(p, 'sit'); joueurs.push(p); } });
+    for (let k = 0; k < 3; k++) { carte3D(creature(300 + i * 9 + k, 1), x - 0.18 + k * 0.18, 0.505, z - 0.13, -Math.PI / 2); carte3D(creature(330 + i * 9 + k, 1), x - 0.18 + k * 0.18, 0.505, z + 0.13, -Math.PI / 2, Math.PI); }
+  });
+  // décor : plantes, cartons de livraison, lampadaire, étagère de classeurs
+  poser('pottedPlant', 7.1, 4.9, 0, 1.6); poser('cardboardBoxClosed', 7.0, 2.2, 0, 1.4); poser('cardboardBoxOpen', 7.1, 1.7, 1, 1.4);
+  poser('bookcaseOpen', -0.15, 4.1, 1, 1.5); poser('plantSmall2', 2.9, 0.15, 0, 1.6);
+  // les clients
+  leo = personne('character-male-e', 6.0, 1.75, Math.PI); jouer(leo, 'idle');
+  client2 = personne('character-female-a', 6, 5.2, Math.PI);
+  suivre(client2, [[6, 5.2, 0], [6, 3.5, 0], [1.2, 3.0, 2.5], [1.2, 2.0, 2], [3.0, 1.6, 0], [4.0, 1.75, 2], [6.8, 3.6, 0], [6, 5.2, 1]]);
+  client3 = personne('character-female-d', 2.0, 3.1, 0);
+  suivre(client3, [[2.0, 3.1, 0], [4.0, 3.15, 3], [4.6, 3.15, 2], [5.6, 3.3, 0], [2.0, 3.1, 1.5]]);
+  etiquette(leo, 'Léo · FOUDRE ?', true); etiquette(client2, 'Inès · regarde'); etiquette(client3, 'M. Paul · collection');
+}
+
+// ---------- caméras ----------
+function cadrer() {
+  const w = innerWidth, h = innerHeight; rendu.setSize(w, h, false);
+  const a = w / h, demi = 4.1;
+  camA.left = -demi; camA.right = demi; camA.top = demi / a; camA.bottom = -demi / a; camA.zoom = 1; camA.updateProjectionMatrix();
+  // le comptoir couvre le bas de l'écran : on ne garde que le haut d'une vue plus haute, centrée au tiers
+  camB.aspect = w / (h * 1.25); camB.setViewOffset(w, h * 1.25, 0, h * 0.25, w, h); camB.updateProjectionMatrix();
+}
+function placerCameras() {
+  camA.position.set(3.4 + 11, 11, 2.6 + 4); camA.lookAt(3.4, 0, 2.6);
+  camB.position.set(5.5, 0.85, -1.5); camB.lookAt(5.5, 0.25, 2.6);
+}
+function montrerMurs() {
+  const en = { A: { fond: 1, gauche: 1, devant: 0, droite: 0 }, B: { fond: 0, gauche: 1, devant: 1, droite: 1 } }[vue === 'C' ? 'A' : vue];
+  for (const k in murs) murs[k].forEach(o => o.visible = !!en[k]);
+  if (vendeuse) vendeuse.o.visible = vue !== 'B';
+}
+
+// ---------- boucle ----------
+const horloge = new THREE.Clock();
+function animer() {
+  requestAnimationFrame(animer);
+  const dt = Math.min(0.05, horloge.getDelta());
+  for (const p of gens) {
+    p.mixer.update(dt);
+    if (!p.chemin || vue === 'B' && p === leo) continue;
+    if (p.attente > 0) { p.attente -= dt; if (p.attente <= 0) p.k = (p.k + 1) % p.chemin.length; continue; }
+    const [tx, tz, pause] = p.chemin[p.k], dx = tx - p.o.position.x, dz = tz - p.o.position.z, d = Math.hypot(dx, dz);
+    if (d < 0.04) { jouer(p, pause > 1.5 ? 'interact-right' : 'idle'); p.attente = pause || 0.01; continue; }
+    jouer(p, 'walk'); const v = Math.min(d, dt * 1.1);
+    p.o.position.x += dx / d * v; p.o.position.z += dz / d * v;
+    const cible = Math.atan2(dx, dz); let e = cible - p.o.rotation.y; e = Math.atan2(Math.sin(e), Math.cos(e)); p.o.rotation.y += e * Math.min(1, dt * 10);
+  }
+  const cam = vue === 'B' ? camB : camA;
+  if (vue === 'A') for (const { p, d } of etiquettes) {
+    if (!p) continue; const v = p.o.position.clone(); v.y += 0.95; v.project(cam);
+    d.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; d.style.top = ((1 - v.y) / 2 * innerHeight) + 'px';
+  }
+  rendu.render(scene, cam);
+}
+
+// ---------- B : le comptoir ----------
+const CLIENTS_B = [
+  { nom: 'LÉO', age: '9 ans · joue au tournoi', budget: 12, dit: 'T\'as des cartes FOUDRE ? Je veux battre mon frère samedi !', offres: [[41, 2], [57, 1], [12, 2]], humeur: 1.35 },
+  { nom: 'M. PAUL', age: 'vend sa collection', budget: 60, dit: 'Toute ma collection pour 60 €… dont un VOLTAX légendaire ! Regardez bien.', offres: [[88, 4], [61, 3], [70, 2]], humeur: 1, achat: true, fausse: 0 },
+];
+let iB = 0, choixB = 0, prixB = 8;
+function remplirB() {
+  const C = CLIENTS_B[iB];
+  document.getElementById('nomB').textContent = C.nom; document.getElementById('ageB').textContent = C.age;
+  document.getElementById('bourseB').textContent = (C.achat ? 'Il demande : ' : 'Budget : ') + C.budget + ' €';
+  document.getElementById('paroleB').textContent = '« ' + C.dit + ' »';
+  document.getElementById('vendreB').textContent = C.achat ? 'ACHETER' : 'PROPOSER';
+  const o = document.getElementById('offresB'); o.innerHTML = '';
+  C.cartes = C.offres.map(([s, r]) => creature(s, r));
+  C.cartes.forEach((b, k) => {
+    const d = document.createElement('div'); d.className = 'offre' + (k === 0 ? ' choisie' : '');
+    const cv = dessinerCarte(b); d.appendChild(cv);
+    const t = document.createElement('small'); t.textContent = C.achat && k === C.fausse ? 'brille bizarrement…' : 'cote ' + b.cote + ' €'; d.appendChild(t);
+    d.onclick = () => { choixB = k; [...o.children].forEach((e, j) => e.classList.toggle('choisie', j === k)); prixB = C.achat ? C.budget : Math.ceil(b.cote * 1.3); majPrix(); };
+    o.appendChild(d);
+  });
+  choixB = 0; prixB = C.achat ? C.budget : Math.ceil(C.cartes[0].cote * 1.3); majPrix();
+  if (leo) { leo.o.position.set(5.5, 0, 1.45); leo.o.rotation.y = Math.PI; jouer(leo, 'idle'); }
+}
+function majPrix() {
+  const C = CLIENTS_B[iB], b = C.cartes[choixB];
+  document.getElementById('prixB').textContent = prixB + ' €';
+  document.getElementById('coteB').textContent = C.achat ? 'valeur du lot ≈ ' + Math.round(C.cartes.reduce((s, x) => s + x.cote, 0) * 0.6) + ' €' : 'cote : ' + b.cote + ' € · marge ' + (prixB - b.cote).toFixed(1).replace('.0', '').replace('.', ',') + ' €';
+  const r = C.achat ? 0.4 : Math.min(1, prixB / (b.cote * C.humeur * 1.6)); document.getElementById('humeurB').style.left = 'calc(' + Math.round(r * 100) + '% - 3px)';
+}
+let caisse = 1240;
+function majCaisse() { const t = caisse.toLocaleString('fr-FR') + ' €'; document.getElementById('caisseA').textContent = t; document.getElementById('caisseB').textContent = t; }
+document.getElementById('moins').onclick = () => { prixB = Math.max(1, prixB - 1); majPrix(); };
+document.getElementById('plus').onclick = () => { prixB += 1; majPrix(); };
+document.getElementById('vendreB').onclick = () => {
+  const C = CLIENTS_B[iB], b = C.cartes[choixB], ok = C.achat || prixB <= Math.min(C.budget, b.cote * C.humeur * 1.6);
+  jouer(leo, ok ? 'emote-yes' : 'emote-no', true);
+  document.getElementById('paroleB').textContent = ok ? (C.achat ? '« Marché conclu ! Prenez-en soin. »' : '« Ouais ! Merci ! Je reviens samedi pour le tournoi ! »') : '« Hein ?! C\'est trop cher pour moi… »';
+  if (ok) { caisse += C.achat ? -prixB : prixB; majCaisse(); setTimeout(() => { iB = (iB + 1) % CLIENTS_B.length; remplirB(); }, 2200); }
+};
+document.getElementById('refuserB').onclick = () => { jouer(leo, 'emote-no', true); setTimeout(() => { iB = (iB + 1) % CLIENTS_B.length; remplirB(); }, 1200); };
+
+// ---------- C : le booster ----------
+const pile = document.getElementById('pile'), paquet = document.getElementById('paquet');
+let tirage = 1, cartesC = [], prochaine = 0;
+function preparerBooster() {
+  pile.innerHTML = ''; prochaine = 0; document.getElementById('bilan').classList.remove('on'); document.getElementById('rayons').classList.remove('on');
+  paquet.className = 'paquet'; document.getElementById('booster').classList.remove('ouvre'); document.getElementById('aideC').textContent = 'Touche le booster pour l\'ouvrir'; document.getElementById('aideC').style.display = '';
+  const r = graine(tirage * 101);
+  // 3 communes, 1 peu commune, 1 rare ou mieux (parfois épique, très rarement légendaire)
+  const rar = [0, 0, 0, 1, r() < 0.06 ? 4 : r() < 0.25 ? 3 : 2];
+  if (tirage === 1) rar[4] = 3;   // la première ouverture montre une épique
+  cartesC = rar.map((x, k) => creature(tirage * 10 + k + 500, x));
+  const bp = document.getElementById('betePaquet'), cx = bp.getContext('2d'); cx.clearRect(0, 0, 240, 220); dessinerBete(cx, creature(tirage + 900, 2), 120, 120, 1.25);
+}
+paquet.onclick = () => {
+  if (paquet.classList.contains('ouvert')) return;
+  paquet.classList.add('tremble');
+  setTimeout(() => { paquet.classList.add('ouvert'); }, 350);
+  setTimeout(() => {
+    paquet.classList.add('vide'); document.getElementById('booster').classList.add('ouvre');
+    // la rare est tout en dessous de la pile : on la découvre en dernier
+    [...cartesC].reverse().forEach((b, k) => {
+      const d = document.createElement('div'); d.className = 'carte3d';
+      d.innerHTML = '<div class="dos"></div><div class="avant"></div>';
+      const av = d.querySelector('.avant'); av.appendChild(dessinerCarte(b));
+      if (b.rarete >= 2) { const h = document.createElement('div'); h.className = 'holo'; av.appendChild(h); }
+      const rg = document.createElement('div'); rg.className = 'rang'; rg.textContent = b.R.n + ' · ' + String(b.cote).replace('.', ',') + ' €'; rg.style.color = b.rarete ? b.R.c : '#fff'; d.appendChild(rg);
+      d.style.transform = 'translateY(' + (240 - k * 2) + 'px) rotateZ(' + (k * 2 - 4) + 'deg)';
+      pile.appendChild(d);
+      setTimeout(() => { d.style.transform = 'translateZ(' + (k * 2) + 'px) rotateZ(' + (k * 1.5 - 3) + 'deg)'; }, 30 + k * 70);
+    });
+    document.getElementById('aideC').textContent = 'Touche la carte pour la retourner';
+  }, 800);
+};
+pile.addEventListener('click', () => {
+  const cs = [...pile.children]; if (prochaine >= cs.length) return;
+  const d = cs[cs.length - 1 - prochaine], b = cartesC[prochaine];
+  // les cartes déjà vues se rangent en éventail en haut ; la dernière (la rare) reste au centre
+  cs.forEach((e, j) => { if (e.dataset.vue) { const n = +e.dataset.vue; e.style.left = (-176 + (n - 1) * 68) + 'px'; e.style.top = '-292px'; e.style.width = '96px'; e.style.height = '134px'; e.style.transform = 'rotateY(180deg) rotateZ(' + ((n - 2.5) * 5) + 'deg)'; e.querySelector('.rang').style.display = 'none'; } });
+  d.dataset.vue = ++prochaine; d.classList.add('retournee'); d.style.transform = 'rotateY(180deg) scale(1.08)'; d.style.zIndex = 10;
+  if (b.rarete >= 2) eclats(b.rarete >= 3 ? 26 : 12);
+  if (b.rarete >= 3) document.getElementById('rayons').classList.add('on');
+  if (prochaine === cs.length) {
+    document.getElementById('aideC').style.display = 'none';
+    const tot = cartesC.reduce((s, x) => s + x.cote, 0);
+    document.getElementById('totalC').textContent = tot.toFixed(1).replace('.0', '').replace('.', ',') + ' €';
+    const best = cartesC.reduce((a, x) => x.rarete > a.rarete ? x : a);
+    document.getElementById('ligneC').innerHTML = (tot > 4 ? '<b style="color:var(--vert-f)">Bon pari !</b> ' : '<b style="color:var(--rouge)">Pas de chance.</b> ') + 'Ouvert : ' + tot.toFixed(1).replace('.', ',') + ' € contre 4 € fermé. Ta meilleure : <b>' + best.nom + '</b> (' + best.R.n.toLowerCase() + ').';
+    setTimeout(() => document.getElementById('bilan').classList.add('on'), 700);
+  }
+});
+function eclats(n) {
+  for (let k = 0; k < n; k++) {
+    const e = document.createElement('div'); e.className = 'eclat'; const a = Math.random() * 6.28, r = 90 + Math.random() * 120;
+    e.style.left = innerWidth / 2 + 'px'; e.style.top = innerHeight / 2 - 30 + 'px'; e.style.setProperty('--dx', Math.cos(a) * r + 'px'); e.style.setProperty('--dy', Math.sin(a) * r + 'px');
+    document.getElementById('booster').appendChild(e); setTimeout(() => e.remove(), 950);
+  }
+}
+// reflets : la carte suit le doigt
+document.getElementById('booster').addEventListener('pointermove', e => {
+  const cs = [...pile.children], d = cs.find(x => +x.dataset.vue === prochaine); if (!d) return;
+  const nx = e.clientX / innerWidth - 0.5, ny = e.clientY / innerHeight - 0.5;
+  d.style.transform = 'rotateY(' + (180 + nx * 30) + 'deg) rotateX(' + (-ny * 25) + 'deg) scale(1.08)';
+  const h = d.querySelector('.holo'); if (h) { h.style.setProperty('--px', (50 + nx * 120) + '%'); h.style.setProperty('--py', (50 + ny * 120) + '%'); }
+});
+document.getElementById('encoreC').onclick = () => { tirage++; preparerBooster(); };
+document.getElementById('classeurC').onclick = document.getElementById('vitrineC').onclick = () => { tirage++; preparerBooster(); };
+
+// ---------- onglets ----------
+const LEGENDES = {
+  A: 'A · On voit toute la boutique : les rayons de boosters, les vitrines, la caisse, les tables du tournoi. Les clients entrent et circulent ; on touche une bulle pour s\'occuper d\'eux.',
+  B: 'B · On est la vendeuse, derrière la caisse. Chaque client vient au comptoir : on choisit la carte, on fixe le prix, il dit oui ou non.',
+  C: 'C · Le moment clé, commun à A et B : ouvrir un booster plutôt que le vendre fermé. Touche, retourne, fais briller les rares.',
+};
+function changerVue(v) {
+  vue = v; document.querySelectorAll('#onglets button').forEach(b => b.classList.toggle('on', b.dataset.vue === v));
+  document.getElementById('vueA').classList.toggle('on', v === 'A'); document.getElementById('vueB').classList.toggle('on', v === 'B');
+  document.getElementById('booster').classList.toggle('on', v === 'C');
+  const lg = document.getElementById('legende'); lg.textContent = LEGENDES[v]; lg.classList.remove('cache'); clearTimeout(lg.minuteur); lg.minuteur = setTimeout(() => lg.classList.add('cache'), 6000);
+  if (v === 'C') preparerBooster();
+  if (v === 'B') remplirB();
+  montrerMurs();
+}
+document.querySelectorAll('#onglets button').forEach(b => b.onclick = () => changerVue(b.dataset.vue));
+document.getElementById('allerB').onclick = () => changerVue('B');
+document.getElementById('bOuvrir').onclick = () => changerVue('C');
+document.getElementById('fermerC').onclick = () => changerVue('A');
+addEventListener('resize', cadrer);
+
+(async () => {
+  await document.fonts.load('22px "Luckiest Guy"').catch(() => {}); await document.fonts.load('600 13px Fredoka').catch(() => {});
+  await charger();
+  construire(); cadrer(); placerCameras(); changerVue(location.hash.slice(1) || 'A');
+  document.getElementById('chargement').remove(); animer();
+})();
+</script>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>La Boutique de cartes</title>
+<meta name="description" content="La Boutique de cartes : tiens une boutique de cartes à collectionner pendant un an, en 3D. Commande, ouvre des boosters, aménage et agrandis ta boutique.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#2b2838">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<!-- polices dans le dépôt (hors connexion) ; data-google : le lien utilisé par l'artefact (outils/artefact.py) -->
+<link rel="stylesheet" href="../polices/boutique.css" data-google="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&family=Pixelify+Sans:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="scene" aria-label="La boutique en 3D"></canvas>
+<div id="chargement">La boutique ouvre…</div>
+
+<div id="haut">
+  <div class="pastille"><span id="hSemaine">SEMAINE 1 · LUNDI</span><small id="hInfo"></small></div>
+  <div class="pastille argent" id="hArgent"><small>EN CAISSE</small><b id="hCaisse">0 €</b></div>
+</div>
+<div id="tourner"><button id="bMenu" aria-label="Menu">☰</button><button id="gauche" aria-label="Tourner à gauche">⟲</button><button id="droite" aria-label="Tourner à droite">⟳</button></div>
+<div id="journal"></div>
+
+<!-- le lundi -->
+<div id="barreLundi" class="barre lundi">
+  <div class="outils">
+    <button data-ecran="grossiste"><svg viewBox="0 0 24 24"><path d="M2 8h13v9H2zM15 11h4l3 3v3h-7z" fill="#8a63d2"/><circle cx="6" cy="18" r="2.2" fill="#2d2a3e"/><circle cx="18" cy="18" r="2.2" fill="#2d2a3e"/></svg>GROSSISTE</button>
+    <button data-ecran="rayons"><svg viewBox="0 0 24 24"><path d="M3 4h18v3H3zM3 11h18v3H3zM3 18h18v3H3z" fill="#c98d12"/><path d="M5 1h3v3H5zM10 8h3v3h-3zM15 15h3v3h-3z" fill="#e5534b"/></svg>RAYONS</button>
+    <button data-ecran="vitrines"><svg viewBox="0 0 24 24"><path d="M2 6h20v14H2z" fill="#9fd3e8"/><path d="M5 9h4v6H5zM10 9h4v6h-4zM15 9h4v6h-4z" fill="#fff"/><path d="M2 18h20v3H2z" fill="#6d6884"/></svg>VITRINES</button>
+    <button data-ecran="boosters"><svg viewBox="0 0 24 24"><path d="M6 3h12l-1 19H7z" fill="#e5534b"/><path d="M6 3h12v3H6z" fill="#cfc8e6"/><circle cx="12" cy="13" r="3.4" fill="#ffd06b"/></svg>BOOSTERS</button>
+    <button data-ecran="classeur"><svg viewBox="0 0 24 24"><path d="M4 2h16v20H4z" fill="#2fae7a"/><path d="M7 5h4v5H7zM13 5h4v5h-4zM7 12h4v5H7zM13 12h4v5h-4z" fill="#d8f5e6"/></svg>CLASSEUR</button>
+    <button id="bAmenager" class="jaune"><svg viewBox="0 0 24 24"><path d="M3 13h18v3H3zM5 16h2v6H5zM17 16h2v6h-2z" fill="#fff"/><path d="M14 3l5 5-7 4-2-2z" fill="#7a4b00"/></svg>AMÉNAGER</button>
+  </div>
+  <div class="suite">
+    <button id="bTournoi" class="gris">TOURNOI</button>
+    <button id="bOuvrir" class="vert">OUVRIR LA BOUTIQUE</button>
+  </div>
+</div>
+<!-- pendant la semaine -->
+<div id="barreSemaine" class="barre" hidden>
+  <div class="jour"><b id="sJour">MARDI</b><small id="sClients"></small></div>
+  <button id="bVitesse">×1</button>
+  <button id="bPause">PAUSE</button>
+</div>
+
+<!-- aménager -->
+<div id="feuille" class="feuille" hidden>
+  <div class="tete"><b>AMÉNAGER</b><button class="vert" id="fini">TERMINÉ</button></div>
+  <div id="fCatalogue">
+    <div class="catalogue" id="catalogue"></div>
+    <p class="aide">Touche un meuble de la boutique pour le déplacer, le tourner ou le revendre.</p>
+  </div>
+  <div id="fPose" hidden>
+    <div class="ligne"><div class="nom" id="poseNom"></div><button class="rond" id="poseTourner" aria-label="Tourner">↻</button><button class="rond" id="poseAnnuler" aria-label="Annuler">✕</button><button class="vert" id="poseOk">POSER</button></div>
+    <p class="aide" id="poseAide"></p>
+  </div>
+  <div id="fChoix" hidden>
+    <div class="ligne"><div class="nom" id="choixNom"></div><button class="rond" id="choixTourner" aria-label="Tourner">↻</button><button class="gris" id="choixDeplacer">DÉPLACER</button><button class="rouge" id="choixVendre">VENDRE</button></div>
+    <p class="aide"><button class="lien" id="choixFermer">Fermer</button></p>
+  </div>
+</div>
+
+<!-- les écrans du lundi (lundi.js) -->
+<div id="panneau" class="feuille haute" hidden>
+  <div class="tete"><b id="pTitre"></b><button class="vert" id="pFermer">OK</button></div>
+  <div id="pCorps"></div>
+</div>
+
+<!-- ouvrir un booster (maquette 2, écran C) -->
+<div id="booster" hidden>
+  <button class="gris fermer" id="bFermer">FERMER</button>
+  <div class="titre" id="bTitre"></div>
+  <div class="rayons" id="rayons"></div>
+  <div class="paquet" id="paquet">
+    <div class="face"><div class="bande"></div><div class="logo" id="bLogo"></div><canvas class="bete" id="bBete" width="96" height="96"></canvas><div class="nb">5 CARTES</div></div>
+  </div>
+  <div class="pile" id="pile"></div>
+  <div class="aide" id="bAide"></div>
+  <div class="bilan" id="bBilan">
+    <div class="total">Valeur des 5 cartes <b id="bTotal">0 €</b></div>
+    <div class="ligneB" id="bLigne"></div>
+    <div class="boutons"><button class="gris" id="bClasseur">AU CLASSEUR</button><button id="bVitrine">EN VITRINE</button><button class="rouge" id="bEncore">UN AUTRE</button></div>
+  </div>
+</div>
+
+<!-- l'écran titre -->
+<div id="titre" hidden>
+  <div class="logo"><small>LA BOUTIQUE</small>DE CARTES</div>
+  <p class="sous">Un an pour faire de ta petite boutique<br>le repaire des collectionneurs</p>
+  <div id="tBoutons"></div>
+  <p id="tRecord"></p>
+</div>
+
+<!-- fenêtres (rencontres, bilan, agrandissement) -->
+<div id="voile" hidden><div id="boite"></div></div>
+
+<script src="monstres.js"></script>
+<script src="regles.js"></script>
+<script src="cartes.js"></script>
+<script src="clients.js"></script>
+<script src="images.js"></script>
+<script src="modeles.js"></script>
+<script src="../ludo-scores.js"></script>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/GLTFLoader.js"></script>
+<script src="../lib/SkeletonUtils.js"></script>
+<script src="dessin-cartes.js"></script>
+<script src="monde3d.js"></script>
+<script src="sons.js"></script>
+<script src="lundi.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu. */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

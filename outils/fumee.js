@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'duche/index.html', 'bannieres/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -179,6 +179,24 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Bannières : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-bannieres.png` });
+    }
+    if (url === 'boutique/index.html') {
+      // La Boutique de cartes : le titre (après le chargement des modèles), une nouvelle partie, une commande, les écrans du lundi, un booster ouvert, la sauvegarde
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let n = 0; n < 60 && Boutique.ecran !== 'titre'; n++) await wait(500);
+        if (Boutique.ecran !== 'titre') return "pas d'écran titre (" + Boutique.ecran + ')';
+        Boutique.nouvelle(); const e = Boutique.etat;
+        if (Boutique.ecran !== 'jeu' || e.semaine !== 1 || e.phase !== 'lundi') return 'pas de partie';
+        if (!bouCommander(e, 'booster:1', 6).ok || e.commandes.length !== 1) return 'commande refusée';
+        for (const x of ['grossiste', 'rayons', 'vitrines', 'boosters', 'classeur', 'tournoi']) { Boutique.lundi.ouvrir(x); if (!document.getElementById('pCorps').children.length) return 'écran ' + x + ' vide'; Boutique.lundi.fermer(); }
+        const ids = bouOuvrir(e, 'booster:1'); if (!ids || ids.length !== 5) return 'booster pas ouvert';
+        localStorage.removeItem('boutique.run'); Boutique.etat = e; Boutique.lundi.ouvrir('vitrines'); await wait(500); document.querySelector('[data-act=remplir]').click(); Boutique.lundi.fermer();
+        if (!JSON.parse(localStorage.getItem('boutique.run') || 'null')) return 'partie pas sauvegardée';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Boutique : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-boutique.png` });
     }
     if (url === 'the-des-jarls/index.html') {
       // Le Thé des Jarls : un duel contre un dieu joué jusqu'au bout (batailles accélérées), partie sauvegardée puis effacée, écran de fin ; le duel à deux démarre

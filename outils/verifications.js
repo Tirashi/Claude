@@ -45,6 +45,8 @@ const sw = read('sw.js');
 const list = JSON.parse('[' + sw.match(/const FILES = \[([\s\S]*?)\];/)[1].replace(/,\s*$/, '') + ']');
 const missing = list.filter(f => f !== './' && !fs.existsSync(path.join(ROOT, f)));
 missing.length ? bad('sw.js : fichiers absents de FILES : ' + missing.join(', ')) : ok(`sw.js : les ${list.length} fichiers de FILES existent`);
+const doublons = list.filter((f, i) => list.indexOf(f) !== i);   // cache.addAll refuse une liste avec deux fois le même fichier : plus rien hors connexion
+if (doublons.length) bad('sw.js : fichiers en double dans FILES : ' + doublons.join(', '));
 const version = sw.match(/const VERSION = "([^"]+)"/)[1];
 read('CLAUDE.md').includes('`' + version + '`') ? ok(`version du cache ${version} notée dans CLAUDE.md`) : bad(`CLAUDE.md ne mentionne pas la version du cache ${version}`);
 for (const f of files.filter(f => /^[a-z0-9-]+\/[a-z0-9-]+\.(html|js|css)$/.test(f) && !/^(maquettes|outils|supabase|specs)\//.test(f)))
@@ -125,6 +127,9 @@ catch (e) { bad('Le Thé des Jarls : simulateur\n' + (e.stdout || '') + (e.stder
 try { execFileSync(process.execPath, [path.join(__dirname, 'bannieres-simulateur.js'), '20'], { stdio: 'pipe', encoding: 'utf8' }); ok('Bannières : simulateur (parties reproductibles, règles, équilibrage)'); }
 catch (e) { bad('Bannières : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// 8 sexies. La Boutique de cartes : catalogue, boosters, règles de base, années complètes (équilibrage grossier), déterminisme, sauvegarde
+try { execFileSync(process.execPath, [path.join(__dirname, 'boutique-simulateur.js'), '6'], { stdio: 'pipe', encoding: 'utf8' }); ok('La Boutique de cartes : simulateur (catalogue, règles, années reproductibles, équilibrage)'); }
+catch (e) { bad('La Boutique de cartes : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 // 8 septies. Doggy Saga : règles du trois en ligne sur grilles préparées, grille toujours saine, reproductibilité, 60 niveaux
 try { execFileSync(process.execPath, [path.join(__dirname, 'doggy-saga-simulateur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Doggy Saga : simulateur (règles, bonus, obstacles, parties reproductibles, 60 niveaux)'); }
 catch (e) { bad('Doggy Saga : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
