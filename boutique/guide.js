@@ -14,8 +14,8 @@ function BouGuide(ctx) {
   // chaque étape : le texte, le bouton qui clignote (cible), et quand elle est faite (fait) ; sans « fait », un bouton SUIVANT
   const ETAPES = [
     { t: 'Bienvenue dans ta boutique ! Je suis Marco, l\'ancien patron. Tu as <b>un an</b> pour en faire la meilleure de la ville. C\'est <b>lundi</b> : la boutique est fermée, on prépare la semaine.' },
-    { t: 'D\'abord, on commande des boosters pour la semaine prochaine. Touche <b>GROSSISTE</b>.', cible: '[data-ecran=grossiste]', fait: (e, L) => L.ecran === 'grossiste' || commande(e) },
-    { t: 'Touche <b>+</b> à côté de « Booster » : 6 boosters à 2,50 €. Ils seront livrés <b>lundi prochain</b>.', cible: '[data-act=plus][data-cle^="booster:"]', fait: e => commande(e) },
+    { t: 'D\'abord, on commande des boosters pour la semaine. Touche <b>GROSSISTE</b>.', cible: '[data-ecran=grossiste]', fait: (e, L) => L.ecran === 'grossiste' || commande(e) },
+    { t: 'Touche <b>+</b> à côté de « Booster » : 6 boosters à 2,50 €. Ils arrivent <b>tout de suite</b> dans ton stock.', cible: '[data-act=plus][data-cle^="booster:"]', fait: e => commande(e) },
     { t: 'C\'est commandé ! Touche <b>OK</b> pour revenir à la boutique.', cible: '#pFermer', fait: (e, L) => !L.ouvert },
     { t: 'Tu as déjà des boosters en stock. Un booster fermé se vend sans risque… mais <b>ouvert</b>, il peut cacher une carte de valeur ! Touche <b>BOOSTERS</b>.', cible: '[data-ecran=boosters]', fait: (e, L) => L.ecran === 'boosters' || L.booster },
     { t: 'Touche <b>OUVRIR</b>.', cible: '[data-act=ouvrir]', fait: (e, L) => L.booster },

@@ -48,7 +48,6 @@ function BouLundi(ctx) {
   $('panneau').addEventListener('click', ev => { if (performance.now() - ouvertA < 400) { ev.stopPropagation(); ev.preventDefault(); } }, true);
   const actions = {};
   $('pCorps').addEventListener('click', ev => { const b = ev.target.closest('[data-act]'); if (b && !b.disabled) actions[b.dataset.act](b.dataset); });
-  $('pCorps').addEventListener('change', ev => { const s = ev.target.closest('select[data-act]'); if (s) actions[s.dataset.act](s.dataset, s.value); });
   const bouton = (act, texte, data = {}, classe = '', off = false) =>
     '<button data-act="' + act + '"' + Object.keys(data).map(k => ' data-' + k + '="' + data[k] + '"').join('') + (classe ? ' class="' + classe + '"' : '') + (off ? ' disabled' : '') + '>' + texte + '</button>';
 
@@ -69,18 +68,19 @@ function BouLundi(ctx) {
         '<div class="nom">' + nomArticle(cle) + '<small>' + (bloque ? 'à partir de la semaine ' + A.des : euros(A.achat) + (A.nb ? ' (' + A.nb + ' boosters)' : ' pièce') + ' · en stock : ' + stock + (nouvelle ? ' · <b>précommande</b>' : '')) + '</small></div>' +
         (bloque ? '' : bouton('moins', '−', { cle }, 'rond', !nb) + '<b class="nb">' + nb + '</b>' + bouton('plus', '+', { cle }, 'rond')) + '</div>';
     }
-    const rupture = e.evenement && e.evenement.id === 'rupture' ? '<p class="msg">Rupture chez le grossiste : les ' + nomArticle(e.evenement.cle) + ' ne seront pas livrés lundi.</p>' : '';
-    return rupture + h + '<p class="total">Commande de la semaine <b>' + euros(total) + '</b><small>payée tout de suite, livrée lundi prochain</small></p>';
+    const rupture = e.evenement && e.evenement.id === 'rupture' ? '<p class="msg">Rupture chez le grossiste : les ' + nomArticle(e.evenement.cle) + ' ne se commandent pas cette semaine.</p>' : '';
+    return rupture + h + '<p class="total">Commande de la semaine <b>' + euros(total) + '</b><small>payée et livrée tout de suite (− pour rendre ce qui n\'est pas encore ouvert)</small></p>';
   }
   actions.plus = d => {
     const r = bouCommander(e, d.cle, PAS[d.cle.split(':')[0]]);
-    if (!r.ok) message = r.raison === 'argent' ? 'Pas assez d\'argent en caisse.' : 'Impossible de commander cet article.';
+    if (!r.ok) message = r.raison === 'argent' ? 'Pas assez d\'argent en caisse.' : r.raison === 'rupture' ? 'Rupture chez le grossiste : pas cette semaine.' : 'Impossible de commander cet article.';
     changer();
   };
   actions.moins = d => {
     const c = e.commandes.find(x => x.cle === d.cle); if (!c) return;
     const reste = c.nb - PAS[d.cle.split(':')[0]];
-    bouAnnulerCommande(e, d.cle); if (reste > 0) bouCommander(e, d.cle, reste);
+    if (!bouAnnulerCommande(e, d.cle)) { message = 'Ces articles sont déjà ouverts : on ne peut plus les rendre.'; return rendre(); }
+    if (reste > 0) bouCommander(e, d.cle, reste);
     changer();
   };
 
@@ -92,18 +92,34 @@ function BouLundi(ctx) {
     if (e.semaine >= BOU_ARTICLES.figurine.des) l.push('figurine');
     return l;
   }
+  // l'image d'un produit : la pochette de l'extension pour les boosters et coffrets, une couleur pour le reste
+  function vignette(cle) {
+    if (!cle) return '<span class="vg vide">+</span>';
+    const [a, n] = cle.split(':');
+    if (n) return '<span class="paq' + (a === 'coffret' ? ' coffret' : '') + '" style="' + pochette(+n) + '"></span>';
+    return '<span class="vg ' + a + '"></span>';
+  }
+  const nomCourt = cle => { const [a, n] = cle.split(':'); return n ? (a === 'coffret' ? 'Coffret ' : 'Booster ') + '<i>' + nomExt(+n) + '</i>' : BOU_ARTICLES[a].nom; };
+  let selR = null;   // { mid, i } : la case de rayon touchée
   function rayons() {
     const rs = e.meubles.filter(m => m.type === 'rayon'), choix = produits();
-    let h = '<h3>TES RAYONS</h3>';
+    if (selR && !rs.find(m => m.id === selR.mid)) selR = null;
+    let h = '<p class="aide">Touche une case d\'un rayon, puis le produit à y mettre. Un rayon vend 3 produits.</p>';
     if (!rs.length) h += '<p class="aide">Pas de rayon : pose-en un en aménageant.</p>';
     rs.forEach((m, k) => {
-      h += '<div class="art"><div class="nom">Rayon ' + (k + 1) + '</div></div><div class="rangs">';
+      h += '<h3 id="rayon' + m.id + '">RAYON ' + (k + 1) + '</h3><div class="cases">';
       for (let i = 0; i < 3; i++) {
-        const cle = m.produits[i];
-        h += '<select data-act="ranger" data-mid="' + m.id + '" data-i="' + i + '"><option value="">— vide —</option>' +
-          choix.concat(cle && !choix.includes(cle) ? [cle] : []).map(c => '<option value="' + c + '"' + (c === cle ? ' selected' : '') + '>' + nomArticle(c).replace(/<\/?i>/g, '') + ' (' + (e.stock[c] || 0) + ')</option>').join('') + '</select>';
+        const cle = m.produits[i], st = cle ? e.stock[cle] || 0 : 0, choisie = selR && selR.mid === m.id && selR.i === i;
+        h += '<div class="case' + (choisie ? ' choisie' : '') + (cle ? '' : ' vide') + '" data-act="caseR" data-mid="' + m.id + '" data-i="' + i + '">' + vignette(cle) +
+          '<b>' + (cle ? nomCourt(cle) : 'Vide') + '</b><small' + (cle && !st ? ' class="rouge"' : '') + '>' + (cle ? (st ? st + ' en stock' : 'rupture !') : 'touche pour remplir') + '</small></div>';
       }
       h += '</div>';
+      if (selR && selR.mid === m.id) {
+        const cle = m.produits[selR.i];
+        h += '<div class="detail"><p class="aide">Que mettre dans cette case ?</p><div class="choix produits">' +
+          choix.map(c => '<div data-act="ranger" data-cle="' + c + '" class="' + (c === cle ? 'pris' : '') + '">' + vignette(c) + '<b>' + nomCourt(c) + '</b><small>' + (e.stock[c] || 0) + ' en stock</small></div>').join('') +
+          (cle ? '<div data-act="ranger" data-cle="">' + vignette(null) + '<b>Vider</b><small>&nbsp;</small></div>' : '') + '</div></div>';
+      }
     });
     if (bouNb(e, 'classeurs')) h += '<p class="aide">L\'étagère à classeurs vend aussi les classeurs et les pochettes.</p>';
     if (bouNb(e, 'figurines')) h += '<p class="aide">Le présentoir vend les figurines.</p>';
@@ -117,7 +133,8 @@ function BouLundi(ctx) {
     }
     return h + '<p class="aide">Trop cher, les clients repartent sans rien ; un rayon vide les déçoit.</p>';
   }
-  actions.ranger = (d, v) => { bouRanger(e, +d.mid, +d.i, v || null); changer(); };
+  actions.caseR = d => { const m = +d.mid, i = +d.i; selR = selR && selR.mid === m && selR.i === i ? null : { mid: m, i }; rendre(); };
+  actions.ranger = d => { bouRanger(e, selR.mid, selR.i, d.cle || null); selR = null; changer(); };
   actions.prix = d => { const p = bouPrix(e, d.cle), pas = p < 10 ? 0.5 : 1; bouFixerPrix(e, d.cle, Math.max(0.5, p + d.s * pas)); changer(); };
 
   /* ---------- les vitrines ---------- */
@@ -131,7 +148,7 @@ function BouLundi(ctx) {
     for (const m of vs) {
       const M = BOU_MEUBLES[m.type], v = bouPlaces(e, m);
       num[m.type] = (num[m.type] || 0) + 1;
-      h += '<h3>' + M.nom.toUpperCase() + ' ' + num[m.type] + (M.valeur ? ' <small>rares et mieux</small>' : '') + '</h3><div class="places">';
+      h += '<h3 id="rayon' + m.id + '">' + M.nom.toUpperCase() + ' ' + num[m.type] + (M.valeur ? ' <small>rares et mieux</small>' : '') + '</h3><div class="places">';
       v.forEach((pl, p) => {
         const choisie = sel && sel.mid === m.id && sel.p === p;
         h += '<div class="place' + (choisie ? ' choisie' : '') + (pl ? '' : ' vide') + '" data-act="place" data-mid="' + m.id + '" data-p="' + p + '">' + (pl ? imgCarte(pl.id) + '<small>' + euros(bouPrixCarte(e, pl)) + '</small>' : '+') + '</div>';
@@ -327,7 +344,11 @@ function BouLundi(ctx) {
 
   const ECRANS = { grossiste: ['LE GROSSISTE', grossiste], rayons: ['RAYONS ET PRIX', rayons], vitrines: ['LES VITRINES', vitrines], boosters: ['LES BOOSTERS', boosters], classeur: ['LE CLASSEUR', classeur], tournoi: ['LE TOURNOI', tournoi] };
   return {
-    ouvrir: nom => { sel = null; nomEcran = nom; ouvrir(...ECRANS[nom]); },
+    // mid : le meuble touché dans la boutique (sa première case est choisie)
+    ouvrir: (nom, mid) => {
+      sel = nom === 'vitrines' && mid ? { mid, p: 0 } : null; selR = nom === 'rayons' && mid ? { mid, i: 0 } : null; nomEcran = nom; ouvrir(...ECRANS[nom]);
+      const t = mid && document.getElementById('rayon' + mid); if (t) t.scrollIntoView({ block: 'start' });
+    },
     fermer, banque,
     get ouvert() { return !!courant || !B.hidden; },
     get ecran() { return courant ? nomEcran : null; }, get booster() { return !B.hidden; },

@@ -109,7 +109,7 @@ body.lundi #journal { bottom: calc(150px + var(--bas)); }
 .rangs { display: flex; gap: 5px; padding-bottom: 6px; }
 .rangs select { flex: 1; min-width: 0; font: 500 12.5px 'Fredoka', sans-serif; padding: 7px 4px; border-radius: 10px; border: 2px solid #e2d9c4; background: var(--creux); color: var(--encre); }
 img.mc { display: block; width: 100%; aspect-ratio: 100 / 128; image-rendering: pixelated; border-radius: 3px; }
-.places { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.places { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
 .places .place { border-radius: 5px; text-align: center; cursor: pointer; border: 2px solid transparent; }
 .places .place small { display: block; font-size: 10px; font-weight: 600; }
 .places .place.vide { aspect-ratio: 100 / 128; background: var(--creux); border: 2px dashed #cfc5ad; display: grid; place-items: center; color: #b4ab98; font-size: 20px; }
@@ -124,7 +124,7 @@ img.mc { display: block; width: 100%; aspect-ratio: 100 / 128; image-rendering: 
 .choix small { font-size: 10.5px; font-weight: 600; }
 .onglets { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
 .onglets button { flex: none; }
-.page { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; padding: 0 16%; }
+.page { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; padding: 0 16%; }
 .page .case { text-align: center; font-size: 11px; font-weight: 600; }
 .page .case.vide { aspect-ratio: 100 / 128; background: #ddd5c3; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #9b927e; }
 .page .case.vide span { font: 22px 'Luckiest Guy', sans-serif; }
@@ -206,3 +206,20 @@ body.au-titre #haut, body.au-titre #tourner, body.au-titre .barre, body.au-titre
 #guide .gb button.vert { margin-left: auto; padding: 7px 14px; font-size: 14px; }
 .guide-cible { animation: guide-clignote 1s infinite !important; position: relative; z-index: 2; }
 @keyframes guide-clignote { 0%, 100% { box-shadow: 0 0 0 3px var(--or), 0 0 14px 4px #f5b82eaa; } 50% { box-shadow: 0 0 0 5px #fff, 0 0 22px 8px #f5b82e; } }
+
+/* ---------- les cases des rayons (on touche une case, puis le produit) ---------- */
+.cases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.cases .case { background: var(--creux); border-radius: 12px; padding: 8px 4px 6px; text-align: center; border: 3px solid transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.cases .case.vide { border: 3px dashed #cfc5ad; background: none; }
+.cases .case.choisie { border: 3px solid var(--or); background: #fff0c9; }
+.cases .case b, .choix.produits b { font-size: 12px; line-height: 1.15; }
+.cases .case small, .choix.produits small { font-size: 10.5px; color: var(--doux); font-weight: 600; }
+.cases .paq, .choix.produits .paq { width: 26px; height: 38px; }
+.cases .paq.coffret, .choix.produits .paq.coffret { width: 36px; height: 30px; margin: 4px 0; }
+.vg { display: block; width: 32px; height: 36px; border-radius: 5px; box-shadow: inset 0 4px 0 #fff6, 0 2px 0 #0003; }
+.vg.vide { box-shadow: none; display: grid; place-items: center; font-size: 24px; color: #b4ab98; }
+.vg.pochettes { background: repeating-linear-gradient(90deg, #9fd4f0 0 6px, #cdeaf8 6px 9px); }
+.vg.classeur { background: linear-gradient(90deg, #7d2fb8 0 45%, #2f6fb8 55%); }
+.vg.figurine { background: radial-gradient(circle at 50% 28%, #ffd9b0 0 18%, transparent 19%), linear-gradient(#e5534b, #b83a33); }
+.choix.produits > div { flex: 0 0 84px; background: #fff; border-radius: 10px; padding: 6px 4px; border: 3px solid transparent; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.choix.produits > div.pris { border-color: var(--vert); }

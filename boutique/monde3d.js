@@ -15,7 +15,7 @@ const BouMonde = (() => {
   const coque = new THREE.Group(), meublesG = new THREE.Group(), terrainG = new THREE.Group(), clientsG = new THREE.Group();
   const murs = [], objets = new Map();
   let niveauConstruit = -1, grille = null, panneau = null;
-  const SIEGE = 0.16, DOS = 0;   // joueurs de la table : hauteur de l'assise, recul vers le dossier
+  const SIEGE = 0.22, DOS = 0;   // joueurs de la table : hauteur de l'assise, recul vers le dossier
   let azimut = Math.PI * 0.3, vise = azimut, zoom = 1;
   let fantome = null, selection = null, vitesse = 1, enPause = false;
   const ecoute = { meuble() {}, terrain() {}, vide() {}, fantome() {}, vente() {} };
