@@ -229,6 +229,16 @@ function bouPlacer(e, type, x, z, r) {
   if (type === 'rayon') m.produits = [null, null, null];
   e.meubles.push(m); return m;
 }
+// la raison pour laquelle on ne peut pas poser ce meuble là (« place », « chemin »), ou null (pour le fantôme de l'aménagement) ;
+// « sauf » : le meuble qu'on déplace
+function bouPeutPoser(e, type, x, z, r, sauf) {
+  if (!bouPlaceLibre(e, type, x, z, r, sauf)) return 'place';
+  const essai = { id: -1, type, x, z, r }, avant = e.meubles;
+  e.meubles = avant.filter(m => m !== sauf).concat([essai]);
+  const ok = bouCheminLibre(e);
+  e.meubles = avant;
+  return ok ? null : 'chemin';
+}
 function bouPoser(e, type, x, z, r) {
   const M = BOU_MEUBLES[type];
   if (!M || M.unique || e.phase !== 'lundi') return { ok: false, raison: 'phase' };

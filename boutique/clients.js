@@ -137,7 +137,7 @@ function bouAcheterCartes(e, R, v, max, budget, filtre, facteur, envie, payer, p
     if (e.evenement && e.evenement.id === 'video' && e.evenement.carte === o.c.id) f *= 1.3;
     if (o.prix > bouCote(e, o.c.id) * f) { cher = true; continue; }
     e.vitrines[o.m.id][o.i] = null; budget -= o.prix; payer(o.prix); bouEncaisser(e, o.prix);
-    v.achats.push({ carte: o.c.id, prix: o.prix, meuble: o.m.id }); pris++;
+    v.achats.push({ carte: o.c.id, prix: o.prix, meuble: o.m.id, place: o.i }); pris++;
   }
   if (!pris && cher) envie.trop++;
 }

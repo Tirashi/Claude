@@ -43,6 +43,8 @@ const sw = read('sw.js');
 const list = JSON.parse('[' + sw.match(/const FILES = \[([\s\S]*?)\];/)[1].replace(/,\s*$/, '') + ']');
 const missing = list.filter(f => f !== './' && !fs.existsSync(path.join(ROOT, f)));
 missing.length ? bad('sw.js : fichiers absents de FILES : ' + missing.join(', ')) : ok(`sw.js : les ${list.length} fichiers de FILES existent`);
+const doublons = list.filter((f, i) => list.indexOf(f) !== i);   // cache.addAll refuse une liste avec deux fois le même fichier : plus rien hors connexion
+if (doublons.length) bad('sw.js : fichiers en double dans FILES : ' + doublons.join(', '));
 const version = sw.match(/const VERSION = "([^"]+)"/)[1];
 read('CLAUDE.md').includes('`' + version + '`') ? ok(`version du cache ${version} notée dans CLAUDE.md`) : bad(`CLAUDE.md ne mentionne pas la version du cache ${version}`);
 for (const f of files.filter(f => /^[a-z0-9-]+\/[a-z0-9-]+\.(html|js|css)$/.test(f) && !/^(maquettes|outils|supabase|specs)\//.test(f)))

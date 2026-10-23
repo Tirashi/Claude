@@ -1,0 +1,5 @@
+/* Polices de La Boutique de cartes, hébergées dans le dépôt (sous-ensembles latins de Google Fonts, SIL Open Font License 1.1) :
+   Fredoka (texte), Luckiest Guy (titres et montants), Pixelify Sans (texte des cartes). */
+@font-face { font-family: 'Fredoka'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(fredoka.woff2) format('woff2'); }
+@font-face { font-family: 'Luckiest Guy'; font-style: normal; font-weight: 400; font-display: swap; src: url(luckiest-guy.woff2) format('woff2'); }
+@font-face { font-family: 'Pixelify Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(pixelify-sans.woff2) format('woff2'); }
