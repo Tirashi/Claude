@@ -12,7 +12,7 @@ const BouMonde = (() => {
   const PERSOS = ['character-female-a', 'character-female-b', 'character-female-c', 'character-female-d', 'character-male-a', 'character-male-c', 'character-male-d', 'character-male-e'];
   const M = {}, CLIPS = {}, animes = [];
   let rendu, scene, cam, canvas, soleil, etat = null;
-  const coque = new THREE.Group(), meublesG = new THREE.Group(), terrainG = new THREE.Group(), clientsG = new THREE.Group();
+  const coque = new THREE.Group(), meublesG = new THREE.Group(), terrainG = new THREE.Group(), clientsG = new THREE.Group(), zonesG = new THREE.Group();
   const murs = [], objets = new Map();
   let portes = null;   // les deux battants de la porte : ils s'ouvrent quand un client approche
   let niveauConstruit = -1, grille = null, panneau = null;
@@ -32,7 +32,7 @@ const BouMonde = (() => {
     scene.add(new THREE.HemisphereLight(0xfff4e6, 0x6b5f8a, 0.75));
     soleil = new THREE.DirectionalLight(0xffffff, 0.85); soleil.castShadow = true;
     soleil.shadow.mapSize.set(1024, 1024); Object.assign(soleil.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); soleil.shadow.bias = -0.0015;
-    scene.add(soleil, soleil.target, coque, meublesG, terrainG, clientsG);
+    scene.add(soleil, soleil.target, coque, meublesG, terrainG, clientsG, zonesG);
     cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
     // l'atlas commun des packs Kenney, en blob: (un artefact interdit fetch sur une adresse data:)
     const atlas = URL.createObjectURL(new Blob([Uint8Array.from(atob(BOU_ATLAS.split(',')[1]), c => c.charCodeAt(0))], { type: 'image/png' }));
@@ -324,7 +324,41 @@ const BouMonde = (() => {
     });
   }
   function deteindre(g) { g.traverse(o => { if (o.isMesh && o.userData.matOrig) { o.material = o.userData.matOrig; delete o.userData.matOrig; } }); }
-  function amenager(oui) { if (grille) grille.visible = oui; if (!oui) { finFantome(); selectionner(null); } }
+  function amenager(oui) { if (grille) grille.visible = oui; enAmenagement = oui; if (!oui) { finFantome(); selectionner(null); } majZones(); }
+  /* les zones d'accès (demande du 23/10) : en aménageant, la case où le client se tient devant chaque meuble qu'il utilise,
+     avec une flèche vers le meuble, et la case d'entrée ; en rouge si on ne peut plus l'atteindre (en comptant le meuble qu'on pose) */
+  let enAmenagement = false;
+  const texZone = {};
+  function texFleche(coul) {
+    return texZone[coul] || (texZone[coul] = texte2d(64, 64, c => {
+      c.fillStyle = coul + '55'; c.fillRect(0, 0, 64, 64); c.strokeStyle = coul; c.lineWidth = 4; c.setLineDash([8, 5]); c.strokeRect(4, 4, 56, 56);
+      c.setLineDash([]); c.fillStyle = coul; c.beginPath(); c.moveTo(32, 10); c.lineTo(50, 34); c.lineTo(38, 34); c.lineTo(38, 52); c.lineTo(26, 52); c.lineTo(26, 34); c.lineTo(14, 34); c.closePath(); c.fill();
+    }));
+  }
+  const geoZone = new THREE.PlaneGeometry(0.86, 0.86);
+  function majZones() {
+    zonesG.clear(); if (!enAmenagement || !etat) return;
+    const T = bouTaille(etat), f = fantome;
+    // la boutique telle qu'elle serait avec le meuble qu'on pose ou déplace
+    const ms = etat.meubles.filter(m => !f || m.id !== f.deplace).map(m => ({ type: m.type, x: m.x, z: m.z, r: m.r, f: false }));
+    if (f) ms.push({ type: f.type, x: f.x, z: f.z, r: f.r, f: true });
+    const g = Array.from({ length: T.L }, () => new Array(T.P).fill(0));
+    for (const m of ms) if (!BOU_MEUBLES[m.type].passe) for (const [x, z] of bouCases(m.type, m.x, m.z, m.r)) if (g[x] && z >= 0 && z < T.P) g[x][z] = 1;
+    const entree = [BOU_PORTE, T.P - 1], vu = new Set();
+    if (!g[entree[0]][entree[1]]) {
+      const file = [entree]; vu.add(entree.join());
+      while (file.length) { const [x, z] = file.shift(); for (const [dx, dz] of BOU_DIR) { const a = x + dx, b = z + dz; if (a >= 0 && b >= 0 && a < T.L && b < T.P && !g[a][b] && !vu.has(a + ',' + b)) { vu.add(a + ',' + b); file.push([a, b]); } } }
+    }
+    const poser = (x, z, dir, ok, fort) => {
+      const p = new THREE.Mesh(geoZone, new THREE.MeshBasicMaterial({ map: texFleche(ok ? (fort ? '#2fae7a' : '#3f8fe0') : '#e5534b'), transparent: true, depthWrite: false }));
+      p.rotation.set(-Math.PI / 2, 0, Math.atan2(-dir[0], -dir[1])); p.position.set(x, 0.035, z); zonesG.add(p);
+    };
+    poser(entree[0], entree[1], [0, -1], vu.has(entree.join()), false);
+    for (const m of ms) if (BOU_MEUBLES[m.type].client) {
+      const [x, z] = bouDevant(m); if (x < 0 || z < 0 || x >= T.L || z >= T.P) { if (m.f) poser(Math.max(0, Math.min(T.L - 1, x)), Math.max(0, Math.min(T.P - 1, z)), [-BOU_DIR[m.r][0], -BOU_DIR[m.r][1]], false, true); continue; }
+      poser(x, z, [-BOU_DIR[m.r][0], -BOU_DIR[m.r][1]], vu.has(x + ',' + z), m.f);
+    }
+  }
   // un meuble à poser (type) ou à déplacer (deplace = id) ; il suit le doigt, vert si on peut le poser, rouge sinon
   function commencerFantome(type, x, z, r, deplace) {
     finFantome();
@@ -339,6 +373,7 @@ const BouMonde = (() => {
     const sauf = f.deplace ? etat.meubles.find(m => m.id === f.deplace) : null;
     f.raison = bouPeutPoser(etat, f.type, f.x, f.z, f.r, sauf);
     teinter(f.g, f.raison ? 0xe5534b : 0x2fae7a);
+    majZones();
     ecoute.fantome(f);
   }
   function bougerFantome(x, z) { if (fantome && (x !== fantome.x || z !== fantome.z)) { fantome.x = x; fantome.z = z; majFantome(); } }
@@ -348,7 +383,7 @@ const BouMonde = (() => {
     fantome = null;
     if (f.deplace) { deteindre(f.g); const m = etat.meubles.find(q => q.id === f.deplace); if (m) placerGroupe(f.g, m.type, m.x, m.z, m.r); objets.get(f.deplace).sig = ''; }
     else { meublesG.remove(f.g); oublier(f.g); }
-    majMeubles();
+    majMeubles(); majZones();
     return f;
   }
   // une case libre près du centre, pour faire apparaître un nouveau meuble
@@ -487,7 +522,7 @@ const BouMonde = (() => {
   function maj(e) {
     etat = e;
     if (e.niveau !== niveauConstruit) { const avant = niveauConstruit >= 0 ? BOU_TAILLES[niveauConstruit] : null; construireCoque(); if (avant) pousser(avant); }
-    majMeubles();
+    majMeubles(); majZones();
   }
   function ecran(id) { const o = objets.get(id); if (!o) return null; const v = o.g.position.clone(); v.y += 0.8; v.project(cam); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight }; }
   return {
