@@ -110,6 +110,8 @@
     const rx = d.fin ? r * 0.84 : r, ry = r * 0.9;
     if (d.touffe) {
       g.fillStyle = d.col;
+      // le fond du visage, sous la couronne de boucles (sinon le médaillon se voit au travers)
+      g.beginPath(); g.ellipse(0, 0, rx * 0.86, ry * 0.86, 0, 0, 7); g.fill();
       for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; g.beginPath(); g.arc(Math.cos(a) * r * 0.76, Math.sin(a) * r * 0.68, r * 0.3, 0, 7); g.fill(); }
       if (d.houppe) for (const [x, y, s] of [[-0.28, -0.92, 0.28], [0.28, -0.92, 0.28], [0, -1.1, 0.32]]) { g.beginPath(); g.arc(x * r, y * r, s * r, 0, 7); g.fill(); }
       g.strokeStyle = sh(d.col, -0.18); g.lineWidth = r * 0.05;
