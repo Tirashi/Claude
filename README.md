@@ -19,6 +19,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
 - [`the-des-jarls/index.html`](the-des-jarls/index.html) : **Le Thé des Jarls**, un duel de dés viking façon Orlog : six dés, trois lancers, chaque face lance une armée de 45 soldats à l'assaut ; 20 dieux nordiques et leurs faveurs, la route du fjord (campagne de 20 tavernes), un duel guidé pour apprendre, le duel à deux sur un téléphone posé à plat et un défi du jour.
+- [`bannieres/index.html`](bannieres/index.html) : **Bannières**, un jeu de conquête en 3D pour les enfants : faire courir ses armées sur les cases, construire et décorer son village, regarder les batailles, et avoir le plus de drapeaux après 25 tours.
 - [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
@@ -241,6 +242,16 @@ Un petit 4X au tour par tour, en pixel art 32 bits : **37 terres hexagonales** (
 - **La couronne** : le vieux roi meurt au tour 11 ; un tour sur deux, un grand électeur vote pour le meilleur seigneur selon son critère (légitimité, armée, terres, trésor, bâtiments), s'il a au moins 40 de légitimité. Cinq votes font un roi.
 - **Fin** : victoire par conquête ou par la couronne, défaite si votre château tombe ; sinon le règne s'achève au tour 30. Score : terres, or, bois, bâtiments, légitimité, votes, primes.
 - **Partie libre** en facile ou en normal (hivers rudes, bâtiments chers, rivaux mordants) ; **Duché du jour** en normal, le même pour toute la famille, une seule tentative classée. Classements : meilleur score (normal) et Duché du jour. Lien direct : `duche/index.html#jour`.
+
+## Bannières
+
+Un jeu de conquête au tour par tour **en 3D**, pensé pour un enfant de 7 ans : des mots simples, des petits nombres, des dessins partout. Les modèles sont ceux de KayKit (Kay Lousberg, CC0).
+
+- **Ta bannière** : choisis ta couleur (or, rouge, bleu ou violet) ; ton château est en bas à gauche, trois autres seigneurs dans les autres coins, des brigands et des ruines hantées gardent des trésors.
+- **Bouger** : touche une armée, puis une case qui brille ; elle y court et les cases traversées deviennent à toi (en rouge : une bataille).
+- **Le village** : au château, achète des chevaliers, archers, lanciers, mages et champions, et soigne ton armée ; sur tes cases, construis (maison, moulin, marché, forge, caserne, tour), agrandis une fois et décore. Le château grandit avec le village (drapeaux, puis remparts). Le coffre est plein à 30 pièces : dépense-les !
+- **Les batailles** : choisis FONCER, TIRER D'ABORD ou PRUDENT, avec des étoiles pour dire si c'est facile ; puis regarde le combat, les cœurs au-dessus des guerriers. Le seigneur ne meurt jamais : blessé, il rentre au château.
+- **Gagner** : prends les 3 châteaux des autres, ou aie le plus de drapeaux après 25 tours. Niveaux FACILE et NORMAL, petite ou grande carte ; petites surprises en chemin. Classement : le plus de drapeaux (petite carte).
 
 ## La Dernière Lanterne (démo)
 Un RPG au tour par tour en HD-2D (tuiles 32 × 32 de Dungeon Crawl posées dans un décor en relief, ombres, flou de profondeur). Dans la vallée de Clairfond, la brume revient : avec ton équipe, rallume les lanternes qui la retiennent.

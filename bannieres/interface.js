@@ -92,10 +92,13 @@ const sansAccent = s => String(s).replace(/<[^>]*>|[^<]+/g, x => (x[0] === '<' ?
 const I = n => `<img class="ico" src="${ICO[n]}" alt="">`;
 const etoilesHtml = c => { const n = banEtoiles(c); return I('etoile').repeat(n) + I('vide').repeat(3 - n); };
 const motEtoiles = c => ['', 'DIFFICILE', 'CA PEUT MARCHER', 'FACILE'][banEtoiles(c)];
+// une boîte qui vient de s'ouvrir ignore les touchers pendant un instant : le doigt qui a touché la carte
+// ne doit pas appuyer, en se levant, sur le bouton apparu dessous (une attaque partait sans qu'on choisisse)
+let boiteOuverte = 0;
 function bouton(txt, action, ok = true, petit = '', classe = '') {
   const b = document.createElement('button');
   b.innerHTML = sansAccent(txt) + (petit ? `<small>${sansAccent(petit)}</small>` : '');
-  b.disabled = !ok; b.onclick = action; if (classe) b.className = classe;
+  b.disabled = !ok; b.onclick = e => { if (performance.now() - boiteOuverte < 400 && b.closest('#boite')) return; action(e); }; if (classe) b.className = classe;
   return b;
 }
 let toastT = 0;
@@ -105,6 +108,7 @@ function boite(titre, html, boutons) {
   const b = $('boite');
   b.innerHTML = (titre ? `<h2 class="banniere">${sansAccent(titre)}</h2>` : '') + (html || '');
   (boutons || []).forEach(x => b.append(x));
+  if ($('voile').classList.contains('cache')) boiteOuverte = performance.now();
   $('voile').classList.remove('cache');
   b.scrollTop = 0;
 }
@@ -113,4 +117,24 @@ const ouverte = () => !$('voile').classList.contains('cache');
 // une boîte qui attend un bouton : resout la promesse avec la valeur du bouton touché
 function demander(titre, html, choix) {
   return new Promise(ok => boite(titre, html, choix.map(([txt, val, petit, classe]) => bouton(txt, () => { fermer(); ok(val); }, true, petit, classe))));
+}
+
+// un feu d'artifice par-dessus l'écran (victoire) : des gerbes de pixels qui retombent, 4 secondes
+function feuArtifice() {
+  const c = document.createElement('canvas'), k = 3;
+  c.width = Math.ceil(innerWidth / k); c.height = Math.ceil(innerHeight / k);
+  c.style.cssText = `position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:25;image-rendering:pixelated`;
+  document.body.append(c);
+  const g = c.getContext('2d'), parts = [], couleurs = ['#f2c230', '#d8322a', '#2f6fe0', '#9b4fd6', '#6cb84a', '#fff6e0'], t0 = performance.now();
+  let graine = 12345; const hasard = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+  const gerbe = () => { const x = c.width * (0.15 + hasard() * 0.7), y = c.height * (0.12 + hasard() * 0.3), col = couleurs[Math.floor(hasard() * couleurs.length)];
+    for (let n = 0; n < 36; n++) { const a = n / 36 * Math.PI * 2, v = 0.6 + hasard() * 0.9; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vie: 1, col }); } };
+  let prochaine = 0;
+  (function image(now) {
+    const t = now - t0;
+    if (t < 2800 && t >= prochaine) { gerbe(); prochaine += 450; }
+    g.clearRect(0, 0, c.width, c.height);
+    parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.025; p.vie -= 0.012; if (p.vie > 0) { g.globalAlpha = Math.min(1, p.vie * 1.5); g.fillStyle = p.col; g.fillRect(Math.round(p.x), Math.round(p.y), 1, 1); } });
+    if (t < 4200) requestAnimationFrame(image); else c.remove();
+  })(t0);
 }

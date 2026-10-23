@@ -31,6 +31,8 @@ const Sons = (function () {
     piece: () => { note(988, 0, 0.08); note(1319, 0.07, 0.16); },
     toc: () => note(440, 0, 0.05, 0.04, 'triangle'),
     batir: () => { bruit(0.08, 900, 0.15); setTimeout(() => bruit(0.08, 900, 0.15), 140); },
+    victoire: () => { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, k) => note(f, k * 0.14, k === 6 ? 0.7 : 0.25, 0.07)); [262, 330, 392].forEach((f, k) => note(f, 0.98, 0.7, 0.04, 'triangle')); },
+    pas: () => bruit(0.05, 500, 0.06, 'lowpass'),
     fanfare: () => [523, 659, 784, 1047].forEach((f, k) => note(f, k * 0.13, 0.3, 0.07)),
     triste: () => [392, 349, 311].forEach((f, k) => note(f, k * 0.2, 0.35, 0.05, 'triangle')),
   };

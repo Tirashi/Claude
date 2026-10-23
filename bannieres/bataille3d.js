@@ -24,9 +24,10 @@ const TYPES = {
   mage: { perso: 'Mage', droite: 'staff', attaques: ['Melee_1H_Attack_Chop'], repos: 'Idle_A', mage: true },
   seigneur: { perso: 'Knight', droite: 'sword_1handed', gauche: 'shield_badge_color', attaques: ['Melee_1H_Attack_Chop', 'Melee_1H_Attack_Stab'], repos: 'Idle_A' },
   lancier: { perso: 'Knight', droite: 'spear_A', gauche: 'shield_badge_color', attaques: ['Melee_1H_Attack_Stab'], repos: 'Idle_A' },
-  squelette: { perso: 'Skeleton_Warrior', droite: 'Skeleton_Blade', gauche: 'Skeleton_Shield_Small_A', attaques: ['Melee_1H_Attack_Chop', 'Melee_1H_Attack_Stab'], repos: 'Idle_A' },
-  sbire: { perso: 'Skeleton_Minion', droite: 'Skeleton_Axe', attaques: ['Melee_1H_Attack_Chop'], repos: 'Idle_A' },
-  necromancien: { perso: 'Skeleton_Mage', droite: 'Skeleton_Staff', attaques: ['Melee_1H_Attack_Chop'], repos: 'Idle_A', mage: true },
+  // les revenants ont leur propre chute (pack Skeletons) : ils s'effondrent en tas d'os
+  squelette: { perso: 'Skeleton_Warrior', droite: 'Skeleton_Blade', gauche: 'Skeleton_Shield_Small_A', attaques: ['Melee_1H_Attack_Chop', 'Melee_1H_Attack_Stab'], repos: 'Idle_A', mort: 'Skeletons_Death' },
+  sbire: { perso: 'Skeleton_Minion', droite: 'Skeleton_Axe', attaques: ['Melee_1H_Attack_Chop'], repos: 'Idle_A', mort: 'Skeletons_Death' },
+  necromancien: { perso: 'Skeleton_Mage', droite: 'Skeleton_Staff', attaques: ['Melee_1H_Attack_Chop'], repos: 'Idle_A', mage: true, mort: 'Skeletons_Death' },
 };
 const TEXTURE_ARME = { sword_1handed: 'Knight', sword_2handed_color: 'Knight', shield_badge_color: 'Knight', bow_withString: 'Ranger', arrow_bow: 'Ranger', axe_1handed: 'Barbarian', dagger: 'Rogue_Hooded', staff: 'Mage', Skeleton_Blade: 'Skeleton_Warrior', Skeleton_Axe: 'Skeleton_Warrior', Skeleton_Staff: 'Skeleton_Warrior', Skeleton_Shield_Small_A: 'Skeleton_Warrior' };   // la lance garde sa propre texture
 // la couleur d'équipe : le rouge du chevalier (cape, plumet, blason du bouclier), le bleu de l'archer (écharpe, cape), le violet du mage
@@ -72,7 +73,9 @@ const geoAnneau = new THREE.RingGeometry(0.16, 0.36, 24), matsAnneau = {};
 // un guerrier : le personnage cloné avec son squelette, ses armes dans les mains, son mélangeur d'animations
 function aventurier(type, coul, haut) {
   const T = TYPES[type], perso = AV.modeles[T.perso] ? T.perso : 'Knight', o = THREE.SkeletonUtils.clone(AV.modeles[perso]), m = AV.mats[perso][coul] || AV.mats[perso].neutre;
-  o.traverse(x => { if (x.isMesh) { x.material = m.peau; x.castShadow = true; x.frustumCulled = false; } });
+  // les pièces animées prennent la matière « peau » (skinning) ; une pièce rigide (casque du squelette, chapeau du nécromancien) la matière « fixe » :
+  // partager une matière entre les deux fait parfois compiler le programme sans l'animation, et le corps reste debout, bras écartés
+  o.traverse(x => { if (x.isMesh) { x.material = x.isSkinnedMesh ? m.peau : m.fixe; x.castShadow = true; x.frustumCulled = false; } });
   const arme = (nom, os) => {
     if (!nom || !AV.armes[nom]) return;
     const w = AV.armes[nom].clone(), src = TEXTURE_ARME[nom], mw = src && AV.mats[src] && (AV.mats[src][coul] || AV.mats[src].neutre).fixe;
@@ -125,7 +128,7 @@ function cadrerBataille() {
   const asp = innerWidth / innerHeight, d = Math.max(8, 5.6 / (2 * Math.tan(15 * Math.PI / 180) * Math.min(1.2, asp)));
   cameraB.aspect = asp; cameraB.position.set(0, 0.5 + d * Math.sin(0.2), d * Math.cos(0.2)); cameraB.lookAt(0, 0.35 + d * 0.035, 0); cameraB.updateProjectionMatrix();
 }
-const EFFETS = { foret: 'FORET : LES FLECHES PASSENT MAL.', colline: 'COLLINE : CELUI QUI DEFEND TIRE UNE FOIS DE PLUS.', montagne: 'MONTAGNE : CELUI QUI DEFEND SE PROTEGE MIEUX.', marais: 'MARAIS : CELUI QUI ATTAQUE FRAPPE MOINS FORT.', riviere: 'RIVIERE : CELUI QUI ATTAQUE FRAPPE MOINS FORT.', plaine: 'HERBE : RIEN DE SPECIAL.' };
+const EFFETS = { foret: 'FORET : LES FLECHES PASSENT MAL.', colline: 'COLLINE : CELUI QUI DEFEND TIRE UNE FOIS DE PLUS.', montagne: 'MONTAGNE : CELUI QUI DEFEND SE PROTEGE MIEUX.', marais: "MARAIS : DANS L'EAU, ON SE PROTEGE MAL.", riviere: "RIVIERE : DANS L'EAU, ON SE PROTEGE MAL.", plaine: 'HERBE : RIEN DE SPECIAL.' };
 const NOM_TERRAIN = { plaine: 'HERBE', foret: 'FORET', colline: 'COLLINE', montagne: 'MONTAGNE', marais: 'MARAIS', riviere: 'RIVIERE' };
 // ap : l'aperçu de la bataille (banApercu) ; source : la case d'où vient l'attaquant ; i : la case attaquée
 function ouvrirBataille(ap, source, i) {
@@ -174,6 +177,7 @@ function ouvrirBataille(ap, source, i) {
   [0, 1].forEach(c => rangsVivants(c).forEach((k, slot) => { const [x, z] = placeRang(c, slot); figures[c][k].position.set(x, 0, z); }));
   cadrerBataille();
   const effets = [EFFETS[terre.t]];
+  if (banEau(gauche.t)) effets.push("L'ATTAQUANT EST DANS L'EAU : IL SE PROTEGE MAL.");
   if (terre.bat === 'chateau') effets.push('CHATEAU : CELUI QUI DEFEND SE PROTEGE MIEUX ET TIRE UNE FOIS DE PLUS.');
   else if (ap.tourDef) effets.push('TOUR : CELUI QUI DEFEND TIRE UNE FOIS DE PLUS.');
   if (ap.garde) effets.push('LA GARDE DU CHATEAU SE BAT AUSSI.');
@@ -229,7 +233,7 @@ function vieJauges() { const B = bataille; [0, 1].forEach(c => { const v = B.vie
 function toucher(c, k, deg, mort) {
   const B = bataille, g = B.figures[c][k]; if (!g || g.userData.mort) return;
   B.vie[c][k] -= deg; vieJauges(); dessinerCoeurs(g.userData.coeurs, Math.max(0, B.vie[c][k]), g.userData.max);
-  if (mort) { jouer(g, 'Death_A', true); g.userData.mort = true; g.userData.anneau.visible = false; g.userData.coeurs.visible = false; }
+  if (mort) { jouer(g, AV.clips[g.userData.T.mort] ? g.userData.T.mort : 'Death_A', true); g.userData.mort = true; g.userData.anneau.visible = false; g.userData.coeurs.visible = false; }
   else jouer(g, deg ? 'Hit_A' : 'Melee_Block', true);
 }
 function animerBataille(now, dtReel) {
@@ -238,6 +242,7 @@ function animerBataille(now, dtReel) {
   B.figures.flat().forEach(g => {
     const u = g.userData; u.mixer.update(dt);
     if (u.mort) return;
+    if (u.fete) { if (u.courant !== u.actions.Cheering) jouer(g, 'Cheering'); return; }   // les vainqueurs fêtent sur place
     g.rotation.y += (u.rotVise - g.rotation.y) * Math.min(1, dt * 10);
     // chacun rejoint sa place dans les rangs (la mêlée au contact après le premier assaut), en courant
     const s = u.c ? 1 : -1;

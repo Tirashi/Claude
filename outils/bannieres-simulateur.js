@@ -11,7 +11,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const DOSSIER = path.join(__dirname, '..', 'bannieres');
 for (const f of ['regles.js', 'surprises.js', 'ia.js']) vm.runInThisContext(fs.readFileSync(path.join(DOSSIER, f), 'utf8'), { filename: 'bannieres/' + f });
-/* global banMaxUnites, banAmeliorer, banSoigner, banGagner, banPrix, BAN_COFFRE, banNouvelle, banMigrer, banIaJouer, banFinTour, banChances, banDeplacer, banAtteignables, banAcheter, banConstruire, banDecorer, banResoudre, banApercu, banArmeeSur, banArmeesDe, banArmee, banChateau, banVoisins, banDrapeaux, banChateaux, banNbBat, banEtapeChateau, banRevenu, banCoeursMax, banSimuler, banVerifierFin, banUnite, banGrille, BAN_DERNIER_TOUR, BAN_SURPRISES, BAN_UNITES, BAN_POINTS */
+/* global banGarnison, banEnnemiSur, banMaxUnites, banAmeliorer, banSoigner, banGagner, banPrix, BAN_COFFRE, banNouvelle, banMigrer, banIaJouer, banFinTour, banChances, banDeplacer, banAtteignables, banAcheter, banConstruire, banDecorer, banResoudre, banApercu, banArmeeSur, banArmeesDe, banArmee, banChateau, banVoisins, banDrapeaux, banChateaux, banNbBat, banEtapeChateau, banRevenu, banCoeursMax, banSimuler, banVerifierFin, banUnite, banGrille, BAN_DERNIER_TOUR, BAN_SURPRISES, BAN_UNITES, BAN_POINTS */
 
 const K = Number(process.argv[2]) || 200, detail = process.argv.includes('--detail');
 let fail = 0;
@@ -22,6 +22,7 @@ const defense = (e, id, i) => { const ch = banChances(e, id, i, 1); return ch.te
 const vus = {};
 let anomalies = 0;
 function controler(e) {   // ce qui ne doit jamais arriver
+  if (e.terres.some(t => (t.garnison || []).length > 6)) anomalies++;
   for (let s = 0; s < 4; s++) if (banArmeesDe(e, s).length > 3 || e.seigneurs[s].pieces < 0) { anomalies++; if (anomalies < 4) console.log('armées', s, banArmeesDe(e, s).length, e.seigneurs[s].pieces); }
   if (e.seigneurs.some(S => S.pieces > 30)) { anomalies++; if (anomalies < 4) console.log('coffre', e.seigneurs.map(S => S.pieces)); }
   if (e.armees.some(a => a.unites.length > 8 || !a.unites.length || a.unites.some(u => u.pv <= 0))) anomalies++;
@@ -92,12 +93,25 @@ function partie(graine, niveau, coupe, rayon) {
   // améliorer un bâtiment, une fois
   const mais = f.terres.findIndex(t => t.prop === 0 && t.bat === 'maison'), rev = banRevenu(f, 0), p0 = f.seigneurs[0].pieces;
   check(banAmeliorer(f, 0, mais).ok && banRevenu(f, 0) === rev + 1 && f.seigneurs[0].pieces === p0 - 4 && !banAmeliorer(f, 0, mais).ok, 'améliorer : une grande maison (+1 pièce de plus), une seule fois, au prix du bâtiment');
-  const cas = f.terres.findIndex(t => t.prop === 0 && t.bat === 'caserne');
-  check(banPrix(f, 0, 'champion') === 6 && banAmeliorer(f, 0, cas).ok && banPrix(f, 0, 'champion') === 5, 'grande caserne : le champion coûte 1 pièce de moins');
+  check(!banConstruire(f, 0, f.terres.findIndex(t => t.prop === 0 && !t.bat), 'forge').ok, 'une seule forge (elles ne s\'additionnent pas)');
+  const cas = f.terres.findIndex(t => t.prop === 0 && t.bat === 'caserne'); f.seigneurs[0].pieces = 20;
+  check(banAmeliorer(f, 0, cas).ok && banPrix(f, 0, 'champion') === 6, 'grande caserne : construite (le champion coûte toujours 6)');
+  { const z3 = JSON.parse(JSON.stringify(f)); const x = { id: 950, s: 0, terre: cas, pts: 0, combat: true, unites: [banUnite(z3, 'champion', 0)] }; x.unites[0].pv = 1; z3.armees = z3.armees.filter(a => a.terre !== cas); z3.armees.push(x); banFinTour(z3);
+    check(banArmee(z3, 950).unites[0].pv === 1 + Math.ceil((banCoeursMax(z3, 'champion', 0) - 1) / 2), 'grande caserne : elle soigne la moitié des cœurs perdus, même après une bataille'); }
+  { const z4 = JSON.parse(JSON.stringify(f)); const r1 = { id: 960, s: 1, terre: banVoisins(z4, cas).find(i => !banArmeeSur(z4, i)), pts: 2, combat: false, unites: [banUnite(z4, 'fantassin', 1)] }; z4.armees = z4.armees.filter(a => a.terre !== cas); z4.armees.push(r1);
+    const ap4 = banApercu(z4, 960, cas); check(banEnnemiSur(z4, 1, cas) && ap4 && ap4.garde === 2 && !banAtteignables(z4, r1).get(cas)?.passe, 'une caserne a une petite garde : on ne la prend plus en marchant dessus'); }
   const tg = f.terres.findIndex(t => t.prop < 0 && !t.bat && !t.camp && !t.ruine); f.terres[tg].prop = 0; banConstruire(f, 0, tg, 'tour');
   f.armees.push({ id: 901, s: 0, terre: tg, pts: 0, combat: false, unites: [banUnite(f, 'archer', 0)] });
   const tirs = gr => { f.terres[tg].grand = gr; const x = { id: 900, s: 1, terre: banVoisins(f, tg).find(i => !banArmeeSur(f, i)), pts: 2, combat: false, unites: [banUnite(f, 'fantassin', 1)] }; f.armees.push(x); const ap2 = banApercu(f, 900, tg); f.armees.splice(f.armees.indexOf(x), 1); return ap2 && ap2.tourDef; };
   check(tirs(false) === 1 && tirs(true) === 2, 'tour : 1 volée de plus, 2 avec une grande tour');
+  // la garnison d'une grande tour : elle reste pour toujours et défend la tour avec la garde
+  { f.terres[tg].grand = true; const gar0 = { id: 970, s: 0, terre: tg, pts: 2, combat: false, unites: ['seigneur', 'archer', 'archer', 'lancier'].map(t => banUnite(f, t, 0)) }; f.armees = f.armees.filter(a => a.id !== 901 && a.terre !== tg); f.armees.push(gar0);
+    const r = banGarnison(f, 0, 970);
+    check(r.ok && r.n === 3 && f.terres[tg].garnison.length === 3 && banArmee(f, 970).unites.length === 1, 'garnison : les guerriers restent dans la grande tour, le seigneur reste dehors');
+    f.armees = f.armees.filter(a => a.id !== 970);
+    const x = { id: 971, s: 1, terre: banVoisins(f, tg).find(i => !banArmeeSur(f, i)), pts: 2, combat: false, unites: [banUnite(f, 'champion', 1)] }; f.armees.push(x);
+    const ap = banApercu(f, 971, tg); check(ap && ap.nGarnison === 3 && ap.D.length === 5 && ap.tourDef === 2, 'garnison : elle défend la tour avec la garde (et 2 volées de plus)');
+    f.armees = f.armees.filter(a => a.id !== 971); }
   f.armees.splice(f.armees.findIndex(a => a.id === 901), 1);
   // le coffre plein à 30
   f.seigneurs[0].pieces = 28;
@@ -167,7 +181,8 @@ for (const niveau of ['facile', 'normal']) {
   check((fins.defaite || 0) < K * (niveau === 'facile' ? 0.1 : 0.35), `${niveau} : il perd rarement son château (${pc(fins.defaite)})`);
 }
 check(anomalies === 0, `jamais plus de 3 armées, de 6 guerriers, de pièces en négatif, ni deux armées sur une case (${anomalies})`);
-check(bilan.normal.ok < bilan.facile.ok, `le niveau normal est plus dur que le facile (${pc(bilan.facile.ok)} → ${pc(bilan.normal.ok)} de victoires)`);
+// plus dur = moins de victoires, ou plus de châteaux perdus (victoires moins châteaux perdus)
+check(bilan.normal.ok - bilan.normal.defaites < bilan.facile.ok - bilan.facile.defaites, `le niveau normal est plus dur que le facile (victoires ${pc(bilan.facile.ok)} → ${pc(bilan.normal.ok)}, châteaux perdus ${pc(bilan.facile.defaites)} → ${pc(bilan.normal.defaites)})`);
 const manquent = Object.keys(BAN_SURPRISES).filter(k => !vus[k]);
 check(!manquent.length, `chaque surprise sort au moins une fois (${manquent.join(', ') || Object.keys(vus).length + ' sortes'})`);
 { let err = 0; for (let k = 0; k < 10; k++) { try { partie(500 + k, 'normal', 0, 4); } catch (x) { err++; if (err < 2) console.log(x.stack); } } check(!err, `grande carte (61 cases) : 10 parties sans erreur (${err})`); }

@@ -139,7 +139,8 @@ function decor(i) {
     d.push(['building_castle_' + k3, 0, 0, mat3, 0, true]);
     const n = S ? banEtapeChateau(etat, t.prop) : 0;   // le château grandit avec le village
     if (n >= 1 && C) d.push(['flag_' + C.k, -0.72, 0.42, C.mat, 0], ['flag_' + C.k, 0.72, 0.42, C.mat, 0]);
-    if (n >= 2) d.push(['fence_wood_straight', 0, 0.85, matBase, 0], ['fence_wood_straight', -0.75, -0.45, matBase, Math.PI / 3], ['fence_wood_straight', 0.75, -0.45, matBase, -Math.PI / 3]);
+    // les remparts : le modèle de palissade est un bord d'hexagone (côté ouest) ; posé au centre et tourné, il longe un bord de la case
+    if (n >= 2) [0, 1, 2, 3].forEach(k => d.push(['fence_wood_straight', 0, 0, matBase, k * Math.PI / 3, false, 0.93]));
     decos();
     return d;
   }
@@ -186,7 +187,7 @@ const matPlaque = new THREE.MeshBasicMaterial({ color: 0xfff27a, transparent: tr
 const matCible = new THREE.MeshBasicMaterial({ color: 0xff5a3c, transparent: true, opacity: 0.5, depthWrite: false });
 function batirTerre(i) {
   const g = groupes[i], t = etat.terres[i], u = g.userData, S = t.prop >= 0 ? etat.seigneurs[t.prop] : null;
-  const sig = JSON.stringify([t.prop, t.camp, t.ruine, t.bat, t.grand, t.decos, t.bat === 'chateau' && t.prop >= 0 ? banEtapeChateau(etat, t.prop) : 0, banVoisins(etat, i).map(v => etat.terres[v].prop)]);
+  const sig = JSON.stringify([t.prop, t.camp, t.ruine, t.bat, t.grand, t.decos, t.bat === 'chateau' && t.prop >= 0 ? banEtapeChateau(etat, t.prop) : 0, (t.garnison || []).length, banVoisins(etat, i).map(v => etat.terres[v].prop)]);
   if (sig === u.sig) return;
   if (u.sig && u.prop !== t.prop) u.flash = performance.now();
   if (u.sig && t.bat && (u.bat !== t.bat || u.grand !== t.grand)) u.pop = performance.now();   // un bâtiment sort de terre
@@ -203,6 +204,8 @@ function batirTerre(i) {
     if (bat) { u.batiments.push(o); o.userData.ech = ech || 1; }
     g.add(o);
   });
+  // la garnison d'une tour : sa bannière, avec le nombre de guerriers, au-dessus de la tour
+  if (t.garnison && t.garnison.length && S) { const e = etiquette(t.garnison.length, COUL[S.coul].hex, false); e.position.set(0, 2.3, -0.12); e.scale.multiplyScalar(0.8); g.add(e); }
   if (u.pop) { const e = objet('building_scaffolding'); e.position.set(0, 0, -0.12); g.add(e); u.echaf = e; }
   if (S) {
     const C = COUL[S.coul];
@@ -293,7 +296,7 @@ async function marcher(id, depart, ch) {
   jouer(fig, 'Running_A', false, 1.1);
   for (const j of ch) {
     const [x1, z1] = placeArmee(j), x0 = g.position.x, z0 = g.position.z;
-    fig.rotation.y = Math.atan2(x1 - x0, z1 - z0);
+    fig.rotation.y = Math.atan2(x1 - x0, z1 - z0); Sons.pas();
     const t0 = performance.now(), duree = vite ? 160 : 420;
     await new Promise(ok => { const pas = () => { const k = Math.min(1, (performance.now() - t0) / duree); g.position.x = x0 + (x1 - x0) * k; g.position.z = z0 + (z1 - z0) * k; if (k < 1) requestAnimationFrame(pas); else ok(); }; pas(); });
   }

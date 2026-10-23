@@ -78,7 +78,7 @@ function banIaCoup(etat, a, car) {
       const sDef = o ? o.s : t.prop;
       if (sDef === 0 && etat.tour < niv.premierTour) return;
       if (a.s > 0 && sDef > 0 && t.bat === 'chateau' && !niv.chateauxRivaux) return;
-      const seuil = Math.max(BAN_IA_SEUIL[car] - (a.s > 0 && niv.audace || 0), sDef === 0 ? niv.seuil : 0);
+      const seuil = Math.max(BAN_IA_SEUIL[car] - (a.s > 0 && niv.audace || 0), sDef === 0 ? niv.seuil : 0, sDef === 0 && t.bat === 'chateau' && niv.seuilChateau || 0);   // en facile, le château du joueur : seulement à coup presque sûr
       const { tac, chance } = banIaTactique(etat, a.id, j);
       if (chance <= seuil) return;
       n = 10 + 2 * chance + (t.bat === 'chateau' ? 5 : 0) + (t.camp || t.ruine ? 2 : 0);
