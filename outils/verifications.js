@@ -9,6 +9,8 @@
    7. Lune-Rover : chaque niveau est gagné par sa solution de référence ;
    8. Odyssée : chaque plateau est traversé par le pilote automatique, sous le temps cible ;
    8 ter. La Dernière Lanterne : moteur RPG, données et accessibilité (outils/lanterne-tests.js) ;
+   8 sexies. Romet : physique et règles (outils/romet-simulateur.js) ;
+   8 septies. Doggy Saga : règles, obstacles, reproductibilité et 60 niveaux (outils/doggy-saga-simulateur.js) ;
    9. classements : chaque record envoyé par un jeu (LudoScores.submit) a son tableau dans le volet de
       l'accueil (RANKS, accueil.js), est repris en rejoignant (registerExisting) et son jeu sert à vérifier les pseudos.
    Code de sortie 1 si quelque chose ne va pas. */
@@ -128,6 +130,12 @@ catch (e) { bad('Bannières : simulateur\n' + (e.stdout || '') + (e.stderr || ''
 // 8 sexies. La Boutique de cartes : catalogue, boosters, règles de base, années complètes (équilibrage grossier), déterminisme, sauvegarde
 try { execFileSync(process.execPath, [path.join(__dirname, 'boutique-simulateur.js'), '6'], { stdio: 'pipe', encoding: 'utf8' }); ok('La Boutique de cartes : simulateur (catalogue, règles, années reproductibles, équilibrage)'); }
 catch (e) { bad('La Boutique de cartes : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+// 8 septies. Doggy Saga : règles du trois en ligne sur grilles préparées, grille toujours saine, reproductibilité, 60 niveaux
+try { execFileSync(process.execPath, [path.join(__dirname, 'doggy-saga-simulateur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Doggy Saga : simulateur (règles, bonus, obstacles, parties reproductibles, 60 niveaux)'); }
+catch (e) { bad('Doggy Saga : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+// 8 sexies. Romet : physique et règles (tas reproductible, sauvegarde et reprise, pièces endormies, fin de partie)
+try { execFileSync(process.execPath, [path.join(__dirname, 'romet-simulateur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Romet : simulateur (tas reproductible, reprise, mise au repos, fin de partie)'); }
+catch (e) { bad('Romet : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
