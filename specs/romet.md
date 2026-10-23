@@ -87,7 +87,7 @@ Bruitages synthétisés en Web Audio : pièce lâchée, tintement des pièces qu
 ## 11. Plan de travail (opusplan)
 1. **Session 1, le moteur et 2 machines** (**faite le 22/10**, détails dans `specs/suivi.md`) : `physique.js` (reprise des maquettes, mise au repos, sauvegarde du tas), rendu, bonus, bourse et fin de partie, trésors, simulateur, la foire et la ruche jouables du début à la fin.
 2. **Session 2, les 4 autres machines et la secrète** (**faite le 22/10**, détails dans `specs/suivi.md`) : l'épave, le casino, la foire de nuit, l'horloger, la machine secrète, avec leurs règles et leurs décors ; écran des machines, déblocages ; réglage des bourses au simulateur.
-3. **Session 3, finitions et intégration** (**faite le 22/10**, détails dans `specs/suivi.md` ; artefact à créer avec l'accord de l'utilisateur) : titre, pause, sons et ambiances, classements, accueil, transfert, crédits, tests, docs, artefact.
+3. **Session 3, finitions et intégration** (**faite le 22/10**, détails dans `specs/suivi.md` ; pas d'artefact pour le moment, choix de l'utilisateur du 23/10) : titre, pause, sons et ambiances, classements, accueil, transfert, crédits, tests, docs, artefact.
 
 Coût estimé : **10 à 15 % de la semaine** (le moteur et les décors existent déjà dans les maquettes ; le plus long est de faire 6 règles et de régler la difficulté).
 
