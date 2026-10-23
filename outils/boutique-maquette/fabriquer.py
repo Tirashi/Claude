@@ -28,8 +28,9 @@ if deux:
     rempl = [('MODELES', json.dumps(m)), ('IMAGES', json.dumps(images)), ('MONSTRES', open(os.path.join(ici, 'monstres.json')).read()), ('GLTF', gltf)]
 else:
     rempl = [('MODELES', json.dumps(m)), ('ATLAS', json.dumps(atlas)), ('GLTF', gltf)]
-for k, c in rempl:
-    assert '</script' not in c and '/*' + k + '*/' in h, k
-    h = h.replace('/*' + k + '*/', c)
+for k, c in rempl:   # « /*K*/null » dans le modèle (pour qu'il reste du JavaScript valide), « /*GLTF*/ » seul
+    t = '/*' + k + '*/' + ('' if k == 'GLTF' else 'null')
+    assert '</script' not in c and t in h, k
+    h = h.replace(t, c)
 open(os.path.join(racine, 'maquettes', 'boutique-de-cartes-2.html' if deux else 'boutique-de-cartes.html'), 'w').write(h)
 print(len(h))
