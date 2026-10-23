@@ -18,8 +18,12 @@
   const totalEtoiles = () => Object.values(prog.etoiles).reduce((a, b) => a + b, 0);
   const debloque = id => id === 1 || (prog.etoiles[id - 1] || 0) > 0;
   const prochain = () => { for (const n of DOG_NIVEAUX) if (!prog.etoiles[n.id]) return n.id; return DOG_NIVEAUX.length; };
+  // journée du jour : une seule tentative classée, comptée dès le départ (doggysaga.dailyTry) ; câlins dans doggysaga.daily
+  const auj = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+  const jourJoue = j => lire('dailyTry', 0) === j || lire('daily', {})[j] !== undefined;
+  const envoyer = (tab, v) => { try { if (window.LudoScores) return LudoScores.submit('doggysaga', tab, v, false); } catch (e) { /* hors ligne */ } return Promise.resolve(null); };
 
-  /* ---------- sons (le fichier sons.js viendra en session 3) ---------- */
+  /* ---------- sons (sons.js, DogSons) ---------- */
   const son = (k, n) => { try { if (window.DogSons) window.DogSons.jouer(k, n); } catch (e) { /* pas de son */ } };
 
   /* ---------- textes ---------- */
@@ -81,6 +85,9 @@
     const t = prog.album.length ? prog.album[Math.floor(Math.random() * prog.album.length)] : 0;
     $('tChien').src = imgChien(t, 140, 2);
     const n = prog.album.length;
+    const j = auj(), dj = lire('daily', {})[j];
+    $('bJour').innerHTML = 'La journée du jour' + (jourJoue(j) ? `<small>${dj !== undefined ? dj + ' câlins aujourd\'hui' : 'déjà jouée'} · pour le plaisir</small>` : '<small>20 coups, le plus de câlins possible</small>');
+    majSon();
     $('tBilan').textContent = totalEtoiles() + ' étoile' + (totalEtoiles() > 1 ? 's' : '') + ' · ' + n + ' chien' + (n > 1 ? 's' : '') + ' adopté' + (n > 1 ? 's' : '') + ' sur ' + DOG_RACES.length;
     montrer('eTitre');
   }
@@ -162,13 +169,34 @@
     ecran = 'intro';
   }
 
+  function introJour() {
+    const j = auj(), niv = dogJour(j), classe = !jourJoue(j), dj = lire('daily', {})[j];
+    $('iChapitre').textContent = 'Journée du jour · ' + new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('iTitre').textContent = 'Le plus de câlins !';
+    $('iObj').innerHTML = niv.races.map(t => `<div class="obj"><img src="${imgChien(t, 46)}" alt="">${DOG_RACES[t].nom}</div>`).join('');
+    $('iAide').hidden = false;
+    $('iAide').textContent = classe ? 'Une seule tentative classée par jour : elle compte dès le départ. La même grille pour toute la famille !'
+      : 'Tentative classée déjà jouée' + (dj !== undefined ? ' (' + dj + ' câlins)' : '') + '. Tu peux rejouer pour le plaisir, sans classement.';
+    $('iCoups').textContent = niv.coups + ' coups';
+    $('bPartir').onclick = () => lancerJour(classe);
+    montrer('eIntro');
+    ecran = 'intro';
+  }
+
   /* ---------- la partie ---------- */
   let P = null;
   const rc = i => [Math.floor(i / N), i % N];
   function vt(p, i) { const [r, c] = rc(i); return { t: p.t, sp: p.sp, ch: p.ch || 0, gm: p.gm || 0, ls: p.ls || 0, x: c, y: r, x0: c, y0: r, vy: 0, grow: 1, sq: 0, ph: Math.random() * 10 }; }
-  function lancer(id) {
-    const niv = DOG_NIVEAUX[id - 1];
-    const e = dogNouvelle(niv, String(Date.now() % 1e9));
+  function lancer(id) { demarrer(DOG_NIVEAUX[id - 1], dogNouvelle(DOG_NIVEAUX[id - 1], String(Date.now() % 1e9))); }
+  function lancerJour(classe) {
+    const j = auj();
+    if (classe && jourJoue(j)) classe = false;
+    if (classe) ecrire('dailyTry', j);
+    demarrer(dogJour(j), dogNouvelleJour(j));
+    P.jour = j; P.classe = classe;
+  }
+  const estJour = () => !!(P && P.jour);
+  function demarrer(niv, e) {
     P = {
       niv, e, vis: e.g.map((p, i) => (p ? vt(p, i) : null)), vb: e.boue.slice(), vn: e.niche.slice(),
       aff: { coups: e.coups, score: 0, calins: new Array(DOG_RACES.length).fill(0), boue: e.boueDepart, chiots: 0 },
@@ -181,6 +209,7 @@
     P.enCours = { k: 'chute', fini: () => toutPose() };
     sprites = {};
     ecran = 'partie';
+    $('bRecommencer').hidden = false;
     montrer();
     son('debut');
   }
@@ -226,7 +255,7 @@
         sx += cc; sy += r; n++;
         if (c.t >= 0 && c.sp !== 4) {
           P.aff.calins[c.t]++;
-          const k = P.niv.obj.findIndex(o => o.k === 'calins' && o.t === c.t);
+          const k = estJour() ? 0 : P.niv.obj.findIndex(o => o.k === 'calins' && o.t === c.t);
           if (k >= 0) { const [cx, cy] = cellXY(cc, r), [tx, ty] = posObjectif(k); P.parts.push({ k: 'vers', x0: cx, y0: cy, x1: tx, y1: ty, l: -Math.random() * 0.15, d: 0.6, col: '#ff6b8a' }); }
         }
       }
@@ -238,7 +267,7 @@
       return;
     }
     if (x.k === 'boue') {
-      P.vb[x.i] = x.n; P.aff.boue--;
+      P.vb[x.i] = x.n; P.aff.boue--; son('boue');
       const [r, c] = rc(x.i), [cx, cy] = cellXY(c, r);
       for (let k = 0; k < 6; k++) { const a = Math.random() * 7, v = 60 + Math.random() * 120; P.parts.push({ k: 'goutte', x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, g: 500, l: 0, d: 0.5, s: 3 + Math.random() * 3, col: '#8b5a2b' }); }
       return;
@@ -294,6 +323,7 @@
       return;
     }
     if (x.k === 'melange') {
+      son('melange');
       P.vis = x.g.map((p, i) => { if (!p) return null; const v = vt(p, i); v.grow = 0; return v; });
       P.banniere = { s: 'On mélange !', t: 0 };
       P.attente = 0.5;
@@ -327,22 +357,42 @@
         if (!p !== !v || (p && (p.t !== v.t || p.sp !== v.sp || (p.ch || 0) !== v.ch || (p.gm || 0) !== v.gm))) { P.vis[i] = p ? vt(p, i) : null; P.desync = (P.desync || 0) + 1; }
       }
       P.vb = e.boue.slice(); P.vn = e.niche.slice(); P.aff.coups = e.coups; P.aff.score = e.score;
+      if (P.classe) { const d = lire('daily', {}); d[P.jour] = dogCalinsTotal(e); ecrire('daily', d); }
       if (P.finale && !P.fini) { P.fini = true; finPartie(); }
     }
   }
+  function finJour() {
+    const e = P.e, n = dogCalinsTotal(e), classe = P.classe;
+    son('gagne');
+    let rec = 0;
+    for (const v of Object.values(lire('daily', {}))) rec = Math.max(rec, v);
+    $('fin').innerHTML = `<p class="sur">Journée du jour</p><h2>${n} câlins !</h2><div class="objectifs">${P.niv.races.map(t => `<div class="obj"><img src="${imgChien(t, 46, 2)}" alt="">${e.calins[t]}</div>`).join('')}</div>`
+      + `<p>${e.score.toLocaleString('fr-FR')} points</p>`
+      + (classe ? `<p class="aide" id="fRang">Câlins envoyés au classement de la famille.</p>` : `<p class="petit">Partie pour le plaisir, pas classée.</p>`)
+      + (rec ? `<p class="petit">Ton meilleur jour : ${rec} câlins</p>` : '')
+      + `<div class="boutons"><button class="gros" id="bFinTitre">Au refuge</button><button id="bRejouer">Rejouer pour le plaisir</button></div>`;
+    montrer('eFin');
+    ecran = 'fin';
+    $('bFinTitre').onclick = titre;
+    $('bRejouer').onclick = () => lancerJour(false);
+    if (classe) envoyer('daily:' + P.jour, n).then(r => { if (r && $('fRang')) $('fRang').textContent = 'Classement du jour : ' + LudoScores.rankText(r); });
+  }
   function finPartie() {
+    if (estJour()) { finJour(); return; }
     const e = P.e, niv = P.niv, gagne = e.fin === 'gagne', et = dogEtoiles(niv, e);
     const nouveaux = [];
     if (gagne) {
+      const avant = totalEtoiles();
       prog.etoiles[niv.id] = Math.max(prog.etoiles[niv.id] || 0, et);
       prog.scores[niv.id] = Math.max(prog.scores[niv.id] || 0, e.score);
       for (const o of niv.obj) if (o.k === 'calins' && !prog.album.includes(o.t)) { prog.album.push(o.t); nouveaux.push(o.t); }
       sauver();
+      if (totalEtoiles() > avant) envoyer('etoiles', totalEtoiles()).then(r => { if (r && $('fRang')) $('fRang').textContent = 'Étoiles : ' + LudoScores.rankText(r); });
       son('gagne');
     } else son('perdu');
     const suivant = niv.id < DOG_NIVEAUX.length;
     $('fin').innerHTML = gagne
-      ? `<h2>Bravo !</h2><div class="etoiles">${[1, 2, 3].map(s => ETOILE(s <= et)).join('')}</div><p>${e.score.toLocaleString('fr-FR')} points</p>`
+      ? `<h2>Bravo !</h2><div class="etoiles">${[1, 2, 3].map(s => ETOILE(s <= et)).join('')}</div><p>${e.score.toLocaleString('fr-FR')} points</p><p class="petit" id="fRang"></p>`
         + (nouveaux.length ? `<div class="objectifs">${nouveaux.map(t => `<div class="obj fait"><img src="${imgChien(t, 58, 2)}" alt="">${DOG_RACES[t].nom}</div>`).join('')}</div><p class="aide">${nouveaux.length > 1 ? 'Ils rejoignent' : 'Rejoint'} l'album des familles !</p>` : '')
         + `<div class="boutons">${suivant ? '<button class="gros" id="bSuivant">Niveau suivant</button>' : ''}<button id="bRejouer">Rejouer</button><button id="bFinCarte">La carte</button></div>`
       : `<h2>Plus de coups !</h2><p>Encore un essai ?</p><div class="objectifs">${htmlObjectifs(niv, dogAvancement(e))}</div><div class="boutons"><button class="gros" id="bRejouer">Réessayer</button><button id="bFinCarte">La carte</button></div>`;
@@ -580,7 +630,7 @@
   }
   // objectifs en haut de l'écran
   function posObjectif(k) {
-    const n = P.niv.obj.length, w = 76;
+    const n = Math.max(1, P.niv.obj.length), w = 76;
     return [180 - (n - 1) * w / 2 + k * w, 104];
   }
   function hud(g) {
@@ -588,6 +638,7 @@
     // bouton pause
     g.beginPath(); g.arc(30, 34, 20, 0, 7); g.fillStyle = '#fff6ea'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#e8784f'; g.stroke();
     g.fillStyle = '#d4572e'; g.fillRect(23, 25, 5, 18); g.fillRect(32, 25, 5, 18);
+    if (estJour()) { hudJour(g); return; }
     txt(g, 'Niveau ' + niv.id, 60, 32, 19, { align: 'left', coul: '#7a3e1d' });
     // barre des points avec les seuils des étoiles
     const bx = 60, bw = 196, max = niv.etoiles[1] * 1.12, f = Math.min(1, a.score / max);
@@ -595,11 +646,33 @@
     if (f > 0) { const gr = g.createLinearGradient(bx, 0, bx + bw, 0); gr.addColorStop(0, '#ff6b8a'); gr.addColorStop(1, '#ffb84d'); g.fillStyle = gr; rondRect(g, bx, 42, Math.max(10, bw * f), 10, 5); g.fill(); }
     niv.etoiles.forEach((s, k) => { const x = bx + bw * s / max, on = a.score >= s; etoileC(g, x, 47, 8, on); if (k === 1) etoileC(g, x + 13, 47, 8, on); });
     txt(g, a.score.toLocaleString('fr-FR'), bx, 70, 14, { align: 'left', poids: 700, coul: '#a0623a' });
-    // coups
+    coupsHud(g);
+    objectifsHud(g);
+  }
+  function coupsHud(g) {
+    const a = P.aff;
     g.beginPath(); g.arc(318, 40, 30, 0, 7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 4; g.strokeStyle = a.coups <= 5 ? '#ff4f7b' : '#e8784f'; g.stroke();
     txt(g, String(Math.max(0, a.coups)), 318, 50, 28, { coul: a.coups <= 5 ? '#e8264f' : '#d4572e' });
     txt(g, 'coups', 318, 64, 11, { poids: 700, coul: '#a0623a' });
-    // les objectifs
+  }
+  function hudJour(g) {
+    const a = P.aff, n = a.calins.reduce((x, y) => x + y, 0);
+    txt(g, 'Journée du jour', 60, 32, 19, { align: 'left', coul: '#7a3e1d' });
+    txt(g, a.score.toLocaleString('fr-FR') + ' points' + (P.classe ? '' : ' · pour le plaisir'), 60, 56, 14, { align: 'left', poids: 700, coul: '#a0623a' });
+    coupsHud(g);
+    // le compteur de câlins (les cœurs volent vers lui)
+    const [x, y] = posObjectif(0), b = 1 + 0.06 * Math.sin(T * 5);
+    g.save(); g.translate(x - 30, y + 2); g.scale(b, b);
+    g.beginPath(); g.moveTo(0, 12); g.bezierCurveTo(-24, -4, -12, -22, 0, -10); g.bezierCurveTo(12, -22, 24, -4, 0, 12);
+    g.fillStyle = '#ff6b8a'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke(); g.restore();
+    txt(g, String(n), x + 4, y + 14, 34, { align: 'left', coul: '#d4572e' });
+    txt(g, 'câlins', x - 30, y + 36, 13, { poids: 700, coul: '#a0623a' });
+    const sol = H - 92;
+    txt(g, 'Le plus de câlins en ' + P.niv.coups + ' coups !', 180, sol + 40, 16, { coul: '#fff6ea', ombre: 'rgba(90,40,10,.45)', poids: 700 });
+    for (let i = 0; i < 5; i++) patte(g, 40 + i * 70 + ((T * 30) % 70), sol + 70 - (i % 2) * 6, 8, 'rgba(120,60,20,.22)', Math.PI / 2);
+  }
+  function objectifsHud(g) {
+    const niv = P.niv, a = P.aff;
     niv.obj.forEach((o, k) => {
       const [x, y] = posObjectif(k);
       g.fillStyle = 'rgba(255,255,255,.7)'; rondRect(g, x - 34, y - 28, 68, 64, 16); g.fill();
@@ -688,12 +761,15 @@
   // un chien qu'on ne peut pas bouger (en laisse, gamelle) : il remue la tête
   function refus(i) { const v = P.vis[i]; if (v) v.sq = 1; son('non'); }
 
-  function pause() { if (ecran !== 'partie') return; ecran = 'pause'; montrer('ePause'); }
+  function pause() { if (ecran !== 'partie') return; ecran = 'pause'; $('bRecommencer').hidden = !!P.classe; majSon(); montrer('ePause'); }
+  function majSon() { const on = !window.DogSons || DogSons.actif; document.querySelectorAll('.bSon').forEach(b => (b.textContent = on ? '🔊 Son : oui' : '🔇 Son : non')); }
+  document.querySelectorAll('.bSon').forEach(b => (b.onclick = () => { if (window.DogSons) { DogSons.actif = !DogSons.actif; son('clic'); } majSon(); }));
   $('bReprendre').onclick = () => { ecran = 'partie'; montrer(); };
-  $('bRecommencer').onclick = () => lancer(P.niv.id);
+  $('bRecommencer').onclick = () => (estJour() ? lancerJour(false) : lancer(P.niv.id));
   $('bPauseCarte').onclick = carte;
   $('bJouer').onclick = () => { const n = prochain(); if (!prog.etoiles[1]) intro(1); else carte(); return n; };
   $('bAlbum').onclick = album;
+  $('bJour').onclick = introJour;
   $('bCarteRetour').onclick = titre;
   $('bAlbumRetour').onclick = titre;
   $('bIntroCarte').onclick = carte;
@@ -710,12 +786,13 @@
   if (window.ResizeObserver) new ResizeObserver(taille).observe(cv); else addEventListener('resize', taille);
   taille();
   titre();
+  if (location.hash === '#jour') introJour();
   if (document.fonts && document.fonts.load) document.fonts.load('800 20px "Baloo 2"').then(() => { for (const k in imgs) delete imgs[k]; if (ecran === 'titre') titre(); }).catch(() => {});
   requestAnimationFrame(boucle);
 
   // pour les tests (outils/fumee.js) : on lance un niveau, on joue un coup, on lit l'état
   window.DoggySaga = {
-    lancer, jouer, carte, album, titre, intro,
+    lancer, jouer, carte, album, titre, intro, introJour, lancerJour, auj,
     etat: () => P && P.e, partie: () => P, ecran: () => ecran, occupe,
     set vite(v) { vite = v ? 12 : 1; }, get vite() { return vite > 1; },
     progres: prog,

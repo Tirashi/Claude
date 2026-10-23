@@ -18,6 +18,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
 - [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
+- [`doggy-saga/index.html`](doggy-saga/index.html) : **Doggy Saga**, un trois en ligne pour toute la famille : aligner les chiens du refuge pour leur faire des câlins et leur trouver une famille, en 60 niveaux, avec la journée du jour.
 - [`the-des-jarls/index.html`](the-des-jarls/index.html) : **Le Thé des Jarls**, un duel de dés viking façon Orlog : six dés, trois lancers, chaque face lance une armée de 45 soldats à l'assaut ; 20 dieux nordiques et leurs faveurs, la route du fjord (campagne de 20 tavernes), un duel guidé pour apprendre, le duel à deux sur un téléphone posé à plat et un défi du jour.
 - [`bannieres/index.html`](bannieres/index.html) : **Bannières**, un jeu de conquête en 3D pour les enfants : faire courir ses armées sur les cases, construire et décorer son village, regarder les batailles, et avoir le plus de drapeaux après 25 tours.
 - [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
@@ -268,6 +269,16 @@ Un mot de 6 lettres par jour à trouver en 6 essais, façon « Wordle », en pix
 - **Mot du jour** : le même pour toute la famille, un nouveau à minuit (718 mots courants, choisis à la main). **Une seule tentative classée**, sauvegardée après chaque essai. Statistiques : parties, pourcentage de victoires, **série de jours** (avec sa flamme), record et répartition des essais. **PARTAGER** copie la grille en carrés de couleur (🟨 ⬜ ⬛), sans les lettres.
 - **Entraînement** : après le mot du jour, AUTRE MOT donne un mot au hasard, non classé, autant qu'on veut.
 - **Sons** discrets (toc du bois, clochette de l'or), qu'on coupe dans l'aide (bouton ?).
+
+## Doggy Saga
+Un trois en ligne façon Candy Crush, pour toute la famille, dans un refuge pour chiens : chaque chien aligné reçoit un câlin, et un chien qui a reçu assez de câlins trouve une famille.
+
+- **La règle** : glisser un chien vers son voisin (ou toucher l'un puis l'autre) pour aligner au moins 3 chiens pareils. Un coup qui n'aligne rien est annulé et ne compte pas. Les chiens tombent, de nouveaux arrivent par le haut, et les cascades rapportent de plus en plus.
+- **Bonus** : 4 alignés font un **bandana** (vide sa ligne ou sa colonne), un L ou un T fait un **nœud** (vide les cases autour), 5 alignés font une **balle de tennis** (échangée avec un chien, toute sa race part jouer). On peut échanger deux bonus entre eux pour de très gros effets. Les coups qui restent à la fin deviennent des bandanas : c'est la fête !
+- **Objectifs** : des câlins pour certains chiens, laver la **boue**, faire descendre les **chiots** jusqu'à leur panier. Obstacles : les **niches** (à ouvrir en alignant à côté), les **gamelles** (à renverser), les chiens **en laisse** (qui ne bougent pas).
+- **60 niveaux en 5 chapitres**, 16 chiens (dont Nounours, le bouvier bernois), étoiles selon les points (180 en tout), et **l'album des familles** avec un petit mot de chaque nouvelle famille. Les 3 premiers niveaux montrent les gestes avec une main ; un indice apparaît si on attend.
+- **Journée du jour** : la même grille pour toute la famille, 20 coups, le plus de câlins possible. **Une seule tentative classée**, comptée dès le départ ; ensuite, on rejoue pour le plaisir. Lien direct : `doggy-saga/index.html#jour`.
+- **Sons** : vrais aboiements (libres de droits) et petits sons qui montent pendant les cascades ; on coupe le son au titre ou dans la pause.
 
 ## Capitaine du port
 Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32 bits : quais en granit, capitainerie, phare, grue et mouettes. Le bassin est encombré de bateaux ; il faut ouvrir la passe au **navire doré** pour qu'il rejoigne la mer.

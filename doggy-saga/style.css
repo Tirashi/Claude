@@ -21,6 +21,9 @@ button:active, .lien:active { transform: scale(.96); }
 button.gros { font-size: 24px; background: var(--orange); color: #fff; border-color: var(--orange2); box-shadow: 0 4px 0 var(--orange2); padding: 12px 28px; }
 button.rond { width: 44px; height: 44px; padding: 0; border-radius: 50%; font-size: 18px; }
 button:focus-visible, .lien:focus-visible { outline: 3px solid var(--rose); outline-offset: 2px; }
+button small { display: block; font-size: 13px; font-weight: 600; color: var(--brun2); margin-top: 2px; }
+button.jour { border-color: var(--rose); }
+button.petitbouton { font-size: 14px; padding: 6px 14px; border-width: 2px; }
 .lien { border-color: var(--brun2); font-size: 15px; }
 
 .titre { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; max-width: 340px; }

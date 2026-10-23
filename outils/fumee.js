@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html', 'bannieres/index.html', 'the-des-jarls/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html', 'bannieres/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -212,6 +212,29 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Le Thé des Jarls : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-jarls.png` });
+    }
+    if (url === 'doggy-saga/index.html') {
+      // Doggy Saga : le niveau 1 joué jusqu'au bout (étoiles et album gardés), grille visible = vraie grille ; la journée du jour se lance et compte dès le départ
+      const r = await p.evaluate(async () => {
+        const D = DoggySaga, wait = ms => new Promise(r => setTimeout(r, ms));
+        D.vite = true; D.lancer(1);
+        for (let k = 0; k < 400 && !D.partie().fini; k++) {
+          if (!D.occupe() && !D.etat().fin) { const m = dogCoupsPossibles(D.etat())[0]; if (m) D.jouer(m[0], m[1]); }
+          await wait(40);
+        }
+        const P = D.partie();
+        if (!P.fini) return 'le niveau 1 ne finit pas';
+        if (P.desync) return `grille visible décalée ${P.desync} fois`;
+        await wait(300);
+        if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        if (P.e.fin === 'gagne' && !(D.progres.etoiles[1] >= 1 && D.progres.album.length)) return 'étoiles ou album pas gardés';
+        D.titre(); document.getElementById('bJour').click(); document.getElementById('bPartir').click();
+        if (!D.etat() || D.etat().mode !== 'jour' || Number(localStorage.getItem('doggysaga.dailyTry')) !== D.auj()) return 'journée du jour pas lancée';
+        D.vite = false;
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Doggy Saga : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-doggy.png` });
     }
     if (url === 'capitaine-du-port/index.html') {
       // Capitaine du port : un bassin gagné par sa solution, écran de fin ; annuler revient en arrière ; le bassin du jour se charge

@@ -47,6 +47,8 @@ const GAMES = [
    d: "Le Yams classique avec de vrais dés en 3D : lance-les d'un geste, garde les bons et remplis les 13 cases de la feuille. Six styles de dés à débloquer, de la taverne à la Lune.", tags: ["3D", "DÉS", "6 STYLES"]},
   {k: "odyssee/index.html", n: "ODYSSEE", s: "ODYSSEE", ic: "galere", fam: "3d", lb: "linear-gradient(#9fdcff, #1fb0c9)", lt: "#13506e", sh: "#2bb3cf", rank: "odyssee",
    d: "Penche le téléphone pour ramener la galère d'Ulysse de Troie à Ithaque : Polyphème, Éole, Circé, les Sirènes, Charybde et Scylla… 30 plateaux en 3D et un plateau du jour pour toute la famille.", tags: ["3D", "PLATEAU DU JOUR"]},
+  {k: "doggy-saga/index.html", n: "DOGGY SAGA", s: "DOGGY", ic: "doggy", fam: "32", lb: "linear-gradient(#ffb48a, #e8784f)", lt: "#fff6ea", sh: "#e8784f", rank: "doggysaga",
+   d: "Trois en ligne au refuge : glisse les chiens pour en aligner 3 pareils et leur faire des câlins. Bandanas, nœuds et balles de tennis font de grosses cascades. Lave la boue, ouvre les niches, guide les chiots jusqu'à leur panier et trouve une famille aux 16 chiens dans 60 niveaux. Pour toute la famille, avec la journée du jour.", tags: ["60 NIVEAUX", "ALBUM", "DEFI DU JOUR"], more: [["JOURNEE DU JOUR", "doggy-saga/index.html#jour"]]},
   {k: "the-des-jarls/index.html", n: "LE THE DES JARLS", s: "JARLS", ic: "jarl", fam: "32", lb: "linear-gradient(#2c3c70, #0e1428)", lt: "#f3d58c", sh: "#3a4a8a", rank: "jarls",
    d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
   {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
@@ -79,6 +81,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "doggy-saga/index.html": {added: "2026-10-23", genres: ["LOGIQUE", "DU JOUR"]},
   "bannieres/index.html": {added: "2026-10-22", genres: ["TACTIQUE"]},
   "lanterne/index.html": {added: "2026-10-22", genres: ["AVENTURE"]},
   "the-des-jarls/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "HASARD", "DU JOUR"]},
@@ -111,6 +114,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-23", "Nouveau jeu : Doggy Saga, un trois en ligne pour toute la famille. Glisse les chiens du refuge pour en aligner 3 pareils : chaque chien aligné reçoit un câlin. Bandanas, nœuds et balles de tennis lancent de grosses cascades. Lave la boue, ouvre les niches, fais descendre les chiots jusqu'à leur panier, et trouve une famille aux 16 chiens (dont Nounours le bouvier bernois) dans 60 niveaux. Chaque jour, la journée du jour : 20 coups, le plus de câlins possible."],
   ["2026-10-22", "Nouveau jeu : Bannières, un jeu de conquête en 3D pensé pour les enfants. Choisis ta couleur, fais courir tes armées de chevaliers, d'archers, de lanciers et de mages sur la carte, achète des guerriers au château, construis, agrandis et décore ton village, et regarde les batailles avec les cœurs au-dessus des guerriers. Des étoiles disent si une bataille est facile. Prends les 3 châteaux des autres seigneurs, ou aie le plus de drapeaux après 25 tours !"],
   ["2026-10-22", "Démo : La Dernière Lanterne, un RPG au tour par tour en HD-2D. Avec ton équipe (lame, clerc, arcaniste), traverse Clairfond, l'abbaye et le Bois Murmurant, rallume les lanternes oubliées et descends dans la Crypte des racines affronter le Roi des aulnes. Le prologue et l'acte 1 sont jouables, la suite arrive."],
   ["2026-10-21", "Nouveau jeu : Le Thé des Jarls, un duel de dés viking. Six dés, trois lancers, et chaque face envoie ton armée de 45 soldats à l'assaut : charge des haches, volée de flèches, éclaireurs qui volent les jetons. Invoque les faveurs de 20 dieux nordiques, apprends avec Sigrid la skalde, remonte la route du fjord de taverne en taverne (étoiles, couleurs, unités à gagner), joue à deux sur le même téléphone posé à plat, et tente le défi du jour."],
@@ -205,6 +209,7 @@ const PROGRESS = {
 };
 // défi du jour : null = pas de défi du jour, false = à faire, true = joué (puzzles : réussi ; missions : tentative commencée)
 const TODAY = {
+  "doggy-saga/index.html": () => rk("doggysaga.dailyTry", 0) === dayNum() || (rk("doggysaga.daily", {}) || {})[dayNum()] !== undefined,
   "the-des-jarls/index.html": () => { const t = rk("jarls.dailyTry", null); return !!(t && t.j === dayNum()); },
   "duche/index.html": () => { const t = rk("duche.dailyTry", null); return !!(t && t.j === dayNum()); },
   "mot-d-or/index.html": () => { const j = rk("motdor.jour", null); return !!(j && j.j === dayNum() && j.fini); },
@@ -226,6 +231,9 @@ const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catc
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
 const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
 const RECS = {
+  "doggy-saga/index.html": () => { const p = rk("doggysaga.progres", {}) || {}, e = p.etoiles || {}, d = rk("doggysaga.daily", {}) || {};
+    return [["Étoiles", num(Object.values(e).reduce((a, v) => a + (Number(v) || 0), 0), "/ 180")], ["Niveaux réussis", num(count(e), "/ 60")], ["Chiens adoptés", num((p.album || []).length, "/ 16")],
+      ["Meilleure journée", num(Math.max(0, ...Object.values(d).map(Number).filter(v => v >= 0)), "câlins")]]; },
   "the-des-jarls/index.html": () => { const e = (rk("jarls.campagne", {}) || {}).etoiles || {}, v = Object.values(e).map(Number).filter(x => x > 0);
     return [["Étoiles de la campagne", num(v.reduce((a, b) => a + b, 0), "/ 60")], ["Dieux battus", num(v.length, "/ 20")], ["Défis du jour", num(count(rk("jarls.daily", {})))]]; },
   "duche/index.html": () => [["Meilleur score (normal)", num(rk("duche.best", 0), "pts")], ["Duchés du jour", num(count(rk("duche.daily", {})))]],
@@ -538,6 +546,11 @@ const RANKS = {
      empty: () => st.back ? "Personne n'a trouvé le mot ce jour-là." : "Personne n'a encore trouvé le mot du jour : à toi !"},
     {label: "SERIE", game: "motdor", board: () => "serie", fmt: v => N(v) + (v > 1 ? " jours" : " jour"), title: () => "MEILLEURE SERIE",
      note: "Le plus de jours d'affilée avec le mot du jour trouvé."}],
+  doggysaga: [{label: "ETOILES", game: "doggysaga", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "LE REFUGE",
+     note: "Les étoiles des 60 niveaux du refuge : 1 étoile par niveau réussi, 2 ou 3 avec beaucoup de points (180 au maximum)."},
+    {label: "JOURNEE DU JOUR", ctl: ["day"], game: "doggysaga", board: daily, fmt: v => N(v) + " câlins", title: () => "JOURNEE DU JOUR",
+     note: "La même grille et les mêmes chiens pour toute la famille : le plus de câlins en 20 coups. Une seule tentative classée par jour.",
+     empty: () => st.back ? "Personne n'a joué la journée de ce jour-là." : "Personne n'a encore joué la journée du jour : à toi !"}],
   jarls: [{label: "ETOILES", game: "jarls", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "LA ROUTE DU FJORD",
      note: "Les étoiles de la campagne des tavernes : par dieu battu, 1 étoile, 2 en gardant 8 PV, 3 en gardant 12 PV (60 au maximum)."},
     {label: "DEFI DU JOUR", ctl: ["day"], game: "jarls", board: daily, fmt: v => N(v) + " pts", title: () => "DEFI DU JOUR",
@@ -903,6 +916,8 @@ function collectSaves(){
   if (ya.b || ya.p) g.yams = ya;
   const od = {s: readKey("odyssee.stars", {}) || {}, b: readKey("odyssee.best", {}) || {}, d: readKey("odyssee.daily", {}) || {}};
   if (Object.keys(od.s).length || Object.keys(od.d).length) g.odyssee = od;
+  const dg = {e: (readKey("doggysaga.progres", {}) || {}).etoiles || {}, a: (readKey("doggysaga.progres", {}) || {}).album || [], d: readKey("doggysaga.daily", {}) || {}};
+  if (Object.keys(dg.e).length || Object.keys(dg.d).length) g.doggysaga = dg;
   const ja = {e: (readKey("jarls.campagne", {}) || {}).etoiles || {}, d: readKey("jarls.daily", {}) || {}};
   if (Object.keys(ja.e).length || Object.keys(ja.d).length) g.jarls = ja;
   const bn = {b: Number(readKey("bannieres.best", 0)) || 0, s: readKey("bannieres.stats", {}) || {}};
@@ -947,6 +962,8 @@ function describeSaves(g){
   if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
   if (g.lunerover){ const n = Object.values(g.lunerover).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Lune-Rover : ${n} étoile${n > 1 ? "s" : ""}`); }
   if (g.odyssee){ const n = Object.values(g.odyssee.s || {}).reduce((s, v) => s + (Number(v) || 0), 0); out.push(`Odyssée : ${n} étoile${n > 1 ? "s" : ""}`); }
+  if (g.doggysaga){ const v = Object.values(g.doggysaga.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.doggysaga.d || {}).length, a = (g.doggysaga.a || []).length;
+    out.push(`Doggy Saga : ${v.length} niveau${v.length > 1 ? "x" : ""}, ${v.reduce((x, y) => x + y, 0)} étoiles, ${a} chien${a > 1 ? "s" : ""} adopté${a > 1 ? "s" : ""}${d ? `, ${d} journée${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.jarls){ const v = Object.values(g.jarls.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.jarls.d || {}).length;
     out.push(`Le Thé des Jarls : ${v.length} dieu${v.length > 1 ? "x" : ""} battu${v.length > 1 ? "s" : ""}, ${v.reduce((a, b) => a + b, 0)} étoiles${d ? `, ${d} défi${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.bannieres){ const s = g.bannieres.s || {}; out.push(`Bannières : ${g.bannieres.b || 0} drapeaux au mieux${s.gagnees ? `, ${s.gagnees} partie${s.gagnees > 1 ? "s" : ""} gagnée${s.gagnees > 1 ? "s" : ""}` : ""}`); }
@@ -1096,6 +1113,14 @@ function mergeSaves(g){
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
     writeKey("odyssee.best", best);
     if (n){ writeKey("odyssee.stars", stars); writeKey("odyssee.daily", daily); done.push(`Odyssée : ${n} plateau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
+  }
+  if (g.doggysaga && typeof g.doggysaga === "object"){
+    // fusion : pour chaque niveau, le plus d'étoiles ; l'album réunit les deux ; pour chaque journée, le plus de câlins
+    const a = g.doggysaga, pr = readKey("doggysaga.progres", {}) || {}, et = Object.assign({}, pr.etoiles || {}), alb = (pr.album || []).slice(), daily = readKey("doggysaga.daily", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(a.e || {})) if (/^\d{1,2}$/.test(k) && v >= 1 && v <= 3 && !(et[k] >= v)){ et[k] = Math.round(v); n++; }
+    for (const t of a.a || []) if (Number.isInteger(t) && t >= 0 && t < 16 && !alb.includes(t)){ alb.push(t); n++; }
+    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v >= 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
+    if (n){ writeKey("doggysaga.progres", Object.assign({etoiles: {}, scores: {}, album: []}, pr, {etoiles: et, album: alb})); writeKey("doggysaga.daily", daily); done.push(`Doggy Saga : ${n} record${n > 1 ? "s" : ""}`); }
   }
   if (g.jarls && typeof g.jarls === "object"){
     // fusion : pour chaque dieu, le plus d'étoiles ; pour chaque défi du jour, le plus haut score

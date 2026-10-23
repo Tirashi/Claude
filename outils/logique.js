@@ -9,6 +9,7 @@
    - Yams : points de chaque case pour des mains connues, bonus de 35 ;
    - Amiral ! : bataille du jour (flottes complètes, mêmes flottes et même placement ennemi pour tous) ;
    - Capitaine du port : bassin du jour des 20 prochains jours (optimum de 12 à 30 coups, vérifié par le solveur, le même pour tous, vite généré) ;
+   - Doggy Saga : journée du jour des prochains jours (même grille pour tous, 6 races, 20 coups, des coups possibles, pas d'alignement tout fait) ;
    - Le Mot d'or : mot du jour des prochains jours (le même pour tous, dans la liste, sans répétition), couleurs des lettres doubles ;
    - accueil : transfert de sauvegarde LUDO1- (exporter, vider, importer : tout revient).
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
@@ -166,6 +167,19 @@ const TESTS = {
     }
     return out;
   }, D),
+  'doggy-saga/index.html': async (p, D) => p.evaluate(D => {
+    const out = [], vus = new Set();
+    for (const { k } of D.slice(0, 30)) {
+      const a = dogNouvelleJour(k), b = dogNouvelleJour(k), n = dogJour(k);
+      if (JSON.stringify(a) !== JSON.stringify(b)) out.push(`journée du ${k} : deux tirages différents`);
+      if (n.races.length !== 6 || n.coups !== 20 || a.mode !== 'jour') out.push(`journée du ${k} : ${n.races.length} races, ${n.coups} coups, mode ${a.mode}`);
+      if (!dogCoupsPossibles(a).length) out.push(`journée du ${k} : aucun coup possible`);
+      if (dogTrouver(a).length) out.push(`journée du ${k} : un alignement tout fait au départ`);
+      vus.add(JSON.stringify(a.g.map(p => p && p.t)));
+    }
+    if (vus.size < 25) out.push(`seulement ${vus.size} grilles différentes sur 30 jours`);
+    return out;
+  }, D),
   'duche/index.html': async (p, D) => p.evaluate(D => {
     // Duché du jour : même graine = même carte, mêmes rivaux, même paquet ; deux jours qui se suivent diffèrent
     const out = [], cartes = new Set();
@@ -213,7 +227,8 @@ const TESTS = {
       'amiral.palmares': { victoires: 3, normal: 1 }, 'amiral.daily': { 20261019: 24 }, 'magasinier.niveaux': { 0: { coups: 7, etoiles: 2 }, 13: { coups: 9, etoiles: 3 } },
       'magasinier.daily': { 20261020: 41 }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 }, 'duche.best': 3120, 'duche.daily': { 20261020: 2800 },
       'motdor.stats': { parties: 5, gagnees: 4, serie: 2, record: 3, dernier: 20261019, dist: [0, 1, 2, 1, 0, 0] }, 'motdor.daily': { 20261019: 3 },
-      'jarls.campagne': { etoiles: { heimdall: 3, idunn: 2 } }, 'jarls.daily': { 20261021: 1290 } };
+      'jarls.campagne': { etoiles: { heimdall: 3, idunn: 2 } }, 'jarls.daily': { 20261021: 1290 },
+      'doggysaga.progres': { etoiles: { 1: 3, 2: 1 }, scores: {}, album: [0, 3] }, 'doggysaga.daily': { 20261023: 98 } };
     const A = window.Accueil, keep = { ...localStorage }; localStorage.clear();
     for (const [k, v] of Object.entries(recs)) localStorage.setItem(k, JSON.stringify(v));
     const code = 'LUDO1-' + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, g: A.collectSaves() }))));
