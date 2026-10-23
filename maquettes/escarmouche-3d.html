@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Escarmouche 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
+<style>
+/* Écran de téléphone : bandeau, plateau 3D en hexagones, fenêtre de commandement ; la scène de combat remplace le plateau */
+:root {
+  --fond: #16202e; --fen: #22324a; --fen2: #182436; --bord: #c9a45a; --txt: #f1e6c8; --doux: #a9b6c8; --or: #f2c14e;
+  --bleu: #2f6fe0; --rouge: #d8322a;
+  --police: "Pixelify Sans", "Trebuchet MS", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--fond); color: var(--txt); font-family: var(--police); font-size: 16px; line-height: 1.25;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 8px 24px;
+}
+.ecran { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+.bandeau { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.bandeau .camp { padding: 2px 10px; border-radius: 4px; background: var(--bleu); color: #fff; }
+.bandeau .camp.rouge { background: var(--rouge); }
+.bandeau .or { color: var(--or); }
+.plateau { position: relative; aspect-ratio: 4 / 5; border: 2px solid var(--bord); border-radius: 8px; overflow: hidden; background: #8fc6e8; touch-action: manipulation; }
+.plateau canvas { display: block; width: 100%; height: 100%; }
+#etiquettes { position: absolute; inset: 0; pointer-events: none; }
+.eti { position: absolute; top: 10px; font-weight: 700; font-size: 18px; text-shadow: 0 2px 0 #000, 0 0 4px #000; display: grid; gap: 3px; width: 44%; }
+.eti.g { left: 10px; } .eti.d { right: 10px; text-align: right; }
+.eti .barre { height: 9px; background: #111; border: 2px solid #111; border-radius: 3px; overflow: hidden; }
+.eti .barre i { display: block; height: 100%; background: #6cd04a; transition: width .45s; }
+.eti.d .barre i { margin-left: auto; }
+.degat { position: absolute; font-weight: 700; font-size: 30px; color: #fff; text-shadow: 0 3px 0 #000, 0 0 6px #000; transform: translate(-50%, -50%); pointer-events: none; animation: monte .9s ease-out forwards; }
+@keyframes monte { to { transform: translate(-50%, -160%); opacity: 0; } }
+.ruban {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.7); opacity: 0; pointer-events: none;
+  font-weight: 700; font-size: 20px; text-align: center; white-space: nowrap; padding: 8px 18px;
+  background: var(--fen); color: var(--txt); border: 2px solid var(--bord); border-radius: 6px; box-shadow: 0 4px 0 rgba(0,0,0,.4);
+  transition: opacity .2s, transform .25s cubic-bezier(.3,1.6,.6,1);
+}
+.ruban.rouge { background: #4a1c1c; } .ruban.vu { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+#charge { position: absolute; inset: 0; display: grid; place-items: center; background: #8fc6e8; color: #1b2a3a; font-weight: 700; font-size: 18px; }
+.fenetre { background: linear-gradient(var(--fen), var(--fen2)); border: 2px solid var(--bord); border-radius: 6px; padding: 10px; display: grid; gap: 8px; }
+.fiches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fiche { min-width: 0; }
+.fiche .nom { font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+.fiche .val { font-size: 14px; color: var(--doux); }
+.fiche .val b { color: var(--txt); }
+.actions, .recrue { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.fenetre button { font-family: var(--police); font-weight: 700; font-size: 15px; padding: 10px 4px; cursor: pointer; border-radius: 5px; background: #2c4262; color: var(--txt); border: 2px solid var(--bord); }
+.fenetre button.chaud { background: var(--or); color: #241a08; }
+.fenetre button:disabled { opacity: .35; cursor: default; }
+.fenetre button:focus-visible { outline: 2px solid var(--or); outline-offset: 2px; }
+.recrue small { display: block; font-weight: 400; color: var(--or); }
+.aide { font-size: 15px; color: var(--doux); min-height: 2.5em; }
+.reglages { display: flex; gap: 14px; flex-wrap: wrap; font-size: 15px; color: var(--doux); }
+.reglages label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.notes { display: grid; gap: 8px; font-size: 16px; color: #d8e0ea; }
+.notes h2 { margin: 0; font-size: 17px; color: var(--or); }
+.notes p, .notes ul { margin: 0; } .notes ul { padding-left: 18px; display: grid; gap: 4px; }
+@media (prefers-reduced-motion: reduce) { .ruban { transition: none; } }
+</style>
+</head>
+<body>
+<div class="ecran">
+  <div class="bandeau"><span id="jour">JOUR 1</span><span class="camp" id="camp">BLEUS</span><span class="or" id="or">OR 2000</span></div>
+  <div class="plateau" id="plateau">
+    <div id="etiquettes"></div>
+    <div class="ruban" id="ruban"></div>
+    <div id="charge">Les chevaliers s'équipent…</div>
+  </div>
+  <div class="fenetre">
+    <div class="fiches">
+      <div class="fiche"><div class="nom" id="t-nom">Plaine</div><div class="val" id="t-val">Défense ★</div></div>
+      <div class="fiche"><div class="nom" id="u-nom">—</div><div class="val" id="u-val">touche une troupe</div></div>
+    </div>
+    <div class="actions" id="actions">
+      <button id="a-attaque" disabled>Attaquer</button>
+      <button id="a-capture" disabled>Capturer</button>
+      <button id="a-attendre" disabled>Attendre</button>
+      <button id="a-fin" class="chaud">Fin du tour</button>
+    </div>
+    <div class="recrue" id="recrue" hidden></div>
+    <div class="aide" id="aide">Touche une troupe bleue pour voir où elle peut aller.</div>
+    <div class="reglages">
+      <label><input type="checkbox" id="o-scene" checked> Scènes de combat</label>
+      <label><input type="checkbox" id="o-son" checked> Sons</label>
+    </div>
+  </div>
+  <div class="notes">
+    <h2>Escarmouche en 3D, avec KayKit</h2>
+    <p>Les modèles 3D de Bannières (KayKit, CC0) : plateau en hexagones, château, maisons, forêts, collines et montagnes, et des personnages animés (repos, marche, coups d'épée et de lance, tir à l'arc, sort, coup reçu, chute). Capes, écharpes et robes prennent la couleur du camp.</p>
+    <ul>
+      <li><b>Soldat</b> : épée et bouclier, prend les villages.</li>
+      <li><b>Archer</b> : tire à 2 cases.</li>
+      <li><b>Lancier</b> : le barbare à la lance, va loin, fort contre les soldats.</li>
+      <li><b>Mage</b> : boule de feu à 2 cases, fort contre les lanciers.</li>
+    </ul>
+    <p>Dans la scène de combat, chaque troupe est une escouade : 10 PV = 5 combattants, un tombe tous les 2 PV perdus. Touche ton château pour recruter. Touche l'écran pendant un combat pour le passer.</p>
+  </div>
+</div>
+
+<script src="../bannieres/modeles.js"></script>
+<script src="../bannieres/personnages.js"></script>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/GLTFLoader.js"></script>
+<script src="../lib/SkeletonUtils.js"></script>
+<script>
+'use strict';
+/* global THREE, KAYKIT, KAYKIT_TEX, DONJON, FORET, FORET_TEX, AVENTURIERS */
+
+// ================= modèles KayKit (décodage repris de bannieres/carte3d.js) =================
+const geos = {};
+const octets = b64 => { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return new DataView(u.buffer); };
+function geo(nom) {
+  if (geos[nom]) return geos[nom];
+  const e = KAYKIT[nom] || DONJON[nom] || FORET[nom];
+  if (!e) throw new Error('modèle inconnu : ' + nom);
+  if (typeof e[0] === 'string') {
+    const base = geo(e[0]), n = base.attributes.position.count, dv = octets(e[1]), uv = new Float32Array(n * 2);
+    for (let i = 0; i < n * 2; i++) uv[i] = dv.getUint16(i * 2, true) / 65535;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', base.attributes.position); g.setAttribute('normal', base.attributes.normal); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(base.index);
+    return geos[nom] = g;
+  }
+  const [n, ni, b64] = e, dv = octets(b64), pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2);
+  let o = 0;
+  for (let i = 0; i < n * 3; i++, o += 2) pos[i] = dv.getInt16(o, true) / 4096;
+  for (let i = 0; i < n * 3; i++, o += 1) nor[i] = dv.getInt8(o) / 127;
+  for (let i = 0; i < n * 2; i++, o += 2) uv[i] = dv.getUint16(o, true) / 65535;
+  const grand = n >= 65536, idx = grand ? new Uint32Array(ni) : new Uint16Array(ni);
+  for (let i = 0; i < ni; i++, o += grand ? 4 : 2) idx[i] = grand ? dv.getUint32(o, true) : dv.getUint16(o, true);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(new THREE.BufferAttribute(idx, 1));
+  return geos[nom] = g;
+}
+function teinte(r, g, b) { const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; if (!d) return [0, 0, mx / 255]; let h = mx === r ? (g - b) / d % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, d / mx, mx / 255]; }
+function rgb(h, s, v) { const f = n => { const k = (n + h / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); }; return [f(5), f(3), f(1)]; }
+function matiere(retouche, source = KAYKIT_TEX) {
+  const tex = new THREE.Texture(); tex.flipY = false; tex.encoding = THREE.sRGBEncoding;
+  const img = new Image();
+  img.onload = () => {
+    if (!retouche) tex.image = img;
+    else { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, c.width, c.height); for (let i = 0; i < d.data.length; i += 4) retouche(d.data, i); g.putImageData(d, 0, 0); tex.image = c; }
+    tex.needsUpdate = true;
+  };
+  img.src = source;
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, metalness: 0 });
+}
+const matBase = matiere(), matForet = matiere(null, FORET_TEX), matSol = matiere();
+matSol.color.setRGB(.74, .95, .68);   // l'herbe des hexagones, un peu plus verte
+const matGris = matiere((p, i) => { const m = (p[i] + p[i + 1] + p[i + 2]) / 3; for (let k = 0; k < 3; k++) p[i + k] = Math.round(p[i + k] * 0.35 + m * 0.65); });
+function objet(nom, mat, ombre = true) { const m = new THREE.Mesh(geo(nom), mat || (FORET[nom] ? matForet : matBase)); m.castShadow = ombre; m.receiveShadow = true; return m; }
+
+// ================= personnages animés (repris de bannieres/bataille3d.js) =================
+const AV = { modeles: {}, clips: {}, armes: {}, mats: {}, haut: 1 };
+const TYPES = {
+  inf: { perso: 'Knight', droite: 'sword_1handed', gauche: 'shield_badge_color', attaques: ['Melee_1H_Attack_Chop', 'Melee_1H_Attack_Stab'], repos: 'Idle_A' },
+  arc: { perso: 'Ranger', gauche: 'bow_withString', attaques: ['Ranged_Bow_Release'], repos: 'Ranged_Bow_Idle', archer: true },
+  cav: { perso: 'Barbarian', droite: 'spear_A', attaques: ['Melee_1H_Attack_Stab'], repos: 'Idle_A' },
+  sie: { perso: 'Mage', droite: 'staff', attaques: ['Ranged_Magic_Shoot'], repos: 'Idle_A', mage: true },
+};
+const TEXTURE_ARME = { sword_1handed: 'Knight', shield_badge_color: 'Knight', bow_withString: 'Ranger', arrow_bow: 'Ranger', staff: 'Mage' };
+const TEINTES = { rouge: [0, 1], bleu: [218, 1] };
+const EQUIPE = { Knight: h => h > 330 || h < 20, Ranger: h => h > 185 && h < 245, Mage: h => h > 245 && h < 305, Barbarian: h => h > 330 || h < 20 };
+async function preparerAventuriers() {
+  const chargeur = new THREE.GLTFLoader(), lire = src => new Promise((ok, ko) => chargeur.parse(src, '', ok, ko));
+  for (const p of ['Knight', 'Ranger', 'Barbarian', 'Mage']) {
+    const g = await lire(Uint8Array.from(atob(AVENTURIERS.persos[p]), c => c.charCodeAt(0)).buffer);
+    AV.modeles[p] = g.scene;
+    let carte = null; g.scene.traverse(o => { if (o.isMesh && !carte) carte = o.material.map; });
+    AV.mats[p] = {};
+    for (const coul of ['rouge', 'bleu']) {
+      const c = document.createElement('canvas'); c.width = c.height = 256; const ctx = c.getContext('2d'); ctx.drawImage(carte.image, 0, 0, 256, 256);
+      const d = ctx.getImageData(0, 0, 256, 256), [cible, lum] = TEINTES[coul];
+      for (let k = 0; k < d.data.length; k += 4) { const [h, s, v] = teinte(d.data[k], d.data[k + 1], d.data[k + 2]); if (s > 0.35 && EQUIPE[p](h)) [d.data[k], d.data[k + 1], d.data[k + 2]] = rgb(cible, Math.min(1, s), Math.min(1, v * lum)); }
+      ctx.putImageData(d, 0, 0);
+      const t = new THREE.CanvasTexture(c); t.flipY = false; t.encoding = THREE.sRGBEncoding;
+      AV.mats[p][coul] = { peau: new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0, skinning: true }), fixe: new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0 }) };
+    }
+  }
+  for (const a of ['sword_1handed', 'shield_badge_color', 'bow_withString', 'arrow_bow', 'staff', 'spear_A']) {
+    AV.armes[a] = (await lire(AVENTURIERS.armes[a])).scene;
+    if (AVENTURIERS.texArmes && AVENTURIERS.texArmes[a]) {
+      const t = new THREE.TextureLoader().load(AVENTURIERS.texArmes[a]); t.flipY = false; t.encoding = THREE.sRGBEncoding;
+      AV.armes[a].traverse(x => { if (x.isMesh) x.material = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, metalness: 0 }); });
+    }
+  }
+  AVENTURIERS.clips.forEach(j => { AV.clips[j.name] = THREE.AnimationClip.parse(j); });
+  const b = new THREE.Box3().setFromObject(AV.modeles.Knight); AV.haut = b.max.y - b.min.y;
+}
+const COUL_HEX = { bleu: 0x2f6fe0, rouge: 0xd8322a };
+const geoAnneau = new THREE.RingGeometry(0.2, 0.42, 24), matsAnneau = {};
+function aventurier(type, coul, haut) {
+  const T = TYPES[type], o = THREE.SkeletonUtils.clone(AV.modeles[T.perso]), m = AV.mats[T.perso][coul];
+  o.traverse(x => { if (x.isMesh) { x.material = x.isSkinnedMesh ? m.peau : m.fixe; x.castShadow = true; x.frustumCulled = false; } });
+  const arme = (nom, os) => {
+    if (!nom || !AV.armes[nom]) return;
+    const w = AV.armes[nom].clone(), src = TEXTURE_ARME[nom], mw = src && AV.mats[src] && AV.mats[src][coul].fixe;
+    w.traverse(x => { if (x.isMesh) { if (mw) x.material = mw; x.castShadow = true; } });
+    if (nom === 'bow_withString') w.rotation.z = Math.PI;
+    const main = o.getObjectByName(os); if (main) main.add(w);
+  };
+  arme(T.droite, 'handslotr'); arme(T.gauche, 'handslotl');
+  o.scale.setScalar(haut / AV.haut);
+  const g = new THREE.Group(); g.add(o);
+  const anneau = new THREE.Mesh(geoAnneau, matsAnneau[coul] || (matsAnneau[coul] = new THREE.MeshBasicMaterial({ color: new THREE.Color(COUL_HEX[coul]).convertSRGBToLinear(), transparent: true, opacity: .95 })));
+  anneau.rotation.x = -Math.PI / 2; anneau.position.y = 0.02; anneau.scale.setScalar(haut / 1.1); g.add(anneau);
+  g.userData = { type, T, coul, mixer: new THREE.AnimationMixer(o), actions: {}, courant: null };
+  return g;
+}
+function jouer(g, nom, une = false, vitesse = 1) {
+  const u = g.userData; if (!AV.clips[nom]) return { time: 0 };
+  const a = u.actions[nom] || (u.actions[nom] = u.mixer.clipAction(AV.clips[nom]));
+  if (u.courant === a && !une) return a;
+  a.reset(); a.setLoop(une ? THREE.LoopOnce : THREE.LoopRepeat, Infinity); a.clampWhenFinished = une; a.timeScale = vitesse;
+  if (u.courant && u.courant !== a) u.courant.fadeOut(0.15);
+  a.fadeIn(0.15).play(); u.courant = a; return a;
+}
+
+// ================= règles (les mêmes que les maquettes 2D) =================
+// carte en rangées décalées : 7 colonnes, 9 rangées
+const CARTE = [
+  "MF.H.FM",
+  "F.v..hF",
+  ".h..F.v",
+  "~~.M.F.",
+  "~..F..~",
+  ".F.M.~~",
+  "v..F.h.",
+  "Fh..v.F",
+  "MF.B.FM",
+];
+const L = 7, H = 9;
+const TERRAINS = { '.': ['Plaine', 1], 'F': ['Forêt', 2], 'h': ['Colline', 2], 'M': ['Montagne', 4], '~': ['Lac', 0], 'v': ['Village', 3], 'H': ['Château', 4], 'B': ['Château', 4] };
+const TROUPES = {
+  inf: { nom: 'Soldat',  mv: 3, rg: [1, 1], atk: 5, prix: 1000, capture: true },
+  arc: { nom: 'Archer',  mv: 3, rg: [2, 2], atk: 5, prix: 2000 },
+  cav: { nom: 'Lancier', mv: 5, rg: [1, 1], atk: 7, prix: 2500, lourd: true },
+  sie: { nom: 'Mage',    mv: 3, rg: [2, 2], atk: 6, prix: 3000 },
+};
+const FORCE = { inf: { arc: 1.2, sie: 1.3 }, arc: { inf: 1.2, sie: 1.2 }, cav: { inf: 1.4, arc: 1.4 }, sie: { cav: 1.6, inf: 1.1 } };
+// voisins en rangées décalées (rangées impaires décalées vers la droite)
+function voisins(x, y) {
+  const d = y % 2 ? [[1, 0], [-1, 0], [0, -1], [1, -1], [0, 1], [1, 1]] : [[1, 0], [-1, 0], [-1, -1], [0, -1], [-1, 1], [0, 1]];
+  return d.map(([dx, dy]) => [x + dx, y + dy]).filter(([a, b]) => a >= 0 && b >= 0 && a < L && b < H);
+}
+const cube = (x, y) => { const q = x - (y - (y & 1)) / 2; return [q, y, -q - y]; };
+const dist = (a, b) => { const p = cube(a.x, a.y), q = cube(b.x, b.y); return Math.max(Math.abs(p[0] - q[0]), Math.abs(p[1] - q[1]), Math.abs(p[2] - q[2])); };
+const terrain = (x, y) => CARTE[y][x];
+let unites, bat, jour, joueur, or, sel, phase, portee, cibles, fini, prochainId, combatEnCours;
+function nouvellePartie() {
+  prochainId = 1; unites = [];
+  const pose = (type, camp, x, y) => unites.push({ id: prochainId++, type, camp, x, y, pv: 10, fait: false });
+  pose('inf', 'B', 2, 7); pose('inf', 'B', 4, 8); pose('arc', 'B', 1, 8); pose('cav', 'B', 5, 7); pose('sie', 'B', 3, 7);
+  pose('inf', 'R', 4, 1); pose('inf', 'R', 2, 0); pose('arc', 'R', 4, 0); pose('cav', 'R', 1, 1); pose('sie', 'R', 3, 1);
+  bat = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) { const c = terrain(x, y); if ('vHB'.includes(c)) bat.push({ x, y, qg: c !== 'v', camp: c === 'B' ? 'B' : c === 'H' ? 'R' : null, pts: c === 'v' ? 10 : 20 }); }
+  jour = 1; joueur = 'B'; or = { B: 2000, R: 2000 }; sel = null; phase = 'libre'; portee = null; cibles = []; fini = false; combatEnCours = null;
+}
+const uniteEn = (x, y) => unites.find(u => u.x === x && u.y === y && u.pv > 0);
+const batEn = (x, y) => bat.find(b => b.x === x && b.y === y);
+function cout(u, c) { if (c === '~') return 99; if (c === 'M') return TROUPES[u.type].lourd ? 99 : 3; if (c === 'F' || c === 'h') return 2; return 1; }
+function calculPortee(u) {
+  const d = {}, pere = {}, k = (x, y) => x + ',' + y, file = [[u.x, u.y]]; d[k(u.x, u.y)] = 0;
+  while (file.length) {
+    file.sort((a, b) => d[k(...a)] - d[k(...b)]); const [x, y] = file.shift();
+    for (const [nx, ny] of voisins(x, y)) {
+      const o = uniteEn(nx, ny); if (o && o.camp !== u.camp) continue;
+      const nd = d[k(x, y)] + cout(u, terrain(nx, ny));
+      if (nd <= TROUPES[u.type].mv && (d[k(nx, ny)] === undefined || nd < d[k(nx, ny)])) { d[k(nx, ny)] = nd; pere[k(nx, ny)] = [x, y]; file.push([nx, ny]); }
+    }
+  }
+  for (const key in d) { const [x, y] = key.split(',').map(Number); const o = uniteEn(x, y); if (o && o !== u) delete d[key]; }
+  return { d, pere };
+}
+function ciblesDepuis(u, x, y) { const [a, b] = TROUPES[u.type].rg; return unites.filter(o => o.pv > 0 && o.camp !== u.camp && dist(o, { x, y }) >= a && dist(o, { x, y }) <= b); }
+function degats(a, d, pvA = a.pv) { return Math.max(1, Math.round(TROUPES[a.type].atk * ((FORCE[a.type] || {})[d.type] || 1) * pvA / 10 * (1 - .08 * TERRAINS[terrain(d.x, d.y)][1]))); }
+const peutCapturer = u => TROUPES[u.type].capture && batEn(u.x, u.y) && batEn(u.x, u.y).camp !== u.camp;
+function chemin(pere, x, y) { const c = [[x, y]]; let k = x + ',' + y; while (pere[k]) { c.unshift(pere[k]); k = pere[k].join(','); } return c; }
+
+// ================= sons =================
+let AC = null, bruit = null;
+const sonActif = () => document.getElementById('o-son').checked;
+function audio() {
+  if (AC || !sonActif()) return AC;
+  try { AC = new (window.AudioContext || window.webkitAudioContext)(); bruit = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d = bruit.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } catch (_) { AC = null; }
+  return AC;
+}
+function note(f, dur, type = 'square', vol = .06, glisse = 0, retard = 0) {
+  if (!sonActif() || !audio()) return;
+  const t = AC.currentTime + retard, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (glisse) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + glisse), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + .02);
+}
+function souffle(dur, f0, f1, vol = .2, retard = 0) {
+  if (!sonActif() || !audio()) return;
+  const t = AC.currentTime + retard, s = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = bruit; fl.type = 'bandpass'; fl.Q.value = 1.2; fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); s.connect(fl).connect(g).connect(AC.destination); s.start(t); s.stop(t + dur + .02);
+}
+const SON = {
+  choix: () => note(660, .06, 'square', .04), pas: () => souffle(.05, 900, 500, .05),
+  inf: () => { souffle(.12, 3000, 6000, .16); note(1400, .1, 'triangle', .05, -400); },
+  cav: () => { souffle(.18, 1800, 4000, .16); note(900, .1, 'triangle', .05, -300); },
+  arc: () => souffle(.25, 2500, 600, .14),
+  sie: () => { souffle(.5, 300, 1600, .22); note(220, .3, 'sawtooth', .04, 300); },
+  touche: () => note(170, .12, 'square', .06, -80), mort: () => note(300, .3, 'triangle', .07, -200),
+  capture: () => [523, 659, 784, 1046].forEach((f, i) => note(f, .14, 'square', .05, 0, i * .08)),
+  pieces: () => [988, 1319].forEach((f, i) => note(f, .12, 'square', .045, 0, i * .07)),
+  tour: c => (c === 'B' ? [392, 523] : [233, 196]).forEach((f, i) => note(f, .22, 'sawtooth', .045, 0, i * .18)),
+};
+
+// ================= rendu =================
+const plateau = document.getElementById('plateau');
+const rendu = new THREE.WebGLRenderer({ antialias: true });
+rendu.setPixelRatio(Math.min(devicePixelRatio, 2)); rendu.outputEncoding = THREE.sRGBEncoding;
+rendu.shadowMap.enabled = true; rendu.shadowMap.type = THREE.PCFSoftShadowMap;
+plateau.prepend(rendu.domElement);
+function lumieres(sc) {
+  sc.add(new THREE.HemisphereLight(0xdff1ff, 0x5a7040, 0.8));
+  const s = new THREE.DirectionalLight(0xfff1d6, 1.0); s.position.set(-8, 16, 8); s.castShadow = true; s.shadow.mapSize.set(1024, 1024);
+  Object.assign(s.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 50 }); s.shadow.bias = -0.0008; sc.add(s);
+}
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x8fc6e8); lumieres(scene);
+const camera = new THREE.PerspectiveCamera(32, 0.8, 0.1, 200);
+// une case (x, y) → position 3D ; les hexagones KayKit font 2 de large
+const pos3 = (x, y) => new THREE.Vector3(2 * x + (y % 2 ? 1 : 0) - (L - 0.5), 0, Math.sqrt(3) * y - Math.sqrt(3) * (H - 1) / 2);
+function cadrer() {
+  const w = plateau.clientWidth, h = plateau.clientHeight; rendu.setSize(w, h, false);
+  camera.aspect = w / h; camera.position.set(0, 23, 14); camera.lookAt(0, 0, 0.8); camera.updateProjectionMatrix();
+  cameraB.aspect = w / h; cameraB.updateProjectionMatrix();
+}
+const hasard = (x, y, k = 0) => { let v = (x * 7 + y * 13 + k * 31 + 1) * 9301; v = (v * 233280 + 12345) % 2147483647; return (v % 1000) / 1000; };
+const decorObjs = [], batObjs = new Map();
+function construirePlateau() {
+  for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) {
+    const c = terrain(x, y), p = pos3(x, y), rot = Math.floor(hasard(x, y, 1) * 6) * Math.PI / 3;
+    const sol = objet(c === '~' ? 'hex_water' : 'hex_grass', c === '~' ? matBase : matSol, false); sol.position.copy(p); scene.add(sol);
+    for (let k = 1; k <= 2; k++) { const s = new THREE.Mesh(geo('hex_grass'), new THREE.MeshLambertMaterial({ color: k === 1 ? 0x7a5534 : 0x5e4a3a })); s.position.set(p.x, -k, p.z); if (y === H - 1 || x === 0 || x === L - 1) scene.add(s); }
+    let d = null;
+    if (c === 'F') d = objet(['trees_A_medium', 'trees_B_large', 'trees_A_large'][Math.floor(hasard(x, y) * 3)]);
+    else if (c === 'h') d = objet(['hill_single_A', 'hills_B', 'hills_C_trees'][Math.floor(hasard(x, y) * 3)]);
+    else if (c === 'M') d = objet(['mountain_C_grass', 'mountain_B_grass', 'mountain_A_grass_trees'][Math.floor(hasard(x, y) * 3)]);
+    else if (c === '~' && hasard(x, y) > .5) d = objet('waterlily_A');
+    else if (c === '.' && hasard(x, y) > .7) { d = objet(hasard(x, y, 2) > .5 ? 'tree_single_A' : 'rock_single_A'); d.position.set(.55, 0, -.45); }
+    if (d) { const g = new THREE.Group(); g.add(d); g.position.copy(p); g.rotation.y = rot; scene.add(g); decorObjs.push(g); }
+  }
+  for (const b of bat) dessinerBatiment(b);
+  // nuages
+  [[-6, 7, -9], [5, 8, -7], [8, 6, 3]].forEach(([x, y, z], k) => { const c = objet(k % 2 ? 'cloud_small' : 'cloud_big', matBase, false); c.position.set(x, y, z); scene.add(c); });
+}
+function dessinerBatiment(b) {
+  if (batObjs.has(b)) scene.remove(batObjs.get(b));
+  const k = b.camp === 'B' ? 'blue' : b.camp === 'R' ? 'red' : 'blue', mat = b.camp ? matBase : matGris;
+  const g = new THREE.Group(), p = pos3(b.x, b.y);
+  if (b.qg) { const o = objet('building_castle_' + k, mat); o.scale.setScalar(.8); g.add(o); }
+  else { const o = objet('building_home_A_' + k, mat); o.position.set(-.3, 0, -.35); o.scale.setScalar(.75); g.add(o); if (b.camp) { const f = objet('flag_' + k); f.position.set(.55, 0, -.2); f.scale.setScalar(.8); g.add(f); } }
+  g.position.copy(p); scene.add(g); batObjs.set(b, g);
+}
+// les troupes sur le plateau : un personnage par troupe, un chiffre de PV au-dessus quand il en manque
+const figures = new Map();
+function chiffreSprite(n) {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 64; const x = c.getContext('2d');
+  x.font = '700 46px "Pixelify Sans", sans-serif'; x.textAlign = 'center'; x.lineWidth = 9; x.strokeStyle = '#111'; x.strokeText(n, 32, 48); x.fillStyle = '#fff'; x.fillText(n, 32, 48);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false })); s.scale.set(.7, .7, 1); s.position.y = 2.1; return s;
+}
+function majFigure(u) {
+  let g = figures.get(u.id);
+  if (!g) {
+    g = aventurier(u.type, u.camp === 'B' ? 'bleu' : 'rouge', 1.6); g.position.copy(pos3(u.x, u.y));
+    g.rotation.y = u.camp === 'B' ? Math.PI : 0; jouer(g, g.userData.T.repos).time = hasard(u.id, 3);
+    scene.add(g); figures.set(u.id, g);
+  }
+  const ud = g.userData;
+  if (ud.pv !== u.pv) { if (ud.chiffre) g.remove(ud.chiffre); ud.chiffre = u.pv < 10 ? chiffreSprite(u.pv) : null; if (ud.chiffre) g.add(ud.chiffre); ud.pv = u.pv; }
+  const gris = u.fait && u.camp === joueur;
+  if (ud.gris !== gris) { ud.gris = gris; g.traverse(o => { if (o.isMesh && o.material && o.material.color && !o.userData.anneau) { o.material = o.material.clone(); o.material.color.setScalar(gris ? .5 : 1); } }); }
+}
+function majFigures() {
+  for (const u of unites) majFigure(u);
+  for (const [id, g] of figures) if (!unites.some(u => u.id === id)) { scene.remove(g); figures.delete(id); }
+}
+// zones de portée : des hexagones plats colorés
+const geoZone = new THREE.CircleGeometry(.93, 6); geoZone.rotateX(-Math.PI / 2); geoZone.rotateY(Math.PI / 6);
+const matZone = { bleu: new THREE.MeshBasicMaterial({ color: 0x2f86ff, transparent: true, opacity: .62, depthWrite: false }), rouge: new THREE.MeshBasicMaterial({ color: 0xff3a2a, transparent: true, opacity: .5, depthWrite: false }), orange: new THREE.MeshBasicMaterial({ color: 0xffa040, transparent: true, opacity: .4, depthWrite: false }), curseur: new THREE.MeshBasicMaterial({ color: 0xffe9a0, transparent: true, opacity: .55, depthWrite: false }) };
+const zones = new THREE.Group(); scene.add(zones);
+let curseur = null;
+function majZones() {
+  zones.clear();
+  const ajoute = (x, y, m, h = .12) => { const z = new THREE.Mesh(geoZone, matZone[m]); z.position.copy(pos3(x, y)); z.position.y = h; zones.add(z); };
+  if (portee) for (const k in portee.d) { const [x, y] = k.split(',').map(Number); ajoute(x, y, portee.ennemi ? 'orange' : 'bleu'); }
+  for (const c of cibles) ajoute(c.x, c.y, 'rouge', .14);
+  if (curseur) ajoute(curseur.x, curseur.y, 'curseur', .16);
+}
+// marche d'une case à l'autre, en suivant le chemin
+let marche = null;
+function deplacer(u, ch, suite) {
+  if (ch.length < 2) { suite && suite(); return; }
+  const g = figures.get(u.id); jouer(g, 'Running_A', false, 1.1);
+  marche = { u, g, ch, t0: performance.now(), suite, pas: -1 };
+}
+function avancerMarche(t) {
+  if (!marche) return;
+  const m = marche, duree = 330, i = Math.max(0, Math.floor((t - m.t0) / duree));
+  if (i !== m.pas) { m.pas = i; SON.pas(); }
+  if (i >= m.ch.length - 1) { const [x, y] = m.ch[m.ch.length - 1]; m.u.x = x; m.u.y = y; m.g.position.copy(pos3(x, y)); jouer(m.g, m.g.userData.T.repos); marche = null; m.suite && m.suite(); return; }
+  const p = Math.min(1, Math.max(0, (t - m.t0) / duree - i)), a = pos3(...m.ch[i]), b = pos3(...m.ch[i + 1]);
+  m.g.position.lerpVectors(a, b, p); m.g.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
+}
+
+// ================= scène de combat =================
+const sceneB = new THREE.Scene(); sceneB.background = new THREE.Color(0x8fc6e8); sceneB.fog = new THREE.Fog(0x8fc6e8, 22, 45); lumieres(sceneB);
+const cameraB = new THREE.PerspectiveCamera(30, 0.8, 0.1, 200);
+const projectiles = [];
+function decorCombat(c, cote) {
+  // le terrain de chaque combattant, au fond de son côté
+  const noms = { 'F': ['trees_A_large', 'trees_B_large'], 'h': ['hills_B', 'hill_single_A'], 'M': ['mountain_B_grass', 'mountain_A_grass_trees'], '.': ['tree_single_A', 'rock_single_A'], 'v': ['building_home_A_blue', 'tree_single_B'], 'H': ['building_castle_red', 'tree_single_A'], 'B': ['building_castle_blue', 'tree_single_A'], '~': ['waterlily_A', 'rock_single_C'] }[c];
+  noms.forEach((n, k) => { const o = objet(n); o.position.set(cote * (2.2 + k * 2.6), 0, -3.4 - k * .8); o.rotation.y = k; sceneB.add(o); });
+}
+function ouvrirCombat(s) {
+  while (sceneB.children.length > 2) sceneB.remove(sceneB.children[2]);
+  // le sol : deux rangées d'hexagones et la mer à l'horizon
+  for (let r = -4; r <= 1; r++) for (let q = -7; q <= 7; q++) {
+    const x = 2 * q + (r % 2 ? 1 : 0), z = Math.sqrt(3) * r; if (Math.abs(x) > 12) continue;
+    const o = objet(r <= -3 ? 'hex_water' : 'hex_grass', r <= -3 ? matBase : matSol, false); o.position.set(x, 0, z); sceneB.add(o);
+    if (r === 1) for (let k = 1; k <= 3; k++) { const t = new THREE.Mesh(geo('hex_grass'), new THREE.MeshLambertMaterial({ color: k === 1 ? 0x7a5534 : 0x5e4a3a })); t.position.set(x, -k, z); sceneB.add(t); }
+  }
+  decorCombat(terrain(s.gauche.x, s.gauche.y), -1); decorCombat(terrain(s.droite.x, s.droite.y), 1);
+  // les escouades : l'attaquant bleu à gauche (ou le défenseur bleu)
+  const places = [[0, 0], [.7, -.8], [.7, .8], [1.4, -.35], [1.4, 1]];
+  s.esc = {};
+  for (const [cote, u] of [['g', s.gauche], ['d', s.droite]]) {
+    const sens = cote === 'g' ? -1 : 1, n = Math.max(1, Math.ceil(s.pv0[u.id] / 2));
+    s.esc[cote] = places.slice(0, n).map(([ox, oz], k) => {
+      const g = aventurier(u.type, u.camp === 'B' ? 'bleu' : 'rouge', 1.1);
+      g.position.set(sens * (1.0 + ox), 0, oz); g.rotation.y = -sens * Math.PI / 2;
+      g.userData.base = g.position.clone(); jouer(g, g.userData.T.repos).time = k * .37; sceneB.add(g); return g;
+    });
+  }
+  cameraB.position.set(0, 3.2, 14.5); cameraB.lookAt(0, 0.6, 0);
+  // étiquettes en HTML par-dessus
+  const e = document.getElementById('etiquettes');
+  e.innerHTML = ['g', 'd'].map(c => { const u = c === 'g' ? s.gauche : s.droite; return `<div class="eti ${c}" style="color:${u.camp === 'B' ? '#a8d0ff' : '#ffb0a0'}">${TROUPES[u.type].nom}<div class="barre"><i id="b-${c}" style="width:${s.pv0[u.id] * 10}%"></i></div><span id="p-${c}">${s.pv0[u.id]} PV</span></div>`; }).join('');
+}
+function fermerCombat() { document.getElementById('etiquettes').innerHTML = ''; projectiles.length = 0; }
+// une frappe : les combattants d'un côté attaquent (en avançant pour la mêlée), l'impact touche l'autre côté
+function frappe(s, coteA, temps) {
+  const att = coteA === 'g' ? s.gauche : s.droite, def = coteA === 'g' ? s.droite : s.gauche, coteD = coteA === 'g' ? 'd' : 'g';
+  const T = TYPES[att.type], dist = T.archer || T.mage ? 0 : .9, sens = coteA === 'g' ? 1 : -1;
+  const ev = [];
+  s.esc[coteA].forEach((g, k) => {
+    const dec = k * 90;
+    if (dist) { ev.push([temps + dec, () => jouer(g, 'Running_A', false, 1.2)]); ev.push([temps + dec, () => { g.userData.cible = g.userData.base.clone().add(new THREE.Vector3(sens * dist, 0, 0)); }]); }
+    ev.push([temps + (dist ? 420 : 0) + dec, () => jouer(g, T.archer ? 'Ranged_Bow_Release' : T.mage ? 'Ranged_Magic_Shoot' : T.attaques[k % T.attaques.length], true)]);
+    if (T.archer || T.mage) ev.push([temps + 250 + dec, () => tirer(s, g, coteD, T.mage)]);
+    if (dist) ev.push([temps + 1250 + dec, () => { g.userData.cible = g.userData.base.clone(); jouer(g, 'Running_A', false, 1.2); }]);
+    ev.push([temps + 1700 + dec, () => { g.userData.cible = null; g.position.copy(g.userData.base); g.rotation.y = -sens * Math.PI / 2 * -1 * -1; g.rotation.y = sens > 0 ? Math.PI / 2 : -Math.PI / 2; jouer(g, T.repos); }]);
+  });
+  const impact = temps + (dist ? 700 : 750);
+  ev.push([impact - 80, () => (SON[att.type])()]);
+  ev.push([impact, () => {
+    SON.touche();
+    const pv0 = s.pv0[def.id], pv1 = coteA === 'g' ? s.pv1[s.droite.id] : s.pv1[s.gauche.id], n0 = s.esc[coteD].length, n1 = Math.ceil(pv1 / 2);
+    s.esc[coteD].forEach((g, k) => { if (k < n1) jouer(g, 'Hit_A', true); else { jouer(g, 'Death_A', true); g.userData.mort = true; } });
+    if (n1 < n0) setTimeout(SON.mort, 200);
+    document.getElementById('b-' + coteD).style.width = pv1 * 10 + '%'; document.getElementById('p-' + coteD).textContent = pv1 + ' PV';
+    if (pv1 <= 2) document.getElementById('b-' + coteD).style.background = '#e2533f'; else if (pv1 <= 5) document.getElementById('b-' + coteD).style.background = '#f2c14e';
+    degatEcran(coteD === 'd' ? '72%' : '28%', '-' + (pv0 - pv1));
+    s.pv0[def.id] = pv1;
+  }]);
+  ev.push([impact + 650, () => s.esc[coteD].forEach(g => { if (!g.userData.mort) jouer(g, TYPES[def.type].repos); })]);
+  return ev;
+}
+function tirer(s, g, coteD, magie) {
+  const depart = g.position.clone().add(new THREE.Vector3(0, 1, 0)), cibles = s.esc[coteD], c = cibles[Math.floor(Math.random() * cibles.length)];
+  const arrivee = c.position.clone().add(new THREE.Vector3(0, .8, 0));
+  let o;
+  if (magie) { o = new THREE.Group(); [[.22, 0xfff3b0, 1], [.34, 0xffa030, .7], [.5, 0xff5a1e, .35]].forEach(([r, col, op]) => o.add(new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op })))); }
+  else { o = AV.armes.arrow_bow.clone(); o.scale.setScalar(1.4); }
+  sceneB.add(o); projectiles.push({ o, depart, arrivee, t0: performance.now(), duree: 480, haut: magie ? .4 : 1 });
+}
+function degatEcran(x, txt) { const d = document.createElement('div'); d.className = 'degat'; d.style.left = x; d.style.top = '40%'; d.textContent = txt; document.getElementById('etiquettes').appendChild(d); setTimeout(() => d.remove(), 950); }
+function combat(a, d, suite) {
+  const dA = degats(a, d), pvD = Math.max(0, d.pv - dA);
+  let dD = 0; if (pvD > 0 && dist(a, d) >= TROUPES[d.type].rg[0] && dist(a, d) <= TROUPES[d.type].rg[1]) dD = degats(d, a, pvD);
+  const fin = () => { a.pv = Math.max(0, a.pv - dD); d.pv = pvD; unites = unites.filter(u => u.pv > 0); majFigures(); verifierFin(); suite && suite(); };
+  const ga = figures.get(a.id); if (ga) { const pa = pos3(a.x, a.y), pd = pos3(d.x, d.y); ga.rotation.y = Math.atan2(pd.x - pa.x, pd.z - pa.z); }
+  if (!document.getElementById('o-scene').checked) {
+    SON[a.type](); if (ga) jouer(ga, TYPES[a.type].archer ? 'Ranged_Bow_Release' : TYPES[a.type].mage ? 'Ranged_Magic_Shoot' : TYPES[a.type].attaques[0], true);
+    setTimeout(() => { if (ga) jouer(ga, TYPES[a.type].repos); fin(); }, 900); return;
+  }
+  const gauche = a.camp === 'B' ? a : d, droite = gauche === a ? d : a;
+  const s = { a, d, gauche, droite, pv0: { [a.id]: a.pv, [d.id]: d.pv }, pv1: { [a.id]: Math.max(0, a.pv - dD), [d.id]: pvD }, fin };
+  ouvrirCombat(s);
+  const coteA = gauche === a ? 'g' : 'd', coteD = coteA === 'g' ? 'd' : 'g';
+  s.ev = frappe(s, coteA, 500);
+  if (dD) s.ev.push(...frappe(s, coteD, 2700));
+  s.duree = (dD ? 2700 : 500) + 2600;
+  s.ev.sort((x, y) => x[0] - y[0]); s.t0 = performance.now(); combatEnCours = s;
+  plateau.classList.add('combat');
+}
+function avancerCombat(t, dt) {
+  const s = combatEnCours, e = t - s.t0;
+  while (s.ev.length && s.ev[0][0] <= e) s.ev.shift()[1]();
+  for (const c of ['g', 'd']) for (const g of s.esc[c]) {
+    if (g.userData.cible) { const v = g.userData.cible.clone().sub(g.position); const l = v.length(); if (l > .02) { v.multiplyScalar(Math.min(1, dt * 3.2 / l)); g.position.add(v); g.rotation.y = Math.atan2(v.x, v.z); } }
+    g.userData.mixer.update(dt);
+  }
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i], k = Math.min(1, (t - p.t0) / p.duree), pos = p.depart.clone().lerp(p.arrivee, k); pos.y += Math.sin(k * Math.PI) * p.haut;
+    if (p.o.isGroup && !p.o.children.length) {} p.o.position.copy(pos);
+    const v = p.arrivee.clone().sub(p.depart); p.o.rotation.set(0, Math.atan2(v.x, v.z), 0);
+    if (k >= 1) { sceneB.remove(p.o); projectiles.splice(i, 1); }
+  }
+  // la caméra se rapproche doucement
+  cameraB.position.x = Math.sin(e / 2400) * .6; cameraB.position.z = 14.5 - Math.min(1, e / 1500) * 1.2; cameraB.lookAt(0, 0.6, 0);
+  if (e >= s.duree) finirCombat();
+}
+function finirCombat() { const s = combatEnCours; if (!s) return; combatEnCours = null; plateau.classList.remove('combat'); fermerCombat(); s.fin(); }
+
+// ================= interface =================
+const aide = m => document.getElementById('aide').textContent = m;
+function majFiches(x, y) {
+  const c = terrain(x, y), [nom, def] = TERRAINS[c], b = batEn(x, y);
+  document.getElementById('t-nom').textContent = b ? nom + (b.camp ? (b.camp === 'B' ? ' bleu' : ' rouge') : ' libre') : nom;
+  document.getElementById('t-val').innerHTML = 'Défense <b>' + ('★'.repeat(def) || '—') + '</b>' + (b ? ` · <b>${b.pts}</b> pts` : '');
+  const u = uniteEn(x, y);
+  if (u) { const r = TROUPES[u.type]; document.getElementById('u-nom').textContent = r.nom + (u.camp === 'B' ? ' bleu' : ' rouge'); document.getElementById('u-val').innerHTML = `PV <b>${u.pv}</b> · Mvt <b>${r.mv}</b> · Tir <b>${r.rg[0] === r.rg[1] ? r.rg[0] : r.rg.join('-')}</b>`; }
+  else { document.getElementById('u-nom').textContent = '—'; document.getElementById('u-val').textContent = 'case libre'; }
+}
+function majBoutons() {
+  document.getElementById('a-attaque').disabled = !(phase === 'agir' && cibles.length);
+  document.getElementById('a-capture').disabled = !(phase === 'agir' && sel && peutCapturer(sel));
+  document.getElementById('a-attendre').disabled = phase !== 'agir';
+  document.getElementById('a-fin').disabled = !!(marche || combatEnCours) || joueur === 'R' || fini;
+}
+function majBandeau() {
+  document.getElementById('jour').textContent = 'JOUR ' + jour;
+  const c = document.getElementById('camp'); c.textContent = joueur === 'B' ? 'BLEUS' : 'ROUGES'; c.classList.toggle('rouge', joueur === 'R');
+  document.getElementById('or').textContent = 'OR ' + or.B;
+}
+function ruban(txt, camp = 'B') { const r = document.getElementById('ruban'); r.textContent = txt; r.classList.toggle('rouge', camp === 'R'); r.classList.add('vu'); clearTimeout(ruban.t); ruban.t = setTimeout(() => r.classList.remove('vu'), 1200); }
+function verifierFin() {
+  if (fini) return;
+  const qgB = bat.find(b => terrain(b.x, b.y) === 'B'), qgR = bat.find(b => terrain(b.x, b.y) === 'H');
+  if (!unites.some(u => u.camp === 'R') || qgR.camp === 'B') { fini = true; ruban('VICTOIRE !'); SON.capture(); aide('Victoire ! Recharge la page pour rejouer.'); figures.forEach(g => { if (g.userData.coul === 'bleu') jouer(g, 'Cheering'); }); }
+  else if (!unites.some(u => u.camp === 'B') || qgB.camp === 'R') { fini = true; ruban('DEFAITE...', 'R'); aide('Les rouges ont gagné. Recharge la page pour rejouer.'); }
+  majBoutons();
+}
+function capturer(u) {
+  const b = batEn(u.x, u.y), max = b.qg ? 20 : 10; b.pts -= u.pv; SON.inf();
+  const g = figures.get(u.id); if (g) { jouer(g, 'Melee_1H_Attack_Chop', true); setTimeout(() => jouer(g, g.userData.T.repos), 800); }
+  if (b.pts <= 0) { b.camp = u.camp; b.pts = max; dessinerBatiment(b); setTimeout(SON.capture, 250); ruban(b.qg ? 'CHATEAU PRIS !' : 'VILLAGE PRIS', u.camp); } else aide(`Encore ${b.pts} points pour le prendre.`);
+  verifierFin();
+}
+function abandons() { for (const b of bat) if (b.pts < (b.qg ? 20 : 10) && !unites.some(u => u.x === b.x && u.y === b.y && TROUPES[u.type].capture && u.camp !== b.camp)) b.pts = b.qg ? 20 : 10; }
+function menuRecrue(b) {
+  const r = document.getElementById('recrue'); r.innerHTML = '';
+  for (const type of ['inf', 'arc', 'cav', 'sie']) {
+    const tr = TROUPES[type], btn = document.createElement('button'); btn.disabled = or.B < tr.prix;
+    btn.innerHTML = `${tr.nom}<small>${tr.prix} or</small>`;
+    btn.onclick = () => { or.B -= tr.prix; SON.pieces(); unites.push({ id: prochainId++, type, camp: 'B', x: b.x, y: b.y, pv: 10, fait: true }); majFigures(); fermerRecrue(); majBandeau(); majFiches(b.x, b.y); aide(`${tr.nom} recruté. Il bougera au prochain tour.`); };
+    r.appendChild(btn);
+  }
+  const ann = document.createElement('button'); ann.textContent = 'Annuler'; ann.onclick = fermerRecrue; ann.style.gridColumn = '1 / -1'; r.appendChild(ann);
+  r.hidden = false; document.getElementById('actions').hidden = true; aide('Le château recrute. La troupe attend le prochain tour pour bouger.');
+}
+function fermerRecrue() { document.getElementById('recrue').hidden = true; document.getElementById('actions').hidden = false; majBoutons(); }
+function finirUnite() { if (sel) sel.fait = true; sel = null; portee = null; cibles = []; phase = 'libre'; abandons(); majFigures(); majZones(); majBoutons(); aide('Choisis une autre troupe, ou Fin du tour.'); }
+
+// toucher le plateau : on cherche la case la plus proche du point visé sur le sol
+const rayon = new THREE.Raycaster(), solPlan = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function caseVisee(ev) {
+  const r = rendu.domElement.getBoundingClientRect(), v = new THREE.Vector2((ev.clientX - r.left) / r.width * 2 - 1, -(ev.clientY - r.top) / r.height * 2 + 1);
+  rayon.setFromCamera(v, camera); const p = new THREE.Vector3(); if (!rayon.ray.intersectPlane(solPlan, p)) return null;
+  let best = null, bd = 1.3;
+  for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) { const d = pos3(x, y).distanceTo(p); if (d < bd) { bd = d; best = { x, y }; } }
+  return best;
+}
+plateau.addEventListener('pointerdown', ev => {
+  audio();
+  if (combatEnCours) { const s = combatEnCours; s.ev.forEach(e => { try { e[1](); } catch (_) {} }); s.ev = []; finirCombat(); return; }
+  if (marche || joueur !== 'B' || fini || !pret) return;
+  const c = caseVisee(ev); if (!c) return;
+  const { x, y } = c; curseur = c; majFiches(x, y); fermerRecrue();
+  const u = uniteEn(x, y);
+  if (phase === 'agir') {
+    const cb = cibles.find(o => o.x === x && o.y === y);
+    if (cb) { const a = sel; phase = 'combat'; cibles = []; majZones(); majBoutons(); combat(a, cb, () => { if (a.pv > 0) a.fait = true; sel = null; phase = 'libre'; abandons(); majFigures(); majZones(); majBoutons(); aide('Choisis une autre troupe, ou Fin du tour.'); }); }
+    majZones(); return;
+  }
+  if (phase === 'choix' && sel && !portee.ennemi && portee.d[x + ',' + y] !== undefined) {
+    const a = sel, p = portee; phase = 'marche'; portee = null; majZones(); majBoutons();
+    deplacer(a, chemin(p.pere, x, y), () => {
+      phase = 'agir'; cibles = ciblesDepuis(a, a.x, a.y); majZones(); majBoutons(); majFiches(a.x, a.y);
+      aide(peutCapturer(a) ? 'Tu peux Capturer ce bâtiment.' : cibles.length ? 'Touche une case rouge pour attaquer, ou Attendre.' : 'Personne à portée : Attendre.');
+    });
+    return;
+  }
+  const b = batEn(x, y);
+  if (u && u.camp === 'B' && !u.fait) { sel = u; portee = calculPortee(u); phase = 'choix'; cibles = []; SON.choix(); aide('Touche une case bleue pour y aller (ou la troupe pour rester sur place).'); }
+  else if (u && u.camp === 'R') { sel = null; portee = { ...calculPortee(u), ennemi: true }; phase = 'choix'; cibles = []; aide('Jusqu\'où cette troupe rouge peut aller.'); }
+  else if (!u && b && b.qg && b.camp === 'B' && terrain(x, y) === 'B') { sel = null; portee = null; phase = 'libre'; menuRecrue(b); }
+  else { sel = null; portee = null; phase = 'libre'; aide('Touche une troupe bleue pour voir où elle peut aller.'); }
+  majZones(); majBoutons();
+});
+document.getElementById('a-attendre').onclick = finirUnite;
+document.getElementById('a-attaque').onclick = () => aide('Touche une des cases rouges.');
+document.getElementById('a-capture').onclick = () => { if (sel && peutCapturer(sel)) { const u = sel; capturer(u); u.fait = true; sel = null; cibles = []; phase = 'libre'; majFigures(); majZones(); majBoutons(); } };
+document.getElementById('a-fin').onclick = () => { if (joueur === 'B' && !marche && !combatEnCours && !fini) tourRouge(); };
+
+// ================= les rouges =================
+function revenus(c) { const n = bat.filter(b => b.camp === c).length; or[c] += 1000 * n; return n; }
+function tourRouge() {
+  sel = null; portee = null; cibles = []; phase = 'libre'; fermerRecrue(); abandons();
+  joueur = 'R'; revenus('R'); majFigures(); majZones(); majBandeau(); majBoutons(); SON.tour('R'); ruban('TOUR DES ROUGES', 'R');
+  const file = unites.filter(u => u.camp === 'R'); let i = 0;
+  const suivant = () => {
+    if (fini) return;
+    if (i >= file.length) return recruterRouge();
+    const g = file[i++]; if (g.pv <= 0) return suivant();
+    curseur = { x: g.x, y: g.y }; majZones();
+    if (peutCapturer(g)) { setTimeout(() => { capturer(g); setTimeout(suivant, 700); }, 300); return; }
+    const p = calculPortee(g), bleus = unites.filter(u => u.camp === 'B'), qg = bat.find(b => terrain(b.x, b.y) === 'B');
+    let mieux = [g.x, g.y], score = 1e9;
+    for (const key in p.d) {
+      const [x, y] = key.split(',').map(Number), cb = ciblesDepuis(g, x, y), b = batEn(x, y);
+      let s = Math.min(...bleus.map(u => dist(u, { x, y })), 99) + .3 * dist(qg, { x, y });
+      if (cb.length) s -= 20 + Math.max(...cb.map(c => degats(g, c)));
+      if (TROUPES[g.type].capture && b && b.camp !== 'R') s -= 25;
+      if (s < score) { score = s; mieux = [x, y]; }
+    }
+    setTimeout(() => deplacer(g, chemin(p.pere, ...mieux), () => {
+      curseur = { x: g.x, y: g.y }; majZones();
+      const cb = ciblesDepuis(g, g.x, g.y).sort((a, b) => a.pv - b.pv);
+      if (cb.length) combat(g, cb[0], () => setTimeout(suivant, 300));
+      else if (peutCapturer(g)) { capturer(g); setTimeout(suivant, 700); }
+      else setTimeout(suivant, 200);
+    }), 300);
+  };
+  setTimeout(suivant, 1000);
+}
+function recruterRouge() {
+  const c = bat.find(b => terrain(b.x, b.y) === 'H');
+  if (c.camp === 'R' && !uniteEn(c.x, c.y)) {
+    const choix = ['inf', 'arc', 'cav', 'sie'].filter(t => or.R >= TROUPES[t].prix);
+    if (choix.length) { const t = choix[jour % choix.length]; or.R -= TROUPES[t].prix; unites.push({ id: prochainId++, type: t, camp: 'R', x: c.x, y: c.y, pv: 10, fait: false }); }
+  }
+  setTimeout(() => {
+    abandons(); unites.forEach(u => u.fait = false); joueur = 'B'; jour++; const n = revenus('B'); curseur = null;
+    majFigures(); majZones(); majBandeau(); majBoutons(); SON.tour('B'); ruban(`JOUR ${jour} · +${n * 1000} OR`);
+    aide('À toi ! Touche une troupe, ou ton château pour recruter.');
+  }, 450);
+}
+
+// ================= boucle =================
+let pret = false, avant = performance.now();
+function boucle() {
+  const t = performance.now(), dt = Math.min(.05, (t - avant) / 1000); avant = t;
+  try {
+    if (combatEnCours) { avancerCombat(t, dt); rendu.render(sceneB, cameraB); }
+    else { avancerMarche(t); figures.forEach(g => g.userData.mixer.update(dt)); rendu.render(scene, camera); }
+  } catch (e) { console.error(e); marche = null; if (combatEnCours) finirCombat(); phase = 'libre'; majBoutons(); }
+  requestAnimationFrame(boucle);
+}
+addEventListener('resize', cadrer);
+nouvellePartie(); majBandeau(); majBoutons();
+preparerAventuriers().then(() => {
+  construirePlateau(); majFigures(); cadrer(); majFiches(2, 7);
+  document.getElementById('charge').remove(); pret = true; requestAnimationFrame(boucle);
+}).catch(e => { document.getElementById('charge').textContent = 'Erreur de chargement : ' + e.message; console.error(e); });
+</script>
+</body>
+</html>
