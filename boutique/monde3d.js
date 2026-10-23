@@ -12,9 +12,12 @@ const BouMonde = (() => {
   const PERSOS = ['character-female-a', 'character-female-b', 'character-female-c', 'character-female-d', 'character-male-a', 'character-male-c', 'character-male-d', 'character-male-e'];
   const M = {}, CLIPS = {}, animes = [];
   let rendu, scene, cam, canvas, soleil, etat = null;
-  const coque = new THREE.Group(), meublesG = new THREE.Group(), terrainG = new THREE.Group(), clientsG = new THREE.Group();
+  const coque = new THREE.Group(), meublesG = new THREE.Group(), terrainG = new THREE.Group(), clientsG = new THREE.Group(), zonesG = new THREE.Group();
   const murs = [], objets = new Map();
+  let portes = null;   // les deux battants de la porte : ils s'ouvrent quand un client approche
   let niveauConstruit = -1, grille = null, panneau = null;
+  const CHAISE = 0.85, TABLE_H = 1.05;   // table de tournoi : taille des chaises, hauteur de la table (à la taille des personnages)
+  const SENS_PORTE = 1;   // les battants s'ouvrent vers l'intérieur
   let azimut = Math.PI * 0.3, vise = azimut, zoom = 1;
   let fantome = null, selection = null, vitesse = 1, enPause = false;
   const ecoute = { meuble() {}, terrain() {}, vide() {}, fantome() {}, vente() {} };
@@ -29,7 +32,7 @@ const BouMonde = (() => {
     scene.add(new THREE.HemisphereLight(0xfff4e6, 0x6b5f8a, 0.75));
     soleil = new THREE.DirectionalLight(0xffffff, 0.85); soleil.castShadow = true;
     soleil.shadow.mapSize.set(1024, 1024); Object.assign(soleil.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 }); soleil.shadow.bias = -0.0015;
-    scene.add(soleil, soleil.target, coque, meublesG, terrainG, clientsG);
+    scene.add(soleil, soleil.target, coque, meublesG, terrainG, clientsG, zonesG);
     cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
     // l'atlas commun des packs Kenney, en blob: (un artefact interdit fetch sur une adresse data:)
     const atlas = URL.createObjectURL(new Blob([Uint8Array.from(atob(BOU_ATLAS.split(',')[1]), c => c.charCodeAt(0))], { type: 'image/png' }));
@@ -143,12 +146,15 @@ const BouMonde = (() => {
         const c = carte3D(p.id, 1.25); c.position.set(-0.3 + i * 0.2, 0.55 + (i % 2) * 0.24, 0.32); c.userData.place = i; g.add(c);
       });
     } else if (t === 'table') {
-      const E = 1.5, tb = modele('table', E); tb.position.set(-0.42 * E, 0, 0.22 * E); g.add(tb);
-      const c1 = modele('chair', E); c1.position.set(0.16, 0, -0.62); g.add(c1);
-      const c2 = modele('chair', E); c2.position.set(-0.16, 0, 0.62); c2.rotation.y = Math.PI; g.add(c2);
-      [[-0.52, 0], [0.52, Math.PI]].forEach(([z, r], i) => { const p = personnage(PERSOS[Math.abs(m.id * 3 + i) % PERSOS.length]); if (p) { p.o.position.set(0, 0.02, z); p.o.rotation.y = r; g.add(p.o); jouer(p, 'sit'); } });
+      const E = 1.5, tb = modele('table', E); tb.scale.y = TABLE_H; tb.position.set(-0.42 * E, 0, 0.22 * E); g.add(tb);
+      // une chaise sous chaque joueur, à la taille des personnages (assise Kenney à 0,24 × CHAISE, le coin du modèle à l'origine, dossier côté −z) ;
+      // la pose « sit » baisse le personnage de 0,15 : ses hanches (z = −0,029) se posent sur l'assise
+      [[-0.52, 0], [0.52, Math.PI]].forEach(([z, r], i) => {
+        const c = modele('chair', CHAISE), s = r ? -1 : 1, d = 0.1 * CHAISE; c.position.set(-s * d, 0, z + s * d); c.rotation.y = r; g.add(c);
+        const p = personnage(PERSOS[Math.abs(m.id * 3 + i) % PERSOS.length]); if (p) { p.o.position.set(0, 0.24 * CHAISE - 0.026, z + s * 0.029); p.o.rotation.y = r; g.add(p.o); jouer(p, 'sit'); }
+      });
       const els = bouCatalogue(etat.graine).extensions[0].cartes;
-      for (let k = 0; k < 3; k++) for (const z of [-0.13, 0.13]) { const c = carte3D(els[Math.abs(m.id * 7 + k * 3 + (z > 0 ? 1 : 0)) % 20]); c.position.set(-0.18 + k * 0.18, 0.505, z); c.rotation.set(-Math.PI / 2, 0, z > 0 ? Math.PI : 0); g.add(c); }
+      for (let k = 0; k < 3; k++) for (const z of [-0.13, 0.13]) { const c = carte3D(els[Math.abs(m.id * 7 + k * 3 + (z > 0 ? 1 : 0)) % 20]); c.position.set(-0.18 + k * 0.18, 0.327 * TABLE_H + 0.006, z); c.rotation.set(-Math.PI / 2, 0, z > 0 ? Math.PI : 0); g.add(c); }
     } else if (t === 'classeurs') {
       const o = modele('bookcaseOpen', 1.5); o.position.set(-0.3, 0, -0.2); g.add(o);
     } else if (t === 'plante') {
@@ -206,6 +212,8 @@ const BouMonde = (() => {
     const mur = (n, x, z, r, nx, nz) => { const o = modele(n); o.position.set(x, 0, z); o.rotation.y = r * Math.PI / 2; coque.add(o); murs.push({ o, nx, nz }); };
     for (let x = 0; x < L; x++) mur(x % 3 === 2 ? 'wall-window' : 'wall', x, -0.5, 0, 0, -1);
     for (let x = 0; x < L; x++) mur(x === BOU_PORTE ? 'wall-door-rotate' : x % 3 === 0 ? 'wall-window' : 'wall', x, P - 0.5, 2, 0, 1);
+    const pm = murs.find(m => m.o.getObjectByName('door-left'));
+    portes = pm ? { g: pm.o.getObjectByName('door-left'), d: pm.o.getObjectByName('door-right'), x: BOU_PORTE, z: P - 0.5, a: 0 } : null;
     for (let z = 0; z < P; z++) mur(z % 3 === 1 ? 'wall-window' : 'wall', -0.5, z, 1, -1, 0);
     for (let z = 0; z < P; z++) mur(z % 3 === 1 ? 'wall-window' : 'wall', L - 0.5, z, 3, 1, 0);
     const ens = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.35), new THREE.MeshBasicMaterial({ map: texte2d(512, 128, c => {
@@ -316,7 +324,41 @@ const BouMonde = (() => {
     });
   }
   function deteindre(g) { g.traverse(o => { if (o.isMesh && o.userData.matOrig) { o.material = o.userData.matOrig; delete o.userData.matOrig; } }); }
-  function amenager(oui) { if (grille) grille.visible = oui; if (!oui) { finFantome(); selectionner(null); } }
+  function amenager(oui) { if (grille) grille.visible = oui; enAmenagement = oui; if (!oui) { finFantome(); selectionner(null); } majZones(); }
+  /* les zones d'accès (demande du 23/10) : en aménageant, la case où le client se tient devant chaque meuble qu'il utilise,
+     avec une flèche vers le meuble, et la case d'entrée ; en rouge si on ne peut plus l'atteindre (en comptant le meuble qu'on pose) */
+  let enAmenagement = false;
+  const texZone = {};
+  function texFleche(coul) {
+    return texZone[coul] || (texZone[coul] = texte2d(64, 64, c => {
+      c.fillStyle = coul + '55'; c.fillRect(0, 0, 64, 64); c.strokeStyle = coul; c.lineWidth = 4; c.setLineDash([8, 5]); c.strokeRect(4, 4, 56, 56);
+      c.setLineDash([]); c.fillStyle = coul; c.beginPath(); c.moveTo(32, 10); c.lineTo(50, 34); c.lineTo(38, 34); c.lineTo(38, 52); c.lineTo(26, 52); c.lineTo(26, 34); c.lineTo(14, 34); c.closePath(); c.fill();
+    }));
+  }
+  const geoZone = new THREE.PlaneGeometry(0.86, 0.86);
+  function majZones() {
+    zonesG.clear(); if (!enAmenagement || !etat) return;
+    const T = bouTaille(etat), f = fantome;
+    // la boutique telle qu'elle serait avec le meuble qu'on pose ou déplace
+    const ms = etat.meubles.filter(m => !f || m.id !== f.deplace).map(m => ({ type: m.type, x: m.x, z: m.z, r: m.r, f: false }));
+    if (f) ms.push({ type: f.type, x: f.x, z: f.z, r: f.r, f: true });
+    const g = Array.from({ length: T.L }, () => new Array(T.P).fill(0));
+    for (const m of ms) if (!BOU_MEUBLES[m.type].passe) for (const [x, z] of bouCases(m.type, m.x, m.z, m.r)) if (g[x] && z >= 0 && z < T.P) g[x][z] = 1;
+    const entree = [BOU_PORTE, T.P - 1], vu = new Set();
+    if (!g[entree[0]][entree[1]]) {
+      const file = [entree]; vu.add(entree.join());
+      while (file.length) { const [x, z] = file.shift(); for (const [dx, dz] of BOU_DIR) { const a = x + dx, b = z + dz; if (a >= 0 && b >= 0 && a < T.L && b < T.P && !g[a][b] && !vu.has(a + ',' + b)) { vu.add(a + ',' + b); file.push([a, b]); } } }
+    }
+    const poser = (x, z, dir, ok, fort) => {
+      const p = new THREE.Mesh(geoZone, new THREE.MeshBasicMaterial({ map: texFleche(ok ? (fort ? '#2fae7a' : '#3f8fe0') : '#e5534b'), transparent: true, depthWrite: false }));
+      p.rotation.set(-Math.PI / 2, 0, Math.atan2(-dir[0], -dir[1])); p.position.set(x, 0.035, z); zonesG.add(p);
+    };
+    poser(entree[0], entree[1], [0, -1], vu.has(entree.join()), false);
+    for (const m of ms) if (BOU_MEUBLES[m.type].client) {
+      const [x, z] = bouDevant(m); if (x < 0 || z < 0 || x >= T.L || z >= T.P) { if (m.f) poser(Math.max(0, Math.min(T.L - 1, x)), Math.max(0, Math.min(T.P - 1, z)), [-BOU_DIR[m.r][0], -BOU_DIR[m.r][1]], false, true); continue; }
+      poser(x, z, [-BOU_DIR[m.r][0], -BOU_DIR[m.r][1]], vu.has(x + ',' + z), m.f);
+    }
+  }
   // un meuble à poser (type) ou à déplacer (deplace = id) ; il suit le doigt, vert si on peut le poser, rouge sinon
   function commencerFantome(type, x, z, r, deplace) {
     finFantome();
@@ -331,6 +373,7 @@ const BouMonde = (() => {
     const sauf = f.deplace ? etat.meubles.find(m => m.id === f.deplace) : null;
     f.raison = bouPeutPoser(etat, f.type, f.x, f.z, f.r, sauf);
     teinter(f.g, f.raison ? 0xe5534b : 0x2fae7a);
+    majZones();
     ecoute.fantome(f);
   }
   function bougerFantome(x, z) { if (fantome && (x !== fantome.x || z !== fantome.z)) { fantome.x = x; fantome.z = z; majFantome(); } }
@@ -340,7 +383,7 @@ const BouMonde = (() => {
     fantome = null;
     if (f.deplace) { deteindre(f.g); const m = etat.meubles.find(q => q.id === f.deplace); if (m) placerGroupe(f.g, m.type, m.x, m.z, m.r); objets.get(f.deplace).sig = ''; }
     else { meublesG.remove(f.g); oublier(f.g); }
-    majMeubles();
+    majMeubles(); majZones();
     return f;
   }
   // une case libre près du centre, pour faire apparaître un nouveau meuble
@@ -447,6 +490,13 @@ const BouMonde = (() => {
     for (const p of animes) p.mixer.update(t);
     coque.children.forEach(o => { if (o.userData.pousse !== undefined) { o.userData.pousse += dt * 2.5; const s = Math.min(1, o.userData.pousse); o.scale.setScalar(s < 1 ? s * (1.25 - 0.25 * s) : 1); if (s >= 1) delete o.userData.pousse; } });
     avancerClients(t);
+    if (portes) {
+      // ouverte tant qu'un client est à moins d'une case et demie de la porte
+      const cible = enJeu.some(c => Math.hypot(c.p.o.position.x - portes.x, c.p.o.position.z - portes.z) < 1.5) ? 1 : 0;
+      portes.a += (cible - portes.a) * Math.min(1, dt * 7 * (enJeu.length ? vitesse : 1));
+      if (portes.g) portes.g.rotation.y = portes.a * SENS_PORTE * 1.45;
+      if (portes.d) portes.d.rotation.y = -portes.a * SENS_PORTE * 1.45;
+    }
     placerCamera();
     rendu.render(scene, cam);
   }
@@ -472,14 +522,14 @@ const BouMonde = (() => {
   function maj(e) {
     etat = e;
     if (e.niveau !== niveauConstruit) { const avant = niveauConstruit >= 0 ? BOU_TAILLES[niveauConstruit] : null; construireCoque(); if (avant) pousser(avant); }
-    majMeubles();
+    majMeubles(); majZones();
   }
   function ecran(id) { const o = objets.get(id); if (!o) return null; const v = o.g.position.clone(); v.y += 0.8; v.project(cam); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight }; }
   return {
     init, maj, vignettes, tourner, amenager, commencerFantome, bougerFantome, tournerFantome, finFantome, caseLibre, selectionner, rejouer, ecran,
     ecouter: (n, f) => { ecoute[n] = f; },
     vitesse: v => { vitesse = v; }, pause: p => { enPause = p; },
-    get fantome() { return fantome; }, get occupe() { return enJeu.length > 0; },
+    get fantome() { return fantome; }, get occupe() { return enJeu.length > 0; }, get porte() { return portes ? portes.a : null; },
     texCarte, M,
   };
 })();

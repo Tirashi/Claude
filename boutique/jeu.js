@@ -57,6 +57,9 @@ const Boutique = (() => {
   /* ---------- les écrans du lundi (lundi.js) ---------- */
   const lundi = BouLundi({ etat: () => e, sauver, maj: () => { BouMonde.maj(e); majHaut(); }, boite, journal, euros });
 
+  /* ---------- la première semaine guidée (guide.js) ---------- */
+  const guide = BouGuide({ etat: () => e, lundi, fini: () => ecrire('guide', true) });
+
   /* ---------- la semaine ---------- */
   async function ouvrirBoutique() {
     if (!bouOuvrirBoutique(e)) return;
@@ -147,6 +150,7 @@ const Boutique = (() => {
     ajouter('NOUVELLE PARTIE', r ? 'jaune' : 'vert', async () => {
       if (r && !await boite('<h2>NOUVELLE PARTIE ?</h2><p>La boutique en cours (semaine ' + r.semaine + ') sera perdue.</p>', [{ texte: 'NON', classe: 'gris', valeur: 0 }, { texte: 'OUI', valeur: 1 }])) return;
       nouvelle(); jouer(e);
+      if (!lire('guide', false)) guide.lancer();
     });
     ajouter('COMMENT JOUER', 'gris', aide);
     const l = document.createElement('div'); l.className = 'liens';
@@ -156,6 +160,7 @@ const Boutique = (() => {
     $('tRecord').textContent = best ? 'Record : ' + best.toLocaleString('fr-FR') + ' · ' + (st.parties || 0) + ' partie' + (st.parties > 1 ? 's' : '') : '';
     $('titre').hidden = false; document.body.classList.add('au-titre');
     clearInterval(tourne); tourne = setInterval(() => BouMonde.tourner(1), 5000);
+    guide.arreter();
   }
   function jouer(etat) {
     e = etat; ecran = 'jeu'; clearInterval(tourne);
@@ -164,21 +169,24 @@ const Boutique = (() => {
   }
   function aide() {
     return boite('<h2>COMMENT JOUER</h2>' +
-      '<p><b>Le lundi</b>, la boutique est fermée : commande au <b>grossiste</b> (livré lundi prochain), range les <b>rayons</b> et fixe les prix, ouvre des <b>boosters</b> pour remplir les <b>vitrines</b> et ton <b>classeur</b>, <b>aménage</b> et agrandis.</p>' +
+      '<p><b>Le lundi</b>, la boutique est fermée : commande au <b>grossiste</b> (livré tout de suite), range les <b>rayons</b> et fixe les prix, ouvre des <b>boosters</b> pour remplir les <b>vitrines</b> et ton <b>classeur</b>, <b>aménage</b> et agrandis.</p>' +
       '<p><b>Du mardi au samedi</b>, les clients entrent et achètent : regarde-les, réponds aux vendeurs, collectionneurs et marchands. Le samedi, le tournoi (il faut une table).</p>' +
       '<p><b>Le dimanche</b>, le bilan : loyer, ventes, cotes qui bougent.</p>' +
       '<p>La banque t\'a prêté ' + euros(BOU_PRET) + ' : rends-les avant la semaine ' + BOU_ECHEANCE + ' (touche la caisse le lundi), sinon elle prend 20 % de plus. Deux dimanches sous zéro : faillite.</p>' +
       '<p>Au bout de <b>52 semaines</b>, le score est la valeur de ta boutique : caisse, stock, cartes, meubles, classeurs complets.</p>',
       [{ texte: 'COMPRIS', valeur: 1 }]);
   }
-  async function menu() {
+  // pendant la semaine, le menu met la boutique en pause et REPRENDRE la relance (sauf si le joueur l'avait déjà mise en pause)
+  async function menu(pauseMenu) {
     const lundiCalme = e.phase === 'lundi' && !lundi.ouvert && !amen;
-    if (e.phase === 'semaine' && !pause) $('bPause').click();
+    if (pauseMenu === undefined) { pauseMenu = e.phase === 'semaine' && !pause; if (pauseMenu) $('bPause').click(); }
     const v = await boite('<h2>MENU</h2>' + (lundiCalme ? '<p>La partie est sauvegardée chaque lundi.</p>' : '<p>Le retour au titre est possible le lundi.</p>'),
       [{ texte: 'SONS : ' + (opts.sons ? 'OUI' : 'NON'), classe: 'gris', valeur: 'sons' }, { texte: 'MUSIQUE : ' + (opts.musique ? 'OUI' : 'NON'), classe: 'gris', valeur: 'musique' }]
-        .concat(lundiCalme ? [{ texte: 'TITRE', classe: 'gris', valeur: 'titre' }] : [], [{ texte: 'REPRENDRE', valeur: 0 }]));
-    if (v === 'sons' || v === 'musique') { opts[v] = !opts[v]; BouSons[v] = opts[v]; ecrire('opts', opts); return menu(); }
+        .concat(lundiCalme ? [{ texte: 'LE GUIDE', classe: 'gris', valeur: 'guide' }, { texte: 'TITRE', classe: 'gris', valeur: 'titre' }] : [], [{ texte: 'REPRENDRE', valeur: 0 }]));
+    if (v === 'sons' || v === 'musique') { opts[v] = !opts[v]; BouSons[v] = opts[v]; ecrire('opts', opts); return menu(pauseMenu); }
+    if (v === 'guide') guide.lancer();
     if (v === 'titre') { sauver(); titre(); }
+    else if (pauseMenu && pause) $('bPause').click();
   }
 
   /* ---------- aménager ---------- */
@@ -235,6 +243,12 @@ const Boutique = (() => {
     BouMonde.maj(e); sauver(); majHaut(); majCatalogue(); feuille('fCatalogue');
   };
   BouMonde.ecouter('meuble', m => {
+    // le lundi, toucher un rayon ou une vitrine ouvre son écran, cette case choisie
+    if (!amen && m && ecran === 'jeu' && e.phase === 'lundi' && !lundi.ouvert && !guide.actif) {
+      if (m.type === 'rayon') lundi.ouvrir('rayons', m.id);
+      else if (BOU_MEUBLES[m.type].cartes) lundi.ouvrir('vitrines', m.id);
+      return;
+    }
     if (!amen || !m) return;
     choisi = m; BouMonde.selectionner(m.id);
     const M = BOU_MEUBLES[m.type];
@@ -288,7 +302,7 @@ const Boutique = (() => {
   })();
   return {
     get etat() { return e; }, set etat(v) { e = v; BouMonde.maj(e); majHaut(); }, get ecran() { return ecran; },
-    ouvrirBoutique, amenager, poser, lundi, titre, menu,
+    ouvrirBoutique, amenager, poser, lundi, titre, menu, guide,
     nouvelle: () => { nouvelle(); jouer(e); }, continuer: () => { const r = sauvee(); if (r) jouer(r); return !!r; },
   };
 })();

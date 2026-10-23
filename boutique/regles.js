@@ -78,7 +78,7 @@ function bouNouvelle(graine) {
     evenement: null, prochain: null, reedition: null, effets: {},
     rencontre: null, plan: null, compte: null, sousZero: 0, complets: [],
     stats: { clients: 0, ventes: 0, manques: 0, trop: 0, meilleure: null, tournois: 0, rencontres: 0, boostersOuverts: 0 },
-    fin: null,
+    fin: null, livreDirect: true,
   };
   for (const el of BOU_ELEMENTS) e.meta[el] = 1;
   bouSortirExtension(e, 1);
@@ -91,7 +91,11 @@ function bouNouvelle(graine) {
   bouNouveauCompte(e);
   return e;
 }
-function bouMigrer(e) { return e && e.v === BOU_V ? e : null; }
+function bouMigrer(e) {
+  if (!e || e.v !== BOU_V) return null;
+  if (!e.livreDirect) { if (e.phase === 'lundi') bouLivrer(e); e.livreDirect = true; }
+  return e;
+}
 const bouTaille = e => BOU_TAILLES[e.niveau];
 function bouNouveauCompte(e) { e.compte = { ventes: 0, achats: 0, loyer: 0, tournoi: 0, rencontres: 0, meubles: 0, arcade: 0, clients: 0, detail: {} }; }
 
@@ -99,15 +103,19 @@ function bouNouveauCompte(e) { e.compte = { ventes: 0, achats: 0, loyer: 0, tour
 const bouArticle = cle => BOU_ARTICLES[cle.split(':')[0]];
 const bouPrix = (e, cle) => e.prix[cle] !== undefined ? e.prix[cle] : bouArticle(cle).conseille;
 function bouFixerPrix(e, cle, prix) { if (!bouArticle(cle) || !(prix > 0)) return false; e.prix[cle] = bouArrondi(prix); return true; }
-// le grossiste : payé tout de suite, livré lundi prochain
+// le grossiste : payé et livré tout de suite (demande du 23/10 : attendre le lundi suivant n'était pas intuitif) ;
+// e.commandes garde la commande de ce lundi, pour pouvoir l'annuler tant que les articles sont encore en stock
+const bouCleStock = cle => { const A = bouArticle(cle); return A.donne ? A.donne + ':' + cle.split(':')[1] : cle; };
 function bouCommander(e, cle, nb) {
   const [a, n] = cle.split(':'), A = BOU_ARTICLES[a];
   if (!A || !(nb > 0) || e.phase !== 'lundi') return { ok: false, raison: 'phase' };
   if (A.ext && !bouCommandable(e, +n)) return { ok: false, raison: 'extension' };
   if (A.des && e.semaine < A.des) return { ok: false, raison: 'bloque' };
+  if (e.evenement && e.evenement.id === 'rupture' && bouCleStock(cle) === e.evenement.cle) return { ok: false, raison: 'rupture' };
   const cout = bouArrondi(A.achat * nb);
   if (cout > e.caisse) return { ok: false, raison: 'argent' };
   e.caisse = bouArrondi(e.caisse - cout); e.compte.achats += cout;
+  const k = bouCleStock(cle); e.stock[k] = (e.stock[k] || 0) + nb * (A.nb || 1);
   const c = e.commandes.find(x => x.cle === cle);
   if (c) c.nb += nb; else e.commandes.push({ cle, nb });
   return { ok: true, cout };
@@ -115,18 +123,17 @@ function bouCommander(e, cle, nb) {
 function bouAnnulerCommande(e, cle) {
   const i = e.commandes.findIndex(x => x.cle === cle);
   if (i < 0 || e.phase !== 'lundi') return false;
-  const c = e.commandes.splice(i, 1)[0], rend = bouArrondi(bouArticle(c.cle).achat * c.nb);
+  const c = e.commandes[i], A = bouArticle(c.cle), k = bouCleStock(c.cle), nb = c.nb * (A.nb || 1);
+  if ((e.stock[k] || 0) < nb) return false;   // déjà ouverts : on ne peut plus les rendre
+  e.commandes.splice(i, 1); e.stock[k] -= nb;
+  const rend = bouArrondi(A.achat * c.nb);
   e.caisse = bouArrondi(e.caisse + rend); e.compte.achats -= rend;
   return true;
 }
+// les anciennes sauvegardes (livraison le lundi suivant) : ce qui attendait d'être livré arrive tout de suite
 function bouLivrer(e) {
-  const bloque = e.evenement && e.evenement.id === 'rupture' ? e.evenement.cle : null, reste = [];
-  for (const c of e.commandes) {
-    if (c.cle === bloque) { reste.push(c); continue; }
-    const A = bouArticle(c.cle), cle = A.donne ? A.donne + ':' + c.cle.split(':')[1] : c.cle;
-    e.stock[cle] = (e.stock[cle] || 0) + c.nb * (A.nb || 1);
-  }
-  e.commandes = reste;
+  for (const c of e.commandes) { const k = bouCleStock(c.cle); e.stock[k] = (e.stock[k] || 0) + c.nb * (bouArticle(c.cle).nb || 1); }
+  e.commandes = [];
 }
 // ouvrir un booster ou un coffret du stock : les cartes vont dans la réserve
 function bouOuvrir(e, cle) {
@@ -351,7 +358,7 @@ function bouDimanche(e) {
   e.evenement = e.prochain; e.prochain = bouTirerEvenement(e, e.semaine + 1);
   for (const X of bouCatalogue(e.graine).extensions) if (X.sortie === e.semaine) bouSortirExtension(e, X.n);
   if (e.evenement) bouDebutEvenement(e);
-  bouLivrer(e);
+  e.commandes = [];   // la commande du lundi ne s'annule plus
   b.evenement = e.evenement; b.prochain = e.prochain;
   bouNouveauCompte(e);
   return b;
@@ -372,7 +379,6 @@ function bouCartesPossedees(e) {
 function bouValeur(e) {
   let v = e.caisse;
   for (const c in e.stock) v += e.stock[c] * bouArticle(c).achat;
-  for (const c of e.commandes) v += c.nb * bouArticle(c.cle).achat;
   for (const id in e.reserve) v += e.reserve[id] * bouCote(e, id);
   for (const id in e.classeur) v += bouCote(e, id);
   for (const k in e.vitrines) for (const p of e.vitrines[k]) if (p) v += bouCote(e, p.id);

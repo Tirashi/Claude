@@ -54,7 +54,7 @@ function gerer(e, strat, memo) {
   // commandes : de quoi tenir la semaine (+ ce qu'on ouvre)
   const ouvrir = strat === 'ouvre' ? Math.max(12, Math.round(vendus * 0.8)) : strat === 'melange' || strat === 'classeur' ? 12 : 0;
   const vendre = strat === 'ouvre' ? Math.round(vendus * 0.2) : Math.round(vendus * 1.25);
-  // ce qui arrive lundi prochain doit couvrir la semaine prochaine : on compte ce qui restera après celle-ci
+  // la commande arrive tout de suite (depuis le 23/10) ; on garde de quoi tenir la semaine suivante aussi
   const reste = Math.max(0, (e.stock[cle] || 0) - vendre - ouvrir);
   const besoin = vendre + ouvrir + 6 - reste;
   const reserveTresorerie = e.pret > 0 && e.semaine < BOU_ECHEANCE ? 150 : 50;
@@ -168,14 +168,14 @@ function annee(graine, strat, coupe) {
   const e = bouNouvelle('base');
   check(e.caisse === 2400 && e.pret === 2000 && e.meubles.length === 3 && bouCheminLibre(e), 'départ : 2 400 € dont 2 000 de prêt, caisse + rayon + vitrine, chemin libre');
   const c0 = e.caisse, r = bouCommander(e, 'booster:1', 10);
-  check(r.ok && e.caisse === c0 - 25 && e.commandes.length === 1, 'commande payée tout de suite');
+  check(r.ok && e.caisse === c0 - 25 && e.commandes.length === 1 && e.stock['booster:1'] === 46, 'commande payée et livrée tout de suite');
   check(bouCommander(e, 'booster:2', 1).ok === false, 'l\'extension 2 ne se commande pas avant la semaine 10');
   check(bouCommander(e, 'figurine', 1).ok === false, 'les figurines sont bloquées avant la semaine 20');
   bouAnnulerCommande(e, 'booster:1');
-  check(e.caisse === c0 && !e.commandes.length, 'annuler une commande rend l\'argent');
+  check(e.caisse === c0 && !e.commandes.length && e.stock['booster:1'] === 36, 'annuler une commande rend l\'argent et reprend les articles');
   bouCommander(e, 'presentoir:1', 1);
   const ids = bouOuvrir(e, 'booster:1');
-  check(ids && ids.length === 5 && e.stock['booster:1'] === 35 && Object.values(e.reserve).reduce((s, x) => s + x, 0) === 5, 'ouvrir un booster : 5 cartes dans la réserve');
+  check(ids && ids.length === 5 && e.stock['booster:1'] === 59 && Object.values(e.reserve).reduce((s, x) => s + x, 0) === 5, 'ouvrir un booster : 5 cartes dans la réserve');
   bouRemplirVitrines(e);
   const v = e.vitrines[e.meubles.find(m => m.type === 'vitrine').id];
   check(v.filter(Boolean).length === 5 && !Object.keys(e.reserve).length, 'remplir les vitrines vide la réserve');
@@ -189,7 +189,7 @@ function annee(graine, strat, coupe) {
   check(bouCommander(e, 'pochettes', 1).ok === false && bouPoser(e, 'plante', 5, 4, 0).ok === false, 'pendant la semaine, ni commande ni meuble');
   while (e.phase === 'semaine') { bouJour(e); while (e.rencontre) bouRepondre(e, 'non'); }
   const b = bouDimanche(e);
-  check(b && e.semaine === 2 && e.phase === 'lundi' && e.stock['booster:1'] >= 24, 'dimanche : semaine 2, livraison du présentoir arrivée');
+  check(b && e.semaine === 2 && e.phase === 'lundi' && !e.commandes.length, 'dimanche : semaine 2, la commande du lundi ne s\'annule plus');
   // la faillite : rien en caisse à la semaine 26
   const f = bouNouvelle('faillite'); f.caisse = 100; f.semaine = BOU_ECHEANCE; f.phase = 'dimanche';
   const bf = bouDimanche(f);
