@@ -32,6 +32,26 @@
   const CHIOT = { col: '#f3d29b', ear: '#d9a75e', mus: '#fff3dc', ol: '#9a6a2a', or: 'tombe', yeux: 1.45 };
   // une couleur de médaillon par race du niveau (6 couleurs bien distinctes, celles de la maquette)
   const MEDAILLONS = ['#ffd59e', '#bfe3ff', '#ffb3a7', '#cfe8b4', '#e3c6ff', '#fff1a8'];
+  // la couleur de chaque chien, la même partout (demande de l'utilisateur, 23/10) ; choisies pour rester bien
+  // distinctes deux à deux (écart de couleur ΔE ≥ 21 entre deux chiens, quels qu'ils soient)
+  const COULEURS = [
+    '#ffc95a', // Biscotte, beagle : or
+    '#8ccbff', // Neige, husky : bleu
+    '#ffa25e', // Kumo, shiba : orange
+    '#ff8c8c', // Domino, dalmatien : rouge
+    '#ffb3e6', // Praline, caniche : rose
+    '#a6e07f', // Réglisse, border collie : vert prairie
+    '#c79bff', // Chorizo, teckel : violet
+    '#7fe0d2', // Pompon, carlin : turquoise
+    '#a3afc0', // Gaston, bouledogue : ardoise
+    '#fffaa8', // Pépite, chihuahua : jaune
+    '#f2d9bd', // Éclair, lévrier : sable
+    '#5fcf8f', // Cacao, labrador : émeraude
+    '#ff7a5c', // Nounours, bouvier bernois : corail
+    '#c4ee4e', // Galette, corgi : citron vert
+    '#e6f7ff', // Flocon, samoyède : glacier
+    '#d9a878', // Caramel, cocker : caramel
+  ];
 
   function oreillesDerriere(g, d, r) {
     g.lineWidth = r * 0.08; g.strokeStyle = d.ol;
@@ -211,7 +231,7 @@
     if (p.gm) return gamelle(g, R);
     if (p.ch) return chiot(g, R, humeur);
     if (p.sp === 4) return balle(g, R);
-    medaillon(g, R, couleur || MEDAILLONS[p.t % 6], p.sp === 3);
+    medaillon(g, R, couleur || COULEURS[p.t], p.sp === 3);
     portrait(g, LOOKS[p.t], R, humeur, p.t);
     if (p.sp === 1 || p.sp === 2) bandana(g, R, p.sp);
     if (p.sp === 3) noeud(g, R);
@@ -280,9 +300,8 @@
     g.beginPath(); g.ellipse(0, 0, S * 0.42, S * 0.08, 0, 0, 7); g.fillStyle = '#ff9cc2'; g.fill();
   }
   // portrait seul (album, objectifs) : médaillon à la couleur de la race
-  // couleur : celle du médaillon dans la grille du niveau (sinon la couleur propre au chien, pour l'album)
-  function carte(g, t, R, humeur, gris, couleur) {
-    medaillon(g, R, gris ? '#e9dfd6' : couleur || MEDAILLONS[t % 6], false);
+  function carte(g, t, R, humeur, gris) {
+    medaillon(g, R, gris ? '#e9dfd6' : COULEURS[t], false);
     if (gris) {
       g.save(); g.globalAlpha = 0.28; portrait(g, LOOKS[t], R, 1, t); g.restore();
       g.fillStyle = '#b39a86'; g.font = '800 ' + Math.round(R * 0.9) + 'px "Baloo 2", system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 0, R * 0.08);
@@ -290,5 +309,5 @@
     }
     portrait(g, LOOKS[t], R, humeur, t);
   }
-  window.DogDessin = { piece, niche, boue, salissures, laisse, panier, carte, chiot, gamelle, balle, MEDAILLONS, LOOKS };
+  window.DogDessin = { piece, niche, boue, salissures, laisse, panier, carte, chiot, gamelle, balle, MEDAILLONS, COULEURS, LOOKS };
 })();

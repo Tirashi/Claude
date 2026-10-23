@@ -70,9 +70,7 @@
     dessin(g, px * 0.46);
     return (imgs[k] = c.toDataURL());
   }
-  const imgChien = (t, taille, humeur, gris, coul) => img('c' + t + '_' + (humeur || 0) + (gris ? 'g' : '') + (coul || ''), taille, (g, R) => DogDessin.carte(g, t, R, humeur || 0, gris, coul));
-  // la couleur du médaillon d'un chien dans la grille d'un niveau (la même dans les objectifs, pour s'y retrouver)
-  const coulDe = (niv, t) => DogDessin.MEDAILLONS[niv.races.indexOf(t)];
+  const imgChien = (t, taille, humeur, gris) => img('c' + t + '_' + (humeur || 0) + (gris ? 'g' : ''), taille, (g, R) => DogDessin.carte(g, t, R, humeur || 0, gris));
   const imgBoue = taille => img('boue', taille, (g, R) => { DogDessin.boue(g, R * 2, 2, 4); });
   const imgChiot = taille => img('chiot', taille, (g, R) => DogDessin.chiot(g, R, 2));
   // le premier chapitre où l'on peut faire adopter chaque chien
@@ -154,7 +152,7 @@
   function htmlObjectifs(niv, av) {
     return niv.obj.map((o, k) => {
       const a = av && av[k], fait = a && a.fait >= a.total;
-      if (o.k === 'calins') return `<div class="obj${fait ? ' fait' : ''}"><img src="${imgChien(o.t, 58, fait ? 2 : 0, false, coulDe(niv, o.t))}" alt="">${a ? Math.min(a.fait, o.n) + ' / ' : ''}${o.n} câlins<br>${DOG_RACES[o.t].nom}</div>`;
+      if (o.k === 'calins') return `<div class="obj${fait ? ' fait' : ''}"><img src="${imgChien(o.t, 58, fait ? 2 : 0)}" alt="">${a ? Math.min(a.fait, o.n) + ' / ' : ''}${o.n} câlins<br>${DOG_RACES[o.t].nom}</div>`;
       if (o.k === 'boue') return `<div class="obj${fait ? ' fait' : ''}"><img src="${imgBoue(58)}" alt="">${a && !fait ? 'encore ' + a.reste : fait ? 'tout est' : 'toute la'}<br>${fait ? 'propre' : 'boue'}</div>`;
       return `<div class="obj${fait ? ' fait' : ''}"><img src="${imgChiot(58)}" alt="">${a ? a.fait + ' / ' : ''}${o.n} chiot${o.n > 1 ? 's' : ''}<br>au panier</div>`;
     }).join('');
@@ -175,7 +173,7 @@
     const j = auj(), niv = dogJour(j), classe = !jourJoue(j), dj = lire('daily', {})[j];
     $('iChapitre').textContent = 'Journée du jour · ' + new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     $('iTitre').textContent = 'Le plus de câlins !';
-    $('iObj').innerHTML = niv.races.map(t => `<div class="obj"><img src="${imgChien(t, 46, 0, false, coulDe(niv, t))}" alt="">${DOG_RACES[t].nom}</div>`).join('');
+    $('iObj').innerHTML = niv.races.map(t => `<div class="obj"><img src="${imgChien(t, 46)}" alt="">${DOG_RACES[t].nom}</div>`).join('');
     $('iAide').hidden = false;
     $('iAide').textContent = classe ? 'Une seule tentative classée par jour : elle compte dès le départ. La même grille pour toute la famille !'
       : 'Tentative classée déjà jouée' + (dj !== undefined ? ' (' + dj + ' câlins)' : '') + '. Tu peux rejouer pour le plaisir, sans classement.';
@@ -205,7 +203,7 @@
       couleurs: {}, file: [], attente: 0, enCours: null, dying: [], parts: [], fx: [], textes: [], banniere: null,
       repos: 0, indice: null, choisi: null, appui: null, fete: false, fini: false, adoptes: [],
     };
-    niv.races.forEach((t, k) => (P.couleurs[t] = DogDessin.MEDAILLONS[k]));
+    niv.races.forEach(t => (P.couleurs[t] = DogDessin.COULEURS[t]));
     // entrée : les chiens tombent du haut
     P.vis.forEach((v, i) => { if (v) { const [r, c] = rc(i); v.y = v.y0 = r - 9 - c * 0.3; } });
     P.enCours = { k: 'chute', fini: () => toutPose() };
@@ -368,7 +366,7 @@
     son('gagne');
     let rec = 0;
     for (const v of Object.values(lire('daily', {}))) rec = Math.max(rec, v);
-    $('fin').innerHTML = `<p class="sur">Journée du jour</p><h2>${n} câlins !</h2><div class="objectifs">${P.niv.races.map(t => `<div class="obj"><img src="${imgChien(t, 46, 2, false, coulDe(P.niv, t))}" alt="">${e.calins[t]}</div>`).join('')}</div>`
+    $('fin').innerHTML = `<p class="sur">Journée du jour</p><h2>${n} câlins !</h2><div class="objectifs">${P.niv.races.map(t => `<div class="obj"><img src="${imgChien(t, 46, 2)}" alt="">${e.calins[t]}</div>`).join('')}</div>`
       + `<p>${e.score.toLocaleString('fr-FR')} points</p>`
       + (classe ? `<p class="aide" id="fRang">Câlins envoyés au classement de la famille.</p>` : `<p class="petit">Partie pour le plaisir, pas classée.</p>`)
       + (rec ? `<p class="petit">Ton meilleur jour : ${rec} câlins</p>` : '')
@@ -681,7 +679,7 @@
       g.fillStyle = 'rgba(255,255,255,.7)'; rondRect(g, x - 34, y - 28, 68, 64, 16); g.fill();
       let fait, texte;
       g.save(); g.translate(x, y - 6);
-      if (o.k === 'calins') { fait = a.calins[o.t] >= o.n; DogDessin.carte(g, o.t, 19, fait ? 2 : 0, false, P.couleurs[o.t]); texte = fait ? '' : Math.min(a.calins[o.t], o.n) + '/' + o.n; }
+      if (o.k === 'calins') { fait = a.calins[o.t] >= o.n; DogDessin.carte(g, o.t, 19, fait ? 2 : 0); texte = fait ? '' : Math.min(a.calins[o.t], o.n) + '/' + o.n; }
       else if (o.k === 'boue') { fait = a.boue <= 0; DogDessin.boue(g, 34, fait ? 0 : 2, 4); if (fait) DogDessin.carte(g, P.niv.races[0], 15, 2); texte = fait ? '' : String(a.boue); }
       else { fait = a.chiots >= o.n; g.scale(0.42, 0.42); DogDessin.chiot(g, 44, 2); texte = fait ? '' : a.chiots + '/' + o.n; }
       g.restore();
