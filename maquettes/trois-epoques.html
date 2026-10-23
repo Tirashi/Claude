@@ -310,7 +310,7 @@ function dessiner(t) {
   // effets
   effets = effets.filter(e => t - e.t0 < e.duree);
   for (const e of effets) {
-    const p = (t - e.t0) / e.duree;
+    const p = Math.max(0, (t - e.t0) / e.duree);
     if (e.type === 'boom') {
       if (ere === 'futur') sprite(ctx, 'boom', e.x * T, e.y * T, Math.floor(p * 9));
       else for (let k = 0; k < 10; k++) {
@@ -365,12 +365,12 @@ function deplacer(u, chem, fini) {
 }
 function avancerAnim(t) {
   if (!anim) return;
-  const pas = 90, i = Math.floor((t - anim.t0) / pas);
+  const pas = 90, i = Math.max(0, Math.floor((t - anim.t0) / pas));
   if (i >= anim.chem.length - 1) {
     const [x, y] = anim.chem[anim.chem.length - 1]; anim.u.x = x; anim.u.y = y; anim.u.px = x * T; anim.u.py = y * T;
     const f = anim.fini; anim = null; f && f(); return;
   }
-  const p = (t - anim.t0) / pas - i, [x0, y0] = anim.chem[i], [x1, y1] = anim.chem[i + 1];
+  const p = Math.min(1, Math.max(0, (t - anim.t0) / pas - i)), [x0, y0] = anim.chem[i], [x1, y1] = anim.chem[i + 1];
   anim.u.px = (x0 + (x1 - x0) * p) * T; anim.u.py = (y0 + (y1 - y0) * p) * T;
 }
 function frapper(a, d) {
@@ -481,6 +481,11 @@ try { depart = localStorage.getItem('trois-epoques') || depart; } catch (_) {}
 if (location.hash && ERES[location.hash.slice(1)]) depart = location.hash.slice(1);
 choisirEre(ERES[depart] ? depart : 'medieval');
 majBoutons();
-function boucle(t) { avancerAnim(t); dessiner(t); requestAnimationFrame(boucle); }
+// on prend l'heure ici : sur Android, l'heure de l'image peut précéder celle du toucher
+function boucle() {
+  const t = performance.now();
+  try { avancerAnim(t); dessiner(t); } catch (e) { console.error(e); anim = null; phase = 'libre'; sel = null; portee = null; cibles = []; majBoutons(); }
+  requestAnimationFrame(boucle);
+}
 Promise.all(Object.values(images).map(im => im.decode ? im.decode().catch(() => {}) : 0)).then(() => { majFiches(curseur.x, curseur.y); requestAnimationFrame(boucle); });
 </script>
