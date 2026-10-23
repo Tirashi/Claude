@@ -15,6 +15,7 @@ const BouMonde = (() => {
   const coque = new THREE.Group(), meublesG = new THREE.Group(), terrainG = new THREE.Group(), clientsG = new THREE.Group();
   const murs = [], objets = new Map();
   let niveauConstruit = -1, grille = null, panneau = null;
+  const SIEGE = 0.16, DOS = 0;   // joueurs de la table : hauteur de l'assise, recul vers le dossier
   let azimut = Math.PI * 0.3, vise = azimut, zoom = 1;
   let fantome = null, selection = null, vitesse = 1, enPause = false;
   const ecoute = { meuble() {}, terrain() {}, vide() {}, fantome() {}, vente() {} };
@@ -144,9 +145,11 @@ const BouMonde = (() => {
       });
     } else if (t === 'table') {
       const E = 1.5, tb = modele('table', E); tb.position.set(-0.42 * E, 0, 0.22 * E); g.add(tb);
-      const c1 = modele('chair', E); c1.position.set(0.16, 0, -0.62); g.add(c1);
-      const c2 = modele('chair', E); c2.position.set(-0.16, 0, 0.62); c2.rotation.y = Math.PI; g.add(c2);
-      [[-0.52, 0], [0.52, Math.PI]].forEach(([z, r], i) => { const p = personnage(PERSOS[Math.abs(m.id * 3 + i) % PERSOS.length]); if (p) { p.o.position.set(0, 0.02, z); p.o.rotation.y = r; g.add(p.o); jouer(p, 'sit'); } });
+      // une chaise sous chaque joueur (la chaise Kenney fait 0,2 × 0,2, son coin à l'origine), le joueur assis à la hauteur de l'assise
+      [[-0.52, 0], [0.52, Math.PI]].forEach(([z, r], i) => {
+        const c = modele('chair', E), s = r ? -1 : 1; c.position.set(-s * 0.15, 0, z + s * 0.15); c.rotation.y = r; g.add(c);
+        const p = personnage(PERSOS[Math.abs(m.id * 3 + i) % PERSOS.length]); if (p) { p.o.position.set(0, SIEGE, z + s * DOS); p.o.rotation.y = r; g.add(p.o); jouer(p, 'sit'); }
+      });
       const els = bouCatalogue(etat.graine).extensions[0].cartes;
       for (let k = 0; k < 3; k++) for (const z of [-0.13, 0.13]) { const c = carte3D(els[Math.abs(m.id * 7 + k * 3 + (z > 0 ? 1 : 0)) % 20]); c.position.set(-0.18 + k * 0.18, 0.505, z); c.rotation.set(-Math.PI / 2, 0, z > 0 ? Math.PI : 0); g.add(c); }
     } else if (t === 'classeurs') {
