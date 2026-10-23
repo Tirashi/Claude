@@ -1,9 +1,9 @@
 /* =====================================================================
    LA BOUTIQUE DE CARTES · le JEU : la page par-dessus le monde 3D.
-   Session 2 : la semaine (lundi → cinq jours rejoués en 3D → bilan du
-   dimanche), aménager et agrandir, les rencontres, la sauvegarde.
-   Les écrans du lundi (grossiste, vitrines, classeur, boosters), le titre,
-   les sons et le classement viennent en session 3 (specs § 16).
+   La semaine (lundi → cinq jours rejoués en 3D → bilan du dimanche),
+   aménager et agrandir, les rencontres, la sauvegarde ; les écrans du
+   lundi sont dans lundi.js (session 3a). Le titre, les sons et le
+   classement viennent en session 3b (specs § 16).
    ===================================================================== */
 'use strict';
 const Boutique = (() => {
@@ -27,7 +27,9 @@ const Boutique = (() => {
     if (e.phase !== 'semaine') caisseVue = e.caisse;
     $('hCaisse').textContent = euros(caisseVue);
     $('hArgent').classList.toggle('moins', caisseVue < 0);
-    $('barreLundi').hidden = e.phase !== 'lundi' || amen;
+    $('barreLundi').hidden = e.phase !== 'lundi' || amen || lundi.ouvert;
+    document.body.classList.toggle('lundi', !$('barreLundi').hidden);
+    const t = $('bTournoi'); t.hidden = !bouNb(e, 'table'); t.textContent = e.tournoi.inscrit ? 'TOURNOI ✓' : 'TOURNOI'; t.className = e.tournoi.inscrit ? 'jaune' : 'gris';
     $('barreSemaine').hidden = e.phase !== 'semaine';
   }
   function journal(t) { const j = $('journal'), d = document.createElement('div'); d.textContent = t; j.appendChild(d); while (j.children.length > 3) j.firstChild.remove(); setTimeout(() => d.remove(), 6000); }
@@ -46,6 +48,9 @@ const Boutique = (() => {
     });
   }
   function mini(id) { const cv = BouCartes.dessiner(bouCarte(e, id)); cv.title = bouCarte(e, id).nom; return cv; }
+
+  /* ---------- les écrans du lundi (lundi.js) ---------- */
+  const lundi = BouLundi({ etat: () => e, sauver, maj: () => { BouMonde.maj(e); majHaut(); }, boite, journal, euros });
 
   /* ---------- la semaine ---------- */
   async function ouvrirBoutique() {
@@ -100,7 +105,7 @@ const Boutique = (() => {
       await boite(html, [{ texte: 'NOUVELLE PARTIE', valeur: 1 }]);
       nouvelle(); BouMonde.maj(e); majHaut(); return;
     }
-    html += '<p>Valeur de la boutique : <b>' + euros(b.valeur) + '</b>' + (e.pret ? ' · prêt à rendre : ' + euros(e.pret) + ' (semaine ' + BOU_ECHEANCE + ')' : '') + '</p>';
+    html += '<p>Valeur de la boutique : <b>' + euros(b.valeur) + '</b>' + (e.pret ? ' · prêt à rendre : ' + euros(e.pret) + ' (semaine ' + BOU_ECHEANCE + ', touche la caisse pour rembourser)' : '') + '</p>';
     if (b.evenement) html += '<p>Cette semaine : <b>' + b.evenement.nom + '</b></p>';
     const X = bouCatalogue(e.graine).extensions.find(x => x.sortie === e.semaine);
     if (X && X.n > 1) html += '<p>Sortie de l\'extension <b>' + X.nom + '</b> !</p>';
@@ -192,6 +197,9 @@ const Boutique = (() => {
   $('bAmenager').onclick = () => amenager(true);
   $('fini').onclick = () => amenager(false);
   $('bOuvrir').onclick = () => ouvrirBoutique();
+  document.querySelectorAll('[data-ecran]').forEach(b => b.onclick = () => lundi.ouvrir(b.dataset.ecran));
+  $('bTournoi').onclick = () => lundi.ouvrir('tournoi');
+  $('hArgent').onclick = () => lundi.banque();
   $('gauche').onclick = () => BouMonde.tourner(-1);
   $('droite').onclick = () => BouMonde.tourner(1);
   $('bVitesse').onclick = () => { vitesse = vitesse === 4 ? 1 : vitesse * 2; BouMonde.vitesse(vitesse); $('bVitesse').textContent = '×' + vitesse; };
@@ -208,5 +216,5 @@ const Boutique = (() => {
     vignettes = BouMonde.vignettes();
     $('chargement').remove(); majHaut();
   })();
-  return { get etat() { return e; }, set etat(v) { e = v; BouMonde.maj(e); majHaut(); }, ouvrirBoutique, amenager, poser, nouvelle: () => { nouvelle(); BouMonde.maj(e); majHaut(); } };
+  return { get etat() { return e; }, set etat(v) { e = v; BouMonde.maj(e); majHaut(); }, ouvrirBoutique, amenager, poser, lundi, nouvelle: () => { nouvelle(); BouMonde.maj(e); majHaut(); } };
 })();

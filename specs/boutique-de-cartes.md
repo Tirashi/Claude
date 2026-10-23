@@ -168,3 +168,18 @@ Bruitages Kenney (CC0, déjà utilisés : clics, caisse, cartes), un petit jingl
 - Règles : `bouPeutPoser(e, type, x, z, r, sauf)` (raison du refus ou null) ; les achats de cartes disent leur `place`.
 
 **Pour la session 3** : il manque les écrans du lundi (grossiste, prix, vitrines, classeur, ouvrir des boosters avec l'animation de la maquette), le choix des produits des rayons, le tournoi, l'écran titre, les sons, le classement `best`, l'accueil (`GAMES`, `RANKS`), le README et l'artefact.
+
+## 20. Bilan de la session 3a (23/10)
+La session 3 a été coupée en deux (3a : les écrans du lundi ; 3b : titre, sons, classement, accueil, README, artefact).
+
+**`boutique/lundi.js`** (`BouLundi(ctx)`, appelé par `jeu.js`) : chaque écran est un panneau en bas, la boutique 3D reste visible au-dessus et se met à jour à chaque changement.
+- **Barre du lundi** : six outils (GROSSISTE, RAYONS, VITRINES, BOOSTERS, CLASSEUR, AMÉNAGER), puis TOURNOI (seulement s'il y a une table) et OUVRIR LA BOUTIQUE.
+- **Grossiste** : les articles commandables (boosters, présentoirs et coffrets de chaque extension encore en vente, précommande la semaine d'avant), − et + par paquets (6 boosters, 10 pochettes…), stock actuel, total payé tout de suite, livré lundi ; la rupture de la semaine est signalée.
+- **Rayons et prix** : les 3 produits de chaque rayon (listes déroulantes, avec le stock), puis le prix de chaque article (pas de 0,50 €, marge affichée, « pas en rayon » ou « rupture ! » en rouge).
+- **Vitrines** : la réserve et TOUT RANGER (`bouRemplirVitrines`), les places de chaque vitrine ; une place vide propose les cartes de la réserve (les plus chères d'abord, rares et mieux pour la grande vitrine) ; une place pleine propose le prix (−10 %, à la cote, +10 %, +25 %, +50 %) ou de la remettre en réserve.
+- **Boosters** : le stock à ouvrir ; un booster s'ouvre avec l'animation de la maquette 2 (paquet aux couleurs de l'extension avec sa légendaire, cartes à retourner, la meilleure en dernier, reflets, éclats, rayons pour une épique ou mieux), puis le bilan « bon pari / pas de chance » contre le prix fermé, et AU CLASSEUR (les cartes qui lui manquent), EN VITRINE, UN AUTRE. Un coffret, ou TOUT (avec confirmation), s'ouvre sans animation avec un résumé.
+- **Classeur** : un onglet par extension sortie, pages de 9 (cartes gardées avec leur cote, cases vides grises avec numéro et étoiles, « en réserve, RANGER » en jaune), RANGER LA RÉSERVE, fenêtre « classeur complet ».
+- **Tournoi** : inscription, frais (0 à 5 €), lots (boosters de la dernière extension).
+- **Banque** : toucher la caisse le lundi pour rendre 500 € ou tout ce qu'on peut (rappel dans le bilan du dimanche).
+
+Vérifié avec Playwright (commande, booster animé, tout ouvrir, vitrines, classeur, tournoi, rayons, puis une semaine jusqu'au bilan).
