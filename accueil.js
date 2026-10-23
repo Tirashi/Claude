@@ -61,6 +61,8 @@ const GAMES = [
    d: "Un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe. Or : bien placée ; argent : mal placée. Le même mot pour toute la famille, et un entraînement pour rejouer.", tags: ["MOTS", "MOT DU JOUR"]},
   {k: "capitaine-du-port/index.html", n: "CAPITAINE DU PORT", s: "CAPITAINE", ic: "remorqueur", fam: "32", lb: "linear-gradient(#2a7c97, #163f66)", lt: "#ffd23f", sh: "#2a7c97", rank: "capitaine",
    d: "Le port est encombré : glisse les bateaux dans leur longueur pour ouvrir la passe au navire doré. 60 bassins en 5 ports (pêche, commerce, marina, chantier naval, grand port), en pixel art 32 bits, et un bassin du jour pour toute la famille.", tags: ["PUZZLE", "60 BASSINS", "DU JOUR"]},
+  {k: "romet/index.html", n: "ROMET", s: "ROMET", ic: "romet", fam: "3d", lb: "linear-gradient(#c0281c, #5a1a0e)", lt: "#ffe2a0", sh: "#e2b04a", rank: "romet",
+   d: "Un coin pusher en 3D, en hommage à Mynthos : lâche tes pièces, le poussoir fait tomber les autres dans le bac. Six machines à finir, de la foire à l'horloger, chacune avec sa règle (miel, courant, couloirs, clous, deux étages) et ses 6 trésors, et une machine secrète.", tags: ["3D", "7 MACHINES", "6 REGLES"]},
   {k: "magasinier/index.html", n: "LE MAGASINIER", s: "MAGASINIER", ic: "caisse", fam: "3d", lb: "linear-gradient(#f6d39a, #a8683a)", lt: "#3a2414", sh: "#e8963a", rank: "magasinier",
    d: "Pousse les caisses sur les marques, dans un entrepôt baigné de soleil en HD-2D. 60 niveaux en 5 entrepôts, avec de la glace, des tapis roulants et des caisses en fonte, et une grille du jour pour toute la famille.", tags: ["3D", "PUZZLE", "GRILLE DU JOUR"]},
   {k: "nebula/index.html", n: "NEBULA", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
@@ -82,6 +84,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
   "doggy-saga/index.html": {added: "2026-10-23", genres: ["LOGIQUE", "DU JOUR"]},
+  "romet/index.html": {added: "2026-10-22", genres: ["ARCADE", "HASARD"]},
   "bannieres/index.html": {added: "2026-10-22", genres: ["TACTIQUE"]},
   "lanterne/index.html": {added: "2026-10-22", genres: ["AVENTURE"]},
   "the-des-jarls/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "HASARD", "DU JOUR"]},
@@ -115,6 +118,7 @@ const META = {
 };
 const NEWS = [
   ["2026-10-23", "Nouveau jeu : Doggy Saga, un trois en ligne pour toute la famille. Glisse les chiens du refuge pour en aligner 3 pareils : chaque chien aligné reçoit un câlin. Bandanas, nœuds et balles de tennis lancent de grosses cascades. Lave la boue, ouvre les niches, fais descendre les chiots jusqu'à leur panier, et trouve une famille aux 16 chiens (dont Nounours le bouvier bernois) dans 60 niveaux. Chaque jour, la journée du jour : 20 coups, le plus de câlins possible."],
+  ["2026-10-22", "Nouveau jeu : Romet, un coin pusher en 3D en hommage à Mynthos. Lâche tes pièces, le poussoir fait tomber les autres dans le bac : ce qui tombe se rejoue, jusqu'à ce que la bourse soit vide. Gagne les 6 trésors de chaque machine pour ouvrir la suivante : la foire, la ruche et son miel, l'épave et son courant, le casino et ses couloirs, la foire de nuit et ses clous, l'horloger à deux étages… et une machine secrète."],
   ["2026-10-22", "Nouveau jeu : Bannières, un jeu de conquête en 3D pensé pour les enfants. Choisis ta couleur, fais courir tes armées de chevaliers, d'archers, de lanciers et de mages sur la carte, achète des guerriers au château, construis, agrandis et décore ton village, et regarde les batailles avec les cœurs au-dessus des guerriers. Des étoiles disent si une bataille est facile. Prends les 3 châteaux des autres seigneurs, ou aie le plus de drapeaux après 25 tours !"],
   ["2026-10-22", "Démo : La Dernière Lanterne, un RPG au tour par tour en HD-2D. Avec ton équipe (lame, clerc, arcaniste), traverse Clairfond, l'abbaye et le Bois Murmurant, rallume les lanternes oubliées et descends dans la Crypte des racines affronter le Roi des aulnes. Le prologue et l'acte 1 sont jouables, la suite arrive."],
   ["2026-10-21", "Nouveau jeu : Le Thé des Jarls, un duel de dés viking. Six dés, trois lancers, et chaque face envoie ton armée de 45 soldats à l'assaut : charge des haches, volée de flèches, éclaireurs qui volent les jetons. Invoque les faveurs de 20 dieux nordiques, apprends avec Sigrid la skalde, remonte la route du fjord de taverne en taverne (étoiles, couleurs, unités à gagner), joue à deux sur le même téléphone posé à plat, et tente le défi du jour."],
@@ -186,6 +190,7 @@ const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))
 const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
 // ce qui attend d'être repris (null si rien)
 const PROGRESS = {
+  "romet/index.html": () => { const p = rk("romet.partie", {}) || {}, ids = Object.keys(p).filter(k => p[k] && !p[k].fini); return ids.length ? (ids.length > 1 ? ids.length + " PARTIES" : "PARTIE EN COURS") : null; },
   "the-des-jarls/index.html": () => { const d = rk("jarls.dailyRun", null), r = rk("jarls.run", null); return d && d.E && d.E.graine === dayNum() ? "DEFI DU JOUR" : r && r.E ? `MANCHE ${r.E.manche}` : null; },
   "duche/index.html": () => { const d = rk("duche.dailyRun", null), r = rk("duche.run", null); return d && d.graine === dayNum() ? "DUCHE DU JOUR" : r && r.tour ? `TOUR ${r.tour}/30` : null; },
   "bannieres/index.html": () => { const r = rk("bannieres.run", null); return r && r.tour && !r.fin ? `TOUR ${Math.min(r.tour, 25)}/25` : null; },
@@ -234,6 +239,9 @@ const RECS = {
   "doggy-saga/index.html": () => { const p = rk("doggysaga.progres", {}) || {}, e = p.etoiles || {}, d = rk("doggysaga.daily", {}) || {};
     return [["Étoiles", num(Object.values(e).reduce((a, v) => a + (Number(v) || 0), 0), "/ 180")], ["Niveaux réussis", num(count(e), "/ 60")], ["Chiens adoptés", num((p.album || []).length, "/ 16")],
       ["Meilleure journée", num(Math.max(0, ...Object.values(d).map(Number).filter(v => v >= 0)), "câlins")]]; },
+  "romet/index.html": () => { const m = rk("romet.machines", {}) || {}, v = Object.values(m).filter(x => x && typeof x === "object");
+    const t = v.reduce((a, x) => a + (Array.isArray(x.t) ? x.t.filter(Boolean).length : 0), 0), f = v.filter(x => Array.isArray(x.t) && x.t.length && x.t.every(Boolean)).length;
+    return [["Trésors", num(t, "/ 42")], ["Machines terminées", num(f, "/ 7")], ["Meilleur butin", num(v.reduce((a, x) => Math.max(a, Number(x.butin) || 0), 0), "pièces")]]; },
   "the-des-jarls/index.html": () => { const e = (rk("jarls.campagne", {}) || {}).etoiles || {}, v = Object.values(e).map(Number).filter(x => x > 0);
     return [["Étoiles de la campagne", num(v.reduce((a, b) => a + b, 0), "/ 60")], ["Dieux battus", num(v.length, "/ 20")], ["Défis du jour", num(count(rk("jarls.daily", {})))]]; },
   "duche/index.html": () => [["Meilleur score (normal)", num(rk("duche.best", 0), "pts")], ["Duchés du jour", num(count(rk("duche.daily", {})))]],
@@ -510,6 +518,10 @@ const RANKS = {
      note: "Score d'une mission : à chaque site, (100 + carburant restant) × le multiplicateur de l'aire."},
     {label: "MISSION DU JOUR", ctl: ["day"], game: "alunissage", board: daily, fmt: v => N(v) + " pts",
      title: () => "MISSION DU JOUR", note: "La même suite de sites pour toute la famille. Seule la première mission du jour est classée.", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}],
+  romet: [{label: "TRESORS", game: "romet", board: () => "tresors", fmt: v => N(v) + (v > 1 ? " trésors" : " trésor"), title: () => "TOTAL DES TRESORS",
+     note: "Les trésors gagnés dans toutes les machines : 6 par machine, 42 en tout avec la machine secrète."},
+    {label: "BUTIN", game: "romet", board: () => "butin", fmt: v => N(v) + (v > 1 ? " pièces" : " pièce"), title: () => "MEILLEUR BUTIN",
+     note: "Le plus de pièces tombées dans le bac en une partie (une bourse), toutes machines confondues ; une pièce rejouée puis regagnée compte encore."}],
   yams: [{label: "MEILLEUR SCORE", game: "yams", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEUR SCORE"}],
   empilage: [{label: "PLUS HAUTE TOUR", game: "empilage", board: () => "best", fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "PLUS HAUTE TOUR"},
     {label: "TOUR DU JOUR", ctl: ["day"], game: "empilage", board: daily, fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "TOUR DU JOUR",
@@ -924,6 +936,8 @@ function collectSaves(){
   if (bn.b || bn.s.parties) g.bannieres = bn;
   const du = {b: Number(readKey("duche.best", 0)) || 0, d: readKey("duche.daily", {}) || {}};
   if (du.b || Object.keys(du.d).length) g.duche = du;
+  const ro = readKey("romet.machines", null);
+  if (ro && typeof ro === "object" && Object.keys(ro).length) g.romet = ro;
   const mg = {n: readKey("magasinier.niveaux", {}) || {}, d: readKey("magasinier.daily", {}) || {}};
   if (Object.keys(mg.n).length || Object.keys(mg.d).length) g.magasinier = mg;
   const mo = {s: readKey("motdor.stats", null), d: readKey("motdor.daily", {}) || {}};
@@ -968,6 +982,8 @@ function describeSaves(g){
     out.push(`Le Thé des Jarls : ${v.length} dieu${v.length > 1 ? "x" : ""} battu${v.length > 1 ? "s" : ""}, ${v.reduce((a, b) => a + b, 0)} étoiles${d ? `, ${d} défi${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.bannieres){ const s = g.bannieres.s || {}; out.push(`Bannières : ${g.bannieres.b || 0} drapeaux au mieux${s.gagnees ? `, ${s.gagnees} partie${s.gagnees > 1 ? "s" : ""} gagnée${s.gagnees > 1 ? "s" : ""}` : ""}`); }
   if (g.duche){ const d = Object.keys(g.duche.d || {}).length; out.push(`Duché : meilleur score ${g.duche.b || 0}${d ? `, ${d} duché${d > 1 ? "s" : ""} du jour` : ""}`); }
+  if (g.romet){ const v = Object.values(g.romet).filter(x => x && typeof x === "object"), t = v.reduce((a, x) => a + (Array.isArray(x.t) ? x.t.filter(Boolean).length : 0), 0);
+    out.push(`Romet : ${t} trésor${t > 1 ? "s" : ""}, meilleur butin ${v.reduce((a, x) => Math.max(a, Number(x.butin) || 0), 0)}`); }
   if (g.magasinier){ const n = Object.values(g.magasinier.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.magasinier.d || {}).length;
     out.push(`Le Magasinier : ${n} étoile${n > 1 ? "s" : ""}${d ? `, ${d} grille${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.motdor && g.motdor.s){ const s = g.motdor.s; out.push(`Le Mot d'or : ${s.gagnees || 0} mot${s.gagnees > 1 ? "s" : ""} du jour trouvé${s.gagnees > 1 ? "s" : ""}, meilleure série ${s.record || 0}`); }
@@ -1142,6 +1158,18 @@ function mergeSaves(g){
     if (Number(a.b) > (Number(readKey("duche.best", 0)) || 0)){ writeKey("duche.best", Math.round(a.b)); n++; }
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
     if (n){ writeKey("duche.daily", daily); done.push(`Duché : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.romet && typeof g.romet === "object"){
+    // fusion : par machine, les trésors gagnés d'un côté ou de l'autre, le meilleur butin, le plus de parties
+    const cur = readKey("romet.machines", {}) || {}; let n = 0;
+    for (const [k, v] of Object.entries(g.romet)) { if (!/^[a-z]{2,12}$/.test(k) || !v || typeof v !== "object") continue;
+      const c = cur[k] && typeof cur[k] === "object" ? cur[k] : {t: [], butin: 0, parties: 0}, t = Array.isArray(c.t) ? c.t.slice() : [];
+      const vt = Array.isArray(v.t) ? v.t.slice(0, 6) : []; let ch = !cur[k];
+      vt.forEach((x, i) => { if (x && !t[i]) { t[i] = true; ch = true; } }); for (let i = 0; i < Math.max(6, t.length); i++) t[i] = !!t[i];
+      const b = Math.max(Number(c.butin) || 0, Math.round(Number(v.butin) || 0)), p = Math.max(Number(c.parties) || 0, Math.round(Number(v.parties) || 0));
+      if (b !== (Number(c.butin) || 0) || p !== (Number(c.parties) || 0)) ch = true;
+      if (ch) { cur[k] = {t: t.slice(0, 6), butin: b, parties: p}; n++; } }
+    if (n){ writeKey("romet.machines", cur); done.push(`Romet : ${n} machine${n > 1 ? "s" : ""}`); }
   }
   if (g.magasinier && typeof g.magasinier === "object"){
     // fusion : pour chaque niveau, le moins de coups et le plus d'étoiles ; pour chaque grille du jour, le moins de coups

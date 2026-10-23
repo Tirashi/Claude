@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'duche/index.html', 'bannieres/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'duche/index.html', 'bannieres/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -122,6 +122,25 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Le Magasinier : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-magasinier.png` });
+    }
+    if (url === 'romet/index.html') {
+      // Romet : JOUER, un vrai toucher lâche une pièce ; la fin de partie montre le butin ; la ruche s'ouvre quand la foire est finie
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 60 && !(window.Romet && Romet.partie); i++) await wait(100);
+        if (!window.Romet || !Romet.partie) return 'pas de partie';
+        document.getElementById('bJouer').click(); const n = Romet.partie.lachers, e = document.getElementById('ecran'), b = e.getBoundingClientRect();
+        e.dispatchEvent(new PointerEvent('pointerdown', { clientX: b.left + b.width / 2, clientY: b.top + b.height / 2, bubbles: true }));
+        e.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+        if (Romet.partie.lachers !== n + 1) return 'le toucher ne lâche pas de pièce';
+        await wait(1500); const p = Romet.partie; p.bourse = 0; p.pluie = 0; p.calme = 5; await wait(300);
+        if (Romet.menu !== 'eFin') return "pas d'écran de fin de partie";
+        Romet.prog.foire.t = [true, true, true, true, true, true]; Romet.ouvrir(Romet.MACHINES[1]); await wait(300);
+        if (Romet.machine.id !== 'ruche' || !Romet.partie) return 'la ruche ne s\'ouvre pas';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Romet : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-romet.png` });
     }
     if (url === 'duche/index.html') {
       // Duché : une partie libre, une attaque jouée jusqu'au bout, un tour des rivaux, un événement répondu, abdiquer → écran de fin ; le Duché du jour se charge

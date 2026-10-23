@@ -93,7 +93,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["duche", "best"], ["bannieres", "best"], ["jarls", "etoiles"], ["doggysaga", "etoiles"], ["capitaine", "etoiles"], ["motdor", "serie"], ["yams", "best"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["escadrille", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["magasinier", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"], ["odyssee", "etoiles"]];
+    ["parcours", "total"], ["duche", "best"], ["bannieres", "best"], ["jarls", "etoiles"], ["doggysaga", "etoiles"], ["capitaine", "etoiles"], ["romet", "tresors"], ["motdor", "serie"], ["yams", "best"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["escadrille", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["magasinier", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"], ["odyssee", "etoiles"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -242,6 +242,10 @@
     hi("magasinier", "etoiles", mns);
     var md = readKey("magasinier.daily", {}) || {};
     Object.keys(md).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("magasinier", "daily:" + k, md[k]); });
+    var rm = readKey("romet.machines", {}) || {}, rmt = 0, rmb = 0;
+    Object.keys(rm).forEach(function (k){ var v = rm[k]; if (!v || typeof v !== "object") return;
+      if (Array.isArray(v.t)) rmt += v.t.filter(Boolean).length; rmb = Math.max(rmb, Number(v.butin) || 0); });
+    hi("romet", "tresors", rmt); hi("romet", "butin", rmb);
     hi("nebula", "best", readKey("nebula.best", 0));
     var nm = readKey("nebula.meta", {}) || {}; hi("nebula", "victoires", Number(nm.wins) || 0);
     var nd = readKey("nebula.daily", {}) || {};
@@ -264,7 +268,7 @@
 
   window.addEventListener("online", function (){ flush(); });
   // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 6 : avec Nebula)
-  var SYNC = 24;
+  var SYNC = 25;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();
