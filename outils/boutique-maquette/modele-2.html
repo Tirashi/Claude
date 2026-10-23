@@ -1,0 +1,836 @@
+<title>Boutique de cartes 2</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+/* Maquette 2 de La Boutique de cartes (22/10), d'après les retours sur la maquette 1 :
+   - la boutique pivote (glisser le doigt, ou les flèches) ;
+   - AMÉNAGER : acheter, poser, tourner, déplacer, revendre les meubles ; AGRANDIR la boutique (terrain « À VENDRE ») ;
+   - plus de vue comptoir : les clients circulent, achètent aux rayons et passent à la caisse tout seuls ;
+   - nouvelles cartes : monstres de Dungeon Crawl (comme La Dernière Lanterne) dans les cadres « Pixel Card Assets »
+     (cafedraw, CC0), deux mises en page à choisir (onglet LES CARTES) ;
+   - l'ouverture d'un booster, gardée, avec les nouvelles cartes.
+   Modèles 3D Kenney (Mini Market, Mini Characters, Furniture Kit, CC0). */
+:root {
+  --fond: #2b2838; --panneau: #fffaf0; --encre: #2d2a3e; --doux: #6d6884; --ligne: #e7dfcf; --creux: #f1ead9;
+  --vert: #2fae7a; --vert-f: #1f8a5e; --rouge: #e5534b; --rouge-f: #b83a33; --or: #f5b82e; --violet: #8a63d2;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fond); color: var(--encre); font-family: 'Fredoka', sans-serif; user-select: none; -webkit-user-select: none; }
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#chargement { position: fixed; inset: 0; display: grid; place-items: center; color: #fff; font: 600 18px 'Fredoka', sans-serif; z-index: 60; background: var(--fond); }
+#onglets { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; background: #14121ec0; padding: 4px; border-radius: 14px; z-index: 40; }
+#onglets button { font: 600 13px 'Fredoka', sans-serif; color: #cfc8e6; background: none; border: 0; padding: 7px 10px; border-radius: 10px; white-space: nowrap; }
+#onglets button.on { background: var(--panneau); color: var(--encre); }
+#legende { position: fixed; left: 10px; right: 10px; top: 54px; z-index: 45; font-size: 13px; line-height: 1.3; color: #fff; background: #1d1a2bee; border-radius: 12px; padding: 8px 10px; text-align: center; pointer-events: none; transition: opacity .6s; }
+#legende.cache { opacity: 0; }
+.btn { border: 0; border-radius: 12px; padding: 9px 14px; font: 600 15px 'Fredoka', sans-serif; color: #fff; background: var(--vert); box-shadow: 0 4px 0 var(--vert-f); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0004; }
+.btn.gris { background: #d9d2c2; color: var(--encre); box-shadow: 0 4px 0 #b4ab98; }
+.btn.rouge { background: var(--rouge); box-shadow: 0 4px 0 var(--rouge-f); }
+.btn:disabled { opacity: .45; }
+.vue { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: none; }
+.vue.on { display: block; }
+.vue > * { pointer-events: auto; }
+
+/* ---- A : la boutique ---- */
+.barre { position: absolute; left: 10px; right: 10px; top: 54px; display: flex; gap: 6px; pointer-events: none; }
+.pastille { background: var(--panneau); border-radius: 12px; padding: 6px 10px; box-shadow: 0 3px 0 #0003; font-weight: 600; font-size: 14px; line-height: 1.15; }
+.pastille small { display: block; font-weight: 500; font-size: 11px; color: var(--doux); }
+.pastille.argent { margin-left: auto; text-align: right; min-width: 104px; }
+.pastille.argent b { font-size: 19px; color: var(--vert-f); font-variant-numeric: tabular-nums; }
+.pastille.argent.moins b { color: var(--rouge); }
+.tourner { position: absolute; right: 10px; top: 118px; display: flex; flex-direction: column; gap: 8px; }
+.tourner button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--panneau); color: var(--encre); font: 700 22px 'Fredoka', sans-serif; box-shadow: 0 3px 0 #0004; }
+.actions { position: absolute; left: 8px; right: 8px; bottom: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.actions button { background: var(--panneau); border: 0; border-radius: 14px; padding: 8px 2px 7px; font: 600 13px 'Fredoka', sans-serif; color: var(--encre); box-shadow: 0 4px 0 #0004; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.actions button.fort { background: var(--or); color: #fff; box-shadow: 0 4px 0 #c98d12; }
+.actions svg { width: 30px; height: 30px; }
+.journal { position: absolute; left: 10px; bottom: 92px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+.journal div { background: #1d1a2bd0; color: #fff; font-size: 12.5px; border-radius: 9px; padding: 4px 8px; animation: entre .3s; }
+@keyframes entre { from { transform: translateX(-20px); opacity: 0; } }
+.gain { position: absolute; transform: translate(-50%, -100%); font: 18px 'Luckiest Guy', sans-serif; color: #ffd84d; text-shadow: 0 2px 0 #7a4b00, 0 0 6px #0008; pointer-events: none; animation: monte 1.4s ease-out forwards; }
+@keyframes monte { to { margin-top: -46px; opacity: 0; } }
+
+/* aménagement : la feuille du bas */
+.feuille { position: absolute; left: 0; right: 0; bottom: 0; background: var(--panneau); border-radius: 20px 20px 0 0; padding: 10px 0 12px; box-shadow: 0 -4px 0 #0002; }
+.feuille .tete { display: flex; align-items: center; gap: 8px; padding: 0 12px 8px; }
+.feuille .tete b { font: 21px 'Luckiest Guy', sans-serif; color: var(--violet); padding-top: 3px; }
+.feuille .tete .btn { margin-left: auto; padding: 7px 12px; font-size: 14px; }
+.catalogue { display: flex; gap: 8px; overflow-x: auto; padding: 2px 12px 6px; scrollbar-width: none; }
+.catalogue::-webkit-scrollbar { display: none; }
+.objet { flex: 0 0 92px; border-radius: 12px; background: var(--creux); padding: 4px 4px 6px; text-align: center; border: 3px solid transparent; }
+.objet img { width: 76px; height: 76px; display: block; margin: 0 auto; }
+.objet b { display: block; font-size: 12px; line-height: 1.15; min-height: 28px; }
+.objet span { display: inline-block; margin-top: 3px; font-weight: 700; font-size: 13px; color: var(--vert-f); }
+.objet.trop span { color: var(--rouge); }
+.objet.agrandir { background: #fff0c9; border-color: var(--or); }
+.objet.agrandir span { color: #b07800; }
+.pose { display: flex; gap: 8px; align-items: center; padding: 2px 12px 0; }
+.pose .nom { flex: 1; min-width: 0; font-weight: 600; font-size: 15px; line-height: 1.2; }
+.pose .nom small { display: block; color: var(--doux); font-weight: 500; font-size: 12px; }
+.pose .rond { width: 46px; height: 46px; border-radius: 50%; border: 0; background: #ece4d2; font: 700 22px 'Fredoka', sans-serif; color: var(--encre); box-shadow: 0 3px 0 #c9bfa9; flex: none; }
+.aide-pose { padding: 6px 12px 0; font-size: 12.5px; color: var(--doux); }
+.achat { position: absolute; left: 14px; right: 14px; top: 50%; transform: translateY(-50%); background: var(--panneau); border-radius: 18px; padding: 14px; box-shadow: 0 6px 0 #0004; text-align: center; }
+.achat b { font: 24px 'Luckiest Guy', sans-serif; color: var(--violet); display: block; padding-top: 4px; }
+.achat p { margin: 6px 0 12px; font-size: 15px; line-height: 1.35; }
+.achat .boutons { display: flex; gap: 8px; }
+.achat .boutons .btn { flex: 1; }
+
+/* ---- B : les cartes ---- */
+#vueB { background: radial-gradient(ellipse at 50% 30%, #3d3466, #17142a 75%); overflow-y: auto; pointer-events: auto; }
+.choixStyle { display: flex; gap: 6px; justify-content: center; margin: 60px 12px 6px; }
+.choixStyle button { border: 0; border-radius: 10px; padding: 8px 12px; font: 600 13.5px 'Fredoka', sans-serif; background: #ffffff22; color: #fff; }
+.choixStyle button.on { background: var(--or); color: #3a2800; }
+.expli { color: #cfc8e6; font-size: 13px; text-align: center; margin: 0 16px 10px; line-height: 1.35; }
+.grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 12px 30px; max-width: 440px; margin: 0 auto; }
+.grille .c { position: relative; border-radius: 6px; overflow: hidden; aspect-ratio: 100 / 128; max-width: 100%; }
+.grille canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.grille small { display: block; text-align: center; color: #cfc8e6; font-size: 11px; margin-top: 3px; }
+.holo { position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .65; pointer-events: none;
+  background: linear-gradient(120deg, #fff0 20%, #ff4fd8aa 35%, #4ff2ffaa 45%, #fff95caa 55%, #fff0 70%); background-size: 250% 250%; background-position: var(--px, 50%) var(--py, 50%); animation: holo 4s ease-in-out infinite alternate; }
+@keyframes holo { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
+
+/* ---- C : le booster ---- */
+#booster { position: fixed; inset: 0; z-index: 20; display: none; background: radial-gradient(ellipse at 50% 45%, #3d3466ee, #120f1ef5 70%); perspective: 900px; overflow: hidden; }
+#booster.on { display: block; }
+#booster .titre { position: absolute; top: 60px; left: 0; right: 0; text-align: center; color: #fff; font: 24px 'Luckiest Guy', sans-serif; letter-spacing: 1px; transition: opacity .4s; }
+#booster .titre small { display: block; font: 500 13px 'Fredoka', sans-serif; color: #cfc8e6; letter-spacing: 0; }
+#booster.ouvre .titre { opacity: 0; }
+.paquet { position: absolute; left: 50%; top: 50%; width: 170px; height: 270px; margin: -150px 0 0 -85px; transform-style: preserve-3d; transition: transform .5s, opacity .4s; cursor: pointer; }
+.paquet .face { position: absolute; inset: 0; border-radius: 10px 10px 14px 14px; overflow: hidden; background: linear-gradient(160deg, #ff8a3d, #e5464b 45%, #7d2fb8); box-shadow: 0 12px 30px #0008, inset 0 0 0 3px #fff4; }
+.paquet .face::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, #fff0 0 18px, #fff2 18px 22px); }
+.paquet .face::after { content: ''; position: absolute; inset: -40%; background: linear-gradient(105deg, #fff0 40%, #fff8 50%, #fff0 60%); animation: reflet 2.6s infinite; }
+.paquet .bande { position: absolute; left: 0; right: 0; top: 0; height: 26px; border-radius: 10px 10px 0 0; background: repeating-linear-gradient(90deg, #c9c2d8 0 6px, #e8e3f0 6px 12px); transition: transform .5s, opacity .5s; z-index: 2; }
+.paquet .logo { position: absolute; top: 40px; left: 0; right: 0; text-align: center; font: 30px/1 'Luckiest Guy', sans-serif; color: #fff; text-shadow: 0 3px 0 #7d2fb8, 0 0 12px #fff8; z-index: 1; }
+.paquet .logo small { display: block; font: 600 12px 'Fredoka', sans-serif; letter-spacing: 1px; text-shadow: none; margin-top: 6px; }
+.paquet .bete { position: absolute; left: 37px; top: 104px; width: 96px; height: 96px; z-index: 1; image-rendering: pixelated; filter: drop-shadow(0 4px 0 #0005); }
+.paquet .nb { position: absolute; bottom: 9px; right: 10px; font: 600 11px 'Fredoka', sans-serif; color: #fffc; z-index: 1; }
+.paquet.tremble { animation: tremble .35s; }
+.paquet.ouvert .bande { transform: translate(60px, -60px) rotate(25deg); opacity: 0; }
+.paquet.vide { transform: translateY(260px) rotateX(30deg); opacity: 0; pointer-events: none; }
+@keyframes reflet { from { transform: translateX(-60%); } to { transform: translateX(60%); } }
+@keyframes tremble { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+.pile { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.carte3d { position: absolute; width: 200px; height: 256px; left: -100px; top: -150px; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3,1.3,.5,1), left .5s, top .5s, width .5s, height .5s; }
+.carte3d .dos, .carte3d .avant { position: absolute; inset: 0; border-radius: 8px; backface-visibility: hidden; overflow: hidden; box-shadow: 0 8px 18px #0007; }
+.carte3d canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.carte3d .avant { transform: rotateY(180deg); }
+.carte3d.retournee { transform: rotateY(180deg); }
+.carte3d .rang { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%) rotateY(180deg); white-space: nowrap; font: 600 13px 'Fredoka', sans-serif; color: #fff; backface-visibility: hidden; }
+.eclat { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #fff6b0; box-shadow: 0 0 8px #ffd700; pointer-events: none; animation: eclat .9s ease-out forwards; }
+@keyframes eclat { to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+.rayons { position: absolute; left: 50%; top: 50%; width: 600px; height: 600px; margin: -330px 0 0 -300px; pointer-events: none; opacity: 0; transition: opacity .5s; background: repeating-conic-gradient(#ffd96b33 0 8deg, #ffd96b00 8deg 20deg); border-radius: 50%; animation: tourne 12s linear infinite; -webkit-mask: radial-gradient(#000 20%, #0000 65%); mask: radial-gradient(#000 20%, #0000 65%); }
+.rayons.on { opacity: 1; }
+@keyframes tourne { to { transform: rotate(360deg); } }
+#booster .aide { position: absolute; bottom: 150px; left: 0; right: 0; text-align: center; color: #fff; font-size: 15px; animation: clignote 1.4s infinite; }
+@keyframes clignote { 50% { opacity: .45; } }
+.bilan { position: absolute; left: 12px; right: 12px; bottom: 12px; background: var(--panneau); border-radius: 18px; padding: 12px 14px; transform: translateY(130%); transition: transform .45s cubic-bezier(.3,1.3,.5,1); }
+.bilan.on { transform: none; }
+.bilan .total { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: var(--doux); }
+.bilan .total b { font: 28px 'Luckiest Guy', sans-serif; color: var(--vert-f); padding-top: 4px; }
+.bilan .ligne { font-size: 13px; margin: 2px 0 10px; }
+.bilan .boutons { display: flex; gap: 8px; }
+.bilan .boutons .btn { flex: 1; font-size: 14px; padding: 9px 6px; }
+#booster .fermer { position: absolute; top: 54px; right: 12px; z-index: 3; }
+@media (prefers-reduced-motion: reduce) { .holo, .rayons, .paquet .face::after, #booster .aide { animation: none; } }
+</style>
+
+<canvas id="scene"></canvas>
+<div id="chargement">La boutique ouvre…</div>
+<div id="onglets">
+  <button data-vue="A" class="on">A · LA BOUTIQUE</button>
+  <button data-vue="B">B · LES CARTES</button>
+  <button data-vue="C">C · UN BOOSTER</button>
+</div>
+<div id="legende"></div>
+
+<!-- A : la boutique -->
+<div class="vue on" id="vueA">
+  <div class="barre">
+    <div class="pastille">SEMAINE 3 · MARDI<small id="infoBoutique">Boutique 6 × 5 · 2 clients</small></div>
+    <div class="pastille argent" id="pastilleArgent"><small>EN CAISSE</small><b id="caisse">2 400 €</b></div>
+  </div>
+  <div class="tourner"><button id="gauche" aria-label="Tourner à gauche">⟲</button><button id="droite" aria-label="Tourner à droite">⟳</button></div>
+  <div class="journal" id="journal"></div>
+  <div class="actions" id="actions">
+    <button id="bAmenager" class="fort"><svg viewBox="0 0 32 32"><path d="M6 26 20 12l4 4-14 14H6z" fill="#fff"/><path d="m20 12 3-3a3 3 0 0 1 4 4l-3 3z" fill="#ffe6a8"/><rect x="4" y="5" width="9" height="9" rx="2" fill="#fff" opacity=".8"/></svg>AMÉNAGER</button>
+    <button id="bCartes"><svg viewBox="0 0 32 32"><rect x="5" y="7" width="14" height="19" rx="2" fill="#4a8fe7" transform="rotate(-10 12 16)"/><rect x="13" y="6" width="14" height="19" rx="2" fill="#e5534b" transform="rotate(8 20 15)"/><circle cx="20" cy="14" r="3" fill="#ffd06b"/></svg>LES CARTES</button>
+    <button id="bBooster"><svg viewBox="0 0 32 32"><path d="M8 6h16l-1 22H9z" fill="#e5464b"/><path d="M8 6h16v4H8z" fill="#cfc8e6"/><circle cx="16" cy="18" r="4" fill="#ffd06b"/></svg>OUVRIR UN BOOSTER</button>
+  </div>
+  <div class="feuille" id="feuille" hidden>
+    <div class="tete"><b>AMÉNAGER</b><button class="btn" id="fini">TERMINÉ</button></div>
+    <div id="feuilleCatalogue">
+      <div class="catalogue" id="catalogue"></div>
+      <div class="aide-pose">Touche un meuble de la boutique pour le déplacer, le tourner ou le revendre.</div>
+    </div>
+    <div id="feuillePose" hidden>
+      <div class="pose"><div class="nom" id="poseNom"></div><button class="rond" id="poseTourner" aria-label="Tourner">↻</button><button class="rond" id="poseAnnuler" aria-label="Annuler">✕</button><button class="btn" id="poseOk">POSER</button></div>
+      <div class="aide-pose" id="poseAide">Fais glisser le meuble avec le doigt.</div>
+    </div>
+    <div id="feuilleChoix" hidden>
+      <div class="pose"><div class="nom" id="choixNom"></div><button class="rond" id="choixTourner" aria-label="Tourner">↻</button><button class="btn gris" id="choixDeplacer">DÉPLACER</button><button class="btn rouge" id="choixVendre">VENDRE</button></div>
+      <div class="aide-pose"><a href="#" id="choixFermer" style="color:var(--doux)">Fermer</a></div>
+    </div>
+  </div>
+  <div class="achat" id="achat" hidden>
+    <b id="achatTitre">AGRANDIR</b>
+    <p id="achatTexte"></p>
+    <div class="boutons"><button class="btn gris" id="achatNon">PLUS TARD</button><button class="btn" id="achatOui">ACHETER</button></div>
+  </div>
+</div>
+
+<!-- B : les cartes -->
+<div class="vue" id="vueB">
+  <div class="choixStyle"><button data-style="1" class="on">1 · CADRE COLORÉ</button><button data-style="2">2 · PLEIN CADRE</button></div>
+  <div class="expli" id="expliStyle"></div>
+  <div class="grille" id="grille"></div>
+</div>
+
+<!-- C : ouverture d'un booster -->
+<div id="booster">
+  <button class="btn gris fermer" id="fermerC">FERMER</button>
+  <div class="titre">VOLCANS D'ÉTÉ<small>extension n° 2 · booster de 5 cartes · payé 4 €</small></div>
+  <div class="rayons" id="rayons"></div>
+  <div class="paquet" id="paquet">
+    <div class="face"><div class="bande"></div><div class="logo">CRÉATURES<small>VOLCANS D'ÉTÉ</small></div><canvas class="bete" id="betePaquet" width="32" height="32"></canvas><div class="nb">5 CARTES</div></div>
+  </div>
+  <div class="pile" id="pile"></div>
+  <div class="aide" id="aideC">Touche le booster pour l'ouvrir</div>
+  <div class="bilan" id="bilan">
+    <div class="total">Valeur des 5 cartes <b id="totalC">0 €</b></div>
+    <div class="ligne" id="ligneC"></div>
+    <div class="boutons"><button class="btn gris" id="classeurC">AU CLASSEUR</button><button class="btn" id="vitrineC">EN VITRINE</button><button class="btn rouge" id="encoreC">UN AUTRE</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/*GLTF*/</script>
+<script>window.KENNEY = /*MODELES*/; window.IMAGES = /*IMAGES*/; window.ELEMENTS_MONSTRES = /*MONSTRES*/;</script>
+<script>
+'use strict';
+// ---------- hasard reproductible ----------
+function graine(s) { return () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const choix = (r, l) => l[Math.floor(r() * l.length)];
+const euros = n => n.toLocaleString('fr-FR') + ' €';
+const img = {};
+function chargerImage(n) { return new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = IMAGES[n]; }).then(i => img[n] = i); }
+
+// ---------- les créatures : un monstre de Dungeon Crawl, un nom inventé ----------
+const ELEMENTS = {
+  FEU:    { c: '#ff7a3d', f: '#8a2a12', ciel: ['#ffcf7a', '#e8603a'], deb: ['Flam', 'Brais', 'Pyr', 'Cendr', 'Tison'], base: [133, 4] },
+  EAU:    { c: '#4aa8ff', f: '#123f7a', ciel: ['#bfe8ff', '#3f86d8'], deb: ['Aqu', 'Ond', 'Marin', 'Goutt', 'Bulb'], base: [14, 4] },
+  PLANTE: { c: '#5cc96b', f: '#1d5a26', ciel: ['#e2f5b0', '#5daf55'], deb: ['Mouss', 'Feuill', 'Sylv', 'Ronc', 'Gland'], base: [366, 4] },
+  FOUDRE: { c: '#ffcf2e', f: '#6b4f00', ciel: ['#fff6c0', '#e8b820'], deb: ['Volt', 'Zap', 'Eclair', 'Statik', 'Orag'], base: [481, 4] },
+  OMBRE:  { c: '#8a6cff', f: '#2a1a5a', ciel: ['#b9a6f0', '#3b2a78'], deb: ['Nyx', 'Ombr', 'Spectr', 'Brum', 'Noct'], base: [610, 4] },
+};
+const FINS = ['on', 'ix', 'aurus', 'ette', 'ard', 'elle', 'o', 'ax', 'in', 'ou'];
+const RARETES = [
+  { n: 'COMMUNE', c: '#b9b2a4', cote: [0.2, 0.6] }, { n: 'PEU COMMUNE', c: '#46b37a', cote: [0.5, 1.5] },
+  { n: 'RARE', c: '#5b9cf0', cote: [2, 6] }, { n: 'ÉPIQUE', c: '#b07ef0', cote: [8, 20] }, { n: 'LÉGENDAIRE', c: '#f0a91c', cote: [40, 90] },
+];
+const PAR_ELEMENT = {}; ELEMENTS_MONSTRES.forEach((e, i) => (PAR_ELEMENT[e] = PAR_ELEMENT[e] || []).push(i));
+function creature(seed, rarete, el) {
+  const r = graine(seed * 7919 + 13); el = el || choix(r, Object.keys(ELEMENTS)); const E = ELEMENTS[el];
+  const nom = (choix(r, E.deb) + choix(r, FINS)).toUpperCase();
+  const R = RARETES[rarete], cote = Math.round((R.cote[0] + r() * (R.cote[1] - R.cote[0])) * 2) / 2;
+  return { seed, el, E, nom, rarete, R, cote, monstre: choix(r, PAR_ELEMENT[el]), atk: 1 + Math.floor(r() * 4) + rarete, pv: 2 + Math.floor(r() * 5) + rarete * 2 };
+}
+function monstre(ctx, i, x, y, k) { ctx.drawImage(img.monstres, (i % 16) * 32, Math.floor(i / 16) * 32, 32, 32, x, y, 32 * k, 32 * k); }
+
+// ---------- dessin d'une carte (100 × 128 pixels de base, ×3) ----------
+// Morceaux de la planche « Pixel Card Assets » (cafedraw, CC0) : [x, y, l, h]
+const P = {
+  cadreArt: [[22, 136, 86, 72], [22, 136, 86, 72], [140, 136, 86, 72], [257, 136, 86, 72], [257, 136, 86, 72]],
+  banniere: [[16, 223, 96, 29], [135, 224, 96, 29], [135, 224, 96, 29], [252, 223, 96, 29], [361, 262, 96, 29]],
+  petiteBan: [[16, 273, 96, 18], [16, 273, 96, 18], [135, 273, 96, 18], [252, 273, 96, 18], [252, 273, 96, 18]],
+  cadrePlein: [[14, 337, 100, 128], [14, 337, 100, 128], [120, 337, 100, 128], [226, 337, 100, 128], [226, 337, 100, 128]],
+  rondAtk: [399, 218, 20, 20], rondPv: [424, 218, 20, 20], etoile: [402, 240, 18, 17],
+};
+const K = 3;
+let styleCarte = 1;
+function morceau(ctx, src, r, x, y, k = 1) { ctx.drawImage(src, r[0], r[1], r[2], r[3], x, y, r[2] * k, r[3] * k); }
+// le décor derrière le monstre : un petit paysage de son élément, en pixels
+function habitat(ctx, b, x, y, w, h) {
+  const E = b.E, r = graine(b.seed + 77);
+  const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, E.ciel[0]); g.addColorStop(1, E.ciel[1]);
+  ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+  if (b.rarete === 4) { ctx.save(); ctx.translate(x + w / 2, y + h * 0.55); ctx.fillStyle = '#fff6'; for (let a = 0; a < 12; a++) { ctx.rotate(Math.PI / 6); ctx.fillRect(0, -2, w, 4); } ctx.restore(); }
+  ctx.fillStyle = '#ffffff55';
+  const d = { FEU: () => ctx.fillRect(x + r() * w, y + h * 0.4 + r() * h * 0.6, 2, 2), EAU: () => { const cx = x + r() * w, cy = y + r() * h; ctx.fillRect(cx, cy, 3, 1); ctx.fillRect(cx, cy + 2, 3, 1); ctx.fillRect(cx - 1, cy + 1, 1, 1); ctx.fillRect(cx + 3, cy + 1, 1, 1); },
+    PLANTE: () => ctx.fillRect(x + r() * w, y + h * 0.7 + r() * h * 0.3, 1, 3), FOUDRE: () => { const cx = x + r() * w, cy = y + r() * h * 0.6; ctx.fillRect(cx, cy, 2, 1); ctx.fillRect(cx + 1, cy + 1, 2, 1); ctx.fillRect(cx, cy + 2, 2, 1); },
+    OMBRE: () => ctx.fillRect(x + r() * w, y + r() * h * 0.7, 1, 1) }[b.el];
+  for (let k = 0; k < 18; k++) d();
+  // le sol
+  ctx.fillStyle = E.f + '88'; ctx.fillRect(x, y + h - Math.round(h * 0.18), w, Math.round(h * 0.18));
+}
+function texte(ctx, t, x, y, taille, coul = '#fff', contour = '#2d2a3e', align = 'center') {
+  ctx.font = '700 ' + taille + 'px "Pixelify Sans", monospace'; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.lineWidth = Math.max(3, taille / 4); ctx.strokeStyle = contour; ctx.lineJoin = 'round'; ctx.strokeText(t, x, y); ctx.fillStyle = coul; ctx.fillText(t, x, y);
+}
+function dessinerCarte(b, cv, style = styleCarte) {
+  cv = cv || document.createElement('canvas'); cv.width = 100 * K; cv.height = 128 * K;
+  const ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  const pc = img.cartes, s = (r, x, y, k = 1) => morceau(ctx, pc, r, x * K, y * K, K * k);
+  if (style === 1) {
+    s([...b.E.base, 100, 128], 0, 0);
+    ctx.save(); ctx.scale(K, K); habitat(ctx, b, 12, 12, 76, 62); ctx.restore();
+    monstre(ctx, b.monstre, 18 * K, 11 * K, 2 * K);
+    s(P.cadreArt[b.rarete], 7, 7);
+    s(P.banniere[b.rarete], 2, 80);
+    let t = 13 * K; ctx.font = '700 ' + t + 'px "Pixelify Sans"'; while (ctx.measureText(b.nom).width > 80 * K) { t -= 3; ctx.font = '700 ' + t + 'px "Pixelify Sans"'; }
+    texte(ctx, b.nom, 50 * K, 94 * K, t);
+    s(P.rondAtk, 5, 104); s(P.rondPv, 75, 104);
+    texte(ctx, String(b.atk), 15 * K, 114 * K, 12 * K); texte(ctx, String(b.pv), 85 * K, 114 * K, 12 * K);
+    const n = b.rarete + 1, l = 9; for (let k = 0; k < n; k++) s(P.etoile, 50 - n * l / 2 + k * l, 110, 0.5);
+  } else {
+    ctx.save(); ctx.scale(K, K); habitat(ctx, b, 4, 4, 92, 120); ctx.restore();
+    monstre(ctx, b.monstre, 2 * K, 4 * K, 3 * K);
+    s(P.cadrePlein[b.rarete], 0, 0);
+    s(P.petiteBan[b.rarete], 2, 86);
+    let t = 11 * K; ctx.font = '700 ' + t + 'px "Pixelify Sans"'; while (ctx.measureText(b.nom).width > 84 * K) { t -= 3; ctx.font = '700 ' + t + 'px "Pixelify Sans"'; }
+    texte(ctx, b.nom, 50 * K, 95 * K, t);
+    s(P.rondAtk, 7, 102); s(P.rondPv, 73, 102);
+    texte(ctx, String(b.atk), 17 * K, 112 * K, 12 * K); texte(ctx, String(b.pv), 83 * K, 112 * K, 12 * K);
+    const n = b.rarete + 1, l = 9; for (let k = 0; k < n; k++) s(P.etoile, 50 - n * l / 2 + k * l, 108, 0.5);
+    texte(ctx, b.el, 50 * K, 10 * K + 8, 7 * K, '#fff', b.E.f);
+  }
+  return cv;
+}
+function dessinerDos(cv) {
+  cv = cv || document.createElement('canvas'); cv.width = 100 * K; cv.height = 128 * K;
+  const ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false; morceau(ctx, img.dos, [776, 4, 100, 128], 0, 0, K); return cv;
+}
+
+// ---------- la scène 3D ----------
+const canvas = document.getElementById('scene');
+const rendu = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+rendu.setPixelRatio(Math.min(2, devicePixelRatio)); rendu.outputEncoding = THREE.sRGBEncoding;
+rendu.shadowMap.enabled = true; rendu.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xfff4e6, 0x6b5f8a, 0.75));
+const soleil = new THREE.DirectionalLight(0xffffff, 0.85); soleil.castShadow = true;
+soleil.shadow.mapSize.set(1024, 1024); Object.assign(soleil.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 }); soleil.shadow.bias = -0.0015;
+scene.add(soleil, soleil.target);
+const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
+let vue = 'A';
+
+const M = {}, CLIPS = {};
+async function charger() {
+  // l'atlas commun des packs Kenney, en blob: (un artefact interdit fetch sur une adresse data:)
+  const urlAtlas = URL.createObjectURL(new Blob([Uint8Array.from(atob(IMAGES.atlas.split(',')[1]), c => c.charCodeAt(0))], { type: 'image/png' }));
+  const gestion = new THREE.LoadingManager(); gestion.setURLModifier(u => /colormap\.png$/.test(u) ? urlAtlas : u);
+  const chargeur = new THREE.GLTFLoader(gestion);
+  for (const n in KENNEY) {
+    try {
+      const g = await new Promise((ok, ko) => chargeur.parse(Uint8Array.from(atob(KENNEY[n]), c => c.charCodeAt(0)).buffer, '', ok, ko));
+      M[n] = g.scene; if (g.animations.length) CLIPS[n] = g.animations;
+      g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    } catch (e) { console.error('modèle', n, e); }
+  }
+}
+function modele(n, ech = 1) { const o = M[n] ? M[n].clone() : new THREE.Group(); o.scale.setScalar(ech); return o; }
+
+// ---------- les cartes et boosters en 3D ----------
+const geoCarte = new THREE.PlaneGeometry(0.14, 0.18);
+const cacheTex = {};
+function texCarte(b) {
+  const k = b.seed + ':' + b.rarete + ':' + styleCarte;
+  if (!cacheTex[k]) { const t = new THREE.CanvasTexture(dessinerCarte(b)); t.encoding = THREE.sRGBEncoding; t.magFilter = THREE.NearestFilter; t.anisotropy = 4; cacheTex[k] = t; }
+  return cacheTex[k];
+}
+function carte3D(b, ech = 1) { const m = new THREE.Mesh(geoCarte, new THREE.MeshStandardMaterial({ map: texCarte(b), roughness: 0.45 })); m.scale.setScalar(ech); m.castShadow = true; m.userData.carte = b; return m; }
+const geoBooster = new THREE.BoxGeometry(0.11, 0.16, 0.025), matsBooster = {};
+function texBooster(el) {
+  const cv = document.createElement('canvas'); cv.width = 64; cv.height = 96; const ctx = cv.getContext('2d'), E = ELEMENTS[el];
+  const g = ctx.createLinearGradient(0, 0, 64, 96); g.addColorStop(0, E.ciel[1]); g.addColorStop(1, E.f); ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 96);
+  ctx.fillStyle = '#e8e3f0'; ctx.fillRect(0, 0, 64, 10); ctx.imageSmoothingEnabled = false; monstre(ctx, PAR_ELEMENT[el][0], 8, 30, 1.5);
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return t;
+}
+function booster(el) {
+  const m = matsBooster[el] || (matsBooster[el] = [0, 0, 0, 0, 1, 1].map(k => k ? new THREE.MeshStandardMaterial({ map: texBooster(el), roughness: 0.3, metalness: 0.25 }) : new THREE.MeshStandardMaterial({ color: ELEMENTS[el].f, roughness: 0.4 })));
+  const b = new THREE.Mesh(geoBooster, m); b.castShadow = true; return b;
+}
+
+// ---------- les gens ----------
+const PERSOS = ['character-female-a', 'character-male-c', 'character-female-d', 'character-male-e', 'character-male-a', 'character-female-b'];
+const animes = [];
+function personnage(n) {
+  const o = THREE.SkeletonUtils.clone(M[n]); o.traverse(c => { if (c.isMesh) { c.castShadow = true; c.frustumCulled = false; } });
+  const p = { o, mixer: new THREE.AnimationMixer(o), clips: CLIPS[n], act: null }; animes.push(p); return p;
+}
+function jouer(p, nom, une = false) {
+  const clip = p.clips.find(c => c.name === nom); if (!clip) return;
+  const a = p.mixer.clipAction(clip); if (p.act === a && !une) return;
+  a.reset(); a.setLoop(une ? THREE.LoopOnce : THREE.LoopRepeat, Infinity); a.clampWhenFinished = une;
+  if (p.act && p.act !== a) p.act.fadeOut(0.2); a.fadeIn(0.2).play(); p.act = a;
+}
+
+// ---------- le catalogue des meubles (posés face à +z quand r = 0) ----------
+const ELS = Object.keys(ELEMENTS);
+let numCarte = 100;
+const CATALOGUE = {
+  rayon: { nom: 'Rayon de boosters', prix: 80, taille: [1, 1], client: true, aide: 'Les boosters fermés : la vente sûre.', fab() {
+    const g = new THREE.Group(), o = modele('shelf-boxes'); g.add(o); o.updateMatrixWorld(true);
+    const places = []; o.traverse(c => { if (/carton/i.test(c.name)) places.push(c); });
+    places.forEach((c, j) => { const p = new THREE.Vector3(); c.getWorldPosition(p); c.visible = false;
+      for (let q = 0; q < 3; q++) { const b = booster(ELS[(j + q + numCarte) % 5]); b.position.set(p.x + (q - 1) * 0.12, p.y + 0.02, p.z); b.rotation.x = -0.12; g.add(b); } });
+    numCarte++; return g; } },
+  vitrine: { nom: 'Vitrine basse', prix: 120, taille: [1, 1], client: true, aide: 'Les cartes à l\'unité, sous verre.', fab() {
+    const g = new THREE.Group(); g.add(modele('freezer'));
+    for (let j = 0; j < 4; j++) for (let k = 0; k < 2; k++) { const s = numCarte++, c = carte3D(creature(s, s % 9 === 0 ? 3 : s % 4 === 0 ? 2 : 1)); c.position.set(-0.27 + j * 0.18, 0.37, -0.12 + k * 0.24); c.rotation.x = -Math.PI / 2 + 0.25; g.add(c); }
+    const v = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.1, 0.56), new THREE.MeshStandardMaterial({ color: 0xd8f2ff, transparent: true, opacity: 0.22, roughness: 0.05 })); v.position.y = 0.41; g.add(v);
+    return g; } },
+  grande: { nom: 'Grande vitrine', prix: 220, taille: [1, 1], client: true, aide: 'Les cartes de valeur, bien en vue.', fab() {
+    const g = new THREE.Group(); g.add(modele('freezers-standing'));
+    for (let k = 0; k < 4; k++) { const s = numCarte++, c = carte3D(creature(s, k === 1 ? 4 : 2 + k % 2), 1.25); c.position.set(-0.3 + k * 0.2, 0.55 + (k % 2) * 0.24, 0.32); g.add(c); }
+    return g; } },
+  table: { nom: 'Table de tournoi', prix: 150, taille: [2, 2], aide: 'Deux joueurs s\'installent pour une partie.', fab() {
+    const g = new THREE.Group(), E = 1.5;   // groupe centré entre les 4 cases
+    const t = modele('table', E); t.position.set(-0.42 * E, 0, 0.22 * E); g.add(t);
+    const c1 = modele('chair', E); c1.position.set(0.16, 0, -0.62); g.add(c1); const c2 = modele('chair', E); c2.position.set(-0.16, 0, 0.62); c2.rotation.y = Math.PI; g.add(c2);
+    [[-0.52, 0], [0.52, Math.PI]].forEach(([z, r], i) => { const p = personnage(PERSOS[(numCarte + i) % PERSOS.length]); p.o.position.set(0, 0.02, z); p.o.rotation.y = r; g.add(p.o); jouer(p, 'sit'); });
+    for (let k = 0; k < 3; k++) for (const z of [-0.13, 0.13]) { const c = carte3D(creature(numCarte++, 1)); c.position.set(-0.18 + k * 0.18, 0.505, z); c.rotation.set(-Math.PI / 2, 0, z > 0 ? Math.PI : 0); g.add(c); }
+    return g; } },
+  classeurs: { nom: 'Étagère à classeurs', prix: 60, taille: [1, 1], client: true, aide: 'Les classeurs et les pochettes.', fab() { const g = new THREE.Group(), o = modele('bookcaseOpen', 1.5); o.position.set(-0.3, 0, -0.2); g.add(o); return g; } },
+  plante: { nom: 'Plante verte', prix: 15, taille: [1, 1], aide: 'Pour faire joli.', fab() { const g = new THREE.Group(), o = modele('pottedPlant', 1.6); o.position.set(-0.2, 0, -0.2); g.add(o); return g; } },
+  lampe: { nom: 'Lampadaire', prix: 25, taille: [1, 1], aide: 'Une lumière douce le soir.', fab() { const g = new THREE.Group(), o = modele('lampSquareFloor', 1.6); o.position.set(-0.2, 0, -0.2); g.add(o); return g; } },
+  caisse: { nom: 'Caisse', prix: 0, taille: [1, 1], unique: true, aide: 'Les clients viennent payer ici.', fab() {
+    const g = new THREE.Group(); g.add(modele('cash-register'));
+    const p = personnage('character-employee'); p.o.position.set(0, 0, -0.7); g.add(p.o); jouer(p, 'idle'); return g; } },
+};
+// une vignette de chaque meuble, dessinée une fois au démarrage
+const vignettes = {};
+function faireVignettes() {
+  const s = new THREE.Scene(); s.add(new THREE.HemisphereLight(0xffffff, 0x8a80a8, 1.0)); const d = new THREE.DirectionalLight(0xffffff, 0.6); d.position.set(3, 5, 4); s.add(d);
+  const c = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 50); const taille = rendu.getSize(new THREE.Vector2());
+  rendu.setSize(128, 128, false); rendu.setPixelRatio(1); rendu.setClearColor(0x000000, 0);
+  for (const k in CATALOGUE) {
+    const g = CATALOGUE[k].fab(); s.add(g);
+    const b = new THREE.Box3().setFromObject(g), ctr = b.getCenter(new THREE.Vector3()), r = b.getSize(new THREE.Vector3()).length() * 0.55;
+    c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.position.set(ctr.x + 4, ctr.y + 3.2, ctr.z + 4); c.lookAt(ctr); c.updateProjectionMatrix();
+    rendu.render(s, c); vignettes[k] = canvas.toDataURL(); s.remove(g); g.traverse(o => { const i = animes.findIndex(p => p.o === o); if (i >= 0) animes.splice(i, 1); });
+  }
+  rendu.setPixelRatio(Math.min(2, devicePixelRatio)); rendu.setSize(taille.x, taille.y, false);
+}
+
+// ---------- la boutique : taille, murs, meubles ----------
+const AGRANDISSEMENTS = [
+  { L: 6, P: 5 },
+  { L: 8, P: 5, prix: 900, nom: 'L\'ARRIÈRE-BOUTIQUE', texte: 'Deux rangées de plus sur le côté : de la place pour une grande vitrine et des rayons.' },
+  { L: 8, P: 7, prix: 1600, nom: 'LA SALLE DE TOURNOI', texte: 'Deux rangées de plus vers la rue : de quoi installer trois tables de tournoi.' },
+  { L: 10, P: 7, prix: 2600, nom: 'LE GRAND MAGASIN', texte: 'La boutique devient la référence de la ville.' },
+];
+let niveau = 0, L = 6, Pr = 5, caisse = 2400;
+const PORTE = 1;   // la porte, sur le mur de devant, colonne 1
+const coque = new THREE.Group(), meublesG = new THREE.Group(), terrainG = new THREE.Group(); scene.add(coque, meublesG, terrainG);
+const murs = [];   // { o, n: normale vers l'extérieur }
+const meubles = [];   // { id, type, x, z, r, g }
+let idMeuble = 1;
+function construireCoque() {
+  coque.clear(); murs.length = 0;
+  for (let x = 0; x < L; x++) for (let z = 0; z < Pr; z++) { const f = modele('floor'); f.position.set(x, 0, z); coque.add(f); }
+  const mur = (n, x, z, r, nx, nz) => { const o = modele(n); o.position.set(x, 0, z); o.rotation.y = r * Math.PI / 2; coque.add(o); murs.push({ o, nx, nz }); };
+  for (let x = 0; x < L; x++) mur(x % 3 === 2 ? 'wall-window' : 'wall', x, -0.5, 0, 0, -1);
+  for (let x = 0; x < L; x++) mur(x === PORTE ? 'wall-door-rotate' : x % 3 === 0 ? 'wall-window' : 'wall', x, Pr - 0.5, 2, 0, 1);
+  for (let z = 0; z < Pr; z++) mur(z % 3 === 1 ? 'wall-window' : 'wall', -0.5, z, 1, -1, 0);
+  for (let z = 0; z < Pr; z++) mur(z % 3 === 1 ? 'wall-window' : 'wall', L - 0.5, z, 3, 1, 0);
+  // l'enseigne au-dessus de la porte
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 128; const c = cv.getContext('2d');
+  c.fillStyle = '#2d2a3e'; c.fillRect(0, 0, 512, 128); c.font = '76px "Luckiest Guy"'; c.textAlign = 'center'; c.fillStyle = '#ffcf2e'; c.fillText('LE REPAIRE', 256, 96);
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding;
+  const ens = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.35), new THREE.MeshBasicMaterial({ map: t })); ens.position.set(PORTE + 1.2, 0.8, Pr - 0.5 + 0.31); coque.add(ens); murs.push({ o: ens, nx: 0, nz: 1 });
+  // le trottoir devant
+  const tr = new THREE.Mesh(new THREE.PlaneGeometry(L + 1, 1.2), new THREE.MeshStandardMaterial({ color: 0x8d8aa0, roughness: 1 })); tr.rotation.x = -Math.PI / 2; tr.position.set((L - 1) / 2, -0.01, Pr + 0.3); tr.receiveShadow = true; coque.add(tr);
+  construireTerrain(); majGrille(); cadrer();
+  document.getElementById('infoBoutique').textContent = 'Boutique ' + L + ' × ' + Pr + ' · ' + clients.length + ' clients';
+}
+// le terrain de l'agrandissement suivant : herbe, ligne pointillée et panneau « À VENDRE »
+let panneau = null;
+function construireTerrain() {
+  terrainG.clear(); panneau = null;
+  const A = AGRANDISSEMENTS[niveau + 1]; if (!A) return;
+  const zones = [];
+  if (A.L > L) zones.push([L, 0, A.L - L, Pr]);
+  if (A.P > Pr) zones.push([0, Pr, A.L, A.P - Pr]);
+  const pointilles = (w, h) => { const cv = document.createElement('canvas'); cv.width = 64 * w; cv.height = 64 * h; const c = cv.getContext('2d'); c.fillStyle = '#7fbf6a'; c.fillRect(0, 0, cv.width, cv.height); c.fillStyle = '#74b360'; for (let i = 0; i < w * h * 6; i++) c.fillRect(Math.random() * cv.width, Math.random() * cv.height, 6, 3); c.setLineDash([16, 12]); c.lineWidth = 6; c.strokeStyle = '#fffaf0'; c.strokeRect(6, 6, cv.width - 12, cv.height - 12); const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return t; };
+  for (const [x, z, w, h] of zones) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: pointilles(w, h), roughness: 1 }));
+    m.rotation.x = -Math.PI / 2; m.position.set(x - 0.5 + w / 2, -0.005, z - 0.5 + h / 2); m.receiveShadow = true; m.userData.terrain = true; terrainG.add(m);
+  }
+  // le panneau
+  const [x, z, w, h] = zones[0];
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 160; const c = cv.getContext('2d');
+  c.fillStyle = '#fffaf0'; c.fillRect(0, 0, 256, 160); c.lineWidth = 10; c.strokeStyle = '#e5534b'; c.strokeRect(5, 5, 246, 150);
+  c.textAlign = 'center'; c.fillStyle = '#e5534b'; c.font = '44px "Luckiest Guy"'; c.fillText('À VENDRE', 128, 68); c.fillStyle = '#2d2a3e'; c.font = '600 40px Fredoka'; c.fillText(euros(A.prix), 128, 124);
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding;
+  panneau = new THREE.Group();
+  const planche = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.04), [0, 0, 0, 0, 1, 1].map(k => k ? new THREE.MeshStandardMaterial({ map: t }) : new THREE.MeshStandardMaterial({ color: 0xc98a4b })));
+  planche.position.y = 0.75; planche.castShadow = true; panneau.add(planche);
+  const poteau = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.06), new THREE.MeshStandardMaterial({ color: 0x8a5a2b })); poteau.position.y = 0.3; poteau.castShadow = true; panneau.add(poteau);
+  panneau.position.set(x - 0.5 + w / 2, 0, z - 0.5 + h / 2); panneau.traverse(o => o.userData.terrain = true); terrainG.add(panneau);
+}
+// le quadrillage, visible pendant l'aménagement
+let grille = null;
+function majGrille() {
+  if (grille) scene.remove(grille);
+  const pts = [];
+  for (let x = 0; x <= L; x++) pts.push(x - 0.5, 0.035, -0.5, x - 0.5, 0.035, Pr - 0.5);
+  for (let z = 0; z <= Pr; z++) pts.push(-0.5, 0.035, z - 0.5, L - 0.5, 0.035, z - 0.5);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  grille = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x8a63d2, transparent: true, opacity: 0.55 })); grille.visible = amenager; scene.add(grille);
+}
+// les cases d'un meuble (taille tournée selon r)
+function cases(type, x, z, r) { const [w, d] = CATALOGUE[type].taille, [a, b] = r % 2 ? [d, w] : [w, d], l = []; for (let i = 0; i < a; i++) for (let j = 0; j < b; j++) l.push([x + i, z + j]); return l; }
+function centre(type, x, z, r) { const [w, d] = CATALOGUE[type].taille, [a, b] = r % 2 ? [d, w] : [w, d]; return [x + (a - 1) / 2, z + (b - 1) / 2]; }
+const DIR = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+function caseClient(m) { const [cx, cz] = centre(m.type, m.x, m.z, m.r); return [Math.round(cx + DIR[m.r][0] * (CATALOGUE[m.type].taille[0] > 1 ? 1 : 1)), Math.round(cz + DIR[m.r][1])]; }
+function occupee(x, z, sauf) { return meubles.some(m => m !== sauf && cases(m.type, m.x, m.z, m.r).some(([a, b]) => a === x && b === z)); }
+function placeLibre(type, x, z, r, sauf) {
+  return cases(type, x, z, r).every(([a, b]) => a >= 0 && b >= 0 && a < L && b < Pr && !(a === PORTE && b === Pr - 1) && !occupee(a, b, sauf));
+}
+function poserMeuble(type, x, z, r) {
+  const g = CATALOGUE[type].fab(), m = { id: idMeuble++, type, x, z, r, g };
+  g.traverse(o => o.userData.meuble = m); placerGroupe(m); meublesG.add(g); meubles.push(m); return m;
+}
+function placerGroupe(m) { const [cx, cz] = centre(m.type, m.x, m.z, m.r); m.g.position.set(cx, 0, cz); m.g.rotation.y = m.r * Math.PI / 2; }
+function retirerMeuble(m) { meublesG.remove(m.g); meubles.splice(meubles.indexOf(m), 1); m.g.traverse(o => { const i = animes.findIndex(p => p.o === o); if (i >= 0) animes.splice(i, 1); }); }
+
+// ---------- la caméra qui tourne autour de la boutique ----------
+let azimut = Math.PI * 0.3, azimutVise = azimut, zoom = 1;
+function cadrer() {
+  const w = innerWidth, h = innerHeight; rendu.setSize(w, h, false);
+  const a = w / h, demi = Math.max(L, Pr) * 0.5 + 0.9;
+  cam.left = -demi; cam.right = demi; cam.top = demi / a; cam.bottom = -demi / a; cam.updateProjectionMatrix();
+}
+function placerCamera() {
+  const cx = (L - 1) / 2, cz = (Pr - 1) / 2, d = 14;
+  cam.position.set(cx + Math.sin(azimut) * d, d * 0.9, cz + Math.cos(azimut) * d); cam.lookAt(cx, 0, cz);
+  // le centre de la boutique un peu plus haut que le milieu de l'écran (les boutons sont en bas)
+  cam.zoom = zoom; cam.updateProjectionMatrix();
+  soleil.position.set(cx + 5, 12, cz + 7); soleil.target.position.set(cx, 0, cz);
+  // on cache les murs qui sont entre la caméra et la boutique
+  const vx = Math.sin(azimut), vz = Math.cos(azimut);
+  for (const m of murs) m.o.visible = m.nx * vx + m.nz * vz < 0.25;
+}
+function tourner(sens) { azimutVise = Math.round((azimutVise - Math.PI / 4) / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 4 + sens * Math.PI / 2; }
+document.getElementById('gauche').onclick = () => tourner(-1);
+document.getElementById('droite').onclick = () => tourner(1);
+
+// ---------- les clients : ils entrent, vont à un meuble, passent à la caisse, repartent ----------
+const clients = [];
+function chemin(de, vers) {
+  const cle = (x, z) => x + ',' + z, vu = new Map([[cle(...de), null]]), file = [de];
+  const libre = (x, z) => x >= 0 && z >= 0 && x < L && z < Pr && !occupee(x, z);
+  while (file.length) {
+    const [x, z] = file.shift();
+    if (x === vers[0] && z === vers[1]) { const l = []; let k = cle(x, z); while (k) { l.unshift(k.split(',').map(Number)); k = vu.get(k); } return l; }
+    for (const [dx, dz] of DIR) { const nx = x + dx, nz = z + dz, k = cle(nx, nz); if (!vu.has(k) && libre(nx, nz)) { vu.set(k, cle(x, z)); file.push([nx, nz]); } }
+  }
+  return null;
+}
+function nouveauClient() {
+  const cibles = meubles.filter(m => CATALOGUE[m.type].client), caisseM = meubles.find(m => m.type === 'caisse');
+  if (!cibles.length || !caisseM) return;
+  const m = cibles[Math.floor(Math.random() * cibles.length)], entree = [PORTE, Pr - 1];
+  const vers = caseClient(m), versCaisse = caseClient(caisseM);
+  const aller = chemin(entree, vers), payer = aller && chemin(vers, versCaisse), sortir = payer && chemin(versCaisse, entree);
+  if (!sortir) return;
+  const p = personnage(PERSOS[Math.floor(Math.random() * PERSOS.length)]);
+  p.o.position.set(PORTE, 0, Pr + 0.4); scene.add(p.o);
+  const etapes = [[PORTE, Pr + 0.4]].concat(aller, [['pause', 2.2, m]], payer.slice(1), [['payer', 1.6, m]], sortir.slice(1), [[PORTE, Pr + 0.6], ['fin']]);
+  clients.push({ p, etapes, k: 1, attente: 0 });
+  document.getElementById('infoBoutique').textContent = 'Boutique ' + L + ' × ' + Pr + ' · ' + clients.length + ' clients';
+}
+function avancerClients(dt) {
+  for (const c of clients.slice()) {
+    const e = c.etapes[c.k];
+    if (e[0] === 'fin') { scene.remove(c.p.o); animes.splice(animes.indexOf(c.p), 1); clients.splice(clients.indexOf(c), 1); continue; }
+    if (e[0] === 'pause' || e[0] === 'payer') {
+      if (c.attente <= 0) {
+        c.attente = e[1]; const [mx, mz] = centre(e[2].type, e[2].x, e[2].z, e[2].r); c.p.o.rotation.y = Math.atan2(mx - c.p.o.position.x, mz - c.p.o.position.z);
+        jouer(c.p, e[0] === 'payer' ? 'interact-right' : 'pick-up');
+        if (e[0] === 'payer') vente(c);
+      }
+      c.attente -= dt; if (c.attente <= 0) c.k++;
+      continue;
+    }
+    const dx = e[0] - c.p.o.position.x, dz = e[1] - c.p.o.position.z, d = Math.hypot(dx, dz);
+    if (d < 0.03) { c.k++; continue; }
+    jouer(c.p, 'walk'); const v = Math.min(d, dt * 1.3);
+    c.p.o.position.x += dx / d * v; c.p.o.position.z += dz / d * v;
+    let a = Math.atan2(dx, dz) - c.p.o.rotation.y; a = Math.atan2(Math.sin(a), Math.cos(a)); c.p.o.rotation.y += a * Math.min(1, dt * 12);
+  }
+}
+const ACHATS = { rayon: [['3 boosters', 12], ['1 booster', 4], ['un présentoir', 24]], vitrine: [['une carte rare', 6], ['deux cartes', 3], ['une carte épique', 15]], grande: [['une LÉGENDAIRE !', 64], ['une carte épique', 18]], classeurs: [['un classeur', 9], ['des pochettes', 3]] };
+function vente(c) {
+  const t = c.etapes.find(e => e[0] === 'pause')[2].type, [quoi, prix] = choix(Math.random, ACHATS[t] || [['un booster', 4]]);
+  caisse += prix; majCaisse();
+  const d = document.createElement('div'); d.className = 'gain'; d.textContent = '+' + prix + ' €'; document.getElementById('vueA').appendChild(d);
+  const v = c.p.o.position.clone(); v.y += 0.9; v.project(cam); d.style.left = (v.x + 1) / 2 * innerWidth + 'px'; d.style.top = (1 - v.y) / 2 * innerHeight + 'px';
+  setTimeout(() => d.remove(), 1400);
+  journal('Un client achète ' + quoi + ' (' + prix + ' €)');
+}
+function journal(t) { const j = document.getElementById('journal'), d = document.createElement('div'); d.textContent = t; j.appendChild(d); while (j.children.length > 3) j.firstChild.remove(); setTimeout(() => d.remove(), 6000); }
+function majCaisse() { document.getElementById('caisse').textContent = euros(caisse); document.getElementById('pastilleArgent').classList.toggle('moins', caisse < 0); majCatalogue(); }
+
+// ---------- l'aménagement ----------
+let amenager = false, fantome = null, selection = null;   // fantome : { type, x, z, r, g, deplace }
+const feuilles = ['feuilleCatalogue', 'feuillePose', 'feuilleChoix'];
+function montrerFeuille(n) { feuilles.forEach(f => document.getElementById(f).hidden = f !== n); }
+function majCatalogue() {
+  const c = document.getElementById('catalogue'); if (!c) return; c.innerHTML = '';
+  const A = AGRANDISSEMENTS[niveau + 1];
+  if (A) { const d = document.createElement('div'); d.className = 'objet agrandir'; d.innerHTML = '<img alt="" src="' + vignetteAgrandir() + '"><b>Agrandir la boutique</b><span>' + euros(A.prix) + '</span>'; d.onclick = proposerAgrandir; c.appendChild(d); }
+  for (const k in CATALOGUE) {
+    const o = CATALOGUE[k]; if (o.unique) continue;
+    const d = document.createElement('div'); d.className = 'objet' + (o.prix > caisse ? ' trop' : '');
+    d.innerHTML = '<img alt="" src="' + vignettes[k] + '"><b>' + o.nom + '</b><span>' + euros(o.prix) + '</span>';
+    d.onclick = () => commencerPose(k); c.appendChild(d);
+  }
+}
+function vignetteAgrandir() {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 76; const c = cv.getContext('2d');
+  c.fillStyle = '#7fbf6a'; c.fillRect(8, 20, 60, 44); c.setLineDash([6, 4]); c.lineWidth = 3; c.strokeStyle = '#fff'; c.strokeRect(10, 22, 56, 40);
+  c.fillStyle = '#fffaf0'; c.fillRect(22, 8, 32, 20); c.strokeStyle = '#e5534b'; c.setLineDash([]); c.lineWidth = 2; c.strokeRect(22, 8, 32, 20); c.fillStyle = '#e5534b'; c.font = '9px "Luckiest Guy"'; c.textAlign = 'center'; c.fillText('À VENDRE', 38, 22);
+  return cv.toDataURL();
+}
+function entrerAmenager(oui) {
+  amenager = oui; grille.visible = oui;
+  document.getElementById('feuille').hidden = !oui; document.getElementById('actions').hidden = oui; document.getElementById('journal').hidden = oui;
+  annulerPose(); deselectionner(); montrerFeuille('feuilleCatalogue'); majCatalogue();
+}
+function teinter(g, coul) {
+  g.traverse(o => { if (!o.isMesh) return; if (!o.userData.matOrig) o.userData.matOrig = o.material;
+    o.material = (Array.isArray(o.userData.matOrig) ? o.userData.matOrig : [o.userData.matOrig]).map(m => { const n = m.clone(); n.transparent = true; n.opacity = 0.75; if (n.emissive) { n.emissive.set(coul); n.emissiveIntensity = 0.45; } return n; });
+    if (o.material.length === 1) o.material = o.material[0]; });
+}
+function deteindre(g) { g.traverse(o => { if (o.isMesh && o.userData.matOrig) { o.material = o.userData.matOrig; delete o.userData.matOrig; } }); }
+// cherche une case libre près du centre pour poser le nouveau meuble
+function caseLibre(type, r) { const cx = Math.floor(L / 2), cz = Math.floor(Pr / 2); let best = null, bd = 1e9; for (let x = 0; x < L; x++) for (let z = 0; z < Pr; z++) if (placeLibre(type, x, z, r)) { const d = Math.abs(x - cx) + Math.abs(z - cz); if (d < bd) { bd = d; best = [x, z]; } } return best || [cx, cz]; }
+function commencerPose(type, deplace) {
+  annulerPose(); deselectionner();
+  const r = deplace ? deplace.r : 0, [x, z] = deplace ? [deplace.x, deplace.z] : caseLibre(type, r);
+  const g = deplace ? deplace.g : CATALOGUE[type].fab();
+  if (!deplace) meublesG.add(g);
+  fantome = { type, x, z, r, g, deplace }; majFantome();
+  document.getElementById('poseNom').innerHTML = CATALOGUE[type].nom + '<small>' + (deplace ? 'déplacement gratuit' : euros(CATALOGUE[type].prix) + ' · ' + CATALOGUE[type].aide) + '</small>';
+  document.getElementById('poseOk').textContent = deplace ? 'ICI' : 'POSER';
+  montrerFeuille('feuillePose');
+}
+function majFantome() {
+  const f = fantome; if (!f) return;
+  const [cx, cz] = centre(f.type, f.x, f.z, f.r); f.g.position.set(cx, 0.02, cz); f.g.rotation.y = f.r * Math.PI / 2;
+  f.ok = placeLibre(f.type, f.x, f.z, f.r, f.deplace) && (f.deplace || CATALOGUE[f.type].prix <= caisse);
+  teinter(f.g, f.ok ? 0x2fae7a : 0xe5534b);
+  document.getElementById('poseOk').disabled = !f.ok;
+  document.getElementById('poseAide').textContent = f.ok ? 'Fais glisser le meuble avec le doigt.' : (CATALOGUE[f.type].prix > caisse && !f.deplace ? 'Pas assez d\'argent en caisse.' : 'La place est prise (ou devant la porte).');
+}
+function annulerPose() {
+  if (!fantome) return;
+  if (fantome.deplace) { deteindre(fantome.g); placerGroupe(fantome.deplace); }
+  else { meublesG.remove(fantome.g); fantome.g.traverse(o => { const i = animes.findIndex(p => p.o === o); if (i >= 0) animes.splice(i, 1); }); }
+  fantome = null; montrerFeuille('feuilleCatalogue');
+}
+document.getElementById('poseAnnuler').onclick = annulerPose;
+document.getElementById('poseTourner').onclick = () => { fantome.r = (fantome.r + 1) % 4; majFantome(); };
+document.getElementById('poseOk').onclick = () => {
+  const f = fantome; if (!f || !f.ok) return;
+  deteindre(f.g);
+  if (f.deplace) { Object.assign(f.deplace, { x: f.x, z: f.z, r: f.r }); placerGroupe(f.deplace); }
+  else { meublesG.remove(f.g); poserMeuble(f.type, f.x, f.z, f.r); caisse -= CATALOGUE[f.type].prix; majCaisse(); journal(CATALOGUE[f.type].nom + ' installé(e) : −' + CATALOGUE[f.type].prix + ' €'); f.g.traverse(o => { const i = animes.findIndex(p => p.o === o); if (i >= 0) animes.splice(i, 1); }); }
+  fantome = null; montrerFeuille('feuilleCatalogue');
+};
+function selectionner(m) {
+  deselectionner(); selection = m; teinter(m.g, 0xf5b82e);
+  const o = CATALOGUE[m.type];
+  document.getElementById('choixNom').innerHTML = o.nom + '<small>' + o.aide + '</small>';
+  const v = document.getElementById('choixVendre'); v.hidden = !!o.unique; v.textContent = 'VENDRE +' + Math.round(o.prix / 2) + ' €';
+  montrerFeuille('feuilleChoix');
+}
+function deselectionner() { if (selection) deteindre(selection.g); selection = null; if (amenager && !fantome) montrerFeuille('feuilleCatalogue'); }
+document.getElementById('choixFermer').onclick = e => { e.preventDefault(); deselectionner(); };
+document.getElementById('choixTourner').onclick = () => { const m = selection; const r = (m.r + 1) % 4; if (placeLibre(m.type, m.x, m.z, r, m)) { m.r = r; placerGroupe(m); } };
+document.getElementById('choixDeplacer').onclick = () => { const m = selection; deteindre(m.g); selection = null; commencerPose(m.type, m); };
+document.getElementById('choixVendre').onclick = () => { const m = selection; selection = null; retirerMeuble(m); caisse += Math.round(CATALOGUE[m.type].prix / 2); majCaisse(); montrerFeuille('feuilleCatalogue'); };
+document.getElementById('bAmenager').onclick = () => entrerAmenager(true);
+document.getElementById('fini').onclick = () => entrerAmenager(false);
+
+// agrandir
+function proposerAgrandir() {
+  const A = AGRANDISSEMENTS[niveau + 1]; if (!A) return;
+  document.getElementById('achatTitre').textContent = A.nom;
+  document.getElementById('achatTexte').innerHTML = A.texte + '<br><b style="font:600 15px Fredoka;color:var(--encre)">' + L + ' × ' + Pr + ' → ' + A.L + ' × ' + A.P + ' cases · ' + euros(A.prix) + '</b>';
+  document.getElementById('achatOui').disabled = A.prix > caisse; document.getElementById('achatOui').textContent = A.prix > caisse ? 'PAS ASSEZ' : 'ACHETER';
+  document.getElementById('achat').hidden = false;
+}
+document.getElementById('achatNon').onclick = () => document.getElementById('achat').hidden = true;
+document.getElementById('achatOui').onclick = () => {
+  const A = AGRANDISSEMENTS[niveau + 1]; document.getElementById('achat').hidden = true;
+  caisse -= A.prix; niveau++; const vieux = [L, Pr]; L = A.L; Pr = A.P;
+  // les meubles restent à leur place ; la caisse et le reste ne bougent pas
+  construireCoque(); majCaisse(); journal('Boutique agrandie : ' + L + ' × ' + Pr);
+  // les nouvelles dalles sortent du sol
+  coque.children.forEach(o => { if (o.position.y === 0 && (o.position.x >= vieux[0] || o.position.z >= vieux[1])) { o.scale.setScalar(0.01); o.userData.pousse = 0; } });
+};
+
+// ---------- toucher l'écran : tourner, poser, choisir ----------
+const rayon = new THREE.Raycaster(), sol = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function pointeur(e) { return new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); }
+function caseSous(e) { rayon.setFromCamera(pointeur(e), cam); const p = new THREE.Vector3(); return rayon.ray.intersectPlane(sol, p) ? [Math.round(p.x), Math.round(p.z)] : null; }
+let appui = null;
+canvas.addEventListener('pointerdown', e => { appui = { x: e.clientX, y: e.clientY, az: azimutVise, bouge: false, surFantome: false };
+  if (fantome) { const c = caseSous(e); appui.surFantome = true; appui.dc = c ? [fantome.x - c[0], fantome.z - c[1]] : [0, 0];
+    // si on touche loin du meuble, on le fait venir sous le doigt
+    if (c && Math.hypot(c[0] - fantome.x, c[1] - fantome.z) > 1.6) appui.dc = [0, 0]; } });
+canvas.addEventListener('pointermove', e => {
+  if (!appui) return; const dx = e.clientX - appui.x;
+  if (Math.hypot(dx, e.clientY - appui.y) > 8) appui.bouge = true;
+  if (!appui.bouge) return;
+  if (fantome && appui.surFantome) { const c = caseSous(e); if (c) { const nx = c[0] + appui.dc[0], nz = c[1] + appui.dc[1]; if (nx !== fantome.x || nz !== fantome.z) { fantome.x = nx; fantome.z = nz; majFantome(); } } return; }
+  azimutVise = appui.az - dx * 0.008;
+});
+canvas.addEventListener('pointerup', e => {
+  const a = appui; appui = null; if (!a || a.bouge) return;
+  if (fantome) { const c = caseSous(e); if (c) { fantome.x = c[0]; fantome.z = c[1]; majFantome(); } return; }
+  rayon.setFromCamera(pointeur(e), cam);
+  const t = rayon.intersectObjects(terrainG.children, true)[0];
+  if (t) { proposerAgrandir(); return; }
+  if (amenager) { const h = rayon.intersectObjects(meublesG.children, true).find(i => i.object.userData.meuble); if (h) selectionner(h.object.userData.meuble); else deselectionner(); }
+});
+addEventListener('wheel', e => { zoom = Math.min(2.2, Math.max(0.7, zoom * (e.deltaY > 0 ? 0.9 : 1.1))); });
+
+// ---------- boucle ----------
+const horloge = new THREE.Clock(); let prochainClient = 1;
+function animer() {
+  requestAnimationFrame(animer);
+  const dt = Math.min(0.05, horloge.getDelta());
+  azimut += (azimutVise - azimut) * Math.min(1, dt * 8);
+  for (const p of animes) p.mixer.update(dt);
+  coque.children.forEach(o => { if (o.userData.pousse !== undefined) { o.userData.pousse += dt * 2.5; const s = Math.min(1, o.userData.pousse); o.scale.setScalar(s < 1 ? s * (1.25 - 0.25 * s) : 1); if (s >= 1) delete o.userData.pousse; } });
+  if (vue === 'A' && !amenager) { prochainClient -= dt; if (prochainClient <= 0 && clients.length < 5) { nouveauClient(); prochainClient = 3 + Math.random() * 3; } }
+  avancerClients(dt);
+  if (panneau) panneau.rotation.y = azimut;
+  placerCamera();
+  if (vue !== 'B') rendu.render(scene, cam);
+}
+
+// ---------- B : la planche des cartes ----------
+const EXPLI = {
+  1: 'Le fond de la carte dit l\'élément (rouge FEU, bleu EAU, vert PLANTE, jaune FOUDRE, pierre OMBRE) ; le cadre de l\'image et le bandeau du nom disent la rareté (cuivre, pierre, argent, or).',
+  2: 'Le monstre en grand, dans son paysage ; le cadre de toute la carte dit la rareté (bois, argent, or).',
+};
+const EXEMPLES = [[11, 0, 'FEU'], [23, 1, 'EAU'], [5, 2, 'PLANTE'], [42, 2, 'FOUDRE'], [17, 3, 'OMBRE'], [8, 4, 'FEU'], [60, 0, 'PLANTE'], [33, 1, 'OMBRE'], [71, 3, 'EAU']];
+function remplirB() {
+  const g = document.getElementById('grille'); g.innerHTML = '';
+  document.getElementById('expliStyle').textContent = EXPLI[styleCarte];
+  for (const [s, r, el] of EXEMPLES) {
+    const b = creature(s, r, el), d = document.createElement('div'), c = document.createElement('div'); c.className = 'c'; c.appendChild(dessinerCarte(b));
+    if (r >= 2) { const h = document.createElement('div'); h.className = 'holo'; c.appendChild(h); }
+    const t = document.createElement('small'); t.textContent = b.R.n.toLowerCase() + ' · ' + String(b.cote).replace('.', ',') + ' €'; d.append(c, t); g.appendChild(d);
+  }
+}
+document.querySelectorAll('.choixStyle button').forEach(b => b.onclick = () => {
+  styleCarte = +b.dataset.style; document.querySelectorAll('.choixStyle button').forEach(x => x.classList.toggle('on', x === b)); remplirB();
+  // les vitrines de la boutique prennent le nouveau style
+  meublesG.traverse(o => { if (o.isMesh && o.userData.carte) o.material.map = texCarte(o.userData.carte); });
+});
+
+// ---------- C : le booster ----------
+const pile = document.getElementById('pile'), paquet = document.getElementById('paquet');
+let tirage = 1, cartesC = [], prochaine = 0;
+function preparerBooster() {
+  pile.innerHTML = ''; prochaine = 0; document.getElementById('bilan').classList.remove('on'); document.getElementById('rayons').classList.remove('on');
+  paquet.className = 'paquet'; document.getElementById('booster').classList.remove('ouvre');
+  const aide = document.getElementById('aideC'); aide.textContent = 'Touche le booster pour l\'ouvrir'; aide.style.display = '';
+  const r = graine(tirage * 101);
+  const rar = [0, 0, 0, 1, r() < 0.06 ? 4 : r() < 0.25 ? 3 : 2];
+  if (tirage === 1) rar[4] = 3;
+  cartesC = rar.map((x, k) => creature(tirage * 10 + k + 500, x));
+  const bp = document.getElementById('betePaquet').getContext('2d'); bp.imageSmoothingEnabled = false; bp.clearRect(0, 0, 32, 32); monstre(bp, PAR_ELEMENT.FEU[(tirage + 3) % PAR_ELEMENT.FEU.length], 0, 0, 1);
+}
+paquet.onclick = () => {
+  if (paquet.classList.contains('ouvert')) return;
+  paquet.classList.add('tremble'); setTimeout(() => paquet.classList.add('ouvert'), 350);
+  setTimeout(() => {
+    paquet.classList.add('vide'); document.getElementById('booster').classList.add('ouvre');
+    // la rare est tout en dessous de la pile : on la découvre en dernier
+    [...cartesC].reverse().forEach((b, k) => {
+      const d = document.createElement('div'); d.className = 'carte3d';
+      const dos = document.createElement('div'); dos.className = 'dos'; dos.appendChild(dessinerDos());
+      const av = document.createElement('div'); av.className = 'avant'; av.appendChild(dessinerCarte(b));
+      if (b.rarete >= 2) { const h = document.createElement('div'); h.className = 'holo'; av.appendChild(h); }
+      const rg = document.createElement('div'); rg.className = 'rang'; rg.textContent = b.R.n + ' · ' + String(b.cote).replace('.', ',') + ' €'; rg.style.color = b.rarete ? b.R.c : '#fff';
+      d.append(dos, av, rg);
+      d.style.transform = 'translateY(' + (240 - k * 2) + 'px) rotateZ(' + (k * 2 - 4) + 'deg)';
+      pile.appendChild(d);
+      setTimeout(() => { d.style.transform = 'translateZ(' + (k * 2) + 'px) rotateZ(' + (k * 1.5 - 3) + 'deg)'; }, 30 + k * 70);
+    });
+    document.getElementById('aideC').textContent = 'Touche la carte pour la retourner';
+  }, 800);
+};
+pile.addEventListener('click', () => {
+  const cs = [...pile.children]; if (prochaine >= cs.length) return;
+  const d = cs[cs.length - 1 - prochaine], b = cartesC[prochaine];
+  cs.forEach(e => { if (e.dataset.vue) { const n = +e.dataset.vue; e.style.left = (-178 + (n - 1) * 68) + 'px'; e.style.top = '-292px'; e.style.width = '96px'; e.style.height = '123px'; e.style.transform = 'rotateY(180deg) rotateZ(' + ((n - 2.5) * 5) + 'deg)'; e.querySelector('.rang').style.display = 'none'; } });
+  d.dataset.vue = ++prochaine; d.classList.add('retournee'); d.style.transform = 'rotateY(180deg) scale(1.08)'; d.style.zIndex = 10;
+  if (b.rarete >= 2) eclats(b.rarete >= 3 ? 26 : 12);
+  if (b.rarete >= 3) document.getElementById('rayons').classList.add('on');
+  if (prochaine === cs.length) {
+    document.getElementById('aideC').style.display = 'none';
+    const tot = cartesC.reduce((s, x) => s + x.cote, 0), best = cartesC.reduce((a, x) => x.rarete > a.rarete ? x : a), f = v => v.toFixed(1).replace('.0', '').replace('.', ',');
+    document.getElementById('totalC').textContent = f(tot) + ' €';
+    document.getElementById('ligneC').innerHTML = (tot > 4 ? '<b style="color:var(--vert-f)">Bon pari !</b> ' : '<b style="color:var(--rouge)">Pas de chance.</b> ') + 'Ouvert : ' + f(tot) + ' € contre 4 € fermé. Ta meilleure : <b>' + best.nom + '</b> (' + best.R.n.toLowerCase() + ').';
+    setTimeout(() => document.getElementById('bilan').classList.add('on'), 700);
+  }
+});
+function eclats(n) {
+  for (let k = 0; k < n; k++) {
+    const e = document.createElement('div'); e.className = 'eclat'; const a = Math.random() * 6.28, r = 90 + Math.random() * 120;
+    e.style.left = innerWidth / 2 + 'px'; e.style.top = innerHeight / 2 - 30 + 'px'; e.style.setProperty('--dx', Math.cos(a) * r + 'px'); e.style.setProperty('--dy', Math.sin(a) * r + 'px');
+    document.getElementById('booster').appendChild(e); setTimeout(() => e.remove(), 950);
+  }
+}
+document.getElementById('booster').addEventListener('pointermove', e => {
+  const d = [...pile.children].find(x => +x.dataset.vue === prochaine); if (!d) return;
+  const nx = e.clientX / innerWidth - 0.5, ny = e.clientY / innerHeight - 0.5;
+  d.style.transform = 'rotateY(' + (180 + nx * 30) + 'deg) rotateX(' + (-ny * 25) + 'deg) scale(1.08)';
+  const h = d.querySelector('.holo'); if (h) { h.style.animation = 'none'; h.style.setProperty('--px', (50 + nx * 120) + '%'); h.style.setProperty('--py', (50 + ny * 120) + '%'); }
+});
+['encoreC', 'classeurC', 'vitrineC'].forEach(id => document.getElementById(id).onclick = () => { tirage++; preparerBooster(); });
+
+// ---------- onglets ----------
+const LEGENDES = {
+  A: 'Fais glisser le doigt pour tourner la boutique. AMÉNAGER : acheter et poser des meubles, les déplacer, agrandir la boutique.',
+  B: 'Les nouvelles cartes : monstres de Dungeon Crawl, cadres en pixels. Deux mises en page à comparer.',
+  C: 'Ouvrir un booster plutôt que le vendre fermé : touche, retourne, fais briller les rares.',
+};
+function changerVue(v) {
+  vue = v; document.querySelectorAll('#onglets button').forEach(b => b.classList.toggle('on', b.dataset.vue === v));
+  document.getElementById('vueA').classList.toggle('on', v === 'A'); document.getElementById('vueB').classList.toggle('on', v === 'B');
+  document.getElementById('booster').classList.toggle('on', v === 'C');
+  const lg = document.getElementById('legende'); lg.textContent = LEGENDES[v]; lg.classList.remove('cache'); clearTimeout(lg.minuteur); lg.minuteur = setTimeout(() => lg.classList.add('cache'), 6000);
+  if (v === 'C') preparerBooster();
+  if (v === 'B') remplirB();
+  if (v !== 'A' && amenager) entrerAmenager(false);
+}
+document.querySelectorAll('#onglets button').forEach(b => b.onclick = () => changerVue(b.dataset.vue));
+document.getElementById('bBooster').onclick = () => changerVue('C');
+document.getElementById('bCartes').onclick = () => changerVue('B');
+document.getElementById('fermerC').onclick = () => changerVue('A');
+addEventListener('resize', cadrer);
+
+(async () => {
+  await Promise.all(['22px "Luckiest Guy"', '600 13px Fredoka', '700 20px "Pixelify Sans"'].map(f => document.fonts.load(f).catch(() => {})));
+  await Promise.all(['monstres', 'cartes', 'dos'].map(chargerImage));
+  await charger();
+  faireVignettes();
+  // la boutique de départ
+  construireCoque();
+  poserMeuble('caisse', 4, 1, 0); poserMeuble('rayon', 0, 1, 1); poserMeuble('rayon', 0, 2, 1); poserMeuble('vitrine', 2, 1, 0);
+  poserMeuble('table', 2, 3, 0); poserMeuble('plante', 5, 4, 0); poserMeuble('classeurs', 5, 0, 0);
+  majCaisse(); placerCamera(); changerVue(location.hash.slice(1) || 'A');
+  document.getElementById('chargement').remove(); animer();
+})();
+</script>
