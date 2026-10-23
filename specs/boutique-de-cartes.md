@@ -130,3 +130,30 @@ Bruitages Kenney (CC0, déjà utilisés : clics, caisse, cartes), un petit jingl
 2. **Pas de défi du jour** : « ça ne s'y prête pas ».
 3. **Faillite** gardée (§ 11).
 4. **Pas de fausses cartes** (§ 7).
+
+## 18. Bilan de la session 1 (23/10)
+**Fichiers** (scripts classiques, portée globale, noms `bou` / `BOU`, chargés dans cet ordre) :
+- `boutique/monstres.js` + `boutique/monstres.png` : 155 monstres de Dungeon Crawl (30 par élément + 5 légendaires réservés), fabriqués par `outils/boutique-monstres.py <rltiles>`. Ne pas changer l'ordre.
+- `boutique/regles.js` : état JSON (`bouNouvelle(graine)`, `bouMigrer`), hasard `bouRng(graine, usage, a, b)`, grossiste (`bouCommander`, `bouAnnulerCommande`, livraison le lundi), prix (`bouFixerPrix`, `bouPrix`), `bouOuvrir` (booster ou coffret → réserve), `bouGarder` (classeur), vitrines (`bouMettreEnVitrine`, `bouPrixVitrine`, `bouRemplirVitrines`, prix = cote × pct, arrondi à 10 c), rayons (`bouRanger`, 3 produits par rayon ; étagère à classeurs et présentoir de figurines vendent leurs articles), meubles (`bouPoser`, `bouDeplacer`, `bouVendreMeuble`, `bouAgrandir`, grille, `bouCheminLibre` : la porte et la case devant chaque meuble à clients restent atteignables), `bouAttrait`, prêt (`bouRembourser`), tournoi (`bouTournoi` : inscrit, frais, lots), semaine (`bouOuvrirBoutique` → `bouJour` × 5 → `bouDimanche`), `bouValeur`, fin (`e.fin` : `annee` ou `faillite`, `score`).
+- `boutique/cartes.js` : `bouCatalogue(graine)` (5 extensions de 40 cartes : 11 cartes de l'élément vedette, 7 de chaque autre, noms uniques), `bouCarte`, `bouCote` (cote de départ × mode de l'élément × popularité × âge), `bouBougerCotes`, `bouTirerBooster`, `bouTirerCoffret`, `bouCommandable`.
+- `boutique/clients.js` : `bouSaison` (calendrier), `bouAffluence`, `bouPlanSemaine`, `bouVisite` (5 types de clients), `bouJouerTournoi`, rencontres (`bouPreparerRencontre`, `bouRepondre` « oui » / « non », le marchand fait 3 offres), événements (`bouTirerEvenement`, annoncés une semaine à l'avance).
+- `outils/boutique-simulateur.js [n] [--detail]` (dans `verifications.js`, 6 années par stratégie, 3 s).
+
+**La semaine dans le code** : `phase` = `lundi` (tout se règle) → `semaine` (`bouJour` rend la liste des visites du jour, à rejouer en 3D : type de client, achats avec article ou carte, prix, meuble ; le samedi, le résultat du tournoi ; une rencontre met `e.rencontre` et bloque la suite jusqu'à `bouRepondre`) → `dimanche` (`bouDimanche` rend le bilan : compte de la semaine, cotes qui ont bougé `{id: [avant, après]}`, valeur, événement en cours et suivant) → `lundi` suivant ou `fin`.
+
+**Valeurs réglées par le simulateur** (moyenne sur des années complètes du gérant automatique) :
+| Stratégie | Valeur à la fin | Faillites |
+|---|---|---|
+| rien (ne fait rien) | 0 | toujours |
+| ferme (vend tout fermé) | ≈ 6 700 € | aucune |
+| ouvre (ouvre presque tout) | ≈ 1 000 € | une année sur deux : l'argent dort en cartes qui ne se vendent pas assez vite |
+| melange (vend fermé ce qui part, ouvre 12 boosters par semaine) | ≈ 9 800 € | aucune |
+| classeur (melange + une carte de chaque au classeur) | ≈ 12 300 € | aucune ; 4 à 5 classeurs complets par an |
+
+- Un booster ouvert vaut en moyenne 4,80 € de cote (vendu fermé 4 €) ; légendaire 1 fois sur 40, épique 1 fois sur 5.
+- Affluence : 14 clients par jour × (0,6 + réputation / 60) × (1 + attrait / 80), poids du jour (mardi 0,8 … samedi 1,6), saison et événements ; au plus surface × 1,4 par jour.
+- Réputation : départ 20 ; + 0,02 par client content, − 0,12 par client qui ne trouve pas ce qu'il veut, − 0,03 si c'est trop cher ; tournoi + 0,6 à + 4 ; classeur complet + 8 ; chaque dimanche × 0,97. Elle se tient vers 35 à 45.
+- Loyer : 60, 85, 120, 160 € par semaine selon la taille. Meubles débloqués : tapis (semaine 5), affiche (8), borne d'arcade (12, + 15 € par semaine), présentoir de figurines (20, avec l'article figurine).
+- Départ : 2 400 € (dont 2 000 de prêt), caisse + rayon (boosters, coffrets, pochettes) + vitrine basse, 36 boosters, 3 coffrets, 15 pochettes.
+
+**Pour la session 2** : la 3D lit l'état (meubles, vitrines, rayons) et rejoue les visites rendues par `bouJour` (la 3D ne décide rien) ; les meubles se posent avec `bouPoser` / `bouDeplacer` (le fantôme est rouge si `bouPlaceLibre` ou `bouCheminLibre` refuse).

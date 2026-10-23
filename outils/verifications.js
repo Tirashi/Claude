@@ -123,6 +123,10 @@ catch (e) { bad('Le Thé des Jarls : simulateur\n' + (e.stdout || '') + (e.stder
 try { execFileSync(process.execPath, [path.join(__dirname, 'bannieres-simulateur.js'), '20'], { stdio: 'pipe', encoding: 'utf8' }); ok('Bannières : simulateur (parties reproductibles, règles, équilibrage)'); }
 catch (e) { bad('Bannières : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// 8 sexies. La Boutique de cartes : catalogue, boosters, règles de base, années complètes (équilibrage grossier), déterminisme, sauvegarde
+try { execFileSync(process.execPath, [path.join(__dirname, 'boutique-simulateur.js'), '6'], { stdio: 'pipe', encoding: 'utf8' }); ok('La Boutique de cartes : simulateur (catalogue, règles, années reproductibles, équilibrage)'); }
+catch (e) { bad('La Boutique de cartes : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
   const pre = new Map(), idx = read('accueil.js'), ls = read('ludo-scores.js');
