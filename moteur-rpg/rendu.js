@@ -197,7 +197,8 @@ void main(){
         for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) g.drawImage(poupees.decoupe(choisir(style.exterieur.sol, x + 50, y)), x * 32, y * 32);
         const t = lointain(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(15, 15);
         const autour = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshPhongMaterial({ map: t, shininess: 0, specular: 0 }));
-        autour.rotation.x = -Math.PI / 2; autour.position.set(c.l / 2, -.08, c.h / 2);   // assez bas pour ne pas se battre avec le sol (rayures) autour.receiveShadow = true; scene.add(autour);
+        // assez bas pour ne pas se battre avec le sol (rayures)
+        autour.rotation.x = -Math.PI / 2; autour.position.set(c.l / 2, -.08, c.h / 2); autour.receiveShadow = true; scene.add(autour);
         const d = style.decors[style.exterieur.decor];
         for (let y = -5; y < c.h + 5; y++) for (let x = -5; x < c.l + 5; x++) {
           if (x >= 0 && y >= 0 && x < c.l && y < c.h) continue;
