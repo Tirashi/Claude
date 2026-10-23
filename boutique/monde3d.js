@@ -16,7 +16,7 @@ const BouMonde = (() => {
   const murs = [], objets = new Map();
   let portes = null;   // les deux battants de la porte : ils s'ouvrent quand un client approche
   let niveauConstruit = -1, grille = null, panneau = null;
-  const SIEGE = 0.22, DOS = 0;   // joueurs de la table : hauteur de l'assise, recul vers le dossier
+  const CHAISE = 0.85, TABLE_H = 1.05;   // table de tournoi : taille des chaises, hauteur de la table (à la taille des personnages)
   const SENS_PORTE = 1;   // les battants s'ouvrent vers l'intérieur
   let azimut = Math.PI * 0.3, vise = azimut, zoom = 1;
   let fantome = null, selection = null, vitesse = 1, enPause = false;
@@ -146,14 +146,15 @@ const BouMonde = (() => {
         const c = carte3D(p.id, 1.25); c.position.set(-0.3 + i * 0.2, 0.55 + (i % 2) * 0.24, 0.32); c.userData.place = i; g.add(c);
       });
     } else if (t === 'table') {
-      const E = 1.5, tb = modele('table', E); tb.position.set(-0.42 * E, 0, 0.22 * E); g.add(tb);
-      // une chaise sous chaque joueur (la chaise Kenney fait 0,2 × 0,2, son coin à l'origine), le joueur assis à la hauteur de l'assise
+      const E = 1.5, tb = modele('table', E); tb.scale.y = TABLE_H; tb.position.set(-0.42 * E, 0, 0.22 * E); g.add(tb);
+      // une chaise sous chaque joueur, à la taille des personnages (assise Kenney à 0,24 × CHAISE, le coin du modèle à l'origine, dossier côté −z) ;
+      // la pose « sit » baisse le personnage de 0,15 : ses hanches (z = −0,029) se posent sur l'assise
       [[-0.52, 0], [0.52, Math.PI]].forEach(([z, r], i) => {
-        const c = modele('chair', E), s = r ? -1 : 1; c.position.set(-s * 0.15, 0, z + s * 0.15); c.rotation.y = r; g.add(c);
-        const p = personnage(PERSOS[Math.abs(m.id * 3 + i) % PERSOS.length]); if (p) { p.o.position.set(0, SIEGE, z + s * DOS); p.o.rotation.y = r; g.add(p.o); jouer(p, 'sit'); }
+        const c = modele('chair', CHAISE), s = r ? -1 : 1, d = 0.1 * CHAISE; c.position.set(-s * d, 0, z + s * d); c.rotation.y = r; g.add(c);
+        const p = personnage(PERSOS[Math.abs(m.id * 3 + i) % PERSOS.length]); if (p) { p.o.position.set(0, 0.24 * CHAISE - 0.026, z + s * 0.029); p.o.rotation.y = r; g.add(p.o); jouer(p, 'sit'); }
       });
       const els = bouCatalogue(etat.graine).extensions[0].cartes;
-      for (let k = 0; k < 3; k++) for (const z of [-0.13, 0.13]) { const c = carte3D(els[Math.abs(m.id * 7 + k * 3 + (z > 0 ? 1 : 0)) % 20]); c.position.set(-0.18 + k * 0.18, 0.505, z); c.rotation.set(-Math.PI / 2, 0, z > 0 ? Math.PI : 0); g.add(c); }
+      for (let k = 0; k < 3; k++) for (const z of [-0.13, 0.13]) { const c = carte3D(els[Math.abs(m.id * 7 + k * 3 + (z > 0 ? 1 : 0)) % 20]); c.position.set(-0.18 + k * 0.18, 0.327 * TABLE_H + 0.006, z); c.rotation.set(-Math.PI / 2, 0, z > 0 ? Math.PI : 0); g.add(c); }
     } else if (t === 'classeurs') {
       const o = modele('bookcaseOpen', 1.5); o.position.set(-0.3, 0, -0.2); g.add(o);
     } else if (t === 'plante') {
