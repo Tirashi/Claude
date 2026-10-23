@@ -111,7 +111,7 @@ const L = [
   [pose(F.losange, C.chiotMilieu), [1, 3, 4, 7, 9], [chiots(3), cal(9, 30)], { chiots: { max: 2 } }],
   [pose(F.coins, C.chiot2, C.boueBas), [0, 5, 7, 8, 9], [chiots(2), BOUE], { chiots: { max: 2 } }],
   [pose(F.plein, C.chiot3, C.boueBas), [2, 3, 6, 8, 9], [chiots(3), BOUE], { chiots: { max: 3 } }],
-  // Chapitre 4 : le jardin (niches et gamelles ; arrivent Éclair le lévrier, Cacao le labrador, Nounours le saint-bernard)
+  // Chapitre 4 : le jardin (niches et gamelles ; arrivent Éclair le lévrier, Cacao le labrador, Nounours le bouvier bernois)
   [pose(F.plein, C.niches2), [0, 1, 6, 9, 10], [cal(10, 25)], { tuto: 'niche' }],
   [pose(F.plein, C.boueBasMoitie, C.gamelles4), [2, 3, 7, 8, 10], [BOUE], { tuto: 'gamelle' }],
   [pose(F.anneau, C.gamelles4), [1, 4, 5, 10, 11], [cal(11, 20), cal(10, 20)]],

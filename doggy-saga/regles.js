@@ -29,7 +29,7 @@ const DOG_RACES = [
   { id: 'chihuahua', nom: 'Pépite', race: 'chihuahua' },
   { id: 'levrier', nom: 'Éclair', race: 'lévrier' },
   { id: 'labrador', nom: 'Cacao', race: 'labrador chocolat' },
-  { id: 'saintbernard', nom: 'Nounours', race: 'saint-bernard' },
+  { id: 'bernois', nom: 'Nounours', race: 'bouvier bernois' },
   { id: 'corgi', nom: 'Galette', race: 'corgi' },
   { id: 'samoyede', nom: 'Flocon', race: 'samoyède' },
   { id: 'cocker', nom: 'Caramel', race: 'cocker' },
