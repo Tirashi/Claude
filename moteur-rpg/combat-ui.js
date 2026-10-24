@@ -147,7 +147,7 @@
           if (x.survol) b.onpointerenter = () => x.survol();
           menu.append(b); return b;
         });
-        if (retour) { const b = h('div', 'cb-option retour', '◀ Retour'); b.onclick = () => finir(-1); menu.append(b); }
+        if (retour) { const b = h('div', 'cb-option retour', '◀ Retour'); b.append(h('i', 'cb-touche', 'B')); b.onclick = () => finir(-1); menu.append(b); }
         const maj = () => { lignes.forEach((b, i) => b.classList.toggle('sel', i === cur)); if (options[cur] && options[cur].survol) options[cur].survol(); };
         const finir = i => { touche = null; sons.effet(i < 0 ? 'bip' : 'ok', .4); fin(i); };
         const valider = () => { if (!options[cur].non) finir(cur); };

@@ -42,7 +42,8 @@ html, body { margin: 0; height: 100%; background: #14110c; color: #f4ecd8; font-
 .cb-option { background: rgba(24, 21, 40, .94); border: 2px solid #4a4068; border-radius: 6px; padding: 6px 8px 6px 22px; margin-top: 3px; position: relative; font-size: 16px; cursor: pointer; }
 .cb-option small { display: block; color: #b9b0d0; font-size: 11px; line-height: 1.2; }
 .cb-option.sel { border-color: #f2c45a; } .cb-option.sel::before { content: '▶'; position: absolute; left: 6px; color: #f2c45a; }
-.cb-option.non { opacity: .4; } .cb-option.retour { font-size: 14px; color: #b9b0d0; }
+.cb-option.non { opacity: .4; } .cb-option.retour { font-size: 15px; color: #f0e8d0; border-color: #6a5c8c; }
+.cb-touche { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; border: 2px solid #c9a75a; color: #c9a75a; font-style: normal; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 
 /* fenêtres du moteur (moteur-rpg/interface.js et menu.js) */
 .rpg-dialogue { position: absolute; left: 8px; right: 8px; bottom: 8px; display: none; gap: 10px; align-items: flex-start; background: rgba(24, 21, 40, .94); border: 3px solid #c9a75a; border-radius: 8px; padding: 10px 12px 14px; min-height: 96px; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
