@@ -4,7 +4,7 @@ window.LANTERNE = window.LANTERNE || {};
 
 // combat : effet en combat (et dans le menu) ; equip : objet que l'on porte (emplacement, classes, bonus)
 LANTERNE.objets = {
-  herbe: { nom: 'Herbe', description: 'Une herbe amère qui rend 30 PV.', combat: { soin: 30 } },
+  herbe: { nom: 'Herbe', description: 'Une herbe amère qui rend 50 PV.', combat: { soin: 50 } },
   fiole: { nom: 'Fiole bleue', description: 'Rend 15 PM.', combat: { pm: 15 } },
   antidote: { nom: 'Antidote', description: 'Guérit du poison.', combat: { guerit: 'poison' } },
   plume: { nom: 'Plume de phénix', description: 'Relève un héros à terre avec la moitié de ses PV.', combat: { releve: .5 } },
@@ -102,7 +102,7 @@ LANTERNE.monstres = {
     groupes: [['rose_epine'], ['rose_epine', 'ronce']],
     bestiaire: 'Elle fleurit sur les tombes oubliées. Son parfum endort les souvenirs.' },
   // premier boss : le Gardien de la Crypte des racines
-  roi_aulnes: { nom: 'Roi des aulnes', tuile: 'roi_aulnes', taille: 1.7, boss: true, pv: 320, pm: 30, for: 19, def: 12, mag: 13, vit: 8, xp: 220, ecus: 120,
+  roi_aulnes: { nom: 'Roi des aulnes', tuile: 'roi_aulnes', taille: 1.7, boss: true, pv: 220, pm: 30, for: 19, def: 12, mag: 13, vit: 8, xp: 220, ecus: 120,
     elements: { lumiere: 1.5, feu: 1.5, glace: .5 }, butin: [{ objet: 'plume', chance: 1 }],
     actions: [{ type: 'attaque', poids: 4 },
       { type: 'sort', nom: 'Souffle des racines', puissance: 10, element: 'glace', zone: true, pm: 4, visuel: 'poison', poids: 2 },

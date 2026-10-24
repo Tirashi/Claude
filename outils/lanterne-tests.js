@@ -114,7 +114,7 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   ec.objets = { herbe: 1 }; ec.heros.eloi.pv = 5;
   c = Combat.creer(J, ec, { monstres: ['feu_follet'], initiative: 'heros' }, fixe(.5));
   Combat.resoudre(c, { heros: { action: 'objet', objet: 'herbe', cible: 'eloi' }, eloi: { action: 'defense' } });
-  egal([c.heros[1].pv, ec.objets.herbe], [Math.min(c.heros[1].pvMax, 35), undefined], 'l\'herbe rend 30 PV et disparaît du sac');
+  egal([c.heros[1].pv, ec.objets.herbe], [Math.min(c.heros[1].pvMax, 55), undefined], 'l\'herbe rend 50 PV et disparaît du sac');
 
   // équilibrage : les mêmes cas que outils/lanterne-combats.js, sur moins de combats
   const LC = require('./lanterne-combats.js');

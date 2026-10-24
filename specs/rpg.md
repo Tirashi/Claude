@@ -242,6 +242,14 @@ Environ **25 monstres**, 5 par région, avec quelques variantes de couleur plus 
   5. Aubrin le Porte-Flamme (2 phases) ;
   6. boss secret : l'Ancien du puits.
 
+### 10.2 Refonte du combat à faire (retours du 24/10, prochaine session)
+Retour après le Roi des aulnes : « on ne comprend pas vraiment ce qu'il se passe », l'herbe arrive après les coups, les attaques semblent partir en retard. Cause : on choisit les actions de toute l'équipe, puis tout se résout d'un coup dans l'ordre de la Vitesse (rien ne relie le bouton à l'action ; un héros mis K.O. avant son rang perd son action). Correctif rapide fait le 24/10 : objets prioritaires, herbe 50 PV, Roi des aulnes 220 PV (simulé : 42 % de victoires au niveau 3, 96 % au niveau 4). À faire, **maquette jouable du combat contre le Roi d'abord** :
+1. **Tour par tour façon Octopath** : frise de l'ordre de passage (portraits) en haut ; on choisit l'action d'un héros quand vient son tour, et il agit aussitôt.
+2. **Lisibilité** : bandeau par action (« Le Roi des aulnes attaque Eloi : 18 »), acteur mis en avant, barre de PV du boss, avertissement très visible quand il prépare l'Étreinte (conseil : Défense), réglage de vitesse.
+3. Plus d'herbes dans les coffres avant la crypte.
+4. Équilibrage revu avec le nouveau système (viser 80 % de victoires au niveau 4).
+5. « Réessayer le combat » juste avant le boss après une défaite.
+
 ## 11. Écrans et commandes (téléphone, en portrait)
 - **Carte** : la carte en haut, avec en bas une **croix** virtuelle, un bouton **A** (parler, ouvrir, agir), un bouton **B** (outil choisi) et **MENU**.
 - **Menu** : EQUIPE (stats de chacun, expliquées ; ordre de la file), OBJETS, EQUIPEMENT, OUTILS, JOURNAL (quête en cours en une phrase, pages trouvées, bestiaire), CARTE, OPTIONS, et **RETOUR A LA LUDOTHEQUE** (règle du 17/10, pas de bouton ajouté par-dessus le jeu).

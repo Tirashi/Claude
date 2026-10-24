@@ -86,7 +86,7 @@
     const acteurs = [];
     if (herosAgissent) for (const h of vivants(c.heros)) if (choix[h.id]) acteurs.push({ f: h, a: choix[h.id] });
     if (monstresAgissent) for (const m of vivants(c.monstres)) acteurs.push({ f: m, a: choisirIA(c, m) });
-    const prioritaire = x => x.a.action === 'defense' || (x.a.action === 'talent' && ((c.jeu.talents[x.a.talent] || {}).effet || {}).priorite);
+    const prioritaire = x => x.a.action === 'defense' || x.a.action === 'objet' || (x.a.action === 'talent' && ((c.jeu.talents[x.a.talent] || {}).effet || {}).priorite);
     for (const x of acteurs) x.ordre = (prioritaire(x) ? 1000 : 0) + R().tirageOrdre(stat(x.f, 'vit'), rng);
     acteurs.sort((a, b) => b.ordre - a.ordre);
 
