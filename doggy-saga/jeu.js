@@ -203,7 +203,7 @@
       couleurs: {}, file: [], attente: 0, enCours: null, dying: [], parts: [], fx: [], textes: [], banniere: null,
       repos: 0, indice: null, choisi: null, appui: null, fete: false, fini: false, adoptes: [],
     };
-    niv.races.forEach((t, k) => (P.couleurs[t] = DogDessin.MEDAILLONS[k]));
+    niv.races.forEach(t => (P.couleurs[t] = DogDessin.COULEURS[t]));
     // entrée : les chiens tombent du haut
     P.vis.forEach((v, i) => { if (v) { const [r, c] = rc(i); v.y = v.y0 = r - 9 - c * 0.3; } });
     P.enCours = { k: 'chute', fini: () => toutPose() };
@@ -481,6 +481,7 @@
     const g = c.getContext('2d');
     g.scale(px / L, px / L); g.translate(L / 2, L / 2);
     DogDessin.piece(g, v, CELL * 0.46, humeur, P.couleurs[v.t]);
+    c.addEventListener('contextrestored', () => { sprites = {}; });
     return (sprites[cle] = c);
   }
   function dessinerPiece(g, v, cx, cy, sx, sy, rot, alpha, humeur) {
@@ -784,6 +785,12 @@
     requestAnimationFrame(boucle);
   }
   if (window.ResizeObserver) new ResizeObserver(taille).observe(cv); else addEventListener('resize', taille);
+  // Android vide parfois les toiles hors écran quand l'appli passe en arrière-plan (les chiens préparés deviennent
+  // transparents) : au retour, on les redessine.
+  const refaire = () => { sprites = {}; taille(); };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refaire(); });
+  addEventListener('pageshow', refaire);
+  cv.addEventListener('contextrestored', refaire);
   taille();
   titre();
   if (location.hash === '#jour') introJour();
