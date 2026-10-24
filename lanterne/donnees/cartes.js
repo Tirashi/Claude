@@ -220,7 +220,7 @@ LANTERNE.cartes = {
     ],
     sorties: [
       { x: 0, y: [6, 7], vers: 'clairfond', a: [22, 6], dir: 'gauche' },
-      { x: 26, y: 2, vers: 'crypte_entree', a: [6, 6], dir: 'haut' }
+      { x: 26, y: 2, vers: 'crypte_entree', a: [6, 6], dir: 'haut', si: 'verene_rejoint', refus: 'crypte_fermee' }
     ],
     declencheurs: [{ x: 12, y: [9, 10], evenement: 'verene_scene', si: '!verene_rejoint' }]
   },

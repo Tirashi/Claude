@@ -216,9 +216,17 @@ LANTERNE.evenements = {
           { dire: ['La brume s\'illumine. Un souvenir monte :',
             'une femme de brume berce un enfant de chair, au bord d\'un village. Les deux rient. Personne n\'a peur.',
             'Puis la vision se défait comme une buée sur une vitre.'] },
-          { dire: 'Vous avez vu ? Elles vivaient AVEC eux !', qui: 'verene' }
+          // on peut rallumer cette lanterne avant d'avoir rencontré Vérène : Eloi parle à sa place
+          { si: { equipe: 'verene' }, alors: [{ dire: 'Vous avez vu ? Elles vivaient AVEC eux !', qui: 'verene' }],
+            sinon: [{ dire: ['Une femme de brume… et un enfant.', 'Ils n\'avaient pas peur l\'un de l\'autre.'], qui: 'eloi' }] }
         ], []] }
       ] }
+  ],
+
+  // l'entrée de la crypte attend Vérène (ses répliques dans la crypte supposent qu'elle est là)
+  crypte_fermee: [
+    { dire: 'Un escalier s\'enfonce sous les racines.' },
+    { dire: ['Attendez… Vous entendez ? Quelqu\'un crie, vers le sud du bois !', 'La crypte attendra.'], qui: 'eloi' }
   ],
 
   // ---------- la Crypte des racines ----------
