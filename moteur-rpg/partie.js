@@ -247,7 +247,7 @@
     const actions = {
       sauver: c => sauver(c.sauver === 'main' ? 'main' : 'auto'),
       teleporter: c => passer(c.teleporter, c.x, c.y, c.dir),
-      combat: async c => { const r = await o.combat({ monstres: [].concat(c.combat), boss: c.boss, initiative: 'normal' }); if (r === 'defaite') { o.defaite(); return; } },
+      combat: async c => { const r = await o.combat({ monstres: [].concat(c.combat), boss: c.boss, initiative: 'normal' }); if (r === 'defaite') { o.defaite(); return false; } },
       pnj: c => {
         if (c.cacher || c.montrer) {
           etat.drapeaux['pnj:' + c.pnj] = c.cacher ? 'cache' : 'montre';

@@ -67,6 +67,9 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   if (!vu.includes('SAUVE')) bad('la sauvegarde automatique du début n\'est pas demandée');
   egal(await Evenements.jouer([{ dire: 'a' }, { stop: true }, { drapeau: 'apres' }], { etat: e2, jeu: J, ui, actions }), false, '{ stop } arrête l\'événement');
   egal(e2.drapeaux.apres, undefined, 'rien après { stop }');
+  // combat perdu dans un événement : l'action renvoie false, la suite (victoire, boss caché, sauvegarde) ne joue pas
+  egal(await Evenements.jouer([{ combat: ['loup'] }, { drapeau: 'vaincu' }], { etat: e2, jeu: J, ui, actions: { combat: async () => false } }), false, 'un combat perdu arrête l\'événement');
+  egal(e2.drapeaux.vaincu, undefined, 'rien après un combat perdu');
   egal(Evenements.condition({ tous: ['mission', { non: 'rien' }, { objet: 'herbe', min: 2 }] }, e2), true, 'conditions composées');
   if (!fail) ok('moteur : sauvegardes, objets, file, initiative, monstres, événements');
 

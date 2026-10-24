@@ -8,7 +8,7 @@
      { rejoindre: 'eloi' }   { quitter: 'eloi' }   { soigner: true }   { sauver: 'auto' }
      { teleporter: 'carte', x, y, dir }   { combat: ['monstre', …], boss }   { pnj: 'id', cacher | montrer | aller: [x, y] }
      { son: 'nom' }   { musique: 'nom' }   { attendre: 0.5 }   { chapitre: 'Acte 1' }   { evenement: 'autre' }
-     { stop: true }                                    arrête l'événement
+     { stop: true }                                    arrête l'événement (une action du jeu qui renvoie false aussi)
    Conditions : 'drapeau', '!drapeau', { drapeau, egal }, { objet, min }, { ecus }, { equipe: 'id' },
    { tous: […] }, { un: […] }, { non: condition }.
 
@@ -65,7 +65,8 @@
       else {
         const nom = ['sauver', 'teleporter', 'combat', 'pnj', 'son', 'musique', 'attendre'].find(k => c[k] !== undefined);
         if (!nom) throw new Error('commande inconnue : ' + JSON.stringify(c));
-        if (actions[nom]) await actions[nom](c);
+        // une action qui renvoie false arrête l'événement (combat perdu : la partie est rechargée, la suite ne doit pas jouer)
+        if (actions[nom] && (await actions[nom](c)) === false) return false;
       }
     }
     return true;
