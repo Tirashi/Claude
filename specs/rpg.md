@@ -192,7 +192,7 @@ Il n'y a pas de stat cachée. Il n'y a pas non plus de chance ni de résistance 
 - **Coup critique** : 1 chance sur 16 (1 sur 6 pour le RODEUR). Il ignore la Défense et fait ×1,5. Le texte annonce « COUP CRITIQUE ! ».
 - **Ordre du tour** : chacun tire **VIT + un petit hasard** (0 à VIT ÷ 4), et le plus grand joue en premier.
 - **Esquive** : 3 % de base, plus 1 % par point de VIT au-dessus de l'attaquant, plafonnée à 25 %.
-- **Fuite** : 50 % de base, plus 5 % par point de VIT au-dessus du monstre le plus rapide. Impossible contre les boss.
+- **Fuite** : 50 % de base, plus 5 % par point de VIT au-dessus du monstre le plus rapide. Impossible contre les boss et les combats marqués `fuite: false` (combat d'histoire, par ex. Vérène ; sur un événement `{ combat, fuite: false }` ou un monstre de carte).
 - **Défendre** : dégâts reçus ÷ 2 jusqu'au prochain tour.
 
 ### 9.3 Niveaux

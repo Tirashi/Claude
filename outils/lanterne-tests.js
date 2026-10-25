@@ -104,6 +104,9 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   c = Combat.creer(J, ec, { monstres: ['roi_aulnes'] }, fixe(.01));
   ev = Combat.resoudre(c, { fuite: true });
   if (!ev.some(x => x.texte === 'Impossible de fuir !') || c.fin) bad('on ne fuit pas un boss');
+  c = Combat.creer(J, ec, { monstres: ['feu_follet'], fuite: false }, fixe(.01));
+  ev = Combat.resoudre(c, { fuite: true });
+  if (!ev.some(x => x.texte === 'Impossible de fuir !') || c.fin) bad('on ne fuit pas un combat marqué fuite: false');
   c = Combat.creer(J, ec, { monstres: ['feu_follet'] }, fixe(.01));
   ev = Combat.resoudre(c, { fuite: true }); egal(c.fin, 'fuite', 'fuite réussie');
   c = Combat.creer(J, ec, { monstres: ['feu_follet'], initiative: 'heros' }, fixe(.5));

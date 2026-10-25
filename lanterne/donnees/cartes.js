@@ -142,10 +142,11 @@ LANTERNE.cartes = {
     ],
     pnj: [{ id: 'isee', perso: 'isee', x: 7, y: 13, evenement: 'isee_route', cache: true }],
     monstres: [
-      { type: 'feu_follet', x: 9, y: 24, rayon: 2 },
-      { type: 'feu_follet', x: 3, y: 16, rayon: 2 },
-      { type: 'crapaud', x: 9, y: 12, rayon: 2 },
-      { type: 'corbeau', x: 9, y: 8, rayon: 3 }
+      // le héros traverse cette route seul la première fois : un monstre à la fois
+      { type: 'feu_follet', x: 9, y: 24, rayon: 2, groupe: ['feu_follet'] },
+      { type: 'feu_follet', x: 3, y: 16, rayon: 2, groupe: ['feu_follet'] },
+      { type: 'crapaud', x: 9, y: 12, rayon: 2, groupe: ['crapaud'] },
+      { type: 'corbeau', x: 9, y: 8, rayon: 3, groupe: ['corbeau'] }
     ],
     sorties: [{ x: [6, 7], y: 29, vers: 'clairfond', a: [11, 1], dir: 'bas' }, { x: [6, 7], y: 2, vers: 'abbaye', a: [6, 8], dir: 'haut' }],
     declencheurs: [

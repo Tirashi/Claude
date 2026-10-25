@@ -2,7 +2,7 @@
    Une équipe de 1 à 4 héros contre 1 à 4 monstres. Au début de chaque tour, on choisit l'action de chaque
    héros, puis tout le monde agit dans l'ordre de la Vitesse (Défense, Protection et Rempart d'abord).
 
-   creer(jeu, etat, rencontre, rng) → combat     rencontre : { monstres: ['feu_follet', …], initiative, boss }
+   creer(jeu, etat, rencontre, rng) → combat     rencontre : { monstres: ['feu_follet', …], initiative, boss, fuite: false (combat qu'on ne peut pas fuir) }
    resoudre(c, choix) → liste d'événements à montrer, dans l'ordre :
      choix = { <héros>: { action: 'attaque' | 'talent' | 'objet' | 'defense', cible, talent, objet }, fuite: true }
      événements : { t: 'message', texte } { t: 'action', de, anim, effet, cibles } { t: 'degats', a, n, critique }
@@ -22,7 +22,7 @@
   function nomHeros(jeu, etat, id) { return id === etat.equipe[0] && jeu.heros[id].nomJoueur ? etat.nom : jeu.heros[id].nom; }
 
   function creer(jeu, etat, rencontre, rng = Math.random) {
-    const c = { jeu, etat, rng, tour: 0, fin: null, initiative: rencontre.initiative || 'normal', boss: !!rencontre.boss,
+    const c = { jeu, etat, rng, tour: 0, fin: null, initiative: rencontre.initiative || 'normal', boss: !!rencontre.boss, sansFuite: rencontre.fuite === false,
       heros: [], monstres: [], protecteur: null, rempart: false };
     etat.equipe.forEach((id, i) => {
       const h = etat.heros[id], s = R().statsEquipees(jeu, h);
@@ -74,7 +74,7 @@
     const monstresAgissent = !(c.tour === 1 && c.initiative === 'heros');
 
     if (choix.fuite && herosAgissent) {
-      if (c.boss) dire('Impossible de fuir !');
+      if (c.boss || c.sansFuite) dire('Impossible de fuir !');
       else {
         const vh = Math.max(...vivants(c.heros).map(h => stat(h, 'vit'))), vm = Math.max(...vivants(c.monstres).map(m => stat(m, 'vit')));
         if (rng() < R().chanceFuite(vh, vm)) { ev.push({ t: 'fuite', ok: true }); dire('L\'équipe prend la fuite !'); c.fin = 'fuite'; return ev; }

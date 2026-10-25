@@ -102,7 +102,7 @@
     const monstres = info.monstres || groupes[Math.floor(Math.random() * groupes.length)];
     const decor = carte.combat || (carte.exterieur ? { sol: J.style.exterieur.sol, decor: J.style.exterieur.decor, brume: carte.brume }
       : { sol: J.style.sols.calcaire.tuiles, decor: 'mur_haut', interieur: true });
-    combatEnCours = MR.CombatUI.Combattre({ jeu: J, etat: partie.etat, rencontre: { monstres, initiative: info.initiative, boss: info.boss }, decor, rendu, racine: $('fenetres'), sons });
+    combatEnCours = MR.CombatUI.Combattre({ jeu: J, etat: partie.etat, rencontre: { monstres, initiative: info.initiative, boss: info.boss, fuite: info.fuite }, decor, rendu, racine: $('fenetres'), sons });
     const r = await combatEnCours.promesse;
     combatEnCours = null;
     sons.musique(carte.musique || null);
