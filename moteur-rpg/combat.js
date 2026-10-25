@@ -75,9 +75,10 @@
     const monstresAgissent = !(c.tour === 1 && c.initiative === 'heros');
 
     if (choix.fuite && herosAgissent) {
-      if (c.boss || c.sansFuite) dire('Impossible de fuir !');
+      const f = fuite(c);
+      if (!f.possible) dire(f.raison);
       else {
-        const vh = Math.max(...vivants(c.heros).map(h => stat(h, 'vit'))), vm = Math.max(...vivants(c.monstres).map(m => stat(m, 'vit')));
+        const { vh, vm } = f;
         if (rng() < R().chanceFuite(vh, vm)) { ev.push({ t: 'fuite', ok: true }); dire('L\'équipe prend la fuite !'); c.fin = 'fuite'; return ev; }
         ev.push({ t: 'fuite', ok: false }); dire('La fuite échoue !');
       }
@@ -116,6 +117,15 @@
     c.protecteur = null; c.rempart = false;
     verifierFin(c);
     return ev;
+  }
+
+  // peut-on fuir ? (boss, combat d'histoire, ou un monstre bien plus rapide que toute l'équipe)
+  function fuite(c) {
+    if (c.boss || c.sansFuite) return { possible: false, raison: 'Impossible de fuir !' };
+    const vh = Math.max(...vivants(c.heros).map(h => stat(h, 'vit')));
+    const rapide = vivants(c.monstres).reduce((a, m) => (!a || stat(m, 'vit') > stat(a, 'vit') ? m : a), null), vm = stat(rapide, 'vit');
+    if (!R().fuitePossible(vh, vm)) return { possible: false, raison: `${rapide.nom} est bien trop rapide pour être semé !` };
+    return { possible: true, vh, vm };
   }
 
   function verifierFin(c) {
@@ -375,6 +385,6 @@
     return { fin: c.fin || 'trop long', tours: c.tour, combat: c };
   }
 
-  M.Combat = { creer, intro, resoudre, terminer, choixAuto, simuler, stat, vivants, nomHeros };
+  M.Combat = { creer, intro, resoudre, terminer, choixAuto, simuler, stat, vivants, nomHeros, fuite };
   if (typeof module !== 'undefined') module.exports = M;
 })(typeof window !== 'undefined' ? (window.MoteurRPG = window.MoteurRPG || {}) : (globalThis.MoteurRPG = globalThis.MoteurRPG || {}));

@@ -81,6 +81,7 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   egal(Regles.degatsArme(20, 12, () => .5, true), 30, 'coup critique : ignore la Défense, × 1,5');
   egal([Regles.chanceEsquive(10, 10), Regles.chanceEsquive(40, 1)], [.03, .25], 'esquive : 3 %, plafond 25 %');
   egal(Regles.chanceFuite(10, 8), .6, 'fuite : 50 % + 5 % par point de VIT');
+  egal([Regles.fuitePossible(5, 9), Regles.fuitePossible(5, 10)], [true, false], 'fuite impossible à 5 points de VIT de retard');
   const hx = Regles.creerHeros(J, 'heros', 1);
   const pass = Regles.gagnerXp(J, hx, 8 + 32);
   egal([hx.niveau, hx.xp, pass.length, pass[0].apres.for - pass[0].avant.for], [3, 0, 2, 2], 'expérience : 8 × niveau² par niveau, gains fixes');
@@ -109,6 +110,9 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   const rythme = [];
   for (let t = 0; t < 5 && !c.fin; t++) { const evs = Combat.resoudre(c, { [c.heros[0].id]: { action: 'defense' } }); rythme.push(evs.some(x => /plonge ses racines/.test(x.texte || '')) ? 'racines' : evs.some(x => /Étreinte/.test(x.texte || '')) ? 'etreinte' : evs.some(x => /Souffle/.test(x.texte || '')) ? 'souffle' : 'coup'); }
   egal(rythme.join(' '), 'coup coup souffle racines etreinte', 'le Roi des aulnes suit son cycle');
+  { const e3 = Etat.nouvellePartie(J, 'T'); e3.equipe = ['heros']; Object.assign(e3.heros.heros, Regles.creerHeros(J, 'heros', 1));
+    const c3 = Combat.creer(J, e3, { monstres: ['corbeau'] }, fixe(.01)), ev3 = Combat.resoudre(c3, { fuite: true });
+    if (!ev3.some(x => /trop rapide/.test(x.texte || '')) || c3.fin) bad('on ne sème pas un corbeau bien plus rapide'); }
   c = Combat.creer(J, ec, { monstres: ['feu_follet'], fuite: false }, fixe(.01));
   ev = Combat.resoudre(c, { fuite: true });
   if (!ev.some(x => x.texte === 'Impossible de fuir !') || c.fin) bad('on ne fuit pas un combat marqué fuite: false');

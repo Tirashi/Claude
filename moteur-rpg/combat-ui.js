@@ -171,7 +171,7 @@
       for (;;) {
         marquer(x.id);
         const talents = M.Regles.talentsConnus(jeu.talents, x.classe, x.ref.niveau);
-        const ops = [{ texte: 'Attaque' }, { texte: 'Talents', non: !talents.length }, { texte: 'Objets', non: !usables().length }, { texte: 'Défense' }, { texte: 'Fuite', non: c.boss || c.sansFuite }];
+        const ops = [{ texte: 'Attaque' }, { texte: 'Talents', non: !talents.length }, { texte: 'Objets', non: !usables().length }, { texte: 'Défense' }, { texte: 'Fuite', non: !C.fuite(c).possible, aide: C.fuite(c).possible ? undefined : C.fuite(c).raison }];
         const i = await liste(ops, !premier);
         if (i < 0) return 'retour';
         if (i === 0) { const id = await choisirCible(C.vivants(c.monstres)); if (id) return { action: 'attaque', cible: id }; }

@@ -102,7 +102,7 @@ LANTERNE.monstres = {
     groupes: [['rose_epine'], ['rose_epine', 'ronce']],
     bestiaire: 'Elle fleurit sur les tombes oubliées. Son parfum endort les souvenirs.' },
   // premier boss : le Gardien de la Crypte des racines
-  roi_aulnes: { nom: 'Roi des aulnes', tuile: 'roi_aulnes', taille: 1.7, boss: true, pv: 260, pm: 30, for: 19, def: 12, mag: 13, vit: 8, xp: 220, ecus: 120,
+  roi_aulnes: { nom: 'Roi des aulnes', tuile: 'roi_aulnes', taille: 1.7, boss: true, pv: 300, pm: 30, for: 19, def: 12, mag: 13, vit: 8, xp: 220, ecus: 120,
     elements: { lumiere: 1.5, feu: 1.5, glace: .5 }, butin: [{ objet: 'plume', chance: 1 }],
     actions: [{ type: 'attaque', poids: 4 },
       { type: 'sort', nom: 'Souffle des racines', puissance: 10, element: 'glace', zone: true, pm: 4, visuel: 'poison', poids: 2 },
