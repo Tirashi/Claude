@@ -13,7 +13,8 @@
      talents: { id: { nom, classe, niveau, pm, cible: 'ennemi'|'ennemis'|'allie'|'allies'|'soi'|'allie_ko',
                       effet: { type: 'arme'|'sort'|'soin'|'buff'|'brise'|'etat'|'protection'|'rempart'|'esquive'|'purification'|'releve'|'vol', … } } }
      monstres: { id: { nom, pv, pm, for, def, mag, vit, xp, ecus, elements: { feu: 1.5 }, butin: [{ objet, chance }], vol, boss,
-                       actions: [{ type: 'attaque'|'sort'|'etat'|'charge', poids, nom, puissance, element, etat, chance, zone, prepare, mult }] } }
+                       actions: [{ type: 'attaque'|'sort'|'etat'|'charge', poids, nom, puissance, element, etat, chance, zone, prepare, mult }],
+                       cycle: [numéros d'actions] (boss au rythme fixe, sinon tirage selon les poids) } }
      objets:   { id: { nom, combat: { soin, pm, guerit, releve } } } */
 (function (M) {
   const R = () => M.Regles, E = () => M.Etat;
@@ -287,10 +288,17 @@
   function choisirIA(c, m) {
     if (m.prepare) { const a = m.prepare; m.prepare = null; return { action: 'sort', sort: aSort(a), cible: null }; }
     const actions = m.def.actions || [{ type: 'attaque', poids: 1 }];
-    const pret = actions.filter(a => !a.pm || m.pm >= a.pm);
-    const total = pret.reduce((s, a) => s + (a.poids || 1), 0);
-    let r = c.rng() * total, a = pret[0];
-    for (const x of pret) { r -= x.poids || 1; if (r < 0) { a = x; break; } }
+    let a;
+    if (m.def.cycle) {   // un boss au rythme fixe, que le joueur peut apprendre : cycle = numéros des actions, dans l'ordre
+      const etape = m.etape || 0; m.etape = etape + 1;
+      a = actions[m.def.cycle[etape % m.def.cycle.length]];
+      if (a.pm && m.pm < a.pm) a = actions.find(x => x.type === 'attaque') || a;
+    } else {
+      const pret = actions.filter(a => !a.pm || m.pm >= a.pm);
+      const total = pret.reduce((s, a) => s + (a.poids || 1), 0);
+      let r = c.rng() * total; a = pret[0];
+      for (const x of pret) { r -= x.poids || 1; if (r < 0) { a = x; break; } }
+    }
     if (a.pm) m.pm -= a.pm;
     if (a.prepare) { m.prepare = a; return { action: 'prepare', texte: a.prepare }; }
     if (a.type === 'attaque') return { action: 'attaque', cible: null };

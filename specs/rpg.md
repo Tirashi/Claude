@@ -249,6 +249,7 @@ Retour après le Roi des aulnes : « on ne comprend pas vraiment ce qu'il se pas
 3. Plus d'herbes dans les coffres avant la crypte.
 4. Équilibrage revu avec le nouveau système (viser 80 % de victoires au niveau 4).
 5. « Réessayer le combat » juste avant le boss après une défaite.
+**Fait le 25/10** : le Roi des aulnes suit un **cycle fixe** (`cycle` dans les données d'un monstre) : coup, coup, Souffle des racines, il plonge ses racines (un tour d'annonce), Étreinte, puis ça recommence ; 260 PV (simulé : 96 % de victoires au niveau 4 en 6 tours, 17 % au niveau 3). Avec la frise du point 1, montrer l'action suivante du boss.
 6. **Coup critique** (demande du 25/10) : aujourd'hui il ignore la Défense puis fait × 1,5 (§ 9.2), si bien qu'un critique de monstre fait 2 à 5 fois un coup normal (feu follet contre Alden : 2 → 10,5 ; Roi des aulnes : 11 → 28,5 ; une Étreinte critique fait 41 à 50 PV à chacun). Nouvelle règle : **critique = coup normal × 1,5**, (FOR − DEF ÷ 2) × 1,5, pour tous ; « ignore la Défense » réservé à un talent du RODEUR ; les attaques chargées et les sorts de zone ne sont jamais critiques. Mettre à jour § 9.2, `degatsArme` (`moteur-rpg/regles.js`), les tests et l'équilibrage.
 
 ## 11. Écrans et commandes (téléphone, en portrait)

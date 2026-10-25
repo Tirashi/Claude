@@ -104,6 +104,11 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   c = Combat.creer(J, ec, { monstres: ['roi_aulnes'] }, fixe(.01));
   ev = Combat.resoudre(c, { fuite: true });
   if (!ev.some(x => x.texte === 'Impossible de fuir !') || c.fin) bad('on ne fuit pas un boss');
+  // le Roi des aulnes suit son cycle : coup, coup, Souffle, racines (préparation), Étreinte
+  c = Combat.creer(J, ec, { monstres: ['roi_aulnes'] }, fixe(.5));
+  const rythme = [];
+  for (let t = 0; t < 5 && !c.fin; t++) { const evs = Combat.resoudre(c, { [c.heros[0].id]: { action: 'defense' } }); rythme.push(evs.some(x => /plonge ses racines/.test(x.texte || '')) ? 'racines' : evs.some(x => /Étreinte/.test(x.texte || '')) ? 'etreinte' : evs.some(x => /Souffle/.test(x.texte || '')) ? 'souffle' : 'coup'); }
+  egal(rythme.join(' '), 'coup coup souffle racines etreinte', 'le Roi des aulnes suit son cycle');
   c = Combat.creer(J, ec, { monstres: ['feu_follet'], fuite: false }, fixe(.01));
   ev = Combat.resoudre(c, { fuite: true });
   if (!ev.some(x => x.texte === 'Impossible de fuir !') || c.fin) bad('on ne fuit pas un combat marqué fuite: false');
