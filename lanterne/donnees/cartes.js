@@ -244,7 +244,8 @@ LANTERNE.cartes = {
     objets: [
       { type: 'grille', id: 'crypte_grille', x: 6, y: 1, ouvertSi: 'levier_crypte', texte: 'Une grille rouillée, prise dans les racines. Un mécanisme doit l\'ouvrir.' },
       { type: 'levier', id: 'crypte_levier', x: 1, y: 3, drapeau: 'levier_crypte', texte: 'Le levier grince… Au fond de la salle, la grille remonte dans un nuage de poussière.' },
-      { type: 'lanterne', x: 11, y: 6 }
+      { type: 'lanterne', x: 11, y: 6 },
+      { type: 'coffre', id: 'crypte_entree_herbes', x: 1, y: 6, contenu: { objet: 'herbe', n: 3 } }
     ],
     monstres: [{ type: 'gelee', x: 9, y: 3, rayon: 1 }],
     sorties: [

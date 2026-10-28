@@ -1,10 +1,10 @@
 /* Moteur RPG — le combat au tour par tour (testable sous Node, sans DOM) : cahier des charges § 10.
-   Une équipe de 1 à 4 héros contre 1 à 4 monstres. Au début de chaque tour, on choisit l'action de chaque
-   héros, puis tout le monde agit dans l'ordre de la Vitesse (Défense, Protection et Rempart d'abord).
+   Une équipe de 1 à 4 héros contre 1 à 4 monstres. Chacun agit à son tour, dans l'ordre de la Vitesse :
+   le joueur choisit l'action d'un héros quand vient son tour (façon Octopath Traveler, ordre visible).
 
    creer(jeu, etat, rencontre, rng) → combat     rencontre : { monstres: ['feu_follet', …], initiative, boss, fuite: false (combat qu'on ne peut pas fuir) }
-   resoudre(c, choix) → liste d'événements à montrer, dans l'ordre :
-     choix = { <héros>: { action: 'attaque' | 'talent' | 'objet' | 'defense', cible, talent, objet }, fuite: true }
+   debutTour, prochain, agirUn, finTour : un tour pas à pas (voir plus bas) ; resoudre(c, choix) : un tour entier d'un coup.
+     action d'un héros : { action: 'attaque' | 'talent' | 'objet' | 'defense' | 'fuite', cible, talent, objet }
      événements : { t: 'message', texte } { t: 'action', de, anim, effet, cibles } { t: 'degats', a, n, critique }
        { t: 'soin', a, n } { t: 'rate', a } { t: 'ko', a } { t: 'releve', a } { t: 'etat', a, etat } { t: 'fuite', ok }
    terminer(c) → écrit le résultat dans l'état de la partie (PV, PM, expérience, écus, butin) et le renvoie.
@@ -67,56 +67,89 @@
   }
 
   // ---------- un tour ----------
-  function resoudre(c, choix = {}) {
-    const ev = [], rng = c.rng, dire = texte => ev.push({ t: 'message', texte });
-    if (c.fin) return ev;
+  /* Chacun agit à son tour, dans l'ordre de la Vitesse (avec un petit hasard), tiré au début du tour ;
+     l'ordre du tour suivant est tiré d'avance pour que l'écran puisse le montrer (frise).
+     debutTour(c) → ordre ; prochain(c) → le combattant qui doit agir (ou null : tour fini) ;
+     agirUn(c, action) → événements (action : le choix du joueur pour un héros, ignorée pour un monstre) ;
+     finTour(c) → événements (poison, effets qui s'épuisent).
+     Défense, Protection et Rempart durent jusqu'au prochain tour de celui qui les a lancés. */
+  function tirerOrdre(c) {
+    return vivants(tous(c)).map(f => ({ id: f.id, o: R().tirageOrdre(stat(f, 'vit'), c.rng) })).sort((a, b) => b.o - a.o).map(x => x.id);
+  }
+  function debutTour(c) {
+    if (c.fin) return [];
     c.tour++;
-    let herosAgissent = !(c.tour === 1 && c.initiative === 'monstre');
-    const monstresAgissent = !(c.tour === 1 && c.initiative === 'heros');
-
-    if (choix.fuite && herosAgissent) {
-      const f = fuite(c);
-      if (!f.possible) dire(f.raison);
-      else {
-        const { vh, vm } = f;
-        if (rng() < R().chanceFuite(vh, vm)) { ev.push({ t: 'fuite', ok: true }); dire('L\'équipe prend la fuite !'); c.fin = 'fuite'; return ev; }
-        ev.push({ t: 'fuite', ok: false }); dire('La fuite échoue !');
-      }
-      herosAgissent = false;
+    let ordre = c.ordreSuivant || tirerOrdre(c);
+    c.ordreSuivant = tirerOrdre(c);
+    ordre = ordre.filter(id => { const f = trouve(c, id); return f && f.pv > 0; });
+    if (c.tour === 1 && c.initiative === 'monstre') ordre = ordre.filter(id => trouve(c, id).camp === 'm');
+    if (c.tour === 1 && c.initiative === 'heros') ordre = ordre.filter(id => trouve(c, id).camp === 'h');
+    c.ordre = ordre;
+    return ordre.slice();
+  }
+  function prochain(c) {
+    while (!c.fin && c.ordre && c.ordre.length) {
+      const f = trouve(c, c.ordre[0]);
+      if (f && f.pv > 0) return f;
+      c.ordre.shift();
     }
-
-    const acteurs = [];
-    if (herosAgissent) for (const h of vivants(c.heros)) if (choix[h.id]) acteurs.push({ f: h, a: choix[h.id] });
-    if (monstresAgissent) for (const m of vivants(c.monstres)) acteurs.push({ f: m, a: choisirIA(c, m) });
-    const prioritaire = x => x.a.action === 'defense' || x.a.action === 'objet' || (x.a.action === 'talent' && ((c.jeu.talents[x.a.talent] || {}).effet || {}).priorite);
-    for (const x of acteurs) x.ordre = (prioritaire(x) ? 1000 : 0) + R().tirageOrdre(stat(x.f, 'vit'), rng);
-    acteurs.sort((a, b) => b.ordre - a.ordre);
-
-    for (const x of acteurs) {
-      if (c.fin) break;
-      if (x.f.pv <= 0) continue;
-      if (x.f.etats.sommeil) {
-        if (rng() < 1 / 3) { delete x.f.etats.sommeil; dire(`${x.f.nom} se réveille.`); ev.push({ t: 'etat', a: x.f.id, etat: 'reveil' }); }
-        else { dire(`${x.f.nom} dort profondément.`); continue; }
-      }
-      agir(c, x.f, x.a, ev);
-      verifierFin(c);
+    return null;
+  }
+  function agirUn(c, a) {
+    const ev = [], rng = c.rng, dire = texte => ev.push({ t: 'message', texte });
+    const f = prochain(c);
+    if (!f) return ev;
+    c.ordre.shift();
+    // ce qui durait jusqu'à son prochain tour s'arrête
+    f.defense = false;
+    if (c.protecteur === f) c.protecteur = null;
+    if (c.rempart === f.id) c.rempart = false;
+    if (f.etats.sommeil) {
+      if (rng() < 1 / 3) { delete f.etats.sommeil; dire(`${f.nom} se réveille.`); ev.push({ t: 'etat', a: f.id, etat: 'reveil' }); }
+      else { dire(`${f.nom} dort profondément.`); return ev; }
     }
-
-    // fin du tour : poison, effets qui s'épuisent
+    if (f.camp === 'm') a = choisirIA(c, f);
+    if (!a) return ev;
+    if (a.action === 'fuite') {
+      const r = fuite(c);
+      if (!r.possible) dire(r.raison);
+      else if (rng() < R().chanceFuite(r.vh, r.vm)) { ev.push({ t: 'fuite', ok: true }); dire('L\'équipe prend la fuite !'); c.fin = 'fuite'; }
+      else { ev.push({ t: 'fuite', ok: false }); dire('La fuite échoue !'); }
+      return ev;
+    }
+    agir(c, f, a, ev);
+    verifierFin(c);
+    return ev;
+  }
+  function finTour(c) {
+    const ev = [], dire = texte => ev.push({ t: 'message', texte });
     if (!c.fin) for (const f of vivants(tous(c))) {
       if (f.etats.poison) {
         const n = Math.max(1, Math.round(f.pvMax / 10));
         dire(`${f.nom} souffre du poison.`); blesser(c, f, n, ev, false);
       }
     }
-    for (const f of tous(c)) {
-      f.defense = false;
-      for (const k in f.effets) if (--f.effets[k].tours <= 0) delete f.effets[k];
-    }
-    c.protecteur = null; c.rempart = false;
+    for (const f of tous(c)) for (const k in f.effets) if (--f.effets[k].tours <= 0) delete f.effets[k];
     verifierFin(c);
     return ev;
+  }
+  // un tour entier d'un coup (tests) : choix = { <héros>: action }, ou { fuite: true } pour que chaque héros tente de fuir
+  function resoudre(c, choix = {}) {
+    const ev = [];
+    if (c.fin) return ev;
+    debutTour(c);
+    let f;
+    while ((f = prochain(c))) ev.push(...agirUn(c, f.camp === 'h' ? (choix.fuite ? { action: 'fuite' } : choix[f.id]) : null));
+    if (!c.fin) ev.push(...finTour(c));
+    return ev;
+  }
+  // la prochaine action d'un monstre quand on peut la prévoir (boss au rythme fixe, grand coup préparé)
+  function prochaineAction(c, m) {
+    const nom = a => a.nom || (a.type === 'attaque' ? 'Attaque' : '?');
+    if (m.prepare) return { nom: nom(m.prepare), grand: true };
+    if (!m.def.cycle) return null;
+    const a = (m.def.actions || [])[m.def.cycle[(m.etape || 0) % m.def.cycle.length]];
+    return a ? { nom: a.prepare ? 'Prépare un grand coup' : nom(a), prepare: !!a.prepare } : null;
   }
 
   // peut-on fuir ? (boss, combat d'histoire, ou un monstre bien plus rapide que toute l'équipe)
@@ -149,7 +182,7 @@
       const cible = cibleDe(c, f, a.cible);
       if (!cible) return;
       ev.push({ t: 'action', de: f.id, anim: 'attaque', effet: f.camp === 'h' ? (jeu.heros[f.id].effetAttaque || 'coup') : (f.def.effetAttaque || 'morsure'), cibles: [cible.id] });
-      dire(`${f.nom} attaque !`);
+      dire(`${f.nom} attaque ${cible.nom} !`);
       frapper(c, f, cible, 1, ev);
       return;
     }
@@ -196,7 +229,7 @@
     if (!cibles.length) { dire('Sans effet.'); return; }
     switch (e.type) {
       case 'arme':
-        for (const x of cibles) for (let i = 0; i < (e.coups || 1); i++) if (x.pv > 0) frapper(c, f, x, e.mult || 1, ev, e.critique, e.poison);
+        for (const x of cibles) for (let i = 0; i < (e.coups || 1); i++) if (x.pv > 0) frapper(c, f, x, e.mult || 1, ev, e.critique, e.poison, e.sansCritique || t.cible === 'ennemis');
         break;
       case 'sort':
         for (const x of cibles) {
@@ -226,7 +259,7 @@
         }
         break;
       case 'protection': c.protecteur = f; dire(`${f.nom} se dresse devant l'équipe.`); break;
-      case 'rempart': c.rempart = true; dire('L\'équipe se serre derrière le bouclier !'); break;
+      case 'rempart': c.rempart = f.id; dire('L\'équipe se serre derrière le bouclier !'); break;
       case 'esquive': f.effets.esquive = { mult: 1, tours: 2 }; dire(`${f.nom} guette le prochain coup.`); break;
       case 'purification': for (const x of cibles) { x.etats = {}; ev.push({ t: 'etat', a: x.id, etat: 'gueri' }); dire(`${x.nom} est purifié.`); } break;
       case 'releve': for (const x of cibles) appliquerSoutien(c, f, x, { releve: e.part || .5 }, ev); break;
@@ -242,7 +275,8 @@
   const ETATS = { poison: 'est empoisonné !', sommeil: 's\'endort !', silence: 'ne peut plus parler !' };
 
   // une attaque à l'arme (esquive, protection, critique, Défense, Rempart)
-  function frapper(c, att, cible, mult, ev, critiqueSur = false, poison = 0) {
+  // critiqueSur : talent au coup critique assuré, qui ignore la Défense ; sansCritique : grand coup ou attaque de zone
+  function frapper(c, att, cible, mult, ev, critiqueSur = false, poison = 0, sansCritique = false) {
     const dire = texte => ev.push({ t: 'message', texte }), rng = c.rng;
     if (att.camp === 'm' && cible.camp === 'h' && c.protecteur && c.protecteur !== cible && c.protecteur.pv > 0) {
       dire(`${c.protecteur.nom} protège ${cible.nom} !`); cible = c.protecteur;
@@ -250,9 +284,9 @@
     if (cible.effets.esquive) { delete cible.effets.esquive; ev.push({ t: 'rate', a: cible.id }); dire(`${cible.nom} esquive !`); return; }
     if (!critiqueSur && rng() < R().chanceEsquive(stat(cible, 'vit'), stat(att, 'vit'))) { ev.push({ t: 'rate', a: cible.id }); dire(`${cible.nom} esquive !`); return; }
     const classe = att.camp === 'h' ? c.jeu.classes[att.classe] : null;
-    const critique = critiqueSur || rng() < R().chanceCritique(classe);
+    const critique = critiqueSur || (!sansCritique && rng() < R().chanceCritique(classe));
     if (critique) dire('COUP CRITIQUE !');
-    const n = R().degatsArme(stat(att, 'for'), stat(cible, 'def'), rng, critique, mult);
+    const n = R().degatsArme(stat(att, 'for'), stat(cible, 'def'), rng, critique, mult, critiqueSur);
     blesser(c, cible, reduire(c, cible, n), ev, critique);
     if (poison && cible.pv > 0 && rng() < poison) { cible.etats.poison = true; ev.push({ t: 'etat', a: cible.id, etat: 'poison' }); dire(`${cible.nom} ${ETATS.poison}`); }
   }
@@ -317,7 +351,7 @@
   // une action spéciale de monstre, sous la forme d'un talent
   function aSort(a) {
     const cible = a.zone ? 'ennemis' : 'ennemi';
-    if (a.type === 'charge') return { nom: a.nom, cible, anim: 'attaque', visuel: a.visuel || 'coup', effet: { type: 'arme', mult: a.mult || 1.5 } };
+    if (a.type === 'charge') return { nom: a.nom, cible, anim: 'attaque', visuel: a.visuel || 'coup', effet: { type: 'arme', mult: a.mult || 1.5, sansCritique: true } };
     if (a.type === 'etat') return { nom: a.nom, cible, visuel: a.visuel || a.etat, effet: { type: 'etat', etat: a.etat, chance: a.chance } };
     return { nom: a.nom, cible, visuel: a.visuel || a.element, effet: { type: 'sort', puissance: a.puissance, element: a.element } };
   }
@@ -381,10 +415,15 @@
   // un combat entier joué par choixAuto (tests, équilibrage)
   function simuler(jeu, etat, rencontre, rng = Math.random, maxTours = 60) {
     const c = creer(jeu, etat, rencontre, rng);
-    while (!c.fin && c.tour < maxTours) resoudre(c, choixAuto(c));
+    while (!c.fin && c.tour < maxTours) {
+      debutTour(c);
+      let f;
+      while ((f = prochain(c))) agirUn(c, f.camp === 'h' ? choixAuto(c)[f.id] : null);   // chaque héros choisit à son tour
+      if (!c.fin) finTour(c);
+    }
     return { fin: c.fin || 'trop long', tours: c.tour, combat: c };
   }
 
-  M.Combat = { creer, intro, resoudre, terminer, choixAuto, simuler, stat, vivants, nomHeros, fuite };
+  M.Combat = { creer, intro, debutTour, prochain, agirUn, finTour, resoudre, prochaineAction, terminer, choixAuto, simuler, stat, vivants, nomHeros, fuite };
   if (typeof module !== 'undefined') module.exports = M;
 })(typeof window !== 'undefined' ? (window.MoteurRPG = window.MoteurRPG || {}) : (globalThis.MoteurRPG = globalThis.MoteurRPG || {}));

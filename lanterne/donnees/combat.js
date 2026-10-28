@@ -49,7 +49,7 @@ LANTERNE.talents = {
   tempete: { nom: 'Tempête', classe: 'ARCANISTE', niveau: 24, pm: 12, cible: 'ennemis', description: 'Foudre sur tous les ennemis (puissance 34).', effet: { type: 'sort', puissance: 34, element: 'foudre' } },
   // RODEUR
   vol: { nom: 'Vol', classe: 'RODEUR', niveau: 1, pm: 0, cible: 'ennemi', description: 'Prend un objet à un ennemi.', anim: 'attaque', visuel: 'coup', effet: { type: 'vol', chance: .5 } },
-  coup_bas: { nom: 'Coup bas', classe: 'RODEUR', niveau: 4, pm: 3, cible: 'ennemi', description: 'Coup critique assuré.', effet: { type: 'arme', critique: true } },
+  coup_bas: { nom: 'Coup bas', classe: 'RODEUR', niveau: 4, pm: 3, cible: 'ennemi', description: 'Coup critique assuré, qui ignore la Défense.', effet: { type: 'arme', critique: true } },
   poison: { nom: 'Poison', classe: 'RODEUR', niveau: 8, pm: 3, cible: 'ennemi', description: 'Une attaque qui empoisonne souvent.', visuel: 'poison', effet: { type: 'arme', poison: .7 } },
   esquive: { nom: 'Esquive', classe: 'RODEUR', niveau: 13, pm: 2, cible: 'soi', description: 'Évite le prochain coup.', visuel: 'buff', effet: { type: 'esquive', priorite: true } },
   double_lame: { nom: 'Double lame', classe: 'RODEUR', niveau: 18, pm: 5, cible: 'ennemi', description: 'Deux attaques.', effet: { type: 'arme', coups: 2 } },

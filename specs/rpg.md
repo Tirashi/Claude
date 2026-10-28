@@ -189,7 +189,7 @@ Il n'y a pas de stat cachée. Il n'y a pas non plus de chance ni de résistance 
   *Exemple : Étincelle (puissance 10) avec MAG 16 donne 18 ; contre un monstre faible au feu, 27.*
 - **Soin** : PV rendus = **puissance + MAG**.
 - **Éléments** : feu, glace, foudre, lumière. Un monstre peut y être **faible (×1,5)**, **résistant (×0,5)** ou neutre. Le bestiaire l'indique une fois le monstre vaincu. Les créatures de brume sont toutes faibles à la lumière.
-- **Coup critique** : 1 chance sur 16 (1 sur 6 pour le RODEUR). Il ignore la Défense et fait ×1,5. Le texte annonce « COUP CRITIQUE ! ».
+- **Coup critique** : 1 chance sur 16 (1 sur 6 pour le RODEUR). Il fait **le coup normal × 1,5** (règle du 28/10). Les grands coups préparés et les attaques de zone ne sont jamais critiques ; un talent au critique assuré (RODEUR) ignore en plus la Défense. Le texte annonce « COUP CRITIQUE ! ».
 - **Ordre du tour** : chacun tire **VIT + un petit hasard** (0 à VIT ÷ 4), et le plus grand joue en premier.
 - **Esquive** : 3 % de base, plus 1 % par point de VIT au-dessus de l'attaquant, plafonnée à 25 %.
 - **Fuite** : 50 % de base, plus 5 % par point de VIT au-dessus du monstre le plus rapide (entre 10 et 95 %). **Impossible si le monstre le plus rapide a 5 points de VIT de plus que le héros le plus rapide** (règle du 25/10 : « Le corbeau est bien trop rapide pour être semé ! », Fuite grisée avec la raison). Impossible contre les boss et les combats marqués `fuite: false` (combat d'histoire, par ex. Vérène ; sur un événement `{ combat, fuite: false }` ou un monstre de carte).
@@ -242,7 +242,7 @@ Environ **25 monstres**, 5 par région, avec quelques variantes de couleur plus 
   5. Aubrin le Porte-Flamme (2 phases) ;
   6. boss secret : l'Ancien du puits.
 
-### 10.2 Refonte du combat à faire (retours du 24/10, prochaine session)
+### 10.2 Refonte du combat (retours du 24/10, **faite le 28/10**)
 Retour après le Roi des aulnes : « on ne comprend pas vraiment ce qu'il se passe », l'herbe arrive après les coups, les attaques semblent partir en retard. Cause : on choisit les actions de toute l'équipe, puis tout se résout d'un coup dans l'ordre de la Vitesse (rien ne relie le bouton à l'action ; un héros mis K.O. avant son rang perd son action). Correctif rapide fait le 24/10 : objets prioritaires, herbe 50 PV, Roi des aulnes 220 PV (simulé : 42 % de victoires au niveau 3, 96 % au niveau 4). À faire, **maquette jouable du combat contre le Roi d'abord** :
 1. **Tour par tour façon Octopath** : frise de l'ordre de passage (portraits) en haut ; on choisit l'action d'un héros quand vient son tour, et il agit aussitôt.
 2. **Lisibilité** : bandeau par action (« Le Roi des aulnes attaque Eloi : 18 »), acteur mis en avant, barre de PV du boss, avertissement très visible quand il prépare l'Étreinte (conseil : Défense), réglage de vitesse.
@@ -250,6 +250,12 @@ Retour après le Roi des aulnes : « on ne comprend pas vraiment ce qu'il se pas
 4. Équilibrage revu avec le nouveau système (viser 80 % de victoires au niveau 4).
 5. « Réessayer le combat » juste avant le boss après une défaite.
 **Fait le 25/10** : le Roi des aulnes suit un **cycle fixe** (`cycle` dans les données d'un monstre) : coup, coup, Souffle des racines, il plonge ses racines (un tour d'annonce), Étreinte, puis ça recommence ; 300 PV (choix de l'utilisatrice ; simulé : 84 % de victoires au niveau 4 en 9 tours, 5 % au niveau 3). Avec la frise du point 1, montrer l'action suivante du boss.
+**Fait le 28/10** (points 1 à 6) :
+- **chacun agit à son tour** (`Combat.debutTour`, `prochain`, `agirUn`, `finTour` ; `resoudre` reste pour les tests) : le joueur choisit l'action d'un héros quand vient son tour, elle se joue aussitôt ; l'ordre du tour suivant est tiré d'avance ; Défense, Protection et Rempart durent jusqu'au prochain tour de celui qui les a lancés ; la fuite est l'action d'un héros ;
+- **écran** : frise de l'ordre de passage (tour en cours, puis le suivant en plus pâle, « ! » rouge sur un monstre qui prépare un coup), flèche dorée au-dessus de celui qui agit, barre du boss avec sa **prochaine action** (`Combat.prochaineAction`), alerte rouge quand il prépare un grand coup, messages « X attaque Y ! », réglage **Combats rapides** dans les Options ;
+- **coup critique** = coup normal × 1,5 (§ 9.2) ;
+- 3 herbes dans un coffre à l'entrée de la crypte ; **Réessayer le combat** après une défaite contre un boss (équipe et sac comme en entrant, `lanterne/jeu.js`) ;
+- équilibrage (simulé, chacun choisissant à son tour) : Roi des aulnes au niveau 4 : 92 à 94 % de victoires, 8 à 9 tours ; tous les cas de `outils/lanterne-combats.js` dans leurs cibles.
 6. **Coup critique** (demande du 25/10) : aujourd'hui il ignore la Défense puis fait × 1,5 (§ 9.2), si bien qu'un critique de monstre fait 2 à 5 fois un coup normal (feu follet contre Alden : 2 → 10,5 ; Roi des aulnes : 11 → 28,5 ; une Étreinte critique fait 41 à 50 PV à chacun). Nouvelle règle : **critique = coup normal × 1,5**, (FOR − DEF ÷ 2) × 1,5, pour tous ; « ignore la Défense » réservé à un talent du RODEUR ; les attaques chargées et les sorts de zone ne sont jamais critiques. Mettre à jour § 9.2, `degatsArme` (`moteur-rpg/regles.js`), les tests et l'équilibrage.
 
 ## 11. Écrans et commandes (téléphone, en portrait)

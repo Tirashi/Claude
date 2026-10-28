@@ -78,7 +78,8 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   egal([Regles.degatsArme(20, 12, () => 0), Regles.degatsArme(20, 12, () => .5), Regles.degatsArme(20, 12, () => .999)], [13, 14, 15], 'FOR 20 contre DEF 12 : 13 à 15 (§ 9.2)');
   egal(Regles.degatsArme(3, 40, () => .5), 1, 'une attaque fait au moins 1');
   egal([Regles.degatsSort(10, 16, () => .5), Regles.degatsSort(10, 16, () => .5, 1.5)], [18, 27], 'Étincelle avec MAG 16 : 18, et 27 sur un monstre faible au feu (§ 9.2)');
-  egal(Regles.degatsArme(20, 12, () => .5, true), 30, 'coup critique : ignore la Défense, × 1,5');
+  egal(Regles.degatsArme(20, 12, () => .5, true), 21, 'coup critique : coup normal × 1,5');
+  egal(Regles.degatsArme(20, 12, () => .5, true, 1, true), 30, 'coup perçant (critique assuré) : ignore la Défense, × 1,5');
   egal([Regles.chanceEsquive(10, 10), Regles.chanceEsquive(40, 1)], [.03, .25], 'esquive : 3 %, plafond 25 %');
   egal(Regles.chanceFuite(10, 8), .6, 'fuite : 50 % + 5 % par point de VIT');
   egal([Regles.fuitePossible(5, 9), Regles.fuitePossible(5, 10)], [true, false], 'fuite impossible à 5 points de VIT de retard');

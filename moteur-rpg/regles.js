@@ -37,9 +37,10 @@
   const peutPorter = (jeu, h, id) => { const e = jeu.objets[id] && jeu.objets[id].equip; return !!e && (!e.classes || e.classes.includes(h.classe)); };
 
   /* Dégâts d'une attaque à l'arme : FOR − DEF ÷ 2, ± 10 %, au moins 1.
-     Un coup critique ignore la Défense et fait × 1,5. */
-  function degatsArme(force, defense, rng, critique = false, mult = 1) {
-    const base = critique ? force * 1.5 : force - defense / 2;
+     Un coup critique fait × 1,5 (règle du 25/10 : avant, il ignorait la Défense, et un critique de monstre
+     faisait 2 à 5 fois un coup normal). perce : coup qui ignore la Défense (talent à coup critique assuré). */
+  function degatsArme(force, defense, rng, critique = false, mult = 1, perce = false) {
+    const base = (perce ? force : force - defense / 2) * (critique ? 1.5 : 1);
     return Math.max(1, Math.round(base * (.9 + .2 * rng()) * mult));
   }
   // sort offensif : puissance + MAG ÷ 2, ± 10 %, × l'élément (faible 1,5, résistant 0,5) ; la Défense ne compte pas
