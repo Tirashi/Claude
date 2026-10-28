@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1020">
+  <title>Résistance</title>
+  <meta name="description" content="Résistance : rogue-lite tactique façon Fire Emblem GBA. À la tête de l'armée rebelle, libérez les pays du tyran.">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../icons/icon-192.png">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="stage">
+      <canvas id="game"></canvas>
+
+      <!-- Bandeau de phase -->
+      <div id="banner" class="hidden"></div>
+
+      <!-- Menu d'action après un déplacement -->
+      <div id="action-menu" class="panel menu hidden"></div>
+
+      <!-- Gain d'expérience -->
+      <div id="exp-panel" class="panel hidden"></div>
+
+      <!-- Montée de niveau -->
+      <div id="levelup" class="overlay hidden">
+        <div class="panel levelup-box" id="levelup-box"></div>
+      </div>
+
+      <!-- Fin de partie -->
+      <div id="end-screen" class="overlay hidden">
+        <div class="panel end-box">
+          <h1 id="end-title"></h1>
+          <p id="end-text"></p>
+          <p class="seed">Graine <span id="end-seed"></span></p>
+          <button id="restart-btn">Retour à la forteresse</button>
+          <button id="replay-btn">Même graine</button>
+        </div>
+      </div>
+
+      <!-- Fenêtre de run : repos, bilan de combat, armée -->
+      <div id="run-overlay" class="overlay hidden">
+        <div class="panel run-box" id="run-box"></div>
+      </div>
+
+      <!-- Panneaux d'informations : par-dessus la carte sur ordinateur,
+           sous la carte sur téléphone -->
+      <div id="hud">
+        <div id="node-panel" class="panel hidden"></div>
+        <div id="unit-panel" class="panel hidden"></div>
+        <div id="forecast" class="panel hidden"></div>
+        <div id="terrain-panel" class="panel hidden"></div>
+      </div>
+    </div>
+
+    <div id="toolbar">
+      <span id="turn-label">Tour 1</span>
+      <span id="resources"></span>
+      <button id="cancel-btn">Annuler</button>
+      <button id="end-turn-btn">Fin du tour</button>
+      <button id="retreat-btn">Retraite</button>
+      <button id="army-btn">Armée</button>
+      <button id="depart-btn">Partir en campagne</button>
+      <a id="ludo-btn" class="ludo-retour" href="../index.html">◀ Ludothèque</a>
+      <span id="seed-label" class="seed"></span>
+      <span class="help">Clic / Entrée : sélectionner · Clic droit / Échap : annuler · Flèches : curseur · E : fin du tour · A : armée</span>
+    </div>
+  </div>
+
+  <!-- Scripts classiques (pas de modules ES) : chaque fichier range ce qu'il partage dans
+       window.Resistance ; l'ordre de chargement suit les dépendances. -->
+  <script>window.Resistance = {};</script>
+  <script src="js/core/view.js"></script>
+  <script src="js/data/terrain.js"></script>
+  <script src="js/battle/pathfinding.js"></script>
+  <script src="js/data/weapons.js"></script>
+  <script src="js/data/recruits.js"></script>
+  <script src="js/battle/combat.js"></script>
+  <script src="js/battle/ai.js"></script>
+  <script src="js/core/rng.js"></script>
+  <script src="js/data/classes.js"></script>
+  <script src="js/data/maps.js"></script>
+  <script src="js/data/items.js"></script>
+  <script src="js/data/rebels.js"></script>
+  <script src="js/battle/progression.js"></script>
+  <script src="js/battle/battle.js"></script>
+  <script src="js/data/icons.js"></script>
+  <script src="js/data/fortress.js"></script>
+  <script src="js/core/assets.js"></script>
+  <script src="js/core/digits.js"></script>
+  <script src="js/battle/renderer.js"></script>
+  <script src="js/battle/ui.js"></script>
+  <script src="js/core/save.js"></script>
+  <script src="js/data/countries.js"></script>
+  <script src="js/data/encounters.js"></script>
+  <script src="js/data/events.js"></script>
+  <script src="js/run/mapgen.js"></script>
+  <script src="js/run/run.js"></script>
+  <script src="js/run/runmap.js"></script>
+  <script src="js/run/fortress.js"></script>
+  <script src="js/run/game.js"></script>
+  <script src="js/run/validate.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+  /* Ludothèque : mode hors connexion. Le retour à la Ludothèque est le bouton « ◀ Ludothèque »
+     de la forteresse (classe ludo-retour, masqué dans les artefacts). */
+  (function () {
+    try {
+      if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+        navigator.serviceWorker.register("../sw.js").catch(function () {});
+    } catch (e) {}
+  })();
+  </script>
+</body>
+</html>

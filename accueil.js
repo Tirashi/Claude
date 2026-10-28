@@ -53,6 +53,8 @@ const GAMES = [
    d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
   {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
    d: "Un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtis, recrute, conquiers les terres de trois seigneurs rivaux et gagne la couronne en 30 saisons. Combats en scènes HD-2D, événements, un Duché du jour pour toute la famille.", tags: ["STRATEGIE", "30 TOURS", "DUCHE DU JOUR"]},
+  {k: "resistance/index.html", n: "RESISTANCE", s: "RESISTANCE", ic: "resistance", fam: "32", lb: "linear-gradient(#2c4fa8, #121a3a)", lt: "#ffd23f", sh: "#2c4fa8",
+   d: "Rogue-lite tactique façon Fire Emblem GBA : un tyran a soumis le continent, mène l'armée rebelle. Recrute tes soldats, traverse le pays de combat en combat (marchand, repos, événements), triangle des armes, mort définitive, et abats le général. À chaque retour, agrandis la forteresse rebelle : caserne, taverne, infirmerie, Mémorial des vétérans…", tags: ["ROGUE-LITE", "FORTERESSE", "11 CLASSES"]},
   {k: "boutique/index.html", n: "LA BOUTIQUE DE CARTES", s: "BOUTIQUE", ic: "boutique", fam: "3d", lb: "linear-gradient(#8a63d2, #2b2838)", lt: "#ffd84d", sh: "#8a63d2", rank: "boutique",
    d: "Tiens une boutique de cartes à collectionner pendant un an, en 3D. Commande au grossiste, ouvre des boosters (vendre fermé ou ouvrir ? c'est tout le pari), remplis tes vitrines et ton classeur, aménage et agrandis la boutique, organise le tournoi du samedi, et regarde les clients acheter. Cinq extensions sortent dans l'année, les cotes bougent chaque dimanche.", tags: ["3D", "GESTION", "52 SEMAINES"]},
   {k: "bannieres/index.html", n: "BANNIERES", s: "BANNIERES", ic: "banniere", fam: "3d", lb: "linear-gradient(#9fd4f2, #5a9a3a)", lt: "#fff6e0", sh: "#d0482c", rank: "bannieres",
@@ -85,6 +87,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "resistance/index.html": {added: "2026-10-28", genres: ["TACTIQUE"]},
   "boutique/index.html": {added: "2026-10-23", genres: ["SIMULATION"]},
   "doggy-saga/index.html": {added: "2026-10-23", genres: ["LOGIQUE", "DU JOUR"]},
   "romet/index.html": {added: "2026-10-22", genres: ["ARCADE", "HASARD"]},
@@ -120,6 +123,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-10-28", "Nouveau jeu : Résistance, un rogue-lite tactique façon Fire Emblem GBA. Recrute trois rebelles, traverse les Marches de l'Ouest de combat en combat (marchand, repos, événements) et abats le général du tyran. Défaite ou victoire, tu rapportes du ravitaillement pour agrandir la forteresse rebelle : chaque bâtiment rend les campagnes suivantes plus fortes."],
   ["2026-10-23", "Nouveau jeu : La Boutique de cartes, une année à la tête d'une boutique de cartes à collectionner, en 3D. Le lundi, commande au grossiste, fixe tes prix, ouvre des boosters et range les meilleures cartes en vitrine ou dans ton classeur ; du mardi au samedi, regarde les clients entrer et acheter ; le dimanche, fais tes comptes. Aménage, agrandis, organise des tournois et rembourse la banque avant la semaine 26 !"],
   ["2026-10-23", "Nouveau jeu : Doggy Saga, un trois en ligne pour toute la famille. Glisse les chiens du refuge pour en aligner 3 pareils : chaque chien aligné reçoit un câlin. Bandanas, nœuds et balles de tennis lancent de grosses cascades. Lave la boue, ouvre les niches, fais descendre les chiots jusqu'à leur panier, et trouve une famille aux 16 chiens (dont Nounours le bouvier bernois) dans 60 niveaux. Chaque jour, la journée du jour : 20 coups, le plus de câlins possible."],
   ["2026-10-22", "Nouveau jeu : Romet, un coin pusher en 3D en hommage à Mynthos. Lâche tes pièces, le poussoir fait tomber les autres dans le bac : ce qui tombe se rejoue, jusqu'à ce que la bourse soit vide. Gagne les 6 trésors de chaque machine pour ouvrir la suivante : la foire, la ruche et son miel, l'épave et son courant, le casino et ses couloirs, la foire de nuit et ses clous, l'horloger à deux étages… et une machine secrète."],
@@ -194,6 +198,7 @@ const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))
 const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
 // ce qui attend d'être repris (null si rien)
 const PROGRESS = {
+  "resistance/index.html": () => { const r = (rk("resistance.run", {}) || {}).run, n = r && r.map && r.current !== null ? r.map.nodes[r.current] : null; return r ? (n ? `ETAGE ${n.floor + 1}/${r.map.floors}` : "CAMPAGNE EN COURS") : null; },
   "romet/index.html": () => { const p = rk("romet.partie", {}) || {}, ids = Object.keys(p).filter(k => p[k] && !p[k].fini); return ids.length ? (ids.length > 1 ? ids.length + " PARTIES" : "PARTIE EN COURS") : null; },
   "the-des-jarls/index.html": () => { const d = rk("jarls.dailyRun", null), r = rk("jarls.run", null); return d && d.E && d.E.graine === dayNum() ? "DEFI DU JOUR" : r && r.E ? `MANCHE ${r.E.manche}` : null; },
   "duche/index.html": () => { const d = rk("duche.dailyRun", null), r = rk("duche.run", null); return d && d.graine === dayNum() ? "DUCHE DU JOUR" : r && r.tour ? `TOUR ${r.tour}/30` : null; },
@@ -241,6 +246,8 @@ const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catc
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
 const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
 const RECS = {
+  "resistance/index.html": () => { const m = (rk("resistance.save", {}) || {}).meta || {}, b = Object.values(m.upgrades || {}).reduce((a, v) => a + (Number(v) || 0), 0);
+    return [["Pays libérés", num(m.wins)], ["Campagnes", num(m.runs)], ["Forteresse", num(b, b > 1 ? "niveaux" : "niveau")], ["Vétéran", m.veteran && m.veteran.name ? `${m.veteran.name} (niv ${m.veteran.level})` : null]]; },
   "doggy-saga/index.html": () => { const p = rk("doggysaga.progres", {}) || {}, e = p.etoiles || {}, d = rk("doggysaga.daily", {}) || {};
     return [["Étoiles", num(Object.values(e).reduce((a, v) => a + (Number(v) || 0), 0), "/ 180")], ["Niveaux réussis", num(count(e), "/ 60")], ["Chiens adoptés", num((p.album || []).length, "/ 16")],
       ["Meilleure journée", num(Math.max(0, ...Object.values(d).map(Number).filter(v => v >= 0)), "câlins")]]; },
@@ -942,6 +949,8 @@ function collectSaves(){
   if (Object.keys(ja.e).length || Object.keys(ja.d).length) g.jarls = ja;
   const bo = {b: Number(readKey("boutique.best", 0)) || 0, s: readKey("boutique.stats", {}) || {}};
   if (bo.b || bo.s.parties) g.boutique = bo;
+  const re = (readKey("resistance.save", {}) || {}).meta;
+  if (re && re.runs) g.resistance = re;
   const bn = {b: Number(readKey("bannieres.best", 0)) || 0, s: readKey("bannieres.stats", {}) || {}};
   if (bn.b || bn.s.parties) g.bannieres = bn;
   const du = {b: Number(readKey("duche.best", 0)) || 0, d: readKey("duche.daily", {}) || {}};
@@ -991,6 +1000,7 @@ function describeSaves(g){
   if (g.jarls){ const v = Object.values(g.jarls.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.jarls.d || {}).length;
     out.push(`Le Thé des Jarls : ${v.length} dieu${v.length > 1 ? "x" : ""} battu${v.length > 1 ? "s" : ""}, ${v.reduce((a, b) => a + b, 0)} étoiles${d ? `, ${d} défi${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.boutique){ const s = g.boutique.s || {}; out.push(`La Boutique de cartes : meilleure boutique ${g.boutique.b || 0} pts${s.finies ? `, ${s.finies} année${s.finies > 1 ? "s" : ""} finie${s.finies > 1 ? "s" : ""}` : ""}`); }
+  if (g.resistance){ const m = g.resistance; out.push(`Résistance : ${m.runs} campagne${m.runs > 1 ? "s" : ""}${m.wins ? `, ${m.wins} pays libéré${m.wins > 1 ? "s" : ""}` : ""}`); }
   if (g.bannieres){ const s = g.bannieres.s || {}; out.push(`Bannières : ${g.bannieres.b || 0} drapeaux au mieux${s.gagnees ? `, ${s.gagnees} partie${s.gagnees > 1 ? "s" : ""} gagnée${s.gagnees > 1 ? "s" : ""}` : ""}`); }
   if (g.duche){ const d = Object.keys(g.duche.d || {}).length; out.push(`Duché : meilleur score ${g.duche.b || 0}${d ? `, ${d} duché${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.romet){ const v = Object.values(g.romet).filter(x => x && typeof x === "object"), t = v.reduce((a, x) => a + (Array.isArray(x.t) ? x.t.filter(Boolean).length : 0), 0);
@@ -1162,6 +1172,11 @@ function mergeSaves(g){
     if (Number(a.b) > (Number(readKey("boutique.best", 0)) || 0)){ writeKey("boutique.best", Math.round(a.b)); n++; }
     for (const k of ["parties", "finies", "faillites"]) if (Number((a.s || {})[k]) > (Number(s[k]) || 0)){ s[k] = Math.round(a.s[k]); n++; }
     if (n){ writeKey("boutique.stats", s); done.push(`La Boutique de cartes : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.resistance && typeof g.resistance === "object" && Number(g.resistance.runs) > 0){
+    // fusion : la forteresse la plus avancée (le plus de campagnes) remplace l'autre en entier
+    const loc = (readKey("resistance.save", {}) || {}).meta || {};
+    if (Number(g.resistance.runs) > (Number(loc.runs) || 0)){ writeKey("resistance.save", {version: 1, meta: g.resistance}); done.push(`Résistance : forteresse après ${Math.round(g.resistance.runs)} campagnes`); }
   }
   if (g.bannieres && typeof g.bannieres === "object"){
     // fusion : le plus de drapeaux, et le plus grand nombre de parties (jouées, gagnées)

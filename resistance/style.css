@@ -1,0 +1,512 @@
+/* Police pixel : Pixelify Sans (SIL OFL 1.1), partagée avec La Dernière Lanterne dans polices/ */
+@font-face {
+  font-family: 'Pixelify Sans';
+  src: url('../polices/pixelify-sans.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: block;
+}
+
+:root {
+  --s: 4;                    /* pixels CSS par pixel de jeu, mis à jour par JS */
+  --u: calc(1px * var(--s)); /* un pixel de jeu */
+  --fs: max(13px, calc(var(--u) * 4.5)); /* taille de texte, jamais illisible */
+  --px: max(1px, calc(var(--fs) / 12)); /* un pixel de la police (ombre, contours) */
+  --bg: #0d1020;
+  --text: #f8f8f0;
+  --muted: #b8c4e8;
+  --gold: #f8d870;
+  --ink: #101830;            /* ombre du texte, contours */
+  --hp: #78e070;
+  --exp: #f8d040;
+  --player: #b8d0ff;
+  --enemy: #ffb8a8;
+
+  /* Cadres des fenêtres : 9-slice du pack Mana Soul GUI (tiopalada, CC0), 96×96 avec leur
+     remplissage. Un pixel de cadre = un demi-pixel de jeu (--a), pour des bordures fines. */
+  --a: calc(var(--u) * .5);
+  --frame-blue: url('assets/ui/frame-navy.png');      /* fenêtres, panneaux alliés */
+  --frame-red: url('assets/ui/frame-purple.png');     /* panneaux ennemis */
+  --frame-button: url('assets/ui/frame-button.png');  /* boutons */
+  --frame-gold: url('assets/ui/frame-orange.png');    /* bouton principal */
+  --frame-pink: url('assets/ui/frame-pink.png');      /* Retraite */
+  /* Remplissages en bandes du bandeau de phase (pas de dégradé lisse, comme sur GBA) */
+  --fill-night: linear-gradient(180deg, #24286c 0 30%, #1a1d58 30% 65%, #111343 65%);
+  --fill-plum: linear-gradient(180deg, #5c2c78 0 30%, #4a2466 30% 65%, #421f59 65%);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; } }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Pixelify Sans', "Trebuchet MS", Verdana, sans-serif;
+  /* La ligature « fi » de Pixelify Sans ressemble à un A (« InArmerie », « An du tour ») */
+  font-variant-ligatures: none;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;   /* pas de zoom au double appui */
+  overscroll-behavior: none;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+           env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
+#stage { position: relative; }
+
+#game {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.hidden { display: none !important; }
+
+/* ---------- Cadre pixel commun (panneaux, boutons) ---------- */
+.panel, .end-box button, .run-actions button, #toolbar button {
+  border: calc(var(--a) * 14) solid transparent;
+  border-image: var(--frame-blue) 20 fill / calc(var(--a) * 14) stretch;
+  background: none;
+  border-radius: 0;
+  text-shadow: var(--px) var(--px) 0 var(--ink);
+}
+
+/* ---------- Panneaux ---------- */
+.panel {
+  position: absolute;
+  font-size: var(--fs);
+  line-height: 1.2;
+  padding: calc(var(--u) * .5) calc(var(--u) * 1);
+  pointer-events: none;
+  filter: drop-shadow(var(--u) var(--u) 0 rgba(0, 0, 0, .45));
+}
+.panel.enemy { border-image-source: var(--frame-red); }
+/* Le fond du cadre bleu nuit est un peu transparent : bien pour les panneaux posés sur la
+   carte, mais les grandes fenêtres (recrutement, marchand, fin) restent opaques. */
+.run-box, .end-box, .levelup-box { background: #111343 padding-box; }
+
+#hud { position: absolute; inset: 0; pointer-events: none; }
+#unit-panel { top: 10px; left: 10px; min-width: 15em; }
+#unit-panel.right { left: auto; right: 10px; }
+#terrain-panel { bottom: 10px; left: 10px; text-align: center; min-width: 7em; }
+#terrain-panel.right { left: auto; right: 10px; }
+#forecast { top: 10px; right: 10px; min-width: 17em; }
+#forecast.left { right: auto; left: 10px; }
+
+.unit-name { font-weight: 700; font-size: 1.15em; }
+.unit-name.player { color: var(--player); }
+.unit-name.enemy { color: var(--enemy); }
+.panel.enemy .unit-name.enemy { color: var(--text); }
+.unit-class { color: var(--muted); font-size: .85em; }
+.panel.enemy .unit-class { color: #f8d0c8; }
+.row { display: flex; justify-content: space-between; gap: 10px; }
+
+/* Jauges : contour sombre d'un pixel de jeu, remplissage plein, reflet clair en haut */
+.bar {
+  height: calc(var(--u) * 2);
+  background: #301818;
+  box-shadow: 0 0 0 var(--px) var(--ink);
+  margin: calc(var(--u) * 1) var(--px) calc(var(--u) * 1.25);
+}
+.bar > div {
+  height: 100%;
+  background: linear-gradient(180deg, #c8f8b8 0 35%, var(--hp) 35%);
+}
+.bar.exp { background: #302810; height: calc(var(--u) * 1); }
+.bar.exp > div { background: var(--exp); }
+
+.stats { display: grid; grid-template-columns: repeat(4, auto); gap: 0 10px; font-size: .9em; }
+.stats b, .lu-grid b, .fc-grid .lbl { color: var(--gold); font-weight: 400; }
+.weapon { margin-top: 3px; font-size: .9em; color: #fff0c0; }
+/* Icône 16×16 un peu plus grande que le texte (1em = une icône, voir iconHtml dans ui.js) */
+.icon {
+  display: inline-block;
+  font-size: 1.25em; width: 1em; height: 1em;
+  vertical-align: -0.2em;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+/* ---------- Menu d'action ---------- */
+.menu { pointer-events: auto; padding: calc(var(--u) * 1); min-width: 7em; z-index: 5; }
+.menu button {
+  position: relative;
+  display: block; width: 100%;
+  font: inherit; color: var(--text); text-shadow: inherit;
+  background: transparent; border: none; text-align: left;
+  padding: calc(var(--u) * 1.5) calc(var(--u) * 2) calc(var(--u) * 1.5) calc(var(--u) * 6);
+  cursor: pointer;
+}
+.menu button.active, .menu button:hover { background: rgba(255, 255, 255, .14); }
+/* Curseur triangulaire pixel devant l'option active */
+.menu button.active::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--u) * 1.5); top: 50%;
+  width: calc(var(--u) * 3); height: calc(var(--u) * 4);
+  transform: translateY(-50%);
+  background: var(--text);
+  clip-path: polygon(0 0, 33% 0, 33% 12.5%, 66% 12.5%, 66% 25%, 100% 25%, 100% 75%,
+                     66% 75%, 66% 87.5%, 33% 87.5%, 33% 100%, 0 100%);
+  filter: drop-shadow(var(--px) var(--px) 0 var(--ink));
+  animation: blink .8s steps(2) infinite;
+}
+@keyframes blink { 50% { transform: translate(calc(var(--u) * 1), -50%); } }
+
+/* ---------- Prévisions ---------- */
+.fc-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1px 10px; text-align: center; }
+.fc-grid .lbl { font-size: .9em; }
+.fc-grid .p { color: var(--player); }
+.fc-grid .e { color: var(--enemy); }
+.fc-head { font-weight: 700; }
+.fc-adv { color: #98ff90; }
+.fc-dis { color: #ff9090; }
+.fc-note { color: var(--muted); font-size: .8em; text-align: center; margin-top: 3px; }
+/* Rappel du triangle des armes (prévisions, fiche d'unité) */
+.fc-tri { margin-top: 4px; padding: 1px 6px; text-align: center; font-size: .9em; }
+.fc-tri.adv { background: rgba(80, 220, 100, .22); color: #c8ffc0; }
+.fc-tri.dis { background: rgba(255, 80, 80, .22); color: #ffd0c8; }
+.tri-line { margin-top: 2px; font-size: .85em; }
+.fc-tri.eff { background: rgba(248, 216, 112, .25); color: #fff0b0; }
+.eff-line { color: var(--gold); }
+
+/* ---------- EXP ---------- */
+#exp-panel {
+  left: 50%; bottom: 12%;
+  transform: translateX(-50%);
+  min-width: 14em;
+  z-index: 6;
+}
+#exp-panel .bar { height: calc(var(--u) * 2); }
+#exp-panel .bar > div { transition: width .6s steps(20); }
+
+/* ---------- Montée de niveau ---------- */
+.overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(5, 8, 20, .55);
+  z-index: 10;
+}
+#levelup { pointer-events: auto; cursor: pointer; }
+.levelup-box { position: static; min-width: 16em; text-align: center; }
+.levelup-box h2 { margin: 0 0 2px; color: var(--exp); font-size: 1.35em; }
+.lu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 18px; margin: 8px 0 4px; text-align: left; }
+.lu-grid .stat { display: flex; justify-content: space-between; }
+.lu-grid .plus { color: #98ff90; font-weight: 700; opacity: 0; animation: pop .24s steps(3) forwards; }
+.lu-grid .up { color: #fff; }
+@keyframes pop { from { opacity: 0; transform: scale(2); } to { opacity: 1; transform: scale(1); } }
+
+/* ---------- Bandeau de phase ---------- */
+#banner {
+  position: absolute; left: 0; right: 0; top: 40%;
+  text-align: center;
+  font-size: max(20px, calc(var(--u) * 9));
+  font-weight: 700;
+  letter-spacing: calc(var(--u) * .5);
+  padding: calc(var(--u) * 2) 0;
+  /* Bleu nuit et liserés dorés, comme les cadres Mana Soul */
+  background: var(--fill-night);
+  box-shadow: inset 0 var(--u) 0 #f8c858, inset 0 calc(var(--u) * -1) 0 #f8c858,
+              0 var(--u) 0 #0a0a24, 0 calc(var(--u) * -1) 0 #0a0a24;
+  text-shadow: calc(var(--px) * 1.5) calc(var(--px) * 1.5) 0 var(--ink);
+  animation: banner 1.2s steps(24) forwards;
+  pointer-events: none;
+  z-index: 8;
+}
+#banner.enemy {
+  background: var(--fill-plum);
+  box-shadow: inset 0 var(--u) 0 #f0a0b8, inset 0 calc(var(--u) * -1) 0 #f0a0b8,
+              0 var(--u) 0 #1a0820, 0 calc(var(--u) * -1) 0 #1a0820;
+}
+@keyframes banner {
+  0% { opacity: 0; clip-path: inset(50% 0); }
+  15% { opacity: 1; clip-path: inset(0 0); }
+  85% { opacity: 1; clip-path: inset(0 0); }
+  100% { opacity: 0; clip-path: inset(50% 0); }
+}
+
+/* ---------- Carte de run ---------- */
+#node-panel {
+  top: 3px; left: 50%; transform: translateX(-50%);
+  text-align: center; white-space: nowrap; line-height: 1.1;
+  padding-top: calc(var(--u) * 1); padding-bottom: calc(var(--u) * 1);
+}
+.run-box { position: static; pointer-events: auto; text-align: center; min-width: 18em; max-height: 92%; overflow: auto; }
+.run-box h2 { margin: 0 0 4px; color: var(--gold); font-size: 1.35em; }
+.run-box p { margin: 0 0 6px; }
+.run-actions { margin-top: 8px; display: flex; gap: 8px; justify-content: center; }
+.army-list { display: grid; gap: calc(var(--u) * 1.5); text-align: left; }
+.army-row {
+  display: grid; grid-template-columns: auto 1fr auto auto; gap: 0 10px; align-items: baseline;
+}
+.army-row .bar { grid-column: 1 / -1; margin-top: 2px; }
+.army-row.fallen { opacity: .55; }
+.army-hp { text-align: right; min-width: 6.5em; }
+
+/* Les fenêtres de run couvrent tout l'écran (sur téléphone, la carte seule est trop petite) */
+#run-overlay { position: fixed; }
+.trait { color: var(--gold); }
+.run-actions button:disabled { opacity: .45; filter: grayscale(.6); cursor: default; transform: none; }
+.run-actions button.focus { outline: var(--px) dashed var(--text); outline-offset: var(--px); }
+
+/* ---------- Ressources (barre d'outils) ---------- */
+#resources { display: flex; gap: 12px; white-space: nowrap; flex-shrink: 0; font-size: 16px; color: var(--gold); }
+#resources span { display: inline-flex; align-items: center; gap: 4px; }
+/* Nombre en chiffres pixel (numberHtml) : hauteur = 1em, 8 pixels de chiffre */
+.num { display: inline-block; height: 1em; vertical-align: -0.1em; overflow: visible; }
+#resources:empty { display: none; }
+
+/* ---------- Listes de choix (marchand, choix d'un soldat) ---------- */
+.choice-list { display: grid; gap: calc(var(--u) * 1); margin: 4px 0; text-align: left; }
+.choice {
+  display: flex; gap: 8px; align-items: center; width: 100%; text-align: left;
+  font: inherit; color: var(--text); text-shadow: inherit;
+  background: rgba(16, 24, 48, .35);
+  border: var(--px) solid rgba(16, 24, 48, .6);
+  padding: 4px 8px; cursor: pointer;
+}
+.choice:hover:not(:disabled) { background: rgba(255, 255, 255, .12); }
+.choice.focus { outline: var(--px) dashed var(--text); outline-offset: calc(var(--px) * -3); }
+.choice:disabled { opacity: .45; cursor: default; }
+.choice .icon { font-size: 1.6em; flex: none; }
+.choice-main { flex: 1; min-width: 0; }
+.price { flex: none; color: var(--gold); font-weight: 700; }
+.bag { margin-top: 6px; text-align: left; }
+
+/* ---------- Recrutement ---------- */
+.recruit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(var(--u) * 1.5); margin: 4px 0; }
+.recruit {
+  display: flex; gap: 8px; align-items: center; text-align: left;
+  font: inherit; color: var(--text); text-shadow: inherit;
+  background: rgba(16, 24, 48, .35);
+  border: var(--px) solid rgba(16, 24, 48, .6);
+  padding: 4px 8px 4px 4px; cursor: pointer;
+}
+.recruit:hover { background: rgba(255, 255, 255, .12); }
+.recruit.focus { outline: var(--px) dashed var(--text); outline-offset: calc(var(--px) * -3); }
+.recruit.chosen { background: rgba(248, 216, 112, .3); border-color: var(--gold); }
+/* Portrait : première image de la planche d'unité (256×448, cellules 32×32), recadrée
+   sur le personnage (x 6→26, y 2→28 dans la cellule). Un pixel de sprite = --fs / 8. */
+.portrait {
+  flex: none;
+  width: calc(var(--fs) * 2.5); height: calc(var(--fs) * 3.25);
+  background-size: calc(var(--fs) * 32) calc(var(--fs) * 56);
+  background-position: calc(var(--fs) * -0.75) calc(var(--fs) * -0.25);
+  image-rendering: pixelated;
+}
+.recruit-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.recruit-info .trait { font-size: .85em; }
+.recruit-stats { font-size: .8em; color: var(--muted); }
+@media (max-width: 560px) { .recruit-grid { grid-template-columns: 1fr; } }
+
+/* Boutons de la barre d'outils selon l'écran */
+body[data-mode="map"] #cancel-btn, body[data-mode="map"] #end-turn-btn,
+body[data-mode="battle"] #army-btn,
+body[data-mode="fortress"] #cancel-btn, body[data-mode="fortress"] #end-turn-btn,
+body[data-mode="fortress"] #army-btn,
+body:not([data-mode="fortress"]) #depart-btn, body:not([data-mode="fortress"]) #ludo-btn,
+body:not([data-mode="battle"]) #retreat-btn { display: none; }
+/* Retraite : bouton rose, à part (action rare et coûteuse) */
+#toolbar #retreat-btn { border-image-source: var(--frame-pink); color: #3a0c28; text-shadow: none; }
+
+/* ---------- Fin de partie ---------- */
+.end-box { position: static; pointer-events: auto; text-align: center; padding: 20px 30px; }
+.end-box h1 { margin: 0 0 6px; font-size: 1.8em; }
+button { touch-action: manipulation; }
+
+/* ---------- Boutons ---------- */
+.end-box button, .run-actions button, #toolbar button, #toolbar #ludo-btn {
+  font: inherit; font-weight: 700; color: var(--text);
+  padding: 6px 14px; cursor: pointer; white-space: nowrap;
+  border-width: calc(var(--a) * 10);
+  border-image: var(--frame-button) 16 fill / calc(var(--a) * 10) stretch;
+}
+/* Bouton principal (Fin du tour, Partir en campagne…) : orange, texte sombre */
+#toolbar #end-turn-btn, #toolbar #depart-btn, .end-box #restart-btn, .run-actions button.primary {
+  border-image-source: var(--frame-gold);
+  color: #3a1c08;
+  text-shadow: var(--px) var(--px) 0 #ffd8a0;
+}
+.end-box button:hover, .run-actions button:hover, #toolbar button:hover { filter: brightness(1.12); }
+.end-box button:active, .run-actions button:active, #toolbar button:active { transform: translateY(var(--px)); filter: brightness(.9); }
+#toolbar button:disabled { opacity: .45; cursor: default; filter: grayscale(.6); transform: none; }
+#replay-btn { margin-left: 8px; }
+
+/* ---------- Barre d'outils ---------- */
+#toolbar { display: flex; gap: 12px; align-items: center; font-size: 15px; text-shadow: 1px 1px 0 var(--ink); }
+#toolbar .help { color: var(--muted); font-size: 13px; }
+#turn-label { font-weight: 700; min-width: 60px; font-size: 17px; }
+/* Graine de la partie : sélectionnable pour pouvoir la copier */
+.seed { color: var(--muted); font-size: 13px; user-select: text; white-space: nowrap; }
+#turn-label, #toolbar button, #ludo-btn, .seed { white-space: nowrap; flex-shrink: 0; }
+#toolbar .help { min-width: 0; }
+.end-box .seed { margin-top: -4px; }
+
+/* ================= Téléphone (portrait) =================
+   La carte occupe toute la largeur, les panneaux passent dessous. */
+@media (max-aspect-ratio: 1/1) {
+  #app { justify-content: flex-start; padding-top: max(8px, env(safe-area-inset-top, 0px)); }
+  #hud {
+    position: static;
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 6px;
+    min-height: 9.5em;
+    align-content: flex-start;
+  }
+  #hud .panel { position: static; min-width: 0; }
+  #node-panel { flex: 1 1 100%; transform: none; white-space: normal; }
+  #unit-panel { flex: 1 1 60%; }
+  #forecast { flex: 1 1 100%; }
+  #terrain-panel { flex: 0 1 auto; }
+  #forecast:not(.hidden) ~ #terrain-panel { display: none; }
+  #toolbar { width: 100%; padding: 0 8px; justify-content: space-between; }
+  #toolbar button, #toolbar #ludo-btn { padding: 10px 16px; font-size: 17px; }
+  #toolbar .help, #seed-label { display: none; }
+  #turn-label { white-space: normal; flex-shrink: 1; min-width: 0; }
+  /* En combat : 3 boutons, on passe à la ligne et l'or (inutile en combat) est masqué */
+  #toolbar { flex-wrap: wrap; row-gap: 8px; }
+  body[data-mode="battle"] #resources { display: none; }
+}
+/* Écrans tactiles en paysage : boutons plus gros, aide masquée */
+@media (pointer: coarse) {
+  #toolbar .help { display: none; }
+  #toolbar button, #toolbar #ludo-btn { padding: 8px 14px; font-size: 16px; }
+}
+
+/* Retour à la Ludothèque (forteresse seulement) : un lien habillé comme les boutons */
+#toolbar #ludo-btn { text-decoration: none; }
+
+/* ================= Téléphone : retouches d'ergonomie (28/10) ================= */
+/* Bouton « Attaquer » des prévisions (toucher de nouveau la cible marche aussi) */
+#forecast .fc-go {
+  display: block; margin: 6px auto 0; pointer-events: auto;
+  font: inherit; font-weight: 700; color: #3a1c08; text-shadow: var(--px) var(--px) 0 #ffd8a0;
+  padding: 6px 22px; cursor: pointer;
+  border: calc(var(--a) * 10) solid transparent;
+  border-image: var(--frame-gold) 16 fill / calc(var(--a) * 10) stretch;
+}
+/* Les choix (événements, marchand, Intendance) ressemblent à des boutons */
+.choice { background: rgba(255, 255, 255, .07); border-color: rgba(184, 196, 232, .35); }
+
+@media (pointer: coarse) {
+  /* Texte jamais sous ~13 px sur un écran tactile */
+  :root { --fs: max(15px, calc(var(--u) * 4.5)); }
+  .unit-class, .fc-note, .recruit-stats, .tri-line, .recruit-info .trait, .fc-grid .lbl, .stats { font-size: .9em; }
+  .menu button { min-height: 44px; }
+  .choice, .recruit { min-height: 48px; }
+  #forecast .fc-go { padding: 10px 30px; }
+}
+
+/* Portrait : menu d'action en gros boutons sous la carte, barre en bas à portée du pouce */
+@media (max-aspect-ratio: 1/1) {
+  #hud .menu.docked {
+    flex: 1 1 100%; display: flex; gap: 8px; padding: 8px;
+  }
+  #hud .menu.docked button {
+    flex: 1; text-align: center; padding: 14px 6px; font-weight: 700;
+    border: calc(var(--a) * 10) solid transparent;
+    border-image: var(--frame-button) 16 fill / calc(var(--a) * 10) stretch;
+  }
+  #hud .menu.docked button:first-child {
+    border-image-source: var(--frame-gold); color: #3a1c08; text-shadow: var(--px) var(--px) 0 #ffd8a0;
+  }
+  #hud .menu.docked button.active::before { display: none; }
+  #toolbar { margin-top: auto; padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)); }
+  /* Combat : une seule rangée (Retraite petite, Annuler, Fin du tour) pour laisser la place à la
+     carte couchée et à la fiche ; le numéro du tour s'affiche dans le bandeau de chaque phase */
+  body[data-mode="battle"] #toolbar { flex-wrap: nowrap; gap: 6px; }
+  body[data-mode="battle"] #turn-label { display: none; }
+  body[data-mode="battle"] #toolbar #retreat-btn { order: -1; flex: 0 0 auto; padding: 12px 8px; font-size: 14px; }
+  body[data-mode="battle"] #toolbar #cancel-btn { flex: 1 1 0; padding: 14px 6px; }
+  body[data-mode="battle"] #toolbar #end-turn-btn { flex: 1.3 1 0; padding: 14px 6px; }
+  /* La fiche d'unité prend toute la largeur ; la case (terrain) revient quand on touche une case vide */
+  #unit-panel:not(.hidden) ~ #terrain-panel { display: none; }
+  #unit-panel { flex: 1 1 100%; }
+  /* Fenêtres : presque toute la largeur */
+  .run-box, .end-box { width: calc(100vw - 16px); max-width: 32em; min-width: 0; box-sizing: border-box; }
+}
+
+/* ================= Boutons façon GBA (maquette des boutons, direction A, 28/10) =================
+   Fenêtre bleue à bord blanc, texte blanc ombré ; le bouton principal a un bord et un texte
+   dorés, Retraite un bord rose. Le menu d'action est une liste avec la petite main qui pointe. */
+:root {
+  --gba-fond: linear-gradient(#2a3a9a, #1a2266);
+  --gba-bord: #e8ecff;
+  --gba-or: #f8d870;
+  --gba-rose: #ff9c9c;
+}
+.end-box button, .run-actions button, #toolbar button, #toolbar #ludo-btn, #forecast .fc-go {
+  border-image: none;
+  border: 3px solid var(--gba-bord);
+  border-radius: 6px;
+  background: var(--gba-fond);
+  box-shadow: 0 0 0 2px var(--ink);
+  color: var(--text);
+  text-shadow: 2px 2px 0 var(--ink);
+  margin: 2px;
+}
+#toolbar #end-turn-btn, #toolbar #depart-btn, .end-box #restart-btn, .run-actions button.primary, #forecast .fc-go {
+  border-image: none;
+  border-color: var(--gba-or);
+  color: var(--gba-or);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+#toolbar #retreat-btn { border-image: none; border-color: var(--gba-rose); color: #ffc8c8; text-shadow: 2px 2px 0 var(--ink); }
+.end-box button:active, .run-actions button:active, #toolbar button:active, #forecast .fc-go:active { transform: translateY(2px); filter: none; }
+#toolbar button:disabled { opacity: .4; }
+
+/* Menu d'action : fenêtre GBA, une action par ligne, détail à droite */
+.panel.menu {
+  border-image: none;
+  border: 3px solid var(--gba-bord);
+  border-radius: 6px;
+  background: var(--gba-fond);
+  box-shadow: 0 0 0 2px var(--ink), inset 0 0 0 2px #5a6ad8;
+  filter: none;
+  padding: 4px;
+}
+.menu button {
+  display: flex; align-items: center; gap: .5em;
+  font-weight: 700; text-shadow: 2px 2px 0 var(--ink);
+  padding: .45em .7em .45em 1.7em;
+  border-radius: 4px;
+}
+.menu button .det { margin-left: auto; padding-left: 1em; font-weight: 400; font-size: .85em; color: var(--gba-or); white-space: nowrap; }
+.menu button .icon { font-size: 1.1em; }
+.menu button.active, .menu button:hover { background: rgba(255, 255, 255, .14); }
+/* La petite main (pixel art 9×9, dessinée par ui.js dans --main) remplace le triangle */
+.menu button.active::before {
+  left: .4em; width: 1em; height: 1em;
+  clip-path: none; filter: none;
+  background: var(--main) center / contain no-repeat;
+  image-rendering: pixelated;
+  animation: pointe .6s steps(2) infinite;
+}
+@keyframes pointe { 50% { transform: translate(3px, -50%); } }
+@media (max-aspect-ratio: 1/1) {
+  #hud .menu.docked { display: flex; flex-direction: column; gap: 0; padding: 4px; }
+  #hud .menu.docked button {
+    border: 0; border-image: none; background: none; color: var(--text);
+    text-align: left; padding: 11px 12px 11px 34px; font-size: 19px;
+  }
+  #hud .menu.docked button:first-child { border-image: none; color: var(--text); text-shadow: 2px 2px 0 var(--ink); }
+  #hud .menu.docked button.active { background: rgba(255, 255, 255, .14); }
+  #hud .menu.docked button.active::before { display: block; left: 10px; width: 16px; height: 16px; }
+}
