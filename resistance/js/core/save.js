@@ -1,6 +1,6 @@
-// Sauvegarde locale (localStorage), au format versionné. Pour l'instant : la méta-progression
-// (ravitaillement accumulé pour la forteresse, nombre de runs). Une sauvegarde d'une autre
-// version est ignorée : à migrer ici quand le format changera.
+// Sauvegarde locale (localStorage), au format versionné : la méta-progression (ravitaillement
+// accumulé pour la forteresse, nombre de runs) et la run en cours (reprise si le téléphone ferme
+// le jeu). Une sauvegarde d'une autre version est ignorée : à migrer ici quand le format changera.
 (() => {
   'use strict';
   const KEY = 'resistance.save';
@@ -25,5 +25,27 @@
     } catch { /* navigation privée, quota… : la partie continue sans sauvegarde */ }
   }
 
-  Object.assign(Resistance, { loadMeta, saveMeta });
+  // Run en cours (Run.toSave) : écrite à chaque étape, effacée en fin de run
+  const RUN_KEY = 'resistance.run';
+  const RUN_VERSION = 1;
+
+  function loadRun() {
+    try {
+      const data = JSON.parse(localStorage.getItem(RUN_KEY));
+      if (data?.version === RUN_VERSION) return data.run;
+    } catch { /* illisible : pas de reprise */ }
+    return null;
+  }
+
+  function saveRun(run) {
+    try {
+      localStorage.setItem(RUN_KEY, JSON.stringify({ version: RUN_VERSION, run }));
+    } catch { /* la run continue sans sauvegarde */ }
+  }
+
+  function clearRun() {
+    try { localStorage.removeItem(RUN_KEY); } catch { /* rien à faire */ }
+  }
+
+  Object.assign(Resistance, { loadMeta, saveMeta, loadRun, saveRun, clearRun });
 })();

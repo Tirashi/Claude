@@ -86,6 +86,7 @@
     // bonuses : améliorations de la forteresse (fortressBonuses dans data/fortress.js)
     constructor(seed, countryId = 'marches', bonuses = {}) {
       this.seed = seed >>> 0;
+      this.countryId = countryId;
       this.country = COUNTRIES[countryId];
       this.map = generateRunMap(new RNG(this.seed), this.country);
       this.slots = RECRUITMENT.slots + (bonuses.slots ?? 0);
@@ -335,6 +336,30 @@
         rec.hp = Math.min(rec.stats.hp, rec.hp + Math.round(rec.stats.hp * this.rules.restHeal));
         return this.summary(rec, { healed: rec.hp - before });
       });
+    }
+
+    // Sauvegarde de la run en cours. at : nœud où reprendre (null : sur la carte).
+    // La carte est gardée telle quelle (stocks des marchands, combats d'événements).
+    toSave(at = null) {
+      return {
+        seed: this.seed, countryId: this.countryId, map: this.map, slots: this.slots, rules: this.rules,
+        traitChance: this.traitChance, startLevels: this.startLevels, candidates: this.candidates,
+        army: this.army, current: this.current?.id ?? null, visited: [...this.visited],
+        gold: this.gold, supplies: this.supplies, inventory: this.inventory, at,
+      };
+    }
+
+    static fromSave(data) {
+      const run = Object.create(Run.prototype);
+      Object.assign(run, {
+        seed: data.seed, countryId: data.countryId, country: COUNTRIES[data.countryId], map: data.map,
+        slots: data.slots, rules: data.rules, traitChance: data.traitChance, startLevels: data.startLevels,
+        candidates: data.candidates, army: data.army, visited: new Set(data.visited), over: false,
+        gold: data.gold, supplies: data.supplies, inventory: data.inventory,
+      });
+      run.current = data.current === null ? null : run.node(data.current);
+      run.veteran = run.army.find((r) => r.grade) ?? null; // le Capitaine, s'il y en a un
+      return run;
     }
 
     summary(rec, extra = {}) {

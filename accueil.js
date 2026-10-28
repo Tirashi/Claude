@@ -198,6 +198,7 @@ const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))
 const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
 // ce qui attend d'être repris (null si rien)
 const PROGRESS = {
+  "resistance/index.html": () => { const r = (rk("resistance.run", {}) || {}).run, n = r && r.map && r.current !== null ? r.map.nodes[r.current] : null; return r ? (n ? `ETAGE ${n.floor + 1}/${r.map.floors}` : "CAMPAGNE EN COURS") : null; },
   "romet/index.html": () => { const p = rk("romet.partie", {}) || {}, ids = Object.keys(p).filter(k => p[k] && !p[k].fini); return ids.length ? (ids.length > 1 ? ids.length + " PARTIES" : "PARTIE EN COURS") : null; },
   "the-des-jarls/index.html": () => { const d = rk("jarls.dailyRun", null), r = rk("jarls.run", null); return d && d.E && d.E.graine === dayNum() ? "DEFI DU JOUR" : r && r.E ? `MANCHE ${r.E.manche}` : null; },
   "duche/index.html": () => { const d = rk("duche.dailyRun", null), r = rk("duche.run", null); return d && d.graine === dayNum() ? "DUCHE DU JOUR" : r && r.tour ? `TOUR ${r.tour}/30` : null; },

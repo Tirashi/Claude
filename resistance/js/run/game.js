@@ -2,7 +2,7 @@
 // `scene` est l'écran actif (RunMapScene ou Battle) : main.js lui transmet les entrées.
 (() => {
   'use strict';
-  const { Battle, ENCOUNTERS, FORTRESS, META_RULES, PREPARATION, fortressBonuses, veteranPrice, RECRUITMENT, CAPTAIN, traitLabel, COUNTRIES, ITEMS, WEAPONS, CLASSES, EVENTS, WEAPON_UPGRADES, ITEM_ICONS, armyHtml, iconHtml, numberHtml, effectiveText, loadMeta, saveMeta, Run, randomSeed, canWield, shopEntry, prepEntry, prepText, prepBonuses, veteranReturnLevel, RunMapScene, FortressScene } = Resistance;
+  const { Battle, ENCOUNTERS, FORTRESS, META_RULES, PREPARATION, fortressBonuses, veteranPrice, RECRUITMENT, CAPTAIN, traitLabel, COUNTRIES, ITEMS, WEAPONS, CLASSES, EVENTS, WEAPON_UPGRADES, ITEM_ICONS, armyHtml, iconHtml, numberHtml, effectiveText, loadMeta, saveMeta, loadRun, saveRun, clearRun, Run, randomSeed, canWield, shopEntry, prepEntry, prepText, prepBonuses, veteranReturnLevel, RunMapScene, FortressScene } = Resistance;
 
   const goldIcon = () => iconHtml(ITEM_ICONS.gold.sheet, ITEM_ICONS.gold.at);
   const suppliesIcon = () => iconHtml(ITEM_ICONS.supplies.sheet, ITEM_ICONS.supplies.at);
@@ -231,6 +231,39 @@
     }
 
     // ------------------------------------------------------------ run
+    // Run sauvegardée (le téléphone a fermé le jeu) : on la reprend là où elle en était.
+    // Un combat interrompu recommence à son début (même graine : mêmes ennemis). Renvoie false
+    // s'il n'y a rien à reprendre.
+    resumeRun() {
+      const data = loadRun();
+      if (!data) return false;
+      let run;
+      try {
+        run = Run.fromSave(data);
+        if (!run.country || !run.army.length) throw new Error('run incomplète');
+      } catch (err) {
+        console.warn('Run sauvegardée illisible, ignorée :', err);
+        clearRun();
+        return false;
+      }
+      this.run = run;
+      window.__run = run;
+      this.ui.setSeed(run.seed);
+      const node = data.at === null ? null : run.node(data.at);
+      if (!node) { this.showMap(); return true; }
+      this.ui.setMode('map');
+      this.refreshResources();
+      if (node.type === 'event' && node.encounter) this.startBattle(node); // combat d'un événement
+      else this.enter(node);
+      return true;
+    }
+
+    // Sauvegarde de la run en cours (at : nœud où reprendre, null : sur la carte).
+    // Rien avant la fin du recrutement : la run n'a pas encore d'armée.
+    saveRun(at = null) {
+      if (this.run?.army.length && !this.run.over) saveRun(this.run.toSave(at));
+    }
+
     newRun(seed = randomSeed()) {
       this.ui.hideEnd();
       this.ui.hideAll();
@@ -302,6 +335,7 @@
       this.refreshResources();
       this.scene = new RunMapScene(this.run, this.ui, (node) => this.enter(node));
       window.__battle = null;
+      this.saveRun();
     }
 
     refreshResources() {
@@ -310,6 +344,7 @@
 
     async enter(node) {
       this.run.moveTo(node);
+      this.saveRun(node.id);
       if (node.type === 'rest') {
         const report = this.run.rest();
         const loot = this.run.collectRewards(node);
@@ -430,6 +465,7 @@
           if (who !== 'back') run.buy(entry, who);
         }
         this.refreshResources();
+        this.saveRun(node.id);
       }
     }
 
@@ -468,6 +504,7 @@
       });
       this.scene = battle;
       window.__battle = battle;
+      this.saveRun(node.id); // interrompu, le combat reprendra à son début
       battle.start();
     }
 
@@ -477,6 +514,7 @@
       if (win === 'retreat') {
         // L'armée garde ses niveaux et son EXP, les tombés restent tombés ; pas de butin ni de soin.
         const report = run.applyBattle(battle, { heal: false });
+        if (node.type !== 'boss') this.saveRun();
         if (node.type === 'boss') {
           this.endRun(false, "L'armée s'est repliée devant le général : le pays reste sous le joug du tyran.", 'Retraite');
           return;
@@ -495,6 +533,7 @@
       const report = run.applyBattle(battle);
       const loot = run.collectRewards(node);
       this.refreshResources();
+      if (node.type !== 'boss') this.saveRun();
       if (node.type === 'boss') {
         this.endRun(true, run.country.liberated, 'Pays libéré !');
         return;
@@ -512,6 +551,7 @@
     async endRun(win, text, title) {
       const { run } = this;
       run.over = true;
+      clearRun();
       const supplies = Math.max(META_RULES.minSuppliesPerRun, run.supplies);
       const share = Math.min(1, META_RULES.goldKept + (fortressBonuses(this.meta.upgrades).goldKept ?? 0));
       const gold = Math.floor(run.gold * share);

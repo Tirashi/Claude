@@ -109,6 +109,7 @@
     const urlSeed = Number.parseInt(new URLSearchParams(location.search).get('seed'), 10);
     // On arrive à la forteresse ; une graine passée dans l'URL sert à la première run.
     game.showFortress(Number.isFinite(urlSeed) ? urlSeed >>> 0 : null);
+    game.resumeRun(); // une run interrompue (téléphone, onglet fermé) reprend où elle en était
     requestAnimationFrame(loop);
   })();
 })();
