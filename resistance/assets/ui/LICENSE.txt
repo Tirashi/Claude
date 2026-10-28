@@ -1,0 +1,11 @@
+Cadres d'interface (frame-*.png) : « Tiny RPG - Mana Soul GUI » par tiopalada
+https://tiopalada.itch.io/tiny-rpg-mana-soul-gui
+Licence : Creative Commons Zero v1.0 Universal (CC0 1.0), domaine public.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Fichiers d'origine (renommés) :
+  frame-navy.png   <- 20250420manaSoul9SlicesA-Sheet.png
+  frame-purple.png <- 20250420manaSoul9SlicesB-Sheet.png
+  frame-button.png <- 20250420manaSoul9SlicesC-Sheet.png
+  frame-pink.png   <- 20250420manaSoul9SlicesD-Sheet.png
+  frame-orange.png <- 20250420manaSoul9SlicesF-Sheet.png

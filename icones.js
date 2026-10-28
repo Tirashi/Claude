@@ -5,6 +5,23 @@
 (function (){
 "use strict";
 const ICONS = {
+  resistance: {pal:{o:"#1a0f2e", B:"#5a8ae0", b:"#2c4fa8", h:"#ffffff", s:"#a8b4c8", y:"#ffd23f"}, map:[
+    "................",
+    ".oooooooooooooo.",
+    ".oBBBBBhsBBBBBo.",
+    ".oBbbbbhsbbbbBo.",
+    ".oBbbbbhsbbbbBo.",
+    ".oBbbyyyyyybbBo.",
+    ".oBbbbbhsbbbbBo.",
+    ".oBbbbbhsbbbbBo.",
+    "..oBbbbhsbbbBo..",
+    "..oBbbbhsbbbBo..",
+    "...oBbbhsbbBo...",
+    "...oBbbhsbbBo...",
+    "....oBbbbbBo....",
+    ".....oBbbBo.....",
+    "......oBBo......",
+    ".......oo......."]},
   lanterne: {pal:{o:"#1a0f2e", m:"#4a4a58", M:"#7a7a8a", y:"#ffd23f", h:"#fff6c2", d:"#d98a1c"}, map:[
     "......oooo......",
     ".....oMmmMo.....",
