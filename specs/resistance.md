@@ -113,3 +113,10 @@ Tour complet dans Chromium sur un téléphone (390 × 844, tactile, portrait pui
 - Choix (événements, marchand, Intendance) en vrais boutons (fond et bord visibles) ; fenêtres presque pleine largeur en portrait.
 - Pas changé : en paysage, la fiche d'unité reste posée sur la carte ; la carte garde sa taille (piste A).
 
+### Piste A : maquette (28/10)
+`maquettes/resistance-carte.html` (https://claude.ai/artifact/K154d3x8LT1wzwaHWebWBN), trois écrans de téléphone jouables sur un vrai combat (« Patrouille du gué », exporté du jeu, vrais sprites) :
+- **A, la caméra qui suit** : 9 cases de large (43 px), les 10 lignes en entier, la carte glisse au doigt et se recentre sur le soldat choisi, petite carte en coin.
+- **B, la carte couchée** : en portrait, la carte tournée d'un quart de tour (10 × 15 cases de 39 px), l'armée en bas, tout visible sans glisser ; soldats vus de dos et de face (lignes « dos » et « face » des planches du pack).
+- **C, le zoom au doigt** : toute la carte à 26 px, zoom à 44 px sur le soldat choisi, dézoom après l'action, loupe pour zoomer à la main.
+En attente du choix de l'utilisateur.
+
