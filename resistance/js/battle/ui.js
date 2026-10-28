@@ -1,8 +1,18 @@
 (() => {
   'use strict';
-  const { WEAPONS, WEAPON_TYPES, BEATS, MOVE_TYPE_NAMES, CLASSES, TRAITS, ICON_SHEETS, ITEM_ICONS, simulateAllHits, STAT_KEYS, STAT_LABELS, MAX_LEVEL, numberHtml } = Resistance;
+  const { WEAPONS, WEAPON_TYPES, BEATS, MOVE_TYPE_NAMES, CLASSES, TRAITS, ICON_SHEETS, ITEM_ICONS, ITEMS, simulateAllHits, STAT_KEYS, STAT_LABELS, MAX_LEVEL, numberHtml } = Resistance;
 
   const $ = (id) => document.getElementById(id);
+
+  // Petite image pixel (une lettre par couleur) -> adresse data: ; la main du menu d'action
+  const HAND = ['.........', 'kkkk.....', 'kwwwkkkk.', 'kwwwwwwwk', 'kwwwwkkk.', 'kwwwwk...', 'kwwwk....', 'kkkk.....', '.........'];
+  function pixelArt(rows, pal = { k: '#101830', w: '#f8f8f0' }) {
+    const c = document.createElement('canvas');
+    c.width = rows[0].length; c.height = rows.length;
+    const g = c.getContext('2d');
+    rows.forEach((row, y) => [...row].forEach((ch, x) => { if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); } }));
+    return c.toDataURL();
+  }
 
   // Icône 16×16 d'une planche (icons.js), à la taille du texte (1em = une icône).
   function iconHtml(sheetId, [col, row]) {
@@ -59,6 +69,8 @@
         hud: $('hud'), stage: $('stage'),
       };
       this.tileToScreen = tileToScreen;
+      // Petite main pixel du menu d'action (façon GBA), dessinée une fois
+      document.documentElement.style.setProperty('--main', `url(${pixelArt(HAND)})`);
       this.menuItems = [];
       this.menuIndex = 0;
       this.menuCb = null;
@@ -321,6 +333,8 @@
     }
 
     // ------------------------------------------------------------ menu
+    weaponIconHtml(w) { return weaponIcon(w); }
+    itemIconHtml(id) { return ITEMS[id]?.icon ? iconHtml('items', ITEMS[id].icon) : ''; }
     showMenu(items, unit, cb) {
       this.menuItems = items;
       this.menuIndex = 0;
@@ -328,8 +342,9 @@
       const m = this.el.menu;
       m.innerHTML = '';
       items.forEach((it, i) => {
+        // it : { id, label, icon (HTML, facultatif), detail (texte à droite, facultatif) }
         const b = document.createElement('button');
-        b.textContent = it.label;
+        b.innerHTML = `${it.icon ?? ''}<span>${it.label}</span>${it.detail ? `<span class="det">${it.detail}</span>` : ''}`;
         b.addEventListener('click', (e) => { e.stopPropagation(); cb(it.id); });
         b.addEventListener('mouseenter', () => { this.menuIndex = i; this.paintMenu(); });
         m.appendChild(b);

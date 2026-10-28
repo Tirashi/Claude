@@ -477,8 +477,17 @@
     openMenu() {
       const u = this.selected;
       const items = [];
-      if (this.enemiesInRange(u).length) items.push({ id: 'attack', label: 'Attaquer' });
-      if (this.usableItems(u).length) items.push({ id: 'item', label: 'Objet' });
+      // Détail à droite de chaque action : la cible et la précision, les objets du sac
+      const foes = this.enemiesInRange(u);
+      if (foes.length) {
+        const detail = foes.length > 1 ? `${foes.length} cibles` : `${foes[0].name} · ${forecast(this, u, foes[0], u).a.hit} %`;
+        items.push({ id: 'attack', label: 'Attaquer', detail, icon: this.ui.weaponIconHtml(u.weapon) });
+      }
+      const usable = this.usableItems(u);
+      if (usable.length) {
+        const [id, n] = usable[0];
+        items.push({ id: 'item', label: 'Objet', detail: usable.length > 1 ? `${usable.length} objets` : `${ITEMS[id].name} ×${n}`, icon: this.ui.itemIconHtml(id) });
+      }
       items.push({ id: 'wait', label: 'Attendre' });
       this.state = 'menu';
       this.menuLevel = null;
@@ -488,7 +497,7 @@
 
     openItemMenu() {
       const u = this.selected;
-      const items = this.usableItems(u).map(([id, n]) => ({ id, label: `${ITEMS[id].name} ×${n}` }));
+      const items = this.usableItems(u).map(([id, n]) => ({ id, label: ITEMS[id].name, detail: `×${n}`, icon: this.ui.itemIconHtml(id) }));
       this.menuLevel = 'items';
       this.ui.showMenu(items, u, (id) => this.useItem(u, id));
     }

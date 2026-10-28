@@ -442,3 +442,71 @@ button { touch-action: manipulation; }
   /* Fenêtres : presque toute la largeur */
   .run-box, .end-box { width: calc(100vw - 16px); max-width: 32em; min-width: 0; box-sizing: border-box; }
 }
+
+/* ================= Boutons façon GBA (maquette des boutons, direction A, 28/10) =================
+   Fenêtre bleue à bord blanc, texte blanc ombré ; le bouton principal a un bord et un texte
+   dorés, Retraite un bord rose. Le menu d'action est une liste avec la petite main qui pointe. */
+:root {
+  --gba-fond: linear-gradient(#2a3a9a, #1a2266);
+  --gba-bord: #e8ecff;
+  --gba-or: #f8d870;
+  --gba-rose: #ff9c9c;
+}
+.end-box button, .run-actions button, #toolbar button, #toolbar #ludo-btn, #forecast .fc-go {
+  border-image: none;
+  border: 3px solid var(--gba-bord);
+  border-radius: 6px;
+  background: var(--gba-fond);
+  box-shadow: 0 0 0 2px var(--ink);
+  color: var(--text);
+  text-shadow: 2px 2px 0 var(--ink);
+  margin: 2px;
+}
+#toolbar #end-turn-btn, #toolbar #depart-btn, .end-box #restart-btn, .run-actions button.primary, #forecast .fc-go {
+  border-image: none;
+  border-color: var(--gba-or);
+  color: var(--gba-or);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+#toolbar #retreat-btn { border-image: none; border-color: var(--gba-rose); color: #ffc8c8; text-shadow: 2px 2px 0 var(--ink); }
+.end-box button:active, .run-actions button:active, #toolbar button:active, #forecast .fc-go:active { transform: translateY(2px); filter: none; }
+#toolbar button:disabled { opacity: .4; }
+
+/* Menu d'action : fenêtre GBA, une action par ligne, détail à droite */
+.panel.menu {
+  border-image: none;
+  border: 3px solid var(--gba-bord);
+  border-radius: 6px;
+  background: var(--gba-fond);
+  box-shadow: 0 0 0 2px var(--ink), inset 0 0 0 2px #5a6ad8;
+  filter: none;
+  padding: 4px;
+}
+.menu button {
+  display: flex; align-items: center; gap: .5em;
+  font-weight: 700; text-shadow: 2px 2px 0 var(--ink);
+  padding: .45em .7em .45em 1.7em;
+  border-radius: 4px;
+}
+.menu button .det { margin-left: auto; padding-left: 1em; font-weight: 400; font-size: .85em; color: var(--gba-or); white-space: nowrap; }
+.menu button .icon { font-size: 1.1em; }
+.menu button.active, .menu button:hover { background: rgba(255, 255, 255, .14); }
+/* La petite main (pixel art 9×9, dessinée par ui.js dans --main) remplace le triangle */
+.menu button.active::before {
+  left: .4em; width: 1em; height: 1em;
+  clip-path: none; filter: none;
+  background: var(--main) center / contain no-repeat;
+  image-rendering: pixelated;
+  animation: pointe .6s steps(2) infinite;
+}
+@keyframes pointe { 50% { transform: translate(3px, -50%); } }
+@media (max-aspect-ratio: 1/1) {
+  #hud .menu.docked { display: flex; flex-direction: column; gap: 0; padding: 4px; }
+  #hud .menu.docked button {
+    border: 0; border-image: none; background: none; color: var(--text);
+    text-align: left; padding: 11px 12px 11px 34px; font-size: 19px;
+  }
+  #hud .menu.docked button:first-child { border-image: none; color: var(--text); text-shadow: 2px 2px 0 var(--ink); }
+  #hud .menu.docked button.active { background: rgba(255, 255, 255, .14); }
+  #hud .menu.docked button.active::before { display: block; left: 10px; width: 16px; height: 16px; }
+}
