@@ -3,7 +3,7 @@
 // Même interface d'entrées que les autres écrans (hover, click, moveCursor, confirm…).
 (() => {
   'use strict';
-  const { TILE, img, PIXEL_FONT, TERRAIN, FORTRESS, ITEM_ICONS, EMBLEM_GLYPHS, iconHtml, numberHtml, drawWorldSprite, drawPixelText, prepText } = Resistance;
+  const { TILE, img, PIXEL_FONT, TERRAIN, FORTRESS, ITEM_ICONS, EMBLEM_GLYPHS, iconHtml, numberHtml, drawWorldSprite, spriteRect, drawPixelText, prepText, place, cacheValid, storeCache } = Resistance;
 
   const suppliesIcon = () => iconHtml(ITEM_ICONS.supplies.sheet, ITEM_ICONS.supplies.at);
 
@@ -152,8 +152,7 @@
         }
       }
     }
-    renderer.mapCache = c;
-    renderer.mapOwner = scene;
+    storeCache(renderer, scene, c);
   }
 
   // Écusson 11×11 en haut à droite d'un bâtiment (case tx, ty) : contour sombre, fond de la
@@ -179,46 +178,55 @@
     ctx.fillRect(0, 0, renderer.canvas.width, renderer.canvas.height);
     ctx.setTransform(renderer.scale, 0, 0, renderer.scale, 0, 0);
     ctx.imageSmoothingEnabled = false;
-    if (renderer.mapOwner !== s) buildBackground(renderer, s);
+    if (!cacheValid(renderer, s)) buildBackground(renderer, s);
     ctx.drawImage(renderer.mapCache, 0, 0);
 
     for (const spot of s.spots) {
       const [x, y] = spot.pos;
-      if (spot.sprite) { // QG, Intendance : sans niveaux
-        drawWorldSprite(ctx, spot.sprite, x, y);
-        if (spot.emblem) drawEmblem(ctx, spot.emblem, x, y);
-        continue;
-      }
-      const lvl = s.level(spot.id);
-      // Champs (Ferme) : terre labourée, blé mûr une fois le niveau atteint
+      // chaque bâtiment est placé d'un bloc (couché en portrait), autour du centre de son image
+      const sp = spot.sprite ?? spot.sprites?.[0];
+      const r = sp ? spriteRect(sp, x, y) : { dx: x * TILE, dy: y * TILE, w: TILE, h: TILE };
+      const lvl = spot.sprite ? 0 : s.level(spot.id);
+      // Champs (Ferme) : terre labourée, blé mûr une fois le niveau atteint ; chacun sur sa case
       for (const f of spot.fields?.spots ?? []) {
-        drawWorldSprite(ctx, lvl >= f.minLevel ? spot.fields.ripe : spot.fields.empty, x + f.dx, y + f.dy);
+        const fx = x + f.dx, fy = y + f.dy;
+        place(ctx, fx * TILE + 8, fy * TILE + 8,
+          () => drawWorldSprite(ctx, lvl >= f.minLevel ? spot.fields.ripe : spot.fields.empty, fx, fy));
       }
-      if (lvl || spot.base) drawWorldSprite(ctx, lvl ? spot.sprites[lvl - 1] : spot.base, x, y);
-      else {
-        // Chantier : le bâtiment à venir, en grisé et transparent
-        ctx.save();
-        ctx.globalAlpha = 0.55;
-        ctx.filter = 'grayscale(1)';
-        drawWorldSprite(ctx, spot.sprites[0], x, y);
-        ctx.restore();
-      }
-      drawEmblem(ctx, spot.emblem, x, y);
-      // Pastilles de niveau sous le bâtiment
-      const max = spot.costs.length, px = x * TILE + 8 - (max * 4 - 1) / 2, py = (y + 1) * TILE + 1;
-      for (let i = 0; i < max; i++) {
-        ctx.fillStyle = '#101830';
-        ctx.fillRect(px + i * 4 - 1, py - 1, 5, 4);
-        ctx.fillStyle = i < lvl ? '#ffd34d' : '#4a5480';
-        ctx.fillRect(px + i * 4, py, 3, 2);
-      }
+      place(ctx, r.dx + r.w / 2, r.dy + r.h / 2, () => {
+        if (spot.sprite) { // QG, Intendance : sans niveaux
+          drawWorldSprite(ctx, spot.sprite, x, y);
+          if (spot.emblem) drawEmblem(ctx, spot.emblem, x, y);
+          return;
+        }
+        if (lvl || spot.base) drawWorldSprite(ctx, lvl ? spot.sprites[lvl - 1] : spot.base, x, y);
+        else {
+          // Chantier : le bâtiment à venir, en grisé et transparent
+          ctx.save();
+          ctx.globalAlpha = 0.55;
+          ctx.filter = 'grayscale(1)';
+          drawWorldSprite(ctx, spot.sprites[0], x, y);
+          ctx.restore();
+        }
+        drawEmblem(ctx, spot.emblem, x, y);
+        // Pastilles de niveau sous le bâtiment
+        const max = spot.costs.length, px = x * TILE + 8 - (max * 4 - 1) / 2, py = (y + 1) * TILE + 1;
+        for (let i = 0; i < max; i++) {
+          ctx.fillStyle = '#101830';
+          ctx.fillRect(px + i * 4 - 1, py - 1, 5, 4);
+          ctx.fillStyle = i < lvl ? '#ffd34d' : '#4a5480';
+          ctx.fillRect(px + i * 4, py, 3, 2);
+        }
+      });
     }
 
     // Curseur sur le bâtiment en avant
     const f = s.focus, frame = Math.floor(t / 400) % 2, [fw, fh] = f.size;
     const cx = f.pos[0] * TILE + 8 - (fw * TILE) / 2, cy = (f.pos[1] + 1 - fh) * TILE;
-    if (fw === 1) ctx.drawImage(img('cursor'), frame * 32, 0, 32, 32, cx - 8, cy - 8, 32, 32);
-    else ctx.drawImage(img('cursor'), frame * 32, 0, 32, 32, cx - 8, cy - 8, fw * TILE + 16, fh * TILE + 16);
+    place(ctx, cx + (fw * TILE) / 2, cy + (fh * TILE) / 2, () => {
+      if (fw === 1) ctx.drawImage(img('cursor'), frame * 32, 0, 32, 32, cx - 8, cy - 8, 32, 32);
+      else ctx.drawImage(img('cursor'), frame * 32, 0, 32, 32, cx - 8, cy - 8, fw * TILE + 16, fh * TILE + 16);
+    });
 
     // Messages « Niveau 2 ! »
     for (const fl of s.floats) {
@@ -227,7 +235,7 @@
       ctx.globalAlpha = p > 0.7 ? (1 - p) / 0.3 : 1;
       ctx.font = `bold 8px ${PIXEL_FONT}, sans-serif`;
       const x = fl.spot.pos[0] * TILE + 8, y = fl.spot.pos[1] * TILE - 4 - p * 10;
-      drawPixelText(ctx, fl.text, x, Math.round(y), '#ffe066');
+      place(ctx, x, fl.spot.pos[1] * TILE + 8, () => drawPixelText(ctx, fl.text, x, Math.round(y), '#ffe066'));
       ctx.globalAlpha = 1;
     }
   }

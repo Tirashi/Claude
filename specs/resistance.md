@@ -119,4 +119,8 @@ Tour complet dans Chromium sur un téléphone (390 × 844, tactile, portrait pui
 - **B, la carte couchée** : en portrait, la carte tournée d'un quart de tour (10 × 15 cases de 39 px), l'armée en bas, tout visible sans glisser ; soldats vus de dos et de face (lignes « dos » et « face » des planches du pack).
 - **C, le zoom au doigt** : toute la carte à 26 px, zoom à 44 px sur le soldat choisi, dézoom après l'action, loupe pour zoomer à la main.
 En attente du choix de l'utilisateur.
+**B choisie** (28/10), étendue aux trois écrans à la demande de l'utilisateur, et faite :
+- `js/core/view.js` : `VIEW.portrait` (écran plus haut que large, réglé par `fit()` dans `main.js`), `toCell` / `fromCell` (case du jeu ↔ case affichée : `(x, y) → (y, 14 − x)`), `toPx`, `place(ctx, ax, ay, fn)` (dessine un objet écrit en coordonnées paysage à la place de son point d'ancrage, sans le tourner), `faceOf` (droite → dos, gauche → face), `cacheValid` / `storeCache` (fond refait si l'orientation change). Les règles, l'IA, la sauvegarde et les écrans gardent leurs coordonnées paysage ; seuls le dessin et le toucher passent par la vue.
+- Combat (`renderer.js`), carte de campagne (`runmap.js` : le camp en bas, le château du général en haut, chemins remis en place point par point) et forteresse (`fortress.js` : chaque bâtiment d'un bloc, les champs case par case).
+- Portrait : la carte fait 160 × 240 pixels de jeu (39 px par case sur un écran de 390 px) ; barre de combat sur une rangée (Retraite, Annuler, Fin du tour ; le numéro du tour est dans le bandeau de phase) ; la fiche d'unité prend toute la largeur et cache la case de terrain (toucher une case vide la montre).
 

@@ -429,11 +429,16 @@ button { touch-action: manipulation; }
   }
   #hud .menu.docked button.active::before { display: none; }
   #toolbar { margin-top: auto; padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)); }
-  /* Combat : « Tour n » et Retraite (petite) en haut, Annuler et Fin du tour en grand dessous */
-  body[data-mode="battle"] #turn-label { order: 0; flex: 1 1 calc(100% - 150px); }
-  body[data-mode="battle"] #toolbar #retreat-btn { order: 1; padding: 6px 12px; font-size: 14px; }
-  body[data-mode="battle"] #toolbar #cancel-btn { order: 2; flex: 1 1 40%; padding: 14px 10px; }
-  body[data-mode="battle"] #toolbar #end-turn-btn { order: 3; flex: 1 1 40%; padding: 14px 10px; }
+  /* Combat : une seule rangée (Retraite petite, Annuler, Fin du tour) pour laisser la place à la
+     carte couchée et à la fiche ; le numéro du tour s'affiche dans le bandeau de chaque phase */
+  body[data-mode="battle"] #toolbar { flex-wrap: nowrap; gap: 6px; }
+  body[data-mode="battle"] #turn-label { display: none; }
+  body[data-mode="battle"] #toolbar #retreat-btn { order: -1; flex: 0 0 auto; padding: 12px 8px; font-size: 14px; }
+  body[data-mode="battle"] #toolbar #cancel-btn { flex: 1 1 0; padding: 14px 6px; }
+  body[data-mode="battle"] #toolbar #end-turn-btn { flex: 1.3 1 0; padding: 14px 6px; }
+  /* La fiche d'unité prend toute la largeur ; la case (terrain) revient quand on touche une case vide */
+  #unit-panel:not(.hidden) ~ #terrain-panel { display: none; }
+  #unit-panel { flex: 1 1 100%; }
   /* Fenêtres : presque toute la largeur */
   .run-box, .end-box { width: calc(100vw - 16px); max-width: 32em; min-width: 0; box-sizing: border-box; }
 }

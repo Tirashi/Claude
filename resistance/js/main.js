@@ -1,9 +1,10 @@
 (() => {
   'use strict';
-  const { loadAssets, TILE, Renderer, UI, Game, validateData, installPixelDigits } = Resistance;
+  const { loadAssets, TILE, Renderer, UI, Game, validateData, installPixelDigits, VIEW, viewSize, fromCell } = Resistance;
 
-  const VIEW_W = 15 * TILE; // 240 px : la résolution de la Game Boy Advance
-  const VIEW_H = 10 * TILE; // 160 px
+  // 240 × 160 px (la résolution de la Game Boy Advance) ; 160 × 240 en portrait, carte couchée
+  let VIEW_W = 15 * TILE;
+  let VIEW_H = 10 * TILE;
 
   const canvas = document.getElementById('game');
   const stage = document.getElementById('stage');
@@ -29,8 +30,10 @@
   function fit() {
     const dpr = window.devicePixelRatio || 1;
     const portrait = window.innerWidth <= window.innerHeight;
+    VIEW.portrait = portrait; // carte couchée sur un écran en hauteur (js/core/view.js)
+    ({ w: VIEW_W, h: VIEW_H } = viewSize());
     const maxW = window.innerWidth - (portrait ? 8 : 16);
-    const maxH = window.innerHeight - (portrait ? 250 : 64);
+    const maxH = window.innerHeight - (portrait ? 280 : 64);
     const raw = Math.min((maxW * dpr) / VIEW_W, (maxH * dpr) / VIEW_H);
     // Écrans haute densité (téléphones) : un facteur non entier reste invisible à l'œil
     // et permet d'utiliser toute la largeur. Sinon, facteur entier pour des pixels parfaits.
@@ -45,10 +48,11 @@
 
   function tileFromEvent(e) {
     const r = canvas.getBoundingClientRect();
-    return {
-      x: Math.floor(((e.clientX - r.left) / r.width) * VIEW_W / TILE),
-      y: Math.floor(((e.clientY - r.top) / r.height) * VIEW_H / TILE),
-    };
+    // case affichée -> case du jeu (la carte peut être couchée)
+    return fromCell(
+      Math.floor(((e.clientX - r.left) / r.width) * VIEW_W / TILE),
+      Math.floor(((e.clientY - r.top) / r.height) * VIEW_H / TILE),
+    );
   }
 
   canvas.addEventListener('pointermove', (e) => {

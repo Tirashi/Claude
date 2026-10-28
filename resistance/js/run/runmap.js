@@ -2,7 +2,9 @@
 // (15×10 cases de 16 px), pour réutiliser curseur, cases animées et sprites.
 (() => {
   'use strict';
-  const { TILE, drawBossMark, img, grayImg, CLASSES, TERRAIN, ENCOUNTERS, encounterIcon, NODE_TYPES, MAP_SPRITES } = Resistance;
+  const { TILE, drawBossMark, img, grayImg, CLASSES, TERRAIN, ENCOUNTERS, encounterIcon, NODE_TYPES, MAP_SPRITES, toPx, place, faceOf, cacheValid, storeCache } = Resistance;
+
+  const DIR_ROW = { right: 0, left: 0, down: 5, up: 10 };
 
   const START = { x: 0, y: 5 };   // camp rebelle (bannière), à gauche du premier étage
   const WALK_MS = 450;            // trajet de l'armée vers le nœud choisi
@@ -158,12 +160,11 @@
         }
       }
     }
-    renderer.mapCache = c;
-    renderer.mapOwner = run;
+    storeCache(renderer, run, c);
   }
 
   function drawPath(ctx, a, b, lit) {
-    const p = center(a), q = center(b);
+    const ca = center(a), cb = center(b), p = toPx(ca.x, ca.y), q = toPx(cb.x, cb.y);
     const dist = Math.hypot(q.x - p.x, q.y - p.y);
     const steps = Math.max(2, Math.round(dist / 5));
     for (let i = 1; i < steps; i++) {
@@ -183,7 +184,10 @@
     }
   }
 
-  function drawSprite(ctx, sheet, col, row, x, y, flip) {
+  // Sprite de soldat (32×32) : anim = ligne d'animation (0 attente, 1 marche), facing = 'right'
+  // ou 'left' sur la carte en paysage (faceOf donne la direction affichée)
+  function drawSprite(ctx, sheet, col, anim, x, y, facing) {
+    const f = faceOf(facing), row = DIR_ROW[f] + anim, flip = f === 'left';
     if (flip) {
       ctx.save();
       ctx.translate(x + 32, y);
@@ -235,6 +239,10 @@
   const drawBuilding = (ctx, id, x, y, bob = 0) => drawWorldSprite(ctx, MAP_SPRITES[id], x, y, bob);
 
   function drawNode(ctx, s, n, t) {
+    place(ctx, n.x * TILE + 8, n.y * TILE + 8, () => drawNodeHere(ctx, s, n, t));
+  }
+
+  function drawNodeHere(ctx, s, n, t) {
     const { run } = s;
     const px = n.x * TILE, py = n.y * TILE;
     const visited = run.visited.has(n.id);
@@ -256,7 +264,7 @@
     const sprite = `${CLASSES[encounterIcon(ENCOUNTERS[n.encounter])].sprite}_red`;
     ctx.globalAlpha = visited || selectable ? 1 : 0.8;
     const col = selectable ? Math.floor(t / 220) % 4 : 0;
-    drawSprite(ctx, visited ? grayImg(sprite) : img(sprite), col, 0, px - 8, py - 8, true);
+    drawSprite(ctx, visited ? grayImg(sprite) : img(sprite), col, 0, px - 8, py - 8, 'left');
     ctx.globalAlpha = 1;
     if (visited) return;
     if (n.type === 'boss') drawBossMark(ctx, px, py, t);
@@ -269,17 +277,18 @@
     if (!leader) return;
     const sheet = img(`${CLASSES[leader.cls].sprite}_blue`);
     let { x, y } = run.current ?? START;
-    let row = 0, col = Math.floor(t / 220) % 4, flip = false;
+    let anim = 0, col = Math.floor(t / 220) % 4, facing = 'right';
     const w = s.walk;
     if (w && w.start !== null) {
       const p = Math.min(1, (t - w.start) / WALK_MS);
       x = w.from.x + (w.to.x - w.from.x) * p;
       y = w.from.y + (w.to.y - w.from.y) * p;
-      row = 1;                         // animation de marche
+      anim = 1;                        // animation de marche
       col = Math.floor(t / 100) % 4;
-      flip = w.to.x < w.from.x;
+      if (w.to.x < w.from.x) facing = 'left';
     }
-    drawSprite(ctx, sheet, col, row, Math.round(x * TILE) - 8, Math.round(y * TILE) - 8, flip);
+    const px = Math.round(x * TILE), py = Math.round(y * TILE);
+    place(ctx, px + 8, py + 8, () => drawSprite(ctx, sheet, col, anim, px - 8, py - 8, facing));
   }
 
   function drawRunMap(renderer, s) {
@@ -292,7 +301,7 @@
     ctx.setTransform(renderer.scale, 0, 0, renderer.scale, 0, 0);
     ctx.imageSmoothingEnabled = false;
 
-    if (renderer.mapOwner !== run) buildBackground(renderer, run);
+    if (!cacheValid(renderer, run)) buildBackground(renderer, run);
     ctx.drawImage(renderer.mapCache, 0, 0);
 
     const nodes = run.map.nodes;
@@ -302,8 +311,10 @@
       for (const id of n.next) drawPath(ctx, n, nodes[id], run.visited.has(n.id) && reached(nodes[id]));
     }
     for (const n of [...nodes].sort((a, b) => a.y - b.y)) drawNode(ctx, s, n, t);
-    drawBuilding(ctx, 'camp', START.x, START.y);
-    drawBanner(ctx, t);
+    place(ctx, START.x * TILE + 8, START.y * TILE + 8, () => {
+      drawBuilding(ctx, 'camp', START.x, START.y);
+      drawBanner(ctx, t);
+    });
     drawArmy(ctx, s, t);
 
     if (s.focus && !s.walk) {
@@ -312,7 +323,8 @@
       const sprite = MAP_SPRITES[s.focus.type];
       const r = sprite && (sprite.size?.[0] ?? 1) > 1 ? spriteRect(sprite, s.focus.x, s.focus.y)
         : { dx: s.focus.x * TILE, dy: s.focus.y * TILE, w: TILE, h: TILE };
-      ctx.drawImage(img('cursor'), frame * 32, 0, 32, 32, r.dx - 8, r.dy - 8, r.w + 16, r.h + 16);
+      place(ctx, r.dx + r.w / 2, r.dy + r.h / 2,
+        () => ctx.drawImage(img('cursor'), frame * 32, 0, 32, 32, r.dx - 8, r.dy - 8, r.w + 16, r.h + 16));
     }
   }
 

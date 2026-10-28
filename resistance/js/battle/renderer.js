@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const { img, grayImg, PIXEL_FONT, TILE, key, triangle, drawPixelText } = Resistance;
+  const { img, grayImg, PIXEL_FONT, TILE, key, triangle, drawPixelText, toCell, place, faceOf, cacheValid, storeCache } = Resistance;
 
   const DIR_ROW = { right: 0, left: 0, down: 5, up: 10 };
   const ANIM_ROW = { idle: 0, walk: 1, attack: 2, death: 3 };
@@ -73,14 +73,13 @@
           if (overlay) put(overlay[h % overlay.length], x, y);
         }
       }
-      this.mapCache = c;
-      this.mapOwner = battle;
+      storeCache(this, battle, c);
     }
 
     draw(battle) {
       const { ctx } = this;
       const t = battle.time;
-      if (this.mapOwner !== battle) this.buildMap(battle);
+      if (!cacheValid(this, battle)) this.buildMap(battle);
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = '#0d1020';
@@ -110,7 +109,8 @@
       const paint = (image, keys) => {
         for (const k of keys) {
           const [x, y] = k.split(',').map(Number);
-          this.ctx.drawImage(image, frame * TILE, 0, TILE, TILE, x * TILE, y * TILE, TILE, TILE);
+          const c = toCell(x, y);
+          this.ctx.drawImage(image, frame * TILE, 0, TILE, TILE, c.x * TILE, c.y * TILE, TILE, TILE);
         }
       };
       if (battle.state === 'selected' && battle.moveRes) {
@@ -128,7 +128,8 @@
       if (battle.state === 'over') return;
       const frame = Math.floor(t / 400) % 2;
       const { x, y } = battle.cursor;
-      this.ctx.drawImage(img('cursor'), frame * 32, 0, 32, 32, x * TILE - 8, y * TILE - 8, 32, 32);
+      place(this.ctx, x * TILE + 8, y * TILE + 8,
+        () => this.ctx.drawImage(img('cursor'), frame * 32, 0, 32, 32, x * TILE - 8, y * TILE - 8, 32, 32));
     }
 
     frameOf(u, t) {
@@ -141,16 +142,21 @@
     }
 
     drawUnit(u, battle, t) {
+      place(this.ctx, u.px + 8, u.py + 8, () => this.drawUnitHere(u, battle, t));
+    }
+
+    drawUnitHere(u, battle, t) {
       const { ctx } = this;
+      const facing = faceOf(u.facing);
       const sheet = u.acted && u.team === 'player' && battle.phase === 'player' ? grayImg(u.sprite) : img(u.sprite);
       const col = this.frameOf(u, t);
-      const row = DIR_ROW[u.facing] + ANIM_ROW[u.anim];
+      const row = DIR_ROW[facing] + ANIM_ROW[u.anim];
       let x = u.px - 8, y = u.py - 8;
       if (t < u.hitShakeUntil) x += Math.round(Math.sin(t / 15) * 1.5);
 
       ctx.save();
       ctx.globalAlpha = u.alpha;
-      if (u.facing === 'left') {
+      if (facing === 'left') {
         ctx.translate(x + 32, y);
         ctx.scale(-1, 1);
         ctx.drawImage(sheet, col * 32, row * 32, 32, 32, 0, 0, 32, 32);
@@ -174,11 +180,15 @@
       for (const e of battle.units) {
         if (!e.alive || e.team === sel.team) continue;
         const tri = triangle(sel.weapon, e.weapon);
-        if (tri) drawArrow(this.ctx, e.px + 13, e.py - 3 + (tri > 0 ? -bob : bob), tri > 0);
+        if (tri) place(this.ctx, e.px + 8, e.py + 8, () => drawArrow(this.ctx, e.px + 13, e.py - 3 + (tri > 0 ? -bob : bob), tri > 0));
       }
     }
 
     drawHpBar(u) {
+      place(this.ctx, u.px + 8, u.py + 8, () => this.drawHpBarHere(u));
+    }
+
+    drawHpBarHere(u) {
       const { ctx } = this;
       const w = 12, x = u.px + 2, y = u.py + 15;
       ctx.globalAlpha = u.alpha;
@@ -195,7 +205,7 @@
       for (const e of battle.effects) {
         if (e.type !== 'crit') continue;
         const f = Math.min(3, Math.floor((t - e.start) / 80));
-        this.ctx.drawImage(img('crit'), f * 32, 0, 32, 32, e.x - 8, e.y - 10, 32, 32);
+        place(this.ctx, e.x + 8, e.y + 8, () => this.ctx.drawImage(img('crit'), f * 32, 0, 32, 32, e.x - 8, e.y - 10, 32, 32));
       }
     }
 
@@ -206,7 +216,7 @@
         const y = f.y - Math.min(1, p * 3) * 8;
         ctx.globalAlpha = p > 0.75 ? (1 - p) * 4 : 1;
         ctx.font = `bold ${f.big ? 9 : 8}px ${PIXEL_FONT}, sans-serif`;
-        drawPixelText(ctx, f.text, f.x, Math.round(y), f.color); // chiffres en glyphes pixel lisibles
+        place(ctx, f.x, f.y + 10, () => drawPixelText(ctx, f.text, f.x, Math.round(y), f.color)); // chiffres en glyphes pixel lisibles
         ctx.globalAlpha = 1;
       }
     }
