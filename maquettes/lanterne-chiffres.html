@@ -1,0 +1,98 @@
+<title>Chiffres de la Lanterne</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&family=VT323&family=Silkscreen:wght@400;700&family=Jersey+10&family=Press+Start+2P&display=swap">
+<style>
+  /* Une colonne de cartes : la même fenêtre de jeu (niveau, équipe, combat, objets) avec les chiffres dans une police différente.
+     Le texte reste en Pixelify Sans, la police du jeu. */
+  :root {
+    --nuit: #121022; --fenetre: #1d1a2e; --bord: #c9a75a; --ligne: #3a3456;
+    --texte: #f4ecd8; --doux: #b9b0d0; --or: #f2c45a; --vert: #7cff8a; --rouge: #ff7a6a; --bleu: #6aa8ff;
+    --texte-jeu: 'Pixelify Sans', system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--nuit); color: var(--texte); font-family: var(--texte-jeu); margin: 0; }
+  main { max-width: 760px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1 { font-size: 24px; color: var(--or); margin: 0 0 6px; text-wrap: balance; }
+  .intro { color: var(--doux); font-size: 15px; line-height: 1.4; margin: 0 0 18px; max-width: 62ch; }
+  .cartes { display: grid; gap: 16px; }
+  .carte { background: var(--fenetre); border: 3px solid var(--ligne); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .carte.actuelle { border-color: #6a5c8c; }
+  .entete { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .entete b { font-size: 19px; color: var(--or); }
+  .entete span { color: var(--doux); font-size: 13px; }
+  .scene { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .bloc { background: rgba(0, 0, 0, .25); border: 2px solid var(--bord); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+  .bloc h3 { margin: 0 0 6px; font-size: 13px; color: var(--doux); font-weight: 400; letter-spacing: .5px; }
+  .n { font-family: var(--chiffres); font-variant-numeric: tabular-nums; }
+  .niv-titre { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .niv-titre b { font-size: 16px; } .niv-titre .n { color: var(--or); font-size: calc(16px * var(--echelle)); }
+  .stat { display: grid; grid-template-columns: 1fr 44px 40px; align-items: center; padding: 3px 4px; border-bottom: 1px solid var(--ligne); font-size: 15px; }
+  .stat.monte { background: rgba(124, 255, 138, .1); }
+  .stat .n { text-align: right; font-size: calc(16px * var(--echelle)); }
+  .stat .gain { color: var(--vert); font-weight: 700; }
+  .heros b { font-size: 15px; color: var(--or); }
+  .jauge { display: flex; justify-content: space-between; font-size: 14px; margin-top: 4px; }
+  .jauge .n { font-size: calc(15px * var(--echelle)); }
+  .barre { height: 5px; background: #0c0a16; border-radius: 3px; overflow: hidden; margin-top: 2px; }
+  .barre i { display: block; height: 100%; background: var(--rouge); } .barre.pm i { background: var(--bleu); }
+  .degats { display: flex; gap: 14px; align-items: flex-end; margin: 4px 0 8px; flex-wrap: wrap; }
+  .degats .n { font-size: calc(26px * var(--echelle)); color: #fff; text-shadow: 0 2px 0 #000; }
+  .degats .n.crit { color: var(--or); font-size: calc(32px * var(--echelle)); }
+  .degats .n.soin { color: var(--vert); }
+  .petit { font-size: 14px; color: var(--doux); }
+  .petit .n { color: var(--texte); font-size: calc(15px * var(--echelle)); }
+  .test { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--ligne); display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-size: 13px; color: var(--doux); }
+  .test .n { font-size: calc(22px * var(--echelle)); color: var(--texte); letter-spacing: 1px; }
+  .avis { margin: 10px 0 0; font-size: 14px; line-height: 1.4; color: var(--doux); }
+  .avis b { color: var(--texte); font-weight: 400; }
+</style>
+
+<main>
+  <h1>Chiffres de la Lanterne</h1>
+  <p class="intro">La même fenêtre du jeu cinq fois : seuls les chiffres changent de police, le texte reste en Pixelify Sans. Regarde surtout les <b>2</b> (qui ressemblent à des 8) et les <b>5</b> (qui ressemblent à des S) dans la police actuelle, puis choisis la lettre qui se lit le mieux sur ton téléphone.</p>
+  <div class="cartes" id="cartes"></div>
+</main>
+
+<script>
+  // police des chiffres, échelle (pour qu'ils aient à peu près la même taille), avis
+  const POLICES = [
+    { lettre: 'A', nom: 'Pixelify Sans', note: 'police actuelle', famille: "'Pixelify Sans', monospace", echelle: 1, actuelle: true,
+      avis: 'Belle avec le reste du jeu, mais le 5 et le S sont presque pareils, et en petit le 2 se confond avec le 8.' },
+    { lettre: 'B', nom: 'VT323', note: 'terminal rétro', famille: "'VT323', monospace", echelle: 1.3,
+      avis: 'Chiffres fins et très nets, faciles à lire en colonne. Un peu « écran d\'ordinateur » à côté du texte.' },
+    { lettre: 'C', nom: 'Silkscreen', note: 'pixel carré', famille: "'Silkscreen', monospace", echelle: .82,
+      avis: 'Pixel carré, très lisible même petit. Plus large, il prend un peu plus de place.' },
+    { lettre: 'D', nom: 'Jersey 10', note: 'pixel arrondi', famille: "'Jersey 10', monospace", echelle: 1.25,
+      avis: 'Proche de l\'esprit du jeu, chiffres hauts et bien distincts.' },
+    { lettre: 'E', nom: 'Press Start 2P', note: 'console 8 bits', famille: "'Press Start 2P', monospace", echelle: .62,
+      avis: 'La police de l\'accueil de la Ludothèque : impossible de confondre deux chiffres, mais très large.' }
+  ];
+  const n = (t, cls = '') => `<span class="n ${cls}">${t}</span>`;
+  const stats = [['PV', 30, 36], ['PM', 4, 5], ['Force', 9, 11], ['Défense', 8, 10], ['Magie', 2, 2], ['Vitesse', 5, 6]];
+  document.getElementById('cartes').innerHTML = POLICES.map(p => `
+    <section class="carte${p.actuelle ? ' actuelle' : ''}" style="--chiffres: ${p.famille}; --echelle: ${p.echelle}">
+      <div class="entete"><b>${p.lettre} · ${p.nom}</b><span>${p.note}</span></div>
+      <div class="scene">
+        <div class="bloc">
+          <h3>MONTÉE DE NIVEAU</h3>
+          <div class="niv-titre"><b>Alden</b>${n('NIVEAU 2')}</div>
+          ${stats.map(([nom, a, b]) => `<div class="stat${b > a ? ' monte' : ''}"><span>${nom}</span>${n(b)}${n(b > a ? '+' + (b - a) : '', 'gain')}</div>`).join('')}
+        </div>
+        <div class="bloc">
+          <h3>EN COMBAT</h3>
+          <div class="heros"><b>Vérène</b>
+            <div class="jauge"><span>PV</span>${n('25/28')}</div><div class="barre"><i style="width:89%"></i></div>
+            <div class="jauge"><span>PM</span>${n('15/15')}</div><div class="barre pm"><i style="width:100%"></i></div>
+          </div>
+          <div class="degats">${n('-12')}${n('-25', 'crit')}${n('+50', 'soin')}</div>
+          <div class="petit">Chance de fuir : ${n('65 %')}</div>
+          <div class="petit">Herbe × ${n('2')} · Fiole bleue × ${n('5')}</div>
+          <div class="petit">Roi des aulnes · PV ${n('258/300')}</div>
+        </div>
+      </div>
+      <div class="test">Tous les chiffres ${n('0123456789')} · à comparer ${n('2 8 5')} et S</div>
+      <p class="avis"><b>Mon avis :</b> ${p.avis}</p>
+    </section>`).join('');
+</script>
