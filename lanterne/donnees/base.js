@@ -56,6 +56,7 @@ LANTERNE.aide = [
   { titre: 'Coups critiques', texte: 'Un coup sur seize environ est un COUP CRITIQUE : il fait une fois et demie les dégâts d\'un coup normal (un sur six pour Maud, la rôdeuse). Les grands coups préparés et les attaques sur toute l\'équipe ne sont jamais critiques. Le talent Coup bas, lui, ignore aussi la Défense.' },
   { titre: 'Fuir', texte: 'Fuite tente d\'échapper au combat : une chance sur deux, plus 5 % par point de Vitesse d\'avance de ton héros le plus rapide sur le monstre le plus rapide (le menu affiche la chance). Si un monstre a 5 points de Vitesse de plus que tous tes héros, impossible de le semer. On ne fuit jamais un boss ni un combat où quelqu\'un a besoin d\'aide.' },
   { titre: 'Faiblesses', texte: 'Certains monstres craignent le feu, la glace, la foudre ou la lumière (× 1,5), d\'autres y résistent (× 0,5). Ce que tu découvres s\'inscrit dans l\'onglet Monstres.' },
+  { titre: 'Les PV des monstres', texte: 'Une barre sous chaque monstre montre ce qui lui reste de PV. Les chiffres exacts s\'affichent quand tu l\'as déjà vaincu une fois. Le boss a sa grande barre en haut de l\'écran.' },
   { titre: 'Sauvegardes', texte: 'La partie se sauvegarde toute seule aux moments importants, et à la main aux lanternes. Si l\'équipe tombe, on reprend à la dernière sauvegarde ; contre un boss, on peut aussi réessayer le combat.' }
 ];
 

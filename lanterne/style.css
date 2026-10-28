@@ -157,3 +157,6 @@ h1 { position: relative; margin: 0; font-size: 42px; line-height: 1.05; font-wei
 .cb-niveau-ligne.monte .val { color: #fff6c2; }
 .cb-niveau-talent { margin-top: 6px; color: #8cd8ff; font-size: 14px; }
 .cb-niveau-suite { display: block; margin-top: 8px; text-align: center; color: #b9b0d0; font-size: 12px; }
+.cb-pv-monstre { position: absolute; left: 0; top: 0; width: 56px; text-align: center; pointer-events: none; }
+.cb-pv-monstre .rpg-barre { height: 5px; border: 1px solid #000; }
+.cb-pv-monstre small { font-size: 11px; color: #f4ecd8; text-shadow: 0 1px 0 #000, 0 0 3px #000; }

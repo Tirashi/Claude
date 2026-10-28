@@ -95,6 +95,10 @@
         }
       }
       if (!lum) rendu.eclair(0xffffff, 0, 0, 0, 0);
+      for (const [id, x] of barresPV) if (places.has(id)) {
+        const [px, pz] = places.get(id), [sx, sy] = rendu.projeter(px, 0, pz + .45);
+        x.el.style.transform = `translate(${Math.round(sx - 28)}px, ${Math.round(sy)}px)`;
+      }
       for (const m of [marque, fleche]) if (m.dataset.cible && places.has(m.dataset.cible)) {
         const [x, z] = places.get(m.dataset.cible), f = combattant(m.dataset.cible);
         const y = f && f.camp === 'm' ? 1.6 * (f.def.taille || 1) + .5 : 2.3;
@@ -105,6 +109,23 @@
     function marquer(id) { marque.dataset.cible = id || ''; marque.style.display = id ? '' : 'none'; }
     function montrerActeur(id) { fleche.dataset.cible = id || ''; fleche.style.display = id ? '' : 'none'; }
     marquer(null); montrerActeur(null);
+
+    // une petite barre de PV sous chaque monstre (pas le boss : il a sa barre en haut) ;
+    // les chiffres n'apparaissent que si on l'a déjà vaincu une fois (bestiaire)
+    const barresPV = new Map();
+    for (const m of c.monstres) if (!m.boss) {
+      const el = h('div', 'cb-pv-monstre'), b = h('div', 'rpg-barre pv'), i = h('i'), t = h('small', '');
+      b.append(i); el.append(b, t); calque.append(el);
+      barresPV.set(m.id, { el, i, t, connu: ((etat.bestiaire || {})[m.type] || {}).v >= 1 });
+    }
+    function majPV() {
+      for (const [id, x] of barresPV) {
+        const m = combattant(id);
+        x.el.style.display = m.pv > 0 && places.has(id) ? '' : 'none';
+        x.i.style.width = 100 * m.pv / m.pvMax + '%';
+        x.t.textContent = x.connu ? `${m.pv}/${m.pvMax}` : '';
+      }
+    }
 
     // ---------- la frise de l'ordre de passage, la barre du boss, l'alerte ----------
     const portraits = new Map();
@@ -269,14 +290,14 @@
         }
         else if (e.t === 'degats') {
           anim(e.a, 'touche', .5); sons.effet('touche', .45);
-          chiffre(e.a, '-' + e.n, e.critique ? 'critique' : ''); majEquipe(null);
+          chiffre(e.a, '-' + e.n, e.critique ? 'critique' : ''); majEquipe(null); majPV();
           await attendre(120);
         }
-        else if (e.t === 'soin') { if (e.n) chiffre(e.a, '+' + e.n, 'soin'); majEquipe(null); }
+        else if (e.t === 'soin') { if (e.n) chiffre(e.a, '+' + e.n, 'soin'); majEquipe(null); majPV(); }
         else if (e.t === 'rate') { chiffre(e.a, 'Raté', 'rate'); }
         else if (e.t === 'ko') {
           const f = combattant(e.a);
-          if (f.camp === 'm') { sons.effet('vaincu', .5); anim(e.a, 'touche', .5); await attendre(450); rendu.retirer(e.a); places.delete(e.a); }
+          if (f.camp === 'm') { sons.effet('vaincu', .5); anim(e.a, 'touche', .5); await attendre(450); rendu.retirer(e.a); places.delete(e.a); majPV(); }
           majEquipe(null);
         }
         else if (e.t === 'releve') { anims.delete(e.a); chiffre(e.a, 'Debout !', 'soin'); majEquipe(null); }
@@ -324,7 +345,7 @@
       sons.effet('rencontre', .5); sons.musique('combat');
       await attendre(350);
       for (const t of C.intro(c)) await afficher(t);
-      majBoss();
+      majBoss(); majPV();
       while (!c.fin) {
         C.debutTour(c);
         let f;
@@ -344,6 +365,7 @@
         if (!c.fin) { await jouer(C.finTour(c)); majBoss(); }
       }
       frise.innerHTML = ''; barreBoss.style.display = 'none'; alerte.style.display = 'none';
+      for (const x of barresPV.values()) x.el.remove();
       const r = C.terminer(c);
       menu.innerHTML = '';
       if (r.fin === 'victoire') {
