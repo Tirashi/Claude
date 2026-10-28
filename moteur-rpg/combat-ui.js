@@ -216,7 +216,7 @@
       for (;;) {
         marquer(x.id);
         const talents = M.Regles.talentsConnus(jeu.talents, x.classe, x.ref.niveau);
-        const ops = [{ texte: 'Attaque' }, { texte: 'Talents', non: !talents.length }, { texte: 'Objets', non: !usables().length }, { texte: 'Défense' }, { texte: 'Fuite', non: !C.fuite(c).possible, aide: C.fuite(c).possible ? undefined : C.fuite(c).raison }];
+        const ops = [{ texte: 'Attaque' }, { texte: 'Talents', non: !talents.length }, { texte: 'Objets', non: !usables().length }, { texte: 'Défense' }, { texte: 'Fuite', non: !C.fuite(c).possible, aide: C.fuite(c).possible ? `Chance de fuir : ${Math.round(100 * M.Regles.chanceFuite(C.fuite(c).vh, C.fuite(c).vm))} %` : C.fuite(c).raison }];
         const i = await liste(ops, !premier);
         if (i < 0) return 'retour';
         if (i === 0) { const id = await choisirCible(C.vivants(c.monstres)); if (id) return { action: 'attaque', cible: id }; }
@@ -289,6 +289,35 @@
       }
     }
 
+    // ---------- montée de niveau, à la Fire Emblem : les caractéristiques en colonne, qui montent une à une ----------
+    function tableauNiveau(n, p) {
+      return new Promise(async fin => {
+        banniere.classList.remove('on');
+        const fen = h('div', 'cb-niveau'), tete = h('div', 'cb-niveau-tete'), cv = document.createElement('canvas');
+        cv.width = cv.height = 48;
+        if (o.poupees) M.Poupees.portrait(cv, o.poupees.perso(jeu.heros[n.id].perso));
+        const titre = h('div', ''); titre.append(h('b', '', n.nom), h('div', 'cb-niveau-num', `NIVEAU ${p.niveau}`));
+        tete.append(cv, titre); fen.append(tete);
+        const lignes = [['pv', 'PV'], ['pm', 'PM'], ['for', 'Force'], ['def', 'Défense'], ['mag', 'Magie'], ['vit', 'Vitesse']].map(([k, nom]) => {
+          const l = h('div', 'cb-niveau-ligne'), val = h('span', 'val', String(p.avant[k])), gain = h('span', 'gain', '');
+          l.append(h('span', 'nom', nom), val, gain); fen.append(l);
+          return { l, val, gain, d: p.apres[k] - p.avant[k], apres: p.apres[k] };
+        });
+        racine.append(fen); sons.effet('niveau', .6);
+        let presse = false;
+        fen.addEventListener('pointerdown', () => { presse = true; });
+        await attendre(500);
+        for (const x of lignes) {
+          if (!presse) await attendre(280);
+          if (x.d > 0) { x.val.textContent = String(x.apres); x.gain.textContent = '+' + x.d; x.l.classList.add('monte'); sons.effet('bip', .45); }
+        }
+        for (const t of p.talents) fen.append(h('div', 'cb-niveau-talent', `Nouveau talent : ${jeu.talents[t].nom} !`));
+        fen.append(h('small', 'cb-niveau-suite', 'A ou toucher pour continuer'));
+        const finir = () => { attente = null; fen.remove(); fin(); };
+        attente = finir; fen.onclick = finir;
+      });
+    }
+
     // ---------- le combat ----------
     async function derouler() {
       majEquipe(null);
@@ -324,13 +353,7 @@
         await afficher('Victoire !', 900);
         await afficher(`L'équipe gagne ${r.xp} points d'expérience et ${r.ecus} écus.`, 1100);
         for (const ob of r.objets) await afficher(`Tu trouves : ${jeu.objets[ob].nom}.`, 900);
-        for (const n of r.niveaux) for (const p of n.passages) {
-          sons.effet('niveau', .6);
-          await afficher(`${n.nom} passe au niveau ${p.niveau} !`, 900);
-          const lignes = [['pv', 'PV'], ['pm', 'PM'], ['for', 'FOR'], ['def', 'DEF'], ['mag', 'MAG'], ['vit', 'VIT']].filter(([k]) => p.apres[k] !== p.avant[k]).map(([k, nom]) => `${nom} ${p.avant[k]} → ${p.apres[k]}`);
-          if (lignes.length) await afficher(lignes.join(' · '), 1600);
-          for (const t of p.talents) await afficher(`Nouveau talent : ${jeu.talents[t].nom} !`, 1100);
-        }
+        for (const n of r.niveaux) for (const p of n.passages) await tableauNiveau(n, p);
         clearInterval(boucle);
       } else if (r.fin === 'defaite') {
         sons.musique(null);

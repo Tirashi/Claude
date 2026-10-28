@@ -48,6 +48,17 @@ LANTERNE.outils = {
 };
 
 // drapeaux à atteindre pour finir cette version (vérifié par outils/lanterne-tests.js)
+// l'onglet AIDE du menu : les règles du combat expliquées au joueur
+LANTERNE.aide = [
+  { titre: 'Chacun son tour', texte: 'En haut de l\'écran, la frise montre qui va agir, dans l\'ordre (le plus rapide d\'abord), puis le tour suivant en plus pâle. Quand vient le tour d\'un héros, tu choisis son action et elle se joue aussitôt.' },
+  { titre: 'Défense', texte: 'Un héros en Défense reçoit deux fois moins de dégâts, jusqu\'à son prochain tour. Quand un monstre « prépare » un grand coup (point rouge sur la frise, alerte rouge), c\'est le moment de se défendre.' },
+  { titre: 'Les dégâts', texte: 'Un coup fait la Force de l\'attaquant moins la moitié de la Défense de la cible, un peu plus ou un peu moins au hasard. Un sort fait sa puissance plus la moitié de la Magie, sans compter la Défense.' },
+  { titre: 'Coups critiques', texte: 'Un coup sur seize environ est un COUP CRITIQUE : il fait une fois et demie les dégâts d\'un coup normal (un sur six pour Maud, la rôdeuse). Les grands coups préparés et les attaques sur toute l\'équipe ne sont jamais critiques. Le talent Coup bas, lui, ignore aussi la Défense.' },
+  { titre: 'Fuir', texte: 'Fuite tente d\'échapper au combat : une chance sur deux, plus 5 % par point de Vitesse d\'avance de ton héros le plus rapide sur le monstre le plus rapide (le menu affiche la chance). Si un monstre a 5 points de Vitesse de plus que tous tes héros, impossible de le semer. On ne fuit jamais un boss ni un combat où quelqu\'un a besoin d\'aide.' },
+  { titre: 'Faiblesses', texte: 'Certains monstres craignent le feu, la glace, la foudre ou la lumière (× 1,5), d\'autres y résistent (× 0,5). Ce que tu découvres s\'inscrit dans l\'onglet Monstres.' },
+  { titre: 'Sauvegardes', texte: 'La partie se sauvegarde toute seule aux moments importants, et à la main aux lanternes. Si l\'équipe tombe, on reprend à la dernière sauvegarde ; contre un boss, on peut aussi réessayer le combat.' }
+];
+
 LANTERNE.fin = ['vaast_vu', 'verene_rejoint', 'outil:lanterne', 'roi_vaincu', 'acte1_fini'];
 
 LANTERNE.depart = { carte: 'maison_ysolde', x: 2, y: 4, dir: 'bas', equipe: ['heros'], niveau: 1, ecus: 0, chapitre: 'Prologue' };

@@ -2,32 +2,32 @@
    monstres et rencontres (cahier des charges § 7.1, § 9, § 10). Moteur : moteur-rpg/combat.js. */
 window.LANTERNE = window.LANTERNE || {};
 
-// combat : effet en combat (et dans le menu) ; equip : objet que l'on porte (emplacement, classes, bonus)
+// icone : tuile montrée dans le menu ; combat : effet en combat (et dans le menu) ; equip : objet que l'on porte (emplacement, classes, bonus)
 LANTERNE.objets = {
-  herbe: { nom: 'Herbe', description: 'Une herbe amère qui rend 50 PV.', combat: { soin: 50 } },
-  fiole: { nom: 'Fiole bleue', description: 'Rend 15 PM.', combat: { pm: 15 } },
-  antidote: { nom: 'Antidote', description: 'Guérit du poison.', combat: { guerit: 'poison' } },
-  plume: { nom: 'Plume de phénix', description: 'Relève un héros à terre avec la moitié de ses PV.', combat: { releve: .5 } },
-  meche: { nom: 'Mèche', description: 'Ranime une lanterne de sauvegarde éteinte.' },
+  herbe: { icone: 'o_herbe2', nom: 'Herbe', description: 'Une herbe amère qui rend 50 PV.', combat: { soin: 50 } },
+  fiole: { icone: 'o_fiole', nom: 'Fiole bleue', description: 'Rend 15 PM.', combat: { pm: 15 } },
+  antidote: { icone: 'o_antidote', nom: 'Antidote', description: 'Guérit du poison.', combat: { guerit: 'poison' } },
+  plume: { icone: 'o_plume', nom: 'Plume de phénix', description: 'Relève un héros à terre avec la moitié de ses PV.', combat: { releve: .5 } },
+  meche: { icone: 'o_meche', nom: 'Mèche', description: 'Ranime une lanterne de sauvegarde éteinte.' },
   // objets de l'histoire
-  lanterne_eteinte: { nom: 'Lanterne éteinte', description: 'Donnée par le Prieur Vaast. « Elle reconnaîtra la flamme. »' },
-  lanterne_veilleur: { nom: 'Lanterne du veilleur', description: 'Sa flamme pâle dissipe les nappes de brume (B, devant la brume).' },
-  cle_crypte: { nom: 'Petite clé', description: 'Une clé verdie, trouvée dans la Crypte des racines.' },
-  flamme_rouge: { nom: 'Flamme rouge', description: 'Elle bat comme un cœur. Parfois, on croit l\'entendre pleurer.' },
+  lanterne_eteinte: { icone: 'o_meche', nom: 'Lanterne éteinte', description: 'Donnée par le Prieur Vaast. « Elle reconnaîtra la flamme. »' },
+  lanterne_veilleur: { icone: 'o_lanterne', nom: 'Lanterne du veilleur', description: 'Sa flamme pâle dissipe les nappes de brume (B, devant la brume).' },
+  cle_crypte: { icone: 'cle', nom: 'Petite clé', description: 'Une clé verdie, trouvée dans la Crypte des racines.' },
+  flamme_rouge: { icone: 'flamme', nom: 'Flamme rouge', description: 'Elle bat comme un cœur. Parfois, on croit l\'entendre pleurer.' },
   // armes
-  epee_courte: { nom: 'Épée courte', description: 'L\'épée d\'entraînement des apprentis veilleurs.', equip: { emplacement: 'arme', classes: ['LAME'], for: 3 } },
-  epee_longue: { nom: 'Épée longue', description: 'Une vraie lame, lourde et droite.', equip: { emplacement: 'arme', classes: ['LAME'], for: 7 } },
-  masse: { nom: 'Masse de novice', description: 'Une masse de bois cerclée de fer.', equip: { emplacement: 'arme', classes: ['CLERC'], for: 3 } },
-  baton: { nom: 'Bâton de chêne', description: 'Vérène y a gravé des formules qu\'elle seule comprend.', equip: { emplacement: 'arme', classes: ['ARCANISTE'], for: 1, mag: 3 } },
-  arc_court: { nom: 'Arc court', description: 'Léger, rapide, souvent recollé.', equip: { emplacement: 'arme', classes: ['RODEUR'], for: 3, vit: 1 } },
+  epee_courte: { icone: 'o_epee_courte', nom: 'Épée courte', description: 'L\'épée d\'entraînement des apprentis veilleurs.', equip: { emplacement: 'arme', classes: ['LAME'], for: 3 } },
+  epee_longue: { icone: 'o_epee_longue', nom: 'Épée longue', description: 'Une vraie lame, lourde et droite.', equip: { emplacement: 'arme', classes: ['LAME'], for: 7 } },
+  masse: { icone: 'o_masse', nom: 'Masse de novice', description: 'Une masse de bois cerclée de fer.', equip: { emplacement: 'arme', classes: ['CLERC'], for: 3 } },
+  baton: { icone: 'o_baton', nom: 'Bâton de chêne', description: 'Vérène y a gravé des formules qu\'elle seule comprend.', equip: { emplacement: 'arme', classes: ['ARCANISTE'], for: 1, mag: 3 } },
+  arc_court: { icone: 'o_arc', nom: 'Arc court', description: 'Léger, rapide, souvent recollé.', equip: { emplacement: 'arme', classes: ['RODEUR'], for: 3, vit: 1 } },
   // armures
-  tunique: { nom: 'Tunique de veilleur', description: 'Le gris des Veilleurs, un peu trop grand.', equip: { emplacement: 'armure', def: 2 } },
-  robe_novice: { nom: 'Robe de novice', description: 'Blanche, avec les manches usées.', equip: { emplacement: 'armure', classes: ['CLERC', 'ARCANISTE'], def: 2, mag: 1 } },
-  robe_savante: { nom: 'Robe de savante', description: 'Pleine de poches, pleine de craie.', equip: { emplacement: 'armure', classes: ['ARCANISTE'], def: 1, mag: 2 } },
-  cuir: { nom: 'Veste de cuir', description: 'Sent la vase et le feu de bois.', equip: { emplacement: 'armure', def: 3 } },
-  cotte: { nom: 'Cotte de mailles', description: 'Lourde, mais rassurante.', equip: { emplacement: 'armure', classes: ['LAME', 'CLERC'], def: 6, vit: -1 } },
+  tunique: { icone: 'o_tunique', nom: 'Tunique de veilleur', description: 'Le gris des Veilleurs, un peu trop grand.', equip: { emplacement: 'armure', def: 2 } },
+  robe_novice: { icone: 'o_robe', nom: 'Robe de novice', description: 'Blanche, avec les manches usées.', equip: { emplacement: 'armure', classes: ['CLERC', 'ARCANISTE'], def: 2, mag: 1 } },
+  robe_savante: { icone: 'o_robe_savante', nom: 'Robe de savante', description: 'Pleine de poches, pleine de craie.', equip: { emplacement: 'armure', classes: ['ARCANISTE'], def: 1, mag: 2 } },
+  cuir: { icone: 'o_cuir', nom: 'Veste de cuir', description: 'Sent la vase et le feu de bois.', equip: { emplacement: 'armure', def: 3 } },
+  cotte: { icone: 'o_cotte', nom: 'Cotte de mailles', description: 'Lourde, mais rassurante.', equip: { emplacement: 'armure', classes: ['LAME', 'CLERC'], def: 6, vit: -1 } },
   // accessoires
-  ruban: { nom: 'Ruban de vitesse', description: 'Un ruban bleu, noué au poignet.', equip: { emplacement: 'accessoire', vit: 2 } }
+  ruban: { icone: 'o_ruban', nom: 'Ruban de vitesse', description: 'Un ruban bleu, noué au poignet.', equip: { emplacement: 'accessoire', vit: 2 } }
 };
 
 /* Talents et sorts (§ 7.1). cible : ennemi, ennemis (tous), allie, allies (toute l'équipe), soi, allie_ko.
