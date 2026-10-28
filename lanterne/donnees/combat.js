@@ -49,7 +49,7 @@ LANTERNE.talents = {
   tempete: { nom: 'Tempête', classe: 'ARCANISTE', niveau: 24, pm: 12, cible: 'ennemis', description: 'Foudre sur tous les ennemis (puissance 34).', effet: { type: 'sort', puissance: 34, element: 'foudre' } },
   // RODEUR
   vol: { nom: 'Vol', classe: 'RODEUR', niveau: 1, pm: 0, cible: 'ennemi', description: 'Prend un objet à un ennemi.', anim: 'attaque', visuel: 'coup', effet: { type: 'vol', chance: .5 } },
-  coup_bas: { nom: 'Coup bas', classe: 'RODEUR', niveau: 4, pm: 3, cible: 'ennemi', description: 'Coup critique assuré.', effet: { type: 'arme', critique: true } },
+  coup_bas: { nom: 'Coup bas', classe: 'RODEUR', niveau: 4, pm: 3, cible: 'ennemi', description: 'Coup critique assuré, qui ignore la Défense.', effet: { type: 'arme', critique: true } },
   poison: { nom: 'Poison', classe: 'RODEUR', niveau: 8, pm: 3, cible: 'ennemi', description: 'Une attaque qui empoisonne souvent.', visuel: 'poison', effet: { type: 'arme', poison: .7 } },
   esquive: { nom: 'Esquive', classe: 'RODEUR', niveau: 13, pm: 2, cible: 'soi', description: 'Évite le prochain coup.', visuel: 'buff', effet: { type: 'esquive', priorite: true } },
   double_lame: { nom: 'Double lame', classe: 'RODEUR', niveau: 18, pm: 5, cible: 'ennemi', description: 'Deux attaques.', effet: { type: 'arme', coups: 2 } },
@@ -102,10 +102,12 @@ LANTERNE.monstres = {
     groupes: [['rose_epine'], ['rose_epine', 'ronce']],
     bestiaire: 'Elle fleurit sur les tombes oubliées. Son parfum endort les souvenirs.' },
   // premier boss : le Gardien de la Crypte des racines
-  roi_aulnes: { nom: 'Roi des aulnes', tuile: 'roi_aulnes', taille: 1.7, boss: true, pv: 220, pm: 30, for: 19, def: 12, mag: 13, vit: 8, xp: 220, ecus: 120,
+  roi_aulnes: { nom: 'Roi des aulnes', tuile: 'roi_aulnes', taille: 1.7, boss: true, pv: 300, pm: 30, for: 19, def: 12, mag: 13, vit: 8, xp: 220, ecus: 120,
     elements: { lumiere: 1.5, feu: 1.5, glace: .5 }, butin: [{ objet: 'plume', chance: 1 }],
     actions: [{ type: 'attaque', poids: 4 },
       { type: 'sort', nom: 'Souffle des racines', puissance: 10, element: 'glace', zone: true, pm: 4, visuel: 'poison', poids: 2 },
       { type: 'charge', nom: 'Étreinte des racines', mult: 1.6, zone: true, prepare: 'Le Roi des aulnes plonge ses racines dans le sol…', poids: 1 }],
+    // rythme fixe à apprendre : deux coups, le Souffle, puis il plonge ses racines (un tour) et l'Étreinte au tour suivant
+    cycle: [0, 0, 1, 2],
     bestiaire: '« Encore… tu nous enfermes encore. »' }
 };

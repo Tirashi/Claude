@@ -37,9 +37,10 @@
   const peutPorter = (jeu, h, id) => { const e = jeu.objets[id] && jeu.objets[id].equip; return !!e && (!e.classes || e.classes.includes(h.classe)); };
 
   /* Dégâts d'une attaque à l'arme : FOR − DEF ÷ 2, ± 10 %, au moins 1.
-     Un coup critique ignore la Défense et fait × 1,5. */
-  function degatsArme(force, defense, rng, critique = false, mult = 1) {
-    const base = critique ? force * 1.5 : force - defense / 2;
+     Un coup critique fait × 1,5 (règle du 25/10 : avant, il ignorait la Défense, et un critique de monstre
+     faisait 2 à 5 fois un coup normal). perce : coup qui ignore la Défense (talent à coup critique assuré). */
+  function degatsArme(force, defense, rng, critique = false, mult = 1, perce = false) {
+    const base = (perce ? force : force - defense / 2) * (critique ? 1.5 : 1);
     return Math.max(1, Math.round(base * (.9 + .2 * rng()) * mult));
   }
   // sort offensif : puissance + MAG ÷ 2, ± 10 %, × l'élément (faible 1,5, résistant 0,5) ; la Défense ne compte pas
@@ -56,6 +57,9 @@
   // esquive : 3 % de base + 1 % par point de VIT au-dessus de l'attaquant, plafonnée à 25 %
   const chanceEsquive = (vitDefenseur, vitAttaquant) => Math.min(.25, .03 + Math.max(0, vitDefenseur - vitAttaquant) * .01);
   // fuite : 50 % + 5 % par point de VIT au-dessus du monstre le plus rapide (entre 10 et 95 %)
+  // trop lent pour fuir : le monstre le plus rapide a ECART_FUITE points de VIT de plus que le héros le plus rapide
+  const ECART_FUITE = 5;
+  const fuitePossible = (vitHeros, vitMonstre) => vitMonstre - vitHeros < ECART_FUITE;
   const chanceFuite = (vitHeros, vitMonstre) => Math.max(.1, Math.min(.95, .5 + (vitHeros - vitMonstre) * .05));
 
   // talents connus d'une classe à un niveau (talents : { id: { classe, niveau, … } })
@@ -83,6 +87,6 @@
   }
 
   M.Regles = { STATS, EMPLACEMENTS, ELEMENTS, NIVEAU_MAX, statsDeClasse, xpPourNiveau, creerHeros, statsEquipees, peutPorter,
-    degatsArme, degatsSort, soin, multElement, chanceCritique, tirageOrdre, chanceEsquive, chanceFuite, talentsConnus, gagnerXp };
+    degatsArme, degatsSort, soin, multElement, chanceCritique, tirageOrdre, chanceEsquive, chanceFuite, fuitePossible, ECART_FUITE, talentsConnus, gagnerXp };
   if (typeof module !== 'undefined') module.exports = M;
 })(typeof window !== 'undefined' ? (window.MoteurRPG = window.MoteurRPG || {}) : (globalThis.MoteurRPG = globalThis.MoteurRPG || {}));

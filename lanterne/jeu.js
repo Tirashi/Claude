@@ -11,7 +11,7 @@
     try { localStorage.setItem('lanterne.test', '1'); localStorage.removeItem('lanterne.test'); return localStorage; }
     catch (e) { const m = {}; return { getItem: k => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); }, removeItem: k => { delete m[k]; } }; }
   })();
-  let reglages = { musique: true, effets: true };
+  let reglages = { musique: true, effets: true, combatRapide: false };
   try { Object.assign(reglages, JSON.parse(stockage.getItem('lanterne.reglages') || '{}')); } catch (e) { /* réglages par défaut */ }
   const enregistrerReglages = () => { try { stockage.setItem('lanterne.reglages', JSON.stringify(reglages)); } catch (e) { /* rien */ } };
   const sauvegardes = MR.Etat.Sauvegardes(stockage, 'lanterne', undefined, J);
@@ -102,9 +102,20 @@
     const monstres = info.monstres || groupes[Math.floor(Math.random() * groupes.length)];
     const decor = carte.combat || (carte.exterieur ? { sol: J.style.exterieur.sol, decor: J.style.exterieur.decor, brume: carte.brume }
       : { sol: J.style.sols.calcaire.tuiles, decor: 'mur_haut', interieur: true });
-    combatEnCours = MR.CombatUI.Combattre({ jeu: J, etat: partie.etat, rencontre: { monstres, initiative: info.initiative, boss: info.boss }, decor, rendu, racine: $('fenetres'), sons });
-    const r = await combatEnCours.promesse;
-    combatEnCours = null;
+    // contre un boss, une défaite propose de réessayer le combat (l'équipe et le sac comme en entrant)
+    const avant = info.boss ? JSON.stringify(partie.etat) : null;
+    let r;
+    for (;;) {
+      combatEnCours = MR.CombatUI.Combattre({ jeu: J, etat: partie.etat, rencontre: { monstres, initiative: info.initiative, boss: info.boss, fuite: info.fuite }, decor, rendu, racine: $('fenetres'), sons, poupees, rapide: !!reglages.combatRapide });
+      r = await combatEnCours.promesse;
+      combatEnCours = null;
+      if (r.fin !== 'defaite' || !avant) break;
+      const i = await ui.choix('L\'équipe est tombée. Que faire ?', ['Réessayer le combat', 'Reprendre à la sauvegarde']);
+      if (i !== 0) break;
+      const e = JSON.parse(avant);
+      for (const k of Object.keys(partie.etat)) delete partie.etat[k];
+      Object.assign(partie.etat, e);
+    }
     sons.musique(carte.musique || null);
     return r.fin;
   }

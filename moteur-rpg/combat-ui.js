@@ -1,13 +1,17 @@
 /* Moteur RPG — l'écran de combat (navigateur) : relie moteur-rpg/combat.js au rendu HD-2D, aux sons et aux commandes.
-   - messages en haut, tapés lettre par lettre (un toucher ou A les accélère) ;
-   - en bas : l'équipe (PV, PM) et le menu du héros qui choisit : ATTAQUE, TALENTS, OBJETS, DÉFENSE, FUITE ;
+   - en haut : la frise de l'ordre de passage (ce tour, puis le suivant en plus pâle), la barre du boss avec sa
+     prochaine action, l'alerte quand il prépare un grand coup, et les messages tapés lettre par lettre ;
+   - en bas : l'équipe (PV, PM) et le menu du héros dont c'est le tour : ATTAQUE, TALENTS, OBJETS, DÉFENSE, FUITE ;
+   - chacun agit à son tour (flèche dorée au-dessus de lui), le héros choisit quand vient son tour ;
      curseur ▶, croix haut / bas, A pour valider, B ou « Retour » pour revenir ; cible marquée ▼ au-dessus d'elle ;
    - chaque action est jouée : pas en avant, geste, projectile, impact, chiffres qui montent, son.
    Combattre(o) → promesse du résultat de Combat.terminer : { fin: 'victoire' | 'fuite' | 'defaite', xp, ecus, objets, niveaux }.
-   o : { jeu, etat, rencontre, decor, rendu, racine, entrees, sons, rng } ; pendant le combat, appeler .pas(t) à chaque image. */
+   o : { jeu, etat, rencontre, decor, rendu, racine, entrees, sons, poupees, rapide, rng } ; pendant le combat, appeler .pas(t) à chaque image.
+   rapide : combats plus rapides (réglage du joueur). */
 (function (M) {
   const h = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
-  const attendre = ms => new Promise(r => setTimeout(r, ms));
+  let lent = 1;   // 1, ou moins pour les combats rapides
+  const attendre = ms => new Promise(r => setTimeout(r, ms * lent));
   // places à l'écran : monstres à gauche, héros à droite (selon leur nombre)
   const PLACES_H = { 1: [[1.9, .3]], 2: [[1.6, -.8], [2.4, 1.1]], 3: [[1.5, -1.5], [2.5, .1], [1.6, 1.7]], 4: [[1.4, -1.8], [2.5, -.5], [1.5, .9], [2.6, 2.2]] };
   const PLACES_M = { 1: [[-1.9, .2]], 2: [[-1.6, -1], [-2.3, 1.1]], 3: [[-1.5, -1.5], [-2.5, .1], [-1.5, 1.7]], 4: [[-1.4, -1.8], [-2.5, -.5], [-1.5, .9], [-2.6, 2.2]] };
@@ -24,6 +28,7 @@
   function Combattre(o) {
     const { jeu, etat, rendu, sons } = o, C = M.Combat;
     const c = C.creer(jeu, etat, o.rencontre, o.rng || Math.random);
+    lent = o.rapide ? .55 : 1;
     const anims = new Map();   // id → { etat, debut, duree, de, vers, boucle }
     const projectiles = [];    // { cle, tuile, de, vers, debut, duree, impact }
     let t0 = 0, maintenant = 0, attente = null, touche = null;
@@ -31,9 +36,11 @@
     // ---------- l'écran ----------
     const racine = h('div', 'cb'), banniere = h('div', 'cb-message'), calque = h('div', 'cb-calque'), bas = h('div', 'cb-bas');
     const equipe = h('div', 'cb-equipe'), menu = h('div', 'cb-menu');
-    bas.append(equipe, menu); racine.append(calque, banniere, bas); o.racine.append(racine);
+    const haut = h('div', 'cb-haut'), frise = h('div', 'cb-frise'), barreBoss = h('div', 'cb-boss'), alerte = h('div', 'cb-alerte');
+    haut.append(frise, barreBoss, alerte, banniere);
+    bas.append(equipe, menu); racine.append(calque, haut, bas); o.racine.append(racine);
     banniere.addEventListener('pointerdown', e => { if (attente) { e.preventDefault(); attente(); } });
-    const marque = h('div', 'cb-marque', '▼'); calque.append(marque);
+    const marque = h('div', 'cb-marque', '▼'), fleche = h('div', 'cb-marque acteur', '▼'); calque.append(marque, fleche);
 
     // ---------- placer les combattants ----------
     rendu.chargerCombat(o.decor);
@@ -88,15 +95,53 @@
         }
       }
       if (!lum) rendu.eclair(0xffffff, 0, 0, 0, 0);
-      if (marque.dataset.cible) {
-        const [x, z] = places.get(marque.dataset.cible) || [0, 0], f = combattant(marque.dataset.cible);
-        const haut = f && f.camp === 'm' ? 1.6 * (f.def.taille || 1) + .5 : 2.3;
-        const [sx, sy] = rendu.projeter(x, haut, z);
-        marque.style.transform = `translate(${sx - 8}px, ${sy - 22 + Math.sin(t * 8) * 3}px)`;
+      for (const m of [marque, fleche]) if (m.dataset.cible && places.has(m.dataset.cible)) {
+        const [x, z] = places.get(m.dataset.cible), f = combattant(m.dataset.cible);
+        const y = f && f.camp === 'm' ? 1.6 * (f.def.taille || 1) + .5 : 2.3;
+        const [sx, sy] = rendu.projeter(x, y, z);
+        m.style.transform = `translate(${sx - 8}px, ${sy - 22 + Math.sin(t * 8) * 3}px)`;
       }
     }
     function marquer(id) { marque.dataset.cible = id || ''; marque.style.display = id ? '' : 'none'; }
-    marquer(null);
+    function montrerActeur(id) { fleche.dataset.cible = id || ''; fleche.style.display = id ? '' : 'none'; }
+    marquer(null); montrerActeur(null);
+
+    // ---------- la frise de l'ordre de passage, la barre du boss, l'alerte ----------
+    const portraits = new Map();
+    function portrait(f) {
+      if (portraits.has(f.id)) return portraits.get(f.id);
+      const cv = document.createElement('canvas'); cv.width = cv.height = 32;
+      if (o.poupees && f.camp === 'h') M.Poupees.portrait(cv, o.poupees.perso(jeu.heros[f.id].perso));
+      else if (o.poupees) { const img = o.poupees.decoupe(f.def.tuile); if (img) { const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0, 32, 32); } }
+      portraits.set(f.id, cv); return cv;
+    }
+    function majFrise(actif) {
+      frise.innerHTML = '';
+      const case_ = (id, cls) => {
+        const f = combattant(id); if (!f || f.pv <= 0) return;
+        const d = h('div', 'cb-tour ' + (f.camp === 'h' ? 'h ' : 'm ') + (cls || ''));
+        const cv = portrait(f).cloneNode(); cv.getContext('2d').drawImage(portrait(f), 0, 0); d.append(cv);
+        if (f.camp === 'm' && f.prepare) d.append(h('i', 'cb-danger', '!'));
+        frise.append(d);
+      };
+      if (actif) case_(actif, 'actif');
+      for (const id of (c.ordre || []).filter(id => id !== actif)) case_(id);
+      frise.append(h('span', 'cb-sep', '▸'));
+      for (const id of c.ordreSuivant || []) case_(id, 'suivant');
+    }
+    function majBoss() {
+      const b = c.monstres.find(m => m.boss && m.pv > 0);
+      barreBoss.style.display = b ? '' : 'none';
+      if (b) {
+        barreBoss.innerHTML = '';
+        const p = C.prochaineAction(c, b), barre = h('div', 'rpg-barre pv'), i = h('i');
+        i.style.width = 100 * b.pv / b.pvMax + '%'; barre.append(i);
+        barreBoss.append(h('b', '', b.nom), barre, h('small', p && (p.grand || p.prepare) ? 'grand' : '', p ? 'Prochaine action : ' + p.nom : ''));
+      }
+      const prepare = c.monstres.find(m => m.pv > 0 && m.prepare);
+      alerte.style.display = prepare ? '' : 'none';
+      if (prepare) alerte.textContent = `⚠ ${prepare.nom} prépare ${prepare.prepare.nom || 'un grand coup'} ! Mets-toi en Défense.`;
+    }
 
     // un chiffre qui monte au-dessus d'un combattant
     function chiffre(id, texte, cls) {
@@ -129,7 +174,7 @@
         let i = 0, fini = false;
         const minuteur = setInterval(() => { i += 2; banniere.textContent = texte.slice(0, i); if (i >= texte.length) tout(); }, 1000 / 70);
         let suite = null;
-        const tout = () => { clearInterval(minuteur); banniere.textContent = texte; if (!fini) { fini = true; suite = setTimeout(() => { attente = null; fin(); }, pause); } };
+        const tout = () => { clearInterval(minuteur); banniere.textContent = texte; if (!fini) { fini = true; suite = setTimeout(() => { attente = null; fin(); }, pause * lent); } };
         attente = () => { if (!fini) tout(); else { clearTimeout(suite); attente = null; fin(); } };
       });
     }
@@ -171,7 +216,7 @@
       for (;;) {
         marquer(x.id);
         const talents = M.Regles.talentsConnus(jeu.talents, x.classe, x.ref.niveau);
-        const ops = [{ texte: 'Attaque' }, { texte: 'Talents', non: !talents.length }, { texte: 'Objets', non: !usables().length }, { texte: 'Défense' }, { texte: 'Fuite', non: c.boss }];
+        const ops = [{ texte: 'Attaque' }, { texte: 'Talents', non: !talents.length }, { texte: 'Objets', non: !usables().length }, { texte: 'Défense' }, { texte: 'Fuite', non: !C.fuite(c).possible, aide: C.fuite(c).possible ? undefined : C.fuite(c).raison }];
         const i = await liste(ops, !premier);
         if (i < 0) return 'retour';
         if (i === 0) { const id = await choisirCible(C.vivants(c.monstres)); if (id) return { action: 'attaque', cible: id }; }
@@ -198,19 +243,6 @@
         if (i === 4) return { fuite: true };
       }
     }
-    async function choisir() {
-      const choix = {}, qui = C.vivants(c.heros).filter(x => !x.etats.sommeil);
-      for (let i = 0; i < qui.length;) {
-        majEquipe(qui[i].id);
-        const r = await menuHeros(qui[i], i === 0);
-        if (r === 'retour') { i = Math.max(0, i - 1); delete choix[qui[i].id]; continue; }
-        if (r.fuite) { marquer(null); menu.innerHTML = ''; return { fuite: true }; }
-        choix[qui[i].id] = r; i++;
-      }
-      marquer(null); menu.innerHTML = ''; majEquipe(null);
-      return choix;
-    }
-
     // ---------- jouer les événements d'un tour ----------
     async function jouer(evs) {
       for (const e of evs) {
@@ -263,10 +295,26 @@
       sons.effet('rencontre', .5); sons.musique('combat');
       await attendre(350);
       for (const t of C.intro(c)) await afficher(t);
+      majBoss();
       while (!c.fin) {
-        const choix = (c.tour === 0 && c.initiative === 'monstre') ? {} : await choisir();
-        await jouer(C.resoudre(c, choix));
+        C.debutTour(c);
+        let f;
+        while ((f = C.prochain(c))) {
+          majFrise(f.id); montrerActeur(f.id);
+          let a = null;
+          if (f.camp === 'h' && !f.etats.sommeil) {
+            majEquipe(f.id);
+            const r = await menuHeros(f, true);
+            a = r.fuite ? { action: 'fuite' } : r;
+            marquer(null); menu.innerHTML = ''; majEquipe(null);
+          }
+          await jouer(C.agirUn(c, a));
+          majBoss();
+        }
+        montrerActeur(null);
+        if (!c.fin) { await jouer(C.finTour(c)); majBoss(); }
       }
+      frise.innerHTML = ''; barreBoss.style.display = 'none'; alerte.style.display = 'none';
       const r = C.terminer(c);
       menu.innerHTML = '';
       if (r.fin === 'victoire') {

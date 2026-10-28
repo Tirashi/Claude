@@ -196,7 +196,7 @@ LANTERNE.evenements = {
     { pnj: 'verene', montrer: true }, { pnj: 'loup_a', montrer: true }, { pnj: 'loup_b', montrer: true }, { attendre: .5 },
     { dire: ['Ne restez pas plantés là ! Ces bêtes n\'ont pas lu mes traités !', 'Battez-vous avec moi, je m\'occupe du feu !'], qui: 'verene' },
     { rejoindre: 'verene' }, { pnj: 'verene', cacher: true },
-    { combat: ['loup', 'corbeau'] },
+    { combat: ['loup', 'corbeau'], fuite: false },
     { pnj: 'loup_a', cacher: true }, { pnj: 'loup_b', cacher: true },
     { dire: ['Merci. Vérène, savante. Je vous serrerais bien la main, mais je tiens mon bâton.',
       'La brume n\'est pas un poison, vous savez. Elle est vivante. Personne ne me croit, à Port-Gris.'], qui: 'verene' },

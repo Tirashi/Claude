@@ -142,10 +142,11 @@ LANTERNE.cartes = {
     ],
     pnj: [{ id: 'isee', perso: 'isee', x: 7, y: 13, evenement: 'isee_route', cache: true }],
     monstres: [
-      { type: 'feu_follet', x: 9, y: 24, rayon: 2 },
-      { type: 'feu_follet', x: 3, y: 16, rayon: 2 },
-      { type: 'crapaud', x: 9, y: 12, rayon: 2 },
-      { type: 'corbeau', x: 9, y: 8, rayon: 3 }
+      // le héros traverse cette route seul la première fois : un monstre à la fois
+      { type: 'feu_follet', x: 9, y: 24, rayon: 2, groupe: ['feu_follet'] },
+      { type: 'feu_follet', x: 3, y: 16, rayon: 2, groupe: ['feu_follet'] },
+      { type: 'crapaud', x: 9, y: 12, rayon: 2, groupe: ['crapaud'] },
+      { type: 'corbeau', x: 9, y: 8, rayon: 3, groupe: ['corbeau'] }
     ],
     sorties: [{ x: [6, 7], y: 29, vers: 'clairfond', a: [11, 1], dir: 'bas' }, { x: [6, 7], y: 2, vers: 'abbaye', a: [6, 8], dir: 'haut' }],
     declencheurs: [
@@ -243,7 +244,8 @@ LANTERNE.cartes = {
     objets: [
       { type: 'grille', id: 'crypte_grille', x: 6, y: 1, ouvertSi: 'levier_crypte', texte: 'Une grille rouillée, prise dans les racines. Un mécanisme doit l\'ouvrir.' },
       { type: 'levier', id: 'crypte_levier', x: 1, y: 3, drapeau: 'levier_crypte', texte: 'Le levier grince… Au fond de la salle, la grille remonte dans un nuage de poussière.' },
-      { type: 'lanterne', x: 11, y: 6 }
+      { type: 'lanterne', x: 11, y: 6 },
+      { type: 'coffre', id: 'crypte_entree_herbes', x: 1, y: 6, contenu: { objet: 'herbe', n: 3 } }
     ],
     monstres: [{ type: 'gelee', x: 9, y: 3, rayon: 1 }],
     sorties: [

@@ -125,7 +125,7 @@
         b.onclick = () => { r[k] = !r[k]; o.enregistrerReglages(); o.sons.majReglages(); b.textContent = `${t} : ${r[k] ? 'oui' : 'non'}`; };
         page.append(b);
       };
-      bascule('musique', 'Musique'); bascule('effets', 'Bruitages');
+      bascule('musique', 'Musique'); bascule('effets', 'Bruitages'); bascule('combatRapide', 'Combats rapides');
       page.append(h('p', 'rpg-vide', 'La partie se sauvegarde toute seule aux moments clés, et à la main aux lanternes.'));
     }
 
