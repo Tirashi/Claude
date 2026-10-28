@@ -103,3 +103,13 @@ Tour complet dans Chromium sur un téléphone (390 × 844, tactile, portrait pui
 - **A. Mise en page téléphone en portrait** : carte en haut, **zoomée** (une case ≈ 40 px, la vue suit l'unité choisie ou le curseur, glisser pour se déplacer), dessous une zone fixe pour la fiche, les prévisions et le menu d'action en **gros boutons**, la barre en bas à portée du pouce (Fin du tour à droite, Retraite rangée dans un menu « ⋯ »). Gros chantier (rendu, entrées, panneaux), le plus utile.
 - **B. Retouches rapides sans changer la mise en page** : texte minimum 14-15 px sur téléphone, menu d'action en gros boutons dans la zone sous la carte, bouton « Attaquer » dans les prévisions, « Annuler » seulement quand il sert, choix d'événements en boutons, fenêtres plus larges ; fiche d'unité sous la carte aussi en paysage.
 - C. Plus tard : sons (sélection, coups, critique, niveau), petite vibration au toucher.
+
+### Piste B faite (28/10)
+- Écran tactile (`pointer: coarse`) : `--fs` au moins 15 px, petits textes à `.9em` (≈ 13 px), lignes de menu d'au moins 44 px, choix et recrues d'au moins 48 px.
+- Portrait : **menu d'action en gros boutons sous la carte** (`.menu.docked`, rangé dans `#hud` par `UI.showMenu` ; la première action en orange) ; ailleurs, il reste à côté de l'unité.
+- **Bouton « Attaquer » dans les prévisions** (`showForecast(…, onAttack)`, même effet que toucher de nouveau la cible).
+- **« Annuler » grisé** quand il n'y a rien à annuler (`UI.setCancelEnabled`, appelé par `Battle.update`).
+- Portrait : **barre en bas de l'écran** ; en combat « Tour n » et Retraite (petite) en haut, Annuler et Fin du tour en grand dessous.
+- Choix (événements, marchand, Intendance) en vrais boutons (fond et bord visibles) ; fenêtres presque pleine largeur en portrait.
+- Pas changé : en paysage, la fiche d'unité reste posée sur la carte ; la carte garde sa taille (piste A).
+

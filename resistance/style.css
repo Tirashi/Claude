@@ -392,3 +392,48 @@ button { touch-action: manipulation; }
 
 /* Retour à la Ludothèque (forteresse seulement) : un lien habillé comme les boutons */
 #toolbar #ludo-btn { text-decoration: none; }
+
+/* ================= Téléphone : retouches d'ergonomie (28/10) ================= */
+/* Bouton « Attaquer » des prévisions (toucher de nouveau la cible marche aussi) */
+#forecast .fc-go {
+  display: block; margin: 6px auto 0; pointer-events: auto;
+  font: inherit; font-weight: 700; color: #3a1c08; text-shadow: var(--px) var(--px) 0 #ffd8a0;
+  padding: 6px 22px; cursor: pointer;
+  border: calc(var(--a) * 10) solid transparent;
+  border-image: var(--frame-gold) 16 fill / calc(var(--a) * 10) stretch;
+}
+/* Les choix (événements, marchand, Intendance) ressemblent à des boutons */
+.choice { background: rgba(255, 255, 255, .07); border-color: rgba(184, 196, 232, .35); }
+
+@media (pointer: coarse) {
+  /* Texte jamais sous ~13 px sur un écran tactile */
+  :root { --fs: max(15px, calc(var(--u) * 4.5)); }
+  .unit-class, .fc-note, .recruit-stats, .tri-line, .recruit-info .trait, .fc-grid .lbl, .stats { font-size: .9em; }
+  .menu button { min-height: 44px; }
+  .choice, .recruit { min-height: 48px; }
+  #forecast .fc-go { padding: 10px 30px; }
+}
+
+/* Portrait : menu d'action en gros boutons sous la carte, barre en bas à portée du pouce */
+@media (max-aspect-ratio: 1/1) {
+  #hud .menu.docked {
+    flex: 1 1 100%; display: flex; gap: 8px; padding: 8px;
+  }
+  #hud .menu.docked button {
+    flex: 1; text-align: center; padding: 14px 6px; font-weight: 700;
+    border: calc(var(--a) * 10) solid transparent;
+    border-image: var(--frame-button) 16 fill / calc(var(--a) * 10) stretch;
+  }
+  #hud .menu.docked button:first-child {
+    border-image-source: var(--frame-gold); color: #3a1c08; text-shadow: var(--px) var(--px) 0 #ffd8a0;
+  }
+  #hud .menu.docked button.active::before { display: none; }
+  #toolbar { margin-top: auto; padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)); }
+  /* Combat : « Tour n » et Retraite (petite) en haut, Annuler et Fin du tour en grand dessous */
+  body[data-mode="battle"] #turn-label { order: 0; flex: 1 1 calc(100% - 150px); }
+  body[data-mode="battle"] #toolbar #retreat-btn { order: 1; padding: 6px 12px; font-size: 14px; }
+  body[data-mode="battle"] #toolbar #cancel-btn { order: 2; flex: 1 1 40%; padding: 14px 10px; }
+  body[data-mode="battle"] #toolbar #end-turn-btn { order: 3; flex: 1 1 40%; padding: 14px 10px; }
+  /* Fenêtres : presque toute la largeur */
+  .run-box, .end-box { width: calc(100vw - 16px); max-width: 32em; min-width: 0; box-sizing: border-box; }
+}

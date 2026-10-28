@@ -56,6 +56,7 @@
         exp: $('exp-panel'), levelup: $('levelup'), levelupBox: $('levelup-box'),
         army: $('army-btn'), node: $('node-panel'),
         runOverlay: $('run-overlay'), runBox: $('run-box'), resources: $('resources'),
+        hud: $('hud'), stage: $('stage'),
       };
       this.tileToScreen = tileToScreen;
       this.menuItems = [];
@@ -118,6 +119,12 @@
       el.innerHTML = (res.gold === undefined ? ''
         : `<span title="Or">${iconHtml(ITEM_ICONS.gold.sheet, ITEM_ICONS.gold.at)} ${numberHtml(res.gold)}</span>`)
         + `<span title="Ravitaillement">${iconHtml(ITEM_ICONS.supplies.sheet, ITEM_ICONS.supplies.at)} ${numberHtml(res.supplies)}</span>`;
+    }
+
+    // « Annuler » n'est actif que s'il y a quelque chose à annuler
+    setCancelEnabled(on) {
+      if (this.el.cancel.disabled === !on) return;
+      this.el.cancel.disabled = !on;
     }
 
     setLabel(text) {
@@ -329,6 +336,15 @@
       });
       this.paintMenu();
       m.classList.remove('hidden');
+      // Téléphone en portrait : gros boutons sous la carte, à la place de la fiche d'unité
+      const docked = matchMedia('(max-aspect-ratio: 1/1)').matches;
+      m.classList.toggle('docked', docked);
+      if (docked) {
+        if (m.parentNode !== this.el.hud) this.el.hud.prepend(m);
+        m.style.left = m.style.top = '';
+        return;
+      }
+      if (m.parentNode !== this.el.stage) this.el.stage.appendChild(m);
       // placement à côté de l'unité
       const { x, y, stageW } = this.tileToScreen(unit.x, unit.y);
       const mw = m.offsetWidth;
@@ -348,7 +364,8 @@
     hideMenu() { this.el.menu.classList.add('hidden'); this.menuItems = []; }
 
     // ------------------------------------------------------------ prévisions
-    showForecast(att, def, fc, side) {
+    // onAttack : bouton « Attaquer » (même effet que toucher de nouveau la cible)
+    showForecast(att, def, fc, side, onAttack = null) {
       const fmt = (s) => (s ? `${s.dmg}${s.count === 2 ? ' ×2' : ''}` : '–');
       const tri = (s) => (!s || !s.tri ? '' : s.tri > 0 ? ' <span class="fc-adv">▲</span>' : ' <span class="fc-dis">▼</span>');
       const sim = simulateAllHits(att, def, fc);
@@ -375,7 +392,9 @@
           <div>${fc.a.crit}%</div><div class="lbl">Critique</div><div>${fc.d ? fc.d.crit + '%' : '–'}</div>
         </div>
         ${triLine}${eff}${aura}
-        <div class="fc-note">PV si tous les coups touchent · Touchez la cible pour attaquer</div>`;
+        <div class="fc-note">PV si tous les coups touchent</div>
+        ${onAttack ? '<button class="fc-go">Attaquer</button>' : ''}`;
+      this.el.forecast.querySelector('.fc-go')?.addEventListener('click', (e) => { e.stopPropagation(); onAttack(); });
       this.el.forecast.classList.toggle('left', side === 'left');
       this.el.forecast.classList.remove('hidden');
     }

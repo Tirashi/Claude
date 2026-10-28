@@ -118,6 +118,7 @@
 
     update(now) {
       this.time = now;
+      this.ui.setCancelEnabled(['selected', 'menu', 'target'].includes(this.state) || (this.state === 'idle' && !!this.danger));
       const done = [];
       for (const t of this.tweens) {
         const p = Math.min(1, (now - t.start) / t.dur);
@@ -531,8 +532,10 @@
       const def = this.targets[this.targetIndex];
       if (!att || !def) return;
       const fc = forecast(this, att, def, att);
-      this.ui.showForecast(att, def, fc, att.x < this.w / 2 ? 'right' : 'left');
       this.forecastShown = true;
+      this.ui.showForecast(att, def, fc, att.x < this.w / 2 ? 'right' : 'left', () => {
+        if (this.state === 'target' && this.targets[this.targetIndex] === def) this.click(def.x, def.y);
+      });
     }
 
     cancel() {
