@@ -79,3 +79,27 @@ Ajouté à l'intégration (à discuter) :
 - **Classement** quand il y aura plusieurs pays (pays libérés, ou une run du jour à graine commune).
 - Sons (rien pour l'instant).
 - Artefact : les images sont des fichiers à part ; `outils/artefact.py` ne les intègre pas (il faudrait les passer en `data:`).
+
+## 8. Revue sur téléphone et UI/UX (28/10)
+Tour complet dans Chromium sur un téléphone (390 × 844, tactile, portrait puis paysage 844 × 390) : forteresse, bâtiment, Intendance, départ, recrutement, carte, armée, combat (sélection, déplacement, menu, cibles, prévisions, attaque, fiche ennemie, phase ennemie), retraite, marchand, événement, fin de run. Aucune erreur, tout est jouable au doigt. Le jeu a été pensé pour l'ordinateur : sur le téléphone, il est petit et laisse beaucoup de place vide.
+
+### Ce qui marche bien
+- Lecture du combat très claire, fidèle à Fire Emblem : cases bleues et rouges, flèches ▲/▼ du triangle, prévisions complètes (PV avant → après, dégâts ×2, précision, critique, ligne du triangle), fiche d'unité riche (« Fort contre / Faible contre »).
+- Toucher deux fois (une fois pour voir, une fois pour agir) partout : nœuds de la carte, cibles, bâtiments ; pas de survol obligatoire.
+- Confirmation avant chaque décision coûteuse (construire, partir, retraite). Bandeaux de phase lisibles.
+- Recrutement : liste claire, compteur « En route ! (0/3) » qui s'allume quand c'est prêt.
+- Cadres Mana Soul et chiffres pixel : style GBA cohérent.
+
+### Problèmes, du plus gênant au moins gênant
+1. **La carte est minuscule et l'écran à moitié vide** (portrait) : le canvas 240 × 160 prend la largeur (une case = 26 px, ~7 mm, sous les ~9 mm conseillés pour un doigt), soit 30 % de la hauteur ; sous la barre, ~45 % de l'écran reste noir. En paysage c'est pire : une case = 21 px.
+2. **Le menu d'action (Attaquer / Attendre / Objet) est trop petit** et posé sur la carte à côté de l'unité (lignes d'environ 20 px de haut, texte de 13 px) : facile de rater ou de toucher la carte derrière. C'est l'action la plus fréquente du jeu.
+3. **Textes trop petits** : `--fs` vaut 13 px au mieux, et les `.85em` / `.8em` donnent 10-11 px (panneau d'un nœud ou d'un bâtiment, « Touchez encore pour… », stats, prévisions, notes). Pixelify Sans devient difficile à lire sous ~12 px.
+4. **Barre d'outils de combat en vrac** : « Tour 1 · Annuler · Fin du tour » puis « Retraite » seule à la ligne, juste sous la main ; « Annuler » est toujours là même quand il n'y a rien à annuler. En paysage, la fiche d'unité se pose sur la carte et cache des cases.
+5. **Fenêtres étroites** (confirmations à ~240 px de large, texte de 11 px) alors que l'écran fait 390 px.
+6. **Choix des événements** : les lignes ne ressemblent pas à des boutons (seule celle qui a le focus clavier a un cadre pointillé).
+7. Détails : l'attaque se confirme en touchant de nouveau la cible (un bouton « Attaquer » dans les prévisions serait plus clair) ; pas de son ni de vibration au toucher ; les emblèmes des bâtiments de la forteresse sont petits.
+
+### Pistes proposées (à valider, maquette d'abord pour 1 et 2)
+- **A. Mise en page téléphone en portrait** : carte en haut, **zoomée** (une case ≈ 40 px, la vue suit l'unité choisie ou le curseur, glisser pour se déplacer), dessous une zone fixe pour la fiche, les prévisions et le menu d'action en **gros boutons**, la barre en bas à portée du pouce (Fin du tour à droite, Retraite rangée dans un menu « ⋯ »). Gros chantier (rendu, entrées, panneaux), le plus utile.
+- **B. Retouches rapides sans changer la mise en page** : texte minimum 14-15 px sur téléphone, menu d'action en gros boutons dans la zone sous la carte, bouton « Attaquer » dans les prévisions, « Annuler » seulement quand il sert, choix d'événements en boutons, fenêtres plus larges ; fiche d'unité sous la carte aussi en paysage.
+- C. Plus tard : sons (sélection, coups, critique, niveau), petite vibration au toucher.
