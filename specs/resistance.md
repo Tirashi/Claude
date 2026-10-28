@@ -124,3 +124,10 @@ En attente du choix de l'utilisateur.
 - Combat (`renderer.js`), carte de campagne (`runmap.js` : le camp en bas, le château du général en haut, chemins remis en place point par point) et forteresse (`fortress.js` : chaque bâtiment d'un bloc, les champs case par case).
 - Portrait : la carte fait 160 × 240 pixels de jeu (39 px par case sur un écran de 390 px) ; barre de combat sur une rangée (Retraite, Annuler, Fin du tour ; le numéro du tour est dans le bandeau de phase) ; la fiche d'unité prend toute la largeur et cache la case de terrain (toucher une case vide la montre).
 
+### Boutons : maquette (28/10)
+Demande de l'utilisateur (« revoir les boutons »). `maquettes/resistance-boutons.html` (https://claude.ai/artifact/ME8wyFNbRthRCK72hPcoQg), sur la carte couchée, au moment où un soldat vient de se placer contre un ennemi, avec la même fenêtre de la forteresse sous chaque téléphone :
+- **A, la fenêtre GBA** : actions en liste dans une fenêtre bleue à bord blanc, petite main qui pointe, détail à droite (« Voleur · 39 % ») ; boutons plats de la même famille, bord doré pour le principal.
+- **B, gros boutons en relief** : boutons pixel épais qui s'enfoncent, une couleur et une icône par action (rouge Attaquer, vert Objet, bleu Attendre), Retraite en petit drapeau.
+- **C, façon appli** : actions en grandes cartes qui disent ce qui va se passer (« Attaquer le Voleur · 39 % · 10 dégâts · il riposte 2 × 2 »), barre d'icônes rondes, gros bouton orange Fin du tour.
+En attente du choix ; le style retenu ira partout (combat, carte, forteresse, marchand, Intendance, confirmations).
+
