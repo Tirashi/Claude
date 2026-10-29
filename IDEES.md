@@ -126,6 +126,7 @@ Un « Vampire Survivors-like » dans l'espace, mêlé à l'idée de caravane : o
 
 ## Résistance (rogue-lite tactique façon Fire Emblem GBA, reçu le 28/10)
 ✅ Intégré (fait avec une autre IA, repris dans `resistance/`, [`specs/resistance.md`](specs/resistance.md)). Idées et suite (plan d'origine, § 7) : équilibrer la carte de run ; soigneur (clerc de l'extension « Specialist Units » de Matt Walkden, achat prévu en janvier 2027) ; plusieurs cartes de combat et objectifs (tout vaincre, battre le chef, survivre X tours) ; déblocage de classes à la forteresse ; pays thématiques avec leur général, jusqu'au tyran ; pistes payantes *RPG Overworld Tileset* et *Merlin Pixel Font*. Ajoutées à l'intégration : ✅ sauvegarde de la run en cours (28/10), classement (pays libérés ou run du jour), sons. Proche de l'idée **Escarmouche** (Advance Wars), qui reste à part.
+✅ Grande session de confort façon Fire Emblem (29/10, maquette `maquettes/resistance-qol.html`, direction B Heroes).
 ✅ Soigneur (29/10 : bâton, action Soigner, Chapelle de la forteresse).
 ✅ Confort de jeu (29/10, idées de Claude) : zone de danger, garde-fou sur Fin du tour, tour ennemi ×2, dernières paroles, bilan de campagne, premier combat guidé (`specs/resistance.md` § 9).
 

@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const { RNG, CLASSES, WEAPONS, TERRAIN, MAPS, traitsOf, traitBonus, traitLabel, ITEMS, RUN_RULES, reachable, pathTo, threatTiles, tilesInRange, key, manhattan, forecast, strikeOrder, canReach, planEnemy, expGain, rollLevelUp, autoLevel, MAX_LEVEL } = Resistance;
+  const { RNG, CLASSES, WEAPONS, TERRAIN, MAPS, traitsOf, traitBonus, traitLabel, ITEMS, RUN_RULES, reachable, pathTo, threatTiles, tilesInRange, key, unkey, manhattan, forecast, strikeOrder, canReach, planEnemy, expGain, rollLevelUp, autoLevel, MAX_LEVEL } = Resistance;
 
   const TILE = 16;
 
@@ -89,7 +89,9 @@
     // ou avec 'retreat' quand le joueur bat en retraite.
     // guide : premier combat guidé (guide.js), ou null
     // healBonus : PV en plus à chaque soin (Chapelle de la forteresse)
-    constructor({ encounter, army, inventory = {}, seed, levelBonus = 0, healBonus = 0, ui, guide = null, onEnd }) {
+    // options : réglages du joueur (Menu > Options) : fast (tout ×2), autoEnd (fin du tour quand
+    // tous ont joué), doubleTap (toucher une seconde fois la cible pour attaquer)
+    constructor({ encounter, army, inventory = {}, seed, levelBonus = 0, healBonus = 0, options = {}, ui, guide = null, onEnd }) {
       this.encounter = encounter;
       this.inventory = inventory;
       this.menuLevel = null;     // 'items' quand le sous-menu Objet est ouvert
@@ -102,6 +104,7 @@
       this.ui = ui;
       this.guide = guide;
       this.healBonus = healBonus;
+      this.options = options;
       this.targetMode = 'attack'; // 'heal' quand on choisit l'allié à soigner
       this.onEnd = onEnd;
 
@@ -120,7 +123,11 @@
       this.moveRes = null;
       this.threat = null;
       this.origin = null;
-      this.danger = null;        // { unit, moves, threat } quand on inspecte un ennemi
+      this.marked = new Set();   // ennemis touchés : leur portée reste affichée (en rouge)
+      this.preview = null;       // { x, y, path, walking } : flèche du chemin et silhouette à l'arrivée
+      this.plan = null;          // { target, mode: 'attack' | 'heal', x, y } : action proposée en touchant une cible
+      this.peek = null;          // ennemi hors de portée dont on montre la portée (en orange)
+      this.threatCache = new Map();
       this.targets = [];
       this.targetIndex = 0;
       this.forecastShown = false;
@@ -129,8 +136,7 @@
       // la phase ennemie (this.fast), et toutes les animations la suivent.
       this.time = 0;
       this.lastNow = null;
-      this.fast = false;
-      this.dangerZone = null;    // { sig, tiles } : cases que l'ennemi peut frapper (bouton Danger)
+      this.fast = !!options.fast;
       this.tweens = [];
       this.floats = [];
       this.effects = [];
@@ -155,7 +161,15 @@
       this.lastNow = now;
       this.time += dt * (this.fast ? 2 : 1);
       now = this.time;
-      this.ui.setCancelEnabled(['selected', 'menu', 'target'].includes(this.state) || (this.state === 'idle' && !!this.danger));
+      this.ui.setCancelEnabled(['selected', 'menu', 'target'].includes(this.state) || (this.state === 'idle' && this.marked.size > 0));
+      // Panneau du tour (au repos) : tour, objectif, soldats à jouer, bouton Suivant
+      const toPlay = this.phase === 'player' ? this.living('player').filter((p) => !p.acted).length : 0;
+      const status = this.state === 'idle' && this.phase === 'player' ? `${this.turn}|${toPlay}|${this.living('enemy').length}` : '';
+      if (status !== this.statusKey) {
+        this.statusKey = status;
+        if (status) this.ui.showStatus({ turn: this.turn, toPlay, enemies: this.living('enemy').length }, () => this.selectNext());
+        else this.ui.hideStatus();
+      }
       const done = [];
       for (const t of this.tweens) {
         const p = Math.min(1, (now - t.start) / t.dur);
@@ -178,6 +192,7 @@
       await this.ui.banner(this.encounter.name, 'enemy');
       await this.ui.banner(`Tour ${this.turn} — Phase alliée`, 'player');
       this.state = 'idle';
+      this.cursorToNext();
       this.refreshHover();
       this.guide?.on('start');
     }
@@ -190,23 +205,34 @@
       this.ui.setDangerOn(dangerZoneOn);
       if (dangerZoneOn) this.guide?.on('danger');
     }
-    dangerTiles() {
+    // Cases qu'un ennemi peut frapper à son prochain tour : toutes les cases à portée d'une case
+    // où il peut s'arrêter (y compris celles où il peut marcher). Recalculé quand une unité bouge.
+    threatOf(e) {
       const sig = this.units.filter((u) => u.alive).map((u) => `${u.id}:${u.x},${u.y}`).join(' ');
-      if (this.dangerZone?.sig === sig) return this.dangerZone.tiles;
+      const c = this.threatCache.get(e.id);
+      if (c?.sig === sig) return c.tiles;
+      const moves = reachable(this, e);
+      if (e.ai === 'stationary') moves.stops = new Set([key(e.x, e.y)]);
       const tiles = new Set();
-      for (const e of this.living('enemy')) {
-        const moves = reachable(this, e);
-        if (e.ai === 'stationary') moves.stops = new Set([key(e.x, e.y)]);
-        // Toutes les cases à portée d'une case où il peut s'arrêter, y compris celles où il
-        // peut marcher (threatTiles les écarte, elles sont en bleu quand on inspecte un ennemi)
-        for (const k of moves.stops) {
-          const [x, y] = k.split(',').map(Number);
-          for (const t of tilesInRange(this, x, y, e.weapon.min, e.weapon.max)) tiles.add(key(t.x, t.y));
-        }
+      for (const k of moves.stops) {
+        const [x, y] = unkey(k);
+        for (const t of tilesInRange(this, x, y, e.weapon.min, e.weapon.max)) tiles.add(key(t.x, t.y));
       }
-      this.dangerZone = { sig, tiles };
+      this.threatCache.set(e.id, { sig, tiles });
       return tiles;
     }
+    threatUnion(list) {
+      const tiles = new Set();
+      for (const e of list) for (const k of this.threatOf(e)) tiles.add(k);
+      return tiles;
+    }
+    dangerTiles() { return this.threatUnion(this.living('enemy')); }
+    markedTiles() {
+      for (const e of this.marked) if (!e.alive) this.marked.delete(e);
+      return this.threatUnion([...this.marked]);
+    }
+    // Ennemis qui pourront frapper la case (x, y) à leur prochain tour
+    threatsAt(x, y) { return this.living('enemy').filter((e) => this.threatOf(e).has(key(x, y))); }
 
     // Soldats qui n'ont pas encore joué ce tour (garde-fou de « Fin du tour »)
     idleUnits() {
@@ -228,7 +254,6 @@
       const win = !this.living('enemy').length;
       if (!win && this.living('player').length) return false;
       this.state = 'over';
-      this.fast = false;
       this.ui.setSpeed(null);
       this.ui.hideAll();
       this.ui.setEndTurnEnabled(false);
@@ -240,7 +265,6 @@
       if (this.phase !== 'player' || this.state === 'busy' || this.state === 'over') return;
       if (this.state !== 'idle') this.cancelAll();
       this.state = 'busy';
-      this.danger = null;
       this.ui.hideAll();
       await this.runEnemyPhase();
     }
@@ -250,7 +274,7 @@
       this.ui.setTurn(this.turn, 'enemy');
       this.ui.setEndTurnEnabled(false);
       this.guide?.on('enemy');
-      this.ui.setSpeed('hint');
+      this.ui.setSpeed(this.fast ? 'fast' : 'hint');
       await this.ui.banner(`Tour ${this.turn} — Phase ennemie`, 'enemy');
       // Comme sur GBA, chaque camp se soigne sur les forts au début de sa propre phase.
       await this.healOnForts('enemy');
@@ -272,7 +296,7 @@
       }
 
       // Nouveau tour
-      this.fast = false;
+      this.fast = !!this.options.fast;
       this.ui.setSpeed(null);
       this.turn++;
       this.phase = 'player';
@@ -282,6 +306,7 @@
       await this.healOnForts('player');
       this.ui.setEndTurnEnabled(true);
       this.state = 'idle';
+      this.cursorToNext();
       this.refreshHover();
     }
 
@@ -308,11 +333,30 @@
       this.targets = [];
       this.ui.hideMenu();
       this.ui.hideForecast();
+      this.clearPlan();
       if (this.checkEnd()) return;
       this.state = 'idle';
+      this.cursorToNext(); // comme sur GBA, le curseur file au prochain soldat
       this.refreshHover();
-      if (this.living('player').every((p) => p.acted)) this.endPlayerPhase();
+      if (this.options.autoEnd !== false && this.living('player').every((p) => p.acted)) this.endPlayerPhase();
       else this.guide?.on('acted');
+    }
+
+    cursorToNext() {
+      const next = this.living('player').find((p) => !p.acted);
+      if (next) this.cursor = { x: next.x, y: next.y };
+    }
+
+    // Bouton « Suivant » : choisit le prochain soldat qui n'a pas joué (L sur GBA)
+    selectNext() {
+      if (this.phase !== 'player' || !['idle', 'selected'].includes(this.state)) return;
+      const idle = this.living('player').filter((p) => !p.acted);
+      if (!idle.length) return;
+      const u = idle[(idle.indexOf(this.lastNext) + 1) % idle.length];
+      this.lastNext = u;
+      this.cursor = { x: u.x, y: u.y };
+      this.select(u);
+      this.refreshHover();
     }
 
     // ------------------------------------------------------------ animations
@@ -437,6 +481,11 @@
     }
 
     // ------------------------------------------------------------ entrées joueur
+    // Façon Fire Emblem Heroes (maquette du 29/10, direction B) : un soldat choisi, un premier
+    // toucher sur une case bleue montre la flèche du chemin et sa silhouette à l'arrivée
+    // (preview), le second l'y envoie ; on peut aussi glisser le doigt depuis le soldat. Toucher
+    // un ennemi propose un chemin jusqu'à lui avec les prévisions (plan) ; hors de portée, sa
+    // portée s'affiche en orange (peek). Sans soldat choisi, toucher un ennemi garde sa portée.
     hover(x, y) {
       if (!this.inBounds(x, y)) return;
       this.cursor = { x, y };
@@ -445,14 +494,17 @@
         if (i >= 0) { this.targetIndex = i; this.showTargetForecast(); }
         return;
       }
+      // À la souris et au clavier, la flèche suit le curseur (comme sur GBA)
+      if (this.state === 'selected' && !this.plan && this.moveRes.stops.has(key(x, y))) { this.setPreview(x, y, true); return; }
       this.refreshHover();
     }
 
     refreshHover() {
       if (this.state === 'busy' || this.state === 'over' || this.state === 'menu') return;
+      if (this.plan) return; // les prévisions restent affichées
       const { x, y } = this.cursor;
       const side = x < this.w / 2 ? 'right' : 'left';
-      const u = this.unitAt(x, y);
+      const u = this.unitAt(x, y) ?? (this.state === 'selected' ? this.selected : null);
       if (u) this.ui.showUnit(u, side); else this.ui.hideUnit();
       this.ui.showTerrain(this.terrainAt(x, y), side);
     }
@@ -473,7 +525,8 @@
 
     confirm() {
       if (this.state === 'menu') { this.ui.menuConfirm(); return; }
-      if (this.state === 'target') { this.click(this.cursor.x, this.cursor.y); return; }
+      if (this.state === 'target') { this.confirmTarget(); return; } // au clavier, Entrée confirme
+      if (this.state === 'selected' && this.plan && this.cursor.x === this.plan.target.x && this.cursor.y === this.plan.target.y) { this.runPlan(); return; }
       this.click(this.cursor.x, this.cursor.y);
     }
 
@@ -484,6 +537,7 @@
         return;
       }
       if (!this.inBounds(x, y) || this.phase !== 'player') return;
+      this.ui.hideSheet();
       this.cursor = { x, y };
       const u = this.unitAt(x, y);
 
@@ -491,57 +545,48 @@
         case 'idle': {
           this.refreshHover();
           if (u && u.team === 'player' && !u.acted) { this.select(u); return; }
-          if (u && u.team === 'enemy') { this.toggleDanger(u); return; }
-          this.danger = null;
+          if (u && u.team === 'enemy') this.toggleMark(u);
           return;
         }
-        case 'selected': {
-          const k = key(x, y);
-          if (this.moveRes.stops.has(k)) {
-            this.state = 'busy';
-            this.origin = { x: this.selected.x, y: this.selected.y };
-            await this.moveAlong(this.selected, pathTo(this.moveRes, x, y));
-            this.openMenu();
-            this.guide?.on('menu');
-            return;
-          }
-          if (u && u.team === 'player' && !u.acted && u !== this.selected) { this.select(u); return; }
-          this.cancel();
-          return;
-        }
+        case 'selected': this.clickSelected(x, y, u); return;
         case 'target': {
           const i = this.targets.findIndex((e) => e.x === x && e.y === y);
           if (i < 0) return;
-          // Sur écran tactile, un premier appui affiche les prévisions, le second confirme.
-          if (i !== this.targetIndex || !this.forecastShown) {
+          // Un premier appui affiche les prévisions ; le bouton confirme (ou un second appui, en option)
+          if (i !== this.targetIndex || !this.forecastShown || !this.options.doubleTap) {
             this.targetIndex = i;
             this.showTargetForecast();
             return;
           }
-          const t = this.targets[i];
-          const att = this.selected;
-          this.state = 'busy';
-          this.ui.hideForecast();
-          this.ui.hideUnit();
-          if (this.targetMode === 'heal') { await this.heal(att, t); this.finishUnit(att); return; }
-          await this.attack(att, t);
-          if (att.alive) this.finishUnit(att);
-          else {
-            // l'attaquant est tombé pendant l'échange
-            this.selected = null;
-            if (this.checkEnd()) return;
-            this.state = 'idle';
-            this.refreshHover();
-            if (this.living('player').every((p) => p.acted)) this.endPlayerPhase();
-          }
+          await this.confirmTarget();
           return;
         }
         default: return;
       }
     }
 
+    clickSelected(x, y, u) {
+      const sel = this.selected;
+      if (u === sel) { this.go(x, y); return; }
+      if (u && u === this.plan?.target) { if (this.options.doubleTap) this.runPlan(); return; }
+      // Le soigneur : toucher un allié blessé propose d'aller le soigner
+      if (u && u.team === sel.team && sel.weapon.staff && u.hp < u.maxHp && this.planAction(u, 'heal')) return;
+      if (u && u.team === 'player' && !u.acted) { this.select(u); return; }
+      if (u && u.team === 'enemy') {
+        if (!this.planAction(u, 'attack')) this.showPeek(u);
+        return;
+      }
+      if (this.moveRes.stops.has(key(x, y))) {
+        if (this.preview && this.preview.x === x && this.preview.y === y && !this.plan) { this.go(x, y); return; }
+        this.setPreview(x, y);
+        return;
+      }
+      this.cancel();
+    }
+
     select(u) {
-      this.danger = null;
+      this.clearPlan();
+      this.ui.hideForecast();
       this.selected = u;
       this.moveRes = reachable(this, u);
       this.threat = u.weapon.staff ? new Set() : threatTiles(this, u, this.moveRes);
@@ -549,11 +594,172 @@
       this.guide?.on('select');
     }
 
-    toggleDanger(u) {
-      if (this.danger?.unit === u) { this.danger = null; return; }
-      const moves = reachable(this, u);
-      if (u.ai === 'stationary') moves.stops = new Set([key(u.x, u.y)]);
-      this.danger = { unit: u, moves, threat: threatTiles(this, u, moves) };
+    // Toucher un ennemi au repos : sa portée reste affichée jusqu'à ce qu'il tombe ou qu'on le retouche
+    toggleMark(e) {
+      if (this.marked.has(e)) this.marked.delete(e); else this.marked.add(e);
+    }
+
+    clearPlan() {
+      this.preview = null;
+      this.plan = null;
+      this.peek = null;
+      this.ui.setHint(null);
+    }
+
+    // Texte « ! » quand la case d'arrivée sera menacée au prochain tour ennemi
+    threatHint(x, y) {
+      const foes = this.threatsAt(x, y);
+      if (!foes.length) return null;
+      const names = [...new Set(foes.map((e) => e.name))].join(', ');
+      return `! Ici, ${names} pourra${foes.length > 1 ? 'ont' : ''} le frapper au prochain tour.`;
+    }
+
+    // Flèche jusqu'à (x, y) et silhouette du soldat à l'arrivée ; quiet : la souris ou le doigt
+    // qui glisse (pas de consigne)
+    setPreview(x, y, quiet = false) {
+      if (this.preview && this.preview.x === x && this.preview.y === y && !this.plan) return;
+      this.plan = null;
+      this.peek = null;
+      this.ui.hideForecast();
+      this.preview = { x, y, path: pathTo(this.moveRes, x, y) };
+      this.cursor = { x, y };
+      this.ui.setHint(this.threatHint(x, y) ?? (quiet ? null : 'Touche encore la case pour y aller.'));
+      this.ui.showUnit(this.selected, this.selected.x < this.w / 2 ? 'right' : 'left');
+    }
+
+    // Toucher une cible avec un soldat choisi : chemin jusqu'à la case d'où frapper (ou soigner),
+    // puis prévisions avec Attaquer (ou Soigner) et Attendre là. Faux si la cible est hors d'atteinte.
+    planAction(t, mode) {
+      const sel = this.selected, w = sel.weapon;
+      const ok = (x, y) => {
+        const d = manhattan({ x, y }, t);
+        return mode === 'heal' ? d >= w.min && d <= w.max : canReach(sel, d);
+      };
+      const cells = [...this.moveRes.stops].map(unkey).filter(([x, y]) => ok(x, y));
+      if (!cells.length) return false;
+      const same = (c, p) => p && c[0] === p.x && c[1] === p.y;
+      // La case déjà visée, sinon sa place actuelle, sinon le meilleur terrain, puis la plus proche
+      const best = cells.find((c) => same(c, this.preview)) ?? cells.find((c) => same(c, sel))
+        ?? cells.sort((a, b) => {
+          const ta = this.terrainAt(...a), tb = this.terrainAt(...b);
+          return (tb.avo + tb.def * 5) - (ta.avo + ta.def * 5) || this.moveRes.dist.get(key(...a)) - this.moveRes.dist.get(key(...b));
+        })[0];
+      const [x, y] = best;
+      this.peek = null;
+      this.preview = { x, y, path: pathTo(this.moveRes, x, y) };
+      this.plan = { target: t, mode, x, y };
+      this.cursor = { x: t.x, y: t.y };
+      this.ui.hideUnit();
+      this.ui.setHint(this.threatHint(x, y));
+      const side = sel.x < this.w / 2 ? 'right' : 'left';
+      if (mode === 'heal') {
+        this.ui.showHealForecast(sel, t, this.healAmount(sel, t), side, () => this.runPlan(), () => this.runPlan(true));
+      } else {
+        this.ui.showForecast(sel, t, forecast(this, sel, t, { x, y }), side, () => this.runPlan(), () => this.runPlan(true));
+        this.guide?.on('forecast');
+      }
+      return true;
+    }
+
+    // Ennemi hors de portée : on montre sa portée, le soldat reste choisi
+    showPeek(e) {
+      this.preview = null;
+      this.plan = null;
+      this.peek = e;
+      this.ui.hideForecast();
+      this.ui.showUnit(e, this.selected.x < this.w / 2 ? 'right' : 'left');
+      this.ui.setHint(this.selected.weapon.staff ? 'Le soigneur n\'attaque pas. La portée de l\'ennemi est en orange.'
+        : 'Hors de portée. Sa portée est en orange ; le soldat choisi ne change pas.');
+    }
+
+    // Exécute le plan : le soldat suit la flèche, puis attaque ou soigne (ou attend seulement)
+    async runPlan(waitOnly = false) {
+      if (this.state !== 'selected' || !this.plan) return;
+      const { target, mode } = this.plan;
+      const u = this.selected;
+      const path = this.preview.path;
+      this.state = 'busy';
+      this.ui.hideForecast();
+      this.ui.hideUnit();
+      this.origin = { x: u.x, y: u.y };
+      this.clearPlan();
+      this.preview = { x: path.at(-1).x, y: path.at(-1).y, path, walking: true };
+      await this.moveAlong(u, path);
+      this.preview = null;
+      if (waitOnly) { this.finishUnit(u); return; }
+      await this.act(u, target, mode);
+    }
+
+    // Aller sur une case puis ouvrir le menu d'action ; la flèche reste pendant la marche
+    async go(x, y) {
+      const u = this.selected;
+      this.state = 'busy';
+      this.ui.hideForecast();
+      this.ui.setHint(null);
+      this.origin = { x: u.x, y: u.y };
+      const path = pathTo(this.moveRes, x, y);
+      this.plan = null;
+      this.peek = null;
+      this.preview = { x, y, path, walking: true };
+      await this.moveAlong(u, path);
+      this.preview = null;
+      this.openMenu();
+      this.guide?.on('menu');
+    }
+
+    async confirmTarget() {
+      const t = this.targets[this.targetIndex];
+      const att = this.selected;
+      if (this.state !== 'target' || !t || !att) return;
+      this.state = 'busy';
+      this.ui.hideForecast();
+      this.ui.hideUnit();
+      await this.act(att, t, this.targetMode);
+    }
+
+    // Attaque ou soin, puis fin de l'action du soldat
+    async act(att, t, mode) {
+      if (mode === 'heal') { await this.heal(att, t); this.finishUnit(att); return; }
+      await this.attack(att, t);
+      if (att.alive) { this.finishUnit(att); return; }
+      // l'attaquant est tombé pendant l'échange
+      this.selected = null;
+      if (this.checkEnd()) return;
+      this.state = 'idle';
+      this.cursorToNext();
+      this.refreshHover();
+      if (this.options.autoEnd !== false && this.living('player').every((p) => p.acted)) this.endPlayerPhase();
+    }
+
+    // Glisser le doigt depuis un soldat : la flèche suit, lâcher sur une case bleue l'y envoie,
+    // lâcher sur un ennemi (ou un allié blessé pour le soigneur) propose l'action
+    dragStart(x, y) {
+      if (this.phase !== 'player' || !['idle', 'selected'].includes(this.state)) return false;
+      const u = this.unitAt(x, y);
+      if (!u || u.team !== 'player' || u.acted) return false;
+      if (this.selected !== u) this.select(u);
+      return true;
+    }
+    dragTo(x, y) {
+      if (this.state !== 'selected' || !this.inBounds(x, y)) return;
+      const u = this.unitAt(x, y), sel = this.selected;
+      if (u && u !== sel && u === this.plan?.target) return;
+      if (u && u.team === 'enemy' && this.planAction(u, 'attack')) return;
+      if (u && u.team === sel.team && u !== sel && sel.weapon.staff && u.hp < u.maxHp && this.planAction(u, 'heal')) return;
+      if (this.moveRes.stops.has(key(x, y))) this.setPreview(x, y, true);
+    }
+    dragEnd() {
+      if (this.state !== 'selected' || this.plan || !this.preview) return;
+      const { x, y } = this.preview;
+      if (x !== this.selected.x || y !== this.selected.y) this.go(x, y);
+    }
+
+    // Appui long : la fiche complète d'un soldat (allié ou ennemi)
+    longPress(x, y) {
+      const u = this.unitAt(x, y);
+      if (!u) return false;
+      this.ui.showSheet(u);
+      return true;
     }
 
     enemiesInRange(u) {
@@ -611,7 +817,8 @@
         const [id, n] = usable[0];
         items.push({ id: 'item', label: 'Objet', detail: usable.length > 1 ? `${usable.length} objets` : `${ITEMS[id].name} ×${n}`, icon: this.ui.itemIconHtml(id) });
       }
-      items.push({ id: 'wait', label: 'Attendre' });
+      const foesHere = this.threatsAt(u.x, u.y).length;
+      items.push({ id: 'wait', label: 'Attendre', detail: foesHere ? `! ${foesHere} ennemi${foesHere > 1 ? 's' : ''} à portée` : '' });
       this.state = 'menu';
       this.menuLevel = null;
       this.ui.hideUnit();
@@ -667,20 +874,28 @@
       this.forecastShown = true;
       if (this.targetMode === 'heal') {
         this.ui.showHealForecast(att, def, this.healAmount(att, def), att.x < this.w / 2 ? 'right' : 'left', () => {
-          if (this.state === 'target' && this.targets[this.targetIndex] === def) this.click(def.x, def.y);
+          if (this.state === 'target' && this.targets[this.targetIndex] === def) this.confirmTarget();
         });
         return;
       }
       const fc = forecast(this, att, def, att);
       this.guide?.on('forecast');
       this.ui.showForecast(att, def, fc, att.x < this.w / 2 ? 'right' : 'left', () => {
-        if (this.state === 'target' && this.targets[this.targetIndex] === def) this.click(def.x, def.y);
+        if (this.state === 'target' && this.targets[this.targetIndex] === def) this.confirmTarget();
       });
     }
 
     cancel() {
       switch (this.state) {
         case 'selected':
+          // D'abord la flèche, le plan ou la portée montrée ; ensuite seulement le soldat
+          if (this.preview || this.plan || this.peek) {
+            this.clearPlan();
+            this.ui.hideForecast();
+            this.cursor = { x: this.selected.x, y: this.selected.y };
+            this.refreshHover();
+            break;
+          }
           this.selected = null; this.moveRes = null; this.threat = null;
           this.state = 'idle';
           this.refreshHover();
@@ -702,7 +917,7 @@
           this.openMenu();
           break;
         case 'idle':
-          this.danger = null;
+          this.marked.clear();
           break;
         default:
           break;
@@ -710,6 +925,7 @@
     }
 
     cancelAll() {
+      this.clearPlan();
       while (this.state === 'target' || this.state === 'menu' || this.state === 'selected') this.cancel();
     }
   }

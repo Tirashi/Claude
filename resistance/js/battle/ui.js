@@ -38,6 +38,30 @@
       · <span class="fc-dis">Faible contre</span> ${typeHtml(weak)}</div>`;
   }
 
+  // Façon de se déplacer et comportement des ennemis (fiches)
+  const MOVE_LABELS = { foot: 'à pied', armor: 'en armure', mounted: 'à cheval' };
+  const AI_TEXT = {
+    aggressive: 'Fonce sur tes soldats',
+    guard: 'Garde sa zone : bouge si tu y entres',
+    stationary: 'Ne bouge pas de sa case',
+  };
+  const aiText = (u) => (u.ai === 'guard' && u.awake ? 'En alerte : fonce sur tes soldats' : AI_TEXT[u.ai] ?? '');
+  const rangeText = (w) => (w.min === w.max ? `${w.min}` : `${w.min}-${w.max}`);
+
+  // Pastilles : arme, portée, déplacement et sa façon (fiche courte, recrutement, armée)
+  function chipsHtml(w, mov, moveType) {
+    return `<div class="chips"><span class="chip">${weaponIcon(w)} ${w.name}</span>`
+      + `<span class="chip">Portée <b>${rangeText(w)}</b></span>`
+      + `<span class="chip">Dép <b>${mov}</b> ${MOVE_LABELS[moveType] ?? ''}</span></div>`;
+  }
+
+  // Barres de statistiques d'une recrue (Mag à la place de For pour le soigneur et le mage)
+  const BAR_MAX = { hp: 30, str: 10, mag: 10, skl: 12, spd: 12, def: 12, res: 10 };
+  function statBars(s, w) {
+    const keys = ['hp', w.magic || w.staff ? 'mag' : 'str', 'skl', 'spd', 'def', 'res'];
+    return keys.map((k) => `<span><b>${STAT_LABELS[k]}</b>${s[k]}<i><em style="width:${Math.min(100, (100 * s[k]) / BAR_MAX[k])}%"></em></i></span>`).join('');
+  }
+
   // Liste de l'armée (bilan de combat, repos, consultation). entries : voir Run.summary().
   function armyHtml(entries) {
     const rows = entries.map((e) => {
@@ -50,13 +74,14 @@
         <span class="unit-class">${e.className}${e.trait ? ` · <span class="trait">${e.trait}</span>` : ''}
           ${e.weapon ? weaponIcon(WEAPONS[e.weapon]) : ''}</span>
         <span>Niv ${e.level}</span><span class="army-hp">${state}</span>
-        <div class="bar"><div style="width:${pct}%"></div></div></div>`;
+        <div class="bar"><div style="width:${pct}%"></div></div>
+        ${e.cls && e.weapon ? `<div class="army-chips">${chipsHtml(WEAPONS[e.weapon], CLASSES[e.cls].mov + (e.movBonus ?? 0), CLASSES[e.cls].moveType)}</div>` : ''}</div>`;
     }).join('');
     return `<div class="army-list">${rows}</div>`;
   }
 
   class UI {
-    constructor({ onEndTurn, onRestart, onReplay, onCancel, onArmy, onDepart, onRetreat, onDanger, tileToScreen }) {
+    constructor({ onEndTurn, onRestart, onReplay, onCancel, onArmy, onDepart, onMenu, onDanger, tileToScreen }) {
       this.el = {
         unit: $('unit-panel'), terrain: $('terrain-panel'), menu: $('action-menu'),
         forecast: $('forecast'), banner: $('banner'), end: $('end-screen'),
@@ -68,6 +93,7 @@
         runOverlay: $('run-overlay'), runBox: $('run-box'), resources: $('resources'),
         hud: $('hud'), stage: $('stage'), danger: $('danger-btn'),
         quote: $('quote'), speed: $('speed'), guide: $('guide'),
+        status: $('status-panel'), hint: $('hint'), sheet: $('sheet'),
       };
       this.tileToScreen = tileToScreen;
       // Petite main pixel du menu d'action (façon GBA), dessinée une fois
@@ -81,7 +107,8 @@
       this.el.cancel.addEventListener('click', onCancel);
       this.el.army.addEventListener('click', onArmy);
       $('depart-btn').addEventListener('click', onDepart);
-      $('retreat-btn').addEventListener('click', onRetreat);
+      $('menu-btn').addEventListener('click', onMenu);
+      this.el.sheet.addEventListener('click', () => this.hideSheet());
       this.el.danger.addEventListener('click', onDanger);
       this.guideSkip = null;
       this.el.guide.addEventListener('click', (e) => {
@@ -120,7 +147,7 @@
     }
 
     hideAll() {
-      this.hideUnit(); this.hideMenu(); this.hideForecast();
+      this.hideUnit(); this.hideMenu(); this.hideForecast(); this.hideSheet(); this.setHint(null); this.hideStatus();
       this.el.terrain.classList.add('hidden');
     }
 
@@ -234,7 +261,10 @@
             <span><span class="unit-name player">${c.name}</span> <span class="unit-class">${cls.name}</span>
               ${weaponIcon(WEAPONS[cls.weapon])}</span>
             <span class="trait">${trait ? `${trait.name} : ${trait.desc}` : '—'}</span>
-            <span class="recruit-stats">${c.level > 1 ? `Niv ${c.level} · ` : ''}PV ${s.hp} · ${WEAPONS[cls.weapon].staff ? `Mag ${s.mag}` : `For ${s.str}`} · Tec ${s.skl} · Vit ${s.spd} · Déf ${s.def}</span>
+            ${chipsHtml(WEAPONS[c.weapon ?? cls.weapon], cls.mov + (TRAITS[c.trait]?.mov ?? 0), cls.moveType)}
+            ${WEAPONS[cls.weapon].staff ? '<span class="tri-line unit-class">Soigne un allié à côté, n\'attaque pas</span>' : triangleHtml(WEAPONS[cls.weapon])}
+            <span class="stat-bars">${statBars(s, WEAPONS[cls.weapon])}</span>
+            ${c.level > 1 ? `<span class="unit-class">Niv ${c.level}</span>` : ''}
           </span></button>`;
       }).join('');
       const html = `<h2>Recrutement</h2>
@@ -346,14 +376,13 @@
           <span><b>Chc</b> ${u.lck}</span>
           <span><b>Déf</b> ${u.def}</span>
           <span><b>Rés</b> ${u.res}</span>
-          <span><b>Dép</b> ${u.mov}</span>
         </div>
+        ${chipsHtml(w, u.mov, u.moveType)}
         ${w.staff
-          ? `<div class="weapon">${weaponIcon(w)} ${w.name} · Soin Mag + ${w.heal} · Portée ${w.max}</div>
-             <div class="tri-line unit-class">N'attaque pas : soigne un allié à côté</div>`
-          : `<div class="weapon">${weaponIcon(w)} ${w.name} · Pui ${w.mt} · Pré ${w.hit} · Portée ${w.min === w.max ? w.min : `${w.min}-${w.max}`}</div>
-        ${effectiveText(w) ? `<div class="tri-line eff-line">✦ ${effectiveText(w)} (Pui ×3)</div>` : ''}
-        ${triangleHtml(w)}`}`;
+          ? `<div class="tri-line unit-class">N'attaque pas : soigne un allié à côté (Mag + ${w.heal} PV)</div>`
+          : `${effectiveText(w) ? `<div class="tri-line eff-line">✦ ${effectiveText(w)} (Pui ×3)</div>` : ''}
+        ${triangleHtml(w)}`}
+        ${u.team === 'enemy' ? `<div class="ai-line">${aiText(u)}</div>` : ''}`;
       this.el.unit.classList.toggle('right', side === 'right');
       this.el.unit.classList.toggle('enemy', u.team === 'enemy'); // fenêtre rouge, comme sur GBA
       this.el.unit.classList.remove('hidden');
@@ -414,7 +443,8 @@
 
     // ------------------------------------------------------------ prévisions
     // onAttack : bouton « Attaquer » (même effet que toucher de nouveau la cible)
-    showForecast(att, def, fc, side, onAttack = null) {
+    // onWait : bouton « Attendre là » (plan proposé en touchant l'ennemi)
+    showForecast(att, def, fc, side, onAttack = null, onWait = null) {
       const fmt = (s) => (s ? `${s.dmg}${s.count === 2 ? ' ×2' : ''}` : '–');
       const tri = (s) => (!s || !s.tri ? '' : s.tri > 0 ? ' <span class="fc-adv">▲</span>' : ' <span class="fc-dis">▼</span>');
       const sim = simulateAllHits(att, def, fc);
@@ -441,25 +471,68 @@
           <div>${fc.a.crit}%</div><div class="lbl">Critique</div><div>${fc.d ? fc.d.crit + '%' : '–'}</div>
         </div>
         ${triLine}${eff}${aura}
+        ${sim.def <= 0 ? `<div class="fc-kill">Peut vaincre ${def.name} ce tour-ci</div>` : ''}
+        ${sim.att <= 0 ? `<div class="fc-risk">! ${def.name} peut vaincre ${att.name} en ripostant</div>` : ''}
         <div class="fc-note">PV si tous les coups touchent</div>
-        ${onAttack ? '<button class="fc-go">Attaquer</button>' : ''}`;
+        <div class="fc-row">${onAttack ? '<button class="fc-go">Attaquer</button>' : ''}${onWait ? '<button class="fc-wait">Attendre là</button>' : ''}</div>`;
       this.el.forecast.querySelector('.fc-go')?.addEventListener('click', (e) => { e.stopPropagation(); onAttack(); });
+      this.el.forecast.querySelector('.fc-wait')?.addEventListener('click', (e) => { e.stopPropagation(); onWait(); });
       this.el.forecast.classList.toggle('left', side === 'left');
       this.el.forecast.classList.remove('hidden');
     }
     // Prévision d'un soin : PV de l'allié avant → après, bouton « Soigner »
-    showHealForecast(healer, target, amount, side, onHeal) {
+    showHealForecast(healer, target, amount, side, onHeal, onWait = null) {
       const f = this.el.forecast;
       const pct = (hp) => (100 * hp) / target.maxHp;
       f.innerHTML = `<div class="unit-name player">${healer.name} soigne ${target.name}</div>
         <div class="row"><span>PV ${target.hp} → <span class="fc-adv">${target.hp + amount}</span> / ${target.maxHp}</span>
           <span class="fc-adv">+${amount}</span></div>
         <div class="bar"><div style="width:${pct(target.hp + amount)}%"></div></div>
-        <button class="fc-go">Soigner</button>`;
+        <div class="fc-row"><button class="fc-go">Soigner</button>${onWait ? '<button class="fc-wait">Attendre là</button>' : ''}</div>`;
       f.querySelector('.fc-go').addEventListener('click', (e) => { e.stopPropagation(); onHeal(); });
+      f.querySelector('.fc-wait')?.addEventListener('click', (e) => { e.stopPropagation(); onWait(); });
       f.classList.toggle('left', side === 'left');
       f.classList.remove('hidden');
     }
+    // Panneau du tour (au repos)
+    showStatus({ turn, toPlay, enemies }, onNext) {
+      const st = this.el.status;
+      st.innerHTML = `<div class="row"><b style="color:var(--gold)">Tour ${turn}</b><span class="unit-class">${enemies} ennemi${enemies > 1 ? 's' : ''}</span>
+        ${toPlay ? `<span>${toPlay} à jouer</span><button class="next">Suivant ▸</button>` : '<span class="unit-class">Tous ont joué</span>'}</div>`;
+      st.querySelector('.next')?.addEventListener('click', (e) => { e.stopPropagation(); onNext(); });
+      st.classList.remove('hidden');
+    }
+    hideStatus() { this.el.status.classList.add('hidden'); }
+
+    // Consigne sous la carte ; un texte qui commence par « ! » est un avertissement
+    setHint(text) {
+      const h = this.el.hint;
+      h.classList.toggle('hidden', !text);
+      if (!text) return;
+      h.textContent = text;
+      h.classList.toggle('warn', text.startsWith('!'));
+    }
+
+    // Fiche complète d'un soldat (appui long) ; la toucher la ferme
+    showSheet(u) {
+      const w = u.weapon;
+      const stats = STAT_KEYS.map((k) => `<span><b>${STAT_LABELS[k]}</b> ${k === 'hp' ? u.maxHp : u[k]}</span>`).join('');
+      this.el.sheet.innerHTML = `
+        <div class="head"><span class="portrait" style="background-image:url(assets/units/${u.sprite}.png)"></span>
+          <div><div class="unit-name ${u.team}">${u.name}${u.title ? ` <span class="unit-class">${u.title}</span>` : ''}</div>
+          <div class="unit-class">${u.className}${u.boss ? ' · Général' : ''} · Niv ${u.level}${u.traitName ? ` · <span class="trait">${u.traitName}</span>` : ''}</div>
+          <div>PV ${u.hp} / ${u.maxHp}${u.team === 'player' ? ` <span class="unit-class">· EXP ${u.level >= MAX_LEVEL ? '--' : u.exp}</span>` : ''}</div></div></div>
+        <div class="stats">${stats}</div>
+        ${chipsHtml(w, u.mov, u.moveType)}
+        ${w.staff ? `<div class="tri-line unit-class">N'attaque pas : soigne un allié à côté (Mag + ${w.heal} PV)</div>`
+          : `<div class="unit-class">Pui ${w.mt} · Pré ${w.hit} · Crit ${w.crit}</div>${effectiveText(w) ? `<div class="tri-line eff-line">✦ ${effectiveText(w)} (Pui ×3)</div>` : ''}${triangleHtml(w)}`}
+        ${u.team === 'enemy' ? `<div class="ai-line">${aiText(u)}</div>` : ''}
+        <div class="close">Touchez la fiche pour la fermer.</div>`;
+      this.el.sheet.classList.toggle('enemy', u.team === 'enemy');
+      this.el.sheet.classList.remove('hidden');
+    }
+    hideSheet() { this.el.sheet.classList.add('hidden'); }
+
     hideForecast() { this.el.forecast.classList.add('hidden'); }
 
     // ------------------------------------------------------------ expérience
@@ -516,5 +589,5 @@
     hideEnd() { this.el.end.classList.add('hidden'); }
   }
 
-  Object.assign(Resistance, { iconHtml, effectiveText, armyHtml, UI });
+  Object.assign(Resistance, { iconHtml, effectiveText, armyHtml, UI, chipsHtml });
 })();

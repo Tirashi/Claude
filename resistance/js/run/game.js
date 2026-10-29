@@ -2,7 +2,7 @@
 // `scene` est l'écran actif (RunMapScene ou Battle) : main.js lui transmet les entrées.
 (() => {
   'use strict';
-  const { Battle, Guide, ENCOUNTERS, FORTRESS, META_RULES, PREPARATION, fortressBonuses, veteranPrice, RECRUITMENT, CAPTAIN, traitLabel, COUNTRIES, ITEMS, WEAPONS, CLASSES, EVENTS, WEAPON_UPGRADES, ITEM_ICONS, armyHtml, iconHtml, numberHtml, effectiveText, loadMeta, saveMeta, loadRun, saveRun, clearRun, Run, randomSeed, canWield, shopEntry, prepEntry, prepText, prepBonuses, veteranReturnLevel, RunMapScene, FortressScene } = Resistance;
+  const { Battle, Guide, ENCOUNTERS, FORTRESS, META_RULES, PREPARATION, fortressBonuses, veteranPrice, RECRUITMENT, CAPTAIN, traitLabel, COUNTRIES, ITEMS, WEAPONS, CLASSES, EVENTS, WEAPON_UPGRADES, ITEM_ICONS, armyHtml, chipsHtml, iconHtml, numberHtml, traitBonus, traitsOf, effectiveText, loadMeta, saveMeta, loadRun, saveRun, clearRun, Run, randomSeed, canWield, shopEntry, prepEntry, prepText, prepBonuses, veteranReturnLevel, RunMapScene, FortressScene } = Resistance;
 
   const goldIcon = () => iconHtml(ITEM_ICONS.gold.sheet, ITEM_ICONS.gold.at);
   const suppliesIcon = () => iconHtml(ITEM_ICONS.supplies.sheet, ITEM_ICONS.supplies.at);
@@ -487,6 +487,76 @@
       if (choice === 'retreat' && this.scene === battle) battle.retreat();
     }
 
+    // Réglages du joueur (Menu > Options), gardés avec la forteresse
+    options() {
+      return (this.meta.options ??= { fast: false, autoEnd: true, doubleTap: false });
+    }
+
+    // Menu de la carte façon GBA : Unités, Objectif, Options, Retraite
+    async battleMenu() {
+      const battle = this.scene;
+      if (!(battle instanceof Battle) || this.ui.modalOpen || battle.phase !== 'player'
+        || battle.state === 'busy' || battle.state === 'over') return;
+      battle.cancelAll();
+      const pick = await this.ui.showChoices({
+        title: 'Menu',
+        choices: [
+          { id: 'units', html: '<span class="choice-main"><b>Unités</b><br><span class="unit-class">Tes soldats, leurs PV, qui a joué</span></span>' },
+          { id: 'goal', html: '<span class="choice-main"><b>Objectif</b><br><span class="unit-class">Ce qu\'il faut faire pour gagner</span></span>' },
+          { id: 'options', html: '<span class="choice-main"><b>Options</b><br><span class="unit-class">Vitesse, fin du tour, attaque</span></span>' },
+          { id: 'retreat', html: '<span class="choice-main"><b>Retraite</b><br><span class="unit-class">Quitter ce combat</span></span>' },
+        ],
+        buttons: [{ id: 'close', label: 'Fermer' }], cancel: 'close',
+      });
+      if (this.scene !== battle) return;
+      if (pick === 'units') {
+        const rows = battle.units.filter((u) => u.team === 'player').map((u) => ({
+          name: u.name, className: u.className, trait: u.traitName, level: u.level, hp: u.hp, maxHp: u.maxHp,
+          alive: u.alive, fallen: !u.alive, healed: 0,
+        }));
+        const left = battle.living('player').filter((u) => !u.acted).map((u) => u.name);
+        await this.ui.showRunPanel({
+          title: 'Unités',
+          body: `${armyHtml(rows)}<p class="unit-class">${left.length ? `À jouer : ${left.join(', ')}` : 'Tous ont joué ce tour-ci.'}</p>`,
+          buttons: [{ id: 'ok', label: 'Fermer' }], cancel: 'ok',
+        });
+      } else if (pick === 'goal') {
+        const n = battle.living('enemy').length;
+        const boss = battle.units.find((u) => u.boss && u.alive);
+        await this.ui.showRunPanel({
+          title: 'Objectif',
+          body: `<p>Vaincre tous les ennemis : encore ${n} ennemi${n > 1 ? 's' : ''}${boss ? `, dont ${boss.name}` : ''}.</p>
+            <p class="unit-class">Tour ${battle.turn}. Tes soldats tombés sont perdus pour la campagne.</p>`,
+          buttons: [{ id: 'ok', label: 'Fermer' }], cancel: 'ok',
+        });
+      } else if (pick === 'options') {
+        await this.optionsMenu(battle);
+      } else if (pick === 'retreat') {
+        await this.confirmRetreat();
+      }
+    }
+
+    async optionsMenu(battle) {
+      const o = this.options();
+      const line = (title, value, desc) => `<span class="choice-main"><b>${title} : ${value}</b><br><span class="unit-class">${desc}</span></span>`;
+      for (;;) {
+        const pick = await this.ui.showChoices({
+          title: 'Options',
+          body: '<p class="unit-class">Touchez une ligne pour la changer.</p>',
+          choices: [
+            { id: 'fast', html: line('Vitesse', o.fast ? 'rapide' : 'normale', 'Rapide : déplacements et combats deux fois plus vite, pour tous') },
+            { id: 'autoEnd', html: line('Fin du tour automatique', o.autoEnd ? 'oui' : 'non', 'Le tour passe à l\'ennemi dès que tous tes soldats ont joué') },
+            { id: 'doubleTap', html: line('Attaquer d\'un second toucher', o.doubleTap ? 'oui' : 'non', 'Toucher une seconde fois l\'ennemi attaque, sans le bouton Attaquer') },
+          ],
+          buttons: [{ id: 'close', label: 'Fermer' }], cancel: 'close',
+        });
+        if (pick === 'close') break;
+        o[pick] = !o[pick];
+        saveMeta(this.meta);
+        if (pick === 'fast' && battle.phase === 'player') battle.fast = o.fast;
+      }
+    }
+
     // « Fin du tour » alors que des soldats n'ont pas joué : on demande d'abord
     async confirmEndTurn() {
       const battle = this.scene;
@@ -519,6 +589,7 @@
         seed: run.battleSeed(node),
         levelBonus: run.levelBonus(node),
         healBonus: run.healBonus,
+        options: this.options(),
         ui,
         guide: this.meta.guideDone ? null : new Guide(ui),
         onEnd: (win) => this.endBattle(node, battle, win),
@@ -628,7 +699,8 @@
             id: r.armyId,
             html: `<span class="portrait" style="background-image:url(assets/units/${CLASSES[r.cls].sprite}_blue.png)"></span>
               <span class="choice-main"><b>${r.name}</b> <span class="unit-class">${CLASSES[r.cls].name} · Niv ${r.level}</span><br>
-              <span class="unit-class">${r.alive ? 'A survécu' : 'Tombé au combat'} · ${r.kills ?? 0} vaincu${(r.kills ?? 0) > 1 ? 's' : ''}${label ? ` · <span class="trait">${label}</span>` : ''}</span></span>`,
+              <span class="unit-class">${r.alive ? 'A survécu' : 'Tombé au combat'} · ${r.kills ?? 0} vaincu${(r.kills ?? 0) > 1 ? 's' : ''}${label ? ` · <span class="trait">${label}</span>` : ''}</span>
+              ${chipsHtml(WEAPONS[r.weapon], CLASSES[r.cls].mov + traitBonus(traitsOf(r)).mov, CLASSES[r.cls].moveType)}</span>`,
           };
         }),
         buttons: [{ id: 'none', label: current && !inRun ? `Garder ${current.name}` : 'Personne' }],

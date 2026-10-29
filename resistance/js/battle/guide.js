@@ -7,10 +7,10 @@
 
   const STEPS = {
     start: 'Premier combat ! Touche un de tes soldats (en bleu) pour le choisir. Attention : un soldat qui tombe est perdu pour toute la campagne.',
-    select: 'Cases bleues : où il peut aller. Cases rouges : où il pourra frapper. Touche une case bleue pour l\'y envoyer.',
-    menu: 'Choisis une action. « Attaquer » apparaît quand un ennemi est à portée ; sinon, « Attendre ». « Annuler » le ramène à sa place.',
+    select: 'Cases bleues : où il peut aller. Touche une case bleue : une flèche montre le chemin, touche-la encore pour y aller (ou glisse le doigt depuis le soldat). Touche un ennemi pour l\'attaquer.',
+    menu: 'Choisis une action. « Attaquer » apparaît quand un ennemi est à portée ; sinon, « Attendre ». « Annuler » le ramène à sa place. Un appui long sur un soldat montre sa fiche.',
     forecast: 'Les prévisions : PV avant → après, dégâts (×2 : il frappe deux fois), précision et critique en %. Flèche verte : ton arme a l\'avantage (épée > hache > lance > épée). Touche « Attaquer ».',
-    acted: 'Bien joué ! Fais jouer les autres soldats. Touche un ennemi pour voir jusqu\'où il peut frapper, ou « Danger » pour voir toute la zone ennemie.',
+    acted: 'Bien joué ! Fais jouer les autres soldats (« Suivant ▸ »). Touche un ennemi : sa portée reste en rouge jusqu\'à ce qu\'il tombe. « Danger » montre toute la zone ennemie.',
     danger: 'En rouge : toutes les cases que l\'ennemi peut frapper à son prochain tour. Termine ton tour hors du rouge pour être à l\'abri.',
     enemy: 'Au tour de l\'ennemi. Touche la carte pour l\'accélérer.',
   };

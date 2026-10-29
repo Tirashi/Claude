@@ -151,7 +151,7 @@ Idées proposées par Claude le 29/10 (écrites nulle part avant) et faites d'un
 - **Chapelle** (`fortress.js`, case 5,2, coûts 6 puis 12, écusson bâton bleu) : chaque niveau ajoute **un soigneur parmi les candidats** du recrutement et **+3 PV par soin** (`clerics`, `healBonus` ; `run.healBonus` sauvegardé avec la run). Image : la dernière maison libre de `rebel-chapel.png` (toit orange au niveau 1, toit bleu rebelle au niveau 2), pas de vraie chapelle dans le pack.
 - Pas de soin automatique après le combat (l'Infirmerie le fait déjà). Pas de bâton chez le marchand ni à l'Intendance (pour l'instant).
 
-## 11. Grande session de confort façon Fire Emblem (proposée le 29/10, à valider)
+## 11. Grande session de confort façon Fire Emblem (29/10, faite)
 Demande de l'utilisateur : s'inspirer au maximum de l'ergonomie de Fire Emblem GBA (et de Fire Emblem Heroes sur mobile). Maquette jouable `maquettes/resistance-qol.html` (https://claude.ai/artifact/83cLVZeT8GyK7gJyBXyzti) : A façon GBA (un toucher = flèche, le soldat part, menu), B façon Heroes (premier toucher = flèche et silhouette, second = il y va ; glisser le doigt), R recrutement détaillé.
 Liste proposée (idées de l'utilisateur 1, 2, 3, 13) :
 1. Toucher un ennemi : sa portée reste en rouge (marque « ! » sur sa tête), plusieurs à la fois, jusqu'à ce qu'il tombe ou qu'on le retouche.
@@ -169,4 +169,13 @@ Liste proposée (idées de l'utilisateur 1, 2, 3, 13) :
 13. Recrutement : portée, déplacement et type, fort / faible contre, trait, statistiques en barres.
 14. Même fiche dans l'écran Armée et au Mémorial.
 15. Comportement des ennemis visible sur leur fiche (fonce, garde sa zone, ne bouge pas).
+
+### Choix de l'utilisateur et réalisation (29/10)
+Direction **B (Heroes)** ; attaque par le bouton (le second toucher est une option) ; barre Menu · Danger · Annuler · Fin du tour ; tous les numéros gardés ; une seule couleur (rouge) pour les ennemis marqués.
+- `battle.js`, section « entrées joueur » : `preview` (flèche et silhouette ; la souris et le clavier la font suivre le curseur), `plan` (cible touchée : case choisie = celle déjà visée, sinon sa place, sinon le meilleur terrain puis la plus proche ; prévisions avec Attaquer / Soigner et Attendre là, `runPlan`), `peek` (portée en orange d'un ennemi hors d'atteinte), `marked` (ennemis touchés au repos ; Annuler au repos les efface), `threatOf` / `threatsAt` (portée d'un ennemi, gardée tant que personne ne bouge), `dragStart` / `dragTo` / `dragEnd` (glisser le doigt), `longPress` (fiche), `selectNext` et `cursorToNext` (Suivant, curseur au prochain soldat). Annuler retire d'abord la flèche ou le plan, puis le soldat.
+- `main.js` : gestes au doigt et à la souris (appui long 450 ms, glisser, un clic ignoré après un glisser ou un appui long), touche M ; `#game { touch-action: none }`.
+- `renderer.js` : voile rouge (Danger ou ennemis marqués), orange (peek), flèche orangée cernée (`drawArrow`, points passés par `toPx`), silhouette (`drawGhost`), panneaux « ! » rouges sur les ennemis marqués et jaune au bout de la flèche si la case sera menacée (`drawMarks`).
+- `ui.js` : pastilles Portée / Dép et façon de se déplacer (`chipsHtml`, aussi au recrutement, dans l'Armée, Unités et au Mémorial), comportement des ennemis (`AI_TEXT`), fiche complète `showSheet`, panneau du tour `showStatus` (en haut de la carte, sur une ligne), consigne `setHint` (en bas de la carte, `--map-h`), prévisions « Peut vaincre… » / « ! … peut vaincre … en ripostant » et bouton Attendre là, barres de statistiques au recrutement (`statBars`).
+- `game.js` : bouton **Menu** (`battleMenu` : Unités, Objectif, Options, Retraite ; la Retraite a quitté la barre) ; **Options** gardées dans `meta.options` : vitesse rapide (tout ×2, `Battle.fast`), fin du tour automatique (oui par défaut), attaquer d'un second toucher (non par défaut).
+- Testé dans Chromium en portrait et en paysage (marques, flèche et second toucher, Annuler, plan d'attaque, orange, glisser, appui long, Menu, Options, Armée).
 

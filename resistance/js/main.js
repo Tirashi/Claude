@@ -18,7 +18,7 @@
     onCancel: () => game.scene?.cancel(),
     onArmy: () => game.showArmy(),
     onDepart: () => game.scene?.onDepart?.(),
-    onRetreat: () => game.confirmRetreat(),
+    onMenu: () => game.battleMenu(),
     onDanger: () => game.scene?.toggleDangerZone?.(),
     tileToScreen: (x, y) => ({ x: x * TILE * scale, y: y * TILE * scale, stageW: VIEW_W * scale }),
   });
@@ -45,6 +45,7 @@
     canvas.style.height = `${VIEW_H * scale}px`;
     stage.style.width = `${VIEW_W * scale}px`;
     document.documentElement.style.setProperty('--s', scale);
+    document.documentElement.style.setProperty('--map-h', `${VIEW_H * scale}px`); // hauteur de la carte (consignes posées dessus)
   }
 
   function tileFromEvent(e) {
@@ -56,13 +57,42 @@
     );
   }
 
-  canvas.addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return; // au doigt, pas de survol
-    const s = game.scene;
-    const { x, y } = tileFromEvent(e);
-    if (s && (x !== s.cursor.x || y !== s.cursor.y)) s.hover(x, y);
+  // Gestes : toucher (click), glisser le doigt depuis un soldat (la flèche suit, dragStart /
+  // dragTo / dragEnd de l'écran) et appui long (fiche complète, longPress).
+  let press = null;
+  let skipClick = false;
+  canvas.addEventListener('pointerdown', (e) => {
+    const t = tileFromEvent(e);
+    press = { t, id: e.pointerId, drag: false, long: false };
+    press.timer = setTimeout(() => {
+      if (press && !press.drag && game.scene?.longPress?.(press.t.x, press.t.y)) press.long = true;
+    }, 450);
   });
+  canvas.addEventListener('pointermove', (e) => {
+    const s = game.scene;
+    const t = tileFromEvent(e);
+    if (press && press.id === e.pointerId) {
+      if (!press.drag && (t.x !== press.t.x || t.y !== press.t.y)) {
+        clearTimeout(press.timer);
+        if (s?.dragStart?.(press.t.x, press.t.y)) { press.drag = true; canvas.setPointerCapture(e.pointerId); }
+      }
+      if (press.drag) { s.dragTo(t.x, t.y); return; }
+    }
+    if (e.pointerType !== 'mouse') return; // au doigt, pas de survol
+    if (s && (t.x !== s.cursor.x || t.y !== s.cursor.y)) s.hover(t.x, t.y);
+  });
+  const release = (e) => {
+    if (!press || press.id !== e.pointerId) return;
+    clearTimeout(press.timer);
+    const p = press;
+    press = null;
+    if (p.drag) { skipClick = true; game.scene?.dragEnd?.(); }
+    else if (p.long) skipClick = true;
+  };
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', (e) => { if (press) clearTimeout(press.timer); press = null; });
   canvas.addEventListener('click', (e) => {
+    if (skipClick) { skipClick = false; return; }
     const { x, y } = tileFromEvent(e);
     game.scene?.click(x, y);
   });
@@ -87,6 +117,7 @@
     if (isCancel) { e.preventDefault(); s.cancel(); return; }
     if (k === 'e' || k === 'E') game.confirmEndTurn();
     if (k === 'd' || k === 'D') s.toggleDangerZone?.();
+    if (k === 'm' || k === 'M') game.battleMenu();
     if (k === 'a' || k === 'A') game.showArmy();
   });
 

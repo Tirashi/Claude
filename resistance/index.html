@@ -25,6 +25,9 @@
       <!-- Dernières paroles d'un soldat qui tombe -->
       <div id="quote" class="panel hidden"></div>
 
+      <!-- Fiche complète d'un soldat (appui long) -->
+      <div id="sheet" class="panel hidden"></div>
+
       <!-- Bulle du premier combat guidé -->
       <div id="guide" class="panel hidden"></div>
 
@@ -58,25 +61,27 @@
       <!-- Panneaux d'informations : par-dessus la carte sur ordinateur,
            sous la carte sur téléphone -->
       <div id="hud">
+        <div id="status-panel" class="panel hidden"></div>
         <div id="node-panel" class="panel hidden"></div>
         <div id="unit-panel" class="panel hidden"></div>
         <div id="forecast" class="panel hidden"></div>
         <div id="terrain-panel" class="panel hidden"></div>
+        <div id="hint" class="hidden"></div>
       </div>
     </div>
 
     <div id="toolbar">
       <span id="turn-label">Tour 1</span>
       <span id="resources"></span>
+      <button id="menu-btn">Menu</button>
       <button id="cancel-btn">Annuler</button>
       <button id="end-turn-btn">Fin du tour</button>
-      <button id="retreat-btn">Retraite</button>
       <button id="danger-btn" title="Zone de danger (D)">Danger</button>
       <button id="army-btn">Armée</button>
       <button id="depart-btn">Partir en campagne</button>
       <a id="ludo-btn" class="ludo-retour" href="../index.html">◀ Ludothèque</a>
       <span id="seed-label" class="seed"></span>
-      <span class="help">Clic / Entrée : sélectionner · Clic droit / Échap : annuler · Flèches : curseur · D : zone de danger · E : fin du tour · A : armée</span>
+      <span class="help">Clic / Entrée : sélectionner · Clic droit / Échap : annuler · Flèches : curseur · D : zone de danger · M : menu · E : fin du tour · A : armée</span>
     </div>
   </div>
 

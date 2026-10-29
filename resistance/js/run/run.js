@@ -371,7 +371,8 @@
 
     summary(rec, extra = {}) {
       return {
-        name: rec.name, className: CLASSES[rec.cls].name, trait: traitLabel(rec),
+        name: rec.name, className: CLASSES[rec.cls].name, trait: traitLabel(rec), cls: rec.cls,
+        movBonus: traitBonus(traitsOf(rec)).mov,
         weapon: rec.weapon,
         level: rec.level, exp: rec.exp,
         hp: rec.hp, maxHp: rec.stats.hp, alive: rec.alive, healed: 0, fallen: false, ...extra,

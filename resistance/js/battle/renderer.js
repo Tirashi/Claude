@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const { img, grayImg, PIXEL_FONT, TILE, key, triangle, drawPixelText, toCell, place, faceOf, cacheValid, storeCache } = Resistance;
+  const { img, grayImg, PIXEL_FONT, TILE, key, triangle, drawPixelText, toCell, toPx, place, faceOf, cacheValid, storeCache } = Resistance;
 
   const DIR_ROW = { right: 0, left: 0, down: 5, up: 10 };
   const ANIM_ROW = { idle: 0, walk: 1, attack: 2, death: 3 };
@@ -94,9 +94,11 @@
       this.drawRanges(battle, t);
       this.drawCursor(battle, t);
 
+      this.drawGhost(battle, t);
       const units = battle.units.filter((u) => u.alive).sort((a, b) => a.py - b.py);
       for (const u of units) this.drawUnit(u, battle, t);
       for (const u of units) if (u.anim !== 'death') this.drawHpBar(u);
+      this.drawMarks(battle, t);
       this.drawTriangleHints(battle, t);
 
       this.drawEffects(battle, t);
@@ -113,38 +115,95 @@
           this.ctx.drawImage(image, frame * TILE, 0, TILE, TILE, c.x * TILE, c.y * TILE, TILE, TILE);
         }
       };
-      // Zone de danger : voile rouge sous les portées (une case bleue et rouge à la fois est
-      // un endroit où l'unité pourrait aller, mais où l'ennemi pourra la frapper)
-      // (affichée aussi pendant le tour ennemi ; pas pendant le choix d'une cible)
-      const zone = battle.dangerOn && !['target', 'over'].includes(battle.state);
-      if (battle.state === 'selected' && battle.moveRes) {
-        paint(blue, battle.moveRes.dist.keys());
-        if (!zone) paint(red, battle.threat);
-      } else if (battle.state === 'target') {
-        paint(battle.targetMode === 'heal' ? blue : red, battle.targets.map((e) => key(e.x, e.y)));
-      } else if (battle.danger && battle.danger.unit.alive) {
-        paint(blue, battle.danger.moves.stops);
-        paint(red, battle.danger.threat);
-      }
-      if (zone) {
+      // Voile de couleur avec un bord plus vif là où la zone s'arrête
+      const veil = (keys, fill, edge) => {
         const { ctx } = this;
-        const cells = new Set([...battle.dangerTiles()].map((k) => {
+        const cells = new Set([...keys].map((k) => {
           const [x, y] = k.split(',').map(Number);
           const c = toCell(x, y);
           return `${c.x},${c.y}`;
         }));
         for (const k of cells) {
           const [x, y] = k.split(',').map(Number);
-          ctx.fillStyle = 'rgba(255, 40, 60, .38)';
+          ctx.fillStyle = fill;
           ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-          // Bord plus vif là où la zone s'arrête
-          ctx.fillStyle = 'rgba(255, 110, 120, .95)';
+          ctx.fillStyle = edge;
           if (!cells.has(`${x},${y - 1}`)) ctx.fillRect(x * TILE, y * TILE, TILE, 1);
           if (!cells.has(`${x},${y + 1}`)) ctx.fillRect(x * TILE, y * TILE + TILE - 1, TILE, 1);
           if (!cells.has(`${x - 1},${y}`)) ctx.fillRect(x * TILE, y * TILE, 1, TILE);
           if (!cells.has(`${x + 1},${y}`)) ctx.fillRect(x * TILE + TILE - 1, y * TILE, 1, TILE);
         }
+      };
+      // Portées des ennemis : toutes (bouton Danger) ou celles des ennemis marqués, en rouge sous
+      // les cases bleues (une case bleue et rouge : on peut y aller, mais on y sera frappé) ;
+      // affichées aussi pendant le tour ennemi, pas pendant le choix d'une cible
+      const shown = !['target', 'over'].includes(battle.state);
+      const zone = shown && battle.dangerOn;
+      if (battle.state === 'selected' && battle.moveRes) {
+        paint(blue, battle.moveRes.dist.keys());
+        if (!zone && !battle.marked.size) paint(red, battle.threat);
+      } else if (battle.state === 'target') {
+        paint(battle.targetMode === 'heal' ? blue : red, battle.targets.map((e) => key(e.x, e.y)));
       }
+      if (zone) veil(battle.dangerTiles(), 'rgba(255, 40, 60, .38)', 'rgba(255, 110, 120, .95)');
+      else if (shown && battle.marked.size) veil(battle.markedTiles(), 'rgba(255, 40, 60, .38)', 'rgba(255, 110, 120, .95)');
+      // Ennemi hors de portée touché avec un soldat choisi : sa portée en orange
+      if (battle.peek?.alive && battle.state === 'selected') veil(battle.threatOf(battle.peek), 'rgba(255, 160, 40, .36)', 'rgba(255, 210, 100, .95)');
+      if (battle.preview?.path?.length > 1) this.drawArrow(battle.preview.path);
+    }
+
+    // Flèche du chemin, façon GBA : trait orangé cerné de sombre, pointe au bout
+    drawArrow(path) {
+      const { ctx } = this;
+      const pts = path.map((p) => toPx(p.x * TILE + 8, p.y * TILE + 8));
+      ctx.save();
+      ctx.lineJoin = 'miter';
+      for (const [w, col] of [[7, '#2a0c0c'], [4, '#ff8a3a'], [1.5, '#ffd8a0']]) {
+        ctx.strokeStyle = col;
+        ctx.lineWidth = w;
+        ctx.beginPath();
+        pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+        ctx.stroke();
+      }
+      const b = pts.at(-1), a = pts.at(-2);
+      const dx = Math.sign(b.x - a.x), dy = Math.sign(b.y - a.y);
+      const head = (s, col) => {
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(b.x + dx * (4 + s), b.y + dy * (4 + s));
+        ctx.lineTo(b.x - dx * 3 + dy * (5 + s), b.y - dy * 3 + dx * (5 + s));
+        ctx.lineTo(b.x - dx * 3 - dy * (5 + s), b.y - dy * 3 - dx * (5 + s));
+        ctx.closePath();
+        ctx.fill();
+      };
+      head(1.5, '#2a0c0c');
+      head(0, '#ff8a3a');
+      ctx.restore();
+    }
+
+    // Silhouette du soldat au bout de la flèche (avant de confirmer)
+    drawGhost(battle, t) {
+      const p = battle.preview, u = battle.selected;
+      if (!p || p.walking || !u || battle.state !== 'selected' || (p.x === u.x && p.y === u.y)) return;
+      const saved = { px: u.px, py: u.py, alpha: u.alpha };
+      u.px = p.x * TILE; u.py = p.y * TILE; u.alpha = 0.55;
+      this.drawUnit(u, battle, t);
+      Object.assign(u, saved);
+    }
+
+    // Petits panneaux « ! » : au-dessus des ennemis marqués (rouge) et au bout de la flèche
+    // quand la case d'arrivée sera menacée (jaune)
+    drawMarks(battle, t) {
+      const { ctx } = this;
+      const badge = (px, py, color) => place(ctx, px + 8, py + 8, () => {
+        const x = px + 11, y = py - 6 + (Math.floor(t / 300) % 2);
+        ctx.fillStyle = '#101830'; ctx.fillRect(x - 1, y - 1, 7, 10);
+        ctx.fillStyle = color; ctx.fillRect(x, y, 5, 8);
+        ctx.fillStyle = '#101830'; ctx.fillRect(x + 2, y + 1, 1, 4); ctx.fillRect(x + 2, y + 6, 1, 1);
+      });
+      for (const e of battle.marked) if (e.alive) badge(e.px, e.py, '#ff5050');
+      const p = battle.preview;
+      if (p && !p.walking && battle.state === 'selected' && battle.threatsAt(p.x, p.y).length) badge(p.x * TILE, p.y * TILE, '#ffd34d');
     }
 
     drawCursor(battle, t) {
