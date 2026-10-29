@@ -115,6 +115,12 @@
         effect: { startPhoenix: 1 }, effectText: '+1 Fleur du phénix dans le sac au départ (sauve une unité tombée)',
         sprites: [{ src: `${W}rebel-chapel.png`, at: [1, 0] }, { src: `${W}rebel-chapel.png`, at: [1, 1] }],
       },
+      // Chapelle : débloque le soigneur au recrutement (un candidat par niveau) et renforce ses soins
+      chapel: {
+        name: 'Chapelle', pos: [5, 2], costs: [6, 12], emblem: { glyph: 'staff', color: '#3a8ac0' },
+        effect: { clerics: 1, healBonus: 3 }, effectText: '+1 soigneur parmi les candidats, +3 PV par soin',
+        sprites: [{ src: `${W}rebel-chapel.png`, at: [2, 0] }, { src: `${W}rebel-chapel.png`, at: [2, 1] }],
+      },
       infirmary: {
         name: 'Infirmerie', pos: [10, 7], costs: [4, 8], emblem: { glyph: 'cross', color: '#c84858' },
         effect: { afterBattleHeal: 0.15 }, effectText: '+15 % de PV rendus après chaque victoire',

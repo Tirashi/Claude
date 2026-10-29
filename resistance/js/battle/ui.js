@@ -234,7 +234,7 @@
             <span><span class="unit-name player">${c.name}</span> <span class="unit-class">${cls.name}</span>
               ${weaponIcon(WEAPONS[cls.weapon])}</span>
             <span class="trait">${trait ? `${trait.name} : ${trait.desc}` : '—'}</span>
-            <span class="recruit-stats">${c.level > 1 ? `Niv ${c.level} · ` : ''}PV ${s.hp} · For ${s.str} · Tec ${s.skl} · Vit ${s.spd} · Déf ${s.def}</span>
+            <span class="recruit-stats">${c.level > 1 ? `Niv ${c.level} · ` : ''}PV ${s.hp} · ${WEAPONS[cls.weapon].staff ? `Mag ${s.mag}` : `For ${s.str}`} · Tec ${s.skl} · Vit ${s.spd} · Déf ${s.def}</span>
           </span></button>`;
       }).join('');
       const html = `<h2>Recrutement</h2>
@@ -340,7 +340,7 @@
         <div class="bar"><div style="width:${(100 * u.hp) / u.maxHp}%"></div></div>
         ${u.team === 'player' ? `<div class="bar exp" style="height:3px"><div style="width:${u.exp}%"></div></div>` : ''}
         <div class="stats">
-          <span><b>${w.magic ? 'Mag' : 'For'}</b> ${w.magic ? u.mag : u.str}</span>
+          <span><b>${w.magic || w.staff ? 'Mag' : 'For'}</b> ${w.magic || w.staff ? u.mag : u.str}</span>
           <span><b>Tec</b> ${u.skl}</span>
           <span><b>Vit</b> ${u.spd}</span>
           <span><b>Chc</b> ${u.lck}</span>
@@ -348,9 +348,12 @@
           <span><b>Rés</b> ${u.res}</span>
           <span><b>Dép</b> ${u.mov}</span>
         </div>
-        <div class="weapon">${weaponIcon(w)} ${w.name} · Pui ${w.mt} · Pré ${w.hit} · Portée ${w.min === w.max ? w.min : `${w.min}-${w.max}`}</div>
+        ${w.staff
+          ? `<div class="weapon">${weaponIcon(w)} ${w.name} · Soin Mag + ${w.heal} · Portée ${w.max}</div>
+             <div class="tri-line unit-class">N'attaque pas : soigne un allié à côté</div>`
+          : `<div class="weapon">${weaponIcon(w)} ${w.name} · Pui ${w.mt} · Pré ${w.hit} · Portée ${w.min === w.max ? w.min : `${w.min}-${w.max}`}</div>
         ${effectiveText(w) ? `<div class="tri-line eff-line">✦ ${effectiveText(w)} (Pui ×3)</div>` : ''}
-        ${triangleHtml(w)}`;
+        ${triangleHtml(w)}`}`;
       this.el.unit.classList.toggle('right', side === 'right');
       this.el.unit.classList.toggle('enemy', u.team === 'enemy'); // fenêtre rouge, comme sur GBA
       this.el.unit.classList.remove('hidden');
@@ -443,6 +446,19 @@
       this.el.forecast.querySelector('.fc-go')?.addEventListener('click', (e) => { e.stopPropagation(); onAttack(); });
       this.el.forecast.classList.toggle('left', side === 'left');
       this.el.forecast.classList.remove('hidden');
+    }
+    // Prévision d'un soin : PV de l'allié avant → après, bouton « Soigner »
+    showHealForecast(healer, target, amount, side, onHeal) {
+      const f = this.el.forecast;
+      const pct = (hp) => (100 * hp) / target.maxHp;
+      f.innerHTML = `<div class="unit-name player">${healer.name} soigne ${target.name}</div>
+        <div class="row"><span>PV ${target.hp} → <span class="fc-adv">${target.hp + amount}</span> / ${target.maxHp}</span>
+          <span class="fc-adv">+${amount}</span></div>
+        <div class="bar"><div style="width:${pct(target.hp + amount)}%"></div></div>
+        <button class="fc-go">Soigner</button>`;
+      f.querySelector('.fc-go').addEventListener('click', (e) => { e.stopPropagation(); onHeal(); });
+      f.classList.toggle('left', side === 'left');
+      f.classList.remove('hidden');
     }
     hideForecast() { this.el.forecast.classList.add('hidden'); }
 

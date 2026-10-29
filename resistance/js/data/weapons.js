@@ -22,6 +22,8 @@
     ironBow:    { name: 'Arc de fer',     type: 'bow',   mt: 6,  hit: 85,  crit: 0,  min: 2, max: 2, icon: [7, 10] },
     steelBow:   { name: "Arc d'acier",    type: 'bow',   mt: 9,  hit: 70,  crit: 0,  min: 2, max: 2, icon: [7, 8], price: 65 },
     fire:       { name: 'Feu',            type: 'anima', mt: 5,  hit: 90,  crit: 0,  min: 1, max: 2, magic: true, icon: [8, 2] },
+    // Bâton (staff) : n'attaque pas ; soigne un allié à portée de Mag + heal PV (action Soigner)
+    heal:       { name: 'Bâton de soin',  type: 'staff', mt: 0,  hit: 100, crit: 0,  min: 1, max: 1, staff: true, heal: 10, icon: [1, 10] },
     ironDagger: { name: 'Dague',          type: 'sword', mt: 4,  hit: 95,  crit: 10, min: 1, max: 1, icon: [6, 10] },
   };
 
@@ -38,6 +40,7 @@
     lance: { name: 'Lance', icon: [4, 10] },
     bow:   { name: 'Arc',   icon: [7, 10] },
     anima: { name: 'Magie', icon: [8, 2] },
+    staff: { name: 'Bâton', icon: [1, 10] },
   };
 
   Object.assign(Resistance, { WEAPONS, BEATS, MOVE_TYPE_NAMES, WEAPON_TYPES });

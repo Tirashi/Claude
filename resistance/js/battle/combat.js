@@ -12,6 +12,7 @@
   }
 
   function canReach(unit, dist) {
+    if (unit.weapon.staff) return false; // un bâton soigne, il n'attaque pas (et ne riposte pas)
     return dist >= unit.weapon.min && dist <= unit.weapon.max;
   }
 

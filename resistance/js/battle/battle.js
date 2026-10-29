@@ -88,7 +88,8 @@
     // onEnd(victoire) est appelé quand un camp est entièrement vaincu (true / false),
     // ou avec 'retreat' quand le joueur bat en retraite.
     // guide : premier combat guidé (guide.js), ou null
-    constructor({ encounter, army, inventory = {}, seed, levelBonus = 0, ui, guide = null, onEnd }) {
+    // healBonus : PV en plus à chaque soin (Chapelle de la forteresse)
+    constructor({ encounter, army, inventory = {}, seed, levelBonus = 0, healBonus = 0, ui, guide = null, onEnd }) {
       this.encounter = encounter;
       this.inventory = inventory;
       this.menuLevel = null;     // 'items' quand le sous-menu Objet est ouvert
@@ -100,6 +101,8 @@
       this.seed = seed;
       this.ui = ui;
       this.guide = guide;
+      this.healBonus = healBonus;
+      this.targetMode = 'attack'; // 'heal' quand on choisit l'allié à soigner
       this.onEnd = onEnd;
 
       const spawns = this.mapDef.spawns;
@@ -520,6 +523,7 @@
           this.state = 'busy';
           this.ui.hideForecast();
           this.ui.hideUnit();
+          if (this.targetMode === 'heal') { await this.heal(att, t); this.finishUnit(att); return; }
           await this.attack(att, t);
           if (att.alive) this.finishUnit(att);
           else {
@@ -540,7 +544,7 @@
       this.danger = null;
       this.selected = u;
       this.moveRes = reachable(this, u);
-      this.threat = threatTiles(this, u, this.moveRes);
+      this.threat = u.weapon.staff ? new Set() : threatTiles(this, u, this.moveRes);
       this.state = 'selected';
       this.guide?.on('select');
     }
@@ -556,6 +560,32 @@
       return this.living('enemy').filter((e) => canReach(u, manhattan(u, e)));
     }
 
+    // Soin d'un bâton : Mag + soin de l'arme + bonus de la Chapelle, sans dépasser les PV max
+    healAmount(healer, target) {
+      return Math.min(target.maxHp - target.hp, healer.mag + healer.weapon.heal + this.healBonus);
+    }
+
+    // Alliés blessés à portée du bâton
+    alliesToHeal(u) {
+      if (!u.weapon.staff) return [];
+      return this.living(u.team).filter((a) => a !== u && a.hp < a.maxHp
+        && manhattan(u, a) >= u.weapon.min && manhattan(u, a) <= u.weapon.max);
+    }
+
+    async heal(healer, target) {
+      const amount = this.healAmount(healer, target);
+      this.face(healer, target);
+      healer.anim = 'attack';
+      healer.animStart = this.time;
+      await this.wait(300);
+      target.hp += amount;
+      target.flashUntil = this.time + 140;
+      this.addFloat(target, `+${amount}`, '#7dff8a');
+      await this.wait(500);
+      healer.anim = 'idle';
+      if (healer.level < MAX_LEVEL) await this.gainExp(healer, 12); // comme un soin de Fire Emblem (~11 EXP)
+    }
+
     // Objets du sac utilisables par l'unité (un soin ne sert à rien à PV pleins).
     usableItems(u) {
       return Object.entries(this.inventory)
@@ -566,6 +596,11 @@
       const u = this.selected;
       const items = [];
       // Détail à droite de chaque action : la cible et la précision, les objets du sac
+      const wounded = this.alliesToHeal(u);
+      if (wounded.length) {
+        const detail = wounded.length > 1 ? `${wounded.length} alliés` : `${wounded[0].name} · +${this.healAmount(u, wounded[0])} PV`;
+        items.push({ id: 'heal', label: 'Soigner', detail, icon: this.ui.weaponIconHtml(u.weapon) });
+      }
       const foes = this.enemiesInRange(u);
       if (foes.length) {
         const detail = foes.length > 1 ? `${foes.length} cibles` : `${foes[0].name} · ${forecast(this, u, foes[0], u).a.hit} %`;
@@ -613,8 +648,9 @@
       this.ui.hideMenu();
       if (id === 'wait') { this.finishUnit(u); return; }
       if (id === 'item') { this.openItemMenu(); return; }
-      if (id === 'attack') {
-        this.targets = this.enemiesInRange(u);
+      if (id === 'attack' || id === 'heal') {
+        this.targetMode = id;
+        this.targets = id === 'heal' ? this.alliesToHeal(u) : this.enemiesInRange(u);
         this.targetIndex = 0;
         this.forecastShown = false;
         this.state = 'target';
@@ -628,8 +664,14 @@
       const att = this.selected;
       const def = this.targets[this.targetIndex];
       if (!att || !def) return;
-      const fc = forecast(this, att, def, att);
       this.forecastShown = true;
+      if (this.targetMode === 'heal') {
+        this.ui.showHealForecast(att, def, this.healAmount(att, def), att.x < this.w / 2 ? 'right' : 'left', () => {
+          if (this.state === 'target' && this.targets[this.targetIndex] === def) this.click(def.x, def.y);
+        });
+        return;
+      }
+      const fc = forecast(this, att, def, att);
       this.guide?.on('forecast');
       this.ui.showForecast(att, def, fc, att.x < this.w / 2 ? 'right' : 'left', () => {
         if (this.state === 'target' && this.targets[this.targetIndex] === def) this.click(def.x, def.y);

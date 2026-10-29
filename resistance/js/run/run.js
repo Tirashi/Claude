@@ -44,7 +44,8 @@
     const names = [...NAMES];
     const take = (list) => list.splice(rng.int(0, list.length - 1), 1)[0];
     // Chaque classe de base apparaît au moins une fois quand il y a assez de candidats.
-    const classes = [...RECRUITMENT.classes];
+    // Avec la Chapelle, des soigneurs s'y ajoutent (opts.clerics).
+    const classes = [...Array(opts.clerics ?? 0).fill('cleric'), ...RECRUITMENT.classes];
     const traitIds = Object.keys(TRAITS);
     const out = [];
     for (let i = 0; i < opts.candidates; i++) {
@@ -97,7 +98,9 @@
         candidates: Math.max(this.slots, RECRUITMENT.candidates + (bonuses.candidates ?? 0)),
         traitChance: this.traitChance,
         startLevels: this.startLevels,
+        clerics: bonuses.clerics ?? 0,
       });
+      this.healBonus = bonuses.healBonus ?? 0; // Chapelle : PV en plus à chaque soin
       this.army = [];           // rempli par recruit() au début de la run
       this.veteran = null;      // Capitaine rappelé du Mémorial (recallVeteran), avant le recrutement
       this.current = null;      // nœud où se trouve l'armée (null : avant le premier)
@@ -348,7 +351,7 @@
         seed: this.seed, countryId: this.countryId, map: this.map, slots: this.slots, rules: this.rules,
         traitChance: this.traitChance, startLevels: this.startLevels, candidates: this.candidates,
         army: this.army, current: this.current?.id ?? null, visited: [...this.visited],
-        gold: this.gold, supplies: this.supplies, inventory: this.inventory, stats: this.stats, at,
+        gold: this.gold, supplies: this.supplies, inventory: this.inventory, stats: this.stats, healBonus: this.healBonus, at,
       };
     }
 
@@ -359,7 +362,7 @@
         slots: data.slots, rules: data.rules, traitChance: data.traitChance, startLevels: data.startLevels,
         candidates: data.candidates, army: data.army, visited: new Set(data.visited), over: false,
         gold: data.gold, supplies: data.supplies, inventory: data.inventory,
-        stats: data.stats ?? { won: 0, turns: 0 },
+        stats: data.stats ?? { won: 0, turns: 0 }, healBonus: data.healBonus ?? 0,
       });
       run.current = data.current === null ? null : run.node(data.current);
       run.veteran = run.army.find((r) => r.grade) ?? null; // le Capitaine, s'il y en a un

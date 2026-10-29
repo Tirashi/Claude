@@ -121,7 +121,7 @@
         paint(blue, battle.moveRes.dist.keys());
         if (!zone) paint(red, battle.threat);
       } else if (battle.state === 'target') {
-        paint(red, battle.targets.map((e) => key(e.x, e.y)));
+        paint(battle.targetMode === 'heal' ? blue : red, battle.targets.map((e) => key(e.x, e.y)));
       } else if (battle.danger && battle.danger.unit.alive) {
         paint(blue, battle.danger.moves.stops);
         paint(red, battle.danger.threat);

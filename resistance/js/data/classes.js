@@ -34,6 +34,11 @@
     wizard:       { name: 'Mage',      sprite: 'Wizard',        moveType: 'foot',    mov: 5,
       stats: { hp: 18, str: 0, mag: 6, skl: 6, spd: 7, lck: 4, def: 2, res: 6 },  
       growths: { hp: 55, str: 0, mag: 60, skl: 45, spd: 45, lck: 40, def: 15, res: 50 }, weapon: 'fire' },
+    // Soigneur (Chapelle de la forteresse) : bâton de soin, n'attaque pas. Sprite du mage en
+    // attendant le clerc de l'extension « Specialist Units » (achat prévu en janvier 2027).
+    cleric:       { name: 'Soigneur',  sprite: 'Wizard',        moveType: 'foot',    mov: 5,
+      stats: { hp: 17, str: 0, mag: 5, skl: 5, spd: 7, lck: 6, def: 1, res: 7 },
+      growths: { hp: 55, str: 0, mag: 55, skl: 35, spd: 45, lck: 50, def: 15, res: 55 }, weapon: 'heal' },
     thief:        { name: 'Voleur',    sprite: 'Thief',         moveType: 'foot',    mov: 6,
       stats: { hp: 18, str: 3, mag: 0, skl: 9, spd: 12, lck: 8, def: 3, res: 0 }, 
       growths: { hp: 60, str: 30, mag: 5, skl: 55, spd: 70, lck: 60, def: 20, res: 20 }, weapon: 'ironDagger' },

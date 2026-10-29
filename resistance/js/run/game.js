@@ -518,6 +518,7 @@
         inventory: run.inventory,
         seed: run.battleSeed(node),
         levelBonus: run.levelBonus(node),
+        healBonus: run.healBonus,
         ui,
         guide: this.meta.guideDone ? null : new Guide(ui),
         onEnd: (win) => this.endBattle(node, battle, win),

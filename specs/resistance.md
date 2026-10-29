@@ -69,7 +69,7 @@ Fait : combat complet (déplacements, portées, prévisions, animations, IA, tou
 
 Prochaines étapes, dans l'ordre du plan d'origine :
 1. Équilibrer la carte de run en jouant.
-2. Progression pendant la run : d'autres consommables ; **classe de soigneur** (PV rendus après chaque combat ; sprite du mage en attendant le clerc).
+2. Progression pendant la run : d'autres consommables ; ✅ **classe de soigneur** (29/10, § 10) (PV rendus après chaque combat ; sprite du mage en attendant le clerc).
 3. Plusieurs cartes de combat et objectifs (tout vaincre, battre le chef, survivre X tours).
 4. Forteresse : déblocage de classes (le reste est fait).
 5. **Pays thématiques** et leurs généraux (recolorations, compétences spéciales), jusqu'au tyran.
@@ -142,4 +142,12 @@ Idées proposées par Claude le 29/10 (écrites nulle part avant) et faites d'un
 - **Dernières paroles** : un rebelle qui tombe dit une phrase dans une fenêtre façon GBA (2 s, 1 s accéléré). Choisie d'après son nom et le tour, **pas avec la graine** (une partie rejouée reste la même) ; deux phrases à part pour un Capitaine (`LAST_WORDS`, `CAPTAIN_WORDS` dans `battle.js`).
 - **Bilan de campagne** : avant le Mémorial, fenêtre « Bilan de la campagne » (ou « de la victoire ») : étage, combats gagnés, ennemis vaincus, pertes, le **héros** (★, le plus d'ennemis vaincus) et chaque soldat (ennemis vaincus, a survécu ou tombé et où). Nouveau : `kills` sur chaque unité du combat puis chaque soldat de l'armée, `fellAt` (nom de la rencontre), `run.stats` `{won, turns}` (sauvegardé avec la run ; une vieille sauvegarde repart de zéro). Le Mémorial montre aussi les ennemis vaincus.
 - **Premier combat guidé** (`js/battle/guide.js`) : une bulle en haut de la carte explique chaque geste la première fois (choisir un soldat, cases bleues et rouges, menu d'action, prévisions et triangle des armes, après le premier soldat, zone de danger, tour ennemi). Toucher la bulle la ferme, « Passer le guide » l'arrête. `meta.guideDone` après le premier combat (une forteresse déjà avancée le voit donc une fois).
+
+## 10. Le soigneur (29/10)
+Étape 2 du plan (§ 7). Choix de l'utilisateur : **bâton sans attaque** (comme le clerc de Fire Emblem) et **débloqué à la forteresse**.
+- Classe `cleric` « Soigneur » (`classes.js`) : peu de PV et de Défense, bonne Magie et Résistance, 5 de déplacement ; sprite du mage (bleu) en attendant le clerc de « Specialist Units ».
+- Arme `heal` « Bâton de soin » (`weapons.js`, type `staff`, `staff: true`, `heal: 10`, icône bâton de la planche IvoryRed). `canReach` renvoie toujours faux pour un bâton : le soigneur n'attaque pas, **ne riposte pas**, n'a pas de cases rouges ; l'ennemi le vise volontiers (aucune riposte à craindre) : il faut le protéger.
+- Action **Soigner** en tête du menu quand un allié blessé est à côté : cibles en bleu, prévision « PV avant → après » avec un bouton Soigner (`UI.showHealForecast`) ; rend **Mag + 10 PV** (+ bonus de la Chapelle), sans dépasser les PV max ; **12 EXP** par soin (`Battle.heal`, `alliesToHeal`, `healAmount`).
+- **Chapelle** (`fortress.js`, case 5,2, coûts 6 puis 12, écusson bâton bleu) : chaque niveau ajoute **un soigneur parmi les candidats** du recrutement et **+3 PV par soin** (`clerics`, `healBonus` ; `run.healBonus` sauvegardé avec la run). Image : la dernière maison libre de `rebel-chapel.png` (toit orange au niveau 1, toit bleu rebelle au niveau 2), pas de vraie chapelle dans le pack.
+- Pas de soin automatique après le combat (l'Infirmerie le fait déjà). Pas de bâton chez le marchand ni à l'Intendance (pour l'instant).
 

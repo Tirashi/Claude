@@ -51,6 +51,7 @@ Détails déplacés de `CLAUDE.md` le 19/10 (pour qu'il reste court : il est rel
 - Artefact Yams : on ne le republie plus, on joue sur le site (décision de l'utilisateur du 29/10).
 
 ## Résistance (28/10)
+- **Soigneur** (29/10, `resistance.md` § 10) : classe `cleric` au bâton de soin (n'attaque ni ne riposte), action Soigner (Mag + 10 PV, 12 EXP), Chapelle à la forteresse (un soigneur parmi les candidats et +3 PV par soin à chaque niveau) ; testé dans Chromium en portrait ; à essayer sur le téléphone.
 - **Séance d'essais du 29/10** (`specs/essais.md`) : zone de danger trouée près des ennemis et absente au tour ennemi → corrigée ; Yams : dés figés de travers et menu rogné en cercle dans le style à carreaux (--rayon 999px repris par la fenêtre), corrigés (voir la section Yams) ; tous les classements confirmés ; la Lanterne pas encore essayée.
 - **Confort de jeu** (29/10, idées de Claude faites d'un coup) : zone de danger, garde-fou sur Fin du tour, phase ennemie accélérée, dernières paroles, bilan de campagne, premier combat guidé (`resistance.md` § 9) ; testé dans Chromium en portrait (script Playwright dans le bloc-notes) ; à essayer sur le téléphone. Avec, la liste d'essais [`specs/essais.md`](essais.md).
 - L'utilisateur a envoyé le jeu (zip « Conquete ») fait avec une autre IA : rogue-lite tactique façon Fire Emblem GBA, avec sa forteresse. Repris dans `resistance/` ; vision, plan et décisions dans [`resistance.md`](resistance.md).
