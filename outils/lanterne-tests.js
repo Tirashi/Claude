@@ -56,6 +56,12 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
   let sorti = false;
   for (let i = 0; i < 300; i++) { const p = Monde.pasErrant({ x: 0, y: 0, ox: 0, oy: 0, rayon: 1 }, essai, Math.random); if (p && (p.x > 1 || p.y > 1 || p.x < 0 || p.y < 0)) sorti = true; }
   if (sorti) bad('un monstre s\'éloigne plus loin que son rayon');
+  // le grappin : de la rive (0, 0) par-dessus l'eau jusqu'à la case devant le pieu ; rien sans pieu, rien sans eau
+  const lac = Monde.preparer({ id: 'lac', plan: ['.~~..', '.~...', '.....'], objets: [{ type: 'pieu', x: 4, y: 0 }, { type: 'pieu', x: 2, y: 1 }] },
+    { '.': { sol: 'a' }, '~': { sol: 'eau', bloque: true, franchissable: true } });
+  egal(Monde.cibleGrappin(lac, 0, 0, 'droite'), [3, 0], 'grappin : par-dessus l\'eau jusqu\'au pieu');
+  egal(Monde.cibleGrappin(lac, 0, 1, 'droite'), null, 'grappin : pas de rive devant le pieu');
+  egal(Monde.cibleGrappin(lac, 0, 2, 'droite'), null, 'grappin : pas d\'eau à franchir');
 
   const vu = [];
   const ui = { dire: async (qui, pages) => { vu.push(qui + ':' + pages.join(' / ')); }, choix: async () => 1 };
@@ -267,7 +273,13 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
       (atteint[id] = atteint[id] || new Set()).add(x + ',' + y);
       const c = cartesT[id], s = Monde.sortieEn(c, x, y);
       if (s && (!s.si || test(s.si))) { file.push([s.vers, s.a[0], s.a[1]]); continue; }
-      for (const dir in Monde.DIRS) { const [nx, ny] = Monde.devant(x, y, dir); if (!Monde.estBloque(c, nx, ny)) file.push([id, nx, ny]); }
+      for (const dir in Monde.DIRS) {
+        const [nx, ny] = Monde.devant(x, y, dir);
+        if (!Monde.estBloque(c, nx, ny)) file.push([id, nx, ny]);
+        // le grappin, une fois trouvé, franchit l'eau jusqu'aux pieux
+        const g = flags['outil:grappin'] && Monde.cibleGrappin(c, x, y, dir);
+        if (g) file.push([id, g[0], g[1]]);
+      }
     }
     const pres = (id, x, y) => Object.values(Monde.DIRS).some(([dx, dy]) => atteint[id] && atteint[id].has((x + dx) + ',' + (y + dy)));
     const avantFlags = JSON.stringify([flags, sac]);

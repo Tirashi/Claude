@@ -148,7 +148,7 @@ Chaque outil sert **dans son donjon** puis **ouvre des chemins** sur la carte, c
 | Sanctuaire | Outil | Sur la carte |
 |---|---|---|
 | 1 | **Lanterne du veilleur** | Dissipe les petites nappes de brume et éclaire les salles et grottes sombres |
-| 2 | **Grappin** | Franchit les ravins et l'eau en s'accrochant aux pieux |
+| 2 | **Grappin** (fait le 29/10) | Franchit les ravins et l'eau en s'accrochant aux pieux |
 | 3 | **Masse de mineur** | Casse les rochers fendus et les murs fissurés |
 | 4 | **Cloche d'Isée** | Révèle les passages fantômes et réveille les statues |
 
@@ -364,6 +364,17 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 | 1 | ✅ (22/10) Moteur **monde** : écrans, déplacement, équipe en file, collisions, PNJ, dialogues, événements, drapeaux, sauvegardes ; Clairfond jouable | Opus |
 | 2 | ✅ (22/10) Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
 | 3 | ✅ (22/10) Contenu **prologue et acte 1** (abbaye et Eloi, Bois Murmurant et Vérène, Crypte des racines, Roi des aulnes) ; solveur d'accessibilité jusqu'à la fin de l'acte 1 | opusplan |
-| 4 | **Actes 2 et 3** (marais, moulin, Hameau caché, mines) | opusplan |
+| 4 | **Actes 2 et 3** (marais, moulin, Hameau caché, mines) ; ✅ **acte 2** fait (29/10, § 17.1) ; reste le rebondissement 2, le Hameau caché et l'acte 3 | opusplan |
 | 5 | **Acte 4, final, fin**, scène bonus, à-côtés (pages, quêtes des compagnons, lanternes oubliées), donjon facultatif | opusplan |
 | 6 | Équilibrage, sons et musique, accueil, `sw.js`, artefact | Sonnet |
+
+### 17.1 Acte 2 (fait le 29/10)
+- **Ouverture** : de retour à l'abbaye avec la Flamme rouge, le Prieur la laisse dans la lanterne (« Quand les quatre seront réunies, je saurai les accueillir ») et fait ouvrir la route des marais, au sud de Clairfond (`vaast_acte2`, drapeau `mission_marais`, chapitre « Acte 2 »).
+- **Lieux** (7 cartes) : route des marais (marchand « Merci de votre visite ! », lanterne oubliée, Masse de fer), **Port-Gris** (place, statue d'Aubrin « RENDS-LES-NOUS », port et jetée, îlot au grappin avec la Cape de brume, Gaspard qui ouvre enfin sa boutique, Maître Odon, Annick la pêcheuse, Mamie Rose et la comptine des « quatre veilleurs de brume », Petit Théo le dresseur de feux follets), taverne de la **Cloche fêlée** où **MAUD** rejoint l'équipe (son frère Tiennot perdu dans la brume il y a sept ans), **Marais des cloches** (cloches englouties, mare aux lotus, crapaud couronné, Isée qui parle des noces d'autrefois et de Maud qui appelle un nom dans la brume, lanterne oubliée de la berceuse, îlot au grappin avec le Bâton de saule) ; le **Moulin noyé** en 6 salles (entrée, réserve avec la Clé du bief et l'Épée d'acier bleu, salle des meules avec la porte à clé et une nappe de brume à dissiper avec la lanterne, salle du trésor avec le **Grappin** et l'Arc long, bief avec une vanne et son levier de l'autre côté de l'eau, cœur du moulin).
+- **Le grappin** (outil 2) : face à l'eau, B le lance tout droit vers le premier **pieu** à portée (6 cases) ; seulement des cases `franchissable` entre les deux (au moins une), et l'équipe atterrit sur la case libre juste devant le pieu (`Monde.cibleGrappin`, `Partie` : mouvement de 0,45 s par case ; le solveur d'accessibilité le connaît).
+- **Monstres** : sangsue de vase, feu-bleu, phalène de brume (route) ; escargot-glas, anguille d'orage (marais) ; remous, tortue-meule, lavandière (moulin). **Boss : la Dame du moulin** (650 PV, rythme fixe : coup, Eau noire sur l'équipe, coup, la Crue annoncée un tour avant, puis la Berceuse qui endort ; faible à la foudre et à la lumière). En tombant : « Ma berceuse… vous l'emportez aussi… » ; Flamme bleue.
+- **Fresque** : quatre gardiens de brume aux coins de la vallée ; la brume ne forme pas un mur au-dessus des villages, mais un toit. Vérène : « Ce ne sont pas des monstres. Ce sont des gardiens. » Puis fin de l'acte 2 (`acte2_fini`, `LANTERNE.fin`).
+- **Équipement** : Épée d'acier bleu, Masse de fer, Bâton de saule, Arc long, Cape de brume, Bottes de marais ; boutiques faites en événements (`boutique()` dans `evenements.js` : un achat par visite) ; la forge de Bertin, à Clairfond, rouvre après l'acte 2.
+- **Équilibrage** (`outils/lanterne-combats.js`) : même friction qu'à l'acte 1 (2 à 4 tours, 15 à 30 % des PV par combat) ; la Dame est prévue au **niveau 8** (100 % de victoires, 7,8 tours, 43 % des PV) ; au niveau 7, une chance sur deux et un combat très long, parce que Foudre, Protection et Bénédiction arrivent au niveau 8. Une équipe qui fait les combats du marais arrive vers le niveau 8.
+- **Pas encore** : le rebondissement 2 (Isée blessée au sortir du moulin) et le Hameau caché, gardés pour la session de l'acte 3.
+

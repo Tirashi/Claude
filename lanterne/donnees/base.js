@@ -28,7 +28,11 @@ LANTERNE.persos = {
   gaspard: { nom: 'Gaspard', perso: 'gaspard' }, forgeron: { nom: 'Bertin le forgeron', perso: 'forgeron' }, aubergiste: { nom: 'Margot', perso: 'aubergiste' },
   enfant: { nom: 'Petit Lou', perso: 'enfant' }, ancien: { nom: 'Le vieux Aimé', perso: 'ancien' }, paysanne: { nom: 'Jeanne', perso: 'paysanne' },
   pecheur: { nom: 'Fulbert', perso: 'pecheur' }, moine: { nom: 'Un moine', perso: 'vaast' },
-  nuage: { nom: 'Nuage', perso: 'nuage' }, roi: { nom: 'Roi des aulnes', perso: 'roi_aulnes' }, garde: { nom: 'Le garde', perso: 'garde' }, garcon_vert: { nom: 'Le garçon en vert', perso: 'garcon_vert' }
+  nuage: { nom: 'Nuage', perso: 'nuage' }, roi: { nom: 'Roi des aulnes', perso: 'roi_aulnes' }, garde: { nom: 'Le garde', perso: 'garde' }, garcon_vert: { nom: 'Le garçon en vert', perso: 'garcon_vert' },
+  // acte 2 : Port-Gris et le Marais des cloches
+  maitre_port: { nom: 'Maître Odon', perso: 'maitre_port' }, pecheuse: { nom: 'Annick', perso: 'pecheuse' }, dresseur: { nom: 'Petit Théo', perso: 'dresseur' },
+  aubergiste_port: { nom: 'Paulin', perso: 'aubergiste_port' }, marchand: { nom: 'Le marchand', perso: 'marchand' }, conteuse: { nom: 'Mamie Rose', perso: 'conteuse' },
+  crapaud_roi: { nom: 'Un crapaud couronné', perso: 'crapaud_roi' }, dame: { nom: 'La Dame du moulin', perso: 'dame_moulin' }
 };
 
 LANTERNE.statistiques = [
@@ -44,7 +48,9 @@ LANTERNE.statistiques = [
 
 // outils (B, devant soi) : drapeau « outil:<id> » quand on l'a
 LANTERNE.outils = {
-  lanterne: { nom: 'Lanterne du veilleur', aide: 'Appuie sur B pour la dissiper avec la lanterne.', texte: 'La flamme de la lanterne dissipe la brume !', son: 'lanterne' }
+  lanterne: { nom: 'Lanterne du veilleur', aide: 'Appuie sur B pour la dissiper avec la lanterne.', texte: 'La flamme de la lanterne dissipe la brume !', son: 'lanterne' },
+  // le grappin ne s'utilise pas sur un objet : face à l'eau, B le lance vers le pieu d'en face (moteur-rpg/partie.js)
+  grappin: { nom: 'Grappin', son: 'fleche' }
 };
 
 // drapeaux à atteindre pour finir cette version (vérifié par outils/lanterne-tests.js)
@@ -57,10 +63,11 @@ LANTERNE.aide = [
   { titre: 'Fuir', texte: 'Fuite tente d\'échapper au combat : une chance sur deux, plus 5 % par point de Vitesse d\'avance de ton héros le plus rapide sur le monstre le plus rapide (le menu affiche la chance). Si un monstre a 5 points de Vitesse de plus que tous tes héros, impossible de le semer. On ne fuit jamais un boss ni un combat où quelqu\'un a besoin d\'aide.' },
   { titre: 'Faiblesses', texte: 'Certains monstres craignent le feu, la glace, la foudre ou la lumière (× 1,5), d\'autres y résistent (× 0,5). Ce que tu découvres s\'inscrit dans l\'onglet Monstres.' },
   { titre: 'Les PV des monstres', texte: 'Une barre sous chaque monstre montre ce qui lui reste de PV. Les chiffres exacts s\'affichent quand tu l\'as déjà vaincu une fois. Le boss a sa grande barre en haut de l\'écran.' },
+  { titre: 'Le grappin', texte: 'Face à l\'eau, appuie sur B : le grappin file tout droit jusqu\'au pieu planté sur l\'autre rive et y tire toute l\'équipe. Pas de pieu en face, pas de traversée.' },
   { titre: 'Sauvegardes', texte: 'La partie se sauvegarde toute seule aux moments importants, et à la main aux lanternes. Si l\'équipe tombe, on reprend à la dernière sauvegarde ; contre un boss, on peut aussi réessayer le combat.' }
 ];
 
-LANTERNE.fin = ['vaast_vu', 'verene_rejoint', 'outil:lanterne', 'roi_vaincu', 'acte1_fini'];
+LANTERNE.fin = ['vaast_vu', 'verene_rejoint', 'outil:lanterne', 'roi_vaincu', 'acte1_fini', 'mission_marais', 'maud_rejoint', 'outil:grappin', 'dame_vaincue', 'acte2_fini'];
 
 LANTERNE.depart = { carte: 'maison_ysolde', x: 2, y: 4, dir: 'bas', equipe: ['heros'], niveau: 1, ecus: 0, chapitre: 'Prologue' };
 
@@ -72,14 +79,20 @@ LANTERNE.journal = e => {
   if (!d.verene_rejoint) return 'Trouver la Crypte des racines, au cœur du Bois Murmurant, à l\'est de Clairfond.';
   if (!d['outil:lanterne']) return 'Explorer la Crypte des racines, dans le Bois Murmurant. Une grille, une porte fermée… et de la brume.';
   if (!d.roi_vaincu) return 'La lanterne brille : dissiper la brume au fond de la crypte et trouver la Flamme rouge.';
-  return 'La Flamme rouge est dans la lanterne. La suite (Port-Gris et le Marais des cloches) arrive bientôt.';
+  if (!d.mission_marais) return 'La Flamme rouge est dans la lanterne. Retourner à l\'abbaye de Saint-Cendre, au nord de Clairfond, pour prévenir le Prieur.';
+  if (!d.maud_rejoint) return 'Prendre la route des marais, au sud de Clairfond, et trouver un guide à Port-Gris.';
+  if (!d.moulin_vu) return 'Traverser le Marais des cloches, à l\'est de Port-Gris, avec Maud, jusqu\'au Moulin noyé.';
+  if (!d['outil:grappin']) return 'Explorer le Moulin noyé. De la brume barre une porte : la lanterne saura quoi faire.';
+  if (!d.dame_vaincue) return 'Le grappin franchit l\'eau jusqu\'aux pieux. Trouver la clé du moulin et la Flamme bleue.';
+  if (!d.acte2_fini) return 'La Flamme bleue brille. Lire la fresque du moulin avec Vérène.';
+  return 'Deux flammes dans la lanterne. La suite (le Hameau caché et les Hautes-Roches) arrive bientôt.';
 };
 
 /* Légende commune des cartes : une lettre par case.
    sol : dessin du sol ; decor : ce qui se dresse dessus ; bloque : on ne peut pas y marcher. */
 LANTERNE.legende = {
   '.': { sol: 'herbe' }, ',': { sol: 'herbe_sombre' }, ':': { sol: 'chemin' }, '=': { sol: 'paves' },
-  '~': { sol: 'eau', bloque: true },
+  '~': { sol: 'eau', bloque: true, franchissable: true },
   'T': { sol: 'herbe', decor: 'arbre', bloque: true }, 'Y': { sol: 'herbe_sombre', decor: 'sapin', bloque: true },
   'b': { sol: 'herbe', decor: 'buisson', bloque: true }, 'f': { sol: 'herbe', decor: 'massif' },
   'x': { sol: 'herbe', decor: 'barriere', bloque: true }, 'X': { sol: 'chemin', decor: 'barriere', bloque: true },
@@ -98,7 +111,16 @@ LANTERNE.legende = {
   // la Crypte des racines
   'm': { sol: 'mousse' }, 'n': { sol: 'crypte' }, 'C': { sol: 'vide', decor: 'mur_crypte_haut', bloque: true }, 'Z': { sol: 'vide', decor: 'mur_crypte_cote', bloque: true },
   'z': { sol: 'vide', decor: 'mur_crypte_bas', bloque: true }, 'Q': { sol: 'crypte', decor: 'colonne_sombre', bloque: true }, 'R': { sol: 'crypte', decor: 'sarcophage', bloque: true },
-  'g': { sol: 'mousse', decor: 'toile' }, 'E': { sol: 'crypte', decor: 'escalier_bas' }, 'G': { sol: 'crypte', decor: 'escalier_haut' }, 'r': { sol: 'mousse', decor: 'racines', bloque: true }
+  'g': { sol: 'mousse', decor: 'toile' }, 'E': { sol: 'crypte', decor: 'escalier_bas' }, 'G': { sol: 'crypte', decor: 'escalier_haut' }, 'r': { sol: 'mousse', decor: 'racines', bloque: true },
+  // acte 2 : le marais (franchissable : le grappin passe au-dessus)
+  'h': { sol: 'herbe_marais' }, 'u': { sol: 'vase' }, 'd': { sol: 'ponton' },
+  'e': { sol: 'eau_trouble', bloque: true, franchissable: true }, 'y': { sol: 'eau_trouble', decor: 'lotus', bloque: true, franchissable: true },
+  's': { sol: 'herbe_marais', decor: 'saule', bloque: true }, 'i': { sol: 'herbe_marais', decor: 'roseaux', bloque: true },
+  'c': { sol: 'eau_trouble', decor: 'cloche', bloque: true }, '1': { sol: 'ponton', decor: 'tonneau', bloque: true },
+  // le Moulin noyé
+  'N': { sol: 'ponton' }, 'D': { sol: 'vide', decor: 'mur_moulin_haut', bloque: true }, 'I': { sol: 'vide', decor: 'mur_moulin_cote', bloque: true },
+  'J': { sol: 'vide', decor: 'mur_moulin_bas', bloque: true }, 'V': { sol: 'ponton', decor: 'meule', bloque: true }, 'U': { sol: 'eau_trouble', decor: 'roue', bloque: true },
+  '2': { sol: 'ponton', decor: 'sacs', bloque: true }, '3': { sol: 'ponton', decor: 'statue_ondine', bloque: true }
 };
 
 LANTERNE.style = {
@@ -110,6 +132,8 @@ LANTERNE.style = {
     eau: { tuiles: ['eau'], eau: true },
     parquet: { tuiles: ['parquet'] }, calcaire: { tuiles: ['calcaire0', 'calcaire1', 'calcaire2'] },
     marbre: { tuiles: ['marbre0', 'marbre1'] }, mousse: { tuiles: ['mousse0', 'mousse1', 'mousse2'] }, crypte: { tuiles: ['sol_crypte0', 'sol_crypte1'] },
+    herbe_marais: { tuiles: ['herbe_marais0', 'herbe_marais1', 'herbe_marais2'] }, vase: { tuiles: ['vase0', 'vase1'] },
+    eau_trouble: { tuiles: ['eau_trouble', 'eau_trouble2'], eau: true }, ponton: { tuiles: ['ponton'] },
     vide: null
   },
   decors: {
@@ -144,7 +168,19 @@ LANTERNE.style = {
       { boite: [.52, .14, .52], pos: [0, 1.34, 0], face: 'sol_crypte0' }] },
     sarcophage: { type: 'meuble', pieces: [{ boite: [.72, .42, .96], face: 'pierre_sculptee', cote: 'pierre_sculptee', dessus: 'sarco_dessus' }] },
     toile: { type: 'plat', tuiles: ['toile'] }, escalier_bas: { type: 'plat', tuiles: ['escalier_bas'] }, escalier_haut: { type: 'plat', tuiles: ['escalier_haut'] },
-    racines: { type: 'panneau', tuiles: ['buisson2', 'arbre_mort'], taille: 1.3 }
+    racines: { type: 'panneau', tuiles: ['buisson2', 'arbre_mort'], taille: 1.3 },
+    // acte 2
+    saule: { type: 'panneau', tuiles: ['saule1', 'saule2', 'saule3', 'saule1', 'arbre_mort2'], taille: 1.9 },
+    roseaux: { type: 'panneau', tuiles: ['roseau1', 'roseau2', 'roseau3'], taille: 1 },
+    lotus: { type: 'plat', tuiles: ['lotus'] },
+    cloche: { type: 'meuble', pieces: [{ cylindre: [.3, .34], face: 'bronze', dessus: 'bronze' }, { cone: [.33, .36], pos: [0, .34, 0], face: 'bronze' },
+      { cylindre: [.06, .12], pos: [0, .68, 0], face: 'bronze', dessus: 'bronze' }] },
+    mur_moulin_haut: { type: 'bloc', tuile: 'mur_moulin', hauteur: 1.8 }, mur_moulin_cote: { type: 'bloc', tuile: 'mur_moulin', hauteur: .9 }, mur_moulin_bas: { type: 'bloc', tuile: 'mur_moulin', hauteur: .35 },
+    meule: { type: 'meuble', pieces: [{ cylindre: [.44, .2], face: 'calcaire1', dessus: 'calcaire0' }, { cylindre: [.38, .18], pos: [0, .2, 0], face: 'calcaire2', dessus: 'calcaire1' },
+      { cylindre: [.06, .5], pos: [0, .38, 0], face: 'bois_sombre', dessus: 'bois' }] },
+    roue: { type: 'meuble', pieces: [{ cylindre: [.9, .2], pos: [0, .9, 0], rot: [Math.PI / 2, 0, 0], face: 'bois_sombre', dessus: 'roue_face' }] },
+    sacs: { type: 'meuble', pieces: [{ boite: [.42, .4, .36], pos: [-.18, 0, 0], face: 'bois', dessus: 'bois' }, { boite: [.38, .34, .34], pos: [.22, 0, .08], face: 'tonneau_dessus', dessus: 'tonneau_dessus' }] },
+    statue_ondine: { type: 'panneau', tuiles: ['statue_ondine'], taille: 1.4 }
   },
   objets: {
     coffre: { tuile: 'coffre', pieces: [
@@ -163,6 +199,8 @@ LANTERNE.style = {
     grille: { tuile: 'grille', taille: 1, cacheOuvert: true }, porte_cle: { tuile: 'porte_cloutee', taille: 1, cacheOuvert: true },
     nappe: { tuile: 'nappe', taille: 1.25, cacheOuvert: true }, levier: { tuile: 'levier', tuileOuverte: 'levier_baisse', taille: .8 },
     fresque: { tuile: 'fresque', taille: 1.3 },
+    pieu: { tuile: 'panneau', pieces: [{ cylindre: [.1, .95], face: 'bois_sombre', dessus: 'bois' }, { cylindre: [.12, .07], pos: [0, .72, 0], face: 'colonne_fut_sombre', dessus: 'colonne_fut_sombre' },
+      { cylindre: [.12, .07], pos: [0, .2, 0], face: 'colonne_fut_sombre', dessus: 'colonne_fut_sombre' }] },
     grande_lanterne: { tuile: 'lanterne_pierre', pieces: [
       { cylindre: [.82, .12], face: 'calcaire0' }, { cylindre: [.7, .3], pos: [0, .12, 0], face: 'pierre_sculptee', dessus: 'eau' },
       { cylindre: [.13, 1.05], pos: [0, .42, 0], face: 'colonne_fut', dessus: 'calcaire0' }, { boite: [.62, .08, .62], pos: [0, 1.47, 0], face: 'calcaire0' },

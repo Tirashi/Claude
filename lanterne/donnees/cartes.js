@@ -42,7 +42,7 @@ LANTERNE.cartes = {
       'T..::::::::::...~~~~~~.T',
       'T.f........::...~~~~~~.T',
       'T....xxxxx.::b..~~~~~..T',
-      'TTT........XX........TTT',
+      'TTT........::........TTT',
       'TTTTTTTTTTTTTTTTTTTTTTTT'
     ],
     maisons: [
@@ -54,7 +54,7 @@ LANTERNE.cartes = {
       { type: 'lanterne', x: 13, y: 10, evenement: 'lanterne_clairfond' },
       { type: 'deco', x: 10, y: 10, bloque: true, evenement: 'statue_aubrin' },
       { type: 'panneau', x: 13, y: 1, texte: 'Au nord : la route de la forêt et l\'abbaye de Saint-Cendre.' },
-      { type: 'panneau', x: 10, y: 17, texte: ['Au sud : la route des marais.', 'Fermée tant que la brume est si épaisse. — Les Veilleurs'] },
+      { type: 'panneau', x: 10, y: 17, evenement: 'panneau_marais' },
       { type: 'panneau', x: 7, y: 5, texte: 'Maison de la veilleuse Ysolde. Frapper fort, elle est un peu sourde.' },
       { type: 'coffre', id: 'clairfond_buisson', x: 1, y: 9, contenu: { objet: 'herbe', n: 2 } }
     ],
@@ -74,7 +74,8 @@ LANTERNE.cartes = {
       { x: [11, 12], y: 0, vers: 'route_abbaye', a: [6, 28], dir: 'haut', si: 'mission', refus: 'pas_encore' },
       { x: 3, y: 5, vers: 'maison_ysolde', a: [4, 6], dir: 'haut' },
       { x: 18, y: 5, vers: 'auberge', a: [5, 6], dir: 'haut' },
-      { x: 23, y: [6, 7], vers: 'bois_murmurant', a: [1, 6], dir: 'droite', si: 'mission_flammes', refus: 'bois_ferme' }
+      { x: 23, y: [6, 7], vers: 'bois_murmurant', a: [1, 6], dir: 'droite', si: 'mission_flammes', refus: 'bois_ferme' },
+      { x: [11, 12], y: 18, vers: 'route_marais', a: [7, 1], dir: 'bas', si: 'mission_marais', refus: 'marais_ferme' }
     ],
     declencheurs: [{ x: 3, y: 12, evenement: 'forge_fermee' }]
   },
@@ -328,5 +329,339 @@ LANTERNE.cartes = {
     pnj: [{ id: 'roi', perso: 'roi_aulnes', x: 5, y: 3, evenement: 'roi_parle', si: '!roi_vaincu' }],
     sorties: [{ x: 5, y: 10, vers: 'crypte_racines', a: [7, 2], dir: 'bas' }],
     declencheurs: [{ x: [1, 9], y: 6, evenement: 'roi_combat', si: '!roi_vaincu' }]
+  },
+
+  // ---------- acte 2 : la route des marais ----------
+  route_marais: {
+    nom: 'Route des marais', musique: 'foret', exterieur: true, brume: .55, sauvegardeAuto: true, entree: 'marais_entree',
+    combat: { sol: ['herbe_marais0', 'herbe_marais1', 'herbe_marais2'], decor: 'saule', brume: .55 },
+    plan: [
+      'sssssssuusssssss',
+      'shhhhhhuuhhhhhhs',
+      'shihhhuuhhhhhhis',
+      'shhhhhuuhhheeehs',
+      'shhssuuhhheeeeis',
+      'shhhhuuhhhhyeehs',
+      'seehhuuuuhhhhhhs',
+      'seeehhhhuuuhhhss',
+      'sieehhhhhhuuhhhs',
+      'shhhhhshhhuuhhhs',
+      'shhhhhhhhuuhhees',
+      'shhhiuuuuuhhheis',
+      'shhhhuuhhhhhhhhs',
+      'sseehuuhhhhhsshs',
+      'seeehhuuhhhhhhhs',
+      'seyeehhuuuuuuhhs',
+      'siehhhhhhhhhuuhs',
+      'shhhhhhhhhhhuuhs',
+      'shhssshhhhhuuhhs',
+      'shhhhhhhhhuuhhhs',
+      'shheehhhhuuhhhhs',
+      'sheeeehhuuhhhshs',
+      'shieehhuuhhhhhhs',
+      'shhhhhuuhhhhhhhs',
+      'shhhhhuuhhhhhhhs',
+      'ssssssuussssssss'
+    ],
+    objets: [
+      { type: 'panneau', x: 9, y: 1, texte: ['Route des marais.', 'Port-Gris : tout droit au sud. Le Marais des cloches : à vos risques.'] },
+      { type: 'lanterne_oubliee', id: 'marais_route', x: 14, y: 1, evenement: 'lanterne_oubliee_marais' },
+      { type: 'coffre', id: 'marais_masse', x: 1, y: 9, contenu: { objet: 'masse_fer', n: 1 } },
+      { type: 'lanterne', x: 12, y: 12 },
+      { type: 'coffre', id: 'marais_herbes', x: 14, y: 22, contenu: { objet: 'herbe', n: 2 } }
+    ],
+    pnj: [{ id: 'marchand', perso: 'marchand', x: 14, y: 17, evenement: 'marchand' }],
+    monstres: [
+      { type: 'sangsue', x: 6, y: 5, rayon: 2 },
+      { type: 'feu_bleu', x: 10, y: 8, rayon: 2 },
+      { type: 'feu_bleu', x: 3, y: 11, rayon: 2 },
+      { type: 'phalene', x: 11, y: 19, rayon: 2 },
+      { type: 'sangsue', x: 8, y: 22, rayon: 2 }
+    ],
+    sorties: [
+      { x: [7, 8], y: 0, vers: 'clairfond', a: [11, 17], dir: 'haut' },
+      { x: [6, 7], y: 25, vers: 'port_gris', a: [10, 1], dir: 'bas' }
+    ]
+  },
+
+  // ---------- Port-Gris, le village des pêcheurs ----------
+  port_gris: {
+    nom: 'Port-Gris', musique: 'village', exterieur: true, brume: .3, sauvegardeAuto: true, entree: 'port_entree',
+    plan: [
+      'ssssssssssuussssssssss',
+      'sihhhhhshhuuhhhhhhhhhs',
+      'shhhhhhhihuuhhhhhhhshs',
+      'shhhhhhhhhuuhihhhhhhhs',
+      'shhhhhhhhhuuhhhhhhhhis',
+      'shhhhhhhhhuuhhhhhhhhhs',
+      'sh==================hs',
+      'sh========S=========hs',
+      'sh==================hs',
+      'sihhhhhhhh==hhhhhhhhhs',
+      'shhhhhhhhh==hhhhhhhhis',
+      'shhhhhhhhh==hhhhhhhhhs',
+      'eeeeeedd1ddddddddddddd',
+      'eeeeeedeeeddeeeeeeeddd',
+      'eeyeeed1eeddeeeeeeeeee',
+      'eeeeeedeeeddeeeehheeee',
+      'eeeyeeddd1ddeeyehhecee',
+      'eeeeeeeeeeeeeeeeeeeeee'
+    ],
+    maisons: [
+      { x: 2, y: 2, l: 5, p: 3, mur: 'mur_brique', toit: 'toit', porte: 2, fenetres: [.5, 3.5] },
+      { x: 14, y: 2, l: 5, p: 3, mur: 'mur_pierre', toit: 'toit_ardoise', fenetres: [1.5, 3.5] },
+      { x: 3, y: 9, l: 4, p: 3, mur: 'mur_lierre', toit: 'toit_ardoise', fenetres: [1.5] },
+      { x: 14, y: 9, l: 4, p: 3, mur: 'mur_pierre', toit: 'toit', fenetres: [.5, 2.5] }
+    ],
+    objets: [
+      { type: 'panneau', x: 12, y: 1, texte: ['PORT-GRIS', 'Taverne de la Cloche fêlée : à gauche de la place. Le marais : à l\'est, par le quai.'] },
+      { type: 'lanterne', x: 13, y: 7, evenement: 'lanterne_port' },
+      { type: 'deco', x: 10, y: 7, bloque: true, evenement: 'statue_port' },
+      { type: 'pieu', x: 10, y: 15 }, { type: 'pieu', x: 17, y: 15 },
+      { type: 'coffre', id: 'port_ilot', x: 16, y: 16, contenu: { objet: 'cape', n: 1 } }
+    ],
+    pnj: [
+      { id: 'maitre_port', perso: 'maitre_port', x: 15, y: 12, evenement: 'maitre_port' },
+      { id: 'pecheuse', perso: 'pecheuse', x: 6, y: 14, evenement: 'pecheuse' },
+      { id: 'dresseur', perso: 'dresseur', x: 16, y: 7, evenement: 'dresseur', erre: 2 },
+      { id: 'conteuse', perso: 'conteuse', x: 4, y: 7, evenement: 'conteuse' },
+      { id: 'gaspard_port', perso: 'gaspard', x: 8, y: 10, evenement: 'gaspard_port' },
+      { id: 'biscotte_port', perso: 'biscotte', x: 8, y: 9, evenement: 'biscotte' }
+    ],
+    sorties: [
+      { x: [10, 11], y: 0, vers: 'route_marais', a: [6, 24], dir: 'haut' },
+      { x: 4, y: 4, vers: 'taverne_port', a: [5, 6], dir: 'haut' },
+      { x: 21, y: [12, 13], vers: 'marais_cloches', a: [1, 12], dir: 'droite', si: 'maud_rejoint', refus: 'sans_guide' }
+    ]
+  },
+  taverne_port: {
+    nom: 'Taverne de la Cloche fêlée', musique: 'village',
+    plan: [
+      'WWWWWWWWWWW',
+      'wOO___H__Ow',
+      'w__KK_____w',
+      'w________qw',
+      'w_K_____K_w',
+      'w_________w',
+      'w_________w',
+      'vvvvv_vvvvv'
+    ],
+    ornements: [{ type: 'tapis_bleu', x: 5, y: 4 }, { type: 'fenetre', x: 2, y: 0 }, { type: 'tableau', x: 4, y: 0 }, { type: 'fenetre', x: 8, y: 0 }, { type: 'etagere', x: 9, y: 0 }],
+    pnj: [
+      { id: 'aubergiste_port', perso: 'aubergiste_port', x: 3, y: 3, evenement: 'aubergiste_port' },
+      { id: 'maud', perso: 'maud', x: 8, y: 3, evenement: 'maud_taverne', si: '!maud_rejoint' }
+    ],
+    sorties: [{ x: 5, y: 7, vers: 'port_gris', a: [4, 5], dir: 'bas' }]
+  },
+
+  // ---------- le Marais des cloches ----------
+  marais_cloches: {
+    nom: 'Marais des cloches', musique: 'foret', exterieur: true, brume: .5, sauvegardeAuto: true, entree: 'cloches_entree',
+    combat: { sol: ['herbe_marais0', 'herbe_marais1', 'vase0'], decor: 'saule', brume: .5 },
+    plan: [
+      'ssssssssssssssssssssssssssss',
+      'shhhhiihhhhhheeeheeeehhhhhhs',
+      'shhhhhhhhhhhheeeheeeehhhhhhs',
+      'shhhhhhhhhhiheceheeeehhhhhhs',
+      'sheeeecehihhheeeheeeUhhhhhhs',
+      'sheyeeeehhhhheeeheeeehhhhhhs',
+      'sheeyeeehhhhheeehhhhhhhuhhhs',
+      'shhhhhhhhshhheeehhhhhhhuhhhs',
+      'shhhhhhhhhhhhecehshhhhhuhhis',
+      'shshhhhhhhiiheeeihhhhihuhhhs',
+      'shhhhhhhhhhhheeehhhhshhuhhhs',
+      'shhhhhhhhhhhheeehhhhhhhuhhss',
+      'uuuuuuuuuuuuuddduuuuuuuuhhhs',
+      'uuuuuuuuuuuuuddduuuuuuuuhhhs',
+      'shhhhhhhhhhhheeeheedeeeeeees',
+      'shiihhhhhhshheeeheedeeeeeces',
+      'shhhhheyhhhhieeeieedeehhhees',
+      'shhhhheehhhhheceheedeehhhees',
+      'shhhshhhhhhhheeeheeeeehhhees',
+      'shhhhhhhihhhheeeheyeeeeeeyes',
+      'shhhhhhhhhhsheeeheeeeeeeeees',
+      'ssssssssssssssssssssssssssss'
+    ],
+    maisons: [{ x: 21, y: 2, l: 6, p: 4, mur: 'mur_moulin', toit: 'toit', porte: 2, fenetres: [.5, 4.5] }],
+    objets: [
+      { type: 'coffre', id: 'cloches_herbes', x: 8, y: 2, contenu: { objet: 'herbe', n: 3 } },
+      { type: 'lanterne_oubliee', id: 'cloches', x: 3, y: 9, evenement: 'lanterne_oubliee_cloches' },
+      { type: 'lanterne', x: 25, y: 8 },
+      { type: 'panneau', x: 22, y: 7, texte: ['MOULIN DE LA BIEF — Farine, son, et rien d\'autre.', 'Quelqu\'un a ajouté au charbon : « On n\'y entre plus. »'] },
+      { type: 'pieu', x: 23, y: 17 }, { type: 'pieu', x: 18, y: 17 },
+      { type: 'coffre', id: 'cloches_ilot', x: 23, y: 16, contenu: { objet: 'baton_saule', n: 1 } }
+    ],
+    pnj: [
+      { id: 'crapaud_roi', perso: 'crapaud_roi', x: 8, y: 17, evenement: 'crapaud_roi' },
+      { id: 'isee', perso: 'isee', x: 11, y: 10, evenement: 'isee_route', cache: true }
+    ],
+    monstres: [
+      { type: 'escargot', x: 5, y: 12, rayon: 2 },
+      { type: 'phalene', x: 9, y: 9, rayon: 2 },
+      { type: 'anguille', x: 16, y: 13, rayon: 1 },
+      { type: 'anguille', x: 20, y: 12, rayon: 2 },
+      { type: 'sangsue', x: 23, y: 9, rayon: 2 },
+      { type: 'escargot', x: 4, y: 16, rayon: 2 }
+    ],
+    sorties: [
+      { x: 0, y: [12, 13], vers: 'port_gris', a: [20, 12], dir: 'gauche' },
+      { x: 23, y: 5, vers: 'moulin_entree', a: [6, 8], dir: 'haut' }
+    ],
+    declencheurs: [{ x: 9, y: [12, 13], evenement: 'isee_cloches', si: '!isee_cloches' }]
+  },
+
+  // ---------- le Moulin noyé (deuxième sanctuaire) ----------
+  moulin_entree: {
+    nom: 'Moulin noyé', musique: 'foret', ciel: 0x0c1014, sauvegardeAuto: true, entree: 'moulin_arrivee',
+    combat: { sol: ['ponton'], decor: 'mur_moulin_haut', interieur: true },
+    plan: [
+      'DDDDDDNDDDDDD',
+      'INNN2NNNeeNNI',
+      'INNNNNNNeeNNI',
+      'INVNNNNNeeN2I',
+      'INNNNNNNeeNNI',
+      'INNNNNNNeeNNI',
+      'INNNNNNNeeNNN',
+      'INNNNNNNeeNNI',
+      'INNNNNNNeeNNI',
+      'JJJJJJNJJJJJJ'
+    ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 9, y: 0 }],
+    objets: [
+      { type: 'lanterne', x: 2, y: 7 },
+      { type: 'pieu', x: 11, y: 4 }, { type: 'pieu', x: 6, y: 4 }
+    ],
+    monstres: [{ type: 'remous', x: 3, y: 5, rayon: 1 }],
+    sorties: [
+      { x: 6, y: 9, vers: 'marais_cloches', a: [23, 6], dir: 'bas' },
+      { x: 6, y: 0, vers: 'moulin_meules', a: [7, 10], dir: 'haut' },
+      { x: 12, y: 6, vers: 'moulin_reserve', a: [1, 4], dir: 'droite' }
+    ]
+  },
+  moulin_reserve: {
+    nom: 'Moulin noyé', musique: 'foret', ciel: 0x0c1014,
+    combat: { sol: ['ponton'], decor: 'mur_moulin_haut', interieur: true },
+    plan: [
+      'DDDDDDDDD',
+      'I2NNN2NNI',
+      'INNNNNNNI',
+      'INNNNNNNI',
+      'NNNNNNNNI',
+      'INNNVNNNI',
+      'INNNNNN2I',
+      'JJJJJJJJJ'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }],
+    objets: [
+      { type: 'coffre', id: 'moulin_cle', x: 6, y: 1, contenu: { objet: 'cle_moulin', n: 1 } },
+      { type: 'coffre', id: 'moulin_epee', x: 2, y: 6, contenu: { objet: 'epee_acier', n: 1 } }
+    ],
+    monstres: [{ type: 'tortue', x: 5, y: 3, rayon: 1 }],
+    sorties: [{ x: 0, y: 4, vers: 'moulin_entree', a: [11, 6], dir: 'gauche' }]
+  },
+  moulin_meules: {
+    nom: 'Moulin noyé', musique: 'foret', ciel: 0x0c1014,
+    combat: { sol: ['ponton'], decor: 'mur_moulin_haut', interieur: true },
+    plan: [
+      'DDDDDDDNDDDDDDD',
+      'IN2NNNNNNNNN2NI',
+      'INNNVNNNNNVNNNI',
+      'INNNNNNNNNNNNNI',
+      'INNNNeeeeeNNNNI',
+      'INVNNeceeeNNVNI',
+      'NNNNNeeeeeNNNNI',
+      'INNNNNNNNNNNNNI',
+      'INNNVNNNNNVNNNI',
+      'INNNNNNNNNNNNNI',
+      'IN2NNNNNNNNN2NI',
+      'JJJJJJJNJJJJJJJ'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 10, y: 0 }],
+    objets: [
+      { type: 'porte_cle', id: 'moulin_porte', x: 7, y: 1, cle: 'cle_moulin' },
+      { type: 'nappe', id: 'moulin_nappe', x: 1, y: 6, outil: 'lanterne' },
+      { type: 'coffre', id: 'meules_herbes', x: 13, y: 9, contenu: { objet: 'herbe', n: 2 } }
+    ],
+    monstres: [
+      { type: 'lavandiere', x: 3, y: 8, rayon: 1 },
+      { type: 'remous', x: 11, y: 3, rayon: 1 }
+    ],
+    sorties: [
+      { x: 7, y: 11, vers: 'moulin_entree', a: [6, 1], dir: 'bas' },
+      { x: 0, y: 6, vers: 'moulin_tresor', a: [7, 4], dir: 'gauche' },
+      { x: 7, y: 0, vers: 'moulin_bief', a: [6, 8], dir: 'haut' }
+    ]
+  },
+  moulin_tresor: {
+    nom: 'Moulin noyé', musique: 'foret', ciel: 0x0c1014,
+    plan: [
+      'DDDDDDDDD',
+      'IN3NNN3NI',
+      'INNNNNNNI',
+      'INNNNNNNI',
+      'INNNNNNNN',
+      'INNNNNNNI',
+      'IN2NNN2NI',
+      'JJJJJJJJJ'
+    ],
+    ornements: [{ type: 'torche', x: 2, y: 0 }, { type: 'torche', x: 6, y: 0 }],
+    objets: [
+      { type: 'coffre', id: 'grappin', x: 4, y: 1, evenement: 'tresor_grappin' },
+      { type: 'coffre', id: 'tresor_arc', x: 4, y: 6, contenu: { objet: 'arc_long', n: 1 } }
+    ],
+    sorties: [{ x: 8, y: 4, vers: 'moulin_meules', a: [2, 6], dir: 'droite' }]
+  },
+  moulin_bief: {
+    nom: 'Moulin noyé', musique: 'foret', ciel: 0x0c1014, sauvegardeAuto: true,
+    combat: { sol: ['ponton'], decor: 'mur_moulin_haut', interieur: true },
+    plan: [
+      'DDDDDDNDDDDDD',
+      'INNNNNNNeeNNI',
+      'IN2NNNNNeeNNI',
+      'INNNNNNNeeNNI',
+      'INNNNNNNeeNNI',
+      'INNNNNNNeeNNI',
+      'INVNNNNNeeN2I',
+      'INNNNNNNeeNNI',
+      'INNNNNNNeeNNI',
+      'JJJJJJNJJJJJJ'
+    ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 9, y: 0 }],
+    objets: [
+      { type: 'grille', id: 'moulin_grille', x: 6, y: 1, ouvertSi: 'vanne_moulin', texte: 'Une vanne de fer barre le passage. L\'eau gronde derrière. Un mécanisme doit la lever.' },
+      { type: 'levier', id: 'moulin_levier', x: 11, y: 2, drapeau: 'vanne_moulin', texte: 'Le levier résiste, puis cède. Dans un grincement de chaînes, la vanne remonte au fond de la salle.' },
+      { type: 'pieu', x: 11, y: 5 }, { type: 'pieu', x: 6, y: 5 },
+      { type: 'lanterne', x: 2, y: 8 }
+    ],
+    monstres: [
+      { type: 'lavandiere', x: 3, y: 3, rayon: 1 },
+      { type: 'anguille', x: 10, y: 7, rayon: 1 }
+    ],
+    sorties: [
+      { x: 6, y: 9, vers: 'moulin_meules', a: [7, 2], dir: 'bas' },
+      { x: 6, y: 0, vers: 'moulin_coeur', a: [5, 9], dir: 'haut' }
+    ]
+  },
+  moulin_coeur: {
+    nom: 'Cœur du moulin', musique: 'foret', ciel: 0x0c1014, sauvegardeAuto: true, entree: 'moulin_coeur_arrivee',
+    combat: { sol: ['ponton'], decor: 'mur_moulin_haut', interieur: true },
+    plan: [
+      'DDDDDDDDDDD',
+      'IeeNNNNNeeI',
+      'IeUNNNNNUeI',
+      'IeeNNNNNeeI',
+      'INNNNNNNNNI',
+      'INNNNNNNNNI',
+      'INNNNNNNNNI',
+      'INNNNNNNNNI',
+      'INNNNNNNNNI',
+      'INNNNNNNNNI',
+      'JJJJJNJJJJJ'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 6, y: 0 }],
+    objets: [{ type: 'fresque', x: 5, y: 1, evenement: 'fresque_moulin' }],
+    pnj: [{ id: 'dame', perso: 'dame_moulin', x: 5, y: 3, evenement: 'dame_parle', si: '!dame_vaincue' }],
+    sorties: [{ x: 5, y: 10, vers: 'moulin_bief', a: [6, 2], dir: 'bas' }],
+    declencheurs: [{ x: [1, 9], y: 6, evenement: 'dame_combat', si: '!dame_vaincue' }]
   }
 };

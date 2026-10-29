@@ -6,7 +6,8 @@
        legende: { 'T': { sol: 'herbe', decor: 'arbre', bloque: true }, … }   (s'ajoute à la légende commune)
        plan: [ 'TTTT…', … ]                          une lettre par case, toutes les lignes de même longueur
        maisons:   [{ x, y, l, p, h, mur, toit, porte: dx }]  la porte est sur la rangée du bas, à x + dx
-       objets:    [{ type: 'coffre' | 'panneau' | 'lanterne' | 'deco', x, y, … }]  (bloquent le passage)
+       objets:    [{ type: 'coffre' | 'panneau' | 'lanterne' | 'deco' | 'pieu', x, y, … }]  (bloquent le passage ;
+                  un pieu sert d'accroche au grappin, voir cibleGrappin)
        pnj:       [{ id, perso, x, y, evenement, erre, si, cache }]   erre : rayon de promenade (0 : immobile) ;
                   cache : n'apparaît que par la commande { pnj, montrer } d'un événement ;
                   anim : son geste quand il ne marche pas (ex. 'attaque'), sinon il respire
@@ -60,6 +61,24 @@
   const objetEn = (c, x, y) => (c.def.objets || []).find(o => o.x === x && o.y === y) || null;
   const devant = (x, y, dir) => [x + DIRS[dir][0], y + DIRS[dir][1]];
 
+  /* Le grappin (outil du 2e sanctuaire) : lancé tout droit depuis (x, y), il s'accroche au premier pieu (objet « pieu »)
+     à portée. Entre les deux, seulement des cases « franchissable » de la légende (eau, vide), au moins une ; la case
+     juste avant le pieu, sur la rive d'en face, doit être libre : c'est là que l'équipe atterrit. Renvoie [x, y] ou null. */
+  function cibleGrappin(c, x, y, dir, portee = 6) {
+    const [dx, dy] = DIRS[dir];
+    for (let k = 1; k <= portee; k++) {
+      const cx = x + dx * k, cy = y + dy * k;
+      if (dehors(c, cx, cy)) return null;
+      const o = objetEn(c, cx, cy);
+      if (o && o.type === 'pieu') return null;   // pieu collé à l'eau : pas de rive où se poser
+      if (c.cases[cy][cx].franchissable) continue;
+      if (c.bloque[cy][cx] || k < 2) return null;
+      const p = objetEn(c, cx + dx, cy + dy);
+      return p && p.type === 'pieu' ? [cx, cy] : null;
+    }
+    return null;
+  }
+
   /* L'équipe en file : le chef avance, chacun des suivants prend la place de celui qui le précède.
      file : positions des suivants, du plus proche au plus loin. */
   function avancerFile(file, ancienneTete) {
@@ -86,6 +105,6 @@
     return dirChef === dirMonstre ? 'monstre' : 'normal';
   }
 
-  M.Monde = { DIRS, OPPOSE, OUVRABLES, estOuvert, preparer, estBloque, sortieEn, declencheurEn, objetEn, devant, avancerFile, fileGroupee, pasErrant, initiative };
+  M.Monde = { DIRS, OPPOSE, OUVRABLES, estOuvert, preparer, dehors, estBloque, sortieEn, declencheurEn, objetEn, devant, cibleGrappin, avancerFile, fileGroupee, pasErrant, initiative };
   if (typeof module !== 'undefined') module.exports = M;
 })(typeof window !== 'undefined' ? (window.MoteurRPG = window.MoteurRPG || {}) : (globalThis.MoteurRPG = globalThis.MoteurRPG || {}));

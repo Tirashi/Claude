@@ -75,7 +75,7 @@
       etat.temps += dt;
       const libre = !occupe && !menuOuvert && !ui.occupe;
       if (mouvement) {
-        mouvement.t += dt / PAS;
+        mouvement.t += dt / (PAS * (mouvement.duree || 1));
         if (mouvement.t >= 1) { const recul = mouvement.recul; mouvement = null; if (!recul) arrive(); }
       }
       if (!mouvement && libre) { const d = entrees.dir(); if (d) essayer(d); }
@@ -168,6 +168,7 @@
       if (!ob) return;
       if (ob.evenement) return jouer(ob.evenement);
       if (ob.type === 'panneau') return jouer([{ dire: [].concat(ob.texte) }]);
+      if (ob.type === 'pieu') return jouer([{ dire: etat.drapeaux['outil:grappin'] ? 'Un pieu solide. De l\'autre côté de l\'eau, face à un pieu, B lance le grappin.' : 'Un vieux pieu planté dans la vase, cerclé de fer. On pourrait y accrocher quelque chose.' }]);
       if (ob.type === 'coffre') {
         if (etat.drapeaux['coffre:' + ob.id]) return jouer([{ dire: 'Le coffre est vide.' }]);
         etat.drapeaux['coffre:' + ob.id] = true; rendu.majObjet(ob, true); sons.effet('coffre');
@@ -194,7 +195,7 @@
       if (ob.type === 'grille' && !ouvert) return jouer([{ dire: ob.texte || 'Une lourde grille barre le passage.' }]);
     }
 
-    // B : l'outil sur ce qui est devant soi (une nappe de brume et la lanterne, par exemple)
+    // B : l'outil sur ce qui est devant soi (une nappe de brume et la lanterne, de l'eau et le grappin)
     function outil() {
       const [fx, fy] = W.devant(chef.x, chef.y, chef.dir), ob = W.objetEn(carte, fx, fy);
       if (ob && ob.outil && etat.drapeaux['outil:' + ob.outil] && !W.estOuvert(ob, c => Ev.condition(c, etat))) {
@@ -202,7 +203,19 @@
         etat.drapeaux['ouvert:' + ob.id] = true; sons.effet(o2 && o2.son || 'lanterne', .7);
         objetsOuverts();
         if (o2 && o2.texte) ui.message(o2.texte, 1800);
+        return;
       }
+      if (etat.drapeaux['outil:grappin'] && !W.dehors(carte, fx, fy) && carte.cases[fy][fx].franchissable) grappin();
+    }
+    // le grappin file jusqu'au pieu d'en face et tire toute l'équipe sur l'autre rive
+    function grappin() {
+      const cible = W.cibleGrappin(carte, chef.x, chef.y, chef.dir);
+      if (!cible) { ui.message('Rien où accrocher le grappin.', 1500); return; }
+      const d = Math.abs(cible[0] - chef.x) + Math.abs(cible[1] - chef.y);
+      sons.effet((jeu.outils.grappin || {}).son || 'fleche', .7);
+      for (const s of [chef, ...suiveurs]) { s.de = [s.x, s.y]; s.x = cible[0]; s.y = cible[1]; }
+      etat.x = cible[0]; etat.y = cible[1];
+      mouvement = { t: 0, duree: .45 * d };
     }
 
     async function jouer(script) {
