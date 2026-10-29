@@ -41,7 +41,20 @@
     "o_epee_courte": "item/weapon/short_sword1.png", "o_epee_longue": "item/weapon/long_sword1.png", "o_masse": "item/weapon/mace1.png",
     "o_baton": "item/weapon/quarterstaff.png", "o_arc": "item/weapon/ranged/shortbow1.png",
     "o_tunique": "item/armour/leather_armour3.png", "o_robe": "item/armour/robe1.png", "o_robe_savante": "item/armour/robe_ego1.png",
-    "o_cuir": "item/armour/leather_armour1.png", "o_cotte": "item/armour/chain_mail1.png", "o_ruban": "item/amulet/cameo.png"
+    "o_cuir": "item/armour/leather_armour1.png", "o_cotte": "item/armour/chain_mail1.png", "o_ruban": "item/amulet/cameo.png",
+
+    "rocaille0": "dngn/floor/swirlstone0.png", "rocaille1": "dngn/floor/swirlstone1.png", "rocaille2": "dngn/floor/swirlstone2.png",
+    "falaise": "dngn/wall/lab-rock1.png", "gros_rocher": "mon/nonliving/boulder1.png",
+    "sel0": "dngn/floor/endless_salt0.png", "sel1": "dngn/floor/endless_salt1.png", "sel2": "dngn/floor/endless_salt2.png",
+    "mur_mine": "dngn/wall/stone2_brown0.png", "cristal_sel": "dngn/wall/crystal_wall_white.png", "colonne_brisee": "dngn/statues/crumbled_column_3.png",
+    "statue_brume0": "dngn/statues/statue_princess.png", "statue_brume1": "dngn/statues/statue_twins.png", "statue_brume2": "dngn/statues/statue_ancient_hero.png",
+    "statue_brume3": "dngn/statues/statue_archer.png", "statue_brume4": "dngn/statues/statue_angel.png", "statue_tiennot": "dngn/statues/statue_dwarf.png",
+    "yack": "mon/animals/yak.png", "pie_givre": "mon/animals/shard_shrike.png", "tatou": "mon/animals/mountainshell.png", "bete_givre": "mon/animals/ice_beast.png",
+    "chauve_souris": "mon/animals/bat.png", "herisson": "mon/animals/crystal_echidna.png", "scarabee": "mon/animals/boulder_beetle.png",
+    "mineur_sel": "mon/statues/pillar_of_salt.png", "geant_sel": "mon/nonliving/crystal_guardian.png",
+    "o_masse_mineur": "item/weapon/hammer1.png", "o_echarpe": "item/armour/scarf2_1.png", "o_epee_runique": "item/weapon/greatsword1.png",
+    "o_masse_argent": "item/weapon/mace_large1.png", "o_baton_cristal": "item/weapon/quarterstaff3.png", "o_arc_cimes": "item/weapon/ranged/longbow1.png",
+    "o_plastron": "item/armour/plate1.png", "o_manteau": "item/armour/cloak2.png", "o_amulette": "item/amulet/citrine.png"
   },
   "persos": {
     "maitre_port": ["base/human2_m", "boots/long_red", "legs/pants_blue", "body/coat_black", "head/hat_black", "beard/garibaldi_black"],
@@ -50,6 +63,11 @@
     "aubergiste_port": ["base/human_m", "boots/short_brown", "legs/pants_brown", "body/shirt_vest", "beard/full_red", "hair/short_red"],
     "marchand": ["base/human_m", "boots/middle_ybrown", "legs/pants_orange", "body/robe_brown2", "beard/garibaldi_brown", "head/turban_brown"],
     "conteuse": ["cloak/blue", "base/human2_f", "boots/slippers", "body/robe_purple", "hand1/stick", "hair/long_white"],
+    "chevalier": ["cloak/gray", "legs/metal_gray", "body/plate_black", "hand1/great_sword", "hand2/kite_shield_knight_gray", "head/full_black"],
+    "garance": ["base/dwarf_f", "boots/middle_brown", "legs/pants_brown", "body/leather_heavy", "hand1/pick_axe", "hair/pigtail_red", "head/band_yellow"],
+    "mineur": ["base/human2_m", "boots/short_brown", "legs/pants_short_darkbrown", "body/shirt_vest", "hand1/hammer", "beard/full_white", "head/cap_black1"],
+    "dormeur": ["base/human_m", "cloak/white", "boots/middle_ybrown", "legs/pants_blue", "body/shirt_white_yellow", "hand1/katana_slant", "hair/short_red", "head/band_white"],
+    "berger": ["base/halfling_m", "boots/short_brown2", "legs/pants_short_brown", "body/animal_skin", "hand1/quarterstaff", "hair/curly_yellow"],
 
     "heros":   ["base/human_m", "legs/pants_brown", "boots/middle_brown", "body/chainmail", "hair/short_brown", "hand1/long_sword_slant", "hand2/kite_shield_knight_blue"],
     "eloi":    ["base/human2_m", "legs/pants_l_white", "boots/short_brown", "body/robe_white_blue", "hand1/mace", "hand2/buckler_round", "hair/short_white"],

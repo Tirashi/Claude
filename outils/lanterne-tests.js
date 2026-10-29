@@ -293,7 +293,7 @@ const fixe = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // tira
         if (o.evenement && !utilise.has(cle + 'e')) { utilise.add(cle + 'e'); donnerScript(o.evenement); }
         if (o.type === 'levier') flags[o.drapeau] = true;
         if (o.type === 'porte_cle' && !flags['ouvert:' + o.id] && (sac[o.cle] || 0) > 0) { sac[o.cle]--; flags['ouvert:' + o.id] = true; }
-        if (o.type === 'nappe' && flags['outil:' + o.outil]) flags['ouvert:' + o.id] = true;
+        if (o.outil && flags['outil:' + o.outil]) flags['ouvert:' + o.id] = true;
       }
       for (const p of d.pnj || []) if (p.evenement && !p.cache && (!p.si || test(p.si)) && pres(id, p.x, p.y) && !utilise.has('p:' + p.id)) { utilise.add('p:' + p.id); donnerScript(p.evenement); }
       for (const dc of d.declencheurs || []) {

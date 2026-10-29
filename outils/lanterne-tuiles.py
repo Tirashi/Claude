@@ -350,7 +350,45 @@ def dessines():
     d.line([20, 12, 26, 6], fill=FER[0], width=3); d.line([20, 12, 26, 6], fill=FER[2], width=1)
     for (x1, y1, x2, y2) in ((26, 6, 29, 11), (26, 6, 21, 3), (26, 6, 30, 2)): d.line([x1, y1, x2, y2], fill=FER[1], width=2)
     t['o_grappin'] = im
+
+    # ---------- acte 3 ----------
+    # une page de journal : parchemin, lignes d'écriture et sceau rouge
+    im = neuf(); d = ImageDraw.Draw(im)
+    d.polygon([(7, 4), (25, 3), (26, 27), (8, 28)], fill=(226, 210, 170), outline=(120, 96, 60))
+    for y in range(8, 22, 3): d.line([10, y, 23, y - (y % 2)], fill=(110, 90, 70))
+    d.ellipse([17, 20, 24, 27], fill=(170, 30, 30), outline=(100, 14, 14)); d.point((20, 23), fill=(230, 120, 110))
+    t['o_page'] = im
     return t
+
+
+def fissures(im, traits, sombre=(40, 30, 26, 255), clair=(200, 190, 170, 255)):
+    """Des fissures dessinées par-dessus une tuile (rocher fendu, mur fissuré)."""
+    im = im.copy(); d = ImageDraw.Draw(im)
+    for trait in traits:
+        d.line(trait, fill=sombre, width=2)
+        d.line([(x + 1, y) for (x, y) in trait], fill=clair, width=1)
+    return im
+
+
+def teinte(im, f):
+    """Applique f(r, g, b, a) -> (r, g, b, a) à chaque pixel."""
+    im = im.copy(); px = im.load()
+    for y in range(im.height):
+        for x in range(im.width):
+            if px[x, y][3]: px[x, y] = f(*px[x, y])
+    return im
+
+
+def brume(r, g, b, a):
+    """Statue de brume : gris bleuté, pâle et un peu transparente."""
+    v = (r + g + b) // 3
+    return (min(255, 120 + v // 2), min(255, 140 + v // 2), min(255, 170 + v // 2), int(a * .82))
+
+
+def cendre(r, g, b, a):
+    """Armure de cendre : gris chaud et terne, un peu éclairci."""
+    v = (r * 3 + g * 4 + b * 3) // 10
+    return (min(255, 46 + v), min(255, 42 + v), min(255, 40 + int(v * .9)), a)
 
 
 def main():
@@ -366,6 +404,12 @@ def main():
     # la Flamme bleue : la flamme du pack, teintée en bleu
     r_, g_, b_, a_ = images['flamme'].split()
     images['flamme_bleue'] = Image.merge('RGBA', (b_, g_, r_, a_))
+    # la Flamme d'or : la même, teintée en jaune
+    images['flamme_or'] = teinte(images['flamme'], lambda r, g, b, a: (min(255, r + 30), min(255, g + 70), b // 3, a))
+    # acte 3 : rocher fendu et mur fissuré (la Masse de mineur les brise), statues de brume du Hameau caché
+    images['rocher_fendu'] = fissures(images['gros_rocher'], [[(16, 6), (14, 12), (17, 17), (13, 24)], [(14, 12), (9, 15)], [(17, 17), (22, 21)]])
+    images['mur_fissure'] = fissures(images['mur_mine'], [[(15, 2), (12, 9), (17, 15), (13, 22), (16, 30)], [(12, 9), (6, 12)], [(17, 15), (25, 18)], [(13, 22), (8, 27)]])
+    for nom in [n for n in images if n.startswith('statue_brume') or n == 'statue_tiennot']: images[nom] = teinte(images[nom], brume)
     prises = {}
     for nom, pieces in cfg['persos'].items():
         pieces = sorted(pieces, key=lambda p: ORDRE.index(p.split('/')[0]))
@@ -374,6 +418,12 @@ def main():
             t = Image.open(os.path.join(R, 'player', p + '.png')).convert('RGBA')
             if p.startswith('hand1/'): arme = t
             else: corps.alpha_composite(t)
+        # les Chevaliers de cendre : des armures vides, couleur de cendre ; le monstre a aussi son image entière
+        if nom == 'chevalier':
+            corps = teinte(corps, cendre); arme = arme and teinte(arme, cendre)
+            entier = corps.copy()
+            if arme: entier.alpha_composite(arme)
+            images[nom] = entier
         images[nom + '_c'] = corps
         if arme:
             images[nom + '_a'] = arme

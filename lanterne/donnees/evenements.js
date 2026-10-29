@@ -198,6 +198,11 @@ LANTERNE.evenements = {
     ] }
   ],
   vaast: [
+    { si: 'acte3_fini', alors: [{ dire: ['Mes Chevaliers ne sont pas redescendus de la montagne.', 'Tu n\'aurais rien vu, par hasard ?'], qui: 'vaast' }, { dire: '…', qui: 'eloi' }, { stop: true }] },
+    { si: 'mission_roches', alors: [{ dire: ['Les Mines de sel sont au-dessus du village des Hautes-Roches, par la route des cimes, à l\'ouest de Clairfond.', 'Mes Chevaliers veillent sur vous.'], qui: 'vaast' }, { stop: true }] },
+    { si: 'isee_conseil', alors: [{ evenement: 'vaast_acte3' }, { stop: true }] },
+    { si: 'dame_vaincue', alors: [{ dire: 'La Flamme bleue… Approche, mon enfant.', qui: 'vaast' },
+      { dire: 'Eloi te retient par la manche.' }, { dire: 'Attends. Isée voulait nous montrer quelque chose, au Hameau caché, au sud du marais.', qui: 'eloi' }, { stop: true }] },
     { si: 'mission_marais', alors: [{ dire: ['Le Moulin noyé est au cœur du Marais des cloches, à l\'est de Port-Gris.', 'Garde bien les flammes. Elles sont… précieuses.'], qui: 'vaast' }, { stop: true }] },
     { si: 'roi_vaincu',
       alors: [{ evenement: 'vaast_acte2' }],
@@ -540,7 +545,278 @@ LANTERNE.evenements = {
       { dire: 'Dehors, les cloches du marais se sont tues. Toutes à la fois. Le silence est si grand qu\'on entend la brume glisser sur l\'eau.' },
       { dire: ['Deux flammes. Plus que deux.', 'Je ne sais pas si je dois être fière ou avoir honte.'], qui: 'verene' },
       { dire: 'On continue. Si la réponse est quelque part, c\'est au bout. Et Tiennot aussi, peut-être.', qui: 'maud' },
-      { dire: '(Fin de l\'acte 2. La suite — le Hameau caché et les Hautes-Roches — arrive bientôt.)' },
+      { sauver: 'auto' },
+      { evenement: 'isee_blessee' }
+    ] }
+  ],
+
+  // ---------- rebondissement 2 : Isée attaquée, puis le Hameau caché ----------
+  // aussi relancé par un déclencheur devant le moulin, si on a repris la partie à la sauvegarde faite juste avant
+  isee_blessee: [
+    { si: 'isee_avouee', alors: [{ stop: true }] },
+    { pnj: 'isee_blessee', montrer: true }, { pnj: 'assaillant_a', montrer: true }, { pnj: 'assaillant_b', montrer: true }, { pnj: 'assaillant_c', montrer: true },
+    { attendre: .6 },
+    { dire: 'Un cri, sur le chemin. Isée recule, cernée par des créatures de la brume. Elles ne l\'attaquent pas comme des bêtes : on dirait qu\'elles l\'appellent.' },
+    { dire: 'Elles vont la mettre en pièces ! Vite !', qui: 'maud' },
+    { combat: ['lavandiere', 'feu_bleu', 'phalene'], boss: true },
+    { pnj: 'assaillant_a', cacher: true }, { pnj: 'assaillant_b', cacher: true }, { pnj: 'assaillant_c', cacher: true },
+    { dire: ['Les créatures se dispersent. Isée vacille, touchée à l\'épaule…',
+      '… et sous vos yeux, son corps se défait en brume. Il ne reste qu\'un nuage pâle, qui tremble au ras de l\'eau.',
+      'Puis la brume se rassemble, se serre, et Isée est de nouveau là. Plus pâle qu\'avant.'] },
+    { dire: 'Que la Lumière nous garde… Tu… tu es…', qui: 'eloi' },
+    { dire: ['Faite de brume. Oui.', 'Je suis une Brumienne. La dernière d\'entre nous qui soit encore éveillée.'], qui: 'isee' },
+    { dire: 'Les gens de la brume. Ceux des fresques. Je le savais…', qui: 'verene' },
+    { dire: 'Tu as dit que tu me voyais, tous les soirs. Alors tu sais où est Tiennot ?', qui: 'maud' },
+    { dire: ['Venez. Je vais vous montrer où dorment les miens.', 'Ce que vous y verrez, le Prieur ne vous l\'a pas dit.'], qui: 'isee' },
+    { pnj: 'isee_blessee', cacher: true },
+    { drapeau: 'isee_avouee' }, { chapitre: 'Le Hameau caché' },
+    { teleporter: 'hameau_cache', x: 9, y: 13, dir: 'haut' },
+    { sauver: 'auto' }
+  ],
+  sentier_brume: [
+    { dire: 'Un sentier s\'enfonce dans les roseaux, vers le sud. La brume y est si épaisse qu\'on ne voit plus ses propres pieds.' },
+    { dire: 'Pas par là. Même moi, je m\'y perdrais.', qui: 'maud' }
+  ],
+  hameau_entree: [
+    { si: 'hameau_vu', sinon: [
+      { drapeau: 'hameau_vu' },
+      { dire: ['La brume s\'ouvre sur une clairière. Partout, des silhouettes immobiles : des femmes, des enfants, des vieillards, faits de brume figée.',
+        'Ils ne bougent pas. Ils ne respirent pas. On dirait qu\'ils écoutent.'] },
+      { dire: 'Ce sont… des statues ?', qui: 'eloi' },
+      { dire: 'Non. Ils dorment.', qui: 'isee' }
+    ] }
+  ],
+  isee_hameau: [
+    { si: 'isee_conseil',
+      alors: [{ dire: ['Les miens rêvent. Parfois, quand tu passes, l\'un d\'eux sourit.', 'Va, maintenant. Et souviens-toi : à personne.'], qui: 'isee' }],
+      sinon: [
+        { dire: ['Voici les Brumiens. Mon peuple. Ils dorment depuis trois cents ans.',
+          'Avant, la brume était notre souffle. Elle se levait le matin et revenait le soir. Elle gardait la mémoire de vos morts, et vos villages dormaient dessous comme sous un toit.',
+          'Puis nos quatre gardiens ont été pris. Sans eux, mon peuple s\'est endormi, et la brume est devenue folle.'], qui: 'isee' },
+        { dire: 'Quatre gardiens… Le Roi des aulnes. La Dame du moulin.', qui: 'verene' },
+        { dire: 'Et vous portez leurs flammes.', qui: 'isee' },
+        { dire: 'Le Prieur dit que ces flammes appartiennent à la Grande Lanterne.', qui: 'eloi' },
+        { dire: ['Le Prieur dit vrai : c\'est là qu\'on les a mises.', 'Je ne te demande pas d\'arrêter, {HEROS}. Rapporte les flammes.',
+          'Mais ne les donne à personne avant d\'avoir lu la fin de l\'histoire.'], qui: 'isee' },
+        { dire: 'Et la fin de l\'histoire, elle est où ?', qui: 'maud' },
+        { dire: 'Sur les murs. Il reste deux fresques.', qui: 'isee' },
+        { drapeau: 'isee_conseil' }, { sauver: 'auto' },
+        { dire: '(Retourne à l\'abbaye de Saint-Cendre avec la Flamme bleue. Le sentier du marais est à l\'entrée du hameau.)' }
+      ] }
+  ],
+  statue_tiennot: [
+    { si: 'echarpe_trouvee',
+      alors: [{ dire: 'La petite statue tend toujours la main vers une lueur qui n\'est plus là.' }],
+      sinon: [
+        { dire: ['Une statue plus petite que les autres : un garçon qui court, la main tendue vers une lueur.',
+          'Autour de son cou, une écharpe verte. De la vraie laine, tricotée bien trop longue.'] },
+        { dire: ['… C\'est la mienne. Je la lui avais tricotée. Elle était trop longue, il marchait dessus.', 'Tiennot…'], qui: 'maud' },
+        { dire: ['Il ne souffre pas. Il dort, comme les autres.', 'Quand la brume redeviendra douce, elle rendra ce qu\'elle a gardé.'], qui: 'isee' },
+        { dire: 'Alors on va la rendre douce. Promis, Tiennot.', qui: 'maud' },
+        { donner: 'echarpe' }, { drapeau: 'echarpe_trouvee' },
+        { dire: 'Maud dénoue l\'écharpe avec précaution et la serre contre elle.' }
+      ] }
+  ],
+  dormeur: [
+    { dire: 'Un jeune homme aux cheveux rouges dort debout, un sabre à la main, au milieu des statues de brume. Lui n\'est pas fait de brume.' },
+    { choix: 'Le réveiller ?', options: ['Le secouer', 'Le laisser dormir'], suites: [
+      [{ dire: ['Mmh… C\'est… c\'est mon tour ?', '… Non ? Alors réveillez-moi quand ma jauge sera pleine.', 'Zzz…'], qui: 'dormeur' },
+        { dire: 'Sa jauge ? Quelle jauge ?', qui: 'eloi' }],
+      [{ dire: 'Il sourit dans son sommeil. Ça fait peut-être mille ans qu\'il attend son tour.' },
+        { dire: 'Il y en a qui ont de la patience.', qui: 'maud' }]
+    ] }
+  ],
+  lanterne_oubliee_hameau: [
+    { si: 'oubliee:hameau',
+      alors: [{ dire: 'La lanterne brûle au milieu des dormeurs. Leurs visages de brume ont l\'air apaisés.' }],
+      sinon: [
+        { dire: 'Une lanterne oubliée, couchée dans l\'herbe, comme lâchée par quelqu\'un qui s\'est endormi.' },
+        { choix: 'La rallumer ?', options: ['Oui', 'Non'], suites: [[
+          { son: 'lanterne' }, { drapeau: 'oubliee:hameau' },
+          { dire: ['La flamme prend, et le hameau se souvient :',
+            'un village de brume et un village de pierre, côte à côte. Le soir, les Brumiens allument les lanternes des humains.',
+            'Le matin, les humains laissent du pain sur les seuils de brume.'] },
+          { dire: 'Ils… s\'aidaient. Tout simplement.', qui: 'eloi' }
+        ], []] }
+      ] }
+  ],
+
+  // ---------- acte 3 : l'abbaye, puis la route des cimes ----------
+  vaast_acte3: [
+    { dire: ['La Flamme bleue. Je l\'entends chanter d\'ici.',
+      'Garde-la avec la rouge, dans ta lanterne. Plus que deux, et la Grande Lanterne brillera pour trois siècles encore.'], qui: 'vaast' },
+    { dire: 'Eloi. Tu ne m\'as pas écrit. Pas une seule lettre.', qui: 'vaast' },
+    { dire: 'Pardon, Père. Il… s\'est passé beaucoup de choses.', qui: 'eloi' },
+    { dire: ['Bien sûr. Bien sûr.',
+      'La troisième flamme, la Flamme d\'or, dort dans les Mines de sel, au-dessus du village des Hautes-Roches.',
+      'La route des cimes part de l\'ouest de Clairfond. Je fais lever la barrière.',
+      'Et je m\'inquiète pour vous. Mes Chevaliers de cendre vous attendront là-haut. Ils veilleront sur vous… et sur les flammes.'], qui: 'vaast' },
+    { dire: 'Des chevaliers. Pour veiller sur nous… ou sur les flammes ?', qui: 'verene' },
+    { dire: 'Il ne cligne jamais des yeux, ton Prieur. Tu avais remarqué ?', qui: 'maud' },
+    { drapeau: 'mission_roches' }, { chapitre: 'Acte 3' }, { sauver: 'auto' },
+    { dire: '(Acte 3 : la Flamme d\'or. La route des cimes est ouverte, à l\'ouest de Clairfond.)' }
+  ],
+  roches_ferme: [
+    { dire: 'Une barrière de bois ferme la route des cimes. Un écriteau : « FERMÉE. Ordre des Veilleurs. »' },
+    { si: 'isee_conseil', alors: [{ dire: 'Le Prieur peut la faire lever. Allons d\'abord à l\'abbaye.', qui: 'eloi' }] }
+  ],
+  panneau_roches: [
+    { si: 'mission_roches',
+      alors: [{ dire: ['À l\'ouest : la route des cimes, puis le village des Hautes-Roches.', 'Quelqu\'un a ajouté : « Bon courage pour les mollets. »'] }],
+      sinon: [{ dire: ['À l\'ouest : la route des cimes.', 'Fermée depuis l\'affaire des mines. — Les Veilleurs'] }] }
+  ],
+  col_entree: [
+    { si: 'col_vu', sinon: [
+      { drapeau: 'col_vu' },
+      { dire: 'La route grimpe entre les rochers. L\'air devient froid, et il a un goût de sel.' },
+      { dire: 'Du sel, à cette hauteur ? Le vent descend des mines, on dirait.', qui: 'verene' }
+    ] }
+  ],
+  berger: [
+    { dire: ['Colin, berger. Berger de rien, en ce moment.',
+      'Mes yacks ont filé dans la brume. Quand ils reviennent, ils ont de la brume à la place de la laine, et ils ne me reconnaissent plus.',
+      'Si vous en croisez, ne leur faites pas trop mal. Il y a Bouboule, Caramel et Pâquerette.'], qui: 'berger' },
+    { dire: 'On fera… attention.', qui: 'eloi' }
+  ],
+  lanterne_oubliee_cimes: [
+    { si: 'oubliee:cimes',
+      alors: [{ dire: 'La vieille lanterne brille au bord de la falaise. On la voit sûrement depuis Clairfond.' }],
+      sinon: [
+        { dire: 'Une lanterne oubliée, coincée entre deux rochers, pleine de neige.' },
+        { choix: 'La rallumer ?', options: ['Oui', 'Non'], suites: [[
+          { son: 'lanterne' }, { drapeau: 'oubliee:cimes' },
+          { dire: ['La flamme prend, et la montagne se souvient :',
+            'un géant de sel, immense et doux, porte sur ses épaules des enfants de brume et des enfants de chair, pour leur montrer toute la vallée.'] },
+          { dire: 'Le gardien du sel. Il les portait sur ses épaules…', qui: 'verene' }
+        ], []] }
+      ] }
+  ],
+
+  // ---------- le village des Hautes-Roches ----------
+  roches_entree: [
+    { si: 'roches_vues', sinon: [
+      { drapeau: 'roches_vues' }, { sauver: 'auto' },
+      { dire: ['Le village des Hautes-Roches s\'accroche à la montagne. Les toits sont blancs de sel, comme s\'il avait neigé dessus.',
+        'Devant la bouche de la mine, deux chevaliers en armure grise attendent, immobiles.'] },
+      { dire: 'Les Chevaliers du Prieur ! Ils sont venus jusqu\'ici pour nous.', qui: 'eloi' },
+      { dire: 'Regarde leurs casques. Pas de buée. Il fait froid à geler, et ils ne respirent pas.', qui: 'maud' }
+    ] }
+  ],
+  chevalier_garde: [
+    { dire: 'Le chevalier ne bouge pas. Une voix sort du casque, creuse comme un puits : « Le Prieur veille. Allez. »', qui: 'chevalier' },
+    { dire: 'Par la fente du heaume, on ne voit rien. Pas d\'yeux. Juste du noir… et un peu de cendre.' }
+  ],
+  garance: [
+    { si: 'geant_vaincu',
+      alors: [{ dire: ['Le grondement s\'est arrêté. Pour la première fois depuis dix ans, la montagne se tait.', 'Les gars qui sont restés en bas… ils vont peut-être pouvoir se reposer, maintenant.'], qui: 'garance' }],
+      sinon: [{ dire: ['Garance, cheffe des mineurs. Enfin, cheffe de rien : plus personne ne descend.',
+        'Il y a dix ans, quelque chose s\'est réveillé tout au fond. Un géant de sel. Les gars qui étaient en bas… ils sont devenus du sel, eux aussi. Ils creusent encore.',
+        'Si vous descendez, prenez la vieille masse du contremaître, dans la salle des outils, à gauche de la grande galerie. Elle casse tout.'], qui: 'garance' }] }
+  ],
+  mineur: [
+    { dire: ['Quand j\'étais gamin, on laissait une pincée de sel devant la mine, chaque soir. « Pour celui d\'en dessous », disait mon grand-père.',
+      'On a arrêté quand l\'abbaye l\'a interdit. « Superstition », qu\'ils disaient.'], qui: 'mineur' },
+    { dire: 'L\'abbaye interdit beaucoup de choses, pour quelqu\'un qui veut notre bien.', qui: 'maud' }
+  ],
+  gaspard_roches: [
+    { si: 'gaspard_roches_vu', sinon: [
+      { dire: ['Gaspard est partout ! Même à la montagne !', 'Biscotte a le vertige. Il fait semblant de rien, mais il regarde ses sabots.'], qui: 'gaspard' },
+      { drapeau: 'gaspard_roches_vu' }
+    ] },
+    ...boutique('gaspard', [['herbe', 12], ['fiole', 25], ['antidote', 9], ['plume', 80], ['plastron', 160], ['manteau', 120]], 'Excellent choix ! Ça tient chaud et ça arrête les cailloux.')
+  ],
+  statue_roches: [
+    { dire: ['« AUBRIN LE PORTE-FLAMME ». La même statue que dans les autres villages, toute blanche de sel.',
+      'Le vent lui a rongé le visage. On dirait qu\'il n\'en a jamais eu.'] },
+    { dire: '…', qui: 'eloi' }
+  ],
+
+  // ---------- les Mines de sel ----------
+  mines_arrivee: [
+    { si: 'mines_vues', sinon: [
+      { drapeau: 'mines_vues' },
+      { dire: ['Les galeries scintillent : le sel couvre tout, comme du givre.', 'Quelque part, tout au fond, quelqu\'un frappe la pierre. Lentement. Sans jamais s\'arrêter.'] },
+      { dire: 'Les mineurs de sel. Ils creusent encore…', qui: 'verene' }
+    ] }
+  ],
+  tresor_masse: [
+    { si: 'coffre:masse',
+      alors: [{ dire: 'Le coffre est vide.' }],
+      sinon: [
+        { drapeau: 'coffre:masse' }, { son: 'coffre' },
+        { dire: ['Dans le coffre, une masse de mineur. La tête de fer est usée par mille coups.', 'Sur le manche, quelqu\'un a gravé au couteau : « POUR CELUI D\'EN DESSOUS ».'] },
+        { donner: 'masse_mineur' }, { drapeau: 'outil:masse' },
+        { dire: 'Tu as la Masse de mineur ! Face à un rocher fendu ou à un mur fissuré, appuie sur B pour le briser.' },
+        { dire: 'Il y avait un rocher fendu sur la route des cimes, avec quelque chose qui brillait derrière. Je dis ça, je dis rien.', qui: 'maud' }
+      ] }
+  ],
+  page_sceau: [
+    { si: 'coffre:page',
+      alors: [{ dire: 'Le coffre est vide.' }],
+      sinon: [
+        { drapeau: 'coffre:page' }, { son: 'coffre' },
+        { dire: ['Au fond du coffre, sous un vieux registre de paie, une page de journal jaunie. L\'écriture est fine, penchée, très soignée :',
+          '« … Le troisième s\'est laissé approcher. Il m\'a porté sur ses épaules, il m\'a appelé ami. Je n\'ai pas tremblé.',
+          '« Il faut que je vive. Il faut que je vive. Il faut que je vive. »',
+          'En bas, un sceau de cire rouge : une lanterne dans une couronne de cendre. Le sceau de Saint-Cendre.'] },
+        { donner: 'page_sceau' }, { drapeau: 'page_sceau' },
+        { dire: ['Cette écriture… c\'est celle du Père Vaast.', 'Je la reconnaîtrais entre mille. C\'est lui qui m\'a appris à écrire.'], qui: 'eloi' },
+        { dire: 'Eloi. Ce papier a trois cents ans. Au moins.', qui: 'verene' },
+        { dire: '… Alors c\'est impossible. C\'est impossible.', qui: 'eloi' }
+      ] }
+  ],
+  mines_coeur_arrivee: [
+    { si: 'geant_vaincu', sinon: [{ si: 'mines_coeur_vu', sinon: [
+      { drapeau: 'mines_coeur_vu' },
+      { dire: 'Au cœur de la montagne, une immense salle de cristaux. Au milieu, une silhouette de sel, assise, la tête entre les mains.' }
+    ] }] }
+  ],
+  geant_parle: [{ dire: 'Chut… Ils dorment sous le sel. Je garde leur sommeil.', qui: 'geant' }],
+  geant_combat: [
+    { dire: ['Une lanterne… encore une lanterne…', 'La dernière fois, j\'ai porté l\'homme à la lanterne sur mes épaules. Et il m\'a pris ma flamme.'], qui: 'geant' },
+    { dire: 'L\'homme à la lanterne… ?', qui: 'eloi' },
+    { dire: 'Attention ! Quand il frappe la voûte, ça va tomber : en garde !', qui: 'maud' },
+    { combat: ['geant_sel'], boss: true },
+    { drapeau: 'geant_vaincu' },
+    { dire: 'Qui gardera… leur sommeil… maintenant…', qui: 'geant' },
+    { pnj: 'geant', cacher: true },
+    { dire: ['Le Géant de sel s\'effondre en un tas de cristaux qui tintent longtemps.', 'Au milieu, une petite flamme dorée crépite, comme du sel jeté au feu.'] },
+    { son: 'lanterne' }, { donner: 'flamme_or' }, { drapeau: 'flamme_or' },
+    { dire: 'La Flamme d\'or rejoint les deux autres dans la lanterne. Elles ne tournent plus : elles se serrent l\'une contre l\'autre.' },
+    { dire: 'Il ne nous attaquait pas, lui non plus. Il avait peur qu\'on recommence.', qui: 'verene' },
+    { sauver: 'auto' }
+  ],
+  fresque_mines: [
+    { dire: 'Une fresque couvre le mur du fond, à demi recouverte de cristaux de sel.' },
+    { dire: ['Un homme arrive dans la vallée, une lanterne à la main. Il est malade. Il a peur.',
+      'Les quatre gardiens l\'accueillent. Le géant le porte sur ses épaules, la dame le berce, le roi lui donne à manger…',
+      'Ils l\'ont consolé. Ils l\'ont consolé, et…'], qui: 'verene' },
+    { dire: 'Et ?', qui: 'maud' },
+    { dire: 'Et le reste est effacé. Il manque la fin. Il reste une fresque.', qui: 'verene' },
+    { dire: 'Un homme à la lanterne. Comme les statues d\'Aubrin.', qui: 'eloi' },
+    { si: 'geant_vaincu', alors: [{ evenement: 'fin_acte3' }] }
+  ],
+  // aussi relancé par un déclencheur devant la mine, si on a repris la partie à la sauvegarde faite juste avant
+  fin_acte3: [
+    { si: 'chevaliers_vaincus', sinon: [
+      { teleporter: 'hautes_roches', x: 9, y: 3, dir: 'haut' },
+      { dire: 'Dehors, le soleil se couche sur la neige. Les deux Chevaliers de cendre ont quitté leur poste : ils barrent le chemin.' },
+      { dire: ['La flamme. Donnez-la.', 'Le Prieur s\'inquiète. Nous la porterons jusqu\'à lui.'], qui: 'chevalier' },
+      { dire: 'Mais… le Père a dit qu\'elles étaient plus à l\'abri dans la lanterne.', qui: 'eloi' },
+      { dire: 'Le Prieur a changé d\'avis.', qui: 'chevalier' },
+      { dire: '« Ne les donne à personne avant d\'avoir lu la fin de l\'histoire. »', qui: 'verene' },
+      { choix: 'Que réponds-tu ?', options: ['Jamais.', 'Elles restent avec nous.'], suites: [
+        [{ dire: 'Jamais, il dit. Tu as entendu, la casserole ?', qui: 'maud' }],
+        [{ dire: 'Vous avez entendu. Elles restent avec nous.', qui: 'maud' }]
+      ] },
+      { dire: 'Alors nous la prendrons.', qui: 'chevalier' },
+      { combat: ['chevalier', 'chevalier'], boss: true },
+      { pnj: 'chevalier_a', cacher: true }, { pnj: 'chevalier_b', cacher: true }, { drapeau: 'chevaliers_vaincus' },
+      { dire: ['Les armures s\'effondrent avec un bruit de vieilles casseroles.', 'Dedans, il n\'y a rien. Juste un peu de cendre, que le vent emporte vers la vallée.'] },
+      { dire: 'Pourquoi… Pourquoi le Père aurait-il envoyé… ça ?', qui: 'eloi' },
+      { dire: ['Rentrons à Clairfond. Ta Mère Ysolde, elle saura quoi en penser.', 'Elle en sait toujours plus qu\'elle n\'en dit, non ?'], qui: 'maud' },
+      { drapeau: 'acte3_fini' }, { chapitre: 'Acte 3 — la Flamme d\'or' },
+      { dire: '(Fin de l\'acte 3. La suite — le retour à Clairfond — arrive bientôt.)' },
       { sauver: 'auto' }
     ] }
   ],

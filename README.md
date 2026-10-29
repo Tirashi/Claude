@@ -268,10 +268,10 @@ Un jeu de gestion **en 3D** : tu tiens une boutique de cartes à collectionner (
 ## La Dernière Lanterne (démo)
 Un RPG au tour par tour en HD-2D (tuiles 32 × 32 de Dungeon Crawl posées dans un décor en relief, ombres, flou de profondeur). Dans la vallée de Clairfond, la brume revient : avec ton équipe, rallume les lanternes qui la retiennent.
 
-- **Jouable aujourd'hui** : le prologue, l'acte 1 (Clairfond, la route et l'abbaye, le Bois Murmurant, la Crypte des racines et son boss, le Roi des aulnes) et l'acte 2 (la route des marais, Port-Gris où Maud rejoint l'équipe, le Marais des cloches, le Moulin noyé et son boss, la Dame du moulin). La suite arrive par actes.
+- **Jouable aujourd'hui** : le prologue, l'acte 1 (Clairfond, la route et l'abbaye, le Bois Murmurant, la Crypte des racines et son boss, le Roi des aulnes) et l'acte 2 (la route des marais, Port-Gris où Maud rejoint l'équipe, le Marais des cloches, le Moulin noyé et son boss, la Dame du moulin), le Hameau caché des Brumiens et l'acte 3 (la route des cimes, le village des Hautes-Roches, les Mines de sel et leur boss, le Géant de sel). La suite arrive par actes.
 - **Combats** au tour par tour à trois puis quatre héros (lame, clerc, arcaniste, rôdeuse), talents, objets, équipement ; les monstres sont visibles sur la carte.
-- **Outils** (bouton B) : la Lanterne du veilleur dissipe les nappes de brume ; le Grappin file par-dessus l'eau jusqu'aux pieux.
-- **Boutiques** : Gaspard à Port-Gris, un marchand sur la route des marais (« Merci de votre visite ! »).
+- **Outils** (bouton B) : la Lanterne du veilleur dissipe les nappes de brume ; le Grappin file par-dessus l'eau jusqu'aux pieux ; la Masse de mineur brise les rochers fendus et les murs fissurés.
+- **Boutiques** : Gaspard à Port-Gris et aux Hautes-Roches, un marchand sur la route des marais (« Merci de votre visite ! »).
 - **Sauvegardes** automatiques aux moments clés et à la main aux lanternes, 3 emplacements. Pas de classement.
 
 ## Le Mot d'or
