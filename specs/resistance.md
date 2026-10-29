@@ -151,3 +151,22 @@ Idées proposées par Claude le 29/10 (écrites nulle part avant) et faites d'un
 - **Chapelle** (`fortress.js`, case 5,2, coûts 6 puis 12, écusson bâton bleu) : chaque niveau ajoute **un soigneur parmi les candidats** du recrutement et **+3 PV par soin** (`clerics`, `healBonus` ; `run.healBonus` sauvegardé avec la run). Image : la dernière maison libre de `rebel-chapel.png` (toit orange au niveau 1, toit bleu rebelle au niveau 2), pas de vraie chapelle dans le pack.
 - Pas de soin automatique après le combat (l'Infirmerie le fait déjà). Pas de bâton chez le marchand ni à l'Intendance (pour l'instant).
 
+## 11. Grande session de confort façon Fire Emblem (proposée le 29/10, à valider)
+Demande de l'utilisateur : s'inspirer au maximum de l'ergonomie de Fire Emblem GBA (et de Fire Emblem Heroes sur mobile). Maquette jouable `maquettes/resistance-qol.html` (https://claude.ai/artifact/83cLVZeT8GyK7gJyBXyzti) : A façon GBA (un toucher = flèche, le soldat part, menu), B façon Heroes (premier toucher = flèche et silhouette, second = il y va ; glisser le doigt), R recrutement détaillé.
+Liste proposée (idées de l'utilisateur 1, 2, 3, 13) :
+1. Toucher un ennemi : sa portée reste en rouge (marque « ! » sur sa tête), plusieurs à la fois, jusqu'à ce qu'il tombe ou qu'on le retouche.
+2. Flèche du chemin vers la case touchée, puis menu (Attaquer s'il y a une cible).
+3. Soldat choisi + toucher un ennemi : à portée, chemin vers la meilleure case (ou celle déjà visée), prévisions, Attaquer / Attendre là, second toucher = attaque ; hors de portée, sa portée en orange, le soldat reste choisi.
+4. « ! » au bout de la flèche et dans le menu quand la case d'arrivée est menacée (noms des ennemis).
+5. Prévisions qui préviennent : « peut le vaincre ce tour-ci », « peut vaincre X en ripostant ».
+6. Appui long sur un soldat (allié ou ennemi) : fiche complète (stats, arme, portée, déplacement, triangle, trait).
+7. Fiche courte enrichie : pastilles Portée, Dép et type de déplacement.
+8. Après chaque action, le curseur va au prochain soldat ; bouton « Suivant ▸ ».
+9. Panneau au repos : tour, objectif, soldats à jouer.
+10. Bouton Menu façon GBA : Unités, Objectif, Options, Retraite (Retraite quitte la barre).
+11. Options : vitesse rapide (aussi pour nos soldats), fin du tour automatique oui / non, animations courtes.
+12. Soigneur : même logique que 3 en touchant un allié blessé.
+13. Recrutement : portée, déplacement et type, fort / faible contre, trait, statistiques en barres.
+14. Même fiche dans l'écran Armée et au Mémorial.
+15. Comportement des ennemis visible sur leur fiche (fonce, garde sa zone, ne bouge pas).
+
