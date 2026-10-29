@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const { RNG, CLASSES, WEAPONS, TERRAIN, MAPS, traitsOf, traitBonus, traitLabel, ITEMS, RUN_RULES, reachable, pathTo, threatTiles, key, manhattan, forecast, strikeOrder, canReach, planEnemy, expGain, rollLevelUp, autoLevel, MAX_LEVEL } = Resistance;
+  const { RNG, CLASSES, WEAPONS, TERRAIN, MAPS, traitsOf, traitBonus, traitLabel, ITEMS, RUN_RULES, reachable, pathTo, threatTiles, tilesInRange, key, manhattan, forecast, strikeOrder, canReach, planEnemy, expGain, rollLevelUp, autoLevel, MAX_LEVEL } = Resistance;
 
   const TILE = 16;
 
@@ -194,7 +194,12 @@
       for (const e of this.living('enemy')) {
         const moves = reachable(this, e);
         if (e.ai === 'stationary') moves.stops = new Set([key(e.x, e.y)]);
-        for (const k of threatTiles(this, e, moves)) tiles.add(k);
+        // Toutes les cases à portée d'une case où il peut s'arrêter, y compris celles où il
+        // peut marcher (threatTiles les écarte, elles sont en bleu quand on inspecte un ennemi)
+        for (const k of moves.stops) {
+          const [x, y] = k.split(',').map(Number);
+          for (const t of tilesInRange(this, x, y, e.weapon.min, e.weapon.max)) tiles.add(key(t.x, t.y));
+        }
       }
       this.dangerZone = { sig, tiles };
       return tiles;

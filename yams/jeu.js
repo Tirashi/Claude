@@ -191,6 +191,7 @@ function construire(cle){
 }
 const enleve = b => { if (b.world) (monde.removeBody || monde.remove).call(monde, b); };
 function poser(d, x, z, val){
+  d.qCible = d.pCible = null;
   d.m.position.set(x, .5, z); d.m.quaternion.setFromUnitVectors(new THREE.Vector3(...AXES[VALEURS.indexOf(val)]), new THREE.Vector3(0, 1, 0)); d.m.rotateY((d.i * 37 % 10 - 5) * .03);
   d.corps.position.copy(d.m.position); d.corps.quaternion.copy(d.m.quaternion); d.corps.velocity.set(0, 0, 0); d.corps.angularVelocity.set(0, 0, 0);
 }
@@ -203,6 +204,29 @@ function placerDes(){ // remet les dés d'après S (valeurs, dés gardés)
 }
 const valeur = d => { let best = -2, v = 1; AXES.forEach((a, i) => { const y = new THREE.Vector3(...a).applyQuaternion(d.m.quaternion).y; if (y > best){ best = y; v = VALEURS[i]; } }); return v; };
 const penche = d => Math.max(...AXES.map(a => new THREE.Vector3(...a).applyQuaternion(d.m.quaternion).y)) < .95;
+
+// Un dé arrêté de travers (contre un bord ou un autre dé) bascule doucement à plat sur la face
+// la plus haute : on voit tout de suite la valeur comptée. Les dés trop proches s'écartent.
+function aplanir(lances){
+  lances.forEach(d => {
+    let best = -2, haut = null;
+    AXES.forEach(a => { const w = new THREE.Vector3(...a).applyQuaternion(d.m.quaternion); if (w.y > best){ best = w.y; haut = w; } });
+    d.qCible = new THREE.Quaternion().setFromUnitVectors(haut, new THREE.Vector3(0, 1, 0)).multiply(d.m.quaternion);
+    d.pCible = new THREE.Vector3(Math.max(X0 + .62, Math.min(X1 - .62, d.m.position.x)), .5, Math.max(Z0 + .62, Math.min(Z1 - .62, d.m.position.z)));
+  });
+  // vus de dessus, deux carrés de côté 1 tournés de leur angle : se chevauchent-ils ? (axes séparateurs)
+  const angle = d => { let v = new THREE.Vector3(1, 0, 0).applyQuaternion(d.qCible); if (Math.abs(v.y) > .5) v = new THREE.Vector3(0, 0, 1).applyQuaternion(d.qCible); return Math.atan2(v.z, v.x); };
+  lances.forEach(d => { d.ang = angle(d); });
+  const chevauche = (a, b) => [a.ang, a.ang + Math.PI / 2, b.ang, b.ang + Math.PI / 2].every(t => {
+    const ux = Math.cos(t), uz = Math.sin(t), proj = d => .5 * (Math.abs(Math.cos(d.ang - t)) + Math.abs(Math.sin(d.ang - t)));
+    return Math.abs((b.pCible.x - a.pCible.x) * ux + (b.pCible.z - a.pCible.z) * uz) < proj(a) + proj(b) + .02; });
+  for (let n = 0; n < 40; n++) lances.forEach((a, i) => lances.slice(i + 1).forEach(b => {
+    if (!chevauche(a, b)) return;
+    const dx = b.pCible.x - a.pCible.x, dz = b.pCible.z - a.pCible.z, l = Math.hypot(dx, dz) || 1, ux = dx / l || 1, uz = dz / l;
+    a.pCible.x -= ux * .02; a.pCible.z -= uz * .02; b.pCible.x += ux * .02; b.pCible.z += uz * .02;
+  }));
+  lances.forEach(d => { d.corps.position.copy(d.pCible); d.corps.quaternion.copy(d.qCible); d.corps.velocity.set(0, 0, 0); d.corps.angularVelocity.set(0, 0, 0); });
+}
 
 function taille(){
   bouge();
@@ -234,7 +258,7 @@ function maj(){
 function lance(force, dx){
   const libres = des.filter(d => !S.garde[d.i]); if (!libres.length || S.lancers >= 3) return;
   S.lancers++; etat = 'roule'; calme = 0; tLance = performance.now(); $('combi').textContent = ''; $('feuille').hidden = true;
-  libres.forEach((d, k) => { enleve(d.corps); d.m.visible = true; const x = (k - (libres.length - 1) / 2) * 1.15 + (gob ? 0 : dx * .3);
+  libres.forEach((d, k) => { enleve(d.corps); d.m.visible = true; d.qCible = d.pCible = null; const x = (k - (libres.length - 1) / 2) * 1.15 + (gob ? 0 : dx * .3);
     d.corps.position.set(Math.max(X0 + .6, Math.min(X1 - .6, x)), gob ? 2.2 : 1.2, (gob ? 1.0 : 1.6) - (k % 2) * .5);
     d.corps.quaternion.setFromEuler(Math.random() * 6, Math.random() * 6, Math.random() * 6);
     d.corps.velocity.set(dx * 1.5 + (Math.random() - .5) * 3, gob ? 1 : 2.5, -force * (.85 + Math.random() * .3));
@@ -243,7 +267,7 @@ function lance(force, dx){
 }
 function arrete(){ // les dés sont immobiles : on lit les faces
   bouge();
-  etat = 'pret'; S.vals = des.map(valeur); sauver();
+  etat = 'pret'; S.vals = des.map(valeur); aplanir(des.filter(d => !S.garde[d.i])); sauver();
   const c = combinaison(S.vals); $('combi').textContent = c; $('combi').classList.add('pop'); setTimeout(() => $('combi').classList.remove('pop'), 220);
   if (c === 'Yams !') notes([523, 659, 784, 1047]);
   maj(); if (S.lancers >= 3) ouvrirFeuille();
@@ -251,6 +275,7 @@ function arrete(){ // les dés sont immobiles : on lit les faces
 function bascule(d){
   if (S.lancers === 0 || S.lancers >= 3) return;
   S.garde[d.i] = !S.garde[d.i]; clic(.3);
+  if (d.qCible){ d.m.quaternion.copy(d.qCible); d.m.position.copy(d.pCible); d.qCible = d.pCible = null; }
   if (S.garde[d.i]) enleve(d.corps);
   else { const n = des.filter(x => !S.garde[x.i] && x !== d).length; d.cible = null; d.m.position.set(-2.2 + Math.min(4, n) * 1.1, .5, .9);
     d.corps.position.copy(d.m.position); d.corps.quaternion.copy(d.m.quaternion); d.corps.velocity.set(0, 0, 0); d.corps.angularVelocity.set(0, 0, 0); monde.addBody(d.corps); }
@@ -366,7 +391,7 @@ const bouge = (ms = 800) => { reveil = Math.max(reveil, performance.now() + ms);
 function frame(now){
   const dt = Math.min(.05, (now - prec) / 1000); prec = now;
   const actif = etat === 'secoue' || etat === 'verse' || etat === 'roule' || now < reveil
-    || des.some(d => d.cible && d.m.position.distanceToSquared(d.cible) > 1e-6);
+    || des.some(d => (d.cible && d.m.position.distanceToSquared(d.cible) > 1e-6) || d.qCible);
   if (!actif && !(anime && now - dernier > 50)){ requestAnimationFrame(frame); return; }
   dernier = now; if (anime) anime(now / 1000);
   if (etat === 'secoue'){ const k = (now - secoue) / 1000; gob.position.set(Math.sin(k * 38) * .25, 1.6 + Math.abs(Math.sin(k * 30)) * .2, 1.2 + Math.cos(k * 31) * .15); gob.rotation.z = Math.sin(k * 40) * .12;
@@ -382,7 +407,10 @@ function frame(now){
       else { des.forEach(d => { if (!S.garde[d.i] && penche(d)){ d.m.position.copy(d.corps.position); d.m.quaternion.copy(d.corps.quaternion); } }); arrete(); }
     }
   }
-  des.forEach(d => { if (d.cible) d.m.position.lerp(d.cible, Math.min(1, dt * 10)); else if (d.corps.world && etat !== 'secoue'){ d.m.position.copy(d.corps.position); d.m.quaternion.copy(d.corps.quaternion); } });
+  des.forEach(d => { if (d.qCible){ // bascule à plat après l'arrêt (aplanir)
+      const k = Math.min(1, dt * 9); d.m.quaternion.slerp(d.qCible, k); d.m.position.lerp(d.pCible, k);
+      if (d.m.quaternion.angleTo(d.qCible) < .002 && d.m.position.distanceToSquared(d.pCible) < 1e-6){ d.m.quaternion.copy(d.qCible); d.m.position.copy(d.pCible); d.qCible = d.pCible = null; } }
+    else if (d.cible) d.m.position.lerp(d.cible, Math.min(1, dt * 10)); else if (d.corps.world && etat !== 'secoue'){ d.m.position.copy(d.corps.position); d.m.quaternion.copy(d.corps.quaternion); } });
   rendu.render(scene, cam); requestAnimationFrame(frame);
 }
 
