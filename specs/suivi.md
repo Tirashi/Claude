@@ -48,7 +48,7 @@ Détails déplacés de `CLAUDE.md` le 19/10 (pour qu'il reste court : il est rel
 ## Yams, retours de l'essai (29/10)
 - Les dés s'arrêtaient de travers et restaient figés : on ne savait pas quelle face comptait. À l'arrêt, chaque dé lancé bascule maintenant à plat sur la face la plus haute (celle qui était déjà comptée), en restant dans la piste et sans chevaucher les autres dés (`aplanir` dans `yams/jeu.js`). Vérifié sur 15 lancers : tous à plat, aucun chevauchement, valeurs inchangées.
 - Style F (nappe à carreaux) : `--rayon: 999px` (boutons en pilule) était repris par la fenêtre du menu, taillée en cercle qui rognait les boutons ; arrondi de la fenêtre plafonné à 26 px.
-- Artefact Yams pas republié (760 Ko à relire) : à décider avec l'utilisateur.
+- Artefact Yams : on ne le republie plus, on joue sur le site (décision de l'utilisateur du 29/10).
 
 ## Résistance (28/10)
 - **Séance d'essais du 29/10** (`specs/essais.md`) : zone de danger trouée près des ennemis et absente au tour ennemi → corrigée ; Yams : dés figés de travers et menu rogné en cercle dans le style à carreaux (--rayon 999px repris par la fenêtre), corrigés (voir la section Yams) ; tous les classements confirmés ; la Lanterne pas encore essayée.

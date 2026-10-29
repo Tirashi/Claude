@@ -95,7 +95,7 @@ Une ligne par chantier ; détails et historique dans [`specs/suivi.md`](specs/su
 - **Solitaire, cartes lisibles** : **fait** (20/10 : style NET par défaut ; CHIFFRE GEANT, QUATRE COULEURS, PIXEL, 6 dos et 4 tapis dans le MENU, maquette `maquettes/solitaire-lisible.html`) ; à essayer sur le téléphone ; bouton INDICE proposé, pas validé ; **confirmation en fenêtre** (28/10 : NOUVELLE DONNE et PIOCHE demandent OUI / NON au lieu de deux touches). [`specs/suivi.md`](specs/suivi.md)
 - **Accueil retouché** (19/10) : choix C de `maquettes/accueil-retouche.html`, installé ; à voir sur le téléphone. [`specs/suivi.md`](specs/suivi.md)
 - **Séance d'essais du 29/10 faite** ([`specs/essais.md`](specs/essais.md)) : tous les jeux et tous les classements confirmés, sauf **La Dernière Lanterne** (pas encore essayée) ; **Yams** : dés figés de travers et menu rogné en cercle dans le style à carreaux, **corrigés** le 29/10 ; Lune-Rover 22-30 et Orbite (niveaux durs) pas encore atteints, à revoir seulement si c'est trop dur.
-- **Artefacts** pas republiés après le retour au menu (rien de visible) : le faire à leur prochaine vraie modification. **Yams** : artefact pas republié après l'affichage au repos du 19/10 (760 Ko à relire, trop cher) : à republier avec sa prochaine vraie modification.
+- **Artefacts** pas republiés après le retour au menu (rien de visible) : le faire à leur prochaine vraie modification. **Yams** : on ne republie plus son artefact (décision de l'utilisateur du 29/10 : on joue sur le site ; 760 Ko à relire, trop cher).
 
 ## Idées et maquettes
 Les jeux futurs, les maquettes de style et le classement des idées par quantité de travail sont dans [`IDEES.md`](IDEES.md).
