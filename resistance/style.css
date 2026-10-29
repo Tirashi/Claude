@@ -588,8 +588,15 @@ button { touch-action: manipulation; }
 .stat-bars span { display: grid; grid-template-columns: 2.3em 1.5em 1fr; align-items: center; gap: 3px; }
 .stat-bars i { height: 4px; background: #101830; } .stat-bars i em { display: block; height: 100%; background: var(--gold); }
 @media (max-aspect-ratio: 1/1) {
-  /* Le panneau du tour reste en haut de la carte, la consigne en bas de la carte (pas dans le flux) */
-  #hud #status-panel { position: absolute; z-index: 6; }
+  /* Le panneau du tour passe sous la carte (posé dessus, il cachait la première rangée) ;
+     la consigne reste en bas de la carte (pas dans le flux) */
+  #hud #status-panel { flex: 1 1 100%; transform: none; padding: 2px 6px; border-image: none; border: 0; background: rgba(20, 24, 70, .6); border-radius: 4px; }
+  #status-panel .next { padding: 3px 10px; }
+  /* La zone sous la carte défile si elle est trop pleine : la barre du bas reste toujours visible */
+  #app { box-sizing: border-box; }
+  #stage { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  #game { flex: none; }
+  #hud { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
   #hint { top: calc(var(--map-h, 0px) - 6px); bottom: auto; transform: translate(-50%, -100%); }
   #forecast .fc-wait { padding: 10px 18px; }
   #forecast .fc-row ~ .fc-note, #forecast .fc-note { display: none; }
