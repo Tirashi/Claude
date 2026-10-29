@@ -32,6 +32,10 @@
     const anims = new Map();   // id → { etat, debut, duree, de, vers, boucle }
     const projectiles = [];    // { cle, tuile, de, vers, debut, duree, impact }
     let t0 = 0, maintenant = 0, attente = null, touche = null;
+    // PV et PM affichés : le moteur calcule tout le tour d'un coup, l'écran ne retire les PV qu'au moment du coup
+    const vue = new Map(c.heros.concat(c.monstres).map(f => [f.id, { pv: f.pv, pm: f.pm }]));
+    const synchro = () => { for (const f of c.heros.concat(c.monstres)) Object.assign(vue.get(f.id), { pv: f.pv, pm: f.pm }); };
+    const courant = new Map();   // id → position du moment (pendant un élan)
 
     // ---------- l'écran ----------
     const racine = h('div', 'cb'), banniere = h('div', 'cb-message'), calque = h('div', 'cb-calque'), bas = h('div', 'cb-bas');
@@ -58,14 +62,14 @@
     const combattant = id => c.heros.concat(c.monstres).find(f => f.id === id);
     const sens = id => (combattant(id).camp === 'h' ? 1 : -1);   // les héros regardent à gauche, les monstres (retournés) à droite
 
-    function anim(id, etat, duree = .6, mvt = null) { anims.set(id, { etat, debut: maintenant, duree, de: mvt && mvt.de, vers: mvt && mvt.vers }); }
+    function anim(id, etat, duree = .6, mvt = null) { anims.set(id, { etat, debut: maintenant, duree: duree * lent, de: mvt && mvt.de, vers: mvt && mvt.vers }); }
 
     // chaque image : poses, déplacements, projectiles, lumière, chiffres et marque
     function pas(t) {
       maintenant = t; if (!t0) t0 = t;
       for (const f of c.heros.concat(c.monstres)) {
         if (!places.has(f.id)) continue;
-        let [x, z] = places.get(f.id), e = f.pv > 0 ? 'repos' : 'ko', q = 0;
+        let [x, z] = places.get(f.id), e = vue.get(f.id).pv > 0 ? 'repos' : 'ko', q = 0;
         const a = anims.get(f.id);
         if (a) {
           const k = Math.min(1, (t - a.debut) / a.duree);
@@ -75,7 +79,7 @@
             if (a.vers) { const b = Math.sin(Math.min(1, k / .85) * Math.PI); x = a.de[0] + (a.vers[0] - a.de[0]) * b; z = a.de[1] + (a.vers[1] - a.de[1]) * b; }
           }
         }
-        if (f.pv <= 0 && f.camp === 'm') continue;
+        courant.set(f.id, [x, z]);
         rendu.placerMonde(f.id, x, z, e, q, sens(f.id));
       }
       let lum = 0;
@@ -100,7 +104,7 @@
         x.el.style.transform = `translate(${Math.round(sx - 28)}px, ${Math.round(sy)}px)`;
       }
       for (const m of [marque, fleche]) if (m.dataset.cible && places.has(m.dataset.cible)) {
-        const [x, z] = places.get(m.dataset.cible), f = combattant(m.dataset.cible);
+        const [x, z] = courant.get(m.dataset.cible) || places.get(m.dataset.cible), f = combattant(m.dataset.cible);
         const y = f && f.camp === 'm' ? 1.6 * (f.def.taille || 1) + .5 : 2.3;
         const [sx, sy] = rendu.projeter(x, y, z);
         m.style.transform = `translate(${sx - 8}px, ${sy - 22 + Math.sin(t * 8) * 3}px)`;
@@ -112,18 +116,34 @@
 
     // une petite barre de PV sous chaque monstre (pas le boss : il a sa barre en haut) ;
     // les chiffres n'apparaissent que si on l'a déjà vaincu une fois (bestiaire)
+    // une barre qui se vide en douceur, suivie d'une traînée claire (la part qui vient d'être perdue)
+    function jauge(cls) {
+      const el = h('div', 'rpg-barre ' + cls), trace = h('b', 'trace'), i = h('i');
+      el.append(trace, i); return { el, i, trace };
+    }
+    function remplir(j, k) { const l = Math.max(0, Math.min(1, k)) * 100 + '%'; j.i.style.width = l; j.trace.style.width = l; }
+    // un nombre qui défile jusqu'à sa nouvelle valeur
+    function compter(el, v, max) {
+      const de = el.dataset.v === undefined ? v : +el.dataset.v, ecrire = n => { el.textContent = max === undefined ? n : `${n}/${max}`; };
+      el.dataset.v = v;
+      if (de === v) { ecrire(v); return; }
+      const debut = performance.now(), d = 420 * lent, jeton = el.jeton = {};
+      const suite = t => { if (el.jeton !== jeton) return; const k = Math.min(1, (t - debut) / d); ecrire(Math.round(de + (v - de) * k)); if (k < 1) requestAnimationFrame(suite); };
+      requestAnimationFrame(suite);
+    }
+
     const barresPV = new Map();
     for (const m of c.monstres) if (!m.boss) {
-      const el = h('div', 'cb-pv-monstre'), b = h('div', 'rpg-barre pv'), i = h('i'), t = h('small', '');
-      b.append(i); el.append(b, t); calque.append(el);
-      barresPV.set(m.id, { el, i, t, connu: ((etat.bestiaire || {})[m.type] || {}).v >= 1 });
+      const el = h('div', 'cb-pv-monstre'), j = jauge('pv'), t = h('small', '');
+      el.append(j.el, t); calque.append(el);
+      barresPV.set(m.id, { el, j, t, connu: ((etat.bestiaire || {})[m.type] || {}).v >= 1 });
     }
     function majPV() {
       for (const [id, x] of barresPV) {
-        const m = combattant(id);
-        x.el.style.display = m.pv > 0 && places.has(id) ? '' : 'none';
-        x.i.style.width = 100 * m.pv / m.pvMax + '%';
-        x.t.textContent = x.connu ? `${m.pv}/${m.pvMax}` : '';
+        const m = combattant(id), pv = vue.get(id).pv;
+        x.el.style.display = pv > 0 && places.has(id) ? '' : 'none';
+        remplir(x.j, pv / m.pvMax);
+        if (x.connu) compter(x.t, pv, m.pvMax);
       }
     }
 
@@ -150,14 +170,15 @@
       frise.append(h('span', 'cb-sep', '▸'));
       for (const id of c.ordreSuivant || []) case_(id, 'suivant');
     }
+    const boss = {};
     function majBoss() {
       const b = c.monstres.find(m => m.boss && m.pv > 0);
       barreBoss.style.display = b ? '' : 'none';
       if (b) {
-        barreBoss.innerHTML = '';
-        const p = C.prochaineAction(c, b), barre = h('div', 'rpg-barre pv'), i = h('i');
-        i.style.width = 100 * b.pv / b.pvMax + '%'; barre.append(i);
-        barreBoss.append(h('b', '', b.nom), barre, h('small', p && (p.grand || p.prepare) ? 'grand' : '', p ? 'Prochaine action : ' + p.nom : ''));
+        if (!boss.j) { boss.nom = h('b'); boss.j = jauge('pv'); boss.p = h('small'); barreBoss.append(boss.nom, boss.j.el, boss.p); }
+        const p = C.prochaineAction(c, b);
+        boss.nom.textContent = b.nom; remplir(boss.j, vue.get(b.id).pv / b.pvMax);
+        boss.p.className = p && (p.grand || p.prepare) ? 'grand' : ''; boss.p.textContent = p ? 'Prochaine action : ' + p.nom : '';
       }
       const prepare = c.monstres.find(m => m.pv > 0 && m.prepare);
       alerte.style.display = prepare ? '' : 'none';
@@ -174,17 +195,22 @@
     const centre = id => { const [x, z] = places.get(id), f = combattant(id); return [x, f.camp === 'm' ? .8 * (f.def.taille || 1) : 1.1, z]; };
 
     // ---------- l'équipe ----------
+    // chaque fiche est construite une fois, puis mise à jour (pour que les barres glissent)
+    const fiches = new Map();
     function majEquipe(actif) {
-      equipe.innerHTML = '';
       for (const x of c.heros) {
-        const l = h('div', 'cb-heros' + (x.id === actif ? ' actif' : '') + (x.pv <= 0 ? ' ko' : ''));
-        const etats = Object.keys(x.etats).map(k => ({ poison: '☠', sommeil: 'Zz', silence: '…' })[k] || '').join(' ');
-        l.append(h('b', '', x.nom + (etats ? ' ' + etats : '')));
-        const pv = h('div', 'cb-ligne'); pv.append(h('span', '', 'PV'), h('span', '', `${x.pv}/${x.pvMax}`));
-        const bpv = h('div', 'rpg-barre pv'), ipv = h('i'); ipv.style.width = 100 * x.pv / x.pvMax + '%'; bpv.append(ipv);
-        const pm = h('div', 'cb-ligne'); pm.append(h('span', '', 'PM'), h('span', '', `${x.pm}/${x.pmMax}`));
-        const bpm = h('div', 'rpg-barre pm'), ipm = h('i'); ipm.style.width = (x.pmMax ? 100 * x.pm / x.pmMax : 0) + '%'; bpm.append(ipm);
-        l.append(pv, bpv, pm, bpm); equipe.append(l);
+        let l = fiches.get(x.id);
+        if (!l) {
+          l = { el: h('div'), nom: h('b'), tpv: h('span'), pv: jauge('pv'), tpm: h('span'), pm: jauge('pm') };
+          const lpv = h('div', 'cb-ligne'), lpm = h('div', 'cb-ligne');
+          lpv.append(h('span', '', 'PV'), l.tpv); lpm.append(h('span', '', 'PM'), l.tpm);
+          l.el.append(l.nom, lpv, l.pv.el, lpm, l.pm.el); equipe.append(l.el); fiches.set(x.id, l);
+        }
+        const v = vue.get(x.id), etats = Object.keys(x.etats).map(k => ({ poison: '☠', sommeil: 'Zz', silence: '…' })[k] || '').join(' ');
+        l.el.className = 'cb-heros' + (x.id === actif ? ' actif' : '') + (v.pv <= 0 ? ' ko' : '');
+        l.nom.textContent = x.nom + (etats ? ' ' + etats : '');
+        compter(l.tpv, v.pv, x.pvMax); remplir(l.pv, v.pv / x.pvMax);
+        compter(l.tpm, v.pm, x.pmMax); remplir(l.pm, x.pmMax ? v.pm / x.pmMax : 0);
       }
     }
 
@@ -265,49 +291,86 @@
       }
     }
     // ---------- jouer les événements d'un tour ----------
+    // Une action se joue dans cet ordre : l'annonce (« Le loup attaque Alden ! »), le geste, puis AU CONTACT
+    // l'impact, le son, le recul de la cible, le chiffre et la barre qui baisse, tout ensemble ; enfin les messages.
     async function jouer(evs) {
-      for (const e of evs) {
-        if (e.t === 'message') await afficher(e.texte);
-        else if (e.t === 'action') {
-          const x = combattant(e.de), fx = EFFETS[e.effet] || {}, cible = e.cibles[0];
-          const [px, pz] = places.get(e.de);
-          if (e.anim === 'attaque' && cible && places.has(cible) && !fx.projectile) {
-            const [cx, cz] = places.get(cible), k = .62;
-            anim(e.de, 'attaque', .7, { de: [px, pz], vers: [px + (cx - px) * k, pz + (cz - pz) * k + .02] });
-            await attendre(330);
-          } else {
-            anim(e.de, e.anim === 'attaque' ? 'attaque' : 'sort', .8);
-            await attendre(260);
-          }
-          if (fx.son) sons.effet(fx.son, .55);
-          if (fx.projectile && cible) {
-            for (const id of e.cibles.filter(id => places.has(id))) projectiles.push({ cle: 'p' + id, tuile: fx.projectile, de: centre(e.de), vers: centre(id), debut: maintenant, duree: .38, lumiere: fx.lumiere });
-            await attendre(380);
-          }
-          for (const id of e.cibles.filter(id => places.has(id))) if (fx.impact) projectiles.push({ cle: 'i' + id, tuile: fx.impact, vers: centre(id), debut: maintenant, duree: .5, impact: true, lumiere: fx.lumiere, taille: e.effet === 'lumiere' ? 2 : 1.4 });
-          if (x.camp === 'h') majEquipe(null);
-          await attendre(fx.impact ? 200 : 60);
-        }
-        else if (e.t === 'degats') {
-          anim(e.a, 'touche', .5); sons.effet('touche', .45);
-          chiffre(e.a, '-' + e.n, e.critique ? 'critique' : ''); majEquipe(null); majPV();
-          await attendre(120);
-        }
-        else if (e.t === 'soin') { if (e.n) chiffre(e.a, '+' + e.n, 'soin'); majEquipe(null); majPV(); }
-        else if (e.t === 'rate') { chiffre(e.a, 'Raté', 'rate'); }
-        else if (e.t === 'ko') {
-          const f = combattant(e.a);
-          if (f.camp === 'm') { sons.effet('vaincu', .5); anim(e.a, 'touche', .5); await attendre(450); rendu.retirer(e.a); places.delete(e.a); majPV(); }
-          majEquipe(null);
-        }
-        else if (e.t === 'releve') { anims.delete(e.a); chiffre(e.a, 'Debout !', 'soin'); majEquipe(null); }
-        else if (e.t === 'etat') {
-          const txt = { poison: 'Poison', sommeil: 'Zz', silence: 'Silence', buff: '▲', brise: '▼ DEF', gueri: 'Guéri', reveil: '!' }[e.etat];
-          if (txt) chiffre(e.a, txt, e.etat === 'buff' || e.etat === 'gueri' ? 'soin' : 'etat');
-          majEquipe(null);
-        }
-        else if (e.t === 'fuite') sons.effet('fuite', .5);
+      for (let i = 0; i < evs.length;) {
+        if (evs[i].t !== 'action') { await seul(evs[i++]); continue; }
+        let j = i + 1;
+        while (j < evs.length && evs[j].t !== 'action') j++;
+        await action(evs[i], evs.slice(i + 1, j)); i = j;
       }
+      synchro(); majEquipe(null); majPV();
+    }
+
+    // ce qu'un coup change à l'écran (au moment du contact)
+    function toucher(e) {
+      const v = vue.get(e.a), f = combattant(e.a);
+      if (e.t === 'degats') {
+        anim(e.a, 'touche', .5); sons.effet('touche', e.critique ? .7 : .45);
+        v.pv = Math.max(0, v.pv - e.n);
+        chiffre(e.a, '-' + e.n, e.critique ? 'critique' : '');
+        if (e.critique) chiffre(e.a, 'CRITIQUE', 'critique-mot');
+      }
+      else if (e.t === 'soin') { v.pv = Math.min(f.pvMax, v.pv + e.n); v.pm = f.pm; if (e.n) chiffre(e.a, '+' + e.n, 'soin'); }
+      else if (e.t === 'rate') chiffre(e.a, 'Raté', 'rate');
+      else if (e.t === 'releve') { anims.delete(e.a); v.pv = f.pv; chiffre(e.a, 'Debout !', 'soin'); }
+      else if (e.t === 'etat') {
+        const txt = { poison: 'Poison', sommeil: 'Zz', silence: 'Silence', buff: '▲', brise: '▼ DEF', gueri: 'Guéri', reveil: '!' }[e.etat];
+        if (txt) chiffre(e.a, txt, e.etat === 'buff' || e.etat === 'gueri' ? 'soin' : 'etat');
+      }
+      else if (e.t === 'fuite') sons.effet('fuite', .5);
+      majEquipe(null); majPV(); majBoss();
+    }
+    // un monstre vaincu s'efface
+    async function tomber(e) {
+      if (combattant(e.a).camp !== 'm' || !places.has(e.a)) return;
+      sons.effet('vaincu', .5); anim(e.a, 'touche', .5); await attendre(450);
+      rendu.retirer(e.a); places.delete(e.a); majPV();
+    }
+    // un événement hors d'une action (poison en fin de tour, réveil, fuite…)
+    async function seul(e) {
+      if (e.t === 'message') await afficher(e.texte);
+      else if (e.t === 'ko') await tomber(e);
+      else { toucher(e); if (e.t === 'degats' || e.t === 'soin') await attendre(350); }
+    }
+
+    async function action(e, suite) {
+      const x = combattant(e.de), fx = EFFETS[e.effet] || {};
+      const coups = suite.filter(s => s.t !== 'message' && s.t !== 'ko'), kos = suite.filter(s => s.t === 'ko');
+      const messages = suite.filter(s => s.t === 'message').map(s => s.texte);
+      // les vraies cibles (un protecteur peut avoir pris le coup à la place)
+      const touches = [...new Set(coups.map(s => s.a))].filter(id => places.has(id));
+      const cibles = touches.length ? touches : e.cibles.filter(id => places.has(id)), cible = cibles[0];
+      // l'annonce d'abord, puis le geste
+      if (messages.length && suite[0].t === 'message') await afficher(messages.shift(), 250);
+      if (x.camp === 'h') { vue.get(x.id).pm = x.pm; majEquipe(null); }   // les PM partent avec le geste
+      const [px, pz] = places.get(e.de);
+      if (e.anim === 'attaque' && cible && cible !== e.de && !fx.projectile) {
+        const [cx, cz] = places.get(cible), k = .62;
+        anim(e.de, 'attaque', .7, { de: [px, pz], vers: [px + (cx - px) * k, pz + (cz - pz) * k + .02] });
+        await attendre(300);   // l'élan arrive au plus près de la cible
+      } else {
+        anim(e.de, e.anim === 'attaque' ? 'attaque' : 'sort', .8);
+        await attendre(e.anim === 'repos' ? 150 : 280);
+      }
+      if (fx.projectile && cible) {
+        if (fx.son) sons.effet(fx.son, .55);
+        for (const id of cibles) projectiles.push({ cle: 'p' + id, tuile: fx.projectile, de: centre(e.de), vers: centre(id), debut: maintenant, duree: .38 * lent, lumiere: fx.lumiere });
+        await attendre(380);
+      } else if (fx.son) sons.effet(fx.son, .55);
+      // le contact : chaque cible à son tour, un peu décalées pour une attaque de zone
+      for (let n = 0; n < cibles.length; n++) {
+        const id = cibles[n];
+        if (n) await attendre(110);
+        if (!places.has(id)) continue;
+        if (fx.impact) projectiles.push({ cle: 'i' + id, tuile: fx.impact, vers: centre(id), debut: maintenant, duree: .5 * lent, impact: true, lumiere: fx.lumiere, taille: e.effet === 'lumiere' ? 2 : 1.4 });
+        for (const s of coups) if (s.a === id) toucher(s);
+      }
+      for (const s of coups) if (!cibles.includes(s.a)) toucher(s);
+      await attendre(coups.length ? 380 : 200);   // le temps de voir le coup
+      for (const k of kos) await tomber(k);
+      for (const m of messages) await afficher(m);
     }
 
     // ---------- montée de niveau, à la Fire Emblem : les caractéristiques en colonne, qui montent une à une ----------

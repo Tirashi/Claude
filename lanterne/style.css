@@ -43,7 +43,7 @@ html, body { margin: 0; height: 100%; background: #14110c; color: #f4ecd8; font-
 .cb-alerte { background: #6a1a14; border: 2px solid #ff8a5a; border-radius: 6px; padding: 5px 8px; font-size: 14px; color: #ffe8d0; animation: cb-clignote 1s infinite alternate; }
 @keyframes cb-clignote { from { box-shadow: 0 0 2px #ff8a5a; } to { box-shadow: 0 0 12px #ff8a5a; } }
 .cb-chiffre { position: absolute; transform: translate(-50%, -50%); font-weight: 700; font-size: 22px; color: #fff; text-shadow: 0 0 3px #000, 0 2px 0 #000; animation: cb-monte 1.1s ease-out forwards; white-space: nowrap; }
-.cb-chiffre.critique { color: #ffd34a; font-size: 28px; } .cb-chiffre.soin { color: #7ef08a; } .cb-chiffre.rate, .cb-chiffre.etat { color: #c8c0ff; font-size: 17px; }
+.cb-chiffre.critique { color: #ffd34a; font-size: 28px; } .cb-chiffre.critique-mot { color: #ffd34a; font-size: 13px; letter-spacing: 1px; transform: translate(-50%, -260%); } .cb-chiffre.soin { color: #7ef08a; } .cb-chiffre.rate, .cb-chiffre.etat { color: #c8c0ff; font-size: 17px; }
 @keyframes cb-monte { 0% { opacity: 0; margin-top: 6px; } 15% { opacity: 1; } 100% { opacity: 0; margin-top: -34px; } }
 .cb-message { display: none; pointer-events: auto; background: rgba(24, 21, 40, .92); border: 3px solid #c9a75a; border-radius: 8px; padding: 8px 12px; font-size: 17px; min-height: 44px; }
 .cb-message.on { display: block; }
@@ -98,6 +98,11 @@ html, body { margin: 0; height: 100%; background: #14110c; color: #f4ecd8; font-
 .rpg-barre { height: 6px; background: rgba(255,255,255,.12); border-radius: 3px; overflow: hidden; margin: 2px 0 4px; }
 .rpg-barre i { display: block; height: 100%; }
 .rpg-barre.pv i { background: #e0574a; } .rpg-barre.pm i { background: #5b9be0; }
+/* en combat : la barre glisse, une traînée claire montre ce qui vient d'être perdu puis rattrape */
+.rpg-barre { position: relative; }
+.rpg-barre b.trace { display: none; }
+.cb .rpg-barre i { position: relative; transition: width .3s ease-out; }
+.cb .rpg-barre b.trace { display: block; position: absolute; left: 0; top: 0; bottom: 0; background: #fff1b8; transition: width .45s ease-in .4s; }
 .rpg-stats { margin-top: 6px; display: grid; gap: 3px; }
 .rpg-stat { display: grid; grid-template-columns: 40px 30px 1fr; gap: 4px; font-size: 14px; align-items: baseline; }
 .rpg-stat b { color: #f2c45a; } .rpg-stat small { color: #b9b0d0; font-size: 12px; }
