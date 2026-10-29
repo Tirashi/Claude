@@ -22,7 +22,7 @@ button:disabled { opacity: .45; cursor: default; transform: none; }
 button.doux, .lien { background: var(--carte); color: var(--texte); box-shadow: 0 4px 0 var(--ligne); font-size: 15px; padding: 9px 10px; border: 2px solid var(--ligne); }
 .ecran { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 10px;
   padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 20px); box-sizing: border-box; background: linear-gradient(transparent 30%, rgba(0,0,0,.25)); }
-.carte { width: 100%; max-width: 360px; box-sizing: border-box; background: var(--carte); border-radius: calc(var(--rayon) + 8px); padding: 18px 18px 16px;
+.carte { width: 100%; max-width: 360px; box-sizing: border-box; background: var(--carte); border-radius: min(calc(var(--rayon) + 8px), 26px); /* le style F a des boutons en pilule (999px) */ padding: 18px 18px 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,.25); text-align: center; display: flex; flex-direction: column; gap: 10px; max-height: 100%; overflow: auto; }
 h1 { margin: 0; font-size: 50px; line-height: 1; letter-spacing: 2px; color: var(--accent); }
 .carte p { margin: 0; font-size: 15px; line-height: 1.35; }
