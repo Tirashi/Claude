@@ -287,7 +287,7 @@
     // ---------- menu ----------
     function ouvrirMenu() {
       menuOuvert = true; entrees.lacherTout(); sons.effet('ok', .4);
-      ui.ouvrirMenu(racine => M.Menu.construire(racine, { jeu, etat, poupees: o.poupees, reglages: o.reglages, sons, fermer: fermerMenu, enregistrerReglages: o.enregistrerReglages }));
+      ui.ouvrirMenu(racine => M.Menu.construire(racine, { jeu, etat, poupees: o.poupees, reglages: o.reglages, sons, fermer: fermerMenu, enregistrerReglages: o.enregistrerReglages, graphismes: o.graphismes }));
     }
     function fermerMenu() { ui.fermerMenu(); menuOuvert = false; }
 

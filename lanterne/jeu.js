@@ -11,7 +11,7 @@
     try { localStorage.setItem('lanterne.test', '1'); localStorage.removeItem('lanterne.test'); return localStorage; }
     catch (e) { const m = {}; return { getItem: k => (k in m ? m[k] : null), setItem: (k, v) => { m[k] = String(v); }, removeItem: k => { delete m[k]; } }; }
   })();
-  let reglages = { musique: true, effets: true, combatRapide: false };
+  let reglages = { musique: true, effets: true, combatRapide: false, graphismes: 'auto' };
   try { Object.assign(reglages, JSON.parse(stockage.getItem('lanterne.reglages') || '{}')); } catch (e) { /* réglages par défaut */ }
   const enregistrerReglages = () => { try { stockage.setItem('lanterne.reglages', JSON.stringify(reglages)); } catch (e) { /* rien */ } };
   const sauvegardes = MR.Etat.Sauvegardes(stockage, 'lanterne', undefined, J);
@@ -25,7 +25,7 @@
   function demarrer() {
     poupees = MR.Poupees.Poupees(atlas, J.tuiles, J.prises);
     sons = MR.Sons.Sons(J.effets, J.musiques, reglages);
-    rendu = MR.Rendu.Rendu($('scene'), poupees, J.style);
+    rendu = MR.Rendu.Rendu($('scene'), poupees, J.style); rendu.qualite(reglages.graphismes);
     ui = MR.Interface.Interface($('fenetres'), { persos: J.persos, poupees, sons });
     entrees = MR.Entrees.Entrees($('commandes'));
     entrees.on(t => { if (combatEnCours) combatEnCours.touche(t); });
@@ -90,7 +90,8 @@
     emplacement = n;
     J.persos.heros.nom = etat.nom;
     $('titre').classList.add('cache');
-    partie = MR.Partie.Partie({ jeu: J, rendu, ui, entrees, sons, poupees, sauvegardes, emplacement: n, etat, combat, defaite, reglages, enregistrerReglages });
+    partie = MR.Partie.Partie({ jeu: J, rendu, ui, entrees, sons, poupees, sauvegardes, emplacement: n, etat, combat, defaite, reglages, enregistrerReglages,
+      graphismes: nom => (nom ? rendu.qualite(nom) : rendu.graphismes) });
     partie.entrer(etat.carte, etat.x, etat.y, etat.dir);
     if (neuve) partie.jouer('debut');
   }

@@ -5,22 +5,37 @@
 (function (M) {
   function Sons(effets, musiques, reglages) {
     const fichiers = Object.assign({}, effets, musiques);
-    let ctx = null, gMus = null, musique = null, musiqueNom = null, voulue = null;
+    let ctx = null, gTout = null, gMus = null, musique = null, musiqueNom = null, voulue = null;
+    const actif = () => reglages.musique || reglages.effets;
     const tampons = {}, enCours = {};
 
+    // son coupé dans les options : on ne crée ni ne réveille l'audio (sur certains téléphones, rouvrir la sortie fait un « clic »)
     function demarrer() {
-      if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+      if (!actif() || document.hidden) return;
+      if (ctx) { if (ctx.state === 'suspended') reveiller(); return; }
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       ctx = new AC();
-      const vide = ctx.createBufferSource(); vide.buffer = ctx.createBuffer(1, 1, 22050); vide.connect(ctx.destination); vide.start();
-      gMus = ctx.createGain(); gMus.gain.value = .35; gMus.connect(ctx.destination);
+      gTout = ctx.createGain(); gTout.connect(ctx.destination);
+      const vide = ctx.createBufferSource(); vide.buffer = ctx.createBuffer(1, 1, 22050); vide.connect(gTout); vide.start();
+      gMus = ctx.createGain(); gMus.gain.value = .35; gMus.connect(gTout);
       Object.keys(effets).forEach(charger);
       if (voulue) jouerMusique(voulue);
     }
     ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, demarrer, { capture: true }));
-    // l'appli passe en arrière-plan (écran éteint, autre appli) : on coupe le son, il revient au retour
-    document.addEventListener('visibilitychange', () => { if (ctx) { if (document.hidden) ctx.suspend(); else ctx.resume(); } });
+    // l'appli passe en arrière-plan (écran éteint, autre appli) : le son s'éteint en fondu puis l'audio s'endort ;
+    // au retour, il ne se réveille que si un son est voulu, et remonte en fondu (pas de claquement)
+    function endormir() {
+      if (!ctx || ctx.state !== 'running') return;
+      const n = ctx.currentTime; gTout.gain.cancelScheduledValues(n); gTout.gain.setValueAtTime(gTout.gain.value, n); gTout.gain.linearRampToValueAtTime(0, n + .06);
+      setTimeout(() => { if (document.hidden || !actif()) ctx.suspend(); }, 90);
+    }
+    function reveiller() {
+      if (!ctx || !actif() || document.hidden) return;
+      gTout.gain.cancelScheduledValues(ctx.currentTime); gTout.gain.setValueAtTime(0, ctx.currentTime);
+      ctx.resume().then(() => { const n = ctx.currentTime; gTout.gain.setValueAtTime(0, n); gTout.gain.linearRampToValueAtTime(1, n + .4); });
+    }
+    document.addEventListener('visibilitychange', () => { if (document.hidden) endormir(); else reveiller(); });
 
     function charger(nom) {
       if (tampons[nom] || enCours[nom] || !ctx || !fichiers[nom]) return enCours[nom] || Promise.resolve(tampons[nom]);
@@ -33,7 +48,7 @@
       if (!ctx || !reglages.effets) return;
       const t = tampons[nom];
       if (!t) { charger(nom); return; }
-      const s = ctx.createBufferSource(), g = ctx.createGain(); g.gain.value = vol; s.buffer = t; s.connect(g).connect(ctx.destination); s.start();
+      const s = ctx.createBufferSource(), g = ctx.createGain(); g.gain.value = vol; s.buffer = t; s.connect(g).connect(gTout); s.start();
     }
 
     function jouerMusique(nom) {
@@ -54,7 +69,8 @@
     return {
       effet, musique: jouerMusique, demarrer,
       prechauffer(noms) { if (ctx) noms.forEach(charger); },
-      majReglages() { if (!reglages.musique) arreter(); else jouerMusique(voulue); }
+      // appelé depuis le menu (donc après un geste) : on peut créer ou réveiller l'audio, ou l'endormir si tout est coupé
+      majReglages() { if (!reglages.musique) arreter(); if (actif()) { demarrer(); jouerMusique(voulue); } else endormir(); }
     };
   }
 

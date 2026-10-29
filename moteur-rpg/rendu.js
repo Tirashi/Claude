@@ -29,6 +29,18 @@ void main(){
   c*=mix(.72,1.,smoothstep(.95,.4,length(v-.5)));
   gl_FragColor=vec4(c,1.);
 }`;
+  // la version légère (graphismes « rapides ») : mêmes couleurs et même vignettage, sans le flou ni la lueur (32 lectures de moins par pixel)
+  const FRAG_LEGER = `
+uniform sampler2D t;varying vec2 v;
+void main(){
+  vec3 c=texture2D(t,v).rgb;c=mix(vec3(dot(c,vec3(.3,.59,.11))),c,.88);
+  c=mix(c,c*vec3(1.06,1.01,.9),.6);
+  c*=mix(.72,1.,smoothstep(.95,.4,length(v-.5)));
+  gl_FragColor=vec4(c,1.);
+}`;
+  /* Deux niveaux de graphismes : « beaux » (écran net jusqu'à 2 pixels par point, ombres fines, flou de profondeur)
+     et « rapides » (1 pixel par point, ombres plus grossières, sans flou), pour les téléphones qui peinent. */
+  const QUALITES = { beaux: { pixels: 2, ombre: 2048, flou: true }, rapides: { pixels: 1, ombre: 1024, flou: false } };
   const hasard = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
 
   function Rendu(canvas, poupees, style) {
@@ -40,7 +52,34 @@ void main(){
       uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(4, 4) }, foyer: { value: .5 }, bande: { value: .2 }, flou: { value: 8 } },
       vertexShader: 'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}', fragmentShader: FRAG, depthTest: false
     });
-    const scPost = new THREE.Scene(); scPost.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
+    const postLeger = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture } }, vertexShader: post.vertexShader, fragmentShader: FRAG_LEGER, depthTest: false });
+    const ecran = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post);
+    const scPost = new THREE.Scene(); scPost.add(ecran);
+    let q = QUALITES.beaux, auto = true, mesure = { n: 0, somme: 0, dernier: 0, debut: 0 }, dessinPoupees = -1;
+    // qualite('auto' | 'beaux' | 'rapides') ; en « auto », on commence en beaux et on passe en rapides si les images tardent
+    function qualite(nom) {
+      auto = nom !== 'beaux' && nom !== 'rapides';
+      appliquer(nom === 'rapides' ? QUALITES.rapides : QUALITES.beaux);
+      mesure = { n: 0, somme: 0, dernier: 0, debut: 0 };
+    }
+    function appliquer(nq) {
+      q = nq;
+      r.setPixelRatio(Math.min(window.devicePixelRatio || 1, q.pixels)); w0 = h0 = 0;   // la taille sera refaite à la prochaine image
+      ecran.material = q.flou ? post : postLeger;
+      if (soleil) { soleil.shadow.mapSize.set(q.ombre, q.ombre); if (soleil.shadow.map) { soleil.shadow.map.dispose(); soleil.shadow.map = null; } }
+    }
+    // en « auto » : sur 90 images ou 3 secondes de jeu, si une image prend en moyenne plus de 26 ms (moins de 38 images par seconde), on allège
+    function surveiller(t) {
+      const dt = t - mesure.dernier; mesure.dernier = t;
+      if (!auto || q === QUALITES.rapides || dt <= 0 || dt > .5) return;   // appli en arrière-plan, chargement : on ne compte pas
+      if (!mesure.debut) mesure.debut = t;
+      if (t - mesure.debut < 1) return;   // la première seconde (chargement de la carte) ne compte pas
+      mesure.n++; mesure.somme += dt;
+      if (mesure.n >= 90 || mesure.somme >= 3) {
+        if (mesure.somme / mesure.n > .026) appliquer(QUALITES.rapides);
+        mesure.n = 0; mesure.somme = 0;
+      }
+    }
     const camPost = new THREE.Camera();
     const camera = new THREE.PerspectiveCamera(42, 1, 1, 90);
     const textures = {};
@@ -111,7 +150,7 @@ void main(){
       scene.add(new THREE.HemisphereLight(0xe4f0ff, 0x5a6a35, sombre ? .32 : .55));
       if (sombre) scene.add(new THREE.AmbientLight(0xffd9a0, .22));
       soleil = new THREE.DirectionalLight(0xfff0d0, sombre ? .35 : .85);
-      soleil.castShadow = true; soleil.shadow.mapSize.set(2048, 2048); soleil.shadow.bias = -.0004; soleil.shadow.normalBias = .03;
+      soleil.castShadow = true; soleil.shadow.mapSize.set(q.ombre, q.ombre); soleil.shadow.bias = -.0004; soleil.shadow.normalBias = .03;
       Object.assign(soleil.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 40 });
       scene.add(soleil, soleil.target);
     }
@@ -393,7 +432,12 @@ void main(){
       if (!scene) return;
       const w = canvas.clientWidth, h = canvas.clientHeight;
       if (w !== w0 || h !== h0) { w0 = w; h0 = h; r.setSize(w, h, false); const pr = r.getPixelRatio(); rt.setSize(w * pr, h * pr); post.uniforms.res.value.set(w * pr, h * pr); camera.aspect = w / h; camera.updateProjectionMatrix(); }
-      for (const a of acteurs.values()) { M.Poupees.dessiner(a.cv.getContext('2d'), a.p, a.etat, a.q, t, a.sens); a.t.needsUpdate = true; }
+      surveiller(t);
+      // les personnages sont redessinés 24 fois par seconde au plus (chaque dessin repart vers la carte graphique)
+      if (t - dessinPoupees >= 1 / 24 || t < dessinPoupees) {
+        dessinPoupees = t;
+        for (const a of acteurs.values()) { M.Poupees.dessiner(a.cv.getContext('2d'), a.p, a.etat, a.q, t, a.sens); a.t.needsUpdate = true; }
+      }
       for (const v of vacillent) v.p.intensity = v.base * (1 + Math.sin(t * 13 + v.dec) * .1 + Math.sin(t * 7.3 + v.dec) * .1);
       for (const x of alternent) { const k = x.tuiles[Math.floor(t * 3) % x.tuiles.length]; if (x.a.material.map !== k) { x.a.material.map = k; x.a.customDepthMaterial.map = k; } }
       if (eau) eau.opacity = .3 + Math.sin(t * 2) * .08;
@@ -424,8 +468,8 @@ void main(){
       r.setRenderTarget(rt); r.render(scene, camera); r.setRenderTarget(null); r.render(scPost, camPost);
     }
 
-    return { chargerCarte, majObjet, allumer, acteur, placer, retirer, montrer, viser, rendre, chargerCombat, quitterCombat, placerMonde, effet, eclair, projeter,
-      get carte() { return carte; }, get enCombat() { return !!combat; } };
+    return { chargerCarte, majObjet, allumer, acteur, placer, retirer, montrer, viser, rendre, chargerCombat, quitterCombat, placerMonde, effet, eclair, projeter, qualite,
+      get carte() { return carte; }, get enCombat() { return !!combat; }, get graphismes() { return q === QUALITES.rapides ? 'rapides' : 'beaux'; } };
   }
 
   M.Rendu = { Rendu };

@@ -165,6 +165,14 @@
         page.append(b);
       };
       bascule('musique', 'Musique'); bascule('effets', 'Bruitages'); bascule('combatRapide', 'Combats rapides');
+      // graphismes : auto (beaux, allégés tout seuls si le téléphone peine), beaux, rapides
+      if (o.graphismes) {
+        const NOMS = ['auto', 'beaux', 'rapides'], b = h('button', 'rpg-bouton large');
+        const texte = () => { b.textContent = `Graphismes : ${r.graphismes || 'auto'}${(r.graphismes || 'auto') === 'auto' ? ` (${o.graphismes()} en ce moment)` : ''}`; };
+        b.onclick = () => { r.graphismes = NOMS[(NOMS.indexOf(r.graphismes || 'auto') + 1) % 3]; o.enregistrerReglages(); o.graphismes(r.graphismes); texte(); };
+        texte(); page.append(b);
+        page.append(h('p', 'rpg-vide', 'Rapides : image moins fine, sans flou de profondeur, mais plus fluide sur les petits téléphones.'));
+      }
       page.append(h('p', 'rpg-vide', 'La partie se sauvegarde toute seule aux moments clés, et à la main aux lanternes.'));
     }
 
