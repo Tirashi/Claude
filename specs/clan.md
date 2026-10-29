@@ -14,7 +14,7 @@ Gestion et stratégie viking : un petit clan développe son village, produit ses
 ### 1.1 Décisions du 29/10
 - **Nom : Le Clan du fjord** (dossier `clan-du-fjord/`).
 - **Temps réel doux** (§ 10) : tout avance avec l'heure du téléphone, même appli fermée, résumé « PENDANT TON ABSENCE » au retour.
-- Capture de référence : l'utilisateur la dépose dans `maquettes/ref/` avant la maquette.
+- Capture de référence : finalement **aucune** (29/10, « partons d'une page blanche ») ; chercher des graphismes sur les sites autorisés.
 - Bâtiments du Village et but de la V1 (renommée, « jarl de la région ») : **d'accord**.
 - **Pas de cavalier** : remplacé par le **berserker**.
 - Défense perdue sans bâtiment détruit : **d'accord**.
@@ -169,7 +169,14 @@ Pas de défi du jour en V1 (une idée possible plus tard : « le raid du jour »
 - **Famille** : classements déjà là en V1 ; défis entre clans de la famille, cibles qui sont les villages des autres joueurs (demanderait du SQL Supabase en plus).
 
 ## 16. Points décidés (29/10)
-Tous tranchés : voir § 1.1. Il reste à déposer la capture de référence dans `maquettes/ref/`.
+Tous tranchés : voir § 1.1.
+
+## 16.1 Maquette 1 (29/10)
+`maquettes/clan-du-fjord.html`, https://claude.ai/artifact/SxZqj6uVzxCErka8PJJxmX. Graphismes cherchés sur OpenGameArt et itch.io (kenney.nl est bloqué par le proxy) : rien de libre ne couvre à la fois bâtiments, 7 unités et 7 navires dans un même style (drakkar CC0 isolé, tuiles de village viking en vue de dessus, environnements de plateforme) ; tout est donc **dessiné par le code**. Trois téléphones jouables, chacun avec PORT (cible, navires, 7 unités, jauges places / cale / chances, départ et retour de la flotte avec butin) et VILLAGE (AMELIORER change le décor : maison et fumée, forgeron et étincelles, torches, soldats à l'entraînement) :
+- **A, de côté** : panorama du fjord au soleil couchant, montagnes, reflets ; volet en parchemin.
+- **B, de dessus** : comme Capitaine du port (mouettes et leurs ombres, pontons, toits de gazon) ; volet en ardoise.
+- **C, isométrique** : diorama, murs et toits en volume, navires en biais ; volet en cuir et laiton.
+À choisir : point de vue, habillage du volet, lumière suivant l'heure du téléphone ou non.
 Le reste (coûts, statistiques, durées, formule) se règle avec le simulateur, en testant la boucle plutôt qu'en équilibrant tout d'avance.
 
 ## 17. Plan de travail proposé (Opus, une conversation par étape)

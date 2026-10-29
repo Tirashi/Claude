@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le Clan du fjord</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+/* Maquette 1 du Clan du fjord (29/10) : trois points de vue en pixel art dessiné par le code,
+   les écrans PORT (préparation d'un raid) et VILLAGE (bâtiments qui changent le décor). */
+:root{
+  --fond:#14110e; --texte:#f2e8d8; --doux:#bfae96; --or:#f0c050; --ligne:#3a3026; --cadre:#050403;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Pixelify Sans", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1140px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:28px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%;max-width:340px}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);font-size:15px;text-align:center}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:8px}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0 0 6px}
+section.q li{color:var(--doux);margin:4px 0}
+section.q b{color:var(--texte)}
+
+/* ---------- le téléphone ---------- */
+.tel{width:100%;aspect-ratio:9/19;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;
+  box-shadow:0 18px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;background:var(--p-fond);color:var(--p-texte);position:relative}
+.tel canvas{width:100%;display:block;image-rendering:pixelated;flex:none}
+.res{display:flex;justify-content:space-between;gap:2px;padding:5px 7px;background:var(--p-barre);border-bottom:3px solid var(--p-bord);flex:none}
+.res span{display:flex;align-items:center;gap:3px;font-size:13px;font-weight:600;color:var(--p-clair)}
+.res canvas{width:14px;height:14px}
+.vol{flex:1;overflow-y:auto;padding:8px 9px 10px;background:var(--p-volet);border-top:3px solid var(--p-bord);min-height:0;
+  background-image:var(--p-motif)}
+.vol h3{font-family:var(--f-titre);font-size:9px;margin:2px 0 7px;color:var(--p-titre);letter-spacing:.5px}
+.nav{display:flex;flex:none;background:var(--p-barre);border-top:3px solid var(--p-bord)}
+.nav button{flex:1;font-family:var(--f-titre);font-size:7px;padding:9px 0 8px;background:none;border:0;color:var(--p-doux);cursor:pointer;border-right:1px solid var(--p-bord)}
+.nav button:last-child{border-right:0}
+.nav button.on{color:var(--p-titre);background:var(--p-on)}
+.nav button:disabled{opacity:.45;cursor:default}
+.ligne{display:flex;align-items:center;gap:6px;margin:3px 0;font-size:14px}
+.ligne .ic{width:24px;height:30px;flex:none;image-rendering:pixelated}
+.ligne .nom{flex:1;line-height:1.1}
+.ligne .nom small{display:block;color:var(--p-doux);font-size:11.5px}
+.pm{display:flex;align-items:center;gap:3px}
+.pm button,.btn{font-family:var(--f-titre);font-size:9px;background:var(--p-bouton);color:var(--p-texte-bouton);border:2px solid var(--p-bord);
+  box-shadow:0 2px 0 var(--p-bord);border-radius:var(--p-rayon);cursor:pointer}
+.pm button{width:24px;height:22px;padding:0}
+.pm b{min-width:30px;text-align:center;font-size:14px}
+.cible{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.cible button{width:24px;height:24px;padding:0}
+.cible div{flex:1;text-align:center;line-height:1.15}
+.cible div b{font-size:14px}
+.cible div small{display:block;font-size:11.5px;color:var(--p-doux)}
+.navires{display:flex;gap:4px;margin-bottom:7px}
+.navires button{flex:1;font-family:var(--f-texte);font-size:12px;line-height:1.1;padding:4px 2px;background:transparent;color:var(--p-doux);
+  border:2px dashed var(--p-bord);border-radius:var(--p-rayon);cursor:pointer}
+.navires button.on{background:var(--p-on);color:var(--p-texte);border-style:solid}
+.navires small{display:block;font-size:10.5px}
+.jauge{display:flex;align-items:center;gap:6px;font-size:12.5px;margin:4px 0}
+.jauge > span:first-child{width:62px;color:var(--p-doux)}
+.jauge .bar{flex:1;height:10px;background:var(--p-creux);border:2px solid var(--p-bord);position:relative}
+.jauge .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--c,#d8a040)}
+.jauge > span:last-child{width:52px;text-align:right}
+.btn{display:block;width:100%;padding:11px 0;margin-top:8px;font-size:11px;background:var(--p-action);color:var(--p-texte-action)}
+.btn:disabled{opacity:.5}
+.chance{font-family:var(--f-titre);font-size:9px}
+.bat{display:flex;align-items:center;gap:6px;margin:5px 0;padding:5px 6px;border:2px solid var(--p-bord);border-radius:var(--p-rayon);background:var(--p-carte)}
+.bat .nom{flex:1;font-size:14px;line-height:1.1}
+.bat .nom small{display:block;font-size:11.5px;color:var(--p-doux)}
+.bat .btn{width:auto;margin:0;padding:7px 6px;font-size:8px}
+.toast{position:absolute;left:10px;right:10px;top:38%;padding:10px;text-align:center;font-family:var(--f-titre);font-size:9px;line-height:1.7;
+  background:var(--p-volet);border:3px solid var(--p-bord);box-shadow:0 4px 0 #000a;border-radius:var(--p-rayon);display:none;color:var(--p-texte)}
+.toast.on{display:block}
+
+/* Trois habillages d'interface, un par direction */
+.tA{ --p-fond:#2a1a10; --p-barre:#3b2414; --p-bord:#1a0e06; --p-volet:#e8d6aa; --p-motif:linear-gradient(#0000 0 0);
+  --p-texte:#2a1a0a; --p-doux:#7a5a36; --p-titre:#8a2a1a; --p-clair:#f4dfa8; --p-on:#cfb37a; --p-bouton:#7a4a22; --p-texte-bouton:#f4dfa8;
+  --p-action:#a83220; --p-texte-action:#ffe8b0; --p-creux:#cdb888; --p-carte:#f2e4bc; --p-rayon:2px }
+.tA .nav button{color:#c8a870} .tA .nav button.on{color:#ffe0a0;background:#5a3418}
+.tB{ --p-fond:#1c2a30; --p-barre:#24343c; --p-bord:#0c1418; --p-volet:#2e4048; --p-motif:repeating-linear-gradient(0deg,#0000 0 3px,#ffffff06 3px 4px);
+  --p-texte:#e8eef0; --p-doux:#98b0b8; --p-titre:#9fe0e8; --p-clair:#d8f0f4; --p-on:#3e6a74; --p-bouton:#46606a; --p-texte-bouton:#e8f6f8;
+  --p-action:#2f8a6a; --p-texte-action:#eafff6; --p-creux:#1a282e; --p-carte:#34505a; --p-rayon:6px }
+.tC{ --p-fond:#2c2018; --p-barre:#4a3222; --p-bord:#1e140c; --p-volet:#5e4430; --p-motif:radial-gradient(#ffffff08 1px,#0000 1px) 0 0/6px 6px;
+  --p-texte:#f6e6c8; --p-doux:#d0b088; --p-titre:#ffc860; --p-clair:#ffe6b0; --p-on:#8a6038; --p-bouton:#b8862e; --p-texte-bouton:#2a1606;
+  --p-action:#d8a030; --p-texte-action:#2a1606; --p-creux:#3a2818; --p-carte:#6e5038; --p-rayon:0 }
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <h1>LE CLAN DU FJORD</h1>
+  <p>Maquette 1 : trois façons de voir le village, toutes en pixel art dessiné par le code (aucun pack libre ne couvrait bâtiments, unités et navires dans un même style). Chaque téléphone est jouable : au PORT, choisissez la cible, les navires et les soldats, regardez les jauges places / cale et les chances, puis PARTIR (les navires s'en vont et rentrent avec le butin). Au VILLAGE, AMELIORER change le décor : une fumée de plus par maison, le forgeron et ses étincelles, des soldats à l'entraînement…</p>
+</header>
+
+<div class="grille" id="grille"></div>
+
+<section class="q">
+  <h2>A CHOISIR</h2>
+  <ul>
+    <li><b>Le point de vue</b> : A de côté (panorama, ciel et montagnes du fjord), B de dessus (comme Capitaine du port), ou C isométrique (diorama).</li>
+    <li><b>L'habillage du volet</b> : parchemin (A), ardoise (B) ou cuir et laiton (C) ; il peut aller avec n'importe quel point de vue.</li>
+    <li><b>La lumière</b> : fin d'après-midi dorée pour tous ; la suivre sur l'heure du téléphone (nuit avec fenêtres éclairées) ?</li>
+    <li><b>Les soldats</b> : les 7 unités sont dessinées dans la liste du port (guerrier, archer, porte-bouclier, lanceur de haches, lancier, berserker, pilleur).</li>
+  </ul>
+</section>
+</div>
+
+<script>
+"use strict";
+const TAU = Math.PI * 2, W = 216, H = 200;
+
+/* ---------- outils de dessin ---------- */
+function R(g, x, y, w, h, c){ g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); }
+function mk(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.imageSmoothingEnabled = false; return [c, g]; }
+function rng(seed){ let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+function poly(g, pts, col){
+  g.fillStyle = col; let a = Infinity, b = -Infinity;
+  for (const p of pts){ a = Math.min(a, p[1]); b = Math.max(b, p[1]); }
+  for (let y = Math.floor(a); y < Math.ceil(b); y++){
+    const yc = y + .5, xs = [];
+    for (let k = 0; k < pts.length; k++){
+      const p = pts[k], q = pts[(k + 1) % pts.length];
+      if ((p[1] <= yc && q[1] > yc) || (q[1] <= yc && p[1] > yc)) xs.push(p[0] + (yc - p[1]) / (q[1] - p[1]) * (q[0] - p[0]));
+    }
+    xs.sort((m, n) => m - n);
+    for (let k = 0; k + 1 < xs.length; k += 2){ const x0 = Math.round(xs[k]), x1 = Math.round(xs[k + 1]); if (x1 > x0) g.fillRect(x0, y, x1 - x0, 1); }
+  }
+}
+const SILC = new Map();
+function silC(src, col){ let m = SILC.get(src); if (!m) SILC.set(src, m = {}); return m[col] || (m[col] = silhouette(src, col)); }
+function silhouette(src, col){ const [c, g] = mk(src.width, src.height); g.drawImage(src, 0, 0); g.globalCompositeOperation = "source-in"; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height); return c; }
+function outlined(src, col = "#1a0e08"){
+  const [c, g] = mk(src.width, src.height), s = silhouette(src, col);
+  for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) g.drawImage(s, dx, dy);
+  g.drawImage(src, 0, 0); return c;
+}
+function flipH(src){ const [c, g] = mk(src.width, src.height); g.translate(src.width, 0); g.scale(-1, 1); g.drawImage(src, 0, 0); return c; }
+function disc(g, cx, cy, r, col){ for (let y = -r; y <= r; y++){ const w = Math.round(Math.sqrt(r * r - y * y + r * .6)); R(g, cx - w, cy + y, w * 2 + 1, 1, col); } }
+
+/* ---------- les soldats (vus de côté, tournés vers la droite) ---------- */
+const UNITES = [
+  {id:"guerrier", nom:"Guerrier", role:"polyvalent, pas cher", tun:"#8a3a2a", casque:"cone", arme:"hache", bouclier:"rond", bc:"#d8a838", att:3, dispo:12},
+  {id:"archer", nom:"Archer", role:"fort contre les palissades", tun:"#4a6a34", casque:"capuche", arme:"arc", att:3, fort:1.6, dispo:6},
+  {id:"bouclier", nom:"Porte-bouclier", role:"mur de boucliers : moins de pertes", tun:"#34588a", casque:"cone", arme:"epee", bouclier:"grand", bc:"#b83020", att:2, dispo:4},
+  {id:"haches", nom:"Lanceur de haches", role:"brise les boucliers", tun:"#6e4a80", casque:"aucun", arme:"haches", att:4, dispo:4},
+  {id:"lancier", nom:"Lancier", role:"tient la ligne", tun:"#56646e", casque:"cone", arme:"lance", bouclier:"rond", bc:"#3a7a5a", att:2, dispo:6},
+  {id:"berserker", nom:"Berserker", role:"frappe fort, tombe vite", tun:"#5a3a22", casque:"ours", arme:"deux", att:6, dispo:2},
+  {id:"pilleur", nom:"Pilleur", role:"+3 de cale chacun", tun:"#8e7e50", casque:"aucun", arme:"sac", att:1, dispo:4},
+];
+function viking(u, frame){
+  const [c, g] = mk(18, 24), X = 6, Y = 22;
+  const skin = "#eab48a", hair = u.id === "haches" ? "#d8a040" : u.id === "berserker" ? "#8a3a1a" : "#b5652a";
+  const s = frame ? 1 : 0;
+  R(g, X - s, Y - 5, 2, 5, "#4a3a2a"); R(g, X + 3 + s, Y - 5, 2, 5, "#3a2c20");
+  R(g, X - s - 1, Y - 1, 3, 1, "#24180e"); R(g, X + 3 + s, Y - 1, 3, 1, "#24180e");
+  R(g, X - 1, Y - 11, 7, 7, u.tun); R(g, X - 1, Y - 5, 7, 1, "#0003"); R(g, X - 1, Y - 8, 7, 1, "#5a3414"); R(g, X + 2, Y - 8, 1, 1, "#e0c060");
+  if (u.id === "berserker"){ R(g, X - 2, Y - 12, 9, 3, "#7a5432"); R(g, X + 1, Y - 10, 3, 2, skin); }
+  R(g, X + 1, Y - 16, 4, 5, skin); R(g, X + 4, Y - 15, 1, 1, "#24180e");
+  R(g, X + 2, Y - 13, 3, 3, hair); R(g, X + 4, Y - 11, 1, 1, hair); R(g, X, Y - 16, 1, 4, hair);
+  if (u.casque === "cone"){ R(g, X, Y - 17, 6, 2, "#8c96a0"); R(g, X + 1, Y - 18, 4, 1, "#b8c2cc"); R(g, X + 2, Y - 19, 2, 1, "#d8e0e8"); R(g, X + 4, Y - 16, 1, 2, "#8c96a0"); }
+  if (u.casque === "capuche"){ R(g, X - 1, Y - 17, 6, 2, "#5a6a3a"); R(g, X - 1, Y - 15, 2, 5, "#5a6a3a"); R(g, X + 3, Y - 18, 2, 1, "#5a6a3a"); }
+  if (u.casque === "ours"){ R(g, X - 2, Y - 18, 8, 3, "#7a5432"); R(g, X - 2, Y - 19, 2, 1, "#7a5432"); R(g, X + 4, Y - 19, 2, 1, "#7a5432"); R(g, X - 3, Y - 16, 3, 7, "#6a4428"); R(g, X + 5, Y - 17, 1, 1, "#1a0e08"); }
+  const wood = "#7a4a22", iron = "#c8d2dc";
+  switch (u.arme){
+    case "hache": R(g, X + 6, Y - 14, 1, 8, wood); R(g, X + 7, Y - 15, 2, 4, iron); R(g, X + 9, Y - 14, 1, 2, iron); break;
+    case "epee": R(g, X + 6, Y - 9, 1, 2, "#6a4a2a"); R(g, X + 5, Y - 10, 3, 1, "#a08040"); R(g, X + 6, Y - 16, 1, 6, iron); break;
+    case "arc": R(g, X + 7, Y - 17, 1, 1, wood); R(g, X + 8, Y - 16, 1, 9, wood); R(g, X + 7, Y - 7, 1, 1, wood); R(g, X + 7, Y - 16, 1, 9, "#efe6cc"); R(g, X + 5, Y - 11, 3, 1, skin); R(g, X - 3, Y - 14, 2, 6, "#6a4428"); R(g, X - 3, Y - 15, 1, 1, "#e8e0d0"); R(g, X - 2, Y - 15, 1, 1, "#c03020"); break;
+    case "lance": R(g, X + 6, Y - 21, 1, 18, wood); R(g, X + 6, Y - 23, 1, 2, iron); R(g, X + 5, Y - 21, 3, 1, iron); break;
+    case "haches": R(g, X + 6, Y - 18, 1, 5, wood); R(g, X + 7, Y - 19, 2, 3, iron); R(g, X + 5, Y - 14, 2, 2, skin); R(g, X - 2, Y - 8, 1, 4, wood); R(g, X - 3, Y - 8, 1, 2, iron); break;
+    case "deux": R(g, X + 6, Y - 16, 1, 8, wood); R(g, X + 7, Y - 17, 3, 4, iron); R(g, X - 2, Y - 15, 1, 8, wood); R(g, X - 4, Y - 16, 2, 4, iron); R(g, X + 5, Y - 10, 2, 2, skin); R(g, X - 2, Y - 10, 2, 2, skin); break;
+    case "sac": R(g, X - 5, Y - 14, 5, 7, "#b8a070"); R(g, X - 4, Y - 15, 3, 1, "#8a7448"); R(g, X - 4, Y - 11, 3, 1, "#e0c050"); R(g, X + 6, Y - 11, 1, 6, wood); R(g, X + 6, Y - 12, 2, 2, "#5a3414"); break;
+  }
+  if (u.bouclier === "rond"){ disc(g, X + 3, Y - 8, 3, u.bc); R(g, X + 3, Y - 11, 1, 7, "#0002"); R(g, X + 3, Y - 8, 1, 1, "#d8e0e8"); }
+  if (u.bouclier === "grand"){ disc(g, X + 4, Y - 9, 5, u.bc); R(g, X - 1, Y - 9, 11, 1, "#e8d8a0"); R(g, X + 4, Y - 14, 1, 11, "#e8d8a0"); disc(g, X + 4, Y - 9, 1, "#c8d2dc"); }
+  return outlined(c);
+}
+const SPR = {}; // SPR[id] = [frame0, frame1] tournés à droite, SPRL = à gauche
+const SPRL = {};
+function prepareUnits(){ for (const u of UNITES){ SPR[u.id] = [viking(u, 0), viking(u, 1)]; SPRL[u.id] = SPR[u.id].map(flipH); } }
+
+/* ---------- navires vus de côté (proue à droite) ---------- */
+const NAV = {
+  drakkar: {nom:"Drakkar", places:10, cale:6, L:74, d:7, lift:14, mast:30, sw:30, sh:21, voile:["#b8301e","#efe2c0"], boucliers:1, dragon:1, info:"+20 % ATTAQUE"},
+  knarr:   {nom:"Knarr", places:8, cale:24, L:68, d:10, lift:8, mast:28, sw:28, sh:21, voile:["#efe2c0","#efe2c0","#efe2c0","#9a6a3a"], cargo:1, info:"GRANDE CALE"},
+  snekkja: {nom:"Snekkja", places:5, cale:2, L:50, d:5, lift:10, mast:22, sw:20, sh:15, voile:["#2a5a9a","#efe2c0"], boucliers:1, info:"RAID ECLAIR"},
+};
+function shipSide(type){
+  const S = NAV[type], w = S.L + 14, h = S.mast + S.d + 22, [c, g] = mk(w, h);
+  const deck = h - 4 - S.d, x0 = 6, mx = x0 + Math.round(S.L * .5);
+  // voile et mât (derrière la coque)
+  R(g, mx, deck - S.mast, 2, S.mast, "#4a2a12");
+  const top = deck - S.mast + 3;
+  R(g, mx - S.sw / 2 - 2, top - 1, S.sw + 6, 2, "#5a3414");
+  for (let y = 0; y < S.sh; y++){
+    const inset = y > S.sh - 3 ? (y - S.sh + 3) : 0;
+    for (let x = inset; x < S.sw - inset; x++){
+      let col = S.voile[Math.floor(x / 4) % S.voile.length];
+      if (x > S.sw - 5) col = shade(col, -.18); if (y < 2) col = shade(col, .08);
+      R(g, mx - S.sw / 2 + 1 + x, top + 1 + y, 1, 1, col);
+    }
+  }
+  for (let k = 0; k < 12; k++){ R(g, mx - 3 - k * 2.2, deck - S.mast + 2 + k * 2.3, 1, 1, "#3a2010"); R(g, mx + 3 + k * 2.4, deck - S.mast + 2 + k * 2.3, 1, 1, "#3a2010"); }
+  // coque
+  for (let i = 0; i < S.L; i++){
+    const t = i / (S.L - 1), e = Math.abs(t - .5) * 2;
+    const tp = Math.round(deck - Math.pow(e, 2.6) * S.lift), bt = Math.round(deck + S.d * Math.sqrt(Math.max(0, 1 - Math.pow(e, 1.5))));
+    for (let y = tp; y <= bt; y++){ const k = y - tp; R(g, x0 + i, y, 1, 1, k === 0 ? "#d0985a" : k % 3 === 0 ? "#4a2a12" : (k > 4 ? "#6a3c1a" : "#8a5428")); }
+  }
+  // poupe en volute, proue en dragon
+  R(g, x0 - 1, deck - S.lift - 3, 2, 3, "#8a5428"); R(g, x0 + 1, deck - S.lift - 4, 2, 1, "#8a5428"); R(g, x0 + 2, deck - S.lift - 3, 1, 1, "#d0985a");
+  const px = x0 + S.L - 1, py = deck - S.lift;
+  if (S.dragon){
+    R(g, px, py - 6, 2, 6, "#8a5428"); R(g, px + 1, py - 9, 2, 4, "#8a5428"); R(g, px + 2, py - 10, 4, 3, "#a86a30");
+    R(g, px + 5, py - 9, 2, 1, "#a86a30"); R(g, px + 4, py - 10, 1, 1, "#ffe080"); R(g, px + 1, py - 11, 2, 1, "#c03020"); R(g, px + 5, py - 8, 2, 1, "#4a2a12");
+  } else { R(g, px, py - 4, 2, 4, "#8a5428"); R(g, px + 1, py - 5, 2, 1, "#d0985a"); }
+  if (S.boucliers){
+    const cols = ["#b8301e", "#e8c050", "#2a5a9a", "#efe2c0"];
+    for (let i = Math.round(S.L * .14), k = 0; i < S.L * .86; i += 5, k++){ disc(g, x0 + i, deck + 1, 2, cols[k % 4]); R(g, x0 + i, deck + 1, 1, 1, "#c8d2dc"); }
+  }
+  if (S.cargo){ R(g, x0 + 14, deck - 5, 8, 5, "#9a6a3a"); R(g, x0 + 14, deck - 5, 8, 1, "#c8925a"); R(g, x0 + 24, deck - 4, 6, 4, "#7a5030"); R(g, x0 + 46, deck - 6, 5, 6, "#8a5a32"); R(g, x0 + 46, deck - 4, 5, 1, "#5a3414"); }
+  const o = outlined(c);
+  o.wl = deck + 3; o.mastX = mx; o.mastTop = deck - S.mast;
+  return o;
+}
+function shade(hex, k){
+  const n = parseInt(hex.slice(1), 16); let r = n >> 16, gg = n >> 8 & 255, b = n & 255;
+  const f = v => Math.max(0, Math.min(255, Math.round(k > 0 ? v + (255 - v) * k : v * (1 + k))));
+  return "#" + ((1 << 24) + (f(r) << 16) + (f(gg) << 8) + f(b)).toString(16).slice(1);
+}
+
+/* ---------- navires vus de dessus (proue en bas) ---------- */
+function shipTop(type){
+  const S = NAV[type], L = Math.round(S.L * .8), Wd = type === "knarr" ? 18 : type === "snekkja" ? 10 : 14;
+  const [c, g] = mk(Wd + 24, L + 6), cx = (Wd + 24) / 2;
+  for (let j = 0; j < L; j++){
+    const t = j / (L - 1), half = Wd / 2 * Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), .55);
+    const hw = Math.max(1, Math.round(half));
+    R(g, cx - hw, j + 3, hw * 2, 1, "#8a5428"); R(g, cx - hw, j + 3, 1, 1, "#d0985a"); R(g, cx + hw - 1, j + 3, 1, 1, "#5a3414");
+    if (hw > 3) R(g, cx - hw + 2, j + 3, hw * 2 - 4, 1, j % 4 === 0 ? "#6a3c1a" : "#7a4a22");
+  }
+  if (S.boucliers){ const cols = ["#b8301e", "#e8c050", "#2a5a9a", "#efe2c0"]; for (let j = 10, k = 0; j < L - 10; j += 5, k++){ for (const sd of [-1, 1]){ const hw = Math.round(Wd / 2 * Math.pow(Math.sin(Math.PI * j / (L - 1)), .55)); disc(g, cx + sd * hw - (sd > 0 ? 1 : 0), j + 3, 1, cols[(k + (sd > 0 ? 2 : 0)) % 4]); } } }
+  if (S.cargo){ R(g, cx - 5, L * .25 + 3, 10, 7, "#9a6a3a"); R(g, cx - 5, L * .25 + 3, 10, 1, "#c8925a"); R(g, cx - 4, L * .62 + 3, 8, 6, "#7a5030"); }
+  // vergue et voile vues d'en haut
+  const my = Math.round(L * .45) + 3;
+  R(g, cx - Wd / 2 - 7, my, Wd + 14, 2, "#5a3414");
+  for (let x = 0; x < Wd + 10; x++) R(g, cx - Wd / 2 - 5 + x, my + 2, 1, 4, S.voile[Math.floor(x / 4) % S.voile.length]);
+  R(g, cx - 1, my - 1, 2, 2, "#3a2010");
+  if (S.dragon){ R(g, cx - 1, L + 1, 3, 3, "#a86a30"); R(g, cx, L + 3, 1, 1, "#ffe080"); }
+  return outlined(c);
+}
+
+/* ---------- mouettes ---------- */
+const GULL_A = [".....kk........", ".....ggk.......", "......ggk......", "......gggg.....", "......wwwgg....", ".ttwwwwwwwwwhhb", "......wwwgg....", "......gggg.....", "......ggk......", ".....ggk.......", ".....kk........"];
+const GULL_B = ["...............", "...............", "...............", "......kgg......", "......wwwg.....", ".ttwwwwwwwwwhhb", "......wwwg.....", "......kgg......", "...............", "...............", "..............."];
+const GULL_S0 = ["k.......k", ".gw...wg.", "..wwbww..", "........."], GULL_S1 = [".........", ".........", "kgwwbwwgk", "...www..."];
+const GULL_POSE = ["..ww...", ".wwwwb.", "kgggww.", ".kggw..", "...y...", "..y.y.."];
+function mapSprite(map, flip, outline = true){
+  const C = {k:"#2a2638", g:"#a8b0c0", w:"#ffffff", t:"#d8dee8", h:"#ffffff", b:"#ffb020", y:"#e08a20"};
+  const [c, g] = mk(map[0].length + 2, map.length + 2);
+  for (let j = 0; j < map.length; j++) for (let i = 0; i < map[0].length; i++){ const ch = map[j][flip ? map[0].length - 1 - i : i]; if (ch !== ".") R(g, i + 1, j + 1, 1, 1, C[ch]); }
+  return outline ? outlined(c, "#2a263888") : c;
+}
+
+/* ---------- icônes des ressources ---------- */
+function iconRes(k){
+  const [c, g] = mk(12, 12);
+  if (k === "bois"){ disc(g, 4, 7, 3, "#8a5428"); disc(g, 8, 5, 3, "#a86a30"); R(g, 8, 5, 1, 1, "#e0b070"); R(g, 4, 7, 1, 1, "#d0985a"); }
+  if (k === "pierre"){ disc(g, 6, 7, 4, "#8a8f96"); R(g, 3, 5, 4, 2, "#b8bec6"); R(g, 7, 9, 3, 1, "#5a5f66"); }
+  if (k === "nourriture"){ R(g, 2, 4, 8, 5, "#d8a050"); R(g, 3, 3, 6, 1, "#e8b868"); R(g, 3, 5, 2, 1, "#f0d090"); R(g, 6, 6, 2, 1, "#b07830"); }
+  if (k === "or"){ disc(g, 6, 6, 4, "#e8b830"); disc(g, 6, 6, 2, "#ffd860"); R(g, 5, 4, 1, 4, "#c08a10"); }
+  return outlined(c);
+}
+
+/* ---------- fumée, étincelles ---------- */
+function smoke(st, x, y, dt, rate = .35){
+  st.sm = st.sm || []; st.smT = (st.smT || 0);
+  if (Math.random() < dt / rate) st.sm.push({x, y, vx: .25 + Math.random() * .2, vy: -.45 - Math.random() * .2, r: 1, life: 0});
+}
+function drawSmoke(g, st, dt, alpha = 1){
+  st.sm = (st.sm || []).filter(p => p.life < 5);
+  for (const p of st.sm){
+    p.life += dt; p.x += p.vx * dt * 12; p.y += p.vy * dt * 12; p.r = 1 + p.life * .9;
+    const a = Math.max(0, .55 - p.life * .11) * alpha;
+    g.fillStyle = `rgba(220,214,206,${a})`; const r = Math.round(p.r); g.fillRect(Math.round(p.x - r), Math.round(p.y - r), r * 2, r * 2);
+  }
+}
+function sparks(g, x, y, t){
+  const ph = (t * 2) % 1;
+  if (ph < .45){ const k = ph / .45; for (let i = 0; i < 6; i++){ const a = -Math.PI / 2 + (i - 2.5) * .45; R(g, x + Math.cos(a) * k * 9, y + Math.sin(a) * k * 9 + k * k * 6, 1, 1, i % 2 ? "#ffe060" : "#ff8a20"); } }
+}
+
+/* ============================================================
+   DIRECTION A : de côté, panorama du fjord
+   ============================================================ */
+const A = {};
+function prepareA(){
+  // ciel, montagnes : une fois
+  const [c, g] = mk(W, H);
+  const bands = ["#e89a58", "#efac64", "#f4bd72", "#f7cc84", "#f9d996", "#fbe4aa"];
+  for (let y = 0; y < 130; y++){
+    const f = y / 130 * (bands.length - 1), i = Math.floor(f), fr = f - i;
+    for (let x = 0; x < W; x++) R(g, x, y, 1, 1, (fr > .5 && (x + y) % 2 === 0) || fr > .8 ? bands[Math.min(i + 1, bands.length - 1)] : bands[i]);
+  }
+  disc(g, 150, 74, 15, "#fde8a8"); disc(g, 150, 74, 11, "#fff4cc");
+  const r = rng(7);
+  const ridge = (y0, amp, col, snow, seed) => {
+    const rr = rng(seed); let h = 0, v = 0; const hs = [];
+    for (let x = 0; x < W; x++){ v += (rr() - .5) * 1.6; v *= .92; h += v; h = Math.max(-amp, Math.min(amp, h)); hs.push(y0 - amp - h); }
+    for (let x = 0; x < W; x++){ R(g, x, hs[x], 1, 140 - hs[x], col); if (snow && hs[x] < y0 - amp * 1.5) R(g, x, hs[x], 1, 2 + (x % 3 === 0), "#f4eef0"); }
+  };
+  ridge(98, 14, "#c09098", false, 3);
+  ridge(112, 12, "#8a7a96", true, 11);
+  // falaise gauche du fjord
+  for (let x = 0; x < 70; x++){ const top = 40 + Math.pow(x / 70, 1.8) * 90 + Math.sin(x * .7) * 2; R(g, x, top, 1, 140 - top, x % 7 === 0 ? "#4e4a62" : "#5a5670"); if (x % 9 < 3) R(g, x, top, 1, 3, "#3e7050"); }
+  for (let x = 0; x < 70; x += 6) R(g, x, 46 + Math.pow(x / 70, 1.8) * 90, 3, 2, "#2e5a40");
+  A.sky = c;
+  A.ship = {}; for (const k in NAV){ A.ship[k] = flipH(shipSide(k)); A.ship[k].wl = shipSide(k).wl; A.ship[k].mastX = A.ship[k].width - shipSide(k).mastX; A.ship[k].mastTop = shipSide(k).mastTop; }
+  A.g0 = mapSprite(GULL_S0, false); A.g1 = mapSprite(GULL_S1, false); A.gp = mapSprite(GULL_POSE, true);
+  A.clouds = [{x:20, y:22, w:34}, {x:120, y:12, w:46}, {x:180, y:34, w:26}];
+}
+function drawWaterA(g, y0, t){
+  const cols = ["#6fa0b4", "#5a8ea6", "#4a7c96", "#3c6c88", "#305c78", "#264e6a"];
+  for (let y = y0; y < H; y++){ const i = Math.min(cols.length - 1, Math.floor((y - y0) / 14)); R(g, 0, y, W, 1, cols[i]); }
+  for (let k = 0; k < 40; k++){
+    const yy = y0 + 3 + (k * 37) % (H - y0 - 4), sp = 4 + (k % 5), xx = ((k * 53 + t * sp * (k % 2 ? 1 : -1)) % (W + 20) + W + 20) % (W + 20) - 10;
+    R(g, xx, yy, 4 + k % 4, 1, yy < y0 + 20 ? "#a8d0dc" : "#6a9cb4");
+  }
+  for (let y = y0 + 2; y < H; y += 3){ if (Math.sin(y * 1.7 + t * 4) > -.3) R(g, 148 + Math.sin(y * .9 + t * 2) * 3 - (y - y0) * .05, y, 4 + ((y * 7) % 5), 1, "#ffe8a8"); }
+}
+function drawShipA(g, img, x, wy, t, phase, reflect = true){
+  const bob = Math.round(Math.sin(t * 1.6 + phase) * 1.2), y = wy - img.wl + bob;
+  if (reflect){
+    g.globalAlpha = .25;
+    for (let r = 0; r < 22; r++){ const sy = img.wl - 3 - r; if (sy < 0) break; g.drawImage(img, 0, sy, img.width, 1, x + Math.round(Math.sin(t * 3 + r * .8)), wy + 1 + r, img.width, 1); }
+    g.globalAlpha = 1;
+  }
+  g.drawImage(img, 0, 0, img.width, img.wl + 1, x, y, img.width, img.wl + 1);
+  // fanion en haut du mât
+  for (let i = 0; i < 6; i++) R(g, x + img.mastX - 1 - i, y + img.mastTop - 2 + Math.round(Math.sin(t * 6 - i * .9) * .8), 1, 2, i < 3 ? "#c03020" : "#e8c050");
+  R(g, x - 1, wy, img.width + 2, 1, "#d8f0f4");
+}
+function sceneA_port(g, st, t, dt){
+  g.drawImage(A.sky, 0, 0);
+  for (const c of A.clouds){ const x = ((c.x + t * 2) % (W + 60)) - 50; R(g, x, c.y, c.w, 3, "#fff0c8"); R(g, x + 6, c.y - 2, c.w - 14, 2, "#fff6dc"); }
+  const wy = 128; drawWaterA(g, wy, t);
+  // rive lointaine et maisons
+  for (let x = 70; x < W; x++) R(g, x, wy - 2, 1, 2, "#4a6a4a");
+  for (const hx of [92, 104, 118]){ R(g, hx, wy - 6, 8, 4, "#6a4a32"); R(g, hx - 1, wy - 8, 10, 2, "#5a7040"); }
+  // navires au port (ou partis)
+  const order = [["snekkja", 4, 140], ["knarr", 56, 142], ["drakkar", 18, 178]];
+  for (const [k, x, y] of order){
+    const sh = st.navires[k]; if (!sh.dispo) continue;
+    const off = -sh.p * 280; if (x + off < -A.ship[k].width) continue;
+    drawShipA(g, A.ship[k], x + off, y, t, x, true);
+    if (sh.sel && sh.p === 0 && Math.floor(t * 2) % 2) R(g, x + A.ship[k].width / 2 - 2, y - A.ship[k].wl - 6 + Math.round(Math.sin(t * 1.6 + x) * 1.2), 5, 3, "#ffe060");
+  }
+  // ponton
+  const py = 150;
+  for (let x = 140; x < W; x += 13){ R(g, x, py, 3, 30, "#4a2a12"); R(g, x, py + 26, 3, 1, "#d8f0f4"); }
+  R(g, 136, py - 4, W - 136, 5, "#8a5428"); R(g, 136, py - 4, W - 136, 1, "#d0985a"); for (let x = 138; x < W; x += 6) R(g, x, py - 3, 1, 4, "#6a3c1a");
+  R(g, 152, py - 12, 3, 8, "#4a2a12");
+  // hangar à bateaux
+  R(g, 176, py - 30, 40, 26, "#5a3418"); for (let x = 178; x < W; x += 4) R(g, x, py - 30, 1, 26, "#4a2a12"); R(g, 186, py - 18, 12, 14, "#2a160a");
+  poly(g, [[170, py - 29], [196, py - 48], [222, py - 29]], "#6a7a3a"); poly(g, [[174, py - 31], [196, py - 45], [218, py - 31]], "#7e8e46");
+  R(g, 194, py - 52, 4, 4, "#8a5428");
+  // caisses, tonneaux, grue
+  R(g, 158, py - 10, 7, 6, "#9a6a3a"); R(g, 158, py - 10, 7, 1, "#c8925a"); R(g, 166, py - 8, 5, 4, "#7a5030");
+  R(g, 140, py - 34, 2, 30, "#5a3418"); R(g, 140, py - 34, 20, 2, "#5a3418"); const sw = Math.round(Math.sin(t * 1.3) * 1.5); R(g, 158 + sw, py - 32, 1, 10, "#2a160a"); R(g, 155 + sw, py - 22, 7, 5, "#8a5a32");
+  // vikings sur le ponton
+  const walkers = st.walkA || (st.walkA = [{id:"guerrier", x:150, v:6}, {id:"pilleur", x:200, v:-5}, {id:"archer", x:170, v:4}]);
+  for (const w of walkers){ w.x += w.v * dt; if (w.x < 142 || w.x > 206) w.v = -w.v; const fr = Math.floor(t * 4 + w.x) % 2; g.drawImage((w.v > 0 ? SPR : SPRL)[w.id][fr], Math.round(w.x) - 6, py - 26); }
+  // mouette posée sur le pieu
+  const hop = (t % 7) < .25 ? -2 : 0; g.drawImage(A.gp, 150, py - 20 + hop);
+  // mouettes en vol
+  for (let k = 0; k < 4; k++){
+    const x = ((k * 61 + t * (12 + k * 3)) % (W + 40)) - 20, y = 30 + k * 14 + Math.sin(t * .8 + k) * 8;
+    g.drawImage(Math.floor(t * 5 + k) % 2 ? A.g0 : A.g1, Math.round(x), Math.round(y));
+  }
+}
+function sceneA_village(g, st, t, dt){
+  g.drawImage(A.sky, 0, 0, W, 132, 0, 0, W, 132);
+  for (const c of A.clouds){ const x = ((c.x + t * 2) % (W + 60)) - 50; R(g, x, c.y, c.w, 3, "#fff0c8"); R(g, x + 6, c.y - 2, c.w - 14, 2, "#fff6dc"); }
+  // collines et palissade au fond
+  for (let x = 0; x < W; x++){ const y = 118 + Math.sin(x * .03) * 5; R(g, x, y, 1, H - y, "#6e8a48"); R(g, x, y, 1, 1, "#8aa858"); }
+  for (let x = 0; x < W; x += 3){ R(g, x, 116 + Math.sin(x * .03) * 5, 2, 9, "#6a4428"); R(g, x, 116 + Math.sin(x * .03) * 5, 2, 1, "#9a6a3a"); }
+  for (let y = 136; y < H; y += 2) for (let x = (y * 7) % 5; x < W; x += 9) R(g, x, y, 1, 1, "#5e7a3c");
+  // pins
+  for (const [x, y, s] of [[6, 132, 1.2], [200, 130, 1.1], [26, 122, .8], [186, 120, .8]]){ R(g, x, y - 4, 2, 6, "#4a2a12"); for (let k = 0; k < 4; k++) poly(g, [[x - 7 * s + k * s, y - 2 - k * 6 * s], [x + 1, y - 14 * s - k * 6 * s], [x + 9 * s - k * s, y - 2 - k * 6 * s]], k % 2 ? "#2e5a3e" : "#3a6a48"); }
+  // chemin
+  poly(g, [[96, H], [126, H], [118, 160], [104, 160]], "#c8a870");
+  const lv = st.lv;
+  // maisons longues (une de plus par niveau)
+  const houses = [[20, 152, 46], [150, 150, 48], [6, 186, 52], [160, 188, 50]].slice(0, Math.min(4, lv.maisons + 1));
+  const longhouse = (x, y, w) => {
+    R(g, x + 3, y - 12, w - 6, 12, "#6a4428"); for (let i = x + 5; i < x + w - 4; i += 4) R(g, i, y - 12, 1, 12, "#5a3418");
+    R(g, x + w / 2 - 3, y - 9, 6, 9, "#2a160a");
+    poly(g, [[x, y - 11], [x + 4, y - 24], [x + w - 4, y - 24], [x + w, y - 11]], "#7e8e46"); R(g, x + 4, y - 24, w - 8, 2, "#9aa858");
+    for (let i = x + 6; i < x + w - 6; i += 5) R(g, i, y - 20 + (i % 2), 2, 1, "#6a7a3a");
+    smoke(st, x + w * .6, y - 26, dt);
+  };
+  for (const [x, y, w] of houses.slice(0, 2)) longhouse(x, y, w);
+  // grande halle
+  const hx = 64, hy = 170, hw = 88 + lv.halle * 4;
+  R(g, hx + 4, hy - 20, hw - 8, 20, "#5a3418"); for (let i = hx + 6; i < hx + hw - 5; i += 5) R(g, i, hy - 20, 1, 20, "#4a2a12");
+  R(g, hx + hw / 2 - 6, hy - 14, 12, 14, "#2a160a"); R(g, hx + hw / 2 - 6, hy - 15, 12, 1, "#c8925a");
+  if (lv.halle >= 2){ R(g, hx + hw / 2 - 12, hy - 14, 2, 3, "#ffb030"); R(g, hx + hw / 2 + 10, hy - 14, 2, 3, "#ffb030"); R(g, hx + hw / 2 - 12, hy - 15 + Math.round(Math.sin(t * 12)), 2, 1, "#ffe080"); R(g, hx + hw / 2 + 10, hy - 15 + Math.round(Math.cos(t * 11)), 2, 1, "#ffe080"); }
+  poly(g, [[hx - 4, hy - 19], [hx + 8, hy - 42], [hx + hw - 8, hy - 42], [hx + hw + 4, hy - 19]], "#8a5428");
+  for (let y = hy - 40; y < hy - 20; y += 3) for (let i = hx + 2; i < hx + hw - 2; i += 6) R(g, i + (y % 2) * 3, y, 3, 1, "#6a3c1a");
+  R(g, hx + 8, hy - 43, hw - 16, 2, "#c8925a");
+  for (const [dx, f] of [[hx + 8, -1], [hx + hw - 8, 1]]){ R(g, dx, hy - 50, 2, 8, "#8a5428"); R(g, dx + f * 2, hy - 52, 3, 3, "#a86a30"); R(g, dx + f * 4, hy - 51, 1, 1, "#ffe080"); }
+  // étendard
+  const fx = hx + hw / 2; R(g, fx, hy - 68, 1, 26, "#4a2a12");
+  for (let i = 0; i < 14; i++){ const yo = Math.round(Math.sin(t * 5 - i * .6) * 1.5); R(g, fx + 1 + i, hy - 67 + yo, 1, 9, i % 7 < 3 ? "#b8301e" : "#e8c050"); }
+  smoke(st, hx + hw * .3, hy - 44, dt, .5);
+  for (const [x, y, w] of houses.slice(2)) longhouse(x, y, w);
+  // forge
+  if (lv.forge > 0){
+    const fx2 = 168, fy = 200;
+    R(g, fx2, fy - 22, 2, 22, "#4a2a12"); R(g, fx2 + 34, fy - 22, 2, 22, "#4a2a12");
+    poly(g, [[fx2 - 4, fy - 20], [fx2 + 18, fy - 32], [fx2 + 40, fy - 20]], "#6a7a3a");
+    R(g, fx2 + 26, fy - 14, 8, 14, "#5a5f66"); R(g, fx2 + 27, fy - 10, 6, 4, lv.forge >= 2 ? (Math.floor(t * 8) % 2 ? "#ffb030" : "#ff7020") : "#c05020");
+    R(g, fx2 + 10, fy - 7, 9, 3, "#3a3f46"); R(g, fx2 + 12, fy - 4, 5, 4, "#3a3f46");
+    const up = Math.floor(t * 2 % 1 * 4) < 2; g.drawImage(SPR.guerrier[0], fx2 - 2, fy - 22);
+    R(g, fx2 + 6, fy - (up ? 17 : 10), 1, 6, "#7a4a22"); R(g, fx2 + 5, fy - (up ? 18 : 10), 3, 2, "#5a5f66");
+    sparks(g, fx2 + 14, fy - 8, t);
+    smoke(st, fx2 + 30, fy - 24, dt, .25);
+  }
+  // entraînement de la caserne
+  const n = lv.caserne * 2;
+  for (let i = 0; i < n; i++){ const x = 6 + (i % 4) * 14 + (i >= 4 ? 7 : 0), y = 172 + (i >= 4 ? 10 : 0), id = ["guerrier", "lancier", "archer", "haches"][i % 4]; const lunge = Math.sin(t * 5 + i) > .3 ? 1 : 0; g.drawImage(SPR[id][lunge], x + lunge, y); }
+  // poules
+  for (let i = 0; i < 3; i++){ const x = 120 + i * 14 + Math.sin(t * .5 + i) * 6, peck = Math.sin(t * 4 + i * 2) > .6; R(g, x, 186, 4, 3, "#f4ece0"); R(g, x + (peck ? 4 : 3), 185 + (peck ? 2 : 0), 2, 2, "#f4ece0"); R(g, x + 4, 185 + (peck ? 3 : 0), 1, 1, "#d03020"); R(g, x + 1, 189, 1, 2, "#e08a20"); }
+  drawSmoke(g, st, dt);
+}
+
+/* ============================================================
+   DIRECTION B : vue de dessus, comme Capitaine du port
+   ============================================================ */
+const B = {};
+function prepareB(){
+  B.ship = {}; for (const k in NAV) B.ship[k] = shipTop(k);
+  B.gA = mapSprite(GULL_A, false); B.gB = mapSprite(GULL_B, false);
+  B.gAs = silhouette(B.gA, "rgba(10,40,60,.3)"); B.gBs = silhouette(B.gB, "rgba(10,40,60,.3)");
+  B.top = {}; for (const u of UNITES) B.top[u.id] = topGuy(u);
+  const [c, g] = mk(W, H);
+  for (let y = 0; y < H; y++) R(g, 0, y, W, 1, y < 44 ? "#6e9a4a" : "#2f7f9a");
+  for (let k = 0; k < 260; k++){ const x = (k * 97) % W, y = (k * 57) % 44; R(g, x, y, 2, 1, k % 2 ? "#5e8a3c" : "#82ae58"); }
+  for (let x = 0; x < W; x++){ const y = 44 + Math.round(Math.sin(x * .12) * 2); R(g, x, y - 5, 1, 7, "#e0c890"); R(g, x, y + 2, 1, 2, "#a8dce0"); }
+  for (let x = 0; x < W; x += 3) R(g, x, 46 + Math.round(Math.sin(x * .12) * 2), 2, 1, "#c8b07a");
+  B.port = c;
+  const [v, h] = mk(W, H);
+  for (let y = 0; y < H; y++) R(h, 0, y, W, 1, "#6e9a4a");
+  for (let k = 0; k < 900; k++){ const x = (k * 97) % W, y = (k * 61) % H; R(h, x, y, 2, 1, k % 3 ? "#5e8a3c" : "#82ae58"); }
+  poly(h, [[96, 0], [116, 0], [120, 200], [92, 200]], "#c8a870"); poly(h, [[0, 120], [216, 112], [216, 126], [0, 134]], "#c8a870");
+  for (let k = 0; k < 120; k++){ const x = 92 + (k * 13) % 28, y = (k * 29) % H; R(h, x, y, 1, 1, "#b09060"); }
+  B.vil = v;
+}
+function topGuy(u){
+  const [c, g] = mk(9, 9);
+  disc(g, 4, 4, 3, u.tun); disc(g, 4, 3, 2, u.casque === "cone" ? "#a8b2bc" : u.casque === "ours" ? "#7a5432" : u.casque === "capuche" ? "#5a6a3a" : "#c88a40");
+  if (u.bouclier) disc(g, u.bouclier === "grand" ? 6 : 6, 6, u.bouclier === "grand" ? 2 : 1, u.bc);
+  return outlined(c);
+}
+function roofTop(g, x, y, w, h, wallH, opt = {}){
+  const roof = opt.roof || "#7e8e46", roofD = shade(roof, -.2), roofL = shade(roof, .15), wall = opt.wall || "#6a4428";
+  R(g, x - 1, y - 1, w + 2, h + wallH + 2, "#1a0e08");
+  R(g, x, y + h, w, wallH, wall); for (let i = x + 2; i < x + w; i += 4) R(g, i, y + h, 1, wallH, shade(wall, -.25));
+  R(g, x + w / 2 - 2, y + h + 1, 4, wallH - 1, "#2a160a");
+  R(g, x, y, w, h, roof); R(g, x, y, w, Math.floor(h / 2), roofL);
+  for (let j = y + 1; j < y + h; j += 2) for (let i = x + (j % 4); i < x + w; i += 5) R(g, i, j, 2, 1, roofD);
+  R(g, x, y + Math.floor(h / 2), w, 1, shade(roof, -.35));
+  if (opt.dragon){ R(g, x - 3, y + h / 2 - 2, 3, 3, "#a86a30"); R(g, x + w, y + h / 2 - 2, 3, 3, "#a86a30"); R(g, x - 3, y + h / 2 - 2, 1, 1, "#ffe080"); R(g, x + w + 2, y + h / 2 - 2, 1, 1, "#ffe080"); }
+  R(g, x + 3, y + h + wallH, w - 6, 2, "rgba(20,30,10,.35)");
+}
+function drawGullsB(g, t, n = 4){
+  for (let k = 0; k < n; k++){
+    const a = t * (.35 + k * .07) + k * 1.7, cx = 108 + Math.cos(a) * (60 + k * 10), cy = 90 + Math.sin(a * 1.3) * (40 + k * 6);
+    const fr = Math.floor(t * 4 + k) % 2, ang = Math.atan2(Math.cos(a * 1.3) * 1.3 * (40 + k * 6), -Math.sin(a) * (60 + k * 10));
+    g.save(); g.translate(Math.round(cx + 10), Math.round(cy + 14)); g.rotate(ang); g.drawImage(fr ? B.gAs : B.gBs, -8, -6); g.restore();
+    g.save(); g.translate(Math.round(cx), Math.round(cy)); g.rotate(ang); g.drawImage(fr ? B.gA : B.gB, -8, -6); g.restore();
+  }
+}
+function sceneB_port(g, st, t, dt){
+  g.drawImage(B.port, 0, 0);
+  for (let k = 0; k < 70; k++){ const x = (k * 71 + t * (3 + k % 4)) % (W + 10) - 5, y = 50 + (k * 37) % 150; R(g, x, y, 3 + k % 3, 1, k % 3 ? "#4a98b2" : "#8ccad8"); }
+  // maisons du rivage
+  roofTop(g, 10, 6, 34, 14, 7); roofTop(g, 150, 4, 40, 15, 7, {roof:"#8a5428"}); roofTop(g, 60, 12, 22, 10, 6);
+  smoke(st, 30, 8, dt, .5); smoke(st, 168, 6, dt, .5);
+  // pontons
+  R(g, 98, 42, 14, 140, "#1a0e08"); R(g, 99, 42, 12, 139, "#8a5428"); for (let y = 44; y < 180; y += 3) R(g, 99, y, 12, 1, "#6a3c1a");
+  R(g, 40, 120, 136, 10, "#1a0e08"); R(g, 41, 121, 134, 8, "#8a5428"); for (let x = 43; x < 175; x += 3) R(g, x, 121, 1, 8, "#6a3c1a");
+  for (const [x, y] of [[96, 60], [111, 60], [96, 100], [111, 100], [40, 118], [174, 118], [96, 178], [111, 178]]){ R(g, x - 1, y - 1, 5, 5, "#1a0e08"); R(g, x, y, 3, 3, "#5a3418"); R(g, x, y, 3, 1, "#a86a30"); }
+  R(g, 120, 116, 8, 6, "#9a6a3a"); R(g, 120, 116, 8, 1, "#c8925a"); R(g, 60, 116, 6, 5, "#7a5030");
+  // navires amarrés
+  const places = {drakkar:[66, 52], knarr:[124, 46], snekkja:[134, 132]};
+  for (const k in places){
+    const sh = st.navires[k]; if (!sh.dispo) continue;
+    const img = B.ship[k], [x, y0] = places[k], y = y0 + sh.p * 220 + Math.round(Math.sin(t * 1.4 + x) * .8);
+    if (y > H + 10) continue;
+    g.drawImage(silC(img, "rgba(6,30,48,.35)"), x + 3, y + 4);
+    g.drawImage(img, x, y);
+    if (sh.p > 0 && k !== "knarr"){ const ph = Math.sin(t * 6) > 0 ? 2 : -1; for (let j = 14; j < img.height - 14; j += 6) { R(g, x + 3 - 4, y + j + ph, 4, 1, "#3a2010"); R(g, x + img.width - 3, y + j + ph, 4, 1, "#3a2010"); } }
+    if (sh.sel && sh.p === 0 && Math.floor(t * 2) % 2){ R(g, x + img.width / 2 - 2, y - 4, 5, 3, "#ffe060"); }
+    if (sh.p > 0) for (let j = 0; j < 4; j++) R(g, x + img.width / 2 - 4 + (j % 2) * 6, y - 3 - j * 3, 2, 1, "#c8f0f4");
+  }
+  // vikings sur le ponton
+  const walkers = st.walkB || (st.walkB = [{id:"guerrier", y:60, v:7}, {id:"pilleur", y:150, v:-6}, {id:"porte", y:100, v:5}]);
+  for (const w of walkers){ w.y += w.v * dt; if (w.y < 50 || w.y > 172) w.v = -w.v; g.drawImage(B.top[w.id === "porte" ? "bouclier" : w.id], 101, Math.round(w.y)); }
+  // mouette posée
+  g.drawImage(B.gB, 106, 170 - ((t % 6) < .3 ? 3 : 0));
+  drawGullsB(g, t);
+  drawSmoke(g, st, dt);
+}
+function sceneB_village(g, st, t, dt){
+  g.drawImage(B.vil, 0, 0);
+  const lv = st.lv;
+  // palissade
+  const stake = (x, y) => { R(g, x - 1, y - 1, 5, 5, "#1a0e08"); R(g, x, y, 3, 3, "#7a4a22"); R(g, x, y, 3, 1, "#b07a40"); };
+  for (let x = 0; x < W; x += 4){ stake(x, 2); }
+  for (let y = 6; y < H; y += 4){ stake(1, y); stake(W - 4, y); }
+  // pins
+  for (const [x, y] of [[14, 20], [196, 160], [24, 180], [190, 26]]){ disc(g, x + 2, y + 3, 8, "rgba(10,30,10,.3)"); disc(g, x, y, 8, "#2e5a3e"); disc(g, x - 1, y - 1, 5, "#3a6a48"); disc(g, x - 2, y - 2, 2, "#4e8058"); }
+  // grande halle
+  const hw = 70 + lv.halle * 6;
+  roofTop(g, 106 - hw / 2, 58, hw, 26, 11, {roof:"#8a5428", wall:"#5a3418", dragon:1});
+  if (lv.halle >= 2) for (const sx of [106 - hw / 2 - 6, 106 + hw / 2 + 3]){ R(g, sx, 90, 3, 5, "#4a2a12"); R(g, sx, 88 + Math.round(Math.sin(t * 12 + sx)), 3, 2, "#ffb030"); }
+  const fx = 106 + hw / 2 - 10; R(g, fx, 40, 1, 20, "#4a2a12"); for (let i = 0; i < 12; i++) R(g, fx + 1 + i, 41 + Math.round(Math.sin(t * 5 - i * .6)), 1, 7, i % 6 < 3 ? "#b8301e" : "#e8c050");
+  smoke(st, 92, 62, dt, .45);
+  // maisons longues
+  const hs = [[22, 26, 40], [150, 30, 44], [20, 140, 42], [140, 140, 44]].slice(0, Math.min(4, lv.maisons + 1));
+  for (const [x, y, w] of hs){ roofTop(g, x, y, w, 14, 7); smoke(st, x + w * .55, y + 3, dt, .45); }
+  // forge
+  if (lv.forge > 0){
+    roofTop(g, 160, 92, 26, 12, 6, {roof:"#6a6f76", wall:"#4a4f56"});
+    const glow = lv.forge >= 2 && Math.floor(t * 8) % 2 ? "#ffb030" : "#ff7020"; R(g, 168, 108, 4, 3, glow);
+    R(g, 150, 104, 6, 4, "#3a3f46"); g.drawImage(B.top.guerrier, 154, 110); sparks(g, 153, 104, t); smoke(st, 180, 94, dt, .3);
+  }
+  // entraînement
+  const n = lv.caserne * 2;
+  for (let i = 0; i < n; i++){ const x = 40 + (i % 4) * 11, y = 98 + Math.floor(i / 4) * 12, dx = Math.sin(t * 5 + i * 1.3) > .4 ? 2 : 0; g.drawImage(B.top[["guerrier", "lancier", "archer", "haches"][i % 4]], x + dx * (i % 2 ? 1 : -1), y); }
+  if (n){ R(g, 34, 94, 2, 30, "#7a4a22"); R(g, 86, 94, 2, 30, "#7a4a22"); }
+  // poules
+  for (let i = 0; i < 3; i++){ const x = 124 + i * 9 + Math.sin(t * .6 + i) * 5, y = 172 + Math.cos(t * .4 + i) * 4; R(g, x, y, 4, 3, "#f4ece0"); R(g, x + 3, y - 1, 2, 2, "#f4ece0"); R(g, x + 4, y - 2, 1, 1, "#d03020"); }
+  drawSmoke(g, st, dt);
+  drawGullsB(g, t * .8, 2);
+}
+
+/* ============================================================
+   DIRECTION C : isométrique, diorama
+   ============================================================ */
+const C = {}; const OX = 108, OY = -64;
+const S = (i, j) => [OX + (i - j) * 16, OY + (i + j) * 8];
+function tile(g, i, j, col, side){
+  const [x, y] = S(i, j);
+  for (let r = 0; r < 16; r++){ const hw = r < 8 ? (r + 1) * 2 : (16 - r) * 2; R(g, x - hw, y + r, hw * 2, 1, col(r, hw)); }
+  if (side){ for (let r = 0; r < 6; r++){ R(g, x - 16 + r * 0, y + 8 + r, 16, 1, side[0]); } }
+}
+function isoBox(g, i, j, a, b, h, o){
+  const P0 = S(i, j), P1 = S(i + a, j), P2 = S(i + a, j + b), P3 = S(i, j + b), up = (p, k) => [p[0], p[1] - k];
+  const rh = o.rh || 12, rc = o.roof || "#7e8e46";
+  const shadow = [[P1[0], P1[1]], [P2[0], P2[1]], [P2[0] + 14, P2[1] + 6], [P1[0] + 14, P1[1] + 6]];
+  poly(g, shadow, "rgba(20,30,10,.3)");
+  poly(g, [P3, P2, up(P2, h), up(P3, h)], o.wl || "#7a4a22");
+  poly(g, [P2, P1, up(P1, h), up(P2, h)], o.wr || "#5a3418");
+  for (let k = 3; k < h; k += 3){ const yA = P3[1] - k, yB = P2[1] - k; poly(g, [[P3[0], yA], [P2[0], yB], [P2[0], yB + 1], [P3[0], yA + 1]], "rgba(0,0,0,.12)"); }
+  const mA = [(P0[0] + P3[0]) / 2, (P0[1] + P3[1]) / 2 - h - rh], mB = [(P1[0] + P2[0]) / 2, (P1[1] + P2[1]) / 2 - h - rh];
+  poly(g, [up(P0, h), up(P1, h), mB, mA], shade(rc, -.25));
+  poly(g, [up(P2, h), up(P1, h), mB], o.wr || "#5a3418");
+  poly(g, [up(P3, h), up(P2, h), mB, mA], rc);
+  for (let k = 1; k < 4; k++){ const f = k / 4, a1 = [up(P3, h)[0] + (mA[0] - up(P3, h)[0]) * f, up(P3, h)[1] + (mA[1] - up(P3, h)[1]) * f], b1 = [up(P2, h)[0] + (mB[0] - up(P2, h)[0]) * f, up(P2, h)[1] + (mB[1] - up(P2, h)[1]) * f]; poly(g, [a1, b1, [b1[0], b1[1] + 1], [a1[0], a1[1] + 1]], shade(rc, -.15)); }
+  poly(g, [mA, mB, [mB[0], mB[1] + 1], [mA[0], mA[1] + 1]], shade(rc, .25));
+  if (o.door){ const d = [(P3[0] + P2[0]) / 2, (P3[1] + P2[1]) / 2]; poly(g, [[d[0] - 3, d[1] - 1], [d[0] + 3, d[1] + 2], [d[0] + 3, d[1] - 8], [d[0] - 3, d[1] - 11]], "#2a160a"); }
+  if (o.dragon){ for (const m of [mA, mB]){ R(g, m[0] - 1, m[1] - 4, 2, 4, "#a86a30"); R(g, m[0] + 1, m[1] - 5, 2, 2, "#a86a30"); R(g, m[0] + 2, m[1] - 5, 1, 1, "#ffe080"); } }
+  return {mA, mB, P2, P3};
+}
+function prepareC(){
+  C.ship = {}; for (const k in NAV) C.ship[k] = shipSide(k);
+  C.gA = mapSprite(GULL_A, false); C.gB = mapSprite(GULL_B, false); C.gAs = silhouette(C.gA, "rgba(10,40,60,.3)"); C.gBs = silhouette(C.gB, "rgba(10,40,60,.3)");
+  // fond du port : terre en haut à gauche, mer en bas à droite
+  const [c, g] = mk(W, H); R(g, 0, 0, W, H, "#2a6e8c");
+  const land = (i, j) => i < 8 + (j > 11 ? 1 : 0) - (j < 3 ? 1 : 0);
+  for (let s = -4; s < 40; s++) for (let i = -6; i < 24; i++){ const j = s - i; if (j < -8 || j > 26) continue;
+    if (land(i, j)){ const [x, y] = S(i, j); if (!land(i + 1, j) || !land(i, j + 1)){ poly(g, [[x - 16, y + 8], [x, y + 16], [x, y + 22], [x - 16, y + 14]], "#8a6a44"); poly(g, [[x, y + 16], [x + 16, y + 8], [x + 16, y + 14], [x, y + 22]], "#6a4e30"); }
+      tile(g, i, j, (r, hw) => ((r + i * 3 + j * 5) % 7 === 0 ? "#7aa652" : (i === 7 ? "#e0c890" : "#6e9a4a"))); }
+    else tile(g, i, j, (r) => (r === 0 ? "#3a82a0" : "#2f7896"));
+  }
+  C.port = c;
+  const [v, h] = mk(W, H); R(h, 0, 0, W, H, "#2a6e8c");
+  for (let s = -4; s < 40; s++) for (let i = -6; i < 24; i++){ const j = s - i; if (j < -8 || j > 26) continue; const path = (i === 9 || j === 9); tile(h, i, j, (r) => path ? ((r + i + j) % 5 ? "#c8a870" : "#b09060") : ((r + i * 3 + j * 5) % 7 === 0 ? "#7aa652" : "#6e9a4a")); }
+  C.vil = v;
+}
+function drawShipC(g, img, i, j, t, phase){
+  const [x, y] = S(i, j), bob = Math.round(Math.sin(t * 1.5 + phase));
+  g.save(); g.setTransform(1, .5, 0, 1, 0, 0); // l'axe de la coque suit l'axe X de l'iso
+  const yy = y - x * .5;
+  g.globalAlpha = .22; g.drawImage(silC(img, "#0a2838"), Math.round(x - img.width / 2 + 4), Math.round(yy - img.wl + 10)); g.globalAlpha = 1;
+  g.drawImage(img, 0, 0, img.width, img.wl + 1, Math.round(x - img.width / 2), Math.round(yy - img.wl + bob), img.width, img.wl + 1);
+  g.restore();
+  g.imageSmoothingEnabled = false;
+}
+function sceneC_port(g, st, t, dt){
+  g.drawImage(C.port, 0, 0);
+  for (let k = 0; k < 50; k++){ const i = 8 + (k * 7) % 8 + ((t * .15 + k * .37) % 1), j = (k * 5) % 16; const [x, y] = S(i, j); if (y > 0 && y < H) R(g, x, y + 8, 4, 1, "#7ac0d4"); }
+  const places = {drakkar:[12.2, 6.2], knarr:[12.4, 10.6], snekkja:[15.5, 13.4]};
+  const ship = k => {
+    const sh = st.navires[k]; if (!sh.dispo) return;
+    const [i0, j0] = places[k], i = i0 + sh.p * 14;
+    if (S(i, j0)[0] > W + 60) return;
+    drawShipC(g, C.ship[k], i, j0, t, i0);
+    if (sh.sel && sh.p === 0 && Math.floor(t * 2) % 2){ const [x, y] = S(i0, j0); R(g, x - 2, y - 46, 5, 3, "#ffe060"); }
+  };
+  ship("drakkar");
+  // ponton (entre le drakkar, derrière, et les autres navires, devant)
+  const Q = (i, j) => { const [x, y] = S(i, j); return [x, y + 8]; };
+  for (let i = 8.5; i < 15; i += 1.5){ const [x, y] = Q(i, 8.35); R(g, x - 1, y - 1, 2, 9, "#4a2a12"); }
+  poly(g, [Q(7.5, 7.7), Q(15, 7.7), Q(15, 8.3), Q(7.5, 8.3)], "#8a5428");
+  for (let i = 7.7; i < 15; i += .35){ const a1 = Q(i, 7.7), b1 = Q(i, 8.3); poly(g, [a1, b1, [b1[0] + 1, b1[1]], [a1[0] + 1, a1[1]]], "#6a3c1a"); }
+  poly(g, [Q(7.5, 8.3), Q(15, 8.3), [Q(15, 8.3)[0], Q(15, 8.3)[1] + 2], [Q(7.5, 8.3)[0], Q(7.5, 8.3)[1] + 2]], "#4a2a12");
+  const walkers = st.walkC || (st.walkC = [{id:"guerrier", i:8.2, v:.5}, {id:"pilleur", i:12.5, v:-.4}]);
+  for (const w of walkers){ w.i += w.v * dt; if (w.i < 8.1 || w.i > 14.6) w.v = -w.v; const [x, y] = Q(w.i, 8); g.drawImage((w.v > 0 ? SPR : SPRL)[w.id][Math.floor(t * 4) % 2], Math.round(x) - 6, Math.round(y) - 21); }
+  ship("knarr"); ship("snekkja");
+  // bâtiments du rivage
+  isoBox(g, 3, 6, 2, 3, 10, {door:1, roof:"#7e8e46"});
+  isoBox(g, 5, 10, 2, 2, 9, {roof:"#8a5428"});
+  isoBox(g, 1, 1, 3, 2, 10, {roof:"#7e8e46"});
+  smoke(st, S(4, 7.5)[0], S(4, 7.5)[1] - 24, dt, .5);
+  // mouettes
+  for (let k = 0; k < 4; k++){
+    const a = t * (.3 + k * .06) + k * 1.9, cx = 130 + Math.cos(a) * (55 + k * 8), cy = 110 + Math.sin(a) * (35 + k * 5), ang = a + Math.PI;
+    const fr = Math.floor(t * 4 + k) % 2;
+    g.save(); g.translate(Math.round(cx + 12), Math.round(cy + 18)); g.rotate(ang); g.drawImage(fr ? C.gAs : C.gBs, -8, -6); g.restore();
+    g.save(); g.translate(Math.round(cx), Math.round(cy)); g.rotate(ang); g.drawImage(fr ? C.gA : C.gB, -8, -6); g.restore();
+  }
+  drawSmoke(g, st, dt);
+}
+function pineC(g, x, y){ R(g, x - 1, y - 4, 2, 5, "#4a2a12"); for (let k = 0; k < 3; k++) poly(g, [[x - 7 + k, y - 3 - k * 6], [x, y - 14 - k * 6], [x + 7 - k, y - 3 - k * 6]], k % 2 ? "#2e5a3e" : "#3a6a48"); }
+function sceneC_village(g, st, t, dt){
+  g.drawImage(C.vil, 0, 0);
+  const lv = st.lv, items = [];
+  // palissade sur le bord
+  for (let i = 3; i < 15; i++) items.push([i + 3, () => { const [x, y] = S(i, 3); R(g, x - 1, y - 2, 3, 10, "#7a4a22"); R(g, x - 1, y - 2, 3, 1, "#b07a40"); }]);
+  for (let j = 3; j < 15; j++) items.push([3 + j, () => { const [x, y] = S(3, j); R(g, x - 1, y - 2, 3, 10, "#6a4022"); R(g, x - 1, y - 2, 3, 1, "#a06a30"); }]);
+  // grande halle
+  const ha = 3 + lv.halle;
+  items.push([10 + 10 + 2, () => { const r = isoBox(g, 6, 10, ha, 2, 14, {door:1, roof:"#8a5428", wl:"#6a3c1a", wr:"#4a2a12", rh:14, dragon:1});
+    const [fx, fy] = r.mB; R(g, fx, fy - 22, 1, 20, "#4a2a12"); for (let k = 0; k < 10; k++) R(g, fx + 1 + k, fy - 21 + Math.round(Math.sin(t * 5 - k * .6)), 1, 6, k % 6 < 3 ? "#b8301e" : "#e8c050");
+    smoke(st, (r.mA[0] + r.mB[0]) / 2, (r.mA[1] + r.mB[1]) / 2 - 2, dt, .5);
+    if (lv.halle >= 2){ R(g, r.P3[0] - 2, r.P3[1] - 12, 2, 4, "#ffb030"); R(g, r.P3[0] - 2, r.P3[1] - 13 + Math.round(Math.sin(t * 12)), 2, 1, "#ffe080"); } }]);
+  // maisons longues
+  const hs = [[5, 5], [11, 5], [5, 13], [12, 12]].slice(0, Math.min(4, lv.maisons + 1));
+  for (const [i, j] of hs) items.push([i + j + 2, () => { const r = isoBox(g, i, j, 3, 1.5, 9, {door:1}); smoke(st, (r.mA[0] + r.mB[0]) / 2, (r.mA[1] + r.mB[1]) / 2, dt, .45); }]);
+  // forge
+  if (lv.forge > 0) items.push([10 + 13 + 1, () => { const r = isoBox(g, 10, 13, 1.5, 1.5, 8, {roof:"#6a6f76", wl:"#5a5f66", wr:"#4a4f56"}); const [x, y] = S(10.2, 15.3); R(g, x - 4, y - 5, 7, 3, "#3a3f46"); g.drawImage(SPR.guerrier[0], x - 14, y - 20); sparks(g, x, y - 6, t); smoke(st, r.mB[0], r.mB[1], dt, .3); if (lv.forge >= 2) R(g, r.P2[0] - 4, r.P2[1] - 6, 3, 3, Math.floor(t * 8) % 2 ? "#ffb030" : "#ff7020"); }]);
+  // pins
+  for (const [i, j] of [[4, 9], [14, 7], [7, 15], [13, 15]]) items.push([i + j, () => { const [x, y] = S(i, j); pineC(g, x, y + 8); }]);
+  // soldats à l'entraînement
+  const n = lv.caserne * 2;
+  for (let k = 0; k < n; k++){ const i = 7 + (k % 4) * .7, j = 7 + Math.floor(k / 4) * .9; items.push([i + j + .5, () => { const [x, y] = S(i, j), l = Math.sin(t * 5 + k) > .3 ? 1 : 0; g.drawImage(SPR[["guerrier", "lancier", "archer", "haches"][k % 4]][l], Math.round(x) - 6 + l, Math.round(y) - 14); }]); }
+  items.sort((a, b) => a[0] - b[0]); for (const [, f] of items) f();
+  // poules
+  for (let k = 0; k < 3; k++){ const [x, y] = S(12 + Math.sin(t * .5 + k) * .6, 9 + k * .5); R(g, x, y, 4, 3, "#f4ece0"); R(g, x + 3, y - 1, 2, 2, "#f4ece0"); R(g, x + 4, y - 2, 1, 1, "#d03020"); }
+  drawSmoke(g, st, dt);
+}
+
+/* ============================================================
+   Le téléphone : barre des ressources, scène, volet, navigation
+   ============================================================ */
+const CIBLES = [
+  {nom:"FERME DE HAUGR", def:14, butin:30, duree:"6 MIN", info:"Facile, peu de butin"},
+  {nom:"MONASTERE DE LINDHOLM", def:38, butin:90, duree:"25 MIN", fort:1, info:"Mur de pierre : archers conseillés"},
+  {nom:"HALLE DE SIGRID", def:90, butin:260, duree:"1 H 30", fort:1, info:"Un jarl du Thé des Jarls"},
+];
+const DIRS = [
+  {k:"A", titre:"A · DE COTE", txt:"Le fjord en panorama : ciel doré, montagnes, reflets dans l'eau. Les navires partent vers la gauche.", theme:"tA", port:sceneA_port, vil:sceneA_village},
+  {k:"B", titre:"B · DE DESSUS", txt:"Vue de dessus comme Capitaine du port : pontons, mouettes et leurs ombres, toits de chaume et de gazon.", theme:"tB", port:sceneB_port, vil:sceneB_village},
+  {k:"C", titre:"C · ISOMETRIQUE", txt:"Un diorama en isométrique : on voit les murs et les toits, le village a du volume. Les navires partent vers le large.", theme:"tC", port:sceneC_port, vil:sceneC_village},
+];
+const BATS = [
+  {k:"halle", nom:"Grande halle", desc:["", "plafonne les autres bâtiments", "torches à l'entrée", "halle plus longue"], max:3, cout:60},
+  {k:"maisons", nom:"Maisons longues", desc:["", "une maison et une fumée de plus", "", ""], max:3, cout:40},
+  {k:"forge", nom:"Forge", desc:["à construire : le forgeron et ses étincelles", "forgeron au travail", "soufflet : la braise rougeoie", ""], max:2, cout:50},
+  {k:"caserne", nom:"Caserne", desc:["", "2 soldats de plus à l'entraînement", "", ""], max:3, cout:45},
+];
+
+function phone(d){
+  const el = document.createElement("div"); el.className = "dir";
+  el.innerHTML = `<div class="tel ${d.theme}"><div class="res"></div><canvas width="${W}" height="${H}"></canvas><div class="vol"></div>
+    <div class="nav"><button data-s="village">VILLAGE</button><button data-s="port" class="on">PORT</button><button disabled>ENTREE</button><button disabled>TERRES</button></div><div class="toast"></div></div>
+    <h2>${d.titre}</h2><p>${d.txt}</p>`;
+  document.getElementById("grille").appendChild(el);
+  const cv = el.querySelector("canvas"), g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+  const st = {ecran:"port", res:{bois:340, pierre:180, nourriture:120, or:14}, cible:1,
+    nb:Object.fromEntries(UNITES.map(u => [u.id, 0])), navires:{drakkar:{dispo:1, sel:1, p:0}, knarr:{dispo:1, sel:1, p:0}, snekkja:{dispo:1, sel:0, p:0}},
+    lv:{halle:1, maisons:1, forge:0, caserne:1}, raid:null};
+  st.nb.guerrier = 6; st.nb.archer = 4; st.nb.bouclier = 2; st.nb.pilleur = 2;
+  const vol = el.querySelector(".vol"), res = el.querySelector(".res"), toast = el.querySelector(".toast");
+  const icons = {};
+  function drawRes(){
+    res.innerHTML = "";
+    for (const k of ["bois", "pierre", "nourriture", "or"]){
+      const s = document.createElement("span"), c = document.createElement("canvas"); c.width = 12; c.height = 12; c.getContext("2d").drawImage(iconRes(k), 0, 0);
+      s.append(c, document.createTextNode(st.res[k])); res.append(s);
+    }
+  }
+  function say(msg, ms = 2600){ toast.innerHTML = msg; toast.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => toast.classList.remove("on"), ms); }
+  function calc(){
+    const ships = Object.keys(NAV).filter(k => st.navires[k].sel && st.navires[k].p === 0);
+    const places = ships.reduce((s, k) => s + NAV[k].places, 0), cale0 = ships.reduce((s, k) => s + NAV[k].cale, 0);
+    const n = Object.values(st.nb).reduce((a, b) => a + b, 0), c = CIBLES[st.cible];
+    let att = 0; for (const u of UNITES) att += st.nb[u.id] * u.att * (c.fort && u.fort ? u.fort : 1);
+    if (ships.includes("drakkar")) att *= 1.2;
+    const cale = cale0 + Math.max(0, places - n) * 2 + st.nb.pilleur * 3;
+    const p = n ? 1 / (1 + Math.exp(-4 * (att / c.def - 1))) : 0;
+    return {ships, places, n, att: Math.round(att), cale, p, c};
+  }
+  function vPort(){
+    const k = calc(), c = k.c, label = k.p > .75 ? "FACILE" : k.p > .45 ? "RISQUE" : "TRES RISQUE", col = k.p > .75 ? "#4aa040" : k.p > .45 ? "#d8a030" : "#c03020";
+    const busy = Object.values(st.navires).some(s => s.p > 0);
+    vol.innerHTML = `<h3>PREPARER UN RAID</h3>
+      <div class="cible"><button class="pmb" data-c="-1" style="font-family:var(--f-titre);font-size:9px;background:var(--p-bouton);color:var(--p-texte-bouton);border:2px solid var(--p-bord);border-radius:var(--p-rayon)">◀</button>
+        <div><b>${c.nom}</b><small>${c.info} · ${c.duree}</small></div>
+        <button class="pmb" data-c="1" style="font-family:var(--f-titre);font-size:9px;background:var(--p-bouton);color:var(--p-texte-bouton);border:2px solid var(--p-bord);border-radius:var(--p-rayon)">▶</button></div>
+      <div class="navires">${Object.keys(NAV).map(n => `<button data-n="${n}" class="${st.navires[n].sel ? "on" : ""}">${NAV[n].nom}<small>${NAV[n].places} places · cale ${NAV[n].cale}</small><small>${NAV[n].info}</small></button>`).join("")}</div>
+      <div class="units"></div>
+      <div class="jauge"><span>PLACES</span><span class="bar"><i style="width:${Math.min(100, k.n / Math.max(1, k.places) * 100)}%;--c:${k.n > k.places ? "#c03020" : "#5a8ac0"}"></i></span><span>${k.n} / ${k.places}</span></div>
+      <div class="jauge"><span>CALE</span><span class="bar"><i style="width:${Math.min(100, k.cale / c.butin * 100)}%;--c:#d8a040"></i></span><span>${k.cale} / ${c.butin}</span></div>
+      <div class="jauge"><span>CHANCES</span><span class="bar"><i style="width:${Math.round(k.p * 100)}%;--c:${col}"></i></span><span class="chance" style="color:${col}">${label}</span></div>
+      <div class="jauge"><span>ATTAQUE</span><span style="flex:1">${k.att} contre ${c.def}</span></div>
+      <button class="btn" ${busy || !k.n || k.n > k.places || !k.ships.length ? "disabled" : ""}>${busy ? "LA FLOTTE EST EN MER" : k.n > k.places ? "TROP DE SOLDATS" : "PARTIR"}</button>`;
+    const uw = vol.querySelector(".units");
+    for (const u of UNITES){
+      const r = document.createElement("div"); r.className = "ligne";
+      const ic = document.createElement("canvas"); ic.className = "ic"; ic.width = 18; ic.height = 24; ic.getContext("2d").drawImage(SPR[u.id][0], 0, 0);
+      r.append(ic); r.insertAdjacentHTML("beforeend", `<span class="nom">${u.nom}<small>${u.role}</small></span><span class="pm"><button data-u="${u.id}" data-d="-1">-</button><b>${st.nb[u.id]}<small style="font-size:10px;color:var(--p-doux)">/${u.dispo}</small></b><button data-u="${u.id}" data-d="1">+</button></span>`);
+      uw.append(r);
+    }
+    vol.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { st.cible = (st.cible + +b.dataset.c + CIBLES.length) % CIBLES.length; vPort(); });
+    vol.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { const s = st.navires[b.dataset.n]; if (s.p === 0){ s.sel = !s.sel; vPort(); } });
+    vol.querySelectorAll("[data-u]").forEach(b => b.onclick = () => { const u = UNITES.find(x => x.id === b.dataset.u); st.nb[u.id] = Math.max(0, Math.min(u.dispo, st.nb[u.id] + +b.dataset.d)); const y = vol.scrollTop; vPort(); vol.scrollTop = y; });
+    vol.querySelector(".btn").onclick = () => {
+      const k2 = calc(); st.raid = {t:0, ...k2, win: Math.random() < k2.p};
+      for (const s of k2.ships) st.navires[s].p = .0001;
+      say("LA FLOTTE PART POUR<br>" + k2.c.nom, 2000); vPort();
+    };
+  }
+  function vVillage(){
+    vol.innerHTML = `<h3>LE VILLAGE</h3><p style="margin:0 0 4px;font-size:12.5px;color:var(--p-doux)">Chaque amélioration se voit dans le décor.</p>`;
+    for (const b of BATS){
+      const n = st.lv[b.k], max = n >= b.max, d = document.createElement("div"); d.className = "bat";
+      d.innerHTML = `<span class="nom">${b.nom} · niv. ${n}<small>${max ? "niveau maximum" : (b.desc[n + 1] || b.desc[n] || b.desc[1] || "") }</small></span><button class="btn" ${max ? "disabled" : ""}>${max ? "MAX" : (n ? "AMELIORER" : "BATIR") + "<br><span style='font-size:7px'>" + b.cout + " BOIS</span>"}</button>`;
+      d.querySelector("button").onclick = () => { if (st.res.bois < b.cout) return say("PAS ASSEZ DE BOIS"); st.res.bois -= b.cout; st.lv[b.k]++; drawRes(); vVillage(); };
+      vol.append(d);
+    }
+  }
+  function show(s){ st.ecran = s; el.querySelectorAll(".nav button[data-s]").forEach(b => b.classList.toggle("on", b.dataset.s === s)); (s === "port" ? vPort : vVillage)(); vol.scrollTop = 0; }
+  el.querySelectorAll(".nav button[data-s]").forEach(b => b.onclick = () => show(b.dataset.s));
+  drawRes(); show("port");
+  let last = performance.now(), t = Math.random() * 10;
+  function frame(now){
+    const dt = Math.min(.1, (now - last) / 1000); last = now; t += dt;
+    if (st.raid){
+      st.raid.t += dt; const T = st.raid.t;
+      const p = T < 4 ? T / 4 : T < 7 ? 1 : T < 11 ? 1 - (T - 7) / 4 : 0;
+      for (const s of st.raid.ships) st.navires[s].p = p > 0 ? Math.max(.0001, p * p) : 0;
+      if (T >= 11){
+        const r = st.raid, butin = r.win ? Math.min(r.c.butin, r.cale) : Math.round(Math.min(r.c.butin, r.cale) * .2);
+        const pertes = Math.max(0, Math.round(r.n * (r.win ? .08 : .3) * (st.nb.bouclier ? .6 : 1)));
+        st.res.or += butin; drawRes();
+        say((r.win ? "VICTOIRE !" : "RETRAITE...") + "<br>+" + butin + " OR<br>" + pertes + " BLESSE" + (pertes > 1 ? "S" : ""), 3500);
+        st.raid = null; if (st.ecran === "port") vPort();
+      }
+    }
+    if (st.ecran === "port") d.port(g, st, t, dt); else d.vil(g, st, t, dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+prepareUnits(); prepareA(); prepareB(); prepareC();
+DIRS.forEach(phone);
+</script>
+</body>
+</html>
