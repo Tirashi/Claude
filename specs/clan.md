@@ -1,6 +1,6 @@
-# Le Clan (nom provisoire) — cahier des charges
+# Le Clan du fjord — cahier des charges
 
-Gestion et stratégie viking : un petit clan développe son village, produit ses ressources, arme ses drakkars, part en raid pour piller de l'or et défend son village contre les raids ennemis. Idée et première version du cahier des charges proposées par l'utilisateur le 19/10, mises en forme ici. Version 0.1, à relire (§ 16).
+Gestion et stratégie viking : un petit clan développe son village, produit ses ressources, arme ses drakkars, part en raid pour piller de l'or et défend son village contre les raids ennemis. Idée et première version du cahier des charges proposées par l'utilisateur le 19/10, mises en forme ici. Version 0.2 : points du § 16 tranchés le 29/10 ; prochaine étape, la maquette (§ 17).
 
 ## 1. Décisions de l'utilisateur (19/10)
 - **Genre** : gestion, économie, stratégie (raids), défense. Pas un vrai jeu incrémental : la production automatique sert la gestion, elle n'en est pas le cœur. Ni prestige, ni remise à zéro, ni clics répétés.
@@ -10,6 +10,17 @@ Gestion et stratégie viking : un petit clan développe son village, produit ses
 - **Arbitrage central** : plus de soldats = plus de chances de gagner, mais moins de place pour le butin.
 - **DA** : pixel art 2D détaillé, palette chaude (bois, terre, végétation, mer, lumière dorée), interface en bois sombre et parchemin, d'après une **capture de référence** de l'utilisateur.
 - **V1 réduite** : boucle complète et lisible avant tout ; tout le reste va en V2 (§ 15).
+
+### 1.1 Décisions du 29/10
+- **Nom : Le Clan du fjord** (dossier `clan-du-fjord/`).
+- **Temps réel doux** (§ 10) : tout avance avec l'heure du téléphone, même appli fermée, résumé « PENDANT TON ABSENCE » au retour.
+- Capture de référence : l'utilisateur la dépose dans `maquettes/ref/` avant la maquette.
+- Bâtiments du Village et but de la V1 (renommée, « jarl de la région ») : **d'accord**.
+- **Pas de cavalier** : remplacé par le **berserker**.
+- Défense perdue sans bâtiment détruit : **d'accord**.
+- **Lien avec Le Thé des Jarls** : même région ; les jarls du Thé sont des cibles de raid (les plus fortes), avec leurs couleurs et leur portrait.
+- **Plus d'unités** (archer, porte-bouclier, lanceur de haches…) **et plus de types de bateaux**, pas seulement des drakkars, « tant pis si c'est un peu anachronique » : § 6 et § 7.
+- **Petites animations sur chaque écran**, qui **évoluent avec les bâtiments** (mouettes au port comme dans Capitaine du port, moulin qui tourne sur les Terres…) : § 4.5.
 
 ## 2. Principes de conception
 1. Chaque écran a une fonction claire.
@@ -46,6 +57,16 @@ Palissade (remparts en V2), garnison (soldats affectés, capacité qui grandit),
 ### 4.4 Terres — production
 Ferme (nourriture), camp de bûcherons (bois), carrière (pierre). Production automatique ; on améliore, on consulte les rendements, on **collecte** ce qui s'est accumulé (avec un plafond de stockage).
 
+### 4.5 Animations de chaque écran (demande du 29/10)
+Chaque écran vit en permanence, et **chaque amélioration ajoute ou change une animation** : on voit le village grandir. Animations en boucle, légères (quelques sprites, pas de physique), coupées quand l'appli passe en arrière-plan.
+| Écran | Toujours là | Qui apparaît avec les bâtiments |
+|---|---|---|
+| **Village** | fumée des toits, poules, bannière du clan qui flotte sur la grande halle | une fumée de plus par maison longue ; forgeron qui frappe avec des étincelles (forge) ; soldats à l'entraînement devant la caserne, de plus en plus nombreux ; feu dans le foyer de la halle, puis torches aux niveaux suivants |
+| **Port** | **mouettes** qui tournent et se posent (comme dans Capitaine du port), vagues, reflets, navires qui tanguent à quai | pêcheur et filets ; quais qui s'allongent ; grue de chargement ; navires qui **partent et rentrent** pour de vrai (un navire en mer n'est plus à quai) ; butin déchargé au retour d'un raid |
+| **Entrée** | corbeaux sur la palissade, drapeau, feu du brasero | gardes qui font la ronde (un par groupe de la garnison) ; vigie qui scrute au sommet de la tour de guet, cor qui sonne quand un raid est annoncé ; porte renforcée qui s'ouvre au retour des soldats |
+| **Terres** | blés qui ondulent, ruisseau, nuages | **moulin qui tourne** (ferme améliorée) ; moutons puis vaches ; bûcherons qui cognent et un arbre qui tombe de temps en temps (camp de bûcherons) ; chariot de pierres qui fait l'aller-retour (carrière) |
+Commun aux quatre écrans : même ciel et même lumière ; **heure du jour** qui suit celle du téléphone (aube, jour, crépuscule, nuit avec fenêtres éclairées) et saisons (neige l'hiver), à confirmer sur la maquette.
+
 ## 5. Ressources
 | Ressource | Source | Sert à |
 |---|---|---|
@@ -59,24 +80,36 @@ Pas de bonus de combat par la nourriture en V1 (rations : V2).
 ## 6. Armée
 Effectif commun au clan ; chaque soldat est **disponible**, **en expédition** ou **en garnison**, jamais deux à la fois (le moteur tient un compte par état, pas une liste à cocher). Le clan commence avec quelques guerriers.
 
-Proposition de rôles (à chiffrer pendant l'équilibrage), pour que chaque unité ait un vrai rôle :
-| Unité | Rôle | Fort contre | Faible contre |
-|---|---|---|---|
-| Guerrier | polyvalent, pas cher | — | — |
-| Archer | attaque à distance, fort contre les défenses (palissades, tours) | cibles fortifiées | cavaliers |
-| Lancier | défense, arrête les charges | cavaliers | archers |
-| Cavalier léger | rapide, pille plus (porte du butin ?) | archers | lanciers |
+Unités (demande du 29/10 : plusieurs unités différentes, pas de cavalier), débloquées peu à peu par la caserne ; chacune a un vrai rôle, les chiffres se règlent au simulateur :
+| Unité | Arme | Rôle | Fort contre | Faible contre | Déblocage |
+|---|---|---|---|---|---|
+| Guerrier | hache et bouclier rond | polyvalent, pas cher | — | — | départ |
+| Archer | arc | tire avant le corps-à-corps, fort contre les défenses (palissades, tours) | cibles fortifiées, berserkers | lanceurs de haches | caserne 1 |
+| Porte-bouclier | grand bouclier et épée | mur de boucliers : encaisse, réduit les pertes de tout le groupe | archers | lanceurs de haches | caserne 2 |
+| Lanceur de haches | haches de jet | volée de haches qui brise les boucliers | porte-boucliers, archers | lanciers | caserne 2 |
+| Lancier | lance longue | défense, tient la ligne, excellent en garnison | berserkers, lanceurs de haches | archers | caserne 3 |
+| Berserker | deux haches, peau d'ours | très forte attaque, mais pertes élevées | lanciers, garnisons faibles | archers, porte-boucliers | caserne 4 + or |
+| Pilleur | sac et gourdin | se bat mal, mais **porte du butin en plus** (prend une place, ajoute de la cale) | — | tous | port 2 |
+Le pilleur rend l'arbitrage soldats contre butin plus fin : on peut emmener moins de combattants mais mieux chargés.
+Les défenseurs des cibles et les raids ennemis utilisent les mêmes unités (sans pilleur).
 
 Chaque cible (et chaque raid ennemi) a sa propre composition : bien composer son expédition contre la cible compte autant que le nombre.
 Pertes : une partie des pertes revient **blessée** (indisponible un temps) plutôt que morte ; le rapport distingue morts et blessés (proposition).
 
 ## 7. Navires
-| Navire | Soldats | Cale (butin) | Effet |
-|---|---|---|---|
-| Drakkar | peu | petite | bonus d'attaque, plus rapide |
-| Bateau de transport | beaucoup | grande | pas de bonus d'attaque, plus lent |
+Plusieurs types de navires (demande du 29/10 : pas seulement des drakkars ; un peu d'anachronisme accepté). Aucun n'est simplement meilleur qu'un autre : chacun a un rôle.
+| Navire | Places | Cale | Vitesse | Effet | Déblocage |
+|---|---|---|---|---|---|
+| Drakkar | moyen | petite | rapide | bonus d'attaque (débarquement en force) | départ |
+| Snekkja | peu | très petite | très rapide | raids éclair : durée divisée, idéal pour les petites cibles proches | port 1 |
+| Knarr (transport) | beaucoup | grande | lent | pas de bonus d'attaque ; le navire du butin | port 2 |
+| Barque à fond plat | moyen | moyenne | moyen | **remonte les rivières** : seule à atteindre les cibles de l'intérieur des terres | port 3 |
+| Cogue (anachronique) | moyen | grande | lent | château à l'avant : **bonus aux archers**, robuste | port 4 + or |
+| Nef de siège (anachronique) | peu | petite | lent | **baliste** : réduit la palissade et les tours de la cible | port 4 + or |
+| Grand dragon du jarl | beaucoup | moyenne | rapide | unique, fin de partie : bonus d'attaque et de renommée ; nécessaire contre les jarls les plus forts | grande halle max |
+Une flotte mélange les types : par exemple un drakkar pour frapper, un knarr pour rapporter, une nef de siège contre un village fortifié.
 
-Navires persistants (pas de perte de navire en V1). Un navire en mer est indisponible jusqu'à son retour. Le port augmente le nombre de navires par expédition, débloque le transport et améliore les navires (capacité, cale, vitesse).
+Navires persistants (pas de perte de navire en V1). Un navire en mer est indisponible jusqu'à son retour. Le port augmente le nombre de navires par expédition, débloque les types de navires et les améliore (capacité, cale, vitesse).
 
 ## 8. Raids (le cœur stratégique)
 1. **Cible** : liste de cibles graduées (difficulté, force estimée, butin possible, durée). Une cible pillée se « reconstitue » avec le temps (pas de pillage en boucle de la même cible).
@@ -110,7 +143,7 @@ Départ : quelques guerriers, un drakkar, peu de ressources, des bâtiments de n
 **Objectif de la V1** (proposition, pour donner une fin et un classement) : **la renommée** (points gagnés par les raids réussis et les défenses tenues) et un but affiché, par exemple « devenir jarl de la région » en pillant la cible la plus forte.
 
 ## 12. Technique (règles de la Ludothèque)
-- Dossier `clan/` (nom à remplacer) : `index.html` + `jeu.js` + `style.css` ; **`clan/regles.js`** : tout le moteur (ressources, bâtiments, armée, raids, défense, rattrapage du temps), **sans dessin**, script classique avec export pour Node, testable comme `ile/regles.js` et `odyssee/regles.js`.
+- Dossier `clan-du-fjord/` : `index.html` + `jeu.js` + `style.css` ; **`clan-du-fjord/regles.js`** : tout le moteur (ressources, bâtiments, armée, raids, défense, rattrapage du temps), **sans dessin**, script classique avec export pour Node, testable comme `ile/regles.js` et `odyssee/regles.js`.
 - Décor : **canvas en pixel art** (272 × 480 pixels logiques agrandis sans lissage, comme les jeux 32 bits) ; panneaux en HTML pour la lisibilité ; police Press Start 2P pour les titres et une police lisible pour les textes (comme Amiral !).
 - **Tout est dessiné par le code** (pas d'images toutes faites dans le dépôt, sauf exception comme la cartouche de Nebula) : c'est le plus gros du travail de dessin (4 décors détaillés qui évoluent avec les niveaux). On peut réutiliser l'esprit du dessin en volumes des chiens d'Injagility et des décors d'Alunissage.
 - Heure : `Date.now()`, avec une protection simple contre l'horloge qu'on recule (on garde la dernière heure vue).
@@ -122,28 +155,21 @@ Cartouche et volet sur l'accueil (famille 32 bits, genre GESTION) ; classements 
 Pas de défi du jour en V1 (une idée possible plus tard : « le raid du jour », même cible et même flotte pour toute la famille).
 
 ## 14. Périmètre de la V1
-**Inclus** : 4 écrans ; bois, pierre, nourriture produits ; or par pillage ; bâtiments du § 4 ; 4 unités et leurs améliorations ; drakkar et transport ; limite des quais ; composition des expéditions ; places et cale ; attaque, défense, durée, chances ; résolution automatique ; rapports ; palissade, garnison, tour de guet ; raids ennemis et historique ; rattrapage du temps ; interface au doigt en pixel art.
-**Hors V1** : vivres et engins de siège, autres navires, diplomatie, multijoueur, grand arbre technologique, prestige, ressources secondaires, combats tactiques en temps réel.
+**Inclus** : 4 écrans ; bois, pierre, nourriture produits ; or par pillage ; bâtiments du § 4 ; 7 unités et leurs améliorations ; 7 types de navires ; animations de chaque écran (§ 4.5) ; limite des quais ; composition des expéditions ; places et cale ; attaque, défense, durée, chances ; résolution automatique ; rapports ; palissade, garnison, tour de guet ; raids ennemis et historique ; rattrapage du temps ; interface au doigt en pixel art.
+**Hors V1** : vivres et engins de siège à embarquer, diplomatie, multijoueur, grand arbre technologique, prestige, ressources secondaires, combats tactiques en temps réel.
 
 ## 15. Pistes pour la V2 (conservées)
 - **Expéditions** : emplacements de vivres (moins de pertes, moins de cale) et d'engins de siège (échelles, béliers contre les cibles fortifiées).
-- **Navires** : nouveaux types, chacun avec un rôle (pas simplement meilleur que le précédent).
 - **Défense** : remparts après la palissade, pièges, tour de guet plus utile, entrée qui change d'aspect.
 - **Clan** : paliers avancés, nouveaux bâtiments, personnalité du clan.
 - **Cibles** : villages fortifiés, comptoirs, sites particuliers, objectifs autres que l'or.
 - **Économie** : commerce, échanges, rôle plus riche de la nourriture, production avancée.
-- **Armée** : nouvelles unités à rôle distinct, rapports et animations plus riches.
+- **Armée** : rapports et animations de combat plus riches.
 - **Confort** : stockage et absence mieux réglés, notifications de retour (demande un serveur).
 - **Famille** : classements déjà là en V1 ; défis entre clans de la famille, cibles qui sont les villages des autres joueurs (demanderait du SQL Supabase en plus).
 
-## 16. Points à décider avec l'utilisateur
-1. **Le nom du jeu.**
-2. **Temps réel doux ou tours** (§ 10).
-3. **La capture de référence** : la déposer dans `maquettes/ref/` pour la maquette (elle n'est pas dans le dépôt).
-4. Bâtiments du Village (§ 4.1) et but de la V1 (renommée, « jarl de la région ») : d'accord ?
-5. Rôles des unités (§ 6) : le **cavalier** sur un drakkar est peu viking ; le garder, ou le remplacer par une unité plus nordique (berserker : forte attaque, pertes élevées ; ou bouclier : défense) ?
-6. Défaite en défense sans bâtiment détruit (§ 9) : d'accord ?
-7. Lien avec **Le Thé des Jarls** (même univers viking) : même région, mêmes jarls comme cibles ? Simple clin d'œil ou rien du tout.
+## 16. Points décidés (29/10)
+Tous tranchés : voir § 1.1. Il reste à déposer la capture de référence dans `maquettes/ref/`.
 Le reste (coûts, statistiques, durées, formule) se règle avec le simulateur, en testant la boucle plutôt qu'en équilibrant tout d'avance.
 
 ## 17. Plan de travail proposé (Opus, une conversation par étape)
@@ -152,6 +178,8 @@ Le reste (coûts, statistiques, durées, formule) se règle avec le simulateur, 
 2. **Les quatre décors** en pixel art (qui évoluent avec les niveaux), le volet, la navigation, les animations (fumées, drapeaux, départ et retour des navires).
 3. **Raids et défense complets** : préparation avec jauges, animation passable, rapports, historique, tour de guet, résumé d'absence ; sons.
 4. **Intégration et équilibrage** : accueil, classements, transfert, tests, artefact, réglages après les premières parties de l'utilisateur.
+
+Coût revu (29/10) : 7 unités, 7 navires et les animations de chaque écran ajoutent du dessin ; compter **20 à 30 % de la semaine** au total.
 
 ## 18. Critères de réussite de la V1
 Commencer avec son petit village, ses soldats et son drakkar ; produire et construire ; recruter et améliorer ; développer le port ; choisir une cible et composer une expédition cohérente ; comprendre le compromis soldats contre butin ; lancer un raid, revenir plus tard et lire le rapport ; utiliser l'or pour progresser ; tenir une garnison et améliorer les défenses ; subir des attaques et en comprendre les conséquences ; passer facilement d'un écran à l'autre sur le téléphone.
