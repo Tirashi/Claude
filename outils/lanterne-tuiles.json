@@ -1,6 +1,17 @@
 {
   "_": "Liste des tuiles de La Dernière Lanterne, lue par outils/lanterne-tuiles.py. Chemins relatifs au dossier rltiles de Dungeon Crawl Stone Soup (CC0). Les personnages sont des poupées : pièces superposées dans l'ordre de Dungeon Crawl (cape, corps, bottes, jambes, armure, gants, arme, bouclier, cheveux, barbe, tête).",
   "tuiles": {
+    "sangsue": "mon/animals/tyrant_leech.png", "escargot": "mon/animals/torpor_snail.png", "anguille": "mon/aquatic/electric_eel.png", "phalene": "mon/animals/ghost_moth.png",
+    "feu_bleu": "mon/undead/soul_wisp.png", "remous": "mon/nonliving/water_elemental.png", "lavandiere": "mon/undead/glowmurk_ghast.png", "tortue": "mon/animals/snapping_turtle.png",
+    "dame_moulin": "mon/undead/silent_spectre.png", "crapaud_roi": "mon/unique/prince_ribbit.png",
+    "herbe_marais0": "dngn/floor/lair0.png", "herbe_marais1": "dngn/floor/lair1.png", "herbe_marais2": "dngn/floor/lair2.png",
+    "vase0": "dngn/floor/swamp0.png", "vase1": "dngn/floor/swamp1.png",
+    "eau_trouble": "dngn/water/shallow_water_murky.png", "eau_trouble2": "dngn/water/shallow_water_murky2.png",
+    "saule1": "dngn/trees/mangrove1.png", "saule2": "dngn/trees/mangrove2.png", "saule3": "dngn/trees/mangrove3.png", "arbre_mort2": "dngn/trees/tree_dead1.png",
+    "roseau1": "mon/fungi_plants/plant_01.png", "roseau2": "mon/fungi_plants/plant_03.png", "roseau3": "mon/fungi_plants/plant_04.png", "lotus": "mon/fungi_plants/sacred_lotus.png",
+    "mur_moulin": "dngn/wall/stone_mossy0.png", "mur_moulin2": "dngn/wall/stone_mossy1.png", "statue_ondine": "dngn/statues/statue_mermaid.png",
+    "o_arc_long": "item/weapon/ranged/longbow1.png", "o_masse_fer": "item/weapon/mace2.png", "o_baton_saule": "item/weapon/quarterstaff2.png",
+    "o_epee_acier": "item/weapon/long_sword2.png", "o_cape": "item/armour/cloak2.png", "o_bottes": "item/armour/boots1.png",
     "herbe0": "dngn/floor/grass/grass0.png", "herbe1": "dngn/floor/grass/grass1.png", "herbe2": "dngn/floor/grass/grass2.png",
     "herbe3": "dngn/floor/grass/grass3.png", "herbe4": "dngn/floor/grass/grass4.png", "herbe5": "dngn/floor/grass/grass5.png",
     "fleur0": "dngn/floor/grass/grass_flowers0.png", "fleur1": "dngn/floor/grass/grass_flowers1.png", "fleur2": "dngn/floor/grass/grass_flowers2.png",
@@ -33,6 +44,13 @@
     "o_cuir": "item/armour/leather_armour1.png", "o_cotte": "item/armour/chain_mail1.png", "o_ruban": "item/amulet/cameo.png"
   },
   "persos": {
+    "maitre_port": ["base/human2_m", "boots/long_red", "legs/pants_blue", "body/coat_black", "head/hat_black", "beard/garibaldi_black"],
+    "pecheuse": ["cloak/scarf_red", "base/human3_f", "boots/long_white", "legs/trouser_green", "body/shirt_check", "hair/fem_red"],
+    "dresseur": ["base/halfling_m", "boots/short_red", "legs/pants_short_gray", "body/shirt_blue", "head/cap_blue", "hair/short_black"],
+    "aubergiste_port": ["base/human_m", "boots/short_brown", "legs/pants_brown", "body/shirt_vest", "beard/full_red", "hair/short_red"],
+    "marchand": ["base/human_m", "boots/middle_ybrown", "legs/pants_orange", "body/robe_brown2", "beard/garibaldi_brown", "head/turban_brown"],
+    "conteuse": ["cloak/blue", "base/human2_f", "boots/slippers", "body/robe_purple", "hand1/stick", "hair/long_white"],
+
     "heros":   ["base/human_m", "legs/pants_brown", "boots/middle_brown", "body/chainmail", "hair/short_brown", "hand1/long_sword_slant", "hand2/kite_shield_knight_blue"],
     "eloi":    ["base/human2_m", "legs/pants_l_white", "boots/short_brown", "body/robe_white_blue", "hand1/mace", "hand2/buckler_round", "hair/short_white"],
     "verene":  ["base/human_f", "boots/short_purple", "body/robe_blue", "hand1/staff_mage", "hand2/orb1", "hair/long_red"],

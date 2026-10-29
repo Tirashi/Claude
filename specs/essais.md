@@ -1,6 +1,6 @@
 # Séance d'essais sur le téléphone
 
-**Séance faite le 29/10** : tout est coché sauf la Dernière Lanterne. Retours : Résistance, zone de danger avec des trous près des ennemis et absente au tour ennemi (**corrigé** le 29/10) ; Yams, les dés s'arrêtent de travers (on ne sait pas quelle face compte) et le menu du style à carreaux est rogné en cercle (**corrigés** le 29/10 : le dé bascule à plat sur la face comptée ; arrondi de la fenêtre plafonné) ; Lune-Rover 22-30 et Orbite pas encore atteints (considérés bons, on y reviendra si c'est trop dur) ; tous les classements confirmés.
+**Séance faite le 29/10** : tout est coché ; la Dernière Lanterne essayée ensuite (29/10 : nouvelle partie jusqu'au bout de la démo, bugs corrigés au fil de l'eau ; « pas mal », un peu de friction même avec une équipe niveau 4-5, ce qui est voulu). Retours : Résistance, zone de danger avec des trous près des ennemis et absente au tour ennemi (**corrigé** le 29/10) ; Yams, les dés s'arrêtent de travers (on ne sait pas quelle face compte) et le menu du style à carreaux est rogné en cercle (**corrigés** le 29/10 : le dé bascule à plat sur la face comptée ; arrondi de la fenêtre plafonné) ; Lune-Rover 22-30 et Orbite pas encore atteints (considérés bons, on y reviendra si c'est trop dur) ; tous les classements confirmés.
 
 Liste faite le 29/10 à partir des lignes « à essayer sur le téléphone » et « classements à confirmer » de `CLAUDE.md`. Environ 5 minutes par jeu, sur https://tirashi.github.io/Claude/ (appli installée ; si un jeu n'a pas changé, fermer puis rouvrir l'appli). Noter ce qui cloche à côté de la case, puis me le donner : je corrige et je raye la ligne ici et dans `CLAUDE.md`.
 
@@ -8,7 +8,7 @@ Pour chaque jeu, regarder aussi : le texte se lit sans zoomer, rien ne déborde 
 
 ## Les plus récents (le plus utile)
 - [x] **Résistance** : un combat entier en portrait (carte couchée, soldats de profil, boutons GBA) ; le premier combat guidé (bulles) ; le bouton **Danger** ; « Fin du tour » avec des soldats qui n'ont pas joué (on doit demander) ; toucher la carte pendant le tour ennemi (×2) ; un soldat qui tombe (ses dernières paroles) ; fermer l'appli sur la carte puis la rouvrir (reprise) ; le bilan en fin de campagne ; le paysage (téléphone couché).
-- [ ] **La Dernière Lanterne** (démo) : marche, combats au tour par tour, frise de l'ordre de passage, Réessayer, onglets Monstres et Aide.
+- [x] **La Dernière Lanterne** (démo) : marche, combats au tour par tour, frise de l'ordre de passage, Réessayer, onglets Monstres et Aide.
 - [x] **Solitaire** : NOUVELLE DONNE et PIOCHE demandent OUI / NON dans une petite fenêtre ; les styles du MENU.
 - [x] **La Boutique de cartes** : la première semaine guidée, rayons à toucher, commande livrée tout de suite ; fluidité de la 3D ; équilibrage (trop facile ? trop dur ?).
 - [x] **Doggy Saga** : quelques niveaux, la journée du jour, les aboiements.

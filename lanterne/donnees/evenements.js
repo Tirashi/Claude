@@ -2,6 +2,15 @@
    Langage des commandes : moteur-rpg/evenements.js. {HEROS} : le nom choisi par le joueur. */
 window.LANTERNE = window.LANTERNE || {};
 
+/* Une boutique : un choix par article (un achat par visite), puis la réplique du marchand.
+   articles : [[objet, prix], …] ; merci : ce que dit le marchand après un achat. */
+const boutique = (qui, articles, merci) => [
+  { choix: 'Que veux-tu acheter ? (Tu as {ECUS} écus.)', options: articles.map(([id, prix]) => `${LANTERNE.objets[id].nom} : ${prix} écus`).concat(['Rien, merci.']),
+    suites: articles.map(([id, prix]) => [{ si: { ecus: prix },
+      alors: [{ ecus: -prix }, { donner: id, n: 1 }, { dire: merci, qui }],
+      sinon: [{ dire: 'Il te manque quelques écus, on dirait.', qui }] }]) }
+];
+
 LANTERNE.evenements = {
   // ---------- début de partie : la maison de Mère Ysolde ----------
   debut: [
@@ -86,6 +95,11 @@ LANTERNE.evenements = {
       'On dit que la brume est venue jusqu\'au vieux moulin, cette nuit. Fais attention sur la route, petit.'], qui: 'paysanne' }
   ],
   forgeron: [
+    { si: 'acte2_fini', alors: [
+      { dire: 'Le charbon repasse par les marais ! La forge ronfle de nouveau. Tiens, regarde-moi ça.', qui: 'forgeron' },
+      ...boutique('forgeron', [['epee_acier', 160], ['cotte', 120], ['masse_fer', 90]], 'Prends-en soin. Une lame, ça s\'aime.'),
+      { stop: true }
+    ] },
     { dire: ['La forge est fermée : le charbon n\'arrive plus, les charrettes ne passent plus par les marais.',
       'Reviens me voir plus tard. Je te trouverai une lame digne d\'un veilleur.'], qui: 'forgeron' }
   ],
@@ -112,6 +126,15 @@ LANTERNE.evenements = {
           'Moi aussi, j\'étais veilleur, comme toi. Et puis j\'ai pris une flèche dans le genou.'], qui: 'garde' },
         { drapeau: 'garde_vu' }
       ] }
+  ],
+  panneau_marais: [
+    { si: 'mission_marais',
+      alors: [{ dire: ['Au sud : la route des marais, puis Port-Gris.', 'Sous l\'écriteau, quelqu\'un a gratté le mot « FERMÉE ».'] }],
+      sinon: [{ dire: ['Au sud : la route des marais.', 'Fermée tant que la brume est si épaisse. — Les Veilleurs'] }] }
+  ],
+  marais_ferme: [
+    { dire: 'Une barrière de bois ferme la route des marais. Un écriteau : « FERMÉE. Ordre des Veilleurs. »' },
+    { si: 'roi_vaincu', alors: [{ dire: 'Le Prieur peut faire lever la barrière. Allons d\'abord à l\'abbaye !', qui: 'eloi' }] }
   ],
   forge_fermee: [{ dire: 'La porte de la forge est fermée. Dehors, Bertin ronchonne contre le charbon.' }],
   pecheur: [
@@ -175,9 +198,22 @@ LANTERNE.evenements = {
     ] }
   ],
   vaast: [
+    { si: 'mission_marais', alors: [{ dire: ['Le Moulin noyé est au cœur du Marais des cloches, à l\'est de Port-Gris.', 'Garde bien les flammes. Elles sont… précieuses.'], qui: 'vaast' }, { stop: true }] },
     { si: 'roi_vaincu',
-      alors: [{ dire: 'Tu as la Flamme rouge… Je la sens d\'ici. Garde-la bien. Je viendrai la chercher en temps voulu.', qui: 'vaast' }],
+      alors: [{ evenement: 'vaast_acte2' }],
       sinon: [{ dire: ['La Crypte des racines est à l\'est de Clairfond, au cœur du Bois Murmurant.', 'Ne t\'attarde pas dans la brume. Elle ment.'], qui: 'vaast' }] }
+  ],
+  vaast_acte2: [
+    { dire: ['La Flamme rouge… Je la sens d\'ici. Elle bat fort, n\'est-ce pas ?',
+      'Non, garde-la dans ta lanterne. Elle y est plus à l\'abri que derrière mes murs. Quand les quatre seront réunies, je saurai les accueillir.'], qui: 'vaast' },
+    { dire: 'Père… le Roi des aulnes a parlé. Il a dit « encore ». Comme si…', qui: 'eloi' },
+    { dire: ['La brume ment, Eloi. Elle prend la voix de ceux qu\'elle a avalés. Ne l\'écoute pas.',
+      'La deuxième flamme, la Flamme bleue, dort au Moulin noyé, au cœur du Marais des cloches.',
+      'La route des marais part du sud de Clairfond. Je fais lever la barrière dès ce soir.',
+      'À Port-Gris, trouve un guide. Personne ne traverse le marais sans quelqu\'un qui connaît les sentiers.'], qui: 'vaast' },
+    { dire: '« La brume ment. » C\'est pratique, comme réponse.', qui: 'verene' },
+    { drapeau: 'mission_marais' }, { chapitre: 'Acte 2' }, { sauver: 'auto' },
+    { dire: '(Acte 2 : la Flamme bleue. La route des marais est ouverte, au sud de Clairfond.)' }
   ],
   eloi_abbaye: [{ dire: 'Le Prieur m\'a élevé ici. Je n\'ai jamais dépassé le bas de la route…', qui: 'eloi' }],
   grande_lanterne: [{ dire: ['La Grande Lanterne. Sa flamme est blanche, presque froide.', 'De près, on croit entendre un murmure, comme quatre voix très lointaines.'] }],
@@ -288,10 +324,227 @@ LANTERNE.evenements = {
       { dire: 'Dehors, la brume s\'est écartée autour de la ruine. Une silhouette pâle attend sur le chemin.' },
       { dire: ['Une flamme de moins dans la brume.', 'Elle pleurait, tu sais. Tu l\'as entendue ?'], qui: 'isee' },
       { dire: 'Quand on lève les yeux, la jeune fille n\'est déjà plus là.' },
-      { dire: '(Fin de l\'acte 1. La suite — Port-Gris, Maud et le Marais des cloches — arrive bientôt.)' },
+      { dire: 'Il faut prévenir le Prieur. Il saura quoi faire de cette flamme.', qui: 'eloi' },
+      { dire: '(Fin de l\'acte 1. Retourne à l\'abbaye de Saint-Cendre, au nord de Clairfond.)' },
       { sauver: 'auto' }
     ] }
   ],
+  // ---------- acte 2 : la route des marais ----------
+  marais_entree: [
+    { si: 'route_marais_vue', sinon: [
+      { drapeau: 'route_marais_vue' },
+      { dire: 'La route s\'enfonce dans les roseaux. L\'eau est partout, immobile, couleur de thé froid.' },
+      { dire: 'J\'ai grandi par ici. La vase garde tout : les bottes, les pièces, les secrets.', qui: 'verene' }
+    ] }
+  ],
+  marchand: [
+    { dire: ['Bienvenue, bienvenue ! On ne croise pas grand monde, par ici. Juste des sangsues. Elles n\'achètent rien.',
+      'J\'ai de quoi tenir jusqu\'à Port-Gris.'], qui: 'marchand' },
+    ...boutique('marchand', [['herbe', 14], ['fiole', 28], ['antidote', 10]], 'Merci de votre visite !'),
+    { dire: 'Merci de votre visite !', qui: 'marchand' }
+  ],
+  lanterne_oubliee_marais: [
+    { si: 'oubliee:marais_route',
+      alors: [{ dire: 'La vieille lanterne brûle au-dessus de l\'eau. Les grenouilles se sont tues pour la regarder.' }],
+      sinon: [
+        { dire: 'Une lanterne oubliée, penchée au bord de l\'eau. Des escargots ont fait leur maison dedans.' },
+        { choix: 'La rallumer ?', options: ['Oui', 'Non'], suites: [[
+          { son: 'lanterne' }, { drapeau: 'oubliee:marais_route' },
+          { dire: ['La flamme prend. Sur l\'eau, un souvenir se dessine :',
+            'un moulin qui tourne au clair de lune. Des silhouettes de brume y portent des sacs de grain, et les déposent devant les portes des maisons endormies.',
+            'Au matin, les villageois trouvent la farine et remercient le ciel.'] },
+          { dire: 'Ils les nourrissaient. Les gens de la brume nourrissaient les villages.', qui: 'verene' }
+        ], []] }
+      ] }
+  ],
+
+  // ---------- Port-Gris ----------
+  port_entree: [
+    { si: 'port_vu', sinon: [
+      { drapeau: 'port_vu' }, { sauver: 'auto' },
+      { dire: 'Port-Gris : des maisons serrées sur une butte, un quai de planches, des barques retournées. Et partout, l\'odeur du poisson et de la vase.' },
+      { dire: ['Mon village. Ici, on m\'appelle « la folle à la craie ».', 'Pour le guide, allez voir à la Cloche fêlée, la taverne. Ceux qui connaissent les sentiers y boivent leurs dettes.'], qui: 'verene' }
+    ] }
+  ],
+  lanterne_port: [
+    { dire: 'La lanterne de Port-Gris. On a accroché des coquillages tout autour, pour qu\'elle se sente moins seule.' },
+    { evenement: 'lanterne' }
+  ],
+  statue_port: [
+    { dire: ['« AUBRIN LE PORTE-FLAMME ». La même statue qu\'à Clairfond, mais couverte d\'algues séchées.',
+      'Quelqu\'un a noué un ruban bleu autour de sa lanterne. Dessous, gravé petit : « RENDS-LES-NOUS ».'] },
+    { dire: 'Rends… quoi ?', qui: 'eloi' }
+  ],
+  maitre_port: [
+    { si: 'acte2_fini',
+      alors: [{ dire: 'Les cloches se sont tues, cette nuit. Toutes. C\'est la première fois en quarante ans que je dors d\'un trait.', qui: 'maitre_port' }],
+      sinon: [{ dire: ['Odon, maître du port. Du port qui reste, en tout cas.',
+        'La nuit, les cloches du marais sonnent toutes seules. Il y en a des dizaines, englouties là-bas, depuis le temps des noces.',
+        'Le moulin de la Bief tournait encore sans meunier il y a dix ans. Maintenant il est noyé. Et quelqu\'un y chante.'], qui: 'maitre_port' }] }
+  ],
+  pecheuse: [
+    { dire: ['Annick, pêcheuse. Enfin, pêcheuse… je remonte surtout des bottes.',
+      'Tu vois l\'îlot, là-bas ? Il y a un coffre dessus depuis toujours. Personne n\'a jamais pu l\'atteindre : trop de vase, trop de sangsues.',
+      'Il faudrait voler, ou alors s\'accrocher à ce vieux pieu.'], qui: 'pecheuse' }
+  ],
+  dresseur: [
+    { si: 'dresseur_vu',
+      alors: [{ dire: ['Mon rêve ? Être le meilleur dresseur de feux follets de toute la vallée !', 'Mamie dit que c\'est pas un vrai métier.'], qui: 'dresseur' }],
+      sinon: [
+        { dire: ['Regarde ! Dans mon bocal ! J\'en ai attrapé un !', 'Un feu follet. Il s\'appelle Pompon. Je vais tous les attraper, tu verras. Tous !'], qui: 'dresseur' },
+        { dire: 'Il est… triste, ton Pompon. Il tourne en rond.', qui: 'verene' },
+        { dire: ['Mais non, il est content ! Il fait des tours ! …', '… Bon. Peut-être que je le relâcherai ce soir.'], qui: 'dresseur' },
+        { drapeau: 'dresseur_vu' }
+      ] }
+  ],
+  conteuse: [
+    { dire: ['Assieds-toi, petit. Mamie Rose connaît toutes les comptines du marais.',
+      '« Quatre veilleurs de brume, au bord du val,',
+      '« Un sous la terre, un sous le moulin, un sous le sel, un sous les cloches.',
+      '« Tant qu\'ils veillent, dors, mon enfant ; la brume te borde… »',
+      'C\'est ma grand-mère qui la chantait. Bizarre, hein ? Comme si la brume était gentille.'], qui: 'conteuse' },
+    { dire: 'Un sous la terre… et un sous le moulin.', qui: 'verene' }
+  ],
+  gaspard_port: [
+    { si: 'gaspard_port_vu', sinon: [
+      { dire: ['Ha ! Je vous l\'avais dit, Gaspard est partout ! Biscotte a fait la route sous la pluie, il boude.',
+        'Et la boutique est ouverte ! Pour de vrai, cette fois.'], qui: 'gaspard' },
+      { drapeau: 'gaspard_port_vu' }
+    ] },
+    ...boutique('gaspard', [['herbe', 12], ['fiole', 25], ['antidote', 9], ['plume', 80], ['bottes', 70]], 'Excellent choix ! Biscotte approuve. Enfin, je crois.')
+  ],
+  aubergiste_port: [
+    { dire: ['Paulin, patron de la Cloche fêlée. On l\'appelle comme ça parce que la cloche de la porte est fêlée. Pas plus compliqué.',
+      'Un guide pour le marais ? Personne n\'y va plus. À part elle, là-bas, au fond. Mais elle ne fait rien pour rien.'], qui: 'aubergiste_port' }
+  ],
+  maud_taverne: [
+    { dire: ['Maud. Contrebandière, quand il y a quelque chose à passer. Guide, quand il y a quelqu\'un à perdre.',
+      'Vous voulez aller au Moulin noyé ? Personne ne va au Moulin noyé.'], qui: 'maud' },
+    { choix: 'Que lui répondre ?', options: ['Nous y allons quand même.', 'Le Prieur nous envoie.'], suites: [
+      [{ dire: 'J\'aime bien les gens têtus. Ils paient en retard, mais ils paient.', qui: 'maud' }],
+      [{ dire: 'Le Prieur. Évidemment. Le Prieur n\'a jamais mis les pieds dans la vase, lui.', qui: 'maud' }]
+    ] },
+    { dire: 'Maud, attends… Tu connais les sentiers de la brume ? Les vrais ?', qui: 'verene' },
+    { dire: ['Vérène la folle à la craie. Toujours à parler à la brume ?',
+      '… Mon petit frère, Tiennot, s\'est perdu dedans. Il y a sept ans. Il courait derrière un feu follet.',
+      'Depuis, j\'y vais. Tous les soirs. Je connais chaque pieu, chaque trou d\'eau. Je ne l\'ai jamais retrouvé.'], qui: 'maud' },
+    { dire: 'On cherche les flammes de la Grande Lanterne. Si la brume recule, peut-être que…', qui: 'eloi' },
+    { dire: ['Peut-être. C\'est un mot que j\'aime bien.', 'D\'accord. Je vous guide. Vous payez la soupe, et vous ne touchez pas à mon arc.'], qui: 'maud' },
+    { pnj: 'maud', cacher: true }, { rejoindre: 'maud' }, { drapeau: 'maud_rejoint' },
+    { dire: 'Maud rejoint l\'équipe ! L\'équipe est au complet.' },
+    { dire: 'Le marais, c\'est à l\'est du village, par le quai. Suivez-moi et marchez où je marche.', qui: 'maud' },
+    { sauver: 'auto' }
+  ],
+  sans_guide: [
+    { dire: 'Le quai s\'arrête sur l\'eau noire. Au-delà, la brume avale les pieux un par un.' },
+    { dire: 'Sans guide, on ne ressortira jamais de là. Allons voir à la taverne.', qui: 'verene' }
+  ],
+
+  // ---------- le Marais des cloches ----------
+  cloches_entree: [
+    { si: 'cloches_vu', sinon: [
+      { drapeau: 'cloches_vu' },
+      { dire: 'Une cloche dépasse de l\'eau, verte de mousse. Puis une autre. Puis dix. Le vent passe dessus et elles bourdonnent toutes ensemble.' },
+      { dire: ['Le Marais des cloches. Le moulin est au nord-est, au bout du chemin.', 'Restez sur la vase. L\'eau, ici, a des dents.'], qui: 'maud' }
+    ] }
+  ],
+  isee_cloches: [
+    { drapeau: 'isee_cloches' },
+    { pnj: 'isee', montrer: true }, { attendre: .6 },
+    { dire: ['Avant, elles sonnaient pour les noces. Les gens de la brume et ceux de la terre se mariaient ici, sur l\'eau.',
+      'Maintenant, elles sonnent pour rien. Pour personne.'], qui: 'isee' },
+    { dire: 'Qui es-tu, toi ? Je ne t\'ai jamais vue au village.', qui: 'maud' },
+    { dire: 'Toi, je t\'ai vue. Tous les soirs. Tu appelles un nom dans la brume.', qui: 'isee' },
+    { pnj: 'isee', cacher: true },
+    { dire: 'La brume se referme. Maud reste immobile un long moment.' },
+    { dire: '… Avançons.', qui: 'maud' }
+  ],
+  lanterne_oubliee_cloches: [
+    { si: 'oubliee:cloches',
+      alors: [{ dire: 'La lanterne brûle au milieu des roseaux. Les cloches les plus proches se sont tues.' }],
+      sinon: [
+        { dire: 'Une lanterne oubliée, à moitié enfoncée dans la vase.' },
+        { choix: 'La rallumer ?', options: ['Oui', 'Non'], suites: [[
+          { son: 'lanterne' }, { drapeau: 'oubliee:cloches' },
+          { dire: ['La mèche s\'allume, et le marais tout entier se met à chanter.',
+            'Une grande dame de brume se tient près de la roue du moulin. Elle fredonne, et tous les enfants du village dorment à poings fermés.',
+            'La vision se défait. Il reste un air de berceuse, très loin.'] },
+          { dire: 'Je la connais, cette berceuse. Ma mère me la chantait.', qui: 'maud' }
+        ], []] }
+      ] }
+  ],
+  crapaud_roi: [
+    { dire: ['Un gros crapaud porte une petite couronne d\'or. Il te fixe avec un immense espoir.', 'Il avance les lèvres.'] },
+    { choix: '…', options: ['L\'embrasser', 'Surtout pas'], suites: [
+      [{ dire: 'Tu te penches… Le crapaud ferme les yeux… et se fait engloutir par une bulle de vase. Il ressort, dignement, un peu plus loin.' },
+        { dire: 'Je n\'ai rien vu. Personne n\'a rien vu.', qui: 'maud' }],
+      [{ dire: 'Croa. (Il a l\'air déçu, mais habitué.)', qui: 'crapaud_roi' }]
+    ] }
+  ],
+
+  // ---------- le Moulin noyé ----------
+  moulin_arrivee: [
+    { si: 'moulin_vu', sinon: [
+      { drapeau: 'moulin_vu' },
+      { dire: 'L\'eau a envahi le moulin jusqu\'aux genoux des murs. Quelque part, une grande roue tourne lentement, sans bruit.' },
+      { dire: 'Écoutez… Quelqu\'un chante.', qui: 'eloi' },
+      { dire: 'Personne ne chante. C\'est la roue. … C\'est la roue, d\'accord ?', qui: 'maud' }
+    ] }
+  ],
+  tresor_grappin: [
+    { si: 'coffre:grappin',
+      alors: [{ dire: 'Le coffre est vide.' }],
+      sinon: [
+        { drapeau: 'coffre:grappin' }, { son: 'coffre' },
+        { dire: ['Dans le coffre, un crochet de fer à trois dents, au bout d\'une longue corde enroulée.', 'Le meunier s\'en servait pour attraper les sacs sur les barques.'] },
+        { donner: 'grappin' }, { drapeau: 'outil:grappin' },
+        { dire: 'Tu as le Grappin ! Face à l\'eau, appuie sur B : il file jusqu\'au pieu d\'en face et tire toute l\'équipe sur l\'autre rive.' },
+        { dire: ['Un grappin ! J\'ai toujours voulu un grappin.', 'Les pieux cerclés de fer, dans le moulin : c\'est pour ça qu\'ils sont là.'], qui: 'maud' }
+      ] }
+  ],
+  moulin_coeur_arrivee: [
+    { si: 'dame_vaincue', sinon: [{ si: 'moulin_coeur_vu', sinon: [
+      { drapeau: 'moulin_coeur_vu' },
+      { dire: 'Au cœur du moulin, deux roues tournent à l\'envers. Entre elles, une grande dame pâle peigne ses cheveux mouillés.' }
+    ] }] }
+  ],
+  dame_parle: [{ dire: 'Chut… Les enfants dorment. Ils dorment depuis si longtemps.', qui: 'dame' }],
+  dame_combat: [
+    { dire: ['Encore une lumière… Vous allez réveiller les enfants.', 'On m\'a pris ma voix, une fois. On m\'a enfermée dans le bruit de la roue. Vous ne me prendrez pas le reste.'], qui: 'dame' },
+    { dire: 'Elle… elle a peur de nous ?', qui: 'eloi' },
+    { dire: 'Attention ! Quand l\'eau monte autour d\'elle, mettez-vous en garde !', qui: 'maud' },
+    { combat: ['dame_moulin'], boss: true },
+    { drapeau: 'dame_vaincue' },
+    { dire: 'Ma berceuse… vous l\'emportez aussi…', qui: 'dame' },
+    { pnj: 'dame', cacher: true },
+    { dire: ['La Dame du moulin s\'effondre en une flaque d\'eau claire. Les deux roues s\'arrêtent.', 'Au milieu de la flaque, une petite flamme bleue tremble comme un reflet.'] },
+    { son: 'lanterne' }, { donner: 'flamme_bleue' }, { drapeau: 'flamme_bleue' },
+    { dire: 'La Flamme bleue rejoint la rouge dans la lanterne. Elles se tournent autour, comme deux poissons dans un bocal.' },
+    { dire: 'Elle n\'attaquait pas. Elle protégeait quelque chose. Comme le Roi.', qui: 'maud' },
+    { sauver: 'auto' }
+  ],
+  fresque_moulin: [
+    { dire: 'Une fresque couvre le mur du fond, lavée par l\'eau, mais encore lisible.' },
+    { dire: ['Quatre grandes silhouettes de brume, aux quatre coins de la vallée. Une sous les racines, une sous un moulin…',
+      'Et au-dessus des villages, la brume ne forme pas un mur. Elle forme un toit. Un abri.'], qui: 'verene' },
+    { dire: 'La comptine de Mamie Rose. « Quatre veilleurs de brume… »', qui: 'maud' },
+    { dire: ['Ce ne sont pas des monstres. Ce sont des gardiens.', 'Et nous… nous leur prenons leurs flammes.'], qui: 'verene' },
+    { dire: 'Le Prieur dit que la brume ment.', qui: 'eloi' },
+    { dire: 'Une fresque ne ment pas, Eloi. Elle n\'a pas de voix pour ça.', qui: 'verene' },
+    { si: 'dame_vaincue', alors: [{ evenement: 'fin_acte2' }] }
+  ],
+  fin_acte2: [
+    { si: 'acte2_fini', sinon: [
+      { drapeau: 'acte2_fini' }, { chapitre: 'Acte 2 — la Flamme bleue' },
+      { teleporter: 'marais_cloches', x: 23, y: 6, dir: 'bas' },
+      { dire: 'Dehors, les cloches du marais se sont tues. Toutes à la fois. Le silence est si grand qu\'on entend la brume glisser sur l\'eau.' },
+      { dire: ['Deux flammes. Plus que deux.', 'Je ne sais pas si je dois être fière ou avoir honte.'], qui: 'verene' },
+      { dire: 'On continue. Si la réponse est quelque part, c\'est au bout. Et Tiennot aussi, peut-être.', qui: 'maud' },
+      { dire: '(Fin de l\'acte 2. La suite — le Hameau caché et les Hautes-Roches — arrive bientôt.)' },
+      { sauver: 'auto' }
+    ] }
+  ],
+
   porte_abbaye: [
     { si: 'porte_abbaye',
       alors: [{ dire: 'Les grandes portes de Saint-Cendre restent closes. Derrière, une cloche sonne, très loin.' }],

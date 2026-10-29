@@ -24,7 +24,12 @@ const CAS = [
   { nom: 'Prologue : héros seul niv. 2 contre deux corbeaux', equipe: ['heros'], niveau: 2, monstres: ['corbeau', 'corbeau'], objets: { herbe: 2 }, cible: { victoire: .85, tours: [2.5, 6] } },
   { nom: 'Acte 1 : héros + Eloi niv. 3 contre deux loups', equipe: ['heros', 'eloi'], niveau: 3, monstres: ['loup', 'loup'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2.5, 6] } },
   { nom: 'Acte 1 : héros + Eloi + Vérène niv. 4 contre deux ronces-griffes', equipe: ['heros', 'eloi', 'verene'], niveau: 4, monstres: ['ronce', 'ronce'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2, 5] } },
-  { nom: 'Acte 1, boss : héros + Eloi + Vérène niv. 4 contre le Roi des aulnes', equipe: ['heros', 'eloi', 'verene'], niveau: 4, monstres: ['roi_aulnes'], objets: { herbe: 4, fiole: 2 }, cible: { victoire: .8, tours: [4, 10] } }
+  { nom: 'Acte 1, boss : héros + Eloi + Vérène niv. 4 contre le Roi des aulnes', equipe: ['heros', 'eloi', 'verene'], niveau: 4, monstres: ['roi_aulnes'], objets: { herbe: 4, fiole: 2 }, cible: { victoire: .8, tours: [4, 10] } },
+  // acte 2 (29/10) : même friction qu'à l'acte 1 ; la Dame du moulin est prévue au niveau 8 (au niveau 7 : environ une chance sur deux)
+  { nom: 'Acte 2 : héros + Eloi + Vérène niv. 5 contre une sangsue et une phalène', equipe: ['heros', 'eloi', 'verene'], niveau: 5, monstres: ['phalene', 'sangsue'], objets: { herbe: 3 }, cible: { victoire: .95, tours: [2, 5] } },
+  { nom: 'Acte 2 : l\'équipe de 4 niv. 6 contre un escargot-glas et une phalène', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 6, monstres: ['escargot', 'phalene'], objets: { herbe: 3 }, cible: { victoire: .95, tours: [2, 5] } },
+  { nom: 'Acte 2 : l\'équipe de 4 niv. 7 contre une lavandière et un remous', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 7, monstres: ['lavandiere', 'remous'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2, 5] } },
+  { nom: 'Acte 2, boss : l\'équipe de 4 niv. 8 contre la Dame du moulin', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 8, monstres: ['dame_moulin'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 11] } }
 ];
 
 function jouerCas(M, J, cas, n, graine = 1) {

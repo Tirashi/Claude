@@ -319,6 +319,37 @@ def dessines():
         d.line([0, y + 7, 31, y + 7], fill=BOIS[0])
         x = (i * 11) % 32; d.line([x, y, x, y + 6], fill=BOIS[0]); d.point((x + 3, y + 3), fill=BOIS[0])
     t['parquet'] = im
+
+    # ---------- acte 2 : le marais et le Moulin noyé ----------
+    # ponton : planches serrées avec un filet d'eau sombre entre elles, et des clous
+    im = Image.new('RGBA', (32, 32), (24, 34, 30, 255)); d = ImageDraw.Draw(im)
+    for i, x in enumerate(range(0, 32, 8)):
+        d.rectangle([x, 0, x + 6, 31], fill=BOIS[1 + (i % 2)]); d.line([x, 0, x, 31], fill=BOIS[3])
+        for y in (5, 26): d.point((x + 3, y), fill=(60, 50, 44))
+        d.line([x + 2, (i * 9) % 30, x + 2, (i * 9) % 30 + 3], fill=BOIS[0])
+    t['ponton'] = im
+    # bronze vert-de-gris (cloches englouties)
+    im = Image.new('RGBA', (32, 32), (150, 104, 52, 255)); d = ImageDraw.Draw(im)
+    for y in range(32): d.line([0, y, 31, y], fill=(int(120 + 60 * (1 - y / 32)), int(84 + 40 * (1 - y / 32)), 44))
+    for (x, y, r) in ((5, 6, 3), (22, 12, 4), (12, 22, 3), (27, 26, 2), (3, 18, 2)): d.ellipse([x - r, y - r, x + r, y + r], fill=(84, 150, 120))
+    d.line([0, 27, 31, 27], fill=(92, 60, 28)); d.line([0, 29, 31, 29], fill=(176, 130, 70))
+    t['bronze'] = im
+    # roue du moulin vue de face : jante, rayons et moyeu
+    im = Image.new('RGBA', (64, 64), (34, 30, 26, 255)); d = ImageDraw.Draw(im)
+    import math
+    d.ellipse([2, 2, 61, 61], outline=BOIS[0], width=6); d.ellipse([4, 4, 59, 59], outline=BOIS[2], width=3)
+    for k in range(8):
+        a_ = k * math.pi / 4; x2, y2 = 32 + 27 * math.cos(a_), 32 + 27 * math.sin(a_)
+        d.line([32, 32, x2, y2], fill=BOIS[1], width=4); d.line([32, 32, x2, y2], fill=BOIS[3], width=1)
+    d.ellipse([25, 25, 39, 39], fill=BOIS[0]); d.ellipse([28, 28, 36, 36], fill=(110, 110, 120))
+    t['roue_face'] = im
+    # grappin : un crochet de fer à trois dents et sa corde enroulée
+    im = neuf(); d = ImageDraw.Draw(im); FER = [(50, 54, 62), (120, 126, 138), (190, 196, 206)]; CORDE = [(110, 80, 40), (190, 150, 90)]
+    d.ellipse([3, 15, 17, 29], outline=CORDE[0], width=3); d.ellipse([5, 17, 15, 27], outline=CORDE[1], width=1)
+    d.line([14, 18, 20, 12], fill=CORDE[0], width=2)
+    d.line([20, 12, 26, 6], fill=FER[0], width=3); d.line([20, 12, 26, 6], fill=FER[2], width=1)
+    for (x1, y1, x2, y2) in ((26, 6, 29, 11), (26, 6, 21, 3), (26, 6, 30, 2)): d.line([x1, y1, x2, y2], fill=FER[1], width=2)
+    t['o_grappin'] = im
     return t
 
 
@@ -332,6 +363,9 @@ def main():
         im = Image.open(os.path.join(R, p)).convert('RGBA')
         images[nom] = im
     images.update(dessines())
+    # la Flamme bleue : la flamme du pack, teintée en bleu
+    r_, g_, b_, a_ = images['flamme'].split()
+    images['flamme_bleue'] = Image.merge('RGBA', (b_, g_, r_, a_))
     prises = {}
     for nom, pieces in cfg['persos'].items():
         pieces = sorted(pieces, key=lambda p: ORDRE.index(p.split('/')[0]))
