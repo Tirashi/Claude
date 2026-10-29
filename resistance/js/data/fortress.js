@@ -82,7 +82,9 @@
         sprites: [{ src: `${W}rebel-workshop.png`, at: [0, 2] }, { src: `${W}rebel-workshop.png`, at: [1, 0] }],
       },
       farm: {
-        name: 'Ferme', pos: [2, 6], costs: [3, 7], emblem: { glyph: 'wheat', color: '#6a9c34' },
+        // Premiers niveaux bon marché (29/10) : la Ferme à 1 et l'Infirmerie à 2, pour qu'une
+        // première campagne, même perdue tôt, permette déjà de construire quelque chose
+        name: 'Ferme', pos: [2, 6], costs: [1, 7], emblem: { glyph: 'wheat', color: '#6a9c34' },
         effect: { startRations: 2 }, effectText: "+2 rations (rendent 5 PV) dans le sac au départ",
         sprites: [{ src: `${W}resources.png`, at: [0, 1] }, { src: `${W}rebel-resources.png`, at: [0, 1] }],
         // Champs autour du moulin : terre labourée, puis blé mûr à partir de minLevel
@@ -122,7 +124,7 @@
         sprites: [{ src: `${W}rebel-chapel.png`, at: [2, 0] }, { src: `${W}rebel-chapel.png`, at: [2, 1] }],
       },
       infirmary: {
-        name: 'Infirmerie', pos: [10, 7], costs: [4, 8], emblem: { glyph: 'cross', color: '#c84858' },
+        name: 'Infirmerie', pos: [10, 7], costs: [2, 8], emblem: { glyph: 'cross', color: '#c84858' },
         effect: { afterBattleHeal: 0.15 }, effectText: '+15 % de PV rendus après chaque victoire',
         sprites: [{ src: `${W}rebel-chapel.png`, at: [0, 0] }, { src: `${W}rebel-chapel.png`, at: [0, 1] }],
       },

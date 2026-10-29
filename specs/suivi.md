@@ -51,6 +51,7 @@ Détails déplacés de `CLAUDE.md` le 19/10 (pour qu'il reste court : il est rel
 - Artefact Yams : on ne le republie plus, on joue sur le site (décision de l'utilisateur du 29/10).
 
 ## Résistance (28/10)
+- **Prix des premiers bâtiments** (29/10, `resistance.md` § 12) : Ferme 3 → 1, Infirmerie 4 → 2 (niveaux 2 inchangés).
 - **Grande session de confort façon Fire Emblem** (29/10, `resistance.md` § 11) : maquette jouable (A GBA, B Heroes, recrutement), **B choisie** ; les 15 points faits (flèche et silhouette, second toucher pour y aller, glisser, plan d'attaque en touchant l'ennemi avec Attaquer / Attendre là, portées marquées, portée en orange, « ! » sur les cases menacées, prévisions qui préviennent, fiche à l'appui long, Suivant, panneau du tour, Menu avec Unités / Objectif / Options / Retraite, recrutement et Armée détaillés, comportement des ennemis) ; testé dans Chromium ; à essayer sur le téléphone.
 - **Soigneur** (29/10, `resistance.md` § 10) : classe `cleric` au bâton de soin (n'attaque ni ne riposte), action Soigner (Mag + 10 PV, 12 EXP), Chapelle à la forteresse (un soigneur parmi les candidats et +3 PV par soin à chaque niveau) ; testé dans Chromium en portrait ; à essayer sur le téléphone.
 - **Séance d'essais du 29/10** (`specs/essais.md`) : zone de danger trouée près des ennemis et absente au tour ennemi → corrigée ; Yams : dés figés de travers et menu rogné en cercle dans le style à carreaux (--rayon 999px repris par la fenêtre), corrigés (voir la section Yams) ; tous les classements confirmés ; la Lanterne pas encore essayée.

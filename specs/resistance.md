@@ -179,3 +179,6 @@ Direction **B (Heroes)** ; attaque par le bouton (le second toucher est une opti
 - `game.js` : bouton **Menu** (`battleMenu` : Unités, Objectif, Options, Retraite ; la Retraite a quitté la barre) ; **Options** gardées dans `meta.options` : vitesse rapide (tout ×2, `Battle.fast`), fin du tour automatique (oui par défaut), attaquer d'un second toucher (non par défaut).
 - Testé dans Chromium en portrait et en paysage (marques, flèche et second toucher, Annuler, plan d'attaque, orange, glisser, appui long, Menu, Options, Armée).
 
+## 12. Prix des premiers bâtiments (29/10)
+Demande de l'utilisateur : un bâtiment à 1 ravitaillement et un autre à 2, pour qu'une première campagne (souvent perdue tôt, 1 à 3 ravitaillements) permette déjà de construire. **Ferme 3 → 1** (deux rations au départ, utiles tout de suite) et **Infirmerie 4 → 2** (+15 % de PV après chaque victoire) ; leurs niveaux 2 ne changent pas (7 et 8). Les autres premiers niveaux restent à 4 (Taverne, Trésorerie), 5 (Salle d'armes, Mémorial), 6 (Caserne, Chapelle) et 8 (Autel du phénix).
+
