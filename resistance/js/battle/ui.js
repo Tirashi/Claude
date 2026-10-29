@@ -56,7 +56,7 @@
   }
 
   class UI {
-    constructor({ onEndTurn, onRestart, onReplay, onCancel, onArmy, onDepart, onRetreat, tileToScreen }) {
+    constructor({ onEndTurn, onRestart, onReplay, onCancel, onArmy, onDepart, onRetreat, onDanger, tileToScreen }) {
       this.el = {
         unit: $('unit-panel'), terrain: $('terrain-panel'), menu: $('action-menu'),
         forecast: $('forecast'), banner: $('banner'), end: $('end-screen'),
@@ -66,7 +66,8 @@
         exp: $('exp-panel'), levelup: $('levelup'), levelupBox: $('levelup-box'),
         army: $('army-btn'), node: $('node-panel'),
         runOverlay: $('run-overlay'), runBox: $('run-box'), resources: $('resources'),
-        hud: $('hud'), stage: $('stage'),
+        hud: $('hud'), stage: $('stage'), danger: $('danger-btn'),
+        quote: $('quote'), speed: $('speed'), guide: $('guide'),
       };
       this.tileToScreen = tileToScreen;
       // Petite main pixel du menu d'action (façon GBA), dessinée une fois
@@ -81,6 +82,12 @@
       this.el.army.addEventListener('click', onArmy);
       $('depart-btn').addEventListener('click', onDepart);
       $('retreat-btn').addEventListener('click', onRetreat);
+      this.el.danger.addEventListener('click', onDanger);
+      this.guideSkip = null;
+      this.el.guide.addEventListener('click', (e) => {
+        if (e.target.closest('.guide-skip')) this.guideSkip?.();
+        else this.hideGuide();
+      });
       this.levelupResolve = null;
       this.runPanel = null; // { onConfirm, onCancel, onMove } pendant qu'une fenêtre de run est ouverte
       this.el.levelup.addEventListener('click', () => this.closeLevelUp());
@@ -280,6 +287,30 @@
     }
 
     setEndTurnEnabled(on) { this.el.endTurn.disabled = !on; }
+    setDangerOn(on) { this.el.danger.classList.toggle('on', on); }
+
+    // Phase ennemie : 'hint' (« Toucher : ×2 »), 'fast' (accélérée), null (masqué)
+    setSpeed(mode) {
+      const el = this.el.speed;
+      el.classList.toggle('hidden', !mode);
+      el.classList.toggle('fast', mode === 'fast');
+      el.textContent = mode === 'fast' ? 'Accéléré ×2' : 'Toucher : ×2';
+    }
+
+    // Dernières paroles d'un soldat qui tombe
+    showQuote(name, text) {
+      this.el.quote.innerHTML = `<b class="unit-name player">${name}</b> « ${text} »`;
+      this.el.quote.classList.remove('hidden');
+    }
+    hideQuote() { this.el.quote.classList.add('hidden'); }
+
+    // Bulle du premier combat guidé (guide.js) ; toucher la bulle la ferme, « Passer » arrête le guide
+    showGuide(text, onSkip) {
+      this.guideSkip = onSkip;
+      this.el.guide.innerHTML = `<p>${text}</p><button class="guide-skip">Passer le guide</button>`;
+      this.el.guide.classList.remove('hidden');
+    }
+    hideGuide() { this.el.guide.classList.add('hidden'); }
 
     setSeed(seed) {
       this.el.seed.textContent = `Graine ${seed}`;

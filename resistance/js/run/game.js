@@ -2,7 +2,7 @@
 // `scene` est l'écran actif (RunMapScene ou Battle) : main.js lui transmet les entrées.
 (() => {
   'use strict';
-  const { Battle, ENCOUNTERS, FORTRESS, META_RULES, PREPARATION, fortressBonuses, veteranPrice, RECRUITMENT, CAPTAIN, traitLabel, COUNTRIES, ITEMS, WEAPONS, CLASSES, EVENTS, WEAPON_UPGRADES, ITEM_ICONS, armyHtml, iconHtml, numberHtml, effectiveText, loadMeta, saveMeta, loadRun, saveRun, clearRun, Run, randomSeed, canWield, shopEntry, prepEntry, prepText, prepBonuses, veteranReturnLevel, RunMapScene, FortressScene } = Resistance;
+  const { Battle, Guide, ENCOUNTERS, FORTRESS, META_RULES, PREPARATION, fortressBonuses, veteranPrice, RECRUITMENT, CAPTAIN, traitLabel, COUNTRIES, ITEMS, WEAPONS, CLASSES, EVENTS, WEAPON_UPGRADES, ITEM_ICONS, armyHtml, iconHtml, numberHtml, effectiveText, loadMeta, saveMeta, loadRun, saveRun, clearRun, Run, randomSeed, canWield, shopEntry, prepEntry, prepText, prepBonuses, veteranReturnLevel, RunMapScene, FortressScene } = Resistance;
 
   const goldIcon = () => iconHtml(ITEM_ICONS.gold.sheet, ITEM_ICONS.gold.at);
   const suppliesIcon = () => iconHtml(ITEM_ICONS.supplies.sheet, ITEM_ICONS.supplies.at);
@@ -487,6 +487,25 @@
       if (choice === 'retreat' && this.scene === battle) battle.retreat();
     }
 
+    // « Fin du tour » alors que des soldats n'ont pas joué : on demande d'abord
+    async confirmEndTurn() {
+      const battle = this.scene;
+      if (!(battle instanceof Battle) || this.ui.modalOpen || battle.phase !== 'player'
+        || battle.state === 'busy' || battle.state === 'over') return;
+      const idle = battle.idleUnits();
+      if (idle.length) {
+        const names = idle.map((u) => u.name).join(', ');
+        const choice = await this.ui.showRunPanel({
+          title: 'Finir le tour ?',
+          body: `<p>${idle.length > 1 ? `${idle.length} soldats n'ont pas joué` : "Un soldat n'a pas joué"} : ${names}.</p>`,
+          buttons: [{ id: 'back', label: 'Revenir' }, { id: 'end', label: 'Finir le tour' }],
+          cancel: 'back',
+        });
+        if (choice !== 'end' || this.scene !== battle) return;
+      }
+      battle.endPlayerPhase();
+    }
+
     startBattle(node) {
       const { run, ui } = this;
       ui.hideRunPanels();
@@ -500,8 +519,10 @@
         seed: run.battleSeed(node),
         levelBonus: run.levelBonus(node),
         ui,
+        guide: this.meta.guideDone ? null : new Guide(ui),
         onEnd: (win) => this.endBattle(node, battle, win),
       });
+      ui.setDangerOn(battle.dangerOn);
       this.scene = battle;
       window.__battle = battle;
       this.saveRun(node.id); // interrompu, le combat reprendra à son début
@@ -510,6 +531,10 @@
 
     async endBattle(node, battle, win) {
       const { run, ui } = this;
+      ui.hideGuide();
+      if (battle.guide && !this.meta.guideDone) { this.meta.guideDone = true; saveMeta(this.meta); }
+      if (win === true) run.stats.won += 1;
+      run.stats.turns += battle.turn;
       const floors = run.map.floors;
       if (win === 'retreat') {
         // L'armée garde ses niveaux et son EXP, les tombés restent tombés ; pas de butin ni de soin.
@@ -560,9 +585,32 @@
       this.meta.runs += 1;
       if (win) this.meta.wins = (this.meta.wins ?? 0) + 1;
       saveMeta(this.meta);
+      if (run.army.length) await this.showReport(run, win);
       if ((this.meta.upgrades.memorial ?? 0) > 0 && run.army.length) await this.chooseVeteran(run);
       this.ui.showEnd(win, `${text} Rapporté à la forteresse : +${supplies} ravitaillement`
         + ` et +${gold} or (${Math.round(share * 100)} % de l'or restant).`, title);
+    }
+
+    // Bilan de la campagne : étage atteint, combats gagnés, ennemis vaincus, et chaque soldat
+    // (ses victoires, où il est tombé). Le héros est celui qui a vaincu le plus d'ennemis.
+    async showReport(run, win) {
+      const kills = run.army.reduce((n, r) => n + (r.kills ?? 0), 0);
+      const hero = [...run.army].sort((a, b) => (b.kills ?? 0) - (a.kills ?? 0) || b.level - a.level)[0];
+      const floor = Math.max(0, run.floor) + 1;
+      const fallen = run.army.filter((r) => !r.alive).length;
+      const rows = run.army.map((r) => `<div class="army-row${r.alive ? '' : ' fallen'}">
+          <span class="unit-name player">${r === hero && hero.kills ? '★ ' : ''}${r.name}</span>
+          <span class="unit-class">${CLASSES[r.cls].name}</span><span>Niv ${r.level}</span>
+          <span class="army-hp">${r.kills ?? 0} ennemi${(r.kills ?? 0) > 1 ? 's' : ''} vaincu${(r.kills ?? 0) > 1 ? 's' : ''}
+            · ${r.alive ? '<span class="fc-adv">A survécu</span>' : `<span class="fc-dis">Tombé${r.fellAt ? ` : ${r.fellAt}` : ''}</span>`}</span>
+        </div>`).join('');
+      await this.ui.showRunPanel({
+        title: win ? 'Bilan de la victoire' : 'Bilan de la campagne',
+        body: `<p>${win ? 'Pays libéré' : `Étage ${floor}/${run.map.floors}`} · ${run.stats.won} combat${run.stats.won > 1 ? 's' : ''} gagné${run.stats.won > 1 ? 's' : ''}
+            · ${kills} ennemi${kills > 1 ? 's' : ''} vaincu${kills > 1 ? 's' : ''} · ${fallen ? `${fallen} tombé${fallen > 1 ? 's' : ''}` : 'aucune perte'}</p>
+          ${hero?.kills ? `<p>★ Héros de la campagne : <b>${hero.name}</b> (${hero.kills} ennemi${hero.kills > 1 ? 's' : ''} vaincu${hero.kills > 1 ? 's' : ''})</p>` : ''}
+          <div class="army-list">${rows}</div>`,
+      });
     }
 
     // Mémorial : un soldat de la run (mort ou vivant) devient le vétéran, à la place du précédent.
@@ -579,7 +627,7 @@
             id: r.armyId,
             html: `<span class="portrait" style="background-image:url(assets/units/${CLASSES[r.cls].sprite}_blue.png)"></span>
               <span class="choice-main"><b>${r.name}</b> <span class="unit-class">${CLASSES[r.cls].name} · Niv ${r.level}</span><br>
-              <span class="unit-class">${r.alive ? 'A survécu' : 'Tombé au combat'}${label ? ` · <span class="trait">${label}</span>` : ''}</span></span>`,
+              <span class="unit-class">${r.alive ? 'A survécu' : 'Tombé au combat'} · ${r.kills ?? 0} vaincu${(r.kills ?? 0) > 1 ? 's' : ''}${label ? ` · <span class="trait">${label}</span>` : ''}</span></span>`,
           };
         }),
         buttons: [{ id: 'none', label: current && !inRun ? `Garder ${current.name}` : 'Personne' }],

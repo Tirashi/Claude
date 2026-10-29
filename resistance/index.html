@@ -19,6 +19,15 @@
       <!-- Bandeau de phase -->
       <div id="banner" class="hidden"></div>
 
+      <!-- Phase ennemie : toucher pour accélérer -->
+      <div id="speed" class="hidden"></div>
+
+      <!-- Dernières paroles d'un soldat qui tombe -->
+      <div id="quote" class="panel hidden"></div>
+
+      <!-- Bulle du premier combat guidé -->
+      <div id="guide" class="panel hidden"></div>
+
       <!-- Menu d'action après un déplacement -->
       <div id="action-menu" class="panel menu hidden"></div>
 
@@ -62,11 +71,12 @@
       <button id="cancel-btn">Annuler</button>
       <button id="end-turn-btn">Fin du tour</button>
       <button id="retreat-btn">Retraite</button>
+      <button id="danger-btn" title="Zone de danger (D)">Danger</button>
       <button id="army-btn">Armée</button>
       <button id="depart-btn">Partir en campagne</button>
       <a id="ludo-btn" class="ludo-retour" href="../index.html">◀ Ludothèque</a>
       <span id="seed-label" class="seed"></span>
-      <span class="help">Clic / Entrée : sélectionner · Clic droit / Échap : annuler · Flèches : curseur · E : fin du tour · A : armée</span>
+      <span class="help">Clic / Entrée : sélectionner · Clic droit / Échap : annuler · Flèches : curseur · D : zone de danger · E : fin du tour · A : armée</span>
     </div>
   </div>
 
@@ -93,6 +103,7 @@
   <script src="js/core/digits.js"></script>
   <script src="js/battle/renderer.js"></script>
   <script src="js/battle/ui.js"></script>
+  <script src="js/battle/guide.js"></script>
   <script src="js/core/save.js"></script>
   <script src="js/data/countries.js"></script>
   <script src="js/data/encounters.js"></script>

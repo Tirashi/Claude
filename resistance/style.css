@@ -322,7 +322,7 @@ body[data-mode="battle"] #army-btn,
 body[data-mode="fortress"] #cancel-btn, body[data-mode="fortress"] #end-turn-btn,
 body[data-mode="fortress"] #army-btn,
 body:not([data-mode="fortress"]) #depart-btn, body:not([data-mode="fortress"]) #ludo-btn,
-body:not([data-mode="battle"]) #retreat-btn { display: none; }
+body:not([data-mode="battle"]) #retreat-btn, body:not([data-mode="battle"]) #danger-btn { display: none; }
 /* Retraite : bouton rose, à part (action rare et coûteuse) */
 #toolbar #retreat-btn { border-image-source: var(--frame-pink); color: #3a0c28; text-shadow: none; }
 
@@ -433,7 +433,8 @@ button { touch-action: manipulation; }
      carte couchée et à la fiche ; le numéro du tour s'affiche dans le bandeau de chaque phase */
   body[data-mode="battle"] #toolbar { flex-wrap: nowrap; gap: 6px; }
   body[data-mode="battle"] #turn-label { display: none; }
-  body[data-mode="battle"] #toolbar #retreat-btn { order: -1; flex: 0 0 auto; padding: 12px 8px; font-size: 14px; }
+  body[data-mode="battle"] #toolbar #retreat-btn { order: -2; flex: 0 0 auto; padding: 12px 8px; font-size: 14px; }
+  body[data-mode="battle"] #toolbar #danger-btn { order: -1; flex: 0 0 auto; padding: 12px 8px; font-size: 14px; }
   body[data-mode="battle"] #toolbar #cancel-btn { flex: 1 1 0; padding: 14px 6px; }
   body[data-mode="battle"] #toolbar #end-turn-btn { flex: 1.3 1 0; padding: 14px 6px; }
   /* La fiche d'unité prend toute la largeur ; la case (terrain) revient quand on touche une case vide */
@@ -509,4 +510,41 @@ button { touch-action: manipulation; }
   #hud .menu.docked button:first-child { border-image: none; color: var(--text); text-shadow: 2px 2px 0 var(--ink); }
   #hud .menu.docked button.active { background: rgba(255, 255, 255, .14); }
   #hud .menu.docked button.active::before { display: block; left: 10px; width: 16px; height: 16px; }
+}
+
+/* ================= Confort de jeu (29/10) ================= */
+/* Zone de danger : bouton qui reste allumé (fond rouge) tant que la zone est affichée */
+#toolbar #danger-btn.on { background: linear-gradient(#a02434, #641020); border-color: #ffb0b0; }
+
+/* Phase ennemie : « Toucher : ×2 », puis « Accéléré ×2 » */
+#speed {
+  position: absolute; top: 6px; right: 6px; z-index: 10; pointer-events: none;
+  padding: 3px 9px; border: 2px solid var(--gba-bord); border-radius: 5px;
+  background: rgba(16, 20, 60, .82); box-shadow: 0 0 0 2px var(--ink);
+  font-size: .85em; font-weight: 700; color: #c8d0f0; text-shadow: 2px 2px 0 var(--ink);
+}
+#speed.fast { color: var(--gba-or); border-color: var(--gba-or); }
+
+/* Dernières paroles : fenêtre de dialogue en bas de la carte, façon GBA */
+#quote {
+  left: 50%; top: 34%; transform: translateX(-50%); z-index: 7;
+  width: min(92%, 30em); box-sizing: border-box; pointer-events: none;
+  border-image: none; border: 3px solid var(--gba-bord); border-radius: 6px;
+  background: var(--gba-fond); box-shadow: 0 0 0 2px var(--ink);
+  padding: 8px 12px; line-height: 1.35; font-style: italic;
+}
+#quote b { font-style: normal; display: block; }
+
+/* Bulle du premier combat guidé : en haut de la carte ; la toucher la ferme */
+#guide {
+  left: 50%; top: 6px; transform: translateX(-50%); z-index: 9;
+  width: min(94%, 32em); box-sizing: border-box; pointer-events: auto; cursor: pointer;
+  border-image: none; border: 3px solid var(--gba-or); border-radius: 6px;
+  background: linear-gradient(#22307e, #141c58); box-shadow: 0 0 0 2px var(--ink), 0 4px 0 rgba(0, 0, 0, .35);
+  padding: 8px 12px 6px; line-height: 1.35;
+}
+#guide p { margin: 0 0 4px; }
+#guide .guide-skip {
+  display: block; margin-left: auto; font: inherit; font-size: .8em; cursor: pointer;
+  background: none; border: 0; color: #aab4e0; text-decoration: underline; padding: 6px 2px 2px;
 }

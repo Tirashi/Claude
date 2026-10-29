@@ -106,6 +106,7 @@
       this.gold = 0;            // se dépense pendant la run (marchand)
       this.supplies = 0;        // ravitaillement, rapporté à la forteresse en fin de run
       this.inventory = {};      // sac de l'armée : id d'objet -> quantité
+      this.stats = { won: 0, turns: 0 }; // bilan de la campagne (combats gagnés, tours joués)
       if (bonuses.startRations) this.inventory.ration = bonuses.startRations; // Ferme de la forteresse
       if (bonuses.startPhoenix) this.inventory.phoenix = bonuses.startPhoenix; // Autel du phénix
     }
@@ -302,6 +303,7 @@
         rec.stats = Object.fromEntries(STAT_KEYS.map((k) => [k, k === 'hp' ? u.maxHp : u[k]]));
         rec.level = u.level;
         rec.exp = u.exp;
+        rec.kills = (rec.kills ?? 0) + u.kills;
         let healed = 0;
         const fallen = !u.alive;
         const saver = revive && fallen && this.permadeathSaver();
@@ -314,6 +316,7 @@
           continue;
         }
         if (fallen) {
+          if (this.rules.permadeath) rec.fellAt = battle.encounter.name;
           rec.alive = !this.rules.permadeath;
           rec.hp = rec.alive ? 1 : 0;
         } else {
@@ -345,7 +348,7 @@
         seed: this.seed, countryId: this.countryId, map: this.map, slots: this.slots, rules: this.rules,
         traitChance: this.traitChance, startLevels: this.startLevels, candidates: this.candidates,
         army: this.army, current: this.current?.id ?? null, visited: [...this.visited],
-        gold: this.gold, supplies: this.supplies, inventory: this.inventory, at,
+        gold: this.gold, supplies: this.supplies, inventory: this.inventory, stats: this.stats, at,
       };
     }
 
@@ -356,6 +359,7 @@
         slots: data.slots, rules: data.rules, traitChance: data.traitChance, startLevels: data.startLevels,
         candidates: data.candidates, army: data.army, visited: new Set(data.visited), over: false,
         gold: data.gold, supplies: data.supplies, inventory: data.inventory,
+        stats: data.stats ?? { won: 0, turns: 0 },
       });
       run.current = data.current === null ? null : run.node(data.current);
       run.veteran = run.army.find((r) => r.grade) ?? null; // le Capitaine, s'il y en a un

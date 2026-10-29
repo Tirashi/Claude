@@ -12,13 +12,14 @@
   let scale = 4;
 
   const ui = new UI({
-    onEndTurn: () => game.scene?.endPlayerPhase?.(),
+    onEndTurn: () => game.confirmEndTurn(),
     onRestart: () => game.showFortress(),
     onReplay: () => game.newRun(game.run.seed),
     onCancel: () => game.scene?.cancel(),
     onArmy: () => game.showArmy(),
     onDepart: () => game.scene?.onDepart?.(),
     onRetreat: () => game.confirmRetreat(),
+    onDanger: () => game.scene?.toggleDangerZone?.(),
     tileToScreen: (x, y) => ({ x: x * TILE * scale, y: y * TILE * scale, stageW: VIEW_W * scale }),
   });
   // L'écran actif (carte de run ou combat) est game.scene ; il reçoit les entrées.
@@ -84,7 +85,8 @@
     if (moves[k]) { e.preventDefault(); s.moveCursor(...moves[k]); return; }
     if (isConfirm) { e.preventDefault(); s.confirm(); return; }
     if (isCancel) { e.preventDefault(); s.cancel(); return; }
-    if (k === 'e' || k === 'E') s.endPlayerPhase?.();
+    if (k === 'e' || k === 'E') game.confirmEndTurn();
+    if (k === 'd' || k === 'D') s.toggleDangerZone?.();
     if (k === 'a' || k === 'A') game.showArmy();
   });
 
