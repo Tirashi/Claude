@@ -29,7 +29,15 @@ const CAS = [
   { nom: 'Acte 2 : héros + Eloi + Vérène niv. 5 contre une sangsue et une phalène', equipe: ['heros', 'eloi', 'verene'], niveau: 5, monstres: ['phalene', 'sangsue'], objets: { herbe: 3 }, cible: { victoire: .95, tours: [2, 5] } },
   { nom: 'Acte 2 : l\'équipe de 4 niv. 6 contre un escargot-glas et une phalène', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 6, monstres: ['escargot', 'phalene'], objets: { herbe: 3 }, cible: { victoire: .95, tours: [2, 5] } },
   { nom: 'Acte 2 : l\'équipe de 4 niv. 7 contre une lavandière et un remous', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 7, monstres: ['lavandiere', 'remous'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2, 5] } },
-  { nom: 'Acte 2, boss : l\'équipe de 4 niv. 8 contre la Dame du moulin', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 8, monstres: ['dame_moulin'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 11] } }
+  { nom: 'Acte 2, boss : l\'équipe de 4 niv. 8 contre la Dame du moulin', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 8, monstres: ['dame_moulin'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 11] } },
+  // rebondissement 2 et acte 3 (29/10) : même friction ; le Géant de sel est prévu au niveau 10, les Chevaliers de cendre juste après
+  { nom: 'Rebondissement 2 : l\'équipe de 4 niv. 8 contre les assaillants d\'Isée', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 8, monstres: ['lavandiere', 'feu_bleu', 'phalene'], objets: { herbe: 3 }, cible: { victoire: .95, tours: [2, 5] } },
+  { nom: 'Acte 3 : l\'équipe de 4 niv. 8 contre un yack et une pie de givre', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 8, monstres: ['yack', 'pie_givre'], objets: { herbe: 3 }, cible: { victoire: .95, tours: [2, 5] } },
+  { nom: 'Acte 3 : l\'équipe de 4 niv. 9 contre une bête de givre et une pie de givre', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 9, monstres: ['bete_givre', 'pie_givre'], objets: { herbe: 3 }, cible: { victoire: .95, tours: [2, 5] } },
+  { nom: 'Acte 3 : l\'équipe de 4 niv. 9 contre deux chauves-souris de sel', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 9, monstres: ['chauve_souris', 'chauve_souris'], objets: { herbe: 3 }, cible: { victoire: .95, tours: [2, 5] } },
+  { nom: 'Acte 3 : l\'équipe de 4 niv. 10 contre un mineur de sel et un hérisson', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 10, monstres: ['mineur_sel', 'herisson'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2, 5] } },
+  { nom: 'Acte 3, boss : l\'équipe de 4 niv. 10 contre le Géant de sel', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 10, monstres: ['geant_sel'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 11] } },
+  { nom: 'Acte 3 : l\'équipe de 4 niv. 10 contre deux Chevaliers de cendre', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 10, monstres: ['chevalier', 'chevalier'], objets: { herbe: 3, fiole: 2 }, cible: { victoire: .9, tours: [3, 7] } }
 ];
 
 function jouerCas(M, J, cas, n, graine = 1) {

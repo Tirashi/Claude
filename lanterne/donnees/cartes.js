@@ -30,8 +30,8 @@ LANTERNE.cartes = {
       'T......f...::..........T',
       'T.....p....::..f.....o.T',
       'T..........::..........T',
-      'T..:::::::::::::::::::::',
-      'T..:::::::::::::::::::::',
+      '::::::::::::::::::::::::',
+      '::::::::::::::::::::::::',
       'T.......========.......T',
       'T.......========....f..T',
       'Tb.....f==S=====...F...T',
@@ -56,7 +56,8 @@ LANTERNE.cartes = {
       { type: 'panneau', x: 13, y: 1, texte: 'Au nord : la route de la forêt et l\'abbaye de Saint-Cendre.' },
       { type: 'panneau', x: 10, y: 17, evenement: 'panneau_marais' },
       { type: 'panneau', x: 7, y: 5, texte: 'Maison de la veilleuse Ysolde. Frapper fort, elle est un peu sourde.' },
-      { type: 'coffre', id: 'clairfond_buisson', x: 1, y: 9, contenu: { objet: 'herbe', n: 2 } }
+      { type: 'coffre', id: 'clairfond_buisson', x: 1, y: 9, contenu: { objet: 'herbe', n: 2 } },
+      { type: 'panneau', x: 1, y: 5, evenement: 'panneau_roches' }
     ],
     pnj: [
       { id: 'gaspard', perso: 'gaspard', x: 17, y: 9, evenement: 'gaspard' },
@@ -75,7 +76,8 @@ LANTERNE.cartes = {
       { x: 3, y: 5, vers: 'maison_ysolde', a: [4, 6], dir: 'haut' },
       { x: 18, y: 5, vers: 'auberge', a: [5, 6], dir: 'haut' },
       { x: 23, y: [6, 7], vers: 'bois_murmurant', a: [1, 6], dir: 'droite', si: 'mission_flammes', refus: 'bois_ferme' },
-      { x: [11, 12], y: 18, vers: 'route_marais', a: [7, 1], dir: 'bas', si: 'mission_marais', refus: 'marais_ferme' }
+      { x: [11, 12], y: 18, vers: 'route_marais', a: [7, 1], dir: 'bas', si: 'mission_marais', refus: 'marais_ferme' },
+      { x: 0, y: [6, 7], vers: 'col_roches', a: [16, 18], dir: 'gauche', si: 'mission_roches', refus: 'roches_ferme' }
     ],
     declencheurs: [{ x: 3, y: 12, evenement: 'forge_fermee' }]
   },
@@ -480,7 +482,7 @@ LANTERNE.cartes = {
       'shhhshhhhhhhheeeheeeeehhhees',
       'shhhhhhhihhhheeeheyeeeeeeyes',
       'shhhhhhhhhhsheeeheeeeeeeeees',
-      'ssssssssssssssssssssssssssss'
+      'sshsssssssssssssssssssssssss'
     ],
     maisons: [{ x: 21, y: 2, l: 6, p: 4, mur: 'mur_moulin', toit: 'toit', porte: 2, fenetres: [.5, 4.5] }],
     objets: [
@@ -493,7 +495,12 @@ LANTERNE.cartes = {
     ],
     pnj: [
       { id: 'crapaud_roi', perso: 'crapaud_roi', x: 8, y: 17, evenement: 'crapaud_roi' },
-      { id: 'isee', perso: 'isee', x: 11, y: 10, evenement: 'isee_route', cache: true }
+      { id: 'isee', perso: 'isee', x: 11, y: 10, evenement: 'isee_route', cache: true },
+      // le rebondissement 2 : Isée attaquée devant le moulin (fin_acte2)
+      { id: 'isee_blessee', perso: 'isee', x: 21, y: 8, evenement: 'isee_route', cache: true },
+      { id: 'assaillant_a', perso: 'feu_bleu', x: 20, y: 9, cache: true },
+      { id: 'assaillant_b', perso: 'lavandiere', x: 22, y: 9, cache: true },
+      { id: 'assaillant_c', perso: 'phalene', x: 20, y: 8, cache: true }
     ],
     monstres: [
       { type: 'escargot', x: 5, y: 12, rayon: 2 },
@@ -505,9 +512,11 @@ LANTERNE.cartes = {
     ],
     sorties: [
       { x: 0, y: [12, 13], vers: 'port_gris', a: [20, 12], dir: 'gauche' },
-      { x: 23, y: 5, vers: 'moulin_entree', a: [6, 8], dir: 'haut' }
+      { x: 23, y: 5, vers: 'moulin_entree', a: [6, 8], dir: 'haut' },
+      { x: 2, y: 21, vers: 'hameau_cache', a: [9, 14], dir: 'bas', si: 'isee_avouee', refus: 'sentier_brume' }
     ],
-    declencheurs: [{ x: 9, y: [12, 13], evenement: 'isee_cloches', si: '!isee_cloches' }]
+    declencheurs: [{ x: 9, y: [12, 13], evenement: 'isee_cloches', si: '!isee_cloches' },
+      { x: [21, 25], y: [6, 8], evenement: 'isee_blessee', si: { tous: ['acte2_fini', { non: 'isee_avouee' }] } }]
   },
 
   // ---------- le Moulin noyé (deuxième sanctuaire) ----------
@@ -663,5 +672,301 @@ LANTERNE.cartes = {
     pnj: [{ id: 'dame', perso: 'dame_moulin', x: 5, y: 3, evenement: 'dame_parle', si: '!dame_vaincue' }],
     sorties: [{ x: 5, y: 10, vers: 'moulin_bief', a: [6, 2], dir: 'bas' }],
     declencheurs: [{ x: [1, 9], y: 6, evenement: 'dame_combat', si: '!dame_vaincue' }]
+  },
+  // ---------- rebondissement 2 : le Hameau caché des Brumiens ----------
+  hameau_cache: {
+    nom: 'Hameau caché', musique: 'foret', exterieur: true, brume: .75, sauvegardeAuto: true, entree: 'hameau_entree',
+    plan: [
+      'YYYYYYYYYYYYYYYYYYYY',
+      'Y,,,,,Y,,,,,,,Y,,,,Y',
+      'Y,$,,,,,,?,,,,,,,$,Y',
+      'Y,,,,,,,,,,,,,,,,,,Y',
+      'Y,,,?,,,$,,,,$,,?,,Y',
+      'Y,,,,,,,,,,,,,,,,,,Y',
+      'Y,$,,,,,,,,,,,,,,$,Y',
+      'Y,,,,,$,,,,,,,$,,,,Y',
+      'Y,,,,,,,,,,,,,,,,,,Y',
+      'Y,?,,,,$,,,,,$,,,?,Y',
+      'Y,,,,,,,,,,,,,,,,,,Y',
+      'Y,,$,,,,,,,,,,,,$,,Y',
+      'Y,,,,,,,,,,,,,,,,,,Y',
+      'YY,,,,,,,,,,,,,,,,YY',
+      'YYY,,,,,,,,,,,,,YYYY',
+      'YYYYYYYYY,YYYYYYYYYY'
+    ],
+    objets: [
+      { type: 'deco', x: 10, y: 3, bloque: true, tuile: 'statue_tiennot', evenement: 'statue_tiennot' },
+      { type: 'lanterne', x: 15, y: 13 },
+      { type: 'lanterne_oubliee', id: 'hameau', x: 3, y: 1, evenement: 'lanterne_oubliee_hameau' },
+      { type: 'coffre', id: 'hameau_plume', x: 18, y: 1, contenu: { objet: 'plume', n: 1 } }
+    ],
+    pnj: [
+      { id: 'isee_hameau', perso: 'isee', x: 9, y: 7, evenement: 'isee_hameau' },
+      { id: 'dormeur', perso: 'dormeur', x: 2, y: 12, evenement: 'dormeur' }
+    ],
+    sorties: [{ x: 9, y: 15, vers: 'marais_cloches', a: [2, 20], dir: 'bas' }]
+  },
+
+  // ---------- acte 3 : la route des cimes ----------
+  col_roches: {
+    nom: 'Route des cimes', musique: 'foret', exterieur: true, brume: .3, sauvegardeAuto: true, entree: 'col_entree',
+    combat: { sol: ['rocaille0', 'rocaille1', 'rocaille2'], decor: 'sapin', brume: .3 },
+    plan: [
+      '555555554455555555',
+      '555,,,,,44,,5,,,,5',
+      '555,,,,,44,,5,,,,5',
+      '555,7,,,447,4,,,,5',
+      '5,,,,,,,44,,555555',
+      '5,,,,,,,44,,,,,,,5',
+      '5,,,,7,,44,,,,,,,5',
+      '5,,,,,,44,,7,,5555',
+      '5,,,,,,44,,,,,5555',
+      '5,,6,,44,,,,,,,,,5',
+      '5,,,,,44,,,,,,,,,5',
+      '5,,,,,,44,,,,6,,,5',
+      '5,,,,,,,44,,,,,,,5',
+      '555,,,,,44,,,,,7,5',
+      '555,,,,,,44,,,,,,5',
+      '555,,,7,,,44,,,,,5',
+      '5,,,,,,,,,446,,,,5',
+      '5,,,,,,,,,44,,,,,5',
+      '5,,7,,,,,,,4444444',
+      '5,,,,,,,,,,,,,7,44',
+      '5,,,,,,6,,,,,,,,,5',
+      '55555,,,,,,,,55555',
+      '55555,,,,,7,,55555',
+      '555555555555555555'
+    ],
+    objets: [
+      { type: 'panneau', x: 10, y: 1, texte: ['Village des Hautes-Roches : tout en haut du col.', 'Les Mines de sel : au-dessus du village. FERMÉES.'] },
+      { type: 'rocher', id: 'cimes_rocher', x: 12, y: 3, outil: 'masse', texte: 'Un gros rocher fendu bouche un creux de la falaise. Derrière, quelque chose brille.' },
+      { type: 'coffre', id: 'cimes_amulette', x: 15, y: 1, contenu: { objet: 'amulette', n: 1 } },
+      { type: 'lanterne_oubliee', id: 'cimes', x: 2, y: 5, evenement: 'lanterne_oubliee_cimes' },
+      { type: 'lanterne', x: 11, y: 12 },
+      { type: 'coffre', id: 'cimes_herbes', x: 16, y: 9, contenu: { objet: 'herbe', n: 3 } }
+    ],
+    pnj: [{ id: 'berger', perso: 'berger', x: 4, y: 11, evenement: 'berger', erre: 2 }],
+    monstres: [
+      { type: 'yack', x: 5, y: 8, rayon: 2 },
+      { type: 'pie_givre', x: 13, y: 14, rayon: 2 },
+      { type: 'bete_givre', x: 4, y: 17, rayon: 2 },
+      { type: 'tatou', x: 13, y: 6, rayon: 2 },
+      { type: 'yack', x: 8, y: 21, rayon: 2 }
+    ],
+    sorties: [
+      { x: 17, y: [18, 19], vers: 'clairfond', a: [1, 6], dir: 'droite' },
+      { x: [8, 9], y: 0, vers: 'hautes_roches', a: [9, 14], dir: 'haut' }
+    ]
+  },
+
+  // ---------- le village des Hautes-Roches ----------
+  hautes_roches: {
+    nom: 'Hautes-Roches', musique: 'village', exterieur: true, brume: .2, sauvegardeAuto: true, entree: 'roches_entree',
+    plan: [
+      '55555555544555555555',
+      '55555555+44+55555555',
+      '7^,,,,,,,44,,,,,,,,7',
+      '7,,,,,,,,44,,,,,,,,7',
+      '7,,,,,,,,44,,,,,,,,7',
+      '7,,,,,,,,44,,,,,,,,7',
+      '7,,^,,,,,44,,,,,^,,7',
+      '7,,,,,,,====,,,,,,,7',
+      '7,4444444=S=444444,7',
+      '7,,,,,,,====,,,,,,,7',
+      '7,,,,,,,,44,,,,,,,,7',
+      '7,,,,,,,,44,,,,,,,,7',
+      '76,,,,,,,44,,,,,,,,7',
+      '7,,,,,,,,44,,,,,,,67',
+      '7,,,,6,,,44,,,6,,,,7',
+      '77777777744777777777'
+    ],
+    maisons: [
+      { x: 2, y: 3, l: 4, p: 3, mur: 'mur_pierre', toit: 'toit_ardoise', fenetres: [.5, 2.5] },
+      { x: 14, y: 3, l: 4, p: 3, mur: 'mur_pierre', toit: 'toit_ardoise', fenetres: [1.5] },
+      { x: 2, y: 10, l: 5, p: 3, mur: 'mur_brique', toit: 'toit_ardoise', fenetres: [.5, 3.5] },
+      { x: 13, y: 10, l: 5, p: 3, mur: 'mur_pierre', toit: 'toit', fenetres: [1.5, 3.5] }
+    ],
+    objets: [
+      { type: 'deco', x: 10, y: 8, bloque: true, evenement: 'statue_roches' },
+      { type: 'lanterne', x: 7, y: 6 },
+      { type: 'panneau', x: 12, y: 7, texte: ['HAUTES-ROCHES', 'Mines de sel de la Compagnie. Entrée interdite par ordre de l\'abbaye.'] }
+    ],
+    pnj: [
+      { id: 'garance', perso: 'garance', x: 12, y: 3, evenement: 'garance' },
+      { id: 'mineur', perso: 'mineur', x: 7, y: 12, evenement: 'mineur' },
+      { id: 'gaspard_roches', perso: 'gaspard', x: 12, y: 13, evenement: 'gaspard_roches' },
+      { id: 'biscotte_roches', perso: 'biscotte', x: 13, y: 13, evenement: 'biscotte' },
+      { id: 'chevalier_a', perso: 'chevalier', x: 8, y: 2, evenement: 'chevalier_garde', si: '!chevaliers_vaincus' },
+      { id: 'chevalier_b', perso: 'chevalier', x: 11, y: 2, evenement: 'chevalier_garde', si: '!chevaliers_vaincus' }
+    ],
+    sorties: [
+      { x: [9, 10], y: 15, vers: 'col_roches', a: [8, 1], dir: 'bas' },
+      { x: [9, 10], y: 0, vers: 'mines_entree', a: [6, 8], dir: 'haut' }
+    ],
+    declencheurs: [{ x: [8, 11], y: [2, 4], evenement: 'fin_acte3', si: { tous: ['geant_vaincu', { non: 'chevaliers_vaincus' }] } }]
+  },
+
+  // ---------- les Mines de sel (troisième sanctuaire) ----------
+  mines_entree: {
+    nom: 'Mines de sel', musique: 'foret', ciel: 0x101418, sauvegardeAuto: true, entree: 'mines_arrivee',
+    combat: { sol: ['sel0', 'sel1', 'sel2'], decor: 'mur_mine_haut', interieur: true },
+    plan: [
+      '######!######',
+      '|!!!!!!!!!!!|',
+      '|!+!!!!!!!+!|',
+      '|!!!!!!!!!!!|',
+      '|*!!^!!!!!!!|',
+      '|!!!!!!!!!!!|',
+      '|!+!!!!!!!+!|',
+      '|!!!!!!!!!!*|',
+      '|!!!!!!!!!!!|',
+      '------!------'
+    ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 9, y: 0 }],
+    objets: [
+      { type: 'lanterne', x: 2, y: 8 },
+      { type: 'coffre', id: 'mines_fioles', x: 10, y: 8, contenu: { objet: 'fiole', n: 2 } }
+    ],
+    monstres: [{ type: 'chauve_souris', x: 8, y: 4, rayon: 1 }],
+    sorties: [
+      { x: 6, y: 9, vers: 'hautes_roches', a: [9, 2], dir: 'bas' },
+      { x: 6, y: 0, vers: 'mines_galerie', a: [7, 10], dir: 'haut' }
+    ]
+  },
+  mines_galerie: {
+    nom: 'Mines de sel', musique: 'foret', ciel: 0x101418,
+    combat: { sol: ['sel0', 'sel1', 'sel2'], decor: 'mur_mine_haut', interieur: true },
+    plan: [
+      '#######!#######',
+      '|*!!!!!!!!!!!!|',
+      '|!!!!!!!!!!!!!|',
+      '|!!+!!!!!!!+!!|',
+      '|!!!!!!!!!!!!!|',
+      '|!!!!!*!!!!!^!|',
+      '!!!!!!!!!!!!!!!',
+      '|!!!!!!!*!!!!!|',
+      '|!!!!!!!!!!!!!|',
+      '|!!+!^!!!!!+!!|',
+      '|*!!!!!!!!!!!*|',
+      '-------!-------'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 10, y: 0 }],
+    objets: [
+      { type: 'porte_cle', id: 'galerie_porte', x: 7, y: 1, cle: 'cle_mines' },
+      { type: 'coffre', id: 'galerie_baton', x: 12, y: 2, contenu: { objet: 'baton_cristal', n: 1 } }
+    ],
+    monstres: [
+      { type: 'mineur_sel', x: 4, y: 5, rayon: 1 },
+      { type: 'herisson', x: 10, y: 8, rayon: 1 }
+    ],
+    sorties: [
+      { x: 7, y: 11, vers: 'mines_entree', a: [6, 1], dir: 'bas' },
+      { x: 0, y: 6, vers: 'mines_tresor', a: [7, 4], dir: 'gauche' },
+      { x: 14, y: 6, vers: 'mines_lac', a: [1, 8], dir: 'droite' },
+      { x: 7, y: 0, vers: 'mines_puits', a: [6, 8], dir: 'haut' }
+    ]
+  },
+  mines_tresor: {
+    nom: 'Salle des outils', musique: 'foret', ciel: 0x101418,
+    combat: { sol: ['sel0', 'sel1', 'sel2'], decor: 'mur_mine_haut', interieur: true },
+    plan: [
+      '#########',
+      '|*!!!!!*|',
+      '|!!!!!!!|',
+      '|!^!!!!!|',
+      '|!!!!!!!!',
+      '|!!!!!!!|',
+      '|*!!!!!*|',
+      '---------'
+    ],
+    ornements: [{ type: 'torche', x: 2, y: 0 }, { type: 'torche', x: 6, y: 0 }],
+    objets: [
+      { type: 'coffre', id: 'masse', x: 4, y: 1, evenement: 'tresor_masse' },
+      { type: 'coffre', id: 'tresor_epee', x: 4, y: 6, contenu: { objet: 'epee_runique', n: 1 } }
+    ],
+    monstres: [{ type: 'scarabee', x: 5, y: 3, rayon: 1 }],
+    sorties: [{ x: 8, y: 4, vers: 'mines_galerie', a: [1, 6], dir: 'droite' }]
+  },
+  mines_lac: {
+    nom: 'Lac salé', musique: 'foret', ciel: 0x101418, sauvegardeAuto: true,
+    combat: { sol: ['sel0', 'sel1', 'sel2'], decor: 'mur_mine_haut', interieur: true },
+    plan: [
+      '###############',
+      '|*!!!!!!!!!!*!|',
+      '|!!!~~~~~~~!*!|',
+      '|!!!~~~~~~~!!!|',
+      '|!!!~~!!~~~!!!|',
+      '|!!!~~!!~~~!!!|',
+      '|!!!~~~~~~~!!!|',
+      '|!!!~~~~~~~!!!|',
+      '!!!!~~~~~~~!!!|',
+      '|!^!!!!!!!!!!*|',
+      '---------------'
+    ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 11, y: 0 }],
+    objets: [
+      { type: 'pieu', x: 7, y: 5 }, { type: 'pieu', x: 2, y: 5 },
+      { type: 'coffre', id: 'lac_cle', x: 7, y: 4, contenu: { objet: 'cle_mines', n: 1 } },
+      { type: 'rocher', id: 'lac_rocher', x: 13, y: 2, outil: 'masse', texte: 'Un rocher fendu, coincé entre deux blocs de sel. Il y a un coffre derrière.' },
+      { type: 'coffre', id: 'lac_arc', x: 13, y: 1, contenu: { objet: 'arc_cimes', n: 1 } }
+    ],
+    monstres: [
+      { type: 'chauve_souris', x: 9, y: 1, rayon: 1 },
+      { type: 'herisson', x: 12, y: 8, rayon: 1 }
+    ],
+    sorties: [{ x: 0, y: 8, vers: 'mines_galerie', a: [13, 6], dir: 'gauche' }]
+  },
+  mines_puits: {
+    nom: 'Mines de sel', musique: 'foret', ciel: 0x101418, sauvegardeAuto: true,
+    combat: { sol: ['sel0', 'sel1', 'sel2'], decor: 'mur_mine_haut', interieur: true },
+    plan: [
+      '######!######',
+      '|*!!!!!!!!!*|',
+      '|!!!!!!!!!!!|',
+      '|!!!+!!!+!!!|',
+      '|!!!!!!!!!!!|',
+      '|!!!!!!!!!!!|',
+      '|!!!+!!!+!!!|',
+      '|!!!!!!!!!!!|',
+      '|*!!!!!!!!!^|',
+      '------!------'
+    ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 9, y: 0 }],
+    objets: [
+      { type: 'mur_fissure', id: 'puits_mur', x: 6, y: 1, outil: 'masse', texte: 'Un mur fissuré, au fond du puits. Un courant d\'air froid passe entre les fentes.' },
+      { type: 'coffre', id: 'page', x: 2, y: 2, evenement: 'page_sceau' },
+      { type: 'coffre', id: 'puits_masse', x: 10, y: 2, contenu: { objet: 'masse_argent', n: 1 } },
+      { type: 'lanterne', x: 10, y: 7 }
+    ],
+    monstres: [
+      { type: 'mineur_sel', x: 3, y: 5, rayon: 1 },
+      { type: 'scarabee', x: 9, y: 5, rayon: 1 }
+    ],
+    sorties: [
+      { x: 6, y: 9, vers: 'mines_galerie', a: [7, 2], dir: 'bas' },
+      { x: 6, y: 0, vers: 'mines_coeur', a: [5, 9], dir: 'haut' }
+    ]
+  },
+  mines_coeur: {
+    nom: 'Cœur des mines', musique: 'foret', ciel: 0x101418, sauvegardeAuto: true, entree: 'mines_coeur_arrivee',
+    combat: { sol: ['sel0', 'sel1', 'sel2'], decor: 'mur_mine_haut', interieur: true },
+    plan: [
+      '###########',
+      '|**!!!!!**|',
+      '|*!!!!!!!*|',
+      '|!!!!!!!!!|',
+      '|!!!!!!!!!|',
+      '|!!!!!!!!!|',
+      '|!!!!!!!!!|',
+      '|!!!!!!!!!|',
+      '|*!!!!!!!*|',
+      '|!!!!!!!!!|',
+      '-----!-----'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 6, y: 0 }],
+    objets: [{ type: 'fresque', x: 5, y: 1, evenement: 'fresque_mines' }],
+    pnj: [{ id: 'geant', perso: 'geant_sel', x: 5, y: 3, evenement: 'geant_parle', si: '!geant_vaincu' }],
+    sorties: [{ x: 5, y: 10, vers: 'mines_puits', a: [6, 2], dir: 'bas' }],
+    declencheurs: [{ x: [1, 9], y: 6, evenement: 'geant_combat', si: '!geant_vaincu' }]
   }
 };

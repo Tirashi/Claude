@@ -22,9 +22,10 @@
   const dans = (v, a) => Array.isArray(a) ? v >= a[0] && v <= a[1] : v === a;
 
   /* Objets qui s'ouvrent : une grille (ouverte quand la condition ouvertSi est vraie), une porte à clé (porte_cle),
-     une nappe de brume (nappe, dissipée par un outil) : ouverts, ils ne bloquent plus. Le drapeau « ouvert:<id> » note
-     qu'une porte ou une nappe a été ouverte. test(condition) : voir Evenements.condition. */
-  const OUVRABLES = ['grille', 'porte_cle', 'nappe'];
+     une nappe de brume (nappe), un rocher fendu (rocher) ou un mur fissuré (mur_fissure), ôtés par un outil (o.outil) :
+     ouverts, ils ne bloquent plus. Le drapeau « ouvert:<id> » note qu'une porte, une nappe ou un rocher a été ouvert.
+     test(condition) : voir Evenements.condition. */
+  const OUVRABLES = ['grille', 'porte_cle', 'nappe', 'rocher', 'mur_fissure'];
   const estOuvert = (o, test) => o.ouvertSi ? test(o.ouvertSi) : !!o.id && test('ouvert:' + o.id);
 
   function preparer(def, legendeCommune, test = () => false) {

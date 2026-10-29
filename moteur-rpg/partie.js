@@ -192,10 +192,15 @@
         const outil = jeu.outils && jeu.outils[ob.outil];
         return jouer([{ dire: etat.drapeaux['outil:' + ob.outil] ? `Une nappe de brume épaisse. ${outil ? outil.aide : ''}` : 'Une nappe de brume, épaisse comme un mur. Impossible de passer sans lumière.' }]);
       }
+      // un autre obstacle qu'un outil ôte (rocher fendu, mur fissuré) : sa description, puis l'aide de l'outil ou ce qui manque
+      if (ob.outil && !ouvert) {
+        const outil = (jeu.outils && jeu.outils[ob.outil]) || {};
+        return jouer([{ dire: [].concat(ob.texte || [], etat.drapeaux['outil:' + ob.outil] ? outil.aide || [] : outil.sans || []) }]);
+      }
       if (ob.type === 'grille' && !ouvert) return jouer([{ dire: ob.texte || 'Une lourde grille barre le passage.' }]);
     }
 
-    // B : l'outil sur ce qui est devant soi (une nappe de brume et la lanterne, de l'eau et le grappin)
+    // B : l'outil sur ce qui est devant soi (une nappe de brume et la lanterne, un rocher et la masse, de l'eau et le grappin)
     function outil() {
       const [fx, fy] = W.devant(chef.x, chef.y, chef.dir), ob = W.objetEn(carte, fx, fy);
       if (ob && ob.outil && etat.drapeaux['outil:' + ob.outil] && !W.estOuvert(ob, c => Ev.condition(c, etat))) {
