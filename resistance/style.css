@@ -600,4 +600,10 @@ button { touch-action: manipulation; }
   #hint { top: calc(var(--map-h, 0px) - 6px); bottom: auto; transform: translate(-50%, -100%); }
   #forecast .fc-wait { padding: 10px 18px; }
   #forecast .fc-row ~ .fc-note, #forecast .fc-note { display: none; }
+  /* Les boutons des prévisions restent collés en bas de la zone visible, même quand le texte
+     au-dessus (triangle, risques…) est long et que la zone défile */
+  #forecast .fc-row { position: sticky; bottom: 0; z-index: 1; padding: 4px 0 2px; background: #111343; }
+  #forecast .fc-row button { padding: 8px 16px; white-space: nowrap; }
+  /* Sur téléphone, la ligne des armes est retirée (elles sont dans la fiche et la ligne du triangle) */
+  #forecast .fc-grid > :nth-child(4), #forecast .fc-grid > :nth-child(5), #forecast .fc-grid > :nth-child(6) { display: none; }
 }
