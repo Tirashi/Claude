@@ -179,7 +179,7 @@
         if (!boss.j) { boss.nom = h('b'); boss.j = jauge('pv'); boss.p = h('small'); barreBoss.append(boss.nom, boss.j.el, boss.p); }
         const p = C.prochaineAction(c, b);
         boss.nom.textContent = b.nom; remplir(boss.j, vue.get(b.id).pv / b.pvMax);
-        boss.p.className = p && (p.grand || p.prepare) ? 'grand' : ''; boss.p.textContent = p ? 'Prochaine action : ' + p.nom : '';
+        boss.p.className = p && (p.grand || p.prepare) ? 'grand' : ''; boss.p.textContent = p ? 'Ensuite : ' + p.nom : '';
       }
       const prepare = c.monstres.find(m => m.pv > 0 && m.prepare);
       alerte.style.display = prepare ? '' : 'none';
@@ -203,9 +203,11 @@
         let l = fiches.get(x.id);
         if (!l) {
           l = { el: h('div'), nom: h('b'), tpv: h('span'), pv: jauge('pv'), tpm: h('span'), pm: jauge('pm') };
-          const lpv = h('div', 'cb-ligne'), lpm = h('div', 'cb-ligne');
+          // PV et PM côte à côte, sous le nom
+          const lpv = h('div', 'cb-ligne'), lpm = h('div', 'cb-ligne'), cpv = h('div'), cpm = h('div'), jauges = h('div', 'cb-jauges');
           lpv.append(h('span', '', 'PV'), l.tpv); lpm.append(h('span', '', 'PM'), l.tpm);
-          l.el.append(l.nom, lpv, l.pv.el, lpm, l.pm.el); equipe.append(l.el); fiches.set(x.id, l);
+          cpv.append(lpv, l.pv.el); cpm.append(lpm, l.pm.el); jauges.append(cpv, cpm);
+          l.el.append(l.nom, jauges); equipe.append(l.el); fiches.set(x.id, l);
         }
         const v = vue.get(x.id), etats = Object.keys(x.etats).map(k => ({ poison: '☠', sommeil: 'Zz', silence: '…' })[k] || '').join(' ');
         l.el.className = 'cb-heros' + (x.id === actif ? ' actif' : '') + (v.pv <= 0 ? ' ko' : '');
@@ -229,23 +231,31 @@
 
     // ---------- menus ----------
     // une liste au curseur ▶ ; options : [{ texte, aide, non }] ; renvoie l'indice, ou -1 pour Retour
+    const COLONNES = 3;
     function liste(options, retour) {
       return new Promise(fin => {
+        // des boutons en grille au-dessus de l'équipe ; l'explication du choix en cours sur une ligne à part
         menu.innerHTML = '';
+        const aide = h('div', 'cb-aide'); menu.append(aide);
         let cur = Math.max(0, options.findIndex(x => !x.non));
         const lignes = options.map((x, i) => {
           const b = h('div', 'cb-option' + (x.non ? ' non' : ''));
-          b.append(h('span', '', x.texte)); if (x.aide) b.append(h('small', '', x.aide));
-          b.onclick = () => { if (!x.non) { cur = i; valider(); } };
+          b.append(h('span', '', x.texte)); if (x.non && x.aide) b.append(h('small', '', x.aide));
+          b.onclick = () => { if (!x.non) { cur = i; valider(); } else { aide.textContent = x.aide || ''; } };
           if (x.survol) b.onpointerenter = () => x.survol();
           menu.append(b); return b;
         });
         if (retour) { const b = h('div', 'cb-option retour', '◀ Retour'); b.append(h('i', 'cb-touche', 'B')); b.onclick = () => finir(-1); menu.append(b); }
-        const maj = () => { lignes.forEach((b, i) => b.classList.toggle('sel', i === cur)); if (options[cur] && options[cur].survol) options[cur].survol(); };
+        const maj = () => {
+          lignes.forEach((b, i) => b.classList.toggle('sel', i === cur));
+          const x = options[cur]; aide.textContent = (x && x.aide) || '';
+          if (x && x.survol) x.survol();
+          if (lignes[cur]) lignes[cur].scrollIntoView({ block: 'nearest' });
+        };
         const finir = i => { touche = null; sons.effet(i < 0 ? 'bip' : 'ok', .4); fin(i); };
         const valider = () => { if (!options[cur].non) finir(cur); };
         touche = t => {
-          if (t === 'haut' || t === 'bas') { const d = t === 'haut' ? -1 : 1; for (let k = 0; k < options.length; k++) { cur = (cur + d + options.length) % options.length; if (!options[cur].non) break; } sons.effet('bip', .25); maj(); }
+          if (t === 'haut' || t === 'bas' || t === 'gauche' || t === 'droite') { const d = { haut: -COLONNES, bas: COLONNES, gauche: -1, droite: 1 }[t]; for (let k = 0; k < options.length; k++) { cur = (cur + d + options.length) % options.length; if (!options[cur].non) break; } sons.effet('bip', .25); maj(); }
           else if (t === 'A') valider();
           else if ((t === 'B' || t === 'MENU') && retour) finir(-1);
         };
