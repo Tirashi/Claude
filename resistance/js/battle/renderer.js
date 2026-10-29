@@ -113,14 +113,36 @@
           this.ctx.drawImage(image, frame * TILE, 0, TILE, TILE, c.x * TILE, c.y * TILE, TILE, TILE);
         }
       };
+      // Zone de danger : voile rouge sous les portées (une case bleue et rouge à la fois est
+      // un endroit où l'unité pourrait aller, mais où l'ennemi pourra la frapper)
+      const zone = battle.dangerOn && ['idle', 'selected'].includes(battle.state) && battle.phase === 'player';
       if (battle.state === 'selected' && battle.moveRes) {
         paint(blue, battle.moveRes.dist.keys());
-        paint(red, battle.threat);
+        if (!zone) paint(red, battle.threat);
       } else if (battle.state === 'target') {
         paint(red, battle.targets.map((e) => key(e.x, e.y)));
       } else if (battle.danger && battle.danger.unit.alive) {
         paint(blue, battle.danger.moves.stops);
         paint(red, battle.danger.threat);
+      }
+      if (zone) {
+        const { ctx } = this;
+        const cells = new Set([...battle.dangerTiles()].map((k) => {
+          const [x, y] = k.split(',').map(Number);
+          const c = toCell(x, y);
+          return `${c.x},${c.y}`;
+        }));
+        for (const k of cells) {
+          const [x, y] = k.split(',').map(Number);
+          ctx.fillStyle = 'rgba(255, 40, 60, .38)';
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+          // Bord plus vif là où la zone s'arrête
+          ctx.fillStyle = 'rgba(255, 110, 120, .95)';
+          if (!cells.has(`${x},${y - 1}`)) ctx.fillRect(x * TILE, y * TILE, TILE, 1);
+          if (!cells.has(`${x},${y + 1}`)) ctx.fillRect(x * TILE, y * TILE + TILE - 1, TILE, 1);
+          if (!cells.has(`${x - 1},${y}`)) ctx.fillRect(x * TILE, y * TILE, 1, TILE);
+          if (!cells.has(`${x + 1},${y}`)) ctx.fillRect(x * TILE + TILE - 1, y * TILE, 1, TILE);
+        }
       }
     }
 

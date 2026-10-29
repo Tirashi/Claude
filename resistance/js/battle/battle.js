@@ -4,6 +4,29 @@
 
   const TILE = 16;
 
+  // Dernières paroles d'un rebelle qui tombe. Choisies d'après son nom et le tour (pas avec
+  // la graine du combat, pour qu'une partie rejouée reste la même).
+  const LAST_WORDS = [
+    'Continuez sans moi…',
+    'Libérez le pays… pour moi.',
+    'Je ne verrai pas la fin de la guerre…',
+    'Dites à ma famille… que j\'ai tenu.',
+    'Pardon… je n\'ai pas su tenir.',
+    'Ne vous arrêtez pas…',
+    'La rébellion… vivra…',
+    'J\'aurais voulu revoir les montagnes…',
+  ];
+  const CAPTAIN_WORDS = ['Le Mémorial… gardera mon nom.', 'Un Capitaine tombe… cent autres se lèvent.'];
+  function lastWords(u, turn) {
+    const pool = u.grade ? CAPTAIN_WORDS : LAST_WORDS;
+    let h = turn;
+    for (const ch of u.name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return pool[h % pool.length];
+  }
+
+  // Zone de danger (bouton « Danger ») : gardée d'un combat à l'autre
+  let dangerZoneOn = false;
+
   let nextId = 1;
 
   // def vient soit d'une rencontre (ennemi : stats de classe + bonus + niveaux de l'étage),
@@ -55,6 +78,7 @@
       acted: false, alive: true, alpha: 1,
       flashUntil: 0, hitShakeUntil: 0,
       ai: def.ai ?? 'aggressive', boss: !!def.boss, awake: false,
+      kills: 0,                  // ennemis vaincus pendant ce combat (bilan de la campagne)
     };
   }
 
@@ -63,7 +87,8 @@
     // inventory : sac de l'armée (modifié quand un objet est utilisé) ;
     // onEnd(victoire) est appelé quand un camp est entièrement vaincu (true / false),
     // ou avec 'retreat' quand le joueur bat en retraite.
-    constructor({ encounter, army, inventory = {}, seed, levelBonus = 0, ui, onEnd }) {
+    // guide : premier combat guidé (guide.js), ou null
+    constructor({ encounter, army, inventory = {}, seed, levelBonus = 0, ui, guide = null, onEnd }) {
       this.encounter = encounter;
       this.inventory = inventory;
       this.menuLevel = null;     // 'items' quand le sous-menu Objet est ouvert
@@ -74,6 +99,7 @@
       this.rng = new RNG(seed);
       this.seed = seed;
       this.ui = ui;
+      this.guide = guide;
       this.onEnd = onEnd;
 
       const spawns = this.mapDef.spawns;
@@ -96,7 +122,12 @@
       this.targetIndex = 0;
       this.forecastShown = false;
 
+      // Horloge du combat : elle avance deux fois plus vite quand on touche l'écran pendant
+      // la phase ennemie (this.fast), et toutes les animations la suivent.
       this.time = 0;
+      this.lastNow = null;
+      this.fast = false;
+      this.dangerZone = null;    // { sig, tiles } : cases que l'ennemi peut frapper (bouton Danger)
       this.tweens = [];
       this.floats = [];
       this.effects = [];
@@ -117,7 +148,10 @@
     }
 
     update(now) {
-      this.time = now;
+      const dt = this.lastNow === null ? 0 : Math.max(0, now - this.lastNow);
+      this.lastNow = now;
+      this.time += dt * (this.fast ? 2 : 1);
+      now = this.time;
       this.ui.setCancelEnabled(['selected', 'menu', 'target'].includes(this.state) || (this.state === 'idle' && !!this.danger));
       const done = [];
       for (const t of this.tweens) {
@@ -142,6 +176,33 @@
       await this.ui.banner(`Tour ${this.turn} — Phase alliée`, 'player');
       this.state = 'idle';
       this.refreshHover();
+      this.guide?.on('start');
+    }
+
+    // Zone de danger : toutes les cases qu'un ennemi peut frapper à son prochain tour,
+    // recalculée quand une unité bouge ou tombe.
+    get dangerOn() { return dangerZoneOn; }
+    toggleDangerZone() {
+      dangerZoneOn = !dangerZoneOn;
+      this.ui.setDangerOn(dangerZoneOn);
+      if (dangerZoneOn) this.guide?.on('danger');
+    }
+    dangerTiles() {
+      const sig = this.units.filter((u) => u.alive).map((u) => `${u.id}:${u.x},${u.y}`).join(' ');
+      if (this.dangerZone?.sig === sig) return this.dangerZone.tiles;
+      const tiles = new Set();
+      for (const e of this.living('enemy')) {
+        const moves = reachable(this, e);
+        if (e.ai === 'stationary') moves.stops = new Set([key(e.x, e.y)]);
+        for (const k of threatTiles(this, e, moves)) tiles.add(k);
+      }
+      this.dangerZone = { sig, tiles };
+      return tiles;
+    }
+
+    // Soldats qui n'ont pas encore joué ce tour (garde-fou de « Fin du tour »)
+    idleUnits() {
+      return this.phase === 'player' ? this.living('player').filter((u) => !u.acted) : [];
     }
 
     // Retraite (bouton, après confirmation) : seulement pendant la phase alliée, au repos.
@@ -159,6 +220,8 @@
       const win = !this.living('enemy').length;
       if (!win && this.living('player').length) return false;
       this.state = 'over';
+      this.fast = false;
+      this.ui.setSpeed(null);
       this.ui.hideAll();
       this.ui.setEndTurnEnabled(false);
       this.wait(500).then(() => this.onEnd?.(win));
@@ -178,6 +241,8 @@
       this.phase = 'enemy';
       this.ui.setTurn(this.turn, 'enemy');
       this.ui.setEndTurnEnabled(false);
+      this.guide?.on('enemy');
+      this.ui.setSpeed('hint');
       await this.ui.banner(`Tour ${this.turn} — Phase ennemie`, 'enemy');
       // Comme sur GBA, chaque camp se soigne sur les forts au début de sa propre phase.
       await this.healOnForts('enemy');
@@ -199,6 +264,8 @@
       }
 
       // Nouveau tour
+      this.fast = false;
+      this.ui.setSpeed(null);
       this.turn++;
       this.phase = 'player';
       for (const u of this.units) u.acted = false;
@@ -237,6 +304,7 @@
       this.state = 'idle';
       this.refreshHover();
       if (this.living('player').every((p) => p.acted)) this.endPlayerPhase();
+      else this.guide?.on('acted');
     }
 
     // ------------------------------------------------------------ animations
@@ -340,7 +408,10 @@
       }
       await this.wait(220);
       u.anim = 'idle';
-      if (t.hp <= 0) await this.kill(t);
+      if (t.hp <= 0) {
+        if (u.team === 'player') u.kills += 1;
+        await this.kill(t);
+      }
       return hit;
     }
 
@@ -350,6 +421,11 @@
       await this.wait(u.deathFrames * 110 + 150);
       await this.tween(350, (p) => { u.alpha = 1 - p; });
       u.alive = false;
+      if (u.team === 'player') {
+        this.ui.showQuote(u.name, lastWords(u, this.turn));
+        await this.wait(2000);
+        this.ui.hideQuote();
+      }
     }
 
     // ------------------------------------------------------------ entrées joueur
@@ -394,6 +470,11 @@
     }
 
     async click(x, y) {
+      // Pendant la phase ennemie, toucher l'écran l'accélère
+      if (this.phase === 'enemy' && this.state !== 'over') {
+        if (!this.fast) { this.fast = true; this.ui.setSpeed('fast'); }
+        return;
+      }
       if (!this.inBounds(x, y) || this.phase !== 'player') return;
       this.cursor = { x, y };
       const u = this.unitAt(x, y);
@@ -413,6 +494,7 @@
             this.origin = { x: this.selected.x, y: this.selected.y };
             await this.moveAlong(this.selected, pathTo(this.moveRes, x, y));
             this.openMenu();
+            this.guide?.on('menu');
             return;
           }
           if (u && u.team === 'player' && !u.acted && u !== this.selected) { this.select(u); return; }
@@ -455,6 +537,7 @@
       this.moveRes = reachable(this, u);
       this.threat = threatTiles(this, u, this.moveRes);
       this.state = 'selected';
+      this.guide?.on('select');
     }
 
     toggleDanger(u) {
@@ -542,6 +625,7 @@
       if (!att || !def) return;
       const fc = forecast(this, att, def, att);
       this.forecastShown = true;
+      this.guide?.on('forecast');
       this.ui.showForecast(att, def, fc, att.x < this.w / 2 ? 'right' : 'left', () => {
         if (this.state === 'target' && this.targets[this.targetIndex] === def) this.click(def.x, def.y);
       });
