@@ -95,6 +95,10 @@
         }
       }
       if (!lum) rendu.eclair(0xffffff, 0, 0, 0, 0);
+      for (const [id, x] of barresPV) if (places.has(id)) {
+        const [px, pz] = places.get(id), [sx, sy] = rendu.projeter(px, 0, pz + .45);
+        x.el.style.transform = `translate(${Math.round(sx - 28)}px, ${Math.round(sy)}px)`;
+      }
       for (const m of [marque, fleche]) if (m.dataset.cible && places.has(m.dataset.cible)) {
         const [x, z] = places.get(m.dataset.cible), f = combattant(m.dataset.cible);
         const y = f && f.camp === 'm' ? 1.6 * (f.def.taille || 1) + .5 : 2.3;
@@ -105,6 +109,23 @@
     function marquer(id) { marque.dataset.cible = id || ''; marque.style.display = id ? '' : 'none'; }
     function montrerActeur(id) { fleche.dataset.cible = id || ''; fleche.style.display = id ? '' : 'none'; }
     marquer(null); montrerActeur(null);
+
+    // une petite barre de PV sous chaque monstre (pas le boss : il a sa barre en haut) ;
+    // les chiffres n'apparaissent que si on l'a déjà vaincu une fois (bestiaire)
+    const barresPV = new Map();
+    for (const m of c.monstres) if (!m.boss) {
+      const el = h('div', 'cb-pv-monstre'), b = h('div', 'rpg-barre pv'), i = h('i'), t = h('small', '');
+      b.append(i); el.append(b, t); calque.append(el);
+      barresPV.set(m.id, { el, i, t, connu: ((etat.bestiaire || {})[m.type] || {}).v >= 1 });
+    }
+    function majPV() {
+      for (const [id, x] of barresPV) {
+        const m = combattant(id);
+        x.el.style.display = m.pv > 0 && places.has(id) ? '' : 'none';
+        x.i.style.width = 100 * m.pv / m.pvMax + '%';
+        x.t.textContent = x.connu ? `${m.pv}/${m.pvMax}` : '';
+      }
+    }
 
     // ---------- la frise de l'ordre de passage, la barre du boss, l'alerte ----------
     const portraits = new Map();
@@ -216,7 +237,7 @@
       for (;;) {
         marquer(x.id);
         const talents = M.Regles.talentsConnus(jeu.talents, x.classe, x.ref.niveau);
-        const ops = [{ texte: 'Attaque' }, { texte: 'Talents', non: !talents.length }, { texte: 'Objets', non: !usables().length }, { texte: 'Défense' }, { texte: 'Fuite', non: !C.fuite(c).possible, aide: C.fuite(c).possible ? undefined : C.fuite(c).raison }];
+        const ops = [{ texte: 'Attaque' }, { texte: 'Talents', non: !talents.length }, { texte: 'Objets', non: !usables().length }, { texte: 'Défense' }, { texte: 'Fuite', non: !C.fuite(c).possible, aide: C.fuite(c).possible ? `Chance de fuir : ${Math.round(100 * M.Regles.chanceFuite(C.fuite(c).vh, C.fuite(c).vm))} %` : C.fuite(c).raison }];
         const i = await liste(ops, !premier);
         if (i < 0) return 'retour';
         if (i === 0) { const id = await choisirCible(C.vivants(c.monstres)); if (id) return { action: 'attaque', cible: id }; }
@@ -269,14 +290,14 @@
         }
         else if (e.t === 'degats') {
           anim(e.a, 'touche', .5); sons.effet('touche', .45);
-          chiffre(e.a, '-' + e.n, e.critique ? 'critique' : ''); majEquipe(null);
+          chiffre(e.a, '-' + e.n, e.critique ? 'critique' : ''); majEquipe(null); majPV();
           await attendre(120);
         }
-        else if (e.t === 'soin') { if (e.n) chiffre(e.a, '+' + e.n, 'soin'); majEquipe(null); }
+        else if (e.t === 'soin') { if (e.n) chiffre(e.a, '+' + e.n, 'soin'); majEquipe(null); majPV(); }
         else if (e.t === 'rate') { chiffre(e.a, 'Raté', 'rate'); }
         else if (e.t === 'ko') {
           const f = combattant(e.a);
-          if (f.camp === 'm') { sons.effet('vaincu', .5); anim(e.a, 'touche', .5); await attendre(450); rendu.retirer(e.a); places.delete(e.a); }
+          if (f.camp === 'm') { sons.effet('vaincu', .5); anim(e.a, 'touche', .5); await attendre(450); rendu.retirer(e.a); places.delete(e.a); majPV(); }
           majEquipe(null);
         }
         else if (e.t === 'releve') { anims.delete(e.a); chiffre(e.a, 'Debout !', 'soin'); majEquipe(null); }
@@ -289,13 +310,42 @@
       }
     }
 
+    // ---------- montée de niveau, à la Fire Emblem : les caractéristiques en colonne, qui montent une à une ----------
+    function tableauNiveau(n, p) {
+      return new Promise(async fin => {
+        banniere.classList.remove('on');
+        const fen = h('div', 'cb-niveau'), tete = h('div', 'cb-niveau-tete'), cv = document.createElement('canvas');
+        cv.width = cv.height = 48;
+        if (o.poupees) M.Poupees.portrait(cv, o.poupees.perso(jeu.heros[n.id].perso));
+        const titre = h('div', ''); titre.append(h('b', '', n.nom), h('div', 'cb-niveau-num', `NIVEAU ${p.niveau}`));
+        tete.append(cv, titre); fen.append(tete);
+        const lignes = [['pv', 'PV'], ['pm', 'PM'], ['for', 'Force'], ['def', 'Défense'], ['mag', 'Magie'], ['vit', 'Vitesse']].map(([k, nom]) => {
+          const l = h('div', 'cb-niveau-ligne'), val = h('span', 'val', String(p.avant[k])), gain = h('span', 'gain', '');
+          l.append(h('span', 'nom', nom), val, gain); fen.append(l);
+          return { l, val, gain, d: p.apres[k] - p.avant[k], apres: p.apres[k] };
+        });
+        racine.append(fen); sons.effet('niveau', .6);
+        let presse = false;
+        fen.addEventListener('pointerdown', () => { presse = true; });
+        await attendre(500);
+        for (const x of lignes) {
+          if (!presse) await attendre(280);
+          if (x.d > 0) { x.val.textContent = String(x.apres); x.gain.textContent = '+' + x.d; x.l.classList.add('monte'); sons.effet('bip', .45); }
+        }
+        for (const t of p.talents) fen.append(h('div', 'cb-niveau-talent', `Nouveau talent : ${jeu.talents[t].nom} !`));
+        fen.append(h('small', 'cb-niveau-suite', 'A ou toucher pour continuer'));
+        const finir = () => { attente = null; fen.remove(); fin(); };
+        attente = finir; fen.onclick = finir;
+      });
+    }
+
     // ---------- le combat ----------
     async function derouler() {
       majEquipe(null);
       sons.effet('rencontre', .5); sons.musique('combat');
       await attendre(350);
       for (const t of C.intro(c)) await afficher(t);
-      majBoss();
+      majBoss(); majPV();
       while (!c.fin) {
         C.debutTour(c);
         let f;
@@ -315,6 +365,7 @@
         if (!c.fin) { await jouer(C.finTour(c)); majBoss(); }
       }
       frise.innerHTML = ''; barreBoss.style.display = 'none'; alerte.style.display = 'none';
+      for (const x of barresPV.values()) x.el.remove();
       const r = C.terminer(c);
       menu.innerHTML = '';
       if (r.fin === 'victoire') {
@@ -324,13 +375,7 @@
         await afficher('Victoire !', 900);
         await afficher(`L'équipe gagne ${r.xp} points d'expérience et ${r.ecus} écus.`, 1100);
         for (const ob of r.objets) await afficher(`Tu trouves : ${jeu.objets[ob].nom}.`, 900);
-        for (const n of r.niveaux) for (const p of n.passages) {
-          sons.effet('niveau', .6);
-          await afficher(`${n.nom} passe au niveau ${p.niveau} !`, 900);
-          const lignes = [['pv', 'PV'], ['pm', 'PM'], ['for', 'FOR'], ['def', 'DEF'], ['mag', 'MAG'], ['vit', 'VIT']].filter(([k]) => p.apres[k] !== p.avant[k]).map(([k, nom]) => `${nom} ${p.avant[k]} → ${p.apres[k]}`);
-          if (lignes.length) await afficher(lignes.join(' · '), 1600);
-          for (const t of p.talents) await afficher(`Nouveau talent : ${jeu.talents[t].nom} !`, 1100);
-        }
+        for (const n of r.niveaux) for (const p of n.passages) await tableauNiveau(n, p);
         clearInterval(boucle);
       } else if (r.fin === 'defaite') {
         sons.musique(null);

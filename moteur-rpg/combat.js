@@ -41,6 +41,9 @@
         elements: m.elements || {}, effets: {}, etats: {}, boss: !!m.boss, def: m, prepare: null });
       if (m.boss) c.boss = true;
     });
+    // bestiaire : combats rencontrés et gagnés contre chaque monstre (le menu dévoile ses infos peu à peu)
+    const b = etat.bestiaire || (etat.bestiaire = {});
+    for (const t of Object.keys(compte)) (b[t] = b[t] || { r: 0, v: 0 }).r++;
     return c;
   }
 
@@ -285,7 +288,7 @@
     if (!critiqueSur && rng() < R().chanceEsquive(stat(cible, 'vit'), stat(att, 'vit'))) { ev.push({ t: 'rate', a: cible.id }); dire(`${cible.nom} esquive !`); return; }
     const classe = att.camp === 'h' ? c.jeu.classes[att.classe] : null;
     const critique = critiqueSur || (!sansCritique && rng() < R().chanceCritique(classe));
-    if (critique) dire('COUP CRITIQUE !');
+    if (critique) dire('COUP CRITIQUE ! (× 1,5)');
     const n = R().degatsArme(stat(att, 'for'), stat(cible, 'def'), rng, critique, mult, critiqueSur);
     blesser(c, cible, reduire(c, cible, n), ev, critique);
     if (poison && cible.pv > 0 && rng() < poison) { cible.etats.poison = true; ev.push({ t: 'etat', a: cible.id, etat: 'poison' }); dire(`${cible.nom} ${ETATS.poison}`); }
@@ -361,6 +364,8 @@
     const r = { fin: c.fin, xp: 0, ecus: 0, objets: [], niveaux: [] };
     for (const h of c.heros) { h.ref.pv = h.pv; h.ref.pm = h.pm; h.ref.etats = Object.assign({}, h.etats); }
     if (c.fin !== 'victoire') return r;
+    const b = c.etat.bestiaire || (c.etat.bestiaire = {});
+    for (const t of new Set(c.monstres.map(m => m.type))) (b[t] = b[t] || { r: 1, v: 0 }).v++;
     for (const m of c.monstres) {
       r.xp += m.def.xp || 0; r.ecus += m.def.ecus || 0;
       for (const b of m.def.butin || []) if (c.rng() < b.chance && E().donner(c.etat, b.objet, 1)) r.objets.push(b.objet);

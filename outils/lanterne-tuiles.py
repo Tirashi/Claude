@@ -89,6 +89,12 @@ def dessines():
         d.rectangle([cx + r - 1, cy - 1, 27, cy + 1], fill=coul, outline=f)
         for x in (21, 25): d.rectangle([x, cy + 1, x + 1, cy + 5 + (2 if grand else 0)], fill=coul, outline=f)
         t[nom] = im
+    # herbe (objet) : un brin de feuilles
+    im = neuf(); d = ImageDraw.Draw(im); V = [(30, 80, 30), (60, 140, 50), (110, 190, 80)]
+    d.line([16, 28, 16, 10], fill=V[0], width=2)
+    for (x, y, sx) in ((16, 22, -1), (16, 18, 1), (16, 14, -1), (16, 10, 1)):
+        d.ellipse([x + (sx < 0) * -9, y - 4, x + (sx > 0) * 9, y + 2], fill=V[1], outline=V[0]); d.point((x + sx * 4, y - 1), fill=V[2])
+    t['o_herbe2'] = im
     # nappe de brume (bloque le passage tant que la lanterne ne l'a pas dissipée)
     im = neuf(); d = ImageDraw.Draw(im)
     for (x, y, rx, ry, a) in ((16, 20, 14, 9, 150), (10, 16, 9, 7, 170), (22, 15, 9, 7, 170), (16, 11, 8, 6, 190)):

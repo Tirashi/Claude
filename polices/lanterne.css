@@ -1,3 +1,6 @@
-/* Police de La Dernière Lanterne, hébergée dans le dépôt (sous-ensemble latin de Google Fonts) :
-   Pixelify Sans (police variable 400 à 700, SIL Open Font License 1.1). */
+/* Polices de La Dernière Lanterne, hébergées dans le dépôt (sous-ensemble latin de Google Fonts, SIL Open Font License 1.1) :
+   Pixelify Sans (police variable 400 à 700) pour le texte, et Jersey 10 pour les chiffres seulement
+   (choix de l'utilisatrice, 28/10 : dans Pixelify Sans, le 5 ressemble au S et, en petit, le 2 au 8).
+   « Lanterne Chiffres » ne couvre que 0 à 9 (unicode-range) : placée avant Pixelify Sans, elle ne sert qu'aux chiffres. */
 @font-face { font-family: 'Pixelify Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(pixelify-sans.woff2) format('woff2'); }
+@font-face { font-family: 'Lanterne Chiffres'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(jersey-10.woff2) format('woff2'); unicode-range: U+0030-0039; size-adjust: 125%; }
