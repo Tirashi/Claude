@@ -30,10 +30,14 @@
     ctx.restore();
   }
 
-  // Direction affichée d'un soldat : couchée, la droite devient le haut (vu de dos) et la
-  // gauche le bas (vu de face).
-  const PORTRAIT_FACE = { right: 'up', left: 'down', up: 'left', down: 'right' };
-  const faceOf = (f) => (VIEW.portrait ? PORTRAIT_FACE[f] ?? f : f);
+  // Direction affichée d'un soldat sur la carte couchée. VIEW.profil (choix du 28/10) : les
+  // soldats restent de profil (les rebelles regardent à droite, l'ennemi à gauche) ; sinon,
+  // vus de dos (rebelles) et de face (ennemis). Un pas vers le haut ou le bas de la carte en
+  // paysage devient un pas vers la gauche ou la droite.
+  VIEW.profil = true;
+  const FACE_DOS = { right: 'up', left: 'down', up: 'left', down: 'right' };
+  const FACE_PROFIL = { right: 'right', left: 'left', up: 'left', down: 'right' };
+  const faceOf = (f) => (VIEW.portrait ? (VIEW.profil ? FACE_PROFIL : FACE_DOS)[f] ?? f : f);
 
   // Fond de carte dessiné en paysage (cases de 16 px) -> fond affiché, case par case
   function viewCache(c) {
