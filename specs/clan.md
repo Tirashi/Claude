@@ -177,6 +177,10 @@ Tous tranchés : voir § 1.1.
 - **B, de dessus** : comme Capitaine du port (mouettes et leurs ombres, pontons, toits de gazon) ; volet en ardoise.
 - **C, isométrique** : diorama, murs et toits en volume, navires en biais ; volet en cuir et laiton.
 À choisir : point de vue, habillage du volet, lumière suivant l'heure du téléphone ou non.
+**Retour (29/10)** : petits personnages appréciés, navires « presque bien », aucune vue ne convient ; l'utilisateur imagine de l'**isométrique** ; maquettes **trop peu détaillées**, bâtiments trop simples et trop lisses.
+
+## 16.2 Maquette 2 (29/10)
+`maquettes/clan-du-fjord-2.html`, https://claude.ai/artifact/KnJ1KRcdn2L6v2KDdAknaz. Tout en isométrique 2:1, **chaque face texturée pixel par pixel** (moteur `face()` : origine et deux vecteurs dans le monde, texture en coordonnées u, v, lumière par face) : planches avec joints et nœuds, fondations en pierre, clayonnage, gazon fleuri avec lattes d'écorce, chaume en couches, bardeaux ; portes ferrées, fenêtres, boucliers peints, dragons croisés au pignon de la grande halle. Accessoires : puits, pierre runique, séchoirs à poissons, tas de bois, tonneaux, caisses, foin, charrette, linge, champs, mannequins, cible, râtelier, clôtures, pins, bouleaux, rochers ; moutons, poules, villageoise. Navires redessinés (bordage à clins, équipage, voile à losanges). Positions données à l'écran (`at()`), sol calculé pour chaque pixel, quai dans une couche à part pour passer devant le drakkar. Trois rendus : A été sans contours, B contours 32 bits (contour sombre autour de chaque pan, couleurs plus vives), C soir d'hiver (neige, lumière froide, fenêtres éclairées, flocons).
 Le reste (coûts, statistiques, durées, formule) se règle avec le simulateur, en testant la boucle plutôt qu'en équilibrant tout d'avance.
 
 ## 17. Plan de travail proposé (Opus, une conversation par étape)

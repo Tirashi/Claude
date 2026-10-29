@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le Clan du fjord 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+/* Maquette 2 du Clan du fjord (29/10) : tout en isométrique, faces texturées pixel par pixel,
+   trois rendus (été sans contours, contours 32 bits, soir d'hiver), écrans VILLAGE et PORT. */
+:root{
+  --fond:#14110e; --texte:#f2e8d8; --doux:#bfae96; --or:#f0c050; --ligne:#3a3026; --cadre:#050403;
+  --f-titre:"Press Start 2P", monospace; --f-texte:"Pixelify Sans", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1140px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:28px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%;max-width:340px}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);font-size:15px;text-align:center}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:8px}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0 0 6px}
+section.q li{color:var(--doux);margin:4px 0}
+section.q b{color:var(--texte)}
+
+/* ---------- le téléphone ---------- */
+.tel{width:100%;aspect-ratio:9/19;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;
+  box-shadow:0 18px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;background:var(--p-fond);color:var(--p-texte);position:relative}
+.tel canvas{width:100%;display:block;image-rendering:pixelated;flex:none}
+.res{display:flex;justify-content:space-between;gap:2px;padding:5px 7px;background:var(--p-barre);border-bottom:3px solid var(--p-bord);flex:none}
+.res span{display:flex;align-items:center;gap:3px;font-size:13px;font-weight:600;color:var(--p-clair)}
+.res canvas{width:14px;height:14px}
+.vol{flex:1;overflow-y:auto;padding:8px 9px 10px;background:var(--p-volet);border-top:3px solid var(--p-bord);min-height:0;
+  background-image:var(--p-motif)}
+.vol h3{font-family:var(--f-titre);font-size:9px;margin:2px 0 7px;color:var(--p-titre);letter-spacing:.5px}
+.nav{display:flex;flex:none;background:var(--p-barre);border-top:3px solid var(--p-bord)}
+.nav button{flex:1;font-family:var(--f-titre);font-size:7px;padding:9px 0 8px;background:none;border:0;color:var(--p-doux);cursor:pointer;border-right:1px solid var(--p-bord)}
+.nav button:last-child{border-right:0}
+.nav button.on{color:var(--p-titre);background:var(--p-on)}
+.nav button:disabled{opacity:.45;cursor:default}
+.ligne{display:flex;align-items:center;gap:6px;margin:3px 0;font-size:14px}
+.ligne .ic{width:24px;height:30px;flex:none;image-rendering:pixelated}
+.ligne .nom{flex:1;line-height:1.1}
+.ligne .nom small{display:block;color:var(--p-doux);font-size:11.5px}
+.pm{display:flex;align-items:center;gap:3px}
+.pm button,.btn{font-family:var(--f-titre);font-size:9px;background:var(--p-bouton);color:var(--p-texte-bouton);border:2px solid var(--p-bord);
+  box-shadow:0 2px 0 var(--p-bord);border-radius:var(--p-rayon);cursor:pointer}
+.pm button{width:24px;height:22px;padding:0}
+.pm b{min-width:30px;text-align:center;font-size:14px}
+.cible{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.cible button{width:24px;height:24px;padding:0}
+.cible div{flex:1;text-align:center;line-height:1.15}
+.cible div b{font-size:14px}
+.cible div small{display:block;font-size:11.5px;color:var(--p-doux)}
+.navires{display:flex;gap:4px;margin-bottom:7px}
+.navires button{flex:1;font-family:var(--f-texte);font-size:12px;line-height:1.1;padding:4px 2px;background:transparent;color:var(--p-doux);
+  border:2px dashed var(--p-bord);border-radius:var(--p-rayon);cursor:pointer}
+.navires button.on{background:var(--p-on);color:var(--p-texte);border-style:solid}
+.navires small{display:block;font-size:10.5px}
+.jauge{display:flex;align-items:center;gap:6px;font-size:12.5px;margin:4px 0}
+.jauge > span:first-child{width:62px;color:var(--p-doux)}
+.jauge .bar{flex:1;height:10px;background:var(--p-creux);border:2px solid var(--p-bord);position:relative}
+.jauge .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--c,#d8a040)}
+.jauge > span:last-child{width:52px;text-align:right}
+.btn{display:block;width:100%;padding:11px 0;margin-top:8px;font-size:11px;background:var(--p-action);color:var(--p-texte-action)}
+.btn:disabled{opacity:.5}
+.chance{font-family:var(--f-titre);font-size:9px}
+.bat{display:flex;align-items:center;gap:6px;margin:5px 0;padding:5px 6px;border:2px solid var(--p-bord);border-radius:var(--p-rayon);background:var(--p-carte)}
+.bat .nom{flex:1;font-size:14px;line-height:1.1}
+.bat .nom small{display:block;font-size:11.5px;color:var(--p-doux)}
+.bat .btn{width:auto;margin:0;padding:7px 6px;font-size:8px}
+.toast{position:absolute;left:10px;right:10px;top:38%;padding:10px;text-align:center;font-family:var(--f-titre);font-size:9px;line-height:1.7;
+  background:var(--p-volet);border:3px solid var(--p-bord);box-shadow:0 4px 0 #000a;border-radius:var(--p-rayon);display:none;color:var(--p-texte)}
+.toast.on{display:block}
+
+/* Trois habillages d'interface, un par direction */
+.tA{ --p-fond:#2a1a10; --p-barre:#3b2414; --p-bord:#1a0e06; --p-volet:#e8d6aa; --p-motif:linear-gradient(#0000 0 0);
+  --p-texte:#2a1a0a; --p-doux:#7a5a36; --p-titre:#8a2a1a; --p-clair:#f4dfa8; --p-on:#cfb37a; --p-bouton:#7a4a22; --p-texte-bouton:#f4dfa8;
+  --p-action:#a83220; --p-texte-action:#ffe8b0; --p-creux:#cdb888; --p-carte:#f2e4bc; --p-rayon:2px }
+.tA .nav button{color:#c8a870} .tA .nav button.on{color:#ffe0a0;background:#5a3418}
+.tB{ --p-fond:#1c2a30; --p-barre:#24343c; --p-bord:#0c1418; --p-volet:#2e4048; --p-motif:repeating-linear-gradient(0deg,#0000 0 3px,#ffffff06 3px 4px);
+  --p-texte:#e8eef0; --p-doux:#98b0b8; --p-titre:#9fe0e8; --p-clair:#d8f0f4; --p-on:#3e6a74; --p-bouton:#46606a; --p-texte-bouton:#e8f6f8;
+  --p-action:#2f8a6a; --p-texte-action:#eafff6; --p-creux:#1a282e; --p-carte:#34505a; --p-rayon:6px }
+.tC{ --p-fond:#2c2018; --p-barre:#4a3222; --p-bord:#1e140c; --p-volet:#5e4430; --p-motif:radial-gradient(#ffffff08 1px,#0000 1px) 0 0/6px 6px;
+  --p-texte:#f6e6c8; --p-doux:#d0b088; --p-titre:#ffc860; --p-clair:#ffe6b0; --p-on:#8a6038; --p-bouton:#b8862e; --p-texte-bouton:#2a1606;
+  --p-action:#d8a030; --p-texte-action:#2a1606; --p-creux:#3a2818; --p-carte:#6e5038; --p-rayon:0 }
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <h1>LE CLAN DU FJORD</h1>
+  <p>Maquette 2 : tout en isométrique, avec beaucoup plus de détails. Chaque mur et chaque toit est texturé pixel par pixel : planches et fondations en pierre, clayonnage, gazon fleuri avec ses lattes d'écorce, chaume en couches, bardeaux ; portes ferrées, boucliers peints aux murs, têtes de dragon sur la grande halle. Autour : puits, pierre runique, séchoirs à poissons, tas de bois, tonneaux, foin, mannequins d'entraînement, cible, râtelier d'armes, pins, bouleaux, rochers. Trois rendus du même village. AMELIORER change toujours le décor ; au PORT, PARTIR envoie la flotte.</p>
+</header>
+
+<div class="grille" id="grille"></div>
+
+<section class="q">
+  <h2>A CHOISIR</h2>
+  <ul>
+    <li><b>Le rendu</b> : A sans contours, B avec contours, ou C l'hiver (la neige peut aussi venir avec les saisons, quel que soit le rendu).</li>
+    <li><b>Le niveau de détail</b> : assez, ou encore plus (fenêtres, outils, linge, charrettes…) ?</li>
+    <li><b>Les bâtiments</b> : les toits de gazon, de chaume et de bardeaux vous plaisent-ils ? La grande halle en bardeaux rouges avec ses dragons ?</li>
+    <li><b>Une carte plus grande</b> qu'on fait glisser au doigt, pour un village qui s'étend avec les niveaux ?</li>
+  </ul>
+</section>
+</div>
+
+<script>
+"use strict";
+const TAU = Math.PI * 2, W = 256, H = 224;
+
+/* ---------- outils de dessin ---------- */
+function R(g, x, y, w, h, c){ g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); }
+function mk(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.imageSmoothingEnabled = false; return [c, g]; }
+function rng(seed){ let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+function poly(g, pts, col){
+  g.fillStyle = col; let a = Infinity, b = -Infinity;
+  for (const p of pts){ a = Math.min(a, p[1]); b = Math.max(b, p[1]); }
+  for (let y = Math.floor(a); y < Math.ceil(b); y++){
+    const yc = y + .5, xs = [];
+    for (let k = 0; k < pts.length; k++){
+      const p = pts[k], q = pts[(k + 1) % pts.length];
+      if ((p[1] <= yc && q[1] > yc) || (q[1] <= yc && p[1] > yc)) xs.push(p[0] + (yc - p[1]) / (q[1] - p[1]) * (q[0] - p[0]));
+    }
+    xs.sort((m, n) => m - n);
+    for (let k = 0; k + 1 < xs.length; k += 2){ const x0 = Math.round(xs[k]), x1 = Math.round(xs[k + 1]); if (x1 > x0) g.fillRect(x0, y, x1 - x0, 1); }
+  }
+}
+const SILC = new Map();
+function silC(src, col){ let m = SILC.get(src); if (!m) SILC.set(src, m = {}); return m[col] || (m[col] = silhouette(src, col)); }
+function silhouette(src, col){ const [c, g] = mk(src.width, src.height); g.drawImage(src, 0, 0); g.globalCompositeOperation = "source-in"; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height); return c; }
+function outlined(src, col = "#1a0e08"){
+  const [c, g] = mk(src.width, src.height), s = silhouette(src, col);
+  for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) g.drawImage(s, dx, dy);
+  g.drawImage(src, 0, 0); return c;
+}
+function flipH(src){ const [c, g] = mk(src.width, src.height); g.translate(src.width, 0); g.scale(-1, 1); g.drawImage(src, 0, 0); return c; }
+function disc(g, cx, cy, r, col){ for (let y = -r; y <= r; y++){ const w = Math.round(Math.sqrt(r * r - y * y + r * .6)); R(g, cx - w, cy + y, w * 2 + 1, 1, col); } }
+
+/* ---------- les soldats (vus de côté, tournés vers la droite) ---------- */
+const UNITES = [
+  {id:"guerrier", nom:"Guerrier", role:"polyvalent, pas cher", tun:"#8a3a2a", casque:"cone", arme:"hache", bouclier:"rond", bc:"#d8a838", att:3, dispo:12},
+  {id:"archer", nom:"Archer", role:"fort contre les palissades", tun:"#4a6a34", casque:"capuche", arme:"arc", att:3, fort:1.6, dispo:6},
+  {id:"bouclier", nom:"Porte-bouclier", role:"mur de boucliers : moins de pertes", tun:"#34588a", casque:"cone", arme:"epee", bouclier:"grand", bc:"#b83020", att:2, dispo:4},
+  {id:"haches", nom:"Lanceur de haches", role:"brise les boucliers", tun:"#6e4a80", casque:"aucun", arme:"haches", att:4, dispo:4},
+  {id:"lancier", nom:"Lancier", role:"tient la ligne", tun:"#56646e", casque:"cone", arme:"lance", bouclier:"rond", bc:"#3a7a5a", att:2, dispo:6},
+  {id:"berserker", nom:"Berserker", role:"frappe fort, tombe vite", tun:"#5a3a22", casque:"ours", arme:"deux", att:6, dispo:2},
+  {id:"pilleur", nom:"Pilleur", role:"+3 de cale chacun", tun:"#8e7e50", casque:"aucun", arme:"sac", att:1, dispo:4},
+];
+function viking(u, frame){
+  const [c, g] = mk(18, 24), X = 6, Y = 22;
+  const skin = "#eab48a", hair = u.id === "haches" ? "#d8a040" : u.id === "berserker" ? "#8a3a1a" : "#b5652a";
+  const s = frame ? 1 : 0;
+  R(g, X - s, Y - 5, 2, 5, "#4a3a2a"); R(g, X + 3 + s, Y - 5, 2, 5, "#3a2c20");
+  R(g, X - s - 1, Y - 1, 3, 1, "#24180e"); R(g, X + 3 + s, Y - 1, 3, 1, "#24180e");
+  R(g, X - 1, Y - 11, 7, 7, u.tun); R(g, X - 1, Y - 5, 7, 1, "#0003"); R(g, X - 1, Y - 8, 7, 1, "#5a3414"); R(g, X + 2, Y - 8, 1, 1, "#e0c060");
+  if (u.robe){ R(g, X - 2, Y - 6, 9, 5, u.tun); R(g, X - 2, Y - 2, 9, 1, shade(u.tun, -.3)); R(g, X - 2, Y - 13, 2, 7, "#d8a040"); }
+  if (u.id === "berserker"){ R(g, X - 2, Y - 12, 9, 3, "#7a5432"); R(g, X + 1, Y - 10, 3, 2, skin); }
+  R(g, X + 1, Y - 16, 4, 5, skin); R(g, X + 4, Y - 15, 1, 1, "#24180e");
+  R(g, X + 2, Y - 13, 3, 3, hair); R(g, X + 4, Y - 11, 1, 1, hair); R(g, X, Y - 16, 1, 4, hair);
+  if (u.casque === "cone"){ R(g, X, Y - 17, 6, 2, "#8c96a0"); R(g, X + 1, Y - 18, 4, 1, "#b8c2cc"); R(g, X + 2, Y - 19, 2, 1, "#d8e0e8"); R(g, X + 4, Y - 16, 1, 2, "#8c96a0"); }
+  if (u.casque === "capuche"){ R(g, X - 1, Y - 17, 6, 2, "#5a6a3a"); R(g, X - 1, Y - 15, 2, 5, "#5a6a3a"); R(g, X + 3, Y - 18, 2, 1, "#5a6a3a"); }
+  if (u.casque === "ours"){ R(g, X - 2, Y - 18, 8, 3, "#7a5432"); R(g, X - 2, Y - 19, 2, 1, "#7a5432"); R(g, X + 4, Y - 19, 2, 1, "#7a5432"); R(g, X - 3, Y - 16, 3, 7, "#6a4428"); R(g, X + 5, Y - 17, 1, 1, "#1a0e08"); }
+  const wood = "#7a4a22", iron = "#c8d2dc";
+  switch (u.arme){
+    case "hache": R(g, X + 6, Y - 14, 1, 8, wood); R(g, X + 7, Y - 15, 2, 4, iron); R(g, X + 9, Y - 14, 1, 2, iron); break;
+    case "epee": R(g, X + 6, Y - 9, 1, 2, "#6a4a2a"); R(g, X + 5, Y - 10, 3, 1, "#a08040"); R(g, X + 6, Y - 16, 1, 6, iron); break;
+    case "arc": R(g, X + 7, Y - 17, 1, 1, wood); R(g, X + 8, Y - 16, 1, 9, wood); R(g, X + 7, Y - 7, 1, 1, wood); R(g, X + 7, Y - 16, 1, 9, "#efe6cc"); R(g, X + 5, Y - 11, 3, 1, skin); R(g, X - 3, Y - 14, 2, 6, "#6a4428"); R(g, X - 3, Y - 15, 1, 1, "#e8e0d0"); R(g, X - 2, Y - 15, 1, 1, "#c03020"); break;
+    case "lance": R(g, X + 6, Y - 21, 1, 18, wood); R(g, X + 6, Y - 23, 1, 2, iron); R(g, X + 5, Y - 21, 3, 1, iron); break;
+    case "haches": R(g, X + 6, Y - 18, 1, 5, wood); R(g, X + 7, Y - 19, 2, 3, iron); R(g, X + 5, Y - 14, 2, 2, skin); R(g, X - 2, Y - 8, 1, 4, wood); R(g, X - 3, Y - 8, 1, 2, iron); break;
+    case "deux": R(g, X + 6, Y - 16, 1, 8, wood); R(g, X + 7, Y - 17, 3, 4, iron); R(g, X - 2, Y - 15, 1, 8, wood); R(g, X - 4, Y - 16, 2, 4, iron); R(g, X + 5, Y - 10, 2, 2, skin); R(g, X - 2, Y - 10, 2, 2, skin); break;
+    case "seau": R(g, X + 6, Y - 8, 4, 4, "#8a5a32"); R(g, X + 6, Y - 8, 4, 1, "#4a4a50"); R(g, X + 7, Y - 10, 2, 1, "#5a5a60"); R(g, X + 5, Y - 10, 2, 2, skin); break;
+    case "sac": R(g, X - 5, Y - 14, 5, 7, "#b8a070"); R(g, X - 4, Y - 15, 3, 1, "#8a7448"); R(g, X - 4, Y - 11, 3, 1, "#e0c050"); R(g, X + 6, Y - 11, 1, 6, wood); R(g, X + 6, Y - 12, 2, 2, "#5a3414"); break;
+  }
+  if (u.bouclier === "rond"){ disc(g, X + 3, Y - 8, 3, u.bc); R(g, X + 3, Y - 11, 1, 7, "#0002"); R(g, X + 3, Y - 8, 1, 1, "#d8e0e8"); }
+  if (u.bouclier === "grand"){ disc(g, X + 4, Y - 9, 5, u.bc); R(g, X - 1, Y - 9, 11, 1, "#e8d8a0"); R(g, X + 4, Y - 14, 1, 11, "#e8d8a0"); disc(g, X + 4, Y - 9, 1, "#c8d2dc"); }
+  return outlined(c);
+}
+const SPR = {}; // SPR[id] = [frame0, frame1] tournés à droite, SPRL = à gauche
+const SPRL = {};
+function prepareUnits(){ for (const u of [...UNITES, {id:"femme", tun:"#6a7a9a", casque:"aucun", arme:"seau", robe:1}]){ SPR[u.id] = [viking(u, 0), viking(u, 1)]; SPRL[u.id] = SPR[u.id].map(flipH); } }
+
+/* ---------- navires ---------- */
+const NAV = {
+  drakkar: {nom:"Drakkar", places:10, cale:6, L:74, d:7, lift:14, mast:30, sw:30, sh:21, voile:["#b8301e","#efe2c0"], boucliers:1, dragon:1, info:"+20 % ATTAQUE"},
+  knarr:   {nom:"Knarr", places:8, cale:24, L:68, d:10, lift:8, mast:28, sw:28, sh:21, voile:["#efe2c0","#efe2c0","#efe2c0","#9a6a3a"], cargo:1, info:"GRANDE CALE"},
+  snekkja: {nom:"Snekkja", places:5, cale:2, L:50, d:5, lift:10, mast:22, sw:20, sh:15, voile:["#2a5a9a","#efe2c0"], boucliers:1, info:"RAID ECLAIR"},
+};
+
+function shade(hex, k){
+  const n = parseInt(hex.slice(1), 16); let r = n >> 16, gg = n >> 8 & 255, b = n & 255;
+  const f = v => Math.max(0, Math.min(255, Math.round(k > 0 ? v + (255 - v) * k : v * (1 + k))));
+  return "#" + ((1 << 24) + (f(r) << 16) + (f(gg) << 8) + f(b)).toString(16).slice(1);
+}
+
+/* ---------- mouettes ---------- */
+const GULL_A = [".....kk........", ".....ggk.......", "......ggk......", "......gggg.....", "......wwwgg....", ".ttwwwwwwwwwhhb", "......wwwgg....", "......gggg.....", "......ggk......", ".....ggk.......", ".....kk........"];
+const GULL_B = ["...............", "...............", "...............", "......kgg......", "......wwwg.....", ".ttwwwwwwwwwhhb", "......wwwg.....", "......kgg......", "...............", "...............", "..............."];
+const GULL_S0 = ["k.......k", ".gw...wg.", "..wwbww..", "........."], GULL_S1 = [".........", ".........", "kgwwbwwgk", "...www..."];
+const GULL_POSE = ["..ww...", ".wwwwb.", "kgggww.", ".kggw..", "...y...", "..y.y.."];
+function mapSprite(map, flip, outline = true){
+  const C = {k:"#2a2638", g:"#a8b0c0", w:"#ffffff", t:"#d8dee8", h:"#ffffff", b:"#ffb020", y:"#e08a20"};
+  const [c, g] = mk(map[0].length + 2, map.length + 2);
+  for (let j = 0; j < map.length; j++) for (let i = 0; i < map[0].length; i++){ const ch = map[j][flip ? map[0].length - 1 - i : i]; if (ch !== ".") R(g, i + 1, j + 1, 1, 1, C[ch]); }
+  return outline ? outlined(c, "#2a263888") : c;
+}
+
+/* ---------- icônes des ressources ---------- */
+function iconRes(k){
+  const [c, g] = mk(12, 12);
+  if (k === "bois"){ disc(g, 4, 7, 3, "#8a5428"); disc(g, 8, 5, 3, "#a86a30"); R(g, 8, 5, 1, 1, "#e0b070"); R(g, 4, 7, 1, 1, "#d0985a"); }
+  if (k === "pierre"){ disc(g, 6, 7, 4, "#8a8f96"); R(g, 3, 5, 4, 2, "#b8bec6"); R(g, 7, 9, 3, 1, "#5a5f66"); }
+  if (k === "nourriture"){ R(g, 2, 4, 8, 5, "#d8a050"); R(g, 3, 3, 6, 1, "#e8b868"); R(g, 3, 5, 2, 1, "#f0d090"); R(g, 6, 6, 2, 1, "#b07830"); }
+  if (k === "or"){ disc(g, 6, 6, 4, "#e8b830"); disc(g, 6, 6, 2, "#ffd860"); R(g, 5, 4, 1, 4, "#c08a10"); }
+  return outlined(c);
+}
+
+/* ---------- fumée, étincelles ---------- */
+function smoke(st, x, y, dt, rate = .35){
+  st.sm = st.sm || []; st.smT = (st.smT || 0);
+  if (Math.random() < dt / rate) st.sm.push({x, y, vx: .25 + Math.random() * .2, vy: -.45 - Math.random() * .2, r: 1, life: 0});
+}
+function drawSmoke(g, st, dt, alpha = 1){
+  st.sm = (st.sm || []).filter(p => p.life < 5);
+  for (const p of st.sm){
+    p.life += dt; p.x += p.vx * dt * 12; p.y += p.vy * dt * 12; p.r = 1 + p.life * .9;
+    const a = Math.max(0, .55 - p.life * .11) * alpha;
+    g.fillStyle = `rgba(220,214,206,${a})`; const r = Math.round(p.r); g.fillRect(Math.round(p.x - r), Math.round(p.y - r), r * 2, r * 2);
+  }
+}
+function sparks(g, x, y, t){
+  const ph = (t * 2) % 1;
+  if (ph < .45){ const k = ph / .45; for (let i = 0; i < 6; i++){ const a = -Math.PI / 2 + (i - 2.5) * .45; R(g, x + Math.cos(a) * k * 9, y + Math.sin(a) * k * 9 + k * k * 6, 1, 1, i % 2 ? "#ffe060" : "#ff8a20"); } }
+}
+
+/* ---------- navires vus de côté, plus détaillés (proue à droite) ---------- */
+function shipSide(type){
+  const S = NAV[type], w = S.L + 16, h = S.mast + S.d + 24, [c, g] = mk(w, h);
+  const deck = h - 5 - S.d, x0 = 7, mx = x0 + Math.round(S.L * .5);
+  const top = deck - S.mast + 3;
+  // mât, vergue, haubans
+  R(g, mx, deck - S.mast, 2, S.mast, "#4a2a12"); R(g, mx, deck - S.mast, 1, S.mast, "#6a4020");
+  R(g, mx - S.sw / 2 - 3, top - 1, S.sw + 8, 2, "#5a3414"); R(g, mx - S.sw / 2 - 3, top - 1, S.sw + 8, 1, "#8a5a30");
+  // voile : laizes cousues, losanges de cordage, ventre ombré
+  for (let y = 0; y < S.sh; y++){
+    const inset = y > S.sh - 3 ? (y - S.sh + 3) : 0, belly = Math.sin(y / S.sh * Math.PI);
+    for (let x = inset; x < S.sw - inset; x++){
+      let col = S.voile[Math.floor(x / 4) % S.voile.length];
+      const f = x / S.sw;
+      col = shade(col, f > .7 ? -.12 - (f - .7) * .6 : f < .2 ? .06 : 0);
+      if (y < 2) col = shade(col, -.15);
+      if (x % 4 === 3) col = shade(col, -.1);
+      if (S.dragon && ((x + y) % 7 === 0 || (x - y + 70) % 7 === 0)) col = shade(col, -.22);
+      if (belly > .8 && f > .3 && f < .6) col = shade(col, .05);
+      R(g, mx - S.sw / 2 + 1 + x, top + 1 + y, 1, 1, col);
+    }
+  }
+  for (let k = 0; k < 14; k++){ R(g, mx - 3 - k * 2.3, deck - S.mast + 2 + k * 2.2, 1, 1, "#3a2010"); R(g, mx + 3 + k * 2.5, deck - S.mast + 2 + k * 2.2, 1, 1, "#3a2010"); }
+  // équipage
+  if (S.boucliers) for (let i = Math.round(S.L * .2); i < S.L * .8; i += 9){ R(g, x0 + i, deck - 4, 3, 3, "#eab48a"); R(g, x0 + i, deck - 5, 3, 1, "#8c96a0"); R(g, x0 + i + 1, deck - 6, 1, 1, "#b8c2cc"); }
+  // coque à clins : virures avec arête claire et recouvrement sombre
+  for (let i = 0; i < S.L; i++){
+    const t = i / (S.L - 1), e = Math.abs(t - .5) * 2;
+    const tp = Math.round(deck - Math.pow(e, 2.6) * S.lift), bt = Math.round(deck + S.d * Math.sqrt(Math.max(0, 1 - Math.pow(e, 1.5))));
+    for (let y = tp; y <= bt; y++){
+      const k = y - tp, st = k % 3;
+      let col = k === 0 ? "#e0a868" : st === 0 ? "#4a2a12" : st === 1 ? "#a8682e" : "#7a4a22";
+      if (k > 5) col = shade(col, -.2);
+      if (k === 1 && i % 7 === 3 && !S.cargo) col = "#24140a";
+      R(g, x0 + i, y, 1, 1, col);
+    }
+  }
+  // étrave et étambot sculptés
+  R(g, x0 - 1, deck - S.lift - 3, 2, 4, "#8a5428"); R(g, x0 + 1, deck - S.lift - 5, 2, 2, "#8a5428"); R(g, x0 + 2, deck - S.lift - 6, 2, 1, "#a8682e"); R(g, x0 + 3, deck - S.lift - 5, 1, 2, "#d0985a");
+  const px = x0 + S.L - 1, py = deck - S.lift;
+  if (S.dragon){
+    R(g, px, py - 6, 2, 6, "#8a5428"); R(g, px + 1, py - 10, 2, 5, "#8a5428"); R(g, px + 2, py - 12, 5, 3, "#a86a30"); R(g, px + 2, py - 12, 5, 1, "#c88a48");
+    R(g, px + 6, py - 11, 2, 1, "#a86a30"); R(g, px + 5, py - 12, 1, 1, "#ffe080"); R(g, px + 1, py - 13, 3, 1, "#c03020"); R(g, px + 6, py - 9, 2, 1, "#4a2a12"); R(g, px + 7, py - 10, 1, 1, "#f4ece0");
+  } else { R(g, px, py - 4, 2, 4, "#8a5428"); R(g, px + 1, py - 6, 2, 2, "#8a5428"); R(g, px + 2, py - 6, 1, 1, "#d0985a"); }
+  if (S.boucliers){
+    const cols = [["#b8301e", "#efe2c0"], ["#e8c050", "#2a5a9a"], ["#2a5a9a", "#efe2c0"], ["#efe2c0", "#b8301e"]];
+    for (let i = Math.round(S.L * .14), k = 0; i < S.L * .86; i += 5, k++){
+      const [a, b] = cols[k % 4];
+      for (let yy = -2; yy <= 2; yy++) for (let xx = -2; xx <= 2; xx++){ if (xx * xx + yy * yy > 5) continue; R(g, x0 + i + xx, deck + 1 + yy, 1, 1, (xx < 0) === (yy < 0) ? a : b); }
+      R(g, x0 + i, deck + 1, 1, 1, "#c8d2dc");
+    }
+  }
+  if (S.cargo){
+    for (const [cx, cw, ch, col] of [[14, 8, 5, "#9a6a3a"], [23, 6, 4, "#7a5030"], [44, 6, 6, "#8a5a32"], [51, 5, 3, "#b08850"]]){ R(g, x0 + cx, deck - ch, cw, ch, col); R(g, x0 + cx, deck - ch, cw, 1, shade(col, .3)); R(g, x0 + cx + cw - 1, deck - ch, 1, ch, shade(col, -.3)); }
+    R(g, x0 + 32, deck - 3, 5, 3, "#d8c8a0"); R(g, x0 + 33, deck - 4, 3, 1, "#d8c8a0");
+  }
+  const o = outlined(c);
+  o.wl = deck + 3; o.mastX = mx; o.mastTop = deck - S.mast;
+  return o;
+}
+
+/* ============================================================
+   Le moteur isométrique : chaque face est texturée pixel par pixel
+   (planches, pierres, gazon, chaume, bardeaux), puis éclairée.
+   ============================================================ */
+let OX = 128, OY = -40;
+const P = (x, y, z = 0) => [OX + x - y, OY + (x + y) / 2 - z];
+function h2(x, y, s = 0){ let n = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(s | 0, 1442695041); n = Math.imul(n ^ (n >>> 13), 1274126177); n ^= n >>> 16; return (n >>> 0) / 4294967296; }
+const hex = s => [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16)];
+const mix = (a, b, f) => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
+const mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+
+// Les trois styles
+const STYLES = {
+  A: {nom:"ete", outline:false, snow:false, tint:c => c, sat:1},
+  B: {nom:"contours", outline:true, snow:false, tint:c => { const m = (c[0] + c[1] + c[2]) / 3; return [m + (c[0] - m) * 1.28, m + (c[1] - m) * 1.28, m + (c[2] - m) * 1.28]; }},
+  C: {nom:"hiver", outline:false, snow:true, tint:c => [c[0] * .78 + 8, c[1] * .84 + 14, c[2] * .95 + 34]},
+};
+let ST = STYLES.A;
+const PAL = {
+  wood: hex("#8a5a32"), woodD: hex("#6a4022"), woodL: hex("#a8743e"), gap: hex("#3a2210"),
+  stone: hex("#8c8a86"), stoneD: hex("#6c6a68"), mortar: hex("#4e4a46"),
+  turf: [hex("#5e7e38"), hex("#6e8e40"), hex("#7e9e4a")], sod: hex("#5a3e22"), bark: hex("#d8d0b8"),
+  thatch: [hex("#c89a48"), hex("#b08038"), hex("#d8ac58")], shingle: [hex("#8a4a2a"), hex("#7a3e22"), hex("#9a5632")],
+  grass: [hex("#6e9a46"), hex("#628c3e"), hex("#7aa652"), hex("#5a8238")], path: [hex("#c8a870"), hex("#b8985e"), hex("#d4b47c")],
+  sand: [hex("#e0c890"), hex("#d4b880")], water: [hex("#5aa8c0"), hex("#3a88a6"), hex("#2a6e8e"), hex("#205a78")],
+  snow: [hex("#f2f6fa"), hex("#dce6f0"), hex("#c8d6e6")],
+};
+
+/* ---------- couches de pixels ---------- */
+let LY = null, CUR = 1;
+function newLayer(opaque){ return {d:new Uint8ClampedArray(W * H * 4), id:new Int32Array(W * H), opaque}; }
+function put(x, y, c, noTint){
+  x = Math.floor(x); y = Math.floor(y); if (x < 0 || y < 0 || x >= W || y >= H) return;
+  const k = noTint ? c : ST.tint(c), i = y * W + x;
+  LY.d[i * 4] = k[0]; LY.d[i * 4 + 1] = k[1]; LY.d[i * 4 + 2] = k[2]; LY.d[i * 4 + 3] = 255; LY.id[i] = CUR;
+}
+function nid(){ return ++CUR; }
+function layerCanvas(L){
+  if (ST.outline){
+    const d2 = new Uint8ClampedArray(L.d), id = L.id;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+      const i = y * W + x; let front = false;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const j = yy * W + xx; if (id[j] > id[i] && id[j] > 0 && L.d[j * 4 + 3]) front = true; }
+      if (front){ d2[i * 4] = 34; d2[i * 4 + 1] = 22; d2[i * 4 + 2] = 14; d2[i * 4 + 3] = 255; }
+    }
+    L.d = d2;
+  }
+  const [c, g] = mk(W, H); g.putImageData(new ImageData(L.d, W, H), 0, 0); return c;
+}
+
+/* ---------- une face plane : origine, deux vecteurs (monde), texture ---------- */
+function face(O, U, V, light, shader, mask){
+  const o = P(O[0], O[1], O[2]), u2 = [U[0] - U[1], (U[0] + U[1]) / 2 - U[2]], v2 = [V[0] - V[1], (V[0] + V[1]) / 2 - V[2]];
+  const det = u2[0] * v2[1] - u2[1] * v2[0]; if (Math.abs(det) < 1e-6) return;
+  const LU = Math.hypot(U[0], U[1], U[2]), LV = Math.hypot(V[0], V[1], V[2]);
+  const xs = [o[0], o[0] + u2[0], o[0] + v2[0], o[0] + u2[0] + v2[0]], ys = [o[1], o[1] + u2[1], o[1] + v2[1], o[1] + u2[1] + v2[1]];
+  const x0 = Math.max(0, Math.floor(Math.min(...xs))), x1 = Math.min(W - 1, Math.ceil(Math.max(...xs))), y0 = Math.max(0, Math.floor(Math.min(...ys))), y1 = Math.min(H - 1, Math.ceil(Math.max(...ys)));
+  for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++){
+    const dx = px + .5 - o[0], dy = py + .5 - o[1], a = (dx * v2[1] - dy * v2[0]) / det, b = (u2[0] * dy - u2[1] * dx) / det;
+    if (a < 0 || a >= 1 || b < 0 || b >= 1 || (mask && !mask(a, b))) continue;
+    const c = shader(a * LU, b * LV, LU, LV); if (c) put(px, py, mul(c, light));
+  }
+}
+const tri = (a, b) => b <= 1 - Math.abs(2 * a - 1);
+
+/* ---------- textures ---------- */
+function planks(seed, opt = {}){
+  return (u, v, LU, LV) => {
+    const pw = 3, pi = Math.floor(u / pw), r = h2(pi, 7, seed);
+    let c = mix(PAL.wood, PAL.woodD, r * .7);
+    if (r > .8) c = mix(c, PAL.woodL, .5);
+    if (u % pw < .8) c = PAL.gap;
+    else if (h2(pi, Math.floor(v / 5), seed + 3) > .9 && v % 5 < .8) c = PAL.gap;
+    else if (h2(Math.floor(u), Math.floor(v), seed) > .96) c = PAL.woodD;
+    if (v > LV - 1.6) c = mul(c, .55);
+    if (v < 1.2) c = mul(c, .75);
+    if (opt.found && v < opt.found){
+      const row = Math.floor(v / 2.4), off = (row % 2) * 2.2, cell = Math.floor((u + off) / 4.4);
+      c = mix(PAL.stone, PAL.stoneD, h2(cell, row, seed) * .9);
+      if ((u + off) % 4.4 < .8 || v % 2.4 < .7) c = PAL.mortar;
+      if (h2(cell, row, seed + 9) > .8) c = mix(c, hex("#5e7a3c"), .4);
+    }
+    return c;
+  };
+}
+function wattle(seed){
+  return (u, v, LU, LV) => {
+    let c = ((Math.floor(u / 2) + Math.floor(v / 1.5)) % 2) ? hex("#a88452") : hex("#8a6a40");
+    if (u % 6 < 1) c = hex("#5a3a1e");
+    c = mix(c, hex("#c8b48a"), h2(Math.floor(u), Math.floor(v), seed) * .25);
+    if (v > LV - 1.6) c = mul(c, .55);
+    return c;
+  };
+}
+function decorate(base, items){
+  // portes, fenêtres et boucliers peints par-dessus une texture de mur
+  return (u, v, LU, LV) => {
+    for (const it of items){
+      if (it.t === "porte" && u >= it.u && u < it.u + it.w && v < it.h){
+        const du = u - it.u;
+        if (du < 1 || du > it.w - 1 || v > it.h - 1) return hex("#c8925a");
+        if (Math.abs(v - it.h * .35) < .5 || Math.abs(v - it.h * .7) < .5) return du < it.w * .4 ? hex("#3a3a40") : hex("#3a2210");
+        return (Math.floor(du / 2) % 2) ? hex("#4a2a14") : hex("#3a2010");
+      }
+      if (it.t === "fenetre" && u >= it.u && u < it.u + 3 && v >= it.v && v < it.v + 3) return ST.snow ? hex("#ffc860") : hex("#2a1a10");
+      if (it.t === "bouclier"){ const du = u - it.u, dv = v - it.v; if (du * du + dv * dv < 5.5){ if (du * du + dv * dv < 1) return hex("#c8d2dc"); return (du < 0) === (dv < 0) ? hex(it.a) : hex(it.b); } }
+    }
+    return base(u, v, LU, LV);
+  };
+}
+function turf(seed){
+  return (u, v, LU, LV) => {
+    if (v < 1.3) return v < .6 ? PAL.bark : PAL.sod;
+    if (u < .9 || u > LU - .9) return PAL.sod;
+    if (ST.snow && v > 2.2 + h2(Math.floor(u), 1, seed) * 1.5){ const k = h2(Math.floor(u), Math.floor(v), seed); return k > .9 ? PAL.snow[2] : k > .6 ? PAL.snow[1] : PAL.snow[0]; }
+    const k = h2(Math.floor(u), Math.floor(v), seed);
+    if (k > .985) return [hex("#f0d040"), hex("#f4f0e8"), hex("#e07890")][Math.floor(k * 1000) % 3];
+    let c = PAL.turf[k > .7 ? 2 : k > .35 ? 1 : 0];
+    if (h2(Math.floor(u / 3), Math.floor(v / 2), seed + 1) > .75) c = mul(c, .88);
+    if (v > LV - 1) c = mix(c, hex("#9aae58"), .5);
+    return c;
+  };
+}
+function thatch(seed){
+  return (u, v, LU, LV) => {
+    if (ST.snow && v > 1.5 + h2(Math.floor(u), 2, seed) * 2) return PAL.snow[h2(Math.floor(u), Math.floor(v), seed) > .8 ? 1 : 0];
+    let c = PAL.thatch[Math.floor(h2(Math.floor(u * 1.4), Math.floor(v / 2.2), seed) * 3)];
+    if (v % 5 < .9) c = mul(c, .78);
+    if (v < 1) c = mul(c, .6);
+    if (u < .8 || u > LU - .8) c = mul(c, .7);
+    return c;
+  };
+}
+function shingle(seed){
+  return (u, v, LU, LV) => {
+    if (ST.snow && v > 2 + h2(Math.floor(u), 3, seed) * 2) return PAL.snow[h2(Math.floor(u), Math.floor(v), seed) > .8 ? 1 : 0];
+    const row = Math.floor(v / 2.6), off = (row % 2) * 1.6, s = Math.floor((u + off) / 3.2);
+    let c = PAL.shingle[Math.floor(h2(s, row, seed) * 3)];
+    if (v % 2.6 < .8) c = mul(c, .62);
+    else if ((u + off) % 3.2 < .6) c = mul(c, .72);
+    if (v > LV - 1.2) c = hex("#c88a48");
+    if (u < .8 || u > LU - .8) c = mul(c, .7);
+    return c;
+  };
+}
+function plain(col, seed = 1, k = .12){ return (u, v) => mul(col, 1 - h2(Math.floor(u), Math.floor(v), seed) * k); }
+
+/* ---------- un bâtiment ---------- */
+// axe X : faîtage le long de X, pignon visible à droite ; axe Y : pignon de face (à gauche), faîtage vers le fond
+function building(o){
+  const {x, y, w, d, h} = o, rh = o.rh || Math.min(w, d) * .55, e = 2.5, seed = o.seed || 1;
+  const roofSh = (o.roof === "thatch" ? thatch : o.roof === "shingle" ? shingle : turf)(seed);
+  const wallBase = (o.wall === "wattle" ? wattle(seed) : planks(seed, {found:o.found}));
+  const front = decorate(wallBase, o.front || []), side = decorate(wallBase, o.side || []);
+  const res = {};
+  if (o.axis === "Y"){
+    const k = rh / (w / 2);
+    nid(); face([x - e, y - e, h - e * k], [0, d + 2 * e, 0], [w / 2 + e, 0, rh + e * k], .62, roofSh);
+    nid(); face([x, y + d, 0], [w, 0, 0], [0, 0, h], 1, front);
+    face([x, y + d, h], [w, 0, 0], [0, 0, rh], 1, front, tri);
+    nid(); face([x + w, y, 0], [0, d, 0], [0, 0, h], .7, side);
+    nid(); face([x + w + e, y - e, h - e * k], [0, d + 2 * e, 0], [-(w / 2 + e), 0, rh + e * k], .86, roofSh);
+    res.ridgeA = P(x + w / 2, y + d + e, h + rh); res.ridgeB = P(x + w / 2, y - e, h + rh);
+  } else {
+    const k = rh / (d / 2);
+    nid(); face([x - e, y - e, h - e * k], [w + 2 * e, 0, 0], [0, d / 2 + e, rh + e * k], .62, roofSh);
+    nid(); face([x, y + d, 0], [w, 0, 0], [0, 0, h], 1, front);
+    nid(); face([x + w, y, 0], [0, d, 0], [0, 0, h], .7, side);
+    face([x + w, y, h], [0, d, 0], [0, 0, rh], .7, side, tri);
+    nid(); face([x - e, y + d + e, h - e * k], [w + 2 * e, 0, 0], [0, -(d / 2 + e), rh + e * k], 1.04, roofSh);
+    res.ridgeA = P(x - e, y + d / 2, h + rh); res.ridgeB = P(x + w + e, y + d / 2, h + rh);
+  }
+  if (o.dragons) for (const [rx, ry] of [res.ridgeA, res.ridgeB]){
+    nid();
+    for (let k = 0; k < 6; k++){ put(rx - 3 + k * .5, ry - k, hex("#8a5428")); put(rx + 3 - k * .5, ry - k, hex("#8a5428")); }
+    put(rx - .5, ry - 6, hex("#a86a30")); put(rx - 1.5, ry - 6, hex("#a86a30")); put(rx - 2.5, ry - 7, hex("#a86a30")); put(rx - 2.5, ry - 6, hex("#ffe080"));
+    put(rx + 1.5, ry - 6, hex("#a86a30")); put(rx + 2.5, ry - 6, hex("#a86a30")); put(rx + 3.5, ry - 7, hex("#a86a30")); put(rx + 3.5, ry - 6, hex("#ffe080"));
+  }
+  res.chim = P(x + w * .45, y + d * .5, h + rh);
+  return res;
+}
+function box(x, y, z, w, d, h, top, front, side){
+  nid(); face([x, y + d, z], [w, 0, 0], [0, 0, h], 1, front);
+  nid(); face([x + w, y, z], [0, d, 0], [0, 0, h], .7, side || front);
+  nid(); face([x, y, z + h], [w, 0, 0], [0, d, 0], 1.1, top);
+}
+
+/* ---------- accessoires ---------- */
+function pine(x, y, s = 1, seed = 1){
+  const [bx, by] = P(x, y); nid();
+  for (let k = 0; k < 4; k++){ put(bx, by - k, hex("#4a2a12")); put(bx + 1, by - k, hex("#3a2010")); }
+  const layers = 4, H0 = 26 * s;
+  for (let l = 0; l < layers; l++){
+    const yb = by - 3 - l * H0 / layers * .82, hw = (layers - l) * 3.2 * s + 2, hh = H0 / layers * 1.3;
+    for (let j = 0; j < hh; j++){
+      const half = hw * (j / hh);
+      for (let i = -half; i <= half; i++){
+        const k = h2(Math.floor(bx + i), Math.floor(yb - hh + j), seed);
+        let c = i < -half * .2 ? hex("#3e7048") : i > half * .4 ? hex("#1e4030") : hex("#2e5a3e");
+        if (k > .8) c = mul(c, .82); if (k < .08) c = hex("#4e8058");
+        if (ST.snow && j < 2 + k * 2) c = PAL.snow[0];
+        if (ST.snow && j > hh - 2 && k > .5) c = PAL.snow[1];
+        put(bx + i + .5, yb - hh + j, c);
+      }
+    }
+  }
+}
+function birch(x, y, seed = 3){
+  const [bx, by] = P(x, y); nid();
+  for (let k = 0; k < 12; k++){ put(bx, by - k, h2(k, 1, seed) > .7 ? hex("#2a2a2a") : hex("#e8e4dc")); put(bx + 1, by - k, hex("#b8b4ac")); }
+  for (let j = -9; j <= 9; j++) for (let i = -8; i <= 8; i++){
+    if (i * i / 64 + j * j / 81 > 1 - h2(i, j, seed) * .25) continue;
+    const k = h2(i + 99, j, seed); let c = i + j < -4 ? hex("#8ab850") : i + j > 6 ? hex("#4a7a30") : hex("#6a9a3c");
+    if (ST.snow) c = k > .5 ? hex("#c8a050") : hex("#a87838");
+    if (k > .86) c = mul(c, .8);
+    put(bx + i, by - 18 + j, c);
+  }
+}
+function rock(x, y, r = 4, seed = 5){
+  const [bx, by] = P(x, y); nid();
+  for (let j = -r; j <= 1; j++) for (let i = -r - 2; i <= r + 2; i++){
+    if (i * i / ((r + 2) * (r + 2)) + j * j / (r * r) > 1 - h2(i, j, seed) * .2) continue;
+    let c = i + j < -r * .6 ? hex("#a8a8a4") : i + j > r * .5 ? hex("#5e5e5c") : hex("#848480");
+    if (ST.snow && j < -r * .4) c = PAL.snow[0]; else if (h2(i, j, seed + 1) > .85) c = hex("#6e8a48");
+    put(bx + i, by + j, c);
+  }
+}
+function barrel(x, y){
+  const [bx, by] = P(x, y); nid();
+  for (let j = 0; j < 7; j++) for (let i = -2; i <= 2; i++){ let c = i < 0 ? hex("#a06a36") : i > 0 ? hex("#6a4020") : hex("#8a5428"); if (j === 1 || j === 5) c = hex("#4a4a50"); put(bx + i, by - j, c); }
+  for (let i = -1; i <= 1; i++) put(bx + i, by - 7, ST.snow ? PAL.snow[0] : hex("#c08850"));
+}
+function woodpile(x, y, w = 14){
+  const logs = (u, v) => { const cu = (u % 3) - 1.5, cv = (v % 3) - 1.5, r = cu * cu + cv * cv; return r < .6 ? hex("#e0b070") : r < 1.6 ? hex("#c89050") : hex("#5a3414"); };
+  box(x, y, 0, w, 4, 6, (u, v) => ST.snow ? PAL.snow[0] : (Math.floor(u / 1.5) % 2 ? hex("#7a4a22") : hex("#6a3c1a")), (u, v) => (Math.floor(v / 3) % 2 ? hex("#7a4a22") : hex("#6a3c1a")), logs);
+}
+function crate(x, y, z = 0, s = 5){ const t = (u, v, LU, LV) => (u < .8 || v < .8 || u > LU - .8 || v > LV - .8 || Math.abs(u - v) < .6) ? hex("#6a4022") : hex("#a87440"); box(x, y, z, s, s, s, t, t, t); }
+function fenceX(x, y, len){ nid(); face([x, y, 0], [len, 0, 0], [0, 0, 5], 1, wattle(9), (a, b) => b > .15 || (a * len) % 8 < 1.5); for (let i = 0; i <= len; i += 8){ nid(); face([x + i, y + .5, 0], [1, 0, 0], [0, 0, 7], .8, plain(hex("#5a3a1e"))); } }
+function fenceY(x, y, len){ nid(); face([x, y, 0], [0, len, 0], [0, 0, 5], .72, wattle(11), (a, b) => b > .15 || (a * len) % 8 < 1.5); for (let i = 0; i <= len; i += 8){ nid(); face([x + .5, y + i, 0], [0, 1, 0], [0, 0, 7], .7, plain(hex("#5a3a1e"))); } }
+function runestone(x, y){
+  const sh = (u, v, LU, LV) => { if (v > LV - 1.5 && (u < 1 || u > LU - 1)) return null; const k = h2(Math.floor(u), Math.floor(v), 4); let c = mix(hex("#8a8c90"), hex("#6a6c70"), k); if ((Math.abs(u - LU / 2 - Math.sin(v * .8) * 1.5) < .6) && v > 2 && v < LV - 3) c = hex("#b8301e"); if (ST.snow && v > LV - 2) c = PAL.snow[0]; return c; };
+  box(x, y, 0, 4, 3, 13, (u, v) => ST.snow ? PAL.snow[0] : hex("#9a9ca0"), sh, sh);
+}
+function well(x, y){
+  box(x, y, 0, 8, 8, 4, (u, v) => (u > 1.5 && u < 6.5 && v > 1.5 && v < 6.5) ? hex("#1a2a3a") : hex("#9a9a96"), planks(4, {found:9}), planks(4, {found:9}));
+  nid(); face([x + 1, y + 4, 4], [0, 0, 0.001], [0, 0, 9], 1, plain(hex("#5a3a1e")));
+  nid(); face([x, y + 8, 12], [8, 0, 0], [0, -4, 3], 1, shingle(6)); face([x, y, 12], [8, 0, 0], [0, 4, 3], .7, shingle(6));
+  for (let k = 0; k < 9; k++){ put(P(x + .5, y + 4.5, 4 + k)[0], P(x + .5, y + 4.5, 4 + k)[1], hex("#5a3a1e")); put(P(x + 7.5, y + 4.5, 4 + k)[0], P(x + 7.5, y + 4.5, 4 + k)[1], hex("#4a2a12")); }
+}
+function fishRack(x, y){
+  nid();
+  for (const dx of [0, 14]) for (let k = 0; k < 10; k++){ const [a, b] = P(x + dx, y, k); put(a - k * .3, b, hex("#6a4022")); put(a + k * .3, b, hex("#5a3418")); }
+  for (let i = 0; i <= 14; i++){ const [a, b] = P(x + i, y, 10); put(a, b, hex("#8a5a32")); if (i % 2 === 1){ for (let j = 1; j < 5; j++) put(a, b + j, j === 4 ? hex("#4a4038") : hex("#c0b8a8")); put(a + 1, b + 2, hex("#a8a090")); } }
+}
+function hay(x, y){ box(x, y, 0, 7, 5, 4, (u, v) => ST.snow ? PAL.snow[0] : mix(hex("#e0c060"), hex("#c8a040"), h2(Math.floor(u * 2), Math.floor(v), 2)), thatch(8), thatch(9)); }
+function dummy(x, y){
+  const [bx, by] = P(x, y); nid();
+  for (let k = 0; k < 12; k++) put(bx, by - k, hex("#5a3a1e"));
+  for (let i = -4; i <= 4; i++) put(bx + i, by - 9, hex("#5a3a1e"));
+  for (let j = 0; j < 6; j++) for (let i = -2; i <= 2; i++) put(bx + i, by - 10 + j - 2, mix(hex("#e0c060"), hex("#b89040"), h2(i, j, 3)));
+  for (let j = 0; j < 3; j++) for (let i = -1; i <= 1; i++) put(bx + i, by - 15 + j, hex("#d8b860"));
+}
+function target(x, y){
+  const [bx, by] = P(x, y); nid();
+  for (let k = 0; k < 6; k++){ put(bx - 2, by - k, hex("#5a3a1e")); put(bx + 2, by - k, hex("#5a3a1e")); }
+  for (let j = -4; j <= 4; j++) for (let i = -4; i <= 4; i++){ const r = i * i + j * j; if (r > 17) continue; put(bx + i, by - 9 + j, r < 2 ? hex("#c03020") : r < 7 ? hex("#f4ece0") : r < 12 ? hex("#c03020") : hex("#e8d8a0")); }
+}
+function rack(x, y){
+  nid(); face([x, y, 0], [12, 0, 0], [0, 0, 8], 1, (u, v) => (v > 6.5 || u < 1 || u > 11) ? hex("#6a4022") : null);
+  for (let i = 2; i < 12; i += 3){ const [a, b] = P(x + i, y, 0); for (let k = 0; k < 11; k++) put(a, b - k, hex("#7a4a22")); put(a, b - 11, hex("#c8d2dc")); put(a - 1, b - 10, hex("#c8d2dc")); put(a + 1, b - 10, hex("#c8d2dc")); }
+}
+
+function field(x, y, w, d, kind = 0){
+  nid(); face([x, y, 0], [w, 0, 0], [0, d, 0], 1, (u, v) => {
+    if (ST.snow) return v % 3 < 1 ? hex("#a08a6a") : PAL.snow[1];
+    if (u < 1 || v < 1 || u > w - 1 || v > d - 1) return hex("#7a5a36");
+    if (v % 3 < 1.1) return hex("#6a4a2a");
+    const k = h2(Math.floor(u), Math.floor(v), 7);
+    return kind ? (k > .5 ? hex("#d8b848") : hex("#c8a038")) : (k > .7 ? hex("#88c050") : k > .3 ? hex("#6aa040") : hex("#5a8a34"));
+  });
+  for (let i = 0; i <= w; i += 4){ const [a, b] = P(x + i, y + d); put(a, b - 1, hex("#5a3a1e")); put(a, b - 2, hex("#5a3a1e")); }
+}
+function cart(x, y){
+  box(x, y, 3, 12, 7, 3, (u, v) => (u % 3 < .7 ? PAL.gap : (ST.snow ? PAL.snow[0] : hex("#b07a40"))), planks(12), planks(12));
+  nid(); for (const dx of [2, 10]){ const [a, b] = P(x + dx, y + 7, 2); for (let j = -2; j <= 2; j++) for (let i = -2; i <= 2; i++){ if (i * i + j * j > 5) continue; put(a + i, b + j, i * i + j * j < 2 ? hex("#3a2210") : hex("#6a4022")); } }
+  for (let k = 0; k < 8; k++){ const [a, b] = P(x - k, y + 3.5, 4 - k * .3); put(a, b, hex("#6a4022")); }
+  const [hx2, hy2] = P(x + 3, y + 3, 6); for (let j = 0; j < 3; j++) for (let i = 0; i < 6; i++) put(hx2 + i, hy2 - j, ST.snow ? PAL.snow[0] : mix(hex("#e0c060"), hex("#c8a040"), h2(i, j, 9)));
+}
+function laundry(x, y){
+  nid(); for (const dx of [0, 20]){ for (let k = 0; k < 10; k++){ const [a, b] = P(x + dx, y, k); put(a, b, hex("#5a3a1e")); } }
+  const cols = ["#efe6cc", "#b8301e", "#6a8ac0", "#efe6cc"];
+  for (let i = 0; i <= 20; i++){ const sag = Math.sin(i / 20 * Math.PI) * 1.5, [a, b] = P(x + i, y, 9.5 - sag); put(a, b, hex("#3a2a1a")); const ci = Math.floor((i - 2) / 4.5); if (i >= 2 && i < 19 && (i - 2) % 4.5 < 3.2) for (let j = 1; j < 5; j++) put(a, b + j, hex(cols[ci % 4])); }
+}
+
+/* ---------- le sol ---------- */
+function ground(fn){
+  LY = newLayer(true); CUR = 0;
+  const water = [], shore = [];
+  for (let sy = 0; sy < H; sy++) for (let sx = 0; sx < W; sx++){
+    const a = sx + .5 - OX, b = 2 * (sy + .5 - OY), x = (a + b) / 2, y = (b - a) / 2;
+    const r = fn(x, y, sx, sy);
+    if (r.w) water.push([sx, sy, r.depth]);
+    if (r.shore) shore.push([sx, sy, r.ph]);
+    const i = sy * W + sx, k = ST.tint(r.c);
+    LY.d[i * 4] = k[0]; LY.d[i * 4 + 1] = k[1]; LY.d[i * 4 + 2] = k[2]; LY.d[i * 4 + 3] = 255;
+  }
+  CUR = 1;
+  return {water, shore};
+}
+function grassAt(x, y, seed = 1){
+  const k = h2(Math.floor(x), Math.floor(y), seed), k2 = h2(Math.floor(x / 6), Math.floor(y / 6), seed + 1);
+  if (ST.snow){ let c = PAL.snow[k > .9 ? 2 : k > .6 ? 1 : 0]; if (k2 > .82 && k > .4) c = mix(c, PAL.grass[3], .5); return c; }
+  let c = PAL.grass[k > .92 ? 2 : k > .6 ? 1 : 0];
+  if (k2 > .7) c = mix(c, PAL.grass[3], .5);
+  if (k > .995) c = [hex("#f0d040"), hex("#f4f0e8"), hex("#c070d0")][Math.floor(k * 1e4) % 3];
+  return c;
+}
+function segDist(x, y, pts){
+  let best = 1e9;
+  for (let i = 0; i + 1 < pts.length; i++){
+    const [ax, ay] = pts[i], [bx, by] = pts[i + 1], dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+    best = Math.min(best, Math.hypot(x - ax - t * dx, y - ay - t * dy));
+  }
+  return best;
+}
+function pathCol(x, y, d, wdt){
+  const k = h2(Math.floor(x), Math.floor(y), 4);
+  let c = PAL.path[k > .8 ? 2 : k > .4 ? 0 : 1];
+  if (h2(Math.floor(x / 3), Math.floor(y / 3), 6) > .85 && (x % 3) > .8 && (y % 3) > .8) c = hex("#a0a09a");
+  if (d > wdt - 1.2) c = mix(c, PAL.grass[1], .45);
+  if (ST.snow) c = mix(c, PAL.snow[1], .45);
+  return c;
+}
+function seaFn(x, y, extra = 0){
+  const d = x + y - 300 + 12 * Math.sin(x * .05) + 8 * Math.sin(y * .07) + extra;
+  if (d < -9) return null;
+  if (d < 0){ const k = h2(Math.floor(x), Math.floor(y), 2); return {c: ST.snow ? mix(PAL.snow[1], PAL.sand[1], .3) : PAL.sand[k > .7 ? 1 : 0], shore: d > -1.5, ph: x * .1}; }
+  const depth = Math.min(1, d / 70), wi = Math.min(3, Math.floor(depth * 4));
+  let c = mix(PAL.water[wi], PAL.water[Math.min(3, wi + 1)], (depth * 4) % 1);
+  if (d < 3) c = mix(c, hex("#d8f0f0"), .5);
+  if (ST.snow && d < 6) c = mix(c, hex("#e8f4fa"), .55 - d * .08);
+  if (h2(Math.floor(x / 2), Math.floor(y), 8) > .97) c = mix(c, hex("#9ad0e0"), .5);
+  return {c, w:1, depth, shore: d < 3, ph: x * .1};
+}
+
+/* ============================================================
+   Les deux écrans, dessinés une fois par style et par niveau
+   ============================================================ */
+// position d'un bâtiment donnée à l'écran : centre de l'emprise au sol
+const Wd = (sx, sy) => { const a = sx - OX, b = 2 * (sy - OY); return [(a + b) / 2, (b - a) / 2]; };
+const at = (sx, sy, w, d) => { const [cx, cy] = Wd(sx, sy); return [cx - w / 2, cy - d / 2]; };
+function cornerSea(x, y){
+  const d = x - 300 + 6 * Math.sin(y * .08) + 4 * Math.sin(x * .1);
+  if (d < -7) return null;
+  return seaFn(x, y, 300 - (x + y) + d);
+}
+function buildVillage(lv){
+  const out = {chims:[], forge:null, flag:null, torches:[], walk:[], train:[]};
+  const pt = (sx, sy) => Wd(sx, sy);
+  const road = [pt(10, 214), pt(92, 176), pt(120, 172), pt(250, 104)], road2 = [pt(150, 0), pt(150, 60), pt(108, 172)];
+  const G = ground((x, y) => {
+    const s = cornerSea(x, y); if (s) return s;
+    const d1 = segDist(x, y, road), d2 = segDist(x, y, road2);
+    if (d1 < 5) return {c:pathCol(x, y, d1, 5)}; if (d2 < 4) return {c:pathCol(x, y, d2, 4)};
+    return {c:grassAt(x, y)};
+  });
+  out.ground = G;
+  const items = [], add = (key, f) => items.push([key, f]);
+  // grande halle (pignon de face, dragons)
+  const hl = 50 + lv.halle * 8, [hx, hy] = at(124, 112, 36, hl);
+  add(hx + hy + 36 + hl, () => {
+    const r = building({x:hx, y:hy, w:36, d:hl, h:14, rh:20, axis:"Y", roof:"shingle", found:3, dragons:1, seed:2,
+      front:[{t:"porte", u:14, w:8, h:10}, {t:"bouclier", u:6, v:9, a:"#b8301e", b:"#efe2c0"}, {t:"bouclier", u:30, v:9, a:"#2a5a9a", b:"#e8c050"}],
+      side:[{t:"bouclier", u:8, v:8, a:"#e8c050", b:"#b8301e"}, {t:"bouclier", u:20, v:8, a:"#efe2c0", b:"#2a5a9a"}, {t:"bouclier", u:32, v:8, a:"#b8301e", b:"#e8c050"}, {t:"fenetre", u:44, v:7}, {t:"bouclier", u:56, v:8, a:"#2a5a9a", b:"#efe2c0"}]});
+    out.chims.push(P(hx + 18, hy + hl * .45, 34)); out.flag = r.ridgeA;
+    if (lv.halle >= 2){ out.torches.push(P(hx + 10, hy + hl + 1, 10)); out.torches.push(P(hx + 26, hy + hl + 1, 10)); }
+  });
+  // maisons longues
+  const houses = [[52, 60, 50, 20], [204, 56, 46, 20], [34, 150, 22, 46, "Y"], [222, 136, 44, 20]].slice(0, Math.min(4, lv.maisons + 1));
+  houses.forEach(([sx, sy, w, d, ax], i) => { const [x, y] = at(sx, sy, w, d); add(x + y + w + d, () => {
+    building({x, y, w, d, h:11, rh:11, axis:ax || "X", roof:i % 2 ? "thatch" : "turf", wall:i === 1 ? "wattle" : "planks", found:i === 3 ? 2 : 0, seed:10 + i,
+      front: ax ? [{t:"porte", u:9, w:4, h:6}] : [{t:"porte", u:w * .45, w:5, h:7}, {t:"fenetre", u:7, v:4}, {t:"fenetre", u:w - 10, v:4}],
+      side: ax ? [{t:"fenetre", u:10, v:4}, {t:"fenetre", u:30, v:4}] : [{t:"fenetre", u:8, v:4}]});
+    out.chims.push(ax ? P(x + w / 2, y + d * .4, 22) : P(x + w * .55, y + d / 2, 22));
+  }); });
+  // forge
+  if (lv.forge > 0){ const [x, y] = at(204, 192, 24, 18); add(x + y + 42, () => {
+    building({x, y, w:24, d:18, h:8, rh:8, axis:"X", roof:"turf", wall:"planks", found:8, seed:31, side:[{t:"porte", u:6, w:6, h:7}]});
+    box(x - 9, y + 10, 0, 7, 7, 4, plain(hex("#5a5a5c")), planks(3, {found:5}), planks(3, {found:5}));
+    out.forge = P(x - 5.5, y + 13.5, 4); out.chims.push(P(x + 6, y + 6, 22));
+    box(x - 13, y + 22, 0, 3, 2, 3, plain(hex("#3a3c42")), plain(hex("#2a2c32")), plain(hex("#2a2c32")));
+    woodpile(x + 4, y + 22, 12);
+  }); }
+  // cour de la caserne
+  const [yx, yy] = at(62, 200, 50, 40);
+  add(yx + yy, () => { fenceX(yx, yy, 50); fenceY(yx, yy, 40); });
+  add(yx + yy + 4, () => rack(yx + 6, yy + 3));
+  for (let i = 0; i < lv.caserne + 1; i++) add(yx + yy + 30 + i * 6, () => dummy(yx + 38, yy + 10 + i * 10));
+  if (lv.caserne >= 2) add(yx + yy + 20, () => target(yx + 14, yy + 24));
+  out.train = Array.from({length:lv.caserne * 2}, (_, i) => [yx + 10 + (i % 4) * 7, yy + 12 + Math.floor(i / 4) * 12 + (i % 4) * 2, ["guerrier", "lancier", "archer", "haches"][i % 4]]);
+  // accessoires
+  const A1 = (sx, sy, f) => { const [x, y] = Wd(sx, sy); add(x + y, () => f(x, y)); };
+  A1(170, 176, (x, y) => well(x - 4, y - 4));
+  A1(96, 88, (x, y) => woodpile(x, y, 16));
+  A1(200, 92, (x, y) => { barrel(x, y); barrel(x + 4, y + 3); crate(x + 6, y - 4); });
+  A1(178, 128, (x, y) => runestone(x, y));
+  A1(118, 204, (x, y) => { hay(x, y); hay(x + 9, y + 4); });
+  A1(84, 118, (x, y) => fishRack(x, y));
+  A1(244, 186, (x, y) => { barrel(x, y); });
+  A1(40, 100, (x, y) => field(x - 14, y - 10, 28, 20));
+  A1(206, 154 - 70, (x, y) => cart(x, y));
+  A1(90, 140, (x, y) => laundry(x, y));
+  A1(230, 206, (x, y) => field(x - 10, y - 8, 20, 16, 1));
+  for (const [sx, sy, sc, k] of [[14, 30, 1.2, 1], [98, 18, 1, 2], [176, 14, 1.1, 3], [246, 22, 1.2, 4], [8, 110, 1.1, 5], [252, 80, .9, 6], [126, 40, 1, 7], [70, 22, .9, 8]]) A1(sx, sy, (x, y) => pine(x, y, sc, k));
+  for (const [sx, sy, k] of [[232, 100, 1], [20, 70, 2], [150, 150, 3]]) A1(sx, sy, (x, y) => birch(x, y, k));
+  for (const [sx, sy, r] of [[110, 36, 4], [6, 186, 5], [190, 216, 3], [236, 160, 4]]) A1(sx, sy, (x, y) => rock(x, y, r));
+  items.sort((a, b) => a[0] - b[0]); for (const [, f] of items) f();
+  out.canvas = layerCanvas(LY);
+  const seg = (a, b, id) => ({id, a:pt(...a), b:pt(...b)});
+  out.walk = [seg([20, 208], [90, 178], "guerrier"), seg([150, 20], [150, 60], "femme"), seg([140, 160], [240, 110], "pilleur")];
+  out.chickens = [Wd(150, 190), Wd(156, 186), Wd(146, 196)];
+  out.sheep = [Wd(30, 128), Wd(40, 134), Wd(22, 138)];
+  return out;
+}
+function buildPort(){
+  const out = {chims:[], walk:[]};
+  const pt = (sx, sy) => Wd(sx, sy);
+  const shoreX = 178;
+  const sea = (x, y) => { const d = x - shoreX + 5 * Math.sin(y * .07) + 3 * Math.sin(x * .13); if (d < -8) return null; return seaFn(x, y, 300 - (x + y) + d * 1.6); };
+  const road = [pt(0, 60), pt(80, 96), pt(140, 112)];
+  const G = ground((x, y) => {
+    const s = sea(x, y); if (s) return s;
+    const d1 = segDist(x, y, road); if (d1 < 4) return {c:pathCol(x, y, d1, 4)};
+    return {c:grassAt(x, y, 3)};
+  });
+  out.ground = G;
+  const items = [], add = (k, f) => items.push([k, f]);
+  const B1 = (sx, sy, o) => { const [x, y] = at(sx, sy, o.w, o.d); add(x + y + o.w + o.d, () => { const r = building({...o, x, y}); if (o.chim) out.chims.push(r.chim); }); };
+  B1(52, 46, {w:46, d:20, h:11, rh:11, axis:"X", roof:"turf", seed:41, chim:1, front:[{t:"porte", u:20, w:5, h:7}, {t:"fenetre", u:7, v:4}, {t:"fenetre", u:36, v:4}], side:[{t:"fenetre", u:8, v:4}]});
+  B1(150, 30, {w:24, d:24, h:10, rh:12, axis:"Y", roof:"shingle", found:3, seed:42, chim:1, front:[{t:"porte", u:10, w:5, h:7}], side:[{t:"fenetre", u:10, v:5}]});
+  B1(46, 140, {w:34, d:30, h:11, rh:14, axis:"X", roof:"turf", seed:43, side:[{t:"porte", u:5, w:20, h:9}], front:[{t:"fenetre", u:8, v:5}]});
+  const A1 = (sx, sy, f) => { const [x, y] = Wd(sx, sy); if (!sea(x, y)) add(x + y, () => f(x, y)); };
+  A1(104, 70, (x, y) => fishRack(x, y)); A1(20, 96, (x, y) => fishRack(x, y));
+  A1(118, 100, (x, y) => { barrel(x, y); barrel(x + 4, y + 3); crate(x + 5, y - 5); });
+  A1(214, 40, (x, y) => woodpile(x, y, 14)); A1(100, 128, (x, y) => hay(x, y));
+  for (const [sx, sy, sc, k] of [[10, 20, 1.2, 1], [100, 10, 1, 2], [196, 8, 1.1, 3], [250, 20, 1, 4], [6, 170, 1.1, 5], [80, 196, .9, 6]]) A1(sx, sy, (x, y) => pine(x, y, sc, k));
+  A1(236, 60, (x, y) => birch(x, y, 4));
+  for (const [sx, sy, r] of [[16, 214, 5], [110, 214, 4], [96, 176, 3], [250, 104, 3]]) A1(sx, sy, (x, y) => rock(x, y, r));
+  items.sort((a, b) => a[0] - b[0]); for (const [, f] of items) f();
+  out.back = layerCanvas(LY);
+  // le quai, devant le drakkar, dans une couche à part
+  LY = newLayer(false); CUR = 1;
+  const [qx, qy] = Wd(122, 112), QL = 96;
+  for (let i = 8; i < QL; i += 11){ box(qx + i, qy + 13, -8, 2, 2, 12, plain(hex("#4a2a12")), plain(hex("#4a2a12")), plain(hex("#3a2010"))); box(qx + i, qy + 1, -8, 2, 2, 12, plain(hex("#4a2a12")), plain(hex("#4a2a12")), plain(hex("#3a2010"))); }
+  box(qx, qy, 3, QL, 16, 2, (u, v) => { let c = (u % 4 < .7) ? PAL.gap : mix(PAL.woodL, PAL.wood, h2(Math.floor(u / 4), 1, 2)); if (ST.snow && h2(Math.floor(u), Math.floor(v), 3) > .35) c = PAL.snow[1]; return c; }, plain(hex("#5a3418")), plain(hex("#4a2a12")));
+  crate(qx + 46, qy + 2, 5, 5); crate(qx + 51, qy + 3, 5, 4); barrel(qx + 60, qy + 6); barrel(qx + 30, qy + 12);
+  box(qx + 4, qy + 2, 5, 3, 3, 22, plain(hex("#5a3418")), planks(5), planks(5));
+  nid(); for (let k = 0; k < 26; k++){ const [a, b] = P(qx + 5 + k * .9, qy + 3 + k * .3, 27 - k * .05); put(a, b, hex("#6a4022")); put(a, b + 1, hex("#4a2a12")); }
+  out.front = layerCanvas(LY);
+  out.crane = P(qx + 28, qy + 10, 26);
+  out.quayY = qy; out.quayX = qx;
+  out.gull = P(qx + 70, qy + 1, 12);
+  out.walk = [{id:"guerrier", a:[qx + 6, qy + 8], b:[qx + 80, qy + 8]}, {id:"pilleur", a:[qx + 76, qy + 11], b:[qx + 12, qy + 11]}, {id:"femme", a:pt(30, 70), b:pt(120, 108)}];
+  out.places = {drakkar:[qx + 64, qy - 24], knarr:[qx + 86, qy + 58], snekkja:[...Wd(64, 206)]};
+  return out;
+}
+/* ---------- animation ---------- */
+function drawShipIso(g, img, x, y, t, phase){
+  const [sx, sy] = P(x, y), bob = Math.round(Math.sin(t * 1.5 + phase));
+  g.save(); g.setTransform(1, .5, 0, 1, 0, 0); g.imageSmoothingEnabled = false;
+  const X = Math.round(sx - img.width / 2), Y = Math.round(sy - sx * .5 - img.wl);
+  g.globalAlpha = .25; g.drawImage(silC(img, "#0a2838"), 0, img.wl - 6, img.width, 10, X + 3, Y + img.wl + 2, img.width, 6); g.globalAlpha = 1;
+  g.drawImage(img, 0, 0, img.width, img.wl + 1, X, Y + bob, img.width, img.wl + 1);
+  for (let i = 0; i < 6; i++) R(g, X + img.mastX - 1 - i, Y + bob + img.mastTop - 2 + Math.round(Math.sin(t * 6 - i * .9) * .8), 1, 2, i < 3 ? "#c03020" : "#e8c050");
+  g.restore();
+}
+function waterFx(g, G, t){
+  for (let k = 0; k < G.water.length; k += 97){
+    const [x, y, dep] = G.water[(k + Math.floor(t * 3) * 131) % G.water.length];
+    if (dep > .15) R(g, x, y, 2 + (k % 3), 1, ST.snow ? "#d0e8f4" : "#9ad4e4");
+  }
+  g.fillStyle = ST.snow ? "rgba(240,248,255,.55)" : "rgba(240,252,255,.6)";
+  for (const [x, y, ph] of G.shore) if (Math.sin(t * 1.6 - ph) > .55) g.fillRect(x, y, 1, 1);
+}
+function walkers(g, list, st, t, dt){
+  for (const w of list){
+    w.p = (w.p ?? Math.random()) + dt * .05 * (w.dir || (w.dir = 1));
+    if (w.p > 1 || w.p < 0){ w.dir = -w.dir; w.p = Math.max(0, Math.min(1, w.p)); }
+    const x = w.a[0] + (w.b[0] - w.a[0]) * w.p, y = w.a[1] + (w.b[1] - w.a[1]) * w.p, [sx, sy] = P(x, y);
+    const right = (w.b[0] - w.a[0]) - (w.b[1] - w.a[1]) >= 0 ? w.dir > 0 : w.dir < 0;
+    g.drawImage((right ? SPR : SPRL)[w.id][Math.floor(t * 4 + x) % 2], Math.round(sx) - 6, Math.round(sy) - 21);
+  }
+}
+function snowfall(g, t){ for (let k = 0; k < 60; k++){ const x = (k * 53 + t * 6 + Math.sin(t + k) * 4) % W, y = (k * 37 + t * (14 + k % 5)) % H; R(g, x, y, 1, 1, "#ffffffcc"); } }
+function sceneIso(g, st, t, dt){
+  const S0 = STYLES[st.dir]; ST = S0;
+  if (st.ecran === "village"){
+    const key = JSON.stringify(st.lv);
+    if (st.vKey !== key){ st.V = buildVillage(st.lv); st.vKey = key; st.sm = []; }
+    const V = st.V;
+    g.drawImage(V.canvas, 0, 0); waterFx(g, V.ground, t);
+    for (const [x, y, id] of V.train){ const l = Math.sin(t * 5 + x) > .3 ? 1 : 0, [sx, sy] = P(x, y); g.drawImage(SPR[id][l], Math.round(sx) - 6 + l, Math.round(sy) - 21); }
+    walkers(g, V.walk, st, t, dt);
+    for (const [x, y] of V.chickens){ const [sx, sy] = P(x + Math.sin(t * .5 + y) * 3, y + Math.cos(t * .4 + x) * 3), pk = Math.sin(t * 4 + x) > .6; R(g, sx, sy - 3, 4, 3, "#f4ece0"); R(g, sx + 3, sy - 4 + (pk ? 2 : 0), 2, 2, "#f4ece0"); R(g, sx + 4, sy - 5 + (pk ? 2 : 0), 1, 1, "#d03020"); }
+    for (const [x, y] of V.sheep){ const [sx, sy] = P(x + Math.sin(t * .3 + y) * 2, y), bob = Math.sin(t * 3 + x) > .8 ? 1 : 0; R(g, sx - 3, sy - 6, 7, 5, "#2a2020"); R(g, sx - 2, sy - 7, 6, 5, ST.snow ? "#d8d0c4" : "#f4f0e8"); R(g, sx - 1, sy - 7, 3, 1, "#ffffff"); R(g, sx + 3, sy - 6 + bob, 3, 3, "#3a3030"); R(g, sx - 2, sy - 2, 1, 2, "#3a3030"); R(g, sx + 2, sy - 2, 1, 2, "#3a3030"); }
+    if (V.forge){ const [fx, fy] = V.forge; R(g, fx - 2, fy - 2, 4, 2, st.lv.forge >= 2 && Math.floor(t * 8) % 2 ? "#ffd040" : "#ff7020"); g.drawImage(SPR.guerrier[Math.floor(t * 2) % 2], fx - 16, fy - 19); sparks(g, fx - 3, fy - 4, t); }
+    for (const [x, y] of V.torches){ R(g, x, y - 1, 1, 3, "#5a3418"); R(g, x, y - 3 + Math.round(Math.sin(t * 13 + x)), 1, 2, "#ffb030"); R(g, x, y - 4, 1, 1, "#ffe080"); }
+    if (V.flag){ const [fx, fy] = V.flag; R(g, fx, fy - 22, 1, 18, "#3a2010"); for (let i = 0; i < 11; i++) R(g, fx + 1 + i, fy - 21 + Math.round(Math.sin(t * 5 - i * .6) * 1.2), 1, 6, i % 6 < 3 ? "#b8301e" : "#e8c050"); }
+    for (const [x, y] of V.chims) smoke(st, x, y, dt, ST.snow ? .2 : .4);
+    drawSmoke(g, st, dt, ST.snow ? 1.3 : 1);
+  } else {
+    if (!st.Pt){ st.Pt = buildPort(); st.sm = []; }
+    const Pt = st.Pt;
+    g.drawImage(Pt.back, 0, 0); waterFx(g, Pt.ground, t);
+    const places = Pt.places;
+    const ship = k => {
+      const sh = st.navires[k]; if (!sh.dispo) return;
+      const [x0, y0] = places[k], x = x0 + sh.p * 200;
+      if (P(x, y0)[0] > W + 60) return;
+      drawShipIso(g, A2.ship[k], x, y0, t, x0);
+      if (sh.sel && sh.p === 0 && Math.floor(t * 2) % 2){ const [sx, sy] = P(x0, y0); R(g, sx - 2, sy - 50, 5, 3, "#ffe060"); }
+    };
+    ship("drakkar"); g.drawImage(Pt.front, 0, 0);
+    const [cx, cy] = Pt.crane, sw = Math.round(Math.sin(t * 1.3) * 1.5); R(g, cx + sw, cy, 1, 9, "#2a160a"); R(g, cx - 3 + sw, cy + 9, 7, 5, "#8a5a32"); R(g, cx - 3 + sw, cy + 9, 7, 1, "#b88a52");
+    walkers(g, Pt.walk, st, t, dt);
+    ship("knarr"); ship("snekkja");
+    for (const [x, y] of Pt.chims) smoke(st, x, y, dt, .4);
+    drawSmoke(g, st, dt);
+    for (let k = 0; k < 4; k++){
+      const a = t * (.3 + k * .06) + k * 1.9, cx2 = 160 + Math.cos(a) * (60 + k * 8), cy2 = 140 + Math.sin(a) * (35 + k * 5), ang = a + Math.PI, fr = Math.floor(t * 4 + k) % 2;
+      g.save(); g.translate(Math.round(cx2 + 12), Math.round(cy2 + 18)); g.rotate(ang); g.drawImage(fr ? A2.gAs : A2.gBs, -8, -6); g.restore();
+      g.save(); g.translate(Math.round(cx2), Math.round(cy2)); g.rotate(ang); g.drawImage(fr ? A2.gA : A2.gB, -8, -6); g.restore();
+    }
+    const hop = (t % 6) < .3 ? -2 : 0, [gx, gy] = Pt.gull; g.drawImage(A2.gp, gx - 3, gy - 6 + hop);
+  }
+  if (ST.snow) snowfall(g, t);
+}
+const A2 = {};
+function prepareIso(){
+  A2.ship = {}; for (const k in NAV) A2.ship[k] = shipSide(k);
+  A2.gA = mapSprite(GULL_A, false); A2.gB = mapSprite(GULL_B, false); A2.gAs = silhouette(A2.gA, "rgba(10,40,60,.3)"); A2.gBs = silhouette(A2.gB, "rgba(10,40,60,.3)");
+  A2.gp = mapSprite(GULL_POSE, true);
+}
+
+/* ============================================================
+   Le téléphone : barre des ressources, scène, volet, navigation
+   ============================================================ */
+const CIBLES = [
+  {nom:"FERME DE HAUGR", def:14, butin:30, duree:"6 MIN", info:"Facile, peu de butin"},
+  {nom:"MONASTERE DE LINDHOLM", def:38, butin:90, duree:"25 MIN", fort:1, info:"Mur de pierre : archers conseillés"},
+  {nom:"HALLE DE SIGRID", def:90, butin:260, duree:"1 H 30", fort:1, info:"Un jarl du Thé des Jarls"},
+];
+const DIRS = [
+  {k:"A", titre:"A · ETE DU FJORD", txt:"Isométrique en lumière douce, sans contours : le pixel art se lit par les textures et l'ombre des faces.", theme:"tA"},
+  {k:"B", titre:"B · CONTOURS 32 BITS", txt:"Le même village, couleurs plus vives et contour sombre autour de chaque pan de mur et de toit, comme Capitaine du port.", theme:"tB"},
+  {k:"C", titre:"C · SOIR D'HIVER", txt:"Neige sur les toits et le sol, lumière froide, fenêtres éclairées, flocons et fumées plus marquées.", theme:"tC"},
+];
+const BATS = [
+  {k:"halle", nom:"Grande halle", desc:["", "plafonne les autres bâtiments", "torches à l'entrée", "halle plus longue"], max:3, cout:60},
+  {k:"maisons", nom:"Maisons longues", desc:["", "une maison et une fumée de plus", "", ""], max:3, cout:40},
+  {k:"forge", nom:"Forge", desc:["à construire : le forgeron et ses étincelles", "forgeron au travail", "soufflet : la braise rougeoie", ""], max:2, cout:50},
+  {k:"caserne", nom:"Caserne", desc:["", "2 soldats de plus à l'entraînement", "", ""], max:3, cout:45},
+];
+
+function phone(d){
+  const el = document.createElement("div"); el.className = "dir";
+  el.innerHTML = `<div class="tel ${d.theme}"><div class="res"></div><canvas width="${W}" height="${H}"></canvas><div class="vol"></div>
+    <div class="nav"><button data-s="village" class="on">VILLAGE</button><button data-s="port">PORT</button><button disabled>ENTREE</button><button disabled>TERRES</button></div><div class="toast"></div></div>
+    <h2>${d.titre}</h2><p>${d.txt}</p>`;
+  document.getElementById("grille").appendChild(el);
+  const cv = el.querySelector("canvas"), g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+  const st = {dir:d.k, ecran:"village", res:{bois:340, pierre:180, nourriture:120, or:14}, cible:1,
+    nb:Object.fromEntries(UNITES.map(u => [u.id, 0])), navires:{drakkar:{dispo:1, sel:1, p:0}, knarr:{dispo:1, sel:1, p:0}, snekkja:{dispo:1, sel:0, p:0}},
+    lv:{halle:1, maisons:1, forge:0, caserne:1}, raid:null};
+  st.nb.guerrier = 6; st.nb.archer = 4; st.nb.bouclier = 2; st.nb.pilleur = 2;
+  const vol = el.querySelector(".vol"), res = el.querySelector(".res"), toast = el.querySelector(".toast");
+  const icons = {};
+  function drawRes(){
+    res.innerHTML = "";
+    for (const k of ["bois", "pierre", "nourriture", "or"]){
+      const s = document.createElement("span"), c = document.createElement("canvas"); c.width = 12; c.height = 12; c.getContext("2d").drawImage(iconRes(k), 0, 0);
+      s.append(c, document.createTextNode(st.res[k])); res.append(s);
+    }
+  }
+  function say(msg, ms = 2600){ toast.innerHTML = msg; toast.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => toast.classList.remove("on"), ms); }
+  function calc(){
+    const ships = Object.keys(NAV).filter(k => st.navires[k].sel && st.navires[k].p === 0);
+    const places = ships.reduce((s, k) => s + NAV[k].places, 0), cale0 = ships.reduce((s, k) => s + NAV[k].cale, 0);
+    const n = Object.values(st.nb).reduce((a, b) => a + b, 0), c = CIBLES[st.cible];
+    let att = 0; for (const u of UNITES) att += st.nb[u.id] * u.att * (c.fort && u.fort ? u.fort : 1);
+    if (ships.includes("drakkar")) att *= 1.2;
+    const cale = cale0 + Math.max(0, places - n) * 2 + st.nb.pilleur * 3;
+    const p = n ? 1 / (1 + Math.exp(-4 * (att / c.def - 1))) : 0;
+    return {ships, places, n, att: Math.round(att), cale, p, c};
+  }
+  function vPort(){
+    const k = calc(), c = k.c, label = k.p > .75 ? "FACILE" : k.p > .45 ? "RISQUE" : "TRES RISQUE", col = k.p > .75 ? "#4aa040" : k.p > .45 ? "#d8a030" : "#c03020";
+    const busy = Object.values(st.navires).some(s => s.p > 0);
+    vol.innerHTML = `<h3>PREPARER UN RAID</h3>
+      <div class="cible"><button class="pmb" data-c="-1" style="font-family:var(--f-titre);font-size:9px;background:var(--p-bouton);color:var(--p-texte-bouton);border:2px solid var(--p-bord);border-radius:var(--p-rayon)">◀</button>
+        <div><b>${c.nom}</b><small>${c.info} · ${c.duree}</small></div>
+        <button class="pmb" data-c="1" style="font-family:var(--f-titre);font-size:9px;background:var(--p-bouton);color:var(--p-texte-bouton);border:2px solid var(--p-bord);border-radius:var(--p-rayon)">▶</button></div>
+      <div class="navires">${Object.keys(NAV).map(n => `<button data-n="${n}" class="${st.navires[n].sel ? "on" : ""}">${NAV[n].nom}<small>${NAV[n].places} places · cale ${NAV[n].cale}</small><small>${NAV[n].info}</small></button>`).join("")}</div>
+      <div class="units"></div>
+      <div class="jauge"><span>PLACES</span><span class="bar"><i style="width:${Math.min(100, k.n / Math.max(1, k.places) * 100)}%;--c:${k.n > k.places ? "#c03020" : "#5a8ac0"}"></i></span><span>${k.n} / ${k.places}</span></div>
+      <div class="jauge"><span>CALE</span><span class="bar"><i style="width:${Math.min(100, k.cale / c.butin * 100)}%;--c:#d8a040"></i></span><span>${k.cale} / ${c.butin}</span></div>
+      <div class="jauge"><span>CHANCES</span><span class="bar"><i style="width:${Math.round(k.p * 100)}%;--c:${col}"></i></span><span class="chance" style="color:${col}">${label}</span></div>
+      <div class="jauge"><span>ATTAQUE</span><span style="flex:1">${k.att} contre ${c.def}</span></div>
+      <button class="btn" ${busy || !k.n || k.n > k.places || !k.ships.length ? "disabled" : ""}>${busy ? "LA FLOTTE EST EN MER" : k.n > k.places ? "TROP DE SOLDATS" : "PARTIR"}</button>`;
+    const uw = vol.querySelector(".units");
+    for (const u of UNITES){
+      const r = document.createElement("div"); r.className = "ligne";
+      const ic = document.createElement("canvas"); ic.className = "ic"; ic.width = 18; ic.height = 24; ic.getContext("2d").drawImage(SPR[u.id][0], 0, 0);
+      r.append(ic); r.insertAdjacentHTML("beforeend", `<span class="nom">${u.nom}<small>${u.role}</small></span><span class="pm"><button data-u="${u.id}" data-d="-1">-</button><b>${st.nb[u.id]}<small style="font-size:10px;color:var(--p-doux)">/${u.dispo}</small></b><button data-u="${u.id}" data-d="1">+</button></span>`);
+      uw.append(r);
+    }
+    vol.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { st.cible = (st.cible + +b.dataset.c + CIBLES.length) % CIBLES.length; vPort(); });
+    vol.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { const s = st.navires[b.dataset.n]; if (s.p === 0){ s.sel = !s.sel; vPort(); } });
+    vol.querySelectorAll("[data-u]").forEach(b => b.onclick = () => { const u = UNITES.find(x => x.id === b.dataset.u); st.nb[u.id] = Math.max(0, Math.min(u.dispo, st.nb[u.id] + +b.dataset.d)); const y = vol.scrollTop; vPort(); vol.scrollTop = y; });
+    vol.querySelector(".btn").onclick = () => {
+      const k2 = calc(); st.raid = {t:0, ...k2, win: Math.random() < k2.p};
+      for (const s of k2.ships) st.navires[s].p = .0001;
+      say("LA FLOTTE PART POUR<br>" + k2.c.nom, 2000); vPort();
+    };
+  }
+  function vVillage(){
+    vol.innerHTML = `<h3>LE VILLAGE</h3><p style="margin:0 0 4px;font-size:12.5px;color:var(--p-doux)">Chaque amélioration se voit dans le décor.</p>`;
+    for (const b of BATS){
+      const n = st.lv[b.k], max = n >= b.max, d = document.createElement("div"); d.className = "bat";
+      d.innerHTML = `<span class="nom">${b.nom} · niv. ${n}<small>${max ? "niveau maximum" : (b.desc[n + 1] || b.desc[n] || b.desc[1] || "") }</small></span><button class="btn" ${max ? "disabled" : ""}>${max ? "MAX" : (n ? "AMELIORER" : "BATIR") + "<br><span style='font-size:7px'>" + b.cout + " BOIS</span>"}</button>`;
+      d.querySelector("button").onclick = () => { if (st.res.bois < b.cout) return say("PAS ASSEZ DE BOIS"); st.res.bois -= b.cout; st.lv[b.k]++; drawRes(); vVillage(); };
+      vol.append(d);
+    }
+  }
+  function show(s){ st.ecran = s; el.querySelectorAll(".nav button[data-s]").forEach(b => b.classList.toggle("on", b.dataset.s === s)); (s === "port" ? vPort : vVillage)(); vol.scrollTop = 0; }
+  el.querySelectorAll(".nav button[data-s]").forEach(b => b.onclick = () => show(b.dataset.s));
+  drawRes(); show("village");
+  let last = performance.now(), t = Math.random() * 10;
+  function frame(now){
+    const dt = Math.min(.1, (now - last) / 1000); last = now; t += dt;
+    if (st.raid){
+      st.raid.t += dt; const T = st.raid.t;
+      const p = T < 4 ? T / 4 : T < 7 ? 1 : T < 11 ? 1 - (T - 7) / 4 : 0;
+      for (const s of st.raid.ships) st.navires[s].p = p > 0 ? Math.max(.0001, p * p) : 0;
+      if (T >= 11){
+        const r = st.raid, butin = r.win ? Math.min(r.c.butin, r.cale) : Math.round(Math.min(r.c.butin, r.cale) * .2);
+        const pertes = Math.max(0, Math.round(r.n * (r.win ? .08 : .3) * (st.nb.bouclier ? .6 : 1)));
+        st.res.or += butin; drawRes();
+        say((r.win ? "VICTOIRE !" : "RETRAITE...") + "<br>+" + butin + " OR<br>" + pertes + " BLESSE" + (pertes > 1 ? "S" : ""), 3500);
+        st.raid = null; if (st.ecran === "port") vPort();
+      }
+    }
+    sceneIso(g, st, t, dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+prepareUnits(); prepareIso();
+DIRS.forEach(phone);
+</script>
+</body>
+</html>
