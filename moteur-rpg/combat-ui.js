@@ -42,6 +42,7 @@
     const equipe = h('div', 'cb-equipe'), menu = h('div', 'cb-menu');
     const haut = h('div', 'cb-haut'), frise = h('div', 'cb-frise'), barreBoss = h('div', 'cb-boss'), alerte = h('div', 'cb-alerte');
     haut.append(frise, barreBoss, alerte, banniere);
+    barreBoss.style.display = alerte.style.display = 'none';   // remplies après l'annonce des monstres
     bas.append(equipe, menu); racine.append(calque, haut, bas); o.racine.append(racine);
     banniere.addEventListener('pointerdown', e => { if (attente) { e.preventDefault(); attente(); } });
     const marque = h('div', 'cb-marque', '▼'), fleche = h('div', 'cb-marque acteur', '▼'); calque.append(marque, fleche);
