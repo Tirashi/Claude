@@ -115,7 +115,8 @@
       };
       // Zone de danger : voile rouge sous les portées (une case bleue et rouge à la fois est
       // un endroit où l'unité pourrait aller, mais où l'ennemi pourra la frapper)
-      const zone = battle.dangerOn && ['idle', 'selected'].includes(battle.state) && battle.phase === 'player';
+      // (affichée aussi pendant le tour ennemi ; pas pendant le choix d'une cible)
+      const zone = battle.dangerOn && !['target', 'over'].includes(battle.state);
       if (battle.state === 'selected' && battle.moveRes) {
         paint(blue, battle.moveRes.dist.keys());
         if (!zone) paint(red, battle.threat);

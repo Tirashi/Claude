@@ -46,6 +46,7 @@ Détails déplacés de `CLAUDE.md` le 19/10 (pour qu'il reste court : il est rel
 - **Solitaire, confirmation** (28/10) : les joueurs ne comprenaient pas qu'il fallait toucher deux fois NOUVELLE DONNE (ou PIOCHE) pendant une partie. Remplacé par une petite fenêtre « NOUVELLE DONNE ? » / « PIOCHE : n ? » avec NON / ABANDONNER (ou CHANGER) ; Échap = non. Pas de fenêtre si la partie n'a pas commencé ou est gagnée. À essayer sur le téléphone.
 
 ## Résistance (28/10)
+- **Séance d'essais du 29/10** (`specs/essais.md`) : zone de danger trouée près des ennemis et absente au tour ennemi → corrigée ; Yams : dés qui tombent parfois bizarrement, à préciser ; tous les classements confirmés ; la Lanterne pas encore essayée.
 - **Confort de jeu** (29/10, idées de Claude faites d'un coup) : zone de danger, garde-fou sur Fin du tour, phase ennemie accélérée, dernières paroles, bilan de campagne, premier combat guidé (`resistance.md` § 9) ; testé dans Chromium en portrait (script Playwright dans le bloc-notes) ; à essayer sur le téléphone. Avec, la liste d'essais [`specs/essais.md`](essais.md).
 - L'utilisateur a envoyé le jeu (zip « Conquete ») fait avec une autre IA : rogue-lite tactique façon Fire Emblem GBA, avec sa forteresse. Repris dans `resistance/` ; vision, plan et décisions dans [`resistance.md`](resistance.md).
 - Licence des sprites : capture de Matt Walkden (auteur du Fantasy Battle Pack) sur itch.io : « Permission is given to distribute the assets […] as a component part of an artistic or commercial work », ce qui couvre le dépôt GitHub public.
