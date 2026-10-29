@@ -44,6 +44,13 @@ canvas#table:focus{outline:none}
 .win .stats .new{color:var(--gold)}
 /* menu */
 .voile{position:fixed; inset:0; z-index:20; background:rgba(3,6,14,.6); display:flex; align-items:flex-end; justify-content:center}
+/* demande de confirmation (nouvelle donne, changement de pioche) */
+.voile.centre{z-index:30; align-items:center; padding:16px}
+.voile.centre .win{max-width:320px}
+.voile.centre h2{font-size:12px; line-height:1.6}
+.voile.centre .stats{line-height:2}
+.choix{display:flex; gap:10px; align-self:stretch}
+.choix .btn{flex:1}
 .feuille{width:min(100%, 560px); max-height:92dvh; overflow-y:auto; background:var(--bar); border-top:3px solid var(--gold);
   padding:12px max(12px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
   display:flex; flex-direction:column; gap:10px}

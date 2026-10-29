@@ -406,17 +406,23 @@ function hud(){
   $("undoBtn").disabled = !undoStack.length || st.won;
 }
 function setMsg(h){ $("msg").innerHTML = h; $("menuMsg").innerHTML = h; }
-let confirmAt = 0, confirmWhat = "";
-function confirmOr(what, text, fn){
-  const busy = st.started && !st.won;
-  if (!busy || (confirmWhat === what && performance.now() - confirmAt < 4000)){ confirmWhat = ""; setMsg(""); fn(); return; }
-  confirmWhat = what; confirmAt = performance.now(); setMsg(text); SFX.bad();
+/* une partie en cours ne s'abandonne qu'après un OUI dans une petite fenêtre */
+const ask = $("ask");
+let askFn = null;
+function closeAsk(){ ask.hidden = true; askFn = null; }
+function confirmOr(title, text, yes, fn){
+  if (!st.started || st.won){ setMsg(""); fn(); return; }
+  $("askTitle").textContent = title; $("askText").innerHTML = text; $("askYes").textContent = yes;
+  askFn = fn; ask.hidden = false; $("askNo").focus({preventScroll: true}); SFX.flip();
 }
-$("newBtn").onclick = () => confirmOr("new", "Partie en cours : appuie encore sur <b>NOUVELLE DONNE</b> pour l'abandonner.", () => { deal(); SFX.draw(); closeMenu(); });
+$("askYes").onclick = () => { const fn = askFn; closeAsk(); setMsg(""); if (fn) fn(); };
+$("askNo").onclick = closeAsk;
+ask.addEventListener("click", e => { if (e.target === ask) closeAsk(); });
+$("newBtn").onclick = () => confirmOr("NOUVELLE DONNE ?", "La partie en cours sera abandonnee.", "ABANDONNER", () => { deal(); SFX.draw(); closeMenu(); });
 $("againBtn").onclick = () => { deal(); SFX.draw(); };
 $("drawBtn").onclick = () => {
   const next = st.draw === 3 ? 1 : 3;
-  confirmOr("draw" + next, `Changer de pioche redistribue les cartes : appuie encore sur <b>PIOCHE</b>.`, () => {
+  confirmOr("PIOCHE : " + next + " ?", "Changer de pioche redistribue les cartes : la partie en cours sera abandonnee.", "CHANGER", () => {
     drawMode = next; store.set("draw", next); deal(); setMsg(`Nouvelle donne, pioche ${next === 1 ? "d'une carte" : "de trois cartes"}.`); SFX.draw(); closeMenu(); });
 };
 $("undoBtn").onclick = undo;
@@ -454,6 +460,7 @@ function buildMenu(){
   }, t.nom, () => { felt = i; store.set("felt", i); makeFelt(); }));
 }
 document.addEventListener("keydown", e => {
+  if (!ask.hidden){ if (e.key === "Escape") closeAsk(); return; }
   if (!menu.hidden){ if (e.key === "Escape" || e.key === "m" || e.key === "M") closeMenu(); return; }
   if (e.key === "m" || e.key === "M" || e.key === "Escape"){ openMenu(); return; }
   if (e.target.tagName === "BUTTON" && (e.key === " " || e.key === "Enter")) return;
