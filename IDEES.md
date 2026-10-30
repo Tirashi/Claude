@@ -168,8 +168,8 @@ Un « Vampire Survivors-like » dans l'espace, mêlé à l'idée de caravane : o
 
 - **Nebula : flotte à points et défis** (idées du 15/10) — ✅ flotte à points et prime d'audace (session 4, étape 1), défis de combat et contrats de partie (étape 2), missions du jour (étape 3), nouveaux vaisseaux (étape 4) ; session 4 terminée, équilibrage à revoir après plus de parties — composer sa flotte de départ avec des points de flotte et une prime d'audace (moins on dépense, plus on gagne), objectifs de combat et contrats de partie, missions du jour avec une flotte imposée différente chaque jour, nouveaux vaisseaux alliés et pirates. Analyse chiffrée et découpage proposé dans `specs/nebula.md` § 21.
 
-## Mineurs d'étoiles (idée de l'utilisateur du 30/10, nom de travail)
-Exploration spatiale + gestion + auto battler. Départ en orbite terrestre : un petit vaisseau (carburant et soute limités) casse des astéroïdes au tir et ramasse le minerai (fer, rarement or ; un minerai = une case de soute), qu'il faut ramener sur Terre avant la panne sèche. Le minerai devient de l'argent : usines (meilleur prix), centre spatial et recherche (carburant, soute, puissance de tir, plus de minerai par astéroïde, nouveaux minerais). Puis station spatiale et vaisseaux de minage autonomes ; on va plus loin (Lune, Mars…) avec des bases ; vaisseaux de guerre et drones qui patrouillent autour des bases contre les aliens (combats automatiques). Proche de Nebula (DA, vaisseaux) et de la boucle d'automatisation de la Ferme du vallon.
+## Mineurs d'étoiles (idée de l'utilisateur du 30/10)
+🟡 **chantier** : exploration spatiale + gestion + auto battler, tout est dans [`specs/mineurs-d-etoiles.md`](specs/mineurs-d-etoiles.md).
 
 ## Grand jeu spatial : gestion + tactique (brainstorm du 13/10/2026, à approfondir)
 Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux, des planètes, des améliorations, pour **toute la famille**. Quatre formes proposées (toutes gardées) :
