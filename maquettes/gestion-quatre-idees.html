@@ -1,0 +1,468 @@
+<title>Caravane, Chalutier, Alchimiste, Port</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+/* Maquettes très simples (30/10) des quatre idées de gestion retenues : La Caravane, Le Chalutier,
+   L'Alchimiste, Le Port de commerce. Un téléphone par jeu, la boucle de jeu jouable en quelques gestes.
+   Mise en page : grille de téléphones, puis les questions. Thème sombre unique, comme les autres maquettes. */
+:root{
+  --fond:#15120f; --texte:#f2e8d8; --doux:#bfae96; --or:#f0c050; --ligne:#3a3026; --cadre:#050403;
+  --f-titre:"Press Start 2P", ui-monospace, monospace; --f-texte:"Pixelify Sans", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(15px,3.6vw,22px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000;text-wrap:balance}
+header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:28px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0;width:100%;max-width:320px}
+.dir h2{font-family:var(--f-titre);font-size:11px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir > p{margin:0;color:var(--doux);font-size:15px;text-align:center;min-height:4.5em}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:8px}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0 0 6px;letter-spacing:.5px}
+section.q li{color:var(--doux);margin:4px 0}
+section.q b{color:var(--texte)}
+
+.tel{width:100%;max-width:100%;aspect-ratio:9/19;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;
+  box-shadow:0 18px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;background:var(--p-fond);color:var(--p-texte);position:relative}
+.tel canvas{width:100%;display:block;image-rendering:pixelated;flex:none;aspect-ratio:180/170;cursor:pointer;touch-action:manipulation}
+.res{display:flex;justify-content:space-between;gap:2px;padding:5px 8px;background:var(--p-barre);border-bottom:3px solid var(--p-bord);flex:none;
+  font-size:13px;font-weight:600;color:var(--p-clair);font-variant-numeric:tabular-nums}
+.vol{flex:1;overflow-y:auto;padding:8px 9px 10px;background:var(--p-volet);border-top:3px solid var(--p-bord);min-height:0;font-size:14px;line-height:1.3}
+.vol h3{font-family:var(--f-titre);font-size:8px;margin:2px 0 7px;color:var(--p-titre);letter-spacing:.5px;line-height:1.6}
+.vol p{margin:0 0 7px}
+.ligne{display:flex;align-items:center;gap:6px;margin:4px 0;padding:4px 6px;border:2px solid var(--p-bord);border-radius:var(--p-rayon);background:var(--p-carte)}
+.ligne .nom{flex:1;min-width:0;line-height:1.15}
+.ligne .nom small{display:block;color:var(--p-doux);font-size:12px}
+.ligne.on{outline:2px solid var(--p-titre);outline-offset:-2px}
+.btn{font-family:var(--f-titre);font-size:7px;line-height:1.4;padding:7px 6px;background:var(--p-action);color:var(--p-texte-action);border:2px solid var(--p-bord);
+  box-shadow:0 2px 0 var(--p-bord);border-radius:var(--p-rayon);cursor:pointer;flex:none;text-align:center}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.gris{background:var(--p-bouton);color:var(--p-texte-bouton)}
+.btn.large{display:block;width:100%;margin-top:6px;padding:10px 6px;font-size:8px}
+.btn:focus-visible{outline:2px solid var(--or);outline-offset:1px}
+.rangee{display:flex;gap:5px;flex-wrap:wrap}
+.rangee .btn{flex:1}
+.ing{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:6px}
+.ing button{font-family:var(--f-texte);font-size:11.5px;line-height:1.1;padding:5px 1px;border:2px solid var(--p-bord);border-radius:var(--p-rayon);
+  background:var(--p-carte);color:var(--p-texte);cursor:pointer}
+.ing button i{display:block;width:12px;height:12px;margin:0 auto 3px;border:2px solid #0007}
+.ing button.on{background:var(--p-on);color:var(--p-texte-action)}
+.ing button:disabled{opacity:.4}
+.note{color:var(--p-doux);font-size:12.5px}
+
+.tCa{ --p-fond:#3b2414; --p-barre:#4a2e18; --p-bord:#1a0e06; --p-volet:#ecdcb2; --p-texte:#2a1a0a; --p-doux:#7a5a36; --p-titre:#8a2a1a;
+  --p-clair:#f4dfa8; --p-bouton:#7a4a22; --p-texte-bouton:#f4dfa8; --p-action:#a83220; --p-texte-action:#ffe8b0; --p-carte:#f6ead0; --p-on:#a83220; --p-rayon:2px }
+.tCh{ --p-fond:#14303e; --p-barre:#1b3f52; --p-bord:#081820; --p-volet:#244c60; --p-texte:#e8f4f8; --p-doux:#9cc0cc; --p-titre:#ffd060;
+  --p-clair:#e8f8ff; --p-bouton:#3b6478; --p-texte-bouton:#e8f8ff; --p-action:#e07a2a; --p-texte-action:#fff4e0; --p-carte:#2e5c72; --p-on:#e07a2a; --p-rayon:4px }
+.tAl{ --p-fond:#221630; --p-barre:#2e1e40; --p-bord:#0c0614; --p-volet:#3a2850; --p-texte:#f0e6ff; --p-doux:#b8a4d0; --p-titre:#9ff0b8;
+  --p-clair:#f0e6ff; --p-bouton:#54406e; --p-texte-bouton:#f0e6ff; --p-action:#3fa66a; --p-texte-action:#f0fff4; --p-carte:#4a3664; --p-on:#3fa66a; --p-rayon:6px }
+.tPo{ --p-fond:#1d2a36; --p-barre:#24323f; --p-bord:#0b1218; --p-volet:#e6e9ea; --p-texte:#1a242c; --p-doux:#5a6a76; --p-titre:#c0392b;
+  --p-clair:#f4f6f6; --p-bouton:#5a6a76; --p-texte-bouton:#f4f6f6; --p-action:#1f6fb2; --p-texte-action:#ffffff; --p-carte:#f6f8f8; --p-on:#1f6fb2; --p-rayon:0 }
+</style>
+
+<div class="page">
+<header>
+  <h1>QUATRE JEUX DE GESTION</h1>
+  <p>Une maquette très simple par idée retenue : un écran de téléphone avec la boucle du jeu, jouable en quelques gestes. Les graphismes sont des brouillons dessinés par le code, pour juger le jeu, pas encore le style.</p>
+</header>
+<div class="grille" id="grille"></div>
+<section class="q">
+  <h2>A CHOISIR</h2>
+  <ul>
+    <li><b>Lesquelles vous donnent envie d'y rejouer ?</b> On peut en garder une, deux, ou toutes, dans l'ordre que vous voulez.</li>
+    <li><b>Le rythme</b> : la Caravane et l'Alchimiste se jouent à votre rythme ; le Chalutier et le Port avancent tout seuls (avec pause).</li>
+    <li><b>Ensuite</b> : pour celle qui est choisie, une vraie maquette de style (2 ou 3 directions) avant le cahier des charges.</li>
+  </ul>
+</section>
+</div>
+
+<script>
+"use strict";
+const W = 180, H = 170, TAU = Math.PI * 2;
+function R(g, x, y, w, h, c){ g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function rng(seed){ let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+const pick = (r, t) => t[Math.floor(r() * t.length)];
+function txt(g, s, x, y, c, taille = 7, align = "left"){ g.font = `${taille}px "Press Start 2P", monospace`; g.textAlign = align; g.textBaseline = "top"; g.fillStyle = "#000a"; g.fillText(s, x + 1, y + 1); g.fillStyle = c; g.fillText(s, x, y); }
+
+function telephone(theme, titre, texte){
+  const d = document.createElement("div"); d.className = "dir";
+  d.innerHTML = `<h2>${titre}</h2><p>${texte}</p><div class="tel ${theme}"><div class="res"></div><canvas width="${W}" height="${H}"></canvas><div class="vol"></div></div>`;
+  document.getElementById("grille").appendChild(d);
+  const can = d.querySelector("canvas"), g = can.getContext("2d"); g.imageSmoothingEnabled = false;
+  const pos = e => { const r = can.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };
+  return { d, can, g, res: d.querySelector(".res"), vol: d.querySelector(".vol"), pos };
+}
+const JEUX = [];
+
+/* =====================================================================
+   1. LA CARAVANE : carte à embranchements, marchés, événements
+   ===================================================================== */
+(() => {
+  const T = telephone("tCa", "LA CARAVANE", "Du port à la Grande Foire avant le jour 40. Touchez une étape qui clignote, achetez bas, vendez haut.");
+  const r = rng(7);
+  const BIENS = { sel: 8, epices: 22, soie: 34, laine: 11 }, NOMS = { sel: "Sel", epices: "Épices", soie: "Soie", laine: "Laine" };
+  const VILLES = ["Karsha", "Ombrevault", "Dunesel", "Haut-Gué", "Mirabel", "Tessaline"];
+  const TYPES = ["ville", "ville", "auberge", "brigands", "evenement", "col"];
+  const LIGNES = 7, X = [40, 90, 140];
+  const noeuds = [];
+  for (let l = 0; l <= LIGNES; l++){
+    const ligne = [];
+    if (l === 0) ligne.push({ l, v: 1, type: "depart" });
+    else if (l === LIGNES) ligne.push({ l, v: 1, type: "foire" });
+    else for (let v = 0; v < 3; v++) if (r() < .8 || v === 1) ligne.push({ l, v, type: pick(r, TYPES) });
+    for (const n of ligne){
+      n.x = X[n.v] + (r() - .5) * 10; n.y = 158 - l * 21;
+      if (n.type === "ville"){ n.nom = VILLES[(l * 3 + n.v) % VILLES.length]; const b = Object.keys(BIENS); n.fait = pick(r, b); n.veut = pick(r, b.filter(k => k !== n.fait)); }
+    }
+    noeuds.push(ligne);
+  }
+  const liens = n => n.l >= LIGNES ? [] : noeuds[n.l + 1].filter(m => Math.abs(m.v - n.v) <= 1 || n.l + 1 === LIGNES || n.l === 0);
+  const S = { ici: noeuds[0][0], or: 120, vivres: 40, moral: 70, jour: 1, cale: { sel: 0, epices: 0, soie: 0, laine: 0 }, voyage: null, fini: false };
+  const charge = () => Object.values(S.cale).reduce((a, b) => a + b, 0), CAP = 12;
+  const prix = (n, b) => Math.round(BIENS[b] * (n.fait === b ? .6 : n.veut === b ? 1.7 : 1) * (1 - (n.vendu?.[b] || 0) * .06));
+
+  function barre(){ T.res.innerHTML = `<span>OR ${S.or}</span><span>VIVRES ${S.vivres}</span><span>MORAL ${S.moral}</span><span>J ${S.jour}/40</span>`; }
+  function panneau(){
+    const n = S.ici; let h = "";
+    if (S.fini){ h = `<h3>LA GRANDE FOIRE</h3><p>Arrivée au jour ${S.jour}. Tout est vendu au prix fort.</p><p><b>Fortune : ${S.or} or</b></p><button class="btn large" id="ca-re">NOUVELLE CARAVANE</button>`; }
+    else if (n.type === "depart") h = `<h3>LE PORT DE DEPART</h3><p>Trois chariots, deux gardes, un cuisinier. La Grande Foire ouvre au jour 40.</p><p class="note">Touchez une étape qui clignote sur la carte.</p>`;
+    else if (n.type === "ville"){
+      h = `<h3>${n.nom.toUpperCase()}</h3><p class="note">On y produit : ${NOMS[n.fait]} (pas cher). On y réclame : ${NOMS[n.veut]}. Cale ${charge()}/${CAP}.</p>`;
+      for (const b of Object.keys(BIENS)){
+        const p = prix(n, b);
+        h += `<div class="ligne"><div class="nom">${NOMS[b]} · ${p} or<small>dans la cale : ${S.cale[b]}</small></div>
+          <button class="btn gris" data-v="${b}" ${S.cale[b] ? "" : "disabled"}>VENDRE</button><button class="btn" data-a="${b}" ${S.or >= p && charge() < CAP ? "" : "disabled"}>ACHETER</button></div>`;
+      }
+      h += `<button class="btn large gris" data-ach="vivres" ${S.or >= 10 ? "" : "disabled"}>10 VIVRES POUR 10 OR</button>`;
+    }
+    else if (n.type === "auberge") h = `<h3>L'AUBERGE</h3><p>Un bon repas, des lits, un conteur près du feu.</p>${n.fait2 ? `<p class="note">${n.fait2}</p>` : `<button class="btn large" id="ca-aub">SE REPOSER (15 OR) : MORAL +25</button>`}`;
+    else if (n.type === "col") h = `<h3>LE COL ENNEIGE</h3><p>La neige a ralenti les bœufs : deux jours de plus.</p>`;
+    else if (n.type === "brigands") h = `<h3>DES BRIGANDS !</h3>${n.fait2 ? `<p>${n.fait2}</p>` : `<p>Ils barrent la route et réclament un péage.</p><div class="rangee"><button class="btn" data-ch="payer">PAYER 30</button><button class="btn" data-ch="fuir">FUIR</button><button class="btn" data-ch="battre">SE BATTRE</button></div>`}`;
+    else if (n.type === "evenement") h = `<h3>UN MARCHAND PERDU</h3>${n.fait2 ? `<p>${n.fait2}</p>` : `<p>Sa roue est cassée. Il propose 3 balles de soie contre votre aide.</p><div class="rangee"><button class="btn" data-ch="aider">AIDER (1 JOUR)</button><button class="btn gris" data-ch="passer">PASSER</button></div>`}`;
+    T.vol.innerHTML = h;
+    T.vol.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { const p = prix(n, b.dataset.a); S.or -= p; S.cale[b.dataset.a]++; maj(); });
+    T.vol.querySelectorAll("[data-v]").forEach(b => b.onclick = () => { const k = b.dataset.v; S.or += prix(n, k); S.cale[k]--; n.vendu = n.vendu || {}; n.vendu[k] = (n.vendu[k] || 0) + 1; maj(); });
+    T.vol.querySelectorAll("[data-ach]").forEach(b => b.onclick = () => { S.or -= 10; S.vivres += 10; maj(); });
+    const aub = T.vol.querySelector("#ca-aub"); if (aub) aub.onclick = () => { if (S.or < 15) return; S.or -= 15; S.moral = Math.min(100, S.moral + 25); n.fait2 = "Tout le monde a bien dormi."; maj(); };
+    T.vol.querySelectorAll("[data-ch]").forEach(b => b.onclick = () => {
+      const c = b.dataset.ch;
+      if (c === "payer"){ S.or = Math.max(0, S.or - 30); n.fait2 = "Vous payez. Les brigands s'écartent en ricanant."; }
+      if (c === "fuir"){ S.jour += 1; if (r() < .5){ S.cale.laine = Math.max(0, S.cale.laine - 2); n.fait2 = "Vous fuyez par un sentier, mais deux balles tombent du chariot."; } else n.fait2 = "Vous fuyez par un sentier, sans rien perdre."; }
+      if (c === "battre"){ if (r() < .6){ S.or += 25; n.fait2 = "Vos gardes les mettent en déroute : 25 or trouvés sur eux."; } else { S.moral -= 20; n.fait2 = "Le combat tourne mal : le moral baisse de 20."; } }
+      if (c === "aider"){ S.jour += 1; const p = Math.min(3, CAP - charge()); S.cale.soie += p; n.fait2 = `Le marchand vous laisse ${p} balle(s) de soie.`; }
+      if (c === "passer"){ n.fait2 = "Vous passez votre chemin."; }
+      maj();
+    });
+    const re = T.vol.querySelector("#ca-re"); if (re) re.onclick = () => location.reload();
+  }
+  function maj(){ barre(); panneau(); }
+  T.can.onclick = e => {
+    if (S.voyage || S.fini) return;
+    const [x, y] = T.pos(e);
+    const m = liens(S.ici).find(m => Math.hypot(m.x - x, m.y - y) < 11);
+    if (!m) return;
+    const jours = m.type === "col" ? 5 : 3;
+    S.voyage = { de: S.ici, a: m, t: 0, jours };
+  };
+  function maj_t(dt){
+    if (!S.voyage) return;
+    S.voyage.t += dt / .9;
+    if (S.voyage.t >= 1){
+      const v = S.voyage; S.ici = v.a; S.voyage = null;
+      S.jour += v.jours; S.vivres = Math.max(0, S.vivres - v.jours * 3); if (!S.vivres) S.moral = Math.max(0, S.moral - 15);
+      if (S.ici.type === "foire"){ for (const k in S.cale){ S.or += S.cale[k] * Math.round(BIENS[k] * 1.4); S.cale[k] = 0; } S.fini = true; }
+      maj();
+    }
+  }
+  const ICONES = {
+    ville: (g, x, y) => { R(g, x - 4, y - 1, 8, 5, "#f4e4c0"); R(g, x - 5, y - 4, 10, 3, "#b0402a"); R(g, x - 1, y + 1, 2, 3, "#5a3418"); },
+    auberge: (g, x, y) => { R(g, x - 4, y - 2, 8, 6, "#d8b070"); R(g, x - 5, y - 4, 10, 2, "#6a3a1a"); R(g, x - 3, y, 2, 2, "#ffd060"); R(g, x + 1, y, 2, 2, "#ffd060"); },
+    brigands: (g, x, y) => { for (let k = -3; k <= 3; k++){ R(g, x + k, y + k, 1, 1, "#e8e8f0"); R(g, x - k, y + k, 1, 1, "#e8e8f0"); } R(g, x - 4, y + 3, 2, 2, "#6a3a1a"); R(g, x + 2, y + 3, 2, 2, "#6a3a1a"); },
+    evenement: (g, x, y) => { txt(g, "?", x - 3, y - 4, "#ffe070", 8); },
+    col: (g, x, y) => { for (let k = 0; k < 5; k++) R(g, x - k, y - 3 + k, 2 * k + 1, 1, k < 2 ? "#ffffff" : "#8a8a96"); },
+    depart: (g, x, y) => { R(g, x - 1, y - 5, 1, 9, "#5a3418"); R(g, x, y - 5, 5, 3, "#b0402a"); },
+    foire: (g, x, y) => { R(g, x - 6, y - 2, 12, 6, "#ffd060"); R(g, x - 7, y - 5, 14, 3, "#c03030"); R(g, x - 5, y - 5, 2, 3, "#fff"); R(g, x - 1, y - 5, 2, 3, "#fff"); R(g, x + 3, y - 5, 2, 3, "#fff"); },
+  };
+  function dessin(g, temps){
+    R(g, 0, 0, W, H, "#e6d3a3");
+    const rr = rng(3); for (let k = 0; k < 260; k++) R(g, rr() * W, rr() * H, 1, 1, rr() < .5 ? "#d8c08a" : "#efe0b8");
+    R(g, 0, 0, W, 2, "#a88a58"); R(g, 0, H - 2, W, 2, "#a88a58");
+    for (const ligne of noeuds) for (const n of ligne) for (const m of liens(n)){
+      const pas = Math.hypot(m.x - n.x, m.y - n.y) / 3;
+      for (let k = 1; k < pas; k++) if (k % 2) R(g, n.x + (m.x - n.x) * k / pas, n.y + (m.y - n.y) * k / pas, 1, 1, "#8a6a3a");
+    }
+    const prochains = S.voyage || S.fini ? [] : liens(S.ici);
+    for (const ligne of noeuds) for (const n of ligne){
+      const ok = prochains.includes(n), vu = n.l <= S.ici.l;
+      R(g, n.x - 7, n.y - 7, 14, 14, ok && Math.floor(temps * 3) % 2 ? "#f0c050" : vu ? "#cdb888" : "#f2e6c4");
+      R(g, n.x - 6, n.y - 6, 12, 12, n === S.ici ? "#a83220" : "#7a5a36");
+      ICONES[n.type](g, n.x, n.y);
+    }
+    let cx = S.ici.x, cy = S.ici.y;
+    if (S.voyage){ const v = S.voyage; cx = v.de.x + (v.a.x - v.de.x) * v.t; cy = v.de.y + (v.a.y - v.de.y) * v.t; }
+    const b = Math.floor(temps * 6) % 2;
+    R(g, cx - 12, cy + 4, 8, 4, "#5a3418"); R(g, cx - 12, cy + 1, 8, 4, "#f4ecd8"); R(g, cx - 11, cy + 8, 2, 2, "#2a1a0a"); R(g, cx - 7, cy + 8, 2, 2, "#2a1a0a");
+    R(g, cx - 4, cy + 4 + b, 5, 3, "#8a5a2a"); R(g, cx + 1, cy + 3, 2, 2, "#8a5a2a");
+  }
+  maj();
+  JEUX.push({ T, maj: maj_t, dessin });
+})();
+
+/* =====================================================================
+   2. LE CHALUTIER : filet à descendre, criée, améliorations
+   ===================================================================== */
+(() => {
+  const T = telephone("tCh", "LE CHALUTIER", "Lancez le filet, remontez-le plein, vendez à la criée, puis améliorez le bateau pour pêcher plus profond.");
+  const r = rng(11);
+  const ESP = [
+    { nom: "Sardine", c: "#d8e4ec", p: 2, prof: [38, 70], l: 6 }, { nom: "Maquereau", c: "#4aa0a8", p: 4, prof: [55, 95], l: 8 },
+    { nom: "Bar", c: "#a8b8c0", p: 9, prof: [80, 120], l: 10 }, { nom: "Lotte", c: "#8a6a4a", p: 16, prof: [115, 160], l: 11 },
+    { nom: "Poisson-lune", c: "#e8c860", p: 40, prof: [135, 165], l: 12, rare: true },
+  ];
+  const S = { or: 20, cale: [], filet: { y: 0, etat: "haut", prises: [] }, prof: 80, cap: 6, carnet: new Set(), msg: "Touchez LANCER : le filet descend et prend les poissons qu'il croise." };
+  const poissons = [];
+  function nouveau(){
+    const e = ESP[Math.floor(Math.pow(r(), 1.3) * ESP.length)];
+    if (e.rare && r() < .7) return;
+    const dir = r() < .5 ? 1 : -1;
+    poissons.push({ e, x: dir > 0 ? -12 : W + 12, y: e.prof[0] + r() * (e.prof[1] - e.prof[0]), v: dir * (8 + r() * 10) });
+  }
+  for (let k = 0; k < 10; k++){ nouveau(); if (poissons.length) poissons[poissons.length - 1].x = r() * W; }
+  function barre(){ T.res.innerHTML = `<span>OR ${S.or}</span><span>CALE ${S.cale.length}</span><span>FILET ${S.prof} M</span><span>CARNET ${S.carnet.size}/5</span>`; }
+  function panneau(){
+    const f = S.filet;
+    let h = `<h3>EN MER</h3><p class="note">${S.msg}</p><div class="rangee">
+      <button class="btn" id="ch-l" ${f.etat === "haut" ? "" : "disabled"}>LANCER</button>
+      <button class="btn" id="ch-r" ${f.etat === "descend" || f.etat === "fond" ? "" : "disabled"}>REMONTER</button>
+      <button class="btn gris" id="ch-c" ${S.cale.length && f.etat === "haut" ? "" : "disabled"}>A LA CRIEE</button></div>`;
+    h += `<h3 style="margin-top:10px">LE CHANTIER</h3>
+      <div class="ligne"><div class="nom">Filet plus profond<small>${S.prof} m → ${S.prof + 40} m : bars, lottes, poisson-lune</small></div><button class="btn" id="ch-p" ${S.or >= 40 && S.prof < 160 ? "" : "disabled"}>${S.prof < 160 ? "40 OR" : "MAX"}</button></div>
+      <div class="ligne"><div class="nom">Filet plus grand<small>${S.cap} → ${S.cap + 3} poissons par coup</small></div><button class="btn" id="ch-g" ${S.or >= 30 ? "" : "disabled"}>30 OR</button></div>`;
+    T.vol.innerHTML = h;
+    const on = (id, f) => { const b = T.vol.querySelector(id); if (b) b.onclick = f; };
+    on("#ch-l", () => { f.etat = "descend"; f.prises = []; S.msg = "Le filet descend…"; maj(); });
+    on("#ch-r", () => { f.etat = "remonte"; S.msg = "On remonte !"; maj(); });
+    on("#ch-c", () => {
+      const tot = S.cale.reduce((a, p) => a + p.p, 0); S.or += tot;
+      S.msg = `Criée : ${S.cale.length} poisson(s) vendus ${tot} or.`; S.cale = []; maj(); });
+    on("#ch-p", () => { S.or -= 40; S.prof += 40; maj(); });
+    on("#ch-g", () => { S.or -= 30; S.cap += 3; maj(); });
+  }
+  function maj(){ barre(); panneau(); }
+  function maj_t(dt){
+    if (r() < dt * 1.4) nouveau();
+    for (const p of poissons) p.x += p.v * dt;
+    for (let k = poissons.length - 1; k >= 0; k--) if (poissons[k].x < -20 || poissons[k].x > W + 20) poissons.splice(k, 1);
+    const f = S.filet, fond = 30 + S.prof * .82;
+    if (f.etat === "descend"){ f.y = Math.min(fond, f.y + dt * 38); if (f.y >= fond){ f.etat = "fond"; S.msg = "Le filet est au fond : remontez-le."; maj(); } }
+    if (f.etat === "remonte"){ f.y = Math.max(0, f.y - dt * 50); if (f.y <= 0){ f.etat = "haut";
+      S.cale.push(...f.prises.map(p => p.e)); f.prises.forEach(p => S.carnet.add(p.e.nom));
+      S.msg = f.prises.length ? `Prise : ${f.prises.map(p => p.e.nom).join(", ")}.` : "Rien dans le filet. Visez un banc de poissons !"; f.prises = []; maj(); } }
+    if (f.etat !== "haut" && f.prises.length < S.cap){
+      for (let k = poissons.length - 1; k >= 0; k--){
+        const p = poissons[k];
+        if (Math.abs(p.x - 96) < 14 && Math.abs(p.y - (30 + f.y)) < 7){ f.prises.push(p); poissons.splice(k, 1); if (f.prises.length >= S.cap) break; }
+      }
+    }
+  }
+  function dessin(g, temps){
+    R(g, 0, 0, W, 28, "#9fd3ee"); R(g, 20, 8, 22, 4, "#ffffff"); R(g, 130, 12, 16, 3, "#ffffff");
+    const fondH = 30 + S.prof * .82;
+    for (let y = 28; y < H; y++){ const k = (y - 28) / (H - 28); R(g, 0, y, W, 1, `rgb(${Math.round(40 - 30 * k)},${Math.round(150 - 110 * k)},${Math.round(190 - 120 * k)})`); }
+    for (let x = 0; x < W; x += 6) R(g, x + Math.sin(temps * 2 + x) * 2, 28, 3, 1, "#d8f4ff");
+    R(g, 0, H - 6, W, 6, "#6a5a40"); for (let x = 0; x < W; x += 9) R(g, x, H - 8, 4, 2, "#4a6a3a");
+    R(g, 0, fondH + 4, W, 1, "#ffffff22");
+    for (const p of poissons){
+      const d = p.v > 0 ? 1 : -1, l = p.e.l;
+      R(g, p.x - l / 2, p.y - 2, l, 4, p.e.c); R(g, p.x - d * (l / 2 + 2), p.y - 3, 2, 6, p.e.c); R(g, p.x + d * (l / 2 - 2), p.y - 1, 1, 1, "#000");
+    }
+    const b = Math.sin(temps * 2) * 1.2;
+    R(g, 70, 22 + b, 46, 6, "#c0392b"); R(g, 74, 28 + b, 38, 2, "#7a2a20"); R(g, 92, 12 + b, 12, 10, "#f4f4ec"); R(g, 94, 14 + b, 3, 3, "#5ab0e0");
+    R(g, 80, 6 + b, 2, 16, "#5a3418"); R(g, 76, 6 + b, 22, 2, "#5a3418");
+    const f = S.filet, fy = 30 + f.y;
+    R(g, 96, 22 + b, 1, fy - 22 - b, "#e8e0c8");
+    if (f.etat !== "haut" || f.y > 0){
+      for (let k = 0; k < 6; k++){ R(g, 84 + k * 4, fy - 5, 1, 10, "#e8e0c8"); R(g, 84, fy - 5 + k * 2, 24, 1, "#e8e0c888"); }
+      f.prises.forEach((p, k) => R(g, 86 + (k % 4) * 5, fy - 3 + Math.floor(k / 4) * 3, 4, 2, p.e.c));
+    }
+    txt(g, S.prof + " M", 4, 32, "#d8f4ff", 6);
+  }
+  maj();
+  JEUX.push({ T, maj: maj_t, dessin });
+})();
+
+/* =====================================================================
+   3. L'ALCHIMISTE : mélanger deux ingrédients, servir le client
+   ===================================================================== */
+(() => {
+  const T = telephone("tAl", "L'ALCHIMISTE", "Mélangez deux ingrédients pour découvrir des recettes, servez le client qui attend au comptoir, remboursez la guilde.");
+  const r = rng(23);
+  const ING = { herbe: ["Herbe", "#5ac04a"], champi: ["Champi.", "#9a5ad0"], cristal: ["Cristal", "#5ac8f0"], braise: ["Braise", "#f05a30"], miel: ["Miel", "#f0c040"] };
+  const REC = {
+    "herbe+miel": ["Potion de soin", "#e04050", 12], "braise+champi": ["Potion de force", "#f08a20", 15], "cristal+herbe": ["Potion de vision", "#40a0f0", 14],
+    "champi+miel": ["Potion de sommeil", "#8060e0", 11], "braise+cristal": ["Feu liquide", "#ffd040", 20], "cristal+miel": ["Élixir de chance", "#60f0c0", 25],
+  };
+  const cle = (a, b) => [a, b].sort().join("+");
+  const S = { or: 30, dette: 200, jour: 1, stock: { herbe: 3, champi: 3, cristal: 2, braise: 2, miel: 3 }, choix: [], etag: [], connues: new Set(), client: null, msg: "", bulle: 0, chaud: 0 };
+  const CLIENTS = [["Une chevalière", "#c0c0d0"], ["Un vieux mage", "#5a4ab0"], ["Une fermière", "#c08a40"], ["Un voleur", "#3a3a3a"], ["Une naine", "#b05a30"]];
+  function client(){ const ks = Object.keys(REC); const k = ks[Math.floor(r() * ks.length)]; const c = CLIENTS[Math.floor(r() * CLIENTS.length)]; S.client = { veut: k, nom: c[0], c: c[1], x: -20 }; }
+  client();
+  function barre(){ T.res.innerHTML = `<span>OR ${S.or}</span><span>DETTE ${S.dette}</span><span>J ${S.jour}/10</span><span>REC. ${S.connues.size}/6</span>`; }
+  function panneau(){
+    const c = S.client, rv = REC[c.veut];
+    let h = `<h3>AU COMPTOIR</h3><p>${c.nom} voudrait <b>${S.connues.has(c.veut) ? rv[0] : "une potion " + ["rouge", "orange", "bleue", "violette", "dorée", "verte"][Object.keys(REC).indexOf(c.veut)]}</b> (${rv[2]} or).</p>`;
+    if (S.msg) h += `<p class="note">${S.msg}</p>`;
+    h += `<div class="ing">${Object.entries(ING).map(([k, [n, col]]) => `<button data-i="${k}" class="${S.choix.includes(k) ? "on" : ""}" ${S.stock[k] ? "" : "disabled"}><i style="background:${col}"></i>${n}<br>×${S.stock[k]}</button>`).join("")}</div>
+      <div class="rangee"><button class="btn" id="al-m" ${S.choix.length === 2 ? "" : "disabled"}>MELANGER</button><button class="btn gris" id="al-c">CUEILLIR (1 JOUR)</button></div>`;
+    if (S.etag.length) h += `<h3 style="margin-top:9px">ETAGERE</h3>` + S.etag.map((k, i) => `<div class="ligne"><div class="nom">${REC[k] ? REC[k][0] : "Bouillie brune"}</div><button class="btn" data-s="${i}" ${k === c.veut ? "" : "disabled"}>SERVIR</button></div>`).join("");
+    h += `<h3 style="margin-top:9px">GRIMOIRE</h3><p class="note">${[...S.connues].map(k => `${REC[k][0]} : ${k.split("+").map(i => ING[i][0]).join(" + ")}`).join("<br>") || "Aucune recette. Essayez des mélanges !"}</p>`;
+    T.vol.innerHTML = h;
+    T.vol.querySelectorAll("[data-i]").forEach(b => b.onclick = () => {
+      const k = b.dataset.i, i = S.choix.indexOf(k);
+      if (i >= 0) S.choix.splice(i, 1); else if (S.choix.length < 2) S.choix.push(k); else { S.choix.shift(); S.choix.push(k); }
+      maj(); });
+    const m = T.vol.querySelector("#al-m"); if (m) m.onclick = () => {
+      const [a, b] = S.choix; S.stock[a]--; S.stock[b]--; S.choix = []; S.chaud = 1.2;
+      const k = cle(a, b);
+      if (REC[k]){ const neuf = !S.connues.has(k); S.connues.add(k); S.msg = (neuf ? "Nouvelle recette ! " : "") + REC[k][0] + " prête."; S.etag.push(k); }
+      else { S.msg = "Une bouillie brune… ça ne se vend pas."; }
+      maj(); };
+    const c2 = T.vol.querySelector("#al-c"); if (c2) c2.onclick = () => {
+      S.jour++; const ks = Object.keys(ING); for (let k = 0; k < 4; k++) S.stock[ks[Math.floor(r() * ks.length)]]++;
+      S.msg = "Une journée en forêt : 4 ingrédients cueillis."; if (S.jour > 10) S.msg = "Le jour 10 est passé : la guilde attend son or !"; maj(); };
+    T.vol.querySelectorAll("[data-s]").forEach(b => b.onclick = () => {
+      const k = S.etag.splice(+b.dataset.s, 1)[0]; const p = REC[k][2]; S.or += p;
+      const rb = Math.min(S.dette, Math.floor(p / 2)); S.dette -= rb; S.or -= rb;
+      S.msg = `Vendue ${p} or (dont ${rb} pour la guilde).`; S.bulle = 1.2; client(); maj(); });
+  }
+  function maj(){ barre(); panneau(); }
+  function maj_t(dt){ const c = S.client; c.x = Math.min(40, c.x + dt * 40); S.bulle = Math.max(0, S.bulle - dt); S.chaud = Math.max(0, S.chaud - dt); }
+  function dessin(g, temps){
+    R(g, 0, 0, W, H, "#3a2a20");
+    for (let y = 0; y < 110; y += 10) for (let x = (y / 10 % 2) * 10; x < W; x += 20) R(g, x, y, 19, 9, "#46342a");
+    R(g, 120, 14, 50, 50, "#1a2a4a"); R(g, 122, 16, 46, 46, "#3a5a8a"); R(g, 144, 16, 2, 46, "#1a2a4a"); R(g, 122, 38, 46, 2, "#1a2a4a");
+    R(g, 150, 22, 6, 6, "#f4f4d0");
+    const cols = Object.values(REC).map(v => v[1]);
+    for (let e = 0; e < 2; e++){
+      R(g, 8, 26 + e * 24, 100, 3, "#6a4a2a");
+      for (let k = 0; k < 8; k++){ const cc = cols[(k + e * 3) % cols.length]; R(g, 12 + k * 12, 16 + e * 24, 6, 10, cc); R(g, 13 + k * 12, 13 + e * 24, 4, 3, "#d8c8a8"); R(g, 13 + k * 12, 18 + e * 24, 2, 3, "#ffffff66"); }
+    }
+    R(g, 130, 96, 34, 22, "#2a2a30"); R(g, 128, 94, 38, 4, "#4a4a52"); R(g, 134, 118, 4, 8, "#2a2a30"); R(g, 156, 118, 4, 8, "#2a2a30");
+    R(g, 138, 126, 18, 4, "#f05a30"); R(g, 142, 124, 10, 2, "#ffd040");
+    const bul = S.chaud > 0 ? "#ffd040" : "#5ac04a";
+    for (let k = 0; k < 4; k++){ const t = (temps * .8 + k * .25) % 1; R(g, 136 + k * 6, 92 - t * 22, 3, 3, bul + (S.chaud > 0 ? "" : "cc")); }
+    R(g, 0, 118, W, 52, "#5a3a22"); R(g, 0, 114, W, 6, "#8a5a2a"); for (let x = 4; x < W; x += 30) R(g, x, 124, 22, 40, "#4a2e1a");
+    const c = S.client, x = c.x;
+    R(g, x - 6, 78, 12, 36, c.c); R(g, x - 5, 64, 10, 12, "#f0c8a0"); R(g, x - 6, 62, 12, 4, "#5a3418"); R(g, x - 3, 69, 2, 2, "#000"); R(g, x + 1, 69, 2, 2, "#000");
+    if (x >= 39){
+      R(g, x + 10, 52, 22, 18, "#f4f0e0"); R(g, x + 10, 70, 4, 4, "#f4f0e0");
+      R(g, x + 17, 56, 8, 11, REC[c.veut][1]); R(g, x + 18, 53, 6, 3, "#d8c8a8");
+    }
+    if (S.bulle > 0) txt(g, "MERCI !", 60, 40 - (1.2 - S.bulle) * 10, "#9ff0b8", 7);
+  }
+  maj();
+  JEUX.push({ T, maj: maj_t, dessin });
+})();
+
+/* =====================================================================
+   4. LE PORT DE COMMERCE : navires à placer au bon quai, marée, contrats
+   ===================================================================== */
+(() => {
+  const T = telephone("tPo", "LE PORT DE COMMERCE", "Touchez un navire du tableau des arrivées, puis le bon quai. Les gros navires n'entrent qu'à marée haute.");
+  const r = rng(31);
+  const QUAIS = [{ id: "peche", nom: "PECHE", x: 30, occupe: null }, { id: "conteneurs", nom: "CONTENEURS", x: 88, occupe: null }, { id: "citerne", nom: "CITERNE", x: 146, occupe: null }];
+  const TYPES = { peche: { nom: "Chalutier", l: 12, c: "#c0392b", paie: 30, gros: false, dur: 3 }, conteneurs: { nom: "Porte-conteneurs", l: 30, c: "#2c4a6a", paie: 90, gros: true, dur: 6 },
+    citerne: { nom: "Pétrolier", l: 26, c: "#2a2a2a", paie: 70, gros: true, dur: 5 } };
+  const NOMS = ["Marie-Jo", "Belle-Île", "Nordvik", "Albatros", "Saint-Malo", "Kerdonis", "Ostrea", "Pen-Hir", "Cormoran"];
+  const S = { or: 100, heure: 6, rep: 50, navires: [], choisi: null, msg: "Le premier navire arrive. Touchez-le dans le tableau.", n: 0 };
+  function arrive(){
+    const t = pick(r, ["peche", "peche", "conteneurs", "citerne"]);
+    S.navires.push({ id: ++S.n, t, nom: pick(r, NOMS), etat: "attente", x: 20 + (S.n * 37) % 140, y: 14 + (S.n % 3) * 7, attente: 0, delai: 5, quai: null, prog: 0 });
+  }
+  arrive();
+  const maree = () => Math.sin(S.heure / 12 * TAU) > -0.1;
+  function barre(){ T.res.innerHTML = `<span>OR ${S.or}</span><span>${String(Math.floor(S.heure % 24)).padStart(2, "0")}H</span><span>${maree() ? "MAREE HAUTE" : "MAREE BASSE"}</span><span>REP. ${S.rep}</span>`; }
+  function panneau(){
+    let h = `<h3>TABLEAU DES ARRIVEES</h3><p class="note">${S.msg}</p>`;
+    const att = S.navires.filter(n => n.etat === "attente");
+    h += att.length ? att.map(n => { const ty = TYPES[n.t]; return `<div class="ligne ${S.choisi === n.id ? "on" : ""}" data-n="${n.id}" style="cursor:pointer"><div class="nom">${n.nom} · ${ty.nom}<small>${ty.paie} or · attend depuis ${Math.floor(n.attente)} h / ${n.delai} h${ty.gros ? " · marée haute" : ""}</small></div></div>`; }).join("") : `<p class="note">Aucun navire au mouillage.</p>`;
+    h += `<h3 style="margin-top:9px">QUAIS</h3><div class="rangee">${QUAIS.map(q => `<button class="btn" data-q="${q.id}" ${S.choisi && !q.occupe ? "" : "disabled"}>${q.nom}</button>`).join("")}</div>
+      <p class="note" style="margin-top:6px">Un navire qui attend trop longtemps coûte de la réputation.</p>`;
+    T.vol.innerHTML = h;
+    T.vol.querySelectorAll("[data-n]").forEach(l => l.onclick = () => { S.choisi = +l.dataset.n; S.msg = "Choisissez maintenant son quai."; maj(); });
+    T.vol.querySelectorAll("[data-q]").forEach(b => b.onclick = () => placer(b.dataset.q));
+  }
+  function placer(qid){
+    const n = S.navires.find(n => n.id === S.choisi), q = QUAIS.find(q => q.id === qid);
+    if (!n) return;
+    if (n.t !== qid){ S.msg = `Le quai ${q.nom} ne peut pas recevoir un ${TYPES[n.t].nom.toLowerCase()}.`; maj(); return; }
+    if (TYPES[n.t].gros && !maree()){ S.msg = "Marée basse : ce navire touche le fond. Attendez la marée haute."; maj(); return; }
+    n.etat = "entre"; n.quai = q; q.occupe = n; S.choisi = null; S.msg = `${n.nom} entre au port, guidé par le remorqueur.`; maj();
+  }
+  function maj(){ barre(); panneau(); }
+  T.can.onclick = e => {
+    const [x, y] = T.pos(e);
+    const n = S.navires.find(n => n.etat === "attente" && Math.abs(n.x - x) < TYPES[n.t].l / 2 + 3 && Math.abs(n.y - y) < 6);
+    if (n){ S.choisi = n.id; S.msg = "Choisissez maintenant son quai."; maj(); return; }
+    const q = QUAIS.find(q => Math.abs(q.x - x) < 14 && y > 92);
+    if (q && S.choisi) placer(q.id);
+  };
+  let acc = 0, accB = 0;
+  function maj_t(dt){
+    const h = dt * .5; S.heure += h; acc += h; accB += dt;
+    if (acc > 2.6){ acc = 0; if (S.navires.filter(n => n.etat === "attente").length < 4) arrive(); }
+    for (const n of S.navires){
+      if (n.etat === "attente"){ n.attente += h; if (n.attente > n.delai && !n.puni){ n.puni = true; S.rep = Math.max(0, S.rep - 5); S.msg = `${n.nom} s'impatiente : réputation −5.`; } }
+      if (n.etat === "entre"){ const tx = n.quai.x, ty = 100; n.x += Math.sign(tx - n.x) * Math.min(Math.abs(tx - n.x), dt * 30); n.y += Math.min(ty - n.y, dt * 26); if (Math.abs(n.x - tx) < 1 && n.y >= ty - .5) n.etat = "quai"; }
+      if (n.etat === "quai"){ n.prog += h / TYPES[n.t].dur; if (n.prog >= 1){ n.etat = "part"; S.or += TYPES[n.t].paie; S.rep = Math.min(100, S.rep + 2); n.quai.occupe = null; S.msg = `${n.nom} est déchargé : +${TYPES[n.t].paie} or.`; maj(); } }
+      if (n.etat === "part"){ n.y -= dt * 30; if (n.y < -20) n.etat = "fini"; }
+    }
+    S.navires = S.navires.filter(n => n.etat !== "fini");
+    if (accB > .5){ accB = 0; barre(); if (S.navires.some(n => n.etat === "attente")) { const ch = S.choisi; panneau(); S.choisi = ch; } }
+  }
+  function dessin(g, temps){
+    const haute = maree();
+    R(g, 0, 0, W, H, haute ? "#2f86b0" : "#3a7a98");
+    for (let k = 0; k < 40; k++){ const x = (k * 47 + temps * 6) % W, y = (k * 29) % 90; R(g, x, y, 4, 1, "#ffffff30"); }
+    R(g, 0, 40, W, 1, "#ffffff40"); txt(g, "MOUILLAGE", 4, 42, "#d8f0ff", 5);
+    R(g, 0, 120, W, 50, "#c8b890"); R(g, 0, 118, W, 3, "#8a8070");
+    for (let k = 0; k < 6; k++){ R(g, 6 + k * 30, 140, 20, 14, ["#c05a40", "#d8c070", "#7a9ab0"][k % 3]); R(g, 6 + k * 30, 137, 20, 4, "#6a4a3a"); }
+    for (const q of QUAIS){
+      R(g, q.x - 12, 92, 24, 28, "#9a9488"); R(g, q.x - 12, 92, 24, 2, "#bab4a8");
+      txt(g, q.nom.slice(0, 5), q.x, 123, "#2a2a2a", 4, "center");
+      if (q.id === "conteneurs"){ R(g, q.x + 8, 76, 2, 26, "#e0a020"); R(g, q.x - 4, 76, 14, 2, "#e0a020"); }
+      if (q.id === "citerne"){ R(g, q.x - 12, 128, 10, 10, "#e8e8e8"); R(g, q.x + 2, 128, 10, 10, "#e8e8e8"); }
+    }
+    R(g, 0, 150, W, 2, "#5a5a5a"); for (let x = 0; x < W; x += 6) R(g, x, 152, 3, 1, "#7a5a3a");
+    for (const n of S.navires){
+      const ty = TYPES[n.t], l = ty.l, x = n.x, y = n.y, sel = S.choisi === n.id;
+      if (sel) R(g, x - l / 2 - 2, y - 5, l + 4, 10, Math.floor(temps * 4) % 2 ? "#ffd040" : "#ffffff");
+      R(g, x - l / 2, y - 3, l, 6, ty.c); R(g, x - l / 2 + 1, y - 2, l - 2, 4, ty.c);
+      if (n.t === "conteneurs") for (let k = 0; k < l - 8; k += 3) R(g, x - l / 2 + 3 + k, y - 2, 2, 4, ["#e05030", "#3080d0", "#40a050", "#e0c030"][k % 4]);
+      if (n.t === "citerne") R(g, x - l / 2 + 3, y - 1, l - 8, 2, "#c0392b");
+      R(g, x + l / 2 - 5, y - 3, 4, 6, "#f4f4f4");
+      if (n.etat === "entre" && ty.gros){ R(g, x - 4, y + 7, 8, 4, "#e0a020"); R(g, x - 1, y + 5, 1, 2, "#e8e0c8"); }
+      if (n.etat === "quai"){ R(g, x - 10, y - 9, 20, 3, "#00000060"); R(g, x - 10, y - 9, 20 * n.prog, 3, "#40d060"); }
+    }
+    const gull = (x, y) => { R(g, x, y, 2, 1, "#fff"); R(g, x + 3, y, 2, 1, "#fff"); R(g, x + 2, y + 1, 1, 1, "#fff"); };
+    gull(40 + Math.cos(temps) * 30, 60 + Math.sin(temps * 1.3) * 8); gull(120 + Math.cos(temps * .8 + 2) * 25, 54 + Math.sin(temps) * 6);
+  }
+  maj();
+  JEUX.push({ T, maj: maj_t, dessin });
+})();
+
+/* ---------- boucle commune ---------- */
+const reduit = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+let t0 = performance.now();
+function boucle(t){
+  requestAnimationFrame(boucle);
+  const dt = Math.min(.1, (t - t0) / 1000); if (dt < 1 / 40) return; t0 = t;
+  for (const j of JEUX){ j.maj(dt); j.dessin(j.T.g, reduit ? 0 : t / 1000); }
+}
+for (const j of JEUX){ j.dessin(j.T.g, 0); }
+requestAnimationFrame(boucle);
+</script>
