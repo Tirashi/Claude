@@ -31,6 +31,8 @@
 Lues seulement quand on en a besoin : `ajouter-un-jeu`, `republier-artefact` (liens des artefacts), `mettre-a-jour-main`, `packs-itch` (télécharger des packs sur itch.io, compacter des modèles glTF, captures Playwright).
 
 ## Tenir la documentation à jour
+**Cycle d'un projet** (règle du 30/10) : **idée** = quelques lignes en vrac dans `IDEES.md` ; dès qu'on la travaille (maquette, boucle de jeu, décisions), elle devient un **chantier** avec son fichier `specs/<projet>.md`, et `IDEES.md` ne garde qu'une ligne qui y renvoie ; ce fichier devient ensuite le cahier des charges du **jeu**. Les anciens passages détaillés d'`IDEES.md` sont déplacés de la même façon quand on reprend le projet. Ne rien effacer : un projet abandonné garde une ligne (❌ et la raison).
+
 À chaque chantier, quand c'est pertinent : `CLAUDE.md` (nouvelle règle, version du cache, nouveau jeu, lien d'artefact, **une ligne** dans « En cours ») ; `specs/suivi.md` (détails du chantier) ; `specs/ludotheque.md` (détails techniques, leçons, tableau détaillé des jeux) ; `IDEES.md` (✅, nouvelles idées et maquettes, préférences) ; `README.md` (description pour les joueurs).
 
 ## Leçons apprises (générales)
@@ -53,7 +55,7 @@ Une phrase par chantier ; tout l'historique (liens des maquettes, décisions) es
 - **La Dernière Lanterne (RPG)** : actes 1 à 3 faits (29/10), DA Dungeon Crawl 32 × 32 en HD-2D ; prochaine étape : rebondissement 3, acte 4 et final (session 5), opusplan. [`specs/rpg.md`](specs/rpg.md)
 - **Résistance** : intégré, essayé et validé (29/10) ; à suivre : autres pays (plan § 7). [`specs/resistance.md`](specs/resistance.md)
 - **Le Clan du fjord** : 7 maquettes, aucune retenue ; **en pause** (30/10). [`specs/clan.md`](specs/clan.md)
-- **Nouvelles idées de gestion** (30/10, `IDEES.md`) : **Le Chalutier** et **Le Port de commerce** gardés ; **La Ferme du vallon** : contrôle A (fermier au doigt) validé, style 2D **Cute Fantasy de Kenmi** choisi (maquette 2 : https://claude.ai/artifact/CVy4BhPnuSGPjjXBqqhUnS ; héros humain) ; prochaine étape : l'utilisateur achète le pack et envoie les zips, puis maquette avec les vrais sprites et cahier des charges. Achats prévus : `IDEES.md`, section Achats.
+- **Nouvelles idées de gestion** (30/10, `IDEES.md`) : **Le Chalutier** et **Le Port de commerce** gardés ; **La Ferme du vallon** : contrôle A validé, 2D Cute Fantasy choisie ; prochaine étape : l'utilisateur envoie les zips du pack, puis maquette avec les vrais sprites et cahier des charges. [`specs/ferme-du-vallon.md`](specs/ferme-du-vallon.md) Achats prévus : `IDEES.md`, section Achats.
 - **Armada** : cahier des charges à relire par l'utilisateur (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)
 - **Défense orbitale** : cahier des charges validé ; prochaine étape session 1 (le combat), Opus. [`specs/defense-orbitale.md`](specs/defense-orbitale.md)
 - **La colonie** : moteur fait ; reste la nature, l'île du jour et l'intégration. [`specs/colonie.md`](specs/colonie.md)
