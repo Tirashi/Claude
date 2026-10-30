@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mineurs d'étoiles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--fond:#0b0d1a;--carte:#141830;--bord:#2a3060;--texte:#dfe3ff;--doux:#8c93c4;--or:#ffcf4a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--fond:#0b0d1a}}
+:root[data-theme="dark"]{--fond:#0b0d1a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font-family:"Pixelify Sans",system-ui,sans-serif;font-size:16px;line-height:1.45}
+.page{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+h1,h2,h3{font-family:Silkscreen,monospace;font-weight:400;margin:0 0 8px}
+h1{font-size:24px;color:var(--or)} h2{font-size:18px;margin-top:30px;color:#9fd0ff} h3{font-size:15px;margin-top:26px}
+p{margin:6px 0} .doux{color:var(--doux);font-size:14px}
+.tel{position:relative;width:100%;max-width:640px;border:3px solid var(--bord);border-radius:20px;overflow:hidden;background:#05060d;margin-top:8px}
+.ecran{position:absolute;left:0;top:0;width:640px;height:300px;transform-origin:0 0}
+.ecran canvas{display:block;width:640px;height:300px;image-rendering:pixelated;touch-action:none}
+.reglages{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-family:Silkscreen,monospace;font-size:12px}
+.btn{font-family:Silkscreen,monospace;font-size:12px;border:2px solid #5a6be0;background:#1d2560;color:#fff;border-radius:6px;padding:6px 10px;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:default}
+.nomv{color:var(--doux);min-width:150px}
+.panneau{position:absolute;right:10px;top:36px;width:300px;background:#0c0f22f0;border:2px solid #3b4690;border-radius:10px;padding:10px 12px;font-family:Silkscreen,monospace;font-size:11px;display:none}
+.panneau.vu{display:block}
+.panneau h4{margin:0 0 6px;font-weight:400;font-size:13px;color:var(--or)}
+.ligne{display:flex;align-items:center;gap:8px;margin:5px 0} .ligne .nom{flex:1} .ligne .nom small{display:block;color:var(--doux);font-size:9px}
+.go{display:block;width:100%;margin-top:8px;background:#2f7a3a;border-color:#6fdc7f;font-size:13px;padding:7px}
+.verrou{opacity:.45}
+.tableau{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+.tableau th,.tableau td{border-bottom:1px solid var(--bord);padding:7px 6px;text-align:left;vertical-align:top}
+.tableau th{font-family:Silkscreen,monospace;font-weight:400;font-size:12px;color:var(--doux)} .tableau a{color:#9fd0ff}
+#planche{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.mineur{display:flex;align-items:center;gap:12px;background:var(--carte);border:1px solid var(--bord);border-radius:10px;padding:8px 10px;cursor:pointer}
+.mineur.choisi{border-color:var(--or)}
+.mineur canvas{image-rendering:pixelated}
+.mineur b{font-family:Silkscreen,monospace;font-weight:400;display:block}
+.case{background:var(--carte);border:1px solid var(--bord);border-radius:10px;padding:6px;text-align:center;font-size:11px;color:var(--doux);cursor:pointer}
+.case canvas{display:block;margin:0 auto 2px;image-rendering:pixelated}
+.note{background:var(--carte);border-left:3px solid var(--or);padding:8px 12px;border-radius:6px;margin-top:12px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="page">
+<h1>Mineurs d'étoiles</h1>
+<p class="doux">Maquette 3 : pilotage à inertie retenu (joystick sous le pouce gauche, il apparaît là où on pose le doigt), bouton <b>RENTRER</b>. Nouveaux vaisseaux de mineur et nouvelles roches à facettes, dessinés dans les couleurs des planètes.</p>
+
+<div class="tel"></div>
+<div class="reglages" data-pour="0"></div>
+<div class="note">Vaisseaux et roches sont dessinés pixel par pixel pour chacun des 32 angles (pas d'image pivotée), avec la lumière fixe du soleil en haut à gauche, comme sur la Terre. Les améliorations changent le vaisseau : réservoirs, soute, canon. Roches grises veinées d'or = surtout de l'or ; roches brunes rouillées = du fer.</div>
+<h2>Les trois mineurs</h2>
+<p class="doux">Du départ au maximum (réservoir, soute et canon au même niveau). Toucher un mineur pour le piloter.</p>
+<div id="planche"></div>
+</div>
+
+<script>
+const IMG = {"boom": "data:image/png;base64,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", "neb": "data:image/png;base64,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"};
+const imgs = {}; for (const k in IMG) { imgs[k] = new Image(); imgs[k].src = IMG[k]; }
+/* ---------- Shaders de Deep-Fold (Pixel Planet Generator, MIT), passés en GLSL ES 3.0 ---------- */
+const VS = `#version 300 es
+in vec2 p; out vec2 UV; void main(){ UV = vec2(p.x*.5+.5, .5-p.y*.5); gl_Position = vec4(p,0.,1.); }`;
+const TETE = `#version 300 es
+precision highp float; in vec2 UV; out vec4 o;
+uniform float pixels, rotation, time_speed, size, seed, time, dither_size;
+uniform vec2 light_origin; uniform int OCTAVES; uniform bool should_dither;
+`;
+const RAND = m => m ? `float rand(vec2 coord){ coord = mod(coord, ${m}*round(size)); return fract(sin(dot(coord.xy, vec2(12.9898,78.233))) * 15.5453 * seed); }`
+                    : `float rand(vec2 coord){ return fract(sin(dot(coord.xy, vec2(12.9898,78.233))) * 15.5453 * seed); }`;
+const OUTILS = `
+float noise(vec2 coord){ vec2 i = floor(coord); vec2 f = fract(coord);
+ float a = rand(i), b = rand(i+vec2(1.,0.)), c = rand(i+vec2(0.,1.)), d = rand(i+vec2(1.,1.));
+ vec2 cubic = f*f*(3.-2.*f); return mix(a,b,cubic.x) + (c-a)*cubic.y*(1.-cubic.x) + (d-b)*cubic.x*cubic.y; }
+float fbm(vec2 coord){ float v = 0., s = .5; for (int i = 0; i < OCTAVES; i++){ v += noise(coord)*s; coord *= 2.; s *= .5; } return v; }
+vec2 spherify(vec2 uv){ vec2 c = uv*2.-1.; float z = sqrt(1.-dot(c,c)); return c/(z+1.)*.5+.5; }
+vec2 rotate(vec2 coord, float angle){ coord -= .5; coord *= mat2(vec2(cos(angle),-sin(angle)), vec2(sin(angle),cos(angle))); return coord+.5; }
+bool dither(vec2 uv1, vec2 uv2){ return mod(uv1.x+uv2.y, 2./pixels) <= 1./pixels; }`;
+const CERCLES = lisse => `
+float circleNoise(vec2 uv){ float uv_y = floor(uv.y); uv.x += uv_y*.31; vec2 f = fract(uv);
+ float h = rand(vec2(floor(uv.x), floor(uv_y))); float m = length(f-.25-(h*.5)); float r = h*.25;
+ return ${lisse ? 'smoothstep(0., r, m*.75)' : 'smoothstep(r-.1*r, r, m)'}; }`;
+const SH = {
+ terre: TETE + `uniform float light_border_1, light_border_2, river_cutoff; uniform vec4 colors[6];` + RAND('vec2(2.,1.)') + OUTILS + `
+void main(){ vec2 uv = floor(UV*pixels)/pixels; bool dith = dither(uv, UV);
+ float a = step(length(uv-vec2(.5)), .49999); uv = spherify(uv); float d_light = distance(uv, light_origin);
+ uv = rotate(uv, rotation); vec2 b = uv*size + vec2(time*time_speed, 0.);
+ float fbm1 = fbm(b), fbm2 = fbm(b-light_origin*fbm1), fbm3 = fbm(b-light_origin*1.5*fbm1), fbm4 = fbm(b-light_origin*2.*fbm1);
+ float river = step(river_cutoff, fbm(b+fbm1*6.)); float db = (1./pixels)*dither_size;
+ if (d_light < light_border_1) fbm4 *= .9;
+ if (d_light > light_border_1){ fbm2 *= 1.05; fbm3 *= 1.05; fbm4 *= 1.05; }
+ if (d_light > light_border_2){ fbm2 *= 1.3; fbm3 *= 1.4; fbm4 *= 1.8; if (d_light < light_border_2+db && (dith || !should_dither)) fbm4 *= .5; }
+ d_light = pow(d_light, 2.)*.4; vec4 col = colors[3];
+ if (fbm4+d_light < fbm1*1.5) col = colors[2]; if (fbm3+d_light < fbm1) col = colors[1]; if (fbm2+d_light < fbm1) col = colors[0];
+ if (river < fbm1*.5){ col = colors[5]; if (fbm4+d_light < fbm1*1.5) col = colors[4]; }
+ o = vec4(col.rgb, a*col.a); }`,
+ nuages: TETE + `uniform float cloud_cover, stretch, cloud_curve, light_border_1, light_border_2; uniform vec4 colors[4];` + RAND('vec2(1.,1.)') + OUTILS + CERCLES(true) + `
+float cloud_alpha(vec2 uv){ float c = 0.; for (int i = 0; i < 9; i++) c += circleNoise(uv*size*.3 + (float(i+1)+10.) + vec2(time*time_speed, 0.));
+ return fbm(uv*size + c + vec2(time*time_speed, 0.)); }
+void main(){ vec2 uv = floor(UV*pixels)/pixels; float d_light = distance(uv, light_origin);
+ float a = step(length(uv-vec2(.5)), .49999); float dc = distance(uv, vec2(.5));
+ uv = rotate(uv, rotation); uv = spherify(uv); uv.y += smoothstep(0., cloud_curve, abs(uv.x-.4));
+ float c = cloud_alpha(uv*vec2(1., stretch)); vec4 col = colors[0];
+ if (c < cloud_cover+.03) col = colors[1]; if (d_light+c*.2 > light_border_1) col = colors[2]; if (d_light+c*.2 > light_border_2) col = colors[3];
+ c *= step(dc, .5); o = vec4(col.rgb, step(cloud_cover, c)*a*col.a); }`,
+ lune: TETE + `uniform float light_border_1, light_border_2; uniform vec4 colors[3];` + RAND('vec2(1.,1.)') + OUTILS + `
+void main(){ vec2 uv = floor(UV*pixels)/pixels; float dc = distance(uv, vec2(.5)); float d_light = distance(uv, light_origin);
+ float a = step(dc, .49999); bool dith = dither(uv, UV); uv = rotate(uv, rotation);
+ float fbm1 = fbm(uv); d_light += fbm(uv*size+fbm1+vec2(time*time_speed, 0.))*.3; float db = (1./pixels)*dither_size;
+ vec4 col = colors[0];
+ if (d_light > light_border_1){ col = colors[1]; if (d_light < light_border_1+db && (dith || !should_dither)) col = colors[0]; }
+ if (d_light > light_border_2){ col = colors[2]; if (d_light < light_border_2+db && (dith || !should_dither)) col = colors[1]; }
+ o = vec4(col.rgb, a*col.a); }`,
+ crateres: TETE + `uniform float light_border; uniform vec4 colors[2];` + RAND('vec2(1.,1.)') + OUTILS + CERCLES(false) + `
+float crater(vec2 uv){ float c = 1.; for (int i = 0; i < 2; i++) c *= circleNoise(uv*size + (float(i+1)+10.) + vec2(time*time_speed, 0.)); return 1.-c; }
+void main(){ vec2 uv = floor(UV*pixels)/pixels; float dc = distance(uv, vec2(.5)); float d_light = distance(uv, light_origin);
+ float a = step(dc, .49999); uv = rotate(uv, rotation); uv = spherify(uv);
+ float c1 = crater(uv), c2 = crater(uv+(light_origin-.5)*.03); vec4 col = colors[0];
+ a *= step(.5, c1); if (c2 < c1-(.5-d_light)*2.) col = colors[1]; if (d_light > light_border) col = colors[1];
+ a *= step(dc, .5); o = vec4(col.rgb, a*col.a); }`,
+ asteroide: TETE + `uniform vec4 colors[3];` + RAND('') + OUTILS + CERCLES(false) + `
+float crater(vec2 uv){ float c = 1.; for (int i = 0; i < 2; i++) c *= circleNoise(uv*size + (float(i+1)+10.)); return 1.-c; }
+void main(){ vec2 uv = floor(UV*pixels)/pixels; bool dith = dither(uv, UV); float d = distance(uv, vec2(.5));
+ uv = rotate(uv, rotation); float n = fbm(uv*size), n2 = fbm(uv*size + (rotate(light_origin, rotation)-.5)*.5);
+ float ns = step(.2, n-d), n2s = step(.2, n2-d); float rel = (n2s+n2)-(ns+n);
+ float c1 = crater(uv), c2 = crater(uv+(light_origin-.5)*.03); vec4 col = colors[1];
+ if (rel < -.06 || (rel < -.04 && (dith || !should_dither))) col = colors[0];
+ if (rel > .05 || (rel > .03 && (dith || !should_dither))) col = colors[2];
+ if (c1 > .4) col = colors[1]; if (c2 < c1) col = colors[2];
+ o = vec4(col.rgb, ns*col.a); }`,
+};
+const GLR = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const gl = c.getContext('webgl2', { preserveDrawingBuffer: true, premultipliedAlpha: false, alpha: true });
+  if (!gl) return null;
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const progs = {};
+  function compile(t, s){ const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(sh)); return sh; }
+  for (const k in SH){ const p = gl.createProgram(); gl.attachShader(p, compile(gl.VERTEX_SHADER, VS)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, SH[k]));
+    gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p); progs[k] = p; }
+  const ENTIERS = ['OCTAVES', 'should_dither'];
+  // dessine un shader en taille t×t et le recopie dans le contexte 2D cible
+  function rendre(k, t, u, cible, x = 0, y = 0){
+    const p = progs[k]; gl.useProgram(p); gl.viewport(0, 0, t, t); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    for (const n in u){ const v = u[n], l = gl.getUniformLocation(p, n); if (l === null) continue;
+      if (ENTIERS.includes(n)) gl.uniform1i(l, +v);
+      else if (Array.isArray(v) && Array.isArray(v[0])) gl.uniform4fv(l, v.flat());
+      else if (Array.isArray(v)) gl.uniform2f(l, v[0], v[1]); else gl.uniform1f(l, v); }
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    cible.drawImage(c, 0, 512 - t, t, t, x, y, t, t);
+  }
+  return { rendre };
+})();
+const C4 = a => { const r = []; for (let i = 0; i < a.length; i += 4) r.push(a.slice(i, i+4)); return r; };
+const TERRE = { pixels:0, rotation:.2, light_origin:[.39,.39], time_speed:.1, dither_size:3.951, should_dither:1, light_border_1:.287, light_border_2:.476, river_cutoff:.368,
+  colors:C4([.388,.671,.247,1, .231,.490,.310,1, .184,.341,.325,1, .157,.208,.251,1, .310,.643,.722,1, .251,.286,.451,1]), size:4.6, OCTAVES:6, seed:8.98 };
+const NUAGES = { pixels:0, rotation:0, cloud_cover:.47, light_origin:[.39,.39], time_speed:.1, stretch:2, cloud_curve:1.3, light_border_1:.52, light_border_2:.62,
+  colors:C4([.961,1,.910,1, .875,.878,.910,1, .408,.435,.6,1, .251,.286,.451,1]), size:7.315, OCTAVES:2, seed:5.939 };
+const LUNE = { pixels:0, rotation:0, light_origin:[.25,.25], time_speed:.4, dither_size:2, should_dither:1, light_border_1:.615, light_border_2:.729,
+  colors:C4([.639,.655,.761,1, .298,.408,.522,1, .227,.247,.369,1]), size:8, OCTAVES:4, seed:1.012 };
+const CRATERES = { pixels:0, rotation:0, light_origin:[.25,.25], time_speed:.001, light_border:.465, colors:C4([.298,.408,.522,1, .227,.247,.369,1]), size:5, seed:4.517 };
+const ROCHES = [ C4([.639,.655,.761,1, .298,.408,.522,1, .227,.247,.369,1]), C4([.70,.60,.50,1, .45,.36,.31,1, .27,.22,.22,1]), C4([.60,.62,.62,1, .38,.40,.42,1, .21,.22,.27,1]) ];
+
+function toile(w, h){ const c = document.createElement('canvas'); c.width = w; c.height = h || w; const x = c.getContext('2d'); x.imageSmoothingEnabled = false; return [c, x]; }
+const RT = 320, RL = 120;            // diamètre de la Terre et de la Lune à l'écran
+const [terreC, terreX] = toile(RT), [luneC, luneX] = toile(RL);
+let tPlan = 1000;
+function majPlanetes(dt){
+  tPlan += dt; terreX.clearRect(0, 0, RT, RT);
+  if (!GLR){ terreX.fillStyle = '#3b7d4f'; terreX.beginPath(); terreX.arc(RT/2, RT/2, RT/2, 0, 7); terreX.fill(); return; }
+  GLR.rendre('terre', RT, { ...TERRE, pixels:RT, time:tPlan*100*.02 }, terreX);
+  GLR.rendre('nuages', RT, { ...NUAGES, pixels:RT, time:tPlan*(14/.1)*.01 }, terreX);
+}
+function dessinerLune(){
+  luneX.clearRect(0, 0, RL, RL); if (!GLR) { luneX.fillStyle = '#8890b0'; luneX.beginPath(); luneX.arc(RL/2, RL/2, RL/2, 0, 7); luneX.fill(); return; }
+  GLR.rendre('lune', RL, { ...LUNE, pixels:RL, time:tPlan }, luneX); GLR.rendre('crateres', RL, { ...CRATERES, pixels:RL, time:tPlan }, luneX);
+}
+function rocher(t, palette, graine, forme){
+  const [c, x] = toile(t);
+  if (GLR) GLR.rendre('asteroide', t, { pixels:t, rotation:0, light_origin:[0,0], time_speed:0, should_dither:1, colors:ROCHES[palette], size:forme, OCTAVES:2, seed:graine }, x);
+  else { x.fillStyle = '#667'; x.beginPath(); x.arc(t/2, t/2, t/2.4, 0, 7); x.fill(); }
+  return c;
+}
+
+
+function mulberry(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+
+/* ---------- Vaisseaux, minerais, ciel ---------- */
+/* ---------- Pixel art calculé : vaisseaux de mineur et roches à facettes ----------
+   Tout est tracé pixel par pixel pour chaque angle (pas de dessin pivoté), avec une lumière fixe venant du haut à gauche,
+   dans la palette des planètes de Deep-Fold. */
+const LUM = (() => { const l = [-.55, -.6, .58], n = Math.hypot(...l); return l.map(v => v/n); })();
+const MAT = {
+  coque:  ['#e4e7f2', '#b9bed6', '#8a90b0', '#5d6386'],
+  acier:  ['#8e94b4', '#6a7090', '#4a4f6e', '#33364f'],
+  orange: ['#ffd27a', '#f2a94a', '#d0752c', '#8c4a24'],
+  vitre:  ['#d4f6ff', '#8fd8ea', '#4fa4b8', '#2f6a8a'],
+  vert:   ['#b8e07a', '#7ab84a', '#4a8a3e', '#2f5a34'],
+};
+const CONTOUR = '#14152a';
+function ton(m, l){ const c = MAT[m]; return l > .55 ? c[0] : l > .25 ? c[1] : l > -.15 ? c[2] : c[3]; }
+// --- formes : polygones (points [x,y], y vers le bas = arrière), cercles (sphères), rayures
+function dansPoly(p, x, y){ let d = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++){ const [xi, yi] = p[i], [xj, yj] = p[j];
+  if ((yi > y) !== (yj > y) && x < (xj - xi)*(y - yi)/(yj - yi) + xi) d = !d; } return d; }
+// distance au bord le plus proche et normale sortante de ce bord
+function bord(p, x, y){ let best = 1e9, nx = 0, ny = 0;
+  for (let i = 0, j = p.length - 1; i < p.length; j = i++){ const [ax, ay] = p[j], [bx, by] = p[i], ex = bx - ax, ey = by - ay, L = ex*ex + ey*ey || 1;
+    let t = ((x - ax)*ex + (y - ay)*ey)/L; t = Math.max(0, Math.min(1, t)); const qx = ax + t*ex - x, qy = ay + t*ey - y, d = Math.hypot(qx, qy);
+    if (d < best){ best = d; const l = Math.sqrt(L); nx = ey/l; ny = -ex/l; } }
+  // orienter la normale vers l'extérieur
+  if (dansPoly(p, x + nx*.5, y + ny*.5) && !dansPoly(p, x - nx*.5, y - ny*.5)){ nx = -nx; ny = -ny; }
+  return [best, nx, ny]; }
+function tracer(formes, taille, angle){
+  const [c, x] = toile(taille), img = x.createImageData(taille, taille), d = img.data, h = taille/2, co = Math.cos(angle), si = Math.sin(angle);
+  const pose = new Uint8Array(taille*taille);
+  for (let py = 0; py < taille; py++) for (let px = 0; px < taille; px++){
+    // coordonnées locales du centre du pixel (rotation inverse)
+    const wx = px + .5 - h, wy = py + .5 - h, lx = co*wx + si*wy, ly = -si*wx + co*wy;
+    let coul = null;
+    for (let k = formes.length - 1; k >= 0 && !coul; k--){ const f = formes[k];
+      if (f.cercle){ const dx = lx - f.cercle[0], dy = ly - f.cercle[1], r = f.cercle[2], q = dx*dx + dy*dy; if (q > r*r) continue;
+        const nz = Math.sqrt(Math.max(0, 1 - q/(r*r))), nxl = dx/r, nyl = dy/r, nxw = co*nxl - si*nyl, nyw = si*nxl + co*nyl;
+        coul = ton(f.m, nxw*LUM[0] + nyw*LUM[1] + nz*LUM[2] + (f.brille || 0)); }
+      else { if (!dansPoly(f.p, lx, ly)) continue; const [dist, nxl, nyl] = bord(f.p, lx, ly), b = f.biseau ?? 1.6;
+        let m = f.m; if (f.rayures && Math.floor((ly + 40)/f.rayures) % 2) m = f.m2;
+        if (dist < b){ const nxw = co*nxl - si*nyl, nyw = si*nxl + co*nyl; coul = ton(m, (nxw*LUM[0] + nyw*LUM[1])*.95 + .1); }
+        else coul = ton(m, f.plat ?? .4); } }
+    if (coul){ const i = (py*taille + px)*4, v = parseInt(coul.slice(1), 16); d[i] = v >> 16; d[i+1] = v >> 8 & 255; d[i+2] = v & 255; d[i+3] = 255; pose[py*taille + px] = 1; } }
+  // contour sombre autour de la silhouette
+  const o = parseInt(CONTOUR.slice(1), 16);
+  for (let py = 0; py < taille; py++) for (let px = 0; px < taille; px++){ if (pose[py*taille + px]) continue;
+    if ((px > 0 && pose[py*taille + px - 1]) || (px < taille - 1 && pose[py*taille + px + 1]) || (py > 0 && pose[(py - 1)*taille + px]) || (py < taille - 1 && pose[(py + 1)*taille + px])){
+      const i = (py*taille + px)*4; d[i] = o >> 16; d[i+1] = o >> 8 & 255; d[i+2] = o & 255; d[i+3] = 255; } }
+  x.putImageData(img, 0, 0); return c;
+}
+const N_ANG = 32, ECH = 1.5;
+// agrandit les formes (les pixels restent d'un seul point)
+const echelle = (F, k) => F.map(f => ({ ...f, p: f.p && f.p.map(([x, y]) => [x*k, y*k]), cercle: f.cercle && f.cercle.map(v => v*k), biseau: (f.biseau ?? 1.6)*1.2, rayures: f.rayures && f.rayures*k }));
+function cadres(formes, taille){ const F = echelle(formes, ECH), r = []; for (let i = 0; i < N_ANG; i++) r.push(tracer(F, taille, i/N_ANG*Math.PI*2)); return r; }
+const miroir = p => p.map(([x, y]) => [-x, y]).reverse();
+// --- trois modèles de mineur ; n = niveaux { reservoir, soute, canon } (0 à 3)
+const MINEURS = [
+  { nom: 'LA PINCE', aide: 'remorqueur compact, deux pinces à l\'avant', formes(n){
+    const F = [];
+    if (n.soute > 0) for (const s of [-1, 1]) F.push({ p: [[s*9, 0], [s*(13 + n.soute), 1], [s*(13 + n.soute), 9 + n.soute*2], [s*9, 10]].map(([x, y]) => [x, y]), m: 'orange' });
+    if (n.reservoir > 0) for (const s of [-1, 1]) F.push({ cercle: [s*8, 8, 2.5 + n.reservoir*.7], m: 'acier' });
+    for (const s of [-1, 1]) F.push({ p: [[s*4, -6], [s*7, -15], [s*5, -17], [s*3, -14], [s*2, -8]], m: 'acier', biseau: 1 });
+    F.push({ p: [[-8, -6], [8, -6], [10, 4], [7, 11], [-7, 11], [-10, 4]], m: 'coque' });
+    F.push({ p: [[-5, 11], [5, 11], [4, 14], [-4, 14]], m: 'acier', biseau: 1 });
+    F.push({ p: [[-3, -5], [3, -5], [4, 0], [-4, 0]], m: 'vitre', biseau: 1.2 });
+    F.push({ p: [[-7, 3], [7, 3], [7, 5], [-7, 5]], m: 'orange', biseau: .8, plat: .45 });
+    if (n.canon > 0) F.push({ p: [[-1 - n.canon*.4, -3], [1 + n.canon*.4, -3], [1, -12 - n.canon*2], [-1, -12 - n.canon*2]], m: 'acier', biseau: .8 });
+    return F; } },
+  { nom: 'LA FOREUSE', aide: 'longue, une mèche qui tourne à l\'avant', formes(n){
+    const F = [];
+    if (n.reservoir > 0) for (const s of [-1, 1]) F.push({ cercle: [s*7, 6, 2.5 + n.reservoir*.7], m: 'acier' });
+    if (n.soute > 0) F.push({ p: [[-5, 12], [5, 12], [5, 14 + n.soute*3], [-5, 14 + n.soute*3]], m: 'orange' });
+    for (const s of [-1, 1]) F.push({ p: [[s*5, 2], [s*12, 9], [s*12, 13], [s*5, 11]], m: 'acier', biseau: 1 });
+    F.push({ p: [[-6, -8], [6, -8], [7, 6], [5, 13], [-5, 13], [-7, 6]], m: 'coque' });
+    F.push({ p: [[-5, -8], [5, -8], [0, -21 - n.canon*2]], m: 'orange', m2: 'acier', rayures: 3, biseau: 1.2 });
+    F.push({ p: [[-3, -2], [3, -2], [3, 3], [-3, 3]], m: 'vitre', biseau: 1.2 });
+    if (n.canon > 0) for (const s of [-1, 1]) F.push({ p: [[s*8, -2], [s*10, -2], [s*10, -8 - n.canon*2], [s*8, -8 - n.canon*2]], m: 'acier', biseau: .7 });
+    return F; } },
+  { nom: 'LE CARGO', aide: 'large et carré, des conteneurs à l\'arrière', formes(n){
+    const F = [];
+    const nc = 2 + n.soute; for (let i = 0; i < nc; i++){ const s = i % 2 ? 1 : -1, r = Math.floor(i/2); F.push({ p: [[s*1, 4 + r*7], [s*9, 4 + r*7], [s*9, 10 + r*7], [s*1, 10 + r*7]], m: i % 3 === 2 ? 'vert' : 'orange', biseau: 1.2 }); }
+    if (n.reservoir > 0) for (const s of [-1, 1]) F.push({ cercle: [s*11, -2, 2.2 + n.reservoir*.7], m: 'acier' });
+    F.push({ p: [[-9, -12], [9, -12], [11, -6], [11, 3], [-11, 3], [-11, -6]], m: 'coque' });
+    F.push({ p: [[-6, -11], [6, -11], [5, -7], [-5, -7]], m: 'vitre', biseau: 1.2 });
+    F.push({ p: [[-1, 3], [1, 3], [1, 4 + Math.ceil(nc/2)*7], [-1, 4 + Math.ceil(nc/2)*7]], m: 'acier', biseau: .5 });
+    if (n.canon > 0) F.push({ cercle: [0, -3, 2.5 + n.canon*.4], m: 'acier' }, { p: [[-1, -3], [1, -3], [1, -14 - n.canon*2], [-1, -14 - n.canon*2]], m: 'acier', biseau: .6 });
+    return F; } },
+];
+// --- roche à facettes : un sommet décalé relié au pourtour (pyramide aplatie), cratères, veines
+function roche(R, diam, sorte){
+  const r = diam/2 - 2, n = 7 + (R()*5|0), pts = [];
+  for (let i = 0; i < n; i++){ const a = i/n*Math.PI*2 + (R() - .5)*.5, rr = r*(.72 + R()*.28); pts.push([Math.cos(a)*rr, Math.sin(a)*rr, (R() - .5)*r*.15]); }
+  const pic = [(R() - .5)*r*.35, (R() - .5)*r*.35, r*(.45 + R()*.3)];
+  // facettes : triangle (pic, pts[i], pts[i+1]) et sa normale
+  const fac = pts.map((a, i) => { const b = pts[(i + 1) % n], u = [a[0] - pic[0], a[1] - pic[1], a[2] - pic[2]], v = [b[0] - pic[0], b[1] - pic[1], b[2] - pic[2]];
+    let N = [u[1]*v[2] - u[2]*v[1], u[2]*v[0] - u[0]*v[2], u[0]*v[1] - u[1]*v[0]]; if (N[2] < 0) N = N.map(q => -q); const l = Math.hypot(...N); return { a, b, N: N.map(q => q/l), tache: R() < .25 }; });
+  const crat = []; for (let i = 0, k = 1 + (R()*3|0); i < k; i++){ const a = R()*7, d = R()*r*.5; crat.push([Math.cos(a)*d, Math.sin(a)*d, 1.5 + R()*r*.18]); }
+  const veines = []; for (let i = 0, k = Math.round(diam*(sorte === 'or' ? .45 : .25)); i < k; i++){ const a = R()*7, d = Math.sqrt(R())*r*.8; veines.push([Math.cos(a)*d, Math.sin(a)*d, R()]); }
+  const P = sorte === 'or' ? ['#d9dbe8', '#a3a7c2', '#7a86a6', '#56688a', '#3e4566', '#2a2d48'] : ['#e0c2a4', '#bf9478', '#946a56', '#6e4e46', '#4e3840', '#30242e'];
+  const V = sorte === 'or' ? ['#fff2a0', '#ffd54a', '#c98c22'] : ['#d9773a', '#a8502c'];
+  const res = [];
+  for (let f = 0; f < N_ANG; f++){
+    const ang = f/N_ANG*Math.PI*2, co = Math.cos(ang), si = Math.sin(ang), [c, x] = toile(diam), img = x.createImageData(diam, diam), d = img.data, h = diam/2, pose = new Uint8Array(diam*diam);
+    const Nw = fac.map(F => [co*F.N[0] - si*F.N[1], si*F.N[0] + co*F.N[1], F.N[2]]);
+    for (let py = 0; py < diam; py++) for (let px = 0; px < diam; px++){
+      const wx = px + .5 - h, wy = py + .5 - h, lx = co*wx + si*wy, ly = -si*wx + co*wy;
+      if (!dansPoly(pts, lx, ly)) continue;
+      // facette : secteur autour du pic
+      let k = 0; for (let i = 0; i < n; i++) if (dansPoly([pic, pts[i], pts[(i + 1) % n]], lx, ly)){ k = i; break; }
+      const N = Nw[k]; let l = N[0]*LUM[0] + N[1]*LUM[1] + N[2]*LUM[2];
+      for (const [cx, cy, cr] of crat){ const q = Math.hypot(lx - cx, ly - cy); if (q < cr){ const ddx = (lx - cx)/cr, ddy = (ly - cy)/cr, wxn = co*ddx - si*ddy, wyn = si*ddx + co*ddy; l = -(wxn*LUM[0] + wyn*LUM[1])*.9 + .05; } }
+      let idx = l > .8 ? 0 : l > .6 ? 1 : l > .4 ? 2 : l > .15 ? 3 : l > -.15 ? 4 : 5; if (fac[k].tache && idx < 5) idx++;
+      let coul = P[idx];
+      for (const [vx, vy, vk] of veines) if (Math.abs(lx - vx) < .8 && Math.abs(ly - vy) < .8){ coul = V[vk < .5 ? 0 : vk < .85 ? 1 : V.length - 1]; break; }
+      const i = (py*diam + px)*4, v = parseInt(coul.slice(1), 16); d[i] = v >> 16; d[i+1] = v >> 8 & 255; d[i+2] = v & 255; d[i+3] = 255; pose[py*diam + px] = 1; }
+    const o = parseInt(CONTOUR.slice(1), 16);
+    for (let py = 0; py < diam; py++) for (let px = 0; px < diam; px++){ if (pose[py*diam + px]) continue;
+      if ((px > 0 && pose[py*diam + px - 1]) || (px < diam - 1 && pose[py*diam + px + 1]) || (py > 0 && pose[(py - 1)*diam + px]) || (py < diam - 1 && pose[(py + 1)*diam + px])){
+        const i = (py*diam + px)*4; d[i] = o >> 16; d[i+1] = o >> 8 & 255; d[i+2] = o & 255; d[i+3] = 255; } }
+    x.putImageData(img, 0, 0); res.push(c); }
+  return res;
+}
+
+function pepite(type){
+  const P = type === 'or' ? ['#5a3a12', '#e0a526', '#ffe680'] : ['#2b2f3d', '#7d8496', '#c8cede'];
+  const m = ['.0000.', '011110', '012210', '011110', '.0110.']; const [c, x] = toile(6, 5);
+  m.forEach((l, j) => [...l].forEach((ch, i) => { if (ch !== '.') { x.fillStyle = P[+ch]; x.fillRect(i, j, 1, 1); } })); return c;
+}
+const PEP = { fer: pepite('fer'), or: pepite('or') }, PRIX = { fer: 4, or: 25 };
+const [ciel, cielX] = toile(512);
+(() => { const R = mulberry(7); for (let i = 0; i < 300; i++){ const b = R(); cielX.fillStyle = b < .7 ? '#3a4170' : b < .93 ? '#8a93c8' : '#fff4c8';
+  const x = R()*512|0, y = R()*512|0; cielX.fillRect(x, y, 1, 1); if (b > .985){ cielX.fillRect(x-1, y, 3, 1); cielX.fillRect(x, y-1, 1, 3); } } })();
+// veines : quelques pixels de couleur sur la roche (rouille pour le fer, éclats dorés pour l'or)
+function veiner(src, sorte, R){
+  const [c, x] = toile(src.width, src.height); x.drawImage(src, 0, 0); const d = x.getImageData(0, 0, c.width, c.height), p = d.data, w = c.width;
+  const C = sorte === 'or' ? [[255,213,74], [255,242,160], [200,140,30]] : [[181,101,58], [138,74,46]];
+  const n = Math.round(c.width*c.height*(sorte === 'or' ? .012 : .008));
+  for (let i = 0; i < n; i++){ const x0 = R()*w|0, y0 = R()*c.height|0, col = C[R()*C.length|0];
+    for (const [dx, dy] of [[0,0], [1,0], [0,1]]){ if (R() < .5 && dx + dy) continue; const j = ((y0+dy)*w + x0+dx)*4; if (x0+dx >= w || p[j+3] < 200) continue; p[j] = col[0]; p[j+1] = col[1]; p[j+2] = col[2]; } }
+  x.putImageData(d, 0, 0); return c;
+}
+
+/* ---------- La partie ---------- */
+const W = 640, H = 300, R_QUAI = RT/2 + 30, R_MAX = 780, LUNE_D = 1060;
+const AMELIOS = [
+  { k:'reservoir', nom:'RESERVOIR', aide: n => `${35 + n*12} s de vol`, prix: n => Math.round(30*1.7**n), max:3 },
+  { k:'soute', nom:'SOUTE', aide: n => `${5 + n*2} cases`, prix: n => Math.round(40*1.7**n), max:3 },
+  { k:'canon', nom:'CANON', aide: n => `degats ${1 + n}`, prix: n => Math.round(50*1.8**n), max:3 },
+];
+class Partie {
+  constructor(el, i){
+    this.el = el; this.roche = el.dataset.roche; this.R = mulberry(11 + i); this.pilote = 'inertie'; this.m = 0;
+    const e = document.createElement('div'); e.className = 'ecran'; el.appendChild(e); this.ecran = e;
+    const [c, x] = toile(W, H); this.c = c; this.x = x; e.appendChild(c);
+    this.argent = 0; this.niv = { reservoir:0, soute:0, canon:0 };
+    this.ship = { x:0, y:-R_QUAI, vx:0, vy:0, a:0 }; this.cam = { x:0, y:-R_QUAI };
+    this.soute = []; this.balles = []; this.drops = []; this.parts = []; this.booms = []; this.textes = []; this.tir = 0; this.joy = null; this.auto = false; this.panne = 0;
+    this.asts = []; for (let k = 0; k < 30; k++) this.nouvelAst(true);
+    this.panneau(); this.entrees(); this.reglages(document.querySelector(`.reglages[data-pour="${i}"]`));
+    this.carbu = this.carbuMax(); this.accoster();
+    const ajuste = () => { const k = el.clientWidth/W; e.style.transform = `scale(${k})`; el.style.height = H*k + 6 + 'px'; }; ajuste(); addEventListener('resize', ajuste);
+  }
+  carbuMax(){ return 35 + this.niv.reservoir*12; }
+  souteMax(){ return 5 + this.niv.soute*2; }
+  reglages(r){
+    r.innerHTML = `<button class="btn" data-v="-1">◀</button><span class="nomv"></span><button class="btn" data-v="1">▶</button>`;
+    this.nomv = r.querySelector('.nomv'); this.majReglages();
+    r.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; this.m = (this.m + +b.dataset.v + 3) % 3; this.majReglages(); });
+  }
+  majReglages(){ this.nomv.textContent = MINEURS[this.m].nom; this.cad = cadres(MINEURS[this.m].formes(this.niv), 72); document.querySelectorAll('.mineur').forEach((d, k) => d.classList.toggle('choisi', k === this.m)); }
+  nouvelAst(debut){
+    const R = this.R; let r, ang;
+    do { r = 270 + R()*320; ang = R()*Math.PI*2; } while (!debut && Math.hypot(Math.cos(ang)*r - this.ship.x, Math.sin(ang)*r - this.ship.y) < 260);
+    const sorte = R() < .16 ? 'or' : 'fer', a = { r, ang, w: (.04 + R()*.03)/Math.sqrt(r/250)*(R() < .15 ? -1 : 1), rot: R()*6, vr: (R()-.5)*.5, flash: 0, sorte };
+    a.t = [40, 50, 62, 76, 92][R()*5|0]; a.ray = a.t*.36; a.fr = roche(R, a.t, sorte);
+    a.pv = a.pvMax = Math.ceil(a.ray/7); this.asts.push(a);
+  }
+  posAst(a){ return [Math.cos(a.ang)*a.r, Math.sin(a.ang)*a.r]; }
+  panneau(){
+    const p = document.createElement('div'); p.className = 'panneau'; this.ecran.appendChild(p); this.p = p;
+    p.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.k){ const A = AMELIOS.find(a => a.k === b.dataset.k), n = this.niv[A.k], px = A.prix(n);
+        if (this.argent >= px && n < A.max){ this.argent -= px; this.niv[A.k]++; this.carbu = this.carbuMax(); this.majPanneau(); this.majReglages(); } }
+      else if (b.dataset.go) this.decoller(); });
+  }
+  majPanneau(){
+    let h = `<h4>A QUAI · ${this.argent} CR</h4>`;
+    for (const A of AMELIOS){ const n = this.niv[A.k], fin = n >= A.max;
+      h += `<div class="ligne"><span class="nom">${A.nom} ${n+1}<small>${A.aide(n)}${fin ? '' : ' → ' + A.aide(n+1)}</small></span><button class="btn" data-k="${A.k}" ${fin || this.argent < A.prix(n) ? 'disabled' : ''}>${fin ? 'MAX' : A.prix(n) + ' CR'}</button></div>`; }
+    h += `<div class="ligne verrou"><span class="nom">USINE · CENTRE SPATIAL · STATION<small>etages suivants</small></span></div><button class="btn go" data-go="1">DECOLLER</button>`;
+    this.p.innerHTML = h;
+  }
+  accoster(){
+    this.quai = true; this.auto = false; this.joy = null; this.ship.vx = this.ship.vy = 0;
+    let gain = 0; for (const s of this.soute) gain += PRIX[s]; const no = this.soute.filter(s => s === 'or').length;
+    if (gain) this.texte(this.ship.x, this.ship.y - 36, `+${gain} CR${no ? ' (' + no + ' OR)' : ''}`, '#ffcf4a');
+    this.argent += gain; this.soute = []; this.carbu = this.carbuMax(); this.majPanneau(); this.p.classList.add('vu');
+  }
+  decoller(){
+    this.quai = false; this.sorti = false; this.p.classList.remove('vu'); const s = this.ship, d = Math.hypot(s.x, s.y) || 1;
+    s.vx = s.x/d*70; s.vy = s.y/d*70; s.a = Math.atan2(s.vy, s.vx) + Math.PI/2;
+  }
+  texte(x, y, t, c){ this.textes.push({ x, y, t, c, v: 1.6 }); }
+  entrees(){
+    const pos = e => { const r = this.c.getBoundingClientRect(); return [(e.clientX - r.left)*W/r.width, (e.clientY - r.top)*H/r.height]; };
+    this.c.addEventListener('pointerdown', e => { if (this.quai || this.panne) return; const [x, y] = pos(e);
+      if (x > W - 120 && y > H - 52){ this.auto = true; return; }
+      if (x < W*.6){ this.c.setPointerCapture(e.pointerId); this.joy = { id: e.pointerId, bx: x, by: y, dx: 0, dy: 0 }; this.auto = false; } });
+    this.c.addEventListener('pointermove', e => { const j = this.joy; if (!j || j.id !== e.pointerId) return; const [x, y] = pos(e);
+      let dx = x - j.bx, dy = y - j.by; const d = Math.hypot(dx, dy); if (d > 40){ dx *= 40/d; dy *= 40/d; } j.dx = dx; j.dy = dy; });
+    const fin = e => { if (this.joy && this.joy.id === e.pointerId) this.joy = null; }; this.c.addEventListener('pointerup', fin); this.c.addEventListener('pointercancel', fin);
+  }
+  pas(dt){
+    const s = this.ship;
+    for (const a of this.asts){ a.ang += a.w*dt; a.rot += a.vr*dt; a.flash = Math.max(0, a.flash - dt); }
+    if (this.quai){ const ang = Math.atan2(s.y, s.x) + dt*.08; s.x = Math.cos(ang)*R_QUAI; s.y = Math.sin(ang)*R_QUAI; s.a = ang + Math.PI/2; this.suite(dt); return; }
+    if (this.panne){ this.panne -= dt; s.vx *= .98; s.vy *= .98; s.x += s.vx*dt; s.y += s.vy*dt;
+      if (this.panne <= 0){ this.panne = 0; const d = Math.hypot(s.x, s.y); s.x = s.x/d*R_QUAI; s.y = s.y/d*R_QUAI; const perdu = Math.ceil(this.soute.length/2); this.soute.splice(0, perdu);
+        this.texte(s.x, s.y - 50, 'REMORQUE' + (perdu ? ` · -${perdu} MINERAI` : ''), '#ff6a5c'); this.accoster(); }
+      this.suite(dt); return; }
+    const j = this.joy, jx = j ? j.dx/40 : 0, jy = j ? j.dy/40 : 0, force = Math.hypot(jx, jy);
+    let pousse = 0;
+    if (this.auto){ const d = Math.hypot(s.x, s.y), tx = s.x/d*(R_QUAI - 4), ty = s.y/d*(R_QUAI - 4), ex = tx - s.x, ey = ty - s.y, e = Math.hypot(ex, ey) || 1, v = Math.min(170, e*1.5);
+      s.vx += (ex/e*v - s.vx)*Math.min(1, dt*2.5); s.vy += (ey/e*v - s.vy)*Math.min(1, dt*2.5); pousse = .8; }
+    else if (this.pilote === 'direct'){ s.vx += (jx*170 - s.vx)*Math.min(1, dt*3); s.vy += (jy*170 - s.vy)*Math.min(1, dt*3); pousse = force; }
+    else { if (force > .15){ const voulu = Math.atan2(jy, jx) + Math.PI/2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-5*dt, Math.min(5*dt, d));
+        if (Math.abs(d) < .8){ pousse = force; s.vx += Math.sin(s.a)*210*force*dt; s.vy -= Math.cos(s.a)*210*force*dt; } }
+      s.vx *= 1 - dt*.15; s.vy *= 1 - dt*.15; const v = Math.hypot(s.vx, s.vy); if (v > 260){ s.vx *= 260/v; s.vy *= 260/v; } }
+    if ((this.pilote === 'direct' || this.auto) && Math.hypot(s.vx, s.vy) > 10){ const voulu = Math.atan2(s.vy, s.vx) + Math.PI/2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += d*Math.min(1, dt*8); }
+    this.pousse = pousse; s.x += s.vx*dt; s.y += s.vy*dt;
+    const de = Math.hypot(s.x, s.y);
+    if (de > R_MAX){ s.vx -= s.x/de*220*dt; s.vy -= s.y/de*220*dt; if ((this.avert || 0) <= 0){ this.texte(s.x, s.y - 40, 'MOTEURS TROP FAIBLES', '#ff6a5c'); this.avert = 2.5; } }
+    this.avert = (this.avert || 0) - dt;
+    if (de < RT/2 + 10){ s.x = s.x/de*(RT/2 + 10); s.y = s.y/de*(RT/2 + 10); }
+    if (de > R_QUAI + 30) this.sorti = true;
+    if (this.sorti && de < R_QUAI + 4){ this.accoster(); this.suite(dt); return; }
+    if (de > R_QUAI + 10){ this.carbu -= dt*(this.pilote === 'inertie' && !this.auto ? .55 + 1.1*pousse : 1);
+      if (this.carbu <= 0){ this.carbu = 0; this.panne = 2.2; this.joy = null; this.auto = false; this.texte(s.x, s.y - 40, 'PANNE SECHE !', '#ff6a5c'); } }
+    this.tir -= dt; let cible = null, bd = 190;
+    for (const a of this.asts){ const [ax, ay] = this.posAst(a), d = Math.hypot(ax - s.x, ay - s.y) - a.ray; if (d < bd){ bd = d; cible = a; } }
+    if (cible && this.tir <= 0){ this.tir = .3; const [ax, ay] = this.posAst(cible), d = Math.hypot(ax - s.x, ay - s.y), dx = (ax - s.x)/d, dy = (ay - s.y)/d;
+      this.balles.push({ x: s.x + dx*16, y: s.y + dy*16, vx: dx*460, vy: dy*460, v: .6, a: Math.atan2(dy, dx) + Math.PI/2 }); }
+    this.suite(dt);
+  }
+  suite(dt){
+    const s = this.ship;
+    for (const b of this.balles){ b.x += b.vx*dt; b.y += b.vy*dt; b.v -= dt;
+      for (const a of this.asts){ const [ax, ay] = this.posAst(a); if (Math.hypot(ax - b.x, ay - b.y) < a.ray){ b.v = 0; a.pv -= 1 + this.niv.canon; a.flash = .08; this.eclats(b.x, b.y, 3, a.sorte);
+        if (a.pv <= 0) this.casser(a); break; } } }
+    this.balles = this.balles.filter(b => b.v > 0);
+    for (const d of this.drops){ d.v -= dt; const dx = s.x - d.x, dy = s.y - d.y, dist = Math.hypot(dx, dy);
+      if (!this.quai && !this.panne && dist < 80){ const plein = this.soute.length >= this.souteMax();
+        if (!plein){ d.vx += dx/dist*600*dt; d.vy += dy/dist*600*dt; } else if (dist < 34 && !(this.pleinT > 0)){ this.pleinT = 2; this.texte(s.x, s.y - 36, 'SOUTE PLEINE', '#ff6a5c'); }
+        if (!plein && dist < 14){ d.v = 0; this.soute.push(d.type); this.texte(d.x, d.y - 8, d.type === 'or' ? 'OR !' : '+1', d.type === 'or' ? '#ffcf4a' : '#c8cede'); } }
+      d.vx *= 1 - dt*1.2; d.vy *= 1 - dt*1.2; d.x += d.vx*dt; d.y += d.vy*dt; }
+    this.drops = this.drops.filter(d => d.v > 0); this.pleinT = (this.pleinT || 0) - dt;
+    for (const p of this.parts){ p.x += p.vx*dt; p.y += p.vy*dt; p.v -= dt; } this.parts = this.parts.filter(p => p.v > 0);
+    for (const b of this.booms) b.t += dt; this.booms = this.booms.filter(b => b.t < b.n*.07);
+    for (const t of this.textes){ t.y -= 14*dt; t.v -= dt; } this.textes = this.textes.filter(t => t.v > 0);
+    const cx = this.quai ? 150 : s.x + s.vx*.35, cy = this.quai ? 0 : s.y + s.vy*.35;
+    this.cam.x += (cx - this.cam.x)*Math.min(1, dt*(this.quai ? 2 : 4)); this.cam.y += (cy - this.cam.y)*Math.min(1, dt*(this.quai ? 2 : 4));
+  }
+  casser(a){
+    const [x, y] = this.posAst(a); this.asts.splice(this.asts.indexOf(a), 1);
+    const n = 1 + (a.ray > 18 ? 1 : 0) + (this.R() < .35 ? 1 : 0);
+    for (let i = 0; i < n; i++){ const an = this.R()*7; this.drops.push({ x, y, vx: Math.cos(an)*55, vy: Math.sin(an)*55, v: 14, type: this.R() < (a.sorte === 'or' ? .6 : .04) ? 'or' : 'fer' }); }
+    this.booms.push({ x, y, t: 0, n: 8, img: imgs.boom, f0: 0, l: 48, e: a.t > 70 ? 2 : 1, rot: 0 }); this.eclats(x, y, 18, a.sorte, true);
+    setTimeout(() => this.nouvelAst(false), 5000);
+  }
+  eclats(x, y, n, sorte, gros){ const C = sorte === 'or' ? ['#a3a7c2', '#ffd54a', '#56688a'] : ['#bf9478', '#d9773a', '#6e4e46'];
+    for (let i = 0; i < n; i++){ const an = this.R()*7, v = 20 + this.R()*(gros ? 90 : 40); this.parts.push({ x, y, vx: Math.cos(an)*v, vy: Math.sin(an)*v, v: .3 + this.R()*(gros ? .7 : .2), c: C[i%3], t: gros && i%4 === 0 ? 3 : gros ? 2 : 1 }); } }
+  dessin(t){
+    const x = this.x, s = this.ship, ox = Math.round(W/2 - this.cam.x), oy = Math.round(H/2 - this.cam.y);
+    x.fillStyle = '#05060d'; x.fillRect(0, 0, W, H);
+    const px = ((-this.cam.x*.2) % 512 + 512) % 512, py = ((-this.cam.y*.2) % 512 + 512) % 512;
+    for (let i = -1; i < 2; i++) for (let j = -1; j < 1; j++) x.drawImage(ciel, Math.round(px + i*512), Math.round(py + j*512));
+    x.globalAlpha = .5; x.drawImage(imgs.neb, Math.round(ox*.4 + 380), Math.round(oy*.4 - 260)); x.drawImage(imgs.neb, Math.round(ox*.4 - 560), Math.round(oy*.4 + 140)); x.globalAlpha = 1;
+    x.strokeStyle = '#1c2246'; x.setLineDash([3, 6]); x.beginPath(); x.arc(ox, oy, R_MAX, 0, 7); x.stroke(); x.setLineDash([]);
+    const la = -2.4 + t*.008, lx = ox + Math.cos(la)*LUNE_D, ly = oy + Math.sin(la)*LUNE_D;
+    x.drawImage(luneC, Math.round(lx - RL/2), Math.round(ly - RL/2));
+    x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.textAlign = 'center'; x.fillText('LUNE · ETAGE 3', lx, ly + RL/2 + 12);
+    x.drawImage(terreC, ox - RT/2, oy - RT/2);
+    x.strokeStyle = this.quai ? '#7be07b66' : '#7be07b26'; x.beginPath(); x.arc(ox, oy, R_QUAI, 0, 7); x.stroke();
+    for (const a of this.asts){ const [ax, ay] = this.posAst(a), sx = Math.round(ax + ox), sy = Math.round(ay + oy), l = a.t;
+      if (sx < -l || sy < -l || sx > W + l || sy > H + l) continue;
+      const im = a.fr[((Math.round(a.rot/(Math.PI*2)*N_ANG) % N_ANG) + N_ANG) % N_ANG];
+      x.drawImage(im, sx - l/2, sy - l/2);
+      if (a.flash > 0){ x.globalCompositeOperation = 'lighter'; x.globalAlpha = .45; x.drawImage(im, sx - l/2, sy - l/2); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; }
+      if (a.pv < a.pvMax){ x.fillStyle = '#000a'; x.fillRect(sx - 12, sy - a.ray - 8, 24, 3); x.fillStyle = '#ff9d4a'; x.fillRect(sx - 12, sy - a.ray - 8, 24*a.pv/a.pvMax, 3); } }
+    for (const b of this.booms){ const f = Math.min(b.n - 1, b.t/.07|0), l = b.l*b.e; x.save(); x.translate(Math.round(b.x + ox), Math.round(b.y + oy)); x.rotate(b.rot); x.drawImage(b.img, (b.f0 + f)*b.l, 0, b.l, b.l, -l/2, -l/2, l, l); x.restore(); }
+    for (const d of this.drops){ const b = Math.sin(t*5 + d.x); x.drawImage(PEP[d.type], Math.round(d.x + ox - 6), Math.round(d.y + oy - 5 + b), 12, 10); }
+    for (const p of this.parts){ x.fillStyle = p.c; x.fillRect(Math.round(p.x + ox), Math.round(p.y + oy), p.t, p.t); }
+    for (const b of this.balles){ x.save(); x.translate(Math.round(b.x + ox), Math.round(b.y + oy)); x.rotate(b.a); x.fillStyle = '#d0752c'; x.fillRect(-2, -6, 4, 12); x.fillStyle = '#fff2a0'; x.fillRect(-1, -5, 2, 9); x.restore(); }
+    // vaisseau (32 angles tracés d'avance) et flamme derrière
+    const fx = Math.sin(s.a), fy = -Math.cos(s.a), sx0 = Math.round(s.x + ox), sy0 = Math.round(s.y + oy);
+    if (this.pousse > .1 && !this.panne) for (let k = 0; k < 3; k++){ const d = 22 + k*3 + this.pousse*2 + ((t*30|0) + k)%2, r = 3 - k;
+      x.fillStyle = k === 0 ? '#fff2a0' : k === 1 ? '#f2a94a' : '#d0752c'; x.fillRect(Math.round(sx0 - fx*d - r/2), Math.round(sy0 - fy*d - r/2), r + 1, r + 1); }
+    x.drawImage(this.cad[((Math.round(s.a/(Math.PI*2)*N_ANG) % N_ANG) + N_ANG) % N_ANG], sx0 - 36, sy0 - 36);
+    for (const tx of this.textes){ x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#000'; x.fillText(tx.t, tx.x + ox + 1, tx.y + oy + 1); x.fillStyle = tx.c; x.fillText(tx.t, tx.x + ox, tx.y + oy); }
+    // flèche vers la Terre
+    if (ox < -RT/2 + 20 || oy < -RT/2 + 20 || ox > W + RT/2 - 20 || oy > H + RT/2 - 20){ const an = Math.atan2(oy - H/2, ox - W/2), k = Math.min((W/2 - 26)/Math.abs(Math.cos(an)), (H/2 - 50)/Math.abs(Math.sin(an)));
+      const fx = W/2 + Math.cos(an)*k, fy = H/2 + Math.sin(an)*k + 10, d = Math.hypot(s.x, s.y) - R_QUAI, juste = d/170 > this.carbu*.7, col = juste ? '#ff6a5c' : '#7be07b';
+      x.save(); x.translate(fx, fy); x.rotate(an); x.fillStyle = col; x.beginPath(); x.moveTo(10, 0); x.lineTo(-6, -7); x.lineTo(-6, 7); x.fill(); x.restore();
+      x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = col; x.fillText('TERRE ' + Math.round(d/10) + ' KM', fx - Math.cos(an)*24, fy - Math.sin(an)*20 + 3); }
+    // interface
+    x.fillStyle = '#05060dcc'; x.fillRect(0, 0, W, 30);
+    x.font = '13px Silkscreen'; x.textAlign = 'left'; x.fillStyle = '#ffcf4a'; x.fillText(this.argent + ' CR', 10, 20);
+    const sm = this.souteMax(), s0 = W/2 - sm*8; for (let i = 0; i < sm; i++){ const cx = s0 + i*16; x.fillStyle = '#1a1f40'; x.fillRect(cx, 7, 14, 14); x.strokeStyle = '#2f3770'; x.strokeRect(cx + .5, 7.5, 13, 13);
+      if (this.soute[i]) x.drawImage(PEP[this.soute[i]], cx + 1, 9, 12, 10); }
+    x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.textAlign = 'right'; x.fillText('SOUTE', s0 - 6, 18);
+    const f = this.carbu/this.carbuMax(); x.textAlign = 'right'; x.fillText('CARBURANT', W - 140, 18); x.fillStyle = '#1a1f40'; x.fillRect(W - 132, 11, 122, 8);
+    x.fillStyle = f < .25 ? (t*4 % 1 < .5 ? '#ff6a5c' : '#7a2a26') : f < .5 ? '#ff9d4a' : '#7be07b'; x.fillRect(W - 132, 11, Math.round(122*f), 8);
+    if (!this.quai && !this.panne){
+      const j = this.joy, bx = j ? j.bx : 70, by = j ? j.by : H - 70;
+      x.globalAlpha = j ? .55 : .25; x.strokeStyle = '#9fd0ff'; x.lineWidth = 2; x.beginPath(); x.arc(bx, by, 40, 0, 7); x.stroke();
+      x.fillStyle = '#9fd0ff'; x.beginPath(); x.arc(bx + (j ? j.dx : 0), by + (j ? j.dy : 0), 15, 0, 7); x.fill(); x.lineWidth = 1; x.globalAlpha = 1;
+      x.fillStyle = this.auto ? '#2f7a3a' : '#1d2560cc'; x.strokeStyle = this.auto ? '#6fdc7f' : '#5a6be0'; x.fillRect(W - 116, H - 46, 104, 34); x.strokeRect(W - 115.5, H - 45.5, 103, 33);
+      x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText(this.auto ? 'RETOUR...' : 'RENTRER', W - 64, H - 24); }
+  }
+}
+let parties = [];
+
+/* ---------- Galerie ---------- */
+let lance = false;
+function demarrer(){
+  if (lance) return; lance = true;
+  parties = [...document.querySelectorAll('.tel')].map((el, i) => new Partie(el, i));
+  MINEURS.forEach((M, k) => { const d = document.createElement('div'); d.className = 'mineur'; const [c, x] = toile(4*48*2 + 30, 96); c.style.width = (4*96 + 30) + 'px'; c.style.maxWidth = '62vw';
+    for (let s = 0; s < 4; s++) x.drawImage(tracer(echelle(M.formes({ reservoir: s, soute: s, canon: s }), ECH), 72, 0), s*(96 + 10) - 12, -12, 120, 120);
+    const t = document.createElement('div'); t.innerHTML = `<b>${M.nom}</b><span class="doux">${M.aide}</span>`; d.append(c, t);
+    d.onclick = () => { for (const p of parties){ p.m = k; p.majReglages(); } }; document.getElementById('planche').append(d); });
+  for (const p of parties) p.majReglages();
+  dessinerLune(); for (const p of parties) p.majPanneau();
+  let av = performance.now();
+  function boucle(n){ const dt = Math.min(.05, (n - av)/1000); av = n; majPlanetes(dt); if ((n/250|0) !== boucle.l){ boucle.l = n/250|0; dessinerLune(); }
+    for (const p of parties){ p.pas(dt); p.dessin(n/1000); } requestAnimationFrame(boucle); }
+  requestAnimationFrame(boucle);
+}
+Promise.all(Object.values(imgs).map(i => i.decode().catch(() => {}))).then(() => (document.fonts ? document.fonts.ready : Promise.resolve()).then(demarrer));
+setTimeout(demarrer, 3000);
+</script>
+</body>
+</html>
