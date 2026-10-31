@@ -182,8 +182,8 @@ class Tel {
   }
   tapis(cotes, d, g) { // cotes : côté d'entrée ou -1 ; d : sortie
     if (cotes < 0 || cotes === (d + 2) % 4) return this.modele('conveyor-stripe', 0, 0, angle(d), 1, 0, g);
-    for (let k = 0; k < 4; k++) { // le virage relie les côtés 3 et 0 sans rotation
-      const a = (3 - k + 4) % 4, b = (4 - k) % 4;
+    for (let k = 0; k < 4; k++) { // le virage relie les côtés 2 (-x) et 1 (+z) sans rotation
+      const a = (2 - k + 4) % 4, b = (1 - k + 4) % 4;
       if ((a === cotes && b === d) || (b === cotes && a === d)) return this.modele('conveyor-stripe-corner', 0, 0, k * Math.PI / 2, 1, 0, g);
     }
   }
@@ -203,7 +203,7 @@ class Tel {
         const a = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.035, 6, 28), new THREE.MeshBasicMaterial({ color: 0xffb14d }));
         a.rotation.x = Math.PI / 2; a.position.y = 0.43; g.add(a); c.anneau = a;
       } else if (c.t === 'mine') {
-        this.modele('machine-fortified', 0, 0, angle(c.d), 0.62, 0, g);
+        this.modele('machine-fortified', 0, 0, angle(c.d) + Math.PI / 2, 0.62, 0, g); // ouverture vers -x sans rotation
         const k = Array.isArray(c.k) ? c.k : [c.k];
         k.forEach((n, i) => { const m = this.objet(n); m.position.set((i - (k.length - 1) / 2) * 0.28, 0.9, 0); g.add(m); });
       } else if (c.t === 'mach') { c.o = this.modele(c.modele || 'machine', 0, 0, angle(c.d), 0.62, 0, g); }
@@ -358,7 +358,7 @@ const A = {
     t.poser(4, 8, { t: 'sortie' });
     t.poser(0, 3, { t: 'caisses' }); t.poser(5, 5, { t: 'caisses' });
     // décor : mur du fond, piliers, bras robot à la livraison, Oopi
-    for (let x = -1; x <= 6; x++) t.modele(x % 3 ? 'structure-wall' : 'structure-window', x, -1.5, Math.PI / 2);
+    for (let x = -1; x <= 6; x++) t.modele(x % 3 ? 'structure-wall' : 'structure-window', x, -1.6, 0);
     t.modele('structure-yellow-tall', -0.7, -0.6, 0); t.modele('structure-yellow-tall', 5.7, -0.6, 0);
     t.bras = t.modele('robot-arm-a', 5.3, 7.6, 0, 0.42);
     t.oopi = t.modele('oopi', 2.2, 8.4, Math.PI, 0.9);
@@ -482,7 +482,7 @@ const C = {
     t.poser(2, 5, { t: 'aig', d: 1, outs: [1, 2], sel: 0 });
     t.poser(4, 7, { t: 'sortie', couleur: 'bleu' }); t.poser(2, 7, { t: 'sortie', couleur: 'orange' }); t.poser(0, 7, { t: 'sortie', couleur: 'vert' });
     // décor du soir
-    for (let x = -1; x <= 5; x++) t.modele(x % 2 ? 'structure-wall' : 'structure-window', x, -1.5, Math.PI / 2);
+    for (let x = -1; x <= 5; x++) t.modele(x % 2 ? 'structure-wall' : 'structure-window', x, -1.6, 0);
     t.modele('crane', 0.2, 1.4, 0, 0.7); t.modele('screen-wide', 3.6, -0.8, 0, 0.7); t.modele('piston-round', 0.4, 0, 0, 0.6);
     t.modele('warning-traffic', 3.5, 1.2, 0, 0.6);
     const lampe = (x, z, c, f) => { const l = new THREE.PointLight(c, f, 5.5, 2); l.position.set(x, 1.8, z); t.sc.add(l); };
