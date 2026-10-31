@@ -371,7 +371,7 @@ class Tel {
   }
   demi(img, x, y, s) { const g = this.g; g.save(); g.translate(x + 8, y + 8); g.rotate([Math.PI / 2, Math.PI, -Math.PI / 2, 0][s]); g.drawImage(img, -8, -8); g.restore(); }
   dessiner() {
-    const g = this.g, ph = Math.floor(this.t * 44) % 4, t = this.t;
+    const g = this.g, ph = ((Math.floor(this.t * 44) % 4) + 4) % 4, t = this.t;
     g.drawImage(this.fondImg, 0, 0);
     // tapis
     for (const c of this.cells.values()) if (c.t === "tapis") { const x = OX + c.x * T, y = OY + c.y * T; this.demi(this.demis.e[ph], x, y, this.entree(c)); this.demi(this.demis.s[ph], x, y, c.d); }
@@ -483,6 +483,6 @@ function g_(tel) { return tel.g; }
 const TELS = [new Tel("telA", "rouille"), new Tel("telB", "mars"), new Tel("telC", "nuit")];
 TELS.forEach(t => new IntersectionObserver(e => { t.visible = e[0].isIntersecting; }).observe(t.el));
 let av = performance.now();
-function boucle(now) { const dt = Math.min(.05, (now - av) / 1000); av = now; TELS.forEach(t => t.maj(dt)); requestAnimationFrame(boucle); }
+function boucle(now) { const dt = Math.max(0, Math.min(.05, (now - av) / 1000)); av = now; TELS.forEach(t => t.maj(dt)); requestAnimationFrame(boucle); }
 requestAnimationFrame(boucle);
 </script>
