@@ -90,6 +90,8 @@ const TEINTES = {
   orange: 0xffa64d, bleu: 0x6f86ff, vert: 0x4fd18f
 };
 
+// Dans un artefact, fetch() est interdit : sans createImageBitmap, GLTFLoader charge les textures par une balise <img>.
+try { window.createImageBitmap = undefined; } catch (e) {}
 function tampon(b64) { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; }
 function charger(tex) {
   const man = new THREE.LoadingManager();
