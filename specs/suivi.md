@@ -73,6 +73,11 @@ Copie telle quelle des lignes détaillées que `CLAUDE.md` gardait jusqu'au 30/1
 - **Solitaire, cartes lisibles** (20/10) : plainte des joueurs (chiffres 3 × 5 pixels, environ 5 px à l'écran). Maquettes `solitaire-lisibilite.html` (A gros chiffres, B fines 32 bits, C quatre couleurs), `solitaire-b.html` (B creusée, 6 dos, tapis), puis `solitaire-lisible.html` (lisibilité d'abord). Choix de l'utilisateur : style **NET** par défaut ; CHIFFRE GEANT, QUATRE COULEURS et l'ancien PIXEL en personnalisation dans le MENU, avec 6 dos et 4 tapis. Fait : table bord à bord, barre du haut (score, temps, record), MENU / ANNULER / TOUT RANGER en bas. Bouton INDICE de la maquette **pas fait** (pas validé). À essayer sur le téléphone.
 - **Solitaire, confirmation** (28/10) : les joueurs ne comprenaient pas qu'il fallait toucher deux fois NOUVELLE DONNE (ou PIOCHE) pendant une partie. Remplacé par une petite fenêtre « NOUVELLE DONNE ? » / « PIOCHE : n ? » avec NON / ABANDONNER (ou CHANGER) ; Échap = non. Pas de fenêtre si la partie n'a pas commencé ou est gagnée. À essayer sur le téléphone.
 
+## Mineur de l'espace, session 1 (31/10)
+- `mineur-de-l-espace/regles.js` (économie, progression, drones, aliens, bataille finale, sans dessin) et `outils/mineur-simulateur.js` (ajouté à `verifications.js`). Bilan et chiffres : [`specs/mineur-de-l-espace.md`](mineur-de-l-espace.md) § 19.
+- Écarts au cahier des charges trouvés par le simulateur : améliorations **communes à toutes les classes** (5 niveaux) au lieu de propres à chaque classe ; fer 5 CR et or 30 CR ; une unité de flotte abattue n'est pas perdue ; le quai garde le minerai d'un chantier dès qu'on a la moitié de ses CR.
+- Pas encore dans `sw.js` ni sur l'accueil (rien à jouer avant la session 2).
+
 ## Retours de l'utilisateur (29/10, suite des essais)
 - Solitaire : pas de bouton INDICE (refusé).
 - Romet : classements confirmés avec un vrai record.

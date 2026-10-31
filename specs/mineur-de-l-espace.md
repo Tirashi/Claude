@@ -38,7 +38,7 @@ Un jeu de minage et de gestion **calme et sans pièges de jeu mobile** (pas de p
 - **Voyage** entre planètes : depuis la carte du système (écran simple, planètes de Deep-Fold), coût en carburant ou en temps de trajet court (5 à 10 s, animation), pas de vraie physique orbitale.
 - **Fin : la grande bataille.** Le **vaisseau-mère alien** arrive avec sa **grande flotte** ; **toutes les flottes** composées par le joueur (Terre, Lune, Mars) se rassemblent pour l'affronter, avec la corvette du joueur. Victoire = fin du jeu (écran de fin), puis **mode libre** (on continue à miner et à agrandir).
 
-## 6. Minerais et prix (proposition, à régler au simulateur)
+## 6. Minerais et prix (réglés au simulateur le 31/10 : fer 5 CR, or 30 CR, voir § 19)
 | Minerai | Où | Prix de base | Rôle |
 |---|---|---|---|
 | Fer | Terre | 4 CR | argent, construction de la station |
@@ -51,7 +51,7 @@ Un jeu de minage et de gestion **calme et sans pièges de jeu mobile** (pas de p
 - Certaines constructions demandent **des minerais en plus des CR** (ex. module de station = CR + fer), pour donner envie d'aller chercher chaque minerai.
 
 ## 7. Améliorer la corvette
-- **Améliorations de classe** (au quai, comme la maquette) : **réservoir** (+10 s, cuves blanches), **soute** (+2 cases, conteneurs), **canon** (+1 dégât, canons plus longs puis doublés, +1 tourelle au niveau 2), **coque** (plus de résistance, plaques). 3 niveaux chacune, prix croissants (×1,8).
+- **Améliorations de classe** (au quai, comme la maquette) : **réservoir** (+10 s, cuves blanches), **soute** (+2 cases, conteneurs), **canon** (+1 dégât, canons plus longs puis doublés, +1 tourelle au niveau 2), **coque** (plus de résistance, plaques). 3 niveaux chacune, prix croissants (×1,8). **Changé en session 1 (§ 19) : 5 niveaux communes à toutes les classes, prix × 2.**
 - **Classes** (achetées à la station, on garde les classes achetées et on change au quai) :
 
 | Classe | Rôle | Tourelles | Soute | Vol | Débloquée |
@@ -107,7 +107,7 @@ Sons synthétisés (comme la Boutique) : tirs des tourelles, roche qui éclate, 
 - Le **simulateur** joue des parties automatiques (sorties types) pour régler prix et rendements.
 
 ## 16. Plan de travail (Opus, une conversation par session)
-1. **Règles et simulateur** : `regles.js` (minerais, prix, améliorations, classes, usines, recherche, station, drones, étages), `outils/mineur-simulateur.js`, réglages.
+1. ✅ **Règles et simulateur** (fait le 31/10, bilan § 19) : `regles.js` (minerais, prix, améliorations, classes, usines, recherche, station, drones, étages), `outils/mineur-simulateur.js`, réglages.
 2. **Étage 1 jouable** : vol (repris de la maquette 6), quai, améliorations, usines, recherche, sauvegarde ; `index.html` en banc d'essai.
 3. **Station et drones** (étage 2) : construction module par module, hangar, drones qui travaillent.
 4. **Lune et Mars** (étage 3) : carte du système, voyages, nouvelles ceintures et minerais, bases.
@@ -161,3 +161,24 @@ Départ en orbite terrestre : un petit vaisseau (carburant et soute limités) ca
 
 ### Maquette 1 : réglages
 Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 à 460, orbite limite 640, Lune à 860 (visible, inaccessible). 26 astéroïdes de 30 à 58 px (1 PV par 14 px), 1 à 3 minerais, or 10 %. Fer 4 CR, or 25 CR. Carburant 30 s (+12 par niveau ; en B : 0,55/s en glissant, 1,6/s en poussant), soute 5 (+2), canon 1 (+1). Panne sèche : remorqué, moitié de la soute perdue. Les niveaux changent le moteur (réservoir) et l'arme (canon) du vaisseau.
+
+## 19. Session 1 (31/10) : règles et simulateur — bilan
+**Fichiers** : `mineur-de-l-espace/regles.js` (logique pure, noms `mde…` / `MDE_…`, état JSON, hasard à graine `mdeRng`, aucun `Math.random`) et `outils/mineur-simulateur.js` (lancé par `outils/verifications.js`, 8 parties, ~2 s). Rien n'est encore affiché : la session 2 branche le vol de la maquette 6 sur ces règles.
+
+**Ce que contiennent les règles** (tout est réglable en tête de fichier) :
+- Minerais et ceintures : Terre fer 86 % / or 14 % ; Lune glace 50 % / titane 36 % / fer 14 % ; Mars cobalt 60 % / fer 30 % / cristal 10 %. Roches 7 / 3 / 1 PV, 2 à 4 éclats, une petite lâche 1 ou 2 minerais (30 % de chances d'en lâcher 2, + 15 % par recherche « roches riches »).
+- **Le quai garde le minerai d'un chantier** : à la vente, il met de côté le minerai que demande un achat affiché **dès qu'on a la moitié de ses CR**, et vend le reste (au début, tout est vendu). Pas de réglage à faire pour le joueur.
+- Panne sèche ou coque à zéro : remorquée, on perd la moitié de la soute (arrondie en dessous). Dangers : 1,2 à 2,6 petites roches rapides par minute de vol selon l'étage ; le drone réparateur rend un point par sortie.
+- Classes : Éclaireur (1 tourelle, soute 4, 34 s), Prospecteur (module central, 500 CR + 25 fer), Pionnière (ailes solaires, 2 600 CR), Escorte (module quai, étage 4, dégâts 2), **Forteresse** (nom proposé pour la classe lourde : 5 tourelles, soute 10, 60 s, recherche du cristal).
+- **Améliorations communes** (changement par rapport au § 7) : le simulateur a montré qu'avec des améliorations propres à chaque classe, une classe neuve était **plus faible** que l'Éclaireur amélioré. Elles sont donc gardées en changeant de classe, avec **5 niveaux** (prix 50 CR × poids × 2 par niveau) : niveaux 1 à 3 dès le départ, 4 avec le module central, 5 avec la base lunaire. Canon : + 1 dégât aux niveaux 1, 3, 5 et + 1 tourelle aux niveaux 2 et 4. Elles se voient toujours sur la corvette.
+- Usines (3 niveaux : × 1,25, × 1,5, × 2) : fonderie, affinerie, distillerie, laminoir, forge, taillerie. Raffinerie de la station : tous les prix + 20 %.
+- Recherche (immédiate) : roches riches (3 niveaux), aimant, moteurs, filons, centre spatial (→ étage 2), moteur de transfert (→ Lune, étage 3), propulsion lointaine (→ Mars), blindage, taille du cristal (→ Forteresse), commandement (+ 2 places de flotte).
+- Station dans l'ordre de l'ISS : module central → poutre → ailes solaires et hangar → radiateurs → raffinerie ; antenne (satellites) et quai (Escorte, + 2 places) après la base martienne.
+- Drones : production d'une planète = min(mineurs × 2, cargos × 4) minerais par minute (un cargo sert deux mineurs), livrés au fil du jeu, jamais hors ligne. Satellites : 3 par planète au plus.
+- Voyages : Lune 60 CR, Mars 150 CR + 10 glace, 8 s.
+- **Aliens** (étage 4, dès la base martienne) : 8 vagues, une toutes les 6 min (première 4 min après la base), annoncées 20 s + 15 s par satellite à l'avance. Une vague ne vise qu'une planète **défendue** (une flotte) ou celle où est le joueur. Flotte : drone de défense, escorte autonome, réparateur, canonnière ; 4 places (+ 2 quai, + 2 commandement). Sans le joueur, le combat se résout seul (`mdeCombat`) ; la flotte arrive après 10 s (− 3 s par satellite), la base tient 250 PV face à un siège. **Jeu calme : une unité abattue n'est pas perdue** (remorquée, réparée) ; une défaite met seulement la base **hors service** (plus de drones) jusqu'à sa réparation (10 % du prix de la base). Après la 8e vague : **bataille finale** quand le joueur veut, vaisseau-mère (400 PV) et sa flotte contre toutes les flottes réunies et la corvette ; perdue, on peut la relancer 3 min plus tard.
+
+**Résultats du simulateur** (12 parties, pilote « malin ») : fin en **3 h 34** en médiane (cible 3 à 5 h) ; étage 2 à 36 min, étage 3 à 1 h 29, étage 4 à 2 h 39 ; premier achat dès la 1re minute, jamais plus de 11 min sans achat ; 7,4 vagues gagnées sur 8 quand le joueur va défendre ; finale gagnée en 1 ou 2 essais. Le pilote « lent » finit en 3 h 48 ; le pilote qui n'achète rien reste à l'étage 1.
+
+**À voir à la session 2** : le modèle de sortie du simulateur (adresse du pilote, approche, ramassage) sera recalé sur le vrai vol ; les chocs comptent peu (aucune panne pour un bon pilote) ; le combat en vol remplacera `mdeCombat` quand le joueur est sur place.
+

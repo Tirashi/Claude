@@ -169,7 +169,7 @@ Un « Vampire Survivors-like » dans l'espace, mêlé à l'idée de caravane : o
 - **Nebula : flotte à points et défis** (idées du 15/10) — ✅ flotte à points et prime d'audace (session 4, étape 1), défis de combat et contrats de partie (étape 2), missions du jour (étape 3), nouveaux vaisseaux (étape 4) ; session 4 terminée, équilibrage à revoir après plus de parties — composer sa flotte de départ avec des points de flotte et une prime d'audace (moins on dépense, plus on gagne), objectifs de combat et contrats de partie, missions du jour avec une flotte imposée différente chaque jour, nouveaux vaisseaux alliés et pirates. Analyse chiffrée et découpage proposé dans `specs/nebula.md` § 21.
 
 ## Mineur de l'espace (ex-Mineurs d'étoiles, idée de l'utilisateur du 30/10)
-🟡 **chantier, cahier des charges validé** : exploration spatiale + gestion + auto battler, tout est dans [`specs/mineur-de-l-espace.md`](specs/mineur-de-l-espace.md).
+🟡 **en développement** (cahier validé, session 1 faite le 31/10) : exploration spatiale + gestion + auto battler, tout est dans [`specs/mineur-de-l-espace.md`](specs/mineur-de-l-espace.md).
 
 ## Grand jeu spatial : gestion + tactique (brainstorm du 13/10/2026, à approfondir)
 Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux, des planètes, des améliorations, pour **toute la famille**. Quatre formes proposées (toutes gardées) :

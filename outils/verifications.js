@@ -11,6 +11,7 @@
    8 ter. La Dernière Lanterne : moteur RPG, données et accessibilité (outils/lanterne-tests.js) ;
    8 sexies. Romet : physique et règles (outils/romet-simulateur.js) ;
    8 septies. Doggy Saga : règles, obstacles, reproductibilité et 60 niveaux (outils/doggy-saga-simulateur.js) ;
+   8 octies. Mineur de l'espace : règles et équilibrage (outils/mineur-simulateur.js) ;
    9. classements : chaque record envoyé par un jeu (LudoScores.submit) a son tableau dans le volet de
       l'accueil (RANKS, accueil.js), est repris en rejoignant (registerExisting) et son jeu sert à vérifier les pseudos.
    Code de sortie 1 si quelque chose ne va pas. */
@@ -136,6 +137,10 @@ catch (e) { bad('Doggy Saga : simulateur\n' + (e.stdout || '') + (e.stderr || ''
 // 8 sexies. Romet : physique et règles (tas reproductible, sauvegarde et reprise, pièces endormies, fin de partie)
 try { execFileSync(process.execPath, [path.join(__dirname, 'romet-simulateur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Romet : simulateur (tas reproductible, reprise, mise au repos, fin de partie)'); }
 catch (e) { bad('Romet : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+
+// 8 octies. Mineur de l'espace : règles et équilibrage (parties complètes reproductibles, durée 3 à 5 h, sauvegarde)
+try { execFileSync(process.execPath, [path.join(__dirname, 'mineur-simulateur.js'), '8'], { stdio: 'pipe', encoding: 'utf8' }); ok('Mineur de l\'espace : simulateur (règles, parties reproductibles, durée, vagues)'); }
+catch (e) { bad('Mineur de l\'espace : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
