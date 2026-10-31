@@ -171,6 +171,9 @@ Un « Vampire Survivors-like » dans l'espace, mêlé à l'idée de caravane : o
 ## Mineur de l'espace (ex-Mineurs d'étoiles, idée de l'utilisateur du 30/10)
 🟡 **chantier, cahier des charges validé** : exploration spatiale + gestion + auto battler, tout est dans [`specs/mineur-de-l-espace.md`](specs/mineur-de-l-espace.md).
 
+## La petite usine (mini Factorio, idée de l'utilisateur du 31/10)
+Repérée avec le pack **Kenney Factory Kit** (3D, CC0, ~140 fichiers, version 3.0 refaite, animations et variantes de couleur : https://kenney.nl/assets/factory-kit ; à télécharger pour voir la liste exacte des modèles). Idée : poser des **foreuses, tapis roulants, machines et bras robots** sur une petite grille vue en 3D (Three.js, comme Le Magasinier) ; faire couler les minerais vers des machines qui les transforment (minerai → plaques → engrenages → circuits…) pour remplir des **commandes** ; débloquer de nouvelles machines. Version téléphone : petite grille (par ex. 12 × 20), pose au doigt, tapis tracés en glissant, pas de combat. Pistes à trancher : niveaux-puzzles avec une commande à atteindre (plus court, grille du jour possible) **ou** usine libre qui grandit (incrémental, plus long). Le moteur (simulation des tapis et des machines sur grille) se teste sous Node. Prochaine étape : maquette (2 ou 3 directions sur un écran de téléphone).
+
 ## Grand jeu spatial : gestion + tactique (brainstorm du 13/10/2026, à approfondir)
 Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux, des planètes, des améliorations, pour **toute la famille**. Quatre formes proposées (toutes gardées) :
 1. **Empire familial** (façon Ogame) — une planète qui produit en continu même téléphone fermé, constructions de plus en plus longues, flottes qui explorent, chassent les pirates et pillent les autres joueurs de la famille ; parties sur des semaines. Combats **résolus automatiquement** avec des ordres génériques. *Piste détaillée en cours.*
