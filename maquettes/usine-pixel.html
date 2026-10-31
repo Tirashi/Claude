@@ -1,0 +1,488 @@
+<title>Usine en pixels</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Press+Start+2P&display=swap">
+<style>
+/* Mise en page : trois téléphones (même jeu, trois ambiances en pixel art 32 bits), légende dessous. */
+:root{
+  --fond:#17131e; --plaque:#232033; --trait:#3a3552; --texte:#ecebf5; --doux:#a9a5c2;
+  --or:#ffd23f; --orange:#f08a28; --rouge:#ff8a76;
+  --titre:"Press Start 2P", ui-monospace, monospace;
+  --corps:"Chakra Petch", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--corps);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+header{max-width:1120px;margin:0 auto 24px;display:grid;gap:10px}
+h1{font-family:var(--titre);font-size:20px;line-height:1.4;margin:0;color:var(--or);text-wrap:balance}
+header p{margin:0;color:var(--doux);max-width:68ch}
+.tels{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+.bloc{width:340px;max-width:100%;display:grid;gap:12px;align-content:start}
+.bloc h2{font-family:var(--titre);font-size:12px;line-height:1.6;margin:0}
+.bloc h2 b{color:var(--or)}
+.bloc p{margin:0;color:var(--doux)}
+.tel{position:relative;width:340px;max-width:100%;aspect-ratio:340/660;border-radius:26px;overflow:hidden;border:6px solid #0c0a12;box-shadow:0 0 0 1px var(--trait),0 18px 40px #0008;background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated}
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between}
+.haut,.bas{pointer-events:auto;padding:10px;display:grid;gap:6px}
+.haut{background:linear-gradient(#120c16f2 60%,#120c1600)}
+.bas{background:linear-gradient(#120c1600,#120c16f2 35%)}
+.ligne{display:flex;gap:6px;align-items:center;justify-content:space-between}
+.etiq{font-family:var(--titre);font-size:8px;letter-spacing:.06em;color:var(--doux)}
+.val{font-family:var(--titre);font-size:10px;color:var(--texte);font-variant-numeric:tabular-nums}
+.vies b{color:var(--rouge)} .fer b{color:var(--or)}
+.outils{display:flex;gap:6px}
+.outils button,.fin button{flex:1;font-family:var(--titre);font-size:9px;line-height:1.3;padding:11px 4px;border-radius:4px;border:2px solid #120c16;box-shadow:inset 0 2px 0 #ffffff22,inset 0 -2px 0 #00000055;background:#2e3a5c;color:var(--texte);cursor:pointer}
+.outils button.actif{background:var(--or);color:#2a1a06}
+.outils button small{display:block;font-size:7px;margin-top:4px;opacity:.85}
+button:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+.astuce{font-size:13px;color:var(--texte);background:#120c16d9;border:1px solid #ffffff22;border-radius:4px;padding:6px 9px;justify-self:start}
+.fin{position:absolute;inset:0;display:grid;place-content:center;gap:14px;text-align:center;background:#120c16d9;pointer-events:auto;padding:24px}
+.fin h3{font-family:var(--titre);font-size:14px;line-height:1.5;margin:0;color:var(--or)}
+.fin p{margin:0}
+footer{max-width:1120px;margin:36px auto 0;color:var(--doux);font-size:13px}
+</style>
+
+<header>
+  <h1>LA PETITE USINE : PIXELS</h1>
+  <p>Maquette 3 : le même jeu que la défense en direct (la mine fait du minerai, l'armurerie des munitions, les tapis les portent aux tours), dessiné en pixel art 32 bits vu de dessus. Trois ambiances, toutes jouables : TAPIS en glissant le doigt, TOUR en touchant une case libre, GOMME pour effacer.</p>
+</header>
+
+<main class="tels">
+  <section class="bloc">
+    <div class="tel" id="telA"></div>
+    <h2><b>A</b> L'USINE ROUILLEE</h2>
+    <p>Dalles d'acier rivetées, rouille, bandes jaunes et noires le long de la route. Les ennemis sont des robots araignées. Fin d'après-midi.</p>
+  </section>
+  <section class="bloc">
+    <div class="tel" id="telB"></div>
+    <h2><b>B</b> LA COLONIE SUR MARS</h2>
+    <p>Sable rouge tramé, cailloux, traces de chenilles. Les ennemis sont des scarabées géants qui sortent des dunes.</p>
+  </section>
+  <section class="bloc">
+    <div class="tel" id="telC"></div>
+    <h2><b>C</b> L'USINE DE NUIT</h2>
+    <p>Sol bleu nuit quadrillé, tapis lumineux, route bordée de néons. Les ennemis sont des soucoupes volantes clignotantes.</p>
+  </section>
+</main>
+
+<footer>Tout est dessiné par le code (pas de pack d'images). Polices : Press Start 2P et Chakra Petch (Google Fonts).</footer>
+
+<script>
+"use strict";
+// ------------------------------------------------------------ outils de dessin
+const OUT = "#120c16", VW = 170, VH = 330, T = 16, OX = 5, OY = 52;
+const DX = [1, 0, -1, 0], DY = [0, 1, 0, -1];
+const K = (x, y) => x + "," + y;
+function mk(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.imageSmoothingEnabled = false; return [c, g]; }
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function blob(g, cx, cy, r, ramp, contour = true) {
+  for (let y = -r - 1; y <= r + 1; y++) for (let x = -r - 1; x <= r + 1; x++) {
+    const d = Math.hypot(x, y); if (d > r + 1) continue;
+    if (d > r) { if (contour) R(g, cx + x, cy + y, 1, 1, OUT); continue; }
+    const l = (-x - y) / (r * 1.4) - (d / r) * .2;
+    R(g, cx + x, cy + y, 1, 1, ramp[l > .45 ? 0 : l > -.05 ? 1 : l > -.5 ? 2 : 3]);
+  }
+}
+// bloc ombré (lumière en haut à gauche), contour sombre
+function bloc(g, x, y, w, h, ramp, contour = true) {
+  if (contour) R(g, x - 1, y - 1, w + 2, h + 2, OUT);
+  R(g, x, y, w, h, ramp[1]); R(g, x, y, w, 1, ramp[0]); R(g, x, y, 1, h, ramp[0]);
+  R(g, x, y + h - 1, w, 1, ramp[3]); R(g, x + w - 1, y + 1, 1, h - 1, ramp[2]);
+}
+const P = {
+  acier: ["#dfe4ea", "#a3acb9", "#6f7888", "#454c5c"], noir: ["#5e5870", "#3a3548", "#262233", "#17131e"],
+  rouille: ["#eea474", "#c06a3a", "#8e4624", "#5a2a14"], or: ["#fff6c2", "#ffd23f", "#e0a020", "#9a6410"],
+  rouge: ["#ff8a76", "#e04a3c", "#a8302a", "#6e1d1d"], orange: ["#ffc274", "#f08a28", "#c05e14", "#7a3a0c"],
+  vert: ["#b8e27c", "#6fae45", "#457f2e", "#2a5220"], sarcelle: ["#8ae0d0", "#3fa898", "#2c7870", "#1c4a48"],
+  verre: ["#e0f8ff", "#7ccaf0", "#3a86c0", "#22507a"], bleu: ["#9ad4ff", "#3f8fe0", "#2a64b0", "#1a3f7a"],
+  violet: ["#e0b8ff", "#a070e0", "#6a44a8", "#3e2468"], sable: ["#fff0b8", "#ecc878", "#c49a4c", "#8a6430"],
+  rose: ["#ffb8f0", "#ff4fd8", "#b02a98", "#5e1452"], brique: ["#e0906a", "#b0583a", "#7e3a26", "#4e2016"]
+};
+
+// ------------------------------------------------------------ les trois ambiances
+const AMB = {
+  rouille: {
+    sol(g, x, y) { // dalle d'acier rivetée, taches de rouille
+      const v = hash(x, y), d = ["#6b6f7c", "#646875", "#5d616e"][Math.floor(v * 3)];
+      R(g, 0, 0, T, T, d); R(g, 0, 0, T, 1, "#7d8290"); R(g, 0, 0, 1, T, "#7d8290"); R(g, 0, T - 1, T, 1, "#474a55"); R(g, T - 1, 0, 1, T, "#474a55");
+      for (const [a, b] of [[2, 2], [13, 2], [2, 13], [13, 13]]) { R(g, a, b, 1, 1, "#9aa0ad"); R(g, a + 1, b + 1, 1, 1, "#3c3f49"); }
+      if (v > .62) for (let i = 0; i < 9; i++) { const h = hash(x * 7 + i, y * 3); R(g, 4 + h * 8, 4 + hash(i, x + y) * 8, 1 + (h > .5), 1, i % 2 ? "#8e4624" : "#a8582c"); }
+    },
+    route(g, x, y, bords) {
+      R(g, 0, 0, T, T, "#2f2b3b");
+      for (let i = 0; i < 6; i++) R(g, hash(x + i, y) * 15, hash(y + i, x) * 15, 1, 1, "#3a3548");
+      for (const s of bords) { // bande jaune et noire
+        for (let i = 0; i < T; i++) { const c = ((i + x * 16 + y * 16) >> 2) % 2 ? "#ffd23f" : "#1a1622";
+          if (s === 3) R(g, i, 0, 1, 2, c); if (s === 1) R(g, i, T - 2, 1, 2, c); if (s === 2) R(g, 0, i, 2, 1, c); if (s === 0) R(g, T - 2, i, 2, 1, c); }
+      }
+    },
+    tapis: { fond: "#3a3548", raie: "#ffd23f", bord: "#a3acb9" }, grille: "rgba(255,255,255,.06)", fondEcran: "#2a2530",
+    ennemi: "araignee", qg: P.brique, voile: "rgba(255,170,90,.08)"
+  },
+  mars: {
+    sol(g, x, y) {
+      const base = ["#c96f38", "#c2683a", "#cc7440"][Math.floor(hash(x, y) * 3)];
+      R(g, 0, 0, T, T, base);
+      for (let j = 0; j < T; j++) for (let i = 0; i < T; i++) { const h = hash(x * T + i, y * T + j); if (h > .9) R(g, i, j, 1, 1, "#e08a4c"); else if (h < .07) R(g, i, j, 1, 1, "#a8582c"); }
+      if (hash(y, x) > .9) blob(g, 6 + hash(x, 1) * 4, 7 + hash(1, y) * 3, 3, ["#d8c0aa", "#a08876", "#74604f", "#4a3a2e"]);
+    },
+    route(g, x, y, bords) {
+      R(g, 0, 0, T, T, "#9a4e28");
+      for (let j = 0; j < T; j++) for (let i = 0; i < T; i++) if (hash(x * T + i + 99, y * T + j) > .88) R(g, i, j, 1, 1, "#86421f");
+      for (const s of bords) { const c = "#b05a2c"; if (s === 3) R(g, 0, 0, T, 1, c); if (s === 1) R(g, 0, T - 1, T, 1, c); if (s === 2) R(g, 0, 0, 1, T, c); if (s === 0) R(g, T - 1, 0, 1, T, c); }
+    },
+    tapis: { fond: "#3a3548", raie: "#f08a28", bord: "#d6c8aa" }, grille: "rgba(60,20,0,.12)", fondEcran: "#7a3e1e",
+    ennemi: "scarabee", qg: P.acier, voile: "rgba(255,120,40,.06)"
+  },
+  nuit: {
+    sol(g, x, y) {
+      R(g, 0, 0, T, T, hash(x, y) > .5 ? "#1a2040" : "#182039");
+      R(g, 0, 0, T, 1, "#26305a"); R(g, 0, 0, 1, T, "#26305a");
+      if (hash(x, y) > .85) R(g, 7, 7, 2, 2, "#2e3a6e");
+    },
+    route(g, x, y, bords) {
+      R(g, 0, 0, T, T, "#24142e");
+      for (const s of bords) { const c = "#ff4fd8", c2 = "rgba(255,79,216,.35)";
+        if (s === 3) { R(g, 0, 0, T, 1, c); R(g, 0, 1, T, 1, c2); } if (s === 1) { R(g, 0, T - 1, T, 1, c); R(g, 0, T - 2, T, 1, c2); }
+        if (s === 2) { R(g, 0, 0, 1, T, c); R(g, 1, 0, 1, T, c2); } if (s === 0) { R(g, T - 1, 0, 1, T, c); R(g, T - 2, 0, 1, T, c2); } }
+    },
+    tapis: { fond: "#141a30", raie: "#5ff0ff", bord: "#3a4a8a" }, grille: "rgba(120,160,255,.05)", fondEcran: "#0e1226",
+    ennemi: "soucoupe", qg: P.violet, voile: null
+  }
+};
+
+// ------------------------------------------------------------ sprites (préparés une fois)
+function demiTapis(st, sortie, phase) { // la moitié d'un tapis qui va du centre vers le haut (sortie) ou du haut vers le centre (entrée)
+  const [c, g] = mk(T, T);
+  R(g, 2, 0, 12, 10, OUT); R(g, 3, 0, 10, 10, st.fond);
+  R(g, 3, 0, 1, 10, st.bord); R(g, 12, 0, 1, 10, "#00000066");
+  for (let y = 0; y < 10; y++) if (((y + (sortie ? phase : 4 - phase)) % 4) === 0) { R(g, 5, y, 6, 1, st.raie); R(g, 6, y + 1 > 9 ? y : y + 1, 4, 1, st.raie + "66"); }
+  return c;
+}
+function spriteEnnemi(type, gros, f) {
+  const n = gros ? 22 : 16, [c, g] = mk(n, n), m = n / 2, r = gros ? 6 : 4;
+  if (type === "araignee") {
+    const pa = f ? 1 : -1;
+    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { // pattes
+      const x1 = m + sx * (r + 3), y1 = m + sy * (r + 1) + pa * sx;
+      for (let t = 0; t <= 1; t += .2) R(g, m + (x1 - m) * t, m + (y1 - m) * t, 1, 1, OUT);
+      R(g, x1, y1, 1, 2, "#6f7888");
+    }
+    blob(g, m, m, r, P.acier); R(g, m - 1, m - 1, 2, 2, "#ff3b30"); R(g, m - 1, m - 1, 1, 1, "#ffd0c8");
+  } else if (type === "scarabee") {
+    const pa = f ? 1 : 0;
+    for (let k = -1; k <= 1; k++) { R(g, m - r - 3, m + k * 3 + pa, 3, 1, OUT); R(g, m + r + 1, m + k * 3 - pa + 1, 3, 1, OUT); }
+    blob(g, m, m + 1, r, gros ? P.violet : P.vert); R(g, m, m - r + 2, 1, r * 2 - 2, OUT);
+    blob(g, m, m - r, Math.max(2, r - 2), P.noir); R(g, m - 2, m - r - 1, 1, 1, "#fff2a8"); R(g, m + 1, m - r - 1, 1, 1, "#fff2a8");
+  } else {
+    blob(g, m, m, r + 2, gros ? P.violet : P.acier); blob(g, m - 1, m - 1, Math.max(2, r - 2), P.verre);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + (f ? .5 : 0); R(g, m + Math.cos(a) * (r + 1), m + Math.sin(a) * (r + 1), 1, 1, k % 2 ? "#ff4fd8" : "#5ff0ff"); }
+  }
+  return c;
+}
+function spriteTour(amb) {
+  const [c, g] = mk(T, T);
+  bloc(g, 1, 2, 14, 13, amb === "nuit" ? P.bleu : amb === "mars" ? P.acier : P.noir);
+  R(g, 3, 4, 10, 9, "#00000033"); blob(g, 8, 8, 4, P.acier);
+  return c;
+}
+function spriteMine(f) {
+  const [c, g] = mk(T, T);
+  bloc(g, 1, 1, 14, 14, P.rouille); R(g, 3, 3, 10, 10, "#2a1a10");
+  blob(g, 8, 8, 4, P.acier);
+  const a = f * Math.PI / 4; for (let k = 0; k < 4; k++) { const b = a + k * Math.PI / 2; R(g, 8 + Math.cos(b) * 3, 8 + Math.sin(b) * 3, 2, 2, "#ffd23f"); }
+  R(g, 7, 7, 2, 2, OUT);
+  return c;
+}
+function spriteArmurerie(actif) {
+  const [c, g] = mk(T, T + 8);
+  bloc(g, 1, 8, 14, 15, P.brique); // murs
+  for (let y = 10; y < 22; y += 3) R(g, 2, y, 12, 1, "#7e3a26");
+  bloc(g, 0, 3, 16, 7, P.noir); // toit
+  bloc(g, 11, 0, 3, 5, P.acier); // cheminée
+  R(g, 4, 13, 8, 5, OUT); R(g, 5, 14, 6, 3, actif ? "#ffd23f" : "#3a3548"); if (actif) R(g, 5, 14, 6, 1, "#fff6c2");
+  return c;
+}
+function spriteQG(ramp) {
+  const [c, g] = mk(T + 4, T + 12);
+  bloc(g, 1, 8, T + 2, T + 3, ramp); bloc(g, 3, 2, T - 2, 8, P.noir);
+  R(g, 7, 17, 6, 9, OUT); R(g, 8, 18, 4, 8, "#ffd23f"); R(g, 5, 4, 10, 2, "#5ff0ff");
+  return c;
+}
+function spriteMinerai() { const [c, g] = mk(8, 8); blob(g, 4, 4, 2, P.brique); return c; }
+function spriteMunition() { const [c, g] = mk(8, 8); R(g, 2, 1, 4, 6, OUT); R(g, 3, 2, 2, 4, "#e0a020"); R(g, 3, 2, 1, 4, "#fff6c2"); R(g, 3, 1, 2, 1, "#c06a3a"); return c; }
+
+// ------------------------------------------------------------ un téléphone
+const ENN = { a: { hp: 3, vit: .85, prime: 2 }, b: { hp: 2, vit: 1.45, prime: 2 }, c: { hp: 10, vit: .55, prime: 6, gros: true } };
+const vagueDe = n => { const l = []; for (let i = 0; i < 4 + n * 2; i++) l.push(n >= 3 && i % 5 === 4 ? "c" : n >= 2 && i % 3 === 2 ? "b" : "a"); return l; };
+const PRIX = 10, W = 10, H = 13;
+const ROUTE_PTS = [[9, -2], [9, 1], [1, 1], [1, 4], [8, 4], [8, 7], [0, 7]];
+
+class Tel {
+  constructor(id, amb) {
+    this.el = document.getElementById(id); this.ambNom = amb; this.amb = AMB[amb];
+    const [c, g] = mk(VW, VH); this.cv = c; this.g = g; this.el.appendChild(c);
+    // sprites
+    const st = this.amb.tapis;
+    this.demis = { e: [0, 1, 2, 3].map(p => demiTapis(st, false, p)), s: [0, 1, 2, 3].map(p => demiTapis(st, true, p)) };
+    this.spE = {}; for (const t of ["a", "b", "c"]) this.spE[t] = [0, 1].map(f => spriteEnnemi(this.amb.ennemi, t === "c", f));
+    this.spTour = spriteTour(amb); this.spMine = [0, 1].map(spriteMine); this.spArm = [spriteArmurerie(false), spriteArmurerie(true)];
+    this.spQG = spriteQG(this.amb.qg); this.spMin = spriteMinerai(); this.spMun = spriteMunition();
+    // route
+    this.route = []; for (let i = 0; i < ROUTE_PTS.length - 1; i++) { const [x0, y0] = ROUTE_PTS[i], [x1, y1] = ROUTE_PTS[i + 1], dx = Math.sign(x1 - x0), dy = Math.sign(y1 - y0); for (let x = x0, y = y0; x !== x1 || y !== y1; x += dx, y += dy) this.route.push([x, y]); }
+    this.route.push(ROUTE_PTS[ROUTE_PTS.length - 1]); this.chemin = new Set(this.route.map(([x, y]) => K(x, y)));
+    this.fond();
+    this.hud(); this.raz(); this.entrees();
+    this.t = 0; this.p = 0;
+  }
+  fond() { // sol et route, une fois
+    const [c, g] = mk(VW, VH); this.fondImg = c; const a = this.amb;
+    R(g, 0, 0, VW, VH, a.fondEcran);
+    const [tc, tg] = mk(T, T);
+    for (let y = -4; y < 20; y++) for (let x = -1; x <= W; x++) {
+      tg.clearRect(0, 0, T, T);
+      if (this.chemin.has(K(x, y))) { const b = []; for (let s = 0; s < 4; s++) if (!this.chemin.has(K(x + DX[s], y + DY[s]))) b.push(s); a.route(tg, x, y, b); }
+      else a.sol(tg, x, y);
+      g.drawImage(tc, OX + x * T, OY + y * T);
+    }
+    if (a.grille) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (!this.chemin.has(K(x, y))) { g.fillStyle = a.grille; g.fillRect(OX + x * T, OY + y * T, T, 1); g.fillRect(OX + x * T, OY + y * T, 1, T); }
+  }
+  raz() {
+    this.cells = new Map(); this.items = []; this.ennemis = []; this.balles = []; this.effets = []; this.fumees = [];
+    this.s = { vague: 1, vies: 10, fer: 25, file: [], minu: 0, pause: 4, enVague: false, fini: false, outil: this.s ? this.s.outil : "tapis" };
+    const P_ = (x, y, c) => { c.x = x; c.y = y; this.cells.set(K(x, y), c); };
+    P_(0, 11, { t: "mine", d: 0, per: 3, fixe: true }); P_(1, 11, { t: "tapis", d: 0 }); P_(2, 11, { t: "tapis", d: 0 });
+    P_(3, 11, { t: "mach", d: 3, buf: 0, res: 0, busy: 0, temps: 2, fixe: true }); P_(3, 10, { t: "tapis", d: 3 }); P_(3, 9, { t: "tapis", d: 3 });
+    P_(3, 8, this.tour(4)); P_(8, 12, { t: "mine", d: 3, per: 3, fixe: true });
+    this.affiche(); this.el.querySelector(".fin")?.remove();
+  }
+  tour(stock = 0) { return { t: "tour", stock, res: 0, max: 6, cd: 0, rot: -Math.PI / 2 }; }
+  cell(x, y) { return this.cells.get(K(x, y)); }
+  dedans(x, y) { return x >= 0 && y >= 0 && x < W && y < H; }
+  libre(x, y) { return this.dedans(x, y) && !this.cell(x, y) && !this.chemin.has(K(x, y)); }
+
+  // --- simulation de l'usine (pas de 0,36 s)
+  sortie(i) { const c = this.cell(i.x, i.y); return c && c.t === "tapis" ? c.d : -1; }
+  accepte(c, k, d) {
+    if (!c) return false;
+    if (c.t === "tapis") return d !== (c.d + 2) % 4;
+    if (c.t === "mach") return d !== (c.d + 2) % 4 && k === "minerai" && c.buf + c.res < 2;
+    if (c.t === "tour") return k === "munition" && c.stock + c.res < c.max;
+    return false;
+  }
+  pas() {
+    this.items = this.items.filter(i => {
+      if (!i.abs) return true; const c = this.cell(i.x, i.y);
+      if (c && c.t === "mach") { c.res--; c.buf++; } else if (c && c.t === "tour") { c.res--; c.stock++; }
+      return false;
+    });
+    for (const i of this.items) { i.fx = i.x; i.fy = i.y; }
+    const occ = new Map(this.items.map(i => [K(i.x, i.y), i])), nouv = new Map(), und = new Set(this.items);
+    const reste = i => { und.delete(i); nouv.set(K(i.x, i.y), i); };
+    let prog = true;
+    while (und.size && prog) {
+      prog = false;
+      for (const i of [...und]) {
+        const d = this.sortie(i); if (d < 0) { reste(i); prog = true; continue; }
+        const tx = i.x + DX[d], ty = i.y + DY[d], c = this.cell(tx, ty), k = K(tx, ty);
+        if (!this.accepte(c, i.k, d)) { reste(i); prog = true; continue; }
+        if (c.t !== "tapis") { c.res++; i.x = tx; i.y = ty; i.abs = true; und.delete(i); prog = true; continue; }
+        if (nouv.has(k)) { reste(i); prog = true; continue; }
+        const o = occ.get(k); if (o && o !== i && und.has(o)) continue;
+        i.x = tx; i.y = ty; nouv.set(k, i); und.delete(i); prog = true;
+      }
+    }
+    for (const i of und) reste(i);
+    const sortir = (c, k) => {
+      const x = c.x + DX[c.d], y = c.y + DY[c.d], n = this.cell(x, y);
+      if (!n || n.t !== "tapis" || !this.accepte(n, k, c.d) || nouv.has(K(x, y))) return false;
+      const i = { k, x, y, fx: c.x, fy: c.y }; this.items.push(i); nouv.set(K(x, y), i); return true;
+    };
+    for (const c of this.cells.values()) {
+      if (c.t === "mine") { c.n = (c.n || 0) + 1; if (c.n >= c.per && sortir(c, "minerai")) c.n = 0; }
+      else if (c.t === "mach") {
+        if (c.busy > 0) { c.busy--; if (!c.busy) c.pret = true; }
+        if (c.pret && sortir(c, "munition")) c.pret = false;
+        if (!c.busy && !c.pret && c.buf > 0) { c.buf--; c.busy = c.temps; }
+      }
+    }
+  }
+  // --- combat (temps réel)
+  combat(dt) {
+    const S = this.s; if (S.fini) return;
+    if (S.enVague) {
+      if (S.file.length) { S.minu -= dt; if (S.minu <= 0) { S.minu = 1.15; this.nouvelEnnemi(S.file.shift()); } }
+      else if (!this.ennemis.length) { S.enVague = false; S.vague++; S.pause = 6; }
+    } else if (S.pause != null) { S.pause -= dt; if (S.pause <= 0) { S.pause = null; S.file = vagueDe(S.vague); S.minu = .3; S.enVague = true; } }
+    for (const e of [...this.ennemis]) {
+      e.s += e.vit * dt; const R_ = this.route, i = Math.floor(e.s);
+      if (i >= R_.length - 1) { this.ennemis.splice(this.ennemis.indexOf(e), 1); S.vies--; this.rouge = 1; this.boum(OX + 8, OY + 7 * T + 8, "#ff4f4f", 10); if (S.vies <= 0) this.perdu(); continue; }
+      const f = e.s - i; e.x = R_[i][0] + (R_[i + 1][0] - R_[i][0]) * f; e.y = R_[i][1] + (R_[i + 1][1] - R_[i][1]) * f;
+      e.flash = Math.max(0, (e.flash || 0) - dt * 6);
+    }
+    for (const c of this.cells.values()) {
+      if (c.t !== "tour") continue; c.cd -= dt;
+      let cible = null, best = 2.7;
+      for (const e of this.ennemis) { const d = Math.hypot(e.x - c.x, e.y - c.y); if (d < best) { best = d; cible = e; } }
+      if (!cible) continue;
+      const vise = Math.atan2(cible.y - c.y, cible.x - c.x); let da = Math.atan2(Math.sin(vise - c.rot), Math.cos(vise - c.rot));
+      c.rot += da * Math.min(1, dt * 12);
+      if (c.cd <= 0 && c.stock > 0 && Math.abs(da) < .4) {
+        c.stock--; c.cd = .55; c.recul = 1;
+        this.balles.push({ x: c.x + Math.cos(vise) * .45, y: c.y + Math.sin(vise) * .45, cible });
+        this.boum(OX + c.x * T + 8 + Math.cos(vise) * 8, OY + c.y * T + 8 + Math.sin(vise) * 8, "#fff6c2", 2);
+      }
+    }
+    for (const b of [...this.balles]) {
+      const e = b.cible, dx = e.x - b.x, dy = e.y - b.y, l = Math.hypot(dx, dy);
+      if (!this.ennemis.includes(e) || l < .15) {
+        this.balles.splice(this.balles.indexOf(b), 1);
+        if (this.ennemis.includes(e)) {
+          e.hp--; e.flash = 1;
+          if (e.hp <= 0) { this.ennemis.splice(this.ennemis.indexOf(e), 1); S.fer += e.prime; this.boum(OX + e.x * T + 8, OY + e.y * T + 8, "#ffd23f", e.gros ? 12 : 8, true); }
+        }
+        continue;
+      }
+      b.x += dx / l * Math.min(l, 10 * dt); b.y += dy / l * Math.min(l, 10 * dt);
+    }
+  }
+  nouvelEnnemi(type) {
+    const E = ENN[type], hp = Math.round(E.hp * (1 + .18 * (this.s.vague - 1)));
+    this.ennemis.push({ type, hp, max: hp, vit: E.vit, prime: E.prime, gros: !!E.gros, s: 0, x: 9, y: -2, ph: Math.random() * 6 });
+  }
+  boum(x, y, c, r, debris) {
+    this.effets.push({ x, y, c, r, v: 0 });
+    if (debris) for (let k = 0; k < 8; k++) { const a = Math.random() * 6.3; this.effets.push({ x, y, c: k % 2 ? "#6f7888" : c, vx: Math.cos(a) * 40, vy: Math.sin(a) * 40, v: 0, eclat: true }); }
+  }
+  perdu() {
+    this.s.fini = true;
+    const f = document.createElement("div"); f.className = "fin";
+    f.innerHTML = `<h3>USINE ENVAHIE</h3><p>Tu as tenu ${this.s.vague - 1} vague${this.s.vague > 2 ? "s" : ""}.</p><button type="button">REJOUER</button>`;
+    f.querySelector("button").onclick = () => this.raz(); this.el.appendChild(f);
+  }
+
+  // --- dessin
+  entree(c) { // côté par lequel arrivent les objets sur ce tapis (pour dessiner les virages)
+    const fournit = s => { const n = this.cell(c.x + DX[s], c.y + DY[s]); return n && ((n.t === "tapis" || n.t === "mine" || n.t === "mach") && n.d === (s + 2) % 4); };
+    const dos = (c.d + 2) % 4; if (fournit(dos)) return dos;
+    for (let s = 0; s < 4; s++) if (s !== c.d && fournit(s)) return s;
+    return dos;
+  }
+  demi(img, x, y, s) { const g = this.g; g.save(); g.translate(x + 8, y + 8); g.rotate([Math.PI / 2, Math.PI, -Math.PI / 2, 0][s]); g.drawImage(img, -8, -8); g.restore(); }
+  dessiner() {
+    const g = this.g, ph = Math.floor(this.t * 44) % 4, t = this.t;
+    g.drawImage(this.fondImg, 0, 0);
+    // tapis
+    for (const c of this.cells.values()) if (c.t === "tapis") { const x = OX + c.x * T, y = OY + c.y * T; this.demi(this.demis.e[ph], x, y, this.entree(c)); this.demi(this.demis.s[ph], x, y, c.d); }
+    // objets sur les tapis
+    const p = this.p, e = p * p * (3 - 2 * p);
+    for (const i of this.items) {
+      const x = OX + (i.fx + (i.x - i.fx) * e) * T + 4, y = OY + (i.fy + (i.y - i.fy) * e) * T + 4;
+      if (i.abs && p > .6) continue; g.drawImage(i.k === "minerai" ? this.spMin : this.spMun, Math.round(x), Math.round(y));
+    }
+    // bâtiments (du haut vers le bas pour les superpositions)
+    const bat = [...this.cells.values()].filter(c => c.t !== "tapis").sort((a, b) => a.y - b.y);
+    for (const c of bat) {
+      const x = OX + c.x * T, y = OY + c.y * T;
+      if (c.t === "mine") { g.drawImage(this.spMine[Math.floor(t * 6) % 2], x, y); this.fleche(x, y, c.d); }
+      else if (c.t === "mach") { g.drawImage(this.spArm[c.busy ? 1 : 0], x, y - 8); this.fleche(x, y, c.d); if (c.busy && Math.random() < .08) this.fumees.push({ x: x + 12, y: y - 8, v: 0 }); }
+      else if (c.t === "tour") {
+        g.drawImage(this.spTour, x, y);
+        const cx = x + 8, cy = y + 8, r = c.recul ? 1 : 0, ca = Math.cos(c.rot), sa = Math.sin(c.rot);
+        for (let k = 0; k <= 7 - r; k++) R(g, cx + ca * k - 1.5, cy + sa * k - 1.5, 3, 3, OUT);
+        for (let k = 0; k <= 6 - r; k++) R(g, cx + ca * k - 1, cy + sa * k - 1, 2, 2, k > 4 - r ? "#dfe4ea" : "#6f7888");
+        blob(g, cx, cy, 3, this.ambNom === "nuit" ? P.verre : P.or);
+        for (let k = 0; k < c.max; k++) R(g, x + 2 + k * 2 + (k > 2 ? 1 : 0), y + 13, 1, 2, k < c.stock ? "#ffd23f" : "#120c16");
+        c.recul = Math.max(0, (c.recul || 0) - .2);
+      }
+    }
+    // QG au bout de la route
+    g.drawImage(this.spQG, OX - 2, OY + 7 * T - 12);
+    // ennemis
+    for (const en of this.ennemis) {
+      const sp = this.spE[en.type][Math.floor(t * 6 + en.ph) % 2], n = sp.width;
+      const x = Math.round(OX + en.x * T + 8 - n / 2), y = Math.round(OY + en.y * T + 8 - n / 2 + (this.amb.ennemi === "soucoupe" ? Math.sin(t * 4 + en.ph) * 1.5 : 0));
+      R(g, x + 3, y + n - 3, n - 6, 2, "rgba(0,0,0,.3)");
+      g.drawImage(sp, x, y);
+      if (en.flash > .5) { g.globalCompositeOperation = "lighter"; g.drawImage(sp, x, y); g.globalCompositeOperation = "source-over"; }
+      R(g, x + 2, y - 3, n - 4, 2, OUT); R(g, x + 2, y - 3, Math.max(1, (n - 4) * en.hp / en.max), 2, "#ff4f4f");
+    }
+    // balles
+    for (const b of this.balles) { const x = OX + b.x * T + 8, y = OY + b.y * T + 8; R(g, x - 1, y - 1, 3, 3, OUT); R(g, x - 1, y - 1, 2, 2, "#fff6c2"); }
+    // fumée et effets
+    for (const f of [...this.fumees]) { f.v += 1 / 60; f.y -= .25; f.x += .1; R(g, f.x, f.y, 2 + f.v * 3, 2 + f.v * 3, `rgba(200,200,210,${.5 - f.v * .5})`); if (f.v >= 1) this.fumees.splice(this.fumees.indexOf(f), 1); }
+    for (const f of [...this.effets]) {
+      f.v += 1 / 20;
+      if (f.eclat) { f.x += f.vx / 60; f.y += f.vy / 60; R(g, f.x, f.y, 2, 2, f.c); }
+      else { const r = f.r * (.4 + f.v); for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283; R(g, f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, 1, 1, f.c); } if (f.v < .3) blob(g, f.x, f.y, Math.max(1, Math.round(f.r * .4)), P.or, false); }
+      if (f.v >= 1) this.effets.splice(this.effets.indexOf(f), 1);
+    }
+    if (this.amb.voile) { g.fillStyle = this.amb.voile; g.fillRect(0, 0, VW, VH); }
+    if (this.rouge > 0) { g.fillStyle = `rgba(255,40,40,${this.rouge * .35})`; g.fillRect(0, 0, VW, VH); this.rouge = Math.max(0, this.rouge - .04); }
+  }
+  fleche(x, y, d) { // petite flèche jaune vers la sortie
+    const cx = x + 8 + DX[d] * 7, cy = y + 8 + DY[d] * 7;
+    R(g_(this), cx - 1, cy - 1, 2, 2, "#ffd23f");
+  }
+
+  // --- interface
+  hud() {
+    const h = document.createElement("div"); h.className = "hud"; this.el.appendChild(h); this.h = h;
+    h.innerHTML = `<div class="haut"><div class="ligne"><span class="val">VAGUE <b class="vg">1</b></span><span class="val vies">♥ <b class="vi">10</b></span><span class="val fer">FER <b class="fe">25</b></span></div><div class="ligne"><span class="etiq etat"></span></div></div>
+      <div class="bas"><div class="outils"><button type="button" class="actif" data-o="tapis">TAPIS</button><button type="button" data-o="tour">TOUR<small>${PRIX} FER</small></button><button type="button" data-o="gomme">GOMME</button></div></div>`;
+    h.querySelectorAll("[data-o]").forEach(b => b.onclick = () => { this.s.outil = b.dataset.o; h.querySelectorAll("[data-o]").forEach(x => x.classList.toggle("actif", x === b)); });
+  }
+  affiche() {
+    const S = this.s, q = s => this.h.querySelector(s);
+    q(".vg").textContent = S.vague; q(".vi").textContent = Math.max(0, S.vies); q(".fe").textContent = S.fer;
+    q(".etat").textContent = S.enVague ? `${S.file.length + this.ennemis.length} ENNEMIS EN APPROCHE` : S.pause != null ? "PROCHAINE VAGUE DANS " + Math.ceil(S.pause) + " S" : "";
+  }
+  caseSous(ev) { const b = this.cv.getBoundingClientRect(), px = (ev.clientX - b.left) / b.width * VW, py = (ev.clientY - b.top) / b.height * VH; const x = Math.floor((px - OX) / T), y = Math.floor((py - OY) / T); return this.dedans(x, y) ? { x, y } : null; }
+  entrees() {
+    let tr = null;
+    this.cv.addEventListener("pointerdown", ev => { const c = this.caseSous(ev); if (!c || this.s.fini) return; this.cv.setPointerCapture(ev.pointerId); tr = { der: c, bouge: false }; if (this.s.outil === "gomme") this.gommer(c); });
+    this.cv.addEventListener("pointermove", ev => {
+      if (!tr) return; const c = this.caseSous(ev); if (!c || (c.x === tr.der.x && c.y === tr.der.y)) return;
+      if (Math.abs(c.x - tr.der.x) + Math.abs(c.y - tr.der.y) === 1) {
+        const d = DX.findIndex((v, i) => v === c.x - tr.der.x && DY[i] === c.y - tr.der.y);
+        if (this.s.outil === "tapis") this.tracer(tr.der, c, d); else if (this.s.outil === "gomme") this.gommer(c);
+      }
+      tr.der = c; tr.bouge = true;
+    });
+    this.cv.addEventListener("pointerup", () => {
+      if (!tr) return; const c = tr.der, x = this.cell(c.x, c.y);
+      if (!tr.bouge) {
+        if (this.s.outil === "tapis" && x && x.t === "tapis") x.d = (x.d + 1) % 4;
+        if (this.s.outil === "tour" && this.libre(c.x, c.y) && this.s.fer >= PRIX) { this.s.fer -= PRIX; const n = this.tour(); n.x = c.x; n.y = c.y; this.cells.set(K(c.x, c.y), n); }
+      }
+      tr = null;
+    });
+    this.cv.addEventListener("pointercancel", () => { tr = null; });
+  }
+  tracer(a, b, d) {
+    const ca = this.cell(a.x, a.y), cb = this.cell(b.x, b.y);
+    if (ca && ca.t === "tapis") ca.d = d; else if (!ca && this.libre(a.x, a.y)) this.cells.set(K(a.x, a.y), { t: "tapis", d, x: a.x, y: a.y });
+    if (!cb && this.libre(b.x, b.y)) this.cells.set(K(b.x, b.y), { t: "tapis", d, x: b.x, y: b.y });
+    else if (cb && cb.t === "tapis" && cb.d === (d + 2) % 4) cb.d = d;
+  }
+  gommer(c) {
+    const x = this.cell(c.x, c.y); if (!x || x.fixe) return;
+    this.cells.delete(K(c.x, c.y)); if (x.t === "tour") this.s.fer += PRIX / 2;
+  }
+  maj(dt) {
+    this.t += dt;
+    if (!this.s.fini) { this.p += dt / .36; while (this.p >= 1) { this.p -= 1; this.pas(); } }
+    this.combat(dt);
+    if (Math.floor(this.t * 4) !== this.dern) { this.dern = Math.floor(this.t * 4); this.affiche(); }
+    if (this.visible !== false) this.dessiner();
+  }
+}
+function g_(tel) { return tel.g; }
+
+const TELS = [new Tel("telA", "rouille"), new Tel("telB", "mars"), new Tel("telC", "nuit")];
+TELS.forEach(t => new IntersectionObserver(e => { t.visible = e[0].isIntersecting; }).observe(t.el));
+let av = performance.now();
+function boucle(now) { const dt = Math.min(.05, (now - av) / 1000); av = now; TELS.forEach(t => t.maj(dt)); requestAnimationFrame(boucle); }
+requestAnimationFrame(boucle);
+</script>
