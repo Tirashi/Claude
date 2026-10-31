@@ -1,0 +1,522 @@
+<title>La petite usine</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Press+Start+2P&display=swap">
+<style>
+/* Mise en page : trois téléphones côte à côte (empilés sur un téléphone), chacun avec sa légende dessous. */
+:root{
+  --fond:#17161f; --plaque:#232233; --trait:#3a3852; --texte:#ecebf5; --doux:#a9a7c2;
+  --orange:#f5a54a; --bleu:#7b87e0; --vert:#5fc79a; --rouge:#e8655a;
+  --titre:"Press Start 2P", ui-monospace, monospace;
+  --corps:"Chakra Petch", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--corps);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+header{max-width:1120px;margin:0 auto 24px;display:grid;gap:10px}
+h1{font-family:var(--titre);font-size:20px;line-height:1.4;margin:0;color:var(--orange);text-wrap:balance}
+header p{margin:0;color:var(--doux);max-width:65ch}
+.tels{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+.bloc{width:340px;max-width:100%;display:grid;gap:12px;align-content:start}
+.bloc h2{font-family:var(--titre);font-size:12px;line-height:1.6;margin:0;letter-spacing:.04em}
+.bloc h2 b{color:var(--orange)}
+.bloc p{margin:0;color:var(--doux)}
+.bloc ul{margin:0;padding-left:18px;color:var(--doux)}
+.tel{position:relative;width:340px;max-width:100%;aspect-ratio:340/660;border-radius:26px;overflow:hidden;border:6px solid #0c0b12;box-shadow:0 0 0 1px var(--trait),0 18px 40px #0008;background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between}
+.haut,.bas{pointer-events:auto;padding:10px 10px;display:grid;gap:6px}
+.haut{background:linear-gradient(#0c0b16ee,#0c0b1600)}
+.bas{background:linear-gradient(#0c0b1600,#0c0b16ee)}
+.ligne{display:flex;gap:6px;align-items:center;justify-content:space-between}
+.etiq{font-family:var(--titre);font-size:9px;letter-spacing:.06em;color:var(--doux)}
+.val{font-family:var(--titre);font-size:11px;color:var(--texte);font-variant-numeric:tabular-nums}
+.barre{height:8px;border-radius:4px;background:#ffffff1c;overflow:hidden}
+.barre i{display:block;height:100%;width:0;background:var(--orange);transition:width .3s}
+.outils{display:flex;gap:6px}
+.outils button,.fin button{flex:1;font-family:var(--titre);font-size:9px;line-height:1.3;padding:11px 4px;border-radius:10px;border:2px solid var(--trait);background:var(--plaque);color:var(--texte);cursor:pointer}
+.outils button.actif{border-color:var(--orange);color:var(--orange)}
+.outils button.go{background:var(--orange);color:#1b1206;border-color:var(--orange)}
+.outils button:disabled{opacity:.35}
+.outils button small{display:block;font-size:8px;margin-top:4px;color:inherit;opacity:.8}
+button:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+.astuce{font-size:13px;color:var(--texte);background:#0c0b16cc;border-radius:8px;padding:6px 9px;justify-self:start}
+.fin{position:absolute;inset:0;display:grid;place-content:center;gap:14px;text-align:center;background:#0c0b16d9;pointer-events:auto;padding:24px}
+.fin h3{font-family:var(--titre);font-size:15px;line-height:1.5;margin:0;color:var(--orange)}
+.fin p{margin:0;color:var(--texte)}
+.fin .etoiles{font-size:30px;letter-spacing:6px;color:var(--orange)}
+.charge{position:absolute;inset:0;display:grid;place-content:center;font-family:var(--titre);font-size:10px;color:var(--doux)}
+footer{max-width:1120px;margin:36px auto 0;color:var(--doux);font-size:13px}
+footer a{color:var(--bleu)}
+@media (prefers-reduced-motion:reduce){.barre i{transition:none}}
+</style>
+
+<header>
+  <h1>LA PETITE USINE</h1>
+  <p>Maquette : trois façons de faire des puzzles d'usine avec les vrais modèles 3D du Factory Kit. Les trois téléphones sont jouables. Le minerai sort de la mine, passe dans les machines et part dans l'entonnoir de livraison.</p>
+</header>
+
+<main class="tels">
+  <section class="bloc">
+    <div class="tel" id="telA"><div class="charge">CHARGEMENT...</div></div>
+    <h2><b>A</b> TRACER LA CHAINE</h2>
+    <p>Temps réel. On glisse le doigt pour tracer les tapis, l'usine tourne tout de suite. Une commande à remplir, des étoiles au chrono. Vue 3/4 en plein jour.</p>
+    <ul><li>Toucher un tapis le fait tourner.</li><li>La fonderie fait des plaques, la tailleuse des engrenages.</li></ul>
+  </section>
+  <section class="bloc">
+    <div class="tel" id="telB"><div class="charge">CHARGEMENT...</div></div>
+    <h2><b>B</b> PIECES COMPTEES</h2>
+    <p>On pose un nombre limité de tapis et un croisement, puis on lance. Les étoiles récompensent l'usine qui utilise le moins de pièces. Vue de dessus, couleurs « variation » du pack.</p>
+    <ul><li>Le fer et le cuivre doivent se croiser.</li><li>Bouton SOLUTION pour voir une usine qui marche.</li></ul>
+  </section>
+  <section class="bloc">
+    <div class="tel" id="telC"><div class="charge">CHARGEMENT...</div></div>
+    <h2><b>C</b> AIGUILLAGES</h2>
+    <p>L'usine est déjà construite. On touche les aiguillages pour envoyer chaque caisse vers l'entonnoir de sa couleur, de plus en plus vite. Trois erreurs et l'atelier ferme. Atelier du soir.</p>
+    <ul><li>Les flèches montrent où part la caisse.</li></ul>
+  </section>
+</main>
+
+<footer>Modèles : <a href="https://kenney.nl/assets/factory-kit">Factory Kit</a> de Kenney (CC0). Rendu Three.js r128.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+const MOD = __MODELES__;
+const TEX = { a: '__TEX_A__', b: '__TEX_B__' };
+const DX = [1, 0, -1, 0], DZ = [0, 1, 0, -1];
+const K = (x, z) => x + ',' + z;
+const TEINTES = {
+  minerai: 0x8a6e62, fer: 0x9aa1b8, cuivre: 0xd9844a, plaque: 0xdfe5f5, engrenage: 0xffd27a, bobine: 0xe58c4d,
+  orange: 0xffa64d, bleu: 0x6f86ff, vert: 0x4fd18f
+};
+
+function tampon(b64) { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; }
+function charger(tex) {
+  const man = new THREE.LoadingManager();
+  man.setURLModifier(u => /colormap/.test(u) ? tex : u);
+  const L = new THREE.GLTFLoader(man), out = {};
+  return Promise.all(Object.keys(MOD).map(n => new Promise((ok, ko) => {
+    L.parse(tampon(MOD[n]), '', g => {
+      g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      out[n] = g.scene; ok();
+    }, ko);
+  }))).then(() => out);
+}
+function teinter(o, c) {
+  o.traverse(m => { if (m.isMesh) { m.material = m.material.clone(); m.material.color = new THREE.Color(c); } });
+  return o;
+}
+function angle(d) { return Math.atan2(DX[d], DZ[d]); }
+
+// ---------------------------------------------------------------- un téléphone
+class Tel {
+  constructor(id, cfg, mods) {
+    this.el = document.getElementById(id); this.cfg = cfg; this.m = mods;
+    this.el.querySelector('.charge')?.remove();
+    const cv = document.createElement('canvas'); this.el.appendChild(cv); this.cv = cv;
+    const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    r.outputEncoding = THREE.sRGBEncoding; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.sc = new THREE.Scene(); this.sc.background = new THREE.Color(cfg.ciel);
+    this.W = cfg.W; this.H = cfg.H;
+    this.cells = new Map(); this.items = []; this.p = 0; this.ticks = 0;
+    this.gCases = new THREE.Group(); this.gItems = new THREE.Group(); this.gDecor = new THREE.Group();
+    this.sc.add(this.gCases, this.gItems, this.gDecor);
+    this.lumieres();
+    this.camera();
+    this.sol();
+    cfg.init(this);
+    this.hud = document.createElement('div'); this.hud.className = 'hud'; this.el.appendChild(this.hud);
+    cfg.hud(this);
+    this.dessiner();
+    this.entrees();
+    this.taille();
+    new ResizeObserver(() => this.taille()).observe(this.el);
+    this.visible = true;
+    new IntersectionObserver(e => { this.visible = e[0].isIntersecting; }).observe(this.el);
+  }
+  lumieres() {
+    const c = this.cfg;
+    this.sc.add(new THREE.HemisphereLight(c.hemi[0], c.hemi[1], c.hemi[2]));
+    const d = new THREE.DirectionalLight(c.soleil[0], c.soleil[1]);
+    d.position.set(c.W / 2 - 4, 10, c.H / 2 + 3); d.target.position.set(c.W / 2, 0, c.H / 2);
+    d.castShadow = true; d.shadow.mapSize.set(1024, 1024);
+    const s = d.shadow.camera; s.left = -9; s.right = 9; s.top = 9; s.bottom = -9; s.near = 1; s.far = 30; d.shadow.bias = -0.0015;
+    this.sc.add(d, d.target);
+  }
+  camera() {
+    const c = this.cfg.cam, cx = (this.W - 1) / 2, cz = (this.H - 1) / 2 + (c.dz || 0);
+    this.cam = c.ortho ? new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 300) : new THREE.PerspectiveCamera(c.fov, 0.5, 0.1, 100);
+    this.cam.position.set(cx + c.pos[0], c.pos[1], cz + c.pos[2]);
+    this.cam.lookAt(cx, 0, cz);
+  }
+  taille() {
+    const w = this.el.clientWidth, h = this.el.clientHeight; if (!w) return;
+    this.r.setSize(w, h, false);
+    const c = this.cfg.cam;
+    if (c.ortho) { const hh = c.demi, ww = hh * w / h; Object.assign(this.cam, { left: -ww, right: ww, top: hh, bottom: -hh }); }
+    else this.cam.aspect = w / h;
+    this.cam.updateProjectionMatrix();
+  }
+  modele(n, x, z, rot = 0, ech = 1, y = 0, g = this.gDecor) {
+    const o = this.m[n].clone(true); o.position.set(x, y, z); o.rotation.y = rot; o.scale.setScalar(ech); g.add(o); return o;
+  }
+  sol() {
+    for (let x = 0; x < this.W; x++) for (let z = 0; z < this.H; z++) this.modele('floor', x, z, 0, 1, 0.001);
+    const g = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: new THREE.Color(this.cfg.sol).convertSRGBToLinear() }));
+    g.rotation.x = -Math.PI / 2; g.position.set(this.W / 2, -0.01, this.H / 2); g.receiveShadow = true; this.sc.add(g);
+  }
+  cell(x, z) { return this.cells.get(K(x, z)); }
+  poser(x, z, c) { if (c) { c.x = x; c.z = z; this.cells.set(K(x, z), c); } else this.cells.delete(K(x, z)); }
+  dedans(x, z) { return x >= 0 && z >= 0 && x < this.W && z < this.H; }
+
+  // --- visuels des cases (refaits à chaque changement : la grille est petite)
+  entree(x, z, s) { // la case voisine du côté s envoie-t-elle vers (x,z) ?
+    const n = this.cell(x + DX[s], z + DZ[s]); if (!n) return false; const vers = (s + 2) % 4;
+    if (n.t === 'tapis') return n.d === vers;
+    if (n.t === 'aig') return n.outs[n.sel] === vers;
+    if (n.t === 'mine' || n.t === 'mach') return n.d === vers;
+    return false;
+  }
+  tapis(cotes, d, g) { // cotes : côté d'entrée ou -1 ; d : sortie
+    if (cotes < 0 || cotes === (d + 2) % 4) return this.modele('conveyor-stripe', 0, 0, angle(d), 1, 0, g);
+    for (let k = 0; k < 4; k++) { // le virage relie les côtés 3 et 0 sans rotation
+      const a = (3 - k + 4) % 4, b = (4 - k) % 4;
+      if ((a === cotes && b === d) || (b === cotes && a === d)) return this.modele('conveyor-stripe-corner', 0, 0, k * Math.PI / 2, 1, 0, g);
+    }
+  }
+  dessiner() {
+    this.gCases.clear();
+    for (const c of this.cells.values()) {
+      const g = new THREE.Group(); g.position.set(c.x, 0, c.z); this.gCases.add(g); c.g = g;
+      if (c.t === 'tapis') {
+        let e = -1; if (this.entree(c.x, c.z, (c.d + 2) % 4)) e = (c.d + 2) % 4;
+        else for (let s = 0; s < 4; s++) if (s !== c.d && this.entree(c.x, c.z, s)) { e = s; break; }
+        this.tapis(e, c.d, g);
+      } else if (c.t === 'croix') this.modele('conveyor-stripe-cross', 0, 0, 0, 1, 0, g);
+      else if (c.t === 'aig') {
+        this.tapis((c.d + 2) % 4, c.outs[c.sel], g);
+        const f = new THREE.Mesh(FLECHE, new THREE.MeshStandardMaterial({ color: 0xffb14d, emissive: 0xff8a1f, emissiveIntensity: .8 }));
+        f.rotation.y = angle(c.outs[c.sel]); f.position.y = 0.95; g.add(f); c.fleche = f;
+        const a = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.035, 6, 28), new THREE.MeshBasicMaterial({ color: 0xffb14d }));
+        a.rotation.x = Math.PI / 2; a.position.y = 0.43; g.add(a); c.anneau = a;
+      } else if (c.t === 'mine') {
+        this.modele('machine-fortified', 0, 0, angle(c.d), 0.62, 0, g);
+        const k = Array.isArray(c.k) ? c.k : [c.k];
+        k.forEach((n, i) => { const m = this.objet(n); m.position.set((i - (k.length - 1) / 2) * 0.28, 0.9, 0); g.add(m); });
+      } else if (c.t === 'mach') { c.o = this.modele(c.modele || 'machine', 0, 0, angle(c.d), 0.62, 0, g); }
+      else if (c.t === 'sortie') {
+        this.modele('hopper-square', 0, 0, 0, 0.82, 0, g);
+        if (c.couleur) { const m = this.modele('indicator-special-area', 0, 0, 0, 1.1, 0.012, g); teinter(m, TEINTES[c.couleur]); }
+      } else if (c.t === 'caisses') {
+        this.modele('box-small', -0.15, -0.1, 0.3, 0.9, 0, g); this.modele('box-small', 0.2, 0.15, -0.2, 0.9, 0, g); this.modele('box-small', 0, 0, 0.1, 0.8, 0.5, g);
+      }
+    }
+  }
+  objet(k) {
+    let o;
+    if (k === 'minerai' || k === 'fer' || k === 'cuivre') {
+      o = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16, 0), new THREE.MeshStandardMaterial({ color: TEINTES[k], flatShading: true, roughness: .9 }));
+      o.castShadow = true; o.position.y = 0.12; const g = new THREE.Group(); g.add(o); return g;
+    }
+    if (k === 'plaque') { o = teinter(this.m['box-wide'].clone(true), TEINTES.plaque); o.scale.set(0.5, 0.25, 0.5); }
+    else if (k === 'engrenage' || k === 'bobine') { o = teinter(this.m['cog-a'].clone(true), TEINTES[k]); o.scale.setScalar(0.42); o.position.y = 0.07; }
+    else { o = teinter(this.m['box-small'].clone(true), TEINTES[k]); o.scale.setScalar(0.62); }
+    const g = new THREE.Group(); g.add(o); return g;
+  }
+
+  // --- simulation
+  sortie(i) { const c = this.cell(i.x, i.z); if (!c) return -1; if (c.t === 'tapis') return c.d; if (c.t === 'croix') return i.dir; if (c.t === 'aig') return c.outs[c.sel]; return -1; }
+  accepte(c, k, d) {
+    if (!c) return false;
+    if (c.t === 'tapis') return d !== (c.d + 2) % 4;
+    if (c.t === 'croix') return true;
+    if (c.t === 'aig') return d === c.d;
+    if (c.t === 'mach') return d !== (c.d + 2) % 4 && c.entre.includes(k) && c.buf + c.res < 2;
+    if (c.t === 'sortie') return true;
+    return false;
+  }
+  creer(k, x, z, fx, fz, d) { const i = { k, x, z, fx, fz, dir: d, mesh: this.objet(k) }; this.gItems.add(i.mesh); this.items.push(i); return i; }
+  pas() {
+    this.ticks++;
+    this.items = this.items.filter(i => {
+      if (!i.absorbe) return true;
+      this.gItems.remove(i.mesh); const c = this.cell(i.x, i.z);
+      if (c && c.t === 'mach') { c.res--; c.buf++; } else if (c && c.t === 'sortie') this.cfg.livre(this, i, c);
+      return false;
+    });
+    for (const i of this.items) { i.fx = i.x; i.fz = i.z; }
+    const occ = new Map(this.items.map(i => [K(i.x, i.z), i])), nouv = new Map(), und = new Set(this.items);
+    const reste = i => { und.delete(i); nouv.set(K(i.x, i.z), i); };
+    let prog = true;
+    while (und.size && prog) {
+      prog = false;
+      for (const i of [...und]) {
+        const d = this.sortie(i); if (d < 0) { reste(i); prog = true; continue; }
+        const tx = i.x + DX[d], tz = i.z + DZ[d], c = this.cell(tx, tz), k = K(tx, tz);
+        if (!this.accepte(c, i.k, d)) { reste(i); prog = true; continue; }
+        if (c.t === 'mach' || c.t === 'sortie') { if (c.t === 'mach') c.res++; i.x = tx; i.z = tz; i.dir = d; i.absorbe = true; und.delete(i); prog = true; continue; }
+        if (nouv.has(k)) { reste(i); prog = true; continue; }
+        const o = occ.get(k); if (o && o !== i && und.has(o)) continue;
+        i.x = tx; i.z = tz; i.dir = d; nouv.set(k, i); und.delete(i); prog = true;
+      }
+    }
+    for (const i of und) reste(i);
+    const sortir = (c, k) => {
+      const x = c.x + DX[c.d], z = c.z + DZ[c.d], n = this.cell(x, z);
+      if (!this.accepte(n, k, c.d) || nouv.has(K(x, z))) return false;
+      if (n.t === 'mach' || n.t === 'sortie') return false;
+      nouv.set(K(x, z), this.creer(k, x, z, c.x, c.z, c.d)); return true;
+    };
+    for (const c of this.cells.values()) {
+      if (c.t === 'mine') {
+        c.n = (c.n || 0) + 1;
+        if (c.n >= c.per) { const k = Array.isArray(c.k) ? c.k[Math.floor(Math.random() * c.k.length)] : c.k; if (sortir(c, k)) c.n = 0; }
+      } else if (c.t === 'mach') {
+        if (c.busy > 0) { c.busy--; if (!c.busy) c.pret = true; }
+        if (c.pret && sortir(c, c.sort)) c.pret = false;
+        if (!c.busy && !c.pret && c.buf > 0) { c.buf--; c.busy = c.temps; }
+      }
+    }
+  }
+  vider() { for (const i of this.items) this.gItems.remove(i.mesh); this.items = []; for (const c of this.cells.values()) if (c.t === 'mach') { c.buf = c.res = c.busy = 0; c.pret = false; } else if (c.t === 'mine') c.n = 0; }
+  maj(dt, t) {
+    if (this.cfg.marche(this)) { this.p += dt / this.cfg.duree(this); while (this.p >= 1) { this.p -= 1; this.pas(); } }
+    const p = this.p, e = p * p * (3 - 2 * p);
+    for (const i of this.items) {
+      const x = i.fx + (i.x - i.fx) * e, z = i.fz + (i.z - i.fz) * e;
+      i.mesh.position.set(x, 0.4, z);
+      if (i.absorbe) { const c = this.cell(i.x, i.z), q = Math.max(0, (p - 0.4) / 0.6); i.mesh.scale.setScalar(1 - q * 0.9); i.mesh.position.y = 0.4 + (c && c.t === 'sortie' ? 0.55 - q * 0.6 : 0); }
+      else i.mesh.scale.setScalar(1);
+    }
+    for (const c of this.cells.values()) {
+      if (c.t === 'mach' && c.o) { const s = c.busy ? 1 + Math.sin(t * 18) * 0.025 : 1; c.o.scale.set(0.62 * s, 0.62 / s, 0.62 * s); }
+      if (c.t === 'aig' && c.anneau) { c.anneau.material.opacity = 1; c.anneau.scale.setScalar(1 + Math.sin(t * 4) * 0.06); c.fleche.position.y = 0.95 + Math.sin(t * 3) * 0.06; }
+    }
+    this.cfg.anim && this.cfg.anim(this, t, dt);
+    if (this.visible) this.r.render(this.sc, this.cam);
+  }
+
+  // --- toucher
+  caseSous(ev) {
+    const b = this.cv.getBoundingClientRect();
+    const v = new THREE.Vector2(((ev.clientX - b.left) / b.width) * 2 - 1, -((ev.clientY - b.top) / b.height) * 2 + 1);
+    const ray = new THREE.Raycaster(); ray.setFromCamera(v, this.cam);
+    const pt = new THREE.Vector3(); if (!ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.3), pt)) return null;
+    const x = Math.round(pt.x), z = Math.round(pt.z); return this.dedans(x, z) ? { x, z } : null;
+  }
+  entrees() {
+    let tr = null;
+    this.cv.addEventListener('pointerdown', ev => { const c = this.caseSous(ev); if (!c) return; this.cv.setPointerCapture(ev.pointerId); tr = { der: c, bouge: false }; this.cfg.appui && this.cfg.appui(this, c); });
+    this.cv.addEventListener('pointermove', ev => {
+      if (!tr) return; const c = this.caseSous(ev); if (!c || (c.x === tr.der.x && c.z === tr.der.z)) return;
+      if (Math.abs(c.x - tr.der.x) + Math.abs(c.z - tr.der.z) === 1 && this.cfg.trace) {
+        const d = DX.findIndex((v, i) => v === c.x - tr.der.x && DZ[i] === c.z - tr.der.z);
+        this.cfg.trace(this, tr.der, c, d, !tr.bouge);
+      }
+      tr.der = c; tr.bouge = true;
+    });
+    const fin = ev => { if (!tr) return; if (!tr.bouge && this.cfg.tape) this.cfg.tape(this, tr.der); tr = null; };
+    this.cv.addEventListener('pointerup', fin); this.cv.addEventListener('pointercancel', () => { tr = null; });
+  }
+}
+const FLECHE = (() => {
+  const s = new THREE.Shape(); s.moveTo(0, 0.32); s.lineTo(0.24, 0.02); s.lineTo(0.09, 0.02); s.lineTo(0.09, -0.26); s.lineTo(-0.09, -0.26); s.lineTo(-0.09, 0.02); s.lineTo(-0.24, 0.02);
+  const g = new THREE.ExtrudeGeometry(s, { depth: 0.06, bevelEnabled: false }); g.rotateX(-Math.PI / 2); g.rotateY(Math.PI); return g;
+})();
+
+// ---- petites aides de HUD
+function el(html) { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
+function minutes(s) { s = Math.floor(s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function finir(t, titre, texte, etoiles, bouton, fn) {
+  t.el.querySelector('.fin')?.remove();
+  const f = el(`<div class="fin"><h3>${titre}</h3>${etoiles != null ? `<div class="etoiles">${'★'.repeat(etoiles)}${'☆'.repeat(3 - etoiles)}</div>` : ''}<p>${texte}</p><button type="button">${bouton}</button></div>`);
+  f.querySelector('button').onclick = () => { f.remove(); fn(); }; t.el.appendChild(f);
+}
+// tracer des tapis au doigt (A et B)
+function tracer(t, a, b, d, premier, peut) {
+  const ca = t.cell(a.x, a.z), cb = t.cell(b.x, b.z);
+  if (!ca || (ca.t === 'tapis' && !ca.fixe)) { if (ca || peut(t)) t.poser(a.x, a.z, { t: 'tapis', d }); }
+  if (!cb && peut(t)) t.poser(b.x, b.z, { t: 'tapis', d });
+  else if (cb && cb.t === 'tapis' && !cb.fixe && cb.d === (d + 2) % 4) cb.d = d;
+  t.dessiner(); t.cfg.compter && t.cfg.compter(t);
+}
+
+// ================================================================ A : tracer la chaîne
+const A = {
+  W: 6, H: 9, ciel: 0xcfd6ec, sol: 0x8d93b4, hemi: [0xffffff, 0x7a7f9a, 0.95], soleil: [0xfff3e0, 1.25],
+  cam: { ortho: true, demi: 7.2, pos: [1.6, 11, 8.5], dz: -0.9 },
+  but: 8,
+  init(t) {
+    t.s = { outil: 'tracer', livres: 0, temps: 0, fini: false };
+    t.poser(0, 0, { t: 'mine', d: 0, k: 'minerai', per: 3 });
+    [[1, 0, 0], [2, 0, 0], [3, 0, 1], [3, 1, 1]].forEach(([x, z, d]) => t.poser(x, z, { t: 'tapis', d }));
+    t.poser(3, 2, { t: 'mach', d: 1, entre: ['minerai'], sort: 'plaque', temps: 2, buf: 0, res: 0, busy: 0, modele: 'machine' });
+    t.poser(1, 5, { t: 'mach', d: 1, entre: ['plaque'], sort: 'engrenage', temps: 2, buf: 0, res: 0, busy: 0, modele: 'machine-window' });
+    t.poser(4, 8, { t: 'sortie' });
+    t.poser(0, 3, { t: 'caisses' }); t.poser(5, 5, { t: 'caisses' });
+    // décor : mur du fond, piliers, bras robot à la livraison, Oopi
+    for (let x = -1; x <= 6; x++) t.modele(x % 3 ? 'structure-wall' : 'structure-window', x, -1.5, Math.PI / 2);
+    t.modele('structure-yellow-tall', -0.7, -0.6, 0); t.modele('structure-yellow-tall', 5.7, -0.6, 0);
+    t.bras = t.modele('robot-arm-a', 5.3, 7.6, 0, 0.42);
+    t.oopi = t.modele('oopi', 2.2, 8.4, Math.PI, 0.9);
+    t.modele('warning-traffic', 5.6, 3.6, 0, 0.6); t.modele('cone', 0.4, 8.6); t.modele('cone', 0.75, 8.7);
+    t.modele('screen-wide', 1, -0.9, 0, 0.7);
+  },
+  hud(t) {
+    t.hud.innerHTML = `<div class="haut"><div class="ligne"><span class="etiq">COMMANDE</span><span class="val">⚙ <b class="n">0</b> / ${A.but} ENGRENAGES</span></div><div class="barre"><i></i></div><div class="ligne"><span class="etiq">CHRONO <span class="val ch">0:00</span></span><span class="etiq">3★ SOUS 1:30</span></div><div class="astuce">Glisse le doigt depuis la fonderie vers la tailleuse, puis vers l'entonnoir.</div></div>
+    <div class="bas"><div class="outils"><button type="button" class="actif" data-o="tracer">TRACER</button><button type="button" data-o="gomme">GOMME</button><button type="button" data-o="re">RECOMMENCER</button></div></div>`;
+    t.hud.querySelectorAll('[data-o]').forEach(b => b.onclick = () => {
+      if (b.dataset.o === 're') { A.raz(t); return; }
+      t.s.outil = b.dataset.o; t.hud.querySelectorAll('[data-o]').forEach(x => x.classList.toggle('actif', x === b));
+    });
+  },
+  raz(t) {
+    for (const c of [...t.cells.values()]) if (c.t === 'tapis' && !c.fixe && !(c.z <= 1 && c.x <= 3)) t.poser(c.x, c.z, null);
+    t.vider(); t.s.livres = 0; t.s.temps = 0; t.s.fini = false; t.dessiner(); A.affiche(t);
+  },
+  affiche(t) { t.hud.querySelector('.n').textContent = t.s.livres; t.hud.querySelector('.barre i').style.width = (100 * t.s.livres / A.but) + '%'; },
+  marche: t => !t.s.fini, duree: () => 0.36,
+  appui(t, c) { if (t.s.outil === 'gomme') { const x = t.cell(c.x, c.z); if (x && x.t === 'tapis') { t.poser(c.x, c.z, null); t.dessiner(); } } },
+  trace(t, a, b, d) {
+    if (t.s.outil === 'gomme') { const x = t.cell(b.x, b.z); if (x && x.t === 'tapis') { t.poser(b.x, b.z, null); t.dessiner(); } return; }
+    tracer(t, a, b, d, false, () => true);
+    const h = t.hud.querySelector('.astuce'); if (h) h.remove();
+  },
+  tape(t, c) { const x = t.cell(c.x, c.z); if (t.s.outil === 'tracer' && x && x.t === 'tapis') { x.d = (x.d + 1) % 4; t.dessiner(); } },
+  livre(t, i) {
+    if (i.k !== 'engrenage' || t.s.fini) return;
+    t.s.livres++; A.affiche(t); t.saut = 1;
+    if (t.s.livres >= A.but) {
+      t.s.fini = true; const e = t.s.temps < 90 ? 3 : t.s.temps < 150 ? 2 : 1;
+      finir(t, 'COMMANDE LIVREE', `${A.but} engrenages en ${minutes(t.s.temps)}.`, e, 'REJOUER', () => A.raz(t));
+    }
+  },
+  anim(t, s, dt) {
+    if (!t.s.fini) { t.s.temps += dt; t.hud.querySelector('.ch').textContent = minutes(t.s.temps); }
+    t.bras.rotation.y = Math.sin(s * 1.3) * 0.9 - 0.6;
+    t.saut = Math.max(0, (t.saut || 0) - dt * 2);
+    t.oopi.position.y = Math.abs(Math.sin(s * 2.2)) * 0.06 + Math.sin(t.saut * Math.PI) * 0.5;
+    t.oopi.rotation.y = Math.PI + Math.sin(s * 0.7) * 0.5;
+  }
+};
+
+// ================================================================ B : pièces comptées
+const B = {
+  W: 5, H: 7, ciel: 0x2a3140, sol: 0x5a6378, hemi: [0xf2f5ff, 0x55607a, 1.0], soleil: [0xffffff, 1.0],
+  cam: { fov: 38, pos: [0, 16.5, 3.6], dz: 0.3 },
+  stock: { tapis: 14, croix: 1 },
+  init(t) {
+    t.s = { outil: 'tapis', marche: false, plaques: 0, bobines: 0, fini: false };
+    t.poser(0, 0, { t: 'mine', d: 1, k: 'fer', per: 3 });
+    t.poser(4, 0, { t: 'mine', d: 1, k: 'cuivre', per: 3 });
+    t.poser(3, 3, { t: 'mach', d: 1, entre: ['fer'], sort: 'plaque', temps: 2, buf: 0, res: 0, busy: 0, modele: 'machine' });
+    t.poser(1, 3, { t: 'mach', d: 1, entre: ['cuivre'], sort: 'bobine', temps: 2, buf: 0, res: 0, busy: 0, modele: 'machine-window' });
+    t.poser(2, 6, { t: 'sortie' });
+    t.poser(2, 3, { t: 'caisses' }); t.poser(0, 4, { t: 'caisses' }); t.poser(4, 5, { t: 'caisses' });
+    for (let x = -1; x <= 5; x++) t.modele('pipe-large-long', x, -1.3, 0, 0.5);
+    t.modele('robot-arm-a', 3.3, 6.4, 0, 0.4); t.modele('scanner-high', 1.2, 6.5, 0, 0.8);
+  },
+  hud(t) {
+    t.hud.innerHTML = `<div class="haut"><div class="ligne"><span class="etiq">NIVEAU 7 · CROISEMENT</span><span class="etiq">3★ : 13 TAPIS</span></div>
+      <div class="ligne"><span class="val">▬ <b class="np">0</b>/3 PLAQUES</span><span class="val">⚙ <b class="nb">0</b>/3 BOBINES</span></div><div class="astuce">Fer → presse (droite), cuivre → fileuse (gauche), tout à l'entonnoir.</div></div>
+      <div class="bas"><div class="outils"><button type="button" class="actif" data-o="tapis">TAPIS<small class="st">14</small></button><button type="button" data-o="croix">CROISEMENT<small class="sc">1</small></button><button type="button" data-o="gomme">GOMME</button></div>
+      <div class="outils"><button type="button" data-o="solution">SOLUTION</button><button type="button" class="go" data-o="lancer">LANCER</button></div></div>`;
+    t.hud.querySelectorAll('[data-o]').forEach(b => b.onclick = () => {
+      const o = b.dataset.o;
+      if (o === 'lancer') { B.lancer(t, !t.s.marche); return; }
+      if (o === 'solution') { B.solution(t); return; }
+      t.s.outil = o; t.hud.querySelectorAll('.outils:first-child [data-o]').forEach(x => x.classList.toggle('actif', x === b));
+    });
+  },
+  utilises(t) { let n = 0, c = 0; for (const x of t.cells.values()) { if (x.t === 'tapis') n++; if (x.t === 'croix') c++; } return { n, c }; },
+  compter(t) { const u = B.utilises(t); t.hud.querySelector('.st').textContent = B.stock.tapis - u.n; t.hud.querySelector('.sc').textContent = B.stock.croix - u.c; },
+  peut: t => !t.s.marche && B.utilises(t).n < B.stock.tapis,
+  lancer(t, on) {
+    t.s.marche = on; const b = t.hud.querySelector('[data-o="lancer"]'); b.textContent = on ? 'ARRETER' : 'LANCER';
+    t.hud.querySelectorAll('.outils:first-child button, [data-o="solution"]').forEach(x => x.disabled = on);
+    if (!on) { t.vider(); t.s.plaques = t.s.bobines = 0; B.affiche(t); }
+    t.hud.querySelector('.astuce')?.remove();
+  },
+  affiche(t) { t.hud.querySelector('.np').textContent = Math.min(3, t.s.plaques); t.hud.querySelector('.nb').textContent = Math.min(3, t.s.bobines); },
+  solution(t) {
+    for (const c of [...t.cells.values()]) if (c.t === 'tapis' || c.t === 'croix') t.poser(c.x, c.z, null);
+    [[0, 1, 0], [1, 1, 0], [2, 1, 0], [3, 1, 1], [4, 1, 1], [4, 2, 2], [2, 2, 2], [1, 2, 1], [3, 4, 1], [3, 5, 2], [2, 5, 1], [1, 4, 1], [1, 5, 0]]
+      .forEach(([x, z, d]) => t.poser(x, z, { t: 'tapis', d }));
+    t.poser(3, 2, { t: 'croix' }); t.dessiner(); B.compter(t);
+  },
+  marche: t => t.s.marche && !t.s.fini, duree: () => 0.3,
+  appui(t, c) {
+    if (t.s.marche) return; const x = t.cell(c.x, c.z);
+    if (t.s.outil === 'gomme' && x && (x.t === 'tapis' || x.t === 'croix')) { t.poser(c.x, c.z, null); t.dessiner(); B.compter(t); }
+  },
+  trace(t, a, b, d) { if (t.s.marche || t.s.outil !== 'tapis') return; tracer(t, a, b, d, false, B.peut); },
+  tape(t, c) {
+    if (t.s.marche) return; const x = t.cell(c.x, c.z);
+    if (t.s.outil === 'tapis') { if (x && x.t === 'tapis') x.d = (x.d + 1) % 4; else if (!x && B.peut(t)) t.poser(c.x, c.z, { t: 'tapis', d: 1 }); }
+    if (t.s.outil === 'croix' && !x && B.utilises(t).c < B.stock.croix) t.poser(c.x, c.z, { t: 'croix' });
+    t.dessiner(); B.compter(t);
+  },
+  livre(t, i) {
+    if (i.k === 'plaque') t.s.plaques++; if (i.k === 'bobine') t.s.bobines++; B.affiche(t);
+    if (t.s.plaques >= 3 && t.s.bobines >= 3 && !t.s.fini) {
+      t.s.fini = true; const n = B.utilises(t).n, e = n <= 13 ? 3 : n <= 15 ? 2 : 1;
+      finir(t, 'USINE VALIDEE', `${n} tapis et ${B.utilises(t).c} croisement.`, e, 'MODIFIER', () => { t.s.fini = false; B.lancer(t, false); });
+    }
+  }
+};
+
+// ================================================================ C : aiguillages
+const C = {
+  W: 5, H: 8, ciel: 0x15142a, sol: 0x3a3756, hemi: [0x8c88c8, 0x1a1830, 0.55], soleil: [0xffd9a8, 0.55],
+  cam: { fov: 46, pos: [0, 10, 8.4], dz: -0.2 },
+  but: 20,
+  init(t) {
+    t.s = { triees: 0, erreurs: 0, fini: false };
+    t.poser(2, 0, { t: 'mine', d: 1, k: ['orange', 'bleu', 'vert'], per: 4 });
+    [[2, 1, 1], [2, 2, 1], [3, 3, 0], [4, 3, 1], [4, 4, 1], [4, 5, 1], [4, 6, 1], [2, 4, 1], [2, 6, 1], [1, 5, 2], [0, 5, 1], [0, 6, 1]]
+      .forEach(([x, z, d]) => t.poser(x, z, { t: 'tapis', d, fixe: true }));
+    t.poser(2, 3, { t: 'aig', d: 1, outs: [1, 0], sel: 0 });
+    t.poser(2, 5, { t: 'aig', d: 1, outs: [1, 2], sel: 0 });
+    t.poser(4, 7, { t: 'sortie', couleur: 'bleu' }); t.poser(2, 7, { t: 'sortie', couleur: 'orange' }); t.poser(0, 7, { t: 'sortie', couleur: 'vert' });
+    // décor du soir
+    for (let x = -1; x <= 5; x++) t.modele(x % 2 ? 'structure-wall' : 'structure-window', x, -1.5, Math.PI / 2);
+    t.modele('crane', 0.2, 1.4, 0, 0.7); t.modele('screen-wide', 3.6, -0.8, 0, 0.7); t.modele('piston-round', 0.4, 0, 0, 0.6);
+    t.modele('warning-traffic', 3.5, 1.2, 0, 0.6);
+    const lampe = (x, z, c, f) => { const l = new THREE.PointLight(c, f, 5.5, 2); l.position.set(x, 1.8, z); t.sc.add(l); };
+    lampe(4, 7.3, TEINTES.bleu, 3); lampe(2, 7.3, TEINTES.orange, 3); lampe(0, 7.3, TEINTES.vert, 3); lampe(2, 1, 0xffc98a, 3.5); lampe(2, 4.2, 0xffc98a, 2.5);
+  },
+  hud(t) {
+    t.hud.innerHTML = `<div class="haut"><div class="ligne"><span class="etiq">CAISSES TRIEES</span><span class="val"><b class="n">0</b> / ${C.but}</span></div><div class="barre"><i></i></div><div class="ligne"><span class="etiq">ERREURS <span class="val er">○○○</span></span><span class="etiq">VITESSE <span class="val vi">x1.0</span></span></div><div class="astuce">Touche un aiguillage pour changer la flèche.</div></div><div class="bas"></div>`;
+  },
+  affiche(t) {
+    t.hud.querySelector('.n').textContent = t.s.triees; t.hud.querySelector('.barre i').style.width = (100 * t.s.triees / C.but) + '%';
+    t.hud.querySelector('.er').textContent = '●'.repeat(Math.min(3, t.s.erreurs)) + '○'.repeat(Math.max(0, 3 - t.s.erreurs));
+    t.hud.querySelector('.vi').textContent = 'x' + (0.5 / C.duree(t)).toFixed(1);
+  },
+  raz(t) { t.vider(); t.s = { triees: 0, erreurs: 0, fini: false }; C.affiche(t); },
+  marche: t => !t.s.fini, duree: t => Math.max(0.2, 0.5 - t.s.triees * 0.014),
+  appui(t, c) { const x = t.cell(c.x, c.z); if (x && x.t === 'aig') { x.sel = 1 - x.sel; t.dessiner(); t.hud.querySelector('.astuce')?.remove(); } },
+  livre(t, i, c) {
+    if (t.s.fini) return;
+    if (i.k === c.couleur) t.s.triees++; else { t.s.erreurs++; t.flash = 1; }
+    C.affiche(t);
+    if (t.s.erreurs >= 3) { t.s.fini = true; finir(t, 'ATELIER FERME', `${t.s.triees} caisses bien triées.`, null, 'REJOUER', () => C.raz(t)); }
+    else if (t.s.triees >= C.but) { t.s.fini = true; finir(t, 'JOURNEE FINIE', `${C.but} caisses triées, ${t.s.erreurs} erreur${t.s.erreurs > 1 ? 's' : ''}.`, 3 - t.s.erreurs, 'REJOUER', () => C.raz(t)); }
+  },
+  anim(t, s, dt) {
+    t.flash = Math.max(0, (t.flash || 0) - dt * 2.5);
+    t.sc.background.setRGB(0.082 + t.flash * 0.35, 0.078, 0.165);
+  }
+};
+
+// ---------------------------------------------------------------- démarrage
+const TELS = [];
+Promise.all([charger(TEX.a), charger(TEX.b)]).then(([ma, mb]) => {
+  TELS.push(new Tel('telA', A, ma), new Tel('telB', B, mb), new Tel('telC', C, ma));
+  let av = performance.now();
+  const boucle = now => { const dt = Math.min(0.05, (now - av) / 1000); av = now; TELS.forEach(t => t.maj(dt, now / 1000)); requestAnimationFrame(boucle); };
+  requestAnimationFrame(boucle);
+  window.PRET = true;
+}).catch(e => { document.querySelectorAll('.charge').forEach(c => c.textContent = 'ERREUR : ' + e.message); });
+</script>
