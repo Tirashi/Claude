@@ -86,7 +86,10 @@ const MDE_AMELIORATIONS = {
   soute:     { nom: 'SOUTE',     poids: 1.2, effet: 'SOUTE +2' },
   canon:     { nom: 'CANON',     poids: 1.5, effet: ['DEGATS +1', 'TOURELLE +1', 'DEGATS +1', 'TOURELLE +1', 'DEGATS +1'] },
   coque:     { nom: 'COQUE',     poids: 0.8, effet: 'COQUE +2' },
+  moteur:    { nom: 'MOTEUR',    poids: 1.1, effet: 'VITESSE +8 %' },
+  propulseurs: { nom: 'PROPULSEURS', poids: 0.9, effet: 'MANIABILITE +20 %' },
 };
+const MDE_AMEL_ZERO = () => ({ reservoir: 0, soute: 0, canon: 0, coque: 0, moteur: 0, propulseurs: 0 });
 const MDE_NIV_MAX = 5, MDE_AMEL_PRIX = 50, MDE_AMEL_HAUSSE = 2;
 const mdeAmel = e => e.ameliorations;
 // niveaux 1 à 3 dès le départ ; le 4 avec le module central de la station, le 5 avec la base lunaire
@@ -102,7 +105,8 @@ function mdeCorvette(e, classe) {
     soute: C.soute + 2 * A.soute,
     vol: C.vol + 10 * A.reservoir,
     coque: C.coque + 2 * A.coque,
-    vitesse: C.vitesse * (e.recherche.moteurs ? 1.15 : 1),
+    vitesse: C.vitesse * (e.recherche.moteurs ? 1.15 : 1) * (1 + 0.08 * A.moteur),
+    maniabilite: 1 + 0.2 * A.propulseurs,   // vitesse de rotation et poussée
     aimant: (C.capacite === 'aimant' ? 1.6 : 1) * (e.recherche.aimant ? 1.6 : 1),
   };
 }
@@ -189,7 +193,7 @@ function mdeNouvelle(graine) {
   return {
     v: MDE_V, graine: String(graine), temps: 0,
     cr: 0, entrepot: {}, planete: 'terre',
-    classe: 'eclaireur', classes: { eclaireur: true }, ameliorations: { reservoir: 0, soute: 0, canon: 0, coque: 0 },
+    classe: 'eclaireur', classes: { eclaireur: true }, ameliorations: MDE_AMEL_ZERO(),
     usines: {}, recherche: {}, station: {}, bases: {},
     drones: { terre: { mineur: 0, cargo: 0 }, lune: { mineur: 0, cargo: 0 }, mars: { mineur: 0, cargo: 0 } },
     reste: {}, reparateur: 0, satellites: {},
@@ -198,7 +202,11 @@ function mdeNouvelle(graine) {
     fin: false, sorties: 0, achats: 0, journal: [],
   };
 }
-function mdeMigrer(e) { if (!e || typeof e !== 'object') return null; if (!e.v) return null; e.v = MDE_V; return e; }
+function mdeMigrer(e) {
+  if (!e || typeof e !== 'object' || !e.v) return null;
+  e.ameliorations = Object.assign(MDE_AMEL_ZERO(), e.ameliorations);   // 31/10 : moteur et propulseurs ajoutés
+  e.v = MDE_V; return e;
+}
 
 /* ---------- l'étage atteint (§ 5) ---------- */
 function mdeEtage(e) { return e.bases.mars ? 4 : e.recherche.transfert ? 3 : e.recherche.centre ? 2 : 1; }

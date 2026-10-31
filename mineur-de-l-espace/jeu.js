@@ -33,6 +33,10 @@ const [neb, nebX] = toile(128);   // nébuleuse dessinée ici (taches floues), a
 const ROCS = [];
 function preparerRoches() { const R = mulberry(99); for (let t = 0; t < 3; t++) { ROCS[t] = { fer: [], or: [] }; for (let v = 0; v < 3; v++) { const g = R() * 1e9 | 0;
   for (const s of ['fer', 'or']) ROCS[t][s].push(construireRoche(mulberry(g), TAILLES[t], s)); } } }
+// halo d'une météorite : disque de braise en gros pixels (ajouté en mode « lighter » sur la roche)
+const [BRAISE, braiseX] = toile(16);
+(() => { for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) { const d = Math.hypot(i - 7.5, j - 7.5); if (d > 7.5) continue;
+  braiseX.fillStyle = d < 3 ? '#e08a40' : d < 5.5 ? '#b04420' : '#5a180a'; braiseX.fillRect(i, j, 1, 1); } })();
 const aspect = m => m === 'or' || m === 'cristal' ? 'or' : 'fer';
 // niveau d'amélioration (0 à 5) → ce qui se voit sur la corvette (0 à 3)
 const VISIBLE = [0, 1, 2, 2, 3, 3];
@@ -85,9 +89,11 @@ class Partie {
     const t = r.taille - 1;
     this.asts.push({ x, y, vx, vy, r, v: ROCS[t][aspect(r.minerai)][R() * 3 | 0], ray: TAILLES[t] * 0.82, rot: R() * TAU, vr: (R() - 0.5) * (1.2 - t * 0.3), flash: 0, pvMax: r.pv });
   }
-  // danger : une petite roche rapide qui fonce vers la corvette (les tourelles peuvent l'abattre)
-  danger() {
-    const s = this.ship, an = this.R() * TAU, x = s.x + Math.cos(an) * 380, y = s.y + Math.sin(an) * 380, vise = an + Math.PI + (this.R() - 0.5) * 0.5, v = 150 + this.R() * 50;
+  // danger : une météorite (petite roche chauffée au rouge, traînée de feu) qui fonce vers la corvette ; elle est
+  // annoncée 1,3 s avant par une alerte au bord de l'écran, du côté d'où elle vient ; les tourelles peuvent l'abattre
+  danger(an) {
+    const s = this.ship;
+    an = an === undefined ? this.R() * TAU : an; const x = s.x + Math.cos(an) * 380, y = s.y + Math.sin(an) * 380, vise = an + Math.PI + (this.R() - 0.5) * 0.5, v = 150 + this.R() * 50;
     this.nouvelleRoche({ taille: 1, pv: 1, minerai: 'fer' }, x, y, Math.cos(vise) * v, Math.sin(vise) * v);
     const a = this.asts[this.asts.length - 1]; a.rapide = true; a.vie = 5;
   }
@@ -144,7 +150,7 @@ class Partie {
   }
   /* ---------- quai, décollage ---------- */
   accoster(debut, panne) {
-    this.quai = true; this.auto = false; this.joy = null; this.ship.vx = this.ship.vy = 0; this.panne = 0;
+    this.quai = true; this.auto = false; this.joy = null; this.ship.vx = this.ship.vy = 0; this.panne = 0; this.alerteMeteo = null;
     if (!debut) {
       const lot = {}; for (const m of this.soute) lot[m] = (lot[m] || 0) + 1;
       const r = mdeRetour(this.e, lot, panne), g = Object.entries(r.garde).map(([m, n]) => n + ' ' + MDE_MINERAIS[m].nom).join(', ');
@@ -187,12 +193,15 @@ class Partie {
       if (this.panne <= 0) { const d = Math.hypot(s.x, s.y); s.x = s.x / d * R_QUAI; s.y = s.y / d * R_QUAI;
         const perdu = this.soute.length - Math.floor(this.soute.length / 2); this.texte(s.x, s.y - 72, 'REMORQUEE' + (perdu ? ` · -${perdu} MINERAI` : ''), '#ff6a5c'); this.accoster(false, true); }
       this.suite(dt); return; }
-    const j = this.joy, jx = j ? j.dx / 40 : 0, jy = j ? j.dy / 40 : 0, force = Math.hypot(jx, jy), V = c.vitesse; let pousse = 0;
+    const j = this.joy, jx = j ? j.dx / 40 : 0, jy = j ? j.dy / 40 : 0, force = Math.hypot(jx, jy), V = c.vitesse, M = c.maniabilite, TOUR = 2.4 * M; let pousse = 0;
     if (this.auto) { const d = Math.hypot(s.x, s.y), tx = s.x / d * (R_QUAI - 4), ty = s.y / d * (R_QUAI - 4), ex = tx - s.x, ey = ty - s.y, el = Math.hypot(ex, ey) || 1, v = Math.min(120 * V, el * 1.2);
       s.vx += (ex / el * v - s.vx) * Math.min(1, dt * 1.5); s.vy += (ey / el * v - s.vy) * Math.min(1, dt * 1.5); pousse = 1;
-      if (Math.hypot(s.vx, s.vy) > 8) { const voulu = Math.atan2(s.vy, s.vx) + Math.PI / 2; let dd = voulu - s.a; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); s.a += Math.max(-2.4 * dt, Math.min(2.4 * dt, dd)); } }
-    else { if (force > 0.15) { const voulu = Math.atan2(jy, jx) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-2.4 * dt, Math.min(2.4 * dt, d));
-        if (Math.abs(d) < 0.9) { pousse = force; s.vx += Math.sin(s.a) * 110 * V * force * dt; s.vy -= Math.cos(s.a) * 110 * V * force * dt; } }
+      if (Math.hypot(s.vx, s.vy) > 8) { const voulu = Math.atan2(s.vy, s.vx) + Math.PI / 2; let dd = voulu - s.a; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, dd)); } }
+    else { if (force > 0.15) { const voulu = Math.atan2(jy, jx) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, d));
+        // propulseurs : petites bouffées blanches sur le nez quand la corvette tourne
+        if (e.ameliorations.propulseurs && Math.abs(d) > 0.15 && this.R() < 0.5) { const cot = d > 0 ? -1 : 1, nx = s.x + Math.sin(s.a) * 22, ny = s.y - Math.cos(s.a) * 22;
+          this.parts.push({ x: nx, y: ny, vx: Math.cos(s.a) * cot * 50 + s.vx, vy: Math.sin(s.a) * cot * 50 + s.vy, v: 0.25, c: '#c9cde0', t: 2 }); }
+        if (Math.abs(d) < 0.9) { pousse = force; const acc = 110 * V * (0.85 + 0.15 * M) * force * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; } }
       s.vx *= 1 - dt * 0.12; s.vy *= 1 - dt * 0.12; const v = Math.hypot(s.vx, s.vy); if (v > 150 * V) { s.vx *= 150 * V / v; s.vy *= 150 * V / v; } }
     this.pousse = pousse; s.x += s.vx * dt; s.y += s.vy * dt;
     const de = Math.hypot(s.x, s.y);
@@ -204,7 +213,10 @@ class Partie {
     if (de > R_QUAI + 10) { this.carbu -= dt * (MDE_CONSO.glisse + (MDE_CONSO.pousse - MDE_CONSO.glisse) * pousse);
       if (this.carbu <= 0) this.tomberEnPanne('PANNE SECHE !'); }
     // dangers : petites roches rapides, plus nombreuses aux étages suivants
-    if (de > R_QUAI + 60) { this.prochainDanger -= dt; if (this.prochainDanger <= 0) { this.danger(); this.prochainDanger = 60 / MDE_DANGERS[mdeEtage(e)] * (0.5 + this.R()); } }
+    if (de > R_QUAI + 60) { this.prochainDanger -= dt; if (this.prochainDanger <= 0 && !this.alerteMeteo) { this.alerteMeteo = { an: this.R() * TAU, t: 1.3 }; this.prochainDanger = 60 / MDE_DANGERS[mdeEtage(e)] * (0.5 + this.R()); } }
+    if (this.alerteMeteo && (this.alerteMeteo.t -= dt) <= 0) { this.danger(this.alerteMeteo.an); this.alerteMeteo = null; }
+    for (const a of this.asts) if (a.rapide && this.R() < 0.9) { const k = this.R(); this.parts.push({ x: a.x + (this.R() - 0.5) * 4, y: a.y + (this.R() - 0.5) * 4,
+      vx: -a.vx * 0.15 + (this.R() - 0.5) * 20, vy: -a.vy * 0.15 + (this.R() - 0.5) * 20, v: 0.25 + this.R() * 0.3, c: k < 0.3 ? '#fff2a0' : k < 0.6 ? '#f2a94a' : k < 0.85 ? '#d0752c' : '#8c4a24', t: k < 0.5 ? 2 : 1 }); }
     for (const a of this.asts) if (a.rapide && Math.hypot(a.x - s.x, a.y - s.y) < a.ray + 14) {
       a.vie = 0; this.coque--; this.secousse = 0.3; this.eclats(a.x, a.y, 12, 'fer', true); this.texte(s.x, s.y - 44, 'CHOC ! COQUE ' + Math.max(0, this.coque), '#ff6a5c');
       if (navigator.vibrate) try { navigator.vibrate(60); } catch (err) { /* sans vibreur */ }
@@ -268,8 +280,12 @@ class Partie {
     x.drawImage(terreC, ox - RT / 2, oy - RT / 2);
     x.strokeStyle = this.quai ? '#7be07b66' : '#7be07b26'; x.beginPath(); x.arc(ox, oy, R_QUAI, 0, 7); x.stroke();
     for (const a of this.asts) { const sx = Math.round(a.x + ox), sy = Math.round(a.y + oy), L = a.v.L; if (sx < -L || sy < -L || sx > W + L || sy > H + L) continue;
-      if (a.rapide) { x.strokeStyle = '#ff6a5c88'; x.lineWidth = 2; x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx - a.vx * 0.12, sy - a.vy * 0.12); x.stroke(); x.lineWidth = 1; }
+      if (a.rapide) { // queue de feu en gros pixels, qui s'amincit derrière la météorite
+        const v = Math.hypot(a.vx, a.vy) || 1, ux = -a.vx / v, uy = -a.vy / v, lg = 30 + ((t * 20 | 0) % 3) * 2;
+        for (let q = lg; q >= 0; q -= 1) { const f = q / lg, w = Math.max(1, Math.round(7 * (1 - f)));
+          x.fillStyle = f < 0.2 ? '#fff2a0' : f < 0.45 ? '#f2a94a' : f < 0.75 ? '#d0752c' : '#8c4a24'; x.fillRect(Math.round(sx + ux * q - w / 2), Math.round(sy + uy * q - w / 2), w, w); } }
       const im = a.v.fr[nRoc(a.rot)]; x.drawImage(im, sx - (L >> 1), sy - (L >> 1));
+      if (a.rapide) { x.globalCompositeOperation = 'lighter'; x.drawImage(BRAISE, sx - 8, sy - 8); x.globalCompositeOperation = 'source-over'; }
       if (a.flash > 0) { x.globalCompositeOperation = 'lighter'; x.globalAlpha = 0.45; x.drawImage(im, sx - (L >> 1), sy - (L >> 1)); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; }
       if (a.r.pv < a.pvMax) { x.fillStyle = '#000a'; x.fillRect(sx - 12, sy - a.ray - 8, 24, 3); x.fillStyle = '#ff9d4a'; x.fillRect(sx - 12, sy - a.ray - 8, 24 * a.r.pv / a.pvMax, 3); } }
     for (const d of this.drops) { const b = Math.sin(t * 5 + d.x); x.drawImage(PEP[d.type], Math.round(d.x + ox - 6), Math.round(d.y + oy - 5 + b), 12, 10); }
@@ -277,8 +293,8 @@ class Partie {
     for (const b of this.balles) { x.save(); x.translate(Math.round(b.x + ox), Math.round(b.y + oy)); x.rotate(b.a); x.fillStyle = '#d0752c'; x.fillRect(-1.5, -5, 3, 10); x.fillStyle = '#fff2a0'; x.fillRect(-0.5, -4, 1, 7); x.restore(); }
     // corvette : rendu de l'angle le plus proche, tourné du petit reste ; flammes ; tourelles
     const k = nAng(s.a), F = this.nef.frames[k], sx0 = Math.round(s.x + ox), sy0 = Math.round(s.y + oy), bx = -Math.sin(s.a), by = Math.cos(s.a);
-    if (this.pousse > 0.1 && !this.panne && !this.quai) for (const [ex, ey, er] of F.engines) { const l = er * (1.2 + this.pousse * 1.6) + ((t * 30 | 0) % 2);
-      for (let q = 0; q < l; q++) { const f = q / l; x.fillStyle = f < 0.3 ? '#fff2a0' : f < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(er * (1 - f * 0.6)));
+    if (this.pousse > 0.1 && !this.panne && !this.quai) for (const [ex, ey, er] of F.engines) { const nm = e.ameliorations.moteur, l = er * (1.2 + this.pousse * 1.6) * (1 + 0.15 * nm) + ((t * 30 | 0) % 2);
+      for (let q = 0; q < l; q++) { const f = q / l; x.fillStyle = f < 0.3 ? (nm >= 3 ? '#bfe8ff' : '#fff2a0') : f < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(er * (1 - f * 0.6)));
         x.fillRect(Math.round(sx0 - L_NEF / 2 + ex + bx * q - w / 2), Math.round(sy0 - L_NEF / 2 + ey + by * q - w / 2), w, w); } }
     const reste = s.a - k / N_ANG * TAU; x.save(); x.translate(sx0, sy0); x.rotate(Math.atan2(Math.sin(reste), Math.cos(reste)));
     if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -L_NEF / 2, -L_NEF / 2); x.restore();
@@ -289,6 +305,11 @@ class Partie {
       const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + Math.sin(an) * kk + 10, d = Math.hypot(s.x, s.y) - R_QUAI, juste = d / (120 * c.vitesse) > this.carbu * 0.7, col = juste ? '#ff6a5c' : '#7be07b';
       x.save(); x.translate(fx, fy); x.rotate(an); x.fillStyle = col; x.beginPath(); x.moveTo(10, 0); x.lineTo(-6, -7); x.lineTo(-6, 7); x.fill(); x.restore();
       x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = col; x.fillText('TERRE ' + Math.round(d / 10) + ' KM', fx - Math.cos(an) * 24, fy - Math.sin(an) * 20 + 3); }
+    // alerte météorite : chevrons rouges qui clignotent au bord de l'écran, du côté d'où elle arrive
+    if (this.alerteMeteo && (t * 6 | 0) % 2) { const an = this.alerteMeteo.an, kk = Math.min((W / 2 - 20) / Math.abs(Math.cos(an)), (H / 2 - 44) / Math.abs(Math.sin(an)));
+      const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + 8 + Math.sin(an) * kk; x.save(); x.translate(fx, fy); x.rotate(an + Math.PI); x.fillStyle = '#ff6a5c';
+      for (const o of [0, 9]) { x.beginPath(); x.moveTo(o + 8, 0); x.lineTo(o - 4, -8); x.lineTo(o - 4, 8); x.fill(); } x.restore();
+      x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ff6a5c'; x.fillText('METEORITE', fx - Math.cos(an) * 34, fy - Math.sin(an) * 22 + 3); }
     // barre du haut : CR, classe, soute, coque, carburant (le bouton de pause est à droite, en HTML)
     x.fillStyle = '#05060dcc'; x.fillRect(0, 0, W, 30);
     x.font = '13px Silkscreen'; x.textAlign = 'left'; x.fillStyle = '#ffcf4a'; x.fillText(e.cr + ' CR', 10, 20);

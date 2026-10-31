@@ -162,6 +162,11 @@ function jouer(graine, pilote, limite, reprise) {
   check(r1.victoire && !r2.victoire && r2.base === 0, 'combat : quatre drones de défense gagnent la vague 1, une base sans flotte tombe');
   const r3 = mdeCombat('c', 'r', fort, mdeVague(h, 6), { retard: 12 }), r4 = mdeCombat('c', 'r', fort, mdeVague(h, 6), { retard: 0 });
   check(r4.base >= r3.base, 'satellites : la flotte qui arrive plus tôt protège mieux la base');
+  const vieille = mdeNouvelle('v'); vieille.ameliorations = { reservoir: 2, soute: 1, canon: 0, coque: 0 };
+  const mig = mdeMigrer(JSON.parse(JSON.stringify(vieille)));
+  check(mig.ameliorations.moteur === 0 && mig.ameliorations.propulseurs === 0 && mig.ameliorations.reservoir === 2 && mdeCorvette(mig).maniabilite === 1, 'ancienne sauvegarde : moteur et propulseurs ajoutés à 0');
+  mig.ameliorations.moteur = 2; mig.ameliorations.propulseurs = 1;
+  check(Math.abs(mdeCorvette(mig).vitesse - 1.16) < 1e-9 && mdeCorvette(mig).maniabilite === 1.2, 'moteur : vitesse + 8 % par niveau ; propulseurs : maniabilité + 20 %');
   const k = mdeNouvelle('fin'); check(mdeFinale(k) === null, 'pas de bataille finale avant les vagues');
 }
 

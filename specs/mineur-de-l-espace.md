@@ -198,3 +198,8 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 
 **À voir** : essai sur le téléphone (vitesse, temps de minage, fréquence des chocs) ; recaler le modèle de sortie du simulateur sur ce vrai vol si le rythme diffère.
 
+**Retours de l'utilisateur sur l'essai (31/10)** : vitesse très bien ; début de partie très bien ; chocs bien, mais les roches dangereuses étaient bizarres. Changé :
+- deux nouvelles améliorations (demandées) : **MOTEUR** (vitesse + 8 % par niveau, flammes plus longues, cœur bleu au niveau 3) et **PROPULSEURS** (maniabilité + 20 % par niveau : rotation plus rapide et un peu plus de poussée, bouffées blanches sur le nez quand on tourne) ; 5 niveaux comme les autres ; les anciennes sauvegardes les reçoivent à 0 (`mdeMigrer`) ;
+- les roches dangereuses deviennent des **météorites** : roche rougeoyante (halo de braise) avec une **queue de feu** en gros pixels et des étincelles ; chacune est **annoncée 1,3 s avant** par des chevrons rouges « METEORITE » qui clignotent au bord de l'écran, du côté d'où elle arrive.
+- Simulateur après ces ajouts : fin en 3 h 28 en médiane, étage 2 à 39 min.
+
