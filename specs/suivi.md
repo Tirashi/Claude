@@ -76,7 +76,7 @@ Copie telle quelle des lignes détaillées que `CLAUDE.md` gardait jusqu'au 30/1
 ## Mineur de l'espace, session 1 (31/10)
 - `mineur-de-l-espace/regles.js` (économie, progression, drones, aliens, bataille finale, sans dessin) et `outils/mineur-simulateur.js` (ajouté à `verifications.js`). Bilan et chiffres : [`specs/mineur-de-l-espace.md`](mineur-de-l-espace.md) § 19.
 - Écarts au cahier des charges trouvés par le simulateur : améliorations **communes à toutes les classes** (5 niveaux) au lieu de propres à chaque classe ; fer 5 CR et or 30 CR ; une unité de flotte abattue n'est pas perdue ; le quai garde le minerai d'un chantier dès qu'on a la moitié de ses CR.
-- Pas encore dans `sw.js` ni sur l'accueil (rien à jouer avant la session 2).
+- Session 2 (31/10) : étage 1 jouable (`mineur-de-l-espace/index.html`, `jeu.js`, `chantier.js`, `planetes.js`), dans `sw.js` (v80), pas encore sur l'accueil ; artefact https://claude.ai/artifact/JuLojAXG94xkZTHEXY2k2g. Bilan : [`specs/mineur-de-l-espace.md`](mineur-de-l-espace.md) § 20.
 
 ## Retours de l'utilisateur (29/10, suite des essais)
 - Solitaire : pas de bouton INDICE (refusé).

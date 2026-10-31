@@ -1,0 +1,4 @@
+/* Polices de Mineur de l'espace, hébergées dans le dépôt (sous-ensemble latin de Google Fonts) :
+   Silkscreen (Jason Kottke) et Pixelify Sans (Stefie Justprince), licence SIL Open Font License 1.1. */
+@font-face { font-family: 'Silkscreen'; font-style: normal; font-weight: 400; font-display: swap; src: url(silkscreen.woff2) format('woff2'); }
+@font-face { font-family: 'Pixelify Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(pixelify-sans.woff2) format('woff2'); }

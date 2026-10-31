@@ -73,11 +73,11 @@ const MDE_DANGERS = { 1: 1.2, 2: 1.6, 3: 2.2, 4: 2.6 };
 const MDE_CONSO = { pousse: 1, glisse: 0.5 };
 const MDE_TIR = { cadence: 0.45, portee: 210 };
 const MDE_CLASSES = {
-  eclaireur:   { nom: 'ECLAIREUR',   tourelles: 1, soute: 4,  vol: 34, coque: 3,  degats: 1, vitesse: 1,    capacite: null,       prix: null },
-  prospecteur: { nom: 'PROSPECTEUR', tourelles: 2, soute: 6,  vol: 40, coque: 4,  degats: 1, vitesse: 1,    capacite: 'foreuse',  prix: { cr: 500, fer: 25 },  req: e => !!e.station.central },
-  pionniere:   { nom: 'PIONNIERE',   tourelles: 3, soute: 8,  vol: 50, coque: 6,  degats: 1, vitesse: 1.1,  capacite: 'aimant',   prix: { cr: 2600, fer: 60, or: 8 }, req: e => !!e.station.ailes },
-  escorte:     { nom: 'ESCORTE',     tourelles: 3, soute: 4,  vol: 44, coque: 10, degats: 2, vitesse: 1.15, capacite: 'bouclier', prix: { cr: 9000, titane: 40, cobalt: 30 }, req: e => !!e.station.quai },
-  forteresse:  { nom: 'FORTERESSE',  tourelles: 5, soute: 10, vol: 60, coque: 14, degats: 2, vitesse: 0.85, capacite: 'salve',    prix: { cr: 24000, cobalt: 60, cristal: 25 }, req: e => !!e.recherche.cristal },
+  eclaireur:   { nom: 'ECLAIREUR',   tourelles: 1, maxTourelles: 2, soute: 4,  vol: 34, coque: 3,  degats: 1, vitesse: 1,    capacite: null,       prix: null },
+  prospecteur: { nom: 'PROSPECTEUR', tourelles: 2, maxTourelles: 3, soute: 6,  vol: 40, coque: 4,  degats: 1, vitesse: 1,    capacite: 'foreuse',  prix: { cr: 500, fer: 25 },  req: e => !!e.station.central },
+  pionniere:   { nom: 'PIONNIERE',   tourelles: 3, maxTourelles: 4, soute: 8,  vol: 50, coque: 6,  degats: 1, vitesse: 1.1,  capacite: 'aimant',   prix: { cr: 2600, fer: 60, or: 8 }, req: e => !!e.station.ailes },
+  escorte:     { nom: 'ESCORTE',     tourelles: 3, maxTourelles: 4, soute: 4,  vol: 44, coque: 10, degats: 2, vitesse: 1.15, capacite: 'bouclier', prix: { cr: 9000, titane: 40, cobalt: 30 }, req: e => !!e.station.quai },
+  forteresse:  { nom: 'FORTERESSE',  tourelles: 5, maxTourelles: 6, soute: 10, vol: 60, coque: 14, degats: 2, vitesse: 0.85, capacite: 'salve',    prix: { cr: 24000, cobalt: 60, cristal: 25 }, req: e => !!e.recherche.cristal },
 };
 // améliorations, 5 niveaux, prix × 2 par niveau ; COMMUNES à toutes les classes (on les garde en changeant de
 // classe : une classe neuve est toujours mieux que l'ancienne) ; elles se voient sur la corvette
@@ -97,7 +97,7 @@ function mdeCorvette(e, classe) {
   const C = MDE_CLASSES[classe], A = mdeAmel(e);
   return {
     classe, nom: C.nom, capacite: C.capacite,
-    tourelles: C.tourelles + Math.floor(A.canon / 2),
+    tourelles: Math.min(C.maxTourelles, C.tourelles + Math.floor(A.canon / 2)),
     degats: C.degats + Math.ceil(A.canon / 2),
     soute: C.soute + 2 * A.soute,
     vol: C.vol + 10 * A.reservoir,

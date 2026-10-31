@@ -108,7 +108,7 @@ Sons synthétisés (comme la Boutique) : tirs des tourelles, roche qui éclate, 
 
 ## 16. Plan de travail (Opus, une conversation par session)
 1. ✅ **Règles et simulateur** (fait le 31/10, bilan § 19) : `regles.js` (minerais, prix, améliorations, classes, usines, recherche, station, drones, étages), `outils/mineur-simulateur.js`, réglages.
-2. **Étage 1 jouable** : vol (repris de la maquette 6), quai, améliorations, usines, recherche, sauvegarde ; `index.html` en banc d'essai.
+2. ✅ **Étage 1 jouable** (fait le 31/10, bilan § 20) : vol (repris de la maquette 6), quai, améliorations, usines, recherche, sauvegarde ; `index.html` en banc d'essai.
 3. **Station et drones** (étage 2) : construction module par module, hangar, drones qui travaillent.
 4. **Lune et Mars** (étage 3) : carte du système, voyages, nouvelles ceintures et minerais, bases.
 5. **Aliens et défense** (étage 4) : vagues, flotte composée, satellites, bataille finale (vaisseau-mère et grande flotte contre toutes les flottes du joueur), fin et mode libre.
@@ -181,4 +181,20 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 **Résultats du simulateur** (12 parties, pilote « malin ») : fin en **3 h 34** en médiane (cible 3 à 5 h) ; étage 2 à 36 min, étage 3 à 1 h 29, étage 4 à 2 h 39 ; premier achat dès la 1re minute, jamais plus de 11 min sans achat ; 7,4 vagues gagnées sur 8 quand le joueur va défendre ; finale gagnée en 1 ou 2 essais. Le pilote « lent » finit en 3 h 48 ; le pilote qui n'achète rien reste à l'étage 1.
 
 **À voir à la session 2** : le modèle de sortie du simulateur (adresse du pilote, approche, ramassage) sera recalé sur le vrai vol ; les chocs comptent peu (aucune panne pour un bon pilote) ; le combat en vol remplacera `mdeCombat` quand le joueur est sur place.
+
+## 20. Session 2 (31/10) : étage 1 jouable — bilan
+**Fichiers** : `mineur-de-l-espace/index.html` (banc d'essai, pas encore sur l'accueil), `jeu.js` (vol et quai, objet de test `window.Mineur`), `chantier.js` (corvettes, tourelles et roches, repris des maquettes 4 à 6 ; `construireNef(classe, niveaux visibles, nombre de tourelles)`), `planetes.js` (shaders de Deep-Fold), `regles.js` ; polices `polices/mineur.css` (Silkscreen ajoutée, Pixelify Sans déjà là). Artefact : https://claude.ai/artifact/JuLojAXG94xkZTHEXY2k2g.
+
+**Ce qui marche** :
+- Le vol de la maquette 6 (joystick flottant à inertie, RENTRER, flèche vers la Terre, rotation continue), branché sur les règles : roches tirées par `mdeRoche`, éclats par `mdeEclats`, minerai par `mdeButin`, vente et panne par `mdeRetour`, carburant (`MDE_CONSO` : 0,5 par seconde en glissant, 1 en poussant), vitesse et aimant de `mdeCorvette`.
+- **Dangers** : petites roches rapides (traînée rouge) lancées vers la corvette, au rythme de `MDE_DANGERS` (1,2 par minute à l'étage 1) ; un choc = 1 point de coque (barre bleue en haut), écran qui tremble, vibration ; les tourelles les visent en priorité ; coque à zéro = remorquée comme une panne sèche. Coque et carburant refaits au quai. Drone réparateur : 1 point toutes les 20 s.
+- **Quai** : onglets AMELIORER (fiche de la corvette + améliorations), USINES (prix de vente du moment), RECHERCHE, et STATION après le centre spatial (modules et classes achetables, changer de classe ; la station n'est pas encore dessinée : session 3). Message « MIS DE COTE » quand le quai garde du minerai, et l'explication sous un achat bloqué par le minerai.
+- **Ce qui se voit** : niveaux d'amélioration 0 à 5 montrés comme 0, 1, 2, 2, 3, 3 (réservoirs et conteneurs de la maquette) ; tourelles selon `mdeCorvette` (au plus 2 sur l'Éclaireur, 3 Prospecteur, 4 Pionnière et Escorte : `maxTourelles` ajouté aux règles). La Forteresse n'a pas encore de dessin (elle prend celui de l'Escorte).
+- **Écran** : 300 px de haut, largeur selon le téléphone (420 à 760), message « TOURNE LE TELEPHONE » en portrait. Bouton II : pause (REPRENDRE, NOUVELLE PARTIE avec confirmation, ◀ LUDOTHEQUE).
+- **Sauvegarde** : l'état des règles dans `localStorage` (`mineur-de-l-espace`), au quai, après chaque achat et toutes les 30 s (la soute en vol n'est pas sauvegardée).
+- La nébuleuse du fond est dessinée par le jeu (taches floues agrandies), plus l'image des maquettes.
+
+**Vérifié dans Chromium** (paysage 844 × 390) : décollage, tir des tourelles, minerai ramassé, retour automatique et vente, sauvegarde, achats (la corvette gagne sa deuxième tourelle), chocs jusqu'à la panne et remorquage, pause, message en portrait, aucune erreur.
+
+**À voir** : essai sur le téléphone (vitesse, temps de minage, fréquence des chocs) ; recaler le modèle de sortie du simulateur sur ce vrai vol si le rythme diffère.
 

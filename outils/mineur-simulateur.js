@@ -138,9 +138,9 @@ function jouer(graine, pilote, limite, reprise) {
   check(!prix('amel:canon') === false && (mdeAcheter(e, 'amel:canon'), !prix('amel:canon')), 'niveau 4 seulement avec le module central');
   e.station.central = true; e.bases.lune = true;
   for (let i = 0; i < 6; i++) mdeAcheter(e, 'amel:canon');
-  check(!prix('amel:canon') && mdeCorvette(e).tourelles === 3 && mdeCorvette(e).degats === 4, 'cinq niveaux au plus (canon 5 : 2 tourelles et 3 dégâts de plus)');
+  check(!prix('amel:canon') && mdeCorvette(e).tourelles === 2 && mdeCorvette(e).degats === 4, 'cinq niveaux au plus (canon 5 : 3 dégâts de plus ; l\'Éclaireur porte 2 tourelles au plus)');
   e.classes.pionniere = true; mdeChangerClasse(e, 'pionniere');
-  check(mdeCorvette(e).tourelles === 5 && mdeCorvette(e).soute === 10, 'les améliorations restent en changeant de classe');
+  check(mdeCorvette(e).tourelles === 4 && mdeCorvette(e).soute === 10, 'les améliorations restent en changeant de classe');
   check(!mdeAchats(e).some(a => a.type === 'module'), 'pas de station avant le centre spatial');
   const R = mdeRng('x', 'roches'); let ok = true, ok2 = true;
   for (let i = 0; i < 300; i++) { const r = mdeRoche(e, 'terre', R), l = mdeEclats(r, R); if (l.length < 2 || l.length > 4 || l.some(x => x.taille !== 2 || x.minerai !== r.minerai)) ok = false; const b = mdeButin(e, { taille: 1 }, R); if (b < 1 || b > 2 || mdeButin(e, r, R)) ok2 = false; }
