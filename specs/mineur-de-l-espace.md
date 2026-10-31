@@ -1,6 +1,6 @@
-# Mineurs d'étoiles — cahier des charges
+# Mineur de l'espace — cahier des charges
 
-Proposition du 31/10, écrite après la maquette 6 validée. **À relire par l'utilisateur** (il dira quoi changer). L'historique du chantier (idée, maquettes, retours) est au § 18.
+Écrit le 31/10 après la maquette 6 validée ; **réponses de l'utilisateur intégrées le 31/10** (§ 17). Nom de travail d'avant : « Mineurs d'étoiles » (les maquettes gardent ce nom de fichier). L'historique du chantier (idée, maquettes, retours) est au § 18.
 
 ## 1. Décisions de l'utilisateur (30 et 31/10)
 - Fusion **exploration spatiale + gestion + auto battler**, départ depuis la Terre ; DA **différente de Nebula**.
@@ -8,6 +8,7 @@ Proposition du 31/10, écrite après la maquette 6 validée. **À relire par l'u
 - Minage : on casse les astéroïdes, un minerai = une case de soute, il faut rentrer vendre **avant la panne sèche** ; les **gros astéroïdes se brisent en 2 à 4** plus petits.
 - Graphismes : planètes du **Pixel Planet Generator** de Deep-Fold ; corvettes, roches, station et drones faits avec le **moteur de vaisseaux de Nebula** en rendu **palette** ; **rotation continue** (angle tracé le plus proche + petit reste tourné).
 - Les **améliorations se voient** sur la corvette ; une **station spatiale** (façon **ISS**) débloque d'autres **classes** de corvette.
+- **Nom : « Mineur de l'espace »** (31/10). Dangers dès l'étage 1 : oui. Pas de progression hors ligne. Pas de contrainte d'énergie à la station. **Pas de classement.** Fin : vaisseau-mère ou grande flotte alien qui affronte **toutes les flottes** du joueur.
 - Combat : le joueur **défend lui-même** avec sa corvette et **compose la flotte** qui défend chaque planète ; des **satellites** préviennent la flotte d'une attaque et la font venir plus vite.
 
 ## 2. Le jeu en une phrase
@@ -33,9 +34,9 @@ Un jeu de minage et de gestion **calme et sans pièges de jeu mobile** (pas de p
 | 1 | **Terre et sa ceinture** | Minage de fer et d'or, premières améliorations, usines, recherche | départ |
 | 2 | **Station spatiale** (orbite terrestre) | Construire l'ISS module par module ; classes de corvette ; **drones** de minage et cargos qui travaillent seuls | Centre spatial (recherche) |
 | 3 | **Lune**, puis **Mars** | Voyage (carburant), nouvelle ceinture et nouveaux minerais, **bases** (petite station locale avec son quai) | Moteur de transfert (recherche) |
-| 4 | **Aliens** | Attaques sur les planètes à bases ; défense par le joueur, la flotte et les drones ; satellites d'alerte ; vaisseau-mère alien | Première base sur Mars |
+| 4 | **Aliens** | Attaques sur les planètes à bases ; défense par le joueur, la flotte et les drones ; satellites d'alerte ; bataille finale | Première base sur Mars |
 - **Voyage** entre planètes : depuis la carte du système (écran simple, planètes de Deep-Fold), coût en carburant ou en temps de trajet court (5 à 10 s, animation), pas de vraie physique orbitale.
-- **Fin** : détruire le **vaisseau-mère alien** au-delà de Mars. Ensuite, **mode libre** (on continue à miner et à agrandir).
+- **Fin : la grande bataille.** Le **vaisseau-mère alien** arrive avec sa **grande flotte** ; **toutes les flottes** composées par le joueur (Terre, Lune, Mars) se rassemblent pour l'affronter, avec la corvette du joueur. Victoire = fin du jeu (écran de fin), puis **mode libre** (on continue à miner et à agrandir).
 
 ## 6. Minerais et prix (proposition, à régler au simulateur)
 | Minerai | Où | Prix de base | Rôle |
@@ -69,9 +70,9 @@ Un jeu de minage et de gestion **calme et sans pièges de jeu mobile** (pas de p
 
 ## 9. La station spatiale et les drones (étage 2)
 - La station se construit **module par module** (façon ISS, maquette 6) : **module central** → **poutre** et **ailes solaires** (énergie) → **radiateurs** → **hangar** (drones) → **raffinerie** (meilleurs prix) → **antenne** (satellites) → **quai** (changer de classe, réparer).
-- **Énergie** : chaque module consomme, les ailes solaires produisent ; il faut assez d'ailes pour faire tourner hangar et raffinerie (petite contrainte de gestion).
+- **Pas de contrainte d'énergie** (décision du 31/10) : les ailes solaires sont décoratives ou débloquent des modules, sans calcul d'énergie.
 - **Drones** (fabriqués au hangar) : **mineur** (casse les petites roches), **cargo** (ramène le minerai), **réparateur**, **défense**, **satellite**. Ils travaillent seuls autour de la station pendant qu'on pilote ; leur rendement est affiché au quai.
-- **Hors ligne** (proposition) : les drones continuent un peu quand le jeu est fermé (résumé au retour, **plafonné à 2 h**), sans notification ni rappel.
+- **Pas de progression hors ligne** (décision du 31/10) : les drones ne travaillent que pendant qu'on joue.
 
 ## 10. La défense (étage 4)
 - Les aliens (vaisseaux du même moteur, palette violette ou rouge) **attaquent une planète à base** de temps en temps (vague annoncée, jamais pendant qu'on est loin sans protection possible).
@@ -90,7 +91,7 @@ Un jeu de minage et de gestion **calme et sans pièges de jeu mobile** (pas de p
 ## 12. Graphismes et technique
 - Planètes : shaders de Deep-Fold en **WebGL 2** (repli : disque de couleur si WebGL 2 manque).
 - Vaisseaux, roches, station, drones, aliens : **`nebula/vaisseaux.js`** (moteur partagé, non modifié) + un fichier du jeu pour la **géométrie tournée**, les **rainures**, la **palette** et les pièces (repris des maquettes 4 à 6). Angles tracés **à la demande** (64 pour les vaisseaux, 24 pour les roches), rotation continue par le petit reste.
-- Fichiers proposés : `mineurs-d-etoiles/index.html`, `jeu.js` (vol, écrans), `regles.js` (économie, progression, sans dessin), `chantier.js` (fabrication des sprites), `planetes.js` (shaders), `sons.js` ; simulateur `outils/mineurs-simulateur.js`.
+- Fichiers proposés : `mineur-de-l-espace/index.html`, `jeu.js` (vol, écrans), `regles.js` (économie, progression, sans dessin), `chantier.js` (fabrication des sprites), `planetes.js` (shaders), `sons.js` ; simulateur `outils/mineur-simulateur.js`.
 - Polices : Silkscreen et Pixelify Sans (Google Fonts, à héberger dans `polices/` et citer dans les crédits).
 
 ## 13. Sons
@@ -98,8 +99,7 @@ Sons synthétisés (comme la Boutique) : tirs des tourelles, roche qui éclate, 
 
 ## 14. Sauvegarde, classements, défi du jour
 - **Sauvegarde** automatique (au quai et toutes les 30 s), une partie ; transfert `LUDO1-` comme les autres jeux.
-- **Classements** (proposition) : `temps` (temps pour atteindre la fin, plus bas = mieux) et `credits` (crédits gagnés au total).
-- **Pas de défi du jour** (proposition).
+- **Pas de classement** et **pas de défi du jour** (décision du 31/10). Sur l'accueil, le volet du jeu montre la progression (étage atteint, fin obtenue).
 
 ## 15. Durée et équilibrage (cibles)
 - Étage 1 : ~30 min ; étage 2 : ~1 h ; étage 3 : ~1 h 30 ; étage 4 et fin : ~1 h. Total 3 à 5 h.
@@ -107,20 +107,22 @@ Sons synthétisés (comme la Boutique) : tirs des tourelles, roche qui éclate, 
 - Le **simulateur** joue des parties automatiques (sorties types) pour régler prix et rendements.
 
 ## 16. Plan de travail (Opus, une conversation par session)
-1. **Règles et simulateur** : `regles.js` (minerais, prix, améliorations, classes, usines, recherche, station, drones, étages), `outils/mineurs-simulateur.js`, réglages.
+1. **Règles et simulateur** : `regles.js` (minerais, prix, améliorations, classes, usines, recherche, station, drones, étages), `outils/mineur-simulateur.js`, réglages.
 2. **Étage 1 jouable** : vol (repris de la maquette 6), quai, améliorations, usines, recherche, sauvegarde ; `index.html` en banc d'essai.
-3. **Station et drones** (étage 2) : construction module par module, énergie, hangar, drones qui travaillent, hors ligne plafonné.
+3. **Station et drones** (étage 2) : construction module par module, hangar, drones qui travaillent.
 4. **Lune et Mars** (étage 3) : carte du système, voyages, nouvelles ceintures et minerais, bases.
-5. **Aliens et défense** (étage 4) : vagues, flotte composée, satellites, vaisseau-mère, fin et mode libre.
-6. **Finitions** : sons, titre, pause, classements, accueil (cartouche, volet), transfert, crédits, tests, artefact.
+5. **Aliens et défense** (étage 4) : vagues, flotte composée, satellites, bataille finale (vaisseau-mère et grande flotte contre toutes les flottes du joueur), fin et mode libre.
+6. **Finitions** : sons, titre, pause, accueil (cartouche, volet sans classement), transfert, crédits, tests, artefact.
 
-## 17. Questions pour l'utilisateur
-1. Le **nom** : « Mineurs d'étoiles » (nom de travail) te va ?
-2. Les **dangers** de l'étage 1 (roches rapides qui abîment la coque) : oui, ou minage sans aucun danger jusqu'aux aliens ?
-3. Les **drones hors ligne** (plafonnés à 2 h) : oui ou non ?
-4. L'**énergie** de la station (assez d'ailes solaires pour faire tourner les modules) : bonne contrainte ou trop de gestion ?
-5. Les **classements** proposés (temps pour finir, crédits gagnés) ?
-6. La **fin** (vaisseau-mère alien au-delà de Mars) te convient-elle ?
+## 17. Réponses de l'utilisateur (31/10)
+1. Nom : **« Mineur de l'espace »**.
+2. Petits dangers dès l'étage 1 (roches rapides qui abîment la coque) : **oui**.
+3. Drones hors ligne : **non**.
+4. Énergie de la station : **trop de contraintes**, retirée.
+5. Classements : **pas besoin** pour ce jeu.
+6. Fin : **oui**, le vaisseau-mère **ou une grande flotte qui affronte toutes les flottes qu'on a faites**.
+
+**Cahier des charges validé** (31/10). Prochaine étape : session 1 (règles et simulateur), Opus.
 
 ## 18. Historique du chantier
 
