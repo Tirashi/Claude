@@ -10,8 +10,14 @@
 'use strict';
 // noms globaux venus de regles.js (mde…, MDE_…), planetes.js et chantier.js (pas de commentaire « global » : la page les déclare déjà)
 const CLE = 'mineur-de-l-espace';
-const H = 300, R_QUAI = RT / 2 + 34, LUNE_D = 1080, TAILLES = [11, 19, 32];   // TAILLES : rayon des petites, moyennes, grosses
+const H = 300, R_ST = 255, W_ST = 0.02, LUNE_D = 1080;   // R_ST : orbite de la station (au-delà de la planète) ; W_ST : sa vitesse (rad/s)
+const TAILLES = [11, 19, 32];   // TAILLES : rayon des petites, moyennes, grosses
 let W = 640;
+const CLE_COMMANDES = 'mineur-de-l-espace.commandes';
+// joystick fixe en bas à gauche ; en mode « bouton », POUSSER en bas à droite et RENTRER au-dessus
+const JOY = { x: 78, y: H - 78, r: 40 }, GAZ = () => ({ x: W - 66, y: H - 66, r: 40 }), BRENTRER = () => modeCommandes === 'bouton' ? { x: W - 116, y: H - 148, w: 104, h: 32 } : { x: W - 116, y: H - 46, w: 104, h: 34 };
+let modeCommandes = 'bouton';
+try { modeCommandes = localStorage.getItem(CLE_COMMANDES) || 'bouton'; } catch (err) { /* stockage indisponible */ }
 
 /* ---------- petites images : pépites de minerai, ciel, nébuleuse ---------- */
 function teinte(hex, f) { const c = [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16)); return '#' + c.map(v => Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f).toString(16).padStart(2, '0')).join(''); }
@@ -48,8 +54,8 @@ class Partie {
     const e = document.createElement('div'); e.className = 'ecran'; el.appendChild(e); this.ecran = e;
     const [c, x] = toile(W, H); this.c = c; this.x = x; e.appendChild(c);
     this.e = this.charger(); this.onglet = 'amel';
-    this.ship = { x: 0, y: -R_QUAI, vx: 0, vy: 0, a: 0 }; this.cam = { x: 0, y: 0 };
-    this.soute = []; this.balles = []; this.drops = []; this.parts = []; this.textes = []; this.joy = null; this.auto = false; this.panne = 0;
+    this.ship = { x: 0, y: -R_ST - QUAI_ST, vx: 0, vy: 0, a: 0 }; this.cam = { x: 0, y: 0 };
+    this.soute = []; this.balles = []; this.drops = []; this.parts = []; this.textes = []; this.joy = null; this.gaz = null; this.auto = false; this.panne = 0;
     this.asts = []; this.R = mulberry(Date.now() & 0xffffff); this.prochainDanger = 20; this.respawn = 0; this.secousse = 0; this.pauseVue = false; this.tSauve = 0;
     for (let k = 0; k < 16; k++) this.nouvelleRoche();
     this.panneau(); this.pause(); this.entrees(); this.rebatir(); this.accoster(true);
@@ -62,7 +68,7 @@ class Partie {
     return mdeNouvelle('m' + Date.now());
   }
   sauver() { try { localStorage.setItem(CLE, JSON.stringify(this.e)); } catch (err) { /* stockage indisponible */ } }
-  nouvellePartie() { this.e = mdeNouvelle('m' + Date.now()); this.sauver(); this.soute = []; this.drops = []; this.rebatir(); this.ship.x = 0; this.ship.y = -R_QUAI; this.accoster(true); }
+  nouvellePartie() { this.e = mdeNouvelle('m' + Date.now()); this.sauver(); this.soute = []; this.drops = []; this.rebatir(); this.accoster(true); }
   // l'écran : 300 px de haut, largeur selon le téléphone (à l'horizontale)
   ajuster() {
     const r = this.el.getBoundingClientRect(), L = Math.round(Math.max(420, Math.min(760, H * r.width / Math.max(1, r.height))));
@@ -72,6 +78,11 @@ class Partie {
     document.body.classList.toggle('debout', r.height > r.width);
   }
   get C() { return mdeCorvette(this.e); }
+  // la station : angle sur son orbite (lié au temps de jeu), position, vitesse, et la place de la corvette amarrée (quai vers l'extérieur)
+  station() {
+    const phi = -Math.PI / 2 + this.e.temps * W_ST, ux = Math.cos(phi), uy = Math.sin(phi), x = ux * R_ST, y = uy * R_ST;
+    return { phi, x, y, vx: -uy * R_ST * W_ST, vy: ux * R_ST * W_ST, qx: x + ux * QUAI_ST, qy: y + uy * QUAI_ST, a: phi - Math.PI / 2 };
+  }
   rebatir() {
     const A = this.e.ameliorations, c = this.C, cl = CLASSES[this.e.classe] ? this.e.classe : 'escorte';
     this.nef = construireNef(cl, { reservoir: VISIBLE[A.reservoir], soute: VISIBLE[A.soute] }, c.tourelles);
@@ -84,7 +95,7 @@ class Partie {
   nouvelleRoche(r, x, y, vx = 0, vy = 0) {
     const R = this.R;
     if (!r) r = mdeRoche(this.e, this.e.planete, R);
-    if (x === undefined) { let d, an; do { d = 280 + R() * 340; an = R() * TAU; } while (Math.hypot(Math.cos(an) * d - this.ship.x, Math.sin(an) * d - this.ship.y) < 260 && this.asts.length);
+    if (x === undefined) { let d, an; do { d = 340 + R() * 320; an = R() * TAU; } while (Math.hypot(Math.cos(an) * d - this.ship.x, Math.sin(an) * d - this.ship.y) < 260 && this.asts.length);
       x = Math.cos(an) * d; y = Math.sin(an) * d; }
     const t = r.taille - 1;
     this.asts.push({ x, y, vx, vy, r, v: ROCS[t][aspect(r.minerai)][R() * 3 | 0], ray: TAILLES[t] * 0.82, rot: R() * TAU, vr: (R() - 0.5) * (1.2 - t * 0.3), flash: 0, pvMax: r.pv });
@@ -140,17 +151,20 @@ class Partie {
   pause() {
     const b = document.createElement('button'); b.className = 'btn bpause'; b.textContent = 'II'; this.ecran.appendChild(b);
     const f = document.createElement('div'); f.className = 'pause'; this.ecran.appendChild(f); this.f = f;
-    f.innerHTML = `<div class="boite"><h3>PAUSE</h3><button class="btn" data-p="reprendre">REPRENDRE</button><button class="btn" data-p="nouvelle">NOUVELLE PARTIE</button>
-      <a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><p class="doux">LA PARTIE EST SAUVEGARDEE AU QUAI.</p></div>`;
-    b.addEventListener('click', () => { this.pauseVue = true; this.joy = null; f.classList.add('vu'); });
+    f.innerHTML = `<div class="boite"><h3>PAUSE</h3><button class="btn" data-p="reprendre">REPRENDRE</button><button class="btn" data-p="commandes"></button><button class="btn" data-p="nouvelle">NOUVELLE PARTIE</button>
+      <a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><p class="doux">JOYSTICK + POUSSER : LE JOYSTICK TOURNE LA CORVETTE, LE BOUTON ACCELERE. JOYSTICK SEUL : IL TOURNE ET POUSSE. LA PARTIE EST SAUVEGARDEE AU QUAI.</p></div>`;
+    const majC = () => { f.querySelector('[data-p="commandes"]').textContent = modeCommandes === 'bouton' ? 'COMMANDES : JOYSTICK + POUSSER' : 'COMMANDES : JOYSTICK SEUL'; }; majC();
+    b.addEventListener('click', () => { this.pauseVue = true; this.joy = null; this.gaz = null; f.classList.add('vu'); });
     f.addEventListener('click', ev => { const k = ev.target.dataset && ev.target.dataset.p; if (!k) return;
+      if (k === 'commandes') { modeCommandes = modeCommandes === 'bouton' ? 'glisse' : 'bouton'; try { localStorage.setItem(CLE_COMMANDES, modeCommandes); } catch (err) { /* stockage indisponible */ } majC(); return; }
       if (k === 'nouvelle') { if (!ev.target.dataset.sur) { ev.target.dataset.sur = 1; ev.target.textContent = 'SUR ? TOUT EST EFFACE'; return; } this.nouvellePartie(); }
       f.querySelectorAll('[data-sur]').forEach(x => { delete x.dataset.sur; x.textContent = 'NOUVELLE PARTIE'; });
       this.pauseVue = false; f.classList.remove('vu'); });
   }
   /* ---------- quai, décollage ---------- */
   accoster(debut, panne) {
-    this.quai = true; this.auto = false; this.joy = null; this.ship.vx = this.ship.vy = 0; this.panne = 0; this.alerteMeteo = null;
+    this.quai = true; this.auto = false; this.joy = null; this.gaz = null; this.ship.vx = this.ship.vy = 0; this.panne = 0; this.alerteMeteo = null;
+    { const S = this.station(); this.ship.x = S.qx; this.ship.y = S.qy; this.ship.a = S.a; }
     if (!debut) {
       const lot = {}; for (const m of this.soute) lot[m] = (lot[m] || 0) + 1;
       const r = mdeRetour(this.e, lot, panne), g = Object.entries(r.garde).map(([m, n]) => n + ' ' + MDE_MINERAIS[m].nom).join(', ');
@@ -161,18 +175,21 @@ class Partie {
     this.soute = []; const c = this.C; this.carbu = c.vol; this.coque = c.coque; this.majPanneau(); this.p.classList.add('vu');
   }
   decoller() {
-    this.quai = false; this.sorti = false; this.p.classList.remove('vu'); const s = this.ship, d = Math.hypot(s.x, s.y) || 1;
-    s.vx = s.x / d * 45; s.vy = s.y / d * 45; s.a = Math.atan2(s.vy, s.vx) + Math.PI / 2; this.prochainDanger = 12 + this.R() * 20;
+    this.quai = false; this.sorti = false; this.p.classList.remove('vu'); const s = this.ship, S = this.station();
+    s.vx = S.vx + Math.cos(S.phi) * 45; s.vy = S.vy + Math.sin(S.phi) * 45; s.a = S.phi + Math.PI / 2;   // on recule du quai, nez vers l'extérieur this.prochainDanger = 12 + this.R() * 20;
   }
   texte(x, y, t, c) { this.textes.push({ x, y, t, c, v: 1.8 }); }
   entrees() {
     const pos = ev => { const r = this.c.getBoundingClientRect(); return [(ev.clientX - r.left) * W / r.width, (ev.clientY - r.top) * H / r.height]; };
-    this.c.addEventListener('pointerdown', ev => { if (this.quai || this.panne || this.pauseVue) return; const [x, y] = pos(ev);
-      if (x > W - 120 && y > H - 52) { this.auto = true; return; }
-      if (x < W * 0.6) { this.c.setPointerCapture(ev.pointerId); this.joy = { id: ev.pointerId, bx: x, by: y, dx: 0, dy: 0 }; this.auto = false; } });
-    this.c.addEventListener('pointermove', ev => { const j = this.joy; if (!j || j.id !== ev.pointerId) return; const [x, y] = pos(ev);
-      let dx = x - j.bx, dy = y - j.by; const d = Math.hypot(dx, dy); if (d > 40) { dx *= 40 / d; dy *= 40 / d; } j.dx = dx; j.dy = dy; });
-    const fin = ev => { if (this.joy && this.joy.id === ev.pointerId) this.joy = null; }; this.c.addEventListener('pointerup', fin); this.c.addEventListener('pointercancel', fin);
+    // le joystick ne bouge pas : il est fixe en bas à gauche, on peut poser le pouce n'importe où dans la moitié gauche
+    const viser = (j, x, y) => { let dx = x - JOY.x, dy = y - JOY.y; const d = Math.hypot(dx, dy); if (d > JOY.r) { dx *= JOY.r / d; dy *= JOY.r / d; } j.dx = dx; j.dy = dy; };
+    this.c.addEventListener('pointerdown', ev => { if (this.quai || this.panne || this.pauseVue) return; const [x, y] = pos(ev), B = BRENTRER(), G = GAZ();
+      if (x > B.x - 6 && x < B.x + B.w + 6 && y > B.y - 6 && y < B.y + B.h + 6) { this.auto = true; return; }
+      if (modeCommandes === 'bouton' && Math.hypot(x - G.x, y - G.y) < G.r + 14) { this.c.setPointerCapture(ev.pointerId); this.gaz = ev.pointerId; this.auto = false; return; }
+      if (x < W * 0.5 && !this.joy) { this.c.setPointerCapture(ev.pointerId); this.joy = { id: ev.pointerId, dx: 0, dy: 0 }; viser(this.joy, x, y); this.auto = false; } });
+    this.c.addEventListener('pointermove', ev => { const j = this.joy; if (!j || j.id !== ev.pointerId) return; const [x, y] = pos(ev); viser(j, x, y); });
+    const fin = ev => { if (this.joy && this.joy.id === ev.pointerId) this.joy = null; if (this.gaz === ev.pointerId) this.gaz = null; };
+    this.c.addEventListener('pointerup', fin); this.c.addEventListener('pointercancel', fin);
   }
   mondeTourelle(i) { const [mx, my] = this.nef.tourelles[i], s = this.ship, c = Math.cos(s.a), si = Math.sin(s.a); return [s.x + mx * c - my * si, s.y + mx * si + my * c]; }
   /* ---------- un pas de simulation ---------- */
@@ -188,32 +205,35 @@ class Partie {
     this.asts = this.asts.filter(a => !a.rapide || a.vie > 0);
     // de nouvelles grosses roches arrivent dans la ceinture
     this.respawn -= dt; if (this.respawn <= 0) { this.respawn = 6; if (this.asts.filter(a => a.r.taille === 3).length < 12 && this.asts.length < 40) this.nouvelleRoche(); }
-    if (this.quai) { const ang = Math.atan2(s.y, s.x) + dt * 0.06; s.x = Math.cos(ang) * R_QUAI; s.y = Math.sin(ang) * R_QUAI; s.a = ang + Math.PI / 2; this.suite(dt); return; }
+    const S = this.station();
+    if (this.quai) { s.x = S.qx; s.y = S.qy; s.a = S.a; this.suite(dt); return; }
     if (this.panne) { this.panne -= dt; s.vx *= 0.985; s.vy *= 0.985; s.x += s.vx * dt; s.y += s.vy * dt;
-      if (this.panne <= 0) { const d = Math.hypot(s.x, s.y); s.x = s.x / d * R_QUAI; s.y = s.y / d * R_QUAI;
-        const perdu = this.soute.length - Math.floor(this.soute.length / 2); this.texte(s.x, s.y - 72, 'REMORQUEE' + (perdu ? ` · -${perdu} MINERAI` : ''), '#ff6a5c'); this.accoster(false, true); }
+      if (this.panne <= 0) { const perdu = this.soute.length - Math.floor(this.soute.length / 2); this.accoster(false, true); this.texte(s.x, s.y - 72, 'REMORQUEE' + (perdu ? ` · -${perdu} MINERAI` : ''), '#ff6a5c'); }
       this.suite(dt); return; }
     const j = this.joy, jx = j ? j.dx / 40 : 0, jy = j ? j.dy / 40 : 0, force = Math.hypot(jx, jy), V = c.vitesse, M = c.maniabilite, TOUR = 2.4 * M; let pousse = 0;
-    if (this.auto) { const d = Math.hypot(s.x, s.y), tx = s.x / d * (R_QUAI - 4), ty = s.y / d * (R_QUAI - 4), ex = tx - s.x, ey = ty - s.y, el = Math.hypot(ex, ey) || 1, v = Math.min(120 * V, el * 1.2);
-      s.vx += (ex / el * v - s.vx) * Math.min(1, dt * 1.5); s.vy += (ey / el * v - s.vy) * Math.min(1, dt * 1.5); pousse = 1;
+    if (this.auto) { const ex = S.qx - s.x, ey = S.qy - s.y, el = Math.hypot(ex, ey) || 1, v = Math.min(120 * V, el * 1.2);
+      s.vx += (ex / el * v + S.vx - s.vx) * Math.min(1, dt * 1.5); s.vy += (ey / el * v + S.vy - s.vy) * Math.min(1, dt * 1.5); pousse = 1;
       if (Math.hypot(s.vx, s.vy) > 8) { const voulu = Math.atan2(s.vy, s.vx) + Math.PI / 2; let dd = voulu - s.a; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, dd)); } }
     else { if (force > 0.15) { const voulu = Math.atan2(jy, jx) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, d));
         // propulseurs : petites bouffées blanches sur le nez quand la corvette tourne
         if (e.ameliorations.propulseurs && Math.abs(d) > 0.15 && this.R() < 0.5) { const cot = d > 0 ? -1 : 1, nx = s.x + Math.sin(s.a) * 22, ny = s.y - Math.cos(s.a) * 22;
           this.parts.push({ x: nx, y: ny, vx: Math.cos(s.a) * cot * 50 + s.vx, vy: Math.sin(s.a) * cot * 50 + s.vy, v: 0.25, c: '#c9cde0', t: 2 }); }
-        if (Math.abs(d) < 0.9) { pousse = force; const acc = 110 * V * (0.85 + 0.15 * M) * force * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; } }
+        if (modeCommandes === 'glisse' && Math.abs(d) < 0.9) { pousse = force; const acc = 110 * V * (0.85 + 0.15 * M) * force * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; } }
+      if (modeCommandes === 'bouton' && this.gaz !== null) { pousse = 1; const acc = 110 * V * (0.85 + 0.15 * M) * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; }
       s.vx *= 1 - dt * 0.12; s.vy *= 1 - dt * 0.12; const v = Math.hypot(s.vx, s.vy); if (v > 150 * V) { s.vx *= 150 * V / v; s.vy *= 150 * V / v; } }
     this.pousse = pousse; s.x += s.vx * dt; s.y += s.vy * dt;
     const de = Math.hypot(s.x, s.y);
     if (de > this.rMax) { s.vx -= s.x / de * 160 * dt; s.vy -= s.y / de * 160 * dt; if ((this.avert || 0) <= 0) { this.texte(s.x, s.y - 44, 'MOTEURS TROP FAIBLES', '#ff6a5c'); this.avert = 2.5; } }
     this.avert = (this.avert || 0) - dt;
     if (de < RT / 2 + 14) { s.x = s.x / de * (RT / 2 + 14); s.y = s.y / de * (RT / 2 + 14); }
-    if (de > R_QUAI + 30) this.sorti = true;
-    if (this.sorti && de < R_QUAI + 4) { this.accoster(); this.suite(dt); return; }
-    if (de > R_QUAI + 10) { this.carbu -= dt * (MDE_CONSO.glisse + (MDE_CONSO.pousse - MDE_CONSO.glisse) * pousse);
+    // amarrage : il suffit d'arriver près du quai de la station
+    const dq = Math.hypot(s.x - S.qx, s.y - S.qy);
+    if (dq > 90) this.sorti = true;
+    if (this.sorti && dq < 34) { this.accoster(); this.suite(dt); return; }
+    if (dq > 50) { this.carbu -= dt * (MDE_CONSO.glisse + (MDE_CONSO.pousse - MDE_CONSO.glisse) * pousse);
       if (this.carbu <= 0) this.tomberEnPanne('PANNE SECHE !'); }
     // dangers : petites roches rapides, plus nombreuses aux étages suivants
-    if (de > R_QUAI + 60) { this.prochainDanger -= dt; if (this.prochainDanger <= 0 && !this.alerteMeteo) { this.alerteMeteo = { an: this.R() * TAU, t: 1.3 }; this.prochainDanger = 60 / MDE_DANGERS[mdeEtage(e)] * (0.5 + this.R()); } }
+    if (dq > 140) { this.prochainDanger -= dt; if (this.prochainDanger <= 0 && !this.alerteMeteo) { this.alerteMeteo = { an: this.R() * TAU, t: 1.3 }; this.prochainDanger = 60 / MDE_DANGERS[mdeEtage(e)] * (0.5 + this.R()); } }
     if (this.alerteMeteo && (this.alerteMeteo.t -= dt) <= 0) { this.danger(this.alerteMeteo.an); this.alerteMeteo = null; }
     for (const a of this.asts) if (a.rapide && this.R() < 0.9) { const k = this.R(); this.parts.push({ x: a.x + (this.R() - 0.5) * 4, y: a.y + (this.R() - 0.5) * 4,
       vx: -a.vx * 0.15 + (this.R() - 0.5) * 20, vy: -a.vy * 0.15 + (this.R() - 0.5) * 20, v: 0.25 + this.R() * 0.3, c: k < 0.3 ? '#fff2a0' : k < 0.6 ? '#f2a94a' : k < 0.85 ? '#d0752c' : '#8c4a24', t: k < 0.5 ? 2 : 1 }); }
@@ -249,7 +269,7 @@ class Partie {
     for (const t of this.textes) { t.y -= 14 * dt; t.v -= dt; } this.textes = this.textes.filter(t => t.v > 0);
     for (const T of this.tirs) T.recul = Math.max(0, (T.recul || 0) - dt);
     this.secousse = Math.max(0, this.secousse - dt);
-    const qx = Math.cos(Math.atan2(s.y, s.x)) * 0, cx = this.quai ? W / 2 - Math.min(170, W * 0.27) + qx : s.x + s.vx * 0.5, cy = this.quai ? 0 : s.y + s.vy * 0.5;
+    const S = this.station(), cx = this.quai ? S.x + W / 2 - Math.min(180, W * 0.28) : s.x + s.vx * 0.5, cy = this.quai ? S.y : s.y + s.vy * 0.5;
     this.cam.x += (cx - this.cam.x) * Math.min(1, dt * (this.quai ? 2 : 3)); this.cam.y += (cy - this.cam.y) * Math.min(1, dt * (this.quai ? 2 : 3));
   }
   // une roche cassée : ses éclats (règles), ou son minerai si c'était une petite
@@ -278,7 +298,11 @@ class Partie {
     if (lx > -RL && ly > -RL && lx < W + RL && ly < H + RL) { x.drawImage(luneC, Math.round(lx - RL / 2), Math.round(ly - RL / 2));
       x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.textAlign = 'center'; x.fillText(e.recherche.transfert ? 'LUNE' : 'LUNE · MOTEUR DE TRANSFERT', lx, ly + RL / 2 + 12); }
     x.drawImage(terreC, ox - RT / 2, oy - RT / 2);
-    x.strokeStyle = this.quai ? '#7be07b66' : '#7be07b26'; x.beginPath(); x.arc(ox, oy, R_QUAI, 0, 7); x.stroke();
+    // orbite et station : le quai (barre jaune et noire) toujours tourné vers l'extérieur
+    const S = this.station(), FS = construireStation(e.station), kS = nAng(S.a), rS = S.a - kS / N_ANG * TAU, stx = Math.round(S.x + ox), sty = Math.round(S.y + oy);
+    x.strokeStyle = '#7be07b22'; x.setLineDash([2, 5]); x.beginPath(); x.arc(ox, oy, R_ST, 0, 7); x.stroke(); x.setLineDash([]);
+    if (stx > -L_ST && sty > -L_ST && stx < W + L_ST && sty < H + L_ST) { x.save(); x.translate(stx, sty); x.rotate(Math.atan2(Math.sin(rS), Math.cos(rS))); x.drawImage(FS[kS], -L_ST / 2, -L_ST / 2); x.restore();
+      if (!this.quai && this.sorti) { x.strokeStyle = (t * 2 % 1) < 0.5 ? '#7be07b88' : '#7be07b33'; x.beginPath(); x.arc(Math.round(S.qx + ox), Math.round(S.qy + oy), 30, 0, 7); x.stroke(); } }
     for (const a of this.asts) { const sx = Math.round(a.x + ox), sy = Math.round(a.y + oy), L = a.v.L; if (sx < -L || sy < -L || sx > W + L || sy > H + L) continue;
       if (a.rapide) { // queue de feu en gros pixels, qui s'amincit derrière la météorite
         const v = Math.hypot(a.vx, a.vy) || 1, ux = -a.vx / v, uy = -a.vy / v, lg = 30 + ((t * 20 | 0) % 3) * 2;
@@ -300,11 +324,12 @@ class Partie {
     if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -L_NEF / 2, -L_NEF / 2); x.restore();
     this.tirs.forEach((T, i) => { const [tx, ty] = this.mondeTourelle(i), kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round(tx + ox), Math.round(ty + oy)); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); x.drawImage(this.tour[kt], -14, -14); x.restore(); });
     for (const tx of this.textes) { x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#000'; x.fillText(tx.t, tx.x + ox + 1, tx.y + oy + 1); x.fillStyle = tx.c; x.fillText(tx.t, tx.x + ox, tx.y + oy); }
-    // flèche vers la Terre quand elle sort de l'écran (rouge si le carburant devient juste)
-    if (ox < -RT / 2 + 20 || oy < -RT / 2 + 20 || ox > W + RT / 2 - 20 || oy > H + RT / 2 - 20) { const an = Math.atan2(oy - H / 2, ox - W / 2), kk = Math.min((W / 2 - 26) / Math.abs(Math.cos(an)), (H / 2 - 50) / Math.abs(Math.sin(an)));
-      const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + Math.sin(an) * kk + 10, d = Math.hypot(s.x, s.y) - R_QUAI, juste = d / (120 * c.vitesse) > this.carbu * 0.7, col = juste ? '#ff6a5c' : '#7be07b';
+    // flèche vers la station quand elle sort de l'écran (rouge si le carburant devient juste)
+    const qsx = S.qx + ox, qsy = S.qy + oy;
+    if (!this.quai && (qsx < 10 || qsy < 40 || qsx > W - 10 || qsy > H - 10)) { const an = Math.atan2(qsy - H / 2, qsx - W / 2), kk = Math.min((W / 2 - 26) / Math.abs(Math.cos(an)), (H / 2 - 50) / Math.abs(Math.sin(an)));
+      const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + Math.sin(an) * kk + 10, d = Math.hypot(s.x - S.qx, s.y - S.qy), juste = d / (120 * c.vitesse) > this.carbu * 0.7, col = juste ? '#ff6a5c' : '#7be07b';
       x.save(); x.translate(fx, fy); x.rotate(an); x.fillStyle = col; x.beginPath(); x.moveTo(10, 0); x.lineTo(-6, -7); x.lineTo(-6, 7); x.fill(); x.restore();
-      x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = col; x.fillText('TERRE ' + Math.round(d / 10) + ' KM', fx - Math.cos(an) * 24, fy - Math.sin(an) * 20 + 3); }
+      x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = col; x.fillText('STATION ' + Math.round(d / 10) + ' KM', fx - Math.cos(an) * 24, fy - Math.sin(an) * 20 + 3); }
     // alerte météorite : chevrons rouges qui clignotent au bord de l'écran, du côté d'où elle arrive
     if (this.alerteMeteo && (t * 6 | 0) % 2) { const an = this.alerteMeteo.an, kk = Math.min((W / 2 - 20) / Math.abs(Math.cos(an)), (H / 2 - 44) / Math.abs(Math.sin(an)));
       const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + 8 + Math.sin(an) * kk; x.save(); x.translate(fx, fy); x.rotate(an + Math.PI); x.fillStyle = '#ff6a5c';
@@ -319,11 +344,16 @@ class Partie {
     const c0 = s0 + sm * 13 + 10; for (let i = 0; i < c.coque; i++) { x.fillStyle = i < this.coque ? '#9fd0ff' : '#2a3060'; x.fillRect(c0 + i * 6, 10, 4, 10); }
     const f = this.carbu / c.vol, bw = 90, bxx = W - 48 - bw; x.textAlign = 'right'; x.fillStyle = '#8c93c4'; x.fillText('CARBU', bxx - 6, 18); x.fillStyle = '#1a1f40'; x.fillRect(bxx, 11, bw, 8);
     x.fillStyle = f < 0.25 ? (t * 4 % 1 < 0.5 ? '#ff6a5c' : '#7a2a26') : f < 0.5 ? '#ff9d4a' : '#7be07b'; x.fillRect(bxx, 11, Math.round(bw * f), 8);
-    if (!this.quai && !this.panne) { const j = this.joy, bx2 = j ? j.bx : 70, by2 = j ? j.by : H - 70;
-      x.globalAlpha = j ? 0.55 : 0.25; x.strokeStyle = '#9fd0ff'; x.lineWidth = 2; x.beginPath(); x.arc(bx2, by2, 40, 0, 7); x.stroke();
-      x.fillStyle = '#9fd0ff'; x.beginPath(); x.arc(bx2 + (j ? j.dx : 0), by2 + (j ? j.dy : 0), 15, 0, 7); x.fill(); x.lineWidth = 1; x.globalAlpha = 1;
-      x.fillStyle = this.auto ? '#2f7a3a' : '#1d2560cc'; x.strokeStyle = this.auto ? '#6fdc7f' : '#5a6be0'; x.fillRect(W - 116, H - 46, 104, 34); x.strokeRect(W - 115.5, H - 45.5, 103, 33);
-      x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText(this.auto ? 'RETOUR...' : 'RENTRER', W - 64, H - 24); }
+    // commandes : joystick fixe, bouton POUSSER (mode « bouton »), RENTRER
+    if (!this.quai && !this.panne) { const j = this.joy;
+      x.globalAlpha = j ? 0.55 : 0.3; x.strokeStyle = '#9fd0ff'; x.lineWidth = 2; x.beginPath(); x.arc(JOY.x, JOY.y, JOY.r, 0, 7); x.stroke();
+      x.fillStyle = '#9fd0ff'; x.beginPath(); x.arc(JOY.x + (j ? j.dx : 0), JOY.y + (j ? j.dy : 0), 15, 0, 7); x.fill(); x.lineWidth = 1; x.globalAlpha = 1;
+      if (modeCommandes === 'bouton') { const G = GAZ(), on = this.gaz !== null;
+        x.globalAlpha = on ? 0.9 : 0.55; x.fillStyle = on ? '#7a3a14' : '#3a1e10'; x.strokeStyle = on ? '#ffcf4a' : '#d0752c'; x.lineWidth = 2;
+        x.beginPath(); x.arc(G.x, G.y, G.r, 0, 7); x.fill(); x.stroke(); x.lineWidth = 1; x.globalAlpha = 1;
+        x.font = '10px Silkscreen'; x.textAlign = 'center'; x.fillStyle = on ? '#ffcf4a' : '#f2a94a'; x.fillText('POUSSER', G.x, G.y + 4); }
+      const B = BRENTRER(); x.fillStyle = this.auto ? '#2f7a3a' : '#1d2560cc'; x.strokeStyle = this.auto ? '#6fdc7f' : '#5a6be0'; x.fillRect(B.x, B.y, B.w, B.h); x.strokeRect(B.x + 0.5, B.y + 0.5, B.w - 1, B.h - 1);
+      x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText(this.auto ? 'RETOUR...' : 'RENTRER', B.x + B.w / 2, B.y + B.h / 2 + 4); }
   }
 }
 
