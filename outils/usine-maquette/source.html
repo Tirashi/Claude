@@ -181,7 +181,7 @@ class Tel {
     return false;
   }
   tapis(cotes, d, g) { // cotes : côté d'entrée ou -1 ; d : sortie
-    if (cotes < 0 || cotes === (d + 2) % 4) return this.modele('conveyor-stripe', 0, 0, angle(d), 1, 0, g);
+    if (cotes < 0 || cotes === (d + 2) % 4) return this.modele('conveyor-stripe', 0, 0, angle(d) + Math.PI / 2, 1, 0, g); // tapis droit dans l'axe x sans rotation
     for (let k = 0; k < 4; k++) { // le virage relie les côtés 2 (-x) et 1 (+z) sans rotation
       const a = (2 - k + 4) % 4, b = (1 - k + 4) % 4;
       if ((a === cotes && b === d) || (b === cotes && a === d)) return this.modele('conveyor-stripe-corner', 0, 0, k * Math.PI / 2, 1, 0, g);
