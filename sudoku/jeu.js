@@ -238,7 +238,7 @@ let K = 1, T = 0, BTN = [], BG = null;
 const S = {
   phase: 'title', P: null, v: [], notes: [], hist: [], sel: -1, pencil: false, t0: 0, elapsed: 0, hints: 0, daily: false, offRank: false,
   best: store.get('best', {}) || {}, dailyDone: store.get('daily', {}) || {}, wins: store.get('wins', 0) || 0, errMode: store.get('err', 1),
-  winT: 0, rankText: '', record: false, flash: [], parts: [], petals: [], msg: '', msgT: 0, clearArm: 0,
+  winT: 0, rankText: '', record: false, flash: [], parts: [], petals: [], msg: '', msgT: 0, confirmClear: false,
 };
 function layout(N) { const cs = N === 9 ? 28 : N === 6 ? 40 : 56, size = cs * N; return { cs, size, ox: Math.floor((LW - size) / 2), oy: 48 + Math.floor((256 - size) / 2) }; }
 /* grille du jour : une seule tentative classée. Elle est sauvegardée à part (sudoku.dailyRun, chrono compris) :
@@ -250,7 +250,7 @@ function startDaily() {
   startPuzzle(9, dailyLevel(), true);
 }
 function setup(P) {
-  S.P = P; S.hist = []; S.sel = -1; S.pencil = false; S.flash = []; S.parts = []; S.msg = ''; S.rankText = ''; S.record = false; S.phase = 'play'; S.t0 = now();
+  S.P = P; S.hist = []; S.sel = -1; S.pencil = false; S.confirmClear = false; S.flash = []; S.parts = []; S.msg = ''; S.rankText = ''; S.record = false; S.phase = 'play'; S.t0 = now();
 }
 function startPuzzle(N, lvl, daily) {
   const seed = daily ? todayKey() * 13 + 5 : (Math.random() * 2 ** 31) | 0;
@@ -306,6 +306,13 @@ function setCell(i, d, pencil = S.pencil) {
 function erase(i) {
   if (i < 0 || isGiven(i) || (!S.v[i] && !S.notes[i])) return;
   snap(); S.v[i] = 0; S.notes[i] = 0; SFX.click(); saveGame();
+}
+// vider la grille : enlève tous les chiffres posés et les notes, garde le chrono et les indices (ANNULER la rend)
+function clearGrid() {
+  S.confirmClear = false;
+  if (!S.v.some((d, i) => d && !isGiven(i)) && !S.notes.some(n => n)) { say('La grille est déjà vide.'); SFX.click(); return; }
+  snap(); S.v = S.P.puz.slice(); S.notes = new Array(S.v.length).fill(0); S.sel = -1;
+  SFX.click(); say('Grille vidée. ANNULER la remet comme avant.'); saveGame();
 }
 // indice : corrige un chiffre faux, sinon remplit la case choisie (ou la plus facile) : 30 s de pénalité
 function hint() {
@@ -451,10 +458,23 @@ function drawPlay(t) {
   button(140, ty, 60, 24, 'ANNULER', undo, { size: 6 });
   button(206, ty, 58, 24, 'INDICE', hint, { size: 6 });
   const filled = S.v.filter(d => d).length;
-  text(`CASES : ${filled} / ${N * N}`, 136, 386, '#ffd76a', 'center', 7);
+  text(`CASES : ${filled} / ${N * N}`, 8, 386, '#ffd76a', 'left', 7);
+  button(206, 380, 58, 18, 'VIDER', () => { S.confirmClear = true; S.sel = -1; SFX.click(); }, { size: 6 });
   const msg = S.msg && now() - S.msgT < 3500 ? S.msg : S.sel < 0 ? 'Touche une case, puis un chiffre en bas. Le crayon sert à noter les possibilités.' :
     S.pencil ? 'Crayon : touche un chiffre pour l\'ajouter ou l\'enlever des notes.' : `Un chiffre par ligne, par colonne et par bloc ${Topo(N)}.`;
   wrap(msg, 32).slice(0, 4).forEach((l, i) => text(l, 136, 404 + i * 12, '#e8dcf8', 'center', 7));
+  if (S.confirmClear) drawConfirmClear();
+}
+// fenêtre OUI / NON : seuls ses deux boutons répondent
+function drawConfirmClear() {
+  BTN = [];
+  R(0, 0, LW, LH, 'rgba(6,3,16,.72)');
+  const x = 26, y = 170, w = 220, h = 110;
+  panel(x, y, w, h, true);
+  text('VIDER LA GRILLE ?', 136, y + 14, '#ffd76a', 'center', 8);
+  ['Tous tes chiffres et tes notes', 'seront effacés.', 'Le chrono continue.'].forEach((l, i) => text(l, 136, y + 34 + i * 12, '#f6f0ff', 'center', 6));
+  button(x + 14, y + 76, 88, 22, 'OUI', clearGrid, { gold: true, size: 8 });
+  button(x + w - 102, y + 76, 88, 22, 'NON', () => { S.confirmClear = false; SFX.click(); }, { size: 8 });
 }
 const Topo = N => N === 9 ? '3x3' : N === 6 ? '2x3' : '2x2';
 function drawWin(t) {
@@ -554,13 +574,14 @@ cv.addEventListener('pointerdown', e => {
   e.preventDefault(); audioInit();
   const [x, y] = logical(e);
   for (let i = BTN.length - 1; i >= 0; i--) { const b = BTN[i]; if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) { b.act(); return; } }
-  if (S.phase !== 'play') return;
+  if (S.phase !== 'play' || S.confirmClear) return;
   const Lo = layout(S.P.N), c = Math.floor((x - Lo.ox) / Lo.cs), r = Math.floor((y - Lo.oy) / Lo.cs);
   if (c >= 0 && r >= 0 && c < S.P.N && r < S.P.N) { const i = r * S.P.N + c; S.sel = S.sel === i ? -1 : i; SFX.select(); }
   else S.sel = -1;
 });
 document.addEventListener('keydown', e => {
   if (S.phase !== 'play') return;
+  if (S.confirmClear) { if (e.key === 'Escape') S.confirmClear = false; else if (e.key === 'Enter') clearGrid(); return; }
   const N = S.P.N;
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { undo(); return; }
   const d = parseInt(e.key, 10);
@@ -587,7 +608,7 @@ function resize() {
   cv.width = LW * K; cv.height = LH * K;
 }
 window.addEventListener('resize', resize);
-window.Sudoku = { generate, logicSolve, countSolutions, topo, S, startPuzzle, startDaily, setCell, hint, undo };   // pour les tests
+window.Sudoku = { generate, logicSolve, countSolutions, topo, S, startPuzzle, startDaily, setCell, hint, undo, clearGrid };   // pour les tests
 
 BG = buildBg();
 setTimeout(resize, 0); resize();

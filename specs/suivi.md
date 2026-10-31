@@ -80,6 +80,7 @@ Copie telle quelle des lignes détaillées que `CLAUDE.md` gardait jusqu'au 30/1
 - Résistance : la grande session de confort (§ 11), le soigneur et les prix des bâtiments sont validés.
 - La Dernière Lanterne : `main` à jour ; son au retour et réglage Graphismes nickel ; acte 2 plutôt bien équilibré.
 - Duché et La Boutique de cartes : équilibrage jugé bon ; c'est l'utilisateur qui reviendra vers nous s'il faut retoucher.
+- Sudoku : bouton **VIDER** demandé (29/10), fait : sous le pavé, à droite de CASES ; fenêtre OUI / NON (Entrée / Échap au clavier) ; enlève chiffres et notes, garde le chrono et les indices ; ANNULER rend la grille (`clearGrid` dans `window.Sudoku`).
 
 ## Yams, retours de l'essai (29/10)
 - Les dés s'arrêtaient de travers et restaient figés : on ne savait pas quelle face comptait. À l'arrêt, chaque dé lancé bascule maintenant à plat sur la face la plus haute (celle qui était déjà comptée), en restant dans la piste et sans chevaucher les autres dés (`aplanir` dans `yams/jeu.js`). Vérifié sur 15 lancers : tous à plat, aucun chevauchement, valeurs inchangées.
