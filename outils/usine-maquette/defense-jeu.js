@@ -50,7 +50,7 @@ function terrain(t, neige) {
     const s1 = cote(c, av), s2 = cote(c, ap);
     if (s1 === (s2 + 2) % 4) t.modele(p + 'tile-straight', x, z, angle(s1), 1, -0.2);
     else for (let k = 0; k < 4; k++) {
-      const a = (2 - k + 4) % 4, b = (1 - k + 4) % 4;
+      const a = (4 - k) % 4, b = (1 - k + 4) % 4; // le virage du chemin relie +x et +z sans rotation (celui des tapis : -x et +z)
       if ((a === s1 && b === s2) || (a === s2 && b === s1)) t.modele(p + 'tile-corner-round', x, z, k * Math.PI / 2, 1, -0.2);
     }
   }
