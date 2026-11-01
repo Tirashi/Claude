@@ -487,7 +487,10 @@ class Partie {
         x.fillRect(Math.round(sx0 + (ex - F.img.width / 2) * EC + bx * q - w / 2), Math.round(sy0 + (ey - F.img.height / 2) * EC + by * q - w / 2), w, w); } }
     const reste = s.a - k / N_ANG * TAU; x.save(); x.translate(sx0, sy0); x.rotate(Math.atan2(Math.sin(reste), Math.cos(reste)));
     if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -F.img.width * EC / 2, -F.img.height * EC / 2, F.img.width * EC, F.img.height * EC); x.restore();   // taille du dessin : 128 px pour le chantier, autre pour un habillage
-    this.tirs.forEach((T, i) => { const [tx, ty] = this.mondeTourelle(i), kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round(tx + ox), Math.round(ty + oy)); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); const TE = this.tourEch || 1, Ti = this.tour[kt]; x.drawImage(Ti, -Ti.width * TE / 2, -Ti.height * TE / 2, Ti.width * TE, Ti.height * TE); x.restore(); });
+    // tourelles accrochées à la coque : placées depuis la position de la corvette À L'ÉCRAN (sx0, sy0), sans arrondi à part
+    // (sinon elles tremblent d'un pixel par rapport à la coque)
+    const ca = Math.cos(s.a), sa = Math.sin(s.a);
+    this.tirs.forEach((T, i) => { const [mx, my] = this.nef.tourelles[i], kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(sx0 + mx * ca - my * sa, sy0 + mx * sa + my * ca); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); const TE = this.tourEch || 1, Ti = this.tour[kt]; x.drawImage(Ti, -Ti.width * TE / 2, -Ti.height * TE / 2, Ti.width * TE, Ti.height * TE); x.restore(); });
     for (const tx of this.textes) { x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#000'; x.fillText(tx.t, tx.x + ox + 1, tx.y + oy + 1); x.fillStyle = tx.c; x.fillText(tx.t, tx.x + ox, tx.y + oy); }
     // flèche vers la station quand elle sort de l'écran (rouge si le carburant devient juste)
     const qsx = S.qx + ox, qsy = S.qy + oy;

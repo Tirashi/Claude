@@ -28,15 +28,26 @@ def moteurs(im):   # tuyères : segments opaques de la rangée la plus basse (x,
             seg.append([round((x0 + x - 1) / 2, 1), m + 1, max(1.5, min(3.5, (x - x0) / 2))])
         else: x += 1
     return seg[:4]
-def tourelles(im, n=6):   # places des tourelles (décalage depuis le centre, pixels de l'image), posées sur la coque
-    w, h = im.size; px = im.load(); out = []
-    for fx, fy in [(0, -.12), (-.27, .05), (.27, .05), (0, .2), (-.3, .32), (.3, .32)][:n]:
-        x, y = round(fx * w), round(fy * h)
-        for t in range(12):
-            xx, yy = int(w / 2 + x * (1 - t / 12)), int(h / 2 + y * (1 - t / 12))
-            if 0 <= xx < w and 0 <= yy < h and px[xx, yy][3] > 0: x, y = xx - w / 2, yy - h / 2; break
-        out.append([round(x), round(y)])
-    return out
+def tourelles(im, n=6):   # places des tourelles sur les FLANCS (retour du 01/11) : par paires gauche/droite, posées
+    # près du bord de la coque, sur les rangées les plus larges du milieu ; une seule tourelle : sur le nez, au centre
+    w, h = im.size; px = im.load(); ins = 9   # retrait depuis le bord (la tourelle fait 18 px de large)
+    def bords(y):
+        xs = [x for x in range(w) if px[x, y][3] > 0]; return (xs[0], xs[-1]) if xs else None
+    lignes = []
+    for fy in [i / 40 for i in range(-10, 9)]:   # du haut du milieu (-25 %) au bas (+20 %)
+        y = int(h / 2 + fy * h); b = bords(y)
+        if b: lignes.append((b[1] - b[0], y, b))
+    lignes.sort(reverse=True); pris = []
+    for larg, y, b in lignes:
+        if all(abs(y - q) > 28 for q in pris): pris.append(y)
+        if len(pris) == 2: break
+    pris.sort(); out = []
+    for y in pris:
+        (g, d) = bords(y); out += [[round(g + ins - w / 2), round(y - h / 2)], [round(d - ins - w / 2), round(y - h / 2)]]
+    centre = None
+    for y in range(h):
+        if px[w // 2, y][3] > 0: centre = [0, round(y + 0.3 * h * 0.5 - h / 2)]; break
+    return {'paires': out[:n], 'centre': centre or [0, 0]}
 def nef(im, ech=0.5, tour=True):
     d = {'src': data(im), 'w': im.size[0], 'h': im.size[1], 'ech': ech, 'moteurs': moteurs(im)}
     if tour: d['tourelles'] = tourelles(im)
@@ -50,7 +61,7 @@ SP = {
   # escadrille du porte-vaisseaux (Star Fleet 5 : n° 29, puis 28 améliorée à fond)
   'chasseur1': nef(sckr('f5', 29), tour=False), 'chasseur2': nef(sckr('f5', 28), tour=False),
   # drones des stations, satellites et flottes du joueur (Star Fleet 5)
-  'd_mineur': nef(sckr('f5', 10), tour=False), 'd_cargo': nef(sckr('f5', 38), tour=False), 'd_reparateur': nef(sckr('f5', 47), tour=False),
+  'd_mineur': nef(sckr('f5', 10), tour=False), 'd_cargo': nef(sckr('f5', 19), tour=False), 'd_reparateur': nef(sckr('f5', 47), tour=False),
   'd_satellite': nef(sckr('f5', 5), tour=False),
   'u_garde': nef(sckr('f5', 33), tour=False), 'u_escorte': nef(sckr('f5', 4), tour=False),
   'u_reparateur': nef(sckr('f5', 18), tour=False), 'u_canonniere': nef(sckr('f5', 49), tour=False),

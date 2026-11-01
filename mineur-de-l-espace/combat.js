@@ -42,8 +42,9 @@ Object.assign(Partie.prototype, {
   // le dessin de la corvette : sprite du pack si chargé (porte-vaisseaux compris), sinon le moteur de Nebula
   nefSprite(cl, nbT) {
     if (!pretSpr(cl)) return null;
-    const S = SPR[cl], e = S.ech;
-    return { frames: tournesSpr(cl), ech: e, tourelles: S.tourelles.slice(0, Math.max(1, nbT)).map(([a, b]) => [a * e, b * e]) };
+    // tourelles sur les flancs, par paires ; une seule (Éclaireur au départ) : au centre ; nombre impair : la dernière au centre
+    const S = SPR[cl], e = S.ech, T = S.tourelles, n = Math.max(1, nbT), l = n === 1 ? [T.centre] : T.paires.slice(0, n - (n % 2)).concat(n % 2 ? [T.centre] : []);
+    return { frames: tournesSpr(cl), ech: e, tourelles: l.map(([a, b]) => [a * e, b * e]) };
   },
   tourSprite() { return pretSpr('tourelle') ? { fr: paresseux(i => tournesSpr('tourelle')[i].img), ech: SPR.tourelle.ech } : null; },
   // l'escadrille du porte-vaisseaux : chasseurs à bord, pleins d'énergie
