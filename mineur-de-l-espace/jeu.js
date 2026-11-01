@@ -73,8 +73,12 @@ class Partie {
   // l'écran : 300 px de haut, largeur selon le téléphone (à l'horizontale)
   ajuster() {
     const r = this.el.getBoundingClientRect(), L = Math.round(Math.max(420, Math.min(760, H * r.width / Math.max(1, r.height))));
-    if (L !== W) { W = L; this.c.width = W; this.x = this.c.getContext('2d'); this.x.imageSmoothingEnabled = false; }
-    const k = Math.min(r.width / W, r.height / H); this.ecran.style.width = W + 'px'; this.ecran.style.height = H + 'px';
+    W = L; const k = Math.min(r.width / W, r.height / H);
+    // résolution : le canvas est tracé à la taille réelle de l'écran (multiple entier de 300 px de haut), le pixel art
+    // grossit en gros pixels réguliers, le texte, les traits et les rotations restent fins (surtout sur PC)
+    const RES = Math.max(1, Math.min(4, Math.floor(k * (devicePixelRatio || 1) + 0.15)));
+    if (this.c.width !== W * RES || this.c.height !== H * RES) { this.c.width = W * RES; this.c.height = H * RES; this.x = this.c.getContext('2d'); }
+    this.res = RES; this.x.imageSmoothingEnabled = false; this.ecran.style.width = W + 'px'; this.ecran.style.height = H + 'px';
     this.ecran.style.transform = `translate(${(r.width - W * k) / 2}px, ${(r.height - H * k) / 2}px) scale(${k})`;
     document.body.classList.toggle('debout', r.height > r.width);
   }
@@ -415,6 +419,7 @@ class Partie {
     x.fillStyle = '#1a1f40'; x.fillRect(W / 2 - 80, 62, 160, 5); x.fillStyle = '#7be07b'; x.fillRect(W / 2 - 80, 62, Math.round(160 * f), 5);
   }
   dessin(t) {
+    this.x.setTransform(this.res || 1, 0, 0, this.res || 1, 0, 0); this.x.imageSmoothingEnabled = false;
     if (this.enVoyage) return this.dessinVoyage(t);
     const x = this.x, s = this.ship, e = this.e, c = this.C, sk = this.secousse > 0 ? (this.R() - 0.5) * 6 : 0;
     const ox = Math.round(W / 2 - this.cam.x + sk), oy = Math.round(H / 2 - this.cam.y + sk); this.ox = ox; this.oy = oy;
