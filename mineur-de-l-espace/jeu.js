@@ -92,8 +92,11 @@ class Partie {
   }
   rebatir() {
     const A = this.e.ameliorations, c = this.C, cl = CLASSES[this.e.classe] ? this.e.classe : 'escorte';
-    this.nef = construireNef(cl, { reservoir: VISIBLE[A.reservoir], soute: VISIBLE[A.soute] }, c.tourelles);
-    this.tour = tourelle(VISIBLE[A.canon]);
+    // les sprites des packs (combat.js) s'ils sont chargés, sinon le moteur de Nebula
+    const sp = this.nefSprite && this.nefSprite(this.e.classe, c.tourelles), ts = sp && this.tourSprite();
+    this.nef = sp || construireNef(cl, { reservoir: VISIBLE[A.reservoir], soute: VISIBLE[A.soute] }, c.tourelles);
+    this.tour = ts ? ts.fr : tourelle(VISIBLE[A.canon]); this.tourEch = ts ? ts.ech : 1;
+    if (this.armerEscadrille) this.armerEscadrille();
     this.tirs = this.nef.tourelles.map((_, i) => ({ a: 0, t: i * 0.15 }));
     this.carbu = c.vol; this.coque = c.coque;
   }
@@ -124,6 +127,8 @@ class Partie {
         const S = this.station(), mod = id.startsWith('module:');
         this.texte(mod ? S.x : this.ship.x, mod ? S.y - 80 : this.ship.y - 46, mod ? MDE_MODULES[id.slice(7)].nom + ' INSTALLE !' : id.startsWith('drone:') ? 'NOUVEAU DRONE !' : 'ACHETE !', '#7be07b'); this.sauver(); } }
       else if (b.dataset.c) { if (mdeChangerClasse(this.e, b.dataset.c)) { this.rebatir(); this.sauver(); } }
+      else if (b.dataset.r) { if (!this.bat && mdeRetirerUnite(this.e, this.e.planete, +b.dataset.r)) this.sauver(); }
+      else if (b.dataset.fin) { if (this.e.aliens.finale && !this.e.fin && !this.bat) { this.decoller(); this.lancerBataille(true); } return; }
       else if (b.dataset.go) return this.decoller();
       else if (b.dataset.v) return this.voyager(b.dataset.v);
       this.majPanneauSiCalme(); });
@@ -136,6 +141,10 @@ class Partie {
     const prix = P => Object.entries(P).map(([k, v]) => k === 'cr' ? v + ' CR' : v + ' ' + MDE_MINERAIS[k].nom).join(' + ');
     let h = `<div class="onglets">${O.map(([k, n]) => `<button class="btn ${this.onglet === k ? 'actif' : ''}" data-o="${k}">${n}</button>`).join('')}</div>`;
     h += `<h4>A QUAI · ${MDE_PLANETES[e.planete].nom} · ${e.cr} CR</h4>`;
+    // étage 4 : combat en cours, base hors service, bataille finale
+    if (this.bat && !this.bat.fini) h += `<p class="alerte">${this.bat.finale ? 'BATAILLE FINALE EN COURS !' : 'ATTAQUE EN COURS : DECOLLE POUR DEFENDRE LA STATION !'}</p>`;
+    if (e.hs[e.planete]) h += `<p class="alerte">BASE HORS SERVICE : PLUS DE DRONES NI DE FLOTTE ICI. REPARE-LA (ONGLET STATION).</p>`;
+    if (e.aliens.finale && !e.fin && !this.bat) h += `<p class="alerte">LE VAISSEAU-MERE APPROCHE. TOUTES TES FLOTTES SE REUNIRONT POUR LA BATAILLE.</p><button class="btn go finale" data-fin="1">BATAILLE FINALE</button>`;
     const mis = Object.entries(e.entrepot).filter(([, n]) => n > 0);
     if (mis.length) h += `<p class="mis">MIS DE COTE : ${mis.map(([m, n]) => n + ' ' + MDE_MINERAIS[m].nom).join(', ')}</p>`;
     const ligne = (a) => `<div class="ligne"><span class="nom">${a.nom}<small>${a.effet}</small></span><button class="btn" data-a="${a.id}" ${a.possible ? '' : 'disabled'}>${prix(a.prix)}</button></div>`;
@@ -145,6 +154,9 @@ class Partie {
     if (this.onglet === 'amel') {
       const c = this.C; h += `<p class="fiche">${c.nom} · ${c.tourelles} TOURELLE${c.tourelles > 1 ? 'S' : ''} · DEGATS ${c.degats} · SOUTE ${c.soute} · ${c.vol} S · COQUE ${c.coque}</p>`;
       const a = l.filter(x => x.type === 'amel'); h += a.length ? a.map(ligne).join('') : rien('TOUT EST AU MAXIMUM POUR L\'INSTANT');
+      if (e.classes.porte) { const E = mdeEscadrille(e), es = l.filter(x => x.type === 'esc');
+        h += `<h5>ESCADRILLE DU PORTE-VAISSEAUX</h5><p class="fiche">${E.nb} CHASSEURS · ENERGIE ${E.energie} S · DEGATS ${E.degats} · PV ${E.pv} · DEFENSE ${E.defense.portee} M${E.grand ? ' · CHASSEURS LOURDS' : ''}</p>`;
+        h += es.length ? es.map(ligne).join('') : rien('ESCADRILLE AU MAXIMUM POUR L\'INSTANT'); }
     } else if (this.onglet === 'usine') {
       h += `<p class="fiche">PRIX : ${Object.keys(MDE_MINERAIS).filter(m => m === 'fer' || m === 'or' || mdeEtage(e) >= 3).map(m => MDE_MINERAIS[m].nom + ' ' + mdePrix(e, m)).join(' · ')}</p>`;
       const a = l.filter(x => x.type === 'usine'); h += a.length ? a.map(ligne).join('') : rien('TOUTES LES USINES SONT AU MAXIMUM');
@@ -170,6 +182,15 @@ class Partie {
       h += titre('CLASSES DE CORVETTE');
       h += l.filter(x => x.type === 'classe').map(ligne).join('');
       h += Object.keys(e.classes).map(c => `<div class="ligne"><span class="nom">${MDE_CLASSES[c].nom}<small>${MDE_CLASSES[c].tourelles} TOURELLE(S) · SOUTE ${MDE_CLASSES[c].soute} · ${MDE_CLASSES[c].vol} S</small></span><button class="btn" data-c="${c}" ${c === e.classe ? 'disabled' : ''}>${c === e.classe ? 'A BORD' : 'PRENDRE'}</button></div>`).join('');
+      const rep = l.find(x => x.type === 'reparer'); if (rep) h += titre('BASE HORS SERVICE') + ligne(rep);
+      if (mdeEtage(e) >= 4 && mdeABase(e, e.planete)) {
+        // la flotte de la planète (auto battler) : elle se bat seule quand les aliens attaquent
+        const F = e.flottes[e.planete], pl = mdePlaces(e);
+        h += titre('FLOTTE · ' + MDE_PLANETES[e.planete].nom + ' · ' + F.length + ' / ' + pl);
+        h += `<p>ELLE DECOLLE QUAND LES ALIENS ATTAQUENT (PLUS TOT AVEC DES SATELLITES : ${e.satellites[e.planete] || 0} / 3). RETIRER UNE UNITE REND LA MOITIE DE SES CR.</p>`;
+        h += F.map((u, i) => { const D = MDE_UNITES[u.type]; return `<div class="ligne"><span class="nom">${D.nom}<small>PV ${D.pv}${D.att ? ' · ATTAQUE ' + D.att : ''}${D.soin ? ' · SOIGNE ' + D.soin : ''}</small></span><button class="btn" data-r="${i}" ${this.bat ? 'disabled' : ''}>RETIRER</button></div>`; }).join('');
+        h += l.filter(x => x.type === 'unite').map(ligne).join('');
+      }
       h += titre('DRONES');
       if (!e.station.hangar) h += rien('IL FAUT LE HANGAR POUR FABRIQUER DES DRONES');
       else { const p = e.planete, q = mdeProduction(e, p), d = e.drones[p], val = Object.entries(MDE_PLANETES[p].ceinture).reduce((t, [m, x]) => t + x * mdePrix(e, m), 0);
@@ -219,7 +240,7 @@ class Partie {
       if (g) this.texte(this.ship.x, this.ship.y - 56, 'MIS DE COTE : ' + g, '#9fd0ff');
       this.sauver();
     }
-    this.soute = []; const c = this.C; this.carbu = c.vol; this.coque = c.coque; this.majPanneau(); this.p.classList.add('vu');
+    this.soute = []; const c = this.C; this.carbu = c.vol; this.coque = c.coque; if (this.armerEscadrille) this.armerEscadrille(); this.majPanneau(); this.p.classList.add('vu');
   }
   voyager(pl) {
     const de = this.e.planete; if (!mdeVoyager(this.e, pl)) return;
@@ -275,7 +296,10 @@ class Partie {
     if (this.pauseVue) return;
     if (this.enVoyage) { mdeAvancer(this.e, dt); this.enVoyage.t += dt; if (this.enVoyage.t >= this.enVoyage.d) this.finVoyage(); return; }
     const s = this.ship, c = this.C, e = this.e;
-    const ev = mdeAvancer(e, dt); if (ev.gain) { this.livre = (this.livre || 0) + ev.gain; if (this.quai) this.majPanneauBientot = true; }
+    const ev = mdeAvancer(e, dt);
+    if (this.evenementsAliens) { this.evenementsAliens(ev); this.pasCombat(dt); this.pasEscadrille(dt); }
+    if (this.bandeau) this.bandeau.v -= dt;
+    if (ev.gain) { this.livre = (this.livre || 0) + ev.gain; if (this.quai) this.majPanneauBientot = true; }
     this.tLivre = (this.tLivre || 0) + dt; if (this.tLivre > 4) { this.tLivre = 0; if (this.livre) { const S = this.station(); this.texte(S.x, S.y - 70, '+' + this.livre + ' CR (DRONES)', '#ffcf4a'); this.livre = 0; if (this.majPanneauBientot && this.quai) { this.majPanneauBientot = false; this.majPanneauSiCalme(); } } }
     this.tSauve += dt; if (this.tSauve > 30) { this.tSauve = 0; this.sauver(); }
     // roches : dérive autour de la planète ; les rapides vont tout droit
@@ -333,6 +357,7 @@ class Partie {
     // tourelles : chacune vise la roche la plus proche (les rapides d'abord), tourne puis tire quand elle est alignée
     this.tirs.forEach((T, i) => { const [tx, ty] = this.mondeTourelle(i); let cible = null, bd = MDE_TIR.portee;
       for (const a of this.asts) { const d = Math.hypot(a.x - tx, a.y - ty) - a.ray - (a.rapide ? 120 : 0); if (d < bd) { bd = d; cible = a; } }
+      if (this.bat) for (const a of this.bat.aliens) if (a.pv > 0 && !a.fuite) { const d = Math.hypot(a.x - tx, a.y - ty) - 150; if (d < bd) { bd = d; cible = a; } }
       T.t -= dt; if (!cible) return;
       const voulu = Math.atan2(cible.y - ty, cible.x - tx) + Math.PI / 2; let d = voulu - T.a; d = Math.atan2(Math.sin(d), Math.cos(d)); T.a += Math.max(-5 * dt, Math.min(5 * dt, d));
       if (Math.abs(d) < 0.12 && T.t <= 0) { T.t = MDE_TIR.cadence; const fx = Math.sin(T.a), fy = -Math.cos(T.a), lg = 10 + VISIBLE[e.ameliorations.canon] * 2;
@@ -345,8 +370,10 @@ class Partie {
   tomberEnPanne(t) { this.carbu = Math.max(0, this.carbu); this.panne = 2.4; this.joy = null; this.auto = false; this.texte(this.ship.x, this.ship.y - 44, t, '#ff6a5c'); }
   suite(dt) {
     const s = this.ship, deg = this.C.degats;
-    for (const b of this.balles) { b.x += b.vx * dt; b.y += b.vy * dt; b.v -= dt;
-      for (const a of this.asts) if (Math.hypot(a.x - b.x, a.y - b.y) < a.ray) { b.v = 0; a.r.pv -= deg; a.flash = 0.08; this.eclats(b.x, b.y, 3, a.r.minerai); if (a.r.pv <= 0) this.casser(a); break; } }
+    for (const b of this.balles) { b.x += b.vx * dt; b.y += b.vy * dt; b.v -= dt; const dg = b.deg || deg;
+      if (this.bat && this.toucheAlien(b, dg)) { b.v = 0; continue; }
+      if (b.sorte === 'flotte') continue;   // la flotte ne vise que les aliens
+      for (const a of this.asts) if (Math.hypot(a.x - b.x, a.y - b.y) < a.ray) { b.v = 0; a.r.pv -= dg; a.flash = 0.08; this.eclats(b.x, b.y, 3, a.r.minerai); if (a.r.pv <= 0) this.casser(a); break; } }
     this.balles = this.balles.filter(b => b.v > 0);
     const aimant = 90 * this.C.aimant;
     for (const d of this.drops) { d.v -= dt; const dx = s.x - d.x, dy = s.y - d.y, dist = Math.hypot(dx, dy);
@@ -381,6 +408,7 @@ class Partie {
   dessinDrones(x, ox, oy, t, S) {
     const e = this.e, p = e.planete, d = e.drones[p], marche = mdeABase(e, p) && !e.hs[p];
     const tire = (k, px, py, a) => { const sx = Math.round(px + ox), sy = Math.round(py + oy); if (sx < -30 || sy < -30 || sx > W + 30 || sy > H + 30) return false;
+      if (typeof pretSpr === 'function' && pretSpr('d_' + k)) { dessineSpr(x, 'd_' + k, sx, sy, a); return true; }
       const F = drone(k), n = nAng(a), r = a - n / N_ANG * TAU; x.save(); x.translate(sx, sy); x.rotate(Math.atan2(Math.sin(r), Math.cos(r))); x.drawImage(F[n], -20, -20); x.restore(); return true; };
     const postes = [];
     if (marche) for (let i = 0; i < d.mineur; i++) {
@@ -412,7 +440,7 @@ class Partie {
     const L1 = Math.round(RL * (1 - f) * 1.4), L2 = Math.round(RL * f * 1.6);
     if (L1 > 2) x.drawImage(LOINTAINES[V.de][0], Math.round(-L1 / 2 + 40 - f * 120), Math.round(H / 2 - L1 / 2), L1, L1);
     if (L2 > 2) x.drawImage(LOINTAINES[V.vers][0], Math.round(W - 40 - L2 / 2 + (1 - f) * 120), Math.round(H / 2 - L2 / 2), L2, L2);
-    const F = this.nef.frames[nAng(Math.PI / 2)]; x.drawImage(F.img, Math.round(W / 2 - F.img.width / 2), Math.round(H / 2 - F.img.height / 2));
+    const F = this.nef.frames[nAng(Math.PI / 2)], EC = this.nef.ech || 1; x.drawImage(F.img, Math.round(W / 2 - F.img.width * EC / 2), Math.round(H / 2 - F.img.height * EC / 2), F.img.width * EC, F.img.height * EC);
     for (let q = 0; q < 16; q++) { const fl = q / 16; x.fillStyle = fl < 0.3 ? '#fff2a0' : fl < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(4 * (1 - fl)));
       x.fillRect(Math.round(W / 2 - 34 - q * 2 - (t * 30 | 0) % 2), Math.round(H / 2 - w / 2), w, w); }
     x.font = '13px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ffcf4a'; x.fillText('EN ROUTE VERS ' + (V.vers === 'lune' ? 'LA LUNE' : V.vers === 'mars' ? 'MARS' : 'LA TERRE'), W / 2, 50);
@@ -450,15 +478,16 @@ class Partie {
       if (a.r.pv < a.pvMax) { x.fillStyle = '#000a'; x.fillRect(sx - 12, sy - a.ray - 8, 24, 3); x.fillStyle = '#ff9d4a'; x.fillRect(sx - 12, sy - a.ray - 8, 24 * a.r.pv / a.pvMax, 3); } }
     for (const d of this.drops) { const b = Math.sin(t * 5 + d.x); x.drawImage(PEP[d.type], Math.round(d.x + ox - 6), Math.round(d.y + oy - 5 + b), 12, 10); }
     for (const p of this.parts) { x.fillStyle = p.c; x.fillRect(Math.round(p.x + ox), Math.round(p.y + oy), p.t, p.t); }
-    for (const b of this.balles) { x.save(); x.translate(Math.round(b.x + ox), Math.round(b.y + oy)); x.rotate(b.a); x.fillStyle = '#d0752c'; x.fillRect(-1.5, -5, 3, 10); x.fillStyle = '#fff2a0'; x.fillRect(-0.5, -4, 1, 7); x.restore(); }
+    if (this.dessinCombat) this.dessinCombat(x, ox, oy, t);
+    for (const b of this.balles) { if (b.sorte) { const c = b.sorte === 'chasseur' ? '#ff9d4a' : '#9fd0ff'; x.fillStyle = c; x.fillRect(Math.round(b.x + ox) - 1, Math.round(b.y + oy) - 1, 2, 2); continue; } x.save(); x.translate(Math.round(b.x + ox), Math.round(b.y + oy)); x.rotate(b.a); x.fillStyle = '#d0752c'; x.fillRect(-1.5, -5, 3, 10); x.fillStyle = '#fff2a0'; x.fillRect(-0.5, -4, 1, 7); x.restore(); }
     // corvette : rendu de l'angle le plus proche, tourné du petit reste ; flammes ; tourelles
-    const k = nAng(s.a), F = this.nef.frames[k], sx0 = Math.round(s.x + ox), sy0 = Math.round(s.y + oy), bx = -Math.sin(s.a), by = Math.cos(s.a);
+    const k = nAng(s.a), F = this.nef.frames[k], sx0 = Math.round(s.x + ox), sy0 = Math.round(s.y + oy), bx = -Math.sin(s.a), by = Math.cos(s.a), EC = this.nef.ech || 1;
     if (this.pousse > 0.1 && !this.panne && !this.quai) for (const [ex, ey, er] of F.engines) { const nm = e.ameliorations.moteur, l = er * (1.2 + this.pousse * 1.6) * (1 + 0.15 * nm) + ((t * 30 | 0) % 2);
       for (let q = 0; q < l; q++) { const f = q / l; x.fillStyle = f < 0.3 ? (nm >= 3 ? '#bfe8ff' : '#fff2a0') : f < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(er * (1 - f * 0.6)));
-        x.fillRect(Math.round(sx0 - F.img.width / 2 + ex + bx * q - w / 2), Math.round(sy0 - F.img.height / 2 + ey + by * q - w / 2), w, w); } }
+        x.fillRect(Math.round(sx0 + (ex - F.img.width / 2) * EC + bx * q - w / 2), Math.round(sy0 + (ey - F.img.height / 2) * EC + by * q - w / 2), w, w); } }
     const reste = s.a - k / N_ANG * TAU; x.save(); x.translate(sx0, sy0); x.rotate(Math.atan2(Math.sin(reste), Math.cos(reste)));
-    if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -F.img.width / 2, -F.img.height / 2); x.restore();   // taille du dessin : 128 px pour le chantier, autre pour un habillage
-    this.tirs.forEach((T, i) => { const [tx, ty] = this.mondeTourelle(i), kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round(tx + ox), Math.round(ty + oy)); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); x.drawImage(this.tour[kt], -this.tour[kt].width / 2, -this.tour[kt].height / 2); x.restore(); });
+    if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -F.img.width * EC / 2, -F.img.height * EC / 2, F.img.width * EC, F.img.height * EC); x.restore();   // taille du dessin : 128 px pour le chantier, autre pour un habillage
+    this.tirs.forEach((T, i) => { const [tx, ty] = this.mondeTourelle(i), kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round(tx + ox), Math.round(ty + oy)); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); const TE = this.tourEch || 1, Ti = this.tour[kt]; x.drawImage(Ti, -Ti.width * TE / 2, -Ti.height * TE / 2, Ti.width * TE, Ti.height * TE); x.restore(); });
     for (const tx of this.textes) { x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#000'; x.fillText(tx.t, tx.x + ox + 1, tx.y + oy + 1); x.fillStyle = tx.c; x.fillText(tx.t, tx.x + ox, tx.y + oy); }
     // flèche vers la station quand elle sort de l'écran (rouge si le carburant devient juste)
     const qsx = S.qx + ox, qsy = S.qy + oy;
@@ -475,11 +504,14 @@ class Partie {
     x.fillStyle = '#05060dcc'; x.fillRect(0, 0, W, 30);
     x.font = '13px Silkscreen'; x.textAlign = 'left'; x.fillStyle = '#ffcf4a'; x.fillText(e.cr + ' CR', 10, 20);
     x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.fillText(c.nom, 92, 19);
-    const sm = c.soute, s0 = Math.round(W / 2 - sm * 6.5 - 30); for (let i = 0; i < sm; i++) { const cx = s0 + i * 13; x.fillStyle = '#1a1f40'; x.fillRect(cx, 8, 11, 12); x.strokeStyle = '#2f3770'; x.strokeRect(cx + 0.5, 8.5, 10, 11);
-      if (this.soute[i]) x.drawImage(PEP[this.soute[i]], cx + 1, 10, 9, 8); }
-    const c0 = s0 + sm * 13 + 10; for (let i = 0; i < c.coque; i++) { x.fillStyle = i < this.coque ? '#9fd0ff' : '#2a3060'; x.fillRect(c0 + i * 6, 10, 4, 10); }
+    // soute et coque : cases plus étroites quand elles sont nombreuses (porte-vaisseaux amélioré : 22 cases, 26 plaques)
+    const sm = c.soute, pas = Math.min(13, Math.floor((W - 440) / sm)), s0 = Math.max(Math.round(W / 2 - sm * pas / 2 - 40), x.measureText(c.nom).width + 104 | 0);
+    for (let i = 0; i < sm; i++) { const cx = s0 + i * pas; x.fillStyle = '#1a1f40'; x.fillRect(cx, 8, pas - 2, 12); x.strokeStyle = '#2f3770'; x.strokeRect(cx + 0.5, 8.5, pas - 3, 11);
+      if (this.soute[i]) x.drawImage(PEP[this.soute[i]], cx + 1, 10, pas - 4, 8); }
+    const c0 = s0 + sm * pas + 8, cp = Math.min(6, Math.max(2, Math.floor(56 / c.coque))); for (let i = 0; i < c.coque; i++) { x.fillStyle = i < this.coque ? '#9fd0ff' : '#2a3060'; x.fillRect(c0 + i * cp, 10, Math.max(1, cp - 2), 10); }
     const f = this.carbu / c.vol, bw = 90, bxx = W - 48 - bw; x.textAlign = 'right'; x.fillStyle = '#8c93c4'; x.fillText('CARBU', bxx - 6, 18); x.fillStyle = '#1a1f40'; x.fillRect(bxx, 11, bw, 8);
     x.fillStyle = f < 0.25 ? (t * 4 % 1 < 0.5 ? '#ff6a5c' : '#7a2a26') : f < 0.5 ? '#ff9d4a' : '#7be07b'; x.fillRect(bxx, 11, Math.round(bw * f), 8);
+    if (this.dessinAlertes) this.dessinAlertes(x, t);
     // commandes : joystick fixe, bouton POUSSER (mode « bouton »), RENTRER
     if (!this.quai && !this.panne && this.pc && this.viseSouris && this.souris) { const mx = Math.round(this.souris.x), my = Math.round(this.souris.y); x.fillStyle = this.clic ? '#ffcf4a' : '#9fd0ff';
       for (const [a, b, w, h] of [[-8, 0, 5, 1], [4, 0, 5, 1], [0, -8, 1, 5], [0, 4, 1, 5]]) x.fillRect(mx + a, my + b, w, h); }
@@ -508,5 +540,7 @@ function demarrer() {
     partie.pas(dt); partie.dessin(n / 1000); requestAnimationFrame(boucle); }
   requestAnimationFrame(boucle);
 }
-(document.fonts ? document.fonts.ready : Promise.resolve()).then(demarrer);
-setTimeout(demarrer, 2500);
+// au chargement de la page (tous les scripts lus, combat.js compris), polices et sprites prêts
+const lancer = () => Promise.all([document.fonts ? document.fonts.ready : 0, typeof spritesPrets !== 'undefined' ? spritesPrets : 0]).then(demarrer);
+if (document.readyState === 'complete') lancer(); else addEventListener('load', lancer);
+setTimeout(demarrer, 4000);

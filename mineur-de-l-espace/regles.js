@@ -77,8 +77,27 @@ const MDE_CLASSES = {
   prospecteur: { nom: 'PROSPECTEUR', tourelles: 2, maxTourelles: 3, soute: 6,  vol: 40, coque: 4,  degats: 1, vitesse: 1,    capacite: 'foreuse',  prix: { cr: 500, fer: 25 },  req: e => !!e.station.central },
   pionniere:   { nom: 'PIONNIERE',   tourelles: 3, maxTourelles: 4, soute: 8,  vol: 50, coque: 6,  degats: 1, vitesse: 1.1,  capacite: 'aimant',   prix: { cr: 2600, fer: 60, or: 8 }, req: e => !!e.station.ailes },
   escorte:     { nom: 'ESCORTE',     tourelles: 3, maxTourelles: 4, soute: 4,  vol: 44, coque: 10, degats: 2, vitesse: 1.15, capacite: 'bouclier', prix: { cr: 9000, titane: 40, cobalt: 30 }, req: e => !!e.station.quai },
-  forteresse:  { nom: 'FORTERESSE',  tourelles: 5, maxTourelles: 6, soute: 10, vol: 60, coque: 14, degats: 2, vitesse: 0.85, capacite: 'salve',    prix: { cr: 24000, cobalt: 60, cristal: 25 }, req: e => !!e.recherche.cristal },
+  // le porte-vaisseaux (choix du 01/11, remplace la Forteresse) : lent, grosse soute, deux tourelles à lui, une
+  // escadrille de chasseurs qui minent et se battent seuls, et une défense rapprochée contre les météorites
+  porte:       { nom: 'PORTE-VAISSEAUX', tourelles: 2, maxTourelles: 3, soute: 12, vol: 60, coque: 16, degats: 2, vitesse: 0.8, capacite: 'escadrille', prix: { cr: 24000, cobalt: 60, cristal: 25 }, req: e => !!e.recherche.cristal },
 };
+// l'escadrille du porte-vaisseaux : 5 niveaux comme les améliorations (achetées dès qu'on a le porte-vaisseaux)
+const MDE_ESCADRILLE = {
+  endurance: { nom: 'ENDURANCE', poids: 1,   effet: 'ENERGIE DES CHASSEURS +5 S' },
+  puissance: { nom: 'PUISSANCE', poids: 1.3, effet: 'DEGATS DES CHASSEURS +50 %' },
+  blindage:  { nom: 'BLINDAGE',  poids: 1,   effet: 'CHASSEURS PLUS RESISTANTS' },
+  hangar:    { nom: 'HANGAR',    poids: 1.5, effet: '+1 CHASSEUR' },
+  defense:   { nom: 'DEFENSE',   poids: 0.8, effet: 'DEFENSE RAPPROCHEE PLUS RAPIDE' },
+};
+const MDE_ESC_ZERO = () => ({ endurance: 0, puissance: 0, blindage: 0, hangar: 0, defense: 0 }), MDE_ESC_PRIX = 1500;
+// ce que vaut l'escadrille : nombre de chasseurs, énergie (s de vol), dégâts par tir, PV, minerai porté ;
+// défense rapprochée (cadence, portée) ; « grand » : améliorée à fond (les chasseurs changent de modèle)
+function mdeEscadrille(e) {
+  const N = e.escadrille || MDE_ESC_ZERO();
+  return { nb: Math.min(6, 2 + N.hangar), energie: 14 + 5 * N.endurance, degats: 1 + 0.5 * N.puissance, pv: 3 + 2 * N.blindage, soute: N.puissance >= 3 ? 2 : 1,
+    defense: { cadence: 0.6 - 0.07 * N.defense, portee: 85 + 8 * N.defense },
+    grand: N.endurance + N.puissance + N.blindage + N.hangar >= 4 * MDE_NIV_MAX };
+}
 // améliorations, 5 niveaux, prix × 2 par niveau ; COMMUNES à toutes les classes (on les garde en changeant de
 // classe : une classe neuve est toujours mieux que l'ancienne) ; elles se voient sur la corvette
 const MDE_AMELIORATIONS = {
@@ -108,6 +127,7 @@ function mdeCorvette(e, classe) {
     vitesse: C.vitesse * (e.recherche.moteurs ? 1.15 : 1) * (1 + 0.08 * A.moteur),
     maniabilite: 1 + 0.2 * A.propulseurs,   // vitesse de rotation et poussée
     aimant: (C.capacite === 'aimant' ? 1.6 : 1) * (e.recherche.aimant ? 1.6 : 1),
+    escadrille: C.capacite === 'escadrille' ? mdeEscadrille(e) : null,
   };
 }
 
@@ -193,7 +213,7 @@ function mdeNouvelle(graine) {
   return {
     v: MDE_V, graine: String(graine), temps: 0,
     cr: 0, entrepot: {}, planete: 'terre',
-    classe: 'eclaireur', classes: { eclaireur: true }, ameliorations: MDE_AMEL_ZERO(),
+    classe: 'eclaireur', classes: { eclaireur: true }, ameliorations: MDE_AMEL_ZERO(), escadrille: MDE_ESC_ZERO(),
     usines: {}, recherche: {}, station: {}, bases: {},
     drones: { terre: { mineur: 0, cargo: 0 }, lune: { mineur: 0, cargo: 0 }, mars: { mineur: 0, cargo: 0 } },
     reste: {}, reparateur: 0, satellites: {},
@@ -205,6 +225,9 @@ function mdeNouvelle(graine) {
 function mdeMigrer(e) {
   if (!e || typeof e !== 'object' || !e.v) return null;
   e.ameliorations = Object.assign(MDE_AMEL_ZERO(), e.ameliorations);   // 31/10 : moteur et propulseurs ajoutés
+  e.escadrille = Object.assign(MDE_ESC_ZERO(), e.escadrille);           // 01/11 : le porte-vaisseaux remplace la Forteresse
+  if (e.classes.forteresse) { delete e.classes.forteresse; e.classes.porte = true; }
+  if (e.classe === 'forteresse') e.classe = 'porte';
   e.v = MDE_V; return e;
 }
 
@@ -253,6 +276,8 @@ function mdeAchats(e) {
     const D = MDE_AMELIORATIONS[k];
     l.push({ id: 'amel:' + k, type: 'amel', nom: D.nom + ' ' + (A[k] + 1), effet: Array.isArray(D.effet) ? D.effet[A[k]] : D.effet, prix: { cr: Math.round(MDE_AMEL_PRIX * D.poids * Math.pow(MDE_AMEL_HAUSSE, A[k])) } });
   }
+  if (e.classes.porte) for (const k in MDE_ESCADRILLE) { const n = e.escadrille[k]; if (n < mdeNivMax(e)) { const D = MDE_ESCADRILLE[k];
+    l.push({ id: 'esc:' + k, type: 'esc', nom: D.nom + ' ' + (n + 1), effet: D.effet, prix: { cr: Math.round(MDE_ESC_PRIX * D.poids * Math.pow(MDE_AMEL_HAUSSE, n)), cobalt: 5 * (n + 1) } }); } }
   for (const k in MDE_CLASSES) { const D = MDE_CLASSES[k]; if (!e.classes[k] && D.prix && D.req(e)) l.push({ id: 'classe:' + k, type: 'classe', nom: 'CLASSE ' + D.nom, effet: D.tourelles + ' TOURELLES', prix: D.prix }); }
   for (const k in MDE_USINES) { const D = MDE_USINES[k], n = e.usines[k] || 0; if (n < 3 && (!D.req || D.req(e))) l.push({ id: 'usine:' + k, type: 'usine', nom: D.nom + ' ' + (n + 1), effet: MDE_MINERAIS[D.minerai].nom + ' X' + MDE_USINE_MULT[n + 1], prix: { cr: D.prix[n] } }); }
   for (const k in MDE_RECHERCHES) { const D = MDE_RECHERCHES[k]; if (!e.recherche[k] && (!D.req || D.req(e))) l.push({ id: 'rech:' + k, type: 'rech', nom: D.nom, effet: D.effet, prix: D.prix }); }
@@ -279,6 +304,7 @@ function mdeAcheter(e, id) {
   mdePayer(e, a.prix);
   const [t, k] = id.split(':'), p = e.planete;
   if (t === 'amel') mdeAmel(e)[k]++;
+  else if (t === 'esc') e.escadrille[k]++;
   else if (t === 'classe') { e.classes[k] = true; e.classe = k; }
   else if (t === 'usine') e.usines[k] = (e.usines[k] || 0) + 1;
   else if (t === 'rech') e.recherche[k] = true;
@@ -348,7 +374,7 @@ function mdeVague(e, n, budget) {
 // camp : [{type, pv, att, soin?}] ; la flotte arrive après `retard` secondes ; avant, les aliens tirent sur la base
 // corvette : stats de mdeCorvette si le joueur est là (il est remorqué, pas détruit, à zéro PV)
 function mdeUniteCombat(e, u) { const D = MDE_UNITES[u.type]; return { type: u.type, pv: Math.round(D.pv * (e.recherche.blindage ? 1.3 : 1)), att: D.att, soin: D.soin || 0 }; }
-function mdeCorvetteCombat(c) { return { type: 'corvette', pv: c.coque * 5, att: c.tourelles * c.degats * 0.9, soin: 0 }; }
+function mdeCorvetteCombat(c) { const E = c.escadrille; return { type: 'corvette', pv: c.coque * 5, att: c.tourelles * c.degats * 0.9 + (E ? E.nb * E.degats * 0.6 : 0), soin: 0 }; }
 function mdeCombat(graine, usage, defense, aliens, opts) {
   opts = opts || {};
   const R = mdeRng(graine, usage), retard = opts.retard || 0;
@@ -376,12 +402,25 @@ function mdeResoudreAttaque(e, corvette) {
   const p = al.planete, F = e.flottes[p];
   const def = F.map(u => mdeUniteCombat(e, u)); if (corvette) def.push(mdeCorvetteCombat(mdeCorvette(e)));
   const r = mdeCombat(e.graine, 'attaque' + al.vague, def, mdeVague(e, al.vague), { retard: mdeRetard(e, p) });
-  if (!r.victoire) e.hs[p] = true;   // les unités abattues sont remorquées et réparées : seule la base est mise hors service
+  mdeFinVague(e, r.victoire);
+  return Object.assign(r, { planete: p, vague: al.vague });
+}
+// la fin d'une vague (combat calculé ci-dessus, ou joué en direct dans le jeu) : perdre met la base hors service
+// (les unités abattues sont remorquées et réparées) ; après la dernière vague, la bataille finale est possible
+function mdeFinVague(e, victoire) {
+  const al = e.aliens.alerte; if (!al) return;
+  if (!victoire) e.hs[al.planete] = true;
   e.aliens.vague = al.vague; e.aliens.alerte = null;
   if (e.aliens.vague >= MDE_VAGUES.nombre) { e.aliens.prochaine = null; e.aliens.finaleApres = e.temps; }
   else e.aliens.prochaine = e.temps + MDE_VAGUES.intervalle;
-  e.journal.push({ t: Math.round(e.temps), vague: al.vague, planete: p, victoire: r.victoire });
-  return Object.assign(r, { planete: p, vague: al.vague });
+  e.journal.push({ t: Math.round(e.temps), vague: al.vague, planete: al.planete, victoire });
+}
+// la fin de la bataille finale (jouée en direct) : gagnée, la partie est finie (on peut continuer en mode libre) ;
+// perdue, le vaisseau-mère se replie et revient plus tard
+function mdeFinFinale(e, victoire) {
+  if (!e.aliens.finale || e.fin) return;
+  e.journal.push({ t: Math.round(e.temps), finale: true, victoire });
+  if (victoire) e.fin = true; else { e.aliens.finale = false; e.aliens.finaleApres = e.temps + MDE_FINALE.attente; }
 }
 // la grande bataille : le vaisseau-mère et sa flotte contre TOUTES les flottes du joueur réunies, et sa corvette
 function mdeForceFlottes(e) { let f = 0; for (const p in e.flottes) for (const u of e.flottes[p]) { const s = mdeUniteCombat(e, u); f += s.pv * Math.max(s.att, 1); } return f; }
@@ -392,7 +431,6 @@ function mdeFinale(e) {
   tous.push(mdeCorvetteCombat(mdeCorvette(e)));
   const essai = e.journal.filter(j => j.finale).length;
   const r = mdeCombat(e.graine, 'finale' + essai, tous, ['mere'].concat(mdeVague(e, 99, MDE_FINALE.budget)), { sansBase: true });
-  e.journal.push({ t: Math.round(e.temps), finale: true, victoire: r.victoire });
-  if (r.victoire) e.fin = true; else { e.aliens.finale = false; e.aliens.finaleApres = e.temps + MDE_FINALE.attente; }
+  mdeFinFinale(e, r.victoire);
   return r;
 }
