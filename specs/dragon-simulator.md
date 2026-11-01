@@ -37,7 +37,7 @@ La logique tourne en « pixels » (12 px = 1 unité 3D, sol à 268) pour être t
 - Bâtiment : points de vie = hauteur × 0,32 ; dégâts = force × 0,9 par image de flamme ; gain = hauteur / 10, arrondi au-dessus (2 à 4 pièces). Il noircit, brûle, s'effondre en 45 images dans la poussière, laisse des ruines qui brûlent 4 s.
 - Véhicule : explose (+3), débris qui volent. Chauve-souris : tombe en flammes (+4). Animaux : s'enfuient en sautillant (rien à gagner).
 - **Grenade** : la prochaine destruction souffle aussi tout ce qui est à moins de 50 px.
-- **Pièces de distance** : 1 pièce tous les 20 m (proposition, en plus de la destruction et des pièces ramassées), pour coller à « plus on va loin, plus on a de points ».
+- **Pièces de distance** : 1 pièce tous les 20 m (validé, en plus de la destruction et des pièces ramassées), pour coller à « plus on va loin, plus on a de points ».
 
 ## 7. Obstacles
 Grues (ville), tour de contrôle (aéroport), montgolfières, hélicoptère (partout), petit avion qui décolle (aéroport), chauves-souris (partout, brûlables), toits des bâtiments.
@@ -65,11 +65,11 @@ Grues (ville), tour de contrôle (aéroport), montgolfières, hélicoptère (par
 Titre (DRAGON SIMULATOR, le dragon qui plane, JOUER, retour à la Ludothèque), nid, partie (HUD : distance, cœurs, pièces, jauges ÉNERGIE et FEU, grenades, bouton FEU), pause, bilan (distance, pièces gagnées, record battu). Police Press Start 2P pour les titres (majuscules sans accents), Fredoka pour les textes.
 
 ## 11. Sons (Web Audio, synthétisés, coupables)
-Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce, bonus, choc, atterrissage ; une petite musique d'aventure en boucle (à proposer). Pas de cris d'animaux ni de bruits réalistes de destruction.
+Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce, bonus, choc, atterrissage ; une **petite musique discrète** en boucle (validée). Pas de cris d'animaux ni de bruits réalistes de destruction.
 
 ## 12. Sauvegarde et classements
 - Sauvegarde locale `dragonsim.*` : pièces, niveaux, décors atteints, records (plus grande distance, plus de pièces en une partie, total de bâtiments détruits). Ajoutée au transfert `LUDO1-` de l'accueil.
-- **Classement de la famille** : plus grande distance (proposition).
+- **Classement de la famille** : plus grande distance (validé). Pas de vol du jour.
 
 ## 13. Technique
 - Dossier `dragon-simulator/` : `index.html`, `style.css`, `regles.js` (vol, économie, nid, bonus, génération des décors en « pixels », sans Three.js, testable sous Node), `monde3d.js` (scène, modèles, caméra, particules), `jeu.js` (écrans, HUD, commandes, sons), `modeles.glb` (fichier binaire d'environ 3 Mo fabriqué par `outils/fbx-vers-glb.js`, à adapter pour écrire un `.glb`).
@@ -83,11 +83,11 @@ Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce
 2. **Le jeu en 3D** : `monde3d.js` et `jeu.js` d'après la maquette, ville et aéroport, nid, les 10 bonus, sauvegarde, sons.
 3. **Intégration** : accueil (cartouche 3D, volet, classement, transfert), service worker, tests, artefact.
 
-## 15. Questions pour l'utilisateur
-1. **Pièces de distance** (1 tous les 20 m) en plus de la destruction : d'accord ?
-2. **Classement de la famille** sur la plus grande distance : oui ?
-3. **Vol du jour** (même ville pour tout le monde, une tentative classée par jour) : utile, ou pas pour ce jeu ?
-4. **Musique** : une petite musique en boucle, ou seulement les bruitages ?
+## 15. Questions tranchées (02/11) : cahier des charges validé
+1. **Pièces de distance** (1 tous les 20 m), en plus de la destruction : **oui**.
+2. **Classement de la famille** sur la plus grande distance : **oui**.
+3. **Vol du jour** : **non**.
+4. **Musique** : **oui, une petite musique discrète** en boucle (coupable avec les sons).
 
 ## Historique du chantier
 
