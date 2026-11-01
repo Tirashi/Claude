@@ -109,7 +109,7 @@ Sons synthétisés (comme la Boutique) : tirs des tourelles, roche qui éclate, 
 ## 16. Plan de travail (Opus, une conversation par session)
 1. ✅ **Règles et simulateur** (fait le 31/10, bilan § 19) : `regles.js` (minerais, prix, améliorations, classes, usines, recherche, station, drones, étages), `outils/mineur-simulateur.js`, réglages.
 2. ✅ **Étage 1 jouable** (fait le 31/10, bilan § 20) : vol (repris de la maquette 6), quai, améliorations, usines, recherche, sauvegarde ; `index.html` en banc d'essai.
-3. **Station et drones** (étage 2) : construction module par module, hangar, drones qui travaillent.
+3. ✅ **Station et drones** (étage 2, fait le 01/11, bilan § 21) : construction module par module, hangar, drones qui travaillent.
 4. **Lune et Mars** (étage 3) : carte du système, voyages, nouvelles ceintures et minerais, bases.
 5. **Aliens et défense** (étage 4) : vagues, flotte composée, satellites, bataille finale (vaisseau-mère et grande flotte contre toutes les flottes du joueur), fin et mode libre.
 6. **Finitions** : sons, titre, pause, accueil (cartouche, volet sans classement), transfert, crédits, tests, artefact.
@@ -208,4 +208,14 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 - La station se dessine avec **les modules achetés** (`mineur-de-l-espace/station.js`, pièces façon ISS de la maquette 6) : au départ un **avant-poste** (module court et barre d'amarrage), puis module central, poutre, ailes solaires, radiateurs, hangar, raffinerie, antenne, quai (poutre allongée et deux paires d'ailes de plus) ; 64 angles tracés à la demande, comme les corvettes. C'est une avance sur la session 3 (le dessin), les drones restent pour elle.
 - « Le joystick se déplace quand on l'utilise » : il était flottant (il se recentrait là où on posait le doigt) ; il est maintenant **fixe** en bas à gauche, le pouce peut se poser n'importe où dans la moitié gauche de l'écran.
 - « Essayer une autre façon de diriger : on choisit la direction au joystick et on accélère avec un bouton » : nouveau mode **JOYSTICK + POUSSER** (par défaut) : le joystick tourne la corvette, le gros bouton rond POUSSER (bas à droite) accélère dans la direction du nez ; RENTRER passe au-dessus. L'ancien mode (**JOYSTICK SEUL** : il tourne et pousse) se choisit dans la pause (option gardée à part, `mineur-de-l-espace.commandes`).
+
+**Troisième essai (01/11)** : « le nouveau gameplay marche plutôt bien » (station en orbite, joystick fixe, JOYSTICK + POUSSER).
+
+## 21. Session 3 (01/11) : station et drones — bilan
+- **Station** (déjà dessinée depuis les retours du 31/10, `station.js`) : grandit module par module ; à l'achat, « MODULE … INSTALLE ! » s'affiche sur la station.
+- **Onglet STATION** rangé en trois parties : MODULES (compte x / 8, « la station est complète »), CLASSES DE CORVETTE (achat, puis PRENDRE / A BORD avec tourelles, soute et vol de chaque classe), DRONES (il faut le hangar ; ligne de rendement : mineurs, cargos, minerai par minute et CR par minute, « il manque des cargos / des mineurs » ; rappel : ils ne travaillent que pendant qu'on joue).
+- **Drones visibles** (dessin seulement : la production vient des règles, `mdeProduction` = min(mineurs × 2, cargos × 4) par minute, livrée au fil du jeu par `mdeAvancer`) : chaque **mineur** a son poste dans la ceinture, derrière la station sur son orbite, laser orange sur un petit caillou et étincelles ; les **cargos** font la navette entre la station et les mineurs (un trajet ~16 s, petite courbe) ; le **réparateur** suit la corvette en vol et clignote en vert quand la coque est abîmée (+ 1 point toutes les 20 s). Les livraisons s'affichent sur la station : « +N CR (DRONES) » toutes les 4 s.
+- Sprites des drones repris de la maquette 6 (`DRONES_DEF` dans `station.js` : mineur, cargo, défense, satellite, réparateur), 64 angles à la demande.
+- Le panneau du quai garde sa position de défilement quand il se met à jour (achats, livraisons des drones).
+- Pas encore : drones et bases sur la Lune et Mars (session 4), satellites et drones de défense (session 5).
 

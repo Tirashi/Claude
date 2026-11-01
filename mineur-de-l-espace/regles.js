@@ -260,7 +260,7 @@ function mdeAchats(e) {
   for (const k in MDE_BASES) if (!e.bases[k] && MDE_PLANETES[k].req(e) && (k === 'lune' || e.bases.lune)) l.push({ id: 'base:' + k, type: 'base', nom: MDE_BASES[k].nom, effet: 'DRONES ET FLOTTE', prix: MDE_BASES[k].prix });
   const p = e.planete;
   if (mdeABase(e, p)) {
-    for (const k of ['mineur', 'cargo']) { const n = e.drones[p][k]; if (n < MDE_DRONES[k].max) l.push({ id: 'drone:' + k, type: 'drone', nom: MDE_DRONES[k].nom, effet: MDE_PLANETES[p].nom, prix: mdeMult(MDE_DRONES[k].prix, Math.pow(MDE_DRONES[k].hausse, n)) }); }
+    for (const k of ['mineur', 'cargo']) { const n = e.drones[p][k]; if (n < MDE_DRONES[k].max) l.push({ id: 'drone:' + k, type: 'drone', nom: MDE_DRONES[k].nom, effet: (k === 'mineur' ? 'MINE ' + MDE_DRONE_MINEUR + ' MINERAIS/MIN' : 'RAMENE LE MINERAI DE 2 MINEURS') + ' · ' + n + '/' + MDE_DRONES[k].max, prix: mdeMult(MDE_DRONES[k].prix, Math.pow(MDE_DRONES[k].hausse, n)) }); }
     if (MDE_DRONES.satellite.req(e) && (e.satellites[p] || 0) < 3) l.push({ id: 'drone:satellite', type: 'drone', nom: 'SATELLITE', effet: 'ALERTE PLUS TOT', prix: mdeMult(MDE_DRONES.satellite.prix, Math.pow(1.4, e.satellites[p] || 0)) });
     if (mdeEtage(e) >= 4 && e.flottes[p].length < mdePlaces(e)) for (const k in MDE_UNITES) { const D = MDE_UNITES[k]; if (!D.req || D.req(e)) l.push({ id: 'unite:' + k, type: 'unite', nom: D.nom, effet: 'FLOTTE ' + MDE_PLANETES[p].nom, prix: D.prix }); }
     if (e.hs[p]) l.push({ id: 'reparer', type: 'reparer', nom: 'REPARER LA BASE', effet: MDE_PLANETES[p].nom, prix: mdeCoutReparation(e, p) });

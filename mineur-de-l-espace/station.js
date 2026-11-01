@@ -63,3 +63,22 @@ function construireStation(st) {
   if (STATIONS[cle]) return STATIONS[cle];
   return STATIONS[cle] = paresseux(k => { const B0 = builder(L_ST, L_ST), B = tourne(B0, k / N_ANG * TAU, L_ST / 2); piecesStation(B, st); return aplats(render(B0, { seed: 9 }).img); });
 }
+
+// drones : petites machines automatiques (même moteur), 64 angles tracés à la demande
+const DRONES_DEF = [
+  { nom: 'DRONE MINEUR', aide: 'casse les petites roches', f: B => { B.poly(half(0, [[0, -8], [5, -5], [6, 4], [3, 8], [0, 8]]), 5, 2, 'orange'); for (const s of [-1, 1]) B.poly([[s*3, -6], [s*7, -13], [s*5, -14], [s*2, -9]], 5.5, .8, 'coque2', 2);
+      B.dome(0, -1, 2.5, 2.5, 4, 7, 'glass'); return [[0, 9, 2]]; } },
+  { nom: 'DRONE CARGO', aide: 'rapporte le minerai à la station', f: B => { B.box(-7, -6, 14, 14, 6, 1.6, 'sarcelle', 1); B.rainure(-7, 1, 7, 1); B.box(-4, -10, 8, 5, 6.5, 1, 'coque', 2); B.lights([[-2, -8], [2, -8]], CHAUD); return [[-4, 9, 1.8], [4, 9, 1.8]]; } },
+  { nom: 'DRONE DE DÉFENSE', aide: 'patrouille et protège', f: B => { B.poly(half(0, [[0, -12], [3, -6], [10, 4], [9, 7], [3, 6], [2, 9], [0, 9]]), 5, 2, 'coque'); B.dome(0, 0, 3, 3, 4, 8, 'coque2'); B.box(-.8, -10, 1.6, 8, 8, .5, 'pont', 6);
+      for (const s of [-1, 1]) B.box(s < 0 ? -9 : 7, 2, 2, 4, 6, .6, 'amber', 4); return [[0, 10, 2]]; } },
+  { nom: 'SATELLITE', aide: 'prévient la flotte d’une attaque', f: B => { B.box(-3, -3, 6, 6, 6, 1.2, 'blanc', 1); for (const s of [-1, 1]){ B.box(s < 0 ? -14 : 5, -3, 9, 6, 3, .6, 'solaire', 1); B.rainure(s*9.5, -3, s*9.5, 3); } B.dome(0, -4, 3, 3, 5, 8, 'blanc'); B.lights([[0, 0]], FROID); return []; } },
+  { nom: 'DRONE RÉPARATEUR', aide: 'soigne la corvette et la station', f: B => { B.dome(0, 0, 6, 6, 1, 6, 'blanc'); for (const s of [-1, 1]) B.box(s < 0 ? -11 : 5, -1, 6, 2, 5, .6, 'coque2', 2); B.box(-2, -2, 4, 4, 7, .8, 'vert', 5); return [[0, 7, 1.6]]; } },
+];
+const DRONE_DESSIN = { mineur: 0, cargo: 1, garde: 2, satellite: 3, reparateur: 4 };
+const DRONES_FR = {};
+function drone(k) {
+  if (DRONES_FR[k]) return DRONES_FR[k];
+  const D = DRONES_DEF[DRONE_DESSIN[k]];
+  return DRONES_FR[k] = paresseux(i => { const L = 40, B0 = builder(L, L), B = tourne(B0, i / N_ANG * TAU, L / 2), eng = D.f(B); B.engines(eng); return aplats(render(B0, { seed: 4 }).img); });
+}
+
