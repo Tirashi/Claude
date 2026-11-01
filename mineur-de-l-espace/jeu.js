@@ -78,7 +78,7 @@ class Partie {
     // grossit en gros pixels réguliers, le texte, les traits et les rotations restent fins (surtout sur PC)
     const RES = Math.max(1, Math.min(4, Math.floor(k * (devicePixelRatio || 1) + 0.15)));
     if (this.c.width !== W * RES || this.c.height !== H * RES) { this.c.width = W * RES; this.c.height = H * RES; this.x = this.c.getContext('2d'); }
-    this.res = RES; this.x.imageSmoothingEnabled = false; this.ecran.style.width = W + 'px'; this.ecran.style.height = H + 'px';
+    this.res = RES; if (this.majResolution) this.majResolution(RES); this.x.imageSmoothingEnabled = false; this.ecran.style.width = W + 'px'; this.ecran.style.height = H + 'px';
     this.ecran.style.transform = `translate(${(r.width - W * k) / 2}px, ${(r.height - H * k) / 2}px) scale(${k})`;
     document.body.classList.toggle('debout', r.height > r.width);
   }
@@ -450,7 +450,7 @@ class Partie {
     this.x.setTransform(this.res || 1, 0, 0, this.res || 1, 0, 0); this.x.imageSmoothingEnabled = false;
     if (this.enVoyage) return this.dessinVoyage(t);
     const x = this.x, s = this.ship, e = this.e, c = this.C, sk = this.secousse > 0 ? (this.R() - 0.5) * 6 : 0;
-    const ox = Math.round(W / 2 - this.cam.x + sk), oy = Math.round(H / 2 - this.cam.y + sk); this.ox = ox; this.oy = oy;
+    const rp = this.res || 1, ox = Math.round((W / 2 - this.cam.x + sk) * rp) / rp, oy = Math.round((H / 2 - this.cam.y + sk) * rp) / rp;   // au pixel de l'écran this.ox = ox; this.oy = oy;
     const cur = !this.quai && this.pc && !this.pauseVue ? 'none' : 'default'; if (this.c.style.cursor !== cur) this.c.style.cursor = cur;   // en vol sur PC : le viseur dessiné remplace la flèche
     x.fillStyle = '#05060d'; x.fillRect(0, 0, W, H);
     const px = ((-this.cam.x * 0.2) % 512 + 512) % 512, py = ((-this.cam.y * 0.2) % 512 + 512) % 512;
@@ -481,7 +481,7 @@ class Partie {
     if (this.dessinCombat) this.dessinCombat(x, ox, oy, t);
     for (const b of this.balles) { if (b.sorte) { const c = b.sorte === 'chasseur' ? '#ff9d4a' : '#9fd0ff'; x.fillStyle = c; x.fillRect(Math.round(b.x + ox) - 1, Math.round(b.y + oy) - 1, 2, 2); continue; } x.save(); x.translate(Math.round(b.x + ox), Math.round(b.y + oy)); x.rotate(b.a); x.fillStyle = '#d0752c'; x.fillRect(-1.5, -5, 3, 10); x.fillStyle = '#fff2a0'; x.fillRect(-0.5, -4, 1, 7); x.restore(); }
     // corvette : rendu de l'angle le plus proche, tourné du petit reste ; flammes ; tourelles
-    const k = nAng(s.a), F = this.nef.frames[k], sx0 = Math.round(s.x + ox), sy0 = Math.round(s.y + oy), bx = -Math.sin(s.a), by = Math.cos(s.a), EC = this.nef.ech || 1;
+    const k = nAng(s.a), F = this.nef.frames[k], sx0 = Math.round((s.x + ox) * rp) / rp, sy0 = Math.round((s.y + oy) * rp) / rp, bx = -Math.sin(s.a), by = Math.cos(s.a), EC = this.nef.ech || 1;
     if (this.pousse > 0.1 && !this.panne && !this.quai) for (const [ex, ey, er] of F.engines) { const nm = e.ameliorations.moteur, l = er * (1.2 + this.pousse * 1.6) * (1 + 0.15 * nm) + ((t * 30 | 0) % 2);
       for (let q = 0; q < l; q++) { const f = q / l; x.fillStyle = f < 0.3 ? (nm >= 3 ? '#bfe8ff' : '#fff2a0') : f < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(er * (1 - f * 0.6)));
         x.fillRect(Math.round(sx0 + (ex - F.img.width / 2) * EC + bx * q - w / 2), Math.round(sy0 + (ey - F.img.height / 2) * EC + by * q - w / 2), w, w); } }
@@ -490,7 +490,7 @@ class Partie {
     // tourelles accrochées à la coque : placées depuis la position de la corvette À L'ÉCRAN (sx0, sy0), sans arrondi à part
     // (sinon elles tremblent d'un pixel par rapport à la coque)
     const ca = Math.cos(s.a), sa = Math.sin(s.a);
-    this.tirs.forEach((T, i) => { const [mx, my] = this.nef.tourelles[i], kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(sx0 + mx * ca - my * sa, sy0 + mx * sa + my * ca); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); const TE = this.tourEch || 1, Ti = this.tour[kt]; x.drawImage(Ti, -Ti.width * TE / 2, -Ti.height * TE / 2, Ti.width * TE, Ti.height * TE); x.restore(); });
+    this.tirs.forEach((T, i) => { const [mx, my] = this.nef.tourelles[i], kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round((sx0 + mx * ca - my * sa) * rp) / rp, Math.round((sy0 + mx * sa + my * ca) * rp) / rp); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); const TE = this.tourEch || 1, Ti = this.tour[kt]; x.drawImage(Ti, -Ti.width * TE / 2, -Ti.height * TE / 2, Ti.width * TE, Ti.height * TE); x.restore(); });
     for (const tx of this.textes) { x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#000'; x.fillText(tx.t, tx.x + ox + 1, tx.y + oy + 1); x.fillStyle = tx.c; x.fillText(tx.t, tx.x + ox, tx.y + oy); }
     // flèche vers la station quand elle sort de l'écran (rouge si le carburant devient juste)
     const qsx = S.qx + ox, qsy = S.qy + oy;

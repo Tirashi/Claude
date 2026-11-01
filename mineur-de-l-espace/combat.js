@@ -13,19 +13,24 @@ const SPR = {};
 const spritesPrets = typeof SPRITES === 'undefined' ? Promise.resolve() : Promise.all(Object.entries(SPRITES).map(([k, d]) => new Promise(ok => {
   const im = new Image(); im.onload = im.onerror = () => ok(); SPR[k] = Object.assign({ im }, d); im.src = d.src; })));
 const pretSpr = k => !!(SPR[k] && SPR[k].im.complete && SPR[k].im.naturalWidth > 0);
-// angles d'un sprite : toile carrée (pixels de l'image), tuyères tournées avec lui ; ech = taille à l'écran
+// angles d'un sprite, tracés À LA RÉSOLUTION DE L'ÉCRAN (RES_SPR pixels par pixel de jeu) : chaque angle est mis à
+// l'échelle une fois pour toutes, puis copié pixel pour pixel ; à une échelle non entière (× 1,5…) il est lissé à la
+// fabrication. Avant, l'image était agrandie à chaque dessin d'un facteur non entier : ses pixels changeaient de largeur
+// quand le vaisseau bougeait d'un pixel, il « tremblait » (retour du 01/11). Tuyères tournées avec lui (pixels de la toile).
+let RES_SPR = 1;
 function tournesSpr(k) {
-  const S = SPR[k]; if (S.fr) return S.fr;
-  const L = Math.ceil(Math.hypot(S.w, S.h)) + 4;
-  return S.fr = paresseux(i => { const a = i / N_ANG * TAU, c = document.createElement('canvas'); c.width = c.height = L; const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
-    x.translate(L / 2, L / 2); x.rotate(a); x.drawImage(S.im, -S.w / 2, -S.h / 2);
+  const S = SPR[k], cle = 'fr' + RES_SPR; if (S[cle]) return S[cle];
+  const f = S.ech * RES_SPR, L = 2 * Math.ceil(Math.hypot(S.w, S.h) * f / 2 + 2), lisse = Math.abs(f - Math.round(f)) > 0.01;
+  return S[cle] = paresseux(i => { const a = i / N_ANG * TAU, c = document.createElement('canvas'); c.width = c.height = L; const x = c.getContext('2d'); x.imageSmoothingEnabled = lisse;
+    x.translate(L / 2, L / 2); x.rotate(a); x.scale(f, f); x.drawImage(S.im, -S.w / 2, -S.h / 2);
     const co = Math.cos(a), si = Math.sin(a);
-    return { img: c, engines: S.moteurs.map(([ex, ey, er]) => { const dx = ex - S.w / 2, dy = ey - S.h / 2; return [L / 2 + dx * co - dy * si, L / 2 + dx * si + dy * co, er]; }) }; });
+    return { img: c, engines: S.moteurs.map(([ex, ey, er]) => { const dx = (ex - S.w / 2) * f, dy = (ey - S.h / 2) * f; return [L / 2 + dx * co - dy * si, L / 2 + dx * si + dy * co, er]; }) }; });
 }
+const auPixel = v => Math.round(v * RES_SPR) / RES_SPR;   // arrondi au pixel de l'écran (pas au pixel de jeu)
 // un sprite tourné (a = 0 : nez en haut) centré en (sx, sy) à l'écran
 function dessineSpr(x, k, sx, sy, a, ech, alpha) {
-  const F = tournesSpr(k), n = nAng(a), r = a - n / N_ANG * TAU, f = F[n], L = f.img.width * (ech || SPR[k].ech);
-  x.save(); x.translate(Math.round(sx), Math.round(sy)); x.rotate(Math.atan2(Math.sin(r), Math.cos(r))); if (alpha !== undefined) x.globalAlpha = alpha;
+  const F = tournesSpr(k), n = nAng(a), r = a - n / N_ANG * TAU, f = F[n], L = f.img.width / RES_SPR;
+  x.save(); x.translate(auPixel(sx), auPixel(sy)); x.rotate(Math.atan2(Math.sin(r), Math.cos(r))); if (alpha !== undefined) x.globalAlpha = alpha;
   x.drawImage(f.img, -L / 2, -L / 2, L, L); x.restore();
 }
 const versAngle = (dx, dy) => Math.atan2(dy, dx) + Math.PI / 2;   // angle du nez pour regarder vers (dx, dy)
@@ -43,10 +48,17 @@ Object.assign(Partie.prototype, {
   nefSprite(cl, nbT) {
     if (!pretSpr(cl)) return null;
     // tourelles sur les flancs, par paires ; une seule (Éclaireur au départ) : au centre ; nombre impair : la dernière au centre
-    const S = SPR[cl], e = S.ech, T = S.tourelles, n = Math.max(1, nbT), l = n === 1 ? [T.centre] : T.paires.slice(0, n - (n % 2)).concat(n % 2 ? [T.centre] : []);
-    return { frames: tournesSpr(cl), ech: e, tourelles: l.map(([a, b]) => [a * e, b * e]) };
+    const S = SPR[cl], e = S.ech, T = S.tourelles, n = Math.max(1, nbT), np = n - (n % 2);
+    // coque trop étroite pour deux tourelles côte à côte (Éclaireur) : l'une derrière l'autre, sur l'axe
+    const l = n === 1 ? [T.centre] : T.paires.length >= np ? T.paires.slice(0, np).concat(n % 2 ? [T.centre] : []) : T.axe.slice(0, n);
+    return { frames: tournesSpr(cl), ech: 1 / RES_SPR, sprite: cl, tourelles: l.map(([a, b]) => [a * e, b * e]) };
   },
-  tourSprite() { return pretSpr('tourelle') ? { fr: paresseux(i => tournesSpr('tourelle')[i].img), ech: SPR.tourelle.ech } : null; },
+  tourSprite() { return pretSpr('tourelle') ? { fr: paresseux(i => tournesSpr('tourelle')[i].img), ech: 1 / RES_SPR } : null; },
+  // la résolution de l'écran change (rotation, fenêtre) : on refait les dessins des sprites, sans toucher à la corvette
+  majResolution(res) {
+    if (res === RES_SPR) return; RES_SPR = res;
+    if (this.nef && this.nef.sprite) { this.nef = this.nefSprite(this.nef.sprite, this.nef.tourelles.length) || this.nef; const ts = this.tourSprite(); if (ts) { this.tour = ts.fr; this.tourEch = ts.ech; } }
+  },
   // l'escadrille du porte-vaisseaux : chasseurs à bord, pleins d'énergie
   armerEscadrille() {
     const E = this.C.escadrille; this.escadrille = [];

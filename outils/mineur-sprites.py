@@ -36,7 +36,7 @@ def tourelles(im, n=6):   # places des tourelles sur les FLANCS (retour du 01/11
     lignes = []
     for fy in [i / 40 for i in range(-10, 9)]:   # du haut du milieu (-25 %) au bas (+20 %)
         y = int(h / 2 + fy * h); b = bords(y)
-        if b: lignes.append((b[1] - b[0], y, b))
+        if b and b[1] - b[0] - 2 * ins >= 20: lignes.append((b[1] - b[0], y, b))   # assez large pour deux tourelles côte à côte
     lignes.sort(reverse=True); pris = []
     for larg, y, b in lignes:
         if all(abs(y - q) > 28 for q in pris): pris.append(y)
@@ -47,7 +47,8 @@ def tourelles(im, n=6):   # places des tourelles sur les FLANCS (retour du 01/11
     centre = None
     for y in range(h):
         if px[w // 2, y][3] > 0: centre = [0, round(y + 0.3 * h * 0.5 - h / 2)]; break
-    return {'paires': out[:n], 'centre': centre or [0, 0]}
+    centre = centre or [0, 0]
+    return {'paires': out[:n], 'centre': centre, 'axe': [centre, [0, centre[1] + 24]]}   # coque étroite : l'une derrière l'autre
 def nef(im, ech=0.5, tour=True):
     d = {'src': data(im), 'w': im.size[0], 'h': im.size[1], 'ech': ech, 'moteurs': moteurs(im)}
     if tour: d['tourelles'] = tourelles(im)
@@ -57,7 +58,7 @@ SP = {
   'eclaireur': nef(zoser('A', 'support_ship_03')), 'prospecteur': nef(zoser('A', 'combat_ship_05')),
   'pionniere': nef(zoser('A', 'combat_ship_02')), 'escorte': nef(zoser('A', 'combat_ship_07')),
   'porte': nef(sckr('c5', 15, 90), ech=0.42),
-  'tourelle': nef(zoser('A', 'weapon_turret_09'), tour=False),
+  'tourelle': nef(zoser('A', 'weapon_turret_09'), ech=0.38, tour=False),
   # escadrille du porte-vaisseaux (Star Fleet 5 : n° 29, puis 28 améliorée à fond)
   'chasseur1': nef(sckr('f5', 29), tour=False), 'chasseur2': nef(sckr('f5', 28), tour=False),
   # drones des stations, satellites et flottes du joueur (Star Fleet 5)
