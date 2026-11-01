@@ -31,6 +31,7 @@ const auPixel = v => Math.round(v * RES_SPR) / RES_SPR;   // arrondi au pixel de
 function dessineSpr(x, k, sx, sy, a, ech, alpha) {
   const F = tournesSpr(k), n = nAng(a), r = a - n / N_ANG * TAU, f = F[n], L = f.img.width / RES_SPR;
   x.save(); x.translate(auPixel(sx), auPixel(sy)); x.rotate(Math.atan2(Math.sin(r), Math.cos(r))); if (alpha !== undefined) x.globalAlpha = alpha;
+  x.imageSmoothingEnabled = true;   // le petit reste de rotation, lissé : les pixels ne grouillent pas quand le vaisseau tourne
   x.drawImage(f.img, -L / 2, -L / 2, L, L); x.restore();
 }
 const versAngle = (dx, dy) => Math.atan2(dy, dx) + Math.PI / 2;   // angle du nez pour regarder vers (dx, dy)

@@ -290,6 +290,13 @@ class Partie {
     this.c.addEventListener('pointerup', fin); this.c.addEventListener('pointercancel', fin);
   }
   capturer(ev) { try { this.c.setPointerCapture(ev.pointerId); } catch (err) { /* pointeur déjà relâché */ } }
+  // la station agrandie aux pixels de l'écran (au plus proche, nette) ; seuls les derniers angles servis sont gardés
+  // (elle tourne lentement : 2 ou 3 angles à la fois), pour la tourner ensuite en douceur sans faire grouiller ses pixels
+  stationHD(FS, k) {
+    const r = this.res || 1, c = (this.stHD = this.stHD || []).find(o => o.fs === FS && o.k === k && o.r === r); if (c) return c.img;
+    const img = document.createElement('canvas'); img.width = img.height = L_ST * r; const g = img.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(FS[k], 0, 0, L_ST * r, L_ST * r);
+    this.stHD.unshift({ fs: FS, k, r, img }); this.stHD.length = Math.min(this.stHD.length, 4); return img;
+  }
   mondeTourelle(i) { const [mx, my] = this.nef.tourelles[i], s = this.ship, c = Math.cos(s.a), si = Math.sin(s.a); return [s.x + mx * c - my * si, s.y + mx * si + my * c]; }
   /* ---------- un pas de simulation ---------- */
   pas(dt) {
@@ -329,7 +336,10 @@ class Partie {
         if (modeCommandes === 'glisse' && Math.abs(d) < 0.9) { pousse = force; const acc = 110 * V * (0.85 + 0.15 * M) * force * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; } }
       if (tg) { s.a += tg * TOUR * dt; this.bouffee(tg); }
       else if (this.pc && this.viseSouris && this.souris && !j) { const wx = this.souris.x - (this.ox || 0), wy = this.souris.y - (this.oy || 0);
-        if (Math.hypot(wx - s.x, wy - s.y) > 24) { const voulu = Math.atan2(wy - s.y, wx - s.x) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, d)); if (Math.abs(d) > 0.15) this.bouffee(-Math.sign(d)); } }
+        // la souris : la corvette tourne vite vers le pointeur (2,2 × la vitesse de rotation du clavier), en ralentissant
+        // à l'approche du bon cap (plus d'à-coups) ; zone morte réduite à 12 px autour d'elle
+        if (Math.hypot(wx - s.x, wy - s.y) > 12) { const voulu = Math.atan2(wy - s.y, wx - s.x) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d));
+          const v = Math.min(TOUR * 2.2, Math.abs(d) * 9 + 0.3) * dt; s.a += Math.max(-v, Math.min(v, d)); if (Math.abs(d) > 0.3) this.bouffee(-Math.sign(d)); } }
       if (gazPC || (modeCommandes === 'bouton' && this.gaz !== null)) { pousse = 1; const acc = 110 * V * (0.85 + 0.15 * M) * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; }
       s.vx *= 1 - dt * 0.12; s.vy *= 1 - dt * 0.12; const v = Math.hypot(s.vx, s.vy); if (v > 150 * V) { s.vx *= 150 * V / v; s.vy *= 150 * V / v; } }
     this.pousse = pousse; s.x += s.vx * dt; s.y += s.vy * dt;
@@ -450,7 +460,7 @@ class Partie {
     this.x.setTransform(this.res || 1, 0, 0, this.res || 1, 0, 0); this.x.imageSmoothingEnabled = false;
     if (this.enVoyage) return this.dessinVoyage(t);
     const x = this.x, s = this.ship, e = this.e, c = this.C, sk = this.secousse > 0 ? (this.R() - 0.5) * 6 : 0;
-    const rp = this.res || 1, ox = Math.round((W / 2 - this.cam.x + sk) * rp) / rp, oy = Math.round((H / 2 - this.cam.y + sk) * rp) / rp;   // au pixel de l'écran this.ox = ox; this.oy = oy;
+    const rp = this.res || 1, ox = Math.round((W / 2 - this.cam.x + sk) * rp) / rp, oy = Math.round((H / 2 - this.cam.y + sk) * rp) / rp; this.ox = ox; this.oy = oy;   // au pixel de l'écran
     const cur = !this.quai && this.pc && !this.pauseVue ? 'none' : 'default'; if (this.c.style.cursor !== cur) this.c.style.cursor = cur;   // en vol sur PC : le viseur dessiné remplace la flèche
     x.fillStyle = '#05060d'; x.fillRect(0, 0, W, H);
     const px = ((-this.cam.x * 0.2) % 512 + 512) % 512, py = ((-this.cam.y * 0.2) % 512 + 512) % 512;
@@ -462,9 +472,9 @@ class Partie {
         x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.textAlign = 'center'; x.fillText(MDE_PLANETES[pl].nom + (pl === 'lune' && !e.recherche.transfert ? ' · MOTEUR DE TRANSFERT' : ''), lx, ly + L / 2 + 12); } }
     x.drawImage(planeteC, ox - RT / 2, oy - RT / 2);
     // orbite et station : le quai (barre jaune et noire) toujours tourné vers l'extérieur
-    const S = this.station(), FS = construireStation(this.stationIci()), kS = nAng(S.a), rS = S.a - kS / N_ANG * TAU, stx = Math.round(S.x + ox), sty = Math.round(S.y + oy);
+    const S = this.station(), FS = construireStation(this.stationIci()), kS = nAng(S.a), rS = S.a - kS / N_ANG * TAU, stx = Math.round((S.x + ox) * rp) / rp, sty = Math.round((S.y + oy) * rp) / rp;
     x.strokeStyle = '#7be07b22'; x.setLineDash([2, 5]); x.beginPath(); x.arc(ox, oy, R_ST, 0, 7); x.stroke(); x.setLineDash([]);
-    if (stx > -L_ST && sty > -L_ST && stx < W + L_ST && sty < H + L_ST) { x.save(); x.translate(stx, sty); x.rotate(Math.atan2(Math.sin(rS), Math.cos(rS))); x.drawImage(FS[kS], -L_ST / 2, -L_ST / 2); x.restore();
+    if (stx > -L_ST && sty > -L_ST && stx < W + L_ST && sty < H + L_ST) { x.save(); x.translate(stx, sty); x.rotate(Math.atan2(Math.sin(rS), Math.cos(rS))); x.imageSmoothingEnabled = true; x.drawImage(this.stationHD(FS, kS), -L_ST / 2, -L_ST / 2, L_ST, L_ST); x.imageSmoothingEnabled = false; x.restore();
       if (!this.quai && this.sorti) { x.strokeStyle = (t * 2 % 1) < 0.5 ? '#7be07b88' : '#7be07b33'; x.beginPath(); x.arc(Math.round(S.qx + ox), Math.round(S.qy + oy), 30, 0, 7); x.stroke(); } }
     this.dessinDrones(x, ox, oy, t, S);
     for (const a of this.asts) { const sx = Math.round(a.x + ox), sy = Math.round(a.y + oy), L = a.v.L; if (sx < -L || sy < -L || sx > W + L || sy > H + L) continue;
@@ -486,11 +496,11 @@ class Partie {
       for (let q = 0; q < l; q++) { const f = q / l; x.fillStyle = f < 0.3 ? (nm >= 3 ? '#bfe8ff' : '#fff2a0') : f < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(er * (1 - f * 0.6)));
         x.fillRect(Math.round(sx0 + (ex - F.img.width / 2) * EC + bx * q - w / 2), Math.round(sy0 + (ey - F.img.height / 2) * EC + by * q - w / 2), w, w); } }
     const reste = s.a - k / N_ANG * TAU; x.save(); x.translate(sx0, sy0); x.rotate(Math.atan2(Math.sin(reste), Math.cos(reste)));
-    if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -F.img.width * EC / 2, -F.img.height * EC / 2, F.img.width * EC, F.img.height * EC); x.restore();   // taille du dessin : 128 px pour le chantier, autre pour un habillage
+    x.imageSmoothingEnabled = !!this.nef.sprite; if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -F.img.width * EC / 2, -F.img.height * EC / 2, F.img.width * EC, F.img.height * EC); x.restore();   // taille du dessin : 128 px pour le chantier, autre pour un habillage
     // tourelles accrochées à la coque : placées depuis la position de la corvette À L'ÉCRAN (sx0, sy0), sans arrondi à part
     // (sinon elles tremblent d'un pixel par rapport à la coque)
     const ca = Math.cos(s.a), sa = Math.sin(s.a);
-    this.tirs.forEach((T, i) => { const [mx, my] = this.nef.tourelles[i], kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round((sx0 + mx * ca - my * sa) * rp) / rp, Math.round((sy0 + mx * sa + my * ca) * rp) / rp); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); const TE = this.tourEch || 1, Ti = this.tour[kt]; x.drawImage(Ti, -Ti.width * TE / 2, -Ti.height * TE / 2, Ti.width * TE, Ti.height * TE); x.restore(); });
+    this.tirs.forEach((T, i) => { const [mx, my] = this.nef.tourelles[i], kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round((sx0 + mx * ca - my * sa) * rp) / rp, Math.round((sy0 + mx * sa + my * ca) * rp) / rp); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); const TE = this.tourEch || 1, Ti = this.tour[kt]; x.imageSmoothingEnabled = !!this.nef.sprite; x.drawImage(Ti, -Ti.width * TE / 2, -Ti.height * TE / 2, Ti.width * TE, Ti.height * TE); x.restore(); });
     for (const tx of this.textes) { x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#000'; x.fillText(tx.t, tx.x + ox + 1, tx.y + oy + 1); x.fillStyle = tx.c; x.fillText(tx.t, tx.x + ox, tx.y + oy); }
     // flèche vers la station quand elle sort de l'écran (rouge si le carburant devient juste)
     const qsx = S.qx + ox, qsy = S.qy + oy;
