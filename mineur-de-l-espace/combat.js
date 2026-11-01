@@ -70,11 +70,11 @@ Object.assign(Partie.prototype, {
   /* ----- vagues : alerte, puis combat en direct (ou calculé par les règles si l'on est ailleurs) ----- */
   evenementsAliens(ev) {
     const e = this.e;
-    if (ev.alerte) { const P = MDE_PLANETES[ev.alerte.planete].nom; this.annonce('ALERTE ! ATTAQUE ALIEN SUR ' + P, '#ff6a5c'); }
+    if (ev.alerte) { const P = MDE_PLANETES[ev.alerte.planete].nom; this.annonce('ALERTE ! ATTAQUE ALIEN SUR ' + P, '#ff6a5c'); this.son('alerte'); this.vibrer(200); }
     if (ev.attaque && !this.bat) {
       if (ev.attaque.planete === e.planete && !this.enVoyage) this.lancerBataille(false);
       else { const r = mdeResoudreAttaque(e, false), P = MDE_PLANETES[r.planete].nom;
-        this.annonce(r.victoire ? 'LA FLOTTE DE ' + P + ' A REPOUSSE LA VAGUE ' + r.vague : 'BASE ' + P + ' HORS SERVICE', r.victoire ? '#7be07b' : '#ff6a5c'); this.sauver();
+        this.son(r.victoire ? 'flotte' : 'defaite'); this.annonce(r.victoire ? 'LA FLOTTE DE ' + P + ' A REPOUSSE LA VAGUE ' + r.vague : 'BASE ' + P + ' HORS SERVICE', r.victoire ? '#7be07b' : '#ff6a5c'); this.sauver();
         if (this.quai) this.majPanneauSiCalme(); }
     }
   },
@@ -97,8 +97,8 @@ Object.assign(Partie.prototype, {
   finBataille(victoire) {
     const B = this.bat, e = this.e; if (!B || B.fini) return;
     B.fini = 1;
-    if (B.finale) { mdeFinFinale(e, victoire); if (victoire) this.victoire(); else this.annonce('LE VAISSEAU-MERE A GAGNE CETTE FOIS : IL REVIENDRA', '#ff6a5c'); }
-    else { mdeFinVague(e, victoire); this.annonce(victoire ? 'VAGUE ' + B.vague + ' REPOUSSEE !' : 'LA STATION EST HORS SERVICE (A REPARER AU QUAI)', victoire ? '#7be07b' : '#ff6a5c'); }
+    if (B.finale) { mdeFinFinale(e, victoire); if (victoire) this.victoire(); else { this.son('defaite'); this.annonce('LE VAISSEAU-MERE A GAGNE CETTE FOIS : IL REVIENDRA', '#ff6a5c'); } }
+    else { mdeFinVague(e, victoire); this.son(victoire ? 'flotte' : 'defaite'); this.annonce(victoire ? 'VAGUE ' + B.vague + ' REPOUSSEE !' : 'LA STATION EST HORS SERVICE (A REPARER AU QUAI)', victoire ? '#7be07b' : '#ff6a5c'); }
     for (const a of B.aliens) if (a.pv > 0) a.fuite = true;   // les survivants repartent dans l'espace
     this.sauver(); if (this.quai) this.majPanneauSiCalme();
   },
@@ -114,7 +114,7 @@ Object.assign(Partie.prototype, {
   // un tir alien qui touche : la corvette perd de la coque (4 points de dégâts = 1 plaque), la station des PV (siège : moitié)
   toucher(quoi, dmg) {
     const B = this.bat;
-    if (quoi === 'corvette') { if (this.quai || this.panne) return; this.coque -= dmg / 4; this.secousse = 0.15;
+    if (quoi === 'corvette') { if (this.quai || this.panne) return; this.coque -= dmg / 4; this.secousse = 0.15; this.son('touche'); this.vibrer(25);
       if (this.coque <= 0) { if (B && B.finale) this.finBataille(false); this.tomberEnPanne('COQUE DETRUITE !'); } }
     else if (quoi === 'station') { B.base -= dmg * MDE_VAGUES.siege; if (B.base <= 0) { B.base = 0; this.finBataille(false); } }
     else if (quoi.etat) { quoi.pv -= dmg; if (quoi.pv <= 0) { quoi.etat = 'retour'; quoi.energie = 0; this.texte(quoi.x, quoi.y - 12, 'CHASSEUR TOUCHE', '#ff9d4a'); } }
@@ -127,8 +127,8 @@ Object.assign(Partie.prototype, {
     return false;
   },
   blesserAlien(a, deg) {
-    a.pv -= deg; a.flash = 0.08; this.eclats(a.x, a.y, 2, 'cobalt');
-    if (a.pv <= 0) { this.eclats(a.x, a.y, a.k === 'mere' ? 60 : a.k === 'croiseur' ? 30 : 16, 'cristal', true); this.secousse = a.k === 'mere' ? 0.6 : 0.15;
+    a.pv -= deg; a.flash = 0.08; this.eclats(a.x, a.y, 2, 'cobalt'); this.son('touche');
+    if (a.pv <= 0) { this.eclats(a.x, a.y, a.k === 'mere' ? 60 : a.k === 'croiseur' ? 30 : 16, 'cristal', true); this.secousse = a.k === 'mere' ? 0.6 : 0.15; this.son(a.k === 'mere' ? 'mere' : 'boum'); if (a.k === 'mere') this.vibrer(400);
       this.texte(a.x, a.y - 16, MDE_ALIENS[a.k].nom + ' ABATTU', '#d27ef0'); }
   },
 
@@ -139,7 +139,7 @@ Object.assign(Partie.prototype, {
     const vivants = B.aliens.filter(a => a.pv > 0 && !a.fuite);
     if (!B.fini && !vivants.length) this.finBataille(true);
     // la flotte décolle de la station après son retard (les satellites la font venir plus tôt)
-    for (const u of B.unites) if (!u.la && B.t >= B.retard + u.t) { u.la = true; u.x = S.x; u.y = S.y; if (u === B.unites[0]) this.texte(S.x, S.y - 60, 'LA FLOTTE DECOLLE !', '#9fd0ff'); }
+    for (const u of B.unites) if (!u.la && B.t >= B.retard + u.t) { u.la = true; u.x = S.x; u.y = S.y; if (u === B.unites[0]) { this.texte(S.x, S.y - 60, 'LA FLOTTE DECOLLE !', '#9fd0ff'); this.son('flotte'); } }
     // les aliens
     const cibles = this.ciblesAliens();
     for (const a of B.aliens) {
@@ -160,7 +160,7 @@ Object.assign(Partie.prototype, {
       const dc = Math.hypot(cx - a.x, cy - a.y);
       a.a = tournerVers(a.a, dc < V.d + 120 ? versAngle(cx - a.x, cy - a.y) : versAngle(a.vx, a.vy), 3 * dt);
       if (dc < V.d + 70 && a.t <= 0) { a.t = V.cd * (0.85 + R() * 0.3);
-        const n = a.k === 'mere' ? 3 : 1;
+        const n = a.k === 'mere' ? 3 : 1; this.son('alien');
         for (let i = 0; i < n; i++) { const vise = Math.atan2(cy - a.y, cx - a.x) + (i - (n - 1) / 2) * 0.12, v = 210;
           this.tirsA.push({ x: a.x + Math.cos(vise) * V.ray * 0.6, y: a.y + Math.sin(vise) * V.ray * 0.6, vx: Math.cos(vise) * v, vy: Math.sin(vise) * v, v: 2.2, dmg: MDE_ALIENS[a.k].att * V.cd / n, cible: c.quoi }); } }
     }
@@ -227,7 +227,7 @@ Object.assign(Partie.prototype, {
       c.vx += (dx / dl * vv - c.vx) * Math.min(1, dt * 3); c.vy += (dy / dl * vv - c.vy) * Math.min(1, dt * 3); c.x += c.vx * dt; c.y += c.vy * dt;
       c.a = tournerVers(c.a, c.etat === 'sortie' && Math.hypot(tx - c.x, ty - c.y) < dd + 60 ? versAngle(tx - c.x, ty - c.y) : versAngle(c.vx, c.vy), 6 * dt);
       if (c.etat === 'sortie' && c.t <= 0 && Math.hypot(tx - c.x, ty - c.y) < dd + 50) { c.t = 0.5; const an = Math.atan2(ty - c.y, tx - c.x);
-        this.balles.push({ x: c.x + Math.cos(an) * 6, y: c.y + Math.sin(an) * 6, vx: Math.cos(an) * 300, vy: Math.sin(an) * 300, v: 0.5, a: an + Math.PI / 2, deg: E.degats, sorte: 'chasseur' }); }
+        this.son('chasseur'); this.balles.push({ x: c.x + Math.cos(an) * 6, y: c.y + Math.sin(an) * 6, vx: Math.cos(an) * 300, vy: Math.sin(an) * 300, v: 0.5, a: an + Math.PI / 2, deg: E.degats, sorte: 'chasseur' }); }
       // ramasser le minerai qui passe tout près
       if (c.cargo.length < E.soute) for (const d of this.drops) if (d.v > 0 && Math.hypot(d.x - c.x, d.y - c.y) < 16) { d.v = 0; c.cargo.push(d.type); if (c.cargo.length >= E.soute) break; }
       if (c.etat === 'retour' && dS < 16) {
@@ -244,7 +244,7 @@ Object.assign(Partie.prototype, {
     for (const a of this.asts) if (a.rapide) { const d = Math.hypot(a.x - s.x, a.y - s.y); if (d < bd) { bd = d; best = a; } }
     for (const a of aliens) { const d = Math.hypot(a.x - s.x, a.y - s.y) - AL_VOL[a.k].ray; if (d < bd) { bd = d; best = a; } }
     if (!best) return;
-    this.defT = E.defense.cadence; this.zaps.push({ x: best.x, y: best.y, v: 0.1 });
+    this.defT = E.defense.cadence; this.son('zap'); this.zaps.push({ x: best.x, y: best.y, v: 0.1 });
     if (best.k) this.blesserAlien(best, 1); else { best.vie = 0; this.eclats(best.x, best.y, 8, 'fer', true); }
   },
 
@@ -305,7 +305,7 @@ Object.assign(Partie.prototype, {
     f.innerHTML = `<div class="boite"><h3>VICTOIRE !</h3><p class="doux" style="font-size:10px;color:#dfe3ff">LE VAISSEAU-MERE EST ABATTU. LES ALIENS NE REVIENDRONT PLUS.</p>
       <p class="doux">TEMPS DE JEU : ${h} H ${String(m).padStart(2, '0')} · VAGUES REPOUSSEES : ${g} / ${MDE_VAGUES.nombre}</p>
       <button class="btn" data-libre="1">CONTINUER EN MODE LIBRE</button><a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a></div>`;
-    this.pauseVue = true;
+    this.pauseVue = true; this.son('victoire');
     f.addEventListener('click', ev => { if (ev.target.dataset && ev.target.dataset.libre) { f.remove(); this.pauseVue = false; this.annonce('MODE LIBRE : MINE A TA GUISE', '#7be07b'); } });
   },
 });

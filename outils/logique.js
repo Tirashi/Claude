@@ -228,7 +228,8 @@ const TESTS = {
       'magasinier.daily': { 20261020: 41 }, 'romet.machines': { foire: { t: [true, false, true, true, false, false], butin: 312, parties: 3 } }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 }, 'duche.best': 3120, 'duche.daily': { 20261020: 2800 },
       'motdor.stats': { parties: 5, gagnees: 4, serie: 2, record: 3, dernier: 20261019, dist: [0, 1, 2, 1, 0, 0] }, 'motdor.daily': { 20261019: 3 },
       'jarls.campagne': { etoiles: { heimdall: 3, idunn: 2 } }, 'jarls.daily': { 20261021: 1290 },
-      'doggysaga.progres': { etoiles: { 1: 3, 2: 1 }, scores: {}, album: [0, 3] }, 'doggysaga.daily': { 20261023: 98 } };
+      'doggysaga.progres': { etoiles: { 1: 3, 2: 1 }, scores: {}, album: [0, 3] }, 'doggysaga.daily': { 20261023: 98 },
+      'mineur-de-l-espace': { v: 1, graine: 'm1', temps: 4321, cr: 120, recherche: { centre: true }, bases: {}, fin: false } };
     const A = window.Accueil, keep = { ...localStorage }; localStorage.clear();
     for (const [k, v] of Object.entries(recs)) localStorage.setItem(k, JSON.stringify(v));
     const code = 'LUDO1-' + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, g: A.collectSaves() }))));

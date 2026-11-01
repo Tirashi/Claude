@@ -19,6 +19,8 @@ const CLE_COMMANDES = 'mineur-de-l-espace.commandes';
 // joystick fixe en bas à gauche ; en mode « bouton », POUSSER en bas à droite et RENTRER au-dessus
 const JOY = { x: 78, y: H - 78, r: 40 }, GAZ = () => ({ x: W - 66, y: H - 66, r: 40 }), BRENTRER = pc => modeCommandes === 'bouton' && !pc ? { x: W - 116, y: H - 148, w: 104, h: 32 } : { x: W - 116, y: H - 46, w: 104, h: 34 };
 let modeCommandes = 'bouton';
+const CLE_VIBRE = 'mineur-de-l-espace.vibre';
+let modeVibre = true; try { modeVibre = localStorage.getItem(CLE_VIBRE) !== 'non'; } catch (err) { /* stockage indisponible */ }
 try { modeCommandes = localStorage.getItem(CLE_COMMANDES) || 'bouton'; } catch (err) { /* stockage indisponible */ }
 
 /* ---------- petites images : pépites de minerai, ciel, nébuleuse ---------- */
@@ -62,6 +64,20 @@ class Partie {
     this.panneau(); this.pause(); this.entrees(); this.rebatir(); this.accoster(true);
     this.cam.x = this.ship.x; this.cam.y = this.ship.y;
     this.ajuster(); addEventListener('resize', () => this.ajuster());
+    this.titre();
+  }
+  /* ---------- écran titre : la station et la planète tournent derrière ; continuer, nouvelle partie, retour ---------- */
+  titre() {
+    const e = this.e, enCours = e.temps > 30, f = document.createElement('div'); f.className = 'titre'; this.ecran.appendChild(f); this.ecranTitre = f; this.pauseVue = true; this.p.classList.remove('vu');
+    const etage = mdeEtage(e), h = Math.floor(e.temps / 3600), m = Math.floor(e.temps / 60) % 60;
+    f.innerHTML = `<div class="boite"><h1>MINEUR<br>DE L'ESPACE</h1><p class="sous">CASSE, RAMASSE, CONSTRUIS, DEFENDS</p>
+      ${enCours ? `<button class="btn grand" data-t="continuer">CONTINUER</button><p class="doux">${e.fin ? 'PARTIE FINIE · MODE LIBRE' : 'ETAGE ' + etage + ' / 4'} · ${h} H ${String(m).padStart(2, '0')} · ${e.cr} CR</p>
+        <button class="btn" data-t="nouvelle">NOUVELLE PARTIE</button>` : `<button class="btn grand" data-t="nouvelle">JOUER</button>`}
+      <a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><p class="doux">AU PC : CLAVIER ET SOURIS · ENTREE : JOUER</p></div>`;
+    f.addEventListener('click', ev => { const b = ev.target.closest('[data-t]'); if (!b) return; const k = b.dataset.t;
+      if (k === 'nouvelle' && enCours) { if (!b.dataset.sur) { b.dataset.sur = 1; b.textContent = 'SUR ? LA PARTIE EST EFFACEE'; return; } }
+      if (k === 'nouvelle' && enCours) this.nouvellePartie();
+      this.son('quai'); f.remove(); this.ecranTitre = null; this.pauseVue = false; if (this.quai) { this.majPanneau(); this.p.classList.add('vu'); } });
   }
   /* sauvegarde : l'état des règles (un objet JSON) */
   charger() {
@@ -123,7 +139,7 @@ class Partie {
     const p = document.createElement('div'); p.className = 'panneau'; this.ecran.appendChild(p); this.p = p;
     p.addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return;
       if (b.dataset.o) this.onglet = b.dataset.o;
-      else if (b.dataset.a) { const id = b.dataset.a; if (mdeAcheter(this.e, id)) { if (/^(amel|classe)/.test(id)) this.rebatir();
+      else if (b.dataset.a) { const id = b.dataset.a; if (mdeAcheter(this.e, id)) { this.son('achat'); if (/^(amel|classe|esc)/.test(id)) this.rebatir();
         const S = this.station(), mod = id.startsWith('module:');
         this.texte(mod ? S.x : this.ship.x, mod ? S.y - 80 : this.ship.y - 46, mod ? MDE_MODULES[id.slice(7)].nom + ' INSTALLE !' : id.startsWith('drone:') ? 'NOUVEAU DRONE !' : 'ACHETE !', '#7be07b'); this.sauver(); } }
       else if (b.dataset.c) { if (mdeChangerClasse(this.e, b.dataset.c)) { this.rebatir(); this.sauver(); } }
@@ -217,17 +233,21 @@ class Partie {
   pause() {
     const b = document.createElement('button'); b.className = 'btn bpause'; b.textContent = 'II'; this.ecran.appendChild(b);
     const f = document.createElement('div'); f.className = 'pause'; this.ecran.appendChild(f); this.f = f;
-    f.innerHTML = `<div class="boite"><h3>PAUSE</h3><button class="btn" data-p="reprendre">REPRENDRE</button><button class="btn" data-p="commandes"></button><button class="btn" data-p="nouvelle">NOUVELLE PARTIE</button>
+    f.innerHTML = `<div class="boite"><h3>PAUSE</h3><button class="btn" data-p="reprendre">REPRENDRE</button><button class="btn" data-p="commandes"></button><button class="btn" data-p="sons"></button><button class="btn" data-p="vibre"></button><button class="btn" data-p="titre">ECRAN TITRE</button>
       <a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><p class="doux">JOYSTICK + POUSSER : LE JOYSTICK TOURNE LA CORVETTE, LE BOUTON ACCELERE. JOYSTICK SEUL : IL TOURNE ET POUSSE. LA PARTIE EST SAUVEGARDEE AU QUAI.</p><p class="doux">SUR PC : Z (OU W), FLECHE HAUT OU ESPACE POUSSE ; Q (OU A) ET D OU LES FLECHES TOURNENT ; LA SOURIS VISE, CLIC GAUCHE POUSSE ; R RENTRE ; ENTREE DECOLLE ; ECHAP : PAUSE.</p></div>`;
-    const majC = () => { f.querySelector('[data-p="commandes"]').textContent = modeCommandes === 'bouton' ? 'COMMANDES : JOYSTICK + POUSSER' : 'COMMANDES : JOYSTICK SEUL'; }; majC();
+    const majC = () => { f.querySelector('[data-p="commandes"]').textContent = modeCommandes === 'bouton' ? 'COMMANDES : JOYSTICK + POUSSER' : 'COMMANDES : JOYSTICK SEUL';
+      f.querySelector('[data-p="sons"]').textContent = 'SONS : ' + (typeof MineurSons === 'undefined' || MineurSons.actif ? 'OUI' : 'NON');
+      f.querySelector('[data-p="vibre"]').textContent = 'VIBRATIONS : ' + (modeVibre ? 'OUI' : 'NON'); }; majC();
     this.ouvrirPause = () => { this.pauseVue = true; this.joy = null; this.gaz = null; this.clic = false; if (this.touches) this.touches.clear(); f.classList.add('vu'); };
-    this.fermerPause = () => { f.querySelectorAll('[data-sur]').forEach(x => { delete x.dataset.sur; x.textContent = 'NOUVELLE PARTIE'; }); this.pauseVue = false; f.classList.remove('vu'); };
+    this.fermerPause = () => { if (this.ecranTitre) return; this.pauseVue = false; f.classList.remove('vu'); };
     b.addEventListener('click', () => this.ouvrirPause());
     f.addEventListener('click', ev => { const k = ev.target.dataset && ev.target.dataset.p; if (!k) return;
       if (k === 'commandes') { modeCommandes = modeCommandes === 'bouton' ? 'glisse' : 'bouton'; try { localStorage.setItem(CLE_COMMANDES, modeCommandes); } catch (err) { /* stockage indisponible */ } majC(); return; }
-      if (k === 'nouvelle') { if (!ev.target.dataset.sur) { ev.target.dataset.sur = 1; ev.target.textContent = 'SUR ? TOUT EST EFFACE'; return; } this.nouvellePartie(); }
-      f.querySelectorAll('[data-sur]').forEach(x => { delete x.dataset.sur; x.textContent = 'NOUVELLE PARTIE'; });
-      this.pauseVue = false; f.classList.remove('vu'); });
+      if (k === 'sons') { if (typeof MineurSons !== 'undefined') MineurSons.basculer(); majC(); return; }
+      if (k === 'vibre') { modeVibre = !modeVibre; try { localStorage.setItem(CLE_VIBRE, modeVibre ? 'oui' : 'non'); } catch (err) { /* stockage indisponible */ } if (modeVibre) this.vibrer(80); majC(); return; }
+      f.classList.remove('vu');
+      if (k === 'titre') { this.sauver(); this.titre(); return; }
+      this.pauseVue = false; });
   }
   /* ---------- quai, décollage ---------- */
   accoster(debut, panne) {
@@ -236,7 +256,7 @@ class Partie {
     if (!debut) {
       const lot = {}; for (const m of this.soute) lot[m] = (lot[m] || 0) + 1;
       const r = mdeRetour(this.e, lot, panne), g = Object.entries(r.garde).map(([m, n]) => n + ' ' + MDE_MINERAIS[m].nom).join(', ');
-      if (r.gain) this.texte(this.ship.x, this.ship.y - 40, `+${r.gain} CR`, '#ffcf4a');
+      this.son(r.gain ? 'vente' : 'quai'); if (r.gain) this.texte(this.ship.x, this.ship.y - 40, `+${r.gain} CR`, '#ffcf4a');
       if (g) this.texte(this.ship.x, this.ship.y - 56, 'MIS DE COTE : ' + g, '#9fd0ff');
       this.sauver();
     }
@@ -244,7 +264,7 @@ class Partie {
   }
   voyager(pl) {
     const de = this.e.planete; if (!mdeVoyager(this.e, pl)) return;
-    this.p.classList.remove('vu'); this.enVoyage = { de, vers: pl, t: 0, d: 4 }; this.sauver();
+    this.p.classList.remove('vu'); this.enVoyage = { de, vers: pl, t: 0, d: 4 }; this.sauver(); this.son('voyage');
   }
   finVoyage() {
     const pl = this.enVoyage.vers; this.enVoyage = null;
@@ -254,7 +274,7 @@ class Partie {
   }
   decoller() {
     this.quai = false; this.sorti = false; this.p.classList.remove('vu'); const s = this.ship, S = this.station();
-    s.vx = S.vx + Math.cos(S.phi) * 45; s.vy = S.vy + Math.sin(S.phi) * 45; s.a = S.phi + Math.PI / 2;   // on recule du quai, nez vers l'extérieur this.prochainDanger = 12 + this.R() * 20;
+    this.son('decollage'); s.vx = S.vx + Math.cos(S.phi) * 45; s.vy = S.vy + Math.sin(S.phi) * 45; s.a = S.phi + Math.PI / 2;   // on recule du quai, nez vers l'extérieur this.prochainDanger = 12 + this.R() * 20;
   }
   texte(x, y, t, c) { this.textes.push({ x, y, t, c, v: 1.8 }); }
   entrees() {
@@ -273,6 +293,7 @@ class Partie {
     this.touches = new Set();
     const TOUCHES = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'Space'];
     addEventListener('keydown', ev => {
+      if (this.ecranTitre) { if (ev.code === 'Enter' || ev.code === 'Space') { this.ecranTitre.querySelector('[data-t]').click(); ev.preventDefault(); } return; }
       if (ev.code === 'Escape' || ev.code === 'KeyP') { if (this.pauseVue) this.fermerPause(); else this.ouvrirPause(); ev.preventDefault(); return; }
       if (this.pauseVue) return;
       this.pc = true;
@@ -297,6 +318,9 @@ class Partie {
     const img = document.createElement('canvas'); img.width = img.height = L_ST * r; const g = img.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(FS[k], 0, 0, L_ST * r, L_ST * r);
     this.stHD.unshift({ fs: FS, k, r, img }); this.stHD.length = Math.min(this.stHD.length, 4); return img;
   }
+  // sons (sons.js) et vibrations (réglage de la pause)
+  son(n) { if (typeof MineurSons !== 'undefined') MineurSons.jouer(n); }
+  vibrer(ms) { if (modeVibre && navigator.vibrate) try { navigator.vibrate(ms); } catch (err) { /* sans vibreur */ } }
   mondeTourelle(i) { const [mx, my] = this.nef.tourelles[i], s = this.ship, c = Math.cos(s.a), si = Math.sin(s.a); return [s.x + mx * c - my * si, s.y + mx * si + my * c]; }
   /* ---------- un pas de simulation ---------- */
   pas(dt) {
@@ -351,7 +375,7 @@ class Partie {
     const dq = Math.hypot(s.x - S.qx, s.y - S.qy);
     if (dq > 90) this.sorti = true;
     if (this.sorti && dq < 34) { this.accoster(); this.suite(dt); return; }
-    if (dq > 50) { this.carbu -= dt * (MDE_CONSO.glisse + (MDE_CONSO.pousse - MDE_CONSO.glisse) * pousse);
+    if (dq > 50) { this.carbu -= dt * (MDE_CONSO.glisse + (MDE_CONSO.pousse - MDE_CONSO.glisse) * pousse); if (this.carbu < c.vol * 0.25) this.son('carbu');
       if (this.carbu <= 0) this.tomberEnPanne('PANNE SECHE !'); }
     // dangers : petites roches rapides, plus nombreuses aux étages suivants
     if (dq > 140) { this.prochainDanger -= dt; if (this.prochainDanger <= 0 && !this.alerteMeteo) { this.alerteMeteo = { an: this.R() * TAU, t: 1.3 }; this.prochainDanger = 60 / MDE_DANGERS[mdeEtage(e)] * (0.5 + this.R()); } }
@@ -359,8 +383,8 @@ class Partie {
     for (const a of this.asts) if (a.rapide && this.R() < 0.9) { const k = this.R(); this.parts.push({ x: a.x + (this.R() - 0.5) * 4, y: a.y + (this.R() - 0.5) * 4,
       vx: -a.vx * 0.15 + (this.R() - 0.5) * 20, vy: -a.vy * 0.15 + (this.R() - 0.5) * 20, v: 0.25 + this.R() * 0.3, c: k < 0.3 ? '#fff2a0' : k < 0.6 ? '#f2a94a' : k < 0.85 ? '#d0752c' : '#8c4a24', t: k < 0.5 ? 2 : 1 }); }
     for (const a of this.asts) if (a.rapide && Math.hypot(a.x - s.x, a.y - s.y) < a.ray + 14) {
-      a.vie = 0; this.coque--; this.secousse = 0.3; this.eclats(a.x, a.y, 12, 'fer', true); this.texte(s.x, s.y - 44, 'CHOC ! COQUE ' + Math.max(0, this.coque), '#ff6a5c');
-      if (navigator.vibrate) try { navigator.vibrate(60); } catch (err) { /* sans vibreur */ }
+      a.vie = 0; this.coque--; this.secousse = 0.3; this.eclats(a.x, a.y, 12, 'fer', true); this.son('choc'); this.texte(s.x, s.y - 44, 'CHOC ! COQUE ' + Math.max(0, this.coque), '#ff6a5c');
+      this.vibrer(60);
       if (this.coque <= 0) { this.tomberEnPanne('COQUE DETRUITE !'); break; } }
     // drone réparateur : un point de coque toutes les 20 s
     if (e.reparateur && this.coque < c.coque) { this.repare = (this.repare || 0) + dt; if (this.repare > 20) { this.repare = 0; this.coque++; } }
@@ -371,7 +395,7 @@ class Partie {
       T.t -= dt; if (!cible) return;
       const voulu = Math.atan2(cible.y - ty, cible.x - tx) + Math.PI / 2; let d = voulu - T.a; d = Math.atan2(Math.sin(d), Math.cos(d)); T.a += Math.max(-5 * dt, Math.min(5 * dt, d));
       if (Math.abs(d) < 0.12 && T.t <= 0) { T.t = MDE_TIR.cadence; const fx = Math.sin(T.a), fy = -Math.cos(T.a), lg = 10 + VISIBLE[e.ameliorations.canon] * 2;
-        this.balles.push({ x: tx + fx * lg, y: ty + fy * lg, vx: fx * 380, vy: fy * 380, v: 0.65, a: T.a }); T.recul = 0.08; } });
+        this.balles.push({ x: tx + fx * lg, y: ty + fy * lg, vx: fx * 380, vy: fy * 380, v: 0.65, a: T.a }); T.recul = 0.08; this.son('tir'); } });
     this.suite(dt);
   }
   // propulseurs : petites bouffées blanches sur le nez quand la corvette tourne (cot : côté de la bouffée)
@@ -383,13 +407,13 @@ class Partie {
     for (const b of this.balles) { b.x += b.vx * dt; b.y += b.vy * dt; b.v -= dt; const dg = b.deg || deg;
       if (this.bat && this.toucheAlien(b, dg)) { b.v = 0; continue; }
       if (b.sorte === 'flotte') continue;   // la flotte ne vise que les aliens
-      for (const a of this.asts) if (Math.hypot(a.x - b.x, a.y - b.y) < a.ray) { b.v = 0; a.r.pv -= dg; a.flash = 0.08; this.eclats(b.x, b.y, 3, a.r.minerai); if (a.r.pv <= 0) this.casser(a); break; } }
+      for (const a of this.asts) if (Math.hypot(a.x - b.x, a.y - b.y) < a.ray) { b.v = 0; a.r.pv -= dg; a.flash = 0.08; if (a.r.pv > 0) this.son('touche'); this.eclats(b.x, b.y, 3, a.r.minerai); if (a.r.pv <= 0) this.casser(a); break; } }
     this.balles = this.balles.filter(b => b.v > 0);
     const aimant = 90 * this.C.aimant;
     for (const d of this.drops) { d.v -= dt; const dx = s.x - d.x, dy = s.y - d.y, dist = Math.hypot(dx, dy);
       if (!this.quai && !this.panne && dist < aimant) { const plein = this.soute.length >= this.C.soute;
-        if (!plein) { d.vx += dx / dist * 600 * dt; d.vy += dy / dist * 600 * dt; } else if (dist < 40 && !(this.pleinT > 0)) { this.pleinT = 2; this.texte(s.x, s.y - 44, 'SOUTE PLEINE', '#ff6a5c'); }
-        if (!plein && dist < 18) { d.v = 0; this.soute.push(d.type); const rare = MDE_MINERAIS[d.type].prix >= 20; this.texte(d.x, d.y - 8, rare ? MDE_MINERAIS[d.type].nom + ' !' : '+1', rare ? '#ffcf4a' : '#d8c2aa'); } }
+        if (!plein) { d.vx += dx / dist * 600 * dt; d.vy += dy / dist * 600 * dt; } else if (dist < 40 && !(this.pleinT > 0)) { this.pleinT = 2; this.son('plein'); this.texte(s.x, s.y - 44, 'SOUTE PLEINE', '#ff6a5c'); }
+        if (!plein && dist < 18) { d.v = 0; this.soute.push(d.type); const rare = MDE_MINERAIS[d.type].prix >= 20; this.son(rare ? 'rare' : 'ramasse'); this.texte(d.x, d.y - 8, rare ? MDE_MINERAIS[d.type].nom + ' !' : '+1', rare ? '#ffcf4a' : '#d8c2aa'); } }
       d.vx *= 1 - dt * 1.2; d.vy *= 1 - dt * 1.2; d.x += d.vx * dt; d.y += d.vy * dt; }
     this.drops = this.drops.filter(d => d.v > 0); this.pleinT = (this.pleinT || 0) - dt;
     for (const p of this.parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.v -= dt; } this.parts = this.parts.filter(p => p.v > 0);
@@ -401,7 +425,7 @@ class Partie {
   }
   // une roche cassée : ses éclats (règles), ou son minerai si c'était une petite
   casser(a) {
-    this.asts.splice(this.asts.indexOf(a), 1);
+    this.asts.splice(this.asts.indexOf(a), 1); this.son(a.r.taille >= 2 ? 'grosse' : 'roche');
     if (a.rapide) { this.eclats(a.x, a.y, 8, 'fer', true); return; }
     const R = this.R, l = mdeEclats(a.r, R);
     l.forEach((r, i) => { const an = i / l.length * TAU + R() * 0.6, v = 25 + R() * 25;
@@ -513,6 +537,7 @@ class Partie {
       const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + 8 + Math.sin(an) * kk; x.save(); x.translate(fx, fy); x.rotate(an + Math.PI); x.fillStyle = '#ff6a5c';
       for (const o of [0, 9]) { x.beginPath(); x.moveTo(o + 8, 0); x.lineTo(o - 4, -8); x.lineTo(o - 4, 8); x.fill(); } x.restore();
       x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ff6a5c'; x.fillText('METEORITE', fx - Math.cos(an) * 34, fy - Math.sin(an) * 22 + 3); }
+    if (this.ecranTitre) return;   // l'écran titre : seulement la scène derrière
     // barre du haut : CR, classe, soute, coque, carburant (le bouton de pause est à droite, en HTML)
     x.fillStyle = '#05060dcc'; x.fillRect(0, 0, W, 30);
     x.font = '13px Silkscreen'; x.textAlign = 'left'; x.fillStyle = '#ffcf4a'; x.fillText(e.cr + ' CR', 10, 20);

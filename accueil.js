@@ -53,6 +53,8 @@ const GAMES = [
    d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
   {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
    d: "Un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtis, recrute, conquiers les terres de trois seigneurs rivaux et gagne la couronne en 30 saisons. Combats en scènes HD-2D, événements, un Duché du jour pour toute la famille.", tags: ["STRATEGIE", "30 TOURS", "DUCHE DU JOUR"]},
+  {k: "mineur-de-l-espace/index.html", n: "MINEUR DE L'ESPACE", s: "MINEUR", ic: "mineur", fam: "32", lb: "radial-gradient(circle at 70% 25%, #24306a, #05060d 70%)", lt: "#ffcf4a", sh: "#3b6fd0",
+   d: "Pilote ta corvette dans la ceinture d'astéroïdes, casse les roches et rapporte le minerai à la station en orbite. Améliore ta corvette, construis la station module par module, envoie des drones miner, pars vers la Lune et Mars, puis défends tes bases contre les aliens avec tes flottes, jusqu'à la grande bataille contre le vaisseau-mère. Une partie de 3 à 5 heures, sauvegardée au quai.", tags: ["GESTION", "MINAGE", "3 A 5 H"]},
   {k: "resistance/index.html", n: "RESISTANCE", s: "RESISTANCE", ic: "resistance", fam: "32", lb: "linear-gradient(#2c4fa8, #121a3a)", lt: "#ffd23f", sh: "#2c4fa8",
    d: "Rogue-lite tactique façon Fire Emblem GBA : un tyran a soumis le continent, mène l'armée rebelle. Recrute tes soldats, traverse le pays de combat en combat (marchand, repos, événements), triangle des armes, mort définitive, et abats le général. À chaque retour, agrandis la forteresse rebelle : caserne, taverne, infirmerie, Mémorial des vétérans…", tags: ["ROGUE-LITE", "FORTERESSE", "11 CLASSES"]},
   {k: "boutique/index.html", n: "LA BOUTIQUE DE CARTES", s: "BOUTIQUE", ic: "boutique", fam: "3d", lb: "linear-gradient(#8a63d2, #2b2838)", lt: "#ffd84d", sh: "#8a63d2", rank: "boutique",
@@ -87,6 +89,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "mineur-de-l-espace/index.html": {added: "2026-11-01", genres: ["SIMULATION", "ESPACE"]},
   "resistance/index.html": {added: "2026-10-28", genres: ["TACTIQUE"]},
   "boutique/index.html": {added: "2026-10-23", genres: ["SIMULATION"]},
   "doggy-saga/index.html": {added: "2026-10-23", genres: ["LOGIQUE", "DU JOUR"]},
@@ -123,6 +126,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-11-01", "Nouveau jeu : Mineur de l'espace. Casse des astéroïdes avec ta corvette et rapporte le minerai à la station : améliorations, usines, recherche, station construite module par module, drones qui minent seuls, voyages vers la Lune et Mars, bases, puis vagues d'aliens, flottes, porte-vaisseaux à escadrille et bataille finale contre le vaisseau-mère. Au PC : clavier et souris."],
   ["2026-10-28", "Nouveau jeu : Résistance, un rogue-lite tactique façon Fire Emblem GBA. Recrute trois rebelles, traverse les Marches de l'Ouest de combat en combat (marchand, repos, événements) et abats le général du tyran. Défaite ou victoire, tu rapportes du ravitaillement pour agrandir la forteresse rebelle : chaque bâtiment rend les campagnes suivantes plus fortes."],
   ["2026-10-23", "Nouveau jeu : La Boutique de cartes, une année à la tête d'une boutique de cartes à collectionner, en 3D. Le lundi, commande au grossiste, fixe tes prix, ouvre des boosters et range les meilleures cartes en vitrine ou dans ton classeur ; du mardi au samedi, regarde les clients entrer et acheter ; le dimanche, fais tes comptes. Aménage, agrandis, organise des tournois et rembourse la banque avant la semaine 26 !"],
   ["2026-10-23", "Nouveau jeu : Doggy Saga, un trois en ligne pour toute la famille. Glisse les chiens du refuge pour en aligner 3 pareils : chaque chien aligné reçoit un câlin. Bandanas, nœuds et balles de tennis lancent de grosses cascades. Lave la boue, ouvre les niches, fais descendre les chiots jusqu'à leur panier, et trouve une famille aux 16 chiens (dont Nounours le bouvier bernois) dans 60 niveaux. Chaque jour, la journée du jour : 20 coups, le plus de câlins possible."],
@@ -197,7 +201,10 @@ const count = o => Object.keys(o || {}).length;
 const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
 // ce qui attend d'être repris (null si rien)
+const mineurEtage = e => e.bases && e.bases.mars ? 4 : e.recherche && e.recherche.transfert ? 3 : e.recherche && e.recherche.centre ? 2 : 1;
+const mineurTemps = t => { t = Math.floor((Number(t) || 0) / 60); return Math.floor(t / 60) + " h " + String(t % 60).padStart(2, "0"); };
 const PROGRESS = {
+  "mineur-de-l-espace/index.html": () => { const e = rk("mineur-de-l-espace", null); return e && e.temps > 30 && !e.fin ? `ETAGE ${mineurEtage(e)}/4` : null; },
   "resistance/index.html": () => { const r = (rk("resistance.run", {}) || {}).run, n = r && r.map && r.current !== null ? r.map.nodes[r.current] : null; return r ? (n ? `ETAGE ${n.floor + 1}/${r.map.floors}` : "CAMPAGNE EN COURS") : null; },
   "romet/index.html": () => { const p = rk("romet.partie", {}) || {}, ids = Object.keys(p).filter(k => p[k] && !p[k].fini); return ids.length ? (ids.length > 1 ? ids.length + " PARTIES" : "PARTIE EN COURS") : null; },
   "the-des-jarls/index.html": () => { const d = rk("jarls.dailyRun", null), r = rk("jarls.run", null); return d && d.E && d.E.graine === dayNum() ? "DEFI DU JOUR" : r && r.E ? `MANCHE ${r.E.manche}` : null; },
@@ -246,6 +253,8 @@ const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catc
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
 const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
 const RECS = {
+  "mineur-de-l-espace/index.html": () => { const e = rk("mineur-de-l-espace", null); if (!e) return [];
+    return [["Étage atteint", e.fin ? "4 (fin)" : mineurEtage(e) + " / 4"], ["Temps de jeu", e.temps > 60 ? mineurTemps(e.temps) : null], ["Vaisseau-mère", e.fin ? "abattu" : null]]; },
   "resistance/index.html": () => { const m = (rk("resistance.save", {}) || {}).meta || {}, b = Object.values(m.upgrades || {}).reduce((a, v) => a + (Number(v) || 0), 0);
     return [["Pays libérés", num(m.wins)], ["Campagnes", num(m.runs)], ["Forteresse", num(b, b > 1 ? "niveaux" : "niveau")], ["Vétéran", m.veteran && m.veteran.name ? `${m.veteran.name} (niv ${m.veteran.level})` : null]]; },
   "doggy-saga/index.html": () => { const p = rk("doggysaga.progres", {}) || {}, e = p.etoiles || {}, d = rk("doggysaga.daily", {}) || {};
@@ -949,6 +958,7 @@ function collectSaves(){
   if (Object.keys(ja.e).length || Object.keys(ja.d).length) g.jarls = ja;
   const bo = {b: Number(readKey("boutique.best", 0)) || 0, s: readKey("boutique.stats", {}) || {}};
   if (bo.b || bo.s.parties) g.boutique = bo;
+  const mi = readKey("mineur-de-l-espace", null); if (mi && mi.v && mi.temps > 0) g.mineur = mi;
   const re = (readKey("resistance.save", {}) || {}).meta;
   if (re && re.runs) g.resistance = re;
   const bn = {b: Number(readKey("bannieres.best", 0)) || 0, s: readKey("bannieres.stats", {}) || {}};
@@ -1000,6 +1010,7 @@ function describeSaves(g){
   if (g.jarls){ const v = Object.values(g.jarls.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.jarls.d || {}).length;
     out.push(`Le Thé des Jarls : ${v.length} dieu${v.length > 1 ? "x" : ""} battu${v.length > 1 ? "s" : ""}, ${v.reduce((a, b) => a + b, 0)} étoiles${d ? `, ${d} défi${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.boutique){ const s = g.boutique.s || {}; out.push(`La Boutique de cartes : meilleure boutique ${g.boutique.b || 0} pts${s.finies ? `, ${s.finies} année${s.finies > 1 ? "s" : ""} finie${s.finies > 1 ? "s" : ""}` : ""}`); }
+  if (g.mineur){ const e = g.mineur; out.push(`Mineur de l'espace : étage ${mineurEtage(e)}${e.fin ? " (fini)" : ""}, ${mineurTemps(e.temps)} de jeu`); }
   if (g.resistance){ const m = g.resistance; out.push(`Résistance : ${m.runs} campagne${m.runs > 1 ? "s" : ""}${m.wins ? `, ${m.wins} pays libéré${m.wins > 1 ? "s" : ""}` : ""}`); }
   if (g.bannieres){ const s = g.bannieres.s || {}; out.push(`Bannières : ${g.bannieres.b || 0} drapeaux au mieux${s.gagnees ? `, ${s.gagnees} partie${s.gagnees > 1 ? "s" : ""} gagnée${s.gagnees > 1 ? "s" : ""}` : ""}`); }
   if (g.duche){ const d = Object.keys(g.duche.d || {}).length; out.push(`Duché : meilleur score ${g.duche.b || 0}${d ? `, ${d} duché${d > 1 ? "s" : ""} du jour` : ""}`); }
@@ -1172,6 +1183,11 @@ function mergeSaves(g){
     if (Number(a.b) > (Number(readKey("boutique.best", 0)) || 0)){ writeKey("boutique.best", Math.round(a.b)); n++; }
     for (const k of ["parties", "finies", "faillites"]) if (Number((a.s || {})[k]) > (Number(s[k]) || 0)){ s[k] = Math.round(a.s[k]); n++; }
     if (n){ writeKey("boutique.stats", s); done.push(`La Boutique de cartes : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.mineur && typeof g.mineur === "object" && g.mineur.v && Number(g.mineur.temps) > 0){
+    // une seule partie : on garde la plus avancée (finie d'abord, puis le plus long temps de jeu)
+    const loc = readKey("mineur-de-l-espace", null), a = g.mineur, rang = e => (e && e.fin ? 1e9 : 0) + (Number(e && e.temps) || 0);
+    if (rang(a) > rang(loc)){ writeKey("mineur-de-l-espace", a); done.push(`Mineur de l'espace : partie de ${mineurTemps(a.temps)} reprise`); }
   }
   if (g.resistance && typeof g.resistance === "object" && Number(g.resistance.runs) > 0){
     // fusion : la forteresse la plus avancée (le plus de campagnes) remplace l'autre en entier
