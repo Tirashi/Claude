@@ -110,7 +110,7 @@ Sons synthétisés (comme la Boutique) : tirs des tourelles, roche qui éclate, 
 1. ✅ **Règles et simulateur** (fait le 31/10, bilan § 19) : `regles.js` (minerais, prix, améliorations, classes, usines, recherche, station, drones, étages), `outils/mineur-simulateur.js`, réglages.
 2. ✅ **Étage 1 jouable** (fait le 31/10, bilan § 20) : vol (repris de la maquette 6), quai, améliorations, usines, recherche, sauvegarde ; `index.html` en banc d'essai.
 3. ✅ **Station et drones** (étage 2, fait le 01/11, bilan § 21) : construction module par module, hangar, drones qui travaillent.
-4. **Lune et Mars** (étage 3) : carte du système, voyages, nouvelles ceintures et minerais, bases.
+4. ✅ **Lune et Mars** (étage 3, fait le 01/11, bilan § 22) : carte du système, voyages, nouvelles ceintures et minerais, bases.
 5. **Aliens et défense** (étage 4) : vagues, flotte composée, satellites, bataille finale (vaisseau-mère et grande flotte contre toutes les flottes du joueur), fin et mode libre.
 6. **Finitions** : sons, titre, pause, accueil (cartouche, volet sans classement), transfert, crédits, tests, artefact.
 
@@ -224,4 +224,18 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 - Souris : la corvette **vise le pointeur** (viseur dessiné, la flèche du système est cachée en vol) ; **clic gauche maintenu** = pousser ; clic sur RENTRER (R) ; panneau du quai et pause à la souris comme avant.
 - Dès qu'on se sert de la souris ou du clavier, le joystick et POUSSER disparaissent ; ils reviennent au premier toucher de l'écran. Les touches tourner désactivent la visée à la souris jusqu'au prochain mouvement de souris.
 - Aide dans la pause ; « DECOLLER (ENTREE) » et « RENTRER (R) » sur PC.
+
+**Retour du 01/11** : « ça devient vraiment fun, même si pour le moment ça manque de progression ». Idées proposées par Claude, **gardées de côté pour plus tard** (décision de l'utilisateur) :
+1. une ceinture qui s'enrichit en s'éloignant (roches plus grosses, plus d'or loin de la station, plus de météorites) ;
+2. un « prochain objectif » affiché au quai (« construis le module central », « recherche le centre spatial »…) ;
+3. des paliers de récompense (bonus au premier or, à la première soute pleine, au premier module).
+
+## 22. Session 4 (01/11) : Lune et Mars — bilan
+- **Onglet CARTE** (après le moteur de transfert) : petite carte du système (soleil, Terre, Lune, Mars, planètes de Deep-Fold, celle où l'on est entourée en vert, les fermées en grisé), une ligne par planète (minerais de sa ceinture, coût du voyage, ou ce qu'il manque : moteur de transfert, base lunaire, propulsion lointaine), et l'achat des **bases**.
+- **Voyage** : animation de 4 s (étoiles qui filent, planète de départ qui s'éloigne, d'arrivée qui grandit, barre de progression, « EN ROUTE VERS LA LUNE ») ; arrivée amarrée à la station de l'autre planète, « BIENVENUE : LUNE » ; nouvelle ceinture. Coûts (règles) : Lune 60 CR ; Mars 150 CR + 10 glace ; retour sur Terre : le coût de la planète d'où l'on part (corrigé : le retour plantait).
+- **Planètes** (`planetes.js`) : la planète où l'on est est rendue en grand (Terre avec nuages ; Lune ; **Mars** = shader de la Lune en palette rouille) ; dans le ciel, les planètes lointaines (la Lune depuis la Terre, la Terre depuis la Lune, la Terre et la Lune toutes petites depuis Mars).
+- **Roches par minerai** (`chantier.js`, `VEINES`) : chaque minerai a sa roche et ses veines (fer rouille, or doré, glace claire aux veines blanches, titane argenté, cobalt bleu sur roche rouge, cristal violet) ; éclats de la couleur du minerai ; palette élargie (violets, rouges, bleus).
+- **Stations des autres planètes** : un **avant-poste** (module court et barre d'amarrage) avant la base ; avec la base : module central, poutre, ailes et hangar (plus les radiateurs sur Mars). Les drones de la base travaillent pour sa planète (onglet STATION, sur place), comme sur Terre.
+- Bug corrigé : le dessin d'une station en cache gardait une référence vers l'état (les modules ajoutés après se dessinaient sur l'ancien dessin).
+- Pas encore : satellites, flottes et aliens (session 5).
 

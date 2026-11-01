@@ -61,6 +61,7 @@ const STATIONS = {};
 function construireStation(st) {
   const cle = Object.keys(st).filter(k => st[k]).sort().join(',');
   if (STATIONS[cle]) return STATIONS[cle];
+  st = Object.assign({}, st);   // copie : l'état peut changer, ce dessin garde ses modules
   return STATIONS[cle] = paresseux(k => { const B0 = builder(L_ST, L_ST), B = tourne(B0, k / N_ANG * TAU, L_ST / 2); piecesStation(B, st); return aplats(render(B0, { seed: 9 }).img); });
 }
 

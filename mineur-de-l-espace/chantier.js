@@ -12,10 +12,12 @@ Object.assign(MAT, {
   orange: { c: [190, 108, 44], spec: .35, plates: 0 }, blanc: { c: [150, 154, 160], spec: .4, plates: 0 }, sarcelle: { c: [58, 116, 124], spec: .35, plates: 0 },
   coque: { c: [92, 98, 108], spec: .35, plates: 0 }, coque2: { c: [62, 66, 74], spec: .3, plates: 0 }, pont: { c: [118, 120, 122], spec: .25, plates: 0 },
   roche: { c: [118, 110, 102], spec: .12, plates: 0 }, rocheB: { c: [124, 92, 70], spec: .12, plates: 0 },
+  rocheG: { c: [176, 196, 210], spec: .35, plates: 0 }, rocheM: { c: [132, 82, 62], spec: .12, plates: 0 },
 });
 const PALETTE = ['#f4f6fb', '#c9cde0', '#9ea4c2', '#71789c', '#4c5274', '#33374f', '#20223a', '#14152a',
   '#ffe08a', '#f2a94a', '#d0752c', '#8c4a24', '#5a2e1c', '#a8e6f0', '#4fa4b8', '#2f6a8a', '#7ab84a', '#c23a2e',
-  '#d8c2aa', '#b0927a', '#86685a', '#5e4640', '#3c2c2c'].map(h => [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)));
+  '#d8c2aa', '#b0927a', '#86685a', '#5e4640', '#3c2c2c',
+  '#e2f4fa', '#d27ef0', '#8a4ac0', '#c25a3a', '#8a3a2a', '#6a8cf0', '#3a52b0'].map(h => [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)));
 function aplats(src, gain = 1.35){
   const [c, x] = NV.mk(src.width, src.height); x.drawImage(src, 0, 0); const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
   for (let i = 0; i < p.length; i += 4){ if (!p[i+3]) continue; const r = p[i]*gain, g = p[i+1]*gain, b = p[i+2]*gain; let best = 0, bd = 1e9;
@@ -114,13 +116,23 @@ function tourelle(niv){
 }
 // roches : polygone déchiqueté en relief (arêtes nettes), éclats et cratères ; 16 angles ; veines selon le minerai
 const N_ROC = 24, nRoc = a => ((Math.round(a/TAU*N_ROC) % N_ROC) + N_ROC) % N_ROC;
+// chaque minerai a sa roche (matière) et ses veines (deux couleurs) ; « densite » : nombre de veines par unité de rayon
+const VEINES = {
+  fer:     { mat: 'rocheB', c: [[208, 117, 44], [140, 74, 36]], densite: .9 },
+  or:      { mat: 'roche',  c: [[255, 224, 138], [242, 169, 74]], densite: 1.4 },
+  glace:   { mat: 'rocheG', c: [[226, 244, 250], [168, 230, 240]], densite: 1.6 },
+  titane:  { mat: 'roche',  c: [[232, 234, 242], [180, 184, 200]], densite: 1.2 },
+  cobalt:  { mat: 'rocheM', c: [[106, 140, 240], [58, 82, 176]], densite: 1.2 },
+  cristal: { mat: 'rocheM', c: [[226, 150, 250], [160, 90, 220]], densite: 1.8 },
+};
 function construireRoche(R, rayon, sorte){
   const L = Math.ceil(rayon*2 + 6), n = 9 + (R()*4|0), pts = [];
   for (let i = 0; i < n; i++){ const a = i/n*TAU + (R() - .5)*.4, rr = rayon*(.7 + R()*.3); pts.push([Math.cos(a)*rr, Math.sin(a)*rr]); }
   const eclats = []; for (let i = 0; i < 2; i++){ const a = R()*TAU, d = rayon*.35, m = 5 + (R()*2|0), q = []; for (let j = 0; j < m; j++){ const b = j/m*TAU, r2 = rayon*(.3 + R()*.15); q.push([Math.cos(a)*d + Math.cos(b)*r2, Math.sin(a)*d + Math.sin(b)*r2]); } eclats.push(q); }
   const crat = []; for (let i = 0, k = 1 + (R()*3|0); i < k; i++){ const a = R()*TAU, d = R()*rayon*.5; crat.push([Math.cos(a)*d, Math.sin(a)*d, 1.5 + R()*rayon*.15]); }
-  const veines = []; for (let i = 0, k = Math.round(rayon*(sorte === 'or' ? 1.4 : .9)); i < k; i++){ const a = R()*TAU, d = Math.sqrt(R())*rayon*.75; veines.push([Math.cos(a)*d, Math.sin(a)*d, R()]); }
-  const V = sorte === 'or' ? [[255, 224, 138], [242, 169, 74]] : [[208, 117, 44], [140, 74, 36]], mat = sorte === 'or' ? 'roche' : 'rocheB';
+  const VE = VEINES[sorte] || VEINES.fer;
+  const veines = []; for (let i = 0, k = Math.round(rayon*VE.densite); i < k; i++){ const a = R()*TAU, d = Math.sqrt(R())*rayon*.75; veines.push([Math.cos(a)*d, Math.sin(a)*d, R()]); }
+  const V = VE.c, mat = VE.mat;
   const fr = paresseux(k => { const ang = k/N_ROC*TAU, B0 = builder(L, L), B = tourne(B0, ang, L/2);
     B.poly(pts, rayon*.5, rayon*.55, mat); for (const q of eclats) B.poly(q, rayon*.62, rayon*.2, mat, rayon*.3);
     for (const [x, y, r] of crat) B.holeE(x, y, r, r, 1.5, mat);

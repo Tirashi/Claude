@@ -296,7 +296,8 @@ function mdeRetirerUnite(e, p, i) { const u = e.flottes[p][i]; if (!u) return fa
 // changer de classe au quai (parmi les classes achetées)
 function mdeChangerClasse(e, k) { if (!e.classes[k]) return false; e.classe = k; return true; }
 // voyager vers une autre planète (depuis le quai)
-function mdeCoutVoyage(e, p) { const V = MDE_PLANETES[p].voyage; return V && p !== e.planete ? (p === 'terre' ? MDE_PLANETES[e.planete].voyage : V) : null; }
+// coût d'un voyage : celui de la planète d'arrivée ; pour rentrer sur Terre, celui de la planète d'où l'on part
+function mdeCoutVoyage(e, p) { if (p === e.planete) return null; return p === 'terre' ? MDE_PLANETES[e.planete].voyage : MDE_PLANETES[p].voyage; }
 function mdePeutVoyager(e, p) { const P = MDE_PLANETES[p]; return p !== e.planete && (!P.req || P.req(e)) && (p !== 'mars' || e.bases.lune) && mdePeutPayer(e, mdeCoutVoyage(e, p)); }
 function mdeVoyager(e, p) { if (!mdePeutVoyager(e, p)) return false; mdePayer(e, mdeCoutVoyage(e, p)); e.planete = p; return true; }
 

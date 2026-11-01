@@ -10,7 +10,9 @@
 'use strict';
 // noms globaux venus de regles.js (mde…, MDE_…), planetes.js et chantier.js (pas de commentaire « global » : la page les déclare déjà)
 const CLE = 'mineur-de-l-espace';
-const H = 300, R_ST = 255, W_ST = 0.02, LUNE_D = 1080;   // R_ST : orbite de la station (au-delà de la planète) ; W_ST : sa vitesse (rad/s)
+const H = 300, R_ST = 255, W_ST = 0.02;
+// les planètes qu'on voit au loin depuis chaque planète : [planète, angle de départ, distance, échelle]
+const CIEL = { terre: [['lune', -2.4, 1080, 1]], lune: [['terre', 0.9, 1150, 1.25]], mars: [['terre', -0.6, 1500, 0.45], ['lune', -0.75, 1480, 0.2]] };   // R_ST : orbite de la station (au-delà de la planète) ; W_ST : sa vitesse (rad/s)
 const TAILLES = [11, 19, 32];   // TAILLES : rayon des petites, moyennes, grosses
 let W = 640;
 const CLE_COMMANDES = 'mineur-de-l-espace.commandes';
@@ -35,15 +37,14 @@ const [neb, nebX] = toile(128);   // nébuleuse dessinée ici (taches floues), a
 (() => { const R = mulberry(31), C = ['#5a2a8a', '#2a3a8a', '#8a2a6a', '#2a6a8a'];
   for (let i = 0; i < 16; i++) { const x = 20 + R() * 88, y = 20 + R() * 88, r = 10 + R() * 26, g = nebX.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, C[i % 4] + '55'); g.addColorStop(1, C[i % 4] + '00'); nebX.fillStyle = g; nebX.fillRect(0, 0, 128, 128); } })();
-// réserve de roches : 3 tailles × 3 formes × 2 aspects (veines dorées ou rouille), tracées à la demande
+// réserve de roches : 3 tailles × 3 formes × chaque minerai (sa roche et ses veines, chantier.js), angles tracés à la demande
 const ROCS = [];
-function preparerRoches() { const R = mulberry(99); for (let t = 0; t < 3; t++) { ROCS[t] = { fer: [], or: [] }; for (let v = 0; v < 3; v++) { const g = R() * 1e9 | 0;
-  for (const s of ['fer', 'or']) ROCS[t][s].push(construireRoche(mulberry(g), TAILLES[t], s)); } } }
+function preparerRoches() { const R = mulberry(99); for (let t = 0; t < 3; t++) { ROCS[t] = {}; for (const m in MDE_MINERAIS) ROCS[t][m] = []; for (let v = 0; v < 3; v++) { const g = R() * 1e9 | 0;
+  for (const m in MDE_MINERAIS) ROCS[t][m].push(construireRoche(mulberry(g), TAILLES[t], m)); } } }
 // halo d'une météorite : disque de braise en gros pixels (ajouté en mode « lighter » sur la roche)
 const [BRAISE, braiseX] = toile(16);
 (() => { for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) { const d = Math.hypot(i - 7.5, j - 7.5); if (d > 7.5) continue;
   braiseX.fillStyle = d < 3 ? '#e08a40' : d < 5.5 ? '#b04420' : '#5a180a'; braiseX.fillRect(i, j, 1, 1); } })();
-const aspect = m => m === 'or' || m === 'cristal' ? 'or' : 'fer';
 // niveau d'amélioration (0 à 5) → ce qui se voit sur la corvette (0 à 3)
 const VISIBLE = [0, 1, 2, 2, 3, 3];
 
@@ -78,6 +79,8 @@ class Partie {
     document.body.classList.toggle('debout', r.height > r.width);
   }
   get C() { return mdeCorvette(this.e); }
+  // ce qui est construit à la station de la planète où l'on est : la grande station sur Terre ; ailleurs un avant-poste, puis la base
+  stationIci() { const e = this.e, p = e.planete; return p === 'terre' ? e.station : e.bases[p] ? { central: true, poutre: true, ailes: true, hangar: true, radiateurs: p === 'mars' } : {}; }
   // la station : angle sur son orbite (lié au temps de jeu), position, vitesse, et la place de la corvette amarrée (quai vers l'extérieur)
   station() {
     const phi = -Math.PI / 2 + this.e.temps * W_ST, ux = Math.cos(phi), uy = Math.sin(phi), x = ux * R_ST, y = uy * R_ST;
@@ -98,7 +101,7 @@ class Partie {
     if (x === undefined) { let d, an; do { d = 340 + R() * 320; an = R() * TAU; } while (Math.hypot(Math.cos(an) * d - this.ship.x, Math.sin(an) * d - this.ship.y) < 260 && this.asts.length);
       x = Math.cos(an) * d; y = Math.sin(an) * d; }
     const t = r.taille - 1;
-    this.asts.push({ x, y, vx, vy, r, v: ROCS[t][aspect(r.minerai)][R() * 3 | 0], ray: TAILLES[t] * 0.82, rot: R() * TAU, vr: (R() - 0.5) * (1.2 - t * 0.3), flash: 0, pvMax: r.pv });
+    this.asts.push({ x, y, vx, vy, r, v: ROCS[t][r.minerai][R() * 3 | 0], ray: TAILLES[t] * 0.82, rot: R() * TAU, vr: (R() - 0.5) * (1.2 - t * 0.3), flash: 0, pvMax: r.pv });
   }
   // danger : une météorite (petite roche chauffée au rouge, traînée de feu) qui fonce vers la corvette ; elle est
   // annoncée 1,3 s avant par une alerte au bord de l'écran, du côté d'où elle vient ; les tourelles peuvent l'abattre
@@ -118,15 +121,17 @@ class Partie {
         this.texte(mod ? S.x : this.ship.x, mod ? S.y - 80 : this.ship.y - 46, mod ? MDE_MODULES[id.slice(7)].nom + ' INSTALLE !' : id.startsWith('drone:') ? 'NOUVEAU DRONE !' : 'ACHETE !', '#7be07b'); this.sauver(); } }
       else if (b.dataset.c) { if (mdeChangerClasse(this.e, b.dataset.c)) { this.rebatir(); this.sauver(); } }
       else if (b.dataset.go) return this.decoller();
+      else if (b.dataset.v) return this.voyager(b.dataset.v);
       this.majPanneauSiCalme(); });
   }
   majPanneau() {
     const e = this.e, l = mdeAchats(e), O = [['amel', 'AMELIORER'], ['usine', 'USINES'], ['rech', 'RECHERCHE']];
     if (e.recherche.centre) O.push(['station', 'STATION']);
+    if (e.recherche.transfert) O.push(['carte', 'CARTE']);
     if (!O.some(o => o[0] === this.onglet)) this.onglet = 'amel';
     const prix = P => Object.entries(P).map(([k, v]) => k === 'cr' ? v + ' CR' : v + ' ' + MDE_MINERAIS[k].nom).join(' + ');
     let h = `<div class="onglets">${O.map(([k, n]) => `<button class="btn ${this.onglet === k ? 'actif' : ''}" data-o="${k}">${n}</button>`).join('')}</div>`;
-    h += `<h4>A QUAI · ${e.cr} CR</h4>`;
+    h += `<h4>A QUAI · ${MDE_PLANETES[e.planete].nom} · ${e.cr} CR</h4>`;
     const mis = Object.entries(e.entrepot).filter(([, n]) => n > 0);
     if (mis.length) h += `<p class="mis">MIS DE COTE : ${mis.map(([m, n]) => n + ' ' + MDE_MINERAIS[m].nom).join(', ')}</p>`;
     const ligne = (a) => `<div class="ligne"><span class="nom">${a.nom}<small>${a.effet}</small></span><button class="btn" data-a="${a.id}" ${a.possible ? '' : 'disabled'}>${prix(a.prix)}</button></div>`;
@@ -139,6 +144,18 @@ class Partie {
     } else if (this.onglet === 'usine') {
       h += `<p class="fiche">PRIX : ${Object.keys(MDE_MINERAIS).filter(m => m === 'fer' || m === 'or' || mdeEtage(e) >= 3).map(m => MDE_MINERAIS[m].nom + ' ' + mdePrix(e, m)).join(' · ')}</p>`;
       const a = l.filter(x => x.type === 'usine'); h += a.length ? a.map(ligne).join('') : rien('TOUTES LES USINES SONT AU MAXIMUM');
+    } else if (this.onglet === 'carte') {
+      // la carte du système : les trois planètes, où l'on est, les voyages et les bases
+      h += `<canvas class="carte" width="280" height="64"></canvas>`;
+      for (const pl of Object.keys(MDE_PLANETES)) { const P = MDE_PLANETES[pl], ici = pl === e.planete, ouvert = !P.req || P.req(e), mars = pl !== 'mars' || e.bases.lune;
+        const mins = Object.keys(P.ceinture).map(m => MDE_MINERAIS[m].nom).join(', '), cout = mdeCoutVoyage(e, pl);
+        let bouton;
+        if (ici) bouton = `<button class="btn" disabled>ICI</button>`;
+        else if (!ouvert || !mars) bouton = `<button class="btn" disabled>FERME</button>`;
+        else bouton = `<button class="btn" data-v="${pl}" ${mdePeutVoyager(e, pl) ? '' : 'disabled'}>${prix(cout)}</button>`;
+        const pourquoi = !ouvert ? (pl === 'lune' ? 'IL FAUT LE MOTEUR DE TRANSFERT' : 'IL FAUT LA BASE LUNAIRE PUIS LA PROPULSION LOINTAINE') : !mars ? 'IL FAUT LA BASE LUNAIRE' : mins;
+        h += `<div class="ligne"><span class="nom">${P.nom}${e.bases[pl] ? ' · BASE' : ''}<small>${pourquoi}</small></span>${bouton}</div>`; }
+      const b = l.filter(x => x.type === 'base'); if (b.length) { h += `<h5>BASES</h5><p>UNE BASE DONNE UN HANGAR A DRONES A LA PLANETE (ET PLUS TARD UNE FLOTTE).</p>` + b.map(ligne).join(''); }
     } else if (this.onglet === 'rech') {
       const a = l.filter(x => x.type === 'rech'); h += a.length ? a.map(ligne).join('') : rien('RIEN A CHERCHER POUR L\'INSTANT');
     } else {
@@ -158,6 +175,17 @@ class Partie {
     }
     h += `<button class="btn go" data-go="1">DECOLLER${this.pc ? ' (ENTREE)' : ''}</button>`;
     this.p.innerHTML = h;
+    const cv = this.p.querySelector('canvas.carte'); if (cv) this.dessinerCarte(cv);
+  }
+  // la petite carte : la Terre, la Lune et Mars sur leurs orbites autour d'un soleil, la planète où l'on est entourée
+  dessinerCarte(cv) {
+    const x = cv.getContext('2d'); x.imageSmoothingEnabled = false; x.fillStyle = '#05060d'; x.fillRect(0, 0, cv.width, cv.height);
+    x.fillStyle = '#ffcf4a'; x.beginPath(); x.arc(14, 32, 7, 0, 7); x.fill();
+    const pos = { terre: [96, 32, 30], lune: [140, 20, 18], mars: [226, 34, 26] };
+    x.strokeStyle = '#2a3060'; x.beginPath(); x.moveTo(96, 32); x.lineTo(140, 20); x.moveTo(140, 20); x.lineTo(226, 34); x.stroke();
+    for (const pl in pos) { const [px, py, L] = pos[pl], ouvert = pl === 'terre' || (MDE_PLANETES[pl].req(this.e) && (pl !== 'mars' || this.e.bases.lune));
+      x.globalAlpha = ouvert ? 1 : 0.35; x.drawImage(LOINTAINES[pl][0], px - L / 2, py - L / 2, L, L); x.globalAlpha = 1;
+      if (pl === this.e.planete) { x.strokeStyle = '#7be07b'; x.beginPath(); x.arc(px, py, L / 2 + 3, 0, 7); x.stroke(); } }
   }
   majPanneauSiCalme() { const y = this.p.scrollTop; this.majPanneau(); this.p.scrollTop = y; }
   /* ---------- pause ---------- */
@@ -188,6 +216,16 @@ class Partie {
       this.sauver();
     }
     this.soute = []; const c = this.C; this.carbu = c.vol; this.coque = c.coque; this.majPanneau(); this.p.classList.add('vu');
+  }
+  voyager(pl) {
+    const de = this.e.planete; if (!mdeVoyager(this.e, pl)) return;
+    this.p.classList.remove('vu'); this.enVoyage = { de, vers: pl, t: 0, d: 4 }; this.sauver();
+  }
+  finVoyage() {
+    const pl = this.enVoyage.vers; this.enVoyage = null;
+    this.asts = []; this.drops = []; this.balles = []; this.parts = []; this.textes = []; for (let k = 0; k < 16; k++) this.nouvelleRoche();
+    this.onglet = 'amel'; this.accoster(true); const S = this.station(); this.cam.x = S.x; this.cam.y = S.y;
+    this.texte(S.x, S.y - 80, 'BIENVENUE : ' + MDE_PLANETES[pl].nom, '#7be07b');
   }
   decoller() {
     this.quai = false; this.sorti = false; this.p.classList.remove('vu'); const s = this.ship, S = this.station();
@@ -231,6 +269,7 @@ class Partie {
   /* ---------- un pas de simulation ---------- */
   pas(dt) {
     if (this.pauseVue) return;
+    if (this.enVoyage) { mdeAvancer(this.e, dt); this.enVoyage.t += dt; if (this.enVoyage.t >= this.enVoyage.d) this.finVoyage(); return; }
     const s = this.ship, c = this.C, e = this.e;
     const ev = mdeAvancer(e, dt); if (ev.gain) { this.livre = (this.livre || 0) + ev.gain; if (this.quai) this.majPanneauBientot = true; }
     this.tLivre = (this.tLivre || 0) + dt; if (this.tLivre > 4) { this.tLivre = 0; if (this.livre) { const S = this.station(); this.texte(S.x, S.y - 70, '+' + this.livre + ' CR (DRONES)', '#ffcf4a'); this.livre = 0; if (this.majPanneauBientot && this.quai) { this.majPanneauBientot = false; this.majPanneauSiCalme(); } } }
@@ -330,7 +369,7 @@ class Partie {
     for (let i = 0; i < n; i++) { const an = R() * TAU; this.drops.push({ x: a.x, y: a.y, vx: a.vx + Math.cos(an) * 40, vy: a.vy + Math.sin(an) * 40, v: 14, type: a.r.minerai }); }
     this.eclats(a.x, a.y, l.length ? 14 : 10, a.r.minerai, true);
   }
-  eclats(x, y, n, m, gros) { const C = aspect(m) === 'or' ? ['#c9cde0', '#ffe08a', '#71789c'] : ['#b0927a', '#d0752c', '#5e4640'];
+  eclats(x, y, n, m, gros) { const V = VEINES[m] || VEINES.fer, hex = c => '#' + c.map(v => v.toString(16).padStart(2, '0')).join(''), C = [hex(V.c[0]), hex(V.c[1]), '#71789c'];
     for (let i = 0; i < n; i++) { const an = this.R() * TAU, v = 20 + this.R() * (gros ? 80 : 40); this.parts.push({ x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v, v: 0.3 + this.R() * (gros ? 0.7 : 0.2), c: C[i % 3], t: gros && i % 4 === 0 ? 3 : gros ? 2 : 1 }); } }
   /* ---------- les drones au travail (dessin seulement : la production vient des règles, mdeProduction) ---------- */
   // mineurs : chacun à son poste dans la ceinture, derrière la station sur son orbite, laser sur un petit caillou ;
@@ -344,7 +383,7 @@ class Partie {
       const an = S.phi - 0.45 - i * 0.3 + Math.sin(t * 0.2 + i) * 0.03, r = 420 + (i % 2) * 46, px = Math.cos(an) * r, py = Math.sin(an) * r;
       const cx = px + Math.cos(an) * 16, cy = py + Math.sin(an) * 16; postes.push([px, py]);
       const sx = Math.round(cx + ox), sy = Math.round(cy + oy);
-      if (sx > -20 && sy > -20 && sx < W + 20 && sy < H + 20) { const roc = ROCS[0].fer[i % 3]; x.drawImage(roc.fr[nRoc(t * 0.3 + i)], sx - (roc.L >> 1), sy - (roc.L >> 1));
+      if (sx > -20 && sy > -20 && sx < W + 20 && sy < H + 20) { const roc = ROCS[0][Object.keys(MDE_PLANETES[p].ceinture)[0]][i % 3]; x.drawImage(roc.fr[nRoc(t * 0.3 + i)], sx - (roc.L >> 1), sy - (roc.L >> 1));
         if ((t * 3 + i) % 1 < 0.6) { x.strokeStyle = '#ff9d4a'; x.beginPath(); x.moveTo(Math.round(px + ox), Math.round(py + oy)); x.lineTo(sx, sy); x.stroke();
           if (this.R() < 0.2) this.parts.push({ x: cx, y: cy, vx: (this.R() - 0.5) * 40, vy: (this.R() - 0.5) * 40, v: 0.3, c: '#ffe08a', t: 1 }); } }
       tire('mineur', px, py, an + Math.PI / 2);   // nez vers le caillou
@@ -361,7 +400,22 @@ class Partie {
       if (sur && this.coque < this.C.coque && (t * 4 | 0) % 2) { x.fillStyle = '#7be07b'; x.fillRect(Math.round(this.rep.x + ox) - 1, Math.round(this.rep.y + oy) - 14, 3, 3); } }
   }
   /* ---------- dessin ---------- */
+  // le voyage : la corvette file entre les étoiles, de la planète de départ à celle d'arrivée
+  dessinVoyage(t) {
+    const x = this.x, V = this.enVoyage, f = V.t / V.d, R = mulberry(5);
+    x.fillStyle = '#05060d'; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < 90; i++) { const y = R() * H, v = 0.3 + R(), xx = ((R() * W - t * 420 * v) % W + W) % W, l = 4 + v * 18; x.fillStyle = v > 1 ? '#c9cde0' : '#4c5274'; x.fillRect(Math.round(xx), Math.round(y), Math.round(l), 1); }
+    const L1 = Math.round(RL * (1 - f) * 1.4), L2 = Math.round(RL * f * 1.6);
+    if (L1 > 2) x.drawImage(LOINTAINES[V.de][0], Math.round(-L1 / 2 + 40 - f * 120), Math.round(H / 2 - L1 / 2), L1, L1);
+    if (L2 > 2) x.drawImage(LOINTAINES[V.vers][0], Math.round(W - 40 - L2 / 2 + (1 - f) * 120), Math.round(H / 2 - L2 / 2), L2, L2);
+    const F = this.nef.frames[nAng(Math.PI / 2)]; x.drawImage(F.img, Math.round(W / 2 - L_NEF / 2), Math.round(H / 2 - L_NEF / 2));
+    for (let q = 0; q < 16; q++) { const fl = q / 16; x.fillStyle = fl < 0.3 ? '#fff2a0' : fl < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(4 * (1 - fl)));
+      x.fillRect(Math.round(W / 2 - 34 - q * 2 - (t * 30 | 0) % 2), Math.round(H / 2 - w / 2), w, w); }
+    x.font = '13px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ffcf4a'; x.fillText('EN ROUTE VERS ' + (V.vers === 'lune' ? 'LA LUNE' : V.vers === 'mars' ? 'MARS' : 'LA TERRE'), W / 2, 50);
+    x.fillStyle = '#1a1f40'; x.fillRect(W / 2 - 80, 62, 160, 5); x.fillStyle = '#7be07b'; x.fillRect(W / 2 - 80, 62, Math.round(160 * f), 5);
+  }
   dessin(t) {
+    if (this.enVoyage) return this.dessinVoyage(t);
     const x = this.x, s = this.ship, e = this.e, c = this.C, sk = this.secousse > 0 ? (this.R() - 0.5) * 6 : 0;
     const ox = Math.round(W / 2 - this.cam.x + sk), oy = Math.round(H / 2 - this.cam.y + sk); this.ox = ox; this.oy = oy;
     const cur = !this.quai && this.pc && !this.pauseVue ? 'none' : 'default'; if (this.c.style.cursor !== cur) this.c.style.cursor = cur;   // en vol sur PC : le viseur dessiné remplace la flèche
@@ -370,12 +424,12 @@ class Partie {
     for (let i = -1; i < 2; i++) for (let k = -1; k < 1; k++) x.drawImage(ciel, Math.round(px + i * 512), Math.round(py + k * 512));
     x.globalAlpha = 0.6; x.drawImage(neb, Math.round(ox * 0.3 + 200), Math.round(oy * 0.3 - 330), 512, 512); x.drawImage(neb, Math.round(ox * 0.3 - 700), Math.round(oy * 0.3 + 60), 512, 512); x.globalAlpha = 1;
     x.strokeStyle = '#1c2246'; x.setLineDash([3, 6]); x.beginPath(); x.arc(ox, oy, this.rMax, 0, 7); x.stroke(); x.setLineDash([]);
-    const la = -2.4 + t * 0.008, lx = ox + Math.cos(la) * LUNE_D, ly = oy + Math.sin(la) * LUNE_D;
-    if (lx > -RL && ly > -RL && lx < W + RL && ly < H + RL) { x.drawImage(luneC, Math.round(lx - RL / 2), Math.round(ly - RL / 2));
-      x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.textAlign = 'center'; x.fillText(e.recherche.transfert ? 'LUNE' : 'LUNE · MOTEUR DE TRANSFERT', lx, ly + RL / 2 + 12); }
-    x.drawImage(terreC, ox - RT / 2, oy - RT / 2);
+    for (const [pl, a0, dist, ech] of CIEL[e.planete]) { const la = a0 + t * 0.008, lx = ox * 0.7 + W * 0.15 + Math.cos(la) * dist * 0.7, ly = oy * 0.7 + H * 0.15 + Math.sin(la) * dist * 0.7, L = Math.round(RL * ech);
+      if (lx > -L && ly > -L && lx < W + L && ly < H + L) { x.drawImage(LOINTAINES[pl][0], Math.round(lx - L / 2), Math.round(ly - L / 2), L, L);
+        x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.textAlign = 'center'; x.fillText(MDE_PLANETES[pl].nom + (pl === 'lune' && !e.recherche.transfert ? ' · MOTEUR DE TRANSFERT' : ''), lx, ly + L / 2 + 12); } }
+    x.drawImage(planeteC, ox - RT / 2, oy - RT / 2);
     // orbite et station : le quai (barre jaune et noire) toujours tourné vers l'extérieur
-    const S = this.station(), FS = construireStation(e.station), kS = nAng(S.a), rS = S.a - kS / N_ANG * TAU, stx = Math.round(S.x + ox), sty = Math.round(S.y + oy);
+    const S = this.station(), FS = construireStation(this.stationIci()), kS = nAng(S.a), rS = S.a - kS / N_ANG * TAU, stx = Math.round(S.x + ox), sty = Math.round(S.y + oy);
     x.strokeStyle = '#7be07b22'; x.setLineDash([2, 5]); x.beginPath(); x.arc(ox, oy, R_ST, 0, 7); x.stroke(); x.setLineDash([]);
     if (stx > -L_ST && sty > -L_ST && stx < W + L_ST && sty < H + L_ST) { x.save(); x.translate(stx, sty); x.rotate(Math.atan2(Math.sin(rS), Math.cos(rS))); x.drawImage(FS[kS], -L_ST / 2, -L_ST / 2); x.restore();
       if (!this.quai && this.sorti) { x.strokeStyle = (t * 2 % 1) < 0.5 ? '#7be07b88' : '#7be07b33'; x.beginPath(); x.arc(Math.round(S.qx + ox), Math.round(S.qy + oy), 30, 0, 7); x.stroke(); } }
@@ -444,8 +498,8 @@ function demarrer() {
   if (lance) return; lance = true;
   preparerRoches(); partie = new Partie(document.getElementById('jeu'));
   window.Mineur = { get partie() { return partie; }, get etat() { return partie.e; } };
-  dessinerLune(); let av = performance.now();
-  function boucle(n) { const dt = Math.min(0.05, (n - av) / 1000); av = n; majPlanetes(dt); if ((n / 250 | 0) !== boucle.l) { boucle.l = n / 250 | 0; dessinerLune(); }
+  dessinerLointaines(); let av = performance.now();
+  function boucle(n) { const dt = Math.min(0.05, (n - av) / 1000); av = n; majPlanetes(dt, partie.e.planete); if ((n / 500 | 0) !== boucle.l) { boucle.l = n / 500 | 0; dessinerLointaines(); }
     partie.pas(dt); partie.dessin(n / 1000); requestAnimationFrame(boucle); }
   requestAnimationFrame(boucle);
 }
