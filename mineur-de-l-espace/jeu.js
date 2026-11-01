@@ -408,7 +408,7 @@ class Partie {
     const L1 = Math.round(RL * (1 - f) * 1.4), L2 = Math.round(RL * f * 1.6);
     if (L1 > 2) x.drawImage(LOINTAINES[V.de][0], Math.round(-L1 / 2 + 40 - f * 120), Math.round(H / 2 - L1 / 2), L1, L1);
     if (L2 > 2) x.drawImage(LOINTAINES[V.vers][0], Math.round(W - 40 - L2 / 2 + (1 - f) * 120), Math.round(H / 2 - L2 / 2), L2, L2);
-    const F = this.nef.frames[nAng(Math.PI / 2)]; x.drawImage(F.img, Math.round(W / 2 - L_NEF / 2), Math.round(H / 2 - L_NEF / 2));
+    const F = this.nef.frames[nAng(Math.PI / 2)]; x.drawImage(F.img, Math.round(W / 2 - F.img.width / 2), Math.round(H / 2 - F.img.height / 2));
     for (let q = 0; q < 16; q++) { const fl = q / 16; x.fillStyle = fl < 0.3 ? '#fff2a0' : fl < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(4 * (1 - fl)));
       x.fillRect(Math.round(W / 2 - 34 - q * 2 - (t * 30 | 0) % 2), Math.round(H / 2 - w / 2), w, w); }
     x.font = '13px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ffcf4a'; x.fillText('EN ROUTE VERS ' + (V.vers === 'lune' ? 'LA LUNE' : V.vers === 'mars' ? 'MARS' : 'LA TERRE'), W / 2, 50);
@@ -450,10 +450,10 @@ class Partie {
     const k = nAng(s.a), F = this.nef.frames[k], sx0 = Math.round(s.x + ox), sy0 = Math.round(s.y + oy), bx = -Math.sin(s.a), by = Math.cos(s.a);
     if (this.pousse > 0.1 && !this.panne && !this.quai) for (const [ex, ey, er] of F.engines) { const nm = e.ameliorations.moteur, l = er * (1.2 + this.pousse * 1.6) * (1 + 0.15 * nm) + ((t * 30 | 0) % 2);
       for (let q = 0; q < l; q++) { const f = q / l; x.fillStyle = f < 0.3 ? (nm >= 3 ? '#bfe8ff' : '#fff2a0') : f < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(er * (1 - f * 0.6)));
-        x.fillRect(Math.round(sx0 - L_NEF / 2 + ex + bx * q - w / 2), Math.round(sy0 - L_NEF / 2 + ey + by * q - w / 2), w, w); } }
+        x.fillRect(Math.round(sx0 - F.img.width / 2 + ex + bx * q - w / 2), Math.round(sy0 - F.img.height / 2 + ey + by * q - w / 2), w, w); } }
     const reste = s.a - k / N_ANG * TAU; x.save(); x.translate(sx0, sy0); x.rotate(Math.atan2(Math.sin(reste), Math.cos(reste)));
-    if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -L_NEF / 2, -L_NEF / 2); x.restore();
-    this.tirs.forEach((T, i) => { const [tx, ty] = this.mondeTourelle(i), kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round(tx + ox), Math.round(ty + oy)); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); x.drawImage(this.tour[kt], -14, -14); x.restore(); });
+    if (this.secousse > 0 && (t * 20 | 0) % 2) x.globalAlpha = 0.5; x.drawImage(F.img, -F.img.width / 2, -F.img.height / 2); x.restore();   // taille du dessin : 128 px pour le chantier, autre pour un habillage
+    this.tirs.forEach((T, i) => { const [tx, ty] = this.mondeTourelle(i), kt = nAng(T.a), rt = T.a - kt / N_ANG * TAU; x.save(); x.translate(Math.round(tx + ox), Math.round(ty + oy)); x.rotate(Math.atan2(Math.sin(rt), Math.cos(rt))); x.drawImage(this.tour[kt], -this.tour[kt].width / 2, -this.tour[kt].height / 2); x.restore(); });
     for (const tx of this.textes) { x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#000'; x.fillText(tx.t, tx.x + ox + 1, tx.y + oy + 1); x.fillStyle = tx.c; x.fillText(tx.t, tx.x + ox, tx.y + oy); }
     // flèche vers la station quand elle sort de l'écran (rouge si le carburant devient juste)
     const qsx = S.qx + ox, qsy = S.qy + oy;
