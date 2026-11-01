@@ -262,3 +262,9 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 
 **À choisir sur les planches** (bande F, https://claude.ai/artifact/PUnWLCZNeuTR4MScU5rRZb) : le porte-vaisseaux (C5-31, C5-30, C5-9, C5-14, C5-15, C5-26, C5-25, C5-20), les chasseurs de l'escadrille, et les aliens (Zoser bleu canard ou Cute SCKR organiques).
 
+**Choix de l'utilisateur (01/11)** :
+- Porte-vaisseaux : **C5-15** (*Complete Spaceship* planche 5, n° 15 ; nez à droite dans le pack, à tourner de 90° pour l'avoir nez en haut).
+- Aliens : **Zoser, *Fields of the Void B*** (bleu canard et violet).
+- Petits vaisseaux de l'escadrille : **F5-29** (*Star Fleet* planche 5, n° 29), qui devient **F5-28** quand l'escadrille est améliorée à fond.
+- Encore ouvert : pièces Zoser *Top Down Parts* pour montrer les améliorations sur les corvettes.
+
