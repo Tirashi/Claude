@@ -42,3 +42,10 @@ Questions posées : quelle caméra ; le dragon de Quaternius plaît-il (sinon le
 - Nouveaux modèles : hélicoptère (ville et aéroport, rotor qui tourne), petit avion d'école qui décolle, petit hangar à brûler, manche à air (Low-Poly Aircraft Kit Free, **CC BY 4.0, à citer**) ; pompiers et police sur la route (Kenney Car Kit, CC0).
 - Catalogue de 60 vignettes dans la page (`LES MODELES 3D DISPONIBLES`), fabriquées hors ligne dans Playwright (rendu 128 px en JPEG) : KayKit City Builder Bits, Quaternius Monsters / Animals / Modular Street / Cars, Kenney Car Kit / Suburban, Aircraft Kit. Payants repérés : Rigged Dragon Pack (4,99 $), Aircraft Kit complet (8,99 $), Airport & Aviation Kit (4,99 $).
 - Même lien d'artefact (republié). Questions : la destruction plaît-elle ; nouveaux modèles à garder ; envies dans le catalogue.
+
+## Retours du 02/11 et maquette 2 ter
+- La destruction plaît ; **tous les modèles plaisent** → ajout de **tous les gratuits** ; bug : **le feu ne partait pas de la gueule**.
+- Feu : il part de l'os `dragon_Nose` (position monde à chaque image, convertie en « pixels » pour les touches).
+- Ajouts : maisons Kenney Suburban (30 % de la rangée de devant en ville, avec un arbre), 21 véhicules (KayKit, Kenney Car Kit, Quaternius Cars) qui **explosent** sous les flammes (+3 pièces, débris Kenney qui volent et rebondissent), lampadaires / feux / panneaux Quaternius et KayKit, bancs, bennes, bouches d'incendie, carlin sur le trottoir ; à l'aéroport animaux Quaternius dans l'herbe au premier plan (ils **s'enfuient** devant le feu, ne brûlent pas), cônes, tracteurs, camionnettes ; **chauve-souris animée** (obstacle, `SkeletonUtils.clone`, matcap).
+- `outils/fbx-vers-glb.js` réécrit : prend un dossier (FBX, GLB/glTF, OBJ+MTL), préfixe os et pistes des FBX, regroupe et indexe, retire les normales et fusionne les sommets hors FBX (rendu en flatShading dans la page), partage les textures identiques : 60 modèles en 4 Mo de base64.
+- Questions : animaux qui fuient au lieu de brûler ; chauve-souris à brûler ou non ; packs payants pour plus tard.
