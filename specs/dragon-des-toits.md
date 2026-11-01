@@ -35,3 +35,10 @@ https://claude.ai/artifact/93nrGTRHG1G1qbt9GCg97q — source `maquettes/dragon-s
 - **Leçons techniques** : conversion FBX → GLB dans Playwright (FBXLoader + GLTFExporter de three 0.128, `npm pack three@0.128.0` car jsdelivr est bloqué depuis le conteneur) : `outils/fbx-vers-glb.js`. Le maillage FBX à 99 groupes doit être regroupé par matériau **et indexé**, sinon chaque primitive glTF dessine tout le corps (le dernier matériau, noir, gagne). Le dragon est rendu en **matcap** (couleurs par nom de matériau : Main, Wings, Belly, Eyes, Claws).
 
 Questions posées : quelle caméra ; le dragon de Quaternius plaît-il (sinon le pack payant) ; ordre des décors suivants ; bonus à garder ; ville avec ou sans petites maisons.
+
+## Choix du 01/11 (après la maquette 2) et maquette 2 bis
+- **Caméra de profil** retenue ; **bonus proposés validés** (bébé dragon, super-souffle, nuage d'orage, bouclier, aimant, œuf d'or) ; **dragon de Quaternius gardé** ; pour le moment **ville et aéroport en alternance**.
+- Retour : « les flammes sont censées pouvoir détruire des bâtiments » → flammes plus longues (portée ~110 px, angle vers le bas 0,5 à 1,25 rad, 5 particules par image), bâtiments plus fragiles (PV = hauteur × 0,32), feu à 0,25 par image ; le bâtiment noircit, brûle, **s'effondre** (s'enfonce en 45 images dans la poussière) et laisse des **ruines qui brûlent** ; la démo vole plus bas pour brûler.
+- Nouveaux modèles : hélicoptère (ville et aéroport, rotor qui tourne), petit avion d'école qui décolle, petit hangar à brûler, manche à air (Low-Poly Aircraft Kit Free, **CC BY 4.0, à citer**) ; pompiers et police sur la route (Kenney Car Kit, CC0).
+- Catalogue de 60 vignettes dans la page (`LES MODELES 3D DISPONIBLES`), fabriquées hors ligne dans Playwright (rendu 128 px en JPEG) : KayKit City Builder Bits, Quaternius Monsters / Animals / Modular Street / Cars, Kenney Car Kit / Suburban, Aircraft Kit. Payants repérés : Rigged Dragon Pack (4,99 $), Aircraft Kit complet (8,99 $), Airport & Aviation Kit (4,99 $).
+- Même lien d'artefact (republié). Questions : la destruction plaît-elle ; nouveaux modèles à garder ; envies dans le catalogue.
