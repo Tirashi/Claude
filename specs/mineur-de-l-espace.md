@@ -219,3 +219,9 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 - Le panneau du quai garde sa position de défilement quand il se met à jour (achats, livraisons des drones).
 - Pas encore : drones et bases sur la Lune et Mars (session 4), satellites et drones de défense (session 5).
 
+**Clavier et souris sur PC (01/11, demande de l'utilisateur)** : en plus du tactile, sans réglage.
+- Clavier (touches physiques, donc AZERTY comme QWERTY) : **Z / W, flèche haut ou Espace** = pousser ; **Q / A et D, ou flèches gauche et droite** = tourner ; **R** = rentrer (une touche de pilotage reprend la main) ; **Entrée** (ou Espace) au quai = décoller ; **Échap ou P** = pause.
+- Souris : la corvette **vise le pointeur** (viseur dessiné, la flèche du système est cachée en vol) ; **clic gauche maintenu** = pousser ; clic sur RENTRER (R) ; panneau du quai et pause à la souris comme avant.
+- Dès qu'on se sert de la souris ou du clavier, le joystick et POUSSER disparaissent ; ils reviennent au premier toucher de l'écran. Les touches tourner désactivent la visée à la souris jusqu'au prochain mouvement de souris.
+- Aide dans la pause ; « DECOLLER (ENTREE) » et « RENTRER (R) » sur PC.
+

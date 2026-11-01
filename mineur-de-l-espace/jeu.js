@@ -15,7 +15,7 @@ const TAILLES = [11, 19, 32];   // TAILLES : rayon des petites, moyennes, grosse
 let W = 640;
 const CLE_COMMANDES = 'mineur-de-l-espace.commandes';
 // joystick fixe en bas à gauche ; en mode « bouton », POUSSER en bas à droite et RENTRER au-dessus
-const JOY = { x: 78, y: H - 78, r: 40 }, GAZ = () => ({ x: W - 66, y: H - 66, r: 40 }), BRENTRER = () => modeCommandes === 'bouton' ? { x: W - 116, y: H - 148, w: 104, h: 32 } : { x: W - 116, y: H - 46, w: 104, h: 34 };
+const JOY = { x: 78, y: H - 78, r: 40 }, GAZ = () => ({ x: W - 66, y: H - 66, r: 40 }), BRENTRER = pc => modeCommandes === 'bouton' && !pc ? { x: W - 116, y: H - 148, w: 104, h: 32 } : { x: W - 116, y: H - 46, w: 104, h: 34 };
 let modeCommandes = 'bouton';
 try { modeCommandes = localStorage.getItem(CLE_COMMANDES) || 'bouton'; } catch (err) { /* stockage indisponible */ }
 
@@ -156,7 +156,7 @@ class Partie {
         h += `<p>LES DRONES TRAVAILLENT PENDANT QUE TU JOUES (PAS QUAND LE JEU EST FERME).</p>`;
         h += l.filter(x => x.type === 'drone').map(ligne).join(''); }
     }
-    h += `<button class="btn go" data-go="1">DECOLLER</button>`;
+    h += `<button class="btn go" data-go="1">DECOLLER${this.pc ? ' (ENTREE)' : ''}</button>`;
     this.p.innerHTML = h;
   }
   majPanneauSiCalme() { const y = this.p.scrollTop; this.majPanneau(); this.p.scrollTop = y; }
@@ -165,9 +165,11 @@ class Partie {
     const b = document.createElement('button'); b.className = 'btn bpause'; b.textContent = 'II'; this.ecran.appendChild(b);
     const f = document.createElement('div'); f.className = 'pause'; this.ecran.appendChild(f); this.f = f;
     f.innerHTML = `<div class="boite"><h3>PAUSE</h3><button class="btn" data-p="reprendre">REPRENDRE</button><button class="btn" data-p="commandes"></button><button class="btn" data-p="nouvelle">NOUVELLE PARTIE</button>
-      <a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><p class="doux">JOYSTICK + POUSSER : LE JOYSTICK TOURNE LA CORVETTE, LE BOUTON ACCELERE. JOYSTICK SEUL : IL TOURNE ET POUSSE. LA PARTIE EST SAUVEGARDEE AU QUAI.</p></div>`;
+      <a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><p class="doux">JOYSTICK + POUSSER : LE JOYSTICK TOURNE LA CORVETTE, LE BOUTON ACCELERE. JOYSTICK SEUL : IL TOURNE ET POUSSE. LA PARTIE EST SAUVEGARDEE AU QUAI.</p><p class="doux">SUR PC : Z (OU W), FLECHE HAUT OU ESPACE POUSSE ; Q (OU A) ET D OU LES FLECHES TOURNENT ; LA SOURIS VISE, CLIC GAUCHE POUSSE ; R RENTRE ; ENTREE DECOLLE ; ECHAP : PAUSE.</p></div>`;
     const majC = () => { f.querySelector('[data-p="commandes"]').textContent = modeCommandes === 'bouton' ? 'COMMANDES : JOYSTICK + POUSSER' : 'COMMANDES : JOYSTICK SEUL'; }; majC();
-    b.addEventListener('click', () => { this.pauseVue = true; this.joy = null; this.gaz = null; f.classList.add('vu'); });
+    this.ouvrirPause = () => { this.pauseVue = true; this.joy = null; this.gaz = null; this.clic = false; if (this.touches) this.touches.clear(); f.classList.add('vu'); };
+    this.fermerPause = () => { f.querySelectorAll('[data-sur]').forEach(x => { delete x.dataset.sur; x.textContent = 'NOUVELLE PARTIE'; }); this.pauseVue = false; f.classList.remove('vu'); };
+    b.addEventListener('click', () => this.ouvrirPause());
     f.addEventListener('click', ev => { const k = ev.target.dataset && ev.target.dataset.p; if (!k) return;
       if (k === 'commandes') { modeCommandes = modeCommandes === 'bouton' ? 'glisse' : 'bouton'; try { localStorage.setItem(CLE_COMMANDES, modeCommandes); } catch (err) { /* stockage indisponible */ } majC(); return; }
       if (k === 'nouvelle') { if (!ev.target.dataset.sur) { ev.target.dataset.sur = 1; ev.target.textContent = 'SUR ? TOUT EST EFFACE'; return; } this.nouvellePartie(); }
@@ -196,14 +198,35 @@ class Partie {
     const pos = ev => { const r = this.c.getBoundingClientRect(); return [(ev.clientX - r.left) * W / r.width, (ev.clientY - r.top) * H / r.height]; };
     // le joystick ne bouge pas : il est fixe en bas à gauche, on peut poser le pouce n'importe où dans la moitié gauche
     const viser = (j, x, y) => { let dx = x - JOY.x, dy = y - JOY.y; const d = Math.hypot(dx, dy); if (d > JOY.r) { dx *= JOY.r / d; dy *= JOY.r / d; } j.dx = dx; j.dy = dy; };
-    this.c.addEventListener('pointerdown', ev => { if (this.quai || this.panne || this.pauseVue) return; const [x, y] = pos(ev), B = BRENTRER(), G = GAZ();
+    // PC : la souris vise (la corvette se tourne vers le pointeur), le clic gauche maintenu pousse ; le clavier est plus bas
+    this.c.addEventListener('pointerdown', ev => { if (ev.pointerType !== 'mouse') this.pc = false; }, true);
+    this.c.addEventListener('pointerdown', ev => { if (ev.pointerType !== 'mouse' || this.quai || this.panne || this.pauseVue) return;
+      this.pc = true; const [x, y] = pos(ev), B = BRENTRER(true); this.souris = { x, y }; this.viseSouris = true;
+      if (x > B.x && x < B.x + B.w && y > B.y && y < B.y + B.h) { this.auto = true; ev.stopImmediatePropagation(); return; }
+      if (ev.button === 0) { this.capturer(ev); this.clic = true; this.auto = false; } ev.stopImmediatePropagation(); });
+    this.c.addEventListener('pointermove', ev => { if (ev.pointerType !== 'mouse') return; this.pc = true; const [x, y] = pos(ev); this.souris = { x, y }; this.viseSouris = true; });
+    this.c.addEventListener('pointerup', ev => { if (ev.pointerType === 'mouse') this.clic = false; });
+    this.c.addEventListener('contextmenu', ev => ev.preventDefault());
+    this.touches = new Set();
+    const TOUCHES = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW', 'Space'];
+    addEventListener('keydown', ev => {
+      if (ev.code === 'Escape' || ev.code === 'KeyP') { if (this.pauseVue) this.fermerPause(); else this.ouvrirPause(); ev.preventDefault(); return; }
+      if (this.pauseVue) return;
+      this.pc = true;
+      if (this.quai && (ev.code === 'Enter' || ev.code === 'NumpadEnter' || ev.code === 'Space') && !ev.repeat && !(ev.target && ev.target.closest && ev.target.closest('button'))) { this.decoller(); ev.preventDefault(); return; }
+      if (ev.code === 'KeyR' && !this.quai && !this.panne) { this.auto = true; return; }
+      if (TOUCHES.includes(ev.code)) { this.touches.add(ev.code); if (/Left|Right|KeyA|KeyD/.test(ev.code)) this.viseSouris = false; ev.preventDefault(); } });
+    addEventListener('keyup', ev => this.touches.delete(ev.code));
+    addEventListener('blur', () => { this.touches.clear(); this.clic = false; });
+    this.c.addEventListener('pointerdown', ev => { if (this.quai || this.panne || this.pauseVue) return; const [x, y] = pos(ev), B = BRENTRER(this.pc), G = GAZ();
       if (x > B.x - 6 && x < B.x + B.w + 6 && y > B.y - 6 && y < B.y + B.h + 6) { this.auto = true; return; }
-      if (modeCommandes === 'bouton' && Math.hypot(x - G.x, y - G.y) < G.r + 14) { this.c.setPointerCapture(ev.pointerId); this.gaz = ev.pointerId; this.auto = false; return; }
-      if (x < W * 0.5 && !this.joy) { this.c.setPointerCapture(ev.pointerId); this.joy = { id: ev.pointerId, dx: 0, dy: 0 }; viser(this.joy, x, y); this.auto = false; } });
+      if (modeCommandes === 'bouton' && Math.hypot(x - G.x, y - G.y) < G.r + 14) { this.capturer(ev); this.gaz = ev.pointerId; this.auto = false; return; }
+      if (x < W * 0.5 && !this.joy) { this.capturer(ev); this.joy = { id: ev.pointerId, dx: 0, dy: 0 }; viser(this.joy, x, y); this.auto = false; } });
     this.c.addEventListener('pointermove', ev => { const j = this.joy; if (!j || j.id !== ev.pointerId) return; const [x, y] = pos(ev); viser(j, x, y); });
     const fin = ev => { if (this.joy && this.joy.id === ev.pointerId) this.joy = null; if (this.gaz === ev.pointerId) this.gaz = null; };
     this.c.addEventListener('pointerup', fin); this.c.addEventListener('pointercancel', fin);
   }
+  capturer(ev) { try { this.c.setPointerCapture(ev.pointerId); } catch (err) { /* pointeur déjà relâché */ } }
   mondeTourelle(i) { const [mx, my] = this.nef.tourelles[i], s = this.ship, c = Math.cos(s.a), si = Math.sin(s.a); return [s.x + mx * c - my * si, s.y + mx * si + my * c]; }
   /* ---------- un pas de simulation ---------- */
   pas(dt) {
@@ -226,15 +249,21 @@ class Partie {
       if (this.panne <= 0) { const perdu = this.soute.length - Math.floor(this.soute.length / 2); this.accoster(false, true); this.texte(s.x, s.y - 72, 'REMORQUEE' + (perdu ? ` · -${perdu} MINERAI` : ''), '#ff6a5c'); }
       this.suite(dt); return; }
     const j = this.joy, jx = j ? j.dx / 40 : 0, jy = j ? j.dy / 40 : 0, force = Math.hypot(jx, jy), V = c.vitesse, M = c.maniabilite, TOUR = 2.4 * M; let pousse = 0;
+    // PC : touches et souris
+    const K = this.touches || new Set(), tg = (K.has('ArrowLeft') || K.has('KeyA') ? -1 : 0) + (K.has('ArrowRight') || K.has('KeyD') ? 1 : 0);
+    const gazPC = K.has('ArrowUp') || K.has('KeyW') || K.has('Space') || !!this.clic;
+    if (this.auto && (tg || gazPC)) this.auto = false;
     if (this.auto) { const ex = S.qx - s.x, ey = S.qy - s.y, el = Math.hypot(ex, ey) || 1, v = Math.min(120 * V, el * 1.2);
       s.vx += (ex / el * v + S.vx - s.vx) * Math.min(1, dt * 1.5); s.vy += (ey / el * v + S.vy - s.vy) * Math.min(1, dt * 1.5); pousse = 1;
       if (Math.hypot(s.vx, s.vy) > 8) { const voulu = Math.atan2(s.vy, s.vx) + Math.PI / 2; let dd = voulu - s.a; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, dd)); } }
     else { if (force > 0.15) { const voulu = Math.atan2(jy, jx) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, d));
         // propulseurs : petites bouffées blanches sur le nez quand la corvette tourne
-        if (e.ameliorations.propulseurs && Math.abs(d) > 0.15 && this.R() < 0.5) { const cot = d > 0 ? -1 : 1, nx = s.x + Math.sin(s.a) * 22, ny = s.y - Math.cos(s.a) * 22;
-          this.parts.push({ x: nx, y: ny, vx: Math.cos(s.a) * cot * 50 + s.vx, vy: Math.sin(s.a) * cot * 50 + s.vy, v: 0.25, c: '#c9cde0', t: 2 }); }
+        if (Math.abs(d) > 0.15) this.bouffee(d > 0 ? -1 : 1);
         if (modeCommandes === 'glisse' && Math.abs(d) < 0.9) { pousse = force; const acc = 110 * V * (0.85 + 0.15 * M) * force * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; } }
-      if (modeCommandes === 'bouton' && this.gaz !== null) { pousse = 1; const acc = 110 * V * (0.85 + 0.15 * M) * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; }
+      if (tg) { s.a += tg * TOUR * dt; this.bouffee(tg); }
+      else if (this.pc && this.viseSouris && this.souris && !j) { const wx = this.souris.x - (this.ox || 0), wy = this.souris.y - (this.oy || 0);
+        if (Math.hypot(wx - s.x, wy - s.y) > 24) { const voulu = Math.atan2(wy - s.y, wx - s.x) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, d)); if (Math.abs(d) > 0.15) this.bouffee(-Math.sign(d)); } }
+      if (gazPC || (modeCommandes === 'bouton' && this.gaz !== null)) { pousse = 1; const acc = 110 * V * (0.85 + 0.15 * M) * dt; s.vx += Math.sin(s.a) * acc; s.vy -= Math.cos(s.a) * acc; }
       s.vx *= 1 - dt * 0.12; s.vy *= 1 - dt * 0.12; const v = Math.hypot(s.vx, s.vy); if (v > 150 * V) { s.vx *= 150 * V / v; s.vy *= 150 * V / v; } }
     this.pousse = pousse; s.x += s.vx * dt; s.y += s.vy * dt;
     const de = Math.hypot(s.x, s.y);
@@ -267,6 +296,9 @@ class Partie {
         this.balles.push({ x: tx + fx * lg, y: ty + fy * lg, vx: fx * 380, vy: fy * 380, v: 0.65, a: T.a }); T.recul = 0.08; } });
     this.suite(dt);
   }
+  // propulseurs : petites bouffées blanches sur le nez quand la corvette tourne (cot : côté de la bouffée)
+  bouffee(cot) { const s = this.ship; if (!this.e.ameliorations.propulseurs || this.R() > 0.5) return; const nx = s.x + Math.sin(s.a) * 22, ny = s.y - Math.cos(s.a) * 22;
+    this.parts.push({ x: nx, y: ny, vx: Math.cos(s.a) * cot * 50 + s.vx, vy: Math.sin(s.a) * cot * 50 + s.vy, v: 0.25, c: '#c9cde0', t: 2 }); }
   tomberEnPanne(t) { this.carbu = Math.max(0, this.carbu); this.panne = 2.4; this.joy = null; this.auto = false; this.texte(this.ship.x, this.ship.y - 44, t, '#ff6a5c'); }
   suite(dt) {
     const s = this.ship, deg = this.C.degats;
@@ -331,7 +363,8 @@ class Partie {
   /* ---------- dessin ---------- */
   dessin(t) {
     const x = this.x, s = this.ship, e = this.e, c = this.C, sk = this.secousse > 0 ? (this.R() - 0.5) * 6 : 0;
-    const ox = Math.round(W / 2 - this.cam.x + sk), oy = Math.round(H / 2 - this.cam.y + sk);
+    const ox = Math.round(W / 2 - this.cam.x + sk), oy = Math.round(H / 2 - this.cam.y + sk); this.ox = ox; this.oy = oy;
+    const cur = !this.quai && this.pc && !this.pauseVue ? 'none' : 'default'; if (this.c.style.cursor !== cur) this.c.style.cursor = cur;   // en vol sur PC : le viseur dessiné remplace la flèche
     x.fillStyle = '#05060d'; x.fillRect(0, 0, W, H);
     const px = ((-this.cam.x * 0.2) % 512 + 512) % 512, py = ((-this.cam.y * 0.2) % 512 + 512) % 512;
     for (let i = -1; i < 2; i++) for (let k = -1; k < 1; k++) x.drawImage(ciel, Math.round(px + i * 512), Math.round(py + k * 512));
@@ -389,15 +422,19 @@ class Partie {
     const f = this.carbu / c.vol, bw = 90, bxx = W - 48 - bw; x.textAlign = 'right'; x.fillStyle = '#8c93c4'; x.fillText('CARBU', bxx - 6, 18); x.fillStyle = '#1a1f40'; x.fillRect(bxx, 11, bw, 8);
     x.fillStyle = f < 0.25 ? (t * 4 % 1 < 0.5 ? '#ff6a5c' : '#7a2a26') : f < 0.5 ? '#ff9d4a' : '#7be07b'; x.fillRect(bxx, 11, Math.round(bw * f), 8);
     // commandes : joystick fixe, bouton POUSSER (mode « bouton »), RENTRER
-    if (!this.quai && !this.panne) { const j = this.joy;
+    if (!this.quai && !this.panne && this.pc && this.viseSouris && this.souris) { const mx = Math.round(this.souris.x), my = Math.round(this.souris.y); x.fillStyle = this.clic ? '#ffcf4a' : '#9fd0ff';
+      for (const [a, b, w, h] of [[-8, 0, 5, 1], [4, 0, 5, 1], [0, -8, 1, 5], [0, 4, 1, 5]]) x.fillRect(mx + a, my + b, w, h); }
+    if (!this.quai && !this.panne && !this.pc) { const j = this.joy;
       x.globalAlpha = j ? 0.55 : 0.3; x.strokeStyle = '#9fd0ff'; x.lineWidth = 2; x.beginPath(); x.arc(JOY.x, JOY.y, JOY.r, 0, 7); x.stroke();
       x.fillStyle = '#9fd0ff'; x.beginPath(); x.arc(JOY.x + (j ? j.dx : 0), JOY.y + (j ? j.dy : 0), 15, 0, 7); x.fill(); x.lineWidth = 1; x.globalAlpha = 1;
       if (modeCommandes === 'bouton') { const G = GAZ(), on = this.gaz !== null;
         x.globalAlpha = on ? 0.9 : 0.55; x.fillStyle = on ? '#7a3a14' : '#3a1e10'; x.strokeStyle = on ? '#ffcf4a' : '#d0752c'; x.lineWidth = 2;
         x.beginPath(); x.arc(G.x, G.y, G.r, 0, 7); x.fill(); x.stroke(); x.lineWidth = 1; x.globalAlpha = 1;
         x.font = '10px Silkscreen'; x.textAlign = 'center'; x.fillStyle = on ? '#ffcf4a' : '#f2a94a'; x.fillText('POUSSER', G.x, G.y + 4); }
-      const B = BRENTRER(); x.fillStyle = this.auto ? '#2f7a3a' : '#1d2560cc'; x.strokeStyle = this.auto ? '#6fdc7f' : '#5a6be0'; x.fillRect(B.x, B.y, B.w, B.h); x.strokeRect(B.x + 0.5, B.y + 0.5, B.w - 1, B.h - 1);
-      x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText(this.auto ? 'RETOUR...' : 'RENTRER', B.x + B.w / 2, B.y + B.h / 2 + 4); }
+    }
+    if (!this.quai && !this.panne) {
+      const B = BRENTRER(this.pc); x.fillStyle = this.auto ? '#2f7a3a' : '#1d2560cc'; x.strokeStyle = this.auto ? '#6fdc7f' : '#5a6be0'; x.fillRect(B.x, B.y, B.w, B.h); x.strokeRect(B.x + 0.5, B.y + 0.5, B.w - 1, B.h - 1);
+      x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText(this.auto ? 'RETOUR...' : this.pc ? 'RENTRER (R)' : 'RENTRER', B.x + B.w / 2, B.y + B.h / 2 + 4); }
   }
 }
 
