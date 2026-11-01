@@ -107,7 +107,7 @@ section{display:flex;flex-direction:column;gap:16px}
     <h2>CE QUI A CHANGE (2 NOVEMBRE)</h2>
     <p><b>Le feu part de la gueule du dragon.</b> Il suit maintenant sa tête, même quand il bat des ailes.</p>
     <p><b>Tous les modèles gratuits sont dans le jeu.</b> En ville : les petites maisons avec leurs arbres entre les immeubles, 21 sortes de voitures et camions sur la route, lampadaires, feux rouges, panneaux, bancs, bennes, bouches d'incendie, et un carlin qui se promène. À l'aéroport : vaches, chevaux, lamas, cochons, moutons et zèbres dans l'herbe, cônes, tracteurs et camionnettes. Dans le ciel : la chauve-souris, qui bat des ailes.</p>
-    <p><b>Les voitures aussi brûlent</b> : elles explosent et leurs roues, portières et pare-chocs volent. Les animaux, eux, ne brûlent pas : ils s'enfuient en sautillant.</p>
+    <p><b>Les voitures aussi brûlent</b> : elles explosent et leurs roues, portières et pare-chocs volent. Les animaux, eux, ne brûlent pas : ils s'enfuient en sautillant. <b>Les chauves-souris</b> touchées par le feu tombent en flammes (+4 pièces).</p>
     <p>Touche le téléphone : on arrive au <b>nid</b>, puis <b>ENVOLER !</b> Un toucher = un coup d'ailes ; le bouton <b>FEU</b> crache les flammes.</p>
   </div>
 </div>
@@ -141,9 +141,7 @@ section{display:flex;flex-direction:column;gap:16px}
 <section>
   <h2>QUESTIONS</h2>
   <ol class="qs">
-    <li><b>Les animaux</b> qui s'enfuient devant les flammes au lieu de brûler : ça lui va ?</li>
-    <li><b>La chauve-souris</b> : obstacle seulement, ou aussi un ennemi qu'on peut brûler pour des pièces ?</li>
-    <li><b>Les payants</b> (six dragons à 4,99 $, onze avions et hélicoptères à 8,99 $) : à garder pour plus tard ?</li>
+    <li>Le cahier des charges du jeu est écrit : il reste à le relire et à le valider.</li>
   </ol>
 </section>
 </div>
@@ -442,7 +440,7 @@ class Tel{
     this.dist=d.x/8;
     const bi=this.biome(d.x);if(bi!==this.biAff){this.biAff=bi;this.annoncer(NOM_BIOME[bi]+' !');}
     this.gen();
-    for(const o of this.obs){if(o.t==='ballon'){o.y+=Math.sin(this.t*.03+o.x)*.2;}else if(o.t==='avion'){o.x+=o.vx;o.y-=.12;}else if(o.t==='helico'){o.x+=o.vx;o.y+=Math.sin(this.t*.05+o.x*.1)*.25;}else if(o.t==='chauve'){o.x+=o.vx;o.y+=Math.sin(this.t*.09+o.x*.2)*.6;}}
+    for(const o of this.obs){if(o.t==='ballon'){o.y+=Math.sin(this.t*.03+o.x)*.2;}else if(o.t==='avion'){o.x+=o.vx;o.y-=.12;}else if(o.t==='helico'){o.x+=o.vx;o.y+=Math.sin(this.t*.05+o.x*.1)*.25;}else if(o.t==='chauve'){if(o.mort){if(o.y<GY-6){o.y+=2.2;o.x+=.4;if(this.t%2===0)this.parts.add(x3(o.x),y3(o.y),rnd(-.2,.2),rnd(-.02,.02),rnd(.02,.05),0,16,FEU[ri(0,3)]);}else o.m.visible=false;}else{o.x+=o.vx;o.y+=Math.sin(this.t*.09+o.x*.2)*.6;}}}
     // le feu
     this.feuLum.intensity=0;
     if(this.feuOn&&this.feu>0&&!this.ko){
@@ -451,6 +449,7 @@ class Tel{
       this.feuLum.position.set(x3(bx)+1,y3(by)-.5,1);this.feuLum.intensity=2.2+Math.random();
       const touches=new Set();
       for(let k=8;k<=112;k+=6){const px=bx+Math.cos(a)*k,py=by+Math.sin(a)*k;for(const o of this.bat)if(!o.dead&&px>o.x&&px<o.x+o.w&&py>GY-o.h&&py<GY)touches.add(o);
+        for(const o of this.obs)if(o.t==='chauve'&&!o.mort&&Math.hypot(px-o.x,py-o.y)<13){o.mort=true;this.pieces+=4;this.texte('+4',x3(o.x),y3(o.y)+.8);this.explo(x3(o.x),y3(o.y),.5);}
         if(py>GY-18)for(const v of this.voit){const vx=v.m.position.x*U;if(!v.dead&&Math.abs(px-vx)<10){if(v.animal)v.peur=90;else this.exploserVoiture(v);}}}
       for(const o of touches){o.hp-=s.force*.9;o.burn=40;this.teinter(o);if(o.hp<=0)this.detruire(o);}
     }
@@ -460,7 +459,7 @@ class Tel{
       for(const o of this.obs){
         if(o.t==='grue'){if((d.x>o.x-3&&d.x<o.x+7&&d.y>o.top-2)||(d.x>o.x-36&&d.x<o.x+18&&Math.abs(d.y-(o.top+1))<5)){this.choc();d.vy=-1.6;}}
         else if(o.t==='tour'){if(d.x>o.x-10&&d.x<o.x+10&&d.y>o.top-26){this.choc();d.vy=-1.6;}}
-        else if(o.t==='avion'||o.t==='helico'||o.t==='chauve'){if(Math.abs(d.x-o.x)<(o.t==='chauve'?13:20)&&Math.abs(d.y-o.y)<10){this.choc();d.vy=1;}}
+        else if((o.t==='avion'||o.t==='helico'||o.t==='chauve')&&!o.mort){if(Math.abs(d.x-o.x)<(o.t==='chauve'?13:20)&&Math.abs(d.y-o.y)<10){this.choc();d.vy=1;}}
         else if(Math.hypot(d.x-o.x,d.y-o.y)<12){this.choc();d.vy=1;}
       }
       for(const o of this.bat)if(!o.dead&&d.x+6>o.x&&d.x-6<o.x+o.w&&d.y+5>GY-o.h){this.choc();d.vy=-1.6;break;}
@@ -503,6 +502,7 @@ class Tel{
     cible=Math.max(cible,30);
     if(d.y>cible&&d.vy>-.3&&this.t%6===0)this.flap=true;
     let vise=false;for(const b of this.bat){const dx=b.x+b.w/2-d.x,dy=GY-b.h-d.y;if(!b.dead&&dx>4&&dx<95&&dy>0&&dy<100)vise=true;}
+    for(const o of this.obs)if(o.t==='chauve'&&!o.mort&&o.x-d.x>8&&o.x-d.x<70&&o.y>d.y)vise=true;
     this.feuOn=vise&&this.feu>0;
   }
   /* ---------- une image ---------- */
@@ -535,7 +535,7 @@ class Tel{
     // objets animés
     const tt=this.t;
     for(const p of this.pick){p.m.position.y=y3(p.y)+Math.sin(tt*.08+p.x)*.15;p.m.rotation.y=tt*.04;p.m.userData.halo.material.opacity=.35+.25*Math.sin(tt*.15);}
-    for(const o of this.obs){if(o.t==='ballon'||o.t==='avion'||o.t==='helico'||o.t==='chauve')o.m.position.set(x3(o.x),y3(o.y),0);if(o.mix)o.mix.update(dt);
+    for(const o of this.obs){if(o.t==='ballon'||o.t==='avion'||o.t==='helico'||o.t==='chauve')o.m.position.set(x3(o.x),y3(o.y),0);if(o.mix)o.mix.update(o.mort?0:dt);if(o.mort)o.m.rotation.z+=.15;
       o.m.traverse(m=>{if(m.userData.clignote)m.visible=tt%40<20;if(m.userData.tourne)m.rotation.y+=.6;});}
     // caméra
     const cp=this.camPos,cv=this.camVise;let tp,tv;

@@ -2,7 +2,7 @@
 // node outils/fbx-vers-glb.js <dossier des modèles> <sortie.b64>
 // Chaque fichier du dossier devient un objet nommé d'après son nom de fichier (sans extension) : dragon.fbx -> « dragon ».
 // Il faut un three 0.128 dépaqueté dans <dossier>/../npm/package (npm pack three@0.128.0 ; jsdelivr est bloqué depuis le conteneur).
-// Corrections faites ici (voir specs/dragon-des-toits.md) :
+// Corrections faites ici (voir specs/dragon-simulator.md) :
 //  - les maillages à groupes non indexés (FBX, OBJ multi-matériaux) sont regroupés par matériau ET indexés,
 //    sinon chaque primitive glTF dessine tout l'objet ;
 //  - les os et pistes d'animation des FBX sont préfixés par le nom de l'objet (pas de collision entre deux squelettes Quaternius) ;
