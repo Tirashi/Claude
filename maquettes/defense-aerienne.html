@@ -1,0 +1,470 @@
+<title>Défense aérienne</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Press+Start+2P&display=swap">
+<style>
+/* Mise en page : trois téléphones (même jeu vu de côté, trois époques), légende dessous. */
+:root{
+  --fond:#14121c; --plaque:#232033; --trait:#3a3552; --texte:#ecebf5; --doux:#a9a5c2;
+  --or:#ffd23f; --rouge:#ff8a76; --bleu:#9ad4ff;
+  --titre:"Press Start 2P", ui-monospace, monospace;
+  --corps:"Chakra Petch", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{font-family:var(--corps);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+header{max-width:1120px;margin:0 auto 24px;display:grid;gap:10px}
+h1{font-family:var(--titre);font-size:20px;line-height:1.4;margin:0;color:var(--or);text-wrap:balance}
+header p{margin:0;color:var(--doux);max-width:68ch}
+.tels{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+.bloc{width:340px;max-width:100%;display:grid;gap:12px;align-content:start}
+.bloc h2{font-family:var(--titre);font-size:12px;line-height:1.6;margin:0}
+.bloc h2 b{color:var(--or)}
+.bloc p{margin:0;color:var(--doux)}
+.bloc ul{margin:0;padding-left:18px;color:var(--doux)}
+.tel{position:relative;width:340px;max-width:100%;aspect-ratio:340/660;border-radius:26px;overflow:hidden;border:6px solid #0c0a12;box-shadow:0 0 0 1px var(--trait),0 18px 40px #0008;background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated}
+.hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between}
+.haut,.bas{pointer-events:auto;padding:10px;display:grid;gap:6px}
+.haut{background:linear-gradient(#0c0a12e6 55%,#0c0a1200)}
+.bas{background:#0c0a12f0}
+.ligne{display:flex;gap:6px;align-items:center;justify-content:space-between}
+.etiq{font-family:var(--titre);font-size:8px;letter-spacing:.06em;color:var(--doux)}
+.val{font-family:var(--titre);font-size:10px;color:var(--texte);font-variant-numeric:tabular-nums}
+.ville b{color:var(--rouge)} .sous b{color:var(--or)}
+.outils{display:flex;gap:6px}
+.outils button,.fin button{flex:1;font-family:var(--titre);font-size:8px;line-height:1.4;padding:9px 3px;border-radius:4px;border:2px solid #0c0a12;box-shadow:inset 0 2px 0 #ffffff22,inset 0 -2px 0 #00000055;background:#2e3a5c;color:var(--texte);cursor:pointer}
+.outils button.raid{background:#a8302a}
+.outils button.raid.pret{background:#e04a3c}
+.outils button:disabled{opacity:.4}
+.outils button small{display:block;font-size:7px;margin-top:3px;opacity:.85}
+button:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+.astuce{font-size:13px;color:var(--texte);background:#0c0a12d9;border:1px solid #ffffff22;border-radius:4px;padding:6px 9px;justify-self:start}
+.fin{position:absolute;inset:0;display:grid;place-content:center;gap:14px;text-align:center;background:#0c0a12d9;pointer-events:auto;padding:24px}
+.fin h3{font-family:var(--titre);font-size:14px;line-height:1.5;margin:0;color:var(--or)}
+.fin p{margin:0}
+footer{max-width:1120px;margin:36px auto 0;color:var(--doux);font-size:13px}
+</style>
+
+<header>
+  <h1>DEFENSE AERIENNE</h1>
+  <p>Maquette : vue de côté, le ciel en haut, la ville en bas. Les avions traversent par vagues et les bombardiers lâchent leurs bombes sur les maisons. On touche un emplacement au sol pour y construire une tour, et on appelle un raid quand ça chauffe. Trois époques, toutes jouables.</p>
+</header>
+
+<main class="tels">
+  <section class="bloc">
+    <div class="tel" id="telA"></div>
+    <h2><b>A</b> LONDRES 1940, LA NUIT</h2>
+    <p>Bombardiers bimoteurs et chasseurs dans un ciel étoilé. Les projecteurs balaient le ciel, les obus de DCA éclatent en nuages noirs.</p>
+    <ul><li>Projecteur : l'avion éclairé prend double dégâts.</li><li>Raid : trois chasseurs amis traversent en mitraillant.</li></ul>
+  </section>
+  <section class="bloc">
+    <div class="tel" id="telB"></div>
+    <h2><b>B</b> BASE AERIENNE, AUJOURD'HUI</h2>
+    <p>Grand jour au-dessus des hangars. Avions à réaction, hélicoptères qui volent bas, essaims de drones. Les missiles sol-air laissent des traînées de fumée.</p>
+    <ul><li>Radar : les tours voisines tirent plus vite.</li><li>Raid : intercepteurs qui tirent des missiles.</li></ul>
+  </section>
+  <section class="bloc">
+    <div class="tel" id="telC"></div>
+    <h2><b>C</b> LE VILLAGE, 1918</h2>
+    <p>Coucher de soleil sur les champs. Biplans colorés et gros dirigeables lents, à arrêter avant qu'ils ne survolent le village.</p>
+    <ul><li>Ballon de barrage : les avions qui le croisent se prennent le câble.</li><li>Raid : l'escadrille de biplans amis.</li></ul>
+  </section>
+</main>
+
+<footer>Tout est dessiné par le code (pas de pack d'images). Polices : Press Start 2P et Chakra Petch (Google Fonts).</footer>
+
+<script>
+"use strict";
+// ------------------------------------------------------------ outils de dessin
+const OUT = "#120c16", VW = 170, VH = 330, SOL = 262;
+function mk(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.imageSmoothingEnabled = false; return [c, g]; }
+const R = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function blob(g, cx, cy, rx, ry, ramp, contour = true) {
+  for (let y = -ry - 1; y <= ry + 1; y++) for (let x = -rx - 1; x <= rx + 1; x++) {
+    const d = Math.hypot(x / rx, y / ry); if (d > 1 + 1 / Math.min(rx, ry)) continue;
+    if (d > 1) { if (contour) R(g, cx + x, cy + y, 1, 1, OUT); continue; }
+    const l = (-x / rx - y / ry) / 1.4 - d * .2;
+    R(g, cx + x, cy + y, 1, 1, ramp[l > .45 ? 0 : l > -.05 ? 1 : l > -.5 ? 2 : 3]);
+  }
+}
+const P = {
+  gris: ["#dfe4ea", "#a3acb9", "#6f7888", "#454c5c"], noir: ["#5e5870", "#3a3548", "#262233", "#17131e"],
+  kaki: ["#c8c890", "#8e8e58", "#62623a", "#3c3c22"], vert: ["#b8e27c", "#6fae45", "#457f2e", "#2a5220"],
+  rouge: ["#ff8a76", "#e04a3c", "#a8302a", "#6e1d1d"], jaune: ["#fff2a8", "#ffd23f", "#d09a1c", "#8f6410"],
+  bleu: ["#9ad4ff", "#3f8fe0", "#2a64b0", "#1a3f7a"], verre: ["#e0f8ff", "#7ccaf0", "#3a86c0", "#22507a"],
+  creme: ["#ffffff", "#f4ecda", "#d6c8aa", "#a8977a"], brique: ["#e0906a", "#b0583a", "#7e3a26", "#4e2016"],
+  bois: ["#f0c088", "#c48a52", "#9a6236", "#6a4020"], sable: ["#fff0b8", "#ecc878", "#c49a4c", "#8a6430"]
+};
+// fuselage : une bande ombrée horizontale (lumière en haut)
+function fus(g, x, y, w, h, ramp) {
+  R(g, x - 1, y, w + 2, h, OUT); R(g, x, y - 1, w, h + 2, OUT);
+  for (let j = 0; j < h; j++) R(g, x, y + j, w, 1, ramp[j === 0 ? 0 : j < h / 2 ? 1 : j < h - 1 ? 2 : 3]);
+}
+
+// ------------------------------------------------------------ avions (de profil, tournés vers la droite)
+function avion(type, f, ami) {
+  let c, g;
+  if (type === "chasseur") { // chasseur à hélice
+    [c, g] = mk(20, 10); const ra = ami ? P.kaki : P.gris;
+    fus(g, 3, 4, 13, 3, ra); R(g, 15, 4, 2, 3, ra[1]); R(g, 1, 2, 3, 2, OUT); R(g, 2, 2, 2, 2, ra[2]); // queue
+    R(g, 7, 6, 6, 2, OUT); R(g, 7, 6, 6, 1, ra[2]); // aile
+    R(g, 9, 3, 3, 1, P.verre[1]); R(g, 9, 2, 3, 1, OUT);
+    R(g, 18, f ? 2 : 4, 1, f ? 6 : 2, "#ffffff88"); // hélice
+    if (ami) { R(g, 5, 5, 2, 1, "#e04a3c"); } else R(g, 5, 5, 2, 1, "#ffd23f");
+  } else if (type === "bombardier") {
+    [c, g] = mk(34, 13);
+    fus(g, 4, 5, 25, 4, P.noir); R(g, 1, 2, 4, 3, OUT); R(g, 2, 2, 3, 3, P.noir[2]); R(g, 1, 9, 3, 1, P.noir[2]);
+    R(g, 27, 5, 3, 3, P.verre[1]); R(g, 27, 5, 3, 1, P.verre[0]);
+    for (const x of [12, 19]) { R(g, x - 1, 8, 6, 3, OUT); R(g, x, 8, 4, 2, P.noir[1]); R(g, x + 4, f ? 6 : 8, 1, f ? 6 : 2, "#ffffff66"); }
+    R(g, 8, 6, 14, 1, P.noir[0]);
+  } else if (type === "jet") {
+    [c, g] = mk(24, 9);
+    fus(g, 3, 4, 17, 2, P.gris); R(g, 20, 4, 3, 1, P.gris[1]); R(g, 22, 5, 1, 1, OUT);
+    R(g, 2, 1, 3, 3, OUT); R(g, 3, 1, 2, 3, P.gris[2]); R(g, 8, 6, 8, 1, OUT); R(g, 9, 6, 6, 1, P.gris[2]);
+    R(g, 14, 3, 3, 1, P.verre[1]); R(g, 0, 4, 3, 2, f ? "#ffd23f" : "#f08a28");
+  } else if (type === "helico") {
+    [c, g] = mk(26, 13);
+    blob(g, 16, 7, 5, 3, P.kaki); R(g, 3, 6, 9, 2, OUT); R(g, 3, 6, 9, 1, P.kaki[2]); R(g, 2, 3, 2, 4, P.kaki[3]);
+    R(g, 18, 6, 3, 2, P.verre[1]); R(g, 12, 11, 9, 1, OUT);
+    R(g, f ? 6 : 10, 2, f ? 20 : 12, 1, "#ffffffaa"); R(g, 15, 3, 1, 1, OUT);
+  } else if (type === "drone") {
+    [c, g] = mk(14, 7); fus(g, 3, 3, 8, 2, P.gris); R(g, 6, 5, 4, 1, OUT); R(g, 1, f ? 1 : 3, 1, f ? 5 : 2, "#ffffff88"); R(g, 9, 3, 1, 1, "#e04a3c");
+  } else if (type === "biplan") {
+    [c, g] = mk(20, 12); const ra = ami ? P.bleu : P.rouge;
+    fus(g, 3, 5, 12, 3, ra); R(g, 1, 3, 3, 2, OUT); R(g, 2, 3, 2, 2, ra[2]);
+    R(g, 6, 2, 9, 2, OUT); R(g, 7, 2, 7, 1, P.jaune[1]); R(g, 6, 9, 9, 2, OUT); R(g, 7, 9, 7, 1, P.jaune[2]);
+    R(g, 8, 4, 1, 5, OUT); R(g, 13, 4, 1, 5, OUT); R(g, 17, f ? 3 : 5, 1, f ? 7 : 3, "#ffffff88");
+  } else { // dirigeable
+    [c, g] = mk(50, 20);
+    blob(g, 25, 8, 21, 6, P.creme); R(g, 3, 3, 4, 10, OUT); R(g, 4, 4, 3, 8, P.creme[2]);
+    for (let x = 10; x < 42; x += 6) R(g, x, 3, 1, 11, "#a8977a66");
+    R(g, 20, 15, 10, 3, OUT); R(g, 21, 15, 8, 2, P.bois[1]); R(g, 22, 15, 2, 1, P.jaune[1]); R(g, 26, 15, 2, 1, P.jaune[1]);
+  }
+  return c;
+}
+const TYPES = {
+  chasseur: { hp: 3, vit: 30, bombes: 1, w: 20, h: 10, prime: 3, alt: [70, 200] },
+  bombardier: { hp: 12, vit: 15, bombes: 4, w: 34, h: 13, prime: 8, alt: [90, 160] },
+  jet: { hp: 4, vit: 48, bombes: 1, w: 24, h: 9, prime: 4, alt: [60, 130] },
+  helico: { hp: 7, vit: 14, bombes: 3, w: 26, h: 13, prime: 6, alt: [200, 232] },
+  drone: { hp: 2, vit: 24, bombes: 1, w: 14, h: 7, prime: 2, alt: [120, 220] },
+  biplan: { hp: 3, vit: 22, bombes: 1, w: 20, h: 12, prime: 3, alt: [100, 220] },
+  dirigeable: { hp: 40, vit: 7, bombes: 8, w: 50, h: 20, prime: 20, alt: [70, 110] }
+};
+
+// ------------------------------------------------------------ les trois époques
+const EPOQUES = {
+  a: {
+    ciel: ["#070a1e", "#141a3e", "#2a2850"], etoiles: true, lune: true, sol: "#1c1a24", herbe: "#2a2830",
+    maison: (g, x, w, h, f) => { R(g, x - 1, SOL - h - 1, w + 2, h + 1, OUT); R(g, x, SOL - h, w, h, f ? "#2a2230" : "#3a3548"); R(g, x, SOL - h, w, 1, "#5e5870"); for (let y = SOL - h + 3; y < SOL - 3; y += 4) for (let i = x + 2; i < x + w - 2; i += 4) if (hash(i, y) > .45 && !f) R(g, i, y, 2, 2, "#ffd23f"); },
+    loin: "#1a1b33", tours: ["mitrailleuse", "canon", "projecteur"], vague: n => ({ chasseur: 2 + n, bombardier: 1 + Math.floor(n / 2) }),
+    eclat: ["#3a3548", "#262233"], raid: "CHASSEURS", ami: "chasseur", nuit: true
+  },
+  b: {
+    ciel: ["#4f98e0", "#8cc4f0", "#d6ecff"], nuages: true, sol: "#5c5a50", herbe: "#6f9a4a",
+    maison: (g, x, w, h, f) => { R(g, x - 1, SOL - h - 1, w + 2, h + 1, OUT); R(g, x, SOL - h, w, h, f ? "#6f6a60" : "#a3acb9"); R(g, x, SOL - h, w, 2, "#dfe4ea"); R(g, x + 3, SOL - h + 5, w - 6, h - 5, f ? "#2a2626" : "#454c5c"); for (let i = x + 4; i < x + w - 4; i += 3) R(g, i, SOL - h + 5, 1, h - 5, "#6f7888"); },
+    loin: "#9cb8cc", tours: ["mitrailleuse", "missile", "radar"], vague: n => ({ jet: 1 + n, helico: Math.floor(n / 2) + 1, drone: 2 + n }),
+    eclat: ["#f4f4f4", "#c8d0dc"], raid: "INTERCEPTEURS", ami: "jet", nuit: false
+  },
+  c: {
+    ciel: ["#5a3a78", "#e07a5a", "#ffd27a"], soleil: true, nuages: true, sol: "#4a3a22", herbe: "#6f8a3a",
+    maison: (g, x, w, h, f) => { R(g, x - 1, SOL - h + 3, w + 2, h - 2, OUT); R(g, x, SOL - h + 4, w, h - 4, f ? "#8a7a62" : "#f4ecda"); for (let k = 0; k < w / 2 + 1; k++) R(g, x + k - 1, SOL - h + 4 - k, w - 2 * k + 2, 1, k === 0 ? OUT : f ? "#4e2016" : "#b0583a"); R(g, x + w / 2 - 2, SOL - 6, 4, 6, "#6a4020"); R(g, x + 2, SOL - h + 7, 3, 3, "#3a86c0"); },
+    loin: "#7a5070", tours: ["mitrailleuse", "canon", "ballon"], vague: n => ({ biplan: 3 + n, dirigeable: n % 3 === 0 ? 1 : 0 }),
+    eclat: ["#3a3548", "#5e5870"], raid: "ESCADRILLE", ami: "biplan", nuit: false
+  }
+};
+const TOURS = {
+  mitrailleuse: { nom: "MITRAIL.", prix: 10, cad: .16, portee: 120, deg: 1 },
+  canon: { nom: "CANON", prix: 25, cad: 1.3, portee: 230, deg: 3, zone: 14 },
+  missile: { nom: "MISSILE", prix: 30, cad: 2.2, portee: 240, deg: 7 },
+  projecteur: { nom: "PROJECT.", prix: 15, cad: 0, portee: 230 },
+  radar: { nom: "RADAR", prix: 15, cad: 0, portee: 0 },
+  ballon: { nom: "BALLON", prix: 15, cad: 0, portee: 0 }
+};
+const EMPL = [17, 51, 85, 119, 153], MAISONS = [[30, 14, 22], [64, 16, 28], [98, 14, 20], [132, 16, 26]];
+
+// ------------------------------------------------------------ un téléphone
+class Tel {
+  constructor(id, ep) {
+    this.el = document.getElementById(id); this.E = EPOQUES[ep]; this.ep = ep;
+    const [c, g] = mk(VW, VH); this.cv = c; this.g = g; this.el.appendChild(c);
+    this.sp = {}; for (const t in TYPES) this.sp[t] = [0, 1].map(f => avion(t, f, false));
+    this.spAmi = [0, 1].map(f => avion(this.E.ami, f, true));
+    this.fond(); this.hud(); this.raz(); this.entrees(); this.t = 0;
+  }
+  fond() {
+    const [c, g] = mk(VW, VH); this.fondImg = c; const E = this.E;
+    const gr = g.createLinearGradient(0, 0, 0, SOL); gr.addColorStop(0, E.ciel[0]); gr.addColorStop(.55, E.ciel[1]); gr.addColorStop(1, E.ciel[2]);
+    g.fillStyle = gr; g.fillRect(0, 0, VW, SOL);
+    // tramage des bandes du ciel (pixel art)
+    for (let y = 0; y < SOL; y++) for (let x = (y % 2); x < VW; x += 2) if (hash(x, y) > .82) R(g, x, y, 1, 1, "rgba(255,255,255,.035)");
+    if (E.etoiles) for (let i = 0; i < 70; i++) R(g, hash(i, 1) * VW, hash(2, i) * 190, 1, 1, hash(i, i) > .8 ? "#ffffff" : "#8a8ac0");
+    if (E.lune) { blob(g, 130, 70, 9, 9, ["#ffffff", "#f4ecda", "#d6c8aa", "#a8977a"], false); R(g, 127, 67, 2, 2, "#d6c8aa"); R(g, 133, 72, 3, 2, "#d6c8aa"); }
+    if (E.soleil) { for (let r = 22; r > 0; r -= 4) blob(g, 120, 205, r, r, r > 14 ? ["#ffb070", "#ffb070", "#ffb070", "#ffb070"] : ["#fff6c2", "#ffe08a", "#ffd23f", "#ffc274"], false); }
+    if (E.nuages) for (let i = 0; i < 6; i++) { const x = hash(i, 7) * 160, y = 40 + hash(7, i) * 150; for (let k = 0; k < 4; k++) blob(g, x + k * 7, y - (k % 2) * 3, 6, 3, this.ep === "c" ? ["#ffe8c8", "#ffc8a0", "#e09a80", "#b07070"] : ["#ffffff", "#f4f8ff", "#dfeaf6", "#c8d8ea"], false); }
+    // collines lointaines
+    for (let x = 0; x < VW; x++) { const h = 14 + Math.sin(x / 13) * 5 + Math.sin(x / 5) * 2; R(g, x, SOL - h, 1, h, E.loin); }
+    // sol
+    R(g, 0, SOL, VW, VH - SOL, E.sol); R(g, 0, SOL, VW, 2, E.herbe);
+    for (let i = 0; i < 120; i++) R(g, hash(i, 3) * VW, SOL + 3 + hash(3, i) * 34, 1, 1, "rgba(0,0,0,.25)");
+    for (const x of EMPL) { R(g, x - 8, SOL + 1, 16, 3, "rgba(0,0,0,.35)"); }
+  }
+  raz() {
+    this.avions = []; this.amis = []; this.balles = []; this.bombes = []; this.effets = []; this.fumees = [];
+    this.tours = EMPL.map(() => null); this.maisons = MAISONS.map(([x, w, h]) => ({ x, w, h, pv: 3 }));
+    this.s = { vague: 1, argent: 40, file: [], minu: 0, pause: 3, enVague: false, fini: false, raid: 8, choix: -1 };
+    this.tours[1] = this.nouvelleTour(this.E.tours[0]); this.tours[3] = this.nouvelleTour(this.E.tours[1]);
+    this.el.querySelector(".fin")?.remove(); this.barre(); this.affiche();
+  }
+  nouvelleTour(type) { return { type, cd: 0, ang: -Math.PI / 2, cible: null, recul: 0, pv: 4, ballonY: 130 }; }
+
+  // --- vagues
+  lancer() {
+    const comp = this.E.vague(this.s.vague), f = [];
+    for (const t in comp) for (let i = 0; i < comp[t]; i++) f.push(t);
+    f.sort(() => Math.random() - .5); this.s.file = f; this.s.minu = .2; this.s.enVague = true;
+  }
+  nouvelAvion(type) {
+    const T = TYPES[type], dir = Math.random() < .5 ? 1 : -1, hp = Math.round(T.hp * (1 + .15 * (this.s.vague - 1)));
+    const y = T.alt[0] + Math.random() * (T.alt[1] - T.alt[0]);
+    this.avions.push({ type, x: dir > 0 ? -T.w : VW + T.w, y, y0: y, dir, vit: T.vit * (.9 + Math.random() * .2), hp, max: hp, bombes: T.bombes, ph: Math.random() * 6, flash: 0, marque: 0 });
+  }
+  // --- une image de simulation
+  maj(dt) {
+    this.t += dt; const S = this.s;
+    if (!S.fini) {
+      if (S.enVague) {
+        if (S.file.length) { S.minu -= dt; if (S.minu <= 0) { S.minu = 1.1 + Math.random() * .6; this.nouvelAvion(S.file.shift()); } }
+        else if (!this.avions.length) { S.enVague = false; S.vague++; S.pause = 5; S.argent += 10; }
+      } else if (S.pause != null) { S.pause -= dt; if (S.pause <= 0) { S.pause = null; this.lancer(); } }
+      S.raid = Math.max(0, S.raid - dt);
+      this.avancer(dt); this.tirer(dt);
+    }
+    this.particules(dt);
+    if (Math.floor(this.t * 4) !== this.dern) { this.dern = Math.floor(this.t * 4); this.affiche(); }
+    if (this.visible !== false) this.dessiner();
+  }
+  avancer(dt) {
+    const S = this.s;
+    for (const a of [...this.avions]) {
+      const T = TYPES[a.type];
+      a.x += a.dir * a.vit * dt; a.y = a.y0 + Math.sin(this.t * 1.5 + a.ph) * 2;
+      a.flash = Math.max(0, a.flash - dt * 6); a.marque = Math.max(0, a.marque - dt);
+      // bombes au-dessus d'une maison
+      for (const m of this.maisons) if (a.bombes > 0 && m.pv > 0 && Math.abs(a.x - (m.x + m.w / 2 - a.dir * (SOL - a.y) * a.vit / 140)) < 2 && !a["b" + m.x]) {
+        a["b" + m.x] = true; a.bombes--; this.bombes.push({ x: a.x, y: a.y + 4, vx: a.dir * a.vit * .8, vy: 0 });
+      }
+      // ballons de barrage
+      this.tours.forEach((t, i) => { if (t && t.type === "ballon" && t.pv > 0 && Math.abs(a.x - EMPL[i]) < 5 && a.y > t.ballonY && !a["c" + i]) { a["c" + i] = true; this.toucher(a, 5, a.x, a.y); this.eclat(a.x, a.y, "#dfe4ea", 6); } });
+      if (a.x < -60 || a.x > VW + 60) this.avions.splice(this.avions.indexOf(a), 1);
+    }
+    for (const b of [...this.bombes]) {
+      b.vy += 90 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.vx *= .995;
+      if (b.y >= SOL - 2) {
+        this.bombes.splice(this.bombes.indexOf(b), 1); this.boum(b.x, SOL - 4, 12, true);
+        for (const m of this.maisons) if (m.pv > 0 && b.x > m.x - 3 && b.x < m.x + m.w + 3) { m.pv--; if (m.pv <= 0) this.boum(m.x + m.w / 2, SOL - 10, 18, true); }
+        if (this.maisons.every(m => m.pv <= 0)) this.perdu();
+      }
+    }
+    for (const a of [...this.amis]) {
+      a.x += 60 * dt;
+      for (const e of this.avions) if (!a.vus.has(e) && Math.abs(e.x - a.x) < 14 && Math.abs(e.y - a.y) < 26) { a.vus.add(e); this.balles.push({ x: a.x + 8, y: a.y, cible: e, v: 220, deg: 4, type: this.ep === "b" ? "missile" : "balle" }); }
+      if (a.x > VW + 30) this.amis.splice(this.amis.indexOf(a), 1);
+    }
+  }
+  tirer(dt) {
+    this.tours.forEach((t, i) => {
+      if (!t) return; const T = TOURS[t.type], x = EMPL[i], y = SOL - 8;
+      if (t.type === "ballon") { t.ballonY = 130 + Math.sin(this.t + i) * 3; return; }
+      if (t.type === "radar") return;
+      t.recul = Math.max(0, t.recul - dt * 6);
+      // cible : l'avion le plus proche à portée (le projecteur préfère un avion pas encore éclairé)
+      let best = null, bd = T.portee;
+      for (const a of this.avions) { const d = Math.hypot(a.x - x, a.y - y); if (d < bd && a.x > -10 && a.x < VW + 10) { bd = d; best = a; } }
+      t.cible = best; if (!best) return;
+      const vise = Math.atan2(best.y - y, best.x + best.dir * best.vit * bd / 200 - x); t.ang += (vise - t.ang) * Math.min(1, dt * 8);
+      if (t.type === "projecteur") { best.marque = .3; return; }
+      const radar = this.tours.some((r, j) => r && r.type === "radar" && Math.abs(j - i) === 1);
+      t.cd -= dt * (radar ? 1.6 : 1);
+      if (t.cd <= 0) {
+        t.cd = T.cad; t.recul = 1;
+        const bx = x + Math.cos(t.ang) * 9, by = y + Math.sin(t.ang) * 9;
+        if (t.type === "mitrailleuse") this.balles.push({ x: bx, y: by, vx: Math.cos(t.ang) * 230, vy: Math.sin(t.ang) * 230, deg: T.deg, type: "trace", vie: .8 });
+        else if (t.type === "canon") { const px = best.x + best.dir * best.vit * bd / 160, py = best.y; this.balles.push({ x: bx, y: by, tx: px, ty: py, deg: T.deg, type: "obus" }); this.eclat(bx, by, "#fff6c2", 3); }
+        else this.balles.push({ x: bx, y: by, vx: Math.cos(t.ang) * 40, vy: Math.sin(t.ang) * 40, cible: best, deg: T.deg, type: "missile" });
+      }
+    });
+    for (const b of [...this.balles]) {
+      if (b.type === "trace") {
+        b.x += b.vx * dt; b.y += b.vy * dt; b.vie -= dt;
+        const a = this.avions.find(a => Math.abs(a.x - b.x) < TYPES[a.type].w / 2 && Math.abs(a.y - b.y) < TYPES[a.type].h / 2);
+        if (a) { this.toucher(a, b.deg, b.x, b.y); this.balles.splice(this.balles.indexOf(b), 1); }
+        else if (b.vie <= 0 || b.y < 0) this.balles.splice(this.balles.indexOf(b), 1);
+      } else if (b.type === "obus") {
+        const dx = b.tx - b.x, dy = b.ty - b.y, l = Math.hypot(dx, dy), v = 170 * dt;
+        if (l < v) { this.balles.splice(this.balles.indexOf(b), 1); this.flak(b.tx, b.ty, b.deg); } else { b.x += dx / l * v; b.y += dy / l * v; }
+      } else { // missile à tête chercheuse ou tir d'un ami
+        const e = b.cible; if (!this.avions.includes(e)) { this.balles.splice(this.balles.indexOf(b), 1); continue; }
+        const dx = e.x - b.x, dy = e.y - b.y, l = Math.hypot(dx, dy);
+        if (l < 5) { this.balles.splice(this.balles.indexOf(b), 1); this.toucher(e, b.deg, e.x, e.y); if (b.type === "missile") this.boum(e.x, e.y, 8); continue; }
+        if (b.type === "missile") { b.vx += dx / l * 260 * dt; b.vy += dy / l * 260 * dt; const v = Math.hypot(b.vx, b.vy), m = 130; if (v > m) { b.vx *= m / v; b.vy *= m / v; } this.fumees.push({ x: b.x, y: b.y, v: 0, c: "#f4f4f4" }); }
+        else { b.vx = dx / l * b.v; b.vy = dy / l * b.v; }
+        b.x += b.vx * dt; b.y += b.vy * dt;
+      }
+    }
+  }
+  flak(x, y, deg) { // éclat d'obus : dégâts en zone
+    this.effets.push({ x, y, v: 0, flak: true });
+    for (const a of [...this.avions]) if (Math.hypot(a.x - x, a.y - y) < TOURS.canon.zone + TYPES[a.type].w / 3) this.toucher(a, deg, a.x, a.y);
+  }
+  toucher(a, deg, x, y) {
+    if (!this.avions.includes(a)) return;
+    a.hp -= deg * (a.marque > 0 ? 2 : 1); a.flash = 1; this.eclat(x, y, "#ffd23f", 2);
+    if (a.hp <= 0) {
+      this.avions.splice(this.avions.indexOf(a), 1); this.s.argent += TYPES[a.type].prime;
+      this.boum(a.x, a.y, TYPES[a.type].w / 2 + 4, true);
+      this.effets.push({ chute: true, sp: this.sp[a.type][0], x: a.x, y: a.y, dir: a.dir, vy: 0, v: 0 });
+    }
+  }
+  boum(x, y, r, debris) { this.effets.push({ x, y, r, v: 0 }); if (debris) for (let k = 0; k < 8; k++) { const an = Math.random() * 6.3; this.effets.push({ x, y, vx: Math.cos(an) * 50, vy: Math.sin(an) * 50 - 20, v: 0, eclat: true, c: k % 2 ? "#ffd23f" : "#6f7888" }); } }
+  eclat(x, y, c, r) { this.effets.push({ x, y, r, v: .5, c }); }
+  raid() {
+    if (this.s.raid > 0 || this.s.fini) return; this.s.raid = 20;
+    for (let k = 0; k < 3; k++) this.amis.push({ x: -20 - k * 22, y: 90 + k * 45, vus: new Set() });
+  }
+  perdu() {
+    if (this.s.fini) return; this.s.fini = true;
+    const f = document.createElement("div"); f.className = "fin";
+    f.innerHTML = `<h3>LA VILLE EST TOMBEE</h3><p>Tu as tenu ${this.s.vague - 1} vague${this.s.vague > 2 ? "s" : ""}.</p><button type="button">REJOUER</button>`;
+    f.querySelector("button").onclick = () => this.raz(); this.el.appendChild(f);
+  }
+  particules(dt) {
+    for (const f of [...this.effets]) {
+      f.v += dt * (f.flak ? 1.2 : f.chute ? .5 : 2.2);
+      if (f.eclat) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 80 * dt; }
+      if (f.chute) { f.vy += 60 * dt; f.y += f.vy * dt; f.x += f.dir * 20 * dt; if (Math.random() < .5) this.fumees.push({ x: f.x, y: f.y, v: 0, c: "#3a3548" }); if (f.y > SOL) { this.boum(f.x, SOL - 3, 10); f.v = 1; } }
+      if (f.v >= 1) this.effets.splice(this.effets.indexOf(f), 1);
+    }
+    for (const f of [...this.fumees]) { f.v += dt * 1.4; f.y -= 6 * dt; if (f.v >= 1) this.fumees.splice(this.fumees.indexOf(f), 1); }
+  }
+
+  // --- dessin
+  dessiner() {
+    const g = this.g, t = this.t, E = this.E;
+    g.drawImage(this.fondImg, 0, 0);
+    // projecteurs décoratifs (nuit) et projecteurs-tours
+    if (E.nuit) { g.globalCompositeOperation = "lighter"; for (let k = 0; k < 2; k++) this.faisceau(20 + k * 130, SOL - 4, -Math.PI / 2 + Math.sin(t * .4 + k * 2) * .6, "rgba(120,140,200,.10)"); g.globalCompositeOperation = "source-over"; }
+    this.tours.forEach((tr, i) => { if (tr && tr.type === "projecteur") { g.globalCompositeOperation = "lighter"; this.faisceau(EMPL[i], SOL - 10, tr.ang, tr.cible ? "rgba(255,240,170,.22)" : "rgba(255,240,170,.1)"); g.globalCompositeOperation = "source-over"; } });
+    // maisons
+    for (const m of this.maisons) { E.maison(g, m.x, m.w, m.h, m.pv <= 0); if (m.pv > 0 && m.pv < 3) for (let k = 0; k < 3 - m.pv; k++) { const fx = m.x + 3 + k * 6, fl = Math.floor(t * 10 + k) % 2; R(g, fx, SOL - m.h - 3 - fl, 3, 3 + fl, "#f08a28"); R(g, fx + 1, SOL - m.h - 2, 1, 2, "#ffd23f"); if (Math.random() < .05) this.fumees.push({ x: fx + 1, y: SOL - m.h - 4, v: 0, c: "#3a3548" }); } }
+    // ballons de barrage
+    this.tours.forEach((tr, i) => { if (tr && tr.type === "ballon") { const x = EMPL[i], y = tr.ballonY; for (let yy = y + 5; yy < SOL - 6; yy += 2) R(g, x, yy, 1, 1, "#6f7888"); blob(g, x, y, 7, 4, P.gris); R(g, x - 9, y - 2, 3, 4, OUT); R(g, x - 8, y - 1, 2, 2, P.gris[2]); } });
+    // fumées
+    for (const f of this.fumees) { const s = 1 + f.v * 3; R(g, f.x - s / 2, f.y - s / 2, s, s, f.c === "#f4f4f4" ? `rgba(244,244,244,${.7 - f.v * .7})` : `rgba(40,36,52,${.6 - f.v * .6})`); }
+    // avions
+    for (const a of this.avions) this.dessinAvion(this.sp[a.type][Math.floor(t * 12 + a.ph) % 2], a.x, a.y, a.dir, a.flash > .5, a.marque > 0, a);
+    for (const a of this.amis) this.dessinAvion(this.spAmi[Math.floor(t * 12) % 2], a.x, a.y, 1, false, false);
+    // bombes et tirs
+    for (const b of this.bombes) { R(g, b.x - 1, b.y - 2, 3, 5, OUT); R(g, b.x, b.y - 1, 1, 3, "#6f7888"); }
+    for (const b of this.balles) {
+      if (b.type === "trace") { R(g, b.x, b.y, 1, 1, "#fff6c2"); R(g, b.x - b.vx * .012, b.y - b.vy * .012, 1, 1, "#ffd23f"); }
+      else if (b.type === "obus") R(g, b.x - 1, b.y - 1, 2, 2, "#fff6c2");
+      else { R(g, b.x - 1, b.y - 1, 3, 3, OUT); R(g, b.x - 1, b.y - 1, 2, 2, b.type === "missile" ? "#dfe4ea" : "#fff6c2"); }
+    }
+    // effets
+    for (const f of this.effets) {
+      if (f.chute) { g.save(); g.translate(Math.round(f.x), Math.round(f.y)); if (f.dir < 0) g.scale(-1, 1); g.rotate(.5); g.drawImage(f.sp, -f.sp.width / 2, -f.sp.height / 2); g.restore(); continue; }
+      if (f.eclat) { R(g, f.x, f.y, 2, 2, f.c); continue; }
+      if (f.flak) { const r = 3 + f.v * 9; blob(g, f.x, f.y, Math.round(r), Math.round(r * .8), [E.eclat[0], E.eclat[0], E.eclat[1], E.eclat[1]], false); if (f.v < .2) blob(g, f.x, f.y, 3, 3, P.jaune, false); continue; }
+      const r = Math.max(1, Math.round(f.r * (.3 + f.v * .7)));
+      if (f.v < .5) blob(g, f.x, f.y, r, r, f.c ? [f.c, f.c, f.c, f.c] : ["#fff6c2", "#ffd23f", "#f08a28", "#c05e14"], false);
+      else for (let k = 0; k < 10; k++) { const an = k / 10 * 6.283; R(g, f.x + Math.cos(an) * r, f.y + Math.sin(an) * r, 1, 1, f.c || "#f08a28"); }
+    }
+    // tours et emplacements
+    EMPL.forEach((x, i) => this.dessinTour(this.tours[i], x, i));
+    if (this.s.choix >= 0) { const x = EMPL[this.s.choix]; R(g, x - 9, SOL - 1, 18, 1, "#ffd23f"); R(g, x - 9, SOL + 15, 18, 1, "#ffd23f"); }
+  }
+  faisceau(x, y, a, c) {
+    const g = this.g, L = 260, w = .07;
+    g.fillStyle = c; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a - w) * L, y + Math.sin(a - w) * L); g.lineTo(x + Math.cos(a + w) * L, y + Math.sin(a + w) * L); g.closePath(); g.fill();
+  }
+  dessinAvion(sp, x, y, dir, flash, marque, a) {
+    const g = this.g; g.save(); g.translate(Math.round(x), Math.round(y)); if (dir < 0) g.scale(-1, 1);
+    g.drawImage(sp, -Math.floor(sp.width / 2), -Math.floor(sp.height / 2));
+    if (flash || marque) { g.globalCompositeOperation = "lighter"; g.globalAlpha = flash ? 1 : .35; g.drawImage(sp, -Math.floor(sp.width / 2), -Math.floor(sp.height / 2)); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; }
+    g.restore();
+    if (a && a.hp < a.max) { const w = Math.min(20, sp.width - 4); R(g, x - w / 2, y - sp.height / 2 - 4, w, 2, OUT); R(g, x - w / 2, y - sp.height / 2 - 4, Math.max(1, w * a.hp / a.max), 2, "#ff4f4f"); }
+  }
+  dessinTour(t, x, i) {
+    const g = this.g, y = SOL;
+    if (!t) { // emplacement libre
+      R(g, x - 7, y + 2, 14, 10, "rgba(0,0,0,.3)"); for (let k = 0; k < 14; k += 3) { R(g, x - 7 + k, y + 2, 2, 1, "#ffd23f88"); R(g, x - 7 + k, y + 11, 2, 1, "#ffd23f88"); }
+      R(g, x - 1, y + 5, 3, 1, "#ffd23f"); R(g, x, y + 4, 1, 3, "#ffd23f"); return;
+    }
+    // socle (sacs de sable ou béton)
+    const socle = this.ep === "b" ? P.gris : P.sable;
+    for (let k = 0; k < 4; k++) blob(g, x - 6 + k * 4, y + 6, 2, 2, socle);
+    const cx = x, cy = y - 2, ca = Math.cos(t.ang), sa = Math.sin(t.ang), rc = t.recul;
+    if (t.type === "mitrailleuse") {
+      for (let k = 0; k < 9 - rc; k++) { R(g, cx + ca * k - 1, cy + sa * k - 1, 2, 2, OUT); }
+      for (let k = 1; k < 8 - rc; k++) R(g, cx + ca * k, cy + sa * k, 1, 1, "#6f7888");
+      blob(g, cx, cy + 1, 3, 2, this.ep === "c" ? P.bois : P.kaki);
+      if (rc > .6) R(g, cx + ca * 10 - 1, cy + sa * 10 - 1, 3, 3, "#fff6c2");
+    } else if (t.type === "canon") {
+      for (let k = 0; k < 14 - rc * 2; k++) R(g, cx + ca * k - 1.5, cy + sa * k - 1.5, 3, 3, OUT);
+      for (let k = 1; k < 13 - rc * 2; k++) R(g, cx + ca * k - 1, cy + sa * k - 1, 2, 2, k > 10 ? "#a3acb9" : "#62623a");
+      blob(g, cx, cy + 1, 5, 3, P.kaki);
+    } else if (t.type === "missile") {
+      blob(g, cx, cy + 2, 5, 3, P.gris);
+      for (let k = 0; k < 10; k++) R(g, cx + ca * k - 2, cy + sa * k - 2, 4, 4, OUT);
+      for (let k = 1; k < 9; k++) R(g, cx + ca * k - 1, cy + sa * k - 1, 3, 3, k > 6 && t.cd > .5 ? "#454c5c" : "#dfe4ea");
+    } else if (t.type === "projecteur") {
+      blob(g, cx, cy + 1, 4, 3, P.noir); R(g, cx + ca * 4 - 2, cy + sa * 4 - 2, 4, 4, OUT); R(g, cx + ca * 4 - 1, cy + sa * 4 - 1, 3, 3, "#fff6c2");
+    } else if (t.type === "radar") {
+      R(g, cx, cy - 6, 1, 8, OUT); const w = Math.abs(Math.cos(this.t * 2)) * 6 + 1; R(g, cx - w, cy - 9, w * 2, 3, OUT); R(g, cx - w + 1, cy - 8, w * 2 - 2, 1, "#dfe4ea");
+      if (Math.floor(this.t * 2) % 2) R(g, cx, cy - 11, 1, 1, "#ff4f4f");
+    } else if (t.type === "ballon") { R(g, cx - 4, cy, 8, 4, OUT); R(g, cx - 3, cy + 1, 6, 2, P.bois[1]); }
+  }
+
+  // --- interface
+  hud() {
+    const h = document.createElement("div"); h.className = "hud"; this.el.appendChild(h); this.h = h;
+    h.innerHTML = `<div class="haut"><div class="ligne"><span class="val">VAGUE <b class="vg">1</b></span><span class="val ville">MAISONS <b class="vi">4</b></span><span class="val sous">$ <b class="ar">0</b></span></div><div class="ligne"><span class="etiq etat"></span></div><div class="astuce">Touche un emplacement jaune au sol pour construire une tour.</div></div><div class="bas"></div>`;
+  }
+  barre() { // le bas : raid, ou les tours à construire si un emplacement est choisi
+    const b = this.h.querySelector(".bas"), S = this.s;
+    if (S.choix >= 0) {
+      const t = this.tours[S.choix];
+      b.innerHTML = `<div class="outils">${t ? `<button type="button" data-v="1">VENDRE<small>+${Math.floor(TOURS[t.type].prix / 2)} $</small></button>` : this.E.tours.map(n => `<button type="button" data-t="${n}" ${S.argent < TOURS[n].prix ? "disabled" : ""}>${TOURS[n].nom}<small>${TOURS[n].prix} $</small></button>`).join("")}<button type="button" data-x="1">FERMER</button></div>`;
+      b.querySelectorAll("[data-t]").forEach(x => x.onclick = () => { const n = x.dataset.t; if (S.argent >= TOURS[n].prix) { S.argent -= TOURS[n].prix; this.tours[S.choix] = this.nouvelleTour(n); S.choix = -1; this.barre(); this.affiche(); } });
+      b.querySelectorAll("[data-v]").forEach(x => x.onclick = () => { S.argent += Math.floor(TOURS[t.type].prix / 2); this.tours[S.choix] = null; S.choix = -1; this.barre(); this.affiche(); });
+      b.querySelectorAll("[data-x]").forEach(x => x.onclick = () => { S.choix = -1; this.barre(); });
+    } else {
+      b.innerHTML = `<div class="outils"><button type="button" class="raid" data-r="1">RAID : ${this.E.raid}<small class="rd"></small></button></div>`;
+      b.querySelector("[data-r]").onclick = () => this.raid();
+    }
+  }
+  affiche() {
+    const S = this.s, q = s => this.h.querySelector(s);
+    q(".vg").textContent = S.vague; q(".vi").textContent = this.maisons.filter(m => m.pv > 0).length; q(".ar").textContent = S.argent;
+    q(".etat").textContent = S.enVague ? `${S.file.length + this.avions.length} AVIONS EN APPROCHE` : S.pause != null ? "PROCHAINE VAGUE DANS " + Math.ceil(S.pause) + " S" : "";
+    const r = q("[data-r]"); if (r) { r.classList.toggle("pret", S.raid <= 0); q(".rd").textContent = S.raid > 0 ? "PRET DANS " + Math.ceil(S.raid) + " S" : "PRET !"; }
+    if (S.choix >= 0) this.h.querySelectorAll("[data-t]").forEach(x => x.disabled = S.argent < TOURS[x.dataset.t].prix);
+  }
+  entrees() {
+    this.cv.addEventListener("pointerdown", ev => {
+      if (this.s.fini) return; const b = this.cv.getBoundingClientRect(), px = (ev.clientX - b.left) / b.width * VW, py = (ev.clientY - b.top) / b.height * VH;
+      if (py < SOL - 30) return;
+      const i = EMPL.findIndex(x => Math.abs(px - x) < 14); if (i < 0) return;
+      this.s.choix = i; this.barre(); this.h.querySelector(".astuce")?.remove();
+    });
+  }
+}
+
+const TELS = [new Tel("telA", "a"), new Tel("telB", "b"), new Tel("telC", "c")];
+TELS.forEach(t => new IntersectionObserver(e => { t.visible = e[0].isIntersecting; }).observe(t.el));
+let av = performance.now();
+function boucle(now) { const dt = Math.max(0, Math.min(.05, (now - av) / 1000)); av = now; TELS.forEach(t => t.maj(dt)); requestAnimationFrame(boucle); }
+requestAnimationFrame(boucle);
+</script>

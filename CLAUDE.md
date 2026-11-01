@@ -57,7 +57,8 @@ Une phrase par chantier ; tout l'historique (liens des maquettes, décisions) es
 - **Le Clan du fjord** : 7 maquettes, aucune retenue ; **en pause** (30/10). [`specs/clan.md`](specs/clan.md)
 - **Nouvelles idées de gestion** (30/10, `IDEES.md`) : **Le Chalutier** et **Le Port de commerce** gardés ; **La Ferme du vallon** (mise de côté le 30/10) : contrôle A validé, 2D Cute Fantasy choisie ; prochaine étape : l'utilisateur envoie les zips du pack, puis maquette avec les vrais sprites et cahier des charges. [`specs/ferme-du-vallon.md`](specs/ferme-du-vallon.md) Achats prévus : `IDEES.md`, section Achats.
 - **Mineur de l'espace** (ex-Mineurs d'étoiles, 30/10 : minage spatial + gestion + auto battler) : maquette 6 validée (https://claude.ai/artifact/1d3pKCvcRP2wrsoBhQo8Xw) ; **cahier des charges validé** (31/10 : pas de classement, pas de hors ligne, bataille finale contre toutes les flottes) ; prochaine étape : session 1 (règles et simulateur), Opus. [`specs/mineur-de-l-espace.md`](specs/mineur-de-l-espace.md)
-- **La petite usine** (mini Factorio, 31/10) : 3 maquettes (puzzles, défense en 3D, pixel art), **mise de côté** (01/11). **Tower defense** : 10 pistes à choisir (`IDEES.md`, brainstorm du 01/11).
+- **La petite usine** (mini Factorio, 31/10) : 3 maquettes, **mise de côté** (01/11).
+- **Défense aérienne** (tower defense vu de côté, 01/11) : maquette 1 (3 époques : Londres 1940, base moderne, village 1918) à choisir : https://claude.ai/artifact/HrUtHqbKkhDD8eSdvJFbAe. [`specs/defense-aerienne.md`](specs/defense-aerienne.md)
 - **Armada** : cahier des charges à relire par l'utilisateur (§ 18), puis session 1, Opus. [`specs/armada.md`](specs/armada.md)
 - **Défense orbitale** : cahier des charges validé ; prochaine étape session 1 (le combat), Opus. [`specs/defense-orbitale.md`](specs/defense-orbitale.md)
 - **La colonie** : moteur fait ; reste la nature, l'île du jour et l'intégration. [`specs/colonie.md`](specs/colonie.md)
