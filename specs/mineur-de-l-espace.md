@@ -244,3 +244,21 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 - **Planches (01/11)**, plus claires que l'essai en jeu (retour de l'utilisateur) : https://claude.ai/artifact/PUnWLCZNeuTR4MScU5rRZb (« Hangar du Mineur », privé, pas dans le dépôt). Une bande par proposition A à E (corvettes des cinq classes, drones et équipement, aliens), à taille double, nez en haut ; puis la réserve complète de chaque pack, numérotée (C5-…, C2-…, C4-…, F5-…, noms Zoser, T1-/T2-) ; les sprites qui pointaient sur le côté sont remis nez en haut (marqués ↻). En attente du choix de l'utilisateur.
 - **Résolution sur PC (01/11)** : le canvas est tracé à la résolution de l'écran (multiple entier de la scène de 300 px, jusqu'à × 4) au lieu d'une image de 300 px agrandie : pixel art en gros pixels réguliers, texte, traits et rotations nets.
 
+## 23. Vaisseaux des packs et porte-vaisseaux (décisions du 01/11)
+**Décisions de l'utilisateur** :
+- **Corvettes : pack Zoser**, *Fields of the Void A* (gris et bleu) ; **pas l'orange** (*Fields of the Void C* écarté).
+- **Petits vaisseaux autonomes** (drones qui minent autour des planètes) : **Cute SCKR, *Star Fleet* planche 5**.
+- **Porte-vaisseaux** en fin de partie : un **Cute SCKR** (*Complete Spaceship*), qui remplace la classe lourde (« Forteresse »).
+- Idée de l'utilisateur : le porte-vaisseaux a une **escadrille de petits vaisseaux** qui **décollent, minent et attaquent, puis reviennent se recharger en énergie** à bord ; des **améliorations** les rendent plus **endurants, puissants et résistants** ; le porte-vaisseaux a une **défense à courte portée**.
+
+**Proposition de Claude** (à valider, puis à régler au simulateur) :
+- Classe **PORTE-VAISSEAUX** (dernière classe, recherche du cristal) : lent, grosse soute, peu de tourelles à lui ; il transporte une **escadrille** de 2 chasseurs au départ (jusqu'à 6).
+- **Escadrille** : chaque chasseur a une **énergie** (secondes de vol). Il décolle seul quand une roche ou un alien est à portée (~350 px), casse les petites roches, ramasse leur minerai (1 ou 2 cases) ou tire sur les aliens, rentre quand son énergie baisse ou sa petite soute est pleine, dépose le minerai dans la soute du porte-vaisseaux, se recharge quelques secondes, et repart.
+- **Améliorations de l'escadrille** (5 niveaux comme les autres) : **ENDURANCE** (+ énergie), **PUISSANCE** (+ dégâts, minage plus rapide), **BLINDAGE** (+ résistance contre les aliens), **HANGAR** (+ 1 chasseur).
+- **Défense rapprochée** du porte-vaisseaux : petites tourelles rapides à courte portée (~90 px) qui abattent les météorites et les aliens trop proches ; amélioration DEFENSE (cadence et portée).
+- Les mêmes petits vaisseaux *Star Fleet* servent de **drones des stations** (mineurs, cargos, réparateur) et de **satellites** (*Star Fleet* a des satellites).
+- Les améliorations ne se voient plus sur les corvettes Zoser ; piste : ajouter des pièces du pack Zoser *Spaceship Top Down Parts* (réacteurs, nacelles) selon les niveaux.
+- Place dans le plan : avec la session 5 (les chasseurs servent aussi contre les aliens).
+
+**À choisir sur les planches** (bande F, https://claude.ai/artifact/PUnWLCZNeuTR4MScU5rRZb) : le porte-vaisseaux (C5-31, C5-30, C5-9, C5-14, C5-15, C5-26, C5-25, C5-20), les chasseurs de l'escadrille, et les aliens (Zoser bleu canard ou Cute SCKR organiques).
+
