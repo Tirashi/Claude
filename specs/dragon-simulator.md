@@ -21,8 +21,8 @@ Idée du fils de l'utilisateur (7 ans), 01/11. Maquette 3D jouable qui sert de r
 ## 4. Le vol (règles de la maquette, à garder)
 La logique tourne en « pixels » (12 px = 1 unité 3D, sol à 268) pour être testée sous Node.
 - Vitesse de croisière 1,7 px/image (jusqu'à 3,2 avec le jetpack), gravité 0,045 × plané, chute plafonnée tant qu'il reste de l'énergie (vol plané), libre quand elle est vide.
-- Coup d'ailes : −1,45 en vertical, +0,12 en vitesse, −3 d'énergie.
-- **Énergie** 100, qui baisse de 0,07 par image (moins avec les AILES) : au niveau 1, une partie dure environ 30 s sans bonus.
+- Coup d'ailes : −1,45 en vertical, +0,12 en vitesse, −2,5 d'énergie (3 dans la maquette, réglé en session 1).
+- **Énergie** 100, qui baisse de 0,05 par image (0,07 dans la maquette ; −13 % par niveau d'AILES) : au niveau 1, une partie dure environ 25 s (simulateur).
 - **Feu** : réserve de 45 au niveau 1 (+15 par niveau), 0,25 par image ; portée ~110 px vers l'avant et le bas ; la flamme part de la gueule (os `dragon_Nose`).
 - **Cœurs** : 2 au départ (+1 par niveau d'ÉCAILLES) ; un choc en retire un et rend invincible un instant ; à 0, le dragon tombe.
 - **Difficulté** : les obstacles se rapprochent avec la distance (jusqu'à −70 px d'écart).
@@ -79,7 +79,7 @@ Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce
 - Téléphone : `setPixelRatio` ≤ 1,5, objets retirés derrière la caméra, pas d'ombres portées.
 
 ## 14. Plan de travail (opusplan, une conversation par session)
-1. **Règles et simulateur** : `regles.js` (vol, destruction, économie, bonus, génération), `outils/dragon-simulateur.js`, réglage de l'économie.
+1. **Règles et simulateur** ✅ (02/11) : `dragon-simulator/regles.js` (vol, destruction, économie, bonus, génération, pilote automatique), `outils/dragon-simulateur.js` (lancé par `verifications.js`), réglage ci-dessous (§ 16).
 2. **Le jeu en 3D** : `monde3d.js` et `jeu.js` d'après la maquette, ville et aéroport, nid, les 10 bonus, sauvegarde, sons.
 3. **Intégration** : accueil (cartouche 3D, volet, classement, transfert), service worker, tests, artefact.
 
@@ -88,6 +88,15 @@ Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce
 2. **Classement de la famille** sur la plus grande distance : **oui**.
 3. **Vol du jour** : **non**.
 4. **Musique** : **oui, une petite musique discrète** en boucle (coupable avec les sons).
+
+## 16. Session 1 : règles et réglage (02/11)
+- **`dragon-simulator/regles.js`** : script classique, noms `ds…` / `DS_…`. La partie est un objet JSON (sauvegardable tel quel), avec son propre générateur à graine (`p.ra`, aucun `Math.random`). `dsNouvellePartie(sauv, graine)`, puis à chaque image `dsPas(p, { ailes, feu })` ; `p.ev` liste ce qui vient d'arriver (envol, ailes, choc, bouclier, ko, detruit, grenade, voiture, peur, chauve, bonus, pieces, eclair, biome, fin) pour les sons et effets ; `p.flamme` et `p.flammeBebe` disent où dessiner le feu. Chaque objet a un `id` pour retrouver son modèle 3D. `dsTerminer(sauv, p)` paie une seule fois (pièces, records, décors atteints). `dsPilote(p, adresse, alea)` sert à la démo de l'écran titre et au simulateur.
+- La décoration (immeubles du fond, trottoir, arbres, buissons) n'a pas de règle : `monde3d.js` la tire lui-même.
+- La bouche du dragon est calculée par les règles (décalage mesuré sur l'os `dragon_Nose`) ; la 3D peut faire partir les particules de l'os lui-même.
+- Choix pour les bonus : le **bébé dragon** vole derrière et sous le dragon, et crache (portée 70, dégâts ×0,5) sur ce qui est devant lui ; le **nuage d'orage** foudroie le bâtiment le plus proche, juste devant ; l'**aimant** attire tout sauf les nuages ; l'**œuf d'or** double toutes les pièces, distance comprise.
+- **Réglage** (`node outils/dragon-simulateur.js 6`, trois pilotes automatiques qui achètent l'amélioration la moins chère) : première partie ≈ 25 s et 375 m ; dragon au maximum ≈ 60 s et 1 000 m (il atteint l'aéroport). Avec les coûts validés (1 920 pièces), un joueur moyen gagne environ 70 à 90 pièces par vol au début et environ 200 à la fin. Il achète sa **première amélioration dès le premier vol** et **tout en environ 16 vols (11 min de vol)**. Cibles vérifiées par le simulateur : première partie de 20 à 45 s, première amélioration en 2 vols au plus, tout en 12 à 45 vols, dragon amélioré nettement plus loin.
+- Les pilotes adroits ou maladroits finissent à peu près pareil : le jeu pardonne beaucoup (le bouclier, les cœurs, le plané).
+- La plupart des vols finissent en « chute » : quand l'énergie est vide, le dragon descend sur les toits.
 
 ## Historique du chantier
 
