@@ -14,5 +14,6 @@ Seulement quand l'utilisateur le demande (« mets à jour main », « mets main 
    ```
    git fetch origin main && git merge-base --is-ancestor origin/main HEAD && git push origin HEAD:main
    ```
+   **Vérifier ensuite** `git ls-remote origin main` (même empreinte que `HEAD`) : enchaîné avec `&&` puis `| tail`, un `merge-base` qui échoue passe inaperçu (leçon du 02/11 : une mise à jour annoncée n'avait pas eu lieu, une autre conversation avait fait avancer main).
    Si `merge-base` échoue, main a avancé : fusionner `origin/main` dans la branche de travail, revérifier, pousser la branche, puis recommencer. Jamais de `--force` sur main.
 5. Dire à l'utilisateur ce qui part sur main (commits `ancien..nouveau`) et ce qui n'a pas été vérifié.
