@@ -85,11 +85,11 @@ Object.assign(Partie.prototype, {
     // ils arrivent ensemble de l'espace, en formation, du côté de la station
     const an = S.phi + (R() - 0.5) * 0.9, ux = Math.cos(an), uy = Math.sin(an);
     const aliens = liste.map((k, i) => { const rang = Math.floor((i + 1) / 2), cote = i % 2 ? 1 : -1, d = 720 + rang * 34 + (k === 'mere' ? 120 : 0);
-      const x = ux * d - uy * cote * rang * 30, y = uy * d + ux * cote * rang * 30;
+      const C = MONDE[p], x = C.x + ux * d - uy * cote * rang * 30, y = C.y + uy * d + ux * cote * rang * 30;
       return { k, x, y, vx: 0, vy: 0, a: versAngle(-ux, -uy), pv: MDE_ALIENS[k].pv * (k === 'mere' ? MERE_DIRECT : 1), max: MDE_ALIENS[k].pv * (k === 'mere' ? MERE_DIRECT : 1), t: 1 + R() * 1.5, flash: 0, orb: R() * TAU, cible: null }; });
     const F = finale ? Object.values(e.flottes).flat() : e.flottes[p];
     const unites = F.map((u, i) => { const s = mdeUniteCombat(e, u); return Object.assign(s, { max: s.pv, x: S.x, y: S.y, vx: 0, vy: 0, a: S.a, t: i * 0.2, orb: i / Math.max(1, F.length) * TAU, la: false }); });
-    this.bat = { finale, vague: finale ? 0 : e.aliens.alerte.vague, aliens, unites, base: finale ? 0 : MDE_VAGUES.base, baseMax: MDE_VAGUES.base, t: 0, retard: finale ? 0 : mdeRetard(e, p), fini: 0 };
+    this.bat = { p, finale, vague: finale ? 0 : e.aliens.alerte.vague, aliens, unites, base: finale ? 0 : MDE_VAGUES.base, baseMax: MDE_VAGUES.base, t: 0, retard: finale ? 0 : mdeRetard(e, p), fini: 0 };
     this.tirsA = [];
     this.annonce(finale ? 'LE VAISSEAU-MERE ARRIVE !' : 'VAGUE ' + this.bat.vague + ' : LES ALIENS ATTAQUENT !', '#d27ef0');
     if (this.quai) this.majPanneauSiCalme();
@@ -146,7 +146,7 @@ Object.assign(Partie.prototype, {
       if (a.pv <= 0) continue;
       const V = AL_VOL[a.k];
       a.flash = Math.max(0, a.flash - dt);
-      if (a.fuite) { const r = Math.hypot(a.x, a.y) || 1; a.vx += (a.x / r * V.v * 2.5 - a.vx) * dt; a.vy += (a.y / r * V.v * 2.5 - a.vy) * dt; a.x += a.vx * dt; a.y += a.vy * dt; a.a = tournerVers(a.a, versAngle(a.vx, a.vy), 2 * dt);
+      if (a.fuite) { const C = MONDE[B.p || 'terre'], fx = a.x - C.x, fy = a.y - C.y, r = Math.hypot(fx, fy) || 1; a.vx += (fx / r * V.v * 2.5 - a.vx) * dt; a.vy += (fy / r * V.v * 2.5 - a.vy) * dt; a.x += a.vx * dt; a.y += a.vy * dt; a.a = tournerVers(a.a, versAngle(a.vx, a.vy), 2 * dt);
         if (r > 1400) a.pv = 0; continue; }
       a.t -= dt; a.chg = (a.chg || 0) - dt;
       if (a.chg <= 0 || !a.cible || (a.cible.quoi !== 'corvette' && a.cible.quoi !== 'station' && a.cible.quoi.pv <= 0)) { a.chg = 1 + R();
@@ -255,7 +255,8 @@ Object.assign(Partie.prototype, {
     const orb = [];
     for (let k = 0; k < (e.satellites[p] || 0); k++) orb.push('d_satellite');
     if (e.orbite.guidage) orb.push('d_guidage'); if (e.orbite.meteo) orb.push('d_meteo'); if (e.orbite.radar) orb.push('d_radar');
-    orb.forEach((k, i) => { const an = t * 0.05 + i / orb.length * TAU, X = Math.cos(an) * 205 + ox, Y = Math.sin(an) * 205 + oy;
+    const CP = MONDE[p], RO = CP.r + 45;   // orbite basse, autour de la planète où l'on est
+    orb.forEach((k, i) => { const an = t * 0.05 + i / orb.length * TAU, X = CP.x + Math.cos(an) * RO + ox, Y = CP.y + Math.sin(an) * RO + oy;
       if (vu(X, Y, 20)) { if (pretSpr(k)) dessineSpr(x, k, X, Y, an); else { x.fillStyle = '#9fd0ff'; x.fillRect(Math.round(X) - 2, Math.round(Y) - 2, 4, 4); }
         if (k === 'd_radar' && this.radarT > 0) { const f = (t * 1.2) % 1; x.strokeStyle = `rgba(255,207,74,${0.5 * (1 - f)})`; x.beginPath(); x.arc(Math.round(X), Math.round(Y), 6 + f * 40, 0, 7); x.stroke(); } } });
     for (const sd of this.satsDef || []) { const X = sd.x + ox, Y = sd.y + oy; if (!vu(X, Y, 20)) continue;
@@ -309,7 +310,8 @@ Object.assign(Partie.prototype, {
   pasDrones(dt) {
     const e = this.e, p = e.planete, d = e.drones[p], marche = mdeABase(e, p) && !e.hs[p];
     if (!marche) { this.drn = null; return; }
-    const S = this.station(), D = this.drn || (this.drn = { m: [], c: [] }), s = this.ship;
+    if (this.drn && this.drn.p !== p) this.drn = null;   // les drones d'une planète restent autour d'elle
+    const S = this.station(p), D = this.drn || (this.drn = { p, m: [], c: [] }), s = this.ship, CP = MONDE[p];
     while (D.m.length < d.mineur) D.m.push({ x: S.x, y: S.y, vx: 0, vy: 0, a: 0, cible: null });
     while (D.c.length < d.cargo) D.c.push({ x: S.x, y: S.y, vx: 0, vy: 0, a: 0, charge: 0, cible: null, orb: this.R() * TAU });
     D.m.length = d.mineur; D.c.length = d.cargo;
@@ -318,11 +320,11 @@ Object.assign(Partie.prototype, {
     const prises = new Set(D.m.map(m => m.cible));
     for (const m of D.m) {
       m.laser = null;
-      if (!m.cible || !this.asts.includes(m.cible)) {   // la roche la plus proche, loin de la corvette (on ne lui vole pas la sienne)
-        let best = null, bd = 1e9; for (const a of this.asts) { if (a.rapide || prises.has(a) || Math.hypot(a.x - s.x, a.y - s.y) < 220) continue; const dd = Math.hypot(a.x - m.x, a.y - m.y); if (dd < bd) { bd = dd; best = a; } }
+      if (!m.cible || !this.asts.includes(m.cible)) {   // la roche la plus proche, autour de leur planète, loin de la corvette
+        let best = null, bd = 1e9; for (const a of this.asts) { if (a.rapide || a.pl !== p || prises.has(a) || Math.hypot(a.x - s.x, a.y - s.y) < 220) continue; const dd = Math.hypot(a.x - m.x, a.y - m.y); if (dd < bd) { bd = dd; best = a; } }
         m.cible = best; prises.add(best);
       }
-      const a = m.cible; if (!a) { aller(m, S.x * 1.6, S.y * 1.6, 40, 0); m.a = tournerVers(m.a, versAngle(m.vx, m.vy), 3 * dt); continue; }
+      const a = m.cible; if (!a) { const C = MONDE[p]; aller(m, C.x + (S.x - C.x) * 1.6, C.y + (S.y - C.y) * 1.6, 40, 0); m.a = tournerVers(m.a, versAngle(m.vx, m.vy), 3 * dt); continue; }
       const dl = aller(m, a.x, a.y, 60, a.ray + 16);
       m.a = tournerVers(m.a, dl < a.ray + 60 ? versAngle(a.x - m.x, a.y - m.y) : versAngle(m.vx, m.vy), 3 * dt);
       if (dl < a.ray + 40) { m.laser = a; a.r.pv -= dt * 0.9; a.flash = 0.05;
@@ -332,7 +334,7 @@ Object.assign(Partie.prototype, {
     const visees = new Set(D.c.map(c => c.cible));
     for (const c of D.c) {
       if (c.charge < 3 && (!c.cible || !(c.cible.v > 0))) {   // le minerai en orbite le plus proche de lui (pas celui que la corvette attire)
-        let best = null, bd = 1e9; for (const k of this.drops) { if (visees.has(k) || Math.hypot(k.x - s.x, k.y - s.y) < 120) continue; const dd = Math.hypot(k.x - c.x, k.y - c.y); if (dd < bd) { bd = dd; best = k; } }
+        let best = null, bd = 1e9; for (const k of this.drops) { if (visees.has(k) || Math.hypot(k.x - s.x, k.y - s.y) < 120 || Math.hypot(k.x - CP.x, k.y - CP.y) > CP.r + 700) continue; const dd = Math.hypot(k.x - c.x, k.y - c.y); if (dd < bd) { bd = dd; best = k; } }
         c.cible = best; visees.add(best);
       }
       if (c.charge < 3 && c.cible) { const dl = aller(c, c.cible.x, c.cible.y, 80, 0); c.a = tournerVers(c.a, versAngle(c.vx, c.vy), 4 * dt);
@@ -378,7 +380,7 @@ Object.assign(Partie.prototype, {
     if (!this.satsDef || this.satsDef.length !== n) this.satsDef = Array.from({ length: n }, (_, i) => ({ i, x: 0, y: 0, a: 0, t: i * 0.3, feu: 0 }));
     const aliens = this.bat ? this.bat.aliens.filter(a => a.pv > 0 && !a.fuite) : [];
     for (const sd of this.satsDef) {
-      const an = e.temps * 0.03 + sd.i / n * TAU; sd.x = Math.cos(an) * 300; sd.y = Math.sin(an) * 300; sd.t -= dt; sd.feu -= dt;
+      const C = MONDE[e.planete], an = e.temps * 0.03 + sd.i / n * TAU; sd.x = C.x + Math.cos(an) * (C.r + 140); sd.y = C.y + Math.sin(an) * (C.r + 140); sd.t -= dt; sd.feu -= dt;
       let best = null, bd = R.portee;
       for (const a of aliens) { const d = Math.hypot(a.x - sd.x, a.y - sd.y) - 40; if (d < bd) { bd = d; best = a; } }
       if (!best) for (const a of this.asts) { const d = Math.hypot(a.x - sd.x, a.y - sd.y) - a.ray; if (d < bd) { bd = d; best = a; } }

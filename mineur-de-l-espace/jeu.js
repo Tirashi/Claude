@@ -12,8 +12,12 @@
 const CLE = 'mineur-de-l-espace';
 const H = 300, R_ST = 255, W_ST = 0.02;
 // les planètes qu'on voit au loin depuis chaque planète : [planète, angle de départ, distance, échelle]
-const CIEL = { terre: [['lune', -2.4, 1080, 1]], lune: [['terre', 0.9, 1150, 1.25]], mars: [['terre', -0.6, 1500, 0.45], ['lune', -0.75, 1480, 0.2]] };   // R_ST : orbite de la station (au-delà de la planète) ; W_ST : sa vitesse (rad/s)
-const TAILLES = [11, 19, 32];   // TAILLES : rayon des petites, moyennes, grosses
+const TAILLES = [11, 19, 32];
+// le monde (02/11) : les trois planètes dans le même espace, à leur place ; on vole librement de l'une à l'autre (le moteur
+// de transfert, puis la propulsion lointaine, repoussent la limite) ; r : rayon du dessin de la planète
+const MONDE = { terre: { x: 0, y: 0 }, lune: { x: 1900, y: -900 }, mars: { x: -4300, y: 4400 } };
+for (const p in MONDE) MONDE[p].r = RP[p] / 2;
+const RST = p => MONDE[p].r + 95;   // rayon de l'orbite de la station de chaque planète (Terre : 255)   // TAILLES : rayon des petites, moyennes, grosses
 let W = 640;
 const CLE_COMMANDES = 'mineur-de-l-espace.commandes';
 // joystick fixe en bas à gauche ; en mode « bouton », POUSSER en bas à droite et RENTRER au-dessus
@@ -101,11 +105,16 @@ class Partie {
   }
   get C() { return mdeCorvette(this.e); }
   // ce qui est construit à la station de la planète où l'on est : la grande station sur Terre ; ailleurs un avant-poste, puis la base
-  stationIci() { const e = this.e, p = e.planete; return p === 'terre' ? e.station : e.bases[p] ? { central: true, poutre: true, ailes: true, hangar: true, radiateurs: p === 'mars' } : {}; }
+  stationIci(p) { const e = this.e; p = p || e.planete; return p === 'terre' ? e.station : e.bases[p] ? { central: true, poutre: true, ailes: true, hangar: true, radiateurs: p === 'mars' } : {}; }
+  // les planètes où l'on peut aller (limite repoussée), celles qui ont un quai, la plus proche de la corvette
+  ouverte(p) { return p === 'terre' || MDE_PLANETES[p].req(this.e); }
+  zone() { const s = this.ship; let best = 'terre', bd = 1e9; for (const p in MONDE) if (this.ouverte(p)) { const d = Math.hypot(s.x - MONDE[p].x, s.y - MONDE[p].y) - MONDE[p].r; if (d < bd) { bd = d; best = p; } } return best; }
+  quaiProche() { const s = this.ship; let best = 'terre', bd = 1e9; for (const p in MONDE) if (mdeAQuai(this.e, p)) { const S = this.station(p), d = Math.hypot(s.x - S.qx, s.y - S.qy); if (d < bd) { bd = d; best = p; } } return best; }
   // la station : angle sur son orbite (lié au temps de jeu), position, vitesse, et la place de la corvette amarrée (quai vers l'extérieur)
-  station() {
-    const phi = -Math.PI / 2 + this.e.temps * W_ST, ux = Math.cos(phi), uy = Math.sin(phi), x = ux * R_ST, y = uy * R_ST;
-    return { phi, x, y, vx: -uy * R_ST * W_ST, vy: ux * R_ST * W_ST, qx: x + ux * QUAI_ST, qy: y + uy * QUAI_ST, a: phi - Math.PI / 2 };
+  station(p) {
+    p = p || this.e.planete; const C = MONDE[p], R = RST(p);
+    const phi = -Math.PI / 2 + this.e.temps * W_ST + (p === 'terre' ? 0 : 2), ux = Math.cos(phi), uy = Math.sin(phi), x = C.x + ux * R, y = C.y + uy * R;
+    return { p, phi, x, y, vx: -uy * R * W_ST, vy: ux * R * W_ST, qx: x + ux * QUAI_ST, qy: y + uy * QUAI_ST, a: phi - Math.PI / 2 };
   }
   rebatir() {
     const A = this.e.ameliorations, c = this.C, cl = CLASSES[this.e.classe] ? this.e.classe : 'escorte';
@@ -117,15 +126,16 @@ class Partie {
     this.tirs = this.nef.tourelles.map((_, i) => ({ a: 0, t: i * 0.15 }));
     this.carbu = c.vol; this.coque = c.coque;
   }
-  get rMax() { return 800 * (this.e.recherche.moteurs ? 1.15 : 1); }
+  // la limite (un cercle autour de la Terre) : la ceinture terrestre, puis la Lune, puis Mars
+  get rMax() { let r = 800 * (this.e.recherche.moteurs ? 1.15 : 1); for (const p of ['lune', 'mars']) if (this.ouverte(p)) r = Math.max(r, Math.hypot(MONDE[p].x, MONDE[p].y) + MONDE[p].r + 520); return r; }
   // une roche : taille 3, 2 ou 1 (règles) ; sans position, une grosse roche loin du joueur dans la ceinture
-  nouvelleRoche(r, x, y, vx = 0, vy = 0) {
-    const R = this.R;
-    if (!r) r = mdeRoche(this.e, this.e.planete, R);
-    if (x === undefined) { let d, an; do { d = 340 + R() * 320; an = R() * TAU; } while (Math.hypot(Math.cos(an) * d - this.ship.x, Math.sin(an) * d - this.ship.y) < 260 && this.asts.length);
-      x = Math.cos(an) * d; y = Math.sin(an) * d; }
+  nouvelleRoche(r, x, y, vx = 0, vy = 0, pl) {
+    const R = this.R; pl = pl || this.e.planete; const C = MONDE[pl], r0 = C.r + 180;
+    if (!r) r = mdeRoche(this.e, pl, R);
+    if (x === undefined) { let d, an, n = 0; do { d = r0 + R() * 320; an = R() * TAU; } while (Math.hypot(C.x + Math.cos(an) * d - this.ship.x, C.y + Math.sin(an) * d - this.ship.y) < 260 && n++ < 20);
+      x = C.x + Math.cos(an) * d; y = C.y + Math.sin(an) * d; }
     const t = r.taille - 1;
-    this.asts.push({ x, y, vx, vy, r, v: ROCS[t][r.minerai][R() * 3 | 0], ray: TAILLES[t] * 0.82, rot: R() * TAU, vr: (R() - 0.5) * (1.2 - t * 0.3), flash: 0, pvMax: r.pv });
+    this.asts.push({ pl, x, y, vx, vy, r, v: ROCS[t][r.minerai][R() * 3 | 0], ray: TAILLES[t] * 0.82, rot: R() * TAU, vr: (R() - 0.5) * (1.2 - t * 0.3), flash: 0, pvMax: r.pv });
   }
   // danger : une météorite (petite roche chauffée au rouge, traînée de feu) qui fonce vers la corvette ; elle est
   // annoncée 1,3 s avant par une alerte au bord de l'écran, du côté d'où elle vient ; les tourelles peuvent l'abattre
@@ -141,6 +151,7 @@ class Partie {
     p.addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return;
       if (b.dataset.o) this.onglet = b.dataset.o;
       else if (b.dataset.a) { const id = b.dataset.a; if (mdeAcheter(this.e, id)) { this.son('achat'); if (/^(amel|classe|esc|ailier)/.test(id)) this.rebatir();
+        if (/^(avant|base):/.test(id)) { this.sauver(); return this.envoyer(id.split(':')[1], id.split(':')[0]); }
         const S = this.station(), mod = id.startsWith('module:');
         this.texte(mod ? S.x : this.ship.x, mod ? S.y - 80 : this.ship.y - 46, mod ? MDE_MODULES[id.slice(7)].nom + ' INSTALLE !' : id.startsWith('drone:') ? 'NOUVEAU DRONE !' : 'ACHETE !', '#7be07b'); this.sauver(); } }
       else if (b.dataset.c) { if (mdeChangerClasse(this.e, b.dataset.c)) { this.rebatir(); this.sauver(); } }
@@ -196,17 +207,13 @@ class Partie {
         h += `<div class="ligne"><span class="nom">${MDE_MINERAIS[m].nom}<small>${mdePrix(e, m)} CR · STOCK ${n}${n ? ' (' + Math.round(n * mdePrix(e, m)) + ' CR)' : ''}</small></span>
           <button class="btn pol ${pol}" data-pol="${m}">${NOM[pol]}</button><button class="btn" data-vs="${m}" ${n ? '' : 'disabled'}>VENDRE</button></div>`; }
     } else if (this.onglet === 'carte') {
-      // la carte du système : les trois planètes, où l'on est, les voyages et les bases
+      // la carte du système : les trois planètes ; on y vole librement (02/11) ; un avant-poste y donne un quai, la base l'agrandit
       h += `<canvas class="carte" width="280" height="64"></canvas>`;
-      for (const pl of Object.keys(MDE_PLANETES)) { const P = MDE_PLANETES[pl], ici = pl === e.planete, ouvert = !P.req || P.req(e), mars = pl !== 'mars' || e.bases.lune;
-        const mins = Object.keys(P.ceinture).map(m => MDE_MINERAIS[m].nom).join(', '), cout = mdeCoutVoyage(e, pl);
-        let bouton;
-        if (ici) bouton = `<button class="btn" disabled>ICI</button>`;
-        else if (!ouvert || !mars) bouton = `<button class="btn" disabled>FERME</button>`;
-        else bouton = `<button class="btn" data-v="${pl}" ${mdePeutVoyager(e, pl) ? '' : 'disabled'}>${prix(cout)}</button>`;
-        const pourquoi = !ouvert ? (pl === 'lune' ? 'IL FAUT LE MOTEUR DE TRANSFERT' : 'IL FAUT LA BASE LUNAIRE PUIS LA PROPULSION LOINTAINE') : !mars ? 'IL FAUT LA BASE LUNAIRE' : mins;
-        h += `<div class="ligne"><span class="nom">${P.nom}${e.bases[pl] ? ' · BASE' : ''}<small>${pourquoi}</small></span>${bouton}</div>`; }
-      const b = l.filter(x => x.type === 'base'); if (b.length) { h += `<h5>BASES</h5><p>UNE BASE DONNE UN HANGAR A DRONES A LA PLANETE (ET PLUS TARD UNE FLOTTE).</p>` + b.map(ligne).join(''); }
+      for (const pl of Object.keys(MDE_PLANETES)) { const P = MDE_PLANETES[pl], ouvert = this.ouverte(pl), mins = Object.keys(P.ceinture).map(m => MDE_MINERAIS[m].nom).join(', ');
+        const etat = pl === 'terre' ? 'STATION' : e.bases[pl] ? 'BASE' : e.avants[pl] ? 'AVANT-POSTE' : ouvert ? 'PAS DE QUAI' : 'HORS DE PORTEE';
+        const pourquoi = !ouvert ? (pl === 'lune' ? 'IL FAUT LE MOTEUR DE TRANSFERT' : 'IL FAUT LA BASE LUNAIRE PUIS LA PROPULSION LOINTAINE') : mins + (pl !== 'terre' && !e.avants[pl] ? ' · ON PEUT Y MINER, MAIS IL FAUT REVENIR VENDRE' : '');
+        h += `<div class="ligne"><span class="nom">${P.nom} · ${etat}<small>${pourquoi}</small></span>${pl === e.planete ? '<button class="btn" disabled>ICI</button>' : ''}</div>`; }
+      const b = l.filter(x => x.type === 'base'); if (b.length) { h += `<h5>AVANT-POSTES ET BASES</h5><p>UN AVANT-POSTE EST ENVOYE DEPUIS LA TERRE : UN QUAI LA-BAS (VENDRE, PLEIN, REPARER). LA BASE L'AGRANDIT : DRONES ET FLOTTE.</p>` + b.map(ligne).join(''); }
     } else if (this.onglet === 'rech') {
       const a = l.filter(x => x.type === 'rech'); h += a.length ? a.map(ligne).join('') : rien('RIEN A CHERCHER POUR L\'INSTANT');
     } else {
@@ -285,7 +292,12 @@ class Partie {
     const de = this.e.planete; if (!mdeVoyager(this.e, pl)) return;
     this.p.classList.remove('vu'); this.enVoyage = { de, vers: pl, t: 0, d: 4 }; this.sauver(); this.son('voyage');
   }
+  // l'envoi d'un avant-poste ou d'une base (02/11) : la station file de la Terre vers sa planète
+  envoyer(pl, type) { this.p.classList.remove('vu'); this.enVoyage = { de: 'terre', vers: pl, t: 0, d: 4.5, envoi: type }; this.son('voyage'); }
   finVoyage() {
+    if (this.enVoyage.envoi) { const V = this.enVoyage; this.enVoyage = null;
+      const S = this.station(); this.texte(S.x, S.y - 80, (V.envoi === 'avant' ? 'AVANT-POSTE' : 'BASE') + ' INSTALLE' + (V.envoi === 'base' ? 'E' : '') + ' : ' + MDE_PLANETES[V.vers].nom, '#7be07b');
+      if (this.quai) { this.majPanneau(); this.p.classList.add('vu'); } return; }
     const pl = this.enVoyage.vers; this.enVoyage = null;
     this.asts = []; this.drops = []; this.drn = null; this.balles = []; this.parts = []; this.textes = []; for (let k = 0; k < 16; k++) this.nouvelleRoche();
     this.onglet = 'amel'; this.accoster(true); const S = this.station(); this.cam.x = S.x; this.cam.y = S.y;
@@ -338,7 +350,7 @@ class Partie {
   stationHD(FS, k) {
     const r = this.res || 1, c = (this.stHD = this.stHD || []).find(o => o.fs === FS && o.k === k && o.r === r); if (c) return c.img;
     const img = document.createElement('canvas'); img.width = img.height = L_ST * r; const g = img.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(FS[k], 0, 0, L_ST * r, L_ST * r);
-    this.stHD.unshift({ fs: FS, k, r, img }); this.stHD.length = Math.min(this.stHD.length, 4); return img;
+    this.stHD.unshift({ fs: FS, k, r, img }); this.stHD.length = Math.min(this.stHD.length, 8); return img;
   }
   // sons (sons.js) et vibrations (réglage de la pause)
   son(n) { if (typeof MineurSons !== 'undefined') MineurSons.jouer(n); }
@@ -346,16 +358,16 @@ class Partie {
   // RENTRER : la ligne droite vers le quai si elle ne frôle pas la planète ; sinon un point de passage qui fait le tour
   // de la planète par le plus court côté, à distance (retour du 02/11 : la corvette raclait la planète)
   cheminRetour(S) {
-    const s = this.ship, Rs = RT / 2 + 105, dx = S.qx - s.x, dy = S.qy - s.y, L2 = dx * dx + dy * dy || 1;   // 105 m de marge (02/11 : à 50 m elle semblait raser la planète)
+    const C = MONDE[S.p], s = { x: this.ship.x - C.x, y: this.ship.y - C.y }, Rs = C.r + 105, dx = S.qx - C.x - s.x, dy = S.qy - C.y - s.y, L2 = dx * dx + dy * dy || 1;   // 105 m de marge (02/11 : à 50 m elle semblait raser la planète)
     const t = Math.max(0, Math.min(1, -(s.x * dx + s.y * dy) / L2)), px = s.x + dx * t, py = s.y + dy * t;
     if (Math.hypot(px, py) >= Rs) return [S.qx, S.qy];
     // contournement : tourner autour de la planète (du côté le plus court) en revenant vers un cercle de sécurité (Rs + 50) :
     // la direction mêle la tangente et un rappel vers ce cercle, si bien que la corvette ne peut pas passer en dessous
     // (02/11 : un point de passage à poursuivre la faisait couper le virage vers la planète)
-    const r = Math.hypot(s.x, s.y) || 1, ux = s.x / r, uy = s.y / r, fs = Math.atan2(s.y, s.x), fq = Math.atan2(S.qy, S.qx);
+    const r = Math.hypot(s.x, s.y) || 1, ux = s.x / r, uy = s.y / r, fs = Math.atan2(s.y, s.x), fq = Math.atan2(S.qy - C.y, S.qx - C.x);
     const sens = Math.sign(Math.atan2(Math.sin(fq - fs), Math.cos(fq - fs)) || 1), rappel = Math.max(-1, Math.min(1.5, (Rs + 50 - r) / 50));
     const dx2 = -uy * sens + ux * rappel, dy2 = ux * sens + uy * rappel, n = Math.hypot(dx2, dy2) || 1;
-    return [s.x + dx2 / n * 200, s.y + dy2 / n * 200];
+    return [this.ship.x + dx2 / n * 200, this.ship.y + dy2 / n * 200];
   }
   mondeTourelle(i) { const [mx, my] = this.nef.tourelles[i], s = this.ship, c = Math.cos(s.a), si = Math.sin(s.a); return [s.x + mx * c - my * si, s.y + mx * si + my * c]; }
   /* ---------- un pas de simulation ---------- */
@@ -372,16 +384,21 @@ class Partie {
     this.tSauve += dt; if (this.tSauve > 30) { this.tSauve = 0; this.sauver(); }
     // roches : dérive autour de la planète ; les rapides vont tout droit
     for (const a of this.asts) {
-      if (a.rapide) { a.vie -= dt; } else { const r = Math.hypot(a.x, a.y) || 1, w = 0.045 / Math.sqrt(r / 260), tx = -a.y / r * w * r, ty = a.x / r * w * r;
+      if (a.rapide) { a.vie -= dt; } else { const C = MONDE[a.pl || 'terre'], rx = a.x - C.x, ry = a.y - C.y, r = Math.hypot(rx, ry) || 1, w = 0.045 / Math.sqrt(r / 260), tx = -ry * w, ty = rx * w;
         a.vx += (tx - a.vx) * Math.min(1, dt * 0.6); a.vy += (ty - a.vy) * Math.min(1, dt * 0.6); }
       a.x += a.vx * dt; a.y += a.vy * dt; a.rot += a.vr * dt; a.flash = Math.max(0, a.flash - dt); }
     this.asts = this.asts.filter(a => !a.rapide || a.vie > 0);
     // de nouvelles grosses roches arrivent dans la ceinture
-    this.respawn -= dt; if (this.respawn <= 0) { this.respawn = 6; if (this.asts.filter(a => a.r.taille === 3).length < 12 && this.asts.length < 40) this.nouvelleRoche(); }
-    const S = this.station();
+    // chaque planète ouverte a sa ceinture : on la peuple à son ouverture, puis de grosses roches arrivent de temps en temps
+    this.peuple = this.peuple || {};
+    for (const p in MONDE) if (this.ouverte(p) && !this.peuple[p]) { this.peuple[p] = true; if (!this.asts.some(a => a.pl === p)) for (let k = 0; k < 14; k++) this.nouvelleRoche(null, undefined, undefined, 0, 0, p); }
+    this.respawn -= dt; if (this.respawn <= 0) { this.respawn = 4; for (const p in MONDE) if (this.ouverte(p) && this.asts.filter(a => a.pl === p && a.r.taille === 3).length < 10 && this.asts.length < 80) { this.nouvelleRoche(null, undefined, undefined, 0, 0, p); break; } }
+    // en vol, « la planète où l'on est » = la plus proche ; le quai visé (RENTRER, flèche, carburant) = le plus proche
+    if (!this.quai) { e.planete = this.zone(); this.pq = this.quaiProche(); }
+    const S = this.station(this.quai ? e.planete : this.pq);
     if (this.quai) { s.x = S.qx; s.y = S.qy; s.a = S.a; this.suite(dt); return; }
     if (this.panne) { this.panne -= dt; s.vx *= 0.985; s.vy *= 0.985; s.x += s.vx * dt; s.y += s.vy * dt;
-      if (this.panne <= 0) { const perdu = this.soute.length - Math.floor(this.soute.length / 2); this.accoster(false, true); this.texte(s.x, s.y - 72, 'REMORQUEE' + (perdu ? ` · -${perdu} MINERAI` : ''), '#ff6a5c'); }
+      if (this.panne <= 0) { const perdu = this.soute.length - Math.floor(this.soute.length / 2); e.planete = this.pq; this.accoster(false, true); this.texte(s.x, s.y - 72, 'REMORQUEE' + (perdu ? ` · -${perdu} MINERAI` : ''), '#ff6a5c'); }
       this.suite(dt); return; }
     const j = this.joy, jx = j ? j.dx / 40 : 0, jy = j ? j.dy / 40 : 0, force = Math.hypot(jx, jy), V = c.vitesse, M = c.maniabilite, TOUR = 2.4 * M; let pousse = 0;
     // PC : touches et souris
@@ -406,13 +423,13 @@ class Partie {
       s.vx *= 1 - dt * 0.12; s.vy *= 1 - dt * 0.12; const v = Math.hypot(s.vx, s.vy); if (v > 150 * V) { s.vx *= 150 * V / v; s.vy *= 150 * V / v; } }
     this.pousse = pousse; s.x += s.vx * dt; s.y += s.vy * dt;
     const de = Math.hypot(s.x, s.y);
-    if (de > this.rMax) { s.vx -= s.x / de * 160 * dt; s.vy -= s.y / de * 160 * dt; if ((this.avert || 0) <= 0) { this.texte(s.x, s.y - 44, 'MOTEURS TROP FAIBLES', '#ff6a5c'); this.avert = 2.5; } }
+    if (de > this.rMax) { s.vx -= s.x / de * 160 * dt; s.vy -= s.y / de * 160 * dt; if ((this.avert || 0) <= 0) { this.texte(s.x, s.y - 44, !this.ouverte('lune') ? 'IL FAUT LE MOTEUR DE TRANSFERT' : 'MOTEURS TROP FAIBLES', '#ff6a5c'); this.avert = 2.5; } }
     this.avert = (this.avert || 0) - dt;
-    if (de < RT / 2 + 14) { s.x = s.x / de * (RT / 2 + 14); s.y = s.y / de * (RT / 2 + 14); }
+    for (const p in MONDE) { const C = MONDE[p], dx = s.x - C.x, dy = s.y - C.y, dp = Math.hypot(dx, dy) || 1, lim = C.r + 14; if (dp < lim) { s.x = C.x + dx / dp * lim; s.y = C.y + dy / dp * lim; } }
     // amarrage : il suffit d'arriver près du quai de la station
     const dq = Math.hypot(s.x - S.qx, s.y - S.qy);
     if (dq > 90) this.sorti = true;
-    if (this.sorti && dq < 34) { this.accoster(); this.suite(dt); return; }
+    if (this.sorti && dq < 34) { e.planete = S.p; this.accoster(); this.suite(dt); return; }
     if (dq > 50) { this.carbu -= dt * (MDE_CONSO.glisse + (MDE_CONSO.pousse - MDE_CONSO.glisse) * pousse); if (this.carbu < c.vol * 0.25) this.son('carbu');
       if (this.carbu <= 0) this.tomberEnPanne('PANNE SECHE !'); }
     // dangers : petites roches rapides, plus nombreuses aux étages suivants
@@ -473,7 +490,7 @@ class Partie {
     if (a.rapide) { this.eclats(a.x, a.y, 8, 'fer', true); return; }
     const R = this.R, l = mdeEclats(a.r, R);
     l.forEach((r, i) => { const an = i / l.length * TAU + R() * 0.6, v = 25 + R() * 25;
-      this.nouvelleRoche(r, a.x + Math.cos(an) * a.ray * 0.5, a.y + Math.sin(an) * a.ray * 0.5, a.vx + Math.cos(an) * v, a.vy + Math.sin(an) * v); });
+      this.nouvelleRoche(r, a.x + Math.cos(an) * a.ray * 0.5, a.y + Math.sin(an) * a.ray * 0.5, a.vx + Math.cos(an) * v, a.vy + Math.sin(an) * v, a.pl); });
     const n = mdeButin(this.e, a.r, R);
     for (let i = 0; i < n; i++) { const an = R() * TAU; this.drops.push({ x: a.x, y: a.y, vx: a.vx + Math.cos(an) * 40, vy: a.vy + Math.sin(an) * 40, v: 14, type: a.r.minerai }); }
     this.eclats(a.x, a.y, l.length ? 14 : 10, a.r.minerai, true);
@@ -509,10 +526,12 @@ class Partie {
     const L1 = Math.round(RL * (1 - f) * 1.4), L2 = Math.round(RL * f * 1.6);
     if (L1 > 2) x.drawImage(LOINTAINES[V.de][0], Math.round(-L1 / 2 + 40 - f * 120), Math.round(H / 2 - L1 / 2), L1, L1);
     if (L2 > 2) x.drawImage(LOINTAINES[V.vers][0], Math.round(W - 40 - L2 / 2 + (1 - f) * 120), Math.round(H / 2 - L2 / 2), L2, L2);
-    const F = this.nef.frames[nAng(Math.PI / 2)], EC = this.nef.ech || 1; x.drawImage(F.img, Math.round(W / 2 - F.img.width * EC / 2), Math.round(H / 2 - F.img.height * EC / 2), F.img.width * EC, F.img.height * EC);
+    if (V.envoi) { const FS = construireStation(V.envoi === 'avant' ? {} : { central: true, poutre: true, ailes: true, hangar: true, radiateurs: V.vers === 'mars' }), k = nAng(Math.PI / 2 + Math.sin(t) * 0.1);
+      x.save(); x.translate(Math.round(W / 2), Math.round(H / 2)); x.drawImage(FS[k], -L_ST / 2, -L_ST / 2); x.restore(); }
+    else { const F = this.nef.frames[nAng(Math.PI / 2)], EC = this.nef.ech || 1; x.drawImage(F.img, Math.round(W / 2 - F.img.width * EC / 2), Math.round(H / 2 - F.img.height * EC / 2), F.img.width * EC, F.img.height * EC); }
     for (let q = 0; q < 16; q++) { const fl = q / 16; x.fillStyle = fl < 0.3 ? '#fff2a0' : fl < 0.65 ? '#f2a94a' : '#d0752c'; const w = Math.max(1, Math.round(4 * (1 - fl)));
       x.fillRect(Math.round(W / 2 - 34 - q * 2 - (t * 30 | 0) % 2), Math.round(H / 2 - w / 2), w, w); }
-    x.font = '13px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ffcf4a'; x.fillText('EN ROUTE VERS ' + (V.vers === 'lune' ? 'LA LUNE' : V.vers === 'mars' ? 'MARS' : 'LA TERRE'), W / 2, 50);
+    x.font = '13px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ffcf4a'; x.fillText((V.envoi ? (V.envoi === 'avant' ? "ENVOI DE L'AVANT-POSTE VERS " : 'ENVOI DE LA BASE VERS ') : 'EN ROUTE VERS ') + (V.vers === 'lune' ? 'LA LUNE' : V.vers === 'mars' ? 'MARS' : 'LA TERRE'), W / 2, 50);
     x.fillStyle = '#1a1f40'; x.fillRect(W / 2 - 80, 62, 160, 5); x.fillStyle = '#7be07b'; x.fillRect(W / 2 - 80, 62, Math.round(160 * f), 5);
   }
   dessin(t) {
@@ -526,16 +545,19 @@ class Partie {
     for (let i = -1; i < 2; i++) for (let k = -1; k < 1; k++) x.drawImage(ciel, Math.round(px + i * 512), Math.round(py + k * 512));
     x.globalAlpha = 0.6; x.drawImage(neb, Math.round(ox * 0.3 + 200), Math.round(oy * 0.3 - 330), 512, 512); x.drawImage(neb, Math.round(ox * 0.3 - 700), Math.round(oy * 0.3 + 60), 512, 512); x.globalAlpha = 1;
     x.strokeStyle = '#1c2246'; x.setLineDash([3, 6]); x.beginPath(); x.arc(ox, oy, this.rMax, 0, 7); x.stroke(); x.setLineDash([]);
-    for (const [pl, a0, dist, ech] of CIEL[e.planete]) { const la = a0 + t * 0.008, lx = ox * 0.7 + W * 0.15 + Math.cos(la) * dist * 0.7, ly = oy * 0.7 + H * 0.15 + Math.sin(la) * dist * 0.7, L = Math.round(RL * ech);
-      if (lx > -L && ly > -L && lx < W + L && ly < H + L) { x.drawImage(LOINTAINES[pl][0], Math.round(lx - L / 2), Math.round(ly - L / 2), L, L);
-        x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.textAlign = 'center'; x.fillText(MDE_PLANETES[pl].nom + (pl === 'lune' && !e.recherche.transfert ? ' · MOTEUR DE TRANSFERT' : ''), lx, ly + L / 2 + 12); } }
-    x.drawImage(planeteC, ox - RT / 2, oy - RT / 2);
-    // orbite et station : le quai (barre jaune et noire) toujours tourné vers l'extérieur
-    const S = this.station(), FS = construireStation(this.stationIci()), kS = nAng(S.a), rS = S.a - kS / N_ANG * TAU, stx = Math.round((S.x + ox) * rp) / rp, sty = Math.round((S.y + oy) * rp) / rp;
-    x.strokeStyle = '#7be07b22'; x.setLineDash([2, 5]); x.beginPath(); x.arc(ox, oy, R_ST, 0, 7); x.stroke(); x.setLineDash([]);
-    if (stx > -L_ST && sty > -L_ST && stx < W + L_ST && sty < H + L_ST) { x.save(); x.translate(stx, sty); x.rotate(Math.atan2(Math.sin(rS), Math.cos(rS))); x.imageSmoothingEnabled = true; x.drawImage(this.stationHD(FS, kS), -L_ST / 2, -L_ST / 2, L_ST, L_ST); x.imageSmoothingEnabled = false; x.restore();
-      if (!this.quai && this.sorti) { x.strokeStyle = (t * 2 % 1) < 0.5 ? '#7be07b88' : '#7be07b33'; x.beginPath(); x.arc(Math.round(S.qx + ox), Math.round(S.qy + oy), 30, 0, 7); x.stroke(); } }
-    this.dessinDrones(x, ox, oy, t, S);
+    // les planètes à leur place ; la limite (cercle autour de la Terre)
+    for (const p in MONDE) { const C = MONDE[p], L = RP[p], X = C.x + ox, Y = C.y + oy; if (X < -L || Y < -L || X > W + L || Y > H + L) continue;
+      if (!this.ouverte(p)) x.globalAlpha = 0.55; x.drawImage(GRANDES[p][0], Math.round(X - L / 2), Math.round(Y - L / 2)); x.globalAlpha = 1;
+      if (!this.ouverte(p)) { x.font = '9px Silkscreen'; x.fillStyle = '#8c93c4'; x.textAlign = 'center'; x.fillText(MDE_PLANETES[p].nom + (p === 'lune' ? ' · MOTEUR DE TRANSFERT' : ' · PROPULSION LOINTAINE'), X, Y + L / 2 + 14); } }
+    // stations de chaque planète qui a un quai : orbite et quai (barre jaune et noire) toujours tourné vers l'extérieur
+    for (const p in MONDE) { if (!mdeAQuai(e, p)) continue; const S2 = this.station(p), C = MONDE[p], cx = C.x + ox, cy = C.y + oy, R = RST(p);
+      if (cx < -R - L_ST || cy < -R - L_ST || cx > W + R + L_ST || cy > H + R + L_ST) continue;
+      const FS = construireStation(this.stationIci(p)), kS = nAng(S2.a), rS = S2.a - kS / N_ANG * TAU, stx = Math.round((S2.x + ox) * rp) / rp, sty = Math.round((S2.y + oy) * rp) / rp;
+      x.strokeStyle = '#7be07b22'; x.setLineDash([2, 5]); x.beginPath(); x.arc(cx, cy, R, 0, 7); x.stroke(); x.setLineDash([]);
+      if (stx > -L_ST && sty > -L_ST && stx < W + L_ST && sty < H + L_ST) { x.save(); x.translate(stx, sty); x.rotate(Math.atan2(Math.sin(rS), Math.cos(rS))); x.imageSmoothingEnabled = true; x.drawImage(this.stationHD(FS, kS), -L_ST / 2, -L_ST / 2, L_ST, L_ST); x.imageSmoothingEnabled = false; x.restore();
+        if (!this.quai && this.sorti && p === this.pq) { x.strokeStyle = (t * 2 % 1) < 0.5 ? '#7be07b88' : '#7be07b33'; x.beginPath(); x.arc(Math.round(S2.qx + ox), Math.round(S2.qy + oy), 30, 0, 7); x.stroke(); } } }
+    const S = this.station(this.quai ? e.planete : this.pq || e.planete);
+    this.dessinDrones(x, ox, oy, t, this.station(e.planete));
     for (const a of this.asts) { const sx = Math.round(a.x + ox), sy = Math.round(a.y + oy), L = a.v.L; if (sx < -L || sy < -L || sx > W + L || sy > H + L) continue;
       if (a.rapide) { // queue de feu en gros pixels, qui s'amincit derrière la météorite
         const v = Math.hypot(a.vx, a.vy) || 1, ux = -a.vx / v, uy = -a.vy / v, lg = 30 + ((t * 20 | 0) % 3) * 2;
@@ -566,7 +588,12 @@ class Partie {
     if (!this.quai && (qsx < 10 || qsy < 40 || qsx > W - 10 || qsy > H - 10)) { const an = Math.atan2(qsy - H / 2, qsx - W / 2), kk = Math.min((W / 2 - 26) / Math.abs(Math.cos(an)), (H / 2 - 50) / Math.abs(Math.sin(an)));
       const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + Math.sin(an) * kk + 10, d = Math.hypot(s.x - S.qx, s.y - S.qy), juste = d / (120 * c.vitesse) > this.carbu * 0.7, col = juste ? '#ff6a5c' : '#7be07b';
       x.save(); x.translate(fx, fy); x.rotate(an); x.fillStyle = col; x.beginPath(); x.moveTo(10, 0); x.lineTo(-6, -7); x.lineTo(-6, 7); x.fill(); x.restore();
-      x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = col; x.fillText('STATION ' + Math.round(d / 10) + ' KM', fx - Math.cos(an) * 24, fy - Math.sin(an) * 20 + 3); }
+      x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = col; x.fillText('STATION' + (S.p !== 'terre' ? ' ' + MDE_PLANETES[S.p].nom : '') + ' ' + Math.round(d / 10) + ' KM', fx - Math.cos(an) * 24, fy - Math.sin(an) * 20 + 3); }
+    // les autres planètes ouvertes, hors de l'écran : petite flèche grise et leur distance
+    if (!this.quai) for (const p in MONDE) { if (p === e.planete || !this.ouverte(p)) continue; const C = MONDE[p], X = C.x + ox, Y = C.y + oy; if (X > -C.r && Y > -C.r && X < W + C.r && Y < H + C.r) continue;
+      const an = Math.atan2(Y - H / 2, X - W / 2), kk = Math.min((W / 2 - 60) / Math.abs(Math.cos(an)), (H / 2 - 74) / Math.abs(Math.sin(an))), fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + 16 + Math.sin(an) * kk;
+      x.save(); x.translate(fx, fy); x.rotate(an); x.fillStyle = '#8c93c4'; x.beginPath(); x.moveTo(8, 0); x.lineTo(-5, -5); x.lineTo(-5, 5); x.fill(); x.restore();
+      x.font = '8px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#8c93c4'; x.fillText(MDE_PLANETES[p].nom + ' ' + Math.round((Math.hypot(C.x - s.x, C.y - s.y) - C.r) / 10) + ' KM', fx - Math.cos(an) * 30, fy - Math.sin(an) * 14 + 3); }
     // alerte météorite : chevrons rouges qui clignotent au bord de l'écran, du côté d'où elle arrive
     if (this.alerteMeteo && this.e.orbite.meteo && (t * 6 | 0) % 2) { const an = this.alerteMeteo.an, kk = Math.min((W / 2 - 20) / Math.abs(Math.cos(an)), (H / 2 - 44) / Math.abs(Math.sin(an)));
       const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + 8 + Math.sin(an) * kk; x.save(); x.translate(fx, fy); x.rotate(an + Math.PI); x.fillStyle = '#ff6a5c';

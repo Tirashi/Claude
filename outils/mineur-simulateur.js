@@ -152,8 +152,9 @@ function jouer(graine, pilote, limite, reprise) {
   const besoin = mdeBesoins(h).fer, l2 = mdeLivrer(h, { fer: besoin + 3 });
   check(besoin > 0 && h.entrepot.fer === besoin && l2.gain === 15 && !mdeBesoins(mdeNouvelle('vide')).fer, 'le quai garde le fer d\'un module dont on a la moitié des CR et vend le reste (au début, tout est vendu)');
   check(mdePrix(h, 'fer') === 5 && (h.usines.fonderie = 1) && mdePrix(h, 'fer') === 6.25, 'la fonderie augmente le prix du fer');
-  check(!mdePeutVoyager(h, 'lune') && (h.recherche.transfert = true) && mdePeutVoyager(h, 'lune') && !mdePeutVoyager(h, 'mars'), 'voyages : la Lune avec le moteur de transfert, Mars plus tard');
-  h.planete = 'lune'; check(mdePeutVoyager(h, 'terre') && mdeCoutVoyage(h, 'terre').cr === 60 && mdeVoyager(h, 'terre') && h.planete === 'terre', 'retour de la Lune vers la Terre (coût du voyage lunaire)');
+  check(!mdePeutVoyager(h, 'lune') && (h.recherche.transfert = true) && !mdePeutVoyager(h, 'lune') && (h.avants.lune = true) && mdePeutVoyager(h, 'lune') && !mdePeutVoyager(h, 'mars'),
+    'la Lune : le moteur de transfert pour y aller, un avant-poste pour y vendre ; Mars plus tard (02/11)');
+  h.planete = 'lune'; check(mdePeutVoyager(h, 'terre') && !Object.keys(mdeCoutVoyage(h, 'terre')).length && mdeVoyager(h, 'terre') && h.planete === 'terre', 'vol libre : plus de coût de voyage');
   h.station.hangar = true; h.drones.terre = { mineur: 3, cargo: 1 };
   check(mdeProduction(h, 'terre') === 4, 'drones : un cargo sert deux mineurs (3 mineurs + 1 cargo = 4 minerais par minute)');
   const val = () => h.cr + 5 * (h.entrepot.fer || 0), cr0 = val(); for (let i = 0; i < 30; i++) mdeAvancer(h, 2);

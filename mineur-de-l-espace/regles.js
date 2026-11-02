@@ -40,8 +40,10 @@ const MDE_ORDRE = Object.keys(MDE_MINERAIS);
 // part de chaque minerai dans les roches de la ceinture ; voyage : coût depuis la Terre (ou depuis la Lune pour Mars)
 const MDE_PLANETES = {
   terre: { nom: 'TERRE', ceinture: { fer: 0.86, or: 0.14 }, voyage: null },
-  lune:  { nom: 'LUNE',  ceinture: { glace: 0.5, titane: 0.36, fer: 0.14 }, voyage: { cr: 60 }, req: e => !!e.recherche.transfert },
-  mars:  { nom: 'MARS',  ceinture: { cobalt: 0.6, fer: 0.3, cristal: 0.1 }, voyage: { cr: 150, glace: 10 }, req: e => !!e.recherche.lointain },
+  // 02/11 : on vole librement d'une planète à l'autre (le moteur de transfert, puis la propulsion lointaine, repoussent la
+  // limite) : plus de coût de voyage ; pour vendre et faire le plein là-bas, il faut y avoir envoyé un avant-poste
+  lune:  { nom: 'LUNE',  ceinture: { glace: 0.5, titane: 0.36, fer: 0.14 }, voyage: {}, req: e => !!e.recherche.transfert },
+  mars:  { nom: 'MARS',  ceinture: { cobalt: 0.6, fer: 0.3, cristal: 0.1 }, voyage: {}, req: e => !!e.recherche.lointain && !!e.bases.lune },
 };
 const MDE_DUREE_VOYAGE = 8;   // secondes d'animation
 
@@ -209,6 +211,13 @@ const MDE_BASES = {
   lune: { nom: 'BASE LUNAIRE',   prix: { cr: 5000, fer: 60, glace: 30, titane: 20 } },
   mars: { nom: 'BASE MARTIENNE', prix: { cr: 13000, glace: 50, titane: 40, cobalt: 20 } },
 };
+// avant-postes (02/11) : envoyés depuis la Terre (cinématique), ils donnent un quai à la planète (vendre, plein, réparer) ;
+// la base les agrandit ensuite (drones, flotte)
+const MDE_AVANTS = {
+  lune: { nom: 'AVANT-POSTE LUNAIRE',   prix: { cr: 800, fer: 30 } },
+  mars: { nom: 'AVANT-POSTE MARTIEN',   prix: { cr: 3000, glace: 15, titane: 10 } },
+};
+const mdeAQuai = (e, p) => p === 'terre' || !!(e.avants && e.avants[p]) || !!e.bases[p];
 const mdeABase = (e, p) => p === 'terre' ? !!e.station.hangar : !!e.bases[p];
 
 /* ---------- la défense (§ 10) ---------- */
@@ -237,7 +246,7 @@ function mdeNouvelle(graine) {
     v: MDE_V, graine: String(graine), temps: 0,
     cr: 0, entrepot: {}, planete: 'terre',
     classe: 'eclaireur', classes: { eclaireur: true }, ameliorations: MDE_AMEL_ZERO(), escadrille: MDE_ESC_ZERO(), ailiers: [],
-    usines: {}, recherche: {}, station: {}, bases: {},
+    usines: {}, recherche: {}, station: {}, bases: {}, avants: {},
     drones: { terre: { mineur: 0, cargo: 0 }, lune: { mineur: 0, cargo: 0 }, mars: { mineur: 0, cargo: 0 } },
     reste: {}, reparateur: 0, satellites: {}, orbite: MDE_ORBITE_ZERO(), politique: {},
     flottes: { terre: [], lune: [], mars: [] }, hs: {},
@@ -250,6 +259,7 @@ function mdeMigrer(e) {
   e.ameliorations = Object.assign(MDE_AMEL_ZERO(), e.ameliorations);   // 31/10 : moteur et propulseurs ajoutés
   e.escadrille = Object.assign(MDE_ESC_ZERO(), e.escadrille);           // 01/11 : le porte-vaisseaux remplace la Forteresse
   e.ailiers = e.ailiers || [];
+  if (!e.avants) { e.avants = {}; for (const p of ['lune', 'mars']) if (e.bases[p] || e.planete === p) e.avants[p] = true; }   // 02/11 : les anciennes parties y étaient déjà
   e.orbite = Object.assign(MDE_ORBITE_ZERO(), e.orbite); e.politique = e.politique || {};   // 02/11 : satellites du départ, entrepôt
   if (e.classes.forteresse) { delete e.classes.forteresse; e.classes.porte = true; }
   if (e.classe === 'forteresse') e.classe = 'porte';
@@ -269,7 +279,6 @@ function mdePrix(e, m) {
 function mdeBesoins(e) {
   const b = {};
   for (const a of mdeAchats(e)) if (2 * e.cr >= (a.prix.cr || 0)) for (const m in a.prix) if (m !== 'cr') b[m] = Math.max(b[m] || 0, a.prix[m]);
-  if (e.recherche.lointain) b.glace = Math.max(b.glace || 0, MDE_PLANETES.mars.voyage.glace);
   return b;
 }
 // livrer du minerai (retour au quai ou drones) : { gain, garde : {minerai: n} }
@@ -321,7 +330,8 @@ function mdeAchats(e) {
   for (const k in MDE_USINES) { const D = MDE_USINES[k], n = e.usines[k] || 0; if (n < 3 && (!D.req || D.req(e))) l.push({ id: 'usine:' + k, type: 'usine', nom: D.nom + ' ' + (n + 1), effet: MDE_MINERAIS[D.minerai].nom + ' X' + MDE_USINE_MULT[n + 1], prix: { cr: D.prix[n] } }); }
   for (const k in MDE_RECHERCHES) { const D = MDE_RECHERCHES[k]; if (!e.recherche[k] && (!D.req || D.req(e))) l.push({ id: 'rech:' + k, type: 'rech', nom: D.nom, effet: D.effet, prix: D.prix }); }
   if (e.recherche.centre) for (const k in MDE_MODULES) { const D = MDE_MODULES[k]; if (!e.station[k] && (!D.req || D.req(e))) l.push({ id: 'module:' + k, type: 'module', nom: D.nom, effet: D.effet, prix: D.prix }); }
-  for (const k in MDE_BASES) if (!e.bases[k] && MDE_PLANETES[k].req(e) && (k === 'lune' || e.bases.lune)) l.push({ id: 'base:' + k, type: 'base', nom: MDE_BASES[k].nom, effet: 'DRONES ET FLOTTE', prix: MDE_BASES[k].prix });
+  for (const k in MDE_AVANTS) if (!e.avants[k] && MDE_PLANETES[k].req(e)) l.push({ id: 'avant:' + k, type: 'base', nom: MDE_AVANTS[k].nom, effet: 'UN QUAI : VENDRE, PLEIN, REPARER', prix: MDE_AVANTS[k].prix });
+  for (const k in MDE_BASES) if (!e.bases[k] && e.avants[k] && MDE_PLANETES[k].req(e)) l.push({ id: 'base:' + k, type: 'base', nom: MDE_BASES[k].nom, effet: 'DRONES ET FLOTTE', prix: MDE_BASES[k].prix });
   const p = e.planete;
   if (mdeABase(e, p)) {
     for (const k of ['mineur', 'cargo']) { const n = e.drones[p][k]; if (n < MDE_DRONES[k].max) l.push({ id: 'drone:' + k, type: 'drone', nom: MDE_DRONES[k].nom, effet: (k === 'mineur' ? 'MINE ' + MDE_DRONE_MINEUR + ' MINERAIS/MIN' : 'RAMENE LE MINERAI DE 2 MINEURS') + ' · ' + n + '/' + MDE_DRONES[k].max, prix: mdeMult(MDE_DRONES[k].prix, Math.pow(MDE_DRONES[k].hausse, n)) }); }
@@ -351,6 +361,7 @@ function mdeAcheter(e, id) {
   else if (t === 'rech') e.recherche[k] = true;
   else if (t === 'module') e.station[k] = true;
   else if (t === 'base') e.bases[k] = true;
+  else if (t === 'avant') e.avants[k] = true;
   else if (t === 'drone') { if (k === 'satellite') e.satellites[p] = (e.satellites[p] || 0) + 1; else if (k === 'reparateur') e.reparateur++; else e.drones[p][k]++; }
   else if (t === 'unite') e.flottes[p].push({ type: k });
   else if (t === 'reparer') delete e.hs[p];
@@ -365,7 +376,7 @@ function mdeChangerClasse(e, k) { if (!e.classes[k]) return false; e.classe = k;
 // voyager vers une autre planète (depuis le quai)
 // coût d'un voyage : celui de la planète d'arrivée ; pour rentrer sur Terre, celui de la planète d'où l'on part
 function mdeCoutVoyage(e, p) { if (p === e.planete) return null; return p === 'terre' ? MDE_PLANETES[e.planete].voyage : MDE_PLANETES[p].voyage; }
-function mdePeutVoyager(e, p) { const P = MDE_PLANETES[p]; return p !== e.planete && (!P.req || P.req(e)) && (p !== 'mars' || e.bases.lune) && mdePeutPayer(e, mdeCoutVoyage(e, p)); }
+function mdePeutVoyager(e, p) { const P = MDE_PLANETES[p]; return p !== e.planete && (!P.req || P.req(e)) && mdeAQuai(e, p) && mdePeutPayer(e, mdeCoutVoyage(e, p)); }
 function mdeVoyager(e, p) { if (!mdePeutVoyager(e, p)) return false; mdePayer(e, mdeCoutVoyage(e, p)); e.planete = p; return true; }
 
 /* ---------- le temps qui passe (pendant qu'on joue seulement) ---------- */
