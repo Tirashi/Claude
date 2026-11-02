@@ -78,10 +78,10 @@
   }
   function pause() { if (mode !== 'jeu') return; mode = 'pause'; feuTenu = false; $('bFeu').classList.remove('on'); DsSons.feu(false); $('ePause').hidden = false; }
   function reprendre() { mode = 'jeu'; $('ePause').hidden = true; dern = performance.now(); }
-  function abandon() { p.fin = 'abandon'; dsTerminer(sauv, p); sauver(); allerNid(); }
+  function abandon() { p.fin = 'abandon'; const b = dsTerminer(sauv, p); sauver(); envoyer(b.distance); allerNid(); }
   function finir() {
     mode = 'fin'; finT = 0; feuTenu = false; DsSons.feu(false);
-    bilan = dsTerminer(sauv, p); sauver();
+    bilan = dsTerminer(sauv, p); sauver(); envoyer(bilan.distance);
     $('bFeu').hidden = $('aide').hidden = $('bPause').hidden = true;
   }
   function montrerBilan() {
@@ -93,6 +93,13 @@
     for (const d of b.nouveauxDecors) L.push(`<span class="nouveau">NOUVEAU DEPART :<br>${DS_NOM_BIOME[d]} !</span>`);
     $('bLignes').innerHTML = L.join('<br>'); $('eBilan').hidden = false;
     if (b.recordDistance || b.nouveauxDecors.length) DsSons.jouer('record');
+  }
+
+  // classement de la famille : la plus grande distance (la base garde le meilleur envoi)
+  function envoyer(m) {
+    $('bRang').textContent = '';
+    if (!window.LudoScores || !(m > 0)) return;
+    LudoScores.submit('dragonsim', 'distance', m, false).then(r => { if (r) $('bRang').textContent = LudoScores.rankText(r); }).catch(() => { /* hors ligne : envoyé plus tard */ });
   }
 
   /* ---------- HUD ---------- */

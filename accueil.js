@@ -53,6 +53,8 @@ const GAMES = [
    d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
   {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
    d: "Un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtis, recrute, conquiers les terres de trois seigneurs rivaux et gagne la couronne en 30 saisons. Combats en scènes HD-2D, événements, un Duché du jour pour toute la famille.", tags: ["STRATEGIE", "30 TOURS", "DUCHE DU JOUR"]},
+  {k: "dragon-simulator/index.html", n: "DRAGON SIMULATOR", s: "DRAGON", ic: "dragonsim", fam: "3d", lb: "linear-gradient(#5ea7e6, #c23a3a)", lt: "#ffd25a", sh: "#c23a3a", rank: "dragonsim",
+   d: "Une idée d'un garçon de 7 ans : dirige un dragon qui plane au-dessus de la ville, vu de profil, en 3D. Bats des ailes, crache du feu sur les immeubles et les voitures, évite grues et hélicoptères, ramasse jetpacks, grenades, bébé dragon et nuages d'orage. Plus tu vas loin, plus tu gagnes de pièces pour améliorer ton dragon au nid.", tags: ["3D", "POUR LES ENFANTS", "SANS FIN"]},
   {k: "resistance/index.html", n: "RESISTANCE", s: "RESISTANCE", ic: "resistance", fam: "32", lb: "linear-gradient(#2c4fa8, #121a3a)", lt: "#ffd23f", sh: "#2c4fa8",
    d: "Rogue-lite tactique façon Fire Emblem GBA : un tyran a soumis le continent, mène l'armée rebelle. Recrute tes soldats, traverse le pays de combat en combat (marchand, repos, événements), triangle des armes, mort définitive, et abats le général. À chaque retour, agrandis la forteresse rebelle : caserne, taverne, infirmerie, Mémorial des vétérans…", tags: ["ROGUE-LITE", "FORTERESSE", "11 CLASSES"]},
   {k: "boutique/index.html", n: "LA BOUTIQUE DE CARTES", s: "BOUTIQUE", ic: "boutique", fam: "3d", lb: "linear-gradient(#8a63d2, #2b2838)", lt: "#ffd84d", sh: "#8a63d2", rank: "boutique",
@@ -87,6 +89,7 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 // À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
 const META = {
+  "dragon-simulator/index.html": {added: "2026-11-02", genres: ["ARCADE"]},
   "resistance/index.html": {added: "2026-10-28", genres: ["TACTIQUE"]},
   "boutique/index.html": {added: "2026-10-23", genres: ["SIMULATION"]},
   "doggy-saga/index.html": {added: "2026-10-23", genres: ["LOGIQUE", "DU JOUR"]},
@@ -123,6 +126,7 @@ const META = {
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
 };
 const NEWS = [
+  ["2026-11-02", "Nouveau jeu : Dragon Simulator, une idée d'un garçon de 7 ans. Ton dragon s'élance de son nid et plane au-dessus de la ville puis de l'aéroport, vu de profil, en 3D. Touche l'écran pour battre des ailes, tiens le bouton FEU pour brûler immeubles, maisons et voitures, évite grues, montgolfières et hélicoptères, et ramasse dix bonus (jetpack, grenade, bébé dragon, super-souffle, nuage d'orage, bouclier, aimant, œuf d'or…). Plus tu vas loin, plus tu gagnes de pièces : au nid, améliore écailles, flammes, réserve de feu et ailes."],
   ["2026-10-28", "Nouveau jeu : Résistance, un rogue-lite tactique façon Fire Emblem GBA. Recrute trois rebelles, traverse les Marches de l'Ouest de combat en combat (marchand, repos, événements) et abats le général du tyran. Défaite ou victoire, tu rapportes du ravitaillement pour agrandir la forteresse rebelle : chaque bâtiment rend les campagnes suivantes plus fortes."],
   ["2026-10-23", "Nouveau jeu : La Boutique de cartes, une année à la tête d'une boutique de cartes à collectionner, en 3D. Le lundi, commande au grossiste, fixe tes prix, ouvre des boosters et range les meilleures cartes en vitrine ou dans ton classeur ; du mardi au samedi, regarde les clients entrer et acheter ; le dimanche, fais tes comptes. Aménage, agrandis, organise des tournois et rembourse la banque avant la semaine 26 !"],
   ["2026-10-23", "Nouveau jeu : Doggy Saga, un trois en ligne pour toute la famille. Glisse les chiens du refuge pour en aligner 3 pareils : chaque chien aligné reçoit un câlin. Bandanas, nœuds et balles de tennis lancent de grosses cascades. Lave la boue, ouvre les niches, fais descendre les chiots jusqu'à leur panier, et trouve une famille aux 16 chiens (dont Nounours le bouvier bernois) dans 60 niveaux. Chaque jour, la journée du jour : 20 coups, le plus de câlins possible."],
@@ -246,6 +250,8 @@ const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catc
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
 const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
 const RECS = {
+  "dragon-simulator/index.html": () => { const s = rk("dragonsim.sauvegarde", {}) || {}, r = s.records || {}, t = s.total || {}, n = Object.values(s.niv || {}).reduce((a, v) => a + Math.max(0, (Number(v) || 1) - 1), 0);
+    return [["Plus long vol", num(r.distance, "m")], ["Meilleure partie", num(r.pieces, "pièces")], ["Bâtiments brûlés", num(t.batiments)], ["Vols", num(t.parties)], ["Nid", num(n, "/ 16 améliorations")]]; },
   "resistance/index.html": () => { const m = (rk("resistance.save", {}) || {}).meta || {}, b = Object.values(m.upgrades || {}).reduce((a, v) => a + (Number(v) || 0), 0);
     return [["Pays libérés", num(m.wins)], ["Campagnes", num(m.runs)], ["Forteresse", num(b, b > 1 ? "niveaux" : "niveau")], ["Vétéran", m.veteran && m.veteran.name ? `${m.veteran.name} (niv ${m.veteran.level})` : null]]; },
   "doggy-saga/index.html": () => { const p = rk("doggysaga.progres", {}) || {}, e = p.etoiles || {}, d = rk("doggysaga.daily", {}) || {};
@@ -500,6 +506,8 @@ const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
 const daily = () => "daily:" + dayKey(day());
 // chaque jeu : ses classements (vues), leur réglage (ctl), leur format (fmt ; T = temps en ms)
 const RANKS = {
+  dragonsim: [{label: "DISTANCE", game: "dragonsim", board: () => "distance", fmt: v => N(v) + " m", title: () => "PLUS LONG VOL",
+     note: "La plus grande distance parcourue en un vol, en mètres."}],
   tetris: [{label: "MEILLEUR SCORE", game: "tetris", board: () => "best", fmt: N}],
   snake: [{label: "MEILLEUR SCORE", game: "snake", board: () => "best", fmt: N}],
   asteroids: [{label: "MEILLEUR SCORE", game: "asteroids", board: () => "best", fmt: N}],
@@ -956,6 +964,8 @@ function collectSaves(){
   const du = {b: Number(readKey("duche.best", 0)) || 0, d: readKey("duche.daily", {}) || {}};
   if (du.b || Object.keys(du.d).length) g.duche = du;
   const ro = readKey("romet.machines", null);
+  const dsg = readKey("dragonsim.sauvegarde", null);
+  if (dsg && typeof dsg === "object" && ((dsg.total && dsg.total.parties) || dsg.pieces)) g.dragonsim = dsg;
   if (ro && typeof ro === "object" && Object.keys(ro).length) g.romet = ro;
   const mg = {n: readKey("magasinier.niveaux", {}) || {}, d: readKey("magasinier.daily", {}) || {}};
   if (Object.keys(mg.n).length || Object.keys(mg.d).length) g.magasinier = mg;
@@ -1003,6 +1013,7 @@ function describeSaves(g){
   if (g.resistance){ const m = g.resistance; out.push(`Résistance : ${m.runs} campagne${m.runs > 1 ? "s" : ""}${m.wins ? `, ${m.wins} pays libéré${m.wins > 1 ? "s" : ""}` : ""}`); }
   if (g.bannieres){ const s = g.bannieres.s || {}; out.push(`Bannières : ${g.bannieres.b || 0} drapeaux au mieux${s.gagnees ? `, ${s.gagnees} partie${s.gagnees > 1 ? "s" : ""} gagnée${s.gagnees > 1 ? "s" : ""}` : ""}`); }
   if (g.duche){ const d = Object.keys(g.duche.d || {}).length; out.push(`Duché : meilleur score ${g.duche.b || 0}${d ? `, ${d} duché${d > 1 ? "s" : ""} du jour` : ""}`); }
+  if (g.dragonsim){ const r = g.dragonsim.records || {}, t = g.dragonsim.total || {}; out.push(`Dragon Simulator : plus long vol ${Number(r.distance) || 0} m, ${Number(t.parties) || 0} vol${t.parties > 1 ? "s" : ""}, ${Number(g.dragonsim.pieces) || 0} pièces au nid`); }
   if (g.romet){ const v = Object.values(g.romet).filter(x => x && typeof x === "object"), t = v.reduce((a, x) => a + (Array.isArray(x.t) ? x.t.filter(Boolean).length : 0), 0);
     out.push(`Romet : ${t} trésor${t > 1 ? "s" : ""}, meilleur butin ${v.reduce((a, x) => Math.max(a, Number(x.butin) || 0), 0)}`); }
   if (g.magasinier){ const n = Object.values(g.magasinier.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.magasinier.d || {}).length;
@@ -1191,6 +1202,16 @@ function mergeSaves(g){
     if (Number(a.b) > (Number(readKey("duche.best", 0)) || 0)){ writeKey("duche.best", Math.round(a.b)); n++; }
     for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
     if (n){ writeKey("duche.daily", daily); done.push(`Duché : ${n} record${n > 1 ? "s" : ""}`); }
+  }
+  if (g.dragonsim && typeof g.dragonsim === "object"){
+    // fusion : le plus haut niveau de chaque amélioration, le plus de pièces, tous les décors atteints, les meilleurs records et totaux
+    const a = g.dragonsim, cur = readKey("dragonsim.sauvegarde", null) || {}, av = JSON.stringify(cur), M = (x, y) => Math.max(Number(x) || 0, Math.round(Number(y) || 0));
+    const out = Object.assign({v: 1, depart: /^[a-z]{2,12}$/.test(a.depart) ? a.depart : "ville"}, cur); out.pieces = M(cur.pieces, a.pieces);
+    out.niv = Object.assign({}, cur.niv); for (const k of ["ecailles", "flammes", "reserve", "ailes"]) out.niv[k] = Math.min(5, Math.max(1, M((cur.niv || {})[k], (a.niv || {})[k])));
+    out.decors = [...new Set([].concat(cur.decors || ["ville"], a.decors || []).filter(d => /^[a-z]{2,12}$/.test(d)))];
+    out.records = {}; for (const k of ["distance", "pieces"]) out.records[k] = M((cur.records || {})[k], (a.records || {})[k]);
+    out.total = {}; for (const k of ["parties", "batiments", "pieces", "distance"]) out.total[k] = M((cur.total || {})[k], (a.total || {})[k]);
+    if (JSON.stringify(out) !== av){ writeKey("dragonsim.sauvegarde", out); writeKey("dragonsim.record", out.records.distance); done.push("Dragon Simulator : nid et records"); }
   }
   if (g.romet && typeof g.romet === "object"){
     // fusion : par machine, les trésors gagnés d'un côté ou de l'autre, le meilleur butin, le plus de parties

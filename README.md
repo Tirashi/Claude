@@ -26,6 +26,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`dragon-simulator/index.html`](dragon-simulator/index.html) : **Dragon Simulator**, une idée d'un garçon de 7 ans : un dragon plane au-dessus de la ville, vu de profil, en 3D ; il brûle immeubles et voitures, ramasse des bonus et s'améliore au nid.
 - [`romet/index.html`](romet/index.html) : **Romet**, un coin pusher en 3D en hommage à Mynthos : six machines à finir (et une secrète), chacune dans son monde et avec sa règle.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
@@ -302,6 +303,18 @@ Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32
 - **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
 - **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
 - **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
+
+## Dragon Simulator
+L'idée d'un garçon de 7 ans : un dragon s'élance de son nid, en haut d'une tour, et plane au-dessus de la ville, vu de profil, en 3D. Le vol est sans fin : il s'arrête quand le dragon touche le sol.
+
+- **Commandes** : toucher l'écran = un coup d'ailes (le dragon remonte, mais ça use l'énergie) ; tenir le bouton **FEU** = cracher des flammes vers l'avant et le bas, tant qu'il reste du feu. Sur ordinateur : Espace, F tenu, Échap pour la pause.
+- **Le feu** : les immeubles, maisons, hangars et avions garés noircissent, brûlent et s'effondrent (2 à 4 pièces) ; les voitures explosent (3 pièces) ; les chauves-souris tombent en flammes (4 pièces) ; les animaux, eux, s'enfuient. Un bâtiment effondré ne gêne plus le passage.
+- **Les obstacles** : toits, grues, montgolfières, hélicoptères, chauves-souris, et à l'aéroport la tour de contrôle et les petits avions qui décollent. Un choc coûte un cœur ; sans cœur, le dragon tombe.
+- **Les décors** : 400 m de ville, puis 400 m d'aéroport, et ainsi de suite. Un décor déjà atteint peut servir de départ.
+- **Dix bonus** : pièces, jetpack, lance-flammes (feu plein), grenade (la prochaine destruction souffle aussi les voisins), bébé dragon (il vole derrière et crache du feu tout seul 15 s), super-souffle (flamme géante 5 s), nuage d'orage (rebond et éclair), bouclier (absorbe un choc), aimant, œuf d'or (pièces doublées 10 s).
+- **Le nid** : 1 pièce tous les 20 m en plus de la destruction ; au nid, quatre améliorations de 5 niveaux (écailles = cœurs, flammes = force, réserve de feu, ailes = plané).
+- **Classement de la famille** : le plus long vol, en mètres.
+- **Sons** : ailes, souffle du feu, explosions, effondrements, pièces, et une petite musique discrète, réglables au titre et dans la pause.
 
 ## Romet
 Un coin pusher en 3D, en hommage à Mynthos qui a popularisé le genre : on touche l'écran pour lâcher une pièce, le poussoir va et vient et fait tomber les autres. Ce qui tombe à l'avant arrive dans le bac et se rejoue ; ce qui tombe sur les côtés est perdu.

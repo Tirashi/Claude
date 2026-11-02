@@ -81,7 +81,7 @@ Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce
 ## 14. Plan de travail (opusplan, une conversation par session)
 1. **Règles et simulateur** ✅ (02/11) : `dragon-simulator/regles.js` (vol, destruction, économie, bonus, génération, pilote automatique), `outils/dragon-simulateur.js` (lancé par `verifications.js`), réglage ci-dessous (§ 16).
 2. **Le jeu en 3D** ✅ (02/11) : `monde3d.js`, `jeu.js`, `sons.js`, `index.html`, `style.css`, `modeles.glb` (voir § 17).
-3. **Intégration** : accueil (cartouche 3D, volet, classement, transfert), service worker, tests, artefact.
+3. **Intégration** ✅ (02/11) : voir § 18.
 
 ## 15. Questions tranchées (02/11) : cahier des charges validé
 1. **Pièces de distance** (1 tous les 20 m), en plus de la destruction : **oui**.
@@ -106,6 +106,13 @@ Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce
 - **Sauvegarde** : `dragonsim.sauvegarde` (JSON lu par `dsMigrer`), `dragonsim.record` (plus grande distance, pour l'accueil), `dragonsim.son`.
 - **Artefact** : le jeu remplace la maquette au même lien (https://claude.ai/artifact/93nrGTRHG1G1qbt9GCg97q) ; la copie reçoit `modeles.glb` en base64 (`window.DS_MODELES_B64`, inséré après `outils/artefact.py`, 4,8 Mo en tout).
 - Reste pour la session 3 : accueil (cartouche, volet, classement de la distance, transfert `LUDO1-`), service worker, tests `fumee.js` / `logique.js`, essais sur le téléphone.
+
+## 18. Session 3 : intégration (02/11)
+- **Accueil** (`accueil.js`) : cartouche (famille 3D, icône `dragonsim` dans `icones.js`, tête de dragon qui crache du feu), `META` (sorti le 02/11, genre ARCADE, à la une), `NEWS`, `RECS` (plus long vol, meilleure partie, bâtiments brûlés, vols, améliorations du nid sur 16), `RANKS` (`dragonsim` / `distance`, en mètres).
+- **Classement** : `LudoScores.submit('dragonsim', 'distance', m)` à chaque fin de vol (aussi en rentrant au nid depuis la pause), rang affiché sous le bilan ; `registerExisting` reprend le record, `PSEUDO_BOARDS`, `SYNC` 27.
+- **Transfert `LUDO1-`** : `dragonsim.sauvegarde` ; fusion = plus haut niveau de chaque amélioration, le plus de pièces, tous les décors, meilleurs records et totaux. Cas ajouté à `outils/logique.js`.
+- **Tests** : `outils/fumee.js` (titre, nid, ENVOLER !, un toucher bat des ailes, atterrissage → bilan et vol sauvegardé).
+- À essayer sur le téléphone : fluidité, bouton FEU tenu pendant qu'on tape l'écran, classement réel (testé seulement sans Supabase).
 
 ## Historique du chantier
 

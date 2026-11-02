@@ -56,10 +56,12 @@
     <div class="boite">
       <h2 id="bTitre">ATTERRI !</h2>
       <div class="bilan" id="bLignes"></div>
+      <div class="rang" id="bRang"></div>
       <button class="gros" id="bRetourNid" type="button">AU NID !</button>
     </div>
   </div>
 </div>
+<script src="../ludo-scores.js"></script>
 <script src="../lib/three.min.js"></script>
 <script src="../lib/GLTFLoader.js"></script>
 <script src="../lib/SkeletonUtils.js"></script>
@@ -67,5 +69,14 @@
 <script src="monde3d.js"></script>
 <script src="sons.js"></script>
 <script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Le retour à la Ludothèque est dans les menus du jeu (titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>

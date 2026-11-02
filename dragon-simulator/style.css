@@ -63,3 +63,5 @@ button,a{-webkit-tap-highlight-color:transparent}
 .boite h2{font-family:var(--pix);font-weight:400;font-size:16px;color:var(--or);text-align:center;margin:0 0 4px;line-height:1.5;text-shadow:2px 2px 0 #b8401f}
 .bilan{font-family:var(--pix);font-size:10px;line-height:2.2;text-align:center}
 .bilan .nouveau{color:#9fe08a}
+.rang{font-family:var(--pix);font-size:8px;line-height:1.8;color:#9fd8ff;text-align:center}
+.rang:empty{display:none}

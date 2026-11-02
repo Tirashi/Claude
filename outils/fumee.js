@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -122,6 +122,26 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Le Magasinier : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-magasinier.png` });
+    }
+    if (url === 'dragon-simulator/index.html') {
+      // Dragon Simulator : titre, nid, ENVOLER !, un toucher = un coup d'ailes, puis le sol : bilan, pièces au nid, vol compté
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 200 && !(window.DragonSim && DragonSim.mode === 'titre'); i++) await wait(100);
+        if (!window.DragonSim || DragonSim.mode !== 'titre') return 'pas d\'écran titre (modèles 3D ?)';
+        document.getElementById('bJouer').click(); if (DragonSim.mode !== 'nid' || document.getElementById('eNid').hidden) return 'pas de nid';
+        document.getElementById('bEnvol').click(); if (DragonSim.mode !== 'jeu') return 'ENVOLER ! ne lance pas le vol';
+        await wait(800); const q = DragonSim.partie, e0 = q.energie, j = document.getElementById('jeu'), b = j.getBoundingClientRect();
+        j.dispatchEvent(new PointerEvent('pointerdown', { clientX: b.left + b.width / 3, clientY: b.top + b.height / 2, bubbles: true, cancelable: true }));
+        await wait(200); if (!(q.energie < e0 - 2)) return 'le toucher ne fait pas battre des ailes';
+        q.d.y = DS_SOL - 9; q.d.vy = 3; await wait(2500);
+        if (DragonSim.mode !== 'fin' || document.getElementById('eBilan').hidden) return 'pas de bilan à l\'atterrissage';
+        const s = JSON.parse(localStorage.getItem('dragonsim.sauvegarde') || '{}');
+        if (!s.total || s.total.parties !== 1) return 'le vol n\'est pas sauvegardé';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Dragon Simulator : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-dragon.png` });
     }
     if (url === 'romet/index.html') {
       // Romet : JOUER, un vrai toucher lâche une pièce ; la fin de partie montre le butin ; la ruche s'ouvre quand la foire est finie
