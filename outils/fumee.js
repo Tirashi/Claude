@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -217,6 +217,30 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Boutique : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-boutique.png` });
+    }
+    if (url === 'mineur-de-l-espace/index.html') {
+      // Mineur de l'espace : écran titre, décollage, une roche cassée par les tourelles, retour au quai et vente ;
+      // puis une vague alien jouée en direct (fin de partie préparée) et la sauvegarde
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let n = 0; n < 40 && !(window.Mineur && Mineur.partie); n++) await wait(250);
+        const P = Mineur.partie; if (!P || !P.ecranTitre) return "pas d'écran titre";
+        P.ecranTitre.querySelector('[data-t]').click(); if (P.ecranTitre || P.pauseVue) return 'le titre ne se ferme pas';
+        P.decoller(); if (P.quai) return 'pas de décollage';
+        const n0 = P.asts.length; P.nouvelleRoche({ taille: 1, pv: 1, minerai: 'or' }, P.ship.x, P.ship.y - 60); for (let n = 0; n < 50; n++) P.pas(0.05);
+        if (P.asts.length > n0 && P.drops.length === 0 && P.soute.length === 0) return 'les tourelles ne cassent pas la roche';
+        P.soute.push('fer'); const cr = Mineur.etat.cr; P.accoster(); if (!P.quai || Mineur.etat.cr <= cr) return 'pas de vente au quai';
+        const e = Mineur.etat; e.recherche = { centre: true, transfert: true }; e.station = { central: true, hangar: true, quai: true }; e.bases = { lune: true, mars: true };
+        e.flottes.terre = [{ type: 'garde' }, { type: 'escorte' }]; e.aliens = { debut: 1, vague: 0, prochaine: e.temps, alerte: { planete: 'terre', a: e.temps + 0.5, vague: 1 }, finale: false, finaleApres: null };
+        // la simulation est avancée à la main (pas de 50 ms), sans dépendre de la vitesse d'affichage du navigateur
+        for (let n = 0; n < 40 && !P.bat; n++) P.pas(0.05); if (!P.bat) return "la vague n'arrive pas";
+        for (let n = 0; n < 4000 && !e.journal.length; n++) P.pas(0.05);
+        if (!e.journal.length) return 'la vague ne finit pas';
+        if (!JSON.parse(localStorage.getItem('mineur-de-l-espace') || 'null')) return 'partie pas sauvegardée';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Mineur de l\'espace : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-mineur.png` });
     }
     if (url === 'the-des-jarls/index.html') {
       // Le Thé des Jarls : un duel contre un dieu joué jusqu'au bout (batailles accélérées), partie sauvegardée puis effacée, écran de fin ; le duel à deux démarre

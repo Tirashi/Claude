@@ -79,6 +79,9 @@ Copie telle quelle des lignes détaillées que `CLAUDE.md` gardait jusqu'au 30/1
 - Écarts au cahier des charges trouvés par le simulateur : améliorations **communes à toutes les classes** (5 niveaux) au lieu de propres à chaque classe ; fer 5 CR et or 30 CR ; une unité de flotte abattue n'est pas perdue ; le quai garde le minerai d'un chantier dès qu'on a la moitié de ses CR.
 - Session 2 (31/10) : étage 1 jouable (`mineur-de-l-espace/index.html`, `jeu.js`, `chantier.js`, `planetes.js`), dans `sw.js` (v80), pas encore sur l'accueil ; artefact https://claude.ai/artifact/JuLojAXG94xkZTHEXY2k2g. Bilan : [`specs/mineur-de-l-espace.md`](mineur-de-l-espace.md) § 20.
 
+- Session 5 (01/11) : `sprites.js` (sprites des packs Zoser et Cute SCKR, fabriqué par `outils/mineur-sprites.py`, crédits ajoutés) et `combat.js` (vagues aliens en direct, flottes, satellites, porte-vaisseaux et escadrille, défense rapprochée, bataille finale, victoire et mode libre) ; la Forteresse devient le porte-vaisseaux ; `sw.js` v82. Bilan : [`specs/mineur-de-l-espace.md`](mineur-de-l-espace.md) § 24.
+- Session 6 (01/11) : sons (`sons.js`), écran titre, pause (sons, vibrations, écran titre), sur l'accueil (cartouche, volet, records, EN COURS, transfert `LUDO1-`), test de fumée ; `sw.js` v83. Jeu fini. Bilan : § 25.
+
 ## Retours de l'utilisateur (29/10, suite des essais)
 - Solitaire : pas de bouton INDICE (refusé).
 - Romet : classements confirmés avec un vrai record.

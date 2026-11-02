@@ -19,16 +19,27 @@ html,body{margin:0;height:100%;background:#05060d;color:#dfe3ff;font-family:"Pix
 .panneau.vu{display:block}
 .onglets{display:flex;gap:4px;margin-bottom:6px}.onglets .btn{flex:1;font-size:9px;padding:5px 2px}.onglets .btn.actif{background:#3b4690;border-color:#ffcf4a}
 .panneau h4{margin:0 0 4px;font-weight:400;font-size:13px;color:#ffcf4a}
+.panneau h5{margin:10px 0 2px;font-weight:400;font-size:10px;color:#9fd0ff;border-bottom:1px solid #2a3060;padding-bottom:2px}
 .panneau p{margin:2px 0 6px;font-size:9px;color:#8c93c4}.panneau p.mis{color:#9fd0ff}.panneau p.vide{color:#8c93c4;margin:10px 0}
 .ligne{display:flex;align-items:center;gap:8px;margin:5px 0}.ligne .nom{flex:1}.ligne .nom small{display:block;color:#8c93c4;font-size:9px}
 .ligne .btn{max-width:130px;font-size:10px}
+.panneau canvas.carte{display:block;width:100%;image-rendering:pixelated;border:1px solid #2a3060;border-radius:6px;margin:2px 0 6px}
+.panneau p.alerte{color:#ff6a5c;font-size:10px}
+.go.finale{background:#5a1f7a;border-color:#d27ef0}
 .go{display:block;width:100%;margin-top:8px;background:#2f7a3a;border-color:#6fdc7f;font-size:13px;padding:6px}
 .bpause{position:absolute;right:8px;top:4px;width:32px;height:22px;padding:0;font-size:10px}
 .pause{position:absolute;inset:0;background:#05060dd0;display:none;align-items:center;justify-content:center}
 .pause.vu{display:flex}
-.pause .boite{background:#0c0f22;border:2px solid #3b4690;border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;width:240px}
+.pause .boite{background:#0c0f22;border:2px solid #3b4690;border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:6px;width:250px;max-height:94%;overflow:auto;touch-action:pan-y}
 .pause h3{margin:0 0 4px;font-family:Silkscreen,monospace;font-weight:400;color:#ffcf4a;text-align:center;font-size:18px}
 .pause .doux{font-family:Silkscreen,monospace;font-size:8px;color:#8c93c4;text-align:center;margin:4px 0 0}
+/* écran titre : la scène tourne derrière, un voile sur la gauche */
+.titre{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;padding-left:6%;background:linear-gradient(90deg,#05060de8 0%,#05060db0 45%,#05060d20 75%)}
+.titre .boite{display:flex;flex-direction:column;gap:8px;width:250px}
+.titre h1{margin:0;font-family:Silkscreen,monospace;font-weight:400;font-size:30px;line-height:1.05;color:#ffcf4a;text-shadow:3px 3px 0 #7a3a14}
+.titre .sous{margin:0 0 6px;font-family:Silkscreen,monospace;font-size:9px;color:#9fd0ff;letter-spacing:1px}
+.titre .doux{margin:0;font-family:Silkscreen,monospace;font-size:8px;color:#8c93c4;text-align:center}
+.titre .grand{font-size:15px;padding:8px;background:#2f7a3a;border-color:#6fdc7f}
 #tourner{display:none;position:fixed;inset:0;align-items:center;justify-content:center;text-align:center;font-family:Silkscreen,monospace;font-size:14px;color:#ffcf4a;background:#05060d;padding:24px;line-height:1.6}
 body.debout #tourner{display:flex}
 </style>
@@ -41,6 +52,19 @@ body.debout #tourner{display:flex}
 <script src="../nebula/vaisseaux.js"></script>
 <script src="chantier.js"></script>
 <script src="station.js"></script>
+<script src="sons.js"></script>
+<script src="sprites.js"></script>
 <script src="jeu.js"></script>
+<script src="combat.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>

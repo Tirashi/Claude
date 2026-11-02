@@ -16,8 +16,8 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 vm.runInThisContext(fs.readFileSync(path.join(__dirname, '..', 'mineur-de-l-espace', 'regles.js'), 'utf8'), { filename: 'mineur-de-l-espace/regles.js' });
 /* global MDE_MINERAIS, MDE_ORDRE, MDE_PLANETES, MDE_ROCHES, MDE_DANGERS, MDE_CONSO, MDE_TIR, MDE_CLASSES, MDE_VAGUES, MDE_DUREE_VOYAGE,
    mdeRng, mdeNouvelle, mdeMigrer, mdeEtage, mdeRoche, mdeEclats, mdeButin, mdeCorvette, mdeAchats, mdeAcheter, mdeBesoins, mdeLivrer,
-   mdeRetour, mdeAvancer, mdeVoyager, mdePeutVoyager, mdeProduction, mdeResoudreAttaque, mdeFinale, mdeCombat, mdeUniteCombat,
-   mdeCorvetteCombat, mdeForceFlottes, mdePrix, mdeChangerClasse, mdeVague, mdeRetirerUnite, mdePlaces, MDE_UNITES */
+   mdeRetour, mdeAvancer, mdeVoyager, mdePeutVoyager, mdeProduction, mdeResoudreAttaque, mdeFinale, mdeFinVague, mdeFinFinale, mdeCombat, mdeUniteCombat,
+   mdeCorvetteCombat, mdeForceFlottes, mdePrix, mdeChangerClasse, mdeVague, mdeRetirerUnite, mdePlaces, MDE_UNITES, mdeCoutVoyage */
 
 const N = Number(process.argv[2]) || 12, detail = process.argv.includes('--detail');
 let fail = 0;
@@ -153,6 +153,7 @@ function jouer(graine, pilote, limite, reprise) {
   check(besoin > 0 && h.entrepot.fer === besoin && l2.gain === 15 && !mdeBesoins(mdeNouvelle('vide')).fer, 'le quai garde le fer d\'un module dont on a la moitié des CR et vend le reste (au début, tout est vendu)');
   check(mdePrix(h, 'fer') === 5 && (h.usines.fonderie = 1) && mdePrix(h, 'fer') === 6.25, 'la fonderie augmente le prix du fer');
   check(!mdePeutVoyager(h, 'lune') && (h.recherche.transfert = true) && mdePeutVoyager(h, 'lune') && !mdePeutVoyager(h, 'mars'), 'voyages : la Lune avec le moteur de transfert, Mars plus tard');
+  h.planete = 'lune'; check(mdePeutVoyager(h, 'terre') && mdeCoutVoyage(h, 'terre').cr === 60 && mdeVoyager(h, 'terre') && h.planete === 'terre', 'retour de la Lune vers la Terre (coût du voyage lunaire)');
   h.station.hangar = true; h.drones.terre = { mineur: 3, cargo: 1 };
   check(mdeProduction(h, 'terre') === 4, 'drones : un cargo sert deux mineurs (3 mineurs + 1 cargo = 4 minerais par minute)');
   const val = () => h.cr + 5 * (h.entrepot.fer || 0), cr0 = val(); for (let i = 0; i < 30; i++) mdeAvancer(h, 2);
@@ -168,6 +169,17 @@ function jouer(graine, pilote, limite, reprise) {
   mig.ameliorations.moteur = 2; mig.ameliorations.propulseurs = 1;
   check(Math.abs(mdeCorvette(mig).vitesse - 1.16) < 1e-9 && mdeCorvette(mig).maniabilite === 1.2, 'moteur : vitesse + 8 % par niveau ; propulseurs : maniabilité + 20 %');
   const k = mdeNouvelle('fin'); check(mdeFinale(k) === null, 'pas de bataille finale avant les vagues');
+  // porte-vaisseaux (01/11) : une ancienne sauvegarde avec la Forteresse passe au porte-vaisseaux ; son escadrille s'améliore
+  const pv = mdeMigrer(JSON.parse(JSON.stringify(Object.assign(mdeNouvelle('pv'), { classes: { eclaireur: true, forteresse: true }, classe: 'forteresse', escadrille: undefined }))));
+  check(pv.classe === 'porte' && pv.classes.porte && !pv.classes.forteresse && mdeCorvette(pv).escadrille.nb === 2, 'migration : la Forteresse devient le porte-vaisseaux (2 chasseurs)');
+  pv.cr = 1e6; pv.entrepot.cobalt = 999; pv.bases.lune = true;
+  for (let i = 0; i < 5; i++) for (const q of ['endurance', 'puissance', 'blindage', 'hangar']) mdeAcheter(pv, 'esc:' + q);
+  const E = mdeCorvette(pv).escadrille; check(E.nb === 6 && E.grand && E.energie === 39 && !mdeAchats(pv).some(a => a.id === 'esc:hangar'), 'escadrille : 6 chasseurs au plus, améliorée à fond = nouveaux chasseurs');
+  // la fin d'une vague jouée en direct : perdue, la base est hors service ; la vague suivante est programmée
+  const fv = mdeNouvelle('fv'); fv.aliens.alerte = { planete: 'terre', a: 0, vague: 1 }; mdeFinVague(fv, false);
+  check(fv.hs.terre && fv.aliens.vague === 1 && !fv.aliens.alerte && fv.aliens.prochaine > 0, 'vague perdue en direct : base hors service, vague suivante programmée');
+  fv.aliens.finale = true; mdeFinFinale(fv, false); check(!fv.aliens.finale && !fv.fin && fv.aliens.finaleApres > 0, 'finale perdue : le vaisseau-mère revient plus tard');
+  fv.aliens.finale = true; mdeFinFinale(fv, true); check(fv.fin, 'finale gagnée : la partie est finie');
 }
 
 /* ---------- parties complètes ---------- */
