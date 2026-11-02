@@ -229,7 +229,8 @@ const TESTS = {
       'motdor.stats': { parties: 5, gagnees: 4, serie: 2, record: 3, dernier: 20261019, dist: [0, 1, 2, 1, 0, 0] }, 'motdor.daily': { 20261019: 3 },
       'jarls.campagne': { etoiles: { heimdall: 3, idunn: 2 } }, 'jarls.daily': { 20261021: 1290 },
       'doggysaga.progres': { etoiles: { 1: 3, 2: 1 }, scores: {}, album: [0, 3] }, 'doggysaga.daily': { 20261023: 98 },
-      'mineur-de-l-espace': { v: 1, graine: 'm1', temps: 4321, cr: 120, recherche: { centre: true }, bases: {}, fin: false } };
+      'mineur-de-l-espace': { v: 1, graine: 'm1', temps: 4321, cr: 120, recherche: { centre: true }, bases: {}, fin: false },
+      'dragonsim.sauvegarde': { v: 1, depart: 'aeroport', pieces: 57, niv: { ecailles: 3, flammes: 2, reserve: 1, ailes: 4 }, decors: ['ville', 'aeroport'], records: { distance: 812, pieces: 143 }, total: { parties: 12, batiments: 40, pieces: 900, distance: 5000 } } };
     const A = window.Accueil, keep = { ...localStorage }; localStorage.clear();
     for (const [k, v] of Object.entries(recs)) localStorage.setItem(k, JSON.stringify(v));
     const code = 'LUDO1-' + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, g: A.collectSaves() }))));

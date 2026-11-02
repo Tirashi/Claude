@@ -12,6 +12,7 @@
    8 sexies. Romet : physique et règles (outils/romet-simulateur.js) ;
    8 septies. Doggy Saga : règles, obstacles, reproductibilité et 60 niveaux (outils/doggy-saga-simulateur.js) ;
    8 octies. Mineur de l'espace : règles et équilibrage (outils/mineur-simulateur.js) ;
+   8 nonies. Dragon Simulator : règles et économie (outils/dragon-simulateur.js) ;
    9. classements : chaque record envoyé par un jeu (LudoScores.submit) a son tableau dans le volet de
       l'accueil (RANKS, accueil.js), est repris en rejoignant (registerExisting) et son jeu sert à vérifier les pseudos.
    Code de sortie 1 si quelque chose ne va pas. */
@@ -141,6 +142,9 @@ catch (e) { bad('Romet : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 // 8 octies. Mineur de l'espace : règles et équilibrage (parties complètes reproductibles, durée 3 à 5 h, sauvegarde)
 try { execFileSync(process.execPath, [path.join(__dirname, 'mineur-simulateur.js'), '8'], { stdio: 'pipe', encoding: 'utf8' }); ok('Mineur de l\'espace : simulateur (règles, parties reproductibles, durée, vagues)'); }
 catch (e) { bad('Mineur de l\'espace : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+// 8 nonies. Dragon Simulator : règles et économie (outils/dragon-simulateur.js)
+try { execFileSync(process.execPath, [path.join(__dirname, 'dragon-simulateur.js'), '3'], { stdio: 'pipe', encoding: 'utf8' }); ok('Dragon Simulator : simulateur (règles, dix bonus, parties reproductibles, économie du nid)'); }
+catch (e) { bad('Dragon Simulator : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
