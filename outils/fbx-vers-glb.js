@@ -1,5 +1,5 @@
 // Rassemble des modèles 3D (FBX animés, glTF/GLB, OBJ+MTL) en un seul GLB, écrit en base64, pour une maquette sans fichiers à côté.
-// node outils/fbx-vers-glb.js <dossier des modèles> <sortie.b64>
+// node outils/fbx-vers-glb.js <dossier des modèles> <sortie.b64 | sortie.glb>   (.glb : fichier binaire, comme dragon-simulator/modeles.glb)
 // Chaque fichier du dossier devient un objet nommé d'après son nom de fichier (sans extension) : dragon.fbx -> « dragon ».
 // Il faut un three 0.128 dépaqueté dans <dossier>/../npm/package (npm pack three@0.128.0 ; jsdelivr est bloqué depuis le conteneur).
 // Corrections faites ici (voir specs/dragon-simulator.md) :
@@ -53,4 +53,4 @@ const b64=await p.evaluate(async(fichiers)=>{
   const glb=await new Promise(ok=>new THREE.GLTFExporter().parse(sc,ok,{binary:true,animations:anims,embedImages:true}));
   let s='';const u=new Uint8Array(glb);for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s);
 },fichiers);
-fs.writeFileSync(OUT,b64);console.log('taille base64',b64.length);await b.close();})();
+if(/\.glb$/i.test(OUT)){fs.writeFileSync(OUT,Buffer.from(b64,'base64'));console.log('taille',fs.statSync(OUT).size);}else{fs.writeFileSync(OUT,b64);console.log('taille base64',b64.length);}await b.close();})();

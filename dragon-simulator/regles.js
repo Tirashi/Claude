@@ -184,7 +184,7 @@ function dsGenerer(p) {
 }
 
 /* ---------- pièces (l'œuf d'or double tout) ---------- */
-function dsGagner(p, n, x, y) { if (p.oeuf > 0) n *= 2; p.pieces += n; dsEv(p, 'pieces', { n, x, y }); }
+function dsGagner(p, n, x, y, q) { if (p.oeuf > 0) n *= 2; p.pieces += n; dsEv(p, 'pieces', { n, x, y, q }); }   // q : 'distance', 'bonus'… (rien = destruction)
 
 /* ---------- destruction (§ 6) ---------- */
 function dsDetruire(p, o, cause) {
@@ -228,7 +228,7 @@ function dsPrendre(p, b) {
   b.pris = true; p.bonusPris++; dsEv(p, 'bonus', { id: b.id, b: b.t, x: b.x, y: b.y });
   const d = p.d;
   switch (b.t) {
-    case 'pieces': dsGagner(p, 5, b.x, b.y); break;
+    case 'pieces': dsGagner(p, 5, b.x, b.y, 'bonus'); break;
     case 'jetpack': p.jet = DS_DUREE.jetpack; p.energie = Math.min(100, p.energie + 35); break;
     case 'lance': p.feu = p.s.feuMax; break;
     case 'grenade': p.gren++; break;
@@ -267,7 +267,7 @@ function dsPas(p, e) {
   p.energie = Math.max(0, p.energie - (p.jet > 0 ? 0 : s.drain));
   for (const k of ['souffle', 'bebe', 'aimant', 'oeuf']) if (p[k] > 0) p[k]--;
   p.dist = d.x / DS_PX_M;
-  while (p.mPayes + DS_M_PIECE <= p.dist) { p.mPayes += DS_M_PIECE; dsGagner(p, 1, d.x, d.y - 14); }
+  while (p.mPayes + DS_M_PIECE <= p.dist) { p.mPayes += DS_M_PIECE; dsGagner(p, 1, d.x, d.y - 14, 'distance'); }
   const bi = dsBiome(p, d.x); if (bi !== p.biome) { p.biome = bi; dsEv(p, 'biome', { b: bi }); }
   dsGenerer(p);
   // ce qui bouge

@@ -80,7 +80,7 @@ Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce
 
 ## 14. Plan de travail (opusplan, une conversation par session)
 1. **Règles et simulateur** ✅ (02/11) : `dragon-simulator/regles.js` (vol, destruction, économie, bonus, génération, pilote automatique), `outils/dragon-simulateur.js` (lancé par `verifications.js`), réglage ci-dessous (§ 16).
-2. **Le jeu en 3D** : `monde3d.js` et `jeu.js` d'après la maquette, ville et aéroport, nid, les 10 bonus, sauvegarde, sons.
+2. **Le jeu en 3D** ✅ (02/11) : `monde3d.js`, `jeu.js`, `sons.js`, `index.html`, `style.css`, `modeles.glb` (voir § 17).
 3. **Intégration** : accueil (cartouche 3D, volet, classement, transfert), service worker, tests, artefact.
 
 ## 15. Questions tranchées (02/11) : cahier des charges validé
@@ -97,6 +97,15 @@ Battement d'ailes, souffle du feu, crépitement, explosion, effondrement, pièce
 - **Réglage** (`node outils/dragon-simulateur.js 6`, trois pilotes automatiques qui achètent l'amélioration la moins chère) : première partie ≈ 25 s et 375 m ; dragon au maximum ≈ 60 s et 1 000 m (il atteint l'aéroport). Avec les coûts validés (1 920 pièces), un joueur moyen gagne environ 70 à 90 pièces par vol au début et environ 200 à la fin. Il achète sa **première amélioration dès le premier vol** et **tout en environ 16 vols (11 min de vol)**. Cibles vérifiées par le simulateur : première partie de 20 à 45 s, première amélioration en 2 vols au plus, tout en 12 à 45 vols, dragon amélioré nettement plus loin.
 - Les pilotes adroits ou maladroits finissent à peu près pareil : le jeu pardonne beaucoup (le bouclier, les cœurs, le plané).
 - La plupart des vols finissent en « chute » : quand l'énergie est vide, le dragon descend sur les toits.
+
+## 17. Session 2 : le jeu en 3D (02/11)
+- **Fichiers** (`dragon-simulator/`) : `index.html` et `style.css` (écrans par-dessus la scène, colonne de téléphone centrée sur un écran large), `regles.js`, `monde3d.js` (`window.DsMonde` : scène, modèles, décor, particules, caméra, textes flottants), `sons.js` (`window.DsSons` : sons synthétisés, souffle continu du feu, petite musique en la mineur au triangle), `jeu.js` (écrans, commandes, HUD, sauvegarde, boucle à 60 images par seconde à pas fixe ; `window.DragonSim` pour les tests), `modeles.glb` (2,9 Mo, le même GLB que la maquette ; `outils/fbx-vers-glb.js` écrit maintenant un `.glb` si la sortie finit par `.glb`). Polices locales `polices/dragon-simulator.css` (Press Start 2P, Fredoka).
+- **Écrans** : titre (démo jouée par `dsPilote`, dragon niveau 3, ville puis aéroport), nid (achats qui profitent tout de suite au dragon posé, décor de départ : un décor pas encore atteint affiche la distance où on le trouve), partie (HUD : distance, cœurs, pièces, jauges, bonus en cours avec leurs secondes ; bouton FEU qui pâlit sans feu et blanchit avec le super-souffle), pause (aussi quand l'appli passe en arrière-plan ; RENTRER AU NID paie quand même les pièces), bilan (distance, pièces, bâtiments brûlés, record, nouveau départ débloqué).
+- **Clavier** (pour l'ordinateur) : Espace ou ↑ = coup d'ailes, F ou → tenu = feu, Échap ou P = pause.
+- **Nouveaux modèles faits à la main** : bébé dragon (clone orange du dragon, en plus petit, qui vole derrière), icônes des bonus (tête de bébé dragon, flamme, nuage d'orage avec éclair, bulle-bouclier, aimant, œuf d'or), bulle autour du dragon avec le bouclier, éclair en zigzag avec flash.
+- **Sauvegarde** : `dragonsim.sauvegarde` (JSON lu par `dsMigrer`), `dragonsim.record` (plus grande distance, pour l'accueil), `dragonsim.son`.
+- **Artefact** : le jeu remplace la maquette au même lien (https://claude.ai/artifact/93nrGTRHG1G1qbt9GCg97q) ; la copie reçoit `modeles.glb` en base64 (`window.DS_MODELES_B64`, inséré après `outils/artefact.py`, 4,8 Mo en tout).
+- Reste pour la session 3 : accueil (cartouche, volet, classement de la distance, transfert `LUDO1-`), service worker, tests `fumee.js` / `logique.js`, essais sur le téléphone.
 
 ## Historique du chantier
 

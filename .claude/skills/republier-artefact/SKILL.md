@@ -39,5 +39,6 @@ Un jeu sans lien ci-dessous : demander le lien à l'utilisateur avant d'en crée
 | La Boutique de cartes (le jeu a remplacé la maquette 2 le 23/10 ; Three.js depuis cdnjs) | https://claude.ai/artifact/CfcT2Wzc9QEsbNUouQD5Y6 |
 | Doggy Saga | https://claude.ai/artifact/6BHJa8xeXP91zKLkf1GiN6 |
 | Mineur de l'espace (banc d'essai depuis la session 2, 31/10) | https://claude.ai/artifact/JuLojAXG94xkZTHEXY2k2g |
+| Dragon Simulator (le jeu a remplacé la maquette 3D le 02/11 ; après `artefact.py`, insérer `<script>window.DS_MODELES_B64="…"</script>` (base64 de `modeles.glb`) juste avant le script de `monde3d.js`) | https://claude.ai/artifact/93nrGTRHG1G1qbt9GCg97q |
 
 Queens, Sudoku, Touché Coulé, Tetris, Snake, Asteroids, Solitaire, le Jeu de la vie, Odyssée, Le Mot d'or, Romet et Résistance **n'ont pas d'artefact** : on les joue sur le site. Ne pas en créer sans demande.

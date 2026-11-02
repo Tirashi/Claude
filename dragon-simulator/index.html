@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#140f1c">
+<title>Dragon Simulator</title>
+<!-- polices dans le dépôt (hors connexion) ; data-google : le lien utilisé par l'artefact (outils/artefact.py) -->
+<link rel="stylesheet" href="../polices/dragon-simulator.css" data-google="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="jeu">
+  <canvas id="scene"></canvas>
+  <div id="couche"></div>
+  <div id="charge" class="charge">LE DRAGON SE REVEILLE...</div>
+
+  <div class="hud" id="hud" hidden>
+    <div class="ligne"><span id="hDist">0 M</span><span id="hCoeurs" class="coeurs"></span><span id="hPieces" class="or"></span></div>
+    <div class="ligne"><span class="mini">ENERGIE</span><span class="jauge en"><i id="hEnergie"></i></span></div>
+    <div class="ligne"><span class="mini">FEU</span><span class="jauge fe"><i id="hFeu"></i></span></div>
+    <div class="actifs" id="hActifs"></div>
+  </div>
+  <button class="bpause" id="bPause" type="button" hidden aria-label="Pause">II</button>
+  <button class="bfeu" id="bFeu" type="button" hidden aria-label="Cracher du feu">FEU</button>
+  <div class="aide" id="aide" hidden>TOUCHE L'ECRAN :<br>BATTRE DES AILES<br>TIENS LE BOUTON FEU :<br>CRACHER DU FEU</div>
+  <div class="annonce" id="annonce" hidden></div>
+
+  <div class="ecran titre" id="eTitre" hidden>
+    <h1>DRAGON<br>SIMULATOR</h1>
+    <p class="record" id="tRecord"></p>
+    <button class="gros" id="bJouer" type="button">JOUER</button>
+    <button class="petit" id="bSonT" type="button"></button>
+    <a class="petit ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
+  </div>
+
+  <div class="nid" id="eNid" hidden>
+    <div class="nid-tete"><button class="retour" id="bNidRetour" type="button" aria-label="Retour">◀</button><span>LE NID</span><span class="or" id="nPieces"></span></div>
+    <div class="amels" id="nAmels"></div>
+    <div class="etiq">DEPART :</div>
+    <div class="decors" id="nDecors"></div>
+    <button class="envol" id="bEnvol" type="button">ENVOLER !</button>
+  </div>
+
+  <div class="voile" id="ePause" hidden>
+    <div class="boite">
+      <h2>PAUSE</h2>
+      <button class="gros" id="bReprendre" type="button">REPRENDRE</button>
+      <button class="petit" id="bAuNid" type="button">RENTRER AU NID</button>
+      <button class="petit" id="bSonP" type="button"></button>
+      <a class="petit ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
+    </div>
+  </div>
+
+  <div class="voile" id="eBilan" hidden>
+    <div class="boite">
+      <h2 id="bTitre">ATTERRI !</h2>
+      <div class="bilan" id="bLignes"></div>
+      <button class="gros" id="bRetourNid" type="button">AU NID !</button>
+    </div>
+  </div>
+</div>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/GLTFLoader.js"></script>
+<script src="../lib/SkeletonUtils.js"></script>
+<script src="regles.js"></script>
+<script src="monde3d.js"></script>
+<script src="sons.js"></script>
+<script src="jeu.js"></script>
+</body>
+</html>
