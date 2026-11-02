@@ -102,7 +102,7 @@ function mdeEscadrille(e) {
 // classe : une classe neuve est toujours mieux que l'ancienne) ; elles se voient sur la corvette
 const MDE_AMELIORATIONS = {
   reservoir: { nom: 'RESERVOIR', poids: 1,   effet: 'VOL +10 S' },
-  soute:     { nom: 'SOUTE',     poids: 1.2, effet: 'SOUTE +2' },
+  soute:     { nom: 'SOUTE',     poids: 1.2, effet: 'SOUTE +2', plus: 3 },   // 3 niveaux de plus (retour du 02/11 : moins de minage à vide)
   canon:     { nom: 'CANON',     poids: 1.5, effet: ['DEGATS +1', 'TOURELLE +1', 'DEGATS +1', 'TOURELLE +1', 'DEGATS +1'] },
   coque:     { nom: 'COQUE',     poids: 0.8, effet: 'COQUE +2' },
   moteur:    { nom: 'MOTEUR',    poids: 1.1, effet: 'VITESSE +8 %' },
@@ -113,6 +113,8 @@ const MDE_NIV_MAX = 5, MDE_AMEL_PRIX = 50, MDE_AMEL_HAUSSE = 2;
 const mdeAmel = e => e.ameliorations;
 // niveaux 1 à 3 dès le départ ; le 4 avec le module central de la station, le 5 avec la base lunaire
 const mdeNivMax = e => e.bases.lune ? 5 : e.station.central ? 4 : 3;
+// le niveau le plus haut d'une amélioration : la soute en a 3 de plus (8 au bout, 6 dès le départ)
+const mdeNivMaxAmel = (e, k) => mdeNivMax(e) + (MDE_AMELIORATIONS[k].plus || 0);
 // ce que vaut la corvette d'une classe avec ses améliorations et la recherche
 function mdeCorvette(e, classe) {
   classe = classe || e.classe;
@@ -272,7 +274,7 @@ function mdeRetour(e, soute, panne) {
 function mdeMult(p, f) { const r = {}; for (const k in p) r[k] = Math.round(p[k] * f); return r; }
 function mdeAchats(e) {
   const l = [], A = mdeAmel(e);
-  for (const k in MDE_AMELIORATIONS) if (A[k] < mdeNivMax(e)) {
+  for (const k in MDE_AMELIORATIONS) if (A[k] < mdeNivMaxAmel(e, k)) {
     const D = MDE_AMELIORATIONS[k];
     l.push({ id: 'amel:' + k, type: 'amel', nom: D.nom + ' ' + (A[k] + 1), effet: Array.isArray(D.effet) ? D.effet[A[k]] : D.effet, prix: { cr: Math.round(MDE_AMEL_PRIX * D.poids * Math.pow(MDE_AMEL_HAUSSE, A[k])) } });
   }

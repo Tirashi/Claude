@@ -290,3 +290,7 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 - **Transfert `LUDO1-`** : la partie entière ; à l'import, on garde la plus avancée (finie d'abord, puis le plus long temps de jeu) ; cas ajouté à `outils/logique.js`.
 - **Tests** : `outils/fumee.js` (titre, décollage, roche cassée par les tourelles, vente au quai, vague alien jouée jusqu'au bout en avançant la simulation à la main, sauvegarde).
 - `sw.js` v83 (`sons.js`), script de la Ludothèque (service worker) en bas de la page.
+
+## 26. Retours du 02/11
+- **RENTRER contourne la planète** : si la ligne droite vers le quai passe à moins de 50 m de la planète, la corvette vise un point de passage sur un cercle autour d'elle, du côté le plus court, puis file droit au quai (`cheminRetour`). Essai : partie de l'autre côté de la planète, amarrée en 7 s sans passer à moins de 68 m de la surface.
+- **Soute : 3 niveaux de plus** (`plus: 3` dans `MDE_AMELIORATIONS`, `mdeNivMaxAmel`) : 6 niveaux dès le départ (soute 16 sur l'Éclaireur), 7 avec le module central, 8 avec la base lunaire ; même prix × 2 par niveau (480, 960, 1 920… CR). Pour le moment de minage à vide avant le centre spatial (vers 25 à 45 min). Simulateur : partie médiane 3 h 25 (avant 3 h 30), plus long temps sans achat 7 min en médiane (avant 9).

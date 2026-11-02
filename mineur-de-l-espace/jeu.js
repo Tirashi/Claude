@@ -110,7 +110,7 @@ class Partie {
     const A = this.e.ameliorations, c = this.C, cl = CLASSES[this.e.classe] ? this.e.classe : 'escorte';
     // les sprites des packs (combat.js) s'ils sont chargés, sinon le moteur de Nebula
     const sp = this.nefSprite && this.nefSprite(this.e.classe, c.tourelles), ts = sp && this.tourSprite();
-    this.nef = sp || construireNef(cl, { reservoir: VISIBLE[A.reservoir], soute: VISIBLE[A.soute] }, c.tourelles);
+    this.nef = sp || construireNef(cl, { reservoir: VISIBLE[A.reservoir], soute: VISIBLE[Math.min(5, A.soute)] }, c.tourelles);
     this.tour = ts ? ts.fr : tourelle(VISIBLE[A.canon]); this.tourEch = ts ? ts.ech : 1;
     if (this.armerEscadrille) this.armerEscadrille();
     this.tirs = this.nef.tourelles.map((_, i) => ({ a: 0, t: i * 0.15 }));
@@ -321,6 +321,16 @@ class Partie {
   // sons (sons.js) et vibrations (réglage de la pause)
   son(n) { if (typeof MineurSons !== 'undefined') MineurSons.jouer(n); }
   vibrer(ms) { if (modeVibre && navigator.vibrate) try { navigator.vibrate(ms); } catch (err) { /* sans vibreur */ } }
+  // RENTRER : la ligne droite vers le quai si elle ne frôle pas la planète ; sinon un point de passage qui fait le tour
+  // de la planète par le plus court côté, à distance (retour du 02/11 : la corvette raclait la planète)
+  cheminRetour(S) {
+    const s = this.ship, Rs = RT / 2 + 50, dx = S.qx - s.x, dy = S.qy - s.y, L2 = dx * dx + dy * dy || 1;
+    const t = Math.max(0, Math.min(1, -(s.x * dx + s.y * dy) / L2)), px = s.x + dx * t, py = s.y + dy * t;
+    if (Math.hypot(px, py) >= Rs) return [S.qx, S.qy];
+    const r = Math.hypot(s.x, s.y), fs = Math.atan2(s.y, s.x), fq = Math.atan2(S.qy, S.qx), d = Math.atan2(Math.sin(fq - fs), Math.cos(fq - fs));
+    const f = fs + Math.sign(d || 1) * Math.min(Math.abs(d), 0.7), rw = Math.max(Rs + 25, Math.min(r, R_ST + QUAI_ST));
+    return [Math.cos(f) * rw, Math.sin(f) * rw];
+  }
   mondeTourelle(i) { const [mx, my] = this.nef.tourelles[i], s = this.ship, c = Math.cos(s.a), si = Math.sin(s.a); return [s.x + mx * c - my * si, s.y + mx * si + my * c]; }
   /* ---------- un pas de simulation ---------- */
   pas(dt) {
@@ -351,7 +361,7 @@ class Partie {
     const K = this.touches || new Set(), tg = (K.has('ArrowLeft') || K.has('KeyA') ? -1 : 0) + (K.has('ArrowRight') || K.has('KeyD') ? 1 : 0);
     const gazPC = K.has('ArrowUp') || K.has('KeyW') || K.has('Space') || !!this.clic;
     if (this.auto && (tg || gazPC)) this.auto = false;
-    if (this.auto) { const ex = S.qx - s.x, ey = S.qy - s.y, el = Math.hypot(ex, ey) || 1, v = Math.min(120 * V, el * 1.2);
+    if (this.auto) { const [cx, cy] = this.cheminRetour(S), ex = cx - s.x, ey = cy - s.y, el = Math.hypot(ex, ey) || 1, v = cx === S.qx ? Math.min(120 * V, el * 1.2) : 120 * V;
       s.vx += (ex / el * v + S.vx - s.vx) * Math.min(1, dt * 1.5); s.vy += (ey / el * v + S.vy - s.vy) * Math.min(1, dt * 1.5); pousse = 1;
       if (Math.hypot(s.vx, s.vy) > 8) { const voulu = Math.atan2(s.vy, s.vx) + Math.PI / 2; let dd = voulu - s.a; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, dd)); } }
     else { if (force > 0.15) { const voulu = Math.atan2(jy, jx) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, d));

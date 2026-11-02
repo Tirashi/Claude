@@ -169,6 +169,8 @@ function jouer(graine, pilote, limite, reprise) {
   mig.ameliorations.moteur = 2; mig.ameliorations.propulseurs = 1;
   check(Math.abs(mdeCorvette(mig).vitesse - 1.16) < 1e-9 && mdeCorvette(mig).maniabilite === 1.2, 'moteur : vitesse + 8 % par niveau ; propulseurs : maniabilité + 20 %');
   const k = mdeNouvelle('fin'); check(mdeFinale(k) === null, 'pas de bataille finale avant les vagues');
+  const so = mdeNouvelle('soute'); so.cr = 1e6; while (mdeAcheter(so, 'amel:soute'));
+  check(so.ameliorations.soute === 6 && mdeCorvette(so).soute === 16 && ((so.bases.lune = true), mdeAcheter(so, 'amel:soute') && mdeAcheter(so, 'amel:soute') && !mdeAcheter(so, 'amel:soute')), 'soute : 6 niveaux dès le départ, 8 avec la base lunaire (retour du 02/11)');
   // porte-vaisseaux (01/11) : une ancienne sauvegarde avec la Forteresse passe au porte-vaisseaux ; son escadrille s'améliore
   const pv = mdeMigrer(JSON.parse(JSON.stringify(Object.assign(mdeNouvelle('pv'), { classes: { eclaireur: true, forteresse: true }, classe: 'forteresse', escadrille: undefined }))));
   check(pv.classe === 'porte' && pv.classes.porte && !pv.classes.forteresse && mdeCorvette(pv).escadrille.nb === 2, 'migration : la Forteresse devient le porte-vaisseaux (2 chasseurs)');
