@@ -158,7 +158,7 @@ const MDE_RECHERCHES = {
   moteurs:   { nom: 'MOTEURS',              effet: 'VITESSE +15 %',         prix: { cr: 420, fer: 10 } },
   filon:     { nom: 'FILONS',               effet: 'OR ET CRISTAL PLUS SOUVENT', prix: { cr: 650, fer: 15 } },
   riche2:    { nom: 'ROCHES TRES RICHES',   effet: 'PLUS DE MINERAI',       prix: { cr: 1000, fer: 25 }, req: e => !!e.recherche.riche1 && !!e.station.central },
-  centre:    { nom: 'CENTRE SPATIAL',       effet: 'LA STATION',            prix: { cr: 700, fer: 40, or: 6 } },
+  centre:    { nom: 'CENTRE SPATIAL',       effet: 'LA STATION',            prix: { cr: 600, fer: 40, or: 6 } },
   transfert: { nom: 'MOTEUR DE TRANSFERT',  effet: 'VOYAGE VERS LA LUNE',   prix: { cr: 6000, fer: 80, or: 15 }, req: e => !!e.station.radiateurs },
   riche3:    { nom: 'ROCHES GORGEES',       effet: 'PLUS DE MINERAI',       prix: { cr: 3500, titane: 25 }, req: e => !!e.recherche.riche2 && !!e.recherche.transfert },
   // soute intelligente (idée du 02/11) : avec la base lunaire ; l'aimant porte plus loin, et soute pleine, il attire
