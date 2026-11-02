@@ -49,6 +49,8 @@ def tourelles(im, n=6):   # places des tourelles sur les FLANCS (retour du 01/11
         if px[w // 2, y][3] > 0: centre = [0, round(y + 0.3 * h * 0.5 - h / 2)]; break
     centre = centre or [0, 0]
     return {'paires': out[:n], 'centre': centre, 'axe': [centre, [0, centre[1] + 24]]}   # coque étroite : l'une derrière l'autre
+def compo(base, dessus):   # une pièce posée au centre d'une autre (satellite de défense : satellite + tourelle)
+    b = base.copy(); b.alpha_composite(dessus, ((b.width - dessus.width) // 2, (b.height - dessus.height) // 2)); return b
 def nef(im, ech=0.5, tour=True):
     d = {'src': data(im), 'w': im.size[0], 'h': im.size[1], 'ech': ech, 'moteurs': moteurs(im)}
     if tour: d['tourelles'] = tourelles(im)
@@ -66,7 +68,7 @@ SP = {
   'd_satellite': nef(sckr('f5', 13), tour=False),   # satellite de veille (aliens)
   # satellites du départ (02/11) : guidage, météo, radar ; satellite de défense
   'd_guidage': nef(sckr('f5', 5), tour=False), 'd_meteo': nef(sckr('f5', 7), tour=False), 'd_radar': nef(sckr('f5', 6), tour=False),
-  'd_satdef': nef(sckr('f5', 23), tour=False),
+  'd_satdef': nef(compo(sckr('f5', 24), zoser('A', 'weapon_turret_09')), ech=0.7, tour=False),   # satellite + tourelle Zoser (02/11 : le n° 23 faisait radar)
   'u_garde': nef(sckr('f5', 33), tour=False), 'u_escorte': nef(sckr('f5', 4), tour=False),
   'u_reparateur': nef(sckr('f5', 18), tour=False), 'u_canonniere': nef(sckr('f5', 49), tour=False),
   # aliens (Zoser, Fields of the Void B, bleu canard et violet)

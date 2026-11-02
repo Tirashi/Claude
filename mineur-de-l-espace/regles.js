@@ -185,7 +185,7 @@ const MDE_ORBITE = {
   radar:   { nom: 'SATELLITE RADAR', niveaux: 3, effet: n => 'BOUTON RADAR : ROCHES A ' + MDE_RADAR[n] + ' M', prix: n => ({ cr: [180, 900, 3200][n] }), req: (e, n) => n === 0 || (n === 1 ? !!e.station.central : !!e.recherche.transfert) },
 };
 const MDE_RADAR = [600, 1000, 1500];   // portée du radar par niveau (1 à 3)
-const MDE_SATDEF = { nom: 'SATELLITE DE DEFENSE', max: 3, prix: { cr: 900, fer: 15 }, hausse: 1.8, pv: 15, att: 1.2, portee: 170, cadence: 0.8 };
+const MDE_SATDEF = { nom: 'SATELLITE DE DEFENSE', max: 3, prix: { cr: 900, fer: 15 }, hausse: 1.8, pv: 15, att: 1.2, portee: 260, cadence: 0.55 };   // portée et cadence relevées le 02/11 (il tirait trop peu)
 const MDE_ORBITE_ZERO = () => ({ guidage: false, meteo: false, radar: 0, defense: { terre: 0, lune: 0, mars: 0 } });
 const MDE_STATION_ORDRE = Object.keys(MDE_MODULES);
 

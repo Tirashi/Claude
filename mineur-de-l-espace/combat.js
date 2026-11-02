@@ -260,7 +260,7 @@ Object.assign(Partie.prototype, {
         if (k === 'd_radar' && this.radarT > 0) { const f = (t * 1.2) % 1; x.strokeStyle = `rgba(255,207,74,${0.5 * (1 - f)})`; x.beginPath(); x.arc(Math.round(X), Math.round(Y), 6 + f * 40, 0, 7); x.stroke(); } } });
     for (const sd of this.satsDef || []) { const X = sd.x + ox, Y = sd.y + oy; if (!vu(X, Y, 20)) continue;
       if (pretSpr('d_satdef')) dessineSpr(x, 'd_satdef', X, Y, sd.a); else { x.fillStyle = '#ff9d4a'; x.fillRect(Math.round(X) - 3, Math.round(Y) - 3, 6, 6); }
-      if (sd.feu > 0) { x.strokeStyle = '#fff2a0'; x.beginPath(); x.moveTo(Math.round(X), Math.round(Y)); x.lineTo(Math.round(sd.cx + ox), Math.round(sd.cy + oy)); x.stroke(); } }
+      if (sd.feu > 0) { x.fillStyle = '#fff2a0'; x.fillRect(Math.round(X + Math.sin(sd.a) * 9) - 2, Math.round(Y - Math.cos(sd.a) * 9) - 2, 4, 4); } }
     if (B) {
       for (const u of B.unites) { if (!u.la || u.pv <= 0) continue; const X = u.x + ox, Y = u.y + oy; if (!vu(X, Y, 30)) continue;
         if (u.rayon) { x.strokeStyle = '#7be07b'; x.beginPath(); x.moveTo(Math.round(X), Math.round(Y)); x.lineTo(Math.round(u.rayon.x + ox), Math.round(u.rayon.y + oy)); x.stroke(); }
@@ -304,12 +304,11 @@ Object.assign(Partie.prototype, {
   },
 
   /* ----- drones des stations (02/11) : les mineurs vont de roche en roche, les cargos ramassent le plus proche ----- */
-  // dessin et mouvement seulement : la production reste celle des règles (mdeProduction) ; le minerai des roches cassées
-  // par un mineur devient un « colis » que seuls les cargos ramassent
+  // la production reste celle des règles (mdeProduction) ; les roches cassées par un mineur lâchent leur minerai comme
+  // celles de la corvette : le joueur peut le prendre, et les cargos ramassent tout minerai qui flotte en orbite (02/11)
   pasDrones(dt) {
     const e = this.e, p = e.planete, d = e.drones[p], marche = mdeABase(e, p) && !e.hs[p];
-    this.colis = (this.colis || []).filter(c => (c.v -= dt) > 0);
-    if (!marche) { this.drn = null; this.colis = []; return; }
+    if (!marche) { this.drn = null; return; }
     const S = this.station(), D = this.drn || (this.drn = { m: [], c: [] }), s = this.ship;
     while (D.m.length < d.mineur) D.m.push({ x: S.x, y: S.y, vx: 0, vy: 0, a: 0, cible: null });
     while (D.c.length < d.cargo) D.c.push({ x: S.x, y: S.y, vx: 0, vy: 0, a: 0, charge: 0, cible: null, orb: this.R() * TAU });
@@ -328,20 +327,19 @@ Object.assign(Partie.prototype, {
       m.a = tournerVers(m.a, dl < a.ray + 60 ? versAngle(a.x - m.x, a.y - m.y) : versAngle(m.vx, m.vy), 3 * dt);
       if (dl < a.ray + 40) { m.laser = a; a.r.pv -= dt * 0.9; a.flash = 0.05;
         if (this.R() < dt * 6) this.parts.push({ x: a.x + (this.R() - 0.5) * a.ray, y: a.y + (this.R() - 0.5) * a.ray, vx: (this.R() - 0.5) * 30, vy: (this.R() - 0.5) * 30, v: 0.3, c: '#ffe08a', t: 1 });
-        if (a.r.pv <= 0) { this.casser(a, true); m.cible = null; } }
+        if (a.r.pv <= 0) { this.casser(a, true); m.cible = null; } }   // son minerai flotte comme celui de la corvette
     }
     const visees = new Set(D.c.map(c => c.cible));
     for (const c of D.c) {
-      if (c.charge < 3 && (!c.cible || !this.colis.includes(c.cible))) {   // le colis le plus proche de lui
-        let best = null, bd = 1e9; for (const k of this.colis) { if (visees.has(k)) continue; const dd = Math.hypot(k.x - c.x, k.y - c.y); if (dd < bd) { bd = dd; best = k; } }
+      if (c.charge < 3 && (!c.cible || !(c.cible.v > 0))) {   // le minerai en orbite le plus proche de lui (pas celui que la corvette attire)
+        let best = null, bd = 1e9; for (const k of this.drops) { if (visees.has(k) || Math.hypot(k.x - s.x, k.y - s.y) < 120) continue; const dd = Math.hypot(k.x - c.x, k.y - c.y); if (dd < bd) { bd = dd; best = k; } }
         c.cible = best; visees.add(best);
       }
       if (c.charge < 3 && c.cible) { const dl = aller(c, c.cible.x, c.cible.y, 80, 0); c.a = tournerVers(c.a, versAngle(c.vx, c.vy), 4 * dt);
-        if (dl < 10) { this.colis.splice(this.colis.indexOf(c.cible), 1); c.charge++; c.cible = null; } }
+        if (dl < 10) { c.cible.v = 0; c.charge++; c.cible = null; } }
       else if (c.charge) { const dl = aller(c, S.x, S.y, 80, 0); c.a = tournerVers(c.a, versAngle(c.vx, c.vy), 4 * dt); if (dl < 14) c.charge = 0; }
       else { c.orb += dt * 0.4; aller(c, S.x + Math.cos(c.orb) * 50, S.y + Math.sin(c.orb) * 50, 40, 0); c.a = tournerVers(c.a, versAngle(c.vx, c.vy), 3 * dt); }
     }
-    for (const k of this.colis) { k.vx *= 1 - dt * 0.8; k.vy *= 1 - dt * 0.8; k.x += k.vx * dt; k.y += k.vy * dt; }
   },
   /* ----- satellites de défense : en orbite haute, ils tirent sur les roches proches et sur les aliens ----- */
   pasOrbite(dt) {
@@ -354,9 +352,10 @@ Object.assign(Partie.prototype, {
       for (const a of aliens) { const d = Math.hypot(a.x - sd.x, a.y - sd.y) - 40; if (d < bd) { bd = d; best = a; } }
       if (!best) for (const a of this.asts) { const d = Math.hypot(a.x - sd.x, a.y - sd.y) - a.ray; if (d < bd) { bd = d; best = a; } }
       sd.a = best ? tournerVers(sd.a, versAngle(best.x - sd.x, best.y - sd.y), 4 * dt) : an + Math.PI;
-      if (best && sd.t <= 0) { sd.t = R.cadence; sd.feu = 0.06; sd.cx = best.x; sd.cy = best.y;
-        if (best.k) this.blesserAlien(best, R.att * R.cadence * 1.5);
-        else { best.r.pv -= 1; best.flash = 0.08; this.eclats(best.x, best.y, 3, best.rapide ? 'fer' : best.r.minerai); if (best.r.pv <= 0) { if (best.rapide) best.vie = 0; else this.casser(best); } } }
+      // un vrai tir (balle visible, qui touche roches et aliens comme celles de la corvette)
+      if (best && sd.t <= 0 && Math.abs(Math.atan2(Math.sin(sd.a - versAngle(best.x - sd.x, best.y - sd.y)), Math.cos(sd.a - versAngle(best.x - sd.x, best.y - sd.y)))) < 0.3) {
+        sd.t = R.cadence; sd.feu = 0.08; const an = Math.atan2(best.y - sd.y, best.x - sd.x);
+        this.balles.push({ x: sd.x + Math.cos(an) * 10, y: sd.y + Math.sin(an) * 10, vx: Math.cos(an) * 340, vy: Math.sin(an) * 340, v: 1, a: an + Math.PI / 2, deg: best.k ? R.att * R.cadence * 1.5 : 1, sorte: 'sat' }); }
     }
   },
   /* ----- le radar (bouton) : les roches les plus proches dans sa portée, montrées quelques secondes ----- */
