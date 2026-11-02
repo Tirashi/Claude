@@ -341,12 +341,16 @@ class Partie {
   // RENTRER : la ligne droite vers le quai si elle ne frôle pas la planète ; sinon un point de passage qui fait le tour
   // de la planète par le plus court côté, à distance (retour du 02/11 : la corvette raclait la planète)
   cheminRetour(S) {
-    const s = this.ship, Rs = RT / 2 + 50, dx = S.qx - s.x, dy = S.qy - s.y, L2 = dx * dx + dy * dy || 1;
+    const s = this.ship, Rs = RT / 2 + 105, dx = S.qx - s.x, dy = S.qy - s.y, L2 = dx * dx + dy * dy || 1;   // 105 m de marge (02/11 : à 50 m elle semblait raser la planète)
     const t = Math.max(0, Math.min(1, -(s.x * dx + s.y * dy) / L2)), px = s.x + dx * t, py = s.y + dy * t;
     if (Math.hypot(px, py) >= Rs) return [S.qx, S.qy];
-    const r = Math.hypot(s.x, s.y), fs = Math.atan2(s.y, s.x), fq = Math.atan2(S.qy, S.qx), d = Math.atan2(Math.sin(fq - fs), Math.cos(fq - fs));
-    const f = fs + Math.sign(d || 1) * Math.min(Math.abs(d), 0.7), rw = Math.max(Rs + 25, Math.min(r, R_ST + QUAI_ST));
-    return [Math.cos(f) * rw, Math.sin(f) * rw];
+    // contournement : tourner autour de la planète (du côté le plus court) en revenant vers un cercle de sécurité (Rs + 50) :
+    // la direction mêle la tangente et un rappel vers ce cercle, si bien que la corvette ne peut pas passer en dessous
+    // (02/11 : un point de passage à poursuivre la faisait couper le virage vers la planète)
+    const r = Math.hypot(s.x, s.y) || 1, ux = s.x / r, uy = s.y / r, fs = Math.atan2(s.y, s.x), fq = Math.atan2(S.qy, S.qx);
+    const sens = Math.sign(Math.atan2(Math.sin(fq - fs), Math.cos(fq - fs)) || 1), rappel = Math.max(-1, Math.min(1.5, (Rs + 50 - r) / 50));
+    const dx2 = -uy * sens + ux * rappel, dy2 = ux * sens + uy * rappel, n = Math.hypot(dx2, dy2) || 1;
+    return [s.x + dx2 / n * 200, s.y + dy2 / n * 200];
   }
   mondeTourelle(i) { const [mx, my] = this.nef.tourelles[i], s = this.ship, c = Math.cos(s.a), si = Math.sin(s.a); return [s.x + mx * c - my * si, s.y + mx * si + my * c]; }
   /* ---------- un pas de simulation ---------- */
@@ -380,7 +384,8 @@ class Partie {
     const gazPC = K.has('ArrowUp') || K.has('KeyW') || K.has('Space') || !!this.clic;
     if (this.auto && (tg || gazPC)) this.auto = false;
     if (this.auto) { const [cx, cy] = this.cheminRetour(S), ex = cx - s.x, ey = cy - s.y, el = Math.hypot(ex, ey) || 1, v = cx === S.qx ? Math.min(120 * V, el * 1.2) : 120 * V;
-      s.vx += (ex / el * v + S.vx - s.vx) * Math.min(1, dt * 1.5); s.vy += (ey / el * v + S.vy - s.vy) * Math.min(1, dt * 1.5); pousse = 1;
+      const kv = 3;   // la corvette suit son cap de près (sinon, emportée par son élan, elle coupe le virage vers la planète)
+      s.vx += (ex / el * v + S.vx - s.vx) * Math.min(1, dt * kv); s.vy += (ey / el * v + S.vy - s.vy) * Math.min(1, dt * kv); pousse = 1;
       if (Math.hypot(s.vx, s.vy) > 8) { const voulu = Math.atan2(s.vy, s.vx) + Math.PI / 2; let dd = voulu - s.a; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, dd)); } }
     else { if (force > 0.15) { const voulu = Math.atan2(jy, jx) + Math.PI / 2; let d = voulu - s.a; d = Math.atan2(Math.sin(d), Math.cos(d)); s.a += Math.max(-TOUR * dt, Math.min(TOUR * dt, d));
         // propulseurs : petites bouffées blanches sur le nez quand la corvette tourne
@@ -440,8 +445,14 @@ class Partie {
     const aimant = 90 * this.C.aimant;
     for (const d of this.drops) { d.v -= dt; const dx = s.x - d.x, dy = s.y - d.y, dist = Math.hypot(dx, dy);
       if (!this.quai && !this.panne && dist < aimant) { const plein = this.soute.length >= this.C.soute;
-        if (!plein) { d.vx += dx / dist * 600 * dt; d.vy += dy / dist * 600 * dt; } else if (dist < 40 && !(this.pleinT > 0)) { this.pleinT = 2; this.son('plein'); this.texte(s.x, s.y - 44, 'SOUTE PLEINE', '#ff6a5c'); }
-        if (!plein && dist < 18) { d.v = 0; this.soute.push(d.type); const rare = MDE_MINERAIS[d.type].prix >= 20; this.son(rare ? 'rare' : 'ramasse'); this.texte(d.x, d.y - 8, rare ? MDE_MINERAIS[d.type].nom + ' !' : '+1', rare ? '#ffcf4a' : '#d8c2aa'); } }
+        // soute intelligente : soute pleine, un minerai plus cher que le moins cher de la soute est attiré quand même
+        let iPire = -1; if (plein && this.C.tri) { let pmin = mdePrix(this.e, d.type); this.soute.forEach((m, i) => { const pm = mdePrix(this.e, m); if (pm < pmin) { pmin = pm; iPire = i; } }); }
+        const prend = !plein || iPire >= 0;
+        if (prend) { d.vx += dx / dist * 600 * dt; d.vy += dy / dist * 600 * dt; } else if (dist < 40 && !(this.pleinT > 0)) { this.pleinT = 2; this.son('plein'); this.texte(s.x, s.y - 44, 'SOUTE PLEINE', '#ff6a5c'); }
+        if (prend && dist < 18 && iPire >= 0) {   // le moins cher est lâché derrière la corvette
+          const m = this.soute.splice(iPire, 1)[0], an = s.a + Math.PI + (this.R() - 0.5); this.drops.push({ x: s.x, y: s.y, vx: s.vx + Math.sin(an) * 70, vy: s.vy - Math.cos(an) * 70, v: 10, type: m });
+          this.texte(s.x, s.y - 56, MDE_MINERAIS[d.type].nom + ' REMPLACE ' + MDE_MINERAIS[m].nom, '#9fd0ff'); }
+        if (prend && dist < 18) { d.v = 0; this.soute.push(d.type); const rare = MDE_MINERAIS[d.type].prix >= 20; this.son(rare ? 'rare' : 'ramasse'); this.texte(d.x, d.y - 8, rare ? MDE_MINERAIS[d.type].nom + ' !' : '+1', rare ? '#ffcf4a' : '#d8c2aa'); } }
       d.vx *= 1 - dt * 1.2; d.vy *= 1 - dt * 1.2; d.x += d.vx * dt; d.y += d.vy * dt; }
     this.drops = this.drops.filter(d => d.v > 0); this.pleinT = (this.pleinT || 0) - dt;
     for (const p of this.parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.v -= dt; } this.parts = this.parts.filter(p => p.v > 0);

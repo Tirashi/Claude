@@ -129,7 +129,8 @@ function mdeCorvette(e, classe) {
     coque: C.coque + 2 * A.coque,
     vitesse: C.vitesse * (e.recherche.moteurs ? 1.15 : 1) * (1 + 0.08 * A.moteur),
     maniabilite: 1 + 0.2 * A.propulseurs,   // vitesse de rotation et poussée
-    aimant: (C.capacite === 'aimant' ? 1.6 : 1) * (e.recherche.aimant ? 1.6 : 1),
+    aimant: (C.capacite === 'aimant' ? 1.6 : 1) * (e.recherche.aimant ? 1.6 : 1) * (e.recherche.tri ? 1.25 : 1),
+    tri: !!e.recherche.tri,
     escadrille: C.capacite === 'escadrille' ? mdeEscadrille(e) : null,
   };
 }
@@ -155,6 +156,9 @@ const MDE_RECHERCHES = {
   centre:    { nom: 'CENTRE SPATIAL',       effet: 'LA STATION',            prix: { cr: 700, fer: 40, or: 6 } },
   transfert: { nom: 'MOTEUR DE TRANSFERT',  effet: 'VOYAGE VERS LA LUNE',   prix: { cr: 6000, fer: 80, or: 15 }, req: e => !!e.station.radiateurs },
   riche3:    { nom: 'ROCHES GORGEES',       effet: 'PLUS DE MINERAI',       prix: { cr: 3500, titane: 25 }, req: e => !!e.recherche.riche2 && !!e.recherche.transfert },
+  // soute intelligente (idée du 02/11) : avec la base lunaire ; l'aimant porte plus loin, et soute pleine, il attire
+  // quand même un minerai plus cher que le moins cher de la soute, qui est alors lâché à sa place
+  tri:       { nom: 'SOUTE INTELLIGENTE',   effet: 'AIMANT +25 % ; LE MINERAI CHER REMPLACE LE MOINS CHER', prix: { cr: 2400, titane: 20 }, req: e => !!e.bases.lune && !!e.recherche.aimant },
   lointain:  { nom: 'PROPULSION LOINTAINE', effet: 'VOYAGE VERS MARS',      prix: { cr: 10000, glace: 40, titane: 30 }, req: e => !!e.bases.lune },
   blindage:  { nom: 'BLINDAGE',             effet: 'FLOTTES PV +30 %',      prix: { cr: 7000, titane: 30, cobalt: 20 }, req: e => mdeEtage(e) >= 4 },
   cristal:   { nom: 'TAILLE DU CRISTAL',    effet: 'CLASSE FORTERESSE',     prix: { cr: 14000, cristal: 10 }, req: e => !!e.bases.mars },

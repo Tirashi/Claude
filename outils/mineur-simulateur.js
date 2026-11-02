@@ -178,6 +178,8 @@ function jouer(graine, pilote, limite, reprise) {
   mdeChangerPolitique(en, 'fer'); mdeLivrer(en, { fer: 5 }); const g1 = en.entrepot.fer;
   mdeChangerPolitique(en, 'fer'); mdeLivrer(en, { fer: 5 }); const g2 = en.entrepot.fer, cr = en.cr, v = mdeVendreStock(en, 'fer');
   check(g1 === 5 && g2 === 5 && cr === 25 && v === 25 && !en.entrepot.fer && en.cr === 50, 'entrepôt : GARDER garde tout, VENDRE vend tout, le stock se vend au prix du jour');
+  const tr = mdeNouvelle('tri'); tr.cr = 1e5; tr.entrepot.titane = 50; tr.recherche.aimant = true;
+  check(!mdeAchats(tr).some(a => a.id === 'rech:tri') && ((tr.bases.lune = true), mdeAcheter(tr, 'rech:tri')) && mdeCorvette(tr).tri && Math.abs(mdeCorvette(tr).aimant - 2) < 1e-9, 'soute intelligente : avec la base lunaire, aimant + 25 %');
   const so = mdeNouvelle('soute'); so.cr = 1e6; while (mdeAcheter(so, 'amel:soute'));
   check(so.ameliorations.soute === 6 && mdeCorvette(so).soute === 16 && ((so.bases.lune = true), mdeAcheter(so, 'amel:soute') && mdeAcheter(so, 'amel:soute') && !mdeAcheter(so, 'amel:soute')), 'soute : 6 niveaux dès le départ, 8 avec la base lunaire (retour du 02/11)');
   // porte-vaisseaux (01/11) : une ancienne sauvegarde avec la Forteresse passe au porte-vaisseaux ; son escadrille s'améliore
