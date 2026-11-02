@@ -17,12 +17,14 @@ html,body{margin:0;height:100%;background:#05060d;color:#dfe3ff;font-family:"Pix
 .btn:disabled{opacity:.4;cursor:default}
 .panneau{position:absolute;right:10px;top:36px;width:300px;max-height:256px;overflow:auto;background:#0c0f22f0;border:2px solid #3b4690;border-radius:10px;padding:8px 10px;font-family:Silkscreen,monospace;font-size:11px;display:none;touch-action:pan-y}
 .panneau.vu{display:block}
-.onglets{display:flex;gap:4px;margin-bottom:6px}.onglets .btn{flex:1;font-size:9px;padding:5px 2px}.onglets .btn.actif{background:#3b4690;border-color:#ffcf4a}
+.onglets{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}.onglets .btn{flex:1;font-size:8px;padding:5px 1px}.onglets .btn.actif{background:#3b4690;border-color:#ffcf4a}
 .panneau h4{margin:0 0 4px;font-weight:400;font-size:13px;color:#ffcf4a}
 .panneau h5{margin:10px 0 2px;font-weight:400;font-size:10px;color:#9fd0ff;border-bottom:1px solid #2a3060;padding-bottom:2px}
 .panneau p{margin:2px 0 6px;font-size:9px;color:#8c93c4}.panneau p.mis{color:#9fd0ff}.panneau p.vide{color:#8c93c4;margin:10px 0}
 .ligne{display:flex;align-items:center;gap:8px;margin:5px 0}.ligne .nom{flex:1}.ligne .nom small{display:block;color:#8c93c4;font-size:9px}
 .ligne .btn{max-width:130px;font-size:10px}
+.ligne .nom small.manque{color:#ff9d4a}
+.btn.pol{min-width:62px}.btn.pol.garder{background:#1f4a2a;border-color:#6fdc7f}.btn.pol.vendre{background:#5a2a16;border-color:#f2a94a}
 .panneau canvas.carte{display:block;width:100%;image-rendering:pixelated;border:1px solid #2a3060;border-radius:6px;margin:2px 0 6px}
 .panneau p.alerte{color:#ff6a5c;font-size:10px}
 .go.finale{background:#5a1f7a;border-color:#d27ef0}

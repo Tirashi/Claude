@@ -63,7 +63,10 @@ SP = {
   'chasseur1': nef(sckr('f5', 29), tour=False), 'chasseur2': nef(sckr('f5', 28), tour=False),
   # drones des stations, satellites et flottes du joueur (Star Fleet 5)
   'd_mineur': nef(sckr('f5', 10), tour=False), 'd_cargo': nef(sckr('f5', 19), tour=False), 'd_reparateur': nef(sckr('f5', 47), tour=False),
-  'd_satellite': nef(sckr('f5', 5), tour=False),
+  'd_satellite': nef(sckr('f5', 13), tour=False),   # satellite de veille (aliens)
+  # satellites du départ (02/11) : guidage, météo, radar ; satellite de défense
+  'd_guidage': nef(sckr('f5', 5), tour=False), 'd_meteo': nef(sckr('f5', 7), tour=False), 'd_radar': nef(sckr('f5', 6), tour=False),
+  'd_satdef': nef(sckr('f5', 23), tour=False),
   'u_garde': nef(sckr('f5', 33), tour=False), 'u_escorte': nef(sckr('f5', 4), tour=False),
   'u_reparateur': nef(sckr('f5', 18), tour=False), 'u_canonniere': nef(sckr('f5', 49), tour=False),
   # aliens (Zoser, Fields of the Void B, bleu canard et violet)

@@ -17,7 +17,8 @@ const TAILLES = [11, 19, 32];   // TAILLES : rayon des petites, moyennes, grosse
 let W = 640;
 const CLE_COMMANDES = 'mineur-de-l-espace.commandes';
 // joystick fixe en bas à gauche ; en mode « bouton », POUSSER en bas à droite et RENTRER au-dessus
-const JOY = { x: 78, y: H - 78, r: 40 }, GAZ = () => ({ x: W - 66, y: H - 66, r: 40 }), BRENTRER = pc => modeCommandes === 'bouton' && !pc ? { x: W - 116, y: H - 148, w: 104, h: 32 } : { x: W - 116, y: H - 46, w: 104, h: 34 };
+const JOY = { x: 78, y: H - 78, r: 40 }, GAZ = () => ({ x: W - 66, y: H - 66, r: 40 }), BRENTRER = pc => modeCommandes === 'bouton' && !pc ? { x: W - 116, y: H - 148, w: 104, h: 32 } : { x: W - 116, y: H - 46, w: 104, h: 34 },
+  BRADAR = pc => { const B = BRENTRER(pc); return { x: B.x, y: B.y - 38, w: B.w, h: 30 }; };   // le bouton RADAR, au-dessus de RENTRER
 let modeCommandes = 'bouton';
 const CLE_VIBRE = 'mineur-de-l-espace.vibre';
 let modeVibre = true; try { modeVibre = localStorage.getItem(CLE_VIBRE) !== 'non'; } catch (err) { /* stockage indisponible */ }
@@ -58,7 +59,7 @@ class Partie {
     const [c, x] = toile(W, H); this.c = c; this.x = x; e.appendChild(c);
     this.e = this.charger(); this.onglet = 'amel';
     this.ship = { x: 0, y: -R_ST - QUAI_ST, vx: 0, vy: 0, a: 0 }; this.cam = { x: 0, y: 0 };
-    this.soute = []; this.balles = []; this.drops = []; this.parts = []; this.textes = []; this.joy = null; this.gaz = null; this.auto = false; this.panne = 0;
+    this.soute = []; this.balles = []; this.drops = []; this.colis = []; this.parts = []; this.textes = []; this.joy = null; this.gaz = null; this.auto = false; this.panne = 0;
     this.asts = []; this.R = mulberry(Date.now() & 0xffffff); this.prochainDanger = 20; this.respawn = 0; this.secousse = 0; this.pauseVue = false; this.tSauve = 0;
     for (let k = 0; k < 16; k++) this.nouvelleRoche();
     this.panneau(); this.pause(); this.entrees(); this.rebatir(); this.accoster(true);
@@ -143,6 +144,8 @@ class Partie {
         const S = this.station(), mod = id.startsWith('module:');
         this.texte(mod ? S.x : this.ship.x, mod ? S.y - 80 : this.ship.y - 46, mod ? MDE_MODULES[id.slice(7)].nom + ' INSTALLE !' : id.startsWith('drone:') ? 'NOUVEAU DRONE !' : 'ACHETE !', '#7be07b'); this.sauver(); } }
       else if (b.dataset.c) { if (mdeChangerClasse(this.e, b.dataset.c)) { this.rebatir(); this.sauver(); } }
+      else if (b.dataset.pol) { mdeChangerPolitique(this.e, b.dataset.pol); this.sauver(); }
+      else if (b.dataset.vs) { const g = mdeVendreStock(this.e, b.dataset.vs); if (g) { this.son('vente'); this.texte(this.ship.x, this.ship.y - 40, '+' + g + ' CR', '#ffcf4a'); this.sauver(); } }
       else if (b.dataset.r) { if (!this.bat && mdeRetirerUnite(this.e, this.e.planete, +b.dataset.r)) this.sauver(); }
       else if (b.dataset.fin) { if (this.e.aliens.finale && !this.e.fin && !this.bat) { this.decoller(); this.lancerBataille(true); } return; }
       else if (b.dataset.go) return this.decoller();
@@ -150,7 +153,7 @@ class Partie {
       this.majPanneauSiCalme(); });
   }
   majPanneau() {
-    const e = this.e, l = mdeAchats(e), O = [['amel', 'AMELIORER'], ['usine', 'USINES'], ['rech', 'RECHERCHE']];
+    const e = this.e, l = mdeAchats(e), O = [['amel', 'AMELIORER'], ['usine', 'USINES'], ['entrepot', 'STOCK'], ['rech', 'RECHERCHE']];
     if (e.recherche.centre) O.push(['station', 'STATION']);
     if (e.recherche.transfert) O.push(['carte', 'CARTE']);
     if (!O.some(o => o[0] === this.onglet)) this.onglet = 'amel';
@@ -163,19 +166,30 @@ class Partie {
     if (e.aliens.finale && !e.fin && !this.bat) h += `<p class="alerte">LE VAISSEAU-MERE APPROCHE. TOUTES TES FLOTTES SE REUNIRONT POUR LA BATAILLE.</p><button class="btn go finale" data-fin="1">BATAILLE FINALE</button>`;
     const mis = Object.entries(e.entrepot).filter(([, n]) => n > 0);
     if (mis.length) h += `<p class="mis">MIS DE COTE : ${mis.map(([m, n]) => n + ' ' + MDE_MINERAIS[m].nom).join(', ')}</p>`;
-    const ligne = (a) => `<div class="ligne"><span class="nom">${a.nom}<small>${a.effet}</small></span><button class="btn" data-a="${a.id}" ${a.possible ? '' : 'disabled'}>${prix(a.prix)}</button></div>`;
+    const manque = a => { if (a.possible) return ''; const m = mdeManque(e, a.prix); return `<small class="manque">IL MANQUE ${Object.entries(m).map(([k, v]) => k === 'cr' ? Math.ceil(v) + ' CR' : v + ' ' + MDE_MINERAIS[k].nom).join(' + ')}</small>`; };
+    const ligne = (a) => `<div class="ligne"><span class="nom">${a.nom}<small>${a.effet}</small>${manque(a)}</span><button class="btn" data-a="${a.id}" ${a.possible ? '' : 'disabled'}>${prix(a.prix)}</button></div>`;
     const rien = t => `<p class="vide">${t}</p>`;
     if (l.some(x => !x.possible && Object.keys(x.prix).length > 1 && x.type === (this.onglet === 'station' ? 'module' : this.onglet)))
       h += '<p>LE QUAI MET DE COTE LE MINERAI D\'UN ACHAT DES QUE TU AS LA MOITIE DE SES CR.</p>';
     if (this.onglet === 'amel') {
       const c = this.C; h += `<p class="fiche">${c.nom} · ${c.tourelles} TOURELLE${c.tourelles > 1 ? 'S' : ''} · DEGATS ${c.degats} · SOUTE ${c.soute} · ${c.vol} S · COQUE ${c.coque}</p>`;
       const a = l.filter(x => x.type === 'amel'); h += a.length ? a.map(ligne).join('') : rien('TOUT EST AU MAXIMUM POUR L\'INSTANT');
+      const sat = l.filter(x => x.type === 'orbite');
+      if (sat.length) h += `<h5>SATELLITES EN ORBITE</h5>` + sat.map(ligne).join('');
       if (e.classes.porte) { const E = mdeEscadrille(e), es = l.filter(x => x.type === 'esc');
         h += `<h5>ESCADRILLE DU PORTE-VAISSEAUX</h5><p class="fiche">${E.nb} CHASSEURS · ENERGIE ${E.energie} S · DEGATS ${E.degats} · PV ${E.pv} · DEFENSE ${E.defense.portee} M${E.grand ? ' · CHASSEURS LOURDS' : ''}</p>`;
         h += es.length ? es.map(ligne).join('') : rien('ESCADRILLE AU MAXIMUM POUR L\'INSTANT'); }
     } else if (this.onglet === 'usine') {
       h += `<p class="fiche">PRIX : ${Object.keys(MDE_MINERAIS).filter(m => m === 'fer' || m === 'or' || mdeEtage(e) >= 3).map(m => MDE_MINERAIS[m].nom + ' ' + mdePrix(e, m)).join(' · ')}</p>`;
       const a = l.filter(x => x.type === 'usine'); h += a.length ? a.map(ligne).join('') : rien('TOUTES LES USINES SONT AU MAXIMUM');
+    } else if (this.onglet === 'entrepot') {
+      // l'entrepôt : pour chaque minerai, AUTO (le quai garde ce qu'il faut pour les achats proches), GARDER ou VENDRE tout
+      h += `<p>AUTO : LE QUAI GARDE LE MINERAI D'UN ACHAT QUAND TU AS LA MOITIE DE SES CR ET VEND LE RESTE. GARDER : TOUT EST MIS DE COTE. VENDRE : TOUT EST VENDU.</p>`;
+      const vus = MDE_ORDRE.filter(m => Object.keys(MDE_PLANETES).some(p => MDE_PLANETES[p].ceinture[m] && (p === 'terre' || (MDE_PLANETES[p].req(e) && (p !== 'mars' || e.bases.lune)))) || e.entrepot[m]);
+      const NOM = { auto: 'AUTO', garder: 'GARDER', vendre: 'VENDRE' };
+      for (const m of vus) { const n = e.entrepot[m] || 0, pol = mdePolitique(e, m);
+        h += `<div class="ligne"><span class="nom">${MDE_MINERAIS[m].nom}<small>${mdePrix(e, m)} CR · STOCK ${n}${n ? ' (' + Math.round(n * mdePrix(e, m)) + ' CR)' : ''}</small></span>
+          <button class="btn pol ${pol}" data-pol="${m}">${NOM[pol]}</button><button class="btn" data-vs="${m}" ${n ? '' : 'disabled'}>VENDRE</button></div>`; }
     } else if (this.onglet === 'carte') {
       // la carte du système : les trois planètes, où l'on est, les voyages et les bases
       h += `<canvas class="carte" width="280" height="64"></canvas>`;
@@ -234,7 +248,7 @@ class Partie {
     const b = document.createElement('button'); b.className = 'btn bpause'; b.textContent = 'II'; this.ecran.appendChild(b);
     const f = document.createElement('div'); f.className = 'pause'; this.ecran.appendChild(f); this.f = f;
     f.innerHTML = `<div class="boite"><h3>PAUSE</h3><button class="btn" data-p="reprendre">REPRENDRE</button><button class="btn" data-p="commandes"></button><button class="btn" data-p="sons"></button><button class="btn" data-p="vibre"></button><button class="btn" data-p="titre">ECRAN TITRE</button>
-      <a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><p class="doux">JOYSTICK + POUSSER : LE JOYSTICK TOURNE LA CORVETTE, LE BOUTON ACCELERE. JOYSTICK SEUL : IL TOURNE ET POUSSE. LA PARTIE EST SAUVEGARDEE AU QUAI.</p><p class="doux">SUR PC : Z (OU W), FLECHE HAUT OU ESPACE POUSSE ; Q (OU A) ET D OU LES FLECHES TOURNENT ; LA SOURIS VISE, CLIC GAUCHE POUSSE ; R RENTRE ; ENTREE DECOLLE ; ECHAP : PAUSE.</p></div>`;
+      <a class="btn ludo-retour" href="../index.html">◀ LUDOTHEQUE</a><p class="doux">JOYSTICK + POUSSER : LE JOYSTICK TOURNE LA CORVETTE, LE BOUTON ACCELERE. JOYSTICK SEUL : IL TOURNE ET POUSSE. LA PARTIE EST SAUVEGARDEE AU QUAI.</p><p class="doux">SUR PC : Z (OU W), FLECHE HAUT OU ESPACE POUSSE ; Q (OU A) ET D OU LES FLECHES TOURNENT ; LA SOURIS VISE, CLIC GAUCHE POUSSE ; R RENTRE (SATELLITE DE GUIDAGE) ; T : RADAR ; ENTREE DECOLLE ; ECHAP : PAUSE.</p></div>`;
     const majC = () => { f.querySelector('[data-p="commandes"]').textContent = modeCommandes === 'bouton' ? 'COMMANDES : JOYSTICK + POUSSER' : 'COMMANDES : JOYSTICK SEUL';
       f.querySelector('[data-p="sons"]').textContent = 'SONS : ' + (typeof MineurSons === 'undefined' || MineurSons.actif ? 'OUI' : 'NON');
       f.querySelector('[data-p="vibre"]').textContent = 'VIBRATIONS : ' + (modeVibre ? 'OUI' : 'NON'); }; majC();
@@ -268,7 +282,7 @@ class Partie {
   }
   finVoyage() {
     const pl = this.enVoyage.vers; this.enVoyage = null;
-    this.asts = []; this.drops = []; this.balles = []; this.parts = []; this.textes = []; for (let k = 0; k < 16; k++) this.nouvelleRoche();
+    this.asts = []; this.drops = []; this.colis = []; this.drn = null; this.balles = []; this.parts = []; this.textes = []; for (let k = 0; k < 16; k++) this.nouvelleRoche();
     this.onglet = 'amel'; this.accoster(true); const S = this.station(); this.cam.x = S.x; this.cam.y = S.y;
     this.texte(S.x, S.y - 80, 'BIENVENUE : ' + MDE_PLANETES[pl].nom, '#7be07b');
   }
@@ -285,7 +299,8 @@ class Partie {
     this.c.addEventListener('pointerdown', ev => { if (ev.pointerType !== 'mouse') this.pc = false; }, true);
     this.c.addEventListener('pointerdown', ev => { if (ev.pointerType !== 'mouse' || this.quai || this.panne || this.pauseVue) return;
       this.pc = true; const [x, y] = pos(ev), B = BRENTRER(true); this.souris = { x, y }; this.viseSouris = true;
-      if (x > B.x && x < B.x + B.w && y > B.y && y < B.y + B.h) { this.auto = true; ev.stopImmediatePropagation(); return; }
+      if (this.e.orbite.guidage && x > B.x && x < B.x + B.w && y > B.y && y < B.y + B.h) { this.auto = true; ev.stopImmediatePropagation(); return; }
+      { const D = BRADAR(true); if (this.e.orbite.radar && x > D.x && x < D.x + D.w && y > D.y && y < D.y + D.h) { this.radar(); ev.stopImmediatePropagation(); return; } }
       if (ev.button === 0) { this.capturer(ev); this.clic = true; this.auto = false; } ev.stopImmediatePropagation(); });
     this.c.addEventListener('pointermove', ev => { if (ev.pointerType !== 'mouse') return; this.pc = true; const [x, y] = pos(ev); this.souris = { x, y }; this.viseSouris = true; });
     this.c.addEventListener('pointerup', ev => { if (ev.pointerType === 'mouse') this.clic = false; });
@@ -298,12 +313,14 @@ class Partie {
       if (this.pauseVue) return;
       this.pc = true;
       if (this.quai && (ev.code === 'Enter' || ev.code === 'NumpadEnter' || ev.code === 'Space') && !ev.repeat && !(ev.target && ev.target.closest && ev.target.closest('button'))) { this.decoller(); ev.preventDefault(); return; }
-      if (ev.code === 'KeyR' && !this.quai && !this.panne) { this.auto = true; return; }
+      if (ev.code === 'KeyR' && !this.quai && !this.panne && this.e.orbite.guidage) { this.auto = true; return; }
+      if (ev.code === 'KeyT' && !this.quai && !this.panne) { this.radar(); return; }
       if (TOUCHES.includes(ev.code)) { this.touches.add(ev.code); if (/Left|Right|KeyA|KeyD/.test(ev.code)) this.viseSouris = false; ev.preventDefault(); } });
     addEventListener('keyup', ev => this.touches.delete(ev.code));
     addEventListener('blur', () => { this.touches.clear(); this.clic = false; });
     this.c.addEventListener('pointerdown', ev => { if (this.quai || this.panne || this.pauseVue) return; const [x, y] = pos(ev), B = BRENTRER(this.pc), G = GAZ();
-      if (x > B.x - 6 && x < B.x + B.w + 6 && y > B.y - 6 && y < B.y + B.h + 6) { this.auto = true; return; }
+      if (this.e.orbite.guidage && x > B.x - 6 && x < B.x + B.w + 6 && y > B.y - 6 && y < B.y + B.h + 6) { this.auto = true; return; }
+      { const D = BRADAR(this.pc); if (this.e.orbite.radar && x > D.x - 6 && x < D.x + D.w + 6 && y > D.y - 4 && y < D.y + D.h + 4) { this.radar(); return; } }
       if (modeCommandes === 'bouton' && Math.hypot(x - G.x, y - G.y) < G.r + 14) { this.capturer(ev); this.gaz = ev.pointerId; this.auto = false; return; }
       if (x < W * 0.5 && !this.joy) { this.capturer(ev); this.joy = { id: ev.pointerId, dx: 0, dy: 0 }; viser(this.joy, x, y); this.auto = false; } });
     this.c.addEventListener('pointermove', ev => { const j = this.joy; if (!j || j.id !== ev.pointerId) return; const [x, y] = pos(ev); viser(j, x, y); });
@@ -338,7 +355,8 @@ class Partie {
     if (this.enVoyage) { mdeAvancer(this.e, dt); this.enVoyage.t += dt; if (this.enVoyage.t >= this.enVoyage.d) this.finVoyage(); return; }
     const s = this.ship, c = this.C, e = this.e;
     const ev = mdeAvancer(e, dt);
-    if (this.evenementsAliens) { this.evenementsAliens(ev); this.pasCombat(dt); this.pasEscadrille(dt); }
+    if (this.evenementsAliens) { this.evenementsAliens(ev); this.pasCombat(dt); this.pasEscadrille(dt); this.pasDrones(dt); this.pasOrbite(dt); }
+    this.radarT = Math.max(0, (this.radarT || 0) - dt);
     if (this.bandeau) this.bandeau.v -= dt;
     if (ev.gain) { this.livre = (this.livre || 0) + ev.gain; if (this.quai) this.majPanneauBientot = true; }
     this.tLivre = (this.tLivre || 0) + dt; if (this.tLivre > 4) { this.tLivre = 0; if (this.livre) { const S = this.station(); this.texte(S.x, S.y - 70, '+' + this.livre + ' CR (DRONES)', '#ffcf4a'); this.livre = 0; if (this.majPanneauBientot && this.quai) { this.majPanneauBientot = false; this.majPanneauSiCalme(); } } }
@@ -434,41 +452,35 @@ class Partie {
     this.cam.x += (cx - this.cam.x) * Math.min(1, dt * (this.quai ? 2 : 3)); this.cam.y += (cy - this.cam.y) * Math.min(1, dt * (this.quai ? 2 : 3));
   }
   // une roche cassée : ses éclats (règles), ou son minerai si c'était une petite
-  casser(a) {
-    this.asts.splice(this.asts.indexOf(a), 1); this.son(a.r.taille >= 2 ? 'grosse' : 'roche');
+  casser(a, parDrone) {
+    this.asts.splice(this.asts.indexOf(a), 1); if (!parDrone) this.son(a.r.taille >= 2 ? 'grosse' : 'roche');
     if (a.rapide) { this.eclats(a.x, a.y, 8, 'fer', true); return; }
     const R = this.R, l = mdeEclats(a.r, R);
     l.forEach((r, i) => { const an = i / l.length * TAU + R() * 0.6, v = 25 + R() * 25;
       this.nouvelleRoche(r, a.x + Math.cos(an) * a.ray * 0.5, a.y + Math.sin(an) * a.ray * 0.5, a.vx + Math.cos(an) * v, a.vy + Math.sin(an) * v); });
     const n = mdeButin(this.e, a.r, R);
+    if (parDrone) { for (let i = 0; i < n; i++) { const an = R() * TAU; this.colis.push({ x: a.x, y: a.y, vx: Math.cos(an) * 15, vy: Math.sin(an) * 15, v: 60, type: a.r.minerai }); } this.eclats(a.x, a.y, 8, a.r.minerai, true); return; }
     for (let i = 0; i < n; i++) { const an = R() * TAU; this.drops.push({ x: a.x, y: a.y, vx: a.vx + Math.cos(an) * 40, vy: a.vy + Math.sin(an) * 40, v: 14, type: a.r.minerai }); }
     this.eclats(a.x, a.y, l.length ? 14 : 10, a.r.minerai, true);
   }
   eclats(x, y, n, m, gros) { const V = VEINES[m] || VEINES.fer, hex = c => '#' + c.map(v => v.toString(16).padStart(2, '0')).join(''), C = [hex(V.c[0]), hex(V.c[1]), '#71789c'];
     for (let i = 0; i < n; i++) { const an = this.R() * TAU, v = 20 + this.R() * (gros ? 80 : 40); this.parts.push({ x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v, v: 0.3 + this.R() * (gros ? 0.7 : 0.2), c: C[i % 3], t: gros && i % 4 === 0 ? 3 : gros ? 2 : 1 }); } }
   /* ---------- les drones au travail (dessin seulement : la production vient des règles, mdeProduction) ---------- */
-  // mineurs : chacun à son poste dans la ceinture, derrière la station sur son orbite, laser sur un petit caillou ;
-  // cargos : navettes entre la station et les mineurs ; réparateur : suit la corvette
+  // réparateur : suit la corvette
   dessinDrones(x, ox, oy, t, S) {
-    const e = this.e, p = e.planete, d = e.drones[p], marche = mdeABase(e, p) && !e.hs[p];
+    const e = this.e, p = e.planete, marche = mdeABase(e, p) && !e.hs[p];
     const tire = (k, px, py, a) => { const sx = Math.round(px + ox), sy = Math.round(py + oy); if (sx < -30 || sy < -30 || sx > W + 30 || sy > H + 30) return false;
       if (typeof pretSpr === 'function' && pretSpr('d_' + k)) { dessineSpr(x, 'd_' + k, sx, sy, a); return true; }
       const F = drone(k), n = nAng(a), r = a - n / N_ANG * TAU; x.save(); x.translate(sx, sy); x.rotate(Math.atan2(Math.sin(r), Math.cos(r))); x.drawImage(F[n], -20, -20); x.restore(); return true; };
-    const postes = [];
-    if (marche) for (let i = 0; i < d.mineur; i++) {
-      const an = S.phi - 0.45 - i * 0.3 + Math.sin(t * 0.2 + i) * 0.03, r = 420 + (i % 2) * 46, px = Math.cos(an) * r, py = Math.sin(an) * r;
-      const cx = px + Math.cos(an) * 16, cy = py + Math.sin(an) * 16; postes.push([px, py]);
-      const sx = Math.round(cx + ox), sy = Math.round(cy + oy);
-      if (sx > -20 && sy > -20 && sx < W + 20 && sy < H + 20) { const roc = ROCS[0][Object.keys(MDE_PLANETES[p].ceinture)[0]][i % 3]; x.drawImage(roc.fr[nRoc(t * 0.3 + i)], sx - (roc.L >> 1), sy - (roc.L >> 1));
-        if ((t * 3 + i) % 1 < 0.6) { x.strokeStyle = '#ff9d4a'; x.beginPath(); x.moveTo(Math.round(px + ox), Math.round(py + oy)); x.lineTo(sx, sy); x.stroke();
-          if (this.R() < 0.2) this.parts.push({ x: cx, y: cy, vx: (this.R() - 0.5) * 40, vy: (this.R() - 0.5) * 40, v: 0.3, c: '#ffe08a', t: 1 }); } }
-      tire('mineur', px, py, an + Math.PI / 2);   // nez vers le caillou
-    }
-    if (marche && postes.length) for (let j = 0; j < d.cargo; j++) {
-      const P = postes[(j * 2) % postes.length], ph = (t / 16 + j * 0.37) % 1;
-      let f, va; if (ph < 0.42) { f = ph / 0.42; va = 1; } else if (ph < 0.5) { f = 1; va = 0; } else if (ph < 0.92) { f = 1 - (ph - 0.5) / 0.42; va = -1; } else { f = 0; va = 0; }
-      const g = f * f * (3 - 2 * f), px = S.x + (P[0] - S.x) * g, py = S.y + (P[1] - S.y) * g, dir = Math.atan2(P[1] - S.y, P[0] - S.x) + (va < 0 ? Math.PI : 0);
-      tire('cargo', px + Math.cos(dir + Math.PI / 2) * 10 * Math.sin(f * Math.PI), py + Math.sin(dir + Math.PI / 2) * 10 * Math.sin(f * Math.PI), dir + Math.PI / 2);
+    // mineurs (pasDrones, combat.js) : ils vont de roche en roche dans la ceinture et les cassent au laser ; cargos :
+    // ils ramassent le minerai le plus proche et le rapportent à la station (la production reste celle des règles)
+    const D = this.drn;
+    if (marche && D) {
+      for (const c of this.colis) { const X = Math.round(c.x + ox), Y = Math.round(c.y + oy); if (X < -10 || Y < -10 || X > W + 10 || Y > H + 10) continue;
+        x.globalAlpha = 0.85; x.drawImage(PEP[c.type], X - 4, Y - 3, 8, 7); x.globalAlpha = 1; if ((t * 2 + c.x) % 1 < 0.5) { x.fillStyle = '#9fd0ff'; x.fillRect(X - 1, Y - 6, 2, 2); } }
+      for (const m of D.m) { if (m.laser && (t * 8 | 0) % 3) { x.strokeStyle = '#ff9d4a'; x.beginPath(); x.moveTo(Math.round(m.x + ox), Math.round(m.y + oy)); x.lineTo(Math.round(m.laser.x + ox), Math.round(m.laser.y + oy)); x.stroke(); }
+        tire('mineur', m.x, m.y, m.a); }
+      for (const c of D.c) { tire('cargo', c.x, c.y, c.a); if (c.charge) { const X = Math.round(c.x + ox), Y = Math.round(c.y + oy); x.fillStyle = '#ffcf4a'; for (let k = 0; k < c.charge; k++) x.fillRect(X - 4 + k * 3, Y + 9, 2, 2); } }
     }
     if (e.reparateur) { const s = this.ship, sur = !this.quai && !this.panne, px = sur ? s.x - Math.sin(s.a) * 46 + Math.cos(t) * 8 : S.x + 50, py = sur ? s.y + Math.cos(s.a) * 46 + Math.sin(t) * 8 : S.y + 10;
       this.rep = this.rep || { x: px, y: py }; this.rep.x += (px - this.rep.x) * 0.08; this.rep.y += (py - this.rep.y) * 0.08;
@@ -543,7 +555,7 @@ class Partie {
       x.save(); x.translate(fx, fy); x.rotate(an); x.fillStyle = col; x.beginPath(); x.moveTo(10, 0); x.lineTo(-6, -7); x.lineTo(-6, 7); x.fill(); x.restore();
       x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = col; x.fillText('STATION ' + Math.round(d / 10) + ' KM', fx - Math.cos(an) * 24, fy - Math.sin(an) * 20 + 3); }
     // alerte météorite : chevrons rouges qui clignotent au bord de l'écran, du côté d'où elle arrive
-    if (this.alerteMeteo && (t * 6 | 0) % 2) { const an = this.alerteMeteo.an, kk = Math.min((W / 2 - 20) / Math.abs(Math.cos(an)), (H / 2 - 44) / Math.abs(Math.sin(an)));
+    if (this.alerteMeteo && this.e.orbite.meteo && (t * 6 | 0) % 2) { const an = this.alerteMeteo.an, kk = Math.min((W / 2 - 20) / Math.abs(Math.cos(an)), (H / 2 - 44) / Math.abs(Math.sin(an)));
       const fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + 8 + Math.sin(an) * kk; x.save(); x.translate(fx, fy); x.rotate(an + Math.PI); x.fillStyle = '#ff6a5c';
       for (const o of [0, 9]) { x.beginPath(); x.moveTo(o + 8, 0); x.lineTo(o - 4, -8); x.lineTo(o - 4, 8); x.fill(); } x.restore();
       x.font = '9px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ff6a5c'; x.fillText('METEORITE', fx - Math.cos(an) * 34, fy - Math.sin(an) * 22 + 3); }
@@ -559,7 +571,7 @@ class Partie {
     const c0 = s0 + sm * pas + 8, cp = Math.min(6, Math.max(2, Math.floor(56 / c.coque))); for (let i = 0; i < c.coque; i++) { x.fillStyle = i < this.coque ? '#9fd0ff' : '#2a3060'; x.fillRect(c0 + i * cp, 10, Math.max(1, cp - 2), 10); }
     const f = this.carbu / c.vol, bw = 90, bxx = W - 48 - bw; x.textAlign = 'right'; x.fillStyle = '#8c93c4'; x.fillText('CARBU', bxx - 6, 18); x.fillStyle = '#1a1f40'; x.fillRect(bxx, 11, bw, 8);
     x.fillStyle = f < 0.25 ? (t * 4 % 1 < 0.5 ? '#ff6a5c' : '#7a2a26') : f < 0.5 ? '#ff9d4a' : '#7be07b'; x.fillRect(bxx, 11, Math.round(bw * f), 8);
-    if (this.dessinAlertes) this.dessinAlertes(x, t);
+    if (this.dessinAlertes) { this.dessinAlertes(x, t); this.dessinRadar(x, t); }
     // commandes : joystick fixe, bouton POUSSER (mode « bouton »), RENTRER
     if (!this.quai && !this.panne && this.pc && this.viseSouris && this.souris) { const mx = Math.round(this.souris.x), my = Math.round(this.souris.y); x.fillStyle = this.clic ? '#ffcf4a' : '#9fd0ff';
       for (const [a, b, w, h] of [[-8, 0, 5, 1], [4, 0, 5, 1], [0, -8, 1, 5], [0, 4, 1, 5]]) x.fillRect(mx + a, my + b, w, h); }
@@ -571,7 +583,10 @@ class Partie {
         x.beginPath(); x.arc(G.x, G.y, G.r, 0, 7); x.fill(); x.stroke(); x.lineWidth = 1; x.globalAlpha = 1;
         x.font = '10px Silkscreen'; x.textAlign = 'center'; x.fillStyle = on ? '#ffcf4a' : '#f2a94a'; x.fillText('POUSSER', G.x, G.y + 4); }
     }
-    if (!this.quai && !this.panne) {
+    if (!this.quai && !this.panne && this.e.orbite.radar) { const D = BRADAR(this.pc), on = this.radarT > 0;
+      x.fillStyle = on ? '#5a4a10cc' : '#1d2560cc'; x.strokeStyle = on ? '#ffcf4a' : '#5a6be0'; x.fillRect(D.x, D.y, D.w, D.h); x.strokeRect(D.x + 0.5, D.y + 0.5, D.w - 1, D.h - 1);
+      x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = on ? '#ffcf4a' : '#fff'; x.fillText(this.pc ? 'RADAR (T)' : 'RADAR', D.x + D.w / 2, D.y + D.h / 2 + 4); }
+    if (!this.quai && !this.panne && this.e.orbite.guidage) {
       const B = BRENTRER(this.pc); x.fillStyle = this.auto ? '#2f7a3a' : '#1d2560cc'; x.strokeStyle = this.auto ? '#6fdc7f' : '#5a6be0'; x.fillRect(B.x, B.y, B.w, B.h); x.strokeRect(B.x + 0.5, B.y + 0.5, B.w - 1, B.h - 1);
       x.font = '11px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText(this.auto ? 'RETOUR...' : this.pc ? 'RENTRER (R)' : 'RENTRER', B.x + B.w / 2, B.y + B.h / 2 + 4); }
   }

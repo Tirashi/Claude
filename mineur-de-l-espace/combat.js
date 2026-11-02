@@ -251,11 +251,16 @@ Object.assign(Partie.prototype, {
   /* ----- dessin : satellites, flotte, aliens, escadrille, tirs ----- */
   dessinCombat(x, ox, oy, t) {
     const e = this.e, p = e.planete, B = this.bat, vu = (X, Y, m) => X > -m && Y > -m && X < W + m && Y < H + m;
-    // satellites : en orbite basse autour de la planète
-    const ns = e.satellites[p] || 0;
-    for (let i = 0; i < ns; i++) { const an = t * 0.05 + i / ns * TAU, X = Math.cos(an) * 205 + ox, Y = Math.sin(an) * 205 + oy;
-      if (vu(X, Y, 20)) { if (pretSpr('d_satellite')) dessineSpr(x, 'd_satellite', X, Y, an); else { x.fillStyle = '#9fd0ff'; x.fillRect(Math.round(X) - 2, Math.round(Y) - 2, 4, 4); }
-        if ((t * 2 + i) % 3 < 0.2) { x.strokeStyle = '#9fd0ff55'; x.beginPath(); x.arc(Math.round(X), Math.round(Y), 8 + (t * 2 + i) % 3 * 40, 0, 7); x.stroke(); } } }
+    // satellites en orbite basse : veille (aliens), guidage, météo, radar ; ceux de défense plus haut, avec leurs tirs
+    const orb = [];
+    for (let k = 0; k < (e.satellites[p] || 0); k++) orb.push('d_satellite');
+    if (e.orbite.guidage) orb.push('d_guidage'); if (e.orbite.meteo) orb.push('d_meteo'); if (e.orbite.radar) orb.push('d_radar');
+    orb.forEach((k, i) => { const an = t * 0.05 + i / orb.length * TAU, X = Math.cos(an) * 205 + ox, Y = Math.sin(an) * 205 + oy;
+      if (vu(X, Y, 20)) { if (pretSpr(k)) dessineSpr(x, k, X, Y, an); else { x.fillStyle = '#9fd0ff'; x.fillRect(Math.round(X) - 2, Math.round(Y) - 2, 4, 4); }
+        if (k === 'd_radar' && this.radarT > 0) { const f = (t * 1.2) % 1; x.strokeStyle = `rgba(255,207,74,${0.5 * (1 - f)})`; x.beginPath(); x.arc(Math.round(X), Math.round(Y), 6 + f * 40, 0, 7); x.stroke(); } } });
+    for (const sd of this.satsDef || []) { const X = sd.x + ox, Y = sd.y + oy; if (!vu(X, Y, 20)) continue;
+      if (pretSpr('d_satdef')) dessineSpr(x, 'd_satdef', X, Y, sd.a); else { x.fillStyle = '#ff9d4a'; x.fillRect(Math.round(X) - 3, Math.round(Y) - 3, 6, 6); }
+      if (sd.feu > 0) { x.strokeStyle = '#fff2a0'; x.beginPath(); x.moveTo(Math.round(X), Math.round(Y)); x.lineTo(Math.round(sd.cx + ox), Math.round(sd.cy + oy)); x.stroke(); } }
     if (B) {
       for (const u of B.unites) { if (!u.la || u.pv <= 0) continue; const X = u.x + ox, Y = u.y + oy; if (!vu(X, Y, 30)) continue;
         if (u.rayon) { x.strokeStyle = '#7be07b'; x.beginPath(); x.moveTo(Math.round(X), Math.round(Y)); x.lineTo(Math.round(u.rayon.x + ox), Math.round(u.rayon.y + oy)); x.stroke(); }
@@ -298,6 +303,80 @@ Object.assign(Partie.prototype, {
         x.save(); x.translate(fx, fy); x.rotate(an); x.fillStyle = '#d27ef0'; x.beginPath(); x.moveTo(7, 0); x.lineTo(-5, -6); x.lineTo(-5, 6); x.fill(); x.restore(); } }
   },
 
+  /* ----- drones des stations (02/11) : les mineurs vont de roche en roche, les cargos ramassent le plus proche ----- */
+  // dessin et mouvement seulement : la production reste celle des règles (mdeProduction) ; le minerai des roches cassées
+  // par un mineur devient un « colis » que seuls les cargos ramassent
+  pasDrones(dt) {
+    const e = this.e, p = e.planete, d = e.drones[p], marche = mdeABase(e, p) && !e.hs[p];
+    this.colis = (this.colis || []).filter(c => (c.v -= dt) > 0);
+    if (!marche) { this.drn = null; this.colis = []; return; }
+    const S = this.station(), D = this.drn || (this.drn = { m: [], c: [] }), s = this.ship;
+    while (D.m.length < d.mineur) D.m.push({ x: S.x, y: S.y, vx: 0, vy: 0, a: 0, cible: null });
+    while (D.c.length < d.cargo) D.c.push({ x: S.x, y: S.y, vx: 0, vy: 0, a: 0, charge: 0, cible: null, orb: this.R() * TAU });
+    D.m.length = d.mineur; D.c.length = d.cargo;
+    const aller = (o, tx, ty, v, dist) => { const dx = tx - o.x, dy = ty - o.y, dl = Math.hypot(dx, dy) || 1, vv = Math.min(v, Math.max(0, dl - dist) * 1.5);
+      o.vx += (dx / dl * vv - o.vx) * Math.min(1, dt * 2); o.vy += (dy / dl * vv - o.vy) * Math.min(1, dt * 2); o.x += o.vx * dt; o.y += o.vy * dt; return dl; };
+    const prises = new Set(D.m.map(m => m.cible));
+    for (const m of D.m) {
+      m.laser = null;
+      if (!m.cible || !this.asts.includes(m.cible)) {   // la roche la plus proche, loin de la corvette (on ne lui vole pas la sienne)
+        let best = null, bd = 1e9; for (const a of this.asts) { if (a.rapide || prises.has(a) || Math.hypot(a.x - s.x, a.y - s.y) < 220) continue; const dd = Math.hypot(a.x - m.x, a.y - m.y); if (dd < bd) { bd = dd; best = a; } }
+        m.cible = best; prises.add(best);
+      }
+      const a = m.cible; if (!a) { aller(m, S.x * 1.6, S.y * 1.6, 40, 0); m.a = tournerVers(m.a, versAngle(m.vx, m.vy), 3 * dt); continue; }
+      const dl = aller(m, a.x, a.y, 60, a.ray + 16);
+      m.a = tournerVers(m.a, dl < a.ray + 60 ? versAngle(a.x - m.x, a.y - m.y) : versAngle(m.vx, m.vy), 3 * dt);
+      if (dl < a.ray + 40) { m.laser = a; a.r.pv -= dt * 0.9; a.flash = 0.05;
+        if (this.R() < dt * 6) this.parts.push({ x: a.x + (this.R() - 0.5) * a.ray, y: a.y + (this.R() - 0.5) * a.ray, vx: (this.R() - 0.5) * 30, vy: (this.R() - 0.5) * 30, v: 0.3, c: '#ffe08a', t: 1 });
+        if (a.r.pv <= 0) { this.casser(a, true); m.cible = null; } }
+    }
+    const visees = new Set(D.c.map(c => c.cible));
+    for (const c of D.c) {
+      if (c.charge < 3 && (!c.cible || !this.colis.includes(c.cible))) {   // le colis le plus proche de lui
+        let best = null, bd = 1e9; for (const k of this.colis) { if (visees.has(k)) continue; const dd = Math.hypot(k.x - c.x, k.y - c.y); if (dd < bd) { bd = dd; best = k; } }
+        c.cible = best; visees.add(best);
+      }
+      if (c.charge < 3 && c.cible) { const dl = aller(c, c.cible.x, c.cible.y, 80, 0); c.a = tournerVers(c.a, versAngle(c.vx, c.vy), 4 * dt);
+        if (dl < 10) { this.colis.splice(this.colis.indexOf(c.cible), 1); c.charge++; c.cible = null; } }
+      else if (c.charge) { const dl = aller(c, S.x, S.y, 80, 0); c.a = tournerVers(c.a, versAngle(c.vx, c.vy), 4 * dt); if (dl < 14) c.charge = 0; }
+      else { c.orb += dt * 0.4; aller(c, S.x + Math.cos(c.orb) * 50, S.y + Math.sin(c.orb) * 50, 40, 0); c.a = tournerVers(c.a, versAngle(c.vx, c.vy), 3 * dt); }
+    }
+    for (const k of this.colis) { k.vx *= 1 - dt * 0.8; k.vy *= 1 - dt * 0.8; k.x += k.vx * dt; k.y += k.vy * dt; }
+  },
+  /* ----- satellites de défense : en orbite haute, ils tirent sur les roches proches et sur les aliens ----- */
+  pasOrbite(dt) {
+    const e = this.e, n = e.orbite.defense[e.planete] || 0, R = MDE_SATDEF;
+    if (!this.satsDef || this.satsDef.length !== n) this.satsDef = Array.from({ length: n }, (_, i) => ({ i, x: 0, y: 0, a: 0, t: i * 0.3, feu: 0 }));
+    const aliens = this.bat ? this.bat.aliens.filter(a => a.pv > 0 && !a.fuite) : [];
+    for (const sd of this.satsDef) {
+      const an = e.temps * 0.03 + sd.i / n * TAU; sd.x = Math.cos(an) * 300; sd.y = Math.sin(an) * 300; sd.t -= dt; sd.feu -= dt;
+      let best = null, bd = R.portee;
+      for (const a of aliens) { const d = Math.hypot(a.x - sd.x, a.y - sd.y) - 40; if (d < bd) { bd = d; best = a; } }
+      if (!best) for (const a of this.asts) { const d = Math.hypot(a.x - sd.x, a.y - sd.y) - a.ray; if (d < bd) { bd = d; best = a; } }
+      sd.a = best ? tournerVers(sd.a, versAngle(best.x - sd.x, best.y - sd.y), 4 * dt) : an + Math.PI;
+      if (best && sd.t <= 0) { sd.t = R.cadence; sd.feu = 0.06; sd.cx = best.x; sd.cy = best.y;
+        if (best.k) this.blesserAlien(best, R.att * R.cadence * 1.5);
+        else { best.r.pv -= 1; best.flash = 0.08; this.eclats(best.x, best.y, 3, best.rapide ? 'fer' : best.r.minerai); if (best.r.pv <= 0) { if (best.rapide) best.vie = 0; else this.casser(best); } } }
+    }
+  },
+  /* ----- le radar (bouton) : les roches les plus proches dans sa portée, montrées quelques secondes ----- */
+  radar() {
+    const e = this.e, P = e.orbite.radar ? MDE_RADAR[e.orbite.radar - 1] : 0; if (!P || this.radarT > 0) return;
+    const s = this.ship, l = this.asts.filter(a => !a.rapide).map(a => ({ a, d: Math.hypot(a.x - s.x, a.y - s.y) })).filter(o => o.d < P).sort((u, v) => u.d - v.d).slice(0, 3).map(o => o.a);
+    this.radarL = l; this.radarT = 6; this.son('zap');
+    if (!l.length) this.texte(s.x, s.y - 44, 'RADAR : RIEN A ' + P + ' M', '#ffcf4a');
+  },
+  dessinRadar(x, t) {
+    if (!(this.radarT > 0) || this.quai) return;
+    const ox = this.ox, oy = this.oy, s = this.ship;
+    (this.radarL || []).forEach((a, i) => { if (!this.asts.includes(a)) return; const X = a.x + ox, Y = a.y + oy, d = Math.round(Math.hypot(a.x - s.x, a.y - s.y) / 10);
+      x.strokeStyle = '#ffcf4a'; x.globalAlpha = Math.min(1, this.radarT);
+      if (X > 10 && Y > 40 && X < W - 10 && Y < H - 10) { const r = a.ray + 6 + Math.sin(t * 6) * 2; x.beginPath(); x.arc(Math.round(X), Math.round(Y), r, 0, 7); x.stroke(); }
+      else { const an = Math.atan2(Y - H / 2, X - W / 2), kk = Math.min((W / 2 - 40) / Math.abs(Math.cos(an)), (H / 2 - 70) / Math.abs(Math.sin(an))), fx = W / 2 + Math.cos(an) * kk, fy = H / 2 + 14 + Math.sin(an) * kk;
+        x.save(); x.translate(fx, fy); x.rotate(an); x.fillStyle = '#ffcf4a'; x.beginPath(); x.moveTo(9, 0); x.lineTo(-5, -6); x.lineTo(-5, 6); x.fill(); x.restore();
+        x.font = '8px Silkscreen'; x.textAlign = 'center'; x.fillStyle = '#ffcf4a'; x.fillText((i === 0 ? 'ROCHE ' : '') + d + ' KM', fx - Math.cos(an) * 26, fy - Math.sin(an) * 16 + 3); }
+      x.globalAlpha = 1; });
+  },
   /* ----- fin de partie ----- */
   victoire() {
     const e = this.e, f = document.createElement('div'); f.className = 'pause vu victoire'; this.ecran.appendChild(f);

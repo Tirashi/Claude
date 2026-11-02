@@ -16,7 +16,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 vm.runInThisContext(fs.readFileSync(path.join(__dirname, '..', 'mineur-de-l-espace', 'regles.js'), 'utf8'), { filename: 'mineur-de-l-espace/regles.js' });
 /* global MDE_MINERAIS, MDE_ORDRE, MDE_PLANETES, MDE_ROCHES, MDE_DANGERS, MDE_CONSO, MDE_TIR, MDE_CLASSES, MDE_VAGUES, MDE_DUREE_VOYAGE,
    mdeRng, mdeNouvelle, mdeMigrer, mdeEtage, mdeRoche, mdeEclats, mdeButin, mdeCorvette, mdeAchats, mdeAcheter, mdeBesoins, mdeLivrer,
-   mdeRetour, mdeAvancer, mdeVoyager, mdePeutVoyager, mdeProduction, mdeResoudreAttaque, mdeFinale, mdeFinVague, mdeFinFinale, mdeCombat, mdeUniteCombat,
+   mdeRetour, mdeAvancer, mdeVoyager, mdePeutVoyager, mdeProduction, mdeResoudreAttaque, mdeFinale, mdeFinVague, mdeFinFinale, mdeSatDefCombat, mdeChangerPolitique, mdeVendreStock, mdeCombat, mdeUniteCombat,
    mdeCorvetteCombat, mdeForceFlottes, mdePrix, mdeChangerClasse, mdeVague, mdeRetirerUnite, mdePlaces, MDE_UNITES, mdeCoutVoyage */
 
 const N = Number(process.argv[2]) || 12, detail = process.argv.includes('--detail');
@@ -129,10 +129,10 @@ function jouer(graine, pilote, limite, reprise) {
   check(mdeEtage(e) === 1 && e.cr === 0 && e.classe === 'eclaireur', 'nouvelle partie : étage 1, 0 CR, Éclaireur');
   check(!mdeAcheter(e, 'amel:soute'), 'sans argent, on ne peut rien acheter');
   const c0 = mdeCorvette(e); e.cr = 1e6;
-  check(c0.tourelles === 1 && c0.soute === 4 && c0.vol === 34, 'Éclaireur : 1 tourelle, soute 4, 34 s de vol');
+  check(c0.tourelles === 1 && c0.soute === 4 && c0.vol === 26, 'Éclaireur : 1 tourelle, soute 4, 26 s de vol (réservoir réduit le 02/11)');
   mdeAcheter(e, 'amel:soute'); mdeAcheter(e, 'amel:reservoir'); mdeAcheter(e, 'amel:canon'); mdeAcheter(e, 'amel:canon');
   const c1 = mdeCorvette(e);
-  check(c1.soute === 6 && c1.vol === 44 && c1.degats === 2 && c1.tourelles === 2, 'améliorations : soute +2, réservoir +10 s, canon +1 dégât puis +1 tourelle');
+  check(c1.soute === 6 && c1.vol === 36 && c1.degats === 2 && c1.tourelles === 2, 'améliorations : soute +2, réservoir +10 s, canon +1 dégât puis +1 tourelle');
   const prix = l => (mdeAchats(e).find(a => a.id === l) || {}).prix;
   check(prix('amel:canon').cr === Math.round(50 * 1.5 * 2 * 2), 'les prix des améliorations doublent à chaque niveau');
   check(!prix('amel:canon') === false && (mdeAcheter(e, 'amel:canon'), !prix('amel:canon')), 'niveau 4 seulement avec le module central');
@@ -169,6 +169,15 @@ function jouer(graine, pilote, limite, reprise) {
   mig.ameliorations.moteur = 2; mig.ameliorations.propulseurs = 1;
   check(Math.abs(mdeCorvette(mig).vitesse - 1.16) < 1e-9 && mdeCorvette(mig).maniabilite === 1.2, 'moteur : vitesse + 8 % par niveau ; propulseurs : maniabilité + 20 %');
   const k = mdeNouvelle('fin'); check(mdeFinale(k) === null, 'pas de bataille finale avant les vagues');
+  // satellites du départ (02/11) et entrepôt : un choix par minerai
+  const sa = mdeNouvelle('sat'); sa.cr = 1e5; sa.entrepot.fer = 99;
+  check(mdeAcheter(sa, 'orbite:guidage') && mdeAcheter(sa, 'orbite:meteo') && mdeAcheter(sa, 'orbite:radar') && !mdeAchats(sa).some(a => a.id === 'orbite:radar') && sa.orbite.guidage && sa.orbite.radar === 1,
+    'satellites : guidage, météo et radar 1 dès le départ, radar 2 avec le module central');
+  check(mdeAcheter(sa, 'orbite:defense') && sa.orbite.defense.terre === 1 && mdeSatDefCombat(sa, 'terre').length === 1, 'satellite de défense : un par achat, il se bat pour sa planète');
+  const en = mdeNouvelle('ent'); en.cr = 0;
+  mdeChangerPolitique(en, 'fer'); mdeLivrer(en, { fer: 5 }); const g1 = en.entrepot.fer;
+  mdeChangerPolitique(en, 'fer'); mdeLivrer(en, { fer: 5 }); const g2 = en.entrepot.fer, cr = en.cr, v = mdeVendreStock(en, 'fer');
+  check(g1 === 5 && g2 === 5 && cr === 25 && v === 25 && !en.entrepot.fer && en.cr === 50, 'entrepôt : GARDER garde tout, VENDRE vend tout, le stock se vend au prix du jour');
   const so = mdeNouvelle('soute'); so.cr = 1e6; while (mdeAcheter(so, 'amel:soute'));
   check(so.ameliorations.soute === 6 && mdeCorvette(so).soute === 16 && ((so.bases.lune = true), mdeAcheter(so, 'amel:soute') && mdeAcheter(so, 'amel:soute') && !mdeAcheter(so, 'amel:soute')), 'soute : 6 niveaux dès le départ, 8 avec la base lunaire (retour du 02/11)');
   // porte-vaisseaux (01/11) : une ancienne sauvegarde avec la Forteresse passe au porte-vaisseaux ; son escadrille s'améliore

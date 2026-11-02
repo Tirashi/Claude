@@ -72,14 +72,15 @@ const MDE_DANGERS = { 1: 1.2, 2: 1.6, 3: 2.2, 4: 2.6 };
 // vol : secondes de carburant en poussant (on consomme MDE_CONSO.glisse en glissant)
 const MDE_CONSO = { pousse: 1, glisse: 0.5 };
 const MDE_TIR = { cadence: 0.45, portee: 210 };
+// vol : secondes de carburant (réduites le 02/11 : le carburant compte dès les premières sorties)
 const MDE_CLASSES = {
-  eclaireur:   { nom: 'ECLAIREUR',   tourelles: 1, maxTourelles: 2, soute: 4,  vol: 34, coque: 3,  degats: 1, vitesse: 1,    capacite: null,       prix: null },
-  prospecteur: { nom: 'PROSPECTEUR', tourelles: 2, maxTourelles: 3, soute: 6,  vol: 40, coque: 4,  degats: 1, vitesse: 1,    capacite: 'foreuse',  prix: { cr: 500, fer: 25 },  req: e => !!e.station.central },
-  pionniere:   { nom: 'PIONNIERE',   tourelles: 3, maxTourelles: 4, soute: 8,  vol: 50, coque: 6,  degats: 1, vitesse: 1.1,  capacite: 'aimant',   prix: { cr: 2600, fer: 60, or: 8 }, req: e => !!e.station.ailes },
-  escorte:     { nom: 'ESCORTE',     tourelles: 3, maxTourelles: 4, soute: 4,  vol: 44, coque: 10, degats: 2, vitesse: 1.15, capacite: 'bouclier', prix: { cr: 9000, titane: 40, cobalt: 30 }, req: e => !!e.station.quai },
+  eclaireur:   { nom: 'ECLAIREUR',   tourelles: 1, maxTourelles: 2, soute: 4,  vol: 26, coque: 3,  degats: 1, vitesse: 1,    capacite: null,       prix: null },
+  prospecteur: { nom: 'PROSPECTEUR', tourelles: 2, maxTourelles: 3, soute: 6,  vol: 28, coque: 4,  degats: 1, vitesse: 1,    capacite: 'foreuse',  prix: { cr: 500, fer: 25 },  req: e => !!e.station.central },
+  pionniere:   { nom: 'PIONNIERE',   tourelles: 3, maxTourelles: 4, soute: 8,  vol: 36, coque: 6,  degats: 1, vitesse: 1.1,  capacite: 'aimant',   prix: { cr: 2600, fer: 60, or: 8 }, req: e => !!e.station.ailes },
+  escorte:     { nom: 'ESCORTE',     tourelles: 3, maxTourelles: 4, soute: 4,  vol: 32, coque: 10, degats: 2, vitesse: 1.15, capacite: 'bouclier', prix: { cr: 9000, titane: 40, cobalt: 30 }, req: e => !!e.station.quai },
   // le porte-vaisseaux (choix du 01/11, remplace la Forteresse) : lent, grosse soute, deux tourelles à lui, une
   // escadrille de chasseurs qui minent et se battent seuls, et une défense rapprochée contre les météorites
-  porte:       { nom: 'PORTE-VAISSEAUX', tourelles: 2, maxTourelles: 3, soute: 12, vol: 60, coque: 16, degats: 2, vitesse: 0.8, capacite: 'escadrille', prix: { cr: 24000, cobalt: 60, cristal: 25 }, req: e => !!e.recherche.cristal },
+  porte:       { nom: 'PORTE-VAISSEAUX', tourelles: 2, maxTourelles: 3, soute: 12, vol: 46, coque: 16, degats: 2, vitesse: 0.8, capacite: 'escadrille', prix: { cr: 24000, cobalt: 60, cristal: 25 }, req: e => !!e.recherche.cristal },
 };
 // l'escadrille du porte-vaisseaux : 5 niveaux comme les améliorations (achetées dès qu'on a le porte-vaisseaux)
 const MDE_ESCADRILLE = {
@@ -151,7 +152,7 @@ const MDE_RECHERCHES = {
   moteurs:   { nom: 'MOTEURS',              effet: 'VITESSE +15 %',         prix: { cr: 420, fer: 10 } },
   filon:     { nom: 'FILONS',               effet: 'OR ET CRISTAL PLUS SOUVENT', prix: { cr: 650, fer: 15 } },
   riche2:    { nom: 'ROCHES TRES RICHES',   effet: 'PLUS DE MINERAI',       prix: { cr: 1000, fer: 25 }, req: e => !!e.recherche.riche1 && !!e.station.central },
-  centre:    { nom: 'CENTRE SPATIAL',       effet: 'LA STATION',            prix: { cr: 1000, fer: 40, or: 6 } },
+  centre:    { nom: 'CENTRE SPATIAL',       effet: 'LA STATION',            prix: { cr: 700, fer: 40, or: 6 } },
   transfert: { nom: 'MOTEUR DE TRANSFERT',  effet: 'VOYAGE VERS LA LUNE',   prix: { cr: 6000, fer: 80, or: 15 }, req: e => !!e.station.radiateurs },
   riche3:    { nom: 'ROCHES GORGEES',       effet: 'PLUS DE MINERAI',       prix: { cr: 3500, titane: 25 }, req: e => !!e.recherche.riche2 && !!e.recherche.transfert },
   lointain:  { nom: 'PROPULSION LOINTAINE', effet: 'VOYAGE VERS MARS',      prix: { cr: 10000, glace: 40, titane: 30 }, req: e => !!e.bases.lune },
@@ -171,6 +172,17 @@ const MDE_MODULES = {
   antenne:    { nom: 'ANTENNE',        effet: 'SATELLITES',         prix: { cr: 5000, titane: 30, cobalt: 10 }, req: e => !!e.bases.mars },
   quai:       { nom: 'QUAI',           effet: 'CLASSE ESCORTE, FLOTTES +2 PLACES', prix: { cr: 8000, titane: 40, cobalt: 25 }, req: e => !!e.bases.mars },
 };
+// satellites en orbite (dès le départ, valables autour de toutes les planètes) : GUIDAGE (le bouton RENTRER),
+// METEO (alerte des météorites), RADAR 1 à 3 (bouton qui montre les roches les plus proches, portée croissante) ;
+// et satellites de DEFENSE par planète (tirent sur les roches près de l'orbite, puis sur les aliens)
+const MDE_ORBITE = {
+  guidage: { nom: 'SATELLITE DE GUIDAGE', effet: 'DEBLOQUE LE RETOUR AUTOMATIQUE (RENTRER)', prix: { cr: 120 } },
+  meteo:   { nom: 'SATELLITE METEO',      effet: 'PREVIENT DES METEORITES', prix: { cr: 260 } },
+  radar:   { nom: 'SATELLITE RADAR', niveaux: 3, effet: n => 'BOUTON RADAR : ROCHES A ' + MDE_RADAR[n] + ' M', prix: n => ({ cr: [180, 900, 3200][n] }), req: (e, n) => n === 0 || (n === 1 ? !!e.station.central : !!e.recherche.transfert) },
+};
+const MDE_RADAR = [600, 1000, 1500];   // portée du radar par niveau (1 à 3)
+const MDE_SATDEF = { nom: 'SATELLITE DE DEFENSE', max: 3, prix: { cr: 900, fer: 15 }, hausse: 1.8, pv: 15, att: 1.2, portee: 170, cadence: 0.8 };
+const MDE_ORBITE_ZERO = () => ({ guidage: false, meteo: false, radar: 0, defense: { terre: 0, lune: 0, mars: 0 } });
 const MDE_STATION_ORDRE = Object.keys(MDE_MODULES);
 
 /* ---------- drones (§ 9) : ils travaillent seuls, seulement pendant qu'on joue ---------- */
@@ -180,7 +192,7 @@ const MDE_DRONES = {
   mineur:     { nom: 'DRONE MINEUR', max: 6, prix: { cr: 450, fer: 10 }, hausse: 1.35 },
   cargo:      { nom: 'DRONE CARGO',  max: 3, prix: { cr: 350, fer: 10 }, hausse: 1.35 },
   reparateur: { nom: 'DRONE REPARATEUR', max: 1, prix: { cr: 1800, fer: 30, or: 6 }, effet: 'REPARE LA COQUE EN VOL' },
-  satellite:  { nom: 'SATELLITE',    max: 3, prix: { cr: 1500, titane: 10 }, hausse: 1.4, req: e => !!e.station.antenne },
+  satellite:  { nom: 'SATELLITE DE VEILLE',    max: 3, prix: { cr: 1500, titane: 10 }, hausse: 1.4, req: e => !!e.station.antenne },
 };
 
 /* ---------- bases (§ 5) ---------- */
@@ -218,7 +230,7 @@ function mdeNouvelle(graine) {
     classe: 'eclaireur', classes: { eclaireur: true }, ameliorations: MDE_AMEL_ZERO(), escadrille: MDE_ESC_ZERO(),
     usines: {}, recherche: {}, station: {}, bases: {},
     drones: { terre: { mineur: 0, cargo: 0 }, lune: { mineur: 0, cargo: 0 }, mars: { mineur: 0, cargo: 0 } },
-    reste: {}, reparateur: 0, satellites: {},
+    reste: {}, reparateur: 0, satellites: {}, orbite: MDE_ORBITE_ZERO(), politique: {},
     flottes: { terre: [], lune: [], mars: [] }, hs: {},
     aliens: { debut: null, vague: 0, prochaine: null, alerte: null, finale: false, finaleApres: null },
     fin: false, sorties: 0, achats: 0, journal: [],
@@ -228,6 +240,7 @@ function mdeMigrer(e) {
   if (!e || typeof e !== 'object' || !e.v) return null;
   e.ameliorations = Object.assign(MDE_AMEL_ZERO(), e.ameliorations);   // 31/10 : moteur et propulseurs ajoutés
   e.escadrille = Object.assign(MDE_ESC_ZERO(), e.escadrille);           // 01/11 : le porte-vaisseaux remplace la Forteresse
+  e.orbite = Object.assign(MDE_ORBITE_ZERO(), e.orbite); e.politique = e.politique || {};   // 02/11 : satellites du départ, entrepôt
   if (e.classes.forteresse) { delete e.classes.forteresse; e.classes.porte = true; }
   if (e.classe === 'forteresse') e.classe = 'porte';
   e.v = MDE_V; return e;
@@ -250,11 +263,20 @@ function mdeBesoins(e) {
   return b;
 }
 // livrer du minerai (retour au quai ou drones) : { gain, garde : {minerai: n} }
+// entrepôt (02/11) : pour chaque minerai, AUTO (comme ci-dessus), GARDER (tout) ou VENDRE (tout)
+const MDE_POLITIQUES = ['auto', 'garder', 'vendre'];
+const mdePolitique = (e, m) => (e.politique && e.politique[m]) || 'auto';
+function mdeChangerPolitique(e, m) { const i = MDE_POLITIQUES.indexOf(mdePolitique(e, m)); e.politique[m] = MDE_POLITIQUES[(i + 1) % 3]; return e.politique[m]; }
+// vendre tout le stock gardé d'un minerai
+function mdeVendreStock(e, m) { const n = e.entrepot[m] || 0; if (!n) return 0; const g = Math.round(n * mdePrix(e, m)); e.entrepot[m] = 0; e.cr += g; return g; }
+// ce qui manque pour un achat (minerai et CR), pour l'afficher
+function mdeManque(e, prix) { const r = {}; for (const k in prix) { const a = k === 'cr' ? e.cr : e.entrepot[k] || 0; if (a < prix[k]) r[k] = prix[k] - a; } return r; }
 function mdeLivrer(e, lot) {
   const besoin = mdeBesoins(e), garde = {}; let gain = 0;
   for (const m of MDE_ORDRE) {
     const n = lot[m] || 0; if (!n) continue;
-    const g = Math.max(0, Math.min(n, (besoin[m] || 0) - (e.entrepot[m] || 0)));
+    const pol = mdePolitique(e, m);
+    const g = pol === 'garder' ? n : pol === 'vendre' ? 0 : Math.max(0, Math.min(n, (besoin[m] || 0) - (e.entrepot[m] || 0)));
     if (g) { e.entrepot[m] = (e.entrepot[m] || 0) + g; garde[m] = g; }
     gain += (n - g) * mdePrix(e, m);
   }
@@ -280,6 +302,10 @@ function mdeAchats(e) {
   }
   if (e.classes.porte) for (const k in MDE_ESCADRILLE) { const n = e.escadrille[k]; if (n < mdeNivMax(e)) { const D = MDE_ESCADRILLE[k];
     l.push({ id: 'esc:' + k, type: 'esc', nom: D.nom + ' ' + (n + 1), effet: D.effet, prix: { cr: Math.round(MDE_ESC_PRIX * D.poids * Math.pow(MDE_AMEL_HAUSSE, n)), cobalt: 5 * (n + 1) } }); } }
+  const O = e.orbite;
+  for (const k of ['guidage', 'meteo']) if (!O[k]) l.push({ id: 'orbite:' + k, type: 'orbite', nom: MDE_ORBITE[k].nom, effet: MDE_ORBITE[k].effet, prix: MDE_ORBITE[k].prix });
+  if (O.radar < 3 && MDE_ORBITE.radar.req(e, O.radar)) l.push({ id: 'orbite:radar', type: 'orbite', nom: MDE_ORBITE.radar.nom + ' ' + (O.radar + 1), effet: MDE_ORBITE.radar.effet(O.radar), prix: MDE_ORBITE.radar.prix(O.radar) });
+  { const n = O.defense[e.planete] || 0; if (n < MDE_SATDEF.max && (e.planete === 'terre' || e.bases[e.planete])) l.push({ id: 'orbite:defense', type: 'orbite', nom: MDE_SATDEF.nom, effet: 'TIRE SUR LES ROCHES ET LES ALIENS · ' + MDE_PLANETES[e.planete].nom + ' ' + n + '/' + MDE_SATDEF.max, prix: mdeMult(MDE_SATDEF.prix, Math.pow(MDE_SATDEF.hausse, n)) }); }
   for (const k in MDE_CLASSES) { const D = MDE_CLASSES[k]; if (!e.classes[k] && D.prix && D.req(e)) l.push({ id: 'classe:' + k, type: 'classe', nom: 'CLASSE ' + D.nom, effet: D.tourelles + ' TOURELLES', prix: D.prix }); }
   for (const k in MDE_USINES) { const D = MDE_USINES[k], n = e.usines[k] || 0; if (n < 3 && (!D.req || D.req(e))) l.push({ id: 'usine:' + k, type: 'usine', nom: D.nom + ' ' + (n + 1), effet: MDE_MINERAIS[D.minerai].nom + ' X' + MDE_USINE_MULT[n + 1], prix: { cr: D.prix[n] } }); }
   for (const k in MDE_RECHERCHES) { const D = MDE_RECHERCHES[k]; if (!e.recherche[k] && (!D.req || D.req(e))) l.push({ id: 'rech:' + k, type: 'rech', nom: D.nom, effet: D.effet, prix: D.prix }); }
@@ -288,7 +314,7 @@ function mdeAchats(e) {
   const p = e.planete;
   if (mdeABase(e, p)) {
     for (const k of ['mineur', 'cargo']) { const n = e.drones[p][k]; if (n < MDE_DRONES[k].max) l.push({ id: 'drone:' + k, type: 'drone', nom: MDE_DRONES[k].nom, effet: (k === 'mineur' ? 'MINE ' + MDE_DRONE_MINEUR + ' MINERAIS/MIN' : 'RAMENE LE MINERAI DE 2 MINEURS') + ' · ' + n + '/' + MDE_DRONES[k].max, prix: mdeMult(MDE_DRONES[k].prix, Math.pow(MDE_DRONES[k].hausse, n)) }); }
-    if (MDE_DRONES.satellite.req(e) && (e.satellites[p] || 0) < 3) l.push({ id: 'drone:satellite', type: 'drone', nom: 'SATELLITE', effet: 'ALERTE PLUS TOT', prix: mdeMult(MDE_DRONES.satellite.prix, Math.pow(1.4, e.satellites[p] || 0)) });
+    if (MDE_DRONES.satellite.req(e) && (e.satellites[p] || 0) < 3) l.push({ id: 'drone:satellite', type: 'drone', nom: 'SATELLITE DE VEILLE', effet: 'ALERTE ALIEN PLUS TOT', prix: mdeMult(MDE_DRONES.satellite.prix, Math.pow(1.4, e.satellites[p] || 0)) });
     if (mdeEtage(e) >= 4 && e.flottes[p].length < mdePlaces(e)) for (const k in MDE_UNITES) { const D = MDE_UNITES[k]; if (!D.req || D.req(e)) l.push({ id: 'unite:' + k, type: 'unite', nom: D.nom, effet: 'FLOTTE ' + MDE_PLANETES[p].nom, prix: D.prix }); }
     if (e.hs[p]) l.push({ id: 'reparer', type: 'reparer', nom: 'REPARER LA BASE', effet: MDE_PLANETES[p].nom, prix: mdeCoutReparation(e, p) });
   }
@@ -307,6 +333,7 @@ function mdeAcheter(e, id) {
   const [t, k] = id.split(':'), p = e.planete;
   if (t === 'amel') mdeAmel(e)[k]++;
   else if (t === 'esc') e.escadrille[k]++;
+  else if (t === 'orbite') { if (k === 'radar') e.orbite.radar++; else if (k === 'defense') e.orbite.defense[p] = (e.orbite.defense[p] || 0) + 1; else e.orbite[k] = true; }
   else if (t === 'classe') { e.classes[k] = true; e.classe = k; }
   else if (t === 'usine') e.usines[k] = (e.usines[k] || 0) + 1;
   else if (t === 'rech') e.recherche[k] = true;
@@ -376,6 +403,8 @@ function mdeVague(e, n, budget) {
 // camp : [{type, pv, att, soin?}] ; la flotte arrive après `retard` secondes ; avant, les aliens tirent sur la base
 // corvette : stats de mdeCorvette si le joueur est là (il est remorqué, pas détruit, à zéro PV)
 function mdeUniteCombat(e, u) { const D = MDE_UNITES[u.type]; return { type: u.type, pv: Math.round(D.pv * (e.recherche.blindage ? 1.3 : 1)), att: D.att, soin: D.soin || 0 }; }
+// les satellites de défense d'une planète : présents dès le début du combat (pas de retard)
+function mdeSatDefCombat(e, p) { const n = (e.orbite && e.orbite.defense[p]) || 0, l = []; for (let i = 0; i < n; i++) l.push({ type: 'corvette', pv: MDE_SATDEF.pv, att: MDE_SATDEF.att, soin: 0 }); return l; }
 function mdeCorvetteCombat(c) { const E = c.escadrille; return { type: 'corvette', pv: c.coque * 5, att: c.tourelles * c.degats * 0.9 + (E ? E.nb * E.degats * 0.6 : 0), soin: 0 }; }
 function mdeCombat(graine, usage, defense, aliens, opts) {
   opts = opts || {};
@@ -402,7 +431,7 @@ function mdeCombat(graine, usage, defense, aliens, opts) {
 function mdeResoudreAttaque(e, corvette) {
   const al = e.aliens.alerte; if (!al) return null;
   const p = al.planete, F = e.flottes[p];
-  const def = F.map(u => mdeUniteCombat(e, u)); if (corvette) def.push(mdeCorvetteCombat(mdeCorvette(e)));
+  const def = F.map(u => mdeUniteCombat(e, u)).concat(mdeSatDefCombat(e, p)); if (corvette) def.push(mdeCorvetteCombat(mdeCorvette(e)));
   const r = mdeCombat(e.graine, 'attaque' + al.vague, def, mdeVague(e, al.vague), { retard: mdeRetard(e, p) });
   mdeFinVague(e, r.victoire);
   return Object.assign(r, { planete: p, vague: al.vague });
