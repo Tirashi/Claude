@@ -16,7 +16,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 vm.runInThisContext(fs.readFileSync(path.join(__dirname, '..', 'mineur-de-l-espace', 'regles.js'), 'utf8'), { filename: 'mineur-de-l-espace/regles.js' });
 /* global MDE_MINERAIS, MDE_ORDRE, MDE_PLANETES, MDE_ROCHES, MDE_DANGERS, MDE_CONSO, MDE_TIR, MDE_CLASSES, MDE_VAGUES, MDE_DUREE_VOYAGE,
    mdeRng, mdeNouvelle, mdeMigrer, mdeEtage, mdeRoche, mdeEclats, mdeButin, mdeCorvette, mdeAchats, mdeAcheter, mdeBesoins, mdeLivrer,
-   mdeRetour, mdeAvancer, mdeVoyager, mdePeutVoyager, mdeProduction, mdeResoudreAttaque, mdeFinale, mdeFinVague, mdeFinFinale, mdeSatDefCombat, mdeChangerPolitique, mdeVendreStock, mdeCombat, mdeUniteCombat,
+   mdeRetour, mdeAvancer, mdeVoyager, mdePeutVoyager, mdeProduction, mdeResoudreAttaque, mdeFinale, mdeFinVague, mdeFinFinale, mdeSatDefCombat, mdeChangerPolitique, mdeVendreStock, mdeChangerAilier, mdeCombat, mdeUniteCombat,
    mdeCorvetteCombat, mdeForceFlottes, mdePrix, mdeChangerClasse, mdeVague, mdeRetirerUnite, mdePlaces, MDE_UNITES, mdeCoutVoyage */
 
 const N = Number(process.argv[2]) || 12, detail = process.argv.includes('--detail');
@@ -180,6 +180,9 @@ function jouer(graine, pilote, limite, reprise) {
   check(g1 === 5 && g2 === 5 && cr === 25 && v === 25 && !en.entrepot.fer && en.cr === 50, 'entrepôt : GARDER garde tout, VENDRE vend tout, le stock se vend au prix du jour');
   const tr = mdeNouvelle('tri'); tr.cr = 1e5; tr.entrepot.titane = 50; tr.recherche.aimant = true;
   check(!mdeAchats(tr).some(a => a.id === 'rech:tri') && ((tr.bases.lune = true), mdeAcheter(tr, 'rech:tri')) && mdeCorvette(tr).tri && Math.abs(mdeCorvette(tr).aimant - 2) < 1e-9, 'soute intelligente : avec la base lunaire, aimant + 25 %');
+  const ai = mdeNouvelle('ailier'); ai.cr = 1e5; ai.entrepot.fer = 50;
+  check(mdeAcheter(ai, 'ailier:1') && mdeCorvette(ai).soute === 7 && mdeChangerAilier(ai, 0) && mdeCorvette(ai).soute === 4 && mdeCorvette(ai).ailiersTir === 1 && !mdeAchats(ai).some(a => a.type === 'ailier'),
+    "drones d'escorte : cargo (+3 soute) ou tireur, le 2e avec le module central");
   const so = mdeNouvelle('soute'); so.cr = 1e6; while (mdeAcheter(so, 'amel:soute'));
   check(so.ameliorations.soute === 6 && mdeCorvette(so).soute === 16 && ((so.bases.lune = true), mdeAcheter(so, 'amel:soute') && mdeAcheter(so, 'amel:soute') && !mdeAcheter(so, 'amel:soute')), 'soute : 6 niveaux dès le départ, 8 avec la base lunaire (retour du 02/11)');
   // porte-vaisseaux (01/11) : une ancienne sauvegarde avec la Forteresse passe au porte-vaisseaux ; son escadrille s'améliore

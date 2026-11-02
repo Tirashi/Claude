@@ -90,6 +90,10 @@ const MDE_ESCADRILLE = {
   hangar:    { nom: 'HANGAR',    poids: 1.5, effet: '+1 CHASSEUR' },
   defense:   { nom: 'DEFENSE',   poids: 0.8, effet: 'DEFENSE RAPPROCHEE PLUS RAPIDE' },
 };
+// drones d'escorte de la corvette (idée du 02/11) : ils la suivent en formation ; chacun est TIREUR (il tire sur les
+// roches et les aliens, dégâts de la corvette) ou CARGO (+3 cases de soute) ; on change leur rôle au quai, sans frais
+const MDE_AILIERS = { prix: [{ cr: 350 }, { cr: 1500, fer: 20 }, { cr: 6000, titane: 15 }], req: [() => true, e => !!e.station.central, e => !!e.bases.lune], soute: 3 };
+function mdeChangerAilier(e, i) { if (!e.ailiers[i]) return false; e.ailiers[i] = e.ailiers[i] === 'tir' ? 'soute' : 'tir'; return true; }
 const MDE_ESC_ZERO = () => ({ endurance: 0, puissance: 0, blindage: 0, hangar: 0, defense: 0 }), MDE_ESC_PRIX = 1500;
 // ce que vaut l'escadrille : nombre de chasseurs, énergie (s de vol), dégâts par tir, PV, minerai porté ;
 // défense rapprochée (cadence, portée) ; « grand » : améliorée à fond (les chasseurs changent de modèle)
@@ -124,7 +128,8 @@ function mdeCorvette(e, classe) {
     classe, nom: C.nom, capacite: C.capacite,
     tourelles: Math.min(C.maxTourelles, C.tourelles + Math.floor(A.canon / 2)),
     degats: C.degats + Math.ceil(A.canon / 2),
-    soute: C.soute + 2 * A.soute,
+    soute: C.soute + 2 * A.soute + MDE_AILIERS.soute * (e.ailiers || []).filter(r => r === 'soute').length,
+    ailiersTir: (e.ailiers || []).filter(r => r === 'tir').length,
     vol: C.vol + 10 * A.reservoir,
     coque: C.coque + 2 * A.coque,
     vitesse: C.vitesse * (e.recherche.moteurs ? 1.15 : 1) * (1 + 0.08 * A.moteur),
@@ -231,7 +236,7 @@ function mdeNouvelle(graine) {
   return {
     v: MDE_V, graine: String(graine), temps: 0,
     cr: 0, entrepot: {}, planete: 'terre',
-    classe: 'eclaireur', classes: { eclaireur: true }, ameliorations: MDE_AMEL_ZERO(), escadrille: MDE_ESC_ZERO(),
+    classe: 'eclaireur', classes: { eclaireur: true }, ameliorations: MDE_AMEL_ZERO(), escadrille: MDE_ESC_ZERO(), ailiers: [],
     usines: {}, recherche: {}, station: {}, bases: {},
     drones: { terre: { mineur: 0, cargo: 0 }, lune: { mineur: 0, cargo: 0 }, mars: { mineur: 0, cargo: 0 } },
     reste: {}, reparateur: 0, satellites: {}, orbite: MDE_ORBITE_ZERO(), politique: {},
@@ -244,6 +249,7 @@ function mdeMigrer(e) {
   if (!e || typeof e !== 'object' || !e.v) return null;
   e.ameliorations = Object.assign(MDE_AMEL_ZERO(), e.ameliorations);   // 31/10 : moteur et propulseurs ajoutés
   e.escadrille = Object.assign(MDE_ESC_ZERO(), e.escadrille);           // 01/11 : le porte-vaisseaux remplace la Forteresse
+  e.ailiers = e.ailiers || [];
   e.orbite = Object.assign(MDE_ORBITE_ZERO(), e.orbite); e.politique = e.politique || {};   // 02/11 : satellites du départ, entrepôt
   if (e.classes.forteresse) { delete e.classes.forteresse; e.classes.porte = true; }
   if (e.classe === 'forteresse') e.classe = 'porte';
@@ -306,6 +312,7 @@ function mdeAchats(e) {
   }
   if (e.classes.porte) for (const k in MDE_ESCADRILLE) { const n = e.escadrille[k]; if (n < mdeNivMax(e)) { const D = MDE_ESCADRILLE[k];
     l.push({ id: 'esc:' + k, type: 'esc', nom: D.nom + ' ' + (n + 1), effet: D.effet, prix: { cr: Math.round(MDE_ESC_PRIX * D.poids * Math.pow(MDE_AMEL_HAUSSE, n)), cobalt: 5 * (n + 1) } }); } }
+  { const n = e.ailiers.length; if (n < 3 && MDE_AILIERS.req[n](e)) l.push({ id: 'ailier:' + (n + 1), type: 'ailier', nom: "DRONE D'ESCORTE " + (n + 1), effet: 'IL SUIT LA CORVETTE : TIREUR OU CARGO (+' + MDE_AILIERS.soute + ' SOUTE)', prix: MDE_AILIERS.prix[n] }); }
   const O = e.orbite;
   for (const k of ['guidage', 'meteo']) if (!O[k]) l.push({ id: 'orbite:' + k, type: 'orbite', nom: MDE_ORBITE[k].nom, effet: MDE_ORBITE[k].effet, prix: MDE_ORBITE[k].prix });
   if (O.radar < 3 && MDE_ORBITE.radar.req(e, O.radar)) l.push({ id: 'orbite:radar', type: 'orbite', nom: MDE_ORBITE.radar.nom + ' ' + (O.radar + 1), effet: MDE_ORBITE.radar.effet(O.radar), prix: MDE_ORBITE.radar.prix(O.radar) });
@@ -337,6 +344,7 @@ function mdeAcheter(e, id) {
   const [t, k] = id.split(':'), p = e.planete;
   if (t === 'amel') mdeAmel(e)[k]++;
   else if (t === 'esc') e.escadrille[k]++;
+  else if (t === 'ailier') e.ailiers.push('soute');   // cargo au départ ; le joueur choisit au quai
   else if (t === 'orbite') { if (k === 'radar') e.orbite.radar++; else if (k === 'defense') e.orbite.defense[p] = (e.orbite.defense[p] || 0) + 1; else e.orbite[k] = true; }
   else if (t === 'classe') { e.classes[k] = true; e.classe = k; }
   else if (t === 'usine') e.usines[k] = (e.usines[k] || 0) + 1;
@@ -409,7 +417,7 @@ function mdeVague(e, n, budget) {
 function mdeUniteCombat(e, u) { const D = MDE_UNITES[u.type]; return { type: u.type, pv: Math.round(D.pv * (e.recherche.blindage ? 1.3 : 1)), att: D.att, soin: D.soin || 0 }; }
 // les satellites de défense d'une planète : présents dès le début du combat (pas de retard)
 function mdeSatDefCombat(e, p) { const n = (e.orbite && e.orbite.defense[p]) || 0, l = []; for (let i = 0; i < n; i++) l.push({ type: 'corvette', pv: MDE_SATDEF.pv, att: MDE_SATDEF.att, soin: 0 }); return l; }
-function mdeCorvetteCombat(c) { const E = c.escadrille; return { type: 'corvette', pv: c.coque * 5, att: c.tourelles * c.degats * 0.9 + (E ? E.nb * E.degats * 0.6 : 0), soin: 0 }; }
+function mdeCorvetteCombat(c) { const E = c.escadrille; return { type: 'corvette', pv: c.coque * 5, att: c.tourelles * c.degats * 0.9 + (E ? E.nb * E.degats * 0.6 : 0) + (c.ailiersTir || 0) * c.degats * 0.6, soin: 0 }; }
 function mdeCombat(graine, usage, defense, aliens, opts) {
   opts = opts || {};
   const R = mdeRng(graine, usage), retard = opts.retard || 0;

@@ -67,6 +67,8 @@ SP = {
   'd_mineur': nef(sckr('f5', 10), tour=False), 'd_cargo': nef(sckr('f5', 19), tour=False), 'd_reparateur': nef(sckr('f5', 47), tour=False),
   'd_satellite': nef(sckr('f5', 13), tour=False),   # satellite de veille (aliens)
   # satellites du départ (02/11) : guidage, météo, radar ; satellite de défense
+  # drones d'escorte de la corvette (02/11) : tireur et cargo (Star Fleet 5 n° 0 et 57)
+  'e_tir': nef(sckr('f5', 0), tour=False), 'e_cargo': nef(sckr('f5', 57), tour=False),
   'd_guidage': nef(sckr('f5', 5), tour=False), 'd_meteo': nef(sckr('f5', 7), tour=False), 'd_radar': nef(sckr('f5', 6), tour=False),
   'd_satdef': nef(compo(sckr('f5', 24), zoser('A', 'weapon_turret_09')), ech=0.7, tour=False),   # satellite + tourelle Zoser (02/11 : le n° 23 faisait radar)
   'u_garde': nef(sckr('f5', 33), tour=False), 'u_escorte': nef(sckr('f5', 4), tour=False),

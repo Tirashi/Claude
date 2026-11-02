@@ -341,6 +341,37 @@ Object.assign(Partie.prototype, {
       else { c.orb += dt * 0.4; aller(c, S.x + Math.cos(c.orb) * 50, S.y + Math.sin(c.orb) * 50, 40, 0); c.a = tournerVers(c.a, versAngle(c.vx, c.vy), 3 * dt); }
     }
   },
+  /* ----- drones d'escorte (02/11) : en formation derrière la corvette ; les tireurs tirent sur roches et aliens ----- */
+  pasAiliers(dt) {
+    const e = this.e, s = this.ship, c = this.C, enVol = !this.quai && !this.panne, B = this.bat;
+    this.ail = (this.ail || []).slice(0, e.ailiers.length);
+    while (this.ail.length < e.ailiers.length) this.ail.push({ x: s.x, y: s.y, a: s.a, t: this.ail.length * 0.2 });
+    const PL = [[-30, 24], [30, 24], [0, 46]], co = Math.cos(s.a), si = Math.sin(s.a);
+    this.ail.forEach((d, i) => {
+      d.role = e.ailiers[i];
+      const [mx, my] = PL[i], px = s.x + mx * co - my * si, py = s.y + mx * si + my * co;
+      if (!enVol) { d.x = px; d.y = py; d.a = s.a; return; }
+      d.x += (px - d.x) * Math.min(1, dt * 6); d.y += (py - d.y) * Math.min(1, dt * 6); d.t -= dt;
+      let best = null, bd = 220;
+      if (d.role === 'tir') {
+        if (B) for (const a of B.aliens) if (a.pv > 0 && !a.fuite) { const dd = Math.hypot(a.x - d.x, a.y - d.y) - 60; if (dd < bd) { bd = dd; best = a; } }
+        if (!best) for (const a of this.asts) { const dd = Math.hypot(a.x - d.x, a.y - d.y) - a.ray - (a.rapide ? 100 : 0); if (dd < bd) { bd = dd; best = a; } }
+      }
+      d.a = tournerVers(d.a, best ? versAngle(best.x - d.x, best.y - d.y) : s.a, 6 * dt);
+      if (best && d.t <= 0 && Math.abs(Math.atan2(Math.sin(d.a - versAngle(best.x - d.x, best.y - d.y)), Math.cos(d.a - versAngle(best.x - d.x, best.y - d.y)))) < 0.25) {
+        d.t = 0.6; const an = d.a - Math.PI / 2; this.son('chasseur');
+        this.balles.push({ x: d.x + Math.cos(an) * 8, y: d.y + Math.sin(an) * 8, vx: Math.cos(an) * 360 + s.vx, vy: Math.sin(an) * 360 + s.vy, v: 0.65, a: d.a, deg: c.degats, sorte: 'ailier' }); }
+    });
+  },
+  dessinAiliers(x, ox, oy) {
+    if (this.quai || !this.ail) return;
+    const pleins = Math.max(0, this.soute.length - (this.C.soute - MDE_AILIERS.soute * this.ail.filter(d => d.role === 'soute').length));
+    let reste = pleins;
+    for (const d of this.ail) { const k = d.role === 'tir' ? 'e_tir' : 'e_cargo', X = d.x + ox, Y = d.y + oy;
+      if (pretSpr(k)) dessineSpr(x, k, X, Y, d.a); else { x.fillStyle = d.role === 'tir' ? '#ff9d4a' : '#9fd0ff'; x.fillRect(Math.round(X) - 3, Math.round(Y) - 3, 6, 6); }
+      if (d.role === 'soute') { const n = Math.min(MDE_AILIERS.soute, reste); reste -= n;   // ses cases pleines (la soute déborde dans les cargos)
+        for (let k2 = 0; k2 < MDE_AILIERS.soute; k2++) { x.fillStyle = k2 < n ? '#ffcf4a' : '#2a3060'; x.fillRect(Math.round(X) - 5 + k2 * 4, Math.round(Y) + 11, 3, 2); } } }
+  },
   /* ----- satellites de défense : en orbite haute, ils tirent sur les roches proches et sur les aliens ----- */
   pasOrbite(dt) {
     const e = this.e, n = e.orbite.defense[e.planete] || 0, R = MDE_SATDEF;

@@ -140,10 +140,11 @@ class Partie {
     const p = document.createElement('div'); p.className = 'panneau'; this.ecran.appendChild(p); this.p = p;
     p.addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return;
       if (b.dataset.o) this.onglet = b.dataset.o;
-      else if (b.dataset.a) { const id = b.dataset.a; if (mdeAcheter(this.e, id)) { this.son('achat'); if (/^(amel|classe|esc)/.test(id)) this.rebatir();
+      else if (b.dataset.a) { const id = b.dataset.a; if (mdeAcheter(this.e, id)) { this.son('achat'); if (/^(amel|classe|esc|ailier)/.test(id)) this.rebatir();
         const S = this.station(), mod = id.startsWith('module:');
         this.texte(mod ? S.x : this.ship.x, mod ? S.y - 80 : this.ship.y - 46, mod ? MDE_MODULES[id.slice(7)].nom + ' INSTALLE !' : id.startsWith('drone:') ? 'NOUVEAU DRONE !' : 'ACHETE !', '#7be07b'); this.sauver(); } }
       else if (b.dataset.c) { if (mdeChangerClasse(this.e, b.dataset.c)) { this.rebatir(); this.sauver(); } }
+      else if (b.dataset.ail) { if (mdeChangerAilier(this.e, +b.dataset.ail)) { this.soute.length = Math.min(this.soute.length, this.C.soute); this.rebatir(); this.sauver(); } }
       else if (b.dataset.pol) { mdeChangerPolitique(this.e, b.dataset.pol); this.sauver(); }
       else if (b.dataset.vs) { const g = mdeVendreStock(this.e, b.dataset.vs); if (g) { this.son('vente'); this.texte(this.ship.x, this.ship.y - 40, '+' + g + ' CR', '#ffcf4a'); this.sauver(); } }
       else if (b.dataset.r) { if (!this.bat && mdeRetirerUnite(this.e, this.e.planete, +b.dataset.r)) this.sauver(); }
@@ -174,6 +175,10 @@ class Partie {
     if (this.onglet === 'amel') {
       const c = this.C; h += `<p class="fiche">${c.nom} · ${c.tourelles} TOURELLE${c.tourelles > 1 ? 'S' : ''} · DEGATS ${c.degats} · SOUTE ${c.soute} · ${c.vol} S · COQUE ${c.coque}</p>`;
       const a = l.filter(x => x.type === 'amel'); h += a.length ? a.map(ligne).join('') : rien('TOUT EST AU MAXIMUM POUR L\'INSTANT');
+      // drones d'escorte : la liste (rôle à changer d'un toucher) et l'achat du suivant
+      const ach = l.filter(x => x.type === 'ailier');
+      if (e.ailiers.length || ach.length) { h += `<h5>DRONES D'ESCORTE</h5><p>ILS SUIVENT LA CORVETTE. TIREUR : IL TIRE AVEC SES DEGATS. CARGO : +${MDE_AILIERS.soute} CASES DE SOUTE. TOUCHE POUR CHANGER.</p>`;
+        h += e.ailiers.map((r, i) => `<div class="ligne"><span class="nom">DRONE ${i + 1}<small>${r === 'tir' ? 'TIRE SUR LES ROCHES ET LES ALIENS' : '+' + MDE_AILIERS.soute + ' CASES DE SOUTE'}</small></span><button class="btn pol ${r === 'tir' ? 'vendre' : 'garder'}" data-ail="${i}">${r === 'tir' ? 'TIREUR' : 'CARGO'}</button></div>`).join('') + ach.map(ligne).join(''); }
       const sat = l.filter(x => x.type === 'orbite');
       if (sat.length) h += `<h5>SATELLITES EN ORBITE</h5>` + sat.map(ligne).join('');
       if (e.classes.porte) { const E = mdeEscadrille(e), es = l.filter(x => x.type === 'esc');
@@ -359,7 +364,7 @@ class Partie {
     if (this.enVoyage) { mdeAvancer(this.e, dt); this.enVoyage.t += dt; if (this.enVoyage.t >= this.enVoyage.d) this.finVoyage(); return; }
     const s = this.ship, c = this.C, e = this.e;
     const ev = mdeAvancer(e, dt);
-    if (this.evenementsAliens) { this.evenementsAliens(ev); this.pasCombat(dt); this.pasEscadrille(dt); this.pasDrones(dt); this.pasOrbite(dt); }
+    if (this.evenementsAliens) { this.evenementsAliens(ev); this.pasCombat(dt); this.pasEscadrille(dt); this.pasDrones(dt); this.pasOrbite(dt); this.pasAiliers(dt); }
     this.radarT = Math.max(0, (this.radarT || 0) - dt);
     if (this.bandeau) this.bandeau.v -= dt;
     if (ev.gain) { this.livre = (this.livre || 0) + ev.gain; if (this.quai) this.majPanneauBientot = true; }
@@ -542,8 +547,8 @@ class Partie {
       if (a.r.pv < a.pvMax) { x.fillStyle = '#000a'; x.fillRect(sx - 12, sy - a.ray - 8, 24, 3); x.fillStyle = '#ff9d4a'; x.fillRect(sx - 12, sy - a.ray - 8, 24 * a.r.pv / a.pvMax, 3); } }
     for (const d of this.drops) { const b = Math.sin(t * 5 + d.x); x.drawImage(PEP[d.type], Math.round(d.x + ox - 6), Math.round(d.y + oy - 5 + b), 12, 10); }
     for (const p of this.parts) { x.fillStyle = p.c; x.fillRect(Math.round(p.x + ox), Math.round(p.y + oy), p.t, p.t); }
-    if (this.dessinCombat) this.dessinCombat(x, ox, oy, t);
-    for (const b of this.balles) { if (b.sorte) { const c = b.sorte === 'flotte' ? '#9fd0ff' : b.sorte === 'sat' ? '#fff2a0' : '#ff9d4a'; x.fillStyle = c; x.fillRect(Math.round(b.x + ox) - 1, Math.round(b.y + oy) - 1, 2, 2); continue; } x.save(); x.translate(Math.round(b.x + ox), Math.round(b.y + oy)); x.rotate(b.a); x.fillStyle = '#d0752c'; x.fillRect(-1.5, -5, 3, 10); x.fillStyle = '#fff2a0'; x.fillRect(-0.5, -4, 1, 7); x.restore(); }
+    if (this.dessinCombat) { this.dessinCombat(x, ox, oy, t); this.dessinAiliers(x, ox, oy); }
+    for (const b of this.balles) { if (b.sorte) { const c = b.sorte === 'flotte' ? '#9fd0ff' : b.sorte === 'sat' || b.sorte === 'ailier' ? '#fff2a0' : '#ff9d4a'; x.fillStyle = c; x.fillRect(Math.round(b.x + ox) - 1, Math.round(b.y + oy) - 1, 2, 2); continue; } x.save(); x.translate(Math.round(b.x + ox), Math.round(b.y + oy)); x.rotate(b.a); x.fillStyle = '#d0752c'; x.fillRect(-1.5, -5, 3, 10); x.fillStyle = '#fff2a0'; x.fillRect(-0.5, -4, 1, 7); x.restore(); }
     // corvette : rendu de l'angle le plus proche, tourné du petit reste ; flammes ; tourelles
     const k = nAng(s.a), F = this.nef.frames[k], sx0 = Math.round((s.x + ox) * rp) / rp, sy0 = Math.round((s.y + oy) * rp) / rp, bx = -Math.sin(s.a), by = Math.cos(s.a), EC = this.nef.ech || 1;
     if (this.pousse > 0.1 && !this.panne && !this.quai) for (const [ex, ey, er] of F.engines) { const nm = e.ameliorations.moteur, l = er * (1.2 + this.pousse * 1.6) * (1 + 0.15 * nm) + ((t * 30 | 0) % 2);
