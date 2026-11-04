@@ -1,0 +1,2 @@
+f: conveyor-stripe conveyor-stripe-corner machine machine-fortified robot-arm-a structure-yellow-tall warning-traffic oopi floor box-small cog-a
+t: tile tile-straight tile-corner-round tile-spawn tile-end-round tile-tree tile-rock snow-tile snow-tile-straight snow-tile-corner-round snow-tile-spawn snow-tile-end-round snow-tile-tree snow-tile-rock enemy-ufo-a enemy-ufo-b enemy-ufo-c tower-square-bottom-a weapon-turret weapon-ammo-bullet

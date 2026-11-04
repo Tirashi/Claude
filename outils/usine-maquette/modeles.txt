@@ -1,0 +1,5 @@
+conveyor-stripe conveyor-stripe-corner conveyor-stripe-cross conveyor-stripe-junction-t
+machine machine-window machine-fortified hopper-square hopper-high-round robot-arm-a
+box-small box-wide cog-a floor structure-wall structure-window structure-yellow-tall
+screen-wide warning-traffic cone oopi indicator-special-area arrow-basic piston-round
+catwalk-straight pipe-large-long scanner-high crane

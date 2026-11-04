@@ -20,6 +20,8 @@ Liste les fichiers de la page, télécharge le premier dont le nom correspond au
 `python3 -I .claude/skills/packs-itch/pack.py <dossier des .gltf> <sortie.b64> [nom1,nom2,…]`
 Positions quantifiées en int16 sur la boîte du modèle + indices, par matériau ; en-tête JSON + binaire, gzippé puis en base64. Dans la page : `DecompressionStream("gzip")`, `MeshStandardMaterial` avec `flatShading` (pas besoin de normales). Exemple de lecteur : `maquettes/clan-du-fjord-7.html`. Fait pour Ultimate Fantasy RTS (Quaternius) ; les personnages animés Kenney passent plutôt par `GLTFLoader` + `SkeletonUtils` (voir `maquettes/ferme-du-vallon.html`).
 
+**Textures dans un artefact** : `fetch()` y est interdit, et GLTFLoader (r128) charge les textures avec `createImageBitmap`, qui passe par `fetch` → « failed to fetch ». Mettre `window.createImageBitmap = undefined` avant de charger (il passe alors par une balise `<img>`). Exemple : `outils/usine-maquette/source.html`.
+
 ## Capturer une maquette
 `ATTENTE=9000 node .claude/skills/packs-itch/capture.js <fichier.html absolu> [largeur] [code JS à lancer] [sortie.png]`
 Sert `three.min.js`, `GLTFLoader.js`, `SkeletonUtils.js` depuis `lib/`, coupe Google Fonts. `SANS_TEL=1` vide `TEL` (arrête la boucle des téléphones des maquettes). Captures seulement quand c'est utile.
