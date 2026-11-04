@@ -3,3 +3,5 @@
 # Le workflow « Ménage des branches » les supprime en gardant une étiquette archive/<nom>
 # (pour la retrouver : git fetch origin tag archive/<nom>, puis git checkout -b <nom> archive/<nom>).
 # Laisser la ligne après la suppression : c'est la trace de l'abandon.
+claude/dreamy-hopper-hcw056 | 04/11 | maquettes de Tactique / Escarmouche et notes recopiées dans main le 04/11 (fusion impossible sans conflits)
+ccr-3e4b662d-6bm92g | 04/11 | dernier commit (« la page des classements reste telle quelle », 21/10) remplacé par la décision suivante : les classements passent dans le volet de chaque jeu

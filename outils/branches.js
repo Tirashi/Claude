@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Classe les branches de GitHub (origin/*) par rapport à main, pour repérer le travail oublié.
 //   node outils/branches.js [--fetch] [--markdown fichier] [--a-supprimer fichier]
-//   --fetch           : git fetch origin --prune d'abord (en local)
+//   --fetch           : télécharge d'abord toutes les branches et tout l'historique (en local)
 //   --markdown f      : écrit aussi le tableau en Markdown (résumé de la CI)
 //   --a-supprimer f   : écrit « branche sha » pour chaque branche qu'on peut supprimer (workflow de ménage)
 // Catégories :
@@ -24,7 +24,17 @@ const git = (...a) => {
 };
 const essai = (...a) => { try { return git(...a); } catch (e) { return null; } };
 
-if (args.includes('--fetch')) git('fetch', 'origin', '--prune', '--quiet');
+// Un clone partiel (les sessions de Claude ne téléchargent que les derniers commits) ferait croire
+// que les anciennes branches n'ont pas d'ancêtre commun avec main : il faut tout l'historique.
+const partiel = () => git('rev-parse', '--is-shallow-repository').trim() === 'true';
+if (args.includes('--fetch')) {
+  if (partiel()) git('fetch', '--unshallow', '--quiet', 'origin');
+  git('fetch', 'origin', '+refs/heads/*:refs/remotes/origin/*', '--prune', '--quiet');
+}
+if (partiel()) {
+  console.error("Clone partiel : relancer avec --fetch (ou git fetch --unshallow origin), sinon le classement est faux.");
+  process.exit(1);
+}
 
 const MAIN = 'origin/main';
 const mainTree = git('rev-parse', MAIN + '^{tree}').trim();
