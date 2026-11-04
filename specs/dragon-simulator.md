@@ -29,11 +29,11 @@ La logique tourne en « pixels » (12 px = 1 unité 3D, sol à 268) pour être t
 
 ## 5. Les décors
 - Chaque décor dure **250 m** (400 m avant le 04/11), puis le suivant : ville, maisons, centre-ville, usines, aéroport, ville… Annonce « L'AEROPORT ! » au changement.
-- **Ville** : rangée d'immeubles KayKit et de maisons Kenney à brûler, rangées d'immeubles derrière, route avec 21 sortes de véhicules, trottoir (lampadaires, feux, panneaux, bancs, bennes, bouches d'incendie, carlin), château d'eau.
+- **Ville** : rangée d'immeubles KayKit à brûler (sans maisons depuis le 05/11), rangées d'immeubles derrière, route avec 21 sortes de véhicules, trottoir (lampadaires, feux, panneaux, bancs, bennes, bouches d'incendie, carlin), château d'eau.
 - **Maisons** (04/11, Kenney City Kit Suburban 2.0) : pavillons à brûler avec leur arbre, quelques petits immeubles tout faits (Modular Buildings), pavillons et arbres derrière, bacs à fleurs et haies, peu de voitures, plus de carlins, plus de montgolfières que de grues.
 - **Centre-ville** (04/11, City Kit Commercial 2.1) : bureaux et tours toutes faites (Modular Buildings) à brûler, tours blanches et gratte-ciel derrière, réverbères courbes et feux (City Kit Roads 2.2), beaucoup de voitures.
 - **Usines** (04/11, City Kit Industrial 2.0) : ateliers, grandes cheminées et cuves à brûler ; derrière, ateliers, cheminées qui fument, cuves, éoliennes ; conteneurs, cônes et barrières de chantier sur le trottoir ; camions sur la route.
-- La ville a maintenant aussi des maisons Suburban 2.0 (à la place des 1.0) et des tours toutes faites de Modular Buildings.
+- **Ville 100 % KayKit** (05/11 : le mélange avec les pavillons Kenney et les tours Modular Buildings jurait) ; plus d'immeubles empilés au fond (le rez-de-chaussée et les auvents du deuxième flottaient en l'air) : la hauteur vient de la taille (× 1,35 à 1,75).
 - **Aéroport** : hangars, terminal, avions garés et petit hangar à brûler ; piste, cônes, tracteurs ; animaux dans l'herbe ; manche à air.
 - **Décor de départ** : tout décor **déjà atteint une fois** se choisit dans le nid (la ville l'est d'emblée). Décors proposés pour plus tard : port, fête foraine, montagne, château fort, campagne.
 
@@ -177,3 +177,4 @@ Questions posées : quelle caméra ; le dragon de Quaternius plaît-il (sinon le
 - **City Kits 2 de Kenney** (Suburban 2.0, Commercial 2.1, Industrial 2.0, Roads 2.2) et **Modular Buildings** (immeubles tout faits), CC0, pris sur OpenGameArt (kenney.nl et les pages itch.io de Commercial et Industrial ne répondent pas depuis le conteneur). Trois nouveaux décors : **maisons**, **centre-ville**, **usines** ; décors de 250 m. Un décor atteint devient un départ possible au nid (5 boutons).
 - Modèles : 73 de plus dans `modeles.glb` (3,0 → 3,9 Mo), préfixes `ksu_`, `kco_`, `kin_`, `kro_`, `kmb_` ; les maisons Suburban 1.0 (`ks_house…`) sont retirées. Chaque kit a sa propre `colormap.png` : le GLB de chaque modèle est réécrit pour pointer vers `Textures/colormap_<préfixe>.png` avant `outils/fbx-vers-glb.js` (sinon tous prendraient la même texture).
 - Fumée des cheminées d'usine (particules grises), éoliennes tournées de profil.
+- 05/11 : ville de départ refaite en KayKit seul, sans empilements ; test « le dragon amélioré vole plus loin » sur les 3 premières et 3 dernières parties de chaque carrière (une seule était trop soumise au hasard).

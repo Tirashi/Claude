@@ -210,9 +210,9 @@
       while (this.nbb < loin) {
         const bi = dsBiome(p, this.nbb);
         if (bi === 'ville') {
-          for (const [z, s] of [[-3, 1], [-6.2, 1.35]]) {
+          // pas d'immeubles empilés (05/11) : le rez-de-chaussée et les auvents du deuxième flottaient en l'air ; la hauteur vient de la taille
+          for (const [z, s] of [[-3, rnd(1, 1.15)], [-6.2, rnd(1.35, 1.75)]]) {
             const n = DS_IMMEUBLES[ri(0, 7)], m = Kc(n); m.scale.setScalar(s);
-            if (z < -5 && Math.random() < 0.5) { const m2 = Kc(n); m2.position.y = DS_TAILLES[n][1]; m.add(m2); }
             this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb) + rnd(-0.3, 0.3), 0, z) });
           }
           if (Math.random() < 0.3) this.deco.push({ x: this.nbb, m: this.ajouter(Kc('watertower'), x3(this.nbb), 0, -1.6) });

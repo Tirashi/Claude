@@ -152,10 +152,8 @@ function dsGenerer(p) {
     const bi = dsBiome(p, p.nb), r = dsAlea(p); let o;
     const pris = (liste, k, e1, e2) => { const m = liste[dsEntre(p, 0, liste.length - 1)], [w, h] = DS_TAILLES[m]; return { modele: m, k, w: w * k * DS_U, h: h * k * DS_U, ecart: dsEntre(p, e1, e2) }; };
     const maison = () => { const o = pris(DS_MAISONS, DS_K_MAISON, 8, 16); o.arbre = DS_ARBRES[dsEntre(p, 0, 1)]; return o; };
-    if (bi === 'ville') {
-      if (r < 0.25) o = maison();
-      else if (r < 0.4) o = pris(DS_TOUT_FAITS, DS_K_TOUT_FAIT, 3, 10);
-      else { const m = DS_IMMEUBLES[dsEntre(p, 0, 7)], [w, h] = DS_TAILLES[m]; o = { modele: m, k: 1, w: w * DS_U, h: h * DS_U, ecart: dsEntre(p, 3, 12) }; }
+    if (bi === 'ville') {                                  // 100 % KayKit (05/11 : le mélange des packs jurait)
+      const m = DS_IMMEUBLES[dsEntre(p, 0, 7)], [w, h] = DS_TAILLES[m]; o = { modele: m, k: 1, w: w * DS_U, h: h * DS_U, ecart: dsEntre(p, 3, 12) };
     } else if (bi === 'maisons') {
       o = r < 0.85 ? maison() : pris(DS_PETITS_IMMEUBLES, DS_K_TOUT_FAIT, 8, 14);
     } else if (bi === 'centre') {

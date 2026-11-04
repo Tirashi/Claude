@@ -186,11 +186,11 @@ function carriere(nom, adresse, k) {
   return { parties, premier, tout, s };
 }
 const moy = (l, f) => l.reduce((a, x) => a + f(x), 0) / l.length;
-console.log(`3. Carrières (${N} par pilote) : première partie → dernière partie ; parties (minutes) pour la 1re amélioration et pour tout`);
+console.log(`3. Carrières (${N} par pilote) : 3 premières parties → 3 dernières ; parties (minutes) pour la 1re amélioration et pour tout`);
 const res = {};
 for (const [nom, adr] of Object.entries(PILOTES)) {
   const cs = []; for (let k = 0; k < N; k++) cs.push(carriere(nom, adr, k));
-  const prem = cs.map(c => c.parties[0]), der = cs.map(c => c.parties[c.parties.length - 1]);
+  const prem = cs.flatMap(c => c.parties.slice(0, 3)), der = cs.flatMap(c => c.parties.slice(-3));   // 3 premières et 3 dernières parties de chaque carrière (une seule = trop de hasard)
   const r = res[nom] = {
     s1: moy(prem, x => x.s), m1: moy(prem, x => x.m), p1: moy(prem, x => x.pc), sN: moy(der, x => x.s), mN: moy(der, x => x.m), pN: moy(der, x => x.pc),
     premier: moy(cs, c => c.premier ? c.premier.parties : 99), tout: moy(cs, c => c.tout ? c.tout.parties : 400), toutMin: moy(cs, c => c.tout ? c.tout.min : 999),
