@@ -1,0 +1,5 @@
+# Branches abandonnées : l'idée n'a rien donné et on ne garde pas ses fichiers dans main.
+# Une ligne par branche : nom | date | raison
+# Le workflow « Ménage des branches » les supprime en gardant une étiquette archive/<nom>
+# (pour la retrouver : git fetch origin tag archive/<nom>, puis git checkout -b <nom> archive/<nom>).
+# Laisser la ligne après la suppression : c'est la trace de l'abandon.

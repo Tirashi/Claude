@@ -1,0 +1,53 @@
+# Ménage des branches, lancé à la main (onglet « Actions », ou par Claude avec les outils GitHub).
+# Classe toutes les branches avec outils/branches.js (tableau dans le résumé du lancement).
+# Avec « supprimer » coché : supprime les branches FUSIONNEE, REPRISE et ABANDONNEE, après avoir posé
+# pour chacune une étiquette archive/<branche> sur son dernier commit (rien n'est perdu).
+# Ne touche jamais à main ni aux branches EN ATTENTE. Claude ne peut pas supprimer de branche
+# depuis une session (le proxy refuse), d'où ce workflow.
+name: Ménage des branches
+on:
+  workflow_dispatch:
+    inputs:
+      supprimer:
+        description: "Supprimer les branches fusionnées, reprises ou abandonnées (sinon : seulement le tableau)"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency: menage-branches
+jobs:
+  menage:
+    name: Classer les branches (et supprimer celles qui ne servent plus)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune --tags
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Classer les branches
+        run: node outils/branches.js --markdown "$GITHUB_STEP_SUMMARY" --a-supprimer a-supprimer.txt
+      - name: Supprimer (avec une étiquette archive/…)
+        if: inputs.supprimer
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Suppressions" >> "$GITHUB_STEP_SUMMARY"
+          n=0
+          while read -r nom sha; do
+            [ -z "$nom" ] && continue
+            [ "$nom" = "main" ] && continue
+            etiquette="archive/$nom"
+            deja=$(git ls-remote --tags origin "refs/tags/$etiquette" | cut -f1)
+            if [ -n "$deja" ] && [ "$deja" != "$sha" ]; then etiquette="$etiquette-${sha:0:7}"; fi
+            if [ "$deja" != "$sha" ]; then
+              git tag -f "$etiquette" "$sha"
+              git push origin "refs/tags/$etiquette"
+            fi
+            git push origin --delete "$nom"
+            echo "- \`$nom\` supprimée (étiquette \`$etiquette\`)" >> "$GITHUB_STEP_SUMMARY"
+            n=$((n+1))
+          done < a-supprimer.txt
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "$n branche(s) supprimée(s)." >> "$GITHUB_STEP_SUMMARY"
