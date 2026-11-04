@@ -217,6 +217,25 @@
           }
           if (Math.random() < 0.3) this.deco.push({ x: this.nbb, m: this.ajouter(Kc('watertower'), x3(this.nbb), 0, -1.6) });
           this.nbb += ri(24, 30);
+        } else if (bi === 'maisons') {                     // pavillons, arbres, haies
+          for (const [z, s] of [[-2.8, 1.5], [-5.6, 1.7]]) {
+            const n = Math.random() < 0.8 ? DS_MAISONS[ri(0, DS_MAISONS.length - 1)] : DS_PETITS_IMMEUBLES[ri(0, 2)], m = Kc(n); m.scale.setScalar(n.startsWith('kmb') ? s * 0.6 : s);
+            this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb) + rnd(-0.3, 0.3), 0, z) });
+            if (Math.random() < 0.7) { const a = Kc(DS_ARBRES[ri(0, 1)]); a.scale.setScalar(rnd(2, 3)); this.deco.push({ x: this.nbb, m: this.ajouter(a, x3(this.nbb) + rnd(1.2, 1.8), 0, z + rnd(-0.6, 0.6)) }); }
+          }
+          this.nbb += ri(30, 38);
+        } else if (bi === 'centre') {                      // tours de bureaux et gratte-ciel
+          { const n = 'kco_low-detail-building-' + 'abcdefghijklm'[ri(0, 12)], m = Kc(n); m.scale.set(3, rnd(1.6, 2.2), 3); this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb) + rnd(-0.2, 0.2), 0, -3.2) }); }
+          { const n = 'kco_building-skyscraper-' + 'abce'[ri(0, 3)], m = Kc(n); m.scale.setScalar(rnd(1.3, 1.7)); this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb) + rnd(-0.4, 0.4), 0, -6.6) }); }
+          if (Math.random() < 0.5) { const m = Kc('kco_low-detail-building-wide-' + 'ab'[ri(0, 1)]); m.scale.set(3, 2.5, 3); this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb) + 1.6, 0, -9.5) }); }
+          this.nbb += ri(24, 32);
+        } else if (bi === 'usines') {                      // ateliers, cheminées qui fument, cuves, éoliennes
+          { const n = DS_USINES[ri(0, DS_USINES.length - 1)], m = Kc(n); m.scale.setScalar(1.6); this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb) + rnd(-0.3, 0.3), 0, -3.2) }); }
+          const r = Math.random();
+          if (r < 0.45) { const c = Kc(Math.random() < 0.5 ? 'kin_chimney-medium' : 'kin_chimney-large'); c.scale.setScalar(rnd(2, 2.6)); c.updateMatrixWorld(); const h = new THREE.Box3().setFromObject(c).max.y; this.deco.push({ x: this.nbb, m: this.ajouter(c, x3(this.nbb) + 0.8, 0, -6.4), fumee: h }); }
+          else if (r < 0.75) { const m = Kc(Math.random() < 0.5 ? 'kin_detail-tank-large' : 'kin_detail-tank'); m.scale.setScalar(2.2); this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb) + 0.8, 0, -6.4) }); }
+          else { const m = Kc('kin_windmill'); m.scale.setScalar(2.3); m.rotation.y = Math.PI / 2; this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb) + 0.8, 0, -7.5) }); }
+          this.nbb += ri(26, 34);
         } else {
           if (Math.random() < 0.35) { const m = Kc('air_windsock'); m.scale.setScalar(0.3); this.deco.push({ x: this.nbb, m: this.ajouter(m, x3(this.nbb), 0, 1.3) }); }
           if (Math.random() < 0.5) this.deco.push({ x: this.nbb, m: this.ajouter(hangar(4), x3(this.nbb), 0, -5.5) });
@@ -226,10 +245,22 @@
       }
       while (this.nr < loin) {
         const bi = dsBiome(p, this.nr), X = x3(this.nr) + 1, D = m => this.deco.push({ x: this.nr, m });
-        if (bi === 'ville') {
+        if (DS_VILLES.includes(bi)) {
           const r = Kc('road_straight'); r.rotation.y = Math.PI / 2; D(this.ajouter(r, X, 0, 2.3));
-          D(this.ajouter(boite(2, 0.05, 14, 0xb3aea2), X, -0.03, -6)); D(this.ajouter(boite(2, 0.05, 8, 0x86ad62), X, -0.03, 7.3));
-          if (Math.floor(this.nr / 24) % 3 === 0) { const n = ['streetlight', 'ru_Streetlight_Single', 'ru_Streetlight_Double', 'trafficlight_A', 'ru_TrafficLight'][ri(0, 4)], m = Kc(n); if (n.startsWith('ru_')) m.scale.setScalar(1.1); D(this.ajouter(m, X, 0, 1.15)); }
+          D(this.ajouter(boite(2, 0.05, 14, { ville: 0xb3aea2, maisons: 0x86ad62, centre: 0xa8a6a0, usines: 0x9c9890 }[bi]), X, -0.03, -6)); D(this.ajouter(boite(2, 0.05, 8, 0x86ad62), X, -0.03, 7.3));
+          const tr = Math.floor(this.nr / 24);
+          if (bi === 'maisons') {                           // haies, bacs à fleurs, petits arbres
+            if (Math.random() < 0.4) { const m = Kc(Math.random() < 0.6 ? 'ksu_planter' : 'ksu_fence-low'); m.scale.setScalar(1.6); D(this.ajouter(m, X + rnd(-0.5, 0.5), 0, 1.0)); }
+            if (tr % 4 === 0) D(this.ajouter(Kc('streetlight'), X, 0, 1.15));
+          } else if (bi === 'centre') {                     // réverbères courbes, feux
+            if (tr % 3 === 0) { const n = Math.random() < 0.75 ? 'kro_light-curved' : 'kro_traffic-light', m = Kc(n); m.scale.setScalar(n === 'kro_traffic-light' ? 2.6 : 2.4); m.rotation.y = Math.PI; D(this.ajouter(m, X, 0, 1.15)); }
+            if (Math.random() < 0.25) { const [n, k] = [['bench', 1.8], ['firehydrant', 1.6], ['ru_Sign_NoParking', 1.3]][ri(0, 2)], m = Kc(n); m.scale.setScalar(k); D(this.ajouter(m, X + rnd(-0.6, 0.6), 0, 1.0)); }
+          } else if (bi === 'usines') {                     // conteneurs, cônes, barrières de chantier
+            if (tr % 4 === 0) { const m = Kc('kro_light-square'); m.scale.setScalar(2.4); m.rotation.y = Math.PI; D(this.ajouter(m, X, 0, 1.15)); }
+            const r = Math.random();
+            if (r < 0.2) { const m = Kc('kin_shipping-container-' + 'abc'[ri(0, 2)]); m.scale.setScalar(2.2); m.rotation.y = Math.PI / 2; D(this.ajouter(m, X + rnd(-0.4, 0.4), 0, 1.0)); }
+            else if (r < 0.4) { const m = Kc(Math.random() < 0.5 ? 'kro_construction-cone' : 'kro_construction-barrier'); m.scale.setScalar(3); D(this.ajouter(m, X + rnd(-0.6, 0.6), 0, 1.0)); }
+          } else if (tr % 3 === 0) { const n = ['streetlight', 'ru_Streetlight_Single', 'ru_Streetlight_Double', 'trafficlight_A', 'ru_TrafficLight'][ri(0, 4)], m = Kc(n); if (n.startsWith('ru_')) m.scale.setScalar(1.1); D(this.ajouter(m, X, 0, 1.15)); }
           if (Math.random() < 0.35) { const [n, k] = [['firehydrant', 1.6], ['bench', 1.8], ['dumpster', 1.6], ['ru_Sign_Stop', 1.3], ['ru_Sign_NoParking', 1.3], ['ru_Sign_Triangle', 1.3]][ri(0, 5)], m = Kc(n); m.scale.setScalar(k); D(this.ajouter(m, X + rnd(-0.6, 0.6), 0, 1.0)); }
         } else {
           D(this.ajouter(boite(2, 0.05, 2.8, 0x3a3d44), X, -0.02, 2.5)); D(this.ajouter(boite(2, 0.05, 1.4, 0x9a9da3), X, -0.03, 0.5));
@@ -254,7 +285,7 @@
         else if (o.modele === 'avion') { m = new THREE.Group(); const a = avion([0xd6303a, 0x3b6ea8, 0xf2b632][o.couleur]); a.scale.setScalar(0.9); a.rotation.y = Math.PI; a.position.set(0, 0.6, 0.2); m.add(a); }
         else { m = Kc(o.modele); m.scale.setScalar(o.k); }
         this.ajouter(m, x3(o.x + o.w / 2), 0, 0);
-        if (o.arbre) { const a = Kc(o.arbre); a.scale.setScalar(1.8); this.deco.push({ x: o.x, m: this.ajouter(a, x3(o.x + o.w) + 0.4, 0, -0.6) }); }
+        if (o.arbre) { const a = Kc(o.arbre); a.scale.setScalar(2.4); this.deco.push({ x: o.x, m: this.ajouter(a, x3(o.x + o.w) + 0.4, 0, -0.6) }); }
         e.hp = o.mx;
       } else if (sorte === 'obs') {
         if (o.t === 'chauve') { m = THREE.SkeletonUtils.clone(this.chs); m.scale.setScalar(0.0026); m.rotation.y = -Math.PI / 2; e.mix = new THREE.AnimationMixer(m); e.mix.clipAction(this.clipChs).play(); e.mix.update(Math.random()); }
@@ -338,6 +369,8 @@
     pas(p) {
       this.genDeco(p); this.synchro(p); this.evenements(p);
       const t = p.t;
+      // la fumée des cheminées d'usine
+      if (t % 7 === 0) { const xd = x3(p.d.x); for (const o of this.deco) if (o.fumee && Math.abs(o.m.position.x - xd) < 14) this.parts.add(o.m.position.x + rnd(-0.15, 0.15), o.fumee, o.m.position.z, rnd(0.004, 0.012), rnd(0.018, 0.028), 0, ri(70, 100), [0xd8d8d8, 0xbcbcbc, 0xe8e8e8][ri(0, 2)]); }
       // le feu
       this.feuLum.intensity = 0;
       if (p.flamme) {

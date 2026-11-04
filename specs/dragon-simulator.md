@@ -20,16 +20,20 @@ Idée du fils de l'utilisateur (7 ans), 01/11. Maquette 3D jouable qui sert de r
 
 ## 4. Le vol (règles de la maquette, à garder)
 La logique tourne en « pixels » (12 px = 1 unité 3D, sol à 268) pour être testée sous Node.
-- Vitesse de croisière 1,7 px/image (jusqu'à 3,2 avec le jetpack), gravité 0,045 × plané, chute plafonnée tant qu'il reste de l'énergie (vol plané), libre quand elle est vide.
-- Coup d'ailes : −1,45 en vertical, +0,12 en vitesse, −2,5 d'énergie (3 dans la maquette, réglé en session 1).
+- Vitesse de croisière **1,15 px/image au départ, qui monte jusqu'à 1,75 à 600 m** (04/11 : trop rapide au début ; avant : 1,7 fixe), un coup d'ailes ajoute au plus 0,8, le jetpack 1,4 (`DS_VITESSE`, `dsCroisiere`) ; gravité 0,045 × plané, chute plafonnée tant qu'il reste de l'énergie (vol plané), libre quand elle est vide.
+- Coup d'ailes : −1,45 en vertical, +0,09 en vitesse, −2,5 d'énergie (3 dans la maquette, réglé en session 1).
 - **Énergie** 100, qui baisse de 0,05 par image (0,07 dans la maquette ; −13 % par niveau d'AILES) : au niveau 1, une partie dure environ 25 s (simulateur).
 - **Feu** : réserve de 45 au niveau 1 (+15 par niveau), 0,25 par image ; portée ~110 px vers l'avant et le bas ; la flamme part de la gueule (os `dragon_Nose`).
 - **Cœurs** : 2 au départ (+1 par niveau d'ÉCAILLES) ; un choc en retire un et rend invincible un instant ; à 0, le dragon tombe.
 - **Difficulté** : les obstacles se rapprochent avec la distance (jusqu'à −70 px d'écart).
 
 ## 5. Les décors
-- Chaque décor dure **400 m**, puis le suivant : ville, aéroport, ville… Annonce « L'AEROPORT ! » au changement.
+- Chaque décor dure **250 m** (400 m avant le 04/11), puis le suivant : ville, maisons, centre-ville, usines, aéroport, ville… Annonce « L'AEROPORT ! » au changement.
 - **Ville** : rangée d'immeubles KayKit et de maisons Kenney à brûler, rangées d'immeubles derrière, route avec 21 sortes de véhicules, trottoir (lampadaires, feux, panneaux, bancs, bennes, bouches d'incendie, carlin), château d'eau.
+- **Maisons** (04/11, Kenney City Kit Suburban 2.0) : pavillons à brûler avec leur arbre, quelques petits immeubles tout faits (Modular Buildings), pavillons et arbres derrière, bacs à fleurs et haies, peu de voitures, plus de carlins, plus de montgolfières que de grues.
+- **Centre-ville** (04/11, City Kit Commercial 2.1) : bureaux et tours toutes faites (Modular Buildings) à brûler, tours blanches et gratte-ciel derrière, réverbères courbes et feux (City Kit Roads 2.2), beaucoup de voitures.
+- **Usines** (04/11, City Kit Industrial 2.0) : ateliers, grandes cheminées et cuves à brûler ; derrière, ateliers, cheminées qui fument, cuves, éoliennes ; conteneurs, cônes et barrières de chantier sur le trottoir ; camions sur la route.
+- La ville a maintenant aussi des maisons Suburban 2.0 (à la place des 1.0) et des tours toutes faites de Modular Buildings.
 - **Aéroport** : hangars, terminal, avions garés et petit hangar à brûler ; piste, cônes, tracteurs ; animaux dans l'herbe ; manche à air.
 - **Décor de départ** : tout décor **déjà atteint une fois** se choisit dans le nid (la ville l'est d'emblée). Décors proposés pour plus tard : port, fête foraine, montagne, château fort, campagne.
 
@@ -167,3 +171,9 @@ Questions posées : quelle caméra ; le dragon de Quaternius plaît-il (sinon le
 - Ajouts : maisons Kenney Suburban (30 % de la rangée de devant en ville, avec un arbre), 21 véhicules (KayKit, Kenney Car Kit, Quaternius Cars) qui **explosent** sous les flammes (+3 pièces, débris Kenney qui volent et rebondissent), lampadaires / feux / panneaux Quaternius et KayKit, bancs, bennes, bouches d'incendie, carlin sur le trottoir ; à l'aéroport animaux Quaternius dans l'herbe au premier plan (ils **s'enfuient** devant le feu, ne brûlent pas), cônes, tracteurs, camionnettes ; **chauve-souris animée** (obstacle, `SkeletonUtils.clone`, matcap).
 - `outils/fbx-vers-glb.js` réécrit : prend un dossier (FBX, GLB/glTF, OBJ+MTL), préfixe os et pistes des FBX, regroupe et indexe, retire les normales et fusionne les sommets hors FBX (rendu en flatShading dans la page), partage les textures identiques : 60 modèles en 4 Mo de base64.
 - Questions : animaux qui fuient au lieu de brûler ; chauve-souris à brûler ou non ; packs payants pour plus tard.
+
+## 19. Retours du 04/11 : vitesse et City Kits 2 de Kenney
+- **Vitesse** : trop rapide en début de partie. Croisière 1,15 px/image au départ, qui monte jusqu'à 1,75 à 600 m ; coup d'ailes +0,09 (au plus croisière + 0,8), jetpack au plus croisière + 1,4. Simulateur : premier vol ~25 s et ~300 m, dragon au maximum ~60 s et ~900 m, tout acheté en ~18 vols.
+- **City Kits 2 de Kenney** (Suburban 2.0, Commercial 2.1, Industrial 2.0, Roads 2.2) et **Modular Buildings** (immeubles tout faits), CC0, pris sur OpenGameArt (kenney.nl et les pages itch.io de Commercial et Industrial ne répondent pas depuis le conteneur). Trois nouveaux décors : **maisons**, **centre-ville**, **usines** ; décors de 250 m. Un décor atteint devient un départ possible au nid (5 boutons).
+- Modèles : 73 de plus dans `modeles.glb` (3,0 → 3,9 Mo), préfixes `ksu_`, `kco_`, `kin_`, `kro_`, `kmb_` ; les maisons Suburban 1.0 (`ks_house…`) sont retirées. Chaque kit a sa propre `colormap.png` : le GLB de chaque modèle est réécrit pour pointer vers `Textures/colormap_<préfixe>.png` avant `outils/fbx-vers-glb.js` (sinon tous prendraient la même texture).
+- Fumée des cheminées d'usine (particules grises), éoliennes tournées de profil.

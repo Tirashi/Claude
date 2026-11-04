@@ -64,7 +64,7 @@
     const dec = $('nDecors'); dec.innerHTML = '';
     for (const bi of DS_BIOMES) {
       const ok = sauv.decors.includes(bi), bt = document.createElement('button'); bt.type = 'button';
-      bt.textContent = ok ? DS_NOM_BIOME[bi].replace(/^LA |^L'/, '') : '? ' + (DS_BIOMES.indexOf(bi) * DS_LONG_BIOME / DS_PX_M) + ' M';
+      bt.textContent = ok ? DS_NOM_BIOME[bi].replace(/^(LA|LE|LES) |^L'/, '') : '? ' + (DS_BIOMES.indexOf(bi) * DS_LONG_BIOME / DS_PX_M) + ' M';
       bt.disabled = !ok; bt.classList.toggle('choisi', bi === sauv.depart);
       bt.addEventListener('click', () => { if (sauv.depart === bi) return; sauv.depart = bi; sauver(); DsSons.jouer('bouton'); p = dsNouvellePartie(sauv, graine()); monde.preparer(p); majNid(); });
       dec.appendChild(bt);

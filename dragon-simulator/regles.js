@@ -1,7 +1,7 @@
 /* =====================================================================
    DRAGON SIMULATOR · les RÈGLES (logique pure, sans Three.js ni DOM) :
    vol plané, feu, destruction, pièces, obstacles, dix bonus, décors
-   (ville et aéroport en alternance), nid (améliorations), sauvegarde.
+   (cinq décors à la suite : ville, maisons, centre-ville, usines, aéroport), nid (améliorations), sauvegarde.
    Tout tourne en « pixels » comme la maquette : 12 px = 1 unité 3D,
    sol à DS_SOL ; une image = 1/60 s.
    Tout l'aléatoire passe par le générateur à graine rangé DANS la
@@ -17,9 +17,10 @@ const DS_V = 1;
 const DS_U = 12, DS_SOL = 268;                 // 12 px = 1 unité 3D ; le sol
 const DS_IPS = 60;                             // images par seconde
 const DS_PX_M = 8;                             // 8 px = 1 mètre
-const DS_BIOMES = ['ville', 'aeroport'];
-const DS_NOM_BIOME = { ville: 'LA VILLE', aeroport: "L'AEROPORT" };
-const DS_LONG_BIOME = 3200;                    // 400 m par décor
+// les décors, dans l'ordre du vol (04/11 : trois nouveaux avec les City Kits 2 de Kenney)
+const DS_BIOMES = ['ville', 'maisons', 'centre', 'usines', 'aeroport'];
+const DS_NOM_BIOME = { ville: 'LA VILLE', maisons: 'LES MAISONS', centre: 'LE CENTRE-VILLE', usines: 'LES USINES', aeroport: "L'AEROPORT" };
+const DS_LONG_BIOME = 2000;                    // 250 m par décor
 const DS_M_PIECE = 20;                         // 1 pièce tous les 20 m
 const DS_COUT_AILES = 2.5;                     // énergie d'un coup d'ailes
 
@@ -36,16 +37,33 @@ const DS_TAILLES = {
   building_A_withoutBase: [1.207, 1.55], building_B_withoutBase: [1.607, 1.55], building_C_withoutBase: [1.207, 2.25],
   building_D_withoutBase: [1.607, 2.25], building_E_withoutBase: [2.007, 2.25], building_F_withoutBase: [2.007, 2.25],
   building_G_withoutBase: [2.007, 2.25], building_H_withoutBase: [2.007, 2.95],
-  ks_house01: [1.3, 0.738], ks_house03: [1.708, 1.138], ks_house05: [1.308, 0.738], ks_house07: [1.3, 0.738],
-  ks_house09: [1.3, 0.834], ks_house11: [1.258, 1.138], ks_house13: [1.35, 1], ks_house15: [0.904, 1.15],
-  ks_house17: [1.406, 1.138], ks_house19: [1.2, 0.85], ks_house21: [0.858, 1.034],
+  // Kenney City Kits 2 : maisons (Suburban), bureaux (Commercial), usines (Industrial), immeubles tout faits (Modular Buildings)
+  'ksu_building-type-a': [1.30, 0.83], 'ksu_building-type-c': [1.29, 1.03], 'ksu_building-type-g': [1.45, 0.77], 'ksu_building-type-h': [1.30, 0.74],
+  'ksu_building-type-i': [1.29, 0.74], 'ksu_building-type-j': [1.37, 1.04], 'ksu_building-type-k': [0.92, 1.15], 'ksu_building-type-l': [1.03, 1.05],
+  'ksu_building-type-m': [1.43, 0.74], 'ksu_building-type-q': [1.24, 0.92], 'ksu_building-type-r': [1.03, 1.14], 'ksu_building-type-s': [1.41, 1.14],
+  'kco_building-a': [0.88, 1.29], 'kco_building-b': [0.97, 1.29], 'kco_building-c': [0.88, 0.89], 'kco_building-d': [0.84, 1.29],
+  'kco_building-e': [1.64, 0.89], 'kco_building-h': [0.88, 1.29],
+  'kin_building-d': [0.88, 1.41], 'kin_building-g': [1.68, 1.28], 'kin_building-h': [1.32, 0.73], 'kin_building-i': [1.03, 0.73],
+  'kin_building-j': [1.03, 0.86], 'kin_building-k': [1.30, 0.77], 'kin_building-o': [0.88, 0.92], 'kin_building-p': [1.68, 0.71],
+  'kin_building-s': [2.12, 0.84], 'kin_chimney-large': [1.08, 1.70], 'kin_detail-tank-large': [1.51, 0.96],
+  'kmb_building-sample-house-a': [1.10, 1.14], 'kmb_building-sample-house-b': [1.09, 1.98], 'kmb_building-sample-house-c': [2.00, 1.98],
+  'kmb_building-sample-tower-a': [1.10, 2.50], 'kmb_building-sample-tower-b': [1.10, 1.89], 'kmb_building-sample-tower-c': [1.10, 3.14],
+  'kmb_building-sample-tower-d': [1.10, 3.76],
   air_small_hangar: [14.6, 6],
 };
 const DS_IMMEUBLES = 'ABCDEFGH'.split('').map(l => 'building_' + l + '_withoutBase');
-const DS_MAISONS = ['01', '03', '05', '07', '09', '11', '13', '15', '17', '19', '21'].map(n => 'ks_house' + n);
-const DS_K_MAISON = 1.7, DS_K_PETIT_HANGAR = 0.26;
+const DS_MAISONS = 'acghijklmqrs'.split('').map(l => 'ksu_building-type-' + l);
+const DS_BUREAUX = 'abcdeh'.split('').map(l => 'kco_building-' + l);
+const DS_USINES = 'dghijkops'.split('').map(l => 'kin_building-' + l);
+const DS_TOUT_FAITS = ['kmb_building-sample-tower-a', 'kmb_building-sample-tower-b', 'kmb_building-sample-tower-c', 'kmb_building-sample-tower-d'];
+const DS_PETITS_IMMEUBLES = ['kmb_building-sample-house-a', 'kmb_building-sample-house-b', 'kmb_building-sample-house-c'];
+const DS_K_MAISON = 1.7, DS_K_BUREAU = 1.7, DS_K_USINE = 1.8, DS_K_TOUT_FAIT = 1, DS_K_PETIT_HANGAR = 0.26;
+const DS_ARBRES = ['ksu_tree-large', 'ksu_tree-small'];
+const DS_VILLES = ['ville', 'maisons', 'centre', 'usines'];   // décors avec une route
 const DS_VOITURES = ['car_taxi', 'car_police', 'car_sedan', 'car_hatchback', 'car_stationwagon', 'kc_ambulance', 'kc_firetruck', 'kc_garbage-truck', 'kc_police', 'kc_taxi', 'kc_delivery', 'kc_truck', 'kc_race', 'kc_suv', 'kc_van', 'qv_Cop', 'qv_SportsCar', 'qv_SUV', 'qv_Taxi', 'qv_NormalCar1', 'qv_NormalCar2'];
 const DS_ENGINS_AEROPORT = ['kc_tractor', 'kc_van', 'kc_truck', 'kc_delivery'];
+const DS_CAMIONS = ['kc_truck', 'kc_delivery', 'kc_garbage-truck', 'kc_van', 'kc_firetruck', 'qv_SUV'];
+const DS_TRAFIC = { ville: 0.3, maisons: 0.18, centre: 0.42, usines: 0.24 };   // chance d'une voiture par tronçon de route
 const DS_ANIMAUX = ['an_Cow', 'an_Horse', 'an_Llama', 'an_Pig', 'an_Sheep', 'an_Zebra'];
 // le nid : en haut de trois immeubles C
 const DS_NID_Y = DS_SOL - (3 * DS_TAILLES.building_C_withoutBase[1] + 0.2) * DS_U - 12;
@@ -131,13 +149,21 @@ const dsEv = (p, t, o) => p.ev.push(Object.assign({ t }, o));
 function dsGenerer(p) {
   const loin = p.d.x + 200;
   while (p.nb < loin) {                                    // rangée de devant (bâtiments à brûler)
-    const bi = dsBiome(p, p.nb); let o;
-    if (bi === 'ville' && dsAlea(p) < 0.3) {
-      const m = DS_MAISONS[dsEntre(p, 0, DS_MAISONS.length - 1)], [w, h] = DS_TAILLES[m];
-      o = { modele: m, k: DS_K_MAISON, w: w * DS_K_MAISON * DS_U, h: h * DS_K_MAISON * DS_U, arbre: dsAlea(p) < 0.5 ? 'ks_tree' : 'ks_tree2', ecart: dsEntre(p, 8, 16) };
-    } else if (bi === 'ville') {
-      const m = DS_IMMEUBLES[dsEntre(p, 0, 7)], [w, h] = DS_TAILLES[m];
-      o = { modele: m, k: 1, w: w * DS_U, h: h * DS_U, ecart: dsEntre(p, 3, 12) };
+    const bi = dsBiome(p, p.nb), r = dsAlea(p); let o;
+    const pris = (liste, k, e1, e2) => { const m = liste[dsEntre(p, 0, liste.length - 1)], [w, h] = DS_TAILLES[m]; return { modele: m, k, w: w * k * DS_U, h: h * k * DS_U, ecart: dsEntre(p, e1, e2) }; };
+    const maison = () => { const o = pris(DS_MAISONS, DS_K_MAISON, 8, 16); o.arbre = DS_ARBRES[dsEntre(p, 0, 1)]; return o; };
+    if (bi === 'ville') {
+      if (r < 0.25) o = maison();
+      else if (r < 0.4) o = pris(DS_TOUT_FAITS, DS_K_TOUT_FAIT, 3, 10);
+      else { const m = DS_IMMEUBLES[dsEntre(p, 0, 7)], [w, h] = DS_TAILLES[m]; o = { modele: m, k: 1, w: w * DS_U, h: h * DS_U, ecart: dsEntre(p, 3, 12) }; }
+    } else if (bi === 'maisons') {
+      o = r < 0.85 ? maison() : pris(DS_PETITS_IMMEUBLES, DS_K_TOUT_FAIT, 8, 14);
+    } else if (bi === 'centre') {
+      o = r < 0.7 ? pris(DS_BUREAUX, DS_K_BUREAU, 2, 8) : pris(DS_TOUT_FAITS, DS_K_TOUT_FAIT, 2, 8);
+    } else if (bi === 'usines') {
+      if (r < 0.7) o = pris(DS_USINES, DS_K_USINE, 4, 12);
+      else if (r < 0.85) o = pris(['kin_chimney-large'], 1.5, 6, 12);
+      else o = pris(['kin_detail-tank-large'], 1.6, 6, 12);
     } else {
       const r = dsAlea(p);
       if (r < 0.25) { const [w, h] = DS_TAILLES.air_small_hangar; o = { modele: 'air_small_hangar', k: DS_K_PETIT_HANGAR, w: w * DS_K_PETIT_HANGAR * DS_U, h: h * DS_K_PETIT_HANGAR * DS_U }; }
@@ -151,9 +177,9 @@ function dsGenerer(p) {
   }
   while (p.nr < loin) {                                    // la route : véhicules et animaux, par tronçons de 24 px
     const bi = dsBiome(p, p.nr), x = p.nr + DS_U;
-    if (bi === 'ville') {
-      if (dsAlea(p) < 0.3) { const sens = dsAlea(p) < 0.5 ? 1 : -1; p.route.push({ id: p.nid++, t: 'voiture', modele: DS_VOITURES[dsEntre(p, 0, DS_VOITURES.length - 1)], x, z: 2.3 + sens * 0.5, sens, v: sens * dsReel(p, 0.24, 0.6), mort: false }); }
-      if (dsAlea(p) < 0.07) { const sens = dsAlea(p) < 0.5 ? 1 : -1; p.route.push({ id: p.nid++, t: 'animal', modele: 'an_Pug', x, z: 1.35, sens, v: sens * dsReel(p, 0.05, 0.14), peur: 0 }); }
+    if (DS_VILLES.includes(bi)) {
+      if (dsAlea(p) < DS_TRAFIC[bi]) { const sens = dsAlea(p) < 0.5 ? 1 : -1, liste = bi === 'usines' && dsAlea(p) < 0.6 ? DS_CAMIONS : DS_VOITURES; p.route.push({ id: p.nid++, t: 'voiture', modele: liste[dsEntre(p, 0, liste.length - 1)], x, z: 2.3 + sens * 0.5, sens, v: sens * dsReel(p, 0.24, 0.6), mort: false }); }
+      if (dsAlea(p) < (bi === 'maisons' ? 0.12 : bi === 'ville' ? 0.07 : 0)) { const sens = dsAlea(p) < 0.5 ? 1 : -1; p.route.push({ id: p.nid++, t: 'animal', modele: 'an_Pug', x, z: 1.35, sens, v: sens * dsReel(p, 0.05, 0.14), peur: 0 }); }
     } else {
       if (dsAlea(p) < 0.1) p.route.push({ id: p.nid++, t: 'voiture', modele: DS_ENGINS_AEROPORT[dsEntre(p, 0, 3)], x, z: 0.9, sens: dsAlea(p) < 0.5 ? 1 : -1, v: 0, mort: false });
       if (dsAlea(p) < 0.3) { const sens = dsAlea(p) < 0.5 ? 1 : -1; p.route.push({ id: p.nid++, t: 'animal', modele: DS_ANIMAUX[dsEntre(p, 0, 5)], x, z: dsReel(p, 4.3, 5.6), sens, v: sens * dsReel(p, 0.05, 0.14), peur: 0 }); }
@@ -164,8 +190,8 @@ function dsGenerer(p) {
     const bi = dsBiome(p, p.no), r = dsAlea(p); let o;
     if (r >= 0.22 && r < 0.36) o = { t: 'chauve', x: p.no + 60, y: dsEntre(p, 50, 160), vx: -0.5, mort: false };
     else if (r < 0.22) o = { t: 'helico', x: p.no + 80, y: dsEntre(p, 55, 150), vx: -0.7 };
-    else if (bi === 'ville') {
-      if (r < 0.7) o = { t: 'grue', x: p.no, haut: DS_SOL - dsEntre(p, 120, 175) };
+    else if (DS_VILLES.includes(bi)) {
+      if (r < (bi === 'maisons' ? 0.45 : 0.7)) o = { t: 'grue', x: p.no, haut: DS_SOL - dsEntre(p, 120, 175) };
       else o = { t: 'ballon', x: p.no, y: dsEntre(p, 50, 170), couleur: dsEntre(p, 0, 2) };
     } else {
       if (r < 0.4) o = { t: 'tour', x: p.no, haut: DS_SOL - dsEntre(p, 110, 160) };
@@ -247,6 +273,10 @@ function dsPrendre(p, b) {
   }
 }
 
+/* ---------- vitesse de croisière : lente au départ, elle monte avec la distance (retour du 04/11) ---------- */
+const DS_VITESSE = { depart: 1.15, max: 1.75, montee: 600 };   // px/image ; atteinte à 600 m
+function dsCroisiere(p) { return DS_VITESSE.depart + (DS_VITESSE.max - DS_VITESSE.depart) * Math.min(1, (p.dist || 0) / DS_VITESSE.montee); }
+
 /* ---------- la bouche du dragon (d'après l'os dragon_Nose de la maquette) ---------- */
 function dsBouche(d) { const c = Math.cos(d.ang), s = Math.sin(d.ang); return { x: d.x + 2 + 8 * c - 4 * s, y: d.y + 8 * s + 4 * c }; }
 function dsPosBebe(d) { return { x: d.x - 22, y: d.y + 18 }; }
@@ -256,13 +286,13 @@ function dsPas(p, e) {
   p.ev.length = 0; p.flamme = p.flammeBebe = null;
   if (p.fin) return;
   const d = p.d, s = p.s; p.t++;
-  if (p.lancer > 0) { if (--p.lancer === 0) { d.pose = false; d.vx = 2; d.vy = -2.3; d.f = 14; dsEv(p, 'envol', {}); } return; }
-  if (e && e.ailes && p.energie > 3 && !p.ko) { d.vy = Math.min(d.vy, 0.2) - 1.45; d.vx = Math.min(d.vx + 0.12, 3); p.energie -= DS_COUT_AILES; d.f = 14; dsEv(p, 'ailes', {}); }
+  if (p.lancer > 0) { if (--p.lancer === 0) { d.pose = false; d.vx = dsCroisiere(p) + 0.2; d.vy = -2.3; d.f = 14; dsEv(p, 'envol', {}); } return; }
+  if (e && e.ailes && p.energie > 3 && !p.ko) { d.vy = Math.min(d.vy, 0.2) - 1.45; d.vx = Math.min(d.vx + 0.09, dsCroisiere(p) + 0.8); p.energie -= DS_COUT_AILES; d.f = 14; dsEv(p, 'ailes', {}); }
   if (d.f > 0) d.f--;
-  if (p.jet > 0) { p.jet--; d.vy -= 0.085; d.vx = Math.min(d.vx + 0.02, 3.2); }
+  if (p.jet > 0) { p.jet--; d.vy -= 0.085; d.vx = Math.min(d.vx + 0.02, dsCroisiere(p) + 1.4); }
   d.vy += 0.045 * s.chute;
   const vmax = (p.energie > 0 && !p.ko) ? 0.55 * s.chute + 0.15 : 1.8; if (d.vy > vmax) d.vy += (vmax - d.vy) * 0.12;
-  d.vx += (1.7 - d.vx) * 0.004; d.x += d.vx; d.y += d.vy; if (d.y < 14) { d.y = 14; if (d.vy < 0) d.vy = 0; }
+  d.vx += (dsCroisiere(p) - d.vx) * 0.004; d.x += d.vx; d.y += d.vy; if (d.y < 14) { d.y = 14; if (d.vy < 0) d.vy = 0; }
   d.ang = dsBorne(Math.atan2(d.vy, d.vx) * 0.9, -0.6, 0.7);
   p.energie = Math.max(0, p.energie - (p.jet > 0 ? 0 : s.drain));
   for (const k of ['souffle', 'bebe', 'aimant', 'oeuf']) if (p[k] > 0) p[k]--;

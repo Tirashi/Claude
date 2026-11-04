@@ -306,12 +306,12 @@ Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32
 - **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
 
 ## Dragon Simulator
-L'idée d'un garçon de 7 ans : un dragon s'élance de son nid, en haut d'une tour, et plane au-dessus de la ville, vu de profil, en 3D. Le vol est sans fin : il s'arrête quand le dragon touche le sol.
+L'idée d'un garçon de 7 ans : un dragon s'élance de son nid, en haut d'une tour, et plane au-dessus de la ville, vu de profil, en 3D. Le vol est sans fin : il s'arrête quand le dragon touche le sol. Il part doucement et prend de la vitesse en volant.
 
 - **Commandes** : toucher l'écran = un coup d'ailes (le dragon remonte, mais ça use l'énergie) ; tenir le bouton **FEU** = cracher des flammes vers l'avant et le bas, tant qu'il reste du feu. Sur ordinateur : Espace, F tenu, Échap pour la pause.
 - **Le feu** : les immeubles, maisons, hangars et avions garés noircissent, brûlent et s'effondrent (2 à 4 pièces) ; les voitures explosent (3 pièces) ; les chauves-souris tombent en flammes (4 pièces) ; les animaux, eux, s'enfuient. Un bâtiment effondré ne gêne plus le passage.
 - **Les obstacles** : toits, grues, montgolfières, hélicoptères, chauves-souris, et à l'aéroport la tour de contrôle et les petits avions qui décollent. Un choc coûte un cœur ; sans cœur, le dragon tombe.
-- **Les décors** : 400 m de ville, puis 400 m d'aéroport, et ainsi de suite. Un décor déjà atteint peut servir de départ.
+- **Les décors** : 250 m de ville, puis les maisons, le centre-ville et ses gratte-ciel, les usines qui fument, l'aéroport, et ainsi de suite. Un décor déjà atteint peut servir de départ.
 - **Dix bonus** : pièces, jetpack, lance-flammes (feu plein), grenade (la prochaine destruction souffle aussi les voisins), bébé dragon (il vole derrière et crache du feu tout seul 15 s), super-souffle (flamme géante 5 s), nuage d'orage (rebond et éclair), bouclier (absorbe un choc), aimant, œuf d'or (pièces doublées 10 s).
 - **Le nid** : 1 pièce tous les 20 m en plus de la destruction ; au nid, quatre améliorations de 5 niveaux (écailles = cœurs, flammes = force, réserve de feu, ailes = plané).
 - **Classement de la famille** : le plus long vol, en mètres.

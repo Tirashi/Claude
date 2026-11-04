@@ -127,7 +127,11 @@ console.log('1. Règles de base');
   verif(p.pieces === Math.floor(p.dist / 20), `1 pièce tous les 20 m (${p.pieces} pour ${Math.floor(p.dist)} m)`);
 }
 { // décors
-  const p = partieVide(); verif(dsBiome(p, 0) === 'ville' && dsBiome(p, DS_LONG_BIOME + 1) === 'aeroport' && dsBiome(p, 2 * DS_LONG_BIOME + 1) === 'ville', 'ville, aéroport, ville…');
+  const p = partieVide(); verif(DS_BIOMES.every((b, k) => dsBiome(p, k * DS_LONG_BIOME + 1) === b) && dsBiome(p, DS_BIOMES.length * DS_LONG_BIOME + 1) === 'ville', 'ville, maisons, centre, usines, aéroport, ville…');
+  verif(DS_BIOMES.every(b => DS_NOM_BIOME[b]), 'chaque décor a un nom');
+  { const q = dsNouvellePartie(dsNouvelleSauvegarde(), "zones"), vus = new Set(); let ok = true;
+    for (let x = 0; x < DS_BIOMES.length * DS_LONG_BIOME; x += 150) { q.d.x = x; dsGenerer(q); for (const o of q.bat) { vus.add(o.biome); ok = ok && o.w > 0 && o.h > 0 && o.hp > 0; } }
+    verif(DS_BIOMES.every(b => vus.has(b)) && ok, 'chaque décor a des bâtiments à brûler'); }
   const s = dsNouvelleSauvegarde(); s.depart = 'aeroport'; const q = dsNouvellePartie(s, 'a'); verif(q.biome === 'aeroport', 'départ depuis l\'aéroport');
 }
 { // nid et sauvegarde
@@ -141,7 +145,7 @@ console.log('1. Règles de base');
   const s2 = dsNouvelleSauvegarde(), p = partieVide(); p.pieces = 33; p.d.x = DS_LONG_BIOME + 10; p.dist = p.d.x / DS_PX_M; p.fin = 'atterri';
   const bi = dsTerminer(s2, p); dsTerminer(s2, p);
   verif(s2.pieces === 33 && s2.total.parties === 1, 'la fin de partie ne paie qu\'une fois');
-  verif(bi.recordDistance && s2.records.distance === Math.floor(p.dist) && s2.decors.includes('aeroport') && bi.nouveauxDecors[0] === 'aeroport', 'records et décor atteint');
+  verif(bi.recordDistance && s2.records.distance === Math.floor(p.dist) && s2.decors.includes('maisons') && bi.nouveauxDecors[0] === 'maisons', 'records et décor atteint');
 }
 { // pas de Math.random dans les règles
   verif(!/Math\.random/.test(SRC.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')), 'aucun Math.random dans regles.js');
