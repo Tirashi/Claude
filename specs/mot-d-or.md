@@ -72,3 +72,10 @@ Petit « toc » de bois à chaque touche, retournement feutré par tuile (plus c
 
 ## 12. Découpage
 Fait en une session le 20/10 : 1) `mots.js` et son outil, 2) le jeu d'après la maquette 2, 3) intégration et tests.
+
+## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
+Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
+
+*Section « Les jeux futurs sélectionnés (coups de cœur, en 32 bits) » :*
+
+4. **Le Mot d'or** (réflexion) — un mot de 6 lettres par jour en 6 essais, tuiles en bois : or = bien placée, argent = mal placée, gris = absente. Série de jours, classement du jour. **Maquette (20/10)**, jouable, trois tables d'après la scène de la planche 32 bits — A la table de jeu (noyer, feutre vert, tuiles façon Scrabble), B le bureau du soir (cuir bordeaux, tuiles en ivoire, lampe), C la rivière d'or (tamis dans le courant, bois flotté, galets, pépites) : https://claude.ai/artifact/2JjrJxGzfjjp24jEEkA6qv — source `maquettes/mot-d-or.html`. ✅ **Choix (20/10) : B, le bureau du soir**, sans accents ni points sur les tuiles ; l'interface (clavier, boutons, messages) doit être dans une police soignée et lisible, avec une ergonomie « aux petits oignons ». **Maquette 2 (20/10)** : B avec l'interface en police nette par-dessus le pixel art, Fredoka ou Rajdhani à choisir ; grandes touches, VALIDER qui s'allume, curseur libre, rappel des lettres d'or, fenêtres aide et statistiques, partage en carrés de couleur : https://claude.ai/artifact/FRFEmEuihqKqx3KZSMaWwG — source `maquettes/mot-d-or-2.html`. ✅ **Validée (20/10) : Fredoka**, filigrane et partage gardés. Cahier des charges : [`specs/mot-d-or.md`](specs/mot-d-or.md). ✅ **Jeu fait (20/10)** : `mot-d-or/`, 718 mots du jour, entraînement, sur l'accueil.

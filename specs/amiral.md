@@ -125,3 +125,18 @@ Fait dans `amiral/jeu.js` :
 - **Tests** : `outils/fumee.js` (mines, riposte, fumée, leurre, bataille du jour, 108 parties simulées avec les nouveaux navires), `outils/logique.js` (bataille du jour des 60 prochains jours, transfert).
 
 **Réglages** (Amiral contre Amiral, contre la flotte classique ; le camp qui commence gagne 0,60 à flottes égales) : mouilleur à la place du sous-marin 0,50 avec un tir en retour ordinaire, **0,55** avec le touché assuré ; brouilleur à la place du sous-marin **0,51 à 0,56** ; vedette à la place du torpilleur 0,41 puis **0,47–0,48** avec le leurre posé sur les probabilités de l'adversaire (autant que le garde-côte à la même place, 0,48 : la torpille est forte dans les mains de l'IA). Comme à la session 1, ces pouvoirs défensifs valent sans doute plus pour un joueur que pour l'IA.
+
+## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
+Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
+
+*Section « Maquettes de style déjà faites (artefacts) » :*
+
+- Amiral en HD-2D : https://claude.ai/artifact/UNpVXyxYPmRUsJuTs8Zuvb
+- Amiral en low poly : https://claude.ai/artifact/G2by9gwxhq79KTep63FPTH
+- Amiral en cartoon : https://claude.ai/artifact/Rtsb5f818qg2URHy7uVmQh
+- Amiral illustré (pas aimé) : https://claude.ai/artifact/EwyYQAhbLE5NKpyza6NpDA
+- Amiral façon console DS (malentendu) : https://claude.ai/artifact/KXAVKJxqQCadNqjvy7zk9t
+- Amiral façon Pokémon Noir et Blanc : https://claude.ai/artifact/3Uy4Bm8bKvND7dMxNPywxf
+- Amiral en pixel art isométrique (inspiré d'une image de croiseurs détaillés, « pas mal ») : https://claude.ai/artifact/HXFyTpQ1QbVJuJzUK92cXA
+- Amiral en pixel art 2D détaillé vu de dessus (même palette : coques grises, ponts terracotta, mer turquoise) : https://claude.ai/artifact/EHvMsofdyxEbXapxJJjish
+- Amiral ! chantier naval (17/10, maquette jouable : 3 polices, torpille en deux gestes, bouton FEU !, choix de la flotte parmi 11 navires, bataille du jour) : https://claude.ai/artifact/7jpyciqv3pN5x4AYJqe2aS — source `maquettes/amiral-chantier.html` — **validée, police C** ; planche des nouveaux navires (3 dessins chacun) : https://claude.ai/artifact/2kK1n6Uj7Smo4JCavJLiSN — source `maquettes/amiral-navires.html` — choix (17/10) : croiseur C (cuirassé façon Iowa, pont bleu 1944), atelier A, destroyer A, mouilleur C2, brouilleur A1, vedette B, garde-côte A ; cahier des charges `specs/amiral.md` ; ✅ session 1 programmée le 17/10 (chantier, polices, 4 nouveaux navires), session 2 à faire

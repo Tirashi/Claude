@@ -85,9 +85,9 @@ Bruitages synthétisés en Web Audio : pièce lâchée, tintement des pièces qu
 - Liste de contrôle « Ajouter un nouveau jeu » de `specs/ludotheque.md` ; artefact à créer (demander le lien à l'utilisateur).
 
 ## 11. Plan de travail (opusplan)
-1. **Session 1, le moteur et 2 machines** (**faite le 22/10**, détails dans `specs/suivi.md`) : `physique.js` (reprise des maquettes, mise au repos, sauvegarde du tas), rendu, bonus, bourse et fin de partie, trésors, simulateur, la foire et la ruche jouables du début à la fin.
-2. **Session 2, les 4 autres machines et la secrète** (**faite le 22/10**, détails dans `specs/suivi.md`) : l'épave, le casino, la foire de nuit, l'horloger, la machine secrète, avec leurs règles et leurs décors ; écran des machines, déblocages ; réglage des bourses au simulateur.
-3. **Session 3, finitions et intégration** (**faite le 22/10**, détails dans `specs/suivi.md` ; pas d'artefact pour le moment, choix de l'utilisateur du 23/10) : titre, pause, sons et ambiances, classements, accueil, transfert, crédits, tests, docs, artefact.
+1. **Session 1, le moteur et 2 machines** (**faite le 22/10**, détails dans `specs/suivi/2026-10.md`) : `physique.js` (reprise des maquettes, mise au repos, sauvegarde du tas), rendu, bonus, bourse et fin de partie, trésors, simulateur, la foire et la ruche jouables du début à la fin.
+2. **Session 2, les 4 autres machines et la secrète** (**faite le 22/10**, détails dans `specs/suivi/2026-10.md`) : l'épave, le casino, la foire de nuit, l'horloger, la machine secrète, avec leurs règles et leurs décors ; écran des machines, déblocages ; réglage des bourses au simulateur.
+3. **Session 3, finitions et intégration** (**faite le 22/10**, détails dans `specs/suivi/2026-10.md` ; pas d'artefact pour le moment, choix de l'utilisateur du 23/10) : titre, pause, sons et ambiances, classements, accueil, transfert, crédits, tests, docs, artefact.
 
 Coût estimé : **10 à 15 % de la semaine** (le moteur et les décors existent déjà dans les maquettes ; le plus long est de faire 6 règles et de régler la difficulté).
 
@@ -96,3 +96,10 @@ Coût estimé : **10 à 15 % de la semaine** (le moteur et les décors existent 
 2. Pas de défi du jour pour le moment (§ 6).
 3. Ordre des machines, règles spéciales et machine secrète : oui (§ 3).
 4. Pas de secousse (§ 4).
+
+## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
+Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
+
+*Section « Nouveaux jeux pensés pour la 3D (brainstorm du 16/10, retenus par l'utilisateur) » :*
+
+- ✅ **Coin pusher → Romet** (fait le 22/10, `romet/`, cahier des charges `specs/romet.md`) 🟡 (idée du 19/10 ; casino de nuit, néons, low poly) — la machine à pièces des fêtes foraines : on touche le haut de l'écran pour lâcher un jeton, le plateau va et vient et pousse les pièces ; celles qui tombent par l'avant rapportent, celles des côtés sont perdues. Bonus qui tombent avec les pièces (pièce géante, mur qui empêche les pertes sur les côtés, pluie de jetons, petits lots à collectionner) ; réserve de jetons qui se recharge avec le temps, record de gains. Physique avec cannon.js (déjà dans `lib/` pour le Yams). **Point délicat : la fluidité sur le téléphone avec 100 à 200 pièces** (pièces au repos « endormies », cylindres simplifiés, nombre de pièces plafonné) ; à vérifier dès la maquette. Maquette d'abord (2 ou 3 directions : casino néon, fête foraine en bois et laiton, pixel 3D rétro). **Maquette (22/10)**, jouable, les trois directions : https://claude.ai/artifact/T54AGRTH85JwZstrEcV9n1 — source `maquettes/coin-pusher.html`. cannon.js s'est révélé trop lent (150 pièces) : physique maison des pièces à la place (voir `specs/suivi.md`). A et B retenues (60 images/s sur le téléphone). Le jeu s'appellera **Romet** (hommage à Mynthos). **Maquette 2 (22/10)** : A néon, B foire de jour, C foire de nuit (mélange) : https://claude.ai/artifact/E1oayNtBM9SsemAnFdhcfk — source `maquettes/romet.html`. Jugée « pas mal, mais sois plus original » : **maquette 3 (22/10)**, trois mondes loin du casino et de la foire (l'épave, la ruche, l'horloger) : https://claude.ai/artifact/54niZV1m7XcXPzcjGMKEs1 — source `maquettes/romet-3.html`. « Tous sympa » : chaque monde devient une machine (niveau) de plus en plus dure, cahier des charges [`specs/romet.md`](specs/romet.md) à valider.

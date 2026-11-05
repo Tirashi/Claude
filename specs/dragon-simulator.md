@@ -178,3 +178,10 @@ Questions posées : quelle caméra ; le dragon de Quaternius plaît-il (sinon le
 - Modèles : 73 de plus dans `modeles.glb` (3,0 → 3,9 Mo), préfixes `ksu_`, `kco_`, `kin_`, `kro_`, `kmb_` ; les maisons Suburban 1.0 (`ks_house…`) sont retirées. Chaque kit a sa propre `colormap.png` : le GLB de chaque modèle est réécrit pour pointer vers `Textures/colormap_<préfixe>.png` avant `outils/fbx-vers-glb.js` (sinon tous prendraient la même texture).
 - Fumée des cheminées d'usine (particules grises), éoliennes tournées de profil.
 - 05/11 : ville de départ refaite en KayKit seul, sans empilements ; test « le dragon amélioré vole plus loin » sur les 3 premières et 3 dernières parties de chaque carrière (une seule était trop soumise au hasard).
+
+## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
+Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
+
+*Section « ✅ Dragon Simulator (ex-Dragon des toits, idée du fils de l'utilisateur, 7 ans, 01/11 ; sur l'accueil le 02/11) » :*
+
+Un dragon plane au-dessus d'une ville, crache du feu sur les maisons, ramasse des bonus (jetpack, lance-flammes, grenade) ; plus il va loin, plus il gagne de pièces pour s'améliorer dans le nid. Chantier : [`specs/dragon-simulator.md`](specs/dragon-simulator.md) (maquettes du 01/11, A en 3D choisie ; cahier des charges écrit le 02/11).

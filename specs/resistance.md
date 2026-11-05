@@ -188,3 +188,13 @@ Demande de l'utilisateur : un bâtiment à 1 ravitaillement et un autre à 2, po
 Texte de la ligne de ce jeu dans le tableau « Les jeux existants (détails) » de [`specs/ludotheque.md`](ludotheque.md), recopié tel quel lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 2). L'essentiel, tenu à jour, est dans le `CLAUDE.md` du dossier du jeu.
 
 Rogue-lite tactique façon Fire Emblem GBA, repris le 28/10 d'un dépôt fait avec une autre IA. 30 scripts classiques dans `js/` (anciens modules ES) : chacun lit ses dépendances dans `window.Resistance` et y range ce qu'il partage ; l'ordre des `<script>` suit les dépendances. Images dans `assets/` (Fantasy Battle Pack, IvoryRed, Mini World, Mana Soul), police `polices/pixelify-sans.woff2`. Sauvegardes `resistance.save` (forteresse) et `resistance.run` (run en cours, reprise au lancement ; un combat interrompu recommence ; `PROGRESS` de l'accueil). Pas de classement ni d'artefact. Tests : `__game`, `__run`, `__battle`. Détails : `specs/resistance.md`.
+
+## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
+Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
+
+*Section « Résistance (rogue-lite tactique façon Fire Emblem GBA, reçu le 28/10) » :*
+
+✅ Intégré (fait avec une autre IA, repris dans `resistance/`, [`specs/resistance.md`](specs/resistance.md)). Idées et suite (plan d'origine, § 7) : équilibrer la carte de run ; soigneur (clerc de l'extension « Specialist Units » de Matt Walkden, achat prévu en janvier 2027) ; plusieurs cartes de combat et objectifs (tout vaincre, battre le chef, survivre X tours) ; déblocage de classes à la forteresse ; pays thématiques avec leur général, jusqu'au tyran ; pistes payantes *RPG Overworld Tileset* et *Merlin Pixel Font*. Ajoutées à l'intégration : ✅ sauvegarde de la run en cours (28/10), classement (pays libérés ou run du jour), sons. Proche de l'idée **Escarmouche** (Advance Wars), qui reste à part.
+✅ Grande session de confort façon Fire Emblem (29/10, maquette `maquettes/resistance-qol.html`, direction B Heroes).
+✅ Soigneur (29/10 : bâton, action Soigner, Chapelle de la forteresse).
+✅ Confort de jeu (29/10, idées de Claude) : zone de danger, garde-fou sur Fin du tour, tour ennemi ×2, dernières paroles, bilan de campagne, premier combat guidé (`specs/resistance.md` § 9).

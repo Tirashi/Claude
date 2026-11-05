@@ -6,7 +6,7 @@ Plan donné par l'utilisateur le 05/11, enregistré tel quel pour pouvoir le rep
 - [x] Phase 0 — État des lieux
 - [x] Phase 1 — Alléger CLAUDE.md (18 072 → 11 292 octets ; objectif ramené à 10 Ko par l'utilisateur, plancher atteint sans toucher aux sections protégées)
 - [x] Phase 2 — Un CLAUDE.md par gros jeu : resistance/, lanterne/ (+ moteur-rpg/), mineur-de-l-espace/, nebula/, ile/, bannieres/, boutique/, the-des-jarls/, duche/, doggy-saga/ (validé le 05/11)
-- [ ] Phase 3 — IDEES.md et suivi.md
+- [x] Phase 3 — IDEES.md et suivi.md
 - [ ] Phase 4 — Code partagé dans un dossier commun/
 - [ ] Phase 5 — accueil.js (proposition seulement)
 

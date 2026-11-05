@@ -111,3 +111,10 @@ Reste : essais sur le téléphone (taille des bateaux sous le doigt, difficulté
 3. Bassin du jour : **tous les coups comptent**, annulations comprises.
 4. **Bruitages et musique discrète.**
 5. Dossier **`capitaine-du-port/`**.
+
+## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
+Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
+
+*Section « Les jeux de bateaux sélectionnés (pour mon fils) » :*
+
+3. **Capitaine du port** (puzzle) — façon « Rush Hour » : un petit remorqueur pousse et tire péniches, cargos et ferries (qui n'avancent que dans leur longueur) pour amener le navire doré à son quai en un minimum de coups ; 60 niveaux, étoiles, niveau du jour. **Maquette (20/10)** : 1re version (pixels 16 bits, bateaux-jouets, carte marine) **refusée** : « aucune ne me convient », l'utilisateur veut la DA de la scène du port de la planche « 9 coups de cœur + 4 jeux de bateaux en 32 bits » (https://claude.ai/artifact/XzRmvgNKZeSMRUAM1NuFsA). 2e version dans cette DA (moteur de la scène repris : bateaux en volume vus du dessus, granit, grue, capitainerie, phare, mouettes, plaques bleu nuit), en portrait, bassin jouable de 11 coups, sortie en haut, remorqueur qui pousse, à trois heures (jour, coucher de soleil, nuit) : même lien https://claude.ai/artifact/GXnCqj89iVvxUbDfcr3urg — source `maquettes/capitaine-du-port.html`. **Choix (20/10) : plein jour**, polices à revoir « comme Amiral ! et Escadrille ! » → maquette 3 (même lien) : Press Start 2P pour les logos, Rajdhani 700 pour le reste, textes dessinés sur une toile 3 fois plus fine que le pixel art. **Maquette validée (20/10)** : polices OK ; remorqueur **décoratif** (on glisse les bateaux, il vient pousser) ; grille de 6 × 6, **7 × 7 pour le dernier port**. Cahier des charges écrit et validé le 20/10 : `specs/capitaine-du-port.md` ; ✅ **fini le 20/10** (sessions 1 et 2 : 60 bassins, bassin du jour, sur l'accueil).

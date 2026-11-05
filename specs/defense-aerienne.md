@@ -11,3 +11,10 @@ Commun aux trois : 5 emplacements au sol (toucher → choisir une tour ou la ven
 - **C Le village, 1918** : biplans et dirigeables (un toutes les 3 vagues) au coucher du soleil ; mitrailleuse, canon, **ballon de barrage** (les avions qui passent sous le ballon se prennent le câble) ; raid de l'escadrille.
 
 Retours : à venir.
+
+## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
+Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
+
+*Section « Tower defense (brainstorm du 01/11, après La petite usine) » :*
+
+2. **Défense aérienne** — ✅ **choisie le 01/11, vue de côté** (ciel en haut, sol en bas) → chantier [`specs/defense-aerienne.md`](specs/defense-aerienne.md), maquette 1 : https://claude.ai/artifact/HrUtHqbKkhDD8eSdvJFbAe. Idée de départ : les avions passent dans le ciel, on place des canons antiaériens (flak, mitrailleuses, projecteurs la nuit, ballons de barrage, radar) et on appelle des raids (chasseurs d'interception, bombardement). Graphismes : nos avions d'Escadrille ! (`escadrille/avions.js`), SCKR Modern Air Force, Zeus 2D Modern Military Aircrafts (7,99 $), canon antiaérien de gamedeveloperstudio (1 £).

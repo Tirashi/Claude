@@ -199,3 +199,10 @@ Le jeu réussit s'il crée des **moments de partage**, pas des sessions de grind
 - Pas de graines liées à la météo : la météo agit sur la pousse et le décor, pas sur les graines obtenues. Les cadeaux restent possibles (code de graine) mais ne sont pas une source principale.
 - Le pixel art reste possible : le style se décidera sur la maquette (prochaine étape, avant tout code).
 - Le journal suit l'herbier (une page par espèce découverte) ; la fin du journal = l'herbier complet, mais le jardin continue ensuite (pas de fin au jeu).
+
+## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
+Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
+
+*Section « Jardin contemplatif (idée du 16/10) » :*
+
+1. **Racines** (jardin zen en temps réel, partage en famille) — une île-jardin qui flotte au-dessus des nuages ; les plantes poussent **en temps réel**, même jeu fermé (2 à 6 h pour une commune, 6 à 48 h pour une rare) ; la **météo réelle** du jour change ce qui pousse ; on **croise** des plantes fleuries pour créer des espèces inédites qu'on nomme dans l'**herbier** ; aucune plante ne meurt (elle fait la sieste) ; **pas de classement**, pas de chrono. Partage : **offrir une graine** à un proche, visiter son jardin, herbier familial. Style aquarelle pastel, musique générative douce, mode nuit. Document de game design complet (écrit avant la Ludothèque), **adaptation à la Ludothèque validée** (technique sans build, météo Open-Meteo sans clé, code de graine, SQL Supabase pour les visites) et **brainstorming fait le 16/10** (22 réponses : toute la famille, ~60 espèces, génétique devinable, vue en portrait…) : [`specs/racines.md`](specs/racines.md). Prochaine étape : la maquette du style, 2 variantes (pixel art pastel, aquarelle à contours encrés).
