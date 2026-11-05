@@ -1,42 +1,63 @@
-# Jeux 16 bits
+# Ludothèque 16 bits
 
-Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index.html`](index.html) à la racine est un menu qui mène à tous les jeux :
+Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index.html`](index.html) à la racine est un menu qui mène à tous les jeux, rangés ici par famille (les présentations détaillées suivent le même ordre) :
+
+**Réflexion et jeux du jour**
 
 - [`queens/index.html`](queens/index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
 - [`lignee/index.html`](lignee/index.html) : **Lignée**, un puzzle de généalogie : reconstituer un arbre grâce aux indices, en famille française ou en dynastie royale.
-- [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu d'agility canine en 32 bits : course sans fin façon dino de Chrome, et parcours vus du dessus ([`injagility/parcours.html`](injagility/parcours.html)) avec six races à adopter.
-- [`touche-coule/index.html`](touche-coule/index.html) : **Touché Coulé**, une bataille navale contre l'ordinateur (modes Classique et Arsenal).
-- [`club/index.html`](club/index.html) : **Le Club d'agility**, un jeu de gestion en 32 bits : recruter des chiens, les entraîner semaine après semaine, gagner les concours et faire grandir le club jusqu'au Championnat de France.
-- [`amiral/index.html`](amiral/index.html) : **Amiral !**, une bataille navale tactique en 32 bits où chaque navire a un pouvoir : on compose sa flotte au chantier naval (avion de reconnaissance, salve, torpille, plongée du sous-marin, missiles, sonar, projecteur, réparation, et trois navires à débloquer : les mines qui ripostent, l'écran de fumée, le leurre gonflable). Chaque jour, une **bataille du jour** aux flottes imposées, avec son classement (une seule tentative classée).
-- [`escadrille/index.html`](escadrille/index.html) : **Escadrille !**, la petite sœur d'Amiral ! dans le ciel : quatre avions en relief choisis au hangar parmi dix, chacun avec son pouvoir (radar, bombes en croix, missile, esquive, roquettes, réparation, détection, leurres, ballons de barrage, caméra), contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As. Un sol différent à chaque partie, les pilotes abattus sautent en parachute, six avions et trois escadrilles à débloquer (Furtif, Hélices, Canonnière).
-- [`lune-rover/index.html`](lune-rover/index.html) : **Lune-Rover**, un puzzle de programmation en 32 bits : écrire à l'avance le programme d'un petit robot lunaire pour ramasser tous les cristaux, en 30 niveaux.
-- [`orbite/index.html`](orbite/index.html) : **Orbite**, un jeu de physique en 32 bits : lancer une sonde dont la trajectoire est courbée par la gravité des planètes pour atteindre une balise, en 30 niveaux.
-- [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
-- [`calculator/index.html`](calculator/index.html) : **Calculator**, le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour, en trois styles (arcade, cahier d'écolier, calculatrice de poche).
 - [`sudoku/index.html`](sudoku/index.html) : **Sudoku**, le jardin des chiffres en 32 bits : grilles 4×4 et 6×6 pour débuter, 9×9 facile, moyen ou difficile, notes au crayon et grille du jour.
-- [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
-- [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
-- [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
-- [`doggy-saga/index.html`](doggy-saga/index.html) : **Doggy Saga**, un trois en ligne pour toute la famille : aligner les chiens du refuge pour leur faire des câlins et leur trouver une famille, en 60 niveaux, avec la journée du jour.
-- [`the-des-jarls/index.html`](the-des-jarls/index.html) : **Le Thé des Jarls**, un duel de dés viking façon Orlog : six dés, trois lancers, chaque face lance une armée de 45 soldats à l'assaut ; 20 dieux nordiques et leurs faveurs, la route du fjord (campagne de 20 tavernes), un duel guidé pour apprendre, le duel à deux sur un téléphone posé à plat et un défi du jour.
-- [`bannieres/index.html`](bannieres/index.html) : **Bannières**, un jeu de conquête en 3D pour les enfants : faire courir ses armées sur les cases, construire et décorer son village, regarder les batailles, et avoir le plus de drapeaux après 25 tours.
-- [`resistance/index.html`](resistance/index.html) : **Résistance**, un rogue-lite tactique façon Fire Emblem GBA : à la tête de l'armée rebelle, recruter, traverser le pays de combat en combat jusqu'au général du tyran, et agrandir la forteresse rebelle entre deux campagnes (sa Chapelle fait venir des soigneurs).
-- [`boutique/index.html`](boutique/index.html) : **La Boutique de cartes**, une année à la tête d'une boutique de cartes à collectionner, en 3D : commander, ouvrir des boosters, remplir les vitrines et le classeur, aménager, et finir l'année avec la plus belle boutique.
-- [`mineur-de-l-espace/index.html`](mineur-de-l-espace/index.html) : **Mineur de l'espace**, minage spatial et gestion : casse des astéroïdes avec ta corvette, rapporte le minerai à la station en orbite, améliore la corvette, construis la station module par module, envoie des drones miner, pars vers la Lune et Mars, puis défends tes bases contre les aliens avec tes flottes et ton porte-vaisseaux jusqu'à la bataille contre le vaisseau-mère. Une partie de 3 à 5 heures ; au téléphone (joystick) ou au PC (clavier et souris).
-- [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
+- [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
+- [`lune-rover/index.html`](lune-rover/index.html) : **Lune-Rover**, un puzzle de programmation en 32 bits : écrire à l'avance le programme d'un petit robot lunaire pour ramasser tous les cristaux, en 30 niveaux.
+- [`calculator/index.html`](calculator/index.html) : **Calculator**, le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour, en trois styles (arcade, cahier d'écolier, calculatrice de poche).
+- [`doggy-saga/index.html`](doggy-saga/index.html) : **Doggy Saga**, un trois en ligne pour toute la famille : aligner les chiens du refuge pour leur faire des câlins et leur trouver une famille, en 60 niveaux, avec la journée du jour.
+
+**Adresse et arcade**
+
+- [`injagility/index.html`](injagility/index.html) : **Injagility**, un jeu d'agility canine en 32 bits : course sans fin façon dino de Chrome, et parcours vus du dessus ([`injagility/parcours.html`](injagility/parcours.html)) avec six races à adopter.
+- [`orbite/index.html`](orbite/index.html) : **Orbite**, un jeu de physique en 32 bits : lancer une sonde dont la trajectoire est courbée par la gravité des planètes pour atteindre une balise, en 30 niveaux.
+- [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
+- [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
+- [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
 - [`dragon-simulator/index.html`](dragon-simulator/index.html) : **Dragon Simulator**, une idée d'un garçon de 7 ans : un dragon plane au-dessus de la ville, vu de profil, en 3D ; il brûle immeubles et voitures, ramasse des bonus et s'améliore au nid.
 - [`romet/index.html`](romet/index.html) : **Romet**, un coin pusher en 3D en hommage à Mynthos : six machines à finir (et une secrète), chacune dans son monde et avec sa règle.
-- [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
-- [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
+
+**Batailles navales et aériennes**
+
+- [`touche-coule/index.html`](touche-coule/index.html) : **Touché Coulé**, une bataille navale contre l'ordinateur (modes Classique et Arsenal).
+- [`amiral/index.html`](amiral/index.html) : **Amiral !**, une bataille navale tactique en 32 bits où chaque navire a un pouvoir : on compose sa flotte au chantier naval (avion de reconnaissance, salve, torpille, plongée du sous-marin, missiles, sonar, projecteur, réparation, et trois navires à débloquer : les mines qui ripostent, l'écran de fumée, le leurre gonflable). Chaque jour, une **bataille du jour** aux flottes imposées, avec son classement (une seule tentative classée).
+- [`escadrille/index.html`](escadrille/index.html) : **Escadrille !**, la petite sœur d'Amiral ! dans le ciel : quatre avions en relief choisis au hangar parmi dix, chacun avec son pouvoir (radar, bombes en croix, missile, esquive, roquettes, réparation, détection, leurres, ballons de barrage, caméra), contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As. Un sol différent à chaque partie, les pilotes abattus sautent en parachute, six avions et trois escadrilles à débloquer (Furtif, Hélices, Canonnière).
+
+**Stratégie, tactique et aventure**
+
 - [`nebula/index.html`](nebula/index.html) : **Nebula**, un rogue-lite tactique spatial : mener sa flotte de balise en balise et vaincre les pirates qui annoncent leurs tirs.
+- [`resistance/index.html`](resistance/index.html) : **Résistance**, un rogue-lite tactique façon Fire Emblem GBA : à la tête de l'armée rebelle, recruter, traverser le pays de combat en combat jusqu'au général du tyran, et agrandir la forteresse rebelle entre deux campagnes (sa Chapelle fait venir des soigneurs).
+- [`duche/index.html`](duche/index.html) : **Duché**, un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtir, recruter, conquérir les terres de trois seigneurs rivaux et gagner la couronne.
+- [`bannieres/index.html`](bannieres/index.html) : **Bannières**, un jeu de conquête en 3D pour les enfants : faire courir ses armées sur les cases, construire et décorer son village, regarder les batailles, et avoir le plus de drapeaux après 25 tours.
+- [`lanterne/index.html`](lanterne/index.html) : **La Dernière Lanterne** (démo), un RPG au tour par tour en HD-2D : dans la vallée de Clairfond où la brume revient, mener son équipe de village en donjon.
+
+**Dés et cartes**
+
+- [`the-des-jarls/index.html`](the-des-jarls/index.html) : **Le Thé des Jarls**, un duel de dés viking façon Orlog : six dés, trois lancers, chaque face lance une armée de 45 soldats à l'assaut ; 20 dieux nordiques et leurs faveurs, la route du fjord (campagne de 20 tavernes), un duel guidé pour apprendre, le duel à deux sur un téléphone posé à plat et un défi du jour.
+- [`yams/index.html`](yams/index.html) : **Yams**, le Yams classique avec de vrais dés en 3D lancés d'un geste ou secoués dans un gobelet, et six styles de dés à débloquer.
+- [`solitaire/index.html`](solitaire/index.html) : **Solitaire**, le Klondike de Windows XP.
+
+**Gestion**
+
+- [`club/index.html`](club/index.html) : **Le Club d'agility**, un jeu de gestion en 32 bits : recruter des chiens, les entraîner semaine après semaine, gagner les concours et faire grandir le club jusqu'au Championnat de France.
+- [`boutique/index.html`](boutique/index.html) : **La Boutique de cartes**, une année à la tête d'une boutique de cartes à collectionner, en 3D : commander, ouvrir des boosters, remplir les vitrines et le classeur, aménager, et finir l'année avec la plus belle boutique.
+- [`mineur-de-l-espace/index.html`](mineur-de-l-espace/index.html) : **Mineur de l'espace**, minage spatial et gestion : casse des astéroïdes avec ta corvette, rapporte le minerai à la station en orbite, améliore la corvette, construis la station module par module, envoie des drones miner, pars vers la Lune et Mars, puis défends tes bases contre les aliens avec tes flottes et ton porte-vaisseaux jusqu'à la bataille contre le vaisseau-mère. Une partie de 3 à 5 heures ; au téléphone (joystick) ou au PC (clavier et souris).
+
+**Les classiques**
+
 - [`tetris/index.html`](tetris/index.html) : **Tetris**.
 - [`snake/index.html`](snake/index.html) : **Snake**.
 - [`asteroids/index.html`](asteroids/index.html) : **Asteroids**.
 - [`jeu-de-la-vie/index.html`](jeu-de-la-vie/index.html) : **Jeu de la Vie**, l'automate cellulaire de Conway (voir son propre README).
-- [`solitaire/index.html`](solitaire/index.html) : **Solitaire**, le Klondike de Windows XP.
 
 Sur le menu : les **cartouches en 3D**, debout sur des planches, qui flottent et pivotent doucement (un modèle par famille : cartouche grise pour les jeux 16 bits, noire striée pour les jeux 32 bits, poche en plastique transparent pour les reprises), avec des filtres (tous, favoris, nouveau, du jour, **en cours**) commentés par le gardien. Une étiquette signale un jeu tout neuf, mis à jour ou une partie en cours, une étoile les favoris et une couronne les jeux où l'on détient un record de la famille. **Toucher une cartouche** la fait tourner, puis un volet monte du bas : la **boîte du jeu** qui tourne, sa description, ☆ FAVORI, **mes records** sur cet appareil, **le classement de la famille** et JOUER (le bouton retour du téléphone referme le volet). Sous les cartouches : un **tri** (favoris d'abord, nouveautés, nom, dernière partie lancée depuis le menu), une **recherche** (nom, description ou genre, sans se soucier des accents ; Entrée ouvre le premier jeu trouvé), le bouton **Surprends-moi** (les cartouches défilent dans une console et un jeu au hasard parmi ceux affichés est lancé), le jeu à la une dans sa boîte avec le quoi de neuf, et le transfert de sauvegardes.
 
@@ -64,8 +85,6 @@ Ouvre `queens/index.html` dans n'importe quel navigateur récent. Aucun build, a
 - Annuler, effacer, indice, chrono et record par taille (stocké localement).
 - **Grille du jour** : la même grille pour toute la famille (graine = date), qui grandit au fil de la semaine (5×5 le lundi, 6×6 le mardi, 7×7 le mercredi et le jeudi, 8×8 le vendredi, 9×9 le week-end). Score = temps + 30 secondes par indice. **Une seule tentative classée** : la partie du jour est sauvegardée, chrono compris (le chrono s'arrête quand on quitte l'appli et reprend au retour) ; une fois réussie, elle se rejoue hors classement. Le score du jour part au classement et au transfert de sauvegardes. Lien direct : `queens/index.html#jour`.
 - Jouable au clavier : flèches, Espace, Q, X, Z.
-
----
 
 ## Picross Dex
 
@@ -95,8 +114,6 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 
 Projet de fan à usage strictement personnel, sans lien avec Nintendo, Game Freak ou The Pokémon Company. Le pixel art a été dessiné pour ce jeu.
 
----
-
 ## Lignée
 
 Un puzzle de logique sur le thème de la généalogie. Un arbre vide s'affiche (couples reliés, enfants en dessous) avec une réserve de personnages en pixel art ; une liste d'indices (« Louise est la grand-mère de Hugo », « Paul n'a pas de frère », « Le père de Chloé n'a ni frère ni sœur »…) permet de replacer chacun dans sa case.
@@ -112,6 +129,88 @@ Un puzzle de logique sur le thème de la généalogie. Un arbre vide s'affiche (
 - Un indice dont toutes les personnes sont placées se coche tout seul et descend en bas de la liste, en gardant son numéro.
 - La partie en cours est sauvegardée ; les records de temps et le nombre d'arbres réussis par mode et par niveau font partie du transfert de sauvegardes.
 
+## Sudoku
+
+Le **Sudoku** classique, sous la lune d'un jardin japonais en 32 bits.
+
+- Chaque ligne, chaque colonne et chaque bloc contient une seule fois chaque chiffre.
+- **Commandes** : toucher une case, puis un chiffre en bas (retoucher le même chiffre l'enlève). Le **CRAYON** note les chiffres possibles dans une case ; ces notes s'effacent toutes seules quand le chiffre est posé ailleurs dans la ligne, la colonne ou le bloc. GOMME, ANNULER et INDICE (+30 secondes). **VIDER** efface tous les chiffres posés et les notes après confirmation (OUI / NON) ; le chrono continue, et ANNULER rend la grille. Les chiffres du même genre que la case choisie sont surlignés, et les doublons apparaissent en rouge (réglage DOUBLONS au menu). Sur ordinateur : chiffres au clavier, flèches, N pour le crayon.
+- **Tailles et niveaux** : 4×4 et 6×6 pour débuter ; 9×9 **facile** (beaucoup de chiffres donnés), **moyen** (peu de chiffres, mais tout se trouve case par case) et **difficile** (il faut raisonner sur les notes : candidats bloqués et paires). Les grilles sont générées à l'infini et toujours **à solution unique**.
+- **Grille du jour** en 9×9, la même pour toute la famille : facile le lundi et le mardi, moyenne du mercredi au vendredi, difficile le week-end. **Une seule tentative classée**, sauvegardée à part avec son chrono ; une fois réussie, elle se rejoue hors classement.
+- La partie en cours (notes comprises) est sauvegardée et se reprend depuis l'écran titre. Les meilleurs temps et le nombre de grilles font partie du transfert de sauvegardes.
+
+## Pont stellaire
+
+Un puzzle de logique sur les règles du **Hashi**, dans un ciel étoilé en 32 bits.
+
+- Chaque étoile porte un nombre : c'est le nombre de faisceaux de lumière qui doivent en partir.
+- Les faisceaux sont droits (horizontaux ou verticaux) et vont d'une étoile à sa voisine : un ou deux entre deux étoiles, jamais plus, et ils ne se croisent jamais.
+- À la fin, toutes les étoiles doivent être reliées en une seule constellation, qui s'illumine en or et reçoit un nom (la Lyre, le Cygne, Cassiopée…).
+- **Commandes** : toucher une étoile puis sa voisine, ou glisser de l'une vers l'autre, pose un faisceau ; recommencer en pose deux, puis les enlève. Toucher un faisceau le fait aussi tourner. Une étoile devient verte quand elle est complète, rouge quand elle a trop de faisceaux. ANNULER, EFFACER (deux appuis) et INDICE (+30 secondes).
+- **Trois tailles** (7×7, 9×9 et 11×11) et un **Ciel du jour** en 9×9, le même pour toute la famille. Les grilles sont générées à l'infini, et un solveur vérifie que chacune n'a **qu'une seule solution**.
+- **Ciel du jour : une seule tentative classée.** Elle est sauvegardée à part, chrono compris : quitter puis revenir la reprend au même temps. Une fois réussi, le ciel du jour se rejoue hors classement.
+- La partie en cours est sauvegardée et se reprend depuis l'écran titre. Les meilleurs temps, les temps du Ciel du jour et le nombre de constellations font partie du transfert de sauvegardes.
+
+## Le Mot d'or
+Un mot de 6 lettres par jour à trouver en 6 essais, façon « Wordle », en pixel art 32 bits : un bureau d'acajou le soir, un sous-main en cuir bordeaux doré au fer, des tuiles en ivoire sous la lampe.
+
+- **La règle** : on tape un mot de 6 lettres, puis VALIDER. Les tuiles se retournent : **or**, la lettre est à la bonne place ; **argent**, elle est dans le mot mais ailleurs ; **gris**, elle n'y est pas. Une lettre en double ne compte qu'autant de fois qu'elle est dans le mot. Les accents ne comptent pas (ÉTÉ s'écrit ETE), et seuls les vrais mots sont acceptés (près de 14 000 mots de 6 lettres).
+- **Confort** : grand clavier AZERTY qui se colore au fil des essais, VALIDER qui s'allume quand la ligne est pleine, curseur qu'on place en touchant une case pour corriger une lettre, rappel en filigrane des lettres d'or déjà trouvées, petite vibration à chaque touche. Sur ordinateur : le clavier, Entrée, Retour arrière et les flèches.
+- **Mot du jour** : le même pour toute la famille, un nouveau à minuit (718 mots courants, choisis à la main). **Une seule tentative classée**, sauvegardée après chaque essai. Statistiques : parties, pourcentage de victoires, **série de jours** (avec sa flamme), record et répartition des essais. **PARTAGER** copie la grille en carrés de couleur (🟨 ⬜ ⬛), sans les lettres.
+- **Entraînement** : après le mot du jour, AUTRE MOT donne un mot au hasard, non classé, autant qu'on veut.
+- **Sons** discrets (toc du bois, clochette de l'or), qu'on coupe dans l'aide (bouton ?).
+
+## Capitaine du port
+Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32 bits : quais en granit, capitainerie, phare, grue et mouettes. Le bassin est encombré de bateaux ; il faut ouvrir la passe au **navire doré** pour qu'il rejoigne la mer.
+
+- **La règle** : un bateau ne glisse que dans le sens de sa longueur, d'autant de cases libres qu'on veut ; **un coup = un bateau déplacé**. Le bassin est gagné quand le navire doré arrive à la passe, en haut. ANNULER sans limite et REJOUER.
+- **Commandes** : glisser un bateau du doigt (le petit remorqueur rouge vient le pousser) ; sur ordinateur, à la souris, Z pour annuler, R pour rejouer, Échap pour la pause.
+- **60 bassins en 5 ports** de 12 : le port de pêche (les bases, les 3 premiers expliqués), le port de commerce (plus de grands bateaux), la marina (bouées, pieux et épaves **qui ne bougent jamais**), le chantier naval (pétroliers et paquebots de **4 cases**) et le grand port (**7 × 7**, tout mélangé). Le port suivant s'ouvre quand on a fini 8 bassins du précédent.
+- **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
+- **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
+- **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
+
+## Le Magasinier
+Un Sokoban dans un entrepôt en HD-2D (façon Octopath Traveler) : un petit diorama en relief habillé de pixel art, avec la lumière du soleil qui entre par les fenêtres, et un docker en pixel art (casquette, foulard rouge, gilet de cuir) qui marche, pousse, glisse et se retourne vers toi quand il attend.
+
+- **La règle** : pousser toutes les caisses sur les marques jaunes. On ne peut que pousser, une caisse à la fois, jamais tirer. ANNULER sans limite et RECOMMENCER.
+- **Commandes** : glisser le doigt sur l'écran, ou la croix (qu'on peut masquer dans la pause) ; sur ordinateur, les flèches, Z pour annuler, R pour recommencer.
+- **60 niveaux en 5 entrepôts** de 12 : le quai (le Sokoban de base), la chambre froide (sur la **glace**, caisses et docker glissent jusqu'au premier obstacle), l'atelier (les **tapis roulants** emportent les caisses d'une case à chaque coup ; le docker marche dessus sans glisser), la fonderie (les **caisses en fonte** ne glissent pas et les tapis ne les portent pas) et le grand entrepôt (tout mélangé). L'entrepôt suivant s'ouvre quand on a fini 8 niveaux du précédent.
+- **Étoiles** : 3 étoiles en au plus 10 % de coups de plus que le minimum, 2 en au plus 50 % de plus, sinon 1 (180 en tout). Chaque niveau a été vérifié par un solveur, qui connaît le minimum.
+- **Grille du jour** : la même pour toute la famille, tirée de la date (un jour sur trois avec de la glace). **Une seule tentative classée** : le moins de coups gagne, et chaque pas compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussie, la grille se rejoue hors classement. Lien direct : `magasinier/index.html#jour`.
+- **Sons** : bruitages et musique d'ambiance discrète, chacun réglable dans la pause ; EFFETS LEGERS pour les téléphones lents (sans ombres ni flou).
+
+## Lune-Rover
+
+Un puzzle de programmation en style dessin animé : on écrit à l'avance le programme de Pico, le petit robot lunaire, puis GO ! Pico réagit à ce qu'il fait (concentré, ravi quand il ramasse un cristal, étourdi après un choc, vertige au bord d'un cratère). Il l'exécute pas à pas et doit ramasser tous les cristaux, sans heurter un rocher ni tomber dans un cratère.
+
+- **Les instructions** : avancer, tourner à gauche ou à droite, sauter par-dessus une case (un cratère, pas un rocher), ramasser. On les touche dans la palette, elles s'ajoutent au programme (16 cases au plus).
+- **30 niveaux en 5 étapes** : les bases, puis le saut, les répétitions (toucher une instruction posée, puis + et -), la fonction **F1** (une suite d'instructions qu'on appelle d'un seul bloc) et enfin les **conditions** (SI sur un cristal, voie libre, cratère devant, bloqué devant) et la **BOUCLE** (avec une condition, elle devient « tant que »).
+- **3 étoiles** pour le programme le plus court (pas plus long que la solution de référence), 2 avec jusqu'à 2 instructions de plus, 1 sinon. Réussir un niveau ouvre le suivant ; le programme de chaque niveau est gardé.
+- Les niveaux sont posés sur une carte, un chemin de pierres en 5 zones (bases, sauts, répéter, F1, conditions) qu'on fait défiler du doigt.
+- Vitesse x1, x2 ou x4 ; un bouton ? rappelle la consigne du niveau, dite par Pico. Chaque niveau est vérifié par un outil de test (sa solution de référence gagne).
+- Les étoiles font partie du transfert de sauvegardes ; le total d'étoiles (90 au maximum) part au classement familial.
+
+## Calculator
+
+Le calcul mental de 7 à 77 ans.
+
+- **Opérations au choix** : additions, soustractions, multiplications, divisions, ou un mélange.
+- **Cinq niveaux**, de Petit écolier à Champion.
+- **Trois façons de jouer** : une série de 20 calculs, 60 secondes contre la montre, ou le **calcul du jour** (la même série pour toute la famille, une seule tentative classée).
+- **Trois styles** au choix dans le menu : arcade 16 bits, cahier d'écolier, ou calculatrice de poche à 7 segments.
+- Classements : le calcul du jour, la série de 20 et les 60 secondes, par niveau et par opération.
+
+## Doggy Saga
+Un trois en ligne façon Candy Crush, pour toute la famille, dans un refuge pour chiens : chaque chien aligné reçoit un câlin, et un chien qui a reçu assez de câlins trouve une famille.
+
+- **La règle** : glisser un chien vers son voisin (ou toucher l'un puis l'autre) pour aligner au moins 3 chiens pareils. Un coup qui n'aligne rien est annulé et ne compte pas. Les chiens tombent, de nouveaux arrivent par le haut, et les cascades rapportent de plus en plus.
+- **Bonus** : 4 alignés font un **bandana** (vide sa ligne ou sa colonne), un L ou un T fait un **nœud** (vide les cases autour), 5 alignés font une **balle de tennis** (échangée avec un chien, toute sa race part jouer). On peut échanger deux bonus entre eux pour de très gros effets. Les coups qui restent à la fin deviennent des bandanas : c'est la fête !
+- **Objectifs** : des câlins pour certains chiens, laver la **boue**, faire descendre les **chiots** jusqu'à leur panier. Obstacles : les **niches** (à ouvrir en alignant à côté), les **gamelles** (à renverser), les chiens **en laisse** (qui ne bougent pas).
+- **60 niveaux en 5 chapitres**, 16 chiens (dont Nounours, le bouvier bernois), étoiles selon les points (180 en tout), et **l'album des familles** avec un petit mot de chaque nouvelle famille. Les 3 premiers niveaux montrent les gestes avec une main ; un indice apparaît si on attend.
+- **Journée du jour** : la même grille pour toute la famille, 20 coups, le plus de câlins possible. **Une seule tentative classée**, comptée dès le départ ; ensuite, on rejoue pour le plaisir. Lien direct : `doggy-saga/index.html#jour`.
+- **Sons** : vrais aboiements (libres de droits) et petits sons qui montent pendant les cascades ; on coupe le son au titre ou dans la pause.
+
 ## Injagility
 
 Deux modes, reliés par des onglets en haut de page.
@@ -119,7 +218,7 @@ Deux modes, reliés par des onglets en haut de page.
 **Mode infini** : ton chien enchaîne les obstacles d'agility, dans l'esprit du jeu du dino de Chrome. Le chien est celui choisi au chenil du mode Parcours.
 
 - Graphismes en style 32 bits : écran de 480 × 240, décor en plusieurs plans (nuages, collines, arbres, barrière du ring avec fanions, pelouse tondue), obstacles vus de trois quarts.
-- Les 6 races sont dessinées par [`commun/pixel32.js`](commun/pixel32.js), partagé par les deux modes : chaque chien est monté comme un squelette (corps, cou, tête, oreilles, queue, quatre pattes articulées), peint en pixels ombrés avec 4 nuances par couleur, avec ses propres proportions, marques, oreilles, queue et poil. Galop en 8 images, saut en 5, reptation dans le tunnel en 4.
+- Les 6 races ont chacune leurs proportions, leurs marques, leurs oreilles, leur queue et leur poil ; chaque chien est animé membre par membre (galop en 8 images, saut en 5, reptation dans le tunnel en 4).
 
 - Obstacles : haie, oxer (double barre), pneu (plus haut) et tunnel (il faut se baisser jusqu'à la sortie).
 - Saut à hauteur variable selon la durée d'appui, descente rapide en se baissant en l'air.
@@ -134,19 +233,6 @@ Deux modes, reliés par des onglets en haut de page.
 - Points : 30 par obstacle, os, bonus de temps, moins les flaques et les fautes de boutons. Ils servent à adopter des races au chenil : Jack Russell (slalom facile), Golden retriever (os doublés), Border collie (plus rapide), Berger australien (les sauts ne ralentissent pas), Berger des Shetland (passerelle facile, flaques sans effet).
 - La progression (niveaux, records, points, chiens) est sauvegardée et fait partie du transfert de sauvegardes.
 
----
-
-## Lune-Rover
-
-Un puzzle de programmation en style dessin animé : on écrit à l'avance le programme de Pico, le petit robot lunaire, puis GO ! Pico réagit à ce qu'il fait (concentré, ravi quand il ramasse un cristal, étourdi après un choc, vertige au bord d'un cratère). Il l'exécute pas à pas et doit ramasser tous les cristaux, sans heurter un rocher ni tomber dans un cratère.
-
-- **Les instructions** : avancer, tourner à gauche ou à droite, sauter par-dessus une case (un cratère, pas un rocher), ramasser. On les touche dans la palette, elles s'ajoutent au programme (16 cases au plus).
-- **30 niveaux en 5 étapes** : les bases, puis le saut, les répétitions (toucher une instruction posée, puis + et -), la fonction **F1** (une suite d'instructions qu'on appelle d'un seul bloc) et enfin les **conditions** (SI sur un cristal, voie libre, cratère devant, bloqué devant) et la **BOUCLE** (avec une condition, elle devient « tant que »).
-- **3 étoiles** pour le programme le plus court (pas plus long que la solution de référence), 2 avec jusqu'à 2 instructions de plus, 1 sinon. Réussir un niveau ouvre le suivant ; le programme de chaque niveau est gardé.
-- Les niveaux sont posés sur une carte, un chemin de pierres en 5 zones (bases, sauts, répéter, F1, conditions) qu'on fait défiler du doigt.
-- Vitesse x1, x2 ou x4 ; un bouton ? rappelle la consigne du niveau, dite par Pico. Chaque niveau est vérifié par un outil de test (sa solution de référence gagne).
-- Les étoiles font partie du transfert de sauvegardes ; le total d'étoiles (90 au maximum) part au classement familial.
-
 ## Orbite
 
 Un jeu de physique spatiale en 32 bits : on lance une sonde depuis sa rampe, la gravité des planètes courbe sa trajectoire, et il faut atteindre la balise dorée.
@@ -157,63 +243,26 @@ Un jeu de physique spatiale en 32 bits : on lance une sonde depuis sa rampe, la 
 - Le vol est calculé à pas fixe : une même visée donne toujours la même trajectoire. Chaque niveau a été vérifié par un solveur, qui s'assure qu'il existe des tirs gagnants avec une marge suffisante pour être faits au doigt.
 - Les étoiles sont sauvegardées et font partie du transfert de sauvegardes ; le total d'étoiles (90 au maximum) part au classement familial.
 
----
+## Alunissage
 
-## Pont stellaire
+Poser un module lunaire en douceur, site après site.
 
-Un puzzle de logique sur les règles du **Hashi**, dans un ciel étoilé en 32 bits.
+- **Deux réacteurs**, un par moitié d'écran (un doigt chacun) : le gauche pousse vers le haut et vers la droite, le droit vers le haut et vers la gauche, les deux ensemble tout droit. Au clavier : flèches gauche, droite, haut.
+- Se poser **sur une aire**, à plat, avec une vitesse verticale et horizontale assez faibles (affichées en vert ou en rouge). Les aires étroites rapportent ×5, les moyennes ×3, les larges ×2.
+- **Cadrans près du module**, pour ne pas le quitter des yeux : un réticule qui passe au vert quand tout est bon pour se poser (orange ou rouge sinon), 5 segments de carburant au-dessus, deux barres de vitesse (V et H, le trait blanc marque la limite) dessous, l'aire survolée à côté (×2, ×3, ×5, ou un trait si le sol est en pente), une flèche qui montre où va le module, et sous 120 m un pointillé jusqu'au sol avec la hauteur.
+- Une **mission** enchaîne les sites (la Lune, Phobos, Mars, Europe, Titan et son vent, une comète…), de plus en plus durs, jusqu'au crash ou à l'arrêt. Chaque site rapporte (100 + carburant restant) × le multiplicateur ; le carburant se recharge en partie à chaque alunissage.
+- **Mission du jour** : la même suite de sites pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) ; on peut la rejouer hors classement. Le record et la mission du jour font partie des classements et du transfert de sauvegardes.
+- **Graphismes « cinématiques »** : un soleil qui éclaire le relief et fait des ombres, des montagnes lointaines qui glissent avec le module, un sol de cratères et de rochers, l'astre de chaque monde dans le ciel (la Terre, Mars, Jupiter, Saturne…) et ses effets (vent de poussière sur Mars, geysers sur Europe, brume sur Titan, jets de gaz sur la comète). Le module, plus grand, a ses feux de position, une ombre et des flammes qui éclairent le sol ; après un alunissage, un astronaute plante un drapeau ; après un crash, explosion et cratère fumant.
 
-- Chaque étoile porte un nombre : c'est le nombre de faisceaux de lumière qui doivent en partir.
-- Les faisceaux sont droits (horizontaux ou verticaux) et vont d'une étoile à sa voisine : un ou deux entre deux étoiles, jamais plus, et ils ne se croisent jamais.
-- À la fin, toutes les étoiles doivent être reliées en une seule constellation, qui s'illumine en or et reçoit un nom (la Lyre, le Cygne, Cassiopée…).
-- **Commandes** : toucher une étoile puis sa voisine, ou glisser de l'une vers l'autre, pose un faisceau ; recommencer en pose deux, puis les enlève. Toucher un faisceau le fait aussi tourner. Une étoile devient verte quand elle est complète, rouge quand elle a trop de faisceaux. ANNULER, EFFACER (deux appuis) et INDICE (+30 secondes).
-- **Trois tailles** (7×7, 9×9 et 11×11) et un **Ciel du jour** en 9×9, le même pour toute la famille. Les grilles sont générées à l'infini, et un solveur vérifie que chacune n'a **qu'une seule solution**.
-- **Ciel du jour : une seule tentative classée.** Elle est sauvegardée à part, chrono compris : quitter puis revenir la reprend au même temps. Une fois réussi, le ciel du jour se rejoue hors classement.
-- La partie en cours est sauvegardée et se reprend depuis l'écran titre. Les meilleurs temps, les temps du Ciel du jour et le nombre de constellations font partie du transfert de sauvegardes.
+## Empilage
 
----
+Le premier jeu en 3D de la Ludothèque : une tour de blocs pastel à faire monter le plus haut possible.
 
-## Sudoku
-
-Le **Sudoku** classique, sous la lune d'un jardin japonais en 32 bits.
-
-- Chaque ligne, chaque colonne et chaque bloc contient une seule fois chaque chiffre.
-- **Commandes** : toucher une case, puis un chiffre en bas (retoucher le même chiffre l'enlève). Le **CRAYON** note les chiffres possibles dans une case ; ces notes s'effacent toutes seules quand le chiffre est posé ailleurs dans la ligne, la colonne ou le bloc. GOMME, ANNULER et INDICE (+30 secondes). **VIDER** efface tous les chiffres posés et les notes après confirmation (OUI / NON) ; le chrono continue, et ANNULER rend la grille. Les chiffres du même genre que la case choisie sont surlignés, et les doublons apparaissent en rouge (réglage DOUBLONS au menu). Sur ordinateur : chiffres au clavier, flèches, N pour le crayon.
-- **Tailles et niveaux** : 4×4 et 6×6 pour débuter ; 9×9 **facile** (beaucoup de chiffres donnés), **moyen** (peu de chiffres, mais tout se trouve case par case) et **difficile** (il faut raisonner sur les notes : candidats bloqués et paires). Les grilles sont générées à l'infini et toujours **à solution unique**.
-- **Grille du jour** en 9×9, la même pour toute la famille : facile le lundi et le mardi, moyenne du mercredi au vendredi, difficile le week-end. **Une seule tentative classée**, sauvegardée à part avec son chrono ; une fois réussie, elle se rejoue hors classement.
-- La partie en cours (notes comprises) est sauvegardée et se reprend depuis l'écran titre. Les meilleurs temps et le nombre de grilles font partie du transfert de sauvegardes.
-
----
-
-## Nebula
-
-Rogue-lite tactique dans l'espace, vaisseaux en relief : trois secteurs pirates à traverser.
-
-- **Flotte de départ à composer** avec 10 points de flotte, 4 vaisseaux au plus (éclaireur, convoyeur, drones 1 ; bombardier, égide 2 ; chasseur, artilleur, porte-vaisseaux, atelier 3 ; frégate 4 ; cuirassé 5). Trois modèles se chargent d'un toucher puis se modifient : **escorte** (porte-vaisseaux, frégate, chasseur), **choc** (cuirassé, bombardier, chasseur), **marchande** (convoyeur, 2 chasseurs, éclaireur). **Prime d'audace** : chaque point non dépensé donne +10 % de score et de données stellaires en fin de partie (au plus +50 %).
-- **Contrat de partie** : au départ, on choisit un contrat parmi 3 (chasse aux pirates, gros gibier, zéro perte, équipage complet, fortune, grande escadre, tête brûlée…) ; son avancement s'affiche sur la carte, et réussi il rapporte des points de score et des données stellaires.
-- **Défi de combat** : chaque combat a son défi, affiché sous la barre du haut (aucune perte, victoire en peu de tours, abattre un pirate précis en premier, coques à moitié ou plus) ; réussi, il rapporte des crédits en plus du butin.
-- La flotte traverse la **Ceinture de Karn** : une carte de 7 étages de balises jusqu'à l'**amiral rouillé**. Chaque saut coûte 1 carburant ; sans carburant, chaque vaisseau perd 2 de coque.
-- **Combat** sur une grille de 7×9 : les vaisseaux occupent 1, 2 ou 3 cases. À chaque tour, les pirates se déplacent puis **annoncent en rouge la case qu'ils vont frapper** : on sort de la case, ou on détruit le pirate avant la fin du tour. Chaque vaisseau se déplace (cases bleues) puis agit une fois. Les astéroïdes bloquent les tirs ; le bouclier encaisse d'abord et remonte de 1 par tour. Un vaisseau détruit est perdu pour la partie. Le bouton **PORTÉES** (en haut) montre ou cache la portée des armes sur la grille : en ambre celle du vaisseau choisi, en rouge les cases où les pirates peuvent tirer (plus c'est foncé, plus ils sont nombreux).
-- Capacités (rappelées sur la fiche du vaisseau en combat et au hangar) : riposte du chasseur, laser ou missile de la frégate, baies du porte-vaisseaux (chasseur léger ou drones), torpilles du bombardier, essaim des drones (on touche un pirate collé à la nuée pour l'attaquer), bulle de l'Égide. Pirates : intercepteurs en meute, brûlots kamikazes, croiseurs lance-torpilles, l'amiral et ses renforts. Dans les contacts lourds, les pirates manœuvrent pour **coincer** la flotte : ils visent aussi les cases où l'on pourrait se replier.
-- Pour déplacer un vaisseau, garder le doigt sur une case bleue montre où il ira (et les dégâts qui l'y attendent) ; il part quand on lève le doigt. Tant qu'il n'a pas tiré, on peut le replacer en touchant une autre case bleue.
-- Autres vaisseaux à recruter au comptoir : **éclaireur** (marque un pirate : +1 à chacun de tes tirs sur lui ce tour), **convoyeur** (+50 % de crédits et de carburant), **artilleur** (salve sur 2×2 cases par-dessus les astéroïdes), **cuirassé** (deux tirs par tour), **atelier mobile** (répare les voisins et toute la flotte après chaque combat). Nouveau pirate : le **harponneur**, qui attire les petits vaisseaux avec son grappin.
-- **Mission du jour** (écran titre) : la même carte et les mêmes combats pour toute la famille, avec une mission qui change chaque jour et impose sa flotte et sa règle (escadrille de chasseurs, tapis de bombes, convoi dont le convoyeur ne doit pas être détruit, équipage d'élite avec pilotes, blocus sans comptoirs, réservoirs à sec, armada, la meute), sans prime d'audace ; un écran la présente avant le départ. Seule la première tentative du jour est classée, on peut la rejouer hors classement.
-- **Données stellaires** (gagnées en fin de partie et dans certaines épaves) : l'écran **DÉBLOCAGES** les dépense pour ouvrir de nouveaux vaisseaux (éclaireur, convoyeur, artilleur, cuirassé, atelier), qui entrent alors dans la flotte de départ, au comptoir et dans les épaves. (Les anciens déblocages de flottes ont disparu : les données dépensées sont revenues.) Les déblocages font partie du transfert de sauvegardes.
-- **Nouveaux vaisseaux** (à débloquer) : le **brouilleur** annule le tir annoncé d'un pirate à 4 cases (la case devient grise, BROUILLÉ) au lieu de tirer ; le **mouilleur de mines** pose des mines invisibles pour les pirates (4 par combat, 5 dégâts au passage). Nouveaux pirates (secteurs 2 et 3) : la **frégate-bouclier** donne +1 bouclier aux pirates collés à elle, le **poseur de mines** annonce une mine (case MINE) à côté d'un de tes vaisseaux puis la pose : passer dessus coûte 3 dégâts.
-- **Épaves** : une petite histoire à choix (fouiller une soute, réveiller un pilote, répondre à un signal de détresse… parfois un piège ou une embuscade). **Nébuleuses** : un combat dans la brume, ou un moment de calme.
-- **Pilotes** (épaves et comptoirs) : As (+1 vitesse), Mécano (répare 1 de coque par tour), Tireur (+1 dégât), Prudent (+1 bouclier), Vétéran (gagne de la coque à chaque victoire). On les place au hangar, un par vaisseau.
-- Sur la carte, chaque balise porte son nom ; en touchant une balise hors de portée, sa fiche dit ce qu'on y trouve, et le bouton **? LÉGENDE** les explique toutes.
-- Entre les combats : **comptoir** (carburant, réparations, modules, recrues), **dock** (réparation ou module gratuit), **hangar** pour poser les modules (blindage, bouclier, propulseurs, ciblage, canons Mk2) : en touchant un module, chaque vaisseau montre ce qu'il y gagnerait (par exemple VITESSE 3 → 4) ; de même en touchant un pilote de la réserve.
-- Trois secteurs, chacun gardé par un amiral : la **Ceinture de Karn** (astéroïdes, l'amiral rouillé), la **Nébuleuse d'Orphée** (nuages ioniques qui font perdre le bouclier à qui y finit son tour, nébuleuse où l'on ne vise rien à plus de 2 cases ; la Veuve d'Orphée et sa couvée de brûlots) et **Le Seuil** (pirates plus nombreux et plus rusés ; la Rouille-Reine, dont le bouclier se recharge à chaque tour). +3 carburant en entrant dans un nouveau secteur.
-- **Gestes** : garder le doigt sur un vaisseau, un pirate ou une balise ouvre sa fiche (sur ordinateur : clic droit) ; le tir et le saut partent au lever du doigt ; FIN DU TOUR demande confirmation si un vaisseau peut encore tirer. Réglages de l'écran titre : animations ×1 / ×2, vibrations (quand un vaisseau est touché) et nappe d'ambiance (coupée par défaut).
-- Sons : armes et impacts discrets et étouffés (comme entendus à travers la coque), bips discrets, saut en hyperespace lourd ; ambiance (réglage AMBIANCE) : une marche héroïque sur la carte, une musique de tension en combat.
-- Nebula marche entièrement hors connexion dès la première visite (ses polices sont incluses) et ménage la batterie quand rien ne bouge.
-- Au début de chaque combat, la flotte arrive à toute vitesse du bas de l'écran et freine jusqu'à sa case de départ.
-- **Entraînement guidé** : un petit combat en 5 étapes (choisir un vaisseau, esquiver une case rouge, tirer, bouclier et coque, fin du tour), proposé une fois avant le premier départ et rejouable depuis le manuel ; la partie en cours n'est pas touchée.
-- **Manuel** (écran titre, ou bouton MANUEL COMPLET de la légende de la carte) : les règles en rubriques, une fiche par vaisseau et par pirate (coque, bouclier, vitesse, armes, capacité, où le trouver), le terrain, les balises, les modules et les pilotes.
-- Score : 1000 par secteur terminé, 20 par pirate détruit, plus les crédits restants, plus 3000 pour la victoire finale. Partie sauvegardée à chaque étape. Le record fait partie des classements et du transfert de sauvegardes.
-
----
+- Un bloc va et vient au-dessus de la tour, une fois dans un sens, une fois dans l'autre. **Touche l'écran** (ou Espace) pour le lâcher : ce qui dépasse tombe, et le bloc suivant est plus petit.
+- Un bloc posé **pile** sur le précédent garde sa taille (PARFAIT) ; **trois parfaits d'affilée** le font regrandir un peu. Les blocs vont de plus en plus vite.
+- Le ciel change avec la hauteur : matin, coucher de soleil vers 25 blocs, nuit vers 50, étoiles et lune au-delà. À la fin, la caméra recule pour montrer toute la tour.
+- **Tour du jour** : les mêmes vitesses et les mêmes départs pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) ; on peut la rejouer hors classement.
+- Le record et la tour du jour font partie des classements et du transfert de sauvegardes.
 
 ## Odyssée
 
@@ -226,84 +275,6 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - **Plateau du jour** : le même plateau (parfois en miroir) et les mêmes dangers pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) : le temps, plus 5 secondes par naufrage.
 - **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
-
-## Le Thé des Jarls
-
-Un duel de dés viking, sur les règles de l'Orlog : deux armées de **45 soldats** (3 par PV) se font face sur un fjord en HD-2D, et chaque face de dé lance une action de l'armée.
-
-- **Les dés** : six dés, trois lancers au plus, chacun son tour ; on garde les dés qu'on veut. **Hache** : les fantassins chargent (un casque adverse en pare une) ; **flèche** : les archers tirent (un bouclier en pare une) ; **main** : un éclaireur vole un jeton ; les faces **dorées** rapportent un jeton de faveur.
-- **Les faveurs des dieux** : on emporte trois faveurs parmi 20 (Thor, Idunn, Vidar, Loki, Freyja, Odin…), à invoquer au niveau I, II ou III contre des jetons. Celles d'après la bataille ratent si on s'est fait voler ses jetons. À partir de la manche 10, l'hiver mord les deux armées.
-- **La route du fjord** : 20 tavernes, du plus faible des dieux au plus fort ; battre un dieu gagne sa faveur, des étoiles (selon les PV gardés), des couleurs et des unités pour son armée (berserkers, skjaldmö, chasseurs, garde du jarl).
-- **Apprendre** : un premier duel guidé avec Sigrid la skalde, le livre du skalde (7 pages), un bouton « ? » en jeu et des astuces pendant les trois premières parties.
-- **Duel libre** contre le dieu de son choix (facile, normal, difficile), **à deux** sur un téléphone posé à plat, et **défi du jour** : le même dieu, les mêmes faveurs et les mêmes dés pour toute la famille, une seule tentative classée. Classements : étoiles de la campagne et défi du jour.
-
-## Duché
-
-Un petit 4X au tour par tour, en pixel art 32 bits : **37 terres hexagonales** (plaines, forêts, montagnes, collines, marais, rivière), votre duché en bas à gauche, trois seigneurs rivaux dans les autres coins, et des brigands entre les deux. Un tour = une saison ; la carte change avec elles (blés, feuilles d'automne, neige).
-
-- **Chez vous** : bâtir (ferme, scierie, mine, marché, caserne, tour de guet ; un bâtiment par terre), recruter au château ou à la caserne, déplacer des soldats, changer du bois contre de l'or au marché.
-- **Ailleurs** : attaquer une terre voisine avec la chance de victoire affichée ; le combat se joue en 3 passes dans une scène HD-2D (décor selon le terrain et la saison).
-- **Événements** : récoltes, révoltes, tournois, mariages, mercenaires… chacun sur un parchemin illustré, avec 2 ou 3 réponses.
-- **La couronne** : le vieux roi meurt au tour 11 ; un tour sur deux, un grand électeur vote pour le meilleur seigneur selon son critère (légitimité, armée, terres, trésor, bâtiments), s'il a au moins 40 de légitimité. Cinq votes font un roi.
-- **Fin** : victoire par conquête ou par la couronne, défaite si votre château tombe ; sinon le règne s'achève au tour 30. Score : terres, or, bois, bâtiments, légitimité, votes, primes.
-- **Partie libre** en facile ou en normal (hivers rudes, bâtiments chers, rivaux mordants) ; **Duché du jour** en normal, le même pour toute la famille, une seule tentative classée. Classements : meilleur score (normal) et Duché du jour. Lien direct : `duche/index.html#jour`.
-
-## Bannières
-
-Un jeu de conquête au tour par tour **en 3D**, pensé pour un enfant de 7 ans : des mots simples, des petits nombres, des dessins partout. Les modèles sont ceux de KayKit (Kay Lousberg, CC0).
-
-- **Ta bannière** : choisis ta couleur (or, rouge, bleu ou violet) ; ton château est en bas à gauche, trois autres seigneurs dans les autres coins, des brigands et des ruines hantées gardent des trésors.
-- **Bouger** : touche une armée, puis une case qui brille ; elle y court et les cases traversées deviennent à toi (en rouge : une bataille).
-- **Le village** : au château, achète des chevaliers, archers, lanciers, mages et champions, et soigne ton armée ; sur tes cases, construis (maison, moulin, marché, forge, caserne, tour), agrandis une fois et décore. Le château grandit avec le village (drapeaux, puis remparts). Le coffre est plein à 30 pièces : dépense-les !
-- **Les batailles** : choisis FONCER, TIRER D'ABORD ou PRUDENT, avec des étoiles pour dire si c'est facile ; puis regarde le combat, les cœurs au-dessus des guerriers. Le seigneur ne meurt jamais : blessé, il rentre au château.
-- **Gagner** : prends les 3 châteaux des autres, ou aie le plus de drapeaux après 25 tours. Niveaux FACILE et NORMAL, petite ou grande carte ; petites surprises en chemin. Classement : le plus de drapeaux (petite carte).
-
-## La Boutique de cartes
-Un jeu de gestion **en 3D** : tu tiens une boutique de cartes à collectionner (le jeu inventé « CRÉATURES », 5 éléments, 5 raretés) pendant **52 semaines**. Les modèles sont ceux de Kenney (CC0), les monstres ceux de Dungeon Crawl (CC0), les cadres des cartes ceux de Pixel Card Assets (CC0).
-
-- **Le lundi** (la boutique est fermée) : commande au **grossiste** (livré tout de suite), choisis les produits des **rayons** et leurs prix, ouvre des **boosters** (fermés, ils se vendent sans risque ; ouverts, ils donnent des cartes, parfois une légendaire), range les cartes dans les **vitrines** avec leur prix, complète ton **classeur**, **aménage** (rayons, vitrines, tables, plantes, borne d'arcade…) et **agrandis** la boutique.
-- **Du mardi au samedi** : les clients entrent, vont aux meubles, achètent et passent à la caisse (×1, ×2, ×4, pause). Des visiteurs t'arrêtent : un client qui vend sa collection, un collectionneur, un marchand qui négocie. Le samedi, le **tournoi** (il faut une table).
-- **Le dimanche** : le bilan (ventes, loyer, cotes qui montent et qui baissent). Une nouvelle extension sort toutes les 10 semaines ; événements (vidéo d'un vidéaste, carte interdite, rupture, concurrent, vacances, Noël).
-- **La banque** t'a prêté 2 000 € : rends-les avant la semaine 26 (touche la caisse le lundi), sinon elle prend 20 % de plus. Deux dimanches sous zéro : faillite.
-- **Score** : la valeur de la boutique au bout de l'année (caisse, stock, cartes, meubles, classeurs complets). Classement : la meilleure boutique.
-
-## La Dernière Lanterne (démo)
-Un RPG au tour par tour en HD-2D (tuiles 32 × 32 de Dungeon Crawl posées dans un décor en relief, ombres, flou de profondeur). Dans la vallée de Clairfond, la brume revient : avec ton équipe, rallume les lanternes qui la retiennent.
-
-- **Jouable aujourd'hui** : le prologue, l'acte 1 (Clairfond, la route et l'abbaye, le Bois Murmurant, la Crypte des racines et son boss, le Roi des aulnes) et l'acte 2 (la route des marais, Port-Gris où Maud rejoint l'équipe, le Marais des cloches, le Moulin noyé et son boss, la Dame du moulin), le Hameau caché des Brumiens et l'acte 3 (la route des cimes, le village des Hautes-Roches, les Mines de sel et leur boss, le Géant de sel). La suite arrive par actes.
-- **Combats** au tour par tour à trois puis quatre héros (lame, clerc, arcaniste, rôdeuse), talents, objets, équipement ; les monstres sont visibles sur la carte.
-- **Outils** (bouton B) : la Lanterne du veilleur dissipe les nappes de brume ; le Grappin file par-dessus l'eau jusqu'aux pieux ; la Masse de mineur brise les rochers fendus et les murs fissurés.
-- **Boutiques** : Gaspard à Port-Gris et aux Hautes-Roches, un marchand sur la route des marais (« Merci de votre visite ! »).
-- **Sauvegardes** automatiques aux moments clés et à la main aux lanternes, 3 emplacements. Pas de classement.
-
-## Le Mot d'or
-Un mot de 6 lettres par jour à trouver en 6 essais, façon « Wordle », en pixel art 32 bits : un bureau d'acajou le soir, un sous-main en cuir bordeaux doré au fer, des tuiles en ivoire sous la lampe.
-
-- **La règle** : on tape un mot de 6 lettres, puis VALIDER. Les tuiles se retournent : **or**, la lettre est à la bonne place ; **argent**, elle est dans le mot mais ailleurs ; **gris**, elle n'y est pas. Une lettre en double ne compte qu'autant de fois qu'elle est dans le mot. Les accents ne comptent pas (ÉTÉ s'écrit ETE), et seuls les vrais mots sont acceptés (près de 14 000 mots de 6 lettres).
-- **Confort** : grand clavier AZERTY qui se colore au fil des essais, VALIDER qui s'allume quand la ligne est pleine, curseur qu'on place en touchant une case pour corriger une lettre, rappel en filigrane des lettres d'or déjà trouvées, petite vibration à chaque touche. Sur ordinateur : le clavier, Entrée, Retour arrière et les flèches.
-- **Mot du jour** : le même pour toute la famille, un nouveau à minuit (718 mots courants, choisis à la main). **Une seule tentative classée**, sauvegardée après chaque essai. Statistiques : parties, pourcentage de victoires, **série de jours** (avec sa flamme), record et répartition des essais. **PARTAGER** copie la grille en carrés de couleur (🟨 ⬜ ⬛), sans les lettres.
-- **Entraînement** : après le mot du jour, AUTRE MOT donne un mot au hasard, non classé, autant qu'on veut.
-- **Sons** discrets (toc du bois, clochette de l'or), qu'on coupe dans l'aide (bouton ?).
-
-## Doggy Saga
-Un trois en ligne façon Candy Crush, pour toute la famille, dans un refuge pour chiens : chaque chien aligné reçoit un câlin, et un chien qui a reçu assez de câlins trouve une famille.
-
-- **La règle** : glisser un chien vers son voisin (ou toucher l'un puis l'autre) pour aligner au moins 3 chiens pareils. Un coup qui n'aligne rien est annulé et ne compte pas. Les chiens tombent, de nouveaux arrivent par le haut, et les cascades rapportent de plus en plus.
-- **Bonus** : 4 alignés font un **bandana** (vide sa ligne ou sa colonne), un L ou un T fait un **nœud** (vide les cases autour), 5 alignés font une **balle de tennis** (échangée avec un chien, toute sa race part jouer). On peut échanger deux bonus entre eux pour de très gros effets. Les coups qui restent à la fin deviennent des bandanas : c'est la fête !
-- **Objectifs** : des câlins pour certains chiens, laver la **boue**, faire descendre les **chiots** jusqu'à leur panier. Obstacles : les **niches** (à ouvrir en alignant à côté), les **gamelles** (à renverser), les chiens **en laisse** (qui ne bougent pas).
-- **60 niveaux en 5 chapitres**, 16 chiens (dont Nounours, le bouvier bernois), étoiles selon les points (180 en tout), et **l'album des familles** avec un petit mot de chaque nouvelle famille. Les 3 premiers niveaux montrent les gestes avec une main ; un indice apparaît si on attend.
-- **Journée du jour** : la même grille pour toute la famille, 20 coups, le plus de câlins possible. **Une seule tentative classée**, comptée dès le départ ; ensuite, on rejoue pour le plaisir. Lien direct : `doggy-saga/index.html#jour`.
-- **Sons** : vrais aboiements (libres de droits) et petits sons qui montent pendant les cascades ; on coupe le son au titre ou dans la pause.
-
-## Capitaine du port
-Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32 bits : quais en granit, capitainerie, phare, grue et mouettes. Le bassin est encombré de bateaux ; il faut ouvrir la passe au **navire doré** pour qu'il rejoigne la mer.
-
-- **La règle** : un bateau ne glisse que dans le sens de sa longueur, d'autant de cases libres qu'on veut ; **un coup = un bateau déplacé**. Le bassin est gagné quand le navire doré arrive à la passe, en haut. ANNULER sans limite et REJOUER.
-- **Commandes** : glisser un bateau du doigt (le petit remorqueur rouge vient le pousser) ; sur ordinateur, à la souris, Z pour annuler, R pour rejouer, Échap pour la pause.
-- **60 bassins en 5 ports** de 12 : le port de pêche (les bases, les 3 premiers expliqués), le port de commerce (plus de grands bateaux), la marina (bouées, pieux et épaves **qui ne bougent jamais**), le chantier naval (pétroliers et paquebots de **4 cases**) et le grand port (**7 × 7**, tout mélangé). Le port suivant s'ouvre quand on a fini 8 bassins du précédent.
-- **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
-- **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
-- **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
 
 ## Dragon Simulator
 L'idée d'un garçon de 7 ans : un dragon s'élance de son nid, en haut d'une tour, et plane au-dessus de la ville, vu de profil, en 3D. Le vol est sans fin : il s'arrête quand le dragon touche le sol. Il part doucement et prend de la vitesse en volant.
@@ -328,51 +299,102 @@ Un coin pusher en 3D, en hommage à Mynthos qui a popularisé le genre : on touc
 - **Classements de la famille** : le total des trésors, et le meilleur butin en une partie.
 - **Sons** : bruitages et ambiance de chaque monde (orgue de foire, essaim, houle, tic-tac…), réglables dans la pause avec les vibrations.
 
-## Le Magasinier
-Un Sokoban dans un entrepôt en HD-2D (façon Octopath Traveler) : un petit diorama en relief habillé de pixel art, avec la lumière du soleil qui entre par les fenêtres, et un docker en pixel art (casquette, foulard rouge, gilet de cuir) qui marche, pousse, glisse et se retourne vers toi quand il attend.
+## Touché Coulé
 
-- **La règle** : pousser toutes les caisses sur les marques jaunes. On ne peut que pousser, une caisse à la fois, jamais tirer. ANNULER sans limite et RECOMMENCER.
-- **Commandes** : glisser le doigt sur l'écran, ou la croix (qu'on peut masquer dans la pause) ; sur ordinateur, les flèches, Z pour annuler, R pour recommencer.
-- **60 niveaux en 5 entrepôts** de 12 : le quai (le Sokoban de base), la chambre froide (sur la **glace**, caisses et docker glissent jusqu'au premier obstacle), l'atelier (les **tapis roulants** emportent les caisses d'une case à chaque coup ; le docker marche dessus sans glisser), la fonderie (les **caisses en fonte** ne glissent pas et les tapis ne les portent pas) et le grand entrepôt (tout mélangé). L'entrepôt suivant s'ouvre quand on a fini 8 niveaux du précédent.
-- **Étoiles** : 3 étoiles en au plus 10 % de coups de plus que le minimum, 2 en au plus 50 % de plus, sinon 1 (180 en tout). Chaque niveau a été vérifié par un solveur, qui connaît le minimum.
-- **Grille du jour** : la même pour toute la famille, tirée de la date (un jour sur trois avec de la glace). **Une seule tentative classée** : le moins de coups gagne, et chaque pas compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussie, la grille se rejoue hors classement. Lien direct : `magasinier/index.html#jour`.
-- **Sons** : bruitages et musique d'ambiance discrète, chacun réglable dans la pause ; EFFETS LEGERS pour les téléphones lents (sans ombres ni flou).
+La bataille navale classique contre l'ordinateur, en 16 bits.
 
-## Empilage
+- **Deux modes** : Classique (on tire case par case) et **Arsenal**, avec le sonar et les torpilles en plus.
+- **Trois niveaux d'ordinateur** : Facile, Normal et Amiral.
+- Record : la victoire en le moins de tirs, par mode et par niveau. Classement familial.
 
-Le premier jeu en 3D de la Ludothèque : une tour de blocs pastel à faire monter le plus haut possible.
+## Amiral !
 
-- Un bloc va et vient au-dessus de la tour, une fois dans un sens, une fois dans l'autre. **Touche l'écran** (ou Espace) pour le lâcher : ce qui dépasse tombe, et le bloc suivant est plus petit.
-- Un bloc posé **pile** sur le précédent garde sa taille (PARFAIT) ; **trois parfaits d'affilée** le font regrandir un peu. Les blocs vont de plus en plus vite.
-- Le ciel change avec la hauteur : matin, coucher de soleil vers 25 blocs, nuit vers 50, étoiles et lune au-delà. À la fin, la caméra recule pour montrer toute la tour.
-- **Tour du jour** : les mêmes vitesses et les mêmes départs pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) ; on peut la rejouer hors classement.
-- Le record et la tour du jour font partie des classements et du transfert de sauvegardes.
+Une bataille navale tactique en 32 bits sur une mer de 8 × 8, où **chaque navire a un pouvoir**.
 
----
+- **Chantier naval** : on compose sa flotte de 4 navires (4, 3, 3 et 2 cases) parmi 11 : porte-avions (avion de reconnaissance), croiseur (missiles), navire-atelier (réparation), cuirassé (salve), sous-marin (plongée), destroyer (sonar), torpilleur (torpille), garde-côte (projecteur)…
+- **Trois navires à débloquer** en gagnant des batailles : le mouilleur et ses mines qui ripostent, le brouilleur et son écran de fumée, la vedette et son faux navire gonflable.
+- **Trois niveaux d'ordinateur** : Mousse, Capitaine et Amiral ; l'ordinateur se sert aussi des pouvoirs.
+- **Bataille du jour** : les mêmes flottes et le même ennemi pour toute la famille, en Capitaine, une seule tentative classée.
+- Classements : la victoire en le moins de tours par niveau, et la bataille du jour.
 
-## Alunissage
+## Escadrille !
 
-Poser un module lunaire en douceur, site après site.
+La petite sœur d'Amiral ! dans le ciel : un ciel de 9 × 9 et une escadrille pirate cachée dans les nuages.
 
-- **Deux réacteurs**, un par moitié d'écran (un doigt chacun) : le gauche pousse vers le haut et vers la droite, le droit vers le haut et vers la gauche, les deux ensemble tout droit. Au clavier : flèches gauche, droite, haut.
-- Se poser **sur une aire**, à plat, avec une vitesse verticale et horizontale assez faibles (affichées en vert ou en rouge). Les aires étroites rapportent ×5, les moyennes ×3, les larges ×2.
-- **Cadrans près du module**, pour ne pas le quitter des yeux : un réticule qui passe au vert quand tout est bon pour se poser (orange ou rouge sinon), 5 segments de carburant au-dessus, deux barres de vitesse (V et H, le trait blanc marque la limite) dessous, l'aire survolée à côté (×2, ×3, ×5, ou un trait si le sol est en pente), une flèche qui montre où va le module, et sous 120 m un pointillé jusqu'au sol avec la hauteur.
-- Une **mission** enchaîne les sites (la Lune, Phobos, Mars, Europe, Titan et son vent, une comète…), de plus en plus durs, jusqu'au crash ou à l'arrêt. Chaque site rapporte (100 + carburant restant) × le multiplicateur ; le carburant se recharge en partie à chaque alunissage.
-- **Mission du jour** : la même suite de sites pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) ; on peut la rejouer hors classement. Le record et la mission du jour font partie des classements et du transfert de sauvegardes.
-- **Graphismes « cinématiques »** : un soleil qui éclaire le relief et fait des ombres, des montagnes lointaines qui glissent avec le module, un sol de cratères et de rochers, l'astre de chaque monde dans le ciel (la Terre, Mars, Jupiter, Saturne…) et ses effets (vent de poussière sur Mars, geysers sur Europe, brume sur Titan, jets de gaz sur la comète). Le module, plus grand, a ses feux de position, une ombre et des flammes qui éclairent le sol ; après un alunissage, un astronaute plante un drapeau ; après un crash, explosion et cratère fumant.
+- **Hangar** : on choisit ses 4 avions parmi 10, chacun avec son pouvoir : radar, bombes en croix, missile, esquive de l'hélicoptère, roquettes, ravitaillement, patrouille (compte une ligne et une colonne), leurres, ballons de barrage et DCA, drone et sa caméra.
+- **Quatre escadrilles** (familles d'avions et leurs couleurs), dont trois à débloquer : Furtif, Hélices et Canonnière.
+- Un sol différent à chaque partie, et les pilotes abattus sautent en parachute.
+- **Trois niveaux** : Recrue, Pilote et As ; en Pilote et en As, les pirates utilisent aussi les nouveaux avions.
+- Classement : la victoire en le moins de tours, par niveau.
 
----
+## Nebula
 
-## Les classiques passés en 16 bits
+Rogue-lite tactique dans l'espace, vaisseaux en relief : traverser trois secteurs pirates (la Ceinture de Karn, la Nébuleuse d'Orphée et Le Seuil), chacun gardé par un amiral.
 
-Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire en le moins de tirs) et le classement. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).
+- **Flotte de départ** composée avec 10 points (4 vaisseaux au plus), un **contrat de partie** à remplir et un **défi** à chaque combat.
+- **Carte** de balises à sauts : comptoir, dock, hangar, épaves à petites histoires, nébuleuses, pilotes à recruter ; chaque saut coûte du carburant.
+- **Combat** sur une grille de 7 × 9 : les pirates **annoncent en rouge la case qu'ils vont frapper** ; on esquive, on bloque avec le bouclier ou on les détruit avant. Chaque vaisseau a sa capacité (riposte, laser, drones, torpilles, brouillage, mines…).
+- **Modules** à poser au hangar, **données stellaires** pour débloquer de nouveaux vaisseaux, **mission du jour** avec sa flotte et sa règle imposées.
+- Un **entraînement guidé** et un **manuel** complet (une fiche par vaisseau et par pirate) dans le jeu. Gestes : garder le doigt sur un vaisseau, un pirate ou une balise ouvre sa fiche.
+- Joue hors connexion, partie sauvegardée à chaque étape. Score : secteurs terminés, pirates détruits, crédits, victoire finale. Classements : meilleur score, partie du jour, nombre de victoires.
 
-- **Tetris** : briques en relief, puits en damier, pièce fantôme en pointillés, record sauvegardé, un niveau toutes les 10 lignes avec une vitesse qui suit la courbe de la NES (jusqu'à une case par image au niveau 29), écran d'accueil, boutons tactiles avec répétition.
-- **Snake** : jardin en damier, pomme et serpent dessinés en pixels, tête orientée avec langue, record conservé (même clé que l'original), file de virages pour ne jamais se retourner sur soi, glisser ou croix directionnelle sur mobile.
-- **Asteroids** : rendu en basse résolution pixel par pixel, astéroïdes ombrés avec cratères, grand vaisseau au contour lumineux, flamme du réacteur, nébuleuse et étoiles fixes qui scintillent, record sauvegardé, tir continu en maintenant le bouton sur mobile.
-- **Jeu de la Vie** : moteur et réglages inchangés ; cellules en briques, traces en paliers de couleur, panneaux et curseurs en style pixel.
+## Résistance
 
----
+Un rogue-lite tactique façon Fire Emblem GBA : un tyran a soumis le continent, et on mène l'armée rebelle.
+
+- **Une campagne** : recruter ses soldats, traverser le pays de combat en combat sur une carte à embranchements (marchand, repos, événements), jusqu'au général du tyran.
+- **Combats** au tour par tour sur une grille : triangle des armes, 11 classes, soigneur, zone de danger des ennemis ; un soldat tombé est **perdu pour de bon**.
+- **La forteresse** : défaite ou victoire, on rapporte du ravitaillement pour agrandir la forteresse rebelle (caserne, taverne, infirmerie, chapelle, Mémorial des vétérans…) ; chaque bâtiment rend les campagnes suivantes plus fortes.
+- La campagne en cours reprend au lancement. Pas de classement.
+
+## Duché
+
+Un petit 4X au tour par tour, en pixel art 32 bits : **37 terres hexagonales** (plaines, forêts, montagnes, collines, marais, rivière), votre duché en bas à gauche, trois seigneurs rivaux dans les autres coins, et des brigands entre les deux. Un tour = une saison ; la carte change avec elles (blés, feuilles d'automne, neige).
+
+- **Chez vous** : bâtir (ferme, scierie, mine, marché, caserne, tour de guet ; un bâtiment par terre), recruter au château ou à la caserne, déplacer des soldats, changer du bois contre de l'or au marché.
+- **Ailleurs** : attaquer une terre voisine avec la chance de victoire affichée ; le combat se joue en 3 passes dans une scène HD-2D (décor selon le terrain et la saison).
+- **Événements** : récoltes, révoltes, tournois, mariages, mercenaires… chacun sur un parchemin illustré, avec 2 ou 3 réponses.
+- **La couronne** : le vieux roi meurt au tour 11 ; un tour sur deux, un grand électeur vote pour le meilleur seigneur selon son critère (légitimité, armée, terres, trésor, bâtiments), s'il a au moins 40 de légitimité. Cinq votes font un roi.
+- **Fin** : victoire par conquête ou par la couronne, défaite si votre château tombe ; sinon le règne s'achève au tour 30. Score : terres, or, bois, bâtiments, légitimité, votes, primes.
+- **Partie libre** en facile ou en normal (hivers rudes, bâtiments chers, rivaux mordants) ; **Duché du jour** en normal, le même pour toute la famille, une seule tentative classée. Classements : meilleur score (normal) et Duché du jour. Lien direct : `duche/index.html#jour`.
+
+## Bannières
+
+Un jeu de conquête au tour par tour **en 3D**, pensé pour un enfant de 7 ans : des mots simples, des petits nombres, des dessins partout. Les modèles sont ceux de KayKit (Kay Lousberg, CC0).
+
+- **Ta bannière** : choisis ta couleur (or, rouge, bleu ou violet) ; ton château est en bas à gauche, trois autres seigneurs dans les autres coins, des brigands et des ruines hantées gardent des trésors.
+- **Bouger** : touche une armée, puis une case qui brille ; elle y court et les cases traversées deviennent à toi (en rouge : une bataille).
+- **Le village** : au château, achète des chevaliers, archers, lanciers, mages et champions, et soigne ton armée ; sur tes cases, construis (maison, moulin, marché, forge, caserne, tour), agrandis une fois et décore. Le château grandit avec le village (drapeaux, puis remparts). Le coffre est plein à 30 pièces : dépense-les !
+- **Les batailles** : choisis FONCER, TIRER D'ABORD ou PRUDENT, avec des étoiles pour dire si c'est facile ; puis regarde le combat, les cœurs au-dessus des guerriers. Le seigneur ne meurt jamais : blessé, il rentre au château.
+- **Gagner** : prends les 3 châteaux des autres, ou aie le plus de drapeaux après 25 tours. Niveaux FACILE et NORMAL, petite ou grande carte ; petites surprises en chemin. Classement : le plus de drapeaux (petite carte).
+
+## La Dernière Lanterne (démo)
+Un RPG au tour par tour en HD-2D (tuiles 32 × 32 de Dungeon Crawl posées dans un décor en relief, ombres, flou de profondeur). Dans la vallée de Clairfond, la brume revient : avec ton équipe, rallume les lanternes qui la retiennent.
+
+- **Jouable aujourd'hui** : le prologue, l'acte 1 (Clairfond, la route et l'abbaye, le Bois Murmurant, la Crypte des racines et son boss, le Roi des aulnes) et l'acte 2 (la route des marais, Port-Gris où Maud rejoint l'équipe, le Marais des cloches, le Moulin noyé et son boss, la Dame du moulin), le Hameau caché des Brumiens et l'acte 3 (la route des cimes, le village des Hautes-Roches, les Mines de sel et leur boss, le Géant de sel). La suite arrive par actes.
+- **Combats** au tour par tour à trois puis quatre héros (lame, clerc, arcaniste, rôdeuse), talents, objets, équipement ; les monstres sont visibles sur la carte.
+- **Outils** (bouton B) : la Lanterne du veilleur dissipe les nappes de brume ; le Grappin file par-dessus l'eau jusqu'aux pieux ; la Masse de mineur brise les rochers fendus et les murs fissurés.
+- **Boutiques** : Gaspard à Port-Gris et aux Hautes-Roches, un marchand sur la route des marais (« Merci de votre visite ! »).
+- **Sauvegardes** automatiques aux moments clés et à la main aux lanternes, 3 emplacements. Pas de classement.
+
+## Le Thé des Jarls
+
+Un duel de dés viking, sur les règles de l'Orlog : deux armées de **45 soldats** (3 par PV) se font face sur un fjord en HD-2D, et chaque face de dé lance une action de l'armée.
+
+- **Les dés** : six dés, trois lancers au plus, chacun son tour ; on garde les dés qu'on veut. **Hache** : les fantassins chargent (un casque adverse en pare une) ; **flèche** : les archers tirent (un bouclier en pare une) ; **main** : un éclaireur vole un jeton ; les faces **dorées** rapportent un jeton de faveur.
+- **Les faveurs des dieux** : on emporte trois faveurs parmi 20 (Thor, Idunn, Vidar, Loki, Freyja, Odin…), à invoquer au niveau I, II ou III contre des jetons. Celles d'après la bataille ratent si on s'est fait voler ses jetons. À partir de la manche 10, l'hiver mord les deux armées.
+- **La route du fjord** : 20 tavernes, du plus faible des dieux au plus fort ; battre un dieu gagne sa faveur, des étoiles (selon les PV gardés), des couleurs et des unités pour son armée (berserkers, skjaldmö, chasseurs, garde du jarl).
+- **Apprendre** : un premier duel guidé avec Sigrid la skalde, le livre du skalde (7 pages), un bouton « ? » en jeu et des astuces pendant les trois premières parties.
+- **Duel libre** contre le dieu de son choix (facile, normal, difficile), **à deux** sur un téléphone posé à plat, et **défi du jour** : le même dieu, les mêmes faveurs et les mêmes dés pour toute la famille, une seule tentative classée. Classements : étoiles de la campagne et défi du jour.
+
+## Yams
+
+Le Yams classique avec de **vrais dés en 3D**, qui roulent et rebondissent.
+
+- On lance les dés d'un geste, ou on les secoue dans un gobelet ; on garde les bons, jusqu'à trois lancers par tour.
+- La feuille de marque classique en **13 cases** : bonus de 35 points à partir de 63 en haut ; full 25, petite suite 30, grande suite 40, Yams 50.
+- **Six styles de dés** à débloquer, de la taverne au casino de nuit, aux gros pixels rétro et jusque sur la Lune.
+- Classement : le meilleur score.
 
 ## Solitaire
 
@@ -386,6 +408,46 @@ Le Klondike tel qu'il était livré avec Windows XP, avec des cartes faites pour
 - Toucher une carte l'envoie à la meilleure place (pile d'abord, sinon colonne) ; on peut aussi la glisser. Annuler, bouton TOUT RANGER quand toutes les cartes sont visibles.
 - Les cartes rebondissent à la victoire, comme dans l'original.
 - La partie en cours est sauvegardée et reprend au prochain lancement ; le meilleur score fait partie du transfert de sauvegardes.
+
+## Le Club d'agility
+
+Un jeu de gestion en 32 bits : faire d'un petit club canin le meilleur de France. Une semaine par tour.
+
+- **Six races** de chiens à recruter.
+- **Chaque semaine** : agrès, repos ou câlins pour chaque chien ; une séance guidée est proposée en option.
+- **Concours** joués au doigt (garder le chien dans la zone verte), sur 5 niveaux, jusqu'au **Championnat de France**.
+- **Boutique** pour agrandir le club : chenil, buvette, tribunes, gazon pro. Le nom du club se change.
+- Classements : la plus grande réputation, et le Championnat de France gagné en le moins de semaines.
+
+## La Boutique de cartes
+Un jeu de gestion **en 3D** : tu tiens une boutique de cartes à collectionner (le jeu inventé « CRÉATURES », 5 éléments, 5 raretés) pendant **52 semaines**. Les modèles sont ceux de Kenney (CC0), les monstres ceux de Dungeon Crawl (CC0), les cadres des cartes ceux de Pixel Card Assets (CC0).
+
+- **Le lundi** (la boutique est fermée) : commande au **grossiste** (livré tout de suite), choisis les produits des **rayons** et leurs prix, ouvre des **boosters** (fermés, ils se vendent sans risque ; ouverts, ils donnent des cartes, parfois une légendaire), range les cartes dans les **vitrines** avec leur prix, complète ton **classeur**, **aménage** (rayons, vitrines, tables, plantes, borne d'arcade…) et **agrandis** la boutique.
+- **Du mardi au samedi** : les clients entrent, vont aux meubles, achètent et passent à la caisse (×1, ×2, ×4, pause). Des visiteurs t'arrêtent : un client qui vend sa collection, un collectionneur, un marchand qui négocie. Le samedi, le **tournoi** (il faut une table).
+- **Le dimanche** : le bilan (ventes, loyer, cotes qui montent et qui baissent). Une nouvelle extension sort toutes les 10 semaines ; événements (vidéo d'un vidéaste, carte interdite, rupture, concurrent, vacances, Noël).
+- **La banque** t'a prêté 2 000 € : rends-les avant la semaine 26 (touche la caisse le lundi), sinon elle prend 20 % de plus. Deux dimanches sous zéro : faillite.
+- **Score** : la valeur de la boutique au bout de l'année (caisse, stock, cartes, meubles, classeurs complets). Classement : la meilleure boutique.
+
+## Mineur de l'espace
+
+Minage spatial, gestion et batailles automatiques : une grande partie de 3 à 5 heures.
+
+- **Le minage** : piloter sa corvette dans la ceinture d'astéroïdes, casser les roches et rapporter le minerai à la station en orbite.
+- **La gestion** : améliorer la corvette (les améliorations se voient sur le vaisseau), construire la station module par module, usines, recherche, entrepôt, drones qui minent seuls.
+- **Le voyage** : partir vers la Lune et Mars, y installer des bases et des avant-postes.
+- **La défense** : vagues d'aliens, flottes, porte-vaisseaux et son escadrille, jusqu'à la grande bataille contre le vaisseau-mère.
+- Au téléphone : joystick et boutons ; au PC : clavier et souris. Partie sauvegardée au quai. Pas de classement.
+
+## Les classiques passés en 16 bits
+
+Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire en le moins de tirs) et le classement. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).
+
+- **Tetris** : briques en relief, puits en damier, pièce fantôme en pointillés, record sauvegardé, un niveau toutes les 10 lignes avec une vitesse qui suit la courbe de la NES (jusqu'à une case par image au niveau 29), écran d'accueil, boutons tactiles avec répétition.
+- **Snake** : jardin en damier, pomme et serpent dessinés en pixels, tête orientée avec langue, record conservé (même clé que l'original), file de virages pour ne jamais se retourner sur soi, glisser ou croix directionnelle sur mobile.
+- **Asteroids** : rendu en basse résolution pixel par pixel, astéroïdes ombrés avec cratères, grand vaisseau au contour lumineux, flamme du réacteur, nébuleuse et étoiles fixes qui scintillent, record sauvegardé, tir continu en maintenant le bouton sur mobile.
+- **Jeu de la Vie** : moteur et réglages inchangés ; cellules en briques, traces en paliers de couleur, panneaux et curseurs en style pixel.
+
+---
 
 ## Transférer ses sauvegardes
 
@@ -414,6 +476,16 @@ Les classements sont dans le **volet de chaque jeu**, sur l'accueil : des classe
 - **Pont stellaire** : le Ciel du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille (7×7, 9×9, 11×11, plus 30 secondes par indice) et le nombre de constellations dessinées.
 - **Calculator** : le calcul du jour (même série pour toute la famille, une seule tentative classée), la série de 20 et les 60 secondes, par niveau et par opération (MELANGE quand on en choisit plusieurs).
 - **Sudoku** : la grille du jour (avec les flèches pour revoir les jours précédents), le meilleur temps par taille et niveau (4×4, 6×6, 9×9 facile, moyen, difficile ; plus 30 secondes par indice) et le nombre de grilles terminées.
+- **Dragon Simulator** : le plus long vol, en mètres.
+- **Romet** : le total des trésors gagnés dans toutes les machines, et le meilleur butin en une partie.
+- **Yams** : le meilleur score.
+- **Doggy Saga** : les étoiles des 60 niveaux du refuge, et la journée du jour (le plus de câlins en 20 coups).
+- **Le Thé des Jarls** : les étoiles de la route du fjord, et le défi du jour.
+- **La Boutique de cartes** : la meilleure boutique (sa valeur à la fin des 52 semaines).
+- **Bannières** : le plus de drapeaux à la fin d'une partie sur la petite carte.
+- **Duché** : le meilleur règne (en normal), et le Duché du jour.
+- **Capitaine du port** : le total d'étoiles des 60 bassins, et le bassin du jour (le moins de coups).
+- **Le Magasinier** : le total d'étoiles des 60 niveaux, et la grille du jour (le moins de coups).
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).
 
@@ -429,5 +501,3 @@ Sur le site GitHub Pages, la Ludothèque s'installe comme une application, avec 
 - **iPhone et iPad** : un encadré explique la marche à suivre dans Safari (Partager, puis Sur l'écran d'accueil). Apple ne permet pas à une page de lancer l'installation elle-même.
 - **Hors connexion** : `sw.js` met tous les jeux en cache à la première visite. En ligne, il sert toujours la dernière version publiée.
 - Un bouton **◀ LUDOTHÈQUE**, dans les menus de chaque jeu (écran titre, pause, fin de partie), ramène à la Ludothèque.
-
-Fichiers : `manifest.webmanifest`, `sw.js` et le dossier `icons/`. Quand on ajoute ou renomme un fichier de jeu, il faut l'ajouter à la liste `FILES` de `sw.js` et changer `VERSION`, pour que le préchargement hors connexion en tienne compte.
