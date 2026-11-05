@@ -146,13 +146,34 @@ catch (e) { bad('Mineur de l\'espace : simulateur\n' + (e.stdout || '') + (e.std
 try { execFileSync(process.execPath, [path.join(__dirname, 'dragon-simulateur.js'), '3'], { stdio: 'pipe', encoding: 'utf8' }); ok('Dragon Simulator : simulateur (règles, dix bonus, parties reproductibles, économie du nid)'); }
 catch (e) { bad('Dragon Simulator : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// 8 decies. fiches des jeux (<dossier>/fiche.js) : chaque chemin de GAMES sans cartouche a sa fiche, chargée par l'accueil et en cache
+{
+  const idx = read('accueil.js'), page = read('index.html');
+  const games = idx.slice(idx.indexOf('const GAMES = ['), idx.indexOf('\n];', idx.indexOf('const GAMES = [')));
+  const chemins = [...games.matchAll(/^\s*"([^"]+\/index\.html)",/gm)].map(m => m[1]);
+  const fiches = files.filter(f => /^[^/]+\/fiche\.js$/.test(f));
+  for (const c of chemins) {
+    const f = c.replace(/index\.html$/, 'fiche.js');
+    if (!fiches.includes(f)) { bad(`fiches : ${c} est dans GAMES sans fiche (${f})`); continue; }
+    if (!read(f).includes(`k: "${c}"`)) bad(`fiches : ${f} ne déclare pas k: "${c}"`);
+  }
+  for (const f of fiches) {
+    if (!page.includes(`<script src="${f}"></script>`)) bad(`fiches : ${f} n'est pas chargée par index.html`);
+    if (!chemins.includes(f.replace(/fiche\.js$/, 'index.html'))) bad(`fiches : ${f} n'a pas son chemin dans GAMES (accueil.js)`);
+    for (const champ of ['carte:', 'meta:']) if (!read(f).includes(champ)) bad(`fiches : ${f} sans ${champ.slice(0, -1)}`);
+  }
+  if (page.indexOf('accueil-outils.js') > page.indexOf('/fiche.js') || page.lastIndexOf('/fiche.js') > page.indexOf('src="accueil.js"')) bad('fiches : index.html doit charger accueil-outils.js, puis les fiches, puis accueil.js');
+  ok(`fiches : ${fiches.length} jeux décrits par leur fiche`);
+}
+
 // 9. classements : jeu + début du nom du tableau (« best », « daily »…), lus dans le code
 {
   const pre = new Map(), idx = read('accueil.js'), ls = read('ludo-scores.js');
   for (const f of files.filter(f => /\.(html|js)$/.test(f) && !/^(maquettes|outils|lib)\//.test(f) && f !== 'ludo-scores.js'))
     for (const m of read(f).matchAll(/\.submit\(\s*(['"])([a-z]+)\1\s*,\s*(?:(['"`])([A-Za-z]+)|\w+)/g))
       if (m[4]) pre.set(m[2] + ' ' + m[4], f);   // tableau calculé (Calculator : serie/chrono) : non vérifié
-  const at = idx.indexOf('const RANKS = {'), ranks = idx.slice(at, idx.indexOf('\n};', at));
+  const fiches = files.filter(f => /^[^/]+\/fiche\.js$/.test(f)).map(read).join('\n');   // classements des fiches des jeux
+  const at = idx.indexOf('const RANKS = {'), ranks = idx.slice(at, idx.indexOf('\n};', at)) + fiches;
   const shown = new Set([...ranks.matchAll(/game: "([a-z]+)", board: (?:\(\) => ["`]([A-Za-z]+)|daily)/g)].map(m => m[1] + ' ' + (m[2] || 'daily')));
   const resent = new Set([...ls.matchAll(/\b(?:hi|lo)\("([a-z]+)", "([A-Za-z]+)/g)].map(m => m[1] + ' ' + m[2]));
   const pseudo = new Set([...ls.matchAll(/\["([a-z]+)", "[^"]+"\]/g)].map(m => m[1]));

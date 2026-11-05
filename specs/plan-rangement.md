@@ -8,7 +8,9 @@ Plan donné par l'utilisateur le 05/11, enregistré tel quel pour pouvoir le rep
 - [x] Phase 2 — Un CLAUDE.md par gros jeu : resistance/, lanterne/ (+ moteur-rpg/), mineur-de-l-espace/, nebula/, ile/, bannieres/, boutique/, the-des-jarls/, duche/, doggy-saga/ (validé le 05/11)
 - [x] Phase 3 — IDEES.md et suivi.md
 - [x] Phase 4 — Code partagé dans un dossier commun/ (05/11, décision de l'utilisateur : seuls les deux fichiers vraiment partagés bougent, `injagility/chiens32.js` → `commun/pixel32.js` et `nebula/vaisseaux.js` → `commun/vaisseaux.js` ; `nebula/regles.js`, `nebula/sons.js` et `ile/regles.js` restent, car ils ne servent qu'à leur jeu ; cache `ludotheque-v87` ; artefacts identiques à des commentaires près, donc pas republiés)
-- [x] Phase 5 — accueil.js (proposition seulement) : proposition écrite en fin de fichier, à décider plus tard
+- [x] Phase 5 — accueil.js (proposition seulement) : proposition écrite en fin de fichier ; **acceptée le 05/11** (fiches dans les dossiers des jeux, en deux sessions)
+- [x] Phase 6, session 1 (05/11) — `accueil-outils.js` (`Ludo.fiche`, `rk`, `num`, `N`, `st`, `daily`…), fusion fiches + anciennes tables dans `accueil.js`, fiches de **Tetris** et **Nebula** ; cache `ludotheque-v88`
+- [ ] Phase 6, session 2 — les 34 autres jeux par lots, puis suppression des anciennes tables (`GAMES` ne garde que les chemins = `ORDRE`), `registerExisting`/`PSEUDO_BOARDS` (à voir), liste de contrôle du mémo et skill `ajouter-un-jeu`, artefact de l'accueil (ses trois retouches) republié
 
 ## Plan (texte de l'utilisateur)
 
@@ -95,7 +97,13 @@ PHASE 5 — accueil.js (proposition seulement, AUCUN code)
   qu'ajouter un jeu ne modifie plus accueil.js à plusieurs endroits.
   Estime le travail et les risques. On décidera plus tard.
 
-## Phase 5 — proposition pour `accueil.js` (05/11, aucun code écrit)
+## Phase 5 — proposition pour `accueil.js` (05/11 ; acceptée, faite en phase 6)
+
+### Ce qui a été fait (session 1, 05/11)
+- `accueil-outils.js` (chargé avant les fiches) : `Ludo.fiche()`, mode d'emploi d'une fiche en tête du fichier, et les petits outils sortis d'`accueil.js` (`rk`/`readKey`, `writeKey`, `dayNum`, `mmss`/`fmtTime`, `sum`, `count`, `nf`, `num`, `N`, `T`, `dayKey`, `dayCode`, `st`, `day`, `dayName`, `daily`). `accueil.js` reste enveloppé dans sa fonction `(() => { … })()` : il voit ces const, les tests passent par `window.Accueil`.
+- Ordre : **`GAMES` sert d'`ORDRE` pendant la transition** : un jeu migré n'y a plus que son chemin (`"tetris/index.html"`), remplacé au chargement par la cartouche de sa fiche (fiche absente ou cassée : la cartouche disparaît, l'accueil marche ; essayé). Les fiches remplissent ensuite `META`, `PROGRESS`, `TODAY`, `RECS`, `NICE`, `RANKS[carte.rank]`, et le transfert boucle sur `transfert` (`collecter`/`decrire`/`fusionner`, clé `g[cle]` inchangée).
+- Vérifié dans Chromium : ancien et nouvel accueil donnent les mêmes cartouches (ordre compris), volets, records, parties en cours, défis du jour, contenu du code `LUDO1-`, résumé et import. `logique.js` relit un contenu fait par l'ancien accueil ; `verifications.js` (point 8 decies) : chaque chemin de `GAMES` a sa fiche, chargée par `index.html` dans le bon ordre et en cache ; le point 9 lit aussi les classements des fiches.
+- Laissés pour la session 2 : `NEBULA_IMG` (retouche de l'artefact), `registerExisting`/`PSEUDO_BOARDS` de `ludo-scores.js`, l'ordre des lignes du résumé des sauvegardes (les jeux en fiche passent à la fin).
 
 ### Aujourd'hui
 `accueil.js` (1 385 lignes, 145 Ko) décrit les 36 jeux dans une dizaine de tables séparées ; environ 840 lignes (60 %) sont des données de jeux. Ajouter un jeu touche **11 endroits dans 3 fichiers** :

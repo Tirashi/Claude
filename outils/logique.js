@@ -240,6 +240,14 @@ const TESTS = {
     for (const [k, v] of Object.entries(recs)) if (localStorage.getItem(k) !== JSON.stringify(v)) out.push(`${k} : ${localStorage.getItem(k)} au lieu de ${JSON.stringify(v)}`);
     if (A.mergeSaves(A.decodeSaves(code)).length) out.push('un second import change encore quelque chose');
     try { A.decodeSaves('LUDO1-abc'); out.push('un code abîmé est accepté'); } catch (e) {}
+    // compatibilité des fiches des jeux (<dossier>/fiche.js) : un contenu fait par l'accueil d'avant les fiches (05/11) se relit
+    // à l'identique et ressort pareil (même clé g, même forme) ; à compléter quand un jeu passe en fiche
+    const ref = { 'tetris16.best': 1234, nebula: { b: 900, m: { games: 7, wins: 2, data: 40, unlocked: ['choc'] }, d: { 20261104: 1500 } } };
+    const refLS = { 'tetris16.best': 1234, 'nebula.best': 900, 'nebula.meta': ref.nebula.m, 'nebula.daily': ref.nebula.d };
+    localStorage.clear(); A.mergeSaves(JSON.parse(JSON.stringify(ref)));
+    for (const [k, v] of Object.entries(refLS)) if (localStorage.getItem(k) !== JSON.stringify(v)) out.push(`ancien code : ${k} = ${localStorage.getItem(k)} au lieu de ${JSON.stringify(v)}`);
+    const g2 = A.collectSaves();
+    for (const k of Object.keys(ref)) if (JSON.stringify(g2[k]) !== JSON.stringify(ref[k])) out.push(`ancien code : g.${k} ressort ${JSON.stringify(g2[k])} au lieu de ${JSON.stringify(ref[k])}`);
     localStorage.clear(); for (const [k, v] of Object.entries(keep)) localStorage.setItem(k, v);
     return out;
   }),

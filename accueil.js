@@ -7,7 +7,8 @@ const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) 
 const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- les jeux : cartouche (famille 16 bits, 32 bits ou reprise), couleurs, description ---------- */
-// À TENIR À JOUR pour un nouveau jeu : une ligne dans GAMES (k = chemin de la page, ic = icône de icones.js,
+// À TENIR À JOUR pour un nouveau jeu : une fiche <dossier>/fiche.js (voir accueil-outils.js) et son chemin dans GAMES ;
+// pour un jeu sans fiche (en attendant qu'ils en aient tous une) : une ligne dans GAMES (k = chemin de la page, ic = icône de icones.js,
 // fam = "16" | "32" | "rep" | "3d" (CD dans un boîtier bonbon de la teinte sh), lb/lt = étiquette et texte, sh = teinte du plastique de poche, rank = classements dans RANKS),
 // et dans META (dates, genres), NEWS, PROGRESS, RECS, RANKS.
 const GAMES = [
@@ -73,10 +74,8 @@ const GAMES = [
    d: "Un coin pusher en 3D, en hommage à Mynthos : lâche tes pièces, le poussoir fait tomber les autres dans le bac. Six machines à finir, de la foire à l'horloger, chacune avec sa règle (miel, courant, couloirs, clous, deux étages) et ses 6 trésors, et une machine secrète.", tags: ["3D", "7 MACHINES", "6 REGLES"]},
   {k: "magasinier/index.html", n: "LE MAGASINIER", s: "MAGASINIER", ic: "caisse", fam: "3d", lb: "linear-gradient(#f6d39a, #a8683a)", lt: "#3a2414", sh: "#e8963a", rank: "magasinier",
    d: "Pousse les caisses sur les marques, dans un entrepôt baigné de soleil en HD-2D. 60 niveaux en 5 entrepôts, avec de la glace, des tapis roulants et des caisses en fonte, et une grille du jour pour toute la famille.", tags: ["3D", "PUZZLE", "GRILLE DU JOUR"]},
-  {k: "nebula/index.html", n: "NEBULA", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
-   d: "Mène ta flotte de balise en balise jusqu'à l'amiral pirate. Les pirates annoncent leurs tirs : esquive, riposte, survis.", tags: ["ROGUE-LITE"]},
-  {k: "tetris/index.html", n: "TETRIS", s: "TETRIS", ic: "blocks", fam: "rep", lb: "linear-gradient(#3b2a8a, #160f45)", lt: "#facc15", sh: "#6a4ad0", rank: "tetris",
-   d: "Empile les pièces, complète des lignes, tiens le plus longtemps possible.", tags: ["NIVEAUX"]},
+  "nebula/index.html",   // fiche : nebula/fiche.js
+  "tetris/index.html",   // fiche : tetris/fiche.js
   {k: "snake/index.html", n: "SNAKE", s: "SNAKE", ic: "snake", fam: "rep", lb: "linear-gradient(#377a28, #1c4214)", lt: "#c4ff7a", sh: "#3fa02a", rank: "snake",
    d: "Mange les pommes sans te mordre la queue ni toucher les bords du jardin.", tags: []},
   {k: "asteroids/index.html", n: "ASTEROIDS", s: "ASTEROIDS", ic: "rock", fam: "rep", lb: "radial-gradient(circle at 70% 30%, #1d2a5a, #05040e 70%)", lt: "#5ce1ff", sh: "#2ab0d0", rank: "asteroids",
@@ -84,6 +83,13 @@ const GAMES = [
   {k: "jeu-de-la-vie/index.html", n: "JEU DE LA VIE", s: "JEU DE LA VIE", ic: "glider", fam: "rep", lb: "linear-gradient(#23307e, #0d1450)", lt: "#5cff8a", sh: "#3ad06a",
    d: "L'automate de Conway : dessine des cellules, pose des motifs, regarde-les évoluer.", tags: ["MOTIFS"]},
 ];
+// un jeu qui a sa fiche (<dossier>/fiche.js, voir accueil-outils.js) n'a ici que son chemin : sa cartouche vient de la fiche
+// (une fiche absente ou fautive fait disparaître la cartouche, pas l'accueil)
+const FICHES = Ludo.fiches;
+for (let i = GAMES.length - 1; i >= 0; i--) if (typeof GAMES[i] === "string"){
+  const f = FICHES[GAMES[i]];
+  if (f && f.carte) GAMES[i] = Object.assign({k: f.k}, f.carte); else GAMES.splice(i, 1);
+}
 const NEBULA_IMG = "nebula/cartouche.jpg";
 const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 
@@ -112,7 +118,6 @@ const META = {
   "calculator/index.html": {added: "2026-10-16", genres: ["CALCUL", "DU JOUR"]},
   "lune-rover/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "ESPACE"]},
   "sudoku/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "DU JOUR"]},
-  "nebula/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["TACTIQUE", "ESPACE"]},
   "alunissage/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["ADRESSE", "ESPACE", "DU JOUR"]},
   "pont-stellaire/index.html": {added: "2026-10-12", updated: "2026-10-15", genres: ["LOGIQUE", "ESPACE", "DU JOUR"]},
   "orbite/index.html": {added: "2026-10-12", genres: ["ADRESSE", "ESPACE"]},
@@ -123,7 +128,6 @@ const META = {
   "injagility/index.html": {genres: ["ADRESSE", "CHIENS"]},
   "solitaire/index.html": {genres: ["CARTES"]},
   "touche-coule/index.html": {genres: ["TACTIQUE"]},
-  "tetris/index.html": {genres: ["ARCADE"]},
   "snake/index.html": {genres: ["ARCADE"]},
   "asteroids/index.html": {genres: ["ARCADE", "ESPACE"]},
   "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
@@ -196,14 +200,7 @@ const favKey = "ludo.favs";
 let favs = []; try { favs = JSON.parse(localStorage.getItem(favKey)) || []; } catch (e) {}
 const isFav = g => favs.includes(g.k);
 
-/* ---------- parties en cours et records, lus dans les sauvegardes de chaque jeu (sans toucher aux jeux) ---------- */
-const rk = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
-const dayNum = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
-const mmss = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
-const sum = o => Object.values(o || {}).reduce((a, v) => a + (Number(v) || 0), 0);
-const count = o => Object.keys(o || {}).length;
-const nf = v => String(Math.round(Number(v) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-const num = (v, unit) => Number(v) > 0 ? nf(v) + (unit ? " " + unit : "") : null;
+/* ---------- parties en cours et records, lus dans les sauvegardes de chaque jeu (sans toucher aux jeux ; rk, num… : accueil-outils.js) ---------- */
 // ce qui attend d'être repris (null si rien)
 const mineurEtage = e => e.bases && e.bases.mars ? 4 : e.recherche && e.recherche.transfert ? 3 : e.recherche && e.recherche.centre ? 2 : 1;
 const mineurTemps = t => { t = Math.floor((Number(t) || 0) / 60); return Math.floor(t / 60) + " h " + String(t % 60).padStart(2, "0"); };
@@ -221,7 +218,6 @@ const PROGRESS = {
   "magasinier/index.html": () => { const d = rk("magasinier.dailyRun", null), p = rk("magasinier.partie", null);
     return d && d.j === dayNum() ? "GRILLE DU JOUR" : p && p.chemin ? "NIVEAU " + (p.n + 1) : null; },
   "yams/index.html": () => { const p = rk("yams.partie", null); return p && p.tour < 13 ? `TOUR ${p.tour + 1}/13` : null; },
-  "nebula/index.html": () => { const r = rk("nebula.run", null); return r && r.phase !== "end" && !r.training ? `SECTEUR ${r.sector || 1}` : null; },
   "club/index.html": () => { const g = rk("club.save", null); return g && g.week > 1 ? `SEMAINE ${g.week}` : null; },
   "queens/index.html": () => { const r = rk("queens16.dailyRun", null); return r && r.day === dayNum() ? "GRILLE DU JOUR" : null; },
   "sudoku/index.html": () => { const d = rk("sudoku.dailyRun", null), g = rk("sudoku.game", null);
@@ -245,7 +241,6 @@ const TODAY = {
   "pont-stellaire/index.html": () => !!(rk("pontstellaire.daily", {}) || {})[dayNum()],
   "lignee/index.html": () => { const j = "-J" + dayNum().toString(36).toUpperCase(); return Object.keys(rk("lignee.daily", {}) || {}).some(c => c.endsWith(j)); },
   "alunissage/index.html": () => rk("alunissage.dailyTry", 0) === dayNum(),
-  "nebula/index.html": () => rk("nebula.dailyTry", 0) === dayNum(),
   "calculator/index.html": () => rk("calculator.dailyTry", 0) === dayNum(),
   "empilage/index.html": () => rk("empilage.dailyTry", 0) === dayNum(),
   "odyssee/index.html": () => rk("odyssee.dailyTry", 0) === dayNum(),
@@ -278,7 +273,6 @@ const RECS = {
     return [["Mots du jour trouvés", num(s.gagnees)], ["Meilleure série", num(s.record, s.record > 1 ? "jours" : "jour")], ["Parties", num(s.parties)]]; },
   "capitaine-du-port/index.html": () => { const f = rk("capitaine.niveaux", {}) || {}, n = Object.values(f).reduce((a, v) => a + (Number(v && v.etoiles) || 0), 0);
     return [["Étoiles", n ? n + " / 180" : null], ["Bassins réussis", num(count(f))], ["Bassins du jour", num(count(rk("capitaine.daily", {})))]]; },
-  "tetris/index.html": () => [["Meilleur score", num(rk("tetris16.best", 0))]],
   "snake/index.html": () => [["Meilleur score", num(rk("snakeBestScore", 0))]],
   "asteroids/index.html": () => [["Meilleur score", num(rk("asteroids16.best", 0))]],
   "solitaire/index.html": () => [["Meilleur score", num(rk("solitaire16.best", 0))]],
@@ -319,11 +313,17 @@ const RECS = {
     return out.slice(0, 8).concat([["Calculs du jour", num(count(rk("calculator.daily", {})))], ["Parties jouées", num(rk("calculator.parties", 0))]]); },
   "yams/index.html": () => [["Meilleur score", num(rk("yams.best", 0), "pts")], ["Yams inscrits", num(rk("yams.nbYams", 0))], ["Parties jouées", num(rk("yams.parties", 0))]],
   "empilage/index.html": () => [["Plus haute tour", num(rk("empilage.best", 0), "blocs")], ["Tours du jour", num(count(rk("empilage.daily", {})))], ["Parties jouées", num(rk("empilage.parties", 0))]],
-  "nebula/index.html": () => { const m = rk("nebula.meta", {}) || {}; return [["Meilleur score", num(rk("nebula.best", 0), "pts")], ["Victoires", num(m.wins)], ["Parties jouées", num(m.games)]]; },
 };
 const myRecords = g => { try { return (RECS[g.k] || (() => []))().filter(r => r[1]); } catch (e) { return []; } };
-const NICE = {"nebula/index.html": "Nebula", "club/index.html": "le Club", "queens/index.html": "Queens", "pont-stellaire/index.html": "Pont stellaire", "sudoku/index.html": "le Sudoku",
+const NICE = {"club/index.html": "le Club", "queens/index.html": "Queens", "pont-stellaire/index.html": "Pont stellaire", "sudoku/index.html": "le Sudoku",
   "lignee/index.html": "Lignée", "picross/index.html": "Picross Dex", "solitaire/index.html": "le Solitaire"};
+for (const f of Object.values(FICHES)){
+  if (f.meta) META[f.k] = f.meta;
+  if (f.enCours) PROGRESS[f.k] = f.enCours;
+  if (f.duJour) TODAY[f.k] = f.duJour;
+  if (f.records) RECS[f.k] = f.records;
+  if (f.nom) NICE[f.k] = f.nom;
+}
 
 /* ---------- les cartouches ---------- */
 // l'image d'un jeu : icône 16×16 (le chien est plus large), ou la capture de Nebula
@@ -498,26 +498,16 @@ $("surprise").addEventListener("click", () => {
 });
 
 /* ---------- les classements de la famille : vues, réglages et format de chaque jeu ---------- */
-const N = v => nf(v), T = mmss;
-const dayKey = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-// même code que l'Arbre du jour de Lignée : C2-J + date aaaammjj en base 36
-const dayCode = (mode, d) => `${mode}2-J${dayKey(d).toString(36).toUpperCase()}`;
 const TCMODES = [["classic", "CLASSIQUE"], ["arsenal", "ARSENAL"]], TCAI = [["easy", "FACILE"], ["normal", "NORMAL"], ["hard", "AMIRAL"]];
 const AMAI = [["easy", "MOUSSE"], ["normal", "CAPITAINE"], ["hard", "AMIRAL"]];
 const ESAI = [["easy", "RECRUE"], ["normal", "PILOTE"], ["hard", "AS"]];
 const CCLVL = [[1, "PETIT ECOLIER"], [2, "ECOLIER"], [3, "COLLEGE"], [4, "COSTAUD"], [5, "CHAMPION"]];
 const CCOP = [["add", "+"], ["sub", "−"], ["mul", "×"], ["div", "÷"], ["mix", "MELANGE"]];
 const SDK = [["4", "4×4"], ["6", "6×6"], ["9-1", "FACILE"], ["9-2", "MOYEN"], ["9-3", "DIFFICILE"]];
-const st = {view: 0, mode: "C", back: 0, level: 2, size: 7, plevel: 1, poke: null, tcmode: "classic", tcai: "normal", amai: "normal", esai: "normal", pssize: 9, sdk: "9-2", cclvl: 2, ccop: "mix"};
-const day = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - st.back); return d; };
-const dayName = () => st.back === 0 ? "AUJOURD'HUI" : st.back === 1 ? "HIER" :
-  day().toLocaleDateString("fr-FR", {weekday: "short", day: "numeric", month: "short"}).toUpperCase().replace(/\./g, "").normalize("NFD").replace(/[̀-ͯ]/g, "");
-const daily = () => "daily:" + dayKey(day());
 // chaque jeu : ses classements (vues), leur réglage (ctl), leur format (fmt ; T = temps en ms)
 const RANKS = {
   dragonsim: [{label: "DISTANCE", game: "dragonsim", board: () => "distance", fmt: v => N(v) + " m", title: () => "PLUS LONG VOL",
      note: "La plus grande distance parcourue en un vol, en mètres."}],
-  tetris: [{label: "MEILLEUR SCORE", game: "tetris", board: () => "best", fmt: N}],
   snake: [{label: "MEILLEUR SCORE", game: "snake", board: () => "best", fmt: N}],
   asteroids: [{label: "MEILLEUR SCORE", game: "asteroids", board: () => "best", fmt: N}],
   solitaire: [{label: "MEILLEUR SCORE", game: "solitaire", board: () => "best", fmt: N}],
@@ -557,13 +547,6 @@ const RANKS = {
     {label: "TOUR DU JOUR", ctl: ["day"], game: "empilage", board: daily, fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "TOUR DU JOUR",
      note: "Les mêmes vitesses et les mêmes départs pour toute la famille. Seule la première tour du jour est classée.",
      empty: () => st.back ? "Personne n'a joué la tour ce jour-là." : "Personne n'a encore joué la tour du jour : à toi !"}],
-  nebula: [{label: "MEILLEUR SCORE", game: "nebula", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEURE PARTIE",
-     note: "1000 par secteur terminé, 20 par pirate détruit, les crédits restants, et 3000 pour la victoire finale."},
-    {label: "MISSION DU JOUR", ctl: ["day"], game: "nebula", board: daily, fmt: v => N(v) + " pts",
-     title: () => "MISSION DU JOUR", note: "La même carte et les mêmes combats pour toute la famille, avec la flotte et la règle du jour. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"},
-    {label: "VICTOIRES", game: "nebula", board: () => "victoires", fmt: v => N(v) + " victoire" + (v > 1 ? "s" : ""), title: () => "VICTOIRES",
-     note: "Le nombre de parties gagnées (la Rouille-Reine vaincue).", empty: "Personne n'a encore vaincu la Rouille-Reine."}],
   pontstellaire: [{label: "CIEL DU JOUR", ctl: ["day"], game: "pontstellaire", board: daily, fmt: T,
      title: () => "CIEL DU JOUR", note: "Le même ciel 9×9 pour toute la famille, plus 30 secondes par indice. Une seule tentative classée par jour.",
      empty: () => st.back ? "Personne n'a dessiné le ciel ce jour-là." : "Personne n'a encore dessiné le ciel du jour : à toi de jouer !"},
@@ -632,6 +615,7 @@ const RANKS = {
   escadrille: [{label: "MEILLEURE VICTOIRE", ctl: ["esai"], game: "escadrille", board: () => `best:${st.esai}`, fmt: v => N(v) + " tours",
      title: () => ESAI.find(m => m[0] === st.esai)[1], note: "La victoire en le moins de tours, par niveau de l'ordinateur."}],
 };
+for (const f of Object.values(FICHES)) if (f.classements && f.carte && f.carte.rank) RANKS[f.carte.rank] = f.classements;
 // les Pokémon du Picross Dex (noms lus dans la page du jeu, mise en cache par l'appli), chargés à la première demande
 let DEX = null, dexReady = null;
 const loadDex = () => dexReady || (dexReady = fetch(ROOT + "picross/dessins.js").then(r => r.text()).then(t => {
@@ -921,11 +905,10 @@ addEventListener("hashchange", fromHash);
 addEventListener("pageshow", e => { if (e.persisted){ paintMarks(); arrange(); if (ovOpen() && cur) renderVolet(); } });
 
 /* ---------- transfert de toutes les sauvegardes entre navigateurs ---------- */
-const readKey = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
-const writeKey = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+// le transfert des jeux qui ont une fiche : g[cle] (voir accueil-outils.js)
+const TRANSFERTS = () => Object.values(FICHES).flatMap(f => [].concat(f.transfert || []));
 // meilleurs scores : on garde le plus grand
-const SCORES = [["tetris16.best", "Tetris"], ["snakeBestScore", "Snake"], ["asteroids16.best", "Asteroids"], ["injagility.best", "Injagility"], ["solitaire16.best", "Solitaire"]];
-const fmtTime = ms => { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
+const SCORES = [["snakeBestScore", "Snake"], ["asteroids16.best", "Asteroids"], ["injagility.best", "Injagility"], ["solitaire16.best", "Solitaire"]];
 function collectSaves(){
   const g = {};
   for (const [k] of SCORES){ const v = Number(readKey(k, 0)); if (v > 0) g[k] = v; }
@@ -952,8 +935,6 @@ function collectSaves(){
   if (su.w || Object.keys(su.b).length) g.sudoku = su;
   const cc = {b: readKey("calculator.best", {}) || {}, d: readKey("calculator.daily", {}) || {}, p: Number(readKey("calculator.parties", 0)) || 0};
   if (cc.p || Object.keys(cc.b).length) g.calculator = cc;
-  const nb = {b: Number(readKey("nebula.best", 0)) || 0, m: readKey("nebula.meta", null), d: readKey("nebula.daily", {}) || {}};
-  if (nb.b || (nb.m && nb.m.games)) g.nebula = nb;
   const em = {b: Number(readKey("empilage.best", 0)) || 0, p: Number(readKey("empilage.parties", 0)) || 0, d: readKey("empilage.daily", {}) || {}};
   if (em.b || em.p) g.empilage = em;
   const ya = {b: Number(readKey("yams.best", 0)) || 0, p: Number(readKey("yams.parties", 0)) || 0, y: Number(readKey("yams.nbYams", 0)) || 0, o: Number(readKey("yams.bonus", 0)) || 0};
@@ -985,6 +966,7 @@ function collectSaves(){
   if (Object.keys(cp.n).length || Object.keys(cp.d).length) g.capitaine = cp;
   const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
   const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
+  for (const t of TRANSFERTS()){ try { const v = t.collecter(); if (v != null) g[t.cle] = v; } catch (e) {} }
   return g;
 }
 function describeSaves(g){
@@ -1012,7 +994,6 @@ function describeSaves(g){
   if (g.yams) out.push(`Yams : record ${g.yams.b || 0} pts, ${g.yams.p || 0} partie${g.yams.p > 1 ? "s" : ""}`);
   if (g.empilage) out.push(`Empilage : record ${g.empilage.b || 0} bloc${g.empilage.b > 1 ? "s" : ""}, ${g.empilage.p || 0} partie${g.empilage.p > 1 ? "s" : ""}`);
   if (g.calculator){ const p = g.calculator; out.push(`Calculator : ${p.p || 0} partie${p.p > 1 ? "s" : ""}, ${Object.keys(p.b || {}).length} record${Object.keys(p.b || {}).length > 1 ? "s" : ""}`); }
-  if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
   if (g.lunerover){ const n = Object.values(g.lunerover).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Lune-Rover : ${n} étoile${n > 1 ? "s" : ""}`); }
   if (g.odyssee){ const n = Object.values(g.odyssee.s || {}).reduce((s, v) => s + (Number(v) || 0), 0); out.push(`Odyssée : ${n} étoile${n > 1 ? "s" : ""}`); }
   if (g.doggysaga){ const v = Object.values(g.doggysaga.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.doggysaga.d || {}).length, a = (g.doggysaga.a || []).length;
@@ -1033,6 +1014,7 @@ function describeSaves(g){
   if (g.capitaine){ const n = Object.values(g.capitaine.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.capitaine.d || {}).length;
     out.push(`Capitaine du port : ${n} étoile${n > 1 ? "s" : ""}${d ? `, ${d} bassin${d > 1 ? "s" : ""} du jour` : ""}`); }
   if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
+  for (const t of TRANSFERTS()) if (g[t.cle] != null){ try { const l = t.decrire(g[t.cle]); if (l) out.push(l); } catch (e) {} }
   return out;
 }
 function decodeSaves(text){
@@ -1297,21 +1279,6 @@ function mergeSaves(g){
     if (p.p > pa){ writeKey("calculator.parties", Math.round(p.p)); n++; }
     if (n){ writeKey("calculator.best", best); writeKey("calculator.daily", daily); done.push(`Calculator : ${n} record${n > 1 ? "s" : ""}`); }
   }
-  if (g.nebula && typeof g.nebula === "object"){
-    const a = g.nebula; let n = 0;
-    if (a.b > (Number(readKey("nebula.best", 0)) || 0)){ writeKey("nebula.best", Math.round(a.b)); n++; }
-    // statistiques : on garde le maximum de chaque compteur (les données stellaires ne s'additionnent pas, sinon un aller-retour les doublerait)
-    if (a.m && typeof a.m === "object"){
-      const mine = readKey("nebula.meta", {}) || {}; let ch = false;
-      for (const [k, v] of Object.entries(a.m)) if (typeof v === "number" && v > (Number(mine[k]) || 0)){ mine[k] = v; ch = true; }
-      // déblocages : on réunit les deux listes (le solde est recalculé par le jeu : données gagnées - coût des déblocages)
-      if (Array.isArray(a.m.unlocked)){ const u = new Set(Array.isArray(mine.unlocked) ? mine.unlocked : []); for (const x of a.m.unlocked) if (typeof x === "string" && /^[a-z]{1,16}$/.test(x) && !u.has(x)){ u.add(x); ch = true; } mine.unlocked = [...u]; }
-      if (ch){ writeKey("nebula.meta", mine); n++; }
-    }
-    const daily = readKey("nebula.daily", {}) || {};
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("nebula.daily", daily); done.push(`Nebula : ${n} record${n > 1 ? "s" : ""}`); }
-  }
   if (g.orbite && typeof g.orbite === "object"){
     const mine = readKey("orbite.stars", {}) || {}; let n = 0;
     for (const [k, v] of Object.entries(g.orbite)) if (/^\d{1,2}$/.test(k) && v >= 1 && v <= 3 && !(mine[k] >= v)){ mine[k] = Math.round(v); n++; }
@@ -1327,6 +1294,7 @@ function mergeSaves(g){
     for (const [code, t] of Object.entries(g.ligneeDaily)) if (/^[CR]2-J[0-9A-Z]+$/.test(code) && t > 0 && (!mine[code] || t < mine[code])){ mine[code] = Math.round(t); n++; }
     if (n){ writeKey("lignee.daily", mine); done.push(`Lignée : ${n} Arbre${n > 1 ? "s" : ""} du jour`); }
   }
+  for (const t of TRANSFERTS()) if (g[t.cle] != null){ try { const l = t.fusionner(g[t.cle]); if (l) done.push(l); } catch (e) {} }
   return done;
 }
 const savesRes = (t, ok) => { const el = document.getElementById("savesRes"); el.textContent = t; el.className = "res " + (ok ? "ok" : "err"); };
