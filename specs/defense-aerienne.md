@@ -1,4 +1,6 @@
-# Défense aérienne (chantier ouvert le 01/11)
+# Défense aérienne (chantier ouvert le 01/11, ❌ abandonné le 05/11)
+
+**Abandonné le 05/11** : en revoyant la maquette 1, l'utilisateur a décidé qu'aucune des trois directions ne lui plaît. On garde la maquette (`maquettes/defense-aerienne.html`, artefact ci-dessous) et ce fichier comme trace.
 
 Tower defense **vu de côté** (idée de l'utilisateur du 01/11, piste 2 du brainstorm « Tower defense » d'`IDEES.md`) : le ciel en haut, la ville en bas. Les avions traversent l'écran par vagues ; les bombardiers lâchent leurs bombes sur les maisons ; on construit des tours sur des emplacements au sol et on appelle des raids d'avions amis. Partie perdue quand toutes les maisons sont détruites.
 
@@ -10,7 +12,7 @@ Commun aux trois : 5 emplacements au sol (toucher → choisir une tour ou la ven
 - **B Base aérienne, aujourd'hui** : avions à réaction, hélicoptères bas, drones ; mitrailleuse, **missile sol-air** (tête chercheuse, traînée de fumée), **radar** (les tours voisines tirent 60 % plus vite) ; raid d'intercepteurs.
 - **C Le village, 1918** : biplans et dirigeables (un toutes les 3 vagues) au coucher du soleil ; mitrailleuse, canon, **ballon de barrage** (les avions qui passent sous le ballon se prennent le câble) ; raid de l'escadrille.
 
-Retours : à venir.
+Retours (05/11) : rien ne plaît, idée abandonnée.
 
 ## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
 Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.

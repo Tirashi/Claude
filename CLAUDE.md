@@ -55,7 +55,7 @@ Une phrase par chantier ; le détail est dans le cahier des charges du jeu et da
 - **La Dernière Lanterne** : actes 1 à 3 faits ; prochaine étape session 5 (acte 4, final), opusplan ([cdc](specs/rpg.md)).
 - **Mineur de l'espace** : fini, sur l'accueil ; à essayer sur le téléphone et au PC ([cdc](specs/mineur-de-l-espace.md)).
 - **Dragon Simulator** : fini ; à essayer (prix du nid à doubler si trop rapide) ([cdc](specs/dragon-simulator.md)).
-- **Défense aérienne** : maquette 1 à choisir ([cdc](specs/defense-aerienne.md)). **Armada** : cdc à relire (§ 18), puis session 1, Opus ([cdc](specs/armada.md)). **Défense orbitale** : session 1 (combat), Opus ([cdc](specs/defense-orbitale.md)).
+- **Armada** : cdc à relire (§ 18), puis session 1, Opus ([cdc](specs/armada.md)). **Défense orbitale** : session 1 (combat), Opus ([cdc](specs/defense-orbitale.md)).
 - **La colonie** : reste nature, île du jour, intégration ([cdc](specs/colonie.md)). **Nebula** : prochain chantier possible « l'Empire des étoiles » ([cdc](specs/nebula.md)).
 - **En pause** : Ferme du vallon (attend les zips du pack, [cdc](specs/ferme-du-vallon.md)), Clan du fjord ([cdc](specs/clan.md)), tactique façon Advance Wars, petite usine ; autres idées et achats : [`IDEES.md`](IDEES.md).
 - **Artefacts** pas republiés depuis le retour au menu : à leur prochaine vraie modification (sauf Yams). Essais du 29/10 : tout confirmé ([essais](specs/essais.md)).

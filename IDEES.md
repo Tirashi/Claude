@@ -127,7 +127,7 @@ Repérée avec le pack **Kenney Factory Kit** (3D, CC0, ~140 fichiers, version 3
 ## Tower defense (brainstorm du 01/11, après La petite usine)
 **La petite usine mise de côté (01/11)** : « bof » aussi en pixel art (maquette 3) ; maquettes et outils gardés (`maquettes/usine*.html`, `outils/usine-maquette/`). L'utilisateur veut un **tower defense** ; pistes :
 1. **Classique, chemin suivi par les ennemis** (façon Kingdom Rush). Graphismes : Kenney Tower Defense top-down 2D (CC0, 300 sprites, OpenGameArt) ou Tower Defense Kit 3D (CC0, déjà téléchargé) ; Pixelated Studioz (2 $, 68 tours, 39 ennemis, herbe, sable, neige) ; doughnutdev (2 $, 16 × 16) ; afgameassets (17 €, 588 sprites, canons en 8 directions).
-2. 🟡 **Défense aérienne** — choisie le 01/11, chantier : détails déplacés dans [`specs/defense-aerienne.md`](specs/defense-aerienne.md).
+2. ❌ **Défense aérienne** — choisie le 01/11, **abandonnée le 05/11** : aucune des trois directions de la maquette 1 ne plaît à l'utilisateur. Maquette et détails gardés dans [`specs/defense-aerienne.md`](specs/defense-aerienne.md).
 3. **Défense spatiale** : comme l'aérien, plus des vaisseaux qui restent là où on les pose. ⚠ C'est déjà presque **Défense orbitale** (cahier des charges validé : flottes posées dans une limite orbitale) ; à fusionner plutôt qu'à doubler. Graphismes : Space Breaker (zintoki, prix libre), Kanati Spaceships (1 $), Hexagon6 Sci-Fi TD (CC0), Zoser, Collapse of Sol Hegemony.
 4. **Défense côtière** : une flotte de débarquement remonte vers la plage, on place batteries, mines et vedettes (navires d'Amiral !).
 5. **Couloirs verticaux** façon Plants vs Zombies : 5 couloirs du haut vers le bas, très adapté au téléphone en portrait.
