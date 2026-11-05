@@ -8,7 +8,7 @@ Plan donné par l'utilisateur le 05/11, enregistré tel quel pour pouvoir le rep
 - [x] Phase 2 — Un CLAUDE.md par gros jeu : resistance/, lanterne/ (+ moteur-rpg/), mineur-de-l-espace/, nebula/, ile/, bannieres/, boutique/, the-des-jarls/, duche/, doggy-saga/ (validé le 05/11)
 - [x] Phase 3 — IDEES.md et suivi.md
 - [x] Phase 4 — Code partagé dans un dossier commun/ (05/11, décision de l'utilisateur : seuls les deux fichiers vraiment partagés bougent, `injagility/chiens32.js` → `commun/pixel32.js` et `nebula/vaisseaux.js` → `commun/vaisseaux.js` ; `nebula/regles.js`, `nebula/sons.js` et `ile/regles.js` restent, car ils ne servent qu'à leur jeu ; cache `ludotheque-v87` ; artefacts identiques à des commentaires près, donc pas republiés)
-- [ ] Phase 5 — accueil.js (proposition seulement)
+- [x] Phase 5 — accueil.js (proposition seulement) : proposition écrite en fin de fichier, à décider plus tard
 
 ## Plan (texte de l'utilisateur)
 
@@ -94,3 +94,61 @@ PHASE 5 — accueil.js (proposition seulement, AUCUN code)
   fiche de données (GAMES, META, RECS, RANKS…) assemblée par l'accueil, afin
   qu'ajouter un jeu ne modifie plus accueil.js à plusieurs endroits.
   Estime le travail et les risques. On décidera plus tard.
+
+## Phase 5 — proposition pour `accueil.js` (05/11, aucun code écrit)
+
+### Aujourd'hui
+`accueil.js` (1 385 lignes, 145 Ko) décrit les 36 jeux dans une dizaine de tables séparées ; environ 840 lignes (60 %) sont des données de jeux. Ajouter un jeu touche **11 endroits dans 3 fichiers** :
+
+| Où | Quoi | Lignes |
+|---|---|---|
+| `accueil.js` `GAMES` | cartouche : nom, icône, famille, couleurs, description, étiquettes, `rank`, `demo` | 13-86 |
+| `META` | date d'ajout ou de mise à jour, genres | 93-130 |
+| `NEWS` | annonces datées (déjà une liste par date, pas par jeu) | 131-189 |
+| `PROGRESS` / `TODAY` | « partie en cours » et « défi du jour fait » | 210-254 |
+| `RECS` | records affichés dans le volet | 259-323 |
+| `NICE` | nom du jeu dans les phrases | 325 |
+| `RANKS` | tableaux de classement du volet | 517-635 |
+| `SCORES`, `collectSaves`, `describeSaves`, `mergeSaves` | transfert `LUDO1-` | 927-1331 |
+| `ludo-scores.js` | `registerExisting` (records repris en rejoignant), `PSEUDO_BOARDS` | 95-180 |
+| `icones.js`, `sw.js` | icône, fichiers | — |
+
+### Proposition : une fiche par jeu
+- Un fichier **`<dossier>/fiche.js`** par jeu (à côté de son `CLAUDE.md` : tout ce qui concerne un jeu est dans son dossier), script classique qui appelle :
+  ```js
+  Ludo.fiche({
+    k: "duche/index.html",
+    carte: { n: "DUCHE", ic: "…", fam: "32", lb: "…", d: "…", tags: […], rank: "duche" },  // ex-GAMES
+    meta: { added: "2026-10-21", genres: ["STRATEGIE"] },                                 // ex-META
+    nom: "Duché",                                                                            // ex-NICE
+    enCours: () => …, duJour: () => …, records: () => [[…]],                                 // ex-PROGRESS, TODAY, RECS
+    classements: [{ label: "…", game: "duche", board: () => "best", fmt: N }],               // ex-RANKS
+    transfert: { cle: "duche", collecter: () => …, decrire: g => …, fusionner: g => … },     // ex-collect/describe/mergeSaves
+    reprise: [["duche", "best", "duche.best", "hi"]], pseudo: true                           // ex-registerExisting, PSEUDO_BOARDS
+  });
+  ```
+- `accueil.js` ne garde que le moteur : `Ludo.fiche()` range chaque fiche, puis l'accueil construit `GAMES`, `META`, `RANKS`… à partir des fiches, **dans l'ordre d'une seule liste** `ORDRE` (l'ordre des cartouches reste décidé à un endroit).
+- Les petites fonctions communes (`rk`, `num`, `N`, `mmss`, `dayNum`…) passent dans un `accueil-outils.js` chargé avant les fiches.
+- `index.html` charge les 36 fiches par `<script src>` (pas de build possible) ; `sw.js` les met en cache ; `outils/artefact.py` les intègre déjà toutes seules dans l'artefact de l'accueil.
+- `NEWS` reste une liste par date dans `accueil.js` (ce n'est pas une donnée de jeu).
+- Ajouter un jeu = créer `fiche.js` + une ligne dans `ORDRE`, une dans `index.html`, une dans `sw.js` (+ l'icône) : **4 lignes hors du dossier du jeu au lieu de 11 endroits**.
+
+### Ce qui ne doit pas changer (sauvegardes et transferts)
+- Aucune clé `localStorage` ne change (les fiches lisent les mêmes clés).
+- Le code de transfert `LUDO1-` garde **exactement le même contenu** (mêmes noms `g.queens`, `g.amiralPal`…) : un code fait avant le changement doit se recharger après, et inversement. À vérifier en fabriquant un code avec l'ancien accueil et en le relisant avec le nouveau (test à ajouter dans `outils/logique.js`).
+
+### Travail estimé
+- L'extraction est surtout mécanique : un script peut découper les tables actuelles par jeu et écrire les 36 fiches, puis on relit.
+- **Une grosse session Opus** (moteur emmêlé : l'accueil sert à tous les jeux), environ **10 à 15 % de la semaine**, ou deux sessions plus courtes :
+  1. `accueil-outils.js`, `Ludo.fiche()` qui **fusionne** fiches et anciennes tables (les deux marchent en même temps), et 2 jeux migrés (un petit, Tetris ; un gros, Nebula) ;
+  2. les 34 autres par lots, puis suppression des anciennes tables, `verifications.js` et skill `ajouter-un-jeu` mis à jour.
+
+### Risques
+- **L'accueil sert à tout** : une erreur dans une fiche peut casser le menu entier. Parade : chaque fiche est appelée dans un `try` (une fiche fautive fait disparaître sa cartouche, pas l'accueil) ; `fumee.js` ouvre déjà l'accueil.
+- **Transfert `LUDO1-`** : la partie la plus délicate (280 lignes de fusion). Parade : test de compatibilité avant/après ci-dessus, `logique.js` couvre déjà les cas.
+- **`verifications.js` (point 9)** lit `RANKS`, `registerExisting` et `PSEUDO_BOARDS` avec des expressions régulières : à réécrire pour charger les fiches (dans `vm`) ; en échange il pourra vérifier que chaque jeu a une fiche complète.
+- **`ludo-scores.js`** est aussi chargé par les jeux : `registerExisting` et `PSEUDO_BOARDS` ne peuvent passer dans les fiches que s'ils ne servent qu'à l'accueil (à vérifier ; sinon on les laisse où ils sont).
+- **Téléphone** : 36 petits fichiers de plus à charger sur l'accueil ; négligeable une fois en cache (service worker), un peu plus lent au tout premier lancement.
+- **Artefact de l'accueil** : ses trois retouches à la main (leçon du mémo) sont à refaire et vérifier une fois.
+
+**À décider plus tard** : faire ce chantier, et si oui où placer les fiches (`<dossier>/fiche.js`, recommandé, ou un dossier `fiches/`).
