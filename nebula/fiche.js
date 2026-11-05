@@ -18,25 +18,29 @@ Ludo.fiche({
     {label: "VICTOIRES", game: "nebula", board: () => "victoires", fmt: v => N(v) + " victoire" + (v > 1 ? "s" : ""), title: () => "VICTOIRES",
      note: "Le nombre de parties gagnées (la Rouille-Reine vaincue).", empty: "Personne n'a encore vaincu la Rouille-Reine."}],
   // g.nebula = {b: meilleur score, m: nebula.meta (compteurs, déblocages), d: nebula.daily}
-  transfert: {cle: "nebula",
-    collecter: () => { const nb = {b: Number(readKey("nebula.best", 0)) || 0, m: readKey("nebula.meta", null), d: readKey("nebula.daily", {}) || {}};
-      return nb.b || (nb.m && nb.m.games) ? nb : null; },
-    decrire: a => { const m = a.m || {}; return `Nebula : record ${a.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`; },
-    fusionner: a => {
-      if (!a || typeof a !== "object") return null;
-      let n = 0;
-      if (a.b > (Number(readKey("nebula.best", 0)) || 0)){ writeKey("nebula.best", Math.round(a.b)); n++; }
-      // statistiques : on garde le maximum de chaque compteur (les données stellaires ne s'additionnent pas, sinon un aller-retour les doublerait)
-      if (a.m && typeof a.m === "object"){
-        const mine = readKey("nebula.meta", {}) || {}; let ch = false;
-        for (const [k, v] of Object.entries(a.m)) if (typeof v === "number" && v > (Number(mine[k]) || 0)){ mine[k] = v; ch = true; }
-        // déblocages : on réunit les deux listes (le solde est recalculé par le jeu : données gagnées - coût des déblocages)
-        if (Array.isArray(a.m.unlocked)){ const u = new Set(Array.isArray(mine.unlocked) ? mine.unlocked : []); for (const x of a.m.unlocked) if (typeof x === "string" && /^[a-z]{1,16}$/.test(x) && !u.has(x)){ u.add(x); ch = true; } mine.unlocked = [...u]; }
-        if (ch){ writeKey("nebula.meta", mine); n++; }
+  transfert: {cles: ["nebula"],
+    collecter(g){
+      const nb = {b: Number(readKey("nebula.best", 0)) || 0, m: readKey("nebula.meta", null), d: readKey("nebula.daily", {}) || {}};
+      if (nb.b || (nb.m && nb.m.games)) g.nebula = nb;
+    },
+    decrire(g, out){
+      if (g.nebula){ const m = g.nebula.m || {}; out.push(`Nebula : record ${g.nebula.b || 0} points, ${m.games || 0} partie${m.games > 1 ? "s" : ""}, ${m.data || 0} données stellaires`); }
+    },
+    fusionner(g, done){
+      if (g.nebula && typeof g.nebula === "object"){
+        const a = g.nebula; let n = 0;
+        if (a.b > (Number(readKey("nebula.best", 0)) || 0)){ writeKey("nebula.best", Math.round(a.b)); n++; }
+        // statistiques : on garde le maximum de chaque compteur (les données stellaires ne s'additionnent pas, sinon un aller-retour les doublerait)
+        if (a.m && typeof a.m === "object"){
+          const mine = readKey("nebula.meta", {}) || {}; let ch = false;
+          for (const [k, v] of Object.entries(a.m)) if (typeof v === "number" && v > (Number(mine[k]) || 0)){ mine[k] = v; ch = true; }
+          // déblocages : on réunit les deux listes (le solde est recalculé par le jeu : données gagnées - coût des déblocages)
+          if (Array.isArray(a.m.unlocked)){ const u = new Set(Array.isArray(mine.unlocked) ? mine.unlocked : []); for (const x of a.m.unlocked) if (typeof x === "string" && /^[a-z]{1,16}$/.test(x) && !u.has(x)){ u.add(x); ch = true; } mine.unlocked = [...u]; }
+          if (ch){ writeKey("nebula.meta", mine); n++; }
+        }
+        const daily = readKey("nebula.daily", {}) || {};
+        for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
+        if (n){ writeKey("nebula.daily", daily); done.push(`Nebula : ${n} record${n > 1 ? "s" : ""}`); }
       }
-      const daily = readKey("nebula.daily", {}) || {};
-      for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
-      if (!n) return null;
-      writeKey("nebula.daily", daily); return `Nebula : ${n} record${n > 1 ? "s" : ""}`;
     }}
 });

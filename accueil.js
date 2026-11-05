@@ -6,132 +6,57 @@ const $ = id => document.getElementById(id);
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ---------- les jeux : cartouche (famille 16 bits, 32 bits ou reprise), couleurs, description ---------- */
-// À TENIR À JOUR pour un nouveau jeu : une fiche <dossier>/fiche.js (voir accueil-outils.js) et son chemin dans GAMES ;
-// pour un jeu sans fiche (en attendant qu'ils en aient tous une) : une ligne dans GAMES (k = chemin de la page, ic = icône de icones.js,
-// fam = "16" | "32" | "rep" | "3d" (CD dans un boîtier bonbon de la teinte sh), lb/lt = étiquette et texte, sh = teinte du plastique de poche, rank = classements dans RANKS),
-// et dans META (dates, genres), NEWS, PROGRESS, RECS, RANKS.
-const GAMES = [
-  {k: "picross/index.html", n: "PICROSS DEX", s: "PICROSS DEX", ic: "ball", fam: "16", lb: "#cf2b34", lt: "#fff7ec", sh: "#d23a3a", rank: "picross",
-   d: "Remplis la grille d'après les nombres pour révéler un Pokémon. Fan-game personnel.", tags: ["207 GRILLES"]},
-  {k: "lignee/index.html", n: "LIGNEE", s: "LIGNEE", ic: "tree", fam: "16", lb: "linear-gradient(#6b3f1f, #2f1a0c)", lt: "#e0a83a", sh: "#a0682e", rank: "lignee",
-   d: "Reconstitue un arbre généalogique grâce aux indices, avec 3 vies : familles françaises, dynasties royales ou familles de films et de séries.", tags: ["ARBRES INFINIS"]},
-  {k: "queens/index.html", n: "QUEENS", s: "QUEENS", ic: "crown", fam: "16", lb: "linear-gradient(#3a4cc8, #141a6a)", lt: "#ffd23f", sh: "#3a4cc8", rank: "queens",
-   d: "Une reine par ligne, par colonne et par couleur, sans qu'elles se touchent.", tags: ["5×5 A 9×9"], more: [["GRILLE DU JOUR", "queens/index.html#jour"]]},
-  {k: "injagility/index.html", n: "INJAGILITY", s: "INJAGILITY", ic: "dog", fam: "32", lb: "linear-gradient(#78bae7, #5fb548)", lt: "#fff", sh: "#5fb548", rank: "injagility",
-   d: "Ton chien en agility : course sans fin, ou parcours vus du dessus à tracer au doigt. Six races à adopter au chenil.", tags: ["COURSE", "PARCOURS"], play: "INFINI ▶", more: [["PARCOURS ▶", "injagility/parcours.html"]]},
-  {k: "solitaire/index.html", n: "SOLITAIRE", s: "SOLITAIRE", ic: "cards", fam: "rep", lb: "linear-gradient(#2a8a48, #145a2c)", lt: "#ffd23f", sh: "#2a8a48", rank: "solitaire",
-   d: "Le Klondike de Windows XP : range les cartes de l'As au Roi, et regarde-les rebondir à la fin.", tags: ["PIOCHE 1 OU 3"]},
-  {k: "touche-coule/index.html", n: "TOUCHE COULE", s: "TOUCHE COULE", ic: "boat", fam: "16", lb: "linear-gradient(#2b6fd0, #0f1866)", lt: "#ffd84a", sh: "#2b6fd0", rank: "touchecoule",
-   d: "Bataille navale contre l'ordinateur, en mode classique ou avec sonar et torpilles.", tags: ["3 NIVEAUX D'IA"]},
-  {k: "amiral/index.html", n: "AMIRAL !", s: "AMIRAL !", ic: "anchor", fam: "32", lb: "linear-gradient(#1c579c, #0a1c40)", lt: "#ffd23f", sh: "#1c579c", rank: "amiral",
-   d: "La bataille navale où chaque navire a un pouvoir : compose ta flotte au chantier naval parmi 11 navires (avion, salve, torpille, sonar, mines, fumée, leurre...), et chaque jour une bataille imposée.", tags: ["3 NIVEAUX", "DU JOUR"]},
-  {k: "escadrille/index.html", n: "ESCADRILLE !", s: "ESCADRILLE", ic: "fighter", fam: "32", lb: "linear-gradient(#3a7cc4, #0f2850)", lt: "#ffd23f", sh: "#3a7cc4", rank: "escadrille",
-   d: "La bataille aérienne où chaque avion a un pouvoir : radar, bombes en croix, missile, esquive, roquettes, leurres, ballons de barrage… Choisis tes 4 avions au hangar parmi 10, abats l'escadrille pirate cachée dans les nuages, gagne des avions et des escadrilles.", tags: ["3 NIVEAUX", "10 AVIONS", "4 ESCADRILLES"]},
-  {k: "club/index.html", n: "LE CLUB D'AGILITY", s: "CLUB AGILITY", ic: "cup", fam: "32", lb: "linear-gradient(#3f8a37, #173a1a)", lt: "#ffd23f", sh: "#3f8a37", rank: "club",
-   d: "Recrute des chiens, entraîne-les semaine après semaine et mène ton club jusqu'au Championnat de France.", tags: ["6 RACES"]},
-  {k: "orbite/index.html", n: "ORBITE", s: "ORBITE", ic: "planet", fam: "32", lb: "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt: "#6fd8ff", sh: "#5a3ab8", rank: "orbite",
-   d: "Lance ta sonde et laisse la gravité des planètes la guider jusqu'à la balise, entre trous noirs et portails.", tags: ["30 NIVEAUX"]},
-  {k: "alunissage/index.html", n: "ALUNISSAGE", s: "ALUNISSAGE", ic: "lander", fam: "32", lb: "linear-gradient(#0a0c1e, #2c2a28)", lt: "#e8e4d8", sh: "#8a8a90", rank: "alunissage",
-   d: "Pose ton module en douceur avec deux réacteurs, de la Lune à la comète. Plus l'aire est étroite, plus elle rapporte.", tags: ["MISSION DU JOUR"]},
-  {k: "pont-stellaire/index.html", n: "PONT STELLAIRE", s: "PONT STELLAIRE", ic: "stars", fam: "32", lb: "radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%)", lt: "#ffd76a", sh: "#2a4a9a", rank: "pontstellaire",
-   d: "Relie les étoiles par des faisceaux de lumière, sans croisement, pour dessiner une constellation. Un ciel du jour pour toute la famille.", tags: ["CIEL DU JOUR"]},
-  {k: "lune-rover/index.html", n: "LUNE-ROVER", s: "LUNE-ROVER", ic: "rover", fam: "32", lb: "linear-gradient(#14142a, #3a3834)", lt: "#5ae6f2", sh: "#5a5a6a", rank: "lunerover",
-   d: "Programme Pico, le petit robot lunaire, à l'avance (avancer, tourner, sauter, ramasser, boucles et conditions) pour récolter les cristaux. 3 étoiles pour le programme le plus court.", tags: ["30 NIVEAUX"]},
-  {k: "sudoku/index.html", n: "SUDOKU", s: "SUDOKU", ic: "grid9", fam: "32", lb: "linear-gradient(#3a1a4a, #12082a)", lt: "#ffb8d0", sh: "#8a3aa8", rank: "sudoku",
-   d: "Un chiffre par ligne, par colonne et par bloc, sous la lune d'un jardin japonais. Notes au crayon et grille du jour.", tags: ["4×4 A 9×9"]},
-  {k: "calculator/index.html", n: "CALCULATOR", s: "CALCULATOR", ic: "calc", fam: "32", lb: "linear-gradient(#3a3d43, #1c1d21)", lt: "#c4d0a8", sh: "#e8783a", rank: "calculator",
-   d: "Le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour. Trois styles : arcade, cahier ou calculatrice.", tags: ["5 NIVEAUX"]},
-  {k: "empilage/index.html", n: "EMPILAGE", s: "EMPILAGE", ic: "stack", fam: "3d", lb: "linear-gradient(#9fd8ff, #ffd6c8)", lt: "#5a46a8", sh: "#f29bc0", rank: "empilage",
-   d: "Lâche chaque bloc pile sur la tour : ce qui dépasse tombe. Monte du matin jusqu'à la nuit étoilée, en 3D pastel. Une tour du jour pour toute la famille.", tags: ["3D", "TOUR DU JOUR"]},
-  {k: "yams/index.html", n: "YAMS", s: "YAMS", ic: "des", fam: "3d", lb: "linear-gradient(#f6e1f3, #bfe8d0)", lt: "#6b4a7a", sh: "#e0559a", rank: "yams",
-   d: "Le Yams classique avec de vrais dés en 3D : lance-les d'un geste, garde les bons et remplis les 13 cases de la feuille. Six styles de dés à débloquer, de la taverne à la Lune.", tags: ["3D", "DÉS", "6 STYLES"]},
-  {k: "odyssee/index.html", n: "ODYSSEE", s: "ODYSSEE", ic: "galere", fam: "3d", lb: "linear-gradient(#9fdcff, #1fb0c9)", lt: "#13506e", sh: "#2bb3cf", rank: "odyssee",
-   d: "Penche le téléphone pour ramener la galère d'Ulysse de Troie à Ithaque : Polyphème, Éole, Circé, les Sirènes, Charybde et Scylla… 30 plateaux en 3D et un plateau du jour pour toute la famille.", tags: ["3D", "PLATEAU DU JOUR"]},
-  {k: "doggy-saga/index.html", n: "DOGGY SAGA", s: "DOGGY", ic: "doggy", fam: "32", lb: "linear-gradient(#ffb48a, #e8784f)", lt: "#fff6ea", sh: "#e8784f", rank: "doggysaga",
-   d: "Trois en ligne au refuge : glisse les chiens pour en aligner 3 pareils et leur faire des câlins. Bandanas, nœuds et balles de tennis font de grosses cascades. Lave la boue, ouvre les niches, guide les chiots jusqu'à leur panier et trouve une famille aux 16 chiens dans 60 niveaux. Pour toute la famille, avec la journée du jour.", tags: ["60 NIVEAUX", "ALBUM", "DEFI DU JOUR"], more: [["JOURNEE DU JOUR", "doggy-saga/index.html#jour"]]},
-  {k: "the-des-jarls/index.html", n: "LE THE DES JARLS", s: "JARLS", ic: "jarl", fam: "32", lb: "linear-gradient(#2c3c70, #0e1428)", lt: "#f3d58c", sh: "#3a4a8a", rank: "jarls",
-   d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
-  {k: "duche/index.html", n: "DUCHE", s: "DUCHE", ic: "donjon", fam: "32", lb: "linear-gradient(#5a3a20, #2a1a0e)", lt: "#f0c24a", sh: "#8a6410", rank: "duche",
-   d: "Un petit 4X au tour par tour sur 37 terres hexagonales en pixel art 32 bits : bâtis, recrute, conquiers les terres de trois seigneurs rivaux et gagne la couronne en 30 saisons. Combats en scènes HD-2D, événements, un Duché du jour pour toute la famille.", tags: ["STRATEGIE", "30 TOURS", "DUCHE DU JOUR"]},
-  {k: "dragon-simulator/index.html", n: "DRAGON SIMULATOR", s: "DRAGON", ic: "dragonsim", fam: "3d", lb: "linear-gradient(#5ea7e6, #c23a3a)", lt: "#ffd25a", sh: "#c23a3a", rank: "dragonsim",
-   d: "Une idée d'un garçon de 7 ans : dirige un dragon qui plane au-dessus de la ville, vu de profil, en 3D. Bats des ailes, crache du feu sur les immeubles et les voitures, évite grues et hélicoptères, ramasse jetpacks, grenades, bébé dragon et nuages d'orage. Plus tu vas loin, plus tu gagnes de pièces pour améliorer ton dragon au nid.", tags: ["3D", "POUR LES ENFANTS", "SANS FIN"]},
-  {k: "mineur-de-l-espace/index.html", n: "MINEUR DE L'ESPACE", s: "MINEUR", ic: "mineur", fam: "32", lb: "radial-gradient(circle at 70% 25%, #24306a, #05060d 70%)", lt: "#ffcf4a", sh: "#3b6fd0",
-   d: "Pilote ta corvette dans la ceinture d'astéroïdes, casse les roches et rapporte le minerai à la station en orbite. Améliore ta corvette, construis la station module par module, envoie des drones miner, pars vers la Lune et Mars, puis défends tes bases contre les aliens avec tes flottes, jusqu'à la grande bataille contre le vaisseau-mère. Une partie de 3 à 5 heures, sauvegardée au quai.", tags: ["GESTION", "MINAGE", "3 A 5 H"]},
-  {k: "resistance/index.html", n: "RESISTANCE", s: "RESISTANCE", ic: "resistance", fam: "32", lb: "linear-gradient(#2c4fa8, #121a3a)", lt: "#ffd23f", sh: "#2c4fa8",
-   d: "Rogue-lite tactique façon Fire Emblem GBA : un tyran a soumis le continent, mène l'armée rebelle. Recrute tes soldats, traverse le pays de combat en combat (marchand, repos, événements), triangle des armes, mort définitive, et abats le général. À chaque retour, agrandis la forteresse rebelle : caserne, taverne, infirmerie, Mémorial des vétérans…", tags: ["ROGUE-LITE", "FORTERESSE", "11 CLASSES"]},
-  {k: "boutique/index.html", n: "LA BOUTIQUE DE CARTES", s: "BOUTIQUE", ic: "boutique", fam: "3d", lb: "linear-gradient(#8a63d2, #2b2838)", lt: "#ffd84d", sh: "#8a63d2", rank: "boutique",
-   d: "Tiens une boutique de cartes à collectionner pendant un an, en 3D. Commande au grossiste, ouvre des boosters (vendre fermé ou ouvrir ? c'est tout le pari), remplis tes vitrines et ton classeur, aménage et agrandis la boutique, organise le tournoi du samedi, et regarde les clients acheter. Cinq extensions sortent dans l'année, les cotes bougent chaque dimanche.", tags: ["3D", "GESTION", "52 SEMAINES"]},
-  {k: "bannieres/index.html", n: "BANNIERES", s: "BANNIERES", ic: "banniere", fam: "3d", lb: "linear-gradient(#9fd4f2, #5a9a3a)", lt: "#fff6e0", sh: "#d0482c", rank: "bannieres",
-   d: "Un jeu de conquête en 3D pour les enfants : choisis ta couleur, fais courir tes chevaliers, archers et mages sur les cases, construis et décore ton village autour du château, et regarde les batailles. Des pièces, des cœurs, des étoiles et des mots simples. Après 25 tours, on compte les drapeaux !", tags: ["3D", "POUR LES ENFANTS", "25 TOURS"]},
-  {k: "lanterne/index.html", n: "LA DERNIERE LANTERNE", s: "LANTERNE", ic: "lanterne", fam: "32", lb: "linear-gradient(#2e4a34, #0e1a12)", lt: "#ffd27a", sh: "#4a6a3a", demo: true,
-   d: "Démo d'un RPG au tour par tour en HD-2D : avec ton équipe, rallume les lanternes qui retiennent la brume. Le prologue et l'acte 1 sont jouables : Clairfond, l'abbaye, le Bois Murmurant et la Crypte des racines, jusqu'au Roi des aulnes. La suite arrive.", tags: ["RPG", "DEMO", "ACTE 1"]},
-  {k: "mot-d-or/index.html", n: "LE MOT D'OR", s: "MOT D'OR", ic: "motdor", fam: "32", lb: "linear-gradient(#7a2a20, #2a0e0a)", lt: "#ffd23f", sh: "#b0402c", rank: "motdor",
-   d: "Un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe. Or : bien placée ; argent : mal placée. Le même mot pour toute la famille, et un entraînement pour rejouer.", tags: ["MOTS", "MOT DU JOUR"]},
-  {k: "capitaine-du-port/index.html", n: "CAPITAINE DU PORT", s: "CAPITAINE", ic: "remorqueur", fam: "32", lb: "linear-gradient(#2a7c97, #163f66)", lt: "#ffd23f", sh: "#2a7c97", rank: "capitaine",
-   d: "Le port est encombré : glisse les bateaux dans leur longueur pour ouvrir la passe au navire doré. 60 bassins en 5 ports (pêche, commerce, marina, chantier naval, grand port), en pixel art 32 bits, et un bassin du jour pour toute la famille.", tags: ["PUZZLE", "60 BASSINS", "DU JOUR"]},
-  {k: "romet/index.html", n: "ROMET", s: "ROMET", ic: "romet", fam: "3d", lb: "linear-gradient(#c0281c, #5a1a0e)", lt: "#ffe2a0", sh: "#e2b04a", rank: "romet",
-   d: "Un coin pusher en 3D, en hommage à Mynthos : lâche tes pièces, le poussoir fait tomber les autres dans le bac. Six machines à finir, de la foire à l'horloger, chacune avec sa règle (miel, courant, couloirs, clous, deux étages) et ses 6 trésors, et une machine secrète.", tags: ["3D", "7 MACHINES", "6 REGLES"]},
-  {k: "magasinier/index.html", n: "LE MAGASINIER", s: "MAGASINIER", ic: "caisse", fam: "3d", lb: "linear-gradient(#f6d39a, #a8683a)", lt: "#3a2414", sh: "#e8963a", rank: "magasinier",
-   d: "Pousse les caisses sur les marques, dans un entrepôt baigné de soleil en HD-2D. 60 niveaux en 5 entrepôts, avec de la glace, des tapis roulants et des caisses en fonte, et une grille du jour pour toute la famille.", tags: ["3D", "PUZZLE", "GRILLE DU JOUR"]},
-  "nebula/index.html",   // fiche : nebula/fiche.js
-  "tetris/index.html",   // fiche : tetris/fiche.js
-  {k: "snake/index.html", n: "SNAKE", s: "SNAKE", ic: "snake", fam: "rep", lb: "linear-gradient(#377a28, #1c4214)", lt: "#c4ff7a", sh: "#3fa02a", rank: "snake",
-   d: "Mange les pommes sans te mordre la queue ni toucher les bords du jardin.", tags: []},
-  {k: "asteroids/index.html", n: "ASTEROIDS", s: "ASTEROIDS", ic: "rock", fam: "rep", lb: "radial-gradient(circle at 70% 30%, #1d2a5a, #05040e 70%)", lt: "#5ce1ff", sh: "#2ab0d0", rank: "asteroids",
-   d: "Pilote ton vaisseau et pulvérise les astéroïdes, vague après vague.", tags: ["VAGUES"]},
-  {k: "jeu-de-la-vie/index.html", n: "JEU DE LA VIE", s: "JEU DE LA VIE", ic: "glider", fam: "rep", lb: "linear-gradient(#23307e, #0d1450)", lt: "#5cff8a", sh: "#3ad06a",
-   d: "L'automate de Conway : dessine des cellules, pose des motifs, regarde-les évoluer.", tags: ["MOTIFS"]},
+/* ---------- les jeux : l'ordre des cartouches ; tout le reste est dans la fiche de chaque jeu ---------- */
+// À TENIR À JOUR pour un nouveau jeu : sa fiche <dossier>/fiche.js (mode d'emploi en tête d'accueil-outils.js), son chemin ici,
+// sa ligne <script src> dans index.html, la fiche dans FILES de sw.js, son icône dans icones.js ; une ligne dans NEWS.
+const ORDRE = [
+  "picross/index.html",
+  "lignee/index.html",
+  "queens/index.html",
+  "injagility/index.html",
+  "solitaire/index.html",
+  "touche-coule/index.html",
+  "amiral/index.html",
+  "escadrille/index.html",
+  "club/index.html",
+  "orbite/index.html",
+  "alunissage/index.html",
+  "pont-stellaire/index.html",
+  "lune-rover/index.html",
+  "sudoku/index.html",
+  "calculator/index.html",
+  "empilage/index.html",
+  "yams/index.html",
+  "odyssee/index.html",
+  "doggy-saga/index.html",
+  "the-des-jarls/index.html",
+  "duche/index.html",
+  "dragon-simulator/index.html",
+  "mineur-de-l-espace/index.html",
+  "resistance/index.html",
+  "boutique/index.html",
+  "bannieres/index.html",
+  "lanterne/index.html",
+  "mot-d-or/index.html",
+  "capitaine-du-port/index.html",
+  "romet/index.html",
+  "magasinier/index.html",
+  "nebula/index.html",
+  "tetris/index.html",
+  "snake/index.html",
+  "asteroids/index.html",
+  "jeu-de-la-vie/index.html",
 ];
-// un jeu qui a sa fiche (<dossier>/fiche.js, voir accueil-outils.js) n'a ici que son chemin : sa cartouche vient de la fiche
-// (une fiche absente ou fautive fait disparaître la cartouche, pas l'accueil)
+// la cartouche de chaque jeu vient de sa fiche (une fiche absente ou fautive fait disparaître la cartouche, pas l'accueil)
 const FICHES = Ludo.fiches;
-for (let i = GAMES.length - 1; i >= 0; i--) if (typeof GAMES[i] === "string"){
-  const f = FICHES[GAMES[i]];
-  if (f && f.carte) GAMES[i] = Object.assign({k: f.k}, f.carte); else GAMES.splice(i, 1);
-}
+const GAMES = ORDRE.filter(k => FICHES[k] && FICHES[k].carte).map(k => Object.assign({k}, FICHES[k].carte));
 const NEBULA_IMG = "nebula/cartouche.jpg";
 const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 
 /* ---------- accueil : dates de sortie et de mise à jour, genres, jeu à la une, quoi de neuf ---------- */
-// À TENIR À JOUR : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
+// Dans la fiche : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
 // Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
-const META = {
-  "dragon-simulator/index.html": {added: "2026-11-02", genres: ["ARCADE"]},
-  "mineur-de-l-espace/index.html": {added: "2026-11-01", genres: ["SIMULATION", "ESPACE"]},
-  "resistance/index.html": {added: "2026-10-28", genres: ["TACTIQUE"]},
-  "boutique/index.html": {added: "2026-10-23", genres: ["SIMULATION"]},
-  "doggy-saga/index.html": {added: "2026-10-23", genres: ["LOGIQUE", "DU JOUR"]},
-  "romet/index.html": {added: "2026-10-22", genres: ["ARCADE", "HASARD"]},
-  "bannieres/index.html": {added: "2026-10-22", genres: ["TACTIQUE"]},
-  "lanterne/index.html": {added: "2026-10-22", genres: ["AVENTURE"]},
-  "the-des-jarls/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "HASARD", "DU JOUR"]},
-  "duche/index.html": {added: "2026-10-21", genres: ["TACTIQUE", "DU JOUR"]},
-  "mot-d-or/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
-  "capitaine-du-port/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
-  "magasinier/index.html": {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
-  "yams/index.html": {added: "2026-10-17", genres: ["HASARD"]},
-  "escadrille/index.html": {added: "2026-10-17", updated: "2026-10-19", genres: ["TACTIQUE"]},
-  "amiral/index.html": {updated: "2026-10-19", genres: ["TACTIQUE", "DU JOUR"]},
-  "odyssee/index.html": {added: "2026-10-17", genres: ["ADRESSE", "DU JOUR"]},
-  "empilage/index.html": {added: "2026-10-16", genres: ["ADRESSE", "DU JOUR"]},
-  "calculator/index.html": {added: "2026-10-16", genres: ["CALCUL", "DU JOUR"]},
-  "lune-rover/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "ESPACE"]},
-  "sudoku/index.html": {added: "2026-10-16", genres: ["LOGIQUE", "DU JOUR"]},
-  "alunissage/index.html": {added: "2026-10-13", updated: "2026-10-15", genres: ["ADRESSE", "ESPACE", "DU JOUR"]},
-  "pont-stellaire/index.html": {added: "2026-10-12", updated: "2026-10-15", genres: ["LOGIQUE", "ESPACE", "DU JOUR"]},
-  "orbite/index.html": {added: "2026-10-12", genres: ["ADRESSE", "ESPACE"]},
-  "club/index.html": {added: "2026-10-12", genres: ["GESTION", "CHIENS"]},
-  "picross/index.html": {genres: ["LOGIQUE"]},
-  "lignee/index.html": {genres: ["LOGIQUE", "DU JOUR"]},
-  "queens/index.html": {updated: "2026-10-15", genres: ["LOGIQUE", "DU JOUR"]},
-  "injagility/index.html": {genres: ["ADRESSE", "CHIENS"]},
-  "solitaire/index.html": {genres: ["CARTES"]},
-  "touche-coule/index.html": {genres: ["TACTIQUE"]},
-  "snake/index.html": {genres: ["ARCADE"]},
-  "asteroids/index.html": {genres: ["ARCADE", "ESPACE"]},
-  "jeu-de-la-vie/index.html": {genres: ["SIMULATION"]},
-};
+const META = {};   // rempli par les fiches (meta)
 const NEWS = [
   ["2026-11-02", "Nouveau jeu : Dragon Simulator, une idée d'un garçon de 7 ans. Ton dragon s'élance de son nid et plane au-dessus de la ville puis de l'aéroport, vu de profil, en 3D. Touche l'écran pour battre des ailes, tiens le bouton FEU pour brûler immeubles, maisons et voitures, évite grues, montgolfières et hélicoptères, et ramasse dix bonus (jetpack, grenade, bébé dragon, super-souffle, nuage d'orage, bouclier, aimant, œuf d'or…). Plus tu vas loin, plus tu gagnes de pièces : au nid, améliore écailles, flammes, réserve de feu et ailes."],
   ["2026-11-01", "Nouveau jeu : Mineur de l'espace. Casse des astéroïdes avec ta corvette et rapporte le minerai à la station : améliorations, usines, recherche, station construite module par module, drones qui minent seuls, voyages vers la Lune et Mars, bases, puis vagues d'aliens, flottes, porte-vaisseaux à escadrille et bataille finale contre le vaisseau-mère. Au PC : clavier et souris."],
@@ -202,122 +127,16 @@ const isFav = g => favs.includes(g.k);
 
 /* ---------- parties en cours et records, lus dans les sauvegardes de chaque jeu (sans toucher aux jeux ; rk, num… : accueil-outils.js) ---------- */
 // ce qui attend d'être repris (null si rien)
-const mineurEtage = e => e.bases && e.bases.mars ? 4 : e.recherche && e.recherche.transfert ? 3 : e.recherche && e.recherche.centre ? 2 : 1;
-const mineurTemps = t => { t = Math.floor((Number(t) || 0) / 60); return Math.floor(t / 60) + " h " + String(t % 60).padStart(2, "0"); };
-const PROGRESS = {
-  "mineur-de-l-espace/index.html": () => { const e = rk("mineur-de-l-espace", null); return e && e.temps > 30 && !e.fin ? `ETAGE ${mineurEtage(e)}/4` : null; },
-  "resistance/index.html": () => { const r = (rk("resistance.run", {}) || {}).run, n = r && r.map && r.current !== null ? r.map.nodes[r.current] : null; return r ? (n ? `ETAGE ${n.floor + 1}/${r.map.floors}` : "CAMPAGNE EN COURS") : null; },
-  "romet/index.html": () => { const p = rk("romet.partie", {}) || {}, ids = Object.keys(p).filter(k => p[k] && !p[k].fini); return ids.length ? (ids.length > 1 ? ids.length + " PARTIES" : "PARTIE EN COURS") : null; },
-  "the-des-jarls/index.html": () => { const d = rk("jarls.dailyRun", null), r = rk("jarls.run", null); return d && d.E && d.E.graine === dayNum() ? "DEFI DU JOUR" : r && r.E ? `MANCHE ${r.E.manche}` : null; },
-  "duche/index.html": () => { const d = rk("duche.dailyRun", null), r = rk("duche.run", null); return d && d.graine === dayNum() ? "DUCHE DU JOUR" : r && r.tour ? `TOUR ${r.tour}/30` : null; },
-  "boutique/index.html": () => { const r = rk("boutique.run", null); return r && r.semaine && !r.fin ? `SEMAINE ${r.semaine}/52` : null; },
-  "bannieres/index.html": () => { const r = rk("bannieres.run", null); return r && r.tour && !r.fin ? `TOUR ${Math.min(r.tour, 25)}/25` : null; },
-  "mot-d-or/index.html": () => { const j = rk("motdor.jour", null); return j && j.j === dayNum() && !j.fini && (j.rows || []).length ? "MOT DU JOUR" : null; },
-  "capitaine-du-port/index.html": () => { const d = rk("capitaine.dailyRun", null), p = rk("capitaine.partie", null);
-    return d && d.j === dayNum() ? "BASSIN DU JOUR" : p && p.coups ? "BASSIN " + (p.n + 1) : null; },
-  "magasinier/index.html": () => { const d = rk("magasinier.dailyRun", null), p = rk("magasinier.partie", null);
-    return d && d.j === dayNum() ? "GRILLE DU JOUR" : p && p.chemin ? "NIVEAU " + (p.n + 1) : null; },
-  "yams/index.html": () => { const p = rk("yams.partie", null); return p && p.tour < 13 ? `TOUR ${p.tour + 1}/13` : null; },
-  "club/index.html": () => { const g = rk("club.save", null); return g && g.week > 1 ? `SEMAINE ${g.week}` : null; },
-  "queens/index.html": () => { const r = rk("queens16.dailyRun", null); return r && r.day === dayNum() ? "GRILLE DU JOUR" : null; },
-  "sudoku/index.html": () => { const d = rk("sudoku.dailyRun", null), g = rk("sudoku.game", null);
-    return d && d.day === dayNum() ? "GRILLE DU JOUR" : g && !g.daily ? "UNE GRILLE" : null; },
-  "pont-stellaire/index.html": () => { const d = rk("pontstellaire.dailyRun", null), g = rk("pontstellaire.game", null);
-    return d && d.day === dayNum() ? "CIEL DU JOUR" : g && !g.daily ? "UN CIEL" : null; },
-  "lignee/index.html": () => { const today = dayNum().toString(36).toUpperCase(), cd = rk("lignee.curDaily", null), c = rk("lignee.cur", null);
-    return cd && cd.lives !== 0 && String(cd.code).endsWith("-J" + today) ? "ARBRE DU JOUR" : c && c.lives !== 0 ? "UN ARBRE" : null; },
-  "picross/index.html": () => { const n = count(rk("picrossdex.progress", {})); return n ? `${n} GRILLE${n > 1 ? "S" : ""}` : null; },
-  "solitaire/index.html": () => { const g = rk("solitaire16.game", null); return g && g.started && !g.won ? "UNE DONNE" : null; },
-};
+const PROGRESS = {};   // rempli par les fiches (enCours)
 // défi du jour : null = pas de défi du jour, false = à faire, true = joué (puzzles : réussi ; missions : tentative commencée)
-const TODAY = {
-  "doggy-saga/index.html": () => rk("doggysaga.dailyTry", 0) === dayNum() || (rk("doggysaga.daily", {}) || {})[dayNum()] !== undefined,
-  "the-des-jarls/index.html": () => { const t = rk("jarls.dailyTry", null); return !!(t && t.j === dayNum()); },
-  "duche/index.html": () => { const t = rk("duche.dailyTry", null); return !!(t && t.j === dayNum()); },
-  "mot-d-or/index.html": () => { const j = rk("motdor.jour", null); return !!(j && j.j === dayNum() && j.fini); },
-  "capitaine-du-port/index.html": () => !!(rk("capitaine.daily", {}) || {})[dayNum()],
-  "queens/index.html": () => !!(rk("queens16.daily", {}) || {})[dayNum()],
-  "sudoku/index.html": () => !!(rk("sudoku.daily", {}) || {})[dayNum()],
-  "pont-stellaire/index.html": () => !!(rk("pontstellaire.daily", {}) || {})[dayNum()],
-  "lignee/index.html": () => { const j = "-J" + dayNum().toString(36).toUpperCase(); return Object.keys(rk("lignee.daily", {}) || {}).some(c => c.endsWith(j)); },
-  "alunissage/index.html": () => rk("alunissage.dailyTry", 0) === dayNum(),
-  "calculator/index.html": () => rk("calculator.dailyTry", 0) === dayNum(),
-  "empilage/index.html": () => rk("empilage.dailyTry", 0) === dayNum(),
-  "odyssee/index.html": () => rk("odyssee.dailyTry", 0) === dayNum(),
-  "magasinier/index.html": () => !!(rk("magasinier.daily", {}) || {})[dayNum()],
-  "amiral/index.html": () => rk("amiral.dailyTry", 0) === dayNum(),
-};
+const TODAY = {};   // rempli par les fiches (duJour)
 const dailyState = g => { try { return TODAY[g.k] ? TODAY[g.k]() : null; } catch (e) { return null; } };
 const inProgress = g => { try { return (PROGRESS[g.k] || (() => null))(); } catch (e) { return null; } };
 // mes records sur ce téléphone, pour le volet : [libellé, valeur] (les lignes sans valeur sont cachées)
-const LEVELS = ["FACILE", "MOYEN", "DIFFICILE", "EXPERT"];
-const RECS = {
-  "dragon-simulator/index.html": () => { const s = rk("dragonsim.sauvegarde", {}) || {}, r = s.records || {}, t = s.total || {}, n = Object.values(s.niv || {}).reduce((a, v) => a + Math.max(0, (Number(v) || 1) - 1), 0);
-    return [["Plus long vol", num(r.distance, "m")], ["Meilleure partie", num(r.pieces, "pièces")], ["Bâtiments brûlés", num(t.batiments)], ["Vols", num(t.parties)], ["Nid", num(n, "/ 16 améliorations")]]; },
-  "mineur-de-l-espace/index.html": () => { const e = rk("mineur-de-l-espace", null); if (!e) return [];
-    return [["Étage atteint", e.fin ? "4 (fin)" : mineurEtage(e) + " / 4"], ["Temps de jeu", e.temps > 60 ? mineurTemps(e.temps) : null], ["Vaisseau-mère", e.fin ? "abattu" : null]]; },
-  "resistance/index.html": () => { const m = (rk("resistance.save", {}) || {}).meta || {}, b = Object.values(m.upgrades || {}).reduce((a, v) => a + (Number(v) || 0), 0);
-    return [["Pays libérés", num(m.wins)], ["Campagnes", num(m.runs)], ["Forteresse", num(b, b > 1 ? "niveaux" : "niveau")], ["Vétéran", m.veteran && m.veteran.name ? `${m.veteran.name} (niv ${m.veteran.level})` : null]]; },
-  "doggy-saga/index.html": () => { const p = rk("doggysaga.progres", {}) || {}, e = p.etoiles || {}, d = rk("doggysaga.daily", {}) || {};
-    return [["Étoiles", num(Object.values(e).reduce((a, v) => a + (Number(v) || 0), 0), "/ 180")], ["Niveaux réussis", num(count(e), "/ 60")], ["Chiens adoptés", num((p.album || []).length, "/ 16")],
-      ["Meilleure journée", num(Math.max(0, ...Object.values(d).map(Number).filter(v => v >= 0)), "câlins")]]; },
-  "romet/index.html": () => { const m = rk("romet.machines", {}) || {}, v = Object.values(m).filter(x => x && typeof x === "object");
-    const t = v.reduce((a, x) => a + (Array.isArray(x.t) ? x.t.filter(Boolean).length : 0), 0), f = v.filter(x => Array.isArray(x.t) && x.t.length && x.t.every(Boolean)).length;
-    return [["Trésors", num(t, "/ 42")], ["Machines terminées", num(f, "/ 7")], ["Meilleur butin", num(v.reduce((a, x) => Math.max(a, Number(x.butin) || 0), 0), "pièces")]]; },
-  "the-des-jarls/index.html": () => { const e = (rk("jarls.campagne", {}) || {}).etoiles || {}, v = Object.values(e).map(Number).filter(x => x > 0);
-    return [["Étoiles de la campagne", num(v.reduce((a, b) => a + b, 0), "/ 60")], ["Dieux battus", num(v.length, "/ 20")], ["Défis du jour", num(count(rk("jarls.daily", {})))]]; },
-  "duche/index.html": () => [["Meilleur score (normal)", num(rk("duche.best", 0), "pts")], ["Duchés du jour", num(count(rk("duche.daily", {})))]],
-  "boutique/index.html": () => { const s = rk("boutique.stats", {}) || {}; return [["Meilleure boutique", num(rk("boutique.best", 0), "pts")], ["Années finies", num(s.finies)], ["Parties", num(s.parties)]]; },
-  "bannieres/index.html": () => { const s = rk("bannieres.stats", {}) || {}; return [["Le plus de drapeaux", num(rk("bannieres.best", 0), "drapeaux")], ["Parties gagnées", num(s.gagnees)], ["Parties", num(s.parties)]]; },
-  "mot-d-or/index.html": () => { const s = rk("motdor.stats", {}) || {};
-    return [["Mots du jour trouvés", num(s.gagnees)], ["Meilleure série", num(s.record, s.record > 1 ? "jours" : "jour")], ["Parties", num(s.parties)]]; },
-  "capitaine-du-port/index.html": () => { const f = rk("capitaine.niveaux", {}) || {}, n = Object.values(f).reduce((a, v) => a + (Number(v && v.etoiles) || 0), 0);
-    return [["Étoiles", n ? n + " / 180" : null], ["Bassins réussis", num(count(f))], ["Bassins du jour", num(count(rk("capitaine.daily", {})))]]; },
-  "snake/index.html": () => [["Meilleur score", num(rk("snakeBestScore", 0))]],
-  "asteroids/index.html": () => [["Meilleur score", num(rk("asteroids16.best", 0))]],
-  "solitaire/index.html": () => [["Meilleur score", num(rk("solitaire16.best", 0))]],
-  "injagility/index.html": () => { const p = rk("injagility.parcours", {}) || {};
-    return [["Infini", num(rk("injagility.best", 0), "obstacles")], ["Parcours réussis", num((p.unlocked || 1) - 1)], ["Parcours : total", num(sum(p.best), "pts")]]; },
-  "queens/index.html": () => { const b = rk("queens16.best", {}) || {};
-    return Object.keys(b).filter(n => /^[5-9]$/.test(n) && b[n] > 0).sort().map(n => [`${n}×${n}`, mmss(b[n])]).concat([["Grilles du jour", num(count(rk("queens16.daily", {})))]]); },
-  "picross/index.html": () => { const cap = rk("picrossdex.captured", {}) || {}, n = Object.keys(cap).filter(id => cap[id] && !cap[id].test && id !== "pokeball").length;
-    return [["Pokémon capturés", num(n)], ["Grilles commencées", num(count(rk("picrossdex.progress", {})))]]; },
-  "lignee/index.html": () => { const s = rk("lignee.stats", {}) || {}, out = [["Arbres reconstitués", num(Object.values(s).reduce((a, v) => a + (v && v.n || 0), 0))]];
-    for (const m of ["C", "R"]) LEVELS.forEach((l, i) => { const v = s[m + (i + 1)]; if (v && v.best > 0) out.push([`${m === "R" ? "Royal" : "Classique"} ${l.toLowerCase()}`, mmss(v.best)]); });
-    return out.concat([["Arbres du jour", num(count(rk("lignee.daily", {})))]]); },
-  "touche-coule/index.html": () => { const b = rk("touchecoule.best", {}) || {}, ai = {easy: "facile", normal: "normale", hard: "amiral"};
-    return Object.keys(b).filter(k => b[k] > 0).sort().map(k => { const [m, a] = k.split(":"); return [`${m === "arsenal" ? "Arsenal" : "Classique"} · IA ${ai[a] || a}`, num(b[k], "tirs")]; }); },
-  "amiral/index.html": () => { const b = rk("amiral.best", {}) || {}, p = rk("amiral.palmares", {}) || {};
-    const nav = 8 + (p.normal > 0) + (p.hard > 0) + (p.victoires >= 10);
-    return [["easy", "Mousse"], ["normal", "Capitaine"], ["hard", "Amiral"]].map(([k, l]) => [l, num(b[k], "tours")])
-      .concat([["Victoires", num(p.victoires)], ["Navires au chantier", nav + " / 11"], ["Batailles du jour", num(count(rk("amiral.daily", {})))]]); },
-  "escadrille/index.html": () => { const b = rk("escadrille.best", {}) || {}; return [["easy", "Recrue"], ["normal", "Pilote"], ["hard", "As"]].map(([k, l]) => [l, num(b[k], "tours")]).concat([["Victoires", num(rk("escadrille.victoires", 0), "")], ["Escadrilles", `${Math.max(1, (rk("escadrille.skins", ["a"]) || ["a"]).length)}/4`],
-    // avions débloqués au hangar (mêmes conditions que escadrille/jeu.js : PLANES[..].need)
-    ["Avions", (() => { const v = Number(rk("escadrille.victoires", 0)) || 0, p = rk("escadrille.palmares", {}) || {}, rap = p.rapide || Object.values(b).some(x => x > 0 && x < 25), as = Math.max(Number(p.hard) || 0, b.hard ? 1 : 0);
-      return `${4 + (v >= 2) + (v >= 4) + (v >= 6) + !!rap + !!p.intacte + (as >= 2)}/10`; })()]]); },
-  "club/index.html": () => { const g = rk("club.save", null) || {};
-    return [["Réputation", num(Math.max(g.rep || 0, g.bestRep || 0))], ["Champion de France en", num(g.champion, "semaines")], ["Partie en cours", g.week > 1 ? "semaine " + g.week : null]]; },
-  "magasinier/index.html": () => { const f = rk("magasinier.niveaux", {}) || {}, n = Object.values(f).reduce((a, v) => a + (Number(v && v.etoiles) || 0), 0);
-    return [["Étoiles", n ? n + " / 180" : null], ["Niveaux réussis", num(count(f))], ["Grilles du jour", num(count(rk("magasinier.daily", {})))]]; },
-  "lune-rover/index.html": () => { const s = rk("lunerover.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },
-  "odyssee/index.html": () => { const s = rk("odyssee.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Plateaux réussis", num(Object.values(s).filter(v => v > 0).length)], ["Plateaux du jour", num(count(rk("odyssee.daily", {})))]]; },
-  "orbite/index.html": () => { const s = rk("orbite.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },
-  "alunissage/index.html": () => [["Meilleure mission", num(rk("alunissage.best", 0), "pts")], ["Sites atteints", num(rk("alunissage.sites", 0))], ["Missions du jour", num(count(rk("alunissage.daily", {})))]],
-  "pont-stellaire/index.html": () => { const b = rk("pontstellaire.best", {}) || {};
-    return ["7", "9", "11"].map(n => [`${n}×${n}`, b[n] > 0 ? mmss(b[n]) : null]).concat([["Constellations", num(rk("pontstellaire.wins", 0))]]); },
-  "sudoku/index.html": () => { const b = rk("sudoku.best", {}) || {};
-    return [["4", "4×4"], ["6", "6×6"], ["9-1", "9×9 facile"], ["9-2", "9×9 moyen"], ["9-3", "9×9 difficile"]].map(([k, l]) => [l, b[k] > 0 ? mmss(b[k]) : null]).concat([["Grilles terminées", num(rk("sudoku.wins", 0))]]); },
-  "calculator/index.html": () => { const b = rk("calculator.best", {}) || {}, out = [], nm = {add: "+", sub: "−", mul: "×", div: "÷", mix: "mélange"};
-    for (const k of Object.keys(b).sort()){ const [m, l, c] = k.split(":"); if (m === "serie" && b[k] > 0) out.push([`Série de 20 · niv. ${l} · ${nm[c] || c}`, mmss(b[k])]); }
-    for (const k of Object.keys(b).sort()){ const [m, l, c] = k.split(":"); if (m === "chrono" && b[k] > 0) out.push([`60 s · niv. ${l} · ${nm[c] || c}`, num(b[k], "bonnes")]); }
-    return out.slice(0, 8).concat([["Calculs du jour", num(count(rk("calculator.daily", {})))], ["Parties jouées", num(rk("calculator.parties", 0))]]); },
-  "yams/index.html": () => [["Meilleur score", num(rk("yams.best", 0), "pts")], ["Yams inscrits", num(rk("yams.nbYams", 0))], ["Parties jouées", num(rk("yams.parties", 0))]],
-  "empilage/index.html": () => [["Plus haute tour", num(rk("empilage.best", 0), "blocs")], ["Tours du jour", num(count(rk("empilage.daily", {})))], ["Parties jouées", num(rk("empilage.parties", 0))]],
-};
+const RECS = {};   // rempli par les fiches (records)
 const myRecords = g => { try { return (RECS[g.k] || (() => []))().filter(r => r[1]); } catch (e) { return []; } };
-const NICE = {"club/index.html": "le Club", "queens/index.html": "Queens", "pont-stellaire/index.html": "Pont stellaire", "sudoku/index.html": "le Sudoku",
-  "lignee/index.html": "Lignée", "picross/index.html": "Picross Dex", "solitaire/index.html": "le Solitaire"};
-for (const f of Object.values(FICHES)){
+const NICE = {};   // nom dans les phrases du gardien (fiches : nom ; sinon le nom de la cartouche)
+for (const f of GAMES.map(g => FICHES[g.k])){
   if (f.meta) META[f.k] = f.meta;
   if (f.enCours) PROGRESS[f.k] = f.enCours;
   if (f.duJour) TODAY[f.k] = f.duJour;
@@ -439,7 +258,7 @@ function arrange(){
 
 /* ---------- jeu à la une : le dernier sorti, présenté dans sa boîte ---------- */
 (function une(){
-  const keys = Object.keys(META), rank = g => keys.indexOf(g.k);   // à date égale, le premier de META l'emporte
+  const rank = g => ORDRE.indexOf(g.k);   // à date égale, le premier dans ORDRE l'emporte
   const g = GAMES.filter(g => metaOf(g).added && !g.demo).sort((a, b) => metaOf(b).added.localeCompare(metaOf(a).added) || rank(a) - rank(b))[0];
   if (!g) return;
   const m = metaOf(g), box = $("une");
@@ -498,130 +317,15 @@ $("surprise").addEventListener("click", () => {
 });
 
 /* ---------- les classements de la famille : vues, réglages et format de chaque jeu ---------- */
-const TCMODES = [["classic", "CLASSIQUE"], ["arsenal", "ARSENAL"]], TCAI = [["easy", "FACILE"], ["normal", "NORMAL"], ["hard", "AMIRAL"]];
-const AMAI = [["easy", "MOUSSE"], ["normal", "CAPITAINE"], ["hard", "AMIRAL"]];
-const ESAI = [["easy", "RECRUE"], ["normal", "PILOTE"], ["hard", "AS"]];
-const CCLVL = [[1, "PETIT ECOLIER"], [2, "ECOLIER"], [3, "COLLEGE"], [4, "COSTAUD"], [5, "CHAMPION"]];
-const CCOP = [["add", "+"], ["sub", "−"], ["mul", "×"], ["div", "÷"], ["mix", "MELANGE"]];
-const SDK = [["4", "4×4"], ["6", "6×6"], ["9-1", "FACILE"], ["9-2", "MOYEN"], ["9-3", "DIFFICILE"]];
 // chaque jeu : ses classements (vues), leur réglage (ctl), leur format (fmt ; T = temps en ms)
-const RANKS = {
-  dragonsim: [{label: "DISTANCE", game: "dragonsim", board: () => "distance", fmt: v => N(v) + " m", title: () => "PLUS LONG VOL",
-     note: "La plus grande distance parcourue en un vol, en mètres."}],
-  snake: [{label: "MEILLEUR SCORE", game: "snake", board: () => "best", fmt: N}],
-  asteroids: [{label: "MEILLEUR SCORE", game: "asteroids", board: () => "best", fmt: N}],
-  solitaire: [{label: "MEILLEUR SCORE", game: "solitaire", board: () => "best", fmt: N}],
-  queens: [{label: "MEILLEUR TEMPS", ctl: ["size"], game: "queens", board: () => "best:" + st.size, fmt: T, title: () => `${st.size}×${st.size}`, note: "Grilles réussies sans indice."},
-    {label: "GRILLE DU JOUR", ctl: ["day"], game: "queens", board: daily, fmt: T,
-     title: () => { const n = [9, 5, 6, 7, 7, 8, 9][day().getDay()]; return `GRILLE DU JOUR · ${n}×${n}`; },
-     note: "La même grille pour toute la famille, de 5×5 le lundi à 9×9 le week-end. Temps plus 30 secondes par indice. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a fini la grille ce jour-là." : "Personne n'a encore fini la grille du jour : à toi de jouer !"}],
-  picross: [{label: "PAR POKEMON", ctl: ["pokemon"], game: "picross", board: () => "t:" + st.poke, fmt: T, title: () => st.poke ? pokeLabel(st.poke) : "PAR POKEMON",
-     note: "Temps de la grille, plus 30 secondes par indice utilisé.", empty: "Personne n'a encore capturé de Pokémon."},
-    {label: "RECORDS DETENUS", kind: "records", game: "picross", fmt: v => N(v) + (v > 1 ? " records" : " record"), title: () => "QUI DETIENT LE PLUS DE RECORDS",
-     note: "Nombre de Pokémon sur lesquels chacun a le meilleur temps de la famille."},
-    {label: "POKEDEX", game: "picross", board: () => "dex", fmt: v => N(v) + " capturés", title: () => "LE POKEDEX LE PLUS COMPLET"}],
-  lignee: [{label: "ARBRE DU JOUR", ctl: ["mode", "day"], game: "lignee", board: () => "daily:" + dayCode(st.mode, day()), fmt: T,
-     title: () => `ARBRE DU JOUR · ${st.mode === "R" ? "ROYAL" : "CLASSIQUE"}`,
-     empty: () => st.back ? "Personne n'a fini l'arbre ce jour-là." : "Personne n'a encore fini l'arbre du jour : à toi de jouer !"},
-    {label: "PAR NIVEAU", ctl: ["mode", "level"], game: "lignee", board: () => "best:" + st.mode + st.level, fmt: T, title: () => `${st.mode === "R" ? "ROYAL" : "CLASSIQUE"} · ${LEVELS[st.level - 1]}`},
-    {label: "ARBRES", game: "lignee", board: () => "arbres", fmt: v => N(v) + (v > 1 ? " arbres" : " arbre"), title: () => "ARBRES RECONSTITUES"}],
-  injagility: [{label: "INFINI", game: "injagility", board: () => "best", fmt: v => N(v) + " obst.", title: () => "INFINI · OBSTACLES FRANCHIS"},
-    {label: "PARCOURS · TOTAL", game: "parcours", board: () => "total", fmt: v => N(v) + " pts", title: () => "PARCOURS · TOTAL DES MEILLEURS SCORES"},
-    {label: "PAR PARCOURS", ctl: ["plevel"], game: "parcours", board: () => "lvl:" + st.plevel, fmt: v => N(v) + " pts", title: () => `PARCOURS N° ${st.plevel}`}],
-  touchecoule: [{label: "MEILLEURE VICTOIRE", ctl: ["tcmode", "tcai"], game: "touchecoule", board: () => `best:${st.tcmode}:${st.tcai}`, fmt: v => N(v) + " tirs",
-     title: () => `${TCMODES.find(m => m[0] === st.tcmode)[1]} · IA ${TCAI.find(m => m[0] === st.tcai)[1]}`, note: "La victoire en le moins de tirs, par mode et par niveau de l'IA."}],
-  club: [{label: "REPUTATION", game: "club", board: () => "rep", fmt: v => N(v) + " pts", title: () => "LA PLUS GRANDE REPUTATION"},
-    {label: "CHAMPION", game: "club", board: () => "champion", fmt: v => N(v) + " sem.", title: () => "CHAMPION DE FRANCE LE PLUS RAPIDE",
-     note: "Le nombre de semaines pour gagner le Championnat de France.", empty: "Personne n'est encore champion de France."}],
-  alunissage: [{label: "MEILLEUR SCORE", game: "alunissage", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEURE MISSION",
-     note: "Score d'une mission : à chaque site, (100 + carburant restant) × le multiplicateur de l'aire."},
-    {label: "MISSION DU JOUR", ctl: ["day"], game: "alunissage", board: daily, fmt: v => N(v) + " pts",
-     title: () => "MISSION DU JOUR", note: "La même suite de sites pour toute la famille. Seule la première mission du jour est classée.", empty: () => st.back ? "Personne n'a joué la mission ce jour-là." : "Personne n'a encore joué la mission du jour : à toi !"}],
-  romet: [{label: "TRESORS", game: "romet", board: () => "tresors", fmt: v => N(v) + (v > 1 ? " trésors" : " trésor"), title: () => "TOTAL DES TRESORS",
-     note: "Les trésors gagnés dans toutes les machines : 6 par machine, 42 en tout avec la machine secrète."},
-    {label: "BUTIN", game: "romet", board: () => "butin", fmt: v => N(v) + (v > 1 ? " pièces" : " pièce"), title: () => "MEILLEUR BUTIN",
-     note: "Le plus de pièces tombées dans le bac en une partie (une bourse), toutes machines confondues ; une pièce rejouée puis regagnée compte encore."}],
-  yams: [{label: "MEILLEUR SCORE", game: "yams", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEUR SCORE"}],
-  empilage: [{label: "PLUS HAUTE TOUR", game: "empilage", board: () => "best", fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "PLUS HAUTE TOUR"},
-    {label: "TOUR DU JOUR", ctl: ["day"], game: "empilage", board: daily, fmt: v => N(v) + (v > 1 ? " blocs" : " bloc"), title: () => "TOUR DU JOUR",
-     note: "Les mêmes vitesses et les mêmes départs pour toute la famille. Seule la première tour du jour est classée.",
-     empty: () => st.back ? "Personne n'a joué la tour ce jour-là." : "Personne n'a encore joué la tour du jour : à toi !"}],
-  pontstellaire: [{label: "CIEL DU JOUR", ctl: ["day"], game: "pontstellaire", board: daily, fmt: T,
-     title: () => "CIEL DU JOUR", note: "Le même ciel 9×9 pour toute la famille, plus 30 secondes par indice. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a dessiné le ciel ce jour-là." : "Personne n'a encore dessiné le ciel du jour : à toi de jouer !"},
-    {label: "PAR TAILLE", ctl: ["pssize"], game: "pontstellaire", board: () => "best:" + st.pssize, fmt: T, title: () => `${st.pssize}×${st.pssize}`, note: "Le meilleur temps, plus 30 secondes par indice."},
-    {label: "CONSTELLATIONS", game: "pontstellaire", board: () => "ciels", fmt: v => N(v) + (v > 1 ? " ciels" : " ciel"), title: () => "CONSTELLATIONS DESSINEES"}],
-  sudoku: [{label: "GRILLE DU JOUR", ctl: ["day"], game: "sudoku", board: daily, fmt: T,
-     title: () => "GRILLE DU JOUR", note: "La même grille 9×9 pour toute la famille (facile lundi et mardi, moyenne du mercredi au vendredi, difficile le week-end), plus 30 secondes par indice. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a rempli la grille ce jour-là." : "Personne n'a encore rempli la grille du jour : à toi de jouer !"},
-    {label: "PAR NIVEAU", ctl: ["sdk"], game: "sudoku", board: () => "best:" + st.sdk, fmt: T, title: () => SDK.find(m => m[0] === st.sdk)[1], note: "Le meilleur temps, plus 30 secondes par indice."},
-    {label: "GRILLES", game: "sudoku", board: () => "grilles", fmt: v => N(v) + (v > 1 ? " grilles" : " grille"), title: () => "GRILLES TERMINEES"}],
-  calculator: [{label: "CALCUL DU JOUR", ctl: ["day"], game: "calculator", board: daily, fmt: T,
-     title: () => "CALCUL DU JOUR", note: "Les mêmes 20 calculs pour toute la famille, du plus facile au plus dur. Le temps, plus 5 secondes par erreur. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a fait le calcul ce jour-là." : "Personne n'a encore fait le calcul du jour : à toi de jouer !"},
-    {label: "SERIE DE 20", ctl: ["cclvl", "ccop"], game: "calculator", board: () => `serie:${st.cclvl}:${st.ccop}`, fmt: T,
-     title: () => `SERIE DE 20 · ${CCLVL.find(m => m[0] === st.cclvl)[1]} · ${CCOP.find(m => m[0] === st.ccop)[1]}`, note: "Le temps pour 20 calculs, plus 5 secondes par erreur. MELANGE : plusieurs opérations choisies."},
-    {label: "60 SECONDES", ctl: ["cclvl", "ccop"], game: "calculator", board: () => `chrono:${st.cclvl}:${st.ccop}`, fmt: v => N(v) + (v > 1 ? " bonnes" : " bonne"),
-     title: () => `60 SECONDES · ${CCLVL.find(m => m[0] === st.cclvl)[1]} · ${CCOP.find(m => m[0] === st.ccop)[1]}`, note: "Le plus de bonnes réponses en une minute."}],
-  lunerover: [{label: "ETOILES", game: "lunerover", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
-     note: "Par niveau : 3 étoiles pour le programme le plus court, 2 avec jusqu'à 2 instructions de plus, 1 sinon (90 au maximum)."}],
-  motdor: [{label: "MOT DU JOUR", ctl: ["day"], game: "motdor", board: daily, fmt: v => N(v) + (v > 1 ? " essais" : " essai"), title: () => "MOT DU JOUR",
-     note: "Le même mot pour toute la famille ; le moins d'essais gagne. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a trouvé le mot ce jour-là." : "Personne n'a encore trouvé le mot du jour : à toi !"},
-    {label: "SERIE", game: "motdor", board: () => "serie", fmt: v => N(v) + (v > 1 ? " jours" : " jour"), title: () => "MEILLEURE SERIE",
-     note: "Le plus de jours d'affilée avec le mot du jour trouvé."}],
-  doggysaga: [{label: "ETOILES", game: "doggysaga", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "LE REFUGE",
-     note: "Les étoiles des 60 niveaux du refuge : 1 étoile par niveau réussi, 2 ou 3 avec beaucoup de points (180 au maximum)."},
-    {label: "JOURNEE DU JOUR", ctl: ["day"], game: "doggysaga", board: daily, fmt: v => N(v) + " câlins", title: () => "JOURNEE DU JOUR",
-     note: "La même grille et les mêmes chiens pour toute la famille : le plus de câlins en 20 coups. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a joué la journée de ce jour-là." : "Personne n'a encore joué la journée du jour : à toi !"}],
-  jarls: [{label: "ETOILES", game: "jarls", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "LA ROUTE DU FJORD",
-     note: "Les étoiles de la campagne des tavernes : par dieu battu, 1 étoile, 2 en gardant 8 PV, 3 en gardant 12 PV (60 au maximum)."},
-    {label: "DEFI DU JOUR", ctl: ["day"], game: "jarls", board: daily, fmt: v => N(v) + " pts", title: () => "DEFI DU JOUR",
-     note: "Le même dieu, les mêmes faveurs et les mêmes dés pour toute la famille, en normal. Victoire : 1000 + 50 par PV gardé − 10 par manche ; défaite : 20 par PV pris au dieu. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a défié le dieu ce jour-là." : "Personne n'a encore relevé le défi du jour : à toi !"}],
-  boutique: [{label: "MEILLEURE BOUTIQUE", game: "boutique", board: () => "best", fmt: v => N(v) + " pts", title: () => "LA MEILLEURE BOUTIQUE",
-     note: "Le score à la fin des 52 semaines : la valeur de la boutique (caisse, stock, cartes à leur cote, meubles, agrandissements, classeurs complets, moins le prêt). En cas de faillite, la moitié."}],
-  bannieres: [{label: "DRAPEAUX", game: "bannieres", board: () => "best", fmt: v => N(v) + (v > 1 ? " drapeaux" : " drapeau"), title: () => "LE PLUS DE DRAPEAUX",
-     note: "Les drapeaux (les cases à toi) à la fin d'une partie sur la petite carte (37 cases), en facile ou en normal."}],
-  duche: [{label: "MEILLEUR SCORE", game: "duche", board: () => "best", fmt: v => N(v) + " pts", title: () => "MEILLEUR REGNE",
-     note: "Le meilleur score d'une partie en normal (Duché du jour compris) : terres ×100, or, bois ÷ 2, bâtiments ×20, légitimité ×5, votes ×50, primes de victoire."},
-    {label: "DUCHE DU JOUR", ctl: ["day"], game: "duche", board: daily, fmt: v => N(v) + " pts", title: () => "DUCHE DU JOUR",
-     note: "La même carte, les mêmes rivaux et les mêmes événements pour toute la famille, en normal. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a régné sur le duché ce jour-là." : "Personne n'a encore joué le Duché du jour : à toi !"}],
-  capitaine: [{label: "ETOILES", game: "capitaine", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
-     note: "Par bassin : 3 étoiles jusqu'à 10 % au-dessus du minimum de coups (au moins un coup de marge), 2 jusqu'à 50 % au-dessus, sinon 1 (180 au maximum)."},
-    {label: "BASSIN DU JOUR", ctl: ["day"], game: "capitaine", board: daily, fmt: v => N(v) + (v > 1 ? " coups" : " coup"), title: () => "BASSIN DU JOUR",
-     note: "Le même bassin pour toute la famille ; le moins de coups gagne, en comptant ceux qu'on annule et ceux d'avant un recommencement. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Aucun navire doré n'est rentré au port ce jour-là." : "Personne n'a encore tenté le bassin du jour : à toi !"}],
-  magasinier: [{label: "ETOILES", game: "magasinier", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
-     note: "Par niveau : 3 étoiles au plus 10 % au-dessus du minimum de coups, 2 au plus 50 % au-dessus, sinon 1 (180 au maximum)."},
-    {label: "GRILLE DU JOUR", ctl: ["day"], game: "magasinier", board: daily, fmt: v => N(v) + (v > 1 ? " coups" : " coup"), title: () => "GRILLE DU JOUR",
-     note: "La même grille pour toute la famille ; le moins de coups gagne, en comptant ceux qu'on annule et ceux d'avant un recommencement. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a rangé l'entrepôt ce jour-là." : "Personne n'a encore tenté la grille du jour : à toi !"}],
-  odyssee: [{label: "ETOILES", game: "odyssee", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
-     note: "Par plateau : 1 étoile en arrivant au port, 2 sans naufrage, 3 sans naufrage et sous le temps cible (90 au maximum)."},
-    {label: "PLATEAU DU JOUR", ctl: ["day"], game: "odyssee", board: daily, fmt: T, title: () => "PLATEAU DU JOUR",
-     note: "Le même plateau et les mêmes dangers pour toute la famille ; le temps, plus 5 secondes par naufrage. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a navigué ce jour-là." : "Personne n'a encore tenté le plateau du jour : à toi !"}],
-  orbite: [{label: "ETOILES", game: "orbite", board: () => "etoiles", fmt: v => N(v) + (v > 1 ? " étoiles" : " étoile"), title: () => "TOTAL D'ETOILES",
-     note: "3 étoiles par niveau réussi du premier coup, 2 au deuxième essai, 1 au troisième (90 au maximum)."}],
-  amiral: [{label: "MEILLEURE VICTOIRE", ctl: ["amai"], game: "amiral", board: () => `best:${st.amai}`, fmt: v => N(v) + " tours",
-     title: () => AMAI.find(m => m[0] === st.amai)[1], note: "La victoire en le moins de tours, par niveau de l'ordinateur."},
-    {label: "BATAILLE DU JOUR", ctl: ["day"], game: "amiral", board: daily, fmt: v => N(v) + " tours", title: () => "BATAILLE DU JOUR",
-     note: "Les mêmes flottes et le même ennemi pour toute la famille, en Capitaine ; la victoire en le moins de tours. Une seule tentative classée par jour.",
-     empty: () => st.back ? "Personne n'a gagné la bataille ce jour-là." : "Personne n'a encore gagné la bataille du jour : à toi !"}],
-  escadrille: [{label: "MEILLEURE VICTOIRE", ctl: ["esai"], game: "escadrille", board: () => `best:${st.esai}`, fmt: v => N(v) + " tours",
-     title: () => ESAI.find(m => m[0] === st.esai)[1], note: "La victoire en le moins de tours, par niveau de l'ordinateur."}],
-};
-for (const f of Object.values(FICHES)) if (f.classements && f.carte && f.carte.rank) RANKS[f.carte.rank] = f.classements;
+const RANKS = {};   // rempli par les fiches (classements, rangés sous carte.rank)
+for (const f of GAMES.map(g => FICHES[g.k])) if (f.classements && f.carte.rank) RANKS[f.carte.rank] = f.classements;
 // les Pokémon du Picross Dex (noms lus dans la page du jeu, mise en cache par l'appli), chargés à la première demande
 let DEX = null, dexReady = null;
 const loadDex = () => dexReady || (dexReady = fetch(ROOT + "picross/dessins.js").then(r => r.text()).then(t => {
   DEX = {}; for (const m of t.matchAll(/\{id:"([a-z0-9_-]+)", no:"([0-9A-Z]+)", name:"([^"]+)"/g)) DEX[m[1]] = {no: m[2], name: m[3]};
 }).catch(() => { DEX = {}; }));
-const pokeLabel = id => { const d = DEX && DEX[id]; return d ? `${d.no === "OBJ" ? "OBJ" : "#" + d.no} ${d.name}` : id.toUpperCase(); };
+const pokeLabel = Ludo.pokeLabel = id => { const d = DEX && DEX[id]; return d ? `${d.no === "OBJ" ? "OBJ" : "#" + d.no} ${d.name}` : id.toUpperCase(); };   // aussi pour la fiche de Picross
 const ord = n => n === 1 ? "1er" : n + "e";
 
 // une couronne sur les cartouches des jeux où je détiens un record de la famille (gardé 15 minutes)
@@ -905,116 +609,16 @@ addEventListener("hashchange", fromHash);
 addEventListener("pageshow", e => { if (e.persisted){ paintMarks(); arrange(); if (ovOpen() && cur) renderVolet(); } });
 
 /* ---------- transfert de toutes les sauvegardes entre navigateurs ---------- */
-// le transfert des jeux qui ont une fiche : g[cle] (voir accueil-outils.js)
-const TRANSFERTS = () => Object.values(FICHES).flatMap(f => [].concat(f.transfert || []));
-// meilleurs scores : on garde le plus grand
-const SCORES = [["snakeBestScore", "Snake"], ["asteroids16.best", "Asteroids"], ["injagility.best", "Injagility"], ["solitaire16.best", "Solitaire"]];
+// chaque fiche s'occupe de sa part du code (transfert : collecter, decrire, fusionner ; voir accueil-outils.js)
+const TRANSFERTS = () => GAMES.map(g => FICHES[g.k].transfert).filter(Boolean);
 function collectSaves(){
   const g = {};
-  for (const [k] of SCORES){ const v = Number(readKey(k, 0)); if (v > 0) g[k] = v; }
-  const q = readKey("queens16.best", {}); if (q && Object.keys(q).length) g.queens = q;
-  const qd = readKey("queens16.daily", {}); if (qd && Object.keys(qd).length) g.queensDaily = qd;
-  const cap = readKey("picrossdex.captured", {}), prog = readKey("picrossdex.progress", {});
-  const c = {}, p = {};
-  for (const [id, v] of Object.entries(cap || {})) if (v && v.time > 0) c[id] = Object.assign({t: v.time, h: v.hints || 0}, v.test ? {x: 1} : {});
-  for (const [id, v] of Object.entries(prog || {})) if (v && Array.isArray(v.cells)) p[id] = {c: v.cells.join(""), e: Math.round(v.elapsed || 0), h: v.hints || 0};
-  if (Object.keys(c).length || Object.keys(p).length) g.picross = {c, p};
-  const lg = readKey("lignee.stats", {}); if (lg && Object.keys(lg).length) g.lignee = lg;
-  const ld = readKey("lignee.daily", {}); if (ld && Object.keys(ld).length) g.ligneeDaily = ld;
-  const tc = readKey("touchecoule.best", {}); if (tc && Object.keys(tc).length) g.touchecoule = tc;
-  const am = readKey("amiral.best", {}); if (am && Object.keys(am).length) g.amiral = am;
-  const ap = {p: readKey("amiral.palmares", {}) || {}, d: readKey("amiral.daily", {}) || {}}; if (Object.keys(ap.p).length || Object.keys(ap.d).length) g.amiralPal = ap;
-  const es = {b: readKey("escadrille.best", {}) || {}, v: Number(readKey("escadrille.victoires", 0)) || 0, s: readKey("escadrille.skins", []) || [], k: readKey("escadrille.skin", null), p: readKey("escadrille.palmares", {}) || {}}; if (Object.keys(es.b).length || es.v) g.escadrille = es;
-  const ob = readKey("orbite.stars", {}); if (ob && Object.keys(ob).length) g.orbite = ob;
-  const lr = readKey("lunerover.stars", {}); if (lr && Object.keys(lr).length) g.lunerover = lr;
-  const al = {b: Number(readKey("alunissage.best", 0)) || 0, s: Number(readKey("alunissage.sites", 0)) || 0, d: readKey("alunissage.daily", {}) || {}};
-  if (al.b || al.s) g.alunissage = al;
-  const ps = {b: readKey("pontstellaire.best", {}) || {}, d: readKey("pontstellaire.daily", {}) || {}, w: Number(readKey("pontstellaire.wins", 0)) || 0};
-  if (ps.w || Object.keys(ps.b).length) g.pontstellaire = ps;
-  const su = {b: readKey("sudoku.best", {}) || {}, d: readKey("sudoku.daily", {}) || {}, w: Number(readKey("sudoku.wins", 0)) || 0};
-  if (su.w || Object.keys(su.b).length) g.sudoku = su;
-  const cc = {b: readKey("calculator.best", {}) || {}, d: readKey("calculator.daily", {}) || {}, p: Number(readKey("calculator.parties", 0)) || 0};
-  if (cc.p || Object.keys(cc.b).length) g.calculator = cc;
-  const em = {b: Number(readKey("empilage.best", 0)) || 0, p: Number(readKey("empilage.parties", 0)) || 0, d: readKey("empilage.daily", {}) || {}};
-  if (em.b || em.p) g.empilage = em;
-  const ya = {b: Number(readKey("yams.best", 0)) || 0, p: Number(readKey("yams.parties", 0)) || 0, y: Number(readKey("yams.nbYams", 0)) || 0, o: Number(readKey("yams.bonus", 0)) || 0};
-  if (ya.b || ya.p) g.yams = ya;
-  const od = {s: readKey("odyssee.stars", {}) || {}, b: readKey("odyssee.best", {}) || {}, d: readKey("odyssee.daily", {}) || {}};
-  if (Object.keys(od.s).length || Object.keys(od.d).length) g.odyssee = od;
-  const dg = {e: (readKey("doggysaga.progres", {}) || {}).etoiles || {}, a: (readKey("doggysaga.progres", {}) || {}).album || [], d: readKey("doggysaga.daily", {}) || {}};
-  if (Object.keys(dg.e).length || Object.keys(dg.d).length) g.doggysaga = dg;
-  const ja = {e: (readKey("jarls.campagne", {}) || {}).etoiles || {}, d: readKey("jarls.daily", {}) || {}};
-  if (Object.keys(ja.e).length || Object.keys(ja.d).length) g.jarls = ja;
-  const bo = {b: Number(readKey("boutique.best", 0)) || 0, s: readKey("boutique.stats", {}) || {}};
-  if (bo.b || bo.s.parties) g.boutique = bo;
-  const mi = readKey("mineur-de-l-espace", null); if (mi && mi.v && mi.temps > 0) g.mineur = mi;
-  const re = (readKey("resistance.save", {}) || {}).meta;
-  if (re && re.runs) g.resistance = re;
-  const bn = {b: Number(readKey("bannieres.best", 0)) || 0, s: readKey("bannieres.stats", {}) || {}};
-  if (bn.b || bn.s.parties) g.bannieres = bn;
-  const du = {b: Number(readKey("duche.best", 0)) || 0, d: readKey("duche.daily", {}) || {}};
-  if (du.b || Object.keys(du.d).length) g.duche = du;
-  const ro = readKey("romet.machines", null);
-  const dsg = readKey("dragonsim.sauvegarde", null);
-  if (dsg && typeof dsg === "object" && ((dsg.total && dsg.total.parties) || dsg.pieces)) g.dragonsim = dsg;
-  if (ro && typeof ro === "object" && Object.keys(ro).length) g.romet = ro;
-  const mg = {n: readKey("magasinier.niveaux", {}) || {}, d: readKey("magasinier.daily", {}) || {}};
-  if (Object.keys(mg.n).length || Object.keys(mg.d).length) g.magasinier = mg;
-  const mo = {s: readKey("motdor.stats", null), d: readKey("motdor.daily", {}) || {}};
-  if (mo.s && mo.s.parties > 0) g.motdor = mo;
-  const cp = {n: readKey("capitaine.niveaux", {}) || {}, d: readKey("capitaine.daily", {}) || {}};
-  if (Object.keys(cp.n).length || Object.keys(cp.d).length) g.capitaine = cp;
-  const cl = readKey("club.save", null); if (cl && cl.week > 1) g.club = cl;
-  const pc = readKey("injagility.parcours", null); if (pc && (pc.wallet || (pc.unlocked || 1) > 1)) g.parcours = pc;
-  for (const t of TRANSFERTS()){ try { const v = t.collecter(); if (v != null) g[t.cle] = v; } catch (e) {} }
+  for (const t of TRANSFERTS()){ try { t.collecter(g); } catch (e) {} }
   return g;
 }
 function describeSaves(g){
   const out = [];
-  if (g.picross) out.push(`Picross Dex : ${Object.keys(g.picross.c).length} Pokémon` + (Object.keys(g.picross.p).length ? `, ${Object.keys(g.picross.p).length} grille(s) en cours` : ""));
-  if (g.queens) out.push("Queens : " + Object.keys(g.queens).sort((a, b) => a - b).map(n => `${n}×${n} en ${fmtTime(g.queens[n])}`).join(", "));
-  if (g.queensDaily){ const n = Object.keys(g.queensDaily).length; out.push(`Queens : ${n} grille${n > 1 ? "s" : ""} du jour`); }
-  for (const [k, name] of SCORES) if (g[k]) out.push(`${name} : ${g[k]} ${k === "injagility.best" ? "obstacles" : "points"}`);
-  if (g.parcours) out.push(`Injagility Parcours : ${(g.parcours.unlocked || 1) - 1} parcours réussis, ${g.parcours.wallet || 0} points, ${(g.parcours.owned || []).length} chien${(g.parcours.owned || []).length > 1 ? "s" : ""}`);
-  if (g.lignee){ const n = Object.values(g.lignee).reduce((s, v) => s + (v && v.n || 0), 0); if (n) out.push(`Lignée : ${n} arbre${n > 1 ? "s" : ""} reconstitué${n > 1 ? "s" : ""}`); }
-  if (g.touchecoule){ const v = Object.values(g.touchecoule).filter(x => x > 0); if (v.length) out.push(`Touché Coulé : meilleure victoire en ${Math.min(...v)} tirs`); }
-  if (g.club && g.club.week) out.push(`Club d'agility : semaine ${g.club.week}, ${(g.club.dogs || []).length} chien${(g.club.dogs || []).length > 1 ? "s" : ""}, réputation ${g.club.rep || 0}`);
-  if (g.amiral){ const v = Object.values(g.amiral).filter(x => x > 0); if (v.length) out.push(`Amiral ! : meilleure victoire en ${Math.min(...v)} tours`); }
-  if (g.amiralPal){ const n = Number((g.amiralPal.p || {}).victoires) || 0, d = Object.keys(g.amiralPal.d || {}).length;
-    if (n || d) out.push(`Amiral ! : ${n} victoire${n > 1 ? "s" : ""}${d ? `, ${d} bataille${d > 1 ? "s" : ""} du jour` : ""}`); }
-  if (g.escadrille){ const v = Object.values(g.escadrille.b || {}).filter(x => x > 0), n = g.escadrille.v || 0;
-    const f = Math.max(1, (g.escadrille.s || []).length);
-    if (v.length || n) out.push(`Escadrille ! : ${n} victoire${n > 1 ? "s" : ""}${v.length ? `, meilleure en ${Math.min(...v)} tours` : ""}, ${f} escadrille${f > 1 ? "s" : ""} sur 4`); }
-  if (g.alunissage) out.push(`Alunissage : record ${g.alunissage.b || 0} points, ${g.alunissage.s || 0} site${g.alunissage.s > 1 ? "s" : ""} atteint${g.alunissage.s > 1 ? "s" : ""}`);
-  if (g.pontstellaire){ const p = g.pontstellaire, b = Object.keys(p.b || {}).sort((x, y) => x - y).map(n => `${n}×${n} en ${fmtTime(p.b[n])}`);
-    out.push(`Pont stellaire : ${p.w || 0} constellation${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
-  if (g.sudoku){ const p = g.sudoku, nm = {"4": "4×4", "6": "6×6", "9-1": "9×9 facile", "9-2": "9×9 moyen", "9-3": "9×9 difficile"};
-    const b = Object.keys(nm).filter(k => (p.b || {})[k] > 0).map(k => `${nm[k]} en ${fmtTime(p.b[k])}`);
-    out.push(`Sudoku : ${p.w || 0} grille${p.w > 1 ? "s" : ""}` + (b.length ? ", " + b.join(", ") : "")); }
-  if (g.yams) out.push(`Yams : record ${g.yams.b || 0} pts, ${g.yams.p || 0} partie${g.yams.p > 1 ? "s" : ""}`);
-  if (g.empilage) out.push(`Empilage : record ${g.empilage.b || 0} bloc${g.empilage.b > 1 ? "s" : ""}, ${g.empilage.p || 0} partie${g.empilage.p > 1 ? "s" : ""}`);
-  if (g.calculator){ const p = g.calculator; out.push(`Calculator : ${p.p || 0} partie${p.p > 1 ? "s" : ""}, ${Object.keys(p.b || {}).length} record${Object.keys(p.b || {}).length > 1 ? "s" : ""}`); }
-  if (g.lunerover){ const n = Object.values(g.lunerover).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Lune-Rover : ${n} étoile${n > 1 ? "s" : ""}`); }
-  if (g.odyssee){ const n = Object.values(g.odyssee.s || {}).reduce((s, v) => s + (Number(v) || 0), 0); out.push(`Odyssée : ${n} étoile${n > 1 ? "s" : ""}`); }
-  if (g.doggysaga){ const v = Object.values(g.doggysaga.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.doggysaga.d || {}).length, a = (g.doggysaga.a || []).length;
-    out.push(`Doggy Saga : ${v.length} niveau${v.length > 1 ? "x" : ""}, ${v.reduce((x, y) => x + y, 0)} étoiles, ${a} chien${a > 1 ? "s" : ""} adopté${a > 1 ? "s" : ""}${d ? `, ${d} journée${d > 1 ? "s" : ""} du jour` : ""}`); }
-  if (g.jarls){ const v = Object.values(g.jarls.e || {}).map(Number).filter(x => x > 0), d = Object.keys(g.jarls.d || {}).length;
-    out.push(`Le Thé des Jarls : ${v.length} dieu${v.length > 1 ? "x" : ""} battu${v.length > 1 ? "s" : ""}, ${v.reduce((a, b) => a + b, 0)} étoiles${d ? `, ${d} défi${d > 1 ? "s" : ""} du jour` : ""}`); }
-  if (g.boutique){ const s = g.boutique.s || {}; out.push(`La Boutique de cartes : meilleure boutique ${g.boutique.b || 0} pts${s.finies ? `, ${s.finies} année${s.finies > 1 ? "s" : ""} finie${s.finies > 1 ? "s" : ""}` : ""}`); }
-  if (g.mineur){ const e = g.mineur; out.push(`Mineur de l'espace : étage ${mineurEtage(e)}${e.fin ? " (fini)" : ""}, ${mineurTemps(e.temps)} de jeu`); }
-  if (g.resistance){ const m = g.resistance; out.push(`Résistance : ${m.runs} campagne${m.runs > 1 ? "s" : ""}${m.wins ? `, ${m.wins} pays libéré${m.wins > 1 ? "s" : ""}` : ""}`); }
-  if (g.bannieres){ const s = g.bannieres.s || {}; out.push(`Bannières : ${g.bannieres.b || 0} drapeaux au mieux${s.gagnees ? `, ${s.gagnees} partie${s.gagnees > 1 ? "s" : ""} gagnée${s.gagnees > 1 ? "s" : ""}` : ""}`); }
-  if (g.duche){ const d = Object.keys(g.duche.d || {}).length; out.push(`Duché : meilleur score ${g.duche.b || 0}${d ? `, ${d} duché${d > 1 ? "s" : ""} du jour` : ""}`); }
-  if (g.dragonsim){ const r = g.dragonsim.records || {}, t = g.dragonsim.total || {}; out.push(`Dragon Simulator : plus long vol ${Number(r.distance) || 0} m, ${Number(t.parties) || 0} vol${t.parties > 1 ? "s" : ""}, ${Number(g.dragonsim.pieces) || 0} pièces au nid`); }
-  if (g.romet){ const v = Object.values(g.romet).filter(x => x && typeof x === "object"), t = v.reduce((a, x) => a + (Array.isArray(x.t) ? x.t.filter(Boolean).length : 0), 0);
-    out.push(`Romet : ${t} trésor${t > 1 ? "s" : ""}, meilleur butin ${v.reduce((a, x) => Math.max(a, Number(x.butin) || 0), 0)}`); }
-  if (g.magasinier){ const n = Object.values(g.magasinier.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.magasinier.d || {}).length;
-    out.push(`Le Magasinier : ${n} étoile${n > 1 ? "s" : ""}${d ? `, ${d} grille${d > 1 ? "s" : ""} du jour` : ""}`); }
-  if (g.motdor && g.motdor.s){ const s = g.motdor.s; out.push(`Le Mot d'or : ${s.gagnees || 0} mot${s.gagnees > 1 ? "s" : ""} du jour trouvé${s.gagnees > 1 ? "s" : ""}, meilleure série ${s.record || 0}`); }
-  if (g.capitaine){ const n = Object.values(g.capitaine.n || {}).reduce((s, v) => s + (Number(v && v.etoiles) || 0), 0), d = Object.keys(g.capitaine.d || {}).length;
-    out.push(`Capitaine du port : ${n} étoile${n > 1 ? "s" : ""}${d ? `, ${d} bassin${d > 1 ? "s" : ""} du jour` : ""}`); }
-  if (g.orbite){ const n = Object.values(g.orbite).reduce((s, v) => s + (Number(v) || 0), 0); if (n) out.push(`Orbite : ${n} étoile${n > 1 ? "s" : ""}`); }
-  for (const t of TRANSFERTS()) if (g[t.cle] != null){ try { const l = t.decrire(g[t.cle]); if (l) out.push(l); } catch (e) {} }
+  for (const t of TRANSFERTS()){ try { t.decrire(g, out); } catch (e) {} }
   return out;
 }
 function decodeSaves(text){
@@ -1030,271 +634,7 @@ function decodeSaves(text){
 }
 function mergeSaves(g){
   const done = [];
-  for (const [k, name] of SCORES){
-    const v = Number(g[k]); if (!(v > 0)) continue;
-    if (v > Number(readKey(k, 0))){ writeKey(k, v); done.push(`${name} : record ${v}`); }
-  }
-  if (g.queens && typeof g.queens === "object"){
-    const mine = readKey("queens16.best", {}) || {}; let n = 0;
-    for (const [size, t] of Object.entries(g.queens)) if (/^[5-9]$/.test(size) && t > 0 && (!mine[size] || t < mine[size])){ mine[size] = Math.round(t); n++; }
-    if (n){ writeKey("queens16.best", mine); done.push(`Queens : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.queensDaily && typeof g.queensDaily === "object"){
-    const mine = readKey("queens16.daily", {}) || {}; let n = 0;
-    for (const [d, t] of Object.entries(g.queensDaily)) if (/^\d{8}$/.test(d) && t > 0 && (!mine[d] || t < mine[d])){ mine[d] = Math.round(t); n++; }
-    if (n){ writeKey("queens16.daily", mine); done.push(`Queens : ${n} grille${n > 1 ? "s" : ""} du jour`); }
-  }
-  if (g.picross){
-    const cap = readKey("picrossdex.captured", {}) || {}, prog = readKey("picrossdex.progress", {}) || {};
-    let added = 0, faster = 0, grids = 0;
-    for (const [id, v] of Object.entries(g.picross.c || {})){
-      if (!/^[a-z0-9_-]+$/.test(id) || !(v.t > 0)) continue;
-      const mk = () => Object.assign({time: Math.round(v.t), hints: v.h || 0}, v.x ? {test: true} : {});
-      const score = (t, n) => t + 30000 * (n || 0);
-      if (!cap[id]){ cap[id] = mk(); added++; }
-      else if (score(v.t, v.h) < score(cap[id].time, cap[id].hints)){ cap[id] = mk(); faster++; }
-    }
-    for (const [id, v] of Object.entries(g.picross.p || {})){
-      if (!/^[a-z0-9_-]+$/.test(id) || cap[id] || prog[id] || typeof v.c !== "string" || !/^[012]+$/.test(v.c)) continue;
-      prog[id] = {cells: [...v.c].map(Number), elapsed: v.e || 0, hints: v.h || 0}; grids++;
-    }
-    for (const id of Object.keys(prog)) if (cap[id]) delete prog[id];
-    writeKey("picrossdex.captured", cap); writeKey("picrossdex.progress", prog);
-    const parts = [];
-    if (added) parts.push(`${added} Pokémon`); if (faster) parts.push(`${faster} record${faster > 1 ? "s" : ""}`); if (grids) parts.push(`${grids} grille${grids > 1 ? "s" : ""} en cours`);
-    if (parts.length) done.push("Picross Dex : " + parts.join(", "));
-  }
-  if (g.parcours && typeof g.parcours === "object"){
-    // on garde le plus avancé : niveaux, meilleurs scores, chiens adoptés, et le plus gros porte-monnaie
-    const mine = readKey("injagility.parcours", {}) || {}, o = g.parcours, before = JSON.stringify(mine);
-    mine.unlocked = Math.max(mine.unlocked || 1, Math.min(999, o.unlocked || 1));
-    mine.wallet = Math.max(mine.wallet || 0, Math.min(1e7, o.wallet || 0));
-    mine.best = mine.best || {}; for (const [k, v] of Object.entries(o.best || {})) if (/^\d+$/.test(k) && v > (mine.best[k] || 0)) mine.best[k] = Math.round(v);
-    mine.owned = [...new Set([...(mine.owned || ["bernois"]), ...(o.owned || []).filter(x => /^[a-z]+$/.test(x))])];
-    mine.dog = mine.dog || o.dog || "bernois";
-    if (JSON.stringify(mine) !== before){ writeKey("injagility.parcours", mine); done.push("Injagility Parcours : progression mise à jour"); }
-  }
-  if (g.lignee && typeof g.lignee === "object"){
-    const mine = readKey("lignee.stats", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(g.lignee)){
-      if (!/^([CR][1-4]|F[1-4]:[A-Z]{2,8})$/.test(k) || !v) continue;
-      const m = mine[k] || {best: 0, n: 0}, before = JSON.stringify(m);
-      if (v.best > 0 && (!m.best || v.best < m.best)) m.best = Math.round(v.best);
-      if ((v.n || 0) > (m.n || 0)) m.n = v.n;
-      if (JSON.stringify(m) !== before){ mine[k] = m; n++; }
-    }
-    if (n){ writeKey("lignee.stats", mine); done.push(`Lignée : ${n} niveau${n > 1 ? "x" : ""} mis à jour`); }
-  }
-  if (g.touchecoule && typeof g.touchecoule === "object"){
-    const mine = readKey("touchecoule.best", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(g.touchecoule)) if (/^(classic|arsenal):(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
-    if (n){ writeKey("touchecoule.best", mine); done.push(`Touché Coulé : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  // le club : on garde la partie la plus avancée (la plus grande réputation)
-  if (g.club && typeof g.club === "object" && g.club.v === 1 && Array.isArray(g.club.dogs)){
-    const mine = readKey("club.save", null);
-    if (!mine || (g.club.rep || 0) > (mine.rep || 0) || ((g.club.rep || 0) === (mine.rep || 0) && g.club.week > mine.week)){
-      writeKey("club.save", g.club); done.push(`Club d'agility : partie de la semaine ${g.club.week}`); }
-  }
-  if (g.amiral && typeof g.amiral === "object"){
-    const mine = readKey("amiral.best", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(g.amiral)) if (/^(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
-    if (n){ writeKey("amiral.best", mine); done.push(`Amiral ! : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.amiralPal && typeof g.amiralPal === "object"){
-    // palmarès (navires débloqués au chantier) : le plus grand de chaque compte ; batailles du jour : le moins de tours
-    const a = g.amiralPal, pm = readKey("amiral.palmares", {}) || {}, daily = readKey("amiral.daily", {}) || {}; let n = 0;
-    for (const k of ["victoires", "easy", "normal", "hard"]) { const v = Math.round(Number((a.p || {})[k]) || 0); if (v > (pm[k] || 0)){ pm[k] = v; n++; } }
-    for (const k of ["rapide", "intacte"]) if ((a.p || {})[k] === true && !pm[k]){ pm[k] = true; n++; }
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("amiral.palmares", pm); writeKey("amiral.daily", daily); done.push("Amiral ! : palmarès et batailles du jour"); }
-  }
-  if (g.escadrille && typeof g.escadrille === "object"){
-    const mine = readKey("escadrille.best", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(g.escadrille.b || {})) if (/^(easy|normal|hard)$/.test(k) && v > 0 && (!mine[k] || v < mine[k])){ mine[k] = Math.round(v); n++; }
-    if (n) writeKey("escadrille.best", mine);
-    const vic = Math.round(Number(g.escadrille.v) || 0), myVic = Number(readKey("escadrille.victoires", 0)) || 0;
-    if (vic > myVic) writeKey("escadrille.victoires", vic);
-    const mySk = readKey("escadrille.skins", ["a"]) || ["a"], sk = ["a", "b", "c", "d"].filter(k => mySk.includes(k) || (Array.isArray(g.escadrille.s) && g.escadrille.s.includes(k)));
-    const newSk = sk.length > mySk.length; if (newSk) writeKey("escadrille.skins", sk);
-    if (!readKey("escadrille.skin", null) && /^[abcd]$/.test(g.escadrille.k || "") && sk.includes(g.escadrille.k)) writeKey("escadrille.skin", g.escadrille.k);
-    // palmarès (avions débloqués au hangar) : le plus grand de chaque compte
-    const ep = readKey("escadrille.palmares", {}) || {}; let np = 0;
-    for (const k of ["easy", "normal", "hard"]) { const v = Math.round(Number((g.escadrille.p || {})[k]) || 0); if (v > (ep[k] || 0)){ ep[k] = v; np++; } }
-    for (const k of ["rapide", "intacte"]) if ((g.escadrille.p || {})[k] === true && !ep[k]){ ep[k] = true; np++; }
-    if (np) writeKey("escadrille.palmares", ep);
-    if (n || vic > myVic || newSk || np) done.push(`Escadrille ! : ${n ? n + " record" + (n > 1 ? "s" : "") : vic > myVic ? "victoires" : newSk ? "escadrilles" : "avions"}`);
-  }
-  if (g.alunissage && typeof g.alunissage === "object"){
-    const a = g.alunissage; let n = 0;
-    if (a.b > (Number(readKey("alunissage.best", 0)) || 0)){ writeKey("alunissage.best", Math.round(a.b)); n++; }
-    if (a.s > (Number(readKey("alunissage.sites", 0)) || 0)){ writeKey("alunissage.sites", Math.round(a.s)); n++; }
-    const daily = readKey("alunissage.daily", {}) || {};
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("alunissage.daily", daily); done.push(`Alunissage : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.yams && typeof g.yams === "object"){
-    const a = g.yams; let n = 0;
-    if (a.b > (Number(readKey("yams.best", 0)) || 0)){ writeKey("yams.best", Math.round(a.b)); n++; }
-    [["p", "parties"], ["y", "nbYams"], ["o", "bonus"]].forEach(([c, k]) => { if (a[c] > (Number(readKey("yams." + k, 0)) || 0)) writeKey("yams." + k, Math.round(a[c])); });
-    if (n) done.push("Yams : record");
-  }
-  if (g.empilage && typeof g.empilage === "object"){
-    const a = g.empilage; let n = 0;
-    if (a.b > (Number(readKey("empilage.best", 0)) || 0)){ writeKey("empilage.best", Math.round(a.b)); n++; }
-    if (a.p > (Number(readKey("empilage.parties", 0)) || 0)) writeKey("empilage.parties", Math.round(a.p));
-    const daily = readKey("empilage.daily", {}) || {};
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("empilage.daily", daily); done.push(`Empilage : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.odyssee && typeof g.odyssee === "object"){
-    const a = g.odyssee, stars = readKey("odyssee.stars", {}) || {}, best = readKey("odyssee.best", {}) || {}, daily = readKey("odyssee.daily", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(a.s || {})) if (/^\d{1,2}-[1-3]$/.test(k) && v >= 1 && v <= 3 && !(stars[k] >= v)){ stars[k] = Math.round(v); n++; }
-    for (const [k, v] of Object.entries(a.b || {})) if (/^\d{1,2}-[1-3]$/.test(k) && v > 0 && !(best[k] <= v)) best[k] = Math.round(v);
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
-    writeKey("odyssee.best", best);
-    if (n){ writeKey("odyssee.stars", stars); writeKey("odyssee.daily", daily); done.push(`Odyssée : ${n} plateau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
-  }
-  if (g.doggysaga && typeof g.doggysaga === "object"){
-    // fusion : pour chaque niveau, le plus d'étoiles ; l'album réunit les deux ; pour chaque journée, le plus de câlins
-    const a = g.doggysaga, pr = readKey("doggysaga.progres", {}) || {}, et = Object.assign({}, pr.etoiles || {}), alb = (pr.album || []).slice(), daily = readKey("doggysaga.daily", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(a.e || {})) if (/^\d{1,2}$/.test(k) && v >= 1 && v <= 3 && !(et[k] >= v)){ et[k] = Math.round(v); n++; }
-    for (const t of a.a || []) if (Number.isInteger(t) && t >= 0 && t < 16 && !alb.includes(t)){ alb.push(t); n++; }
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v >= 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("doggysaga.progres", Object.assign({etoiles: {}, scores: {}, album: []}, pr, {etoiles: et, album: alb})); writeKey("doggysaga.daily", daily); done.push(`Doggy Saga : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.jarls && typeof g.jarls === "object"){
-    // fusion : pour chaque dieu, le plus d'étoiles ; pour chaque défi du jour, le plus haut score
-    const a = g.jarls, camp = readKey("jarls.campagne", {}) || {}, et = Object.assign({}, camp.etoiles || {}), daily = readKey("jarls.daily", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(a.e || {})) if (/^[a-z]{2,10}$/.test(k) && v >= 1 && v <= 3 && !(et[k] >= v)){ et[k] = Math.round(v); n++; }
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v >= 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("jarls.campagne", Object.assign({}, camp, {etoiles: et})); writeKey("jarls.daily", daily); done.push(`Le Thé des Jarls : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.boutique && typeof g.boutique === "object"){
-    // fusion : la meilleure boutique, et le plus grand nombre de parties (jouées, finies, faillites)
-    const a = g.boutique, s = readKey("boutique.stats", {}) || {}; let n = 0;
-    if (Number(a.b) > (Number(readKey("boutique.best", 0)) || 0)){ writeKey("boutique.best", Math.round(a.b)); n++; }
-    for (const k of ["parties", "finies", "faillites"]) if (Number((a.s || {})[k]) > (Number(s[k]) || 0)){ s[k] = Math.round(a.s[k]); n++; }
-    if (n){ writeKey("boutique.stats", s); done.push(`La Boutique de cartes : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.mineur && typeof g.mineur === "object" && g.mineur.v && Number(g.mineur.temps) > 0){
-    // une seule partie : on garde la plus avancée (finie d'abord, puis le plus long temps de jeu)
-    const loc = readKey("mineur-de-l-espace", null), a = g.mineur, rang = e => (e && e.fin ? 1e9 : 0) + (Number(e && e.temps) || 0);
-    if (rang(a) > rang(loc)){ writeKey("mineur-de-l-espace", a); done.push(`Mineur de l'espace : partie de ${mineurTemps(a.temps)} reprise`); }
-  }
-  if (g.resistance && typeof g.resistance === "object" && Number(g.resistance.runs) > 0){
-    // fusion : la forteresse la plus avancée (le plus de campagnes) remplace l'autre en entier
-    const loc = (readKey("resistance.save", {}) || {}).meta || {};
-    if (Number(g.resistance.runs) > (Number(loc.runs) || 0)){ writeKey("resistance.save", {version: 1, meta: g.resistance}); done.push(`Résistance : forteresse après ${Math.round(g.resistance.runs)} campagnes`); }
-  }
-  if (g.bannieres && typeof g.bannieres === "object"){
-    // fusion : le plus de drapeaux, et le plus grand nombre de parties (jouées, gagnées)
-    const a = g.bannieres, s = readKey("bannieres.stats", {}) || {}; let n = 0;
-    if (Number(a.b) > (Number(readKey("bannieres.best", 0)) || 0)){ writeKey("bannieres.best", Math.round(a.b)); n++; }
-    for (const k of ["parties", "gagnees"]) if (Number((a.s || {})[k]) > (Number(s[k]) || 0)){ s[k] = Math.round(a.s[k]); n++; }
-    if (n){ writeKey("bannieres.stats", s); done.push(`Bannières : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.duche && typeof g.duche === "object"){
-    // fusion : le meilleur score, et pour chaque Duché du jour le plus haut
-    const a = g.duche, daily = readKey("duche.daily", {}) || {}; let n = 0;
-    if (Number(a.b) > (Number(readKey("duche.best", 0)) || 0)){ writeKey("duche.best", Math.round(a.b)); n++; }
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] >= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("duche.daily", daily); done.push(`Duché : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.dragonsim && typeof g.dragonsim === "object"){
-    // fusion : le plus haut niveau de chaque amélioration, le plus de pièces, tous les décors atteints, les meilleurs records et totaux
-    const a = g.dragonsim, cur = readKey("dragonsim.sauvegarde", null) || {}, av = JSON.stringify(cur), M = (x, y) => Math.max(Number(x) || 0, Math.round(Number(y) || 0));
-    const out = Object.assign({v: 1, depart: /^[a-z]{2,12}$/.test(a.depart) ? a.depart : "ville"}, cur); out.pieces = M(cur.pieces, a.pieces);
-    out.niv = Object.assign({}, cur.niv); for (const k of ["ecailles", "flammes", "reserve", "ailes"]) out.niv[k] = Math.min(5, Math.max(1, M((cur.niv || {})[k], (a.niv || {})[k])));
-    out.decors = [...new Set([].concat(cur.decors || ["ville"], a.decors || []).filter(d => /^[a-z]{2,12}$/.test(d)))];
-    out.records = {}; for (const k of ["distance", "pieces"]) out.records[k] = M((cur.records || {})[k], (a.records || {})[k]);
-    out.total = {}; for (const k of ["parties", "batiments", "pieces", "distance"]) out.total[k] = M((cur.total || {})[k], (a.total || {})[k]);
-    if (JSON.stringify(out) !== av){ writeKey("dragonsim.sauvegarde", out); writeKey("dragonsim.record", out.records.distance); done.push("Dragon Simulator : nid et records"); }
-  }
-  if (g.romet && typeof g.romet === "object"){
-    // fusion : par machine, les trésors gagnés d'un côté ou de l'autre, le meilleur butin, le plus de parties
-    const cur = readKey("romet.machines", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(g.romet)) { if (!/^[a-z]{2,12}$/.test(k) || !v || typeof v !== "object") continue;
-      const c = cur[k] && typeof cur[k] === "object" ? cur[k] : {t: [], butin: 0, parties: 0}, t = Array.isArray(c.t) ? c.t.slice() : [];
-      const vt = Array.isArray(v.t) ? v.t.slice(0, 6) : []; let ch = !cur[k];
-      vt.forEach((x, i) => { if (x && !t[i]) { t[i] = true; ch = true; } }); for (let i = 0; i < Math.max(6, t.length); i++) t[i] = !!t[i];
-      const b = Math.max(Number(c.butin) || 0, Math.round(Number(v.butin) || 0)), p = Math.max(Number(c.parties) || 0, Math.round(Number(v.parties) || 0));
-      if (b !== (Number(c.butin) || 0) || p !== (Number(c.parties) || 0)) ch = true;
-      if (ch) { cur[k] = {t: t.slice(0, 6), butin: b, parties: p}; n++; } }
-    if (n){ writeKey("romet.machines", cur); done.push(`Romet : ${n} machine${n > 1 ? "s" : ""}`); }
-  }
-  if (g.magasinier && typeof g.magasinier === "object"){
-    // fusion : pour chaque niveau, le moins de coups et le plus d'étoiles ; pour chaque grille du jour, le moins de coups
-    const a = g.magasinier, niv = readKey("magasinier.niveaux", {}) || {}, daily = readKey("magasinier.daily", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(a.n || {})) { if (!/^\d{1,2}$/.test(k) || !v || !(v.coups > 0)) continue;
-      const m = niv[k], et = Math.min(3, Math.max(1, Math.round(v.etoiles) || 1));
-      if (!m || v.coups < m.coups || et > m.etoiles){ niv[k] = {coups: Math.round(m ? Math.min(m.coups, v.coups) : v.coups), etoiles: Math.max(et, m ? m.etoiles : 0)}; n++; } }
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("magasinier.niveaux", niv); writeKey("magasinier.daily", daily); done.push(`Le Magasinier : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.motdor && typeof g.motdor === "object" && g.motdor.s && typeof g.motdor.s === "object"){
-    // fusion : le plus grand de chaque statistique ; pour chaque mot du jour, le moins d'essais
-    const a = g.motdor.s, s = Object.assign({parties: 0, gagnees: 0, serie: 0, record: 0, dernier: 0, dist: [0, 0, 0, 0, 0, 0]}, readKey("motdor.stats", {}) || {});
-    const daily = readKey("motdor.daily", {}) || {}; let n = 0;
-    for (const k of ["parties", "gagnees", "record"]) if (Number(a[k]) > s[k]){ s[k] = Math.round(Number(a[k])); n++; }
-    if (Number(a.dernier) > s.dernier){ s.dernier = Math.round(Number(a.dernier)); s.serie = Math.round(Number(a.serie) || 0); }
-    if (Array.isArray(a.dist)) s.dist = s.dist.map((v, i) => Math.max(v, Math.round(Number(a.dist[i]) || 0)));
-    for (const [k, v] of Object.entries(g.motdor.d || {})) if (/^\d{8}$/.test(k) && v >= 1 && v <= 6 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("motdor.stats", s); writeKey("motdor.daily", daily); done.push(`Le Mot d'or : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.capitaine && typeof g.capitaine === "object"){
-    // fusion : pour chaque bassin, le moins de coups et le plus d'étoiles ; pour chaque bassin du jour, le moins de coups
-    const a = g.capitaine, niv = readKey("capitaine.niveaux", {}) || {}, daily = readKey("capitaine.daily", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(a.n || {})) { if (!/^\d{1,2}$/.test(k) || !v || !(v.coups > 0)) continue;
-      const m = niv[k], et = Math.min(3, Math.max(1, Math.round(v.etoiles) || 1));
-      if (!m || v.coups < m.coups || et > m.etoiles){ niv[k] = {coups: Math.round(m ? Math.min(m.coups, v.coups) : v.coups), etoiles: Math.max(et, m ? m.etoiles : 0)}; n++; } }
-    for (const [k, v] of Object.entries(a.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] <= v)){ daily[k] = Math.round(v); n++; }
-    if (n){ writeKey("capitaine.niveaux", niv); writeKey("capitaine.daily", daily); done.push(`Capitaine du port : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.pontstellaire && typeof g.pontstellaire === "object"){
-    const p = g.pontstellaire, best = readKey("pontstellaire.best", {}) || {}, daily = readKey("pontstellaire.daily", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(p.b || {})) if (/^(7|9|11)$/.test(k) && v > 0 && !(best[k] > 0 && best[k] <= v)){ best[k] = Math.round(v); n++; }
-    for (const [k, v] of Object.entries(p.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] > 0 && daily[k] <= v)){ daily[k] = Math.round(v); n++; }
-    const w = Number(readKey("pontstellaire.wins", 0)) || 0;
-    if (p.w > w){ writeKey("pontstellaire.wins", Math.round(p.w)); n++; }
-    if (n){ writeKey("pontstellaire.best", best); writeKey("pontstellaire.daily", daily); done.push(`Pont stellaire : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.sudoku && typeof g.sudoku === "object"){
-    const p = g.sudoku, best = readKey("sudoku.best", {}) || {}, daily = readKey("sudoku.daily", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(p.b || {})) if (/^(4|6|9-[123])$/.test(k) && v > 0 && !(best[k] > 0 && best[k] <= v)){ best[k] = Math.round(v); n++; }
-    for (const [k, v] of Object.entries(p.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] > 0 && daily[k] <= v)){ daily[k] = Math.round(v); n++; }
-    const w = Number(readKey("sudoku.wins", 0)) || 0;
-    if (p.w > w){ writeKey("sudoku.wins", Math.round(p.w)); n++; }
-    if (n){ writeKey("sudoku.best", best); writeKey("sudoku.daily", daily); done.push(`Sudoku : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.calculator && typeof g.calculator === "object"){
-    const p = g.calculator, best = readKey("calculator.best", {}) || {}, daily = readKey("calculator.daily", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(p.b || {})){
-      if (!/^(serie|chrono):[1-5]:(add|sub|mul|div|mix)$/.test(k) || !(v > 0)) continue;
-      const low = k.startsWith("serie");
-      if (!(best[k] > 0) || (low ? v < best[k] : v > best[k])){ best[k] = Math.round(v); n++; }
-    }
-    for (const [k, v] of Object.entries(p.d || {})) if (/^\d{8}$/.test(k) && v > 0 && !(daily[k] > 0 && daily[k] <= v)){ daily[k] = Math.round(v); n++; }
-    const pa = Number(readKey("calculator.parties", 0)) || 0;
-    if (p.p > pa){ writeKey("calculator.parties", Math.round(p.p)); n++; }
-    if (n){ writeKey("calculator.best", best); writeKey("calculator.daily", daily); done.push(`Calculator : ${n} record${n > 1 ? "s" : ""}`); }
-  }
-  if (g.orbite && typeof g.orbite === "object"){
-    const mine = readKey("orbite.stars", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(g.orbite)) if (/^\d{1,2}$/.test(k) && v >= 1 && v <= 3 && !(mine[k] >= v)){ mine[k] = Math.round(v); n++; }
-    if (n){ writeKey("orbite.stars", mine); done.push(`Orbite : ${n} niveau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
-  }
-  if (g.lunerover && typeof g.lunerover === "object"){
-    const mine = readKey("lunerover.stars", {}) || {}; let n = 0;
-    for (const [k, v] of Object.entries(g.lunerover)) if (/^\d{1,2}$/.test(k) && v >= 1 && v <= 3 && !(mine[k] >= v)){ mine[k] = Math.round(v); n++; }
-    if (n){ writeKey("lunerover.stars", mine); done.push(`Lune-Rover : ${n} niveau${n > 1 ? "x" : ""} amélioré${n > 1 ? "s" : ""}`); }
-  }
-  if (g.ligneeDaily && typeof g.ligneeDaily === "object"){
-    const mine = readKey("lignee.daily", {}) || {}; let n = 0;
-    for (const [code, t] of Object.entries(g.ligneeDaily)) if (/^[CR]2-J[0-9A-Z]+$/.test(code) && t > 0 && (!mine[code] || t < mine[code])){ mine[code] = Math.round(t); n++; }
-    if (n){ writeKey("lignee.daily", mine); done.push(`Lignée : ${n} Arbre${n > 1 ? "s" : ""} du jour`); }
-  }
-  for (const t of TRANSFERTS()) if (g[t.cle] != null){ try { const l = t.fusionner(g[t.cle]); if (l) done.push(l); } catch (e) {} }
+  for (const t of TRANSFERTS()){ try { t.fusionner(g, done); } catch (e) {} }
   return done;
 }
 const savesRes = (t, ok) => { const el = document.getElementById("savesRes"); el.textContent = t; el.className = "res " + (ok ? "ok" : "err"); };

@@ -42,5 +42,8 @@ Plan et avancement : [`plan-rangement.md`](plan-rangement.md). Phase 4 : `commun
 ## Une fiche par jeu, session 1 (05/11)
 Proposition acceptée par l'utilisateur. `accueil-outils.js` + fiches de Tetris et Nebula ; ancien et nouvel accueil comparés dans Chromium (identiques) ; tests de compatibilité `LUDO1-` dans `logique.js`, contrôle des fiches dans `verifications.js` ; cache `ludotheque-v88`. Détails : [`plan-rangement.md`](plan-rangement.md) (phase 6). Reste la session 2 (34 jeux). À essayer sur le téléphone : l'accueil, Tetris et Nebula s'affichent, leurs volets et l'export/import marchent.
 
+## Une fiche par jeu, session 2 (05/11)
+Les 34 autres jeux ont leur fiche ; `accueil.js` passe de 1385 à 693 lignes (`ORDRE`, `NEWS`, moteur) ; liste de contrôle du mémo et skill `ajouter-un-jeu` réécrites ; cache `ludotheque-v89`. Ancien et nouvel accueil comparés dans Chromium sur les 36 jeux : identiques (sauf l'ordre des lignes du résumé des sauvegardes). Artefact de l'accueil pas republié (identique). Détails : [`plan-rangement.md`](plan-rangement.md). À essayer sur le téléphone : l'accueil, quelques volets, l'export/import.
+
 ## README relu (05/11)
 Titre « Ludothèque 16 bits » ; liste du haut et présentations rangées par famille (réflexion, adresse, batailles, stratégie, dés et cartes, gestion, classiques) ; La Dernière Lanterne ajoutée à la liste ; 8 présentations écrites (Touché Coulé, Amiral !, Escadrille !, Club d'agility, Calculator, Yams, Résistance, Mineur de l'espace) ; 10 jeux ajoutés aux classements familiaux ; section Nebula raccourcie (texte complet en fin de [`nebula.md`](nebula.md)) ; deux lignes techniques (dessin des chiens, fichiers de la PWA) déplacées dans [`ludotheque.md`](ludotheque.md).

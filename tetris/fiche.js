@@ -7,8 +7,14 @@ Ludo.fiche({
   records: () => [["Meilleur score", num(rk("tetris16.best", 0))]],
   classements: [{label: "MEILLEUR SCORE", game: "tetris", board: () => "best", fmt: N}],
   // meilleur score : on garde le plus grand
-  transfert: {cle: "tetris16.best",
-    collecter: () => { const v = Number(readKey("tetris16.best", 0)); return v > 0 ? v : null; },
-    decrire: v => `Tetris : ${v} points`,
-    fusionner: v => { v = Number(v); if (!(v > 0) || v <= Number(readKey("tetris16.best", 0))) return null; writeKey("tetris16.best", v); return `Tetris : record ${v}`; }}
+  transfert: {cles: ["tetris16.best"],
+    collecter(g){
+      { const v = Number(readKey("tetris16.best", 0)); if (v > 0) g["tetris16.best"] = v; }
+    },
+    decrire(g, out){
+      if (g["tetris16.best"]) out.push(`Tetris : ${g["tetris16.best"]} points`);
+    },
+    fusionner(g, done){
+      { const v = Number(g["tetris16.best"]); if (v > 0 && v > Number(readKey("tetris16.best", 0))){ writeKey("tetris16.best", v); done.push(`Tetris : record ${v}`); } }
+    }}
 });
