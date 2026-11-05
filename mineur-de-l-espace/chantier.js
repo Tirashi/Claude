@@ -1,6 +1,6 @@
 /* =====================================================================
    MINEUR DE L'ESPACE · le CHANTIER : corvettes, tourelles et roches
-   fabriquées avec le moteur de vaisseaux de Nebula (nebula/vaisseaux.js,
+   fabriquées avec le moteur de vaisseaux de Nebula (commun/vaisseaux.js,
    non modifié). La géométrie est tournée AVANT l'éclairage : chaque angle
    est un vrai rendu (lumière fixe en haut à gauche), tracé à la demande,
    puis l'image est ramenée à la palette de la planète.

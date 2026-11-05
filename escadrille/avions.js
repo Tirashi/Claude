@@ -1,6 +1,6 @@
 /* =====================================================================
    ESCADRILLE ! : les avions en relief, construits avec le moteur des vaisseaux de Nebula
-   (nebula/vaisseaux.js : builder, render, half, MAT). Script classique, chargé avant le jeu.
+   (commun/vaisseaux.js : builder, render, half, MAT). Script classique, chargé avant le jeu.
    Données et constructeurs seulement (repris de la maquette validée maquettes/escadrille.html) :
      EscAvions.STYLES  : matières par famille, pour mon escadrille (mine) et les pirates (foe)
      EscAvions.AVIONS  : constructeurs par famille (a escadre, b furtif, c hélices, d canonnière)
@@ -10,7 +10,7 @@
 (function () {
 'use strict';
 /* ---------- les avions, en relief comme les vaisseaux de Nebula ----------
-   Chaque avion est une carte de hauteurs construite avec le moteur de nebula/vaisseaux.js
+   Chaque avion est une carte de hauteurs construite avec le moteur de commun/vaisseaux.js
    (plaques, rainures, ombres, reflets, verrières, petits boîtiers), puis éclairée.
    Quatre familles aux silhouettes différentes ; les cases occupées restent les mêmes.
    Pour chaque sens, on tourne la construction AVANT l'éclairage : la lumière vient toujours d'en haut à gauche.

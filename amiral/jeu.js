@@ -150,7 +150,7 @@ const MUSIC = {
 };
 
 /* =========================================================
-   GRAPHISMES 32 BITS (volumes ombrés de chiens32.js)
+   GRAPHISMES 32 BITS (volumes ombrés de commun/pixel32.js)
    ========================================================= */
 function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; }
 function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }

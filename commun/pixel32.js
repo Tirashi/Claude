@@ -1,5 +1,8 @@
 /* =====================================================================
-   Injagility : les chiens en 32 bits, partagés par le mode Infini et le
+   Moteur de pixel art 32 bits partagé (commun/pixel32.js, ex-injagility/chiens32.js,
+   objet window.Chiens32 gardé) : les chiens d'Injagility (modes Infini et Parcours), du
+   Club d'agility, l'icône de l'accueil ; les volumes ombrés d'Amiral ! et d'Escadrille !.
+   À l'origine : les chiens en 32 bits, partagés par le mode Infini et le
    mode Parcours. Chaque chien est monté comme un squelette (corps, cou,
    tête, oreilles, queue, quatre pattes articulées), peint en pixels
    ombrés, puis mis en cache image par image.

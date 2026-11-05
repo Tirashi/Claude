@@ -5,7 +5,7 @@ Maquette validée le 17/10 : https://claude.ai/artifact/Kbhvmnp4ahAAW9msZiUaqE �
 
 ## 1. Décisions (17/10)
 - **Même DA qu'Amiral !** : mêmes plaques, boutons, police Press Start 2P, petite police 3×5, cadre riveté, brouillard en nuages, flammes, fumée, explosions, typographie et mise en page des écrans. Le ciel remplace la mer, un pilote (casque de cuir, lunettes) remplace l'amiral.
-- **Avions en relief façon Nebula** : construits avec le moteur de `nebula/vaisseaux.js` (`builder`, `render`, `half`, `MAT`), en double définition (`setScale(2)`). Pour chaque sens, la construction est tournée **avant** l'éclairage (`rotBuilder` de la maquette) : la lumière vient toujours d'en haut à gauche. Sprites fabriqués à la demande puis gardés.
+- **Avions en relief façon Nebula** : construits avec le moteur de `commun/vaisseaux.js` (`builder`, `render`, `half`, `MAT`), en double définition (`setScale(2)`). Pour chaque sens, la construction est tournée **avant** l'éclairage (`rotBuilder` de la maquette) : la lumière vient toujours d'en haut à gauche. Sprites fabriqués à la demande puis gardés.
 - **Écran en 544 × 960** (comme Nebula) : on dessine avec `setTransform(2, 0, 0, 2, 0, 0)` sur une base logique de 272 × 480 ; l'interface pixel d'Amiral reste nette (rectangles entiers, lissage coupé), les avions sont dessinés lissés.
 - **Écartés** : la règle du cockpit, le Canadair, le dirigeable (pour le moment), les dessins pixel, jouets, patrouille et les simples changements de couleur.
 - **Décidé le 17/10 (session 2)** : le pilote en parachute quand un avion est abattu : **oui** ; le ciel du jour : **non**.
@@ -47,7 +47,7 @@ Les familles ne changent que le dessin (mêmes cases, mêmes règles). Les ennem
 ## 5. Sauvegarde, classements, intégration
 - Sauvegardes : `escadrille.best` (record par niveau), `escadrille.diff`, `escadrille.opts` (son, musique), `escadrille.victoires`, `escadrille.skins` (familles débloquées), `escadrille.skin` (famille choisie). À inclure dans le transfert `LUDO1-`.
 - Classement `escadrille` : `best:<niveau>` (le moins de tours gagne), comme Amiral !.
-- Fichiers : `escadrille/index.html` (+ `escadrille/avions.js` pour les constructeurs d'avions et les familles s'il devient gros) ; charge `injagility/chiens32.js`, `nebula/vaisseaux.js`, `ludo-scores.js`.
+- Fichiers : `escadrille/index.html` (+ `escadrille/avions.js` pour les constructeurs d'avions et les familles s'il devient gros) ; charge `commun/pixel32.js`, `commun/vaisseaux.js`, `ludo-scores.js`.
 - Suivre la **liste de contrôle « Ajouter un nouveau jeu »** de `specs/ludotheque.md` (accueil, cartouche, icône, `sw.js`, classements, transfert, fumée, artefact).
 - Sons et musique : reprendre le moteur d'Amiral ! ; bruitages à adapter (moteurs, missile, radar, hélices).
 
@@ -56,7 +56,7 @@ Les familles ne changent que le dessin (mêmes cases, mêmes règles). Les ennem
 2. Session 2 : familles B, C, D, HANGAR, déblocages et annonce.
 
 ## 7. Bilan de la session 1 (17/10)
-- **Fichiers** : `escadrille/index.html` (le jeu) et `escadrille/avions.js` (`window.EscAvions` : matières `STYLES`, constructeurs `AVIONS` des 4 familles, `SIZE`, `rotBuilder`, repris tels quels de la maquette). Charge `injagility/chiens32.js`, `nebula/vaisseaux.js`, `ludo-scores.js`. La famille en cours est `STYLE` (`'a'` pour l'instant) : la session 2 n'aura qu'à la lire dans `escadrille.skin`.
+- **Fichiers** : `escadrille/index.html` (le jeu) et `escadrille/avions.js` (`window.EscAvions` : matières `STYLES`, constructeurs `AVIONS` des 4 familles, `SIZE`, `rotBuilder`, repris tels quels de la maquette). Charge `commun/pixel32.js`, `commun/vaisseaux.js`, `ludo-scores.js`. La famille en cours est `STYLE` (`'a'` pour l'instant) : la session 2 n'aura qu'à la lire dans `escadrille.skin`.
 - **Moteur** : celui d'Amiral ! (état `S`, `act()`, `describe()`, `aiTurn()`, `gameOver()`), avec des avions en forme (`shapeOf`, `cellsOf`, `fits`, `put`) au lieu de navires droits. ESQUIVE = la plongée d'Amiral ! (2 cases au plus dans chaque sens, même orientation, jamais sur une case déjà visée ; ce que l'adversaire savait de ces cases est oublié).
 - **IA** : celle d'Amiral !, la densité compte toutes les positions des avions encore en vol dans les 4 sens. RECRUE vise au hasard ou à côté d'un feu ; PILOTE chasse en damier (60 %) et, une fois sur deux, tire à côté d'un feu au lieu de calculer ; AS calcule toujours et esquive plus tôt. Mesure (60 parties, sans esquive du joueur) : l'ordinateur abat une escadrille en **51 tours (RECRUE), 22 (PILOTE), 19 (AS)** en moyenne.
 - **Écrans** : ceux de la maquette (titre, placement, combat, fin). Placement : toucher un avion, puis une case (l'avion s'y centre) ; toucher encore l'avion le tourne (décalé s'il le faut pour tenir). RADAR : faisceau qui tourne sur la zone puis balayage ; bombes qui tombent avec leur ombre ; missile avec sa traînée ; hélicoptère qui file vers sa nouvelle place (caché chez l'ennemi). Fin : pilote, ou pilote pirate (casque sombre, lunettes rouges) à la défaite.

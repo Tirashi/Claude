@@ -7,7 +7,7 @@ Plan donné par l'utilisateur le 05/11, enregistré tel quel pour pouvoir le rep
 - [x] Phase 1 — Alléger CLAUDE.md (18 072 → 11 292 octets ; objectif ramené à 10 Ko par l'utilisateur, plancher atteint sans toucher aux sections protégées)
 - [x] Phase 2 — Un CLAUDE.md par gros jeu : resistance/, lanterne/ (+ moteur-rpg/), mineur-de-l-espace/, nebula/, ile/, bannieres/, boutique/, the-des-jarls/, duche/, doggy-saga/ (validé le 05/11)
 - [x] Phase 3 — IDEES.md et suivi.md
-- [ ] Phase 4 — Code partagé dans un dossier commun/
+- [x] Phase 4 — Code partagé dans un dossier commun/ (05/11, décision de l'utilisateur : seuls les deux fichiers vraiment partagés bougent, `injagility/chiens32.js` → `commun/pixel32.js` et `nebula/vaisseaux.js` → `commun/vaisseaux.js` ; `nebula/regles.js`, `nebula/sons.js` et `ile/regles.js` restent, car ils ne servent qu'à leur jeu ; cache `ludotheque-v87` ; artefacts identiques à des commentaires près, donc pas republiés)
 - [ ] Phase 5 — accueil.js (proposition seulement)
 
 ## Plan (texte de l'utilisateur)

@@ -119,7 +119,7 @@ Deux modes, reliés par des onglets en haut de page.
 **Mode infini** : ton chien enchaîne les obstacles d'agility, dans l'esprit du jeu du dino de Chrome. Le chien est celui choisi au chenil du mode Parcours.
 
 - Graphismes en style 32 bits : écran de 480 × 240, décor en plusieurs plans (nuages, collines, arbres, barrière du ring avec fanions, pelouse tondue), obstacles vus de trois quarts.
-- Les 6 races sont dessinées par [`injagility/chiens32.js`](injagility/chiens32.js), partagé par les deux modes : chaque chien est monté comme un squelette (corps, cou, tête, oreilles, queue, quatre pattes articulées), peint en pixels ombrés avec 4 nuances par couleur, avec ses propres proportions, marques, oreilles, queue et poil. Galop en 8 images, saut en 5, reptation dans le tunnel en 4.
+- Les 6 races sont dessinées par [`commun/pixel32.js`](commun/pixel32.js), partagé par les deux modes : chaque chien est monté comme un squelette (corps, cou, tête, oreilles, queue, quatre pattes articulées), peint en pixels ombrés avec 4 nuances par couleur, avec ses propres proportions, marques, oreilles, queue et poil. Galop en 8 images, saut en 5, reptation dans le tunnel en 4.
 
 - Obstacles : haie, oxer (double barre), pneu (plus haut) et tunnel (il faut se baisser jusqu'à la sortie).
 - Saut à hauteur variable selon la durée d'appui, descente rapide en se baissant en l'air.

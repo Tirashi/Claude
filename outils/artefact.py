@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fabrique la copie d'un jeu à publier en artefact claude.ai.
    python3 outils/artefact.py orbite/index.html /chemin/sortie.html
-- intègre les feuilles de style locales (`style.css`, `accueil.css`…, pas les polices) et tous les scripts locaux de la page (<script src="…"> : chiens32.js, nebula/vaisseaux.js,
+- intègre les feuilles de style locales (`style.css`, `accueil.css`…, pas les polices) et tous les scripts locaux de la page (<script src="…"> : commun/pixel32.js, commun/vaisseaux.js,
   nebula/regles.js…), car l'artefact ne peut pas les charger ;
 - garde la police Google Fonts de la page (Press Start 2P par défaut) ; une feuille de polices du dépôt
   (`polices/…css`) est remplacée par son lien Google (attribut data-google) ;

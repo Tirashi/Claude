@@ -1,5 +1,6 @@
 /* =====================================================================
-   NEBULA · moteur de vaisseaux en relief (partagé avec « Nebula : l'Empire
+   NEBULA · moteur de vaisseaux en relief (commun/vaisseaux.js, ex-nebula/vaisseaux.js ;
+   utilisé par Nebula, Escadrille ! et Mineur de l'espace ; partagé avec « Nebula : l'Empire
    des étoiles »). Extrait du catalogue maquettes/nebula-chantier-naval.html.
    - builder(w, h) + render(B, opt) : carte de hauteurs éclairée (ombres,
      rainures, reflets), sans contour noir.

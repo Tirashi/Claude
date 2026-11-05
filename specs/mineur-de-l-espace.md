@@ -90,7 +90,7 @@ Un jeu de minage et de gestion **calme et sans pièges de jeu mobile** (pas de p
 
 ## 12. Graphismes et technique
 - Planètes : shaders de Deep-Fold en **WebGL 2** (repli : disque de couleur si WebGL 2 manque).
-- Vaisseaux, roches, station, drones, aliens : **`nebula/vaisseaux.js`** (moteur partagé, non modifié) + un fichier du jeu pour la **géométrie tournée**, les **rainures**, la **palette** et les pièces (repris des maquettes 4 à 6). Angles tracés **à la demande** (64 pour les vaisseaux, 24 pour les roches), rotation continue par le petit reste.
+- Vaisseaux, roches, station, drones, aliens : **`commun/vaisseaux.js`** (moteur partagé, non modifié) + un fichier du jeu pour la **géométrie tournée**, les **rainures**, la **palette** et les pièces (repris des maquettes 4 à 6). Angles tracés **à la demande** (64 pour les vaisseaux, 24 pour les roches), rotation continue par le petit reste.
 - Fichiers proposés : `mineur-de-l-espace/index.html`, `jeu.js` (vol, écrans), `regles.js` (économie, progression, sans dessin), `chantier.js` (fabrication des sprites), `planetes.js` (shaders), `sons.js` ; simulateur `outils/mineur-simulateur.js`.
 - Polices : Silkscreen et Pixelify Sans (Google Fonts, à héberger dans `polices/` et citer dans les crédits).
 

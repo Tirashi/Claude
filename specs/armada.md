@@ -3,7 +3,7 @@
 Survivor spatial (genre « Vampire Survivors ») : on pilote un vaisseau amiral, les vaisseaux gagnés rejoignent la flotte et volent en formation. Brainstorm, décisions et maquettes du 17/10 : `IDEES.md` § « Armada ». Maquettes : `maquettes/armada.html` (4 styles, https://claude.ai/artifact/QesFkKzq2XaBiDuQawc2L1) et `maquettes/armada-2.html` (flotte, https://claude.ai/artifact/MR2E43u7PazJpZfn8QcR2E). Les chiffres ci-dessous sont des **valeurs de départ**, à régler avec un pilote automatique (§ 15) puis sur le téléphone.
 
 ## 1. Décisions de l'utilisateur (17/10)
-- **Titre** : Armada. **DA de Nebula** : vaisseaux en relief de `nebula/vaisseaux.js`, nébuleuse, astéroïdes, pirates rouillés en face, halo bleu sous la flotte pour la distinguer.
+- **Titre** : Armada. **DA de Nebula** : vaisseaux en relief de `commun/vaisseaux.js`, nébuleuse, astéroïdes, pirates rouillés en face, halo bleu sous la flotte pour la distinguer.
 - **Partie de 10 minutes**, écran en portrait, un pouce.
 - Les « armes » sont des **vaisseaux qui rejoignent la flotte** et volent en **formation**.
 - **4 formations disponibles dès le début** (en V, en cercle, en convoi, en carré), en **icônes en bas de l'écran**, semi-transparentes, celle choisie plus opaque.
@@ -155,7 +155,7 @@ Affichage de la vie (deux / autour / haut), son, musique, vibration aux coups re
 Reprendre `nebula/sons.js` (`NebulaSons.play(...)`) : `laser` (frégate), `missile`, `canon` (canonnière, amiral), `mine`, `bouclier` (impact absorbé), `coque`, `explosion`, `soin` (mécano), `saut` (hyperespace), `bip` / `valide` (cartes), `renforts` (boss), `victoire`, `defaite`. Ambiance « Tension II » en partie, « Garde » dans les menus. Avec 150 ennemis : limiter les sons simultanés (au plus 1 explosion toutes les 80 ms, tirs des drones et chasseurs muets ou très discrets).
 
 ## 15. Technique
-- Fichiers : `armada/index.html` (moteur, écrans), `armada/regles.js` (données : vaisseaux, cartes, évolutions, ennemis, déroulé, prix ; partagé avec les outils de test). Charge `nebula/vaisseaux.js`, `nebula/sons.js`, `ludo-scores.js`. Scripts classiques, pas de build.
+- Fichiers : `armada/index.html` (moteur, écrans), `armada/regles.js` (données : vaisseaux, cartes, évolutions, ennemis, déroulé, prix ; partagé avec les outils de test). Charge `commun/vaisseaux.js`, `nebula/sons.js`, `ludo-scores.js`. Scripts classiques, pas de build.
 - Sprites des petits vaisseaux et des ennemis **précalculés** à leur taille (sans lueur) ; seuls l'escorte et l'amiral passent par `drawShip` (maquette : 120 ennemis fluides).
 - Objets en **tableaux réutilisés** (tirs, particules, gemmes) et **grille spatiale** pour les collisions (ennemis × tirs, ennemis × flotte).
 - Hasard à graine partout dans la simulation (secteur du jour reproductible) ; pas de `Math.random()` dans la simulation.

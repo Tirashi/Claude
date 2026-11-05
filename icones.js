@@ -1,6 +1,6 @@
 /* Icônes 16×16 des jeux de la Ludothèque, partagées par les cartouches et les boîtes de l'accueil.
    Chaque icône : une palette et 16 lignes de 16 caractères (vérifié par outils/verifications.js),
-   ou une fonction draw(contexte) pour les icônes dessinées. Le chien demande injagility/chiens32.js.
+   ou une fonction draw(contexte) pour les icônes dessinées. Le chien demande commun/pixel32.js.
    LudoIcons.draw(canvas, nom) dessine une icône ; LudoIcons.paint() dessine tous les canvas[data-icon]. */
 (function (){
 "use strict";
