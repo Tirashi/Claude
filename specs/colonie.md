@@ -157,3 +157,8 @@ Les menaces s'annoncent quand c'est possible (la tour de guet, le ciel, la rivi�
 
 ## Artefact
 Publier la colonie au lien de l'ancienne Île (décision du 16/10) : https://claude.ai/artifact/9AnNRRCCBu4pgYh35UwrPb
+
+## Détails techniques (déplacés du mémo le 05/11)
+Texte de la ligne de ce jeu dans le tableau « Les jeux existants (détails) » de [`specs/ludotheque.md`](ludotheque.md), recopié tel quel lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 2). L'essentiel, tenu à jour, est dans le `CLAUDE.md` du dossier du jeu.
+
+Remplace l'Île des naufragés (ancienne survie de 40 jours retirée le 16/10 ; l'icône `palm` est gardée, ses scores restent dans Supabase). Un tout petit Banished au tour par tour, en paysage (640 × 360) : cahier des charges `specs/colonie.md`. **Étape 2 faite le 16/10** (moteur) : `ile/regles.js` = logique pure aussi chargée par Node (île 24 × 14 à graine, épave placée près de forêt et de pierre, 6 lieux, bâtiments, postes, production par saison, champs semés/récoltés, bois sur pied qui repousse, gibier, outils qui s'usent, logement, chauffage, vêtements, faim et froid → départs (un par cause et par semaine, jamais d'enfant seul), naissances, retraite, arbre de recherche à 3 branches + savoir, score, `RUN_V` + `migrate()`) ; `ile/index.html` = affichage (décor agrandi une fois, colons qui travaillent et portent, enfants qui jouent, fumée, 30 images/s puis 10 au repos). Sauvegarde `ile.run`, records `ile.best` (`score`, `annees`, `population`). `window.Ile` (règles + `run`, `nextWeek`, `openSheet`, `startRun`, `selectTile`). Pilote automatique `node outils/ile-colonie.js [parties] [années] [graine] [détail]`. Pas encore sur l'accueil ni dans les classements (étape 3).

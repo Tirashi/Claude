@@ -320,3 +320,8 @@ Terre 150 px (shader terre + nuages), quai à 101 px du centre, ceinture de 190 
 - **Drones** : ceux d'une planète ne minent que les roches de sa ceinture et leurs cargos ne ramassent que le minerai à moins de 700 m d'elle. Satellites et combats se placent autour de la planète où l'on est.
 - Corrigé au passage : le quai gardait un nombre invalide de glace pour Mars (coût de voyage disparu), ce qui bloquait la partie au simulateur.
 - Simulateur : partie médiane 3 h 35, étage 2 vers 41 min.
+
+## Détails techniques (déplacés du mémo le 05/11)
+Texte de la ligne de ce jeu dans le tableau « Les jeux existants (détails) » de [`specs/ludotheque.md`](ludotheque.md), recopié tel quel lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 2). L'essentiel, tenu à jour, est dans le `CLAUDE.md` du dossier du jeu.
+
+Minage spatial + gestion + auto battler (cahier des charges `specs/mineur-de-l-espace.md`, sessions 1 à 6 du 31/10 au 01/11). `regles.js` (état JSON, hasard `mdeRng`, préfixe `mde`/`MDE_`, sans dessin ; simulateur `outils/mineur-simulateur.js`), `planetes.js` (shaders Deep-Fold en WebGL 2), `chantier.js` + `station.js` (corvettes, roches, station et drones avec `nebula/vaisseaux.js`, en secours), `sprites.js` (sprites des packs Zoser et Cute SCKR, fabriqué par `outils/mineur-sprites.py`, packs hors dépôt), `sons.js` (`MineurSons`, synthétisés), `jeu.js` (classe `Partie` : vol, quai, panneau, titre, pause, rendu à la résolution de l'écran), `combat.js` (aliens en direct, flottes, escadrille, finale). Sauvegarde `mineur-de-l-espace` (l'état entier), réglages `mineur-de-l-espace.commandes`, `.sons`, `.vibre`. Pas de classement. Transfert : la partie la plus avancée. Tests : `window.Mineur` (`partie`, `etat`).

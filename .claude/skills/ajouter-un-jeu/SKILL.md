@@ -15,6 +15,6 @@ Résumé, dans l'ordre :
 4. **Classements** : `LudoScores.submit(...)`, `registerExisting`, `RANKS` dans `accueil.js`. Défi du jour : une seule tentative classée par jour. Tester avec `outils/faux-classements.js` (Supabase injoignable d'ici), puis demander un essai sur le téléphone.
 5. **`sw.js`** : fichiers dans `FILES`, `VERSION` +1, et la noter dans `CLAUDE.md` (« Service worker », `verifications.js` le contrôle).
 6. **Crédits** : `credits/index.html` pour toute ressource venue d'ailleurs.
-7. **Docs** : `README.md`, `CLAUDE.md` (liste des jeux, une ligne dans « En cours »), `specs/ludotheque.md` (tableau détaillé), `specs/suivi.md`, `IDEES.md` (✅).
+7. **Docs** : `README.md`, `CLAUDE.md` (nom et dossier dans « Les jeux », une ligne dans « En cours »), `specs/ludotheque.md` (une ligne dans le tableau des jeux), `specs/suivi.md`, `IDEES.md` (✅). **Gros jeu** (plusieurs scripts, simulateur) : son propre `<dossier>/CLAUDE.md` de moins de 2 Ko (rôle de chaque fichier, objet `window.<Jeu>`, simulateur, fichiers partagés utilisés, pièges, lien vers `specs/<jeu>.md`), et la ligne du mémo y renvoie ; modèle : `duche/CLAUDE.md`. Petit jeu : le détail reste dans la ligne du mémo.
 8. **Tests** : `git add` d'abord (`verifications.js` ne voit que les fichiers suivis), puis `node outils/verifications.js` ; test de fumée dans `outils/fumee.js` ; le reste tourne en CI.
 9. **Artefact** : skill `republier-artefact` (nouveau lien à ajouter dans son tableau ; demander l'accord avant d'en créer un).
