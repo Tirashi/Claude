@@ -88,4 +88,24 @@ https://claude.ai/artifact/GpCeg68qf7wZKAdk2iBayS — page source `outils/bastio
 - Sous chaque téléphone, la vitrine des six figurines en grand.
 - Le script de téléchargement `itch.py` (skill `packs-itch`) gère maintenant les pages « téléchargement direct » (fichiers listés sur la page, sans prix libre).
 
+Retour (06/11) : « c'est trop petit, pas assez détaillé ; trouve d'autres packs ».
+
+## Deuxième recherche de packs 2D iso (06/11)
+| Pack | Prix | Licence | Contenu | Avis |
+|---|---|---|---|---|
+| [Isometric Classic Hero + Tiles (32x32)](https://opengameart.org/node/92757) (DezrasDragons, OpenGameArt) | gratuit | **CC0** | Tuiles iso 32×32 en dalles (herbe, mousse, sable, neige, pierre, eau, planches, souche, rochers) ; 8 personnages d'environ 19 px (repos, marche, attaque, de face et de dos) : **samouraï au chapeau de paille**, **ninja**, chevalier, viking, mousquetaire, pirate, **hoplite à lance et bouclier**, héros | **Retenu pour la maquette 6** (sol et soldats) ; planches sur fond lavande et quadrillage, enlevés par le code |
+| [EAST, échantillon gratuit](https://mmorwynn.itch.io/east-free-sample) (mmorwynn) | gratuit (les packs complets : 3,49 $ chacun en promotion, 4,99 $ sinon) | usage libre, même commercial, crédit non obligatoire ; pas de revente ni redistribution | Japon en iso pixel art très détaillé, deux tailles (14 m = 96 px ou 192 px) : machiya, minka, salle de culte, **pagode à cinq toits**, torii, renards gardiens, lanternes kasuga, bassin aux carpes, pont rouge, cerisier, érable, bambous (4 saisons, animation du vent), ombres à part | **Retenu pour B** ; packs complets : [EAST HOUSES](https://mmorwynn.itch.io/east-houses-pack), [SHRINES](https://mmorwynn.itch.io/shrines-pack), [GARDENS](https://mmorwynn.itch.io/gardens-pack), [BAMBOO](https://mmorwynn.itch.io/bamboo-pack). Art fait par des générateurs procéduraux (code écrit avec l'aide d'une IA, aucune image dessinée par une IA, d'après l'auteur) |
+| [PEOPLE](https://mmorwynn.itch.io/people-pack) (mmorwynn) | 3,49 $ (promotion) | même licence | 14 sortes de gens médiévaux (dont garde, chevalier), 3 variantes, **8 directions**, repos, marche, course, attaque… ~27 px, même échelle qu'EAST | Pas de samouraï ; à garder en tête pour un Bastion médiéval |
+| [Medieval Strategy (MARCHKEEP)](https://mmorwynn.itch.io/marchkeep) et [Imperial China (JADEKEEP)](https://mmorwynn.itch.io/jadekeep) (mmorwynn) | 6,99 $ chacun (promotion) | même licence | Décors complets de jeu de stratégie (château, ville, champs ; palais, pagodes, ville sur le fleuve), sol en cases 64×32, 4 vues, été/hiver | Décors seulement, pas de personnages |
+| [Edo Town](https://antahonist.itch.io/edo-town-feudal-japan-pixel-buildings) (Antahonist) | 3,49 à 6,29 $ | à lire | Bâtiments du Japon féodal en iso (pagode, donjon, sanctuaire, maison de thé…) | Auteur qui publie des centaines de packs ; pas vu de près |
+Toujours aucun soldat asiatique en iso dans un pack complet : le samouraï et le ninja de DezrasDragons sont les seuls trouvés.
+
+## Maquette 6 : plus grand, plus détaillé (06/11)
+https://claude.ai/artifact/RVrXXUxEURRGwQn6NHis7i — page source `outils/bastion-maquette/source-6.html`, fabriquée par `fabriquer.py 6 <dossier des planches OGA> <dossier east-free-sample>` (plateau de **7×7 cases** : la simulation de la maquette 2 est reprise avec d'autres plans et `N = 7`).
+- Cases de 64×32 (tuiles CC0 affichées à 2×), soldats d'environ 38 px (1,5 fois ceux de la maquette 5, contre 8 px avant) ; **zoom 1,7×** par défaut, plateau déplacé au doigt, loupe ⊕/⊖ pour le voir en entier, flèches ⟲ ⟳ pour le tourner.
+- Escouades : samouraïs (sabre), arquebusiers (teppō, le mousquetaire), ashigaru (yari, l'hoplite) ; ennemis : ninjas, pirates wakō, et l'oni (le viking repeint : peau rouge, cheveux noirs ; 1,6 fois plus grand).
+- **A** : maisons blanches à toits gris, pagode à quatre toits, torii, lanternes, cerisiers, érables et pins dessinés au pixel par le code, au grain des tuiles.
+- **B** : les mêmes sol et soldats, avec les bâtiments et arbres de l'échantillon EAST à leur taille (pixels deux fois plus fins que les soldats) : machiya, salle de culte, minka, pagode, torii, renards, lanternes kasuga, bassin, bottes de riz, lanterne de papier, cerisiers, érables, bambous, iris.
+- Vitrine des six figurines en grand sous les téléphones.
+
 Retours : à venir.

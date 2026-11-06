@@ -1,0 +1,367 @@
+<title>Bastion, maquette 6</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel:wght@600;800&family=Shippori+Mincho:wght@600;800&display=swap">
+<style>
+/* Maquette 6 de « Bastion » : 2D iso plus grande et plus détaillée. Sol et figurines : « Isometric Classic Hero + Tiles (32x32) »
+   de DezrasDragons (OpenGameArt, CC0), affichés à 2× ; B ajoute les bâtiments et les arbres de l'échantillon gratuit « EAST »
+   de mmorwynn (itch.io), affichés à leur taille. Plateau de 7×7 cases. Fabriquée par outils/bastion-maquette/fabriquer.py 6. */
+:root{
+  color-scheme: dark;
+  --bg:#15131a; --text:#f0ece4; --dim:#b6aea0; --gold:#e8c46a; --laque:#c8301e;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+  --ouest:"Cinzel", Georgia, serif; --est:"Shippori Mincho", "Yu Mincho", serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(#26222f 1px, transparent 1.5px); background-size:5px 5px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:24px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.intro{max-width:1180px; margin:0 auto 22px; display:flex; flex-direction:column; gap:8px}
+.intro h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-shadow:3px 3px 0 #7a4a1a, 5px 5px 0 #000}
+.intro p{margin:0; max-width:76ch; color:var(--dim)}
+.intro b{color:var(--text); font-weight:400}
+.grid{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:28px; justify-items:center}
+.col{display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px; min-width:0}
+.col > h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; line-height:1.6; color:var(--gold)}
+.col > h2 span{color:#e98a6a}
+.col > p{margin:0; color:var(--dim); font-size:19px}
+canvas.px{image-rendering:pixelated; image-rendering:crisp-edges}
+
+.phone{position:relative; width:100%; max-width:360px; height:700px; overflow:hidden; border:4px solid #000; border-radius:22px; box-shadow:0 0 0 3px #3a3444, 6px 6px 0 3px #000; touch-action:none; user-select:none; -webkit-user-select:none}
+.phone > canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:12px 10px}
+.hud > *{pointer-events:auto}
+.top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.lvl{display:flex; flex-direction:column; gap:3px}
+.lvl b{font-weight:800}
+.pills{display:flex; flex-direction:column; align-items:flex-end; gap:4px}
+.pill{padding:2px 8px; white-space:nowrap}
+.banner{position:absolute; left:10px; right:10px; top:84px; padding:7px 10px; text-align:center; opacity:0; transform:translateY(-6px); transition:opacity .2s, transform .2s; pointer-events:none}
+.banner.on{opacity:1; transform:none}
+.slow{position:absolute; left:50%; bottom:150px; transform:translateX(-50%); padding:4px 12px; opacity:0; transition:opacity .15s; pointer-events:none; white-space:nowrap}
+.phone.slowed .slow{opacity:1}
+.phone::after{content:""; position:absolute; inset:0; pointer-events:none; border:3px solid transparent; border-radius:18px; transition:border-color .15s}
+.hint{text-align:center; margin-bottom:6px; pointer-events:none}
+.cards{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px}
+.card{position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; padding:7px 4px 30px; text-align:center}
+.card .ico{width:32px; height:32px; display:grid; place-items:center; font-size:18px; line-height:1}
+.card .pips{display:flex; gap:3px}
+.card .pips i{width:6px; height:6px}
+.card[aria-pressed="true"]{transform:translateY(-4px)}
+.card .sp{position:absolute; left:5px; right:5px; bottom:5px; height:20px; display:grid; place-items:center; overflow:hidden}
+.card .sp::before{content:""; position:absolute; left:0; top:0; bottom:0; width:var(--cd, 0%); opacity:.35; background:#000}
+.card .sp span{position:relative}
+.turn{position:absolute; top:62px; display:grid; place-items:center; width:34px; height:34px; font-size:20px; line-height:1}
+.turn{top:auto; bottom:156px} .turn.g{left:10px} .turn.d{right:10px} .turn.z{left:50%; transform:translateX(-50%)}
+
+/* A · Valbrune (parchemin) */
+.thA{background:radial-gradient(circle at 50% 40%, #b8d0d8, #6a8a9a 85%)}
+.thA .lvl b{font-family:var(--ouest); font-size:19px; color:#2a1808; text-shadow:0 1px 0 #f5e8c8}
+.thA .lvl span{color:#3a2410; font-family:var(--ouest); font-size:11px; font-weight:600; letter-spacing:1px}
+.thA .pill{font-family:var(--ouest); font-weight:600; font-size:12px; letter-spacing:1px; color:#f5e8c8; background:#5a3a1a; border:2px solid #2a1808; border-radius:3px}
+.thA .banner{font-family:var(--ouest); font-weight:800; font-size:13px; letter-spacing:1px; color:#f5e8c8; background:#7a2a1a; border:2px solid #2a1808; border-radius:3px; box-shadow:0 3px 0 #2a1808}
+.thA .banner.good{background:#3a5a2a}
+.thA .slow{font-family:var(--ouest); font-weight:800; font-size:13px; letter-spacing:3px; color:#f5e8c8; background:#7a2a1a; border:2px solid #2a1808}
+.thA.slowed::after{border-color:#7a2a1a}
+.thA .hint{color:#2a1808; font-family:var(--ouest); font-size:12px; font-weight:600; text-shadow:0 1px 0 #f5e8c8}
+.thA .card{background:linear-gradient(#f2e3bf, #d9c294); border:2px solid #3a2410; border-radius:4px; box-shadow:0 3px 0 #3a2410; color:#3a2410}
+.thA .card .ico{background:var(--c); border:2px solid #3a2410; border-radius:50%; color:#fff}
+.thA .card .nm{font-family:var(--ouest); font-weight:800; font-size:11px; letter-spacing:1px}
+.thA .card .pips i{background:#3a2410} .thA .card .pips i.off{background:#c4ad80}
+.thA .card .sp{font-family:var(--ouest); font-weight:800; font-size:9px; letter-spacing:1px; color:#f5e8c8; background:#7a2a1a; border-radius:2px}
+.thA .card .sp.ready{background:#b8571a; box-shadow:0 0 8px #ffb84a}
+.thA .card[aria-pressed="true"]{background:linear-gradient(#fff4d6, #ead39c); box-shadow:0 7px 0 #3a2410}
+.thA .turn{background:#f2e3bf; border:2px solid #3a2410; border-radius:50%; color:#3a2410; box-shadow:0 2px 0 #3a2410}
+
+/* B · le temple de la Grue (laque et papier) */
+.thB{background:linear-gradient(#f0b890, #8a6a7a 55%, #3a3450)}
+.thB .lvl b{font-family:var(--est); font-size:20px; color:#fff4e6; text-shadow:0 2px 6px #1a1020}
+.thB .lvl span{color:#ffe0c0; font-family:var(--est); font-weight:600; font-size:12px; letter-spacing:2px; text-shadow:0 1px 3px #1a1020}
+.thB .pill{font-family:var(--est); font-weight:600; font-size:13px; color:#f4ede0; background:#1a1410; border-left:4px solid var(--laque)}
+.thB .banner{font-family:var(--est); font-weight:800; font-size:14px; letter-spacing:2px; color:#f4ede0; background:#1a1410; border-top:3px solid var(--laque); border-bottom:3px solid var(--laque)}
+.thB .banner.good{border-color:var(--gold)}
+.thB .slow{font-family:var(--est); font-weight:800; font-size:14px; letter-spacing:4px; color:#f4ede0; background:var(--laque); border-radius:2px}
+.thB.slowed::after{border-color:var(--laque)}
+.thB .hint{color:#fff4e6; font-family:var(--est); font-size:13px; font-weight:600; text-shadow:0 1px 4px #000}
+.thB .card{background:#f4ede0; border:2px solid #1a1410; color:#1a1410; box-shadow:3px 3px 0 #1a1410}
+.thB .card .ico{background:var(--c); color:#f4ede0; font-family:var(--est); font-weight:800; font-size:17px}
+.thB .card .nm{font-family:var(--est); font-weight:800; font-size:13px}
+.thB .card .pips i{background:var(--laque); border-radius:50%} .thB .card .pips i.off{background:#d6cbb6}
+.thB .card .sp{font-family:var(--est); font-weight:800; font-size:11px; letter-spacing:1px; color:#f4ede0; background:#1a1410}
+.thB .card .sp.ready{background:var(--laque); box-shadow:0 0 8px #ff7a5a}
+.thB .card[aria-pressed="true"]{background:#fff; box-shadow:3px 7px 0 var(--laque)}
+.thB .turn{background:#1a1410; color:#f4ede0; border-left:3px solid var(--laque)}
+
+/* la vitrine des figurines */
+.vit{position:relative; width:100%; border:3px solid #000; border-radius:10px; overflow:hidden}
+.vit canvas{display:block; width:100%; height:auto}
+.vit.thA{background:#d8c8a0} .vit.thB{background:#e8d8c0}
+.vnoms{display:grid; grid-template-columns:repeat(6, 1fr); text-align:center; font-size:15px; color:var(--dim); line-height:1}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<div class="intro">
+  <h1>BASTION · MAQUETTE 6 · PLUS GRAND, PLUS DETAILLE</h1>
+  <p>Toujours en <b>2D iso pixel art</b>, mais avec des packs plus fins : des <b>cases deux fois plus grandes</b> et des <b>soldats 1,5 fois plus grands</b> (plateau de 7×7 cases au lieu de 9×9). Sol et soldats : <b>Isometric Classic Hero + Tiles</b> (DezrasDragons, CC0) : samouraï au chapeau de paille, ashigaru à la lance, arquebusier ; en face, ninjas, pirates wakō et un oni. Le plateau est <b>zoomé</b> : <b>glisse le doigt</b> pour le déplacer, la loupe ⊕/⊖ le montre en entier, les flèches le <b>tournent</b>.</p>
+  <p><b>A</b> : tout en CC0, maisons et pagode dessinées par le code. <b>B</b> : le même plateau avec les <b>bâtiments et arbres détaillés</b> de l'échantillon gratuit <b>EAST</b> (mmorwynn) : machiya, salle de culte, pagode, torii, renards gardiens, lanternes, cerisiers, érables, bambous.</p>
+</div>
+
+<div class="grid">
+  <section class="col">
+    <h2>A · TOUT EN CC0 <span>MAISONS PAR LE CODE</span></h2>
+    <div class="phone thB" id="pA"></div>
+    <p>Sol en dalles (mousse, pierre, eau), soldats animés (repos, marche, attaque, de face et de dos). Les bâtiments sont dessinés au pixel par le code, dans le même grain.</p>
+  </section>
+  <section class="col">
+    <h2>B · CC0 + EAST <span>BATIMENTS DETAILLES</span></h2>
+    <div class="phone thB" id="pB"></div>
+    <p>Mêmes sol et soldats ; bâtiments, arbres et objets d'EAST, plus fins (pixels deux fois plus petits que ceux des soldats). La collection complète est payante (3,49 $ par pack en promotion).</p>
+  </section>
+</div>
+<div class="grid" style="margin-top:22px">
+  <section class="col" style="max-width:760px">
+    <h2>LES FIGURINES <span>DE PRES</span></h2>
+    <div class="vit thB"><canvas class="px" id="vit"></canvas></div>
+    <div class="vnoms"><span>侍 samouraï</span><span>槍 ashigaru</span><span>鉄砲 arquebuse</span><span>忍 ninja</span><span>倭寇 pirate</span><span>鬼 oni</span></div>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const TUILES = "__TUILES__", HEROS = "__HEROS__";   // planches DezrasDragons (fond à enlever)
+const EAST = __EAST__;                               // nom → image EAST (data:image/png;base64)
+
+__SIM__
+
+/* ================= les images ================= */
+const cv = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const charge = s => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = s; });
+const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
+const key = (r, g, b) => "#" + [r, g, b].map(v => v.toString(16).padStart(2, "0")).join("");
+// recolorer : map {"#rrggbb": "#rrggbb"} ou fonction (r, g, b) → [r, g, b] | null
+function recolor(src, map){
+  const c = cv(src.width, src.height), x = c.getContext("2d"); x.drawImage(src, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+  for (let i = 0; i < p.length; i += 4){
+    if (!p[i + 3]) continue;
+    const n = typeof map === "function" ? map(p[i], p[i + 1], p[i + 2]) : (map[key(p[i], p[i + 1], p[i + 2])] && hex(map[key(p[i], p[i + 1], p[i + 2])]));
+    if (n){ p[i] = n[0]; p[i + 1] = n[1]; p[i + 2] = n[2]; }
+  }
+  x.putImageData(d, 0, 0); return c;
+}
+// rampe de couleurs selon la luminosité (pour repeindre une teinte entière)
+const ramp = (cols, test) => { const C = cols.map(hex); return (r, g, b) => { if (test && !test(r, g, b)) return null;
+  const L = (r * .3 + g * .59 + b * .11) / 255; return C[Math.max(0, Math.min(C.length - 1, Math.floor((L - .12) / .6 * C.length)))]; }; };
+const verdure = (r, g, b) => g > r + 6 && g >= b;
+
+/* ================= dessin au pixel (sans flou) ================= */
+function inside(x, y, P){ let o = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++){ const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) o = !o; } return o; }
+function poly(x, P, col){ x.fillStyle = col; const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  for (let py = Math.floor(Math.min(...ys)); py <= Math.ceil(Math.max(...ys)); py++) for (let px = Math.floor(Math.min(...xs)); px <= Math.ceil(Math.max(...xs)); px++) if (inside(px + .5, py + .5, P)) x.fillRect(px, py, 1, 1); }
+function line(x, a, b, col){ x.fillStyle = col; let [x0, y0] = a.map(Math.round), [x1, y1] = b.map(Math.round); const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy;
+  for (;;){ x.fillRect(x0, y0, 1, 1); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy){ e += dy; x0 += sx; } if (e2 <= dx){ e += dx; y0 += sy; } } }
+const dia = (cx, cy, hw) => [[cx - hw, cy], [cx, cy - hw / 2], [cx + hw, cy], [cx, cy + hw / 2]];
+// une boîte iso posée sur la case (repère : centre de la face du dessus de la case = (0, 0)), e = hauteur du bas, h = sa hauteur
+function box(x, hw, e, h, c){ const b = dia(0, -e, hw), t = dia(0, -e - h, hw);
+  poly(x, [t[0], t[3], b[3], b[0]], c[0]); poly(x, [t[3], t[2], b[2], b[3]], c[1]); poly(x, t, c[2]); }
+// un toit en pyramide (c : arrière gauche, arrière droit, avant gauche, avant droit, bord), relevé aux coins si up
+function roof(x, hw, e, rise, c, up){ const d = dia(0, -e, hw), A = [0, -e - rise];
+  poly(x, [d[0], d[1], A], c[0]); poly(x, [d[1], d[2], A], c[1]); poly(x, [d[0], d[3], A], c[2]); poly(x, [d[3], d[2], A], c[3]);
+  line(x, d[0], d[3], c[4]); line(x, d[3], d[2], c[4]);
+  if (up){ x.fillStyle = c[4]; x.fillRect(d[0][0] - 1, d[0][1] - 1, 1, 1); x.fillRect(d[2][0] + 1, d[2][1] - 1, 1, 1); x.fillRect(d[3][0], d[3][1] + 1, 1, 1); } }
+// un objet dessiné : toile 40×56, la case est au point (20, 44)
+function objet(f){ const c = cv(40, 56), x = c.getContext("2d"); x.translate(20, 44); f(x); return c; }
+
+// contour sombre d'un pixel autour d'une figurine (lisible sur l'herbe)
+function contour(src){
+  const c = cv(16, 17), x = c.getContext("2d"), d = src.getContext("2d").getImageData(0, 0, 16, 17).data, a = (i, j) => i >= 0 && j >= 0 && i < 16 && j < 17 && d[(j * 16 + i) * 4 + 3] > 0;
+  x.fillStyle = "#1a1410"; for (let j = 0; j < 17; j++) for (let i = 0; i < 16; i++) if (!a(i, j) && (a(i - 1, j) || a(i + 1, j) || a(i, j - 1) || a(i, j + 1))) x.fillRect(i, j, 1, 1);
+  x.drawImage(src, 0, 0); return c;
+}
+
+// une petite image dessinée au pixel puis agrandie 2× (grain des tuiles CC0) : toile 64×80, la case est au point (32, 64)
+function objet2(f){ const c = cv(64, 80), x = c.getContext("2d"); x.translate(32, 64); f(x); return x2(c); }
+const x2 = (src, k) => { k = k || 2; const c = cv(src.width * k, src.height * k), x = c.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(src, 0, 0, c.width, c.height); return c; };
+function disc(x, cx, cy, r, col){ x.fillStyle = col; for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j <= r * r + r * .6) x.fillRect(cx + i, cy + j, 1, 1); }
+// enlever le fond et le quadrillage des planches DezrasDragons
+const cle = (img, fonds) => (() => { const c = cv(img.width, img.height), x = c.getContext("2d"); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), p = d.data; for (let i = 0; i < p.length; i += 4) if (fonds.some(f => p[i] === f[0] && p[i + 1] === f[1] && p[i + 2] === f[2])) p[i + 3] = 0;
+  x.putImageData(d, 0, 0); return c; })();
+const case32 = (sheet, col, row, x0, y0) => { const c = cv(32, 32); c.getContext("2d").drawImage(sheet, (x0 || 0) + 1 + col * 33, (y0 || 0) + 1 + row * 33, 32, 32, 0, 0, 32, 32); return c; };
+
+/* ================= les deux mondes ================= */
+const R = {};
+async function ressources(){
+  if (R.ok) return R;
+  const [t, h] = await Promise.all([charge(TUILES), charge(HEROS)]);
+  const T = cle(t, [[255, 255, 255], [1, 1, 1]]), H = cle(h, [[200, 191, 231], [1, 1, 1]]);
+  R.top = x2(case32(T, 0, 0)); R.grass = x2(case32(T, 0, 3)); R.stone = x2(case32(T, 0, 6)); R.water = x2(case32(T, 0, 7)); R.water2 = x2(case32(T, 1, 7));
+  R.mossy = [1, 2, 3, 4, 5].map(i => x2(case32(T, i, 0))); R.stoneV = [1, 2, 3].map(i => x2(case32(T, i, 6)));
+  R.stump = x2(case32(T, 6, 0)); R.rocks = x2(case32(T, 6, 4));
+  // figurines : bloc (g, moitié) de 4 colonnes × 7 rangées ; rangées 0-2 de face (repos, marche, attaque), 3-5 de dos
+  const fig = (g, half, map) => { const ox = g * 165, oy = half * 264, s = (r, n) => Array.from({length: n}, (_, c) => { let im = case32(H, c, r, ox, oy); if (map) im = recolor(im, map); return x2(im); });
+    return [{idle: s(0, 4), walk: s(1, 4), atk: s(2, 3)}, {idle: s(3, 4), walk: s(4, 4), atk: s(5, 3)}]; };
+  const peauRouge = (r, g, b) => (r > 180 && g > 110 && b < 150 && r > g + 30) ? (g > 170 ? hex("#e85a4a") : hex("#a8241a"))
+    : (r > 190 && g > 170 && b < 90) ? hex("#2a2228") : (r > 190 && g > 170 && b < 100) ? hex("#1a1418") : (b > 140 && r < 100) ? hex("#3a2a30") : null;   // peau rouge, cheveux noirs
+  R.squads = [fig(2, 1), fig(4, 1), fig(5, 1)];         // samouraï, arquebusier, lancier (hoplite)
+  R.foes = [fig(1, 0), fig(1, 1)];                      // ninjas, pirates
+  R.boss = fig(3, 1, peauRouge);                        // l'oni : le viking à la peau rouge
+  // EAST (B)
+  R.east = {}; await Promise.all(Object.entries(EAST).map(async ([k, v]) => { R.east[k] = await charge(v); }));
+  // A : maisons, pagode, torii, arbres dessinés au grain des tuiles
+  R.housesA = [0, 1, 2, 3].map(i => objet2(x => {
+    box(x, 11, 0, 12, ["#ece4d4", "#b8b0a0", "#f4ece0"]); x.fillStyle = "#4a3020"; x.fillRect(-11, -3, 11, 3); x.fillStyle = "#3a2418"; x.fillRect(0, -3, 11, 4);
+    x.fillStyle = "#5a3a24"; for (let k = -9; k < 0; k += 3) x.fillRect(k, -11, 1, 8); x.fillStyle = "#2a1a10"; x.fillRect(3, -9, 4, 7); x.fillStyle = "#c8a878"; x.fillRect(8, -10, 2, 3);
+    roof(x, 15, 12, 7, ["#5a5a68", "#3e3e4a", "#6a6a78", "#2e2e3a", "#1a1a22"], true); x.fillStyle = "#24242c"; x.fillRect(-1, -20, 2, 2);
+    if (i % 2){ x.fillStyle = "#c8301e"; x.fillRect(-7, -6, 3, 5); x.fillStyle = "#f4ece0"; x.fillRect(-6, -5, 1, 2); } }));
+  R.pagodaA = objet2(x => { let e = 0; [[9, 9], [7, 7], [5.5, 6], [4, 5]].forEach(([hw, h]) => { box(x, hw, e, h, ["#c8301e", "#8a2014", "#d84a2a"]); x.fillStyle = "#3a1a10"; x.fillRect(-1, -e - h + 2, 2, h - 2);
+    roof(x, hw + 4, e + h, 4, ["#4a5a58", "#2e3a3a", "#5a6a68", "#243030", "#141c1c"], true); e += h + 4; }); x.fillStyle = "#e8c46a"; x.fillRect(0, -e - 8, 1, 8); x.fillRect(-1, -e - 5, 3, 1); x.fillRect(-1, -e - 2, 3, 1); });
+  R.toriiA = objet2(x => { x.fillStyle = "#c8301e"; x.fillRect(-9, -22, 3, 23); x.fillRect(6, -22, 3, 23); x.fillStyle = "#8a2014"; x.fillRect(-7, -22, 1, 23); x.fillRect(8, -22, 1, 23);
+    x.fillStyle = "#c8301e"; x.fillRect(-11, -17, 22, 2); x.fillStyle = "#1a1410"; x.fillRect(-13, -25, 26, 3); x.fillRect(-15, -26, 3, 1); x.fillRect(12, -26, 3, 1); x.fillStyle = "#c8301e"; x.fillRect(-12, -22, 24, 2); x.fillStyle = "#1a1410"; x.fillRect(-1, -21, 2, 4); });
+  R.lanternA = objet2(x => { x.fillStyle = "#8a8288"; x.fillRect(-1, -9, 3, 9); x.fillRect(-3, -1, 7, 2); x.fillStyle = "#a8a0a8"; x.fillRect(-3, -13, 7, 4); x.fillStyle = "#ffd070"; x.fillRect(-1, -12, 3, 2); x.fillStyle = "#5a5258"; x.fillRect(-5, -16, 11, 3); x.fillRect(-1, -18, 3, 2); });
+  const arbre = (cols, tronc) => objet2(x => { x.fillStyle = tronc; x.fillRect(-1, -16, 3, 16); x.fillRect(1, -20, 1, 5); x.fillRect(-3, -14, 2, 1);
+    [[-6, -22, 7, 0], [6, -24, 7, 0], [0, -30, 8, 0], [-3, -26, 6, 1], [4, -29, 5, 1], [-1, -33, 4, 2]].forEach(([cx, cy, r, k]) => disc(x, cx, cy, r, cols[k]));
+    x.fillStyle = cols[3]; for (let k = 0; k < 14; k++) x.fillRect(((k * 7) % 17) - 8, -36 + ((k * 5) % 15), 1, 1); });
+  R.treesA = [arbre(["#c86a8a", "#e898b0", "#ffd0dc", "#fff4f8"], "#4a2a2a"), arbre(["#a8301e", "#d85a2a", "#f09a4a", "#ffe0a0"], "#3a2418"),
+              objet2(x => { x.fillStyle = "#3a2418"; x.fillRect(-1, -8, 3, 8); [[0, -10, 11, "#1a3a2a"], [0, -18, 8, "#2a5a3a"], [0, -25, 6, "#3a6a42"], [0, -31, 4, "#4a7a4a"]].forEach(([cx, cy, w, c]) => poly(x, [[cx - w, cy + 4], [cx, cy - 6], [cx + w, cy + 4]], c)); })];
+  R.ok = true; return R;
+}
+
+/* ================= le plateau en iso ================= */
+SQ.B[1] = {nm: "鉄砲 TEPPO", ic: "砲", c: "#3d6b4a", sp: "斉 SALVE"}; SQ.B[2] = {nm: "槍 YARI", ic: "槍", c: "#c8301e", sp: "突 ASSAUT"};
+const ROT = [(x, y) => [x, y], (x, y) => [N - y, x], (x, y) => [N - x, N - y], (x, y) => [y, N - x]];
+const RV = [(x, y) => [x, y], (x, y) => [-y, x], (x, y) => [-x, -y], (x, y) => [y, -x]];
+const place = S => { [[2, 2], [4, 2], [3, 5]].forEach(([x, y], i) => Object.assign(S.squads[i], {x: x + .5, y: y + .5, tx: x + .5, ty: y + .5})); S.id = "B"; return S; };
+const LARGE = 470;   // largeur du dessin en pixels (le plateau fait 7 × 64)
+function plateau(id, phone){
+  const S = place(makeSim(id)), E = id === "B";
+  const c = document.createElement("canvas"); c.className = "px"; phone.prepend(c);
+  const x = c.getContext("2d");
+  const paint = hud("B", phone, S);
+  let ok = false, rot = 0, ox = LARGE / 2, oy = 120, Z = 1.7, camX = 0, camY = 0, Wc = LARGE, Hc = 800;
+  ressources().then(() => ok = true);
+  // zoom : on dessine une fenêtre de LARGE / Z pixels de large sur le monde, qu'on déplace au doigt
+  const clamp = () => { camX = Math.max(-20, Math.min(LARGE - Wc + 20, camX)); camY = Math.max(-40, Math.min(oy + 260 - Hc * .55, camY)); };
+  const centre = () => { camX = (LARGE - Wc) / 2; camY = oy + 100 - Hc * .5; clamp(); };
+  const size = () => { const w = phone.clientWidth, h = phone.clientHeight; Wc = Math.round(LARGE / Z); c.width = Wc; c.height = Hc = Math.round(h * Wc / w); centre(); };
+  size(); addEventListener("resize", size);
+  { const b = document.createElement("button"); b.type = "button"; b.className = "turn z"; b.textContent = "⊕"; b.setAttribute("aria-label", "Zoom");
+    b.addEventListener("click", e => { e.stopPropagation(); Z = Z > 1 ? 1 : 1.7; b.textContent = Z > 1 ? "⊕" : "⊖"; size(); }); phone.querySelector(".hud").append(b); }
+  for (const [s, d] of [["g", -1], ["d", 1]]){ const b = document.createElement("button"); b.type = "button"; b.className = "turn " + s; b.textContent = d < 0 ? "⟲" : "⟳"; b.setAttribute("aria-label", "Tourner le plateau");
+    b.addEventListener("click", e => { e.stopPropagation(); rot = (rot + d + 4) % 4; }); phone.querySelector(".hud").append(b); }
+  const topOf = t => t.water ? -.5 : t.h;
+  const P = (u, v, z) => [ox + (u - v) * 32, oy + (u + v) * 16 - z * 16];
+  const at = (gx, gy) => ROT[rot](gx, gy);
+  let drag = null;
+  const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * c.width + camX, (e.clientY - r.top) / r.height * c.height + camY]; };
+  phone.addEventListener("pointerdown", e => { if (e.target.closest("button")) return; drag = {x: e.clientX, y: e.clientY, cx: camX, cy: camY, done: false}; });
+  phone.addEventListener("pointermove", e => { if (!drag) return; const k = c.width / c.getBoundingClientRect().width, dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.hypot(dx, dy) > 8) drag.done = true; if (drag.done){ camX = drag.cx - dx * k; camY = drag.cy - dy * k; clamp(); } });
+  phone.addEventListener("pointerup", e => {
+    const d = drag; drag = null; if (!d || d.done || e.target.closest("button")) return;
+    const [px, py] = pos(e);
+    let pick = -1, pd = 30;
+    S.squads.forEach((q, i) => { if (q.hp <= 0) return; const [u, v] = at(q.x, q.y), [sx, sy] = P(u, v, topOf(tile(S, q.x, q.y))); const dd = Math.hypot(px - sx, py - (sy - 18)); if (dd < pd){ pd = dd; pick = i; } });
+    let hit = null, best = -1;
+    for (const t of S.tiles){ const [u, v] = at(t.x + .5, t.y + .5), [cx, cy] = P(u, v, topOf(t)); if (Math.abs(px - cx) / 32 + Math.abs(py - cy) / 16 <= 1 && u + v > best){ best = u + v; hit = t; } }
+    if (S.sel >= 0 && (pick < 0 || pick === S.sel)){ if (hit && !hit.water){ const q = S.squads[S.sel]; q.tx = hit.x + .5; q.ty = hit.y + .5; } S.sel = -1; }
+    else if (pick >= 0) S.sel = pick;
+  });
+  const img = (im, sx, sy, ax, ay) => x.drawImage(im, Math.round(sx - ax), Math.round(sy - ay));
+  const eastAt = (k, sx, sy, lift) => { const im = R.east[k]; if (im) img(im, sx, sy + (lift || 0), im.width / 2, im.height - im.width * .2); };
+  const diamondLine = (cx, cy, hw, col) => { const d = dia(cx, cy, hw); for (let i = 0; i < 4; i++){ line(x, d[i], d[(i + 1) % 4], col); line(x, [d[i][0], d[i][1] + 1], [d[(i + 1) % 4][0], d[(i + 1) % 4][1] + 1], col); } };
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (S.reset) Object.assign(S, place(makeSim(id)));
+    const slow = S.sel >= 0 ? .15 : 1;
+    step(S, dt * slow);
+    x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
+    if (!ok){ requestAnimationFrame(frame); return; }
+    x.setTransform(1, 0, 0, 1, -Math.round(camX), -Math.round(camY));
+    const T = now / 1000, list = [];
+    let ti = 0;
+    for (const t of S.tiles){
+      const [u, v] = at(t.x + .5, t.y + .5), ri = u - .5, rj = v - .5, k = ri + rj, n = t.x * 7 + t.y * 3;
+      list.push([k, () => {
+        for (let z = -1; z <= Math.max(0, t.h) - (t.water ? 1 : 0); z++){
+          const [sx, sy] = P(ri, rj, z), top = z === t.h && !t.water;
+          img(top ? (t.path ? R.stoneV[n % 3] : n % 4 ? R.top : R.mossy[n % 5]) : R.top, sx, sy, 32, 18);
+        }
+        if (t.water){ const [sx, sy] = P(ri, rj, 0); img(Math.sin(T * 2 + t.x + t.y) > .3 ? R.water2 : R.water, sx, sy + 8, 32, 18); }
+      }]);
+      const [cx, cy] = P(u, v, t.h);
+      if (t.tree){ const i = ti++; list.push([k + .6, () => {
+        if (E){ const keys = ["sakura", "bamboo", "maple", "sakura", "bamboo", "iris"], kk = keys[(n + i) % keys.length]; eastAt(kk, cx, cy, kk === "iris" ? 0 : 6); }
+        else img(R.treesA[(n + i) % 3], cx, cy, 64, 128); }]); }
+      if (t.rock) list.push([k + .6, () => img(R.rocks, cx, cy, 32, 34)]);
+    }
+    S.houses.forEach((h, i) => { const t = tile(S, h.x, h.y), [u, v] = at(h.x + .5, h.y + .5), [cx, cy] = P(u, v, t.h);
+      list.push([u + v - 1 + .6, () => { x.globalAlpha = h.hp <= 0 ? .35 : 1;
+        if (E) eastAt(["machiya", "worship_hall", "machiya_w", "minka"][i % 4], cx, cy, 4); else img(R.housesA[i], cx, cy, 64, 128); x.globalAlpha = 1;
+        if (h.hp > 0 && h.hp < h.max * .6){ for (let k = 0; k < 5; k++){ const fx = cx - 10 + k * 5, fy = cy - 40 - Math.abs(Math.sin(T * 8 + k * 1.7)) * 10; disc(x, Math.round(fx), Math.round(fy), 3, k % 2 ? "#ff9a2a" : "#ffd04a"); } } }]); });
+    const deco = E ? [[3, 3, "pagoda", 4], [3, 4, "torii", 2], [2, 4, "kasuga", 2], [4, 4, "kasuga", 2], [2, 5, "fox", 2], [5, 4, "koi", 0], [0, 2, "rice", 0], [6, 5, "lantern", 0]]
+                   : [[3, 3, R.pagodaA], [3, 4, R.toriiA], [2, 4, R.lanternA], [4, 4, R.lanternA]];
+    for (const [gx, gy, im, lift] of deco){ const t = tile(S, gx, gy), [u, v] = at(gx + .5, gy + .5), [cx, cy] = P(u, v, t.h);
+      list.push([u + v - 1 + .6, () => E ? eastAt(im, cx, cy, lift) : img(im, cx, cy, 64, 128)]); }
+    const nearFoe = (px, py) => { let b = null, d = 99; for (const f of S.foes) if (f.delay <= 0){ const e = Math.hypot(f.x - px, f.y - py); if (e < d){ d = e; b = f; } } return [b, d]; };
+    const unit = (F, gx, gy, mvx, mvy, mode, ph, k, off) => {
+      k = k || 1; const [u, v] = at(gx, gy), t = tile(S, gx, gy), [du, dv] = RV[rot](mvx, mvy); let [sx, sy] = P(u, v, topOf(t)); if (off){ sx += off[0]; sy += off[1]; }
+      const sdx = du - dv, sdy = du + dv, back = sdy < -1e-4 ? 1 : 0, flip = back ? sdx < 0 : sdx > 0;
+      const tt = T * slow + ph, fr = F[back][mode], f = fr[Math.floor(tt * (mode === "atk" ? 7 : mode === "walk" ? 8 : 3)) % fr.length];
+      list.push([Math.floor(u) + Math.floor(v) + .5 + (u + v) * .01 + (off ? off[1] * .0005 : 0), () => {
+        x.fillStyle = "rgba(20,12,16,.3)"; x.fillRect(Math.round(sx) - 9 * k, Math.round(sy) - 1, 18 * k, 3);
+        const w = 64 * k, h = 64 * k;
+        if (flip){ x.save(); x.translate(Math.round(sx), 0); x.scale(-1, 1); x.drawImage(f, -w / 2, Math.round(sy - 50 * k), w, h); x.restore(); }
+        else x.drawImage(f, Math.round(sx - w / 2), Math.round(sy - 50 * k), w, h); }]);
+    };
+    S.squads.forEach((q, i) => {
+      if (q.hp <= 0) return;
+      const K = KINDS[q.k], v = q.px == null ? 0 : Math.hypot(q.x - q.px, q.y - q.py) / Math.max(dt, 1e-3); q.vs = (q.vs || 0) * .8 + v * .2;
+      const mx = q.x - (q.px == null ? q.x : q.px), my = q.y - (q.py == null ? q.y : q.py); q.px = q.x; q.py = q.y;
+      const [nf, nd] = nearFoe(q.x, q.y), fighting = nf && nd <= K.range + .2, mode = q.vs > .15 ? "walk" : fighting ? "atk" : "idle";
+      if (Math.hypot(mx, my) > 1e-4){ q.fx_ = mx; q.fy_ = my; } else if (nf && nd < 4.5){ q.fx_ = nf.x - q.x; q.fy_ = nf.y - q.y; }
+      const n = alive(q), tight = q.k === "inf" && q.fx > 0, a = Math.ceil(n / 2);
+      for (let k = 0; k < n; k++){ const row = k < a ? 0 : 1, inRow = row ? n - a : a, col = row ? k - a : k;
+        unit(R.squads[i], q.x, q.y, q.fx_ || .1, q.fy_ || .1, mode, k * .37 + i, 1, [(col - (inRow - 1) / 2) * (tight ? 9 : 13) + (row ? 4 : -4), row ? 5 : -5]); }
+      if (i === S.sel || (q.k === "inf" && q.fx > 0)){ const [u, vv] = at(q.x, q.y), [sx, sy] = P(u, vv, topOf(tile(S, q.x, q.y))); list.push([Math.floor(u) + Math.floor(vv) + .4, () => diamondLine(sx, sy, 30, i === S.sel ? "#fff4c0" : "#e8c46a")]); }
+      if (Math.hypot(q.tx - q.x, q.ty - q.y) > .3){ const [u, vv] = at(q.tx, q.ty), [sx, sy] = P(u, vv, topOf(tile(S, q.tx, q.ty))); list.push([Math.floor(u) + Math.floor(vv) + .4, () => diamondLine(sx, sy, 10, "#ffffff")]); }
+    });
+    const nearSq = (px, py) => { let b = null, d = 99; for (const q of S.squads) if (q.hp > 0){ const e = Math.hypot(q.x - px, q.y - py); if (e < d){ d = e; b = q; } } return b; };
+    S.foes.forEach((f, k) => { if (f.delay > 0) return;
+      const mx = f.x - (f.px == null ? f.x : f.px), my = f.y - (f.py == null ? f.y : f.py); f.px = f.x; f.py = f.y;
+      let fx = mx, fy = my; if (f.fight){ const q = nearSq(f.x, f.y); if (q){ fx = q.x - f.x; fy = q.y - f.y; } }
+      if (Math.hypot(fx, fy) > 1e-5){ f.fx_ = fx; f.fy_ = fy; }
+      unit(f.boss ? R.boss : R.foes[k % 2], f.x, f.y, f.fx_ || .1, f.fy_ || .1, f.fight ? "atk" : "walk", k * .53, f.boss ? 1.6 : 1); });
+    for (const a of S.arrows){ const u0 = Math.min(1, a.t / a.d), gx = a.x + (a.f.x - a.x) * u0, gy = a.y + (a.f.y - a.y) * u0, [u, v] = at(gx, gy), [sx, sy] = P(u, v, topOf(tile(S, gx, gy)));
+      const hgt = 22 + Math.sin(u0 * Math.PI) * 12; list.push([99, () => { disc(x, Math.round(sx), Math.round(sy - hgt), 1, "#2a2a30"); if (u0 < .15){ disc(x, Math.round(sx), Math.round(sy - hgt), 3, "#e8e0d0"); } }]); }
+    if (S.warnAt){ const [gx, gy] = S.warnAt, [u, v] = at(gx + .5, gy + .5), [sx, sy] = P(u, v, tile(S, gx, gy).h), b = Math.abs(Math.sin(T * 5)) * 6;
+      list.push([99, () => { x.fillStyle = "#e8301e"; for (let r = 0; r < 7; r++) x.fillRect(Math.round(sx) - 7 + r, Math.round(sy - 40 - b) + r, 15 - r * 2, 1); x.fillRect(Math.round(sx) - 3, Math.round(sy - 50 - b), 7, 10); }]); }
+    list.sort((a, b) => a[0] - b[0]); for (const [, f] of list) f();
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    paint();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ================= la vitrine : les six figurines en grand ================= */
+function vitrine(c){
+  c.width = 384; c.height = 74; const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+  ressources().then(() => {
+    const L = [R.squads[0], R.squads[2], R.squads[1], R.foes[0], R.foes[1], R.boss];
+    (function f(now){ const T = now / 1000; x.clearRect(0, 0, c.width, c.height);
+      L.forEach((F, i) => { const m = ["idle", "walk", "atk"][Math.floor(T / 2.5 + i * .3) % 3], fr = F[0][m], im = fr[Math.floor(T * (m === "atk" ? 7 : 6)) % fr.length], k = i === 5 ? 1.25 : 1;
+        x.drawImage(im, Math.round(i * 64 + 32 - 32 * k), Math.round(70 - 50 * k), 64 * k, 64 * k); });
+      requestAnimationFrame(f); })(performance.now());
+  });
+}
+plateau("A", document.getElementById("pA")); plateau("B", document.getElementById("pB"));
+vitrine(document.getElementById("vit"));
+})();
+</script>
