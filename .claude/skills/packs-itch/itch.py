@@ -10,8 +10,8 @@ if 'data-upload_id' in s: dl = s  # page « téléchargement direct » (gratuit,
 else:
     r = json.loads(curl("-X", "POST", "-d", "csrf_token=" + tok, page + "/download_url"))
     dl = curl(r["url"])
-for m in re.finditer(r'data-upload_id="(\d+)"(.{0,600})', dl, re.S):
-    nom = re.search(r'<strong[^>]*? title="([^"]*)"', m.group(2))
+for m in re.finditer(r'data-upload_id="(\d+)"', dl):   # pas de .{0,600} dans le motif : il avalait le fichier suivant
+    nom = re.search(r'<strong[^>]*? title="([^"]*)"', dl[m.end():m.end() + 800])
     nom = html.unescape(nom.group(1)) if nom else "?"
     print("fichier :", m.group(1), nom)
     if re.search(motif, nom, re.I):
