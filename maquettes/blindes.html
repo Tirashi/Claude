@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Blindés</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
+<style>
+/* Maquette « Blindés » : tactique au tour par tour façon Advance Wars, plateau et unités en voxels dessinés dans le code */
+:root {
+  --fond: #1a2230; --fen: #263449; --fen2: #1a2536; --bord: #e0b84a; --txt: #f3ead2; --doux: #aab7c8; --or: #f2c14e;
+  --bleu: #2f74e0; --rouge: #d8402e;
+  --police: "Pixelify Sans", "Trebuchet MS", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--fond); color: var(--txt); font-family: var(--police); font-size: 16px; line-height: 1.25;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 8px 24px;
+}
+.ecran { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+.directions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.directions button { font-family: var(--police); font-weight: 700; font-size: 14px; padding: 7px 4px; border-radius: 5px; cursor: pointer; background: var(--fen2); color: var(--doux); border: 2px solid #3a4a62; }
+.directions button.vu { background: var(--or); color: #241a08; border-color: var(--or); }
+.directions button:disabled { opacity: .45; cursor: default; }
+.bandeau { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.bandeau .camp { padding: 2px 10px; border-radius: 4px; background: var(--bleu); color: #fff; }
+.bandeau .camp.rouge { background: var(--rouge); }
+.bandeau .or { color: var(--or); }
+.plateau { position: relative; aspect-ratio: 3 / 4; border: 2px solid var(--bord); border-radius: 8px; overflow: hidden; background: #7cc0e6; touch-action: manipulation; }
+.plateau > canvas { display: block; width: 100%; height: 100%; }
+#combat { position: absolute; inset: 0; display: none; background: rgba(10, 16, 26, .55); }
+.plateau.combat #combat { display: block; }
+#combat .vue { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); aspect-ratio: 3 / 2; border-block: 3px solid var(--bord); overflow: hidden; }
+#combat canvas { display: block; width: 100%; height: 100%; }
+#etiquettes { position: absolute; inset: 0; pointer-events: none; }
+.eti { position: absolute; top: 8px; font-weight: 700; font-size: 16px; text-shadow: 0 2px 0 #000, 0 0 4px #000; display: grid; gap: 3px; width: 44%; }
+.eti.g { left: 8px; } .eti.d { right: 8px; text-align: right; }
+.eti .barre { height: 8px; background: #111; border: 2px solid #111; border-radius: 3px; overflow: hidden; }
+.eti .barre i { display: block; height: 100%; background: #6cd04a; transition: width .45s; }
+.eti.d .barre i { margin-left: auto; }
+.degat { position: absolute; font-weight: 700; font-size: 28px; color: #fff; text-shadow: 0 3px 0 #000, 0 0 6px #000; transform: translate(-50%, -50%); pointer-events: none; animation: monte .9s ease-out forwards; }
+@keyframes monte { to { transform: translate(-50%, -160%); opacity: 0; } }
+.ruban {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.7); opacity: 0; pointer-events: none;
+  font-weight: 700; font-size: 20px; text-align: center; white-space: nowrap; padding: 8px 18px;
+  background: #1f3f78; color: #fff; border: 2px solid var(--bord); border-radius: 6px; box-shadow: 0 4px 0 rgba(0,0,0,.4);
+  transition: opacity .2s, transform .25s cubic-bezier(.3,1.6,.6,1);
+}
+.ruban.rouge { background: #6e1f17; } .ruban.vu { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.fenetre { background: linear-gradient(var(--fen), var(--fen2)); border: 2px solid var(--bord); border-radius: 6px; padding: 10px; display: grid; gap: 8px; }
+.fiches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fiche { min-width: 0; }
+.fiche .nom { font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+.fiche .val { font-size: 14px; color: var(--doux); }
+.fiche .val b { color: var(--txt); }
+.actions, .recrue { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.fenetre button { font-family: var(--police); font-weight: 700; font-size: 15px; padding: 10px 4px; cursor: pointer; border-radius: 5px; background: #2c4262; color: var(--txt); border: 2px solid var(--bord); }
+.fenetre button.chaud { background: var(--or); color: #241a08; }
+.fenetre button:disabled { opacity: .35; cursor: default; }
+.recrue small { display: block; font-weight: 400; color: var(--or); }
+.aide { font-size: 15px; color: var(--doux); min-height: 2.5em; }
+.reglages { display: flex; gap: 14px; flex-wrap: wrap; font-size: 15px; color: var(--doux); }
+.reglages label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.notes { display: grid; gap: 8px; font-size: 16px; color: #d8e0ea; }
+.notes h2 { margin: 0; font-size: 17px; color: var(--or); }
+.notes p, .notes ul { margin: 0; } .notes ul { padding-left: 18px; display: grid; gap: 4px; }
+@media (prefers-reduced-motion: reduce) { .ruban { transition: none; } }
+</style>
+</head>
+<body>
+<div class="ecran">
+  <div class="directions" id="directions">
+    <button data-style="A" class="vu">A · Voxels maison</button>
+    <button data-style="B" disabled>B · Packs CC0</button>
+  </div>
+  <div class="bandeau"><span id="jour">JOUR 1</span><span class="camp" id="camp">BLEUS</span><span class="or" id="or">FONDS 3000</span></div>
+  <div class="plateau" id="plateau">
+    <div class="ruban" id="ruban"></div>
+    <div id="combat"><div class="vue" id="vue"><div id="etiquettes"></div></div></div>
+  </div>
+  <div class="fenetre">
+    <div class="fiches">
+      <div class="fiche"><div class="nom" id="t-nom">Plaine</div><div class="val" id="t-val">Défense ★</div></div>
+      <div class="fiche"><div class="nom" id="u-nom">—</div><div class="val" id="u-val">touche une unité</div></div>
+    </div>
+    <div class="actions" id="actions">
+      <button id="a-tir" disabled>Tirer</button>
+      <button id="a-capture" disabled>Capturer</button>
+      <button id="a-attendre" disabled>Attendre</button>
+      <button id="a-fin" class="chaud">Fin du tour</button>
+    </div>
+    <div class="recrue" id="recrue" hidden></div>
+    <div class="aide" id="aide">Touche une unité bleue pour voir où elle peut aller.</div>
+    <div class="reglages">
+      <label><input type="checkbox" id="o-scene" checked> Scènes de combat</label>
+      <label><input type="checkbox" id="o-son" checked> Sons</label>
+    </div>
+  </div>
+  <div class="notes">
+    <h2>Blindés : direction A, voxels maison</h2>
+    <p id="note-style">Tout est dessiné dans le code, cube par cube (aucun fichier venu d'ailleurs) : plaines, routes, forêts, montagnes, mer, villes, usines et QG ; cinq unités aux couleurs de leur camp.</p>
+    <ul>
+      <li><b>Fantassin</b> (1000) : prend les villes, pas cher.</li>
+      <li><b>Bazooka</b> (3000) : prend les villes, fort contre les blindés, passe les montagnes.</li>
+      <li><b>Jeep</b> (4000) : très rapide, mitrailleuse contre l'infanterie.</li>
+      <li><b>Char</b> (7000) : solide et polyvalent.</li>
+      <li><b>Artillerie</b> (6000) : tire de 2 à 3 cases, mais pas après avoir bougé, et ne riposte pas.</li>
+    </ul>
+    <p>Chaque unité est une escouade : 10 PV = 5 soldats ou 3 véhicules dans la scène de combat. Une ville rapporte 1000 par tour ; touche ton usine pour recruter. Prends le QG rouge ou détruis toutes ses unités. Touche l'écran pendant un combat pour le passer.</p>
+  </div>
+</div>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/GLTFLoader.js"></script>
+<script src="blindes-b.js"></script>
+<script>
+'use strict';
+// ================= voxels : un modèle = des cubes colorés, fusionnés en une géométrie (faces cachées retirées) =================
+const FACES = [
+  [[1, 0, 0], [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]]], [[-1, 0, 0], [[0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, 0]]],
+  [[0, 1, 0], [[0, 1, 0], [0, 1, 1], [1, 1, 1], [1, 1, 0]]], [[0, -1, 0], [[1, 0, 0], [1, 0, 1], [0, 0, 1], [0, 0, 0]]],
+  [[0, 0, 1], [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]]], [[0, 0, -1], [[0, 1, 0], [1, 1, 0], [1, 0, 0], [0, 0, 0]]],
+];
+const hasard = (x, y, k = 0) => { let v = Math.sin(x * 127.1 + y * 311.7 + k * 74.7) * 43758.5453; return v - Math.floor(v); };
+function Vox() {
+  const m = new Map();
+  const v = {
+    m,
+    set(x, y, z, c) { if (c == null) m.delete(x + ',' + y + ',' + z); else m.set(x + ',' + y + ',' + z, c); return v; },
+    box(x0, x1, y0, y1, z0, z1, c) { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) for (let z = z0; z <= z1; z++) v.set(x, y, z, typeof c === 'function' ? c(x, y, z) : c); return v; },
+    has: (x, y, z) => m.has(x + ',' + y + ',' + z),
+  };
+  return v;
+}
+const _c = new THREE.Color();
+// s : taille d'un voxel ; bruit : variation de teinte d'un cube à l'autre ; centre : on centre en x et z, le bas à y = 0
+function voxGeo(v, s, bruit = .06, centre = true) {
+  const pos = [], nor = [], col = [];
+  let mnx = 1e9, mxx = -1e9, mny = 1e9, mnz = 1e9, mxz = -1e9;
+  for (const [k, c] of v.m) {
+    const [x, y, z] = k.split(',').map(Number);
+    mnx = Math.min(mnx, x); mxx = Math.max(mxx, x + 1); mny = Math.min(mny, y); mnz = Math.min(mnz, z); mxz = Math.max(mxz, z + 1);
+    _c.setHex(c); const f = 1 + (hasard(x, y, z) - .5) * 2 * bruit;
+    const r = Math.min(1, _c.r * f), g = Math.min(1, _c.g * f), b = Math.min(1, _c.b * f);
+    for (const [n, q] of FACES) {
+      if (v.has(x + n[0], y + n[1], z + n[2])) continue;
+      for (const i of [0, 1, 2, 0, 2, 3]) { pos.push(x + q[i][0], y + q[i][1], z + q[i][2]); nor.push(n[0], n[1], n[2]); col.push(r, g, b); }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  if (centre) g.translate(-(mnx + mxx) / 2, -mny, -(mnz + mxz) / 2);
+  g.scale(s, s, s);
+  return g;
+}
+const matVox = new THREE.MeshLambertMaterial({ vertexColors: true });
+
+// ================= couleurs des camps =================
+const CAMPS = {
+  B: { nom: 'BLEUS', c: 0x3478d8, f: 0x1f4d94, cl: 0x7fb2f0 },
+  R: { nom: 'ROUGES', c: 0xd8452e, f: 0x8c2a1c, cl: 0xf3907a },
+  N: { c: 0xb4b0a6, f: 0x7c786e, cl: 0xd8d4ca },
+};
+const PEAU = 0xf0c08a, NOIR = 0x2a2a2e, GRIS = 0x5a5e66, ACIER = 0x8a929c, KAKI = 0x8a7a4a;
+
+// ================= les unités (A : voxels maison), toutes tournées vers +x =================
+function soldat(v, cp, bazooka) {
+  const C = CAMPS[cp];
+  v.box(-1, 0, 0, 1, -2, -1, NOIR).box(-1, 0, 0, 1, 1, 2, NOIR);          // bottes
+  v.box(-1, 0, 2, 4, -2, -1, C.f).box(-1, 0, 2, 4, 1, 2, C.f);            // jambes
+  v.box(-1, 1, 5, 8, -2, 2, C.c).box(-1, 1, 5, 5, -2, 2, 0x5a4428);       // torse, ceinture
+  v.box(-1, 0, 6, 8, -3, -3, C.c).box(-1, 0, 6, 8, 3, 3, C.c);            // bras
+  v.box(-3, -2, 5, 8, -1, 1, KAKI);                                        // sac à dos
+  v.box(-1, 1, 9, 10, -1, 1, PEAU).set(1, 10, -1, NOIR).set(1, 10, 1, NOIR); // tête, yeux
+  v.box(-2, 1, 11, 11, -2, 2, C.f).box(-1, 1, 12, 12, -1, 1, C.f).box(2, 2, 11, 11, -1, 1, C.f); // casque
+  if (bazooka) {
+    v.box(-5, 4, 9, 10, 3, 4, 0x4e5a3a).box(5, 5, 9, 10, 3, 4, NOIR).box(1, 2, 6, 8, 3, 3, PEAU); // tube sur l'épaule
+  } else {
+    v.box(1, 6, 7, 7, -1, -1, NOIR).box(-1, 0, 6, 7, -1, -1, 0x6a4a2a).set(2, 6, -1, NOIR).box(1, 2, 7, 7, -2, -2, PEAU); // fusil
+  }
+}
+function chenilles(v, x0, x1, z) {
+  for (const zz of [z, -z]) {
+    const s = zz > 0 ? 1 : -1;
+    v.box(x0, x1, 0, 2, Math.min(zz, zz - 2 * s), Math.max(zz, zz - 2 * s), NOIR);
+    for (let x = x0 + 1; x < x1; x += 3) v.set(x, 1, zz, GRIS);
+    v.box(x0 + 1, x1 - 1, 0, 0, Math.min(zz, zz - 2 * s), Math.max(zz, zz - 2 * s), 0x1c1c20);
+  }
+}
+const MODELES_A = {
+  inf: cp => { const v = Vox(); soldat(v, cp, false); return v; },
+  baz: cp => { const v = Vox(); soldat(v, cp, true); return v; },
+  tank: cp => {
+    const v = Vox(), C = CAMPS[cp];
+    chenilles(v, -7, 7, 5);
+    v.box(-7, 7, 3, 4, -5, 5, C.f).box(-6, 6, 2, 5, -3, 3, C.c).box(5, 7, 3, 4, -3, 3, C.f);
+    v.box(-3, 2, 6, 8, -3, 3, C.c).box(-2, -1, 9, 9, -1, 0, C.f).box(-3, 2, 6, 6, -3, 3, C.f);
+    v.box(3, 11, 7, 7, -1, 0, GRIS).box(11, 12, 6, 8, -1, 0, NOIR);
+    v.box(-1, 0, 7, 7, 4, 4, 0xffffff).box(-1, 0, 7, 7, -4, -4, 0xffffff).box(-6, -6, 5, 5, -2, 2, C.cl);
+    return v;
+  },
+  rec: cp => {
+    const v = Vox(), C = CAMPS[cp];
+    for (const x of [-5, 3]) for (const z of [-4, 3]) v.box(x, x + 2, 0, 2, z, z + 1, NOIR).set(x + 1, 1, z < 0 ? z : z + 1, ACIER);
+    v.box(-6, 6, 2, 4, -3, 3, C.c).box(2, 6, 5, 5, -3, 3, C.c).box(-6, -4, 5, 6, -3, 3, C.f);
+    v.box(1, 1, 5, 7, -3, 3, 0x9ad4f0).box(1, 1, 8, 8, -3, 3, NOIR).box(6, 6, 3, 3, -2, 2, 0xffe08a);
+    v.box(-2, -1, 5, 6, -1, 0, PEAU).box(-2, -1, 7, 7, -2, 1, C.f);           // conducteur
+    v.box(-4, -4, 5, 8, 2, 2, GRIS).box(-5, 1, 9, 9, 2, 2, NOIR);             // mitrailleuse
+    return v;
+  },
+  art: cp => {
+    const v = Vox(), C = CAMPS[cp];
+    chenilles(v, -6, 6, 4);
+    v.box(-6, 6, 3, 4, -4, 4, C.f).box(-5, 5, 2, 5, -2, 2, C.c);
+    v.box(-4, 1, 6, 8, -2, 2, C.c).box(-4, -4, 6, 9, -3, 3, C.f);
+    for (let i = 0; i < 10; i++) v.box(1 + i, 2 + i, 8 + Math.round(i * .6), 8 + Math.round(i * .6), -1, 0, i > 7 ? NOIR : GRIS);
+    v.box(-6, -5, 3, 3, -1, 0, ACIER);
+    return v;
+  },
+};
+const geosUnites = {};
+let style = 'A';
+// ================= direction B : véhicules de padadu (.vox d'une couleur, peints ici) et soldats animés de Kenney =================
+function lireVox(nom, cp) {
+  const o = BLINDES_B.vox[nom], b = atob(o.v), v = Vox(), C = CAMPS[cp], pts = [];
+  for (let i = 0; i < b.length; i += 4) pts.push([b.charCodeAt(i), b.charCodeAt(i + 1), b.charCodeAt(i + 2)]);
+  const long = o.t[0] > o.t[1];                       // le grand côté du modèle devient l'avant (+x)
+  const cle = new Set(pts.map(p => p.join(',')));
+  let zmax = 0; for (const p of pts) zmax = Math.max(zmax, p[2]);
+  for (const [x, y, z] of pts) {
+    let n = 0; for (const [a, bb, c] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) if (cle.has((x + a) + ',' + (y + bb) + ',' + (z + c))) n++;
+    const coul = z <= 2 ? NOIR : n <= 2 ? GRIS : z >= zmax - 1 ? C.f : (z === 3 ? C.f : C.c);
+    if (long) v.set(x, z, y, coul); else v.set(-y, z, x, coul);
+  }
+  return v;
+}
+const MODELES_B = {
+  rec: cp => lireVox('jeep', cp),
+  tank: cp => lireVox('tank', cp),
+  art: cp => {                                          // le camion du pack, avec un canon à longue portée (voxels maison) sur le plateau
+    const v = lireVox('truck', cp); let mnx = 99, h = 0;
+    for (const k of v.m.keys()) { const [x, y] = k.split(',').map(Number); mnx = Math.min(mnx, x); }
+    for (const k of v.m.keys()) { const [x, y] = k.split(',').map(Number); if (x < mnx + 12) h = Math.max(h, y); }
+    v.box(mnx + 2, mnx + 9, h + 1, h + 3, 4, 9, CAMPS[cp].f);
+    for (let i = 0; i < 16; i++) v.box(mnx + 7 + i, mnx + 8 + i, h + 3 + Math.round(i * .6), h + 4 + Math.round(i * .6), 6, 7, i > 13 ? NOIR : GRIS);
+    return v;
+  },
+};
+const KB = { pret: false, mats: {} };
+const animes = new Set();
+function chargerB() {
+  window.createImageBitmap = undefined;                 // dans l'artefact, fetch est interdit : les images passent par <img>
+  const gestion = new THREE.LoadingManager(); gestion.setURLModifier(u => /\.png$/.test(u) ? BLINDES_B.soldatTex : u);
+  const bin = atob(BLINDES_B.soldatGlb), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  new THREE.GLTFLoader(gestion).parse(buf.buffer, '', g => {
+    KB.modele = g.scene; KB.clips = {}; for (const c of g.animations) KB.clips[c.name] = c;
+    const bb = new THREE.Box3().setFromObject(g.scene); KB.haut = bb.max.y - bb.min.y;
+    const img = new Image(); img.onload = () => {
+      for (const cp of ['B', 'R']) {
+        const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'); x.drawImage(img, 0, 0, 256, 256);
+        const d = x.getImageData(0, 0, 256, 256), p = d.data, C = new THREE.Color(CAMPS[cp].c), F = new THREE.Color(CAMPS[cp].f);
+        for (let i = 0; i < p.length; i += 4) {
+          const r = p[i], gg = p[i + 1], b = p[i + 2];
+          if (b > r + 25 && b > gg + 10) { const l = Math.min(1.4, (r + gg + b) / 250); p[i] = C.r * 255 * l; p[i + 1] = C.g * 255 * l; p[i + 2] = C.b * 255 * l; }
+        }
+        x.putImageData(d, 0, 0);
+        x.fillStyle = '#' + F.getHexString(); x.fillRect(32, 0, 32, 32); x.fillRect(0, 32, 128, 8);   // casque : dessus et haut de la tête
+        KB.mats[cp] = c;
+      }
+      KB.fusil = voxGeo(Vox().box(0, 11, 0, 1, 0, 0, NOIR).box(-3, -1, -1, 1, 0, 0, 0x6a4a2a).box(3, 4, -2, -1, 0, 0, NOIR), KB.haut / 22, 0);
+      KB.tube = voxGeo(Vox().box(-6, 7, 0, 1, 0, 1, 0x4e5a3a).box(7, 8, 0, 1, 0, 1, NOIR), KB.haut / 18, 0);
+      KB.pret = true; const bt = document.querySelector('[data-style="B"]'); bt.disabled = false;
+    };
+    img.src = BLINDES_B.soldatTex;
+  }, e => console.log('chargement B :', e));
+}
+// une matière par pièce du personnage : la texture repeinte, avec le décalage d'UV propre à chaque pièce (KHR_texture_transform)
+function matsSoldat(cp) {
+  const m = {};
+  KB.modele.traverse(o => {
+    if (!o.isMesh) return;
+    const t = o.material.map.clone(); t.image = KB.mats[cp]; t.encoding = THREE.LinearEncoding; t.magFilter = t.minFilter = THREE.NearestFilter; t.needsUpdate = true;
+    m[o.name] = new THREE.MeshLambertMaterial({ map: t });
+  });
+  return m;
+}
+const _matsS = {};
+function soldatB(cp, baz, mats) {
+  const g = new THREE.Group(), c = KB.modele.clone(true), m = mats || _matsS[cp] || (_matsS[cp] = matsSoldat(cp));
+  c.traverse(o => { if (o.isMesh) { o.material = m[o.name]; o.castShadow = true; } });
+  c.rotation.y = Math.PI / 2; c.scale.setScalar(.74 / KB.haut); g.add(c);
+  // l'arme suit le bras droit
+  let bras = null, torse = null; c.traverse(o => { if (o.name === 'arm-right') bras = o; if (o.name === 'torso') torse = o; });
+  const arme = new THREE.Mesh(baz ? KB.tube : KB.fusil, matVox); arme.castShadow = true;
+  if (baz) { arme.rotation.y = -Math.PI / 2; arme.position.set(-.17 * KB.haut, .3 * KB.haut, 0); (torse || c).add(arme); }
+  else { arme.rotation.z = -Math.PI / 2; arme.position.set(0, -.3 * KB.haut, 0); (bras || c).add(arme); }
+  const mix = new THREE.AnimationMixer(c); g.userData.mixer = mix; g.userData.baz = baz;
+  g.userData.jouer = (nom, une) => {
+    const clip = KB.clips[nom]; if (!clip) return;
+    const a = mix.clipAction(clip); if (g.userData.act === a && !une) return;
+    a.reset(); a.setLoop(une ? THREE.LoopOnce : THREE.LoopRepeat); a.clampWhenFinished = !!une;
+    if (g.userData.act) g.userData.act.fadeOut(.12); a.fadeIn(.12).play(); g.userData.act = a;
+  };
+  g.userData.jouer(baz ? 'holding-right' : 'holding-both');
+  mix.update(Math.random());
+  animes.add(g);
+  return g;
+}
+const soldat_ = t => t === 'inf' || t === 'baz';
+function geoUnite(type, cp) { const k = style + type + cp; return geosUnites[k] || (geosUnites[k] = voxGeo((style === 'B' ? MODELES_B : MODELES_A)[type](cp), style === 'B' ? 1 / 34 : 1 / 18, style === 'B' ? .03 : .05)); }
+function figureUnite(type, cp, mat) {
+  if (style === 'B' && soldat_(type)) return soldatB(cp, type === 'baz', mat);
+  const m = new THREE.Mesh(geoUnite(type, cp), mat || matVox); m.castShadow = true; m.receiveShadow = true; return m;
+}
+function matFigure(type, cp) { return style === 'B' && soldat_(type) ? matsSoldat(cp) : matVox.clone(); }
+
+// ================= décor du plateau (une case = 16 voxels) =================
+function arbre(v, ox, oz, h, k) {
+  const vert = [0x3f8a3a, 0x357a32, 0x4f9a44, 0x2f6e2e];
+  v.box(ox, ox + 1, 0, 2, oz, oz + 1, 0x6a4a2a);
+  const couches = [[3, 3], [3, 2], [2, 1], [1, 0]];
+  let y = 3;
+  couches.forEach(([r, n], i) => { const r2 = r - (h ? 0 : (i === 0 ? 1 : 0)); for (let j = 0; j <= n; j++, y++) v.box(ox - r2 + 1, ox + r2, y, y, oz - r2 + 1, oz + r2, (x, yy, z) => vert[Math.floor(hasard(x, yy, z + k) * 4)]); });
+}
+const DECOR = {
+  F: () => { const v = Vox(); arbre(v, -4, -3, 1, 1); arbre(v, 3, -1, 0, 2); arbre(v, -2, 4, 0, 3); return v; },
+  M: () => {
+    const v = Vox();
+    for (let x = -7; x <= 7; x++) for (let z = -7; z <= 7; z++) {
+      const h1 = 14 - 1.7 * Math.max(Math.abs(x + 1), Math.abs(z + 1)) - hasard(x, z) * 1.5;
+      const h2 = 9 - 1.6 * Math.max(Math.abs(x - 4), Math.abs(z - 3)) - hasard(z, x) * 1.2;
+      const h = Math.round(Math.max(h1, h2));
+      for (let y = 0; y < h; y++) v.set(x, y, z, y >= 11 ? 0xf4f4f0 : y >= 7 ? 0xa89a86 : y >= 3 ? 0x8c7458 : 0x6e8a46);
+    }
+    return v;
+  },
+  c: cp => {
+    const v = Vox(), C = CAMPS[cp];
+    const maison = (ox, oz, h) => {
+      v.box(ox - 3, ox + 2, 0, h, oz - 3, oz + 2, 0xeadfc4);
+      for (let k = 0; k < 4; k++) v.box(ox - 4 + k, ox + 3 - k, h + 1 + k, h + 1 + k, oz - 4, oz + 3, k === 3 ? C.f : C.c);
+      v.box(ox + 3, ox + 3, 1, 2, oz - 1, oz, 0x5a3a24).box(ox + 3, ox + 3, h - 1, h - 1, oz - 3 + 0, oz - 3, 0x3a5a8a).box(ox + 3, ox + 3, h - 1, h - 1, oz + 2, oz + 2, 0x3a5a8a);
+    };
+    maison(-3, -3, 4); maison(3, 3, 3);
+    return v;
+  },
+  Q: cp => {
+    const v = Vox(), C = CAMPS[cp];
+    v.box(-6, 5, 0, 5, -5, 4, 0xdcd4c0).box(-6, 5, 6, 6, -5, 4, C.c);
+    for (let x = -6; x <= 5; x += 2) v.set(x, 7, -5, C.f).set(x, 7, 4, C.f);
+    v.box(-2, 1, 7, 12, -2, 1, 0xe8e0cc).box(-3, 2, 13, 13, -3, 2, C.c).box(-1, 0, 14, 14, -1, 0, C.f);
+    v.box(6, 6, 1, 3, -1, 0, 0x5a3a24);
+    for (const z of [-4, -2, 1, 3]) v.set(6, 4, z, 0x3a5a8a);
+    v.box(0, 0, 15, 22, 0, 0, ACIER).box(1, 5, 19, 22, 0, 0, C.c).box(2, 3, 20, 21, 0, 0, 0xffffff);
+    return v;
+  },
+  U: cp => {
+    const v = Vox(), C = CAMPS[cp];
+    v.box(-6, 5, 0, 4, -5, 4, 0xa3abb5);
+    for (let i = 0; i < 3; i++) for (let k = 0; k < 3; k++) v.box(-6 + 4 * i, -6 + 4 * i + 3 - k, 5 + k, 5 + k, -5, 4, k === 0 ? C.f : C.c);
+    v.box(2, 3, 5, 11, 1, 2, 0x7a4a3a).box(2, 3, 11, 11, 1, 2, NOIR);
+    v.box(6, 6, 0, 3, -2, 1, 0x4a4a52).box(6, 6, 3, 3, -2, 1, C.c);
+    return v;
+  },
+  touffe: k => { const v = Vox(); for (let i = 0; i < 5; i++) { const x = Math.floor(hasard(k, i) * 12) - 6, z = Math.floor(hasard(i, k) * 12) - 6; v.set(x, 0, z, 0x5aa040).set(x + 1, 0, z, 0x5aa040).set(x, 1, z, 0x6cb84a); } return v; },
+};
+const geosDecor = {};
+function geoDecor(k, cp) { const kk = k + (cp || ''); return geosDecor[kk] || (geosDecor[kk] = voxGeo(DECOR[k](cp), 1 / 16, .07)); }
+
+// ================= règles =================
+const CARTE = [
+  '~.F.M.Q.',
+  '~.U===c.',
+  '~..=.FF.',
+  '~F.=..M.',
+  '.c.=.c..',
+  '..M===F.',
+  '.F..=.c.',
+  '.M..=.F~',
+  '.FF.=..~',
+  '.c===U.~',
+  '.Q.M.F.~',
+];
+const L = 8, H = 11;
+const TERRAINS = { '.': ['Plaine', 1], F: ['Forêt', 2], M: ['Montagne', 4], '~': ['Mer', 0], '=': ['Route', 0], c: ['Ville', 3], Q: ['QG', 4], U: ['Usine', 3] };
+const TROUPES = {
+  inf: { nom: 'Fantassin', pm: 3, prix: 1000, rg: [1, 1], capture: true, mv: 'pied' },
+  baz: { nom: 'Bazooka', pm: 2, prix: 3000, rg: [1, 1], capture: true, mv: 'pied+' },
+  rec: { nom: 'Jeep', pm: 7, prix: 4000, rg: [1, 1], mv: 'roues' },
+  tank: { nom: 'Char', pm: 6, prix: 7000, rg: [1, 1], mv: 'chenilles' },
+  art: { nom: 'Artillerie', pm: 5, prix: 6000, rg: [2, 3], mv: 'chenilles', indirect: true },
+};
+// dégâts de base (en %) : attaquant → défenseur
+const BASE = {
+  inf: { inf: 55, baz: 45, rec: 12, tank: 5, art: 15 },
+  baz: { inf: 65, baz: 55, rec: 85, tank: 55, art: 70 },
+  rec: { inf: 70, baz: 65, rec: 35, tank: 6, art: 45 },
+  tank: { inf: 75, baz: 70, rec: 85, tank: 55, art: 70 },
+  art: { inf: 90, baz: 85, rec: 80, tank: 70, art: 75 },
+};
+const COUT = {
+  pied: { '.': 1, F: 1, M: 2, '=': 1, c: 1, Q: 1, U: 1 },
+  'pied+': { '.': 1, F: 1, M: 1, '=': 1, c: 1, Q: 1, U: 1 },
+  roues: { '.': 2, F: 3, '=': 1, c: 1, Q: 1, U: 1 },
+  chenilles: { '.': 1, F: 2, '=': 1, c: 1, Q: 1, U: 1 },
+};
+const terrain = (x, y) => CARTE[y][x];
+const dans = (x, y) => x >= 0 && y >= 0 && x < L && y < H;
+const dist = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+const VOIS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+let unites, bat, jour, joueur, fonds, sel, phase, portee, cibles, fini, prochainId, depart, aBouge;
+const uniteEn = (x, y) => unites.find(u => u.x === x && u.y === y && u.pv > 0);
+const batEn = (x, y) => bat.find(b => b.x === x && b.y === y);
+function nouvellePartie() {
+  unites = []; bat = []; jour = 1; joueur = 'B'; fonds = { B: 0, R: 0 }; sel = null; phase = 'libre'; portee = null; cibles = []; fini = false; prochainId = 1;
+  for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) { const t = terrain(x, y); if ('cQU'.includes(t)) bat.push({ x, y, k: t, camp: y <= 1 ? 'R' : y >= 9 ? 'B' : 'N', pts: 20 }); }
+  [['inf', 2, 8], ['inf', 4, 8], ['tank', 3, 9], ['rec', 6, 9], ['art', 2, 10]].forEach(([t, x, y]) => ajouter(t, 'B', x, y));
+  [['inf', 3, 2], ['inf', 5, 2], ['tank', 4, 1], ['rec', 1, 2], ['art', 5, 0]].forEach(([t, x, y]) => ajouter(t, 'R', x, y));
+  fonds.B = 1000 * bat.filter(b => b.camp === 'B').length;
+}
+function ajouter(type, camp, x, y) { const u = { id: prochainId++, type, camp, x, y, pv: 10, fait: false }; unites.push(u); return u; }
+function calculPortee(u) {
+  const T = TROUPES[u.type], cout = COUT[T.mv];
+  const best = new Map([[u.x + ',' + u.y, { c: 0, pere: null, x: u.x, y: u.y }]]), file = [[u.x, u.y, 0]];
+  while (file.length) {
+    file.sort((a, b) => a[2] - b[2]);
+    const [x, y, c] = file.shift();
+    for (const [dx, dy] of VOIS) {
+      const nx = x + dx, ny = y + dy; if (!dans(nx, ny)) continue;
+      const k = cout[terrain(nx, ny)]; if (!k) continue;
+      const o = uniteEn(nx, ny); if (o && o.camp !== u.camp) continue;
+      const nc = c + k; if (nc > T.pm) continue;
+      const key = nx + ',' + ny; if (best.has(key) && best.get(key).c <= nc) continue;
+      best.set(key, { c: nc, pere: x + ',' + y, x: nx, y: ny }); file.push([nx, ny, nc]);
+    }
+  }
+  for (const [k, p] of [...best]) { const o = uniteEn(p.x, p.y); if (o && o !== u) best.get(k).passe = true; }
+  return best;
+}
+function chemin(P, x, y) { const c = []; let k = x + ',' + y; while (k) { const p = P.get(k); c.unshift([p.x, p.y]); k = p.pere; } return c; }
+function ciblesDepuis(u, x, y) { const [a, b] = TROUPES[u.type].rg; return unites.filter(o => o.pv > 0 && o.camp !== u.camp && dist(o, { x, y }) >= a && dist(o, { x, y }) <= b); }
+function degats(a, d, pvA = a.pv, pvD = d.pv) {
+  const base = BASE[a.type][d.type], et = TERRAINS[terrain(d.x, d.y)][1];
+  return Math.min(pvD, Math.max(1, Math.round(base / 10 * pvA / 10 * (1 - et * pvD / 100))));
+}
+const peutCapturer = u => TROUPES[u.type].capture && batEn(u.x, u.y) && batEn(u.x, u.y).camp !== u.camp;
+function riposte(a, d) { return d.pv > 0 && !TROUPES[d.type].indirect && !TROUPES[a.type].indirect && dist(a, d) === 1; }
+
+// ================= sons (synthétisés) =================
+let AC = null, bruitBuf = null;
+const sonActif = () => document.getElementById('o-son').checked;
+function audio() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate; bruitBuf = AC.createBuffer(1, n, n); const d = bruitBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; } catch (e) { AC = null; } }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function note(f, dur, type = 'square', vol = .05, glisse = 0, retard = 0) {
+  if (!sonActif() || !audio()) return;
+  const t = AC.currentTime + retard, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (glisse) o.frequency.exponentialRampToValueAtTime(Math.max(20, f + glisse), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + .02);
+}
+function souffle(dur, f0, f1, vol = .2, retard = 0) {
+  if (!sonActif() || !audio()) return;
+  const t = AC.currentTime + retard, s = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = bruitBuf; fl.type = 'lowpass'; fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); s.connect(fl).connect(g).connect(AC.destination); s.start(t); s.stop(t + dur + .02);
+}
+const SON = {
+  clic: () => note(880, .05, 'square', .03),
+  pas: () => note(220, .04, 'triangle', .04),
+  fusil: () => souffle(.07, 4000, 800, .12),
+  rafale: () => { for (let i = 0; i < 4; i++) souffle(.05, 3500, 900, .1, i * .07); },
+  canon: () => { souffle(.4, 1200, 80, .35); note(90, .25, 'sine', .2, -50); },
+  boum: () => { souffle(.6, 900, 60, .3); note(60, .4, 'sine', .15, -30); },
+  capture: () => { note(523, .1, 'square', .04); note(659, .1, 'square', .04, 0, .1); note(784, .18, 'square', .04, 0, .2); },
+  tour: () => { note(392, .12, 'square', .04); note(523, .2, 'square', .04, 0, .12); },
+  victoire: () => [523, 659, 784, 1046].forEach((f, i) => note(f, .25, 'square', .05, 0, i * .15)),
+};
+
+// ================= rendu du plateau =================
+const plateau = document.getElementById('plateau');
+const rendu = new THREE.WebGLRenderer({ antialias: true });
+rendu.setPixelRatio(Math.min(2, devicePixelRatio)); rendu.shadowMap.enabled = true; rendu.shadowMap.type = THREE.PCFSoftShadowMap;
+plateau.prepend(rendu.domElement);
+function lumieres(sc, ombreTaille = 8) {
+  sc.add(new THREE.HemisphereLight(0xdcefff, 0x6a5a40, .62));
+  const sol = new THREE.DirectionalLight(0xfff2dc, .75); sol.position.set(-5, 12, 6); sol.castShadow = true;
+  sol.shadow.mapSize.set(2048, 2048); Object.assign(sol.shadow.camera, { left: -ombreTaille, right: ombreTaille, top: ombreTaille, bottom: -ombreTaille, near: 1, far: 40 });
+  sol.shadow.bias = -.0008; sc.add(sol);
+}
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x7cc0e6); lumieres(scene);
+const camera = new THREE.PerspectiveCamera(30, .8, .1, 200);
+const HT = { '~': .12, '.': .3, F: .3, M: .3, '=': .3, c: .3, Q: .3, U: .3 };
+const pos3 = (x, y) => new THREE.Vector3(x - (L - 1) / 2, 0, y - (H - 1) / 2);
+function cadrer() {
+  const w = plateau.clientWidth, h = plateau.clientHeight; rendu.setSize(w, h, false);
+  camera.aspect = w / h;
+  const dir = new THREE.Vector3(0, 1, .85).normalize(), cible = new THREE.Vector3(0, 0, .2);
+  const coins = [[-.5, -.5], [L - .5, -.5], [-.5, H - .5], [L - .5, H - .5]].map(([x, y]) => pos3(x, y));
+  let a = 5, b = 60;
+  for (let i = 0; i < 30; i++) {
+    const d = (a + b) / 2; camera.position.copy(cible).addScaledVector(dir, d); camera.lookAt(cible); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    const ok = coins.every(c => { const p = c.clone().project(camera); return Math.abs(p.x) < .98 && Math.abs(p.y) < .97; });
+    if (ok) b = d; else a = d;
+  }
+  camera.position.copy(cible).addScaledVector(dir, b); camera.lookAt(cible); camera.updateProjectionMatrix();
+}
+const geoCase = new THREE.BoxGeometry(1, 1, 1); geoCase.translate(0, -.5, 0);
+const matsCase = {};
+function matCase(coul) { return matsCase[coul] || (matsCase[coul] = new THREE.MeshLambertMaterial({ color: coul })); }
+const COUL_SOL = { '.': [0x7cc252, 0x74b84c], F: [0x6cae48, 0x66a644], M: [0x7cb850, 0x76b04c], '~': [0x3a8fd8, 0x3a8fd8], '=': [0xa49c8c, 0x9c9484], c: [0x9c9484, 0x948c7c], Q: [0x9c9484, 0x948c7c], U: [0x9c9484, 0x948c7c] };
+const batObjs = new Map();
+let eau;
+function construirePlateau() {
+  for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) {
+    const t = terrain(x, y), p = pos3(x, y), h = HT[t];
+    const m = new THREE.Mesh(geoCase, matCase(COUL_SOL[t][(x + y) & 1])); m.scale.set(1, h + 1, 1); m.position.set(p.x, h, p.z); m.receiveShadow = true; scene.add(m);
+    if (t === 'F' || t === 'M') { const d = new THREE.Mesh(geoDecor(t), matVox); d.position.set(p.x, h, p.z); d.rotation.y = t === 'F' ? Math.floor(hasard(x, y) * 4) * Math.PI / 2 : 0; d.castShadow = d.receiveShadow = true; scene.add(d); }
+    if (t === '.' && hasard(x, y, 3) < .6) { const d = new THREE.Mesh(geoDecor('touffe', String(x * 13 + y)), matVox); d.position.set(p.x, h, p.z); scene.add(d); }
+    if (t === '=') {
+      const marque = (ox, oz, sx, sz) => { const r = new THREE.Mesh(geoCase, matCase(0xe2d8bc)); r.scale.set(sx, .02, sz); r.position.set(p.x + ox, h + .02, p.z + oz); r.receiveShadow = true; scene.add(r); };
+      const route = (a, b) => dans(a, b) && '=cQU'.includes(terrain(a, b));
+      marque(0, 0, .12, .12);
+      if (route(x + 1, y)) marque(.3, 0, .3, .12); if (route(x - 1, y)) marque(-.3, 0, .3, .12);
+      if (route(x, y + 1)) marque(0, .3, .12, .3); if (route(x, y - 1)) marque(0, -.3, .12, .3);
+    }
+  }
+  // la mer : un plan d'eau un peu brillant et le fond sous le plateau
+  eau = new THREE.Mesh(new THREE.PlaneGeometry(L + 30, H + 30), new THREE.MeshLambertMaterial({ color: 0x3e95dc, transparent: true, opacity: .85 }));
+  eau.rotation.x = -Math.PI / 2; eau.position.y = .1; scene.add(eau);
+  for (const b of bat) dessinerBatiment(b);
+}
+function dessinerBatiment(b) {
+  if (batObjs.has(b)) scene.remove(batObjs.get(b));
+  const p = pos3(b.x, b.y), m = new THREE.Mesh(geoDecor(b.k, b.camp), matVox);
+  m.position.set(p.x, HT[b.k], p.z); m.castShadow = m.receiveShadow = true; scene.add(m); batObjs.set(b, m);
+}
+// les unités sur le plateau : une figure voxel par unité, un chiffre de PV quand il en manque
+const figures = new Map();
+const spritesPV = {};
+function chiffreSprite(n) {
+  if (!spritesPV[n]) {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+    g.fillStyle = '#111'; g.fillRect(8, 8, 48, 48); g.fillStyle = '#fff'; g.font = 'bold 44px monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(n, 32, 35);
+    const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; spritesPV[n] = new THREE.SpriteMaterial({ map: t, depthTest: false });
+  }
+  return spritesPV[n];
+}
+const facePour = (dx, dy) => Math.atan2(-dy, dx);
+function majFigure(u) {
+  let f = figures.get(u.id);
+  if (u.pv <= 0) { if (f) { scene.remove(f.g); figures.delete(u.id); } return; }
+  if (!f) {
+    const g = new THREE.Group(), mat = matFigure(u.type, u.camp), m = figureUnite(u.type, u.camp, mat);
+    m.scale.setScalar(soldat_(u.type) ? (style === 'B' ? 1.25 : 1.45) : 1.3);
+    g.add(m);
+    if (u.type === 'inf' || u.type === 'baz') { const m2 = figureUnite(u.type, u.camp, mat); m2.scale.setScalar(style === 'B' ? 1.25 : 1.45); m.position.set(.12, 0, -.16); m2.position.set(-.14, 0, .16); g.add(m2); }
+    const s = new THREE.Sprite(chiffreSprite(9)); s.scale.setScalar(.3); s.position.set(.32, .62, .3); s.renderOrder = 5; g.add(s);
+    f = { g, mat, s, rot: u.camp === 'B' ? facePour(0, -1) : facePour(0, 1) };
+    scene.add(g); figures.set(u.id, f);
+  }
+  const p = pos3(u.x, u.y);
+  if (!(marche && marche.u === u)) { f.g.position.set(p.x, HT[terrain(u.x, u.y)], p.z); f.g.rotation.y = f.rot; }
+  for (const m of (f.mat.isMaterial ? [f.mat] : Object.values(f.mat))) m.color.setScalar(u.fait && u.camp === joueur ? .5 : 1);
+  f.s.visible = u.pv < 10; if (u.pv < 10) f.s.material = chiffreSprite(u.pv);
+}
+function majFigures() { for (const u of unites) majFigure(u); }
+// zones : cases colorées posées sur le sol
+const geoZone = new THREE.PlaneGeometry(.92, .92); geoZone.rotateX(-Math.PI / 2);
+const matZone = { bleu: new THREE.MeshBasicMaterial({ color: 0x4aa0ff, transparent: true, opacity: .5, depthWrite: false }), rouge: new THREE.MeshBasicMaterial({ color: 0xff4030, transparent: true, opacity: .55, depthWrite: false }), curseur: new THREE.MeshBasicMaterial({ color: 0xffe070, transparent: true, opacity: .55, depthWrite: false }) };
+const zones = new THREE.Group(); scene.add(zones);
+let curseur = null;
+function zone(x, y, mat) { const z = new THREE.Mesh(geoZone, mat), p = pos3(x, y); z.position.set(p.x, HT[terrain(x, y)] + .025, p.z); z.renderOrder = 2; zones.add(z); }
+function majZones() {
+  zones.clear();
+  if (portee && phase === 'deplace') for (const p of portee.values()) if (!p.passe) zone(p.x, p.y, matZone.bleu);
+  for (const c of cibles) zone(c.x, c.y, matZone.rouge);
+  if (curseur) zone(curseur.x, curseur.y, matZone.curseur);
+}
+// marche d'une case à l'autre en suivant le chemin
+let marche = null;
+function deplacer(u, ch) {
+  return new Promise(fin => {
+    if (ch.length < 2) { u.x = ch[0][0]; u.y = ch[0][1]; majFigure(u); fin(); return; }
+    marche = { u, ch, i: 0, t: 0, fin };
+  });
+}
+function avancerMarche(dt) {
+  const m = marche, f = figures.get(m.u.id);
+  m.t += dt * 7;
+  while (m.t >= 1 && m.i < m.ch.length - 1) { m.t -= 1; m.i++; if (m.i % 2) SON.pas(); }
+  if (m.i >= m.ch.length - 1) { for (const c of f.g.children) if (c.userData.jouer) c.userData.jouer(c.userData.baz ? 'holding-right' : 'holding-both'); const [x, y] = m.ch[m.ch.length - 1]; m.u.x = x; m.u.y = y; marche = null; majFigure(m.u); m.fin(); return; }
+  const [x0, y0] = m.ch[m.i], [x1, y1] = m.ch[m.i + 1], a = pos3(x0, y0), b = pos3(x1, y1);
+  f.rot = facePour(x1 - x0, y1 - y0); f.g.rotation.y = f.rot;
+  for (const c of f.g.children) if (c.userData.jouer) c.userData.jouer('walk');
+  f.g.position.lerpVectors(a, b, m.t); f.g.position.y = HT[terrain(x0, y0)] * (1 - m.t) + HT[terrain(x1, y1)] * m.t + Math.abs(Math.sin(m.t * Math.PI)) * .04;
+}
+
+// ================= scène de combat (escouades de profil) =================
+const vue = document.getElementById('vue');
+const renduB = new THREE.WebGLRenderer({ antialias: true }); renduB.setPixelRatio(Math.min(2, devicePixelRatio)); renduB.shadowMap.enabled = true;
+vue.prepend(renduB.domElement);
+const sceneB = new THREE.Scene(); sceneB.background = new THREE.Color(0x8ccaf0); sceneB.fog = new THREE.Fog(0x8ccaf0, 14, 30); lumieres(sceneB, 7);
+const cameraB = new THREE.PerspectiveCamera(30, 3 / 2, .1, 100);
+const groupeB = new THREE.Group(); sceneB.add(groupeB);
+let combatEnCours = null;
+const particules = [], projectiles = [];
+const geoCube = new THREE.BoxGeometry(1, 1, 1);
+const matsPart = {};
+const matPart = c => matsPart[c] || (matsPart[c] = new THREE.MeshBasicMaterial({ color: c, transparent: true }));
+const NB = t => (t === 'inf' || t === 'baz') ? 5 : 3;
+const nbFig = (t, pv) => Math.ceil(pv * NB(t) / 10);
+const ECH = 1.35;
+function solCombat(t, cote) {
+  const coul = COUL_SOL[t === '~' ? '.' : t][0];
+  const sol = new THREE.Mesh(geoCube, matCase(coul)); sol.scale.set(9, .5, 7); sol.position.set(cote * 4.5, -.25, -1); sol.receiveShadow = true; groupeB.add(sol);
+  const fond = t === 'F' ? 'F' : t === 'M' ? 'M' : 'cQU'.includes(t) ? 'c' : null;
+  if (fond) for (let i = 0; i < 4; i++) {
+    const d = new THREE.Mesh(geoDecor(fond, 'N'), matVox); d.scale.setScalar(2.2); d.position.set(cote * (1.6 + i * 2.1), 0, -3.4 - (i % 2) * .8); d.castShadow = true; groupeB.add(d);
+  }
+  if (t === '=') { const r = new THREE.Mesh(geoCube, matCase(0xa49c8c)); r.scale.set(9, .02, 1.6); r.position.set(cote * 4.5, .01, .4); groupeB.add(r); }
+}
+function ouvrirCombat(s) {
+  groupeB.clear(); particules.length = 0; projectiles.length = 0;
+  const gauche = s.a.camp === 'B' ? s.a : s.d, droite = gauche === s.a ? s.d : s.a;
+  solCombat(terrain(gauche.x, gauche.y), -1); solCombat(terrain(droite.x, droite.y), 1);
+  s.cotes = new Map();
+  for (const [u, cote] of [[gauche, -1], [droite, 1]]) {
+    const n0 = nbFig(u.type, s.pv0.get(u)), figs = [], inf = NB(u.type) === 5;
+    for (let i = 0; i < n0; i++) {
+      const m = figureUnite(u.type, u.camp);
+      const col = inf ? [[.8, .9], [1.5, -.1], [2.2, .9], [2.9, -.1], [3.6, .9]][i] : [[1.15, .8], [2.45, -.5], [3.75, .8]][i];
+      m.position.set(cote * col[0], 0, col[1]); m.rotation.y = cote < 0 ? 0 : Math.PI; m.scale.setScalar(ECH);
+      groupeB.add(m); figs.push({ m, base: m.position.clone(), mort: null, recul: 0, inf });
+    }
+    s.cotes.set(u, { cote, figs });
+  }
+  const eti = document.getElementById('etiquettes'); eti.innerHTML = '';
+  for (const [u, cl] of [[gauche, 'g'], [droite, 'd']]) {
+    const d = document.createElement('div'); d.className = 'eti ' + cl; d.style.color = u.camp === 'B' ? '#bcd6ff' : '#ffc4b8';
+    d.innerHTML = `<span>${TROUPES[u.type].nom} <span class="pv">${s.pv0.get(u)}</span></span><div class="barre"><i style="width:${s.pv0.get(u) * 10}%"></i></div>`;
+    eti.appendChild(d); s.cotes.get(u).eti = d;
+  }
+  const w = vue.clientWidth, h = vue.clientHeight; renduB.setSize(w, h, false); cameraB.aspect = w / h;
+  cameraB.position.set(0, 2.5, 11.4); cameraB.lookAt(0, .7, 0); cameraB.updateProjectionMatrix();
+}
+// bout du canon, selon l'unité (en coordonnées du modèle, avant l'échelle)
+const CANON = { inf: [.33, .42], baz: [.33, .56], rec: [.12, .53], tank: [.68, .42], art: [.6, .82] };
+const CANON_B = { inf: [.3, .33], baz: [.3, .42], rec: [.3, .4], tank: [.5, .33], art: [.45, .78] };
+function eclair(pos) { const e = new THREE.Mesh(geoCube, matPart(0xffe27a)); e.scale.setScalar(.22); e.position.copy(pos); groupeB.add(e); particules.push({ m: e, v: new THREE.Vector3(), vie: .07, g: 0 }); }
+function explosion(pos, gros) {
+  const n = gros ? 22 : 8;
+  for (let i = 0; i < n; i++) {
+    const c = [0xffd040, 0xff8a20, 0xe04a18, 0x555555, 0x333333][Math.floor(Math.random() * 5)];
+    const p = new THREE.Mesh(geoCube, matPart(c)); p.scale.setScalar(.06 + Math.random() * (gros ? .14 : .07)); p.position.copy(pos);
+    groupeB.add(p); particules.push({ m: p, v: new THREE.Vector3((Math.random() - .5) * 3, Math.random() * (gros ? 4 : 2.5), (Math.random() - .5) * 3), vie: .5 + Math.random() * .5, g: 7 });
+  }
+}
+function fumee(pos) { for (let i = 0; i < 3; i++) { const p = new THREE.Mesh(geoCube, matPart(0x6a6a6a)); p.scale.setScalar(.2); p.position.copy(pos); groupeB.add(p); particules.push({ m: p, v: new THREE.Vector3((Math.random() - .5) * .3, .6 + Math.random() * .4, 0), vie: 1.2, g: -0.2, grossit: .5 }); } }
+// une salve : chaque figure de l'attaquant tire, l'impact fait tomber les figures en trop chez l'autre
+function salve(s, u, cible, t0, pvApres) {
+  const A = s.cotes.get(u), D = s.cotes.get(cible), type = u.type, art = type === 'art';
+  const vivants = A.figs.filter(f => !f.mort);
+  let tImpact = t0;
+  vivants.forEach((f, i) => {
+    const tt = t0 + i * .13;
+    s.ev.push({ t: tt, fn: () => {
+      f.recul = 1;
+      if (f.m.userData.jouer) f.m.userData.jouer(type === 'baz' ? 'holding-right-shoot' : 'holding-both-shoot', true);
+      const [dx, dy] = (style === 'B' ? CANON_B : CANON)[type], bout = f.base.clone().add(new THREE.Vector3(-A.cote * dx * ECH, dy * ECH, 0));
+      eclair(bout);
+      if (i === 0 || type !== 'inf') (type === 'inf' ? SON.fusil : type === 'rec' ? SON.rafale : SON.canon)();
+      const vis = D.figs.filter(g => !g.mort); const g = vis[i % Math.max(1, vis.length)];
+      if (!g) return;
+      const arrivee = g.base.clone().add(new THREE.Vector3(0, .3, 0)), duree = art ? .75 : (type === 'inf' || type === 'rec') ? .18 : .3;
+      const balle = (type === 'inf' || type === 'rec');
+      const p = new THREE.Mesh(geoCube, matPart(balle ? 0xfff0a0 : 0x2a2a2a)); p.scale.set(balle ? .25 : .14, balle ? .04 : .14, balle ? .04 : .14);
+      groupeB.add(p); projectiles.push({ m: p, a: bout, b: arrivee, t: 0, duree, arc: art ? 2.6 : 0, fin: () => explosion(arrivee, !balle) });
+    } });
+    tImpact = Math.max(tImpact, tt + (art ? .75 : .3));
+  });
+  s.ev.push({ t: tImpact + .05, fn: () => {
+    const n1 = nbFig(cible.type, pvApres), vis = D.figs.filter(g => !g.mort);
+    const tues = vis.length - n1;
+    vis.slice(vis.length - tues).forEach((g, k) => { g.mort = { t: 0, retard: k * .12 }; if (NB(cible.type) === 3) { explosion(g.base.clone().add(new THREE.Vector3(0, .4, 0)), true); SON.boum(); } });
+    const pv0 = s.pvAff.get(cible); s.pvAff.set(cible, pvApres);
+    D.eti.querySelector('.pv').textContent = pvApres; D.eti.querySelector('.barre i').style.width = pvApres * 10 + '%';
+    degatEcran(D.cote < 0 ? '28%' : '72%', pv0 - pvApres > 0 ? '-' + (pv0 - pvApres) : '0');
+  } });
+  return tImpact + .05;
+}
+function degatEcran(x, txt) { const d = document.createElement('div'); d.className = 'degat'; d.style.left = x; d.style.top = '45%'; d.textContent = txt; document.getElementById('etiquettes').appendChild(d); setTimeout(() => d.remove(), 950); }
+function combat(a, d) {
+  return new Promise(fin => {
+    const pvA0 = a.pv, pvD0 = d.pv;
+    const dA = degats(a, d); d.pv -= dA;
+    let dD = 0; if (riposte(a, d)) { dD = degats(d, a); a.pv -= dD; }
+    const s = { a, d, pv0: new Map([[a, pvA0], [d, pvD0]]), pvAff: new Map([[a, pvA0], [d, pvD0]]), ev: [], t: 0, fin };
+    if (!document.getElementById('o-scene').checked) { finCombat(s); return; }
+    plateau.classList.add('combat'); ouvrirCombat(s);
+    let t = salve(s, a, d, .5, d.pv);
+    if (dD > 0) t = salve(s, d, a, t + .6, a.pv);
+    s.ev.push({ t: t + 1.1, fn: () => finCombat(s) });
+    s.ev.sort((x, y) => x.t - y.t);
+    combatEnCours = s;
+  });
+}
+function finCombat(s) {
+  if (s.fini) return; s.fini = true; combatEnCours = null; plateau.classList.remove('combat');
+  for (const u of [s.a, s.d]) if (u.pv <= 0) { u.pv = 0; const b = batEn(u.x, u.y); if (b && b.pts < 20) b.pts = 20; }
+  majFigures(); s.fin();
+}
+function avancerCombat(dt) {
+  const s = combatEnCours; s.t += dt;
+  while (s.ev.length && s.ev[0].t <= s.t) s.ev.shift().fn();
+  if (!combatEnCours) return;
+  for (const C of s.cotes.values()) for (const f of C.figs) {
+    f.recul = Math.max(0, f.recul - dt * 6);
+    f.m.position.x = f.base.x + C.cote * f.recul * .08;
+    if (f.mort) {
+      f.mort.t += dt; const k = Math.max(0, f.mort.t - f.mort.retard);
+      if (f.m.userData.jouer) { if (!f.tombe) { f.tombe = true; f.m.userData.jouer('die', true); } f.m.position.y = -Math.max(0, k - 1.2) * .6; }
+      else if (f.inf) {
+        f.m.rotation.z = Math.min(1, k * 4) * Math.PI / 2;
+        f.m.position.y = -Math.max(0, k - .5) * .6;
+      } else {
+        if (!f.noirci) { f.noirci = true; f.m.material = f.m.material.clone(); f.m.material.color.setHex(0x3a3a3a); }
+        if (Math.random() < dt * 6) fumee(f.base.clone().add(new THREE.Vector3(0, .6, 0)));
+        f.m.position.y = -Math.max(0, k - .6) * .5;
+      }
+    }
+  }
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i]; p.t += dt / p.duree;
+    if (p.t >= 1) { groupeB.remove(p.m); projectiles.splice(i, 1); p.fin(); continue; }
+    p.m.position.lerpVectors(p.a, p.b, p.t); p.m.position.y += Math.sin(p.t * Math.PI) * p.arc;
+    p.m.lookAt(p.b); p.m.rotateY(Math.PI / 2);
+  }
+  for (let i = particules.length - 1; i >= 0; i--) {
+    const p = particules[i]; p.vie -= dt;
+    if (p.vie <= 0) { groupeB.remove(p.m); particules.splice(i, 1); continue; }
+    p.v.y -= p.g * dt; p.m.position.addScaledVector(p.v, dt); if (p.m.position.y < 0 && p.g > 0) { p.m.position.y = 0; p.v.multiplyScalar(.4); }
+    if (p.grossit) p.m.scale.multiplyScalar(1 + p.grossit * dt);
+  }
+  cameraB.position.x = Math.sin(s.t * .4) * .15;
+  cameraB.lookAt(0, .7, 0);
+}
+
+// ================= interface =================
+const $ = id => document.getElementById(id);
+const aide = m => $('aide').textContent = m;
+const etoiles = n => n ? '★'.repeat(n) : '—';
+function majFiches(x, y) {
+  const t = terrain(x, y), b = batEn(x, y);
+  $('t-nom').textContent = TERRAINS[t][0] + (b ? (b.camp === 'N' ? ' (libre)' : b.camp === 'B' ? ' (bleue)' : ' (rouge)') : '');
+  $('t-val').innerHTML = `Défense <b>${etoiles(TERRAINS[t][1])}</b>` + (b && b.pts < 20 ? ` · prise <b>${b.pts}</b>/20` : '');
+  const u = uniteEn(x, y);
+  $('u-nom').textContent = u ? TROUPES[u.type].nom + (u.camp === 'B' ? ' bleu' : ' rouge') : '—';
+  $('u-val').innerHTML = u ? `PV <b>${u.pv}</b>/10 · mouv. <b>${TROUPES[u.type].pm}</b> · portée <b>${TROUPES[u.type].rg.join('-')}</b>` : 'touche une unité';
+}
+function majBoutons() {
+  const act = phase === 'action' && sel;
+  $('a-tir').disabled = !(act && ciblesDepuis(sel, sel.x, sel.y).length && !(TROUPES[sel.type].indirect && aBouge));
+  $('a-capture').disabled = !(act && peutCapturer(sel));
+  $('a-attendre').disabled = !act;
+  $('a-fin').disabled = joueur !== 'B' || fini || phase === 'anim';
+  $('a-fin').textContent = phase === 'cible' || phase === 'action' ? 'Annuler' : 'Fin du tour';
+}
+function majBandeau() {
+  $('jour').textContent = 'JOUR ' + jour;
+  $('camp').textContent = CAMPS[joueur].nom; $('camp').classList.toggle('rouge', joueur === 'R');
+  $('or').textContent = 'FONDS ' + fonds.B;
+}
+function ruban(txt, camp = 'B') { const r = $('ruban'); r.textContent = txt; r.classList.toggle('rouge', camp === 'R'); r.classList.add('vu'); clearTimeout(ruban.t); ruban.t = setTimeout(() => r.classList.remove('vu'), 1300); }
+function verifierFin() {
+  if (fini) return true;
+  for (const c of ['B', 'R']) {
+    const qg = bat.find(b => b.k === 'Q' && b.camp !== c && b.y === (c === 'B' ? 10 : 0));
+    const plusRien = !unites.some(u => u.camp === c && u.pv > 0);
+    if (qg || plusRien) { fini = true; const gagnant = c === 'B' ? 'R' : 'B'; ruban(gagnant === 'B' ? 'VICTOIRE !' : 'DEFAITE...', gagnant); if (gagnant === 'B') SON.victoire(); aide(gagnant === 'B' ? 'Victoire ! Touche Fin du tour pour rejouer.' : 'Défaite… Touche Fin du tour pour rejouer.'); phase = 'libre'; $('a-fin').disabled = false; $('a-fin').textContent = 'Rejouer'; return true; }
+  }
+  return false;
+}
+function capturer(u) {
+  const b = batEn(u.x, u.y); b.pts -= u.pv;
+  if (b.pts <= 0) { b.camp = u.camp; b.pts = 20; dessinerBatiment(b); SON.capture(); ruban(TERRAINS[b.k][0].toUpperCase() + ' PRISE !', u.camp); }
+  else note(330, .1, 'square', .04);
+}
+function abandons() { for (const b of bat) if (b.pts < 20 && !unites.some(u => u.x === b.x && u.y === b.y && u.pv > 0 && TROUPES[u.type].capture && u.camp !== b.camp)) b.pts = 20; }
+function menuRecrue(b) {
+  const r = $('recrue'); r.innerHTML = '';
+  for (const [k, T] of Object.entries(TROUPES)) {
+    const bt = document.createElement('button'); bt.innerHTML = `${T.nom}<small>${T.prix}</small>`; bt.disabled = fonds.B < T.prix;
+    bt.onclick = () => { fonds.B -= T.prix; const u = ajouter(k, 'B', b.x, b.y); u.fait = true; majFigure(u); SON.capture(); fermerRecrue(); majBandeau(); aide(T.nom + ' recruté : il agira au prochain tour.'); };
+    r.appendChild(bt);
+  }
+  const an = document.createElement('button'); an.textContent = 'Fermer'; an.onclick = fermerRecrue; r.appendChild(an);
+  r.hidden = false; $('actions').hidden = true; aide('Usine : que veux-tu construire ?');
+}
+function fermerRecrue() { $('recrue').hidden = true; $('actions').hidden = false; majBoutons(); }
+function finirUnite() { depart = null; if (sel) sel.fait = true; sel = null; portee = null; cibles = []; phase = 'libre'; abandons(); majFigures(); majZones(); majBoutons(); if (!verifierFin()) aide('Choisis une autre unité, ou Fin du tour.'); }
+function annuler() {
+  if (sel && depart && (phase === 'action' || phase === 'cible')) { sel.x = depart[0]; sel.y = depart[1]; majFigure(sel); }
+  depart = null;
+  sel = null; portee = null; cibles = []; phase = 'libre'; majZones(); majBoutons(); aide('Touche une unité bleue pour voir où elle peut aller.');
+}
+// toucher le plateau : la case sous le doigt
+const rayon = new THREE.Raycaster(), solPlan = new THREE.Plane(new THREE.Vector3(0, 1, 0), -.3);
+function caseVisee(ev) {
+  const r = rendu.domElement.getBoundingClientRect();
+  rayon.setFromCamera(new THREE.Vector2((ev.clientX - r.left) / r.width * 2 - 1, -(ev.clientY - r.top) / r.height * 2 + 1), camera);
+  const p = new THREE.Vector3(); if (!rayon.ray.intersectPlane(solPlan, p)) return null;
+  const x = Math.round(p.x + (L - 1) / 2), y = Math.round(p.z + (H - 1) / 2);
+  return dans(x, y) ? { x, y } : null;
+}
+plateau.addEventListener('pointerup', async ev => {
+  audio();
+  if (combatEnCours) { finCombat(combatEnCours); return; }
+  if (joueur !== 'B' || fini || phase === 'anim' || marche) return;
+  const c = caseVisee(ev); if (!c) return;
+  curseur = c; majFiches(c.x, c.y); SON.clic();
+  const u = uniteEn(c.x, c.y);
+  if (phase === 'cible') {
+    const t = cibles.find(o => o.x === c.x && o.y === c.y);
+    if (t) { phase = 'anim'; cibles = []; majZones(); majBoutons(); await combat(sel, t); finirUnite(); }
+    majZones(); return;
+  }
+  if (phase === 'deplace') {
+    const p = portee.get(c.x + ',' + c.y);
+    if (p && !p.passe) {
+      phase = 'anim'; majZones(); majBoutons(); depart = [sel.x, sel.y]; aBouge = c.x !== sel.x || c.y !== sel.y;
+      await deplacer(sel, chemin(portee, c.x, c.y)); phase = 'action'; portee = null; majZones(); majBoutons();
+      aide('Que fait ' + TROUPES[sel.type].nom.toLowerCase() + ' ? (Annuler pour revenir)'); return;
+    }
+    annuler(); majZones(); return;
+  }
+  if (phase === 'action') { majZones(); return; }
+  if (u && u.camp === 'B' && !u.fait) {
+    sel = u; portee = calculPortee(u); phase = 'deplace'; majZones(); majBoutons();
+    aide('Touche une case bleue pour y aller (ou la même case pour rester).'); return;
+  }
+  const b = batEn(c.x, c.y);
+  if (b && b.k === 'U' && b.camp === 'B' && !u) { menuRecrue(b); majZones(); return; }
+  majZones();
+});
+$('a-tir').onclick = () => { cibles = ciblesDepuis(sel, sel.x, sel.y); phase = 'cible'; majZones(); majBoutons(); aide('Touche une cible rouge.'); };
+$('a-capture').onclick = () => { capturer(sel); finirUnite(); };
+$('a-attendre').onclick = () => finirUnite();
+$('a-fin').onclick = () => {
+  if (fini) { recommencer(); return; }
+  if (phase === 'action' || phase === 'cible') { annuler(); return; }
+  if (joueur !== 'B' || phase === 'anim') return;
+  annuler(); tourRouge();
+};
+// ================= les rouges (ordinateur) =================
+const pause = ms => new Promise(r => setTimeout(r, ms));
+function revenus(c) { fonds[c] += 1000 * bat.filter(b => b.camp === c).length; }
+async function tourRouge() {
+  joueur = 'R'; phase = 'anim'; for (const u of unites) u.fait = false; revenus('R'); majBandeau(); majFigures(); majBoutons();
+  ruban('TOUR DES ROUGES', 'R'); SON.tour(); aide('Les rouges réfléchissent…'); await pause(1000);
+  const ordre = unites.filter(u => u.camp === 'R' && u.pv > 0).sort((a, b) => (b.type === 'art') - (a.type === 'art'));
+  for (const u of ordre) { if (fini) return; if (u.pv > 0) await jouerRouge(u); }
+  if (fini) return;
+  // recrutement
+  for (const b of bat.filter(b => b.k === 'U' && b.camp === 'R' && !uniteEn(b.x, b.y))) {
+    const nInf = unites.filter(u => u.camp === 'R' && u.pv > 0 && TROUPES[u.type].capture).length;
+    const choix = nInf < 2 ? ['inf', 'baz'] : ['tank', 'art', 'rec', 'baz', 'inf'];
+    const t = choix.find(k => TROUPES[k].prix <= fonds.R);
+    if (t) { fonds.R -= TROUPES[t].prix; const u = ajouter(t, 'R', b.x, b.y); u.fait = true; majFigure(u); SON.capture(); await pause(400); }
+  }
+  // tour suivant
+  jour++; joueur = 'B'; for (const u of unites) u.fait = false; revenus('B'); phase = 'libre'; curseur = null;
+  majBandeau(); majFigures(); majZones(); majBoutons(); ruban('JOUR ' + jour + ' · A TOI'); SON.tour(); aide('Touche une unité bleue pour voir où elle peut aller.');
+}
+async function jouerRouge(u) {
+  const P = calculPortee(u), T = TROUPES[u.type];
+  let best = null;
+  for (const p of P.values()) {
+    if (p.passe) continue;
+    if (T.indirect && (p.x !== u.x || p.y !== u.y)) continue;
+    for (const e of ciblesDepuis(u, p.x, p.y)) {
+      const dg = degats(u, e), rip = (dist(e, p) === 1 && !T.indirect && !TROUPES[e.type].indirect && e.pv - dg > 0) ? degats(e, { ...u, x: p.x, y: p.y, pv: u.pv }, e.pv - dg) : 0;
+      const sc = dg * TROUPES[e.type].prix / 10 * (e.pv - dg <= 0 ? 1.5 : 1) - rip * T.prix / 20 + TERRAINS[terrain(p.x, p.y)][1] * 20;
+      if (!best || sc > best.sc) best = { sc, p, e };
+    }
+    if (T.capture) { const b = batEn(p.x, p.y); if (b && b.camp !== 'R') { const sc = (b.k === 'Q' ? 9000 : 2600) + (p.x === u.x && p.y === u.y ? 800 : 0); if (!best || sc > best.sc) best = { sc, p, cap: true }; } }
+  }
+  if (best && best.sc > 0) {
+    curseur = { x: best.p.x, y: best.p.y }; majZones();
+    await deplacer(u, chemin(P, best.p.x, best.p.y)); await pause(200);
+    if (best.cap) { capturer(u); }
+    else { cibles = [best.e]; majZones(); await pause(350); cibles = []; majZones(); await combat(u, best.e); }
+  } else {
+    // s'approcher : l'infanterie vers les villes à prendre, les autres vers les bleus
+    const buts = [...unites.filter(o => o.camp === 'B' && o.pv > 0)];
+    if (T.capture) buts.push(...bat.filter(b => b.camp !== 'R'));
+    let cible = null, dmin = 1e9;
+    for (const p of P.values()) {
+      if (p.passe) continue;
+      for (const g of buts) { let d = dist(p, g) + p.c * .01; if (T.indirect) d = Math.abs(d - 2.5); if (d < dmin) { dmin = d; cible = p; } }
+    }
+    if (cible) { curseur = { x: cible.x, y: cible.y }; majZones(); await deplacer(u, chemin(P, cible.x, cible.y)); }
+  }
+  u.fait = true; abandons(); majFigures(); verifierFin(); await pause(250);
+}
+function recommencer() {
+  for (const f of figures.values()) scene.remove(f.g); figures.clear();
+  nouvellePartie(); for (const b of bat) dessinerBatiment(b);
+  majFigures(); curseur = null; majZones(); majBandeau(); majBoutons(); majFiches(2, 8);
+  aide('Touche une unité bleue pour voir où elle peut aller.');
+}
+
+// ================= boucle =================
+let avant = performance.now();
+function boucle(t) {
+  const dt = Math.min(.05, (t - avant) / 1000); avant = t;
+  if (marche) avancerMarche(dt);
+  // les unités au repos respirent un peu
+  for (const [id, f] of figures) { if (marche && marche.u.id === id) continue; f.g.children[0].position.y = Math.abs(Math.sin(t / 400 + id)) * .012; }
+  for (const g of animes) { let o = g; while (o.parent) o = o.parent; if (o.isScene) { g.userData.vu = true; g.userData.mixer.update(dt); } else if (g.userData.vu) animes.delete(g); }
+  eau.material.opacity = .82 + Math.sin(t / 700) * .04;
+  rendu.render(scene, camera);
+  if (combatEnCours) { avancerCombat(dt); if (combatEnCours) renduB.render(sceneB, cameraB); }
+  requestAnimationFrame(boucle);
+}
+document.querySelectorAll('[data-style]').forEach(bt => bt.onclick = () => {
+  if (bt.disabled || style === bt.dataset.style || marche || combatEnCours) return;
+  style = bt.dataset.style; document.querySelectorAll('[data-style]').forEach(b => b.classList.toggle('vu', b === bt));
+  for (const f of figures.values()) scene.remove(f.g); figures.clear(); majFigures();
+  document.querySelector('.notes h2').textContent = style === 'A' ? 'Blindés : direction A, voxels maison' : 'Blindés : direction B, packs CC0';
+  $('note-style').innerHTML = style === 'A' ? NOTE_A : NOTE_B;
+});
+const NOTE_A = $('note-style').innerHTML;
+const NOTE_B = "Mêmes plateau et règles, mais les unités viennent de deux packs gratuits (CC0) : les <b>véhicules</b> du <i>Voxel Pack 15 - modern warfare</i> de padadu (jeep, char, camion ; fichiers MagicaVoxel d'une seule couleur, peints ici aux couleurs des camps ; le canon de l'artillerie est ajouté) et les <b>soldats</b> des <i>Blocky Characters</i> de Kenney (le policier, repeint en uniforme avec un casque, et ses animations : repos, marche, tir, chute). Fusil et bazooka sont en voxels maison.";
+chargerB();
+nouvellePartie(); construirePlateau(); cadrer(); majFigures(); majBandeau(); majBoutons(); majFiches(2, 8);
+addEventListener('resize', cadrer);
+requestAnimationFrame(boucle);
+</script>
+</body>
+</html>

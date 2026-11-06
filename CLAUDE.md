@@ -54,6 +54,7 @@ Une phrase par chantier ; le détail est dans le cahier des charges du jeu et da
 - **Duché**, **Bannières**, **Boutique**, **Doggy Saga**, **Romet**, **Résistance** : validés ; Résistance : autres pays plus tard ([cdc](specs/resistance.md)).
 - **La Dernière Lanterne** : actes 1 à 3 faits ; prochaine étape session 5 (acte 4, final), opusplan ([cdc](specs/rpg.md)).
 - **Bastion** (défense tactique à la Bad North, 06/11) : l'Empire de l'Est (asiatique) est retenu après la [maquette 2](https://claude.ai/artifact/4K652xgNxZud1Dn5gqNfxx) ; prochaine étape : trouver de vrais modèles 3D (ou beaucoup améliorer) et refaire une maquette ([cdc](specs/bastion.md)).
+- **Blindés** (tactique façon Advance Wars en voxels, 06/11) : [maquette](https://claude.ai/artifact/Xcsp1kJyXJ9Yg41zjZWBmi) A (voxels maison) ou B (packs CC0 padadu + Kenney) à choisir ; voir « Trois époques » dans `IDEES.md`.
 - **Armada** : cdc à relire (§ 18), puis session 1, Opus ([cdc](specs/armada.md)). **Défense orbitale** : session 1 (combat), Opus ([cdc](specs/defense-orbitale.md)).
 - **La colonie** : reste nature, île du jour, intégration ([cdc](specs/colonie.md)). **Nebula** : prochain chantier possible « l'Empire des étoiles » ([cdc](specs/nebula.md)).
 - **En pause** : Ferme du vallon (attend les zips du pack, [cdc](specs/ferme-du-vallon.md)), Clan du fjord ([cdc](specs/clan.md)), tactique façon Advance Wars, petite usine ; autres idées et achats : [`IDEES.md`](IDEES.md).
