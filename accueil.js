@@ -55,65 +55,69 @@ const FAMSTYLE = {"16": "A", "32": "C", rep: "B", "3d": "D"};
 
 /* ---------- accueil : dates de sortie et de mise à jour, genres, jeu à la une, quoi de neuf ---------- */
 // Dans la fiche : `added` (sortie) et `updated` (dernière mise à jour visible) au format AAAA-MM-JJ, `genres` pour les filtres.
-// Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours ; le jeu sorti le plus récemment est « à la une ».
+// Une cartouche porte l'étiquette NEUF ou MAJ pendant 3 jours.
 const META = {};   // rempli par les fiches (meta)
+// le journal (bouton JOURNAL de l'accueil) : [date, genre, dossier du jeu, texte], du plus récent au plus ancien ;
+// genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
+// Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
-  ["2026-11-02", "Nouveau jeu : Dragon Simulator, une idée d'un garçon de 7 ans. Ton dragon s'élance de son nid et plane au-dessus de la ville puis de l'aéroport, vu de profil, en 3D. Touche l'écran pour battre des ailes, tiens le bouton FEU pour brûler immeubles, maisons et voitures, évite grues, montgolfières et hélicoptères, et ramasse dix bonus (jetpack, grenade, bébé dragon, super-souffle, nuage d'orage, bouclier, aimant, œuf d'or…). Plus tu vas loin, plus tu gagnes de pièces : au nid, améliore écailles, flammes, réserve de feu et ailes."],
-  ["2026-11-01", "Nouveau jeu : Mineur de l'espace. Casse des astéroïdes avec ta corvette et rapporte le minerai à la station : améliorations, usines, recherche, station construite module par module, drones qui minent seuls, voyages vers la Lune et Mars, bases, puis vagues d'aliens, flottes, porte-vaisseaux à escadrille et bataille finale contre le vaisseau-mère. Au PC : clavier et souris."],
-  ["2026-10-28", "Nouveau jeu : Résistance, un rogue-lite tactique façon Fire Emblem GBA. Recrute trois rebelles, traverse les Marches de l'Ouest de combat en combat (marchand, repos, événements) et abats le général du tyran. Défaite ou victoire, tu rapportes du ravitaillement pour agrandir la forteresse rebelle : chaque bâtiment rend les campagnes suivantes plus fortes."],
-  ["2026-10-23", "Nouveau jeu : La Boutique de cartes, une année à la tête d'une boutique de cartes à collectionner, en 3D. Le lundi, commande au grossiste, fixe tes prix, ouvre des boosters et range les meilleures cartes en vitrine ou dans ton classeur ; du mardi au samedi, regarde les clients entrer et acheter ; le dimanche, fais tes comptes. Aménage, agrandis, organise des tournois et rembourse la banque avant la semaine 26 !"],
-  ["2026-10-23", "Nouveau jeu : Doggy Saga, un trois en ligne pour toute la famille. Glisse les chiens du refuge pour en aligner 3 pareils : chaque chien aligné reçoit un câlin. Bandanas, nœuds et balles de tennis lancent de grosses cascades. Lave la boue, ouvre les niches, fais descendre les chiots jusqu'à leur panier, et trouve une famille aux 16 chiens (dont Nounours le bouvier bernois) dans 60 niveaux. Chaque jour, la journée du jour : 20 coups, le plus de câlins possible."],
-  ["2026-10-22", "Nouveau jeu : Romet, un coin pusher en 3D en hommage à Mynthos. Lâche tes pièces, le poussoir fait tomber les autres dans le bac : ce qui tombe se rejoue, jusqu'à ce que la bourse soit vide. Gagne les 6 trésors de chaque machine pour ouvrir la suivante : la foire, la ruche et son miel, l'épave et son courant, le casino et ses couloirs, la foire de nuit et ses clous, l'horloger à deux étages… et une machine secrète."],
-  ["2026-10-22", "Nouveau jeu : Bannières, un jeu de conquête en 3D pensé pour les enfants. Choisis ta couleur, fais courir tes armées de chevaliers, d'archers, de lanciers et de mages sur la carte, achète des guerriers au château, construis, agrandis et décore ton village, et regarde les batailles avec les cœurs au-dessus des guerriers. Des étoiles disent si une bataille est facile. Prends les 3 châteaux des autres seigneurs, ou aie le plus de drapeaux après 25 tours !"],
-  ["2026-10-22", "Démo : La Dernière Lanterne, un RPG au tour par tour en HD-2D. Avec ton équipe (lame, clerc, arcaniste), traverse Clairfond, l'abbaye et le Bois Murmurant, rallume les lanternes oubliées et descends dans la Crypte des racines affronter le Roi des aulnes. Le prologue et l'acte 1 sont jouables, la suite arrive."],
-  ["2026-10-21", "Nouveau jeu : Le Thé des Jarls, un duel de dés viking. Six dés, trois lancers, et chaque face envoie ton armée de 45 soldats à l'assaut : charge des haches, volée de flèches, éclaireurs qui volent les jetons. Invoque les faveurs de 20 dieux nordiques, apprends avec Sigrid la skalde, remonte la route du fjord de taverne en taverne (étoiles, couleurs, unités à gagner), joue à deux sur le même téléphone posé à plat, et tente le défi du jour."],
-  ["2026-10-21", "Nouveau jeu : Duché, un petit 4X au tour par tour sur 37 terres hexagonales. Bâtis, recrute, prends les terres des trois seigneurs rivaux et gagne la couronne quand le vieux roi meurt : un grand électeur vote un tour sur deux. Combats en scènes HD-2D, événements illustrés, partie libre (facile ou normal) et un Duché du jour pour toute la famille, une seule tentative classée."],
-  ["2026-10-20", "Nouveau jeu : Le Mot d'or, un mot de 6 lettres par jour à trouver en 6 essais. Les tuiles se retournent en or (bien placée), en argent (mal placée) ou en gris (absente). Le même mot pour toute la famille, une seule tentative classée, une série de jours à faire durer, et un entraînement pour rejouer autant qu'on veut."],
-  ["2026-10-20", "Nouveau jeu : Capitaine du port, un casse-tête de bateaux en pixel art 32 bits. Glisse les bateaux du bassin pour ouvrir la passe au navire doré, dans 60 bassins et 5 ports (bouées, épaves, grands navires de 4 cases, grand port en 7 × 7), et tente le bassin du jour : une seule tentative classée, au plus petit nombre de coups."],
-  ["2026-10-20", "Nouveau jeu : Le Magasinier, un Sokoban en HD-2D façon Octopath Traveler. Pousse les caisses sur les marques dans 60 niveaux et 5 entrepôts (glace, tapis roulants, caisses en fonte), et tente la grille du jour : une seule tentative classée, au plus petit nombre de coups."],
-  ["2026-10-19", "Accueil retouché : le nom de chaque jeu sous sa cartouche, une légende des marques sous le gardien, le jeu à la une en bandeau, un volet plus léger (titre qui reste en haut, JOUER dans sa barre, le classement se rejoint en bas de l'accueil)."],
-  ["2026-10-19", "Escadrille ! : choisis tes avions au hangar (onglet AVIONS). Six nouveaux avions à débloquer, dans les quatre familles : le bombardier d'attaque et ses roquettes, le ravitailleur qui remet un avion à neuf, l'avion de patrouille qui compte une ligne et une colonne, le brouilleur et ses leurres, les ballons de barrage et leur DCA, le drone et sa caméra. Les pirates s'en servent aussi en Pilote et en As."],
-  ["2026-10-19", "Amiral ! : trois navires à débloquer au chantier naval (le mouilleur et ses mines qui ripostent, le brouilleur et son écran de fumée, la vedette et son faux navire gonflable) et la bataille du jour, avec ses flottes imposées et son classement."],
-  ["2026-10-17", "Défi du jour : un rond jaune sur la cartouche quand il reste à jouer, un rond sombre avec ✓ quand c'est fait (Queens, Sudoku, Pont stellaire, Lignée, Alunissage, Nebula, Calculator, Empilage, Odyssée)."],
-  ["2026-10-17", "Nouveau jeu : Yams, le troisième jeu en 3D. De vrais dés qui roulent et rebondissent, lancés d'un geste ou secoués dans un gobelet, la feuille de marque classique en 13 cases, et six styles de dés à débloquer (taverne, casino de nuit, gros pixels rétro, sur la Lune…)."],
-  ["2026-10-17", "Escadrille ! : le hangar et trois escadrilles à débloquer (Furtif, Hélices, Canonnière), un sol différent à chaque partie, et les pilotes abattus sautent en parachute."],
-  ["2026-10-17", "Nouveau jeu : Escadrille !, la petite sœur d'Amiral ! dans le ciel. Quatre avions à pouvoirs (radar, bombes en croix, missile, esquive de l'hélicoptère) sur un ciel de 9 × 9, contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As."],
-  ["2026-10-17", "Nouveau jeu : Odyssée, le deuxième jeu en 3D. Penche le téléphone (ou glisse le doigt) pour ramener la galère d'Ulysse de Troie à Ithaque : 10 épisodes de 3 plateaux, de Polyphème aux Sirènes en passant par Charybde et Scylla, et un plateau du jour pour toute la famille."],
-  ["2026-10-16", "Accueil : les jeux en 3D ont leur propre cartouche, un CD dans un boîtier translucide couleur bonbon. Empilage est le premier à l'avoir."],
-  ["2026-10-16", "Nouveau jeu : Empilage, le premier jeu en 3D de la Ludothèque. Touche pour lâcher chaque bloc pile sur la tour ; ce qui dépasse tombe. Le ciel passe du matin à la nuit étoilée à mesure que tu montes. Tour du jour : les mêmes vitesses pour toute la famille."],
-  ["2026-10-16", "Nouveau jeu : Calculator, le calcul mental de 7 à 77 ans. Choisis tes opérations et ton niveau (de Petit écolier à Champion), joue une série de 20, 60 secondes contre la montre ou le calcul du jour. Trois styles au choix : arcade, cahier d'écolier ou calculatrice de poche."],
-  ["2026-10-16", "Nouveau jeu : Lune-Rover. Programme Pico, le petit robot lunaire, à l'avance pour ramasser les cristaux : 30 niveaux, avec sauts, fonction F1, répétitions, boucles et conditions."],
-  ["2026-10-16", "Classements : le même compte sur plusieurs navigateurs. Sous les cartouches, CODE DE MON COMPTE ; dans l'autre navigateur, REJOINDRE LE CLASSEMENT puis J'AI DEJA UN COMPTE. Les sauvegardes restent dans chaque navigateur."],
-  ["2026-10-16", "Nouvel accueil : les cartouches en 3D sur leurs planches (16 bits, 32 bits et reprises). Touche une cartouche : sa boîte, tes records et le classement de la famille, au même endroit. La page des classements disparaît."],
-  ["2026-10-16", "Nouveau jeu : Sudoku, le jardin des chiffres. Grilles 4×4 et 6×6 pour débuter, 9×9 facile, moyen ou difficile, notes au crayon et grille du jour pour toute la famille."],
-  ["2026-10-15", "Accueil : filtre EN COURS pour retrouver les parties commencées, et sur chaque cartouche ta partie en cours et ton record."],
-  ["2026-10-15", "Défis du jour : dans Queens, Pont stellaire et Alunissage, seule la première tentative du jour est classée (la partie en cours se reprend au même temps)."],
-  ["2026-10-15", "Queens : la grille du jour, la même pour toute la famille, de 5×5 le lundi à 9×9 le week-end, avec son classement."],
-  ["2026-10-15", "Alunissage : nouveaux graphismes, avec la lumière du soleil et les ombres, un décor par monde, un module plus détaillé, l'astronaute et son drapeau, l'explosion et son cratère."],
-  ["2026-10-15", "Alunissage : des cadrans près du module (réticule qui passe au vert, carburant, vitesses, aire survolée, flèche de dérive et hauteur jusqu'au sol)."],
-  ["2026-10-15", "Accueil : bouton SURPRENDS-MOI (un jeu au hasard), tri des cartouches et recherche. Classements : la nouvelle étagère de boîtes de jeu, avec une couronne sur tes records."],
-  ["2026-10-15", "Nebula : nouveaux sons, armes étouffées, saut en hyperespace, musique de combat et marche sur la carte (réglage AMBIANCE)."],
-  ["2026-10-15", "Nebula : quatre nouveaux vaisseaux, le brouilleur et le mouilleur de mines dans ta flotte, la frégate-bouclier et le poseur de mines chez les pirates."],
-  ["2026-10-15", "Nebula : la partie du jour devient la mission du jour, avec chaque jour une flotte et une règle imposées (convoi à protéger, comptoirs fermés, carburant compté…)."],
-  ["2026-10-15", "Nebula : un contrat à choisir au départ de chaque partie et un défi dans chaque combat, pour gagner points, données et crédits."],
-  ["2026-10-15", "Nebula : compose ta flotte de départ avec 10 points (prime d'audace pour les points non dépensés) ; la flotte arrive en combat par le bas de l'écran."],
-  ["2026-10-15", "La Ludothèque s'ouvre plus vite sur un réseau lent ; Nebula marche hors connexion dès la première visite et ménage la batterie."],
-  ["2026-10-15", "Nebula : nouveaux bruitages (grappin, ions, salve, renforts), nappe d'ambiance en option, saut et débris animés."],
-  ["2026-10-15", "Nebula : un doigt posé ouvre la fiche d'un vaisseau ou d'une balise, animations ×2, vibrations, confirmation de fin de tour."],
-  ["2026-10-14", "Nebula : un entraînement guidé en 5 étapes, et au hangar l'effet de chaque pilote sur chaque vaisseau."],
-  ["2026-10-14", "Nebula : un manuel complet (règles, fiches des vaisseaux et des pirates, terrain, balises, modules, pilotes)."],
-  ["2026-10-14", "Nebula : la partie du jour (la même pour toute la famille) et les classements du jour et des victoires."],
-  ["2026-10-14", "Nebula : déblocages avec les données stellaires, flottes de choc et marchande."],
-  ["2026-10-14", "Nebula : épaves à choix, nébuleuses et pilotes (As, Mécano, Tireur, Prudent, Vétéran)."],
-  ["2026-10-14", "Nebula : les secteurs 2 et 3, leurs nuages ioniques, la Veuve d'Orphée, la Rouille-Reine et la victoire finale."],
-  ["2026-10-14", "Nebula : placement des vaisseaux au doigt plus sûr (aperçu, replacement), 5 nouveaux vaisseaux au comptoir et le harponneur pirate."],
-  ["2026-10-14", "Nebula : capacités affichées sur les fiches, légende de la carte, drones au toucher, pirates plus rusés dans les contacts lourds."],
-  ["2026-10-13", "Accueil : favoris (étoile), filtres en menu de RPG avec le gardien, jeu à la une et badges des nouveautés."],
-  ["2026-10-13", "Nebula : nouveau rogue-lite tactique spatial, secteur 1 jusqu'à l'amiral rouillé. Plus fluide et plus net."],
-  ["2026-10-13", "Alunissage : nouveau jeu d'adresse, avec la mission du jour."],
-  ["2026-10-12", "Pont stellaire : nouveau puzzle de constellations, avec le ciel du jour."],
-  ["2026-10-12", "Orbite : nouveau jeu de physique spatiale en 30 niveaux."],
-  ["2026-10-12", "Le Club d'agility : nouveau jeu de gestion de club canin."],
+  ["2026-11-06", "acc", "", "Le Quoi de neuf devient le journal : un numéro par mois, la grande nouveauté en couverture, et une pastille rouge sur le bouton JOURNAL quand il y a du neuf."],
+  ["2026-11-02", "neuf", "dragon-simulator", "Une idée d'un garçon de 7 ans. Ton dragon s'élance de son nid et plane au-dessus de la ville puis de l'aéroport, vu de profil, en 3D. Touche l'écran pour battre des ailes, tiens le bouton FEU pour brûler immeubles, maisons et voitures, évite grues, montgolfières et hélicoptères, et ramasse dix bonus (jetpack, grenade, bébé dragon, super-souffle, nuage d'orage, bouclier, aimant, œuf d'or…). Plus tu vas loin, plus tu gagnes de pièces : au nid, améliore écailles, flammes, réserve de feu et ailes."],
+  ["2026-11-01", "neuf", "mineur-de-l-espace", "Casse des astéroïdes avec ta corvette et rapporte le minerai à la station : améliorations, usines, recherche, station construite module par module, drones qui minent seuls, voyages vers la Lune et Mars, bases, puis vagues d'aliens, flottes, porte-vaisseaux à escadrille et bataille finale contre le vaisseau-mère. Au PC : clavier et souris."],
+  ["2026-10-28", "neuf", "resistance", "Un rogue-lite tactique façon Fire Emblem GBA. Recrute trois rebelles, traverse les Marches de l'Ouest de combat en combat (marchand, repos, événements) et abats le général du tyran. Défaite ou victoire, tu rapportes du ravitaillement pour agrandir la forteresse rebelle : chaque bâtiment rend les campagnes suivantes plus fortes."],
+  ["2026-10-23", "neuf", "boutique", "Une année à la tête d'une boutique de cartes à collectionner, en 3D. Le lundi, commande au grossiste, fixe tes prix, ouvre des boosters et range les meilleures cartes en vitrine ou dans ton classeur ; du mardi au samedi, regarde les clients entrer et acheter ; le dimanche, fais tes comptes. Aménage, agrandis, organise des tournois et rembourse la banque avant la semaine 26 !"],
+  ["2026-10-23", "neuf", "doggy-saga", "Un trois en ligne pour toute la famille. Glisse les chiens du refuge pour en aligner 3 pareils : chaque chien aligné reçoit un câlin. Bandanas, nœuds et balles de tennis lancent de grosses cascades. Lave la boue, ouvre les niches, fais descendre les chiots jusqu'à leur panier, et trouve une famille aux 16 chiens (dont Nounours le bouvier bernois) dans 60 niveaux. Chaque jour, la journée du jour : 20 coups, le plus de câlins possible."],
+  ["2026-10-22", "neuf", "romet", "Un coin pusher en 3D en hommage à Mynthos. Lâche tes pièces, le poussoir fait tomber les autres dans le bac : ce qui tombe se rejoue, jusqu'à ce que la bourse soit vide. Gagne les 6 trésors de chaque machine pour ouvrir la suivante : la foire, la ruche et son miel, l'épave et son courant, le casino et ses couloirs, la foire de nuit et ses clous, l'horloger à deux étages… et une machine secrète."],
+  ["2026-10-22", "neuf", "bannieres", "Un jeu de conquête en 3D pensé pour les enfants. Choisis ta couleur, fais courir tes armées de chevaliers, d'archers, de lanciers et de mages sur la carte, achète des guerriers au château, construis, agrandis et décore ton village, et regarde les batailles avec les cœurs au-dessus des guerriers. Des étoiles disent si une bataille est facile. Prends les 3 châteaux des autres seigneurs, ou aie le plus de drapeaux après 25 tours !"],
+  ["2026-10-22", "neuf", "lanterne", "Un RPG au tour par tour en HD-2D. Avec ton équipe (lame, clerc, arcaniste), traverse Clairfond, l'abbaye et le Bois Murmurant, rallume les lanternes oubliées et descends dans la Crypte des racines affronter le Roi des aulnes. Le prologue et l'acte 1 sont jouables, la suite arrive."],
+  ["2026-10-21", "neuf", "the-des-jarls", "Un duel de dés viking. Six dés, trois lancers, et chaque face envoie ton armée de 45 soldats à l'assaut : charge des haches, volée de flèches, éclaireurs qui volent les jetons. Invoque les faveurs de 20 dieux nordiques, apprends avec Sigrid la skalde, remonte la route du fjord de taverne en taverne (étoiles, couleurs, unités à gagner), joue à deux sur le même téléphone posé à plat, et tente le défi du jour."],
+  ["2026-10-21", "neuf", "duche", "Un petit 4X au tour par tour sur 37 terres hexagonales. Bâtis, recrute, prends les terres des trois seigneurs rivaux et gagne la couronne quand le vieux roi meurt : un grand électeur vote un tour sur deux. Combats en scènes HD-2D, événements illustrés, partie libre (facile ou normal) et un Duché du jour pour toute la famille, une seule tentative classée."],
+  ["2026-10-20", "neuf", "mot-d-or", "Un mot de 6 lettres par jour à trouver en 6 essais. Les tuiles se retournent en or (bien placée), en argent (mal placée) ou en gris (absente). Le même mot pour toute la famille, une seule tentative classée, une série de jours à faire durer, et un entraînement pour rejouer autant qu'on veut."],
+  ["2026-10-20", "neuf", "capitaine-du-port", "Un casse-tête de bateaux en pixel art 32 bits. Glisse les bateaux du bassin pour ouvrir la passe au navire doré, dans 60 bassins et 5 ports (bouées, épaves, grands navires de 4 cases, grand port en 7 × 7), et tente le bassin du jour : une seule tentative classée, au plus petit nombre de coups."],
+  ["2026-10-20", "neuf", "magasinier", "Un Sokoban en HD-2D façon Octopath Traveler. Pousse les caisses sur les marques dans 60 niveaux et 5 entrepôts (glace, tapis roulants, caisses en fonte), et tente la grille du jour : une seule tentative classée, au plus petit nombre de coups."],
+  ["2026-10-19", "acc", "", "Accueil retouché : le nom de chaque jeu sous sa cartouche, une légende des marques sous le gardien, le jeu à la une en bandeau, un volet plus léger (titre qui reste en haut, JOUER dans sa barre, le classement se rejoint en bas de l'accueil)."],
+  ["2026-10-19", "maj", "escadrille", "Choisis tes avions au hangar (onglet AVIONS). Six nouveaux avions à débloquer, dans les quatre familles : le bombardier d'attaque et ses roquettes, le ravitailleur qui remet un avion à neuf, l'avion de patrouille qui compte une ligne et une colonne, le brouilleur et ses leurres, les ballons de barrage et leur DCA, le drone et sa caméra. Les pirates s'en servent aussi en Pilote et en As."],
+  ["2026-10-19", "maj", "amiral", "Trois navires à débloquer au chantier naval (le mouilleur et ses mines qui ripostent, le brouilleur et son écran de fumée, la vedette et son faux navire gonflable) et la bataille du jour, avec ses flottes imposées et son classement."],
+  ["2026-10-17", "acc", "", "Défi du jour : un rond jaune sur la cartouche quand il reste à jouer, un rond sombre avec ✓ quand c'est fait (Queens, Sudoku, Pont stellaire, Lignée, Alunissage, Nebula, Calculator, Empilage, Odyssée)."],
+  ["2026-10-17", "neuf", "yams", "Le troisième jeu en 3D. De vrais dés qui roulent et rebondissent, lancés d'un geste ou secoués dans un gobelet, la feuille de marque classique en 13 cases, et six styles de dés à débloquer (taverne, casino de nuit, gros pixels rétro, sur la Lune…)."],
+  ["2026-10-17", "maj", "escadrille", "Le hangar et trois escadrilles à débloquer (Furtif, Hélices, Canonnière), un sol différent à chaque partie, et les pilotes abattus sautent en parachute."],
+  ["2026-10-17", "neuf", "escadrille", "La petite sœur d'Amiral ! dans le ciel. Quatre avions à pouvoirs (radar, bombes en croix, missile, esquive de l'hélicoptère) sur un ciel de 9 × 9, contre une escadrille pirate cachée dans les nuages. Trois niveaux : Recrue, Pilote, As."],
+  ["2026-10-17", "neuf", "odyssee", "Le deuxième jeu en 3D. Penche le téléphone (ou glisse le doigt) pour ramener la galère d'Ulysse de Troie à Ithaque : 10 épisodes de 3 plateaux, de Polyphème aux Sirènes en passant par Charybde et Scylla, et un plateau du jour pour toute la famille."],
+  ["2026-10-16", "acc", "", "Accueil : les jeux en 3D ont leur propre cartouche, un CD dans un boîtier translucide couleur bonbon. Empilage est le premier à l'avoir."],
+  ["2026-10-16", "neuf", "empilage", "Le premier jeu en 3D de la Ludothèque. Touche pour lâcher chaque bloc pile sur la tour ; ce qui dépasse tombe. Le ciel passe du matin à la nuit étoilée à mesure que tu montes. Tour du jour : les mêmes vitesses pour toute la famille."],
+  ["2026-10-16", "neuf", "calculator", "Le calcul mental de 7 à 77 ans. Choisis tes opérations et ton niveau (de Petit écolier à Champion), joue une série de 20, 60 secondes contre la montre ou le calcul du jour. Trois styles au choix : arcade, cahier d'écolier ou calculatrice de poche."],
+  ["2026-10-16", "neuf", "lune-rover", "Programme Pico, le petit robot lunaire, à l'avance pour ramasser les cristaux : 30 niveaux, avec sauts, fonction F1, répétitions, boucles et conditions."],
+  ["2026-10-16", "acc", "", "Classements : le même compte sur plusieurs navigateurs. Sous les cartouches, CODE DE MON COMPTE ; dans l'autre navigateur, REJOINDRE LE CLASSEMENT puis J'AI DEJA UN COMPTE. Les sauvegardes restent dans chaque navigateur."],
+  ["2026-10-16", "acc", "", "Nouvel accueil : les cartouches en 3D sur leurs planches (16 bits, 32 bits et reprises). Touche une cartouche : sa boîte, tes records et le classement de la famille, au même endroit. La page des classements disparaît."],
+  ["2026-10-16", "neuf", "sudoku", "Le jardin des chiffres. Grilles 4×4 et 6×6 pour débuter, 9×9 facile, moyen ou difficile, notes au crayon et grille du jour pour toute la famille."],
+  ["2026-10-15", "acc", "", "Accueil : filtre EN COURS pour retrouver les parties commencées, et sur chaque cartouche ta partie en cours et ton record."],
+  ["2026-10-15", "acc", "", "Défis du jour : dans Queens, Pont stellaire et Alunissage, seule la première tentative du jour est classée (la partie en cours se reprend au même temps)."],
+  ["2026-10-15", "maj", "queens", "La grille du jour, la même pour toute la famille, de 5×5 le lundi à 9×9 le week-end, avec son classement."],
+  ["2026-10-15", "maj", "alunissage", "Nouveaux graphismes, avec la lumière du soleil et les ombres, un décor par monde, un module plus détaillé, l'astronaute et son drapeau, l'explosion et son cratère."],
+  ["2026-10-15", "maj", "alunissage", "Des cadrans près du module (réticule qui passe au vert, carburant, vitesses, aire survolée, flèche de dérive et hauteur jusqu'au sol)."],
+  ["2026-10-15", "acc", "", "Accueil : bouton SURPRENDS-MOI (un jeu au hasard), tri des cartouches et recherche. Classements : la nouvelle étagère de boîtes de jeu, avec une couronne sur tes records."],
+  ["2026-10-15", "maj", "nebula", "Nouveaux sons, armes étouffées, saut en hyperespace, musique de combat et marche sur la carte (réglage AMBIANCE)."],
+  ["2026-10-15", "maj", "nebula", "Quatre nouveaux vaisseaux, le brouilleur et le mouilleur de mines dans ta flotte, la frégate-bouclier et le poseur de mines chez les pirates."],
+  ["2026-10-15", "maj", "nebula", "La partie du jour devient la mission du jour, avec chaque jour une flotte et une règle imposées (convoi à protéger, comptoirs fermés, carburant compté…)."],
+  ["2026-10-15", "maj", "nebula", "Un contrat à choisir au départ de chaque partie et un défi dans chaque combat, pour gagner points, données et crédits."],
+  ["2026-10-15", "maj", "nebula", "Compose ta flotte de départ avec 10 points (prime d'audace pour les points non dépensés) ; la flotte arrive en combat par le bas de l'écran."],
+  ["2026-10-15", "acc", "", "La Ludothèque s'ouvre plus vite sur un réseau lent ; Nebula marche hors connexion dès la première visite et ménage la batterie."],
+  ["2026-10-15", "maj", "nebula", "Nouveaux bruitages (grappin, ions, salve, renforts), nappe d'ambiance en option, saut et débris animés."],
+  ["2026-10-15", "maj", "nebula", "Un doigt posé ouvre la fiche d'un vaisseau ou d'une balise, animations ×2, vibrations, confirmation de fin de tour."],
+  ["2026-10-14", "maj", "nebula", "Un entraînement guidé en 5 étapes, et au hangar l'effet de chaque pilote sur chaque vaisseau."],
+  ["2026-10-14", "maj", "nebula", "Un manuel complet (règles, fiches des vaisseaux et des pirates, terrain, balises, modules, pilotes)."],
+  ["2026-10-14", "maj", "nebula", "La partie du jour (la même pour toute la famille) et les classements du jour et des victoires."],
+  ["2026-10-14", "maj", "nebula", "Déblocages avec les données stellaires, flottes de choc et marchande."],
+  ["2026-10-14", "maj", "nebula", "Épaves à choix, nébuleuses et pilotes (As, Mécano, Tireur, Prudent, Vétéran)."],
+  ["2026-10-14", "maj", "nebula", "Les secteurs 2 et 3, leurs nuages ioniques, la Veuve d'Orphée, la Rouille-Reine et la victoire finale."],
+  ["2026-10-14", "maj", "nebula", "Placement des vaisseaux au doigt plus sûr (aperçu, replacement), 5 nouveaux vaisseaux au comptoir et le harponneur pirate."],
+  ["2026-10-14", "maj", "nebula", "Capacités affichées sur les fiches, légende de la carte, drones au toucher, pirates plus rusés dans les contacts lourds."],
+  ["2026-10-13", "acc", "", "Accueil : favoris (étoile), filtres en menu de RPG avec le gardien, jeu à la une et badges des nouveautés."],
+  ["2026-10-13", "neuf", "nebula", "Nouveau rogue-lite tactique spatial, secteur 1 jusqu'à l'amiral rouillé. Plus fluide et plus net."],
+  ["2026-10-13", "neuf", "alunissage", "Nouveau jeu d'adresse, avec la mission du jour."],
+  ["2026-10-12", "neuf", "pont-stellaire", "Nouveau puzzle de constellations, avec le ciel du jour."],
+  ["2026-10-12", "neuf", "orbite", "Nouveau jeu de physique spatiale en 30 niveaux."],
+  ["2026-10-12", "neuf", "club", "Nouveau jeu de gestion de club canin."]
 ];
 // filtres de l'accueil (choix de l'utilisateur : peu de filtres) ; les genres de META restent prêts pour plus tard
 const FILTERS = ["TOUS", "★ FAVORIS", "NOUVEAU", "DU JOUR", "EN COURS"];
@@ -256,24 +260,88 @@ function arrange(){
   refreshCarts();
 }
 
-/* ---------- jeu à la une : le dernier sorti, présenté dans sa boîte ---------- */
-(function une(){
-  const rank = g => ORDRE.indexOf(g.k);   // à date égale, le premier dans ORDRE l'emporte
-  const g = GAMES.filter(g => metaOf(g).added && !g.demo).sort((a, b) => metaOf(b).added.localeCompare(metaOf(a).added) || rank(a) - rank(b))[0];
-  if (!g) return;
-  const m = metaOf(g), box = $("une");
-  box.style.setProperty("--lb", g.lb); box.style.setProperty("--lt", g.lt);
-  box.innerHTML = `<button class="box" type="button" aria-label="Ouvrir ${g.n}"><span class="spine">${g.n}</span><span class="front"><span class="stripe"><span>LUDOTHEQUE 16 BITS</span></span><span class="art"><h3${g.n.length > 12 ? ' class="long"' : ""}>${g.n}</h3><span class="tag">${(m.genres || []).slice(0, 2).join(" · ")}</span></span></span>` +
-    (recent(m.added) ? '<span class="sticker">TOUT<br>NEUF !</span>' : "") + `</button>` +
-    `<div class="une-txt"><span class="kicker">${recent(m.added) ? "NOUVEAU JEU" : "A LA UNE"} · ${fmtDay(m.added)}</span><h2>${g.n}</h2><p></p>` +
-    `<a class="saves-btn play" href="${ROOT + g.k}">JOUER</a>` +
-    `<details class="news"><summary>QUOI DE NEUF ?</summary><ul>${NEWS.map(([d, t]) => `<li><b>${fmtDay(d)}</b>${t}</li>`).join("")}</ul></details></div>`;
-  box.querySelector("p").textContent = g.d;
-  box.querySelector(".art").prepend(art(g));
-  box.querySelector(".box").addEventListener("click", () => openVolet(g));
-  box.querySelector(".play").addEventListener("click", () => notePlayed(g.k));
-  box.hidden = false;
-})();
+/* ---------- le journal (Quoi de neuf) : un numéro par mois, façon magazine de jeux vidéo ---------- */
+// bouton JOURNAL de la barre d'outils, avec une pastille rouge tant qu'il y a du neuf pas encore lu (ludo.journalVu = date de la dernière nouvelle vue)
+const MOIS = ["JANVIER", "FEVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOUT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DECEMBRE"];
+const jov = $("jov"), jBody = $("jBody"), jClose = $("jClose"), jBtn = $("journalBtn");
+const jOpen = () => jov.classList.contains("on");
+const JTAG = {neuf: "NEUF", maj: "MAJ", acc: "ACCUEIL"};
+const newsGame = n => n[2] ? GAMES.find(g => g.k === n[2] + "/index.html") || null : null;
+let jSeen = ""; try { jSeen = localStorage.getItem("ludo.journalVu") || ""; } catch (e) {}
+// pas encore lu : plus récent que la dernière visite au journal (première fois : les 14 derniers jours)
+const unread = () => NEWS.filter(n => jSeen ? n[0] > jSeen : daysSince(n[0]) < 14).length;
+function paintJournal(){ const n = unread(), b = $("journalN"); b.textContent = n > 9 ? "9+" : n; b.hidden = !n; }
+function jIcon(g){
+  const b = el("i", "j-ic");
+  if (!g){ b.classList.add("ludo"); b.textContent = "LUDO"; return b; }
+  b.style.setProperty("--lb", g.lb); b.append(art(g)); return b;
+}
+const jTag = (n, g) => el("span", "j-tag " + n[1], g && g.demo && n[1] === "neuf" ? "DEMO" : JTAG[n[1]] || "");
+function jGo(g){
+  // du journal au volet du jeu : le volet prend la place du journal dans l'historique (un seul retour pour revenir à l'accueil)
+  hideJournal(); try { if (history.state && history.state.journal) history.replaceState({volet: g.k}, ""); } catch (e) {}
+  openVolet(g);
+}
+function jRow(n){
+  const g = newsGame(n), r = el(g ? "button" : "div", "j-row"), t = el("div", "t"), h = el("div");
+  if (g){ r.type = "button"; r.addEventListener("click", () => jGo(g)); }
+  h.append(jTag(n, g), el("strong", "", g ? g.n : "LA LUDOTHEQUE"), el("span", "j-date", fmtDay(n[0])));
+  t.append(h, el("p", "", n[3])); r.append(jIcon(g), t); return r;
+}
+function renderJournal(){
+  jBody.textContent = "";
+  const issues = [];   // un numéro par mois, du plus récent au plus ancien
+  for (const n of NEWS){ const ym = n[0].slice(0, 7); if (!issues.length || issues[issues.length - 1].ym !== ym) issues.push({ym, news: []}); issues[issues.length - 1].news.push(n); }
+  const label = ym => { const [y, m] = ym.split("-").map(Number); return `N° ${(y - 2026) * 12 + m - 9} · ${MOIS[m - 1]} ${y}`; };
+  const cur = issues[0]; if (!cur) return;
+  const mast = el("div", "j-mast"); mast.append(el("b", "", "LUDO MAG"), el("span", "", label(cur.ym))); jBody.append(mast);
+  // la couverture : la plus récente nouveauté du mois
+  const top = cur.news.find(n => n[1] === "neuf" && newsGame(n));
+  if (top){
+    const g = newsGame(top), feat = el("div", "j-feat"), cv = el("button", "j-cover"), artBox = el("span", "art"), t = el("div", "t");
+    cv.type = "button"; cv.setAttribute("aria-label", "Ouvrir " + g.n); cv.style.setProperty("--lb", g.lb); feat.style.setProperty("--lt", g.lt);
+    artBox.append(art(g)); cv.append(el("span", "sp"), artBox);
+    if (recent(top[0])) cv.append(el("span", "stk", "TOUT NEUF !"));
+    cv.addEventListener("click", () => jGo(g));
+    const play = link("saves-btn play", "JOUER ▶", g.k, g.k);
+    t.append(el("span", "k", (g.demo ? "DEMO" : "EN COUVERTURE") + " · " + fmtDay(top[0])), el("h3", "", g.n), el("p", "", top[3]), play);
+    feat.append(cv, t); jBody.append(feat);
+  }
+  const others = cur.news.filter(n => n !== top && n[1] === "neuf" && newsGame(n));
+  if (others.length){
+    jBody.append(el("div", "j-sect", "SORTIS CE MOIS-CI"));
+    const box = el("div", "j-minis");
+    for (const n of others){
+      const g = newsGame(n), b = el("button", "j-mini"), h = el("div"); b.type = "button";
+      h.append(jIcon(g), el("strong", "", g.n)); b.append(h, el("p", "", n[3])); b.addEventListener("click", () => jGo(g)); box.append(b);
+    }
+    jBody.append(box);
+  }
+  const rest = cur.news.filter(n => n !== top && !others.includes(n));
+  if (rest.length){ jBody.append(el("div", "j-sect", "MISES A JOUR")); const l = el("div", "j-list"); rest.forEach(n => l.append(jRow(n))); jBody.append(l); }
+  // les numéros précédents, repliés
+  for (const is of issues.slice(1)){
+    const d = el("details", "j-old"), nb = is.news.filter(n => n[1] === "neuf").length;
+    d.append(el("summary", "", `${label(is.ym)} · ${nb} jeu${nb > 1 ? "x" : ""}, ${is.news.length - nb} nouvelle${is.news.length - nb > 1 ? "s" : ""}`));
+    d.addEventListener("toggle", () => { if (d.open && !d.querySelector(".j-list")){ const l = el("div", "j-list"); is.news.forEach(n => l.append(jRow(n))); d.append(l); } });
+    jBody.append(d);
+  }
+}
+function openJournal(){
+  renderJournal();
+  jov.classList.add("on"); document.body.classList.add("lock");
+  $("journal").scrollTop = 0; jClose.focus({preventScroll: true});
+  if (NEWS[0] && NEWS[0][0] > jSeen){ jSeen = NEWS[0][0]; try { localStorage.setItem("ludo.journalVu", jSeen); } catch (e) {} }
+  paintJournal();
+  try { if (!(history.state && history.state.journal)) history.pushState({journal: 1}, ""); } catch (e) {}
+}
+function hideJournal(){ if (!jOpen()) return; jov.classList.remove("on"); if (!ovOpen()) document.body.classList.remove("lock"); }
+function closeJournal(){ try { if (history.state && history.state.journal){ history.back(); return; } } catch (e) {} hideJournal(); jBtn.focus({preventScroll: true}); }
+jBtn.addEventListener("click", openJournal);
+jClose.addEventListener("click", closeJournal);
+jov.addEventListener("click", e => { if (e.target === jov) closeJournal(); });
+addEventListener("popstate", () => { if (!(history.state && history.state.journal)) hideJournal(); });
+paintJournal();
 
 /* ---------- au clavier : les flèches promènent le curseur, Entrée ouvre le volet ---------- */
 let carts = [], sel = 0;
@@ -287,7 +355,8 @@ function select(i, focus){
 }
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && ovOpen()){ e.preventDefault(); closeVolet(); return; }
-  if (ovOpen() || (e.target.closest && e.target.closest("textarea, input, select, .saves, .player"))) return;
+  if (e.key === "Escape" && jOpen()){ e.preventDefault(); closeJournal(); return; }
+  if (ovOpen() || jOpen() || (e.target.closest && e.target.closest("textarea, input, select, .saves, .player"))) return;
   if (["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(e.key)){ e.preventDefault(); kbd = true; select(sel + (["ArrowRight", "ArrowDown"].includes(e.key) ? 1 : -1), true); }
   else if (e.key === "Enter" && document.activeElement === document.body && carts[sel]) carts[sel].el.click();
 });

@@ -32,9 +32,8 @@
   <div class="menu"><div class="cmds" id="filters" role="toolbar" aria-label="Filtrer les jeux"></div><div class="say"><b>LE GARDIEN</b><span id="gardien" aria-live="polite"></span></div>
     <div class="legend" aria-hidden="true"><span><i class="dj"></i>défi du jour</span><span><i class="dj fait">✓</i>fait</span><span><i class="fv">★</i>favori</span><span><i class="crown">♛</i>record de la famille</span></div></div>
 
-  <section class="une" id="une" hidden></section>
 
-  <div class="tools"><label class="dq find"><span>?</span><input id="find" type="search" placeholder="Chercher un jeu…" autocomplete="off" spellcheck="false" aria-label="Chercher un jeu"></label><button class="dq sort" id="sort" type="button"></button><button class="dq surp" id="surprise" type="button">AU HASARD</button></div>
+  <div class="tools"><label class="dq find"><span>?</span><input id="find" type="search" placeholder="Chercher un jeu…" autocomplete="off" spellcheck="false" aria-label="Chercher un jeu"></label><button class="dq sort" id="sort" type="button"></button><button class="dq jr" id="journalBtn" type="button" aria-label="Le journal : quoi de neuf">JOURNAL<span class="n" id="journalN" hidden></span></button><button class="dq surp" id="surprise" type="button">AU HASARD</button></div>
   <nav class="rack" id="rack" aria-label="Jeux"></nav>
   <p class="shelf-empty" id="shelfEmpty" hidden></p>
 
@@ -62,6 +61,7 @@
   <div class="status" id="status"><kbd>FLECHES</kbd> CHOISIR · <kbd>ENTREE</kbd> OUVRIR · <kbd>ECHAP</kbd> FERMER</div>
 </div>
 
+<div class="ov jov" id="jov"><div class="in" id="journal" role="dialog" aria-modal="true" aria-label="Le journal de la Ludothèque"><div class="vbar"><b>LE JOURNAL</b><button class="x" id="jClose" type="button" aria-label="Fermer">✕</button></div><div id="jBody" style="display:contents"></div></div></div>
 <div class="ov" id="ov"><div class="in" id="volet" role="dialog" aria-modal="true" aria-labelledby="vTitle"><button class="x" id="vClose" type="button" aria-label="Fermer">✕</button><div id="vBody" style="display:contents"></div></div></div>
 
 <script src="commun/pixel32.js"></script>

@@ -3,7 +3,7 @@
 ## Le projet
 - Dépôt GitHub : **Tirashi/Claude**. Site publié : **https://tirashi.github.io/Claude/** (installé en appli PWA sur Android).
 - Jeux en HTML **sans build** (le fichier poussé est celui que joue le téléphone), un dossier par jeu ; `index.html` = l'accueil (menu aux cartouches, volet de chaque jeu avec ses records et son classement ; ce que l'accueil sait d'un jeu est dans sa **fiche** `<dossier>/fiche.js`). Un gros jeu peut se répartir en **scripts classiques** (`<script src>`, pas de modules ES ni de npm).
-- Service worker `sw.js` : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v89` au moment d'écrire ces lignes).
+- Service worker `sw.js` : quand on ajoute ou renomme un fichier, l'ajouter à `FILES` et changer `VERSION` (`ludotheque-v90` au moment d'écrire ces lignes).
 - Fichiers partagés : `ludo-scores.js` (classements Supabase), `icones.js` (icônes 16×16), **`commun/`** (code partagé entre plusieurs jeux : `pixel32.js` = moteur de pixel art 32 bits, chiens et volumes ombrés, `window.Chiens32` ; `vaisseaux.js` = vaisseaux en relief de Nebula, `window.NebulaVaisseaux`), `lib/three.min.js` (Three.js r128, pour les jeux en 3D), `lib/cannon.min.js` (cannon.js 0.6.2, physique des dés du Yams), polices dans `polices/`, **`moteur-rpg/`** (moteur RPG réutilisable, `window.MoteurRPG`, cahier des charges [`specs/rpg.md`](specs/rpg.md) § 12).
 - **Mémo technique : [`specs/ludotheque.md`](specs/ludotheque.md)** — architecture (accueil, classements, code de compte, transfert `LUDO1-`), **liste de contrôle pour ajouter un jeu**, leçons et détails de chaque jeu. **Le lire avant** d'ajouter un jeu, de toucher à l'accueil, aux classements ou à un fichier partagé, ou de reprendre un jeu.
 
@@ -49,7 +49,7 @@ Queens `queens/`, Picross Dex `picross/`, Lignée `lignee/`, Injagility `injagil
 
 ## En cours / à vérifier
 Une phrase par chantier ; le détail est dans le cahier des charges du jeu et dans [`specs/suivi.md`](specs/suivi.md) (mois en cours ; octobre dans [`specs/suivi/2026-10.md`](specs/suivi/2026-10.md)) : y ajouter les nouveautés.
-- **Rangement** (05/11) : fini (phases 0 à 6) ; chaque jeu a sa fiche `<dossier>/fiche.js` lue par l'accueil ([plan](specs/plan-rangement.md)). Accueil confirmé sur le téléphone le 06/11 ; reste à essayer le transfert de sauvegardes. **Quoi de neuf** de l'accueil (trop long, pas assez joli, mal placé) : maquette 1 à choisir, https://claude.ai/artifact/DDFF3owWU8i52drxazRBAw ([suivi](specs/suivi.md)).
+- **Rangement** (05/11) : fini (phases 0 à 6) ; chaque jeu a sa fiche `<dossier>/fiche.js` lue par l'accueil ([plan](specs/plan-rangement.md)). Accueil confirmé sur le téléphone le 06/11 ; reste à essayer le transfert de sauvegardes. **Journal** (06/11, direction C de la [maquette](https://claude.ai/artifact/DDFF3owWU8i52drxazRBAw)) : remplace le jeu à la une et le Quoi de neuf ; à essayer sur le téléphone.
 - **Amiral !**, **Escadrille !**, **Thé des Jarls**, **Capitaine du port**, **Mot d'or**, **Magasinier**, **Mineur de l'espace** (téléphone et PC), **Dragon Simulator** (équilibrage gardé tel quel) : confirmés sur le téléphone le 06/11 ([essais](specs/essais.md)) ; artefact d'Escadrille ! pas republié.
 - **Duché**, **Bannières**, **Boutique**, **Doggy Saga**, **Romet**, **Résistance** : validés ; Résistance : autres pays plus tard ([cdc](specs/resistance.md)).
 - **La Dernière Lanterne** : actes 1 à 3 faits ; prochaine étape session 5 (acte 4, final), opusplan ([cdc](specs/rpg.md)).

@@ -1,7 +1,7 @@
 /* Ludothèque : outils communs de l'accueil et des fiches des jeux.
    Ordre de chargement dans index.html : accueil-outils.js, puis les fiches (<dossier>/fiche.js), puis accueil.js.
    Ajouter un jeu : sa fiche, son chemin dans ORDRE (accueil.js, ordre des cartouches), sa ligne <script src> dans index.html,
-   la fiche dans FILES de sw.js, son icône dans icones.js (+ une ligne dans NEWS d'accueil.js).
+   la fiche dans FILES de sw.js, son icône dans icones.js (+ une ligne [date, "neuf", dossier, texte] dans NEWS d'accueil.js : le journal).
    Ce sont des scripts classiques : les const de haut niveau d'ici sont visibles dans les fiches et dans accueil.js.
 
    Une fiche décrit tout ce que l'accueil sait d'un jeu :
