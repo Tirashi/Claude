@@ -13,6 +13,8 @@ https://opengameart.org/node/92757 ; bâtiments de l'échantillon gratuit EAST d
 Maquette 7 (vue du dessus : Tiny Swords de Pixel Frog, ancienne version CC0, https://pixelfrog-assets.itch.io/tiny-swords ;
 Ninja Adventure de Pixel-boy et AAA, CC0, https://pixel-boy.itch.io/ninja-adventure-asset-pack) :
         python3 -I outils/bastion-maquette/fabriquer.py 7 <dossier « Tiny Swords (Update 010) »> <dossier « Ninja Adventure - Asset Pack »> <sortie.html>
+Maquette 8 (vue du dessus, Free Pack actuel de Tiny Swords, https://pixelfrog-assets.itch.io/tiny-swords ; chemins et ruine de l'ancienne version CC0) :
+        python3 -I outils/bastion-maquette/fabriquer.py 8 <dossier « Tiny Swords (Free Pack) »> <dossier « Tiny Swords (Update 010) »> <sortie.html>
 Les packs ne sont pas dans le dépôt (pas de redistribution) : la page fabriquée sert d'artefact, elle n'est pas commitée.
 Packs : https://reodesuxz.itch.io/low-poly-japanese-castle-town-pack, https://reodesuxz.itch.io/low-poly-japanese-shrine-pack,
 https://reodesuxz.itch.io/low-poly-ninja-dojo-castle-pack, https://standout7.itch.io/lowpo-samurai"""
@@ -21,6 +23,33 @@ import base64, glob, json, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, '..', '..'))
 M4 = sys.argv[1] == '4'
+if sys.argv[1] == '8':
+    fp, old, sortie = sys.argv[2:5]
+    b2 = open(os.path.join(RACINE, 'maquettes', 'bastion-2.html'), encoding='utf-8').read()
+    sim = b2[b2.index('/* ================= la simulation commune'):b2.index('/* ================= le rendu 3D')]
+    plan = """["TTT0P0TTT", "T0000000T", "00H111H00", "001222100", "P0122210P", "001222100", "00H111H00", "T0000000T", "TTT0P0TTT"]"""
+    sim = sim[:sim.index('const PLANS = {')] + 'const PLANS = {A: ' + plan + ', B: ' + plan + '};\nconst ENTREES = [[4, 0], [0, 4], [8, 4], [4, 8]];' + sim[sim.index('\nconst DIR'):]
+    png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()
+    T = 'Terrain/'
+    I = {'tm1': T + 'Tileset/Tilemap_color1.png', 'tm4': T + 'Tileset/Tilemap_color4.png', 'tree1': T + 'Resources/Wood/Trees/Tree1.png', 'tree2': T + 'Resources/Wood/Trees/Tree2.png',
+         'tree3': T + 'Resources/Wood/Trees/Tree3.png', 'tree4': T + 'Resources/Wood/Trees/Tree4.png', 'bush1': T + 'Decorations/Bushes/Bushe1.png', 'bush2': T + 'Decorations/Bushes/Bushe3.png',
+         'rock1': T + 'Decorations/Rocks/Rock1.png', 'rock2': T + 'Decorations/Rocks/Rock3.png', 'fire': 'Particle FX/Fire_01.png', 'arrow': 'Units/Blue Units/Archer/Arrow.png',
+         'healfx': 'Units/Blue Units/Monk/Heal_Effect.png'}
+    img = {k: png(os.path.join(fp, v)) for k, v in I.items()}
+    img['sable'] = png(os.path.join(old, 'Terrain/Ground/Tilemap_Flat.png')); img['ruine'] = png(os.path.join(old, 'Factions/Knights/Buildings/House/House_Destroyed.png'))
+    for coul in ('Blue', 'Red', 'Yellow', 'Black'):
+        base = os.path.join(fp, 'Units', coul + ' Units')
+        for d in ('Warrior', 'Archer', 'Lancer'):
+            for f in glob.glob(os.path.join(base, d, '*.png')):
+                n = os.path.splitext(os.path.basename(f))[0]
+                if n != 'Arrow' and 'Defence' not in n: img[coul + '/' + n] = png(f)
+        for n in ('Idle', 'Run', 'Heal'):
+            f = os.path.join(base, 'Monk', n + '.png')
+            if os.path.exists(f): img[coul + '/Monk_' + n] = png(f)
+    for coul in ('Blue', 'Yellow'):
+        for n in ('House1', 'House2', 'House3', 'Castle'): img[coul + '/b/' + n] = png(os.path.join(fp, 'Buildings', coul + ' Buildings', n + '.png'))
+    html = open(os.path.join(ICI, 'source-8.html'), encoding='utf-8').read().replace('__SIM__', sim).replace('__IMAGES__', json.dumps(img))
+    open(sortie, 'w', encoding='utf-8').write(html); print(sortie, len(html) // 1024, 'Ko,', len(img), 'images'); sys.exit()
 if sys.argv[1] == '7':
     ts, na, sortie = sys.argv[2:5]
     b2 = open(os.path.join(RACINE, 'maquettes', 'bastion-2.html'), encoding='utf-8').read()

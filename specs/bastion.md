@@ -133,3 +133,15 @@ Retour (06/11) : **« Tiny Swords est vraiment bien »** ; il y a aussi des lanc
 | [Tiny Swords: Warfare](https://pixelfrog-assets.itch.io/tiny-swords-warfare) | **15 $** en promotion (30 $ ; minimum affiché 30 $ hors promo) | même licence | **accès anticipé, enrichi régulièrement** : roi, berserker, épéiste, lancier à cheval, catapulte, en 5 couleurs ; feuille de route : hallebardier, porte-masse, marteau de guerre, lanceur de javelot, arbalétrier, éclaireur, tambour, porte-bannière, bombardier, porte-torche, bélier, chien de guerre, magicien ; écuries, atelier de siège, camp, tour de mage, forteresse, citadelle ; murs en bois et en pierre, tours, baliste, canon ; port, barques |
 Autres packs « à la Tiny Swords » regardés, tous moins bons : [Tiny Kingdom Armies](https://two-faces-studio.itch.io/tiny-kingdom-armies) (3,99 $, 9 unités, pas de marche), [Medieval Units](https://citrusgames.itch.io/mediaval-units) (gratuit, 32 px, simple), [Medieval Army Pack](https://mtpixls.itch.io/medieval-army-pack) (gratuit, soldats au repos seulement), [Pixel Heroes and Foes](https://swordforge.itch.io/pixel-heroes-and-foes-fantasy-pixel-art-sprite-pack) (vue de côté). Les autres packs de Pixel Frog (Tiny RPG Character, Sunnyside World) ne sont pas des armées.
 Proposition : Free Pack (gratuit) pour nos escouades (guerriers, lanciers, archers, moines) ; ennemis = l'armée rouge du Free Pack, ou l'Enemy Pack (15 $) pour des monstres et un troll en chef ; Warfare plus tard si on veut des murs, des tours et des engins de siège.
+
+**Décision (06/11) : on part sur le médiéval avec Tiny Swords** (l'Empire de l'Est est abandonné) ; maquette refaite avec le Free Pack.
+
+## Maquette 8 : Tiny Swords, Free Pack (06/11)
+https://claude.ai/artifact/Jwyug7BrbEHE1br4TinE5J — page source `outils/bastion-maquette/source-8.html`, fabriquée par `fabriquer.py 8 <dossier Free Pack> <dossier ancienne version>` (95 images ; le Free Pack n'est pas dans le dépôt).
+- Même moteur que la maquette 7 (case = 2 × 2 tuiles de 64 px, zoom 12 tuiles, loupe pour tout voir, déplacement au doigt) ; maisons rapprochées du centre ; château sur la colline.
+- Nouveau tilemap (9 × 6 tuiles par couleur : herbe raccordée, plateau surélevé et falaise) ; chemins de sable et maison en ruine de l'ancienne version (CC0), le Free Pack n'en ayant pas.
+- Figurines en bandes d'images (192 px, lancier 320 px) : **guerriers** (repos, course, deux coups, **garde** derrière le bouclier pendant MUR), **archers** (tir), **lanciers** (coups vers la droite, en bas à droite, en bas, en haut à droite, en haut), **moines** (deux devant le village, qui lèvent leur bâton et font briller le soin sur une escouade qui se soigne près des maisons).
+- Ennemis : guerriers et lanciers de l'autre armée, chef = lancier 1,5 fois plus grand ; maisons qui prennent feu (flammes animées du pack) puis tombent en ruine.
+- **A** : prairie claire (couleur d'herbe 1), bleus contre rouges. **B** : herbe sombre (couleur 4), jaunes contre noirs.
+
+Retours : à venir.
