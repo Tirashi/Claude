@@ -108,4 +108,18 @@ https://claude.ai/artifact/RVrXXUxEURRGwQn6NHis7i — page source `outils/bastio
 - **B** : les mêmes sol et soldats, avec les bâtiments et arbres de l'échantillon EAST à leur taille (pixels deux fois plus fins que les soldats) : machiya, salle de culte, minka, pagode, torii, renards, lanternes kasuga, bassin, bottes de riz, lanterne de papier, cerisiers, érables, bambous, iris.
 - Vitrine des six figurines en grand sous les téléphones.
 
+Retour (06/11) : « c'est toujours pas très joli ; essayons une **vue du dessus** ».
+
+## Maquette 7 : vue du dessus (06/11)
+https://claude.ai/artifact/9o9SWWAVKgva4e83xywF2K — page source `outils/bastion-maquette/source-7.html`, fabriquée par `fabriquer.py 7 <dossier Tiny Swords> <dossier Ninja Adventure>` (plan de 9×9 cases propre à la vue du dessus : maisons aux quatre coins, colline au centre, entrées au milieu des bords).
+| Pack | Prix | Licence | Contenu |
+|---|---|---|---|
+| [Tiny Swords](https://pixelfrog-assets.itch.io/tiny-swords) (Pixel Frog), **ancienne version** (Update 010) | gratuit | **CC0** (le fichier s'appelle « TS_old version_CC0 Licensed » ; la nouvelle version gratuite a d'autres conditions, à relire) | tuiles de 64 px qui se raccordent (herbe, sable, falaises, escaliers, eau), chevaliers (guerrier, archer, ouvrier) et gobelins (torche, dynamite, tonneau) en 4 couleurs, animés dans plusieurs directions en cases de 192 px ; maisons, tour, château (avec ruines), arbres au vent, moutons, décors |
+| [Ninja Adventure](https://pixel-boy.itch.io/ninja-adventure-asset-pack) (Pixel-boy et AAA) | gratuit | **CC0** | tuiles de 16 px (sol, chemins, falaises, eau, maisons japonaises, torii, statues, arbres dont cerisiers), plus de 90 personnages en 4 directions (samouraïs, ninjas, moines, démons…), monstres et boss (tengu, samouraïs géants, kappa…), effets, sons et musiques |
+- **Une case du jeu = 2 × 2 tuiles** : les soldats font une tuile de haut, les maisons 2 × 3 (Tiny Swords) ou 4 × 3 tuiles (Ninja Adventure). Zoom par défaut (11 tuiles de large pour A, 9 pour B), plateau déplacé au doigt, loupe ⊖/⊕ pour le voir en entier ; forêt tout autour (pas d'île).
+- Sol dessiné une fois dans une toile à part (herbe, chemins des entrées jusqu'au pied de la colline, colline à falaises avec escalier) ; arbres, maisons, tour, soldats triés par leur pied.
+- **A · Tiny Swords** : guerriers (épées), archers (tir dans 5 directions), ouvriers à la hache ; gobelins à torche et à dynamite, chef gobelin violet 1,5 fois plus grand ; maisons bleue, rouge, jaune (ruine quand elles brûlent), tour au sommet.
+- **B · Ninja Adventure** : samouraïs au casque doré, archers au chapeau de paille, lanciers bleus ; ninjas noirs, gris et rouges ; le tengu rouge en chef ; quatre maisons japonaises, temple au toit rouge et torii au centre, cerisiers et arbres verts autour.
+- Leçon : Tiny Swords trace un contour sombre au bord de chaque plateau ; deux étages de colline et des chemins qui la traversent donnaient un quadrillage : un seul étage, des chemins qui s'arrêtent au pied.
+
 Retours : à venir.

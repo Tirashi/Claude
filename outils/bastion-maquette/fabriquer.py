@@ -10,6 +10,9 @@ Maquette 5 (2D iso en pixel art, pack « [8x8] Isometric TRPG » de Gustavo Vitu
 Maquette 6 (2D iso plus grande : sol et figurines « Isometric Classic Hero + Tiles (32x32) » de DezrasDragons, CC0,
 https://opengameart.org/node/92757 ; bâtiments de l'échantillon gratuit EAST de mmorwynn, https://mmorwynn.itch.io/east-free-sample) :
         python3 -I outils/bastion-maquette/fabriquer.py 6 <dossier des deux planches OGA (_0.png)> <dossier east-free-sample> <sortie.html>
+Maquette 7 (vue du dessus : Tiny Swords de Pixel Frog, ancienne version CC0, https://pixelfrog-assets.itch.io/tiny-swords ;
+Ninja Adventure de Pixel-boy et AAA, CC0, https://pixel-boy.itch.io/ninja-adventure-asset-pack) :
+        python3 -I outils/bastion-maquette/fabriquer.py 7 <dossier « Tiny Swords (Update 010) »> <dossier « Ninja Adventure - Asset Pack »> <sortie.html>
 Les packs ne sont pas dans le dépôt (pas de redistribution) : la page fabriquée sert d'artefact, elle n'est pas commitée.
 Packs : https://reodesuxz.itch.io/low-poly-japanese-castle-town-pack, https://reodesuxz.itch.io/low-poly-japanese-shrine-pack,
 https://reodesuxz.itch.io/low-poly-ninja-dojo-castle-pack, https://standout7.itch.io/lowpo-samurai"""
@@ -18,6 +21,28 @@ import base64, glob, json, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, '..', '..'))
 M4 = sys.argv[1] == '4'
+if sys.argv[1] == '7':
+    ts, na, sortie = sys.argv[2:5]
+    b2 = open(os.path.join(RACINE, 'maquettes', 'bastion-2.html'), encoding='utf-8').read()
+    sim = b2[b2.index('/* ================= la simulation commune'):b2.index('/* ================= le rendu 3D')]
+    plan = """["TTT0P0TTT", "T0000000T", "0H01110H0", "001222100", "P0122210P", "001222100", "0H01110H0", "T0000000T", "TTT0P0TTT"]"""
+    planB = """["TTT0P0TTT", "T00R0000T", "0H01110H0", "001222100", "P0122210P", "001222100", "0H01110H0", "T00000R0T", "TTT0P0TTT"]"""
+    sim = sim[:sim.index('const PLANS = {')] + 'const PLANS = {A: ' + plan + ', B: ' + planB + '};\nconst ENTREES = [[4, 0], [0, 4], [8, 4], [4, 8]];' + sim[sim.index('\nconst DIR'):]
+    png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()
+    K = 'Factions/Knights/'; G = 'Factions/Goblins/'; A = 'Actor/Character/'
+    I = {'tsFlat': 'Terrain/Ground/Tilemap_Flat.png', 'tsElev': 'Terrain/Ground/Tilemap_Elevation.png', 'tsTree': 'Resources/Trees/Tree.png',
+         'tsHouse': K + 'Buildings/House/House_Blue.png', 'tsHouseR': K + 'Buildings/House/House_Red.png', 'tsHouseY': K + 'Buildings/House/House_Yellow.png',
+         'tsHouseX': K + 'Buildings/House/House_Destroyed.png', 'tsTower': K + 'Buildings/Tower/Tower_Blue.png',
+         'tsWarrior': K + 'Troops/Warrior/Blue/Warrior_Blue.png', 'tsArcher': K + 'Troops/Archer/Blue/Archer_Blue.png', 'tsPawn': K + 'Troops/Pawn/Blue/Pawn_Blue.png',
+         'tsTorch': G + 'Troops/Torch/Red/Torch_Red.png', 'tsTnt': G + 'Troops/TNT/Red/TNT_Red.png', 'tsTorchP': G + 'Troops/Torch/Purple/Torch_Purple.png'}
+    for k in range(6): I['tsDeco%d' % k] = 'Deco/%02d.png' % [1, 4, 7, 9, 12, 16][k]
+    J = {'naFloor': 'Backgrounds/Tilesets/TilesetFloor.png', 'naRelief': 'Backgrounds/Tilesets/TilesetRelief.png', 'naNature': 'Backgrounds/Tilesets/TilesetNature.png',
+         'naHouse': 'Backgrounds/Tilesets/TilesetHouse.png', 'naSamRed': A + 'SamuraiRed/redsamurai.png', 'naSam': A + 'Samurai/SpriteSheet.png',
+         'naSamBlue': A + 'SamuraiBlue/SpriteSheet.png', 'naNinjaDark': A + 'NinjaDark/SpriteSheet.png', 'naNinjaGray': A + 'NinjaGray/SpriteSheet.png',
+         'naNinjaRed': A + 'NinjaRed/SpriteSheet.png', 'naTenguW': 'Actor/Boss/TenguRed/Walk.png', 'naTenguA': 'Actor/Boss/TenguRed/Attack.png', 'naTenguI': 'Actor/Boss/TenguRed/Idle.png'}
+    img = {k: png(os.path.join(ts, v)) for k, v in I.items()}; img.update({k: png(os.path.join(na, v)) for k, v in J.items()})
+    html = open(os.path.join(ICI, 'source-7.html'), encoding='utf-8').read().replace('__SIM__', sim).replace('__IMAGES__', json.dumps(img))
+    open(sortie, 'w', encoding='utf-8').write(html); print(sortie, len(html) // 1024, 'Ko'); sys.exit()
 if sys.argv[1] == '6':
     oga, east, sortie = sys.argv[2:5]
     b2 = open(os.path.join(RACINE, 'maquettes', 'bastion-2.html'), encoding='utf-8').read()

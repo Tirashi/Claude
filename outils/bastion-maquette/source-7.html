@@ -1,0 +1,341 @@
+<title>Bastion, maquette 7</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel:wght@600;800&family=Shippori+Mincho:wght@600;800&display=swap">
+<style>
+/* Maquette 7 de « Bastion » : vue du dessus. A = « Tiny Swords » (Pixel Frog, ancienne version CC0), B = « Ninja Adventure »
+   (Pixel-boy et AAA, CC0). Une case du jeu = 2 × 2 tuiles ; zoom et déplacement au doigt. Fabriquée par fabriquer.py 7. */
+:root{
+  color-scheme: dark;
+  --bg:#15131a; --text:#f0ece4; --dim:#b6aea0; --gold:#e8c46a; --laque:#c8301e;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+  --ouest:"Cinzel", Georgia, serif; --est:"Shippori Mincho", "Yu Mincho", serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(#26222f 1px, transparent 1.5px); background-size:5px 5px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:24px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.intro{max-width:1180px; margin:0 auto 22px; display:flex; flex-direction:column; gap:8px}
+.intro h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-shadow:3px 3px 0 #7a4a1a, 5px 5px 0 #000}
+.intro p{margin:0; max-width:76ch; color:var(--dim)}
+.intro b{color:var(--text); font-weight:400}
+.grid{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:28px; justify-items:center}
+.col{display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px; min-width:0}
+.col > h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; line-height:1.6; color:var(--gold)}
+.col > h2 span{color:#e98a6a}
+.col > p{margin:0; color:var(--dim); font-size:19px}
+canvas.px{image-rendering:pixelated; image-rendering:crisp-edges}
+
+.phone{position:relative; width:100%; max-width:360px; height:700px; overflow:hidden; border:4px solid #000; border-radius:22px; box-shadow:0 0 0 3px #3a3444, 6px 6px 0 3px #000; touch-action:none; user-select:none; -webkit-user-select:none}
+.phone > canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:12px 10px}
+.hud > *{pointer-events:auto}
+.top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.lvl{display:flex; flex-direction:column; gap:3px}
+.lvl b{font-weight:800}
+.pills{display:flex; flex-direction:column; align-items:flex-end; gap:4px}
+.pill{padding:2px 8px; white-space:nowrap}
+.banner{position:absolute; left:10px; right:10px; top:84px; padding:7px 10px; text-align:center; opacity:0; transform:translateY(-6px); transition:opacity .2s, transform .2s; pointer-events:none}
+.banner.on{opacity:1; transform:none}
+.slow{position:absolute; left:50%; bottom:150px; transform:translateX(-50%); padding:4px 12px; opacity:0; transition:opacity .15s; pointer-events:none; white-space:nowrap}
+.phone.slowed .slow{opacity:1}
+.phone::after{content:""; position:absolute; inset:0; pointer-events:none; border:3px solid transparent; border-radius:18px; transition:border-color .15s}
+.hint{text-align:center; margin-bottom:6px; pointer-events:none}
+.cards{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px}
+.card{position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; padding:7px 4px 30px; text-align:center}
+.card .ico{width:32px; height:32px; display:grid; place-items:center; font-size:18px; line-height:1}
+.card .pips{display:flex; gap:3px}
+.card .pips i{width:6px; height:6px}
+.card[aria-pressed="true"]{transform:translateY(-4px)}
+.card .sp{position:absolute; left:5px; right:5px; bottom:5px; height:20px; display:grid; place-items:center; overflow:hidden}
+.card .sp::before{content:""; position:absolute; left:0; top:0; bottom:0; width:var(--cd, 0%); opacity:.35; background:#000}
+.card .sp span{position:relative}
+.turn{position:absolute; top:62px; display:grid; place-items:center; width:34px; height:34px; font-size:20px; line-height:1}
+.turn.z{top:auto; bottom:156px; right:10px}
+
+/* A · Valbrune (parchemin) */
+.thA{background:radial-gradient(circle at 50% 40%, #b8d0d8, #6a8a9a 85%)}
+.thA .lvl b{font-family:var(--ouest); font-size:19px; color:#2a1808; text-shadow:0 1px 0 #f5e8c8}
+.thA .lvl span{color:#3a2410; font-family:var(--ouest); font-size:11px; font-weight:600; letter-spacing:1px}
+.thA .pill{font-family:var(--ouest); font-weight:600; font-size:12px; letter-spacing:1px; color:#f5e8c8; background:#5a3a1a; border:2px solid #2a1808; border-radius:3px}
+.thA .banner{font-family:var(--ouest); font-weight:800; font-size:13px; letter-spacing:1px; color:#f5e8c8; background:#7a2a1a; border:2px solid #2a1808; border-radius:3px; box-shadow:0 3px 0 #2a1808}
+.thA .banner.good{background:#3a5a2a}
+.thA .slow{font-family:var(--ouest); font-weight:800; font-size:13px; letter-spacing:3px; color:#f5e8c8; background:#7a2a1a; border:2px solid #2a1808}
+.thA.slowed::after{border-color:#7a2a1a}
+.thA .hint{color:#2a1808; font-family:var(--ouest); font-size:12px; font-weight:600; text-shadow:0 1px 0 #f5e8c8}
+.thA .card{background:linear-gradient(#f2e3bf, #d9c294); border:2px solid #3a2410; border-radius:4px; box-shadow:0 3px 0 #3a2410; color:#3a2410}
+.thA .card .ico{background:var(--c); border:2px solid #3a2410; border-radius:50%; color:#fff}
+.thA .card .nm{font-family:var(--ouest); font-weight:800; font-size:11px; letter-spacing:1px}
+.thA .card .pips i{background:#3a2410} .thA .card .pips i.off{background:#c4ad80}
+.thA .card .sp{font-family:var(--ouest); font-weight:800; font-size:9px; letter-spacing:1px; color:#f5e8c8; background:#7a2a1a; border-radius:2px}
+.thA .card .sp.ready{background:#b8571a; box-shadow:0 0 8px #ffb84a}
+.thA .card[aria-pressed="true"]{background:linear-gradient(#fff4d6, #ead39c); box-shadow:0 7px 0 #3a2410}
+.thA .turn{background:#f2e3bf; border:2px solid #3a2410; border-radius:50%; color:#3a2410; box-shadow:0 2px 0 #3a2410}
+
+/* B · le temple de la Grue (laque et papier) */
+.thB{background:linear-gradient(#f0b890, #8a6a7a 55%, #3a3450)}
+.thB .lvl b{font-family:var(--est); font-size:20px; color:#fff4e6; text-shadow:0 2px 6px #1a1020}
+.thB .lvl span{color:#ffe0c0; font-family:var(--est); font-weight:600; font-size:12px; letter-spacing:2px; text-shadow:0 1px 3px #1a1020}
+.thB .pill{font-family:var(--est); font-weight:600; font-size:13px; color:#f4ede0; background:#1a1410; border-left:4px solid var(--laque)}
+.thB .banner{font-family:var(--est); font-weight:800; font-size:14px; letter-spacing:2px; color:#f4ede0; background:#1a1410; border-top:3px solid var(--laque); border-bottom:3px solid var(--laque)}
+.thB .banner.good{border-color:var(--gold)}
+.thB .slow{font-family:var(--est); font-weight:800; font-size:14px; letter-spacing:4px; color:#f4ede0; background:var(--laque); border-radius:2px}
+.thB.slowed::after{border-color:var(--laque)}
+.thB .hint{color:#fff4e6; font-family:var(--est); font-size:13px; font-weight:600; text-shadow:0 1px 4px #000}
+.thB .card{background:#f4ede0; border:2px solid #1a1410; color:#1a1410; box-shadow:3px 3px 0 #1a1410}
+.thB .card .ico{background:var(--c); color:#f4ede0; font-family:var(--est); font-weight:800; font-size:17px}
+.thB .card .nm{font-family:var(--est); font-weight:800; font-size:13px}
+.thB .card .pips i{background:var(--laque); border-radius:50%} .thB .card .pips i.off{background:#d6cbb6}
+.thB .card .sp{font-family:var(--est); font-weight:800; font-size:11px; letter-spacing:1px; color:#f4ede0; background:#1a1410}
+.thB .card .sp.ready{background:var(--laque); box-shadow:0 0 8px #ff7a5a}
+.thB .card[aria-pressed="true"]{background:#fff; box-shadow:3px 7px 0 var(--laque)}
+.thB .turn{background:#1a1410; color:#f4ede0; border-left:3px solid var(--laque)}
+
+/* la vitrine des figurines */
+.vit{position:relative; width:100%; border:3px solid #000; border-radius:10px; overflow:hidden}
+.vit canvas{display:block; width:100%; height:auto}
+.vit.thA{background:#d8c8a0} .vit.thB{background:#e8d8c0}
+.vnoms{display:grid; grid-template-columns:repeat(6, 1fr); text-align:center; font-size:15px; color:var(--dim); line-height:1}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<div class="intro">
+  <h1>BASTION · MAQUETTE 7 · VUE DU DESSUS</h1>
+  <p>On passe en <b>vue du dessus</b>, avec deux packs gratuits (CC0) faits pour ça, très soignés et complets. Une case du jeu fait <b>2 × 2 tuiles</b> : les soldats et les maisons sont <b>grands</b>. Le plateau est <b>zoomé</b> : <b>glisse le doigt</b> pour le déplacer, la loupe ⊕/⊖ le montre en entier. Le plateau est entouré de forêt (pas d'île) ; la colline du centre a des falaises.</p>
+  <p><b>A · Tiny Swords</b> (Pixel Frog) : chevaliers, archers et bûcherons bleus contre les gobelins (torches et dynamite), un gros chef gobelin ; maisons, tour, arbres qui bougent au vent. <b>B · Ninja Adventure</b> (Pixel-boy et AAA) : samouraïs au casque doré, archers au chapeau de paille et lanciers contre les ninjas, et un tengu ; maisons japonaises, torii, cerisiers.</p>
+</div>
+
+<div class="grid">
+  <section class="col">
+    <h2>A · TINY SWORDS <span>MEDIEVAL</span></h2>
+    <div class="phone thA" id="pA"></div>
+    <p>Tuiles de 64 px, soldats animés en grand (repos, course, coups vers la droite, le haut, le bas ; tir dans cinq directions). Les maisons brûlées passent en ruine.</p>
+  </section>
+  <section class="col">
+    <h2>B · NINJA ADVENTURE <span>EMPIRE DE L'EST</span></h2>
+    <div class="phone thB" id="pB"></div>
+    <p>Tuiles de 16 px agrandies, personnages chibis vus de dessus dans quatre directions ; des dizaines d'autres personnages, monstres et boss japonais dans le pack (yokai, kappa, samouraïs géants).</p>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const IMG = __IMAGES__;   // nom → image (data:image/png;base64)
+
+__SIM__
+
+/* ================= les images ================= */
+const cv = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const charge = s => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = s; });
+const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
+const key = (r, g, b) => "#" + [r, g, b].map(v => v.toString(16).padStart(2, "0")).join("");
+// recolorer : map {"#rrggbb": "#rrggbb"} ou fonction (r, g, b) → [r, g, b] | null
+function recolor(src, map){
+  const c = cv(src.width, src.height), x = c.getContext("2d"); x.drawImage(src, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+  for (let i = 0; i < p.length; i += 4){
+    if (!p[i + 3]) continue;
+    const n = typeof map === "function" ? map(p[i], p[i + 1], p[i + 2]) : (map[key(p[i], p[i + 1], p[i + 2])] && hex(map[key(p[i], p[i + 1], p[i + 2])]));
+    if (n){ p[i] = n[0]; p[i + 1] = n[1]; p[i + 2] = n[2]; }
+  }
+  x.putImageData(d, 0, 0); return c;
+}
+// rampe de couleurs selon la luminosité (pour repeindre une teinte entière)
+const ramp = (cols, test) => { const C = cols.map(hex); return (r, g, b) => { if (test && !test(r, g, b)) return null;
+  const L = (r * .3 + g * .59 + b * .11) / 255; return C[Math.max(0, Math.min(C.length - 1, Math.floor((L - .12) / .6 * C.length)))]; }; };
+const verdure = (r, g, b) => g > r + 6 && g >= b;
+
+/* ================= dessin au pixel (sans flou) ================= */
+function inside(x, y, P){ let o = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++){ const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) o = !o; } return o; }
+function poly(x, P, col){ x.fillStyle = col; const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  for (let py = Math.floor(Math.min(...ys)); py <= Math.ceil(Math.max(...ys)); py++) for (let px = Math.floor(Math.min(...xs)); px <= Math.ceil(Math.max(...xs)); px++) if (inside(px + .5, py + .5, P)) x.fillRect(px, py, 1, 1); }
+function line(x, a, b, col){ x.fillStyle = col; let [x0, y0] = a.map(Math.round), [x1, y1] = b.map(Math.round); const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy;
+  for (;;){ x.fillRect(x0, y0, 1, 1); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy){ e += dy; x0 += sx; } if (e2 <= dx){ e += dx; y0 += sy; } } }
+const dia = (cx, cy, hw) => [[cx - hw, cy], [cx, cy - hw / 2], [cx + hw, cy], [cx, cy + hw / 2]];
+// une boîte iso posée sur la case (repère : centre de la face du dessus de la case = (0, 0)), e = hauteur du bas, h = sa hauteur
+function box(x, hw, e, h, c){ const b = dia(0, -e, hw), t = dia(0, -e - h, hw);
+  poly(x, [t[0], t[3], b[3], b[0]], c[0]); poly(x, [t[3], t[2], b[2], b[3]], c[1]); poly(x, t, c[2]); }
+// un toit en pyramide (c : arrière gauche, arrière droit, avant gauche, avant droit, bord), relevé aux coins si up
+function roof(x, hw, e, rise, c, up){ const d = dia(0, -e, hw), A = [0, -e - rise];
+  poly(x, [d[0], d[1], A], c[0]); poly(x, [d[1], d[2], A], c[1]); poly(x, [d[0], d[3], A], c[2]); poly(x, [d[3], d[2], A], c[3]);
+  line(x, d[0], d[3], c[4]); line(x, d[3], d[2], c[4]);
+  if (up){ x.fillStyle = c[4]; x.fillRect(d[0][0] - 1, d[0][1] - 1, 1, 1); x.fillRect(d[2][0] + 1, d[2][1] - 1, 1, 1); x.fillRect(d[3][0], d[3][1] + 1, 1, 1); } }
+function disc(x, cx, cy, r, col){ x.fillStyle = col; for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j <= r * r + r * .6) x.fillRect(cx + i, cy + j, 1, 1); }
+
+/* ================= les deux habillages ================= */
+const L = {};
+const load = async () => { if (L.ok) return; await Promise.all(Object.entries(IMG).map(async ([k, v]) => { L[k] = await charge(v); })); L.ok = true; };
+const piece = (im, sx, sy, w, h) => { const c = cv(w, h); c.getContext("2d").drawImage(im, sx, sy, w, h, 0, 0, w, h); return c; };
+const flipH = src => { const c = cv(src.width, src.height), x = c.getContext("2d"); x.translate(src.width, 0); x.scale(-1, 1); x.drawImage(src, 0, 0); return c; };
+// raccord des bords : bloc 4 × 4 (3 × 3 + une colonne et une rangée seules)
+const auto = (n, s, w, e) => [w ? (e ? 1 : 2) : (e ? 0 : 3), n ? (s ? 1 : 2) : (s ? 0 : 3)];
+
+const SKIN = {
+  A: { TL: 64, VT: 11,
+    sol(x, t){ x.drawImage(L.tsFlat, 64, 64, 64, 64, t.px, t.py, 64, 64); },
+    chemin(x, t, m){ const [c, r] = auto(m.n, m.s, m.w, m.e); x.drawImage(L.tsFlat, (5 + c) * 64, r * 64, 64, 64, t.px, t.py, 64, 64); },
+    haut(x, t, m){ const [c, r] = auto(m.n, m.s, m.w, m.e), rr = !m.n && !m.s ? 4 : r; x.drawImage(L.tsElev, c * 64, rr * 64, 64, 64, t.px, t.py, 64, 64);
+      x.drawImage(L.tsFlat, c * 64, r * 64, 64, 64, t.px, t.py, 64, 64); },
+    falaise(x, t, m, esc){ const c = m.w ? (m.e ? 1 : 2) : (m.e ? 0 : 3); if (esc) x.drawImage(L.tsElev, 1 * 64, 7 * 64, 64, 64, t.px, t.py, 64, 64); else x.drawImage(L.tsElev, c * 64, 3 * 64, 64, 64, t.px, t.py, 64, 64); },
+    arbre: (x, X, Y, k, T) => x.drawImage(L.tsTree, (Math.floor(T * 6 + k) % 4) * 192, 0, 192, 192, Math.round(X - 96), Math.round(Y - 175), 192, 192),
+    maison: (x, X, Y, i, mort) => x.drawImage(mort ? L.tsHouseX : [L.tsHouse, L.tsHouseR, L.tsHouse, L.tsHouseY][i], Math.round(X - 64), Math.round(Y - 170)),
+    centre: (x, X, Y) => x.drawImage(L.tsTower, Math.round(X - 64), Math.round(Y - 233)),
+    deco: (x, X, Y, k) => x.drawImage(L["tsDeco" + (k % 6)], Math.round(X - 32), Math.round(Y - 48)),
+    // figurines : planches de cases de 192 px, regardent vers la droite
+    unites(){
+      const fr = (im, row, n) => Array.from({length: n}, (_, i) => piece(im, i * 192, row * 192, 192, 192));
+      const war = im => ({idle: fr(im, 0, 6), run: fr(im, 1, 6), atk: [fr(im, 2, 6), fr(im, 4, 6), fr(im, 6, 6)]});
+      const arc = im => ({idle: fr(im, 0, 6), run: fr(im, 1, 6), atk: [fr(im, 4, 8), fr(im, 6, 8), fr(im, 2, 8)]});
+      const paw = im => ({idle: fr(im, 0, 6), run: fr(im, 1, 6), atk: [fr(im, 3, 6), fr(im, 3, 6), fr(im, 3, 6)]});
+      const gob = im => ({idle: fr(im, 0, 7), run: fr(im, 1, 6), atk: [fr(im, 2, 6), fr(im, 3, 6), fr(im, 4, 6)]});
+      const tnt = im => ({idle: fr(im, 0, 6), run: fr(im, 1, 6), atk: [fr(im, 2, 7), fr(im, 2, 7), fr(im, 2, 7)]});
+      return {squads: [war(L.tsWarrior), arc(L.tsArcher), paw(L.tsPawn)], foes: [gob(L.tsTorch), tnt(L.tsTnt)], boss: gob(L.tsTorchP), fx: 96, fy: 135, k: 1, bossK: 1.5};
+    },
+    dessin(x, U, f, X, Y, flip, k){ const s = 192 * k; if (flip){ x.save(); x.translate(Math.round(X), 0); x.scale(-1, 1); x.drawImage(f, -U.fx * k, Math.round(Y - U.fy * k), s, s); x.restore(); } else x.drawImage(f, Math.round(X - U.fx * k), Math.round(Y - U.fy * k), s, s); },
+    fond: "#5a9a3a" },
+  B: { TL: 16, VT: 9,
+    sol(x, t){ const v = (t.i * 7 + t.j * 13 + (t.i * t.j) % 5) % 7; x.drawImage(L.naFloor, (v < 4 ? 12 + v : 11) * 16, 12 * 16, 16, 16, t.px, t.py, 16, 16); },
+    chemin(x, t, m){ const [c, r] = auto(m.n, m.s, m.w, m.e); x.drawImage(L.naFloor, (11 + c) * 16, (7 + r) * 16, 16, 16, t.px, t.py, 16, 16); },
+    haut(x, t, m){ x.fillStyle = "rgba(255,255,220,.06)"; x.fillRect(t.px, t.py, 16, 16); x.fillStyle = "#2a4a1a";
+      if (!m.w) x.fillRect(t.px, t.py, 1, 16); if (!m.e) x.fillRect(t.px + 15, t.py, 1, 16); if (!m.n) x.fillRect(t.px, t.py, 16, 1); },
+    falaise(x, t, m, esc){ const c = m.w ? (m.e ? 2 : 3) : (m.e ? 1 : 0); if (esc){ x.fillStyle = "#8a6a4a"; for (let k = 0; k < 4; k++) x.fillRect(t.px + 2, t.py + k * 4, 12, 2); } else x.drawImage(L.naRelief, c * 16, 2 * 16, 16, 16, t.px, t.py, 16, 16); },
+    arbre(x, X, Y, k){ const t = [[0, 288], [48, 288], [144, 288], [0, 288]][k % 4]; x.drawImage(L.naNature, t[0], t[1], 48, 48, Math.round(X - 24), Math.round(Y - 44), 48, 48); },
+    maison: (x, X, Y, i, mort) => { const s = [[0, 0], [128, 0], [64, 0], [304, 0]][i]; x.globalAlpha = mort ? .45 : 1; x.drawImage(L.naHouse, s[0], s[1], 64, 48, Math.round(X - 32), Math.round(Y - 40), 64, 48); x.globalAlpha = 1; },
+    centre: (x, X, Y) => { x.drawImage(L.naHouse, 192, 0, 64, 48, Math.round(X - 32), Math.round(Y - 40), 64, 48); },
+    devant: (x, X, Y) => x.drawImage(L.naHouse, 0, 80, 48, 32, Math.round(X - 22), Math.round(Y - 28), 48, 32),
+    deco: (x, X, Y, k) => { const t = [[128, 128, 16, 16], [144, 128, 16, 16], [96, 160, 16, 16], [0, 176, 16, 16], [112, 128, 16, 16], [128, 112, 16, 16]][k % 6]; x.drawImage(L.naNature, t[0], t[1], t[2], t[3], Math.round(X - 8), Math.round(Y - 12), 16, 16); },
+    // personnages 16 × 16 : colonnes = bas, haut, gauche, droite ; rangées 0-3 marche, 4 attaque
+    unites(){
+      const ch = im => { const d = [0, 1, 2, 3].map(c => ({walk: [0, 1, 2, 3].map(r => piece(im, c * 16, r * 16, 16, 16)), atk: [piece(im, c * 16, 64, 16, 16)]})); return {dirs: d}; };
+      const tengu = { walk: Array.from({length: 10}, (_, i) => piece(L.naTenguW, i * 82, 0, 82, 82)), atk: Array.from({length: 15}, (_, i) => piece(L.naTenguA, i * 82, 0, 82, 82)), idle: Array.from({length: 6}, (_, i) => piece(L.naTenguI, i * 82, 0, 82, 82)) };
+      return {squads: [ch(L.naSamRed), ch(L.naSam), ch(L.naSamBlue)], foes: [ch(L.naNinjaDark), ch(L.naNinjaGray), ch(L.naNinjaRed)], boss: tengu, k: 1};
+    },
+    fond: "#5a8a2a" }
+};
+
+/* ================= le plateau vu du dessus ================= */
+SQ.A[2] = {nm: "HACHES", ic: "⚒", c: "#a8742a", sp: "CHARGE"};
+SQ.B[1] = {nm: "弓 ARCS", ic: "弓", c: "#3d6b4a", sp: "雨 PLUIE"}; SQ.B[2] = {nm: "槍 YARI", ic: "槍", c: "#c8301e", sp: "突 ASSAUT"};
+TITLES.A = ["Le hameau de Valbrune", "TERRE 3 · LA COLLINE"];
+const M = 4;   // tuiles de forêt autour du plateau
+const place = S => { [[3, 2], [5, 2], [4, 6]].forEach(([x, y], i) => Object.assign(S.squads[i], {x: x + .5, y: y + .5, tx: x + .5, ty: y + .5})); for (const t of S.tiles) if (t.house) t.h = 0; return S; };
+function plateau(id, phone){
+  const K = SKIN[id], TL = K.TL, S = place(makeSim(id)), NT = N * 2 + M * 2, WW = NT * TL;
+  const c = document.createElement("canvas"); c.className = "px"; phone.prepend(c);
+  const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+  const paint = hud(id, phone, S);
+  let ok = false, U = null, bg = null, VT = K.VT, camX = 0, camY = 0;
+  const W2 = (gx, gy) => [(M + gx * 2) * TL, (M + gy * 2) * TL];   // case du jeu (continue) → pixels du monde
+  const clamp = () => { camX = Math.max(0, Math.min(WW - c.width, camX)); camY = Math.max(-TL * 2, Math.min(WW - c.height * .7, camY)); };
+  const size = () => { const w = phone.clientWidth, h = phone.clientHeight; c.width = VT * TL; c.height = Math.round(h * c.width / w); x.imageSmoothingEnabled = false;
+    const [mx, my] = W2(N / 2, N / 2 + .4); camX = mx - c.width / 2; camY = my - c.height * .5; clamp(); };
+  size(); addEventListener("resize", size);
+  { const b = document.createElement("button"); b.type = "button"; b.className = "turn z"; b.textContent = "⊖"; b.setAttribute("aria-label", "Zoom");
+    b.addEventListener("click", e => { e.stopPropagation(); VT = VT === K.VT ? N * 2 + 2 : K.VT; b.textContent = VT === K.VT ? "⊖" : "⊕"; size(); }); phone.querySelector(".hud").append(b); }
+  // le fond fixe : sol, chemins, hauteurs, falaises
+  const plan = PLANS[id], cellAt = (i, j) => { const gx = Math.floor((i - M) / 2), gy = Math.floor((j - M) / 2); return gx >= 0 && gy >= 0 && gx < N && gy < N ? S.tiles[gy * N + gx] : null; };
+  const chemin = new Set(); for (const [ex, ey] of ENTREES){ let px = ex, py = ey; for (let k = 0; k < 9; k++){ if (S.tiles[py * N + px].h > 0) break; chemin.add(px + "," + py); px += Math.sign(4 - px); py += Math.sign(4 - py); } }
+  chemin.delete("4,4");
+  function fond(){
+    bg = cv(WW, WW); const b = bg.getContext("2d"); b.imageSmoothingEnabled = false;
+    const tl = (i, j) => ({i, j, px: i * TL, py: j * TL});
+    for (let j = 0; j < NT; j++) for (let i = 0; i < NT; i++) K.sol(b, tl(i, j));
+    const isP = (i, j) => { const t = cellAt(i, j); return !!t && chemin.has(t.x + "," + t.y); };
+    const lvl = (i, j) => { const t = cellAt(i, j); return t ? t.h : 0; };
+    for (const L0 of [1]){
+      const inL = (i, j) => lvl(i, j) >= L0;
+      for (let j = 0; j < NT; j++) for (let i = 0; i < NT; i++){
+        if (inL(i, j)) K.haut(b, tl(i, j), {n: inL(i, j - 1), s: inL(i, j + 1), w: inL(i - 1, j), e: inL(i + 1, j)});
+        else if (inL(i, j - 1)){ const m = {w: inL(i - 1, j - 1) && !inL(i - 1, j), e: inL(i + 1, j - 1) && !inL(i + 1, j)}; K.falaise(b, tl(i, j), m, isP(i, j)); }
+      }
+    }
+    for (let j = 0; j < NT; j++) for (let i = 0; i < NT; i++) if (isP(i, j) && !(lvl(i, j - 1) > lvl(i, j))) K.chemin(b, tl(i, j), {n: isP(i, j - 1), s: isP(i, j + 1), w: isP(i - 1, j), e: isP(i + 1, j)});
+  }
+  // la forêt autour, les arbres et décors du plateau
+  const arbres = [], decos = [];
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let j = 0; j < NT; j += 2) for (let i = 0; i < NT; i += 2){ const inside = i >= M - 1 && j >= M - 1 && i < M + N * 2 && j < M + N * 2; if (!inside) arbres.push([(i + 1 + rnd() * .6) * TL, (j + 1.6 + rnd() * .5) * TL, arbres.length]); }
+  S.tiles.forEach(t => { const [X, Y] = W2(t.x + .5, t.y + .5); if (t.tree) arbres.push([X + (rnd() - .5) * TL * .6, Y + TL * .6, arbres.length]); else if (t.rock || (!t.house && !chemin.has(t.x + "," + t.y) && rnd() < .25 && t.h === 0)) decos.push([X + (rnd() - .5) * TL, Y + (rnd() - .2) * TL, decos.length]); });
+  load().then(() => { U = K.unites(); fond(); ok = true; });
+  // au doigt
+  let drag = null;
+  const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * c.width + camX, (e.clientY - r.top) / r.height * c.height + camY]; };
+  phone.addEventListener("pointerdown", e => { if (e.target.closest("button")) return; drag = {x: e.clientX, y: e.clientY, cx: camX, cy: camY, done: false}; });
+  phone.addEventListener("pointermove", e => { if (!drag) return; const k = c.width / c.getBoundingClientRect().width, dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.hypot(dx, dy) > 8) drag.done = true; if (drag.done){ camX = drag.cx - dx * k; camY = drag.cy - dy * k; clamp(); } });
+  phone.addEventListener("pointerup", e => {
+    const d = drag; drag = null; if (!d || d.done || e.target.closest("button")) return;
+    const [px, py] = pos(e), gx = (px / TL - M) / 2, gy = (py / TL - M) / 2;
+    let pick = -1, pd = .9; S.squads.forEach((q, i) => { if (q.hp > 0){ const dd = Math.hypot(q.x - gx, q.y - (gy + .15)); if (dd < pd){ pd = dd; pick = i; } } });
+    if (S.sel >= 0 && (pick < 0 || pick === S.sel)){ if (gx >= 0 && gy >= 0 && gx < N && gy < N){ const q = S.squads[S.sel]; q.tx = Math.floor(gx) + .5; q.ty = Math.floor(gy) + .5; } S.sel = -1; }
+    else if (pick >= 0) S.sel = pick;
+  });
+  const anneau = (X, Y, r, col) => { x.strokeStyle = col; x.lineWidth = Math.max(1, TL / 16); x.beginPath(); x.ellipse(Math.round(X), Math.round(Y), r, r * .5, 0, 0, Math.PI * 2); x.stroke(); };
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (S.reset) Object.assign(S, place(makeSim(id)));
+    const slow = S.sel >= 0 ? .15 : 1; step(S, dt * slow);
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = K.fond; x.fillRect(0, 0, c.width, c.height);
+    if (!ok){ requestAnimationFrame(frame); return; }
+    x.setTransform(1, 0, 0, 1, -Math.round(camX), -Math.round(camY));
+    x.drawImage(bg, 0, 0);
+    const T = now / 1000, list = [];
+    for (const [X, Y, k] of arbres) list.push([Y, () => K.arbre(x, X, Y, k, T)]);
+    for (const [X, Y, k] of decos) list.push([Y - TL, () => K.deco(x, X, Y, k)]);
+    S.houses.forEach((h, i) => { const [X, Y] = W2(h.x + .5, h.y + .85); list.push([Y, () => { K.maison(x, X, Y, i, h.hp <= 0);
+      if (h.hp > 0 && h.hp < h.max * .6) for (let k = 0; k < 5; k++){ const fx = X - TL * .6 + k * TL * .3, fy = Y - TL * 2.2 - Math.abs(Math.sin(T * 8 + k * 1.7)) * TL * .5; disc(x, Math.round(fx), Math.round(fy), Math.max(2, TL / 6), k % 2 ? "#ff9a2a" : "#ffd04a"); } }]); });
+    { const [X, Y] = W2(4.5, 4.75); list.push([Y, () => K.centre(x, X, Y)]); if (K.devant){ const [X2, Y2] = W2(4.5, 5.9); list.push([Y2, () => K.devant(x, X2, Y2)]); } }
+    // soldats
+    const nearFoe = (px, py) => { let b = null, d = 99; for (const f of S.foes) if (f.delay <= 0){ const e = Math.hypot(f.x - px, f.y - py); if (e < d){ d = e; b = f; } } return [b, d]; };
+    const perso = (F, X, Y, dx, dy, mode, tt, k) => {
+      list.push([Y, () => {
+        x.fillStyle = "rgba(20,30,10,.25)"; x.beginPath(); x.ellipse(Math.round(X), Math.round(Y), TL * .3 * k, TL * .12 * k, 0, 0, Math.PI * 2); x.fill();
+        if (id === "A"){ const flip = dx < -1e-4, ad = Math.abs(dy) > Math.abs(dx) * 1.2 ? (dy > 0 ? 1 : 2) : 0, set = mode === "atk" ? F.atk[ad] : mode === "walk" ? F.run : F.idle;
+          K.dessin(x, U, set[Math.floor(tt * (mode === "atk" ? 10 : 9)) % set.length], X, Y, flip && !(mode === "atk" && ad), k); }
+        else if (F.dirs){ const di = Math.abs(dy) > Math.abs(dx) ? (dy > 0 ? 0 : 1) : (dx < 0 ? 2 : 3), D = F.dirs[di], f = mode === "atk" ? D.atk[0] : mode === "walk" ? D.walk[Math.floor(tt * 8) % 4] : D.walk[0];
+          const bob = mode === "atk" && Math.floor(tt * 6) % 2 ? 2 : 0; x.drawImage(f, Math.round(X - 8 - (di === 2 ? -bob : di === 3 ? bob : 0) * 0), Math.round(Y - 15 + (mode === "atk" ? (di === 1 ? -bob : bob) : 0) * .5)); }
+        else { const set = mode === "atk" ? F.atk : mode === "walk" ? F.walk : F.idle, f = set[Math.floor(tt * 10) % set.length];
+          if (dx > 1e-4){ x.save(); x.translate(Math.round(X), 0); x.scale(-1, 1); x.drawImage(f, -41, Math.round(Y - 70)); x.restore(); } else x.drawImage(f, Math.round(X - 41), Math.round(Y - 70)); }
+      }]);
+    };
+    S.squads.forEach((q, i) => {
+      if (q.hp <= 0) return;
+      const Kd = KINDS[q.k], v = q.px == null ? 0 : Math.hypot(q.x - q.px, q.y - q.py) / Math.max(dt, 1e-3); q.vs = (q.vs || 0) * .8 + v * .2;
+      const mx = q.x - (q.px == null ? q.x : q.px), my = q.y - (q.py == null ? q.y : q.py); q.px = q.x; q.py = q.y;
+      const [nf, nd] = nearFoe(q.x, q.y), fighting = nf && nd <= Kd.range + .2, mode = q.vs > .15 ? "walk" : fighting ? "atk" : "idle";
+      if (Math.hypot(mx, my) > 1e-4){ q.fx_ = mx; q.fy_ = my; } else if (nf && nd < 4.5){ q.fx_ = nf.x - q.x; q.fy_ = nf.y - q.y; }
+      const n = alive(q), tight = q.k === "inf" && q.fx > 0, a = Math.ceil(n / 2), sp = tight ? .62 : .78;
+      const [CX, CY] = W2(q.x, q.y);
+      if (i === S.sel || tight) list.push([CY - TL * 2, () => anneau(CX, CY + TL * .2, TL * 1.25, i === S.sel ? "#fff4c0" : "#e8c46a")]);
+      for (let k = 0; k < n; k++){ const row = k < a ? 0 : 1, inRow = row ? n - a : a, col = row ? k - a : k;
+        perso(U.squads[i], CX + (col - (inRow - 1) / 2) * TL * sp + (row ? TL * .25 : -TL * .25), CY + (row ? TL * .35 : -TL * .25), q.fx_ || 0, q.fy_ || .1, mode, T * slow + k * .37 + i, U.k); }
+      if (Math.hypot(q.tx - q.x, q.ty - q.y) > .3){ const [X, Y] = W2(q.tx, q.ty); list.push([Y - TL * 2, () => anneau(X, Y, TL * .4, "#ffffff")]); }
+    });
+    const nearSq = (px, py) => { let b = null, d = 99; for (const q of S.squads) if (q.hp > 0){ const e = Math.hypot(q.x - px, q.y - py); if (e < d){ d = e; b = q; } } return b; };
+    S.foes.forEach((f, k) => { if (f.delay > 0) return;
+      const mx = f.x - (f.px == null ? f.x : f.px), my = f.y - (f.py == null ? f.y : f.py); f.px = f.x; f.py = f.y;
+      let fx = mx, fy = my; if (f.fight){ const q = nearSq(f.x, f.y); if (q){ fx = q.x - f.x; fy = q.y - f.y; } }
+      if (Math.hypot(fx, fy) > 1e-5){ f.fx_ = fx; f.fy_ = fy; }
+      const [X, Y] = W2(f.x, f.y), F = f.boss ? U.boss : U.foes[k % U.foes.length];
+      perso(F, X, Y, f.fx_ || 0, f.fy_ || .1, f.fight ? "atk" : "walk", T * slow + k * .53, f.boss ? (U.bossK || 1) : U.k); });
+    for (const a of S.arrows){ const u0 = Math.min(1, a.t / a.d), [X0, Y0] = W2(a.x, a.y), [X1, Y1] = W2(a.f.x, a.f.y), X = X0 + (X1 - X0) * u0, Y = Y0 + (Y1 - Y0) * u0 - Math.sin(u0 * Math.PI) * TL * 1.2 - TL * .5;
+      const ang = Math.atan2(Y1 - Y0 - Math.cos(u0 * Math.PI) * TL * 1.2, X1 - X0);
+      list.push([1e9, () => { x.save(); x.translate(Math.round(X), Math.round(Y)); x.rotate(ang); x.fillStyle = "#3a2410"; x.fillRect(-TL * .25, -Math.max(1, TL / 32), TL * .5, Math.max(1, TL / 16)); x.fillStyle = "#e8e0d0"; x.fillRect(-TL * .25, -Math.max(1, TL / 32), TL * .08, Math.max(1, TL / 16)); x.restore(); }]); }
+    if (S.warnAt){ const [gx, gy] = S.warnAt, [X, Y] = W2(gx + .5, gy + .2), b = Math.abs(Math.sin(T * 5)) * TL * .3, u = TL / 8;
+      list.push([1e9, () => { x.fillStyle = "#e8301e"; x.beginPath(); x.moveTo(X - 3 * u, Y - 6 * u - b); x.lineTo(X + 3 * u, Y - 6 * u - b); x.lineTo(X, Y - 2 * u - b); x.fill(); x.fillRect(X - u, Y - 10 * u - b, 2 * u, 4 * u); }]); }
+    list.sort((a, b) => a[0] - b[0]); for (const [, f] of list) f();
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    paint();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+plateau("A", document.getElementById("pA")); plateau("B", document.getElementById("pB"));
+})();
+</script>
