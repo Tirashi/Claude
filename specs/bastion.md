@@ -144,4 +144,4 @@ https://claude.ai/artifact/Jwyug7BrbEHE1br4TinE5J — page source `outils/bastio
 - Ennemis : guerriers et lanciers de l'autre armée, chef = lancier 1,5 fois plus grand ; maisons qui prennent feu (flammes animées du pack) puis tombent en ruine.
 - **A** : prairie claire (couleur d'herbe 1), bleus contre rouges. **B** : herbe sombre (couleur 4), jaunes contre noirs.
 
-Retours : à venir.
+Retour (06/11) : **A retenue**. L'utilisateur veut l'**Enemy Pack** (troll, monstres) : il s'achète sur la page de Tiny Swords en payant 15 $ ou plus au « Download Now » (prix libre) ; il enverra le zip.
