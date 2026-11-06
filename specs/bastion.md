@@ -179,4 +179,23 @@ https://claude.ai/artifact/LLw2PCz722gndc8bumRK5F — page source `outils/bastio
 - **B · emplacements** : 6 cercles près des chemins ; toucher une carte puis un cercle libre : l'escouade y va, défend les abords (2,4 cases) et revient à sa place.
 - Essai automatique (Chromium) : récolte, recrutement, vagues, combats, sans erreur ; sans action du joueur, le château de A tombe à la 3e vague (B tient avec ses archers et lanciers).
 
-Retours : à venir.
+**Décision (06/11) : A (escouades libres).** À reprendre : **l'équilibrage**, **les bâtiments**, et peut-être **l'amélioration des unités selon l'expérience** qu'elles accumulent.
+
+## Propositions pour la suite (06/11, à valider)
+**Bâtiments** (construits par les ouvriers au marteau — le pack a « Interact Hammer » — sur des emplacements de chantier ; images du Free Pack, ruines de l'ancienne version) :
+| Bâtiment | Coût | Effet |
+|---|---|---|
+| Château | — | cœur du village ; le perdre = défaite ; peut s'améliorer (plus de PV, tir d'archers) |
+| Maison | bois | +2 ouvriers possibles (plafond d'ouvriers) |
+| Caserne | bois + or | débloque les guerriers puis les lanciers |
+| Archerie | bois | débloque les archers |
+| Monastère | or | débloque les moines |
+| Tour | bois + or | tire sur les monstres proches ; peut accueillir des archers |
+| Murs / palissades (Warfare plus tard) | bois | ralentissent les monstres sur un chemin |
+Les monstres peuvent attaquer les bâtiments (flammes, puis ruine à reconstruire).
+
+**Expérience** : chaque escouade gagne de l'expérience en tuant ou en survivant à une vague ; 3 grades (étoiles au-dessus de l'escouade) : vétérans (+20 % de dégâts), élite (+20 % de PV, un soldat de plus), héros (capacité spéciale : mur de boucliers, salve, charge, grand soin). Une escouade décimée revient au château pour se reformer (contre de la viande) et garde son grade : on s'attache à ses troupes, comme dans Bad North.
+
+**Équilibrage** : réglé avec un simulateur (comme pour les autres jeux) : revenus par minute selon le nombre d'ouvriers, coût d'une défense « suffisante » par vague, et une première partie où l'on peut perdre sans tout comprendre ; un ralenti quand on touche une escouade (comme dans les maquettes 1-4) aiderait sur téléphone.
+
+**Structure** (décisions du début) : niveaux fixes (une carte par niveau, de nouveaux monstres et bâtiments au fil des niveaux) + défi du jour (carte et vagues tirées du jour, une seule tentative classée).
