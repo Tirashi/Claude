@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Blindés 2D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
+<style>
+/* Maquette « Blindés 2D » : tactique façon Advance Wars en pixel art 16 px (pack de JackOatley), agrandi sans flou */
+:root {
+  --fond: #181425; --fen: #262b44; --fen2: #1b1d33; --bord: #feae34; --txt: #f2ecdc; --doux: #a8b2c8; --or: #feae34;
+  --bleu: #0099db; --rouge: #e43b44;
+  --police: "Pixelify Sans", "Trebuchet MS", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--fond); color: var(--txt); font-family: var(--police); font-size: 16px; line-height: 1.25;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 8px 24px;
+}
+.ecran { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+.directions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.directions button { font-family: var(--police); font-weight: 700; font-size: 14px; padding: 7px 4px; border-radius: 5px; cursor: pointer; background: var(--fen2); color: var(--doux); border: 2px solid #3a4466; }
+.directions button.vu { background: var(--or); color: #241a08; border-color: var(--or); }
+.bandeau { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.bandeau .camp { padding: 2px 10px; border-radius: 4px; background: var(--bleu); color: #fff; }
+.bandeau .camp.rouge { background: var(--rouge); }
+.bandeau .or { color: var(--or); }
+.plateau { position: relative; aspect-ratio: 8 / 10; border: 3px solid #181425; outline: 2px solid var(--bord); border-radius: 4px; overflow: hidden; background: #0099db; touch-action: manipulation; }
+canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+#combat { position: absolute; inset: 0; display: none; background: rgba(24, 20, 37, .6); }
+.plateau.combat #combat { display: block; }
+#combat .vue { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); aspect-ratio: 160 / 104; border-block: 3px solid var(--bord); overflow: hidden; background: #181425; }
+#etiquettes { position: absolute; inset: 0; pointer-events: none; }
+.eti { position: absolute; top: 6px; font-weight: 700; font-size: 15px; text-shadow: 0 2px 0 #000, 0 0 4px #000; display: grid; gap: 3px; width: 44%; }
+.eti.g { left: 8px; } .eti.d { right: 8px; text-align: right; }
+.eti .barre { height: 7px; background: #181425; border: 2px solid #181425; overflow: hidden; }
+.eti .barre i { display: block; height: 100%; background: #63c74d; transition: width .45s; }
+.eti.d .barre i { margin-left: auto; }
+.degat { position: absolute; font-weight: 700; font-size: 26px; color: #fff; text-shadow: 0 3px 0 #000, 0 0 6px #000; transform: translate(-50%, -50%); pointer-events: none; animation: monte .9s ease-out forwards; }
+@keyframes monte { to { transform: translate(-50%, -160%); opacity: 0; } }
+.ruban {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.7); opacity: 0; pointer-events: none;
+  font-weight: 700; font-size: 20px; text-align: center; white-space: nowrap; padding: 8px 18px;
+  background: #124e89; color: #fff; border: 3px solid #181425; outline: 2px solid var(--bord); box-shadow: 0 4px 0 rgba(0,0,0,.4);
+  transition: opacity .2s, transform .25s cubic-bezier(.3,1.6,.6,1);
+}
+.ruban.rouge { background: #a22633; } .ruban.vu { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.fenetre { background: linear-gradient(var(--fen), var(--fen2)); border: 2px solid var(--bord); border-radius: 4px; padding: 10px; display: grid; gap: 8px; }
+.fiches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fiche { min-width: 0; display: flex; gap: 8px; align-items: center; }
+.fiche canvas { width: 40px; height: 40px; flex: none; background: #3a4466; border: 2px solid #181425; }
+.fiche .nom { font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+.fiche .val { font-size: 14px; color: var(--doux); }
+.fiche .val b { color: var(--txt); }
+.actions, .recrue { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.fenetre button { font-family: var(--police); font-weight: 700; font-size: 15px; padding: 10px 4px; cursor: pointer; border-radius: 4px; background: #3a4466; color: var(--txt); border: 2px solid var(--bord); }
+.fenetre button.chaud { background: var(--or); color: #241a08; }
+.fenetre button:disabled { opacity: .35; cursor: default; }
+.recrue button { display: flex; align-items: center; gap: 6px; justify-content: center; }
+.recrue canvas { width: 32px; height: 32px; }
+.recrue small { display: block; font-weight: 400; color: var(--or); }
+.aide { font-size: 15px; color: var(--doux); min-height: 2.5em; }
+.reglages { display: flex; gap: 14px; flex-wrap: wrap; font-size: 15px; color: var(--doux); }
+.reglages label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.notes { display: grid; gap: 8px; font-size: 16px; color: #d8e0ea; }
+.notes h2 { margin: 0; font-size: 17px; color: var(--or); }
+.notes p, .notes ul { margin: 0; } .notes ul { padding-left: 18px; display: grid; gap: 4px; }
+@media (prefers-reduced-motion: reduce) { .ruban { transition: none; } }
+</style>
+</head>
+<body>
+<div class="ecran">
+  <div class="directions" id="directions">
+    <button data-biome="herbe" class="vu">Prairie</button>
+    <button data-biome="neige">Neige</button>
+    <button data-biome="desert">Désert</button>
+  </div>
+  <div class="bandeau"><span id="jour">JOUR 1</span><span class="camp" id="camp">BLEUS</span><span class="or" id="or">FONDS 3000</span></div>
+  <div class="plateau" id="plateau">
+    <canvas id="carte" width="128" height="160"></canvas>
+    <div class="ruban" id="ruban"></div>
+    <div id="combat"><div class="vue" id="vue"><canvas id="toile-combat" width="160" height="104"></canvas><div id="etiquettes"></div></div></div>
+  </div>
+  <div class="fenetre">
+    <div class="fiches">
+      <div class="fiche"><canvas id="t-img" width="16" height="16"></canvas><div><div class="nom" id="t-nom">Plaine</div><div class="val" id="t-val">Défense ★</div></div></div>
+      <div class="fiche"><canvas id="u-img" width="16" height="16"></canvas><div><div class="nom" id="u-nom">—</div><div class="val" id="u-val">touche une unité</div></div></div>
+    </div>
+    <div class="actions" id="actions">
+      <button id="a-tir" disabled>Tirer</button>
+      <button id="a-capture" disabled>Capturer</button>
+      <button id="a-attendre" disabled>Attendre</button>
+      <button id="a-fin" class="chaud">Fin du tour</button>
+    </div>
+    <div class="recrue" id="recrue" hidden></div>
+    <div class="aide" id="aide">Touche une unité bleue pour voir où elle peut aller.</div>
+    <div class="reglages">
+      <label><input type="checkbox" id="o-scene" checked> Scènes de combat</label>
+      <label><input type="checkbox" id="o-son" checked> Sons</label>
+    </div>
+  </div>
+  <div class="notes">
+    <h2>Blindés 2D : le pack de JackOatley</h2>
+    <p>Pixel art de 16 px (palette Endesga 32) agrandi sans flou : herbe, routes, lacs, forêts, montagnes, villes, usines et QG, en trois décors (les boutons du haut). Les unités ont deux images d'animation et sept couleurs d'armée.</p>
+    <ul>
+      <li><b>Fantassin</b> (1000) : prend les villes, pas cher.</li>
+      <li><b>Bazooka</b> (3000) : prend les villes, fort contre les blindés, passe les montagnes.</li>
+      <li><b>Blindé</b> (4000) : rapide, mitrailleuse contre l'infanterie.</li>
+      <li><b>Char</b> (7000) : solide et polyvalent.</li>
+      <li><b>Hélico</b> (9000) : vole au-dessus de tout (lacs, montagnes).</li>
+    </ul>
+    <p>Chaque unité est une escouade : 10 PV = 5 soldats ou 3 engins dans la scène de combat. Une ville rapporte 1000 par tour ; touche ton usine pour recruter. Prends le QG rouge ou détruis toutes ses unités. Touche l'écran pendant un combat pour le passer.</p>
+  </div>
+</div>
+<script src="blindes-2d-tuiles.js"></script>
+<script>
+'use strict';
+// ================= la planche (512 × 512, cases de 16 px) =================
+const TS = 16, planche = new Image();
+const BIOMES = { herbe: [0, 0], neige: [0, 240], desert: [256, 240] };   // pas de rangée de palette au-dessus de la neige et du désert
+let biome = 'herbe';
+// tuile de terrain (selon le décor) ou sprite d'unité / de bâtiment (même place dans les trois décors)
+function tuile(g, tx, ty, dx, dy, deco = true, taille = TS) { const [ox, oy] = deco ? BIOMES[biome] : [0, 0]; g.drawImage(planche, ox + tx * TS, oy + ty * TS, TS, TS, dx, dy, taille, taille); }
+const LIGNE_CAMP = { R: 2, B: 4, N: 1 };                                 // rangée (en cases) des couleurs dans la zone des unités
+const COL_UNITE = { inf: 16, baz: 18, tank: 20, apc: 22, heli: 26 };     // colonne de la 1re image (2 images par unité)
+const COL_BAT = { c: 28, U: 29, Q: 31 };
+function sprite(g, type, camp, img, dx, dy, retourne = false, taille = TS) {
+  const sx = (COL_UNITE[type] + img) * TS, sy = LIGNE_CAMP[camp] * TS;
+  if (!retourne) { g.drawImage(planche, sx, sy, TS, TS, dx, dy, taille, taille); return; }
+  g.save(); g.translate(dx + taille, dy); g.scale(-1, 1); g.drawImage(planche, sx, sy, TS, TS, 0, 0, taille, taille); g.restore();
+}
+function chiffre(g, n, dx, dy) {               // les chiffres de la planche (8 × 12, « 1234567890 »)
+  const i = (n + 9) % 10; g.fillStyle = '#181425'; g.fillRect(dx - 1, dy - 1, 8, 9);
+  g.drawImage(planche, 320 + 8 * i, 143, 8, 8, dx - 1, dy - 1, 8, 8);
+}
+
+// ================= règles =================
+const CARTE = [
+  '..F.M.Q.',
+  '.U===c.F',
+  'F.=.~~..',
+  '..=.~~M.',
+  '.c====c.',
+  '.F..=.F.',
+  'M.c.=.~~',
+  '.F..=.~~',
+  '.c===U.F',
+  'F.Q.M...',
+];
+const L = 8, H = 10;
+const TERRAINS = { '.': ['Plaine', 1], F: ['Forêt', 2], M: ['Montagne', 4], '~': ['Lac', 0], '=': ['Route', 0], c: ['Ville', 3], Q: ['QG', 4], U: ['Usine', 3] };
+const TROUPES = {
+  inf: { nom: 'Fantassin', pm: 3, prix: 1000, capture: true, mv: 'pied' },
+  baz: { nom: 'Bazooka', pm: 2, prix: 3000, capture: true, mv: 'pied+' },
+  apc: { nom: 'Blindé', pm: 6, prix: 4000, mv: 'roues' },
+  tank: { nom: 'Char', pm: 6, prix: 7000, mv: 'chenilles' },
+  heli: { nom: 'Hélico', pm: 6, prix: 9000, mv: 'vol' },
+};
+// dégâts de base (en %) : attaquant → défenseur
+const BASE = {
+  inf: { inf: 55, baz: 45, apc: 14, tank: 5, heli: 7 },
+  baz: { inf: 65, baz: 55, apc: 75, tank: 55, heli: 9 },
+  apc: { inf: 70, baz: 65, apc: 35, tank: 6, heli: 12 },
+  tank: { inf: 75, baz: 70, apc: 85, tank: 55, heli: 10 },
+  heli: { inf: 75, baz: 75, apc: 60, tank: 55, heli: 65 },
+};
+const COUT = {
+  pied: { '.': 1, F: 1, M: 2, '=': 1, c: 1, Q: 1, U: 1 },
+  'pied+': { '.': 1, F: 1, M: 1, '=': 1, c: 1, Q: 1, U: 1 },
+  roues: { '.': 2, F: 3, '=': 1, c: 1, Q: 1, U: 1 },
+  chenilles: { '.': 1, F: 2, '=': 1, c: 1, Q: 1, U: 1 },
+  vol: { '.': 1, F: 1, M: 1, '~': 1, '=': 1, c: 1, Q: 1, U: 1 },
+};
+const terrain = (x, y) => CARTE[y][x];
+const dans = (x, y) => x >= 0 && y >= 0 && x < L && y < H;
+const dist = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+const VOIS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+let unites, bat, jour, joueur, fonds, sel, phase, portee, cibles, fini, prochainId, depart;
+const uniteEn = (x, y) => unites.find(u => u.x === x && u.y === y && u.pv > 0);
+const batEn = (x, y) => bat.find(b => b.x === x && b.y === y);
+function nouvellePartie() {
+  unites = []; bat = []; jour = 1; joueur = 'B'; fonds = { B: 0, R: 0 }; sel = null; phase = 'libre'; portee = null; cibles = []; fini = false; prochainId = 1; depart = null;
+  for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) { const t = terrain(x, y); if ('cQU'.includes(t)) bat.push({ x, y, k: t, camp: y <= 1 ? 'R' : y >= 8 ? 'B' : 'N', pts: 20 }); }
+  [['inf', 2, 7], ['inf', 3, 7], ['tank', 3, 9], ['apc', 6, 8], ['heli', 7, 9]].forEach(([t, x, y]) => ajouter(t, 'B', x, y));
+  [['inf', 3, 2], ['inf', 6, 2], ['tank', 3, 0], ['apc', 7, 2], ['heli', 0, 1]].forEach(([t, x, y]) => ajouter(t, 'R', x, y));
+  fonds.B = 1000 * bat.filter(b => b.camp === 'B').length;
+}
+function ajouter(type, camp, x, y) { const u = { id: prochainId++, type, camp, x, y, pv: 10, fait: false, px: x, py: y }; unites.push(u); return u; }
+function calculPortee(u) {
+  const T = TROUPES[u.type], cout = COUT[T.mv];
+  const best = new Map([[u.x + ',' + u.y, { c: 0, pere: null, x: u.x, y: u.y }]]), file = [[u.x, u.y, 0]];
+  while (file.length) {
+    file.sort((a, b) => a[2] - b[2]);
+    const [x, y, c] = file.shift();
+    for (const [dx, dy] of VOIS) {
+      const nx = x + dx, ny = y + dy; if (!dans(nx, ny)) continue;
+      const k = cout[terrain(nx, ny)]; if (!k) continue;
+      const o = uniteEn(nx, ny); if (o && o.camp !== u.camp) continue;
+      const nc = c + k; if (nc > T.pm) continue;
+      const key = nx + ',' + ny; if (best.has(key) && best.get(key).c <= nc) continue;
+      best.set(key, { c: nc, pere: x + ',' + y, x: nx, y: ny }); file.push([nx, ny, nc]);
+    }
+  }
+  for (const p of best.values()) { const o = uniteEn(p.x, p.y); if (o && o !== u) p.passe = true; }
+  return best;
+}
+function chemin(P, x, y) { const c = []; let k = x + ',' + y; while (k) { const p = P.get(k); c.unshift([p.x, p.y]); k = p.pere; } return c; }
+function ciblesDepuis(u, x, y) { return unites.filter(o => o.pv > 0 && o.camp !== u.camp && dist(o, { x, y }) === 1); }
+const defense = d => d.type === 'heli' ? 0 : TERRAINS[terrain(d.x, d.y)][1];
+function degats(a, d, pvA = a.pv, pvD = d.pv) {
+  const base = BASE[a.type][d.type];
+  return Math.min(pvD, Math.max(1, Math.round(base / 10 * pvA / 10 * (1 - defense(d) * pvD / 100))));
+}
+const peutCapturer = u => TROUPES[u.type].capture && batEn(u.x, u.y) && batEn(u.x, u.y).camp !== u.camp;
+const riposte = (a, d) => d.pv > 0 && dist(a, d) === 1;
+
+// ================= sons (synthétisés) =================
+let AC = null, bruitBuf = null;
+const sonActif = () => document.getElementById('o-son').checked;
+function audio() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); const n = AC.sampleRate; bruitBuf = AC.createBuffer(1, n, n); const d = bruitBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; } catch (e) { AC = null; } }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function note(f, dur, type = 'square', vol = .05, glisse = 0, retard = 0) {
+  if (!sonActif() || !audio()) return;
+  const t = AC.currentTime + retard, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (glisse) o.frequency.exponentialRampToValueAtTime(Math.max(20, f + glisse), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + .02);
+}
+function souffle(dur, f0, f1, vol = .2, retard = 0) {
+  if (!sonActif() || !audio()) return;
+  const t = AC.currentTime + retard, s = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = bruitBuf; fl.type = 'lowpass'; fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); s.connect(fl).connect(g).connect(AC.destination); s.start(t); s.stop(t + dur + .02);
+}
+const SON = {
+  clic: () => note(880, .05, 'square', .03),
+  pas: () => note(220, .04, 'triangle', .04),
+  fusil: () => souffle(.07, 4000, 800, .12),
+  rafale: () => { for (let i = 0; i < 4; i++) souffle(.05, 3500, 900, .1, i * .07); },
+  canon: () => { souffle(.4, 1200, 80, .35); note(90, .25, 'sine', .2, -50); },
+  missile: () => { souffle(.35, 2500, 400, .15); note(500, .3, 'sawtooth', .03, -300); },
+  boum: () => { souffle(.6, 900, 60, .3); note(60, .4, 'sine', .15, -30); },
+  capture: () => { note(523, .1, 'square', .04); note(659, .1, 'square', .04, 0, .1); note(784, .18, 'square', .04, 0, .2); },
+  tour: () => { note(392, .12, 'square', .04); note(523, .2, 'square', .04, 0, .12); },
+  victoire: () => [523, 659, 784, 1046].forEach((f, i) => note(f, .25, 'square', .05, 0, i * .15)),
+};
+
+// ================= dessin du plateau =================
+const toile = document.getElementById('carte'), g = toile.getContext('2d');
+g.imageSmoothingEnabled = false;
+const hasard = (x, y, k = 0) => { let v = Math.sin(x * 127.1 + y * 311.7 + k * 74.7) * 43758.5453; return v - Math.floor(v); };
+const estRoute = (x, y) => dans(x, y) && terrain(x, y) === '=';
+// route : la tuile dépend des voisines (H, V, virages, T, croisement)
+const ROUTES = { LR: [2, 3], L: [2, 3], R: [2, 3], UD: [2, 4], U: [2, 4], D: [2, 4], RD: [3, 3], LD: [4, 3], UR: [3, 4], UL: [4, 4], LRD: [5, 3], UDL: [6, 3], UDR: [5, 4], ULR: [6, 4], UDLR: [7, 3], '': [7, 3] };
+function tuileRoute(x, y) {
+  const k = (estRoute(x, y - 1) ? 'U' : '') + (estRoute(x, y + 1) ? 'D' : '') + (estRoute(x - 1, y) ? 'L' : '') + (estRoute(x + 1, y) ? 'R' : '');
+  return ROUTES[k] || ROUTES[k.replace('U', '').replace('D', '')] || [7, 3];
+}
+function tuileLac(x, y) { const e = (a, b) => dans(a, b) && terrain(a, b) === '~'; return [e(x - 1, y) ? 3 : 2, e(x, y - 1) ? 8 : 7]; }
+const FORETS = [[6, 9], [7, 9], [1, 10], [3, 10]], MONTS = [[0, 11], [1, 11], [0, 12], [1, 12]];
+function dessinerCase(gg, x, y, dx, dy) {
+  const t = terrain(x, y);
+  tuile(gg, Math.floor(hasard(x, y) * 9), 1, dx, dy);
+  if (t === 'F') tuile(gg, ...FORETS[Math.floor(hasard(x, y, 2) * 4)], dx, dy);
+  else if (t === 'M') tuile(gg, ...MONTS[Math.floor(hasard(x, y, 3) * 4)], dx, dy);
+  else if (t === '=') tuile(gg, ...tuileRoute(x, y), dx, dy);
+  else if (t === '~') tuile(gg, ...tuileLac(x, y), dx, dy);
+  const b = batEn(x, y);
+  if (b) gg.drawImage(planche, COL_BAT[b.k] * TS, LIGNE_CAMP[b.camp] * TS, TS, TS, dx, dy, TS, TS);
+}
+let curseur = null, temps = 0;
+function dessiner() {
+  for (let y = 0; y < H; y++) for (let x = 0; x < L; x++) dessinerCase(g, x, y, x * TS, y * TS);
+  // zones
+  const pulse = .38 + Math.sin(temps * 5) * .08;
+  if (portee && phase === 'deplace') { g.fillStyle = `rgba(44, 232, 245, ${pulse})`; for (const p of portee.values()) if (!p.passe) g.fillRect(p.x * TS, p.y * TS, TS, TS); }
+  if (cibles.length) { g.fillStyle = `rgba(255, 0, 68, ${pulse + .1})`; for (const c of cibles) g.fillRect(c.x * TS, c.y * TS, TS, TS); }
+  // unités (les rouges regardent à gauche)
+  const img = Math.floor(temps * 3) % 2;
+  for (const u of unites) {
+    if (u.pv <= 0) continue;
+    const dx = Math.round(u.px * TS), dy = Math.round(u.py * TS) - (u.type === 'heli' ? 2 + Math.round(Math.sin(temps * 4 + u.id)) : 0);
+    if (u.type === 'heli') { g.fillStyle = 'rgba(24,20,37,.35)'; g.fillRect(dx + 4, u.py * TS + 13, 8, 2); }
+    if (u.fait && u.camp === joueur) g.filter = 'grayscale(1) brightness(.75)';
+    sprite(g, u.type, u.camp, u.type === 'heli' ? Math.floor(temps * 12) % 2 : img, dx, dy, u.camp === 'R');
+    g.filter = 'none';
+    if (u.pv < 10) chiffre(g, u.pv, dx + 9, dy + 8);
+  }
+  // capture en cours
+  for (const b of bat) if (b.pts < 20) { g.fillStyle = '#181425'; g.fillRect(b.x * TS + 1, b.y * TS + 1, 14, 3); g.fillStyle = '#feae34'; g.fillRect(b.x * TS + 2, b.y * TS + 2, Math.round(12 * (20 - b.pts) / 20), 1); }
+  // curseur : quatre coins
+  if (curseur) {
+    const x = curseur.x * TS, y = curseur.y * TS, o = Math.floor(temps * 4) % 2;
+    g.fillStyle = '#ffffff';
+    for (const [cx, cy, sx, sy] of [[x - o, y - o, 1, 1], [x + 15 + o, y - o, -1, 1], [x - o, y + 15 + o, 1, -1], [x + 15 + o, y + 15 + o, -1, -1]]) { g.fillRect(cx, cy, 4 * sx, 1); g.fillRect(cx, cy, 1, 4 * sy); }
+  }
+}
+// les vignettes des fiches
+function vignette(id, f) { const c = document.getElementById(id), gg = c.getContext('2d'); gg.imageSmoothingEnabled = false; gg.clearRect(0, 0, 16, 16); f(gg); }
+
+// ================= déplacement animé =================
+let marche = null;
+function deplacer(u, ch) {
+  return new Promise(fin => {
+    if (ch.length < 2) { [u.x, u.y] = ch[0]; u.px = u.x; u.py = u.y; fin(); return; }
+    marche = { u, ch, i: 0, t: 0, fin };
+  });
+}
+function avancerMarche(dt) {
+  const m = marche; m.t += dt * 8;
+  while (m.t >= 1 && m.i < m.ch.length - 1) { m.t -= 1; m.i++; if (m.i % 2) SON.pas(); }
+  if (m.i >= m.ch.length - 1) { [m.u.x, m.u.y] = m.ch[m.ch.length - 1]; m.u.px = m.u.x; m.u.py = m.u.y; marche = null; m.fin(); return; }
+  const [x0, y0] = m.ch[m.i], [x1, y1] = m.ch[m.i + 1];
+  m.u.px = x0 + (x1 - x0) * m.t; m.u.py = y0 + (y1 - y0) * m.t;
+}
+
+// ================= scène de combat (escouades de profil, 160 × 104 agrandi) =================
+const vue = document.getElementById('vue'), tc = document.getElementById('toile-combat'), gc = tc.getContext('2d');
+gc.imageSmoothingEnabled = false;
+let combatEnCours = null;
+const NB = t => (t === 'inf' || t === 'baz') ? 5 : 3;
+const nbFig = (t, pv) => Math.ceil(pv * NB(t) / 10);
+const PLACES = { 5: [[2, 50], [14, 62], [26, 48], [37, 61], [47, 47]], 3: [[2, 46], [24, 62], [44, 44]] };
+function decorCote(t, cote) {
+  const x0 = cote < 0 ? 0 : 80;
+  for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) tuile(gc, Math.floor(hasard(i + x0, j) * 9), 1, x0 + i * 16, 56 + j * 16);
+  if (t === '=') for (let i = 0; i < 5; i++) tuile(gc, 2, 3, x0 + i * 16, 72);
+  const fond = t === 'F' ? FORETS : t === 'M' ? MONTS : null;
+  if (fond) for (let i = 0; i < 5; i++) tuile(gc, ...fond[i % 4], x0 + i * 16, 40);
+  if ('cQU'.includes(t)) for (let i = 0; i < 5; i += 2) gc.drawImage(planche, COL_BAT.c * TS, LIGNE_CAMP.N * TS, TS, TS, x0 + i * 16 + 4, 40, TS, TS);
+  if (t === '~') for (let i = 0; i < 5; i++) tuile(gc, 2 + (i % 2), 7, x0 + i * 16, 40);
+}
+function ouvrirCombat(s) {
+  const gauche = s.a.camp === 'B' ? s.a : s.d, droite = gauche === s.a ? s.d : s.a;
+  s.terr = { g: terrain(gauche.x, gauche.y), d: terrain(droite.x, droite.y) };
+  s.cotes = new Map(); s.parts = []; s.balles = []; s.trous = [];
+  for (const [u, cote] of [[gauche, -1], [droite, 1]]) {
+    const n0 = nbFig(u.type, s.pv0.get(u)), figs = [];
+    for (let i = 0; i < n0; i++) {
+      const [x, y] = PLACES[NB(u.type)][i];
+      const fx = cote < 0 ? x : 160 - x - 32;
+      figs.push({ x: fx, y: y - (u.type === 'heli' ? 18 : 0), mort: null, recul: 0, tir: 0 });
+    }
+    s.cotes.set(u, { cote, figs, u });
+  }
+  const eti = document.getElementById('etiquettes'); eti.innerHTML = '';
+  for (const [u, cl] of [[gauche, 'g'], [droite, 'd']]) {
+    const d = document.createElement('div'); d.className = 'eti ' + cl; d.style.color = u.camp === 'B' ? '#9ce0ff' : '#ffb0b6';
+    d.innerHTML = `<span>${TROUPES[u.type].nom} <span class="pv">${s.pv0.get(u)}</span></span><div class="barre"><i style="width:${s.pv0.get(u) * 10}%"></i></div>`;
+    eti.appendChild(d); s.cotes.get(u).eti = d;
+  }
+}
+function eclats(s, x, y, gros) {
+  const n = gros ? 26 : 9;
+  for (let i = 0; i < n; i++) s.parts.push({ x, y, vx: (Math.random() - .5) * (gros ? 70 : 40), vy: -Math.random() * (gros ? 70 : 45), vie: .4 + Math.random() * .5, c: ['#feae34', '#f77622', '#e43b44', '#fee761', '#5a6988', '#3a4466'][Math.floor(Math.random() * 6)], t: gros && Math.random() < .5 ? 2 : 1 });
+}
+// une salve : chaque figure de l'attaquant tire ; à l'impact, les figures en trop tombent de l'autre côté
+function salve(s, u, cible, t0, pvApres) {
+  const A = s.cotes.get(u), D = s.cotes.get(cible), type = u.type;
+  const vivants = A.figs.filter(f => !f.mort), balle = type === 'inf' || type === 'apc';
+  let tImpact = t0;
+  vivants.forEach((f, i) => {
+    const tt = t0 + i * .14;
+    s.ev.push({ t: tt, fn: () => {
+      f.recul = 1; f.tir = .12;
+      if (i === 0 || !balle) (type === 'inf' ? SON.fusil : type === 'apc' ? SON.rafale : type === 'heli' ? SON.missile : SON.canon)();
+      const vis = D.figs.filter(gq => !gq.mort), cib = vis[i % Math.max(1, vis.length)]; if (!cib) return;
+      const bx = A.cote < 0 ? f.x + 31 : f.x, by = f.y + (type === 'tank' ? 9 : type === 'heli' ? 20 : 15);
+      s.balles.push({ x0: bx, y0: by, x1: cib.x + 16, y1: cib.y + 22, t: 0, duree: balle ? .16 : .3, gros: !balle, sens: -A.cote, fin: () => eclats(s, cib.x + 16, cib.y + 24, !balle) });
+    } });
+    tImpact = Math.max(tImpact, tt + (balle ? .16 : .3));
+  });
+  s.ev.push({ t: tImpact + .05, fn: () => {
+    const n1 = nbFig(cible.type, pvApres), vis = D.figs.filter(gq => !gq.mort), tues = vis.length - n1;
+    vis.slice(vis.length - tues).forEach((gq, k) => { gq.mort = { t: -k * .12 }; if (NB(cible.type) === 3) { eclats(s, gq.x + 16, gq.y + 20, true); SON.boum(); } });
+    const pv0 = s.pvAff.get(cible); s.pvAff.set(cible, pvApres);
+    D.eti.querySelector('.pv').textContent = pvApres; D.eti.querySelector('.barre i').style.width = pvApres * 10 + '%';
+    degatEcran(D.cote < 0 ? '25%' : '75%', pv0 - pvApres > 0 ? '-' + (pv0 - pvApres) : '0');
+  } });
+  return tImpact + .05;
+}
+function degatEcran(x, txt) { const d = document.createElement('div'); d.className = 'degat'; d.style.left = x; d.style.top = '50%'; d.textContent = txt; document.getElementById('etiquettes').appendChild(d); setTimeout(() => d.remove(), 950); }
+function combat(a, d) {
+  return new Promise(fin => {
+    const pvA0 = a.pv, pvD0 = d.pv;
+    const dA = degats(a, d); d.pv -= dA;
+    let dD = 0; if (riposte(a, d)) { dD = degats(d, a); a.pv -= dD; }
+    const s = { a, d, pv0: new Map([[a, pvA0], [d, pvD0]]), pvAff: new Map([[a, pvA0], [d, pvD0]]), ev: [], t: 0, fin };
+    if (!document.getElementById('o-scene').checked) { finCombat(s); return; }
+    plateau.classList.add('combat'); ouvrirCombat(s);
+    let t = salve(s, a, d, .5, d.pv);
+    if (dD > 0) t = salve(s, d, a, t + .6, a.pv);
+    s.ev.push({ t: t + 1.1, fn: () => finCombat(s) });
+    s.ev.sort((x, y) => x.t - y.t);
+    combatEnCours = s;
+  });
+}
+function finCombat(s) {
+  if (s.fini) return; s.fini = true; combatEnCours = null; plateau.classList.remove('combat');
+  for (const u of [s.a, s.d]) if (u.pv <= 0) { u.pv = 0; const b = batEn(u.x, u.y); if (b && b.pts < 20) b.pts = 20; }
+  s.fin();
+}
+function avancerCombat(dt) {
+  const s = combatEnCours; s.t += dt;
+  while (s.ev.length && s.ev[0].t <= s.t) s.ev.shift().fn();
+  if (!combatEnCours) return;
+  // ciel, décor des deux côtés, séparation
+  const ciel = gc.createLinearGradient(0, 0, 0, 56); ciel.addColorStop(0, '#2ce8f5'); ciel.addColorStop(1, '#c0cbdc');
+  gc.fillStyle = ciel; gc.fillRect(0, 0, 160, 56);
+  decorCote(s.terr.g, -1); decorCote(s.terr.d, 1);
+  gc.fillStyle = '#181425'; gc.fillRect(79, 0, 2, 104);
+  for (const tr of s.trous) tuile(gc, 11, 1, tr.x, tr.y, true, 16);
+  const img = Math.floor(s.t * 4) % 2;
+  for (const C of s.cotes.values()) for (const f of C.figs) {
+    f.recul = Math.max(0, f.recul - dt * 6); f.tir = Math.max(0, f.tir - dt);
+    const x = Math.round(f.x + C.cote * f.recul * 2), y = f.y, t = C.u.type, ret = C.cote > 0;
+    if (f.mort) {
+      f.mort.t += dt; const k = f.mort.t; if (k < 0) { sprite(gc, t, C.u.camp, img, x, y, ret, 32); continue; }
+      if (NB(t) === 5) {                                      // le soldat clignote, bascule et disparaît
+        if (k > 1.2) continue;
+        gc.save(); gc.globalAlpha = Math.max(0, 1 - Math.max(0, k - .6) / .6); gc.translate(x + 16, y + 30); gc.rotate(-C.cote * Math.min(1, k * 5) * Math.PI / 2); sprite(gc, t, C.u.camp, 0, -16, -30, ret, 32); gc.restore();
+      } else {                                                // l'engin noircit, fume, puis laisse un cratère
+        if (k > .5) { if (!f.trou) { f.trou = true; s.trous.push({ x: x + 8, y: Math.max(y + 12, 60) }); } continue; }
+        gc.filter = 'brightness(.35)'; sprite(gc, t, C.u.camp, 0, x, y, ret, 32); gc.filter = 'none';
+        if (Math.random() < dt * 20) eclats(s, x + 16, y + 10, false);
+      }
+      continue;
+    }
+    if (t === 'heli') { gc.fillStyle = 'rgba(24,20,37,.35)'; gc.fillRect(x + 8, 86, 16, 3); }
+    sprite(gc, t, C.u.camp, t === 'heli' ? Math.floor(s.t * 14) % 2 : img, x, y + (t === 'heli' ? Math.round(Math.sin(s.t * 5 + f.x) * 2) : 0), ret, 32);
+    if (f.tir > 0) {                                          // éclair au bout du canon
+      const bx = C.cote < 0 ? x + 31 : x - 3, by = y + (t === 'tank' ? 8 : t === 'heli' ? 19 : 14);
+      gc.fillStyle = '#fee761'; gc.fillRect(bx, by - 1, 4, 3); gc.fillStyle = '#ffffff'; gc.fillRect(bx + 1, by, 2, 1);
+    }
+  }
+  for (let i = s.balles.length - 1; i >= 0; i--) {
+    const b = s.balles[i]; b.t += dt / b.duree;
+    if (b.t >= 1) { s.balles.splice(i, 1); b.fin(); continue; }
+    const x = b.x0 + (b.x1 - b.x0) * b.t, y = b.y0 + (b.y1 - b.y0) * b.t;
+    if (b.gros) { gc.fillStyle = '#3a4466'; gc.fillRect(Math.round(x) - 2, Math.round(y) - 1, 4, 3); gc.fillStyle = '#feae34'; gc.fillRect(Math.round(x) - 2 - 3 * b.sens, Math.round(y), 3, 1); }
+    else { gc.fillStyle = '#fee761'; gc.fillRect(Math.round(x) - 2, Math.round(y), 4, 1); }
+  }
+  for (let i = s.parts.length - 1; i >= 0; i--) {
+    const p = s.parts[i]; p.vie -= dt; if (p.vie <= 0) { s.parts.splice(i, 1); continue; }
+    p.vy += 160 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    gc.fillStyle = p.c; gc.fillRect(Math.round(p.x), Math.round(p.y), p.t, p.t);
+  }
+}
+
+// ================= interface =================
+const plateau = document.getElementById('plateau');
+const $ = id => document.getElementById(id);
+const aide = m => $('aide').textContent = m;
+const etoiles = n => n ? '★'.repeat(n) : '—';
+const NOMS_CAMP = { B: 'BLEUS', R: 'ROUGES' };
+function majFiches(x, y) {
+  const t = terrain(x, y), b = batEn(x, y);
+  $('t-nom').textContent = TERRAINS[t][0] + (b ? (b.camp === 'N' ? ' (libre)' : b.camp === 'B' ? ' (bleue)' : ' (rouge)') : '');
+  $('t-val').innerHTML = `Défense <b>${etoiles(TERRAINS[t][1])}</b>` + (b && b.pts < 20 ? ` · prise <b>${b.pts}</b>/20` : '');
+  vignette('t-img', gg => dessinerCase(gg, x, y, 0, 0));
+  const u = uniteEn(x, y);
+  $('u-nom').textContent = u ? TROUPES[u.type].nom + (u.camp === 'B' ? ' bleu' : ' rouge') : '—';
+  $('u-val').innerHTML = u ? `PV <b>${u.pv}</b>/10 · mouv. <b>${TROUPES[u.type].pm}</b>` : 'touche une unité';
+  vignette('u-img', gg => { if (u) sprite(gg, u.type, u.camp, 0, 0, 0, u.camp === 'R'); });
+}
+function majBoutons() {
+  const act = phase === 'action' && sel;
+  $('a-tir').disabled = !(act && ciblesDepuis(sel, sel.x, sel.y).length);
+  $('a-capture').disabled = !(act && peutCapturer(sel));
+  $('a-attendre').disabled = !act;
+  $('a-fin').disabled = !fini && (joueur !== 'B' || phase === 'anim');
+  $('a-fin').textContent = fini ? 'Rejouer' : phase === 'cible' || phase === 'action' ? 'Annuler' : 'Fin du tour';
+}
+function majBandeau() {
+  $('jour').textContent = 'JOUR ' + jour;
+  $('camp').textContent = NOMS_CAMP[joueur]; $('camp').classList.toggle('rouge', joueur === 'R');
+  $('or').textContent = 'FONDS ' + fonds.B;
+}
+function ruban(txt, camp = 'B') { const r = $('ruban'); r.textContent = txt; r.classList.toggle('rouge', camp === 'R'); r.classList.add('vu'); clearTimeout(ruban.t); ruban.t = setTimeout(() => r.classList.remove('vu'), 1300); }
+function verifierFin() {
+  if (fini) return true;
+  for (const c of ['B', 'R']) {
+    const qgPerdu = bat.some(b => b.k === 'Q' && b.y === (c === 'B' ? 9 : 0) && b.camp !== c);
+    const plusRien = !unites.some(u => u.camp === c && u.pv > 0);
+    if (qgPerdu || plusRien) {
+      fini = true; const gagnant = c === 'B' ? 'R' : 'B';
+      ruban(gagnant === 'B' ? 'VICTOIRE !' : 'DEFAITE...', gagnant); if (gagnant === 'B') SON.victoire();
+      aide(gagnant === 'B' ? 'Victoire ! Touche Rejouer pour recommencer.' : 'Défaite… Touche Rejouer pour recommencer.');
+      phase = 'libre'; majBoutons(); return true;
+    }
+  }
+  return false;
+}
+function capturer(u) {
+  const b = batEn(u.x, u.y); b.pts -= u.pv;
+  if (b.pts <= 0) { b.camp = u.camp; b.pts = 20; SON.capture(); ruban(TERRAINS[b.k][0].toUpperCase() + ' PRISE !', u.camp); }
+  else note(330, .1, 'square', .04);
+}
+function abandons() { for (const b of bat) if (b.pts < 20 && !unites.some(u => u.x === b.x && u.y === b.y && u.pv > 0 && TROUPES[u.type].capture && u.camp !== b.camp)) b.pts = 20; }
+function menuRecrue(b) {
+  const r = $('recrue'); r.innerHTML = '';
+  for (const [k, T] of Object.entries(TROUPES)) {
+    const bt = document.createElement('button'), c = document.createElement('canvas'); c.width = c.height = 16;
+    const gg = c.getContext('2d'); gg.imageSmoothingEnabled = false; sprite(gg, k, 'B', 0, 0, 0);
+    const txt = document.createElement('span'); txt.innerHTML = `${T.nom}<small>${T.prix}</small>`;
+    bt.append(c, txt); bt.disabled = fonds.B < T.prix;
+    bt.onclick = () => { fonds.B -= T.prix; const u = ajouter(k, 'B', b.x, b.y); u.fait = true; SON.capture(); fermerRecrue(); majBandeau(); aide(T.nom + ' prêt : il agira au prochain tour.'); };
+    r.appendChild(bt);
+  }
+  const an = document.createElement('button'); an.textContent = 'Fermer'; an.onclick = fermerRecrue; r.appendChild(an);
+  r.hidden = false; $('actions').hidden = true; aide('Usine : que veux-tu construire ?');
+}
+function fermerRecrue() { $('recrue').hidden = true; $('actions').hidden = false; majBoutons(); }
+function finirUnite() { depart = null; if (sel) sel.fait = true; sel = null; portee = null; cibles = []; phase = 'libre'; abandons(); majBoutons(); if (!verifierFin()) aide('Choisis une autre unité, ou Fin du tour.'); }
+function annuler() {
+  if (sel && depart && (phase === 'action' || phase === 'cible')) { [sel.x, sel.y] = depart; sel.px = sel.x; sel.py = sel.y; }
+  depart = null; sel = null; portee = null; cibles = []; phase = 'libre'; majBoutons(); aide('Touche une unité bleue pour voir où elle peut aller.');
+}
+toile.addEventListener('pointerup', async ev => {
+  audio();
+  if (joueur !== 'B' || fini || phase === 'anim' || marche || combatEnCours) return;
+  const r = toile.getBoundingClientRect(), x = Math.floor((ev.clientX - r.left) / r.width * L), y = Math.floor((ev.clientY - r.top) / r.height * H);
+  if (!dans(x, y)) return;
+  curseur = { x, y }; majFiches(x, y); SON.clic();
+  const u = uniteEn(x, y);
+  if (phase === 'cible') {
+    const t = cibles.find(o => o.x === x && o.y === y);
+    if (t) { phase = 'anim'; cibles = []; majBoutons(); await combat(sel, t); finirUnite(); }
+    return;
+  }
+  if (phase === 'deplace') {
+    const p = portee.get(x + ',' + y);
+    if (p && !p.passe) {
+      phase = 'anim'; majBoutons(); depart = [sel.x, sel.y];
+      await deplacer(sel, chemin(portee, x, y)); phase = 'action'; portee = null; majBoutons();
+      aide('Que fait ' + TROUPES[sel.type].nom.toLowerCase() + ' ? (Annuler pour revenir)'); return;
+    }
+    annuler(); return;
+  }
+  if (phase === 'action') return;
+  if (u && u.camp === 'B' && !u.fait) { sel = u; portee = calculPortee(u); phase = 'deplace'; majBoutons(); aide('Touche une case claire pour y aller (ou la même case pour rester).'); return; }
+  const b = batEn(x, y);
+  if (b && b.k === 'U' && b.camp === 'B' && !u) menuRecrue(b);
+});
+plateau.addEventListener('pointerup', () => { if (combatEnCours) finCombat(combatEnCours); });
+$('a-tir').onclick = () => { cibles = ciblesDepuis(sel, sel.x, sel.y); phase = 'cible'; majBoutons(); aide('Touche une cible rouge.'); };
+$('a-capture').onclick = () => { capturer(sel); finirUnite(); };
+$('a-attendre').onclick = () => finirUnite();
+$('a-fin').onclick = () => {
+  if (fini) { recommencer(); return; }
+  if (phase === 'action' || phase === 'cible') { annuler(); return; }
+  if (joueur !== 'B' || phase === 'anim') return;
+  annuler(); tourRouge();
+};
+document.querySelectorAll('[data-biome]').forEach(bt => bt.onclick = () => {
+  biome = bt.dataset.biome; document.querySelectorAll('[data-biome]').forEach(b => b.classList.toggle('vu', b === bt));
+  if (curseur) majFiches(curseur.x, curseur.y);
+});
+
+// ================= les rouges (ordinateur) =================
+const pause = ms => new Promise(r => setTimeout(r, ms));
+function revenus(c) { fonds[c] += 1000 * bat.filter(b => b.camp === c).length; }
+async function tourRouge() {
+  joueur = 'R'; phase = 'anim'; for (const u of unites) u.fait = false; revenus('R'); majBandeau(); majBoutons();
+  ruban('TOUR DES ROUGES', 'R'); SON.tour(); aide('Les rouges réfléchissent…'); await pause(1000);
+  for (const u of unites.filter(u => u.camp === 'R' && u.pv > 0)) { if (fini) return; if (u.pv > 0) await jouerRouge(u); }
+  if (fini) return;
+  for (const b of bat.filter(b => b.k === 'U' && b.camp === 'R' && !uniteEn(b.x, b.y))) {
+    const nInf = unites.filter(u => u.camp === 'R' && u.pv > 0 && TROUPES[u.type].capture).length;
+    const choix = nInf < 2 ? ['inf', 'baz'] : ['heli', 'tank', 'apc', 'baz', 'inf'];
+    const t = choix.find(k => TROUPES[k].prix <= fonds.R);
+    if (t) { fonds.R -= TROUPES[t].prix; const u = ajouter(t, 'R', b.x, b.y); u.fait = true; SON.capture(); await pause(400); }
+  }
+  jour++; joueur = 'B'; for (const u of unites) u.fait = false; revenus('B'); phase = 'libre'; curseur = null;
+  majBandeau(); majBoutons(); ruban('JOUR ' + jour + ' · A TOI'); SON.tour(); aide('Touche une unité bleue pour voir où elle peut aller.');
+}
+async function jouerRouge(u) {
+  const P = calculPortee(u), T = TROUPES[u.type];
+  let best = null;
+  for (const p of P.values()) {
+    if (p.passe) continue;
+    for (const e of ciblesDepuis(u, p.x, p.y)) {
+      const dg = degats(u, e), rip = e.pv - dg > 0 ? degats(e, { ...u, x: p.x, y: p.y }, e.pv - dg) : 0;
+      const sc = dg * TROUPES[e.type].prix / 10 * (e.pv - dg <= 0 ? 1.5 : 1) - rip * T.prix / 20 + TERRAINS[terrain(p.x, p.y)][1] * 20;
+      if (!best || sc > best.sc) best = { sc, p, e };
+    }
+    if (T.capture) { const b = batEn(p.x, p.y); if (b && b.camp !== 'R') { const sc = (b.k === 'Q' ? 9000 : 2600) + (p.x === u.x && p.y === u.y ? 800 : 0); if (!best || sc > best.sc) best = { sc, p, cap: true }; } }
+  }
+  if (best && best.sc > 0) {
+    curseur = { x: best.p.x, y: best.p.y };
+    await deplacer(u, chemin(P, best.p.x, best.p.y)); await pause(200);
+    if (best.cap) capturer(u);
+    else { cibles = [best.e]; await pause(400); cibles = []; await combat(u, best.e); }
+  } else {
+    const buts = [...unites.filter(o => o.camp === 'B' && o.pv > 0)];
+    if (T.capture) buts.push(...bat.filter(b => b.camp !== 'R'));
+    let cible = null, dmin = 1e9;
+    for (const p of P.values()) { if (p.passe) continue; for (const gq of buts) { const d = dist(p, gq) + p.c * .01; if (d < dmin) { dmin = d; cible = p; } } }
+    if (cible) { curseur = { x: cible.x, y: cible.y }; await deplacer(u, chemin(P, cible.x, cible.y)); }
+  }
+  u.fait = true; abandons(); verifierFin(); await pause(250);
+}
+function recommencer() { nouvellePartie(); curseur = null; majBandeau(); majBoutons(); majFiches(2, 7); aide('Touche une unité bleue pour voir où elle peut aller.'); }
+
+// ================= boucle =================
+let avant = performance.now();
+function boucle(t) {
+  const dt = Math.min(.05, (t - avant) / 1000); avant = t; temps += dt;
+  if (marche) avancerMarche(dt);
+  dessiner();
+  if (combatEnCours) avancerCombat(dt);
+  requestAnimationFrame(boucle);
+}
+planche.onload = () => { nouvellePartie(); majBandeau(); majBoutons(); majFiches(2, 7); requestAnimationFrame(boucle); };
+planche.src = BLINDES_TUILES;
+</script>
+</body>
+</html>
