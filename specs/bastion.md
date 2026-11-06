@@ -65,4 +65,27 @@ Choix de l'utilisateur : dessiner les soldats par le code plutôt qu'acheter un 
 - À droite : le gros plan des cinq figurines, qui alterne marche, attaque et repos.
 - Matériaux : MeshPhongMaterial à facettes (MeshLambertMaterial n'a pas `flatShading` en r128).
 
+Retour (06/11) : « je me suis trompé, c'est pas de la 3D que je cherche ; essayons en **2D iso** », avec un pack à essayer ([8x8] Isometric TRPG) et d'autres à chercher.
+
+## Recherche de packs 2D iso (06/11)
+| Pack | Prix | Licence | Contenu | Avis |
+|---|---|---|---|---|
+| [[8x8] Isometric TRPG](https://gvituri.itch.io/isometric-trpg) (Gustavo Vituri) — trouvé par l'utilisateur | gratuit | usage libre, même commercial, modification permise ; **pas de redistribution**, pas de NFT ; crédit apprécié | 1 planche de tuiles 16×17 (8 terrains et leurs demi-tuiles, eau, 2 jeux de 11 routes, 4 murs et 4 sols de bâtiments, pont, grille, 12 décors), 16 figurines 8×8 (face et dos, 2 images de repos + 2 d'attaque ; version avec contour), UI | **Retenu pour la maquette 5** : tout ce qu'il faut pour un Bad North en cubes ; médiéval-fantastique ; pas de toits, pas d'arbres « vrais » |
+| [Isoverse: Medieval Outdoors](https://zatoart.itch.io/isoverse-medieval-outdoors) (zatoart) | gratuit (version Premium payante) | à lire | Gratuit : 14 cubes 32 px, un arbre, un rocher, une maison (deux sens) | Joli mais trop maigre en gratuit ; pas de soldats |
+| [Free Japanese City](https://guttykreum.itch.io/free-japanese-city-game-assets) (GuttyKreum) | gratuit | à lire | Ville japonaise moderne | **Pas isométrique** (vue de dessus 3/4, style RPG Maker), moderne : écarté |
+| [Isometric Medieval Tactics](https://gamer-ant.itch.io/isometric-medieval-tactics) (gamer-ant) | 2,46 $ | à lire | archer, épéiste, arbalétrier (attaque, mort, repos, toutes directions) | À voir si on veut des soldats plus grands |
+| [Isometric fantasy knights](https://nulllgames.itch.io/isometric-fantasy-knights) (nulllgames) | 8 $ | à lire | 48 chevaliers, 8 directions, rendus 3D 384 px | Trop gros et réaliste pour notre style |
+| [Mini-Crusader](https://remos.itch.io/mini-crusader) (Remos) | gratuit | CC-BY 4.0 | un croisé, 8 directions, animations complètes | Un seul personnage |
+| Personnages isométriques d'[engvee](https://engvee.itch.io) | gratuits (un par page) | à lire | guerrier hallebardier, orc, khajit… 8 à 16 directions | Rendus 3D, style différent ; un par un |
+Rien d'isométrique et asiatique en gratuit (FEUDAL JAPAN de FeralPixelForge, 13,99 $, est un kit de cartes de jeu de rôle peint, pas du pixel art).
+
+## Maquette 5 : la 2D iso en pixel art (06/11)
+https://claude.ai/artifact/GpCeg68qf7wZKAdk2iBayS — page source `outils/bastion-maquette/source-5.html`, fabriquée par `fabriquer.py 5 <dossier Assets du pack>` (les deux planches du pack en base64 ; le pack n'est pas dans le dépôt). Reprend la simulation et l'interface de la maquette 2 ; dessin sur une toile de 136 px de large agrandie sans flou (`image-rendering: pixelated`).
+- **Plateau en cubes** empilés (terre en dessous, roche pour les étages, herbe ou route sur le dessus, eau en demi-cube qui ondule), triés de l'arrière vers l'avant ; **quart de tour** du plateau au doigt (glisser) ou avec les flèches ⟲ ⟳.
+- **A · le pack tel quel** (médiéval) : chevaliers (épées), lanciers, archers contre gobelins et gobelins archers ; chef orc deux fois plus grand. Arbres = tronc + cube de feuillage du pack ; maisons, toits et donjon à créneaux dessinés au pixel par le code (le pack n'a pas de toits).
+- **B · l'Empire de l'Est** : le même pack **recoloré par le code** (rampes de couleurs selon la luminosité) : herbe moussue, roche grise, cerisiers roses et érables rouges, pins sombres ; samouraïs = chevaliers repeints, casque à la couleur de l'escouade (noir, vert, rouge) avec un croissant doré ajouté, armure laquée ; archers et lanciers repeints ; ennemis : ninjas (l'ombre du pack) et rônins (lanciers repeints en violet, capuche de paille), l'oni = le démon rouge du pack. Pagode à trois toits, torii, maisons blanches à toits gris relevés, lanternes de pierre : dessinés au pixel par le code.
+- Escouades rangées en deux rangs nets à l'écran, petite ombre sous chaque soldat ; images de repos, de marche (repos accéléré + sautillement) et d'attaque ; figurines de face ou de dos et retournées selon la direction.
+- Sous chaque téléphone, la vitrine des six figurines en grand.
+- Le script de téléchargement `itch.py` (skill `packs-itch`) gère maintenant les pages « téléchargement direct » (fichiers listés sur la page, sans prix libre).
+
 Retours : à venir.

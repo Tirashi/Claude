@@ -5,6 +5,8 @@ SkeletonUtils (lib/), FBXLoader et fflate (three@0.128.0, examples/js, paquet np
 Usage : python3 -I outils/bastion-maquette/fabriquer.py <bourg du château> <sanctuaire> <dojo> <LOWPO Samurai_Free> <examples/js de three 0.128> <sortie.html>
 Maquette 4 (soldats dessinés par le code, source-4.html, sans LOWPO ni FBX) :
         python3 -I outils/bastion-maquette/fabriquer.py 4 <bourg du château> <sanctuaire> <dojo> <sortie.html>
+Maquette 5 (2D iso en pixel art, pack « [8x8] Isometric TRPG » de Gustavo Vituri, https://gvituri.itch.io/isometric-trpg) :
+        python3 -I outils/bastion-maquette/fabriquer.py 5 <dossier Assets du pack> <sortie.html>
 Les packs ne sont pas dans le dépôt (pas de redistribution) : la page fabriquée sert d'artefact, elle n'est pas commitée.
 Packs : https://reodesuxz.itch.io/low-poly-japanese-castle-town-pack, https://reodesuxz.itch.io/low-poly-japanese-shrine-pack,
 https://reodesuxz.itch.io/low-poly-ninja-dojo-castle-pack, https://standout7.itch.io/lowpo-samurai"""
@@ -13,6 +15,14 @@ import base64, glob, json, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, '..', '..'))
 M4 = sys.argv[1] == '4'
+if sys.argv[1] == '5':
+    ass, sortie = sys.argv[2:4]
+    b2 = open(os.path.join(RACINE, 'maquettes', 'bastion-2.html'), encoding='utf-8').read()
+    sim = b2[b2.index('/* ================= la simulation commune'):b2.index('/* ================= le rendu 3D')]
+    png = lambda n: 'data:image/png;base64,' + base64.b64encode(open(os.path.join(ass, n), 'rb').read()).decode()
+    html = (open(os.path.join(ICI, 'source-5.html'), encoding='utf-8').read().replace('__SIM__', sim)
+            .replace('__TUILES__', png('Isometric_MedievalFantasy_Tiles.png')).replace('__FIGURINES__', png('IsometricTRPGAssetPack_Entities.png')))
+    open(sortie, 'w', encoding='utf-8').write(html); print(sortie, len(html) // 1024, 'Ko'); sys.exit()
 if M4: chateau, sanctuaire, dojo, sortie = sys.argv[2:6]; lowpo = exemples = None
 else: chateau, sanctuaire, dojo, lowpo, exemples, sortie = sys.argv[1:7]
 

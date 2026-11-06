@@ -14,7 +14,7 @@ description: Récupérer et préparer des graphismes venus d'ailleurs pour une m
 
 ## Télécharger un pack gratuit (« prix libre ») sur itch.io
 `python3 -I .claude/skills/packs-itch/itch.py <url de la page> <motif du nom de fichier> <dossier>`
-Liste les fichiers de la page, télécharge le premier dont le nom correspond au motif (expression régulière). Principe : `POST <page>/download_url` avec le `csrf_token`, ids lus dans `data-upload_id`, puis `POST <page>/file/<id>?source=view_game&as_props=1&after_download_lightbox=true` qui renvoie l'`url` du fichier. Les packs payants : l'utilisateur les achète et envoie les zips.
+Liste les fichiers de la page (pages « prix libre » ou « téléchargement direct »), télécharge le premier dont le nom correspond au motif (expression régulière). Principe : `POST <page>/download_url` avec le `csrf_token`, ids lus dans `data-upload_id`, puis `POST <page>/file/<id>?source=view_game&as_props=1&after_download_lightbox=true` qui renvoie l'`url` du fichier. Les packs payants : l'utilisateur les achète et envoie les zips.
 
 ## Compacter des modèles glTF (maquettes 3D sans fichiers à côté)
 `python3 -I .claude/skills/packs-itch/pack.py <dossier des .gltf> <sortie.b64> [nom1,nom2,…]`
