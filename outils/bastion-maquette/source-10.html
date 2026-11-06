@@ -1,0 +1,405 @@
+<title>Bastion, maquette 10</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel:wght@600;800&display=swap">
+<style>
+/* Maquette 10 de « Bastion » : tactique au tour par tour, façon Wargroove, avec Tiny Swords (Free Pack, Enemy Pack, Warfare).
+   Chaque case porte une escouade (son nombre de soldats suit ses points de vie) ; le roi commande ; en face, le troll.
+   A = le combat se joue sur la carte ; B = chaque attaque ouvre un gros plan de combat.
+   Fabriquée par outils/bastion-maquette/fabriquer.py 10 (packs pas dans le dépôt : pas de redistribution). */
+:root{
+  color-scheme: dark;
+  --bg:#15131a; --text:#f0ece4; --dim:#b6aea0; --gold:#e8c46a;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace; --ouest:"Cinzel", Georgia, serif;
+  --parch:#f2e3bf; --parch2:#d9c294; --ink:#3a2410; --rouge:#7a2a1a;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(#26222f 1px, transparent 1.5px); background-size:5px 5px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:24px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.intro{max-width:1180px; margin:0 auto 22px; display:flex; flex-direction:column; gap:8px}
+.intro h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-shadow:3px 3px 0 #7a4a1a, 5px 5px 0 #000}
+.intro p{margin:0; max-width:78ch; color:var(--dim)}
+.intro b{color:var(--text); font-weight:400}
+.grid{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:28px; justify-items:center}
+.col{display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px; min-width:0}
+.col > h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; line-height:1.6; color:var(--gold)}
+.col > h2 span{color:#e98a6a}
+.col > p{margin:0; color:var(--dim); font-size:19px}
+
+.phone{position:relative; width:100%; max-width:360px; height:700px; overflow:hidden; border:4px solid #000; border-radius:22px; box-shadow:0 0 0 3px #3a3444, 6px 6px 0 3px #000; touch-action:none; user-select:none; -webkit-user-select:none; background:#4a9aa8}
+.phone > canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:10px}
+.hud > *{pointer-events:auto}
+.top{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.tour{font-family:var(--ouest); font-weight:800; font-size:14px; letter-spacing:1px; color:var(--parch); background:#2c4a7a; border:2px solid #14223a; border-radius:4px; padding:4px 10px; box-shadow:0 3px 0 #14223a}
+.tour.eux{background:var(--rouge); border-color:#2a1808; box-shadow:0 3px 0 #2a1808}
+.fin{font-family:var(--ouest); font-weight:800; font-size:12px; letter-spacing:1px; color:var(--parch); background:#b8571a; border:2px solid #2a1808; border-radius:4px; padding:6px 10px; box-shadow:0 3px 0 #2a1808}
+.fin:disabled{opacity:.4}
+.info{display:flex; gap:8px; align-items:stretch; background:linear-gradient(var(--parch), var(--parch2)); border:2px solid var(--ink); border-radius:5px; box-shadow:0 3px 0 var(--ink); color:var(--ink); padding:6px; min-height:84px}
+.info img{width:68px; height:68px; flex:none; image-rendering:pixelated; align-self:center}
+.info .txt{flex:1; display:flex; flex-direction:column; gap:2px; min-width:0}
+.info b{font-family:var(--ouest); font-weight:800; font-size:14px; letter-spacing:1px}
+.info .st{font-size:17px; line-height:1}
+.info .hint{font-size:16px; line-height:1; color:#6a4a2a}
+.info .acts{display:flex; flex-direction:column; gap:4px; justify-content:center}
+.info .acts button{font-family:var(--ouest); font-weight:800; font-size:10px; letter-spacing:1px; color:var(--parch); background:var(--rouge); border:2px solid #2a1808; border-radius:3px; padding:5px 6px}
+.info .acts button[hidden]{display:none}
+.banner{position:absolute; left:10px; right:10px; top:56px; padding:7px 10px; text-align:center; opacity:0; transform:translateY(-6px); transition:opacity .2s, transform .2s; pointer-events:none;
+  font-family:var(--ouest); font-weight:800; font-size:14px; letter-spacing:1px; color:var(--parch); background:var(--rouge); border:2px solid #2a1808; border-radius:3px; box-shadow:0 3px 0 #2a1808}
+.banner.good{background:#3a5a2a}
+.banner.on{opacity:1; transform:none}
+/* B : le gros plan de combat */
+.duel{position:absolute; left:0; right:0; top:50%; transform:translateY(-50%) scaleY(0); transition:transform .18s; height:260px; border-top:4px solid var(--ink); border-bottom:4px solid var(--ink); pointer-events:none; background:#6aa84a}
+.duel.on{transform:translateY(-50%) scaleY(1)}
+.duel canvas{width:100%; height:100%; display:block; image-rendering:pixelated}
+.duel .noms{position:absolute; left:8px; right:8px; top:6px; display:flex; justify-content:space-between; font-family:var(--ouest); font-weight:800; font-size:12px; letter-spacing:1px}
+.duel .noms span{background:var(--parch); color:var(--ink); border:2px solid var(--ink); border-radius:3px; padding:2px 6px}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<div class="intro">
+  <h1>BASTION · MAQUETTE 10 · FACON WARGROOVE</h1>
+  <p>Un essai de <b>tactique au tour par tour</b>, comme Wargroove, avec les graphismes Tiny Swords. Chaque case porte une <b>escouade</b> : ses soldats tombent un à un quand elle perd des points de vie (le chiffre de la pastille, sur 10). Le <b>roi</b> commande : s'il tombe, c'est perdu ; abats le <b>troll</b> pour gagner.</p>
+  <p><b>Joue</b> : touche une escouade bleue, puis une case bleue pour la déplacer, puis une case rouge pour attaquer (verte pour soigner avec les moines), ou ATTENDRE. FIN DU TOUR : les monstres jouent. Glisse le doigt pour faire défiler la carte. Les <b>lanciers</b> sont forts contre les cavaliers et le troll, les <b>cavaliers</b> contre les archers et les gnolls ; les <b>archers</b> tirent à 2 ou 3 cases mais ne ripostent pas de près ; forêts, collines et villages protègent.</p>
+</div>
+
+<div class="grid">
+  <section class="col">
+    <h2>A · COMBAT <span>SUR LA CARTE</span></h2>
+    <div class="phone" id="pA"></div>
+    <p>L'attaquant frappe sur place, les soldats tombent dans un nuage de poussière, la riposte suit.</p>
+  </section>
+  <section class="col">
+    <h2>B · GROS PLAN <span>DE COMBAT</span></h2>
+    <div class="phone" id="pB"></div>
+    <p>À chaque attaque, une bande s'ouvre au milieu de l'écran : les deux escouades en grand, face à face, comme dans Wargroove.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const IMG = __IMAGES__;   // nom → image (data:image/png;base64)
+
+/* ================= les images ================= */
+const cv = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const charge = s => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = s; });
+const L = {};
+const load = async () => { await Promise.all(Object.keys(IMG).filter(k => !k.startsWith("av/") && !L[k]).map(async k => { L[k] = await charge(IMG[k]); })); };
+const strip = (im, fs) => im._s || (im._s = Array.from({length: Math.round(im.width / fs)}, (_, i) => { const c = cv(fs, im.height); c.getContext("2d").drawImage(im, i * fs, 0, fs, im.height, 0, 0, fs, im.height); return c; }));
+const auto = (n, s, w, e) => [w ? (e ? 1 : 2) : (e ? 0 : 3), n ? (s ? 1 : 2) : (s ? 0 : 3)];
+
+/* ================= les troupes ================= */
+// fs = taille d'une case d'image, fx/fy = pieds, k = échelle sur la carte ; mv = déplacement ; rng = portée ; atk = force ; seul = commandant (une figurine)
+const TYPES = {
+  roi:   {nm: "LE ROI", fs: 192, fx: 98, fy: 137, k: 1, mv: 4, rng: [1, 1], atk: 6, def: 1, seul: true, anim: ["Idle", "Run", "Attack"], av: "av/roi", note: "commande l'armee"},
+  guer:  {nm: "GUERRIERS", fs: 192, fx: 96, fy: 135, k: .8, mv: 4, rng: [1, 1], atk: 5.5, anim: ["Idle", "Run", "Attack1"], av: "av/guer", note: "solides"},
+  lance: {nm: "LANCIERS", fs: 320, fx: 150, fy: 196, k: .8, mv: 4, rng: [1, 1], atk: 5, anim: ["Idle", "Run", "Right_Attack"], av: "av/lance", bonus: {cav: 1.6, troll: 1.8, lanceg: 1.2}, note: "forts contre les gros"},
+  arc:   {nm: "ARCHERS", fs: 192, fx: 93, fy: 134, k: .8, mv: 3, rng: [2, 3], atk: 5, anim: ["Idle", "Run", "Shoot"], av: "av/arc", bonus: {gnoll: 1.3, gob: 1.2}, note: "tir a 2-3 cases"},
+  moine: {nm: "MOINES", fs: 192, fx: 96, fy: 132, k: .8, mv: 4, rng: [1, 1], atk: 1.5, anim: ["Idle", "Run", "Heal"], av: "av/moine", soin: 3, note: "soignent (+3)"},
+  cav:   {nm: "CAVALIERS", fs: 320, fx: 172, fy: 222, k: .62, mv: 6, rng: [1, 1], atk: 6, anim: ["Idle", "Run", "Attack"], av: "av/cav", bonus: {arc: 1.4, gnoll: 1.4, moine: 1.4, gob: 1.2}, note: "rapides"},
+  gob:   {nm: "GOBELINS", fs: 192, fx: 80, fy: 133, k: .8, mv: 4, rng: [1, 1], atk: 4.5, anim: ["Idle", "Run", "Attack"], av: "av/gob", note: "torches"},
+  lanceg:{nm: "GOBELINS A LANCE", fs: 256, fx: 125, fy: 171, k: .7, mv: 4, rng: [1, 1], atk: 4.8, anim: ["Idle", "Run", "Attack Fast"], av: "av/lanceg", bonus: {cav: 1.5}, note: "contre les cavaliers"},
+  gnoll: {nm: "GNOLLS", fs: 192, fx: 97, fy: 135, k: .8, mv: 3, rng: [2, 2], atk: 4.2, anim: ["Idle", "Walk", "Throw"], av: "av/gnoll", note: "lancent des os a 2 cases"},
+  troll: {nm: "LE TROLL", fs: 384, fx: 195, fy: 297, k: .62, mv: 3, rng: [1, 1], atk: 7.5, def: 1, seul: true, anim: ["Idle", "Walk", "Attack"], av: "av/troll", note: "le chef des monstres"}};
+const TERRAIN = {".": {nm: "PLAINE", def: 1, cout: 1}, "F": {nm: "FORET", def: 2, cout: 2}, "H": {nm: "COLLINE", def: 3, cout: 2}, "P": {nm: "CHEMIN", def: 0, cout: 1},
+                 "V": {nm: "VILLAGE", def: 3, cout: 1}, "W": {nm: "LAC", def: 0, cout: 99}};
+const CARTE = ["FF.P.FF",
+               "F..P.VF",
+               "..HHH..",
+               "W.HHH.F",
+               "WW.P...",
+               "W..P.F.",
+               "...P.FF",
+               ".F.P...",
+               "..HPH.W",
+               "V..P.WW",
+               "FF.P.FF"];
+const CW = 7, CH = CARTE.length, CS = 128, M = 2;       // cases, taille d'une case (2 × 2 tuiles de 64), marge en tuiles
+const DEPART = [[0, "roi", 3, 9], [0, "guer", 2, 8], [0, "lance", 4, 8], [0, "arc", 3, 7], [0, "moine", 1, 9], [0, "cav", 5, 9],
+                [1, "troll", 3, 1], [1, "gob", 2, 3], [1, "lanceg", 4, 3], [1, "gnoll", 1, 2], [1, "gob", 5, 2], [1, "gnoll", 5, 0], [1, "lanceg", 2, 1]];
+const ter = (x, y) => TERRAIN[(CARTE[y] || "")[x] || "W"];
+const nbSoldats = u => TYPES[u.t].seul ? 1 : Math.max(1, Math.ceil(u.hp / 10 * 4));
+
+/* ================= une partie ================= */
+function partie(id, phone){
+  const DUEL = id === "B";
+  const c = document.createElement("canvas"); phone.prepend(c);
+  const x = c.getContext("2d");
+  const hud = document.createElement("div"); hud.className = "hud";
+  hud.innerHTML = `<div class="top"><span class="tour">TOUR 1 · A TOI</span><button type="button" class="fin">FIN DU TOUR</button></div>
+    <div class="info"><img alt=""><div class="txt"><b></b><span class="st"></span><span class="hint"></span></div><div class="acts"><button type="button" class="att">ATTENDRE</button><button type="button" class="ann">ANNULER</button></div></div>`;
+  phone.append(hud);
+  const ban = document.createElement("div"); ban.className = "banner"; phone.append(ban);
+  let duel = null, dc = null;
+  if (DUEL){ duel = document.createElement("div"); duel.className = "duel"; duel.innerHTML = `<canvas></canvas><div class="noms"><span></span><span></span></div>`; phone.append(duel); dc = duel.querySelector("canvas"); dc.width = 640; dc.height = 300; }
+  const $ = s => hud.querySelector(s);
+  let U = [], tour = 1, camp = 0, sel = null, etat = "libre", portee = null, cibles = [], occupe = false, fini = false, ok = false, bg = null;
+  let VW = 5.6 * CS, camX = 0, camY = 0, fx = [];
+  const WW = (CW * 2 + M * 2) * 64, WH = (CH * 2 + M * 2) * 64;
+  const C2 = (cx, cy) => [(M * 64) + cx * CS + CS / 2, (M * 64) + cy * CS + CS / 2];   // centre d'une case
+  const clamp = () => { camX = Math.max(0, Math.min(WW - c.width, camX)); camY = Math.max(-40, Math.min(WH - c.height + 130 * c.width / phone.clientWidth, camY)); };
+  const size = () => { const w = phone.clientWidth, h = phone.clientHeight; c.width = Math.round(VW); c.height = Math.round(h * c.width / w); x.imageSmoothingEnabled = false; clamp(); };
+  const viser = (cx, cy) => { const [X, Y] = C2(cx, cy); camX = X - c.width / 2; camY = Y - c.height * .45; clamp(); };
+  size(); addEventListener("resize", size);
+  const dire = (t, good) => { ban.textContent = t; ban.classList.toggle("good", !!good); ban.classList.add("on"); clearTimeout(ban._t); ban._t = setTimeout(() => ban.classList.remove("on"), 1800); };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  function nouvelle(){
+    U = DEPART.map(([s, t, cx, cy], i) => ({id: i, s, t, x: cx, y: cy, hp: 10, fait: false, px: cx, py: cy, face: s ? -1 : 1, mode: "idle", t0: Math.random() * 3, mort: 0}));
+    tour = 1; camp = 0; sel = null; etat = "libre"; fini = false; occupe = false; viser(3, 8); maj();
+  }
+  const ici = (cx, cy) => U.find(u => u.hp > 0 && u.x === cx && u.y === cy);
+  // déplacements possibles (coût du terrain, on traverse ses alliés, pas les ennemis)
+  function zone(u){
+    const T = TYPES[u.t], best = new Map([[u.x + "," + u.y, 0]]), from = new Map(), file = [[u.x, u.y]];
+    while (file.length){ const [cx, cy] = file.shift(), d0 = best.get(cx + "," + cy);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= CW || ny >= CH) continue;
+        let cout = ter(nx, ny).cout; if (u.t === "cav" && CARTE[ny][nx] === "F") cout = 3;
+        const o = ici(nx, ny); if (o && o.s !== u.s) continue;
+        const d = d0 + cout; if (d > T.mv) continue; const k = nx + "," + ny; if (!best.has(k) || best.get(k) > d){ best.set(k, d); from.set(k, cx + "," + cy); file.push([nx, ny]); } } }
+    const fin = [...best.keys()].filter(k => { const [a, b] = k.split(",").map(Number); const o = ici(a, b); return !o || o === u; });
+    return {fin: new Set(fin), from};
+  }
+  const chemin = (z, u, k) => { const p = []; while (k && k !== u.x + "," + u.y){ p.unshift(k.split(",").map(Number)); k = z.from.get(k); } return p; };
+  const dist = (a, b, ax, ay) => Math.abs((ax ?? a.x) - b.x) + Math.abs((ay ?? a.y) - b.y);
+  const aPortee = (a, b, ax, ay) => { const d = dist(a, b, ax, ay), r = TYPES[a.t].rng; return d >= r[0] && d <= r[1]; };
+  function degats(a, b){
+    const A = TYPES[a.t], m = (A.bonus && A.bonus[b.t]) || 1, def = ter(b.x, b.y).def + (TYPES[b.t].def || 0);
+    return Math.max(1, Math.round(A.atk * m * (a.hp / 10) * (1 - def * .09) * (0.92 + Math.random() * .16)));
+  }
+
+  /* ---------- animations ---------- */
+  async function marcher(u, p){
+    u.mode = "walk";
+    for (const [nx, ny] of p){ const ox = u.px, oy = u.py, t0 = performance.now(); if (nx !== u.x) u.face = Math.sign(nx - u.x);
+      u.x = nx; u.y = ny; while (true){ const k = Math.min(1, (performance.now() - t0) / 170); u.px = ox + (nx - ox) * k; u.py = oy + (ny - oy) * k; if (k >= 1) break; await wait(16); } }
+    u.mode = "idle";
+  }
+  const pouf = (cx, cy, n) => { const [X, Y] = C2(cx, cy); for (let i = 0; i < n; i++) fx.push({k: "dust", X: X + (Math.random() - .5) * 70, Y: Y + (Math.random() - .3) * 40, t0: performance.now() + i * 90}); };
+  const chiffre = (cx, cy, t, col) => { const [X, Y] = C2(cx, cy); fx.push({k: "txt", X, Y: Y - 70, t, col, t0: performance.now()}); };
+  async function frapper(a, b, d){   // A : le coup se joue sur la carte
+    const avant = nbSoldats(b);
+    if (b.x !== a.x) a.face = Math.sign(b.x - a.x);
+    a.mode = "atk"; a.t0 = performance.now() / 1000;
+    if (TYPES[a.t].rng[1] > 1){ const [X0, Y0] = C2(a.x, a.y), [X1, Y1] = C2(b.x, b.y); fx.push({k: a.t === "gnoll" ? "bone" : "arrow", X0, Y0, X1, Y1, t0: performance.now() + 250}); }
+    await wait(520);
+    b.hp = Math.max(0, b.hp - d); chiffre(b.x, b.y, "-" + d, "#ffe0a0"); pouf(b.x, b.y, Math.max(1, avant - (b.hp > 0 ? nbSoldats(b) : 0)));
+    await wait(380); a.mode = "idle";
+    if (b.hp <= 0){ b.mort = performance.now(); pouf(b.x, b.y, 3); }
+  }
+  async function combat(a, b){
+    occupe = true;
+    if (b.x !== a.x) a.face = Math.sign(b.x - a.x); if (a.x !== b.x) b.face = Math.sign(a.x - b.x);
+    const d = degats(a, b), survit = b.hp - d > 0;
+    let r = 0;
+    if (survit && aPortee(b, a) && !TYPES[b.t].soin){ const hb = b.hp; b.hp = hb - d; r = Math.max(1, Math.round(degats(b, a) * .8)); b.hp = hb; }
+    if (DUEL){ await gros(a, b, d, r); for (const u of [a, b]) if (u.hp <= 0){ u.mort = performance.now(); pouf(u.x, u.y, 3); } }
+    else { await frapper(a, b, d); if (r && b.hp > 0){ await wait(150); await frapper(b, a, r); } }
+    occupe = false; verifier();
+  }
+  async function soigner(m, b){
+    occupe = true; m.mode = "atk"; m.t0 = performance.now() / 1000; const [X, Y] = C2(b.x, b.y); fx.push({k: "heal", X, Y, t0: performance.now()});
+    await wait(700); const v = Math.min(10 - b.hp, TYPES.moine.soin); b.hp += v; chiffre(b.x, b.y, "+" + v, "#c8ffb0"); m.mode = "idle"; occupe = false;
+  }
+  // B : le gros plan
+  async function gros(a, b, d, r){
+    const nous = a.s === 0 ? a : b, eux = a.s === 0 ? b : a;
+    duel.querySelector(".noms").children[0].textContent = TYPES[nous.t].nm + " " + Math.ceil(nous.hp);
+    duel.querySelector(".noms").children[1].textContent = TYPES[eux.t].nm + " " + Math.ceil(eux.hp);
+    duel.classList.add("on"); const t0 = performance.now(); let phase = 0, coups = [[a, b, d]]; if (r) coups.push([b, a, r]);
+    const dx = dc.getContext("2d"); dx.imageSmoothingEnabled = false;
+    const nAvant = new Map([[a, nbSoldats(a)], [b, nbSoldats(b)]]); let ciVu = 0;
+    await new Promise(fin => {
+      (function f(){
+        const t = (performance.now() - t0) / 1000, ci = Math.min(coups.length - 1, Math.floor(t / 1.25)), [ca, cb, cd] = coups[ci], tc = t - ci * 1.25;
+        if (ci !== ciVu){ ciVu = ci; nAvant.set(a, nbSoldats(a)); nAvant.set(b, nbSoldats(b)); }
+        if (tc > .55 && cb._touche !== ci + 1){ cb._touche = ci + 1; cb.hp = Math.max(0, cb.hp - cd); }
+        dx.clearRect(0, 0, 640, 300); const tm = L.tm; for (let i = 0; i < 10; i++) for (let j = 0; j < 5; j++) dx.drawImage(tm, 64, 64, 64, 64, i * 64, j * 64, 64, 64);
+        for (const [u, cote] of [[nous, -1], [eux, 1]]){ const T = TYPES[u.t], n = u.hp > 0 ? nbSoldats(u) : 0, n0 = nAvant.get(u), anim = u === ca && tc < 1 ? 2 : 0, k = T.seul ? 1.2 : 1;
+          const set = strip(L["u/" + u.t + "/" + T.anim[anim]], T.fs), f = set[Math.max(0, Math.floor((anim ? tc : t) * 10)) % set.length];
+          for (let i = 0; i < Math.max(n, n0); i++){ const vivant = i < n && u.hp > 0; const X = 320 + cote * (110 + (i % 2) * 90 + (T.seul ? 40 : 0)), Y = 150 + (Math.floor(i / 2) - .5) * (T.seul ? 0 : 90) + (i % 2) * 20 + (T.seul ? 60 : 30);
+            if (!vivant){ if (tc < 1.1 && u === cb) { dx.globalAlpha = Math.max(0, 1 - (tc - .55) * 2); } else continue; }
+            dx.save(); dx.translate(X, 0); if (cote > 0) dx.scale(-1, 1); dx.drawImage(f, -T.fx * k * (T.fs > 256 ? .55 : .75), Y - T.fy * k * (T.fs > 256 ? .55 : .75), T.fs * k * (T.fs > 256 ? .55 : .75), f.height * k * (T.fs > 256 ? .55 : .75)); dx.restore(); dx.globalAlpha = 1; }
+          if (u === cb && tc > .55 && tc < 1.2){ dx.font = "bold 40px Cinzel, serif"; dx.fillStyle = "#ffe0a0"; dx.strokeStyle = "#3a1408"; dx.lineWidth = 6; dx.textAlign = "center"; const tx = 320 + cote * 170, ty = 80 - (tc - .55) * 40; dx.strokeText("-" + cd, tx, ty); dx.fillText("-" + cd, tx, ty); }
+        }
+        if (t < coups.length * 1.25 + .2) requestAnimationFrame(f); else { coups.forEach(([, cb]) => delete cb._touche); duel.classList.remove("on"); setTimeout(fin, 200); }
+      })();
+    });
+  }
+
+  /* ---------- règles ---------- */
+  function verifier(){
+    const roi = U.find(u => u.t === "roi"), troll = U.find(u => u.t === "troll");
+    if (roi.hp <= 0 && !fini){ fini = true; dire("LE ROI EST TOMBE · DEFAITE"); setTimeout(nouvelle, 3000); }
+    else if ((troll.hp <= 0 || !U.some(u => u.s === 1 && u.hp > 0)) && !fini){ fini = true; dire("LE TROLL EST ABATTU · VICTOIRE", true); setTimeout(nouvelle, 3500); }
+    maj();
+  }
+  function choisir(u){ sel = u; etat = "bouge"; portee = zone(u); cibles = []; maj(); }
+  function apresMarche(u){
+    etat = "action"; portee = null;
+    cibles = U.filter(o => o.hp > 0 && (TYPES[u.t].soin ? (o.s === u.s && o !== u && dist(u, o) === 1 && o.hp < 10) : (o.s !== u.s && aPortee(u, o))));
+    if (!cibles.length){ finir(u); } maj();
+  }
+  function finir(u){ u.fait = true; sel = null; etat = "libre"; portee = null; cibles = []; maj();
+    if (!fini && U.every(o => o.s !== 0 || o.hp <= 0 || o.fait)) setTimeout(() => { if (camp === 0 && !occupe) tourMonstres(); }, 400); }
+  async function toucher(cx, cy){
+    if (occupe || fini || camp !== 0 || !ok) return;
+    const o = ici(cx, cy);
+    if (etat === "libre"){ if (o && o.s === 0 && !o.fait) choisir(o); else { sel = o || null; maj(); } return; }
+    if (etat === "bouge"){
+      const k = cx + "," + cy;
+      if (portee.fin.has(k)){ const u = sel, p = chemin(portee, u, k); occupe = true; portee = null; maj(); await marcher(u, p); occupe = false; apresMarche(u); }
+      else if (o && o.s === 0 && !o.fait) choisir(o);
+      else { sel = null; etat = "libre"; portee = null; maj(); }
+      return;
+    }
+    if (etat === "action"){
+      const cible = cibles.find(t => t.x === cx && t.y === cy); if (!cible) return;
+      const u = sel; cibles = []; maj(); if (TYPES[u.t].soin) await soigner(u, cible); else await combat(u, cible); finir(u);
+    }
+  }
+  async function tourMonstres(){
+    if (fini) return;
+    camp = 1; sel = null; etat = "libre"; maj(); dire("LES MONSTRES ATTAQUENT");
+    await wait(900);
+    const ordre = U.filter(u => u.s === 1 && u.hp > 0).sort((a, b) => (a.t === "troll") - (b.t === "troll"));
+    for (const m of ordre){
+      if (fini || m.hp <= 0) continue;
+      const nous = U.filter(u => u.s === 0 && u.hp > 0); if (!nous.length) break;
+      if (m.t === "troll" && !nous.some(u => dist(u, m) <= 5)) continue;   // le troll garde sa colline
+      const z = zone(m); let best = null;
+      for (const k of z.fin){ const [ax, ay] = k.split(",").map(Number);
+        for (const t of nous) if (aPortee(m, t, ax, ay)){ const s = TYPES[m.t].atk * ((TYPES[m.t].bonus || {})[t.t] || 1) * (1 - ter(t.x, t.y).def * .09) + (t.t === "roi" ? 4 : 0) + (10 - t.hp) * .3 + ter(ax, ay).def * .4;
+          if (!best || s > best.s) best = {s, k, t}; } }
+      if (!best){ let bk = null, bd = 1e9; const roi = nous.find(u => u.t === "roi") || nous[0];
+        for (const k of z.fin){ const [ax, ay] = k.split(",").map(Number), d = Math.min(...nous.map(t => Math.abs(t.x - ax) + Math.abs(t.y - ay))) + .3 * (Math.abs(roi.x - ax) + Math.abs(roi.y - ay)); if (d < bd){ bd = d; bk = k; } }
+        best = {k: bk}; }
+      viser(m.x, m.y); await wait(250);
+      const p = chemin(z, m, best.k); if (p.length) await marcher(m, p);
+      if (best.t && best.t.hp > 0){ await wait(150); await combat(m, best.t); }
+      await wait(250);
+    }
+    if (fini) return;
+    U.forEach(u => u.fait = false); tour++; camp = 0; const roi = U.find(u => u.t === "roi"); if (roi && roi.hp > 0) viser(roi.x, roi.y); maj(); dire("TOUR " + tour + " · A TOI", true);
+  }
+  $(".fin").addEventListener("click", e => { e.stopPropagation(); if (camp === 0 && !occupe && !fini){ sel = null; etat = "libre"; portee = null; cibles = []; tourMonstres(); } });
+  $(".att").addEventListener("click", e => { e.stopPropagation(); if (sel && sel.s === 0 && !occupe && (etat === "action" || etat === "bouge")) finir(sel); });
+  $(".ann").addEventListener("click", e => { e.stopPropagation(); if (etat === "bouge"){ sel = null; etat = "libre"; portee = null; maj(); } });
+  function maj(){
+    $(".tour").textContent = "TOUR " + tour + (camp === 0 ? " · A TOI" : " · MONSTRES"); $(".tour").classList.toggle("eux", camp === 1);
+    $(".fin").disabled = camp !== 0 || occupe;
+    const u = sel, img = $(".info img");
+    if (u){ const T = TYPES[u.t], tt = ter(u.x, u.y); img.src = IMG[T.av]; img.style.visibility = "visible";
+      $(".info b").textContent = T.nm + (u.s ? "" : "");
+      $(".info .st").textContent = `PV ${Math.ceil(u.hp)} · ${T.seul ? "chef" : nbSoldats(u) + " soldats"} · marche ${T.mv} · portee ${T.rng[0] === T.rng[1] ? T.rng[0] : T.rng.join("-")}`;
+      $(".info .hint").textContent = etat === "bouge" ? "Touche une case bleue" : etat === "action" ? (TYPES[u.t].soin ? "Touche un allie (vert) ou ATTENDRE" : "Touche un ennemi (rouge) ou ATTENDRE") : `${T.note} · ${tt.nm}${tt.def ? " +" + tt.def + " def." : ""}`;
+    } else { img.style.visibility = "hidden"; $(".info b").textContent = camp === 0 ? "A TOI DE JOUER" : "LES MONSTRES JOUENT";
+      $(".info .st").textContent = "Abats le troll, garde le roi en vie."; $(".info .hint").textContent = "Touche une escouade bleue"; }
+    $(".att").hidden = !(sel && sel.s === 0 && (etat === "action" || etat === "bouge")); $(".ann").hidden = etat !== "bouge";
+  }
+
+  /* ---------- le décor ---------- */
+  function fond(){
+    bg = cv(WW, WH); const b = bg.getContext("2d"); b.imageSmoothingEnabled = false;
+    const NX = WW / 64, NY = WH / 64, cel = (i, j) => { const cx = Math.floor((i - M) / 2), cy = Math.floor((j - M) / 2); return cx >= 0 && cy >= 0 && cx < CW && cy < CH ? CARTE[cy][cx] : "."; };
+    const put = (im, c0, r0, i, j) => b.drawImage(im, c0 * 64, r0 * 64, 64, 64, i * 64, j * 64, 64, 64);
+    const terre = (i, j) => i >= 0 && j >= 0 && i < NX && j < NY && cel(i, j) !== "W";
+    for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++){ b.drawImage(L.eau, i * 64, j * 64, 64, 64);
+      if (terre(i, j)){ const [cc, r] = auto(terre(i, j - 1) || j === 0, terre(i, j + 1) || j === NY - 1, terre(i - 1, j) || i === 0, terre(i + 1, j) || i === NX - 1); put(L.tm, cc, r, i, j); } }
+    const isP = (i, j) => cel(i, j) === "P" || ((j < M || j >= NY - M) && Math.floor((i - M) / 2) === 3);
+    for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) if (isP(i, j)){ const [cc, r] = auto(isP(i, j - 1) || j === 0, isP(i, j + 1) || j === NY - 1, isP(i - 1, j), isP(i + 1, j)); put(L.sable, 5 + cc, r, i, j); }
+    const inH = (i, j) => cel(i, j) === "H";
+    for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++){
+      if (inH(i, j)){ const [cc, r] = auto(inH(i, j - 1), inH(i, j + 1), inH(i - 1, j), inH(i + 1, j)); put(L.tm, 5 + cc, r, i, j); }
+      else if (inH(i, j - 1)){ const w = inH(i - 1, j - 1), e = inH(i + 1, j - 1); put(L.tm, 5 + (w ? (e ? 1 : 2) : (e ? 0 : 3)), 4, i, j); } }
+    // quadrillage léger
+    b.strokeStyle = "rgba(30,40,10,.13)"; b.lineWidth = 2;
+    for (let cx = 0; cx <= CW; cx++){ b.beginPath(); b.moveTo(M * 64 + cx * CS, M * 64); b.lineTo(M * 64 + cx * CS, M * 64 + CH * CS); b.stroke(); }
+    for (let cy = 0; cy <= CH; cy++){ b.beginPath(); b.moveTo(M * 64, M * 64 + cy * CS); b.lineTo(M * 64 + CW * CS, M * 64 + cy * CS); b.stroke(); }
+  }
+  const objets = [];
+  { let seed = id === "A" ? 5 : 9; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++){ const ch = CARTE[cy][cx], [X, Y] = C2(cx, cy);
+      if (ch === "F") for (let k = 0; k < 2; k++) objets.push({k: "tree", n: Math.floor(rnd() * 4), X: X + (k ? 26 : -24) + (rnd() - .5) * 10, Y: Y + (k ? 40 : 6), ph: rnd() * 8});
+      if (ch === "V") objets.push({k: "house", n: 1 + Math.floor(rnd() * 3), X, Y: Y + 46});
+      if (ch === "." && rnd() < .18) objets.push({k: rnd() < .5 ? "bush" : "rock", X: X + (rnd() - .5) * 70, Y: Y + (rnd() - .5) * 60, ph: rnd() * 8}); }
+    for (let i = 0; i < CW * 2 + 4; i += 1.6) for (const j of [-0.4, CH * 2 + 4.6]){ if (Math.abs(i - (M + 7)) < 1.5) continue; objets.push({k: "tree", n: Math.floor(rnd() * 4), X: i * 64 + 40, Y: j * 64 + 90 + rnd() * 20, ph: rnd() * 8}); }
+    for (let j = 1; j < CH * 2 + 4; j += 1.7) for (const i of [-0.3, CW * 2 + 3.6]) objets.push({k: "tree", n: Math.floor(rnd() * 4), X: i * 64 + 50, Y: j * 64 + 90, ph: rnd() * 8});
+    objets.push({k: "castle", X: M * 64 + 3.5 * CS, Y: M * 64 + CH * CS + 120}); objets.push({k: "hut", X: M * 64 + 1.2 * CS, Y: M * 64 - 10}); }
+  load().then(() => { fond(); ok = true; nouvelle(); });
+
+  /* ---------- au doigt ---------- */
+  let drag = null;
+  phone.addEventListener("pointerdown", e => { if (e.target.closest("button")) return; drag = {x: e.clientX, y: e.clientY, cx: camX, cy: camY, done: false}; });
+  phone.addEventListener("pointermove", e => { if (!drag) return; const k = c.width / c.getBoundingClientRect().width, dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.hypot(dx, dy) > 10) drag.done = true; if (drag.done){ camX = drag.cx - dx * k; camY = drag.cy - dy * k; clamp(); } });
+  phone.addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || d.done || e.target.closest("button, .info")) return;
+    const r = c.getBoundingClientRect(), X = (e.clientX - r.left) / r.width * c.width + camX, Y = (e.clientY - r.top) / r.height * c.height + camY;
+    const cx = Math.floor((X - M * 64) / CS), cy = Math.floor((Y - M * 64) / CS); if (cx >= 0 && cy >= 0 && cx < CW && cy < CH) toucher(cx, cy); });
+
+  /* ---------- le dessin ---------- */
+  const f8 = (im, fs, n) => { const s = strip(im, fs); return s[((n % s.length) + s.length) % s.length]; };
+  const POS = {1: [[0, 8]], 2: [[-26, 6], [26, 6]], 3: [[-28, -8], [28, -8], [0, 30]], 4: [[-28, -12], [28, -12], [-28, 28], [28, 28]]};
+  function frame(now){
+    const T = now / 1000;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = "#4a9aa8"; x.fillRect(0, 0, c.width, c.height);
+    if (!ok){ requestAnimationFrame(frame); return; }
+    x.setTransform(1, 0, 0, 1, -Math.round(camX), -Math.round(camY)); x.drawImage(bg, 0, 0);
+    // cases de déplacement, d'attaque, de soin
+    const caseCol = (cx, cy, col) => { x.fillStyle = col; x.fillRect(M * 64 + cx * CS + 3, M * 64 + cy * CS + 3, CS - 6, CS - 6); };
+    if (portee) for (const k of portee.fin){ const [a, b] = k.split(",").map(Number); caseCol(a, b, "rgba(70,140,255,.32)"); }
+    if (sel && etat === "bouge" && portee){ const z = portee; for (const o of U) if (o.hp > 0 && o.s !== sel.s && [...z.fin].some(k => { const [a, b] = k.split(",").map(Number); return aPortee(sel, o, a, b); })) caseCol(o.x, o.y, "rgba(255,70,50,.18)"); }
+    for (const t of cibles) caseCol(t.x, t.y, TYPES[sel.t].soin ? "rgba(90,230,90,.42)" : "rgba(255,60,40,.45)");
+    if (sel){ x.strokeStyle = "#fff4c0"; x.lineWidth = 6; x.strokeRect(M * 64 + sel.x * CS + 4, M * 64 + sel.y * CS + 4, CS - 8, CS - 8); }
+    const list = [];
+    for (const o of objets){
+      if (o.k === "tree"){ const im = L["tree" + (o.n + 1)], tall = im.height === 256; list.push([o.Y, () => x.drawImage(f8(im, 192, Math.floor(T * 8 + o.ph)), Math.round(o.X - 96), Math.round(o.Y - (tall ? 238 : 168)))]); }
+      else if (o.k === "bush") list.push([o.Y, () => x.drawImage(f8(L.bush1, 128, Math.floor(T * 8 + o.ph)), Math.round(o.X - 64), Math.round(o.Y - 78))]);
+      else if (o.k === "rock") list.push([o.Y - 20, () => x.drawImage(L.rock1, Math.round(o.X - 32), Math.round(o.Y - 48))]);
+      else if (o.k === "house") list.push([o.Y, () => x.drawImage(L["house" + o.n], Math.round(o.X - 64), Math.round(o.Y - 170))]);
+      else if (o.k === "castle") list.push([o.Y, () => x.drawImage(L.castle, Math.round(o.X - 160), Math.round(o.Y - 246))]);
+      else if (o.k === "hut") list.push([o.Y, () => x.drawImage(f8(L.hut, 256, Math.floor(T * 8)), Math.round(o.X - 128), Math.round(o.Y - 240))]);
+    }
+    for (const u of U){
+      const T0 = TYPES[u.t]; if (u.hp <= 0 && (!u.mort || now - u.mort > 700)) continue;
+      const [X, Y] = C2(u.px, u.py), n = u.hp > 0 ? nbSoldats(u) : 0, fade = u.hp <= 0 ? 1 - (now - u.mort) / 700 : 1;
+      const anim = T0.anim[u.mode === "walk" ? 1 : u.mode === "atk" ? 2 : 0], set = strip(L["u/" + u.t + "/" + anim], T0.fs);
+      const pos = T0.seul ? POS[1] : POS[Math.max(1, n)] || POS[4];
+      pos.slice(0, Math.max(1, n)).forEach(([ox, oy], i) => {
+        const fr = set[Math.min(set.length - 1, Math.max(0, Math.floor(u.mode === "atk" ? Math.max(0, T - u.t0) * 12 : T * 9 + u.t0 + i * .7) % set.length))];
+        list.push([Y + oy, () => {
+          if (u.fait && camp === 0 && u.s === 0) x.filter = "saturate(.25) brightness(.85)";
+          x.globalAlpha = Math.max(0, fade);
+          x.fillStyle = "rgba(30,40,10,.25)"; x.beginPath(); x.ellipse(Math.round(X + ox), Math.round(Y + oy), 24 * T0.k * (T0.seul ? 1.6 : 1), 9 * T0.k, 0, 0, Math.PI * 2); x.fill();
+          const k = T0.k, w = T0.fs * k;
+          if (u.face < 0){ x.save(); x.translate(Math.round(X + ox), 0); x.scale(-1, 1); x.drawImage(fr, -T0.fx * k, Math.round(Y + oy - T0.fy * k), w, fr.height * k); x.restore(); }
+          else x.drawImage(fr, Math.round(X + ox - T0.fx * k), Math.round(Y + oy - T0.fy * k), w, fr.height * k);
+          x.filter = "none"; x.globalAlpha = 1; }]);
+      });
+      if (u.hp > 0) list.push([Y + 60, () => { const bx = X + 42, by = Y + 44; x.fillStyle = u.s ? "#a8301e" : "#2c5aa8"; x.strokeStyle = "#1a1008"; x.lineWidth = 4; x.beginPath(); x.arc(bx, by, 17, 0, Math.PI * 2); x.fill(); x.stroke();
+        x.fillStyle = "#fff"; x.font = "bold 22px Cinzel, Georgia, serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(String(Math.ceil(u.hp)), bx, by + 1); if (T0.seul){ x.fillStyle = "#e8c46a"; x.fillRect(bx - 10, by - 25, 20, 6); } }]);
+    }
+    fx = fx.filter(f => now - f.t0 < 1200);
+    for (const f of fx){ const t = (now - f.t0) / 1000; if (t < 0) continue;
+      if (f.k === "dust") list.push([1e9, () => x.drawImage(f8(L.dust, 64, Math.floor(t * 14)), Math.round(f.X - 48), Math.round(f.Y - 80), 96, 96)]);
+      if (f.k === "heal") list.push([1e9, () => x.drawImage(f8(L.healfx, 192, Math.floor(t * 14)), Math.round(f.X - 96), Math.round(f.Y - 130))]);
+      if (f.k === "txt") list.push([1e9, () => { x.font = "bold 40px Cinzel, Georgia, serif"; x.textAlign = "center"; x.lineWidth = 7; x.strokeStyle = "#3a1408"; x.fillStyle = f.col; const yy = f.Y - t * 40; x.strokeText(f.t, f.X, yy); x.fillText(f.t, f.X, yy); }]);
+      if ((f.k === "arrow" || f.k === "bone") && t < .35){ const u0 = t / .35, X = f.X0 + (f.X1 - f.X0) * u0, Y = f.Y0 + (f.Y1 - f.Y0) * u0 - Math.sin(u0 * Math.PI) * 90 - 50;
+        list.push([1e9, () => { x.save(); x.translate(X, Y); x.rotate(f.k === "bone" ? t * 20 : Math.atan2(f.Y1 - f.Y0 - Math.cos(u0 * Math.PI) * 280, f.X1 - f.X0)); x.drawImage(f.k === "bone" ? f8(L.bone, 64, 0) : L.arrow, -32, -32); x.restore(); }]); }
+    }
+    list.sort((a, b) => a[0] - b[0]); for (const [, f] of list) f();
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  window["partie" + id] = {get U(){ return U; }, toucher, tourMonstres, get etat(){ return etat; }};   // pour les essais
+}
+partie("A", document.getElementById("pA")); partie("B", document.getElementById("pB"));
+})();
+</script>

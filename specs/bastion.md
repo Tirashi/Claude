@@ -154,4 +154,17 @@ L'utilisateur a acheté l'**Enemy Pack** et **Warfare** ; récupérés avec l'AP
 
 Maquette 9 : https://claude.ai/artifact/6PrQpKxp5vk34jaG7EmUSF — page source `outils/bastion-maquette/source-9.html`, `fabriquer.py 9 <Free Pack> <ancienne version> <Enemy Pack> <sortie>` ; la direction A de la maquette 8 (prairie, armée bleue) contre les monstres : **A** gobelins à torche et à lance, gnolls, **troll** en chef ; **B** squelettes et voleurs, **minotaure** en chef ; pour la maquette, le chef vient dès la 1re vague.
 
+Retour (06/11) : « fais une maquette pour voir ce que ça donnerait **comme un Wargroove** ; au lieu d'une unité sur la carte, un groupe comme dans la maquette ».
+
+## Maquette 10 : tactique au tour par tour, façon Wargroove (06/11)
+https://claude.ai/artifact/VdGCvnzk4mfP2V72h8dEiB — page source `outils/bastion-maquette/source-10.html` (moteur à part, sans la simulation des maquettes précédentes), `fabriquer.py 10 <Free Pack> <ancienne version> <Enemy Pack> <Warfare> <sortie>` (58 images). Jouable :
+- Carte de **7 × 11 cases** (une case = 2 × 2 tuiles de 64 px, quadrillage léger) : plaine, forêt (+2 déf., coûte 2), colline (+3, coûte 2), chemin (0), village (+3), lac (infranchissable) ; château bleu en bas, cabane gobeline en haut ; zoom 5,6 cases de large, défilement au doigt.
+- **Escouades** : 1 à 4 soldats selon les PV (sur 10, pastille bleue ou rouge) ; les chefs sont seuls (pastille avec une couronne). Bleus : **roi** (Warfare, le perdre = défaite), guerriers, lanciers (×1,6 contre cavaliers, ×1,8 contre le troll), archers (portée 2-3, ne ripostent pas au contact), moines (soignent +3 un allié voisin), cavaliers (Warfare, marche 6, forts contre archers, gnolls, moines). Monstres : gobelins à torche, gobelins à lance (forts contre les cavaliers), gnolls (lancent des os à 2 cases), **troll** (chef, garde sa colline tant que personne n'approche à 5 cases ; l'abattre = victoire).
+- Tour du joueur : toucher une escouade → cases bleues (déplacement, coût du terrain, on traverse ses alliés) et cases rouges pâles (ennemis atteignables) → toucher une case → cibles en rouge (ou vertes pour les moines) → attaquer, ou ATTENDRE ; ANNULER avant de bouger ; FIN DU TOUR (automatique quand tout le monde a joué). Escouades qui ont joué en gris.
+- Dégâts = force × bonus × (PV/10) × (1 − défense du terrain × 9 %) ± 8 % ; riposte à 80 % si la cible survit et peut atteindre l'attaquant.
+- Monstres : chacun choisit la case et la cible qui rapportent le plus (le roi vaut plus, les blessés aussi), sinon avance vers l'armée bleue.
+- Panneau du bas : portrait (avatars des packs), PV, soldats, marche, portée, terrain.
+- **A** : le combat se joue sur la carte (coup, flèche ou os qui vole, chiffre des dégâts, soldats qui tombent dans la poussière, riposte). **B** : chaque attaque ouvre une **bande de gros plan** au milieu de l'écran (les deux escouades en grand face à face, coup puis riposte, soldats qui disparaissent).
+- Essai automatique dans Chromium : choix, déplacement, attaque, tour des monstres, pas d'erreur.
+
 Retours : à venir.
