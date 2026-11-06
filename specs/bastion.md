@@ -57,3 +57,12 @@ https://claude.ai/artifact/EUUdLdBMUsWXTd5nPqPTND — fabriquée par `outils/bas
 - Licences : reodesuxz (usage libre, pas de revente ni redistribution, pas d'entraînement d'IA ; crédit apprécié) ; LOWPO gratuit (CC0). À citer dans `credits/index.html` dès qu'ils entrent dans le jeu.
 
 Retours (06/11) : **les décors reodesuxz sont « vraiment pas mal »** (gardés) ; **les soldats LOWPO gratuits sont « catastrophiques »** (figés bras écartés, sans animation) : à remplacer.
+
+## Maquette 4 : les soldats dessinés par le code (06/11)
+Choix de l'utilisateur : dessiner les soldats par le code plutôt qu'acheter un pack. https://claude.ai/artifact/WhXCAVxBoJJeyWd4yT5zNY — page source `outils/bastion-maquette/source-4.html`, fabriquée par `fabriquer.py 4` (décors reodesuxz seulement).
+- Figurines d'environ 60 formes simples à facettes (`figurine(kind, team)`) : jambes et bras articulés, cuirasse à lamelles, jupe de lamelles, épaulières ; **samouraï** (kabuto à croissant doré, katana), **archer** (jingasa, grand arc, carquois), **lancier** (jingasa, yari), **rônin** (chapeau de paille, kimono usé, katana), **oni** (peau rouge, cornes, massue cloutée, 1,7 fois plus grand). Bannière sashimono dans le dos aux couleurs de l'escouade avec un rond blanc ; armure teintée de la même couleur.
+- Animations par le code (`anim(f, mode, t)`) : marche (jambes et bras en balancier), frappe (sabre levé puis abattu, massue), coup de lance (lance abaissée vers l'avant), tir (arc tendu, corde tirée), repos (respiration). Les soldats se tournent vers leur marche ou vers l'ennemi le plus proche ; tout ralentit avec le temps.
+- À droite : le gros plan des cinq figurines, qui alterne marche, attaque et repos.
+- Matériaux : MeshPhongMaterial à facettes (MeshLambertMaterial n'a pas `flatShading` en r128).
+
+Retours : à venir.
