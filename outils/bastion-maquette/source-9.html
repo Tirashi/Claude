@@ -1,0 +1,317 @@
+<title>Bastion, maquette 9</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel:wght@600;800&family=Shippori+Mincho:wght@600;800&display=swap">
+<style>
+/* Maquette 9 de « Bastion » : la maquette 8 (direction A, prairie et armée bleue du Free Pack de Tiny Swords) avec les monstres
+   de l'Enemy Pack (Pixel Frog, acheté) : A = gobelins à torche et à lance, gnolls, troll en chef ; B = squelettes et voleurs,
+   minotaure en chef. Fabriquée par fabriquer.py 9 (packs pas dans le dépôt : pas de redistribution). */
+:root{
+  color-scheme: dark;
+  --bg:#15131a; --text:#f0ece4; --dim:#b6aea0; --gold:#e8c46a; --laque:#c8301e;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace;
+  --ouest:"Cinzel", Georgia, serif; --est:"Shippori Mincho", "Yu Mincho", serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(#26222f 1px, transparent 1.5px); background-size:5px 5px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:24px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.intro{max-width:1180px; margin:0 auto 22px; display:flex; flex-direction:column; gap:8px}
+.intro h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-shadow:3px 3px 0 #7a4a1a, 5px 5px 0 #000}
+.intro p{margin:0; max-width:76ch; color:var(--dim)}
+.intro b{color:var(--text); font-weight:400}
+.grid{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:28px; justify-items:center}
+.col{display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px; min-width:0}
+.col > h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; line-height:1.6; color:var(--gold)}
+.col > h2 span{color:#e98a6a}
+.col > p{margin:0; color:var(--dim); font-size:19px}
+canvas.px{image-rendering:pixelated; image-rendering:crisp-edges}
+
+.phone{position:relative; width:100%; max-width:360px; height:700px; overflow:hidden; border:4px solid #000; border-radius:22px; box-shadow:0 0 0 3px #3a3444, 6px 6px 0 3px #000; touch-action:none; user-select:none; -webkit-user-select:none}
+.phone > canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:12px 10px}
+.hud > *{pointer-events:auto}
+.top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.lvl{display:flex; flex-direction:column; gap:3px}
+.lvl b{font-weight:800}
+.pills{display:flex; flex-direction:column; align-items:flex-end; gap:4px}
+.pill{padding:2px 8px; white-space:nowrap}
+.banner{position:absolute; left:10px; right:10px; top:84px; padding:7px 10px; text-align:center; opacity:0; transform:translateY(-6px); transition:opacity .2s, transform .2s; pointer-events:none}
+.banner.on{opacity:1; transform:none}
+.slow{position:absolute; left:50%; bottom:150px; transform:translateX(-50%); padding:4px 12px; opacity:0; transition:opacity .15s; pointer-events:none; white-space:nowrap}
+.phone.slowed .slow{opacity:1}
+.phone::after{content:""; position:absolute; inset:0; pointer-events:none; border:3px solid transparent; border-radius:18px; transition:border-color .15s}
+.hint{text-align:center; margin-bottom:6px; pointer-events:none}
+.cards{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px}
+.card{position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; padding:7px 4px 30px; text-align:center}
+.card .ico{width:32px; height:32px; display:grid; place-items:center; font-size:18px; line-height:1}
+.card .pips{display:flex; gap:3px}
+.card .pips i{width:6px; height:6px}
+.card[aria-pressed="true"]{transform:translateY(-4px)}
+.card .sp{position:absolute; left:5px; right:5px; bottom:5px; height:20px; display:grid; place-items:center; overflow:hidden}
+.card .sp::before{content:""; position:absolute; left:0; top:0; bottom:0; width:var(--cd, 0%); opacity:.35; background:#000}
+.card .sp span{position:relative}
+.turn{position:absolute; top:62px; display:grid; place-items:center; width:34px; height:34px; font-size:20px; line-height:1}
+.turn.z{top:auto; bottom:156px; right:10px}
+
+/* A · Valbrune (parchemin) */
+.thA{background:radial-gradient(circle at 50% 40%, #b8d0d8, #6a8a9a 85%)}
+.thA .lvl b{font-family:var(--ouest); font-size:19px; color:#2a1808; text-shadow:0 1px 0 #f5e8c8}
+.thA .lvl span{color:#3a2410; font-family:var(--ouest); font-size:11px; font-weight:600; letter-spacing:1px}
+.thA .pill{font-family:var(--ouest); font-weight:600; font-size:12px; letter-spacing:1px; color:#f5e8c8; background:#5a3a1a; border:2px solid #2a1808; border-radius:3px}
+.thA .banner{font-family:var(--ouest); font-weight:800; font-size:13px; letter-spacing:1px; color:#f5e8c8; background:#7a2a1a; border:2px solid #2a1808; border-radius:3px; box-shadow:0 3px 0 #2a1808}
+.thA .banner.good{background:#3a5a2a}
+.thA .slow{font-family:var(--ouest); font-weight:800; font-size:13px; letter-spacing:3px; color:#f5e8c8; background:#7a2a1a; border:2px solid #2a1808}
+.thA.slowed::after{border-color:#7a2a1a}
+.thA .hint{color:#2a1808; font-family:var(--ouest); font-size:12px; font-weight:600; text-shadow:0 1px 0 #f5e8c8}
+.thA .card{background:linear-gradient(#f2e3bf, #d9c294); border:2px solid #3a2410; border-radius:4px; box-shadow:0 3px 0 #3a2410; color:#3a2410}
+.thA .card .ico{background:var(--c); border:2px solid #3a2410; border-radius:50%; color:#fff}
+.thA .card .nm{font-family:var(--ouest); font-weight:800; font-size:11px; letter-spacing:1px}
+.thA .card .pips i{background:#3a2410} .thA .card .pips i.off{background:#c4ad80}
+.thA .card .sp{font-family:var(--ouest); font-weight:800; font-size:9px; letter-spacing:1px; color:#f5e8c8; background:#7a2a1a; border-radius:2px}
+.thA .card .sp.ready{background:#b8571a; box-shadow:0 0 8px #ffb84a}
+.thA .card[aria-pressed="true"]{background:linear-gradient(#fff4d6, #ead39c); box-shadow:0 7px 0 #3a2410}
+.thA .turn{background:#f2e3bf; border:2px solid #3a2410; border-radius:50%; color:#3a2410; box-shadow:0 2px 0 #3a2410}
+
+/* B · le temple de la Grue (laque et papier) */
+.thB{background:linear-gradient(#f0b890, #8a6a7a 55%, #3a3450)}
+.thB .lvl b{font-family:var(--est); font-size:20px; color:#fff4e6; text-shadow:0 2px 6px #1a1020}
+.thB .lvl span{color:#ffe0c0; font-family:var(--est); font-weight:600; font-size:12px; letter-spacing:2px; text-shadow:0 1px 3px #1a1020}
+.thB .pill{font-family:var(--est); font-weight:600; font-size:13px; color:#f4ede0; background:#1a1410; border-left:4px solid var(--laque)}
+.thB .banner{font-family:var(--est); font-weight:800; font-size:14px; letter-spacing:2px; color:#f4ede0; background:#1a1410; border-top:3px solid var(--laque); border-bottom:3px solid var(--laque)}
+.thB .banner.good{border-color:var(--gold)}
+.thB .slow{font-family:var(--est); font-weight:800; font-size:14px; letter-spacing:4px; color:#f4ede0; background:var(--laque); border-radius:2px}
+.thB.slowed::after{border-color:var(--laque)}
+.thB .hint{color:#fff4e6; font-family:var(--est); font-size:13px; font-weight:600; text-shadow:0 1px 4px #000}
+.thB .card{background:#f4ede0; border:2px solid #1a1410; color:#1a1410; box-shadow:3px 3px 0 #1a1410}
+.thB .card .ico{background:var(--c); color:#f4ede0; font-family:var(--est); font-weight:800; font-size:17px}
+.thB .card .nm{font-family:var(--est); font-weight:800; font-size:13px}
+.thB .card .pips i{background:var(--laque); border-radius:50%} .thB .card .pips i.off{background:#d6cbb6}
+.thB .card .sp{font-family:var(--est); font-weight:800; font-size:11px; letter-spacing:1px; color:#f4ede0; background:#1a1410}
+.thB .card .sp.ready{background:var(--laque); box-shadow:0 0 8px #ff7a5a}
+.thB .card[aria-pressed="true"]{background:#fff; box-shadow:3px 7px 0 var(--laque)}
+.thB .turn{background:#1a1410; color:#f4ede0; border-left:3px solid var(--laque)}
+
+/* la vitrine des figurines */
+.vit{position:relative; width:100%; border:3px solid #000; border-radius:10px; overflow:hidden}
+.vit canvas{display:block; width:100%; height:auto}
+.vit.thA{background:#d8c8a0} .vit.thB{background:#e8d8c0}
+.vnoms{display:grid; grid-template-columns:repeat(6, 1fr); text-align:center; font-size:15px; color:var(--dim); line-height:1}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<div class="intro">
+  <h1>BASTION · MAQUETTE 9 · LES MONSTRES</h1>
+  <p>La direction <b>A</b> de la maquette 8 (la prairie, l'armée bleue : guerriers, archers, lanciers, moines), avec les <b>monstres de l'Enemy Pack</b> que tu as acheté à la place de l'armée rouge. Pour la maquette, le chef arrive <b>dès la 1<sup>re</sup> vague</b> (puis à la 4<sup>e</sup>). Glisse le doigt pour déplacer le plateau, la loupe ⊖/⊕ le montre en entier.</p>
+</div>
+
+<div class="grid">
+  <section class="col">
+    <h2>A · LES GOBELINS <span>ET LE TROLL</span></h2>
+    <div class="phone thA" id="pA"></div>
+    <p>Gobelins à torche, gobelins à lance et gnolls lanceurs d'os ; le <b>troll</b> à massue, plus de trois tuiles de haut, en chef.</p>
+  </section>
+  <section class="col">
+    <h2>B · LES MORTS <span>ET LE MINOTAURE</span></h2>
+    <div class="phone thA" id="pB"></div>
+    <p>Squelettes et voleurs encapuchonnés ; le <b>minotaure</b> à la hache en chef. L'Enemy Pack a 23 sortes de monstres (et des bonus : cabanes, canons, bateaux).</p>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const IMG = __IMAGES__;   // nom → image (data:image/png;base64)
+
+__SIM__
+
+/* ================= les images ================= */
+const cv = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const charge = s => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = s; });
+const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
+const key = (r, g, b) => "#" + [r, g, b].map(v => v.toString(16).padStart(2, "0")).join("");
+// recolorer : map {"#rrggbb": "#rrggbb"} ou fonction (r, g, b) → [r, g, b] | null
+function recolor(src, map){
+  const c = cv(src.width, src.height), x = c.getContext("2d"); x.drawImage(src, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+  for (let i = 0; i < p.length; i += 4){
+    if (!p[i + 3]) continue;
+    const n = typeof map === "function" ? map(p[i], p[i + 1], p[i + 2]) : (map[key(p[i], p[i + 1], p[i + 2])] && hex(map[key(p[i], p[i + 1], p[i + 2])]));
+    if (n){ p[i] = n[0]; p[i + 1] = n[1]; p[i + 2] = n[2]; }
+  }
+  x.putImageData(d, 0, 0); return c;
+}
+// rampe de couleurs selon la luminosité (pour repeindre une teinte entière)
+const ramp = (cols, test) => { const C = cols.map(hex); return (r, g, b) => { if (test && !test(r, g, b)) return null;
+  const L = (r * .3 + g * .59 + b * .11) / 255; return C[Math.max(0, Math.min(C.length - 1, Math.floor((L - .12) / .6 * C.length)))]; }; };
+const verdure = (r, g, b) => g > r + 6 && g >= b;
+
+/* ================= dessin au pixel (sans flou) ================= */
+function inside(x, y, P){ let o = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++){ const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) o = !o; } return o; }
+function poly(x, P, col){ x.fillStyle = col; const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  for (let py = Math.floor(Math.min(...ys)); py <= Math.ceil(Math.max(...ys)); py++) for (let px = Math.floor(Math.min(...xs)); px <= Math.ceil(Math.max(...xs)); px++) if (inside(px + .5, py + .5, P)) x.fillRect(px, py, 1, 1); }
+function line(x, a, b, col){ x.fillStyle = col; let [x0, y0] = a.map(Math.round), [x1, y1] = b.map(Math.round); const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy;
+  for (;;){ x.fillRect(x0, y0, 1, 1); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy){ e += dy; x0 += sx; } if (e2 <= dx){ e += dx; y0 += sy; } } }
+const dia = (cx, cy, hw) => [[cx - hw, cy], [cx, cy - hw / 2], [cx + hw, cy], [cx, cy + hw / 2]];
+// une boîte iso posée sur la case (repère : centre de la face du dessus de la case = (0, 0)), e = hauteur du bas, h = sa hauteur
+function box(x, hw, e, h, c){ const b = dia(0, -e, hw), t = dia(0, -e - h, hw);
+  poly(x, [t[0], t[3], b[3], b[0]], c[0]); poly(x, [t[3], t[2], b[2], b[3]], c[1]); poly(x, t, c[2]); }
+// un toit en pyramide (c : arrière gauche, arrière droit, avant gauche, avant droit, bord), relevé aux coins si up
+function roof(x, hw, e, rise, c, up){ const d = dia(0, -e, hw), A = [0, -e - rise];
+  poly(x, [d[0], d[1], A], c[0]); poly(x, [d[1], d[2], A], c[1]); poly(x, [d[0], d[3], A], c[2]); poly(x, [d[3], d[2], A], c[3]);
+  line(x, d[0], d[3], c[4]); line(x, d[3], d[2], c[4]);
+  if (up){ x.fillStyle = c[4]; x.fillRect(d[0][0] - 1, d[0][1] - 1, 1, 1); x.fillRect(d[2][0] + 1, d[2][1] - 1, 1, 1); x.fillRect(d[3][0], d[3][1] + 1, 1, 1); } }
+function disc(x, cx, cy, r, col){ x.fillStyle = col; for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j <= r * r + r * .6) x.fillRect(cx + i, cy + j, 1, 1); }
+
+function disc(x, cx, cy, r, col){ x.fillStyle = col; x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill(); }
+const L = {};
+const load = async keys => { await Promise.all(keys.filter(k => !L[k]).map(async k => { L[k] = await charge(IMG[k]); })); };
+const strip = (im, fs) => Array.from({length: Math.round(im.width / fs)}, (_, i) => { const c = cv(fs, im.height); c.getContext("2d").drawImage(im, i * fs, 0, fs, im.height, 0, 0, fs, im.height); return c; });
+const auto = (n, s, w, e) => [w ? (e ? 1 : 2) : (e ? 0 : 3), n ? (s ? 1 : 2) : (s ? 0 : 3)];
+
+/* ================= les deux villages ================= */
+const VILLAGES = {
+  A: {herbe: "tm1", nous: "Blue", monstres: ["Torch Goblin", "Spear Goblin", "Torch Goblin", "Gnoll"], chef: "Troll", fond: "#a8b84a"},
+  B: {herbe: "tm1", nous: "Blue", monstres: ["Skull", "Thief", "Skull"], chef: "Minotaur", fond: "#a8b84a"}};
+// les monstres : taille des cases, pieds, noms des animations
+const MON = {"Torch Goblin": [192, 80, 133, "Idle", "Run", "Attack"], "Spear Goblin": [256, 125, 171, "Idle", "Run", "Attack Fast"], "Gnoll": [192, 97, 135, "Idle", "Walk", "Throw"],
+  "Troll": [384, 195, 297, "Idle", "Walk", "Attack"], "Skull": [192, 95, 130, "Idle", "Run", "Attack"], "Thief": [192, 93, 132, "Idle", "Run", "Attack"], "Minotaur": [320, 132, 214, "Idle", "Walk", "Attack"]};
+const monstre = n => { const [fs, fx, fy, a, b, c] = MON[n], g = k => strip(L["E/" + n + "/" + k], fs); return {fs, fx, fy, idle: g(a), run: g(b), atk: {r: g(c)}}; };
+const TL = 64;
+function armee(c){   // les figurines d'une couleur
+  const u = n => L[c + "/" + n];
+  return {
+    inf: {fs: 192, fx: 96, fy: 135, idle: strip(u("Warrior_Idle"), 192), run: strip(u("Warrior_Run"), 192), atk: {r: strip(u("Warrior_Attack1"), 192).concat(strip(u("Warrior_Attack2"), 192))}, guard: strip(u("Warrior_Guard"), 192)},
+    arc: {fs: 192, fx: 93, fy: 134, idle: strip(u("Archer_Idle"), 192), run: strip(u("Archer_Run"), 192), atk: {r: strip(u("Archer_Shoot"), 192)}},
+    pik: {fs: 320, fx: 150, fy: 196, idle: strip(u("Lancer_Idle"), 320), run: strip(u("Lancer_Run"), 320),
+          atk: {r: strip(u("Lancer_Right_Attack"), 320), dr: strip(u("Lancer_DownRight_Attack"), 320), d: strip(u("Lancer_Down_Attack"), 320), ur: strip(u("Lancer_UpRight_Attack"), 320), u: strip(u("Lancer_Up_Attack"), 320)}},
+    monk: {fs: 192, fx: 96, fy: 132, idle: strip(u("Monk_Idle"), 192), run: strip(u("Monk_Run"), 192), atk: {r: strip(u("Monk_Heal"), 192)}}};
+}
+const cles = v => { const k = [v.herbe, "sable", "ruine", "tree1", "tree2", "tree3", "tree4", "bush1", "bush2", "rock1", "rock2", "fire", "arrow", "healfx"];
+  for (const n of v.monstres.concat([v.chef])) for (const a of MON[n].slice(3)) k.push("E/" + n + "/" + a);
+  for (const c of [v.nous]) for (const n of ["Warrior_Idle", "Warrior_Run", "Warrior_Attack1", "Warrior_Attack2", "Warrior_Guard", "Archer_Idle", "Archer_Run", "Archer_Shoot", "Lancer_Idle", "Lancer_Run",
+    "Lancer_Right_Attack", "Lancer_DownRight_Attack", "Lancer_Down_Attack", "Lancer_UpRight_Attack", "Lancer_Up_Attack", "Monk_Idle", "Monk_Run", "Monk_Heal"]) if (IMG[c + "/" + n]) k.push(c + "/" + n);
+  for (const n of ["House1", "House2", "House3", "Castle"]) k.push(v.nous + "/b/" + n); return k; };
+
+/* ================= le plateau vu du dessus ================= */
+SQ.A[2] = {nm: "LANCES", ic: "↑", c: "#a8742a", sp: "CHARGE"};
+TITLES.A = ["Le hameau de Valbrune", "TERRE 3 · LA COLLINE"];
+const M = 4;
+const place = S => { [[3, 1], [5, 1], [5, 7]].forEach(([x, y], i) => Object.assign(S.squads[i], {x: x + .5, y: y + .5, tx: x + .5, ty: y + .5})); for (const t of S.tiles) if (t.house) t.h = 0; return S; };
+function plateau(id, phone){
+  const V = VILLAGES[id], S = place(makeSim(id)), NT = N * 2 + M * 2, WW = NT * TL, VT0 = 12;
+  const c = document.createElement("canvas"); c.className = "px"; phone.prepend(c);
+  const x = c.getContext("2d");
+  const paint = hud("A", phone, S);
+  let ok = false, U = null, E = null, bg = null, VT = VT0, camX = 0, camY = 0;
+  const W2 = (gx, gy) => [(M + gx * 2) * TL, (M + gy * 2) * TL];
+  const clamp = () => { camX = Math.max(0, Math.min(WW - c.width, camX)); camY = Math.max(-TL * 2, Math.min(WW - c.height * .7, camY)); };
+  const size = () => { const w = phone.clientWidth, h = phone.clientHeight; c.width = VT * TL; c.height = Math.round(h * c.width / w); x.imageSmoothingEnabled = false;
+    const [mx, my] = W2(N / 2, N / 2 + .4); camX = mx - c.width / 2; camY = my - c.height * .5; clamp(); };
+  size(); addEventListener("resize", size);
+  { const b = document.createElement("button"); b.type = "button"; b.className = "turn z"; b.textContent = "⊖"; b.setAttribute("aria-label", "Zoom");
+    b.addEventListener("click", e => { e.stopPropagation(); VT = VT === VT0 ? N * 2 + 2 : VT0; b.textContent = VT === VT0 ? "⊖" : "⊕"; size(); }); phone.querySelector(".hud").append(b); }
+  const cellAt = (i, j) => { const gx = Math.floor((i - M) / 2), gy = Math.floor((j - M) / 2); return gx >= 0 && gy >= 0 && gx < N && gy < N ? S.tiles[gy * N + gx] : null; };
+  const chemin = new Set(); for (const [ex, ey] of ENTREES){ let px = ex, py = ey; for (let k = 0; k < 9; k++){ if (S.tiles[py * N + px].h > 0) break; chemin.add(px + "," + py); px += Math.sign(4 - px); py += Math.sign(4 - py); } }
+  function fond(){
+    bg = cv(WW, WW); const b = bg.getContext("2d"); b.imageSmoothingEnabled = false;
+    const tm = L[V.herbe], put = (im, c0, r0, i, j) => b.drawImage(im, c0 * 64, r0 * 64, 64, 64, i * TL, j * TL, TL, TL);
+    for (let j = 0; j < NT; j++) for (let i = 0; i < NT; i++) put(tm, 1, 1, i, j);
+    const isP = (i, j) => { const t = cellAt(i, j); return !!t && chemin.has(t.x + "," + t.y); };
+    for (let j = 0; j < NT; j++) for (let i = 0; i < NT; i++) if (isP(i, j)){ const [cc, r] = auto(isP(i, j - 1), isP(i, j + 1), isP(i - 1, j), isP(i + 1, j)); put(L.sable, 5 + cc, r, i, j); }
+    const inL = (i, j) => { const t = cellAt(i, j); return !!t && t.h >= 1; };
+    for (let j = 0; j < NT; j++) for (let i = 0; i < NT; i++){
+      if (inL(i, j)){ const [cc, r] = auto(inL(i, j - 1), inL(i, j + 1), inL(i - 1, j), inL(i + 1, j)); put(tm, 5 + cc, r, i, j); }
+      else if (inL(i, j - 1)){ const w = inL(i - 1, j - 1), e = inL(i + 1, j - 1); put(tm, 5 + (w ? (e ? 1 : 2) : (e ? 0 : 3)), 4, i, j); }
+    }
+  }
+  const arbres = [], decos = [];
+  let seed = id === "A" ? 7 : 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let j = 0; j < NT; j += 2) for (let i = 0; i < NT; i += 2){ const inside = i >= M - 1 && j >= M - 1 && i < M + N * 2 && j < M + N * 2; if (!inside) arbres.push([(i + 1 + rnd() * .6) * TL, (j + 1.6 + rnd() * .5) * TL, arbres.length]); }
+  S.tiles.forEach(t => { const [X, Y] = W2(t.x + .5, t.y + .5); if (t.tree) arbres.push([X + (rnd() - .5) * TL * .6, Y + TL * .6, arbres.length]); else if (t.rock || (!t.house && !chemin.has(t.x + "," + t.y) && rnd() < .3 && t.h === 0)) decos.push([X + (rnd() - .5) * TL, Y + (rnd() - .2) * TL, decos.length]); });
+  load(cles(V)).then(() => { U = armee(V.nous); E = {mon: [...new Set(V.monstres)].reduce((o, n) => (o[n] = monstre(n), o), {}), chef: monstre(V.chef)}; fond(); ok = true; });
+  let drag = null;
+  const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * c.width + camX, (e.clientY - r.top) / r.height * c.height + camY]; };
+  phone.addEventListener("pointerdown", e => { if (e.target.closest("button")) return; drag = {x: e.clientX, y: e.clientY, cx: camX, cy: camY, done: false}; });
+  phone.addEventListener("pointermove", e => { if (!drag) return; const k = c.width / c.getBoundingClientRect().width, dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.hypot(dx, dy) > 8) drag.done = true; if (drag.done){ camX = drag.cx - dx * k; camY = drag.cy - dy * k; clamp(); } });
+  phone.addEventListener("pointerup", e => {
+    const d = drag; drag = null; if (!d || d.done || e.target.closest("button")) return;
+    const [px, py] = pos(e), gx = (px / TL - M) / 2, gy = (py / TL - M) / 2;
+    let pick = -1, pd = .9; S.squads.forEach((q, i) => { if (q.hp > 0){ const dd = Math.hypot(q.x - gx, q.y - (gy + .15)); if (dd < pd){ pd = dd; pick = i; } } });
+    if (S.sel >= 0 && (pick < 0 || pick === S.sel)){ if (gx >= 0 && gy >= 0 && gx < N && gy < N){ const q = S.squads[S.sel]; q.tx = Math.floor(gx) + .5; q.ty = Math.floor(gy) + .5; } S.sel = -1; }
+    else if (pick >= 0) S.sel = pick;
+  });
+  const anneau = (X, Y, r, col) => { x.strokeStyle = col; x.lineWidth = 4; x.beginPath(); x.ellipse(Math.round(X), Math.round(Y), r, r * .5, 0, 0, Math.PI * 2); x.stroke(); };
+  const img = (im, X, Y, ax, ay, k) => { k = k || 1; x.drawImage(im, Math.round(X - ax * k), Math.round(Y - ay * k), im.width * k, im.height * k); };
+  const frame8 = (im, fs, n) => (im._f || (im._f = strip(im, fs)))[n % Math.round(im.width / fs)];
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (S.reset) Object.assign(S, place(makeSim(id)));
+    const slow = S.sel >= 0 ? .15 : 1; step(S, dt * slow);
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.fond; x.fillRect(0, 0, c.width, c.height);
+    if (!ok){ requestAnimationFrame(frame); return; }
+    x.setTransform(1, 0, 0, 1, -Math.round(camX), -Math.round(camY));
+    x.drawImage(bg, 0, 0);
+    const T = now / 1000, list = [];
+    for (const [X, Y, k] of arbres){ const t = ["tree1", "tree2", "tree3", "tree4"][k % 4], im = L[t], tall = im.height === 256; list.push([Y, () => img(frame8(im, 192, Math.floor(T * 8 + k)), X, Y, 96, tall ? 238 : 168)]); }
+    for (const [X, Y, k] of decos){ const t = ["bush1", "rock1", "bush2", "rock2", "bush1"][k % 5], im = L[t]; list.push([Y - 10, () => t.startsWith("bush") ? img(frame8(im, 128, Math.floor(T * 8 + k)), X, Y, 64, 78) : img(im, X, Y, 32, 48)]); }
+    S.houses.forEach((h, i) => { const [X, Y] = W2(h.x + .5, h.y + .85); list.push([Y, () => {
+      if (h.hp <= 0) img(L.ruine, X, Y, 64, 170); else img(L[V.nous + "/b/House" + (i % 3 + 1)], X, Y, 64, 170);
+      if (h.hp > 0 && h.hp < h.max * .6) for (let k = 0; k < 3; k++) img(frame8(L.fire, 64, Math.floor(T * 10) + k * 3), X - 36 + k * 36, Y - 70 - (k % 2) * 30, 32, 62); }]); });
+    { const [X, Y] = W2(4.5, 4.95); list.push([Y, () => img(L[V.nous + "/b/Castle"], X, Y, 160, 246)]); }
+    const nearFoe = (px, py) => { let b = null, d = 99; for (const f of S.foes) if (f.delay <= 0){ const e = Math.hypot(f.x - px, f.y - py); if (e < d){ d = e; b = f; } } return [b, d]; };
+    // une figurine : A = animations ; dx, dy = direction ; mode idle | walk | atk | guard
+    const perso = (A, X, Y, dx, dy, mode, tt, k) => { k = k || 1; list.push([Y, () => {
+      x.fillStyle = "rgba(30,40,10,.25)"; x.beginPath(); x.ellipse(Math.round(X), Math.round(Y), 22 * k, 8 * k, 0, 0, Math.PI * 2); x.fill();
+      let set = mode === "walk" ? A.run : mode === "guard" ? (A.guard || A.idle) : A.idle, flip = dx < -1e-4;
+      if (mode === "atk"){ const ang = Math.atan2(dy, Math.abs(dx)) * 180 / Math.PI, a = A.atk;
+        set = ang > 60 ? (a.d || a.r) : ang > 20 ? (a.dr || a.r) : ang > -20 ? a.r : ang > -60 ? (a.ur || a.r) : (a.u || a.r); }
+      const f = set[Math.floor(tt * 10) % set.length], s = A.fs * k;
+      if (flip){ x.save(); x.translate(Math.round(X), 0); x.scale(-1, 1); x.drawImage(f, -A.fx * k, Math.round(Y - A.fy * k), s, f.height * k); x.restore(); }
+      else x.drawImage(f, Math.round(X - A.fx * k), Math.round(Y - A.fy * k), s, f.height * k); }]); };
+    let soigne = false;
+    S.squads.forEach((q, i) => {
+      if (q.hp <= 0) return;
+      const Kd = KINDS[q.k], A = U[q.k], v = q.px == null ? 0 : Math.hypot(q.x - q.px, q.y - q.py) / Math.max(dt, 1e-3); q.vs = (q.vs || 0) * .8 + v * .2;
+      const mx = q.x - (q.px == null ? q.x : q.px), my = q.y - (q.py == null ? q.y : q.py); q.px = q.x; q.py = q.y;
+      const [nf, nd] = nearFoe(q.x, q.y), fighting = nf && nd <= Kd.range + .2, guard = q.k === "inf" && q.fx > 0;
+      const mode = q.vs > .15 ? "walk" : guard ? "guard" : fighting ? "atk" : "idle";
+      if (Math.hypot(mx, my) > 1e-4){ q.fx_ = mx; q.fy_ = my; } else if (nf && nd < 4.5){ q.fx_ = nf.x - q.x; q.fy_ = nf.y - q.y; }
+      const n = alive(q), a = Math.ceil(n / 2), sp = guard ? .62 : .8, [CX, CY] = W2(q.x, q.y);
+      const heal = q.hp < Kd.n * Kd.hp && !S.foes.some(f => d2(f, q) < 2.5) && S.houses.some(h => h.hp > 0 && Math.hypot(h.x + .5 - q.x, h.y + .5 - q.y) < 1.3);
+      if (heal){ soigne = true; list.push([CY + 200, () => img(frame8(L.healfx, 192, Math.floor(T * 10)), CX, CY, 96, 120)]); }
+      if (i === S.sel || guard) list.push([CY - TL * 2, () => anneau(CX, CY + TL * .2, TL * 1.3, i === S.sel ? "#fff4c0" : "#e8c46a")]);
+      for (let k = 0; k < n; k++){ const row = k < a ? 0 : 1, inRow = row ? n - a : a, col = row ? k - a : k;
+        perso(A, CX + (col - (inRow - 1) / 2) * TL * sp + (row ? TL * .25 : -TL * .25), CY + (row ? TL * .35 : -TL * .25), q.fx_ || 0, q.fy_ || .1, mode, T * slow + k * .37 + i, 1); }
+      if (Math.hypot(q.tx - q.x, q.ty - q.y) > .3){ const [X, Y] = W2(q.tx, q.ty); list.push([Y - TL * 2, () => anneau(X, Y, TL * .4, "#ffffff")]); }
+    });
+    // les moines, devant le château
+    for (let k = 0; k < 2; k++){ const [X, Y] = W2(3.1 + k * .55, 7.15 + k * .1); perso(U.monk, X, Y, k ? -1 : 1, 0, soigne ? "atk" : "idle", T + k * .5, 1); }
+    const nearSq = (px, py) => { let b = null, d = 99; for (const q of S.squads) if (q.hp > 0){ const e = Math.hypot(q.x - px, q.y - py); if (e < d){ d = e; b = q; } } return b; };
+    S.foes.forEach((f, k) => { if (f.delay > 0) return;
+      const mx = f.x - (f.px == null ? f.x : f.px), my = f.y - (f.py == null ? f.y : f.py); f.px = f.x; f.py = f.y;
+      let fx = mx, fy = my; if (f.fight){ const q = nearSq(f.x, f.y); if (q){ fx = q.x - f.x; fy = q.y - f.y; } }
+      if (Math.hypot(fx, fy) > 1e-5){ f.fx_ = fx; f.fy_ = fy; }
+      const [X, Y] = W2(f.x, f.y), A = f.boss ? E.chef : E.mon[V.monstres[k % V.monstres.length]];
+      perso(A, X, Y, f.fx_ || 0, f.fy_ || .1, f.fight ? "atk" : "walk", T * slow + k * .53, 1); });
+    for (const a of S.arrows){ const u0 = Math.min(1, a.t / a.d), [X0, Y0] = W2(a.x, a.y), [X1, Y1] = W2(a.f.x, a.f.y), X = X0 + (X1 - X0) * u0, Y = Y0 + (Y1 - Y0) * u0 - Math.sin(u0 * Math.PI) * TL * 1.2 - TL * .6;
+      const ang = Math.atan2(Y1 - Y0 - Math.cos(u0 * Math.PI) * TL * 3.7, X1 - X0);
+      list.push([1e9, () => { x.save(); x.translate(Math.round(X), Math.round(Y)); x.rotate(ang); x.drawImage(L.arrow, -32, -32); x.restore(); }]); }
+    if (S.warnAt){ const [gx, gy] = S.warnAt, [X, Y] = W2(gx + .5, gy + .2), b = Math.abs(Math.sin(T * 5)) * 18;
+      list.push([1e9, () => { x.fillStyle = "#e8301e"; x.strokeStyle = "#3a1408"; x.lineWidth = 4; x.beginPath(); x.moveTo(X - 24, Y - 48 - b); x.lineTo(X + 24, Y - 48 - b); x.lineTo(X, Y - 16 - b); x.closePath(); x.fill(); x.stroke(); x.fillRect(X - 8, Y - 80 - b, 16, 32); x.strokeRect(X - 8, Y - 80 - b, 16, 32); }]); }
+    list.sort((a, b) => a[0] - b[0]); for (const [, f] of list) f();
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    paint();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+plateau("A", document.getElementById("pA")); plateau("B", document.getElementById("pB"));
+})();
+</script>

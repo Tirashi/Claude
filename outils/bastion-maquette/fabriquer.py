@@ -15,6 +15,8 @@ Ninja Adventure de Pixel-boy et AAA, CC0, https://pixel-boy.itch.io/ninja-advent
         python3 -I outils/bastion-maquette/fabriquer.py 7 <dossier « Tiny Swords (Update 010) »> <dossier « Ninja Adventure - Asset Pack »> <sortie.html>
 Maquette 8 (vue du dessus, Free Pack actuel de Tiny Swords, https://pixelfrog-assets.itch.io/tiny-swords ; chemins et ruine de l'ancienne version CC0) :
         python3 -I outils/bastion-maquette/fabriquer.py 8 <dossier « Tiny Swords (Free Pack) »> <dossier « Tiny Swords (Update 010) »> <sortie.html>
+Maquette 9 (la 8 avec les monstres de l'Enemy Pack, acheté) :
+        python3 -I outils/bastion-maquette/fabriquer.py 9 <dossier « Tiny Swords (Free Pack) »> <dossier « Tiny Swords (Update 010) »> <dossier « Enemy Pack »> <sortie.html>
 Les packs ne sont pas dans le dépôt (pas de redistribution) : la page fabriquée sert d'artefact, elle n'est pas commitée.
 Packs : https://reodesuxz.itch.io/low-poly-japanese-castle-town-pack, https://reodesuxz.itch.io/low-poly-japanese-shrine-pack,
 https://reodesuxz.itch.io/low-poly-ninja-dojo-castle-pack, https://standout7.itch.io/lowpo-samurai"""
@@ -23,6 +25,8 @@ import base64, glob, json, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, '..', '..'))
 M4 = sys.argv[1] == '4'
+M9 = sys.argv[1] == '9'
+if M9: sys.argv[1:] = ['8', sys.argv[2], sys.argv[3], sys.argv[5]] + [sys.argv[4]]
 if sys.argv[1] == '8':
     fp, old, sortie = sys.argv[2:5]
     b2 = open(os.path.join(RACINE, 'maquettes', 'bastion-2.html'), encoding='utf-8').read()
@@ -48,7 +52,15 @@ if sys.argv[1] == '8':
             if os.path.exists(f): img[coul + '/Monk_' + n] = png(f)
     for coul in ('Blue', 'Yellow'):
         for n in ('House1', 'House2', 'House3', 'Castle'): img[coul + '/b/' + n] = png(os.path.join(fp, 'Buildings', coul + ' Buildings', n + '.png'))
-    html = open(os.path.join(ICI, 'source-8.html'), encoding='utf-8').read().replace('__SIM__', sim).replace('__IMAGES__', json.dumps(img))
+    if M9: sim = sim.replace('if (S.wave % 3 === 0) S.foes.push', 'if (S.wave % 3 === 1) S.foes.push').replace('const boss = (S.wave + 1) % 3 === 0', 'const boss = (S.wave + 1) % 3 === 1')   # le chef dès la 1re vague
+    if M9:   # les monstres de l'Enemy Pack (sans les avatars)
+        ep = sys.argv[5]
+        for n in ('Torch Goblin', 'Spear Goblin', 'Gnoll', 'Troll', 'Skull', 'Thief', 'Minotaur'):
+            for f in glob.glob(os.path.join(ep, n, '*.png')):
+                a = os.path.splitext(os.path.basename(f))[0].split('_', 1)[1]
+                if 'Avatar' not in a and a in ('Idle', 'Run', 'Walk', 'Attack', 'Attack Fast', 'Throw'): img['E/' + n + '/' + a] = png(f)
+        img = {k: v for k, v in img.items() if not k.startswith(('Red/', 'Black/', 'Yellow/'))}
+    html = open(os.path.join(ICI, 'source-9.html' if M9 else 'source-8.html'), encoding='utf-8').read().replace('__SIM__', sim).replace('__IMAGES__', json.dumps(img))
     open(sortie, 'w', encoding='utf-8').write(html); print(sortie, len(html) // 1024, 'Ko,', len(img), 'images'); sys.exit()
 if sys.argv[1] == '7':
     ts, na, sortie = sys.argv[2:5]

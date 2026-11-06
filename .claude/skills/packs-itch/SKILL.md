@@ -14,7 +14,14 @@ description: Récupérer et préparer des graphismes venus d'ailleurs pour une m
 
 ## Télécharger un pack gratuit (« prix libre ») sur itch.io
 `python3 -I .claude/skills/packs-itch/itch.py <url de la page> <motif du nom de fichier> <dossier>`
-Liste les fichiers de la page (pages « prix libre » ou « téléchargement direct »), télécharge le premier dont le nom correspond au motif (expression régulière). Principe : `POST <page>/download_url` avec le `csrf_token`, ids lus dans `data-upload_id`, puis `POST <page>/file/<id>?source=view_game&as_props=1&after_download_lightbox=true` qui renvoie l'`url` du fichier. Les packs payants : l'utilisateur les achète et envoie les zips.
+Liste les fichiers de la page (pages « prix libre » ou « téléchargement direct »), télécharge le premier dont le nom correspond au motif (expression régulière). Principe : `POST <page>/download_url` avec le `csrf_token`, ids lus dans `data-upload_id`, puis `POST <page>/file/<id>?source=view_game&as_props=1&after_download_lightbox=true` qui renvoie l'`url` du fichier. Les packs payants : l'utilisateur les achète, puis on les récupère par l'API (ci-dessous).
+
+## Récupérer un pack acheté (API itch.io)
+Le proxy de l'environnement ajoute la clé de l'utilisateur pour `api.itch.io` (rien à fournir) :
+1. `curl -sS https://api.itch.io/profile/owned-keys` → `owned_keys[]` : `id` (clé d'achat), `game.id`, `game.title`.
+2. `curl -sS "https://api.itch.io/games/<game.id>/uploads?download_key_id=<clé>"` → `uploads[]` : `id`, `filename`.
+3. `curl -sSL "https://api.itch.io/uploads/<upload.id>/download?download_key_id=<clé>" -o <dossier neuf>/pack.zip` (réponse **302** vers le fichier : `-L` obligatoire, pas de JSON).
+Fait le 06/11 pour l'Enemy Pack et Warfare de Tiny Swords (détails dans `specs/bastion.md`).
 
 ## Compacter des modèles glTF (maquettes 3D sans fichiers à côté)
 `python3 -I .claude/skills/packs-itch/pack.py <dossier des .gltf> <sortie.b64> [nom1,nom2,…]`

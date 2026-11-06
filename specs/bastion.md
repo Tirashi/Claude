@@ -145,3 +145,13 @@ https://claude.ai/artifact/Jwyug7BrbEHE1br4TinE5J — page source `outils/bastio
 - **A** : prairie claire (couleur d'herbe 1), bleus contre rouges. **B** : herbe sombre (couleur 4), jaunes contre noirs.
 
 Retour (06/11) : **A retenue**. L'utilisateur veut l'**Enemy Pack** (troll, monstres) : il s'achète sur la page de Tiny Swords en payant 15 $ ou plus au « Download Now » (prix libre) ; il enverra le zip.
+
+## Packs achetés (06/11) et maquette 9
+L'utilisateur a acheté l'**Enemy Pack** et **Warfare** ; récupérés avec l'API itch.io (le proxy de l'environnement ajoute sa clé) : `GET https://api.itch.io/profile/owned-keys` (clés d'achat : Tiny Swords 161477580, Warfare 161477642), `GET /games/<id>/uploads?download_key_id=<clé>`, puis `GET /uploads/<id>/download?download_key_id=<clé>` qui **redirige (302)** vers le fichier (suivre avec `curl -L`). Fichiers : `Tiny Swords (Enemy Pack).zip` (upload 19101739, 2,8 Mo), `Warfare_001.zip` (upload 19996771, 3,1 Mo). Pas dans le dépôt pour l'instant (pas de redistribution ; à ranger dans le dossier du jeu, avec les crédits, quand on le programmera).
+- **Enemy Pack** : 23 monstres (ours, poisson-bombe, bourdon, chauve-souris géante, gnoll lanceur d'os, gnome, gnome à fronde, requins à pagaie et à harpon, chaman maléfique, diablotin, lézard, minotaure, panda, crâne/squelette, serpent, gobelin à lance, araignée, voleur, gobelin à torche, **troll** (coup préparé, frappe, récupération, mort), tortue) ; bonus : cabanes gobeline et de pêcheur, cabane et tour de gnomes, tour pirate, canon (5 directions), bateaux, grotte, arbre mort, barrière en bois, crânes et os, cochon et gobelin chevaucheur.
+- **Warfare** (accès anticipé, version 001) : roi, berserker, épéiste, cavalier, catapulte (charger, tirer la pierre), en 5 couleurs, avec portraits.
+- Images en bandes de cases carrées : 192 px (gobelin à torche, gnoll, squelette, voleur), 256 (gobelin à lance), 320 (minotaure), 384 (troll, plus de 3 tuiles de haut).
+
+Maquette 9 : https://claude.ai/artifact/6PrQpKxp5vk34jaG7EmUSF — page source `outils/bastion-maquette/source-9.html`, `fabriquer.py 9 <Free Pack> <ancienne version> <Enemy Pack> <sortie>` ; la direction A de la maquette 8 (prairie, armée bleue) contre les monstres : **A** gobelins à torche et à lance, gnolls, **troll** en chef ; **B** squelettes et voleurs, **minotaure** en chef ; pour la maquette, le chef vient dès la 1re vague.
+
+Retours : à venir.
