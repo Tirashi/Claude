@@ -1,0 +1,437 @@
+<title>Bastion, maquette</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel:wght@600;800&family=Shippori+Mincho:wght@600;800&display=swap">
+<style>
+/* Maquette « Bastion » : défendre un petit plateau contre des vagues, avec trois escouades, temps réel ralenti pendant les ordres.
+   Trois directions dans trois téléphones : A médiéval 3D, B asiatique 3D, C médiéval en pixel art isométrique. */
+:root{
+  color-scheme: dark;
+  --bg:#15131a; --bg-2:#201d28; --ink:#0b0a0e; --text:#f0ece4; --dim:#b6aea0; --gold:#e8c46a;
+  --f-display:"Press Start 2P", "Courier New", monospace;
+  --f-body:"VT323", "Lucida Console", monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(#26222f 1px, transparent 1.5px); background-size:5px 5px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:24px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.intro{max-width:1180px; margin:0 auto 22px; display:flex; flex-direction:column; gap:8px}
+.intro h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-shadow:3px 3px 0 #7a4a1a, 5px 5px 0 #000}
+.intro p{margin:0; max-width:72ch; color:var(--dim)}
+.intro b{color:var(--text); font-weight:400}
+.grid{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:28px; justify-items:center}
+.col{display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px; min-width:0}
+.col > h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; line-height:1.6; color:var(--gold)}
+.col > h2 span{color:#e98a6a}
+.col > p{margin:0; color:var(--dim); font-size:19px}
+.col > ul{margin:0; padding-left:18px; color:var(--dim); font-size:18px; display:flex; flex-direction:column; gap:3px}
+
+/* le téléphone */
+.phone{position:relative; width:100%; max-width:360px; height:690px; overflow:hidden; border:4px solid #000; border-radius:22px; box-shadow:0 0 0 3px #3a3444, 6px 6px 0 3px #000; touch-action:none; user-select:none; -webkit-user-select:none}
+.phone canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.phone canvas.px{image-rendering:pixelated}
+.hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:12px 10px 12px}
+.hud > *{pointer-events:auto}
+.top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.lvl{display:flex; flex-direction:column; gap:3px}
+.lvl b{font-weight:400}
+.lvl span{font-size:16px; opacity:.85}
+.pills{display:flex; flex-direction:column; align-items:flex-end; gap:4px}
+.pill{font-size:15px; padding:2px 8px; white-space:nowrap}
+.slow{position:absolute; left:50%; top:74px; transform:translateX(-50%); padding:4px 10px; opacity:0; transition:opacity .15s; pointer-events:none; white-space:nowrap}
+.phone.slowed .slow{opacity:1}
+.phone::after{content:""; position:absolute; inset:0; pointer-events:none; border:3px solid transparent; border-radius:18px; transition:border-color .15s}
+.hint{text-align:center; font-size:16px; margin-bottom:6px; pointer-events:none; text-shadow:1px 1px 0 #000}
+.cards{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px}
+.card{display:flex; flex-direction:column; align-items:center; gap:4px; padding:7px 4px 6px; text-align:center}
+.card .ico{width:34px; height:34px; display:grid; place-items:center; font-size:20px; line-height:1}
+.card .nm{font-size:15px; line-height:1}
+.card .pips{display:flex; gap:3px}
+.card .pips i{width:6px; height:6px}
+.card[aria-pressed="true"]{transform:translateY(-4px)}
+
+/* A · médiéval 3D : parchemin et bois */
+.thA{background:radial-gradient(circle at 50% 40%, #d8c9a6, #a8946c 75%)}
+.thA .lvl b{font-family:"Cinzel", Georgia, serif; font-weight:800; font-size:19px; color:#3a2410; text-shadow:0 1px 0 #f5e8c8}
+.thA .lvl span{color:#5a3a1a; font-family:"Cinzel", Georgia, serif; font-size:12px; font-weight:600; letter-spacing:1px}
+.thA .pill{font-family:"Cinzel", Georgia, serif; font-weight:600; font-size:12px; letter-spacing:1px; color:#f5e8c8; background:#5a3a1a; border:2px solid #2a1808; border-radius:3px}
+.thA .slow{font-family:"Cinzel", Georgia, serif; font-weight:800; font-size:13px; letter-spacing:3px; color:#f5e8c8; background:#7a2a1a; border:2px solid #2a1808}
+.thA.slowed::after{border-color:#7a2a1a}
+.thA .hint{color:#3a2410; text-shadow:0 1px 0 #f5e8c8; font-family:"Cinzel", Georgia, serif; font-size:12px; font-weight:600}
+.thA .card{background:linear-gradient(#f2e3bf, #d9c294); border:2px solid #3a2410; border-radius:4px; box-shadow:0 3px 0 #3a2410; color:#3a2410}
+.thA .card .ico{background:var(--c); border:2px solid #3a2410; border-radius:50%; color:#fff}
+.thA .card .nm{font-family:"Cinzel", Georgia, serif; font-weight:800; font-size:11px; letter-spacing:1px}
+.thA .card .pips i{background:#3a2410}
+.thA .card .pips i.off{background:#c4ad80}
+.thA .card[aria-pressed="true"]{background:linear-gradient(#fff4d6, #ead39c); box-shadow:0 7px 0 #3a2410}
+
+/* B · asiatique 3D : papier de riz, laque rouge, encre */
+.thB{background:linear-gradient(#e9e2d4, #c9bfae)}
+.thB .lvl b{font-family:"Shippori Mincho", serif; font-weight:800; font-size:20px; color:#1a1410}
+.thB .lvl span{color:#8a2418; font-family:"Shippori Mincho", serif; font-weight:600; font-size:13px; letter-spacing:2px}
+.thB .pill{font-family:"Shippori Mincho", serif; font-weight:600; font-size:13px; color:#f4ede0; background:#1a1410; border-left:4px solid #b8291b}
+.thB .slow{font-family:"Shippori Mincho", serif; font-weight:800; font-size:14px; letter-spacing:4px; color:#f4ede0; background:#b8291b; border-radius:2px}
+.thB.slowed::after{border-color:#b8291b}
+.thB .hint{color:#1a1410; text-shadow:none; font-family:"Shippori Mincho", serif; font-size:13px; font-weight:600}
+.thB .card{background:#f4ede0; border:2px solid #1a1410; color:#1a1410; box-shadow:3px 3px 0 #1a1410}
+.thB .card .ico{background:var(--c); color:#f4ede0; font-size:18px}
+.thB .card .nm{font-family:"Shippori Mincho", serif; font-weight:800; font-size:13px}
+.thB .card .pips i{background:#b8291b; border-radius:50%}
+.thB .card .pips i.off{background:#d6cbb6}
+.thB .card[aria-pressed="true"]{background:#fff; box-shadow:3px 7px 0 #b8291b}
+
+/* C · pixel art isométrique : fenêtres 32 bits */
+.thC{background:#1a2a20}
+.thC .lvl b{font-family:var(--f-display); font-size:9px; letter-spacing:1px; color:#ffe08a; text-shadow:2px 2px 0 #000}
+.thC .lvl span{font-family:var(--f-display); font-size:6px; color:#bfe0a8; text-shadow:1px 1px 0 #000}
+.thC .pill{font-family:var(--f-display); font-size:7px; color:#fff; background:#000; border:2px solid #fff; box-shadow:2px 2px 0 #000; padding:5px 6px}
+.thC .slow{font-family:var(--f-display); font-size:8px; color:#000; background:#ffe08a; border:2px solid #000; padding:6px 8px}
+.thC.slowed::after{border-color:#ffe08a}
+.thC .hint{font-family:var(--f-display); font-size:6px; color:#fff; line-height:1.6}
+.thC .card{background:#000; border:3px solid #fff; color:#fff; box-shadow:0 0 0 2px #000, 3px 3px 0 2px #000}
+.thC .card .ico{background:var(--c); border:2px solid #000; image-rendering:pixelated; font-family:var(--f-display); font-size:12px; color:#fff}
+.thC .card .nm{font-family:var(--f-display); font-size:6px; letter-spacing:0}
+.thC .card .pips i{background:#5cff8a}
+.thC .card .pips i.off{background:#333}
+.thC .card[aria-pressed="true"]{border-color:#ffe08a}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<div class="intro">
+  <h1>BASTION · MAQUETTE 1</h1>
+  <p>Défendre un petit plateau contre des vagues d'ennemis avec <b>trois escouades</b> (épées, archers, lances). <b>Touche une escouade</b> : le temps ralentit ; <b>touche le sol</b> : elle y court. Les ennemis sortent de la forêt et visent les maisons. Ce n'est pas une île : le plateau est posé comme une maquette sur la table. Dans les deux écrans 3D, <b>glisse le doigt</b> pour tourner autour.</p>
+</div>
+
+<div class="grid">
+  <section class="col">
+    <h2>A · MEDIEVAL <span>EN 3D</span></h2>
+    <div class="phone thA" id="pA"></div>
+    <p>Un hameau sur sa colline, pièces de bois et toits de chaume en 3D épurée (formes simples, couleurs franches, ombres douces). Fenêtres en parchemin, lettres gravées.</p>
+    <ul><li>Comme Bannières : on tourne autour du plateau.</li><li>Lisible : chaque escouade a sa couleur et sa bannière.</li></ul>
+  </section>
+  <section class="col">
+    <h2>B · ASIATIQUE <span>EN 3D</span></h2>
+    <div class="phone thB" id="pB"></div>
+    <p>Un temple de montagne et son village, cerisiers et torii, attaqués par des rônins. Papier de riz, laque rouge et encre pour l'interface.</p>
+    <ul><li>Même jeu que A, autre monde.</li><li>Samouraïs, archers, lanciers (naginata).</li></ul>
+  </section>
+  <section class="col">
+    <h2>C · MEDIEVAL <span>EN PIXEL ART</span></h2>
+    <div class="phone thC" id="pC"></div>
+    <p>Le même hameau en pixel art 32 bits vu de biais (isométrique), dessiné par le code, comme Capitaine du port. Fenêtres noires à bord blanc de la Ludothèque.</p>
+    <ul><li>Pas de rotation : la vue est fixe.</li><li>Plus léger pour le téléphone.</li></ul>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+"use strict";
+/* ================= la simulation commune ================= */
+const N = 9;
+// hauteurs du plateau (0 = bas, 2 = sommet) ; P = chemin ; T = arbre ; H = maison
+const PLAN = [
+  "TT0P0TTTT",
+  "T001001TT",
+  "T01H2H10T",
+  "001222100",
+  "P12H2H21P",
+  "001222100",
+  "T0112110T",
+  "TT00100TT",
+  "TTTP0TTTT"];
+const ENTREES = [[3, 0], [0, 4], [8, 4], [3, 8]];
+const KINDS = {
+  inf: {n: 6, hp: 22, dps: 7, range: .75, speed: 1.6},
+  arc: {n: 5, hp: 16, dps: 3, range: 3.2, speed: 1.7},
+  pik: {n: 6, hp: 20, dps: 10, range: .9, speed: 1.4}};
+function makeSim(){
+  const S = {t: 0, wave: 0, nextWave: 3, alive: true, houses: [], tiles: [], squads: [], foes: [], arrows: [], sel: -1, msg: ""};
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++){
+    const c = PLAN[y][x];
+    const t = {x, y, h: c === "T" ? 0 : c === "P" ? 0 : c === "H" ? 2 : +c, tree: c === "T", path: c === "P", house: c === "H"};
+    S.tiles.push(t);
+    if (t.house) S.houses.push({x, y, hp: 40, max: 40});
+  }
+  const start = [[3, 3, "inf"], [5, 3, "arc"], [4, 5, "pik"]];
+  S.squads = start.map(([x, y, k]) => ({k, x: x + .5, y: y + .5, tx: x + .5, ty: y + .5, hp: KINDS[k].n * KINDS[k].hp, cd: 0}));
+  return S;
+}
+const tile = (S, x, y) => S.tiles[Math.floor(y) * N + Math.floor(x)];
+const hAt = (S, x, y) => { const t = tile(S, Math.max(0, Math.min(N - 1, x)), Math.max(0, Math.min(N - 1, y))); return t ? t.h : 0; };
+const alive = q => Math.ceil(q.hp / KINDS[q.k].hp);
+const d2 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+function step(S, dt){
+  S.t += dt;
+  // vagues : quand la précédente est vaincue (ou au bout de 25 s)
+  if (S.t > S.nextWave){
+    S.wave++; const n = 3 + S.wave, e = ENTREES[(S.wave * 3) % 4], e2 = ENTREES[(S.wave * 3 + 1) % 4];
+    for (let i = 0; i < n; i++){ const [ex, ey] = i % 2 ? e2 : e; S.foes.push({x: ex + .5 + (Math.random() - .5) * .6, y: ey + .5 + (Math.random() - .5) * .6, hp: 26, max: 26, delay: i * .7}); }
+    S.nextWave = S.t + 25;
+  }
+  if (!S.foes.length && S.nextWave - S.t > 6) S.nextWave = S.t + 4;
+  // escouades : marche vers l'ordre, sinon accroche l'ennemi proche
+  for (const q of S.squads){
+    if (q.hp <= 0) continue;
+    const K = KINDS[q.k]; let tgt = null, best = 99;
+    for (const f of S.foes) if (f.hp > 0 && f.delay <= 0){ const d = d2(q, f); if (d < best){ best = d; tgt = f; } }
+    const ordered = Math.hypot(q.tx - q.x, q.ty - q.y) > .08;
+    let gx = q.tx, gy = q.ty;
+    if (!ordered && tgt && best < (q.k === "arc" ? 0 : 1.6) && best > K.range * .8){ gx = tgt.x; gy = tgt.y; }
+    const dx = gx - q.x, dy = gy - q.y, dl = Math.hypot(dx, dy);
+    if (dl > .05){ const s = Math.min(dl, K.speed * dt); q.x += dx / dl * s; q.y += dy / dl * s; }
+    q.cd -= dt;
+    if (tgt && best <= K.range && q.cd <= 0){
+      if (q.k === "arc"){ q.cd = 1.1; for (let i = 0; i < alive(q); i++) S.arrows.push({x: q.x, y: q.y, f: tgt, t: 0, d: .5 + i * .06}); }
+      else { tgt.hp -= K.dps * alive(q) * .25; q.cd = .25; }
+    }
+  }
+  // les flèches
+  for (const a of S.arrows){ a.t += dt; if (a.t >= a.d && a.f.hp > 0){ a.f.hp -= KINDS.arc.dps; a.hit = true; } }
+  S.arrows = S.arrows.filter(a => a.t < a.d);
+  // ennemis : vers la maison debout la plus proche ; se battent au contact
+  for (const f of S.foes){
+    if (f.hp <= 0) continue;
+    if (f.delay > 0){ f.delay -= dt; continue; }
+    let q = null, qd = 99; for (const s of S.squads) if (s.hp > 0){ const d = d2(s, f); if (d < qd){ qd = d; q = s; } }
+    if (q && qd < .7){ q.hp -= 4 * dt; f.fight = true; continue; }
+    f.fight = false;
+    let h = null, hd = 99; for (const s of S.houses) if (s.hp > 0){ const d = Math.hypot(s.x + .5 - f.x, s.y + .5 - f.y); if (d < hd){ hd = d; h = s; } }
+    if (!h) continue;
+    if (hd < .6){ h.hp -= 5 * dt; continue; }
+    const dx = h.x + .5 - f.x, dy = h.y + .5 - f.y, dl = Math.hypot(dx, dy); f.x += dx / dl * .55 * dt; f.y += dy / dl * .55 * dt;
+  }
+  S.foes = S.foes.filter(f => f.hp > 0);
+  for (const q of S.squads) if (q.hp <= 0 && !q.dead){ q.dead = true; }
+  // tout le hameau brûle, ou une escouade perdue : on recommence
+  if (S.houses.every(h => h.hp <= 0) || S.squads.every(q => q.hp <= 0)) S.reset = true;
+}
+// une escouade revient pleine quand elle se repose près d'une maison debout (comme dans le jeu final)
+function heal(S, dt){ for (const q of S.squads) if (q.hp > 0 && !S.foes.some(f => d2(f, q) < 2.5) && S.houses.some(h => h.hp > 0 && Math.hypot(h.x + .5 - q.x, h.y + .5 - q.y) < 1.3)) q.hp = Math.min(KINDS[q.k].n * KINDS[q.k].hp, q.hp + 6 * dt); }
+// positions des soldats d'une escouade, en petit carré autour du centre
+function soldiers(q){
+  const n = alive(q), out = [];
+  for (let i = 0; i < n; i++){ const a = i / n * Math.PI * 2 + (q.k === "arc" ? .4 : 0), r = n > 1 ? .2 : 0; out.push([q.x + Math.cos(a) * r, q.y + Math.sin(a) * r]); }
+  return out;
+}
+
+/* ================= l'interface (HUD), commune ================= */
+const SQ = {
+  A: [{k: "inf", nm: "EPEES", ic: "⚔", c: "#2f5fa8"}, {k: "arc", nm: "ARCHERS", ic: "➶", c: "#3a8a3a"}, {k: "pik", nm: "LANCES", ic: "↑", c: "#a8742a"}],
+  B: [{k: "inf", nm: "侍 SABRES", ic: "刀", c: "#1a1410"}, {k: "arc", nm: "弓 ARCS", ic: "弓", c: "#3d6b4a"}, {k: "pik", nm: "槍 LANCES", ic: "槍", c: "#b8291b"}],
+  C: [{k: "inf", nm: "EPEES", ic: "E", c: "#2f5fa8"}, {k: "arc", nm: "ARCS", ic: "A", c: "#3a8a3a"}, {k: "pik", nm: "LANCES", ic: "L", c: "#a8742a"}]};
+const TITLES = {A: ["Le hameau de Valbrune", "NIVEAU 3 · LES COLLINES"], B: ["Le temple de la Grue", "第三 · LA MONTAGNE"], C: ["VALBRUNE", "NIVEAU 3 · COLLINES"]};
+function hud(id, phone, S, onSel){
+  const h = document.createElement("div"); h.className = "hud";
+  h.innerHTML = `<div class="top"><div class="lvl"><b>${TITLES[id][0]}</b><span>${TITLES[id][1]}</span></div><div class="pills"><span class="pill wv"></span><span class="pill hs"></span></div></div>
+    <div class="slow">${id === "B" ? "時 · RALENTI" : "RALENTI"}</div>
+    <div><div class="hint"></div><div class="cards"></div></div>`;
+  phone.append(h);
+  const cards = SQ[id].map((d, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "card"; b.style.setProperty("--c", d.c);
+    b.innerHTML = `<span class="ico">${d.ic}</span><span class="nm">${d.nm}</span><span class="pips"></span>`;
+    b.addEventListener("click", e => { e.stopPropagation(); onSel(S.sel === i ? -1 : i); });
+    h.querySelector(".cards").append(b); return b;
+  });
+  return () => {
+    h.querySelector(".wv").textContent = (id === "B" ? "波 " : "VAGUE ") + Math.max(1, S.wave) + " / 5";
+    h.querySelector(".hs").textContent = (id === "B" ? "家 " : "MAISONS ") + S.houses.filter(x => x.hp > 0).length + " / " + S.houses.length;
+    h.querySelector(".hint").textContent = S.sel >= 0 ? (id === "C" ? "TOUCHE LE SOL" : "Touche le sol pour envoyer l'escouade") : (id === "C" ? "TOUCHE UNE ESCOUADE" : "Touche une escouade pour donner un ordre");
+    phone.classList.toggle("slowed", S.sel >= 0);
+    cards.forEach((b, i) => {
+      const q = S.squads[i], n = q.hp > 0 ? alive(q) : 0, K = KINDS[q.k];
+      b.setAttribute("aria-pressed", S.sel === i); b.disabled = n === 0; b.style.opacity = n ? 1 : .4;
+      const p = b.querySelector(".pips"); if (p.childElementCount !== K.n) p.innerHTML = "<i></i>".repeat(K.n);
+      [...p.children].forEach((x, k) => x.className = k < n ? "" : "off");
+    });
+  };
+}
+
+/* ================= rendu 3D (A et B) ================= */
+function make3D(id, phone){
+  const asia = id === "B";
+  let S = makeSim();
+  const r = new THREE.WebGLRenderer({antialias: true, alpha: true});
+  r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+  phone.append(r.domElement);
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(36, 1, .1, 100);
+  scene.add(new THREE.HemisphereLight(asia ? 0xfff2e8 : 0xfff4dc, asia ? 0x6a6458 : 0x5a4a30, .75));
+  const sun = new THREE.DirectionalLight(0xffffff, .75); sun.position.set(-6, 12, 5); sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, {left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 30}); scene.add(sun);
+  const M = c => new THREE.MeshLambertMaterial({color: c});
+  const P = asia
+    ? {top: [0x8fae6a, 0x9cbb74, 0xa9c47e], side: 0x7a5a3e, side2: 0x5a4030, path: 0xd8c9a0, tree: 0xf0a6b8, trunk: 0x4a3028, wall: 0xf0e6d2, roof: 0x2a2624, trim: 0xb8291b, foe: 0x3a2a48, hat: 0xc8a860}
+    : {top: [0x7ea24a, 0x8cb054, 0x9abd60], side: 0x8a6a42, side2: 0x6a4e30, path: 0xc8b07a, tree: 0x2f6a3a, trunk: 0x5a3a20, wall: 0xe8dcc0, roof: 0x9a6a2a, trim: 0x6a4a2a, foe: 0x9a2a22, hat: 0x5a1a14};
+  const world = new THREE.Group(); scene.add(world); world.position.set(-N / 2, 0, -N / 2);
+  const tileMesh = [];
+  const sideM = [M(P.side), M(P.side), null, M(P.side2), M(P.side), M(P.side)];
+  for (const t of S.tiles){
+    const hgt = .6 + t.h * .45, g = new THREE.BoxGeometry(1, hgt, 1);
+    const mats = sideM.slice(); mats[2] = M(t.path ? P.path : P.top[t.h]);
+    const m = new THREE.Mesh(g, mats); m.position.set(t.x + .5, hgt / 2 - .6, t.y + .5); m.receiveShadow = true; m.castShadow = true; m.userData.t = t;
+    world.add(m); tileMesh.push(m);
+    const top = hgt - .6;
+    if (t.tree){
+      if (asia){ const tr = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, .5, 5), M(P.trunk)); tr.position.set(t.x + .5, top + .25, t.y + .5); const c = new THREE.Mesh(new THREE.IcosahedronGeometry(.36, 0), M(P.tree)); c.position.set(t.x + .5, top + .65, t.y + .5); c.castShadow = true; world.add(tr, c); }
+      else for (const [ox, oz, s] of [[-.18, -.15, 1], [.2, .18, .8]]){ const c = new THREE.Mesh(new THREE.ConeGeometry(.24 * s, .9 * s, 6), M(P.tree)); c.position.set(t.x + .5 + ox, top + .45 * s, t.y + .5 + oz); c.castShadow = true; world.add(c); }
+    }
+    t.top = top;
+  }
+  // maisons
+  const houseMesh = S.houses.map(h => {
+    const g = new THREE.Group(), top = tile(S, h.x, h.y).top;
+    const w = new THREE.Mesh(new THREE.BoxGeometry(.62, .42, .52), M(P.wall)); w.position.y = .21; w.castShadow = true; g.add(w);
+    let roof;
+    if (asia){ roof = new THREE.Mesh(new THREE.ConeGeometry(.6, .32, 4), M(P.roof)); roof.rotation.y = Math.PI / 4; roof.scale.set(1.15, 1, 1); roof.position.y = .56;
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(.66, .05, .56), M(P.trim)); beam.position.y = .42; g.add(beam); }
+    else { roof = new THREE.Mesh(new THREE.ConeGeometry(.56, .42, 4), M(P.roof)); roof.rotation.y = Math.PI / 4; roof.position.y = .63; }
+    roof.castShadow = true; g.add(roof);
+    const fire = new THREE.Mesh(new THREE.ConeGeometry(.16, .4, 5), new THREE.MeshBasicMaterial({color: 0xff7a1a})); fire.position.y = .9; fire.visible = false; g.add(fire);
+    g.position.set(h.x + .5, top, h.y + .5); world.add(g); return {g, roof, fire, w};
+  });
+  // le sommet : une tour (A) ou une pagode et un torii (B)
+  { const c = tile(S, 4, 4), g = new THREE.Group();
+    if (asia){ for (let i = 0; i < 3; i++){ const b = new THREE.Mesh(new THREE.BoxGeometry(.5 - i * .1, .26, .5 - i * .1), M(P.wall)); b.position.y = .13 + i * .34; const rf = new THREE.Mesh(new THREE.ConeGeometry(.5 - i * .08, .16, 4), M(P.roof)); rf.rotation.y = Math.PI / 4; rf.position.y = .33 + i * .34; b.castShadow = rf.castShadow = true; g.add(b, rf); }
+      const tor = new THREE.Group(); for (const ox of [-.25, .25]){ const p = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, .55, 6), M(P.trim)); p.position.set(ox, .27, 0); tor.add(p); }
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(.7, .05, .07), M(P.trim)); bar.position.y = .55; tor.add(bar); tor.position.set(0, 0, 1.0); g.add(tor); }
+    else { const t = new THREE.Mesh(new THREE.CylinderGeometry(.22, .26, .9, 8), M(0xcfc4ac)); t.position.y = .45; const rf = new THREE.Mesh(new THREE.ConeGeometry(.3, .4, 8), M(0x3a5a8a)); rf.position.y = 1.1; t.castShadow = rf.castShadow = true; g.add(t, rf); }
+    g.position.set(4.5, c.top, 4.5); world.add(g); }
+  // soldats et ennemis : réserve de petits personnages
+  const SQC = asia ? [0x1a1410, 0x3d6b4a, 0xb8291b] : [0x2f5fa8, 0x3a8a3a, 0xa8742a];
+  function person(color, hat){
+    const g = new THREE.Group();
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(.055, .075, .2, 6), M(color)); b.position.y = .1; b.castShadow = true;
+    const hd = new THREE.Mesh(new THREE.SphereGeometry(.055, 8, 6), M(0xf0c8a0)); hd.position.y = .25;
+    g.add(b, hd);
+    if (hat){ const ht = new THREE.Mesh(new THREE.ConeGeometry(.1, .06, 8), M(hat)); ht.position.y = .3; g.add(ht); }
+    world.add(g); return g;
+  }
+  const pool = SQC.map((c, i) => Array.from({length: 6}, () => { const p = person(c, asia ? 0x2a2420 : null); if (i === 2){ const l = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, .5, 4), M(0x6a5a40)); l.position.set(.06, .25, 0); p.add(l); } return p; }));
+  const flags = SQC.map(c => { const g = new THREE.Group(); const pole = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .55, 4), M(0x3a2a1a)); pole.position.y = .27; const f = new THREE.Mesh(new THREE.BoxGeometry(.18, .12, .01), M(c)); f.position.set(.09, .48, 0); g.add(pole, f); world.add(g); return g; });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.32, .4, 24), new THREE.MeshBasicMaterial({color: asia ? 0xb8291b : 0xffe08a, side: THREE.DoubleSide})); ring.rotation.x = -Math.PI / 2; world.add(ring);
+  const foePool = Array.from({length: 14}, () => person(P.foe, P.hat));
+  const arrowPool = Array.from({length: 30}, () => { const m = new THREE.Mesh(new THREE.BoxGeometry(.02, .02, .18), new THREE.MeshBasicMaterial({color: 0x2a1a0a})); world.add(m); return m; });
+  // caméra : on tourne autour du plateau en glissant le doigt
+  let yaw = .7, drag = null, auto = true;
+  const size = () => { const w = phone.clientWidth, h = phone.clientHeight; r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
+  size(); addEventListener("resize", size);
+  const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
+  const sel = i => { S.sel = i; };
+  const paint = hud(id, phone, S, sel);
+  phone.addEventListener("pointerdown", e => { drag = {x: e.clientX, y: e.clientY, yaw, moved: false}; });
+  phone.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 6) drag.moved = true; if (drag.moved){ yaw = drag.yaw - dx * .01; auto = false; } });
+  phone.addEventListener("pointerup", e => {
+    const d = drag; drag = null; if (!d || d.moved || e.target.closest(".card")) return;
+    const rc = r.domElement.getBoundingClientRect(); v2.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1);
+    ray.setFromCamera(v2, cam);
+    // toucher une escouade la choisit ; toucher le sol l'y envoie
+    let pick = -1, pd = .7; const hit = ray.intersectObjects(tileMesh)[0];
+    if (hit){ const p = world.worldToLocal(hit.point.clone()); S.squads.forEach((q, i) => { if (q.hp > 0){ const dd = Math.hypot(q.x - p.x, q.y - p.z); if (dd < pd){ pd = dd; pick = i; } } });
+      if (S.sel >= 0 && (pick < 0 || pick === S.sel)){ const t = hit.object.userData.t; const q = S.squads[S.sel]; q.tx = t.x + .5; q.ty = t.y + .5; S.sel = -1; }
+      else if (pick >= 0) S.sel = pick; }
+  });
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (S.reset){ const s2 = makeSim(); Object.assign(S, s2); S.houses.forEach((h, i) => houseMesh[i]); }
+    const k = S.sel >= 0 ? .15 : 1; step(S, dt * k); heal(S, dt * k);
+    if (auto) yaw += dt * .05;
+    cam.position.set(Math.sin(yaw) * 19, 20, Math.cos(yaw) * 19); cam.lookAt(0, .2, 0);
+    S.houses.forEach((h, i) => { const m = houseMesh[i], burnt = h.hp <= 0, hurt = h.hp < h.max * .6; m.fire.visible = hurt; m.fire.scale.y = .8 + Math.sin(now / 90 + i) * .25; m.roof.material.color.setHex(burnt ? 0x2a2420 : P.roof); m.w.material.color.setHex(burnt ? 0x5a5048 : P.wall); });
+    S.squads.forEach((q, i) => {
+      const pos = q.hp > 0 ? soldiers(q) : [];
+      pool[i].forEach((p, k) => { p.visible = k < pos.length; if (p.visible){ const [x, y] = pos[k]; p.position.set(x, hAt(S, x, y) * .45 + .02, y); p.rotation.y = Math.sin(now / 200 + k) * .3; } });
+      flags[i].visible = q.hp > 0; flags[i].position.set(q.x, hAt(S, q.x, q.y) * .45 + .02, q.y);
+    });
+    const s = S.squads[S.sel]; ring.visible = !!s; if (s) ring.position.set(s.x, hAt(S, s.x, s.y) * .45 + .04, s.y);
+    foePool.forEach((p, k) => { const f = S.foes[k]; p.visible = !!f && f.delay <= 0; if (p.visible){ p.position.set(f.x, hAt(S, f.x, f.y) * .45 + .02 + (f.fight ? Math.abs(Math.sin(now / 80 + k)) * .05 : 0), f.y); } });
+    arrowPool.forEach((m, k) => { const a = S.arrows[k]; m.visible = !!a; if (a){ const u = a.t / a.d, x = a.x + (a.f.x - a.x) * u, y = a.y + (a.f.y - a.y) * u; m.position.set(x, hAt(S, x, y) * .45 + .3 + Math.sin(u * Math.PI) * .6, y); m.lookAt(world.localToWorld(new THREE.Vector3(a.f.x, .3, a.f.y))); } });
+    r.render(scene, cam); paint();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ================= rendu pixel art isométrique (C) ================= */
+function makeIso(phone){
+  let S = makeSim();
+  const W = 200, H = 383, cv = document.createElement("canvas"); cv.width = W; cv.height = H; cv.className = "px"; phone.append(cv);
+  const g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+  const TW = 21, TH = 10.5, LH = 7, OX = W / 2, OY = 132;
+  const iso = (x, y, z) => [OX + (x - y) * TW / 2, OY + (x + y) * TH / 2 - z * LH];
+  const paint = hud("C", phone, S, i => { S.sel = i; });
+  const C = {top: ["#5f8f3a", "#6fa043", "#80b24c"], topHi: "#9acb5c", left: "#7a5634", right: "#5a3e26", path: "#c9b07a", pathL: "#a08a5a", tree: "#2f6a3a", treeHi: "#4a8a4a", trunk: "#4a2e18", wall: "#e8dcc0", wallS: "#bfae8c", roof: "#a8682a", roofS: "#7a4a1a", foe: "#c03a2a", skin: "#f0c8a0"};
+  const SQC = ["#3f6fc0", "#3a9a3a", "#c08a2a"];
+  function px(x, y, w, h, c){ g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); }
+  function diamond(cx, cy, c){ g.fillStyle = c; g.beginPath(); g.moveTo(cx, cy - TH / 2); g.lineTo(cx + TW / 2, cy); g.lineTo(cx, cy + TH / 2); g.lineTo(cx - TW / 2, cy); g.closePath(); g.fill(); }
+  function block(t){
+    const z = t.h + 1, [cx, cy] = iso(t.x + .5, t.y + .5, z), base = iso(t.x + .5, t.y + .5, 0)[1] + LH * 1.2;
+    // côtés
+    g.fillStyle = t.path ? C.pathL : C.left; g.beginPath(); g.moveTo(cx - TW / 2, cy); g.lineTo(cx, cy + TH / 2); g.lineTo(cx, base + TH / 2); g.lineTo(cx - TW / 2, base); g.fill();
+    g.fillStyle = C.right; g.beginPath(); g.moveTo(cx + TW / 2, cy); g.lineTo(cx, cy + TH / 2); g.lineTo(cx, base + TH / 2); g.lineTo(cx + TW / 2, base); g.fill();
+    for (let k = 1; k <= t.h + 1; k++){ px(cx - TW / 2, cy + k * LH - 1, TW / 2, 1, "rgba(0,0,0,.18)"); }
+    diamond(cx, cy, t.path ? C.path : C.top[t.h]);
+    if (!t.path && (t.x + t.y * 3) % 4 === 0) px(cx - 2, cy - 1, 2, 1, C.topHi);
+    t.cx = cx; t.cy = cy;
+  }
+  function tree(t){ const {cx, cy} = t; px(cx - 1, cy - 4, 2, 4, C.trunk); for (let i = 0; i < 4; i++){ px(cx - 4 + i, cy - 7 - i * 3, 9 - i * 2, 3, i % 2 ? C.treeHi : C.tree); } px(cx - 1, cy - 19, 2, 3, C.tree); }
+  function house(h, burnt, hurt, now){
+    const t = tile(S, h.x, h.y), cx = t.cx, cy = t.cy;
+    px(cx - 6, cy - 7, 6, 7, burnt ? "#5a5048" : C.wall); px(cx, cy - 7, 6, 7, burnt ? "#3a3430" : C.wallS);
+    px(cx - 2, cy - 4, 2, 4, "#4a2e18");
+    for (let i = 0; i < 5; i++){ px(cx - 7 + i, cy - 8 - i * 2, 7 - i, 2, burnt ? "#2a2420" : C.roof); px(cx, cy - 8 - i * 2, 7 - i, 2, burnt ? "#1a1614" : C.roofS); }
+    if (hurt && !burnt){ const f = Math.floor(now / 120) % 2; px(cx - 2, cy - 22 - f, 4, 4, "#ff7a1a"); px(cx - 1, cy - 24 - f, 2, 2, "#ffe08a"); }
+    if (burnt){ px(cx - 1 + Math.floor(now / 300) % 2, cy - 24, 2, 2, "#555"); px(cx, cy - 28, 2, 2, "#444"); }
+  }
+  function tower(){ const t = tile(S, 4, 4), cx = t.cx, cy = t.cy; px(cx - 4, cy - 16, 4, 16, "#d8cdb4"); px(cx, cy - 16, 4, 16, "#b0a488"); for (let i = 0; i < 4; i++) px(cx - 4 + i, cy - 18 - i * 2, 8 - i * 2, 2, "#3a5a8a"); px(cx - 1, cy - 11, 2, 3, "#2a1a10"); }
+  function man(x, y, z, body, extra){ const [sx, sy] = iso(x, y, z); px(sx - 1, sy - 6, 3, 4, body); px(sx - 1, sy - 8, 3, 2, C.skin); px(sx - 1, sy - 2, 1, 2, "#2a1a10"); px(sx + 1, sy - 2, 1, 2, "#2a1a10"); if (extra) extra(sx, sy); return [sx, sy]; }
+  const toTile = (mx, my) => { // tuile touchée : de devant vers derrière
+    const order = S.tiles.slice().sort((a, b) => (b.x + b.y) - (a.x + a.y));
+    for (const t of order){ const dx = Math.abs(mx - t.cx) / (TW / 2), dy = Math.abs(my - t.cy) / (TH / 2); if (dx + dy <= 1.05) return t; }
+    return null;
+  };
+  phone.addEventListener("pointerup", e => {
+    if (e.target.closest(".card")) return;
+    const rc = cv.getBoundingClientRect(), mx = (e.clientX - rc.left) / rc.width * W, my = (e.clientY - rc.top) / rc.height * H;
+    let pick = -1, pd = 7;
+    S.squads.forEach((q, i) => { if (q.hp > 0){ const [sx, sy] = iso(q.x, q.y, hAt(S, q.x, q.y) + 1); const d = Math.hypot(sx - mx, sy - 4 - my); if (d < pd){ pd = d; pick = i; } } });
+    if (S.sel >= 0 && pick < 0){ const t = toTile(mx, my); if (t){ const q = S.squads[S.sel]; q.tx = t.x + .5; q.ty = t.y + .5; S.sel = -1; } }
+    else if (pick >= 0) S.sel = pick === S.sel ? -1 : pick;
+  });
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (S.reset) Object.assign(S, makeSim());
+    const k = S.sel >= 0 ? .15 : 1; step(S, dt * k); heal(S, dt * k);
+    // fond : table de bois sombre
+    g.fillStyle = "#1a2a20"; g.fillRect(0, 0, W, H);
+    for (let y = 0; y < H; y += 4) px(0, y, W, 1, "rgba(255,255,255,.025)");
+    const ts = S.tiles.slice().sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    for (const t of ts) block(t);
+    // décor et personnages, triés de l'arrière vers l'avant
+    const items = [];
+    for (const t of S.tiles) if (t.tree) items.push({d: t.x + t.y + 1, f: () => tree(t)});
+    S.houses.forEach(h => items.push({d: h.x + h.y + 1, f: () => house(h, h.hp <= 0, h.hp < h.max * .6, now)}));
+    items.push({d: 9, f: tower});
+    S.squads.forEach((q, i) => { if (q.hp <= 0) return; for (const [x, y] of soldiers(q)) items.push({d: x + y, f: () => man(x, y, hAt(S, x, y) + 1, SQC[i], (sx, sy) => { if (q.k === "pik") px(sx + 2, sy - 11, 1, 9, "#d8c8a0"); if (q.k === "inf") px(sx - 3, sy - 6, 2, 3, "#ddd"); })});
+      items.push({d: q.x + q.y + .01, f: () => { const [sx, sy] = iso(q.x, q.y, hAt(S, q.x, q.y) + 1); px(sx - 4, sy - 16, 1, 9, "#3a2a1a"); px(sx - 3, sy - 16, 5, 3, SQC[i]); if (S.sel === i){ px(sx - 7, sy - 1, 14, 1, "#ffe08a"); px(sx - 7, sy - 1, 1, 3, "#ffe08a"); px(sx + 6, sy - 1, 1, 3, "#ffe08a"); } }}); });
+    for (const f of S.foes) if (f.delay <= 0) items.push({d: f.x + f.y, f: () => man(f.x, f.y, hAt(S, f.x, f.y) + 1, C.foe, (sx, sy) => { px(sx - 1, sy - 9, 3, 1, "#5a1a14"); if (f.fight && Math.floor(now / 100) % 2) px(sx + 2, sy - 7, 2, 1, "#fff"); })});
+    items.sort((a, b) => a.d - b.d).forEach(it => it.f());
+    for (const a of S.arrows){ const u = a.t / a.d, x = a.x + (a.f.x - a.x) * u, y = a.y + (a.f.y - a.y) * u; const [sx, sy] = iso(x, y, hAt(S, x, y) + 1 + Math.sin(u * Math.PI) * 2.2); px(sx - 1, sy - 6, 3, 1, "#2a1a0a"); }
+    paint();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+const ok3D = (() => { try { const c = document.createElement("canvas"); return !!(window.THREE && (c.getContext("webgl") || c.getContext("experimental-webgl"))); } catch (e) { return false; } })();
+if (ok3D){ make3D("A", document.getElementById("pA")); make3D("B", document.getElementById("pB")); }
+else for (const id of ["pA", "pB"]) document.getElementById(id).insertAdjacentHTML("beforeend", '<p style="padding:20px;color:#000">La 3D ne marche pas dans ce navigateur.</p>');
+makeIso(document.getElementById("pC"));
+})();
+</script>
