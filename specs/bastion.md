@@ -48,3 +48,12 @@ Licences : CC0 en priorité ; « usage libre, pas de revente ni de redistributio
 Rien de samouraï chez Kenney, Quaternius ou KayKit (CC0) ; leurs personnages génériques animés peuvent servir de base (repeints en couleurs d'escouade).
 
 **Proposition** : SceneForge SF023 (temple, 5,27 $ en promotion jusqu'au 12/11) + LOWPO Samurai Pro (soldats animés, 9,99 $), et les packs gratuits de reodesuxz pour les petits objets. Une maquette 3 refaite avec ces modèles avant de décider.
+
+## Maquette 3 : les modèles gratuits (06/11)
+https://claude.ai/artifact/EUUdLdBMUsWXTd5nPqPTND — fabriquée par `outils/bastion-maquette/fabriquer.py` (page source `outils/bastion-maquette/source.html` ; reprend la simulation de `maquettes/bastion-2.html` ; GLTFLoader, SkeletonUtils, FBXLoader et fflate de three r128 intégrés). **Les packs ne sont pas dans le dépôt** (pas de redistribution) : la page fabriquée n'existe qu'en artefact ; à refaire, retélécharger les packs (skill `packs-itch`, commande dans l'en-tête du script).
+- Le temple de la Grue jouable, refait avec les trois packs gratuits de reodesuxz (pagode, torii, lions-gardiens, lanternes, jardin zen, tour de guet ; maisons : machiya, maison de thé, entrepôt kura ; arbres : cerisiers, érables, pins, bambous) et les deux samouraïs de LOWPO (gratuit) teintés aux couleurs des escouades (rônins en violet, chef en rouge, 1,8 fois plus grand).
+- La vitrine : une vignette de chacun des 85 modèles (83 reodesuxz + 2 LOWPO).
+- Constats : les modèles reodesuxz sont propres et cohérents, en couleurs unies, plus détaillés que nos formes (toits recourbés, poutres, bannières) ; les samouraïs LOWPO gratuits n'ont **pas d'animation** (pose bras écartés, ils glissent) : pour de vrais soldats, il faut la version Pro (animations, GLB, 9,99 $) ou un autre pack.
+- Licences : reodesuxz (usage libre, pas de revente ni redistribution, pas d'entraînement d'IA ; crédit apprécié) ; LOWPO gratuit (CC0). À citer dans `credits/index.html` dès qu'ils entrent dans le jeu.
+
+Retours : à venir.

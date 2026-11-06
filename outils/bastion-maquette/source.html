@@ -1,0 +1,268 @@
+<title>Bastion, maquette 3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Shippori+Mincho:wght@600;800&display=swap">
+<style>
+/* Maquette 3 de « Bastion » : le temple de la Grue refait avec des modèles 3D gratuits (reodesuxz, LOWPO Samurai),
+   et la vitrine de tous les modèles. Fabriquée par outils/bastion-maquette/fabriquer.py (modèles glissés en base64). */
+:root{
+  color-scheme: dark;
+  --bg:#15131a; --text:#f0ece4; --dim:#b6aea0; --gold:#e8c46a; --laque:#c8301e;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace; --est:"Shippori Mincho", "Yu Mincho", serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(#26222f 1px, transparent 1.5px); background-size:5px 5px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:24px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.intro{max-width:1180px; margin:0 auto 22px; display:flex; flex-direction:column; gap:8px}
+.intro h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-shadow:3px 3px 0 #7a4a1a, 5px 5px 0 #000}
+.intro p{margin:0; max-width:76ch; color:var(--dim)}
+.intro b{color:var(--text); font-weight:400}
+.wrap{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:minmax(0, 360px) minmax(0, 1fr); gap:28px; align-items:start}
+@media (max-width:800px){ .wrap{grid-template-columns:minmax(0, 1fr); justify-items:center} }
+.col{display:flex; flex-direction:column; gap:12px; width:100%; min-width:0}
+.col > h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; line-height:1.6; color:var(--gold)}
+.col > h2 span{color:#e98a6a}
+.col > p{margin:0; color:var(--dim); font-size:19px}
+.load{position:absolute; inset:0; display:grid; place-items:center; font-family:var(--est); font-weight:800; color:#f4ede0; font-size:16px; text-shadow:0 1px 4px #000}
+
+.phone{position:relative; width:100%; max-width:360px; height:700px; overflow:hidden; border:4px solid #000; border-radius:22px; box-shadow:0 0 0 3px #3a3444, 6px 6px 0 3px #000; touch-action:none; user-select:none; -webkit-user-select:none}
+.phone > canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:12px 10px}
+.hud > *{pointer-events:auto}
+.top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.lvl{display:flex; flex-direction:column; gap:3px}
+.lvl b{font-weight:800}
+.pills{display:flex; flex-direction:column; align-items:flex-end; gap:4px}
+.pill{padding:2px 8px; white-space:nowrap}
+.banner{position:absolute; left:10px; right:10px; top:84px; padding:7px 10px; text-align:center; opacity:0; transform:translateY(-6px); transition:opacity .2s, transform .2s; pointer-events:none}
+.banner.on{opacity:1; transform:none}
+.slow{position:absolute; left:50%; bottom:150px; transform:translateX(-50%); padding:4px 12px; opacity:0; transition:opacity .15s; pointer-events:none; white-space:nowrap}
+.phone.slowed .slow{opacity:1}
+.phone::after{content:""; position:absolute; inset:0; pointer-events:none; border:3px solid transparent; border-radius:18px; transition:border-color .15s}
+.hint{text-align:center; margin-bottom:6px; pointer-events:none}
+.cards{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px}
+.card{position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; padding:7px 4px 30px; text-align:center}
+.card .ico{width:32px; height:32px; display:grid; place-items:center; font-size:18px; line-height:1}
+.card .pips{display:flex; gap:3px}
+.card .pips i{width:6px; height:6px}
+.card[aria-pressed="true"]{transform:translateY(-4px)}
+.card .sp{position:absolute; left:5px; right:5px; bottom:5px; height:20px; display:grid; place-items:center; overflow:hidden}
+.card .sp::before{content:""; position:absolute; left:0; top:0; bottom:0; width:var(--cd, 0%); opacity:.35; background:#000}
+.card .sp span{position:relative}
+.thB{background:linear-gradient(#f0b890, #8a6a7a 55%, #3a3450)}
+.thB .lvl b{font-family:var(--est); font-size:20px; color:#fff4e6; text-shadow:0 2px 6px #1a1020}
+.thB .lvl span{color:#ffe0c0; font-family:var(--est); font-weight:600; font-size:12px; letter-spacing:2px; text-shadow:0 1px 3px #1a1020}
+.thB .pill{font-family:var(--est); font-weight:600; font-size:13px; color:#f4ede0; background:#1a1410; border-left:4px solid var(--laque)}
+.thB .banner{font-family:var(--est); font-weight:800; font-size:14px; letter-spacing:2px; color:#f4ede0; background:#1a1410; border-top:3px solid var(--laque); border-bottom:3px solid var(--laque)}
+.thB .banner.good{border-color:var(--gold)}
+.thB .slow{font-family:var(--est); font-weight:800; font-size:14px; letter-spacing:4px; color:#f4ede0; background:var(--laque); border-radius:2px}
+.thB.slowed::after{border-color:var(--laque)}
+.thB .hint{color:#fff4e6; font-family:var(--est); font-size:13px; font-weight:600; text-shadow:0 1px 4px #000}
+.thB .card{background:#f4ede0; border:2px solid #1a1410; color:#1a1410; box-shadow:3px 3px 0 #1a1410}
+.thB .card .ico{background:var(--c); color:#f4ede0; font-family:var(--est); font-weight:800; font-size:17px}
+.thB .card .nm{font-family:var(--est); font-weight:800; font-size:13px}
+.thB .card .pips i{background:var(--laque); border-radius:50%} .thB .card .pips i.off{background:#d6cbb6}
+.thB .card .sp{font-family:var(--est); font-weight:800; font-size:11px; letter-spacing:1px; color:#f4ede0; background:#1a1410}
+.thB .card .sp.ready{background:var(--laque); box-shadow:0 0 8px #ff7a5a}
+.thB .card[aria-pressed="true"]{background:#fff; box-shadow:3px 7px 0 var(--laque)}
+
+/* la vitrine */
+.vit{display:grid; grid-template-columns:repeat(auto-fill, minmax(112px, 1fr)); gap:8px}
+.vit figure{margin:0; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 4px; background:#1e1a26; border:2px solid #2e2838}
+.vit img{width:100%; aspect-ratio:1; max-width:120px; display:block}
+.vit figcaption{font-size:15px; line-height:1; color:var(--dim); text-align:center; overflow-wrap:anywhere}
+.vit figcaption b{display:block; font-family:var(--f-display); font-weight:400; font-size:6px; color:var(--gold); margin-bottom:3px}
+.vit .sam{border-color:var(--laque)}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<div class="intro">
+  <h1>BASTION · MAQUETTE 3 · MODELES GRATUITS</h1>
+  <p>Le temple de la Grue refait avec de <b>vrais modèles 3D gratuits</b> : les trois packs japonais de <b>reodesuxz</b> (temple, pagode, maisons machiya, torii, cerisiers, bambous, lanternes, lions-gardiens) et les samouraïs de <b>LOWPO</b> (version gratuite, donc <b>sans animation</b> : ils glissent au lieu de marcher). Mêmes règles que la maquette 2. À droite, la <b>vitrine</b> : chacun des 85 modèles, pour juger de la finesse.</p>
+</div>
+
+<div class="wrap">
+  <section class="col">
+    <h2>LE TEMPLE <span>DE LA GRUE</span></h2>
+    <div class="phone thB" id="pB"><div class="load" id="loadB">Chargement des modèles…</div></div>
+    <p>Tes escouades portent la couleur de leur bannière (noir, vert, rouge) ; les rônins sont en violet sombre. Touche une escouade : le temps ralentit ; touche le sol : elle y court. Glisse le doigt pour tourner.</p>
+  </section>
+  <section class="col">
+    <h2>LA VITRINE · <span>85 MODELES</span></h2>
+    <p>En rouge, les deux samouraïs LOWPO ; les autres viennent des trois packs reodesuxz (bourg du château, sanctuaire, dojo). Tous sont sans texture, en couleurs unies, de 40 à 300 triangles environ.</p>
+    <div class="vit" id="vit"></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+__LIBS__
+<script>
+(() => {
+"use strict";
+window.createImageBitmap = undefined;   // textures par <img> (fetch interdit dans un artefact)
+const MOD = __MODELES__;              // "pack/nom" → GLB en base64
+const SAM = __SAMOURAIS__;            // nom → FBX en base64
+const SAMTEX = "__SAMTEX__";          // texture des samouraïs (data:)
+const PACKS = {c: "BOURG DU CHATEAU", s: "SANCTUAIRE", d: "DOJO"};
+const buf = b64 => { const s = atob(b64), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a.buffer; };
+
+__SIM__
+
+/* ================= chargement des modèles ================= */
+const LIB = {};
+async function charger(){
+  const gl = new THREE.GLTFLoader();
+  await Promise.all(Object.entries(MOD).map(([k, b]) => new Promise(ok => gl.parse(buf(b), "", g => { LIB[k] = g.scene; ok(); }, () => ok()))));
+  const tex = await new Promise(ok => { const t = new THREE.TextureLoader().load(SAMTEX, () => ok(t), undefined, () => ok(t)); }); tex.magFilter = THREE.NearestFilter;
+  const fbx = new THREE.FBXLoader();
+  for (const [k, b] of Object.entries(SAM)){
+    try { const o = fbx.parse(buf(b), ""); o.traverse(m => { if (m.isMesh){ m.material = new THREE.MeshLambertMaterial({map: tex, skinning: !!m.isSkinnedMesh}); m.castShadow = true; } }); LIB["sam/" + k] = o; } catch (e) { console.warn(k, e); }
+  }
+}
+// une copie du modèle, ramenée à une largeur (ou hauteur) donnée, posée à plat, centrée
+function piece(key, size, byHeight){
+  const src = LIB[key]; if (!src) return new THREE.Group();
+  const o = src.isObject3D && key.startsWith("sam/") ? THREE.SkeletonUtils.clone(src) : src.clone(true);
+  const box = new THREE.Box3().setFromObject(o), s = box.getSize(new THREE.Vector3());
+  const k = size / (byHeight ? s.y : Math.max(s.x, s.z) || 1);
+  o.scale.multiplyScalar(k);
+  const b2 = new THREE.Box3().setFromObject(o), c = b2.getCenter(new THREE.Vector3());
+  o.position.x -= c.x; o.position.z -= c.z; o.position.y -= b2.min.y;
+  const g = new THREE.Group(); g.add(o);
+  o.traverse(m => { if (m.isMesh){ m.castShadow = true; m.receiveShadow = true; } });
+  return g;
+}
+function teinte(g, col){ g.traverse(m => { if (m.isMesh){ m.material = m.material.clone(); m.material.color = new THREE.Color(col); } }); return g; }
+
+/* ================= le temple, avec les modèles ================= */
+function temple(phone){
+  const S = makeSim("B");
+  const r = new THREE.WebGLRenderer({antialias: true, alpha: true});
+  r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+  phone.prepend(r.domElement);
+  const scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x8a6a7a, 26, 46);
+  const cam = new THREE.PerspectiveCamera(36, 1, .1, 100);
+  scene.add(new THREE.HemisphereLight(0xffe0c8, 0x4a3a58, .8));
+  const sun = new THREE.DirectionalLight(0xffc090, .85); sun.position.set(-10, 8, 5); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, {left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 30}); sun.shadow.bias = -.0008; scene.add(sun);
+  const M = c => new THREE.MeshLambertMaterial({color: c});
+  const P = {top: [0x7f9e62, 0x8cab6c, 0x99b876], side: 0x6a4a3e, side2: 0x4a3430, rock: 0x7a7068, path: 0xd0bf98, water: 0x5a7aa8};
+  const world = new THREE.Group(); scene.add(world); world.position.set(-N / 2, 0, -N / 2);
+  const tileMesh = [];
+  const TREES = ["s/cherry_tree", "s/maple_tree", "s/pine_tree_japanese", "s/bamboo_cluster", "c/cherry_tree", "d/sakura_tree"];
+  let ti = 0;
+  for (const t of S.tiles){
+    const hgt = .6 + Math.max(0, t.h) * .45 - (t.water ? .25 : 0);
+    const mats = [M(t.h >= 1 ? P.rock : P.side), M(t.h >= 1 ? P.rock : P.side), M(t.water ? P.side2 : t.path ? P.path : P.top[Math.min(2, t.h)]), M(P.side2), M(P.side), M(P.side)];
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1, hgt, 1), mats); m.position.set(t.x + .5, hgt / 2 - .6, t.y + .5); m.receiveShadow = true; m.castShadow = true; m.userData.t = t;
+    world.add(m); tileMesh.push(m);
+    t.top = hgt - .6;
+    if (t.water){ const w = new THREE.Mesh(new THREE.BoxGeometry(1, .08, 1), new THREE.MeshLambertMaterial({color: P.water, transparent: true, opacity: .85})); w.position.set(t.x + .5, t.top + .18, t.y + .5); world.add(w); }
+    if (t.tree){ const k = TREES[(t.x * 5 + t.y * 3 + ti++) % TREES.length], p = piece(k, k.includes("bamboo") ? .7 : .85); p.position.set(t.x + .5, t.top, t.y + .5); p.rotation.y = (t.x * 1.7 + t.y) % 6; world.add(p); }
+    if (t.rock){ const p = piece("s/moss_boulder", .55); p.position.set(t.x + .5, t.top, t.y + .5); world.add(p); }
+  }
+  // les maisons : machiya, maison de thé, entrepôt
+  const HM = ["c/machiya_house", "s/tea_house", "c/storehouse_kura", "c/machiya_house"];
+  const houseMesh = S.houses.map((h, i) => {
+    const t = tile(S, h.x, h.y), g = piece(HM[i % HM.length], .86); g.position.set(h.x + .5, t.top, h.y + .5); g.rotation.y = h.y < 4 ? 0 : Math.PI; world.add(g);
+    const fire = new THREE.Mesh(new THREE.ConeGeometry(.16, .4, 5), new THREE.MeshBasicMaterial({color: 0xff7a1a})); fire.position.set(h.x + .5, t.top + .9, h.y + .5); fire.visible = false; world.add(fire);
+    const mats = []; g.traverse(m => { if (m.isMesh){ m.material = m.material.clone(); mats.push([m.material, m.material.color.clone()]); } });
+    return {g, fire, mats};
+  });
+  // le sommet : pagode ; devant, le temple et le torii ; lanternes et lions-gardiens
+  const C = tile(S, 4, 4);
+  const pag = piece("s/pagoda", .8); pag.position.set(4.5, C.top, 4.5); world.add(pag);
+  const tor = piece("s/torii_gate", .9); tor.position.set(4.5, tile(S, 4, 6).top, 6.5); world.add(tor);
+  for (const [x, y, k, rot] of [[3.15, 6.2, "s/stone_lantern", 0], [5.85, 6.2, "s/stone_lantern", 0], [4.1, 5.7, "s/komainu", Math.PI], [4.9, 5.7, "s/komainu", Math.PI], [2.2, 3.5, "c/paper_lantern", 0], [6.8, 3.5, "c/paper_lantern", 0], [1.5, 6.5, "s/zen_sand_garden", 0]]){
+    const p = piece(k, k.includes("komainu") ? .22 : k.includes("garden") ? .8 : .25); p.position.set(x, tile(S, x, y).top, y); p.rotation.y = rot; world.add(p);
+  }
+  const wt = piece("c/watchtower", .7); wt.position.set(6.5, tile(S, 6, 2).top, 2.5); world.add(wt);
+  // personnages : samouraïs LOWPO teintés
+  const SQC = [0x2a2a2a, 0x4a8a5a, 0xd8402a];
+  const H = .34;   // taille d'un soldat (une case = 1)
+  const pool = SQC.map(c => Array.from({length: 6}, () => { const p = teinte(piece("sam/Samurai", H, true), c); world.add(p); return p; }));
+  const foePool = Array.from({length: 16}, () => { const p = teinte(piece("sam/Female_Samurai", H, true), 0x5a4a78); world.add(p); return p; });
+  const boss = teinte(piece("sam/Samurai", H * 1.8, true), 0xa0201a); world.add(boss);
+  const flags = SQC.map(c => { const g = new THREE.Group(); const pole = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .7, 4), M(0x3a2a1a)); pole.position.y = .35; const f = new THREE.Mesh(new THREE.BoxGeometry(.1, .24, .01), M(c)); f.position.set(.06, .56, 0); g.add(pole, f); world.add(g); return g; });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.32, .4, 24), new THREE.MeshBasicMaterial({color: 0xc8301e, side: THREE.DoubleSide})); ring.rotation.x = -Math.PI / 2; world.add(ring);
+  const shield = new THREE.Mesh(new THREE.TorusGeometry(.34, .03, 6, 24), new THREE.MeshBasicMaterial({color: 0xe8c46a})); shield.rotation.x = -Math.PI / 2; world.add(shield);
+  const target = new THREE.Mesh(new THREE.RingGeometry(.12, .18, 16), new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide})); target.rotation.x = -Math.PI / 2; world.add(target);
+  const warn = new THREE.Mesh(new THREE.ConeGeometry(.22, .5, 4), new THREE.MeshBasicMaterial({color: 0xe8301e})); warn.rotation.x = Math.PI; world.add(warn);
+  const arrowPool = Array.from({length: 60}, () => { const m = new THREE.Mesh(new THREE.BoxGeometry(.02, .02, .18), new THREE.MeshBasicMaterial({color: 0x2a1a0a})); world.add(m); return m; });
+  let yaw = -.6, drag = null, auto = true;
+  const size = () => { const w = phone.clientWidth, h = phone.clientHeight; r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
+  size(); addEventListener("resize", size);
+  const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
+  const paint = hud("B", phone, S);
+  phone.addEventListener("pointerdown", e => { drag = {x: e.clientX, yaw, moved: false}; });
+  phone.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 6) drag.moved = true; if (drag.moved){ yaw = drag.yaw - dx * .01; auto = false; } });
+  phone.addEventListener("pointerup", e => {
+    const d = drag; drag = null; if (!d || d.moved || e.target.closest(".card")) return;
+    const rc = r.domElement.getBoundingClientRect(); v2.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1);
+    ray.setFromCamera(v2, cam);
+    let pick = -1, pd = .7; const hit = ray.intersectObjects(tileMesh)[0];
+    if (hit){ const p = world.worldToLocal(hit.point.clone()); S.squads.forEach((q, i) => { if (q.hp > 0){ const dd = Math.hypot(q.x - p.x, q.y - p.z); if (dd < pd){ pd = dd; pick = i; } } });
+      if (S.sel >= 0 && (pick < 0 || pick === S.sel)){ const t = hit.object.userData.t; if (!t.water){ const q = S.squads[S.sel]; q.tx = t.x + .5; q.ty = t.y + .5; } S.sel = -1; }
+      else if (pick >= 0) S.sel = pick; }
+  });
+  const Y = (x, y) => tile(S, x, y).top + .01;
+  const face = (p, x, y, tx, ty) => { if (Math.hypot(tx - x, ty - y) > .01) p.rotation.y = Math.atan2(tx - x, ty - y); };
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (S.reset){ const s2 = makeSim("B"); for (const t of s2.tiles) t.top = tile(S, t.x, t.y).top; Object.assign(S, s2); }
+    step(S, dt * (S.sel >= 0 ? .15 : 1));
+    if (auto) yaw += dt * .045;
+    cam.position.set(Math.sin(yaw) * 17, 17, Math.cos(yaw) * 17); cam.lookAt(0, .3, 0);
+    S.houses.forEach((h, i) => { const m = houseMesh[i], burnt = h.hp <= 0, hurt = h.hp < h.max * .6; m.fire.visible = hurt && !burnt; m.fire.scale.y = .8 + Math.sin(now / 90 + i) * .25; m.mats.forEach(([mt, c]) => mt.color.copy(burnt ? new THREE.Color(0x3a3430) : c)); });
+    S.squads.forEach((q, i) => {
+      const pos = q.hp > 0 ? soldiers(q) : [];
+      pool[i].forEach((p, k) => { p.visible = k < pos.length; if (p.visible){ const [x, y] = pos[k]; p.position.set(x, Y(x, y) + Math.abs(Math.sin(now / 160 + k)) * (Math.hypot(q.tx - q.x, q.ty - q.y) > .1 ? .03 : 0), y); face(p, q.x, q.y, q.tx, q.ty); } });
+      flags[i].visible = q.hp > 0; flags[i].position.set(q.x, Y(q.x, q.y), q.y);
+    });
+    const inf = S.squads[0]; shield.visible = inf.hp > 0 && inf.fx > 0; if (shield.visible) shield.position.set(inf.x, Y(inf.x, inf.y) + .1, inf.y);
+    const s = S.squads[S.sel]; ring.visible = !!s; if (s) ring.position.set(s.x, Y(s.x, s.y) + .02, s.y);
+    target.visible = false; S.squads.forEach(q => { if (q.hp > 0 && Math.hypot(q.tx - q.x, q.ty - q.y) > .3){ target.visible = true; target.position.set(q.tx, Y(q.tx, q.ty) + .02, q.ty); } });
+    const foes = S.foes.filter(f => !f.boss), bf = S.foes.find(f => f.boss);
+    foePool.forEach((p, k) => { const f = foes[k]; p.visible = !!f && f.delay <= 0; if (p.visible){ p.position.set(f.x, Y(f.x, f.y) + (f.fight ? Math.abs(Math.sin(now / 80 + k)) * .04 : Math.abs(Math.sin(now / 150 + k)) * .02), f.y); p.rotation.y = Math.atan2(4.5 - f.x, 4.5 - f.y); } });
+    boss.visible = !!bf && bf.delay <= 0; if (boss.visible){ boss.position.set(bf.x, Y(bf.x, bf.y), bf.y); boss.rotation.y = Math.atan2(4.5 - bf.x, 4.5 - bf.y); }
+    warn.visible = !!S.warnAt; if (S.warnAt){ const [x, y] = S.warnAt; warn.position.set(x + .5, Y(x + .5, y + .5) + .8 + Math.abs(Math.sin(now / 200)) * .25, y + .5); }
+    arrowPool.forEach((m, k) => { const a = S.arrows[k]; m.visible = !!a; if (a){ const u = Math.min(1, a.t / a.d), x = a.x + (a.f.x - a.x) * u, y = a.y + (a.f.y - a.y) * u; m.position.set(x, Y(x, y) + .3 + Math.sin(u * Math.PI) * .6, y); m.lookAt(world.localToWorld(new THREE.Vector3(a.f.x, .3, a.f.y))); } });
+    r.render(scene, cam); paint();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ================= la vitrine ================= */
+function vitrine(){
+  const W = 220, r = new THREE.WebGLRenderer({antialias: true, alpha: true, preserveDrawingBuffer: true}); r.setSize(W, W, false);
+  const scene = new THREE.Scene(); scene.add(new THREE.HemisphereLight(0xffffff, 0x6a6070, .9)); const sun = new THREE.DirectionalLight(0xffffff, .6); sun.position.set(3, 5, 4); scene.add(sun);
+  const cam = new THREE.PerspectiveCamera(30, 1, .01, 100);
+  const out = document.getElementById("vit");
+  const keys = Object.keys(LIB).sort((a, b) => (a.startsWith("sam/") ? -1 : 0) - (b.startsWith("sam/") ? -1 : 0) || a.localeCompare(b));
+  for (const k of keys){
+    const sam = k.startsWith("sam/"), p = piece(k, 1, sam); scene.add(p);
+    const b = new THREE.Box3().setFromObject(p), s = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3()), d = Math.max(s.x, s.y, s.z) * 2.2;
+    cam.position.set(c.x + d * .75, c.y + d * .5, c.z + d * .9); cam.lookAt(c);
+    r.render(scene, cam);
+    const f = document.createElement("figure"); if (sam) f.className = "sam";
+    const img = new Image(); img.src = r.domElement.toDataURL(); img.alt = k;
+    const [pk, nm] = k.split("/"), cap = document.createElement("figcaption");
+    cap.innerHTML = `<b>${sam ? "LOWPO" : PACKS[pk]}</b>`; cap.append(nm.replace(/_/g, " "));
+    f.append(img, cap); out.append(f); scene.remove(p);
+  }
+}
+
+charger().then(() => {
+  document.getElementById("loadB").remove();
+  try { temple(document.getElementById("pB")); } catch (e) { console.error(e); }
+  try { vitrine(); } catch (e) { console.error(e); }
+});
+})();
+</script>
