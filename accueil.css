@@ -258,12 +258,8 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
 .j-tag.maj{background:#5ce1ff; color:#05222a}
 .j-tag.acc{background:#5cff8a; color:#06280f}
 .j-date{font-family:var(--f-display); font-size:6px; letter-spacing:1px; color:#8a86b8}
-.j-old{border-top:2px dashed rgba(255,255,255,.18); padding-top:10px}
-.j-old summary{cursor:pointer; font-family:var(--f-display); font-size:8px; letter-spacing:1px; line-height:1.6; color:var(--text-dim); list-style:none}
-.j-old summary::-webkit-details-marker{display:none}
-.j-old summary::before{content:"▶ "; color:var(--gold)} .j-old[open] summary::before{content:"▼ "}
-.j-old summary:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
-.j-old .j-list{margin-top:10px}
+.j-issues{justify-content:center}
+.j-issues .saves-btn{flex:0 1 auto; font-size:8px; padding:8px 10px}
 
 /* ---------- surprends-moi : une console tire une cartouche au hasard et l'insère ---------- */
 .surprise{position:fixed; inset:0; z-index:60; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; background:rgba(8,6,20,.94); cursor:pointer}

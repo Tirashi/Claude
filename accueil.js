@@ -288,13 +288,24 @@ function jRow(n){
   h.append(jTag(n, g), el("strong", "", g ? g.n : "LA LUDOTHEQUE"), el("span", "j-date", fmtDay(n[0])));
   t.append(h, el("p", "", n[3])); r.append(jIcon(g), t); return r;
 }
+let jIssue = 0;   // numéro affiché (0 = le plus récent)
 function renderJournal(){
   jBody.textContent = "";
   const issues = [];   // un numéro par mois, du plus récent au plus ancien
   for (const n of NEWS){ const ym = n[0].slice(0, 7); if (!issues.length || issues[issues.length - 1].ym !== ym) issues.push({ym, news: []}); issues[issues.length - 1].news.push(n); }
   const label = ym => { const [y, m] = ym.split("-").map(Number); return `N° ${(y - 2026) * 12 + m - 9} · ${MOIS[m - 1]} ${y}`; };
-  const cur = issues[0]; if (!cur) return;
+  jIssue = Math.min(jIssue, issues.length - 1);
+  const cur = issues[jIssue]; if (!cur) return;
   const mast = el("div", "j-mast"); mast.append(el("b", "", "LUDO MAG"), el("span", "", label(cur.ym))); jBody.append(mast);
+  // les numéros, en haut (bien visibles, même sur un grand écran) : toucher un numéro l'affiche
+  if (issues.length > 1){
+    const row = el("div", "chips j-issues");
+    issues.forEach((is, i) => {
+      const [y, m] = is.ym.split("-").map(Number), b = button(`N° ${(y - 2026) * 12 + m - 9} · ${MOIS[m - 1]}`, i === jIssue, () => { jIssue = i; renderJournal(); $("journal").scrollTop = 0; });
+      row.append(b);
+    });
+    jBody.append(row);
+  }
   // la couverture : la plus récente nouveauté du mois
   const top = cur.news.find(n => n[1] === "neuf" && newsGame(n));
   if (top){
@@ -309,7 +320,7 @@ function renderJournal(){
   }
   const others = cur.news.filter(n => n !== top && n[1] === "neuf" && newsGame(n));
   if (others.length){
-    jBody.append(el("div", "j-sect", "SORTIS CE MOIS-CI"));
+    jBody.append(el("div", "j-sect", jIssue ? "SORTIS CE MOIS-LA" : "SORTIS CE MOIS-CI"));
     const box = el("div", "j-minis");
     for (const n of others){
       const g = newsGame(n), b = el("button", "j-mini"), h = el("div"); b.type = "button";
@@ -319,16 +330,9 @@ function renderJournal(){
   }
   const rest = cur.news.filter(n => n !== top && !others.includes(n));
   if (rest.length){ jBody.append(el("div", "j-sect", "MISES A JOUR")); const l = el("div", "j-list"); rest.forEach(n => l.append(jRow(n))); jBody.append(l); }
-  // les numéros précédents, repliés
-  for (const is of issues.slice(1)){
-    const d = el("details", "j-old"), nb = is.news.filter(n => n[1] === "neuf").length;
-    d.append(el("summary", "", `${label(is.ym)} · ${nb} jeu${nb > 1 ? "x" : ""}, ${is.news.length - nb} nouvelle${is.news.length - nb > 1 ? "s" : ""}`));
-    d.addEventListener("toggle", () => { if (d.open && !d.querySelector(".j-list")){ const l = el("div", "j-list"); is.news.forEach(n => l.append(jRow(n))); d.append(l); } });
-    jBody.append(d);
-  }
 }
 function openJournal(){
-  renderJournal();
+  jIssue = 0; renderJournal();
   jov.classList.add("on"); document.body.classList.add("lock");
   $("journal").scrollTop = 0; jClose.focus({preventScroll: true});
   if (NEWS[0] && NEWS[0][0] > jSeen){ jSeen = NEWS[0][0]; try { localStorage.setItem("ludo.journalVu", jSeen); } catch (e) {} }
