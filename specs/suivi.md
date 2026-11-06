@@ -42,6 +42,16 @@ Plan et avancement : [`plan-rangement.md`](plan-rangement.md). Phase 4 : `commun
 ## Une fiche par jeu, session 1 (05/11)
 Proposition acceptée par l'utilisateur. `accueil-outils.js` + fiches de Tetris et Nebula ; ancien et nouvel accueil comparés dans Chromium (identiques) ; tests de compatibilité `LUDO1-` dans `logique.js`, contrôle des fiches dans `verifications.js` ; cache `ludotheque-v88`. Détails : [`plan-rangement.md`](plan-rangement.md) (phase 6). Reste la session 2 (34 jeux). À essayer sur le téléphone : l'accueil, Tetris et Nebula s'affichent, leurs volets et l'export/import marchent.
 
+## Essais du 06/11
+Confirmés sur le téléphone : Amiral !, Escadrille !, Thé des Jarls, Capitaine du port, Mot d'or, Magasinier, Mineur de l'espace (aussi au PC), Dragon Simulator (équilibrage gardé) et l'accueil en fiches (sauf le transfert de sauvegardes, pas encore essayé). Demande : refaire un peu la section Quoi de neuf de l'accueil. Détails : [`essais.md`](essais.md).
+
+## Quoi de neuf de l'accueil (06/11)
+Reproches de l'utilisateur : **trop long** (56 lignes depuis le 12/10), **pas assez joli** (liste de texte), **mal placé** (replié sous le jeu à la une). Maquette 1 : https://claude.ai/artifact/DDFF3owWU8i52drxazRBAw (source `maquettes/accueil-quoi-de-neuf.html`, qui charge `../icones.js` et `../commun/pixel32.js` ; copie de l'artefact faite en intégrant ces deux scripts, `outils/artefact.py` ne prenant que des pages complètes). Trois directions, avec les vraies nouvelles raccourcies en une ligne et les icônes des jeux :
+- **A · le bandeau du gardien** : sous le gardien, les 3 dernières nouveautés (icône, nom, une ligne, badge NEUF / MAJ / ACCUEIL) ; TOUT ouvre un volet rangé par semaine sur un mois, « plus ancien » pour le reste.
+- **B · l'étagère des nouveautés** : en tête de page, des boîtes de jeu qui défilent au doigt (jeux sortis depuis un mois), qui remplacent le jeu à la une ; en dessous, les 3 dernières mises à jour en une ligne.
+- **C · le journal** : un bouton JOURNAL (pastille rouge tant qu'il y a du neuf pas lu) ouvre un écran à part façon magazine (« LUDO MAG », un numéro par mois : couverture, jeux du mois, mises à jour).
+À faire après le choix : `NEWS` d'accueil.js avec un genre (neuf / maj / accueil) et le jeu concerné (pour l'icône), textes raccourcis.
+
 ## Une fiche par jeu, session 2 (05/11)
 Les 34 autres jeux ont leur fiche ; `accueil.js` passe de 1385 à 693 lignes (`ORDRE`, `NEWS`, moteur) ; liste de contrôle du mémo et skill `ajouter-un-jeu` réécrites ; cache `ludotheque-v89`. Ancien et nouvel accueil comparés dans Chromium sur les 36 jeux : identiques (sauf l'ordre des lignes du résumé des sauvegardes). Artefact de l'accueil pas republié (identique). Détails : [`plan-rangement.md`](plan-rangement.md). À essayer sur le téléphone : l'accueil, quelques volets, l'export/import.
 
