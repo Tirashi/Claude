@@ -19,6 +19,8 @@ Maquette 9 (la 8 avec les monstres de l'Enemy Pack, acheté) :
         python3 -I outils/bastion-maquette/fabriquer.py 9 <dossier « Tiny Swords (Free Pack) »> <dossier « Tiny Swords (Update 010) »> <dossier « Enemy Pack »> <sortie.html>
 Maquette 10 (tactique au tour par tour façon Wargroove : Free Pack, Enemy Pack, Warfare) :
         python3 -I outils/bastion-maquette/fabriquer.py 10 <Free Pack> <ancienne version> <dossier « Enemy Pack »> <dossier « Warfare »> <sortie.html>
+Maquette 11 (RTS et tower defense : économie, recrutement, vagues ; Free Pack et Enemy Pack) :
+        python3 -I outils/bastion-maquette/fabriquer.py 11 <Free Pack> <ancienne version> <dossier « Enemy Pack »> <sortie.html>
 Les packs ne sont pas dans le dépôt (pas de redistribution) : la page fabriquée sert d'artefact, elle n'est pas commitée.
 Packs : https://reodesuxz.itch.io/low-poly-japanese-castle-town-pack, https://reodesuxz.itch.io/low-poly-japanese-shrine-pack,
 https://reodesuxz.itch.io/low-poly-ninja-dojo-castle-pack, https://standout7.itch.io/lowpo-samurai"""
@@ -27,6 +29,31 @@ import base64, glob, json, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, '..', '..'))
 M4 = sys.argv[1] == '4'
+if sys.argv[1] == '11':
+    fp, old, ep, sortie = sys.argv[2:6]
+    png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()
+    B = os.path.join(fp, 'Units', 'Blue Units'); T = os.path.join(fp, 'Terrain'); BB = os.path.join(fp, 'Buildings', 'Blue Buildings'); R = os.path.join(T, 'Resources')
+    I = {'tm': os.path.join(T, 'Tileset/Tilemap_color1.png'), 'sable': os.path.join(old, 'Terrain/Ground/Tilemap_Flat.png'),
+         'bush': os.path.join(T, 'Decorations/Bushes/Bushe1.png'), 'rock': os.path.join(T, 'Decorations/Rocks/Rock2.png'), 'dust': os.path.join(fp, 'Particle FX/Dust_01.png'),
+         'fire': os.path.join(fp, 'Particle FX/Fire_01.png'), 'arrow': os.path.join(B, 'Archer/Arrow.png'), 'healfx': os.path.join(B, 'Monk/Heal_Effect.png'), 'bone': os.path.join(ep, 'Gnoll/Gnoll_Bone.png'),
+         'castle': os.path.join(BB, 'Castle.png'), 'barracks': os.path.join(BB, 'Barracks.png'), 'archery': os.path.join(BB, 'Archery.png'), 'house1': os.path.join(BB, 'House1.png'), 'house2': os.path.join(BB, 'House2.png'),
+         'sheepM': os.path.join(R, 'Meat/Sheep/Sheep_Move.png'), 'sheepG': os.path.join(R, 'Meat/Sheep/Sheep_Grass.png'),
+         'ic/bois': os.path.join(R, 'Wood/Wood Resource/Wood Resource.png'), 'ic/or': os.path.join(R, 'Gold/Gold Resource/Gold_Resource.png'), 'ic/viande': os.path.join(R, 'Meat/Meat Resource/Meat Resource.png')}
+    for k in range(1, 5): I['tree%d' % k] = os.path.join(R, 'Wood/Trees/Tree%d.png' % k)
+    for k in range(1, 3): I['stump%d' % k] = os.path.join(R, 'Wood/Trees/Stump %d.png' % k)
+    for k in range(3, 6): I['gold%d' % k] = os.path.join(R, 'Gold/Gold Stones/Gold Stone %d.png' % k)
+    for a in ('Run Axe', 'Interact Axe', 'Run Wood', 'Run Pickaxe', 'Interact Pickaxe', 'Run Gold', 'Run Knife', 'Interact Knife', 'Run Meat'): I['pawn/' + a] = os.path.join(B, 'Pawn/Pawn_%s.png' % a)
+    U = {'guer': [os.path.join(B, 'Warrior/Warrior_%s.png'), ('Idle', 'Run', 'Attack1')], 'arc': [os.path.join(B, 'Archer/Archer_%s.png'), ('Idle', 'Run', 'Shoot')],
+         'lance': [os.path.join(B, 'Lancer/Lancer_%s.png'), ('Idle', 'Run', 'Right_Attack')], 'moine': [os.path.join(B, 'Monk/%s.png'), ('Idle', 'Run', 'Heal')],
+         'gob': [os.path.join(ep, 'Torch Goblin/Torch Goblin_%s.png'), ('Idle', 'Run', 'Attack')], 'lanceg': [os.path.join(ep, 'Spear Goblin/Spear Goblin_%s.png'), ('Idle', 'Run', 'Attack Fast')],
+         'gnoll': [os.path.join(ep, 'Gnoll/Gnoll_%s.png'), ('Idle', 'Walk', 'Throw')], 'troll': [os.path.join(ep, 'Troll/Troll_%s.png'), ('Idle', 'Walk', 'Attack')]}
+    for u, (pat, ans) in U.items():
+        for a in ans: I['u/%s/%s' % (u, a)] = pat % a
+    HA = os.path.join(fp, 'UI Elements/UI Elements/Human Avatars')
+    I.update({'av/lance': os.path.join(HA, 'Avatars_01.png'), 'av/guer': os.path.join(HA, 'Avatars_02.png'), 'av/arc': os.path.join(HA, 'Avatars_03.png'), 'av/moine': os.path.join(HA, 'Avatars_05.png')})
+    img = {k: png(v) for k, v in I.items()}
+    html = open(os.path.join(ICI, 'source-11.html'), encoding='utf-8').read().replace('__IMAGES__', json.dumps(img))
+    open(sortie, 'w', encoding='utf-8').write(html); print(sortie, len(html) // 1024, 'Ko,', len(img), 'images'); sys.exit()
 if sys.argv[1] == '10':
     fp, old, ep, wf, sortie = sys.argv[2:7]
     png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()

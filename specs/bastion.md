@@ -167,4 +167,16 @@ https://claude.ai/artifact/VdGCvnzk4mfP2V72h8dEiB — page source `outils/bastio
 - **A** : le combat se joue sur la carte (coup, flèche ou os qui vole, chiffre des dégâts, soldats qui tombent dans la poussière, riposte). **B** : chaque attaque ouvre une **bande de gros plan** au milieu de l'écran (les deux escouades en grand face à face, coup puis riposte, soldats qui disparaissent).
 - Essai automatique dans Chromium : choix, déplacement, attaque, tour des monstres, pas d'erreur.
 
+Retour (06/11) : l'utilisateur **préfère le temps réel à la Bad North** ; idée : un **mélange de RTS et de tower defense** : des ouvriers ramassent des ressources (économie à gérer comme dans un RTS) et on place des soldats pour défendre le château.
+
+## Maquette 11 : RTS et tower defense (06/11)
+https://claude.ai/artifact/LLw2PCz722gndc8bumRK5F — page source `outils/bastion-maquette/source-11.html` (moteur à part), `fabriquer.py 11 <Free Pack> <ancienne version> <Enemy Pack> <sortie>` (65 images). En temps réel :
+- Carte de 9 × 9 cases (2 × 2 tuiles) : château au centre, trois chemins (nord, ouest, est) par où viennent les monstres ; en bas, le bois (arbres, souche quand on vient de couper), l'or (filons), les moutons qui broutent ; caserne, archerie, maisons en décor ; forêt autour.
+- **Économie** : 3 ouvriers au départ (bois, or, viande) ; chacun marche jusqu'à sa ressource (hache, pioche, couteau), travaille 2 à 2,6 s, rapporte 8 au château (bûches, pépite, viande sur l'épaule) ; rangée OUVRIERS : toucher une ressource y envoie un ouvrier de plus (pris là où il y en a le plus) ; + OUVRIER = 10 viande. Départ : 40 bois, 40 or, 30 viande.
+- **Recrutement** : guerriers (10 or, 10 viande ; 4 soldats), archers (15 bois, 10 or ; tir à 2,6 cases), lanciers (15 or, 10 bois ; ×2,5 contre le troll), moines (20 or ; 2 moines qui soignent les escouades proches). Une escouade de guerriers offerte au départ.
+- **Vagues** : 8 vagues, la 1re à 35 s puis toutes les 45 s, alerte 6 s avant (flèche rouge sur l'entrée) ; gobelins à torche, gobelins à lance, gnolls (os à 2 cases) ; le **troll** aux vagues 4 et 8 ; à partir de la 5e, deux chemins à la fois. Les monstres attaquent les escouades qu'ils croisent, sinon le château (barre de vie en haut, flammes sous 60 %). Château détruit = défaite ; 8 vagues tenues = victoire.
+- **A · escouades libres** : l'escouade recrutée sort du château ; la toucher puis toucher le sol pour l'envoyer ; elle combat les monstres proches (sauf pendant un ordre de marche).
+- **B · emplacements** : 6 cercles près des chemins ; toucher une carte puis un cercle libre : l'escouade y va, défend les abords (2,4 cases) et revient à sa place.
+- Essai automatique (Chromium) : récolte, recrutement, vagues, combats, sans erreur ; sans action du joueur, le château de A tombe à la 3e vague (B tient avec ses archers et lanciers).
+
 Retours : à venir.

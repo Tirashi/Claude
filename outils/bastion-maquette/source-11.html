@@ -1,0 +1,368 @@
+<title>Bastion, maquette 11</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel:wght@600;800&display=swap">
+<style>
+/* Maquette 11 de « Bastion » : mélange de RTS et de tower defense en temps réel, avec Tiny Swords (Free Pack, Enemy Pack).
+   Des ouvriers récoltent bois, or et viande ; on recrute des escouades pour défendre le château contre des vagues de monstres.
+   A = escouades libres (comme Bad North) ; B = escouades posées sur des emplacements de défense (comme un tower defense).
+   Fabriquée par outils/bastion-maquette/fabriquer.py 11 (packs pas dans le dépôt : pas de redistribution). */
+:root{
+  color-scheme: dark;
+  --bg:#15131a; --text:#f0ece4; --dim:#b6aea0; --gold:#e8c46a;
+  --f-display:"Press Start 2P", "Courier New", monospace; --f-body:"VT323", "Lucida Console", monospace; --ouest:"Cinzel", Georgia, serif;
+  --parch:#f2e3bf; --parch2:#d9c294; --ink:#3a2410; --rouge:#7a2a1a;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--f-body); font-size:20px; line-height:1.2;
+  background-image:radial-gradient(#26222f 1px, transparent 1.5px); background-size:5px 5px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:24px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px dashed var(--gold); outline-offset:2px}
+.intro{max-width:1180px; margin:0 auto 22px; display:flex; flex-direction:column; gap:8px}
+.intro h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(14px,3.6vw,22px); line-height:1.5; color:var(--gold); text-shadow:3px 3px 0 #7a4a1a, 5px 5px 0 #000}
+.intro p{margin:0; max-width:78ch; color:var(--dim)}
+.intro b{color:var(--text); font-weight:400}
+.grid{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:28px; justify-items:center}
+.col{display:flex; flex-direction:column; gap:12px; width:100%; max-width:360px; min-width:0}
+.col > h2{margin:0; font-family:var(--f-display); font-weight:400; font-size:11px; letter-spacing:1px; line-height:1.6; color:var(--gold)}
+.col > h2 span{color:#e98a6a}
+.col > p{margin:0; color:var(--dim); font-size:19px}
+
+.phone{position:relative; width:100%; max-width:360px; height:700px; overflow:hidden; border:4px solid #000; border-radius:22px; box-shadow:0 0 0 3px #3a3444, 6px 6px 0 3px #000; touch-action:none; user-select:none; -webkit-user-select:none; background:#4a9aa8}
+.phone > canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.hud{position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:10px}
+.hud > *{pointer-events:auto}
+.haut{display:flex; flex-direction:column; gap:5px}
+.ligne{display:flex; justify-content:space-between; align-items:center; gap:6px}
+.res{display:flex; gap:4px}
+.res span{display:flex; align-items:center; gap:2px; font-family:var(--ouest); font-weight:800; font-size:13px; color:var(--ink); background:linear-gradient(var(--parch), var(--parch2)); border:2px solid var(--ink); border-radius:4px; padding:0 6px 0 0; box-shadow:0 2px 0 var(--ink)}
+.res img{width:26px; height:26px; image-rendering:pixelated}
+.vague{font-family:var(--ouest); font-weight:800; font-size:12px; letter-spacing:1px; color:var(--parch); background:var(--rouge); border:2px solid #2a1808; border-radius:4px; padding:3px 8px; box-shadow:0 2px 0 #2a1808; white-space:nowrap}
+.pv{height:12px; border:2px solid var(--ink); border-radius:3px; background:#5a3a2a; overflow:hidden; box-shadow:0 2px 0 var(--ink)}
+.pv i{display:block; height:100%; width:100%; background:linear-gradient(#7ad04a, #4a9a2a); transition:width .3s}
+.bas{display:flex; flex-direction:column; gap:5px}
+.hint{text-align:center; font-family:var(--ouest); font-weight:800; font-size:12px; color:#fff8e0; text-shadow:0 1px 3px #000, 0 0 2px #000}
+.panneau{background:linear-gradient(var(--parch), var(--parch2)); border:2px solid var(--ink); border-radius:5px; box-shadow:0 3px 0 var(--ink); color:var(--ink); padding:5px; display:flex; flex-direction:column; gap:5px}
+.panneau h3{margin:0; font-family:var(--ouest); font-weight:800; font-size:10px; letter-spacing:1px; color:#6a4a2a}
+.jobs{display:grid; grid-template-columns:repeat(4, 1fr); gap:4px}
+.jobs button{display:flex; align-items:center; justify-content:center; gap:2px; font-family:var(--ouest); font-weight:800; font-size:13px; background:#fff4d6; border:2px solid var(--ink); border-radius:4px; padding:2px; box-shadow:0 2px 0 var(--ink)}
+.jobs img{width:26px; height:26px; image-rendering:pixelated}
+.jobs .plus{font-size:10px; flex-direction:column; gap:0; line-height:1.1}
+.cartes{display:grid; grid-template-columns:repeat(4, 1fr); gap:4px}
+.cartes button{display:flex; flex-direction:column; align-items:center; gap:1px; background:#fff4d6; border:2px solid var(--ink); border-radius:4px; padding:2px 1px 3px; box-shadow:0 2px 0 var(--ink)}
+.cartes button img.av{width:40px; height:40px; image-rendering:pixelated}
+.cartes b{font-family:var(--ouest); font-weight:800; font-size:9px; letter-spacing:.5px}
+.cartes .cout{display:flex; gap:1px; font-size:13px; font-weight:800; align-items:center; line-height:1}
+.cartes .cout img{width:16px; height:16px}
+.cartes button.cher{opacity:.45}
+.cartes button.sel{background:#ffe08a; transform:translateY(-3px); box-shadow:0 5px 0 var(--ink)}
+.zoom{position:absolute; right:10px; top:84px; width:34px; height:34px; display:grid; place-items:center; font-size:20px; background:var(--parch); border:2px solid var(--ink); border-radius:50%; color:var(--ink); box-shadow:0 2px 0 var(--ink)}
+.banner{position:absolute; left:10px; right:10px; top:90px; padding:7px 10px; text-align:center; opacity:0; transform:translateY(-6px); transition:opacity .2s, transform .2s; pointer-events:none;
+  font-family:var(--ouest); font-weight:800; font-size:14px; letter-spacing:1px; color:var(--parch); background:var(--rouge); border:2px solid #2a1808; border-radius:3px; box-shadow:0 3px 0 #2a1808}
+.banner.good{background:#3a5a2a}
+.banner.on{opacity:1; transform:none}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<div class="intro">
+  <h1>BASTION · MAQUETTE 11 · RTS ET TOWER DEFENSE</h1>
+  <p>En temps réel. Tes <b>ouvriers</b> coupent du <b>bois</b>, minent de l'<b>or</b> et vont chercher la <b>viande</b> des moutons, puis rapportent tout au château. Touche une ressource dans la rangée OUVRIERS pour y envoyer un ouvrier de plus (chaque voyage rapporte 8) ; « + OUVRIER » en recrute un (10 viande). Avec ce que tu récoltes, tu <b>recrutes des escouades</b> pour défendre le château contre les <b>vagues de monstres</b> qui arrivent par le nord, l'ouest et l'est (une vague toutes les 45 secondes, le troll à la 4<sup>e</sup>).</p>
+  <p><b>A</b> : une escouade recrutée sort du château ; touche-la puis touche le sol pour l'envoyer (comme Bad North). <b>B</b> : touche une carte de recrutement, puis un <b>emplacement</b> (cercle) près des chemins : l'escouade y monte la garde (comme un tower defense). Glisse le doigt pour déplacer la vue ; la loupe montre tout.</p>
+</div>
+
+<div class="grid">
+  <section class="col">
+    <h2>A · ESCOUADES <span>LIBRES</span></h2>
+    <div class="phone" id="pA"></div>
+    <p>Tu déplaces tes escouades là où ça chauffe ; elles attaquent les monstres proches d'elles.</p>
+  </section>
+  <section class="col">
+    <h2>B · EMPLACEMENTS <span>DE DEFENSE</span></h2>
+    <div class="phone" id="pB"></div>
+    <p>Six emplacements gardent les trois chemins ; chaque escouade défend le sien et y revient après le combat.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const IMG = __IMAGES__;   // nom → image (data:image/png;base64)
+
+/* ================= les images ================= */
+const cv = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const charge = s => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = s; });
+const L = {};
+let chargement = null;
+const load = () => chargement || (chargement = Promise.all(Object.keys(IMG).filter(k => !k.startsWith("av/") && !k.startsWith("ic/")).map(async k => { L[k] = await charge(IMG[k]); })));
+const strip = (im, fs) => im._s || (im._s = Array.from({length: Math.round(im.width / fs)}, (_, i) => { const c = cv(fs, im.height); c.getContext("2d").drawImage(im, i * fs, 0, fs, im.height, 0, 0, fs, im.height); return c; }));
+const auto = (n, s, w, e) => [w ? (e ? 1 : 2) : (e ? 0 : 3), n ? (s ? 1 : 2) : (s ? 0 : 3)];
+const f8 = (im, fs, n) => { const s = strip(im, fs); return s[((Math.floor(n) % s.length) + s.length) % s.length]; };
+
+/* ================= les règles ================= */
+const CARTE = ["FFFFPFFFF",
+               "FF..P..FF",
+               "F...P...F",
+               "F...P...F",
+               "PPPP.PPPP",
+               "F.......F",
+               "Fww...ggF",
+               "Fww.s.ggF",
+               "FFFFFFFFF"];
+const N = 9, CS = 128, M = 3;
+const CHATEAU = [4.5, 4.5], DEPOT = [4.5, 5.45];
+const CHEMINS = {N: [[4.5, -0.6], [4.5, 3.4]], O: [[-0.6, 4.5], [3.0, 4.5]], E: [[9.6, 4.5], [6.0, 4.5]]};
+const NOM_DIR = {N: "le nord", O: "l'ouest", E: "l'est"};
+const SLOTS = [[3.6, 2.4], [5.4, 2.4], [2.2, 3.6], [2.2, 5.3], [6.8, 3.6], [6.8, 5.3]];
+// escouades : n soldats, pv par soldat, dégâts par seconde par soldat, portée, vitesse, coût ; images (case, pieds, échelle, animations)
+const ESC = {
+  guer:  {nm: "GUERRIERS", n: 4, pv: 25, dps: 4.5, r: .75, v: 1.3, cout: {or: 10, viande: 10}, fs: 192, fx: 96, fy: 135, k: .8, an: ["Idle", "Run", "Attack1"], av: "av/guer"},
+  arc:   {nm: "ARCHERS", n: 4, pv: 15, dps: 3, r: 2.6, v: 1.3, cout: {bois: 15, or: 10}, fs: 192, fx: 93, fy: 134, k: .8, an: ["Idle", "Run", "Shoot"], av: "av/arc"},
+  lance: {nm: "LANCIERS", n: 4, pv: 28, dps: 4, r: .95, v: 1.1, cout: {or: 15, bois: 10}, fs: 320, fx: 150, fy: 196, k: .8, an: ["Idle", "Run", "Right_Attack"], av: "av/lance", gros: 2.5},
+  moine: {nm: "MOINES", n: 2, pv: 15, dps: 0, soin: 5, r: 1.7, v: 1.2, cout: {or: 20}, fs: 192, fx: 96, fy: 132, k: .8, an: ["Idle", "Run", "Heal"], av: "av/moine"}};
+const MONS = {
+  gob:    {pv: 30, dps: 6, r: .7, v: .55, fs: 192, fx: 80, fy: 133, k: .8, an: ["Idle", "Run", "Attack"]},
+  lanceg: {pv: 40, dps: 7, r: .85, v: .5, fs: 256, fx: 125, fy: 171, k: .7, an: ["Idle", "Run", "Attack Fast"]},
+  gnoll:  {pv: 26, dps: 5, r: 2.0, v: .5, fs: 192, fx: 97, fy: 135, k: .8, an: ["Idle", "Walk", "Throw"]},
+  troll:  {pv: 300, dps: 24, r: .95, v: .33, fs: 384, fx: 195, fy: 297, k: .62, an: ["Idle", "Walk", "Attack"], gros: true}};
+const PAYSAN = {fs: 192, fx: 96, fy: 135, k: .72};
+const JOBS = {bois: {outil: "Axe", charge: "Wood", travail: 2.2}, or: {outil: "Pickaxe", charge: "Gold", travail: 2.6}, viande: {outil: "Knife", charge: "Meat", travail: 2.0}};
+const VAGUE1 = 35, ENTRE = 45, NB_VAGUES = 8;
+const d2 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+/* ================= une partie ================= */
+function partie(id, phone){
+  const LIBRE = id === "A";
+  const c = document.createElement("canvas"); phone.prepend(c);
+  const x = c.getContext("2d");
+  const hud = document.createElement("div"); hud.className = "hud";
+  const ic = k => `<img src="${IMG["ic/" + k]}" alt="">`;
+  hud.innerHTML = `<div class="haut"><div class="ligne"><div class="res"><span>${ic("bois")}<b class="r-bois">0</b></span><span>${ic("or")}<b class="r-or">0</b></span><span>${ic("viande")}<b class="r-viande">0</b></span></div><span class="vague"></span></div><div class="pv"><i></i></div></div>
+    <div class="bas"><div class="hint"></div><div class="panneau"><h3>OUVRIERS</h3><div class="jobs">
+      <button type="button" data-j="bois">${ic("bois")}<b>0</b></button><button type="button" data-j="or">${ic("or")}<b>0</b></button><button type="button" data-j="viande">${ic("viande")}<b>0</b></button>
+      <button type="button" class="plus" data-j="plus">+ OUVRIER<span>10 ${ic("viande").replace('alt=""', 'alt="" style="width:14px;height:14px"')}</span></button></div>
+      <h3>RECRUTER</h3><div class="cartes">${Object.entries(ESC).map(([k, E]) => `<button type="button" data-e="${k}"><img class="av" src="${IMG[E.av]}" alt=""><b>${E.nm}</b><span class="cout">${Object.entries(E.cout).map(([r, v]) => v + ic(r)).join(" ")}</span></button>`).join("")}</div></div></div>`;
+  phone.append(hud);
+  const ban = document.createElement("div"); ban.className = "banner"; phone.append(ban);
+  const zb = document.createElement("button"); zb.type = "button"; zb.className = "zoom"; zb.textContent = "⊖"; zb.setAttribute("aria-label", "Zoom"); phone.append(zb);
+  const $ = s => hud.querySelector(s);
+  const dire = (t, good) => { ban.textContent = t; ban.classList.toggle("good", !!good); ban.classList.add("on"); clearTimeout(ban._t); ban._t = setTimeout(() => ban.classList.remove("on"), 2200); };
+
+  let S = null, ok = false, bg = null, VW = 6 * CS, camX = 0, camY = 0, carte = null;
+  const WW = (N * 2 + M * 2) * 64, WH = WW;
+  const P = (gx, gy) => [M * 64 + gx * CS, M * 64 + gy * CS];
+  const clamp = () => { camX = Math.max(0, Math.min(WW - c.width, camX)); camY = Math.max(-c.height * .12, Math.min(WH - c.height * .62, camY)); };
+  const size = () => { const w = phone.clientWidth, h = phone.clientHeight; c.width = Math.round(VW); c.height = Math.round(h * c.width / w); x.imageSmoothingEnabled = false; const [X, Y] = P(4.5, 5.3); camX = X - c.width / 2; camY = Y - c.height * .4; clamp(); };
+  size(); addEventListener("resize", size);
+  zb.addEventListener("click", e => { e.stopPropagation(); VW = VW === 6 * CS ? (N + 1.5) * CS : 6 * CS; zb.textContent = VW === 6 * CS ? "⊖" : "⊕"; size(); });
+
+  function nouvelle(){
+    S = {t: 0, res: {bois: 40, or: 40, viande: 30}, pv: 100, vague: 0, prochaine: VAGUE1, alerte: null, pawns: [], esc: [], mons: [], fx: [], fini: false, sel: null};
+    for (const j of ["bois", "or", "viande"]) ajouterPaysan(j, true);
+    recruter("guer", LIBRE ? null : 0, true);
+    dire("DEFENDS LE CHATEAU", true);
+  }
+  // les ressources de la carte
+  const ARBRES = [], FILONS = [], MOUTONS = [], DECOR = [];
+  { let seed = id === "A" ? 3 : 8; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++){ const ch = CARTE[y][xx];
+      if (ch === "w") for (const [ox, oy] of [[.3, .45], [.72, .7], [.35, .95]]) ARBRES.push({x: xx + ox + (rnd() - .5) * .1, y: y + oy, n: Math.floor(rnd() * 2), ph: rnd() * 8, coupe: 0});
+      if (ch === "g") FILONS.push({x: xx + .5 + (rnd() - .5) * .3, y: y + .7, n: 3 + Math.floor(rnd() * 3)});
+      if (ch === "F") for (let k = 0; k < 2; k++) DECOR.push({k: "arbre", x: xx + .25 + k * .5 + (rnd() - .5) * .15, y: y + .55 + k * .35, n: Math.floor(rnd() * 4), ph: rnd() * 8});
+      if (ch === "." && rnd() < .15) DECOR.push({k: rnd() < .5 ? "buisson" : "rocher", x: xx + .5 + (rnd() - .5) * .6, y: y + .7, ph: rnd() * 8}); }
+    for (let k = 0; k < 4; k++) MOUTONS.push({x: 3.6 + k * .55, y: 7.3 + (k % 2) * .3, tx: 0, ty: 0, t: rnd() * 5, face: 1});
+    for (let i = -3; i < N * 2 + 3; i += 1.4) for (const j of [-1.2, N * 2 + .4]) DECOR.push({k: "arbre", x: i / 2, y: j / 2 + .9, n: Math.floor(rnd() * 4), ph: rnd() * 8});
+    for (let j = -1; j < N * 2 + 1; j += 1.5) for (const i of [-1.3, N * 2 + .3]) DECOR.push({k: "arbre", x: i / 2 + .3, y: j / 2 + .9, n: Math.floor(rnd() * 4), ph: rnd() * 8});
+    DECOR.push({k: "bat", im: "barracks", x: 2.4, y: 3.15}, {k: "bat", im: "archery", x: 6.6, y: 3.15}, {k: "bat", im: "house1", x: 1.6, y: 5.85}, {k: "bat", im: "house2", x: 7.4, y: 5.85}); }
+  const paye = cout => Object.entries(cout).every(([r, v]) => S.res[r] >= v);
+  function ajouterPaysan(job, gratuit){
+    if (!gratuit){ if (S.res.viande < 10) return dire("IL FAUT 10 VIANDE"); S.res.viande -= 10; }
+    S.pawns.push({job, st: "go", x: DEPOT[0] + (Math.random() - .5) * .4, y: DEPOT[1], cible: null, t: 0, face: 1, ph: Math.random() * 5});
+  }
+  function changerJob(job){
+    const autres = S.pawns.filter(p => p.job !== job); if (!autres.length) return;
+    const compte = j => S.pawns.filter(p => p.job === j).length;
+    autres.sort((a, b) => compte(b.job) - compte(a.job)); const p = autres[0]; p.job = job; p.st = "go"; p.cible = null;
+  }
+  function recruter(k, slot, gratuit){
+    const E = ESC[k];
+    if (!gratuit){ if (!paye(E.cout)) return dire("PAS ASSEZ DE RESSOURCES"); for (const [r, v] of Object.entries(E.cout)) S.res[r] -= v; }
+    const q = {k, x: DEPOT[0], y: DEPOT[1] + .1, tx: DEPOT[0], ty: DEPOT[1] - .2, pv: E.n * E.pv, cd: 0, face: 1, slot: slot ?? null, mode: "idle", ph: Math.random() * 3};
+    if (slot != null){ q.tx = SLOTS[slot][0]; q.ty = SLOTS[slot][1]; } else { const a = S.esc.length * 1.3; q.tx = DEPOT[0] + Math.cos(a) * .9; q.ty = DEPOT[1] - .3 + Math.sin(a) * .5; }
+    S.esc.push(q); if (LIBRE && !gratuit) S.sel = q; return q;
+  }
+  const vivants = q => Math.ceil(q.pv / ESC[q.k].pv);
+
+  /* ---------- la simulation ---------- */
+  function lancerVague(){
+    S.vague++; const w = S.vague, dirs = Object.keys(CHEMINS), d = w <= 3 ? dirs[(w - 1) % 3] : dirs[Math.floor(Math.random() * 3)], n = 2 + w;
+    const types = w === 1 ? ["gob"] : w === 2 ? ["gob", "lanceg"] : ["gob", "lanceg", "gnoll"];
+    for (let i = 0; i < n; i++) S.mons.push(monstre(types[i % types.length], d, i * .9));
+    if (w % 4 === 0) S.mons.push(monstre("troll", d, n * .9 + .5));
+    if (w >= 5){ const d2_ = dirs[(dirs.indexOf(d) + 1) % 3]; for (let i = 0; i < w - 3; i++) S.mons.push(monstre(types[i % types.length], d2_, 2 + i * .9)); }
+    S.prochaine = S.t + ENTRE; S.alerte = null;
+  }
+  const monstre = (t, d, delai) => { const [a, b] = CHEMINS[d]; return {t, x: a[0] + (Math.random() - .5) * .5, y: a[1] + (Math.random() - .5) * .5, dir: d, pv: MONS[t].pv, delai, cd: 0, face: 1, mode: "walk", ph: Math.random() * 3, cible: null}; };
+  function pas(dt){
+    if (S.fini) return;
+    S.t += dt;
+    // vagues
+    if (S.vague < NB_VAGUES){
+      if (!S.alerte && S.t > S.prochaine - 6){ const w = S.vague + 1, dirs = Object.keys(CHEMINS); S.alerte = w <= 3 ? dirs[(w - 1) % 3] : "?"; dire("VAGUE " + w + (w <= 3 ? " · PAR " + NOM_DIR[S.alerte].toUpperCase() : "") + (w % 4 === 0 ? " · AVEC LE TROLL" : "")); }
+      if (S.t > S.prochaine) lancerVague();
+    } else if (!S.mons.length){ S.fini = true; dire("LE CHATEAU A TENU · VICTOIRE", true); setTimeout(nouvelle, 4000); }
+    // ouvriers
+    for (const p of S.pawns){
+      const J = JOBS[p.job];
+      if (p.st === "go"){
+        if (!p.cible){ const src = p.job === "bois" ? ARBRES : p.job === "or" ? FILONS : MOUTONS; p.cible = src[Math.floor(Math.random() * src.length)]; }
+        const tx = p.cible.x + (p.job === "or" ? 0 : -.25), ty = p.cible.y + .05, dx = tx - p.x, dy = ty - p.y, l = Math.hypot(dx, dy);
+        if (l < .06){ p.st = "work"; p.t = J.travail; p.face = p.cible.x >= p.x ? 1 : -1; } else { const s = Math.min(l, 1.15 * dt); p.x += dx / l * s; p.y += dy / l * s; p.face = dx >= 0 ? 1 : -1; }
+      } else if (p.st === "work"){ p.t -= dt; if (p.t <= 0){ p.st = "back"; if (p.job === "bois") p.cible.coupe = 1.2; } }
+      else if (p.st === "back"){ const dx = DEPOT[0] - p.x, dy = DEPOT[1] - p.y, l = Math.hypot(dx, dy);
+        if (l < .1){ S.res[p.job] += 8; S.fx.push({k: "txt", x: p.x, y: p.y - .4, t: "+8", col: "#ffe08a", t0: S.t}); p.st = "go"; p.cible = null; } else { const s = Math.min(l, 1.15 * dt); p.x += dx / l * s; p.y += dy / l * s; p.face = dx >= 0 ? 1 : -1; } }
+    }
+    for (const a of ARBRES) if (a.coupe > 0) a.coupe -= dt;
+    for (const m of MOUTONS){ m.t -= dt; if (m.t <= 0){ m.t = 3 + Math.random() * 4; m.tx = 3.4 + Math.random() * 2.4; m.ty = 7.1 + Math.random() * .7; }
+      const dx = m.tx - m.x, dy = m.ty - m.y, l = Math.hypot(dx, dy); m.mv = l > .05 && m.tx; if (m.mv){ const s = Math.min(l, .3 * dt); m.x += dx / l * s; m.y += dy / l * s; m.face = dx >= 0 ? 1 : -1; } }
+    // escouades
+    for (const q of S.esc){
+      if (q.pv <= 0) continue;
+      const E = ESC[q.k]; let cible = null, best = 99;
+      if (E.soin){ q.cd -= dt; let soigne = false; for (const o of S.esc) if (o !== q && o.pv > 0 && o.pv < ESC[o.k].n * ESC[o.k].pv && d2(o, q) < E.r){ o.pv = Math.min(ESC[o.k].n * ESC[o.k].pv, o.pv + E.soin * vivants(q) * dt); soigne = true; if (q.cd <= 0){ S.fx.push({k: "heal", x: o.x, y: o.y, t0: S.t}); q.cd = 1.1; } }
+        q.mode = soigne ? "atk" : "idle"; }
+      for (const m of S.mons) if (m.pv > 0 && m.delai <= 0){ const d = d2(m, q); if (d < best){ best = d; cible = m; } }
+      const ancre = q.slot != null ? {x: SLOTS[q.slot][0], y: SLOTS[q.slot][1]} : null;
+      const ordre = Math.hypot(q.tx - q.x, q.ty - q.y) > .08 && !q.engage;
+      let gx = q.tx, gy = q.ty;
+      const garde = ancre ? 1.8 : 1.7;
+      if (!E.soin && cible && best < E.r + garde && (!ancre || d2(cible, ancre) < 2.4) && !(LIBRE && ordre && q.ordre)){
+        q.engage = true; if (best > E.r * .9){ gx = cible.x; gy = cible.y; } else { gx = q.x; gy = q.y; }
+      } else { q.engage = false; if (ancre && !ordre){ gx = ancre.x; gy = ancre.y; } }
+      const dx = gx - q.x, dy = gy - q.y, l = Math.hypot(dx, dy);
+      if (l > .05){ const s = Math.min(l, E.v * dt); q.x += dx / l * s; q.y += dy / l * s; q.face = dx >= 0 ? 1 : -1; q.mode = "walk"; if (Math.hypot(q.tx - q.x, q.ty - q.y) < .1) q.ordre = false; }
+      else if (!E.soin) q.mode = cible && best <= E.r + .1 ? "atk" : "idle";
+      if (!E.soin && cible && best <= E.r + .1){ q.face = cible.x >= q.x ? 1 : -1; cible.pv -= E.dps * vivants(q) * dt * (E.gros && MONS[cible.t].gros ? E.gros : 1);
+        q.cd -= dt; if (q.cd <= 0){ q.cd = .6; if (q.k === "arc") for (let i = 0; i < vivants(q); i++) S.fx.push({k: "fleche", x0: q.x, y0: q.y, x1: cible.x, y1: cible.y, t0: S.t + i * .08}); } }
+    }
+    // monstres
+    for (const m of S.mons){
+      if (m.pv <= 0) continue;
+      if (m.delai > 0){ m.delai -= dt; continue; }
+      const MM = MONS[m.t]; let q = null, best = 99; for (const s of S.esc) if (s.pv > 0){ const d = d2(s, m); if (d < best){ best = d; q = s; } }
+      m.cd -= dt;
+      if (q && best <= MM.r + .05){ m.mode = "atk"; m.face = q.x >= m.x ? 1 : -1; const av = vivants(q); q.pv -= MM.dps * dt; if (vivants(q) < av) S.fx.push({k: "pouf", x: q.x + (Math.random() - .5) * .5, y: q.y, t0: S.t});
+        if (m.t === "gnoll" && m.cd <= 0){ m.cd = .9; S.fx.push({k: "os", x0: m.x, y0: m.y, x1: q.x, y1: q.y, t0: S.t}); } continue; }
+      const dc = Math.hypot(CHATEAU[0] - m.x, CHATEAU[1] - m.y);
+      if (dc < 1.45){ m.mode = "atk"; m.face = CHATEAU[0] >= m.x ? 1 : -1; S.pv -= MM.dps * .12 * dt; continue; }
+      if (q && best < 1.5 && m.t !== "gnoll"){ m.mode = "walk"; const dx = q.x - m.x, dy = q.y - m.y, l = Math.hypot(dx, dy); m.x += dx / l * MM.v * dt; m.y += dy / l * MM.v * dt; m.face = dx >= 0 ? 1 : -1; continue; }
+      const [a, b] = CHEMINS[m.dir], tgt = Math.hypot(b[0] - m.x, b[1] - m.y) > .15 && !m.passe ? b : CHATEAU; if (tgt === CHATEAU) m.passe = true;
+      const dx = tgt[0] - m.x, dy = tgt[1] - m.y, l = Math.hypot(dx, dy); m.mode = "walk"; m.x += dx / l * MM.v * dt; m.y += dy / l * MM.v * dt; m.face = dx >= 0 ? 1 : -1;
+    }
+    for (const m of S.mons) if (m.pv <= 0 && !m.mort){ m.mort = S.t; S.fx.push({k: "pouf", x: m.x, y: m.y, t0: S.t}); if (m.t === "troll") dire("LE TROLL EST TOMBE", true); }
+    for (const q of S.esc) if (q.pv <= 0 && !q.mort){ q.mort = S.t; S.fx.push({k: "pouf", x: q.x, y: q.y, t0: S.t}); if (S.sel === q) S.sel = null; }
+    S.mons = S.mons.filter(m => !m.mort || S.t - m.mort < .6); S.esc = S.esc.filter(q => !q.mort || S.t - q.mort < .6);
+    S.fx = S.fx.filter(f => S.t - f.t0 < 1.2);
+    if (S.pv <= 0 && !S.fini){ S.pv = 0; S.fini = true; dire("LE CHATEAU EST TOMBE"); setTimeout(nouvelle, 3500); }
+  }
+
+  /* ---------- l'interface ---------- */
+  let choix = null;   // B : carte de recrutement choisie
+  hud.querySelectorAll(".jobs button").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); if (!S) return; const j = b.dataset.j; if (j === "plus"){ const n = {bois: 0, or: 0, viande: 0}; S.pawns.forEach(p => n[p.job]++); ajouterPaysan(Object.keys(n).sort((a, b2) => n[a] - n[b2])[0]); } else changerJob(j); maj(); }));
+  hud.querySelectorAll(".cartes button").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); if (!S) return; const k = b.dataset.e;
+    if (LIBRE) recruter(k, null); else { if (!paye(ESC[k].cout)){ dire("PAS ASSEZ DE RESSOURCES"); return; } choix = choix === k ? null : k; } maj(); }));
+  function maj(){
+    if (!S) return;
+    for (const r of ["bois", "or", "viande"]){ $(".r-" + r).textContent = Math.floor(S.res[r]); hud.querySelector(`.jobs [data-j="${r}"] b`).textContent = S.pawns.filter(p => p.job === r).length; }
+    $(".vague").textContent = S.vague < NB_VAGUES ? `VAGUE ${S.vague} / ${NB_VAGUES} · ${Math.max(0, Math.ceil(S.prochaine - S.t))} s` : `VAGUE ${NB_VAGUES} / ${NB_VAGUES}`;
+    $(".pv i").style.width = Math.max(0, S.pv) + "%";
+    hud.querySelectorAll(".cartes button").forEach(b => { b.classList.toggle("cher", !paye(ESC[b.dataset.e].cout)); b.classList.toggle("sel", choix === b.dataset.e); });
+    $(".hint").textContent = LIBRE ? (S.sel ? "Touche le sol pour envoyer l'escouade" : "Touche une escouade bleue pour la deplacer") : (choix ? "Touche un emplacement libre (cercle)" : "Recrute, puis place l'escouade sur un emplacement");
+  }
+
+  /* ---------- le décor ---------- */
+  function fond(){
+    bg = cv(WW, WH); const b = bg.getContext("2d"); b.imageSmoothingEnabled = false;
+    const NT = WW / 64, put = (im, c0, r0, i, j) => b.drawImage(im, c0 * 64, r0 * 64, 64, 64, i * 64, j * 64, 64, 64);
+    for (let j = 0; j < NT; j++) for (let i = 0; i < NT; i++) put(L.tm, 1, 1, i, j);
+    const cel = (i, j) => { const cx = Math.floor((i - M) / 2), cy = Math.floor((j - M) / 2); if (cx >= 0 && cy >= 0 && cx < N && cy < N) return CARTE[cy][cx];
+      return (cx === 4 && cy < 0) || (cy === 4 && (cx < 0 || cx >= N)) ? "P" : "F"; };
+    const isP = (i, j) => cel(i, j) === "P";
+    for (let j = 0; j < NT; j++) for (let i = 0; i < NT; i++) if (isP(i, j)){ const [cc, r] = auto(isP(i, j - 1), isP(i, j + 1), isP(i - 1, j), isP(i + 1, j)); put(L.sable, 5 + cc, r, i, j); }
+  }
+  load().then(() => { fond(); ok = true; nouvelle(); maj(); });
+
+  /* ---------- au doigt ---------- */
+  let drag = null;
+  phone.addEventListener("pointerdown", e => { if (e.target.closest("button, .panneau")) return; drag = {x: e.clientX, y: e.clientY, cx: camX, cy: camY, done: false}; });
+  phone.addEventListener("pointermove", e => { if (!drag) return; const k = c.width / c.getBoundingClientRect().width, dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.hypot(dx, dy) > 10) drag.done = true; if (drag.done){ camX = drag.cx - dx * k; camY = drag.cy - dy * k; clamp(); } });
+  phone.addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || d.done || !S || S.fini) return;
+    const r = c.getBoundingClientRect(), X = (e.clientX - r.left) / r.width * c.width + camX, Y = (e.clientY - r.top) / r.height * c.height + camY, gx = (X - M * 64) / CS, gy = (Y - M * 64) / CS;
+    if (LIBRE){
+      let pick = null, pd = .7; for (const q of S.esc) if (q.pv > 0){ const dd = Math.hypot(q.x - gx, q.y - (gy + .2)); if (dd < pd){ pd = dd; pick = q; } }
+      if (S.sel && (!pick || pick === S.sel)){ S.sel.tx = Math.max(.3, Math.min(N - .3, gx)); S.sel.ty = Math.max(.3, Math.min(N - .3, gy)); S.sel.ordre = true; S.sel.engage = false; S.sel = null; }
+      else S.sel = pick;
+    } else if (choix){
+      let si = -1, sd = .8; SLOTS.forEach(([sx, sy], i) => { const dd = Math.hypot(sx - gx, sy - gy); if (dd < sd && !S.esc.some(q => q.slot === i && q.pv > 0)){ sd = dd; si = i; } });
+      if (si >= 0){ recruter(choix, si); choix = null; }
+    }
+    maj(); });
+
+  /* ---------- le dessin ---------- */
+  const fig = (list, D, key, n, X, Y, face, k, filtre) => { const im = L[key]; if (!im) return; const f = f8(im, D.fs, n), s = D.fs * k;
+    list.push([Y, () => { x.fillStyle = "rgba(30,40,10,.25)"; x.beginPath(); x.ellipse(Math.round(X), Math.round(Y), 22 * k / .8, 8 * k / .8, 0, 0, Math.PI * 2); x.fill();
+      if (filtre) x.filter = filtre;
+      if (face < 0){ x.save(); x.translate(Math.round(X), 0); x.scale(-1, 1); x.drawImage(f, -D.fx * k, Math.round(Y - D.fy * k), s, f.height * k); x.restore(); } else x.drawImage(f, Math.round(X - D.fx * k), Math.round(Y - D.fy * k), s, f.height * k);
+      x.filter = "none"; }]); };
+  const POS = {1: [[0, 0]], 2: [[-.22, -.05], [.22, .05]], 3: [[-.24, -.12], [.24, -.12], [0, .18]], 4: [[-.24, -.15], [.24, -.15], [-.24, .18], [.24, .18]]};
+  let last = performance.now(), majT = 0;
+  function frame(now){
+    const dt = Math.min(.05, (now - last) / 1000); last = now; const T = now / 1000;
+    if (ok && S){ pas(dt); majT -= dt; if (majT <= 0){ majT = .25; maj(); } }
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = "#6aa84a"; x.fillRect(0, 0, c.width, c.height);
+    if (!ok || !S){ requestAnimationFrame(frame); return; }
+    x.setTransform(1, 0, 0, 1, -Math.round(camX), -Math.round(camY)); x.drawImage(bg, 0, 0);
+    const list = [];
+    // emplacements (B)
+    if (!LIBRE) SLOTS.forEach(([sx, sy], i) => { const [X, Y] = P(sx, sy), pris = S.esc.some(q => q.slot === i && q.pv > 0);
+      list.push([Y - 300, () => { x.strokeStyle = choix && !pris ? "#fff4a0" : "rgba(60,40,20,.55)"; x.lineWidth = choix && !pris ? 7 : 5; x.setLineDash(pris ? [] : [14, 10]); x.beginPath(); x.ellipse(X, Y + 10, 62, 30, 0, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
+        if (!pris){ x.fillStyle = choix ? "#fff4a0" : "rgba(60,40,20,.55)"; x.fillRect(X - 14, Y + 6, 28, 8); x.fillRect(X - 4, Y - 4, 8, 28); } }]); });
+    for (const o of DECOR){ const [X, Y] = P(o.x, o.y);
+      if (o.k === "arbre"){ const im = L["tree" + (o.n + 1)]; list.push([Y, () => x.drawImage(f8(im, 192, T * 8 + o.ph), Math.round(X - 96), Math.round(Y - (im.height === 256 ? 238 : 168)))]); }
+      else if (o.k === "buisson") list.push([Y, () => x.drawImage(f8(L.bush, 128, T * 8 + o.ph), Math.round(X - 64), Math.round(Y - 78))]);
+      else if (o.k === "rocher") list.push([Y - 20, () => x.drawImage(L.rock, Math.round(X - 32), Math.round(Y - 48))]);
+      else if (o.k === "bat"){ const im = L[o.im]; list.push([Y, () => x.drawImage(im, Math.round(X - im.width / 2), Math.round(Y - im.height + 12))]); } }
+    for (const a of ARBRES){ const [X, Y] = P(a.x, a.y); list.push([Y, () => { if (a.coupe > 0) x.drawImage(L["stump" + (a.n + 1)], Math.round(X - 96), Math.round(Y - 238)); else x.drawImage(f8(L["tree" + (a.n + 1)], 192, T * 8 + a.ph), Math.round(X - 96), Math.round(Y - 238)); }]); }
+    for (const g of FILONS){ const [X, Y] = P(g.x, g.y); list.push([Y - 10, () => x.drawImage(L["gold" + g.n], Math.round(X - 64), Math.round(Y - 90))]); }
+    for (const m of MOUTONS){ const [X, Y] = P(m.x, m.y); fig(list, {fs: 128, fx: 64, fy: 84}, m.mv ? "sheepM" : "sheepG", T * 8 + m.t, X, Y, m.face, .8); }
+    { const [X, Y] = P(4.5, 5.05); list.push([Y, () => { x.drawImage(L.castle, Math.round(X - 160), Math.round(Y - 246)); if (S.pv < 60) for (let k = 0; k < 3; k++) x.drawImage(f8(L.fire, 64, T * 10 + k * 3), Math.round(X - 90 + k * 70), Math.round(Y - 150 - (k % 2) * 40)); }]); }
+    for (const p of S.pawns){ const [X, Y] = P(p.x, p.y), J = JOBS[p.job], key = p.st === "work" ? "pawn/Interact " + J.outil : p.st === "back" ? "pawn/Run " + J.charge : "pawn/Run " + J.outil;
+      fig(list, PAYSAN, key, T * 10 + p.ph, X, Y, p.face, PAYSAN.k); }
+    for (const q of S.esc){ const E = ESC[q.k], n = q.pv > 0 ? vivants(q) : 1, [X, Y] = P(q.x, q.y), key = "u/" + q.k + "/" + E.an[q.mode === "walk" ? 1 : q.mode === "atk" ? 2 : 0];
+      if (S.sel === q || (q.slot != null && q.pv > 0)) list.push([Y - 290, () => { x.strokeStyle = S.sel === q ? "#fff4c0" : "rgba(80,140,255,.8)"; x.lineWidth = 6; x.beginPath(); x.ellipse(X, Y + 10, 66, 32, 0, 0, Math.PI * 2); x.stroke(); }]);
+      (POS[Math.min(4, n)] || POS[1]).forEach(([ox, oy], i) => fig(list, E, key, T * 10 + q.ph + i * .7, X + ox * CS, Y + oy * CS, q.face, E.k, q.mort ? "opacity(.4)" : null));
+      if (q.ordre && Math.hypot(q.tx - q.x, q.ty - q.y) > .3){ const [tx, ty] = P(q.tx, q.ty); list.push([ty - 290, () => { x.strokeStyle = "#ffffff"; x.lineWidth = 5; x.beginPath(); x.ellipse(tx, ty, 34, 16, 0, 0, Math.PI * 2); x.stroke(); }]); } }
+    for (const m of S.mons){ if (m.delai > 0) continue; const MM = MONS[m.t], [X, Y] = P(m.x, m.y), key = "u/" + m.t + "/" + MM.an[m.mode === "walk" ? 1 : m.mode === "atk" ? 2 : 0];
+      fig(list, MM, key, T * 10 + m.ph, X, Y, m.face, MM.k, m.mort ? "opacity(.4)" : null);
+      if (m.pv > 0 && m.pv < MM.pv) list.push([Y + 1, () => { const w = MM.gros ? 120 : 60; x.fillStyle = "#2a1008"; x.fillRect(X - w / 2 - 2, Y - MM.fy * MM.k - 14, w + 4, 10); x.fillStyle = "#e84a2a"; x.fillRect(X - w / 2, Y - MM.fy * MM.k - 12, w * m.pv / MM.pv, 6); }]); }
+    if (S.alerte && S.alerte !== "?"){ const [a] = CHEMINS[S.alerte], [X, Y] = P(Math.max(.4, Math.min(N - .4, a[0])), Math.max(.4, Math.min(N - .4, a[1]))), bb = Math.abs(Math.sin(T * 5)) * 18;
+      list.push([1e9, () => { x.fillStyle = "#e8301e"; x.strokeStyle = "#3a1408"; x.lineWidth = 5; x.beginPath(); x.moveTo(X - 26, Y - 50 - bb); x.lineTo(X + 26, Y - 50 - bb); x.lineTo(X, Y - 16 - bb); x.closePath(); x.fill(); x.stroke(); x.fillRect(X - 9, Y - 86 - bb, 18, 36); x.strokeRect(X - 9, Y - 86 - bb, 18, 36); }]); }
+    for (const f of S.fx){ const t = S.t - f.t0; if (t < 0) continue;
+      if (f.k === "pouf"){ const [X, Y] = P(f.x, f.y); list.push([1e9, () => x.drawImage(f8(L.dust, 64, t * 14), Math.round(X - 48), Math.round(Y - 80), 96, 96)]); }
+      if (f.k === "heal"){ const [X, Y] = P(f.x, f.y); list.push([1e9, () => x.drawImage(f8(L.healfx, 192, t * 14), Math.round(X - 96), Math.round(Y - 130))]); }
+      if (f.k === "txt"){ const [X, Y] = P(f.x, f.y); list.push([1e9, () => { x.font = "bold 34px Cinzel, Georgia, serif"; x.textAlign = "center"; x.lineWidth = 6; x.strokeStyle = "#3a2410"; x.fillStyle = f.col; x.strokeText(f.t, X, Y - t * 50); x.fillText(f.t, X, Y - t * 50); }]); }
+      if ((f.k === "fleche" || f.k === "os") && t < .4){ const u0 = t / .4, [X0, Y0] = P(f.x0, f.y0), [X1, Y1] = P(f.x1, f.y1), X = X0 + (X1 - X0) * u0, Y = Y0 + (Y1 - Y0) * u0 - Math.sin(u0 * Math.PI) * 80 - 50;
+        list.push([1e9, () => { x.save(); x.translate(X, Y); x.rotate(f.k === "os" ? t * 20 : Math.atan2(Y1 - Y0 - Math.cos(u0 * Math.PI) * 250, X1 - X0)); x.drawImage(f.k === "os" ? f8(L.bone, 64, 0) : L.arrow, -32, -32); x.restore(); }]); } }
+    list.sort((a, b) => a[0] - b[0]); for (const [, f] of list) f();
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  window["partie" + id] = {get S(){ return S; }, recruter: (k, s) => { recruter(k, s); maj(); }, avance: t => { for (let i = 0; i < t * 20; i++) pas(.05); }};   // pour les essais
+}
+partie("A", document.getElementById("pA")); partie("B", document.getElementById("pB"));
+})();
+</script>
