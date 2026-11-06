@@ -53,7 +53,7 @@ Une phrase par chantier ; le détail est dans le cahier des charges du jeu et da
 - **Amiral !**, **Escadrille !**, **Thé des Jarls**, **Capitaine du port**, **Mot d'or**, **Magasinier**, **Mineur de l'espace** (téléphone et PC), **Dragon Simulator** (équilibrage gardé tel quel) : confirmés sur le téléphone le 06/11 ([essais](specs/essais.md)) ; artefact d'Escadrille ! pas republié.
 - **Duché**, **Bannières**, **Boutique**, **Doggy Saga**, **Romet**, **Résistance** : validés ; Résistance : autres pays plus tard ([cdc](specs/resistance.md)).
 - **La Dernière Lanterne** : actes 1 à 3 faits ; prochaine étape session 5 (acte 4, final), opusplan ([cdc](specs/rpg.md)).
-- **Bastion** (défense tactique à la Bad North, 06/11) : maquette 1 à choisir, https://claude.ai/artifact/8qDoUNaYTK79s32mZquYWv ([cdc](specs/bastion.md)).
+- **Bastion** (défense tactique à la Bad North, 06/11) : maquette 2 à valider (deux mondes en 3D, Ouest et Est, et leur menu), https://claude.ai/artifact/4K652xgNxZud1Dn5gqNfxx ([cdc](specs/bastion.md)).
 - **Armada** : cdc à relire (§ 18), puis session 1, Opus ([cdc](specs/armada.md)). **Défense orbitale** : session 1 (combat), Opus ([cdc](specs/defense-orbitale.md)).
 - **La colonie** : reste nature, île du jour, intégration ([cdc](specs/colonie.md)). **Nebula** : prochain chantier possible « l'Empire des étoiles » ([cdc](specs/nebula.md)).
 - **En pause** : Ferme du vallon (attend les zips du pack, [cdc](specs/ferme-du-vallon.md)), Clan du fjord ([cdc](specs/clan.md)), tactique façon Advance Wars, petite usine ; autres idées et achats : [`IDEES.md`](IDEES.md).
