@@ -28,3 +28,23 @@ Retours (06/11) : **on garde l'Empire de l'Est** (monde asiatique, B) ; le Royau
 
 ## À décider ensuite
 Nom du jeu ; nombre de niveaux et de mondes ; progression (escouades qui gagnent de l'expérience ? nouvelles troupes débloquées ?) ; règles des étoiles (maisons sauvées, temps, soldats perdus) ; contenu du défi du jour (carte et vagues imposées) ; ennemis spéciaux (béliers, cavaliers, archers ennemis, chefs).
+
+## Recherche de modèles 3D (06/11)
+Licences : CC0 en priorité ; « usage libre, pas de revente ni de redistribution » accepté (règle du 30/10, fichiers dans le dossier du jeu, crédits avec le lien).
+
+**Bâtiments et décor**
+| Pack | Prix | Licence | Contenu | Avis |
+|---|---|---|---|---|
+| [Japanese Low Poly Shrine & Temple 25](https://sceneforgestudio.itch.io/sf023-japanese-low-poly-shrine-temple-25) (SceneForge Studio, SF023) | **5,27 $** au lieu de 7,99 $ jusqu'au **12/11** | à lire à l'achat (README) | 25 pièces : pagode à 5 étages, grand portail rouge, salle principale, scène de kagura, galeries couvertes modulaires (grille de 2 m), tunnel de torii, murs, lions-gardiens, lanternes, tambour… GLB, une seule texture palette 256 × 256, 44 à 3 750 triangles | Le plus beau et le plus proche du temple de la Grue ; une série (SF015 à SF022) dans le même style |
+| [Samurai Town Asset Pack](https://lowpolyboy.itch.io/3dsamuraitownassetpack) (LowPolyBoy) | **19,99 $** | à lire | 9 maisons, 16 grands décors (torii, ponts, clôtures, azumaya), 52 petits (lanternes, bannières, étals), 40 plantes et rochers, sols ; **1 personnage riggé, 8 costumes, 8 armes** ; une texture dégradé | Le plus complet (village + soldats), le plus cher |
+| [Low Poly Japanese Castle Town](https://reodesuxz.itch.io/low-poly-japanese-castle-town-pack), [Shrine](https://reodesuxz.itch.io/low-poly-japanese-shrine-pack), [Ninja Dojo & Castle](https://reodesuxz.itch.io/low-poly-ninja-dojo-castle-pack) (reodesuxz) | **gratuits** | usage libre, pas de redistribution | 26 + 29 + 28 modèles (donjon, portes, machiya, pagode, torii, lanternes, dojo, jardin), GLB, sans texture | Très simples (≈ 100 triangles par modèle) : à peine mieux que nos formes ; bien pour les petits objets |
+
+**Personnages**
+| Pack | Prix | Licence | Contenu | Avis |
+|---|---|---|---|---|
+| [LOWPO: Samurai Pack](https://standout7.itch.io/lowpo-samurai) (Standout 7) | gratuit / **Pro 9,99 $** | CC0 | Gratuit : 2 samouraïs riggés, katana, FBX, **sans animation**. Pro : + tank, ninja, samouraï royal, **animations** (repos, marche, course, 2 attaques), **GLB** | Le meilleur choix pour les soldats et les rônins ; CC0 |
+| Personnage de Samurai Town (ci-dessus) | inclus | à lire | 1 corps riggé, 8 costumes, 8 armes | Utile si on prend Samurai Town |
+
+Rien de samouraï chez Kenney, Quaternius ou KayKit (CC0) ; leurs personnages génériques animés peuvent servir de base (repeints en couleurs d'escouade).
+
+**Proposition** : SceneForge SF023 (temple, 5,27 $ en promotion jusqu'au 12/11) + LOWPO Samurai Pro (soldats animés, 9,99 $), et les packs gratuits de reodesuxz pour les petits objets. Une maquette 3 refaite avec ces modèles avant de décider.
