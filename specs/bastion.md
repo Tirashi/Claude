@@ -186,16 +186,20 @@ https://claude.ai/artifact/LLw2PCz722gndc8bumRK5F — page source `outils/bastio
 | Bâtiment | Coût | Effet |
 |---|---|---|
 | Château | — | cœur du village ; le perdre = défaite ; peut s'améliorer (plus de PV, tir d'archers) |
-| Maison | bois | +2 ouvriers possibles (plafond d'ouvriers) |
+| Maison | bois | +2 ouvriers et +1 escouade possibles (plafonds de population) |
 | Caserne | bois + or | débloque les guerriers puis les lanciers |
 | Archerie | bois | débloque les archers |
 | Monastère | or | débloque les moines |
-| Tour | bois + or | tire sur les monstres proches ; peut accueillir des archers |
+| Tour | bois + or | **garnison d'archers** : on y envoie une escouade d'archers, qui monte dessus (dessinée sur la plateforme du haut), tire plus loin et ne peut pas être attaquée au contact tant que la tour tient ; vide, la tour ne tire pas |
 | Murs / palissades (Warfare plus tard) | bois | ralentissent les monstres sur un chemin |
 Les monstres peuvent attaquer les bâtiments (flammes, puis ruine à reconstruire).
 
-**Expérience** : chaque escouade gagne de l'expérience en tuant ou en survivant à une vague ; 3 grades (étoiles au-dessus de l'escouade) : vétérans (+20 % de dégâts), élite (+20 % de PV, un soldat de plus), héros (capacité spéciale : mur de boucliers, salve, charge, grand soin). Une escouade décimée revient au château pour se reformer (contre de la viande) et garde son grade : on s'attache à ses troupes, comme dans Bad North.
+**Expérience** : chaque escouade gagne de l'expérience en tuant ou en survivant à une vague ; 3 grades (étoiles au-dessus de l'escouade) : vétérans (+20 % de dégâts), élite (+20 % de PV, un soldat de plus), héros (+20 % de dégâts et de PV en plus). **Pas de capacité spéciale** (décision du 06/11) : ni dans les grades, ni sur les cartes d'escouade (le bouton MUR, SALVE, CHARGE des maquettes disparaît). Une escouade décimée revient au château pour se reformer (contre de la viande) et garde son grade : on s'attache à ses troupes, comme dans Bad North.
+
+**Population** (décision du 06/11) : le nombre d'escouades est limité (par exemple 3 au départ, +1 par maison, plafond affiché à côté des cartes de recrutement, « 3/4 ») ; les ouvriers ont leur propre plafond.
 
 **Équilibrage** : réglé avec un simulateur (comme pour les autres jeux) : revenus par minute selon le nombre d'ouvriers, coût d'une défense « suffisante » par vague, et une première partie où l'on peut perdre sans tout comprendre ; un ralenti quand on touche une escouade (comme dans les maquettes 1-4) aiderait sur téléphone.
+
+Retour (06/11) sur ces propositions : « pas mal, mais **pas de capacité spéciale** » ; **limite de population** pour les soldats ; voir si l'on peut **mettre des archers en garnison dans une tour** (oui : la tour du Free Pack, 128 × 256 px, a une plateforme en haut où dessiner 2 ou 3 archers ; à montrer dans la prochaine maquette ou dès la session 1).
 
 **Structure** (décisions du début) : niveaux fixes (une carte par niveau, de nouveaux monstres et bâtiments au fil des niveaux) + défi du jour (carte et vagues tirées du jour, une seule tentative classée).
