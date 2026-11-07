@@ -16,22 +16,22 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
   const S = B.creer({}, 1);
   verif(S.pawns.length === 3 && S.esc.length === 1 && S.res.bois === 50, "départ : 3 ouvriers, une escouade, 50 bois");
   verif(B.recruter(S, "arc") !== null, "les archers demandent une archerie");
-  verif(B.construire(S, 4, "archerie") === null && S.res.bois === 10, "une archerie se paie (40 bois)");
+  verif(B.construire(S, 8, "archerie") === null && S.res.bois === 10, "une archerie se paie (40 bois)");
   verif(S.pawns.some(p => p.job === "bati"), "un ouvrier prend son marteau");
-  verif(B.construire(S, 4, "maison") !== null, "un emplacement pris refuse un 2e bâtiment");
-  for (let i = 0; i < 400 && !S.sites[4].b.fini; i++) B.pas(S, .05);
-  verif(S.sites[4].b.fini, "l'archerie se termine");
+  verif(B.construire(S, 8, "maison") !== null, "un emplacement pris refuse un 2e bâtiment");
+  for (let i = 0; i < 400 && !S.sites[8].b.fini; i++) B.pas(S, .05);
+  verif(S.sites[8].b.fini, "l'archerie se termine");
   verif(B.debloque(S, "arc"), "l'archerie débloque les archers");
   S.res.bois = S.res.or = S.res.viande = 500;
-  verif(B.recruter(S, "arc") === null && B.recruter(S, "guer") === null, "recrutement");
-  verif(B.nbEsc(S) === 3 && B.recruter(S, "guer") !== null, "population : 3 escouades au départ, pas une de plus");
+  verif(B.recruter(S, "guer") !== null && B.recruter(S, "arc") === null && B.recruter(S, "lance") === null, "recrutement (les chevaliers demandent une caserne)");
+  verif(B.nbEsc(S) === 3 && B.recruter(S, "lance") !== null, "population : 3 escouades au départ, pas une de plus");
   // une maison terminée : +1 escouade
-  B.construire(S, 5, "maison"); S.sites[5].b.fini = true;
+  B.construire(S, 9, "maison"); S.sites[9].b.fini = true;
   verif(B.maxEsc(S) === 4 && B.maxOuv(S) === 6, "une maison : +1 escouade, +2 ouvriers");
   // garnison : archers, moines ou catapulte, dans une tour finie
   B.construire(S, 1, "tour"); S.sites[1].b.fini = true; S.sites[1].b.pv = S.P.tour.pv;
-  const g = S.esc.find(q => q.k === "guer"), a = S.esc.find(q => q.k === "arc");
-  verif(B.envoyer(S, g, 0, 0, S.sites[1]) !== null, "les guerriers ne montent pas dans une tour");
+  const g = S.esc.find(q => q.k === "lance"), a = S.esc.find(q => q.k === "arc");
+  verif(B.envoyer(S, g, 0, 0, S.sites[1]) !== null, "les lanciers ne montent pas dans une tour");
   verif(B.GARNISON.moine && B.GARNISON.cata && B.GARNISON.arc, "archers, moines et catapulte vont en garnison");
   verif(B.envoyer(S, a, 0, 0, S.sites[1]) === null, "les archers montent dans une tour");
   for (let i = 0; i < 400 && !a.tour; i++) B.pas(S, .05);
@@ -49,8 +49,23 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
   // la zone de soin des moines grandit avec le grade et dans une tour
   { const m = {k: "moine", grade: 0, tour: null}, r0 = B.portee(S, m); m.grade = 2; const r2 = B.portee(S, m); m.tour = S.sites[1]; const r3 = B.portee(S, m);
     verif(r2 > r0 && r3 > r2, "zone de soin : plus grande avec le grade et dans une tour"); }
+  // emplacements : tours le long des chemins, le reste au village ; un seul bâtiment de chaque sorte qui forme des unités
+  verif(B.construire(S, 2, "maison") !== null && B.construire(S, 10, "tour") !== null, "tours sur les chemins, maisons au village");
+  verif(B.construire(S, 11, "archerie") !== null, "une seule archerie");
+  verif(B.construire(S, 3, "tourbois") === null && S.P.tourbois.pv < S.P.tour.pv && S.P.tourbois.bois < S.P.tour.bois, "la tour en bois : moins chère et plus fragile");
+  // niveaux : une archerie niveau 2 forme des archers vétérans ; caserne niveau 2 : promotions
+  { const S3 = B.creer({}, 4); S3.res.bois = S3.res.or = S3.res.viande = 2000;
+    B.construire(S3, 8, "archerie"); B.construire(S3, 9, "caserne"); for (const i of [8, 9]){ S3.sites[i].b.fini = true; S3.sites[i].b.pv = S3.P[S3.sites[i].b.k].pv; }
+    verif(B.ameliorer(S3, 8) === null && S3.sites[8].b.travaux, "améliorer l'archerie lance des travaux");
+    for (let i = 0; i < 1200 && S3.sites[8].b.travaux; i++) B.pas(S3, .05);
+    verif(S3.sites[8].b.niveau === 2, "les ouvriers finissent les travaux : niveau 2");
+    B.recruter(S3, "arc"); verif(S3.esc.at(-1).grade === 1, "archerie niveau 2 : archers vétérans");
+    const l = S3.esc[0]; verif(B.promouvoir(S3, l) !== null, "pas de promotion sans caserne niveau 2");
+    S3.sites[9].b.niveau = 2; verif(B.promouvoir(S3, l) === null && l.k === "cav", "caserne niveau 2 : les lanciers deviennent cavaliers");
+    const pv0 = S3.pv; verif(B.ameliorerChateau(S3) === null && S3.niveauChateau === 2 && S3.pv > pv0, "château niveau 2 : plus de PV");
+    B.recruter(S3, "lance"); verif(S3.esc.at(-1).grade === 1, "château niveau 2 : lanciers vétérans"); }
   // grades
-  const q = S.esc.find(o => o.k === "guer"), n0 = B.nMax(S, q);
+  const q = S.esc.find(o => o.k === "lance"), n0 = B.nMax(S, q);
   q.xp = S.P.xp.elite - 1; q.grade = 1; q.pv = B.pvMax(S, q);
   S.mons.push({t: "gob", x: q.x, y: q.y, dir: "N", pv: .01, pvMax: 30, delai: 0, cd: 0, face: 1, mode: "walk", ph: 0, passe: true, dernier: q});
   B.pas(S, .05);

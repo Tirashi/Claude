@@ -19,6 +19,8 @@ Maquette 9 (la 8 avec les monstres de l'Enemy Pack, acheté) :
         python3 -I outils/bastion-maquette/fabriquer.py 9 <dossier « Tiny Swords (Free Pack) »> <dossier « Tiny Swords (Update 010) »> <dossier « Enemy Pack »> <sortie.html>
 Maquette 10 (tactique au tour par tour façon Wargroove : Free Pack, Enemy Pack, Warfare) :
         python3 -I outils/bastion-maquette/fabriquer.py 10 <Free Pack> <ancienne version> <dossier « Enemy Pack »> <dossier « Warfare »> <sortie.html>
+Maquette 12 (bestiaire : toutes les unités et tous les bâtiments des packs, avec leurs animations) :
+        python3 -I outils/bastion-maquette/fabriquer.py 12 <Free Pack> <dossier « Enemy Pack »> <dossier « Warfare »> <ancienne version (Update 010)> <sortie.html>
 Maquette 11 (RTS et tower defense : économie, recrutement, vagues ; Free Pack et Enemy Pack) :
         python3 -I outils/bastion-maquette/fabriquer.py 11 <Free Pack> <ancienne version> <dossier « Enemy Pack »> <sortie.html>
 Les packs ne sont pas dans le dépôt (pas de redistribution) : la page fabriquée sert d'artefact, elle n'est pas commitée.
@@ -29,6 +31,75 @@ import base64, glob, json, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, '..', '..'))
 M4 = sys.argv[1] == '4'
+if sys.argv[1] == '12':
+    fp, ep, wf, old, sortie = sys.argv[2:7]
+    import re
+    from PIL import Image
+    png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()
+    # rôle de chaque unité ou bâtiment dans Bastion (point doré)
+    ROLE = {'Warrior': 'chevaliers', 'Lancer': 'lanciers', 'Archer': 'archers', 'Monk': 'moines', 'Pawn': 'ouvriers', 'Torch Goblin': 'gobelins',
+            'Spear Goblin': 'gobelins à lance', 'Gnoll': 'gnolls', 'Troll': 'troll', 'Catapult': 'catapulte',
+            'Castle': 'château', 'Barracks': 'caserne', 'Archery': 'archerie', 'House1': 'maison', 'House2': 'maison', 'House3': 'atelier',
+            'Monastery': 'monastère', 'Tower': 'tour', 'Maison (ancienne)': 'chantier et ruine'}
+    def largeur(f, w, h):
+        # largeur d'une case de bande : carrée en général ; quelques bandes de bâtiments ont des cases plus étroites ou plus larges
+        if 'Wood_Tower' in f: return 256
+        if 'Pirate Tower_Water' in f: return 128
+        return h if w % h == 0 else w
+    def nom_anim(f, nom):
+        a = os.path.splitext(os.path.basename(f))[0]
+        a = re.sub(r'^' + re.escape(nom) + r'[ _]?', '', a); a = re.sub(r'[ _]?Blue$', '', a).replace('_', ' ').strip()
+        return a or nom
+    def anim(f, nom, libelle=None):
+        w, h = Image.open(f).size
+        return [libelle or nom_anim(f, nom), png(f), largeur(f, w, h)]
+    def anims(dossier, nom, garder=lambda f: True):
+        return [anim(f, nom) for f in sorted(glob.glob(os.path.join(dossier, '**', '*.png'), recursive=True)) if 'Avatar' not in f and garder(f)]
+    # --- les unités
+    U = []
+    for d in sorted(os.listdir(os.path.join(fp, 'Units', 'Blue Units'))):
+        U.append({'p': 'FREE', 'n': d, 'b': ROLE.get(d), 'a': anims(os.path.join(fp, 'Units', 'Blue Units', d), d)})
+    X = os.path.join(ep, 'Extra')
+    for d in sorted(os.listdir(ep)):
+        if d == 'Extra' or not os.path.isdir(os.path.join(ep, d)): continue
+        U.append({'p': 'ENEMY', 'n': d, 'b': ROLE.get(d), 'a': anims(os.path.join(ep, d), d)})
+    # animations rangées dans « Extra » : rattachées à leur monstre, ou unités à part
+    par = {u['n']: u for u in U}
+    for dx, cible in [('Gnoll Hit', 'Gnoll'), ('Lizard Hit', 'Lizard'), ('Minotaur Guard', 'Minotaur'), ('Panda Guard', 'Panda'), ('Skull Guard', 'Skull'),
+                      ('Turtle Guard', 'Turtle'), ('Troll Dead', 'Troll'), ('Spear Goblin Strong Attack', 'Spear Goblin'), ('Hex Shaman Transformation Spell', 'Hex Shaman')]:
+        if os.path.isdir(os.path.join(X, dx)) and cible in par: par[cible]['a'] += anims(os.path.join(X, dx), cible)
+    for dx, nom in [('Pig Rider Spear Goblin', 'Pig Rider'), ('Pig', 'Pig'), ('Boat', 'Boat'), ('Seahorse Boat', 'Seahorse Boat')]:
+        if os.path.isdir(os.path.join(X, dx)): U.append({'p': 'ENEMY', 'n': nom, 'b': None, 'a': anims(os.path.join(X, dx), nom)})
+    for d in sorted(os.listdir(wf)):
+        if not os.path.isdir(os.path.join(wf, d)): continue
+        couleur = lambda f: not re.search(r'_(Red|Yellow|Purple|Black)', f)
+        U.append({'p': 'WARFARE', 'n': d, 'b': ROLE.get(d), 'a': anims(os.path.join(wf, d), d, couleur)})
+    U = [u for u in U if u['a']]
+    for u in U: u['a'].sort(key=lambda a: (0 if re.search('idle', a[0], re.I) else 1 if re.search('run|walk|move', a[0], re.I) else 2, a[0]))
+    # --- les bâtiments
+    BT = []
+    COUL = [('Blue', 'bleu'), ('Red', 'rouge'), ('Yellow', 'jaune'), ('Purple', 'violet'), ('Black', 'noir')]
+    for f in sorted(os.listdir(os.path.join(fp, 'Buildings', 'Blue Buildings'))):
+        if not f.endswith('.png'): continue
+        n = f[:-4]
+        BT.append({'p': 'FREE', 'n': n, 'b': ROLE.get(n), 'a': [anim(os.path.join(fp, 'Buildings', c + ' Buildings', f), n, fr) for c, fr in COUL]})
+    E = [('Goblin Hut', 'Goblin Hut', None), ('Fish Hut', 'Fish Hut', None), ('Gnome Hut', 'Gnome Buildings', 'Gnome Hut'), ('Gnome Tower', 'Gnome Buildings', 'Gnome Tower'),
+         ('Pirate Tower', 'Pirate Tower', None), ('Cave', 'Cave', None), ('Cannon', 'Cannon', None), ('Wooden Fence', 'Wooden Fence', None),
+         ('Dead Tree', 'Dead Tree', None), ('Skull decorations', 'Skull decorations', None)]
+    for n, d, seul in E:
+        fs = sorted(glob.glob(os.path.join(X, d, '*.png')))
+        if seul: fs = [f for f in fs if os.path.basename(f).startswith(seul)]
+        if fs: BT.append({'p': 'ENEMY', 'n': n, 'b': None, 'a': [anim(f, n) for f in fs]})
+    K = os.path.join(old, 'Factions', 'Knights', 'Buildings'); G = os.path.join(old, 'Factions', 'Goblins', 'Buildings')
+    ORDRE = lambda f: (0 if re.search('Blue', f) else 1 if re.search('Red|Yellow|Purple', f) else 2 if 'Constr' in f else 3, f)
+    for n, d, pre in [('Château (ancien)', K, 'Castle'), ('Maison (ancienne)', K, 'House'), ('Tour (ancienne)', K, 'Tower'),
+                      ('Maison gobeline', G, 'Wood_House'), ('Tour en bois', G, 'Wood_Tower'), ('Mine d\'or', os.path.join(old, 'Resources'), 'Gold Mine')]:
+        fs = sorted(glob.glob(os.path.join(d, pre, '*.png')), key=ORDRE)
+        if fs: BT.append({'p': 'ANCIEN', 'n': n, 'b': ROLE.get(n), 'a': [anim(f, pre) for f in fs]})
+    data = {'unites': U, 'batiments': BT}
+    html = open(os.path.join(ICI, 'source-12.html'), encoding='utf-8').read().replace('__DATA__', json.dumps(data, ensure_ascii=False))
+    open(sortie, 'w', encoding='utf-8').write(html)
+    print(sortie, len(html) // 1024, 'Ko,', len(U), 'unités,', sum(len(u['a']) for u in U), 'animations,', len(BT), 'bâtiments,', sum(len(b['a']) for b in BT), 'images'); sys.exit()
 if sys.argv[1] == '11':
     fp, old, ep, sortie = sys.argv[2:6]
     png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()

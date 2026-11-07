@@ -1,0 +1,35 @@
+# Suivi des packs de graphismes : chaque lundi (et à la main, onglet « Actions »), outils/packs-maj.py compare
+# les pages publiques et les devlogs des packs de outils/packs-suivis.json à la dernière photo notée.
+# S'il y a du nouveau, il ouvre une issue (étiquette « packs ») : GitHub prévient par mail. Une même nouveauté
+# n'ouvre qu'une issue (empreinte dans le titre), même fermée. Ne télécharge rien et n'a pas besoin de clé :
+# le téléchargement se fait ensuite par Claude (API itch.io), qui note la nouvelle photo (--api --noter).
+name: Suivi des packs
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+concurrency: suivi-packs
+jobs:
+  packs:
+    name: Regarder si les packs suivis ont changé
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Comparer à la dernière photo
+        run: python3 outils/packs-maj.py --rapport rapport.md | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Ouvrir une issue s'il y a du nouveau
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f rapport.md ] || { echo "Rien de nouveau."; exit 0; }
+          titre=$(head -n 1 rapport.md)
+          tail -n +3 rapport.md > corps.md
+          gh label create packs --color c5a24a --description "Mises à jour des packs de graphismes" 2>/dev/null || true
+          if gh issue list --label packs --state all --limit 100 --json title --jq '.[].title' | grep -qxF "$titre"; then
+            echo "Issue déjà ouverte pour : $titre"
+          else
+            gh issue create --title "$titre" --label packs --body-file corps.md
+          fi

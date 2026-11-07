@@ -3,7 +3,7 @@
 (() => {
 "use strict";
 const B = window.BastionRegles;
-const {W, H, CARTE, CHATEAU, DEPOT, CHEMINS, ESC, BAT, FEMININ, DEBLOQUE, GARNISON, GRADES, RES} = B;
+const {W, H, CARTE, CHATEAU, DEPOT, CHEMINS, ESC, BAT, FEMININ, DEBLOQUE, GARNISON, GRADES, RES, TOURS, UNIQUE, PROMO, VILLAGE} = B;
 const CS = 128, M = 3;                       // une case = 2 × 2 tuiles de 64 px ; M = bord de forêt autour de la carte
 const IMG_DOSSIER = "img/";
 const $ = s => document.querySelector(s);
@@ -16,9 +16,9 @@ let MODS = lire("bastion.labo", {}) || {};   // réglages du labo (écarts avec 
 
 /* ---------- les images ---------- */
 const NOMS = ["tm", "sable", "buisson", "rocher", "poussiere", "feu", "fleche", "soin", "os", "chateau", "caserne", "archerie", "maison1", "maison2", "monastere", "tour",
-  "atelier", "pierre", "explosion", "chantier", "ruine", "mouton-marche", "mouton-broute", "arbre1", "arbre2", "arbre3", "arbre4", "souche1", "souche2", "filon3", "filon4", "filon5"];
+  "atelier", "pierre", "explosion", "chantier", "ruine", "tourbois", "tourbois-chantier", "tm-village", "mouton-marche", "mouton-broute", "arbre1", "arbre2", "arbre3", "arbre4", "souche1", "souche2", "filon3", "filon4", "filon5"];
 for (const o of ["hache", "hache-coupe", "bois", "pioche", "pioche-tape", "or", "couteau", "couteau-coupe", "viande", "marteau", "marteau-tape", "repos"]) NOMS.push("ouvrier-" + o);
-for (const u of ["guer", "arc", "lance", "moine", "cata", "gob", "lanceg", "gnoll", "troll"]) for (const a of ["repos", "marche", "coup"]) NOMS.push(u + "-" + a);
+for (const u of ["guer", "arc", "lance", "moine", "cata", "cav", "epee", "gob", "lanceg", "gnoll", "troll"]) for (const a of ["repos", "marche", "coup"]) NOMS.push(u + "-" + a);
 const L = {};
 const charge = n => new Promise(ok => { const i = new Image(); i.onload = () => { L[n] = i; ok(); }; i.onerror = () => ok(); i.src = IMG_DOSSIER + n + ".png"; });
 const strip = (im, fs) => im._s || (im._s = Array.from({length: Math.max(1, Math.round(im.width / fs))}, (_, i) => { const c = cv(fs, im.height); c.getContext("2d").drawImage(im, i * fs, 0, fs, im.height, 0, 0, fs, im.height); return c; }));
@@ -26,14 +26,16 @@ const f8 = (im, fs, n) => { const s = strip(im, fs); return s[((Math.floor(n) % 
 const auto = (n, s, w, e) => [w ? (e ? 1 : 2) : (e ? 0 : 3), n ? (s ? 1 : 2) : (s ? 0 : 3)];
 // figurines : taille d'une case de la bande, pieds, échelle ; animations repos, marche, coup
 const FIG = {
-  guer: {fs: 192, fx: 96, fy: 135, k: .8}, arc: {fs: 192, fx: 93, fy: 134, k: .8}, lance: {fs: 320, fx: 150, fy: 196, k: .8}, moine: {fs: 192, fx: 96, fy: 132, k: .8}, cata: {fs: 256, fx: 128, fy: 200, k: .62},
+  guer: {fs: 192, fx: 96, fy: 135, k: .8}, arc: {fs: 192, fx: 93, fy: 134, k: .8}, lance: {fs: 320, fx: 150, fy: 196, k: .8}, moine: {fs: 192, fx: 96, fy: 132, k: .8}, cata: {fs: 256, fx: 128, fy: 200, k: .62}, cav: {fs: 320, fx: 160, fy: 218, k: .62}, epee: {fs: 320, fx: 160, fy: 203, k: .66},
   gob: {fs: 192, fx: 80, fy: 133, k: .8}, lanceg: {fs: 256, fx: 125, fy: 171, k: .7}, gnoll: {fs: 192, fx: 97, fy: 135, k: .8}, troll: {fs: 384, fx: 195, fy: 297, k: .62}};
 const OUV = {fs: 192, fx: 96, fy: 135, k: .72};
 // bâtiments : image et pieds (bas de l'image utile)
-const BATI = {chateau: ["chateau", 246], caserne: ["caserne", 240], archerie: ["archerie", 236], maison: ["maison1", 172], monastere: ["monastere", 304], atelier: ["atelier", 174], tour: ["tour", 226], chantier: ["chantier", 180], ruine: ["ruine", 164]};
+const BATI = {chateau: ["chateau", 246], caserne: ["caserne", 240], archerie: ["archerie", 236], maison: ["maison1", 172], monastere: ["monastere", 304], atelier: ["atelier", 174], tour: ["tour", 226], tourbois: ["tourbois", 171], chantier: ["chantier", 180], ruine: ["ruine", 164]};
 const ECH_TOUR = 1.5;    // la tour est dessinée 1,5 fois plus grande : ses occupants à taille normale sur la plateforme
-const HAUT = {maison: 1.4, caserne: 1.9, archerie: 1.9, monastere: 2.4, atelier: 1.4, tour: 2.7};   // hauteur de l'image, en cases (toucher, transparence)
-const EFFET = {maison: "+1 escouade, +2 ouvriers", caserne: "debloque les lanciers", archerie: "debloque les archers", monastere: "debloque les moines", atelier: "debloque les catapultes", tour: "garnison : archers, moines ou catapulte"};
+// les tours : échelle du dessin, centre de la plateforme dans l'image (pixels), largeur d'une case de la bande animée
+const TOUR = {tour: {ech: 1.5, px: 64, py: 95, fs: 0}, tourbois: {ech: 1.3, px: 128, py: 48, fs: 256}};
+const HAUT = {maison: 1.4, caserne: 1.9, archerie: 1.9, monastere: 2.4, atelier: 1.4, tour: 2.7, tourbois: 2.0};   // hauteur de l'image, en cases (toucher, transparence)
+const EFFET = {maison: "+1 escouade, +2 ouvriers", caserne: "debloque les chevaliers", archerie: "debloque les archers", monastere: "debloque les moines", atelier: "debloque les catapultes", tour: "garnison : archers, moines ou catapulte", tourbois: "moins chere, plus fragile, porte moins loin"};
 
 /* ---------- la page ---------- */
 const c = $("#cv"), x = c.getContext("2d");
@@ -60,7 +62,7 @@ function dire(t, bon){ ban.textContent = t; ban.classList.toggle("bon", !!bon); 
 function construirePanneau(){
   $("#jobs").innerHTML = ["bois", "or", "viande"].map(j => `<button type="button" data-j="${j}">${ic(j)}<b>0</b></button>`).join("")
     + `<button type="button" data-j="bati">${ic("marteau")}<b>0</b></button><button type="button" class="plus" data-j="plus">+1<span class="cout"></span></button>`;
-  $("#cartes").innerHTML = Object.keys(ESC).map(k => `<button type="button" data-e="${k}"><img class="av" src="${IMG_DOSSIER}av-${k}.png" alt=""><b>${ESC[k]}</b><span class="cout"></span><span class="verrou"></span></button>`).join("");
+  $("#cartes").innerHTML = B.RECRUTABLES.map(k => `<button type="button" data-e="${k}"><img class="av" src="${IMG_DOSSIER}av-${k}.png" alt=""><b>${ESC[k]}</b><span class="cout"></span><span class="verrou"></span></button>`).join("");
 }
 construirePanneau();
 function maj(){
@@ -77,7 +79,9 @@ function maj(){
     b.classList.toggle("ferme", !ok); b.classList.toggle("cher", ok && (!B.peutPayer(S, B.cout(S, k)) || B.nbEsc(S) >= B.maxEsc(S))); });
   const V = S.P.vagues;
   $("#vague").textContent = S.vague < V.nombre ? `VAGUE ${S.vague}/${V.nombre} · ${Math.max(0, Math.ceil(S.prochaine - S.t))} S` : `VAGUE ${V.nombre}/${V.nombre}`;
-  $("#pvc i").style.width = Math.max(0, S.pv / S.P.chateau.pv * 100) + "%";
+  $("#pvc i").style.width = Math.max(0, S.pv / B.pvChateau(S) * 100) + "%";
+  const pr = $("#promo"), q0 = S.sel; pr.hidden = !(q0 && PROMO[q0.k]);
+  if (!pr.hidden){ const k2 = PROMO[q0.k]; pr.innerHTML = `PROMOUVOIR : ${ESC[k2]} ${prix(B.cout(S, k2))}`; pr.classList.toggle("cher", !B.peutPromouvoir(S, q0) || !B.peutPayer(S, B.cout(S, k2))); }
   $("#vit").textContent = vitesse === 0 ? "PAUSE" : "×" + vitesse;
   $("#vit").classList.toggle("on", vitesse !== 1 || robotOn);
   const q = S.sel;
@@ -92,14 +96,29 @@ $("#cartes").addEventListener("click", e => { const b = e.target.closest("button
 /* ---------- le menu de construction ---------- */
 let ouvertA = 0;   // le clic qui suit le toucher ne doit pas choisir un bâtiment (leçon de Bannières)
 function ouvrirChantier(site){
+  choixSite = site; ouvertA = performance.now(); $("#construire h2").textContent = "CONSTRUIRE";
+  $("#bats").innerHTML = Object.keys(BAT).filter(k => !!TOURS[k] === (site.type === "chemin")).map(k => { const im = BATI[k][0], c0 = B.cout(S, k), raison = B.peutBatir(S, site, k), ok = !raison && B.peutPayer(S, c0);
+    return `<button type="button" data-b="${k}" class="${ok ? "" : "cher"}"><img src="${IMG_DOSSIER}${im}.png" alt="" class="${k === "tourbois" ? "bande4" : ""}"><b>${BAT[k]}</b><span class="cout">${raison ? "DEJA FAIT" : prix(c0)}</span><small>${EFFET[k]}</small></button>`; }).join("");
+  $("#construire").hidden = false; maj();
+}
+// toucher un bâtiment du village (ou le château) : son niveau et le bouton AMELIORER
+const ROLE_NIV = {caserne: "chevaliers", archerie: "archers", monastere: "moines", atelier: "catapultes"};
+function ouvrirBatiment(site){
   choixSite = site; ouvertA = performance.now();
-  $("#bats").innerHTML = Object.keys(BAT).map(k => { const im = BATI[k][0], c0 = B.cout(S, k), ok = B.peutPayer(S, c0);
-    return `<button type="button" data-b="${k}" class="${ok ? "" : "cher"}"><img src="${IMG_DOSSIER}${im}.png" alt=""><b>${BAT[k]}</b><span class="cout">${prix(c0)}</span><small>${EFFET[k]}</small></button>`; }).join("");
+  const chateau = site === "chateau", b = chateau ? null : site.b, k = chateau ? "chateau" : b.k;
+  const niv = chateau ? S.niveauChateau : (b.niveau || 1), max = S.P.niveaux.max, c0 = chateau ? B.coutChateau(S) : B.coutNiveau(S, b);
+  $("#construire h2").textContent = (chateau ? "CHATEAU" : BAT[k]) + " · NIVEAU " + niv;
+  const unite = chateau ? "lanciers" : ROLE_NIV[k];
+  const effet = niv >= max ? "Niveau maximum." : `Niveau ${niv + 1} : les ${unite} recrutes arrivent ${niv + 1 === 2 ? "VETERANS" : "ELITE"}${chateau ? ", et le chateau a plus de points de vie" : ""}${k === "caserne" && niv === 1 ? " ; promotions : lanciers en cavaliers, chevaliers en epeistes" : ""}.`;
+  const occupe = !chateau && b.travaux;
+  $("#bats").innerHTML = `<button type="button" data-a="1" class="${niv >= max || occupe || !B.peutPayer(S, c0) ? "cher" : ""}" style="grid-column:1/-1"><b>${occupe ? "TRAVAUX EN COURS" : niv >= max ? "NIVEAU MAXIMUM" : "AMELIORER"}</b><span class="cout">${niv >= max || occupe ? "" : prix(c0)}</span><small>${effet}</small></button>`;
   $("#construire").hidden = false; maj();
 }
 const fermerChantier = () => { choixSite = null; $("#construire").hidden = true; };
 $("#bats").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || !choixSite || performance.now() - ouvertA < 400) return;
-  const err = B.construire(S, choixSite, b.dataset.b); if (err) dire(err); else fermerChantier(); maj(); });
+  const err = b.dataset.a ? (choixSite === "chateau" ? B.ameliorerChateau(S) : B.ameliorer(S, choixSite)) : B.construire(S, choixSite, b.dataset.b);
+  if (err) dire(err); else fermerChantier(); maj(); });
+$("#promo").addEventListener("click", e => { e.stopPropagation(); if (!S || !S.sel) return; const err = B.promouvoir(S, S.sel); if (err) dire(err); maj(); });
 $("#bAnnulerB").addEventListener("click", () => { fermerChantier(); maj(); });
 
 /* ---------- le décor ---------- */
@@ -118,6 +137,9 @@ function fond(){
   bg = cv(WW, WH); const b = bg.getContext("2d"); b.imageSmoothingEnabled = false;
   const NX = WW / 64, NY = WH / 64, put = (im, c0, r0, i, j) => b.drawImage(im, c0 * 64, r0 * 64, 64, 64, i * 64, j * 64, 64, 64);
   for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) put(L.tm, 1, 1, i, j);
+  // le sol du village, d'une autre herbe (bords raccordés)
+  const [vx, vy, vw, vh] = VILLAGE, isV = (i, j) => { const cx = (i - M) / 2, cy = (j - M) / 2; return cx >= vx && cy >= vy && cx < vx + vw && cy < vy + vh; };
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) if (isV(i, j)){ const [cc, r] = auto(isV(i, j - 1), isV(i, j + 1), isV(i - 1, j), isV(i + 1, j)); put(L["tm-village"], cc, r, i, j); }
   const isP = (i, j) => chemin(Math.floor((i - M) / 2), Math.floor((j - M) / 2));
   for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) if (isP(i, j)){ const [cc, r] = auto(isP(i, j - 1), isP(i, j + 1), isP(i - 1, j), isP(i + 1, j)); put(L.sable, 5 + cc, r, i, j); }
 }
@@ -152,19 +174,23 @@ function toucher(gx, gy){
   for (const q of S.esc) if (q.pv > 0){ const dd = Math.hypot(q.x - gx, q.y - (q.tour ? 1.45 : 0) - (gy + .2)); if (dd < pd){ pd = dd; pick = q; } }
   // un emplacement ? (toute l'image du bâtiment compte)
   let site = null, sd = 9;
-  for (const s of S.sites){ const h = s.b ? (s.b.fini ? HAUT[s.b.k] : 1.2) : .9, w = s.b && s.b.k === "tour" ? .75 : .65;
+  for (const s of S.sites){ const h = s.b ? (s.b.fini ? HAUT[s.b.k] : 1.2) : .9, w = s.b && TOURS[s.b.k] ? .75 : .65;
     if (Math.abs(gx - s.x) < w && gy < s.y + .15 && gy > s.y - h){ const dd = Math.abs(gx - s.x) + Math.abs(gy - (s.y - h / 2)) * .5; if (dd < sd){ sd = dd; site = s; } } }
   if (S.sel && pick !== S.sel){
     if (pick && !site){ S.sel = pick; return; }
-    const tour = site && site.b && site.b.k === "tour" && site.b.fini && GARNISON[S.sel.k] ? site : null;
+    const tour = site && site.b && TOURS[site.b.k] && site.b.fini && GARNISON[S.sel.k] ? site : null;
     const err = B.envoyer(S, S.sel, gx, gy, tour); if (err) dire(err);
     S.sel = null; return;
   }
   if (pick){ S.sel = pick === S.sel ? null : pick; return; }
   if (site){
     if (!site.b) ouvrirChantier(site);
-    else { const b = site.b, BB = S.P[b.k]; dire(`${BAT[b.k]}${b.fini ? "" : " EN CHANTIER " + Math.floor(b.prog / BB.travail * 100) + " %"} · PV ${Math.ceil(b.pv)}/${BB.pv}${b.k === "tour" ? (b.garnison ? " · " + ESC[b.garnison.k] + " DEDANS" : " · VIDE") : ""}`, true); }
+    else if (site.b.fini && UNIQUE[site.b.k]) ouvrirBatiment(site);
+    else { const b = site.b, BB = S.P[b.k]; dire(`${BAT[b.k]}${b.fini ? "" : " EN CHANTIER " + Math.floor(b.prog / BB.travail * 100) + " %"} · PV ${Math.ceil(b.pv)}/${Math.round(B.pvBat(S, b))}${TOURS[b.k] ? (b.garnison ? " · " + ESC[b.garnison.k] + " DEDANS" : " · VIDE") : ""}`, true); }
+    return;
   }
+  // le château
+  if (Math.abs(gx - CHATEAU[0]) < 1.25 && gy > CHATEAU[1] - 1.5 && gy < CHATEAU[1] + .55) ouvrirBatiment("chateau");
 }
 
 /* ---------- le dessin ---------- */
@@ -222,7 +248,8 @@ function frame(now){
   for (const m of S.moutons){ const [X, Y] = P(m.x, m.y); fig(list, {fs: 128, fx: 64, fy: 84}, L[m.mv ? "mouton-marche" : "mouton-broute"], T * 8 + m.t, X, Y, m.face, .8); }
   // le château
   { const [X, Y] = P(CHATEAU[0], CHATEAU[1] + .55); list.push([Y, () => { batiment(L.chateau, X, Y, 246, 1);
-    const p = S.pv / S.P.chateau.pv; if (p < .6) for (let k = 0; k < (p < .3 ? 4 : 2); k++) x.drawImage(f8(L.feu, 64, T * 10 + k * 3), Math.round(X - 100 + k * 60), Math.round(Y - 150 - (k % 2) * 40)); }]); }
+    if (S.niveauChateau > 1) etoiles(X, Y + 22, S.niveauChateau - 1);
+    const p = S.pv / B.pvChateau(S); if (p < .6) for (let k = 0; k < (p < .3 ? 4 : 2); k++) x.drawImage(f8(L.feu, 64, T * 10 + k * 3), Math.round(X - 100 + k * 60), Math.round(Y - 150 - (k % 2) * 40)); }]); }
   // les emplacements et les bâtiments
   for (const s of S.sites){ const [X, Y] = P(s.x, s.y), b = s.b;
     if (!b){
@@ -230,14 +257,16 @@ function frame(now){
         const on = choixSite === s; x.strokeStyle = on ? "#fff4a0" : "rgba(60,40,20,.5)"; x.lineWidth = on ? 7 : 5; x.setLineDash([14, 10]); x.beginPath(); x.ellipse(X, Y - 30, 70, 38, 0, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
         x.fillStyle = on ? "#fff4a0" : "rgba(60,40,20,.5)"; x.fillRect(X - 14, Y - 34, 28, 8); x.fillRect(X - 4, Y - 44, 8, 28); }]);
       continue; }
-    const B0 = S.P[b.k];
-    if (!b.fini){ list.push([Y, () => { batiment(L.chantier, X, Y, 180, 1); barre(X, Y + 4, 90, b.prog / B0.travail, "#ffd94a"); }]); continue; }
-    const [nom, fy] = BATI[b.k], im = L[nom], ech = b.k === "tour" ? ECH_TOUR : 1;
+    const B0 = S.P[b.k], pm = B.pvBat(S, b);
+    if (!b.fini){ list.push([Y, () => { if (b.k === "tourbois") batiment(L["tourbois-chantier"], X, Y, 171, 1.3); else batiment(L.chantier, X, Y, 180, 1); barre(X, Y + 4, 90, b.prog / B0.travail, "#ffd94a"); }]); continue; }
+    const [nom, fy] = BATI[b.k], TT = TOUR[b.k], ech = TT ? TT.ech : 1, im = TT && TT.fs ? f8(L[nom], TT.fs, T * 6 + s.i) : L[nom];
     list.push([Y, () => { batiment(im, X, Y, fy, ech);
-      if (b.pv < B0.pv * .5) x.drawImage(f8(L.feu, 64, T * 10 + s.i), Math.round(X - 40), Math.round(Y - fy * ech * .6));
-      if (b.pv < B0.pv) barre(X, Y + 4, 90, b.pv / B0.pv, "#7ad04a"); }]);
+      if ((b.niveau || 1) > 1) etoiles(X, Y + 22, b.niveau - 1);
+      if (b.travaux) barre(X, Y + 4, 90, b.travaux.prog / b.travaux.total, "#ffd94a");
+      if (b.pv < pm * .5) x.drawImage(f8(L.feu, 64, T * 10 + s.i), Math.round(X - 40), Math.round(Y - fy * ech * .6));
+      if (b.pv < pm && !b.travaux) barre(X, Y + 4, 90, b.pv / pm, "#7ad04a"); }]);
     // les occupants, sur la plateforme de la tour (dessinés juste après elle)
-    if (b.k === "tour" && b.garnison){ const q = b.garnison, D = FIG[q.k], py = Y - (fy - 95) * ECH_TOUR + 20;
+    if (TT && b.garnison){ const q = b.garnison, D = FIG[q.k], py = Y - (fy - TT.py) * ech + 20;
       const n = q.k === "cata" ? 1 : Math.min(3, B.vivants(S, q)), k = q.k === "cata" ? .5 : D.k, ecart = 36;
       for (let i = 0; i < n; i++) fig(list, D, L[anim(q, q.k)], T * 10 + q.ph + i * .7, X + (i - (n - 1) / 2) * ecart, py + (i % 2) * 6, q.face, k, null, Y + .5 + i * .01, true);
       list.push([Y + .6, () => { if (q.grade) etoiles(X, py - 130, q.grade); if (q.pv < B.pvMax(S, q)) barre(X, py - 112, 70, q.pv / B.pvMax(S, q), "#5ab0ff"); }]);
@@ -295,10 +324,10 @@ const LIB = {
   eco: ["ECONOMIE", {bois: "Bois au depart", or: "Or au depart", viande: "Viande au depart", ouvriers: "Ouvriers au depart", rapport: "Rapporte par voyage", vitesse: "Vitesse des ouvriers (cases/s)",
     tBois: "Temps pour couper (s)", tOr: "Temps pour miner (s)", tViande: "Temps pour la viande (s)", ouvrier: "Prix d'un ouvrier (viande)", batir: "Vitesse de construction par ouvrier"}],
   pop: ["POPULATION", {escouades: "Escouades au depart", ouvriers: "Ouvriers max au depart", maisonEsc: "Escouades en plus par maison", maisonOuv: "Ouvriers en plus par maison"}],
-  chateau: ["CHATEAU", {pv: "Points de vie"}],
-  guer: ["GUERRIERS", null], arc: ["ARCHERS", null], lance: ["LANCIERS", null], moine: ["MOINES", null], cata: ["CATAPULTE", null],
+  chateau: ["CHATEAU", {pv: "Points de vie", bois: "Amelioration : bois (× niveau)", or: "Amelioration : or (× niveau)", pvNiveau: "PV en plus par niveau (0,3 = +30 %)"}],
+  lance: ["LANCIERS", null], guer: ["CHEVALIERS", null], arc: ["ARCHERS", null], moine: ["MOINES", null], cata: ["CATAPULTE", null], cav: ["CAVALIERS (promotion des lanciers)", null], epee: ["EPEISTES (promotion des chevaliers)", null],
   gob: ["GOBELINS A TORCHE", null], lanceg: ["GOBELINS A LANCE", null], gnoll: ["GNOLLS (lancent des os)", null], troll: ["TROLL", null],
-  maison: ["MAISON", null], caserne: ["CASERNE", null], archerie: ["ARCHERIE", null], monastere: ["MONASTERE", null], atelier: ["ATELIER", null], tour: ["TOUR", null],
+  maison: ["MAISON", null], caserne: ["CASERNE", null], archerie: ["ARCHERIE", null], monastere: ["MONASTERE", null], atelier: ["ATELIER", null], tour: ["TOUR", null], tourbois: ["TOUR EN BOIS", null], niveaux: ["NIVEAUX DES BATIMENTS", {cout: "Prix d'un niveau (× prix du batiment × niveau actuel)", travail: "Temps des travaux (× temps de construction × niveau)", max: "Niveau maximum"}],
   vagues: ["VAGUES", {premiere: "Premiere vague (s)", entre: "Temps entre deux vagues (s)", nombre: "Nombre de vagues", base: "Monstres a la 1re vague", plus: "Monstres en plus par vague",
     force: "PV des monstres en plus par vague (0,15 = +15 %)", troll: "Troll toutes les N vagues (0 = jamais)", deux: "Deux chemins a partir de la vague", alerte: "Alerte avant la vague (s)"}],
   xp: ["EXPERIENCE", {parPv: "XP par PV de monstre abattu", survie: "XP pour une vague survecue", veteran: "XP pour VETERANS", elite: "XP pour ELITE", heros: "XP pour HEROS", bonus: "Bonus par grade (0,2 = +20 %)"}],

@@ -23,6 +23,9 @@ Le proxy de l'environnement ajoute la clé de l'utilisateur pour `api.itch.io` (
 3. `curl -sSL "https://api.itch.io/uploads/<upload.id>/download?download_key_id=<clé>" -o <dossier neuf>/pack.zip` (réponse **302** vers le fichier : `-L` obligatoire, pas de JSON).
 Fait le 06/11 pour l'Enemy Pack et Warfare de Tiny Swords (détails dans `specs/bastion.md`).
 
+## Suivre les mises à jour des packs
+Liste : `outils/packs-suivis.json` (Warfare, Tiny Swords, Fantasy Battle Pack ; ajouter un pack = une entrée avec `nom`, `url`, `jeux`, `cle` si acheté, `etat: null`). Le workflow « Suivi des packs » (`.github/workflows/packs.yml`, chaque lundi) ouvre une issue `packs` s'il y a du nouveau. Quand l'utilisateur demande de récupérer une mise à jour : télécharger par l'API (section précédente), regarder les nouveautés (bestiaire de Bastion : `fabriquer.py 12`), mettre à jour les images des jeux concernés et les crédits, puis `python3 outils/packs-maj.py --api --noter` et committer la photo.
+
 ## Compacter des modèles glTF (maquettes 3D sans fichiers à côté)
 `python3 -I .claude/skills/packs-itch/pack.py <dossier des .gltf> <sortie.b64> [nom1,nom2,…]`
 Positions quantifiées en int16 sur la boîte du modèle + indices, par matériau ; en-tête JSON + binaire, gzippé puis en base64. Dans la page : `DecompressionStream("gzip")`, `MeshStandardMaterial` avec `flatShading` (pas besoin de normales). Exemple de lecteur : `maquettes/clan-du-fjord-7.html`. Fait pour Ultimate Fantasy RTS (Quaternius) ; les personnages animés Kenney passent plutôt par `GLTFLoader` + `SkeletonUtils` (voir `maquettes/ferme-du-vallon.html`).

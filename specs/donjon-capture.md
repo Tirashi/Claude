@@ -99,3 +99,12 @@ Ces points restent à trancher ; les propositions entre parenthèses ne sont pas
 - Taille estimée ⚫ (plusieurs semaines, comme Donjon de poche ou Nebula) ; Opus pour le moteur.
 - Prochaine étape : **maquette d'abord** (2 ou 3 directions sur un écran de téléphone : exploration d'un étage, écran de combat avec héros + 3 monstres, capture, choix à l'escalier), puis validation, puis session 1.
 - Le moteur (génération des étages, combat, capture, expérience) se teste sous Node, comme les autres jeux.
+
+## Ressources graphiques : ce que les packs Tiny Swords couvrent (07/11, question de l'utilisateur)
+- **Monstres : oui, largement.** L'Enemy Pack a 22 monstres animés (repos, marche, attaque ; certains en plus : garde, coup reçu, mort du troll, sorts du chaman), assez pour 12 espèces et leurs « évolutions » (gobelin → gobelin à lance → cavalier sur cochon, crâne → minotaure…). Les variantes de couleur des versions plus fortes se feraient en repeignant (teinte), le pack n'en ayant qu'une. Voir le [bestiaire](https://claude.ai/artifact/Lgd7UTdT8JTAUq66Uyz1CX).
+- **Héros : oui.** Guerrier, lancier, archer, moine (Free Pack, 5 couleurs), épéiste, berserker, roi (Warfare).
+- **Donjon : non.** Pas de murs, sols de pierre, portes, escaliers, coffres, clés : Tiny Swords est un pack d'extérieur (herbe, falaises, eau). On pourrait tricher avec les falaises et une herbe sombre (« grotte ») et la grotte de l'Enemy Pack pour l'entrée, mais ce ne serait pas un vrai donjon.
+- **Objets : très peu.** 12 icônes d'interface (bois, or, viande, épée, bouclier…) : pas de potions, parchemins, œufs, armes et armures variées.
+- **Combat : oui pour l'interface** (rubans, boutons, barres, papier du Free Pack), l'écran de combat séparé se prête bien aux grands sprites de Tiny Swords.
+- **Autres ressources que nous avons** : Dungeon Crawl (32 px, CC0, dans le dépôt, avec murs, sols, escaliers, coffres et des milliers d'objets, mais un style très différent de Tiny Swords) ; Kenney All-in-1 (acheté : Tiny Dungeon, Roguelike Dungeon, 1-Bit Pack…) ; le bundle comshadow (Goblin Cave Lair, Sewer Hideout : décors de donjon vus de dessus, style différent, faits « avec l'aide d'une IA »).
+- Proposition : la maquette d'abord, avec 2 ou 3 mélanges (Tiny Swords pour les monstres et l'écran de combat + un décor de donjon pris ailleurs ; tout en Dungeon Crawl ; tout en Kenney) ; ou chercher un pack de donjon au style proche de Tiny Swords (64 px, contours épais).

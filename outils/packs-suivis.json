@@ -1,0 +1,122 @@
+{
+  "_lisez-moi": "Packs dont on suit les mises à jour (outils/packs-maj.py, workflow .github/workflows/packs.yml). « etat » = dernière photo notée (python3 outils/packs-maj.py --noter) : ne pas la modifier à la main. « cle » = clé d'achat itch.io (api.itch.io, seulement dans l'environnement de Claude).",
+  "packs": [
+    {
+      "nom": "Tiny Swords: Warfare",
+      "url": "https://pixelfrog-assets.itch.io/tiny-swords-warfare",
+      "jeux": "Bastion (catapulte ; maquettes 10 et 12)",
+      "cle": {
+        "jeu": 5221938,
+        "achat": 161477642
+      },
+      "pourquoi": "accès anticipé : l'auteur ajoute régulièrement des unités, des bâtiments, des murs",
+      "etat": {
+        "fichiers": {
+          "Warfare_001.zip": "2.9 MB"
+        },
+        "maj": "25 October 2026 @ 19:21 UTC",
+        "devlog": [
+          {
+            "titre": "Tiny Swords: Warfare is Here! ⚔️",
+            "lien": "https://pixelfrog-assets.itch.io/tiny-swords-warfare/devlog/1727092/tiny-swords-warfare-is-here-",
+            "date": "Sat, 24 Oct 2026 17:48:02 GMT"
+          }
+        ],
+        "api": {
+          "Warfare_001.zip": {
+            "id": 19996771,
+            "taille": 3090286,
+            "maj": "2026-10-24T13:45:18Z"
+          }
+        }
+      }
+    },
+    {
+      "nom": "Tiny Swords (Free Pack et Enemy Pack)",
+      "url": "https://pixelfrog-assets.itch.io/tiny-swords",
+      "jeux": "Bastion (unités, bâtiments, terrain, interface, monstres)",
+      "cle": {
+        "jeu": 1591077,
+        "achat": 161477580
+      },
+      "pourquoi": "l'Enemy Pack annonce encore 8 monstres",
+      "etat": {
+        "fichiers": {
+          "TS_old version_CC0 Licensed": "2.6 MB",
+          "Tiny Swords (Free Pack).zip": "3.3 MB",
+          "Tiny Swords (Enemy Pack).zip": "2.6 MB"
+        },
+        "maj": "24 October 2026 @ 16:56 UTC",
+        "devlog": [
+          {
+            "titre": "Enemy #22: Imp!",
+            "lien": "https://pixelfrog-assets.itch.io/tiny-swords/devlog/1652555/enemy-22-imp",
+            "date": "Fri, 04 Sep 2026 20:49:29 GMT"
+          },
+          {
+            "titre": "Enemy #21: Bumblebee!",
+            "lien": "https://pixelfrog-assets.itch.io/tiny-swords/devlog/1641961/enemy-21-bumblebee",
+            "date": "Wed, 26 Aug 2026 23:13:07 GMT"
+          },
+          {
+            "titre": "Enemy #20: Giant Bat!",
+            "lien": "https://pixelfrog-assets.itch.io/tiny-swords/devlog/1637532/enemy-20-giant-bat",
+            "date": "Sat, 22 Aug 2026 19:37:04 GMT"
+          },
+          {
+            "titre": "Enemy #19: Slingshot Gnome!",
+            "lien": "https://pixelfrog-assets.itch.io/tiny-swords/devlog/1635181/enemy-19-slingshot-gnome",
+            "date": "Thu, 20 Aug 2026 16:49:36 GMT"
+          },
+          {
+            "titre": "Added a few new structures to the pack!",
+            "lien": "https://pixelfrog-assets.itch.io/tiny-swords/devlog/1527877/added-a-few-new-structures-to-the-pack",
+            "date": "Tue, 19 May 2026 13:56:55 GMT"
+          }
+        ],
+        "api": {
+          "Tiny Swords.zip": {
+            "id": 9428013,
+            "taille": 2780719,
+            "maj": "2026-09-16T05:04:11Z"
+          },
+          "Tiny Swords (Free Pack).zip": {
+            "id": 15971141,
+            "taille": 3551908,
+            "maj": "2026-09-16T05:53:48Z"
+          },
+          "Tiny Swords (Enemy Pack).zip": {
+            "id": 19101739,
+            "taille": 2810855,
+            "maj": "2026-09-04T18:04:21Z"
+          }
+        }
+      }
+    },
+    {
+      "nom": "Fantasy Battle Pack",
+      "url": "https://mattwalkden.itch.io/fantasy-battle-pack",
+      "jeux": "Résistance (unités, terrain, interface)",
+      "cle": null,
+      "pourquoi": "téléchargé gratuitement (pas dans les achats) ; l'auteur annonce des mises à jour",
+      "etat": {
+        "fichiers": {
+          "Fantasy Battle Pack 06-07-25.zip": "1.6 MB"
+        },
+        "maj": null,
+        "devlog": [
+          {
+            "titre": "Mounted Units Update Live!",
+            "lien": "https://mattwalkden.itch.io/fantasy-battle-pack/devlog/981082/mounted-units-update-live",
+            "date": "Sun, 06 Jul 2025 17:24:53 GMT"
+          },
+          {
+            "titre": "Mounted Units Update",
+            "lien": "https://mattwalkden.itch.io/fantasy-battle-pack/devlog/895594/mounted-units-update",
+            "date": "Thu, 27 Feb 2025 16:19:20 GMT"
+          }
+        ]
+      }
+    }
+  ]
+}
