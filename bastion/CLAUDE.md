@@ -8,5 +8,5 @@ RTS + tower defense en temps réel (Tiny Swords, vue du dessus). Session 1 = **l
 
 ## Pièges
 - Le volet CONSTRUIRE s'ouvre sur `pointerup` : il ignore les clics 400 ms (leçon de Bannières). Les bandes d'images sont recoupées au retour dans l'appli (`viderToiles`).
-- Changer une règle : relancer le simulateur (session 2 : le robot tient 8,5 vagues sur 10, 1 victoire sur 6).
+- La clé `guer` = les CHEVALIERS (caserne) ; `lance` = les lanciers de départ. Changer une règle : relancer le simulateur (07/11 : 11 victoires du robot sur 30).
 - Contournement : `marcher` garde le côté choisi (`e.cote`) tant qu'il longe un obstacle, sinon l'escouade hésite devant le château.
