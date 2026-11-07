@@ -47,6 +47,7 @@ const ORDRE = [
   "snake/index.html",
   "asteroids/index.html",
   "jeu-de-la-vie/index.html",
+  "pokedex/index.html",
 ];
 // la cartouche de chaque jeu vient de sa fiche (une fiche absente ou fautive fait disparaître la cartouche, pas l'accueil)
 const FICHES = Ludo.fiches;
@@ -62,6 +63,8 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-07", "neuf", "pokedex", "Le premier atelier : un Pokédex avec les 1025 Pokémon en français. Pour chacun, son dessin, ses types, ses évolutions et ce qu'on sait de lui. Cherche par nom, numéro ou type, et l'onglet Types te dit qui gagne : choisis l'attaque et le Pokémon qui défend, il donne les dégâts."],
+  ["2026-11-07", "acc", "", "Une nouvelle étagère sous les jeux : les ATELIERS, des outils pour apprendre et créer. On y trouve le Pokédex, Calculator et le Jeu de la vie."],
   ["2026-11-07", "neuf", "bastion", "Un mélange de jeu de stratégie en temps réel et de tower defense, avec les graphismes de Tiny Swords. Tes ouvriers récoltent bois, or et viande ; bâtis, recrute des escouades qui gagnent des grades, mets des archers en garnison dans les tours et défends le château contre dix vagues de monstres et leur troll. Cette première version est un laboratoire : vitesse, robot, simulateur et tous les réglages, pour trouver ensemble le bon équilibre."],
   ["2026-11-06", "acc", "", "Le Quoi de neuf devient le journal : un numéro par mois, la grande nouveauté en couverture, et une pastille rouge sur le bouton JOURNAL quand il y a du neuf."],
   ["2026-11-02", "neuf", "dragon-simulator", "Une idée d'un garçon de 7 ans. Ton dragon s'élance de son nid et plane au-dessus de la ville puis de l'aéroport, vu de profil, en 3D. Touche l'écran pour battre des ailes, tiens le bouton FEU pour brûler immeubles, maisons et voitures, évite grues, montgolfières et hélicoptères, et ramasse dix bonus (jetpack, grenade, bébé dragon, super-souffle, nuage d'orage, bouclier, aimant, œuf d'or…). Plus tu vas loin, plus tu gagnes de pièces : au nid, améliore écailles, flammes, réserve de feu et ailes."],
@@ -177,14 +180,14 @@ function spin(b){
   b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin");
   b.querySelector(".body").addEventListener("animationend", () => b.classList.remove("spin"), {once: true});
 }
-const rack = $("rack"), order = new Map(GAMES.map((g, i) => [g, i]));
+const rack = $("rack"), rackAtelier = $("rackAtelier"), order = new Map(GAMES.map((g, i) => [g, i]));
 let crownSet = new Set();
 GAMES.forEach((g, i) => {
   g.el = cart(g, i);
   let timer = 0;
   g.el.addEventListener("click", () => { clearTimeout(timer); if (still()) return openVolet(g); spin(g.el); timer = setTimeout(() => openVolet(g), 480); });
   g.el.addEventListener("focus", () => select(carts.indexOf(g)));
-  rack.appendChild(g.el);
+  (g.atelier ? rackAtelier : rack).appendChild(g.el);
 });
 // étiquettes posées sur la cartouche : NEUF, EN COURS ou MAJ, étoile des favoris, couronne d'un record de la famille
 function paintMarks(){
@@ -229,6 +232,7 @@ const sortBtn = $("sort");
 sortBtn.addEventListener("click", () => { sortBy = SORTS[(SORTS.findIndex(x => x[0] === sortBy) + 1) % SORTS.length][0]; try { localStorage.setItem("ludo.sort", sortBy); } catch (e) {} arrange(); });
 const lastDate = g => { const m = metaOf(g); return [m.added || "", m.updated || ""].sort().pop(); };
 function compare(a, b){
+  if (!!a.atelier !== !!b.atelier) return a.atelier ? 1 : -1;   // les ateliers après les jeux (étagère du dessous)
   if (sortBy === "new") return lastDate(b).localeCompare(lastDate(a)) || order.get(a) - order.get(b);
   if (sortBy === "az") return a.n.localeCompare(b.n, "fr");
   if (sortBy === "last") return (played[b.k] || 0) - (played[a.k] || 0) || order.get(a) - order.get(b);
@@ -245,11 +249,12 @@ function say(t){
   let k = 0; e.textContent = ""; sayTimer = setInterval(() => { e.textContent = t.slice(0, ++k); if (k >= t.length) clearInterval(sayTimer); }, 25);
 }
 function arrange(){
-  GAMES.slice().sort(compare).forEach(g => { g.el.hidden = !shows(g); rack.appendChild(g.el); });
+  GAMES.slice().sort(compare).forEach(g => { g.el.hidden = !shows(g); (g.atelier ? rackAtelier : rack).appendChild(g.el); });
   sortBtn.innerHTML = `TRI <b>${SORTS.find(x => x[0] === sortBy)[2]}</b>`; sortBtn.setAttribute("aria-label", "Changer le tri (actuel : " + SORTS.find(x => x[0] === sortBy)[1].toLowerCase() + ")");
   [...fbar.children].forEach(b => b.setAttribute("aria-pressed", b.dataset.f === filter));
   const vis = GAMES.filter(g => !g.el.hidden), n = vis.length, jeux = n > 1 ? "jeux" : "jeu";
-  rack.hidden = !n;
+  rack.hidden = !vis.some(g => !g.atelier);
+  rackAtelier.hidden = $("atelierTitre").hidden = !vis.some(g => g.atelier);
   const empty = $("shelfEmpty"); empty.hidden = !!n;
   empty.textContent = filter === "★ FAVORIS" && !query ? "Aucun favori pour l'instant. Touche une cartouche, puis ☆ FAVORI dans son volet." : "Aucune cartouche ici.";
   const left = GAMES.filter(g => dailyState(g) === false).length;

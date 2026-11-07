@@ -54,6 +54,10 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(17px
   border:3px solid var(--ink); box-shadow:0 0 0 3px #3b3566, 5px 5px 0 3px #000; background-color:#140f28}
 @media (min-width:700px){ .rack{--k:1; --row:200px; grid-template-columns:repeat(auto-fill, minmax(116px,1fr))} }
 .rack .c3{margin-bottom:60px}
+/* l'étagère des ateliers (outils : Pokédex, Calculator, Jeu de la vie), sous celle des jeux */
+.atelier-titre{margin:26px 0 10px; font-family:var(--f-display); font-weight:400; font-size:13px; letter-spacing:1px; color:var(--gold); text-shadow:2px 2px 0 #000; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
+.atelier-titre small{font-family:var(--f-body); font-size:19px; letter-spacing:0; color:var(--text-dim); text-shadow:none}
+.rack.atelier{background-color:#0f2230; box-shadow:0 0 0 3px #2c5266, 5px 5px 0 3px #000}
 /* le nom du jeu, sous la planche, lisible */
 .c3 .nm{position:absolute; top:calc(100% + 26px); left:50%; width:calc(var(--w) + 30px); transform:translateX(-50%); font-weight:400; font-size:16px; line-height:.95;
   text-align:center; color:var(--text); text-shadow:2px 2px 0 #000; overflow-wrap:anywhere; pointer-events:none}

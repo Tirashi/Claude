@@ -566,6 +566,23 @@ const ICONS = {
     [[3,1],[3,2],[3,3],[2,3]].forEach(([a,b]) => cell(a, b, "#3b82f6", "#bcd6ff", "#173a80"));
     [[0,2],[1,2],[1,3],[0,3]].forEach(([a,b]) => cell(a, b, "#facc15", "#fff2a8", "#8a6a00"));
   }},
+  dex: {pal:{o:"#1a0f2e", R:"#e8364a", r:"#a81e30", h:"#ff8a96", W:"#f4f0ff", w:"#b8b0d0"}, map:[
+    "................",
+    "....oooooooo....",
+    "...oohRRrrroo...",
+    "..oohhRRRRRroo..",
+    ".oohhhRRRRRRroo.",
+    ".ohhhRRooRRRRro.",
+    ".oRRRRoWWoRRRro.",
+    ".oooooWWWWooooo.",
+    ".oooooWWWWooooo.",
+    ".owWWWoWWoWWWwo.",
+    ".owWWWWooWWWWwo.",
+    ".oowWWWWWWWWwoo.",
+    "..oowWWWWWWwoo..",
+    "...oowwwwwwoo...",
+    "....oooooooo....",
+    "................"]},
   glider: {draw(x){
     x.fillStyle = "#0b0f24"; x.fillRect(0, 0, 16, 16);
     x.fillStyle = "#18204a"; for (let i = 0; i <= 16; i += 5){ x.fillRect(i, 0, 1, 16); x.fillRect(0, i, 16, 1); }
