@@ -19,6 +19,8 @@ Maquette 9 (la 8 avec les monstres de l'Enemy Pack, acheté) :
         python3 -I outils/bastion-maquette/fabriquer.py 9 <dossier « Tiny Swords (Free Pack) »> <dossier « Tiny Swords (Update 010) »> <dossier « Enemy Pack »> <sortie.html>
 Maquette 10 (tactique au tour par tour façon Wargroove : Free Pack, Enemy Pack, Warfare) :
         python3 -I outils/bastion-maquette/fabriquer.py 10 <Free Pack> <ancienne version> <dossier « Enemy Pack »> <dossier « Warfare »> <sortie.html>
+Maquette 12 (bestiaire : toutes les unités des trois packs et leurs animations) :
+        python3 -I outils/bastion-maquette/fabriquer.py 12 <Free Pack> <dossier « Enemy Pack »> <dossier « Warfare »> <sortie.html>
 Maquette 11 (RTS et tower defense : économie, recrutement, vagues ; Free Pack et Enemy Pack) :
         python3 -I outils/bastion-maquette/fabriquer.py 11 <Free Pack> <ancienne version> <dossier « Enemy Pack »> <sortie.html>
 Les packs ne sont pas dans le dépôt (pas de redistribution) : la page fabriquée sert d'artefact, elle n'est pas commitée.
@@ -29,6 +31,38 @@ import base64, glob, json, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, '..', '..'))
 M4 = sys.argv[1] == '4'
+if sys.argv[1] == '12':
+    fp, ep, wf, sortie = sys.argv[2:6]
+    import re
+    from PIL import Image
+    png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()
+    # rôle de chaque unité dans Bastion (point doré)
+    ROLE = {'Warrior': 'chevaliers', 'Lancer': 'lanciers', 'Archer': 'archers', 'Monk': 'moines', 'Pawn': 'ouvriers', 'Torch Goblin': 'gobelins',
+            'Spear Goblin': 'gobelins à lance', 'Gnoll': 'gnolls', 'Troll': 'troll', 'Catapult': 'catapulte'}
+    def anims(dossier, nom, garder=lambda f: True):
+        out = []
+        for f in sorted(glob.glob(os.path.join(dossier, '**', '*.png'), recursive=True)):
+            if 'Avatar' in f or not garder(f): continue
+            w, h = Image.open(f).size
+            if w % h: continue
+            a = os.path.splitext(os.path.basename(f))[0]
+            a = re.sub(r'^' + re.escape(nom) + r'[ _]?', '', a); a = re.sub(r'[ _]?Blue$', '', a).replace('_', ' ').strip() or nom
+            out.append([a, png(f), h])
+        return out
+    U = []
+    for d in sorted(os.listdir(os.path.join(fp, 'Units', 'Blue Units'))):
+        U.append({'p': 'FREE', 'n': d, 'b': ROLE.get(d), 'a': anims(os.path.join(fp, 'Units', 'Blue Units', d), d)})
+    for d in sorted(os.listdir(ep)):
+        if d == 'Extra' or not os.path.isdir(os.path.join(ep, d)): continue
+        U.append({'p': 'ENEMY', 'n': d, 'b': ROLE.get(d), 'a': anims(os.path.join(ep, d), d)})
+    for d in sorted(os.listdir(wf)):
+        if not os.path.isdir(os.path.join(wf, d)): continue
+        couleur = lambda f: not re.search(r'_(Red|Yellow|Purple|Black)', f)
+        U.append({'p': 'WARFARE', 'n': d, 'b': ROLE.get(d), 'a': anims(os.path.join(wf, d), d, couleur)})
+    U = [u for u in U if u['a']]
+    for u in U: u['a'].sort(key=lambda a: (0 if re.search('idle', a[0], re.I) else 1 if re.search('run|walk|move', a[0], re.I) else 2, a[0]))
+    html = open(os.path.join(ICI, 'source-12.html'), encoding='utf-8').read().replace('__DATA__', json.dumps(U, ensure_ascii=False))
+    open(sortie, 'w', encoding='utf-8').write(html); print(sortie, len(html) // 1024, 'Ko,', len(U), 'unités,', sum(len(u['a']) for u in U), 'animations'); sys.exit()
 if sys.argv[1] == '11':
     fp, old, ep, sortie = sys.argv[2:6]
     png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()

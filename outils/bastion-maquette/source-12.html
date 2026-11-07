@@ -1,0 +1,151 @@
+<title>Bestiaire Tiny Swords</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Maquette 12 de « Bastion » : toutes les unités des packs Tiny Swords (Free Pack, Enemy Pack, Warfare) et leurs animations.
+   On choisit une unité dans la grille ; au-dessus, chaque animation tourne en boucle. Fabriquée par outils/bastion-maquette/fabriquer.py 12
+   (packs pas dans le dépôt : pas de redistribution). */
+/* une table de travail sombre en bois ; la vitrine des animations en haut, le casier des unités en bas */
+:root{
+  color-scheme: dark;
+  --bg:#1b1a17; --panneau:#26241f; --case:#302d27; --trait:#4a4438; --texte:#efe6d2; --doux:#b3a891;
+  --or:#e8c46a; --bleu:#5aa6c8; --rouge:#d9684a; --violet:#a07ad0;
+  --titre:"Cinzel", Georgia, serif; --corps:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--texte); font-family:var(--corps); font-size:15px; line-height:1.4;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:18px 40px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible, input:focus-visible{outline:2px dashed var(--or); outline-offset:2px}
+.page{max-width:1100px; margin:0 auto; display:flex; flex-direction:column; gap:18px}
+header h1{margin:0; font-family:var(--titre); font-weight:800; font-size:clamp(20px, 5vw, 30px); letter-spacing:1px; color:var(--or); text-wrap:balance}
+header p{margin:4px 0 0; color:var(--doux); max-width:65ch}
+
+/* la vitrine */
+.vitrine{background:var(--panneau); border:1px solid var(--trait); border-radius:8px; padding:14px; display:flex; flex-direction:column; gap:12px}
+.tete{display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px}
+.tete h2{margin:0; font-family:var(--titre); font-weight:800; font-size:22px; min-width:0}
+.badge{font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; padding:2px 7px; border-radius:3px; background:var(--case); color:var(--doux); white-space:nowrap}
+.badge.FREE{color:var(--bleu)} .badge.ENEMY{color:var(--rouge)} .badge.WARFARE{color:var(--violet)}
+.badge.bastion{background:var(--or); color:#2a1e08}
+.reglages{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; margin-left:auto; font-size:13px; color:var(--doux)}
+.reglages label{display:flex; align-items:center; gap:6px}
+.reglages input[type=range]{width:110px; accent-color:var(--or)}
+.choix{display:flex; border:1px solid var(--trait); border-radius:4px; overflow:hidden}
+.choix button{padding:4px 9px; font-size:13px}
+.choix button[aria-pressed=true]{background:var(--or); color:#2a1e08; font-weight:600}
+.anims{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px}
+.anim{background:var(--case); border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px; min-width:0}
+.anim canvas{width:100%; aspect-ratio:1; image-rendering:pixelated; border-radius:4px; display:block}
+.anim b{font-weight:600; font-size:14px; overflow-wrap:anywhere}
+.anim small{color:var(--doux); font-size:12px; font-variant-numeric:tabular-nums}
+.fond-herbe canvas{background:#5f9c45}
+.fond-damier canvas{background:repeating-conic-gradient(#3a3730 0 25%, #2c2a25 0 50%) 0 0 / 16px 16px}
+.fond-sombre canvas{background:#141310}
+
+/* le casier */
+.filtres{display:flex; flex-wrap:wrap; gap:6px}
+.filtres button{padding:5px 11px; border:1px solid var(--trait); border-radius:14px; font-size:13px; color:var(--doux)}
+.filtres button[aria-pressed=true]{border-color:var(--or); color:var(--texte); background:var(--case)}
+.grille{display:grid; grid-template-columns:repeat(auto-fill, minmax(96px, 1fr)); gap:8px}
+.unite{display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px 7px; background:var(--panneau); border:1px solid var(--trait); border-radius:6px; min-width:0}
+.unite canvas{width:64px; height:64px; image-rendering:pixelated}
+.unite span{font-size:12px; font-weight:600; text-align:center; line-height:1.15; overflow-wrap:anywhere}
+.unite i{font-style:normal; font-size:10px; letter-spacing:.6px; text-transform:uppercase}
+.unite i.FREE{color:var(--bleu)} .unite i.ENEMY{color:var(--rouge)} .unite i.WARFARE{color:var(--violet)}
+.unite[aria-pressed=true]{border-color:var(--or); background:var(--case); box-shadow:0 0 0 1px var(--or) inset}
+.unite .dans{width:7px; height:7px; border-radius:50%; background:var(--or); align-self:flex-end; margin:-2px 2px -5px 0}
+.unite .dans.non{visibility:hidden}
+.legende{font-size:12px; color:var(--doux)}
+@media (prefers-reduced-motion: reduce){ .unite{transition:none} }
+</style>
+
+<div class="page">
+  <header>
+    <h1>Bestiaire Tiny Swords</h1>
+    <p>Toutes les unités des trois packs de Pixel Frog que nous avons (Free Pack en bleu, Enemy Pack, Warfare en bleu) et chacune de leurs animations. Choisis une unité dans la grille : ses animations tournent en haut.</p>
+  </header>
+
+  <section class="vitrine fond-herbe" id="vitrine" aria-live="polite">
+    <div class="tete">
+      <h2 id="nom"></h2><span class="badge" id="pack"></span><span class="badge bastion" id="bastion" hidden></span>
+      <div class="reglages">
+        <label for="vitesse">Vitesse <input type="range" id="vitesse" min="2" max="20" value="10"> <span id="vitesseV">10</span> img/s</label>
+        <div class="choix" role="group" aria-label="Fond">
+          <button type="button" data-fond="herbe" aria-pressed="true">Herbe</button><button type="button" data-fond="damier" aria-pressed="false">Damier</button><button type="button" data-fond="sombre" aria-pressed="false">Sombre</button>
+        </div>
+      </div>
+    </div>
+    <div class="anims" id="anims"></div>
+  </section>
+
+  <section style="display:flex; flex-direction:column; gap:10px">
+    <div class="filtres" id="filtres" role="group" aria-label="Pack">
+      <button type="button" data-f="" aria-pressed="true">Toutes</button><button type="button" data-f="FREE" aria-pressed="false">Free Pack</button><button type="button" data-f="ENEMY" aria-pressed="false">Enemy Pack</button><button type="button" data-f="WARFARE" aria-pressed="false">Warfare</button><button type="button" data-f="bastion" aria-pressed="false">Dans Bastion</button>
+    </div>
+    <p class="legende">Point doré : unité déjà utilisée dans Bastion.</p>
+    <div class="grille" id="grille"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const UNITES = __DATA__;   // [{p: pack, n: nom, b: rôle dans Bastion, a: [[animation, image data:, taille d'une case]]}]
+const PACKS = {FREE: "Free Pack", ENEMY: "Enemy Pack", WARFARE: "Warfare"};
+const $ = s => document.querySelector(s);
+const images = new Map();
+const image = src => { if (!images.has(src)){ const i = new Image(); i.src = src; images.set(src, i); } return images.get(src); };
+let choisie = UNITES[0], filtre = "", vitesse = 10, vues = [];
+
+// la première image non vide d'une bande, recadrée (vignette de la grille)
+function vignette(cnv, u){
+  const [, src, fs] = u.a.find(a => /idle/i.test(a[0])) || u.a[0], im = image(src);
+  const dessiner = () => { const t = document.createElement("canvas"); t.width = fs; t.height = im.height; const c = t.getContext("2d"); c.drawImage(im, 0, 0, fs, im.height, 0, 0, fs, im.height);
+    const d = c.getImageData(0, 0, fs, im.height).data; let x0 = fs, y0 = im.height, x1 = 0, y1 = 0;
+    for (let y = 0; y < im.height; y++) for (let x = 0; x < fs; x++) if (d[(y * fs + x) * 4 + 3] > 10){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < x0){ x0 = 0; y0 = 0; x1 = fs - 1; y1 = im.height - 1; }
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, k = Math.min(64 / w, 64 / h), g = cnv.getContext("2d"); cnv.width = 64; cnv.height = 64; g.imageSmoothingEnabled = false;
+    g.drawImage(t, x0, y0, w, h, Math.round((64 - w * k) / 2), Math.round((64 - h * k) / 2), Math.round(w * k), Math.round(h * k)); };
+  im.complete ? dessiner() : im.addEventListener("load", dessiner, {once: true});
+}
+function grille(){
+  const g = $("#grille"); g.innerHTML = "";
+  for (const u of UNITES){ if (filtre === "bastion" ? !u.b : filtre && u.p !== filtre) continue;
+    const b = document.createElement("button"); b.type = "button"; b.className = "unite"; b.setAttribute("aria-pressed", u === choisie);
+    b.innerHTML = `<span class="dans${u.b ? "" : " non"}" title="${u.b ? "Dans Bastion : " + u.b : ""}"></span><canvas width="64" height="64"></canvas><span>${u.n}</span><i class="${u.p}">${PACKS[u.p]}</i>`;
+    vignette(b.querySelector("canvas"), u);
+    b.addEventListener("click", () => { choisie = u; vitrine(); grille(); $("#vitrine").scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}); });
+    g.append(b); }
+}
+function vitrine(){
+  const u = choisie; $("#nom").textContent = u.n; $("#pack").textContent = PACKS[u.p]; $("#pack").className = "badge " + u.p;
+  $("#bastion").hidden = !u.b; $("#bastion").textContent = "Dans Bastion : " + (u.b || "");
+  const box = $("#anims"); box.innerHTML = ""; vues = [];
+  for (const [nom, src, fs] of u.a){
+    const im = image(src), div = document.createElement("div"); div.className = "anim";
+    const cnv = document.createElement("canvas"); cnv.width = fs; cnv.height = fs;
+    div.append(cnv); const t = document.createElement("b"); t.textContent = nom; const s = document.createElement("small"); div.append(t, s);
+    const maj = () => { const n = Math.max(1, Math.round(im.width / fs)); s.textContent = `${n} image${n > 1 ? "s" : ""} · ${fs} × ${im.height} px`; cnv.height = im.height; };
+    im.complete ? maj() : im.addEventListener("load", maj, {once: true});
+    box.append(div); vues.push({cnv, im, fs, g: cnv.getContext("2d")});
+  }
+}
+function boucle(t){
+  const k = Math.floor(t / 1000 * vitesse);
+  for (const v of vues){ if (!v.im.complete || !v.im.width) continue; const n = Math.max(1, Math.round(v.im.width / v.fs)), f = k % n;
+    v.g.imageSmoothingEnabled = false; v.g.clearRect(0, 0, v.cnv.width, v.cnv.height); v.g.drawImage(v.im, f * v.fs, 0, v.fs, v.im.height, 0, 0, v.fs, v.im.height); }
+  requestAnimationFrame(boucle);
+}
+$("#vitesse").addEventListener("input", e => { vitesse = Number(e.target.value); $("#vitesseV").textContent = vitesse; });
+document.querySelectorAll("[data-fond]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-fond]").forEach(o => o.setAttribute("aria-pressed", o === b));
+  $("#vitrine").className = "vitrine fond-" + b.dataset.fond; }));
+document.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {
+  filtre = b.dataset.f; document.querySelectorAll("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); grille(); }));
+vitrine(); grille(); requestAnimationFrame(boucle);
+})();
+</script>
