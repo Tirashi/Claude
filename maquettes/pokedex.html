@@ -51,16 +51,17 @@ figure.dir figcaption span { color: var(--muted); font-size: .9rem; line-height:
 .filtres button.on { background: var(--c); color: #fff; }
 .gen { margin: 16px 16px 8px; font-size: 12px; font-weight: 600; color: var(--doux); text-transform: uppercase; letter-spacing: .07em; display: flex; gap: 8px; align-items: center; }
 .gen::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: var(--carte2); }
-.liste { display: grid; gap: 10px; padding: 0 16px 6px; }
-.ligne { display: grid; grid-template-columns: 74px 1fr auto; align-items: center; gap: 12px; text-align: left; background: var(--carte); border-radius: 22px; box-shadow: var(--ombre); padding: 6px 12px 6px 6px; }
-.ligne .vig { width: 74px; height: 74px; border-radius: 18px; display: grid; place-items: center; position: relative; overflow: hidden; background: linear-gradient(145deg, color-mix(in srgb, var(--c) 70%, white), var(--c)); }
-.ligne .vig .filigrane.ico { position: absolute; right: -10px; bottom: -10px; width: 56px; height: 56px; color: rgba(255,255,255,.28); }
-.ligne .vig img { position: relative; width: 70px; height: 70px; object-fit: contain; }
-.ligne .vig img.pixel { width: 84px; height: 84px; }
-.ligne .nom { display: grid; gap: 1px; min-width: 0; }
-.ligne .nom b { font-size: 18px; font-weight: 600; }
-.ligne .nom small { color: var(--doux); font-weight: 500; font-size: 12px; }
-.ligne .types { display: flex; gap: 4px; }
+.liste { display: grid; gap: 12px; padding: 0 16px 6px; }
+.ligne { position: relative; display: flex; align-items: flex-start; width: 100%; min-height: 124px; text-align: left; border-radius: 28px; background: var(--fond-type); color: #fff; padding: 16px 18px; overflow: hidden; box-shadow: var(--ombre); transition: transform .18s; }
+.ligne:active { transform: scale(.97); }
+.ligne .nom { display: grid; gap: 2px; min-width: 0; position: relative; z-index: 1; max-width: 58%; }
+.ligne .nom b { font-size: 23px; font-weight: 700; line-height: 1.1; text-shadow: 0 2px 0 rgba(0,0,0,.12); }
+.ligne .nom small { font-weight: 600; font-size: 13px; opacity: .8; }
+.ligne .types { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.ligne .types .puce { background: rgba(255,255,255,.24); box-shadow: none; font-size: 12px; }
+.ligne img { position: absolute; right: 4px; bottom: -6px; width: 128px; height: 128px; object-fit: contain; filter: drop-shadow(0 6px 6px rgba(0,0,0,.25)); transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+.ligne:hover img, .ligne:focus-visible img { transform: translateY(-6px) rotate(-4deg) scale(1.05); }
+
 .bulle .ico { width: 64%; height: 64%; }
 .bulle { width: 30px; height: 30px; border-radius: 50%; background: var(--c); color: #fff; display: grid; place-items: center; font-size: 17px; box-shadow: inset 0 -2px 0 rgba(0,0,0,.18); }
 .puce { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 5px; border-radius: 99px; background: var(--c); color: #fff; font-size: 13px; font-weight: 600; box-shadow: inset 0 -2px 0 rgba(0,0,0,.15); }
@@ -74,13 +75,11 @@ figure.dir figcaption span { color: var(--muted); font-size: .9rem; line-height:
 .onglets svg { width: 20px; height: 20px; }
 
 /* Fiche */
-.hero { position: relative; padding: 14px 16px 0; background: linear-gradient(170deg, color-mix(in srgb, var(--c) 80%, white), var(--c)); border-radius: 0 0 34px 34px; color: #fff; overflow: hidden; }
-.app.sombre .hero { background: linear-gradient(170deg, var(--c), color-mix(in srgb, var(--c) 55%, #15121f)); }
-.hero .filigrane.ico { position: absolute; right: -40px; top: 30px; width: 220px; height: 220px; color: rgba(255,255,255,.14); }
+.hero { position: relative; padding: 14px 16px 0; background: var(--fond-type); border-radius: 0 0 34px 34px; color: #fff; overflow: hidden; }
 .hero .haut { display: flex; justify-content: space-between; align-items: center; position: relative; }
 .hero .retour { background: rgba(255,255,255,.25); border-radius: 99px; padding: 6px 14px 6px 10px; font-weight: 600; color: #fff; }
 .hero .num { font-weight: 700; font-size: 18px; opacity: .75; }
-.hero img { display: block; margin: 0 auto; width: 200px; height: 200px; object-fit: contain; position: relative; filter: drop-shadow(0 8px 10px rgba(0,0,0,.25)); }
+.hero img { display: block; margin: 0 auto; width: 220px; height: 220px; object-fit: contain; position: relative; filter: drop-shadow(0 8px 10px rgba(0,0,0,.25)); }
 .hero img.pixel { width: 220px; height: 220px; margin-top: -10px; margin-bottom: -10px; }
 .titre-fiche { padding: 14px 16px 4px; display: grid; gap: 8px; }
 .titre-fiche h3 { margin: 0; font-size: 30px; font-weight: 700; line-height: 1; }
@@ -120,20 +119,36 @@ figure.dir figcaption span { color: var(--muted); font-size: .9rem; line-height:
 .choix button.on .bulle { opacity: 1; filter: none; transform: scale(1.12); box-shadow: 0 0 0 3px var(--carte), 0 0 0 5px var(--c); }
 .choix button.on { color: var(--texte); }
 @media (prefers-reduced-motion: reduce) { .choix .bulle { transition: none; } }
+/* Animations (seulement à l'arrivée sur un écran, pas à chaque clic) */
+@keyframes monte { from { opacity: 0; transform: translateY(16px); } }
+@keyframes pop { 0% { opacity: 0; transform: scale(.5); } 70% { transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes flotte { 50% { transform: translateY(-7px); } }
+@keyframes rebond { 40% { transform: scale(1.25); } 100% { transform: scale(1.12); } }
+@keyframes remplit { from { transform: scaleX(0); } }
+.entree .ligne, .entree .bloc, .entree .titre-fiche { animation: monte .45s cubic-bezier(.2,.8,.3,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+.entree .hero img { animation: pop .55s cubic-bezier(.3,1.4,.5,1) both, flotte 3.2s ease-in-out .6s infinite; }
+.hero img { animation: flotte 3.2s ease-in-out infinite; }
+.entree .titre-fiche .puce { animation: pop .4s .25s both; }
+.entree .vue { animation: monte .3s both; }
+.resultat .mult { animation: pop .45s cubic-bezier(.3,1.5,.5,1); }
+.jauge i.on { transform-origin: left; animation: remplit .35s both; animation-delay: calc(var(--i) * 60ms); }
+.choix button.on .bulle { animation: rebond .35s both; }
+.filtres button.on .bulle { animation: rebond .35s both; }
+@media (prefers-reduced-motion: reduce) { .app *, .app *::before { animation: none !important; transition: none !important; } }
 </style>
 
 <header class="page">
-  <h1>Pokédex de poche · maquette 4</h1>
-  <p>La direction B, retravaillée. Il y a maintenant un <b>thème sombre</b> (bouton lune et soleil) et le choix des images : <b>sprites pixel</b> ou <b>dessins officiels</b> (bouton Pixel / Dessin). Chaque type a son <b>icône</b> : flamme, goutte, feuille, éclair… On les retrouve dans la liste, les filtres, les fiches et l'onglet Types. Les trois téléphones montrent la même appli, réglée de trois façons ; tous les boutons marchent.</p>
+  <h1>Pokédex de poche · maquette 5</h1>
+  <p>Les dessins officiels sur fond sombre, retenus à la maquette 4. Les cartes de la liste sont plus grandes et prennent la couleur du type, sans icône derrière le Pokémon. Quand il a deux types, la carte est coupée en diagonale avec une couleur de chaque côté (Bulbizarre, Dracaufeu, Lucario…). Quelques animations : la liste et les fiches arrivent en glissant, le Pokémon apparaît en sautant puis flotte doucement, et le résultat des types rebondit. Le bouton lune/soleil change toujours le thème.</p>
 </header>
 
 <div class="phones">
   <figure class="dir"><div class="tel"><div class="ecran" id="ecran1"></div></div>
-    <figcaption><b>Sombre · dessins</b><span>Thème sombre avec les dessins officiels, plus doux et plus détaillés.</span></figcaption></figure>
+    <figcaption><b>La liste</b><span>Grandes cartes à la couleur du type, coupées en diagonale pour deux types.</span></figcaption></figure>
   <figure class="dir"><div class="tel"><div class="ecran" id="ecran2"></div></div>
-    <figcaption><b>Sombre · pixel</b><span>Le même thème avec les sprites pixel, plus proche du reste de la Ludothèque.</span></figcaption></figure>
+    <figcaption><b>Une fiche</b><span>Dracaufeu, Feu et Vol : le haut de la fiche reprend les deux couleurs.</span></figcaption></figure>
   <figure class="dir"><div class="tel"><div class="ecran" id="ecran3"></div></div>
-    <figcaption><b>Clair · Types</b><span>Thème clair, onglet Types : on touche l'icône de l'attaque, puis une ou deux icônes en défense.</span></figcaption></figure>
+    <figcaption><b>Les types (thème clair)</b><span>On touche l'icône de l'attaque, puis une ou deux icônes en défense.</span></figcaption></figure>
 </div>
 <div class="legende" id="legende"></div>
 
@@ -241,24 +256,27 @@ const num3 = n => String(n).padStart(3, '0');
 const stade = p => p.ch.findIndex(e => e[0] === p.n) + 1;
 const plat = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const puce = (t, extra = '') => `<span class="puce" style="--c:${TYPES[t]}">${ico(t)}${t}${extra}</span>`;
+const fondType = p => p.types.length > 1
+  ? `linear-gradient(135deg, ${TYPES[p.types[0]]} 0 50%, ${TYPES[p.types[1]]} 50% 100%)`
+  : `linear-gradient(160deg, color-mix(in srgb, ${TYPES[p.types[0]]} 70%, white), ${TYPES[p.types[0]]})`;
 const bulle = t => `<span class="bulle" style="--c:${TYPES[t]}" title="${t}">${ico(t)}</span>`;
 
 function creer(id, reglages) {
   const el = document.getElementById(id);
   const S = Object.assign({ onglet: 'dex', fiche: null, q: '', filtre: null, att: 'Eau', def: ['Feu', 'Roche'], sombre: true, img: 'dessin' }, reglages);
   const img = (n, cls = '') => `<img class="${S.img === 'pixel' ? 'pixel' : ''} ${cls}" src="${image(n, S.img)}" alt="" loading="lazy">`;
-  const boutons = () => `<button class="reglage" data-img>${S.img === 'pixel' ? '▦ Pixel' : '✎ Dessin'}</button><button class="reglage rond" data-theme-app aria-label="Changer de thème">${S.sombre ? '☾' : '☀'}</button>`;
+  const boutons = () => `<button class="reglage rond" data-theme-app aria-label="Changer de thème">${S.sombre ? '☾' : '☀'}</button>`;
 
   function resultats() {
     const q = plat(S.q.trim());
     const l = DEX.filter(p => (!S.filtre || p.types.includes(S.filtre)) && (!q || plat(p.nom).includes(q) || String(p.n).includes(q) || p.types.some(t => plat(t).startsWith(q))));
     if (!l.length) return `<div class="vide">Aucun Pokémon ne s'appelle « ${S.q} »…<br>Essaie un autre nom, un numéro ou un type.</div>`;
     let h = '', reg = null;
+    let i = 0;
     for (const p of l) {
       const r = region(p.n);
       if (r !== reg) { if (reg) h += '</div>'; reg = r; h += `<div class="gen">${r[1]} · génération ${r[2]}</div><div class="liste">`; }
-      h += `<button class="ligne" data-n="${p.n}" style="--c:${TYPES[p.types[0]]}"><span class="vig">${ico(p.types[0], 'filigrane')}${img(p.n)}</span>
-        <span class="nom"><small>N° ${num3(p.n)}</small><b>${p.nom}</b></span><span class="types">${p.types.map(bulle).join('')}</span></button>`;
+      h += `<button class="ligne" data-n="${p.n}" style="--fond-type:${fondType(p)};--i:${Math.min(i++, 8)}"><span class="nom"><small>N° ${num3(p.n)}</small><b>${p.nom}</b><span class="types">${p.types.map(t => puce(t)).join('')}</span></span>${img(p.n)}</button>`;
     }
     return h + '</div><div style="height:12px"></div>';
   }
@@ -275,8 +293,8 @@ function creer(id, reglages) {
     const craint = grp(x => x > 1), resiste = grp(x => x > 0 && x < 1), immun = grp(x => x === 0);
     const chaine = p.ch.map((e, k) => (k ? `<div class="fl">${SVG_FLECHE}${e[1]}</div>` : '') + `<button class="${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}" ${parNum(e[0]) ? '' : 'disabled'}><span class="rond">${img(e[0])}</span>${nomDe(e[0])}</button>`).join('');
     return `<div style="--c:${TYPES[p.types[0]]}">
-      <div class="hero">${ico(p.types[0], 'filigrane')}<div class="haut"><button class="retour" data-retour>‹ Retour</button><span class="num">N° ${num3(p.n)}</span></div>${img(p.n)}</div>
-      <div class="titre-fiche"><h3>${p.nom}</h3><div class="puces">${p.types.map(t => puce(t)).join('')}</div></div>
+      <div class="hero" style="--fond-type:${fondType(p)}"><div class="haut"><button class="retour" data-retour>‹ Retour</button><span class="num">N° ${num3(p.n)}</span></div>${img(p.n)}</div>
+      <div class="titre-fiche" style="--i:1"><h3>${p.nom}</h3><div class="puces">${p.types.map(t => puce(t)).join('')}</div></div>
       <div class="fiche">
         <div class="bloc"><h4>Évolution <span class="stades">${p.ch.map((e, k) => `<i class="${k < s ? 'on' : ''}"></i>`).join('')}</span></h4><div class="chaine">${chaine}</div></div>
         <div class="bloc"><h4>Ce qu'on sait de lui</h4>${p.desc}</div>
@@ -295,7 +313,7 @@ function creer(id, reglages) {
         <div class="bloc" style="--m:${c}">
           <div class="versus"><div class="cote">${bulle(S.att)}Attaque ${S.att}</div><div class="fleche">➜</div><div class="cote"><span class="bulles">${S.def.map(bulle).join('')}</span>Défense ${S.def.join(' / ')}</div></div>
           <div class="resultat"><div class="mult">${TXT(m)}</div><div class="phr">${PHRASE(m)}</div></div>
-          <div class="jauge">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= NIVEAU(m) ? 'on' : ''}"></i>`).join('')}</div>
+          <div class="jauge">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= NIVEAU(m) ? 'on' : ''}" style="--i:${i}"></i>`).join('')}</div>
         </div>
         <div class="bloc"><h4>1. Le type de l'attaque</h4><div class="choix">${choix('att', t => t === S.att)}</div></div>
         <div class="bloc"><h4>2. Le Pokémon qui défend (1 ou 2 types)</h4><div class="choix">${choix('def', t => S.def.includes(t))}</div></div>
@@ -308,10 +326,11 @@ function creer(id, reglages) {
       </div>`;
   }
 
-  function rendre() {
+  function rendre(entree = true) {
     const corps = S.onglet === 'types' ? vueTypes() : S.fiche ? vueFiche() : vueDex();
-    el.innerHTML = `<div class="app ${S.sombre ? 'sombre' : ''}"><div class="vue">${corps}</div>
+    el.innerHTML = `<div class="app ${S.sombre ? 'sombre' : ''} ${entree ? 'entree' : ''}"><div class="vue">${corps}</div>
       <nav class="onglets"><button data-onglet="dex" class="${S.onglet === 'dex' ? 'on' : ''}">${SVG_LIVRE}Pokédex</button><button data-onglet="types" class="${S.onglet === 'types' ? 'on' : ''}">${SVG_TYPES}Types</button></nav></div>`;
+    el.querySelectorAll('.fiche > .bloc').forEach((b, k) => b.style.setProperty('--i', k + 2));
   }
 
   el.addEventListener('click', ev => {
@@ -321,7 +340,6 @@ function creer(id, reglages) {
     if (b.dataset.n) { S.fiche = +b.dataset.n; S.onglet = 'dex'; garder = false; }
     else if ('retour' in b.dataset) { S.fiche = null; garder = false; }
     else if (b.dataset.onglet) { S.onglet = b.dataset.onglet; garder = false; }
-    else if ('img' in b.dataset) S.img = S.img === 'pixel' ? 'dessin' : 'pixel';
     else if ('themeApp' in b.dataset) S.sombre = !S.sombre;
     else if (b.dataset.filtre) S.filtre = S.filtre === b.dataset.filtre ? null : b.dataset.filtre;
     else if (b.dataset.att) S.att = b.dataset.att;
@@ -330,7 +348,7 @@ function creer(id, reglages) {
       if (S.def.includes(t)) { if (S.def.length > 1) S.def = S.def.filter(x => x !== t); }
       else S.def = S.def.length < 2 ? [...S.def, t] : [S.def[1], t];
     } else return;
-    rendre();
+    rendre(!garder);
     el.querySelector('.vue').scrollTop = garder ? haut : 0;
   });
   el.addEventListener('input', ev => {
@@ -341,7 +359,7 @@ function creer(id, reglages) {
 }
 
 creer('ecran1', { sombre: true, img: 'dessin' });
-creer('ecran2', { sombre: true, img: 'pixel', fiche: 6 });
+creer('ecran2', { sombre: true, img: 'dessin', fiche: 6 });
 creer('ecran3', { sombre: false, img: 'dessin', onglet: 'types' });
 document.getElementById('legende').innerHTML = LISTE_TYPES.map(t => `<span class="puce" style="--c:${TYPES[t]};font-family:var(--rond)">${ico(t)}${t}</span>`).join('');
 </script>
