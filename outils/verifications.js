@@ -145,6 +145,9 @@ catch (e) { bad('Mineur de l\'espace : simulateur\n' + (e.stdout || '') + (e.std
 // 8 nonies. Dragon Simulator : règles et économie (outils/dragon-simulateur.js)
 try { execFileSync(process.execPath, [path.join(__dirname, 'dragon-simulateur.js'), '3'], { stdio: 'pipe', encoding: 'utf8' }); ok('Dragon Simulator : simulateur (règles, dix bonus, parties reproductibles, économie du nid)'); }
 catch (e) { bad('Dragon Simulator : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+// 8 nonies bis. Bastion : règles (garnison, population, grades) et robot (outils/bastion-simulateur.js)
+try { execFileSync(process.execPath, [path.join(__dirname, 'bastion-simulateur.js'), '8'], { stdio: 'pipe', encoding: 'utf8' }); ok('Bastion : simulateur (règles, garnison, population, grades, parties reproductibles)'); }
+catch (e) { bad('Bastion : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 8 decies. fiches des jeux (<dossier>/fiche.js) : chaque chemin d'ORDRE a sa fiche, chargée par l'accueil et en cache
 {

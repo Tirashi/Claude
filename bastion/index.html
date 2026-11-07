@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Bastion</title>
+<meta name="description" content="Bastion : défends le château contre des vagues de monstres. Ouvriers, ressources, bâtiments et escouades en temps réel. Session 1 : le laboratoire des règles.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#1c2414">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<!-- polices dans le dépôt (hors connexion) ; data-google : le lien utilisé par l'artefact (outils/artefact.py) -->
+<link rel="stylesheet" href="../polices/bastion.css" data-google="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="cv" aria-label="Le château et ses environs"></canvas>
+
+<div id="hud">
+  <div class="haut">
+    <div class="ligne">
+      <div class="res"><span><img class="ic" src="img/ic-bois.png" alt=""><b id="r-bois">0</b></span><span><img class="ic" src="img/ic-or.png" alt=""><b id="r-or">0</b></span><span><img class="ic" src="img/ic-viande.png" alt=""><b id="r-viande">0</b></span></div>
+      <button type="button" id="bLabo" class="petitb">LABO</button>
+      <button type="button" id="bMenu" class="petitb" aria-label="Pause">II</button>
+    </div>
+    <div class="ligne"><span id="vague"></span><button type="button" id="vit" class="petitb">×1</button></div>
+    <div id="pvc"><i></i></div>
+  </div>
+  <button type="button" id="zoom" aria-label="Zoom">−</button>
+  <div class="bas">
+    <div id="aide"></div>
+    <div class="panneau">
+      <h3>OUVRIERS <span id="popOuv"></span></h3><div id="jobs" class="jobs"></div>
+      <h3>ESCOUADES <span id="popEsc"></span></h3><div id="cartes" class="cartes"></div>
+    </div>
+  </div>
+</div>
+<div id="banniere"></div>
+
+<div id="construire" class="volet" hidden>
+  <h2>CONSTRUIRE</h2>
+  <div id="bats"></div>
+  <button type="button" id="bAnnulerB" class="bouton">ANNULER</button>
+</div>
+
+<div id="menu" class="ecran">
+  <div class="plaque">
+    <h1>BASTION</h1>
+    <p class="sous">LABORATOIRE · SESSION 1</p>
+    <p>Des ouvriers recoltent bois, or et viande ; tu batis, tu recrutes des escouades et tu defends le chateau contre des vagues de monstres.</p>
+    <button type="button" id="bJouer" class="bouton or">JOUER</button>
+    <button type="button" id="bNouvelle" class="bouton">NOUVELLE PARTIE</button>
+    <button type="button" id="bLaboMenu" class="bouton">LABO</button>
+    <button type="button" id="bAide" class="bouton">COMMENT JOUER</button>
+    <div id="aideTexte" class="aide" hidden>
+      <p><b>Ouvriers</b> : touche bois, or, viande ou le marteau pour y envoyer un ouvrier de plus (pris la ou il y en a le plus). +1 = un nouvel ouvrier (viande).</p>
+      <p><b>Batir</b> : touche un emplacement (cercle) puis un batiment. Un ouvrier prend son marteau. Maison = plus de population ; caserne, archerie, monastere = nouvelles escouades ; tour = archers en garnison.</p>
+      <p><b>Escouades</b> : touche une carte pour recruter, touche une escouade puis le sol pour l'envoyer. Le jeu ralentit pendant que tu choisis. Des archers envoyes sur une tour montent dedans : ils tirent plus loin et ne craignent plus le corps a corps tant que la tour tient.</p>
+      <p><b>Grades</b> : en abattant des monstres et en survivant aux vagues, une escouade devient VETERANS, ELITE (un soldat de plus) puis HEROS. Pres du chateau, hors combat, elle se reforme contre de la viande.</p>
+      <p><b>LABO</b> : vitesse, triches, robot qui joue seul, simulateur et tous les reglages du jeu.</p>
+    </div>
+    <a class="bouton ludo-retour" href="../index.html#bastion">LUDOTHEQUE</a>
+  </div>
+</div>
+
+<div id="fin" class="ecran" hidden>
+  <div class="plaque large">
+    <h1 id="finTitre"></h1>
+    <p id="finTexte"></p>
+    <div id="finJournal" class="journal"></div>
+    <button type="button" id="bRejouer" class="bouton or">REJOUER</button>
+    <button type="button" id="bFinLabo" class="bouton">LABO</button>
+  </div>
+</div>
+
+<div id="labo" class="ecran" hidden>
+  <div class="plaque large labo">
+    <h1>LABO</h1>
+    <h2>VITESSE</h2>
+    <div id="vitesses" class="rang"><button type="button" class="bouton" data-v="0">PAUSE</button><button type="button" class="bouton" data-v="0.5">×½</button><button type="button" class="bouton" data-v="1">×1</button><button type="button" class="bouton" data-v="2">×2</button><button type="button" class="bouton" data-v="4">×4</button></div>
+    <button type="button" id="tRalenti" class="bouton"></button>
+    <h2>TRICHES</h2>
+    <div class="rang"><button type="button" id="bRiche" class="bouton">+100 DE TOUT</button><button type="button" id="bVague" class="bouton">VAGUE MAINTENANT</button></div>
+    <button type="button" id="tInvincible" class="bouton"></button>
+    <button type="button" id="tTout" class="bouton"></button>
+    <h2>ROBOT</h2>
+    <button type="button" id="tRobot" class="bouton"></button>
+    <button type="button" id="bSimuler" class="bouton">SIMULER 30 PARTIES</button>
+    <p class="petit">Le robot suit une strategie simple et toujours la meme (archerie, maisons, tours sur le chemin annonce, escouades devant l'entree). Le simulateur lui fait jouer 30 parties avec les reglages ci-dessous, meme pas encore appliques.</p>
+    <div id="simu" class="simu"></div>
+    <h2>JOURNAL DE LA PARTIE</h2>
+    <div id="journal" class="journal"></div>
+    <h2>REGLAGES</h2>
+    <p class="petit" id="etatReglages"></p>
+    <p class="petit">En jaune : modifie. A droite : la valeur d'origine.</p>
+    <div id="reglages"></div>
+    <div class="rang"><button type="button" id="bAppliquer" class="bouton or">APPLIQUER ET REJOUER</button><button type="button" id="bOrigine" class="bouton">ORIGINE</button></div>
+    <div class="rang"><button type="button" id="bCopier" class="bouton">COPIER</button><button type="button" id="bCharger" class="bouton">CHARGER</button></div>
+    <textarea id="texte" rows="3" placeholder="Reglages copies (a envoyer a Claude), ou a coller ici puis CHARGER"></textarea>
+    <button type="button" id="bFermer" class="bouton or">FERMER</button>
+  </div>
+</div>
+
+<div id="chargement" class="ecran"><p>CHARGEMENT…</p></div>
+
+<script src="regles.js"></script>
+<script src="jeu.js"></script>
+<script src="../ludo-scores.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Le retour à la Ludothèque est dans le menu du jeu. */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

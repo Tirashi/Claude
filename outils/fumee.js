@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -122,6 +122,24 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Le Magasinier : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-magasinier.png` });
+    }
+    if (url === 'bastion/index.html') {
+      // Bastion : JOUER, un emplacement ouvre le volet CONSTRUIRE, une maison se paie ; le robot tient la première vague ; le LABO s'ouvre
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 100 && !(window.Bastion && Bastion.S); i++) await wait(100);
+        if (!window.Bastion || !Bastion.S) return 'pas de partie (images ?)';
+        document.getElementById('bJouer').click(); const S = Bastion.S;
+        Bastion.toucher(S.sites[1].x, S.sites[1].y - .5); if (document.getElementById('construire').hidden) return 'pas de volet CONSTRUIRE';
+        await wait(450); document.querySelector('#bats [data-b="maison"]').click();
+        if (!S.sites[1].b || S.res.bois !== 10) return 'la maison ne se construit pas';
+        Bastion.robot = true; Bastion.avance(60); Bastion.robot = false;
+        if (S.vague < 1 || S.pv <= 0) return 'la première vague ne vient pas ou le château tombe';
+        document.getElementById('bLabo').click(); if (document.getElementById('labo').hidden || !document.querySelectorAll('#reglages input').length) return 'pas de LABO';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Bastion : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-bastion.png` });
     }
     if (url === 'dragon-simulator/index.html') {
       // Dragon Simulator : titre, nid, ENVOLER !, un toucher = un coup d'ailes, puis le sol : bilan, pièces au nid, vol compté

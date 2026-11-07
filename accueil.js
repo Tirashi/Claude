@@ -37,6 +37,7 @@ const ORDRE = [
   "boutique/index.html",
   "bannieres/index.html",
   "lanterne/index.html",
+  "bastion/index.html",
   "mot-d-or/index.html",
   "capitaine-du-port/index.html",
   "romet/index.html",
@@ -61,6 +62,7 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-07", "neuf", "bastion", "Un mélange de jeu de stratégie en temps réel et de tower defense, avec les graphismes de Tiny Swords. Tes ouvriers récoltent bois, or et viande ; bâtis, recrute des escouades qui gagnent des grades, mets des archers en garnison dans les tours et défends le château contre dix vagues de monstres et leur troll. Cette première version est un laboratoire : vitesse, robot, simulateur et tous les réglages, pour trouver ensemble le bon équilibre."],
   ["2026-11-06", "acc", "", "Le Quoi de neuf devient le journal : un numéro par mois, la grande nouveauté en couverture, et une pastille rouge sur le bouton JOURNAL quand il y a du neuf."],
   ["2026-11-02", "neuf", "dragon-simulator", "Une idée d'un garçon de 7 ans. Ton dragon s'élance de son nid et plane au-dessus de la ville puis de l'aéroport, vu de profil, en 3D. Touche l'écran pour battre des ailes, tiens le bouton FEU pour brûler immeubles, maisons et voitures, évite grues, montgolfières et hélicoptères, et ramasse dix bonus (jetpack, grenade, bébé dragon, super-souffle, nuage d'orage, bouclier, aimant, œuf d'or…). Plus tu vas loin, plus tu gagnes de pièces : au nid, améliore écailles, flammes, réserve de feu et ailes."],
   ["2026-11-01", "neuf", "mineur-de-l-espace", "Casse des astéroïdes avec ta corvette et rapporte le minerai à la station : améliorations, usines, recherche, station construite module par module, drones qui minent seuls, voyages vers la Lune et Mars, bases, puis vagues d'aliens, flottes, porte-vaisseaux à escadrille et bataille finale contre le vaisseau-mère. Au PC : clavier et souris."],

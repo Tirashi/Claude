@@ -23,6 +23,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`alunissage/index.html`](alunissage/index.html) : **Alunissage**, un jeu d'adresse : poser un module en douceur avec deux réacteurs, site après site.
 - [`empilage/index.html`](empilage/index.html) : **Empilage**, le premier jeu en 3D : lâcher chaque bloc pile sur la tour et monter du matin jusqu'à la nuit étoilée.
 - [`odyssee/index.html`](odyssee/index.html) : **Odyssée**, en 3D : pencher le téléphone pour ramener la galère d'Ulysse de Troie jusqu'à Ithaque.
+- [`bastion/index.html`](bastion/index.html) : **Bastion** (démo, laboratoire), un mélange de stratégie en temps réel et de tower defense : des ouvriers récoltent, on bâtit, on recrute des escouades et on défend le château contre des vagues de monstres.
 - [`dragon-simulator/index.html`](dragon-simulator/index.html) : **Dragon Simulator**, une idée d'un garçon de 7 ans : un dragon plane au-dessus de la ville, vu de profil, en 3D ; il brûle immeubles et voitures, ramasse des bonus et s'améliore au nid.
 - [`romet/index.html`](romet/index.html) : **Romet**, un coin pusher en 3D en hommage à Mynthos : six machines à finir (et une secrète), chacune dans son monde et avec sa règle.
 
@@ -275,6 +276,14 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - **Plateau du jour** : le même plateau (parfois en miroir) et les mêmes dangers pour toute la famille. Seule la première tentative du jour est classée (elle compte dès le départ) : le temps, plus 5 secondes par naufrage.
 - **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
+
+## Bastion (démo : le laboratoire)
+Un château au milieu de la prairie, trois chemins par où viennent les gobelins, les gnolls et un troll. Graphismes Tiny Swords (Pixel Frog).
+
+- **Ouvriers** : ils coupent le bois, minent l'or et ramènent la viande des moutons ; les boutons du bas déplacent un ouvrier d'un métier à l'autre ou en recrutent un nouveau.
+- **Bâtir** : toucher un emplacement puis un bâtiment ; un ouvrier prend son marteau. Maison (plus de population), caserne (lanciers), archerie (archers), monastère (moines), tour (archers en garnison, qui tirent plus loin et ne craignent pas le corps à corps).
+- **Escouades** : toucher une carte pour recruter, une escouade puis le sol pour l'envoyer ; le jeu ralentit pendant le choix. Les escouades gagnent des grades (vétérans, élite, héros) et se reforment près du château contre de la viande.
+- **LABO** : vitesse, triches, un robot qui joue tout seul, un simulateur de 30 parties et tous les réglages du jeu, pour trouver le bon équilibre.
 
 ## Dragon Simulator
 L'idée d'un garçon de 7 ans : un dragon s'élance de son nid, en haut d'une tour, et plane au-dessus de la ville, vu de profil, en 3D. Le vol est sans fin : il s'arrête quand le dragon touche le sol. Il part doucement et prend de la vitesse en volant.
