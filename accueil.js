@@ -162,8 +162,23 @@ function art(g){
   LudoIcons.draw(c, g.ic);
   return c;
 }
+// un atelier n'est pas un jeu : c'est l'objet qu'il imite, posé sur l'étagère (carte.objet ; maquette maquettes/accueil-ateliers.html, direction F)
+const OBJETS = {
+  dex: '<span class="dexo"><i class="lent"></i><i class="pt p1"></i><i class="pt p2"></i><i class="pt p3"></i><span class="ecr" data-ic="dex"></span><i class="bt b1"></i><i class="bt b2"></i></span>',
+  calc: '<span class="calco"><span class="lcd">7+5=12</span><span class="touches">' + "<i></i><i></i><i></i><i class='o'></i>".repeat(3) + '<i></i><i></i><i class="g"></i></span></span>',
+  petri: '<span class="petri"><i class="ombre"></i><span class="verre"></span><span class="gel" data-ic="glider"></span></span>'
+};
+function objet(g, i){
+  const b = el("button", "c3 objet");
+  b.type = "button"; b.dataset.k = g.k; b.style.cssText = `--i:${i}`;
+  const o = el("span", "obj"); o.innerHTML = OBJETS[g.objet] || "";
+  o.querySelectorAll("[data-ic]").forEach(e => { const c = document.createElement("canvas"); c.width = c.height = 16; LudoIcons.draw(c, e.dataset.ic); e.append(c); });
+  b.append(o, el("b", "nm", g.n));
+  return b;
+}
 // une cartouche en 3D : six faces ; la face avant change selon la famille
 function cart(g, i){
+  if (g.objet) return objet(g, i);
   const st = FAMSTYLE[g.fam], b = el("button", "c3 s" + st);
   b.type = "button"; b.dataset.k = g.k;
   b.style.cssText = `--i:${i}; --lb:${g.lb}; --lt:${g.lt}; --sh:${g.sh}`;
@@ -177,6 +192,7 @@ function cart(g, i){
   return b;
 }
 function spin(b){
+  if (!b.querySelector(".body")){ b.classList.remove("hop"); void b.offsetWidth; b.classList.add("hop"); return; }   // un objet d'atelier saute
   b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin");
   b.querySelector(".body").addEventListener("animationend", () => b.classList.remove("spin"), {once: true});
 }
@@ -374,7 +390,7 @@ document.addEventListener("keydown", e => {
 
 /* ---------- surprends-moi : les cartouches défilent dans la console de plus en plus lentement, puis la choisie est insérée ---------- */
 $("surprise").addEventListener("click", () => {
-  const vis = GAMES.filter(g => !g.el.hidden), pool = vis.length ? vis : GAMES;
+  const jeux = GAMES.filter(g => !g.atelier), vis = jeux.filter(g => !g.el.hidden), pool = vis.length ? vis : jeux;   // les ateliers ne sont pas tirés au sort
   const pick = pool[Math.floor(Math.random() * pool.length)], go = () => { notePlayed(pick.k); location.href = ROOT + pick.k; };
   if (still()) return go();
   const ov = el("div", "surprise"); ov.setAttribute("role", "dialog"); ov.setAttribute("aria-label", "Surprends-moi");

@@ -9,7 +9,8 @@
      k: "tetris/index.html",                      // chemin de la page (et sa place dans ORDRE d'accueil.js)
      carte: {n, s, ic, fam, lb, lt, sh, rank, d, tags, more, demo},   // la cartouche : nom, nom court de l'étiquette, icône de icones.js,
                                                   // famille "16" | "32" | "rep" | "3d", étiquette et texte, teinte du plastique, classements,
-                                                  // description, étiquettes, boutons en plus [[texte, page]], démo
+                                                  // description, étiquettes, boutons en plus [[texte, page]], démo ;
+                                                  // atelier: true + objet: "dex"|"calc"|"petri" = un outil, posé en objet sur l'étagère ATELIERS
      meta: {added, updated, genres},              // sortie et mise à jour visible (AAAA-MM-JJ : NEUF ou MAJ 3 jours), genres des filtres
      nom: "Nebula",                               // nom dans les phrases du gardien (sinon carte.n)
      enCours: () => "SECTEUR 2" | null,           // partie qui attend d'être reprise
