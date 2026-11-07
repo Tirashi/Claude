@@ -43,7 +43,11 @@ img.ic{width:22px; height:22px; object-fit:contain; vertical-align:middle}
 #aide{text-align:center; font-weight:700; font-size:12px; color:#fff8e0; text-shadow:0 1px 3px #000, 0 0 2px #000; min-height:15px}
 .panneau{display:flex; flex-direction:column; gap:3px; max-width:560px; width:100%; margin:0 auto; padding:0}
 .panneau h3{margin:0; font-weight:700; font-size:10px; letter-spacing:1px; color:#f2d9a8; text-shadow:1px 1px 0 #2a1608}
-.panneau h3 span{color:var(--clair)}
+.panneau h3 span{color:var(--ink); background:var(--clair); border-radius:8px; padding:1px 7px; margin-left:4px; font-size:12px}
+.panneau h3 span.plein{background:#c8402a; color:#fff; animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.12)}}
+@media (prefers-reduced-motion: reduce){ .panneau h3 span.plein{animation:none} }
+.jobs .plus .max{font-family:var(--titre); font-size:7px; color:#c8402a}
 .jobs{display:grid; grid-template-columns:repeat(5, 1fr); gap:3px}
 .jobs button, .cartes button, #bats button{border-style:solid; border-width:8px 9px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 8px 9px stretch}
 .jobs button:active, .cartes button:active, #bats button:active{transform:translateY(2px)}
@@ -63,7 +67,7 @@ button.cher{opacity:.5}
 .cartes .verrou:empty{display:none}
 #banniere{position:fixed; left:50%; top:calc(max(6px, env(safe-area-inset-top)) + 104px); transform:translate(-50%, -6px); max-width:calc(100% - 100px); text-align:center; opacity:0; transition:opacity .2s, transform .2s; pointer-events:none;
   font-weight:700; font-size:13px; letter-spacing:1px; color:var(--clair); text-shadow:1px 1px 0 #2a1010;
-  border-style:solid; border-width:0 30px; border-image:url(img/ui-ruban-rouge.png) 0 97 0 98 fill / 0 30px stretch; padding:7px 4px 11px; white-space:nowrap}
+  border-style:solid; border-width:0 30px; border-image:url(img/ui-ruban-rouge.png) 0 97 0 98 fill / 0 30px stretch; padding:7px 4px 11px; white-space:normal; text-wrap:balance; width:max-content; line-height:1.25}
 #banniere.bon{border-image-source:url(img/ui-ruban-bleu.png); text-shadow:1px 1px 0 #1a2a40}
 #banniere.on{opacity:1; transform:translate(-50%, 0)}
 
@@ -75,8 +79,9 @@ button.cher{opacity:.5}
 #bats button{display:flex; flex-direction:column; align-items:center; gap:1px; padding:0}
 #bats img{height:50px}
 #bats img.bande4{width:66px; object-fit:cover; object-position:left}
-#promo{width:auto; margin:0 auto; font-size:9px; pointer-events:auto}
-#promo[hidden]{display:none}
+.actions{display:flex; flex-wrap:wrap; justify-content:center; gap:4px}
+#promo, #tenir{width:auto; font-size:9px; pointer-events:auto}
+#promo[hidden], #tenir[hidden]{display:none}
 #promo .ic, #promo img.ic{width:14px; height:14px}
 #bats b{font-size:10px}
 #bats .cout{font-size:12px; font-weight:700}

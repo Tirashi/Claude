@@ -63,7 +63,15 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
     const l = S3.esc[0]; verif(B.promouvoir(S3, l) !== null, "pas de promotion sans caserne niveau 2");
     S3.sites[9].b.niveau = 2; verif(B.promouvoir(S3, l) === null && l.k === "cav", "caserne niveau 2 : les lanciers deviennent cavaliers");
     const pv0 = S3.pv; verif(B.ameliorerChateau(S3) === null && S3.niveauChateau === 2 && S3.pv > pv0, "château niveau 2 : plus de PV");
-    B.recruter(S3, "lance"); verif(S3.esc.at(-1).grade === 1, "château niveau 2 : lanciers vétérans"); }
+    B.recruter(S3, "lance"); verif(S3.esc.at(-1).grade === 1, "château niveau 2 : lanciers vétérans");
+    B.construire(S3, 10, "maison"); S3.sites[10].b.fini = true; S3.sites[10].b.pv = S3.P.maison.pv; const e0 = B.maxEsc(S3), o0 = B.maxOuv(S3);
+    B.ameliorer(S3, 10); for (let i = 0; i < 1200 && S3.sites[10].b.travaux; i++) B.pas(S3, .05);
+    verif(B.maxEsc(S3) === e0 + 1 && B.maxOuv(S3) === o0 + 2, "maison niveau 2 : +1 escouade, +2 ouvriers");
+    // tenir la position : l'escouade ne part pas au-devant d'un monstre proche
+    const t = S3.esc.at(-1); t.x = t.tx = 5.5; t.y = t.ty = 7.0; t.ordre = false; B.tenir(S3, t);
+    S3.mons.push({t: "gob", x: 5.5, y: 5.9, dir: "N", etape: 99, ox: 0, oy: 0, pv: 999, pvMax: 999, delai: 0, cd: 0, face: 1, mode: "walk", ph: 0, dernier: null});
+    B.pas(S3, .05); B.pas(S3, .05);
+    verif(t.tenir && Math.hypot(t.x - 5.5, t.y - 7.0) < .02, "une escouade qui tient sa position ne bouge pas"); }
   // grades
   const q = S.esc.find(o => o.k === "lance"), n0 = B.nMax(S, q);
   q.xp = S.P.xp.elite - 1; q.grade = 1; q.pv = B.pvMax(S, q);

@@ -249,3 +249,11 @@ Retours de l'utilisateur : tour en bois (plus fragile, moins chère) ; un villag
 - **Promotions** (caserne niveau 2) : une escouade choisie montre PROMOUVOIR ; lanciers → **cavaliers** (Horseman de Warfare : 36 PV, 5 dégâts/s, vitesse 2, ×2 contre le troll ; 25 or, 15 viande), chevaliers → **épéistes** (Swordsman : 46 PV, 7 dégâts/s ; 30 or, 15 viande). Grade et blessures gardés.
 - Archers : **pas de promotion pour l'instant** (décision du 07/11) ; aucun archer monté dans Tiny Swords (seulement dans le Fantasy Battle Pack, d'un autre style) ; on attend les **arbalétriers** annoncés par Warfare (le suivi des packs préviendra).
 - Équilibrage d'origine : 7 par voyage (les ressources sont plus loin), 3 monstres + 2 par vague ; le robot gagne environ 1 partie sur 2 (il n'améliore rien et ne promeut personne).
+
+Retours sur le téléphone (07/11, capture) et corrections :
+- Les messages trop longs sortaient du ruban : ils passent maintenant à la ligne.
+- **Population plus visible** : pastille à côté de OUVRIERS et ESCOUADES, rouge et qui pulse quand c'est plein ; les cartes affichent « POPULATION MAX », le bouton +1 « MAX ».
+- **Maisons améliorables** (niveaux 2 et 3) : chaque niveau compte comme une maison de plus (+1 escouade, +2 ouvriers).
+- **Flèche verte** du pack (pointée vers le haut, qui sautille) près des bâtiments qui peuvent s'améliorer (château compris), pâle si on n'a pas de quoi payer.
+- **Effet de soin** : il durait 0,8 s mais restait affiché 1,4 s, donc il recommençait sans personne ; et il restait à l'endroit du soin quand l'escouade bougeait. Il ne se joue plus qu'une fois, sur l'escouade soignée (et sur la plateforme d'une tour).
+- **Tenir la position** : une escouade choisie a un bouton TENIR LA POSITION ; elle ne part plus au-devant des monstres et frappe ceux qui arrivent à sa portée (bouclier du pack au-dessus d'elle). Cache v96.

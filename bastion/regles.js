@@ -46,6 +46,8 @@ const FEMININ = {maison: 1, caserne: 1, archerie: 1, tour: 1, tourbois: 1, cata:
 // où se bâtit chaque bâtiment : les tours le long des chemins, le reste au village ; un seul exemplaire des bâtiments qui forment des unités
 const TOURS = {tour: 1, tourbois: 1};
 const UNIQUE = {caserne: 1, archerie: 1, monastere: 1, atelier: 1};
+// les bâtiments qui s'améliorent (niveaux) : ceux qui forment des unités, et les maisons (plus de population)
+const AMELIORABLE = {caserne: 1, archerie: 1, monastere: 1, atelier: 1, maison: 1};
 // le bâtiment qui forme chaque unité (son niveau donne le grade des recrues)
 const FORME = {lance: "chateau", guer: "caserne", arc: "archerie", moine: "monastere", cata: "atelier"};
 // le bâtiment qui débloque chaque escouade (null = le château)
@@ -171,7 +173,8 @@ function dehors(S, x, y){
 }
 
 /* ---------- population, déblocage ---------- */
-const maisons = S => S.sites.filter(s => s.b && s.b.k === "maison" && s.b.fini).length;
+// une maison compte autant de fois que son niveau (niveau 2 = deux maisons de population)
+const maisons = S => S.sites.filter(s => s.b && s.b.k === "maison" && s.b.fini).reduce((n, s) => n + (s.b.niveau || 1), 0);
 const maxEsc = S => S.P.pop.escouades + maisons(S) * S.P.pop.maisonEsc;
 const maxOuv = S => S.P.pop.ouvriers + maisons(S) * S.P.pop.maisonOuv;
 const nbEsc = S => S.esc.filter(q => q.pv > 0).length;
@@ -275,7 +278,7 @@ const coutNiveau = (S, b) => { const c = cout(S, b.k), m = S.P.niveaux.cout * (b
 function ameliorer(S, site){
   const s = typeof site === "number" ? S.sites[site] : site, b = s && s.b;
   if (!b || !b.fini) return "PAS DE BATIMENT TERMINE";
-  if (!UNIQUE[b.k]) return "CE BATIMENT NE S'AMELIORE PAS";
+  if (!AMELIORABLE[b.k]) return "CE BATIMENT NE S'AMELIORE PAS";
   if (b.travaux) return "TRAVAUX DEJA EN COURS";
   if ((b.niveau || 1) >= S.P.niveaux.max) return "NIVEAU MAXIMUM";
   const c = coutNiveau(S, b); if (!peutPayer(S, c)) return "PAS ASSEZ DE RESSOURCES";
@@ -363,6 +366,8 @@ function envoyer(S, q, x, y, site){
   q.tx = x; q.ty = y; q.ordre = true; q.engage = false;
   return null;
 }
+// tenir la position : l'escouade ne part plus au-devant des monstres, elle frappe ceux qui arrivent à sa portée
+function tenir(S, q){ if (!q || q.pv <= 0) return "PAS D'ESCOUADE"; q.tenir = !q.tenir; q.engage = false; return null; }
 function gagnerXp(S, q, n){
   if (!q || q.pv <= 0) return;
   const X = S.P.xp, avant = q.grade, m0 = pvMax(S, q); q.xp += n;
@@ -382,7 +387,7 @@ function pasEscouades(S, dt, obs){
     if (q.tour){ q.x = q.tour.x; q.y = q.tour.y; }
     // les moines soignent les escouades dans leur zone
     if (E.soin){ q.cd -= dt; let soigne = false;
-      for (const o of S.esc) if (o !== q && o.pv > 0 && o.pv < pvMax(S, o) && d2(o, q) < r){ o.pv = Math.min(pvMax(S, o), o.pv + E.soin * nv * force(S, q) * dt); soigne = true; if (q.cd <= 0) S.fx.push({k: "heal", x: o.x, y: o.y, t0: S.t}); }
+      for (const o of S.esc) if (o !== q && o.pv > 0 && o.pv < pvMax(S, o) && d2(o, q) < r){ o.pv = Math.min(pvMax(S, o), o.pv + E.soin * nv * force(S, q) * dt); soigne = true; if (q.cd <= 0) S.fx.push({k: "heal", x: o.x, y: o.y, cible: o, t0: S.t}); }
       if (q.cd <= 0) q.cd = 1.1;
       q.mode = soigne ? "atk" : "idle"; }
     let cible = null, best = 99;
@@ -391,7 +396,7 @@ function pasEscouades(S, dt, obs){
     if (!q.tour){
       // un ordre de marche passe avant le combat ; sinon l'escouade attaque les monstres proches (pas la catapulte, qui reste en place) puis revient à son poste
       let gx = q.tx, gy = q.ty;
-      if (!E.soin && q.k !== "cata" && cible && best < E.r + 1.7 && !q.ordre){ q.engage = true; if (best > E.r * .9){ gx = cible.x; gy = cible.y; } else { gx = q.x; gy = q.y; } }
+      if (!E.soin && q.k !== "cata" && !q.tenir && cible && best < E.r + 1.7 && !q.ordre){ q.engage = true; if (best > E.r * .9){ gx = cible.x; gy = cible.y; } else { gx = q.x; gy = q.y; } }
       else q.engage = false;
       const reste = Math.hypot(gx - q.x, gy - q.y);
       if (reste > .05){ marcher(S, q, gx, gy, E.v, dt, obs); q.mode = "walk"; }
@@ -575,7 +580,7 @@ function simuler(mods, graine, tMax){
 }
 
 const api = {DEFAUT, ESC, MONS, BAT, FEMININ, DEBLOQUE, GARNISON, GRADES, RES, CARTE, W, H, CHATEAU, DEPOT, CHEMINS, NOM_DIR, SITES, VILLAGE, TOURS, UNIQUE, FORME, PROMO, RECRUTABLES,
-  peutBatir, ameliorer, coutNiveau, ameliorerChateau, coutChateau, pvChateau, niveauForme, peutPromouvoir, promouvoir, pvBat,
+  peutBatir, ameliorer, tenir, AMELIORABLE, coutNiveau, ameliorerChateau, coutChateau, pvChateau, niveauForme, peutPromouvoir, promouvoir, pvBat,
   reglages, ecarts, creer, pas, ajouterOuvrier, metierLibre, metier, construire, recruter, envoyer, vagueMaintenant, composition, directions, obstacles, dehors,
   maxEsc, maxOuv, nbEsc, debloque, cout, peutPayer, vivants, nMax, pvMax, pvSoldat, portee, robot, simuler, maisons};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
