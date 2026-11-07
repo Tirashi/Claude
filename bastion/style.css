@@ -74,6 +74,10 @@ button.cher{opacity:.5}
 #bats{display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin-bottom:6px}
 #bats button{display:flex; flex-direction:column; align-items:center; gap:1px; padding:0}
 #bats img{height:50px}
+#bats img.bande4{width:66px; object-fit:cover; object-position:left}
+#promo{width:auto; margin:0 auto; font-size:9px; pointer-events:auto}
+#promo[hidden]{display:none}
+#promo .ic, #promo img.ic{width:14px; height:14px}
 #bats b{font-size:10px}
 #bats .cout{font-size:12px; font-weight:700}
 #bats .cout img.ic{width:14px; height:14px}

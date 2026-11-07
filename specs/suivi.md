@@ -54,6 +54,8 @@ Nouvelle idée de l'utilisateur : un jeu de défense à la Bad North, médiéval
 
 **Session 2 (07/11) : retours sur le labo.** Carte 11 × 14 aux chemins sinueux, contournement des bâtiments, bâtiments transparents quand on passe derrière, tours ×1,5, moines et catapultes en garnison, zone de soin visible qui grandit avec le grade, catapulte (Warfare) débloquée par l'atelier, interface refaite avec les pièces du pack ; cache v93.
 
+**Session 3 (07/11).** Village à part (8 emplacements, autre herbe) et tours seulement le long des chemins, tour en bois, bâtiments uniques, niveaux des bâtiments (recrues vétérans ou élite) et du château, promotions (lanciers → cavaliers, chevaliers → épéistes, sprites Warfare) ; maquette 12 (bestiaire) avec les bâtiments ; suivi des mises à jour des packs (workflow hebdomadaire) ; cache v95.
+
 ## Essais du 06/11
 Confirmés sur le téléphone : Amiral !, Escadrille !, Thé des Jarls, Capitaine du port, Mot d'or, Magasinier, Mineur de l'espace (aussi au PC), Dragon Simulator (équilibrage gardé) et l'accueil en fiches (sauf le transfert de sauvegardes, pas encore essayé). Demande : refaire un peu la section Quoi de neuf de l'accueil. Détails : [`essais.md`](essais.md).
 

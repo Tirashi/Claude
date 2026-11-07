@@ -239,3 +239,13 @@ Ajout (07/11) : onglet **Bâtiments** (24) : les 8 bâtiments du Free Pack dans 
 
 ## Suivi des mises à jour des packs (07/11)
 Warfare, Tiny Swords et le Fantasy Battle Pack (Résistance) sont dans `outils/packs-suivis.json` ; le workflow « Suivi des packs » regarde chaque lundi leur page publique et leur devlog et ouvre une issue (étiquette `packs`) s'il y a du nouveau ; le téléchargement se fait ensuite par Claude (API itch.io). Détails : skill `packs-itch`.
+
+## Session 3 : village, niveaux, promotions (07/11)
+Retours de l'utilisateur : tour en bois (plus fragile, moins chère) ; un village à part avec ses emplacements, les tours seulement le long des chemins ; améliorer les bâtiments pour qu'ils forment des unités déjà aguerries ; un seul exemplaire de l'archerie, du monastère… ; promotions : lanciers → cavaliers (le sprite a une lance), chevaliers → épéistes ; pas encore d'idée pour les archers.
+- **Carte 11 × 16** : sous le château, le **village** (sol d'une autre herbe, couleur 4 du Free Pack) avec 8 emplacements pour maisons, caserne, archerie, monastère, atelier ; les 8 emplacements le long des chemins ne prennent que des tours. Bois, or et moutons descendus d'un rang (au sud du village).
+- **Un seul** exemplaire de la caserne, de l'archerie, du monastère et de l'atelier (le menu affiche « DÉJÀ FAIT »).
+- **Tour en bois** (ancienne version CC0, animée, avec son chantier) : 15 bois, 7 s de travaux, 110 PV, portée +0,7 et soin +0,9 (tour de pierre : 30 bois et 20 or, 300 PV, +1,2 et +1,5) ; même garnison.
+- **Niveaux** : toucher la caserne, l'archerie, le monastère, l'atelier (ou le château) ouvre AMÉLIORER ; prix = prix du bâtiment × niveau actuel, des ouvriers font les travaux (temps de construction × niveau) ; niveau 2 → recrues VÉTÉRANS, niveau 3 → ÉLITE ; étoiles sous le bâtiment ; un bâtiment amélioré a 25 % de PV en plus par niveau. Le château s'améliore sans ouvriers (60 bois et 60 or × niveau) : +30 % de PV par niveau, lanciers aguerris.
+- **Promotions** (caserne niveau 2) : une escouade choisie montre PROMOUVOIR ; lanciers → **cavaliers** (Horseman de Warfare : 36 PV, 5 dégâts/s, vitesse 2, ×2 contre le troll ; 25 or, 15 viande), chevaliers → **épéistes** (Swordsman : 46 PV, 7 dégâts/s ; 30 or, 15 viande). Grade et blessures gardés.
+- Pistes pour les archers : arbalétriers (annoncés dans la feuille de route de Warfare), ou archers montés ; rien de fait.
+- Équilibrage d'origine : 7 par voyage (les ressources sont plus loin), 3 monstres + 2 par vague ; le robot gagne environ 1 partie sur 2 (il n'améliore rien et ne promeut personne).

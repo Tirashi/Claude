@@ -29,6 +29,7 @@
   <button type="button" id="zoom" class="carre" aria-label="Zoom">−</button>
   <div class="bas">
     <div id="aide"></div>
+    <button type="button" id="promo" class="bouton" hidden></button>
     <div class="panneau table">
       <h3>OUVRIERS <span id="popOuv"></span></h3><div id="jobs" class="jobs"></div>
       <h3>ESCOUADES <span id="popEsc"></span></h3><div id="cartes" class="cartes"></div>
@@ -54,7 +55,8 @@
     <button type="button" id="bAide" class="bouton">COMMENT JOUER</button>
     <div id="aideTexte" class="aide" hidden>
       <p><b>Ouvriers</b> : touche bois, or, viande ou le marteau pour y envoyer un ouvrier de plus (pris la ou il y en a le plus). +1 = un nouvel ouvrier (viande).</p>
-      <p><b>Batir</b> : touche un emplacement (cercle) puis un batiment. Un ouvrier prend son marteau. Maison = plus de population ; caserne, archerie, monastere, atelier = nouvelles escouades ; tour = garnison.</p>
+      <p><b>Batir</b> : touche un emplacement (cercle) puis un batiment. Un ouvrier prend son marteau. Au village (sous le chateau) : maisons (plus de population) et un seul exemplaire de la caserne, de l'archerie, du monastere et de l'atelier (nouvelles escouades). Le long des chemins : tours de pierre ou tours en bois (moins cheres, plus fragiles).</p>
+      <p><b>Ameliorer</b> : touche la caserne, l'archerie, le monastere, l'atelier ou le chateau. Au niveau 2 leurs recrues arrivent VETERANS, au niveau 3 ELITE. Caserne niveau 2 : on peut promouvoir les lanciers en cavaliers et les chevaliers en epeistes (touche l'escouade, puis PROMOUVOIR).</p>
       <p><b>Escouades</b> : touche une carte pour recruter, touche une escouade puis le sol pour l'envoyer. Le jeu ralentit pendant que tu choisis. Archers, moines ou catapulte envoyes sur une tour montent dessus : ils tirent (ou soignent) plus loin et ne craignent plus le corps a corps tant que la tour tient. La zone verte autour des moines montre ou ils soignent ; elle grandit avec leur grade.</p>
       <p><b>Grades</b> : en abattant des monstres et en survivant aux vagues, une escouade devient VETERANS, ELITE (un soldat de plus) puis HEROS. Pres du chateau, hors combat, elle se reforme contre de la viande.</p>
       <p><b>LABO</b> : vitesse, triches, robot qui joue seul, simulateur et tous les reglages du jeu.</p>
