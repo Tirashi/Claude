@@ -1,0 +1,267 @@
+<title>Pokédex de poche</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Lexend:wght@400;600;800&display=swap">
+<style>
+/* Mise en page : trois téléphones côte à côte (empilés sur un téléphone), chacun une direction jouable. */
+:root {
+  --bg: #eef0f4; --fg: #1d2230; --muted: #5b6377; --line: #cfd4df; --chip: #ffffff;
+  --body: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --pixel: "Press Start 2P", "Courier New", monospace;
+  --lcd: "VT323", "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #12151d; --fg: #e8ebf2; --muted: #9aa2b6; --line: #2c3243; --chip: #1c212d; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #12151d; --fg: #e8ebf2; --muted: #9aa2b6; --line: #2c3243; --chip: #1c212d; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header.page { max-width: 1120px; margin: 0 auto 18px; display: grid; gap: 6px; }
+header.page h1 { margin: 0; font-size: 1.6rem; font-weight: 800; text-wrap: balance; }
+header.page p { margin: 0; color: var(--muted); max-width: 70ch; line-height: 1.5; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1120px; margin: 0 auto; }
+figure.dir { margin: 0; display: grid; gap: 10px; justify-items: center; }
+figure.dir figcaption { text-align: center; display: grid; gap: 2px; max-width: 340px; }
+figure.dir figcaption b { font-size: 1.05rem; }
+figure.dir figcaption span { color: var(--muted); font-size: .85rem; line-height: 1.4; }
+.tel { width: 340px; max-width: 100%; height: 680px; border-radius: 34px; padding: 10px; background: #0d0f14; box-shadow: 0 10px 30px rgba(0,0,0,.25); box-sizing: border-box; }
+.ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; position: relative; }
+.note { max-width: 1120px; margin: 26px auto 0; color: var(--muted); font-size: .85rem; line-height: 1.5; }
+img.px { image-rendering: pixelated; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid #4d8dff; outline-offset: 2px; }
+
+/* ---------- A : Pokédex rouge ---------- */
+.A { background: #c81e2c; height: 100%; display: flex; flex-direction: column; font-family: var(--lcd); color: #1f2a17; }
+.A .haut { display: flex; align-items: center; gap: 10px; padding: 18px 18px 12px; border-bottom: 4px solid #8f1220; }
+.A .lentille { width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #bfe8ff, #2a8de0 45%, #0d4d93); border: 4px solid #f2f2f2; box-shadow: 0 0 0 3px #222; }
+.A .led { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #222; }
+.A .cadre { margin: 14px 18px 0; background: #e8e8e8; border-radius: 6px 6px 6px 26px; padding: 14px 16px 18px; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.A .lcd { background: #b8c88a; border: 3px solid #333; border-radius: 4px; flex: 1; min-height: 0; overflow: auto; padding: 8px 10px; box-shadow: inset 0 0 18px rgba(40,60,10,.35); }
+.A .ligne { display: flex; align-items: center; gap: 6px; font-size: 22px; padding: 1px 4px; border-radius: 2px; }
+.A .ligne img { width: 34px; height: 34px; filter: grayscale(1) contrast(1.3); mix-blend-mode: multiply; }
+.A .ligne.sel { background: #1f2a17; color: #b8c88a; }
+.A .ligne.sel img { filter: grayscale(1) invert(1) contrast(1.3); mix-blend-mode: screen; }
+.A .fiche { display: grid; gap: 4px; font-size: 20px; line-height: 1.05; }
+.A .fiche .sprite { justify-self: center; width: 120px; height: 120px; filter: grayscale(1) contrast(1.4); mix-blend-mode: multiply; }
+.A .fiche h2 { margin: 0; font-size: 30px; font-weight: 400; }
+.A .types { display: flex; gap: 6px; }
+.A .types span { border: 2px solid #1f2a17; padding: 0 6px; }
+.A .chaine { display: flex; align-items: center; gap: 2px; font-size: 18px; }
+.A .chaine img { width: 40px; height: 40px; filter: grayscale(1) contrast(1.3); mix-blend-mode: multiply; }
+.A .chaine .ici img { background: rgba(31,42,23,.18); border-radius: 3px; }
+.A .commandes { display: flex; align-items: center; justify-content: space-between; padding: 18px 26px 26px; }
+.A .croix { display: grid; grid-template: repeat(3, 30px) / repeat(3, 30px); }
+.A .croix button { background: #222; border: 0; color: #888; font-size: 14px; }
+.A .croix .h { grid-area: 1/2; border-radius: 4px 4px 0 0; } .A .croix .b { grid-area: 3/2; border-radius: 0 0 4px 4px; }
+.A .croix .g { grid-area: 2/1; border-radius: 4px 0 0 4px; } .A .croix .d { grid-area: 2/3; border-radius: 0 4px 4px 0; }
+.A .croix i { grid-area: 2/2; background: #222; }
+.A .ab { display: flex; gap: 14px; transform: rotate(-20deg); }
+.A .ab button { width: 46px; height: 46px; border-radius: 50%; background: #2a2a2a; color: #ddd; border: 0; font-family: var(--lcd); font-size: 24px; box-shadow: 0 3px 0 #000; }
+.A .ab button:active { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+.A .aide { text-align: center; color: #ffd9dc; font-size: 18px; padding-bottom: 10px; }
+
+/* ---------- B : fiche épurée ---------- */
+.B { background: #f7f7fa; height: 100%; overflow: auto; font-family: var(--body); color: #1c1f29; }
+.B .barre { padding: 22px 18px 10px; }
+.B .barre h2 { margin: 0 0 10px; font-size: 26px; font-weight: 800; }
+.B .recherche { background: #ebecf1; border-radius: 12px; padding: 10px 12px; color: #7d8294; font-size: 14px; }
+.B .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 14px 20px; }
+.B .carte { border: 0; border-radius: 16px; padding: 10px 10px 8px; text-align: left; color: #fff; position: relative; overflow: hidden; min-height: 96px; }
+.B .carte .num { font-size: 11px; opacity: .8; }
+.B .carte .nom { font-weight: 600; font-size: 14px; }
+.B .carte .mini { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; align-items: flex-start; }
+.B .carte .mini span { background: rgba(255,255,255,.28); border-radius: 10px; padding: 1px 8px; font-size: 10px; }
+.B .carte img { position: absolute; right: -6px; bottom: -6px; width: 78px; height: 78px; }
+.B .hero { padding: 16px 18px 70px; color: #fff; position: relative; }
+.B .hero .retour { background: rgba(255,255,255,.25); border: 0; color: #fff; border-radius: 10px; padding: 4px 10px; font-size: 13px; }
+.B .hero h2 { margin: 12px 0 2px; font-size: 30px; font-weight: 800; }
+.B .hero .num { position: absolute; right: 18px; top: 52px; font-weight: 800; font-size: 20px; opacity: .55; }
+.B .hero .chips { display: flex; gap: 6px; }
+.B .hero .chips span { background: rgba(255,255,255,.28); border-radius: 12px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
+.B .art { display: block; width: 190px; height: 190px; margin: -66px auto 0; position: relative; z-index: 2; }
+.B .corps { background: #fff; border-radius: 26px 26px 0 0; margin-top: -120px; padding: 128px 20px 24px; display: grid; gap: 14px; }
+.B .corps h3 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #8a8fa0; }
+.B .corps p { margin: 0; line-height: 1.55; font-size: 14px; color: #353a48; }
+.B .evo { display: flex; align-items: center; justify-content: space-between; }
+.B .evo .et { display: grid; justify-items: center; font-size: 12px; gap: 2px; border: 0; background: none; padding: 0; color: inherit; }
+.B .evo .et img { width: 64px; height: 64px; border-radius: 50%; background: #f0f1f5; }
+.B .evo .et.ici img { box-shadow: 0 0 0 3px var(--t); }
+.B .evo .fl { font-size: 11px; color: #8a8fa0; text-align: center; }
+.B .stade { font-weight: 600; font-size: 14px; }
+
+/* ---------- C : pixel 16 bits ---------- */
+.C { background: #10162b; height: 100%; overflow: auto; font-family: var(--pixel); color: #e9edf7; font-size: 9px; line-height: 1.7; }
+.C .titre { padding: 20px 14px 12px; text-align: center; color: #ffd84a; font-size: 13px; text-shadow: 2px 2px 0 #b3412c; }
+.C .compte { text-align: center; color: #8d9bc4; margin-bottom: 8px; }
+.C .grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px 18px; }
+.C .case { background: #1e2a4f; border: 0; box-shadow: inset 0 0 0 2px #3a4c86, 0 3px 0 #070a16; padding: 4px 2px 6px; color: #e9edf7; font-family: var(--pixel); font-size: 7px; display: grid; justify-items: center; gap: 2px; }
+.C .case img { width: 72px; height: 72px; }
+.C .case .n { color: #8d9bc4; }
+.C .plaque { margin: 0 12px 10px; background: #1e2a4f; box-shadow: inset 0 0 0 2px #3a4c86, 0 3px 0 #070a16; padding: 10px; }
+.C .scene { margin: 6px 12px 10px; height: 170px; position: relative; background: linear-gradient(#5aa6e8 0 60%, #6cc04a 60% 100%); box-shadow: inset 0 0 0 2px #3a4c86; display: grid; place-items: center; }
+.C .scene::after { content: ""; position: absolute; bottom: 22px; left: 50%; width: 120px; height: 18px; transform: translateX(-50%); background: #4c9a35; border-radius: 50%; }
+.C .scene img { width: 144px; height: 144px; position: relative; z-index: 1; margin-top: -14px; }
+.C .ent { display: flex; justify-content: space-between; align-items: baseline; color: #ffd84a; font-size: 11px; }
+.C .ent .n { color: #8d9bc4; font-size: 9px; }
+.C .types { display: flex; gap: 6px; margin-top: 8px; }
+.C .types span { padding: 3px 6px; color: #fff; text-shadow: 1px 1px 0 rgba(0,0,0,.5); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
+.C .lbl { color: #8d9bc4; margin-bottom: 4px; }
+.C .chaine { display: flex; align-items: center; justify-content: space-between; }
+.C .chaine button { background: none; border: 0; padding: 0; display: grid; justify-items: center; color: #e9edf7; font-family: var(--pixel); font-size: 6px; }
+.C .chaine img { width: 56px; height: 56px; }
+.C .chaine .ici img { background: #34477f; }
+.C .chaine .fl { color: #ffd84a; font-size: 7px; text-align: center; }
+.C .barres { display: flex; gap: 4px; }
+.C .barres i { flex: 1; height: 8px; background: #2a365f; }
+.C .barres i.on { background: #ffd84a; }
+.C .bouton { display: block; margin: 4px auto 18px; background: #b3412c; color: #fff; border: 0; font-family: var(--pixel); font-size: 9px; padding: 8px 14px; box-shadow: 0 3px 0 #5e1c12; }
+</style>
+
+<header class="page">
+  <h1>Pokédex de poche · maquette</h1>
+  <p>Trois directions pour la même appli, sur 12 Pokémon d'exemple. Touche une case pour ouvrir sa fiche (image, type, stade d'évolution, description), puis une étape de la chaîne pour passer à l'autre forme. Sur le Pokédex rouge, la croix et les boutons A et B marchent aussi.</p>
+</header>
+
+<div class="phones">
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecranA"></div></div>
+    <figcaption><b>A · Pokédex rouge</b><span>L'appareil du dessin animé : écran à cristaux liquides, croix et boutons A/B, sprites en niveaux de vert.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecranB"></div></div>
+    <figcaption><b>B · Fiche épurée</b><span>Appli moderne : cartes à la couleur du type, grands dessins officiels, chaîne d'évolution en images.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecranC"></div></div>
+    <figcaption><b>C · Pixel 16 bits</b><span>Le style de la Ludothèque : plaques bleu nuit, Press Start 2P, sprites des jeux sur une petite scène.</span></figcaption></figure>
+</div>
+
+<p class="note">Descriptions écrites pour la maquette ; l'appli lira les descriptions officielles en français, les types et les évolutions sur PokéAPI. Pokémon © Nintendo, Creatures, GAME FREAK. Projet de fan, sans lien avec eux.</p>
+
+<script>
+// Images : remplacées par des data: URI dans la copie publiée en artefact (outils/pokedex-maquette/fabriquer.py).
+const SPRITES = /*SPRITES*/null;
+const URL_SPRITE = n => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + n + '.png';
+const URL_ART = n => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + n + '.png';
+const sprite = n => SPRITES ? SPRITES['p' + n] : URL_SPRITE(n);
+const art = n => SPRITES ? SPRITES['a' + n] : URL_ART(n);
+
+const TYPES = { Plante: '#4fb04a', Poison: '#9b4bb0', Feu: '#ec7a2c', Vol: '#8f86e0', Eau: '#4a8ee8', 'Électrik': '#e8b818' };
+// chaîne : liste de [numéro, condition pour y arriver]
+const CH_PLANTE = [[1, ''], [2, 'Niv. 16'], [3, 'Niv. 32']];
+const CH_FEU = [[4, ''], [5, 'Niv. 16'], [6, 'Niv. 36']];
+const CH_EAU = [[7, ''], [8, 'Niv. 16'], [9, 'Niv. 36']];
+const CH_ELEC = [[172, ''], [25, 'Amitié'], [26, 'Pierre Foudre']];
+const DEX = [
+  { n: 1, nom: 'Bulbizarre', types: ['Plante', 'Poison'], ch: CH_PLANTE, desc: "Il porte sur le dos une graine qui grossit avec lui. Elle stocke l'énergie du soleil, ce qui lui permet de rester des jours sans manger." },
+  { n: 2, nom: 'Herbizarre', types: ['Plante', 'Poison'], ch: CH_PLANTE, desc: "Le bourgeon sur son dos s'alourdit à mesure qu'il approche de l'éclosion. Il passe alors plus de temps au soleil." },
+  { n: 3, nom: 'Florizarre', types: ['Plante', 'Poison'], ch: CH_PLANTE, desc: "Sa grande fleur dégage un parfum apaisant après la pluie. Ses pétales s'ouvrent largement quand il fait beau." },
+  { n: 4, nom: 'Salamèche', types: ['Feu'], ch: CH_FEU, desc: "La flamme au bout de sa queue montre son humeur et sa santé. Elle brille fort quand il est en pleine forme." },
+  { n: 5, nom: 'Reptincel', types: ['Feu'], ch: CH_FEU, desc: "Batailleur, il cherche sans cesse des adversaires. Sa queue s'embrase et devient bleutée quand il s'énerve." },
+  { n: 6, nom: 'Dracaufeu', types: ['Feu', 'Vol'], ch: CH_FEU, desc: "Il vole haut dans le ciel à la recherche d'adversaires à sa taille. Son souffle de feu fait fondre presque tout." },
+  { n: 7, nom: 'Carapuce', types: ['Eau'], ch: CH_EAU, desc: "Il se réfugie dans sa carapace quand il a peur et projette de l'eau avec force dès qu'on baisse la garde." },
+  { n: 8, nom: 'Carabaffe', types: ['Eau'], ch: CH_EAU, desc: "Sa queue duveteuse, signe de longévité, l'aide à garder l'équilibre quand il nage vite." },
+  { n: 9, nom: 'Tortank', types: ['Eau'], ch: CH_EAU, desc: "Les canons de sa carapace envoient des jets d'eau assez puissants pour percer l'acier." },
+  { n: 172, nom: 'Pichu', types: ['Électrik'], ch: CH_ELEC, desc: "Encore petit, il ne sait pas bien retenir son électricité et se donne lui-même des décharges quand il est surpris." },
+  { n: 25, nom: 'Pikachu', types: ['Électrik'], ch: CH_ELEC, desc: "Il garde de l'électricité dans ses joues. Quand il est menacé, il la libère d'un coup en éclairs." },
+  { n: 26, nom: 'Raichu', types: ['Électrik'], ch: CH_ELEC, desc: "Sa longue queue lui sert de prise de terre pour évacuer le trop-plein d'électricité sans se blesser." },
+];
+const parNum = n => DEX.find(p => p.n === n);
+const num3 = n => String(n).padStart(3, '0');
+const stade = p => p.ch.findIndex(e => e[0] === p.n) + 1;
+const sansAccent = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+
+/* ---------- A ---------- */
+const A = { el: document.getElementById('ecranA'), sel: 0, fiche: null };
+function rendreA() {
+  let lcd;
+  if (A.fiche === null) {
+    lcd = DEX.map((p, i) => `<div class="ligne ${i === A.sel ? 'sel' : ''}" data-i="${i}"><img class="px" src="${sprite(p.n)}" alt="">${num3(p.n)} ${p.nom.toUpperCase()}</div>`).join('');
+  } else {
+    const p = DEX[A.fiche];
+    lcd = `<div class="fiche">
+      <img class="sprite px" src="${sprite(p.n)}" alt="${p.nom}">
+      <div>N° ${num3(p.n)}</div><h2>${p.nom.toUpperCase()}</h2>
+      <div class="types">${p.types.map(t => `<span>${t.toUpperCase()}</span>`).join('')}</div>
+      <div>STADE ${stade(p)}/${p.ch.length}</div>
+      <div class="chaine">${p.ch.map((e, k) => (k ? `<span>›</span>` : '') + `<span class="${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}"><img class="px" src="${sprite(e[0])}" alt=""></span>`).join('')}</div>
+      <div>${p.ch.slice(1).map((e, k) => parNum(p.ch[k][0]).nom + ' → ' + e[1]).join('<br>')}</div>
+      <div style="margin-top:4px">${p.desc}</div></div>`;
+  }
+  A.el.innerHTML = `<div class="A">
+    <div class="haut"><div class="lentille"></div><div class="led" style="background:#ff4b4b"></div><div class="led" style="background:#ffd23f"></div><div class="led" style="background:#4cd964"></div></div>
+    <div class="cadre"><div class="lcd" id="lcdA">${lcd}</div></div>
+    <div class="commandes">
+      <div class="croix"><button class="h" data-k="h" aria-label="Haut">▲</button><button class="g" data-k="g" aria-label="Gauche">◀</button><i></i><button class="d" data-k="d" aria-label="Droite">▶</button><button class="b" data-k="b" aria-label="Bas">▼</button></div>
+      <div class="ab"><button data-k="B">B</button><button data-k="A">A</button></div>
+    </div><div class="aide">A : OUVRIR · B : RETOUR</div></div>`;
+  const s = A.el.querySelector('.ligne.sel'); if (s) s.scrollIntoView({ block: 'nearest' });
+}
+A.el.addEventListener('click', ev => {
+  const l = ev.target.closest('.ligne'), k = ev.target.closest('[data-k]'), c = ev.target.closest('[data-n]');
+  if (l) { const i = +l.dataset.i; if (i === A.sel) A.fiche = i; A.sel = i; }
+  else if (c) { A.fiche = A.sel = DEX.indexOf(parNum(+c.dataset.n)); }
+  else if (k) {
+    const t = k.dataset.k;
+    if (t === 'A' && A.fiche === null) A.fiche = A.sel;
+    else if (t === 'B') A.fiche = null;
+    else if (t === 'h' || t === 'g') { A.sel = (A.sel + DEX.length - 1) % DEX.length; if (A.fiche !== null) A.fiche = A.sel; }
+    else if (t === 'b' || t === 'd') { A.sel = (A.sel + 1) % DEX.length; if (A.fiche !== null) A.fiche = A.sel; }
+  } else return;
+  rendreA();
+});
+
+/* ---------- B ---------- */
+const B = { el: document.getElementById('ecranB'), fiche: null };
+function rendreB() {
+  if (B.fiche === null) {
+    B.el.innerHTML = `<div class="B"><div class="barre"><h2>Pokédex</h2><div class="recherche">⌕ Chercher un Pokémon, un type…</div></div>
+      <div class="grille">${DEX.map(p => `<button class="carte" data-n="${p.n}" style="background:${TYPES[p.types[0]]}">
+        <div class="num">#${num3(p.n)}</div><div class="nom">${p.nom}</div>
+        <div class="mini">${p.types.map(t => `<span>${t}</span>`).join('')}</div>
+        <img src="${art(p.n)}" alt=""></button>`).join('')}</div></div>`;
+    return;
+  }
+  const p = parNum(B.fiche), c = TYPES[p.types[0]];
+  B.el.innerHTML = `<div class="B" style="--t:${c}">
+    <div class="hero" style="background:${c}"><button class="retour" data-retour>‹ Retour</button>
+      <h2>${p.nom}</h2><div class="num">#${num3(p.n)}</div>
+      <div class="chips">${p.types.map(t => `<span>${t}</span>`).join('')}</div></div>
+    <img class="art" src="${art(p.n)}" alt="${p.nom}">
+    <div class="corps">
+      <div class="stade">Stade ${stade(p)} sur ${p.ch.length}</div>
+      <div><h3>Évolution</h3></div>
+      <div class="evo">${p.ch.map((e, k) => (k ? `<div class="fl">→<br>${e[1]}</div>` : '') + `<button class="et ${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}"><img src="${art(e[0])}" alt="">${parNum(e[0]).nom}</button>`).join('')}</div>
+      <h3>Description</h3><p>${p.desc}</p>
+    </div></div>`;
+  B.el.firstElementChild.scrollTop = 0;
+}
+B.el.addEventListener('click', ev => {
+  const n = ev.target.closest('[data-n]');
+  if (n) B.fiche = +n.dataset.n; else if (ev.target.closest('[data-retour]')) B.fiche = null; else return;
+  rendreB();
+});
+
+/* ---------- C ---------- */
+const C = { el: document.getElementById('ecranC'), fiche: null };
+function rendreC() {
+  if (C.fiche === null) {
+    C.el.innerHTML = `<div class="C"><div class="titre">POKEDEX</div><div class="compte">VUS ${DEX.length} · PRIS ${DEX.length}</div>
+      <div class="grille">${DEX.map(p => `<button class="case" data-n="${p.n}"><img class="px" src="${sprite(p.n)}" alt=""><span class="n">${num3(p.n)}</span>${sansAccent(p.nom)}</button>`).join('')}</div></div>`;
+    return;
+  }
+  const p = parNum(C.fiche), s = stade(p);
+  C.el.innerHTML = `<div class="C">
+    <div class="titre">POKEDEX</div>
+    <div class="scene"><img class="px" src="${sprite(p.n)}" alt="${p.nom}"></div>
+    <div class="plaque"><div class="ent"><span>${sansAccent(p.nom)}</span><span class="n">N.${num3(p.n)}</span></div>
+      <div class="types">${p.types.map(t => `<span style="background:${TYPES[t]}">${sansAccent(t)}</span>`).join('')}</div></div>
+    <div class="plaque"><div class="lbl">STADE ${s}/${p.ch.length}</div>
+      <div class="barres">${p.ch.map((e, k) => `<i class="${k < s ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="chaine" style="margin-top:8px">${p.ch.map((e, k) => (k ? `<div class="fl">▶<br>${sansAccent(e[1])}</div>` : '') + `<button class="${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}"><img class="px" src="${sprite(e[0])}" alt="">${sansAccent(parNum(e[0]).nom)}</button>`).join('')}</div></div>
+    <div class="plaque"><div class="lbl">DESCRIPTION</div>${p.desc}</div>
+    <button class="bouton" data-retour>RETOUR</button></div>`;
+  C.el.firstElementChild.scrollTop = 0;
+}
+C.el.addEventListener('click', ev => {
+  const n = ev.target.closest('[data-n]');
+  if (n) C.fiche = +n.dataset.n; else if (ev.target.closest('[data-retour]')) C.fiche = null; else return;
+  rendreC();
+});
+
+// Ouvre une fiche d'exemple dans B et C pour que la maquette montre les deux écrans dès l'arrivée.
+A.sel = 3; rendreA(); B.fiche = null; rendreB(); C.fiche = 25; rendreC();
+</script>
