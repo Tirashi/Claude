@@ -5,6 +5,7 @@
    Lancé par verifications.js (avec 8 parties) : sort en erreur si une règle ne tient pas. */
 "use strict";
 const B = require("../bastion/regles.js");
+const CH = B => B.CHATEAU;
 const nb = Number(process.argv[2]) || 30;
 const mods = process.argv[3] ? JSON.parse(process.argv[3]) : {};
 let erreurs = 0;
@@ -13,9 +14,9 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
 /* ---------- les règles ---------- */
 {
   const S = B.creer({}, 1);
-  verif(S.pawns.length === 3 && S.esc.length === 1 && S.res.bois === 40, "départ : 3 ouvriers, une escouade, 40 bois");
+  verif(S.pawns.length === 3 && S.esc.length === 1 && S.res.bois === 50, "départ : 3 ouvriers, une escouade, 50 bois");
   verif(B.recruter(S, "arc") !== null, "les archers demandent une archerie");
-  verif(B.construire(S, 4, "archerie") === null && S.res.bois === 0, "une archerie se paie (40 bois)");
+  verif(B.construire(S, 4, "archerie") === null && S.res.bois === 10, "une archerie se paie (40 bois)");
   verif(S.pawns.some(p => p.job === "bati"), "un ouvrier prend son marteau");
   verif(B.construire(S, 4, "maison") !== null, "un emplacement pris refuse un 2e bâtiment");
   for (let i = 0; i < 400 && !S.sites[4].b.fini; i++) B.pas(S, .05);
@@ -27,10 +28,11 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
   // une maison terminée : +1 escouade
   B.construire(S, 5, "maison"); S.sites[5].b.fini = true;
   verif(B.maxEsc(S) === 4 && B.maxOuv(S) === 6, "une maison : +1 escouade, +2 ouvriers");
-  // garnison : seulement des archers, dans une tour finie
+  // garnison : archers, moines ou catapulte, dans une tour finie
   B.construire(S, 1, "tour"); S.sites[1].b.fini = true; S.sites[1].b.pv = S.P.tour.pv;
   const g = S.esc.find(q => q.k === "guer"), a = S.esc.find(q => q.k === "arc");
   verif(B.envoyer(S, g, 0, 0, S.sites[1]) !== null, "les guerriers ne montent pas dans une tour");
+  verif(B.GARNISON.moine && B.GARNISON.cata && B.GARNISON.arc, "archers, moines et catapulte vont en garnison");
   verif(B.envoyer(S, a, 0, 0, S.sites[1]) === null, "les archers montent dans une tour");
   for (let i = 0; i < 400 && !a.tour; i++) B.pas(S, .05);
   verif(a.tour === S.sites[1] && S.sites[1].b.garnison === a, "archers en garnison");
@@ -39,6 +41,14 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
   const pvA = a.pv, pvT = S.sites[1].b.pv;
   for (let i = 0; i < 20; i++) B.pas(S, .05);
   verif(a.pv === pvA && S.sites[1].b.pv < pvT, "en garnison, les archers ne craignent pas le corps à corps");
+  // on contourne les bâtiments : jamais dans un obstacle
+  verif(B.obstacles(S).length === 1 + S.sites.filter(s => s.b).length, "obstacles : le château et chaque bâtiment");
+  { const S2 = B.creer({}, 3), q = S2.esc[0]; q.x = CH(B)[0]; q.y = CH(B)[1] - 1.8; B.envoyer(S2, q, CH(B)[0], CH(B)[1] + 1.5); S2.prochaine = 1e9;
+    let dedans = false; for (let i = 0; i < 300; i++){ B.pas(S2, .05); const o = B.obstacles(S2)[0]; if (((q.x - o.x) / o.rx) ** 2 + ((q.y - o.y) / o.ry) ** 2 < .95) dedans = true; }
+    verif(!dedans && q.y > CH(B)[1] + .7, "une escouade contourne le château au lieu de le traverser"); }
+  // la zone de soin des moines grandit avec le grade et dans une tour
+  { const m = {k: "moine", grade: 0, tour: null}, r0 = B.portee(S, m); m.grade = 2; const r2 = B.portee(S, m); m.tour = S.sites[1]; const r3 = B.portee(S, m);
+    verif(r2 > r0 && r3 > r2, "zone de soin : plus grande avec le grade et dans une tour"); }
   // grades
   const q = S.esc.find(o => o.k === "guer"), n0 = B.nMax(S, q);
   q.xp = S.P.xp.elite - 1; q.grade = 1; q.pv = B.pvMax(S, q);

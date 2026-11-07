@@ -52,6 +52,8 @@ Nouvelle idée de l'utilisateur : un jeu de défense à la Bad North, médiéval
 
 **Session 1 (07/11) : le laboratoire.** Dossier `bastion/` (démo sur l'accueil, cache v92) : règles à part (`regles.js`), bâtiments construits par les ouvriers, population, tours à garnison d'archers, grades, renforts, 10 vagues ; panneau LABO (vitesse, triches, robot, simulateur, journal, tous les réglages, copier/charger) ; `outils/bastion-simulateur.js` dans `verifications.js`, bloc dans `fumee.js` ; images utilisées dans `bastion/img/` (Free Pack, Enemy Pack, crédits). Détails dans le [cdc](bastion.md).
 
+**Session 2 (07/11) : retours sur le labo.** Carte 11 × 14 aux chemins sinueux, contournement des bâtiments, bâtiments transparents quand on passe derrière, tours ×1,5, moines et catapultes en garnison, zone de soin visible qui grandit avec le grade, catapulte (Warfare) débloquée par l'atelier, interface refaite avec les pièces du pack ; cache v93.
+
 ## Essais du 06/11
 Confirmés sur le téléphone : Amiral !, Escadrille !, Thé des Jarls, Capitaine du port, Mot d'or, Magasinier, Mineur de l'espace (aussi au PC), Dragon Simulator (équilibrage gardé) et l'accueil en fiches (sauf le transfert de sauvegardes, pas encore essayé). Demande : refaire un peu la section Quoi de neuf de l'accueil. Détails : [`essais.md`](essais.md).
 

@@ -1,92 +1,111 @@
-/* Bastion : interface en parchemin (reprise de la maquette 11) */
+/* Bastion : interface faite avec les pièces du Tiny Swords Free Pack (UI Elements) : table en bois, papier, parchemin,
+   boutons bleus et rouges, rubans, barre, icônes. Les planches ont été recollées en images compactes (bordures en 9 morceaux). */
 :root{
-  --parch:#f2e3bf; --parch2:#d9c294; --ink:#3a2410; --rouge:#7a2a1a; --vert:#3a5a2a; --or:#e8c46a;
+  --ink:#3a2410; --clair:#fff4d6; --or:#ffd94a;
   --titre:"Press Start 2P", "Courier New", monospace; --texte:"Cinzel", Georgia, serif;
 }
 *{box-sizing:border-box}
 html, body{margin:0; height:100%; overflow:hidden; background:#1c2414; color:var(--ink); font-family:var(--texte); -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:none}
 button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+img{image-rendering:pixelated}
 #cv{position:fixed; inset:0; width:100%; height:100%; image-rendering:pixelated; display:block}
-img.ic{width:22px; height:22px; image-rendering:pixelated; vertical-align:middle}
+img.ic{width:22px; height:22px; object-fit:contain; vertical-align:middle}
+
+/* les pièces du pack */
+.papier{border-style:solid; border-width:15px 17px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 15px 17px stretch}
+.table{border-style:solid; border-width:26px 26px 32px; border-image:url(img/ui-table.png) 85 84 103 84 fill / 26px 26px 32px stretch}
+.parchemin{border-style:solid; border-width:22px 28px 36px 32px; border-image:url(img/ui-parchemin.png) 68 84 111 100 fill / 22px 28px 36px 32px stretch}
+.ruban{border-style:solid; border-width:0 34px; border-image:url(img/ui-ruban-bleu.png) 0 97 0 98 fill / 0 34px stretch; min-height:36px; display:flex; align-items:center; justify-content:center;
+  color:var(--clair); text-shadow:2px 2px 0 #1a2a40; padding:4px 0 8px}
+.ruban.rouge{border-image-source:url(img/ui-ruban-rouge.png)}
+.carre{border-style:solid; border-width:10px; border-image:url(img/ui-carre-bleu.png) 30 fill / 10px stretch; min-width:40px; height:40px; display:grid; place-items:center; color:var(--clair);
+  font-family:var(--titre); font-size:10px; text-shadow:1px 1px 0 #1a2a40; padding:0}
+.carre:active{border-image-source:url(img/ui-carre-bleu-appui.png)}
+.carre img{width:24px; height:24px; object-fit:contain}
+.carre.large{min-width:52px}
+.carre.on{filter:hue-rotate(160deg) saturate(1.3)}
 
 /* le bandeau du haut et du bas */
 #hud{position:fixed; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between;
-  padding:max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left))}
+  padding:max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left))}
 #hud button, #hud .panneau{pointer-events:auto}
-.haut{display:flex; flex-direction:column; gap:5px}
-.ligne{display:flex; justify-content:space-between; align-items:center; gap:6px}
-.res{display:flex; gap:4px; flex:1}
-.res span{display:flex; align-items:center; gap:2px; font-weight:700; font-size:14px; background:linear-gradient(var(--parch), var(--parch2)); border:2px solid var(--ink); border-radius:4px; padding:0 6px 0 0; box-shadow:0 2px 0 var(--ink)}
-.res img.ic{width:26px; height:26px}
-.petitb{font-family:var(--titre); font-size:9px; padding:7px 8px; background:linear-gradient(var(--parch), var(--parch2)); border:2px solid var(--ink); border-radius:4px; box-shadow:0 2px 0 var(--ink)}
-.petitb.on{background:#ffe08a}
-#vague{font-weight:700; font-size:12px; letter-spacing:1px; color:var(--parch); background:var(--rouge); border:2px solid #2a1808; border-radius:4px; padding:3px 8px; box-shadow:0 2px 0 #2a1808; white-space:nowrap}
-#pvc{height:12px; border:2px solid var(--ink); border-radius:3px; background:#5a3a2a; overflow:hidden; box-shadow:0 2px 0 var(--ink)}
-#pvc i{display:block; height:100%; width:100%; background:linear-gradient(#7ad04a, #4a9a2a); transition:width .3s}
-#zoom{position:fixed; right:10px; top:calc(max(8px, env(safe-area-inset-top)) + 96px); width:36px; height:36px; pointer-events:auto; font-family:var(--titre); font-size:14px; background:var(--parch); border:2px solid var(--ink); border-radius:50%; box-shadow:0 2px 0 var(--ink)}
-.bas{display:flex; flex-direction:column; gap:5px}
+.haut{display:flex; flex-direction:column; gap:4px}
+.ligne{display:flex; justify-content:space-between; align-items:center; gap:5px}
+.res{display:flex; gap:3px; flex:1}
+.res span{display:flex; align-items:center; gap:2px; font-weight:700; font-size:15px; border-style:solid; border-width:8px 10px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 8px 10px stretch; padding:0 2px 0 0; line-height:1}
+.res img.ic{width:24px; height:24px; margin:-4px 0}
+#vague{font-weight:700; font-size:12px; letter-spacing:1px; white-space:nowrap; border-style:solid; border-width:0 26px; border-image:url(img/ui-ruban-rouge.png) 0 97 0 98 fill / 0 26px stretch;
+  color:var(--clair); text-shadow:1px 1px 0 #3a1010; padding:5px 0 9px; min-height:30px}
+#pvc{height:22px; border-style:solid; border-width:0 10px; border-image:url(img/ui-barre.png) 0 24 fill / 0 10px stretch; padding:5px 0 7px}
+#pvc i{display:block; height:100%; width:100%; background:url(img/ui-barre-plein.png) 0 0 / auto 100% repeat-x; transition:width .3s}
+#zoom{position:fixed; right:8px; top:calc(max(6px, env(safe-area-inset-top)) + 100px); pointer-events:auto; font-size:14px}
+.bas{display:flex; flex-direction:column; gap:4px}
 #aide{text-align:center; font-weight:700; font-size:12px; color:#fff8e0; text-shadow:0 1px 3px #000, 0 0 2px #000; min-height:15px}
-.panneau{background:linear-gradient(var(--parch), var(--parch2)); border:2px solid var(--ink); border-radius:5px; box-shadow:0 3px 0 var(--ink); padding:5px; display:flex; flex-direction:column; gap:5px; max-width:560px; width:100%; margin:0 auto}
-.panneau h3{margin:0; font-weight:700; font-size:10px; letter-spacing:1px; color:#6a4a2a}
-.panneau h3 span{color:var(--ink)}
-.jobs{display:grid; grid-template-columns:repeat(5, 1fr); gap:4px}
-.jobs button{display:flex; align-items:center; justify-content:center; gap:2px; font-weight:700; font-size:14px; background:#fff4d6; border:2px solid var(--ink); border-radius:4px; padding:2px; box-shadow:0 2px 0 var(--ink); min-height:34px}
-.jobs img.ic{width:26px; height:26px; object-fit:contain}
-.jobs .plus{font-size:12px; flex-direction:column; gap:0; line-height:1.1}
-.jobs .plus .cout img.ic{width:14px; height:14px}
-.cartes{display:grid; grid-template-columns:repeat(4, 1fr); gap:4px}
-.cartes button{position:relative; display:flex; flex-direction:column; align-items:center; gap:1px; background:#fff4d6; border:2px solid var(--ink); border-radius:4px; padding:2px 1px 3px; box-shadow:0 2px 0 var(--ink)}
-.cartes img.av{width:40px; height:40px; image-rendering:pixelated}
-.cartes b{font-weight:700; font-size:9px; letter-spacing:.5px}
-.cartes .cout{display:flex; gap:1px; font-size:12px; font-weight:700; align-items:center; line-height:1; flex-wrap:wrap; justify-content:center}
-.cartes .cout img.ic{width:15px; height:15px}
-button.cher{opacity:.45}
+.panneau{display:flex; flex-direction:column; gap:3px; max-width:560px; width:100%; margin:0 auto; padding:0}
+.panneau h3{margin:0; font-weight:700; font-size:10px; letter-spacing:1px; color:#f2d9a8; text-shadow:1px 1px 0 #2a1608}
+.panneau h3 span{color:var(--clair)}
+.jobs{display:grid; grid-template-columns:repeat(5, 1fr); gap:3px}
+.jobs button, .cartes button, #bats button{border-style:solid; border-width:8px 9px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 8px 9px stretch}
+.jobs button:active, .cartes button:active, #bats button:active{transform:translateY(2px)}
+.jobs button{display:flex; align-items:center; justify-content:center; gap:2px; font-weight:700; font-size:15px; min-height:38px; padding:0}
+.jobs img.ic{width:26px; height:26px; margin:-4px 0}
+.jobs .plus{font-size:12px; flex-direction:column; gap:0; line-height:1}
+.jobs .plus .cout img.ic{width:14px; height:14px; margin:0}
+.cartes{display:grid; grid-template-columns:repeat(5, 1fr); gap:3px}
+.cartes button{position:relative; display:flex; flex-direction:column; align-items:center; gap:1px; padding:0}
+.cartes img.av{width:38px; height:38px; margin-top:-3px}
+.cartes b{font-weight:700; font-size:8px; letter-spacing:.3px; white-space:nowrap}
+.cartes .cout{display:flex; gap:1px; font-size:11px; font-weight:700; align-items:center; line-height:1; flex-wrap:wrap; justify-content:center}
+.cartes .cout img.ic{width:14px; height:14px}
+button.cher{opacity:.5}
 .cartes button.ferme img.av, .cartes button.ferme .cout{opacity:.3; filter:grayscale(1)}
-.cartes .verrou{position:absolute; top:14px; left:0; right:0; font-family:var(--titre); font-size:6px; color:#fff; background:rgba(58,36,16,.85); padding:3px 0}
+.cartes .verrou{position:absolute; top:12px; left:-4px; right:-4px; font-family:var(--titre); font-size:6px; color:#fff; background:rgba(58,36,16,.88); padding:3px 0; text-align:center}
 .cartes .verrou:empty{display:none}
-#banniere{position:fixed; left:10px; right:10px; top:calc(max(8px, env(safe-area-inset-top)) + 96px); margin:0 50px; padding:7px 10px; text-align:center; opacity:0; transform:translateY(-6px); transition:opacity .2s, transform .2s; pointer-events:none;
-  font-weight:700; font-size:13px; letter-spacing:1px; color:var(--parch); background:var(--rouge); border:2px solid #2a1808; border-radius:3px; box-shadow:0 3px 0 #2a1808}
-#banniere.bon{background:var(--vert)}
-#banniere.on{opacity:1; transform:none}
+#banniere{position:fixed; left:50%; top:calc(max(6px, env(safe-area-inset-top)) + 104px); transform:translate(-50%, -6px); max-width:calc(100% - 100px); text-align:center; opacity:0; transition:opacity .2s, transform .2s; pointer-events:none;
+  font-weight:700; font-size:13px; letter-spacing:1px; color:var(--clair); text-shadow:1px 1px 0 #2a1010;
+  border-style:solid; border-width:0 30px; border-image:url(img/ui-ruban-rouge.png) 0 97 0 98 fill / 0 30px stretch; padding:7px 4px 11px; white-space:nowrap}
+#banniere.bon{border-image-source:url(img/ui-ruban-bleu.png); text-shadow:1px 1px 0 #1a2a40}
+#banniere.on{opacity:1; transform:translate(-50%, 0)}
 
 /* le volet de construction */
-.volet{position:fixed; left:8px; right:8px; bottom:max(8px, env(safe-area-inset-bottom)); max-width:560px; margin:0 auto; background:linear-gradient(var(--parch), var(--parch2)); border:2px solid var(--ink); border-radius:6px; box-shadow:0 3px 0 var(--ink); padding:8px; z-index:5}
+.volet{position:fixed; left:6px; right:6px; bottom:max(6px, env(safe-area-inset-bottom)); max-width:560px; margin:0 auto; z-index:5}
 .volet[hidden]{display:none}
-.volet h2{margin:0 0 6px; font-family:var(--titre); font-size:11px; text-align:center}
-#bats{display:grid; grid-template-columns:repeat(auto-fill, minmax(96px, 1fr)); gap:5px; margin-bottom:6px}
-#bats button{display:flex; flex-direction:column; align-items:center; gap:2px; background:#fff4d6; border:2px solid var(--ink); border-radius:4px; padding:4px 2px; box-shadow:0 2px 0 var(--ink)}
-#bats img{height:52px; image-rendering:pixelated}
+.volet h2{margin:-10px auto 6px; font-family:var(--titre); font-weight:400; font-size:10px; width:max-content}
+#bats{display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin-bottom:6px}
+#bats button{display:flex; flex-direction:column; align-items:center; gap:1px; padding:0}
+#bats img{height:50px}
 #bats b{font-size:10px}
 #bats .cout{font-size:12px; font-weight:700}
-#bats .cout img.ic{width:15px; height:15px}
+#bats .cout img.ic{width:14px; height:14px}
 #bats small{font-size:9px; line-height:1.1; text-align:center; color:#6a4a2a}
 
 /* écrans : menu, fin, labo */
 .ecran{position:fixed; inset:0; z-index:10; display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; background:rgba(14,18,10,.72);
-  padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); touch-action:pan-y}
+  padding:max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)); touch-action:pan-y}
 .ecran[hidden]{display:none}
-#chargement{align-items:center; font-family:var(--titre); font-size:12px; color:var(--parch)}
-.plaque{margin:auto 0; width:100%; max-width:380px; background:linear-gradient(var(--parch), var(--parch2)); border:3px solid var(--ink); border-radius:8px; box-shadow:0 4px 0 var(--ink); padding:16px; display:flex; flex-direction:column; gap:9px}
+#chargement{align-items:center; font-family:var(--titre); font-size:12px; color:var(--clair)}
+.plaque{margin:auto 0; width:100%; max-width:380px; display:flex; flex-direction:column; gap:9px}
 .plaque.large{max-width:620px}
-.plaque h1{margin:0; font-family:var(--titre); font-weight:400; font-size:22px; text-align:center; color:var(--rouge); text-shadow:2px 2px 0 var(--parch2)}
-.plaque h2{margin:8px 0 0; font-family:var(--titre); font-weight:400; font-size:10px; color:#6a4a2a; border-bottom:2px solid var(--parch2); padding-bottom:4px}
+.plaque h1{margin:-6px auto 2px; font-family:var(--titre); font-weight:400; font-size:18px; width:max-content; max-width:100%}
+.plaque h2{margin:8px 0 0; font-family:var(--titre); font-weight:400; font-size:10px; color:#6a4a2a; border-bottom:2px solid rgba(106,74,42,.35); padding-bottom:4px}
 .plaque p{margin:0; font-size:14px; line-height:1.35}
 .plaque .sous{font-family:var(--titre); font-size:9px; text-align:center; color:#6a4a2a}
 .plaque .petit, .petit{font-size:12px; color:#6a4a2a}
-.bouton{display:block; width:100%; text-align:center; text-decoration:none; font-family:var(--titre); font-size:10px; line-height:1.4; padding:10px 8px; background:#fff4d6; border:2px solid var(--ink); border-radius:5px; box-shadow:0 3px 0 var(--ink); color:var(--ink)}
-.bouton.or{background:linear-gradient(#ffe08a, #e8b84a)}
-.bouton.on{background:#ffe08a}
-.bouton:active{transform:translateY(2px); box-shadow:0 1px 0 var(--ink)}
-.rang{display:flex; gap:6px}
-.rang .bouton{flex:1; padding-inline:2px}
+.bouton{display:block; width:100%; text-align:center; text-decoration:none; font-family:var(--titre); font-size:10px; line-height:1.4; color:var(--clair); text-shadow:1px 1px 0 #1a2a40;
+  border-style:solid; border-width:11px 12px 13px; border-image:url(img/ui-bouton-bleu.png) 47 45 47 45 fill / 11px 12px 13px stretch; padding:2px 2px 0}
+.bouton:active{border-image:url(img/ui-bouton-bleu-appui.png) 36 50 49 50 fill / 11px 12px 13px stretch; transform:translateY(1px)}
+.bouton.or, .bouton.on{border-image-source:url(img/ui-bouton-rouge.png); text-shadow:1px 1px 0 #3a1010}
+.bouton.or:active{border-image:url(img/ui-bouton-rouge-appui.png) 36 50 49 50 fill / 11px 12px 13px stretch}
+.rang{display:flex; gap:5px}
+.rang .bouton{flex:1; padding-inline:0}
 .aide p{font-size:13px; margin-bottom:6px}
 .journal{overflow-x:auto}
 .journal table{border-collapse:collapse; width:100%; font-size:12px; font-weight:700}
 .journal th{font-family:var(--titre); font-weight:400; font-size:7px; text-align:left; padding:3px; border-bottom:2px solid var(--ink)}
-.journal td{padding:3px; border-bottom:1px solid var(--parch2); white-space:nowrap}
+.journal td{padding:3px; border-bottom:1px solid rgba(106,74,42,.3); white-space:nowrap}
 .simu{font-size:13px; line-height:1.35}
 .simu small{font-size:11px; color:#6a4a2a}
-#reglages details{border:2px solid var(--parch2); border-radius:4px; margin-bottom:4px; background:#fff8e4}
+#reglages details{margin-bottom:4px; background:rgba(255,248,228,.6); border-radius:4px}
 #reglages summary{font-family:var(--titre); font-size:9px; padding:9px 8px; cursor:pointer}
 #reglages label{display:grid; grid-template-columns:1fr 76px 40px; gap:6px; align-items:center; padding:3px 8px; font-size:12px; font-weight:700}
 #reglages label.mod{background:#ffe9a0}
