@@ -37,60 +37,83 @@ button:focus-visible { outline: 2px dashed var(--gold); outline-offset: 3px; }
 .tuiles div { border: 3px solid #fff; padding: 10px 6px; text-align: center; font: 9px/1.6 var(--display); background: #000; }
 .tuiles div small { display: block; font: 16px/1 var(--body); color: var(--dim); margin-top: 6px; }
 
-/* ---------- A : les livres ---------- */
-.biblio { border: 3px solid var(--ink); box-shadow: 0 0 0 3px #5a3a20, 5px 5px 0 3px #000; background: linear-gradient(#2a1a10, #1c110a); padding: 16px 10px 0; position: relative; }
-.biblio .rang { display: flex; justify-content: center; align-items: flex-end; gap: 22px; height: 150px; position: relative; }
-.biblio .planche { height: 16px; margin: 0 -10px; background: linear-gradient(var(--wood-hi) 0 3px, var(--wood) 3px 12px, var(--ink) 12px); }
-.livre { --c: #c22; width: 66px; height: var(--h, 128px); position: relative; transform-origin: bottom center; transition: transform .2s; }
-.livre:hover, .livre:focus-visible { transform: translateY(-8px) rotate(-3deg); }
-.livre .couv { position: absolute; inset: 0 6px 0 0; background: var(--c); border: 3px solid #000; border-radius: 2px 6px 6px 2px; box-shadow: inset 7px 0 0 rgba(0,0,0,.28), inset 9px 0 0 rgba(255,255,255,.15), inset -3px -3px 0 rgba(0,0,0,.25); }
-.livre .pages { position: absolute; right: 0; top: 5px; bottom: 5px; width: 9px; background: repeating-linear-gradient(#efe6cc 0 2px, #cfc3a0 2px 3px); border: 3px solid #000; border-left: 0; border-radius: 0 3px 3px 0; }
-.livre .plaque { position: absolute; left: 14px; right: 12px; top: 18px; background: #f3e7c4; border: 2px solid #000; padding: 4px 0; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--gold); }
-.livre .plaque canvas { width: 32px; height: 32px; }
-.livre .bande { position: absolute; left: 10px; right: 8px; bottom: 16px; height: 6px; background: var(--gold); border: 2px solid #000; }
-.livre .nm { position: absolute; top: calc(100% + 22px); left: 50%; transform: translateX(-50%); font: 14px/.95 var(--body); text-align: center; text-shadow: 2px 2px 0 #000; width: 76px; }
-.biblio .noms { height: 46px; }
-.serre { width: 14px; height: 70px; background: linear-gradient(90deg, #8a8478, #c8c0b0 40%, #6a6458); border: 3px solid #000; align-self: flex-end; }
+/* ---------- D : l'ordinateur rétro (les ateliers sont des applis) ---------- */
+.ordi { display: grid; justify-items: center; }
+.moniteur { width: 100%; background: linear-gradient(#e6dcc4, #c9bc9c); border: 3px solid #000; border-radius: 10px; padding: 12px 12px 8px; box-shadow: inset -4px -4px 0 #a89a78, inset 4px 4px 0 #f6efdc, 5px 5px 0 3px #000; box-sizing: border-box; }
+.crt { background: #2a64a8; border: 3px solid #000; border-radius: 8px; box-shadow: inset 0 0 0 3px #13325a, inset 0 0 26px rgba(0,0,0,.55); min-height: 200px; position: relative; overflow: hidden; }
+.crt::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.13) 2px 3px); pointer-events: none; }
+.crt .barre { background: #c9c9d6; border-bottom: 3px solid #000; font: 7px/1 var(--display); color: #111; padding: 5px 6px; display: flex; justify-content: space-between; }
+.crt .icones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 4px; padding: 16px 6px 18px; }
+.appli { display: grid; justify-items: center; gap: 6px; }
+.appli .case { padding: 4px; border: 2px solid transparent; }
+.appli canvas { width: 48px; height: 48px; }
+.appli b { font: 7px/1.4 var(--display); color: #fff; background: #13325a; padding: 3px 4px; text-align: center; }
+.appli:hover .case, .appli:focus-visible .case { border: 2px dotted #fff; background: rgba(255,255,255,.15); }
+.appli:hover b, .appli:focus-visible b { background: #ffd23f; color: #000; }
+.appli:active canvas { animation: ouvre .35s steps(3); }
+@keyframes ouvre { 50% { transform: scale(1.3); } }
+.moniteur .bas { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font: 7px var(--display); color: #6a5e44; }
+.moniteur .led { width: 8px; height: 8px; background: #5cff8a; border: 2px solid #000; box-shadow: 0 0 6px #5cff8a; }
+.pied { width: 90px; height: 14px; background: #b8aa88; border: 3px solid #000; border-top: 0; }
+.socle { width: 150px; height: 10px; background: #c9bc9c; border: 3px solid #000; }
 
-/* ---------- B : les tiroirs ---------- */
-.meuble { border: 3px solid #000; background: linear-gradient(var(--wood-hi) 0 6px, var(--wood) 6px); padding: 10px; box-shadow: 5px 5px 0 3px #000, inset 0 -6px 0 var(--wood-d); }
-.meuble .plateau { height: 10px; margin: -10px -16px 10px; background: linear-gradient(#d8955a 0 3px, var(--wood-hi) 3px 8px, var(--ink) 8px); border: 3px solid #000; }
-.tiroirs { display: grid; gap: 10px; }
-.tiroir { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: linear-gradient(#a8693a, #8a5228); border: 3px solid #000; box-shadow: inset 3px 3px 0 rgba(255,220,170,.25), inset -3px -3px 0 rgba(0,0,0,.3); text-align: left; transition: transform .2s, box-shadow .2s; }
-.tiroir:hover, .tiroir:focus-visible { transform: translateX(10px); box-shadow: inset 3px 3px 0 rgba(255,220,170,.25), inset -3px -3px 0 rgba(0,0,0,.3), -10px 0 0 #2a160a; }
-.tiroir .etiq { background: #f3e7c4; border: 3px solid #c9a24a; box-shadow: 0 0 0 2px #000; padding: 4px; display: grid; place-items: center; }
-.tiroir .etiq canvas { width: 40px; height: 40px; }
-.tiroir .txt { flex: 1; min-width: 0; }
-.tiroir .txt b { display: block; font: 10px/1.5 var(--display); color: #fff3d8; text-shadow: 2px 2px 0 #3a1e0a; }
-.tiroir .txt small { display: block; color: #f2dcb8; font-size: 16px; line-height: 1; margin-top: 3px; }
-.tiroir .poignee { width: 22px; height: 10px; border: 3px solid #000; border-radius: 6px; background: linear-gradient(#ffe48a, #c9a24a); }
+/* ---------- E : les disquettes (les jeux sont des cartouches, les outils des disquettes) ---------- */
+.boite { position: relative; padding: 0 10px; }
+.disks { display: flex; justify-content: center; gap: 10px; align-items: flex-end; height: 132px; position: relative; z-index: 1; }
+.disk { --c: #c22; width: 86px; height: 92px; background: var(--c); border: 3px solid #000; border-radius: 3px 10px 3px 3px; position: relative; box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 4px 4px 0 rgba(255,255,255,.18); transition: transform .2s; transform: translateY(30px); }
+.disk:hover, .disk:focus-visible { transform: translateY(-4px); }
+.disk .volet { position: absolute; top: -3px; left: 22px; width: 38px; height: 24px; background: linear-gradient(90deg, #b8bcc8, #e8ecf4 40%, #9aa0ae); border: 3px solid #000; border-top: 0; }
+.disk .volet::after { content: ""; position: absolute; left: 22px; top: 3px; width: 7px; height: 13px; background: #1a1a24; }
+.disk .etiq { position: absolute; left: 8px; right: 8px; bottom: 6px; height: 50px; background: #f6f2e4; border: 2px solid #000; display: flex; align-items: center; gap: 4px; padding: 0 4px; background-image: repeating-linear-gradient(transparent 0 9px, #c8d4f0 9px 10px); }
+.disk .etiq canvas { width: 30px; height: 30px; flex: none; }
+.disk .etiq { justify-content: center; top: 28px; bottom: auto; height: 40px; }
+.disk .etiq b { font: 6px/1.5 var(--display); color: #222; }
+.bac { position: relative; z-index: 2; height: 64px; background: linear-gradient(rgba(140,180,230,.55), rgba(90,120,180,.65)); border: 3px solid #000; border-radius: 0 0 8px 8px; box-shadow: inset 0 4px 0 rgba(255,255,255,.35), 5px 5px 0 3px #000; display: grid; place-items: center; }
+.bac b { font: 8px var(--display); color: #fff; text-shadow: 2px 2px 0 #13325a; }
+.bac small { display: block; font: 16px var(--body); color: #e6eeff; text-align: center; }
+.disknoms { display: flex; justify-content: center; gap: 10px; margin-top: 12px; font: 15px/1 var(--body); text-shadow: 2px 2px 0 #000; }
+.disknoms span { width: 86px; text-align: center; }
 
-/* ---------- C : le panneau à outils ---------- */
-.panneau { border: 3px solid #000; box-shadow: 0 0 0 3px #6a4a2a, 5px 5px 0 3px #000; background-color: #c08a52; background-image: radial-gradient(#5a3a1c 2.5px, transparent 3px); background-size: 18px 18px; background-position: 9px 9px; padding: 20px 8px 18px; display: flex; justify-content: space-around; align-items: flex-start; }
-.outil { position: relative; display: grid; justify-items: center; padding-top: 18px; transform-origin: top center; }
-.outil::before { content: ""; position: absolute; top: 0; left: 50%; width: 8px; height: 8px; margin-left: -4px; background: #ddd; border: 2px solid #000; border-radius: 50%; }
-.outil::after { content: ""; position: absolute; top: 6px; left: 50%; width: 30px; height: 18px; margin-left: -15px; border: 2px solid #3a2a1a; border-bottom: 0; border-radius: 15px 15px 0 0; }
-.outil:hover, .outil:focus-visible { animation: balance .9s ease-in-out; }
-@keyframes balance { 25% { transform: rotate(6deg); } 60% { transform: rotate(-4deg); } 85% { transform: rotate(2deg); } }
-.outil .carton { background: #f6efe0; border: 3px solid #000; padding: 8px 8px 6px; box-shadow: 3px 3px 0 rgba(0,0,0,.35); display: grid; justify-items: center; gap: 6px; }
-.outil .carton canvas { width: 56px; height: 56px; }
-.outil .carton b { font: 7px/1.4 var(--display); color: #2a1a10; text-align: center; }
-.outil .trou { width: 16px; height: 8px; border: 2px solid #000; border-radius: 4px; background: #c08a52; margin-bottom: 2px; }
+/* ---------- F : les objets (chaque atelier est l'objet qu'il imite) ---------- */
+.objets { border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 5px 5px 0 3px #000; background: #140f28; padding: 12px 8px 0; }
+.objets .rang { display: flex; justify-content: space-around; align-items: flex-end; height: 140px; }
+.objets .planche { height: 13px; margin: 0 -8px; background: linear-gradient(var(--wood-hi) 0 3px, var(--wood) 3px 10px, var(--ink) 10px); }
+.objets .noms { display: flex; justify-content: space-around; padding: 10px 0 12px; font: 15px var(--body); text-shadow: 2px 2px 0 #000; }
+.objets .noms span { width: 33%; text-align: center; }
+.objet { transition: transform .2s; transform-origin: bottom center; }
+.objet:hover, .objet:focus-visible { transform: translateY(-6px) rotate(-4deg); }
+.dexo { width: 70px; height: 104px; background: #d8283c; border: 3px solid #000; border-radius: 6px 6px 6px 18px; position: relative; box-shadow: inset -5px -5px 0 #8e1424, inset 4px 4px 0 #ff6a7a; }
+.dexo .lent { position: absolute; left: 7px; top: 7px; width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c8f0ff, #2a8de0 50%, #0d4d93); border: 3px solid #fff; box-shadow: 0 0 0 2px #000; }
+.dexo .pt { position: absolute; top: 9px; width: 7px; height: 7px; border-radius: 50%; border: 2px solid #000; }
+.dexo .ecr { position: absolute; left: 9px; right: 9px; top: 38px; height: 38px; background: #b8e0c0; border: 3px solid #000; display: grid; place-items: center; box-shadow: inset 0 0 0 2px #f4f0ff; }
+.dexo .ecr canvas { width: 26px; height: 26px; }
+.dexo .bt { position: absolute; bottom: 9px; width: 12px; height: 7px; border: 2px solid #000; border-radius: 3px; background: #333; }
+.calco { width: 66px; height: 98px; background: #3a3d43; border: 3px solid #000; border-radius: 6px; padding: 7px; box-sizing: border-box; box-shadow: inset -4px -4px 0 #24262b, inset 3px 3px 0 #5a5e66; display: grid; grid-template-rows: 24px 1fr; gap: 6px; }
+.calco .lcd { background: #c4d0a8; border: 2px solid #000; font: 11px/1 var(--body); color: #1d2418; text-align: right; padding: 4px 3px; }
+.calco .touches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.calco .touches i { background: #e9e5da; border: 1px solid #000; }
+.calco .touches i.o { background: #e8783a; } .calco .touches i.g { background: #4caf6a; grid-column: span 2; }
+.petri { width: 90px; height: 60px; position: relative; }
+.petri .verre { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(ellipse at 50% 45%, rgba(200,240,255,.35), rgba(120,170,210,.25) 70%); border: 3px solid #000; box-shadow: inset 0 -6px 0 rgba(255,255,255,.25), inset 0 4px 0 rgba(255,255,255,.5); }
+.petri .gel { position: absolute; left: 10px; right: 10px; top: 10px; bottom: 12px; border-radius: 50%; background: #1b2c48; overflow: hidden; display: grid; place-items: center; }
+.petri .gel canvas { width: 34px; height: 34px; animation: vit 1.6s steps(2) infinite; }
+@keyframes vit { 50% { filter: brightness(1.4); } }
+.petri .pied2 { position: absolute; left: 8px; right: 8px; bottom: -8px; height: 12px; border-radius: 50%; background: rgba(0,0,0,.4); z-index: -1; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
 <header class="page">
-  <h1>ETAGERE DES ATELIERS · MAQUETTE</h1>
-  <p>Les ateliers ne sont pas des jeux : ils n'ont plus de cartouche. Voici trois façons de les ranger sous l'étagère des jeux, dans le même pixel art que l'accueil. Touche ou survole un objet pour voir son animation.</p>
+  <h1>ETAGERE DES ATELIERS · MAQUETTE 2</h1>
+  <p>Trois autres pistes, plus éloignées de l'étagère. La maquette 1 (livres, tiroirs, panneau à outils) reste dans l'historique. Touche ou survole un atelier pour voir son animation.</p>
 </header>
 
 <div class="phones">
-  <figure><div class="tel"><div class="ecran" id="A"></div></div>
-    <figcaption><b>A · LES LIVRES</b><span>Une petite bibliothèque : chaque atelier est un livre relié, posé debout, avec son icône sur une plaque dorée. Il se penche quand on le touche.</span></figcaption></figure>
-  <figure><div class="tel"><div class="ecran" id="B"></div></div>
-    <figcaption><b>B · LES TIROIRS</b><span>Un meuble d'atelier en bois : un tiroir par outil, avec une étiquette et une phrase. Le tiroir s'ouvre quand on le touche.</span></figcaption></figure>
-  <figure><div class="tel"><div class="ecran" id="C"></div></div>
-    <figcaption><b>C · LE PANNEAU A OUTILS</b><span>Un panneau perforé comme au garage : chaque atelier pend à un crochet sur un carton. Il se balance quand on le touche.</span></figcaption></figure>
+  <figure><div class="tel"><div class="ecran" id="D"></div></div>
+    <figcaption><b>D · L'ORDINATEUR RETRO</b><span>Les ateliers sont des applis : leurs icônes sont sur le bureau d'un vieil ordinateur à écran bombé, comme dans les années 90.</span></figcaption></figure>
+  <figure><div class="tel"><div class="ecran" id="E"></div></div>
+    <figcaption><b>E · LES DISQUETTES</b><span>Les jeux sont des cartouches, les outils des disquettes : rangées dans un bac en plastique, elles sortent quand on les touche.</span></figcaption></figure>
+  <figure><div class="tel"><div class="ecran" id="F"></div></div>
+    <figcaption><b>F · LES OBJETS</b><span>Chaque atelier est l'objet qu'il imite, posé sur l'étagère : un Pokédex, une calculatrice, une boîte de Pétri où vivent les cellules.</span></figcaption></figure>
 </div>
 
 <script>
@@ -126,8 +149,12 @@ const haut = () => `<div class="jeux">${[["tetris", "#7a4ac8", "TETRIS"], ["calc
   <div class="titre">ATELIERS<small>Des outils pour apprendre et créer</small></div>`;
 const bas = `<div class="tuiles"><div>FAMILLE<small>Rejoindre le classement</small></div><div>SAUVEGARDES<small>Les emporter ailleurs</small></div></div>`;
 
-document.getElementById("A").innerHTML = haut() + `<div class="biblio"><div class="rang"><i class="serre"></i>${ATELIERS.map(a => `<button class="livre" style="--c:${a.c};--h:${a.h}"><span class="couv"></span><span class="pages"></span><span class="plaque" data-ic="${a.ic}"></span><span class="bande"></span><span class="nm">${a.nom.toUpperCase()}</span></button>`).join("")}<i class="serre"></i></div><div class="planche"></div><div class="noms"></div></div>` + bas;
-document.getElementById("B").innerHTML = haut() + `<div class="meuble"><div class="plateau"></div><div class="tiroirs">${ATELIERS.map(a => `<button class="tiroir"><span class="etiq" data-ic="${a.ic}"></span><span class="txt"><b>${a.court}</b><small>${a.phrase}</small></span><span class="poignee"></span></button>`).join("")}</div></div>` + bas;
-document.getElementById("C").innerHTML = haut() + `<div class="panneau">${ATELIERS.map(a => `<button class="outil"><span class="carton"><span class="trou"></span><span data-ic="${a.ic}"></span><b>${a.court.replace(" DE LA ", "<br>DE LA ")}</b></span></button>`).join("")}</div>` + bas;
+document.getElementById("D").innerHTML = haut() + `<div class="ordi"><div class="moniteur"><div class="crt"><div class="barre"><span>LUDO-OS</span><span>ATELIERS</span></div><div class="icones">${ATELIERS.map(a => `<button class="appli"><span class="case" data-ic="${a.ic}"></span><b>${a.court.replace(" DE LA ", "<br>DE LA ")}</b></button>`).join("")}</div></div><div class="bas"><span>LUDO 16</span><i class="led"></i></div></div><div class="pied"></div><div class="socle"></div></div>` + bas;
+document.getElementById("E").innerHTML = haut() + `<div class="boite"><div class="disks">${ATELIERS.map(a => `<button class="disk" style="--c:${a.c}"><span class="volet"></span><span class="etiq" data-ic="${a.ic}"></span></button>`).join("")}</div><div class="bac"><div><b>OUTILS</b><small>touche une disquette</small></div></div><div class="disknoms">${ATELIERS.map(a => `<span>${a.court}</span>`).join("")}</div></div>` + bas;
+document.getElementById("F").innerHTML = haut() + `<div class="objets"><div class="rang">
+  <button class="objet" aria-label="Pokédex"><span class="dexo" style="display:block"><i class="lent"></i><i class="pt" style="left:34px;background:#ff4b4b"></i><i class="pt" style="left:45px;background:#ffd23f"></i><i class="pt" style="left:56px;background:#4cd964"></i><span class="ecr" data-ic="dex"></span><i class="bt" style="left:10px"></i><i class="bt" style="right:10px;background:#2a8de0"></i></span></button>
+  <button class="objet" aria-label="Calculator"><span class="calco"><span class="lcd">7+5=12</span><span class="touches">${"<i></i><i></i><i></i><i class='o'></i>".repeat(3)}<i></i><i></i><i class="g"></i></span></span></button>
+  <button class="objet" aria-label="Jeu de la vie"><span class="petri" style="display:block"><i class="pied2"></i><span class="verre"></span><span class="gel" data-ic="glider"></span></span></button>
+  </div><div class="planche"></div><div class="noms"><span>POKEDEX</span><span>CALCULATOR</span><span>JEU DE LA VIE</span></div></div>` + bas;
 document.querySelectorAll("[data-ic]").forEach(e => e.prepend(icone(e.dataset.ic)));
 </script>
