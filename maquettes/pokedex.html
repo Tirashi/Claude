@@ -1,19 +1,15 @@
 <title>Pokédex de poche</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=Fredoka:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
 <style>
-/* Mise en page : trois téléphones (empilés sur un téléphone). Même appli, même code, trois habillages (A pixel, B rond moderne, C néon). */
+/* Mise en page : trois téléphones (empilés sur un téléphone) = la même appli, réglée de trois façons (thème et images). */
 :root {
-  --bg: #e9ecf3; --fg: #1d2230; --muted: #5b6377;
-  --pixel: "Press Start 2P", "Courier New", monospace;
-  --pixtexte: "Pixelify Sans", "Courier New", monospace;
+  --bg: #e9e6f2; --fg: #221d33; --muted: #625c78;
   --rond: "Fredoka", "Trebuchet MS", sans-serif;
-  --tech: "Rajdhani", "Arial Narrow", sans-serif;
-  --mono: "Share Tech Mono", "Courier New", monospace;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0e1220; --fg: #e8ebf2; --muted: #9aa2b6; color-scheme: dark } }
-:root[data-theme="dark"] { --bg: #0e1220; --fg: #e8ebf2; --muted: #9aa2b6; color-scheme: dark }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0d0b14; --fg: #ece8f6; --muted: #9c95b4; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #0d0b14; --fg: #ece8f6; --muted: #9c95b4; color-scheme: dark }
 body { background: var(--bg); color: var(--fg); font-family: var(--rond); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
 header.page { max-width: 1120px; margin: 0 auto 18px; display: grid; gap: 8px; }
 header.page h1 { margin: 0; font-size: 1.5rem; font-weight: 700; text-wrap: balance; }
@@ -23,150 +19,164 @@ figure.dir { margin: 0; display: grid; gap: 10px; justify-items: center; }
 figure.dir figcaption { text-align: center; display: grid; gap: 3px; max-width: 340px; }
 figure.dir figcaption b { font-size: 1.05rem; }
 figure.dir figcaption span { color: var(--muted); font-size: .9rem; line-height: 1.4; }
-.tel { width: 340px; max-width: 100%; height: 700px; border-radius: 34px; padding: 10px; background: #05070d; box-shadow: 0 10px 30px rgba(0,0,0,.25); box-sizing: border-box; }
+.tel { width: 340px; max-width: 100%; height: 700px; border-radius: 34px; padding: 10px; background: #05040a; box-shadow: 0 10px 30px rgba(0,0,0,.25); box-sizing: border-box; }
 .ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; }
 .note { max-width: 1120px; margin: 26px auto 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+.legende { max-width: 1120px; margin: 22px auto 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 
-/* ---------- Structure commune ---------- */
-.app { height: 100%; display: flex; flex-direction: column; }
-.app img { image-rendering: pixelated; }
-.app button { cursor: pointer; font: inherit; color: inherit; }
+/* ---------- L'appli : couleurs selon le thème choisi dans l'appli ---------- */
+.app { --fond: #f4f1fb; --carte: #ffffff; --carte2: #f0ecf8; --texte: #2a2440; --doux: #8d86a8; --ombre: 0 2px 10px rgba(70,50,140,.10); --accent: #ff6b4a;
+  height: 100%; display: flex; flex-direction: column; background: var(--fond); color: var(--texte); font-family: var(--rond); }
+.app.sombre { --fond: #15121f; --carte: #211c30; --carte2: #2b2540; --texte: #f1edfb; --doux: #9a92b8; --ombre: 0 2px 12px rgba(0,0,0,.35); --accent: #ff7d5e; }
+.app button { cursor: pointer; font: inherit; color: inherit; border: 0; }
 .app button:focus-visible, .app input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.app img.pixel { image-rendering: pixelated; }
 .vue { flex: 1; min-height: 0; overflow: auto; }
-.tete { padding: 18px 14px 8px; display: flex; justify-content: space-between; align-items: baseline; }
-.tete h2 { margin: 0; }
-.recherche { margin: 0 14px; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
-.recherche input { flex: 1; min-width: 0; border: 0; background: none; padding: 10px 0; font: inherit; color: inherit; }
+.ico { width: 1em; height: 1em; flex: none; display: inline-block; vertical-align: -.14em; }
+
+.tete { padding: 18px 16px 10px; display: flex; align-items: center; gap: 8px; }
+.tete h2 { margin: 0; font-size: 27px; font-weight: 700; flex: 1; }
+.tete h2 small { display: block; font-size: 13px; font-weight: 500; color: var(--doux); }
+.reglage { background: var(--carte); box-shadow: var(--ombre); border-radius: 99px; height: 36px; padding: 0 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.reglage.rond { width: 36px; padding: 0; justify-content: center; font-size: 17px; }
+
+.recherche { margin: 0 16px; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: var(--carte); border-radius: 18px; box-shadow: var(--ombre); }
+.recherche svg { width: 18px; height: 18px; color: var(--doux); }
+.recherche input { flex: 1; min-width: 0; border: 0; background: none; padding: 13px 0; font: inherit; font-size: 15px; color: inherit; }
+.recherche input::placeholder { color: var(--doux); }
 .recherche input:focus { outline: none; }
-.filtres { display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px 6px; scrollbar-width: none; }
-.filtres button { flex: none; border: 0; }
-.gen { margin: 12px 14px 6px; }
-.liste { display: grid; gap: 8px; padding: 0 14px 16px; }
-.ligne { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 10px; border: 0; padding: 0 10px 0 0; text-align: left; }
-.ligne .vig { width: 64px; height: 64px; display: grid; place-items: center; position: relative; overflow: hidden; }
-.ligne .vig img { width: 72px; height: 72px; position: relative; }
-.ligne .nom { display: grid; gap: 2px; min-width: 0; }
-.ligne .types { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
-.puce { display: inline-block; padding: 3px 8px; color: #fff; white-space: nowrap; }
-.vide { text-align: center; padding: 30px 20px; }
-.onglets { display: grid; grid-template-columns: 1fr 1fr; flex: none; }
-.onglets button { border: 0; padding: 12px 0 14px; background: none; }
-.decor { height: 180px; display: grid; place-items: end center; background: linear-gradient(color-mix(in srgb, var(--c) 35%, white) 0 60%, color-mix(in srgb, var(--c) 75%, black) 60% 100%); }
-.decor img { height: 160px; margin-bottom: 8px; }
-.fiche { display: grid; gap: 10px; padding: 0 14px 18px; }
-.bloc { padding: 10px 12px; }
-.bloc h4 { margin: 0 0 6px; }
+.filtres { display: flex; gap: 6px; overflow-x: auto; padding: 12px 16px 4px; scrollbar-width: none; }
+.filtres button { flex: none; display: flex; align-items: center; gap: 5px; padding: 6px 11px 6px 6px; border-radius: 99px; background: var(--carte); box-shadow: var(--ombre); font-size: 13px; font-weight: 600; }
+.filtres button .bulle { width: 22px; height: 22px; font-size: 13px; }
+.filtres button.on { background: var(--c); color: #fff; }
+.gen { margin: 16px 16px 8px; font-size: 12px; font-weight: 600; color: var(--doux); text-transform: uppercase; letter-spacing: .07em; display: flex; gap: 8px; align-items: center; }
+.gen::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: var(--carte2); }
+.liste { display: grid; gap: 10px; padding: 0 16px 6px; }
+.ligne { display: grid; grid-template-columns: 74px 1fr auto; align-items: center; gap: 12px; text-align: left; background: var(--carte); border-radius: 22px; box-shadow: var(--ombre); padding: 6px 12px 6px 6px; }
+.ligne .vig { width: 74px; height: 74px; border-radius: 18px; display: grid; place-items: center; position: relative; overflow: hidden; background: linear-gradient(145deg, color-mix(in srgb, var(--c) 70%, white), var(--c)); }
+.ligne .vig .filigrane.ico { position: absolute; right: -10px; bottom: -10px; width: 56px; height: 56px; color: rgba(255,255,255,.28); }
+.ligne .vig img { position: relative; width: 70px; height: 70px; object-fit: contain; }
+.ligne .vig img.pixel { width: 84px; height: 84px; }
+.ligne .nom { display: grid; gap: 1px; min-width: 0; }
+.ligne .nom b { font-size: 18px; font-weight: 600; }
+.ligne .nom small { color: var(--doux); font-weight: 500; font-size: 12px; }
+.ligne .types { display: flex; gap: 4px; }
+.bulle .ico { width: 64%; height: 64%; }
+.bulle { width: 30px; height: 30px; border-radius: 50%; background: var(--c); color: #fff; display: grid; place-items: center; font-size: 17px; box-shadow: inset 0 -2px 0 rgba(0,0,0,.18); }
+.puce { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 5px; border-radius: 99px; background: var(--c); color: #fff; font-size: 13px; font-weight: 600; box-shadow: inset 0 -2px 0 rgba(0,0,0,.15); }
+.puce .ico { width: 18px; height: 18px; padding: 2px; border-radius: 50%; background: rgba(255,255,255,.25); box-sizing: border-box; }
+.puce em { font-style: normal; background: rgba(0,0,0,.22); border-radius: 99px; padding: 0 6px; margin-left: 2px; font-size: 12px; }
+.vide { text-align: center; padding: 34px 20px; color: var(--doux); }
+
+.onglets { display: grid; grid-template-columns: 1fr 1fr; flex: none; background: var(--carte); box-shadow: 0 -4px 14px rgba(0,0,0,.08); padding: 6px 10px 10px; gap: 8px; }
+.onglets button { background: none; padding: 8px 0; border-radius: 14px; font-weight: 600; color: var(--doux); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.onglets button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.onglets svg { width: 20px; height: 20px; }
+
+/* Fiche */
+.hero { position: relative; padding: 14px 16px 0; background: linear-gradient(170deg, color-mix(in srgb, var(--c) 80%, white), var(--c)); border-radius: 0 0 34px 34px; color: #fff; overflow: hidden; }
+.app.sombre .hero { background: linear-gradient(170deg, var(--c), color-mix(in srgb, var(--c) 55%, #15121f)); }
+.hero .filigrane.ico { position: absolute; right: -40px; top: 30px; width: 220px; height: 220px; color: rgba(255,255,255,.14); }
+.hero .haut { display: flex; justify-content: space-between; align-items: center; position: relative; }
+.hero .retour { background: rgba(255,255,255,.25); border-radius: 99px; padding: 6px 14px 6px 10px; font-weight: 600; color: #fff; }
+.hero .num { font-weight: 700; font-size: 18px; opacity: .75; }
+.hero img { display: block; margin: 0 auto; width: 200px; height: 200px; object-fit: contain; position: relative; filter: drop-shadow(0 8px 10px rgba(0,0,0,.25)); }
+.hero img.pixel { width: 220px; height: 220px; margin-top: -10px; margin-bottom: -10px; }
+.titre-fiche { padding: 14px 16px 4px; display: grid; gap: 8px; }
+.titre-fiche h3 { margin: 0; font-size: 30px; font-weight: 700; line-height: 1; }
+.fiche { display: grid; gap: 12px; padding: 8px 16px 18px; }
+.bloc { background: var(--carte); border-radius: 22px; box-shadow: var(--ombre); padding: 12px 14px; line-height: 1.5; font-size: 15px; }
+.bloc h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--doux); display: flex; align-items: center; gap: 6px; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.stades { display: inline-flex; gap: 4px; margin-left: auto; }
+.stades i { width: 9px; height: 9px; border-radius: 50%; background: var(--carte2); }
+.stades i.on { background: var(--c); }
 .chaine { display: flex; align-items: center; justify-content: space-between; }
-.chaine button { background: none; border: 0; padding: 0; display: grid; justify-items: center; gap: 2px; }
-.chaine button[disabled] { cursor: default; opacity: .75; }
-.chaine img { width: 60px; height: 60px; border-radius: 50%; }
-.chaine .ici img { background: color-mix(in srgb, var(--c) 30%, transparent); }
-.chaine .fl { text-align: center; }
-.puces { display: flex; flex-wrap: wrap; gap: 5px; }
-.choix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-.choix button { border: 0; padding: 7px 0; color: #fff; opacity: .45; }
-.choix button.on { opacity: 1; }
-.resultat { text-align: center; padding: 14px 10px; }
-.resultat .mult { display: block; }
-.duel { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
-.retour { border: 0; align-self: start; justify-self: start; }
+.chaine button { background: none; padding: 0; display: grid; justify-items: center; gap: 3px; font-size: 12px; font-weight: 600; }
+.chaine button[disabled] { cursor: default; }
+.chaine .rond { width: 66px; height: 66px; border-radius: 50%; background: var(--carte2); display: grid; place-items: center; }
+.chaine .ici .rond { background: color-mix(in srgb, var(--c) 35%, var(--carte2)); box-shadow: 0 0 0 3px var(--c); }
+.chaine img { width: 56px; height: 56px; object-fit: contain; }
+.chaine img.pixel { width: 70px; height: 70px; }
+.chaine .fl { text-align: center; font-size: 11px; color: var(--doux); display: grid; justify-items: center; gap: 2px; max-width: 64px; }
+.chaine .fl svg { width: 16px; height: 16px; }
+.mauvais h4 { color: #e2574c; } .bon h4 { color: #3fa765; }
 
-/* ---------- A : pixel (Ludothèque) ---------- */
-.A { --accent: #ffd84a; background: #141a33; color: #e9edf7; font-family: var(--pixtexte); font-size: 16px; }
-.A .tete h2 { font: 13px var(--pixel); color: #ffd84a; text-shadow: 2px 2px 0 #b3412c; }
-.A .tete small, .A .gen { font: 7px/1.6 var(--pixel); color: #8d9bc4; }
-.A .recherche { background: #0b1022; box-shadow: inset 0 0 0 2px #3a4c86; }
-.A .recherche input { font-size: 17px; }
-.A .recherche input::placeholder { color: #6a78a4; }
-.A .filtres button { font: 7px var(--pixel); padding: 6px 8px 5px; background: #24305a; color: #c6d0ee; box-shadow: 0 2px 0 #070a16; }
-.A .filtres button.on { background: var(--c); color: #fff; }
-.A .gen { display: flex; align-items: center; gap: 8px; } .A .gen::after { content: ""; flex: 1; height: 2px; background: #2a365f; }
-.A .ligne { background: #1e2a4f; box-shadow: inset 0 0 0 2px #3a4c86, 0 3px 0 #070a16; }
-.A .ligne .vig { background: var(--c); box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 4px 4px 0 rgba(255,255,255,.2); }
-.A .ligne .vig::before { content: ""; position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 6px solid rgba(255,255,255,.18); box-sizing: border-box; }
-.A .ligne .nom b { font-size: 18px; font-weight: 600; } .A .ligne .nom small { font: 7px var(--pixel); color: #8d9bc4; }
-.A .puce { font: 7px/1.4 var(--pixel); padding: 4px 6px 3px; text-shadow: 1px 1px 0 rgba(0,0,0,.5); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
-.A .onglets { background: #0b1022; box-shadow: 0 -2px 0 #3a4c86; } .A .onglets button { font: 8px var(--pixel); color: #6a78a4; } .A .onglets button.on { color: #ffd84a; }
-.A .decor { margin: 0 -14px; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
-.A .bloc { background: #1e2a4f; box-shadow: inset 0 0 0 2px #3a4c86, 0 3px 0 #070a16; line-height: 1.3; }
-.A .bloc h4 { font: 7px var(--pixel); color: #8d9bc4; }
-.A .titre-fiche { display: flex; justify-content: space-between; align-items: baseline; font: 11px var(--pixel); color: #ffd84a; }
-.A .titre-fiche small { font-size: 8px; color: #8d9bc4; }
-.A .chaine button, .A .chaine .fl { font: 6px/1.5 var(--pixel); } .A .chaine .fl { color: #ffd84a; } .A .chaine img { border-radius: 0; }
-.A .choix button { font: 6px var(--pixel); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
-.A .resultat .mult { font: 28px var(--pixel); color: #ffd84a; margin: 6px 0; } .A .resultat .phr { font: 8px var(--pixel); }
-.A .retour { font: 8px var(--pixel); background: #b3412c; color: #fff; padding: 7px 10px; box-shadow: 0 3px 0 #5e1c12; margin-top: 12px; }
-
-/* ---------- B : rond moderne (hors pixel, sprites gardés) ---------- */
-.B { --accent: #ff6b4a; background: #f4f1fb; color: #2a2440; font-family: var(--rond); }
-.B .tete h2 { font-size: 28px; font-weight: 700; } .B .tete small { color: #8d86a8; font-weight: 500; }
-.B .recherche { background: #fff; border-radius: 16px; box-shadow: 0 2px 8px rgba(70,50,140,.1); }
-.B .recherche input { font-size: 15px; } .B .recherche input::placeholder { color: #a9a3c0; }
-.B .filtres button { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 99px; background: #fff; color: #5d5677; box-shadow: 0 1px 3px rgba(70,50,140,.12); }
-.B .filtres button.on { background: var(--c); color: #fff; }
-.B .gen { font-size: 13px; font-weight: 600; color: #8d86a8; text-transform: uppercase; letter-spacing: .06em; }
-.B .ligne { background: #fff; border-radius: 20px; box-shadow: 0 2px 8px rgba(70,50,140,.08); padding: 6px 12px 6px 6px; grid-template-columns: 64px 1fr auto; }
-.B .ligne .vig { border-radius: 16px; background: radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--c) 40%, white) 0 45%, color-mix(in srgb, var(--c) 18%, white) 46%); }
-.B .ligne .nom b { font-size: 17px; font-weight: 600; } .B .ligne .nom small { color: #a9a3c0; font-weight: 500; font-size: 12px; }
-.B .puce { font-size: 11px; font-weight: 600; border-radius: 99px; padding: 2px 9px; }
-.B .onglets { background: #fff; box-shadow: 0 -4px 14px rgba(70,50,140,.08); } .B .onglets button { font-weight: 600; color: #a9a3c0; } .B .onglets button.on { color: #ff6b4a; }
-.B .decor { margin: 0 -14px; border-radius: 0 0 32px 32px; background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--c) 55%, white) 0 38%, color-mix(in srgb, var(--c) 85%, white) 39%); }
-.B .bloc { background: #fff; border-radius: 18px; box-shadow: 0 2px 8px rgba(70,50,140,.08); line-height: 1.5; font-size: 15px; }
-.B .bloc h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: #8d86a8; }
-.B .titre-fiche { display: flex; justify-content: space-between; align-items: baseline; font-size: 24px; font-weight: 700; } .B .titre-fiche small { font-size: 15px; color: #a9a3c0; }
-.B .chaine button { font-size: 12px; font-weight: 500; } .B .chaine .fl { font-size: 11px; color: #8d86a8; } .B .chaine img { background: #f4f1fb; }
-.B .choix button { font-size: 12px; font-weight: 600; border-radius: 10px; }
-.B .resultat .mult { font-size: 46px; font-weight: 700; color: #ff6b4a; } .B .resultat .phr { font-weight: 600; }
-.B .retour { background: rgba(255,255,255,.85); border-radius: 99px; padding: 6px 14px; font-weight: 600; margin-top: 12px; }
-
-/* ---------- C : néon (hors pixel, sprites gardés) ---------- */
-.C { --accent: #3df2ff; background: #07090f; color: #dfe7f5; font-family: var(--tech); font-size: 16px; }
-.C .tete h2 { font-size: 26px; font-weight: 700; letter-spacing: .12em; color: #3df2ff; text-shadow: 0 0 10px rgba(61,242,255,.6); }
-.C .tete small, .C .gen { font: 12px var(--mono); color: #6f7d99; }
-.C .recherche { border: 1px solid #23324d; background: #0d1320; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
-.C .recherche input { font: 15px var(--mono); } .C .recherche input::placeholder { color: #4d5a73; }
-.C .filtres button { font: 600 13px var(--tech); letter-spacing: .05em; padding: 4px 10px; background: transparent; color: #8090ad; border: 1px solid #23324d; }
-.C .filtres button.on { color: var(--c); border-color: var(--c); box-shadow: 0 0 8px var(--c), inset 0 0 6px color-mix(in srgb, var(--c) 40%, transparent); }
-.C .ligne { background: #0d1320; border-left: 3px solid var(--c); box-shadow: inset 30px 0 30px -30px var(--c); }
-.C .ligne .vig { background: radial-gradient(circle, color-mix(in srgb, var(--c) 35%, transparent), transparent 70%); }
-.C .ligne .nom b { font-size: 19px; font-weight: 700; letter-spacing: .03em; } .C .ligne .nom small { font: 12px var(--mono); color: #6f7d99; }
-.C .puce { font: 700 11px var(--tech); letter-spacing: .08em; background: transparent !important; color: var(--c); border: 1px solid var(--c); padding: 1px 7px; text-transform: uppercase; }
-.C .onglets { border-top: 1px solid #23324d; background: #0a0e18; } .C .onglets button { font-weight: 700; letter-spacing: .12em; color: #4d5a73; } .C .onglets button.on { color: #3df2ff; text-shadow: 0 0 8px rgba(61,242,255,.7); }
-.C .decor { margin: 0 -14px; background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, var(--c) 55%, transparent) 0 18%, transparent 19%), radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--c) 30%, transparent), transparent 65%), #07090f; }
-.C .bloc { background: #0d1320; border: 1px solid #23324d; line-height: 1.35; }
-.C .bloc h4 { font: 12px var(--mono); color: #6f7d99; letter-spacing: .1em; }
-.C .titre-fiche { display: flex; justify-content: space-between; align-items: baseline; font-size: 26px; font-weight: 700; letter-spacing: .05em; color: var(--c); text-shadow: 0 0 10px color-mix(in srgb, var(--c) 60%, transparent); } .C .titre-fiche small { font: 14px var(--mono); color: #6f7d99; text-shadow: none; }
-.C .chaine button { font-weight: 600; font-size: 13px; } .C .chaine .fl { font: 11px var(--mono); color: #6f7d99; }
-.C .choix button { font: 700 12px var(--tech); letter-spacing: .05em; background: transparent !important; color: var(--c); border: 1px solid var(--c); }
-.C .choix button.on { box-shadow: 0 0 8px var(--c), inset 0 0 8px color-mix(in srgb, var(--c) 50%, transparent); }
-.C .resultat .mult { font-size: 50px; font-weight: 700; color: #3df2ff; text-shadow: 0 0 14px rgba(61,242,255,.7); } .C .resultat .phr { font: 13px var(--mono); letter-spacing: .1em; }
-.C .retour { background: transparent; border: 1px solid #3df2ff; color: #3df2ff; padding: 5px 12px; font-weight: 700; letter-spacing: .1em; margin-top: 12px; }
+/* Types */
+.versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; text-align: center; }
+.versus .cote { display: grid; justify-items: center; gap: 6px; font-size: 12px; color: var(--doux); font-weight: 600; }
+.versus .cote .bulles { display: flex; gap: 4px; }
+.versus .bulle { width: 52px; height: 52px; font-size: 30px; }
+.versus .fleche { font-size: 26px; color: var(--doux); }
+.resultat { text-align: center; padding: 10px 0 2px; }
+.resultat .mult { font-size: 52px; font-weight: 700; line-height: 1; color: var(--m); }
+.resultat .phr { display: inline-block; margin-top: 6px; padding: 4px 12px; border-radius: 99px; background: color-mix(in srgb, var(--m) 18%, transparent); color: var(--m); font-weight: 600; font-size: 14px; }
+.jauge { display: flex; gap: 4px; margin-top: 12px; }
+.jauge i { flex: 1; height: 8px; border-radius: 4px; background: var(--carte2); }
+.jauge i.on { background: var(--m); }
+.choix { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px 4px; }
+.choix button { background: none; padding: 0; display: grid; justify-items: center; gap: 3px; font-size: 10px; font-weight: 600; color: var(--doux); }
+.choix .bulle { width: 38px; height: 38px; font-size: 21px; opacity: .35; filter: saturate(.6); transition: transform .15s, opacity .15s; }
+.choix button.on .bulle { opacity: 1; filter: none; transform: scale(1.12); box-shadow: 0 0 0 3px var(--carte), 0 0 0 5px var(--c); }
+.choix button.on { color: var(--texte); }
+@media (prefers-reduced-motion: reduce) { .choix .bulle { transition: none; } }
 </style>
 
 <header class="page">
-  <h1>Pokédex de poche · maquette 3</h1>
-  <p>La liste en lignes de la maquette 2, retravaillée, et le même code habillé de trois façons. Il y a maintenant une barre de recherche (nom, numéro ou type), des filtres par type et une liste rangée par région. Les fiches ont un sprite fixe, avec les faiblesses et les résistances du Pokémon. L'onglet <b>Types</b> calcule le multiplicateur de dégâts : choisis le type de l'attaque, puis un ou deux types pour le Pokémon qui défend.</p>
+  <h1>Pokédex de poche · maquette 4</h1>
+  <p>La direction B, retravaillée. Il y a maintenant un <b>thème sombre</b> (bouton lune et soleil) et le choix des images : <b>sprites pixel</b> ou <b>dessins officiels</b> (bouton Pixel / Dessin). Chaque type a son <b>icône</b> : flamme, goutte, feuille, éclair… On les retrouve dans la liste, les filtres, les fiches et l'onglet Types. Les trois téléphones montrent la même appli, réglée de trois façons ; tous les boutons marchent.</p>
 </header>
 
 <div class="phones">
-  <figure class="dir"><div class="tel"><div class="ecran" id="ecranA"></div></div>
-    <figcaption><b>A · Pixel de la Ludothèque</b><span>Plaques bleu nuit, vignettes en relief à la couleur du type, Press Start 2P pour les titres.</span></figcaption></figure>
-  <figure class="dir"><div class="tel"><div class="ecran" id="ecranB"></div></div>
-    <figcaption><b>B · Rond et doux</b><span>Hors du pixel : cartes arrondies, pastilles, police ronde. Seuls les sprites restent en pixel.</span></figcaption></figure>
-  <figure class="dir"><div class="tel"><div class="ecran" id="ecranC"></div></div>
-    <figcaption><b>C · Néon de nuit</b><span>Hors du pixel : fond noir, traits lumineux à la couleur du type, chiffres en police technique.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecran1"></div></div>
+    <figcaption><b>Sombre · dessins</b><span>Thème sombre avec les dessins officiels, plus doux et plus détaillés.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecran2"></div></div>
+    <figcaption><b>Sombre · pixel</b><span>Le même thème avec les sprites pixel, plus proche du reste de la Ludothèque.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecran3"></div></div>
+    <figcaption><b>Clair · Types</b><span>Thème clair, onglet Types : on touche l'icône de l'attaque, puis une ou deux icônes en défense.</span></figcaption></figure>
 </div>
+<div class="legende" id="legende"></div>
 
-<p class="note">Descriptions écrites pour la maquette ; l'appli lira les descriptions officielles en français, les types et les évolutions sur PokéAPI, et les sprites sur son dépôt d'images. Table des types : règles actuelles (18 types, depuis la 6e génération). Pokémon © Nintendo, Creatures, GAME FREAK. Projet de fan, sans lien avec eux.</p>
+<p class="note">Descriptions écrites pour la maquette ; l'appli lira les descriptions officielles en français, les types et les évolutions sur PokéAPI, et les images sur son dépôt d'images. Icônes de types dessinées pour la maquette. Table des types : règles actuelles (18 types). Pokémon © Nintendo, Creatures, GAME FREAK. Projet de fan, sans lien avec eux.</p>
 
 <script>
 // Images : remplacées par des data: URI dans la copie publiée en artefact (outils/pokedex-maquette/fabriquer.py).
 const SPRITES = /*SPRITES*/null;
-const sprite = n => SPRITES ? SPRITES['p' + n] : 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + n + '.png';
+const BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+const image = (n, mode) => mode === 'pixel'
+  ? (SPRITES ? SPRITES['p' + n] : BASE + n + '.png')
+  : (SPRITES ? SPRITES['a' + n] : BASE + 'other/official-artwork/' + n + '.png');
 
-const TYPES = { Normal: '#9a9a78', Feu: '#e8752a', Eau: '#4f86e8', Plante: '#5cae3c', 'Électrik': '#e3b710', Glace: '#5cc4c0', Combat: '#c22e28', Poison: '#a33ea1', Sol: '#c9a24a', Vol: '#8f7ce8', Psy: '#f0507e', Insecte: '#94a81a', Roche: '#a8922e', Spectre: '#6c5594', Dragon: '#6a35f0', 'Ténèbres': '#6b5546', Acier: '#8c8cae', 'Fée': '#d27aa8' };
+// Icônes des types (24 × 24, dessinées pour la maquette, simples pour les enfants)
+const P = 'fill="currentColor"', T = 'fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"';
+const ICONES = {
+  Normal: `<circle cx="12" cy="12" r="7" ${T}/><circle cx="12" cy="12" r="2.5" ${P}/>`,
+  Feu: `<path ${P} d="M12 2c.8 3.6 6 6 6 12a6 6 0 0 1-12 0c0-2.8 1.6-4.8 3-6 .2 1.9 1 3 2.2 3.3C11 8 10.6 5 12 2z"/>`,
+  Eau: `<path ${P} d="M12 2.5C9.2 7 5.5 10.8 5.5 15a6.5 6.5 0 0 0 13 0c0-4.2-3.7-8-6.5-12.5z"/>`,
+  Plante: `<path ${P} d="M5 19C4.5 10 10 4.5 20 4c-.3 9.5-5.5 15.2-15 15z"/><path fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1.8" stroke-linecap="round" d="M6 18l8-8"/>`,
+  'Électrik': `<path ${P} d="M13.5 2L4.5 13.5h6L9.5 22l9-11.5h-6z"/>`,
+  Glace: `<path ${T} d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/>`,
+  Combat: `<path ${P} d="M6 9.5a2 2 0 0 1 4-.3V8a2 2 0 0 1 4 0 2 2 0 0 1 4 .5V15a6 6 0 0 1-6 6h-1.5A4.5 4.5 0 0 1 6 16.5z"/><path fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1.5" d="M10 9v3M14 8.5v3.5M6.2 13h6"/>`,
+  Poison: `<circle cx="9.5" cy="14.5" r="5" ${P}/><circle cx="16.5" cy="8" r="3.2" ${P}/><circle cx="17.5" cy="16.5" r="2" ${P}/><circle cx="8" cy="5.5" r="1.6" ${P}/>`,
+  Sol: `<path ${P} d="M2 19l6.5-10 4 5.5 3-4L22 19z"/>`,
+  Vol: `<path ${P} d="M3 15c5.5 0 8.5-4.5 10-11 2.6 3 3.4 6.4 2.6 9.6 2.6-1 5-.4 6.4 1.6-5 3-11.4 4.3-19 -.2z"/>`,
+  Psy: `<path ${T} d="M12.5 12.5a1.2 1.2 0 0 1 0-1.8 2.4 2.4 0 0 1 3.2 3 4 4 0 0 1-6.6 1.4 5.6 5.6 0 0 1 1.6-8 7.2 7.2 0 0 1 9.3 4"/>`,
+  Insecte: `<circle cx="12" cy="14" r="7" ${P}/><circle cx="12" cy="5.5" r="3" ${P}/><path stroke="rgba(0,0,0,.28)" stroke-width="1.6" d="M12 8v13"/><circle cx="9" cy="12.5" r="1.4" fill="rgba(0,0,0,.28)"/><circle cx="15" cy="12.5" r="1.4" fill="rgba(0,0,0,.28)"/><circle cx="9.5" cy="17" r="1.2" fill="rgba(0,0,0,.28)"/><circle cx="14.5" cy="17" r="1.2" fill="rgba(0,0,0,.28)"/>`,
+  Roche: `<path ${P} d="M4 18.5l1.6-7.5L11 5.5l6.5 3.2L20.5 18.5z"/><path fill="rgba(0,0,0,.2)" d="M11 5.5l6.5 3.2 3 9.8-6-6z"/>`,
+  Spectre: `<path ${P} d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8-2.3 1.8-2.4-1.8-2.4 1.8-2.3-1.8z"/><circle cx="9.5" cy="11" r="1.6" fill="rgba(0,0,0,.35)"/><circle cx="14.5" cy="11" r="1.6" fill="rgba(0,0,0,.35)"/>`,
+  Dragon: `<path ${P} d="M4 20c1-6 4-9 8-10l-2-6 4 3.5L16 3l.5 5.5C20 10 21 13 20 16l-3-1.5-1 3.5-3-2-2.5 3.5-1.5-3z"/><circle cx="15.5" cy="11" r="1.2" fill="rgba(0,0,0,.35)"/>`,
+  'Ténèbres': `<path ${P} d="M15 3a9 9 0 1 0 6.2 13.4A7.5 7.5 0 0 1 15 3z"/>`,
+  Acier: `<path ${P} fill-rule="evenodd" d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 1 0 0-6.8z"/>`,
+  'Fée': `<path ${P} d="M11 3c.9 4.6 2.6 6.4 7 7.3-4.4.9-6.1 2.7-7 7.3-.9-4.6-2.6-6.4-7-7.3 4.4-.9 6.1-2.7 7-7.3z"/><path ${P} d="M18.5 14.5c.4 2 1.1 2.7 3 3.1-1.9.4-2.6 1.1-3 3.1-.4-2-1.1-2.7-3-3.1 1.9-.4 2.6-1.1 3-3.1z"/>`,
+};
+const ico = (t, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONES[t]}</svg>`;
+const SVG_LOUPE = `<svg viewBox="0 0 24 24" ${T}><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>`;
+const SVG_LIVRE = `<svg viewBox="0 0 24 24" ${T}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 23H20"/></svg>`;
+const SVG_TYPES = `<svg viewBox="0 0 24 24"><path ${P} d="M13.5 2L5 13h5.5L9.5 22 19 10.5h-5.5z"/></svg>`;
+const SVG_FLECHE = `<svg viewBox="0 0 24 24" ${T}><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+
+const TYPES = { Normal: '#9b9a7c', Feu: '#f0782e', Eau: '#4d8bf0', Plante: '#4fb04a', 'Électrik': '#efb914', Glace: '#4cc3c8', Combat: '#d1402f', Poison: '#a54bc0', Sol: '#d59a3e', Vol: '#8d7cf0', Psy: '#f1578a', Insecte: '#93b01c', Roche: '#b09a4a', Spectre: '#6f58a8', Dragon: '#5b4cf0', 'Ténèbres': '#5d4a5a', Acier: '#6f93a8', 'Fée': '#e57ab8' };
 const LISTE_TYPES = Object.keys(TYPES);
-// Table des types : pour chaque type d'attaque, les types défenseurs à ×2, ×½ et ×0.
 const TABLE = {
   Normal: [[], ['Roche', 'Acier'], ['Spectre']],
   Feu: [['Plante', 'Glace', 'Insecte', 'Acier'], ['Feu', 'Eau', 'Roche', 'Dragon'], []],
@@ -190,7 +200,9 @@ const TABLE = {
 const mult1 = (a, d) => TABLE[a][0].includes(d) ? 2 : TABLE[a][1].includes(d) ? .5 : TABLE[a][2].includes(d) ? 0 : 1;
 const mult = (a, defs) => defs.reduce((m, d) => m * mult1(a, d), 1);
 const TXT = m => ({ 0: '×0', .25: '×¼', .5: '×½', 1: '×1', 2: '×2', 4: '×4' })[m];
-const PHRASE = m => m === 0 ? 'SANS EFFET' : m < 1 ? "CE N'EST PAS TRES EFFICACE" : m > 1 ? "C'EST SUPER EFFICACE !" : 'DEGATS NORMAUX';
+const PHRASE = m => m === 0 ? 'Aucun effet !' : m === .25 ? 'Presque rien…' : m === .5 ? 'Pas très efficace…' : m === 1 ? 'Dégâts normaux' : m === 2 ? 'Super efficace !' : 'Hyper efficace !!';
+const COUL = m => m === 0 ? '#8d86a8' : m < 1 ? '#e2574c' : m === 1 ? '#5b8def' : '#3fa765';
+const NIVEAU = m => ({ 0: 0, .25: 1, .5: 2, 1: 3, 2: 4, 4: 5 })[m];
 
 const CH_PLANTE = [[1, ''], [2, 'Niv. 16'], [3, 'Niv. 32']];
 const CH_FEU = [[4, ''], [5, 'Niv. 16'], [6, 'Niv. 36']];
@@ -225,107 +237,111 @@ const REGIONS = [[151, 'Kanto', 1], [251, 'Johto', 2], [386, 'Hoenn', 3], [493, 
 const region = n => REGIONS.find(r => n <= r[0]);
 const parNum = n => DEX.find(p => p.n === n);
 const nomDe = n => parNum(n) ? parNum(n).nom : NOMS[n];
-const num3 = n => String(n).padStart(4, '0').replace(/^0(?=\d{3}$)/, '');
+const num3 = n => String(n).padStart(3, '0');
 const stade = p => p.ch.findIndex(e => e[0] === p.n) + 1;
 const plat = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-const MAJ = s => plat(s).toUpperCase();
+const puce = (t, extra = '') => `<span class="puce" style="--c:${TYPES[t]}">${ico(t)}${t}${extra}</span>`;
+const bulle = t => `<span class="bulle" style="--c:${TYPES[t]}" title="${t}">${ico(t)}</span>`;
 
-function creer(id, skin) {
+function creer(id, reglages) {
   const el = document.getElementById(id);
-  const S = { onglet: 'dex', fiche: null, q: '', filtre: null, att: 'Feu', def: ['Plante', 'Acier'] };
-  const T = t => skin === 'A' ? MAJ(t) : t; // Press Start 2P : pas de majuscules accentuées
-  const puce = t => `<span class="puce" style="background:${TYPES[t]};--c:${TYPES[t]}">${T(t)}</span>`;
+  const S = Object.assign({ onglet: 'dex', fiche: null, q: '', filtre: null, att: 'Eau', def: ['Feu', 'Roche'], sombre: true, img: 'dessin' }, reglages);
+  const img = (n, cls = '') => `<img class="${S.img === 'pixel' ? 'pixel' : ''} ${cls}" src="${image(n, S.img)}" alt="" loading="lazy">`;
+  const boutons = () => `<button class="reglage" data-img>${S.img === 'pixel' ? '▦ Pixel' : '✎ Dessin'}</button><button class="reglage rond" data-theme-app aria-label="Changer de thème">${S.sombre ? '☾' : '☀'}</button>`;
 
   function resultats() {
     const q = plat(S.q.trim());
     const l = DEX.filter(p => (!S.filtre || p.types.includes(S.filtre)) && (!q || plat(p.nom).includes(q) || String(p.n).includes(q) || p.types.some(t => plat(t).startsWith(q))));
-    if (!l.length) return `<div class="vide">Aucun Pokémon ne correspond à « ${S.q} ».</div>`;
+    if (!l.length) return `<div class="vide">Aucun Pokémon ne s'appelle « ${S.q} »…<br>Essaie un autre nom, un numéro ou un type.</div>`;
     let h = '', reg = null;
     for (const p of l) {
       const r = region(p.n);
-      if (r !== reg) { if (reg) h += '</div>'; reg = r; h += `<div class="gen">${skin === 'A' ? MAJ(r[1]) + ' · GEN ' + r[2] : r[1] + ' · génération ' + r[2]}</div><div class="liste">`; }
-      h += `<button class="ligne" data-n="${p.n}" style="--c:${TYPES[p.types[0]]}"><span class="vig"><img src="${sprite(p.n)}" alt=""></span>
-        <span class="nom"><small>N° ${num3(p.n)}</small><b>${p.nom}</b></span><span class="types">${p.types.map(puce).join('')}</span></button>`;
+      if (r !== reg) { if (reg) h += '</div>'; reg = r; h += `<div class="gen">${r[1]} · génération ${r[2]}</div><div class="liste">`; }
+      h += `<button class="ligne" data-n="${p.n}" style="--c:${TYPES[p.types[0]]}"><span class="vig">${ico(p.types[0], 'filigrane')}${img(p.n)}</span>
+        <span class="nom"><small>N° ${num3(p.n)}</small><b>${p.nom}</b></span><span class="types">${p.types.map(bulle).join('')}</span></button>`;
     }
-    return h + '</div>';
+    return h + '</div><div style="height:12px"></div>';
   }
 
-  function vueDex() {
-    return `<div class="tete"><h2>${skin === 'A' ? 'POKEDEX' : 'Pokédex'}</h2><small>${DEX.length} / 1025</small></div>
-      <label class="recherche"><span aria-hidden="true">⌕</span><input id="q${skin}" type="search" placeholder="Nom, numéro ou type" value="${S.q}"></label>
-      <div class="filtres">${LISTE_TYPES.map(t => `<button data-filtre="${t}" class="${S.filtre === t ? 'on' : ''}" style="--c:${TYPES[t]}">${T(t)}</button>`).join('')}</div>
-      <div id="res${skin}">${resultats()}</div>`;
-  }
-
-  function defense(types) {
-    const m = LISTE_TYPES.map(a => [a, mult(a, types)]);
-    const grp = (f) => m.filter(([, x]) => f(x)).map(([a, x]) => puce(a).replace('</span>', ` ${TXT(x)}</span>`)).join('') || '<span>—</span>';
-    return { craint: grp(x => x > 1), resiste: grp(x => x > 0 && x < 1), immun: grp(x => x === 0) };
-  }
+  const vueDex = () => `<div class="tete"><h2><small>Salut, dresseur !</small>Pokédex</h2>${boutons()}</div>
+    <label class="recherche">${SVG_LOUPE}<input id="q${id}" type="search" placeholder="Chercher un nom, un numéro, un type…" value="${S.q}"></label>
+    <div class="filtres">${LISTE_TYPES.map(t => `<button data-filtre="${t}" class="${S.filtre === t ? 'on' : ''}" style="--c:${TYPES[t]}">${bulle(t)}${t}</button>`).join('')}</div>
+    <div id="res${id}">${resultats()}</div>`;
 
   function vueFiche() {
-    const p = parNum(S.fiche), c = TYPES[p.types[0]], d = defense(p.types);
-    const chaine = p.ch.map((e, k) => (k ? `<div class="fl">▶<br>${T(e[1])}</div>` : '') + `<button class="${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}" ${parNum(e[0]) ? '' : 'disabled'}><img src="${sprite(e[0])}" alt="">${T(nomDe(e[0]))}</button>`).join('');
-    return `<div class="fiche" style="--c:${c}">
-      <button class="retour" data-retour>${skin === 'A' ? '◀ RETOUR' : '‹ Retour'}</button>
-      <div class="decor"><img src="${sprite(p.n)}" alt="${p.nom}"></div>
-      <div class="titre-fiche"><span>${T(p.nom)}</span><small>N° ${num3(p.n)}</small></div>
-      <div class="puces">${p.types.map(puce).join('')}</div>
-      <div class="bloc"><h4>${T('Évolution')} · ${T('stade')} ${stade(p)} / ${p.ch.length}</h4><div class="chaine">${chaine}</div></div>
-      <div class="bloc"><h4>${T('Description')}</h4>${p.desc}</div>
-      <div class="bloc"><h4>${T('Craint')}</h4><div class="puces">${d.craint}</div></div>
-      <div class="bloc"><h4>${T('Résiste à')}</h4><div class="puces">${d.resiste}</div></div>
-      ${d.immun.includes('puce') ? `<div class="bloc"><h4>${T('Immunisé contre')}</h4><div class="puces">${d.immun}</div></div>` : ''}
-    </div>`;
+    const p = parNum(S.fiche), s = stade(p);
+    const m = LISTE_TYPES.map(a => [a, mult(a, p.types)]);
+    const grp = f => m.filter(([, x]) => f(x)).map(([a, x]) => puce(a, `<em>${TXT(x)}</em>`)).join('');
+    const craint = grp(x => x > 1), resiste = grp(x => x > 0 && x < 1), immun = grp(x => x === 0);
+    const chaine = p.ch.map((e, k) => (k ? `<div class="fl">${SVG_FLECHE}${e[1]}</div>` : '') + `<button class="${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}" ${parNum(e[0]) ? '' : 'disabled'}><span class="rond">${img(e[0])}</span>${nomDe(e[0])}</button>`).join('');
+    return `<div style="--c:${TYPES[p.types[0]]}">
+      <div class="hero">${ico(p.types[0], 'filigrane')}<div class="haut"><button class="retour" data-retour>‹ Retour</button><span class="num">N° ${num3(p.n)}</span></div>${img(p.n)}</div>
+      <div class="titre-fiche"><h3>${p.nom}</h3><div class="puces">${p.types.map(t => puce(t)).join('')}</div></div>
+      <div class="fiche">
+        <div class="bloc"><h4>Évolution <span class="stades">${p.ch.map((e, k) => `<i class="${k < s ? 'on' : ''}"></i>`).join('')}</span></h4><div class="chaine">${chaine}</div></div>
+        <div class="bloc"><h4>Ce qu'on sait de lui</h4>${p.desc}</div>
+        <div class="bloc mauvais"><h4>Attention à ces attaques</h4><div class="puces">${craint}</div></div>
+        ${resiste ? `<div class="bloc bon"><h4>Il résiste bien à</h4><div class="puces">${resiste}</div></div>` : ''}
+        ${immun ? `<div class="bloc bon"><h4>Ça ne lui fait rien</h4><div class="puces">${immun}</div></div>` : ''}
+      </div></div>`;
   }
 
   function vueTypes() {
-    const m = mult(S.att, S.def), a = TABLE[S.att];
-    const liste = l => l.length ? l.map(puce).join('') : '<span>—</span>';
-    const btn = (t, on, k) => `<button data-${k}="${t}" class="${on ? 'on' : ''}" style="background:${TYPES[t]};--c:${TYPES[t]}">${T(t)}</button>`;
-    return `<div class="tete"><h2>${skin === 'A' ? 'TYPES' : 'Types'}</h2><small>${T('dégâts')}</small></div>
+    const m = mult(S.att, S.def), a = TABLE[S.att], c = COUL(m);
+    const choix = (k, on) => LISTE_TYPES.map(t => `<button data-${k}="${t}" class="${on(t) ? 'on' : ''}" style="--c:${TYPES[t]}">${bulle(t)}${t}</button>`).join('');
+    const liste = l => l.length ? l.map(t => puce(t)).join('') : '<span style="color:var(--doux)">Personne</span>';
+    return `<div class="tete"><h2><small>Qui gagne ?</small>Types</h2>${boutons()}</div>
       <div class="fiche">
-        <div class="bloc resultat"><div class="duel">${puce(S.att)} <span>▶</span> ${S.def.map(puce).join(' ')}</div>
-          <span class="mult">${TXT(m)}</span><span class="phr">${PHRASE(m)}</span></div>
-        <div class="bloc"><h4>${T("Type de l'attaque")}</h4><div class="choix">${LISTE_TYPES.map(t => btn(t, t === S.att, 'att')).join('')}</div></div>
-        <div class="bloc"><h4>${T('Pokémon qui défend (1 ou 2 types)')}</h4><div class="choix">${LISTE_TYPES.map(t => btn(t, S.def.includes(t), 'def')).join('')}</div></div>
-        <div class="bloc"><h4>${T(S.att)} ${T('en attaque')}</h4>
-          <div class="puces">${T('Fort contre')} : ${liste(a[0])}</div><br><div class="puces">${T('Peu efficace contre')} : ${liste(a[1])}</div>${a[2].length ? `<br><div class="puces">${T('Sans effet sur')} : ${liste(a[2])}</div>` : ''}</div>
+        <div class="bloc" style="--m:${c}">
+          <div class="versus"><div class="cote">${bulle(S.att)}Attaque ${S.att}</div><div class="fleche">➜</div><div class="cote"><span class="bulles">${S.def.map(bulle).join('')}</span>Défense ${S.def.join(' / ')}</div></div>
+          <div class="resultat"><div class="mult">${TXT(m)}</div><div class="phr">${PHRASE(m)}</div></div>
+          <div class="jauge">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= NIVEAU(m) ? 'on' : ''}"></i>`).join('')}</div>
+        </div>
+        <div class="bloc"><h4>1. Le type de l'attaque</h4><div class="choix">${choix('att', t => t === S.att)}</div></div>
+        <div class="bloc"><h4>2. Le Pokémon qui défend (1 ou 2 types)</h4><div class="choix">${choix('def', t => S.def.includes(t))}</div></div>
+        <div class="bloc"><h4>${ico(S.att)} Une attaque ${S.att}…</h4>
+          <div style="display:grid;gap:8px">
+            <div><b style="color:#3fa765">est très forte contre</b><div class="puces" style="margin-top:4px">${liste(a[0])}</div></div>
+            <div><b style="color:#e2574c">est faible contre</b><div class="puces" style="margin-top:4px">${liste(a[1])}</div></div>
+            ${a[2].length ? `<div><b style="color:var(--doux)">ne fait rien à</b><div class="puces" style="margin-top:4px">${liste(a[2])}</div></div>` : ''}
+          </div></div>
       </div>`;
   }
 
   function rendre() {
     const corps = S.onglet === 'types' ? vueTypes() : S.fiche ? vueFiche() : vueDex();
-    el.innerHTML = `<div class="app ${skin}"><div class="vue">${corps}</div>
-      <nav class="onglets"><button data-onglet="dex" class="${S.onglet === 'dex' ? 'on' : ''}">${skin === 'A' ? 'POKEDEX' : 'Pokédex'}</button><button data-onglet="types" class="${S.onglet === 'types' ? 'on' : ''}">${skin === 'A' ? 'TYPES' : 'Types'}</button></nav></div>`;
+    el.innerHTML = `<div class="app ${S.sombre ? 'sombre' : ''}"><div class="vue">${corps}</div>
+      <nav class="onglets"><button data-onglet="dex" class="${S.onglet === 'dex' ? 'on' : ''}">${SVG_LIVRE}Pokédex</button><button data-onglet="types" class="${S.onglet === 'types' ? 'on' : ''}">${SVG_TYPES}Types</button></nav></div>`;
   }
 
   el.addEventListener('click', ev => {
     const b = ev.target.closest('button'); if (!b || b.disabled) return;
-    const vue = el.querySelector('.vue'), haut = vue.scrollTop;
-    let garder = false;
-    if (b.dataset.n) S.fiche = +b.dataset.n;
-    else if ('retour' in b.dataset) S.fiche = null;
-    else if (b.dataset.onglet) { S.onglet = b.dataset.onglet; S.fiche = b.dataset.onglet === 'dex' ? S.fiche : S.fiche; }
-    else if (b.dataset.filtre) { S.filtre = S.filtre === b.dataset.filtre ? null : b.dataset.filtre; garder = true; }
-    else if (b.dataset.att) { S.att = b.dataset.att; garder = true; }
+    const haut = el.querySelector('.vue').scrollTop;
+    let garder = true;
+    if (b.dataset.n) { S.fiche = +b.dataset.n; S.onglet = 'dex'; garder = false; }
+    else if ('retour' in b.dataset) { S.fiche = null; garder = false; }
+    else if (b.dataset.onglet) { S.onglet = b.dataset.onglet; garder = false; }
+    else if ('img' in b.dataset) S.img = S.img === 'pixel' ? 'dessin' : 'pixel';
+    else if ('themeApp' in b.dataset) S.sombre = !S.sombre;
+    else if (b.dataset.filtre) S.filtre = S.filtre === b.dataset.filtre ? null : b.dataset.filtre;
+    else if (b.dataset.att) S.att = b.dataset.att;
     else if (b.dataset.def) {
       const t = b.dataset.def;
       if (S.def.includes(t)) { if (S.def.length > 1) S.def = S.def.filter(x => x !== t); }
       else S.def = S.def.length < 2 ? [...S.def, t] : [S.def[1], t];
-      garder = true;
     } else return;
     rendre();
-    if (garder) el.querySelector('.vue').scrollTop = haut;
+    el.querySelector('.vue').scrollTop = garder ? haut : 0;
   });
   el.addEventListener('input', ev => {
     if (!ev.target.matches('input')) return;
-    S.q = ev.target.value; el.querySelector('#res' + skin).innerHTML = resultats();
+    S.q = ev.target.value; el.querySelector('#res' + id).innerHTML = resultats();
   });
-  return { S, rendre };
+  rendre();
 }
 
-const A = creer('ecranA', 'A'), B = creer('ecranB', 'B'), C = creer('ecranC', 'C');
-// Arrivée : la liste en A, une fiche en B, le calcul des types en C.
-A.rendre(); B.S.fiche = 448; B.rendre(); C.S.onglet = 'types'; C.rendre();
+creer('ecran1', { sombre: true, img: 'dessin' });
+creer('ecran2', { sombre: true, img: 'pixel', fiche: 6 });
+creer('ecran3', { sombre: false, img: 'dessin', onglet: 'types' });
+document.getElementById('legende').innerHTML = LISTE_TYPES.map(t => `<span class="puce" style="--c:${TYPES[t]};font-family:var(--rond)">${ico(t)}${t}</span>`).join('');
 </script>

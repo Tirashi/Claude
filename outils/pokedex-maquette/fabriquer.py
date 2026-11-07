@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Fabrique la copie de maquettes/pokedex.html publiée en artefact.
 
-Les images Pokémon ne sont pas dans le dépôt : ce script télécharge les sprites pixel sur le dépôt PokeAPI/sprites (raw.githubusercontent.com) et les met en data: URI dans
+Les images Pokémon ne sont pas dans le dépôt : ce script télécharge les sprites pixel et les
+dessins officiels sur le dépôt PokeAPI/sprites (raw.githubusercontent.com) et les met en data: URI dans
 la copie (un artefact ne peut pas charger d'images d'un autre site).
 
   python3 outils/pokedex-maquette/fabriquer.py SORTIE.html [DOSSIER_CACHE]
 """
-import base64, json, os, sys, urllib.request
+import base64, io, json, os, sys, urllib.request
+from PIL import Image
 
 NUMS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 26, 92, 93, 94, 133, 172, 447, 448, 700, 906, 907, 908]
 BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'
@@ -31,6 +33,11 @@ def uri(octets, mime):
 sprites = {}
 for n in NUMS:
     sprites['p%d' % n] = uri(lire('p%d.png' % n, BASE + '%d.png' % n), 'image/png')
+    # dessin officiel, réduit à 240 px pour alléger la copie
+    a = Image.open(io.BytesIO(lire('a%d.png' % n, BASE + 'other/official-artwork/%d.png' % n))).convert('RGBA')
+    a.thumbnail((240, 240), Image.LANCZOS)
+    b = io.BytesIO(); a.save(b, 'PNG', optimize=True)
+    sprites['a%d' % n] = uri(b.getvalue(), 'image/png')
 
 html = open(src, encoding='utf-8').read()
 assert '/*SPRITES*/null' in html
