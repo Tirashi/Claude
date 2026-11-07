@@ -11,9 +11,9 @@ const DEFAUT = {
   eco: {bois: 50, or: 40, viande: 30, ouvriers: 3, rapport: 6, vitesse: 1.3, tBois: 2.2, tOr: 2.6, tViande: 2.0, ouvrier: 10, batir: 1},
   pop: {escouades: 3, ouvriers: 4, maisonEsc: 1, maisonOuv: 2},
   chateau: {pv: 800},
-  guer:  {n: 4, pv: 25, dps: 4.5, r: .75, v: 1.3, bois: 0, or: 10, viande: 10},
+  lance: {n: 4, pv: 24, dps: 4, r: .95, v: 1.2, bois: 10, or: 10, viande: 0, troll: 2.5},
+  guer:  {n: 4, pv: 34, dps: 5.5, r: .75, v: 1.3, bois: 0, or: 20, viande: 10},
   arc:   {n: 4, pv: 15, dps: 3, r: 2.6, v: 1.3, bois: 15, or: 10, viande: 0},
-  lance: {n: 4, pv: 28, dps: 4, r: .95, v: 1.1, bois: 10, or: 15, viande: 0, troll: 2.5},
   moine: {n: 2, pv: 15, soin: 5, r: 1.7, rGrade: .3, v: 1.2, bois: 0, or: 20, viande: 0},
   cata:  {n: 1, pv: 60, degats: 40, cadence: 3.5, zone: .9, r: 4.2, v: .45, bois: 40, or: 30, viande: 0},
   gob:    {pv: 30, dps: 6, r: .7, v: .55},
@@ -32,12 +32,12 @@ const DEFAUT = {
   jeu: {ralenti: .35}
 };
 // noms des escouades, monstres, bâtiments (affichage)
-const ESC = {guer: "GUERRIERS", arc: "ARCHERS", lance: "LANCIERS", moine: "MOINES", cata: "CATAPULTE"};
+const ESC = {lance: "LANCIERS", guer: "CHEVALIERS", arc: "ARCHERS", moine: "MOINES", cata: "CATAPULTE"};
 const MONS = {gob: "GOBELINS", lanceg: "GOBELINS A LANCE", gnoll: "GNOLLS", troll: "TROLL"};
 const BAT = {maison: "MAISON", caserne: "CASERNE", archerie: "ARCHERIE", monastere: "MONASTERE", atelier: "ATELIER", tour: "TOUR"};
 const FEMININ = {maison: 1, caserne: 1, archerie: 1, tour: 1, cata: 1};
 // le bâtiment qui débloque chaque escouade (null = le château)
-const DEBLOQUE = {guer: null, arc: "archerie", lance: "caserne", moine: "monastere", cata: "atelier"};
+const DEBLOQUE = {lance: null, guer: "caserne", arc: "archerie", moine: "monastere", cata: "atelier"};
 // qui peut monter dans une tour
 const GARNISON = {arc: 1, moine: 1, cata: 1};
 const GRADES = ["RECRUES", "VETERANS", "ELITE", "HEROS"];
@@ -105,7 +105,7 @@ function creer(mods, graine){
   const [mx, my, mw, mh] = ZONE_MOUTONS;
   for (let k = 0; k < 4; k++) S.moutons.push({x: mx + .3 + k * .6, y: my + .3 + (k % 2) * .5, tx: 0, ty: 0, t: r2() * 5, face: 1});
   for (let k = 0; k < P.eco.ouvriers; k++) ajouterOuvrier(S, RES[k % 3], true);
-  recruter(S, "guer", true);
+  recruter(S, "lance", true);
   S.sel = null;
   dire(S, "DEFENDS LE CHATEAU", true);
   return S;
@@ -481,7 +481,7 @@ function robot(S, dt){
   // recrutement : archers d'abord (pour les tours), lanciers contre le troll
   const troll = S.mons.some(m => m.t === "troll" && m.pv > 0) || avecTroll(S, S.vague + 1);
   const nArc = S.esc.filter(q => q.k === "arc").length, nAutres = S.esc.length - nArc;
-  const veut = troll && debloque(S, "lance") ? "lance" : nArc < nAutres + 1 && debloque(S, "arc") ? "arc" : "guer";
+  const veut = troll ? "lance" : nArc < nAutres + 1 && debloque(S, "arc") ? "arc" : debloque(S, "guer") ? "guer" : "lance";
   if (nbEsc(S) < maxEsc(S)) recruter(S, veut);
   S.sel = null;
   // placement : archers dans les tours libres, les autres sur le chemin annoncé (partagés entre deux)

@@ -33,7 +33,7 @@ const OUV = {fs: 192, fx: 96, fy: 135, k: .72};
 const BATI = {chateau: ["chateau", 246], caserne: ["caserne", 240], archerie: ["archerie", 236], maison: ["maison1", 172], monastere: ["monastere", 304], atelier: ["atelier", 174], tour: ["tour", 226], chantier: ["chantier", 180], ruine: ["ruine", 164]};
 const ECH_TOUR = 1.5;    // la tour est dessinée 1,5 fois plus grande : ses occupants à taille normale sur la plateforme
 const HAUT = {maison: 1.4, caserne: 1.9, archerie: 1.9, monastere: 2.4, atelier: 1.4, tour: 2.7};   // hauteur de l'image, en cases (toucher, transparence)
-const EFFET = {maison: "+1 escouade, +2 ouvriers", caserne: "debloque les lanciers", archerie: "debloque les archers", monastere: "debloque les moines", atelier: "debloque les catapultes", tour: "garnison : archers, moines ou catapulte"};
+const EFFET = {maison: "+1 escouade, +2 ouvriers", caserne: "debloque les chevaliers", archerie: "debloque les archers", monastere: "debloque les moines", atelier: "debloque les catapultes", tour: "garnison : archers, moines ou catapulte"};
 
 /* ---------- la page ---------- */
 const c = $("#cv"), x = c.getContext("2d");
@@ -296,7 +296,7 @@ const LIB = {
     tBois: "Temps pour couper (s)", tOr: "Temps pour miner (s)", tViande: "Temps pour la viande (s)", ouvrier: "Prix d'un ouvrier (viande)", batir: "Vitesse de construction par ouvrier"}],
   pop: ["POPULATION", {escouades: "Escouades au depart", ouvriers: "Ouvriers max au depart", maisonEsc: "Escouades en plus par maison", maisonOuv: "Ouvriers en plus par maison"}],
   chateau: ["CHATEAU", {pv: "Points de vie"}],
-  guer: ["GUERRIERS", null], arc: ["ARCHERS", null], lance: ["LANCIERS", null], moine: ["MOINES", null], cata: ["CATAPULTE", null],
+  lance: ["LANCIERS", null], guer: ["CHEVALIERS", null], arc: ["ARCHERS", null], moine: ["MOINES", null], cata: ["CATAPULTE", null],
   gob: ["GOBELINS A TORCHE", null], lanceg: ["GOBELINS A LANCE", null], gnoll: ["GNOLLS (lancent des os)", null], troll: ["TROLL", null],
   maison: ["MAISON", null], caserne: ["CASERNE", null], archerie: ["ARCHERIE", null], monastere: ["MONASTERE", null], atelier: ["ATELIER", null], tour: ["TOUR", null],
   vagues: ["VAGUES", {premiere: "Premiere vague (s)", entre: "Temps entre deux vagues (s)", nombre: "Nombre de vagues", base: "Monstres a la 1re vague", plus: "Monstres en plus par vague",

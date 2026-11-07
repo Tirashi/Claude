@@ -23,15 +23,15 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
   verif(S.sites[4].b.fini, "l'archerie se termine");
   verif(B.debloque(S, "arc"), "l'archerie débloque les archers");
   S.res.bois = S.res.or = S.res.viande = 500;
-  verif(B.recruter(S, "arc") === null && B.recruter(S, "guer") === null, "recrutement");
-  verif(B.nbEsc(S) === 3 && B.recruter(S, "guer") !== null, "population : 3 escouades au départ, pas une de plus");
+  verif(B.recruter(S, "guer") !== null && B.recruter(S, "arc") === null && B.recruter(S, "lance") === null, "recrutement (les chevaliers demandent une caserne)");
+  verif(B.nbEsc(S) === 3 && B.recruter(S, "lance") !== null, "population : 3 escouades au départ, pas une de plus");
   // une maison terminée : +1 escouade
   B.construire(S, 5, "maison"); S.sites[5].b.fini = true;
   verif(B.maxEsc(S) === 4 && B.maxOuv(S) === 6, "une maison : +1 escouade, +2 ouvriers");
   // garnison : archers, moines ou catapulte, dans une tour finie
   B.construire(S, 1, "tour"); S.sites[1].b.fini = true; S.sites[1].b.pv = S.P.tour.pv;
-  const g = S.esc.find(q => q.k === "guer"), a = S.esc.find(q => q.k === "arc");
-  verif(B.envoyer(S, g, 0, 0, S.sites[1]) !== null, "les guerriers ne montent pas dans une tour");
+  const g = S.esc.find(q => q.k === "lance"), a = S.esc.find(q => q.k === "arc");
+  verif(B.envoyer(S, g, 0, 0, S.sites[1]) !== null, "les lanciers ne montent pas dans une tour");
   verif(B.GARNISON.moine && B.GARNISON.cata && B.GARNISON.arc, "archers, moines et catapulte vont en garnison");
   verif(B.envoyer(S, a, 0, 0, S.sites[1]) === null, "les archers montent dans une tour");
   for (let i = 0; i < 400 && !a.tour; i++) B.pas(S, .05);
@@ -50,7 +50,7 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
   { const m = {k: "moine", grade: 0, tour: null}, r0 = B.portee(S, m); m.grade = 2; const r2 = B.portee(S, m); m.tour = S.sites[1]; const r3 = B.portee(S, m);
     verif(r2 > r0 && r3 > r2, "zone de soin : plus grande avec le grade et dans une tour"); }
   // grades
-  const q = S.esc.find(o => o.k === "guer"), n0 = B.nMax(S, q);
+  const q = S.esc.find(o => o.k === "lance"), n0 = B.nMax(S, q);
   q.xp = S.P.xp.elite - 1; q.grade = 1; q.pv = B.pvMax(S, q);
   S.mons.push({t: "gob", x: q.x, y: q.y, dir: "N", pv: .01, pvMax: 30, delai: 0, cd: 0, face: 1, mode: "walk", ph: 0, passe: true, dernier: q});
   B.pas(S, .05);

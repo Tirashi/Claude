@@ -281,7 +281,7 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 Un château au milieu de la prairie, trois chemins par où viennent les gobelins, les gnolls et un troll. Graphismes Tiny Swords (Pixel Frog).
 
 - **Ouvriers** : ils coupent le bois, minent l'or et ramènent la viande des moutons ; les boutons du bas déplacent un ouvrier d'un métier à l'autre ou en recrutent un nouveau.
-- **Bâtir** : toucher un emplacement puis un bâtiment ; un ouvrier prend son marteau. Maison (plus de population), caserne (lanciers), archerie (archers), monastère (moines), tour (archers en garnison, qui tirent plus loin et ne craignent pas le corps à corps).
+- **Bâtir** : toucher un emplacement puis un bâtiment ; un ouvrier prend son marteau. Maison (plus de population), caserne (chevaliers), archerie (archers), monastère (moines), atelier (catapulte), tour (archers, moines ou catapulte en garnison, qui portent plus loin et ne craignent pas le corps à corps). Les lanciers se recrutent dès le départ.
 - **Escouades** : toucher une carte pour recruter, une escouade puis le sol pour l'envoyer ; le jeu ralentit pendant le choix. Les escouades gagnent des grades (vétérans, élite, héros) et se reforment près du château contre de la viande.
 - **LABO** : vitesse, triches, un robot qui joue tout seul, un simulateur de 30 parties et tous les réglages du jeu, pour trouver le bon équilibre.
 
