@@ -1,0 +1,133 @@
+<title>Étagère des ateliers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Maquette : trois façons de ranger les ateliers (pas des jeux) sous l'étagère des cartouches de l'accueil. Mise en page : trois téléphones. */
+:root {
+  --night: #110d22; --night-2: #1e1840; --ink: #0d0a18; --text: #f2f0ff; --dim: #a9a6d8; --gold: #ffd23f;
+  --wood-hi: #b77a48; --wood: #7a4a24; --wood-d: #4e2c12;
+  --display: "Press Start 2P", "Courier New", monospace; --body: "VT323", "Lucida Console", monospace;
+  color-scheme: dark;
+}
+body { background: var(--night); background-image: radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size: 4px 4px; color: var(--text); font-family: var(--body); font-size: 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header.page { max-width: 1120px; margin: 0 auto 20px; display: grid; gap: 10px; }
+header.page h1 { margin: 0; font: 15px/1.5 var(--display); color: var(--gold); text-shadow: 2px 2px 0 #000; }
+header.page p { margin: 0; color: var(--dim); max-width: 75ch; line-height: 1.15; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1120px; margin: 0 auto; }
+figure { margin: 0; display: grid; gap: 10px; justify-items: center; }
+figcaption { text-align: center; max-width: 340px; display: grid; gap: 4px; }
+figcaption b { font: 10px/1.6 var(--display); color: var(--gold); }
+figcaption span { color: var(--dim); line-height: 1.1; }
+.tel { width: 340px; max-width: 100%; height: 680px; border-radius: 34px; padding: 10px; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,.5); box-sizing: border-box; }
+.ecran { height: 100%; border-radius: 26px; overflow: auto; background: var(--night); background-image: radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size: 4px 4px; padding: 0 14px 20px; box-sizing: border-box; }
+canvas.ic { image-rendering: pixelated; display: block; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible { outline: 2px dashed var(--gold); outline-offset: 3px; }
+
+/* le bas de l'étagère des jeux (rappel, simplifié) */
+.jeux { margin-top: 14px; border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 5px 5px 0 3px #000; background: #140f28; padding: 14px 6px 0; display: flex; justify-content: space-around; align-items: flex-end; height: 120px; position: relative; }
+.jeux::after { content: ""; position: absolute; left: 0; right: 0; bottom: 34px; height: 13px; background: linear-gradient(var(--wood-hi) 0 3px, var(--wood) 3px 10px, var(--ink) 10px); }
+.mini { width: 54px; height: 66px; margin-bottom: 47px; border: 3px solid #000; display: grid; place-items: center; position: relative; z-index: 1; box-shadow: inset -4px -4px 0 rgba(0,0,0,.3); }
+.mini canvas { width: 32px; height: 32px; }
+.mini b { position: absolute; top: calc(100% + 20px); font: 15px var(--body); white-space: nowrap; text-shadow: 2px 2px 0 #000; }
+.titre { margin: 26px 0 10px; font: 13px var(--display); color: var(--gold); text-shadow: 2px 2px 0 #000; }
+.titre small { display: block; margin-top: 8px; font: 18px var(--body); color: var(--dim); text-shadow: none; }
+.tuiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+.tuiles div { border: 3px solid #fff; padding: 10px 6px; text-align: center; font: 9px/1.6 var(--display); background: #000; }
+.tuiles div small { display: block; font: 16px/1 var(--body); color: var(--dim); margin-top: 6px; }
+
+/* ---------- A : les livres ---------- */
+.biblio { border: 3px solid var(--ink); box-shadow: 0 0 0 3px #5a3a20, 5px 5px 0 3px #000; background: linear-gradient(#2a1a10, #1c110a); padding: 16px 10px 0; position: relative; }
+.biblio .rang { display: flex; justify-content: center; align-items: flex-end; gap: 22px; height: 150px; position: relative; }
+.biblio .planche { height: 16px; margin: 0 -10px; background: linear-gradient(var(--wood-hi) 0 3px, var(--wood) 3px 12px, var(--ink) 12px); }
+.livre { --c: #c22; width: 66px; height: var(--h, 128px); position: relative; transform-origin: bottom center; transition: transform .2s; }
+.livre:hover, .livre:focus-visible { transform: translateY(-8px) rotate(-3deg); }
+.livre .couv { position: absolute; inset: 0 6px 0 0; background: var(--c); border: 3px solid #000; border-radius: 2px 6px 6px 2px; box-shadow: inset 7px 0 0 rgba(0,0,0,.28), inset 9px 0 0 rgba(255,255,255,.15), inset -3px -3px 0 rgba(0,0,0,.25); }
+.livre .pages { position: absolute; right: 0; top: 5px; bottom: 5px; width: 9px; background: repeating-linear-gradient(#efe6cc 0 2px, #cfc3a0 2px 3px); border: 3px solid #000; border-left: 0; border-radius: 0 3px 3px 0; }
+.livre .plaque { position: absolute; left: 14px; right: 12px; top: 18px; background: #f3e7c4; border: 2px solid #000; padding: 4px 0; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--gold); }
+.livre .plaque canvas { width: 32px; height: 32px; }
+.livre .bande { position: absolute; left: 10px; right: 8px; bottom: 16px; height: 6px; background: var(--gold); border: 2px solid #000; }
+.livre .nm { position: absolute; top: calc(100% + 22px); left: 50%; transform: translateX(-50%); font: 14px/.95 var(--body); text-align: center; text-shadow: 2px 2px 0 #000; width: 76px; }
+.biblio .noms { height: 46px; }
+.serre { width: 14px; height: 70px; background: linear-gradient(90deg, #8a8478, #c8c0b0 40%, #6a6458); border: 3px solid #000; align-self: flex-end; }
+
+/* ---------- B : les tiroirs ---------- */
+.meuble { border: 3px solid #000; background: linear-gradient(var(--wood-hi) 0 6px, var(--wood) 6px); padding: 10px; box-shadow: 5px 5px 0 3px #000, inset 0 -6px 0 var(--wood-d); }
+.meuble .plateau { height: 10px; margin: -10px -16px 10px; background: linear-gradient(#d8955a 0 3px, var(--wood-hi) 3px 8px, var(--ink) 8px); border: 3px solid #000; }
+.tiroirs { display: grid; gap: 10px; }
+.tiroir { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: linear-gradient(#a8693a, #8a5228); border: 3px solid #000; box-shadow: inset 3px 3px 0 rgba(255,220,170,.25), inset -3px -3px 0 rgba(0,0,0,.3); text-align: left; transition: transform .2s, box-shadow .2s; }
+.tiroir:hover, .tiroir:focus-visible { transform: translateX(10px); box-shadow: inset 3px 3px 0 rgba(255,220,170,.25), inset -3px -3px 0 rgba(0,0,0,.3), -10px 0 0 #2a160a; }
+.tiroir .etiq { background: #f3e7c4; border: 3px solid #c9a24a; box-shadow: 0 0 0 2px #000; padding: 4px; display: grid; place-items: center; }
+.tiroir .etiq canvas { width: 40px; height: 40px; }
+.tiroir .txt { flex: 1; min-width: 0; }
+.tiroir .txt b { display: block; font: 10px/1.5 var(--display); color: #fff3d8; text-shadow: 2px 2px 0 #3a1e0a; }
+.tiroir .txt small { display: block; color: #f2dcb8; font-size: 16px; line-height: 1; margin-top: 3px; }
+.tiroir .poignee { width: 22px; height: 10px; border: 3px solid #000; border-radius: 6px; background: linear-gradient(#ffe48a, #c9a24a); }
+
+/* ---------- C : le panneau à outils ---------- */
+.panneau { border: 3px solid #000; box-shadow: 0 0 0 3px #6a4a2a, 5px 5px 0 3px #000; background-color: #c08a52; background-image: radial-gradient(#5a3a1c 2.5px, transparent 3px); background-size: 18px 18px; background-position: 9px 9px; padding: 20px 8px 18px; display: flex; justify-content: space-around; align-items: flex-start; }
+.outil { position: relative; display: grid; justify-items: center; padding-top: 18px; transform-origin: top center; }
+.outil::before { content: ""; position: absolute; top: 0; left: 50%; width: 8px; height: 8px; margin-left: -4px; background: #ddd; border: 2px solid #000; border-radius: 50%; }
+.outil::after { content: ""; position: absolute; top: 6px; left: 50%; width: 30px; height: 18px; margin-left: -15px; border: 2px solid #3a2a1a; border-bottom: 0; border-radius: 15px 15px 0 0; }
+.outil:hover, .outil:focus-visible { animation: balance .9s ease-in-out; }
+@keyframes balance { 25% { transform: rotate(6deg); } 60% { transform: rotate(-4deg); } 85% { transform: rotate(2deg); } }
+.outil .carton { background: #f6efe0; border: 3px solid #000; padding: 8px 8px 6px; box-shadow: 3px 3px 0 rgba(0,0,0,.35); display: grid; justify-items: center; gap: 6px; }
+.outil .carton canvas { width: 56px; height: 56px; }
+.outil .carton b { font: 7px/1.4 var(--display); color: #2a1a10; text-align: center; }
+.outil .trou { width: 16px; height: 8px; border: 2px solid #000; border-radius: 4px; background: #c08a52; margin-bottom: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="page">
+  <h1>ETAGERE DES ATELIERS · MAQUETTE</h1>
+  <p>Les ateliers ne sont pas des jeux : ils n'ont plus de cartouche. Voici trois façons de les ranger sous l'étagère des jeux, dans le même pixel art que l'accueil. Touche ou survole un objet pour voir son animation.</p>
+</header>
+
+<div class="phones">
+  <figure><div class="tel"><div class="ecran" id="A"></div></div>
+    <figcaption><b>A · LES LIVRES</b><span>Une petite bibliothèque : chaque atelier est un livre relié, posé debout, avec son icône sur une plaque dorée. Il se penche quand on le touche.</span></figcaption></figure>
+  <figure><div class="tel"><div class="ecran" id="B"></div></div>
+    <figcaption><b>B · LES TIROIRS</b><span>Un meuble d'atelier en bois : un tiroir par outil, avec une étiquette et une phrase. Le tiroir s'ouvre quand on le touche.</span></figcaption></figure>
+  <figure><div class="tel"><div class="ecran" id="C"></div></div>
+    <figcaption><b>C · LE PANNEAU A OUTILS</b><span>Un panneau perforé comme au garage : chaque atelier pend à un crochet sur un carton. Il se balance quand on le touche.</span></figcaption></figure>
+</div>
+
+<script>
+// Icônes 16 × 16 copiées de icones.js (dex, calc ; glider redessiné de la même façon)
+const ICONES = {
+  dex: { pal: { o: "#1a0f2e", R: "#e8364a", r: "#a81e30", h: "#ff8a96", W: "#f4f0ff", w: "#b8b0d0" }, map: [
+    "................", "....oooooooo....", "...oohRRrrroo...", "..oohhRRRRRroo..", ".oohhhRRRRRRroo.", ".ohhhRRooRRRRro.", ".oRRRRoWWoRRRro.", ".oooooWWWWooooo.",
+    ".oooooWWWWooooo.", ".owWWWoWWoWWWwo.", ".owWWWWooWWWWwo.", ".oowWWWWWWWWwoo.", "..oowWWWWWWwoo..", "...oowwwwwwoo...", "....oooooooo....", "................"] },
+  calc: { pal: { k: "#1a1420", b: "#3a3d43", l: "#c4d0a8", d: "#1d2418", w: "#e9e5da", o: "#e8783a", g: "#4caf6a" }, map: [
+    "..kkkkkkkkkkkk..", ".kbbbbbbbbbbbbk.", ".kbllllllllllbk.", ".kblllldlddddbk.", ".kbllldldldllbk.", ".kbllllllllllbk.", ".kbbbbbbbbbbbbk.", ".kbwwbwwbwwoobk.",
+    ".kbwwbwwbwwoobk.", ".kbbbbbbbbbbbbk.", ".kbwwbwwbwwoobk.", ".kbwwbwwbwwoobk.", ".kbbbbbbbbbbbbk.", ".kbwwbwwbggggbk.", ".kbbbbbbbbbbbbk.", "..kkkkkkkkkkkk.."] },
+  glider: { draw(x) {
+    x.fillStyle = "#0b0f24"; x.fillRect(0, 0, 16, 16);
+    x.fillStyle = "#18204a"; for (let i = 0; i <= 16; i += 5) { x.fillRect(i, 0, 1, 16); x.fillRect(0, i, 16, 1); }
+    [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]].forEach(([a, b]) => { const X = a * 5 + 1, Y = b * 5 + 1;
+      x.fillStyle = "#1f8a4a"; x.fillRect(X, Y, 4, 4); x.fillStyle = "#5cff8a"; x.fillRect(X, Y, 3, 3); x.fillStyle = "#d4ffe0"; x.fillRect(X, Y, 3, 1); x.fillRect(X, Y, 1, 3); });
+  } },
+  tetris: { draw(x) { const c = (a, b, f, h, l) => { x.fillStyle = l; x.fillRect(a * 4, b * 4, 4, 4); x.fillStyle = f; x.fillRect(a * 4, b * 4, 3, 3); x.fillStyle = h; x.fillRect(a * 4, b * 4, 3, 1); };
+    [[0, 0], [1, 0], [2, 0], [1, 1]].forEach(([a, b]) => c(a, b, "#a855f7", "#e2c4ff", "#4a1a80")); [[3, 1], [3, 2], [3, 3], [2, 3]].forEach(([a, b]) => c(a, b, "#3b82f6", "#bcd6ff", "#173a80")); [[0, 2], [1, 2], [1, 3], [0, 3]].forEach(([a, b]) => c(a, b, "#facc15", "#fff2a8", "#8a6a00")); } },
+};
+function icone(nom) {
+  const c = document.createElement("canvas"); c.width = c.height = 16; c.className = "ic";
+  const x = c.getContext("2d"), i = ICONES[nom];
+  if (i.draw) i.draw(x); else i.map.forEach((l, y) => [...l].forEach((ch, k) => { if (i.pal[ch]) { x.fillStyle = i.pal[ch]; x.fillRect(k, y, 1, 1); } }));
+  return c;
+}
+const ATELIERS = [
+  { ic: "dex", nom: "Pokédex", court: "POKEDEX", c: "#c8283a", h: "136px", phrase: "Les 1025 Pokémon et leurs types" },
+  { ic: "calc", nom: "Calculator", court: "CALCULATOR", c: "#2f6b4a", h: "118px", phrase: "Le calcul mental en s'amusant" },
+  { ic: "glider", nom: "Jeu de la vie", court: "JEU DE LA VIE", c: "#2a3c8a", h: "128px", phrase: "Des cellules qui naissent et meurent" },
+];
+const haut = () => `<div class="jeux">${[["tetris", "#7a4ac8", "TETRIS"], ["calc", "#3a7a3a", "SNAKE"], ["glider", "#2a8ab0", "ASTEROIDS"]].map(([i, c, n]) => `<div class="mini" style="background:${c}" data-ic="${i}"><b>${n}</b></div>`).join("")}</div>
+  <div class="titre">ATELIERS<small>Des outils pour apprendre et créer</small></div>`;
+const bas = `<div class="tuiles"><div>FAMILLE<small>Rejoindre le classement</small></div><div>SAUVEGARDES<small>Les emporter ailleurs</small></div></div>`;
+
+document.getElementById("A").innerHTML = haut() + `<div class="biblio"><div class="rang"><i class="serre"></i>${ATELIERS.map(a => `<button class="livre" style="--c:${a.c};--h:${a.h}"><span class="couv"></span><span class="pages"></span><span class="plaque" data-ic="${a.ic}"></span><span class="bande"></span><span class="nm">${a.nom.toUpperCase()}</span></button>`).join("")}<i class="serre"></i></div><div class="planche"></div><div class="noms"></div></div>` + bas;
+document.getElementById("B").innerHTML = haut() + `<div class="meuble"><div class="plateau"></div><div class="tiroirs">${ATELIERS.map(a => `<button class="tiroir"><span class="etiq" data-ic="${a.ic}"></span><span class="txt"><b>${a.court}</b><small>${a.phrase}</small></span><span class="poignee"></span></button>`).join("")}</div></div>` + bas;
+document.getElementById("C").innerHTML = haut() + `<div class="panneau">${ATELIERS.map(a => `<button class="outil"><span class="carton"><span class="trou"></span><span data-ic="${a.ic}"></span><b>${a.court.replace(" DE LA ", "<br>DE LA ")}</b></span></button>`).join("")}</div>` + bas;
+document.querySelectorAll("[data-ic]").forEach(e => e.prepend(icone(e.dataset.ic)));
+</script>
