@@ -1,144 +1,206 @@
 <title>Pokédex de poche</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&family=Fredoka:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
 <style>
-/* Mise en page : trois téléphones côte à côte (empilés sur un téléphone), chacun une direction jouable, tout en sprites pixel. */
+/* Mise en page : trois téléphones (empilés sur un téléphone). Même appli, même code, trois habillages (A pixel, B rond moderne, C néon). */
 :root {
   --bg: #e9ecf3; --fg: #1d2230; --muted: #5b6377;
   --pixel: "Press Start 2P", "Courier New", monospace;
-  --texte: "Pixelify Sans", "Courier New", monospace;
+  --pixtexte: "Pixelify Sans", "Courier New", monospace;
+  --rond: "Fredoka", "Trebuchet MS", sans-serif;
+  --tech: "Rajdhani", "Arial Narrow", sans-serif;
+  --mono: "Share Tech Mono", "Courier New", monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0e1220; --fg: #e8ebf2; --muted: #9aa2b6; color-scheme: dark } }
 :root[data-theme="dark"] { --bg: #0e1220; --fg: #e8ebf2; --muted: #9aa2b6; color-scheme: dark }
-body { background: var(--bg); color: var(--fg); font-family: var(--texte); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+body { background: var(--bg); color: var(--fg); font-family: var(--rond); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
 header.page { max-width: 1120px; margin: 0 auto 18px; display: grid; gap: 8px; }
-header.page h1 { margin: 0; font-family: var(--pixel); font-size: 1rem; line-height: 1.5; text-wrap: balance; }
-header.page p { margin: 0; color: var(--muted); max-width: 72ch; line-height: 1.45; font-size: 1.05rem; }
+header.page h1 { margin: 0; font-size: 1.5rem; font-weight: 700; text-wrap: balance; }
+header.page p { margin: 0; color: var(--muted); max-width: 75ch; line-height: 1.5; }
 .phones { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1120px; margin: 0 auto; }
 figure.dir { margin: 0; display: grid; gap: 10px; justify-items: center; }
-figure.dir figcaption { text-align: center; display: grid; gap: 4px; max-width: 340px; }
-figure.dir figcaption b { font-family: var(--pixel); font-size: .7rem; }
-figure.dir figcaption span { color: var(--muted); font-size: 1rem; line-height: 1.35; }
-.tel { width: 340px; max-width: 100%; height: 680px; border-radius: 34px; padding: 10px; background: #05070d; box-shadow: 0 10px 30px rgba(0,0,0,.25); box-sizing: border-box; }
-.ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; position: relative; }
-.ecran > div { height: 100%; overflow: auto; }
-.note { max-width: 1120px; margin: 26px auto 0; color: var(--muted); font-size: .95rem; line-height: 1.45; }
-img { image-rendering: pixelated; }
-button { cursor: pointer; }
-button:focus-visible { outline: 3px solid #ffd84a; outline-offset: 2px; }
+figure.dir figcaption { text-align: center; display: grid; gap: 3px; max-width: 340px; }
+figure.dir figcaption b { font-size: 1.05rem; }
+figure.dir figcaption span { color: var(--muted); font-size: .9rem; line-height: 1.4; }
+.tel { width: 340px; max-width: 100%; height: 700px; border-radius: 34px; padding: 10px; background: #05070d; box-shadow: 0 10px 30px rgba(0,0,0,.25); box-sizing: border-box; }
+.ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; }
+.note { max-width: 1120px; margin: 26px auto 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
 
-/* Décors pixel par type (bandes nettes, sans flou) */
-.d-Plante { background: linear-gradient(#7ec8f0 0 55%, #8fd860 55% 58%, #5cb03c 58% 100%); }
-.d-Feu { background: linear-gradient(#f2a35a 0 30%, #e8743a 30% 55%, #8a4a2a 55% 58%, #5e3020 58% 100%); }
-.d-Eau { background: linear-gradient(#9fd8ff 0 50%, #4a9ae8 50% 54%, #2f6fc8 54% 100%); }
-.d-Électrik { background: linear-gradient(#ffe78a 0 55%, #c9b26a 55% 58%, #8c7a48 58% 100%); }
-.d-Ténèbres { background: linear-gradient(#2a2346 0 55%, #4a3f78 55% 58%, #2c2752 58% 100%); }
+/* ---------- Structure commune ---------- */
+.app { height: 100%; display: flex; flex-direction: column; }
+.app img { image-rendering: pixelated; }
+.app button { cursor: pointer; font: inherit; color: inherit; }
+.app button:focus-visible, .app input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.vue { flex: 1; min-height: 0; overflow: auto; }
+.tete { padding: 18px 14px 8px; display: flex; justify-content: space-between; align-items: baseline; }
+.tete h2 { margin: 0; }
+.recherche { margin: 0 14px; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+.recherche input { flex: 1; min-width: 0; border: 0; background: none; padding: 10px 0; font: inherit; color: inherit; }
+.recherche input:focus { outline: none; }
+.filtres { display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px 6px; scrollbar-width: none; }
+.filtres button { flex: none; border: 0; }
+.gen { margin: 12px 14px 6px; }
+.liste { display: grid; gap: 8px; padding: 0 14px 16px; }
+.ligne { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 10px; border: 0; padding: 0 10px 0 0; text-align: left; }
+.ligne .vig { width: 64px; height: 64px; display: grid; place-items: center; position: relative; overflow: hidden; }
+.ligne .vig img { width: 72px; height: 72px; position: relative; }
+.ligne .nom { display: grid; gap: 2px; min-width: 0; }
+.ligne .types { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.puce { display: inline-block; padding: 3px 8px; color: #fff; white-space: nowrap; }
+.vide { text-align: center; padding: 30px 20px; }
+.onglets { display: grid; grid-template-columns: 1fr 1fr; flex: none; }
+.onglets button { border: 0; padding: 12px 0 14px; background: none; }
+.decor { height: 180px; display: grid; place-items: end center; background: linear-gradient(color-mix(in srgb, var(--c) 35%, white) 0 60%, color-mix(in srgb, var(--c) 75%, black) 60% 100%); }
+.decor img { height: 160px; margin-bottom: 8px; }
+.fiche { display: grid; gap: 10px; padding: 0 14px 18px; }
+.bloc { padding: 10px 12px; }
+.bloc h4 { margin: 0 0 6px; }
+.chaine { display: flex; align-items: center; justify-content: space-between; }
+.chaine button { background: none; border: 0; padding: 0; display: grid; justify-items: center; gap: 2px; }
+.chaine button[disabled] { cursor: default; opacity: .75; }
+.chaine img { width: 60px; height: 60px; border-radius: 50%; }
+.chaine .ici img { background: color-mix(in srgb, var(--c) 30%, transparent); }
+.chaine .fl { text-align: center; }
+.puces { display: flex; flex-wrap: wrap; gap: 5px; }
+.choix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.choix button { border: 0; padding: 7px 0; color: #fff; opacity: .45; }
+.choix button.on { opacity: 1; }
+.resultat { text-align: center; padding: 14px 10px; }
+.resultat .mult { display: block; }
+.duel { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.retour { border: 0; align-self: start; justify-self: start; }
 
-/* ---------- A : plaques bleu nuit ---------- */
-.A { background: #10162b; color: #e9edf7; font-family: var(--texte); }
-.A .titre { padding: 20px 14px 6px; text-align: center; color: #ffd84a; font: 13px var(--pixel); text-shadow: 2px 2px 0 #b3412c; }
-.A .compte { text-align: center; color: #8d9bc4; margin-bottom: 10px; font: 8px/1.6 var(--pixel); }
-.A .grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px 18px; }
-.A .case { background: #1e2a4f; border: 0; box-shadow: inset 0 0 0 2px #3a4c86, 0 3px 0 #070a16; padding: 2px 2px 6px; color: #e9edf7; font: 6px/1.6 var(--pixel); display: grid; justify-items: center; }
-.A .case img { width: 80px; height: 80px; margin: -4px 0 -6px; }
-.A .case .n { color: #8d9bc4; }
-.A .plaque { margin: 0 12px 10px; background: #1e2a4f; box-shadow: inset 0 0 0 2px #3a4c86, 0 3px 0 #070a16; padding: 10px; font-size: 16px; line-height: 1.3; }
-.A .scene { margin: 4px 12px 10px; height: 180px; box-shadow: inset 0 0 0 2px #3a4c86; display: grid; place-items: end center; }
-.A .scene img { height: 150px; margin-bottom: 12px; }
-.A .ent { display: flex; justify-content: space-between; align-items: baseline; color: #ffd84a; font: 11px var(--pixel); }
-.A .ent .n { color: #8d9bc4; font-size: 8px; }
-.A .types { display: flex; gap: 6px; margin-top: 8px; }
-.A .types span, .B .types span, .C .types span { padding: 3px 6px 2px; color: #fff; font: 7px/1.5 var(--pixel); text-shadow: 1px 1px 0 rgba(0,0,0,.5); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
-.A .lbl { color: #8d9bc4; margin-bottom: 6px; font: 8px var(--pixel); }
-.A .barres { display: flex; gap: 4px; }
-.A .barres i { flex: 1; height: 8px; background: #2a365f; }
-.A .barres i.on { background: #ffd84a; }
-.chaine { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
-.chaine button { background: none; border: 0; padding: 0; display: grid; justify-items: center; color: inherit; font: 6px/1.5 var(--pixel); }
-.chaine img { width: 60px; height: 60px; }
-.chaine .fl { font: 6px/1.6 var(--pixel); text-align: center; }
-.A .chaine .ici img { background: #34477f; }
-.A .chaine .fl { color: #ffd84a; }
-.A .bouton { display: block; margin: 4px auto 18px; background: #b3412c; color: #fff; border: 0; font: 9px var(--pixel); padding: 8px 14px; box-shadow: 0 3px 0 #5e1c12; }
+/* ---------- A : pixel (Ludothèque) ---------- */
+.A { --accent: #ffd84a; background: #141a33; color: #e9edf7; font-family: var(--pixtexte); font-size: 16px; }
+.A .tete h2 { font: 13px var(--pixel); color: #ffd84a; text-shadow: 2px 2px 0 #b3412c; }
+.A .tete small, .A .gen { font: 7px/1.6 var(--pixel); color: #8d9bc4; }
+.A .recherche { background: #0b1022; box-shadow: inset 0 0 0 2px #3a4c86; }
+.A .recherche input { font-size: 17px; }
+.A .recherche input::placeholder { color: #6a78a4; }
+.A .filtres button { font: 7px var(--pixel); padding: 6px 8px 5px; background: #24305a; color: #c6d0ee; box-shadow: 0 2px 0 #070a16; }
+.A .filtres button.on { background: var(--c); color: #fff; }
+.A .gen { display: flex; align-items: center; gap: 8px; } .A .gen::after { content: ""; flex: 1; height: 2px; background: #2a365f; }
+.A .ligne { background: #1e2a4f; box-shadow: inset 0 0 0 2px #3a4c86, 0 3px 0 #070a16; }
+.A .ligne .vig { background: var(--c); box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 4px 4px 0 rgba(255,255,255,.2); }
+.A .ligne .vig::before { content: ""; position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 6px solid rgba(255,255,255,.18); box-sizing: border-box; }
+.A .ligne .nom b { font-size: 18px; font-weight: 600; } .A .ligne .nom small { font: 7px var(--pixel); color: #8d9bc4; }
+.A .puce { font: 7px/1.4 var(--pixel); padding: 4px 6px 3px; text-shadow: 1px 1px 0 rgba(0,0,0,.5); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
+.A .onglets { background: #0b1022; box-shadow: 0 -2px 0 #3a4c86; } .A .onglets button { font: 8px var(--pixel); color: #6a78a4; } .A .onglets button.on { color: #ffd84a; }
+.A .decor { margin: 0 -14px; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
+.A .bloc { background: #1e2a4f; box-shadow: inset 0 0 0 2px #3a4c86, 0 3px 0 #070a16; line-height: 1.3; }
+.A .bloc h4 { font: 7px var(--pixel); color: #8d9bc4; }
+.A .titre-fiche { display: flex; justify-content: space-between; align-items: baseline; font: 11px var(--pixel); color: #ffd84a; }
+.A .titre-fiche small { font-size: 8px; color: #8d9bc4; }
+.A .chaine button, .A .chaine .fl { font: 6px/1.5 var(--pixel); } .A .chaine .fl { color: #ffd84a; } .A .chaine img { border-radius: 0; }
+.A .choix button { font: 6px var(--pixel); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
+.A .resultat .mult { font: 28px var(--pixel); color: #ffd84a; margin: 6px 0; } .A .resultat .phr { font: 8px var(--pixel); }
+.A .retour { font: 8px var(--pixel); background: #b3412c; color: #fff; padding: 7px 10px; box-shadow: 0 3px 0 #5e1c12; margin-top: 12px; }
 
-/* ---------- B : cartes de collection ---------- */
-.B { background: #241a3a; color: #f3eee0; font-family: var(--texte); }
-.B .titre { padding: 18px 14px 12px; font: 12px var(--pixel); color: #ffcf5a; display: flex; justify-content: space-between; align-items: center; }
-.B .titre small { font-size: 7px; color: #b9a9d8; }
-.B .liste { display: grid; gap: 6px; padding: 0 12px 18px; }
-.B .ligne { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 8px; border: 0; padding: 0 10px 0 0; background: #33275a; color: inherit; box-shadow: 0 3px 0 #120c22; text-align: left; }
-.B .ligne .vig { width: 56px; height: 56px; display: grid; place-items: center; }
-.B .ligne img { width: 64px; height: 64px; }
-.B .ligne .nom { font-size: 17px; font-weight: 600; }
-.B .ligne .nom small { display: block; font: 7px var(--pixel); color: #b9a9d8; }
-.B .ligne .types { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
-.B .carte { margin: 6px 16px 14px; padding: 8px; background: #e8c260; box-shadow: inset 0 0 0 3px #a87a24, 0 5px 0 #120c22; }
-.B .carte .int { background: var(--t); box-shadow: inset 0 0 0 3px rgba(0,0,0,.25); padding: 8px; display: grid; gap: 8px; }
-.B .carte .ent { display: flex; justify-content: space-between; align-items: center; font: 10px var(--pixel); color: #fff; text-shadow: 2px 2px 0 rgba(0,0,0,.4); }
-.B .carte .vue { height: 170px; display: grid; place-items: end center; box-shadow: inset 0 0 0 3px #a87a24; }
-.B .carte .vue img { height: 150px; margin-bottom: 8px; }
-.B .carte .types { display: flex; gap: 5px; }
-.B .carte .bloc { background: #fbf4dc; color: #2b2238; padding: 8px; font-size: 15px; line-height: 1.3; box-shadow: inset 0 0 0 2px rgba(0,0,0,.15); }
-.B .carte .bloc b { font: 7px var(--pixel); color: #7a6a90; display: block; margin-bottom: 4px; }
-.B .carte .chaine .ici img { background: #f0dfae; outline: 2px solid #a87a24; }
-.B .retour { display: block; margin: 0 auto 18px; background: #ffcf5a; border: 0; font: 9px var(--pixel); padding: 8px 14px; box-shadow: 0 3px 0 #8a6420; color: #2b2238; }
+/* ---------- B : rond moderne (hors pixel, sprites gardés) ---------- */
+.B { --accent: #ff6b4a; background: #f4f1fb; color: #2a2440; font-family: var(--rond); }
+.B .tete h2 { font-size: 28px; font-weight: 700; } .B .tete small { color: #8d86a8; font-weight: 500; }
+.B .recherche { background: #fff; border-radius: 16px; box-shadow: 0 2px 8px rgba(70,50,140,.1); }
+.B .recherche input { font-size: 15px; } .B .recherche input::placeholder { color: #a9a3c0; }
+.B .filtres button { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 99px; background: #fff; color: #5d5677; box-shadow: 0 1px 3px rgba(70,50,140,.12); }
+.B .filtres button.on { background: var(--c); color: #fff; }
+.B .gen { font-size: 13px; font-weight: 600; color: #8d86a8; text-transform: uppercase; letter-spacing: .06em; }
+.B .ligne { background: #fff; border-radius: 20px; box-shadow: 0 2px 8px rgba(70,50,140,.08); padding: 6px 12px 6px 6px; grid-template-columns: 64px 1fr auto; }
+.B .ligne .vig { border-radius: 16px; background: radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--c) 40%, white) 0 45%, color-mix(in srgb, var(--c) 18%, white) 46%); }
+.B .ligne .nom b { font-size: 17px; font-weight: 600; } .B .ligne .nom small { color: #a9a3c0; font-weight: 500; font-size: 12px; }
+.B .puce { font-size: 11px; font-weight: 600; border-radius: 99px; padding: 2px 9px; }
+.B .onglets { background: #fff; box-shadow: 0 -4px 14px rgba(70,50,140,.08); } .B .onglets button { font-weight: 600; color: #a9a3c0; } .B .onglets button.on { color: #ff6b4a; }
+.B .decor { margin: 0 -14px; border-radius: 0 0 32px 32px; background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--c) 55%, white) 0 38%, color-mix(in srgb, var(--c) 85%, white) 39%); }
+.B .bloc { background: #fff; border-radius: 18px; box-shadow: 0 2px 8px rgba(70,50,140,.08); line-height: 1.5; font-size: 15px; }
+.B .bloc h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: #8d86a8; }
+.B .titre-fiche { display: flex; justify-content: space-between; align-items: baseline; font-size: 24px; font-weight: 700; } .B .titre-fiche small { font-size: 15px; color: #a9a3c0; }
+.B .chaine button { font-size: 12px; font-weight: 500; } .B .chaine .fl { font-size: 11px; color: #8d86a8; } .B .chaine img { background: #f4f1fb; }
+.B .choix button { font-size: 12px; font-weight: 600; border-radius: 10px; }
+.B .resultat .mult { font-size: 46px; font-weight: 700; color: #ff6b4a; } .B .resultat .phr { font-weight: 600; }
+.B .retour { background: rgba(255,255,255,.85); border-radius: 99px; padding: 6px 14px; font-weight: 600; margin-top: 12px; }
 
-/* ---------- C : menu de jeu clair ---------- */
-.C { background: #a8d8f0; background-image: linear-gradient(rgba(255,255,255,.35) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,.35) 2px, transparent 2px); background-size: 16px 16px; color: #26324a; font-family: var(--texte); }
-.C .bandeau { background: #3a64c8; color: #fff; font: 11px var(--pixel); padding: 18px 14px 12px; box-shadow: 0 4px 0 #233f86; display: flex; justify-content: space-between; }
-.C .bandeau small { font-size: 7px; color: #c6d6ff; align-self: center; }
-.C .boite { background: #fff; border: 4px solid #4878e0; border-radius: 10px; box-shadow: 0 4px 0 #233f86; margin: 12px; padding: 8px 10px; }
-.C .liste { display: grid; gap: 0; padding: 0; }
-.C .ligne { display: flex; align-items: center; gap: 6px; border: 0; background: none; padding: 0 4px; color: inherit; font-size: 18px; text-align: left; border-bottom: 2px dotted #c4d2ee; }
-.C .ligne:last-child { border-bottom: 0; }
-.C .ligne img { width: 48px; height: 48px; margin: -4px 0; }
-.C .ligne .n { font: 8px var(--pixel); color: #7b8bb0; width: 34px; }
-.C .ligne .pt { margin-left: auto; width: 10px; height: 10px; }
-.C .ligne.sel { background: #ffe9a0; }
-.C .fiche { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-.C .fiche .vue { height: 150px; display: grid; place-items: end center; border-radius: 6px; }
-.C .fiche .vue img { height: 120px; margin-bottom: 6px; }
-.C .fiche .info { padding: 4px 0 0 10px; display: grid; align-content: start; gap: 6px; }
-.C .fiche .info .nom { font: 10px/1.4 var(--pixel); }
-.C .fiche .info .n { font: 8px var(--pixel); color: #7b8bb0; }
-.C .types { display: flex; flex-wrap: wrap; gap: 4px; }
-.C .lbl { font: 7px var(--pixel); color: #3a64c8; margin-bottom: 4px; }
-.C .desc { font-size: 17px; line-height: 1.3; }
-.C .chaine .ici img { background: #ffe9a0; border-radius: 6px; }
-.C .chaine .fl { color: #3a64c8; }
-.C .retour { display: block; margin: 0 auto 18px; background: #fff; border: 4px solid #4878e0; border-radius: 10px; font: 9px var(--pixel); padding: 8px 14px; box-shadow: 0 4px 0 #233f86; color: #26324a; }
+/* ---------- C : néon (hors pixel, sprites gardés) ---------- */
+.C { --accent: #3df2ff; background: #07090f; color: #dfe7f5; font-family: var(--tech); font-size: 16px; }
+.C .tete h2 { font-size: 26px; font-weight: 700; letter-spacing: .12em; color: #3df2ff; text-shadow: 0 0 10px rgba(61,242,255,.6); }
+.C .tete small, .C .gen { font: 12px var(--mono); color: #6f7d99; }
+.C .recherche { border: 1px solid #23324d; background: #0d1320; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+.C .recherche input { font: 15px var(--mono); } .C .recherche input::placeholder { color: #4d5a73; }
+.C .filtres button { font: 600 13px var(--tech); letter-spacing: .05em; padding: 4px 10px; background: transparent; color: #8090ad; border: 1px solid #23324d; }
+.C .filtres button.on { color: var(--c); border-color: var(--c); box-shadow: 0 0 8px var(--c), inset 0 0 6px color-mix(in srgb, var(--c) 40%, transparent); }
+.C .ligne { background: #0d1320; border-left: 3px solid var(--c); box-shadow: inset 30px 0 30px -30px var(--c); }
+.C .ligne .vig { background: radial-gradient(circle, color-mix(in srgb, var(--c) 35%, transparent), transparent 70%); }
+.C .ligne .nom b { font-size: 19px; font-weight: 700; letter-spacing: .03em; } .C .ligne .nom small { font: 12px var(--mono); color: #6f7d99; }
+.C .puce { font: 700 11px var(--tech); letter-spacing: .08em; background: transparent !important; color: var(--c); border: 1px solid var(--c); padding: 1px 7px; text-transform: uppercase; }
+.C .onglets { border-top: 1px solid #23324d; background: #0a0e18; } .C .onglets button { font-weight: 700; letter-spacing: .12em; color: #4d5a73; } .C .onglets button.on { color: #3df2ff; text-shadow: 0 0 8px rgba(61,242,255,.7); }
+.C .decor { margin: 0 -14px; background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, var(--c) 55%, transparent) 0 18%, transparent 19%), radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--c) 30%, transparent), transparent 65%), #07090f; }
+.C .bloc { background: #0d1320; border: 1px solid #23324d; line-height: 1.35; }
+.C .bloc h4 { font: 12px var(--mono); color: #6f7d99; letter-spacing: .1em; }
+.C .titre-fiche { display: flex; justify-content: space-between; align-items: baseline; font-size: 26px; font-weight: 700; letter-spacing: .05em; color: var(--c); text-shadow: 0 0 10px color-mix(in srgb, var(--c) 60%, transparent); } .C .titre-fiche small { font: 14px var(--mono); color: #6f7d99; text-shadow: none; }
+.C .chaine button { font-weight: 600; font-size: 13px; } .C .chaine .fl { font: 11px var(--mono); color: #6f7d99; }
+.C .choix button { font: 700 12px var(--tech); letter-spacing: .05em; background: transparent !important; color: var(--c); border: 1px solid var(--c); }
+.C .choix button.on { box-shadow: 0 0 8px var(--c), inset 0 0 8px color-mix(in srgb, var(--c) 50%, transparent); }
+.C .resultat .mult { font-size: 50px; font-weight: 700; color: #3df2ff; text-shadow: 0 0 14px rgba(61,242,255,.7); } .C .resultat .phr { font: 13px var(--mono); letter-spacing: .1em; }
+.C .retour { background: transparent; border: 1px solid #3df2ff; color: #3df2ff; padding: 5px 12px; font-weight: 700; letter-spacing: .1em; margin-top: 12px; }
 </style>
 
 <header class="page">
-  <h1>POKEDEX DE POCHE · MAQUETTE 2</h1>
-  <p>Tout en sprites pixel, sans contour d'appareil. Trois directions, 15 Pokémon d'exemple dont trois de la 9e génération (Poussacha et ses évolutions) : les sprites pixel existent jusqu'au dernier. Dans les fiches, le sprite est animé quand une version animée existe. Touche une case pour ouvrir une fiche, puis une étape de la chaîne d'évolution.</p>
+  <h1>Pokédex de poche · maquette 3</h1>
+  <p>La liste en lignes de la maquette 2, retravaillée, et le même code habillé de trois façons. Il y a maintenant une barre de recherche (nom, numéro ou type), des filtres par type et une liste rangée par région. Les fiches ont un sprite fixe, avec les faiblesses et les résistances du Pokémon. L'onglet <b>Types</b> calcule le multiplicateur de dégâts : choisis le type de l'attaque, puis un ou deux types pour le Pokémon qui défend.</p>
 </header>
 
 <div class="phones">
   <figure class="dir"><div class="tel"><div class="ecran" id="ecranA"></div></div>
-    <figcaption><b>A · PLAQUES BLEU NUIT</b><span>Le style de la Ludothèque : grille de sprites, fiche avec le Pokémon sur un petit décor de son type.</span></figcaption></figure>
+    <figcaption><b>A · Pixel de la Ludothèque</b><span>Plaques bleu nuit, vignettes en relief à la couleur du type, Press Start 2P pour les titres.</span></figcaption></figure>
   <figure class="dir"><div class="tel"><div class="ecran" id="ecranB"></div></div>
-    <figcaption><b>B · CARTES DE COLLECTION</b><span>Liste en lignes ; chaque fiche est une carte à cadre doré à la couleur du type.</span></figcaption></figure>
+    <figcaption><b>B · Rond et doux</b><span>Hors du pixel : cartes arrondies, pastilles, police ronde. Seuls les sprites restent en pixel.</span></figcaption></figure>
   <figure class="dir"><div class="tel"><div class="ecran" id="ecranC"></div></div>
-    <figcaption><b>C · MENU DE JEU CLAIR</b><span>L'écran de résumé des jeux sur console portable : fond quadrillé, boîtes blanches à bord bleu.</span></figcaption></figure>
+    <figcaption><b>C · Néon de nuit</b><span>Hors du pixel : fond noir, traits lumineux à la couleur du type, chiffres en police technique.</span></figcaption></figure>
 </div>
 
-<p class="note">Descriptions écrites pour la maquette ; l'appli lira les descriptions officielles en français, les types et les évolutions sur PokéAPI, et les sprites sur son dépôt d'images. Pokémon © Nintendo, Creatures, GAME FREAK. Projet de fan, sans lien avec eux.</p>
+<p class="note">Descriptions écrites pour la maquette ; l'appli lira les descriptions officielles en français, les types et les évolutions sur PokéAPI, et les sprites sur son dépôt d'images. Table des types : règles actuelles (18 types, depuis la 6e génération). Pokémon © Nintendo, Creatures, GAME FREAK. Projet de fan, sans lien avec eux.</p>
 
 <script>
 // Images : remplacées par des data: URI dans la copie publiée en artefact (outils/pokedex-maquette/fabriquer.py).
 const SPRITES = /*SPRITES*/null;
-const BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
-const sprite = n => SPRITES ? SPRITES['p' + n] : BASE + n + '.png';
-const anime = n => SPRITES ? (SPRITES['g' + n] || SPRITES['p' + n]) : BASE + 'other/showdown/' + n + '.gif';
+const sprite = n => SPRITES ? SPRITES['p' + n] : 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + n + '.png';
 
-const TYPES = { Plante: '#4c9e3c', Poison: '#8e44a8', Feu: '#e0682a', Vol: '#7e74d6', Eau: '#3a7fd8', 'Électrik': '#d4a610', 'Ténèbres': '#5a4a6a' };
+const TYPES = { Normal: '#9a9a78', Feu: '#e8752a', Eau: '#4f86e8', Plante: '#5cae3c', 'Électrik': '#e3b710', Glace: '#5cc4c0', Combat: '#c22e28', Poison: '#a33ea1', Sol: '#c9a24a', Vol: '#8f7ce8', Psy: '#f0507e', Insecte: '#94a81a', Roche: '#a8922e', Spectre: '#6c5594', Dragon: '#6a35f0', 'Ténèbres': '#6b5546', Acier: '#8c8cae', 'Fée': '#d27aa8' };
+const LISTE_TYPES = Object.keys(TYPES);
+// Table des types : pour chaque type d'attaque, les types défenseurs à ×2, ×½ et ×0.
+const TABLE = {
+  Normal: [[], ['Roche', 'Acier'], ['Spectre']],
+  Feu: [['Plante', 'Glace', 'Insecte', 'Acier'], ['Feu', 'Eau', 'Roche', 'Dragon'], []],
+  Eau: [['Feu', 'Sol', 'Roche'], ['Eau', 'Plante', 'Dragon'], []],
+  Plante: [['Eau', 'Sol', 'Roche'], ['Feu', 'Plante', 'Poison', 'Vol', 'Insecte', 'Dragon', 'Acier'], []],
+  'Électrik': [['Eau', 'Vol'], ['Électrik', 'Plante', 'Dragon'], ['Sol']],
+  Glace: [['Plante', 'Sol', 'Vol', 'Dragon'], ['Feu', 'Eau', 'Glace', 'Acier'], []],
+  Combat: [['Normal', 'Glace', 'Roche', 'Ténèbres', 'Acier'], ['Poison', 'Vol', 'Psy', 'Insecte', 'Fée'], ['Spectre']],
+  Poison: [['Plante', 'Fée'], ['Poison', 'Sol', 'Roche', 'Spectre'], ['Acier']],
+  Sol: [['Feu', 'Électrik', 'Poison', 'Roche', 'Acier'], ['Plante', 'Insecte'], ['Vol']],
+  Vol: [['Plante', 'Combat', 'Insecte'], ['Électrik', 'Roche', 'Acier'], []],
+  Psy: [['Combat', 'Poison'], ['Psy', 'Acier'], ['Ténèbres']],
+  Insecte: [['Plante', 'Psy', 'Ténèbres'], ['Feu', 'Combat', 'Poison', 'Vol', 'Spectre', 'Acier', 'Fée'], []],
+  Roche: [['Feu', 'Glace', 'Vol', 'Insecte'], ['Combat', 'Sol', 'Acier'], []],
+  Spectre: [['Psy', 'Spectre'], ['Ténèbres'], ['Normal']],
+  Dragon: [['Dragon'], ['Acier'], ['Fée']],
+  'Ténèbres': [['Psy', 'Spectre'], ['Combat', 'Ténèbres', 'Fée'], []],
+  Acier: [['Glace', 'Roche', 'Fée'], ['Feu', 'Eau', 'Électrik', 'Acier'], []],
+  'Fée': [['Combat', 'Dragon', 'Ténèbres'], ['Feu', 'Poison', 'Acier'], []],
+};
+const mult1 = (a, d) => TABLE[a][0].includes(d) ? 2 : TABLE[a][1].includes(d) ? .5 : TABLE[a][2].includes(d) ? 0 : 1;
+const mult = (a, defs) => defs.reduce((m, d) => m * mult1(a, d), 1);
+const TXT = m => ({ 0: '×0', .25: '×¼', .5: '×½', 1: '×1', 2: '×2', 4: '×4' })[m];
+const PHRASE = m => m === 0 ? 'SANS EFFET' : m < 1 ? "CE N'EST PAS TRES EFFICACE" : m > 1 ? "C'EST SUPER EFFICACE !" : 'DEGATS NORMAUX';
+
 const CH_PLANTE = [[1, ''], [2, 'Niv. 16'], [3, 'Niv. 32']];
 const CH_FEU = [[4, ''], [5, 'Niv. 16'], [6, 'Niv. 36']];
 const CH_EAU = [[7, ''], [8, 'Niv. 16'], [9, 'Niv. 36']];
 const CH_ELEC = [[172, ''], [25, 'Amitié'], [26, 'Pierre Foudre']];
+const CH_SPECTRE = [[92, ''], [93, 'Niv. 25'], [94, 'Échange']];
+const CH_LUCARIO = [[447, ''], [448, 'Amitié, de jour']];
+const CH_NYMPHALI = [[133, ''], [700, 'Amitié + attaque Fée']];
 const CH_CHAT = [[906, ''], [907, 'Niv. 16'], [908, 'Niv. 36']];
+const NOMS = { 92: 'Fantominus', 93: 'Spectrum', 447: 'Riolu', 133: 'Évoli' };
 const DEX = [
   { n: 1, nom: 'Bulbizarre', types: ['Plante', 'Poison'], ch: CH_PLANTE, desc: "Il porte sur le dos une graine qui grossit avec lui. Elle stocke l'énergie du soleil, ce qui lui permet de rester des jours sans manger." },
   { n: 2, nom: 'Herbizarre', types: ['Plante', 'Poison'], ch: CH_PLANTE, desc: "Le bourgeon sur son dos s'alourdit à mesure qu'il approche de l'éclosion. Il passe alors plus de temps au soleil." },
@@ -149,77 +211,121 @@ const DEX = [
   { n: 7, nom: 'Carapuce', types: ['Eau'], ch: CH_EAU, desc: "Il se réfugie dans sa carapace quand il a peur et projette de l'eau avec force dès qu'on baisse la garde." },
   { n: 8, nom: 'Carabaffe', types: ['Eau'], ch: CH_EAU, desc: "Sa queue duveteuse, signe de longévité, l'aide à garder l'équilibre quand il nage vite." },
   { n: 9, nom: 'Tortank', types: ['Eau'], ch: CH_EAU, desc: "Les canons de sa carapace envoient des jets d'eau assez puissants pour percer l'acier." },
-  { n: 172, nom: 'Pichu', types: ['Électrik'], ch: CH_ELEC, desc: "Encore petit, il ne sait pas bien retenir son électricité et se donne lui-même des décharges quand il est surpris." },
   { n: 25, nom: 'Pikachu', types: ['Électrik'], ch: CH_ELEC, desc: "Il garde de l'électricité dans ses joues. Quand il est menacé, il la libère d'un coup en éclairs." },
   { n: 26, nom: 'Raichu', types: ['Électrik'], ch: CH_ELEC, desc: "Sa longue queue lui sert de prise de terre pour évacuer le trop-plein d'électricité sans se blesser." },
+  { n: 94, nom: 'Ectoplasma', types: ['Spectre', 'Poison'], ch: CH_SPECTRE, desc: "Il se cache dans l'ombre des gens et leur glace le dos. Son sourire est la dernière chose qu'on voit avant le frisson." },
+  { n: 172, nom: 'Pichu', types: ['Électrik'], ch: CH_ELEC, desc: "Encore petit, il ne sait pas bien retenir son électricité et se donne lui-même des décharges quand il est surpris." },
+  { n: 448, nom: 'Lucario', types: ['Combat', 'Acier'], ch: CH_LUCARIO, desc: "Il perçoit l'aura des êtres vivants, ce qui lui permet de deviner leurs pensées et leurs mouvements." },
+  { n: 700, nom: 'Nymphali', types: ['Fée'], ch: CH_NYMPHALI, desc: "Il enroule ses rubans autour du bras de son dresseur pour rester près de lui et apaise les combats d'un souffle." },
   { n: 906, nom: 'Poussacha', types: ['Plante'], ch: CH_CHAT, desc: "Son pelage dégage une odeur d'herbe fraîche. Il fait sa toilette avec soin pour garder ce parfum qui calme ceux qui l'entourent." },
   { n: 907, nom: 'Matourgeon', types: ['Plante'], ch: CH_CHAT, desc: "Il tient une fleur dans sa gueule et s'en sert pour distraire ses adversaires avant de frapper." },
   { n: 908, nom: 'Miascarade', types: ['Plante', 'Ténèbres'], ch: CH_CHAT, desc: "Agile comme un magicien, il fait apparaître des fleurs de sa cape et disparaît dans un tourbillon de pétales." },
 ];
+const REGIONS = [[151, 'Kanto', 1], [251, 'Johto', 2], [386, 'Hoenn', 3], [493, 'Sinnoh', 4], [649, 'Unys', 5], [721, 'Kalos', 6], [809, 'Alola', 7], [905, 'Galar', 8], [1025, 'Paldea', 9]];
+const region = n => REGIONS.find(r => n <= r[0]);
 const parNum = n => DEX.find(p => p.n === n);
-const num3 = n => String(n).padStart(3, '0');
+const nomDe = n => parNum(n) ? parNum(n).nom : NOMS[n];
+const num3 = n => String(n).padStart(4, '0').replace(/^0(?=\d{3}$)/, '');
 const stade = p => p.ch.findIndex(e => e[0] === p.n) + 1;
-const MAJ = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
-const decor = p => 'd-' + p.types[p.types.length > 1 && p.types[1] === 'Ténèbres' ? 1 : 0];
-const chips = (p, maj) => p.types.map(t => `<span style="background:${TYPES[t]}">${maj ? MAJ(t) : MAJ(t)}</span>`).join('');
-const chaine = (p, ici) => p.ch.map((e, k) => (k ? `<div class="fl">▶<br>${MAJ(e[1])}</div>` : '') + `<button class="${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}"><img src="${sprite(e[0])}" alt="">${MAJ(parNum(e[0]).nom)}</button>`).join('');
+const plat = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const MAJ = s => plat(s).toUpperCase();
 
-function ecran(id, rendre) {
-  const o = { el: document.getElementById(id), fiche: null, rendre };
-  o.el.addEventListener('click', ev => {
-    const n = ev.target.closest('[data-n]');
-    if (n) o.fiche = +n.dataset.n; else if (ev.target.closest('[data-retour]')) o.fiche = null; else return;
-    o.el.innerHTML = o.rendre(o.fiche); o.el.firstElementChild.scrollTop = 0;
+function creer(id, skin) {
+  const el = document.getElementById(id);
+  const S = { onglet: 'dex', fiche: null, q: '', filtre: null, att: 'Feu', def: ['Plante', 'Acier'] };
+  const T = t => skin === 'A' ? MAJ(t) : t; // Press Start 2P : pas de majuscules accentuées
+  const puce = t => `<span class="puce" style="background:${TYPES[t]};--c:${TYPES[t]}">${T(t)}</span>`;
+
+  function resultats() {
+    const q = plat(S.q.trim());
+    const l = DEX.filter(p => (!S.filtre || p.types.includes(S.filtre)) && (!q || plat(p.nom).includes(q) || String(p.n).includes(q) || p.types.some(t => plat(t).startsWith(q))));
+    if (!l.length) return `<div class="vide">Aucun Pokémon ne correspond à « ${S.q} ».</div>`;
+    let h = '', reg = null;
+    for (const p of l) {
+      const r = region(p.n);
+      if (r !== reg) { if (reg) h += '</div>'; reg = r; h += `<div class="gen">${skin === 'A' ? MAJ(r[1]) + ' · GEN ' + r[2] : r[1] + ' · génération ' + r[2]}</div><div class="liste">`; }
+      h += `<button class="ligne" data-n="${p.n}" style="--c:${TYPES[p.types[0]]}"><span class="vig"><img src="${sprite(p.n)}" alt=""></span>
+        <span class="nom"><small>N° ${num3(p.n)}</small><b>${p.nom}</b></span><span class="types">${p.types.map(puce).join('')}</span></button>`;
+    }
+    return h + '</div>';
+  }
+
+  function vueDex() {
+    return `<div class="tete"><h2>${skin === 'A' ? 'POKEDEX' : 'Pokédex'}</h2><small>${DEX.length} / 1025</small></div>
+      <label class="recherche"><span aria-hidden="true">⌕</span><input id="q${skin}" type="search" placeholder="Nom, numéro ou type" value="${S.q}"></label>
+      <div class="filtres">${LISTE_TYPES.map(t => `<button data-filtre="${t}" class="${S.filtre === t ? 'on' : ''}" style="--c:${TYPES[t]}">${T(t)}</button>`).join('')}</div>
+      <div id="res${skin}">${resultats()}</div>`;
+  }
+
+  function defense(types) {
+    const m = LISTE_TYPES.map(a => [a, mult(a, types)]);
+    const grp = (f) => m.filter(([, x]) => f(x)).map(([a, x]) => puce(a).replace('</span>', ` ${TXT(x)}</span>`)).join('') || '<span>—</span>';
+    return { craint: grp(x => x > 1), resiste: grp(x => x > 0 && x < 1), immun: grp(x => x === 0) };
+  }
+
+  function vueFiche() {
+    const p = parNum(S.fiche), c = TYPES[p.types[0]], d = defense(p.types);
+    const chaine = p.ch.map((e, k) => (k ? `<div class="fl">▶<br>${T(e[1])}</div>` : '') + `<button class="${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}" ${parNum(e[0]) ? '' : 'disabled'}><img src="${sprite(e[0])}" alt="">${T(nomDe(e[0]))}</button>`).join('');
+    return `<div class="fiche" style="--c:${c}">
+      <button class="retour" data-retour>${skin === 'A' ? '◀ RETOUR' : '‹ Retour'}</button>
+      <div class="decor"><img src="${sprite(p.n)}" alt="${p.nom}"></div>
+      <div class="titre-fiche"><span>${T(p.nom)}</span><small>N° ${num3(p.n)}</small></div>
+      <div class="puces">${p.types.map(puce).join('')}</div>
+      <div class="bloc"><h4>${T('Évolution')} · ${T('stade')} ${stade(p)} / ${p.ch.length}</h4><div class="chaine">${chaine}</div></div>
+      <div class="bloc"><h4>${T('Description')}</h4>${p.desc}</div>
+      <div class="bloc"><h4>${T('Craint')}</h4><div class="puces">${d.craint}</div></div>
+      <div class="bloc"><h4>${T('Résiste à')}</h4><div class="puces">${d.resiste}</div></div>
+      ${d.immun.includes('puce') ? `<div class="bloc"><h4>${T('Immunisé contre')}</h4><div class="puces">${d.immun}</div></div>` : ''}
+    </div>`;
+  }
+
+  function vueTypes() {
+    const m = mult(S.att, S.def), a = TABLE[S.att];
+    const liste = l => l.length ? l.map(puce).join('') : '<span>—</span>';
+    const btn = (t, on, k) => `<button data-${k}="${t}" class="${on ? 'on' : ''}" style="background:${TYPES[t]};--c:${TYPES[t]}">${T(t)}</button>`;
+    return `<div class="tete"><h2>${skin === 'A' ? 'TYPES' : 'Types'}</h2><small>${T('dégâts')}</small></div>
+      <div class="fiche">
+        <div class="bloc resultat"><div class="duel">${puce(S.att)} <span>▶</span> ${S.def.map(puce).join(' ')}</div>
+          <span class="mult">${TXT(m)}</span><span class="phr">${PHRASE(m)}</span></div>
+        <div class="bloc"><h4>${T("Type de l'attaque")}</h4><div class="choix">${LISTE_TYPES.map(t => btn(t, t === S.att, 'att')).join('')}</div></div>
+        <div class="bloc"><h4>${T('Pokémon qui défend (1 ou 2 types)')}</h4><div class="choix">${LISTE_TYPES.map(t => btn(t, S.def.includes(t), 'def')).join('')}</div></div>
+        <div class="bloc"><h4>${T(S.att)} ${T('en attaque')}</h4>
+          <div class="puces">${T('Fort contre')} : ${liste(a[0])}</div><br><div class="puces">${T('Peu efficace contre')} : ${liste(a[1])}</div>${a[2].length ? `<br><div class="puces">${T('Sans effet sur')} : ${liste(a[2])}</div>` : ''}</div>
+      </div>`;
+  }
+
+  function rendre() {
+    const corps = S.onglet === 'types' ? vueTypes() : S.fiche ? vueFiche() : vueDex();
+    el.innerHTML = `<div class="app ${skin}"><div class="vue">${corps}</div>
+      <nav class="onglets"><button data-onglet="dex" class="${S.onglet === 'dex' ? 'on' : ''}">${skin === 'A' ? 'POKEDEX' : 'Pokédex'}</button><button data-onglet="types" class="${S.onglet === 'types' ? 'on' : ''}">${skin === 'A' ? 'TYPES' : 'Types'}</button></nav></div>`;
+  }
+
+  el.addEventListener('click', ev => {
+    const b = ev.target.closest('button'); if (!b || b.disabled) return;
+    const vue = el.querySelector('.vue'), haut = vue.scrollTop;
+    let garder = false;
+    if (b.dataset.n) S.fiche = +b.dataset.n;
+    else if ('retour' in b.dataset) S.fiche = null;
+    else if (b.dataset.onglet) { S.onglet = b.dataset.onglet; S.fiche = b.dataset.onglet === 'dex' ? S.fiche : S.fiche; }
+    else if (b.dataset.filtre) { S.filtre = S.filtre === b.dataset.filtre ? null : b.dataset.filtre; garder = true; }
+    else if (b.dataset.att) { S.att = b.dataset.att; garder = true; }
+    else if (b.dataset.def) {
+      const t = b.dataset.def;
+      if (S.def.includes(t)) { if (S.def.length > 1) S.def = S.def.filter(x => x !== t); }
+      else S.def = S.def.length < 2 ? [...S.def, t] : [S.def[1], t];
+      garder = true;
+    } else return;
+    rendre();
+    if (garder) el.querySelector('.vue').scrollTop = haut;
   });
-  o.montrer = f => { o.fiche = f; o.el.innerHTML = rendre(f); };
-  return o;
+  el.addEventListener('input', ev => {
+    if (!ev.target.matches('input')) return;
+    S.q = ev.target.value; el.querySelector('#res' + skin).innerHTML = resultats();
+  });
+  return { S, rendre };
 }
 
-/* ---------- A ---------- */
-const A = ecran('ecranA', f => {
-  if (f === null) return `<div class="A"><div class="titre">POKEDEX</div><div class="compte">VUS ${DEX.length} · 1025 EN TOUT</div>
-    <div class="grille">${DEX.map(p => `<button class="case" data-n="${p.n}"><img src="${sprite(p.n)}" alt=""><span class="n">${num3(p.n)}</span>${MAJ(p.nom)}</button>`).join('')}</div></div>`;
-  const p = parNum(f), s = stade(p);
-  return `<div class="A"><div class="titre">POKEDEX</div>
-    <div class="scene ${decor(p)}"><img src="${anime(p.n)}" alt="${p.nom}"></div>
-    <div class="plaque"><div class="ent"><span>${MAJ(p.nom)}</span><span class="n">N.${num3(p.n)}</span></div><div class="types">${chips(p)}</div></div>
-    <div class="plaque"><div class="lbl">STADE ${s}/${p.ch.length}</div><div class="barres">${p.ch.map((e, k) => `<i class="${k < s ? 'on' : ''}"></i>`).join('')}</div>
-      <div class="chaine">${chaine(p)}</div></div>
-    <div class="plaque"><div class="lbl">DESCRIPTION</div>${p.desc}</div>
-    <button class="bouton" data-retour>RETOUR</button></div>`;
-});
-
-/* ---------- B ---------- */
-const B = ecran('ecranB', f => {
-  if (f === null) return `<div class="B"><div class="titre">COLLECTION <small>${DEX.length} CARTES</small></div>
-    <div class="liste">${DEX.map(p => `<button class="ligne" data-n="${p.n}"><span class="vig" style="background:${TYPES[p.types[0]]}"><img src="${sprite(p.n)}" alt=""></span>
-      <span class="nom"><small>N.${num3(p.n)}</small>${p.nom}</span><span class="types">${chips(p)}</span></button>`).join('')}</div></div>`;
-  const p = parNum(f);
-  return `<div class="B"><div class="titre">COLLECTION <small>N.${num3(p.n)}</small></div>
-    <div class="carte" style="--t:${TYPES[p.types[0]]}"><div class="int">
-      <div class="ent"><span>${MAJ(p.nom)}</span><span>${stade(p)}/${p.ch.length}</span></div>
-      <div class="vue ${decor(p)}"><img src="${anime(p.n)}" alt="${p.nom}"></div>
-      <div class="types">${chips(p)}</div>
-      <div class="bloc"><b>STADE ${stade(p)} SUR ${p.ch.length}</b><div class="chaine">${chaine(p)}</div></div>
-      <div class="bloc"><b>DESCRIPTION</b>${p.desc}</div>
-    </div></div>
-    <button class="retour" data-retour>RETOUR</button></div>`;
-});
-
-/* ---------- C ---------- */
-const C = ecran('ecranC', f => {
-  if (f === null) return `<div class="C"><div class="bandeau">POKEDEX <small>PAR NUMERO</small></div>
-    <div class="boite liste">${DEX.map(p => `<button class="ligne" data-n="${p.n}"><img src="${sprite(p.n)}" alt=""><span class="n">${num3(p.n)}</span>${p.nom}
-      <span class="pt" style="background:${TYPES[p.types[0]]}"></span></button>`).join('')}</div></div>`;
-  const p = parNum(f);
-  return `<div class="C"><div class="bandeau">FICHE <small>N.${num3(p.n)}</small></div>
-    <div class="boite fiche"><div class="vue ${decor(p)}"><img src="${anime(p.n)}" alt="${p.nom}"></div>
-      <div class="info"><div class="n">N.${num3(p.n)}</div><div class="nom">${MAJ(p.nom)}</div><div class="types">${chips(p)}</div><div class="n">STADE ${stade(p)}/${p.ch.length}</div></div></div>
-    <div class="boite"><div class="lbl">EVOLUTION</div><div class="chaine">${chaine(p)}</div></div>
-    <div class="boite"><div class="lbl">DESCRIPTION</div><div class="desc">${p.desc}</div></div>
-    <button class="retour" data-retour>RETOUR</button></div>`;
-});
-
-// Arrivée : une liste et deux fiches, pour montrer les deux écrans.
-A.montrer(null); B.montrer(6); C.montrer(906);
+const A = creer('ecranA', 'A'), B = creer('ecranB', 'B'), C = creer('ecranC', 'C');
+// Arrivée : la liste en A, une fiche en B, le calcul des types en C.
+A.rendre(); B.S.fiche = 448; B.rendre(); C.S.onglet = 'types'; C.rendre();
 </script>

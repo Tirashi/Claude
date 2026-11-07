@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """Fabrique la copie de maquettes/pokedex.html publiée en artefact.
 
-Les images Pokémon ne sont pas dans le dépôt : ce script télécharge les sprites pixel
-(et animés quand ils existent) sur le dépôt PokeAPI/sprites (raw.githubusercontent.com) et les met en data: URI dans
+Les images Pokémon ne sont pas dans le dépôt : ce script télécharge les sprites pixel sur le dépôt PokeAPI/sprites (raw.githubusercontent.com) et les met en data: URI dans
 la copie (un artefact ne peut pas charger d'images d'un autre site).
 
   python3 outils/pokedex-maquette/fabriquer.py SORTIE.html [DOSSIER_CACHE]
 """
 import base64, json, os, sys, urllib.request
 
-NUMS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 172, 25, 26, 906, 907, 908]
+NUMS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 26, 92, 93, 94, 133, 172, 447, 448, 700, 906, 907, 908]
 BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'
 ici = os.path.dirname(os.path.abspath(__file__))
 src = os.path.join(ici, '..', '..', 'maquettes', 'pokedex.html')
@@ -32,9 +31,6 @@ def uri(octets, mime):
 sprites = {}
 for n in NUMS:
     sprites['p%d' % n] = uri(lire('p%d.png' % n, BASE + '%d.png' % n), 'image/png')
-    g = lire('g%d.gif' % n, BASE + 'other/showdown/%d.gif' % n)  # sprite animé (absent pour quelques-uns)
-    if g:
-        sprites['g%d' % n] = uri(g, 'image/gif')
 
 html = open(src, encoding='utf-8').read()
 assert '/*SPRITES*/null' in html
