@@ -153,6 +153,15 @@ Envie : un jeu dans l'espace avec de la gestion et de la tactique, des vaisseaux
 
 - ✅ **Bonbons en cascade → Doggy Saga** (fini le 23/10) — détails déplacés dans [`specs/doggy-saga.md`](specs/doggy-saga.md).
 
+## Idées du 07/11 (de l'utilisateur)
+Ordre conseillé : coloriage, puis musique, puis le dungeon crawler et son bestiaire ; la stratégie quand l'idée sera mûre.
+
+- **Dungeon crawler à capture de monstres** (nom à trouver) ⚫ — chantier : cahier des charges de l'utilisateur dans [`specs/donjon-capture.md`](specs/donjon-capture.md). Prochaine étape : maquette.
+- **Pokédex minimaliste** 🟢 — fiche par créature : image, type, stade d'évolution, description. Les vrais Pokémon appartiennent à Nintendo / The Pokémon Company (le site est public) : piste retenue, le **bestiaire du dungeon crawler** avec nos propres monstres (ou un vrai Pokédex dans un dépôt privé, hors Ludothèque).
+- **Atelier de musique** 🟡 — découvrir la création musicale en s'amusant, très simple et ergonomique : grille de pas (séquenceur de 8 ou 16 colonnes ; lignes batterie, basse, mélodie), notes toujours dans la gamme pour que rien ne sonne faux, la boucle tourne pendant qu'on touche les cases ; sons fabriqués par Web Audio (aucune ressource externe).
+- **Dessin et coloriage magique** 🟢 — deux onglets : dessin libre (pinceaux, couleurs, gomme, enregistrer) et **coloriage par additions** : chaque case porte un calcul, chaque résultat est une couleur de la palette ; niveaux (additions jusqu'à 10, 20, puis soustractions, tables) ; coloriage du jour possible. Pour les enfants.
+- **Grande stratégie commerciale victorienne** 🔴 à ⚫ — façon Victoria 3 en simple : **carte aux territoires dessinés** (formes et frontières, pas d'hexagones), quelques aménagements par territoire, surtout du **commerce** : acheter et vendre des ressources entre États, prix qui bougent avec l'offre et la demande, chaînes de production et industrialisation ; batailles à résolution simple, peu d'animations. Époque **victorienne** choisie le 07/11 (le Moyen Âge serait trop proche de Duché). Voisins à ne pas répéter : Duché, Bannières, La Caravane, Le Port de commerce.
+
 ## Achats (bundles et packs repérés, relevé du 30/10)
 Bundles mis de côté par l'utilisateur (onglets ouverts le 30/10). Heures en heure de Paris. Licences : utilisation dans nos jeux, pas de revente ni de redistribution des fichiers (accepté depuis le 30/10, voir « Préférences notées »).
 
