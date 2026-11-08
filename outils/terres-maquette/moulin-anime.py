@@ -49,7 +49,17 @@ masque = [[any(est_aile(x, y, a) for a in DIRS) for x in range(W)] for y in rang
 C = 2 * R1 + 8; aile = Image.new("RGBA", (C, C)); pa = aile.load()
 for y in range(H):
   for x in range(W):
-    if est_aile(x, y, DIRS[0]) and lateral(x, y, DIRS[0])[1] >= 27: pa[x - HX + C // 2, y - HY + C // 2] = px[x, y]
+    sur_toit = ((x - TCX) / TRX) ** 2 + ((y - TCY) / TRY) ** 2 <= 1.05
+    if est_aile(x, y, DIRS[0]) and lateral(x, y, DIRS[0])[1] >= 27 and (not sur_toit or clair(px[x, y]) or (lateral(x, y, DIRS[0])[0] > 2 and sum(clair(px[x + dx, y + dy]) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if 0 <= x + dx < W and 0 <= y + dy < H) >= 2)): pa[x - HX + C // 2, y - HY + C // 2] = px[x, y]   # rien du toit dans l'aile
+# l'aile modèle : le bout près du moyeu (au-dessus du toit) est refait en recopiant la toile 18 px plus loin (la toile se répète)
+t0 = math.radians(DIRS[0]); ux, uy, sx_, sy_ = math.cos(t0), math.sin(t0), math.cos(t0 - math.pi / 2), math.sin(t0 - math.pi / 2)
+for _ in range(2):
+  for yy in range(C):
+    for xx in range(C):
+      dx, dy = xx - C // 2, yy - C // 2; r = dx * ux + dy * uy; l = dx * sx_ + dy * sy_
+      if 27 <= r < 46 and LAT0 <= l <= LAT1:
+        qx, qy = round(C // 2 + (r + 18) * ux + l * sx_), round(C // 2 + (r + 18) * uy + l * sy_)
+        if 0 <= qx < C and 0 <= qy < C and pa[qx, qy][3]: pa[xx, yy] = pa[qx, qy]
 # 2. la tour sans les ailes : dehors -> transparent ; dedans -> pixel voisin non masqué de la même rangée (pas de 16 px, comme les pierres)
 corps = im.copy(); pc = corps.load()
 for y in range(H):
@@ -100,7 +110,7 @@ for f in range(N):
   from PIL import ImageDraw
   d = ImageDraw.Draw(img)
   for k in range(4):   # les bras près du moyeu, redessinés (contour sombre, bois clair)
-    t = math.radians(DIRS[0] + phi + 90 * k); ex, ey = HX + math.cos(t) * 28, HY + math.sin(t) * 28
+    t = math.radians(DIRS[0] + phi + 90 * k); ex, ey = HX + math.cos(t) * 40, HY + math.sin(t) * 40
     d.line([(HX, HY), (ex, ey)], fill=(74, 46, 24, 255), width=4); d.line([(HX, HY), (ex, ey)], fill=(176, 122, 64, 255), width=2)
   img.alpha_composite(moyeu, (HX - 7, HY - 7))
   bande.paste(img, (f * W, 0))

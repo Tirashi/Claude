@@ -1,0 +1,386 @@
+<title>Terres franches · retouches</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=IM+Fell+English&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* Mise en page : deux téléphones (empilés sur un téléphone) = la même vallée Cute SCKR, les mêmes villageois LPC, deux habillages d'interface. */
+:root { --bg: #e8eadf; --fg: #23261c; --muted: #5d634f; --texte: "Alegreya Sans", "Trebuchet MS", sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #121410; --fg: #e9ecdf; --muted: #a2a891; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #121410; --fg: #e9ecdf; --muted: #a2a891; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--texte); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header.page { max-width: 1000px; margin: 0 auto 18px; display: grid; gap: 6px; }
+header.page h1 { margin: 0; font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 1.9rem; text-wrap: balance; }
+header.page p, .note p { margin: 0; color: var(--muted); max-width: 80ch; line-height: 1.5; }
+.phones { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; max-width: 1000px; margin: 0 auto; }
+figure.dir { margin: 0; display: grid; gap: 10px; justify-items: center; }
+figure.dir figcaption { display: grid; gap: 4px; max-width: 360px; }
+figure.dir figcaption b { font-size: 1.1rem; }
+figure.dir figcaption span { color: var(--muted); font-size: .95rem; line-height: 1.4; }
+.tel { width: 360px; max-width: 100%; height: 740px; border-radius: 34px; padding: 10px; background: #0a0a08; box-shadow: 0 10px 30px rgba(0,0,0,.28); box-sizing: border-box; }
+.ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; position: relative; user-select: none; -webkit-user-select: none; font-family: "Pixelify Sans", monospace; font-size: 13px; }
+.ecran canvas { flex: 1; min-height: 0; width: 100%; display: block; touch-action: none; cursor: grab; }
+.ressources { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px; }
+.res { display: flex; align-items: center; gap: 4px; min-width: 0; line-height: 1; }
+.res img { width: 22px; height: 22px; object-fit: contain; image-rendering: pixelated; flex: none; }
+.res b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.res small { font-size: 10px; opacity: .8; margin-left: auto; }
+.panneau { flex: none; display: grid; gap: 4px; }
+.titre { text-align: center; font-weight: 700; letter-spacing: 1px; }
+.metier { display: grid; grid-template-columns: 30px 22px 1fr auto; align-items: center; gap: 6px; }
+.metier canvas.portrait { width: 30px; height: 30px; image-rendering: pixelated; flex: none; cursor: default; }
+.metier img { width: 20px; height: 20px; object-fit: contain; image-rendering: pixelated; }
+.metier .nom { display: grid; line-height: 1.1; min-width: 0; }
+.metier .nom small { font-size: 10px; opacity: .75; }
+.pm { display: flex; align-items: center; gap: 4px; }
+.pm b { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px; }
+.chantier { display: grid; grid-template-columns: 30px 1fr; gap: 6px; align-items: center; }
+.chantier img { width: 30px; height: 30px; object-fit: contain; image-rendering: pixelated; }
+.jauge { height: 12px; position: relative; }
+.jauge i { position: absolute; inset: 0 auto 0 0; display: block; }
+.outils { display: flex; gap: 3px; }
+.outils button { flex: 1; font-size: 11px; min-width: 0; }
+.outils button[data-z] { flex: 0 0 30px; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid #f2c94c; outline-offset: 1px; }
+
+/* ---------- A : bois et parchemin (ToffeeCraft) ---------- */
+.uiBois { background: #2a1d14; color: #f3e2c0; }
+.uiBois .ressources { background: #3b2a1c; box-shadow: inset 0 -3px 0 #1d140d; }
+.uiBois .res { border-style: solid; border-width: 7px 8px; border-image: var(--t-planche) 8 9 fill / 7px 8px stretch; image-rendering: pixelated; color: #2b1a0e; padding: 0 2px; }
+.uiBois .res small { color: #5a3a1e; }
+.uiBois .panneau { margin: 6px; border-style: solid; border-width: 14px; border-image: var(--t-cadre) 14 fill / 14px stretch; image-rendering: pixelated; color: #2b1a0e; padding: 0 2px; }
+.uiBois .titre { border-style: solid; border-width: 6px 8px; border-image: var(--t-planche) 8 9 fill / 6px 8px stretch; color: #fbeccc; text-shadow: 1px 1px 0 #2b1a0e; }
+.uiBois .pm button { width: 28px; height: 28px; border: 0; padding: 0; background: var(--t-plus2) center / 100% 100% no-repeat; image-rendering: pixelated; font-size: 0; }
+.uiBois .pm button[data-d="-1"] { background-image: var(--t-moins2); }
+.uiBois .pm button:active { background-image: var(--t-plus); }
+.uiBois .pm button[data-d="-1"]:active { background-image: var(--t-moins); }
+.uiBois .outils button { border-style: solid; border-width: 6px 8px; border-image: var(--t-planche) 8 9 fill / 6px 8px stretch; background: none; color: #fbeccc; padding: 0 2px; text-shadow: 1px 1px 0 #2b1a0e; font-weight: 600; }
+.uiBois .outils button.on { filter: hue-rotate(-25deg) saturate(1.6) brightness(1.1); }
+.uiBois .jauge { background: #4a3020; border: 2px solid #2b1a0e; }
+.uiBois .jauge i { background: linear-gradient(#e8b84a, #b07a22); }
+.uiBois .metier + .metier { border-top: 1px dashed rgba(60,35,15,.35); padding-top: 3px; }
+
+/* ---------- B : Tiny Swords ---------- */
+.uiTS { background: #3b4a2a; color: #fbf1dc; }
+.uiTS .ressources { background: #6b4a2e; box-shadow: inset 0 -3px 0 #4a3020; }
+.uiTS .res { border-style: solid; border-width: 7px 9px; border-image: var(--ui-papier) 44 52 45 52 fill / 7px 9px stretch; color: #3c2a1a; padding: 0 1px; }
+.uiTS .res small { color: #7a5a3a; }
+.uiTS .panneau { margin: 4px; border-style: solid; border-width: 20px 24px 30px 26px; border-image: var(--ui-parchemin) 68 84 111 100 fill / 20px 24px 30px 26px stretch; color: #3c2a1a; }
+.uiTS .titre { border-style: solid; border-width: 0 26px; border-image: var(--ui-ruban-rouge) 0 97 0 98 fill / 0 26px stretch; color: #fff; padding: 5px 0 9px; margin: -10px 10px 0; text-shadow: 1px 1px 0 #3a1010; }
+.uiTS .pm button { width: 30px; height: 30px; border-style: solid; border-width: 8px; border-image: var(--ui-carre-bleu) 30 fill / 8px stretch; background: none; color: #fff; padding: 0; font-weight: 700; line-height: 1; }
+.uiTS .pm button:active { border-image-source: var(--ui-carre-bleu-appui); }
+.uiTS .outils button { border-style: solid; border-width: 8px; border-image: var(--ui-carre-bleu) 30 fill / 8px stretch; background: none; color: #fff; padding: 0 2px; font-weight: 600; }
+.uiTS .outils button.on { border-image-source: var(--ui-carre-rouge); }
+.uiTS .jauge { border-style: solid; border-width: 0 6px; border-image: var(--ui-barre) 0 24 fill / 0 6px stretch; height: 16px; }
+.uiTS .jauge i { background: var(--ui-barre-plein) 0 0 / auto 100% repeat-x; inset: 3px auto 5px 0; }
+.note { max-width: 1000px; margin: 26px auto 0; display: grid; gap: 8px; }
+.note h2 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; margin: 8px 0 0; font-size: 1.3rem; }
+</style>
+
+<header class="page">
+  <h1>Terres franches · retouches</h1>
+  <p>Maquette 7, retouches de la maquette 6 : la route du sud longe les champs au lieu de passer dessous, la fumée monte droit au ras des cheminées avant de pencher avec le vent (le four n'en a plus : il n'a pas de cheminée), l'aile du moulin n'emporte plus aucun pixel du toit, et des vols d'oiseaux traversent régulièrement l'écran (avec des oiseaux qui picorent au sol près des champs et sur la place). Toujours : SAISON, METEO, NUIT.</p></p></p>
+</header>
+
+<div class="phones">
+  <figure class="dir"><div class="tel"><div class="ecran uiTS" id="B"></div></div>
+    <figcaption><b>Quatre saisons</b><span>Faites glisser la carte, zoomez avec + ; SAISON, METEO et NUIT changent l'ambiance.</span></figcaption></figure>
+</div>
+
+<div class="note">
+  <h2>Sources</h2>
+  <p>Villageois : Universal LPC Spritesheet Character Generator (gratuit ; CC-BY-SA 3.0 / GPL 3.0, chaque auteur sera cité dans les crédits), composés par <code>outils/terres-maquette/lpc-villageois.py</code>. Icônes : Medieval Fantasy Icons, Pixel Medieval Fantasy Icon et Pixel Food Icon (lot Cute SCKR déjà acheté). Interface A : Fantasy UI de ToffeeCraft (version gratuite ; un « méga pack » payant existe). Interface B : Tiny Swords.</p>
+</div>
+
+<script>
+const IMAGES = "@@IMAGES@@";
+const VILLAGEOIS = "@@VILLAGEOIS@@";
+const IMG = {};
+for (const k in IMAGES){ const im = new Image(); im.src = IMAGES[k]; IMG[k] = im; }
+const ok = im => im && (im instanceof HTMLCanvasElement || (im.complete && im.naturalWidth > 0));
+const T = 48, MW = 40, MH = 46;
+for (const k of ["t-planche", "t-cadre", "t-plus", "t-moins", "t-plus2", "t-moins2", "ui-papier", "ui-parchemin", "ui-ruban-rouge", "ui-carre-bleu", "ui-carre-bleu-appui", "ui-carre-rouge", "ui-barre", "ui-barre-plein"])
+  document.documentElement.style.setProperty("--" + k, `url(${IMAGES[k]})`);
+/*@@COMMUN@@*/
+STYLE.B.rive = "#a07a4e"; STYLE.B.routeImg = "terre"; STYLE.B.routeBord = "rgba(104,84,40,.45)"; STYLE.B.eau = "#78bde0";
+/* ---------- les villageois LPC ---------- */
+const HACHE = VILLAGEOIS.filter(v => v.outil === "hache").map(v => v.i), HOUE = VILLAGEOIS.filter(v => v.outil === "houe").map(v => v.i);
+const PORTE = {bois: "i-bois", viande: "i-ble", or: "i-pierre"};
+function lpc(x, v, mode, dir, f, X, Y, k){
+  if (mode === "travail"){ const im = IMG["lpc" + v + "-travail"]; if (!ok(im)) return; const fs = im.height / 2, nb = im.width / fs, row = dir === "d" ? 1 : 0, i = Math.floor(f) % nb;
+    x.drawImage(im, i * fs, row * fs, fs, fs, Math.round(X - fs / 2 * k), Math.round(Y - (fs === 128 ? 92 : 60) * k), fs * k, fs * k); return; }
+  if (mode === "repos"){ const im = IMG["lpc" + v + "-repos"]; if (!ok(im)) return; const i = Math.floor(f / 4) % 2; x.drawImage(im, i * 64, 128, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k); return; }
+  const im = IMG["lpc" + v + "-marche"]; if (!ok(im)) return; const row = {h: 0, g: 1, b: 2, d: 3}[dir], i = 1 + Math.floor(f) % 8;
+  x.drawImage(im, i * 64, row * 64, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k);
+}
+function portrait(c, v){ const b = c.getContext("2d"); b.imageSmoothingEnabled = false; const im = IMG["lpc" + v + "-repos"]; const go = () => { b.clearRect(0, 0, 30, 30); b.drawImage(im, 17, 128 + 6, 30, 30, 0, 0, 30, 30); }; ok(im) ? go() : im.addEventListener("load", go); }
+
+const METIERS = [{nom: "Bucherons", ic: "i-bois", n: 6, v: HACHE[0], prod: "+38 bois/min"}, {nom: "Fermiers", ic: "i-ble", n: 8, v: HOUE[0], prod: "+52 ble/min"}, {nom: "Meuniers", ic: "i-farine", n: 2, v: HACHE[3], prod: "ble > farine"},
+  {nom: "Boulangers", ic: "i-pain", n: 2, v: HOUE[2], prod: "farine > pain"}, {nom: "Tisserands", ic: "i-tissu", n: 1, v: HOUE[4], prod: "laine > tissu"}];
+const RES = [["i-bois", 248, "+38"], ["i-pierre", 96, "+12"], ["i-ble", 140, "+52"], ["i-pain", 54, "+9"], ["i-laine", 22, "+4"], ["i-or", 310, "+6"]];
+
+/* ---------- l'eau du pack, animée ---------- */
+const FIN_RIV = (() => { let y = 30; while (y < coteY(rivX(y))) y += .02; return y + .15; })();
+const MER = (() => { const p = new Path2D(); p.moveTo(0, MH * T); for (let X = 0; X <= MW * T; X += 12) p.lineTo(X, coteY(X / T) * T); p.lineTo(MW * T, MH * T); p.closePath(); return p; })();
+const BERGES = [-1, 1].map(sg => { const p = new Path2D(); for (let y = -1; y <= FIN_RIV - .2; y += .25) p.lineTo((rivX(y) + sg * .9) * T, y * T); return p; });
+const RIVIERE = (() => { const q = new Path2D(); for (let y = -1; y <= FIN_RIV; y += .25) q.lineTo((rivX(y) - .9) * T, y * T); for (let y = FIN_RIV; y >= -1; y -= .25) q.lineTo((rivX(y) + .9) * T, y * T); q.closePath(); return q; })();
+let motifEau = null;
+function eauAnimee(x, t, cam, vw, vh){
+  if (!ok(IMG.eau)) return; if (!motifEau) motifEau = x.createPattern(IMG.eau, "repeat");
+  const X0 = cam.x - vw / 2 - 60, Y0 = cam.y - vh / 2 - 60;
+  for (const zone of [MER, RIVIERE]){ x.save(); x.clip(zone);
+    for (const [ox, oy, al] of [[t * 6, t * 3, 1], [-t * 5 + 17, t * 4 + 23, .45]]){ motifEau.setTransform(new DOMMatrix([1, 0, 0, 1, ox % 48, oy % 48])); x.globalAlpha = al; x.fillStyle = motifEau; x.fillRect(X0, Y0, vw + 120, vh + 120); }
+    if (SAISON === 3){ x.globalAlpha = .5; x.fillStyle = "#e4eef6"; x.fillRect(X0, Y0, vw + 120, vh + 120); }
+    x.globalAlpha = 1; x.restore(); }
+  // bord sombre de la mer et des berges, puis l'écume qui va et vient
+  x.strokeStyle = "rgba(40,80,120,.55)"; x.lineWidth = 3;
+  x.beginPath(); for (let X = 0; X <= MW * T; X += 12) x.lineTo(X, coteY(X / T) * T); x.stroke(); for (const b of BERGES) x.stroke(b);
+  if (SAISON === 3) return;
+  x.strokeStyle = `rgba(235,250,255,${.35 + .2 * Math.sin(t * 2)})`; x.lineWidth = 2; x.setLineDash([10, 7]); x.lineDashOffset = -t * 9;
+  x.beginPath(); for (let X = 0; X <= MW * T; X += 12) x.lineTo(X, (coteY(X / T) + .12 + .04 * Math.sin(t * 1.5 + X * .02)) * T); x.stroke();
+  for (const sg of [-1, 1]){ x.beginPath(); for (let y = -1; y <= FIN_RIV - .3; y += .3) x.lineTo((rivX(y) + sg * .78) * T, y * T); x.stroke(); }
+  x.setLineDash([]);
+}
+/* ---------- le pont, dans l'axe de la route ---------- */
+const PONT = (() => { const a = [19, 22], b = [29, 23.2]; let lo = 0, hi = 1; const f = u => a[0] + (b[0] - a[0]) * u - rivX(a[1] + (b[1] - a[1]) * u);
+  for (let k = 0; k < 40; k++){ const m = (lo + hi) / 2; (f(lo) * f(m) <= 0) ? hi = m : lo = m; }
+  const u = (lo + hi) / 2; return {x: (a[0] + (b[0] - a[0]) * u) * T, y: (a[1] + (b[1] - a[1]) * u) * T, ang: Math.atan2(b[1] - a[1], b[0] - a[0])}; })();
+function pont(x){
+  const L = 3.3 * T, l = 1.2 * T; x.save(); x.translate(PONT.x, PONT.y); x.rotate(PONT.ang);
+  x.fillStyle = "rgba(20,30,40,.25)"; x.fillRect(-L / 2 + 4, -l / 2 + 8, L, l);
+  x.fillStyle = "#5e3a1e"; x.fillRect(-L / 2, -l / 2, L, l);
+  for (let k = 0; k < L / 9 - 1; k++){ x.fillStyle = k % 3 === 1 ? "#9a6838" : "#a8743f"; x.fillRect(-L / 2 + 2 + k * 9, -l / 2 + 6, 7, l - 12); }
+  x.fillStyle = "#7a4f2c"; x.fillRect(-L / 2, -l / 2, L, 6); x.fillRect(-L / 2, l / 2 - 6, L, 6);
+  x.fillStyle = "#4a2c16"; for (const px of [-L / 2, -L / 6, L / 6, L / 2 - 8]) for (const py of [-l / 2 - 4, l / 2 - 4]) x.fillRect(px, py, 8, 8);
+  x.restore();
+}
+/* ---------- les saisons ---------- */
+let SAISON = 1;                                   // 0 printemps, 1 été, 2 automne, 3 hiver
+const SAISONS = ["PRINTEMPS", "ETE", "AUTOMNE", "HIVER"];
+const VARIANTES = {};                              // images retouchées par saison (calculées une fois)
+function variante(nom, s){
+  const im = BASE[nom]; if (!ok(im) || s === 1) return im; const cle = nom + s; if (VARIANTES[cle]) return VARIANTES[cle];
+  const c = document.createElement("canvas"); c.width = im.width; c.height = im.height; const b = c.getContext("2d"); b.drawImage(im, 0, 0);
+  const d = b.getImageData(0, 0, c.width, c.height), p = d.data, W = c.width, r = alea(nom.length * 13 + s);
+  const feuille = i => p[i + 3] > 0 && p[i + 1] > p[i] && p[i + 1] > p[i + 2] - 10, arbre = nom.startsWith("s-arbre"), roux = nom.charCodeAt(nom.length - 1) % 2;
+  const dessus = (x, y) => y > 0 && p[((y - 1) * W + x) * 4 + 3] === 0;
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < W; x++){ const i = (y * W + x) * 4; if (!p[i + 3]) continue; const l = (p[i] + p[i + 1] + p[i + 2]) / 3;
+    if (s === 2 && arbre && feuille(i)){ p[i] = Math.min(255, 90 + l * 1.1); p[i + 1] = Math.min(255, (roux ? 35 : 75) + l * .55); p[i + 2] = 25 + l * .1; }
+    if (s === 0 && arbre && feuille(i)){ p[i + 1] = Math.min(255, p[i + 1] + 14); if (r() < .025){ p[i] = 250; p[i + 1] = 190; p[i + 2] = 215; } }
+    if (s === 3){ if (arbre && feuille(i)){ p[i] = p[i + 1] = p[i + 2] = 70 + l * .55; p[i + 2] += 20; }
+      if (dessus(x, y) || (y > 1 && dessus(x, y - 1)) || (arbre && r() < .05 && feuille(i))){ p[i] = 240; p[i + 1] = 246; p[i + 2] = 255; } } }
+  b.putImageData(d, 0, 0); return VARIANTES[cle] = c;
+}
+const BASE = {};
+const A_RETOUCHER = n => n.startsWith("s-arbre") || /^(chaume|colomb|pierre)\d/.test(n) || ["grange", "hangar", "four", "forge", "auberge", "mairie", "eglise", "eglise2", "rempart", "rempart-porte", "meule1", "meule2", "puits-couvert", "fontaine"].includes(n);
+function changerSaison(s){ SAISON = s; for (const n in IMG){ if (!A_RETOUCHER(n)) continue; if (!BASE[n]) BASE[n] = IMG[n]; IMG[n] = variante(n, s); } }
+function sol(bg, s){   // l'herbe change avec la saison (les chemins, la place et la rive gardent leur couleur)
+  if (s === 1) return bg; const c = document.createElement("canvas"); c.width = bg.width; c.height = bg.height; const b = c.getContext("2d"); b.drawImage(bg, 0, 0);
+  const d = b.getImageData(0, 0, c.width, c.height), p = d.data, r = alea(77 + s);
+  for (let i = 0; i < p.length; i += 4){ if (!(p[i + 1] > p[i] && p[i + 1] > p[i + 2] && p[i + 1] > 70)) continue; const l = (p[i] + p[i + 1] + p[i + 2]) / 3;
+    if (s === 3){ const n = r() * 10; p[i] = 222 + n; p[i + 1] = 230 + n; p[i + 2] = 240 + n * .8; }
+    else if (s === 2){ p[i] = Math.min(255, p[i] + 45); p[i + 1] = Math.min(255, p[i + 1] + 12); p[i + 2] = Math.max(0, p[i + 2] - 15); }
+    else if (s === 0){ p[i + 1] = Math.min(255, p[i + 1] + 10); const f = r(); if (f < .0016){ p[i] = 255; p[i + 1] = 245; p[i + 2] = 250; } else if (f < .0026){ p[i] = 250; p[i + 1] = 210; p[i + 2] = 60; } else if (f < .0034){ p[i] = 235; p[i + 1] = 120; p[i + 2] = 170; } } }
+  b.putImageData(d, 0, 0); return c;
+}
+/* ---------- la fumée des vraies cheminées (repérées à la main, en px de l'image) ---------- */
+const CHEMINEES = {chaume3: [74.5, 1], chaume4: [74, 10], colomb1: [77.5, 7], colomb2: [63, 21], pierre2: [63, 19], pierre3: [15.5, 6], pierre5: [19, 2], forge: [20, 1]};   // haut de la cheminée, en px de l'image
+function fumee(x, o, t){
+  const sp = STYLE.B.spr(o) || (COMMUN[o.k] && COMMUN[o.k](o)); if (!sp) return; const c = CHEMINEES[sp[0]], im = IMG[sp[0]]; if (!c || !ok(im)) return;
+  const k = sp[1], X = o.x * T - im.width * k / 2 + c[0] * k, Y = o.y * T - im.height * k + c[1] * k, w = vent(o.x, o.y, t);
+  for (let q = 0; q < 6; q++){ const a = (t * .45 + q / 6 + o.x * .37) % 1, r = 2 + a * 7;   // monte d'abord droit, puis penche avec le vent
+    x.fillStyle = `rgba(${o.k === "forge" ? "120,120,125" : "232,232,236"},${.6 * (1 - a)})`; x.beginPath(); x.arc(X + a * a * (16 + w * 14) + Math.sin(t * 2 + q) * a * 2, Y - 1 - r * .6 - a * 34, r, 0, 6.3); x.fill(); }
+}
+/* ---------- les animaux (LPC, OpenGameArt) ---------- */
+// planches : case l × h, pieds à py ; lignes de marche h/g/b/d (null = miroir de g) ; repos : planche, ligne, images
+const ESPECES = {
+  biche: {im: "a-biche", l: 64, h: 96, py: 90, k: .7, v: .6, n: 4, rang: {h: 0, g: 1, b: 3, d: null}, repos: ["a-biche", {h: 2, g: 2, b: 2, d: null}, 4]},
+  cerf: {im: "a-cerf", l: 64, h: 96, py: 90, k: .75, v: .6, n: 4, rang: {h: 0, g: 1, b: 3, d: null}, repos: ["a-cerf", {h: 2, g: 2, b: 2, d: null}, 4]},
+  renard: {im: "a-renard", l: 64, h: 64, py: 54, k: .6, v: 2.2, n: 4, rang: {h: 3, g: 1, b: 0, d: 2}, repos: ["a-renard", {h: 0, g: 0, b: 0, d: 0}, 1]},
+  chien: {im: "a-chien", l: 32, h: 32, py: 30, k: 1, v: 1.2, n: 3, bloc: 128, rang: {h: 1, g: 0, b: 2, d: 3}, repos: ["a-chien", {h: 4, g: 4, b: 4, d: 4}, 3]},
+  chat: {im: "a-chat", l: 32, h: 32, py: 30, k: .85, v: .7, n: 3, bloc: 128, rang: {h: 1, g: 0, b: 2, d: 3}, repos: ["a-chat", {h: 0, g: 0, b: 0, d: 0}, 1, 3]},
+  poule: {im: "a-poule", l: 32, h: 32, py: 28, k: .8, v: .5, n: 4, rang: {h: 0, g: 1, b: 2, d: 3}, repos: ["a-poule-mange", {h: 0, g: 1, b: 2, d: 3}, 4]},
+  vache: {im: "a-vache", l: 128, h: 128, py: 100, k: .7, v: .35, n: 4, rang: {h: 0, g: 1, b: 2, d: 3}, repos: ["a-vache-mange", {h: 0, g: 1, b: 2, d: 3}, 4]},
+  cochon: {im: "a-cochon", l: 128, h: 128, py: 96, k: .6, v: .4, n: 4, rang: {h: 0, g: 1, b: 2, d: 3}, repos: ["a-cochon-mange", {h: 0, g: 1, b: 2, d: 3}, 4]},
+  oiseau: {im: "a-oiseau1", l: 32, h: 32, py: 26, k: .5, v: .8, n: 3, rang: {h: 5, g: 4, b: 6, d: 7}, repos: ["a-oiseau1", {h: 5, g: 4, b: 6, d: 7}, 3]},
+  poisson: {im: "a-poisson", l: 32, h: 32, py: 16, k: .9, v: .7, n: 4, rang: {h: 0, g: 1, b: 3, d: 2}}
+};
+const ZONES = {orée: [8.6, 12.5, 12, 19.5], renard: [31, 38.5, 31, 40], village: [15, 24, 19.5, 28], chats: [13.5, 25, 18.5, 28], poules: [9, 15, 34, 37], poules2: [22, 26, 25.5, 28.5], enclos: [33, 37, 27.6, 30.4], champs: [13, 22, 29.5, 36.5], place: [17, 21, 22.5, 24.5]};
+const ANIMAUX = [];
+{ const r = alea(21), ajoute = (sp, z, n, opt = {}) => { for (let i = 0; i < n; i++){ const Z = ZONES[z]; ANIMAUX.push({sp, z, x: Z[0] + r() * (Z[1] - Z[0]), y: Z[2] + r() * (Z[3] - Z[2]), e: "pause", jusqua: r() * 4, dir: "b", ph: r() * 9, bloc: Math.floor(r() * 4), ...opt}); } };
+  ajoute("biche", "orée", 2); ajoute("cerf", "orée", 1); ajoute("renard", "renard", 1); ajoute("chien", "village", 1); ANIMAUX.push({sp: "chien", suit: 0, x: 18, y: 23, e: "pause", jusqua: 0, dir: "b", ph: 1, bloc: 2}); ANIMAUX.push({sp: "chat", z: "caresse", x: 21.85, y: 26.55, e: "pause", jusqua: 1e9, dir: "d", ph: 0, bloc: 1, calme: true}); ajoute("chat", "chats", 3, {calme: true}); ajoute("poule", "poules", 4); ajoute("poule", "poules2", 3);
+  ajoute("vache", "enclos", 2); ajoute("cochon", "enclos", 2); ajoute("oiseau", "champs", 5); ajoute("oiseau", "place", 3);
+  for (let i = 0; i < 9; i++){ const enMer = i < 6, x0 = enMer ? 2 + r() * 34 : 0, y0 = enMer ? 0 : 3 + r() * 36; ANIMAUX.push({sp: "poisson", e: "eau", mer: enMer, x: enMer ? x0 : rivX(y0), y: enMer ? coteY(x0) + 1 + r() * 2.4 : y0, ph: r() * 9, dir: "g", saut: 3 + r() * 20}); } }
+function bouger(a, dt, t){
+  const E = ESPECES[a.sp];
+  if (a.suit != null){ const p = POS[a.suit]; if (!p) return; const tx = p[0] - .7, ty = p[1] + .25, dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
+    if (d < .25){ a.e = "pause"; return; } a.e = "marche"; const v = Math.min(d, (d > 2 ? 2.4 : 1.4) * dt); a.x += dx / d * v; a.y += dy / d * v; a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "d" : "g") : (dy > 0 ? "b" : "h"); return; }
+  if (a.e === "eau"){ // nage le long de la côte ou de la rivière, saute de temps en temps
+    if (a.mer){ a.x += (a.dir === "d" ? 1 : -1) * E.v * dt; if (a.x < 1) a.dir = "d"; if (a.x > MW - 1) a.dir = "g"; a.y = Math.max(coteY(a.x) + .8, Math.min(MH - .6, a.y + Math.sin(t + a.ph) * dt * .3)); }
+    else { a.y += (a.dir === "b" ? 1 : -1) * E.v * .6 * dt; if (a.y < 1) a.dir = "b"; if (a.y > 41) a.dir = "h"; a.x = rivX(a.y) + Math.sin(t * .7 + a.ph) * .35; }
+    return; }
+  if (a.e === "pause"){ if (t > a.jusqua){ const Z = ZONES[a.z]; a.tx = Z[0] + Math.random() * (Z[1] - Z[0]); a.ty = Z[2] + Math.random() * (Z[3] - Z[2]); a.e = "marche"; } return; }
+  const dx = a.tx - a.x, dy = a.ty - a.y, d = Math.hypot(dx, dy), v = E.v * dt;
+  if (d < v){ a.x = a.tx; a.y = a.ty; a.e = "pause"; a.jusqua = t + (a.calme ? 8 + Math.random() * 14 : 1.5 + Math.random() * 5); return; }
+  a.x += dx / d * v; a.y += dy / d * v; a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "d" : "g") : (dy > 0 ? "b" : "h");
+}
+function cadre(x, im, E, ligne, col, X, Y, miroir, bloc){
+  if (!ok(im)) return; const k = E.k, sx = (bloc || 0) + col * E.l, sy = ligne * E.h;
+  if (miroir){ x.save(); x.translate(Math.round(X), 0); x.scale(-1, 1); x.drawImage(im, sx, sy, E.l, E.h, Math.round(-E.l * k / 2), Math.round(Y - E.py * k), E.l * k, E.h * k); x.restore(); }
+  else x.drawImage(im, sx, sy, E.l, E.h, Math.round(X - E.l * k / 2), Math.round(Y - E.py * k), E.l * k, E.h * k);
+}
+function bete(x, a, t){
+  const E = ESPECES[a.sp], X = a.x * T, Y = a.y * T, bloc = E.bloc ? a.bloc * E.bloc : 0;
+  x.fillStyle = "rgba(30,40,10,.22)"; x.beginPath(); x.ellipse(X, Y, E.l * E.k * .28, E.l * E.k * .1, 0, 0, 6.3); x.fill();
+  if (a.e === "marche"){ const r = E.rang[a.dir], mi = r === null; cadre(x, IMG[E.im], E, mi ? E.rang.g : r, Math.floor(t * 8 + a.ph) % E.n, X, Y, mi, bloc); return; }
+  const [nom, rangs, n, col0] = E.repos, r = rangs[a.dir], mi = r === null;
+  cadre(x, IMG[nom], E, mi ? rangs.g : r, col0 != null ? col0 : Math.floor(t * 3 + a.ph) % n, X, Y, mi, bloc);
+}
+function poisson(x, a, t){
+  const E = ESPECES.poisson, X = a.x * T, Y = a.y * T, c = (t + a.saut) % 14;
+  if (c < .9){ // le saut : le poisson sort de l'eau, puis des ronds
+    const u = c / .9; x.save(); x.globalAlpha = 1; cadre(x, IMG[E.im], E, a.mer ? E.rang[a.dir] : 1, 1, X, Y - Math.sin(u * Math.PI) * 26, false, 0); x.restore(); return; }
+  if (c < 2.4){ const u = (c - .9) / 1.5; x.strokeStyle = `rgba(240,250,255,${.8 * (1 - u)})`; x.lineWidth = 2; x.beginPath(); x.ellipse(X, Y, 6 + u * 18, 3 + u * 7, 0, 0, 6.3); x.stroke(); }
+  x.save(); x.globalAlpha = .45; x.filter = "brightness(.35)"; cadre(x, IMG[E.im], E, E.rang[a.dir], Math.floor(t * 6 + a.ph) % E.n, X, Y, false, 0); x.restore();
+}
+const POS = {};
+const CARESSE = {x: 21.25, y: 26.5, v: 5};
+const ENFANTS = [0, 1, 2, 3, 4, 5].map(i => ({cx: 19, cy: 23.15, r: 1.9 + (i % 2) * .5, v: (i % 3 === 2 ? -1 : 1) * (.55 + (i % 2) * .1), ph: i * 1.05}));
+function enfant(x, i, dir, f, X, Y){ const im = IMG["enfant" + i]; if (!ok(im)) return; const row = {h: 0, g: 1, b: 2, d: 3}[dir], k = .62; x.drawImage(im, (1 + Math.floor(f) % 8) * 64, row * 64, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k); }
+function coeur(x, X, Y, a){ x.globalAlpha = Math.max(0, a); x.fillStyle = "#e0405a"; for (const [dx, dy, w] of [[-3, 0, 2], [1, 0, 2], [-4, 1, 8], [-4, 2, 8], [-3, 3, 6], [-2, 4, 4], [-1, 5, 2]]) x.fillRect(Math.round(X + dx), Math.round(Y + dy), w, 1); x.globalAlpha = 1; }
+const GOUTTES = Array.from({length: 150}, (_, i) => ({x: (i * 977) % 1000 / 1000, y: (i * 613) % 1000 / 1000, v: .8 + (i % 7) / 10}));
+function intemperies(x, t, cam, vw, vh, pluie){
+  const X0 = cam.x - vw / 2, Y0 = cam.y - vh / 2, neige = SAISON === 3;
+  if (pluie){ x.fillStyle = neige ? "rgba(200,210,230,.12)" : "rgba(30,40,60,.22)"; x.fillRect(X0, Y0, vw, vh); }
+  const n = pluie ? GOUTTES.length : 50;
+  for (let k = 0; k < n; k++){ const g = GOUTTES[k], px = X0 + ((g.x * vw + (neige ? Math.sin(t + k) * 20 : -t * 60 * g.v)) % vw + vw) % vw, py = Y0 + ((g.y * vh + t * (neige ? 30 : 420) * g.v) % vh);
+    if (neige){ x.fillStyle = "rgba(255,255,255,.9)"; x.fillRect(Math.round(px), Math.round(py), 3, 3); }
+    else { x.strokeStyle = "rgba(200,220,255,.55)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(px, py); x.lineTo(px - 4, py + 14); x.stroke(); } }
+  if (pluie && !neige){ x.strokeStyle = "rgba(230,245,255,.6)"; x.lineWidth = 1.5;   // ronds sur l'eau
+    for (let k = 0; k < 40; k++){ const u = (t * 1.3 + k * .37) % 1, gx = X0 + ((k * 211) % 997) / 997 * vw, gy = Y0 + ((k * 431) % 991) / 991 * vh; if (!(gy > coteY(gx / T) * T + 8 || Math.abs(gx / T - rivX(gy / T)) < .7)) continue;
+      x.globalAlpha = 1 - u; x.beginPath(); x.ellipse(gx, gy, 2 + u * 9, 1 + u * 4, 0, 0, 6.3); x.stroke(); } x.globalAlpha = 1; }
+}
+const VOL = [0, 1, 2, 3, 4].map(i => ({dx: (i % 3) * 22 - i * 4, dy: i * 12 - (i % 2) * 16}));
+/* ---------- les animations (dessinées par le code) ---------- */
+const vent = (x, y, t) => Math.sin(t * 1.1 - x * .18 + y * .05) * .6 + Math.sin(t * 2.7 + x * .9 + y * .3) * .18 + (Math.sin(t * .23 - x * .05) > .7 ? Math.sin(t * 4 + x) * .5 : 0);
+function arbre(x, im, X, Y, w, ph){
+  if (!ok(im)) return; const h = im.height, iw = im.width, X0 = Math.round(X - iw / 2), Y0 = Math.round(Y - h + 8);
+  if (!w){ x.drawImage(im, X0, Y0); return; }
+  for (let y = 0; y < h; y += 3){ const f = Math.pow(Math.max(0, (h - 34 - y) / (h - 34)), 1.3), dx = Math.round(w * 5 * f + Math.sin(ph + y * .07) * w * f);
+    x.drawImage(im, 0, y, iw, Math.min(3, h - y), X0 + dx, Y0 + y, iw, Math.min(3, h - y)); }
+}
+const ETATS = ["nu", "pousse", "pousse", "mur", "mur", "blond"], ETATS_SAISON = [["nu", "pousse", "pousse"], ETATS, ["blond", "nu", "blond", "nu"], ["nu"]];
+function champsAnimes(x, S, t, anim){
+  S.champs.forEach((ch, i) => { const E = ETATS_SAISON[SAISON], s = anim ? E[Math.floor(t / 7 + i * 1.7) % E.length] : ch.s, im = IMG["champ-" + s]; if (!ok(im)) return;
+    const X = ch.x * T, Y = ch.y * T, sw = 2 * T / im.width;
+    if (SAISON === 3){ x.drawImage(im, X, Y, 2 * T, 2 * T); x.fillStyle = "rgba(240,246,255,.82)"; x.fillRect(X + 3, Y + 3, 2 * T - 6, 2 * T - 6); return; }
+    if (!anim || s === "nu"){ x.drawImage(im, X, Y, 2 * T, 2 * T); return; }
+    for (let y = 0; y < im.height; y += 2){ const w = vent(ch.x + y / 48, ch.y, t), dx = Math.round(w * 2 * ((y % 12) < 6 ? 1 : .5));
+      x.drawImage(im, 0, y, im.width, 2, X + dx, Y + y * sw, 2 * T, 2 * sw); }
+  });
+}
+const MOULIN = {k: 0};
+function moulin(x, o, t){ const im = IMG["moulin-anime"]; if (!ok(im)) return; const fw = im.width / 8, f = Math.floor(t * 7 + o.x) % 8;
+  x.drawImage(im, f * fw, 0, fw, im.height, Math.round(o.x * T - fw / 2), Math.round(o.y * T - im.height + 4), fw, im.height); }
+function fontaine(x, o, t){ const X = o.x * T, Y = o.y * T - 46; for (let k = 0; k < 14; k++){ const a = (t * .9 + k / 14) % 1, ang = k * 2.4;
+  x.fillStyle = `rgba(200,235,255,${.9 - a * .7})`; x.fillRect(Math.round(X + Math.cos(ang) * a * 16), Math.round(Y - Math.sin(a * Math.PI) * 14 + a * 10), 2, 2); } }
+const feuilles = [];
+const NUAGES = [0, 1, 2, 3].map(i => ({x: i * 560, y: 300 + i * 470, r: 170 + i * 30}));
+const OISEAUX = [0, 1, 2, 3, 4].map(i => ({dx: (i % 3) * 22 - i * 4, dy: i * 12 - (i % 2) * 16}));
+function effets(x, t, cam, vw, vh){
+  // reflets qui bougent sur l'eau
+  x.fillStyle = "rgba(255,255,255,.55)";
+  for (let k = 0; k < 90; k++){ const gx = (k * 397) % (MW * T), dy = ((k * 131) % 140) / 48, a = Math.sin(t * 2 + k * 1.7);
+    if (a < .55) continue; const yy = (coteY(gx / T) + .5 + dy) * T; x.fillRect(Math.round(gx + Math.sin(t * .5 + k) * 8), Math.round(yy), 6 + Math.round(a * 6), 2); }
+  for (let k = 0; k < 40; k++){ const yy = (k * 1.07) % 42, a = Math.sin(t * 2.4 + k * 2.1); if (a < .6) continue; x.fillRect(Math.round(rivX(yy) * T - 10 + (k * 7) % 20), Math.round(yy * T + ((t * 20 + k * 9) % 30)), 5, 2); }
+  // feuilles qui tombent
+  for (let i = feuilles.length - 1; i >= 0; i--){ const f = feuilles[i], a = t - f.t0; if (a > 4){ feuilles.splice(i, 1); continue; }
+    x.globalAlpha = Math.min(1, 4 - a); x.fillStyle = f.c; x.fillRect(Math.round(f.x + Math.sin(a * 3) * 10 + a * 12), Math.round(f.y + a * 22), 3, 2); }
+  x.globalAlpha = 1;
+  // papillons près des champs (printemps et été)
+  if (SAISON < 2)
+  for (let k = 0; k < 6; k++){ const bx = (14 + (k % 3) * 3.5) * T + Math.sin(t * .7 + k) * 60, by = (30 + Math.floor(k / 3) * 3) * T + Math.cos(t * 1.1 + k * 2) * 30, ail = Math.sin(t * 18 + k) > 0;
+    x.fillStyle = k % 2 ? "#fff6c8" : "#f2f2ff"; x.fillRect(Math.round(bx) - (ail ? 3 : 1), Math.round(by), ail ? 6 : 2, 2); }
+  // oiseaux
+  for (let n = 0; n < 2; n++){ const per = 11 + n * 6, u = ((t + n * 5) % per) / per, versD = (Math.floor((t + n * 5) / per) + n) % 2 === 0;   // un vol traverse l'écran
+    const X0 = cam.x - vw / 2 - 80, ox = versD ? X0 + u * (vw + 160) : X0 + (1 - u) * (vw + 160), oy = cam.y - vh / 2 + vh * (.18 + .3 * n) + Math.sin(t * .8 + n) * 30;
+    for (const b of VOL){ cadre(x, IMG[n ? "a-oiseau1" : "a-oiseau2"], {l: 32, h: 32, py: 16, k: .55}, versD ? 0 : 3, Math.floor(t * 10 + b.dx) % 3, ox + b.dx * (versD ? -1.3 : 1.3), oy + b.dy * 1.3, false, 0); } }
+  // ombres des nuages
+  for (const n of NUAGES){ const nx = ((n.x + t * 14) % (MW * T + 800)) - 400, ny = n.y + t * 3 % 200;
+    const g = x.createRadialGradient(nx, ny, 0, nx, ny, n.r); g.addColorStop(0, "rgba(20,30,40,.16)"); g.addColorStop(1, "rgba(20,30,40,0)"); x.fillStyle = g; x.beginPath(); x.ellipse(nx, ny, n.r * 1.4, n.r * .8, 0, 0, 6.3); x.fill(); }
+}
+function monter(id){
+  const root = document.getElementById(id), st = STYLE.B;
+  root.innerHTML = `<div class="ressources">${RES.map(([ic, n, t]) => `<div class="res"><img src="${IMAGES[ic]}" alt=""><b>${n}</b><small>${t}</small></div>`).join("")}</div>
+    <canvas></canvas>
+    <div class="panneau"><div class="titre">METIERS · 48 HABITANTS</div>
+      ${METIERS.map((m, i) => `<div class="metier"><canvas class="portrait" width="30" height="30"></canvas><img src="${IMAGES[m.ic]}" alt=""><span class="nom">${m.nom}<small>${m.prod}</small></span><span class="pm"><button type="button" data-m="${i}" data-d="-1" aria-label="Retirer">−</button><b>${m.n}</b><button type="button" data-m="${i}" data-d="1" aria-label="Ajouter">+</button></span></div>`).join("")}
+      <div class="chantier"><img src="${IMAGES.moulin2}" alt=""><span>Moulin · 62 %<div class="jauge"><i style="width:62%"></i></div></span></div>
+      <div class="outils"><button type="button" data-s="1">ETE</button><button type="button" data-p="1">SOLEIL</button><button type="button" data-n="1">NUIT</button></div><div class="outils"><button type="button" data-e="1">BOURG</button><button type="button" data-a="1" class="on">ANIM</button><button type="button" data-z="-1" aria-label="Zoom arriere">−</button><button type="button" data-z="1" aria-label="Zoom avant">+</button></div></div>`;
+  root.querySelectorAll("canvas.portrait").forEach((c, i) => portrait(c, METIERS[i].v));
+  const cvs = root.querySelector("canvas:not(.portrait)"), x = cvs.getContext("2d");
+  const Z = [.25, .36, .5, .75, 1, 1.5]; let zi = 3, cam = {x: 21 * T, y: 30.5 * T}, etape = 2, S = scene(2), bg = null, nuit = 0, nuitCible = 0, pions = false, anim = true, pluie = false;
+  const metiers = METIERS.map(m => m.n);
+  window.vue = {cam, zoom: v => zi = v};   // pour les captures de contrôle
+  root.querySelector(".panneau").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.m){ const i = +b.dataset.m; metiers[i] = Math.max(0, metiers[i] + +b.dataset.d); b.parentNode.querySelector("b").textContent = metiers[i]; }
+    if (b.dataset.e){ etape = etape === 2 ? 1 : 2; S = scene(etape); bg = null; b.textContent = etape === 2 ? "BOURG" : "VILLAGE"; }
+    if (b.dataset.s){ changerSaison((SAISON + 1) % 4); b.textContent = SAISONS[SAISON]; bg = null; }
+    if (b.dataset.p){ pluie = !pluie; b.textContent = pluie ? (SAISON === 3 ? "NEIGE" : "PLUIE") : "SOLEIL"; b.classList.toggle("on", pluie); }
+    if (b.dataset.n){ nuitCible = nuitCible ? 0 : .6; b.classList.toggle("on", !!nuitCible); }
+    if (b.dataset.a){ anim = !anim; b.classList.toggle("on", anim); }
+    if (b.dataset.z) zi = Math.max(0, Math.min(Z.length - 1, zi + +b.dataset.z)); };
+  let glisse = null;
+  cvs.addEventListener("pointerdown", e => { glisse = {x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y}; cvs.setPointerCapture(e.pointerId); });
+  cvs.addEventListener("pointermove", e => { if (!glisse) return; const z = Z[zi]; cam.x = glisse.cx - (e.clientX - glisse.x) / z; cam.y = glisse.cy - (e.clientY - glisse.y) / z; });
+  cvs.addEventListener("pointerup", () => glisse = null); cvs.addEventListener("pointercancel", () => glisse = null);
+  cvs.addEventListener("wheel", e => { e.preventDefault(); zi = Math.max(0, Math.min(Z.length - 1, zi + (e.deltaY < 0 ? 1 : -1))); }, {passive: false});
+  function image(now){
+    const t = now / 1000, dpr = Math.min(2, window.devicePixelRatio || 1), cw = cvs.clientWidth, chh = cvs.clientHeight;
+    if (cvs.width !== Math.round(cw * dpr) || cvs.height !== Math.round(chh * dpr)){ cvs.width = Math.round(cw * dpr); cvs.height = Math.round(chh * dpr); }
+    if (!bg && ok(IMG.herbe) && ok(IMG.pave)) bg = sol(fond("B", {...S, champs: []}), SAISON);
+    const z = Z[zi], vw = cw / z, vh = chh / z;
+    cam.x = Math.max(vw / 2, Math.min(MW * T - vw / 2, cam.x)); cam.y = Math.max(vh / 2, Math.min(MH * T - vh / 2, cam.y));
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = st.eau; x.fillRect(0, 0, cvs.width, cvs.height);
+    x.setTransform(dpr * z, 0, 0, dpr * z, (cw / 2 - cam.x * z) * dpr, (chh / 2 - cam.y * z) * dpr); x.imageSmoothingEnabled = false;
+    if (bg) x.drawImage(bg, 0, 0);
+    const dtA = Math.min(.1, t - (image.t || t)); image.t = t;
+    eauAnimee(x, anim ? t : 0, cam, vw, vh); if (etape) for (const a of ANIMAUX) if (a.e === "eau"){ if (anim) bouger(a, dtA, t); poisson(x, a, anim ? t : 0); }
+    nuit += (nuitCible - nuit) * .06;
+    const x0 = cam.x - vw / 2 - 200, x1 = cam.x + vw / 2 + 200, y0 = cam.y - vh / 2 - 60, y1 = cam.y + vh / 2 + 300, vis = (px, py) => px > x0 && px < x1 && py > y0 && py < y1;
+    const L = [], lum = [];
+    champsAnimes(x, S, t, anim);
+    for (const a of ARBRES){ const X = a.x * T, Y = a.y * T; if (!vis(X, Y)) continue; L.push([Y, () => arbre(x, IMG[ARB_S[a.n]], X, Y, anim ? vent(a.x, a.y, t) : 0, a.ph)]);
+      if (anim && SAISON !== 3 && Math.random() < (SAISON === 2 ? .012 : .0016)) feuilles.push({x: X + (Math.random() - .5) * 50, y: Y - 60 - Math.random() * 50, t0: t, c: SAISON === 2 ? ["#d9762a", "#c9a43a", "#b8452a"][Math.floor(Math.random() * 3)] : SAISON === 0 ? "#f6c4d8" : Math.random() < .5 ? "#7da34a" : "#c9a43a"}); }
+    for (const o of S.O){ if (!vis(o.x * T, o.y * T)) continue; if (o.k === "pont"){ L.push([-1e9, () => pont(x)]); continue; } if (o.k === "moulin"){ L.push([o.y * T, () => moulin(x, o, anim ? t : 0)]); continue; } if (o.k === "fontaine" && anim) L.push([o.y * T + 1, () => fontaine(x, o, t)]); L.push([o.k === "pont" || o.k === "ponton" || o.k === "enclos" ? -1e9 + o.y : o.y * T, () => { dessinerObjet(x, "B", o, t, nuit, lum); if (anim) fumee(x, o, t); }]); }
+    if (etape) for (const a of ANIMAUX){ if (anim) bouger(a, dtA, t); if (a.e === "eau" || !vis(a.x * T, a.y * T)) continue; L.push([a.y * T, () => bete(x, a, anim ? t : 0)]); }
+    S.W.forEach((w, wi) => { const d = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), m = d / 1.1, cyc = 2 * m + 4, q = ((t + w.a[0] * 1.7) % cyc);
+      const pool = ["hache", "pioche", "marteau"].includes(w.w) ? HACHE : w.w === "couteau" ? HOUE : VILLAGEOIS.map(v => v.i), v = pool[wi % pool.length];
+      let px, py, mode, dir, porte = null, anim, face;
+      const dirDe = (ax, ay, bx, by) => Math.abs(bx - ax) > Math.abs(by - ay) ? (bx > ax ? "d" : "g") : (by > ay ? "b" : "h");
+      if (w.w === "repos" && d < .5){ px = w.a[0]; py = w.a[1]; mode = "repos"; dir = "b"; anim = "repos"; face = 1; }
+      else if (q < m){ const u = q / m; px = w.a[0] + (w.b[0] - w.a[0]) * u; py = w.a[1] + (w.b[1] - w.a[1]) * u; mode = "marche"; dir = dirDe(...w.a, ...w.b); anim = w.w === "repos" ? "repos" : w.w; face = w.b[0] >= w.a[0] ? 1 : -1; }
+      else if (q < m + 3){ px = w.b[0]; py = w.b[1]; mode = w.w === "repos" ? "repos" : "travail"; dir = (wi % 2) ? "d" : "g"; anim = w.w === "repos" ? "repos" : w.w === "hache" ? "hache-coupe" : w.w === "pioche" ? "pioche-tape" : w.w === "marteau" ? "marteau-tape" : "couteau-coupe"; face = 1; }
+      else { const u = Math.min(1, (q - m - 3) / m); px = w.b[0] + (w.a[0] - w.b[0]) * u; py = w.b[1] + (w.a[1] - w.b[1]) * u; mode = "marche"; dir = dirDe(...w.b, ...w.a); porte = w.c; anim = w.c || "repos"; face = w.a[0] >= w.b[0] ? 1 : -1; }
+      POS[wi] = [px, py]; const X = px * T, Y = py * T; if (!vis(X, Y)) return;
+      L.push([Y, () => { x.fillStyle = "rgba(30,40,10,.25)"; x.beginPath(); x.ellipse(X, Y, 11, 4, 0, 0, 6.3); x.fill();
+        if (pions){ const k = .6 * .72; bande(x, IMG["ouvrier-" + anim], 192, t * 10 + w.a[1], X - 96 * k, Y - 135 * k, k, face); return; }
+        lpc(x, v, mode, dir, t * (mode === "travail" ? 8 : 10) + wi, X, Y, .8);
+        if (porte && PORTE[porte]){ const ic = IMG[PORTE[porte]]; if (ok(ic)) x.drawImage(ic, Math.round(X - 9), Math.round(Y - 66), 18, 18); } }]); });
+    if (etape){ ENFANTS.forEach((e, i) => { const a = (anim ? t : 0) * e.v + e.ph, px = e.cx + Math.cos(a) * e.r, py = e.cy + Math.sin(a) * e.r * .55, vx = -Math.sin(a) * e.v, vy = Math.cos(a) * e.v * .55;
+        const dir = Math.abs(vx) > Math.abs(vy) ? (vx > 0 ? "d" : "g") : (vy > 0 ? "b" : "h"); L.push([py * T, () => { x.fillStyle = "rgba(30,40,10,.22)"; x.beginPath(); x.ellipse(px * T, py * T, 8, 3, 0, 0, 6.3); x.fill(); enfant(x, i, dir, anim ? t * 12 + i : 0, px * T, py * T); }]); });
+      const c = CARESSE; L.push([c.y * T, () => { lpc(x, c.v, "repos", "d", anim ? t * 2 : 0, c.x * T, c.y * T, .8); if (anim && (t % 5) < 2.2){ const u = (t % 5) / 2.2; coeur(x, (c.x + .55) * T, (c.y - .9 - u * .5) * T, 1 - u); } }]); }
+    L.sort((a, b) => a[0] - b[0]); for (const [, f] of L) f();
+    if (anim) effets(x, t, cam, vw, vh);
+    if (SAISON === 2){ x.fillStyle = "rgba(255,150,40,.07)"; x.fillRect(cam.x - vw / 2, cam.y - vh / 2, vw, vh); }
+    if (SAISON === 3){ x.fillStyle = "rgba(190,215,255,.1)"; x.fillRect(cam.x - vw / 2, cam.y - vh / 2, vw, vh); }
+    if (anim && (pluie || SAISON === 3)) intemperies(x, t, cam, vw, vh, pluie);
+    if (nuit > .01){ x.fillStyle = `rgba(16,22,58,${nuit})`; x.fillRect(cam.x - vw / 2, cam.y - vh / 2, vw, vh); x.globalCompositeOperation = "lighter";
+      for (const [lx, ly, r] of lum){ const g = x.createRadialGradient(lx, ly, 0, lx, ly, r); g.addColorStop(0, `rgba(255,170,70,${nuit})`); g.addColorStop(1, "rgba(255,170,70,0)"); x.fillStyle = g; x.fillRect(lx - r, ly - r, r * 2, r * 2); }
+      x.globalCompositeOperation = "source-over"; }
+    requestAnimationFrame(image);
+  }
+  requestAnimationFrame(image);
+}
+monter("B");
+</script>
