@@ -1,0 +1,276 @@
+<title>Terres d'Éveil · le territoire</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=IM+Fell+English&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* Mise en page : deux téléphones (empilés sur un téléphone) = la même vallée, aux trois étapes, avec deux jeux d'images. */
+:root { --bg: #e8eadf; --fg: #23261c; --muted: #5d634f; --texte: "Alegreya Sans", "Trebuchet MS", sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #121410; --fg: #e9ecdf; --muted: #a2a891; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #121410; --fg: #e9ecdf; --muted: #a2a891; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--texte); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header.page { max-width: 1000px; margin: 0 auto 18px; display: grid; gap: 6px; }
+header.page h1 { margin: 0; font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 1.9rem; text-wrap: balance; }
+header.page p, .note p { margin: 0; color: var(--muted); max-width: 80ch; line-height: 1.5; }
+.phones { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; max-width: 1000px; margin: 0 auto; }
+figure.dir { margin: 0; display: grid; gap: 10px; justify-items: center; }
+figure.dir figcaption { display: grid; gap: 4px; max-width: 360px; }
+figure.dir figcaption b { font-size: 1.1rem; }
+figure.dir figcaption span { color: var(--muted); font-size: .95rem; line-height: 1.4; }
+.tel { width: 360px; max-width: 100%; height: 720px; border-radius: 34px; padding: 10px; background: #0a0a08; box-shadow: 0 10px 30px rgba(0,0,0,.28); box-sizing: border-box; }
+.ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; position: relative; user-select: none; -webkit-user-select: none;
+  background: #3b4a2a; color: #fbf1dc; font-family: "Pixelify Sans", monospace; font-size: 13px; }
+.barre { display: flex; gap: 4px; padding: 8px; background: #6b4a2e; box-shadow: inset 0 -3px 0 #4a3020; flex: none; }
+.barre button { flex: 1; }
+.ecran canvas { flex: 1; min-height: 0; width: 100%; display: block; touch-action: none; cursor: grab; }
+.bas { flex: none; background: #e9d7ae; color: #3c2a1a; padding: 8px; display: grid; gap: 6px; box-shadow: inset 0 3px 0 #c9ad78; }
+.bas .info { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.bas .info b { color: #9c3326; }
+.bas .outils { display: flex; gap: 4px; }
+.bas .outils .large { flex: 1; }
+button { font: inherit; cursor: pointer; background: #4f7fbf; color: #fff; border: 0; border-radius: 6px; padding: 6px 8px; box-shadow: inset 0 -3px 0 #2f5891; font-weight: 600; }
+button:active { box-shadow: inset 0 2px 0 #2f5891; }
+button:focus-visible { outline: 2px solid #f2c94c; outline-offset: 1px; }
+button.on { background: #d94f3d; box-shadow: inset 0 -3px 0 #9c3326; }
+.barre button:not(.on) { background: #b98f5a; box-shadow: inset 0 -3px 0 #8b6638; }
+.catalogue[hidden] { display: none; }
+.catalogue { position: absolute; inset: 46px 0 88px; background: #e9d7ae; color: #3c2a1a; overflow-y: auto; padding: 10px; display: grid; gap: 8px; align-content: start; }
+.catalogue h3 { margin: 0; font-size: 15px; }
+.catalogue p { margin: 0; font-size: 12px; line-height: 1.35; }
+.catalogue .grille { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.catalogue figure { margin: 0; background: #f6ead0; border-radius: 6px; padding: 4px; display: grid; justify-items: center; gap: 2px; font-size: 10px; text-align: center; }
+.catalogue figure.ajout { background: #dbe8c4; }
+.catalogue img { width: 100%; height: 58px; object-fit: contain; image-rendering: pixelated; }
+.note { max-width: 1000px; margin: 26px auto 0; display: grid; gap: 8px; }
+.note h2 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; margin: 8px 0 0; font-size: 1.3rem; }
+.note table { border-collapse: collapse; font-size: .95rem; }
+.note td, .note th { border-bottom: 1px solid var(--muted); padding: 4px 10px 4px 0; text-align: left; vertical-align: top; }
+.tab { overflow-x: auto; }
+</style>
+
+<header class="page">
+  <h1>Terres d'Éveil · le grand territoire</h1>
+  <p>Maquette 2 : la même vallée de 40 × 46 cases, vue au campement, au village (une vingtaine d'habitants) et au bourg (une cinquantaine). On la fait glisser au doigt, on zoome avec − et +. Le bouton BATIMENTS montre tous les bâtiments que chaque direction peut offrir.</p>
+</header>
+
+<div class="phones">
+  <figure class="dir"><div class="tel"><div class="ecran" id="A"></div></div>
+    <figcaption><b>A · Tiny Swords, complété</b><span>Sol, eau, arbres, villageois et maisons de Tiny Swords (château = mairie, monastère = église). Ce qui manque au pack (moulin, champs, meules, marché, forge, four, auberge, remparts) vient du lot Cute SCKR.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran" id="B"></div></div>
+    <figcaption><b>B · Tout Cute SCKR</b><span>Sol, arbres et bâtiments du lot Cute SCKR (déjà acheté) : les maisons changent d'allure avec le palier (chaume au village, colombages et pierre au bourg). Seuls les villageois et les moutons restent ceux de Tiny Swords.</span></figcaption></figure>
+</div>
+
+<div class="note">
+  <h2>Ce qu'il faut regarder</h2>
+  <p>Est-ce qu'on a envie de remplir cette vallée ? Les deux directions ont les mêmes villageois animés ; ce qui change, c'est le sol, les arbres et les bâtiments. Dans A, les maisons ne changent pas d'un palier à l'autre (Tiny Swords n'en a que trois modèles) ; dans B, chaque palier a son style de maison, et il reste beaucoup d'images en réserve dans le lot (forge détaillée, potagers, vergers, port, château…).</p>
+  <p>Les piquets avec une corde sont des terrains libres : le bourg finit par manquer de place, c'est le signal qu'il est temps de promulguer une Loi et de fonder une nouvelle colonie, plus grande.</p>
+  <div class="tab"><table>
+    <tr><th>Pack</th><th>Licence</th><th>Remarque</th></tr>
+    <tr><td>Tiny Swords (Pixel Frog)</td><td>usage dans un jeu, pas de redistribution</td><td>déjà dans Bastion ; 7 sortes de bâtiments en 5 couleurs</td></tr>
+    <tr><td>Lot Cute SCKR (Medieval Village, Buildings, Farm, Large Forest…)</td><td>usage dans un jeu, pas de revente ni de redistribution ; crédit apprécié</td><td>déjà acheté (668 packs) ; l'auteur signale des images « assistées par IA »</td></tr>
+  </table></div>
+</div>
+
+<script>
+const IMAGES = "@@IMAGES@@";
+const IMG = {};
+for (const k in IMAGES){ const im = new Image(); im.src = IMAGES[k]; IMG[k] = im; }
+const ok = im => im && im.complete && im.naturalWidth > 0;
+const T = 48, MW = 40, MH = 46;
+
+/* ---------- la vallée ---------- */
+const coteY = x => 42 + 1.2 * Math.sin(x * .35);
+const rivX = y => 30 + 2.2 * Math.sin(y / 5.5);
+const eau = (x, y) => y > coteY(x) || (Math.abs(x - rivX(y)) < .9);
+const VILLE = [19, 24];
+function alea(s){ return () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const ARBRES = [];
+{ const r = alea(5);
+  for (let gy = 0.5; gy < 44; gy += 1.35) for (let gx = 0.3; gx < MW; gx += 1.45){
+    const x = gx + (r() - .5) * .9, y = gy + (r() - .5) * .8;
+    const foret = x < 7.5 + 1.8 * Math.sin(y / 3.7) || y < 3.6 + 1.2 * Math.sin(x / 2.3) || (x > 33.5 && y > 14 && y < 21) || (x > 36.5 && y < 30);
+    const epars = r() < .035;
+    if (!(foret || epars) || eau(x, y) || eau(x, y + .6) || Math.hypot(x - rivX(y), 0) < 1.6) continue;
+    if (Math.hypot(x - VILLE[0], (y - VILLE[1]) * 1.2) < 11 && !foret) continue;
+    if (x > 32 && x < 39 && y > 5 && y < 12) continue;   // la carrière
+    ARBRES.push({x, y, n: Math.floor(r() * 7), ph: r() * 8});
+  } }
+
+/* ---------- ce qu'il y a à chaque étape ---------- */
+const ETAPES = ["CAMPEMENT", "VILLAGE", "BOURG"];
+const route = (...p) => p;
+function scene(e){
+  const O = [], R = [], W = [], P = [], champs = [], piquets = [];
+  const place = e === 0 ? null : {x: 19, y: 22, r: e === 1 ? 2.6 : 3.6, pave: e === 2};
+  if (e === 0){
+    O.push({k: "tente", x: 19, y: 22}, {k: "feu", x: 20.4, y: 22.5});
+    R.push({pts: route([19, 22], [9.5, 21]), l: .5, pale: true});
+    W.push({a: [19.6, 23], b: [9.4, 20.6], w: "hache", c: "bois"}, {a: [20.3, 23.2], b: [13.6, 16.4], w: "couteau", c: "viande"}, {a: [21, 22.8], b: [28.6, 24.6], w: "couteau", c: "viande"});
+    O.push({k: "buisson", x: 14, y: 16});
+    return {O, R, W, P, champs, piquets, place, hab: 3, info: "le pionnier et deux compagnons"};
+  }
+  // routes
+  R.push({pts: route([19, 22], [19, 11.4]), l: e === 2 ? 1.1 : .8, pave: e === 2}, {pts: route([19, 22], [9, 22.4]), l: .8, pave: e === 2}, {pts: route([19, 22], [29, 23.2], [36, 24.5]), l: .8, pave: e === 2},
+    {pts: route([19, 22], [19, 29.3], [14, 33.2]), l: .8}, {pts: route([19, 14], [26, 11.5], [33.5, 9.5]), l: .6});
+  // maisons
+  const M1 = e === 1 ? [[15, 19], [17.8, 18.4], [21.2, 18.4], [24, 19], [14.6, 26], [17.6, 27], [21.4, 27], [24.2, 26]] : [[15, 19], [23.6, 19], [14.6, 26], [17.6, 27], [21.4, 27], [24.2, 26]];
+  M1.forEach(([x, y], i) => O.push({k: "maison", x, y, v: i, niv: e}));
+  if (e === 2) [[12, 16.2], [15.4, 14.8], [22.8, 14.8], [26.4, 16.4], [11.4, 27], [26.6, 28.4], [13.6, 29.2], [24.6, 29.6], [27.2, 21.2], [11, 19.6]].forEach(([x, y], i) => O.push({k: "maison", x, y, v: i + 8, niv: 2}));
+  // champs (case en haut à gauche, 2 × 2)
+  const C = e === 1 ? [[15, 30.2, "mur"], [17, 30.2, "pousse"], [15, 32.2, "nu"], [17, 32.2, "mur"], [19.6, 32.2, "pousse"]] :
+    [[13, 30.2, "mur"], [15, 30.2, "pousse"], [17, 30.2, "mur"], [13, 32.2, "nu"], [15, 32.2, "mur"], [17, 32.2, "blond"], [19.6, 32.2, "pousse"], [15, 34.2, "mur"], [17, 34.2, "pousse"], [19.6, 34.2, "mur"]];
+  for (const [x, y, s] of C) champs.push({x, y, s});
+  O.push({k: "moulin", x: 23, y: 33.6, v: 0}, {k: "meule", x: 21.4, y: 31.2, v: 0}, {k: "grange", x: e === 1 ? 12.6 : 10.6, y: 33.4}, {k: "puits", x: 19, y: 21.8}, {k: "hangar", x: 11, y: 21.2}, {k: "lanterne", x: 16.8, y: 22.6}, {k: "lanterne", x: 21.2, y: 22.6});
+  O.push({k: "four", x: 23.6, y: 23.4}, {k: "enclos", x: 32.6, y: 27, w: 5, h: 3.6}, {k: "pont", x: rivX(23.4), y: 23.4}, {k: "ponton", x: 25, y: coteY(25) + .2});
+  [[35, 8.2], [36.6, 9.2], [34.2, 10.3], [37.6, 7.3], [35.6, 6.4]].forEach(([x, y]) => O.push({k: "rocher", x, y}));
+  if (e === 1){ [[12, 17.6], [26.4, 17.2], [12, 28.4], [26.4, 29.4], [27.4, 21.4], [11.2, 25]].forEach(([x, y]) => piquets.push({x, y})); }
+  else {
+    O.push({k: "mairie", x: 19, y: 18.4}, {k: "eglise", x: 26.4, y: 13.2}, {k: "auberge", x: 13.6, y: 22.8}, {k: "forge", x: 25.6, y: 24.4}, {k: "tour", x: 29.6, y: 11.8}, {k: "moulin", x: 24.8, y: 37.4, v: 1}, {k: "meule", x: 12.2, y: 35.6, v: 1},
+      {k: "etal", x: 17, y: 24.4, v: 0}, {k: "etal", x: 21, y: 24.4, v: 1}, {k: "etal", x: 16.4, y: 21.4, v: 2}, {k: "ecurie", x: 35, y: 26.2}, {k: "lanterne", x: 19.8, y: 15.8}, {k: "lanterne", x: 18.2, y: 15.8}, {k: "lanterne", x: 25, y: 22.6}, {k: "lanterne", x: 13, y: 22.6});
+    for (const [k, x] of [["rempart", 11], ["rempart", 15], ["porte", 19], ["rempart", 23], ["rempart", 27]]) O.push({k, x, y: 11.6});
+    [[9.6, 15], [28.4, 32.6]].forEach(([x, y]) => piquets.push({x, y}));
+    O.splice(O.findIndex(o => o.k === "puits"), 1, {k: "fontaine", x: 19, y: 22.2});
+  }
+  // villageois au travail : aller-retour entre a et b
+  W.push({a: [18, 22.8], b: [7.6, 20.4], w: "hache", c: "bois"}, {a: [12, 22], b: [7.2, 23.8], w: "hache", c: "bois"}, {a: [19.6, 24], b: [16, 31.2], w: "couteau", c: null},
+    {a: [16.4, 31.4], b: [18, 33.2], w: "couteau", c: null}, {a: [19, 29], b: [20.4, 33.3], w: "couteau", c: "viande"}, {a: [20, 21], b: [35.4, 9.6], w: "pioche", c: "or"},
+    {a: [22, 23.5], b: [28.4, 24.2], w: "couteau", c: "viande"}, {a: [24.8, 41.2], b: [24.6, 37.6], w: "repos", c: "viande"}, {a: [33.6, 29], b: [36.4, 29.4], w: "couteau", c: null},
+    {a: [23.6, 24.2], b: [23.2, 24.4], w: "marteau", c: null}, {a: [18.4, 22.6], b: [20.2, 22.9], w: "repos", c: null}, {a: [17.6, 21.3], b: [17.9, 21.2], w: "repos", c: null});
+  if (e === 2) W.push({a: [19, 19], b: [7.4, 17], w: "hache", c: "bois"}, {a: [20, 26.6], b: [14.4, 34.8], w: "couteau", c: "viande"}, {a: [25.6, 25], b: [26, 25.1], w: "marteau", c: null},
+    {a: [20, 13], b: [36.6, 8.2], w: "pioche", c: "or"}, {a: [17, 25.3], b: [21, 25.2], w: "repos", c: null}, {a: [16.2, 22.4], b: [16.2, 22.5], w: "repos", c: null}, {a: [14, 23.6], b: [18.4, 23.4], w: "repos", c: null},
+    {a: [19, 12.2], b: [19, 9], w: "repos", c: "bois"}, {a: [27, 22], b: [33, 24.8], w: "repos", c: null});
+  const n = O.filter(o => !["lanterne", "rocher", "rempart", "pont"].includes(o.k)).length + champs.length;
+  return {O, R, W, P, champs, piquets, place, hab: e === 1 ? 20 : 48, bat: n, info: ""};
+}
+const MOUTONS = [[33.4, 28.4], [35, 28.9], [36.4, 28.1], [34.4, 29.8], [36.6, 30.1]];
+
+/* ---------- les deux jeux d'images ---------- */
+const TSH = ["ts-blue-house1", "ts-red-house2", "ts-yellow-house3", "ts-blue-house2", "ts-red-house1", "ts-yellow-house1", "ts-blue-house3", "ts-red-house3", "ts-yellow-house2"];
+const STYLE = {
+  A: {sol: "tm", eau: "#47aba9", rive: "rgba(255,255,255,.55)", route: "#e2c48a", routeBord: "#c9a66a", place: "#e2c48a", arbresTS: true, ts: .75,
+    spr(o){ switch (o.k){
+      case "maison": return [TSH[o.v % TSH.length], .75];
+      case "mairie": return ["ts-blue-castle", .75]; case "eglise": return ["ts-blue-monastery", .75]; case "tour": return ["ts-blue-tower", .75];
+      case "grange": return ["ts-red-barracks", .75];
+      default: return null; } } },
+  B: {sol: "sckr", eau: "#5a9fd6", rive: "#d8c48e", route: "#b99060", routeBord: "#9a7448", place: "#c09a68", arbresTS: false, ts: .6,
+    spr(o){ if (o.k === "maison"){ const l = o.niv === 1 ? ["chaume1", "chaume2", "chaume3", "chaume4", "chaume5"] : o.v % 3 === 0 ? ["pierre1", "pierre2", "pierre3", "pierre4", "pierre5"] : ["colomb1", "colomb2", "colomb3", "colomb4"]; return [l[o.v % l.length], 1]; }
+      if (o.k === "tour") return ["maison-guilde", 1];
+      return null; } }
+};
+// ce qui vient de Cute SCKR dans les deux directions
+const COMMUN = {moulin: o => ["moulin" + (o.v ? 3 : 1), 1], meule: o => ["meule" + (o.v + 1), .8], grange: () => ["grange", 1], puits: () => ["puits-couvert", 1], fontaine: () => ["fontaine", 1], hangar: () => ["hangar", 1],
+  four: () => ["four", 1], forge: () => ["forge", 1], mairie: () => ["mairie", 1], eglise: () => ["eglise", 1], auberge: () => ["auberge", 1], ecurie: () => ["ecurie", 1], lanterne: () => ["lanterne", .8],
+  etal: o => ["etal" + (o.v + 1), 1], rempart: () => ["rempart", 1], porte: () => ["rempart-porte", 1]};
+const CATALOGUE = {
+  A: {ts: [["ts-blue-house1", "Maison 1"], ["ts-blue-house2", "Maison 2"], ["ts-blue-house3", "Maison 3"], ["ts-blue-tower", "Tour"], ["ts-blue-barracks", "Caserne"], ["ts-blue-archery", "Archerie"], ["ts-blue-castle", "Chateau"], ["ts-blue-monastery", "Monastere"]],
+    plus: [["moulin1", "Moulin"], ["champ-mur", "Champ"], ["meule1", "Meule"], ["grange", "Grange"], ["four", "Four"], ["forge", "Forge"], ["etal1", "Etal"], ["auberge", "Auberge"], ["puits-couvert", "Puits"], ["fontaine", "Fontaine"], ["rempart-porte", "Porte"], ["ecurie", "Ecurie"]]},
+  B: {ts: [["chaume1", "Chaumiere"], ["chaume3", "Chaumiere"], ["colomb1", "Colombages"], ["colomb3", "Colombages"], ["pierre1", "Pierre"], ["pierre3", "Pierre"], ["moulin1", "Moulin"], ["moulin2", "Moulin"],
+    ["moulin3", "Moulin"], ["moulin4", "Moulin"], ["champ-mur", "Champ"], ["champ-pousse", "Semis"], ["meule1", "Meule"], ["grange", "Grange"], ["hangar", "Hangar"], ["ecurie", "Ecurie"], ["four", "Four"], ["forge", "Forge"],
+    ["etal1", "Etal"], ["etal2", "Etal"], ["etal3", "Etal"], ["charrette", "Charrette"], ["puits", "Puits"], ["fontaine", "Fontaine"], ["auberge", "Auberge"], ["maison-bleue", "Maison"], ["mairie", "Mairie"],
+    ["halle", "Halle"], ["guilde", "Guilde"], ["maison-guilde", "Guilde"], ["eglise", "Eglise"], ["eglise2", "Eglise"], ["rempart", "Rempart"], ["rempart-porte", "Porte"], ["lanterne", "Lanterne"], ["s-arbre4", "Arbre"]], plus: []}
+};
+
+/* ---------- dessin ---------- */
+function bande(x, im, fs, f, dx, dy, k, face){ if (!ok(im)) return; const nb = Math.max(1, Math.floor(im.width / fs)), i = ((Math.floor(f) % nb) + nb) % nb;
+  if (face < 0){ x.save(); x.translate(dx + fs * k / 2, 0); x.scale(-1, 1); x.drawImage(im, i * fs, 0, fs, im.height, -fs * k / 2, dy, fs * k, im.height * k); x.restore(); }
+  else x.drawImage(im, i * fs, 0, fs, im.height, dx, dy, fs * k, im.height * k); }
+function trait(b, pts, larg){ b.lineWidth = larg; b.lineCap = "round"; b.lineJoin = "round"; b.beginPath(); pts.forEach(([px, py], i) => i ? b.lineTo(px * T, py * T) : b.moveTo(px * T, py * T)); b.stroke(); }
+function fond(id, S){
+  const st = STYLE[id], c = document.createElement("canvas"); c.width = MW * T; c.height = MH * T; const b = c.getContext("2d"), r = alea(9); b.imageSmoothingEnabled = false;
+  for (let j = 0; j < MH; j++) for (let i = 0; i < MW; i++){
+    if (st.sol === "tm") b.drawImage(IMG.tm, 64, 64, 64, 64, i * T, j * T, T, T);
+    else { const v = r(); b.drawImage(IMG[v < .9 ? "herbe" : v < .96 ? "herbe2" : "herbef"], i * T, j * T); } }
+  // mer et rivière, avec leur rive
+  const mer = (l) => { b.beginPath(); b.moveTo(0, MH * T); for (let X = 0; X <= MW * T; X += 12) b.lineTo(X, (coteY(X / T) - l) * T); b.lineTo(MW * T, MH * T); b.closePath(); b.fill(); };
+  const riv = (l) => { b.beginPath(); for (let y = -1; y <= 44; y += .25) b.lineTo(rivX(y) * T, y * T); b.lineWidth = (1.8 + l * 2) * T; b.lineJoin = "round"; b.stroke(); };
+  b.fillStyle = b.strokeStyle = st.rive; mer(.25); riv(.22);
+  b.fillStyle = b.strokeStyle = st.eau; mer(0); riv(0);
+  b.fillStyle = "rgba(255,255,255,.18)"; for (let k = 0; k < 160; k++){ const X = r() * MW * T, Y = (coteY(X / T) + .6 + r() * 3) * T; b.fillRect(X, Y, 10 + r() * 14, 3); }
+  // place, routes, champs
+  b.strokeStyle = st.routeBord; for (const ro of S.R) trait(b, ro.pts, ro.l * T + 6);
+  for (const ro of S.R){ b.strokeStyle = ro.pale ? "rgba(200,160,100,.55)" : ro.pave && IMG.pave ? b.createPattern(IMG.pave, "repeat") : st.route; trait(b, ro.pts, ro.l * T); }
+  if (S.place){ b.fillStyle = S.place.pave ? b.createPattern(IMG.pave, "repeat") : st.place; b.strokeStyle = st.routeBord; b.lineWidth = 6; b.beginPath(); b.ellipse(S.place.x * T, S.place.y * T, S.place.r * T, S.place.r * .75 * T, 0, 0, 6.3); b.fill(); b.stroke(); }
+  for (const ch of S.champs){ const im = IMG["champ-" + ch.s]; if (ok(im)) b.drawImage(im, ch.x * T, ch.y * T, 2 * T, 2 * T); }
+  // pont
+  return c;
+}
+function dessinerObjet(x, id, o, t, nuitA, lum){
+  const st = STYLE[id], X = o.x * T, Y = o.y * T;
+  if (o.k === "tente"){ x.fillStyle = "#2b2b3a"; x.beginPath(); x.moveTo(X - 34, Y + 3); x.lineTo(X, Y - 48); x.lineTo(X + 34, Y + 3); x.fill(); x.fillStyle = "#d9a066"; x.beginPath(); x.moveTo(X - 29, Y); x.lineTo(X, Y - 42); x.lineTo(X + 29, Y); x.fill(); x.fillStyle = "#8f563b"; x.beginPath(); x.moveTo(X - 8, Y); x.lineTo(X, Y - 24); x.lineTo(X + 8, Y); x.fill(); return; }
+  if (o.k === "feu"){ bande(x, IMG.feu, 64, t * 10, X - 24, Y - 44, .75, 1); lum.push([X, Y - 16, 120]); return; }
+  if (o.k === "rocher"){ if (ok(IMG.rocher)) x.drawImage(IMG.rocher, X - 36, Y - 56, 72, 72); return; }
+  if (o.k === "buisson"){ bande(x, IMG.buisson, 128, t * 6, X - 48, Y - 72, .75, 1); return; }
+  if (o.k === "pont"){ x.fillStyle = "#7a4f2c"; x.fillRect(X - 70, Y - 22, 140, 40); x.fillStyle = "#9c6b3e"; for (let k = 0; k < 8; k++) x.fillRect(X - 66 + k * 17, Y - 20, 14, 36); x.fillStyle = "#5e3a20"; x.fillRect(X - 70, Y - 26, 140, 5); x.fillRect(X - 70, Y + 16, 140, 5); return; }
+  if (o.k === "ponton"){ x.fillStyle = "#8a5a32"; x.fillRect(X - 14, Y - 10, 28, 90); x.fillStyle = "#5e3a20"; for (let k = 0; k < 8; k++) x.fillRect(X - 14, Y - 6 + k * 11, 28, 2); return; }
+  if (o.k === "enclos"){ x.strokeStyle = "#6b4226"; x.lineWidth = 5; x.strokeRect(X, Y, o.w * T, o.h * T); x.lineWidth = 2; x.strokeRect(X + 6, Y + 6, o.w * T - 12, o.h * T - 12);
+    x.fillStyle = "#5a3a1e"; for (let k = 0; k <= o.w * 2; k++){ x.fillRect(X + k * T / 2 - 3, Y - 8, 6, 16); x.fillRect(X + k * T / 2 - 3, Y + o.h * T - 8, 6, 16); } return; }
+  let s = st.spr(o) || (COMMUN[o.k] && COMMUN[o.k](o)); if (!s) return;
+  const [nom, k] = s, im = IMG[nom]; if (!ok(im)) return;
+  const w = im.width * k, h = im.height * k;
+  x.drawImage(im, Math.round(X - w / 2), Math.round(Y - h), Math.round(w), Math.round(h));
+  if (o.k === "maison" && nuitA > 0) lum.push([X + w * .15, Y - h * .35, 46]);
+  if (o.k === "lanterne") lum.push([X, Y - h + 8, 70]);
+  if (["maison", "four", "forge", "auberge"].includes(o.k)){ // fumée
+    for (let q = 0; q < 4; q++){ const a = ((t * .35 + q / 4 + o.x * .13) % 1); x.fillStyle = `rgba(230,230,230,${.45 * (1 - a)})`; x.beginPath(); x.arc(X + w * .22 + Math.sin(t * 2 + q) * 4 + a * 10, Y - h + 6 - a * 40, 4 + a * 7, 0, 6.3); x.fill(); } }
+}
+const ARB_S = ["s-arbre1", "s-arbre2", "s-arbre3", "s-arbre4", "s-arbre5", "s-arbre6", "s-arbre7"];
+function monter(id){
+  const root = document.getElementById(id), st = STYLE[id];
+  root.innerHTML = `<div class="barre">${ETAPES.map((n, i) => `<button type="button" data-e="${i}" class="${i === 1 ? "on" : ""}">${n}</button>`).join("")}</div>
+    <canvas></canvas><div class="bas"><div class="info"></div><div class="outils"><button type="button" data-z="-1" aria-label="Zoom arriere">−</button><button type="button" data-z="1" aria-label="Zoom avant">+</button><button type="button" class="large" data-n="1">NUIT</button><button type="button" class="large" data-c="1">BATIMENTS</button></div></div>
+    <div class="catalogue" hidden></div>`;
+  const cvs = root.querySelector("canvas"), x = cvs.getContext("2d"), info = root.querySelector(".info"), cat = root.querySelector(".catalogue");
+  const Z = [.17, .25, .36, .5, .75, 1]; let zi = 3, cam = {x: 19 * T, y: 23 * T}, etape = 1, S = scene(1), bg = null, nuit = 0, nuitCible = 0;
+  const C = CATALOGUE[id];
+  cat.innerHTML = `<h3>${id === "A" ? "Tiny Swords : 8 batiments" : "Cute SCKR : " + C.ts.length + " images (un extrait)"}</h3>
+    <p>${id === "A" ? "En 5 couleurs (bleu, rouge, jaune, violet, noir). En vert, ce qu'il faut prendre ailleurs pour le cahier des charges :" : "Extrait de 4 packs sur les 668 du lot : il reste potagers, vergers, port, chateau, temple, alchimiste, bibliotheque, mine de cristaux…"}</p>
+    <div class="grille">${C.ts.map(([n, l]) => `<figure><img src="${IMAGES[n]}" alt=""><span>${l}</span></figure>`).join("")}${C.plus.map(([n, l]) => `<figure class="ajout"><img src="${IMAGES[n]}" alt=""><span>${l}</span></figure>`).join("")}</div>`;
+  function changer(e){ etape = e; S = scene(e); bg = null; root.querySelectorAll("[data-e]").forEach(b => b.classList.toggle("on", +b.dataset.e === e)); majInfo(); }
+  function majInfo(){ info.innerHTML = `<span><b>${ETAPES[etape]}</b> · ${S.hab} habitants</span><span>${etape ? S.bat + " batiments · " + S.piquets.length + " terrains libres" : S.info}</span>`; }
+  root.querySelector(".barre").onclick = e => { const b = e.target.closest("button"); if (b) changer(+b.dataset.e); };
+  root.querySelector(".outils").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.z) zi = Math.max(0, Math.min(Z.length - 1, zi + +b.dataset.z));
+    if (b.dataset.n){ nuitCible = nuitCible ? 0 : .6; b.textContent = nuitCible ? "JOUR" : "NUIT"; }
+    if (b.dataset.c){ cat.hidden = !cat.hidden; b.classList.toggle("on", !cat.hidden); } };
+  let glisse = null;
+  cvs.addEventListener("pointerdown", e => { glisse = {x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y}; cvs.setPointerCapture(e.pointerId); });
+  cvs.addEventListener("pointermove", e => { if (!glisse) return; const z = Z[zi]; cam.x = glisse.cx - (e.clientX - glisse.x) / z; cam.y = glisse.cy - (e.clientY - glisse.y) / z; });
+  cvs.addEventListener("pointerup", () => glisse = null); cvs.addEventListener("pointercancel", () => glisse = null);
+  cvs.addEventListener("wheel", e => { e.preventDefault(); zi = Math.max(0, Math.min(Z.length - 1, zi + (e.deltaY < 0 ? 1 : -1))); }, {passive: false});
+  majInfo();
+  function image(now){
+    const t = now / 1000, dpr = Math.min(2, window.devicePixelRatio || 1), cw = cvs.clientWidth, chh = cvs.clientHeight;
+    if (cvs.width !== Math.round(cw * dpr) || cvs.height !== Math.round(chh * dpr)){ cvs.width = Math.round(cw * dpr); cvs.height = Math.round(chh * dpr); }
+    if (!bg && ok(IMG.tm) && ok(IMG.herbe)) bg = fond(id, S);
+    const z = Z[zi], vw = cw / z, vh = chh / z;
+    cam.x = Math.max(vw / 2, Math.min(MW * T - vw / 2, cam.x)); cam.y = Math.max(vh / 2, Math.min(MH * T - vh / 2, cam.y));
+    if (vw > MW * T) cam.x = MW * T / 2; if (vh > MH * T) cam.y = MH * T / 2;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = st.eau; x.fillRect(0, 0, cvs.width, cvs.height);
+    x.setTransform(dpr * z, 0, 0, dpr * z, (cw / 2 - cam.x * z) * dpr, (chh / 2 - cam.y * z) * dpr); x.imageSmoothingEnabled = false;
+    if (bg) x.drawImage(bg, 0, 0);
+    nuit += (nuitCible - nuit) * .06;
+    const x0 = cam.x - vw / 2 - 200, x1 = cam.x + vw / 2 + 200, y0 = cam.y - vh / 2 - 60, y1 = cam.y + vh / 2 + 300, vis = (px, py) => px > x0 && px < x1 && py > y0 && py < y1;
+    const L = [], lum = [];
+    for (const a of ARBRES){ const X = a.x * T, Y = a.y * T; if (!vis(X, Y)) continue;
+      L.push([Y, st.arbresTS ? () => bande(x, IMG["arbre" + (a.n % 4 + 1)], 192, t * 7 + a.ph, X - 72, Y - 178, .75, 1) : () => { const im = IMG[ARB_S[a.n]]; if (ok(im)) x.drawImage(im, Math.round(X - im.width / 2), Math.round(Y - im.height + 8)); }]); }
+    for (const o of S.O){ if (!vis(o.x * T, o.y * T)) continue; L.push([o.k === "pont" || o.k === "ponton" || o.k === "enclos" ? -1e9 + o.y : o.y * T, () => dessinerObjet(x, id, o, t, nuit, lum)]); }
+    for (const p of S.piquets){ const X = p.x * T, Y = p.y * T; if (!vis(X, Y)) continue; L.push([Y - 60, () => { x.strokeStyle = "rgba(240,230,200,.9)"; x.lineWidth = 2; x.setLineDash([6, 4]); x.strokeRect(X - 40, Y - 50, 80, 50); x.setLineDash([]); x.fillStyle = "#6b4226"; for (const [dx, dy] of [[-40, -50], [40, -50], [-40, 0], [40, 0]]) x.fillRect(X + dx - 3, Y + dy - 12, 6, 14); }]); }
+    if (etape) for (const [mx, my] of MOUTONS){ const ph = mx * 3, ax = mx + Math.sin(t * .2 + ph) * .4, f = Math.cos(t * .2 + ph); L.push([my * T, () => bande(x, IMG[f > .4 ? "mouton-marche" : "mouton-broute"], 128, t * 8 + ph, ax * T - 38, my * T - 60, .6, f > 0 ? 1 : -1)]); }
+    for (const w of S.W){ const d = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), m = d / 1.1, cyc = 2 * m + 4, q = ((t + w.a[0] * 1.7) % cyc);
+      let px, py, anim, face;
+      if (w.w === "repos" && d < .5){ px = w.a[0]; py = w.a[1]; anim = "repos"; face = 1; }
+      else if (q < m){ const u = q / m; px = w.a[0] + (w.b[0] - w.a[0]) * u; py = w.a[1] + (w.b[1] - w.a[1]) * u; anim = w.w === "repos" ? "repos" : w.w; face = w.b[0] >= w.a[0] ? 1 : -1; }
+      else if (q < m + 3){ px = w.b[0]; py = w.b[1]; anim = w.w === "repos" ? "repos" : w.w === "hache" ? "hache-coupe" : w.w === "pioche" ? "pioche-tape" : w.w === "marteau" ? "marteau-tape" : "couteau-coupe"; face = 1; }
+      else { const u = Math.min(1, (q - m - 3) / m); px = w.b[0] + (w.a[0] - w.b[0]) * u; py = w.b[1] + (w.a[1] - w.b[1]) * u; anim = w.c || "repos"; face = w.a[0] >= w.b[0] ? 1 : -1; }
+      const X = px * T, Y = py * T; if (!vis(X, Y)) continue; const k = st.ts * .72;
+      L.push([Y, () => { x.fillStyle = "rgba(30,40,10,.25)"; x.beginPath(); x.ellipse(X, Y, 13, 5, 0, 0, 6.3); x.fill(); bande(x, IMG["ouvrier-" + anim], 192, t * 10 + w.a[1], X - 96 * k, Y - 135 * k, k, face); }]); }
+    L.sort((a, b) => a[0] - b[0]); for (const [, f] of L) f();
+    if (nuit > .01){ x.fillStyle = `rgba(16,22,58,${nuit})`; x.fillRect(cam.x - vw / 2, cam.y - vh / 2, vw, vh); x.globalCompositeOperation = "lighter";
+      for (const [lx, ly, r] of lum){ const g = x.createRadialGradient(lx, ly, 0, lx, ly, r); g.addColorStop(0, `rgba(255,170,70,${nuit})`); g.addColorStop(1, "rgba(255,170,70,0)"); x.fillStyle = g; x.fillRect(lx - r, ly - r, r * 2, r * 2); }
+      x.globalCompositeOperation = "source-over"; }
+    requestAnimationFrame(image);
+  }
+  requestAnimationFrame(image);
+}
+monter("A"); monter("B");
+</script>

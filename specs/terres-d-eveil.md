@@ -9,6 +9,12 @@
   - **B · 16 bits de la Ludothèque** : tout dessiné par le code en gros pixels (toile 160 × 200 agrandie ×2), Press Start 2P, villageois colorés selon le métier, liste d'incrémental classique.
   - **C · Le carnet de la vallée** : carte à l'encre et à l'aquarelle sur parchemin (toponymes, rose des vents), personnages au trait, la partie racontée dans une **chronique** (« Jour 3 : Berthe se fait cueilleur »).
   - **À choisir** (et retours sur le rythme, l'écran en portrait, le panneau du bas).
+- **Retour sur la maquette 1 (08/11)** : la direction **A (Tiny Swords)** plaît, mais crainte de **manquer de bâtiments** : la finalité est de **construire et d'aménager un grand territoire**. **Pas de classement** (rien d'évident à comparer entre joueurs). Des noms sont demandés (§ 3).
+- Inventaire : Tiny Swords n'a que **7 sortes de bâtiments** (maisons 1 à 3, tour, caserne, archerie, château, monastère), en 5 couleurs, plus la mine d'or et la maison et la tour en bois des gobelins (ancienne version) : ni moulin, ni ferme, ni marché, ni forge. Le **lot Cute SCKR** déjà acheté (668 packs, `api.itch.io/profile/owned-keys`, fichiers `.rar` à ouvrir avec `unar`) a tout : *Medieval Village* (≈ 30 maisons en chaume, colombages ou pierre, granges, écuries, 4 moulins, meules, puits, 2 églises), *Medieval Buildings* (mairie, halle, guildes, auberge, étals, forge, remparts et portes, lanternes), *Medieval Farm* (champs de blé à plusieurs stades, potagers, clôtures, outils), *Large Forest* (arbres, jeunes pousses, souches) ; et plus loin *Medieval Blacksmith*, *Arcane Library*, *Medieval Alchemist Laboratory*, *Crystal Mine*, *Orchard and Vineyard*, *Medieval Harbour*… Images de 48 px (format RPG Maker), licence « usage dans un jeu, pas de revente ni de redistribution » ; l'auteur les signale **assistées par IA**.
+- **08/11 — maquette 2, le grand territoire** : https://claude.ai/artifact/WE1dTX3PUzYUnq7gBXCzGL — page source `outils/terres-maquette/source-2.html`, fabriquée par `python3 -I outils/terres-maquette/fabriquer-2.py <Free Pack> <dossier SCKR> <sortie> [planche.png]` (découpes listées dans le script ; les packs ne sont pas dans le dépôt). Une vallée de 40 × 46 cases (forêt, rivière et pont, mer, carrière, enclos), à trois étapes (**campement** 3 habitants, **village** 20, **bourg** 48 avec mairie, église, auberge, forge, marché pavé, remparts bas, deuxième moulin), glisser au doigt, zoom, nuit, piquets = terrains libres, bouton BATIMENTS (catalogue). Deux directions avec les mêmes villageois Tiny Swords :
+  - **A · Tiny Swords, complété** : sol, eau, arbres et maisons Tiny Swords (château = mairie, monastère = église, tour, caserne = grange) ; le reste vient de Cute SCKR.
+  - **B · Tout Cute SCKR** : sol, arbres et bâtiments Cute SCKR ; les maisons changent avec le palier (chaume → colombages et pierre).
+  - **À choisir.**
 - Prochaines étapes après le choix : décisions du § 2, puis **simulateur d'équilibrage d'abord** (`outils/terres-simulateur.js`, ère 1), puis session 1.
 
 ## 2. Adaptations à la Ludothèque (proposées le 08/11, à confirmer)
@@ -28,7 +34,17 @@ Le cahier reçu est écrit pour un projet seul ; dans la Ludothèque, quelques p
 
 **Points communs avec d'autres chantiers** (à garder en tête, pas de fusion proposée) : **la colonie** (`ile/`, tour par tour, la nature est l'ennemie, cdc `specs/colonie.md`) ; **le Clan du fjord** (en pause : les graphismes à créer l'ont bloqué → ici, choisir un style qui ne demande pas de tout dessiner) ; **la Mine sans fond** (incrémental, `IDEES.md`). Terres d'Éveil s'en distingue par le **temps réel incrémental** (production qui continue appli fermée) et le **prestige par les Lois**.
 
-**Questions ouvertes** : style (maquette) ; classement ou pas ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) ; nom définitif.
+**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : style (maquette 2) ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) ; nom définitif.
+
+## 3. Noms proposés (08/11)
+| Nom | Pourquoi |
+|---|---|
+| **Terres franches** (préféré) | Au Moyen Âge, une ville « franche » est celle qui a reçu sa charte de libertés : c'est le prestige par les Lois. |
+| **Clairval** | Le nom de la première vallée ; court, doux, se retient. |
+| **Feux et Chartes** | Du feu de camp du début aux chartes qui font les villes. |
+| **Les Bâtisseurs du Val** | Dit tout de suite qu'on construit. |
+| **De Hameau en Capitale** | Raconte la progression des cinq ères. |
+| **Terres d'Éveil** | Le nom de travail du cahier. |
 
 ---
 
