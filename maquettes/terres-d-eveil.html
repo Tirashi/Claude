@@ -1,0 +1,435 @@
+<title>Terres d'Éveil</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=IM+Fell+English:ital@0;1&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* Mise en page : trois téléphones côte à côte (empilés sur un téléphone) = le même petit moteur, dessiné de trois façons. */
+:root {
+  --bg: #e8eadf; --fg: #23261c; --muted: #5d634f; --trait: #c9cdb9;
+  --texte: "Alegreya Sans", "Trebuchet MS", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #121410; --fg: #e9ecdf; --muted: #a2a891; --trait: #33382b; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #121410; --fg: #e9ecdf; --muted: #a2a891; --trait: #33382b; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--texte); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header.page { max-width: 1120px; margin: 0 auto 18px; display: grid; gap: 6px; }
+header.page h1 { margin: 0; font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 1.9rem; text-wrap: balance; }
+header.page p { margin: 0; color: var(--muted); max-width: 78ch; line-height: 1.5; font-size: 1rem; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1120px; margin: 0 auto; }
+figure.dir { margin: 0; display: grid; gap: 10px; justify-items: center; }
+figure.dir figcaption { display: grid; gap: 4px; max-width: 340px; }
+figure.dir figcaption b { font-size: 1.1rem; }
+figure.dir figcaption span { color: var(--muted); font-size: .95rem; line-height: 1.4; }
+.tel { width: 340px; max-width: 100%; height: 700px; border-radius: 34px; padding: 10px; background: #0a0a08; box-shadow: 0 10px 30px rgba(0,0,0,.28); box-sizing: border-box; }
+.ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; position: relative; user-select: none; -webkit-user-select: none; }
+.ecran canvas { width: 100%; aspect-ratio: 4 / 5; display: block; image-rendering: pixelated; touch-action: manipulation; cursor: pointer; flex: none; }
+.haut { display: flex; gap: 6px; align-items: center; padding: 8px 10px; flex: none; }
+.haut .r { display: grid; line-height: 1.05; min-width: 0; }
+.haut .r small { opacity: .75; font-size: .68em; }
+.haut .vite { margin-left: auto; }
+.panneau { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 10px 12px; display: grid; gap: 6px; align-content: start; }
+.ligne { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
+.ligne .nom { display: grid; min-width: 0; }
+.ligne .nom small { opacity: .75; }
+.pm { display: flex; gap: 4px; align-items: center; }
+.pm b { min-width: 1.6em; text-align: center; font-variant-numeric: tabular-nums; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.cher { opacity: .45; }
+.onglets { display: flex; gap: 4px; }
+.note { max-width: 1120px; margin: 26px auto 0; color: var(--muted); font-size: .95rem; line-height: 1.5; display: grid; gap: 6px; }
+.note h2 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; color: var(--fg); margin: 8px 0 0; font-size: 1.3rem; }
+
+/* ---------- A : Tiny Swords ---------- */
+.dA { background: #3b4a2a; color: #fbf1dc; font-family: "Pixelify Sans", monospace; font-size: 13px; }
+.dA .haut { background: #6b4a2e; box-shadow: inset 0 -3px 0 #4a3020; }
+.dA .haut .r b { font-size: 15px; }
+.dA .panneau { background: #e9d7ae; color: #3c2a1a; box-shadow: inset 0 3px 0 #c9ad78; }
+.dA button { background: #4f7fbf; color: #fff; border: 0; border-radius: 6px; padding: 5px 9px; box-shadow: inset 0 -3px 0 #2f5891; font-weight: 600; }
+.dA button:active { box-shadow: inset 0 2px 0 #2f5891; transform: translateY(1px); }
+.dA .pm button { width: 28px; padding: 4px 0; }
+.dA .onglets button { background: #b98f5a; box-shadow: inset 0 -3px 0 #8b6638; flex: 1; }
+.dA .onglets button.on { background: #d94f3d; box-shadow: inset 0 -3px 0 #9c3326; }
+.dA .vite { background: #d9a43d !important; box-shadow: inset 0 -3px 0 #a87a22 !important; }
+.dA .ligne { background: #f6ead0; border-radius: 6px; padding: 5px 7px; }
+.dA [data-tab]:not(.vu) { display: none !important; }
+
+/* ---------- B : 16 bits de la Ludothèque ---------- */
+.dB { background: #10152b; color: #e8ecff; font-family: "Press Start 2P", monospace; font-size: 8px; line-height: 1.5; }
+.dB .haut { background: #1d2547; border-bottom: 2px solid #3a4a8c; gap: 8px; }
+.dB .haut .r b { font-size: 9px; }
+.dB .haut .r small { font-size: 7px; }
+.dB .panneau { background: #10152b; gap: 4px; }
+.dB button { background: #10152b; color: #ffd84a; border: 2px solid #ffd84a; padding: 5px 6px; font-size: 8px; }
+.dB button:active { background: #ffd84a; color: #10152b; }
+.dB .pm button { width: 22px; padding: 4px 0; }
+.dB .ligne { border-bottom: 2px solid #1d2547; padding: 4px 2px; }
+.dB .titre { color: #7fd0ff; padding-top: 4px; }
+.dB .onglets { display: none; }
+
+/* ---------- C : le carnet de la vallée ---------- */
+.dC { background: #efe2c4; color: #3a2e22; font-family: "IM Fell English", Georgia, serif; font-size: 14px; }
+.dC .haut { border-bottom: 1px solid #b59f78; font-style: italic; }
+.dC .haut .r b { font-size: 16px; font-style: normal; }
+.dC .panneau { gap: 2px; }
+.dC button { background: none; border: 0; color: #8a2b1d; text-decoration: underline; text-underline-offset: 3px; padding: 2px 4px; font-style: italic; }
+.dC .pm button { text-decoration: none; font-style: normal; font-size: 16px; border: 1px solid #b59f78; border-radius: 50%; width: 24px; height: 24px; padding: 0; }
+.dC .ligne { border-bottom: 1px dotted #b59f78; padding: 3px 0; }
+.dC .chron { font-style: italic; font-size: 13px; line-height: 1.35; border-left: 2px solid #b59f78; padding: 2px 0 4px 8px; display: grid; gap: 2px; color: #5a4a36; }
+.dC .chron div:first-child { color: #3a2e22; }
+.dC .onglets { display: none; }
+@media (prefers-reduced-motion: reduce) { .dA button:active { transform: none; } }
+</style>
+
+<header class="page">
+  <h1>Terres d'Éveil</h1>
+  <p>Maquette jouable : le même début de partie (le pionnier seul, puis le campement et le hameau), dessiné de trois façons. Touchez les arbres, les buissons et l'eau pour récolter, accueillez des villageois, donnez-leur un métier et bâtissez des cabanes. Le bouton ×10 accélère le temps pour voir arriver le hameau (3 habitants) et le village (8).</p>
+</header>
+
+<div class="phones">
+  <figure class="dir"><div class="tel"><div class="ecran dA" id="A"></div></div>
+    <figcaption><b>A · Tiny Swords</b><span>Le pack déjà acheté pour Bastion : villageois animés (hache, couteau, fagots), moutons, maisons, nuit avec le feu et les fenêtres qui s'allument. Panneau de bois à onglets.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran dB" id="B"></div></div>
+    <figcaption><b>B · 16 bits de la Ludothèque</b><span>Tout dessiné par le code, en gros pixels : on voit toute la vallée, les villageois sont de petits personnages colorés selon leur métier. Liste d'incrémental classique en dessous.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran dC" id="C"></div></div>
+    <figcaption><b>C · Le carnet de la vallée</b><span>Une carte dessinée à l'encre et à l'aquarelle, plus contemplative ; la partie se raconte dans une chronique (« Jour 3 : Berthe se fait cueilleuse »).</span></figcaption></figure>
+</div>
+
+<div class="note">
+  <h2>Ce que la maquette montre (et ne montre pas)</h2>
+  <p>Chaque villageois va au travail, récolte, rapporte au feu de camp, et la récolte s'envole en « +3 ». Les habitants mangent baies et poisson ; manger des deux donne le moral à 110 %, ne plus rien avoir à manger ralentit tout le monde. Une cabane loge 3 villageois de plus et se construit en 20 secondes.</p>
+  <p>Pas encore là : les chaînes (le champ de blé est montré verrouillé), la pierre, les saisons, la magie, les Lois. On choisit d'abord le style ; les nombres viendront du simulateur d'équilibrage.</p>
+</div>
+
+<script>
+/* =================== le moteur commun =================== */
+const W = 10, H = 12.5;
+const cote = x => 9.1 + .55 * Math.sin(x * .9 + .4);
+const terre = (x, y) => y < cote(x);
+const ARBRES = [[.8,1.3],[2,1],[3.2,1.6],[1.3,2.6],[2.6,2.9],[.7,4],[1.9,4.3],[3.3,4.1],[.9,5.7],[2.3,6],[1.2,7.3],[4.4,1.2]];
+const BUISSONS = [[7.4,2.2],[8.6,2.7],[7.9,3.7],[9,4.5],[7.1,4.9]];
+const PECHE = [4.4, 6.1, 7.7].map(x => [x, cote(x) - .3]);
+const FEU = [5.2, 5.7], TENTE = [4.3, 5.1], TOUR = [8.4, 8.0];
+const SLOTS = [[6.5,4.6],[3.9,7.0],[6.7,7.2],[5.6,3.7],[4.2,8.4],[7.9,6.3],[5.6,8.5],[3.6,5.5]];
+const NOEUDS = [...ARBRES.map(([x, y]) => ({k: "bois", x, y})), ...BUISSONS.map(([x, y]) => ({k: "baies", x, y})), ...PECHE.map(([x, y]) => ({k: "poisson", x, y}))];
+const METIERS = {bucheron: "bois", cueilleur: "baies", pecheur: "poisson"};
+const RENDEMENT = {bois: 3, baies: 3, poisson: 4};
+const NOMS = ["Berthe","Colin","Douce","Gauvain","Hermine","Isaure","Jehan","Lison","Mahaut","Perrin","Sibylle","Thibaud","Ysolde","Aubin","Clémence","Enguerrand"];
+const ROLE = {pionnier: "pionnier", libre: "sans métier", bucheron: "bûcheron", cueilleur: "cueilleur", pecheur: "pêcheur"};
+const PALIERS = ["Campement", "Hameau", "Village"];
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+function creer(){
+  return {t: 0, res: {bois: 0, baies: 0, poisson: 0}, gains: {bois: 0, baies: 0, poisson: 0}, taux: {bois: 0, baies: 0, poisson: 0}, tT: 0,
+    cabanes: [], palier: 0, faim: false, moral: 1, mange: {baies: -99, poisson: -99}, evts: [], noms: 0,
+    gens: [{nom: "Le pionnier", m: "pionnier", x: FEU[0] - .6, y: FEU[1] + .2, e: "repos", t: 0, ph: 0, face: 1, tape: -9}]};
+}
+const places = S => 2 + 3 * S.cabanes.filter(c => c.prog >= 1).length;
+const n = S => S.gens.length;
+const coutRecrue = S => ({vivres: Math.round(12 * Math.pow(1.2, n(S) - 1)), bois: Math.round(6 * Math.pow(1.2, n(S) - 1))});
+const coutCabane = S => ({bois: Math.round(20 * Math.pow(1.15, S.cabanes.length))});
+const vivres = S => S.res.baies + S.res.poisson;
+const jour = S => 1 + Math.floor(S.t / 90);
+function payerVivres(S, q){ while (q > 0){ const k = S.res.baies >= S.res.poisson ? "baies" : "poisson"; const p = Math.min(q, S.res[k]); if (p <= 0) break; S.res[k] -= p; q -= p; } }
+function chronique(S, txt){ S.evts.push({type: "chron", txt: "Jour " + jour(S) + " : " + txt}); }
+
+function recolter(S, nd){
+  S.res[nd.k] += 1; S.gains[nd.k] += 1; S.evts.push({type: "flot", txt: "+1", k: nd.k, x: nd.x, y: nd.y - (nd.k === "bois" ? 1.3 : .4)});
+  const p = S.gens[0]; p.cible = nd; p.tape = S.t; if (p.e !== "travail") p.e = "aller";
+}
+function recruter(S){
+  if (n(S) >= places(S)) return "Plus de place : bâtissez une cabane";
+  const c = coutRecrue(S); if (vivres(S) < c.vivres || S.res.bois < c.bois) return "Pas assez de vivres ou de bois";
+  if (S.faim) return "Le campement a faim";
+  payerVivres(S, c.vivres); S.res.bois -= c.bois;
+  const g = {nom: NOMS[S.noms++ % NOMS.length], m: "libre", x: -.4, y: 6.4, e: "arrive", t: 0, ph: Math.random() * 8, face: 1};
+  S.gens.push(g); chronique(S, g.nom + " rejoint la vallée.");
+  const pal = n(S) >= 8 ? 2 : n(S) >= 3 ? 1 : 0;
+  if (pal > S.palier){ S.palier = pal; S.evts.push({type: "palier", txt: PALIERS[pal]}); chronique(S, "le campement devient un " + PALIERS[pal].toLowerCase() + " !"); }
+  return null;
+}
+function metier(S, m, d){
+  if (d > 0){ const g = S.gens.find(g => g.m === "libre"); if (!g) return "Personne sans métier"; g.m = m; g.e = "repos"; chronique(S, g.nom + " se fait " + ROLE[m] + "."); }
+  else { const g = [...S.gens].reverse().find(g => g.m === m); if (!g) return null; g.m = "libre"; g.e = "repos"; }
+  return null;
+}
+function batir(S){
+  if (S.cabanes.length >= SLOTS.length) return "Plus de place dans la vallée";
+  const c = coutCabane(S); if (S.res.bois < c.bois) return "Pas assez de bois";
+  S.res.bois -= c.bois; const [x, y] = SLOTS[S.cabanes.length]; S.cabanes.push({x, y, prog: 0, v: S.cabanes.length % 2});
+  chronique(S, "on commence une cabane."); return null;
+}
+function vers(g, cx, cy, v, dt){ const dx = cx - g.x, dy = cy - g.y, d = Math.hypot(dx, dy); if (Math.abs(dx) > .02) g.face = dx > 0 ? 1 : -1;
+  if (d <= v * dt) { g.x = cx; g.y = cy; return true; } g.x += dx / d * v * dt; g.y += dy / d * v * dt; return false; }
+function choisir(S, g){ const k = METIERS[g.m], l = NOEUDS.filter(nd => nd.k === k); const i = S.gens.filter(h => h.m === g.m).indexOf(g); return l[(i * 2 + Math.floor(S.t / 40)) % l.length]; }
+
+function pas(S, dt){
+  S.t += dt;
+  // manger
+  let q = n(S) * .04 * dt; const avant = {...S.res};
+  payerVivres(S, q);
+  for (const k of ["baies", "poisson"]) if (S.res[k] < avant[k]) S.mange[k] = S.t;
+  S.faim = vivres(S) <= 0 && n(S) > 1;
+  S.moral = S.faim ? .6 : 1 + (S.t - S.mange.baies < 20 && S.t - S.mange.poisson < 20 ? .1 : 0);
+  const v = 1.5 * (S.faim ? .6 : 1);
+  for (const c of S.cabanes) if (c.prog < 1){ c.prog = Math.min(1, c.prog + dt / 20); if (c.prog >= 1) chronique(S, "une cabane est terminée (+3 places)."); }
+  for (const g of S.gens){
+    g.ph += dt;
+    if (g.e === "arrive"){ if (vers(g, FEU[0] + .8, FEU[1] + .6, v, dt)) g.e = "repos"; continue; }
+    if (g.m === "pionnier"){
+      if (g.e === "aller" && g.cible){ if (vers(g, g.cible.x + .45, g.cible.y + .1, v * 1.6, dt)) g.e = "travail"; }
+      else if (g.e === "travail" && S.t - g.tape > 1.5){ g.e = "repos"; }
+      continue;
+    }
+    if (g.m === "libre"){ if (!g.dest || S.t > g.dest.t){ const a = Math.random() * 6.28; g.dest = {x: FEU[0] + Math.cos(a) * .9, y: FEU[1] + .3 + Math.sin(a) * .5, t: S.t + 3 + Math.random() * 4}; }
+      vers(g, g.dest.x, g.dest.y, .5, dt); g.e = "repos"; continue; }
+    if (g.e === "repos"){ g.cible = choisir(S, g); g.e = "aller"; }
+    if (g.e === "aller"){ if (vers(g, g.cible.x + .45 * (g.cible.k === "bois" ? 1 : .6), g.cible.y + .1, v, dt)){ g.e = "travail"; g.t = 0; } }
+    else if (g.e === "travail"){ g.t += dt * S.moral; if (g.t > 2.5) g.e = "retour"; }
+    else if (g.e === "retour"){ if (vers(g, FEU[0] + .35 * g.face, FEU[1] + .25, v, dt)){ const k = g.cible.k, q = Math.round(RENDEMENT[k] * S.moral * 10) / 10;
+      S.res[k] += q; S.gains[k] += q; S.evts.push({type: "flot", txt: "+" + q, k, x: FEU[0], y: FEU[1] - .5}); g.e = "repos"; } }
+  }
+  S.tT += dt; if (S.tT >= 15){ for (const k in S.gains){ S.taux[k] = S.gains[k] * 4; S.gains[k] = 0; } S.tT = 0; }
+}
+
+/* =================== outils de dessin =================== */
+const IMG = {};
+const SRC = {tm: "@@tm@@", arbre1: "@@arbre1@@", arbre2: "@@arbre2@@", buisson: "@@buisson@@", feu: "@@feu@@", maison1: "@@maison1@@", maison2: "@@maison2@@", chantier: "@@chantier@@", tour: "@@tour@@",
+  "mouton-broute": "@@mouton-broute@@", "mouton-marche": "@@mouton-marche@@", "ouvrier-repos": "@@ouvrier-repos@@", "ouvrier-hache": "@@ouvrier-hache@@", "ouvrier-hache-coupe": "@@ouvrier-hache-coupe@@",
+  "ouvrier-bois": "@@ouvrier-bois@@", "ouvrier-couteau": "@@ouvrier-couteau@@", "ouvrier-couteau-coupe": "@@ouvrier-couteau-coupe@@", "ouvrier-viande": "@@ouvrier-viande@@", rocher: "@@rocher@@"};
+for (const k in SRC){ const im = new Image(); im.src = SRC[k]; IMG[k] = im; }
+const ok = im => im && im.complete && im.naturalWidth > 0;
+function bande(x, im, fs, f, dx, dy, k = 1, face = 1){ if (!ok(im)) return; const nb = Math.max(1, Math.floor(im.width / fs)), i = ((Math.floor(f) % nb) + nb) % nb, h = im.height;
+  if (face < 0){ x.save(); x.translate(Math.round(dx + fs * k / 2), 0); x.scale(-1, 1); x.drawImage(im, i * fs, 0, fs, h, -fs * k / 2, Math.round(dy), fs * k, h * k); x.restore(); }
+  else x.drawImage(im, i * fs, 0, fs, h, Math.round(dx), Math.round(dy), fs * k, h * k); }
+function alea(s){ return () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const nuit = t => Math.max(0, Math.min(.55, -Math.cos(t / 90 * Math.PI * 2) * 1.1 - .35));
+const MOUTONS = [{x: 8.6, y: 6.9, ph: 0}, {x: 9.2, y: 7.6, ph: 3}, {x: 8.0, y: 7.9, ph: 6}];
+
+/* =================== les trois directions =================== */
+const LAB = {
+  A: s => s,
+  B: s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase(),
+  C: s => s
+};
+const RES_NOM = {bois: "Bois", baies: "Baies", poisson: "Poisson"};
+
+function monter(id){
+  const root = document.getElementById(id), L = LAB[id];
+  let dejaHtml = "", S = creer(), vite = 1, flots = [], banniere = null, chron = [], dernier = performance.now(), msg = null, tab = "gens";
+  root.innerHTML = `<div class="haut">${["bois","baies","poisson"].map(k => `<div class="r" data-r="${k}"><small>${L(RES_NOM[k])}</small><b>0</b><small class="t"></small></div>`).join("")}
+    <button type="button" class="vite" id="vite${id}">×1</button></div>
+    <canvas width="${id === "B" ? 160 : 640}" height="${id === "B" ? 200 : 800}"></canvas>
+    <div class="panneau"></div>`;
+  const cvs = root.querySelector("canvas"), x = cvs.getContext("2d"), pan = root.querySelector(".panneau"), E = cvs.width / W;
+  x.imageSmoothingEnabled = false;
+  root.querySelector(".vite").onclick = e => { vite = vite === 1 ? 10 : 1; e.target.textContent = "×" + vite; };
+  cvs.addEventListener("pointerdown", e => { const r = cvs.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W, py = (e.clientY - r.top) / r.height * H;
+    let best = null, bd = 1.1;
+    for (const nd of NOEUDS){ const d = Math.hypot(px - nd.x, py - (nd.y - (nd.k === "bois" ? 1 : nd.k === "baies" ? .3 : -.5))); if (d < bd){ bd = d; best = nd; } }
+    if (!best && !terre(px, py)) best = NOEUDS.filter(nd => nd.k === "poisson").sort((a, b) => Math.abs(a.x - px) - Math.abs(b.x - px))[0];
+    if (best) recolter(S, best); });
+
+  function panneau(){
+    const c = coutRecrue(S), cb = coutCabane(S), libres = S.gens.filter(g => g.m === "libre").length;
+    const prix = o => Object.entries(o).map(([k, v]) => v + " " + L(k)).join(", ");
+    const onglets = `<div class="onglets"><button type="button" data-o="gens" class="${tab === "gens" ? "on" : ""}">Villageois</button><button type="button" data-o="bat" class="${tab === "bat" ? "on" : ""}">Construire</button></div>`;
+    const ch = id === "C" ? `<div class="chron">${chron.slice(0, 4).map(t => `<div>${t}</div>`).join("") || "<div>Jour 1 : le pionnier arrive seul dans la vallée.</div>"}</div>` : "";
+    const info = `<div class="ligne ${id === "B" ? "titre" : ""}"><span>${L(PALIERS[S.palier])} · ${n(S)}/${places(S)} ${L("habitants")}</span><span>${L("Moral")} ${Math.round(S.moral * 100)} %${S.faim ? " · " + L("Faim !") : ""}</span></div>`;
+    const gens = `<div data-tab="gens" class="${tab === "gens" ? "vu" : ""}" style="display:grid;gap:6px">
+      <div class="ligne"><span class="nom">${L("Accueillir un villageois")}<small>${prix({vivres: c.vivres, bois: c.bois})}</small></span><button type="button" data-a="recruter" class="${n(S) >= places(S) || vivres(S) < c.vivres || S.res.bois < c.bois ? "cher" : ""}">${L("Accueillir")}</button></div>
+      ${Object.keys(METIERS).map(m => `<div class="ligne"><span class="nom">${L(ROLE[m][0].toUpperCase() + ROLE[m].slice(1))}<small>${L(RES_NOM[METIERS[m]])} · ${RENDEMENT[METIERS[m]]} ${L("par voyage")}</small></span><span class="pm"><button type="button" data-m="${m}" data-d="-1">−</button><b>${S.gens.filter(g => g.m === m).length}</b><button type="button" data-m="${m}" data-d="1" class="${libres ? "" : "cher"}">+</button></span></div>`).join("")}
+      <div class="ligne"><span class="nom">${L("Sans métier")}</span><b>${libres}</b></div></div>`;
+    const bat = `<div data-tab="bat" class="${tab === "bat" ? "vu" : ""}" style="display:grid;gap:6px">
+      <div class="ligne"><span class="nom">${L("Cabane")} (${S.cabanes.length})<small>+3 ${L("places")} · ${prix(cb)}</small></span><button type="button" data-a="batir" class="${S.res.bois < cb.bois ? "cher" : ""}">${L("Bâtir")}</button></div>
+      <div class="ligne cher"><span class="nom">${L("Champ de blé")}<small>${L("Au village (8 habitants), avec le moulin")}</small></span><span>🔒</span></div></div>`;
+    const html = (id === "A" ? onglets : "") + ch + info + (msg && performance.now() - msg.t < 2500 ? `<div class="ligne" style="color:${id === "B" ? "#ff6b6b" : "#b03a2a"}">${L(msg.txt)}</div>` : "") + gens + bat;
+    if (html !== dejaHtml){ pan.innerHTML = html; dejaHtml = html; }
+    for (const k of ["bois", "baies", "poisson"]){ const el = root.querySelector(`[data-r="${k}"]`); el.querySelector("b").textContent = Math.floor(S.res[k]);
+      const net = S.taux[k] - (k === "bois" ? 0 : n(S) * .04 * 60 / 2); el.querySelector(".t").textContent = (S.taux[k] || n(S) > 1) && S.t > 15 ? (net >= 0 ? "+" : "") + Math.round(net) + "/" + L("min") : ""; }
+  }
+  pan.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; let err = null;
+    if (b.dataset.o) tab = b.dataset.o;
+    if (b.dataset.a === "recruter") err = recruter(S);
+    if (b.dataset.a === "batir") err = batir(S);
+    if (b.dataset.m) err = metier(S, b.dataset.m, +b.dataset.d);
+    msg = err ? {txt: err, t: performance.now()} : null; panneau(); });
+
+  const DESSIN = {A: dessinA, B: dessinB, C: dessinC}[id]; let prep = {A: null, B: fondB(), C: fondC()}[id];
+  if (id === "C" && document.fonts) document.fonts.ready.then(() => { prep = fondC(); });
+  function boucle(now){
+    let dt = Math.min(.25, (now - dernier) / 1000) * vite; dernier = now;
+    while (dt > 0){ const d = Math.min(.05, dt); pas(S, d); dt -= d; }
+    for (const ev of S.evts){ if (ev.type === "flot") flots.push({...ev, t0: now}); if (ev.type === "palier") banniere = {txt: ev.txt, t0: now}; if (ev.type === "chron") chron.unshift(ev.txt); }
+    if (S.evts.length && id === "C") panneau(); S.evts.length = 0;
+    flots = flots.filter(f => now - f.t0 < 1300);
+    DESSIN(x, S, now / 1000, E, prep, flots.map(f => ({...f, a: (now - f.t0) / 1300})), banniere && now - banniere.t0 < 3200 ? {...banniere, a: (now - banniere.t0) / 3200} : null);
+    requestAnimationFrame(boucle);
+  }
+  panneau(); setInterval(panneau, 400); requestAnimationFrame(boucle);
+}
+
+/* ---------- A : Tiny Swords ---------- */
+const autoT = (nn, s, w, e) => [w ? (e ? 1 : 2) : (e ? 0 : 3), nn ? (s ? 1 : 2) : (s ? 0 : 3)];
+let fondA = null;
+function faireFondA(){
+  if (!ok(IMG.tm)) return null; const c = document.createElement("canvas"); c.width = 640; c.height = 832; const b = c.getContext("2d"); b.imageSmoothingEnabled = false;
+  const T = (i, j) => i >= 0 && i < 10 && j >= 0 && j < 13 && terre(i + .5, j + .5) || (j < 0 && i >= 0 && i < 10) || ((i < 0 || i > 9) && j >= 0 && terre(Math.max(.5, Math.min(9.5, i + .5)), j + .5));
+  for (let j = 0; j < 13; j++) for (let i = 0; i < 10; i++) if (T(i, j)){ const [cc, r] = autoT(T(i, j - 1), T(i, j + 1), T(i - 1, j), T(i + 1, j)); b.drawImage(IMG.tm, cc * 64, r * 64, 64, 64, i * 64, j * 64, 64, 64); }
+  return c;
+}
+function dessinA(x, S, t, E, _, flots, ban){
+  if (!fondA) fondA = faireFondA();
+  x.fillStyle = "#47aba9"; x.fillRect(0, 0, 640, 800);
+  // écume autour de la côte
+  x.fillStyle = "rgba(255,255,255,.28)";
+  for (let i = 0; i < 10; i++){ const yy = Math.floor(cote(i + .5) + .5) * 64; x.fillRect(i * 64 - 4, yy - 64, 72, 70 + 5 * Math.sin(t * 2 + i)); }
+  if (fondA) x.drawImage(fondA, 0, 0);
+  // reflets sur l'eau
+  x.fillStyle = "rgba(255,255,255,.35)";
+  for (let k = 0; k < 9; k++){ const px = (k * 137 + t * 12) % 680 - 20, py = 690 + (k * 53) % 100; x.fillRect(Math.round(px), Math.round(py), 14, 3); }
+  // pontons
+  for (const [px, py] of PECHE){ const X = px * 64, Y = py * 64; x.fillStyle = "#8a5a32"; x.fillRect(X - 12, Y - 6, 24, 62); x.fillStyle = "#5e3a20"; for (let k = 0; k < 6; k++) x.fillRect(X - 12, Y - 4 + k * 10, 24, 2); x.fillRect(X - 14, Y + 50, 4, 14); x.fillRect(X + 10, Y + 50, 4, 14); }
+  // poisson qui saute
+  { const c = t % 4; if (c < .8){ const px = PECHE[Math.floor(t / 4) % 3][0] * 64 + 40, py = 720 - Math.sin(c / .8 * Math.PI) * 30; x.fillStyle = "#e9eef0"; x.fillRect(px - 6, py - 3, 12, 6); x.fillRect(px + 6, py - 5, 4, 10); } }
+  const L = [];
+  for (const [i, [ax, ay]] of ARBRES.entries()) L.push([ay * 64, () => bande(x, IMG["arbre" + (i % 2 + 1)], 192, t * 8 + i * 3, ax * 64 - 96, ay * 64 - 238)]);
+  for (const [i, [bx, by]] of BUISSONS.entries()) L.push([by * 64, () => { bande(x, IMG.buisson, 128, t * 6 + i, bx * 64 - 64, by * 64 - 96); x.fillStyle = "#d8344a"; for (let k = 0; k < 5; k++) x.fillRect(Math.round(bx * 64 - 22 + (k * 17) % 40), Math.round(by * 64 - 46 + (k * 11) % 22), 6, 6); }]);
+  L.push([TENTE[1] * 64, () => { const X = TENTE[0] * 64, Y = TENTE[1] * 64; x.fillStyle = "#2b2b3a"; x.beginPath(); x.moveTo(X - 44, Y + 4); x.lineTo(X, Y - 62); x.lineTo(X + 44, Y + 4); x.fill(); x.fillStyle = "#d9a066"; x.beginPath(); x.moveTo(X - 38, Y); x.lineTo(X, Y - 55); x.lineTo(X + 38, Y); x.fill(); x.fillStyle = "#8f563b"; x.beginPath(); x.moveTo(X - 10, Y); x.lineTo(X, Y - 30); x.lineTo(X + 10, Y); x.fill(); }]);
+  L.push([FEU[1] * 64, () => { if (ok(IMG.rocher)) x.drawImage(IMG.rocher, FEU[0] * 64 - 32, FEU[1] * 64 - 40); bande(x, IMG.feu, 64, t * 10, FEU[0] * 64 - 32, FEU[1] * 64 - 64); }]);
+  for (const c of S.cabanes) L.push([c.y * 64, () => { const im = c.prog >= 1 ? IMG["maison" + (c.v + 1)] : IMG.chantier; if (ok(im)) x.drawImage(im, c.x * 64 - 64, c.y * 64 - 170);
+    if (c.prog < 1){ x.fillStyle = "#2b2b3a"; x.fillRect(c.x * 64 - 40, c.y * 64 + 6, 80, 10); x.fillStyle = "#f2c94c"; x.fillRect(c.x * 64 - 38, c.y * 64 + 8, 76 * c.prog, 6); } }]);
+  if (S.palier >= 2) L.push([TOUR[1] * 64, () => { if (ok(IMG.tour)) x.drawImage(IMG.tour, TOUR[0] * 64 - 64, TOUR[1] * 64 - 230); }]);
+  for (const m of MOUTONS){ const mx = m.x + Math.sin(t * .15 + m.ph) * .5, my = m.y; const marche = Math.cos(t * .15 + m.ph) > .3;
+    L.push([my * 64, () => bande(x, IMG[marche ? "mouton-marche" : "mouton-broute"], 128, t * 8 + m.ph, mx * 64 - 51, my * 64 - 80, .8, Math.cos(t * .15 + m.ph) > 0 ? 1 : -1)]); }
+  for (const g of S.gens){ let k = "repos";
+    const b = g.m === "pionnier" ? (g.cible || {}).k : METIERS[g.m];
+    if (g.e === "aller" || g.e === "arrive") k = b === "bois" ? "hache" : g.m === "libre" || g.e === "arrive" ? "repos" : "couteau";
+    else if (g.e === "travail") k = b === "bois" ? "hache-coupe" : "couteau-coupe";
+    else if (g.e === "retour") k = b === "bois" ? "bois" : "viande";
+    if (g.m === "libre" && g.dest && Math.hypot(g.dest.x - g.x, g.dest.y - g.y) > .05) k = "repos";
+    L.push([g.y * 64, () => { x.fillStyle = "rgba(30,40,10,.25)"; x.beginPath(); x.ellipse(g.x * 64, g.y * 64, 16, 6, 0, 0, 6.3); x.fill();
+      bande(x, IMG["ouvrier-" + k], 192, g.ph * 10, g.x * 64 - 96 * .72, g.y * 64 - 135 * .72, .72, g.face);
+      if (g.m === "pionnier"){ x.fillStyle = "#f2c94c"; x.beginPath(); x.moveTo(g.x * 64 - 6, g.y * 64 - 74); x.lineTo(g.x * 64 + 6, g.y * 64 - 74); x.lineTo(g.x * 64, g.y * 64 - 66); x.fill(); } }]); }
+  L.sort((a, b) => a[0] - b[0]); for (const [, f] of L) f();
+  // la nuit, puis les lumières
+  const a = nuit(S.t);
+  if (a > 0){ x.fillStyle = `rgba(16,22,58,${a})`; x.fillRect(0, 0, 640, 800); x.globalCompositeOperation = "lighter";
+    const lum = (X, Y, r, al) => { const gr = x.createRadialGradient(X, Y, 0, X, Y, r); gr.addColorStop(0, `rgba(255,170,70,${al})`); gr.addColorStop(1, "rgba(255,170,70,0)"); x.fillStyle = gr; x.fillRect(X - r, Y - r, r * 2, r * 2); };
+    lum(FEU[0] * 64, FEU[1] * 64 - 20, 150 + 8 * Math.sin(t * 9), a * .9);
+    for (const c of S.cabanes) if (c.prog >= 1) lum(c.x * 64, c.y * 64 - 50, 60, a * .8);
+    x.globalCompositeOperation = "source-over"; }
+  x.font = "bold 30px 'Pixelify Sans', monospace"; x.textAlign = "center"; x.lineWidth = 6; x.strokeStyle = "#2b2b3a";
+  const COL = {bois: "#f2c94c", baies: "#ff8fa0", poisson: "#9fe3ff"};
+  for (const f of flots){ const X = f.x * 64, Y = f.y * 64 - f.a * 60; x.globalAlpha = 1 - f.a * f.a; x.strokeText(f.txt, X, Y); x.fillStyle = COL[f.k]; x.fillText(f.txt, X, Y); }
+  x.globalAlpha = 1;
+  if (ban){ const y0 = 300 + Math.min(1, ban.a * 8) * 0; x.globalAlpha = ban.a > .85 ? (1 - ban.a) / .15 : 1; x.fillStyle = "#9c3326"; x.fillRect(80, y0 - 6, 480, 100); x.fillStyle = "#d94f3d"; x.fillRect(90, y0, 460, 86);
+    x.fillStyle = "#fbf1dc"; x.font = "bold 46px 'Pixelify Sans', monospace"; x.fillText(ban.txt.toUpperCase(), 320, y0 + 58); x.globalAlpha = 1; }
+  x.font = "bold 24px 'Pixelify Sans', monospace"; x.textAlign = "left"; x.lineWidth = 5; x.strokeText("Jour " + jour(S), 16, 36); x.fillStyle = "#fbf1dc"; x.fillText("Jour " + jour(S), 16, 36);
+}
+
+/* ---------- B : 16 bits, dessiné par le code ---------- */
+function fondB(){
+  const c = document.createElement("canvas"); c.width = 160; c.height = 200; const b = c.getContext("2d"), r = alea(7);
+  for (let y = 0; y < 200; y++) for (let xx = 0; xx < 160; xx++){ const X = xx / 16, Y = y / 16, cy = cote(X) * 16;
+    let col; if (y < cy - 2) col = (xx + y) % 2 === 0 && r() < .25 ? "#4f8f37" : r() < .04 ? "#79b852" : "#5b9c3f";
+    else if (y < cy) col = "#d9c27c"; else col = y < cy + 2 ? "#cfe8ff" : r() < .02 ? "#5c8fd6" : "#2f5f9c";
+    b.fillStyle = col; b.fillRect(xx, y, 1, 1); }
+  // chemin de terre vers le feu
+  b.fillStyle = "#a07a4a"; for (let k = 0; k < 40; k++){ const X = 3 + k * .06, Y = 6.7 - k * .025; b.fillRect(Math.round(X * 16), Math.round(Y * 16), 2, 2); }
+  return c;
+}
+function disque(b, cx, cy, r, col){ b.fillStyle = col; for (let j = -r; j <= r; j++){ const w = Math.round(Math.sqrt(r * r - j * j)); b.fillRect(Math.round(cx - w), Math.round(cy + j), w * 2 + 1, 1); } }
+const COLB = {pionnier: "#ffd84a", libre: "#9aa0b8", bucheron: "#5bd36b", cueilleur: "#ff5a7a", pecheur: "#4ab8ff"};
+function dessinB(x, S, t, E, fond, flots, ban){
+  x.drawImage(fond, 0, 0);
+  // vagues
+  x.fillStyle = "#cfe8ff"; for (let k = 0; k < 7; k++){ const px = Math.round((k * 29 + t * 4) % 170 - 5), py = 178 + (k * 7) % 18; x.fillRect(px, py, 3, 1); }
+  for (const [px, py] of PECHE){ x.fillStyle = "#8a5a32"; x.fillRect(Math.round(px * 16) - 2, Math.round(py * 16), 4, 9); }
+  const L = [];
+  for (const [i, [ax, ay]] of ARBRES.entries()) L.push([ay, () => { const X = ax * 16, Y = ay * 16; x.fillStyle = "#6b4226"; x.fillRect(Math.round(X) - 1, Math.round(Y) - 4, 2, 4); disque(x, X, Y - 9, 6, "#1f5a2a"); disque(x, X - 1, Y - 10, 4, "#2f7a35"); x.fillStyle = "#58a84a"; x.fillRect(Math.round(X) - 3, Math.round(Y) - 13, 2, 1); }]);
+  for (const [bx, by] of BUISSONS) L.push([by, () => { disque(x, bx * 16, by * 16 - 3, 3, "#2f7a35"); x.fillStyle = "#ff3a5a"; x.fillRect(Math.round(bx * 16) - 1, Math.round(by * 16) - 4, 1, 1); x.fillRect(Math.round(bx * 16) + 1, Math.round(by * 16) - 2, 1, 1); }]);
+  L.push([TENTE[1], () => { const X = Math.round(TENTE[0] * 16), Y = Math.round(TENTE[1] * 16); for (let j = 0; j < 7; j++){ x.fillStyle = "#e0b070"; x.fillRect(X - j, Y - 7 + j, j * 2 + 1, 1); } x.fillStyle = "#6b4226"; x.fillRect(X - 1, Y - 3, 2, 3); }]);
+  L.push([FEU[1], () => { const X = Math.round(FEU[0] * 16), Y = Math.round(FEU[1] * 16); x.fillStyle = "#6b6b6b"; x.fillRect(X - 3, Y - 1, 7, 2); const f = Math.floor(t * 8) % 3; x.fillStyle = "#ff8a1a"; x.fillRect(X - 1, Y - 3 - f % 2, 3, 3); x.fillStyle = "#ffe14a"; x.fillRect(X, Y - 3 - (f === 2 ? 1 : 0), 1, 2); }]);
+  for (const c of S.cabanes) L.push([c.y, () => { const X = Math.round(c.x * 16), Y = Math.round(c.y * 16);
+    if (c.prog >= 1){ x.fillStyle = "#c9a26a"; x.fillRect(X - 5, Y - 6, 11, 6); for (let j = 0; j < 5; j++){ x.fillStyle = c.v ? "#b8432f" : "#7d4a2a"; x.fillRect(X - 6 + j, Y - 11 + j, 13 - j * 2, 1); } x.fillStyle = "#4a2a14"; x.fillRect(X - 1, Y - 3, 2, 3); x.fillStyle = nuit(S.t) > .1 ? "#ffd84a" : "#3a4a6a"; x.fillRect(X + 2, Y - 5, 2, 2); }
+    else { x.fillStyle = "#8a5a32"; x.fillRect(X - 5, Y - 1, 11, 1); x.fillRect(X - 5, Y - 8, 1, 8); x.fillRect(X + 5, Y - 8, 1, 8); x.fillRect(X - 5, Y - 8, 11, 1); x.fillStyle = "#ffd84a"; x.fillRect(X - 5, Y + 2, Math.round(11 * c.prog), 1); } }]);
+  if (S.palier >= 2) L.push([TOUR[1], () => { const X = Math.round(TOUR[0] * 16), Y = Math.round(TOUR[1] * 16); x.fillStyle = "#8c8c9c"; x.fillRect(X - 3, Y - 16, 7, 16); x.fillStyle = "#b8432f"; for (let j = 0; j < 4; j++) x.fillRect(X - 4 + j, Y - 20 + j, 9 - j * 2, 1); }]);
+  for (const m of MOUTONS){ const mx = m.x + Math.sin(t * .15 + m.ph) * .5; L.push([m.y, () => { x.fillStyle = "#f4f4f4"; x.fillRect(Math.round(mx * 16) - 2, Math.round(m.y * 16) - 3, 5, 3); x.fillStyle = "#333"; x.fillRect(Math.round(mx * 16) + (Math.cos(t * .15 + m.ph) > 0 ? 3 : -3), Math.round(m.y * 16) - 3, 1, 2); }]); }
+  for (const g of S.gens) L.push([g.y, () => { const X = Math.round(g.x * 16), Y = Math.round(g.y * 16), pas_ = g.e === "aller" || g.e === "retour" || g.e === "arrive" ? Math.floor(g.ph * 8) % 2 : 0, tape = g.e === "travail" ? Math.floor(g.ph * 6) % 2 : 0;
+    x.fillStyle = "#f2c8a0"; x.fillRect(X, Y - 6 - tape, 2, 2); x.fillStyle = COLB[g.m]; x.fillRect(X, Y - 4, 2, 3); x.fillStyle = "#3a2a1a"; x.fillRect(X + pas_ - (pas_ ? 0 : 0), Y - 1, 1, 1); x.fillRect(X + 1 - pas_, Y - 1, 1, 1);
+    if (g.e === "retour"){ x.fillStyle = g.cible.k === "bois" ? "#a0602a" : g.cible.k === "baies" ? "#ff3a5a" : "#cfe8ff"; x.fillRect(X - (g.face > 0 ? 1 : -2), Y - 8, 2, 2); }
+    if (g.e === "travail"){ x.fillStyle = "#e8ecff"; x.fillRect(X + (g.face > 0 ? 2 : -1), Y - 5 + tape, 1, 2); } }]);
+  L.sort((a, b) => a[0] - b[0]); for (const [, f] of L) f();
+  const a = nuit(S.t); if (a > 0){ x.fillStyle = `rgba(10,14,50,${a})`; x.fillRect(0, 0, 160, 200); x.fillStyle = `rgba(255,170,60,${a * .5})`; disque(x, FEU[0] * 16, FEU[1] * 16 - 2, 9, `rgba(255,170,60,${a * .35})`); }
+  x.font = "8px 'Press Start 2P', monospace"; x.textAlign = "center";
+  const COL = {bois: "#ffd84a", baies: "#ff8fa0", poisson: "#9fe3ff"};
+  for (const f of flots){ const X = Math.round(f.x * 16), Y = Math.round(f.y * 16 - f.a * 14); x.fillStyle = "#10152b"; x.fillText(f.txt, X + 1, Y + 1); x.fillStyle = COL[f.k]; x.fillText(f.txt, X, Y); }
+  if (ban && Math.floor(ban.a * 12) % 2 === 0 || ban && ban.a > .3){ x.fillStyle = "#10152b"; x.fillRect(20, 84, 120, 22); x.strokeStyle = "#ffd84a"; x.strokeRect(21.5, 85.5, 117, 19); x.fillStyle = "#ffd84a"; x.fillText(LAB.B(ban.txt), 80, 99); }
+  x.textAlign = "left"; x.fillStyle = "#10152b"; x.fillText("JOUR " + jour(S), 5, 13); x.fillStyle = "#e8ecff"; x.fillText("JOUR " + jour(S), 4, 12);
+}
+
+/* ---------- C : le carnet, à l'encre ---------- */
+const ENCRE = "#3a2e22";
+function fondC(){
+  const c = document.createElement("canvas"); c.width = 640; c.height = 800; const b = c.getContext("2d"), r = alea(11);
+  b.fillStyle = "#efe2c4"; b.fillRect(0, 0, 640, 800);
+  for (let k = 0; k < 2500; k++){ b.fillStyle = r() < .5 ? "rgba(120,90,50,.06)" : "rgba(255,255,255,.12)"; b.fillRect(r() * 640, r() * 800, 2 + r() * 3, 2); }
+  // lavis d'eau et trait de côte
+  b.beginPath(); b.moveTo(0, 800); for (let X = 0; X <= 640; X += 8) b.lineTo(X, cote(X / 64) * 64); b.lineTo(640, 800); b.closePath(); b.fillStyle = "rgba(90,150,170,.35)"; b.fill();
+  b.strokeStyle = ENCRE; b.lineWidth = 2.5; b.beginPath(); for (let X = 0; X <= 640; X += 6) b.lineTo(X, cote(X / 64) * 64 + (r() - .5) * 2); b.stroke();
+  b.lineWidth = 1.2; b.strokeStyle = "rgba(58,46,34,.55)"; for (let k = 0; k < 60; k++){ const X = r() * 620, Y = cote(X / 64) * 64 + 18 + r() * 120; if (Y > 795) continue; b.beginPath(); b.moveTo(X, Y); b.quadraticCurveTo(X + 7, Y - 4, X + 14, Y); b.quadraticCurveTo(X + 21, Y + 4, X + 28, Y); b.stroke(); }
+  // un lavis vert sur la forêt, un sentier en pointillé
+  const gr = b.createRadialGradient(130, 220, 20, 130, 220, 260); gr.addColorStop(0, "rgba(110,150,80,.25)"); gr.addColorStop(1, "rgba(110,150,80,0)"); b.fillStyle = gr; b.fillRect(0, 0, 400, 520);
+  b.setLineDash([6, 8]); b.lineWidth = 2; b.strokeStyle = "rgba(58,46,34,.5)"; b.beginPath(); b.moveTo(0, 410); b.bezierCurveTo(120, 420, 220, 400, 320, 380); b.stroke(); b.setLineDash([]);
+  // les arbres, griffonnés une fois pour toutes
+  for (const [ax, ay] of ARBRES){ const X = ax * 64, Y = ay * 64; b.fillStyle = "rgba(90,130,60,.45)"; b.beginPath(); b.arc(X, Y - 46, 34, 0, 6.3); b.fill();
+    b.strokeStyle = ENCRE; b.lineWidth = 2; b.beginPath(); for (let a = 0; a < 6.5; a += .35){ const rr = 30 + (r() - .5) * 8; b.lineTo(X + Math.cos(a) * rr, Y - 46 + Math.sin(a) * rr); } b.stroke();
+    b.lineWidth = 1; for (let k = 0; k < 6; k++){ const yy = Y - 40 + k * 5; b.beginPath(); b.moveTo(X + 6 + k, yy); b.lineTo(X + 22, yy - 8); b.stroke(); }
+    b.lineWidth = 3; b.beginPath(); b.moveTo(X, Y - 16); b.lineTo(X, Y); b.stroke(); }
+  for (const [bx, by] of BUISSONS){ const X = bx * 64, Y = by * 64; b.fillStyle = "rgba(90,130,60,.45)"; b.beginPath(); b.arc(X, Y - 14, 18, 0, 6.3); b.fill(); b.strokeStyle = ENCRE; b.lineWidth = 1.8; b.beginPath(); for (let a = 0; a < 6.5; a += .5) b.lineTo(X + Math.cos(a) * (16 + r() * 4), Y - 14 + Math.sin(a) * (14 + r() * 3)); b.stroke();
+    b.fillStyle = "#a83224"; for (let k = 0; k < 6; k++){ b.beginPath(); b.arc(X - 10 + r() * 20, Y - 22 + r() * 14, 2.5, 0, 6.3); b.fill(); } }
+  for (const [px, py] of PECHE){ const X = px * 64, Y = py * 64; b.strokeStyle = ENCRE; b.lineWidth = 2; b.strokeRect(X - 10, Y - 4, 20, 54); for (let k = 0; k < 5; k++){ b.beginPath(); b.moveTo(X - 10, Y + 6 + k * 10); b.lineTo(X + 10, Y + 6 + k * 10); b.stroke(); } }
+  // tente
+  { const X = TENTE[0] * 64, Y = TENTE[1] * 64; b.fillStyle = "rgba(200,150,90,.4)"; b.beginPath(); b.moveTo(X - 36, Y); b.lineTo(X, Y - 50); b.lineTo(X + 36, Y); b.fill(); b.strokeStyle = ENCRE; b.lineWidth = 2.2; b.beginPath(); b.moveTo(X - 36, Y); b.lineTo(X, Y - 50); b.lineTo(X + 36, Y); b.moveTo(X, Y - 50); b.lineTo(X - 6, Y); b.stroke(); }
+  // rose des vents
+  b.font = "italic 22px 'IM Fell English', serif"; b.fillStyle = ENCRE; b.textAlign = "center"; b.fillText("N", 590, 40); b.lineWidth = 2; b.beginPath(); b.moveTo(590, 48); b.lineTo(590, 100); b.moveTo(566, 74); b.lineTo(614, 74); b.stroke();
+  b.font = "italic 26px 'IM Fell English', serif"; b.fillText("le Bois-Clair", 150, 470); b.fillText("l'Étang", 300, 780);
+  return c;
+}
+function maisonC(x, X, Y, prog, v){
+  x.strokeStyle = ENCRE; x.lineWidth = 2;
+  if (prog < 1){ x.setLineDash([5, 5]); }
+  x.fillStyle = v ? "rgba(170,80,60,.35)" : "rgba(160,110,70,.35)"; if (prog >= 1){ x.beginPath(); x.moveTo(X - 30, Y - 40); x.lineTo(X, Y - 66); x.lineTo(X + 30, Y - 40); x.fill(); }
+  x.strokeRect(X - 24, Y - 40, 48, 40); x.beginPath(); x.moveTo(X - 30, Y - 40); x.lineTo(X, Y - 66); x.lineTo(X + 30, Y - 40); x.stroke();
+  x.setLineDash([]); if (prog >= 1){ x.strokeRect(X - 6, Y - 18, 12, 18); x.fillStyle = nuit(0) ? ENCRE : ENCRE; }
+  else { x.fillStyle = "rgba(58,46,34,.25)"; x.fillRect(X - 24, Y + 4, 48 * prog, 5); }
+}
+const COLC = {pionnier: "#b8862a", libre: "#7a6a58", bucheron: "#4f7a3a", cueilleur: "#a83224", pecheur: "#3a6a8a"};
+function dessinC(x, S, t, E, fond, flots, ban){
+  x.drawImage(fond, 0, 0);
+  const L = [];
+  L.push([FEU[1], () => { const X = FEU[0] * 64, Y = FEU[1] * 64; x.fillStyle = `rgba(220,110,40,${.35 + .15 * Math.sin(t * 7)})`; x.beginPath(); x.arc(X, Y - 10, 16 + 2 * Math.sin(t * 9), 0, 6.3); x.fill();
+    x.strokeStyle = ENCRE; x.lineWidth = 2; x.beginPath(); x.moveTo(X - 14, Y); x.lineTo(X + 14, Y - 6); x.moveTo(X - 14, Y - 6); x.lineTo(X + 14, Y); for (let k = 0; k < 3; k++){ x.moveTo(X - 6 + k * 6, Y - 6); x.quadraticCurveTo(X - 10 + k * 6 + 4 * Math.sin(t * 6 + k), Y - 18, X - 4 + k * 6, Y - 28); } x.stroke();
+    // fumée
+    x.strokeStyle = "rgba(58,46,34,.35)"; x.lineWidth = 1.5; x.beginPath(); for (let k = 0; k < 20; k++){ const yy = Y - 36 - k * 4; x.lineTo(X + Math.sin(t + k * .4) * (4 + k * .6), yy); } x.stroke(); }]);
+  for (const c of S.cabanes) L.push([c.y, () => maisonC(x, c.x * 64, c.y * 64, c.prog, c.v)]);
+  if (S.palier >= 2) L.push([TOUR[1], () => { const X = TOUR[0] * 64, Y = TOUR[1] * 64; x.strokeStyle = ENCRE; x.lineWidth = 2; x.fillStyle = "rgba(140,140,150,.35)"; x.fillRect(X - 14, Y - 90, 28, 90); x.strokeRect(X - 14, Y - 90, 28, 90); x.beginPath(); x.moveTo(X - 20, Y - 90); x.lineTo(X, Y - 120); x.lineTo(X + 20, Y - 90); x.stroke(); x.beginPath(); x.moveTo(X, Y - 120); x.lineTo(X, Y - 140); x.stroke(); x.fillStyle = "#a83224"; x.fillRect(X, Y - 140, 16 + 3 * Math.sin(t * 4), 9); }]);
+  for (const m of MOUTONS){ const mx = m.x + Math.sin(t * .15 + m.ph) * .5; L.push([m.y, () => { const X = mx * 64, Y = m.y * 64; x.fillStyle = "#f6efe0"; x.strokeStyle = ENCRE; x.lineWidth = 1.5; x.beginPath(); x.ellipse(X, Y - 10, 14, 9, 0, 0, 6.3); x.fill(); x.stroke(); x.beginPath(); x.arc(X + (Math.cos(t * .15 + m.ph) > 0 ? 14 : -14), Y - 12, 5, 0, 6.3); x.fillStyle = ENCRE; x.fill(); }]); }
+  for (const g of S.gens) L.push([g.y, () => { const X = g.x * 64, Y = g.y * 64, marche = g.e === "aller" || g.e === "retour" || g.e === "arrive", p = marche ? Math.sin(g.ph * 10) * 5 : 0, b = g.e === "travail" ? Math.sin(g.ph * 9) * 4 : 0;
+    x.strokeStyle = ENCRE; x.lineWidth = 2.2; x.beginPath(); x.moveTo(X, Y - 12); x.lineTo(X - 4 + p, Y); x.moveTo(X, Y - 12); x.lineTo(X + 4 - p, Y); x.moveTo(X, Y - 12); x.lineTo(X, Y - 28); x.moveTo(X, Y - 24); x.lineTo(X + 8 * g.face, Y - 18 - b); x.stroke();
+    x.beginPath(); x.arc(X, Y - 33, 5, 0, 6.3); x.stroke(); x.fillStyle = COLC[g.m]; x.beginPath(); x.arc(X, Y - 22, 5, 0, 6.3); x.fill();
+    if (g.e === "retour"){ x.fillStyle = g.cible.k === "bois" ? "rgba(140,90,50,.8)" : g.cible.k === "baies" ? "#a83224" : "rgba(58,106,138,.8)"; x.beginPath(); x.ellipse(X - 6 * g.face, Y - 38, 8, 5, .3, 0, 6.3); x.fill(); x.stroke(); }
+    if (g.m === "pionnier"){ x.beginPath(); x.moveTo(X - 6, Y - 39); x.lineTo(X + 6, Y - 39); x.lineTo(X, Y - 44); x.closePath(); x.stroke(); } }]);
+  L.sort((a, b) => a[0] - b[0]); for (const [, f] of L) f();
+  const a = nuit(S.t); if (a > 0){ x.fillStyle = `rgba(40,50,80,${a * .6})`; x.fillRect(0, 0, 640, 800); x.fillStyle = `rgba(240,200,120,${a * .5})`; for (const c of S.cabanes) if (c.prog >= 1){ x.fillRect(c.x * 64 + 8, c.y * 64 - 32, 10, 10); } }
+  x.textAlign = "center"; x.font = "italic 30px 'IM Fell English', serif";
+  const COL = {bois: "#6b4a2a", baies: "#a83224", poisson: "#2f5a78"};
+  for (const f of flots){ x.globalAlpha = 1 - f.a * f.a; x.fillStyle = COL[f.k]; x.fillText(f.txt + " " + RES_NOM[f.k].toLowerCase(), f.x * 64, f.y * 64 - 10 - f.a * 50); }
+  x.globalAlpha = 1;
+  if (ban){ x.globalAlpha = ban.a > .8 ? (1 - ban.a) / .2 : Math.min(1, ban.a * 6); x.fillStyle = "rgba(239,226,196,.9)"; x.fillRect(110, 330, 420, 110); x.strokeStyle = ENCRE; x.lineWidth = 2; x.strokeRect(118, 338, 404, 94);
+    x.fillStyle = ENCRE; x.font = "italic 26px 'IM Fell English', serif"; x.fillText("Ici commence le", 320, 374); x.font = "48px 'IM Fell English', serif"; x.fillText(ban.txt, 320, 418); x.globalAlpha = 1; }
+  x.textAlign = "left"; x.font = "italic 28px 'IM Fell English', serif"; x.fillStyle = ENCRE; x.fillText("Jour " + jour(S), 18, 40);
+}
+
+for (const id of ["A", "B", "C"]) monter(id);
+</script>
