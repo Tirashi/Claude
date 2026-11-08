@@ -1,0 +1,231 @@
+<title>Terres franches · la vallée vivante</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=IM+Fell+English&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* Mise en page : deux téléphones (empilés sur un téléphone) = la même vallée Cute SCKR, les mêmes villageois LPC, deux habillages d'interface. */
+:root { --bg: #e8eadf; --fg: #23261c; --muted: #5d634f; --texte: "Alegreya Sans", "Trebuchet MS", sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #121410; --fg: #e9ecdf; --muted: #a2a891; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #121410; --fg: #e9ecdf; --muted: #a2a891; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--texte); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header.page { max-width: 1000px; margin: 0 auto 18px; display: grid; gap: 6px; }
+header.page h1 { margin: 0; font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 1.9rem; text-wrap: balance; }
+header.page p, .note p { margin: 0; color: var(--muted); max-width: 80ch; line-height: 1.5; }
+.phones { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; max-width: 1000px; margin: 0 auto; }
+figure.dir { margin: 0; display: grid; gap: 10px; justify-items: center; }
+figure.dir figcaption { display: grid; gap: 4px; max-width: 360px; }
+figure.dir figcaption b { font-size: 1.1rem; }
+figure.dir figcaption span { color: var(--muted); font-size: .95rem; line-height: 1.4; }
+.tel { width: 360px; max-width: 100%; height: 740px; border-radius: 34px; padding: 10px; background: #0a0a08; box-shadow: 0 10px 30px rgba(0,0,0,.28); box-sizing: border-box; }
+.ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; position: relative; user-select: none; -webkit-user-select: none; font-family: "Pixelify Sans", monospace; font-size: 13px; }
+.ecran canvas { flex: 1; min-height: 0; width: 100%; display: block; touch-action: none; cursor: grab; }
+.ressources { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px; }
+.res { display: flex; align-items: center; gap: 4px; min-width: 0; line-height: 1; }
+.res img { width: 22px; height: 22px; object-fit: contain; image-rendering: pixelated; flex: none; }
+.res b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.res small { font-size: 10px; opacity: .8; margin-left: auto; }
+.panneau { flex: none; display: grid; gap: 4px; }
+.titre { text-align: center; font-weight: 700; letter-spacing: 1px; }
+.metier { display: grid; grid-template-columns: 30px 22px 1fr auto; align-items: center; gap: 6px; }
+.metier canvas.portrait { width: 30px; height: 30px; image-rendering: pixelated; flex: none; cursor: default; }
+.metier img { width: 20px; height: 20px; object-fit: contain; image-rendering: pixelated; }
+.metier .nom { display: grid; line-height: 1.1; min-width: 0; }
+.metier .nom small { font-size: 10px; opacity: .75; }
+.pm { display: flex; align-items: center; gap: 4px; }
+.pm b { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px; }
+.chantier { display: grid; grid-template-columns: 30px 1fr; gap: 6px; align-items: center; }
+.chantier img { width: 30px; height: 30px; object-fit: contain; image-rendering: pixelated; }
+.jauge { height: 12px; position: relative; }
+.jauge i { position: absolute; inset: 0 auto 0 0; display: block; }
+.outils { display: flex; gap: 3px; }
+.outils button { flex: 1; font-size: 11px; min-width: 0; }
+.outils button[data-z] { flex: 0 0 30px; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid #f2c94c; outline-offset: 1px; }
+
+/* ---------- A : bois et parchemin (ToffeeCraft) ---------- */
+.uiBois { background: #2a1d14; color: #f3e2c0; }
+.uiBois .ressources { background: #3b2a1c; box-shadow: inset 0 -3px 0 #1d140d; }
+.uiBois .res { border-style: solid; border-width: 7px 8px; border-image: var(--t-planche) 8 9 fill / 7px 8px stretch; image-rendering: pixelated; color: #2b1a0e; padding: 0 2px; }
+.uiBois .res small { color: #5a3a1e; }
+.uiBois .panneau { margin: 6px; border-style: solid; border-width: 14px; border-image: var(--t-cadre) 14 fill / 14px stretch; image-rendering: pixelated; color: #2b1a0e; padding: 0 2px; }
+.uiBois .titre { border-style: solid; border-width: 6px 8px; border-image: var(--t-planche) 8 9 fill / 6px 8px stretch; color: #fbeccc; text-shadow: 1px 1px 0 #2b1a0e; }
+.uiBois .pm button { width: 28px; height: 28px; border: 0; padding: 0; background: var(--t-plus2) center / 100% 100% no-repeat; image-rendering: pixelated; font-size: 0; }
+.uiBois .pm button[data-d="-1"] { background-image: var(--t-moins2); }
+.uiBois .pm button:active { background-image: var(--t-plus); }
+.uiBois .pm button[data-d="-1"]:active { background-image: var(--t-moins); }
+.uiBois .outils button { border-style: solid; border-width: 6px 8px; border-image: var(--t-planche) 8 9 fill / 6px 8px stretch; background: none; color: #fbeccc; padding: 0 2px; text-shadow: 1px 1px 0 #2b1a0e; font-weight: 600; }
+.uiBois .outils button.on { filter: hue-rotate(-25deg) saturate(1.6) brightness(1.1); }
+.uiBois .jauge { background: #4a3020; border: 2px solid #2b1a0e; }
+.uiBois .jauge i { background: linear-gradient(#e8b84a, #b07a22); }
+.uiBois .metier + .metier { border-top: 1px dashed rgba(60,35,15,.35); padding-top: 3px; }
+
+/* ---------- B : Tiny Swords ---------- */
+.uiTS { background: #3b4a2a; color: #fbf1dc; }
+.uiTS .ressources { background: #6b4a2e; box-shadow: inset 0 -3px 0 #4a3020; }
+.uiTS .res { border-style: solid; border-width: 7px 9px; border-image: var(--ui-papier) 44 52 45 52 fill / 7px 9px stretch; color: #3c2a1a; padding: 0 1px; }
+.uiTS .res small { color: #7a5a3a; }
+.uiTS .panneau { margin: 4px; border-style: solid; border-width: 20px 24px 30px 26px; border-image: var(--ui-parchemin) 68 84 111 100 fill / 20px 24px 30px 26px stretch; color: #3c2a1a; }
+.uiTS .titre { border-style: solid; border-width: 0 26px; border-image: var(--ui-ruban-rouge) 0 97 0 98 fill / 0 26px stretch; color: #fff; padding: 5px 0 9px; margin: -10px 10px 0; text-shadow: 1px 1px 0 #3a1010; }
+.uiTS .pm button { width: 30px; height: 30px; border-style: solid; border-width: 8px; border-image: var(--ui-carre-bleu) 30 fill / 8px stretch; background: none; color: #fff; padding: 0; font-weight: 700; line-height: 1; }
+.uiTS .pm button:active { border-image-source: var(--ui-carre-bleu-appui); }
+.uiTS .outils button { border-style: solid; border-width: 8px; border-image: var(--ui-carre-bleu) 30 fill / 8px stretch; background: none; color: #fff; padding: 0 2px; font-weight: 600; }
+.uiTS .outils button.on { border-image-source: var(--ui-carre-rouge); }
+.uiTS .jauge { border-style: solid; border-width: 0 6px; border-image: var(--ui-barre) 0 24 fill / 0 6px stretch; height: 16px; }
+.uiTS .jauge i { background: var(--ui-barre-plein) 0 0 / auto 100% repeat-x; inset: 3px auto 5px 0; }
+.note { max-width: 1000px; margin: 26px auto 0; display: grid; gap: 8px; }
+.note h2 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; margin: 8px 0 0; font-size: 1.3rem; }
+</style>
+
+<header class="page">
+  <h1>Terres franches · la vallée vivante</h1>
+  <p>Maquette 4 : les animations ajoutées par le code aux images de Cute SCKR, avec l'interface Tiny Swords choisie. Les ailes du moulin tournent (découpées et reconstituées pixel par pixel), les arbres et le blé ondulent sous des rafales qui traversent la vallée, les champs poussent puis jaunissent, des feuilles tombent, des oiseaux et l'ombre des nuages passent, l'eau scintille, la fontaine coule. Le bouton ANIM coupe tout pour comparer.</p>
+</header>
+
+<div class="phones">
+  <figure class="dir"><div class="tel"><div class="ecran uiTS" id="B"></div></div>
+    <figcaption><b>La vallée vivante</b><span>Faites glisser la carte, zoomez avec + ; la nuit allume les fenêtres et les lanternes.</span></figcaption></figure>
+</div>
+
+<div class="note">
+  <h2>Sources</h2>
+  <p>Villageois : Universal LPC Spritesheet Character Generator (gratuit ; CC-BY-SA 3.0 / GPL 3.0, chaque auteur sera cité dans les crédits), composés par <code>outils/terres-maquette/lpc-villageois.py</code>. Icônes : Medieval Fantasy Icons, Pixel Medieval Fantasy Icon et Pixel Food Icon (lot Cute SCKR déjà acheté). Interface A : Fantasy UI de ToffeeCraft (version gratuite ; un « méga pack » payant existe). Interface B : Tiny Swords.</p>
+</div>
+
+<script>
+const IMAGES = "@@IMAGES@@";
+const VILLAGEOIS = "@@VILLAGEOIS@@";
+const IMG = {};
+for (const k in IMAGES){ const im = new Image(); im.src = IMAGES[k]; IMG[k] = im; }
+const ok = im => im && im.complete && im.naturalWidth > 0;
+const T = 48, MW = 40, MH = 46;
+for (const k of ["t-planche", "t-cadre", "t-plus", "t-moins", "t-plus2", "t-moins2", "ui-papier", "ui-parchemin", "ui-ruban-rouge", "ui-carre-bleu", "ui-carre-bleu-appui", "ui-carre-rouge", "ui-barre", "ui-barre-plein"])
+  document.documentElement.style.setProperty("--" + k, `url(${IMAGES[k]})`);
+/*@@COMMUN@@*/
+/* ---------- les villageois LPC ---------- */
+const HACHE = VILLAGEOIS.filter(v => v.outil === "hache").map(v => v.i), HOUE = VILLAGEOIS.filter(v => v.outil === "houe").map(v => v.i);
+const PORTE = {bois: "i-bois", viande: "i-ble", or: "i-pierre"};
+function lpc(x, v, mode, dir, f, X, Y, k){
+  if (mode === "travail"){ const im = IMG["lpc" + v + "-travail"]; if (!ok(im)) return; const fs = im.height / 2, nb = im.width / fs, row = dir === "d" ? 1 : 0, i = Math.floor(f) % nb;
+    x.drawImage(im, i * fs, row * fs, fs, fs, Math.round(X - fs / 2 * k), Math.round(Y - (fs === 128 ? 92 : 60) * k), fs * k, fs * k); return; }
+  if (mode === "repos"){ const im = IMG["lpc" + v + "-repos"]; if (!ok(im)) return; const i = Math.floor(f / 4) % 2; x.drawImage(im, i * 64, 128, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k); return; }
+  const im = IMG["lpc" + v + "-marche"]; if (!ok(im)) return; const row = {h: 0, g: 1, b: 2, d: 3}[dir], i = 1 + Math.floor(f) % 8;
+  x.drawImage(im, i * 64, row * 64, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k);
+}
+function portrait(c, v){ const b = c.getContext("2d"); b.imageSmoothingEnabled = false; const im = IMG["lpc" + v + "-repos"]; const go = () => { b.clearRect(0, 0, 30, 30); b.drawImage(im, 17, 128 + 6, 30, 30, 0, 0, 30, 30); }; ok(im) ? go() : im.addEventListener("load", go); }
+
+const METIERS = [{nom: "Bucherons", ic: "i-bois", n: 6, v: HACHE[0], prod: "+38 bois/min"}, {nom: "Fermiers", ic: "i-ble", n: 8, v: HOUE[0], prod: "+52 ble/min"}, {nom: "Meuniers", ic: "i-farine", n: 2, v: HACHE[3], prod: "ble > farine"},
+  {nom: "Boulangers", ic: "i-pain", n: 2, v: HOUE[2], prod: "farine > pain"}, {nom: "Tisserands", ic: "i-tissu", n: 1, v: HOUE[4], prod: "laine > tissu"}];
+const RES = [["i-bois", 248, "+38"], ["i-pierre", 96, "+12"], ["i-ble", 140, "+52"], ["i-pain", 54, "+9"], ["i-laine", 22, "+4"], ["i-or", 310, "+6"]];
+
+/* ---------- les animations (dessinées par le code) ---------- */
+const vent = (x, y, t) => Math.sin(t * 1.1 - x * .18 + y * .05) * .6 + Math.sin(t * 2.7 + x * .9 + y * .3) * .18 + (Math.sin(t * .23 - x * .05) > .7 ? Math.sin(t * 4 + x) * .5 : 0);
+function arbre(x, im, X, Y, w, ph){
+  if (!ok(im)) return; const h = im.height, iw = im.width, X0 = Math.round(X - iw / 2), Y0 = Math.round(Y - h + 8);
+  if (!w){ x.drawImage(im, X0, Y0); return; }
+  for (let y = 0; y < h; y += 3){ const f = Math.pow(Math.max(0, (h - 34 - y) / (h - 34)), 1.3), dx = Math.round(w * 5 * f + Math.sin(ph + y * .07) * w * f);
+    x.drawImage(im, 0, y, iw, Math.min(3, h - y), X0 + dx, Y0 + y, iw, Math.min(3, h - y)); }
+}
+const ETATS = ["nu", "pousse", "pousse", "mur", "mur", "blond"];
+function champsAnimes(x, S, t, anim){
+  S.champs.forEach((ch, i) => { const s = anim ? ETATS[Math.floor(t / 7 + i * 1.7) % ETATS.length] : ch.s, im = IMG["champ-" + s]; if (!ok(im)) return;
+    const X = ch.x * T, Y = ch.y * T, sw = 2 * T / im.width;
+    if (!anim || s === "nu"){ x.drawImage(im, X, Y, 2 * T, 2 * T); return; }
+    for (let y = 0; y < im.height; y += 2){ const w = vent(ch.x + y / 48, ch.y, t), dx = Math.round(w * 2 * ((y % 12) < 6 ? 1 : .5));
+      x.drawImage(im, 0, y, im.width, 2, X + dx, Y + y * sw, 2 * T, 2 * sw); }
+    // la vague du vent sur les épis
+    const v = (t * 40 - ch.x * 30) % 400; if (v > 0 && v < 2 * T){ x.fillStyle = "rgba(255,245,200,.16)"; x.fillRect(X + v - 10, Y + 4, 16, 2 * T - 8); } });
+}
+const MOULIN = {k: 0};
+function moulin(x, o, t){ const im = IMG["moulin-anime"]; if (!ok(im)) return; const fw = im.width / 8, f = Math.floor(t * 7 + o.x) % 8;
+  x.drawImage(im, f * fw, 0, fw, im.height, Math.round(o.x * T - fw / 2), Math.round(o.y * T - im.height + 4), fw, im.height); }
+function fontaine(x, o, t){ const X = o.x * T, Y = o.y * T - 46; for (let k = 0; k < 14; k++){ const a = (t * .9 + k / 14) % 1, ang = k * 2.4;
+  x.fillStyle = `rgba(200,235,255,${.9 - a * .7})`; x.fillRect(Math.round(X + Math.cos(ang) * a * 16), Math.round(Y - Math.sin(a * Math.PI) * 14 + a * 10), 2, 2); } }
+const feuilles = [];
+const NUAGES = [0, 1, 2, 3].map(i => ({x: i * 560, y: 300 + i * 470, r: 170 + i * 30}));
+const OISEAUX = [0, 1, 2, 3, 4].map(i => ({dx: (i % 3) * 22 - i * 4, dy: i * 12 - (i % 2) * 16}));
+function effets(x, t, cam, vw, vh){
+  // reflets qui bougent sur l'eau
+  x.fillStyle = "rgba(255,255,255,.55)";
+  for (let k = 0; k < 90; k++){ const gx = (k * 397) % (MW * T), dy = ((k * 131) % 140) / 48, a = Math.sin(t * 2 + k * 1.7);
+    if (a < .55) continue; const yy = (coteY(gx / T) + .5 + dy) * T; x.fillRect(Math.round(gx + Math.sin(t * .5 + k) * 8), Math.round(yy), 6 + Math.round(a * 6), 2); }
+  for (let k = 0; k < 40; k++){ const yy = (k * 1.07) % 42, a = Math.sin(t * 2.4 + k * 2.1); if (a < .6) continue; x.fillRect(Math.round(rivX(yy) * T - 10 + (k * 7) % 20), Math.round(yy * T + ((t * 20 + k * 9) % 30)), 5, 2); }
+  // feuilles qui tombent
+  for (let i = feuilles.length - 1; i >= 0; i--){ const f = feuilles[i], a = t - f.t0; if (a > 4){ feuilles.splice(i, 1); continue; }
+    x.globalAlpha = Math.min(1, 4 - a); x.fillStyle = f.c; x.fillRect(Math.round(f.x + Math.sin(a * 3) * 10 + a * 12), Math.round(f.y + a * 22), 3, 2); }
+  x.globalAlpha = 1;
+  // papillons près des champs
+  for (let k = 0; k < 6; k++){ const bx = (14 + (k % 3) * 3.5) * T + Math.sin(t * .7 + k) * 60, by = (30 + Math.floor(k / 3) * 3) * T + Math.cos(t * 1.1 + k * 2) * 30, ail = Math.sin(t * 18 + k) > 0;
+    x.fillStyle = k % 2 ? "#fff6c8" : "#f2f2ff"; x.fillRect(Math.round(bx) - (ail ? 3 : 1), Math.round(by), ail ? 6 : 2, 2); }
+  // oiseaux
+  const ox = ((t * 70) % (MW * T + 600)) - 300, oy = 9 * T + Math.sin(t * .3) * 60;
+  x.strokeStyle = "rgba(40,40,50,.85)"; x.lineWidth = 2;
+  for (const b of OISEAUX){ const px = ox + b.dx * 2, py = oy + b.dy * 2, f = Math.sin(t * 9 + b.dx) * 4; x.beginPath(); x.moveTo(px - 6, py - f); x.lineTo(px, py); x.lineTo(px + 6, py - f); x.stroke(); }
+  // ombres des nuages
+  for (const n of NUAGES){ const nx = ((n.x + t * 14) % (MW * T + 800)) - 400, ny = n.y + t * 3 % 200;
+    const g = x.createRadialGradient(nx, ny, 0, nx, ny, n.r); g.addColorStop(0, "rgba(20,30,40,.16)"); g.addColorStop(1, "rgba(20,30,40,0)"); x.fillStyle = g; x.beginPath(); x.ellipse(nx, ny, n.r * 1.4, n.r * .8, 0, 0, 6.3); x.fill(); }
+}
+function monter(id){
+  const root = document.getElementById(id), st = STYLE.B;
+  root.innerHTML = `<div class="ressources">${RES.map(([ic, n, t]) => `<div class="res"><img src="${IMAGES[ic]}" alt=""><b>${n}</b><small>${t}</small></div>`).join("")}</div>
+    <canvas></canvas>
+    <div class="panneau"><div class="titre">METIERS · 48 HABITANTS</div>
+      ${METIERS.map((m, i) => `<div class="metier"><canvas class="portrait" width="30" height="30"></canvas><img src="${IMAGES[m.ic]}" alt=""><span class="nom">${m.nom}<small>${m.prod}</small></span><span class="pm"><button type="button" data-m="${i}" data-d="-1" aria-label="Retirer">−</button><b>${m.n}</b><button type="button" data-m="${i}" data-d="1" aria-label="Ajouter">+</button></span></div>`).join("")}
+      <div class="chantier"><img src="${IMAGES.moulin2}" alt=""><span>Moulin · 62 %<div class="jauge"><i style="width:62%"></i></div></span></div>
+      <div class="outils"><button type="button" data-e="1">VILLAGE</button><button type="button" data-e="2" class="on">BOURG</button><button type="button" data-n="1">NUIT</button><button type="button" data-a="1" class="on">ANIM</button><button type="button" data-z="-1" aria-label="Zoom arriere">−</button><button type="button" data-z="1" aria-label="Zoom avant">+</button></div></div>`;
+  root.querySelectorAll("canvas.portrait").forEach((c, i) => portrait(c, METIERS[i].v));
+  const cvs = root.querySelector("canvas:not(.portrait)"), x = cvs.getContext("2d");
+  const Z = [.25, .36, .5, .75, 1, 1.5]; let zi = 3, cam = {x: 21 * T, y: 30.5 * T}, etape = 2, S = scene(2), bg = null, nuit = 0, nuitCible = 0, pions = false, anim = true;
+  const metiers = METIERS.map(m => m.n);
+  root.querySelector(".panneau").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.m){ const i = +b.dataset.m; metiers[i] = Math.max(0, metiers[i] + +b.dataset.d); b.parentNode.querySelector("b").textContent = metiers[i]; }
+    if (b.dataset.e){ etape = +b.dataset.e; S = scene(etape); bg = null; root.querySelectorAll("[data-e]").forEach(c => c.classList.toggle("on", c === b)); }
+    if (b.dataset.n){ nuitCible = nuitCible ? 0 : .6; b.classList.toggle("on", !!nuitCible); }
+    if (b.dataset.a){ anim = !anim; b.classList.toggle("on", anim); }
+    if (b.dataset.z) zi = Math.max(0, Math.min(Z.length - 1, zi + +b.dataset.z)); };
+  let glisse = null;
+  cvs.addEventListener("pointerdown", e => { glisse = {x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y}; cvs.setPointerCapture(e.pointerId); });
+  cvs.addEventListener("pointermove", e => { if (!glisse) return; const z = Z[zi]; cam.x = glisse.cx - (e.clientX - glisse.x) / z; cam.y = glisse.cy - (e.clientY - glisse.y) / z; });
+  cvs.addEventListener("pointerup", () => glisse = null); cvs.addEventListener("pointercancel", () => glisse = null);
+  cvs.addEventListener("wheel", e => { e.preventDefault(); zi = Math.max(0, Math.min(Z.length - 1, zi + (e.deltaY < 0 ? 1 : -1))); }, {passive: false});
+  function image(now){
+    const t = now / 1000, dpr = Math.min(2, window.devicePixelRatio || 1), cw = cvs.clientWidth, chh = cvs.clientHeight;
+    if (cvs.width !== Math.round(cw * dpr) || cvs.height !== Math.round(chh * dpr)){ cvs.width = Math.round(cw * dpr); cvs.height = Math.round(chh * dpr); }
+    if (!bg && ok(IMG.herbe) && ok(IMG.pave)) bg = fond("B", {...S, champs: []});
+    const z = Z[zi], vw = cw / z, vh = chh / z;
+    cam.x = Math.max(vw / 2, Math.min(MW * T - vw / 2, cam.x)); cam.y = Math.max(vh / 2, Math.min(MH * T - vh / 2, cam.y));
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = st.eau; x.fillRect(0, 0, cvs.width, cvs.height);
+    x.setTransform(dpr * z, 0, 0, dpr * z, (cw / 2 - cam.x * z) * dpr, (chh / 2 - cam.y * z) * dpr); x.imageSmoothingEnabled = false;
+    if (bg) x.drawImage(bg, 0, 0);
+    nuit += (nuitCible - nuit) * .06;
+    const x0 = cam.x - vw / 2 - 200, x1 = cam.x + vw / 2 + 200, y0 = cam.y - vh / 2 - 60, y1 = cam.y + vh / 2 + 300, vis = (px, py) => px > x0 && px < x1 && py > y0 && py < y1;
+    const L = [], lum = [];
+    champsAnimes(x, S, t, anim);
+    for (const a of ARBRES){ const X = a.x * T, Y = a.y * T; if (!vis(X, Y)) continue; L.push([Y, () => arbre(x, IMG[ARB_S[a.n]], X, Y, anim ? vent(a.x, a.y, t) : 0, a.ph)]);
+      if (anim && Math.random() < .0016) feuilles.push({x: X + (Math.random() - .5) * 50, y: Y - 60 - Math.random() * 50, t0: t, c: Math.random() < .5 ? "#7da34a" : "#c9a43a"}); }
+    for (const o of S.O){ if (!vis(o.x * T, o.y * T)) continue; if (o.k === "moulin"){ L.push([o.y * T, () => moulin(x, o, anim ? t : 0)]); continue; } if (o.k === "fontaine" && anim) L.push([o.y * T + 1, () => fontaine(x, o, t)]); L.push([o.k === "pont" || o.k === "ponton" || o.k === "enclos" ? -1e9 + o.y : o.y * T, () => dessinerObjet(x, "B", o, t, nuit, lum)]); }
+    for (const [mx, my] of MOUTONS){ const ph = mx * 3, ax = mx + Math.sin(t * .2 + ph) * .4, f = Math.cos(t * .2 + ph); L.push([my * T, () => bande(x, IMG[f > .4 ? "mouton-marche" : "mouton-broute"], 128, t * 8 + ph, ax * T - 38, my * T - 60, .6, f > 0 ? 1 : -1)]); }
+    S.W.forEach((w, wi) => { const d = Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), m = d / 1.1, cyc = 2 * m + 4, q = ((t + w.a[0] * 1.7) % cyc);
+      const pool = ["hache", "pioche", "marteau"].includes(w.w) ? HACHE : w.w === "couteau" ? HOUE : VILLAGEOIS.map(v => v.i), v = pool[wi % pool.length];
+      let px, py, mode, dir, porte = null, anim, face;
+      const dirDe = (ax, ay, bx, by) => Math.abs(bx - ax) > Math.abs(by - ay) ? (bx > ax ? "d" : "g") : (by > ay ? "b" : "h");
+      if (w.w === "repos" && d < .5){ px = w.a[0]; py = w.a[1]; mode = "repos"; dir = "b"; anim = "repos"; face = 1; }
+      else if (q < m){ const u = q / m; px = w.a[0] + (w.b[0] - w.a[0]) * u; py = w.a[1] + (w.b[1] - w.a[1]) * u; mode = "marche"; dir = dirDe(...w.a, ...w.b); anim = w.w === "repos" ? "repos" : w.w; face = w.b[0] >= w.a[0] ? 1 : -1; }
+      else if (q < m + 3){ px = w.b[0]; py = w.b[1]; mode = w.w === "repos" ? "repos" : "travail"; dir = (wi % 2) ? "d" : "g"; anim = w.w === "repos" ? "repos" : w.w === "hache" ? "hache-coupe" : w.w === "pioche" ? "pioche-tape" : w.w === "marteau" ? "marteau-tape" : "couteau-coupe"; face = 1; }
+      else { const u = Math.min(1, (q - m - 3) / m); px = w.b[0] + (w.a[0] - w.b[0]) * u; py = w.b[1] + (w.a[1] - w.b[1]) * u; mode = "marche"; dir = dirDe(...w.b, ...w.a); porte = w.c; anim = w.c || "repos"; face = w.a[0] >= w.b[0] ? 1 : -1; }
+      const X = px * T, Y = py * T; if (!vis(X, Y)) return;
+      L.push([Y, () => { x.fillStyle = "rgba(30,40,10,.25)"; x.beginPath(); x.ellipse(X, Y, 11, 4, 0, 0, 6.3); x.fill();
+        if (pions){ const k = .6 * .72; bande(x, IMG["ouvrier-" + anim], 192, t * 10 + w.a[1], X - 96 * k, Y - 135 * k, k, face); return; }
+        lpc(x, v, mode, dir, t * (mode === "travail" ? 8 : 10) + wi, X, Y, .8);
+        if (porte && PORTE[porte]){ const ic = IMG[PORTE[porte]]; if (ok(ic)) x.drawImage(ic, Math.round(X - 9), Math.round(Y - 66), 18, 18); } }]); });
+    L.sort((a, b) => a[0] - b[0]); for (const [, f] of L) f();
+    if (anim) effets(x, t, cam, vw, vh);
+    if (nuit > .01){ x.fillStyle = `rgba(16,22,58,${nuit})`; x.fillRect(cam.x - vw / 2, cam.y - vh / 2, vw, vh); x.globalCompositeOperation = "lighter";
+      for (const [lx, ly, r] of lum){ const g = x.createRadialGradient(lx, ly, 0, lx, ly, r); g.addColorStop(0, `rgba(255,170,70,${nuit})`); g.addColorStop(1, "rgba(255,170,70,0)"); x.fillStyle = g; x.fillRect(lx - r, ly - r, r * 2, r * 2); }
+      x.globalCompositeOperation = "source-over"; }
+    requestAnimationFrame(image);
+  }
+  requestAnimationFrame(image);
+}
+monter("B");
+</script>
