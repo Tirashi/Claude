@@ -20,12 +20,26 @@ def dans_tour(x, y):
     u = (y - 128) / (H - 128); g, d = 53 - 12 * u, 129 + 12 * u
     return g <= x <= d
   return False
-masque = [[any(dans_aile(x, y, a) for a in DIRS) and px[x, y][3] > 0 for x in range(W)] for y in range(H)]
+def clair(p): return p[3] > 0 and p[0] > 175 and p[1] > 160 and p[2] > 130 and max(p[:3]) - min(p[:3]) < 70   # toile
+def lateral(x, y, a):
+  t = math.radians(a); sx, sy = math.cos(t - math.pi / 2), math.sin(t - math.pi / 2); dx, dy = x - HX, y - HY
+  return dx * sx + dy * sy, dx * math.cos(t) + dy * math.sin(t)
+def est_aile(x, y, a):
+  """pixel d'aile : loin du toit tout ce qui est dans la bande ; sur le toit seulement le bras, la toile claire et son contour"""
+  if not dans_aile(x, y, a) or px[x, y][3] == 0: return False
+  l, r = lateral(x, y, a)
+  if not ((x - 91) / 40) ** 2 + ((y - 110) / 31) ** 2 <= 1.15: return True
+  if -2.5 <= l <= 2.5: return True
+  if clair(px[x, y]): return True
+  q = px[x, y]
+  if not (q[0] - q[2] > 45 and q[0] > 85): return True      # pas doré comme le chaume : toile dans l'ombre ou contour
+  return any(clair(px[x + dx, y + dy]) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if 0 <= x + dx < W and 0 <= y + dy < H) and sum(px[x, y][:3]) < 330
+masque = [[any(est_aile(x, y, a) for a in DIRS) for x in range(W)] for y in range(H)]
 # 1. l'aile modèle (celle du haut à droite), dans un carré centré sur le moyeu
 C = 2 * R1 + 8; aile = Image.new("RGBA", (C, C)); pa = aile.load()
 for y in range(H):
   for x in range(W):
-    if dans_aile(x, y, DIRS[0]) and px[x, y][3] > 0: pa[x - HX + C // 2, y - HY + C // 2] = px[x, y]
+    if est_aile(x, y, DIRS[0]): pa[x - HX + C // 2, y - HY + C // 2] = px[x, y]
 # 2. la tour sans les ailes : dehors -> transparent ; dedans -> pixel voisin non masqué de la même rangée (pas de 16 px, comme les pierres)
 corps = im.copy(); pc = corps.load()
 for y in range(H):

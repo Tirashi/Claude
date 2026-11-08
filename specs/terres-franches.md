@@ -29,6 +29,13 @@
   - **champs** : le blé ondule en bandes de 2 px, une vague claire passe sur les épis, et chaque champ passe par les stades nu → pousses → mûr → blond (les images de *Medieval Farm*) ;
   - **ambiance** : reflets qui bougent sur la mer et la rivière, jet de la fontaine, papillons près des champs, vol d'oiseaux, ombres des nuages ; fumée des cheminées et lumières de la nuit (maquette 2).
 - **08/11 — maquette 4, la vallée vivante** : https://claude.ai/artifact/LsfwAW5RYuihKKDiSrbXXe — page source `outils/terres-maquette/source-4.html` (la maquette 3 avec l'interface Tiny Swords seule), fabriquée par `fabriquer-4.py` (mêmes arguments que `fabriquer-3.py`). Bouton ANIM pour tout couper et comparer. **À valider.**
+- **Retours sur la maquette 4 (08/11)** : arbres et champs « super » ; à revoir : morceaux du toit qui tournent avec les ailes, l'eau, la fumée pas sur les cheminées, une ligne claire qui traverse les champs (c'était la « vague du vent » : retirée) ; demande d'animaux (oiseaux, poissons, biches, chiens, chats). Les chemins de la maquette 4 étaient dessinés par le code (couleur unie).
+- **08/11 — maquette 5, bêtes et cheminées** : https://claude.ai/artifact/3wXMDswHZQJRMTKRFPVmnX — `outils/terres-maquette/source-5.html`, `fabriquer-5.py` (arguments de `fabriquer-3.py` plus le dossier des animaux avant la sortie). Nouveautés :
+  - **moulin** : une aile ne garde que la toile claire, son contour et le bras quand elle passe sur le toit (le chaume doré reste au toit) ; restent quelques plaques un peu floues sur les côtés du toit, cachées par les ailes la plupart du temps ;
+  - **eau** : texture d'eau du pack (*Medieval Village*, feuille 3, 48 × 48) en deux couches qui glissent en sens contraires, bord sombre, écume en pointillés qui avance le long de la rive, rive de terre ;
+  - **chemins et place** : texture de terre battue du pack (*Medieval Village*, feuille 1, 32 × 32 sans herbe) ;
+  - **fumée** : seulement sur les vraies cheminées, repérées à la main en pixels de l'image (`CHEMINEES` : chaume3 et 4, colomb1 et 2, pierre2, 3 et 5, forge ; le four fume par sa gueule) ; elle penche avec le vent ;
+  - **animaux LPC** (OpenGameArt, licences libres, crédits) : biches et cerf à l'orée (marche, broutent), renard dans la prairie, chiens et chats au village (les chats restent couchés longtemps), poules près de la grange, vaches et cochons dans l'enclos (à la place des moutons Tiny Swords), oiseaux au sol près des champs et en vol, poissons en ombre sous l'eau qui sautent parfois (ronds dans l'eau). Chaque bête se promène dans sa zone (`ZONES`) avec des pauses.
 - Prochaines étapes après le choix : décisions du § 2, puis **simulateur d'équilibrage d'abord** (`outils/terres-simulateur.js`, ère 1), puis session 1.
 
 ## 2. Adaptations à la Ludothèque (proposées le 08/11, à confirmer)
@@ -48,7 +55,7 @@ Le cahier reçu est écrit pour un projet seul ; dans la Ludothèque, quelques p
 
 **Points communs avec d'autres chantiers** (à garder en tête, pas de fusion proposée) : **la colonie** (`ile/`, tour par tour, la nature est l'ennemie, cdc `specs/colonie.md`) ; **le Clan du fjord** (en pause : les graphismes à créer l'ont bloqué → ici, choisir un style qui ne demande pas de tout dessiner) ; **la Mine sans fond** (incrémental, `IDEES.md`). Terres d'Éveil s'en distingue par le **temps réel incrémental** (production qui continue appli fermée) et le **prestige par les Lois**.
 
-**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : animations (maquette 4) ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) .
+**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : animations et animaux (maquette 5) ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) .
 
 ## 3. Noms proposés (08/11)
 | Nom | Pourquoi |
