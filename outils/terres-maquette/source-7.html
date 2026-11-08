@@ -79,7 +79,7 @@ button:focus-visible { outline: 2px solid #f2c94c; outline-offset: 1px; }
 
 <header class="page">
   <h1>Terres franches · retouches</h1>
-  <p>Maquette 7, retouches de la maquette 6 : la route du sud longe les champs au lieu de passer dessous, la fumée monte droit au ras des cheminées avant de pencher avec le vent (le four n'en a plus : il n'a pas de cheminée), l'aile du moulin n'emporte plus aucun pixel du toit, et des vols d'oiseaux traversent régulièrement l'écran (avec des oiseaux qui picorent au sol près des champs et sur la place). Toujours : SAISON, METEO, NUIT.</p></p></p>
+  <p>Maquette 7, retouches de la maquette 6 : la route du sud longe les champs au lieu de passer dessous, la fumée monte droit au ras des cheminées avant de pencher avec le vent (le four n'en a plus : il n'a pas de cheminée), le moulin reste immobile (image d'origine du pack), et des vols d'oiseaux traversent régulièrement l'écran (avec des oiseaux qui picorent au sol près des champs et sur la place). Toujours : SAISON, METEO, NUIT.</p></p></p>
 </header>
 
 <div class="phones">
@@ -280,7 +280,8 @@ function champsAnimes(x, S, t, anim){
   });
 }
 const MOULIN = {k: 0};
-function moulin(x, o, t){ const im = IMG["moulin-anime"]; if (!ok(im)) return; const fw = im.width / 8, f = Math.floor(t * 7 + o.x) % 8;
+function moulin(x, o, t){ const im0 = IMG.moulin1; if (ok(im0)){ x.drawImage(im0, Math.round(o.x * T - im0.width / 2), Math.round(o.y * T - im0.height + 4)); return; }   // moulin immobile (décision du 08/11 : l'animation des ailes n'était pas assez propre)
+  const im = IMG["moulin-anime"]; if (!ok(im)) return; const fw = im.width / 8, f = Math.floor(t * 7 + o.x) % 8;
   x.drawImage(im, f * fw, 0, fw, im.height, Math.round(o.x * T - fw / 2), Math.round(o.y * T - im.height + 4), fw, im.height); }
 function fontaine(x, o, t){ const X = o.x * T, Y = o.y * T - 46; for (let k = 0; k < 14; k++){ const a = (t * .9 + k / 14) % 1, ang = k * 2.4;
   x.fillStyle = `rgba(200,235,255,${.9 - a * .7})`; x.fillRect(Math.round(X + Math.cos(ang) * a * 16), Math.round(Y - Math.sin(a * Math.PI) * 14 + a * 10), 2, 2); } }
