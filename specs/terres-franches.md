@@ -36,6 +36,13 @@
   - **chemins et place** : texture de terre battue du pack (*Medieval Village*, feuille 1, 32 × 32 sans herbe) ;
   - **fumée** : seulement sur les vraies cheminées, repérées à la main en pixels de l'image (`CHEMINEES` : chaume3 et 4, colomb1 et 2, pierre2, 3 et 5, forge ; le four fume par sa gueule) ; elle penche avec le vent ;
   - **animaux LPC** (OpenGameArt, licences libres, crédits) : biches et cerf à l'orée (marche, broutent), renard dans la prairie, chiens et chats au village (les chats restent couchés longtemps), poules près de la grange, vaches et cochons dans l'enclos (à la place des moutons Tiny Swords), oiseaux au sol près des champs et en vol, poissons en ombre sous l'eau qui sautent parfois (ronds dans l'eau). Chaque bête se promène dans sa zone (`ZONES`) avec des pauses.
+- **Retours sur la maquette 5 (08/11, captures du téléphone)** : à revoir la jonction rivière-mer, la jonction pont-route, des lignes entre les carrés d'herbe, des petits défauts au centre des ailes ; « toutes tes pistes sont super » (autres moulins, saisons, pluie, villageois qui caressent les bêtes, enfants).
+- **08/11 — maquette 6, quatre saisons** : https://claude.ai/artifact/SkPnFbK5ySxWhWcHLcT4fv — `outils/terres-maquette/source-6.html`, `fabriquer-6.py` (arguments de `fabriquer-5.py` ; villageois et enfants : `lpc-villageois.py <LPC> <sortie> 24 11 6`, les enfants sont tirés après les adultes pour que les adultes restent les mêmes) :
+  - **corrections** : la rivière s'arrête à la côte (avant, elle allait jusqu'au bord de la carte et, dans le chemin de découpe, la zone commune avec la mer s'annulait : rectangle clair) ; le pont est posé là où la route croise la rivière et tourné dans son axe ; l'herbe = un seul carré de *Medieval Village* qui se raccorde sans couture (235, 387), retourné au hasard (le carré d'avant avait une colonne claire sur son bord) ; moulin : les bras près du moyeu sont redessinés à chaque image (l'aile modèle commence à 27 px du moyeu) et le chaume caché par les ailes est recopié depuis la même rangée (le chaume est en couches horizontales) ;
+  - **moulins en bois** (modèles 2 à 4, `moulin-anime.py … [modèle]`, géométries mesurées dans `MOULINS`) : **pas encore propres** (les bras ont la couleur du toit ; restes de toile), donc pas utilisés : les deux moulins de la carte restent le moulin de pierre ;
+  - **saisons** (bouton SAISON) : images retouchées au pixel une fois par saison (`variante()` : feuillage roux ou doré à l'automne, fleurs roses au printemps, givre et neige sur le haut des arbres, des toits et des bâtiments en hiver), herbe retouchée (`sol()` : fleurs au printemps, dorée à l'automne, neige en hiver ; les chemins et la place gardent leur couleur), champs selon la saison, feuilles qui tombent (rousses à l'automne, pétales au printemps), eau gelée en hiver, papillons au printemps et en été ;
+  - **météo** (bouton METEO) : pluie (ciel assombri, gouttes, ronds sur l'eau) ; en hiver, il neige (et quelques flocons même sans le bouton) ;
+  - **vie du village** : 6 enfants LPC qui jouent autour de la fontaine, un chien qui suit un bûcheron, une villageoise qui caresse un chat (cœurs).
 - Prochaines étapes après le choix : décisions du § 2, puis **simulateur d'équilibrage d'abord** (`outils/terres-simulateur.js`, ère 1), puis session 1.
 
 ## 2. Adaptations à la Ludothèque (proposées le 08/11, à confirmer)
@@ -55,7 +62,7 @@ Le cahier reçu est écrit pour un projet seul ; dans la Ludothèque, quelques p
 
 **Points communs avec d'autres chantiers** (à garder en tête, pas de fusion proposée) : **la colonie** (`ile/`, tour par tour, la nature est l'ennemie, cdc `specs/colonie.md`) ; **le Clan du fjord** (en pause : les graphismes à créer l'ont bloqué → ici, choisir un style qui ne demande pas de tout dessiner) ; **la Mine sans fond** (incrémental, `IDEES.md`). Terres d'Éveil s'en distingue par le **temps réel incrémental** (production qui continue appli fermée) et le **prestige par les Lois**.
 
-**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : animations et animaux (maquette 5) ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) .
+**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : ambiance (maquette 6) ; moulins en bois ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) .
 
 ## 3. Noms proposés (08/11)
 | Nom | Pourquoi |

@@ -3,7 +3,8 @@
 auteurs dans son CREDITS.csv). Sortie : une bande par villageois, cases de 64 px :
   lignes 0-3 = marche (9 images, haut / gauche / bas / droite), ligne 4 = repos (2 images, vers le bas),
   lignes 5-6 = travail vers la gauche / la droite (hache : 6 images de la frappe, ou houe : 8 images), cases de 128 px pour la hache.
-Usage : python3 -I outils/terres-maquette/lpc-villageois.py <dossier du dépôt LPC> <dossier de sortie> [nombre] [graine]"""
+Usage : python3 -I outils/terres-maquette/lpc-villageois.py <dossier du dépôt LPC> <dossier de sortie> [nombre] [graine] [nombre d'enfants]
+Enfants : e<i>-marche.png (marche seulement : les habits d'enfant LPC n'ont que la marche)."""
 import json, pathlib, random, sys
 from PIL import Image
 L, SORTIE = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2]); N = int(sys.argv[3]) if len(sys.argv) > 3 else 12; r = random.Random(int(sys.argv[4]) if len(sys.argv) > 4 else 7)
@@ -77,6 +78,22 @@ def villageois(i):
         trav.paste(c, (f * fs, ligne * fs))
   walk.save(SORTIE / f"v{i}-marche.png"); idle.save(SORTIE / f"v{i}-repos.png"); trav.save(SORTIE / f"v{i}-{outil}.png")
   return {"i": i, "outil": outil, "femme": fem, "peau": peau, "cheveux": chev, "coiffe": coiffe, "vieux": vieux}
+def enfant(i):
+  peau = r.choice(["light", "amber", "olive", "taupe", "bronze", "brown", "black"]); chev = r.choice(["blonde", "sandy", "ginger", "chestnut", "dark_brown", "black", "light_brown", "redhead"])
+  tissus = ["brown", "tan", "maroon", "forest", "green", "navy", "bluegray", "red", "teal", "yellow", "orange", "sky", "white", "pink", "lavender"]
+  bas = r.choice(["legs/pants/child", "legs/skirts/child"]); dispo = lambda ch: [f.stem for f in sorted((S / ch / "walk").glob("*.png"))]
+  couches = [(10, "body/bodies/child", None, (PEAU["light"], PEAU[peau])), (20, bas, r.choice(dispo(bas)), None),
+    (35, "torso/clothes/shirt/child", r.choice(dispo("torso/clothes/shirt/child")), None), (100, "head/heads/human/child", None, (PEAU["light"], PEAU[peau])),
+    (105, "eyes/human/child", r.choice(["brown", "blue", "green"]), None), (120, "hair/" + r.choice(["jewfro", "parted_side_bangs", "relm_short", "swoop_side", "wavy"]) + "/child", None, (CHEV["orange"], CHEV[chev]))]
+  out = None
+  for _, ch, coul, p in couches:
+    im = calque(ch, "walk", coul, p)
+    if im is None: continue
+    if out is None: out = Image.new("RGBA", im.size)
+    out.alpha_composite(im)
+  out.save(SORTIE / f"e{i}-marche.png")
 info = [villageois(i) for i in range(N)]
+NE = int(sys.argv[5]) if len(sys.argv) > 5 else 0
+for i in range(NE): enfant(i)   # après les adultes : les adultes restent les mêmes pour une même graine
 json.dump(info, open(SORTIE / "villageois.json", "w"), ensure_ascii=False, indent=1)
 print(len(info), "villageois")
