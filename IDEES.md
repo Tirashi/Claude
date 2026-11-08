@@ -7,7 +7,7 @@ Ici, seulement des idées courtes (un titre et quelques lignes). Dès qu'une id�
 - **Lune-Rover, trois directions graphiques** (A console de mission, B diorama isométrique, C dessin animé ; **C choisi** le 16/10) : https://claude.ai/artifact/REghC6dTgZ92evFFZB3VU9
 - **Lune-Rover, style dessin animé approfondi** (titre, carte des niveaux en chemin de pierres, partie animée, victoire ; Pico le rover et ses 5 expressions ; polices Luckiest Guy + Fredoka), **validé et installé** le 16/10 : https://claude.ai/artifact/DLb5Jn4K8prbo2WCa6fHAW
 - **La colonie, écran en paysage** (16/10) : maquette, détails et liens déplacés dans [`specs/colonie.md`](specs/colonie.md).
-- **Terres d'Éveil** (cahier des charges de l'utilisateur reçu le 08/11 : colonie incrémentale médiévale-fantastique en temps réel, chaînes de production, magie, prestige par les Lois) : 🟡 chantier, maquette 1 (Tiny Swords / 16 bits / carnet à l'encre) et adaptations dans [`specs/terres-d-eveil.md`](specs/terres-d-eveil.md).
+- **Terres franches** (ex-« Terres d'Éveil », cahier des charges de l'utilisateur reçu le 08/11 : colonie incrémentale médiévale-fantastique en temps réel, chaînes de production, magie, prestige par les Lois) : 🟡 chantier, maquettes 1 à 3 (style Cute SCKR choisi, villageois LPC) et adaptations dans [`specs/terres-franches.md`](specs/terres-franches.md).
 - **Nebula** — ✅ (sessions 1 à 4) : maquettes (chantier naval, écrans, banc d'écoute des sons, nouveaux vaisseaux), détails et liens déplacés dans [`specs/nebula.md`](specs/nebula.md).
 - Maquette 32 bits d'Injagility : https://claude.ai/artifact/TymnL37HHZbjo2BTgMT5Kj
 - 9 coups de cœur + 4 jeux de bateaux en 32 bits : https://claude.ai/artifact/XzRmvgNKZeSMRUAM1NuFsA

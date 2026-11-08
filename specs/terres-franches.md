@@ -1,7 +1,9 @@
-# Cahier des charges — TERRES D'ÉVEIL (nom de travail)
+# Cahier des charges — TERRES FRANCHES
+
+> Nom choisi le 08/11 (nom de travail du cahier : « Terres d'Éveil »).
 
 > Cahier des charges de l'utilisateur reçu le 08/11/2026 (recopié tel quel plus bas, § « Cahier reçu »). Avant lui : les **adaptations à la Ludothèque** et l'état du chantier.
-> Dossier prévu : `terres-d-eveil/`. Modèle conseillé : Opus pour le moteur (économie, agents, prestige), opusplan pour les sessions de contenu.
+> Dossier prévu : `terres-franches/`. Modèle conseillé : Opus pour le moteur (économie, agents, prestige), opusplan pour les sessions de contenu.
 
 ## 1. État du chantier
 - **08/11 — maquette 1** : https://claude.ai/artifact/HGXY4qdbJLhXCgGw3bJiJ7 — source `maquettes/terres-d-eveil.html` (images en `@@nom@@`), page fabriquée par `python3 outils/terres-maquette/fabriquer.py <sortie>` (met en base64 les images Tiny Swords de `bastion/img/` ; la page fabriquée ne va pas dans le dépôt). Jouable : le pionnier seul (toucher arbres, buissons, eau = +1), accueillir des villageois (vivres + bois, coût ×1,2), métiers bûcheron / cueilleur / pêcheur avec + et − (aller, travailler, rapporter au feu, « +3 » qui s'envole), manger (baies et poisson ; les deux = moral 110 %, faim = tout ralentit), cabanes (+3 places, chantier de 20 s), paliers campement → hameau (3) → village (8, tour de guet), jour et nuit (90 s), bouton ×10. Trois directions :
@@ -15,6 +17,11 @@
   - **A · Tiny Swords, complété** : sol, eau, arbres et maisons Tiny Swords (château = mairie, monastère = église, tour, caserne = grange) ; le reste vient de Cute SCKR.
   - **B · Tout Cute SCKR** : sol, arbres et bâtiments Cute SCKR ; les maisons changent avec le palier (chaume → colombages et pierre).
   - **À choisir.**
+- **Choix (08/11)** : **direction B, tout Cute SCKR** (« tout est dans la même DA, et les petits personnages de Tiny Swords ne jurent pas trop »). Nom : **Terres franches**. Demande : des villageois **plus variés**, et des images pour l'**interface** et les **icônes des ressources**.
+- **Recherche des villageois (08/11)** : les packs payants regardés ont peu de variété ou peu d'animations de travail (8 NPC Pack de Tiny Questers 5,99 $ : marche et repos seulement ; Medieval Citizens de hnnnnnnn 6 $ : 3 personnages ; Villager de sanctumpixel 4,20 $ : hache, pioche, ferme, construction, 6 couleurs, mais un style réaliste sans contour ; Mana Seed NPC Packs 10 $ : 10 personnages ; Minifantasy Crafting : 8 × 8 px, trop petit). **Retenu pour la maquette : LPC** (*Universal LPC Spritesheet Character Generator*, dépôt public LiberatedPixelCup, CC-BY-SA 3.0 / GPL 3.0 / OGA-BY selon les calques, auteurs dans son `CREDITS.csv`) : gratuit, des centaines de têtes, coiffures, habits, tabliers, chapeaux et couleurs de peau (palettes), animations marche, repos, coup (hache, pioche, marteau avec les calques d'outils), poussée (houe, pelle, arrosoir), canne à pêche, assis… ; même échelle que les tuiles de 48 px. Composés par `outils/terres-maquette/lpc-villageois.py <dépôt LPC> <sortie> [nombre] [graine]` (clone partiel : `git clone --depth 1 --filter=blob:none --no-checkout` puis `git sparse-checkout` des calques utiles). Licence à suivre : citer chaque auteur des calques utilisés, et les images LPC dérivées restent en CC-BY-SA.
+- **Icônes des ressources** : packs du lot Cute SCKR déjà achetés, *Medieval Fantasy Icons Pack*, *Pixel Medieval Fantasy Icon Pack*, *Pixel Food Icon Pack* (grilles de 7 ou 8 icônes sur 1024 px) : pierre, minerai, cristaux, tissu, grimoire, or, laine, sac de farine, pain, viande, poisson, baies, potions, parchemins… ; le bois (tas de bûches) et le blé (gerbe) viennent des feuilles de village et de ferme.
+- **Interface** : *Fantasy UI* de ToffeeCraft (version gratuite : pancartes, cadre en bois suspendu, petits boutons +, −, ✓ et ✕, barre ; licence : usage et modification libres, pas de redistribution ni de revente ; un « méga pack » payant existe) ou l'interface de Tiny Swords (déjà dans Bastion). Autres packs repérés : Wood UI V1 de Pixel Vault (3 $), Pixel UI Kit de gegx (assisté par IA), Medieval Age GUI de pzuh.
+- **08/11 — maquette 3, villageois et interface** : https://claude.ai/artifact/4XZsL63g4soMJoPrKNerue — page source `outils/terres-maquette/source-3.html` (reprend le code de la vallée de `source-2.html`), fabriquée par `python3 -I outils/terres-maquette/fabriquer-3.py <Free Pack> <dossier SCKR> <dossier icônes> <villageois LPC> <freefantasy.png de ToffeeCraft> <sortie> [planche.png]`. Vallée B au bourg, 24 villageois LPC tirés au hasard (hache ou houe, la récolte au-dessus de la tête au retour ; bouton TS pour revoir Tiny Swords), barre de 6 ressources avec leurs icônes, panneau des métiers (portrait du villageois, icône, + et −), chantier du moulin avec sa jauge. **A** habillage bois et parchemin (ToffeeCraft) ; **B** habillage Tiny Swords. **À choisir.**
 - Prochaines étapes après le choix : décisions du § 2, puis **simulateur d'équilibrage d'abord** (`outils/terres-simulateur.js`, ère 1), puis session 1.
 
 ## 2. Adaptations à la Ludothèque (proposées le 08/11, à confirmer)
@@ -23,7 +30,7 @@ Le cahier reçu est écrit pour un projet seul ; dans la Ludothèque, quelques p
 | Cahier reçu | Dans la Ludothèque | Pourquoi |
 |---|---|---|
 | Vanilla JS **ou React + Vite**, build par GitHub Actions | **Vanilla JS sans build**, scripts classiques (`regles.js` pur et testable sous Node, `jeu.js` dessin et interface, `donnees.js` bâtiments et ressources) | Règle du dépôt : le fichier poussé est celui que joue le téléphone ; GitHub Pages publie déjà le site. |
-| Structure `src/game`, `src/render`, `src/ui` | Même découpage, mais en quelques fichiers dans `terres-d-eveil/` (comme Bastion) | Pas de modules ES ni de npm. |
+| Structure `src/game`, `src/render`, `src/ui` | Même découpage, mais en quelques fichiers dans `terres-franches/` (comme Bastion) | Pas de modules ES ni de npm. |
 | PC d'abord, responsive mobile | **Téléphone d'abord** (appli PWA Android), en portrait ; le PC suit | C'est là que la famille joue. |
 | Assets Kenney / itch.io CC0 | Selon la maquette : Tiny Swords (déjà acheté, déjà crédité), ou dessiné par le code | Règle des crédits ; images rangées dans le dossier du jeu. |
 | Sauvegarde `localStorage` + export/import JSON | `localStorage` (clé `terres.partie`) + le **transfert `LUDO1-`** de l'accueil (qui sert déjà d'export) | Déjà en place pour tous les jeux. |
@@ -34,12 +41,12 @@ Le cahier reçu est écrit pour un projet seul ; dans la Ludothèque, quelques p
 
 **Points communs avec d'autres chantiers** (à garder en tête, pas de fusion proposée) : **la colonie** (`ile/`, tour par tour, la nature est l'ennemie, cdc `specs/colonie.md`) ; **le Clan du fjord** (en pause : les graphismes à créer l'ont bloqué → ici, choisir un style qui ne demande pas de tout dessiner) ; **la Mine sans fond** (incrémental, `IDEES.md`). Terres d'Éveil s'en distingue par le **temps réel incrémental** (production qui continue appli fermée) et le **prestige par les Lois**.
 
-**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : style (maquette 2) ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) ; nom définitif.
+**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : habillage de l'interface (maquette 3) ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) .
 
 ## 3. Noms proposés (08/11)
 | Nom | Pourquoi |
 |---|---|
-| **Terres franches** (préféré) | Au Moyen Âge, une ville « franche » est celle qui a reçu sa charte de libertés : c'est le prestige par les Lois. |
+| **Terres franches** (**choisi le 08/11**) | Au Moyen Âge, une ville « franche » est celle qui a reçu sa charte de libertés : c'est le prestige par les Lois. |
 | **Clairval** | Le nom de la première vallée ; court, doux, se retient. |
 | **Feux et Chartes** | Du feu de camp du début aux chartes qui font les villes. |
 | **Les Bâtisseurs du Val** | Dit tout de suite qu'on construit. |
