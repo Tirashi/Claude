@@ -89,3 +89,4 @@ Retours sur la maquette 4 → **maquette 5** : https://claude.ai/artifact/3wXMDs
 Retours sur la maquette 5 → **maquette 6** : https://claude.ai/artifact/SkPnFbK5ySxWhWcHLcT4fv (`fabriquer-6.py`) : rivière arrêtée à la côte, pont dans l'axe de la route, herbe sans couture, centre du moulin redessiné ; saisons, pluie et neige, enfants, chien qui suit son maître, caresse au chat. Moulins en bois tentés mais pas encore propres.
 Retouches → **maquette 7** : https://claude.ai/artifact/BuUxWHgRBp4VoShKw87FvC (route qui longe les champs, fumée au ras des cheminées, ailes du moulin nettes, vols d'oiseaux).
 Décision : moulin immobile (image d'origine), l'animation des ailes n'étant pas assez propre ; maquette 7 republiée.
+**Validation** : la maquette 7 représente globalement le jeu ; placement des bâtiments et des routes à rendre plus logique. Prochaine étape : simulateur d'équilibrage (ère 1).

@@ -46,6 +46,7 @@
 - **Retours sur la maquette 6 (08/11)** : « c'est vraiment très bien » ; restent la route du sud qui passait sous les champs, la fumée un peu décalée (et le four qui fumait par le haut sans cheminée), un petit morceau de toit qui tournait avec les ailes, et pas d'oiseaux visibles.
 - **08/11 — maquette 7, retouches** : https://claude.ai/artifact/BuUxWHgRBp4VoShKw87FvC — `source-7.html`, `fabriquer-7.py` (mêmes arguments) : la route du sud longe les champs (patch de la scène commune dans `fabriquer-7.py`) ; cheminées vérifiées au pixel (haut de la cheminée, en px de l'image) et fumée qui monte droit avant de pencher (dérive en a²), plus de fumée au four ; moulin : l'aile modèle ne prend plus rien sur le toit, et son bout près du moyeu est refait en recopiant la toile 18 px plus loin (toiles rectangulaires nettes) ; oiseaux : deux vols qui traversent l'écran à tour de rôle (rangée 0 vers la droite, 3 vers la gauche) et des oiseaux au sol près des champs et sur la place (oiseau brun : rangées 4 gauche, 7 droite, 5 dos, 6 face), plus petits.
 - **Décision (08/11) : le moulin reste immobile** (image d'origine du pack) : malgré plusieurs essais, l'animation des ailes laissait toujours des défauts (« je crois qu'on y arrivera pas avec le moulin »). `moulin-anime.py` est gardé dans `outils/` au cas où un pack proposerait un jour un moulin animé dans ce style. Maquette 7 republiée au même lien.
+- **Validation (08/11)** : « la maquette représente globalement le jeu » (maquette 7 : Cute SCKR, villageois et animaux LPC, interface Tiny Swords, décors animés par le code, saisons, météo). Ajustements à prévoir ; **à revoir dans le jeu : l'emplacement des bâtiments et des routes, pour que ce soit plus logique** (dans la maquette, tout est posé à la main autour d'une place ; dans le jeu, les bâtiments se posent sur des terrains et les routes doivent relier ce qui travaille ensemble : champs → moulin → boulangerie, forêt → scierie, carrière → chantiers, port au bord de l'eau).
 - Prochaines étapes après le choix : décisions du § 2, puis **simulateur d'équilibrage d'abord** (`outils/terres-simulateur.js`, ère 1), puis session 1.
 
 ## 2. Adaptations à la Ludothèque (proposées le 08/11, à confirmer)
@@ -65,7 +66,7 @@ Le cahier reçu est écrit pour un projet seul ; dans la Ludothèque, quelques p
 
 **Points communs avec d'autres chantiers** (à garder en tête, pas de fusion proposée) : **la colonie** (`ile/`, tour par tour, la nature est l'ennemie, cdc `specs/colonie.md`) ; **le Clan du fjord** (en pause : les graphismes à créer l'ont bloqué → ici, choisir un style qui ne demande pas de tout dessiner) ; **la Mine sans fond** (incrémental, `IDEES.md`). Terres d'Éveil s'en distingue par le **temps réel incrémental** (production qui continue appli fermée) et le **prestige par les Lois**.
 
-**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : ambiance (maquette 6) ; moulins en bois ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) .
+**Décidé (08/11)** : **pas de classement**. **Questions ouvertes** : placement des bâtiments (le joueur choisit le terrain, ou le village se range tout seul) ; durée visée (le cahier dit 25 à 40 h ; sur téléphone, en sessions courtes, ça tient si l'idle fait sa part) .
 
 ## 3. Noms proposés (08/11)
 | Nom | Pourquoi |
