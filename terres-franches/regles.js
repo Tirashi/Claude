@@ -6,7 +6,9 @@
    R.robot(S) joue un coup (simulateur). Les villageois sont comptés par métier (le jeu leur donne visage et nom). */
 (function(){
 "use strict";
-const DON = (typeof module !== "undefined" && module.exports) ? require("./donnees.js") : window.TerresDonnees;
+const NODE = typeof module !== "undefined" && module.exports;
+const DON = NODE ? require("./donnees.js") : window.TerresDonnees;
+const CARTE = NODE ? require("./carte.js") : window.TerresCarte;   // les terrains : où se pose chaque bâtiment
 const VERSION = 1;
 
 /* ---------- réglages ---------- */
@@ -29,7 +31,7 @@ const D = S => reglages(S.mods);
 /* ---------- une partie ---------- */
 function creer(mods){
   const P = reglages(mods), S = {v: VERSION, mods: mods || {}, t: 0, res: {}, bat: {}, chantiers: [], pop: 0, jobs: {},
-    statut: 0, recrutes: 0, loi: false, touchers: 0, evts: [], jalons: {}};
+    statut: 0, recrutes: 0, loi: false, touchers: 0, evts: [], jalons: {}, lots: {}, ordreLots: []};
   for (const r in P.RES) S.res[r] = 0;
   for (const b in P.BATIMENTS) S.bat[b] = 0;
   for (const m in P.METIERS) S.jobs[m] = 0;
@@ -54,6 +56,7 @@ function logement(S){
 const popMax = S => Math.min(logement(S), D(S).STATUTS[S.statut].popMax);
 const enChantier = (S, b) => S.chantiers.filter(c => c.k === b).length;
 function parcellesLibres(S, terrain){
+  if (CARTE) return CARTE.libres(S, terrain).length;
   const P = D(S); let n = P.CARTE[terrain] || 0;
   for (const b in P.BATIMENTS) if (P.BATIMENTS[b].terrain === terrain) n -= S.bat[b] + enChantier(S, b);
   return n;
@@ -130,11 +133,12 @@ function taux(S, jobs){
   return t;
 }
 
-function pas(S, dt){
-  while (dt > 1e-9){ const h = Math.min(dt, 1); pas1(S, h); dt -= h; }
+// eff : part de la production pendant ce temps (1 en jeu, HORS_LIGNE.rendement quand l'appli est fermée) ; les chantiers avancent toujours
+function pas(S, dt, eff){
+  while (dt > 1e-9){ const h = Math.min(dt, 1); pas1(S, h, eff === undefined ? 1 : eff); dt -= h; }
 }
-function pas1(S, dt){
-  const P = D(S), mult = moral(S).mult;
+function pas1(S, dt, eff){
+  const P = D(S), mult = moral(S).mult * eff;
   S.t += dt;
   // chantiers
   for (const c of S.chantiers) c.reste -= dt;
@@ -155,9 +159,9 @@ function pas1(S, dt){
   }
   // on mange, on s'habille
   if (S.pop){
-    const besoin = S.pop * P.BESOINS.conso * dt;
+    const besoin = S.pop * P.BESOINS.conso * dt * eff;
     payerVivres(S, Math.min(besoin, vivres(S)));
-    if (S.pop >= P.BESOINS.vetements.pop) S.res.vetements = Math.max(0, S.res.vetements - S.pop * P.BESOINS.vetements.conso * dt);
+    if (S.pop >= P.BESOINS.vetements.pop) S.res.vetements = Math.max(0, S.res.vetements - S.pop * P.BESOINS.vetements.conso * dt * eff);
   }
   for (const r in S.res) if (S.res[r] < 1e-9) S.res[r] = 0;
 }
@@ -194,9 +198,28 @@ function peutConstruire(S, b){
   if (!peutPayer(S, coutBat(S, b))) return "PAS ASSEZ DE RESSOURCES";
   return null;
 }
-function construire(S, b){
+// lot = le terrain choisi par le joueur (sinon celui que propose la carte)
+function construire(S, b, lot){
   const e = peutConstruire(S, b); if (e) return e;
-  payer(S, coutBat(S, b)); S.chantiers.push({k: b, reste: D(S).BATIMENTS[b].travail});
+  if (CARTE){
+    lot = lot || CARTE.proposer(S, b);
+    const L = CARTE.LOTS[lot];
+    if (!L || L.terrain !== D(S).BATIMENTS[b].terrain) return "CE TERRAIN NE CONVIENT PAS";
+    if (S.lots[lot]) return "CE TERRAIN EST PRIS";
+    S.lots[lot] = b; S.ordreLots.push(lot);
+  }
+  payer(S, coutBat(S, b)); S.chantiers.push({k: b, reste: D(S).BATIMENTS[b].travail, lot: lot || null});
+  return null;
+}
+// déplacer un bâtiment (ou son chantier) sur un autre terrain libre du même genre : gratuit
+function deplacer(S, de, vers){
+  if (!CARTE) return "PAS DE CARTE";
+  const b = S.lots[de], L = CARTE.LOTS[vers];
+  if (!b) return "RIEN A DEPLACER";
+  if (!L || L.terrain !== CARTE.LOTS[de].terrain) return "CE TERRAIN NE CONVIENT PAS";
+  if (S.lots[vers]) return "CE TERRAIN EST PRIS";
+  delete S.lots[de]; S.lots[vers] = b; S.ordreLots[S.ordreLots.indexOf(de)] = vers;
+  for (const c of S.chantiers) if (c.lot === de) c.lot = vers;
   return null;
 }
 function peutMonter(S){
@@ -228,10 +251,11 @@ function promulguer(S){
 
 /* ---------- hors ligne, sauvegarde ---------- */
 function horsLigne(S, secondes){
-  const H = D(S).HORS_LIGNE, s = Math.max(0, Math.min(secondes, H.plafond)) * H.rendement;
-  const avant = copie(S.res); pas(S, s);
+  const H = D(S).HORS_LIGNE, s = Math.max(0, Math.min(secondes, H.plafond)), avant = copie(S.res);
+  pas(S, s, H.rendement);
+  if (secondes > s) pas(S, secondes - s, 0);   // au-delà du plafond : le temps passe (chantiers), plus rien ne se produit
   const gains = {}; for (const r in S.res){ const g = S.res[r] - avant[r]; if (Math.abs(g) >= .5) gains[r] = Math.round(g); }
-  return {duree: s, plafonne: secondes > H.plafond, gains};
+  return {duree: s, absence: Math.max(0, secondes), plafonne: secondes > H.plafond, rendement: H.rendement, gains};
 }
 const sauver = S => JSON.stringify(S);
 function charger(txt){
@@ -242,6 +266,8 @@ function charger(txt){
   for (const r in neuf.res) if (typeof S.res[r] !== "number") S.res[r] = 0;
   for (const b in neuf.bat) if (typeof S.bat[b] !== "number") S.bat[b] = 0;
   for (const m in neuf.jobs) if (typeof S.jobs[m] !== "number") S.jobs[m] = 0;
+  if (!S.lots || typeof S.lots !== "object") S.lots = {};
+  if (!Array.isArray(S.ordreLots)) S.ordreLots = Object.keys(S.lots);
   S.v = VERSION;
   return S;
 }
@@ -336,7 +362,7 @@ function aToucher(S){
 }
 
 const api = {VERSION, reglages, creer, pas, taux, moral, places, logement, popMax, libres, parcellesLibres, vivres,
-  coutBat, coutRecrue, peutPayer, toucher, recruter, affecter, peutConstruire, construire, peutMonter, monterStatut,
+  coutBat, coutRecrue, peutPayer, toucher, recruter, affecter, peutConstruire, construire, deplacer, peutMonter, monterStatut,
   peutPromulguer, promulguer, horsLigne, sauver, charger, robot, aToucher, objectif, PLAN};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresRegles = api;

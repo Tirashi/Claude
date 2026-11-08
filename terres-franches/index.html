@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Terres franches</title>
+<meta name="description" content="Terres franches : un campement au bord d'une rivière devient un village. Récolte, accueille des villageois, donne-leur un métier et bâtis ; la colonie travaille même quand tu n'es pas là.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#2c4a24">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<!-- polices dans le dépôt (hors connexion) ; data-google : le lien utilisé par l'artefact (outils/artefact.py) -->
+<link rel="stylesheet" href="../polices/bastion.css" data-google="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="cv" aria-label="La vallée"></canvas>
+
+<div id="hud">
+  <div class="haut">
+    <div class="ligne">
+      <div class="res" id="res"></div>
+      <button type="button" id="bMenu" class="carre" aria-label="Menu"><b>II</b></button>
+    </div>
+    <div id="statut" class="ruban">CAMPEMENT</div>
+  </div>
+  <div class="bas">
+    <div class="zoom"><button type="button" id="zPlus" class="carre" aria-label="Zoom avant">+</button><button type="button" id="zMoins" class="carre" aria-label="Zoom arriere">−</button></div>
+    <div id="panneau" class="panneau table" hidden></div>
+    <div class="onglets">
+      <button type="button" class="bouton" data-onglet="villageois">VILLAGEOIS</button>
+      <button type="button" class="bouton" data-onglet="construire">CONSTRUIRE</button>
+      <button type="button" class="bouton" data-onglet="colonie">COLONIE</button>
+    </div>
+  </div>
+</div>
+<div id="banniere" class="ruban"></div>
+<div id="bulle" class="papier" hidden></div>
+<div id="placement" hidden>
+  <p class="papier" id="placeTexte"></p>
+  <div class="rang"><button type="button" id="bPoser" class="bouton or">BATIR ICI</button><button type="button" id="bAnnulerP" class="bouton">ANNULER</button></div>
+</div>
+
+<div id="menu" class="ecran" hidden>
+  <div class="plaque parchemin">
+    <h1 class="ruban">TERRES FRANCHES</h1>
+    <p class="sous" id="menuSous">ERE 1 · LA VALLEE</p>
+    <button type="button" id="bReprendre" class="bouton or">REPRENDRE</button>
+    <button type="button" id="bAide" class="bouton">COMMENT JOUER</button>
+    <div id="aideTexte" class="aide" hidden>
+      <p><b>Récolter</b> : touche un arbre, un buisson ou l'eau : le pionnier rapporte du bois, des baies ou du poisson.</p>
+      <p><b>Villageois</b> : avec des vivres et du bois, accueille un villageois (il faut un toit : la tente et le feu en abritent deux, chaque cabane deux de plus). Donne-lui un métier avec + et −.</p>
+      <p><b>Construire</b> : choisis un bâtiment ; le jeu propose le terrain le plus logique (les champs sur la bonne terre, le moulin près des champs, les cabanes autour du feu) et trace la rue. Touche un autre terrain pour changer d'avis. Touche un bâtiment pour le déplacer.</p>
+      <p><b>Colonie</b> : le campement devient hameau puis village (plus d'habitants, nouveaux bâtiments). Varier la nourriture, du pain et des vêtements donnent du moral : tout le monde travaille plus vite. Au village complet, promulgue la Charte du Village.</p>
+      <p><b>Absence</b> : la colonie continue sans toi, mais bien plus lentement (le quart, 4 h au plus).</p>
+    </div>
+    <button type="button" id="bNouvelle" class="bouton">NOUVELLE PARTIE</button>
+    <a class="bouton ludo-retour" href="../index.html#terres-franches">LUDOTHEQUE</a>
+  </div>
+</div>
+<div id="retour" class="ecran" hidden>
+  <div class="plaque parchemin">
+    <h1 class="ruban">DE RETOUR</h1>
+    <p class="sous" id="retourSous"></p>
+    <div class="gains" id="retourGains"></div>
+    <button type="button" id="bRetour" class="bouton or">CONTINUER</button>
+  </div>
+</div>
+<div id="fin" class="ecran" hidden>
+  <div class="plaque parchemin">
+    <h1 class="ruban rouge">LA CHARTE</h1>
+    <p>La Charte du Village est promulguée : la vallée est devenue un vrai village. La suite (fonder une nouvelle colonie sur une terre plus grande, avec les Lois) arrive bientôt.</p>
+    <button type="button" id="bFin" class="bouton or">CONTEMPLER LE VILLAGE</button>
+  </div>
+</div>
+<div id="chargement" class="ecran"><p>CHARGEMENT…</p></div>
+
+<script src="donnees.js"></script>
+<script src="carte.js"></script>
+<script src="regles.js"></script>
+<script src="atlas.js"></script>
+<script src="villageois.js"></script>
+<script src="jeu.js"></script>
+<script src="ecran.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Le retour à la Ludothèque est dans le menu du jeu. */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

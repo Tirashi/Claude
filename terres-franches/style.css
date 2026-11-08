@@ -1,0 +1,95 @@
+/* Terres franches : interface faite avec les pièces du Tiny Swords Free Pack (table en bois, papier, parchemin, boutons, rubans),
+   comme Bastion ; la carte est un canvas plein écran. */
+:root{
+  --ink:#3a2410; --clair:#fff4d6; --or:#ffd94a; --vert:#3f7a2a; --rouge:#a8322a;
+  --titre:"Press Start 2P", "Courier New", monospace; --texte:"Cinzel", Georgia, serif;
+}
+*{box-sizing:border-box}
+html, body{margin:0; height:100%; overflow:hidden; background:#2c4a24; color:var(--ink); font-family:var(--texte); -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:none}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+img, canvas{image-rendering:pixelated}
+#cv{position:fixed; inset:0; width:100%; height:100%; display:block}
+.ic{width:22px; height:22px; object-fit:contain; vertical-align:middle}
+
+/* les pièces du pack */
+.papier{border-style:solid; border-width:15px 17px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 15px 17px stretch}
+.table{border-style:solid; border-width:26px 26px 32px; border-image:url(img/ui-table.png) 85 84 103 84 fill / 26px 26px 32px stretch}
+.parchemin{border-style:solid; border-width:22px 28px 36px 32px; border-image:url(img/ui-parchemin.png) 68 84 111 100 fill / 22px 28px 36px 32px stretch}
+.ruban{border-style:solid; border-width:0 30px; border-image:url(img/ui-ruban-bleu.png) 0 97 0 98 fill / 0 30px stretch; min-height:32px; display:flex; align-items:center; justify-content:center;
+  color:var(--clair); text-shadow:2px 2px 0 #1a2a40; padding:3px 0 8px; font-family:var(--titre); font-size:10px; white-space:nowrap}
+.ruban.rouge{border-image-source:url(img/ui-ruban-rouge.png); text-shadow:2px 2px 0 #3a1010}
+.carre{border-style:solid; border-width:10px; border-image:url(img/ui-carre-bleu.png) 30 fill / 10px stretch; min-width:40px; height:40px; display:grid; place-items:center; color:var(--clair);
+  font-family:var(--titre); font-size:11px; text-shadow:1px 1px 0 #1a2a40; padding:0}
+.carre:active{border-image-source:url(img/ui-carre-bleu-appui.png)}
+.bouton{display:block; width:100%; text-align:center; text-decoration:none; font-family:var(--titre); font-size:10px; line-height:1.4; color:var(--clair); text-shadow:1px 1px 0 #1a2a40;
+  border-style:solid; border-width:11px 12px 13px; border-image:url(img/ui-bouton-bleu.png) 47 45 47 45 fill / 11px 12px 13px stretch; padding:2px 2px 0}
+.bouton:active{border-image:url(img/ui-bouton-bleu-appui.png) 36 50 49 50 fill / 11px 12px 13px stretch; transform:translateY(1px)}
+.bouton.or, .bouton.on{border-image-source:url(img/ui-bouton-rouge.png); text-shadow:1px 1px 0 #3a1010}
+.bouton.or:active{border-image:url(img/ui-bouton-rouge-appui.png) 36 50 49 50 fill / 11px 12px 13px stretch}
+.bouton[disabled]{filter:grayscale(.85) brightness(.85); cursor:default}
+.bouton.petit{font-size:8px; border-width:8px 9px 10px; width:auto; padding:1px 4px 0}
+
+/* le haut : ressources, population, statut, menu */
+#hud{position:fixed; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between;
+  padding:max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left))}
+#hud button, #hud .panneau, #hud .res{pointer-events:auto}
+.haut{display:flex; flex-direction:column; gap:3px; align-items:stretch}
+.ligne{display:flex; justify-content:space-between; align-items:center; gap:4px}
+.res{display:flex; flex-wrap:wrap; gap:2px; flex:1}
+.res span{display:flex; align-items:center; gap:1px; font-weight:700; font-size:12px; border-style:solid; border-width:6px 7px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 6px 7px stretch; padding:0 1px 0 0; line-height:1}
+.res span small{font-size:8px; color:#4a6a1a; margin-left:1px}
+.res span small.moins{color:var(--rouge)}
+.res .ic{width:18px; height:18px; margin:-3px 0}
+#statut{align-self:center}
+.bas{display:flex; flex-direction:column; gap:4px; align-items:stretch}
+.onglets{display:flex; gap:4px}
+.onglets .bouton{flex:1; padding-inline:0; font-size:9px}
+.zoom{display:flex; flex-direction:column; gap:4px; align-self:flex-end}
+
+/* les volets du bas (table en bois) */
+.panneau{max-height:52vh; overflow-y:auto; touch-action:pan-y; color:var(--clair); font-size:13px}
+.panneau[hidden]{display:none}
+.panneau h3{margin:0 0 4px; font-family:var(--titre); font-weight:400; font-size:9px; color:var(--or); text-shadow:1px 1px 0 #2a1608; display:flex; justify-content:space-between; gap:6px}
+.panneau p{margin:2px 0 6px; line-height:1.3}
+.rang{display:flex; gap:5px; align-items:center}
+.carte{display:flex; align-items:center; gap:6px; color:var(--ink); border-style:solid; border-width:7px 9px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 7px 9px stretch; margin-bottom:3px; min-height:46px}
+.carte.non{opacity:.55}
+.carte canvas{width:36px; height:36px; flex:none}
+.carte .nom{flex:1; display:flex; flex-direction:column; font-weight:700; font-size:13px; line-height:1.15}
+.carte .nom small{font-weight:600; font-size:11px; color:#6a4a2a}
+.pm{display:flex; align-items:center; gap:4px}
+.pm b{min-width:30px; text-align:center; font-family:var(--titre); font-size:9px}
+.pm .carre{min-width:34px; height:34px; border-width:9px}
+.cout{display:flex; flex-wrap:wrap; gap:4px; font-size:11px; font-weight:700}
+.cout span{display:inline-flex; align-items:center; gap:1px}
+.cout .ic{width:16px; height:16px}
+.cout .manque{color:var(--rouge)}
+.besoin{display:flex; gap:6px; align-items:center; font-size:12px}
+.besoin i{font-style:normal; font-family:var(--titre); font-size:9px; width:16px; text-align:center}
+.besoin.ok i{color:#9be36a} .besoin.non i{color:#ff8a7a}
+
+/* bulle d'un bâtiment, choix du terrain */
+#bulle{position:fixed; z-index:5; transform:translate(-50%, -100%); pointer-events:auto; min-width:150px; max-width:220px; font-size:12px; text-align:center}
+#bulle[hidden], #placement[hidden]{display:none}
+#bulle b{display:block; font-family:var(--titre); font-weight:400; font-size:9px; margin-bottom:4px}
+#bulle .rang{justify-content:center; margin-top:4px}
+#placement{position:fixed; left:0; right:0; bottom:0; z-index:6; padding:0 8px max(8px, env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:4px; pointer-events:none}
+#placement > *{pointer-events:auto}
+#placement p{margin:0; text-align:center; font-size:12px}
+
+/* messages, écrans */
+#banniere{position:fixed; left:50%; top:96px; transform:translateX(-50%); z-index:7; pointer-events:none; opacity:0; transition:opacity .4s; font-size:9px; max-width:94vw}
+#banniere.vu{opacity:1}
+#banniere.mal{border-image-source:url(img/ui-ruban-rouge.png); text-shadow:2px 2px 0 #3a1010}
+.flotte{position:fixed; z-index:4; pointer-events:none; font-family:var(--titre); font-size:10px; color:#fff; text-shadow:1px 1px 0 #000, -1px -1px 0 #000; display:flex; align-items:center; gap:2px; transition:transform 1s ease-out, opacity 1s; white-space:nowrap}
+.ecran{position:fixed; inset:0; z-index:10; display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; background:rgba(14,22,10,.7);
+  padding:max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)); touch-action:pan-y}
+.ecran[hidden]{display:none}
+.plaque{margin:auto 0; width:100%; max-width:380px; display:flex; flex-direction:column; gap:9px}
+.plaque h1{margin:-4px auto 2px; font-size:14px; width:max-content; max-width:100%}
+.plaque h2{margin:6px 0 0; font-family:var(--titre); font-weight:400; font-size:9px; color:#6a4a2a; border-bottom:2px solid rgba(106,74,42,.35); padding-bottom:4px}
+.plaque p{margin:0; font-size:14px; line-height:1.35}
+.plaque .sous{font-family:var(--titre); font-size:8px; text-align:center; color:#6a4a2a; line-height:1.5}
+.plaque .gains{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; font-weight:700}
+.aide p{font-size:13px; margin-bottom:6px}
+#chargement p{margin:auto; font-family:var(--titre); font-size:10px; color:var(--clair)}

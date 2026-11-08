@@ -55,11 +55,39 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
   // hors ligne : plafonné à 8 h
   const X = R.creer(); X.pop = 1; X.jobs.bucheron = 1; X.res.baies = 1e4;
   const h = R.horsLigne(X, 20 * 3600);
-  verif(h.plafonne && h.duree === 8 * 3600 && Math.abs(h.gains.bois - 8 * 3600 * .22) <= 1, "hors ligne : 8 h au plus, production comptée");
+  verif(h.plafonne && h.duree === 4 * 3600 && Math.abs(h.gains.bois - 4 * 3600 * .22 * .25) <= 1 && X.t === 20 * 3600, "hors ligne : production au quart, 4 h au plus, le temps passe quand même");
   // sauvegarde
   const Y = R.charger(R.sauver(X)); verif(Y && Y.res.bois === X.res.bois && Y.jobs.bucheron === 1, "sauvegarde relue à l'identique");
   const Z = R.charger(JSON.stringify({res: {bois: 3}, jobs: {}})); verif(Z && Z.res.pain === 0 && Z.bat.cabane === 0 && Z.statut === 0, "une vieille sauvegarde est complétée");
   verif(R.charger("n'importe quoi") === null, "une sauvegarde abîmée est refusée");
+}
+
+/* ---------- la carte : emplacements proposés, déplacement, routes ---------- */
+{
+  const C = require("../terres-franches/carte.js"), L = C.LOTS;
+  const compte = t => Object.values(L).filter(l => l.terrain === t).length;
+  verif(compte("terre") === 14 && compte("roche") === 2 && compte("rive") === 2 && C.FEU && C.TENTE, "carte : 14 terrains, 2 rochers, 2 rives, le feu et la tente");
+  verif(Object.values(L).every(l => l.terrain !== "terre" || (l.l === 3 && l.h === 3)), "carte : terrains de 3 × 3 cases");
+  const S = R.creer(); S.statut = 2; for (const r in S.res) S.res[r] = 1e5;
+  const d = id => Math.hypot(L[id].cx - C.FEU[0], L[id].cy - C.FEU[1]);
+  R.construire(S, "cabane"); const c1 = S.ordreLots[0];
+  verif(Object.values(L).filter(l => l.terrain === "terre").every(l => d(c1) <= d(l.id) + 1e-9), "la 1re cabane va au plus près du feu");
+  R.construire(S, "champ"); const ch = S.ordreLots[1];
+  verif(L[ch].tags.includes("fertile"), "le champ va sur la bonne terre");
+  R.construire(S, "moulin"); const mo = S.ordreLots[2];
+  verif(!L[mo].tags.includes("fertile") && Math.hypot(L[mo].cx - L[ch].cx, L[mo].cy - L[ch].cy) < 9, "le moulin se pose près du champ, sans manger la bonne terre");
+  R.construire(S, "bergerie"); verif(L[S.ordreLots[3]].tags.includes("pre"), "la bergerie va dans la clairière");
+  R.construire(S, "carriere"); verif(L[S.ordreLots[4]].terrain === "roche", "la carrière va sur un rocher");
+  verif(R.construire(S, "cabane", "X") === "CE TERRAIN NE CONVIENT PAS" && R.construire(S, "cabane", c1) === "CE TERRAIN EST PRIS", "on ne bâtit pas n'importe où");
+  const libre = C.libres(S, "terre")[0];
+  verif(R.deplacer(S, c1, libre) === null && S.lots[libre] === "cabane" && !S.lots[c1] && S.chantiers.some(c => c.lot === libre), "déplacer une cabane (même en chantier)");
+  // toutes les portes sont reliées à la place par une route, même la carte pleine
+  while (!R.construire(S, "cabane") || !R.construire(S, "maison")) ;
+  for (const t of ["terre", "roche", "rive"]) for (const id of C.libres(S, t)) S.lots[id] = t === "terre" ? "atelier" : t === "roche" ? "carriere" : "ponton", S.ordreLots.push(id);
+  const ro = C.routes(S);
+  verif(ro.traces.length === Object.keys(L).length, "routes : chaque bâtiment a sa rue (" + ro.traces.length + "/" + Object.keys(L).length + ")");
+  verif(ro.traces.every(tr => { const p = C.porte(S, tr.id); return tr.cases[0][0] === p[0] && tr.cases[0][1] === p[1]; }), "routes : elles partent des portes");
+  const nb = [...ro.cases].length; verif(nb < 150, "routes : pas de détours (" + nb + " cases)");
 }
 
 /* ---------- les parties du robot ---------- */

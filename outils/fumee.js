@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html', 'pokedex/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -140,6 +140,28 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Bastion : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-bastion.png` });
+    }
+    if (url === 'terres-franches/index.html') {
+      // Terres franches : toucher la forêt rapporte du bois ; accueillir un villageois, lui donner un métier ; CONSTRUIRE propose un terrain, BATIR ICI lance le chantier et la rue suit
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 100 && !(window.Terres && Terres.S); i++) await wait(100);
+        if (!window.Terres || !Terres.S) return 'pas de partie (images ?)';
+        const S = Terres.S, R = TerresRegles;
+        if (Terres.toucherCase(5, 3) !== 'bois' || S.res.bois < 1) return 'toucher la forêt ne rapporte rien';
+        S.res.baies = 500; S.res.bois = 500;
+        document.querySelector('[data-onglet=villageois]').click(); await wait(50);
+        document.querySelector('[data-act=recruter]').click(); if (S.pop !== 1) return 'personne ne vient';
+        document.querySelector('[data-m=bucheron][data-d="1"]').click(); if (S.jobs.bucheron !== 1) return 'pas de bûcheron';
+        document.querySelector('[data-onglet=construire]').click(); await wait(50);
+        document.querySelector('.carte[data-b=cabane]').click(); if (!Terres.PL || !Terres.PL.lot) return 'pas de terrain proposé';
+        document.getElementById('bPoser').click(); if (!S.chantiers.length || !Object.keys(S.lots).length) return 'le chantier ne démarre pas';
+        Terres.avance(30); if (S.bat.cabane !== 1 || R.logement(S) !== 4) return 'la cabane ne se termine pas';
+        if (!TerresCarte.routes(S).traces.length) return 'pas de rue';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Terres franches : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-terres.png` });
     }
     if (url === 'dragon-simulator/index.html') {
       // Dragon Simulator : titre, nid, ENVOLER !, un toucher = un coup d'ailes, puis le sol : bilan, pièces au nid, vol compté

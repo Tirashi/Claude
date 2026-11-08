@@ -37,6 +37,7 @@ const ORDRE = [
   "boutique/index.html",
   "bannieres/index.html",
   "lanterne/index.html",
+  "terres-franches/index.html",
   "bastion/index.html",
   "mot-d-or/index.html",
   "capitaine-du-port/index.html",
@@ -63,6 +64,7 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-08", "neuf", "terres-franches", "Terres franches, première ère : un pionnier, une tente et un feu au bord d'une rivière. Récolte, accueille des villageois, donne-leur un métier (bûcheron, pêcheur, fermier, meunier, boulanger…) et bâtis : le jeu propose le terrain le plus logique et trace les rues, tu peux tout déplacer. Le campement devient hameau puis village, et la colonie travaille encore (doucement) quand l'appli est fermée."],
   ["2026-11-07", "neuf", "pokedex", "Le premier atelier : un Pokédex avec les 1025 Pokémon en français. Pour chacun, son dessin, ses types, ses évolutions et ce qu'on sait de lui. Cherche par nom, numéro ou type, et l'onglet Types te dit qui gagne : choisis l'attaque et le Pokémon qui défend, il donne les dégâts."],
   ["2026-11-07", "acc", "", "Une nouvelle étagère sous les jeux : les ATELIERS, des outils pour apprendre et créer. On y trouve le Pokédex, Calculator et le Jeu de la vie."],
   ["2026-11-07", "neuf", "bastion", "Un mélange de jeu de stratégie en temps réel et de tower defense, avec les graphismes de Tiny Swords. Tes ouvriers récoltent bois, or et viande ; bâtis, recrute des escouades qui gagnent des grades, mets des archers en garnison dans les tours et défends le château contre dix vagues de monstres et leur troll. Cette première version est un laboratoire : vitesse, robot, simulateur et tous les réglages, pour trouver ensemble le bon équilibre."],
