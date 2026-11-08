@@ -54,6 +54,39 @@ h1{margin:0; font-family:var(--f-display); font-weight:400; font-size:clamp(17px
   border:3px solid var(--ink); box-shadow:0 0 0 3px #3b3566, 5px 5px 0 3px #000; background-color:#140f28}
 @media (min-width:700px){ .rack{--k:1; --row:200px; grid-template-columns:repeat(auto-fill, minmax(116px,1fr))} }
 .rack .c3{margin-bottom:60px}
+/* l'étagère des ateliers (outils : Pokédex, Calculator, Jeu de la vie), sous celle des jeux */
+.atelier-titre{margin:26px 0 10px; font-family:var(--f-display); font-weight:400; font-size:13px; letter-spacing:1px; color:var(--gold); text-shadow:2px 2px 0 #000; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
+.atelier-titre small{font-family:var(--f-body); font-size:19px; letter-spacing:0; color:var(--text-dim); text-shadow:none}
+.rack.atelier{background-color:#140f28; box-shadow:0 0 0 3px #3b3566, 5px 5px 0 3px #000}
+/* les ateliers : des objets posés sur l'étagère (Pokédex, calculatrice, boîte de Pétri), à la place des cartouches */
+.c3.objet{--w:calc(92px * var(--k)); --h:calc(108px * var(--k)); perspective:none}
+.c3.objet .obj{position:absolute; left:50%; bottom:0; width:92px; height:108px; display:flex; align-items:flex-end; justify-content:center; transform:translateX(-50%) scale(var(--k)); transform-origin:bottom center}
+.c3.objet .obj > span{transition:transform .2s; transform-origin:bottom center}
+.c3.objet:hover .obj > span{transform:translateY(-6px) rotate(-4deg)}
+.c3.objet.hop .obj > span{animation:hop .45s ease-out}
+@keyframes hop{40%{transform:translateY(-14px) rotate(-6deg)} 70%{transform:translateY(0) rotate(2deg)}}
+.c3.objet:focus-visible .obj, .c3.objet.sel .obj{outline:3px solid var(--gold); outline-offset:4px}
+.c3.objet canvas{image-rendering:pixelated; display:block}
+.dexo{display:block; width:70px; height:104px; background:#d8283c; border:3px solid #000; border-radius:6px 6px 6px 18px; position:relative; box-sizing:border-box; box-shadow:inset -5px -5px 0 #8e1424, inset 4px 4px 0 #ff6a7a}
+.dexo .lent{position:absolute; left:6px; top:6px; width:20px; height:20px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #c8f0ff, #2a8de0 50%, #0d4d93); border:3px solid #fff; box-shadow:0 0 0 2px #000}
+.dexo .pt{position:absolute; top:8px; width:7px; height:7px; border-radius:50%; border:2px solid #000}
+.dexo .p1{left:34px; background:#ff4b4b} .dexo .p2{left:45px; background:#ffd23f} .dexo .p3{left:56px; background:#4cd964}
+.dexo .ecr{position:absolute; left:8px; right:8px; top:37px; height:38px; background:#b8e0c0; border:3px solid #000; display:grid; place-items:center; box-shadow:inset 0 0 0 2px #f4f0ff}
+.dexo .ecr canvas{width:26px; height:26px}
+.dexo .bt{position:absolute; bottom:8px; width:12px; height:7px; border:2px solid #000; border-radius:3px; background:#333}
+.dexo .b1{left:9px} .dexo .b2{right:9px; background:#2a8de0}
+.calco{width:66px; height:98px; background:#3a3d43; border:3px solid #000; border-radius:6px; padding:7px; box-sizing:border-box; box-shadow:inset -4px -4px 0 #24262b, inset 3px 3px 0 #5a5e66; display:grid; grid-template-rows:24px 1fr; gap:6px}
+.calco .lcd{background:#c4d0a8; border:2px solid #000; font:14px/1 var(--f-body); color:#1d2418; text-align:right; padding:2px 3px}
+.calco .touches{display:grid; grid-template-columns:repeat(4, 1fr); gap:3px}
+.calco .touches i{background:#e9e5da; border:1px solid #000}
+.calco .touches i.o{background:#e8783a} .calco .touches i.g{background:#4caf6a; grid-column:span 2}
+.petri{display:block; width:90px; height:60px; position:relative}
+.petri .verre{position:absolute; inset:0; border-radius:50%; background:radial-gradient(ellipse at 50% 45%, rgba(200,240,255,.35), rgba(120,170,210,.25) 70%); border:3px solid #000; box-shadow:inset 0 -6px 0 rgba(255,255,255,.25), inset 0 4px 0 rgba(255,255,255,.5)}
+.petri .gel{position:absolute; left:10px; right:10px; top:10px; bottom:12px; border-radius:50%; background:#1b2c48; overflow:hidden; display:grid; place-items:center}
+.petri .gel canvas{width:34px; height:34px; animation:vit 1.6s steps(2) infinite}
+@keyframes vit{50%{filter:brightness(1.4)}}
+.petri .ombre{position:absolute; left:8px; right:8px; bottom:-8px; height:12px; border-radius:50%; background:rgba(0,0,0,.4)}
+
 /* le nom du jeu, sous la planche, lisible */
 .c3 .nm{position:absolute; top:calc(100% + 26px); left:50%; width:calc(var(--w) + 30px); transform:translateX(-50%); font-weight:400; font-size:16px; line-height:.95;
   text-align:center; color:var(--text); text-shadow:2px 2px 0 #000; overflow-wrap:anywhere; pointer-events:none}

@@ -1,0 +1,160 @@
+<title>Étagère des ateliers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Maquette : trois façons de ranger les ateliers (pas des jeux) sous l'étagère des cartouches de l'accueil. Mise en page : trois téléphones. */
+:root {
+  --night: #110d22; --night-2: #1e1840; --ink: #0d0a18; --text: #f2f0ff; --dim: #a9a6d8; --gold: #ffd23f;
+  --wood-hi: #b77a48; --wood: #7a4a24; --wood-d: #4e2c12;
+  --display: "Press Start 2P", "Courier New", monospace; --body: "VT323", "Lucida Console", monospace;
+  color-scheme: dark;
+}
+body { background: var(--night); background-image: radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size: 4px 4px; color: var(--text); font-family: var(--body); font-size: 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header.page { max-width: 1120px; margin: 0 auto 20px; display: grid; gap: 10px; }
+header.page h1 { margin: 0; font: 15px/1.5 var(--display); color: var(--gold); text-shadow: 2px 2px 0 #000; }
+header.page p { margin: 0; color: var(--dim); max-width: 75ch; line-height: 1.15; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1120px; margin: 0 auto; }
+figure { margin: 0; display: grid; gap: 10px; justify-items: center; }
+figcaption { text-align: center; max-width: 340px; display: grid; gap: 4px; }
+figcaption b { font: 10px/1.6 var(--display); color: var(--gold); }
+figcaption span { color: var(--dim); line-height: 1.1; }
+.tel { width: 340px; max-width: 100%; height: 680px; border-radius: 34px; padding: 10px; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,.5); box-sizing: border-box; }
+.ecran { height: 100%; border-radius: 26px; overflow: auto; background: var(--night); background-image: radial-gradient(var(--night-2) 1px, transparent 1.5px); background-size: 4px 4px; padding: 0 14px 20px; box-sizing: border-box; }
+canvas.ic { image-rendering: pixelated; display: block; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible { outline: 2px dashed var(--gold); outline-offset: 3px; }
+
+/* le bas de l'étagère des jeux (rappel, simplifié) */
+.jeux { margin-top: 14px; border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 5px 5px 0 3px #000; background: #140f28; padding: 14px 6px 0; display: flex; justify-content: space-around; align-items: flex-end; height: 120px; position: relative; }
+.jeux::after { content: ""; position: absolute; left: 0; right: 0; bottom: 34px; height: 13px; background: linear-gradient(var(--wood-hi) 0 3px, var(--wood) 3px 10px, var(--ink) 10px); }
+.mini { width: 54px; height: 66px; margin-bottom: 47px; border: 3px solid #000; display: grid; place-items: center; position: relative; z-index: 1; box-shadow: inset -4px -4px 0 rgba(0,0,0,.3); }
+.mini canvas { width: 32px; height: 32px; }
+.mini b { position: absolute; top: calc(100% + 20px); font: 15px var(--body); white-space: nowrap; text-shadow: 2px 2px 0 #000; }
+.titre { margin: 26px 0 10px; font: 13px var(--display); color: var(--gold); text-shadow: 2px 2px 0 #000; }
+.titre small { display: block; margin-top: 8px; font: 18px var(--body); color: var(--dim); text-shadow: none; }
+.tuiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+.tuiles div { border: 3px solid #fff; padding: 10px 6px; text-align: center; font: 9px/1.6 var(--display); background: #000; }
+.tuiles div small { display: block; font: 16px/1 var(--body); color: var(--dim); margin-top: 6px; }
+
+/* ---------- D : l'ordinateur rétro (les ateliers sont des applis) ---------- */
+.ordi { display: grid; justify-items: center; }
+.moniteur { width: 100%; background: linear-gradient(#e6dcc4, #c9bc9c); border: 3px solid #000; border-radius: 10px; padding: 12px 12px 8px; box-shadow: inset -4px -4px 0 #a89a78, inset 4px 4px 0 #f6efdc, 5px 5px 0 3px #000; box-sizing: border-box; }
+.crt { background: #2a64a8; border: 3px solid #000; border-radius: 8px; box-shadow: inset 0 0 0 3px #13325a, inset 0 0 26px rgba(0,0,0,.55); min-height: 200px; position: relative; overflow: hidden; }
+.crt::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.13) 2px 3px); pointer-events: none; }
+.crt .barre { background: #c9c9d6; border-bottom: 3px solid #000; font: 7px/1 var(--display); color: #111; padding: 5px 6px; display: flex; justify-content: space-between; }
+.crt .icones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 4px; padding: 16px 6px 18px; }
+.appli { display: grid; justify-items: center; gap: 6px; }
+.appli .case { padding: 4px; border: 2px solid transparent; }
+.appli canvas { width: 48px; height: 48px; }
+.appli b { font: 7px/1.4 var(--display); color: #fff; background: #13325a; padding: 3px 4px; text-align: center; }
+.appli:hover .case, .appli:focus-visible .case { border: 2px dotted #fff; background: rgba(255,255,255,.15); }
+.appli:hover b, .appli:focus-visible b { background: #ffd23f; color: #000; }
+.appli:active canvas { animation: ouvre .35s steps(3); }
+@keyframes ouvre { 50% { transform: scale(1.3); } }
+.moniteur .bas { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font: 7px var(--display); color: #6a5e44; }
+.moniteur .led { width: 8px; height: 8px; background: #5cff8a; border: 2px solid #000; box-shadow: 0 0 6px #5cff8a; }
+.pied { width: 90px; height: 14px; background: #b8aa88; border: 3px solid #000; border-top: 0; }
+.socle { width: 150px; height: 10px; background: #c9bc9c; border: 3px solid #000; }
+
+/* ---------- E : les disquettes (les jeux sont des cartouches, les outils des disquettes) ---------- */
+.boite { position: relative; padding: 0 10px; }
+.disks { display: flex; justify-content: center; gap: 10px; align-items: flex-end; height: 132px; position: relative; z-index: 1; }
+.disk { --c: #c22; width: 86px; height: 92px; background: var(--c); border: 3px solid #000; border-radius: 3px 10px 3px 3px; position: relative; box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 4px 4px 0 rgba(255,255,255,.18); transition: transform .2s; transform: translateY(30px); }
+.disk:hover, .disk:focus-visible { transform: translateY(-4px); }
+.disk .volet { position: absolute; top: -3px; left: 22px; width: 38px; height: 24px; background: linear-gradient(90deg, #b8bcc8, #e8ecf4 40%, #9aa0ae); border: 3px solid #000; border-top: 0; }
+.disk .volet::after { content: ""; position: absolute; left: 22px; top: 3px; width: 7px; height: 13px; background: #1a1a24; }
+.disk .etiq { position: absolute; left: 8px; right: 8px; bottom: 6px; height: 50px; background: #f6f2e4; border: 2px solid #000; display: flex; align-items: center; gap: 4px; padding: 0 4px; background-image: repeating-linear-gradient(transparent 0 9px, #c8d4f0 9px 10px); }
+.disk .etiq canvas { width: 30px; height: 30px; flex: none; }
+.disk .etiq { justify-content: center; top: 28px; bottom: auto; height: 40px; }
+.disk .etiq b { font: 6px/1.5 var(--display); color: #222; }
+.bac { position: relative; z-index: 2; height: 64px; background: linear-gradient(rgba(140,180,230,.55), rgba(90,120,180,.65)); border: 3px solid #000; border-radius: 0 0 8px 8px; box-shadow: inset 0 4px 0 rgba(255,255,255,.35), 5px 5px 0 3px #000; display: grid; place-items: center; }
+.bac b { font: 8px var(--display); color: #fff; text-shadow: 2px 2px 0 #13325a; }
+.bac small { display: block; font: 16px var(--body); color: #e6eeff; text-align: center; }
+.disknoms { display: flex; justify-content: center; gap: 10px; margin-top: 12px; font: 15px/1 var(--body); text-shadow: 2px 2px 0 #000; }
+.disknoms span { width: 86px; text-align: center; }
+
+/* ---------- F : les objets (chaque atelier est l'objet qu'il imite) ---------- */
+.objets { border: 3px solid var(--ink); box-shadow: 0 0 0 3px #3b3566, 5px 5px 0 3px #000; background: #140f28; padding: 12px 8px 0; }
+.objets .rang { display: flex; justify-content: space-around; align-items: flex-end; height: 140px; }
+.objets .planche { height: 13px; margin: 0 -8px; background: linear-gradient(var(--wood-hi) 0 3px, var(--wood) 3px 10px, var(--ink) 10px); }
+.objets .noms { display: flex; justify-content: space-around; padding: 10px 0 12px; font: 15px var(--body); text-shadow: 2px 2px 0 #000; }
+.objets .noms span { width: 33%; text-align: center; }
+.objet { transition: transform .2s; transform-origin: bottom center; }
+.objet:hover, .objet:focus-visible { transform: translateY(-6px) rotate(-4deg); }
+.dexo { width: 70px; height: 104px; background: #d8283c; border: 3px solid #000; border-radius: 6px 6px 6px 18px; position: relative; box-shadow: inset -5px -5px 0 #8e1424, inset 4px 4px 0 #ff6a7a; }
+.dexo .lent { position: absolute; left: 7px; top: 7px; width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c8f0ff, #2a8de0 50%, #0d4d93); border: 3px solid #fff; box-shadow: 0 0 0 2px #000; }
+.dexo .pt { position: absolute; top: 9px; width: 7px; height: 7px; border-radius: 50%; border: 2px solid #000; }
+.dexo .ecr { position: absolute; left: 9px; right: 9px; top: 38px; height: 38px; background: #b8e0c0; border: 3px solid #000; display: grid; place-items: center; box-shadow: inset 0 0 0 2px #f4f0ff; }
+.dexo .ecr canvas { width: 26px; height: 26px; }
+.dexo .bt { position: absolute; bottom: 9px; width: 12px; height: 7px; border: 2px solid #000; border-radius: 3px; background: #333; }
+.calco { width: 66px; height: 98px; background: #3a3d43; border: 3px solid #000; border-radius: 6px; padding: 7px; box-sizing: border-box; box-shadow: inset -4px -4px 0 #24262b, inset 3px 3px 0 #5a5e66; display: grid; grid-template-rows: 24px 1fr; gap: 6px; }
+.calco .lcd { background: #c4d0a8; border: 2px solid #000; font: 11px/1 var(--body); color: #1d2418; text-align: right; padding: 4px 3px; }
+.calco .touches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.calco .touches i { background: #e9e5da; border: 1px solid #000; }
+.calco .touches i.o { background: #e8783a; } .calco .touches i.g { background: #4caf6a; grid-column: span 2; }
+.petri { width: 90px; height: 60px; position: relative; }
+.petri .verre { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(ellipse at 50% 45%, rgba(200,240,255,.35), rgba(120,170,210,.25) 70%); border: 3px solid #000; box-shadow: inset 0 -6px 0 rgba(255,255,255,.25), inset 0 4px 0 rgba(255,255,255,.5); }
+.petri .gel { position: absolute; left: 10px; right: 10px; top: 10px; bottom: 12px; border-radius: 50%; background: #1b2c48; overflow: hidden; display: grid; place-items: center; }
+.petri .gel canvas { width: 34px; height: 34px; animation: vit 1.6s steps(2) infinite; }
+@keyframes vit { 50% { filter: brightness(1.4); } }
+.petri .pied2 { position: absolute; left: 8px; right: 8px; bottom: -8px; height: 12px; border-radius: 50%; background: rgba(0,0,0,.4); z-index: -1; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="page">
+  <h1>ETAGERE DES ATELIERS · MAQUETTE 2</h1>
+  <p>Trois autres pistes, plus éloignées de l'étagère. La maquette 1 (livres, tiroirs, panneau à outils) reste dans l'historique. Touche ou survole un atelier pour voir son animation.</p>
+</header>
+
+<div class="phones">
+  <figure><div class="tel"><div class="ecran" id="D"></div></div>
+    <figcaption><b>D · L'ORDINATEUR RETRO</b><span>Les ateliers sont des applis : leurs icônes sont sur le bureau d'un vieil ordinateur à écran bombé, comme dans les années 90.</span></figcaption></figure>
+  <figure><div class="tel"><div class="ecran" id="E"></div></div>
+    <figcaption><b>E · LES DISQUETTES</b><span>Les jeux sont des cartouches, les outils des disquettes : rangées dans un bac en plastique, elles sortent quand on les touche.</span></figcaption></figure>
+  <figure><div class="tel"><div class="ecran" id="F"></div></div>
+    <figcaption><b>F · LES OBJETS</b><span>Chaque atelier est l'objet qu'il imite, posé sur l'étagère : un Pokédex, une calculatrice, une boîte de Pétri où vivent les cellules.</span></figcaption></figure>
+</div>
+
+<script>
+// Icônes 16 × 16 copiées de icones.js (dex, calc ; glider redessiné de la même façon)
+const ICONES = {
+  dex: { pal: { o: "#1a0f2e", R: "#e8364a", r: "#a81e30", h: "#ff8a96", W: "#f4f0ff", w: "#b8b0d0" }, map: [
+    "................", "....oooooooo....", "...oohRRrrroo...", "..oohhRRRRRroo..", ".oohhhRRRRRRroo.", ".ohhhRRooRRRRro.", ".oRRRRoWWoRRRro.", ".oooooWWWWooooo.",
+    ".oooooWWWWooooo.", ".owWWWoWWoWWWwo.", ".owWWWWooWWWWwo.", ".oowWWWWWWWWwoo.", "..oowWWWWWWwoo..", "...oowwwwwwoo...", "....oooooooo....", "................"] },
+  calc: { pal: { k: "#1a1420", b: "#3a3d43", l: "#c4d0a8", d: "#1d2418", w: "#e9e5da", o: "#e8783a", g: "#4caf6a" }, map: [
+    "..kkkkkkkkkkkk..", ".kbbbbbbbbbbbbk.", ".kbllllllllllbk.", ".kblllldlddddbk.", ".kbllldldldllbk.", ".kbllllllllllbk.", ".kbbbbbbbbbbbbk.", ".kbwwbwwbwwoobk.",
+    ".kbwwbwwbwwoobk.", ".kbbbbbbbbbbbbk.", ".kbwwbwwbwwoobk.", ".kbwwbwwbwwoobk.", ".kbbbbbbbbbbbbk.", ".kbwwbwwbggggbk.", ".kbbbbbbbbbbbbk.", "..kkkkkkkkkkkk.."] },
+  glider: { draw(x) {
+    x.fillStyle = "#0b0f24"; x.fillRect(0, 0, 16, 16);
+    x.fillStyle = "#18204a"; for (let i = 0; i <= 16; i += 5) { x.fillRect(i, 0, 1, 16); x.fillRect(0, i, 16, 1); }
+    [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]].forEach(([a, b]) => { const X = a * 5 + 1, Y = b * 5 + 1;
+      x.fillStyle = "#1f8a4a"; x.fillRect(X, Y, 4, 4); x.fillStyle = "#5cff8a"; x.fillRect(X, Y, 3, 3); x.fillStyle = "#d4ffe0"; x.fillRect(X, Y, 3, 1); x.fillRect(X, Y, 1, 3); });
+  } },
+  tetris: { draw(x) { const c = (a, b, f, h, l) => { x.fillStyle = l; x.fillRect(a * 4, b * 4, 4, 4); x.fillStyle = f; x.fillRect(a * 4, b * 4, 3, 3); x.fillStyle = h; x.fillRect(a * 4, b * 4, 3, 1); };
+    [[0, 0], [1, 0], [2, 0], [1, 1]].forEach(([a, b]) => c(a, b, "#a855f7", "#e2c4ff", "#4a1a80")); [[3, 1], [3, 2], [3, 3], [2, 3]].forEach(([a, b]) => c(a, b, "#3b82f6", "#bcd6ff", "#173a80")); [[0, 2], [1, 2], [1, 3], [0, 3]].forEach(([a, b]) => c(a, b, "#facc15", "#fff2a8", "#8a6a00")); } },
+};
+function icone(nom) {
+  const c = document.createElement("canvas"); c.width = c.height = 16; c.className = "ic";
+  const x = c.getContext("2d"), i = ICONES[nom];
+  if (i.draw) i.draw(x); else i.map.forEach((l, y) => [...l].forEach((ch, k) => { if (i.pal[ch]) { x.fillStyle = i.pal[ch]; x.fillRect(k, y, 1, 1); } }));
+  return c;
+}
+const ATELIERS = [
+  { ic: "dex", nom: "Pokédex", court: "POKEDEX", c: "#c8283a", h: "136px", phrase: "Les 1025 Pokémon et leurs types" },
+  { ic: "calc", nom: "Calculator", court: "CALCULATOR", c: "#2f6b4a", h: "118px", phrase: "Le calcul mental en s'amusant" },
+  { ic: "glider", nom: "Jeu de la vie", court: "JEU DE LA VIE", c: "#2a3c8a", h: "128px", phrase: "Des cellules qui naissent et meurent" },
+];
+const haut = () => `<div class="jeux">${[["tetris", "#7a4ac8", "TETRIS"], ["calc", "#3a7a3a", "SNAKE"], ["glider", "#2a8ab0", "ASTEROIDS"]].map(([i, c, n]) => `<div class="mini" style="background:${c}" data-ic="${i}"><b>${n}</b></div>`).join("")}</div>
+  <div class="titre">ATELIERS<small>Des outils pour apprendre et créer</small></div>`;
+const bas = `<div class="tuiles"><div>FAMILLE<small>Rejoindre le classement</small></div><div>SAUVEGARDES<small>Les emporter ailleurs</small></div></div>`;
+
+document.getElementById("D").innerHTML = haut() + `<div class="ordi"><div class="moniteur"><div class="crt"><div class="barre"><span>LUDO-OS</span><span>ATELIERS</span></div><div class="icones">${ATELIERS.map(a => `<button class="appli"><span class="case" data-ic="${a.ic}"></span><b>${a.court.replace(" DE LA ", "<br>DE LA ")}</b></button>`).join("")}</div></div><div class="bas"><span>LUDO 16</span><i class="led"></i></div></div><div class="pied"></div><div class="socle"></div></div>` + bas;
+document.getElementById("E").innerHTML = haut() + `<div class="boite"><div class="disks">${ATELIERS.map(a => `<button class="disk" style="--c:${a.c}"><span class="volet"></span><span class="etiq" data-ic="${a.ic}"></span></button>`).join("")}</div><div class="bac"><div><b>OUTILS</b><small>touche une disquette</small></div></div><div class="disknoms">${ATELIERS.map(a => `<span>${a.court}</span>`).join("")}</div></div>` + bas;
+document.getElementById("F").innerHTML = haut() + `<div class="objets"><div class="rang">
+  <button class="objet" aria-label="Pokédex"><span class="dexo" style="display:block"><i class="lent"></i><i class="pt" style="left:34px;background:#ff4b4b"></i><i class="pt" style="left:45px;background:#ffd23f"></i><i class="pt" style="left:56px;background:#4cd964"></i><span class="ecr" data-ic="dex"></span><i class="bt" style="left:10px"></i><i class="bt" style="right:10px;background:#2a8de0"></i></span></button>
+  <button class="objet" aria-label="Calculator"><span class="calco"><span class="lcd">7+5=12</span><span class="touches">${"<i></i><i></i><i></i><i class='o'></i>".repeat(3)}<i></i><i></i><i class="g"></i></span></span></button>
+  <button class="objet" aria-label="Jeu de la vie"><span class="petri" style="display:block"><i class="pied2"></i><span class="verre"></span><span class="gel" data-ic="glider"></span></span></button>
+  </div><div class="planche"></div><div class="noms"><span>POKEDEX</span><span>CALCULATOR</span><span>JEU DE LA VIE</span></div></div>` + bas;
+document.querySelectorAll("[data-ic]").forEach(e => e.prepend(icone(e.dataset.ic)));
+</script>

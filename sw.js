@@ -13,6 +13,7 @@ const VERSION = "ludotheque-v96";
 const NET_WAIT = 2500;
 let slowUntil = 0;   // réseau jugé lent : pendant 10 s, les copies en cache sont servies sans attendre
 const FONTS = "ludotheque-fonts";
+const POKE = "ludotheque-pokedex";   // données et images du Pokédex (PokéAPI), gardées d'une version à l'autre
 const FILES = [
   "./bastion/index.html", "./bastion/style.css", "./bastion/regles.js", "./bastion/jeu.js", "./polices/bastion.css",
   "./bastion/img/arbre1.png", "./bastion/img/arbre2.png", "./bastion/img/arbre3.png", "./bastion/img/arbre4.png", "./bastion/img/arc-coup.png", "./bastion/img/arc-marche.png", "./bastion/img/arc-repos.png", "./bastion/img/archerie.png", "./bastion/img/atelier.png", "./bastion/img/av-arc.png", "./bastion/img/av-cata.png", "./bastion/img/av-cav.png", "./bastion/img/av-epee.png", "./bastion/img/av-guer.png", "./bastion/img/av-lance.png", "./bastion/img/av-moine.png", "./bastion/img/buisson.png", "./bastion/img/caserne.png", "./bastion/img/cata-coup.png", "./bastion/img/cata-marche.png", "./bastion/img/cata-repos.png", "./bastion/img/cav-coup.png", "./bastion/img/cav-marche.png", "./bastion/img/cav-repos.png", "./bastion/img/chantier.png", "./bastion/img/chateau.png", "./bastion/img/epee-coup.png", "./bastion/img/epee-marche.png", "./bastion/img/epee-repos.png", "./bastion/img/explosion.png", "./bastion/img/feu.png", "./bastion/img/filon3.png", "./bastion/img/filon4.png", "./bastion/img/filon5.png", "./bastion/img/fleche.png", "./bastion/img/gnoll-coup.png", "./bastion/img/gnoll-marche.png", "./bastion/img/gnoll-repos.png", "./bastion/img/gob-coup.png", "./bastion/img/gob-marche.png", "./bastion/img/gob-repos.png", "./bastion/img/guer-coup.png", "./bastion/img/guer-marche.png", "./bastion/img/guer-repos.png", "./bastion/img/ic-bois.png", "./bastion/img/ic-bouclier.png", "./bastion/img/ic-croix.png", "./bastion/img/ic-epee.png", "./bastion/img/ic-fleche-verte.png", "./bastion/img/ic-info.png", "./bastion/img/ic-marteau.png", "./bastion/img/ic-musique.png", "./bastion/img/ic-or.png", "./bastion/img/ic-reglages.png", "./bastion/img/ic-retour.png", "./bastion/img/ic-viande.png", "./bastion/img/lance-coup.png", "./bastion/img/lance-marche.png", "./bastion/img/lance-repos.png", "./bastion/img/lanceg-coup.png", "./bastion/img/lanceg-marche.png", "./bastion/img/lanceg-repos.png", "./bastion/img/maison1.png", "./bastion/img/maison2.png", "./bastion/img/moine-coup.png", "./bastion/img/moine-marche.png", "./bastion/img/moine-repos.png", "./bastion/img/monastere.png", "./bastion/img/mouton-broute.png", "./bastion/img/mouton-marche.png", "./bastion/img/os.png", "./bastion/img/ouvrier-bois.png", "./bastion/img/ouvrier-couteau-coupe.png", "./bastion/img/ouvrier-couteau.png", "./bastion/img/ouvrier-hache-coupe.png", "./bastion/img/ouvrier-hache.png", "./bastion/img/ouvrier-marteau-tape.png", "./bastion/img/ouvrier-marteau.png", "./bastion/img/ouvrier-or.png", "./bastion/img/ouvrier-pioche-tape.png", "./bastion/img/ouvrier-pioche.png", "./bastion/img/ouvrier-repos.png", "./bastion/img/ouvrier-viande.png", "./bastion/img/pierre.png", "./bastion/img/poussiere.png", "./bastion/img/rocher.png", "./bastion/img/ruine.png", "./bastion/img/sable.png", "./bastion/img/soin.png", "./bastion/img/souche1.png", "./bastion/img/souche2.png", "./bastion/img/tm-village.png", "./bastion/img/tm.png", "./bastion/img/tour.png", "./bastion/img/tourbois-chantier.png", "./bastion/img/tourbois-ruine.png", "./bastion/img/tourbois.png", "./bastion/img/troll-coup.png", "./bastion/img/troll-marche.png", "./bastion/img/troll-repos.png", "./bastion/img/ui-ardoise.png", "./bastion/img/ui-barre-plein.png", "./bastion/img/ui-barre.png", "./bastion/img/ui-bouton-bleu-appui.png", "./bastion/img/ui-bouton-bleu.png", "./bastion/img/ui-bouton-rouge-appui.png", "./bastion/img/ui-bouton-rouge.png", "./bastion/img/ui-carre-bleu-appui.png", "./bastion/img/ui-carre-bleu.png", "./bastion/img/ui-carre-rouge.png", "./bastion/img/ui-papier.png", "./bastion/img/ui-parchemin.png", "./bastion/img/ui-rond-bleu.png", "./bastion/img/ui-ruban-bleu.png", "./bastion/img/ui-ruban-jaune.png", "./bastion/img/ui-ruban-rouge.png", "./bastion/img/ui-table.png",
@@ -25,6 +26,7 @@ const FILES = [
   "./polices/nebula.css", "./polices/michroma.woff2", "./polices/rajdhani-500.woff2", "./polices/rajdhani-600.woff2", "./polices/rajdhani-700.woff2", "./polices/share-tech-mono.woff2",
   "./lignee/index.html", "./classements/index.html", "./tetris/index.html", "./snake/index.html", "./asteroids/index.html", "./solitaire/index.html",
   "./jeu-de-la-vie/index.html", "./jeu-de-la-vie/style.css", "./jeu-de-la-vie/app.js",
+  "./pokedex/index.html", "./pokedex/style.css", "./pokedex/donnees.js", "./pokedex/app.js", "./pokedex/fiche.js",
   "./empilage/index.html", "./lib/three.min.js", "./polices/empilage.css",
   "./odyssee/index.html", "./odyssee/regles.js", "./odyssee/sons.js",
   "./yams/index.html", "./lib/cannon.min.js",
@@ -42,7 +44,7 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== FONTS).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== FONTS && k !== POKE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -57,6 +59,15 @@ self.addEventListener("fetch", event => {
     event.respondWith(caches.open(FONTS).then(async cache => {
       const hit = await cache.match(req);
       const net = fetch(req).then(res => { if (res && (res.ok || res.type === "opaque")) cache.put(req, res.clone()); return res; }).catch(() => hit);
+      return hit || net;
+    }));
+    return;
+  }
+  // Pokédex : données et images de PokéAPI (raw.githubusercontent.com/PokeAPI/…) : le cache d'abord, rafraîchi en arrière-plan
+  if (url.hostname === "raw.githubusercontent.com" && url.pathname.startsWith("/PokeAPI/")) {
+    event.respondWith(caches.open(POKE).then(async cache => {
+      const hit = await cache.match(req);
+      const net = fetch(req).then(res => { if (res && res.ok) cache.put(req, res.clone()); return res; }).catch(() => hit || Response.error());
       return hit || net;
     }));
     return;

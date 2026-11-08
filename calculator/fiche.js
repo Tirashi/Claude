@@ -2,7 +2,7 @@
 Ludo.fiche({
   k: "calculator/index.html",
   carte: {n: "CALCULATOR", s: "CALCULATOR", ic: "calc", fam: "32", lb: "linear-gradient(#3a3d43, #1c1d21)", lt: "#c4d0a8", sh: "#e8783a", rank: "calculator",
-    d: "Le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour. Trois styles : arcade, cahier ou calculatrice.", tags: ["5 NIVEAUX"]},
+    d: "Le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour. Trois styles : arcade, cahier ou calculatrice.", tags: ["5 NIVEAUX"], atelier: true, objet: "calc"},
   meta: {added: "2026-10-16", genres: ["CALCUL", "DU JOUR"]},
   duJour: () => rk("calculator.dailyTry", 0) === dayNum(),
   records: () => { const b = rk("calculator.best", {}) || {}, out = [], nm = {add: "+", sub: "−", mul: "×", div: "÷", mix: "mélange"};

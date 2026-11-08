@@ -1,0 +1,365 @@
+<title>Pokédex de poche</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+/* Mise en page : trois téléphones (empilés sur un téléphone) = la même appli, réglée de trois façons (thème et images). */
+:root {
+  --bg: #e9e6f2; --fg: #221d33; --muted: #625c78;
+  --rond: "Fredoka", "Trebuchet MS", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0d0b14; --fg: #ece8f6; --muted: #9c95b4; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #0d0b14; --fg: #ece8f6; --muted: #9c95b4; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--rond); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header.page { max-width: 1120px; margin: 0 auto 18px; display: grid; gap: 8px; }
+header.page h1 { margin: 0; font-size: 1.5rem; font-weight: 700; text-wrap: balance; }
+header.page p { margin: 0; color: var(--muted); max-width: 75ch; line-height: 1.5; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1120px; margin: 0 auto; }
+figure.dir { margin: 0; display: grid; gap: 10px; justify-items: center; }
+figure.dir figcaption { text-align: center; display: grid; gap: 3px; max-width: 340px; }
+figure.dir figcaption b { font-size: 1.05rem; }
+figure.dir figcaption span { color: var(--muted); font-size: .9rem; line-height: 1.4; }
+.tel { width: 340px; max-width: 100%; height: 700px; border-radius: 34px; padding: 10px; background: #05040a; box-shadow: 0 10px 30px rgba(0,0,0,.25); box-sizing: border-box; }
+.ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; }
+.note { max-width: 1120px; margin: 26px auto 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+.legende { max-width: 1120px; margin: 22px auto 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+/* ---------- L'appli : couleurs selon le thème choisi dans l'appli ---------- */
+.app { --fond: #f4f1fb; --carte: #ffffff; --carte2: #f0ecf8; --texte: #2a2440; --doux: #8d86a8; --ombre: 0 2px 10px rgba(70,50,140,.10); --accent: #ff6b4a;
+  height: 100%; display: flex; flex-direction: column; background: var(--fond); color: var(--texte); font-family: var(--rond); }
+.app.sombre { --fond: #15121f; --carte: #211c30; --carte2: #2b2540; --texte: #f1edfb; --doux: #9a92b8; --ombre: 0 2px 12px rgba(0,0,0,.35); --accent: #ff7d5e; }
+.app button { cursor: pointer; font: inherit; color: inherit; border: 0; }
+.app button:focus-visible, .app input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.app img.pixel { image-rendering: pixelated; }
+.vue { flex: 1; min-height: 0; overflow: auto; }
+.ico { width: 1em; height: 1em; flex: none; display: inline-block; vertical-align: -.14em; }
+
+.tete { padding: 18px 16px 10px; display: flex; align-items: center; gap: 8px; }
+.tete h2 { margin: 0; font-size: 27px; font-weight: 700; flex: 1; }
+.tete h2 small { display: block; font-size: 13px; font-weight: 500; color: var(--doux); }
+.reglage { background: var(--carte); box-shadow: var(--ombre); border-radius: 99px; height: 36px; padding: 0 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.reglage.rond { width: 36px; padding: 0; justify-content: center; font-size: 17px; }
+
+.recherche { margin: 0 16px; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: var(--carte); border-radius: 18px; box-shadow: var(--ombre); }
+.recherche svg { width: 18px; height: 18px; color: var(--doux); }
+.recherche input { flex: 1; min-width: 0; border: 0; background: none; padding: 13px 0; font: inherit; font-size: 15px; color: inherit; }
+.recherche input::placeholder { color: var(--doux); }
+.recherche input:focus { outline: none; }
+.filtres { display: flex; gap: 6px; overflow-x: auto; padding: 12px 16px 4px; scrollbar-width: none; }
+.filtres button { flex: none; display: flex; align-items: center; gap: 5px; padding: 6px 11px 6px 6px; border-radius: 99px; background: var(--carte); box-shadow: var(--ombre); font-size: 13px; font-weight: 600; }
+.filtres button .bulle { width: 22px; height: 22px; font-size: 13px; }
+.filtres button.on { background: var(--c); color: #fff; }
+.gen { margin: 16px 16px 8px; font-size: 12px; font-weight: 600; color: var(--doux); text-transform: uppercase; letter-spacing: .07em; display: flex; gap: 8px; align-items: center; }
+.gen::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: var(--carte2); }
+.liste { display: grid; gap: 12px; padding: 0 16px 6px; }
+.ligne { position: relative; display: flex; align-items: flex-start; width: 100%; min-height: 124px; text-align: left; border-radius: 28px; background: var(--fond-type); color: #fff; padding: 16px 18px; overflow: hidden; box-shadow: var(--ombre); transition: transform .18s; }
+.ligne:active { transform: scale(.97); }
+.ligne .nom { display: grid; gap: 2px; min-width: 0; position: relative; z-index: 1; max-width: 58%; }
+.ligne .nom b { font-size: 23px; font-weight: 700; line-height: 1.1; text-shadow: 0 2px 0 rgba(0,0,0,.12); }
+.ligne .nom small { font-weight: 600; font-size: 13px; opacity: .8; }
+.ligne .types { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.ligne .types .puce { background: rgba(255,255,255,.24); box-shadow: none; font-size: 12px; }
+.ligne img { position: absolute; right: 4px; bottom: -6px; width: 128px; height: 128px; object-fit: contain; filter: drop-shadow(0 6px 6px rgba(0,0,0,.25)); transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+.ligne:hover img, .ligne:focus-visible img { transform: translateY(-6px) rotate(-4deg) scale(1.05); }
+
+.bulle .ico { width: 64%; height: 64%; }
+.bulle { width: 30px; height: 30px; border-radius: 50%; background: var(--c); color: #fff; display: grid; place-items: center; font-size: 17px; box-shadow: inset 0 -2px 0 rgba(0,0,0,.18); }
+.puce { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 5px; border-radius: 99px; background: var(--c); color: #fff; font-size: 13px; font-weight: 600; box-shadow: inset 0 -2px 0 rgba(0,0,0,.15); }
+.puce .ico { width: 18px; height: 18px; padding: 2px; border-radius: 50%; background: rgba(255,255,255,.25); box-sizing: border-box; }
+.puce em { font-style: normal; background: rgba(0,0,0,.22); border-radius: 99px; padding: 0 6px; margin-left: 2px; font-size: 12px; }
+.vide { text-align: center; padding: 34px 20px; color: var(--doux); }
+
+.onglets { display: grid; grid-template-columns: 1fr 1fr; flex: none; background: var(--carte); box-shadow: 0 -4px 14px rgba(0,0,0,.08); padding: 6px 10px 10px; gap: 8px; }
+.onglets button { background: none; padding: 8px 0; border-radius: 14px; font-weight: 600; color: var(--doux); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.onglets button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.onglets svg { width: 20px; height: 20px; }
+
+/* Fiche */
+.hero { position: relative; padding: 14px 16px 0; background: var(--fond-type); border-radius: 0 0 34px 34px; color: #fff; overflow: hidden; }
+.hero .haut { display: flex; justify-content: space-between; align-items: center; position: relative; }
+.hero .retour { background: rgba(255,255,255,.25); border-radius: 99px; padding: 6px 14px 6px 10px; font-weight: 600; color: #fff; }
+.hero .num { font-weight: 700; font-size: 18px; opacity: .75; }
+.hero img { display: block; margin: 0 auto; width: 220px; height: 220px; object-fit: contain; position: relative; filter: drop-shadow(0 8px 10px rgba(0,0,0,.25)); }
+.hero img.pixel { width: 220px; height: 220px; margin-top: -10px; margin-bottom: -10px; }
+.titre-fiche { padding: 14px 16px 4px; display: grid; gap: 8px; }
+.titre-fiche h3 { margin: 0; font-size: 30px; font-weight: 700; line-height: 1; }
+.fiche { display: grid; gap: 12px; padding: 8px 16px 18px; }
+.bloc { background: var(--carte); border-radius: 22px; box-shadow: var(--ombre); padding: 12px 14px; line-height: 1.5; font-size: 15px; }
+.bloc h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--doux); display: flex; align-items: center; gap: 6px; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.stades { display: inline-flex; gap: 4px; margin-left: auto; }
+.stades i { width: 9px; height: 9px; border-radius: 50%; background: var(--carte2); }
+.stades i.on { background: var(--c); }
+.chaine { display: flex; align-items: center; justify-content: space-between; }
+.chaine button { background: none; padding: 0; display: grid; justify-items: center; gap: 3px; font-size: 12px; font-weight: 600; }
+.chaine button[disabled] { cursor: default; }
+.chaine .rond { width: 66px; height: 66px; border-radius: 50%; background: var(--carte2); display: grid; place-items: center; }
+.chaine .ici .rond { background: color-mix(in srgb, var(--c) 35%, var(--carte2)); box-shadow: 0 0 0 3px var(--c); }
+.chaine img { width: 56px; height: 56px; object-fit: contain; }
+.chaine img.pixel { width: 70px; height: 70px; }
+.chaine .fl { text-align: center; font-size: 11px; color: var(--doux); display: grid; justify-items: center; gap: 2px; max-width: 64px; }
+.chaine .fl svg { width: 16px; height: 16px; }
+.mauvais h4 { color: #e2574c; } .bon h4 { color: #3fa765; }
+
+/* Types */
+.versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; text-align: center; }
+.versus .cote { display: grid; justify-items: center; gap: 6px; font-size: 12px; color: var(--doux); font-weight: 600; }
+.versus .cote .bulles { display: flex; gap: 4px; }
+.versus .bulle { width: 52px; height: 52px; font-size: 30px; }
+.versus .fleche { font-size: 26px; color: var(--doux); }
+.resultat { text-align: center; padding: 10px 0 2px; }
+.resultat .mult { font-size: 52px; font-weight: 700; line-height: 1; color: var(--m); }
+.resultat .phr { display: inline-block; margin-top: 6px; padding: 4px 12px; border-radius: 99px; background: color-mix(in srgb, var(--m) 18%, transparent); color: var(--m); font-weight: 600; font-size: 14px; }
+.jauge { display: flex; gap: 4px; margin-top: 12px; }
+.jauge i { flex: 1; height: 8px; border-radius: 4px; background: var(--carte2); }
+.jauge i.on { background: var(--m); }
+.choix { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px 4px; }
+.choix button { background: none; padding: 0; display: grid; justify-items: center; gap: 3px; font-size: 10px; font-weight: 600; color: var(--doux); }
+.choix .bulle { width: 38px; height: 38px; font-size: 21px; opacity: .35; filter: saturate(.6); transition: transform .15s, opacity .15s; }
+.choix button.on .bulle { opacity: 1; filter: none; transform: scale(1.12); box-shadow: 0 0 0 3px var(--carte), 0 0 0 5px var(--c); }
+.choix button.on { color: var(--texte); }
+@media (prefers-reduced-motion: reduce) { .choix .bulle { transition: none; } }
+/* Animations (seulement à l'arrivée sur un écran, pas à chaque clic) */
+@keyframes monte { from { opacity: 0; transform: translateY(16px); } }
+@keyframes pop { 0% { opacity: 0; transform: scale(.5); } 70% { transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes flotte { 50% { transform: translateY(-7px); } }
+@keyframes rebond { 40% { transform: scale(1.25); } 100% { transform: scale(1.12); } }
+@keyframes remplit { from { transform: scaleX(0); } }
+.entree .ligne, .entree .bloc, .entree .titre-fiche { animation: monte .45s cubic-bezier(.2,.8,.3,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+.entree .hero img { animation: pop .55s cubic-bezier(.3,1.4,.5,1) both, flotte 3.2s ease-in-out .6s infinite; }
+.hero img { animation: flotte 3.2s ease-in-out infinite; }
+.entree .titre-fiche .puce { animation: pop .4s .25s both; }
+.entree .vue { animation: monte .3s both; }
+.resultat .mult { animation: pop .45s cubic-bezier(.3,1.5,.5,1); }
+.jauge i.on { transform-origin: left; animation: remplit .35s both; animation-delay: calc(var(--i) * 60ms); }
+.choix button.on .bulle { animation: rebond .35s both; }
+.filtres button.on .bulle { animation: rebond .35s both; }
+@media (prefers-reduced-motion: reduce) { .app *, .app *::before { animation: none !important; transition: none !important; } }
+</style>
+
+<header class="page">
+  <h1>Pokédex de poche · maquette 5</h1>
+  <p>Les dessins officiels sur fond sombre, retenus à la maquette 4. Les cartes de la liste sont plus grandes et prennent la couleur du type, sans icône derrière le Pokémon. Quand il a deux types, la carte est coupée en diagonale avec une couleur de chaque côté (Bulbizarre, Dracaufeu, Lucario…). Quelques animations : la liste et les fiches arrivent en glissant, le Pokémon apparaît en sautant puis flotte doucement, et le résultat des types rebondit. Le bouton lune/soleil change toujours le thème.</p>
+</header>
+
+<div class="phones">
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecran1"></div></div>
+    <figcaption><b>La liste</b><span>Grandes cartes à la couleur du type, coupées en diagonale pour deux types.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecran2"></div></div>
+    <figcaption><b>Une fiche</b><span>Dracaufeu, Feu et Vol : le haut de la fiche reprend les deux couleurs.</span></figcaption></figure>
+  <figure class="dir"><div class="tel"><div class="ecran" id="ecran3"></div></div>
+    <figcaption><b>Les types (thème clair)</b><span>On touche l'icône de l'attaque, puis une ou deux icônes en défense.</span></figcaption></figure>
+</div>
+<div class="legende" id="legende"></div>
+
+<p class="note">Descriptions écrites pour la maquette ; l'appli lira les descriptions officielles en français, les types et les évolutions sur PokéAPI, et les images sur son dépôt d'images. Icônes de types dessinées pour la maquette. Table des types : règles actuelles (18 types). Pokémon © Nintendo, Creatures, GAME FREAK. Projet de fan, sans lien avec eux.</p>
+
+<script>
+// Images : remplacées par des data: URI dans la copie publiée en artefact (outils/pokedex-maquette/fabriquer.py).
+const SPRITES = /*SPRITES*/null;
+const BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+const image = (n, mode) => mode === 'pixel'
+  ? (SPRITES ? SPRITES['p' + n] : BASE + n + '.png')
+  : (SPRITES ? SPRITES['a' + n] : BASE + 'other/official-artwork/' + n + '.png');
+
+// Icônes des types (24 × 24, dessinées pour la maquette, simples pour les enfants)
+const P = 'fill="currentColor"', T = 'fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"';
+const ICONES = {
+  Normal: `<circle cx="12" cy="12" r="7" ${T}/><circle cx="12" cy="12" r="2.5" ${P}/>`,
+  Feu: `<path ${P} d="M12 2c.8 3.6 6 6 6 12a6 6 0 0 1-12 0c0-2.8 1.6-4.8 3-6 .2 1.9 1 3 2.2 3.3C11 8 10.6 5 12 2z"/>`,
+  Eau: `<path ${P} d="M12 2.5C9.2 7 5.5 10.8 5.5 15a6.5 6.5 0 0 0 13 0c0-4.2-3.7-8-6.5-12.5z"/>`,
+  Plante: `<path ${P} d="M5 19C4.5 10 10 4.5 20 4c-.3 9.5-5.5 15.2-15 15z"/><path fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1.8" stroke-linecap="round" d="M6 18l8-8"/>`,
+  'Électrik': `<path ${P} d="M13.5 2L4.5 13.5h6L9.5 22l9-11.5h-6z"/>`,
+  Glace: `<path ${T} d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/>`,
+  Combat: `<path ${P} d="M6 9.5a2 2 0 0 1 4-.3V8a2 2 0 0 1 4 0 2 2 0 0 1 4 .5V15a6 6 0 0 1-6 6h-1.5A4.5 4.5 0 0 1 6 16.5z"/><path fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1.5" d="M10 9v3M14 8.5v3.5M6.2 13h6"/>`,
+  Poison: `<circle cx="9.5" cy="14.5" r="5" ${P}/><circle cx="16.5" cy="8" r="3.2" ${P}/><circle cx="17.5" cy="16.5" r="2" ${P}/><circle cx="8" cy="5.5" r="1.6" ${P}/>`,
+  Sol: `<path ${P} d="M2 19l6.5-10 4 5.5 3-4L22 19z"/>`,
+  Vol: `<path ${P} d="M3 15c5.5 0 8.5-4.5 10-11 2.6 3 3.4 6.4 2.6 9.6 2.6-1 5-.4 6.4 1.6-5 3-11.4 4.3-19 -.2z"/>`,
+  Psy: `<path ${T} d="M12.5 12.5a1.2 1.2 0 0 1 0-1.8 2.4 2.4 0 0 1 3.2 3 4 4 0 0 1-6.6 1.4 5.6 5.6 0 0 1 1.6-8 7.2 7.2 0 0 1 9.3 4"/>`,
+  Insecte: `<circle cx="12" cy="14" r="7" ${P}/><circle cx="12" cy="5.5" r="3" ${P}/><path stroke="rgba(0,0,0,.28)" stroke-width="1.6" d="M12 8v13"/><circle cx="9" cy="12.5" r="1.4" fill="rgba(0,0,0,.28)"/><circle cx="15" cy="12.5" r="1.4" fill="rgba(0,0,0,.28)"/><circle cx="9.5" cy="17" r="1.2" fill="rgba(0,0,0,.28)"/><circle cx="14.5" cy="17" r="1.2" fill="rgba(0,0,0,.28)"/>`,
+  Roche: `<path ${P} d="M4 18.5l1.6-7.5L11 5.5l6.5 3.2L20.5 18.5z"/><path fill="rgba(0,0,0,.2)" d="M11 5.5l6.5 3.2 3 9.8-6-6z"/>`,
+  Spectre: `<path ${P} d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-1.8-2.3 1.8-2.4-1.8-2.4 1.8-2.3-1.8z"/><circle cx="9.5" cy="11" r="1.6" fill="rgba(0,0,0,.35)"/><circle cx="14.5" cy="11" r="1.6" fill="rgba(0,0,0,.35)"/>`,
+  Dragon: `<path ${P} d="M4 20c1-6 4-9 8-10l-2-6 4 3.5L16 3l.5 5.5C20 10 21 13 20 16l-3-1.5-1 3.5-3-2-2.5 3.5-1.5-3z"/><circle cx="15.5" cy="11" r="1.2" fill="rgba(0,0,0,.35)"/>`,
+  'Ténèbres': `<path ${P} d="M15 3a9 9 0 1 0 6.2 13.4A7.5 7.5 0 0 1 15 3z"/>`,
+  Acier: `<path ${P} fill-rule="evenodd" d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 1 0 0-6.8z"/>`,
+  'Fée': `<path ${P} d="M11 3c.9 4.6 2.6 6.4 7 7.3-4.4.9-6.1 2.7-7 7.3-.9-4.6-2.6-6.4-7-7.3 4.4-.9 6.1-2.7 7-7.3z"/><path ${P} d="M18.5 14.5c.4 2 1.1 2.7 3 3.1-1.9.4-2.6 1.1-3 3.1-.4-2-1.1-2.7-3-3.1 1.9-.4 2.6-1.1 3-3.1z"/>`,
+};
+const ico = (t, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONES[t]}</svg>`;
+const SVG_LOUPE = `<svg viewBox="0 0 24 24" ${T}><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>`;
+const SVG_LIVRE = `<svg viewBox="0 0 24 24" ${T}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 23H20"/></svg>`;
+const SVG_TYPES = `<svg viewBox="0 0 24 24"><path ${P} d="M13.5 2L5 13h5.5L9.5 22 19 10.5h-5.5z"/></svg>`;
+const SVG_FLECHE = `<svg viewBox="0 0 24 24" ${T}><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+
+const TYPES = { Normal: '#9b9a7c', Feu: '#f0782e', Eau: '#4d8bf0', Plante: '#4fb04a', 'Électrik': '#efb914', Glace: '#4cc3c8', Combat: '#d1402f', Poison: '#a54bc0', Sol: '#d59a3e', Vol: '#8d7cf0', Psy: '#f1578a', Insecte: '#93b01c', Roche: '#b09a4a', Spectre: '#6f58a8', Dragon: '#5b4cf0', 'Ténèbres': '#5d4a5a', Acier: '#6f93a8', 'Fée': '#e57ab8' };
+const LISTE_TYPES = Object.keys(TYPES);
+const TABLE = {
+  Normal: [[], ['Roche', 'Acier'], ['Spectre']],
+  Feu: [['Plante', 'Glace', 'Insecte', 'Acier'], ['Feu', 'Eau', 'Roche', 'Dragon'], []],
+  Eau: [['Feu', 'Sol', 'Roche'], ['Eau', 'Plante', 'Dragon'], []],
+  Plante: [['Eau', 'Sol', 'Roche'], ['Feu', 'Plante', 'Poison', 'Vol', 'Insecte', 'Dragon', 'Acier'], []],
+  'Électrik': [['Eau', 'Vol'], ['Électrik', 'Plante', 'Dragon'], ['Sol']],
+  Glace: [['Plante', 'Sol', 'Vol', 'Dragon'], ['Feu', 'Eau', 'Glace', 'Acier'], []],
+  Combat: [['Normal', 'Glace', 'Roche', 'Ténèbres', 'Acier'], ['Poison', 'Vol', 'Psy', 'Insecte', 'Fée'], ['Spectre']],
+  Poison: [['Plante', 'Fée'], ['Poison', 'Sol', 'Roche', 'Spectre'], ['Acier']],
+  Sol: [['Feu', 'Électrik', 'Poison', 'Roche', 'Acier'], ['Plante', 'Insecte'], ['Vol']],
+  Vol: [['Plante', 'Combat', 'Insecte'], ['Électrik', 'Roche', 'Acier'], []],
+  Psy: [['Combat', 'Poison'], ['Psy', 'Acier'], ['Ténèbres']],
+  Insecte: [['Plante', 'Psy', 'Ténèbres'], ['Feu', 'Combat', 'Poison', 'Vol', 'Spectre', 'Acier', 'Fée'], []],
+  Roche: [['Feu', 'Glace', 'Vol', 'Insecte'], ['Combat', 'Sol', 'Acier'], []],
+  Spectre: [['Psy', 'Spectre'], ['Ténèbres'], ['Normal']],
+  Dragon: [['Dragon'], ['Acier'], ['Fée']],
+  'Ténèbres': [['Psy', 'Spectre'], ['Combat', 'Ténèbres', 'Fée'], []],
+  Acier: [['Glace', 'Roche', 'Fée'], ['Feu', 'Eau', 'Électrik', 'Acier'], []],
+  'Fée': [['Combat', 'Dragon', 'Ténèbres'], ['Feu', 'Poison', 'Acier'], []],
+};
+const mult1 = (a, d) => TABLE[a][0].includes(d) ? 2 : TABLE[a][1].includes(d) ? .5 : TABLE[a][2].includes(d) ? 0 : 1;
+const mult = (a, defs) => defs.reduce((m, d) => m * mult1(a, d), 1);
+const TXT = m => ({ 0: '×0', .25: '×¼', .5: '×½', 1: '×1', 2: '×2', 4: '×4' })[m];
+const PHRASE = m => m === 0 ? 'Aucun effet !' : m === .25 ? 'Presque rien…' : m === .5 ? 'Pas très efficace…' : m === 1 ? 'Dégâts normaux' : m === 2 ? 'Super efficace !' : 'Hyper efficace !!';
+const COUL = m => m === 0 ? '#8d86a8' : m < 1 ? '#e2574c' : m === 1 ? '#5b8def' : '#3fa765';
+const NIVEAU = m => ({ 0: 0, .25: 1, .5: 2, 1: 3, 2: 4, 4: 5 })[m];
+
+const CH_PLANTE = [[1, ''], [2, 'Niv. 16'], [3, 'Niv. 32']];
+const CH_FEU = [[4, ''], [5, 'Niv. 16'], [6, 'Niv. 36']];
+const CH_EAU = [[7, ''], [8, 'Niv. 16'], [9, 'Niv. 36']];
+const CH_ELEC = [[172, ''], [25, 'Amitié'], [26, 'Pierre Foudre']];
+const CH_SPECTRE = [[92, ''], [93, 'Niv. 25'], [94, 'Échange']];
+const CH_LUCARIO = [[447, ''], [448, 'Amitié, de jour']];
+const CH_NYMPHALI = [[133, ''], [700, 'Amitié + attaque Fée']];
+const CH_CHAT = [[906, ''], [907, 'Niv. 16'], [908, 'Niv. 36']];
+const NOMS = { 92: 'Fantominus', 93: 'Spectrum', 447: 'Riolu', 133: 'Évoli' };
+const DEX = [
+  { n: 1, nom: 'Bulbizarre', types: ['Plante', 'Poison'], ch: CH_PLANTE, desc: "Il porte sur le dos une graine qui grossit avec lui. Elle stocke l'énergie du soleil, ce qui lui permet de rester des jours sans manger." },
+  { n: 2, nom: 'Herbizarre', types: ['Plante', 'Poison'], ch: CH_PLANTE, desc: "Le bourgeon sur son dos s'alourdit à mesure qu'il approche de l'éclosion. Il passe alors plus de temps au soleil." },
+  { n: 3, nom: 'Florizarre', types: ['Plante', 'Poison'], ch: CH_PLANTE, desc: "Sa grande fleur dégage un parfum apaisant après la pluie. Ses pétales s'ouvrent largement quand il fait beau." },
+  { n: 4, nom: 'Salamèche', types: ['Feu'], ch: CH_FEU, desc: "La flamme au bout de sa queue montre son humeur et sa santé. Elle brille fort quand il est en pleine forme." },
+  { n: 5, nom: 'Reptincel', types: ['Feu'], ch: CH_FEU, desc: "Batailleur, il cherche sans cesse des adversaires. Sa queue s'embrase et devient bleutée quand il s'énerve." },
+  { n: 6, nom: 'Dracaufeu', types: ['Feu', 'Vol'], ch: CH_FEU, desc: "Il vole haut dans le ciel à la recherche d'adversaires à sa taille. Son souffle de feu fait fondre presque tout." },
+  { n: 7, nom: 'Carapuce', types: ['Eau'], ch: CH_EAU, desc: "Il se réfugie dans sa carapace quand il a peur et projette de l'eau avec force dès qu'on baisse la garde." },
+  { n: 8, nom: 'Carabaffe', types: ['Eau'], ch: CH_EAU, desc: "Sa queue duveteuse, signe de longévité, l'aide à garder l'équilibre quand il nage vite." },
+  { n: 9, nom: 'Tortank', types: ['Eau'], ch: CH_EAU, desc: "Les canons de sa carapace envoient des jets d'eau assez puissants pour percer l'acier." },
+  { n: 25, nom: 'Pikachu', types: ['Électrik'], ch: CH_ELEC, desc: "Il garde de l'électricité dans ses joues. Quand il est menacé, il la libère d'un coup en éclairs." },
+  { n: 26, nom: 'Raichu', types: ['Électrik'], ch: CH_ELEC, desc: "Sa longue queue lui sert de prise de terre pour évacuer le trop-plein d'électricité sans se blesser." },
+  { n: 94, nom: 'Ectoplasma', types: ['Spectre', 'Poison'], ch: CH_SPECTRE, desc: "Il se cache dans l'ombre des gens et leur glace le dos. Son sourire est la dernière chose qu'on voit avant le frisson." },
+  { n: 172, nom: 'Pichu', types: ['Électrik'], ch: CH_ELEC, desc: "Encore petit, il ne sait pas bien retenir son électricité et se donne lui-même des décharges quand il est surpris." },
+  { n: 448, nom: 'Lucario', types: ['Combat', 'Acier'], ch: CH_LUCARIO, desc: "Il perçoit l'aura des êtres vivants, ce qui lui permet de deviner leurs pensées et leurs mouvements." },
+  { n: 700, nom: 'Nymphali', types: ['Fée'], ch: CH_NYMPHALI, desc: "Il enroule ses rubans autour du bras de son dresseur pour rester près de lui et apaise les combats d'un souffle." },
+  { n: 906, nom: 'Poussacha', types: ['Plante'], ch: CH_CHAT, desc: "Son pelage dégage une odeur d'herbe fraîche. Il fait sa toilette avec soin pour garder ce parfum qui calme ceux qui l'entourent." },
+  { n: 907, nom: 'Matourgeon', types: ['Plante'], ch: CH_CHAT, desc: "Il tient une fleur dans sa gueule et s'en sert pour distraire ses adversaires avant de frapper." },
+  { n: 908, nom: 'Miascarade', types: ['Plante', 'Ténèbres'], ch: CH_CHAT, desc: "Agile comme un magicien, il fait apparaître des fleurs de sa cape et disparaît dans un tourbillon de pétales." },
+];
+const REGIONS = [[151, 'Kanto', 1], [251, 'Johto', 2], [386, 'Hoenn', 3], [493, 'Sinnoh', 4], [649, 'Unys', 5], [721, 'Kalos', 6], [809, 'Alola', 7], [905, 'Galar', 8], [1025, 'Paldea', 9]];
+const region = n => REGIONS.find(r => n <= r[0]);
+const parNum = n => DEX.find(p => p.n === n);
+const nomDe = n => parNum(n) ? parNum(n).nom : NOMS[n];
+const num3 = n => String(n).padStart(3, '0');
+const stade = p => p.ch.findIndex(e => e[0] === p.n) + 1;
+const plat = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const puce = (t, extra = '') => `<span class="puce" style="--c:${TYPES[t]}">${ico(t)}${t}${extra}</span>`;
+const fondType = p => p.types.length > 1
+  ? `linear-gradient(135deg, ${TYPES[p.types[0]]} 0 50%, ${TYPES[p.types[1]]} 50% 100%)`
+  : `linear-gradient(160deg, color-mix(in srgb, ${TYPES[p.types[0]]} 70%, white), ${TYPES[p.types[0]]})`;
+const bulle = t => `<span class="bulle" style="--c:${TYPES[t]}" title="${t}">${ico(t)}</span>`;
+
+function creer(id, reglages) {
+  const el = document.getElementById(id);
+  const S = Object.assign({ onglet: 'dex', fiche: null, q: '', filtre: null, att: 'Eau', def: ['Feu', 'Roche'], sombre: true, img: 'dessin' }, reglages);
+  const img = (n, cls = '') => `<img class="${S.img === 'pixel' ? 'pixel' : ''} ${cls}" src="${image(n, S.img)}" alt="" loading="lazy">`;
+  const boutons = () => `<button class="reglage rond" data-theme-app aria-label="Changer de thème">${S.sombre ? '☾' : '☀'}</button>`;
+
+  function resultats() {
+    const q = plat(S.q.trim());
+    const l = DEX.filter(p => (!S.filtre || p.types.includes(S.filtre)) && (!q || plat(p.nom).includes(q) || String(p.n).includes(q) || p.types.some(t => plat(t).startsWith(q))));
+    if (!l.length) return `<div class="vide">Aucun Pokémon ne s'appelle « ${S.q} »…<br>Essaie un autre nom, un numéro ou un type.</div>`;
+    let h = '', reg = null;
+    let i = 0;
+    for (const p of l) {
+      const r = region(p.n);
+      if (r !== reg) { if (reg) h += '</div>'; reg = r; h += `<div class="gen">${r[1]} · génération ${r[2]}</div><div class="liste">`; }
+      h += `<button class="ligne" data-n="${p.n}" style="--fond-type:${fondType(p)};--i:${Math.min(i++, 8)}"><span class="nom"><small>N° ${num3(p.n)}</small><b>${p.nom}</b><span class="types">${p.types.map(t => puce(t)).join('')}</span></span>${img(p.n)}</button>`;
+    }
+    return h + '</div><div style="height:12px"></div>';
+  }
+
+  const vueDex = () => `<div class="tete"><h2><small>Salut, dresseur !</small>Pokédex</h2>${boutons()}</div>
+    <label class="recherche">${SVG_LOUPE}<input id="q${id}" type="search" placeholder="Chercher un nom, un numéro, un type…" value="${S.q}"></label>
+    <div class="filtres">${LISTE_TYPES.map(t => `<button data-filtre="${t}" class="${S.filtre === t ? 'on' : ''}" style="--c:${TYPES[t]}">${bulle(t)}${t}</button>`).join('')}</div>
+    <div id="res${id}">${resultats()}</div>`;
+
+  function vueFiche() {
+    const p = parNum(S.fiche), s = stade(p);
+    const m = LISTE_TYPES.map(a => [a, mult(a, p.types)]);
+    const grp = f => m.filter(([, x]) => f(x)).map(([a, x]) => puce(a, `<em>${TXT(x)}</em>`)).join('');
+    const craint = grp(x => x > 1), resiste = grp(x => x > 0 && x < 1), immun = grp(x => x === 0);
+    const chaine = p.ch.map((e, k) => (k ? `<div class="fl">${SVG_FLECHE}${e[1]}</div>` : '') + `<button class="${e[0] === p.n ? 'ici' : ''}" data-n="${e[0]}" ${parNum(e[0]) ? '' : 'disabled'}><span class="rond">${img(e[0])}</span>${nomDe(e[0])}</button>`).join('');
+    return `<div style="--c:${TYPES[p.types[0]]}">
+      <div class="hero" style="--fond-type:${fondType(p)}"><div class="haut"><button class="retour" data-retour>‹ Retour</button><span class="num">N° ${num3(p.n)}</span></div>${img(p.n)}</div>
+      <div class="titre-fiche" style="--i:1"><h3>${p.nom}</h3><div class="puces">${p.types.map(t => puce(t)).join('')}</div></div>
+      <div class="fiche">
+        <div class="bloc"><h4>Évolution <span class="stades">${p.ch.map((e, k) => `<i class="${k < s ? 'on' : ''}"></i>`).join('')}</span></h4><div class="chaine">${chaine}</div></div>
+        <div class="bloc"><h4>Ce qu'on sait de lui</h4>${p.desc}</div>
+        <div class="bloc mauvais"><h4>Attention à ces attaques</h4><div class="puces">${craint}</div></div>
+        ${resiste ? `<div class="bloc bon"><h4>Il résiste bien à</h4><div class="puces">${resiste}</div></div>` : ''}
+        ${immun ? `<div class="bloc bon"><h4>Ça ne lui fait rien</h4><div class="puces">${immun}</div></div>` : ''}
+      </div></div>`;
+  }
+
+  function vueTypes() {
+    const m = mult(S.att, S.def), a = TABLE[S.att], c = COUL(m);
+    const choix = (k, on) => LISTE_TYPES.map(t => `<button data-${k}="${t}" class="${on(t) ? 'on' : ''}" style="--c:${TYPES[t]}">${bulle(t)}${t}</button>`).join('');
+    const liste = l => l.length ? l.map(t => puce(t)).join('') : '<span style="color:var(--doux)">Personne</span>';
+    return `<div class="tete"><h2><small>Qui gagne ?</small>Types</h2>${boutons()}</div>
+      <div class="fiche">
+        <div class="bloc" style="--m:${c}">
+          <div class="versus"><div class="cote">${bulle(S.att)}Attaque ${S.att}</div><div class="fleche">➜</div><div class="cote"><span class="bulles">${S.def.map(bulle).join('')}</span>Défense ${S.def.join(' / ')}</div></div>
+          <div class="resultat"><div class="mult">${TXT(m)}</div><div class="phr">${PHRASE(m)}</div></div>
+          <div class="jauge">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= NIVEAU(m) ? 'on' : ''}" style="--i:${i}"></i>`).join('')}</div>
+        </div>
+        <div class="bloc"><h4>1. Le type de l'attaque</h4><div class="choix">${choix('att', t => t === S.att)}</div></div>
+        <div class="bloc"><h4>2. Le Pokémon qui défend (1 ou 2 types)</h4><div class="choix">${choix('def', t => S.def.includes(t))}</div></div>
+        <div class="bloc"><h4>${ico(S.att)} Une attaque ${S.att}…</h4>
+          <div style="display:grid;gap:8px">
+            <div><b style="color:#3fa765">est très forte contre</b><div class="puces" style="margin-top:4px">${liste(a[0])}</div></div>
+            <div><b style="color:#e2574c">est faible contre</b><div class="puces" style="margin-top:4px">${liste(a[1])}</div></div>
+            ${a[2].length ? `<div><b style="color:var(--doux)">ne fait rien à</b><div class="puces" style="margin-top:4px">${liste(a[2])}</div></div>` : ''}
+          </div></div>
+      </div>`;
+  }
+
+  function rendre(entree = true) {
+    const corps = S.onglet === 'types' ? vueTypes() : S.fiche ? vueFiche() : vueDex();
+    el.innerHTML = `<div class="app ${S.sombre ? 'sombre' : ''} ${entree ? 'entree' : ''}"><div class="vue">${corps}</div>
+      <nav class="onglets"><button data-onglet="dex" class="${S.onglet === 'dex' ? 'on' : ''}">${SVG_LIVRE}Pokédex</button><button data-onglet="types" class="${S.onglet === 'types' ? 'on' : ''}">${SVG_TYPES}Types</button></nav></div>`;
+    el.querySelectorAll('.fiche > .bloc').forEach((b, k) => b.style.setProperty('--i', k + 2));
+  }
+
+  el.addEventListener('click', ev => {
+    const b = ev.target.closest('button'); if (!b || b.disabled) return;
+    const haut = el.querySelector('.vue').scrollTop;
+    let garder = true;
+    if (b.dataset.n) { S.fiche = +b.dataset.n; S.onglet = 'dex'; garder = false; }
+    else if ('retour' in b.dataset) { S.fiche = null; garder = false; }
+    else if (b.dataset.onglet) { S.onglet = b.dataset.onglet; garder = false; }
+    else if ('themeApp' in b.dataset) S.sombre = !S.sombre;
+    else if (b.dataset.filtre) S.filtre = S.filtre === b.dataset.filtre ? null : b.dataset.filtre;
+    else if (b.dataset.att) S.att = b.dataset.att;
+    else if (b.dataset.def) {
+      const t = b.dataset.def;
+      if (S.def.includes(t)) { if (S.def.length > 1) S.def = S.def.filter(x => x !== t); }
+      else S.def = S.def.length < 2 ? [...S.def, t] : [S.def[1], t];
+    } else return;
+    rendre(!garder);
+    el.querySelector('.vue').scrollTop = garder ? haut : 0;
+  });
+  el.addEventListener('input', ev => {
+    if (!ev.target.matches('input')) return;
+    S.q = ev.target.value; el.querySelector('#res' + id).innerHTML = resultats();
+  });
+  rendre();
+}
+
+creer('ecran1', { sombre: true, img: 'dessin' });
+creer('ecran2', { sombre: true, img: 'dessin', fiche: 6 });
+creer('ecran3', { sombre: false, img: 'dessin', onglet: 'types' });
+document.getElementById('legende').innerHTML = LISTE_TYPES.map(t => `<span class="puce" style="--c:${TYPES[t]};font-family:var(--rond)">${ico(t)}${t}</span>`).join('');
+</script>

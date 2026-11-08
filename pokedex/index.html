@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>Pokédex</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#15121f">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Ludothèque">
+<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="donnees.js"></script>
+<script src="app.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Le retour à la Ludothèque est dans l'en-tête de l'atelier. */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
