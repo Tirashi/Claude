@@ -13,6 +13,7 @@
    8 septies. Doggy Saga : règles, obstacles, reproductibilité et 60 niveaux (outils/doggy-saga-simulateur.js) ;
    8 octies. Mineur de l'espace : règles et équilibrage (outils/mineur-simulateur.js) ;
    8 nonies. Dragon Simulator : règles et économie (outils/dragon-simulateur.js) ;
+   8 nonies ter. Terres franches : règles et équilibrage de l'ère 1 (outils/terres-simulateur.js) ;
    9. classements : chaque record envoyé par un jeu (LudoScores.submit) a son tableau dans le volet de
       l'accueil (RANKS, accueil.js), est repris en rejoignant (registerExisting) et son jeu sert à vérifier les pseudos.
    Code de sortie 1 si quelque chose ne va pas. */
@@ -148,6 +149,10 @@ catch (e) { bad('Dragon Simulator : simulateur\n' + (e.stdout || '') + (e.stderr
 // 8 nonies bis. Bastion : règles (garnison, population, grades) et robot (outils/bastion-simulateur.js)
 try { execFileSync(process.execPath, [path.join(__dirname, 'bastion-simulateur.js'), '8'], { stdio: 'pipe', encoding: 'utf8' }); ok('Bastion : simulateur (règles, garnison, population, grades, parties reproductibles)'); }
 catch (e) { bad('Bastion : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
+
+// 8 nonies ter. Terres franches : règles de l'ère 1 et équilibrage (outils/terres-simulateur.js)
+try { execFileSync(process.execPath, [path.join(__dirname, 'terres-simulateur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Terres franches : simulateur (règles, hors ligne, sauvegarde, rythme de l\'ère 1)'); }
+catch (e) { bad('Terres franches : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 8 decies. fiches des jeux (<dossier>/fiche.js) : chaque chemin d'ORDRE a sa fiche, chargée par l'accueil et en cache
 {

@@ -90,3 +90,4 @@ Retours sur la maquette 5 → **maquette 6** : https://claude.ai/artifact/SkPnFb
 Retouches → **maquette 7** : https://claude.ai/artifact/BuUxWHgRBp4VoShKw87FvC (route qui longe les champs, fumée au ras des cheminées, ailes du moulin nettes, vols d'oiseaux).
 Décision : moulin immobile (image d'origine), l'animation des ailes n'étant pas assez propre ; maquette 7 republiée.
 **Validation** : la maquette 7 représente globalement le jeu ; placement des bâtiments et des routes à rendre plus logique. Prochaine étape : simulateur d'équilibrage (ère 1).
+- **08/11 — Terres franches, simulateur de l'ère 1** : placement décidé (emplacement proposé, déplaçable) ; `terres-franches/donnees.js` + `regles.js` (règles pures) et `outils/terres-simulateur.js` (dans `verifications.js`) : 1er villageois 1 min, hameau 19 min, village 1 h 49, Charte 2 h 43 (profil actif) ; détails dans le cdc.
