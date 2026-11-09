@@ -625,7 +625,12 @@ function toucher(sx, sy){
   const [wx, wy] = versMonde(sx, sy), E = window.TerresEcran;
   if (PL){ const id = lotEn(wx, wy); if (id && lotsPossibles().includes(id)){ PL.lot = id; E && E.placement(); } return; }
   const id = lotEn(wx, wy);
-  if (id && S.lots[id]){ E && E.bulle(id); return; }
+  if (id && S.lots[id]){
+    // faucille et forces du pionnier : toucher un champ donne du blé, la bergerie de la laine (la bulle s'ouvre aussi)
+    const r = {champ: R.eff(S, "toucherBle") && "ble", bergerie: R.eff(S, "toucherLaine") && "laine"}[S.lots[id]];
+    if (r && !S.chantiers.some(c => c.lot === id) && !R.toucher(S, r)) flotte(wx, wy - 8, r, "+" + (DON.PIONNIER.toucher + R.eff(S, "toucher")));
+    E && E.bulle(id); return;
+  }
   E && E.bulle(null);
   // récolter : la case touchée ou une voisine (forêt, buisson, eau)
   const tx = Math.floor(wx / T), ty = Math.floor(wy / T);

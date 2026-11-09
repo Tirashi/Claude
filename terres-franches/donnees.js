@@ -101,13 +101,21 @@ const ORDONNANCES = {
   panier:     {nom: "PANIER DU PIONNIER", type: "equipement", desc: "Chaque toucher rapporte une ressource de plus.", effet: {toucher: 1}, niveaux: 4, cout: {bois: 30, baies: 20}, croit: 2.2, statut: 0},
   hottes:     {nom: "HOTTES ET BROUETTES", type: "equipement", desc: "On porte plus à chaque voyage : moins d'allers-retours.", effet: {porte: .08}, niveaux: 4, cout: {bois: 120}, croit: 2, statut: 0},
   coupes:     {nom: "NOUVELLES COUPES",   type: "ordonnance", desc: "On ouvre d'autres arbres, buissons et coins de pêche : une place de plus pour chacun.", effet: {places: 1}, niveaux: 3, cout: {bois: 80, baies: 40}, croit: 2.2, statut: 0},
+  tentes:     {nom: "TENTES D'APPOINT",   type: "equipement", desc: "Un habitant de plus que ne le permet le statut (campement, hameau ou village), s'il y a un toit.", effet: {pop: 1}, niveaux: 3, cout: {bois: 90, baies: 40}, croit: 2.3, statut: 0},
+  etageres:   {nom: "ETAGERES ET TONNEAUX", type: "equipement", desc: "Mieux ranger : 20 % de place en plus dans toutes les réserves.", effet: {stock: .2}, niveaux: 3, cout: {bois: 100}, croit: 2.2, statut: 0},
   ateres:     {nom: "ATRES FERMES",       type: "equipement", desc: "Des foyers qui gardent la chaleur : moins de bois brûlé l'hiver.", effet: {chauffage: .15}, niveaux: 4, cout: {bois: 100}, croit: 1.8, statut: 0},
   pioche:     {nom: "PIOCHE DU PIONNIER", type: "equipement", desc: "Toucher un rocher rapporte de la pierre.", effet: {toucherPierre: 1}, niveaux: 1, cout: {bois: 150, pierre: 20}, croit: 1, statut: 1},
+  faucille:   {nom: "FAUCILLE DU PIONNIER", type: "equipement", desc: "Toucher un champ rapporte du blé.", effet: {toucherBle: 1}, niveaux: 1, cout: {bois: 120, pierre: 30}, croit: 1, statut: 1},
+  engrais:    {nom: "FUMURE DES CHAMPS",  type: "ordonnance", desc: "On fume les champs : les fermiers récoltent plus de blé.", effet: {m_fermier: .15}, niveaux: 3, cout: {bois: 100, baies: 60}, croit: 2, statut: 1},
+  meules:     {nom: "MEULES DE PIERRE",   type: "equipement", desc: "De bonnes meules : le meunier fait plus de farine.", effet: {m_meunier: .2}, niveaux: 3, cout: {pierre: 80, bois: 60}, croit: 2, statut: 1},
+  pelles:     {nom: "PELLES A ENFOURNER", type: "equipement", desc: "Le boulanger cuit plus de pain.", effet: {m_boulanger: .2}, niveaux: 3, cout: {bois: 120, pierre: 40}, croit: 2, statut: 1},
   chemins:    {nom: "CHEMINS DAMES",      type: "ordonnance", desc: "Rues tassées et entretenues : on y marche plus vite, tout le monde travaille un peu plus.", effet: {route: .2, route_prod: .03}, niveaux: 3, cout: {bois: 150, pierre: 60}, croit: 2, statut: 1},
   conserves:  {nom: "FUMAGE ET SALAISON", type: "ordonnance", desc: "Des vivres qui se gardent : on mange moins en plus l'hiver.", effet: {faim: .25}, niveaux: 3, cout: {poisson: 80, bois: 80}, croit: 2, statut: 1},
   fetes:      {nom: "JOURS DE FETE",      type: "ordonnance", desc: "Des fêtes au village : tout le monde est plus content et travaille mieux.", effet: {moral: .05}, niveaux: 4, cout: {baies: 120, poisson: 80}, croit: 2.1, statut: 1},
   charpente:  {nom: "CHARPENTIERS",       type: "ordonnance", desc: "Des bâtisseurs entraînés : les chantiers vont plus vite.", effet: {chantier: .15}, niveaux: 3, cout: {bois: 200, pierre: 80}, croit: 2, statut: 1},
   accueil:    {nom: "DROIT D'ACCUEIL",    type: "ordonnance", desc: "Deux habitants de plus que ne le permet le statut (s'il y a des toits).", effet: {pop: 2}, niveaux: 3, cout: {bois: 300, pierre: 150, pain: 40}, croit: 2.2, statut: 2},
+  forces:     {nom: "FORCES DU PIONNIER", type: "equipement", desc: "Toucher la bergerie rapporte de la laine.", effet: {toucherLaine: 1}, niveaux: 1, cout: {bois: 200, pierre: 80}, croit: 1, statut: 2},
+  metiers:    {nom: "METIERS A TISSER",   type: "equipement", desc: "Le tisserand fait plus de vêtements ; les bergers tondent mieux.", effet: {m_tisserand: .2, m_berger: .1}, niveaux: 3, cout: {bois: 200, pierre: 100}, croit: 2, statut: 2},
   hospitalite:{nom: "HOSPITALITE",        type: "ordonnance", desc: "Les nouveaux venus coûtent moins cher à accueillir.", effet: {recrue: .1}, niveaux: 3, cout: {pain: 60, bois: 200}, croit: 2, statut: 2}
 };
 

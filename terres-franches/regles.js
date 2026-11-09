@@ -45,7 +45,7 @@ const jalon = (S, k) => { if (S.jalons[k] === undefined) S.jalons[k] = S.t; };
 function eff(S, k){ const O = D(S).ORDONNANCES || {}, n = S.ord || {}; let v = 0; for (const id in n) if (O[id] && O[id].effet[k]) v += O[id].effet[k] * n[id]; return v; }
 const RECOLTEURS = ["bucheron", "cueilleur", "pecheur", "carrier", "fermier", "berger"];
 // multiplicateur de débit d'un métier (outils, hottes, chemins)
-const bonusMetier = (S, m) => 1 + (RECOLTEURS.includes(m) ? eff(S, "recolte") + eff(S, "porte") : 0) + eff(S, "route_prod");
+const bonusMetier = (S, m) => 1 + (RECOLTEURS.includes(m) ? eff(S, "recolte") + eff(S, "porte") : 0) + eff(S, "route_prod") + eff(S, "m_" + m);
 function coutOrd(S, id){ const O = D(S).ORDONNANCES[id], n = (S.ord || {})[id] || 0, c = {}; for (const r in O.cout) c[r] = Math.ceil(O.cout[r] * Math.pow(O.croit, n)); return c; }
 function peutAcheter(S, id){
   const P = D(S), O = P.ORDONNANCES[id]; if (!O) return "INCONNU";
@@ -85,7 +85,7 @@ function parcellesLibres(S, terrain){
 /* ---------- stockage et saisons ---------- */
 // le bâtiment qui garde la ressource r (grenier ou aire), et la place : base × 2^niveau (niveau = nombre construit)
 function gardien(S, r){ const P = D(S); for (const b in P.BATIMENTS){ const g = P.BATIMENTS[b].stock; if (g && P.STOCK.groupes[g].includes(r)) return b; } return null; }
-function capacite(S, r){ const P = D(S), base = P.STOCK.base[r]; if (base === undefined) return Infinity; const b = gardien(S, r); return base * Math.pow(2, b ? S.bat[b] : 0); }
+function capacite(S, r){ const P = D(S), base = P.STOCK.base[r]; if (base === undefined) return Infinity; const b = gardien(S, r); return base * Math.pow(2, b ? S.bat[b] : 0) * (1 + eff(S, "stock")); }
 function borner(S){ for (const r in S.res){ const c = capacite(S, r); if (S.res[r] > c) S.res[r] = c; } }
 const plein = (S, r) => S.res[r] >= capacite(S, r) - 1e-9;
 // saisons : 0 printemps … 3 hiver (comme vie.js, qui dessine)
@@ -206,7 +206,8 @@ function pas1(S, dt, rend){
 
 /* ---------- ordres du joueur ---------- */
 function toucher(S, r, n){
-  const P = D(S); if (!P.PIONNIER.ressources.includes(r) && !(r === "pierre" && eff(S, "toucherPierre"))) return "RIEN A RECOLTER";
+  const P = D(S), en_plus = {pierre: "toucherPierre", ble: "toucherBle", laine: "toucherLaine"};   // ce que les équipements ouvrent au toucher
+  if (!P.PIONNIER.ressources.includes(r) && !(en_plus[r] && eff(S, en_plus[r]))) return "RIEN A RECOLTER";
   if (plein(S, r)) return r === "bois" ? "PLUS DE PLACE : AGRANDIS L'AIRE DE STOCKAGE" : "PLUS DE PLACE : AGRANDIS LE GRENIER";
   S.res[r] = Math.min(capacite(S, r), S.res[r] + (P.PIONNIER.toucher + eff(S, "toucher")) * (n || 1)); S.touchers += n || 1; return null;
 }
@@ -404,7 +405,7 @@ function robot(S){
   for (const id of ORDRE_ROBOT){ if (peutAcheter(S, id)) continue; const c = coutOrd(S, id); if (Object.keys(c).every(r => c[r] <= S.res[r] * .05)) acheter(S, id); }
   repartir(S);
 }
-const ORDRE_ROBOT = ["outils", "hottes", "coupes", "ateres", "chemins", "charpente", "conserves", "fetes", "accueil", "hospitalite", "panier", "pioche"];
+const ORDRE_ROBOT = ["outils", "etageres", "tentes", "meules", "pelles", "engrais", "metiers", "hottes", "coupes", "ateres", "chemins", "charpente", "conserves", "fetes", "accueil", "hospitalite", "panier", "pioche"];
 // ce que le pionnier touche : ce qui manque le plus pour le prochain achat
 function aToucher(S){
   const mq = manque(S, objectif(S));

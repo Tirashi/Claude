@@ -96,7 +96,8 @@
   - **Blessures** : après un combat, des gardes peuvent être blessés : ils se soignent quelques minutes (à la maison), sans travailler. Ordonnances *Entraînement* (force +20 %), *Soins* (guérison plus rapide).
   - **Forge** (village, pierre et bois) : un forgeron fait des **épées** (force) et des **boucliers** (moins de blessés) pour la garde.
   - **Graphismes** : pillards et gardes LPC (capuches, lances, épées : déjà dans le générateur LPC), sacs volés sur le dos.
-  - **Questions** : des pillards pendant l'absence (hors ligne) ? (proposition : oui, mais le combat se règle tout seul et le récap le raconte) ; au campement, vraiment aucun ? ; les villageois s'enfuient-ils vers les maisons à l'arrivée de la bande ?
+  - **Réponses de l'utilisateur (09/11) : oui à tout** : des pillards aussi pendant l'absence (combat réglé tout seul, raconté dans le récap) ; aucun au campement ; les villageois courent se mettre à l'abri quand la bande arrive.
+- **09/11 — ordonnances ajoutées** (la liste de l'utilisateur n'était pas complète) : *Tentes d'appoint* (+1 habitant au-delà du statut dès le campement), *Étagères et tonneaux* (+20 % de place dans toutes les réserves), *Faucille du pionnier* (toucher un champ : du blé), *Forces du pionnier* (toucher la bergerie : de la laine), *Fumure des champs* (+15 % de blé), *Meules de pierre* (+20 % de farine), *Pelles à enfourner* (+20 % de pain), *Métiers à tisser* (+20 % de vêtements, +10 % de laine). 20 améliorations en tout ; Charte du robot 2 h 58.
 - Prochaines étapes après le choix : décisions du § 2, puis **simulateur d'équilibrage d'abord** (`outils/terres-simulateur.js`, ère 1), puis session 1.
 
 ## 2. Adaptations à la Ludothèque (proposées le 08/11, à confirmer)

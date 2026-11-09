@@ -94,7 +94,7 @@ function conditions(pop, c){
 }
 // ordonnances et équipements : une carte par amélioration (on la touche pour l'acheter)
 const ICONES_ORD = {outils: "souche-hache", panier: "panier-baies", hottes: "tonneaux", coupes: "souche", ateres: "buche", pioche: "rocher-p", chemins: "pave",
-  conserves: "sechoir-poisson", fetes: "tonneau", charpente: "chantier", accueil: "chaume1", hospitalite: "panier-pommes"};
+  tentes: "chaume2", etageres: "caisse", faucille: "i-ble", engrais: "botte", meules: "sac-farine", pelles: "panier-patates", forces: "i-laine", metiers: "i-tissu", conserves: "sechoir-poisson", fetes: "tonneau", charpente: "chantier", accueil: "chaume1", hospitalite: "panier-pommes"};
 function volAmeliorer(){
   const S = J.S, P = R.reglages(S.mods), O = P.ORDONNANCES; let h = `<p class="limite">Ordonnances et équipements : chaque niveau s'ajoute au précédent.</p>`;
   for (const id of Object.keys(O).sort((a, b) => O[a].statut - O[b].statut)){
