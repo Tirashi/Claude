@@ -65,6 +65,7 @@ const META = {};   // rempli par les fiches (meta)
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
   ["2026-11-09", "maj", "terres-franches", "Terres franches se joue aussi sur ordinateur : la vallée à gauche, les volets dans une colonne à droite, la molette pour zoomer, les flèches pour se promener, 1 2 3 pour les volets, et le nom de ce qu'on survole. Sur l'étagère, le jeu devient une disquette."],
+  ["2026-11-09", "acc", "", "Les jeux qui se jouent aussi sur ordinateur ont une disquette sur l'étagère : Terres franches, Mineur de l'espace et Bastion."],
   ["2026-11-08", "neuf", "terres-franches", "Terres franches, première ère : un pionnier, une tente et un feu au bord d'une rivière. Récolte, accueille des villageois, donne-leur un métier (bûcheron, pêcheur, fermier, meunier, boulanger…) et bâtis : le jeu propose le terrain le plus logique et trace les rues, tu peux tout déplacer. Le campement devient hameau puis village, et la colonie travaille encore (doucement) quand l'appli est fermée."],
   ["2026-11-07", "neuf", "pokedex", "Le premier atelier : un Pokédex avec les 1025 Pokémon en français. Pour chacun, son dessin, ses types, ses évolutions et ce qu'on sait de lui. Cherche par nom, numéro ou type, et l'onglet Types te dit qui gagne : choisis l'attaque et le Pokémon qui défend, il donne les dégâts."],
   ["2026-11-07", "acc", "", "Une nouvelle étagère sous les jeux : les ATELIERS, des outils pour apprendre et créer. On y trouve le Pokédex, Calculator et le Jeu de la vie."],
