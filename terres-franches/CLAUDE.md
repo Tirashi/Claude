@@ -10,4 +10,5 @@ Colonie incrémentale en temps réel. Session 1 = l'ère 1 (campement → hameau
 
 ## Pièges
 - Une lettre minuscule de `GRILLE` = un terrain : la tente est `^`, pas `t`. Garder des ruelles (le moulin s'est retrouvé enfermé entre les champs et le lac).
+- Le pionnier est `AG[0]` (rangée `PIONNIER` de `villageois.png`, `rang(i)`) ; `PI` ne se dessine qu'avant le premier villageois. Planches LPC des bêtes : chien et chat, ligne 0 = vers la droite.
 - Changer un nombre : relancer le simulateur (cibles du cahier vérifiées). Changer la carte : les contrôles de la carte (portes reliées, pas de détour).

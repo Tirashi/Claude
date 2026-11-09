@@ -157,7 +157,9 @@ function postes(S, m){
   const pres = (x, y) => Math.hypot(x - FEU[0], y - FEU[1]);
   const voisin = (x, y, c) => DIRS.some(([dx, dy]) => case_(x + dx, y + dy) === c);
   if (m === "bucheron"){ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (GRILLE[y][x] === "." && voisin(x, y, "T")) res.push([x, y]); }
-  else if (m === "cueilleur"){ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (GRILLE[y][x] === "*") res.push([x, y]); }
+  else if (m === "cueilleur"){   // devant le buisson (au sud de préférence, sinon à côté) : jamais dedans
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (GRILLE[y][x] === "*"){ const c = [[0, 1], [-1, 0], [1, 0], [0, -1]].map(([dx, dy]) => [x + dx, y + dy]).find(([u, v]) => case_(u, v) === "."); if (c) res.push(c); }
+  }
   else if (m === "pecheur"){
     for (const id in S.lots || {}) if (S.lots[id] === "ponton" && (S.bat || {}).ponton) res.push([LOTS[id].x, LOTS[id].y], [LOTS[id].x, LOTS[id].y]);
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (GRILLE[y][x] === "." && voisin(x, y, "~")) res.push([x, y]);

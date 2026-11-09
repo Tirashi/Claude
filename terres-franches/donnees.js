@@ -37,17 +37,17 @@ const METIERS = {
 // bâtiments : coût de base × croissance^nombre déjà construits ; travail = durée du chantier ;
 //   terrain = où il se pose (« terre » pour la plupart) ; logement = places d'habitants ; statut = statut requis ;
 //   pres = affinités pour l'emplacement proposé (carte.js) : près du feu, de l'eau, de la forêt, des logis ou d'un bâtiment (poids > 0),
-//   ou loin (poids < 0) ; « fertile » et « pre » sont des étiquettes de terrain
+//   ou loin (poids < 0) ; « fertile » et « pre » sont des étiquettes de terrain ; desc = la phrase du volet CONSTRUIRE
 const BATIMENTS = {
-  cabane:   {nom: "CABANE",    cout: {bois: 14},              croit: 1.18, travail: 20,  terrain: "terre", logement: 2, statut: 0, pres: {feu: 4, logis: 2, fertile: -3, pre: -2}},
-  champ:    {nom: "CHAMP",     cout: {bois: 30, baies: 10},   croit: 1.3,  travail: 30,  terrain: "terre", statut: 1, pres: {fertile: 6, champ: 2, moulin: 2, feu: -1}},
-  carriere: {nom: "CARRIERE",  cout: {bois: 45},              croit: 1.5,  travail: 40,  terrain: "roche", statut: 1, pres: {feu: 1}},
-  ponton:   {nom: "PONTON",    cout: {bois: 40},              croit: 1.5,  travail: 30,  terrain: "rive",  statut: 1, pres: {feu: 1}},
-  moulin:   {nom: "MOULIN",    cout: {bois: 70, pierre: 30},  croit: 1.6,  travail: 60,  terrain: "terre", statut: 1, pres: {champ: 4, eau: 2, fertile: -4, logis: -1}},
-  four:     {nom: "FOUR",      cout: {bois: 30, pierre: 40},  croit: 1.6,  travail: 45,  terrain: "terre", statut: 1, pres: {moulin: 3, logis: 2, feu: 1, fertile: -4}},
-  maison:   {nom: "MAISON",    cout: {bois: 60, pierre: 50},  croit: 1.2,  travail: 60,  terrain: "terre", logement: 4, statut: 2, pres: {feu: 4, logis: 2, fertile: -3, pre: -2}},
-  bergerie: {nom: "BERGERIE",  cout: {bois: 90, pierre: 20},  croit: 1.5,  travail: 50,  terrain: "terre", statut: 2, pres: {pre: 6, logis: -1, fertile: -2}},
-  atelier:  {nom: "ATELIER",   cout: {bois: 80, pierre: 60},  croit: 1.6,  travail: 60,  terrain: "terre", statut: 2, pres: {logis: 3, bergerie: 2, feu: 1, fertile: -4, pre: -2}}
+  cabane:   {desc: "Un toit pour 2 habitants de plus, dans la limite du statut de la colonie.", nom: "CABANE",    cout: {bois: 14},              croit: 1.18, travail: 20,  terrain: "terre", logement: 2, statut: 0, pres: {feu: 4, logis: 2, fertile: -3, pre: -2}},
+  champ:    {desc: "2 places de fermier : du blé, sur la bonne terre.", nom: "CHAMP",     cout: {bois: 30, baies: 10},   croit: 1.3,  travail: 30,  terrain: "terre", statut: 1, pres: {fertile: 6, champ: 2, moulin: 2, feu: -1}},
+  carriere: {desc: "3 places de carrier : de la pierre.", nom: "CARRIERE",  cout: {bois: 45},              croit: 1.5,  travail: 40,  terrain: "roche", statut: 1, pres: {feu: 1}},
+  ponton:   {desc: "2 places de pêcheur de plus, au bord de l'eau.", nom: "PONTON",    cout: {bois: 40},              croit: 1.5,  travail: 30,  terrain: "rive",  statut: 1, pres: {feu: 1}},
+  moulin:   {desc: "1 meunier : le blé devient farine.", nom: "MOULIN",    cout: {bois: 70, pierre: 30},  croit: 1.6,  travail: 60,  terrain: "terre", statut: 1, pres: {champ: 4, eau: 2, fertile: -4, logis: -1}},
+  four:     {desc: "1 boulanger : farine et bois deviennent du pain.", nom: "FOUR",      cout: {bois: 30, pierre: 40},  croit: 1.6,  travail: 45,  terrain: "terre", statut: 1, pres: {moulin: 3, logis: 2, feu: 1, fertile: -4}},
+  maison:   {desc: "Un toit pour 4 habitants de plus, dans la limite du statut.", nom: "MAISON",    cout: {bois: 60, pierre: 50},  croit: 1.2,  travail: 60,  terrain: "terre", logement: 4, statut: 2, pres: {feu: 4, logis: 2, fertile: -3, pre: -2}},
+  bergerie: {desc: "2 places de berger : de la laine.", nom: "BERGERIE",  cout: {bois: 90, pierre: 20},  croit: 1.5,  travail: 50,  terrain: "terre", statut: 2, pres: {pre: 6, logis: -1, fertile: -2}},
+  atelier:  {desc: "1 tisserand : la laine devient des vêtements.", nom: "ATELIER",   cout: {bois: 80, pierre: 60},  croit: 1.6,  travail: 60,  terrain: "terre", statut: 2, pres: {logis: 3, bergerie: 2, feu: 1, fertile: -4, pre: -2}}
 };
 
 // statuts de la colonie (ère 1) : population maximale ; passer au suivant demande une population et des ressources

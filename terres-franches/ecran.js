@@ -23,7 +23,7 @@ function majBarre(){
   const st = DON.STATUTS[S.statut].nom; if ($("statut").textContent !== st) $("statut").textContent = st;
 }
 const vill = new Image(); vill.src = "img/villageois.png";
-function portrait(c, i){ const b = c.getContext("2d"); b.imageSmoothingEnabled = false; const go = () => { b.clearRect(0, 0, 30, 30); b.drawImage(vill, 576 + 17, (i || 0) * 256 + 128 + 6, 30, 30, 0, 0, 30, 30); }; vill.complete ? go() : vill.addEventListener("load", go); }
+function portrait(c, i){ const b = c.getContext("2d"); b.imageSmoothingEnabled = false; const go = () => { b.clearRect(0, 0, 30, 30); b.drawImage(vill, 576 + 17, J.rang(i || 0) * 256 + 128 + 6, 30, 30, 0, 0, 30, 30); }; vill.complete ? go() : vill.addEventListener("load", go); }
 
 /* ---------- les volets ---------- */
 let onglet = null, contenu = "";
@@ -34,6 +34,10 @@ function cout(c){
 function volVillageois(){
   const S = J.S, P = R.reglages(S.mods), t = R.taux(S);
   let h = `<h3><span>HABITANTS ${S.pop}/${R.popMax(S)}</span><span>LIBRES ${R.libres(S)}</span></h3>`;
+  // la limite : les toits (tente et feu, cabanes, maisons) ou le statut de la colonie, le plus petit des deux
+  const toits = R.logement(S), lim = P.STATUTS[S.statut].popMax, suiv = P.STATUTS[S.statut + 1];
+  h += `<p class="limite">Toits : <b>${toits}</b> · ${P.STATUTS[S.statut].nom} : <b>${lim}</b> au plus<br>${S.pop < R.popMax(S) ? "Il reste de la place : accueille quelqu'un."
+    : toits < lim ? "Il manque des toits : construis une cabane." : suiv ? `Le ${P.STATUTS[S.statut].nom.toLowerCase()} est plein : il faut devenir ${suiv.nom.toLowerCase()} (volet COLONIE).` : "Plafond de l'ère : promulgue la Loi."}</p>`;
   const c = R.coutRecrue(S);
   h += `<div class="carte"><canvas width="30" height="30" class="portrait" data-p="${S.pop}"></canvas><span class="nom">ACCUEILLIR<small>${cout(c)}</small></span><button type="button" class="bouton petit or" data-act="recruter">+1</button></div>`;
   for (const m in P.METIERS){
@@ -48,8 +52,10 @@ function volConstruire(){
   const S = J.S, P = R.reglages(S.mods); let h = "";
   for (const b in P.BATIMENTS){
     const B = P.BATIMENTS[b], e = R.peutConstruire(S, b), bloque = B.statut > S.statut, libres = C.libres(S, B.terrain).length;
-    const info = bloque ? `IL FAUT LE ${P.STATUTS[B.statut].nom}` : !libres ? "PLUS DE TERRAIN" : B.logement ? `LOGE ${B.logement} · ${libres} TERRAIN${libres > 1 ? "S" : ""}` : `${libres} TERRAIN${libres > 1 ? "S" : ""} LIBRE${libres > 1 ? "S" : ""}`;
-    h += `<div class="carte${e ? " non" : ""}" data-b="${b}"><canvas width="36" height="36" data-s="${b}"></canvas><span class="nom">${B.nom} <small>${info}</small>${bloque ? "" : cout(R.coutBat(S, b))}</span></div>`;
+    const plein = B.logement && !bloque && R.logement(S) >= P.STATUTS[S.statut].popMax;   // assez de toits : le statut limite
+    const info = bloque ? `IL FAUT LE ${P.STATUTS[B.statut].nom}` : !libres ? "PLUS DE TERRAIN" : `${libres} TERRAIN${libres > 1 ? "S" : ""} LIBRE${libres > 1 ? "S" : ""}`;
+    const desc = plein ? `Assez de toits pour le ${P.STATUTS[S.statut].nom.toLowerCase()} : un toit de plus n'apportera personne.` : B.desc;
+    h += `<div class="carte${e ? " non" : ""}" data-b="${b}"><canvas width="36" height="36" data-s="${b}"></canvas><span class="nom">${B.nom} <small>${info}</small><small class="desc${plein ? " alerte" : ""}">${desc}</small>${bloque ? "" : cout(R.coutBat(S, b))}</span></div>`;
   }
   return h;
 }
@@ -60,14 +66,20 @@ function volColonie(){
   let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3><p>${V.NOMS[V.saison(S)]} DE L'AN ${V.annee(S)}${V.pluie(S) ? (V.saison(S) === 3 ? " · IL NEIGE" : " · IL PLEUT") : ""}${V.nuit(S) > .5 ? " · LA NUIT" : ""}</p>`;
   h += mo.det.length ? mo.det.map(d => `<div class="besoin ${d.ok ? "ok" : "non"}"><i>${d.ok ? "+" : "-"}</i>${NOMS[d.k]}</div>`).join("") : `<p>Pas encore de besoins : à 6 habitants, il faudra varier la nourriture.</p>`;
   if (suiv){
-    h += `<h3 style="margin-top:8px"><span>DEVENIR ${suiv.nom}</span></h3><p>${suiv.pop} habitants (${S.pop}), puis : ${cout(suiv.cout)}</p>
-      <p>Jusqu'à ${suiv.popMax} habitants et de nouveaux bâtiments.</p><button type="button" class="bouton or" data-act="statut"${R.peutMonter(S) ? " disabled" : ""}>FONDER LE ${suiv.nom}</button>`;
+    h += `<h3 style="margin-top:8px"><span>DEVENIR ${suiv.nom}</span></h3><p>Jusqu'à ${suiv.popMax} habitants et de nouveaux bâtiments.</p>${conditions(suiv.pop, suiv.cout)}
+      <button type="button" class="bouton or" data-act="statut"${R.peutMonter(S) ? " disabled" : ""}>FONDER LE ${suiv.nom}</button>`;
   } else {
     const L = P.LOI;
-    h += `<h3 style="margin-top:8px"><span>${L.nom}</span></h3><p>La Loi de l'ère 1 : ${L.pop} habitants (${S.pop}), puis : ${cout(L.cout)}</p>`;
+    h += `<h3 style="margin-top:8px"><span>${L.nom}</span></h3><p>La Loi de l'ère 1.</p>${conditions(L.pop, L.cout)}`;
     h += S.loi ? `<p>Promulguée !</p>` : `<button type="button" class="bouton or" data-act="loi"${R.peutPromulguer(S) ? " disabled" : ""}>PROMULGUER</button>`;
   }
   return h;
+}
+// les conditions d'un statut ou de la Loi : une ligne par condition, grande icône, ce qu'on a / ce qu'il faut, cochée quand c'est bon
+function conditions(pop, c){
+  const S = J.S, ligne = (ok, icone, a, n, nom) => `<div class="cond ${ok ? "ok" : "non"}"><i>${ok ? "✔" : "✘"}</i>${icone}<b>${a} / ${n}</b><span>${nom}</span></div>`;
+  return `<div class="conds">${ligne(S.pop >= pop, `<canvas class="ic" width="30" height="30" data-p="0"></canvas>`, S.pop, pop, "HABITANTS")}`
+    + Object.entries(c).map(([r, n]) => ligne(S.res[r] + 1e-9 >= n, ic(r), fmt(S.res[r]), fmt(n), nomRes(r))).join("") + `</div>`;
 }
 const VOLETS = {villageois: volVillageois, construire: volConstruire, colonie: volColonie};
 function majVolet(force){

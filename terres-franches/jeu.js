@@ -62,14 +62,23 @@ function planterArbres(){
   for (let y = -2; y < C.H - 1; y += 2) for (let xx = -2; xx < C.W + 1; xx += 2){
     let n = 0; for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) if (C.case_(xx + dx, y + dy) === "T") n++;
     if (n < 3) continue;
-    const h = hash(xx, y), X = (xx + 1 + (h - .5) * 1.2) * T, Y = (y + 1.6 + (hash(y, xx) - .5) * 1) * T;
-    ARBRES.push({X, Y, n: "s-arbre" + (1 + Math.floor(h * 6)), ph: h * 6});
+    const h = hash(xx, y), n2 = "s-arbre" + (1 + Math.floor(h * 6));
+    // décalé au hasard, sinon au centre du carré, sinon on recule vers la forêt : l'ombre au pied ne doit pas toucher l'eau
+    for (const [ox, oy] of [[(h - .5) * 1.2, (hash(y, xx) - .5)], [0, 0], [.5, 0], [-.5, 0], [0, -.5]]){
+      const X = (xx + 1 + ox) * T, Y = (y + 1.6 + oy) * T;
+      if (piedSec(X, Y, AT[n2] ? AT[n2][2] * .42 : 40)){ ARBRES.push({X, Y, n: n2, ph: h * 6}); break; }
+    }
   }
   for (let y = 0; y < C.H; y++) for (let xx = 0; xx < C.W; xx++){
     if (C.GRILLE[y][xx] !== "T") continue;
     const voisin = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => /[.*]/.test(C.case_(xx + dx, y + dy)));
-    if (voisin && hash(xx * 3, y * 7) < .35) ARBRES.push({X: (xx + .5) * T, Y: (y + .95) * T, n: "s-jeune", ph: xx});
+    if (voisin && hash(xx * 3, y * 7) < .35 && piedSec((xx + .5) * T, (y + .95) * T, 26)) ARBRES.push({X: (xx + .5) * T, Y: (y + .95) * T, n: "s-jeune", ph: xx});
   }
+}
+// le pied d'un arbre (ellipse de demi-largeur r) est-il loin de l'eau ?
+function piedSec(X, Y, r){
+  for (const [dx, dy] of [[-r, 0], [r, 0], [0, -6], [0, 10], [-r * .7, 8], [r * .7, 8], [0, 0]]) if (C.case_(Math.floor((X + dx) / T), Math.floor((Y + dy) / T)) === "~") return false;
+  return true;
 }
 // le sol, redessiné quand une rue, un bâtiment ou le statut change
 let fond = null, cleFond = "", ROUTES = {traces: [], cases: new Set()};
@@ -84,7 +93,17 @@ function dessinerFond(){
   for (let k = 0; k < 160; k++){ const h = hash(k, 7), X = hash(k, 3) * MW, Y = h * MH; b.fillStyle = k % 2 ? "rgba(255,255,200,.05)" : "rgba(20,60,10,.06)"; b.beginPath(); b.ellipse(X, Y, 20 + h * 40, 12 + h * 20, 0, 0, 6.3); b.fill(); }
   b.drawImage(SOUS_BOIS, 0, 0); b.drawImage(RIVE, 0, 0);
   const terre = b.createPattern(piece("terre"), "repeat"), st = S.statut, [fx, fy] = C.FEU;
-  // la place : terre battue (pavée au village)
+  // les rues (avant la place : elles s'y fondent)
+  ROUTES = C.routes(S);
+  b.lineCap = b.lineJoin = "round";
+  const PXf = (fx + .5) * T, PYf = (fy + .5) * T;
+  for (const [w, s] of [[24, "rgba(90,70,30,.35)"], [20, terre]]){
+    b.lineWidth = w; b.strokeStyle = s;
+    for (const tr of ROUTES.traces){ const p = lisser(tr.cases); b.beginPath(); b.moveTo(p[0][0], p[0][1]);
+      if (p.length === 1){ const d = Math.hypot(PXf - p[0][0], PYf - p[0][1]) || 1; b.lineTo(p[0][0] + (PXf - p[0][0]) / d * T * 1.2, p[0][1] + (PYf - p[0][1]) / d * T * 1.2); }
+      for (const q of p.slice(1)) b.lineTo(q[0], q[1]); b.stroke(); }
+  }
+  // la place : terre battue (pavée au village), par-dessus le bout des rues
   const R0 = C.PLACE(st) * T, PX = (fx + .5) * T, PY = (fy + .5) * T;
   {  // bord irrégulier et adouci (piétiné), pavés au village
     const tmp = document.createElement("canvas"); tmp.width = MW; tmp.height = MH; const tb = tmp.getContext("2d");
@@ -95,18 +114,22 @@ function dessinerFond(){
     tb.globalCompositeOperation = "destination-in"; const g = tb.createRadialGradient(PX, PY, R0 * .6, PX, PY, R0 * 1.15); g.addColorStop(0, "#000"); g.addColorStop(1, "rgba(0,0,0,0)");
     tb.fillStyle = g; tb.fillRect(0, 0, MW, MH); b.drawImage(tmp, 0, 0);
   }
-  // les rues
-  ROUTES = C.routes(S);
-  b.lineCap = b.lineJoin = "round";
-  for (const [w, s] of [[24, "rgba(90,70,30,.35)"], [20, terre]]){
-    b.lineWidth = w; b.strokeStyle = s;
-    for (const tr of ROUTES.traces){ const p = lisser(tr.cases); b.beginPath(); b.moveTo(p[0][0], p[0][1]); if (p.length === 1) b.lineTo(p[0][0] + .1, p[0][1]); for (const q of p.slice(1)) b.lineTo(q[0], q[1]); b.stroke(); }
-  }
   // pied des terrains bâtis : un peu de terre devant la porte, potager des cabanes
   for (const id in S.lots){ const L = C.LOTS[id], bk = S.lots[id]; if (L.terrain !== "terre" || bk === "champ") continue;
     b.fillStyle = "rgba(80,110,40,.25)"; b.fillRect(L.x * T + 4, L.y * T + 8, L.l * T - 8, L.h * T - 10); }
   V.sol(c, saisonVue);   // l'herbe de la saison
+  // le puits (hameau) puis la fontaine (village) : au bord de la place, jamais sur une rue ni sur un terrain
+  PUITS = null;
+  if (st >= 1){
+    const Rp = C.PLACE(st) * .78;
+    for (const an of [3.6, 2.7, 5.8, .5, 4.4, 1.6, 5.1, 3.1]){
+      const px = fx + .5 + Math.cos(an) * Rp, py = fy + .5 + Math.sin(an) * Rp * .85, cx = Math.floor(px), cy = Math.floor(py);
+      const occupe = [[0, 0], [-1, 0], [1, 0], [0, -1]].some(([dx, dy]) => ROUTES.cases.has((cy + dy) * C.W + cx + dx) || C.case_(cx + dx, cy + dy) !== "." && C.case_(cx + dx, cy + dy) !== "^" || Object.keys(C.LOTS).some(id => { const L = C.LOTS[id]; return cx + dx >= L.x && cx + dx < L.x + L.l && cy + dy >= L.y && cy + dy < L.y + L.h; }));
+      if (!occupe){ PUITS = [px * T, (py + .4) * T]; break; }
+    }
+  }
 }
+let PUITS = null;
 
 /* ---------- l'eau, animée ---------- */
 let motifEau = null;
@@ -141,12 +164,49 @@ function champ(L, t, i){
     x.drawImage(planche, at[0], at[1] + y, at[2], 2, X + dx, Y + y * H / at[3], W, 2 * H / at[3] + .5); }
 }
 // fumée : haut de la cheminée, en px de l'image (repérés pour la maquette 7)
-const CHEMINEES = {chaume3: [74.5, 1], chaume4: [74, 10], colomb1: [77.5, 7], colomb2: [63, 21], pierre2: [63, 19], pierre3: [15.5, 6], pierre5: [19, 2]};
+const CHEMINEES = {four: [35, 31], chaume3: [74.5, 1], chaume4: [74, 10], colomb1: [77.5, 7], colomb2: [63, 21], pierre2: [63, 19], pierre3: [15.5, 6], pierre5: [19, 2]};
 function fumee(n, X, Y, k, t, gris){
-  const c = CHEMINEES[n], a0 = AT[n]; if (!c || !a0) return;
+  const c = CHEMINEES[n] || (CHEMINEE_AJOUT[n] && [CHEMINEE_AJOUT[n][0], CHEMINEE_AJOUT[n][1] - 15]), a0 = AT[n]; if (!c || !a0) return;
   const X0 = X - a0[2] * k / 2 + c[0] * k, Y0 = Y - a0[3] * k + c[1] * k, w = vent(X, Y, t);
   for (let q = 0; q < 6; q++){ const a = (t * .45 + q / 6 + X * .01) % 1, r = 2 + a * 6;
-    x.fillStyle = `rgba(${gris ? "130,130,135" : "232,232,236"},${.55 * (1 - a)})`; x.beginPath(); x.arc(X0 + a * a * (14 + w * 12) + Math.sin(t * 2 + q) * a * 2, Y0 - 1 - r * .6 - a * 30, r, 0, 6.3); x.fill(); }
+    x.fillStyle = `rgba(${gris ? "120,120,126" : "214,214,220"},${.75 * (1 - a)})`; x.beginPath(); x.arc(X0 + a * a * (14 + w * 12) + Math.sin(t * 2 + q) * a * 2, Y0 - 1 - r * .6 - a * 30, r, 0, 6.3); x.fill(); }
+}
+function feuDeCamp(X, Y, t){
+  x.fillStyle = "rgba(30,20,10,.35)"; x.beginPath(); x.ellipse(X, Y, 20, 8, 0, 0, 6.3); x.fill();
+  // les bûches croisées (sous les flammes)
+  x.lineCap = "round";
+  for (const [a, c] of [[.5, "#6b4423"], [-.45, "#5a381c"], [.05, "#7a4e2a"]]){ x.strokeStyle = c; x.lineWidth = 5; x.beginPath(); x.moveTo(X - Math.cos(a) * 14, Y - 3 + Math.sin(a) * 4); x.lineTo(X + Math.cos(a) * 14, Y - 3 - Math.sin(a) * 4); x.stroke(); }
+  x.fillStyle = "#3a2210"; for (const [a, b] of [[-13, -4], [12, -6], [-12, -1], [13, -1]]) x.fillRect(Math.round(X + a) - 1, Math.round(Y + b) - 1, 3, 3);
+  x.lineCap = "butt";
+  // le cercle de pierres (devant)
+  for (let k = 0; k < 9; k++){ const an = k / 9 * 6.283 + .3, px = X + Math.cos(an) * 17, py = Y - 2 + Math.sin(an) * 6; if (Math.sin(an) < -.2) continue;
+    x.fillStyle = "#6e6a62"; x.beginPath(); x.ellipse(px, py, 4.5, 3.2, 0, 0, 6.3); x.fill(); x.fillStyle = "#9a958a"; x.fillRect(Math.round(px - 2), Math.round(py - 3), 3, 1); }
+  // les flammes : des langues qui ondulent, du rouge au jaune
+  const lang = (dx, h, l, c, ph) => { const o = Math.sin(t * 7 + ph) * 2 + Math.sin(t * 13 + ph * 2) * 1, hh = h * (.85 + .15 * Math.sin(t * 9 + ph * 3));
+    x.fillStyle = c; x.beginPath(); x.moveTo(X + dx - l, Y - 4); x.quadraticCurveTo(X + dx - l * .8, Y - 4 - hh * .55, X + dx + o, Y - 4 - hh); x.quadraticCurveTo(X + dx + l * .8, Y - 4 - hh * .55, X + dx + l, Y - 4); x.fill(); };
+  for (const [dx, h, l, ph] of [[-6, 16, 6, 0], [6, 15, 6, 2], [0, 22, 8, 4]]) lang(dx, h, l, "#d8452a", ph);
+  for (const [dx, h, l, ph] of [[-4, 11, 4.5, 1], [4, 12, 4.5, 3], [0, 16, 5.5, 5]]) lang(dx, h, l, "#f59a2c", ph);
+  lang(0, 9 + Math.sin(t * 11) * 1.5, 3.5, "#ffe27a", 6);
+  // étincelles qui montent
+  for (let k = 0; k < 4; k++){ const u = (t * .8 + k / 4) % 1; x.fillStyle = `rgba(255,${200 - u * 120},80,${1 - u})`; x.fillRect(Math.round(X + Math.sin(k * 2.3 + t * 2) * 6 * u), Math.round(Y - 14 - u * 26), 2, 2); }
+}
+// cheminées ajoutées aux maisons du pack qui n'en ont pas (pied de la cheminée sur le toit, en px de l'image)
+const CHEMINEE_AJOUT = {chaume1: [74, 18], chaume2: [62, 34], chaume5: [80, 24], colomb3: [80, 27], colomb4: [82, 16], pierre1: [80, 27], pierre4: [64, 32]};
+function cheminee(n, X, Y, k){
+  const c = CHEMINEE_AJOUT[n], a0 = AT[n]; if (!c || !a0) return;
+  const X0 = Math.round(X - a0[2] * k / 2 + c[0] * k), Y0 = Math.round(Y - a0[3] * k + c[1] * k);
+  x.fillStyle = "#5a5450"; x.fillRect(X0 - 4, Y0 - 13, 9, 13); x.fillStyle = "#8a847c"; x.fillRect(X0 - 3, Y0 - 12, 7, 11);
+  x.fillStyle = "#a8a298"; x.fillRect(X0 - 5, Y0 - 15, 11, 3); x.fillStyle = "#3a3430"; x.fillRect(X0 - 3, Y0 - 14, 7, 1);
+  x.fillStyle = "#6e6862"; x.fillRect(X0 - 3, Y0 - 8, 7, 1); x.fillRect(X0 - 3, Y0 - 4, 7, 1);
+}
+function buissonBaies(cx, cy, t){
+  const X = (cx + .5) * T, Y = (cy + 1) * T;
+  spr("buisson", X, Y, .4, t * 5 + cx, 8);
+  if (saisonVue === 3) return;
+  const mur = saisonVue === 0 ? .35 : 1;   // au printemps, peu de baies
+  for (let k = 0; k < 9; k++){ if (hash(cx * 9 + k, cy) > mur) continue;
+    const bx = Math.round(X - 13 + hash(k, cx + cy * 3) * 26), by = Math.round(Y - 30 + hash(cy + k, cx) * 20);
+    x.fillStyle = "#5a0e1e"; x.fillRect(bx - 1, by - 1, 5, 5); x.fillStyle = k % 3 ? "#d8243a" : "#8a3ad0"; x.fillRect(bx, by, 3, 3); x.fillStyle = "#ffd0d8"; x.fillRect(bx, by, 1, 1); }
 }
 function tente(X, Y){
   x.fillStyle = "rgba(30,40,20,.3)"; x.beginPath(); x.ellipse(X, Y, 26, 7, 0, 0, 6.3); x.fill();
@@ -164,9 +224,10 @@ function ponton(L){
   x.fillStyle = "#4a2c16"; for (const px of [lg - 8, lg / 2 - 4]) for (const py of [-12, 6]) x.fillRect(px, py, 6, 6);
   x.restore();
 }
+const ROCHERS = [[13, 26, .6], [50, 33, .58], [31, 60, .5]];   // [x, pied, taille] dans un terrain de 2 × 2
 function carriere(L, bati){
   const X = L.x * T, Y = L.y * T;
-  spr("rocher", X + 18, Y + 44, 1); spr("rocher", X + 46, Y + 40, .9); spr("rocher", X + 34, Y + 62, .8);
+  for (const [a, b, k] of ROCHERS) spr("rocher", X + a, Y + b, k);
   if (!bati) return;
   for (const [a, b, w, h] of [[2, 46, 12, 8], [14, 50, 10, 7], [44, 52, 13, 9], [52, 44, 9, 7]]){ x.fillStyle = "#7d7a74"; x.fillRect(X + a, Y + b, w, h); x.fillStyle = "#a9a59c"; x.fillRect(X + a, Y + b, w, 2); }
   x.fillStyle = "#6a4a26"; x.fillRect(X + 58, Y + 14, 3, 42); x.fillRect(X + 40, Y + 14, 21, 3); x.fillStyle = "#d8d0b8"; x.fillRect(X + 42, Y + 17, 1, 14);
@@ -187,7 +248,8 @@ function spriteDe(b, id){ if (MAISONS[b]){ const l = MAISONS[b]; return [l[id.ch
 const AG = [];                                  // un par habitant ; i = rangée de villageois.png
 const PIONNIER = VL.adultes.length - 1;
 const ENTREE = [2, 23];
-const rang = i => i === PIONNIER ? PIONNIER : i % (VL.adultes.length - 1);   // le pionnier a sa rangée à lui
+// le pionnier (dernière rangée) est le premier villageois : AG[0] ; les autres prennent les rangées suivantes
+const rang = i => i === 0 ? PIONNIER : (i - 1) % (VL.adultes.length - 1);
 const outil = i => VL.adultes[rang(i)].outil;
 function lpc(a, X, Y, k){
   const ry = rang(a.i) * 256, row = {h: 0, g: 1, b: 2, d: 3}[a.dir] || 2;
@@ -212,7 +274,7 @@ function marcher(a, cible, ensuite){
 }
 function surPlace(a){ const [fx, fy] = C.FEU, r = C.PLACE(S.statut) * .7, an = hash(a.i, Math.floor(a.t)) * 6.3; return [Math.round(fx + Math.cos(an) * r), Math.round(fy + Math.sin(an) * r * .8)]; }
 function synchroniser(){
-  while (AG.length < S.pop){ const i = AG.length; AG.push({i, x: (ENTREE[0] + .5) * T, y: (ENTREE[1] + .5) * T, dir: "h", f: 0, t: 0, job: null, etat: "pret", anim: "marche"}); }
+  while (AG.length < S.pop){ const i = AG.length, [x0, y0] = i === 0 ? [PI.x, PI.y] : [(ENTREE[0] + .5) * T, (ENTREE[1] + .5) * T]; AG.push({i, x: x0, y: y0, dir: i ? "h" : "b", f: 0, t: 0, job: null, etat: "pret", anim: "marche"}); }
   AG.length = Math.min(AG.length, S.pop);
   for (const m in S.jobs){
     const les = AG.filter(a => a.job === m);
@@ -232,7 +294,7 @@ function poste(a){
   return q;
 }
 function regarder(a, xx, yy){   // tourné vers la forêt, l'eau ou le rocher voisin
-  const cible = a.job === "bucheron" ? "T" : a.job === "pecheur" ? "~" : a.job === "carrier" ? /[XY]/ : null;
+  const cible = a.job === "bucheron" ? "T" : a.job === "pecheur" ? "~" : a.job === "cueilleur" ? "*" : a.job === "carrier" ? /[XY]/ : null;
   if (!cible) return;
   for (const [dx, dy, d] of [[-1, 0, "g"], [1, 0, "d"], [0, -1, "h"], [0, 1, "b"]]){ const c = C.case_(xx + dx, yy + dy); if (c === cible || (cible instanceof RegExp && cible.test(c))){ a.dir = d; return; } }
 }
@@ -254,7 +316,7 @@ function bouger(a, dt){
       if (a.job !== m){ a.etat = "pret"; return; }
       if (DON.METIERS[m].entree){ a.etat = "dedans"; a.fin = a.t + 30; return; }
       if (m === "berger"){ a.etat = "flane"; a.anim = "repos"; a.dir = "b"; a.fin = a.t + 8; return; }
-      a.etat = "travail"; a.anim = m === "pecheur" ? "repos" : "travail"; regarder(a, p[0], p[1]); if (a.anim === "travail" && a.dir !== "g" && a.dir !== "d") a.dir = hash(a.i, 9) < .5 ? "g" : "d";
+      a.etat = "travail"; a.anim = m === "pecheur" || m === "cueilleur" ? "repos" : "travail"; regarder(a, p[0], p[1]); if (a.anim === "travail" && a.dir !== "g" && a.dir !== "d") a.dir = hash(a.i, 9) < .5 ? "g" : "d";
       a.fin = a.t + (DUREE[m] || 8);
     });
     return;
@@ -272,12 +334,15 @@ function dessinerAgent(a){
   lpc(a, a.x, a.y, .75);
   if (a.porte){ const ic = ICONE[a.porte], at = AT[ic]; if (at) x.drawImage(planche, at[0], at[1], at[2], at[3], Math.round(a.x - 8), Math.round(a.y - 58), 16, 16 * at[3] / at[2]); }
   if (a.job === "pecheur" && a.etat === "travail"){   // la ligne du pêcheur
-    const s = a.dir === "g" ? -1 : a.dir === "d" ? 1 : 0, sy = a.dir === "h" ? -1 : a.dir === "b" ? 1 : 0, ex = a.x + s * 30 + (s ? 0 : 6), ey = a.y - 8 + sy * 26 + Math.sin(a.t * 2) * 1.5;
-    x.strokeStyle = "rgba(240,240,220,.8)"; x.lineWidth = 1; x.beginPath(); x.moveTo(a.x + s * 6, a.y - 30); x.quadraticCurveTo(a.x + s * 22, a.y - 34, ex, ey); x.stroke(); x.fillStyle = "#e04030"; x.fillRect(Math.round(ex) - 1, Math.round(ey) - 1, 3, 3);
+    const s = a.dir === "g" ? -1 : a.dir === "d" ? 1 : 0, sy = a.dir === "h" ? -1 : a.dir === "b" ? 1 : 0;
+    const mx = a.x + (s ? s * 7 : 7), my = a.y - 19, bx = mx + s * 16 + (s ? 0 : 3), by = my - 16 + sy * 4 + Math.sin(a.t * 1.3) * 1;   // main, bout de la canne
+    const ex = a.x + s * 34 + (s ? 0 : 8), ey = a.y - 6 + sy * 30 + Math.sin(a.t * 2) * 1.5;                                          // le bouchon
+    x.strokeStyle = "#5a3a1a"; x.lineWidth = 2; x.beginPath(); x.moveTo(mx, my); x.lineTo(bx, by); x.stroke();
+    x.strokeStyle = "rgba(240,240,220,.8)"; x.lineWidth = 1; x.beginPath(); x.moveTo(bx, by); x.quadraticCurveTo((bx + ex) / 2, by + 4, ex, ey); x.stroke(); x.fillStyle = "#e04030"; x.fillRect(Math.round(ex) - 1, Math.round(ey) - 1, 3, 3);
   }
 }
 // le pionnier, devant sa tente
-const PI = {i: PIONNIER, x: (C.TENTE[0] + 1.6) * T, y: (C.TENTE[1] + 1.2) * T, dir: "b", f: 0, anim: "repos", fin: 0};
+const PI = {i: 0, x: (C.TENTE[0] + 1.6) * T, y: (C.TENTE[1] + 1.2) * T, dir: "b", f: 0, anim: "repos", fin: 0};
 
 /* ---------- les chiffres qui s'envolent ---------- */
 const flottes = [];
@@ -350,8 +415,9 @@ function batiment(b, id, t, fantome){
   if (b === "bergerie"){ bergerie(L, t); return; }
   const s = spriteDe(b, id); if (!s) return;
   x.fillStyle = "rgba(20,30,10,.25)"; x.beginPath(); x.ellipse(X, Y - 2, 40 * s[1] / (s[1] < 1 ? .55 : 1), 7, 0, 0, 6.3); x.fill();
-  spr(s[0], X, Y, s[1]);
+  spr(s[0], X, Y, s[1]); cheminee(s[0], X, Y, s[1]);
   if (!fantome && (b === "cabane" || b === "maison")) fumee(s[0], X, Y, s[1], t);
+  if (!fantome && b === "four" && S.jobs.boulanger) fumee("four", X, Y, s[1], t, true);
 }
 function chantier(c, id, t){
   const L = C.LOTS[id], X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 6, tot = DON.BATIMENTS[c.k].travail, u = 1 - c.reste / tot;
@@ -395,19 +461,19 @@ function image(now){
   // tout ce qui a des pieds, rangé de haut en bas
   const L = [], vis = (X, Y, m) => X > X0 - m && X < X0 + vw + m && Y > Y0 - 20 && Y < Y0 + vh + 170;
   for (const a of ARBRES) if (vis(a.X, a.Y, 70)) L.push([a.Y, () => arbre(a, t)]);
-  for (let y = 0; y < C.H; y++) for (let xx = 0; xx < C.W; xx++) if (C.GRILLE[y][xx] === "*") L.push([(y + .9) * T, () => spr("buisson", (xx + .5) * T, (y + 1) * T, .4, (t * 5 + xx) , 8)]);
+  for (let y = 0; y < C.H; y++) for (let xx = 0; xx < C.W; xx++) if (C.GRILLE[y][xx] === "*") L.push([(y + .95) * T, () => buissonBaies(xx, y, t)]);
   for (const id in C.LOTS){ const Lo = C.LOTS[id];
-    if (Lo.terrain === "roche" && S.lots[id] !== "carriere") L.push([(Lo.y + 2) * T, () => carriere(Lo, false)]);
+    if (Lo.terrain === "roche" && S.lots[id] !== "carriere") for (const [a, b2, k] of ROCHERS) L.push([Lo.y * T + b2, () => spr("rocher", Lo.x * T + a, Lo.y * T + b2, k)]);
     if (enCours[id]) L.push([(Lo.y + Lo.h) * T, () => chantier(enCours[id], id, t)]);
     else if (S.lots[id] && !["champ", "ponton"].includes(S.lots[id])) L.push([(Lo.y + Lo.h) * T - 2, () => batiment(S.lots[id], id, t)]);
   }
   const [fx, fy] = C.FEU, [tx, ty] = C.TENTE;
-  if (S.statut < 2) L.push([(ty + .9) * T, () => tente((tx + .5) * T, (ty + .9) * T)]);   // au village, le pionnier a sa maison
-  L.push([(fy + .8) * T, () => { spr("feu", (fx + .5) * T, (fy + .95) * T, 1, t * 9, 8); }]);
-  if (S.statut >= 1) L.push([(fy - .4) * T, () => spr(S.statut >= 2 ? "fontaine" : "puits", (fx - 1.9) * T, (fy - .4) * T, S.statut >= 2 ? .8 : .7)]);
+  if (S.statut < 1) L.push([(ty + .9) * T, () => tente((tx + .5) * T, (ty + .9) * T)]);   // au hameau, le pionnier a son toit
+  L.push([(fy + .75) * T, () => feuDeCamp((fx + .5) * T, (fy + .75) * T, t)]);
+  if (PUITS) L.push([PUITS[1], () => spr(S.statut >= 2 ? "fontaine" : "puits", PUITS[0], PUITS[1], S.statut >= 2 ? .8 : .7)]);
   for (const a of AG){ bouger(a, dt); L.push([a.y, () => dessinerAgent(a)]); }
   PI.f += dt * 8; if (PI.anim === "travail" && t > PI.fin) PI.anim = "repos";
-  L.push([PI.y, () => dessinerAgent(PI)]);
+  if (!S.pop) L.push([PI.y, () => dessinerAgent(PI)]);
   V.objets(L, x, t, dt, S, AG, vis);
   L.sort((a, b) => a[0] - b[0]);
   for (const [, f] of L) f();
@@ -497,7 +563,7 @@ function toucherCase(tx, ty, wx, wy){
   if (!r) return null;
   if (R.toucher(S, r)) return null;
   flotte(wx === undefined ? (tx + .5) * T : wx, wy === undefined ? ty * T : wy - 8, r, "+" + DON.PIONNIER.toucher);
-  PI.anim = "travail"; PI.fin = dernier + .45; PI.dir = (tx + .5) * T < PI.x ? "g" : "d";
+  if (!S.pop){ PI.anim = "travail"; PI.fin = dernier + .45; PI.dir = (tx + .5) * T < PI.x ? "g" : "d"; }
   return r;
 }
 
@@ -528,7 +594,7 @@ window.addEventListener("pagehide", sauver);
 function nouvelle(){ S = R.creer(); AG.length = 0; cleFond = ""; PL = null; sauver(); cam.x = (C.FEU[0] + .5) * T; cam.y = (C.FEU[1] + 1.5) * T; cam.zi = zoomDepart(); }
 function viser(id){ const L = C.LOTS[id]; cam.x = (L.x + L.l / 2) * T + margeD() / 2 / Z[cam.zi]; cam.y = (L.y + L.h / 2) * T + (grand.matches ? 0 : 40); }
 window.Terres = {
-  get S(){ return S; }, cam, zoom, sauver, nouvelle, icone, piece, spriteDe, AT, viser, versEcran,
+  get S(){ return S; }, rang, cam, zoom, sauver, nouvelle, icone, piece, spriteDe, AT, viser, versEcran,
   get PL(){ return PL; }, set PL(v){ PL = v; },
   avance(s){ R.pas(S, s); }, toucherCase, AG, flotte
 };

@@ -59,8 +59,8 @@ const ESPECES = {
   biche: {im: "biche", l: 64, h: 96, py: 90, k: .6, v: .6, n: 4, rang: {h: 0, g: 1, b: 3, d: null}, repos: ["biche", {h: 2, g: 2, b: 2, d: null}, 4]},
   cerf: {im: "cerf", l: 64, h: 96, py: 90, k: .65, v: .6, n: 4, rang: {h: 0, g: 1, b: 3, d: null}, repos: ["cerf", {h: 2, g: 2, b: 2, d: null}, 4]},
   renard: {im: "renard", l: 64, h: 64, py: 54, k: .5, v: 1.6, n: 4, rang: {h: 3, g: 1, b: 0, d: 2}, repos: ["renard", {h: 0, g: 0, b: 0, d: 0}, 1]},
-  chien: {im: "chien", l: 32, h: 32, py: 30, k: .9, v: 1.2, n: 3, bloc: 128, rang: {h: 1, g: 0, b: 2, d: 3}, repos: ["chien", {h: 4, g: 4, b: 4, d: 4}, 3]},
-  chat: {im: "chat", l: 32, h: 32, py: 30, k: .75, v: .7, n: 3, bloc: 128, rang: {h: 1, g: 0, b: 2, d: 3}, repos: ["chat", {h: 0, g: 0, b: 0, d: 0}, 1, 3]},
+  chien: {im: "chien", l: 32, h: 32, py: 30, k: .9, v: 1.2, n: 3, bloc: 128, rang: {h: 1, g: 3, b: 2, d: 0}, repos: ["chien", {h: 4, g: 4, b: 4, d: 4}, 3]},
+  chat: {im: "chat", l: 32, h: 32, py: 30, k: .75, v: .7, n: 3, bloc: 128, rang: {h: 1, g: 3, b: 2, d: 0}, repos: ["chat", {h: 0, g: 0, b: 0, d: 0}, 1, 3]},
   poule: {im: "poule", l: 32, h: 32, py: 28, k: .7, v: .5, n: 4, rang: {h: 0, g: 1, b: 2, d: 3}, repos: ["poule-mange", {h: 0, g: 1, b: 2, d: 3}, 4]},
   oiseau: {im: "oiseau1", l: 32, h: 32, py: 26, k: .45, v: .8, n: 3, rang: {h: 5, g: 4, b: 6, d: 7}, repos: ["oiseau1", {h: 5, g: 4, b: 6, d: 7}, 3]},
   poisson: {im: "poisson", l: 32, h: 32, py: 16, k: .8, v: .6, n: 4, rang: {h: 0, g: 1, b: 3, d: 2}}
@@ -87,7 +87,8 @@ function zoneDe(a, S){
   if (a.logis){ const id = Object.keys(S.lots).find(i => S.lots[i] === "cabane" || S.lots[i] === "maison"); if (!id) return null; const L = C.LOTS[id]; return [L.x - .3, L.x + L.l + .3, L.y + L.h, L.y + L.h + .8]; }
   return null;
 }
-const libre = (x, y) => /[.^F]/.test(C.case_(Math.floor(x), Math.floor(y)));
+const libre = (x, y) => /[.^]/.test(C.case_(Math.floor(x), Math.floor(y))) && Math.hypot(x - C.FEU[0] - .5, y - C.FEU[1] - .5) > 1.3;
+function trajetLibre(x0, y0, x1, y1){ const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 3); for (let i = 1; i <= n; i++) if (!libre(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n)) return false; return true; }
 function bouger(a, dt, t, S, agents){
   const E = ESPECES[a.sp];
   if (a.suit){ const m = agents[0]; if (!m) return; const tx = m.x / T - .7, ty = m.y / T + .25, dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
@@ -95,8 +96,14 @@ function bouger(a, dt, t, S, agents){
     if (d < .3){ a.e = "pause"; return; } if (d > 8){ a.x = tx; a.y = ty; return; }
     a.e = "marche"; const v = Math.min(d, (d > 2 ? 2.4 : 1.4) * dt); a.x += dx / d * v; a.y += dy / d * v; a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "d" : "g") : (dy > 0 ? "b" : "h"); return; }
   const Z = zoneDe(a, S); if (!Z) return;
-  if (!a.pose){ a.x = Z[0] + hash(a.k, 3) * (Z[1] - Z[0]); a.y = Z[2] + hash(a.k, 5) * (Z[3] - Z[2]); a.pose = true; }
-  if (a.e === "pause"){ if (t > a.jusqua){ for (let k = 0; k < 6; k++){ a.tx = Z[0] + Math.random() * (Z[1] - Z[0]); a.ty = Z[2] + Math.random() * (Z[3] - Z[2]); if (libre(a.tx, a.ty)) break; } a.e = "marche"; } return; }
+  if (!a.pose){
+    for (let k = 0; k < 40; k++){ a.x = Z[0] + hash(a.k + k, 3) * (Z[1] - Z[0]); a.y = Z[2] + hash(a.k, 5 + k) * (Z[3] - Z[2]); if (libre(a.x, a.y)) break; }
+    a.pose = true;
+  }
+  if (a.e === "pause"){ if (t > a.jusqua){
+    for (let k = 0; k < 8; k++){ const tx = Z[0] + Math.random() * (Z[1] - Z[0]), ty = Z[2] + Math.random() * (Z[3] - Z[2]); if (trajetLibre(a.x, a.y, tx, ty)){ a.tx = tx; a.ty = ty; a.e = "marche"; break; } }
+    if (a.e === "pause") a.jusqua = t + 1;   // rien de libre en ligne droite : il attend
+  } return; }
   const dx = a.tx - a.x, dy = a.ty - a.y, d = Math.hypot(dx, dy), v = E.v * dt;
   if (d < v){ a.x = a.tx; a.y = a.ty; a.e = "pause"; a.jusqua = t + (a.calme ? 8 + Math.random() * 14 : 1.5 + Math.random() * 5); return; }
   a.x += dx / d * v; a.y += dy / d * v; a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "d" : "g") : (dy > 0 ? "b" : "h");

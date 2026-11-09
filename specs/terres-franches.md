@@ -58,6 +58,22 @@
   - **L'ancienne vallée** reste **visitable en souvenir** (figée telle qu'on l'a laissée, avec ses villageois, saisons et animaux ; menu « Mes terres ») ; elle ne produit plus.
   - **Lois : un arbre** : chaque Loi promulguée rapporte des points à dépenser dans un arbre (production, hors ligne, chantiers, recrues, place…). À concevoir avec le simulateur (ère 1 puis ère 2).
   - **Contenu prioritaire de l'ère 2** : **port et bateaux** (pêche en mer avec des barques, fumoir → poisson fumé), **planches** (scierie, pour les bâtiments avancés), **bière et taverne** (orge → brasseur → bière ; besoin « moral »). Le marché attendra.
+- **09/11 — retours de l'utilisateur après avoir joué (PC)** et corrections faites le jour même :
+  - **Feu de camp** dessiné par le code (cercle de pierres, bûches croisées, flammes qui ondulent sans s'arrêter, étincelles) à la place du feu Tiny Swords qui ressemblait à une explosion.
+  - **Baies** : buissons semés de baies rouges et violettes (peu au printemps, aucune l'hiver) ; le **cueilleur** se tient devant le buisson (au sud), plus dedans (on voyait ses jambes sous le buisson) ; il cueille à la main (pas d'outil).
+  - **Rochers** : trois rochers plus petits et espacés, rangés chacun à sa profondeur. **Arbres** : le pied et son ombre ne touchent plus l'eau (on recule l'arbre vers la forêt).
+  - **Place et rues** : les rues sont dessinées avant la place, qui les recouvre (plus de chevauchement ni de petit rond devant une porte collée à la place).
+  - **Puits / fontaine** : posés au bord de la place, jamais sur une rue ni un terrain. **Tente** : disparaît au hameau. **Le pionnier devient le premier villageois** (il prend un métier au lieu de rester au feu).
+  - **Cheminées** : dessinées sur les maisons du pack qui n'en ont pas, fumée plus visible, fumée du four quand un boulanger travaille.
+  - **Bêtes** : chien et chat tournés du bon côté (planches : ligne 0 = vers la droite) ; plus de trajet sur l'eau (le renard), ni sur le feu et ses abords (le chat).
+  - **Pêcheur** : la canne part de la main.
+  - **Interface** : volet VILLAGEOIS : « Toits : x · CAMPEMENT : 5 au plus » et la phrase qui dit ce qui bloque ; CONSTRUIRE : une phrase par bâtiment (ponton : 2 places de pêcheur de plus) et, quand il y a assez de toits, l'avertissement qu'une cabane n'apportera personne ; COLONIE : conditions en lignes (grande icône, « 8 / 800 », coche) ; plus de barre de défilement ; ressources plus grandes sur PC.
+  - **Pas encore fait** : (1) **outils par métier** : le générateur LPC a la pioche, la canne, la houe, l'arrosoir, le marteau : refaire `villageois.png` avec plusieurs outils par villageois (hache = bûcheron, pioche = carrier, houe = fermier, canne = pêcheur), étape à part ; (2) « certains personnages de face au lieu de dos » : pas retrouvé (marche, repos et travail vérifiés), à préciser.
+- **09/11 — idées de l'utilisateur (à concevoir avec le simulateur)** :
+  - **Améliorations pendant la partie** (en plus des Lois) : les **Lois** relèvent les stats de base (permanentes, entre prestiges) ; pendant la partie, des **édits / ordonnances / équipements** (brouette, outils…) donnent un pourcentage en plus : récolte au clic, quantité rapportée par voyage, vitesse de récolte, limite de population, places par ressource.
+  - **Bâtiments de stockage** : grenier (nourriture), aire de stockage (bois, pierre) ; on **voit les ressources s'accumuler** (piles de bûches, tas de pierres, sacs) ; en construire plus ou les améliorer : plus de place et récolte plus rapide (moins de trajet). Implique une **capacité** par ressource.
+  - **Loi : vitesse sur les routes** (les villageois marchent plus vite sur les rues).
+  - **Hiver** (question de l'utilisateur) : consommer plus de nourriture et du **bois de chauffage** l'hiver ?
 - Prochaines étapes après le choix : décisions du § 2, puis **simulateur d'équilibrage d'abord** (`outils/terres-simulateur.js`, ère 1), puis session 1.
 
 ## 2. Adaptations à la Ludothèque (proposées le 08/11, à confirmer)

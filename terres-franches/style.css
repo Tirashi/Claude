@@ -67,6 +67,19 @@ img, canvas{image-rendering:pixelated}
 .besoin{display:flex; gap:6px; align-items:center; font-size:12px}
 .besoin i{font-style:normal; font-family:var(--titre); font-size:9px; width:16px; text-align:center}
 .besoin.ok i{color:#9be36a} .besoin.non i{color:#ff8a7a}
+.panneau{scrollbar-width:none} .panneau::-webkit-scrollbar{display:none}   /* on fait défiler au doigt ou à la molette, sans barre */
+.limite{font-size:12px; color:#f3e2b8} .limite b{color:var(--or)}
+.carte .nom small.desc{font-weight:600; font-size:11px; color:#5a4a32; font-style:italic; line-height:1.2; margin:1px 0 2px}
+.carte .nom small.desc.alerte{color:var(--rouge)}
+/* conditions d'un statut ou de la Loi */
+.conds{display:flex; flex-direction:column; gap:3px; margin:4px 0 8px}
+.cond{display:flex; align-items:center; gap:8px; color:var(--ink); border-style:solid; border-width:6px 9px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 6px 9px stretch; min-height:40px; font-size:13px}
+.cond i{font-style:normal; font-family:var(--titre); font-size:11px; width:16px; text-align:center}
+.cond.ok i{color:#3f7a2a} .cond.non i{color:var(--rouge)}
+.cond .ic{width:28px; height:28px}
+.cond b{font-family:var(--titre); font-weight:400; font-size:10px; min-width:96px}
+.cond.non b{color:var(--rouge)}
+.cond span{font-weight:700; font-size:12px; color:#6a4a2a}
 
 /* bulle d'un bâtiment, choix du terrain */
 #bulle{position:fixed; z-index:5; transform:translate(-50%, -100%); pointer-events:auto; min-width:150px; max-width:220px; font-size:12px; text-align:center}
@@ -104,8 +117,11 @@ kbd, .touches, .aide .pc{display:none}
   .haut{flex-direction:row; align-items:flex-start; gap:12px}
   .ligne{flex:1; order:0}
   #statut{order:-1; align-self:flex-start}
-  .res span{font-size:14px; border-width:7px 8px}
-  .res .ic{width:22px; height:22px}
+  .res{gap:4px}
+  .res span{font-size:15px; border-width:8px 10px; gap:3px}
+  .res .ic{width:28px; height:28px; margin:-4px 0}
+  .res span small{font-size:10px}
+  .cond{font-size:14px} .cond .ic{width:32px; height:32px} .cond b{font-size:11px}
   .bas{position:fixed; top:64px; right:12px; bottom:12px; width:360px; justify-content:flex-start; gap:6px}
   .onglets{order:-1}
   .onglets .bouton{font-size:9px}
@@ -115,5 +131,5 @@ kbd, .touches, .aide .pc{display:none}
   .zoom{position:fixed; left:12px; bottom:12px; flex-direction:row}
   #placement{left:auto; right:12px; width:360px; bottom:12px; padding:0}
   .touches{display:block; margin:0; text-align:center; font-family:var(--titre); font-size:7px; color:var(--clair); text-shadow:1px 1px 0 #000}
-  #banniere{top:20px; left:calc(50% - 192px)}
+  #banniere{top:auto; bottom:72px; left:calc(50% - 192px)}
 }
