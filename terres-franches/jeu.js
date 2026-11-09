@@ -244,7 +244,7 @@ function bouger(a, dt){
   }
   if (a.etat === "pret"){
     if (!a.job){ marcher(a, surPlace(a), () => { a.etat = "flane"; a.anim = "repos"; a.dir = "b"; a.fin = a.t + 2 + hash(a.i, a.t | 0) * 5; }); return; }
-    const p = poste(a); if (!p){ a.job = a.job; marcher(a, surPlace(a), () => { a.etat = "flane"; a.anim = "repos"; a.fin = a.t + 4; }); return; }
+    const p = poste(a); if (!p){ marcher(a, surPlace(a), () => { a.etat = "flane"; a.anim = "repos"; a.fin = a.t + 4; }); return; }
     const m = a.job;
     marcher(a, [p[0], p[1]], () => {
       if (a.job !== m){ a.etat = "pret"; return; }
