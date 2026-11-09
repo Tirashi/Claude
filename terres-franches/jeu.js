@@ -453,28 +453,43 @@ function tas(n, X, Y, f, max, k, px, py){
 const buches = (X, Y, f, max) => tas("buche", X, Y, f, max || 10, .62, 15, 6);
 const pierres = (X, Y, f, max) => tas("rocher-p", X, Y, f, max || 6, .5, 12, 6);
 function rangee(n, X, Y, f, max, k, px){ const tot = Math.round(f * max); for (let i = 0; i < tot; i++) spr(n, X + i * px, Y, k); }
-// l'aire de stockage : un abri ouvert ; bûches et pierres devant, laine et vêtements dessous
+// l'aire de stockage : un abri ouvert à droite, le tas de bûches à gauche (sur la case voisine), pierres, laine et vêtements sous l'abri
 function aire(L, ouvert){
   const X = L.x * T, Y = L.y * T;
-  x.fillStyle = "rgba(110,85,50,.3)"; x.fillRect(X + 2, Y + 30, 60, 32);
-  x.globalAlpha = ouvert ? .35 : 1; spr("abri", X + 32, Y + 44, .68); x.globalAlpha = 1;
-  rangee("sac", X + 12, Y + 42, part("laine"), 3, .3, 10); rangee("caisse-p", X + 44, Y + 42, part("vetements"), 2, .3, 10);
-  buches(X + 2, Y + 62, part("bois"), 10); tas("rocher-p", X + 36, Y + 63, part("pierre"), 5, .44, 9, 5);
+  x.fillStyle = "rgba(110,85,50,.3)"; x.fillRect(X - 44, Y + 24, 100, 38);
+  x.globalAlpha = ouvert ? .35 : 1; spr("abri", X + 22, Y + 40, .58); x.globalAlpha = 1;
+  tas("rocher-p", X + 4, Y + 40, part("pierre"), 6, .6, 11, 7);
+  rangee("sac", X + 2, Y + 62, part("laine"), 3, .42, 12); rangee("caisse-p", X + 32, Y + 62, part("vetements"), 2, .42, 12);
+  tas("buche", X - 44, Y + 62, part("bois"), 12, .8, 16, 8);   // le gros tas de bûches (sur la case voisine, à gauche ; la rivière est à droite)
+  if (Z[cam.zi] >= 1) pancarte(X + 12, Y - 6, ["bois", "pierre", "laine", "vetements"]);
 }
-// le grenier : la grange ; quand on le touche, il devient transparent et on voit les vivres dedans (comme dans Stronghold)
+// le grenier : la grange ; paniers et sacs de part et d'autre ; quand on le touche, il devient transparent et on voit les vivres dedans (comme dans Stronghold)
 function grenier(L, ouvert){
   const X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 2;
-  x.fillStyle = "rgba(20,30,10,.25)"; x.beginPath(); x.ellipse(X, Y - 2, 32, 6, 0, 0, 6.3); x.fill();
+  x.fillStyle = "rgba(20,30,10,.25)"; x.beginPath(); x.ellipse(X, Y - 2, 46, 7, 0, 0, 6.3); x.fill();
   if (ouvert){
-    x.fillStyle = "rgba(90,62,34,.85)"; x.fillRect(X - 30, Y - 40, 60, 38);   // le plancher
-    rangee("sacs-grain", X - 27, Y - 26, part("ble"), 3, .4, 17); rangee("sac-farine", X - 27, Y - 12, part("farine"), 3, .36, 17);
-    rangee("panier-patates", X + 6, Y - 26, part("pain"), 2, .4, 17); rangee("panier-baies", X + 6, Y - 4, part("baies"), 2, .42, 18);
-    rangee("tonneau", X - 27, Y - 2, part("poisson"), 3, .36, 12);
-    x.globalAlpha = .3; spr("grange", X, Y - 4, .66); x.globalAlpha = 1; return;
+    x.fillStyle = "rgba(90,62,34,.85)"; x.fillRect(X - 30, Y - 44, 60, 42);   // le plancher
+    rangee("sacs-grain", X - 28, Y - 30, part("ble"), 3, .45, 19); rangee("sac-farine", X - 28, Y - 14, part("farine"), 3, .42, 19);
+    rangee("panier-patates", X + 4, Y - 30, part("pain"), 2, .45, 19); rangee("panier-baies", X + 4, Y - 4, part("baies"), 2, .45, 20);
+    rangee("tonneau", X - 28, Y - 2, part("poisson"), 3, .4, 13);
+    x.globalAlpha = .3; spr("grange", X, Y - 4, .62); x.globalAlpha = 1;
+  } else {
+    spr("grange", X, Y - 4, .62);
+    // à gauche les baies et le pain, à droite le poisson, devant le blé et la farine
+    tas("panier-baies", X - 50, Y - 2, part("baies"), 3, .5, 20, 12); tas("panier-patates", X - 48, Y - 26, part("pain"), 2, .42, 18, 10);
+    tas("tonneau", X + 38, Y - 2, part("poisson"), 3, .45, 14, 14);
+    rangee("sacs-grain", X - 26, Y + 12, part("ble"), 2, .45, 22); rangee("sac-farine", X + 8, Y + 12, part("farine"), 2, .42, 18);
   }
-  spr("grange", X, Y - 4, .66);
-  if (part("baies") > .02) spr("panier-baies", X - 20, Y + 12, .38); if (part("poisson") > .02) spr("tonneau", X + 20, Y + 12, .34);
-  if (part("ble") > .02) spr("sacs-grain", X - 2, Y + 12, .34);
+  if (Z[cam.zi] >= 1) pancarte(X, Y - 72, ["baies", "poisson", "ble", "farine", "pain"]);
+}
+// une petite pancarte au-dessus d'une réserve : une icône et une jauge par ressource (vert, orange, rouge quand c'est plein)
+function pancarte(X, Y, rs){
+  const vus = rs.filter(r => S.res[r] >= 1 || ["bois", "baies", "poisson"].includes(r)); if (!vus.length) return;
+  const w = vus.length * 18 + 4, X0 = Math.round(X - w / 2);
+  x.fillStyle = "rgba(58,36,16,.9)"; x.fillRect(X0 - 1, Y - 1, w + 2, 22); x.fillStyle = "#f2e2bc"; x.fillRect(X0, Y, w, 20);
+  vus.forEach((r, i) => { const a = AT[ICONE[r]], bx = X0 + 3 + i * 18, f = part(r);
+    if (a) x.drawImage(planche, a[0], a[1], a[2], a[3], bx + 1, Y + 1, 14, 14 * Math.min(1, a[3] / a[2]));
+    x.fillStyle = "#5a4024"; x.fillRect(bx, Y + 15, 16, 4); x.fillStyle = f > .985 ? "#c0392b" : f > .8 ? "#e0a030" : "#5aa02c"; x.fillRect(bx + 1, Y + 16, Math.round(14 * f), 2); });
 }
 // avant le grenier et l'aire : le stock est près du feu
 function reservesDuFeu(){
