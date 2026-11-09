@@ -176,6 +176,25 @@ function retour(r){
   $("retour").hidden = false;
 }
 
+/* ---------- le clavier (PC) : 1 2 3 = les volets, Échap = fermer / annuler / menu, Entrée = bâtir ici ---------- */
+addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  const ouvert = [...document.querySelectorAll(".ecran:not([hidden])")].filter(x => x.id !== "chargement");
+  if (e.key === "Escape"){
+    e.preventDefault();
+    if (ouvert.length) ouvert.forEach(x => { x.hidden = true; });
+    else if (J.PL) finPlacement();
+    else if (bulleLot) bulle(null);
+    else if (onglet) document.querySelector(`[data-onglet="${onglet}"]`).click();
+    else $("bMenu").click();
+    return;
+  }
+  if (ouvert.length) return;
+  if (e.key === "Enter" && J.PL){ e.preventDefault(); if (!$("bPoser").disabled) $("bPoser").click(); return; }
+  const n = ["1", "2", "3"].indexOf(e.key);
+  if (n >= 0 && !J.PL){ e.preventDefault(); document.querySelectorAll("[data-onglet]")[n].click(); }
+});
+
 let derniere = 0;
 window.TerresEcran = {
   annonce, bulle, placement, retour,

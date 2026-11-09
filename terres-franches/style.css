@@ -93,3 +93,27 @@ img, canvas{image-rendering:pixelated}
 .plaque .gains{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; font-weight:700}
 .aide p{font-size:13px; margin-bottom:6px}
 #chargement p{margin:auto; font-family:var(--titre); font-size:10px; color:var(--clair)}
+
+/* ---------- grand écran (PC) : la carte à gauche, les volets dans une colonne à droite (COLONNE = 384 px dans jeu.js) ---------- */
+kbd, .touches, .aide .pc{display:none}
+#info{position:fixed; z-index:6; pointer-events:none; font-family:var(--titre); font-size:8px; line-height:1.4; border-width:8px 10px; border-image-width:8px 10px; white-space:nowrap}
+#info[hidden]{display:none}
+@media (hover:hover) and (pointer:fine){ .aide .pc{display:block} .bouton:hover:not([disabled]){filter:brightness(1.12)} .carte[data-b]:hover{filter:brightness(1.06)} }
+@media (min-width:900px){
+  #hud{padding:12px}
+  .haut{flex-direction:row; align-items:flex-start; gap:12px}
+  .ligne{flex:1; order:0}
+  #statut{order:-1; align-self:flex-start}
+  .res span{font-size:14px; border-width:7px 8px}
+  .res .ic{width:22px; height:22px}
+  .bas{position:fixed; top:64px; right:12px; bottom:12px; width:360px; justify-content:flex-start; gap:6px}
+  .onglets{order:-1}
+  .onglets .bouton{font-size:9px}
+  kbd{display:inline; margin-left:6px; font:inherit; font-size:7px; opacity:.7}
+  .panneau{max-height:none; flex:0 1 auto; min-height:0; font-size:14px}
+  .carte .nom{font-size:14px} .carte .nom small{font-size:12px}
+  .zoom{position:fixed; left:12px; bottom:12px; flex-direction:row}
+  #placement{left:auto; right:12px; width:360px; bottom:12px; padding:0}
+  .touches{display:block; margin:0; text-align:center; font-family:var(--titre); font-size:7px; color:var(--clair); text-shadow:1px 1px 0 #000}
+  #banniere{top:20px; left:calc(50% - 192px)}
+}

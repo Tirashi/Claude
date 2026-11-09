@@ -28,17 +28,19 @@
     <div class="zoom"><button type="button" id="zPlus" class="carre" aria-label="Zoom avant">+</button><button type="button" id="zMoins" class="carre" aria-label="Zoom arriere">−</button></div>
     <div id="panneau" class="panneau table" hidden></div>
     <div class="onglets">
-      <button type="button" class="bouton" data-onglet="villageois">VILLAGEOIS</button>
-      <button type="button" class="bouton" data-onglet="construire">CONSTRUIRE</button>
-      <button type="button" class="bouton" data-onglet="colonie">COLONIE</button>
+      <button type="button" class="bouton" data-onglet="villageois">VILLAGEOIS<kbd>1</kbd></button>
+      <button type="button" class="bouton" data-onglet="construire">CONSTRUIRE<kbd>2</kbd></button>
+      <button type="button" class="bouton" data-onglet="colonie">COLONIE<kbd>3</kbd></button>
     </div>
   </div>
 </div>
 <div id="banniere" class="ruban"></div>
+<div id="info" class="papier" hidden></div>
 <div id="bulle" class="papier" hidden></div>
 <div id="placement" hidden>
   <p class="papier" id="placeTexte"></p>
   <div class="rang"><button type="button" id="bPoser" class="bouton or">BATIR ICI</button><button type="button" id="bAnnulerP" class="bouton">ANNULER</button></div>
+  <p class="touches">ENTREE : BATIR · ECHAP : ANNULER</p>
 </div>
 
 <div id="menu" class="ecran" hidden>
@@ -52,6 +54,7 @@
       <p><b>Villageois</b> : avec des vivres et du bois, accueille un villageois (il faut un toit : la tente et le feu en abritent deux, chaque cabane deux de plus). Donne-lui un métier avec + et −.</p>
       <p><b>Construire</b> : choisis un bâtiment ; le jeu propose le terrain le plus logique (les champs sur la bonne terre, le moulin près des champs, les cabanes autour du feu) et trace la rue. Touche un autre terrain pour changer d'avis. Touche un bâtiment pour le déplacer.</p>
       <p><b>Colonie</b> : le campement devient hameau puis village (plus d'habitants, nouveaux bâtiments). Varier la nourriture, du pain et des vêtements donnent du moral : tout le monde travaille plus vite. Au village complet, promulgue la Charte du Village.</p>
+      <p class="pc"><b>Sur ordinateur</b> : clic pour toucher, glisser ou flèches (ZQSD) pour bouger la carte, molette ou + et − pour zoomer ; 1, 2, 3 ouvrent les volets, Entrée bâtit, Échap ferme ou annule.</p>
       <p><b>Absence</b> : la colonie continue sans toi, mais bien plus lentement (le quart, 4 h au plus).</p>
     </div>
     <button type="button" id="bNouvelle" class="bouton">NOUVELLE PARTIE</button>

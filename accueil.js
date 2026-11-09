@@ -64,6 +64,7 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-09", "maj", "terres-franches", "Terres franches se joue aussi sur ordinateur : la vallée à gauche, les volets dans une colonne à droite, la molette pour zoomer, les flèches pour se promener, 1 2 3 pour les volets, et le nom de ce qu'on survole. Sur l'étagère, le jeu devient une disquette."],
   ["2026-11-08", "neuf", "terres-franches", "Terres franches, première ère : un pionnier, une tente et un feu au bord d'une rivière. Récolte, accueille des villageois, donne-leur un métier (bûcheron, pêcheur, fermier, meunier, boulanger…) et bâtis : le jeu propose le terrain le plus logique et trace les rues, tu peux tout déplacer. Le campement devient hameau puis village, et la colonie travaille encore (doucement) quand l'appli est fermée."],
   ["2026-11-07", "neuf", "pokedex", "Le premier atelier : un Pokédex avec les 1025 Pokémon en français. Pour chacun, son dessin, ses types, ses évolutions et ce qu'on sait de lui. Cherche par nom, numéro ou type, et l'onglet Types te dit qui gagne : choisis l'attaque et le Pokémon qui défend, il donne les dégâts."],
   ["2026-11-07", "acc", "", "Une nouvelle étagère sous les jeux : les ATELIERS, des outils pour apprendre et créer. On y trouve le Pokédex, Calculator et le Jeu de la vie."],
@@ -178,15 +179,16 @@ function objet(g, i){
   b.append(o, el("b", "nm", g.n));
   return b;
 }
-// une cartouche en 3D : six faces ; la face avant change selon la famille
+// une cartouche en 3D : six faces ; la face avant change selon la famille (carte.disquette : une disquette 3½, jeu qui se joue aussi au clavier et à la souris)
 function cart(g, i){
   if (g.objet) return objet(g, i);
-  const st = FAMSTYLE[g.fam], b = el("button", "c3 s" + st);
+  const st = g.disquette ? "E" : FAMSTYLE[g.fam], b = el("button", "c3 s" + st);
   b.type = "button"; b.dataset.k = g.k;
   b.style.cssText = `--i:${i}; --lb:${g.lb}; --lt:${g.lt}; --sh:${g.sh}`;
   const body = el("div", "body"), front = el("div", "f front"), lab = el("div", "lab");
   if (st === "A"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "rid"), lab, el("i", "notch")); }
   else if (st === "B"){ body.append(el("div", "f pcb")); lab.append(art(g), el("b", "", g.s)); front.append(el("span", "emb", "LUDO"), lab, el("span", "arw", "▼")); }
+  else if (st === "E"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "volet"), el("i", "trou"), lab, el("span", "tagpc", "PC")); }
   else if (st === "D"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "disc"), el("i", "spine"), lab, el("span", "tag3d", "3D")); }
   else { lab.append(art(g)); front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip")); }
   ["back", "left", "right", "top", "bottom"].forEach(f => body.append(el("div", "f " + f)));

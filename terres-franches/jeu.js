@@ -293,10 +293,27 @@ function dessinerFlottes(dt){
 /* ---------- la caméra ---------- */
 const Z = [.6, .8, 1, 1.4, 2, 2.8];
 const cam = {x: (C.FEU[0] + .5) * T, y: (C.FEU[1] + 1.5) * T, zi: 2};
-function zoom(d){ cam.zi = Math.max(0, Math.min(Z.length - 1, cam.zi + d)); }
+// sur grand écran (PC), les volets sont dans une colonne à droite (style.css) : la carte se cadre à sa gauche
+const grand = matchMedia("(min-width: 900px)"), COLONNE = 384;
+const margeD = () => grand.matches ? COLONNE : 0;
+// zoom ; avec un point de l'écran (molette), ce point reste sous le curseur
+function zoom(d, sx, sy){
+  const zi = Math.max(0, Math.min(Z.length - 1, cam.zi + d)); if (zi === cam.zi) return;
+  if (sx === undefined){ cam.zi = zi; return; }
+  const [wx, wy] = versMonde(sx, sy); cam.zi = zi; const z = Z[zi];
+  cam.x = wx - (sx - cv.clientWidth / 2) / z; cam.y = wy - (sy - cv.clientHeight / 2) / z;
+}
+// zoom de départ : sur PC, le plus grand qui montre toute la vallée à gauche de la colonne
+function zoomDepart(){
+  if (!grand.matches) return 2;
+  const lw = cv.clientWidth - COLONNE, lh = cv.clientHeight; let zi = 0;
+  Z.forEach((z, i) => { if (MW * z <= lw * 1.1 && MH * z <= lh * 1.1) zi = i; });
+  return zi;
+}
 function borner(vw, vh){
-  cam.x = vw >= MW ? MW / 2 : Math.max(vw / 2, Math.min(MW - vw / 2, cam.x));
-  cam.y = vh >= MH ? MH / 2 : Math.max(vh / 2 - 60, Math.min(MH - vh / 2 + 120, cam.y));
+  const md = margeD() / Z[cam.zi];
+  cam.x = vw - md >= MW ? MW / 2 + md / 2 : Math.max(vw / 2, Math.min(MW - vw / 2 + md, cam.x));
+  cam.y = vh >= MH ? MH / 2 : Math.max(vh / 2 - 60, Math.min(MH - vh / 2 + (grand.matches ? 60 : 120), cam.y));
 }
 const versMonde = (sx, sy) => { const z = Z[cam.zi]; return [cam.x + (sx - cv.clientWidth / 2) / z, cam.y + (sy - cv.clientHeight / 2) / z]; };
 const versEcran = (wx, wy) => { const z = Z[cam.zi]; return [(wx - cam.x) * z + cv.clientWidth / 2, (wy - cam.y) * z + cv.clientHeight / 2]; };
@@ -351,6 +368,10 @@ function image(now){
   requestAnimationFrame(image);
   const t = now / 1000, dt = Math.min(.25, Math.max(0, t - dernier)); dernier = t;
   if (!S) return;
+  if (fleches.size && !document.querySelector(".ecran:not([hidden])")){   // flèches ou ZQSD/WASD : la carte glisse
+    const v = 520 * dt / Z[cam.zi];
+    for (const k of fleches){ const d = DIRS[k]; cam.x += d[0] * v; cam.y += d[1] * v; }
+  }
   R.pas(S, dt);
   // ce que les règles annoncent
   if (S.evts.length){ for (const e of S.evts) window.TerresEcran && window.TerresEcran.annonce(e.txt, e.bon); S.evts = []; }
@@ -409,6 +430,7 @@ cv.addEventListener("pointerdown", e => {
   if (doigts.size === 2){ const [a, b] = [...doigts.values()]; pince = {d: Math.hypot(a[0] - b[0], a[1] - b[1]), zi: cam.zi}; glisse = null; bouge = 99; }
 });
 cv.addEventListener("pointermove", e => {
+  if (e.pointerType === "mouse") survol(e.clientX, e.clientY, doigts.size > 0 && bouge > 8);
   if (!doigts.has(e.pointerId)) return; doigts.set(e.pointerId, [e.clientX, e.clientY]);
   if (pince && doigts.size === 2){ const [a, b] = [...doigts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); cam.zi = Math.max(0, Math.min(Z.length - 1, pince.zi + Math.round(Math.log(d / pince.d) / Math.log(1.4)))); return; }
   if (!glisse) return; const z = Z[cam.zi], dx = e.clientX - glisse.x, dy = e.clientY - glisse.y; bouge = Math.max(bouge, Math.hypot(dx, dy));
@@ -421,7 +443,37 @@ const lacher = e => {
   if (!doigts.size) glisse = null;
 };
 cv.addEventListener("pointerup", lacher); cv.addEventListener("pointercancel", e => { doigts.delete(e.pointerId); glisse = pince = null; });
-cv.addEventListener("wheel", e => { e.preventDefault(); zoom(e.deltaY < 0 ? 1 : -1); }, {passive: false});
+// molette (un cran à la fois, même avec un pavé tactile qui envoie beaucoup de petits pas), centrée sur le curseur
+let molette = 0;
+cv.addEventListener("wheel", e => { e.preventDefault(); const t = performance.now(); if (t - molette < 140 || !e.deltaY) return; molette = t; zoom(e.deltaY < 0 ? 1 : -1, e.clientX, e.clientY); }, {passive: false});
+cv.addEventListener("pointerleave", () => { info.hidden = true; });
+
+/* ---------- la souris (PC) : main sur ce qui se touche, étiquette qui suit le curseur ---------- */
+const info = document.getElementById("info");
+function survol(sx, sy, tire){
+  let txt = null;
+  if (!tire && S){
+    const [wx, wy] = versMonde(sx, sy), id = lotEn(wx, wy);
+    if (PL) txt = id && lotsPossibles().includes(id) ? (id === PL.lot ? "TERRAIN CHOISI" : "CHOISIR CE TERRAIN") : null;
+    else if (id && S.lots[id]) txt = DON.BATIMENTS[S.lots[id]].nom + (S.chantiers.some(c => c.lot === id) ? " · CHANTIER" : "");
+    else { const r = recolte(Math.floor(wx / T), Math.floor(wy / T)); if (r) txt = DON.RES[r].nom + " +" + DON.PIONNIER.toucher; }
+  }
+  cv.style.cursor = tire ? "grabbing" : txt ? "pointer" : "grab";
+  info.hidden = !txt; if (!txt) return;
+  info.textContent = txt; info.style.left = sx + 14 + "px"; info.style.top = sy + 16 + "px";
+}
+
+/* ---------- le clavier (PC) : la carte glisse avec les flèches ou ZQSD/WASD (touches physiques), + et − zooment ---------- */
+const DIRS = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1], KeyA: [-1, 0], KeyD: [1, 0], KeyW: [0, -1], KeyS: [0, 1]};
+const fleches = new Set();
+addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (DIRS[e.code]){ fleches.add(e.code); e.preventDefault(); info.hidden = true; }
+  else if (e.key === "+" || e.key === "=" || e.code === "NumpadAdd") zoom(1);
+  else if (e.key === "-" || e.code === "NumpadSubtract") zoom(-1);
+});
+addEventListener("keyup", e => fleches.delete(e.code));
+addEventListener("blur", () => fleches.clear());
 function lotEn(wx, wy){ const tx = Math.floor(wx / T), ty = Math.floor(wy / T); for (const id in C.LOTS){ const L = C.LOTS[id]; if (tx >= L.x && tx < L.x + L.l && ty >= L.y && ty < L.y + L.h) return id; } return null; }
 function toucher(sx, sy){
   const [wx, wy] = versMonde(sx, sy), E = window.TerresEcran;
@@ -433,10 +485,15 @@ function toucher(sx, sy){
   const tx = Math.floor(wx / T), ty = Math.floor(wy / T);
   return toucherCase(tx, ty, wx, wy);
 }
-function toucherCase(tx, ty, wx, wy){
+// ce que le pionnier récolte en touchant cette case (ou une voisine) : forêt, buisson, eau
+function recolte(tx, ty){
   const quoi = {T: "bois", "*": "baies", "~": "poisson"};
   let r = quoi[C.case_(tx, ty)];
   if (!r) for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) if ((r = quoi[C.case_(tx + dx, ty + dy)])) break;
+  return r || null;
+}
+function toucherCase(tx, ty, wx, wy){
+  const r = recolte(tx, ty);
   if (!r) return null;
   if (R.toucher(S, r)) return null;
   flotte(wx === undefined ? (tx + .5) * T : wx, wy === undefined ? ty * T : wy - 8, r, "+" + DON.PIONNIER.toucher);
@@ -454,7 +511,7 @@ function demarrer(){
   let recap = null;
   if (S && S.vu){ const s = (Date.now() - S.vu) / 1000; if (s > 60) recap = R.horsLigne(S, s); }
   if (!S) S = R.creer();
-  vuLe = Date.now();
+  vuLe = Date.now(); cam.zi = zoomDepart();
   document.getElementById("chargement").hidden = true;
   if (window.TerresEcran) window.TerresEcran.depart(recap);
   requestAnimationFrame(image);
@@ -468,8 +525,8 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("pagehide", sauver);
 
-function nouvelle(){ S = R.creer(); AG.length = 0; cleFond = ""; PL = null; sauver(); cam.x = (C.FEU[0] + .5) * T; cam.y = (C.FEU[1] + 1.5) * T; cam.zi = 2; }
-function viser(id){ const L = C.LOTS[id]; cam.x = (L.x + L.l / 2) * T; cam.y = (L.y + L.h / 2) * T + 40; }
+function nouvelle(){ S = R.creer(); AG.length = 0; cleFond = ""; PL = null; sauver(); cam.x = (C.FEU[0] + .5) * T; cam.y = (C.FEU[1] + 1.5) * T; cam.zi = zoomDepart(); }
+function viser(id){ const L = C.LOTS[id]; cam.x = (L.x + L.l / 2) * T + margeD() / 2 / Z[cam.zi]; cam.y = (L.y + L.h / 2) * T + (grand.matches ? 0 : 40); }
 window.Terres = {
   get S(){ return S; }, cam, zoom, sauver, nouvelle, icone, piece, spriteDe, AT, viser, versEcran,
   get PL(){ return PL; }, set PL(v){ PL = v; },

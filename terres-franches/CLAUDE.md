@@ -5,6 +5,7 @@ Colonie incrémentale en temps réel. Session 1 = l'ère 1 (campement → hameau
 - `regles.js` (`window.TerresRegles`, aussi sous Node) : `creer`, `pas(S, dt, eff)`, ordres (`toucher`, `recruter`, `affecter`, `construire(S, b, lot)`, `deplacer`, `monterStatut`, `promulguer`) qui renvoient une erreur ou null, `taux`, `moral`, `horsLigne` (quart de la production, 4 h au plus), `sauver`/`charger`, `robot`.
 - `jeu.js` (`window.Terres`) : dessin, villageois (`AG`), caméra, toucher, sauvegarde `terres.partie`. `ecran.js` (`window.TerresEcran`) : barre, volets, bulle, choix du terrain, menus. `vie.js` (`window.TerresVie`) : saisons, nuit, météo, animaux, enfants (décor seulement).
 - Images : `img/decor.png` + `atlas.js`, `img/villageois.png` + `villageois.js`, `img/ui-*.png`, fabriqués par `python3 -I outils/terres-maquette/atlas.py <SCKR> <icônes> <villageois LPC> <animaux>` (packs hors du dépôt : skill packs-itch).
+- **PC** (≥ 900 px, `grand` et `COLONNE` = 384 dans `jeu.js`, `@media` à la fin de `style.css`) : volets dans une colonne à droite, la caméra se cadre à sa gauche (`borner`, `viser`, `zoomDepart`) ; clavier dans `jeu.js` (flèches/ZQSD par `e.code`, + −) et `ecran.js` (1 2 3, Échap, Entrée) ; survol souris = `#info`.
 - Tests : `outils/terres-simulateur.js` (règles, carte, robot ; dans `verifications.js`), bloc dans `fumee.js`.
 
 ## Pièges
