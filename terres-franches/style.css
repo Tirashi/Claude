@@ -41,9 +41,20 @@ img, canvas{image-rendering:pixelated}
 .res span small.moins{color:var(--rouge)}
 .res .ic{width:18px; height:18px; margin:-3px 0}
 .res span{position:relative}
-.res .jauge{position:absolute; left:0; bottom:-4px; height:2px; background:#6aa83a; border-radius:1px}
-.res span.plein .jauge{background:var(--rouge)}
-.res span.plein small{color:var(--rouge); font-family:var(--titre); font-size:6px}
+/* jauge de remplissage sous chaque ressource (piste sombre, remplissage vert → orange → rouge) */
+.res .jauge{position:absolute; left:2px; right:2px; bottom:-5px; height:4px; background:rgba(40,25,10,.55); border-radius:2px; overflow:hidden}
+.res .jauge i{display:block; height:100%; background:#6aa83a}
+.res span.presque .jauge i{background:#e0a030}
+.res span.plein .jauge i{background:var(--rouge)}
+.res span.plein b{color:var(--rouge)}
+.res small.pl{color:var(--rouge); font-family:var(--titre); font-size:6px}
+.res small.max{display:none; color:#7a6a4a; margin-left:0}
+.res em.libres{font-style:normal; font-family:var(--titre); font-size:6px; background:var(--or); color:var(--ink); padding:2px 3px; margin-left:3px; border-radius:2px}
+.sans{display:flex; align-items:center; gap:8px; margin:2px 0 6px; padding:4px 8px; background:rgba(0,0,0,.25); border-radius:3px; font-size:12px}
+.sans b{font-family:var(--titre); font-weight:400; font-size:14px; color:#bbb}
+.sans.oui{background:rgba(255,217,74,.22); outline:2px solid var(--or)} .sans.oui b{color:var(--or)}
+.sans i{font-style:normal; font-family:var(--titre); font-size:10px}
+.carte .nom small em{font-style:italic; font-weight:600; color:#6a4a2a}
 .cond.place{min-height:0; font-size:12px} .cond.place span{color:var(--rouge); font-weight:700}
 #statut{align-self:center}
 .bas{display:flex; flex-direction:column; gap:4px; align-items:stretch}
@@ -126,6 +137,9 @@ kbd, .touches, .aide .pc{display:none}
   .res span{font-size:15px; border-width:8px 10px; gap:3px}
   .res .ic{width:28px; height:28px; margin:-4px 0}
   .res span small{font-size:10px}
+  .res small.max{display:inline; font-size:11px}
+  .res .jauge{height:5px; bottom:-6px}
+  .res em.libres{font-size:8px}
   .cond{font-size:14px} .cond .ic{width:32px; height:32px} .cond b{font-size:11px}
   .bas{position:fixed; top:64px; right:12px; bottom:12px; width:360px; justify-content:flex-start; gap:6px}
   .onglets{order:-1}

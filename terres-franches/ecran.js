@@ -18,8 +18,9 @@ function majBarre(){
   const liste = Object.keys(DON.RES).filter(r => TOUJOURS.includes(r) || vus[r]);
   let h = liste.map(r => { const v = t[r] * 60, tx = Math.abs(v) < .05 ? "" : `<small class="${v < 0 ? "moins" : ""}">${v > 0 ? "+" : ""}${Math.abs(v) < 10 ? v.toFixed(1) : Math.round(v)}</small>`;
     const cap = R.capacite(S, r), f = Math.min(1, S.res[r] / cap), pl = f > .985;
-    return `<span class="${pl ? "plein" : ""}" title="${nomRes(r)} : ${fmt(S.res[r])} / ${fmt(cap)}">${ic(r)}<b>${fmt(S.res[r])}</b>${pl ? "<small>PLEIN</small>" : tx}<i class="jauge" style="width:${Math.round(f * 100)}%"></i></span>`; }).join("");
-  h += `<span title="Habitants"><canvas class="ic portrait" width="30" height="30"></canvas><b>${S.pop}/${R.popMax(S)}</b></span>`;
+    return `<span class="${pl ? "plein" : f > .8 ? "presque" : ""}" title="${nomRes(r)} : ${fmt(S.res[r])} / ${fmt(cap)}">${ic(r)}<b>${fmt(S.res[r])}</b><small class="max">/${fmt(cap)}</small>${pl ? "<small class='pl'>PLEIN</small>" : tx}<i class="jauge"><i style="width:${Math.round(f * 100)}%"></i></i></span>`; }).join("");
+  const lib = R.libres(S);
+  h += `<span title="Habitants"><canvas class="ic portrait" width="30" height="30"></canvas><b>${S.pop}/${R.popMax(S)}</b>${lib ? `<em class="libres" title="Sans métier">${lib} LIBRE${lib > 1 ? "S" : ""}</em>` : ""}</span>`;
   if (h !== barre){ barre = h; $("res").innerHTML = h; $("res").querySelectorAll("canvas.portrait").forEach(portrait); }
   const st = DON.STATUTS[S.statut].nom; if ($("statut").textContent !== st) $("statut").textContent = st;
 }
@@ -34,13 +35,15 @@ function cout(c){
 }
 function volVillageois(){
   const S = J.S, P = R.reglages(S.mods), t = R.taux(S);
-  let h = `<h3><span>HABITANTS ${S.pop}/${R.popMax(S)}</span><span>LIBRES ${R.libres(S)}</span></h3>`;
+  const lib = R.libres(S);
+  let h = `<h3><span>HABITANTS ${S.pop}/${R.popMax(S)}</span></h3>`;
+  h += `<div class="sans ${lib ? "oui" : ""}"><b>${lib}</b><span>${lib ? `villageois sans métier : donne-${lib > 1 ? "leur" : "lui"} un travail avec <i>+</i>` : "Tout le monde travaille."}</span></div>`;
   // la limite : les toits (tente et feu, cabanes, maisons) ou le statut de la colonie, le plus petit des deux
   const toits = R.logement(S), lim = P.STATUTS[S.statut].popMax, suiv = P.STATUTS[S.statut + 1];
   h += `<p class="limite">Toits : <b>${toits}</b> · ${P.STATUTS[S.statut].nom} : <b>${lim}</b> au plus<br>${S.pop < R.popMax(S) ? "Il reste de la place : accueille quelqu'un."
     : toits < lim ? "Il manque des toits : construis une cabane." : suiv ? `Le ${P.STATUTS[S.statut].nom.toLowerCase()} est plein : il faut devenir ${suiv.nom.toLowerCase()} (volet COLONIE).` : "Plafond de l'ère : promulgue la Loi."}</p>`;
   const c = R.coutRecrue(S);
-  h += `<div class="carte"><canvas width="30" height="30" class="portrait" data-p="${S.pop}"></canvas><span class="nom">ACCUEILLIR<small>${cout(c)}</small></span><button type="button" class="bouton petit or" data-act="recruter">+1</button></div>`;
+  h += `<div class="carte"><canvas width="30" height="30" class="portrait" data-p="${S.pop}"></canvas><span class="nom">ACCUEILLIR<small>${cout(c)} <em>vivres = baies, poisson ou pain</em></small></span><button type="button" class="bouton petit or" data-act="recruter">+1</button></div>`;
   for (const m in P.METIERS){
     const M = P.METIERS[m], pl = R.places(S, m); if (!pl) continue;
     const r = M.produit || M.sortie, par = M.produit ? `${(t[r] * 60 >= 0 ? "+" : "")}${(t[r] * 60).toFixed(1)} ${nomRes(r)}/MIN` : `${Object.keys(M.entree).map(nomRes).join(" + ")} → ${nomRes(r)}`;
@@ -51,7 +54,7 @@ function volVillageois(){
 }
 function volConstruire(){
   const S = J.S, P = R.reglages(S.mods); let h = "";
-  for (const b in P.BATIMENTS){
+  for (const b of Object.keys(P.BATIMENTS).sort((u, v) => P.BATIMENTS[u].statut - P.BATIMENTS[v].statut)){   // dans l'ordre où l'on peut bâtir
     const B = P.BATIMENTS[b], e = R.peutConstruire(S, b), bloque = B.statut > S.statut, libres = C.libres(S, B.terrain).length;
     const plein = B.logement && !bloque && R.logement(S) >= P.STATUTS[S.statut].popMax;   // assez de toits : le statut limite
     if (B.niveaux && S.bat[b] + S.chantiers.filter(c => c.k === b).length > 0){   // une réserve déjà là : on l'agrandit
@@ -164,10 +167,16 @@ function bulle(id){
   const S = J.S, b = S.lots[id], B = DON.BATIMENTS[b], ch = S.chantiers.find(c => c.lot === id);
   const metiers = Object.keys(DON.METIERS).filter(m => DON.METIERS[m].places[b]);
   const qui = metiers.map(m => `${DON.METIERS[m].nom} : ${S.jobs[m]}/${R.places(S, m)}`).join("<br>");
-  const res = B.stock ? DON.STOCK.groupes[B.stock].map(r => `${nomRes(r).toLowerCase()} ${fmt(S.res[r])}/${fmt(R.capacite(S, r))}`).join("<br>") : "";
-  el.innerHTML = `<b>${B.nom}${B.niveaux ? " · NIV. " + S.bat[b] : ""}</b>${ch ? `${ch.agrandit ? "Agrandissement" : "Chantier"} : encore ${Math.ceil(ch.reste)} s` : B.logement ? `Loge ${B.logement} habitants` : res || qui || ""}
-    <div class="rang"><button type="button" class="bouton petit" data-x="dep">DEPLACER</button><button type="button" class="bouton petit" data-x="ok">OK</button></div>`;
+  el.innerHTML = `<div id="bInfo">${infoBulle(id)}</div>
+    <div class="rang">${B.niveaux ? `<button type="button" class="bouton petit or" data-x="up">AGRANDIR</button>` : ""}<button type="button" class="bouton petit" data-x="dep">DEPLACER</button><button type="button" class="bouton petit" data-x="ok">OK</button></div>`;
   el.hidden = false; placerBulle();
+}
+// le texte de la bulle (refait 4 fois par seconde : le minuteur du chantier baisse)
+function infoBulle(id){
+  const S = J.S, b = S.lots[id]; if (!b) return ""; const B = DON.BATIMENTS[b], ch = S.chantiers.find(c => c.lot === id);
+  const qui = Object.keys(DON.METIERS).filter(m => DON.METIERS[m].places[b]).map(m => `${DON.METIERS[m].nom} : ${S.jobs[m]}/${R.places(S, m)}`).join("<br>");
+  const res = B.stock ? DON.STOCK.groupes[B.stock].map(r => `${nomRes(r).toLowerCase()} ${fmt(S.res[r])}/${fmt(R.capacite(S, r))}`).join("<br>") : "";
+  return `<b>${B.nom}${B.niveaux ? " · NIV. " + S.bat[b] : ""}</b>${ch ? `${ch.agrandit ? "Agrandissement" : "Chantier"} : encore ${Math.ceil(ch.reste)} s<br>` : ""}${B.logement ? `Loge ${B.logement} habitants` : res || qui || ""}`;
 }
 function placerBulle(){
   if (!bulleLot) return; const L = C.LOTS[bulleLot], [sx, sy] = J.versEcran((L.x + L.l / 2) * C.T, L.y * C.T);
@@ -176,6 +185,7 @@ function placerBulle(){
 $("bulle").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; const id = bulleLot; bulle(null);
   if (b.dataset.x === "dep") choisir(J.S.lots[id], id);
+  if (b.dataset.x === "up"){ const k = J.S.lots[id], e = R.construire(J.S, k); annonce(e || "AGRANDISSEMENT : " + DON.BATIMENTS[k].nom, !e); if (!e) J.sauver(); }
 });
 
 /* ---------- messages ---------- */
@@ -225,6 +235,6 @@ let derniere = 0;
 window.TerresEcran = {
   annonce, bulle, placement, retour,
   depart(recap){ majBarre(); retour(recap); },
-  image(t){ if (t - derniere > .25){ derniere = t; majBarre(); majVolet(); } placerBulle(); }
+  image(t){ if (t - derniere > .25){ derniere = t; majBarre(); majVolet(); const bi = $("bInfo"); if (bi && bulleLot){ const h = infoBulle(bulleLot); if (bi.innerHTML !== h) bi.innerHTML = h; } } placerBulle(); }
 };
 })();

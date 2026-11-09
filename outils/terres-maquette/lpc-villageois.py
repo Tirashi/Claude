@@ -62,14 +62,15 @@ def villageois(i):
     return out
   walk, idle = compose("walk"), compose("idle")
   sl, th = compose("slash"), compose("thrust")
-  def outil128(dossier, corps_anim):   # hache, pioche, canne : cases de 128 px, 6 images, gauche puis droite
+  def outil128(dossier, corps_anim, cols=range(6), corps=None):   # hache, pioche, canne : cases de 128 px, 6 images, gauche puis droite
+    # cols : colonnes de la planche de l'outil ; corps : image du corps pour chacune (canne : custom_animations « tool_rod » du dépôt LPC)
     bg, fg = Image.open(S / f"tools/{dossier}/bg.png").convert("RGBA"), Image.open(S / f"tools/{dossier}/fg.png").convert("RGBA")
-    nf, fs = 6, 128; trav = Image.new("RGBA", (nf * fs, 2 * fs))
+    cols = list(cols); corps = corps or cols; nf, fs = len(cols), 128; trav = Image.new("RGBA", (nf * fs, 2 * fs))
     for ligne, rang in ((0, 1), (1, 3)):   # gauche, droite
-      for f in range(nf):
+      for k, (f, cf) in enumerate(zip(cols, corps)):
         c = Image.new("RGBA", (fs, fs)); c.alpha_composite(bg.crop((f * fs, rang * fs, f * fs + fs, rang * fs + fs)))
-        c.alpha_composite(corps_anim.crop((f * 64, rang * 64, f * 64 + 64, rang * 64 + 64)), (32, 32)); c.alpha_composite(fg.crop((f * fs, rang * fs, f * fs + fs, rang * fs + fs)))
-        trav.paste(c, (f * fs, ligne * fs))
+        c.alpha_composite(corps_anim.crop((cf * 64, rang * 64, cf * 64 + 64, rang * 64 + 64)), (32, 32)); c.alpha_composite(fg.crop((f * fs, rang * fs, f * fs + fs, rang * fs + fs)))
+        trav.paste(c, (k * fs, ligne * fs))
     return trav
   def houe():   # cases de 64 px, 8 images
     bg, fg = Image.open(S / "tools/hoe/bg/thrust.png").convert("RGBA"), Image.open(S / "tools/hoe/fg/thrust.png").convert("RGBA")
@@ -82,7 +83,8 @@ def villageois(i):
     return trav
   walk.save(SORTIE / f"v{i}-marche.png"); idle.save(SORTIE / f"v{i}-repos.png")
   outil128("axe", sl).save(SORTIE / f"v{i}-hache.png"); outil128("pickaxe", sl).save(SORTIE / f"v{i}-pioche.png")
-  outil128("fishing_rod", th).save(SORTIE / f"v{i}-canne.png"); houe().save(SORTIE / f"v{i}-houe.png")
+  # canne : le lancer (colonnes 0, 2, 4, 5) puis la canne tendue vers l'eau (6, 7)
+  outil128("fishing_rod", th, [0, 2, 4, 5, 6, 7], [0, 2, 4, 5, 4, 4]).save(SORTIE / f"v{i}-canne.png"); houe().save(SORTIE / f"v{i}-houe.png")
   return {"i": i, "outil": outil, "femme": fem, "peau": peau, "cheveux": chev, "coiffe": coiffe, "vieux": vieux}
 def enfant(i):
   peau = r.choice(["light", "amber", "olive", "taupe", "bronze", "brown", "black"]); chev = r.choice(["blonde", "sandy", "ginger", "chestnut", "dark_brown", "black", "light_brown", "redhead"])

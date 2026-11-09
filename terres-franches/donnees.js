@@ -91,10 +91,13 @@ const BESOINS = {
 // le pionnier (le joueur) : chaque toucher rapporte `toucher` de la ressource touchée
 const PIONNIER = {toucher: 1, ressources: ["bois", "baies", "poisson"]};
 
+// la marche des villageois (cases par seconde ; × route sur les rues et la place)
+const MARCHE = {vitesse: 1.7, route: 1.5};
+
 // hors ligne : la production continue, bien plus lentement, et plafonnée
 const HORS_LIGNE = {plafond: 4 * 3600, rendement: .25};   // décision du 08/11 : peu au début ; des Lois l'augmenteront
 
-const api = {RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
+const api = {MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresDonnees = api;
 })();

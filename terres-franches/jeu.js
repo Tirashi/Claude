@@ -30,7 +30,14 @@ function piece(n){
 }
 const ICONE = {bois: "i-bois", pierre: "i-pierre", baies: "i-baies", poisson: "i-poisson", ble: "i-ble", farine: "i-farine", pain: "i-pain", laine: "i-laine", vetements: "i-tissu", vivres: "i-baies"};
 const icones = {};
-function icone(r){ if (!icones[r] && ok()) icones[r] = piece(ICONE[r] || "i-or").toDataURL(); return icones[r] || ""; }
+function icone(r){
+  if (!icones[r] && ok()){
+    if (r === "vivres"){ const c = document.createElement("canvas"); c.width = c.height = 48; const b = c.getContext("2d"), p1 = piece("i-baies"), p2 = piece("i-poisson");   // n'importe quelle nourriture
+      b.drawImage(p1, 0, 0, 30, 30 * p1.height / p1.width); b.drawImage(p2, 14, 22, 34, 34 * p2.height / p2.width); icones[r] = c.toDataURL(); }
+    else icones[r] = piece(ICONE[r] || "i-or").toDataURL();
+  }
+  return icones[r] || "";
+}
 const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) ^ 0x5bd1e995; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 
 /* ---------- la partie ---------- */
@@ -257,7 +264,7 @@ function lpc(a, X, Y, k){
   if (a.anim === "travail" && VL.outils[a.outil || "hache"]){
     const [ox, fs, nb] = VL.outils[a.outil || "hache"], r = a.dir === "d" ? 1 : 0;
     // la canne : on lance une fois, puis on attend (petite secousse de temps en temps) ; les autres outils frappent en boucle
-    const f = a.outil === "canne" ? (a.f < 6 ? Math.floor(a.f) : (Math.floor(a.t * 1.5) % 5 === 0 ? 5 : 4)) : Math.floor(a.f) % nb;
+    const f = a.outil === "canne" ? (a.f < 4 ? Math.floor(a.f) : (Math.floor(a.t * 1.2) % 3 === 0 ? 5 : 4)) : Math.floor(a.f) % nb;
     x.drawImage(vill, ox + f * fs, ry + r * fs, fs, fs, Math.round(X - fs / 2 * k), Math.round(Y - (fs === 128 ? 92 : 60) * k), fs * k, fs * k); return;
   }
   if (a.anim === "repos"){ const f = Math.floor(a.f / 4) % 2; x.drawImage(vill, 576 + f * 64, ry + row * 64, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k); return; }
@@ -306,7 +313,8 @@ function bouger(a, dt){
   a.f += dt * (a.anim === "travail" ? 8 : 10); a.t += dt;
   if (a.etat === "marche"){
     const p = a.chemin[0]; if (!p){ a.etat = "arrive"; return; }
-    const dx = p[0] - a.x, dy = p[1] - a.y, d = Math.hypot(dx, dy), v = 1.7 * T * dt;
+    const cx = Math.floor(a.x / T), cy = Math.floor(a.y / T), rue = ROUTES.cases.has(cy * C.W + cx) || C.surPlace(cx, cy, S.statut);
+    const dx = p[0] - a.x, dy = p[1] - a.y, d = Math.hypot(dx, dy), v = DON.MARCHE.vitesse * (rue ? DON.MARCHE.route : 1) * T * dt;   // plus vite sur les rues
     if (d <= v){ a.x = p[0]; a.y = p[1]; a.chemin.shift(); if (!a.chemin.length){ a.etat = "arrive"; } }
     else { a.x += dx / d * v; a.y += dy / d * v; a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "d" : "g") : (dy > 0 ? "b" : "h"); }
     if (a.etat === "arrive" && a.apres){ const f = a.apres; a.apres = null; f(); }
