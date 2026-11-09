@@ -233,7 +233,7 @@ addEventListener("keydown", e => {
 
 let derniere = 0;
 window.TerresEcran = {
-  annonce, bulle, placement, retour,
+  annonce, bulle, placement, retour, ouvert: () => bulleLot,
   depart(recap){ majBarre(); retour(recap); },
   image(t){ if (t - derniere > .25){ derniere = t; majBarre(); majVolet(); const bi = $("bInfo"); if (bi && bulleLot){ const h = infoBulle(bulleLot); if (bi.innerHTML !== h) bi.innerHTML = h; } } placerBulle(); }
 };

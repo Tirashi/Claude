@@ -135,8 +135,39 @@ function dessinerFond(){
       if (!occupe){ PUITS = [px * T, (py + .4) * T]; break; }
     }
   }
+  placerDecor();
 }
 let PUITS = null;
+// le décor des lieux de récolte : il s'étoffe à chaque statut (la lisière des bûcherons devient un petit camp, etc.)
+let DECOR = [];
+const CAMPS = {
+  bucheron: [[0, "souche-hache", .7], [1, "souche", .6], [1, "buche", .6], [2, "tonneaux", .6], [2, "buche", .6]],
+  pecheur: [[1, "sechoir-poisson", .5], [2, "tonneau", .4], [2, "caisse-p", .45]],
+  cueilleur: [[1, "panier-baies", .45], [2, "panier-pommes", .45]],
+  carrier: [[1, "gravats", .7], [2, "caisse", .4]],
+  fermier: [[1, "botte", .5], [2, "meule-foin", .5]]
+};
+function placerDecor(){
+  DECOR = []; const pris = new Set();
+  const libreIci = (cx, cy) => C.case_(cx, cy) === "." && !ROUTES.cases.has(cy * C.W + cx) && !C.surPlace(cx, cy, S.statut) && !pris.has(cy * C.W + cx)
+    && !Object.values(C.LOTS).some(L => cx >= L.x && cx < L.x + L.l && cy >= L.y - 1 && cy <= L.y + L.h);   // ni sur un terrain ni devant sa porte
+  for (const m in CAMPS){
+    const postes = C.postes(S, m); if (!postes.length) continue;
+    for (const p of postes.slice(0, 4)) pris.add(p[1] * C.W + p[0]);   // les premiers postes : les villageois s'y tiennent
+    let k = 0;
+    for (const [st, n, ech] of CAMPS[m]){
+      if (st > S.statut) continue;
+      // près du premier poste (le plus proche du feu), sur une case libre voisine
+      for (let tour = 0; tour < 30; tour++){
+        const p = postes[Math.min(postes.length - 1, Math.floor(k / 2))], d = [[1, 0], [-1, 0], [0, 1], [1, 1], [-1, 1], [2, 0], [-2, 0], [0, 2]][(k + tour) % 8];
+        const cx = p[0] + d[0], cy = p[1] + d[1];
+        if (libreIci(cx, cy)){ pris.add(cy * C.W + cx); DECOR.push({n, X: (cx + .5) * T + (hash(cx, cy) - .5) * 8, Y: (cy + .85) * T, k: ech}); break; }
+        if (tour === 29) k++;
+      }
+      k++;
+    }
+  }
+}
 
 /* ---------- l'eau, animée ---------- */
 let motifEau = null;
@@ -206,14 +237,11 @@ function cheminee(n, X, Y, k){
   x.fillStyle = "#a8a298"; x.fillRect(X0 - 5, Y0 - 15, 11, 3); x.fillStyle = "#3a3430"; x.fillRect(X0 - 3, Y0 - 14, 7, 1);
   x.fillStyle = "#6e6862"; x.fillRect(X0 - 3, Y0 - 8, 7, 1); x.fillRect(X0 - 3, Y0 - 4, 7, 1);
 }
+// buisson à baies (pack de la ferme Cute SCKR, rouges ou bleues) ; l'hiver, sans baies
 function buissonBaies(cx, cy, t){
   const X = (cx + .5) * T, Y = (cy + 1) * T;
-  spr("buisson", X, Y, .4, t * 5 + cx, 8);
-  if (saisonVue === 3) return;
-  const mur = saisonVue === 0 ? .35 : 1;   // au printemps, peu de baies
-  for (let k = 0; k < 9; k++){ if (hash(cx * 9 + k, cy) > mur) continue;
-    const bx = Math.round(X - 13 + hash(k, cx + cy * 3) * 26), by = Math.round(Y - 30 + hash(cy + k, cx) * 20);
-    x.fillStyle = "#5a0e1e"; x.fillRect(bx - 1, by - 1, 5, 5); x.fillStyle = k % 3 ? "#d8243a" : "#8a3ad0"; x.fillRect(bx, by, 3, 3); x.fillStyle = "#ffd0d8"; x.fillRect(bx, by, 1, 1); }
+  if (saisonVue === 3){ spr("buisson", X, Y, .4, t * 5 + cx, 8); return; }
+  spr(hash(cx, cy) < .5 ? "baies-rouges" : "baies-bleues", X + Math.round(vent(X, Y, t) * .6), Y, .78);
 }
 function tente(X, Y){
   x.fillStyle = "rgba(30,40,20,.3)"; x.beginPath(); x.ellipse(X, Y, 26, 7, 0, 0, 6.3); x.fill();
@@ -414,53 +442,50 @@ function dessinerPlacement(t){
 
 /* ---------- un bâtiment ---------- */
 /* ---------- les réserves : des tas qui suivent le stock (part = stock / place) ---------- */
+/* ---------- les réserves : les morceaux des packs (bûches, rochers, sacs, paniers, tonneaux) suivent le stock (part = stock / place) ---------- */
+const J_ouvert = () => window.TerresEcran && window.TerresEcran.ouvert ? window.TerresEcran.ouvert() : null;   // la bulle ouverte
 const part = r => Math.max(0, Math.min(1, S.res[r] / R.capacite(S, r)));
-function buches(X, Y, f, n){   // un tas de bûches : n rangées au plus, remplies selon f
-  const tot = Math.round(f * n * (n + 1) / 2); let k = 0;
-  for (let rg = 0; rg < n && k < tot; rg++) for (let i = 0; i < n - rg && k < tot; i++, k++){
-    const bx = X + i * 9 + rg * 4.5, by = Y - rg * 7;
-    x.fillStyle = "#6b4423"; x.fillRect(Math.round(bx), Math.round(by - 7), 9, 7); x.fillStyle = "#c8975a"; x.beginPath(); x.ellipse(bx + 1.5, by - 3.5, 2.6, 3.4, 0, 0, 6.3); x.fill();
-    x.fillStyle = "#8a5a30"; x.fillRect(Math.round(bx + 1), Math.round(by - 4), 1, 1); }
+// un tas : n morceaux au plus en pyramide, autant que la part f ; pas = écart entre deux morceaux
+function tas(n, X, Y, f, max, k, px, py){
+  const tot = Math.round(f * max); let i = 0;
+  for (let rg = 0; i < tot; rg++) for (let c = 0; c < Math.ceil(Math.sqrt(max * 2)) - rg && i < tot; c++, i++) spr(n, X + c * px + rg * px / 2, Y - rg * py, k);
 }
-function pierres(X, Y, f, n){
-  const tot = Math.round(f * n * (n + 1) / 2); let k = 0;
-  for (let rg = 0; rg < n && k < tot; rg++) for (let i = 0; i < n - rg && k < tot; i++, k++){
-    const bx = X + i * 8 + rg * 4, by = Y - rg * 6; x.fillStyle = "#77736b"; x.beginPath(); x.ellipse(bx + 4, by - 3, 4.6, 3.6, 0, 0, 6.3); x.fill(); x.fillStyle = "#a9a59c"; x.fillRect(Math.round(bx + 2), Math.round(by - 6), 3, 1); }
+const buches = (X, Y, f, max) => tas("buche", X, Y, f, max || 10, .62, 15, 6);
+const pierres = (X, Y, f, max) => tas("rocher-p", X, Y, f, max || 6, .5, 12, 6);
+function rangee(n, X, Y, f, max, k, px){ const tot = Math.round(f * max); for (let i = 0; i < tot; i++) spr(n, X + i * px, Y, k); }
+// l'aire de stockage : un abri ouvert ; bûches et pierres devant, laine et vêtements dessous
+function aire(L, ouvert){
+  const X = L.x * T, Y = L.y * T;
+  x.fillStyle = "rgba(110,85,50,.3)"; x.fillRect(X + 2, Y + 30, 60, 32);
+  x.globalAlpha = ouvert ? .35 : 1; spr("abri", X + 32, Y + 44, .68); x.globalAlpha = 1;
+  rangee("sac", X + 12, Y + 42, part("laine"), 3, .3, 10); rangee("caisse-p", X + 44, Y + 42, part("vetements"), 2, .3, 10);
+  buches(X + 2, Y + 62, part("bois"), 10); tas("rocher-p", X + 36, Y + 63, part("pierre"), 5, .44, 9, 5);
 }
-function sacs(X, Y, f, n, coul){   // sacs (laine, blé, farine) ou paniers
-  const k = Math.round(f * n);
-  for (let i = 0; i < k; i++){ const bx = X + (i % 3) * 9 + (i >= 3 ? 4 : 0), by = Y - Math.floor(i / 3) * 7;
-    x.fillStyle = "#3a2a18"; x.fillRect(Math.round(bx) - 1, Math.round(by - 10), 9, 11); x.fillStyle = coul; x.fillRect(Math.round(bx), Math.round(by - 9), 7, 9); x.fillStyle = "rgba(255,255,255,.35)"; x.fillRect(Math.round(bx + 1), Math.round(by - 8), 2, 4); x.fillStyle = "#5a4024"; x.fillRect(Math.round(bx + 2), Math.round(by - 11), 3, 2); }
-}
-function panier(X, Y, f, coul, dessus){   // un panier rempli de baies ou de poissons
-  x.fillStyle = "#7a5530"; x.beginPath(); x.ellipse(X, Y - 4, 9, 5, 0, 0, 6.3); x.fill(); x.fillStyle = "#a07440"; x.fillRect(X - 9, Y - 5, 18, 2);
-  for (let i = 0; i < Math.round(f * 10); i++){ x.fillStyle = i % 2 ? coul : dessus; x.fillRect(Math.round(X - 7 + (i * 5) % 14), Math.round(Y - 8 - Math.floor(i / 3) * 2), 3, 3); }
-}
-function aire(L){
-  const X = L.x * T, Y = L.y * T, W = L.l * T, H = L.h * T;
-  x.fillStyle = "rgba(110,85,50,.35)"; x.fillRect(X + 2, Y + 6, W - 4, H - 8);
-  x.strokeStyle = "#6a4a26"; x.lineWidth = 2; x.strokeRect(X + 2, Y + 6, W - 4, H - 8);
-  for (let k = 0; k <= 4; k++){ x.fillStyle = "#5a3a1c"; x.fillRect(X + 1 + k * (W - 6) / 4, Y + 3, 3, 6); }
-  buches(X + 5, Y + 30, part("bois"), 5); pierres(X + 6, Y + H - 4, part("pierre"), 4);
-  sacs(X + 40, Y + H - 4, part("laine"), 3, "#e8e2d0"); sacs(X + 40, Y + 30, part("vetements"), 3, "#5a7ab0");
-}
-function grenier(L){
+// le grenier : la grange ; quand on le touche, il devient transparent et on voit les vivres dedans (comme dans Stronghold)
+function grenier(L, ouvert){
   const X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 2;
   x.fillStyle = "rgba(20,30,10,.25)"; x.beginPath(); x.ellipse(X, Y - 2, 32, 6, 0, 0, 6.3); x.fill();
+  if (ouvert){
+    x.fillStyle = "rgba(90,62,34,.85)"; x.fillRect(X - 30, Y - 40, 60, 38);   // le plancher
+    rangee("sacs-grain", X - 27, Y - 26, part("ble"), 3, .4, 17); rangee("sac-farine", X - 27, Y - 12, part("farine"), 3, .36, 17);
+    rangee("panier-patates", X + 6, Y - 26, part("pain"), 2, .4, 17); rangee("panier-baies", X + 6, Y - 4, part("baies"), 2, .42, 18);
+    rangee("tonneau", X - 27, Y - 2, part("poisson"), 3, .36, 12);
+    x.globalAlpha = .3; spr("grange", X, Y - 4, .66); x.globalAlpha = 1; return;
+  }
   spr("grange", X, Y - 4, .66);
-  sacs(X - 30, Y + 2, part("ble"), 3, "#d8b450"); sacs(X + 6, Y + 2, part("farine"), 3, "#f2ece0");
-  panier(X - 18, Y + 12, part("baies"), "#c8243a", "#7a2ab0"); panier(X + 4, Y + 12, part("poisson"), "#8aa8c0", "#c8d8e4"); sacs(X + 16, Y + 14, part("pain"), 2, "#c88a3a");
+  if (part("baies") > .02) spr("panier-baies", X - 20, Y + 12, .38); if (part("poisson") > .02) spr("tonneau", X + 20, Y + 12, .34);
+  if (part("ble") > .02) spr("sacs-grain", X - 2, Y + 12, .34);
 }
-// avant le grenier et l'aire : le stock est près du feu (tas de bûches, paniers)
+// avant le grenier et l'aire : le stock est près du feu
 function reservesDuFeu(){
   const [fx, fy] = C.FEU, X = (fx + .5) * T, Y = (fy + .5) * T;
-  if (!S.bat.aire){ buches(X - 52, Y + 30, part("bois"), 4); if (S.res.pierre > 0) pierres(X - 52, Y + 44, part("pierre"), 3); }
-  if (!S.bat.grenier){ panier(X + 38, Y + 30, part("baies"), "#c8243a", "#7a2ab0"); panier(X + 58, Y + 30, part("poisson"), "#8aa8c0", "#c8d8e4"); }
+  if (!S.bat.aire){ buches(X - 70, Y + 34, part("bois"), 6); if (S.res.pierre > 0) pierres(X - 70, Y + 48, part("pierre"), 3); }
+  if (!S.bat.grenier){ if (part("baies") > .01) spr("panier-baies", X + 46, Y + 34, .4 + .2 * part("baies")); if (part("poisson") > .01) spr("tonneau", X + 68, Y + 34, .3 + .15 * part("poisson")); }
 }
 function batiment(b, id, t, fantome){
   const L = C.LOTS[id], X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 4;
-  if (b === "aire"){ aire(L); return; }
-  if (b === "grenier"){ grenier(L); return; }
+  if (b === "aire"){ aire(L, J_ouvert() === id); return; }
+  if (b === "grenier"){ grenier(L, J_ouvert() === id); return; }
   if (b === "champ"){ champ(L, t, id.charCodeAt(0)); return; }
   if (b === "ponton"){ ponton(L); return; }
   if (b === "carriere"){ carriere(L, true); return; }
@@ -524,6 +549,7 @@ function image(now){
   if (S.statut < 1) L.push([(ty + .9) * T, () => tente((tx + .5) * T, (ty + .9) * T)]);   // au hameau, le pionnier a son toit
   L.push([(fy + .75) * T, () => feuDeCamp((fx + .5) * T, (fy + .75) * T, t)]);
   L.push([(fy + 1.4) * T, reservesDuFeu]);
+  for (const d of DECOR) if (vis(d.X, d.Y, 60)) L.push([d.Y, () => spr(d.n, d.X, d.Y, d.k)]);
   if (PUITS) L.push([PUITS[1], () => spr(S.statut >= 2 ? "fontaine" : "puits", PUITS[0], PUITS[1], S.statut >= 2 ? .8 : .7)]);
   for (const a of AG){ bouger(a, dt); L.push([a.y, () => dessinerAgent(a)]); }
   PI.f += dt * 8; if (PI.anim === "travail" && t > PI.fin) PI.anim = "repos";

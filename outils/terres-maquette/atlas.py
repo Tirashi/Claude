@@ -15,12 +15,22 @@ ici, jeu = racine / "outils/terres-maquette", racine / "terres-franches"
 (jeu / "img").mkdir(parents=True, exist_ok=True)
 src2 = (ici / "fabriquer-2.py").read_text(encoding="utf-8")
 TOUTES = eval(re.search(r"DECOUPES = (\{.*?\n\})", src2, re.S).group(1))
+# réserves et décor des lieux de récolte (09/11) : bûche, rochers, tonneaux, caisses, paniers, sacs, foin, séchoirs, souches, buissons à baies, abri
+TOUTES.update({"buche": ("V2", 683, 482, 30, 14), "rocher-p": ("V2", 681, 545, 27, 19), "gravats": ("V2", 731, 543, 26, 21), "tonneaux": ("V2", 672, 392, 33, 23),
+  "abri": ("V2", 385, 386, 95, 66), "tonneau": ("F5", 391, 579, 34, 43), "caisse": ("F3", 536, 678, 33, 41), "caisse-p": ("F5", 441, 584, 30, 32),
+  "panier-baies": ("F3", 626, 682, 45, 34), "panier-pommes": ("F3", 626, 734, 45, 34), "panier-legumes": ("F3", 578, 729, 45, 39), "panier-patates": ("F3", 578, 675, 45, 45),
+  "sechoir-poisson": ("F5", 581, 399, 86, 70), "sechoir-viande": ("F5", 485, 399, 86, 70), "sac-farine": ("V5", 722, 147, 44, 43), "sacs-grain": ("V5", 144, 724, 48, 42),
+  "sac": ("V5", 148, 676, 40, 41), "foin": ("F5", 291, 586, 42, 34), "botte": ("F5", 534, 584, 35, 32), "meule-foin": ("V5", 673, 677, 95, 89),
+  "souche-hache": ("V5", 6, 96, 41, 47), "souche": ("V5", 52, 54, 42, 41), "baies-rouges": ("F3", 51, 389, 44, 42), "baies-bleues": ("F3", 3, 485, 44, 45)})
 TOUTES.update({"i-bois": ("V1", 96, 528, 48, 48), "i-ble": ("F4", 0, 576, 48, 48), "terre": ("V1", 60, 56, 32, 32), "eau": ("V3", 408, 410, 48, 48), "herbe": ("V1", 235, 387, 48, 48)})
 GARDE = ["herbe", "terre", "eau", "pave", "champ-mur", "champ-pousse", "champ-nu", "champ-blond", "chaume1", "chaume2", "chaume3", "chaume4", "chaume5",
   "colomb1", "colomb2", "colomb3", "colomb4", "pierre1", "pierre2", "pierre3", "pierre4", "pierre5", "grange", "hangar", "moulin1", "meule1", "meule2",
-  "puits", "puits-couvert", "fontaine", "four", "charrette", "lanterne", "s-arbre1", "s-arbre2", "s-arbre3", "s-arbre4", "s-arbre5", "s-arbre6", "s-jeune", "i-bois", "i-ble"]
+  "puits", "puits-couvert", "fontaine", "four", "charrette", "lanterne", "s-arbre1", "s-arbre2", "s-arbre3", "s-arbre4", "s-arbre5", "s-arbre6", "s-jeune", "i-bois", "i-ble",
+  "buche", "rocher-p", "gravats", "tonneaux", "abri", "tonneau", "caisse", "caisse-p", "panier-baies", "panier-pommes", "panier-legumes", "panier-patates",
+  "sechoir-poisson", "sechoir-viande", "sac-farine", "sacs-grain", "sac", "foin", "botte", "meule-foin", "souche-hache", "souche", "baies-rouges", "baies-bleues"]
 def feuille(d, n): return next((SC / d).rglob(f"tile-B-0{n}.png"))
-F = {"V1": feuille("village", 1), "V2": feuille("village", 2), "V3": feuille("village", 3), "F4": feuille("farm", 4), "B4": feuille("buildings", 4), "FO": feuille("foret", 1)}
+F = {"V1": feuille("village", 1), "V2": feuille("village", 2), "V3": feuille("village", 3), "F4": feuille("farm", 4), "B4": feuille("buildings", 4), "FO": feuille("foret", 1),
+  "F3": feuille("farm", 3), "F5": feuille("farm", 5), "V5": feuille("village", 5)}
 images, cache = {}, {}
 for nom in GARDE:
   f, x, y, l, h, *eff = TOUTES[nom]
