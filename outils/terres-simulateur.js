@@ -53,9 +53,19 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
   verif(R.recruter(W) === "IL FAUT DES VETEMENTS", "12 habitants : il faut des vêtements");
   W.res.vetements = 5; verif(R.recruter(W) === null, "avec des vêtements, on recrute");
   // hors ligne : plafonné à 8 h
-  const X = R.creer(); X.pop = 1; X.jobs.bucheron = 1; X.res.baies = 1e4;
+  const X = R.creer({HIVER: {chauffage: 0, faim: 1}, STOCK: {base: {bois: 1e6, baies: 1e6}}}); X.pop = 1; X.jobs.bucheron = 1; X.res.baies = 1e4;   // sans hiver ni limite de stock
   const h = R.horsLigne(X, 20 * 3600);
   verif(h.plafonne && h.duree === 4 * 3600 && Math.abs(h.gains.bois - 4 * 3600 * .22 * .25) <= 1 && X.t === 20 * 3600, "hors ligne : production au quart, 4 h au plus, le temps passe quand même");
+  // stockage : la place limite ce qu'on garde ; le grenier double la place à chaque niveau ; on l'agrandit sur place
+  const K = R.creer(); K.res.bois = 1e4; K.res.baies = 290; R.pas(K, 1);
+  verif(K.res.bois === 300 && R.toucher(K, "bois") !== null && R.capacite(K, "baies") === 100 && K.res.baies === 100, "stock : 300 bois et 100 baies au plus, le toucher refuse quand c'est plein");
+  verif(R.construire(K, "grenier") === null && K.chantiers[0].lot === "S", "le grenier se pose sur sa réserve");
+  R.pas(K, 40); verif(R.capacite(K, "baies") === 200 && R.capacite(K, "pain") === 120 && R.capacite(K, "bois") === 300, "grenier niveau 1 : la nourriture double, pas le bois");
+  K.res.bois = 300; K.res.baies = 200; verif(R.construire(K, "grenier") === null && K.chantiers[0].lot === "S" && K.chantiers[0].agrandit && Object.keys(K.lots).length === 1, "agrandir le grenier : sur place, pas de nouveau terrain");
+  // hiver : on se chauffe (le bois baisse), sans bois le moral baisse, personne ne meurt
+  const Hv = R.creer(); Hv.pop = 4; Hv.res.baies = 100; Hv.res.bois = 50; Hv.t = 20 * 60 * 2.4; verif(R.hiver(Hv), "l'hiver arrive à la 3e saison");
+  R.pas(Hv, 60); verif(Hv.res.bois < 50 && Hv.res.bois > 45 && Hv.pop === 4, "hiver : un peu de bois brûlé, 4 habitants toujours là");
+  Hv.res.bois = 0; verif(R.moral(Hv).det.some(d => d.k === "chauffage" && !d.ok) && R.moral(Hv).mult < 1, "hiver sans bois : le moral baisse");
   // sauvegarde
   const Y = R.charger(R.sauver(X)); verif(Y && Y.res.bois === X.res.bois && Y.jobs.bucheron === 1, "sauvegarde relue à l'identique");
   const Z = R.charger(JSON.stringify({res: {bois: 3}, jobs: {}})); verif(Z && Z.res.pain === 0 && Z.bat.cabane === 0 && Z.statut === 0, "une vieille sauvegarde est complétée");
@@ -83,7 +93,7 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
   verif(R.deplacer(S, c1, libre) === null && S.lots[libre] === "cabane" && !S.lots[c1] && S.chantiers.some(c => c.lot === libre), "déplacer une cabane (même en chantier)");
   // toutes les portes sont reliées à la place par une route, même la carte pleine
   while (!R.construire(S, "cabane") || !R.construire(S, "maison")) ;
-  for (const t of ["terre", "roche", "rive"]) for (const id of C.libres(S, t)) S.lots[id] = t === "terre" ? "atelier" : t === "roche" ? "carriere" : "ponton", S.ordreLots.push(id);
+  for (const t of ["terre", "roche", "rive", "reserve"]) for (const id of C.libres(S, t)) S.lots[id] = t === "terre" ? "atelier" : t === "roche" ? "carriere" : t === "rive" ? "ponton" : id === "R" ? "aire" : "grenier", S.ordreLots.push(id);
   const ro = C.routes(S);
   verif(ro.traces.length === Object.keys(L).length, "routes : chaque bâtiment a sa rue (" + ro.traces.length + "/" + Object.keys(L).length + ")");
   verif(ro.traces.every(tr => { const p = C.porte(S, tr.id); return tr.cases[0][0] === p[0] && tr.cases[0][1] === p[1]; }), "routes : elles partent des portes");

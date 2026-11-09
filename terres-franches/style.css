@@ -40,6 +40,11 @@ img, canvas{image-rendering:pixelated}
 .res span small{font-size:8px; color:#4a6a1a; margin-left:1px}
 .res span small.moins{color:var(--rouge)}
 .res .ic{width:18px; height:18px; margin:-3px 0}
+.res span{position:relative}
+.res .jauge{position:absolute; left:0; bottom:-4px; height:2px; background:#6aa83a; border-radius:1px}
+.res span.plein .jauge{background:var(--rouge)}
+.res span.plein small{color:var(--rouge); font-family:var(--titre); font-size:6px}
+.cond.place{min-height:0; font-size:12px} .cond.place span{color:var(--rouge); font-weight:700}
 #statut{align-self:center}
 .bas{display:flex; flex-direction:column; gap:4px; align-items:stretch}
 .onglets{display:flex; gap:4px}

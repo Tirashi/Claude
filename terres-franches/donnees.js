@@ -47,8 +47,21 @@ const BATIMENTS = {
   four:     {desc: "1 boulanger : farine et bois deviennent du pain.", nom: "FOUR",      cout: {bois: 30, pierre: 40},  croit: 1.6,  travail: 45,  terrain: "terre", statut: 1, pres: {moulin: 3, logis: 2, feu: 1, fertile: -4}},
   maison:   {desc: "Un toit pour 4 habitants de plus, dans la limite du statut.", nom: "MAISON",    cout: {bois: 60, pierre: 50},  croit: 1.2,  travail: 60,  terrain: "terre", logement: 4, statut: 2, pres: {feu: 4, logis: 2, fertile: -3, pre: -2}},
   bergerie: {desc: "2 places de berger : de la laine.", nom: "BERGERIE",  cout: {bois: 90, pierre: 20},  croit: 1.5,  travail: 50,  terrain: "terre", statut: 2, pres: {pre: 6, logis: -1, fertile: -2}},
+  grenier:  {desc: "Garde la nourriture : chaque niveau double la place des baies, du poisson, du blé, de la farine et du pain.", nom: "GRENIER", cout: {bois: 50, baies: 10}, croit: 2, travail: 30, terrain: "reserve", place: "S", statut: 0, niveaux: 4, stock: "nourriture", pres: {champ: 3, fertile: 2, feu: 1}},
+  aire:     {desc: "Garde le bois, la pierre, la laine et les vêtements : chaque niveau double la place.", nom: "AIRE DE STOCKAGE", cout: {bois: 40}, croit: 2, travail: 25, terrain: "reserve", place: "R", statut: 0, niveaux: 5, stock: "materiaux", pres: {feu: 1, eau: 1}},
   atelier:  {desc: "1 tisserand : la laine devient des vêtements.", nom: "ATELIER",   cout: {bois: 80, pierre: 60},  croit: 1.6,  travail: 60,  terrain: "terre", statut: 2, pres: {logis: 3, bergerie: 2, feu: 1, fertile: -4, pre: -2}}
 };
+
+// stockage : ce que la colonie peut garder de chaque ressource ; un bâtiment de stockage (grenier, aire) double la place à chaque niveau
+//   (décision du 09/11 : on essaie une vraie limite ; on l'enlèvera si c'est trop contraignant)
+const STOCK = {
+  base: {bois: 300, pierre: 200, baies: 100, poisson: 100, ble: 100, farine: 60, pain: 60, laine: 60, vetements: 40},
+  groupes: {nourriture: ["baies", "poisson", "ble", "farine", "pain"], materiaux: ["bois", "pierre", "laine", "vetements"]}
+};
+
+// l'hiver (une saison sur quatre, 20 min chacune ; la partie commence au printemps) : on se chauffe et on mange plus ;
+//   sans bois, le moral baisse, mais personne ne meurt (décision du 09/11)
+const HIVER = {saison: 20 * 60, decalage: .7, chauffage: .006, faim: 1.25, froid: -.15};
 
 // statuts de la colonie (ère 1) : population maximale ; passer au suivant demande une population et des ressources
 const STATUTS = [
@@ -61,7 +74,7 @@ const STATUTS = [
 const LOI = {nom: "CHARTE DU VILLAGE", pop: 20, cout: {bois: 2000, pierre: 1200, pain: 500, vetements: 60}};
 
 // carte de l'ère 1 (24 × 24) : parcelles par terrain ; le feu de camp (logement 2) est déjà là
-const CARTE = {terre: 14, roche: 2, rive: 2, feu: 2};
+const CARTE = {terre: 14, roche: 2, rive: 2, reserve: 2, feu: 2};
 
 // villageois : un nouveau coûte des vivres (pris dans n'importe quelle nourriture) et du bois, × croit^recrutés
 const RECRUTER = {vivres: 40, bois: 20, croit: 1.15};
@@ -81,7 +94,7 @@ const PIONNIER = {toucher: 1, ressources: ["bois", "baies", "poisson"]};
 // hors ligne : la production continue, bien plus lentement, et plafonnée
 const HORS_LIGNE = {plafond: 4 * 3600, rendement: .25};   // décision du 08/11 : peu au début ; des Lois l'augmenteront
 
-const api = {RES, METIERS, BATIMENTS, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
+const api = {RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresDonnees = api;
 })();

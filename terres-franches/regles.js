@@ -61,6 +61,15 @@ function parcellesLibres(S, terrain){
   for (const b in P.BATIMENTS) if (P.BATIMENTS[b].terrain === terrain) n -= S.bat[b] + enChantier(S, b);
   return n;
 }
+/* ---------- stockage et saisons ---------- */
+// le bâtiment qui garde la ressource r (grenier ou aire), et la place : base × 2^niveau (niveau = nombre construit)
+function gardien(S, r){ const P = D(S); for (const b in P.BATIMENTS){ const g = P.BATIMENTS[b].stock; if (g && P.STOCK.groupes[g].includes(r)) return b; } return null; }
+function capacite(S, r){ const P = D(S), base = P.STOCK.base[r]; if (base === undefined) return Infinity; const b = gardien(S, r); return base * Math.pow(2, b ? S.bat[b] : 0); }
+function borner(S){ for (const r in S.res){ const c = capacite(S, r); if (S.res[r] > c) S.res[r] = c; } }
+const plein = (S, r) => S.res[r] >= capacite(S, r) - 1e-9;
+// saisons : 0 printemps … 3 hiver (comme vie.js, qui dessine)
+function saison(S){ const H = D(S).HIVER; return Math.floor((S.t + H.saison * H.decalage) / H.saison) % 4; }
+const hiver = S => saison(S) === 3;
 function vivres(S){ const P = D(S); let v = 0; for (const r in P.RES) if (P.RES[r].vivres) v += S.res[r] * P.RES[r].vivres; return v; }
 
 /* ---------- coûts ---------- */
@@ -102,6 +111,7 @@ function moral(S){
   }
   if (S.pop >= B.vetements.pop){ const ok = S.res.vetements >= .5; if (ok) m += B.vetements.bonus; det.push({k: "vetements", ok}); }
   if (S.pop >= B.pain.pop){ const ok = S.res.pain >= 1; if (ok) m += B.pain.bonus; det.push({k: "pain", ok}); }
+  if (hiver(S) && S.pop){ const ok = S.res.bois >= 1; if (!ok) m += P.HIVER.froid; det.push({k: "chauffage", ok}); }
   const famine = S.pop > 0 && vivres(S) < 1e-6;
   if (famine){ m *= B.famine; det.push({k: "famine", ok: false}); }
   return {mult: m, det, famine};
@@ -127,7 +137,8 @@ function taux(S, jobs){
     for (const r in M.entree) t[r] -= out * M.entree[r];
     t[M.sortie] += out;
   }
-  const v = S.pop * P.BESOINS.conso;
+  const v = S.pop * P.BESOINS.conso * (hiver(S) ? P.HIVER.faim : 1);
+  if (hiver(S)) t.bois -= S.pop * P.HIVER.chauffage;
   t.vivres = Object.keys(P.RES).reduce((a, r) => a + (P.RES[r].vivres ? t[r] * P.RES[r].vivres : 0), 0) - v;
   if (S.pop >= P.BESOINS.vetements.pop) t.vetements -= S.pop * P.BESOINS.vetements.conso;
   return t;
@@ -151,7 +162,7 @@ function pas1(S, dt, eff){
   // transformations (limitées par ce qu'il y a en réserve)
   for (const m in P.METIERS){
     const M = P.METIERS[m]; if (!M.entree || !S.jobs[m]) continue;
-    let out = M.debit * S.jobs[m] * mult * dt;
+    let out = Math.min(M.debit * S.jobs[m] * mult * dt, Math.max(0, capacite(S, M.sortie) - S.res[M.sortie]));
     for (const r in M.entree) out = Math.min(out, S.res[r] / M.entree[r]);
     if (out <= 0) continue;
     for (const r in M.entree) S.res[r] -= out * M.entree[r];
@@ -159,17 +170,20 @@ function pas1(S, dt, eff){
   }
   // on mange, on s'habille
   if (S.pop){
-    const besoin = S.pop * P.BESOINS.conso * dt * eff;
+    const H = hiver(S), besoin = S.pop * P.BESOINS.conso * (H ? P.HIVER.faim : 1) * dt * eff;
     payerVivres(S, Math.min(besoin, vivres(S)));
+    if (H) S.res.bois = Math.max(0, S.res.bois - S.pop * P.HIVER.chauffage * dt * eff);   // on se chauffe
     if (S.pop >= P.BESOINS.vetements.pop) S.res.vetements = Math.max(0, S.res.vetements - S.pop * P.BESOINS.vetements.conso * dt * eff);
   }
   for (const r in S.res) if (S.res[r] < 1e-9) S.res[r] = 0;
+  borner(S);   // ce qui dépasse la place est perdu
 }
 
 /* ---------- ordres du joueur ---------- */
 function toucher(S, r, n){
   const P = D(S); if (!P.PIONNIER.ressources.includes(r)) return "RIEN A RECOLTER";
-  S.res[r] += P.PIONNIER.toucher * (n || 1); S.touchers += n || 1; return null;
+  if (plein(S, r)) return r === "bois" ? "PLUS DE PLACE : AGRANDIS L'AIRE DE STOCKAGE" : "PLUS DE PLACE : AGRANDIS LE GRENIER";
+  S.res[r] = Math.min(capacite(S, r), S.res[r] + P.PIONNIER.toucher * (n || 1)); S.touchers += n || 1; return null;
 }
 function recruter(S){
   const P = D(S);
@@ -194,13 +208,18 @@ function affecter(S, m, d){
 function peutConstruire(S, b){
   const P = D(S), B = P.BATIMENTS[b]; if (!B) return "BATIMENT INCONNU";
   if (B.statut > S.statut) return "IL FAUT LE STATUT " + P.STATUTS[B.statut].nom;
-  if (parcellesLibres(S, B.terrain) < 1) return "PLUS DE TERRAIN LIBRE";
+  const n = S.bat[b] + enChantier(S, b);
+  if (B.niveaux && n >= B.niveaux) return "NIVEAU MAXIMAL";
+  if (B.niveaux && enChantier(S, b)) return "DEJA EN TRAVAUX";
+  if (!(B.niveaux && n > 0) && parcellesLibres(S, B.terrain) < 1) return "PLUS DE TERRAIN LIBRE";
   if (!peutPayer(S, coutBat(S, b))) return "PAS ASSEZ DE RESSOURCES";
   return null;
 }
 // lot = le terrain choisi par le joueur (sinon celui que propose la carte)
 function construire(S, b, lot){
   const e = peutConstruire(S, b); if (e) return e;
+  const ici = D(S).BATIMENTS[b].niveaux && Object.keys(S.lots).find(id => S.lots[id] === b);   // agrandir : sur place
+  if (ici){ payer(S, coutBat(S, b)); S.chantiers.push({k: b, reste: D(S).BATIMENTS[b].travail, lot: ici, agrandit: true}); return null; }
   if (CARTE){
     lot = lot || CARTE.proposer(S, b);
     const L = CARTE.LOTS[lot];
@@ -278,6 +297,8 @@ const PLAN = ["cabane", "cabane", "champ", "carriere", "cabane", "moulin", "four
   "maison", "bergerie", "atelier", "maison", "maison", "champ", "carriere", "ponton", "maison", "maison", "maison"];
 function prochainBat(S){
   const P = D(S), vus = {};
+  const st = P.STATUTS[S.statut + 1], vise = Object.assign({}, st ? st.cout : P.LOI.cout);
+  for (const r in vise){ if (vise[r] <= capacite(S, r) * .98) continue; const g = gardien(S, r); if (g && !peutConstruireSansCout(S, g)) return g; }
   for (const b of PLAN){
     vus[b] = (vus[b] || 0) + 1;
     if (S.bat[b] + enChantier(S, b) >= vus[b]) continue;
@@ -289,6 +310,7 @@ function prochainBat(S){
   }
   return null;
 }
+function peutConstruireSansCout(S, b){ const e = peutConstruire(S, b); return e === "PAS ASSEZ DE RESSOURCES" ? null : e; }
 function enChantierLogement(S){ const P = D(S); return S.chantiers.reduce((a, c) => a + (P.BATIMENTS[c.k].logement || 0), 0); }
 // ce qui manque pour le prochain achat (sert à choisir quoi toucher et où mettre les villageois)
 function objectif(S){
@@ -319,9 +341,9 @@ function repartir(S){
   const nourr = ["pecheur", "cueilleur"];
   let garde = 0;
   while (reste > 0 && garde++ < 40){
-    const t = taux(S, J), cible = S.pop * P.BESOINS.conso * .35 + (manque(S, objectif(S)).vivres ? .25 : 0);
+    const t = taux(S, J), cible = S.pop * P.BESOINS.conso * .35 + (manque(S, objectif(S)).vivres ? .25 + S.pop * .03 : 0);   // les recrues coûtent cher en vivres
     if (t.vivres >= cible) break;
-    const m = nourr.filter(x => J[x] < places(S, x)).sort((a, b) => J[a] - J[b])[0];
+    const m = nourr.filter(x => J[x] < places(S, x) && !plein(S, P.METIERS[x].produit)).sort((a, b) => J[a] - J[b])[0];
     if (!m){ if (!mettre("fermier", 1)) break; continue; }
     mettre(m, 1);
   }
@@ -336,6 +358,7 @@ function repartir(S){
       const M = P.METIERS[m], r = M.produit || M.sortie;
       let s = (mq[r] || 0) / Math.max(.05, t[r] + .05) + (r === "bois" ? .5 : 0) + (r === "pierre" && S.statut >= 1 ? .4 : 0);
       if (M.entree && Object.keys(M.entree).some(x => S.res[x] < 1 && t[x] <= 0)) s = 0;
+      if (plein(S, r)) s = -.5;   // stock plein : ailleurs d'abord
       if (s > bs){ bs = s; best = m; }
     }
     mettre(best, 1);
@@ -347,7 +370,8 @@ function robot(S){
   const P = D(S);
   if (!peutPromulguer(S)) promulguer(S);
   if (!peutMonter(S)) monterStatut(S);
-  const st = P.STATUTS[S.statut + 1], attend = st && S.pop >= st.pop;  // il économise pour le statut
+  // il économise pour le statut, sauf s'il manque une ressource que personne ne produit encore (le pain : moulin et four d'abord)
+  const st = P.STATUTS[S.statut + 1], t = taux(S), attend = st && S.pop >= st.pop && Object.keys(st.cout).every(r => S.res[r] >= st.cout[r] || t[r] > 1e-6);
   if (!attend){
     const b = prochainBat(S); if (b && !peutConstruire(S, b)) construire(S, b);
     let n = 0; while (n++ < 3 && !recruter(S));
@@ -361,7 +385,7 @@ function aToucher(S){
   return "bois";
 }
 
-const api = {VERSION, reglages, creer, pas, taux, moral, places, logement, popMax, libres, parcellesLibres, vivres,
+const api = {VERSION, reglages, creer, pas, taux, moral, places, logement, popMax, libres, parcellesLibres, vivres, capacite, gardien, plein, saison, hiver,
   coutBat, coutRecrue, peutPayer, toucher, recruter, affecter, peutConstruire, construire, deplacer, peutMonter, monterStatut,
   peutPromulguer, promulguer, horsLigne, sauver, charger, robot, aToucher, objectif, PLAN};
 if (typeof module !== "undefined" && module.exports) module.exports = api;

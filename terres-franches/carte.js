@@ -1,7 +1,8 @@
 /* Terres franches : la carte de l'ère 1 (la vallée), les terrains à bâtir, l'emplacement proposé et les routes. Sans dessin, aussi sous Node.
    Une case = 32 px (T) ; les images du pack gardent leur taille (une maison de 96 px tient sur un terrain de 3 × 3 cases).
    GRILLE : T forêt, . herbe, * buisson, ~ eau, F feu de camp, ^ tente du pionnier,
-            lettres minuscules = terrains à bâtir (« terre », 3 × 3), X Y = rochers (carrières), P Q = rives (pontons).
+            lettres minuscules = terrains à bâtir (« terre », 3 × 3), X Y = rochers (carrières), P Q = rives (pontons),
+            R S = réserves (« reserve », 2 × 2 : grenier, aire de stockage).
    proposer(S, b) : le terrain le plus logique pour b (affinités `pres` de donnees.js) ; routes(S) : les rues, tracées dans l'ordre
    de construction, de la porte de chaque bâtiment vers la rue ou la place la plus proche (elles se rejoignent toutes seules). */
 (function(){
@@ -15,8 +16,8 @@ const GRILLE = [
   "TTTTTTTT*nnnTT..YY.~~.TT",
   "TTTTT*..........YY.~~.TT",
   "TTTT*.....bbb......~~.TT",
-  "TTTT..aaa.bbb.ccc...~~TT",
-  "TTTT..aaa.bbb.ccc...~~TT",
+  "TTTT..aaa.bbb.ccc.RR~~TT",
+  "TTTT..aaa.bbb.ccc.RR~~TT",
   "TTTT..aaa.....ccc...~~TT",
   "TT.T.....^.........P~~TT",
   "TT.*.ddd...F...eee..~~TT",
@@ -26,8 +27,8 @@ const GRILLE = [
   "TT....fff..ggg.hhh.~~.TT",
   "TTiii.fff..ggg.hhh.~~.TT",
   "TTiii.fff..ggg.hhh.~~.TT",
-  "TTiii..............~~.TT",
-  "TT........lll..Q.~~~~~~~",
+  "TTiii.SS...........~~.TT",
+  "TT....SS..lll..Q.~~~~~~~",
   "TT.jjjkkk.lll..~~~~~~~~~",
   "TT.jjjkkk.lll..~~~~~~~~~",
   "TT.jjjkkk..mmm.~~~~~~~~~",
@@ -46,8 +47,8 @@ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
   const c = GRILLE[y][x];
   if (c === "F") FEU = [x, y];
   if (c === "^") TENTE = [x, y];
-  if (!/[a-zXYPQ]/.test(c)) continue;
-  const L = LOTS[c] || (LOTS[c] = {id: c, x, y, l: 0, h: 0, terrain: /[a-z]/.test(c) ? "terre" : /[XY]/.test(c) ? "roche" : "rive", tags: ETIQUETTES[c] || []});
+  if (!/[a-zXYPQRS]/.test(c)) continue;
+  const L = LOTS[c] || (LOTS[c] = {id: c, x, y, l: 0, h: 0, terrain: /[a-z]/.test(c) ? "terre" : /[XY]/.test(c) ? "roche" : /[RS]/.test(c) ? "reserve" : "rive", tags: ETIQUETTES[c] || []});
   L.l = Math.max(L.l, x - L.x + 1); L.h = Math.max(L.h, y - L.y + 1);
 }
 for (const L of Object.values(LOTS)){
@@ -100,6 +101,7 @@ function score(S, b, id){
 // le terrain proposé pour b (null s'il n'y en a plus)
 function proposer(S, b){
   const B = DON.BATIMENTS[b]; if (!B) return null;
+  if (B.place && libres(S, B.terrain).includes(B.place)) return B.place;   // sa réserve à lui (grenier près des champs, aire près des rochers)
   let best = null, bs = -1e9;
   for (const id of libres(S, B.terrain)){ const s = score(S, b, id); if (s > bs + 1e-9){ bs = s; best = id; } }
   return best;

@@ -17,7 +17,8 @@ function majBarre(){
   for (const r in DON.RES) if (S.res[r] >= 1 || Math.abs(t[r]) > 1e-6) vus[r] = 1;
   const liste = Object.keys(DON.RES).filter(r => TOUJOURS.includes(r) || vus[r]);
   let h = liste.map(r => { const v = t[r] * 60, tx = Math.abs(v) < .05 ? "" : `<small class="${v < 0 ? "moins" : ""}">${v > 0 ? "+" : ""}${Math.abs(v) < 10 ? v.toFixed(1) : Math.round(v)}</small>`;
-    return `<span>${ic(r)}<b>${fmt(S.res[r])}</b>${tx}</span>`; }).join("");
+    const cap = R.capacite(S, r), f = Math.min(1, S.res[r] / cap), pl = f > .985;
+    return `<span class="${pl ? "plein" : ""}" title="${nomRes(r)} : ${fmt(S.res[r])} / ${fmt(cap)}">${ic(r)}<b>${fmt(S.res[r])}</b>${pl ? "<small>PLEIN</small>" : tx}<i class="jauge" style="width:${Math.round(f * 100)}%"></i></span>`; }).join("");
   h += `<span title="Habitants"><canvas class="ic portrait" width="30" height="30"></canvas><b>${S.pop}/${R.popMax(S)}</b></span>`;
   if (h !== barre){ barre = h; $("res").innerHTML = h; $("res").querySelectorAll("canvas.portrait").forEach(portrait); }
   const st = DON.STATUTS[S.statut].nom; if ($("statut").textContent !== st) $("statut").textContent = st;
@@ -53,6 +54,12 @@ function volConstruire(){
   for (const b in P.BATIMENTS){
     const B = P.BATIMENTS[b], e = R.peutConstruire(S, b), bloque = B.statut > S.statut, libres = C.libres(S, B.terrain).length;
     const plein = B.logement && !bloque && R.logement(S) >= P.STATUTS[S.statut].popMax;   // assez de toits : le statut limite
+    if (B.niveaux && S.bat[b] + S.chantiers.filter(c => c.k === b).length > 0){   // une réserve déjà là : on l'agrandit
+      const n = S.bat[b], tr = S.chantiers.some(c => c.k === b), mx = n >= B.niveaux, r0 = P.STOCK.groupes[B.stock][0];
+      const inf = tr ? "AGRANDISSEMENT EN COURS" : mx ? `NIVEAU ${n} : MAXIMAL` : `NIVEAU ${n} → ${n + 1}`;
+      h += `<div class="carte${e ? " non" : ""}" data-b="${b}"><canvas width="36" height="36" data-s="${b}"></canvas><span class="nom">AGRANDIR : ${B.nom} <small>${inf}</small><small class="desc">${nomRes(r0)} : ${fmt(R.capacite(S, r0))}${mx || tr ? "" : " → " + fmt(R.capacite(S, r0) * 2)} au plus. ${B.desc}</small>${mx || tr ? "" : cout(R.coutBat(S, b))}</span></div>`;
+      continue;
+    }
     const info = bloque ? `IL FAUT LE ${P.STATUTS[B.statut].nom}` : !libres ? "PLUS DE TERRAIN" : `${libres} TERRAIN${libres > 1 ? "S" : ""} LIBRE${libres > 1 ? "S" : ""}`;
     const desc = plein ? `Assez de toits pour le ${P.STATUTS[S.statut].nom.toLowerCase()} : un toit de plus n'apportera personne.` : B.desc;
     h += `<div class="carte${e ? " non" : ""}" data-b="${b}"><canvas width="36" height="36" data-s="${b}"></canvas><span class="nom">${B.nom} <small>${info}</small><small class="desc${plein ? " alerte" : ""}">${desc}</small>${bloque ? "" : cout(R.coutBat(S, b))}</span></div>`;
@@ -61,9 +68,9 @@ function volConstruire(){
 }
 function volColonie(){
   const S = J.S, P = R.reglages(S.mods), mo = R.moral(S), st = P.STATUTS[S.statut], suiv = P.STATUTS[S.statut + 1];
-  const NOMS = {variete: "Nourriture variée (2 sortes)", vetements: "Vêtements", pain: "Du pain", famine: "Famine !"};
+  const NOMS = {variete: "Nourriture variée (2 sortes)", vetements: "Vêtements", pain: "Du pain", chauffage: "Bois pour se chauffer (hiver)", famine: "Famine !"};
   const V = window.TerresVie;
-  let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3><p>${V.NOMS[V.saison(S)]} DE L'AN ${V.annee(S)}${V.pluie(S) ? (V.saison(S) === 3 ? " · IL NEIGE" : " · IL PLEUT") : ""}${V.nuit(S) > .5 ? " · LA NUIT" : ""}</p>`;
+  let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3><p>${V.NOMS[V.saison(S)]} DE L'AN ${V.annee(S)}${V.pluie(S) ? (V.saison(S) === 3 ? " · IL NEIGE" : " · IL PLEUT") : ""}${V.nuit(S) > .5 ? " · LA NUIT" : ""}</p>${R.hiver(S) ? `<p class="limite">L'hiver : chaque habitant brûle du bois et mange un peu plus. Sans bois, le moral baisse.</p>` : R.saison(S) === 2 ? `<p class="limite">L'automne : fais des réserves de bois et de nourriture pour l'hiver.</p>` : ""}`;
   h += mo.det.length ? mo.det.map(d => `<div class="besoin ${d.ok ? "ok" : "non"}"><i>${d.ok ? "+" : "-"}</i>${NOMS[d.k]}</div>`).join("") : `<p>Pas encore de besoins : à 6 habitants, il faudra varier la nourriture.</p>`;
   if (suiv){
     h += `<h3 style="margin-top:8px"><span>DEVENIR ${suiv.nom}</span></h3><p>Jusqu'à ${suiv.popMax} habitants et de nouveaux bâtiments.</p>${conditions(suiv.pop, suiv.cout)}
@@ -79,7 +86,8 @@ function volColonie(){
 function conditions(pop, c){
   const S = J.S, ligne = (ok, icone, a, n, nom) => `<div class="cond ${ok ? "ok" : "non"}"><i>${ok ? "✔" : "✘"}</i>${icone}<b>${a} / ${n}</b><span>${nom}</span></div>`;
   return `<div class="conds">${ligne(S.pop >= pop, `<canvas class="ic" width="30" height="30" data-p="0"></canvas>`, S.pop, pop, "HABITANTS")}`
-    + Object.entries(c).map(([r, n]) => ligne(S.res[r] + 1e-9 >= n, ic(r), fmt(S.res[r]), fmt(n), nomRes(r))).join("") + `</div>`;
+    + Object.entries(c).map(([r, n]) => ligne(S.res[r] + 1e-9 >= n, ic(r), fmt(S.res[r]), fmt(n), nomRes(r))
+      + (R.capacite(S, r) < n ? `<div class="cond non place"><i>!</i><span>Pas assez de place : ${fmt(R.capacite(S, r))} ${nomRes(r).toLowerCase()} au plus. Agrandis ${R.gardien(S, r) === "grenier" ? "le grenier" : "l'aire de stockage"}.</span></div>` : "")).join("") + `</div>`;
 }
 const VOLETS = {villageois: volVillageois, construire: volConstruire, colonie: volColonie};
 function majVolet(force){
@@ -93,7 +101,7 @@ function majVolet(force){
   p.querySelectorAll("canvas[data-s]").forEach(c => miniature(c, null, c.dataset.s));
   p.querySelectorAll("canvas[data-p]").forEach(c => portrait(c, +c.dataset.p));
 }
-const MINI = {champ: "champ-mur", carriere: "rocher", ponton: null, bergerie: "grange"};
+const MINI = {champ: "champ-mur", carriere: "rocher", ponton: null, bergerie: "grange", grenier: "grange", aire: "i-bois"};
 function miniature(c, _, b, r){
   const g = c.getContext("2d"); g.imageSmoothingEnabled = false; g.clearRect(0, 0, c.width, c.height);
   let n = r ? ({bois: "i-bois", pierre: "i-pierre", baies: "i-baies", poisson: "i-poisson", ble: "i-ble", farine: "i-farine", pain: "i-pain", laine: "i-laine", vetements: "i-tissu"})[r] : (b in MINI ? MINI[b] : (J.spriteDe(b, "a") || [])[0]);
@@ -114,7 +122,12 @@ $("panneau").addEventListener("click", e => {
   else if (el.dataset.act === "recruter") err = R.recruter(S);
   else if (el.dataset.act === "statut") err = R.monterStatut(S);
   else if (el.dataset.act === "loi"){ err = R.promulguer(S); if (!err) $("fin").hidden = false; }
-  else if (el.dataset.b){ err = R.peutConstruire(S, el.dataset.b); if (!err) choisir(el.dataset.b); }
+  else if (el.dataset.b){
+    const b = el.dataset.b, B = DON.BATIMENTS[b];
+    err = R.peutConstruire(S, b);
+    if (!err && B.niveaux && S.bat[b] > 0){ err = R.construire(S, b); if (!err) annonce("AGRANDISSEMENT : " + B.nom, true); }   // sur place, sans choisir de terrain
+    else if (!err) choisir(b);
+  }
   if (err) annonce(err, false); else J.sauver();
   majVolet(true); majBarre();
 });
@@ -151,7 +164,8 @@ function bulle(id){
   const S = J.S, b = S.lots[id], B = DON.BATIMENTS[b], ch = S.chantiers.find(c => c.lot === id);
   const metiers = Object.keys(DON.METIERS).filter(m => DON.METIERS[m].places[b]);
   const qui = metiers.map(m => `${DON.METIERS[m].nom} : ${S.jobs[m]}/${R.places(S, m)}`).join("<br>");
-  el.innerHTML = `<b>${B.nom}</b>${ch ? `Chantier : encore ${Math.ceil(ch.reste)} s` : B.logement ? `Loge ${B.logement} habitants` : qui || ""}
+  const res = B.stock ? DON.STOCK.groupes[B.stock].map(r => `${nomRes(r).toLowerCase()} ${fmt(S.res[r])}/${fmt(R.capacite(S, r))}`).join("<br>") : "";
+  el.innerHTML = `<b>${B.nom}${B.niveaux ? " · NIV. " + S.bat[b] : ""}</b>${ch ? `${ch.agrandit ? "Agrandissement" : "Chantier"} : encore ${Math.ceil(ch.reste)} s` : B.logement ? `Loge ${B.logement} habitants` : res || qui || ""}
     <div class="rang"><button type="button" class="bouton petit" data-x="dep">DEPLACER</button><button type="button" class="bouton petit" data-x="ok">OK</button></div>`;
   el.hidden = false; placerBulle();
 }

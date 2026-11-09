@@ -275,6 +275,8 @@ function marcher(a, cible, ensuite){
   a.chemin = ch ? ch.map(([u, v]) => [(u + .5) * T + (hash(a.i, u) - .5) * 8, (v + .5) * T + (hash(v, a.i) - .5) * 6]) : [[(cible[0] + .5) * T, (cible[1] + .5) * T]];
   a.etat = "marche"; a.apres = ensuite; a.anim = "marche";
 }
+// où déposer une récolte : la porte de sa réserve (grenier, aire) quand elle existe, sinon près du feu
+function depot(a, r){ const b = R.gardien(S, r), id = b && S.bat[b] && Object.keys(S.lots).find(k => S.lots[k] === b); return id ? C.porte(S, id) : surPlace(a); }
 function surPlace(a){ const [fx, fy] = C.FEU, r = C.PLACE(S.statut) * .7, an = hash(a.i, Math.floor(a.t)) * 6.3; return [Math.round(fx + Math.cos(an) * r), Math.round(fy + Math.sin(an) * r * .8)]; }
 function synchroniser(){
   while (AG.length < S.pop){ const i = AG.length, [x0, y0] = i === 0 ? [PI.x, PI.y] : [(ENTREE[0] + .5) * T, (ENTREE[1] + .5) * T]; AG.push({i, x: x0, y: y0, dir: i ? "h" : "b", f: 0, t: 0, job: null, etat: "pret", anim: "marche"}); }
@@ -326,7 +328,7 @@ function bouger(a, dt){
   if ((a.etat === "flane" || a.etat === "dedans") && a.t > a.fin){ a.etat = "pret"; return; }
   if (a.etat === "travail" && a.t > a.fin){
     const m = a.job;
-    if (RAPPORTE[m]){ a.porte = PRODUIT(m); marcher(a, surPlace(a), () => { flotte(a.x, a.y - 40, a.porte); a.porte = null; a.etat = "pret"; }); }
+    if (RAPPORTE[m]){ a.porte = PRODUIT(m); marcher(a, depot(a, a.porte), () => { flotte(a.x, a.y - 40, a.porte); a.porte = null; a.etat = "pret"; }); }
     else a.etat = "pret";
   }
 }
@@ -403,8 +405,54 @@ function dessinerPlacement(t){
 }
 
 /* ---------- un bâtiment ---------- */
+/* ---------- les réserves : des tas qui suivent le stock (part = stock / place) ---------- */
+const part = r => Math.max(0, Math.min(1, S.res[r] / R.capacite(S, r)));
+function buches(X, Y, f, n){   // un tas de bûches : n rangées au plus, remplies selon f
+  const tot = Math.round(f * n * (n + 1) / 2); let k = 0;
+  for (let rg = 0; rg < n && k < tot; rg++) for (let i = 0; i < n - rg && k < tot; i++, k++){
+    const bx = X + i * 9 + rg * 4.5, by = Y - rg * 7;
+    x.fillStyle = "#6b4423"; x.fillRect(Math.round(bx), Math.round(by - 7), 9, 7); x.fillStyle = "#c8975a"; x.beginPath(); x.ellipse(bx + 1.5, by - 3.5, 2.6, 3.4, 0, 0, 6.3); x.fill();
+    x.fillStyle = "#8a5a30"; x.fillRect(Math.round(bx + 1), Math.round(by - 4), 1, 1); }
+}
+function pierres(X, Y, f, n){
+  const tot = Math.round(f * n * (n + 1) / 2); let k = 0;
+  for (let rg = 0; rg < n && k < tot; rg++) for (let i = 0; i < n - rg && k < tot; i++, k++){
+    const bx = X + i * 8 + rg * 4, by = Y - rg * 6; x.fillStyle = "#77736b"; x.beginPath(); x.ellipse(bx + 4, by - 3, 4.6, 3.6, 0, 0, 6.3); x.fill(); x.fillStyle = "#a9a59c"; x.fillRect(Math.round(bx + 2), Math.round(by - 6), 3, 1); }
+}
+function sacs(X, Y, f, n, coul){   // sacs (laine, blé, farine) ou paniers
+  const k = Math.round(f * n);
+  for (let i = 0; i < k; i++){ const bx = X + (i % 3) * 9 + (i >= 3 ? 4 : 0), by = Y - Math.floor(i / 3) * 7;
+    x.fillStyle = "#3a2a18"; x.fillRect(Math.round(bx) - 1, Math.round(by - 10), 9, 11); x.fillStyle = coul; x.fillRect(Math.round(bx), Math.round(by - 9), 7, 9); x.fillStyle = "rgba(255,255,255,.35)"; x.fillRect(Math.round(bx + 1), Math.round(by - 8), 2, 4); x.fillStyle = "#5a4024"; x.fillRect(Math.round(bx + 2), Math.round(by - 11), 3, 2); }
+}
+function panier(X, Y, f, coul, dessus){   // un panier rempli de baies ou de poissons
+  x.fillStyle = "#7a5530"; x.beginPath(); x.ellipse(X, Y - 4, 9, 5, 0, 0, 6.3); x.fill(); x.fillStyle = "#a07440"; x.fillRect(X - 9, Y - 5, 18, 2);
+  for (let i = 0; i < Math.round(f * 10); i++){ x.fillStyle = i % 2 ? coul : dessus; x.fillRect(Math.round(X - 7 + (i * 5) % 14), Math.round(Y - 8 - Math.floor(i / 3) * 2), 3, 3); }
+}
+function aire(L){
+  const X = L.x * T, Y = L.y * T, W = L.l * T, H = L.h * T;
+  x.fillStyle = "rgba(110,85,50,.35)"; x.fillRect(X + 2, Y + 6, W - 4, H - 8);
+  x.strokeStyle = "#6a4a26"; x.lineWidth = 2; x.strokeRect(X + 2, Y + 6, W - 4, H - 8);
+  for (let k = 0; k <= 4; k++){ x.fillStyle = "#5a3a1c"; x.fillRect(X + 1 + k * (W - 6) / 4, Y + 3, 3, 6); }
+  buches(X + 5, Y + 30, part("bois"), 5); pierres(X + 6, Y + H - 4, part("pierre"), 4);
+  sacs(X + 40, Y + H - 4, part("laine"), 3, "#e8e2d0"); sacs(X + 40, Y + 30, part("vetements"), 3, "#5a7ab0");
+}
+function grenier(L){
+  const X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 2;
+  x.fillStyle = "rgba(20,30,10,.25)"; x.beginPath(); x.ellipse(X, Y - 2, 32, 6, 0, 0, 6.3); x.fill();
+  spr("grange", X, Y - 4, .66);
+  sacs(X - 30, Y + 2, part("ble"), 3, "#d8b450"); sacs(X + 6, Y + 2, part("farine"), 3, "#f2ece0");
+  panier(X - 18, Y + 12, part("baies"), "#c8243a", "#7a2ab0"); panier(X + 4, Y + 12, part("poisson"), "#8aa8c0", "#c8d8e4"); sacs(X + 16, Y + 14, part("pain"), 2, "#c88a3a");
+}
+// avant le grenier et l'aire : le stock est près du feu (tas de bûches, paniers)
+function reservesDuFeu(){
+  const [fx, fy] = C.FEU, X = (fx + .5) * T, Y = (fy + .5) * T;
+  if (!S.bat.aire){ buches(X - 52, Y + 30, part("bois"), 4); if (S.res.pierre > 0) pierres(X - 52, Y + 44, part("pierre"), 3); }
+  if (!S.bat.grenier){ panier(X + 38, Y + 30, part("baies"), "#c8243a", "#7a2ab0"); panier(X + 58, Y + 30, part("poisson"), "#8aa8c0", "#c8d8e4"); }
+}
 function batiment(b, id, t, fantome){
   const L = C.LOTS[id], X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 4;
+  if (b === "aire"){ aire(L); return; }
+  if (b === "grenier"){ grenier(L); return; }
   if (b === "champ"){ champ(L, t, id.charCodeAt(0)); return; }
   if (b === "ponton"){ ponton(L); return; }
   if (b === "carriere"){ carriere(L, true); return; }
@@ -415,11 +463,11 @@ function batiment(b, id, t, fantome){
   if (!fantome && (b === "cabane" || b === "maison")) fumee(s[0], X, Y, s[1], t);
   if (!fantome && b === "four" && S.jobs.boulanger) fumee("four", X, Y, s[1], t, true);
 }
-function chantier(c, id, t){
+function chantier(c, id, t, barre){
   const L = C.LOTS[id], X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 6, tot = DON.BATIMENTS[c.k].travail, u = 1 - c.reste / tot;
   if (c.k === "champ"){ x.fillStyle = "rgba(110,80,40,.6)"; x.fillRect(L.x * T + 6, L.y * T + 6, (L.l * T - 12) * u, L.h * T - 12); }
   else if (c.k === "ponton"){ x.globalAlpha = .4 + .6 * u; ponton(L); x.globalAlpha = 1; }
-  else spr("chantier", X, Y, .5);
+  else if (!barre) spr("chantier", X, Y, .5);
   x.fillStyle = "#2a1608"; x.fillRect(X - 22, Y + 1, 44, 6); x.fillStyle = "#ffd94a"; x.fillRect(X - 21, Y + 2, 42 * u, 4);
   if (Math.sin(t * 9) > .6){ x.fillStyle = "#fff6c8"; x.fillRect(X - 10 + (t * 37 % 20), Y - 30 - (t * 53 % 14), 2, 2); }
 }
@@ -460,12 +508,14 @@ function image(now){
   for (let y = 0; y < C.H; y++) for (let xx = 0; xx < C.W; xx++) if (C.GRILLE[y][xx] === "*") L.push([(y + .95) * T, () => buissonBaies(xx, y, t)]);
   for (const id in C.LOTS){ const Lo = C.LOTS[id];
     if (Lo.terrain === "roche" && S.lots[id] !== "carriere") for (const [a, b2, k] of ROCHERS) L.push([Lo.y * T + b2, () => spr("rocher", Lo.x * T + a, Lo.y * T + b2, k)]);
-    if (enCours[id]) L.push([(Lo.y + Lo.h) * T, () => chantier(enCours[id], id, t)]);
+    if (enCours[id] && enCours[id].agrandit) L.push([(Lo.y + Lo.h) * T, () => { batiment(S.lots[id], id, t); chantier(enCours[id], id, t, true); }]);
+    else if (enCours[id]) L.push([(Lo.y + Lo.h) * T, () => chantier(enCours[id], id, t)]);
     else if (S.lots[id] && !["champ", "ponton"].includes(S.lots[id])) L.push([(Lo.y + Lo.h) * T - 2, () => batiment(S.lots[id], id, t)]);
   }
   const [fx, fy] = C.FEU, [tx, ty] = C.TENTE;
   if (S.statut < 1) L.push([(ty + .9) * T, () => tente((tx + .5) * T, (ty + .9) * T)]);   // au hameau, le pionnier a son toit
   L.push([(fy + .75) * T, () => feuDeCamp((fx + .5) * T, (fy + .75) * T, t)]);
+  L.push([(fy + 1.4) * T, reservesDuFeu]);
   if (PUITS) L.push([PUITS[1], () => spr(S.statut >= 2 ? "fontaine" : "puits", PUITS[0], PUITS[1], S.statut >= 2 ? .8 : .7)]);
   for (const a of AG){ bouger(a, dt); L.push([a.y, () => dessinerAgent(a)]); }
   PI.f += dt * 8; if (PI.anim === "travail" && t > PI.fin) PI.anim = "repos";

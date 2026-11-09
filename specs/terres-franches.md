@@ -74,6 +74,12 @@
   - **Bâtiments de stockage** : grenier (nourriture), aire de stockage (bois, pierre) ; on **voit les ressources s'accumuler** (piles de bûches, tas de pierres, sacs) ; en construire plus ou les améliorer : plus de place et récolte plus rapide (moins de trajet). Implique une **capacité** par ressource.
   - **Loi : vitesse sur les routes** (les villageois marchent plus vite sur les rues).
   - **Hiver** (question de l'utilisateur) : consommer plus de nourriture et du **bois de chauffage** l'hiver ?
+- **09/11 — réponses et réalisation** :
+  - **Marche vers le haut** : on voyait le visage (le villageois semblait reculer) : `{h: 0}[dir] || 2` donnait 2 ; corrigé (`??`).
+  - **Outils** : chaque villageois a les quatre outils LPC (`villageois.png` refait, mêmes villageois) : hache (bûcheron), pioche (carrier), canne (pêcheur : lancer puis attente), houe (fermier) ; le cueilleur cueille à la main.
+  - **Hiver** (personne ne meurt) : `HIVER` de `donnees.js` : chaque habitant brûle 0,006 bois/s (0,36/min) et mange 25 % de plus ; sans bois, moral −15 % (« Bois pour se chauffer »). Le volet COLONIE prévient à l'automne.
+  - **Stock limité** (pour voir ; on l'enlèvera si c'est trop contraignant) : `STOCK.base` (bois 300, pierre 200, baies/poisson/blé 100, farine/pain/laine 60, vêtements 40) ; **grenier** (nourriture) et **aire de stockage** (bois, pierre, laine, vêtements) sur deux réserves 2 × 2 de la carte (`S` près des champs, `R` près des rochers et de la rivière, terrain `reserve`) ; chaque niveau double la place (grenier 4 niveaux, aire 5), on agrandit sur place (coût × 2). Ce qui dépasse est perdu, le toucher refuse quand c'est plein. **On voit le stock** : bûches, pierres, sacs et paniers qui grossissent et fondent (près du feu avant le grenier et l'aire) ; les récolteurs déposent à leur réserve ; jauge sous chaque ressource (rouge et PLEIN quand c'est plein) ; le volet COLONIE dit quand une condition dépasse la place.
+  - Simulateur (robot qui agrandit ses réserves et ne garde pas de récolteurs sur un stock plein) : hameau 24 min, village 1 h 59, Charte 3 h 10 (sans le stock : 2 h 45).
 - Prochaines étapes après le choix : décisions du § 2, puis **simulateur d'équilibrage d'abord** (`outils/terres-simulateur.js`, ère 1), puis session 1.
 
 ## 2. Adaptations à la Ludothèque (proposées le 08/11, à confirmer)
