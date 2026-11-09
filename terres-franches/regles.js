@@ -330,7 +330,7 @@ function prochainBat(S){
     if (S.bat[b] + enChantier(S, b) >= vus[b]) continue;
     if (P.BATIMENTS[b].statut > S.statut) continue;
     // un logis quand on manque de place, pas avant
-    if (P.BATIMENTS[b].logement && logement(S) + enChantierLogement(S) > S.pop + 1 && S.pop < P.STATUTS[S.statut].popMax - 1) continue;
+    if (P.BATIMENTS[b].logement && logement(S) + enChantierLogement(S) > S.pop + 1 && S.pop < plafondStatut(S) - 1) continue;
     if (parcellesLibres(S, P.BATIMENTS[b].terrain) < 1) continue;
     return b;
   }

@@ -39,8 +39,9 @@ function volVillageois(){
   let h = `<h3><span>HABITANTS ${S.pop}/${R.popMax(S)}</span></h3>`;
   h += `<div class="sans ${lib ? "oui" : ""}"><b>${lib}</b><span>${lib ? `villageois sans métier : donne-${lib > 1 ? "leur" : "lui"} un travail avec <i>+</i>` : "Tout le monde travaille."}</span></div>`;
   // la limite : les toits (tente et feu, cabanes, maisons) ou le statut de la colonie, le plus petit des deux
-  const toits = R.logement(S), lim = P.STATUTS[S.statut].popMax, suiv = P.STATUTS[S.statut + 1];
-  h += `<p class="limite">Toits : <b>${toits}</b> · ${P.STATUTS[S.statut].nom} : <b>${lim}</b> au plus<br>${S.pop < R.popMax(S) ? "Il reste de la place : accueille quelqu'un."
+  // la limite du statut compte les améliorations (tentes d'appoint, droit d'accueil)
+  const toits = R.logement(S), lim = R.plafondStatut(S), bonus = R.eff(S, "pop"), suiv = P.STATUTS[S.statut + 1];
+  h += `<p class="limite">Toits : <b>${toits}</b> · ${P.STATUTS[S.statut].nom} : <b>${lim}</b> au plus${bonus ? ` (${P.STATUTS[S.statut].popMax} + ${bonus} par les améliorations)` : ""}<br>${S.pop < R.popMax(S) ? "Il reste de la place : accueille quelqu'un."
     : toits < lim ? "Il manque des toits : construis une cabane." : suiv ? `Le ${P.STATUTS[S.statut].nom.toLowerCase()} est plein : il faut devenir ${suiv.nom.toLowerCase()} (volet COLONIE).` : "Plafond de l'ère : promulgue la Loi."}</p>`;
   const c = R.coutRecrue(S);
   h += `<div class="carte"><canvas width="30" height="30" class="portrait" data-p="${S.pop}"></canvas><span class="nom">ACCUEILLIR<small>${cout(c)} <em>vivres = baies, poisson ou pain</em></small></span><button type="button" class="bouton petit or" data-act="recruter">+1</button></div>`;
@@ -56,7 +57,7 @@ function volConstruire(){
   const S = J.S, P = R.reglages(S.mods); let h = "";
   for (const b of Object.keys(P.BATIMENTS).sort((u, v) => P.BATIMENTS[u].statut - P.BATIMENTS[v].statut)){   // dans l'ordre où l'on peut bâtir
     const B = P.BATIMENTS[b], e = R.peutConstruire(S, b), bloque = B.statut > S.statut, libres = C.libres(S, B.terrain).length;
-    const plein = B.logement && !bloque && R.logement(S) >= P.STATUTS[S.statut].popMax;   // assez de toits : le statut limite
+    const plein = B.logement && !bloque && R.logement(S) >= R.plafondStatut(S);   // assez de toits : le statut limite
     if (B.niveaux && S.bat[b] + S.chantiers.filter(c => c.k === b).length > 0){   // une réserve déjà là : on l'agrandit
       const n = S.bat[b], tr = S.chantiers.some(c => c.k === b), mx = n >= B.niveaux, r0 = P.STOCK.groupes[B.stock][0];
       const inf = tr ? "AGRANDISSEMENT EN COURS" : mx ? `NIVEAU ${n} : MAXIMAL` : `NIVEAU ${n} → ${n + 1}`;
@@ -76,7 +77,7 @@ function volColonie(){
   let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3><p>${V.NOMS[V.saison(S)]} DE L'AN ${V.annee(S)}${V.pluie(S) ? (V.saison(S) === 3 ? " · IL NEIGE" : " · IL PLEUT") : ""}${V.nuit(S) > .5 ? " · LA NUIT" : ""}</p>${R.hiver(S) ? `<p class="limite">L'hiver : chaque habitant brûle du bois et mange un peu plus. Sans bois, le moral baisse.</p>` : R.saison(S) === 2 ? `<p class="limite">L'automne : fais des réserves de bois et de nourriture pour l'hiver.</p>` : ""}`;
   h += mo.det.length ? mo.det.map(d => `<div class="besoin ${d.ok ? "ok" : "non"}"><i>${d.ok ? "+" : "-"}</i>${NOMS[d.k]}</div>`).join("") : `<p>Pas encore de besoins : à 6 habitants, il faudra varier la nourriture.</p>`;
   if (suiv){
-    h += `<h3 style="margin-top:8px"><span>DEVENIR ${suiv.nom}</span></h3><p>Jusqu'à ${suiv.popMax} habitants et de nouveaux bâtiments.</p>${conditions(suiv.pop, suiv.cout)}
+    h += `<h3 style="margin-top:8px"><span>DEVENIR ${suiv.nom}</span></h3><p>Jusqu'à ${suiv.popMax + R.eff(S, "pop")} habitants${R.eff(S, "pop") ? ` (dont ${R.eff(S, "pop")} par les améliorations)` : ""} et de nouveaux bâtiments.</p>${conditions(suiv.pop, suiv.cout)}
       <button type="button" class="bouton or" data-act="statut"${R.peutMonter(S) ? " disabled" : ""}>FONDER LE ${suiv.nom}</button>`;
   } else {
     const L = P.LOI;
