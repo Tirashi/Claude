@@ -441,18 +441,19 @@ function dessinerPlacement(t){
 }
 
 /* ---------- un bâtiment ---------- */
-/* ---------- les réserves : des tas qui suivent le stock (part = stock / place) ---------- */
 /* ---------- les réserves : les morceaux des packs (bûches, rochers, sacs, paniers, tonneaux) suivent le stock (part = stock / place) ---------- */
 const J_ouvert = () => window.TerresEcran && window.TerresEcran.ouvert ? window.TerresEcran.ouvert() : null;   // la bulle ouverte
 const part = r => Math.max(0, Math.min(1, S.res[r] / R.capacite(S, r)));
 // un tas : n morceaux au plus en pyramide, autant que la part f ; pas = écart entre deux morceaux
+// combien de morceaux : la racine de la part, pour qu'un petit stock se voie déjà (un quart du stock = la moitié du tas)
+const morceaux = (f, max) => f < .004 ? 0 : Math.min(max, Math.ceil(Math.sqrt(f) * max));
 function tas(n, X, Y, f, max, k, px, py){
-  const tot = Math.round(f * max); let i = 0;
+  const tot = morceaux(f, max); let i = 0;
   for (let rg = 0; i < tot; rg++) for (let c = 0; c < Math.ceil(Math.sqrt(max * 2)) - rg && i < tot; c++, i++) spr(n, X + c * px + rg * px / 2, Y - rg * py, k);
 }
 const buches = (X, Y, f, max) => tas("buche", X, Y, f, max || 10, .62, 15, 6);
 const pierres = (X, Y, f, max) => tas("rocher-p", X, Y, f, max || 6, .5, 12, 6);
-function rangee(n, X, Y, f, max, k, px){ const tot = Math.round(f * max); for (let i = 0; i < tot; i++) spr(n, X + i * px, Y, k); }
+function rangee(n, X, Y, f, max, k, px){ const tot = morceaux(f, max); for (let i = 0; i < tot; i++) spr(n, X + i * px, Y, k); }
 // l'aire de stockage : un abri ouvert à droite, le tas de bûches à gauche (sur la case voisine), pierres, laine et vêtements sous l'abri
 function aire(L, ouvert){
   const X = L.x * T, Y = L.y * T;
