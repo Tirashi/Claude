@@ -3,13 +3,14 @@ Sorties dans terres-franches/img/ :
  - decor.png + ../atlas.js (window.TerresAtlas = {nom: [x, y, l, h]}) : découpes Cute SCKR (maisons, champs, moulin, four, arbres, herbe,
    eau, terre, icônes) et Tiny Swords venues de bastion/img (feu, rocher, buisson, chantier, moutons) ;
  - villageois.png (une rangée de 256 px par villageois : marche 576 px, repos 128 px, travail 768 px) et ../villageois.js (VILLAGEOIS LPC) ;
- - les pièces d'interface ui-*.png (copiées de bastion/img).
-Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC>
+ - les pièces d'interface ui-*.png (copiées de bastion/img) ;
+ - animaux.png + window.TerresAnimauxAtlas dans ../atlas.js : animaux LPC d'OpenGameArt (chat, chien, biche, cerf, renard, oiseaux, poules, poissons).
+Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC> <dossier des animaux>
 (mêmes dossiers que fabriquer-7.py ; villageois : sortie de lpc-villageois.py ... 24 11 6)."""
 import json, pathlib, re, shutil, sys
 from PIL import Image
 racine = pathlib.Path(__file__).resolve().parents[2]
-SC, ICO, VL = map(pathlib.Path, sys.argv[1:4])
+SC, ICO, VL, AN = map(pathlib.Path, sys.argv[1:5])
 ici, jeu = racine / "outils/terres-maquette", racine / "terres-franches"
 (jeu / "img").mkdir(parents=True, exist_ok=True)
 src2 = (ici / "fabriquer-2.py").read_text(encoding="utf-8")
@@ -46,7 +47,16 @@ for n in ordre:
 pl = Image.new("RGBA", (L, y + hl), (0, 0, 0, 0))
 for n, (a, b, w, h) in pos.items(): pl.paste(images[n], (a, b))
 pl.save(jeu / "img/decor.png", optimize=True)
-(jeu / "atlas.js").write_text("/* Terres franches : où est chaque image dans img/decor.png (fabriqué par outils/terres-maquette/atlas.py). */\nwindow.TerresAtlas = " + json.dumps(pos, separators=(",", ":")) + ";\n", encoding="utf-8")
+# animaux LPC (OpenGameArt), rangés en une bande
+A = AN / "animals/lpc animals 2022 v1.1/individual creature spritesheets"
+ANX = {"chat": AN / "cat_0.png", "chien": AN / "dog_2.png", "biche": A / "deer, light doe.png", "cerf": A / "deer, dark buck.png", "renard": A / "fox, woods.png",
+  "oiseau1": AN / "bird_1_brown.png", "oiseau2": AN / "bird_2_black.png", "poule": AN / "chicken_walk.png", "poule-mange": AN / "chicken_eat.png", "poisson": next(AN.rglob("lpc_fish.png"))}
+ims = {n: Image.open(c).convert("RGBA") for n, c in ANX.items()}; xa, posA = 0, {}
+for n, im in ims.items(): posA[n] = [xa, 0, im.width, im.height]; xa += im.width + 2
+pa = Image.new("RGBA", (xa, max(i.height for i in ims.values())), (0, 0, 0, 0))
+for n, im in ims.items(): pa.paste(im, (posA[n][0], 0))
+pa.save(jeu / "img/animaux.png", optimize=True)
+(jeu / "atlas.js").write_text("/* Terres franches : où est chaque image dans img/decor.png et img/animaux.png (fabriqué par outils/terres-maquette/atlas.py). */\nwindow.TerresAtlas = " + json.dumps(pos, separators=(",", ":")) + ";\nwindow.TerresAnimauxAtlas = " + json.dumps(posA, separators=(",", ":")) + ";\n", encoding="utf-8")
 # villageois LPC
 info = json.load(open(VL / "villageois.json")); enf = sorted(VL.glob("e*-marche.png"))
 pv = Image.new("RGBA", (1472, 256 * (len(info) + (len(enf) + 1) // 2)), (0, 0, 0, 0))

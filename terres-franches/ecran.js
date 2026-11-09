@@ -56,7 +56,8 @@ function volConstruire(){
 function volColonie(){
   const S = J.S, P = R.reglages(S.mods), mo = R.moral(S), st = P.STATUTS[S.statut], suiv = P.STATUTS[S.statut + 1];
   const NOMS = {variete: "Nourriture variée (2 sortes)", vetements: "Vêtements", pain: "Du pain", famine: "Famine !"};
-  let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3>`;
+  const V = window.TerresVie;
+  let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3><p>${V.NOMS[V.saison(S)]} DE L'AN ${V.annee(S)}${V.pluie(S) ? (V.saison(S) === 3 ? " · IL NEIGE" : " · IL PLEUT") : ""}${V.nuit(S) > .5 ? " · LA NUIT" : ""}</p>`;
   h += mo.det.length ? mo.det.map(d => `<div class="besoin ${d.ok ? "ok" : "non"}"><i>${d.ok ? "+" : "-"}</i>${NOMS[d.k]}</div>`).join("") : `<p>Pas encore de besoins : à 6 habitants, il faudra varier la nourriture.</p>`;
   if (suiv){
     h += `<h3 style="margin-top:8px"><span>DEVENIR ${suiv.nom}</span></h3><p>${suiv.pop} habitants (${S.pop}), puis : ${cout(suiv.cout)}</p>

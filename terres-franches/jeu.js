@@ -13,12 +13,14 @@ let charges = 0; const fini = () => { if (++charges === 2) demarrer(); };
 decor.onload = vill.onload = fini; decor.onerror = vill.onerror = fini;
 decor.src = "img/decor.png"; vill.src = "img/villageois.png";
 const ok = () => decor.naturalWidth > 0;
+let planche = decor, saisonVue = 1;   // planche = le décor retouché pour la saison (vie.js)
+const V = window.TerresVie;
 // morceau n de la planche, pieds en (X, Y) (milieu du bas), échelle k ; f = image f d'une bande de `nf` images
 function spr(n, X, Y, k, f, nf, miroir){
   const a = AT[n]; if (!a || !ok()) return; k = k || 1;
   const fw = nf ? a[2] / nf : a[2], sx = a[0] + (nf ? (Math.floor(f) % nf) * fw : 0), w = fw * k, h = a[3] * k;
-  if (miroir){ x.save(); x.translate(Math.round(X), 0); x.scale(-1, 1); x.drawImage(decor, sx, a[1], fw, a[3], Math.round(-w / 2), Math.round(Y - h), w, h); x.restore(); }
-  else x.drawImage(decor, sx, a[1], fw, a[3], Math.round(X - w / 2), Math.round(Y - h), w, h);
+  if (miroir){ x.save(); x.translate(Math.round(X), 0); x.scale(-1, 1); x.drawImage(planche, sx, a[1], fw, a[3], Math.round(-w / 2), Math.round(Y - h), w, h); x.restore(); }
+  else x.drawImage(planche, sx, a[1], fw, a[3], Math.round(X - w / 2), Math.round(Y - h), w, h);
 }
 const pieces = {};   // morceau en canvas (motifs, icônes de l'interface)
 function piece(n){
@@ -103,6 +105,7 @@ function dessinerFond(){
   // pied des terrains bâtis : un peu de terre devant la porte, potager des cabanes
   for (const id in S.lots){ const L = C.LOTS[id], bk = S.lots[id]; if (L.terrain !== "terre" || bk === "champ") continue;
     b.fillStyle = "rgba(80,110,40,.25)"; b.fillRect(L.x * T + 4, L.y * T + 8, L.l * T - 8, L.h * T - 10); }
+  V.sol(c, saisonVue);   // l'herbe de la saison
 }
 
 /* ---------- l'eau, animée ---------- */
@@ -117,6 +120,7 @@ function eau(t, X0, Y0, vw, vh){
   // reflets
   b.fillStyle = "rgba(255,255,255,.5)";
   for (let k = 0; k < 70; k++){ const gx = hash(k, 1) * MW, gy = hash(k, 2) * MH, a = Math.sin(t * 2 + k * 1.7); if (a > .6) b.fillRect(Math.round(gx + Math.sin(t * .5 + k) * 6), Math.round(gy), 4 + Math.round(a * 5), 2); }
+  if (saisonVue === 3){ b.fillStyle = "rgba(228,238,246,.55)"; b.fillRect(0, 0, MW, MH); }   // l'hiver, l'eau gèle
   b.globalCompositeOperation = "destination-in"; b.drawImage(EAU, 0, 0); b.globalCompositeOperation = "source-over";
   x.drawImage(eauCalque, 0, 0);
 }
@@ -126,15 +130,15 @@ const vent = (X, Y, t) => Math.sin(t * 1.1 - X * .006 + Y * .002) * .6 + Math.si
 function arbre(a, t){
   const at = AT[a.n]; if (!at) return; const w = vent(a.X, a.Y, t), h = at[3], iw = at[2], X0 = Math.round(a.X - iw / 2), Y0 = Math.round(a.Y - h + 8);
   for (let y = 0; y < h; y += 4){ const f = Math.pow(Math.max(0, (h - 34 - y) / (h - 34)), 1.3), dx = Math.round(w * 4 * f + Math.sin(a.ph + y * .07) * w * f);
-    x.drawImage(decor, at[0], at[1] + y, iw, Math.min(4, h - y), X0 + dx, Y0 + y, iw, Math.min(4, h - y)); }
+    x.drawImage(planche, at[0], at[1] + y, iw, Math.min(4, h - y), X0 + dx, Y0 + y, iw, Math.min(4, h - y)); }
 }
-const ETATS = ["nu", "pousse", "pousse", "mur", "mur", "blond"];
 function champ(L, t, i){
-  const s = ETATS[Math.floor(t / 40 + i * 1.7) % ETATS.length], at = AT["champ-" + s]; if (!at) return;
+  const s = V.etatChamp(t, i, saisonVue), at = AT["champ-" + s]; if (!at) return;
   const X = L.x * T, Y = L.y * T, W = L.l * T, H = L.h * T;
-  if (s === "nu" || s === "pousse"){ x.drawImage(decor, at[0], at[1], at[2], at[3], X, Y, W, H); return; }
+  if (saisonVue === 3){ x.drawImage(planche, at[0], at[1], at[2], at[3], X, Y, W, H); x.fillStyle = "rgba(240,246,255,.82)"; x.fillRect(X + 3, Y + 3, W - 6, H - 6); return; }
+  if (s === "nu" || s === "pousse"){ x.drawImage(planche, at[0], at[1], at[2], at[3], X, Y, W, H); return; }
   for (let y = 0; y < at[3]; y += 2){ const w = vent(X + y, Y, t), dx = Math.round(w * 2 * ((y % 12) < 6 ? 1 : .5));
-    x.drawImage(decor, at[0], at[1] + y, at[2], 2, X + dx, Y + y * H / at[3], W, 2 * H / at[3] + .5); }
+    x.drawImage(planche, at[0], at[1] + y, at[2], 2, X + dx, Y + y * H / at[3], W, 2 * H / at[3] + .5); }
 }
 // fumée : haut de la cheminée, en px de l'image (repérés pour la maquette 7)
 const CHEMINEES = {chaume3: [74.5, 1], chaume4: [74, 10], colomb1: [77.5, 7], colomb2: [63, 21], pierre2: [63, 19], pierre3: [15.5, 6], pierre5: [19, 2]};
@@ -266,7 +270,7 @@ function dessinerAgent(a){
   if (a.etat === "dedans") return;
   x.fillStyle = "rgba(20,30,10,.28)"; x.beginPath(); x.ellipse(a.x, a.y, 10, 4, 0, 0, 6.3); x.fill();
   lpc(a, a.x, a.y, .75);
-  if (a.porte){ const ic = ICONE[a.porte], at = AT[ic]; if (at) x.drawImage(decor, at[0], at[1], at[2], at[3], Math.round(a.x - 8), Math.round(a.y - 58), 16, 16 * at[3] / at[2]); }
+  if (a.porte){ const ic = ICONE[a.porte], at = AT[ic]; if (at) x.drawImage(planche, at[0], at[1], at[2], at[3], Math.round(a.x - 8), Math.round(a.y - 58), 16, 16 * at[3] / at[2]); }
   if (a.job === "pecheur" && a.etat === "travail"){   // la ligne du pêcheur
     const s = a.dir === "g" ? -1 : a.dir === "d" ? 1 : 0, sy = a.dir === "h" ? -1 : a.dir === "b" ? 1 : 0, ex = a.x + s * 30 + (s ? 0 : 6), ey = a.y - 8 + sy * 26 + Math.sin(a.t * 2) * 1.5;
     x.strokeStyle = "rgba(240,240,220,.8)"; x.lineWidth = 1; x.beginPath(); x.moveTo(a.x + s * 6, a.y - 30); x.quadraticCurveTo(a.x + s * 22, a.y - 34, ex, ey); x.stroke(); x.fillStyle = "#e04030"; x.fillRect(Math.round(ex) - 1, Math.round(ey) - 1, 3, 3);
@@ -282,7 +286,7 @@ function dessinerFlottes(dt){
   for (let i = flottes.length - 1; i >= 0; i--){ const f = flottes[i]; f.t += dt; if (f.t > 1.4){ flottes.splice(i, 1); continue; }
     const a = AT[ICONE[f.r]], y = f.Y - f.t * 26; x.globalAlpha = Math.min(1, 1.4 - f.t) * 1;
     x.font = "8px 'Press Start 2P', monospace"; x.textAlign = "right"; x.fillStyle = "#000"; x.fillText(f.txt, f.X + 1, y + 1); x.fillStyle = "#fff"; x.fillText(f.txt, f.X, y);
-    if (a) x.drawImage(decor, a[0], a[1], a[2], a[3], Math.round(f.X + 1), Math.round(y - 11), 14, 14 * a[3] / a[2]);
+    if (a) x.drawImage(planche, a[0], a[1], a[2], a[3], Math.round(f.X + 1), Math.round(y - 11), 14, 14 * a[3] / a[2]);
     x.globalAlpha = 1; }
 }
 
@@ -350,7 +354,8 @@ function image(now){
   R.pas(S, dt);
   // ce que les règles annoncent
   if (S.evts.length){ for (const e of S.evts) window.TerresEcran && window.TerresEcran.annonce(e.txt, e.bon); S.evts = []; }
-  const cle = S.ordreLots.join("") + "|" + S.statut + "|" + Object.keys(S.lots).map(k => S.lots[k]).join(",");
+  const sv = V.saison(S); if (sv !== saisonVue){ saisonVue = sv; planche = V.recolorer(decor, sv); }
+  const cle = sv + "|" + S.ordreLots.join("") + "|" + S.statut + "|" + Object.keys(S.lots).map(k => S.lots[k]).join(",");
   if (cle !== cleFond){ cleFond = cle; dessinerFond(); cheminCache = new Map(); }
   synchroniser();
   const dpr = Math.min(2, window.devicePixelRatio || 1), cw = cv.clientWidth, ch = cv.clientHeight;
@@ -382,8 +387,13 @@ function image(now){
   for (const a of AG){ bouger(a, dt); L.push([a.y, () => dessinerAgent(a)]); }
   PI.f += dt * 8; if (PI.anim === "travail" && t > PI.fin) PI.anim = "repos";
   L.push([PI.y, () => dessinerAgent(PI)]);
+  V.objets(L, x, t, dt, S, AG, vis);
   L.sort((a, b) => a[0] - b[0]);
   for (const [, f] of L) f();
+  // les lumières de la nuit : le feu, la fontaine, une fenêtre par logis
+  const lum = [[(fx + .5) * T, (fy + .6) * T, 90, 1.2]];
+  for (const id in S.lots) if (!enCours[id] && (S.lots[id] === "cabane" || S.lots[id] === "maison" || S.lots[id] === "four")){ const Lo = C.LOTS[id]; lum.push([(Lo.x + Lo.l / 2) * T, (Lo.y + Lo.h) * T - 22, 46, .9]); }
+  V.ciel(x, t, S, X0, Y0, vw, vh, lum);
   dessinerPlacement(t);
   dessinerFlottes(dt);
   // nuages qui passent
