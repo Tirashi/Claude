@@ -142,7 +142,7 @@ kbd, .touches, .aide .pc{display:none}
   .res em.libres{font-size:8px}
   .cond{font-size:14px} .cond .ic{width:32px; height:32px} .cond b{font-size:11px}
   .bas{position:fixed; top:64px; right:12px; bottom:12px; width:360px; justify-content:flex-start; gap:6px}
-  .onglets{order:-1}
+  .onglets{order:-1; display:grid; grid-template-columns:1fr 1fr; gap:4px}   /* 4 volets : deux par ligne dans la colonne */
   .onglets .bouton{font-size:9px}
   kbd{display:inline; margin-left:6px; font:inherit; font-size:7px; opacity:.7}
   .panneau{max-height:none; flex:0 1 auto; min-height:0; font-size:14px}
