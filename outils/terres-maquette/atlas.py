@@ -2,7 +2,7 @@
 Sorties dans terres-franches/img/ :
  - decor.png + ../atlas.js (window.TerresAtlas = {nom: [x, y, l, h]}) : découpes Cute SCKR (maisons, champs, moulin, four, arbres, herbe,
    eau, terre, icônes) et Tiny Swords venues de bastion/img (feu, rocher, buisson, chantier, moutons) ;
- - villageois.png (une rangée de 256 px par villageois : marche 576 px, repos 128 px, travail 768 px) et ../villageois.js (VILLAGEOIS LPC) ;
+ - villageois.png (une rangée de 256 px par villageois : marche 576 px, repos 128 px, puis hache, pioche, canne, houe) et ../villageois.js (VILLAGEOIS LPC) ;
  - les pièces d'interface ui-*.png (copiées de bastion/img) ;
  - animaux.png + window.TerresAnimauxAtlas dans ../atlas.js : animaux LPC d'OpenGameArt (chat, chien, biche, cerf, renard, oiseaux, poules, poissons).
 Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC> <dossier des animaux>
@@ -59,14 +59,17 @@ pa.save(jeu / "img/animaux.png", optimize=True)
 (jeu / "atlas.js").write_text("/* Terres franches : où est chaque image dans img/decor.png et img/animaux.png (fabriqué par outils/terres-maquette/atlas.py). */\nwindow.TerresAtlas = " + json.dumps(pos, separators=(",", ":")) + ";\nwindow.TerresAnimauxAtlas = " + json.dumps(posA, separators=(",", ":")) + ";\n", encoding="utf-8")
 # villageois LPC
 info = json.load(open(VL / "villageois.json")); enf = sorted(VL.glob("e*-marche.png"))
-pv = Image.new("RGBA", (1472, 256 * (len(info) + (len(enf) + 1) // 2)), (0, 0, 0, 0))
+# une rangée de 256 px par villageois : marche (576), repos (128), puis les outils (OUTILS : x, taille de case, images ; gauche puis droite)
+OUTILS = {"hache": [704, 128, 6], "pioche": [1472, 128, 6], "canne": [2240, 128, 6], "houe": [3008, 64, 8]}
+pv = Image.new("RGBA", (3520, 256 * (len(info) + (len(enf) + 1) // 2)), (0, 0, 0, 0))
 for k, v in enumerate(info):
-  i = v["i"]
-  pv.paste(Image.open(VL / f"v{i}-marche.png"), (0, k * 256)); pv.paste(Image.open(VL / f"v{i}-repos.png"), (576, k * 256)); pv.paste(Image.open(VL / f"v{i}-{v['outil']}.png"), (704, k * 256))
+  i = v["i"]; v.pop("outil", None)
+  pv.paste(Image.open(VL / f"v{i}-marche.png"), (0, k * 256)); pv.paste(Image.open(VL / f"v{i}-repos.png"), (576, k * 256))
+  for o, (ox, _, _) in OUTILS.items(): pv.paste(Image.open(VL / f"v{i}-{o}.png"), (ox, k * 256))
 for k, e in enumerate(enf): pv.paste(Image.open(e), ((k % 2) * 576, (len(info) + k // 2) * 256))
 pv.save(jeu / "img/villageois.png", optimize=True)
 (jeu / "villageois.js").write_text("/* Terres franches : les villageois LPC de img/villageois.png (rangée k = villageois k ; enfants après). Fabriqué par outils/terres-maquette/atlas.py. */\n"
-  "window.TerresVillageois = " + json.dumps({"adultes": info, "enfants": len(enf)}, separators=(",", ":"), ensure_ascii=False) + ";\n", encoding="utf-8")
+  "window.TerresVillageois = " + json.dumps({"adultes": info, "enfants": len(enf), "outils": OUTILS}, separators=(",", ":"), ensure_ascii=False) + ";\n", encoding="utf-8")
 for n in ["ui-papier", "ui-parchemin", "ui-table", "ui-ruban-rouge", "ui-ruban-bleu", "ui-carre-bleu", "ui-carre-bleu-appui", "ui-barre", "ui-barre-plein", "ui-bouton-bleu", "ui-bouton-bleu-appui", "ui-bouton-rouge", "ui-bouton-rouge-appui"]:
   shutil.copy(racine / "bastion/img" / (n + ".png"), jeu / "img" / (n + ".png"))
 print("decor", pl.size, "villageois", pv.size, len(pos), "morceaux")

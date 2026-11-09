@@ -2,7 +2,8 @@
 « Universal LPC Spritesheet Character Generator » (dépôt public LiberatedPixelCup, licences CC-BY-SA 3.0 / GPL 3.0 / OGA-BY,
 auteurs dans son CREDITS.csv). Sortie : une bande par villageois, cases de 64 px :
   lignes 0-3 = marche (9 images, haut / gauche / bas / droite), ligne 4 = repos (2 images, vers le bas),
-  lignes 5-6 = travail vers la gauche / la droite (hache : 6 images de la frappe, ou houe : 8 images), cases de 128 px pour la hache.
+  outils (09/11 : chaque villageois a les quatre) : v<i>-hache.png, -pioche.png, -canne.png (6 images de 128 px, gauche puis droite),
+  -houe.png (8 images de 64 px, gauche puis droite) ; pioche et canne : tools/pickaxe et tools/fishing_rod du dépôt LPC.
 Usage : python3 -I outils/terres-maquette/lpc-villageois.py <dossier du dépôt LPC> <dossier de sortie> [nombre] [graine] [nombre d'enfants]
 Enfants : e<i>-marche.png (marche seulement : les habits d'enfant LPC n'ont que la marche)."""
 import json, pathlib, random, sys
@@ -38,7 +39,7 @@ def villageois(i):
   tissus = ["brown", "leather", "walnut", "tan", "maroon", "forest", "green", "navy", "bluegray", "slate", "gray", "white", "red", "teal", "yellow", "orange", "sky"]
   haut = r.choice(["torso/clothes/longsleeve/longsleeve/female", "torso/clothes/blouse_longsleeve/female", "torso/clothes/tunic/female"] if fem else ["torso/clothes/longsleeve/longsleeve/male", "torso/clothes/vest/male", "torso/clothes/sleeveless/laced/male"])
   bas = "legs/skirts/plain/thin" if fem and r.random() < .6 else f"legs/pants/{mince}"
-  outil = r.choice(["hache", "houe"])
+  outil = r.choice(["hache", "houe"])   # n'est plus utilisé (tous les outils), gardé pour que la graine donne les mêmes villageois
   couches = [  # (zPos, chemin, couleur de fichier, palette)
     (10, f"body/bodies/{corps}", None, (PEAU["light"], PEAU[peau])),
     (15, f"feet/shoes/revised/{mince}", None, (TISSU["white"], TISSU[r.choice(["brown", "leather", "walnut", "black", "charcoal"])])),
@@ -60,23 +61,28 @@ def villageois(i):
       out.alpha_composite(im)
     return out
   walk, idle = compose("walk"), compose("idle")
-  if outil == "hache":
-    sl = compose("slash"); bg, fg = Image.open(S / "tools/axe/bg.png").convert("RGBA"), Image.open(S / "tools/axe/fg.png").convert("RGBA")
+  sl, th = compose("slash"), compose("thrust")
+  def outil128(dossier, corps_anim):   # hache, pioche, canne : cases de 128 px, 6 images, gauche puis droite
+    bg, fg = Image.open(S / f"tools/{dossier}/bg.png").convert("RGBA"), Image.open(S / f"tools/{dossier}/fg.png").convert("RGBA")
     nf, fs = 6, 128; trav = Image.new("RGBA", (nf * fs, 2 * fs))
     for ligne, rang in ((0, 1), (1, 3)):   # gauche, droite
       for f in range(nf):
         c = Image.new("RGBA", (fs, fs)); c.alpha_composite(bg.crop((f * fs, rang * fs, f * fs + fs, rang * fs + fs)))
-        c.alpha_composite(sl.crop((f * 64, rang * 64, f * 64 + 64, rang * 64 + 64)), (32, 32)); c.alpha_composite(fg.crop((f * fs, rang * fs, f * fs + fs, rang * fs + fs)))
+        c.alpha_composite(corps_anim.crop((f * 64, rang * 64, f * 64 + 64, rang * 64 + 64)), (32, 32)); c.alpha_composite(fg.crop((f * fs, rang * fs, f * fs + fs, rang * fs + fs)))
         trav.paste(c, (f * fs, ligne * fs))
-  else:
-    th = compose("thrust"); bg, fg = Image.open(S / "tools/hoe/bg/thrust.png").convert("RGBA"), Image.open(S / "tools/hoe/fg/thrust.png").convert("RGBA")
+    return trav
+  def houe():   # cases de 64 px, 8 images
+    bg, fg = Image.open(S / "tools/hoe/bg/thrust.png").convert("RGBA"), Image.open(S / "tools/hoe/fg/thrust.png").convert("RGBA")
     nf, fs = 8, 64; trav = Image.new("RGBA", (nf * fs, 2 * fs))
     for ligne, rang in ((0, 1), (1, 3)):
       for f in range(nf):
         c = Image.new("RGBA", (fs, fs)); box = (f * 64, rang * 64, f * 64 + 64, rang * 64 + 64)
         for im in (bg, th, fg): c.alpha_composite(im.crop(box))
         trav.paste(c, (f * fs, ligne * fs))
-  walk.save(SORTIE / f"v{i}-marche.png"); idle.save(SORTIE / f"v{i}-repos.png"); trav.save(SORTIE / f"v{i}-{outil}.png")
+    return trav
+  walk.save(SORTIE / f"v{i}-marche.png"); idle.save(SORTIE / f"v{i}-repos.png")
+  outil128("axe", sl).save(SORTIE / f"v{i}-hache.png"); outil128("pickaxe", sl).save(SORTIE / f"v{i}-pioche.png")
+  outil128("fishing_rod", th).save(SORTIE / f"v{i}-canne.png"); houe().save(SORTIE / f"v{i}-houe.png")
   return {"i": i, "outil": outil, "femme": fem, "peau": peau, "cheveux": chev, "coiffe": coiffe, "vieux": vieux}
 def enfant(i):
   peau = r.choice(["light", "amber", "olive", "taupe", "bronze", "brown", "black"]); chev = r.choice(["blonde", "sandy", "ginger", "chestnut", "dark_brown", "black", "light_brown", "redhead"])

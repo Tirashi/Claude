@@ -250,12 +250,15 @@ const PIONNIER = VL.adultes.length - 1;
 const ENTREE = [2, 23];
 // le pionnier (dernière rangée) est le premier villageois : AG[0] ; les autres prennent les rangées suivantes
 const rang = i => i === 0 ? PIONNIER : (i - 1) % (VL.adultes.length - 1);
-const outil = i => VL.adultes[rang(i)].outil;
+// l'outil de chaque métier (planches de villageois.png : VL.outils = {outil: [x, case, images]}) ; le cueilleur cueille à la main
+const OUTIL = {bucheron: "hache", carrier: "pioche", pecheur: "canne", fermier: "houe"};
 function lpc(a, X, Y, k){
-  const ry = rang(a.i) * 256, row = {h: 0, g: 1, b: 2, d: 3}[a.dir] || 2;
-  if (a.anim === "travail"){
-    const hache = outil(a.i) === "hache", fs = hache ? 128 : 64, nb = hache ? 6 : 8, r = a.dir === "d" ? 1 : 0, f = Math.floor(a.f) % nb;
-    x.drawImage(vill, 704 + f * fs, ry + r * fs, fs, fs, Math.round(X - fs / 2 * k), Math.round(Y - (hache ? 92 : 60) * k), fs * k, fs * k); return;
+  const ry = rang(a.i) * 256, row = {h: 0, g: 1, b: 2, d: 3}[a.dir] ?? 2;   // ?? et pas || : « haut » vaut 0
+  if (a.anim === "travail" && VL.outils[a.outil || "hache"]){
+    const [ox, fs, nb] = VL.outils[a.outil || "hache"], r = a.dir === "d" ? 1 : 0;
+    // la canne : on lance une fois, puis on attend (petite secousse de temps en temps) ; les autres outils frappent en boucle
+    const f = a.outil === "canne" ? (a.f < 6 ? Math.floor(a.f) : (Math.floor(a.t * 1.5) % 5 === 0 ? 5 : 4)) : Math.floor(a.f) % nb;
+    x.drawImage(vill, ox + f * fs, ry + r * fs, fs, fs, Math.round(X - fs / 2 * k), Math.round(Y - (fs === 128 ? 92 : 60) * k), fs * k, fs * k); return;
   }
   if (a.anim === "repos"){ const f = Math.floor(a.f / 4) % 2; x.drawImage(vill, 576 + f * 64, ry + row * 64, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k); return; }
   const f = 1 + Math.floor(a.f) % 8; x.drawImage(vill, f * 64, ry + row * 64, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k);
@@ -280,9 +283,8 @@ function synchroniser(){
     const les = AG.filter(a => a.job === m);
     for (let k = les.length - 1; k >= S.jobs[m]; k--){ les[k].job = null; les[k].etat = "pret"; }
     for (let k = les.length; k < S.jobs[m]; k++){
-      const veut = ["bucheron", "carrier"].includes(m) ? "hache" : "houe";
-      const libres = AG.filter(a => !a.job); if (!libres.length) break;
-      const a = libres.find(b => outil(b.i) === veut) || libres[0]; a.job = m; a.etat = "pret";
+      const a = AG.find(b => !b.job); if (!a) break;
+      a.job = m; a.etat = "pret";
     }
   }
 }
@@ -316,7 +318,7 @@ function bouger(a, dt){
       if (a.job !== m){ a.etat = "pret"; return; }
       if (DON.METIERS[m].entree){ a.etat = "dedans"; a.fin = a.t + 30; return; }
       if (m === "berger"){ a.etat = "flane"; a.anim = "repos"; a.dir = "b"; a.fin = a.t + 8; return; }
-      a.etat = "travail"; a.anim = m === "pecheur" || m === "cueilleur" ? "repos" : "travail"; regarder(a, p[0], p[1]); if (a.anim === "travail" && a.dir !== "g" && a.dir !== "d") a.dir = hash(a.i, 9) < .5 ? "g" : "d";
+      a.etat = "travail"; a.anim = OUTIL[m] ? "travail" : "repos"; a.outil = OUTIL[m]; a.f = 0; regarder(a, p[0], p[1]); if (a.anim === "travail" && a.dir !== "g" && a.dir !== "d") a.dir = hash(a.i, 9) < .5 ? "g" : "d";
       a.fin = a.t + (DUREE[m] || 8);
     });
     return;
@@ -333,13 +335,7 @@ function dessinerAgent(a){
   x.fillStyle = "rgba(20,30,10,.28)"; x.beginPath(); x.ellipse(a.x, a.y, 10, 4, 0, 0, 6.3); x.fill();
   lpc(a, a.x, a.y, .75);
   if (a.porte){ const ic = ICONE[a.porte], at = AT[ic]; if (at) x.drawImage(planche, at[0], at[1], at[2], at[3], Math.round(a.x - 8), Math.round(a.y - 58), 16, 16 * at[3] / at[2]); }
-  if (a.job === "pecheur" && a.etat === "travail"){   // la ligne du pêcheur
-    const s = a.dir === "g" ? -1 : a.dir === "d" ? 1 : 0, sy = a.dir === "h" ? -1 : a.dir === "b" ? 1 : 0;
-    const mx = a.x + (s ? s * 7 : 7), my = a.y - 19, bx = mx + s * 16 + (s ? 0 : 3), by = my - 16 + sy * 4 + Math.sin(a.t * 1.3) * 1;   // main, bout de la canne
-    const ex = a.x + s * 34 + (s ? 0 : 8), ey = a.y - 6 + sy * 30 + Math.sin(a.t * 2) * 1.5;                                          // le bouchon
-    x.strokeStyle = "#5a3a1a"; x.lineWidth = 2; x.beginPath(); x.moveTo(mx, my); x.lineTo(bx, by); x.stroke();
-    x.strokeStyle = "rgba(240,240,220,.8)"; x.lineWidth = 1; x.beginPath(); x.moveTo(bx, by); x.quadraticCurveTo((bx + ex) / 2, by + 4, ex, ey); x.stroke(); x.fillStyle = "#e04030"; x.fillRect(Math.round(ex) - 1, Math.round(ey) - 1, 3, 3);
-  }
+
 }
 // le pionnier, devant sa tente
 const PI = {i: 0, x: (C.TENTE[0] + 1.6) * T, y: (C.TENTE[1] + 1.2) * T, dir: "b", f: 0, anim: "repos", fin: 0};
@@ -563,7 +559,7 @@ function toucherCase(tx, ty, wx, wy){
   if (!r) return null;
   if (R.toucher(S, r)) return null;
   flotte(wx === undefined ? (tx + .5) * T : wx, wy === undefined ? ty * T : wy - 8, r, "+" + DON.PIONNIER.toucher);
-  if (!S.pop){ PI.anim = "travail"; PI.fin = dernier + .45; PI.dir = (tx + .5) * T < PI.x ? "g" : "d"; }
+  if (!S.pop && r !== "baies"){ PI.anim = "travail"; PI.outil = r === "poisson" ? "canne" : "hache"; PI.f = 0; PI.fin = dernier + (r === "poisson" ? .8 : .45); PI.dir = (tx + .5) * T < PI.x ? "g" : "d"; }
   return r;
 }
 
