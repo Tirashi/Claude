@@ -66,6 +66,14 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
   const Hv = R.creer(); Hv.pop = 4; Hv.res.baies = 100; Hv.res.bois = 50; Hv.t = 20 * 60 * 2.4; verif(R.hiver(Hv), "l'hiver arrive à la 3e saison");
   R.pas(Hv, 60); verif(Hv.res.bois < 50 && Hv.res.bois > 45 && Hv.pop === 4, "hiver : un peu de bois brûlé, 4 habitants toujours là");
   Hv.res.bois = 0; verif(R.moral(Hv).det.some(d => d.k === "chauffage" && !d.ok) && R.moral(Hv).mult < 1, "hiver sans bois : le moral baisse");
+  // ordonnances et équipements : niveaux, coût qui grandit, effets
+  const O = R.creer(); O.res.bois = 300; O.res.baies = 100;
+  verif(R.peutAcheter(O, "pioche") !== null && R.peutAcheter(O, "accueil") !== null, "ordonnances : certaines attendent le hameau ou le village");
+  const co1 = R.coutOrd(O, "outils").bois; verif(R.acheter(O, "outils") === null && O.ord.outils === 1 && R.coutOrd(O, "outils").bois > co1 && O.res.bois === 300 - co1, "outils affûtés niveau 1 : payé, le niveau suivant coûte plus");
+  O.pop = 1; O.jobs.bucheron = 1; const tb = R.taux(O).bois; O.ord.outils = 0; verif(tb > R.taux(O).bois * 1.09, "outils : +10 % de bois par bûcheron");
+  O.ord.coupes = 1; verif(R.places(O, "bucheron") === 6, "nouvelles coupes : une place de bûcheron de plus");
+  O.ord.panier = 2; O.res.baies = 0; R.toucher(O, "baies"); verif(O.res.baies === 3, "panier du pionnier niveau 2 : 3 baies par toucher");
+  O.ord.accueil = 1; verif(R.plafondStatut(O) === 7, "droit d'accueil : 2 habitants de plus que le statut");
   // sauvegarde
   const Y = R.charger(R.sauver(X)); verif(Y && Y.res.bois === X.res.bois && Y.jobs.bucheron === 1, "sauvegarde relue à l'identique");
   const Z = R.charger(JSON.stringify({res: {bois: 3}, jobs: {}})); verif(Z && Z.res.pain === 0 && Z.bat.cabane === 0 && Z.statut === 0, "une vieille sauvegarde est complétée");

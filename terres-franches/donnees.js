@@ -91,13 +91,33 @@ const BESOINS = {
 // le pionnier (le joueur) : chaque toucher rapporte `toucher` de la ressource touchée
 const PIONNIER = {toucher: 1, ressources: ["bois", "baies", "poisson"]};
 
+// ordonnances et équipements : améliorations achetées pendant la partie (décision du 09/11) ; chaque niveau ajoute `effet`
+//   (cumulé), coûte cout × croit^niveau ; statut = statut requis ; les Lois (prestige) relèveront les valeurs de base.
+//   effets : recolte (+ débit des récolteurs), porte (+ débit des récolteurs : moins d'allers-retours), route (+ vitesse sur les rues,
+//   et + débit de tous les métiers), pop (+ habitants au-delà du statut), moral, chauffage (− bois l'hiver), faim (− nourriture en plus l'hiver),
+//   places (+ places par lieu de récolte : bûcherons, cueilleurs, pêcheurs), toucherPierre, toucher (+ par toucher), chantier (− durée), recrue (− coût)
+const ORDONNANCES = {
+  outils:     {nom: "OUTILS AFFUTES",     type: "equipement", desc: "Haches, pioches et houes bien tranchantes : on récolte plus vite.", effet: {recolte: .1}, niveaux: 5, cout: {bois: 60}, croit: 1.9, statut: 0},
+  panier:     {nom: "PANIER DU PIONNIER", type: "equipement", desc: "Chaque toucher rapporte une ressource de plus.", effet: {toucher: 1}, niveaux: 4, cout: {bois: 30, baies: 20}, croit: 2.2, statut: 0},
+  hottes:     {nom: "HOTTES ET BROUETTES", type: "equipement", desc: "On porte plus à chaque voyage : moins d'allers-retours.", effet: {porte: .08}, niveaux: 4, cout: {bois: 120}, croit: 2, statut: 0},
+  coupes:     {nom: "NOUVELLES COUPES",   type: "ordonnance", desc: "On ouvre d'autres arbres, buissons et coins de pêche : une place de plus pour chacun.", effet: {places: 1}, niveaux: 3, cout: {bois: 80, baies: 40}, croit: 2.2, statut: 0},
+  ateres:     {nom: "ATRES FERMES",       type: "equipement", desc: "Des foyers qui gardent la chaleur : moins de bois brûlé l'hiver.", effet: {chauffage: .15}, niveaux: 4, cout: {bois: 100}, croit: 1.8, statut: 0},
+  pioche:     {nom: "PIOCHE DU PIONNIER", type: "equipement", desc: "Toucher un rocher rapporte de la pierre.", effet: {toucherPierre: 1}, niveaux: 1, cout: {bois: 150, pierre: 20}, croit: 1, statut: 1},
+  chemins:    {nom: "CHEMINS DAMES",      type: "ordonnance", desc: "Rues tassées et entretenues : on y marche plus vite, tout le monde travaille un peu plus.", effet: {route: .2, route_prod: .03}, niveaux: 3, cout: {bois: 150, pierre: 60}, croit: 2, statut: 1},
+  conserves:  {nom: "FUMAGE ET SALAISON", type: "ordonnance", desc: "Des vivres qui se gardent : on mange moins en plus l'hiver.", effet: {faim: .25}, niveaux: 3, cout: {poisson: 80, bois: 80}, croit: 2, statut: 1},
+  fetes:      {nom: "JOURS DE FETE",      type: "ordonnance", desc: "Des fêtes au village : tout le monde est plus content et travaille mieux.", effet: {moral: .05}, niveaux: 4, cout: {baies: 120, poisson: 80}, croit: 2.1, statut: 1},
+  charpente:  {nom: "CHARPENTIERS",       type: "ordonnance", desc: "Des bâtisseurs entraînés : les chantiers vont plus vite.", effet: {chantier: .15}, niveaux: 3, cout: {bois: 200, pierre: 80}, croit: 2, statut: 1},
+  accueil:    {nom: "DROIT D'ACCUEIL",    type: "ordonnance", desc: "Deux habitants de plus que ne le permet le statut (s'il y a des toits).", effet: {pop: 2}, niveaux: 3, cout: {bois: 300, pierre: 150, pain: 40}, croit: 2.2, statut: 2},
+  hospitalite:{nom: "HOSPITALITE",        type: "ordonnance", desc: "Les nouveaux venus coûtent moins cher à accueillir.", effet: {recrue: .1}, niveaux: 3, cout: {pain: 60, bois: 200}, croit: 2, statut: 2}
+};
+
 // la marche des villageois (cases par seconde ; × route sur les rues et la place)
 const MARCHE = {vitesse: 1.7, route: 1.5};
 
 // hors ligne : la production continue, bien plus lentement, et plafonnée
 const HORS_LIGNE = {plafond: 4 * 3600, rendement: .25};   // décision du 08/11 : peu au début ; des Lois l'augmenteront
 
-const api = {MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
+const api = {ORDONNANCES, MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresDonnees = api;
 })();

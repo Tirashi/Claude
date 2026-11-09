@@ -59,7 +59,7 @@ img, canvas{image-rendering:pixelated}
 #statut{align-self:center}
 .bas{display:flex; flex-direction:column; gap:4px; align-items:stretch}
 .onglets{display:flex; gap:4px}
-.onglets .bouton{flex:1; padding-inline:0; font-size:9px}
+.onglets .bouton{flex:1; padding-inline:0; font-size:8px; letter-spacing:-.3px}
 .zoom{display:flex; flex-direction:column; gap:4px; align-self:flex-end}
 
 /* les volets du bas (table en bois) */

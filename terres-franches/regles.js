@@ -31,7 +31,7 @@ const D = S => reglages(S.mods);
 /* ---------- une partie ---------- */
 function creer(mods){
   const P = reglages(mods), S = {v: VERSION, mods: mods || {}, t: 0, res: {}, bat: {}, chantiers: [], pop: 0, jobs: {},
-    statut: 0, recrutes: 0, loi: false, touchers: 0, evts: [], jalons: {}, lots: {}, ordreLots: []};
+    statut: 0, recrutes: 0, loi: false, ord: {}, touchers: 0, evts: [], jalons: {}, lots: {}, ordreLots: []};
   for (const r in P.RES) S.res[r] = 0;
   for (const b in P.BATIMENTS) S.bat[b] = 0;
   for (const m in P.METIERS) S.jobs[m] = 0;
@@ -40,11 +40,31 @@ function creer(mods){
 const evt = (S, txt, bon) => { S.evts.push({txt, bon: !!bon}); if (S.evts.length > 40) S.evts.shift(); };
 const jalon = (S, k) => { if (S.jalons[k] === undefined) S.jalons[k] = S.t; };
 
+/* ---------- ordonnances et équipements ---------- */
+// effet cumulé d'une clé (somme sur les ordonnances achetées : effet × niveau)
+function eff(S, k){ const O = D(S).ORDONNANCES || {}, n = S.ord || {}; let v = 0; for (const id in n) if (O[id] && O[id].effet[k]) v += O[id].effet[k] * n[id]; return v; }
+const RECOLTEURS = ["bucheron", "cueilleur", "pecheur", "carrier", "fermier", "berger"];
+// multiplicateur de débit d'un métier (outils, hottes, chemins)
+const bonusMetier = (S, m) => 1 + (RECOLTEURS.includes(m) ? eff(S, "recolte") + eff(S, "porte") : 0) + eff(S, "route_prod");
+function coutOrd(S, id){ const O = D(S).ORDONNANCES[id], n = (S.ord || {})[id] || 0, c = {}; for (const r in O.cout) c[r] = Math.ceil(O.cout[r] * Math.pow(O.croit, n)); return c; }
+function peutAcheter(S, id){
+  const P = D(S), O = P.ORDONNANCES[id]; if (!O) return "INCONNU";
+  if (O.statut > S.statut) return "IL FAUT LE " + P.STATUTS[O.statut].nom;
+  if (((S.ord || {})[id] || 0) >= O.niveaux) return "NIVEAU MAXIMAL";
+  if (!peutPayer(S, coutOrd(S, id))) return "PAS ASSEZ DE RESSOURCES";
+  return null;
+}
+function acheter(S, id){
+  const e = peutAcheter(S, id); if (e) return e;
+  payer(S, coutOrd(S, id)); S.ord = S.ord || {}; S.ord[id] = (S.ord[id] || 0) + 1;
+  evt(S, D(S).ORDONNANCES[id].nom + (D(S).ORDONNANCES[id].niveaux > 1 ? " NIV. " + S.ord[id] : ""), true); return null;
+}
+
 /* ---------- comptes ---------- */
 const occupes = S => Object.values(S.jobs).reduce((a, b) => a + b, 0);
 const libres = S => S.pop - occupes(S);
 function places(S, m){
-  const pl = D(S).METIERS[m].places; let n = pl.base || 0;
+  const pl = D(S).METIERS[m].places; let n = pl.base ? pl.base + eff(S, "places") : 0;
   for (const b in pl) if (b !== "base") n += pl[b] * (S.bat[b] || 0);
   return n;
 }
@@ -53,7 +73,8 @@ function logement(S){
   for (const b in P.BATIMENTS) n += (P.BATIMENTS[b].logement || 0) * S.bat[b];
   return n;
 }
-const popMax = S => Math.min(logement(S), D(S).STATUTS[S.statut].popMax);
+const plafondStatut = S => D(S).STATUTS[S.statut].popMax + eff(S, "pop");
+const popMax = S => Math.min(logement(S), plafondStatut(S));
 const enChantier = (S, b) => S.chantiers.filter(c => c.k === b).length;
 function parcellesLibres(S, terrain){
   if (CARTE) return CARTE.libres(S, terrain).length;
@@ -70,6 +91,8 @@ const plein = (S, r) => S.res[r] >= capacite(S, r) - 1e-9;
 // saisons : 0 printemps … 3 hiver (comme vie.js, qui dessine)
 function saison(S){ const H = D(S).HIVER; return Math.floor((S.t + H.saison * H.decalage) / H.saison) % 4; }
 const hiver = S => saison(S) === 3;
+const chauffage = S => D(S).HIVER.chauffage * Math.max(0, 1 - eff(S, "chauffage"));
+const faimHiver = S => 1 + (D(S).HIVER.faim - 1) * Math.max(0, 1 - eff(S, "faim"));
 function vivres(S){ const P = D(S); let v = 0; for (const r in P.RES) if (P.RES[r].vivres) v += S.res[r] * P.RES[r].vivres; return v; }
 
 /* ---------- coûts ---------- */
@@ -79,7 +102,7 @@ function coutBat(S, b){
   return c;
 }
 function coutRecrue(S){
-  const R = D(S).RECRUTER, f = Math.pow(R.croit, S.recrutes);
+  const R = D(S).RECRUTER, f = Math.pow(R.croit, S.recrutes) * (1 - eff(S, "recrue"));
   return {vivres: Math.ceil(R.vivres * f), bois: Math.ceil(R.bois * f)};
 }
 // « vivres » se paie avec n'importe quelle nourriture (d'abord la plus abondante)
@@ -112,6 +135,7 @@ function moral(S){
   if (S.pop >= B.vetements.pop){ const ok = S.res.vetements >= .5; if (ok) m += B.vetements.bonus; det.push({k: "vetements", ok}); }
   if (S.pop >= B.pain.pop){ const ok = S.res.pain >= 1; if (ok) m += B.pain.bonus; det.push({k: "pain", ok}); }
   if (hiver(S) && S.pop){ const ok = S.res.bois >= 1; if (!ok) m += P.HIVER.froid; det.push({k: "chauffage", ok}); }
+  if (eff(S, "moral")){ m += eff(S, "moral"); det.push({k: "fetes", ok: true}); }
   const famine = S.pop > 0 && vivres(S) < 1e-6;
   if (famine){ m *= B.famine; det.push({k: "famine", ok: false}); }
   return {mult: m, det, famine};
@@ -128,17 +152,17 @@ function debitBrut(M, n){
 function taux(S, jobs){
   const P = D(S), J = jobs || S.jobs, mult = moral(S).mult, t = {};
   for (const r in P.RES) t[r] = 0;
-  for (const m in P.METIERS){ const M = P.METIERS[m]; if (M.produit) t[M.produit] += debitBrut(M, J[m]) * mult; }
+  for (const m in P.METIERS){ const M = P.METIERS[m]; if (M.produit) t[M.produit] += debitBrut(M, J[m]) * mult * bonusMetier(S, m); }
   // transformations dans l'ordre des données (le blé avant la farine)
   for (const m in P.METIERS){
     const M = P.METIERS[m]; if (!M.entree || !J[m]) continue;
-    let out = M.debit * J[m] * mult;
+    let out = M.debit * J[m] * mult * bonusMetier(S, m);
     for (const r in M.entree) if (S.res[r] < 1) out = Math.min(out, Math.max(0, t[r]) / M.entree[r]);
     for (const r in M.entree) t[r] -= out * M.entree[r];
     t[M.sortie] += out;
   }
-  const v = S.pop * P.BESOINS.conso * (hiver(S) ? P.HIVER.faim : 1);
-  if (hiver(S)) t.bois -= S.pop * P.HIVER.chauffage;
+  const v = S.pop * P.BESOINS.conso * (hiver(S) ? faimHiver(S) : 1);
+  if (hiver(S)) t.bois -= S.pop * chauffage(S);
   t.vivres = Object.keys(P.RES).reduce((a, r) => a + (P.RES[r].vivres ? t[r] * P.RES[r].vivres : 0), 0) - v;
   if (S.pop >= P.BESOINS.vetements.pop) t.vetements -= S.pop * P.BESOINS.vetements.conso;
   return t;
@@ -148,21 +172,22 @@ function taux(S, jobs){
 function pas(S, dt, eff){
   while (dt > 1e-9){ const h = Math.min(dt, 1); pas1(S, h, eff === undefined ? 1 : eff); dt -= h; }
 }
-function pas1(S, dt, eff){
-  const P = D(S), mult = moral(S).mult * eff;
+function pas1(S, dt, rend){
+  const P = D(S), mult = moral(S).mult * rend;
   S.t += dt;
   // chantiers
-  for (const c of S.chantiers) c.reste -= dt;
+  const vite = 1 / Math.max(.3, 1 - eff(S, "chantier"));   // charpentiers
+  for (const c of S.chantiers) c.reste -= dt * vite;
   for (const c of S.chantiers.filter(c => c.reste <= 0)){
     S.bat[c.k]++; evt(S, P.BATIMENTS[c.k].nom + " TERMINE", true); jalon(S, c.k + S.bat[c.k]);
   }
   S.chantiers = S.chantiers.filter(c => c.reste > 0);
   // production brute
-  for (const m in P.METIERS){ const M = P.METIERS[m]; if (M.produit && S.jobs[m]) S.res[M.produit] += debitBrut(M, S.jobs[m]) * mult * dt; }
+  for (const m in P.METIERS){ const M = P.METIERS[m]; if (M.produit && S.jobs[m]) S.res[M.produit] += debitBrut(M, S.jobs[m]) * mult * bonusMetier(S, m) * dt; }
   // transformations (limitées par ce qu'il y a en réserve)
   for (const m in P.METIERS){
     const M = P.METIERS[m]; if (!M.entree || !S.jobs[m]) continue;
-    let out = Math.min(M.debit * S.jobs[m] * mult * dt, Math.max(0, capacite(S, M.sortie) - S.res[M.sortie]));
+    let out = Math.min(M.debit * S.jobs[m] * mult * bonusMetier(S, m) * dt, Math.max(0, capacite(S, M.sortie) - S.res[M.sortie]));
     for (const r in M.entree) out = Math.min(out, S.res[r] / M.entree[r]);
     if (out <= 0) continue;
     for (const r in M.entree) S.res[r] -= out * M.entree[r];
@@ -170,10 +195,10 @@ function pas1(S, dt, eff){
   }
   // on mange, on s'habille
   if (S.pop){
-    const H = hiver(S), besoin = S.pop * P.BESOINS.conso * (H ? P.HIVER.faim : 1) * dt * eff;
+    const H = hiver(S), besoin = S.pop * P.BESOINS.conso * (H ? faimHiver(S) : 1) * dt * rend;
     payerVivres(S, Math.min(besoin, vivres(S)));
-    if (H) S.res.bois = Math.max(0, S.res.bois - S.pop * P.HIVER.chauffage * dt * eff);   // on se chauffe
-    if (S.pop >= P.BESOINS.vetements.pop) S.res.vetements = Math.max(0, S.res.vetements - S.pop * P.BESOINS.vetements.conso * dt * eff);
+    if (H) S.res.bois = Math.max(0, S.res.bois - S.pop * chauffage(S) * dt * rend);   // on se chauffe
+    if (S.pop >= P.BESOINS.vetements.pop) S.res.vetements = Math.max(0, S.res.vetements - S.pop * P.BESOINS.vetements.conso * dt * rend);
   }
   for (const r in S.res) if (S.res[r] < 1e-9) S.res[r] = 0;
   borner(S);   // ce qui dépasse la place est perdu
@@ -181,13 +206,13 @@ function pas1(S, dt, eff){
 
 /* ---------- ordres du joueur ---------- */
 function toucher(S, r, n){
-  const P = D(S); if (!P.PIONNIER.ressources.includes(r)) return "RIEN A RECOLTER";
+  const P = D(S); if (!P.PIONNIER.ressources.includes(r) && !(r === "pierre" && eff(S, "toucherPierre"))) return "RIEN A RECOLTER";
   if (plein(S, r)) return r === "bois" ? "PLUS DE PLACE : AGRANDIS L'AIRE DE STOCKAGE" : "PLUS DE PLACE : AGRANDIS LE GRENIER";
-  S.res[r] = Math.min(capacite(S, r), S.res[r] + P.PIONNIER.toucher * (n || 1)); S.touchers += n || 1; return null;
+  S.res[r] = Math.min(capacite(S, r), S.res[r] + (P.PIONNIER.toucher + eff(S, "toucher")) * (n || 1)); S.touchers += n || 1; return null;
 }
 function recruter(S){
   const P = D(S);
-  if (S.pop >= D(S).STATUTS[S.statut].popMax) return S.statut + 1 < P.STATUTS.length ? "IL FAUT UN STATUT PLUS GRAND" : "PLAFOND DE L'ERE : PROMULGUER LA LOI";
+  if (S.pop >= plafondStatut(S)) return S.statut + 1 < P.STATUTS.length ? "IL FAUT UN STATUT PLUS GRAND" : "PLAFOND DE L'ERE : PROMULGUER LA LOI";
   if (S.pop >= logement(S)) return "PLUS DE PLACE : CONSTRUIRE UN LOGIS";
   if (S.pop >= P.BESOINS.vetements.pop && P.BESOINS.vetements.bloque && S.res.vetements < .5) return "IL FAUT DES VETEMENTS";
   if (moral(S).famine) return "LA COLONIE A FAIM";
@@ -376,8 +401,10 @@ function robot(S){
     const b = prochainBat(S); if (b && !peutConstruire(S, b)) construire(S, b);
     let n = 0; while (n++ < 3 && !recruter(S));
   }
+  for (const id of ORDRE_ROBOT){ if (peutAcheter(S, id)) continue; const c = coutOrd(S, id); if (Object.keys(c).every(r => c[r] <= S.res[r] * .05)) acheter(S, id); }
   repartir(S);
 }
+const ORDRE_ROBOT = ["outils", "hottes", "coupes", "ateres", "chemins", "charpente", "conserves", "fetes", "accueil", "hospitalite", "panier", "pioche"];
 // ce que le pionnier touche : ce qui manque le plus pour le prochain achat
 function aToucher(S){
   const mq = manque(S, objectif(S));
@@ -385,7 +412,7 @@ function aToucher(S){
   return "bois";
 }
 
-const api = {VERSION, reglages, creer, pas, taux, moral, places, logement, popMax, libres, parcellesLibres, vivres, capacite, gardien, plein, saison, hiver,
+const api = {VERSION, eff, coutOrd, peutAcheter, acheter, plafondStatut, chauffage, faimHiver, reglages, creer, pas, taux, moral, places, logement, popMax, libres, parcellesLibres, vivres, capacite, gardien, plein, saison, hiver,
   coutBat, coutRecrue, peutPayer, toucher, recruter, affecter, peutConstruire, construire, deplacer, peutMonter, monterStatut,
   peutPromulguer, promulguer, horsLigne, sauver, charger, robot, aToucher, objectif, PLAN};
 if (typeof module !== "undefined" && module.exports) module.exports = api;

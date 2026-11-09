@@ -71,7 +71,7 @@ function volConstruire(){
 }
 function volColonie(){
   const S = J.S, P = R.reglages(S.mods), mo = R.moral(S), st = P.STATUTS[S.statut], suiv = P.STATUTS[S.statut + 1];
-  const NOMS = {variete: "Nourriture variée (2 sortes)", vetements: "Vêtements", pain: "Du pain", chauffage: "Bois pour se chauffer (hiver)", famine: "Famine !"};
+  const NOMS = {fetes: "Jours de fête", variete: "Nourriture variée (2 sortes)", vetements: "Vêtements", pain: "Du pain", chauffage: "Bois pour se chauffer (hiver)", famine: "Famine !"};
   const V = window.TerresVie;
   let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3><p>${V.NOMS[V.saison(S)]} DE L'AN ${V.annee(S)}${V.pluie(S) ? (V.saison(S) === 3 ? " · IL NEIGE" : " · IL PLEUT") : ""}${V.nuit(S) > .5 ? " · LA NUIT" : ""}</p>${R.hiver(S) ? `<p class="limite">L'hiver : chaque habitant brûle du bois et mange un peu plus. Sans bois, le moral baisse.</p>` : R.saison(S) === 2 ? `<p class="limite">L'automne : fais des réserves de bois et de nourriture pour l'hiver.</p>` : ""}`;
   h += mo.det.length ? mo.det.map(d => `<div class="besoin ${d.ok ? "ok" : "non"}"><i>${d.ok ? "+" : "-"}</i>${NOMS[d.k]}</div>`).join("") : `<p>Pas encore de besoins : à 6 habitants, il faudra varier la nourriture.</p>`;
@@ -92,7 +92,19 @@ function conditions(pop, c){
     + Object.entries(c).map(([r, n]) => ligne(S.res[r] + 1e-9 >= n, ic(r), fmt(S.res[r]), fmt(n), nomRes(r))
       + (R.capacite(S, r) < n ? `<div class="cond non place"><i>!</i><span>Pas assez de place : ${fmt(R.capacite(S, r))} ${nomRes(r).toLowerCase()} au plus. Agrandis ${R.gardien(S, r) === "grenier" ? "le grenier" : "l'aire de stockage"}.</span></div>` : "")).join("") + `</div>`;
 }
-const VOLETS = {villageois: volVillageois, construire: volConstruire, colonie: volColonie};
+// ordonnances et équipements : une carte par amélioration (on la touche pour l'acheter)
+const ICONES_ORD = {outils: "souche-hache", panier: "panier-baies", hottes: "tonneaux", coupes: "souche", ateres: "buche", pioche: "rocher-p", chemins: "pave",
+  conserves: "sechoir-poisson", fetes: "tonneau", charpente: "chantier", accueil: "chaume1", hospitalite: "panier-pommes"};
+function volAmeliorer(){
+  const S = J.S, P = R.reglages(S.mods), O = P.ORDONNANCES; let h = `<p class="limite">Ordonnances et équipements : chaque niveau s'ajoute au précédent.</p>`;
+  for (const id of Object.keys(O).sort((a, b) => O[a].statut - O[b].statut)){
+    const o = O[id], n = (S.ord || {})[id] || 0, e = R.peutAcheter(S, id), bloque = o.statut > S.statut, mx = n >= o.niveaux;
+    const info = bloque ? `IL FAUT LE ${P.STATUTS[o.statut].nom}` : mx ? `NIVEAU ${n} : MAXIMAL` : o.niveaux > 1 ? `NIVEAU ${n} → ${n + 1} (SUR ${o.niveaux})` : o.type === "equipement" ? "EQUIPEMENT" : "ORDONNANCE";
+    h += `<div class="carte${e ? " non" : ""}" data-o="${id}"><canvas width="36" height="36" data-m="${ICONES_ORD[id] || ""}"></canvas><span class="nom">${o.nom} <small>${info}</small><small class="desc">${o.desc}</small>${bloque || mx ? "" : cout(R.coutOrd(S, id))}</span></div>`;
+  }
+  return h;
+}
+const VOLETS = {villageois: volVillageois, construire: volConstruire, ameliorer: volAmeliorer, colonie: volColonie};
 function majVolet(force){
   const p = $("panneau");
   if (!onglet){ p.hidden = true; return; }
@@ -103,6 +115,7 @@ function majVolet(force){
   p.querySelectorAll("canvas[data-i]").forEach(c => miniature(c, window.Terres.AT, null, c.dataset.i));
   p.querySelectorAll("canvas[data-s]").forEach(c => miniature(c, null, c.dataset.s));
   p.querySelectorAll("canvas[data-p]").forEach(c => portrait(c, +c.dataset.p));
+  p.querySelectorAll("canvas[data-m]").forEach(c => { if (!c.dataset.m) return; const g = c.getContext("2d"), q = J.piece(c.dataset.m), k = Math.min(36 / q.width, 36 / q.height); g.imageSmoothingEnabled = false; g.drawImage(q, (36 - q.width * k) / 2, (36 - q.height * k) / 2, q.width * k, q.height * k); });
 }
 const MINI = {champ: "champ-mur", carriere: "rocher", ponton: null, bergerie: "grange", grenier: "grange", aire: "i-bois"};
 function miniature(c, _, b, r){
@@ -119,14 +132,16 @@ document.querySelector(".onglets").addEventListener("click", e => {
   majVolet(true);
 });
 $("panneau").addEventListener("click", e => {
-  const S = J.S, el = e.target.closest("button, .carte[data-b]"); if (!el) return;
+  const S = J.S, el = e.target.closest("button, .carte[data-b], .carte[data-o]"); if (!el) return;
   let err = null;
   if (el.dataset.m) err = R.affecter(S, el.dataset.m, +el.dataset.d);
   else if (el.dataset.act === "recruter") err = R.recruter(S);
   else if (el.dataset.act === "statut") err = R.monterStatut(S);
   else if (el.dataset.act === "loi"){ err = R.promulguer(S); if (!err) $("fin").hidden = false; }
+  else if (el.dataset.o){ err = R.acheter(S, el.dataset.o); }
   else if (el.dataset.b){
     const b = el.dataset.b, B = DON.BATIMENTS[b];
+    if (!b) return;
     err = R.peutConstruire(S, b);
     if (!err && B.niveaux && S.bat[b] > 0){ err = R.construire(S, b); if (!err) annonce("AGRANDISSEMENT : " + B.nom, true); }   // sur place, sans choisir de terrain
     else if (!err) choisir(b);
@@ -227,7 +242,7 @@ addEventListener("keydown", e => {
   }
   if (ouvert.length) return;
   if (e.key === "Enter" && J.PL){ e.preventDefault(); if (!$("bPoser").disabled) $("bPoser").click(); return; }
-  const n = ["1", "2", "3"].indexOf(e.key);
+  const n = ["1", "2", "3", "4"].indexOf(e.key);
   if (n >= 0 && !J.PL){ e.preventDefault(); document.querySelectorAll("[data-onglet]")[n].click(); }
 });
 

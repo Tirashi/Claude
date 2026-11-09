@@ -342,7 +342,7 @@ function bouger(a, dt){
   if (a.etat === "marche"){
     const p = a.chemin[0]; if (!p){ a.etat = "arrive"; return; }
     const cx = Math.floor(a.x / T), cy = Math.floor(a.y / T), rue = ROUTES.cases.has(cy * C.W + cx) || C.surPlace(cx, cy, S.statut);
-    const dx = p[0] - a.x, dy = p[1] - a.y, d = Math.hypot(dx, dy), v = DON.MARCHE.vitesse * (rue ? DON.MARCHE.route : 1) * T * dt;   // plus vite sur les rues
+    const dx = p[0] - a.x, dy = p[1] - a.y, d = Math.hypot(dx, dy), v = DON.MARCHE.vitesse * (rue ? DON.MARCHE.route * (1 + R.eff(S, "route")) : 1) * T * dt;   // plus vite sur les rues
     if (d <= v){ a.x = p[0]; a.y = p[1]; a.chemin.shift(); if (!a.chemin.length){ a.etat = "arrive"; } }
     else { a.x += dx / d * v; a.y += dy / d * v; a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "d" : "g") : (dy > 0 ? "b" : "h"); }
     if (a.etat === "arrive" && a.apres){ const f = a.apres; a.apres = null; f(); }
@@ -602,7 +602,7 @@ function survol(sx, sy, tire){
     const [wx, wy] = versMonde(sx, sy), id = lotEn(wx, wy);
     if (PL) txt = id && lotsPossibles().includes(id) ? (id === PL.lot ? "TERRAIN CHOISI" : "CHOISIR CE TERRAIN") : null;
     else if (id && S.lots[id]) txt = DON.BATIMENTS[S.lots[id]].nom + (S.chantiers.some(c => c.lot === id) ? " · CHANTIER" : "");
-    else { const r = recolte(Math.floor(wx / T), Math.floor(wy / T)); if (r) txt = DON.RES[r].nom + " +" + DON.PIONNIER.toucher; }
+    else { const r = recolte(Math.floor(wx / T), Math.floor(wy / T)); if (r) txt = DON.RES[r].nom + " +" + (DON.PIONNIER.toucher + R.eff(S, "toucher")); }
   }
   cv.style.cursor = tire ? "grabbing" : txt ? "pointer" : "grab";
   info.hidden = !txt; if (!txt) return;
@@ -634,6 +634,7 @@ function toucher(sx, sy){
 // ce que le pionnier récolte en touchant cette case (ou une voisine) : forêt, buisson, eau
 function recolte(tx, ty){
   const quoi = {T: "bois", "*": "baies", "~": "poisson"};
+  if (R.eff(S, "toucherPierre")){ quoi.X = quoi.Y = "pierre"; }   // pioche du pionnier
   let r = quoi[C.case_(tx, ty)];
   if (!r) for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) if ((r = quoi[C.case_(tx + dx, ty + dy)])) break;
   return r || null;
@@ -642,8 +643,8 @@ function toucherCase(tx, ty, wx, wy){
   const r = recolte(tx, ty);
   if (!r) return null;
   if (R.toucher(S, r)) return null;
-  flotte(wx === undefined ? (tx + .5) * T : wx, wy === undefined ? ty * T : wy - 8, r, "+" + DON.PIONNIER.toucher);
-  if (!S.pop && r !== "baies"){ PI.anim = "travail"; PI.outil = r === "poisson" ? "canne" : "hache"; PI.f = 0; PI.fin = dernier + (r === "poisson" ? .8 : .45); PI.dir = (tx + .5) * T < PI.x ? "g" : "d"; }
+  flotte(wx === undefined ? (tx + .5) * T : wx, wy === undefined ? ty * T : wy - 8, r, "+" + (DON.PIONNIER.toucher + R.eff(S, "toucher")));
+  if (!S.pop && r !== "baies"){ PI.anim = "travail"; PI.outil = r === "poisson" ? "canne" : r === "pierre" ? "pioche" : "hache"; PI.f = 0; PI.fin = dernier + (r === "poisson" ? .8 : .45); PI.dir = (tx + .5) * T < PI.x ? "g" : "d"; }
   return r;
 }
 
