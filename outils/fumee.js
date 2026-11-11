@@ -148,7 +148,7 @@ const shots = process.argv[2];
         for (let i = 0; i < 100 && !(window.Terres && Terres.S); i++) await wait(100);
         if (!window.Terres || !Terres.S) return 'pas de partie (images ?)';
         const S = Terres.S, R = TerresRegles;
-        if (Terres.toucherCase(5, 3) !== 'bois' || S.res.bois < 1) return 'toucher la forêt ne rapporte rien';
+        if (Terres.toucherCase(2, 3) !== 'bois' || S.res.bois < 1) return 'toucher la forêt ne rapporte rien';
         S.res.baies = 500; S.res.bois = 500;
         document.querySelector('[data-onglet=villageois]').click(); await wait(50);
         document.querySelector('[data-act=recruter]').click(); if (S.pop !== 1) return 'personne ne vient';
