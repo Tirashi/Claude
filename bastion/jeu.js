@@ -40,12 +40,16 @@ const EFFET = {maison: "+1 escouade, +2 ouvriers", caserne: "debloque les cheval
 /* ---------- la page ---------- */
 const c = $("#cv"), x = c.getContext("2d");
 const hud = $("#hud"), ban = $("#banniere");
-let S = null, bg = null, VW = 6 * CS, camX = 0, camY = 0, pret = false;
+let S = null, bg = null, VW = 6 * CS, camX = 0, camY = 0, pret = false, loin = false;
 let vitesse = 1, ralentiOn = true, robotOn = false, choixSite = null, pause = true;
 const WW = (W * 2 + M * 2) * 64, WH = (H * 2 + M * 2) * 64;
 const P = (gx, gy) => [M * 64 + gx * CS, M * 64 + gy * CS];
 const clamp = () => { camX = Math.max(-c.width * .1, Math.min(WW - c.width * .9, camX)); camY = Math.max(-c.height * .1, Math.min(WH - c.height * .55, camY)); };
+// largeur de la vue (pixels du monde) : sur téléphone 6 cases ; sur un grand écran, la même taille de figurines (environ 2 pixels du monde par pixel d'écran),
+// sans dépasser la carte ; « loin » = toute la carte
+const vueProche = () => Math.max(6 * CS, Math.min((W + 2) * CS, innerWidth * 1.9));
 function taille(){
+  VW = loin ? Math.max((W + 1.5) * CS, vueProche()) : vueProche();
   const w = innerWidth, h = innerHeight; c.width = Math.round(VW); c.height = Math.round(h * c.width / w); x.imageSmoothingEnabled = false;
   const [X, Y] = P(5.5, 7.6); camX = X - c.width / 2; camY = Y - c.height * .45; clamp();
 }
@@ -55,6 +59,8 @@ const viderToiles = () => { for (const k in L) delete L[k]._s; if (pret) fond();
 document.addEventListener("visibilitychange", () => { if (!document.hidden) viderToiles(); });
 addEventListener("pageshow", viderToiles);
 const ic = k => `<img class="ic" src="${IMG_DOSSIER}ic-${k}.png" alt="">`;
+// un texte d'une ligne qui ne tient pas dans sa boîte : on réduit sa taille jusqu'à ce qu'il tienne
+function ajuster(el, min = 5){ el.style.fontSize = ""; let f = parseFloat(getComputedStyle(el).fontSize); while (el.scrollWidth > el.clientWidth + 1 && f > min){ f -= .5; el.style.fontSize = f + "px"; } }
 const prix = o => RES.filter(r => o[r]).map(r => o[r] + ic(r)).join(" ") || "GRATUIT";
 function dire(t, bon){ ban.textContent = t; ban.classList.toggle("bon", !!bon); ban.classList.add("on"); clearTimeout(ban._t); ban._t = setTimeout(() => ban.classList.remove("on"), 2400); }
 
@@ -77,7 +83,8 @@ function maj(){
   $("#popEsc").textContent = B.nbEsc(S) + "/" + B.maxEsc(S); $("#popEsc").classList.toggle("plein", pleinE);
   plus.querySelector(".max").hidden = !pleinO;
   document.querySelectorAll("#cartes button").forEach(b => { const k = b.dataset.e, ok = B.debloque(S, k);
-    b.querySelector(".cout").innerHTML = prix(B.cout(S, k)); b.querySelector(".verrou").textContent = !ok ? BAT[DEBLOQUE[k]] : pleinE ? "POPULATION MAX" : "";
+    b.querySelector(".cout").innerHTML = prix(B.cout(S, k)); const v = b.querySelector(".verrou"), t = !ok ? BAT[DEBLOQUE[k]] : pleinE ? "POPULATION MAX" : "";
+    if (v.textContent !== t){ v.textContent = t; ajuster(v); }
     b.classList.toggle("ferme", !ok); b.classList.toggle("cher", ok && (!B.peutPayer(S, B.cout(S, k)) || B.nbEsc(S) >= B.maxEsc(S))); });
   const V = S.P.vagues;
   $("#vague").textContent = S.vague < V.nombre ? `VAGUE ${S.vague}/${V.nombre} · ${Math.max(0, Math.ceil(S.prochaine - S.t))} S` : `VAGUE ${V.nombre}/${V.nombre}`;
@@ -326,7 +333,7 @@ $("#bNouvelle").addEventListener("click", () => { finVue = false; nouvelle(); $(
 $("#bAide").addEventListener("click", () => { $("#aideTexte").hidden = !$("#aideTexte").hidden; });
 $("#bRejouer").addEventListener("click", () => { finVue = false; nouvelle(); pause = false; });
 $("#bFinLabo").addEventListener("click", () => ouvrirLabo());
-$("#zoom").addEventListener("click", () => { VW = VW === 6 * CS ? (W + 1.5) * CS : 6 * CS; $("#zoom").textContent = VW === 6 * CS ? "−" : "+"; taille(); });
+$("#zoom").addEventListener("click", () => { loin = !loin; $("#zoom").textContent = loin ? "+" : "−"; taille(); });
 $("#vit").addEventListener("click", () => { const L0 = [1, 2, 4, 0, .5]; vitesse = L0[(L0.indexOf(vitesse) + 1) % L0.length]; maj(); });
 
 /* ---------- le LABO ---------- */

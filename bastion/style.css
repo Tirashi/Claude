@@ -63,7 +63,7 @@ img.ic{width:22px; height:22px; object-fit:contain; vertical-align:middle}
 .cartes .cout img.ic{width:14px; height:14px}
 button.cher{opacity:.5}
 .cartes button.ferme img.av, .cartes button.ferme .cout{opacity:.3; filter:grayscale(1)}
-.cartes .verrou{position:absolute; top:12px; left:-4px; right:-4px; font-family:var(--titre); font-size:6px; color:#fff; background:rgba(58,36,16,.88); padding:3px 0; text-align:center}
+.cartes .verrou{position:absolute; top:12px; left:0; right:0; font-family:var(--texte); font-weight:700; font-size:8px; letter-spacing:0; color:#fff; background:rgba(58,36,16,.88); padding:2px 0; text-align:center; overflow:hidden; white-space:nowrap}
 .cartes .verrou:empty{display:none}
 #banniere{position:fixed; left:50%; top:calc(max(6px, env(safe-area-inset-top)) + 104px); transform:translate(-50%, -6px); max-width:calc(100% - 100px); text-align:center; opacity:0; transition:opacity .2s, transform .2s; pointer-events:none;
   font-weight:700; font-size:13px; letter-spacing:1px; color:var(--clair); text-shadow:1px 1px 0 #2a1010;
