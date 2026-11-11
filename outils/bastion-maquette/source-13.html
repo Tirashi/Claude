@@ -1,0 +1,259 @@
+<title>Bastion, maquette 13</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@600;800&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Maquette 13 de « Bastion » : refonte de l'interface (3 directions), écran des niveaux et tuto.
+   Le fond de chaque téléphone est une vraie vue du jeu (capture sans interface) ; l'interface est faite avec les pièces du Tiny Swords Free Pack.
+   Fabriquée par outils/bastion-maquette/fabriquer.py 13 (images de bastion/img et deux captures). */
+/* page sombre de présentation ; trois téléphones côte à côte puis deux écrans communs */
+:root{
+  color-scheme: dark;
+  --bg:#17160f; --texte:#efe6d2; --doux:#b3a891; --or:#e8c46a; --ink:#3a2410; --clair:#fff4d6; --rouge:#c8402a;
+  --titre:"Press Start 2P", "Courier New", monospace; --jeu:"Cinzel", Georgia, serif; --corps:"Source Sans 3", "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0; background:var(--bg); color:var(--texte); font-family:var(--corps); font-size:15px; line-height:1.4;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:20px 48px}
+button{font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+button:focus-visible{outline:2px dashed var(--or); outline-offset:2px}
+img{image-rendering:pixelated; max-width:100%}
+.page{max-width:1100px; margin:0 auto; display:flex; flex-direction:column; gap:22px}
+header h1{margin:0; font-family:var(--jeu); font-weight:800; font-size:clamp(20px, 5vw, 30px); color:var(--or)}
+header p{margin:6px 0 0; color:var(--doux); max-width:70ch}
+.rangee{display:flex; flex-wrap:wrap; gap:22px; justify-content:center}
+.dir{display:flex; flex-direction:column; gap:8px; width:300px; max-width:100%}
+.dir h2{margin:0; font-family:var(--jeu); font-weight:800; font-size:18px; color:var(--or)}
+.dir p{margin:0; font-size:14px; color:var(--doux)}
+.dir ul{margin:0; padding-left:18px; font-size:13px; color:var(--doux)}
+
+/* le téléphone */
+.tel{position:relative; width:300px; max-width:100%; aspect-ratio:300/620; border-radius:22px; overflow:hidden; border:3px solid #000; background:#3c6a2a center / cover no-repeat;
+  font-family:var(--jeu); color:var(--ink); box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.tel.jeu{background-image:var(--jeu-img)}
+.tel .voile{position:absolute; inset:0; background:rgba(10,14,8,.55)}
+
+/* pièces du pack */
+.papier{border-style:solid; border-width:6px 8px; border-image:var(--papier) 44 52 45 52 fill / 6px 8px stretch}
+.table{border-style:solid; border-width:16px 16px 20px; border-image:var(--table) 85 84 103 84 fill / 16px 16px 20px stretch}
+.parchemin{border-style:solid; border-width:16px 20px 26px 22px; border-image:var(--parchemin) 68 84 111 100 fill / 16px 20px 26px 22px stretch}
+.ruban{border-style:solid; border-width:0 18px; border-image:var(--ruban-bleu) 0 97 0 98 fill / 0 18px stretch; color:var(--clair); text-shadow:1px 1px 0 #1a2a40; padding:3px 2px 6px; font-weight:800; text-align:center}
+.ruban.rouge{border-image-source:var(--ruban-rouge); text-shadow:1px 1px 0 #3a1010}
+.carre{border-style:solid; border-width:6px; border-image:var(--carre) 30 fill / 6px stretch; width:30px; height:30px; display:grid; place-items:center; color:var(--clair); font-family:var(--titre); font-size:8px}
+.rond{width:52px; height:52px; border-style:solid; border-width:10px; border-image:var(--rond) 40 fill / 10px stretch; display:grid; place-items:center; position:relative}
+.rond img{width:26px; height:26px; object-fit:contain}
+.rond small{position:absolute; bottom:-16px; left:50%; transform:translateX(-50%); font-size:8px; font-weight:800; color:var(--clair); text-shadow:0 1px 2px #000; white-space:nowrap}
+.rond.on{filter:hue-rotate(160deg) saturate(1.4)}
+.pastille{background:var(--clair); border-radius:8px; padding:0 6px; font-size:10px; font-weight:800}
+.pastille.plein{background:var(--rouge); color:#fff}
+
+/* haut commun */
+.haut{position:absolute; top:8px; left:8px; right:8px; display:flex; flex-direction:column; gap:3px}
+.ligne{display:flex; align-items:center; gap:3px}
+.res{display:flex; gap:2px}
+.res span{display:flex; align-items:center; gap:1px; font-size:11px; font-weight:800; padding:0 2px 0 0}
+.res img{width:18px; height:18px; margin:-3px 0}
+.vague{font-size:9px; padding:2px 0 5px}
+.barre{height:12px; border-style:solid; border-width:0 6px; border-image:var(--barre) 0 24 fill / 0 6px stretch; padding:3px 0 4px}
+.barre i{display:block; height:100%; width:78%; background:var(--barre-plein) 0 0 / auto 100% repeat-x}
+.droite{margin-left:auto; display:flex; gap:3px}
+
+/* A : barre d'actions et tiroir */
+.barreA{position:absolute; left:0; right:0; bottom:22px; display:flex; justify-content:center; gap:14px}
+.tiroir{position:absolute; left:6px; right:6px; bottom:84px; transition:transform .25s, opacity .25s}
+.tiroir[hidden]{display:block !important; opacity:0; transform:translateY(20px); pointer-events:none}
+.tiroir h3{margin:0 0 4px; font-size:10px; color:#f2d9a8; text-shadow:1px 1px 0 #2a1608; display:flex; justify-content:space-between; align-items:center}
+.cartes{display:grid; grid-template-columns:repeat(5, 1fr); gap:3px}
+.cartes .c{display:flex; flex-direction:column; align-items:center; font-size:7px; font-weight:800; padding:2px 0; position:relative; min-width:0}
+.cartes img{width:30px; height:30px}
+.cartes .cout{font-size:9px; display:flex; align-items:center; gap:1px}
+.cartes .cout img{width:10px; height:10px}
+.cartes .c.ferme img{opacity:.35; filter:grayscale(1)}
+.cartes .c .v{position:absolute; top:10px; left:0; right:0; background:rgba(58,36,16,.88); color:#fff; font-size:6px; text-align:center}
+.contexte{position:absolute; left:0; right:0; bottom:88px; display:flex; flex-direction:column; align-items:center; gap:4px}
+.contexte .nom{font-size:10px; color:#fff8e0; text-shadow:0 1px 3px #000; font-weight:800}
+.actions{display:flex; gap:4px}
+.btn{border-style:solid; border-width:6px 7px 8px; border-image:var(--bouton) 47 45 47 45 fill / 6px 7px 8px stretch; color:var(--clair); font-family:var(--titre); font-size:6.5px; padding:2px 3px 0; text-shadow:1px 1px 0 #1a2a40; white-space:nowrap}
+.btn.rouge{border-image-source:var(--bouton-rouge)}
+
+/* B : tout sur la carte */
+.anneau{position:absolute; left:50%; top:53%; width:0; height:0}
+.anneau .rond{position:absolute; transform:translate(-50%, -50%)}
+.bulle{position:absolute; font-size:10px; font-weight:800; padding:2px 4px}
+.indice{position:absolute; left:0; right:0; bottom:14px; text-align:center; font-size:10px; color:#fff8e0; text-shadow:0 1px 3px #000; font-weight:800}
+.etiquette{position:absolute; display:flex; align-items:center; gap:2px; font-size:10px; font-weight:800}
+.etiquette img{width:16px; height:16px}
+
+/* C : bandeau replié, onglets */
+.bandeau{position:absolute; left:6px; right:6px; bottom:10px}
+.bandeau .tete{display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:10px; font-weight:800; color:#f2d9a8; text-shadow:1px 1px 0 #2a1608}
+.onglets{display:flex; gap:3px; margin:6px 0 4px}
+.onglets button{flex:1; font-family:var(--titre); font-size:6.5px; padding:5px 0; color:var(--ink)}
+.onglets button[aria-selected=true]{filter:brightness(1.12); box-shadow:0 0 0 2px var(--or) inset}
+.ouv{display:grid; grid-template-columns:repeat(4, 1fr); gap:3px}
+.ouv .c{display:flex; align-items:center; justify-content:center; gap:2px; font-size:11px; font-weight:800; padding:3px 0}
+.ouv img{width:18px; height:18px}
+
+/* écrans communs */
+.niveaux{position:absolute; inset:10px; display:flex; flex-direction:column; gap:6px}
+.niveaux .carte{position:relative; flex:1}
+.noeud{position:absolute; transform:translate(-50%, -50%); display:flex; flex-direction:column; align-items:center; gap:1px; width:96px}
+.noeud .rond{width:40px; height:40px; border-width:8px}
+.noeud b{font-size:8px; color:var(--ink); text-align:center; line-height:1.1}
+.noeud .et{color:#d8a020; font-size:10px; letter-spacing:1px}
+.noeud.ferme .rond{filter:grayscale(1) brightness(.8)}
+.noeud .rond span{font-family:var(--titre); font-size:9px; color:var(--clair)}
+.chemin{position:absolute; inset:0; width:100%; height:100%}
+.fiche{font-size:9px; padding:2px}
+.fiche b{font-size:10px}
+.tuto{position:absolute; left:8px; right:8px; bottom:16px; display:flex; gap:6px; align-items:flex-end}
+.tuto .portrait{width:58px; flex:none}
+.tuto .texte{font-size:11px; font-weight:600; line-height:1.3}
+.tuto .texte b{color:#7a2a1a}
+.doigt{position:absolute; width:34px; animation:pointe 1s ease-in-out infinite}
+@keyframes pointe{50%{transform:translate(4px, 6px)}}
+.cercle{position:absolute; border:3px dashed #fff4a0; border-radius:50%; animation:clign 1.2s ease-in-out infinite}
+@keyframes clign{50%{opacity:.35}}
+@media (prefers-reduced-motion: reduce){ .doigt, .cercle{animation:none} .tiroir{transition:none} }
+.note{font-size:13px; color:var(--doux); max-width:70ch}
+table.niv{border-collapse:collapse; font-size:13px; width:100%}
+table.niv th, table.niv td{text-align:left; padding:5px 6px; border-bottom:1px solid #3a352a; vertical-align:top}
+table.niv th{color:var(--or); font-weight:600}
+.defile{overflow-x:auto}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Bastion : nouvelle interface</h1>
+    <p>Trois façons de ranger les commandes pour que la carte respire (le recrutement n'est plus affiché en permanence), puis l'écran de choix des niveaux et le tuto, communs aux trois. Touche les boutons des téléphones : les tiroirs et les onglets s'ouvrent.</p>
+  </header>
+
+  <div class="rangee">
+    <!-- A -->
+    <section class="dir">
+      <h2>A · Barre d'actions</h2>
+      <div class="tel jeu" id="telA">
+        __HAUT__
+        <div class="contexte" id="ctxA"><span class="nom">LANCIERS · VETERANS · 4/4</span><div class="actions"><span class="btn">TENIR</span><span class="btn">TOUR</span><span class="btn rouge">PROMOUVOIR</span></div></div>
+        <div class="tiroir table" id="tirA" hidden>
+          <h3><span>RECRUTER</span><span class="pastille plein">3/3</span></h3>
+          __CARTES__
+        </div>
+        <div class="barreA">
+          <button type="button" class="rond" data-t="ouvriers"><img src="__ic-marteau__" alt=""><small>OUVRIERS</small></button>
+          <button type="button" class="rond" data-t="recruter"><img src="__ic-epee__" alt=""><small>RECRUTER</small></button>
+          <button type="button" class="rond" data-t="batir"><img src="__ic-bouclier__" alt=""><small>BATIR</small></button>
+        </div>
+      </div>
+      <p>Trois gros boutons ronds en bas. Chacun ouvre un tiroir en bois par-dessus la carte, puis se referme. Quand une escouade est choisie, ses actions apparaissent au-dessus (tenir, tour, promouvoir).</p>
+      <ul><li>Simple à apprendre, bon pour le tuto (on montre un bouton à la fois).</li><li>Un toucher de plus pour recruter.</li></ul>
+    </section>
+
+    <!-- B -->
+    <section class="dir">
+      <h2>B · Tout sur la carte</h2>
+      <div class="tel jeu">
+        __HAUT__
+        <div class="anneau">
+          <div class="rond" style="left:-62px;top:-46px"><img src="__av-lance__" alt=""><small>10 · 10</small></div>
+          <div class="rond" style="left:-22px;top:-78px"><img src="__av-arc__" alt=""><small>15 · 10</small></div>
+          <div class="rond" style="left:22px;top:-78px"><img src="__av-guer__" alt=""><small>20 · 10</small></div>
+          <div class="rond" style="left:62px;top:-46px"><img src="__av-moine__" alt=""><small>20</small></div>
+        </div>
+        <div class="etiquette papier" style="left:30px;top:83%"><img src="__ic-bois__" alt="">2 <b style="color:#2a7a2a">+</b> <b style="color:#a03020">−</b></div>
+        <div class="etiquette papier" style="right:30px;top:83%"><img src="__ic-or__" alt="">1 <b style="color:#2a7a2a">+</b> <b style="color:#a03020">−</b></div>
+        <div class="indice">Touche le château pour recruter, un bois ou une mine pour les ouvriers</div>
+      </div>
+      <p>Pas de bandeau du tout. On touche le château (ou la caserne, l'archerie…) : ses unités sortent en anneau autour de lui. Une étiquette sur le bois, l'or et les moutons règle le nombre d'ouvriers.</p>
+      <ul><li>La carte prend tout l'écran ; on joue « dans » le monde.</li><li>Moins évident au début : le tuto doit tout montrer.</li></ul>
+    </section>
+
+    <!-- C -->
+    <section class="dir">
+      <h2>C · Bandeau à onglets</h2>
+      <div class="tel jeu">
+        __HAUT__
+        <div class="bandeau table" id="banC">
+          <div class="tete"><span>OUVRIERS <span class="pastille">4/6</span></span><span>ESCOUADES <span class="pastille plein">3/3</span></span><button type="button" class="carre" id="plieC" aria-label="Replier">▼</button></div>
+          <div id="corpsC">
+            <div class="onglets" role="tablist"><button type="button" class="papier" role="tab" data-o="ouv" aria-selected="false">OUVRIERS</button><button type="button" class="papier" role="tab" data-o="rec" aria-selected="true">RECRUTER</button><button type="button" class="papier" role="tab" data-o="bat" aria-selected="false">BATIR</button></div>
+            <div data-p="rec">__CARTES__</div>
+            <div data-p="ouv" hidden><div class="ouv"><span class="c papier"><img src="__ic-bois__" alt="">2</span><span class="c papier"><img src="__ic-or__" alt="">1</span><span class="c papier"><img src="__ic-viande__" alt="">1</span><span class="c papier"><img src="__ic-marteau__" alt="">0</span></div></div>
+            <div data-p="bat" hidden><p style="margin:2px 0;font-size:10px;color:#f2d9a8">Touche un cercle sur la carte : les bâtiments possibles s'affichent ici.</p></div>
+          </div>
+        </div>
+      </div>
+      <p>Le bandeau actuel, replié par défaut en une ligne : les deux compteurs de population restent toujours visibles. Déplié, un seul onglet à la fois.</p>
+      <ul><li>Le plus proche de ce que tu connais.</li><li>Sur PC, le bandeau devient une colonne à droite, toujours ouverte.</li></ul>
+    </section>
+  </div>
+
+  <h2 style="margin:6px 0 0;font-family:var(--jeu);color:var(--or)">Communs aux trois</h2>
+  <div class="rangee">
+    <section class="dir">
+      <h2>Choix du niveau</h2>
+      <div class="tel" style="background:#24301a">
+        <div class="niveaux">
+          <div class="ruban" style="font-size:12px">LES MARCHES DU ROYAUME</div>
+          <div class="carte parchemin">
+            <svg class="chemin" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M30 88 C 60 82, 75 74, 68 62 S 25 52, 30 40 S 78 30, 70 18" fill="none" stroke="#8a6a3a" stroke-width="1.2" stroke-dasharray="2.5 2"/></svg>
+            __NOEUDS__
+          </div>
+          <div class="fiche papier"><b>2 · LE GUE</b><br>Une seule route, plus longue. Gobelins et gobelins à lance. L'archerie se débloque. 6 vagues.</div>
+          <div class="btn rouge" style="text-align:center;font-size:8px">JOUER</div>
+        </div>
+      </div>
+      <p>Une carte du royaume, un niveau par lieu, débloqués l'un après l'autre. Étoiles selon les PV du château à la fin (comme Orbite ou Doggy Saga).</p>
+    </section>
+    <section class="dir">
+      <h2>Tuto (niveau 1)</h2>
+      <div class="tel jeu">
+        __HAUT__
+        <div class="cercle" style="left:92px;top:320px;width:116px;height:76px"></div>
+        <img class="doigt" src="__doigt__" alt="" style="left:176px;top:352px">
+        <div class="tuto">
+          <img class="portrait" src="__av-roi__" alt="">
+          <div class="texte parchemin">Voici ton <b>château</b>. Les monstres viendront par le nord. Touche-le pour <b>recruter</b> ta première escouade de lanciers.<br><span style="font-size:9px;color:#6a4a2a">ÉTAPE 2 / 7 · toucher pour continuer</span></div>
+        </div>
+      </div>
+      <p>Le roi (portrait de Warfare) explique une chose à la fois, avec un doigt et un cercle sur ce qu'il faut toucher. Le jeu attend que tu l'aies fait. Étapes : la carte, recruter, envoyer l'escouade, les ouvriers, bâtir une tour, mettre des archers dedans, la première vague.</p>
+    </section>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2 style="margin:0;font-family:var(--jeu);color:var(--or)">Proposition de niveaux</h2>
+    <div class="defile"><table class="niv">
+      <tr><th>Niveau</th><th>Routes</th><th>Ennemis</th><th>Village</th><th>Se débloque</th></tr>
+      <tr><td>1 · La clairière (tuto)</td><td>1, courte, au nord</td><td>gobelins, 5 vagues</td><td>à l'abri au sud</td><td>maisons, tours en bois</td></tr>
+      <tr><td>2 · Le gué</td><td>1, longue</td><td>+ gobelins à lance, 6 vagues</td><td>à l'abri</td><td>archerie, tours de pierre</td></tr>
+      <tr><td>3 · Le carrefour</td><td>2</td><td>+ gnolls, 8 vagues</td><td>à l'abri</td><td>caserne (chevaliers)</td></tr>
+      <tr><td>4 · Les trois chemins</td><td>3 (la carte actuelle)</td><td>+ le troll, 10 vagues</td><td>sous le château</td><td>monastère, niveaux des bâtiments</td></tr>
+      <tr><td>5 · Le village exposé</td><td>3</td><td>plus nombreux, 10 vagues</td><td>une route passe à côté</td><td>atelier (catapulte), promotions</td></tr>
+      <tr><td>6 · La forteresse</td><td>3, dont une double</td><td>plus forts, deux trolls, 12 vagues</td><td>entre deux routes</td><td>tout</td></tr>
+    </table></div>
+    <p class="note">La difficulté monte par le nombre de routes, la quantité et la force des monstres, et la place du village, comme tu l'as demandé. Le LABO resterait accessible (avec un niveau « bac à sable »).</p>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+// A : un tiroir à la fois
+const tir = document.getElementById("tirA"), ctx = document.getElementById("ctxA");
+document.querySelectorAll("#telA [data-t]").forEach(b => b.addEventListener("click", () => {
+  const ouvert = !tir.hidden && tir.dataset.t === b.dataset.t;
+  document.querySelectorAll("#telA [data-t]").forEach(o => o.classList.toggle("on", !ouvert && o === b));
+  tir.hidden = ouvert; tir.dataset.t = b.dataset.t; ctx.hidden = !ouvert;
+  tir.querySelector("h3 span").textContent = {ouvriers: "OUVRIERS", recruter: "RECRUTER", batir: "BATIR"}[b.dataset.t];
+}));
+// C : onglets et repli
+document.querySelectorAll("[data-o]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-o]").forEach(o => o.setAttribute("aria-selected", o === b));
+  document.querySelectorAll("[data-p]").forEach(p => p.hidden = p.dataset.p !== b.dataset.o);
+}));
+const plie = document.getElementById("plieC"), corps = document.getElementById("corpsC");
+plie.addEventListener("click", () => { corps.hidden = !corps.hidden; plie.textContent = corps.hidden ? "▲" : "▼"; });
+})();
+</script>

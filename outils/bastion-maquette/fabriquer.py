@@ -19,6 +19,8 @@ Maquette 9 (la 8 avec les monstres de l'Enemy Pack, acheté) :
         python3 -I outils/bastion-maquette/fabriquer.py 9 <dossier « Tiny Swords (Free Pack) »> <dossier « Tiny Swords (Update 010) »> <dossier « Enemy Pack »> <sortie.html>
 Maquette 10 (tactique au tour par tour façon Wargroove : Free Pack, Enemy Pack, Warfare) :
         python3 -I outils/bastion-maquette/fabriquer.py 10 <Free Pack> <ancienne version> <dossier « Enemy Pack »> <dossier « Warfare »> <sortie.html>
+Maquette 13 (nouvelle interface : 3 directions, choix du niveau, tuto) :
+        python3 -I outils/bastion-maquette/fabriquer.py 13 <dossier « Warfare »> <Free Pack> <capture du jeu sans interface.png> <sortie.html>
 Maquette 12 (bestiaire : toutes les unités et tous les bâtiments des packs, avec leurs animations) :
         python3 -I outils/bastion-maquette/fabriquer.py 12 <Free Pack> <dossier « Enemy Pack »> <dossier « Warfare »> <ancienne version (Update 010)> <sortie.html>
 Maquette 11 (RTS et tower defense : économie, recrutement, vagues ; Free Pack et Enemy Pack) :
@@ -31,6 +33,33 @@ import base64, glob, json, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, '..', '..'))
 M4 = sys.argv[1] == '4'
+if sys.argv[1] == '13':
+    wf, fp, capture, sortie = sys.argv[2:6]
+    png = lambda f: 'data:image/png;base64,' + base64.b64encode(open(f, 'rb').read()).decode()
+    IMG = os.path.join(RACINE, 'bastion', 'img')
+    im = lambda n: png(os.path.join(IMG, n + '.png'))
+    D = {n: im(n) for n in ['ic-bois', 'ic-or', 'ic-viande', 'ic-marteau', 'ic-epee', 'ic-bouclier', 'ic-reglages', 'av-lance', 'av-guer', 'av-arc', 'av-moine', 'av-cata']}
+    D['av-roi'] = png(os.path.join(wf, 'King', 'King Avatar', 'King_Avatar_01.png'))
+    D['doigt'] = png(os.path.join(fp, 'UI Elements', 'UI Elements', 'Cursors', 'Cursor_02.png'))
+    rond = png(os.path.join(fp, 'UI Elements', 'UI Elements', 'Buttons', 'SmallBlueRoundButton_Regular.png'))
+    var = {'papier': im('ui-papier'), 'table': im('ui-table'), 'parchemin': im('ui-parchemin'), 'ruban-bleu': im('ui-ruban-bleu'), 'ruban-rouge': im('ui-ruban-rouge'),
+           'carre': im('ui-carre-bleu'), 'rond': rond, 'barre': im('ui-barre'), 'barre-plein': im('ui-barre-plein'), 'bouton': im('ui-bouton-bleu'), 'bouton-rouge': im('ui-bouton-rouge'),
+           'jeu-img': png(capture)}
+    haut = ('<div class="haut"><div class="ligne"><div class="res"><span class="papier"><img src="__ic-bois__" alt="">85</span><span class="papier"><img src="__ic-or__" alt="">62</span>'
+            '<span class="papier"><img src="__ic-viande__" alt="">48</span></div><div class="droite"><span class="carre"><img src="__ic-reglages__" alt="" style="width:16px"></span><span class="carre">II</span></div></div>'
+            '<div class="ligne"><span class="ruban rouge vague">VAGUE 3/10 · 12 S</span></div><div class="barre"><i></i></div></div>')
+    cartes = '<div class="cartes">' + ''.join('<span class="c papier%s"><img src="__av-%s__" alt="">%s<span class="cout">%s</span>%s</span>' % (
+        ' ferme' if v else '', k, n, c, '<span class="v">%s</span>' % v if v else '') for k, n, c, v in [
+        ('lance', 'LANCIERS', '10<img src="__ic-bois__" alt="">10<img src="__ic-or__" alt="">', ''), ('guer', 'CHEVALIERS', '20<img src="__ic-or__" alt="">', 'CASERNE'),
+        ('arc', 'ARCHERS', '15<img src="__ic-bois__" alt="">', ''), ('moine', 'MOINES', '20<img src="__ic-or__" alt="">', 'MONASTERE'), ('cata', 'CATAPULTE', '40<img src="__ic-bois__" alt="">', 'ATELIER')]) + '</div>'
+    noeuds = ''.join('<div class="noeud%s" style="left:%d%%;top:%d%%"><span class="rond"><span>%s</span></span><b>%s</b><span class="et">%s</span></div>' % (cl, x, y, num, nom, et) for cl, x, y, num, nom, et in [
+        ('', 30, 88, '1', 'LA CLAIRIERE', '★★★'), ('', 68, 66, '2', 'LE GUE', '★☆☆'), (' ferme', 28, 46, '3', 'LE CARREFOUR', ''),
+        (' ferme', 72, 34, '4', 'LES TROIS CHEMINS', ''), (' ferme', 30, 20, '5', 'LE VILLAGE EXPOSE', ''), (' ferme', 70, 9, '6', 'LA FORTERESSE', '')])
+    html = open(os.path.join(ICI, 'source-13.html'), encoding='utf-8').read()
+    html = html.replace('__HAUT__', haut).replace('__CARTES__', cartes).replace('__NOEUDS__', noeuds)
+    for k, v in D.items(): html = html.replace('__%s__' % k, v)
+    html = html.replace('<div class="page">', '<style>:root{' + ''.join('--%s:url(%s);' % kv for kv in var.items()) + '}</style>\n<div class="page">', 1)
+    open(sortie, 'w', encoding='utf-8').write(html); print(sortie, len(html) // 1024, 'Ko'); sys.exit()
 if sys.argv[1] == '12':
     fp, ep, wf, old, sortie = sys.argv[2:7]
     import re

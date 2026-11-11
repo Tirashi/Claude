@@ -54,7 +54,7 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
   verif(B.construire(S, 11, "archerie") !== null, "une seule archerie");
   verif(B.construire(S, 3, "tourbois") === null && S.P.tourbois.pv < S.P.tour.pv && S.P.tourbois.bois < S.P.tour.bois, "la tour en bois : moins chère et plus fragile");
   // niveaux : une archerie niveau 2 forme des archers vétérans ; caserne niveau 2 : promotions
-  { const S3 = B.creer({}, 4); S3.res.bois = S3.res.or = S3.res.viande = 2000;
+  { const S3 = B.creer({}, 4, 5); S3.res.bois = S3.res.or = S3.res.viande = 2000;
     B.construire(S3, 8, "archerie"); B.construire(S3, 9, "caserne"); for (const i of [8, 9]){ S3.sites[i].b.fini = true; S3.sites[i].b.pv = S3.P[S3.sites[i].b.k].pv; }
     verif(B.ameliorer(S3, 8) === null && S3.sites[8].b.travaux, "améliorer l'archerie lance des travaux");
     for (let i = 0; i < 1200 && S3.sites[8].b.travaux; i++) B.pas(S3, .05);
