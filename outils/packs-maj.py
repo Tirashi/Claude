@@ -25,7 +25,7 @@ def etat(pack, api):
     """L'état actuel d'un pack : fichiers (nom → taille), date « Updated », derniers billets du devlog."""
     page = lire(pack['url'])
     fichiers = {}
-    for m in re.finditer(r'upload_name"><strong title="([^"]+)"', page):
+    for m in re.finditer(r'upload_name"><strong[^>]*? title="([^"]+)"', page):   # l'ordre des attributs change d'une page à l'autre
         z = re.search(r'file_size"><span>([^<]+)</span>', page[m.end():m.end() + 800])
         fichiers[html.unescape(m.group(1))] = z.group(1) if z else '?'
     z = re.search(r'Updated</td><td><abbr title="([^"]+)"', page)
@@ -76,6 +76,9 @@ def main():
         except Exception as x:
             print('%s : page illisible (%s)' % (p['nom'], x)); continue
         avant = p.get('etat')
+        if avant and avant.get('fichiers') and not e['fichiers']:
+            # aucune ligne de fichier reconnue : la page a sans doute changé de forme ; on ne crie pas « tout est retiré »
+            print('%s : page lue, mais aucun fichier reconnu (format de la page changé ?) : à vérifier' % p['nom']); continue
         if avant and not api and 'api' in avant: e['api'] = avant['api']      # garder ce que l'API avait vu
         diff = differences(avant, e)
         print('%s : %s' % (p['nom'], 'rien de nouveau' if not diff else ''))
