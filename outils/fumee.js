@@ -124,44 +124,28 @@ const shots = process.argv[2];
       if (shots) await p.screenshot({ path: `${shots}/fumee-magasinier.png` });
     }
     if (url === 'bastion/index.html') {
-      // Bastion : JOUER, un emplacement ouvre le volet CONSTRUIRE, une maison se paie ; le robot tient la première vague ; le LABO s'ouvre
+      // Bastion : BAC A SABLE ; un cercle du village ouvre l'anneau, une maison se paie ; le château ouvre son anneau ; le robot tient la première vague ;
+      // l'écran des niveaux et le tuto du niveau 1 ; le LABO s'ouvre
       const r = await p.evaluate(async () => {
         const wait = ms => new Promise(r => setTimeout(r, ms));
         for (let i = 0; i < 100 && !(window.Bastion && Bastion.S); i++) await wait(100);
         if (!window.Bastion || !Bastion.S) return 'pas de partie (images ?)';
-        document.getElementById('bJouer').click(); const S = Bastion.S;
-        Bastion.toucher(S.sites[8].x, S.sites[8].y - .5); if (document.getElementById('construire').hidden) return 'pas de volet CONSTRUIRE';
-        await wait(450); const b0 = S.res.bois; document.querySelector('#bats [data-b="maison"]').click();
+        document.getElementById('bLaboMenu').click(); const S = Bastion.S;
+        Bastion.toucher(S.sites[8].x, S.sites[8].y - .5); if (document.getElementById('anneau').hidden) return 'pas d\'anneau sur un emplacement';
+        await wait(450); const b0 = S.res.bois; const m = document.querySelector('#anneau [data-k="maison"]'); if (!m) return 'pas de maison dans l\'anneau'; m.click();
         if (!S.sites[8].b || S.res.bois !== b0 - S.P.maison.bois) return 'la maison ne se construit pas';
+        Bastion.toucher(S.c ? 5.5 : 5.5, 9.3); if (!Bastion.anneau || Bastion.anneau.cible !== 'chateau') return 'le château n\'ouvre pas son anneau';
+        Bastion.toucher(1, 1);
         Bastion.robot = true; Bastion.avance(60); Bastion.robot = false;
         if (S.vague < 1 || S.pv <= 0) return 'la première vague ne vient pas ou le château tombe';
         document.getElementById('bLabo').click(); if (document.getElementById('labo').hidden || !document.querySelectorAll('#reglages input').length) return 'pas de LABO';
+        document.getElementById('bFermer').click();
+        Bastion.ouvrirNiveaux(); if (document.getElementById('niveaux').hidden || document.querySelectorAll('#carteNiv .noeud').length !== 6) return 'pas d\'écran des niveaux';
+        document.getElementById('bJouerNiv').click(); if (!Bastion.tuto || document.getElementById('tuto').hidden) return 'pas de tuto au niveau 1';
         return 'ok';
       });
       if (r !== 'ok') errs.push('Bastion : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-bastion.png` });
-    }
-    if (url === 'terres-franches/index.html') {
-      // Terres franches : toucher la forêt rapporte du bois ; accueillir un villageois, lui donner un métier ; CONSTRUIRE propose un terrain, BATIR ICI lance le chantier et la rue suit
-      const r = await p.evaluate(async () => {
-        const wait = ms => new Promise(r => setTimeout(r, ms));
-        for (let i = 0; i < 100 && !(window.Terres && Terres.S); i++) await wait(100);
-        if (!window.Terres || !Terres.S) return 'pas de partie (images ?)';
-        const S = Terres.S, R = TerresRegles;
-        if (Terres.toucherCase(2, 3) !== 'bois' || S.res.bois < 1) return 'toucher la forêt ne rapporte rien';
-        S.res.baies = 500; S.res.bois = 500;
-        document.querySelector('[data-onglet=villageois]').click(); await wait(50);
-        document.querySelector('[data-act=recruter]').click(); if (S.pop !== 1) return 'personne ne vient';
-        document.querySelector('[data-m=bucheron][data-d="1"]').click(); if (S.jobs.bucheron !== 1) return 'pas de bûcheron';
-        document.querySelector('[data-onglet=construire]').click(); await wait(50);
-        document.querySelector('.carte[data-b=cabane]').click(); if (!Terres.PL || !Terres.PL.lot) return 'pas de terrain proposé';
-        document.getElementById('bPoser').click(); if (!S.chantiers.length || !Object.keys(S.lots).length) return 'le chantier ne démarre pas';
-        Terres.avance(30); if (S.bat.cabane !== 1 || R.logement(S) !== 4) return 'la cabane ne se termine pas';
-        if (!TerresCarte.routes(S).traces.length) return 'pas de rue';
-        return 'ok';
-      });
-      if (r !== 'ok') errs.push('Terres franches : ' + r);
-      if (shots) await p.screenshot({ path: `${shots}/fumee-terres.png` });
     }
     if (url === 'dragon-simulator/index.html') {
       // Dragon Simulator : titre, nid, ENVOLER !, un toucher = un coup d'ailes, puis le sol : bilan, pièces au nid, vol compté

@@ -30,7 +30,7 @@ const DEFAUT = {
   tour:      {bois: 30, or: 20, travail: 14, pv: 300, portee: 1.2, soigne: 1.5},
   tourbois:  {bois: 15, or: 0, travail: 7, pv: 110, portee: .7, soigne: .9},
   niveaux:   {cout: 1, travail: 1, max: 3},
-  vagues: {premiere: 40, entre: 45, nombre: 10, base: 3, plus: 2, force: .12, troll: 4, deux: 5, alerte: 6},
+  vagues: {premiere: 40, entre: 45, nombre: 10, base: 3, plus: 2, force: .12, troll: 4, trolls: 1, deux: 5, alerte: 6},
   xp: {parPv: .1, survie: 4, veteran: 25, elite: 60, heros: 120, bonus: .2},
   renfort: {viande: 4, temps: 2},
   jeu: {ralenti: .35}
@@ -57,45 +57,77 @@ const GARNISON = {arc: 1, moine: 1, cata: 1};
 const GRADES = ["RECRUES", "VETERANS", "ELITE", "HEROS"];
 const RES = ["bois", "or", "viande"];
 
-/* ---------- la carte (11 × 14 cases) ----------
-   F forêt, P chemin, w bois, g or, . herbe. Trois chemins sinueux mènent au château (en bas, au milieu) :
-   le nord fait deux lacets, l'ouest rejoint le nord, l'est longe le côté droit. Bois, or et moutons derrière le château. */
-const CARTE = ["FFFFFPFFFFF",
-               "F....P....F",
-               "F.PPPP....F",
-               "F.P.....PPP",
-               "PPP.....P.F",
-               "F.P.....P.F",
-               "F.PPPP..P.F",
-               "F....P..P.F",
-               "F....P..P.F",
-               "F......PP.F",
-               "F.........F",
-               "F.........F",
-               "F.........F",
-               "Fww.....ggF",
-               "Fww.....ggF",
-               "FFFFFFFFFFF"];
+/* ---------- les cartes et les niveaux (11 × 16 cases) ----------
+   F forêt, P chemin, w bois, g or, . herbe. Le château est en bas au milieu (rang 9), le village dessous (rangs 10 à 12),
+   bois, or et moutons au sud. Chaque niveau a sa carte (routes, emplacements), ses vagues et ses bâtiments. */
 const W = 11, H = 16;
 const CHATEAU = [5.5, 9.6], DEPOT = [5.5, 10.6];
-// chemins des monstres (points de passage, au milieu des cases), puis le château
-const CHEMINS = {N: [[5.5, -0.6], [5.5, 2.5], [2.5, 2.5], [2.5, 6.5], [5.5, 6.5], [5.5, 8.6]],
-                 O: [[-0.6, 4.5], [2.5, 4.5], [2.5, 6.5], [5.5, 6.5], [5.5, 8.6]],
-                 E: [[11.6, 3.5], [8.5, 3.5], [8.5, 9.5], [7.2, 9.5]]};
-const NOM_DIR = {N: "LE NORD", O: "L'OUEST", E: "L'EST"};
-// emplacements de construction (pieds du bâtiment) : 8 le long des chemins, 2 près du château
-// 0 à 7 : le long des chemins (tours seulement) ; 8 à 15 : le village, sous le château (les autres bâtiments)
-const SITES = [[3.6, 1.6], [4.0, 4.9], [1.3, 3.5], [6.9, 4.8], [9.6, 6.2], [7.0, 1.8], [3.6, 8.4], [6.9, 8.0],
-               [1.8, 11.0], [3.4, 11.1], [7.6, 11.1], [9.2, 11.0], [2.2, 12.7], [4.2, 12.8], [6.8, 12.8], [8.8, 12.7]];
-const TYPE_SITE = SITES.map((_, i) => i < 8 ? "chemin" : "village");
-const VILLAGE = [1, 10, 9, 3];   // le sol du village (cases) : x, y, largeur, hauteur
+const BAS = ["F.........F", "F.........F", "F.........F", "Fww.....ggF", "Fww.....ggF", "FFFFFFFFFFF"];   // rangs 10 à 15
+const BAS_SUD = ["F.........F", "F......PPPP", "F.........F", "Fww.....ggF", "Fww.....ggF", "FFFFFFFFFFF"];  // une route qui passe près du village
+const R_NORD = [[5.5, -0.6], [5.5, 2.5], [2.5, 2.5], [2.5, 6.5], [5.5, 6.5], [5.5, 8.6]];       // deux lacets
+const R_OUEST = [[-0.6, 4.5], [2.5, 4.5], [2.5, 6.5], [5.5, 6.5], [5.5, 8.6]];
+const R_EST = [[11.6, 3.5], [8.5, 3.5], [8.5, 9.5], [7.2, 9.5]];
+const R_SUD = [[11.6, 11.5], [7.5, 11.5]];                                                       // par le village
+const V_ABRI = [[1.8, 11.0], [3.4, 11.1], [7.6, 11.1], [9.2, 11.0], [2.2, 12.7], [4.2, 12.8], [6.8, 12.8], [8.8, 12.7]];
+const V_EXPOSE = [[1.8, 11.0], [3.4, 11.1], [2.2, 12.7], [4.2, 12.8], [6.6, 12.9]];
+const T_TROIS = [[3.6, 1.6], [4.0, 4.9], [1.3, 3.5], [6.9, 4.8], [9.6, 6.2], [7.0, 1.8], [3.6, 8.4], [6.9, 8.0]];
+const NIVEAUX = [
+  {nom: "LA CLAIRIERE", texte: "Une seule route, courte, au nord. Des gobelins seulement. Le village est a l'abri. 5 vagues.",
+   carte: ["FFFFFPFFFFF", "FF...P...FF", "F....P....F", "F....P....F", "F....P....F", "F....P....F", "F....P....F", "F....P....F", "F....P....F", "F.........F", ...BAS],
+   chemins: {N: [[5.5, -0.6], [5.5, 8.6]]}, tours: [[3.9, 2.6], [7.1, 2.6], [3.9, 5.6], [7.1, 5.6], [3.6, 8.4], [7.4, 8.4]], village: V_ABRI,
+   batiments: ["maison", "tourbois", "archerie"], niveaux: false, promotions: false, especes: ["gob"], tuto: true,
+   regles: {eco: {bois: 90}, vagues: {nombre: 5, base: 2, plus: 1, force: .06, troll: 0, deux: 99, premiere: 60}}},
+  {nom: "LE GUE", texte: "Une seule route, longue, en deux lacets. Gobelins et gobelins a lance. Nouveau : tours de pierre et caserne. 6 vagues.",
+   carte: ["FFFFFPFFFFF", "F....P....F", "F.PPPP....F", "F.P.......F", "F.P.......F", "F.P.......F", "F.PPPP....F", "F....P....F", "F....P....F", "F.........F", ...BAS],
+   chemins: {N: R_NORD}, tours: [[3.6, 1.6], [4.0, 4.9], [1.3, 3.5], [6.7, 2.6], [1.3, 7.0], [3.6, 8.4], [6.9, 7.6]], village: V_ABRI,
+   batiments: ["maison", "tourbois", "archerie", "tour", "caserne"], niveaux: false, promotions: false, especes: ["gob", "lanceg"],
+   regles: {vagues: {nombre: 6, base: 3, plus: 1, force: .08, troll: 0, deux: 99}}},
+  {nom: "LE CARREFOUR", texte: "Deux routes, au nord et a l'est. Les gnolls lancent des os. Nouveau : monastere et niveaux des batiments. 8 vagues.",
+   carte: ["FFFFFPFFFFF", "F....P....F", "F.PPPP....F", "F.P.....PPP", "F.P.....P.F", "F.P.....P.F", "F.PPPP..P.F", "F....P..P.F", "F....P..P.F", "F......PP.F", ...BAS],
+   chemins: {N: R_NORD, E: R_EST}, tours: T_TROIS, village: V_ABRI,
+   batiments: ["maison", "tourbois", "archerie", "tour", "caserne", "monastere"], niveaux: true, promotions: false, especes: ["gob", "lanceg", "gnoll"],
+   regles: {vagues: {nombre: 8, base: 3, plus: 2, force: .11, troll: 0, deux: 4}}},
+  {nom: "LES TROIS CHEMINS", texte: "Trois routes. Le troll vient aux vagues 4, 8 et 10. Nouveau : atelier et catapulte. 10 vagues.",
+   carte: ["FFFFFPFFFFF", "F....P....F", "F.PPPP....F", "F.P.....PPP", "PPP.....P.F", "F.P.....P.F", "F.PPPP..P.F", "F....P..P.F", "F....P..P.F", "F......PP.F", ...BAS],
+   chemins: {N: R_NORD, O: R_OUEST, E: R_EST}, tours: T_TROIS, village: V_ABRI,
+   batiments: ["maison", "tourbois", "archerie", "tour", "caserne", "monastere", "atelier"], niveaux: true, promotions: false, especes: ["gob", "lanceg", "gnoll"],
+   regles: {}},
+  {nom: "LE VILLAGE EXPOSE", texte: "Trois routes, dont une qui passe le long du village. Plus de monstres. Nouveau : promotions. 10 vagues.",
+   carte: ["FFFFFPFFFFF", "F....P....F", "F.PPPP....F", "F.P.......F", "PPP.......F", "F.P.......F", "F.PPPP....F", "F....P....F", "F....P....F", "F.........F", ...BAS_SUD],
+   chemins: {N: R_NORD, O: R_OUEST, S: R_SUD}, tours: [[3.6, 1.6], [4.0, 4.9], [1.3, 3.5], [3.6, 8.4], [6.9, 8.0], [9.2, 10.2], [8.6, 12.9], [6.9, 4.8]], village: V_EXPOSE,
+   batiments: null, niveaux: true, promotions: true, especes: ["gob", "lanceg", "gnoll"],
+   regles: {vagues: {nombre: 10, base: 3, plus: 2, force: .12, troll: 5, deux: 5}}},
+  {nom: "LA FORTERESSE", texte: "Trois routes, le village entre deux d'entre elles. Monstres plus forts, deux trolls a la fois. 12 vagues.",
+   carte: ["FFFFFPFFFFF", "F....P....F", "F.PPPP....F", "F.P.....PPP", "F.P.....P.F", "F.P.....P.F", "F.PPPP..P.F", "F....P..P.F", "F....P..P.F", "F......PP.F", ...BAS_SUD],
+   chemins: {N: R_NORD, E: R_EST, S: R_SUD}, tours: [[3.6, 1.6], [4.0, 4.9], [1.3, 3.5], [6.9, 4.8], [9.6, 6.2], [7.0, 1.8], [3.6, 8.4], [8.6, 12.9]], village: V_EXPOSE,
+   batiments: null, niveaux: true, promotions: true, especes: ["gob", "lanceg", "gnoll"],
+   regles: {vagues: {nombre: 12, base: 3, plus: 2, force: .12, troll: 4, trolls: 2, deux: 4}}}];
+// la carte d'un niveau, prête à jouer
+function carteNiveau(n){
+  const L = NIVEAUX[Math.max(1, Math.min(NIVEAUX.length, n || 4)) - 1];
+  const sites = [...L.tours.map(([x, y]) => [x, y, "chemin"]), ...L.village.map(([x, y]) => [x, y, "village"])];
+  return {n: NIVEAUX.indexOf(L) + 1, nom: L.nom, carte: L.carte, chemins: L.chemins, sites, village: [1, 10, 9, 3], L};
+}
+// une case hors de la carte est-elle le prolongement d'une route ? (pour le dessin)
+function routeHors(c, cx, cy){
+  for (const pts of Object.values(c.chemins)){ const [x0, y0] = pts[0];
+    if (x0 < 0 && cx < 0 && cy === Math.floor(y0)) return true;
+    if (x0 > W && cx >= W && cy === Math.floor(y0)) return true;
+    if (y0 < 0 && cy < 0 && cx === Math.floor(x0)) return true; }
+  return false;
+}
+// pour la compatibilité (tests, labo) : la carte du niveau 4
+const CARTE = NIVEAUX[3].carte, CHEMINS = NIVEAUX[3].chemins, VILLAGE = [1, 10, 9, 3];
+const SITES = carteNiveau(4).sites.map(([x, y]) => [x, y]);
+const NOM_DIR = {N: "LE NORD", O: "L'OUEST", E: "L'EST", S: "LE SUD-EST"};
 const ZONE_MOUTONS = [4.0, 13.4, 3.0, 1.2];   // x, y, largeur, hauteur
 
 const d2 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const copie = o => JSON.parse(JSON.stringify(o));
 // réglages complets = DEFAUT modifié par les valeurs données (seuls les nombres connus sont pris)
-function reglages(mods){
+function reglages(mods, base){
   const P = copie(DEFAUT);
+  if (base) for (const g of Object.keys(base)) for (const k of Object.keys(base[g])) if (P[g] && typeof base[g][k] === "number") P[g][k] = base[g][k];
   if (mods && typeof mods === "object") for (const g of Object.keys(P)) if (mods[g] && typeof mods[g] === "object")
     for (const k of Object.keys(P[g])) if (typeof mods[g][k] === "number" && isFinite(mods[g][k])) P[g][k] = mods[g][k];
   return P;
@@ -108,18 +140,18 @@ function ecarts(P){
 }
 
 /* ---------- une partie ---------- */
-function creer(mods, graine){
-  const P = reglages(mods);
+function creer(mods, graine, niveau){
+  const c = carteNiveau(niveau || 4), P = reglages(mods, c.L.regles);
   let seed = (graine >>> 0) % 2147483646 + 1;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const S = {P, rnd, t: 0, res: {bois: P.eco.bois, or: P.eco.or, viande: P.eco.viande}, pv: P.chateau.pv, vague: 0, prochaine: P.vagues.premiere,
     alerte: null, dirs: [], pawns: [], esc: [], mons: [], fx: [], tirs: [], evts: [], fini: null, sel: null, nid: 1, enVague: false,
     triche: {invincible: false, tout: false},
     stats: {recolte: {bois: 0, or: 0, viande: 0}, tues: 0, pertes: 0, escouades: 0, batiments: 0, journal: []},
-    arbres: [], filons: [], moutons: [], sites: SITES.map(([x, y], i) => ({i, x, y, type: TYPE_SITE[i], b: null, ruine: false})), niveauChateau: 1};
+    arbres: [], filons: [], moutons: [], sites: c.sites.map(([x, y, type], i) => ({i, x, y, type, b: null, ruine: false})), niveauChateau: 1, c, niveau: c.n};
   // les ressources de la carte (même décor à chaque partie)
   let s2 = 3; const r2 = () => (s2 = (s2 * 16807) % 2147483647) / 2147483647;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){ const ch = CARTE[y][x];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){ const ch = c.carte[y][x];
     if (ch === "w") for (const [ox, oy] of [[.3, .45], [.72, .7], [.35, .95]]) S.arbres.push({x: x + ox + (r2() - .5) * .1, y: y + oy, n: Math.floor(r2() * 2), ph: r2() * 8, coupe: 0});
     if (ch === "g") S.filons.push({x: x + .5 + (r2() - .5) * .3, y: y + .7, n: 3 + Math.floor(r2() * 3)}); }
   const [mx, my, mw, mh] = ZONE_MOUTONS;
@@ -206,6 +238,12 @@ function metier(S, job){
   else p.ancien = null;
   p.job = job; p.st = "go"; p.cible = null; return null;
 }
+// retire un ouvrier d'un métier : il passe au métier le moins pourvu (parmi les autres)
+function retirer(S, job){
+  const p = S.pawns.find(o => o.job === job); if (!p) return "PERSONNE NE TRAVAILLE ICI";
+  const n = {bois: 0, or: 0, viande: 0}; S.pawns.forEach(o => { if (n[o.job] != null) n[o.job]++; });
+  p.job = RES.filter(r => r !== job).sort((a, b) => n[a] - n[b])[0]; p.ancien = null; p.st = "go"; p.cible = null; p.charge = 0; return null;
+}
 // le chantier (ou le bâtiment abîmé) le plus proche
 function chantierPour(S, p){
   let best = null, bd = 1e9;
@@ -267,7 +305,9 @@ function construire(S, site, k){
   return null;
 }
 // ce bâtiment peut-il aller sur cet emplacement ? (null = oui, sinon la raison)
+const permis = (S, k) => S.triche.tout || !S.c.L.batiments || S.c.L.batiments.includes(k);
 function peutBatir(S, s, k){
+  if (!permis(S, k)) return "PAS ENCORE DANS CE NIVEAU";
   if (TOURS[k] && s.type !== "chemin") return "LES TOURS SE BATISSENT LE LONG DES CHEMINS";
   if (!TOURS[k] && s.type === "chemin") return "ICI, SEULEMENT DES TOURS";
   if (UNIQUE[k] && S.sites.some(o => o.b && o.b.k === k)) return (FEMININ[k] ? "UNE " : "UN ") + BAT[k] + " SEULEMENT";
@@ -279,6 +319,7 @@ function ameliorer(S, site){
   const s = typeof site === "number" ? S.sites[site] : site, b = s && s.b;
   if (!b || !b.fini) return "PAS DE BATIMENT TERMINE";
   if (!AMELIORABLE[b.k]) return "CE BATIMENT NE S'AMELIORE PAS";
+  if (!S.c.L.niveaux && !S.triche.tout && b.k !== "maison") return "PAS ENCORE DANS CE NIVEAU";
   if (b.travaux) return "TRAVAUX DEJA EN COURS";
   if ((b.niveau || 1) >= S.P.niveaux.max) return "NIVEAU MAXIMUM";
   const c = coutNiveau(S, b); if (!peutPayer(S, c)) return "PAS ASSEZ DE RESSOURCES";
@@ -290,6 +331,7 @@ function ameliorer(S, site){
 const coutChateau = S => { const m = S.niveauChateau; return {bois: S.P.chateau.bois * m, or: S.P.chateau.or * m, viande: 0}; };
 const pvChateau = S => S.P.chateau.pv * (1 + S.P.chateau.pvNiveau * (S.niveauChateau - 1));
 function ameliorerChateau(S){
+  if (!S.c.L.niveaux && !S.triche.tout) return "PAS ENCORE DANS CE NIVEAU";
   if (S.niveauChateau >= S.P.niveaux.max) return "NIVEAU MAXIMUM";
   const c = coutChateau(S); if (!peutPayer(S, c)) return "PAS ASSEZ DE RESSOURCES";
   payer(S, c); const avant = pvChateau(S); S.niveauChateau++; S.pv += pvChateau(S) - avant;
@@ -298,9 +340,10 @@ function ameliorerChateau(S){
 }
 // le niveau du bâtiment qui forme une unité (1 s'il n'existe pas)
 const niveauForme = (S, k) => { const f = FORME[k]; if (f === "chateau") return S.niveauChateau; const s = S.sites.find(o => o.b && o.b.k === f && o.b.fini); return s ? (s.b.niveau || 1) : 1; };
-const peutPromouvoir = (S, q) => !!(q && q.pv > 0 && PROMO[q.k] && (S.triche.tout || S.sites.some(s => s.b && s.b.k === "caserne" && s.b.fini && (s.b.niveau || 1) >= 2)));
+const peutPromouvoir = (S, q) => !!(q && q.pv > 0 && PROMO[q.k] && (S.triche.tout || S.c.L.promotions) && (S.triche.tout || S.sites.some(s => s.b && s.b.k === "caserne" && s.b.fini && (s.b.niveau || 1) >= 2)));
 function promouvoir(S, q){
   if (!q || q.pv <= 0 || !PROMO[q.k]) return "CETTE ESCOUADE NE PEUT PAS ETRE PROMUE";
+  if (!S.c.L.promotions && !S.triche.tout) return "PAS ENCORE DANS CE NIVEAU";
   if (!peutPromouvoir(S, q)) return "IL FAUT UNE CASERNE NIVEAU 2";
   const k = PROMO[q.k], c = cout(S, k); if (!peutPayer(S, c)) return "PAS ASSEZ DE RESSOURCES";
   payer(S, c);
@@ -433,26 +476,27 @@ function pasEscouades(S, dt, obs){
 }
 
 /* ---------- les vagues et les monstres ---------- */
-const typesVague = w => w === 1 ? ["gob"] : w === 2 ? ["gob", "lanceg"] : ["gob", "lanceg", "gnoll"];
+// les espèces d'une vague : celles du niveau, une de plus à chaque vague
+const typesVague = (S, w) => S.c.L.especes.slice(0, Math.max(1, Math.min(S.c.L.especes.length, w)));
 function directions(S, w){
   if (S.dirs[w]) return S.dirs[w];
-  const ds = Object.keys(CHEMINS), d = w <= 3 ? ds[(w - 1) % 3] : ds[Math.floor(S.rnd() * 3)];
-  const r = [d]; if (w >= S.P.vagues.deux) r.push(ds[(ds.indexOf(d) + 1) % 3]);
+  const ds = Object.keys(S.c.chemins), k = ds.length, d = w <= k ? ds[(w - 1) % k] : ds[Math.floor(S.rnd() * k)];
+  const r = [d]; if (k > 1 && w >= S.P.vagues.deux) r.push(ds[(ds.indexOf(d) + 1) % k]);
   return (S.dirs[w] = r);
 }
 const avecTroll = (S, w) => S.P.vagues.troll > 0 && (w % S.P.vagues.troll === 0 || w === S.P.vagues.nombre);
 // la composition d'une vague (aussi pour l'annonce)
 function composition(S, w){
-  const V = S.P.vagues, types = typesVague(w), n = Math.max(1, Math.round(V.base + V.plus * (w - 1))), ds = directions(S, w), out = [];
+  const V = S.P.vagues, types = typesVague(S, w), n = Math.max(1, Math.round(V.base + V.plus * (w - 1))), ds = directions(S, w), out = [];
   for (let i = 0; i < n; i++) out.push([types[i % types.length], ds[0], i * .9]);
-  if (avecTroll(S, w)) out.push(["troll", ds[0], n * .9 + .5]);
+  if (avecTroll(S, w)) for (let k = 0; k < Math.max(1, V.trolls); k++) out.push(["troll", ds[k % ds.length], n * .9 + .5 + k * 1.5]);
   if (ds[1]){ const n2 = Math.max(1, Math.round(n * .6)); for (let i = 0; i < n2; i++) out.push([types[i % types.length], ds[1], 2 + i * .9]); }
   return out;
 }
 function lancerVague(S){
   S.vague++; const w = S.vague, mult = 1 + S.P.vagues.force * (w - 1);
   for (const [t, d, delai] of composition(S, w)){
-    const [a] = CHEMINS[d], pv = S.P[t].pv * mult;
+    const [a] = S.c.chemins[d], pv = S.P[t].pv * mult;
     S.mons.push({t, x: a[0] + (S.rnd() - .5) * .4, y: a[1] + (S.rnd() - .5) * .4, dir: d, etape: 1, ox: (S.rnd() - .5) * .5, oy: (S.rnd() - .5) * .5,
       pv, pvMax: pv, delai, cd: 0, face: 1, mode: "walk", ph: S.rnd() * 3, dernier: null});
   }
@@ -484,7 +528,7 @@ function pasMonstres(S, dt, obs){
     m.mode = "walk";
     if (q && best < 1.5 && m.t !== "gnoll"){ marcher(S, m, q.x, q.y, MM.v, dt, obs); continue; }
     // le chemin, point après point, puis le château
-    const pts = CHEMINS[m.dir];
+    const pts = S.c.chemins[m.dir];
     if (m.etape < pts.length){ const [px, py] = pts[m.etape], tx = px + m.ox, ty = py + m.oy;
       if (Math.hypot(tx - m.x, ty - m.y) < .15) m.etape++; else marcher(S, m, tx, ty, MM.v, dt, obs); }
     else marcher(S, m, CHATEAU[0], CHATEAU[1], MM.v, dt, obs);
@@ -537,23 +581,32 @@ function vagueMaintenant(S){ if (S.vague < S.P.vagues.nombre && !S.fini){ S.proc
 /* ---------- le robot (simulateur et bouton ROBOT du labo) ----------
    Une stratégie simple et régulière, pour comparer des réglages : ouvriers équilibrés, archerie puis maisons,
    tours le long du chemin annoncé avec des archers dedans, escouades sur le chemin de la prochaine vague. */
-const POSTE = {N: [4.2, 2.5], O: [1.4, 4.5], E: [8.5, 5.5]};
-const SITE_TOUR = {N: [0, 1, 6], O: [2, 1, 6], E: [3, 4, 7]};
-const SITE_BASE = [9, 10, 8, 11, 13, 14, 12, 15];
+// un point du chemin, à une fraction de sa longueur (le poste où attendre la vague)
+function pointChemin(pts, f){
+  let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+  let r = L * f;
+  for (let i = 1; i < pts.length; i++){ const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    if (r <= l){ const u = r / l; return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * u, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * u]; } r -= l; }
+  return pts[pts.length - 1];
+}
+const distChemin = (pts, x, y) => { let b = 99; for (let i = 1; i < pts.length; i++){ const [ax, ay] = pts[i - 1], [bx, by] = pts[i], dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy || 1;
+  const u = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)); b = Math.min(b, Math.hypot(ax + dx * u - x, ay + dy * u - y)); } return b; };
 function robot(S, dt){
   S._rob = (S._rob || 0) - dt; if (S._rob > 0 || S.fini) return; S._rob = .5;
   const P = S.P;
   if (S.pawns.length < maxOuv(S) && S.res.viande >= P.eco.ouvrier + 6) ajouterOuvrier(S, metierLibre(S));
   const has = k => S.sites.some(s => s.b && s.b.k === k);
-  const libre = ids => ids.map(i => S.sites[i]).find(s => !s.b);
+  const village = S.sites.filter(s => s.type === "village" && !s.b), base = () => village.find(s => !s.b);
+  const tourLibre = d => S.sites.filter(s => s.type === "chemin" && !s.b).sort((a, b) => distChemin(S.c.chemins[d], a.x, a.y) - distChemin(S.c.chemins[d], b.x, b.y))[0];
+  const typeTour = permis(S, "tour") ? "tour" : "tourbois";
   // pendant une vague : son chemin ; sinon celui de la prochaine
   const ds = S.enVague ? directions(S, S.vague) : S.alerte || directions(S, Math.min(P.vagues.nombre, S.vague + 1));
   const enChantier = S.sites.some(s => s.b && !s.b.fini);
   const nTours = S.sites.filter(s => s.b && TOURS[s.b.k]).length;
-  if (!has("archerie")) construire(S, libre(SITE_BASE), "archerie");
-  else if (!enChantier && nTours < 1 + Math.floor(S.vague / 2)){ const s = libre(SITE_TOUR[ds[0]]) || libre([0, 1, 2, 3, 4, 5, 6, 7]); if (s) construire(S, s, "tour"); }
-  else if (!enChantier && nbEsc(S) >= maxEsc(S)){ const s = libre(SITE_BASE); if (s) construire(S, s, "maison"); }
-  if (!enChantier && S.vague >= 3 && !has("caserne") && S.res.or >= 40){ const s = libre(SITE_BASE); if (s) construire(S, s, "caserne"); }
+  if (!has("archerie")) construire(S, base(), "archerie");
+  else if (!enChantier && nTours < 1 + Math.floor(S.vague / 2)){ const s = tourLibre(ds[0]); if (s) construire(S, s, typeTour); }
+  else if (!enChantier && nbEsc(S) >= maxEsc(S)){ const s = base(); if (s) construire(S, s, "maison"); }
+  if (!enChantier && S.vague >= 3 && !has("caserne") && permis(S, "caserne") && S.res.or >= 40){ const s = base(); if (s) construire(S, s, "caserne"); }
   // recrutement : archers d'abord (pour les tours), lanciers contre le troll
   const troll = S.mons.some(m => m.t === "troll" && m.pv > 0) || avecTroll(S, S.vague + 1);
   const nArc = S.esc.filter(q => q.k === "arc").length, nAutres = S.esc.length - nArc;
@@ -567,20 +620,20 @@ function robot(S, dt){
     if (q.pv <= 0 || q.tour || q.versTour) continue;
     if (q.k === "arc" && tours.length){ envoyer(S, q, 0, 0, tours.shift()); continue; }
     const blesse = vivants(S, q) < nMax(S, q) - 1 && !S.enVague;
-    const [ex, ey] = blesse ? DEPOT : POSTE[ds[i % ds.length]]; i++;
+    const [ex, ey] = blesse ? DEPOT : pointChemin(S.c.chemins[ds[i % ds.length]], .45); i++;
     const recul = q.k === "arc" || q.k === "moine" ? .25 : 0, cx = ex + (CHATEAU[0] - ex) * recul, cy = ey + (CHATEAU[1] - ey) * recul;
     if (Math.hypot(q.tx - cx, q.ty - cy) > .6 && !q.engage) envoyer(S, q, cx + (S.rnd() - .5) * .4, cy + (S.rnd() - .5) * .4);
   }
 }
 // une partie complète jouée par le robot (simulateur) : résultat résumé
-function simuler(mods, graine, tMax){
-  const S = creer(mods, graine);
+function simuler(mods, graine, tMax, niveau){
+  const S = creer(mods, graine, niveau);
   while (!S.fini && S.t < (tMax || 1400)){ robot(S, .05); pas(S, .05); S.evts.length = 0; }
   return {fini: S.fini || "temps", vague: S.vague, pv: Math.round(S.pv), t: Math.round(S.t), tues: S.stats.tues, pertes: S.stats.pertes, journal: S.stats.journal};
 }
 
-const api = {DEFAUT, ESC, MONS, BAT, FEMININ, DEBLOQUE, GARNISON, GRADES, RES, CARTE, W, H, CHATEAU, DEPOT, CHEMINS, NOM_DIR, SITES, VILLAGE, TOURS, UNIQUE, FORME, PROMO, RECRUTABLES,
-  peutBatir, ameliorer, tenir, AMELIORABLE, coutNiveau, ameliorerChateau, coutChateau, pvChateau, niveauForme, peutPromouvoir, promouvoir, pvBat,
+const api = {NIVEAUX, carteNiveau, routeHors, permis, DEFAUT, ESC, MONS, BAT, FEMININ, DEBLOQUE, GARNISON, GRADES, RES, CARTE, W, H, CHATEAU, DEPOT, CHEMINS, NOM_DIR, SITES, VILLAGE, TOURS, UNIQUE, FORME, PROMO, RECRUTABLES,
+  peutBatir, ameliorer, tenir, retirer, AMELIORABLE, coutNiveau, ameliorerChateau, coutChateau, pvChateau, niveauForme, peutPromouvoir, promouvoir, pvBat,
   reglages, ecarts, creer, pas, ajouterOuvrier, metierLibre, metier, construire, recruter, envoyer, vagueMaintenant, composition, directions, obstacles, dehors,
   maxEsc, maxOuv, nbEsc, debloque, cout, peutPayer, vivants, nMax, pvMax, pvSoldat, portee, robot, simuler, maisons};
 if (typeof module !== "undefined" && module.exports) module.exports = api;

@@ -23,55 +23,61 @@
       <button type="button" id="bLabo" class="carre" aria-label="Labo"><img src="img/ic-reglages.png" alt=""></button>
       <button type="button" id="bMenu" class="carre" aria-label="Pause"><b>II</b></button>
     </div>
-    <div class="ligne"><span id="vague"></span><button type="button" id="vit" class="carre large">×1</button></div>
+    <div class="ligne"><span id="vague"></span><span class="pops"><span class="pill" id="popOuv" title="Ouvriers"><img src="img/ic-marteau.png" alt="Ouvriers"><b></b></span><span class="pill" id="popEsc" title="Escouades"><img src="img/ic-epee.png" alt="Escouades"><b></b></span></span><button type="button" id="vit" class="carre large">×1</button></div>
     <div id="pvc"><i></i></div>
   </div>
   <button type="button" id="zoom" class="carre" aria-label="Zoom">−</button>
   <div class="bas">
     <div id="aide"></div>
     <div class="actions"><button type="button" id="tenir" class="bouton" hidden></button><button type="button" id="promo" class="bouton" hidden></button></div>
-    <div class="panneau table">
-      <h3>OUVRIERS <span id="popOuv"></span></h3><div id="jobs" class="jobs"></div>
-      <h3>ESCOUADES <span id="popEsc"></span></h3><div id="cartes" class="cartes"></div>
-    </div>
   </div>
 </div>
+<!-- sur la carte : l'anneau d'un bâtiment (recruter, améliorer, bâtir) et les étiquettes des ouvriers -->
+<div id="anneau" hidden></div>
+<div id="etiquettes"></div>
+<!-- le tuto : le roi parle, un doigt et un cercle montrent quoi toucher -->
+<div id="cercle" hidden></div>
+<img id="doigt" src="img/doigt.png" alt="" hidden>
+<div id="tuto" hidden><img class="portrait" src="img/av-roi.png" alt=""><div class="texte parchemin"><p id="tutoTexte"></p><small id="tutoEtape"></small></div></div>
 <div id="banniere"></div>
-
-<div id="construire" class="volet table" hidden>
-  <h2 class="ruban">CONSTRUIRE</h2>
-  <div id="bats"></div>
-  <button type="button" id="bAnnulerB" class="bouton">ANNULER</button>
-</div>
 
 <div id="menu" class="ecran">
   <div class="plaque parchemin">
     <h1 class="ruban">BASTION</h1>
-    <p class="sous">LABORATOIRE</p>
     <p>Des ouvriers recoltent bois, or et viande ; tu batis, tu recrutes des escouades et tu defends le chateau contre des vagues de monstres.</p>
+    <button type="button" id="bReprendre" class="bouton or" hidden>REPRENDRE</button>
     <button type="button" id="bJouer" class="bouton or">JOUER</button>
-    <button type="button" id="bNouvelle" class="bouton">NOUVELLE PARTIE</button>
-    <button type="button" id="bLaboMenu" class="bouton">LABO</button>
+    <button type="button" id="bLaboMenu" class="bouton">BAC A SABLE (LABO)</button>
     <button type="button" id="bAide" class="bouton">COMMENT JOUER</button>
     <div id="aideTexte" class="aide" hidden>
-      <p><b>Ouvriers</b> : touche bois, or, viande ou le marteau pour y envoyer un ouvrier de plus (pris la ou il y en a le plus). +1 = un nouvel ouvrier (viande).</p>
-      <p><b>Batir</b> : touche un emplacement (cercle) puis un batiment. Un ouvrier prend son marteau. Au village (sous le chateau) : maisons (plus de population) et un seul exemplaire de la caserne, de l'archerie, du monastere et de l'atelier (nouvelles escouades). Le long des chemins : tours de pierre ou tours en bois (moins cheres, plus fragiles).</p>
-      <p><b>Ameliorer</b> : touche la caserne, l'archerie, le monastere, l'atelier ou le chateau. Au niveau 2 leurs recrues arrivent VETERANS, au niveau 3 ELITE. Les maisons s'ameliorent aussi (plus de population). Une fleche verte montre ce qui peut s'ameliorer. Caserne niveau 2 : on peut promouvoir les lanciers en cavaliers et les chevaliers en epeistes (touche l'escouade, puis PROMOUVOIR).</p>
-      <p><b>Escouades</b> : touche une carte pour recruter, touche une escouade puis le sol pour l'envoyer. Le jeu ralentit pendant que tu choisis. Archers, moines ou catapulte envoyes sur une tour montent dessus : ils tirent (ou soignent) plus loin et ne craignent plus le corps a corps tant que la tour tient. La zone verte autour des moines montre ou ils soignent ; elle grandit avec leur grade.</p>
-      <p><b>Tenir la position</b> : une escouade choisie peut TENIR LA POSITION (bouclier au-dessus d'elle) : elle ne part plus au-devant des monstres et frappe ceux qui arrivent a sa portee.</p>
-      <p><b>Grades</b> : en abattant des monstres et en survivant aux vagues, une escouade devient VETERANS, ELITE (un soldat de plus) puis HEROS. Pres du chateau, hors combat, elle se reforme contre de la viande.</p>
-      <p><b>LABO</b> : vitesse, triches, robot qui joue seul, simulateur et tous les reglages du jeu.</p>
+      <p><b>Le chateau</b> : touche-le, des boutons sortent autour de lui : recruter des lanciers, un ouvrier de plus, l'ameliorer. Pareil pour la caserne, l'archerie, le monastere et l'atelier, chacun avec ses escouades.</p>
+      <p><b>Ouvriers</b> : les etiquettes posees sur le bois, l'or et les moutons montrent combien d'ouvriers y travaillent ; + en envoie un de plus, − en retire un.</p>
+      <p><b>Batir</b> : touche un cercle. Au village (sous le chateau) : maisons (plus de population), caserne, archerie, monastere, atelier (un seul de chaque). Le long des chemins : tours de pierre ou tours en bois. Un ouvrier prend son marteau.</p>
+      <p><b>Escouades</b> : touche une escouade puis le sol pour l'envoyer ; le jeu ralentit pendant que tu choisis. Archers, moines ou catapulte envoyes sur une tour montent dessus. TENIR LA POSITION : l'escouade ne part plus au-devant des monstres.</p>
+      <p><b>Grades et niveaux</b> : les escouades deviennent VETERANS, ELITE puis HEROS. Un batiment ameliore forme des recrues deja aguerries ; une fleche verte montre ce qui peut s'ameliorer.</p>
+      <p><b>Population</b> : en haut, le marteau = ouvriers, l'epee = escouades ; rouge quand c'est plein (construis ou ameliore des maisons).</p>
     </div>
     <a class="bouton ludo-retour" href="../index.html#bastion">LUDOTHEQUE</a>
+  </div>
+</div>
+
+<div id="niveaux" class="ecran" hidden>
+  <div class="plaque large parchemin">
+    <h1 class="ruban">LES MARCHES</h1>
+    <div id="carteNiv"><svg class="trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M30 90 Q49 81 68 72 Q48 64 28 56 Q50 50 72 44 Q51 37 30 30 Q50 22 70 15" fill="none" stroke="#8a6a3a" stroke-width="1.2" stroke-dasharray="2.5 2"/></svg></div>
+    <div id="ficheNiv" class="fiche"></div>
+    <div class="rang"><button type="button" id="bRetourNiv" class="bouton">RETOUR</button><button type="button" id="bJouerNiv" class="bouton or">JOUER</button></div>
   </div>
 </div>
 
 <div id="fin" class="ecran" hidden>
   <div class="plaque large papier">
     <h1 id="finTitre" class="ruban"></h1>
+    <p id="finEtoiles" class="etoilesFin"></p>
     <p id="finTexte"></p>
     <div id="finJournal" class="journal"></div>
-    <button type="button" id="bRejouer" class="bouton or">REJOUER</button>
+    <button type="button" id="bSuivant" class="bouton or" hidden>NIVEAU SUIVANT</button>
+    <div class="rang"><button type="button" id="bRejouer" class="bouton">REJOUER</button><button type="button" id="bFinNiveaux" class="bouton">NIVEAUX</button></div>
     <button type="button" id="bFinLabo" class="bouton">LABO</button>
   </div>
 </div>

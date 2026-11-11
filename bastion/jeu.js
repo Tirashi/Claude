@@ -1,9 +1,9 @@
-/* Bastion, le laboratoire. Dessin, commandes au doigt, panneau LABO (vitesse, triches, robot, réglages, journal).
+/* Bastion : dessin, commandes au doigt (anneaux sur la carte, étiquettes des ouvriers), niveaux, tuto, panneau LABO (vitesse, triches, robot, réglages, journal).
    Les règles sont dans regles.js (window.BastionRegles) ; les images dans img/ (Tiny Swords, voir la page des crédits). */
 (() => {
 "use strict";
 const B = window.BastionRegles;
-const {W, H, CARTE, CHATEAU, DEPOT, CHEMINS, ESC, BAT, FEMININ, DEBLOQUE, GARNISON, GRADES, RES, TOURS, UNIQUE, AMELIORABLE, PROMO, VILLAGE} = B;
+const {W, H, CHATEAU, DEPOT, ESC, BAT, FEMININ, DEBLOQUE, GARNISON, GRADES, RES, TOURS, UNIQUE, AMELIORABLE, PROMO} = B;
 const CS = 128, M = 3;                       // une case = 2 × 2 tuiles de 64 px ; M = bord de forêt autour de la carte
 const IMG_DOSSIER = "img/";
 const $ = s => document.querySelector(s);
@@ -41,7 +41,7 @@ const EFFET = {maison: "+1 escouade, +2 ouvriers", caserne: "debloque les cheval
 const c = $("#cv"), x = c.getContext("2d");
 const hud = $("#hud"), ban = $("#banniere");
 let S = null, bg = null, VW = 6 * CS, camX = 0, camY = 0, pret = false, loin = false;
-let vitesse = 1, ralentiOn = true, robotOn = false, choixSite = null, pause = true;
+let vitesse = 1, ralentiOn = true, robotOn = false, pause = true;
 const WW = (W * 2 + M * 2) * 64, WH = (H * 2 + M * 2) * 64;
 const P = (gx, gy) => [M * 64 + gx * CS, M * 64 + gy * CS];
 const clamp = () => { camX = Math.max(-c.width * .1, Math.min(WW - c.width * .9, camX)); camY = Math.max(-c.height * .1, Math.min(WH - c.height * .55, camY)); };
@@ -64,123 +64,244 @@ function ajuster(el, min = 5){ el.style.fontSize = ""; let f = parseFloat(getCom
 const prix = o => RES.filter(r => o[r]).map(r => o[r] + ic(r)).join(" ") || "GRATUIT";
 function dire(t, bon){ ban.textContent = t; ban.classList.toggle("bon", !!bon); ban.classList.add("on"); clearTimeout(ban._t); ban._t = setTimeout(() => ban.classList.remove("on"), 2400); }
 
-/* ---------- le bandeau du bas ---------- */
-function construirePanneau(){
-  $("#jobs").innerHTML = ["bois", "or", "viande"].map(j => `<button type="button" data-j="${j}">${ic(j)}<b>0</b></button>`).join("")
-    + `<button type="button" data-j="bati">${ic("marteau")}<b>0</b></button><button type="button" class="plus" data-j="plus">+1<span class="cout"></span><span class="max" hidden>MAX</span></button>`;
-  $("#cartes").innerHTML = B.RECRUTABLES.map(k => `<button type="button" data-e="${k}"><img class="av" src="${IMG_DOSSIER}av-${k}.png" alt=""><b>${ESC[k]}</b><span class="cout"></span><span class="verrou"></span></button>`).join("");
-}
-construirePanneau();
+/* ---------- l'écran : ressources, population, actions de l'escouade choisie ---------- */
 function maj(){
   if (!S) return;
   for (const r of RES) $("#r-" + r).textContent = Math.floor(S.res[r]);
-  const nb = j => S.pawns.filter(p => p.job === j).length;
-  document.querySelectorAll("#jobs [data-j]").forEach(b => { const j = b.dataset.j; if (j !== "plus") b.querySelector("b").textContent = nb(j); });
-  const plus = $("#jobs .plus"); plus.querySelector(".cout").innerHTML = S.P.eco.ouvrier + ic("viande");
-  plus.classList.toggle("cher", S.pawns.length >= B.maxOuv(S) || S.res.viande < S.P.eco.ouvrier);
   const pleinO = S.pawns.length >= B.maxOuv(S), pleinE = B.nbEsc(S) >= B.maxEsc(S);
-  $("#popOuv").textContent = S.pawns.length + "/" + B.maxOuv(S); $("#popOuv").classList.toggle("plein", pleinO);
-  $("#popEsc").textContent = B.nbEsc(S) + "/" + B.maxEsc(S); $("#popEsc").classList.toggle("plein", pleinE);
-  plus.querySelector(".max").hidden = !pleinO;
-  document.querySelectorAll("#cartes button").forEach(b => { const k = b.dataset.e, ok = B.debloque(S, k);
-    b.querySelector(".cout").innerHTML = prix(B.cout(S, k)); const v = b.querySelector(".verrou"), t = !ok ? BAT[DEBLOQUE[k]] : pleinE ? "POPULATION MAX" : "";
-    if (v.textContent !== t){ v.textContent = t; ajuster(v); }
-    b.classList.toggle("ferme", !ok); b.classList.toggle("cher", ok && (!B.peutPayer(S, B.cout(S, k)) || B.nbEsc(S) >= B.maxEsc(S))); });
+  $("#popOuv b").textContent = S.pawns.length + "/" + B.maxOuv(S); $("#popOuv").classList.toggle("plein", pleinO);
+  $("#popEsc b").textContent = B.nbEsc(S) + "/" + B.maxEsc(S); $("#popEsc").classList.toggle("plein", pleinE);
   const V = S.P.vagues;
-  $("#vague").textContent = S.vague < V.nombre ? `VAGUE ${S.vague}/${V.nombre} · ${Math.max(0, Math.ceil(S.prochaine - S.t))} S` : `VAGUE ${V.nombre}/${V.nombre}`;
+  $("#vague").textContent = tuto ? "TUTO" : S.vague < V.nombre ? `VAGUE ${S.vague}/${V.nombre} · ${Math.max(0, Math.ceil(S.prochaine - S.t))} S` : `VAGUE ${V.nombre}/${V.nombre}`;
   $("#pvc i").style.width = Math.max(0, S.pv / B.pvChateau(S) * 100) + "%";
   const tn = $("#tenir"); tn.hidden = !(S.sel && !S.sel.tour && S.sel.k !== "cata"); if (!tn.hidden) tn.textContent = "TENIR LA POSITION : " + (S.sel.tenir ? "OUI" : "NON");
   tn.classList.toggle("or", !!(S.sel && S.sel.tenir));
-  const pr = $("#promo"), q0 = S.sel; pr.hidden = !(q0 && PROMO[q0.k]);
+  const pr = $("#promo"), q0 = S.sel; pr.hidden = !(q0 && PROMO[q0.k] && (S.c.L.promotions || S.triche.tout));
   if (!pr.hidden){ const k2 = PROMO[q0.k]; pr.innerHTML = `PROMOUVOIR : ${ESC[k2]} ${prix(B.cout(S, k2))}`; pr.classList.toggle("cher", !B.peutPromouvoir(S, q0) || !B.peutPayer(S, B.cout(S, k2))); }
   $("#vit").textContent = vitesse === 0 ? "PAUSE" : "×" + vitesse;
   $("#vit").classList.toggle("on", vitesse !== 1 || robotOn);
   const q = S.sel;
-  $("#aide").textContent = choixSite ? "Choisis un batiment" : q ? `${ESC[q.k]} · ${GRADES[q.grade]} · ${B.vivants(S, q)}/${B.nMax(S, q)} · XP ${Math.floor(q.xp)}${q.grade < 3 ? "/" + [S.P.xp.veteran, S.P.xp.elite, S.P.xp.heros][q.grade] : ""}${GARNISON[q.k] ? " · touche le sol ou une tour" : " · touche le sol"}`
-    : robotOn ? "Le robot joue" : "Touche une escouade, ou un emplacement pour batir";
+  $("#aide").textContent = anneau ? "" : q ? `${ESC[q.k]} · ${GRADES[q.grade]} · ${B.vivants(S, q)}/${B.nMax(S, q)} · XP ${Math.floor(q.xp)}${q.grade < 3 ? "/" + [S.P.xp.veteran, S.P.xp.elite, S.P.xp.heros][q.grade] : ""}${GARNISON[q.k] ? " · touche le sol ou une tour" : " · touche le sol"}`
+    : robotOn ? "Le robot joue" : tuto ? "" : "Touche le chateau, un batiment, un cercle ou une escouade";
+  majEtiquettes(); if (anneau) dessinerAnneau();
 }
-document.querySelectorAll("#jobs").forEach(el => el.addEventListener("click", e => { const b = e.target.closest("button"); if (!b || !S || S.fini) return; e.stopPropagation();
-  const j = b.dataset.j, err = j === "plus" ? B.ajouterOuvrier(S, B.metierLibre(S)) : B.metier(S, j); if (err) dire(err); maj(); }));
-$("#cartes").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || !S || S.fini) return; e.stopPropagation();
-  const err = B.recruter(S, b.dataset.e); if (err) dire(err); maj(); });
 
-/* ---------- le menu de construction ---------- */
-let ouvertA = 0;   // le clic qui suit le toucher ne doit pas choisir un bâtiment (leçon de Bannières)
-function ouvrirChantier(site){
-  choixSite = site; ouvertA = performance.now(); $("#construire h2").textContent = "CONSTRUIRE";
-  $("#bats").innerHTML = Object.keys(BAT).filter(k => !!TOURS[k] === (site.type === "chemin")).map(k => { const im = BATI[k][0], c0 = B.cout(S, k), raison = B.peutBatir(S, site, k), ok = !raison && B.peutPayer(S, c0);
-    return `<button type="button" data-b="${k}" class="${ok ? "" : "cher"}"><img src="${IMG_DOSSIER}${im}.png" alt="" class="${k === "tourbois" ? "bande4" : ""}"><b>${BAT[k]}</b><span class="cout">${raison ? "DEJA FAIT" : prix(c0)}</span><small>${EFFET[k]}</small></button>`; }).join("");
-  $("#construire").hidden = false; maj();
-}
-// toucher un bâtiment du village (ou le château) : son niveau et le bouton AMELIORER
+/* ---------- l'anneau : les boutons qui sortent autour du château, d'un bâtiment ou d'un emplacement ---------- */
+let anneau = null, ouvertA = 0;   // le clic qui suit le toucher ne doit pas choisir un bouton (leçon de Bannières)
+const ICONES = {};                 // vignettes faites au chargement (première image d'une bande)
+function vignette(nom, fs){ const im = L[nom]; if (!im) return ""; const f = f8(im, fs, 0), t = cv(f.width, f.height); t.getContext("2d").drawImage(f, 0, 0); return t.toDataURL(); }
 const ROLE_NIV = {caserne: "chevaliers", archerie: "archers", monastere: "moines", atelier: "catapultes"};
-function ouvrirBatiment(site){
-  choixSite = site; ouvertA = performance.now();
-  const chateau = site === "chateau", b = chateau ? null : site.b, k = chateau ? "chateau" : b.k;
-  const niv = chateau ? S.niveauChateau : (b.niveau || 1), max = S.P.niveaux.max, c0 = chateau ? B.coutChateau(S) : B.coutNiveau(S, b);
-  $("#construire h2").textContent = (chateau ? "CHATEAU" : BAT[k]) + " · NIVEAU " + niv;
-  const unite = chateau ? "lanciers" : ROLE_NIV[k];
-  const effet = niv >= max ? "Niveau maximum." : k === "maison" ? `Niveau ${niv + 1} : +${S.P.pop.maisonEsc} escouade et +${S.P.pop.maisonOuv} ouvriers de population.` : `Niveau ${niv + 1} : les ${unite} recrutes arrivent ${niv + 1 === 2 ? "VETERANS" : "ELITE"}${chateau ? ", et le chateau a plus de points de vie" : ""}${k === "caserne" && niv === 1 ? " ; promotions : lanciers en cavaliers, chevaliers en epeistes" : ""}.`;
-  const occupe = !chateau && b.travaux;
-  $("#bats").innerHTML = `<button type="button" data-a="1" class="${niv >= max || occupe || !B.peutPayer(S, c0) ? "cher" : ""}" style="grid-column:1/-1"><b>${occupe ? "TRAVAUX EN COURS" : niv >= max ? "NIVEAU MAXIMUM" : "AMELIORER"}</b><span class="cout">${niv >= max || occupe ? "" : prix(c0)}</span><small>${effet}</small></button>`;
-  $("#construire").hidden = false; maj();
+function itemsAnneau(cible){
+  const out = [], P0 = S.P, max = P0.niveaux.max;
+  const rec = k => { const c0 = B.cout(S, k), plein = B.nbEsc(S) >= B.maxEsc(S);
+    return {k, img: IMG_DOSSIER + "av-" + k + ".png", titre: ESC[k], prix: c0, ok: B.debloque(S, k) && !plein && B.peutPayer(S, c0), raison: plein ? "POPULATION MAX" : "", faire: () => B.recruter(S, k)}; };
+  const amel = (niv, c0, faire, effet) => ({k: "ameliorer", img: IMG_DOSSIER + "ic-fleche-verte.png", fleche: true, titre: "NIVEAU " + (niv + 1), prix: c0, ok: niv < max && B.peutPayer(S, c0), raison: niv >= max ? "MAXIMUM" : "", effet, faire});
+  if (cible === "chateau"){
+    out.push(rec("lance"));
+    const plein = S.pawns.length >= B.maxOuv(S);
+    out.push({k: "ouvrier", img: ICONES.ouvrier, titre: "OUVRIER", prix: {viande: P0.eco.ouvrier}, ok: !plein && S.res.viande >= P0.eco.ouvrier, raison: plein ? "POPULATION MAX" : "", faire: () => B.ajouterOuvrier(S, B.metierLibre(S))});
+    if (S.c.L.niveaux || S.triche.tout) out.push(amel(S.niveauChateau, B.coutChateau(S), () => B.ameliorerChateau(S), "lanciers aguerris, chateau plus solide"));
+  } else if (!cible.b){
+    for (const k of Object.keys(BAT)) if (!!TOURS[k] === (cible.type === "chemin") && B.permis(S, k)){
+      const c0 = B.cout(S, k), r = B.peutBatir(S, cible, k);
+      out.push({k, img: ICONES[k] || IMG_DOSSIER + BATI[k][0] + ".png", bat: true, titre: BAT[k], prix: c0, ok: !r && B.peutPayer(S, c0), raison: r ? "DEJA FAIT" : "", effet: EFFET[k], faire: () => B.construire(S, cible, k)}); }
+  } else if (cible.b.fini){
+    const k = cible.b.k, u = Object.keys(B.FORME).find(e => B.FORME[e] === k);
+    if (u) out.push(rec(u));
+    if (AMELIORABLE[k] && (k === "maison" || S.c.L.niveaux || S.triche.tout)) out.push(amel(cible.b.niveau || 1, B.coutNiveau(S, cible.b), () => B.ameliorer(S, cible), k === "maison" ? "+1 escouade, +2 ouvriers" : "les " + ROLE_NIV[k] + " arrivent aguerris"));
+  }
+  return out;
 }
-const fermerChantier = () => { choixSite = null; $("#construire").hidden = true; };
-$("#bats").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || !choixSite || performance.now() - ouvertA < 400) return;
-  const err = b.dataset.a ? (choixSite === "chateau" ? B.ameliorerChateau(S) : B.ameliorer(S, choixSite)) : B.construire(S, choixSite, b.dataset.b);
-  if (err) dire(err); else fermerChantier(); maj(); });
+function titreAnneau(cible){
+  if (cible === "chateau") return "CHATEAU · NIV " + S.niveauChateau;
+  if (!cible.b) return cible.type === "chemin" ? "BATIR UNE TOUR" : "BATIR AU VILLAGE";
+  return BAT[cible.b.k] + (AMELIORABLE[cible.b.k] ? " · NIV " + (cible.b.niveau || 1) : "") + (cible.b.travaux ? " · TRAVAUX" : "");
+}
+function ouvrirAnneau(cible){
+  anneau = {cible}; ouvertA = performance.now();
+  if (!itemsAnneau(cible).length){ anneau = null; return false; }
+  dessinerAnneau(); placerCalques(); return true;
+}
+function fermerAnneau(){ anneau = null; $("#anneau").hidden = true; $("#anneau").innerHTML = ""; }
+function dessinerAnneau(){
+  const el = $("#anneau"), items = itemsAnneau(anneau.cible); anneau.items = items;
+  const cle = JSON.stringify(items.map(it => [it.k, it.ok, it.raison])) + titreAnneau(anneau.cible);
+  if (el.dataset.cle === cle && !el.hidden) return;
+  el.dataset.cle = cle;
+  el.innerHTML = `<span class="titreA ruban">${titreAnneau(anneau.cible)}</span>` + items.map((it, i) => `<button type="button" class="pion${it.ok ? "" : " cher"}" data-i="${i}" data-k="${it.k}" title="${it.titre}${it.effet ? " : " + it.effet : ""}">
+    <span class="rondA${it.bat ? " bat" : ""}${it.fleche ? " fl" : ""}"><img src="${it.img}" alt=""></span><b>${it.titre}</b><small>${it.raison || prix(it.prix)}</small></button>`).join("");
+  el.hidden = false;
+}
+$("#anneau").addEventListener("click", e => { const b = e.target.closest("button[data-i]"); if (!b || !anneau || performance.now() - ouvertA < 400) return; e.stopPropagation();
+  const it = anneau.items[Number(b.dataset.i)]; if (!it) return;
+  const err = it.faire(); if (err) dire(err); else fermerAnneau(); maj(); });
+// le centre (en pixels de l'écran) d'un point de la carte
+function ecran(gx, gy){ const r = c.getBoundingClientRect(), [X, Y] = P(gx, gy); return [(X - camX) * r.width / c.width + r.left, (Y - camY) * r.height / c.height + r.top]; }
+// place l'anneau et les étiquettes sur la carte (à chaque image : la vue peut bouger)
+function placerCalques(){
+  if (anneau){
+    const el = $("#anneau"), ci = anneau.cible, h = ci === "chateau" ? 1.1 : ci.b ? Math.min(1.4, (HAUT[ci.b.k] || 1.2) * .55) : .45;
+    const [cx, cy] = ci === "chateau" ? ecran(CHATEAU[0], CHATEAU[1] - .1) : ecran(ci.x, ci.y - h);
+    const n = (anneau.items || []).length, R = n > 4 ? 92 : 80, dessous = cy < 190;
+    el.style.left = cx + "px"; el.style.top = cy + "px";
+    el.querySelectorAll(".pion").forEach((b, i) => { const a = n === 1 ? -Math.PI / 2 : (-Math.PI + Math.PI * (i + .5) / n) * (dessous ? -1 : 1);
+      b.style.transform = `translate(${Math.cos(a) * R}px, ${Math.sin(a) * R * .9}px) translate(-50%, -50%)`; });
+    const t = el.querySelector(".titreA"); if (t) t.style.transform = `translate(-50%, ${dessous ? -70 : 34}px)`;
+  }
+  for (const [j, gx, gy] of ZONES){ const e = document.querySelector(`.etiq[data-j="${j}"]`); if (!e) continue; const [ex, ey] = ecran(gx, gy); e.style.left = ex + "px"; e.style.top = ey + "px"; }
+}
+
+/* ---------- les étiquettes des ouvriers, posées sur le bois, l'or et les moutons ---------- */
+const ZONES = [["bois", 2.0, 13.55], ["or", 9.0, 13.55], ["viande", 5.5, 13.9]];
+$("#etiquettes").innerHTML = ZONES.map(([j]) => `<div class="etiq papier" data-j="${j}"><button type="button" data-a="-" aria-label="Un ouvrier de moins">−</button>${ic(j)}<b>0</b><button type="button" data-a="+" aria-label="Un ouvrier de plus">+</button></div>`).join("");
+$("#etiquettes").addEventListener("click", e => { const b = e.target.closest("button"); if (!b || !S || S.fini) return; e.stopPropagation();
+  const j = b.closest(".etiq").dataset.j, err = b.dataset.a === "+" ? B.metier(S, j) : B.retirer(S, j); if (err) dire(err); maj(); });
+function majEtiquettes(){
+  if (!S) return; const n = {bois: 0, or: 0, viande: 0}; S.pawns.forEach(p => { if (n[p.job] != null) n[p.job]++; });
+  for (const [j] of ZONES){ const e = document.querySelector(`.etiq[data-j="${j}"] b`); if (e) e.textContent = n[j]; }
+}
 $("#tenir").addEventListener("click", e => { e.stopPropagation(); if (!S || !S.sel) return; B.tenir(S, S.sel); maj(); });
 $("#promo").addEventListener("click", e => { e.stopPropagation(); if (!S || !S.sel) return; const err = B.promouvoir(S, S.sel); if (err) dire(err); maj(); });
-$("#bAnnulerB").addEventListener("click", () => { fermerChantier(); maj(); });
 
-/* ---------- le décor ---------- */
-const DECOR = [];
+/* ---------- le décor (refait pour chaque carte) ---------- */
+let DECOR = [];
 // une case est-elle un chemin (sur la carte, ou son prolongement hors de la carte) ?
-const chemin = (cx, cy) => cx >= 0 && cy >= 0 && cx < W && cy < H ? CARTE[cy][cx] === "P" : (cx === 5 && cy < 0) || (cy === 4 && cx < 0) || (cy === 3 && cx >= W);
-{ let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const chemin = (cx, cy) => cx >= 0 && cy >= 0 && cx < W && cy < H ? S.c.carte[cy][cx] === "P" : B.routeHors(S.c, cx, cy);
+function faireDecor(){
+  DECOR = []; let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const libre = (x, y) => !chemin(Math.floor(x), Math.floor(y)) && !chemin(Math.floor(x), Math.floor(y - .4));
-  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++){ const ch = CARTE[y][xx];
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++){ const ch = S.c.carte[y][xx];
     if (ch === "F") for (let k = 0; k < 2; k++){ const o = {k: "arbre", x: xx + .25 + k * .5 + (rnd() - .5) * .15, y: y + .55 + k * .35, n: Math.floor(rnd() * 4), ph: rnd() * 8}; if (libre(o.x, o.y)) DECOR.push(o); }
-    if (ch === "." && rnd() < .1 && !B.SITES.some(([sx, sy]) => Math.hypot(sx - xx - .5, sy - y - .7) < 1.3)) DECOR.push({k: rnd() < .5 ? "buisson" : "rocher", x: xx + .5 + (rnd() - .5) * .6, y: y + .7, ph: rnd() * 8}); }
+    if (ch === "." && rnd() < .1 && !S.sites.some(s => Math.hypot(s.x - xx - .5, s.y - y - .7) < 1.3)) DECOR.push({k: rnd() < .5 ? "buisson" : "rocher", x: xx + .5 + (rnd() - .5) * .6, y: y + .7, ph: rnd() * 8}); }
   const pousse = o => { if (libre(o.x, o.y)) DECOR.push(o); };
   for (let i = -3; i < W * 2 + 3; i += 1.4) for (const j of [-1.2, H * 2 + .4]) pousse({k: "arbre", x: i / 2, y: j / 2 + .9, n: Math.floor(rnd() * 4), ph: rnd() * 8});
-  for (let j = -1; j < H * 2 + 1; j += 1.5) for (const i of [-1.3, W * 2 + .3]) pousse({k: "arbre", x: i / 2 + .3, y: j / 2 + .9, n: Math.floor(rnd() * 4), ph: rnd() * 8}); }
+  for (let j = -1; j < H * 2 + 1; j += 1.5) for (const i of [-1.3, W * 2 + .3]) pousse({k: "arbre", x: i / 2 + .3, y: j / 2 + .9, n: Math.floor(rnd() * 4), ph: rnd() * 8});
+}
 function fond(){
+  if (!S) return;
   bg = cv(WW, WH); const b = bg.getContext("2d"); b.imageSmoothingEnabled = false;
   const NX = WW / 64, NY = WH / 64, put = (im, c0, r0, i, j) => b.drawImage(im, c0 * 64, r0 * 64, 64, 64, i * 64, j * 64, 64, 64);
   for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) put(L.tm, 1, 1, i, j);
   // le sol du village, d'une autre herbe (bords raccordés)
-  const [vx, vy, vw, vh] = VILLAGE, isV = (i, j) => { const cx = (i - M) / 2, cy = (j - M) / 2; return cx >= vx && cy >= vy && cx < vx + vw && cy < vy + vh; };
+  const [vx, vy, vw, vh] = S.c.village, isV = (i, j) => { const cx = (i - M) / 2, cy = (j - M) / 2; return cx >= vx && cy >= vy && cx < vx + vw && cy < vy + vh; };
   for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) if (isV(i, j)){ const [cc, r] = auto(isV(i, j - 1), isV(i, j + 1), isV(i - 1, j), isV(i + 1, j)); put(L["tm-village"], cc, r, i, j); }
   const isP = (i, j) => chemin(Math.floor((i - M) / 2), Math.floor((j - M) / 2));
   for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) if (isP(i, j)){ const [cc, r] = auto(isP(i, j - 1), isP(i, j + 1), isP(i - 1, j), isP(i + 1, j)); put(L.sable, 5 + cc, r, i, j); }
 }
 
 /* ---------- une partie ---------- */
-function nouvelle(){
-  S = B.creer(MODS, (Date.now() % 1e9) + 1);
-  fermerChantier(); $("#fin").hidden = true; maj(); majJournal();
+let niveau = 1, labo = false;
+const progres = () => lire("bastion.progres", {etoiles: {}}) || {etoiles: {}};
+const ouvert = n => n === 1 || (progres().etoiles[n - 1] || 0) > 0;
+// niveau n (1 à 6), ou le bac à sable (niveau 4 avec les réglages du LABO)
+function nouvelle(n, bac){
+  if (n) niveau = n; if (bac != null) labo = bac;
+  S = B.creer(labo ? MODS : {}, (Date.now() % 1e9) + 1, labo ? 4 : niveau);
+  fermerAnneau(); $("#fin").hidden = true; finVue = false;
+  faireDecor(); if (pret) fond(); taille();
+  tuto = null; if (!labo && S.c.L.tuto) demarrerTuto();
+  dire(labo ? "BAC A SABLE" : "NIVEAU " + niveau + " · " + S.c.nom, true);
+  maj(); majJournal();
 }
+const etoilesDe = S0 => S0.fini !== "victoire" ? 0 : 1 + (S0.pv >= B.pvChateau(S0) * .5 ? 1 : 0) + (S0.pv >= B.pvChateau(S0) * .85 ? 1 : 0);
 function finPartie(){
   const st = lire("bastion.parties", {jouees: 0, victoires: 0, vague: 0}) || {jouees: 0, victoires: 0, vague: 0};
   st.jouees++; if (S.fini === "victoire") st.victoires++; st.vague = Math.max(st.vague || 0, S.vague);
-  if (!robotOn) ecrire("bastion.parties", st);
+  const e = etoilesDe(S);
+  if (!robotOn){ ecrire("bastion.parties", st);
+    if (!labo && e){ const pg = progres(); pg.etoiles[niveau] = Math.max(pg.etoiles[niveau] || 0, e); ecrire("bastion.progres", pg); } }
   $("#finTitre").textContent = S.fini === "victoire" ? "VICTOIRE" : "LE CHATEAU EST TOMBE";
-  $("#finTexte").textContent = `Vague ${S.vague}/${S.P.vagues.nombre} · ${S.stats.tues} monstres abattus · ${S.stats.pertes} soldats perdus · ${Math.floor(S.t / 60)} min ${String(Math.floor(S.t % 60)).padStart(2, "0")}${robotOn ? " · partie du robot" : ""}`;
+  $("#finEtoiles").textContent = labo ? "" : "★".repeat(e) + "☆".repeat(3 - e);
+  $("#finTexte").textContent = `${labo ? "Bac a sable" : "Niveau " + niveau + " · " + S.c.nom} · vague ${S.vague}/${S.P.vagues.nombre} · ${S.stats.tues} monstres abattus · ${S.stats.pertes} soldats perdus · ${Math.floor(S.t / 60)} min ${String(Math.floor(S.t % 60)).padStart(2, "0")}${robotOn ? " · partie du robot" : ""}`;
   $("#finJournal").innerHTML = tableJournal();
+  $("#bSuivant").hidden = labo || S.fini !== "victoire" || niveau >= B.NIVEAUX.length;
   $("#fin").hidden = false;
+}
+
+/* ---------- l'écran des niveaux ---------- */
+const POS_NIV = [[30, 90], [68, 72], [28, 56], [72, 44], [30, 30], [70, 15]];
+let nivChoisi = 1;
+function ouvrirNiveaux(){
+  pause = true; $("#menu").hidden = true; $("#fin").hidden = true;
+  const pg = progres(); nivChoisi = Math.max(1, B.NIVEAUX.findIndex((_, i) => !(pg.etoiles[i + 1] > 0)) + 1 || B.NIVEAUX.length);
+  dessinerNiveaux(); $("#niveaux").hidden = false;
+}
+function dessinerNiveaux(){
+  const pg = progres();
+  $("#carteNiv").querySelectorAll(".noeud").forEach(e => e.remove());
+  B.NIVEAUX.forEach((L0, i) => { const n = i + 1, ok = ouvert(n), e = pg.etoiles[n] || 0, [px, py] = POS_NIV[i];
+    const b = document.createElement("button"); b.type = "button"; b.className = "noeud" + (ok ? "" : " ferme") + (n === nivChoisi ? " choisi" : ""); b.dataset.n = n;
+    b.style.left = px + "%"; b.style.top = py + "%";
+    b.innerHTML = `<span class="rondA"><span>${n}</span></span><b>${L0.nom}</b><span class="et">${e ? "★".repeat(e) + "☆".repeat(3 - e) : ok ? "" : "FERME"}</span>`;
+    $("#carteNiv").append(b); });
+  const L0 = B.NIVEAUX[nivChoisi - 1];
+  $("#ficheNiv").innerHTML = `<b>${nivChoisi} · ${L0.nom}</b><br>${L0.texte}`;
+  $("#bJouerNiv").classList.toggle("cher", !ouvert(nivChoisi));
+}
+$("#carteNiv").addEventListener("click", e => { const b = e.target.closest(".noeud"); if (!b) return; nivChoisi = Number(b.dataset.n); dessinerNiveaux(); });
+$("#bJouerNiv").addEventListener("click", () => { if (!ouvert(nivChoisi)){ dire("TERMINE D'ABORD LE NIVEAU " + (nivChoisi - 1)); return; }
+  $("#niveaux").hidden = true; nouvelle(nivChoisi, false); pause = false; last = performance.now(); });
+$("#bRetourNiv").addEventListener("click", () => { $("#niveaux").hidden = true; ouvrirMenu(); });
+
+/* ---------- le tuto (niveau 1) : une étape à la fois, le jeu attend qu'elle soit faite ---------- */
+let tuto = null;
+const nbJob = j => S.pawns.filter(p => p.job === j).length;
+const siteVillage = () => S.sites.find(s => s.type === "village" && !s.b) || S.sites.find(s => s.type === "village");
+const ETAPES = [
+  {txt: "Bienvenue, seigneur ! Voici ton <b>chateau</b>. Les monstres viendront par le <b>chemin du nord</b>. Je vais t'apprendre a le defendre.", vise: () => ["carte", CHATEAU[0], CHATEAU[1] - .4], toucher: true},
+  {txt: "Touche le <b>chateau</b> : des boutons sortent autour de lui.", vise: () => ["carte", CHATEAU[0], CHATEAU[1] - .4], fait: () => anneau && anneau.cible === "chateau"},
+  {txt: "Touche les <b>LANCIERS</b> pour recruter une escouade.", vise: () => ["dom", '#anneau [data-k="lance"]'], fait: () => S.esc.length >= 2},
+  {txt: "Ton escouade est choisie (cercle clair). Touche le <b>chemin</b> pour l'y envoyer.", vise: () => ["carte", 5.5, 5.2], fait: () => S.esc.some(q => q.ordre || q.ty < 8.5)},
+  {txt: "Tes <b>ouvriers</b> coupent le bois, minent l'or et ramenent la viande. Touche <b>+</b> sur l'etiquette du <b>bois</b> : un ouvrier de plus y part.", vise: () => ["dom", '.etiq[data-j="bois"] [data-a="+"]'], cam: () => [2.6, 13.4], debut: () => { tuto.bois = nbJob("bois"); }, fait: () => nbJob("bois") > tuto.bois},
+  {txt: "Pour former des archers, il faut une <b>archerie</b>. Touche un <b>cercle du village</b>, sous le chateau, puis l'archerie.", vise: () => { const s = siteVillage(); return ["carte", s.x, s.y - .3]; }, fait: () => S.sites.some(s => s.b && s.b.k === "archerie")},
+  {txt: "Un ouvrier prend son marteau. Pendant ce temps, touche un <b>cercle pres du chemin</b> et bâtis une <b>tour en bois</b>.", vise: () => ["carte", S.sites[2].x, S.sites[2].y - .3], fait: () => S.sites.some(s => s.b && B.TOURS[s.b.k])},
+  {txt: "Quand l'archerie est terminee, touche-la et recrute des <b>ARCHERS</b>.", vise: () => { const s = S.sites.find(o => o.b && o.b.k === "archerie"); return s ? ["carte", s.x, s.y - .8] : null; }, fait: () => S.esc.some(q => q.k === "arc")},
+  {txt: "Envoie les archers sur la tour : touche-les, puis touche la <b>tour</b> (une fois finie). La-haut, ils tirent plus loin et ne craignent pas les coups.", vise: () => { const s = S.sites.find(o => o.b && B.TOURS[o.b.k]); return s ? ["carte", s.x, s.y - 1] : null; }, fait: () => S.esc.some(q => q.k === "arc" && (q.tour || q.versTour))},
+  {txt: "Parfait ! La premiere vague arrive. Tiens <b>5 vagues</b>. Quand une escouade est blessee, ramene-la pres du chateau pour la reformer. Bonne chance !", toucher: true}];
+function demarrerTuto(){ tuto = {i: 0}; S.prochaine = 1e9; etapeTuto(); }
+// fait glisser la vue vers un point de la carte s'il n'est pas bien visible (au-dessus de la bulle du tuto)
+let camCible = null;
+function montrer(gx, gy){
+  const [sx, sy] = ecran(gx, gy), bas = innerHeight - ($("#tuto").hidden ? 80 : 190);
+  if (sx > 40 && sx < innerWidth - 40 && sy > 150 && sy < bas) return;
+  const [X, Y] = P(gx, gy); camCible = [X - c.width / 2, Y - c.height * .4];
+}
+function etapeTuto(){
+  const E = ETAPES[tuto.i]; if (E.debut) E.debut();
+  const v = E.cam ? ["carte", ...E.cam()] : E.vise && E.vise(); if (v && v[0] === "carte") montrer(v[1], v[2]);
+  $("#tutoTexte").innerHTML = E.txt; $("#tutoEtape").textContent = `ETAPE ${tuto.i + 1} / ${ETAPES.length}` + (E.toucher ? " · touche la bulle pour continuer" : "") + " · PASSER";
+  $("#tuto").hidden = false;
+}
+function finTuto(){ tuto = null; $("#tuto").hidden = true; $("#doigt").hidden = true; $("#cercle").hidden = true; if (S && !S.fini){ S.prochaine = S.t + 12; } ecrire("bastion.tuto", true); maj(); }
+$("#tuto").addEventListener("click", e => { if (!tuto) return; e.stopPropagation();
+  if (e.target.closest("#tutoEtape") && /PASSER/.test(e.target.textContent)){ finTuto(); return; }
+  if (ETAPES[tuto.i].toucher){ tuto.i++; if (tuto.i >= ETAPES.length) finTuto(); else etapeTuto(); } });
+// à chaque image : l'étape est-elle faite ? où pointer ?
+function suivreTuto(T){
+  if (!tuto || !S) return;
+  S.prochaine = Math.max(S.prochaine, S.t + 30); S.alerte = null;
+  const E = ETAPES[tuto.i];
+  if (E.fait && E.fait()){ tuto.i++; if (tuto.i >= ETAPES.length) return finTuto(); etapeTuto(); return; }
+  const v = E.vise && E.vise(), d = $("#doigt"), ce = $("#cercle");
+  if (!v){ d.hidden = ce.hidden = true; return; }
+  let x0, y0, r = 34;
+  if (v[0] === "dom"){ const el = document.querySelector(v[1]); if (!el || !el.offsetParent){ d.hidden = ce.hidden = true; return; } const b = el.getBoundingClientRect(); x0 = b.left + b.width / 2; y0 = b.top + b.height / 2; r = Math.max(b.width, b.height) / 2 + 8; }
+  else [x0, y0] = ecran(v[1], v[2]);
+  ce.hidden = d.hidden = false;
+  ce.style.left = (x0 - r) + "px"; ce.style.top = (y0 - r) + "px"; ce.style.width = ce.style.height = (2 * r) + "px";
+  const k = Math.abs(Math.sin(T * 4)) * 6; d.style.left = (x0 + 4 + k) + "px"; d.style.top = (y0 + 6 + k) + "px";
 }
 
 /* ---------- au doigt ---------- */
 let drag = null;
-c.addEventListener("pointerdown", e => { drag = {x: e.clientX, y: e.clientY, cx: camX, cy: camY, done: false}; });
+c.addEventListener("pointerdown", e => { camCible = null; drag = {x: e.clientX, y: e.clientY, cx: camX, cy: camY, done: false}; });
 addEventListener("pointermove", e => { if (!drag) return; const k = c.width / c.getBoundingClientRect().width, dx = e.clientX - drag.x, dy = e.clientY - drag.y;
   if (Math.hypot(dx, dy) > 10) drag.done = true; if (drag.done){ camX = drag.cx - dx * k; camY = drag.cy - dy * k; clamp(); } });
 addEventListener("pointerup", e => { const d = drag; drag = null; if (!d || d.done || !S || S.fini || pause) return;
   const r = c.getBoundingClientRect(), X = (e.clientX - r.left) / r.width * c.width + camX, Y = (e.clientY - r.top) / r.height * c.height + camY, gx = (X - M * 64) / CS, gy = (Y - M * 64) / CS;
   toucher(gx, gy); maj(); });
 function toucher(gx, gy){
-  if (choixSite){ fermerChantier(); return; }
+  if (anneau){ fermerAnneau(); return; }
   // une escouade ?
   let pick = null, pd = .6;
   for (const q of S.esc) if (q.pv > 0){ const dd = Math.hypot(q.x - gx, q.y - (q.tour ? 1.45 : 0) - (gy + .2)); if (dd < pd){ pd = dd; pick = q; } }
@@ -196,13 +317,13 @@ function toucher(gx, gy){
   }
   if (pick){ S.sel = pick === S.sel ? null : pick; return; }
   if (site){
-    if (!site.b) ouvrirChantier(site);
-    else if (site.b.fini && AMELIORABLE[site.b.k]) ouvrirBatiment(site);
-    else { const b = site.b, BB = S.P[b.k]; dire(`${BAT[b.k]}${b.fini ? "" : " EN CHANTIER " + Math.floor(b.prog / BB.travail * 100) + " %"} · PV ${Math.ceil(b.pv)}/${Math.round(B.pvBat(S, b))}${TOURS[b.k] ? (b.garnison ? " · " + ESC[b.garnison.k] + " DEDANS" : " · VIDE") : ""}`, true); }
+    if (!site.b || (site.b.fini && (AMELIORABLE[site.b.k] || Object.values(B.FORME).includes(site.b.k)))){ if (ouvrirAnneau(site)) return; }
+    if (!site.b){ dire("RIEN A BATIR ICI DANS CE NIVEAU"); return; }
+    { const b = site.b, BB = S.P[b.k]; dire(`${BAT[b.k]}${b.fini ? "" : " EN CHANTIER " + Math.floor(b.prog / BB.travail * 100) + " %"} · PV ${Math.ceil(b.pv)}/${Math.round(B.pvBat(S, b))}${TOURS[b.k] ? (b.garnison ? " · " + ESC[b.garnison.k] + " DEDANS" : " · VIDE") : ""}`, true); }
     return;
   }
   // le château
-  if (Math.abs(gx - CHATEAU[0]) < 1.25 && gy > CHATEAU[1] - 1.5 && gy < CHATEAU[1] + .55) ouvrirBatiment("chateau");
+  if (Math.abs(gx - CHATEAU[0]) < 1.25 && gy > CHATEAU[1] - 1.5 && gy < CHATEAU[1] + .55) ouvrirAnneau("chateau");
 }
 
 /* ---------- le dessin ---------- */
@@ -243,12 +364,14 @@ let last = performance.now(), majT = 0, finVue = false;
 function frame(now){
   const dt0 = Math.min(.05, (now - last) / 1000); last = now; const T = now / 1000;
   if (pret && S && !pause){
-    const v = vitesse * (S.sel && ralentiOn ? S.P.jeu.ralenti : 1);
+    const v = vitesse * ((S.sel || anneau) && ralentiOn ? S.P.jeu.ralenti : 1);
     let reste = dt0 * v; while (reste > 1e-6){ const d = Math.min(.05, reste); reste -= d; if (robotOn) B.robot(S, d); B.pas(S, d); }
     for (const e of S.evts) dire(e.txt, e.bon); S.evts.length = 0;
     majT -= dt0; if (majT <= 0){ majT = .25; maj(); }
-    if (S.fini && !finVue){ finVue = true; setTimeout(finPartie, 1500); }
+    if (S.fini && !finVue){ finVue = true; fermerAnneau(); if (tuto) finTuto(); setTimeout(finPartie, 1500); }
   }
+  if (camCible){ camX += (camCible[0] - camX) * .12; camY += (camCible[1] - camY) * .12; clamp(); if (Math.hypot(camCible[0] - camX, camCible[1] - camY) < 2) camCible = null; }
+  if (pret && S){ placerCalques(); suivreTuto(T); }
   x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = "#3c6a2a"; x.fillRect(0, 0, c.width, c.height);
   if (!pret || !S){ requestAnimationFrame(frame); return; }
   x.setTransform(1, 0, 0, 1, -Math.round(camX), -Math.round(camY)); x.drawImage(bg, 0, 0);
@@ -270,7 +393,7 @@ function frame(now){
   for (const s of S.sites){ const [X, Y] = P(s.x, s.y), b = s.b;
     if (!b){
       list.push([Y - 400, () => { if (s.ruine) x.drawImage(L.ruine, Math.round(X - 64), Math.round(Y - 164));
-        const on = choixSite === s; x.strokeStyle = on ? "#fff4a0" : "rgba(60,40,20,.5)"; x.lineWidth = on ? 7 : 5; x.setLineDash([14, 10]); x.beginPath(); x.ellipse(X, Y - 30, 70, 38, 0, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
+        const on = anneau && anneau.cible === s; x.strokeStyle = on ? "#fff4a0" : "rgba(60,40,20,.5)"; x.lineWidth = on ? 7 : 5; x.setLineDash([14, 10]); x.beginPath(); x.ellipse(X, Y - 30, 70, 38, 0, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
         x.fillStyle = on ? "#fff4a0" : "rgba(60,40,20,.5)"; x.fillRect(X - 14, Y - 34, 28, 8); x.fillRect(X - 4, Y - 44, 8, 28); }]);
       continue; }
     const B0 = S.P[b.k], pm = B.pvBat(S, b);
@@ -307,7 +430,7 @@ function frame(now){
     fig(list, D, L[anim(m, m.t)], T * 10 + m.ph, X, Y, m.face, D.k, m.mort ? "opacity(.4)" : null);
     if (m.pv > 0 && m.pv < m.pvMax) list.push([Y + 1, () => barre(X, Y - D.fy * D.k - 14, m.t === "troll" ? 120 : 60, m.pv / m.pvMax, "#e84a2a")]); }
   // alerte : flèche rouge sur l'entrée de la prochaine vague
-  if (S.alerte) for (const d of S.alerte){ const [a] = CHEMINS[d], [X, Y] = P(Math.max(.4, Math.min(W - .4, a[0])), Math.max(.4, Math.min(H - .4, a[1]))), bb = Math.abs(Math.sin(T * 5)) * 18;
+  if (S.alerte) for (const d of S.alerte){ const [a] = S.c.chemins[d], [X, Y] = P(Math.max(.4, Math.min(W - .4, a[0])), Math.max(.4, Math.min(H - .4, a[1]))), bb = Math.abs(Math.sin(T * 5)) * 18;
     list.push([1e9, () => { x.fillStyle = "#e8301e"; x.strokeStyle = "#3a1408"; x.lineWidth = 5; x.beginPath(); x.moveTo(X - 26, Y - 50 - bb); x.lineTo(X + 26, Y - 50 - bb); x.lineTo(X, Y - 16 - bb); x.closePath(); x.fill(); x.stroke(); x.fillRect(X - 9, Y - 86 - bb, 18, 36); x.strokeRect(X - 9, Y - 86 - bb, 18, 36); }]); }
   for (const f of S.fx){ const t = tS - f.t0; if (t < 0) continue;
     if (f.k === "pouf"){ const [X, Y] = P(f.x, f.y); list.push([1e9, () => x.drawImage(f8(L.poussiere, 64, t * 14), Math.round(X - 48), Math.round(Y - 80), 96, 96)]); }
@@ -326,12 +449,16 @@ function frame(now){
 }
 
 /* ---------- menus ---------- */
-const ouvrirMenu = () => { pause = true; $("#menu").hidden = false; $("#bJouer").textContent = S && !S.fini ? "REPRENDRE" : "JOUER"; };
+let enJeu = false;   // une vraie partie a commencé (sinon le fond du menu)
+function ouvrirMenu(){ pause = true; fermerAnneau(); $("#menu").hidden = false; $("#bReprendre").hidden = !(enJeu && S && !S.fini); }
 $("#bMenu").addEventListener("click", ouvrirMenu);
-$("#bJouer").addEventListener("click", () => { if (!S || S.fini){ finVue = false; nouvelle(); } $("#menu").hidden = true; pause = false; last = performance.now(); });
-$("#bNouvelle").addEventListener("click", () => { finVue = false; nouvelle(); $("#menu").hidden = true; pause = false; });
+$("#bReprendre").addEventListener("click", () => { $("#menu").hidden = true; pause = false; last = performance.now(); });
+$("#bJouer").addEventListener("click", () => { ouvrirNiveaux(); });
+$("#bJouerNiv").addEventListener("click", () => { enJeu = true; });
+$("#bSuivant").addEventListener("click", () => { nouvelle(niveau + 1, false); pause = false; enJeu = true; });
+$("#bFinNiveaux").addEventListener("click", () => ouvrirNiveaux());
 $("#bAide").addEventListener("click", () => { $("#aideTexte").hidden = !$("#aideTexte").hidden; });
-$("#bRejouer").addEventListener("click", () => { finVue = false; nouvelle(); pause = false; });
+$("#bRejouer").addEventListener("click", () => { nouvelle(); pause = false; });
 $("#bFinLabo").addEventListener("click", () => ouvrirLabo());
 $("#zoom").addEventListener("click", () => { loin = !loin; $("#zoom").textContent = loin ? "+" : "−"; taille(); });
 $("#vit").addEventListener("click", () => { const L0 = [1, 2, 4, 0, .5]; vitesse = L0[(L0.indexOf(vitesse) + 1) % L0.length]; maj(); });
@@ -368,7 +495,7 @@ $("#reglages").addEventListener("input", e => { const i = e.target; if (!i.datas
 function ouvrirLabo(){ pause = true; formulaire(); majJournal(); majLabo(); $("#labo").hidden = false; }
 function fermerLabo(){ $("#labo").hidden = true; if ($("#menu").hidden && (!S || !S.fini)) { pause = false; last = performance.now(); } }
 $("#bLabo").addEventListener("click", ouvrirLabo);
-$("#bLaboMenu").addEventListener("click", () => { $("#menu").hidden = true; ouvrirLabo(); });
+$("#bLaboMenu").addEventListener("click", () => { $("#menu").hidden = true; nouvelle(4, true); enJeu = true; pause = false; last = performance.now(); });
 $("#bFermer").addEventListener("click", fermerLabo);
 function majLabo(){
   document.querySelectorAll("#vitesses button").forEach(b => b.classList.toggle("on", Number(b.dataset.v) === vitesse));
@@ -385,15 +512,15 @@ $("#tInvincible").addEventListener("click", () => { if (S){ S.triche.invincible 
 $("#tTout").addEventListener("click", () => { if (S){ S.triche.tout = !S.triche.tout; majLabo(); maj(); } });
 $("#bRiche").addEventListener("click", () => { if (S){ for (const r of RES) S.res[r] += 100; maj(); dire("+100 DE TOUT", true); } });
 $("#bVague").addEventListener("click", () => { if (S){ B.vagueMaintenant(S); fermerLabo(); } });
-$("#bAppliquer").addEventListener("click", () => { MODS = lireFormulaire(); ecrire("bastion.labo", MODS); finVue = false; nouvelle(); formulaire(); majLabo(); dire("NOUVEAUX REGLAGES", true); });
-$("#bOrigine").addEventListener("click", () => { MODS = {}; ecrire("bastion.labo", MODS); formulaire(); majLabo(); finVue = false; nouvelle(); dire("REGLAGES D'ORIGINE", true); });
+$("#bAppliquer").addEventListener("click", () => { MODS = lireFormulaire(); ecrire("bastion.labo", MODS); nouvelle(4, true); enJeu = true; formulaire(); majLabo(); dire("NOUVEAUX REGLAGES", true); });
+$("#bOrigine").addEventListener("click", () => { MODS = {}; ecrire("bastion.labo", MODS); formulaire(); majLabo(); nouvelle(4, true); enJeu = true; dire("REGLAGES D'ORIGINE", true); });
 $("#bCopier").addEventListener("click", () => { const t = JSON.stringify(lireFormulaire()); $("#texte").value = t; try { navigator.clipboard.writeText(t).then(() => dire("REGLAGES COPIES", true), () => {}); } catch (e) {} });
-$("#bCharger").addEventListener("click", () => { try { const m = JSON.parse($("#texte").value); MODS = B.ecarts(B.reglages(m)); ecrire("bastion.labo", MODS); formulaire(); majLabo(); finVue = false; nouvelle(); dire("REGLAGES CHARGES", true); } catch (e) { dire("TEXTE ILLISIBLE"); } });
+$("#bCharger").addEventListener("click", () => { try { const m = JSON.parse($("#texte").value); MODS = B.ecarts(B.reglages(m)); ecrire("bastion.labo", MODS); formulaire(); majLabo(); nouvelle(4, true); enJeu = true; dire("REGLAGES CHARGES", true); } catch (e) { dire("TEXTE ILLISIBLE"); } });
 // le simulateur : 30 parties jouées par le robot avec les réglages du formulaire
 $("#bSimuler").addEventListener("click", () => {
   const m = lireFormulaire(), res = [], NB = 30, out = $("#simu"); let g = 0;
   out.textContent = "Simulation…";
-  const tranche = () => { const t0 = performance.now(); while (g < NB && performance.now() - t0 < 40){ g++; res.push(B.simuler(m, g * 7919)); }
+  const tranche = () => { const t0 = performance.now(); while (g < NB && performance.now() - t0 < 40){ g++; res.push(B.simuler(m, g * 7919, 1400, 4)); }
     out.textContent = `Simulation… ${g}/${NB}`; if (g < NB) return setTimeout(tranche, 0);
     const v = res.filter(r => r.fini === "victoire").length, moy = f => res.reduce((s, r) => s + f(r), 0) / NB, nbV = B.reglages(m).vagues.nombre;
     const parVague = []; for (let w = 1; w <= nbV; w++){ const atteint = res.filter(r => r.vague >= w).length, tombe = res.filter(r => r.fini === "defaite" && r.vague === w).length; parVague.push(`V${w} : ${atteint} y arrivent, ${tombe} perdues`); }
@@ -409,7 +536,9 @@ function majJournal(){ $("#journal").innerHTML = tableJournal(); }
 
 /* ---------- démarrage ---------- */
 taille();
-Promise.all(NOMS.map(charge)).then(() => { fond(); pret = true; nouvelle(); maj(); $("#chargement").hidden = true; });
+Promise.all(NOMS.map(charge)).then(() => {
+  ICONES.ouvrier = vignette("ouvrier-repos", 192); ICONES.tourbois = vignette("tourbois", 256);
+  pret = true; nouvelle(1, false); if (tuto){ tuto = null; $("#tuto").hidden = true; } $("#banniere").classList.remove("on"); $("#chargement").hidden = true; });
 requestAnimationFrame(frame);
-window.Bastion = {get S(){ return S; }, B, nouvelle, toucher, avance: t => { for (let i = 0; i < t * 20; i++){ if (robotOn) B.robot(S, .05); B.pas(S, .05); } }, set robot(v){ robotOn = v; }, ouvrirLabo, fermerLabo};   // pour les essais
+window.Bastion = {get S(){ return S; }, get tuto(){ return tuto; }, get anneau(){ return anneau; }, B, nouvelle, toucher, ouvrirNiveaux, finTuto, avance: t => { for (let i = 0; i < t * 20; i++){ if (robotOn) B.robot(S, .05); B.pas(S, .05); } }, set robot(v){ robotOn = v; }, ouvrirLabo, fermerLabo};   // pour les essais
 })();

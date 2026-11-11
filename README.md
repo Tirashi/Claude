@@ -279,13 +279,13 @@ Le retour d'Ulysse en 3D : on penche le téléphone pour guider sa galère sur l
 - **Sons** : une lyre et une flûte qui improvisent doucement (plus inquiètes face aux dangers, plus lentes chez les morts), la mer en fond, les rames, le chant des Sirènes… Bouton SON : OUI/NON sur l'écran titre et dans la pause.
 - Le total d'étoiles et le plateau du jour font partie des classements et du transfert de sauvegardes.
 
-## Bastion (démo : le laboratoire)
-Un château au milieu de la prairie, trois chemins par où viennent les gobelins, les gnolls et un troll. Graphismes Tiny Swords (Pixel Frog).
+## Bastion (démo)
+Un château au milieu de la prairie, des chemins par où viennent les gobelins, les gnolls et les trolls. Graphismes Tiny Swords (Pixel Frog).
 
-- **Ouvriers** : ils coupent le bois, minent l'or et ramènent la viande des moutons ; les boutons du bas déplacent un ouvrier d'un métier à l'autre ou en recrutent un nouveau.
-- **Bâtir** : toucher un emplacement puis un bâtiment ; un ouvrier prend son marteau. Maison (plus de population), caserne (chevaliers), archerie (archers), monastère (moines), atelier (catapulte), tour (archers, moines ou catapulte en garnison, qui portent plus loin et ne craignent pas le corps à corps). Les lanciers se recrutent dès le départ.
-- **Escouades** : toucher une carte pour recruter, une escouade puis le sol pour l'envoyer ; le jeu ralentit pendant le choix. Les escouades gagnent des grades (vétérans, élite, héros) et se reforment près du château contre de la viande.
-- **LABO** : vitesse, triches, un robot qui joue tout seul, un simulateur de 30 parties et tous les réglages du jeu, pour trouver le bon équilibre.
+- **Tout sur la carte** : touche le château ou un bâtiment, ses boutons sortent autour de lui (recruter, un ouvrier de plus, améliorer) ; touche un cercle pour bâtir (maisons, caserne, archerie, monastère, atelier au village ; tours le long des chemins). Les étiquettes posées sur le bois, l'or et les moutons règlent le nombre d'ouvriers.
+- **Escouades** : touche une escouade puis le sol pour l'envoyer ; archers, moines et catapulte montent dans les tours ; grades, promotions (cavaliers, épéistes), tenir la position.
+- **Six niveaux**, de la clairière (une route, des gobelins) à la forteresse (trois routes, deux trolls), avec des étoiles ; un tuto avec le roi au premier niveau.
+- **LABO** : bac à sable avec vitesse, triches, robot, simulateur et tous les réglages.
 
 ## Dragon Simulator
 L'idée d'un garçon de 7 ans : un dragon s'élance de son nid, en haut d'une tour, et plane au-dessus de la ville, vu de profil, en 3D. Le vol est sans fin : il s'arrête quand le dragon touche le sol. Il part doucement et prend de la vitesse en volant.

@@ -58,6 +58,8 @@ Nouvelle idée de l'utilisateur : un jeu de défense à la Bad North, médiéval
 
 **Retours du soir (07/11).** Messages qui passent à la ligne, population bien visible, maisons améliorables, flèche verte sur ce qui s'améliore, effet de soin recalé, TENIR LA POSITION ; cache v96.
 
+**Session 4 (11/11).** Maquette 13 (interface) : direction **B** choisie ; plus de bandeau, anneaux sur la carte (château, bâtiments, cercles), étiquettes des ouvriers, 6 niveaux (`NIVEAUX`), écran des niveaux avec étoiles, tuto du roi au niveau 1, LABO en bac à sable ; zoom de départ sur PC ; cache v101.
+
 ## Essais du 06/11
 Confirmés sur le téléphone : Amiral !, Escadrille !, Thé des Jarls, Capitaine du port, Mot d'or, Magasinier, Mineur de l'espace (aussi au PC), Dragon Simulator (équilibrage gardé) et l'accueil en fiches (sauf le transfert de sauvegardes, pas encore essayé). Demande : refaire un peu la section Quoi de neuf de l'accueil. Détails : [`essais.md`](essais.md).
 
