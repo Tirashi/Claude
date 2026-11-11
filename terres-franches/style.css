@@ -41,6 +41,8 @@ img, canvas{image-rendering:pixelated}
 .res span small.moins{color:var(--rouge)}
 .res .ic{width:18px; height:18px; margin:-3px 0}
 .res span{position:relative}
+.res span b{min-width:2.5em; text-align:center; font-variant-numeric:tabular-nums}   /* largeur fixe : la vignette ne bouge plus quand le nombre change */
+.res span small.tx{min-width:3.4em; text-align:left; font-variant-numeric:tabular-nums}
 /* jauge de remplissage sous chaque ressource (piste sombre, remplissage vert → orange → rouge) */
 .res .jauge{position:absolute; left:2px; right:2px; bottom:-5px; height:4px; background:rgba(40,25,10,.55); border-radius:2px; overflow:hidden}
 .res .jauge i{display:block; height:100%; background:#6aa83a}
