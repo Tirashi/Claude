@@ -16,7 +16,8 @@ const RES = {
   farine:   {nom: "FARINE"},
   pain:     {nom: "PAIN", vivres: 2},
   laine:    {nom: "LAINE"},
-  vetements:{nom: "VETEMENTS"}
+  vetements:{nom: "VETEMENTS"},
+  armes:    {nom: "ARMES"}          // épées et boucliers de la forge, pour la garde (pillards, 11/11)
 };
 
 // métiers : produit (débit), ou transforme (entree → sortie, débit de sortie) ; places = où ils travaillent
@@ -31,7 +32,10 @@ const METIERS = {
   meunier:   {nom: "MEUNIER",   entree: {ble: 2},   sortie: "farine", debit: .4, places: {moulin: 1}},
   boulanger: {nom: "BOULANGER", entree: {farine: .5, bois: .1}, sortie: "pain", debit: .6, places: {four: 1}},
   berger:    {nom: "BERGER",    produit: "laine",   debit: .12, places: {bergerie: 2},       seuil: 4, use: .85},
-  tisserand: {nom: "TISSERAND", entree: {laine: 2}, sortie: "vetements", debit: .1, places: {atelier: 1}}
+  tisserand: {nom: "TISSERAND", entree: {laine: 2}, sortie: "vetements", debit: .1, places: {atelier: 1}},
+  // la garde ne produit rien : elle défend le village contre les pillards (RAIDS) ; le forgeron fait les armes de la garde
+  garde:     {nom: "GARDE",     places: {caserne: 3}, defend: true},
+  forgeron:  {nom: "FORGERON",  entree: {bois: .5, pierre: 1}, sortie: "armes", debit: .02, places: {forge: 1}}
 };
 
 // bâtiments : coût de base × croissance^nombre déjà construits ; travail = durée du chantier ;
@@ -49,14 +53,17 @@ const BATIMENTS = {
   bergerie: {desc: "2 places de berger : de la laine.", nom: "BERGERIE",  cout: {bois: 90, pierre: 20},  croit: 1.5,  travail: 50,  terrain: "terre", statut: 2, pres: {pre: 6, logis: -1, fertile: -2}},
   grenier:  {desc: "Garde la nourriture : chaque niveau double la place des baies, du poisson, du blé, de la farine et du pain.", nom: "GRENIER", cout: {bois: 50, baies: 10}, croit: 2, travail: 30, terrain: "reserve", place: "S", statut: 0, niveaux: 4, stock: "nourriture", pres: {champ: 3, fertile: 2, feu: 1}},
   aire:     {desc: "Garde le bois, la pierre, la laine et les vêtements : chaque niveau double la place.", nom: "AIRE DE STOCKAGE", cout: {bois: 40}, croit: 2, travail: 25, terrain: "reserve", place: "R", statut: 0, niveaux: 5, stock: "materiaux", pres: {feu: 1, eau: 1}},
+  tour:     {desc: "Un guetteur voit venir les pillards de loin : l'alerte sonne plus tôt et la garde, prévenue, se bat mieux.", nom: "TOUR DE GUET", cout: {bois: 120, pierre: 40}, croit: 2, travail: 40, terrain: "guet", statut: 1, niveaux: 1, pres: {feu: 1}},
+  caserne:  {desc: "3 places de garde par niveau : ils défendent les réserves contre les pillards.", nom: "CASERNE", cout: {bois: 150, pierre: 80}, croit: 2.2, travail: 60, terrain: "garnison", statut: 1, niveaux: 2, pres: {feu: 1}},
+  forge:    {desc: "1 forgeron : bois et pierre deviennent des armes ; une garde armée frappe plus fort et se blesse moins.", nom: "FORGE", cout: {bois: 160, pierre: 120}, croit: 1.6, travail: 60, terrain: "garnison", statut: 2, niveaux: 1, pres: {caserne: 4}},
   atelier:  {desc: "1 tisserand : la laine devient des vêtements.", nom: "ATELIER",   cout: {bois: 80, pierre: 60},  croit: 1.6,  travail: 60,  terrain: "terre", statut: 2, pres: {logis: 3, bergerie: 2, feu: 1, fertile: -4, pre: -2}}
 };
 
 // stockage : ce que la colonie peut garder de chaque ressource ; un bâtiment de stockage (grenier, aire) double la place à chaque niveau
 //   (décision du 09/11 : on essaie une vraie limite ; on l'enlèvera si c'est trop contraignant)
 const STOCK = {
-  base: {bois: 300, pierre: 200, baies: 100, poisson: 100, ble: 100, farine: 60, pain: 60, laine: 60, vetements: 40},
-  groupes: {nourriture: ["baies", "poisson", "ble", "farine", "pain"], materiaux: ["bois", "pierre", "laine", "vetements"]}
+  base: {bois: 300, pierre: 200, baies: 100, poisson: 100, ble: 100, farine: 60, pain: 60, laine: 60, vetements: 40, armes: 10},
+  groupes: {nourriture: ["baies", "poisson", "ble", "farine", "pain"], materiaux: ["bois", "pierre", "laine", "vetements", "armes"]}
 };
 
 // l'hiver (une saison sur quatre, 20 min chacune ; la partie commence au printemps) : on se chauffe et on mange plus ;
@@ -74,7 +81,21 @@ const STATUTS = [
 const LOI = {nom: "CHARTE DU VILLAGE", pop: 20, cout: {bois: 2000, pierre: 1200, pain: 500, vetements: 60}};
 
 // carte de l'ère 1 (24 × 24) : parcelles par terrain ; le feu de camp (logement 2) est déjà là
-const CARTE = {terre: 14, roche: 2, rive: 2, reserve: 2, feu: 2};
+const CARTE = {terre: 14, roche: 2, rive: 2, reserve: 2, garnison: 2, guet: 1, feu: 2};
+
+// les pillards (décisions du 09/11) : aucun au campement ; une bande de temps en temps, plus forte quand la colonie grandit ;
+//   intervalle[statut] = [min, max] secondes entre deux bandes ; premier = délai après être devenu hameau ;
+//   approche = secondes de marche vers les réserves (les villageois s'abritent : les récolteurs ne récoltent plus) ;
+//   annonce = secondes d'alerte en plus avec une tour de guet (la garde prévenue se bat mieux : × prevenu) ;
+//   force de la bande = (base + parHab × habitants) × statut[statut] × (1 ± alea) ;
+//   vol = part du stock pas à l'abri qu'ils emportent ; abri = part à l'abri par niveau du grenier ou de l'aire (au plus abriMax) ;
+//   garde : force de chacun, × arme s'il a une arme, part au plus blessée après un combat (÷ 2 avec une arme), guérison en secondes
+const RAIDS = {
+  premier: 12 * 60, intervalle: [null, [30 * 60, 45 * 60], [20 * 60, 30 * 60]], approche: 40, annonce: 60,
+  force: {base: 4, parHab: .6, statut: [0, 1, 1.6], alea: .25},
+  vol: .2, abri: .1, abriMax: .8,
+  garde: {force: 3, arme: 1.5, prevenu: 1.5, blesse: .5, guerison: 5 * 60}
+};
 
 // villageois : un nouveau coûte des vivres (pris dans n'importe quelle nourriture) et du bois, × croit^recrutés
 const RECRUTER = {vivres: 40, bois: 20, croit: 1.15};
@@ -116,6 +137,11 @@ const ORDONNANCES = {
   accueil:    {nom: "DROIT D'ACCUEIL",    type: "ordonnance", desc: "Deux habitants de plus que ne le permet le statut (s'il y a des toits).", effet: {pop: 2}, niveaux: 3, cout: {bois: 300, pierre: 150, pain: 40}, croit: 2.2, statut: 2},
   forces:     {nom: "FORCES DU PIONNIER", type: "equipement", desc: "Toucher la bergerie rapporte de la laine.", effet: {toucherLaine: 1}, niveaux: 1, cout: {bois: 200, pierre: 80}, croit: 1, statut: 2},
   metiers:    {nom: "METIERS A TISSER",   type: "equipement", desc: "Le tisserand fait plus de vêtements ; les bergers tondent mieux.", effet: {m_tisserand: .2, m_berger: .1}, niveaux: 3, cout: {bois: 200, pierre: 100}, croit: 2, statut: 2},
+  serrures:   {nom: "SERRURES ET CADENAS", type: "equipement", desc: "Les réserves ferment à clé : 10 % de plus du stock à l'abri des pillards.", effet: {abri: .1}, niveaux: 3, cout: {bois: 120, pierre: 60}, croit: 2, statut: 1},
+  palissade:  {nom: "PALISSADE",          type: "ordonnance", desc: "Une palissade autour du village : les bandes arrivent essoufflées (10 % moins fortes).", effet: {palissade: .1}, niveaux: 3, cout: {bois: 250, pierre: 40}, croit: 2, statut: 1},
+  guetteurs:  {nom: "GUETTEURS",          type: "ordonnance", desc: "Des guetteurs à la tour : l'alerte sonne 30 secondes plus tôt.", effet: {guet: 30}, niveaux: 2, cout: {bois: 100, poisson: 60}, croit: 2, statut: 1},
+  exercice:   {nom: "ENTRAINEMENT",       type: "ordonnance", desc: "La garde s'entraîne chaque jour : 20 % plus forte.", effet: {garde: .2}, niveaux: 3, cout: {bois: 150, pain: 30}, croit: 2.1, statut: 1},
+  soins:      {nom: "SOINS ET ONGUENTS",  type: "ordonnance", desc: "Les gardes blessés guérissent plus vite.", effet: {soins: .25}, niveaux: 2, cout: {baies: 120, bois: 80}, croit: 2, statut: 1},
   hospitalite:{nom: "HOSPITALITE",        type: "ordonnance", desc: "Les nouveaux venus coûtent moins cher à accueillir.", effet: {recrue: .1}, niveaux: 3, cout: {pain: 60, bois: 200}, croit: 2, statut: 2}
 };
 
@@ -125,7 +151,7 @@ const MARCHE = {vitesse: 1.7, route: 1.5};
 // hors ligne : la production continue, bien plus lentement, et plafonnée
 const HORS_LIGNE = {plafond: 4 * 3600, rendement: .25};   // décision du 08/11 : peu au début ; des Lois l'augmenteront
 
-const api = {ORDONNANCES, MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
+const api = {RAIDS, ORDONNANCES, MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresDonnees = api;
 })();

@@ -8,10 +8,11 @@ const T = C.T, MW = C.W * T, MH = C.H * T, CLE = "terres.partie";
 const cv = document.getElementById("cv"), x = cv.getContext("2d");
 
 /* ---------- images ---------- */
-const decor = new Image(), vill = new Image();
-let charges = 0; const fini = () => { if (++charges === 2) demarrer(); };
-decor.onload = vill.onload = fini; decor.onerror = vill.onerror = fini;
-decor.src = "img/decor.png"; vill.src = "img/villageois.png";
+const decor = new Image(), vill = new Image(), sold = new Image();   // sold : pillards et gardes (soldats.js)
+let charges = 0; const fini = () => { if (++charges === 3) demarrer(); };
+decor.onload = vill.onload = sold.onload = fini; decor.onerror = vill.onerror = sold.onerror = fini;
+decor.src = "img/decor.png"; vill.src = "img/villageois.png"; sold.src = "img/soldats.png";
+const SOL = window.TerresSoldats || {pillards: 4, gardes: 3};
 const ok = () => decor.naturalWidth > 0;
 let planche = decor, saisonVue = 1;   // planche = le décor retouché pour la saison (vie.js)
 const V = window.TerresVie;
@@ -28,7 +29,7 @@ function piece(n){
   const a = AT[n], c = document.createElement("canvas"); c.width = a[2]; c.height = a[3];
   c.getContext("2d").drawImage(decor, a[0], a[1], a[2], a[3], 0, 0, a[2], a[3]); return pieces[n] = c;
 }
-const ICONE = {bois: "i-bois", pierre: "i-pierre", baies: "i-baies", poisson: "i-poisson", ble: "i-ble", farine: "i-farine", pain: "i-pain", laine: "i-laine", vetements: "i-tissu", vivres: "i-baies"};
+const ICONE = {bois: "i-bois", pierre: "i-pierre", baies: "i-baies", poisson: "i-poisson", ble: "i-ble", farine: "i-farine", pain: "i-pain", laine: "i-laine", vetements: "i-tissu", armes: "i-armes", vivres: "i-baies"};
 const icones = {};
 function icone(r){
   if (!icones[r] && ok()){
@@ -85,6 +86,7 @@ function planterArbres(){
 // le pied d'un arbre (ellipse de demi-largeur r) est-il loin de l'eau ?
 function piedSec(X, Y, r){
   for (const [dx, dy] of [[-r, 0], [r, 0], [0, -6], [0, 10], [-r * .7, 8], [r * .7, 8], [0, 0]]) if (C.case_(Math.floor((X + dx) / T), Math.floor((Y + dy) / T)) === "~") return false;
+  for (const dy of [0, -1, -2]) for (const dx of [-1, 0, 1]) if (/[KLG]/.test(C.case_(Math.floor(X / T) + dx, Math.floor(Y / T) + dy))) return false;   // pas d'arbre sur (ni devant) la caserne, la forge et la tour, prises sur la forêt
   return true;
 }
 // le sol, redessiné quand une rue, un bâtiment ou le statut change
@@ -202,7 +204,7 @@ function champ(L, t, i){
     x.drawImage(planche, at[0], at[1] + y, at[2], 2, X + dx, Y + y * H / at[3], W, 2 * H / at[3] + .5); }
 }
 // fumée : haut de la cheminée, en px de l'image (repérés pour la maquette 7)
-const CHEMINEES = {four: [35, 31], chaume3: [74.5, 1], chaume4: [74, 10], colomb1: [77.5, 7], colomb2: [63, 21], pierre2: [63, 19], pierre3: [15.5, 6], pierre5: [19, 2]};
+const CHEMINEES = {four: [35, 31], forge: [22, 4], chaume3: [74.5, 1], chaume4: [74, 10], colomb1: [77.5, 7], colomb2: [63, 21], pierre2: [63, 19], pierre3: [15.5, 6], pierre5: [19, 2]};
 function fumee(n, X, Y, k, t, gris){
   const c = CHEMINEES[n] || (CHEMINEE_AJOUT[n] && [CHEMINEE_AJOUT[n][0], CHEMINEE_AJOUT[n][1] - 15]), a0 = AT[n]; if (!c || !a0) return;
   const X0 = X - a0[2] * k / 2 + c[0] * k, Y0 = Y - a0[3] * k + c[1] * k, w = vent(X, Y, t);
@@ -276,7 +278,7 @@ function bergerie(L, t){
   for (let k = 0; k < 3; k++){ const mx = X + 20 + k * 26 + Math.sin(t * .2 + k * 2) * 8, my = Y + 70 + (k % 2) * 10; spr("mouton-broute", mx, my, .32, t * 6 + k * 3, 12, Math.sin(t * .2 + k * 2 + 1.5) < 0); }
 }
 const MAISONS = {cabane: ["chaume1", "chaume2", "chaume3", "chaume4", "chaume5"], maison: ["colomb1", "colomb2", "colomb3", "colomb4", "pierre1", "pierre2", "pierre3", "pierre5"]};
-const SPRITE = {four: ["four", 1], atelier: ["hangar", 1], moulin: ["moulin1", .5]};
+const SPRITE = {four: ["four", 1], atelier: ["hangar", 1], moulin: ["moulin1", .5], tour: ["tour", .62], caserne: ["caserne", .72], forge: ["forge", .74]};
 function spriteDe(b, id){ if (MAISONS[b]){ const l = MAISONS[b]; return [l[id.charCodeAt(0) % l.length], 1]; } return SPRITE[b] || null; }
 
 /* ---------- les villageois ---------- */
@@ -297,6 +299,12 @@ function lpc(a, X, Y, k){
   }
   if (a.anim === "repos"){ const f = Math.floor(a.f / 4) % 2; x.drawImage(vill, 576 + f * 64, ry + row * 64, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k); return; }
   const f = 1 + Math.floor(a.f) % 8; x.drawImage(vill, f * 64, ry + row * 64, 64, 64, Math.round(X - 32 * k), Math.round(Y - 60 * k), 64 * k, 64 * k);
+}
+// un pillard (k < SOL.pillards) ou un garde (k = SOL.pillards + n) de soldats.png : marche, ou coup de lance (a.anim === "coup")
+function soldat(k, a, X, Y, sc){
+  const ry = k * 256, row = {h: 0, g: 1, b: 2, d: 3}[a.dir] ?? 2;
+  const sx = a.anim === "coup" ? 576 + (Math.floor(a.f) % 8) * 64 : a.anim === "repos" ? 0 : (1 + Math.floor(a.f) % 8) * 64;
+  x.drawImage(sold, sx, ry + row * 64, 64, 64, Math.round(X - 32 * sc), Math.round(Y - 60 * sc), 64 * sc, 64 * sc);
 }
 const PRODUIT = m => DON.METIERS[m].produit || DON.METIERS[m].sortie;
 const RAPPORTE = {bucheron: 1, cueilleur: 1, pecheur: 1, carrier: 1};      // vont déposer au feu
@@ -338,7 +346,11 @@ function regarder(a, xx, yy){   // tourné vers la forêt, l'eau ou le rocher vo
   for (const [dx, dy, d] of [[-1, 0, "g"], [1, 0, "d"], [0, -1, "h"], [0, 1, "b"]]){ const c = C.case_(xx + dx, yy + dy); if (c === cible || (cible instanceof RegExp && cible.test(c))){ a.dir = d; return; } }
 }
 function bouger(a, dt){
-  a.f += dt * (a.anim === "travail" ? 8 : 10); a.t += dt;
+  a.f += dt * (a.anim === "travail" || a.anim === "coup" ? 8 : 10); a.t += dt;
+  if (raidVisible() && a.job !== "garde" && !a.abri){ a.abri = true; a.porte = null; a.apres = null; marcher(a, abriDe(a), () => { a.etat = "cache"; }); }   // on court se mettre à l'abri
+  if (a.abri && !raidVisible()){ a.abri = false; a.etat = "pret"; a.x = (abriDe(a)[0] + .5) * T; a.y = (abriDe(a)[1] + .5) * T; }
+  if (a.etat === "cache") return;
+  if (a.job === "garde" && a.etat !== "marche"){ garder(a); return; }
   if (a.etat === "marche"){
     const p = a.chemin[0]; if (!p){ a.etat = "arrive"; return; }
     const cx = Math.floor(a.x / T), cy = Math.floor(a.y / T), rue = ROUTES.cases.has(cy * C.W + cx) || C.surPlace(cx, cy, S.statut);
@@ -368,9 +380,81 @@ function bouger(a, dt){
     else a.etat = "pret";
   }
 }
+/* ---------- les pillards (règles : R.pillards dans regles.js) ---------- */
+// la bande est visible pendant l'alerte et l'approche, puis tant qu'elle repart ; les villageois restent à l'abri jusqu'à son départ
+let BANDE = null;
+const raidVisible = () => !!(S.raid && S.raid.phase === "approche") || !!(BANDE && BANDE.etat !== "fuite");
+// l'abri d'un villageois : la porte d'un logis (cabane, maison), sinon la tente
+function abriDe(a){
+  const logis = Object.keys(S.lots).filter(id => (S.lots[id] === "cabane" || S.lots[id] === "maison") && S.bat[S.lots[id]] && !S.chantiers.some(c => c.lot === id));
+  return logis.length ? C.porte(S, logis[a.i % logis.length]) : [C.TENTE[0], C.TENTE[1] + 1];
+}
+// la cible des pillards : devant l'aire de stockage et le grenier (sinon le feu)
+function cibleBande(){
+  const ids = Object.keys(S.lots).filter(id => (S.lots[id] === "aire" || S.lots[id] === "grenier") && S.bat[S.lots[id]]);
+  return ids.length ? ids.map(id => C.porte(S, id)) : [[C.FEU[0] - 1, C.FEU[1] + 1]];
+}
+const caserne = () => { const id = Object.keys(S.lots).find(k => S.lots[k] === "caserne"); return id && S.bat.caserne ? C.porte(S, id) : null; };
+// un garde : blessé, il se soigne à la caserne ; pendant un raid, il court aux réserves et se bat ; sinon il fait sa ronde
+function garder(a){
+  const les = AG.filter(b => b.job === "garde"), k = les.indexOf(a), cs = caserne();
+  if (a.etat === "dedans" && a.t < a.fin) return;
+  if (k >= R.gardesValides(S)){ if (cs) marcher(a, cs, () => { a.etat = "dedans"; a.fin = a.t + 3; }); else { a.etat = "dedans"; a.fin = a.t + 3; } return; }   // blessé : il se soigne à la caserne
+  if (S.raid.phase || (BANDE && BANDE.etat === "melee")){
+    const cb = cibleBande(), c = cb[k % cb.length], ici = [c[0] + (k % 2 ? 1 : -1), c[1] + 1];
+    if (Math.hypot(a.x - (ici[0] + .5) * T, a.y - (ici[1] + .5) * T) > 20){ marcher(a, ici, () => { a.etat = "poste"; }); return; }
+    const p = BANDE && BANDE.membres.find(m => Math.hypot(m.x - a.x, m.y - a.y) < 70);
+    a.etat = "poste"; a.anim = p ? "coup" : "repos"; if (p) a.dir = Math.abs(p.x - a.x) > Math.abs(p.y - a.y) ? (p.x > a.x ? "d" : "g") : (p.y > a.y ? "b" : "h");
+    return;
+  }
+  if (a.etat === "ronde" && a.t < a.fin) return;
+  // la ronde : de la caserne à la place et aux réserves
+  const pts = [cs, ...cibleBande(), surPlace(a)].filter(Boolean), q = pts[Math.floor(hash(a.i, a.t | 0) * pts.length)];
+  marcher(a, q, () => { a.etat = "ronde"; a.anim = "repos"; a.dir = "b"; a.fin = a.t + 3 + hash(a.i, 3) * 4; });
+}
+// la bande : elle part de la lisière (sud-ouest) au début de l'approche et arrive aux réserves à l'heure du combat ; puis elle repart
+function bande(dt, L){
+  const ph = S.raid && S.raid.phase;
+  if (!BANDE && ph === "approche"){
+    const n = Math.max(2, Math.min(7, Math.round((S.raid.force || 8) / 4))), cb = cibleBande(), duree = Math.max(5, S.raid.proch - S.t);
+    BANDE = {n0: S.raid.n, etat: "approche", t: 0, membres: []};
+    for (let k = 0; k < n; k++){
+      const c = cb[k % cb.length], but = [c[0] + (k % 3) - 1, c[1] + 1 + (k > 2 ? 1 : 0)];
+      const ch = C.chercher(ENTREE, (u, v) => u === but[0] && v === but[1], ROUTES.cases, null) || [ENTREE, but];
+      const pts = ch.map(([u, v]) => [(u + .5) * T + (hash(k, u) - .5) * 10, (v + .5) * T + (hash(v, k) - .5) * 8]);
+      let lg = 0; for (let i = 1; i < pts.length; i++) lg += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      BANDE.membres.push({k: k % SOL.pillards, x: pts[0][0] - k * 14, y: pts[0][1] + k * 6, dir: "h", f: k, anim: "marche", chemin: pts.slice(1), v: (lg + k * 14) / (duree * .9), sac: false});
+    }
+  }
+  if (!BANDE) return;
+  BANDE.t += dt;
+  if (BANDE.etat === "approche" && S.raid.n > BANDE.n0){   // le combat a eu lieu (regles.js) : on se bat un instant, puis on repart
+    const b = S.raids[S.raids.length - 1]; BANDE.bilan = b; BANDE.etat = "melee"; BANDE.fin = BANDE.t + (b && b.gardes ? 3 : .5);
+    for (const m of BANDE.membres){ m.chemin = []; m.sac = b && !b.repousse && Object.keys(b.vole).length > 0; }
+  }
+  if (BANDE.etat === "melee" && BANDE.t > BANDE.fin){
+    BANDE.etat = "fuite";
+    for (const m of BANDE.membres){
+      const dep = [Math.floor(m.x / T), Math.floor(m.y / T)], ch = C.chercher(dep, (u, v) => u === ENTREE[0] && v === ENTREE[1], ROUTES.cases, null) || [dep, ENTREE];
+      m.chemin = ch.map(([u, v]) => [(u + .5) * T, (v + .5) * T]).concat([[-2 * T, (ENTREE[1] + .5) * T]]); m.v = DON.MARCHE.vitesse * T * (BANDE.bilan && BANDE.bilan.repousse ? 2.2 : 1.6);
+    }
+  }
+  let dehors = 0;
+  for (const m of BANDE.membres){
+    m.f += dt * (m.anim === "coup" ? 8 : 10);
+    const p = m.chemin[0];
+    if (p){ const dx = p[0] - m.x, dy = p[1] - m.y, d = Math.hypot(dx, dy), v = m.v * dt; m.anim = "marche";
+      if (d <= v){ m.x = p[0]; m.y = p[1]; m.chemin.shift(); } else { m.x += dx / d * v; m.y += dy / d * v; m.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "d" : "g") : (dy > 0 ? "b" : "h"); } }
+    else if (BANDE.etat === "fuite") dehors++;
+    else { const g = AG.find(a => a.job === "garde" && a.etat === "poste" && Math.hypot(a.x - m.x, a.y - m.y) < 70); m.anim = g || BANDE.etat === "approche" ? (g ? "coup" : "repos") : "repos"; if (!g) m.dir = "h"; else m.dir = Math.abs(g.x - m.x) > Math.abs(g.y - m.y) ? (g.x > m.x ? "d" : "g") : (g.y > m.y ? "b" : "h"); }
+    L.push([m.y, () => { x.fillStyle = "rgba(20,30,10,.28)"; x.beginPath(); x.ellipse(m.x, m.y, 10, 4, 0, 0, 6.3); x.fill(); soldat(m.k, m, m.x, m.y, .75); if (m.sac) spr("sac", m.x + (m.dir === "g" ? 6 : -6), m.y - 26, .3); }]);
+  }
+  if (BANDE.etat === "fuite" && (dehors === BANDE.membres.length || BANDE.t > BANDE.fin + 60)) BANDE = null;
+}
 function dessinerAgent(a){
-  if (a.etat === "dedans") return;
+  if (a.etat === "dedans" || a.etat === "cache") return;
   x.fillStyle = "rgba(20,30,10,.28)"; x.beginPath(); x.ellipse(a.x, a.y, 10, 4, 0, 0, 6.3); x.fill();
+  if (a.job === "garde"){ soldat(SOL.pillards + a.i % SOL.gardes, a, a.x, a.y, .75); return; }
   lpc(a, a.x, a.y, .75);
   if (a.porte){ const ic = ICONE[a.porte], at = AT[ic]; if (at) x.drawImage(planche, at[0], at[1], at[2], at[3], Math.round(a.x - 8), Math.round(a.y - 58), 16, 16 * at[3] / at[2]); }
 
@@ -520,6 +604,8 @@ function batiment(b, id, t, fantome){
   spr(s[0], X, Y, s[1]); cheminee(s[0], X, Y, s[1]);
   if (!fantome && (b === "cabane" || b === "maison")) fumee(s[0], X, Y, s[1], t);
   if (!fantome && b === "four" && S.jobs.boulanger) fumee("four", X, Y, s[1], t, true);
+  if (b === "caserne") spr("ratelier", X + 34, Y + 2, .34);
+  if (!fantome && b === "forge" && S.jobs.forgeron) fumee("forge", X, Y, s[1], t, true);
 }
 function chantier(c, id, t, barre){
   const L = C.LOTS[id], X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 6, tot = DON.BATIMENTS[c.k].travail, u = 1 - c.reste / tot;
@@ -577,6 +663,7 @@ function image(now){
   for (const d of DECOR) if (vis(d.X, d.Y, 60)) L.push([d.Y, () => spr(d.n, d.X, d.Y, d.k)]);
   if (PUITS) L.push([PUITS[1], () => spr(S.statut >= 2 ? "fontaine" : "puits", PUITS[0], PUITS[1], S.statut >= 2 ? .8 : .7)]);
   for (const a of AG){ bouger(a, dt); L.push([a.y, () => dessinerAgent(a)]); }
+  bande(dt, L);
   PI.f += dt * 8; if (PI.anim === "travail" && t > PI.fin) PI.anim = "repos";
   if (!S.pop) L.push([PI.y, () => dessinerAgent(PI)]);
   V.objets(L, x, t, dt, S, AG, vis);
@@ -705,7 +792,7 @@ window.addEventListener("pagehide", sauver);
 function nouvelle(){ S = R.creer(); AG.length = 0; cleFond = ""; PL = null; sauver(); cam.x = (C.FEU[0] + .5) * T; cam.y = (C.FEU[1] + 1.5) * T; cam.zi = zoomDepart(); }
 function viser(id){ const L = C.LOTS[id]; cam.x = (L.x + L.l / 2) * T + margeD() / 2 / Z[cam.zi]; cam.y = (L.y + L.h / 2) * T + (grand.matches ? 0 : 40); }
 window.Terres = {
-  get S(){ return S; }, rang, cam, zoom, sauver, nouvelle, icone, piece, spriteDe, AT, viser, versEcran,
+  get S(){ return S; }, ICONE, rang, cam, zoom, sauver, nouvelle, icone, piece, spriteDe, AT, viser, versEcran,
   get PL(){ return PL; }, set PL(v){ PL = v; },
   avance(s){ R.pas(S, s); }, toucherCase, AG, flotte
 };

@@ -31,7 +31,8 @@ const D = S => reglages(S.mods);
 /* ---------- une partie ---------- */
 function creer(mods){
   const P = reglages(mods), S = {v: VERSION, mods: mods || {}, t: 0, res: {}, bat: {}, chantiers: [], pop: 0, jobs: {},
-    statut: 0, recrutes: 0, loi: false, ord: {}, touchers: 0, evts: [], jalons: {}, lots: {}, ordreLots: []};
+    statut: 0, recrutes: 0, loi: false, ord: {}, touchers: 0, evts: [], jalons: {}, lots: {}, ordreLots: [],
+    graine: Math.floor(Math.random() * 1e9), raid: {n: 0, proch: null, phase: null}, raids: [], blesses: []};
   for (const r in P.RES) S.res[r] = 0;
   for (const b in P.BATIMENTS) S.bat[b] = 0;
   for (const m in P.METIERS) S.jobs[m] = 0;
@@ -141,6 +142,70 @@ function moral(S){
   return {mult: m, det, famine};
 }
 
+/* ---------- les pillards (RAIDS de donnees.js) ---------- */
+// hasard reproductible : le n-ième tirage de la partie (le simulateur rejoue la même suite)
+function hasard(S, k){ let a = (S.graine + S.raid.n * 7919 + k * 104729) >>> 0; a = (a + 0x6D2B79F5) >>> 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+// part du stock d'une ressource à l'abri (niveau de sa réserve + serrures)
+function abri(S, r){ const P = D(S), g = gardien(S, r); return Math.min(P.RAIDS.abriMax, (g ? S.bat[g] : 0) * P.RAIDS.abri + eff(S, "abri")); }
+// gardes en état de se battre (les blessés se soignent) ; armés = autant que d'armes en réserve
+const blesses = S => Math.min(S.jobs.garde || 0, (S.blesses || []).length);
+const gardesValides = S => Math.max(0, (S.jobs.garde || 0) - blesses(S));
+const gardesArmes = S => Math.min(gardesValides(S), Math.floor(S.res.armes || 0));
+const prevenus = S => S.bat.tour > 0;
+const annonce = S => D(S).RAIDS.approche + (prevenus(S) ? D(S).RAIDS.annonce + eff(S, "guet") : 0);
+function forceBande(S){
+  const F = D(S).RAIDS.force, a = 1 + F.alea * (2 * hasard(S, 1) - 1);
+  return Math.round((F.base + F.parHab * S.pop) * (F.statut[S.statut] || 0) * a * Math.max(.2, 1 - eff(S, "palissade")) * 10) / 10;
+}
+function defense(S){
+  const G = D(S).RAIDS.garde, v = gardesValides(S), ar = gardesArmes(S);
+  return (v + ar * (G.arme - 1)) * G.force * (1 + eff(S, "garde")) * (prevenus(S) ? G.prevenu : 1);
+}
+// la prochaine bande (aucune au campement)
+function planifier(S, premier){
+  const P = D(S).RAIDS, iv = P.intervalle[S.statut];
+  if (!iv){ S.raid.proch = null; return; }
+  S.raid.proch = S.t + (premier ? P.premier : 0) + iv[0] + (iv[1] - iv[0]) * hasard(S, 2);
+}
+// une bande arrive aux réserves : combat, vol, blessés
+function combattre(S){
+  const P = D(S), R = P.RAIDS, f = S.raid.force || forceBande(S), d = defense(S), engages = gardesValides(S);
+  const repousse = d >= f, part = repousse ? 0 : R.vol * (1 - d / f), vole = {};
+  if (part > 0) for (const r in S.res){
+    const n = Math.floor(S.res[r] * (1 - abri(S, r)) * part); if (n >= 1){ S.res[r] -= n; vole[r] = n; }
+  }
+  // blessés : plus la bande est forte face à la garde, plus il y en a ; une arme protège
+  let nb = 0;
+  if (engages){
+    const q = Math.min(1, f / Math.max(1, d)), armes = gardesArmes(S) / engages;
+    nb = Math.min(engages, Math.round(engages * R.garde.blesse * q * (1 - armes / 2) + (hasard(S, 3) - .5) * .8));
+    const duree = R.garde.guerison * Math.max(.2, 1 - eff(S, "soins"));
+    for (let i = 0; i < Math.max(0, nb); i++) S.blesses.push(S.t + duree);
+  }
+  const bilan = {t: S.t, force: f, defense: Math.round(d * 10) / 10, gardes: engages, repousse, vole, blesses: Math.max(0, nb)};
+  S.raids.push(bilan); if (S.raids.length > 12) S.raids.shift();
+  const tot = Object.values(vole).reduce((a, b) => a + b, 0);
+  evt(S, repousse ? "LA GARDE REPOUSSE LES PILLARDS" : tot ? "LES PILLARDS ONT VOLE " + tot + " RESSOURCES" : "LES PILLARDS REPARTENT LES MAINS VIDES", repousse || !tot);
+  jalon(S, "raid" + S.raid.n);
+  S.raid.n++; S.raid.phase = null; S.raid.force = null; planifier(S);
+}
+// à chaque pas : guérisons, alerte, arrivée de la bande
+function pillards(S){
+  const P = D(S).RAIDS;
+  if (S.blesses.length){ const avant = S.blesses.length; S.blesses = S.blesses.filter(t => t > S.t); if (S.blesses.length < avant) evt(S, "UN GARDE EST GUERI", true); }
+  if (!P.intervalle[S.statut]){ S.raid.proch = null; S.raid.phase = null; return; }
+  if (S.raid.proch === null){ planifier(S, true); return; }
+  const reste = S.raid.proch - S.t;
+  if (reste <= 0){ combattre(S); return; }
+  if (reste <= annonce(S) && !S.raid.phase){
+    S.raid.force = forceBande(S); S.raid.phase = "alerte";
+    evt(S, prevenus(S) ? "LA TOUR DE GUET VOIT VENIR DES PILLARDS !" : "DES PILLARDS ARRIVENT !", false);
+  }
+  if (reste <= P.approche && S.raid.phase === "alerte") S.raid.phase = "approche";
+}
+// pendant l'approche, les villageois s'abritent : les récolteurs ne récoltent plus (les ateliers continuent)
+const abrites = S => S.raid && S.raid.phase === "approche";
+
 /* ---------- production ---------- */
 // débit total d'un métier brut (surexploitation au-delà du seuil)
 function debitBrut(M, n){
@@ -182,8 +247,9 @@ function pas1(S, dt, rend){
     S.bat[c.k]++; evt(S, P.BATIMENTS[c.k].nom + " TERMINE", true); jalon(S, c.k + S.bat[c.k]);
   }
   S.chantiers = S.chantiers.filter(c => c.reste > 0);
-  // production brute
-  for (const m in P.METIERS){ const M = P.METIERS[m]; if (M.produit && S.jobs[m]) S.res[M.produit] += debitBrut(M, S.jobs[m]) * mult * bonusMetier(S, m) * dt; }
+  pillards(S);
+  // production brute (rien pendant que les villageois s'abritent)
+  if (!abrites(S)) for (const m in P.METIERS){ const M = P.METIERS[m]; if (M.produit && S.jobs[m]) S.res[M.produit] += debitBrut(M, S.jobs[m]) * mult * bonusMetier(S, m) * dt; }
   // transformations (limitées par ce qu'il y a en réserve)
   for (const m in P.METIERS){
     const M = P.METIERS[m]; if (!M.entree || !S.jobs[m]) continue;
@@ -296,11 +362,12 @@ function promulguer(S){
 
 /* ---------- hors ligne, sauvegarde ---------- */
 function horsLigne(S, secondes){
-  const H = D(S).HORS_LIGNE, s = Math.max(0, Math.min(secondes, H.plafond)), avant = copie(S.res);
+  const H = D(S).HORS_LIGNE, s = Math.max(0, Math.min(secondes, H.plafond)), avant = copie(S.res), n0 = S.raid.n;
   pas(S, s, H.rendement);
   if (secondes > s) pas(S, secondes - s, 0);   // au-delà du plafond : le temps passe (chantiers), plus rien ne se produit
   const gains = {}; for (const r in S.res){ const g = S.res[r] - avant[r]; if (Math.abs(g) >= .5) gains[r] = Math.round(g); }
-  return {duree: s, absence: Math.max(0, secondes), plafonne: secondes > H.plafond, rendement: H.rendement, gains};
+  const raids = S.raids.slice(-Math.min(S.raids.length, S.raid.n - n0));   // les bandes venues pendant l'absence (combat réglé tout seul)
+  return {duree: s, absence: Math.max(0, secondes), plafonne: secondes > H.plafond, rendement: H.rendement, gains, raids};
 }
 const sauver = S => JSON.stringify(S);
 function charger(txt){
@@ -319,8 +386,8 @@ function charger(txt){
 
 /* ---------- le robot (simulateur) ---------- */
 // plan de construction : le robot pose dans cet ordre ce qui est permis, quand il en a les moyens
-const PLAN = ["cabane", "cabane", "champ", "carriere", "cabane", "moulin", "four", "cabane", "ponton", "cabane",
-  "maison", "bergerie", "atelier", "maison", "maison", "champ", "carriere", "ponton", "maison", "maison", "maison"];
+const PLAN = ["cabane", "cabane", "champ", "carriere", "cabane", "moulin", "four", "cabane", "tour", "caserne", "ponton", "cabane",
+  "maison", "bergerie", "atelier", "maison", "forge", "maison", "champ", "carriere", "caserne", "ponton", "maison", "maison", "maison"];
 function prochainBat(S){
   const P = D(S), vus = {};
   const st = P.STATUTS[S.statut + 1], vise = Object.assign({}, st ? st.cout : P.LOI.cout);
@@ -361,6 +428,9 @@ function repartir(S){
   const mettre = (m, n) => { const k = Math.max(0, Math.min(n, reste, places(S, m) - J[m])); J[m] += k; reste -= k; return k; };
   // pain : fermiers pour nourrir le moulin, meunier, boulanger
   if (S.bat.moulin && S.bat.four && S.pop >= 6){ mettre("fermier", 3); mettre("meunier", 1); mettre("boulanger", 1); }
+  // la garde (2 au hameau, 4 au village) et le forgeron tant qu'il manque des armes
+  if (S.bat.caserne) mettre("garde", S.statut >= 2 ? 4 : 2);
+  if (S.bat.forge && S.res.armes < J.garde) mettre("forgeron", 1);
   // vêtements quand le besoin compte bientôt
   if (S.bat.atelier && S.pop >= P.BESOINS.vetements.pop - 2){ mettre("berger", 2); mettre("tisserand", 1); }
   // de quoi manger, avec une marge
@@ -377,7 +447,7 @@ function repartir(S){
   garde = 0;
   while (reste > 0 && garde++ < 40){
     const mq = manque(S, objectif(S)), t = taux(S, J);
-    const cands = Object.keys(P.METIERS).filter(m => J[m] < places(S, m));
+    const cands = Object.keys(P.METIERS).filter(m => J[m] < places(S, m) && !P.METIERS[m].defend && m !== "forgeron");
     if (!cands.length) break;
     let best = null, bs = -1;
     for (const m of cands){
@@ -405,7 +475,7 @@ function robot(S){
   for (const id of ORDRE_ROBOT){ if (peutAcheter(S, id)) continue; const c = coutOrd(S, id); if (Object.keys(c).every(r => c[r] <= S.res[r] * .05)) acheter(S, id); }
   repartir(S);
 }
-const ORDRE_ROBOT = ["outils", "etageres", "tentes", "meules", "pelles", "engrais", "metiers", "hottes", "coupes", "ateres", "chemins", "charpente", "conserves", "fetes", "accueil", "hospitalite", "panier", "pioche"];
+const ORDRE_ROBOT = ["outils", "etageres", "tentes", "serrures", "meules", "pelles", "engrais", "metiers", "exercice", "hottes", "coupes", "ateres", "chemins", "palissade", "charpente", "conserves", "soins", "guetteurs", "fetes", "accueil", "hospitalite", "panier", "pioche"];
 // ce que le pionnier touche : ce qui manque le plus pour le prochain achat
 function aToucher(S){
   const mq = manque(S, objectif(S));
@@ -415,7 +485,7 @@ function aToucher(S){
 
 const api = {VERSION, eff, coutOrd, peutAcheter, acheter, plafondStatut, chauffage, faimHiver, reglages, creer, pas, taux, moral, places, logement, popMax, libres, parcellesLibres, vivres, capacite, gardien, plein, saison, hiver,
   coutBat, coutRecrue, peutPayer, toucher, recruter, affecter, peutConstruire, construire, deplacer, peutMonter, monterStatut,
-  peutPromulguer, promulguer, horsLigne, sauver, charger, robot, aToucher, objectif, PLAN};
+  peutPromulguer, promulguer, horsLigne, abri, defense, forceBande, gardesValides, gardesArmes, blesses, annonce, abrites, sauver, charger, robot, aToucher, objectif, PLAN};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresRegles = api;
 })();
