@@ -22,12 +22,14 @@ TOUTES.update({"buche": ("V2", 683, 482, 30, 14), "rocher-p": ("V2", 681, 545, 2
   "sechoir-poisson": ("F5", 581, 399, 86, 70), "sechoir-viande": ("F5", 485, 399, 86, 70), "sac-farine": ("V5", 722, 147, 44, 43), "sacs-grain": ("V5", 144, 724, 48, 42),
   "sac": ("V5", 148, 676, 40, 41), "foin": ("F5", 291, 586, 42, 34), "botte": ("F5", 534, 584, 35, 32), "meule-foin": ("V5", 673, 677, 95, 89),
   "souche-hache": ("V5", 6, 96, 41, 47), "souche": ("V5", 52, 54, 42, 41), "baies-rouges": ("F3", 51, 389, 44, 42), "baies-bleues": ("F3", 3, 485, 44, 45)})
+# pillards (11/11) : tour de guet, caserne, forge (fourneau, établi, enclume), râtelier d'armes ; feuille « buildings » 4
+TOUTES.update({"tour": ("B4", 435, 0, 42, 97), "caserne": ("B4", 578, 288, 128, 97), "forge": ("B4", 190, 476, 100, 102), "ratelier": ("B4", 292, 617, 93, 58)})
 TOUTES.update({"i-bois": ("V1", 96, 528, 48, 48), "i-ble": ("F4", 0, 576, 48, 48), "terre": ("V1", 60, 56, 32, 32), "eau": ("V3", 408, 410, 48, 48), "herbe": ("V1", 235, 387, 48, 48)})
 GARDE = ["herbe", "terre", "eau", "pave", "champ-mur", "champ-pousse", "champ-nu", "champ-blond", "chaume1", "chaume2", "chaume3", "chaume4", "chaume5",
   "colomb1", "colomb2", "colomb3", "colomb4", "pierre1", "pierre2", "pierre3", "pierre4", "pierre5", "grange", "hangar", "moulin1", "meule1", "meule2",
   "puits", "puits-couvert", "fontaine", "four", "charrette", "lanterne", "s-arbre1", "s-arbre2", "s-arbre3", "s-arbre4", "s-arbre5", "s-arbre6", "s-jeune", "i-bois", "i-ble",
   "buche", "rocher-p", "gravats", "tonneaux", "abri", "tonneau", "caisse", "caisse-p", "panier-baies", "panier-pommes", "panier-legumes", "panier-patates",
-  "sechoir-poisson", "sechoir-viande", "sac-farine", "sacs-grain", "sac", "foin", "botte", "meule-foin", "souche-hache", "souche", "baies-rouges", "baies-bleues"]
+  "sechoir-poisson", "sechoir-viande", "sac-farine", "sacs-grain", "sac", "foin", "botte", "meule-foin", "souche-hache", "souche", "baies-rouges", "baies-bleues", "tour", "caserne", "forge", "ratelier"]
 def feuille(d, n): return next((SC / d).rglob(f"tile-B-0{n}.png"))
 F = {"V1": feuille("village", 1), "V2": feuille("village", 2), "V3": feuille("village", 3), "F4": feuille("farm", 4), "B4": feuille("buildings", 4), "FO": feuille("foret", 1),
   "F3": feuille("farm", 3), "F5": feuille("farm", 5), "V5": feuille("village", 5)}
@@ -41,7 +43,7 @@ for nom in GARDE:
 # icônes des ressources (grilles de 7 ou 8 icônes sur 1024 px)
 FI = {"m2": "Medieval_Fantasy_Icons_Pack/**/2.png", "m3": "Medieval_Fantasy_Icons_Pack/**/3.png", "p1": "Pixel_Medieval_Fantasy_Icon_Pack/**/1.png", "p2": "Pixel_Medieval_Fantasy_Icon_Pack/**/2.png", "f1": "Pixel_Food_Icon_Pack/**/1.png", "f3": "Pixel_Food_Icon_Pack/**/3.png"}
 GRILLE = {"f3": 8}
-ICONES = {"i-pierre": ("m2", 3, 0), "i-tissu": ("m2", 5, 5), "i-laine": ("p2", 6, 4), "i-farine": ("m3", 6, 5), "i-pain": ("f1", 5, 0), "i-poisson": ("f3", 6, 7), "i-baies": ("f3", 0, 6), "i-or": ("p1", 3, 6)}
+ICONES = {"i-pierre": ("m2", 3, 0), "i-tissu": ("m2", 5, 5), "i-laine": ("p2", 6, 4), "i-farine": ("m3", 6, 5), "i-pain": ("f1", 5, 0), "i-poisson": ("f3", 6, 7), "i-baies": ("f3", 0, 6), "i-or": ("p1", 3, 6), "i-armes": ("p1", 0, 0)}
 for nom, (f, rg, c) in ICONES.items():
   if f not in cache: cache[f] = Image.open(next(ICO.glob(FI[f]))).convert("RGBA")
   im = cache[f]; n = im.width / GRILLE.get(f, 7); ic = im.crop((round(c * n), round(rg * n), round(c * n + n), round(rg * n + n))); bb = ic.getbbox()

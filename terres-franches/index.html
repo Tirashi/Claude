@@ -36,6 +36,7 @@
   </div>
 </div>
 <div id="banniere" class="ruban"></div>
+<div id="alerte" class="ruban" hidden></div>
 <div id="info" class="papier" hidden></div>
 <div id="bulle" class="papier" hidden></div>
 <div id="placement" hidden>
@@ -59,6 +60,7 @@
       <p class="pc"><b>Sur ordinateur</b> : clic pour toucher, glisser ou flèches (ZQSD) pour bouger la carte, molette ou + et − pour zoomer ; 1 à 4 ouvrent les volets, Entrée bâtit, Échap ferme ou annule.</p>
       <p><b>Réserves</b> : la colonie ne garde qu'une quantité limitée de chaque ressource (une petite jauge sous chaque nombre). Le grenier garde la nourriture, l'aire de stockage le bois et la pierre ; chaque agrandissement double la place. On voit les tas grossir et fondre.</p>
       <p><b>Hiver</b> : une saison sur quatre, chacun brûle du bois et mange un peu plus. Sans bois, le moral baisse, mais personne ne meurt. Fais des réserves à l'automne.</p>
+      <p><b>Pillards</b> : à partir du hameau, une bande vient de temps en temps voler les réserves. Les villageois courent s'abriter. Agrandir le grenier et l'aire met une part du stock à l'abri ; la <b>tour de guet</b> donne l'alerte plus tôt ; la <b>caserne</b> loge la garde, qui se bat toute seule (un garde blessé se soigne quelques minutes) ; au village, la <b>forge</b> fait des armes. Les bandes viennent aussi pendant ton absence.</p>
       <p><b>Absence</b> : la colonie continue sans toi, mais bien plus lentement (le quart, 4 h au plus).</p>
     </div>
     <button type="button" id="bNouvelle" class="bouton">NOUVELLE PARTIE</button>
@@ -87,6 +89,7 @@
 <script src="regles.js"></script>
 <script src="atlas.js"></script>
 <script src="villageois.js"></script>
+<script src="soldats.js"></script>
 <script src="vie.js"></script>
 <script src="jeu.js"></script>
 <script src="ecran.js"></script>

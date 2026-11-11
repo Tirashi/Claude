@@ -47,7 +47,9 @@ function volVillageois(){
   h += `<div class="carte"><canvas width="30" height="30" class="portrait" data-p="${S.pop}"></canvas><span class="nom">ACCUEILLIR<small>${cout(c)} <em>vivres = baies, poisson ou pain</em></small></span><button type="button" class="bouton petit or" data-act="recruter">+1</button></div>`;
   for (const m in P.METIERS){
     const M = P.METIERS[m], pl = R.places(S, m); if (!pl) continue;
-    const r = M.produit || M.sortie, par = M.produit ? `${(t[r] * 60 >= 0 ? "+" : "")}${(t[r] * 60).toFixed(1)} ${nomRes(r)}/MIN` : `${Object.keys(M.entree).map(nomRes).join(" + ")} → ${nomRes(r)}`;
+    const bl = R.blesses(S), r = M.defend ? "armes" : M.produit || M.sortie;
+    const par = M.defend ? `DEFEND LES RESERVES${bl ? ` · ${bl} BLESSE${bl > 1 ? "S" : ""}` : ""}${S.jobs[m] ? ` · ${R.gardesArmes(S)} ARME${R.gardesArmes(S) > 1 ? "S" : ""}` : ""}`
+      : M.produit ? `${(t[r] * 60 >= 0 ? "+" : "")}${(t[r] * 60).toFixed(1)} ${nomRes(r)}/MIN` : `${Object.keys(M.entree).map(nomRes).join(" + ")} → ${nomRes(r)}`;
     h += `<div class="carte"><canvas width="36" height="36" data-i="${r}"></canvas><span class="nom">${M.nom}<small>${par}</small></span>
       <span class="pm"><button type="button" class="carre" data-m="${m}" data-d="-1" aria-label="Retirer">−</button><b>${S.jobs[m]}/${pl}</b><button type="button" class="carre" data-m="${m}" data-d="1" aria-label="Ajouter">+</button></span></div>`;
   }
@@ -58,6 +60,12 @@ function volConstruire(){
   for (const b of Object.keys(P.BATIMENTS).sort((u, v) => P.BATIMENTS[u].statut - P.BATIMENTS[v].statut)){   // dans l'ordre où l'on peut bâtir
     const B = P.BATIMENTS[b], e = R.peutConstruire(S, b), bloque = B.statut > S.statut, libres = C.libres(S, B.terrain).length;
     const plein = B.logement && !bloque && R.logement(S) >= R.plafondStatut(S);   // assez de toits : le statut limite
+    if (B.niveaux && !B.stock && S.bat[b] + S.chantiers.filter(c => c.k === b).length > 0){   // caserne, tour, forge déjà là : on l'agrandit (s'il y a des niveaux)
+      const n = S.bat[b], tr = S.chantiers.some(c => c.k === b), mx = n >= B.niveaux;
+      const inf = tr ? (n ? "AGRANDISSEMENT EN COURS" : "EN CHANTIER") : mx ? (B.niveaux > 1 ? `NIVEAU ${n} : MAXIMAL` : "DEJA CONSTRUITE") : `NIVEAU ${n} → ${n + 1}`;
+      h += `<div class="carte${e ? " non" : ""}" data-b="${b}"><canvas width="36" height="36" data-s="${b}"></canvas><span class="nom">${mx || tr ? "" : "AGRANDIR : "}${B.nom} <small>${inf}</small><small class="desc">${B.desc}</small>${mx || tr ? "" : cout(R.coutBat(S, b))}</span></div>`;
+      continue;
+    }
     if (B.niveaux && S.bat[b] + S.chantiers.filter(c => c.k === b).length > 0){   // une réserve déjà là : on l'agrandit
       const n = S.bat[b], tr = S.chantiers.some(c => c.k === b), mx = n >= B.niveaux, r0 = P.STOCK.groupes[B.stock][0];
       const inf = tr ? "AGRANDISSEMENT EN COURS" : mx ? `NIVEAU ${n} : MAXIMAL` : `NIVEAU ${n} → ${n + 1}`;
@@ -76,6 +84,7 @@ function volColonie(){
   const V = window.TerresVie;
   let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3><p>${V.NOMS[V.saison(S)]} DE L'AN ${V.annee(S)}${V.pluie(S) ? (V.saison(S) === 3 ? " · IL NEIGE" : " · IL PLEUT") : ""}${V.nuit(S) > .5 ? " · LA NUIT" : ""}</p>${R.hiver(S) ? `<p class="limite">L'hiver : chaque habitant brûle du bois et mange un peu plus. Sans bois, le moral baisse.</p>` : R.saison(S) === 2 ? `<p class="limite">L'automne : fais des réserves de bois et de nourriture pour l'hiver.</p>` : ""}`;
   h += mo.det.length ? mo.det.map(d => `<div class="besoin ${d.ok ? "ok" : "non"}"><i>${d.ok ? "+" : "-"}</i>${NOMS[d.k]}</div>`).join("") : `<p>Pas encore de besoins : à 6 habitants, il faudra varier la nourriture.</p>`;
+  h += pillards();
   if (suiv){
     h += `<h3 style="margin-top:8px"><span>DEVENIR ${suiv.nom}</span></h3><p>Jusqu'à ${suiv.popMax + R.eff(S, "pop")} habitants${R.eff(S, "pop") ? ` (dont ${R.eff(S, "pop")} par les améliorations)` : ""} et de nouveaux bâtiments.</p>${conditions(suiv.pop, suiv.cout)}
       <button type="button" class="bouton or" data-act="statut"${R.peutMonter(S) ? " disabled" : ""}>FONDER LE ${suiv.nom}</button>`;
@@ -84,6 +93,16 @@ function volColonie(){
     h += `<h3 style="margin-top:8px"><span>${L.nom}</span></h3><p>La Loi de l'ère 1.</p>${conditions(L.pop, L.cout)}`;
     h += S.loi ? `<p>Promulguée !</p>` : `<button type="button" class="bouton or" data-act="loi"${R.peutPromulguer(S) ? " disabled" : ""}>PROMULGUER</button>`;
   }
+  return h;
+}
+// les pillards (à partir du hameau) : ce qui est à l'abri, la garde, la dernière bande
+function pillards(){
+  const S = J.S, P = R.reglages(S.mods); if (!P.RAIDS.intervalle[S.statut]) return "";
+  const d = Math.round(R.defense(S)), f = Math.round(R.forceBande(S)), dern = S.raids[S.raids.length - 1];
+  let h = `<h3 style="margin-top:8px"><span>PILLARDS</span><span>${S.raid.phase ? "ILS ARRIVENT !" : ""}</span></h3>`;
+  h += `<p class="limite">Une bande vient de temps en temps voler les réserves. À l'abri : <b>${Math.round(R.abri(S, "baies") * 100)} %</b> des vivres, <b>${Math.round(R.abri(S, "bois") * 100)} %</b> des matériaux (agrandis le grenier et l'aire).<br>`
+    + `Garde : <b>${d}</b> contre une bande d'environ <b>${f}</b>${S.bat.caserne ? "" : " (construis une caserne)"}${S.bat.tour ? "" : " · une tour de guet donne l'alerte plus tôt"}.</p>`;
+  if (dern) h += `<p>Dernière bande : ${dern.repousse ? "repoussée par la garde" : Object.keys(dern.vole).length ? "elle a volé " + Object.entries(dern.vole).map(([r, n]) => n + " " + nomRes(r).toLowerCase()).join(", ") : "repartie les mains vides"}${dern.blesses ? `, ${dern.blesses} garde(s) blessé(s)` : ""}.</p>`;
   return h;
 }
 // les conditions d'un statut ou de la Loi : une ligne par condition, grande icône, ce qu'on a / ce qu'il faut, cochée quand c'est bon
@@ -95,6 +114,7 @@ function conditions(pop, c){
 }
 // ordonnances et équipements : une carte par amélioration (on la touche pour l'acheter)
 const ICONES_ORD = {outils: "souche-hache", panier: "panier-baies", hottes: "tonneaux", coupes: "souche", ateres: "buche", pioche: "rocher-p", chemins: "pave",
+  serrures: "caisse-p", palissade: "souche", guetteurs: "tour", exercice: "ratelier", soins: "panier-legumes",
   tentes: "chaume2", etageres: "caisse", faucille: "i-ble", engrais: "botte", meules: "sac-farine", pelles: "panier-patates", forces: "i-laine", metiers: "i-tissu", conserves: "sechoir-poisson", fetes: "tonneau", charpente: "chantier", accueil: "chaume1", hospitalite: "panier-pommes"};
 function volAmeliorer(){
   const S = J.S, P = R.reglages(S.mods), O = P.ORDONNANCES; let h = `<p class="limite">Ordonnances et équipements : chaque niveau s'ajoute au précédent.</p>`;
@@ -118,10 +138,10 @@ function majVolet(force){
   p.querySelectorAll("canvas[data-p]").forEach(c => portrait(c, +c.dataset.p));
   p.querySelectorAll("canvas[data-m]").forEach(c => { if (!c.dataset.m) return; const g = c.getContext("2d"), q = J.piece(c.dataset.m), k = Math.min(36 / q.width, 36 / q.height); g.imageSmoothingEnabled = false; g.drawImage(q, (36 - q.width * k) / 2, (36 - q.height * k) / 2, q.width * k, q.height * k); });
 }
-const MINI = {champ: "champ-mur", carriere: "rocher", ponton: null, bergerie: "grange", grenier: "grange", aire: "i-bois"};
+const MINI = {champ: "champ-mur", carriere: "rocher", ponton: null, bergerie: "grange", grenier: "grange", aire: "i-bois", tour: "tour", caserne: "caserne", forge: "forge"};
 function miniature(c, _, b, r){
   const g = c.getContext("2d"); g.imageSmoothingEnabled = false; g.clearRect(0, 0, c.width, c.height);
-  let n = r ? ({bois: "i-bois", pierre: "i-pierre", baies: "i-baies", poisson: "i-poisson", ble: "i-ble", farine: "i-farine", pain: "i-pain", laine: "i-laine", vetements: "i-tissu"})[r] : (b in MINI ? MINI[b] : (J.spriteDe(b, "a") || [])[0]);
+  let n = r ? J.ICONE[r] : (b in MINI ? MINI[b] : (J.spriteDe(b, "a") || [])[0]);
   if (b === "ponton"){ g.fillStyle = "#4a8ab8"; g.fillRect(0, 22, 36, 14); g.fillStyle = "#a8743f"; for (let k = 0; k < 5; k++) g.fillRect(4 + k * 6, 6, 5, 24); return; }
   if (!n) return; const p = J.piece(n), k = Math.min(c.width / p.width, c.height / p.height);
   g.drawImage(p, (c.width - p.width * k) / 2, (c.height - p.height * k) / 2, p.width * k, p.height * k);
@@ -184,7 +204,7 @@ function bulle(id){
   const metiers = Object.keys(DON.METIERS).filter(m => DON.METIERS[m].places[b]);
   const qui = metiers.map(m => `${DON.METIERS[m].nom} : ${S.jobs[m]}/${R.places(S, m)}`).join("<br>");
   el.innerHTML = `<div id="bInfo">${infoBulle(id)}</div>
-    <div class="rang">${B.niveaux ? `<button type="button" class="bouton petit or" data-x="up">AGRANDIR</button>` : ""}<button type="button" class="bouton petit" data-x="dep">DEPLACER</button><button type="button" class="bouton petit" data-x="ok">OK</button></div>`;
+    <div class="rang">${B.niveaux > 1 ? `<button type="button" class="bouton petit or" data-x="up">AGRANDIR</button>` : ""}<button type="button" class="bouton petit" data-x="dep">DEPLACER</button><button type="button" class="bouton petit" data-x="ok">OK</button></div>`;
   el.hidden = false; placerBulle();
 }
 // le texte de la bulle (refait 4 fois par seconde : le minuteur du chantier baisse)
@@ -192,7 +212,8 @@ function infoBulle(id){
   const S = J.S, b = S.lots[id]; if (!b) return ""; const B = DON.BATIMENTS[b], ch = S.chantiers.find(c => c.lot === id);
   const qui = Object.keys(DON.METIERS).filter(m => DON.METIERS[m].places[b]).map(m => `${DON.METIERS[m].nom} : ${S.jobs[m]}/${R.places(S, m)}`).join("<br>");
   const res = B.stock ? DON.STOCK.groupes[B.stock].map(r => `${nomRes(r).toLowerCase()} ${fmt(S.res[r])}/${fmt(R.capacite(S, r))}`).join("<br>") : "";
-  return `<b>${B.nom}${B.niveaux ? " · NIV. " + S.bat[b] : ""}</b>${ch ? `${ch.agrandit ? "Agrandissement" : "Chantier"} : encore ${Math.ceil(ch.reste)} s<br>` : ""}${B.logement ? `Loge ${B.logement} habitants` : res || qui || ""}`;
+  const garde = b === "caserne" && S.bat.caserne ? `<br>Défense ${Math.round(R.defense(S))}${R.blesses(S) ? ` · ${R.blesses(S)} blessé(s)` : ""}` : b === "tour" && S.bat.tour ? `Alerte ${R.annonce(S)} s avant l'arrivée des pillards` : "";
+  return `<b>${B.nom}${B.niveaux > 1 ? " · NIV. " + S.bat[b] : ""}</b>${ch ? `${ch.agrandit ? "Agrandissement" : "Chantier"} : encore ${Math.ceil(ch.reste)} s<br>` : ""}${B.logement ? `Loge ${B.logement} habitants` : (res || qui || "") + garde}`;
 }
 function placerBulle(){
   if (!bulleLot) return; const L = C.LOTS[bulleLot], [sx, sy] = J.versEcran((L.x + L.l / 2) * C.T, L.y * C.T);
@@ -224,7 +245,8 @@ function retour(r){
   if (!r) return;
   const g = Object.entries(r.gains).filter(([, n]) => n > 0);
   $("retourSous").innerHTML = `ABSENCE : ${duree(r.absence)}<br>LA COLONIE A TRAVAILLE AU ${Math.round(r.rendement * 100)} %${r.plafonne ? `<br>(${duree(r.duree)} AU PLUS)` : ""}`;
-  $("retourGains").innerHTML = g.length ? g.map(([k, n]) => `<span>${ic(k)} +${fmt(n)}</span>`).join("") : "<span>Rien de neuf : personne ne travaillait.</span>";
+  const rr = (r.raids || []).map(b => b.repousse ? "<span>Des pillards sont venus : la garde les a repoussés.</span>" : Object.keys(b.vole).length ? `<span>Des pillards ont volé ${Object.entries(b.vole).map(([k, n]) => `${ic(k)}${fmt(n)}`).join(" ")}</span>` : "<span>Des pillards sont venus, sans rien trouver.</span>").join("");
+  $("retourGains").innerHTML = (g.length ? g.map(([k, n]) => `<span>${ic(k)} +${fmt(n)}</span>`).join("") : "<span>Rien de neuf : personne ne travaillait.</span>") + rr;
   $("retour").hidden = false;
 }
 
@@ -247,10 +269,16 @@ addEventListener("keydown", e => {
   if (n >= 0 && !J.PL){ e.preventDefault(); document.querySelectorAll("[data-onglet]")[n].click(); }
 });
 
+// l'alerte des pillards : un bandeau rouge tant que la bande approche
+function alerte(){
+  const S = J.S, el = $("alerte"), ph = S.raid && S.raid.phase; el.hidden = !ph; if (!ph) return;
+  const s = Math.max(0, Math.ceil(S.raid.proch - S.t)), tx = `PILLARDS DANS ${s} S` + (ph === "approche" ? " · A L'ABRI !" : " · VUS DE LA TOUR");
+  if (el.textContent !== tx) el.textContent = tx;
+}
 let derniere = 0;
 window.TerresEcran = {
   annonce, bulle, placement, retour, ouvert: () => bulleLot,
   depart(recap){ majBarre(); retour(recap); },
-  image(t){ if (t - derniere > .25){ derniere = t; majBarre(); majVolet(); const bi = $("bInfo"); if (bi && bulleLot){ const h = infoBulle(bulleLot); if (bi.innerHTML !== h) bi.innerHTML = h; } } placerBulle(); }
+  image(t){ if (t - derniere > .25){ derniere = t; majBarre(); majVolet(); alerte(); const bi = $("bInfo"); if (bi && bulleLot){ const h = infoBulle(bulleLot); if (bi.innerHTML !== h) bi.innerHTML = h; } } placerBulle(); }
 };
 })();

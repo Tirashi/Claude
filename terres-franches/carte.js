@@ -2,7 +2,7 @@
    Une case = 32 px (T) ; les images du pack gardent leur taille (une maison de 96 px tient sur un terrain de 3 × 3 cases).
    GRILLE : T forêt, . herbe, * buisson, ~ eau, F feu de camp, ^ tente du pionnier,
             lettres minuscules = terrains à bâtir (« terre », 3 × 3), X Y = rochers (carrières), P Q = rives (pontons),
-            R S = réserves (« reserve », 2 × 2 : grenier, aire de stockage).
+            R S = réserves (« reserve », 2 × 2 : grenier, aire de stockage), K L = garnison (3 × 3 : caserne, forge), G = guet (la tour, 1 case).
    proposer(S, b) : le terrain le plus logique pour b (affinités `pres` de donnees.js) ; routes(S) : les rues, tracées dans l'ordre
    de construction, de la porte de chaque bâtiment vers la rue ou la place la plus proche (elles se rejoignent toutes seules). */
 (function(){
@@ -11,14 +11,14 @@ const DON = (typeof module !== "undefined" && module.exports) ? require("./donne
 const T = 32;
 const GRILLE = [
   "TTTTTTTTTTTTTTTTTTT~~TTT",
-  "TTTTTTTT.nnn.TXXTTT~~TTT",
-  "TTTTTTTT.nnn.TXXTTT~~TTT",
-  "TTTTTTTT*nnnTT..YY.~~.TT",
+  "TTTTLLLT.nnn.TXXTTT~~TTT",
+  "TTTTLLLT.nnn.TXXTTT~~TTT",
+  "TTTTLLLT*nnnTT..YY.~~.TT",
   "TTTTT*..........YY.~~.TT",
-  "TTTT*.....bbb......~~.TT",
-  "TTTT..aaa.bbb.ccc.RR~~TT",
-  "TTTT..aaa.bbb.ccc.RR~~TT",
-  "TTTT..aaa.....ccc...~~TT",
+  "TKKK*.....bbb......~~.TT",
+  "TKKK..aaa.bbb.ccc.RR~~TT",
+  "TKKK..aaa.bbb.ccc.RR~~TT",
+  "T.....aaa.....ccc...~~TT",
   "TT.T.....^.........P~~TT",
   "TT.*.ddd...F...eee..~~TT",
   "TT...ddd.......eee..~~TT",
@@ -32,7 +32,7 @@ const GRILLE = [
   "TT.jjjkkk.lll..~~~~~~~~~",
   "TT.jjjkkk.lll..~~~~~~~~~",
   "TT.jjjkkk..mmm.~~~~~~~~~",
-  "TT.........mmm.~~~~~~~~~",
+  "TT.......G.mmm.~~~~~~~~~",
   "TT.........mmm.~~~~~~~~~"];
 const W = GRILLE[0].length, H = GRILLE.length;
 // étiquettes des terrains (servent aux affinités) : fertile = bonne terre à blé ; pre = clairière pour les moutons
@@ -47,8 +47,8 @@ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
   const c = GRILLE[y][x];
   if (c === "F") FEU = [x, y];
   if (c === "^") TENTE = [x, y];
-  if (!/[a-zXYPQRS]/.test(c)) continue;
-  const L = LOTS[c] || (LOTS[c] = {id: c, x, y, l: 0, h: 0, terrain: /[a-z]/.test(c) ? "terre" : /[XY]/.test(c) ? "roche" : /[RS]/.test(c) ? "reserve" : "rive", tags: ETIQUETTES[c] || []});
+  if (!/[a-zXYPQRSKLG]/.test(c)) continue;
+  const L = LOTS[c] || (LOTS[c] = {id: c, x, y, l: 0, h: 0, terrain: /[a-z]/.test(c) ? "terre" : /[XY]/.test(c) ? "roche" : /[RS]/.test(c) ? "reserve" : /[KL]/.test(c) ? "garnison" : c === "G" ? "guet" : "rive", tags: ETIQUETTES[c] || []});
   L.l = Math.max(L.l, x - L.x + 1); L.h = Math.max(L.h, y - L.y + 1);
 }
 for (const L of Object.values(LOTS)){

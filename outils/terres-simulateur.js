@@ -80,6 +80,24 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
   verif(R.charger("n'importe quoi") === null, "une sauvegarde abîmée est refusée");
 }
 
+/* ---------- les pillards ---------- */
+{
+  const P = R.reglages(), RA = P.RAIDS;
+  const C0 = R.creer(); C0.pop = 4; C0.res.baies = 1e3; R.pas(C0, 3 * 3600); verif(C0.raid.n === 0 && C0.raid.proch === null, "pillards : aucun au campement");
+  const fin = S => { if (S.raid.proch === null) R.pas(S, 1); R.pas(S, S.raid.proch - S.t + 1); return S.raids[S.raids.length - 1]; };
+  const nv = () => { const S = R.creer(); S.graine = 7; S.statut = 1; S.pop = 8; S.res.bois = 200; S.res.baies = 90; S.res.pierre = 100; return S; };
+  const A = nv(); R.pas(A, 1); verif(A.raid.proch >= RA.premier + RA.intervalle[1][0] && A.raid.proch <= RA.premier + RA.intervalle[1][1] + 2, "pillards : la première bande vient après le délai du hameau");
+  const b = fin(A); verif(b && !b.repousse && b.vole.bois >= 30 && A.res.bois < 200, "pillards : sans garde, ils volent du stock (" + JSON.stringify(b && b.vole) + ")");
+  const Ab = nv(); Ab.bat.aire = 3; Ab.bat.grenier = 3; const b2 = fin(Ab); verif(b2.vole.bois < b.vole.bois, "pillards : agrandir les réserves met du stock à l'abri");
+  const G = nv(); G.bat.caserne = 2; G.bat.tour = 1; G.pop = 10; G.jobs.garde = 6; const b3 = fin(G);
+  verif(b3.repousse && !Object.keys(b3.vole).length, "pillards : une garde prévenue les repousse");
+  const Gb = nv(); Gb.bat.caserne = 1; Gb.jobs.garde = 3; Gb.pop = 8; R.pas(Gb, 1); Gb.raid.proch = Gb.t + 5; Gb.graine = 3; const b4 = fin(Gb);
+  verif(b4.gardes === 3 && Gb.blesses.length === b4.blesses && R.gardesValides(Gb) === 3 - b4.blesses, "pillards : des gardes blessés (" + b4.blesses + ") ne se battent plus");
+  if (b4.blesses){ R.pas(Gb, RA.garde.guerison + 2); verif(Gb.blesses.length === 0, "pillards : les blessés guérissent"); }
+  const Pr = nv(); R.pas(Pr, 1); Pr.raid.proch = Pr.t + 30; Pr.jobs.bucheron = 3; const b0 = Pr.res.bois; R.pas(Pr, 5); verif(Pr.raid.phase === "approche" && Pr.res.bois === b0, "pillards : pendant l'approche, les récolteurs s'abritent");
+  const H = nv(); R.pas(H, 1); const r = R.horsLigne(H, 3 * 3600); verif(r.raids.length >= 2 && r.raids.length === H.raid.n, "pillards : ils viennent aussi pendant l'absence (" + r.raids.length + " bandes)");
+}
+
 /* ---------- la carte : emplacements proposés, déplacement, routes ---------- */
 {
   const C = require("../terres-franches/carte.js"), L = C.LOTS;
@@ -101,7 +119,7 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
   verif(R.deplacer(S, c1, libre) === null && S.lots[libre] === "cabane" && !S.lots[c1] && S.chantiers.some(c => c.lot === libre), "déplacer une cabane (même en chantier)");
   // toutes les portes sont reliées à la place par une route, même la carte pleine
   while (!R.construire(S, "cabane") || !R.construire(S, "maison")) ;
-  for (const t of ["terre", "roche", "rive", "reserve"]) for (const id of C.libres(S, t)) S.lots[id] = t === "terre" ? "atelier" : t === "roche" ? "carriere" : t === "rive" ? "ponton" : id === "R" ? "aire" : "grenier", S.ordreLots.push(id);
+  for (const t of ["terre", "roche", "rive", "reserve", "garnison", "guet"]) for (const id of C.libres(S, t)) S.lots[id] = t === "terre" ? "atelier" : t === "roche" ? "carriere" : t === "rive" ? "ponton" : t === "garnison" ? (id === "K" ? "caserne" : "forge") : t === "guet" ? "tour" : id === "R" ? "aire" : "grenier", S.ordreLots.push(id);
   const ro = C.routes(S);
   verif(ro.traces.length === Object.keys(L).length, "routes : chaque bâtiment a sa rue (" + ro.traces.length + "/" + Object.keys(L).length + ")");
   verif(ro.traces.every(tr => { const p = C.porte(S, tr.id); return tr.cases[0][0] === p[0] && tr.cases[0][1] === p[1]; }), "routes : elles partent des portes");
@@ -110,7 +128,7 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
 
 /* ---------- les parties du robot ---------- */
 function partie(profil){
-  const S = R.creer(mods), fin = profil === "actif" ? 8 * 3600 : 72 * 3600;
+  const S = R.creer(mods), fin = profil === "actif" ? 8 * 3600 : 72 * 3600; S.graine = 12345;   // le même hasard (pillards) à chaque partie
   let plafond;
   while (S.t < fin && !S.loi){
     const present = profil === "actif" || S.t % 3600 < 300;
