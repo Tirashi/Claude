@@ -43,8 +43,40 @@ const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) ^ 0x5bd1e995; h
 
 /* ---------- la partie ---------- */
 let S = null;
-function sauver(){ if (!S) return; S.vu = Date.now(); try { localStorage.setItem(CLE, R.sauver(S)); } catch (e){} }
-function charger(){ let t = null; try { t = localStorage.getItem(CLE); } catch (e){} return (t && R.charger(t)) || null; }
+// pendant la visite d'une ancienne colonie, S = la colonie visitée (figée) et REEL = la partie en cours, qui continue
+let REEL = null;
+const lire = k => { try { return localStorage.getItem(k); } catch (e){ return null; } };
+const ecrire = (k, v) => { try { localStorage.setItem(k, v); } catch (e){} };
+function sauver(){ const P = REEL || S; if (!P) return; P.vu = Date.now(); ecrire(CLE, R.sauver(P)); }
+function charger(){ const t = lire(CLE); return (t && R.charger(t)) || null; }
+// ce qui se garde d'une colonie à l'autre : points et Lois (terres.lois) ; la vallée de l'ère 1, figée (terres.vallee)
+const CLE_LOIS = "terres.lois", CLE_VALLEE = "terres.vallee";
+function lois(){ let L = null; try { L = JSON.parse(lire(CLE_LOIS)); } catch (e){} return R.lois(L); }
+function sauverLois(L){ ecrire(CLE_LOIS, JSON.stringify(L)); }
+// la Loi de l'ère promulguée : ses points vont dans terres.lois (une seule fois)
+function recompenser(){ const P = REEL || S, L = lois(), n = R.recompense(P, L); if (n){ sauverLois(L); sauver(); } return n; }
+function vueNeuve(){ AG.length = 0; cleFond = ""; PL = null; BANDE = null; cheminCache = new Map(); flottes.length = 0; }
+// fonder la colonie suivante : l'ancienne est gardée telle quelle, la nouvelle part du campement avec les Lois prises
+function fonder(nom){
+  if (REEL) revenir();
+  recompenser(); const L = lois();
+  const P = REEL || S; if (!P.loi) return "LA LOI N'EST PAS PROMULGUEE";
+  P.vu = Date.now();
+  if ((P.ere || 1) === 1) ecrire(CLE_VALLEE, R.sauver(P));
+  L.colonies.push({nom: P.nom || DON.ERES[P.ere || 1].nom, ere: P.ere || 1, pop: P.pop, statut: P.statut, fin: Date.now()});
+  sauverLois(L);
+  S = R.nouvelleColonie({nom, lois: L.prises, ere: (P.ere || 1) + 1});
+  vueNeuve(); sauver(); cam.x = (C.FEU[0] + .5) * T; cam.y = (C.FEU[1] + 1.5) * T; cam.zi = zoomDepart();
+  return null;
+}
+// revoir la vallée, figée : rien n'y avance, la partie en cours continue pendant ce temps
+const valleeGardee = () => !!lire(CLE_VALLEE);
+function visiter(){
+  const t = lire(CLE_VALLEE), V0 = t && R.charger(t); if (!V0) return false;
+  if (!REEL) REEL = S;
+  V0.raid.phase = null; V0.evts = []; S = V0; vueNeuve(); document.body.classList.add("visite"); return true;
+}
+function revenir(){ if (!REEL) return; S = REEL; REEL = null; vueNeuve(); document.body.classList.remove("visite"); }
 
 /* ---------- la vallée : masques de l'eau et de la forêt (bords arrondis) ---------- */
 function masque(car, seuils){
@@ -674,8 +706,9 @@ function image(now){
     const v = 520 * dt / Z[cam.zi];
     for (const k of fleches){ const d = DIRS[k]; cam.x += d[0] * v; cam.y += d[1] * v; }
   }
-  R.pas(S, dt);
+  R.pas(REEL || S, dt);   // pendant une visite, c'est la partie en cours qui avance, pas la colonie visitée
   // ce que les règles annoncent
+  if (REEL) REEL.evts = [];
   if (S.evts.length){ for (const e of S.evts) window.TerresEcran && window.TerresEcran.annonce(e.txt, e.bon); S.evts = []; }
   const sv = V.saison(S); if (sv !== saisonVue){ saisonVue = sv; planche = V.recolorer(decor, sv); }
   const cle = sv + "|" + S.ordreLots.join("") + "|" + S.statut + "|" + Object.keys(S.lots).map(k => S.lots[k]).join(",");
@@ -783,6 +816,7 @@ addEventListener("keyup", e => fleches.delete(e.code));
 addEventListener("blur", () => fleches.clear());
 function lotEn(wx, wy){ const tx = Math.floor(wx / T), ty = Math.floor(wy / T); for (const id in C.LOTS){ const L = C.LOTS[id]; if (tx >= L.x && tx < L.x + L.l && ty >= L.y && ty < L.y + L.h) return id; } return null; }
 function toucher(sx, sy){
+  if (REEL) return;   // en visite : on regarde seulement
   const [wx, wy] = versMonde(sx, sy), E = window.TerresEcran;
   if (PL){ const id = lotEn(wx, wy); if (id && lotsPossibles().includes(id)){ PL.lot = id; E && E.placement(); } return; }
   const id = lotEn(wx, wy);
@@ -824,6 +858,7 @@ function demarrer(){
   let recap = null;
   if (S && S.vu){ const s = (Date.now() - S.vu) / 1000; if (s > 60) recap = R.horsLigne(S, s); }
   if (!S) S = R.creer();
+  recompenser();   // une Charte promulguée avant l'arrivée des Lois : ses points sont versés au chargement
   vuLe = Date.now(); cam.zi = zoomDepart();
   document.getElementById("chargement").hidden = true;
   if (window.TerresEcran) window.TerresEcran.depart(recap);
@@ -838,11 +873,13 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("pagehide", sauver);
 
-function nouvelle(){ S = R.creer(); AG.length = 0; cleFond = ""; PL = null; sauver(); cam.x = (C.FEU[0] + .5) * T; cam.y = (C.FEU[1] + 1.5) * T; cam.zi = zoomDepart(); }
+// recommencer : la colonie en cours repart de zéro (mêmes ère, nom et Lois)
+function nouvelle(){ if (REEL) revenir(); S = (S && S.ere > 1) ? R.nouvelleColonie({nom: S.nom, lois: S.lois, ere: S.ere}) : R.creer(); vueNeuve(); sauver(); cam.x = (C.FEU[0] + .5) * T; cam.y = (C.FEU[1] + 1.5) * T; cam.zi = zoomDepart(); }
 function viser(id){ const L = C.LOTS[id]; cam.x = (L.x + L.l / 2) * T + margeD() / 2 / Z[cam.zi]; cam.y = (L.y + L.h / 2) * T + (grand.matches ? 0 : 40); }
 window.Terres = {
   get S(){ return S; }, ICONE, rang, cam, zoom, sauver, nouvelle, icone, piece, spriteDe, AT, viser, versEcran,
   get PL(){ return PL; }, set PL(v){ PL = v; },
-  avance(s){ R.pas(S, s); }, toucherCase, AG, flotte
+  avance(s){ R.pas(REEL || S, s); }, toucherCase, AG, flotte,
+  lois, sauverLois, recompenser, fonder, visiter, revenir, valleeGardee, get visite(){ return !!REEL; }, get reel(){ return REEL || S; }
 };
 })();

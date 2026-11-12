@@ -158,3 +158,28 @@ kbd, .touches, .aide .pc{display:none}
   #banniere{top:auto; bottom:72px; left:calc(50% - 192px)}
   #alerte{top:auto; bottom:110px; left:calc(50% - 192px)}
 }
+
+/* ---------- les Lois (prestige), le nom de la colonie, mes terres, la visite ---------- */
+.plaque.large{max-width:760px}
+.arbre{display:grid; grid-template-columns:repeat(auto-fit, minmax(136px, 1fr)); gap:8px}
+.branche{display:flex; flex-direction:column; gap:5px; min-width:0}
+.branche h3{margin:0; font-family:var(--titre); font-weight:400; font-size:8px; color:#8a5a1a; text-align:center; line-height:1.4}
+.loi{display:flex; flex-direction:column; gap:2px; text-align:left; font:inherit; color:var(--ink); border-style:solid; border-width:6px 8px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 6px 8px stretch; background:none; padding:0; cursor:pointer; position:relative}
+.loi b{font-family:var(--titre); font-weight:400; font-size:8px; line-height:1.4}
+.loi span{font-size:12px; line-height:1.2}
+.loi i{font-style:normal; font-family:var(--titre); font-size:7px; color:#8a5a1a}
+.loi.prise{outline:3px solid #6aa83a; outline-offset:-1px} .loi.prise i{color:var(--vert)}
+.loi.possible{outline:3px solid var(--or); outline-offset:-1px; animation:luit 1.4s ease-in-out infinite}
+.loi.ferme{opacity:.5; cursor:default}
+@keyframes luit{50%{outline-color:#fff4b0}}
+.plaque .note{font-size:12px; color:#6a4a2a}
+.rang.nom{display:flex; gap:6px; align-items:center}
+.rang.nom input{flex:1; min-width:0; font-family:var(--titre); font-size:10px; padding:9px 8px; border:3px solid #8a6238; border-radius:4px; background:#fff8e6; color:var(--ink); -webkit-user-select:text; user-select:text}
+.terre{display:flex; align-items:center; gap:8px; color:var(--ink); border-style:solid; border-width:6px 9px; border-image:url(img/ui-papier.png) 44 52 45 52 fill / 6px 9px stretch; min-height:40px}
+.terre div{flex:1; display:flex; flex-direction:column; gap:2px} .terre b{font-family:var(--titre); font-weight:400; font-size:8px; line-height:1.4} .terre small{font-size:12px}
+.terre .bouton{width:auto}
+#visite{position:fixed; z-index:9; left:50%; transform:translateX(-50%); bottom:calc(14px + env(safe-area-inset-bottom)); display:flex; gap:8px; align-items:center}
+#visite[hidden]{display:none}
+#visite .ruban{font-size:9px; white-space:nowrap}
+#visite .bouton{width:auto}
+body.visite #hud, body.visite #bulle, body.visite #alerte, body.visite #info{display:none !important}

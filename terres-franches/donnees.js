@@ -145,13 +145,36 @@ const ORDONNANCES = {
   hospitalite:{nom: "HOSPITALITE",        type: "ordonnance", desc: "Les nouveaux venus coûtent moins cher à accueillir.", effet: {recrue: .1}, niveaux: 3, cout: {pain: 60, bois: 200}, croit: 2, statut: 2}
 };
 
+// les Lois (prestige, maquette 8 validée le 11/11) : un arbre en 5 branches, acheté avec les points que rapporte chaque Loi d'ère
+//   (POINTS_LOI : la Charte du Village en donne 3) ; une Loi prise vaut pour toutes les colonies fondées ensuite (copiée dans S.lois).
+//   req = la Loi d'avant dans la branche. Effets (lus par R.eff, comme les ordonnances) : recolte, places, stock, garde, chantier, recrue,
+//   batiment (− coût des bâtiments), horsRendement (+ part produite hors ligne), horsPlafond (+ secondes), cabaneOfferte, villageois (au départ)
+const LOIS = {
+  glanage:    {branche: "RECOLTES",  nom: "GLANAGE",           desc: "+10 % de production pour les récolteurs.",             points: 1, effet: {recolte: .1}},
+  saisons:    {branche: "RECOLTES",  nom: "BONNES SAISONS",    desc: "+10 % encore.",                                        points: 2, req: "glanage", effet: {recolte: .1}},
+  communs:    {branche: "RECOLTES",  nom: "TERRES COMMUNES",   desc: "Une place de plus par lieu de récolte.",              points: 3, req: "saisons", effet: {places: 1}},
+  intendant:  {branche: "ABSENCE",   nom: "INTENDANT",         desc: "Absent, la colonie produit au tiers (au lieu du quart).", points: 1, effet: {horsRendement: 1 / 12}},
+  veillee:    {branche: "ABSENCE",   nom: "LONGUES VEILLEES",  desc: "Absent : 6 h au plus (au lieu de 4).",                points: 2, req: "intendant", effet: {horsPlafond: 2 * 3600}},
+  conseil:    {branche: "ABSENCE",   nom: "CONSEIL DES ANCIENS", desc: "Absent, la colonie produit à moitié.",              points: 3, req: "veillee", effet: {horsRendement: 1 / 6}},
+  corvees:    {branche: "BATISSEURS", nom: "CORVEES",          desc: "Chantiers 15 % plus courts.",                          points: 1, effet: {chantier: .15}},
+  compagnons: {branche: "BATISSEURS", nom: "COMPAGNONS",       desc: "Bâtiments 10 % moins chers.",                          points: 2, req: "corvees", effet: {batiment: .1}},
+  premierToit:{branche: "BATISSEURS", nom: "PREMIER TOIT",     desc: "Une cabane offerte au départ.",                       points: 2, req: "compagnons", effet: {cabaneOfferte: 1}},
+  hospices:   {branche: "ACCUEIL",   nom: "TERRE D'ACCUEIL",   desc: "Recrues 15 % moins chères.",                           points: 1, effet: {recrue: .15}},
+  fideles:    {branche: "ACCUEIL",   nom: "FIDELES",           desc: "Un villageois de plus emporté dans la nouvelle colonie.", points: 3, req: "hospices", effet: {villageois: 1}},
+  granges:    {branche: "RESERVES ET GARDE", nom: "GRANGES COMMUNES", desc: "+25 % de place dans les réserves.",             points: 1, effet: {stock: .25}},
+  milice:     {branche: "RESERVES ET GARDE", nom: "MILICE",    desc: "Garde 25 % plus forte.",                               points: 2, req: "granges", effet: {garde: .25}}
+};
+const POINTS_LOI = [0, 3];   // par ère : la Charte du Village (ère 1) rapporte 3 points
+// les colonies : une par ère (l'ère 2, la côte, aura sa carte et son contenu aux étapes 2 et 3 du plan)
+const ERES = [null, {nom: "LA VALLEE", loi: "CHARTE DU VILLAGE"}, {nom: "LA COTE", loi: "LOI DES GUILDES"}];
+
 // la marche des villageois (cases par seconde ; × route sur les rues et la place)
 const MARCHE = {vitesse: 1.7, route: 1.5};
 
 // hors ligne : la production continue, bien plus lentement, et plafonnée
 const HORS_LIGNE = {plafond: 4 * 3600, rendement: .25};   // décision du 08/11 : peu au début ; des Lois l'augmenteront
 
-const api = {RAIDS, ORDONNANCES, MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
+const api = {LOIS, POINTS_LOI, ERES, RAIDS, ORDONNANCES, MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresDonnees = api;
 })();

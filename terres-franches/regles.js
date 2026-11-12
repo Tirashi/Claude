@@ -32,7 +32,8 @@ const D = S => reglages(S.mods);
 function creer(mods){
   const P = reglages(mods), S = {v: VERSION, mods: mods || {}, t: 0, res: {}, bat: {}, chantiers: [], pop: 0, jobs: {},
     statut: 0, recrutes: 0, loi: false, ord: {}, touchers: 0, evts: [], jalons: {}, lots: {}, ordreLots: [],
-    graine: Math.floor(Math.random() * 1e9), raid: {n: 0, proch: null, phase: null}, raids: [], blesses: []};
+    graine: Math.floor(Math.random() * 1e9), raid: {n: 0, proch: null, phase: null}, raids: [], blesses: [],
+    ere: 1, nom: "", lois: [], recompense: false};
   for (const r in P.RES) S.res[r] = 0;
   for (const b in P.BATIMENTS) S.bat[b] = 0;
   for (const m in P.METIERS) S.jobs[m] = 0;
@@ -43,7 +44,9 @@ const jalon = (S, k) => { if (S.jalons[k] === undefined) S.jalons[k] = S.t; };
 
 /* ---------- ordonnances et équipements ---------- */
 // effet cumulé d'une clé (somme sur les ordonnances achetées : effet × niveau)
-function eff(S, k){ const O = D(S).ORDONNANCES || {}, n = S.ord || {}; let v = 0; for (const id in n) if (O[id] && O[id].effet[k]) v += O[id].effet[k] * n[id]; return v; }
+// les Lois prises avant de fonder la colonie (S.lois) s'ajoutent de la même façon
+function eff(S, k){ const P = D(S), O = P.ORDONNANCES || {}, n = S.ord || {}; let v = 0; for (const id in n) if (O[id] && O[id].effet[k]) v += O[id].effet[k] * n[id];
+  for (const id of S.lois || []){ const L = P.LOIS[id]; if (L && L.effet[k]) v += L.effet[k]; } return v; }
 const RECOLTEURS = ["bucheron", "cueilleur", "pecheur", "carrier", "fermier", "berger"];
 // multiplicateur de débit d'un métier (outils, hottes, chemins)
 const bonusMetier = (S, m) => 1 + (RECOLTEURS.includes(m) ? eff(S, "recolte") + eff(S, "porte") : 0) + eff(S, "route_prod") + eff(S, "m_" + m);
@@ -99,7 +102,7 @@ function vivres(S){ const P = D(S); let v = 0; for (const r in P.RES) if (P.RES[
 /* ---------- coûts ---------- */
 function coutBat(S, b){
   const B = D(S).BATIMENTS[b], n = S.bat[b] + enChantier(S, b), c = {};
-  for (const r in B.cout) c[r] = Math.ceil(B.cout[r] * Math.pow(B.croit, n));
+  for (const r in B.cout) c[r] = Math.ceil(B.cout[r] * Math.pow(B.croit, n) * (1 - eff(S, "batiment")));
   return c;
 }
 function coutRecrue(S){
@@ -361,13 +364,15 @@ function promulguer(S){
 }
 
 /* ---------- hors ligne, sauvegarde ---------- */
+// la part produite et la durée au plus, Lois de l'absence comprises
+function horsLigneRegle(S){ const H = D(S).HORS_LIGNE; return {rendement: H.rendement + eff(S, "horsRendement"), plafond: H.plafond + eff(S, "horsPlafond")}; }
 function horsLigne(S, secondes){
-  const H = D(S).HORS_LIGNE, s = Math.max(0, Math.min(secondes, H.plafond)), avant = copie(S.res), n0 = S.raid.n;
+  const H = horsLigneRegle(S), s = Math.max(0, Math.min(secondes, H.plafond)), avant = copie(S.res), n0 = S.raid.n;
   pas(S, s, H.rendement);
   if (secondes > s) pas(S, secondes - s, 0);   // au-delà du plafond : le temps passe (chantiers), plus rien ne se produit
   const gains = {}; for (const r in S.res){ const g = S.res[r] - avant[r]; if (Math.abs(g) >= .5) gains[r] = Math.round(g); }
   const raids = S.raids.slice(-Math.min(S.raids.length, S.raid.n - n0));   // les bandes venues pendant l'absence (combat réglé tout seul)
-  return {duree: s, absence: Math.max(0, secondes), plafonne: secondes > H.plafond, rendement: H.rendement, gains, raids};
+  return {duree: s, absence: Math.max(0, secondes), plafonne: secondes > H.plafond, rendement: H.rendement, plafond: H.plafond, gains, raids};
 }
 const sauver = S => JSON.stringify(S);
 function charger(txt){
@@ -381,6 +386,37 @@ function charger(txt){
   if (!S.lots || typeof S.lots !== "object") S.lots = {};
   if (!Array.isArray(S.ordreLots)) S.ordreLots = Object.keys(S.lots);
   S.v = VERSION;
+  return S;
+}
+
+/* ---------- le prestige : les Lois et la nouvelle colonie ---------- */
+// L = ce qui se garde d'une colonie à l'autre (sauvé à part : terres.lois) : points à dépenser, Lois prises, colonies fondées
+function lois(L){
+  L = (L && typeof L === "object") ? L : {};
+  if (typeof L.points !== "number" || L.points < 0) L.points = 0;
+  if (!Array.isArray(L.prises)) L.prises = [];
+  if (!Array.isArray(L.colonies)) L.colonies = [];
+  return L;
+}
+function peutPrendreLoi(L, id, mods){
+  const X = reglages(mods).LOIS[id]; if (!X) return "INCONNUE";
+  if (L.prises.includes(id)) return "DEJA PRISE";
+  if (X.req && !L.prises.includes(X.req)) return "IL FAUT D'ABORD " + reglages(mods).LOIS[X.req].nom;
+  if (L.points < X.points) return "PAS ASSEZ DE POINTS";
+  return null;
+}
+function prendreLoi(L, id, mods){ const e = peutPrendreLoi(L, id, mods); if (e) return e; L.points -= reglages(mods).LOIS[id].points; L.prises.push(id); return null; }
+// la Loi de l'ère promulguée : ses points vont dans L, une seule fois
+function recompense(S, L){
+  if (!S.loi || S.recompense) return 0;
+  const n = D(S).POINTS_LOI[S.ere || 1] || 0; L.points += n; S.recompense = true; return n;
+}
+// fonder la colonie suivante : nouvelle partie de l'ère suivante, avec les Lois prises, le premier villageois (et ceux des Lois),
+// la cabane offerte ; o = {nom, lois, ere, mods}
+function nouvelleColonie(o){
+  const S = creer(o.mods); S.ere = o.ere || 2; S.nom = o.nom || ""; S.lois = (o.lois || []).slice();
+  if (eff(S, "cabaneOfferte")){ const lot = CARTE.proposer(S, "cabane"); if (lot){ S.lots[lot] = "cabane"; S.ordreLots.push(lot); S.bat.cabane = 1; } }
+  S.pop = 1 + eff(S, "villageois");
   return S;
 }
 
@@ -484,6 +520,7 @@ function aToucher(S){
 }
 
 const api = {VERSION, eff, coutOrd, peutAcheter, acheter, plafondStatut, chauffage, faimHiver, reglages, creer, pas, taux, moral, places, logement, popMax, libres, parcellesLibres, vivres, capacite, gardien, plein, saison, hiver,
+  lois, peutPrendreLoi, prendreLoi, recompense, nouvelleColonie, horsLigneRegle,
   coutBat, coutRecrue, peutPayer, toucher, recruter, affecter, peutConstruire, construire, deplacer, peutMonter, monterStatut,
   peutPromulguer, promulguer, horsLigne, abri, defense, forceBande, gardesValides, gardesArmes, blesses, annonce, abrites, sauver, charger, robot, aToucher, objectif, PLAN};
 if (typeof module !== "undefined" && module.exports) module.exports = api;

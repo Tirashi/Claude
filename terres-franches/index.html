@@ -50,6 +50,7 @@
     <h1 class="ruban">TERRES FRANCHES</h1>
     <p class="sous" id="menuSous">ERE 1 · LA VALLEE</p>
     <button type="button" id="bReprendre" class="bouton or">REPRENDRE</button>
+    <button type="button" id="bTerres" class="bouton">MES TERRES</button>
     <button type="button" id="bAide" class="bouton">COMMENT JOUER</button>
     <div id="aideTexte" class="aide" hidden>
       <p><b>Récolter</b> : touche un arbre, un buisson ou l'eau : le pionnier rapporte du bois, des baies ou du poisson.</p>
@@ -61,6 +62,7 @@
       <p><b>Réserves</b> : la colonie ne garde qu'une quantité limitée de chaque ressource (une petite jauge sous chaque nombre). Le grenier garde la nourriture, l'aire de stockage le bois et la pierre ; chaque agrandissement double la place. On voit les tas grossir et fondre.</p>
       <p><b>Hiver</b> : une saison sur quatre, chacun brûle du bois et mange un peu plus. Sans bois, le moral baisse, mais personne ne meurt. Fais des réserves à l'automne.</p>
       <p><b>Pillards</b> : à partir du hameau, une bande vient de temps en temps voler les réserves. Les villageois courent s'abriter. Agrandir le grenier et l'aire met une part du stock à l'abri ; la <b>tour de guet</b> donne l'alerte plus tôt ; la <b>caserne</b> loge la garde, qui se bat toute seule (un garde blessé se soigne quelques minutes) ; au village, la <b>forge</b> fait des armes. Les bandes viennent aussi pendant ton absence.</p>
+      <p><b>Les Lois</b> : au village complet, la Charte du Village rapporte des points de Loi. On les dépense dans l'arbre des Lois (récoltes, absence, bâtisseurs, accueil, réserves et garde), puis on fonde une nouvelle colonie, qui repart du campement avec le premier villageois et profite des Lois. L'ancienne colonie reste telle quelle, à revoir dans MES TERRES.</p>
       <p><b>Absence</b> : la colonie continue sans toi, mais bien plus lentement (le quart, 4 h au plus).</p>
     </div>
     <button type="button" id="bNouvelle" class="bouton">NOUVELLE PARTIE</button>
@@ -78,10 +80,40 @@
 <div id="fin" class="ecran" hidden>
   <div class="plaque parchemin">
     <h1 class="ruban rouge">LA CHARTE</h1>
-    <p>La Charte du Village est promulguée : la vallée est devenue un vrai village. La suite (fonder une nouvelle colonie sur une terre plus grande, avec les Lois) arrive bientôt.</p>
-    <button type="button" id="bFin" class="bouton or">CONTEMPLER LE VILLAGE</button>
+    <p>La Charte du Village est promulguée : la vallée est devenue un vrai village.</p>
+    <p id="finPoints"></p>
+    <p>Choisis tes Lois, puis fonde une nouvelle colonie : elles vaudront pour elle et pour toutes les suivantes. La vallée restera telle quelle : tu pourras la revoir (MENU, MES TERRES).</p>
+    <button type="button" id="bFinLois" class="bouton or">CHOISIR LES LOIS</button>
+    <button type="button" id="bFin" class="bouton">CONTEMPLER LE VILLAGE</button>
   </div>
 </div>
+<div id="loisEcran" class="ecran" hidden>
+  <div class="plaque parchemin large">
+    <h1 class="ruban">LES LOIS</h1>
+    <p class="sous" id="loisSous"></p>
+    <div class="arbre" id="arbre"></div>
+    <div id="loisBas"></div>
+  </div>
+</div>
+<div id="nomEcran" class="ecran" hidden>
+  <div class="plaque parchemin">
+    <h1 class="ruban">LA NOUVELLE COLONIE</h1>
+    <p>Tu pars avec le premier villageois fonder une colonie au bord de la mer. Comment s'appellera-t-elle ?</p>
+    <div class="rang nom"><input id="nomColonie" maxlength="22" autocomplete="off" spellcheck="false"><button type="button" id="bAutreNom" class="bouton petit" aria-label="Un autre nom">?</button></div>
+    <p class="note" id="nomLois"></p>
+    <button type="button" id="bFonder" class="bouton or">FONDER LA COLONIE</button>
+    <button type="button" id="bNomRetour" class="bouton">RETOUR AUX LOIS</button>
+  </div>
+</div>
+<div id="terresEcran" class="ecran" hidden>
+  <div class="plaque parchemin">
+    <h1 class="ruban">MES TERRES</h1>
+    <div id="terresListe"></div>
+    <button type="button" id="bMesLois" class="bouton">MES LOIS</button>
+    <button type="button" id="bTerresFermer" class="bouton or">FERMER</button>
+  </div>
+</div>
+<div id="visite" hidden><span class="ruban" id="visiteNom"></span><button type="button" id="bRevenir" class="bouton or">RETOUR</button></div>
 <div id="chargement" class="ecran"><p>CHARGEMENT…</p></div>
 
 <script src="donnees.js"></script>

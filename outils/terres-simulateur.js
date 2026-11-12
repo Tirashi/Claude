@@ -97,6 +97,25 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
   const Pr = nv(); R.pas(Pr, 1); Pr.raid.proch = Pr.t + 30; Pr.jobs.bucheron = 3; const b0 = Pr.res.bois; R.pas(Pr, 5); verif(Pr.raid.phase === "approche" && Pr.res.bois === b0, "pillards : pendant l'approche, les récolteurs s'abritent");
   const H = nv(); R.pas(H, 1); const r = R.horsLigne(H, 3 * 3600); verif(r.raids.length >= 2 && r.raids.length === H.raid.n, "pillards : ils viennent aussi pendant l'absence (" + r.raids.length + " bandes)");
 }
+/* ---------- le prestige : les Lois et la nouvelle colonie ---------- */
+{
+  const D = R.reglages(), ids = Object.keys(D.LOIS);
+  verif(ids.every(id => !D.LOIS[id].req || D.LOIS[D.LOIS[id].req]) && ids.length >= 13, "Lois : l'arbre se tient (chaque Loi requise existe)");
+  const S = R.creer(); S.loi = true; const L = R.lois(null);
+  verif(R.recompense(S, L) === 3 && L.points === 3 && R.recompense(S, L) === 0, "Lois : la Charte rapporte 3 points, une seule fois");
+  verif(R.prendreLoi(L, "saisons") && !R.prendreLoi(L, "glanage") && L.points === 2, "Lois : on suit la branche (GLANAGE avant BONNES SAISONS)");
+  verif(R.prendreLoi(L, "communs") && !R.prendreLoi(L, "saisons") && L.points === 0 && R.prendreLoi(L, "corvees") === "PAS ASSEZ DE POINTS", "Lois : les points se dépensent");
+  const N = R.nouvelleColonie({nom: "Anse", lois: L.prises});
+  verif(N.ere === 2 && N.nom === "Anse" && N.pop === 1 && N.t === 0 && !N.loi, "Lois : la nouvelle colonie part du campement avec le premier villageois");
+  const N0 = R.nouvelleColonie({}); N0.jobs.bucheron = 1; N.jobs.bucheron = 1;
+  verif(Math.abs(R.taux(N).bois / R.taux(N0).bois - 1.2) < .03, "Lois : +20 % de récolte avec GLANAGE et BONNES SAISONS");
+  const T = R.nouvelleColonie({lois: ["corvees", "compagnons", "premierToit", "hospices", "fideles", "intendant", "veillee", "conseil", "granges"]});
+  verif(T.bat.cabane === 1 && Object.values(T.lots).includes("cabane") && T.pop === 2, "Lois : cabane offerte et villageois emporté");
+  verif(R.coutBat(T, "cabane").bois < R.coutBat(R.nouvelleColonie({}), "cabane").bois * 1.5 * .95 && R.coutRecrue(T).bois < R.coutRecrue(N0).bois, "Lois : bâtiments et recrues moins chers");
+  const h = R.horsLigneRegle(T); verif(Math.abs(h.rendement - .5) < 1e-9 && h.plafond === 6 * 3600, "Lois : hors ligne à moitié, 6 h au plus");
+  verif(Math.abs(R.capacite(T, "bois") / R.capacite(N0, "bois") - 1.25) < 1e-9, "Lois : +25 % de place");
+}
+
 
 /* ---------- la carte : emplacements proposés, déplacement, routes ---------- */
 {

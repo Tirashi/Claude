@@ -89,9 +89,11 @@ function volColonie(){
     h += `<h3 style="margin-top:8px"><span>DEVENIR ${suiv.nom}</span></h3><p>Jusqu'à ${suiv.popMax + R.eff(S, "pop")} habitants${R.eff(S, "pop") ? ` (dont ${R.eff(S, "pop")} par les améliorations)` : ""} et de nouveaux bâtiments.</p>${conditions(suiv.pop, suiv.cout)}
       <button type="button" class="bouton or" data-act="statut"${R.peutMonter(S) ? " disabled" : ""}>FONDER LE ${suiv.nom}</button>`;
   } else {
-    const L = P.LOI;
-    h += `<h3 style="margin-top:8px"><span>${L.nom}</span></h3><p>La Loi de l'ère 1.</p>${conditions(L.pop, L.cout)}`;
-    h += S.loi ? `<p>Promulguée !</p>` : `<button type="button" class="bouton or" data-act="loi"${R.peutPromulguer(S) ? " disabled" : ""}>PROMULGUER</button>`;
+    const L = P.LOI, suite = P.ERES[(S.ere || 1) + 1] && P.POINTS_LOI[S.ere || 1];
+    h += `<h3 style="margin-top:8px"><span>${L.nom}</span></h3><p>La Loi de l'ère ${S.ere || 1}${suite ? ` : elle rapporte ${P.POINTS_LOI[S.ere || 1]} points de Loi et permet de fonder une nouvelle colonie` : ""}.</p>${conditions(L.pop, L.cout)}`;
+    h += !S.loi ? `<button type="button" class="bouton or" data-act="loi"${R.peutPromulguer(S) ? " disabled" : ""}>PROMULGUER</button>`
+      : suite ? `<p>Promulguée !</p><button type="button" class="bouton or" data-act="fonder">CHOISIR LES LOIS ET FONDER</button>`
+      : `<p>Promulguée ! La suite de l'ère ${S.ere} (la côte et sa Loi) arrive bientôt.</p>`;
   }
   return h;
 }
@@ -158,7 +160,8 @@ $("panneau").addEventListener("click", e => {
   if (el.dataset.m) err = R.affecter(S, el.dataset.m, +el.dataset.d);
   else if (el.dataset.act === "recruter") err = R.recruter(S);
   else if (el.dataset.act === "statut") err = R.monterStatut(S);
-  else if (el.dataset.act === "loi"){ err = R.promulguer(S); if (!err) $("fin").hidden = false; }
+  else if (el.dataset.act === "loi"){ err = R.promulguer(S); if (!err) fin(); }
+  else if (el.dataset.act === "fonder"){ ecranLois("choix"); return; }
   else if (el.dataset.o){ err = R.acheter(S, el.dataset.o); }
   else if (el.dataset.b){
     const b = el.dataset.b, B = DON.BATIMENTS[b];
@@ -233,13 +236,88 @@ function annonce(txt, bon){
 }
 
 /* ---------- menus ---------- */
-$("bMenu").onclick = () => { $("menu").hidden = false; J.sauver(); };
+$("bMenu").onclick = () => { const S = J.reel; $("menuSous").textContent = `ERE ${S.ere || 1} · ${MAJ(nomColonie(S))}`; $("menu").hidden = false; J.sauver(); };
 $("bReprendre").onclick = () => { $("menu").hidden = true; };
 $("bAide").onclick = () => { $("aideTexte").hidden = !$("aideTexte").hidden; };
-$("bNouvelle").onclick = () => { if (confirm("Recommencer une nouvelle colonie ? La vallee actuelle sera perdue.")){ J.nouvelle(); $("menu").hidden = true; onglet = null; majVolet(); finPlacement(); } };
+$("bNouvelle").onclick = () => { if (confirm(J.reel.ere > 1 ? "Recommencer cette colonie depuis le campement ? Elle sera perdue (les Lois et les autres terres restent)." : "Recommencer une nouvelle colonie ? La vallee actuelle sera perdue.")){ J.nouvelle(); $("menu").hidden = true; onglet = null; majVolet(); finPlacement(); } };
 $("zPlus").onclick = () => J.zoom(1); $("zMoins").onclick = () => J.zoom(-1);
 $("bRetour").onclick = () => { $("retour").hidden = true; };
 $("bFin").onclick = () => { $("fin").hidden = true; };
+
+/* ---------- le prestige : la Charte, l'arbre des Lois, le nom de la nouvelle colonie, mes terres, la visite ---------- */
+const MAJ = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();   // Press Start 2P : pas de majuscules accentuées
+const nomColonie = S => S.nom || DON.ERES[S.ere || 1].nom;
+const pts = n => `${n} POINT${n > 1 ? "S" : ""}`;
+const NOMS_COTE = ["Port-Clair", "Anse-aux-Mouettes", "Havre-du-Vent", "Roche-Blanche", "Pointe-des-Sables", "Baie-d'Ambre", "Cap-du-Large", "Grève-aux-Phoques",
+  "Port-Joli", "Anse-Dorée", "Havre-de-Grâce", "Roche-aux-Goélands", "Pointe-Bleue", "Baie-des-Brumes"];
+const auHasard = () => NOMS_COTE[Math.floor(Math.random() * NOMS_COTE.length)];
+// la Loi de l'ère promulguée : ses points vont dans terres.lois
+function fin(){
+  const n = J.recompenser();
+  $("finPoints").innerHTML = n ? `Elle te rapporte <b>${pts(n)} de Loi</b>.` : "";
+  $("bFinLois").hidden = !n; $("fin").hidden = false;
+}
+$("bFinLois").onclick = () => { $("fin").hidden = true; ecranLois("choix"); };
+let loisMode = "lecture";
+function ecranLois(mode){ loisMode = mode; majLois(); $("loisEcran").hidden = false; }
+function majLois(){
+  const L = J.lois(), mods = J.reel.mods, P = R.reglages(mods), choix = loisMode === "choix", br = {};
+  for (const id in P.LOIS) (br[P.LOIS[id].branche] = br[P.LOIS[id].branche] || []).push(id);
+  $("loisSous").textContent = choix ? `${pts(L.points)} A DEPENSER` : `${pts(L.points)} DE COTE`;
+  $("arbre").innerHTML = Object.entries(br).map(([b, ids]) => `<div class="branche"><h3>${b}</h3>${ids.map(id => {
+    const X = P.LOIS[id], pr = L.prises.includes(id), e = R.peutPrendreLoi(L, id, mods), cl = pr ? "prise" : (!e && choix) ? "possible" : "ferme";
+    return `<button type="button" class="loi ${cl}" data-loi="${id}"><b>${X.nom}</b><span>${X.desc}</span><i>${pr ? "PRISE" : pts(X.points)}</i></button>`; }).join("")}</div>`).join("");
+  $("loisBas").innerHTML = choix
+    ? `<button type="button" class="bouton or" data-l="nom">FONDER UNE NOUVELLE COLONIE</button><button type="button" class="bouton" data-l="fermer">PLUS TARD</button>`
+    : `<p class="note">Les Lois se choisissent quand une colonie promulgue sa Loi (la Charte du Village pour la vallée) ; elles valent pour les colonies fondées ensuite.</p><button type="button" class="bouton or" data-l="fermer">FERMER</button>`;
+}
+$("loisEcran").addEventListener("click", e => {
+  const b = e.target.closest("[data-loi], [data-l]"); if (!b) return;
+  if (b.dataset.l === "fermer"){ $("loisEcran").hidden = true; return; }
+  if (b.dataset.l === "nom"){ $("loisEcran").hidden = true; ecranNom(); return; }
+  if (loisMode !== "choix" || !b.classList.contains("possible")) return;
+  const id = b.dataset.loi, X = R.reglages(J.reel.mods).LOIS[id];
+  if (!confirm(`Prendre la Loi ${X.nom} pour ${X.points} point${X.points > 1 ? "s" : ""} ? Elle vaudra pour toutes les colonies suivantes.`)) return;
+  const L = J.lois(), err = R.prendreLoi(L, id, J.reel.mods);
+  if (err) annonce(err, false); else { J.sauverLois(L); annonce("LOI PRISE : " + X.nom, true); }
+  majLois();
+});
+function ecranNom(){
+  const L = J.lois(), P = R.reglages(J.reel.mods);
+  $("nomColonie").value = auHasard();
+  $("nomLois").textContent = (L.prises.length ? "Lois : " + L.prises.map(id => P.LOIS[id].nom.toLowerCase()).join(", ") + "." : "Aucune Loi prise.")
+    + (L.points ? ` Il te reste ${L.points} point${L.points > 1 ? "s" : ""} : ${L.points > 1 ? "ils seront gardés" : "il sera gardé"} pour plus tard.` : "")
+    + " En attendant la carte de la côte, la nouvelle colonie s'installe dans une vallée semblable.";
+  $("nomEcran").hidden = false;
+}
+$("bAutreNom").onclick = () => { $("nomColonie").value = auHasard(); };
+$("bNomRetour").onclick = () => { $("nomEcran").hidden = true; ecranLois("choix"); };
+$("bFonder").onclick = () => {
+  const nom = $("nomColonie").value.replace(/\s+/g, " ").trim().slice(0, 22) || auHasard(), err = J.fonder(nom);
+  if (err){ annonce(err, false); return; }
+  $("nomEcran").hidden = true; $("fin").hidden = true; onglet = null; contenu = ""; bulle(null); finPlacement();
+  document.querySelectorAll("[data-onglet]").forEach(x => x.classList.remove("on")); majVolet(true);
+  annonce("BIENVENUE A " + MAJ(nom), true);
+};
+function ecranTerres(){
+  const S = J.reel, L = J.lois();
+  let h = `<div class="terre"><div><b>${MAJ(nomColonie(S))}</b><small>Ère ${S.ere || 1} · ${DON.STATUTS[S.statut].nom.toLowerCase()} de ${S.pop} habitant${S.pop > 1 ? "s" : ""} · en cours</small></div></div>`;
+  for (const c of L.colonies.slice().reverse())
+    h += `<div class="terre"><div><b>${MAJ(c.nom)}</b><small>Ère ${c.ere} · ${(DON.STATUTS[c.statut] || DON.STATUTS[0]).nom.toLowerCase()} de ${c.pop} habitants · figée</small></div>${c.ere === 1 && J.valleeGardee() ? `<button type="button" class="bouton petit or" data-visite="1">VISITER</button>` : ""}</div>`;
+  if (!L.colonies.length) h += `<p class="note">Une seule colonie pour l'instant. Au village complet, la Charte du Village permettra d'en fonder une nouvelle ; celle-ci restera à revoir ici.</p>`;
+  $("terresListe").innerHTML = h; $("terresEcran").hidden = false;
+}
+$("bTerres").onclick = () => { $("menu").hidden = true; ecranTerres(); };
+$("bTerresFermer").onclick = () => { $("terresEcran").hidden = true; };
+$("bMesLois").onclick = () => { $("terresEcran").hidden = true; ecranLois("lecture"); };
+$("terresListe").addEventListener("click", e => {
+  if (!e.target.closest("[data-visite]")) return;
+  if (!J.visiter()) return;
+  $("terresEcran").hidden = true; bulle(null); finPlacement();
+  $("visiteNom").textContent = MAJ(nomColonie(J.S)) + " · FIGEE"; $("visite").hidden = false;
+});
+function revenir(){ J.revenir(); $("visite").hidden = true; }
+$("bRevenir").onclick = revenir;
 function duree(s){ const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h} H ${String(m).padStart(2, "0")}` : `${m} MIN`; }
 function retour(r){
   if (!r) return;
@@ -254,6 +332,8 @@ function retour(r){
 addEventListener("keydown", e => {
   if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
   const ouvert = [...document.querySelectorAll(".ecran:not([hidden])")].filter(x => x.id !== "chargement");
+  if (e.key === "Escape" && J.visite && !document.querySelector(".ecran:not([hidden]):not(#chargement)")){ e.preventDefault(); revenir(); return; }
+  if (J.visite) return;
   if (e.key === "Escape"){
     e.preventDefault();
     if (ouvert.length) ouvert.forEach(x => { x.hidden = true; });
@@ -277,7 +357,7 @@ function alerte(){
 }
 let derniere = 0;
 window.TerresEcran = {
-  annonce, bulle, placement, retour, ouvert: () => bulleLot,
+  annonce, bulle, placement, retour, fin, ouvert: () => bulleLot,
   depart(recap){ majBarre(); retour(recap); },
   image(t){ if (t - derniere > .25){ derniere = t; majBarre(); majVolet(); alerte(); const bi = $("bInfo"); if (bi && bulleLot){ const h = infoBulle(bulleLot); if (bi.innerHTML !== h) bi.innerHTML = h; } } placerBulle(); }
 };

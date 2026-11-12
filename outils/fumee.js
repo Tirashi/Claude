@@ -147,6 +147,35 @@ const shots = process.argv[2];
       if (r !== 'ok') errs.push('Bastion : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-bastion.png` });
     }
+    if (url === 'terres-franches/index.html') {
+      // Terres franches : toucher la forêt rapporte du bois ; accueillir un villageois, lui donner un métier ; CONSTRUIRE propose un terrain, BATIR ICI lance le chantier et la rue suit ;
+      // puis le prestige (Charte, Lois, nouvelle colonie, visite de la vallée)
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 100 && !(window.Terres && Terres.S); i++) await wait(100);
+        if (!window.Terres || !Terres.S) return 'pas de partie (images ?)';
+        const S = Terres.S, R = TerresRegles;
+        if (Terres.toucherCase(2, 3) !== 'bois' || S.res.bois < 1) return 'toucher la forêt ne rapporte rien';
+        S.res.baies = 500; S.res.bois = 500;
+        document.querySelector('[data-onglet=villageois]').click(); await wait(50);
+        document.querySelector('[data-act=recruter]').click(); if (S.pop !== 1) return 'personne ne vient';
+        document.querySelector('[data-m=bucheron][data-d="1"]').click(); if (S.jobs.bucheron !== 1) return 'pas de bûcheron';
+        document.querySelector('[data-onglet=construire]').click(); await wait(50);
+        document.querySelector('.carte[data-b=cabane]').click(); if (!Terres.PL || !Terres.PL.lot) return 'pas de terrain proposé';
+        document.getElementById('bPoser').click(); if (!S.chantiers.length || !Object.keys(S.lots).length) return 'le chantier ne démarre pas';
+        Terres.avance(30); if (S.bat.cabane !== 1 || R.logement(S) !== 4) return 'la cabane ne se termine pas';
+        if (!TerresCarte.routes(S).traces.length) return 'pas de rue';
+        // le prestige : la Charte rapporte des points, une Loi se prend, la nouvelle colonie est fondée, la vallée se visite
+        S.loi = true; TerresEcran.fin(); if (document.getElementById('fin').hidden || Terres.lois().points !== 3) return 'la Charte ne rapporte pas ses points';
+        document.getElementById('bFinLois').click(); if (document.getElementById('loisEcran').hidden) return 'pas d\'arbre des Lois';
+        const L = Terres.lois(); if (TerresRegles.prendreLoi(L, 'glanage')) return 'GLANAGE ne se prend pas'; Terres.sauverLois(L);
+        if (Terres.fonder('Anse-Dorée') || Terres.S.ere !== 2 || Terres.S.lois[0] !== 'glanage' || !Terres.valleeGardee()) return 'la nouvelle colonie n\'est pas fondée';
+        if (!Terres.visiter() || !Terres.visite || Terres.S.ere !== 1) return 'la vallée ne se visite pas'; Terres.revenir();
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Terres franches : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-terres.png` });
+    }
     if (url === 'dragon-simulator/index.html') {
       // Dragon Simulator : titre, nid, ENVOLER !, un toucher = un coup d'ailes, puis le sol : bilan, pièces au nid, vol compté
       const r = await p.evaluate(async () => {
