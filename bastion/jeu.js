@@ -72,6 +72,7 @@ function maj(){
   $("#popOuv b").textContent = S.pawns.length + "/" + B.maxOuv(S); $("#popOuv").classList.toggle("plein", pleinO);
   $("#popEsc b").textContent = B.nbEsc(S) + "/" + B.maxEsc(S); $("#popEsc").classList.toggle("plein", pleinE);
   const V = S.P.vagues;
+  if (!tuto && S.prochaine > S.t + 1e5) S.prochaine = S.t + 12; // un tuto quitté en route ne bloque plus les vagues
   $("#vague").textContent = tuto ? "TUTO" : S.vague < V.nombre ? `VAGUE ${S.vague}/${V.nombre} · ${Math.max(0, Math.ceil(S.prochaine - S.t))} S` : `VAGUE ${V.nombre}/${V.nombre}`;
   $("#pvc i").style.width = Math.max(0, S.pv / B.pvChateau(S) * 100) + "%";
   const tn = $("#tenir"); tn.hidden = !(S.sel && !S.sel.tour && S.sel.k !== "cata"); if (!tn.hidden) tn.textContent = "TENIR LA POSITION : " + (S.sel.tenir ? "OUI" : "NON");
@@ -387,7 +388,7 @@ function frame(now){
   // le château
   { const [X, Y] = P(CHATEAU[0], CHATEAU[1] + .55); list.push([Y, () => { batiment(L.chateau, X, Y, 246, 1);
     if (S.niveauChateau > 1) etoiles(X, Y + 22, S.niveauChateau - 1);
-    if (S.niveauChateau < S.P.niveaux.max) fleche(X + 130, Y - 200, T, B.peutPayer(S, B.coutChateau(S)));
+    if (S.niveauChateau < S.P.niveaux.max && (S.c.L.niveaux || S.triche.tout)) fleche(X + 130, Y - 200, T, B.peutPayer(S, B.coutChateau(S)));
     const p = S.pv / B.pvChateau(S); if (p < .6) for (let k = 0; k < (p < .3 ? 4 : 2); k++) x.drawImage(f8(L.feu, 64, T * 10 + k * 3), Math.round(X - 100 + k * 60), Math.round(Y - 150 - (k % 2) * 40)); }]); }
   // les emplacements et les bâtiments
   for (const s of S.sites){ const [X, Y] = P(s.x, s.y), b = s.b;
@@ -401,7 +402,7 @@ function frame(now){
     const [nom, fy] = BATI[b.k], TT = TOUR[b.k], ech = TT ? TT.ech : 1, im = TT && TT.fs ? f8(L[nom], TT.fs, T * 6 + s.i) : L[nom];
     list.push([Y, () => { batiment(im, X, Y, fy, ech);
       if ((b.niveau || 1) > 1) etoiles(X, Y + 22, b.niveau - 1);
-      if (AMELIORABLE[b.k] && (b.niveau || 1) < S.P.niveaux.max && !b.travaux) fleche(X + 58, Y - fy * ech + 40, T, B.peutPayer(S, B.coutNiveau(S, b)));
+      if (AMELIORABLE[b.k] && (b.k === "maison" || S.c.L.niveaux || S.triche.tout) && (b.niveau || 1) < S.P.niveaux.max && !b.travaux) fleche(X + 58, Y - fy * ech + 40, T, B.peutPayer(S, B.coutNiveau(S, b)));
       if (b.travaux) barre(X, Y + 4, 90, b.travaux.prog / b.travaux.total, "#ffd94a");
       if (b.pv < pm * .5) x.drawImage(f8(L.feu, 64, T * 10 + s.i), Math.round(X - 40), Math.round(Y - fy * ech * .6));
       if (b.pv < pm && !b.travaux) barre(X, Y + 4, 90, b.pv / pm, "#7ad04a"); }]);

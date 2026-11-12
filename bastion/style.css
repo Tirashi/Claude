@@ -36,7 +36,7 @@ img.ic{width:22px; height:22px; object-fit:contain; vertical-align:middle}
 .res img.ic{width:24px; height:24px; margin:-4px 0}
 #vague{font-weight:700; font-size:12px; letter-spacing:1px; white-space:nowrap; border-style:solid; border-width:0 26px; border-image:url(img/ui-ruban-rouge.png) 0 97 0 98 fill / 0 26px stretch;
   color:var(--clair); text-shadow:1px 1px 0 #3a1010; padding:5px 0 9px; min-height:30px}
-#pvc{height:22px; border-style:solid; border-width:0 10px; border-image:url(img/ui-barre.png) 0 24 fill / 0 10px stretch; padding:5px 0 7px}
+#pvc{width:min(100%, 380px); box-sizing:border-box; margin:0 auto; height:22px; border-style:solid; border-width:0 10px; border-image:url(img/ui-barre.png) 0 24 fill / 0 10px stretch; padding:5px 0 7px}
 #pvc i{display:block; height:100%; width:100%; background:url(img/ui-barre-plein.png) 0 0 / auto 100% repeat-x; transition:width .3s}
 #zoom{position:fixed; right:8px; top:calc(max(6px, env(safe-area-inset-top)) + 100px); pointer-events:auto; font-size:14px}
 .bas{display:flex; flex-direction:column; gap:4px}
