@@ -67,14 +67,16 @@ const ESPECES = {
 };
 // zones en cases [x0, x1, y0, y1] ; quand : à partir de quand la bête est là
 const BETES = [
-  {sp: "biche", z: [3, 10, 2, 6], foret: true, quand: () => true}, {sp: "biche", z: [1, 4.5, 8, 15], foret: true, quand: () => true}, {sp: "cerf", z: [3, 11, 1.5, 5.5], foret: true, quand: () => true},
-  {sp: "renard", z: [21.2, 21.8, 3, 17], quand: () => true},
-  {sp: "oiseau", z: [2, 13, 17, 23], quand: S => S.bat.champ > 0, n: 4}, {sp: "oiseau", z: null, place: true, quand: S => S.statut >= 1, n: 3},
+  {sp: "biche", z: "biche.0", foret: true, quand: () => true}, {sp: "biche", z: "biche.1", foret: true, quand: () => true}, {sp: "cerf", z: "cerf", foret: true, quand: () => true},
+  {sp: "renard", z: "renard", quand: () => true},
+  {sp: "oiseau", z: "champs", quand: S => S.bat.champ > 0, n: 4}, {sp: "oiseau", z: null, place: true, quand: S => S.statut >= 1, n: 3},
   {sp: "poule", z: null, logis: true, quand: S => S.bat.cabane > 0, n: 3},
   {sp: "chat", z: null, place: true, calme: true, quand: S => S.statut >= 1}, {sp: "chat", z: null, logis: true, calme: true, quand: S => S.statut >= 2},
   {sp: "chien", suit: true, quand: S => S.pop >= 3}
 ];
 const LISTE = [], POISSONS = [];
+// une autre carte (vallée ou côte) : les bêtes et les poissons seront replacés
+function changer(){ LISTE.length = 0; POISSONS.length = 0; pret = false; }
 function preparer(){
   const r = alea(21);
   BETES.forEach((B, k) => { for (let i = 0; i < (B.n || 1); i++) LISTE.push({...B, k, x: 0, y: 0, e: "pause", jusqua: r() * 4, dir: "b", ph: r() * 9, bloc: Math.floor(r() * 4), pose: false}); });
@@ -82,13 +84,14 @@ function preparer(){
   for (let i = 0; i < 8; i++){ const [x, y] = eaux[Math.floor(r() * eaux.length)]; POISSONS.push({x: x + .5, y: y + .5, dir: r() < .5 ? "g" : "d", ph: r() * 9, saut: 3 + r() * 20}); }
 }
 function zoneDe(a, S){
+  if (typeof a.z === "string"){ const [k, i] = a.z.split("."), z = C.ZONES && C.ZONES[k]; return z ? (i !== undefined ? z[+i] : z) : null; }
   if (a.z) return a.z;
   if (a.place){ const [fx, fy] = C.FEU, R = C.PLACE(S.statut) * .8; return [fx - R + .5, fx + R + .5, fy - R * .6 + .5, fy + R * .6 + .5]; }
   if (a.logis){ const id = Object.keys(S.lots).find(i => S.lots[i] === "cabane" || S.lots[i] === "maison"); if (!id) return null; const L = C.LOTS[id]; return [L.x - .3, L.x + L.l + .3, L.y + L.h, L.y + L.h + .8]; }
   return null;
 }
 // où une bête peut aller : l'herbe (et sous les arbres pour les biches et le cerf), jamais l'eau ni le feu et ses abords
-const libre = (x, y, foret) => (foret ? /[.^T*]/ : /[.^]/).test(C.case_(Math.floor(x), Math.floor(y))) && Math.hypot(x - C.FEU[0] - .5, y - C.FEU[1] - .5) > 1.3;
+const libre = (x, y, foret) => (foret ? /[.,^T*]/ : /[.,^]/).test(C.case_(Math.floor(x), Math.floor(y))) && Math.hypot(x - C.FEU[0] - .5, y - C.FEU[1] - .5) > 1.3;
 function trajetLibre(x0, y0, x1, y1, foret){ const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 3); for (let i = 1; i <= n; i++) if (!libre(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n, foret)) return false; return true; }
 function bouger(a, dt, t, S, agents){
   const E = ESPECES[a.sp];
@@ -197,5 +200,5 @@ function ciel(x, t, S, X0, Y0, vw, vh, lumieres){
   }
 }
 
-window.TerresVie = {saison, annee, nuit, pluie, NOMS, etatChamp, recolorer, sol, objets, ciel};
+window.TerresVie = {changer, saison, annee, nuit, pluie, NOMS, etatChamp, recolorer, sol, objets, ciel};
 })();

@@ -4,7 +4,8 @@
 (function(){
 "use strict";
 const R = window.TerresRegles, C = window.TerresCarte, DON = window.TerresDonnees, AT = window.TerresAtlas, VL = window.TerresVillageois;
-const T = C.T, MW = C.W * T, MH = C.H * T, CLE = "terres.partie";
+const T = C.T, CLE = "terres.partie";
+let MW = C.W * T, MH = C.H * T;   // la taille de la carte affichée (vallée 24 × 24, côte 32 × 32) : voir preparerCarte
 const cv = document.getElementById("cv"), x = cv.getContext("2d");
 
 /* ---------- images ---------- */
@@ -55,7 +56,7 @@ function lois(){ let L = null; try { L = JSON.parse(lire(CLE_LOIS)); } catch (e)
 function sauverLois(L){ ecrire(CLE_LOIS, JSON.stringify(L)); }
 // la Loi de l'ère promulguée : ses points vont dans terres.lois (une seule fois)
 function recompenser(){ const P = REEL || S, L = lois(), n = R.recompense(P, L); if (n){ sauverLois(L); sauver(); } return n; }
-function vueNeuve(){ AG.length = 0; cleFond = ""; PL = null; BANDE = null; cheminCache = new Map(); flottes.length = 0; }
+function vueNeuve(){ preparerCarte(); AG.length = 0; cleFond = ""; PL = null; BANDE = null; cheminCache = new Map(); flottes.length = 0; }
 // fonder la colonie suivante : l'ancienne est gardée telle quelle, la nouvelle part du campement avec les Lois prises
 function fonder(nom){
   if (REEL) revenir();
@@ -74,9 +75,10 @@ const valleeGardee = () => !!lire(CLE_VALLEE);
 function visiter(){
   const t = lire(CLE_VALLEE), V0 = t && R.charger(t); if (!V0) return false;
   if (!REEL) REEL = S;
-  V0.raid.phase = null; V0.evts = []; S = V0; vueNeuve(); document.body.classList.add("visite"); return true;
+  V0.raid.phase = null; V0.evts = []; S = V0; vueNeuve(); document.body.classList.add("visite"); centrer(); return true;
 }
-function revenir(){ if (!REEL) return; S = REEL; REEL = null; vueNeuve(); document.body.classList.remove("visite"); }
+function revenir(){ if (!REEL) return; S = REEL; REEL = null; vueNeuve(); document.body.classList.remove("visite"); centrer(); }
+function centrer(){ cam.x = (C.FEU[0] + .5) * T; cam.y = (C.FEU[1] + 1.5) * T; cam.zi = zoomDepart(); }
 
 /* ---------- la vallée : masques de l'eau et de la forêt (bords arrondis) ---------- */
 function masque(car, seuils){
@@ -95,7 +97,7 @@ function masque(car, seuils){
     cb.putImageData(im, 0, 0); return c;
   });
 }
-let EAU = null, RIVE = null, SOUS_BOIS = null, eauCalque = null;
+let EAU = null, RIVE = null, SOUS_BOIS = null, SABLE = null, eauCalque = null;
 // les arbres : un par carré de 2 × 2 cases de forêt (décalé au hasard), quelques jeunes arbres en lisière
 const ARBRES = [];
 function planterArbres(){
@@ -114,6 +116,14 @@ function planterArbres(){
     const voisin = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => /[.*]/.test(C.case_(xx + dx, y + dy)));
     if (voisin && hash(xx * 3, y * 7) < .35 && piedSec((xx + .5) * T, (y + .95) * T, 26)) ARBRES.push({X: (xx + .5) * T, Y: (y + .95) * T, n: "s-jeune", ph: xx});
   }
+  // sur la côte : quelques arbres isolés dans les prés, loin des terrains et de la place (abattus dès qu'une rue passe à côté)
+  if (C.MER) for (let y = 3; y < C.H - 8; y++) for (let xx = 2; xx < C.W - 3; xx++){
+    if (C.GRILLE[y][xx] !== "." || hash(xx * 11, y * 5) > .3) continue;
+    if (Math.hypot(xx - C.FEU[0], y - C.FEU[1]) < C.PLACE(3) + 1.5) continue;
+    if (Object.values(C.LOTS).some(L => xx >= L.x - 1 && xx < L.x + L.l + 1 && y >= L.y - 1 && y < L.y + L.h + 1)) continue;
+    const n = hash(y, xx * 3) < .5 ? "s-jeune" : "s-arbre" + (1 + Math.floor(hash(xx, y) * 6));
+    ARBRES.push({X: (xx + .5) * T, Y: (y + .9) * T, n, ph: xx + y, seul: y * C.W + xx});
+  }
 }
 // le pied d'un arbre (ellipse de demi-largeur r) est-il loin de l'eau ?
 function piedSec(X, Y, r){
@@ -128,7 +138,7 @@ let BORD = null, bordSaison = -1;
 function dessinerBord(){
   const BW = C.W + 2 * MB, BH = C.H + 2 * MB, c = BORD || (BORD = document.createElement("canvas")); c.width = BW * T; c.height = BH * T; const b = c.getContext("2d");
   const loin = (u, v) => Math.max(-u, u - C.W + 1, -v, v - C.H + 1, 0);   // distance au bord de la carte, en cases
-  const type = (u, v) => { const k = C.case_(Math.max(0, Math.min(C.W - 1, u)), Math.max(0, Math.min(C.H - 1, v))); return k === "~" ? "~" : k === "T" || loin(u, v) > 2 ? "T" : "."; };
+  const type = (u, v) => { const k = C.case_(Math.max(0, Math.min(C.W - 1, u)), Math.max(0, Math.min(C.H - 1, v))); return k === "~" ? "~" : k === "," ? "," : k === "T" || loin(u, v) > 2 ? "T" : "."; };
   b.fillStyle = b.createPattern(piece("herbe"), "repeat"); b.fillRect(0, 0, c.width, c.height);
   // l'eau et le sous-bois : masques flous, comme dans la vallée
   const p = 4, m = document.createElement("canvas"); m.width = BW * p; m.height = BH * p; const mb = m.getContext("2d");
@@ -137,9 +147,12 @@ function dessinerBord(){
     const g = document.createElement("canvas"); g.width = c.width; g.height = c.height; const gb = g.getContext("2d"); gb.imageSmoothingEnabled = true; gb.filter = "blur(7px)"; gb.drawImage(m, 0, 0, c.width, c.height); return g; };
   const teinte = (g, s, col) => { const d = g.getContext("2d").getImageData(0, 0, g.width, g.height), q = d.data; for (let i = 0; i < q.length; i += 4){ const a = q[i + 3] >= s; q[i] = col[0]; q[i + 1] = col[1]; q[i + 2] = col[2]; q[i + 3] = a ? col[3] : 0; } g.getContext("2d").putImageData(d, 0, 0); return g; };
   b.drawImage(teinte(flou("T"), 110, [30, 70, 24, 120]), 0, 0);
-  const ge = flou("~"); b.drawImage(teinte(ge, 52, [150, 122, 76, 255]), 0, 0);
+  if (AT.sable && C.MER){ const sm = teinte(flou(","), 90, [255, 255, 255, 255]), sc = sm.getContext("2d"); sc.globalCompositeOperation = "source-in"; sc.fillStyle = sc.createPattern(piece("sable"), "repeat"); sc.fillRect(0, 0, sm.width, sm.height); b.drawImage(sm, 0, 0); }
+  const ge = flou("~"); b.drawImage(teinte(ge, 52, C.MER ? [236, 226, 196, 255] : [150, 122, 76, 255]), 0, 0);
   const eaux = flou("~"), ec = document.createElement("canvas"); ec.width = c.width; ec.height = c.height; const eb = ec.getContext("2d");
-  eb.fillStyle = eb.createPattern(piece("eau"), "repeat"); eb.fillRect(0, 0, c.width, c.height); if (saisonVue === 3){ eb.fillStyle = "rgba(228,238,246,.55)"; eb.fillRect(0, 0, c.width, c.height); }
+  const pe = eb.createPattern(piece(C.MER && AT.mer ? "mer" : "eau"), "repeat"); eb.fillStyle = pe; eb.fillRect(0, 0, c.width, c.height);
+  eb.globalAlpha = .45; pe.setTransform(new DOMMatrix([1, 0, 0, 1, 17, 23])); eb.fillRect(0, 0, c.width, c.height); eb.globalAlpha = 1;   // deux couches, comme l'eau de la carte
+  if (C.MER){ const g = eb.createLinearGradient(0, (MB + C.H - 6) * T, 0, (MB + C.H) * T); g.addColorStop(0, "rgba(10,40,90,0)"); g.addColorStop(1, "rgba(10,40,90,.35)"); eb.fillStyle = g; eb.fillRect(0, (MB + C.H - 6) * T, c.width, c.height); } if (saisonVue === 3 && !C.MER){ eb.fillStyle = "rgba(228,238,246,.55)"; eb.fillRect(0, 0, c.width, c.height); }
   eb.globalCompositeOperation = "destination-in"; eb.drawImage(teinte(eaux, 128, [255, 255, 255, 255]), 0, 0); b.drawImage(ec, 0, 0);
   V.sol(c, saisonVue);
   // les arbres, un par carré de 2 × 2 cases de forêt, entièrement hors de la carte (la vallée les cacherait)
@@ -156,7 +169,7 @@ function dessinerBord(){
     b.drawImage(planche, at[0], at[1], at[2], at[3], Math.round(X + MB * T - at[2] / 2), Math.round(Y + MB * T - at[3] + 8), at[2], at[3]); }
   // l'ombre qui gagne en s'éloignant (dégradé lissé d'une grille par case)
   const o = document.createElement("canvas"); o.width = BW; o.height = BH; const ob = o.getContext("2d"), od = ob.createImageData(BW, BH);
-  for (let v = 0; v < BH; v++) for (let u = 0; u < BW; u++){ const d = loin(u - MB, v - MB), i = (v * BW + u) * 4; od.data[i] = 14; od.data[i + 1] = 24; od.data[i + 2] = 10; od.data[i + 3] = Math.round(255 * Math.min(1, Math.max(0, (d - 1.5) / (MB - 3)))); }
+  for (let v = 0; v < BH; v++) for (let u = 0; u < BW; u++){ const d = loin(u - MB, v - MB), i = (v * BW + u) * 4; od.data[i] = 14; od.data[i + 1] = 24; od.data[i + 2] = 10; od.data[i + 3] = Math.round(255 * Math.min(1, Math.max(0, (d - 1.5) / (MB - 3))) * (type(u - MB, v - MB) === "~" && C.MER ? .6 : 1)); }
   ob.putImageData(od, 0, 0); b.imageSmoothingEnabled = true; b.drawImage(o, 0, 0, c.width, c.height); b.imageSmoothingEnabled = false;
   bordSaison = saisonVue;
 }
@@ -166,7 +179,10 @@ function dessinerFond(){
   const c = fond || (fond = document.createElement("canvas")); c.width = MW; c.height = MH; const b = c.getContext("2d");
   b.fillStyle = b.createPattern(piece("herbe"), "repeat"); b.fillRect(0, 0, MW, MH);
   for (let k = 0; k < 160; k++){ const h = hash(k, 7), X = hash(k, 3) * MW, Y = h * MH; b.fillStyle = k % 2 ? "rgba(255,255,200,.05)" : "rgba(20,60,10,.06)"; b.beginPath(); b.ellipse(X, Y, 20 + h * 40, 12 + h * 20, 0, 0, 6.3); b.fill(); }
-  b.drawImage(SOUS_BOIS, 0, 0); b.drawImage(RIVE, 0, 0);
+  b.drawImage(SOUS_BOIS, 0, 0);
+  if (SABLE && AT.sable){ const sb = document.createElement("canvas"); sb.width = MW; sb.height = MH; const sc = sb.getContext("2d");   // la plage
+    sc.fillStyle = sc.createPattern(piece("sable"), "repeat"); sc.fillRect(0, 0, MW, MH); sc.globalCompositeOperation = "destination-in"; sc.drawImage(SABLE, 0, 0); b.drawImage(sb, 0, 0); }
+  b.drawImage(RIVE, 0, 0);
   const terre = b.createPattern(piece("terre"), "repeat"), st = S.statut, [fx, fy] = C.FEU;
   // les rues (avant la place : elles s'y fondent)
   ROUTES = C.routes(S);
@@ -239,14 +255,16 @@ let motifEau = null;
 function eau(t, X0, Y0, vw, vh){
   if (!eauCalque){ eauCalque = document.createElement("canvas"); eauCalque.width = MW; eauCalque.height = MH; }
   const b = eauCalque.getContext("2d");
-  if (!motifEau) motifEau = b.createPattern(piece("eau"), "repeat");
+  const ME = C.MER ? "mer" : "eau", pe = AT[ME] ? AT[ME][2] : 48;
+  if (!motifEau) motifEau = b.createPattern(piece(AT[ME] ? ME : "eau"), "repeat");
   b.globalCompositeOperation = "source-over"; b.clearRect(0, 0, MW, MH);
-  for (const [ox, oy, al] of [[t * 6, t * 3, 1], [-t * 5 + 17, t * 4 + 23, .45]]){ motifEau.setTransform(new DOMMatrix([1, 0, 0, 1, ox % 48, oy % 48])); b.globalAlpha = al; b.fillStyle = motifEau; b.fillRect(0, 0, MW, MH); }
+  for (const [ox, oy, al] of [[t * 6, t * 3, 1], [-t * 5 + 17, t * 4 + 23, .45]]){ motifEau.setTransform(new DOMMatrix([1, 0, 0, 1, ox % pe, (C.MER ? oy * .4 : oy) % pe])); b.globalAlpha = al; b.fillStyle = motifEau; b.fillRect(0, 0, MW, MH); }
   b.globalAlpha = 1;
   // reflets
   b.fillStyle = "rgba(255,255,255,.5)";
   for (let k = 0; k < 70; k++){ const gx = hash(k, 1) * MW, gy = hash(k, 2) * MH, a = Math.sin(t * 2 + k * 1.7); if (a > .6) b.fillRect(Math.round(gx + Math.sin(t * .5 + k) * 6), Math.round(gy), 4 + Math.round(a * 5), 2); }
-  if (saisonVue === 3){ b.fillStyle = "rgba(228,238,246,.55)"; b.fillRect(0, 0, MW, MH); }   // l'hiver, l'eau gèle
+  if (C.MER){ const g = b.createLinearGradient(0, (C.H - 6) * T, 0, MH); g.addColorStop(0, "rgba(10,40,90,0)"); g.addColorStop(1, "rgba(10,40,90,.35)"); b.fillStyle = g; b.fillRect(0, 0, MW, MH); }   // plus sombre au large
+  else if (saisonVue === 3){ b.fillStyle = "rgba(228,238,246,.55)"; b.fillRect(0, 0, MW, MH); }   // l'hiver, la rivière gèle (pas la mer)
   b.globalCompositeOperation = "destination-in"; b.drawImage(EAU, 0, 0); b.globalCompositeOperation = "source-over";
   x.drawImage(eauCalque, 0, 0);
 }
@@ -350,7 +368,6 @@ function spriteDe(b, id){ if (MAISONS[b]){ const l = MAISONS[b]; return [l[id.ch
 /* ---------- les villageois ---------- */
 const AG = [];                                  // un par habitant ; i = rangée de villageois.png
 const PIONNIER = VL.adultes.length - 1;
-const ENTREE = [2, 23];
 // le pionnier (dernière rangée) est le premier villageois : AG[0] ; les autres prennent les rangées suivantes
 const rang = i => i === 0 ? PIONNIER : (i - 1) % (VL.adultes.length - 1);
 // l'outil de chaque métier (planches de villageois.png : VL.outils = {outil: [x, case, images]}) ; le cueilleur cueille à la main
@@ -388,7 +405,7 @@ function marcher(a, cible, ensuite){
 function depot(a, r){ const b = R.gardien(S, r), id = b && S.bat[b] && Object.keys(S.lots).find(k => S.lots[k] === b); return id ? C.porte(S, id) : surPlace(a); }
 function surPlace(a){ const [fx, fy] = C.FEU, r = C.PLACE(S.statut) * .7, an = hash(a.i, Math.floor(a.t)) * 6.3; return [Math.round(fx + Math.cos(an) * r), Math.round(fy + Math.sin(an) * r * .8)]; }
 function synchroniser(){
-  while (AG.length < S.pop){ const i = AG.length, [x0, y0] = i === 0 ? [PI.x, PI.y] : [(ENTREE[0] + .5) * T, (ENTREE[1] + .5) * T]; AG.push({i, x: x0, y: y0, dir: i ? "h" : "b", f: 0, t: 0, job: null, etat: "pret", anim: "marche"}); }
+  while (AG.length < S.pop){ const i = AG.length, [x0, y0] = i === 0 ? [PI.x, PI.y] : [(C.ENTREE[0] + .5) * T, (C.ENTREE[1] + .5) * T]; AG.push({i, x: x0, y: y0, dir: i ? "h" : "b", f: 0, t: 0, job: null, etat: "pret", anim: "marche"}); }
   AG.length = Math.min(AG.length, S.pop);
   for (const m in S.jobs){
     const les = AG.filter(a => a.job === m);
@@ -487,7 +504,7 @@ function bande(dt, L){
     BANDE = {n0: S.raid.n, etat: "approche", t: 0, membres: []};
     for (let k = 0; k < n; k++){
       const c = cb[k % cb.length], but = [c[0] + (k % 3) - 1, c[1] + 1 + (k > 2 ? 1 : 0)];
-      const ch = C.chercher(ENTREE, (u, v) => u === but[0] && v === but[1], ROUTES.cases, null) || [ENTREE, but];
+      const ch = C.chercher(C.ENTREE, (u, v) => u === but[0] && v === but[1], ROUTES.cases, null) || [C.ENTREE, but];
       const pts = ch.map(([u, v]) => [(u + .5) * T + (hash(k, u) - .5) * 10, (v + .5) * T + (hash(v, k) - .5) * 8]);
       let lg = 0; for (let i = 1; i < pts.length; i++) lg += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
       BANDE.membres.push({k: k % SOL.pillards, x: pts[0][0] - k * 14, y: pts[0][1] + k * 6, dir: "h", f: k, anim: "marche", chemin: pts.slice(1), v: (lg + k * 14) / (duree * .9), sac: false});
@@ -502,8 +519,8 @@ function bande(dt, L){
   if (BANDE.etat === "melee" && BANDE.t > BANDE.fin){
     BANDE.etat = "fuite";
     for (const m of BANDE.membres){
-      const dep = [Math.floor(m.x / T), Math.floor(m.y / T)], ch = C.chercher(dep, (u, v) => u === ENTREE[0] && v === ENTREE[1], ROUTES.cases, null) || [dep, ENTREE];
-      m.chemin = ch.map(([u, v]) => [(u + .5) * T, (v + .5) * T]).concat([[-2 * T, (ENTREE[1] + .5) * T]]); m.v = DON.MARCHE.vitesse * T * (BANDE.bilan && BANDE.bilan.repousse ? 2.2 : 1.6);
+      const dep = [Math.floor(m.x / T), Math.floor(m.y / T)], ch = C.chercher(dep, (u, v) => u === C.ENTREE[0] && v === C.ENTREE[1], ROUTES.cases, null) || [dep, C.ENTREE];
+      m.chemin = ch.map(([u, v]) => [(u + .5) * T, (v + .5) * T]).concat([[-2 * T, (C.ENTREE[1] + .5) * T]]); m.v = DON.MARCHE.vitesse * T * (BANDE.bilan && BANDE.bilan.repousse ? 2.2 : 1.6);
     }
   }
   let dehors = 0;
@@ -730,7 +747,7 @@ function image(now){
   for (const id in S.lots) if (S.lots[id] === "ponton" && !enCours[id]) ponton(C.LOTS[id]);
   // tout ce qui a des pieds, rangé de haut en bas
   const L = [], vis = (X, Y, m) => X > X0 - m && X < X0 + vw + m && Y > Y0 - 20 && Y < Y0 + vh + 170;
-  for (const a of ARBRES) if (vis(a.X, a.Y, 70)) L.push([a.Y, () => arbre(a, t)]);
+  for (const a of ARBRES) if (vis(a.X, a.Y, 70) && !(a.seul !== undefined && [0, 1, -1, C.W, -C.W].some(d => ROUTES.cases.has(a.seul + d)))) L.push([a.Y, () => arbre(a, t)]);
   for (let y = 0; y < C.H; y++) for (let xx = 0; xx < C.W; xx++) if (C.GRILLE[y][xx] === "*") L.push([(y + .95) * T, () => buissonBaies(xx, y, t)]);
   for (const id in C.LOTS){ const Lo = C.LOTS[id];
     if (Lo.terrain === "roche" && S.lots[id] !== "carriere") for (const [a, b2, k] of ROCHERS) L.push([Lo.y * T + b2, () => spr("rocher", Lo.x * T + a, Lo.y * T + b2, k)]);
@@ -849,15 +866,25 @@ function toucherCase(tx, ty, wx, wy){
 }
 
 /* ---------- départ, absence, sauvegarde ---------- */
-function demarrer(){
+// la carte de la partie affichée (vallée ou côte) : masques de l'eau, du sable et du sous-bois, arbres, calques ; refait quand on change de carte
+function preparerCarte(){
+  const n = C.de(S).n; if (C.n === n && EAU) return; C.utiliser(n);
+  MW = C.W * T; MH = C.H * T;
   EAU = masque("~", [[128, [255, 255, 255, 255]]])[0];
-  [RIVE] = masque("~", [[52, [150, 122, 76, 255]]]);
+  [RIVE] = masque("~", [[52, C.MER ? [236, 226, 196, 255] : [150, 122, 76, 255]]]);   // sur la côte : une frange de sable mouillé
   [SOUS_BOIS] = masque("T", [[110, [30, 70, 24, 120]]]);
-  planterArbres();
+  SABLE = C.MER ? masque(",~MPQ", [[90, [255, 255, 255, 255]]])[0] : null;
+  ARBRES.length = 0; planterArbres();
+  eauCalque = null; fond = null; BORD = null; bordSaison = -1; cleFond = ""; motifEau = null;
+  PI.x = (C.TENTE[0] + 1.6) * T; PI.y = (C.TENTE[1] + 1.2) * T;
+  if (V.changer) V.changer();
+}
+function demarrer(){
   S = charger();
   let recap = null;
   if (S && S.vu){ const s = (Date.now() - S.vu) / 1000; if (s > 60) recap = R.horsLigne(S, s); }
   if (!S) S = R.creer();
+  preparerCarte();
   recompenser();   // une Charte promulguée avant l'arrivée des Lois : ses points sont versés au chargement
   vuLe = Date.now(); cam.zi = zoomDepart();
   document.getElementById("chargement").hidden = true;

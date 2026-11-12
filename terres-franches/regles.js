@@ -81,7 +81,7 @@ const plafondStatut = S => D(S).STATUTS[S.statut].popMax + eff(S, "pop");
 const popMax = S => Math.min(logement(S), plafondStatut(S));
 const enChantier = (S, b) => S.chantiers.filter(c => c.k === b).length;
 function parcellesLibres(S, terrain){
-  if (CARTE) return CARTE.libres(S, terrain).length;
+  if (CARTE) return CARTE.de(S).libres(S, terrain).length;
   const P = D(S); let n = P.CARTE[terrain] || 0;
   for (const b in P.BATIMENTS) if (P.BATIMENTS[b].terrain === terrain) n -= S.bat[b] + enChantier(S, b);
   return n;
@@ -316,8 +316,8 @@ function construire(S, b, lot){
   const ici = D(S).BATIMENTS[b].niveaux && Object.keys(S.lots).find(id => S.lots[id] === b);   // agrandir : sur place
   if (ici){ payer(S, coutBat(S, b)); S.chantiers.push({k: b, reste: D(S).BATIMENTS[b].travail, lot: ici, agrandit: true}); return null; }
   if (CARTE){
-    lot = lot || CARTE.proposer(S, b);
-    const L = CARTE.LOTS[lot];
+    lot = lot || CARTE.de(S).proposer(S, b);
+    const L = CARTE.de(S).LOTS[lot];
     if (!L || L.terrain !== D(S).BATIMENTS[b].terrain) return "CE TERRAIN NE CONVIENT PAS";
     if (S.lots[lot]) return "CE TERRAIN EST PRIS";
     S.lots[lot] = b; S.ordreLots.push(lot);
@@ -328,9 +328,9 @@ function construire(S, b, lot){
 // déplacer un bâtiment (ou son chantier) sur un autre terrain libre du même genre : gratuit
 function deplacer(S, de, vers){
   if (!CARTE) return "PAS DE CARTE";
-  const b = S.lots[de], L = CARTE.LOTS[vers];
+  const b = S.lots[de], L = CARTE.de(S).LOTS[vers];
   if (!b) return "RIEN A DEPLACER";
-  if (!L || L.terrain !== CARTE.LOTS[de].terrain) return "CE TERRAIN NE CONVIENT PAS";
+  if (!L || L.terrain !== CARTE.de(S).LOTS[de].terrain) return "CE TERRAIN NE CONVIENT PAS";
   if (S.lots[vers]) return "CE TERRAIN EST PRIS";
   delete S.lots[de]; S.lots[vers] = b; S.ordreLots[S.ordreLots.indexOf(de)] = vers;
   for (const c of S.chantiers) if (c.lot === de) c.lot = vers;
@@ -415,7 +415,7 @@ function recompense(S, L){
 // la cabane offerte ; o = {nom, lois, ere, mods}
 function nouvelleColonie(o){
   const S = creer(o.mods); S.ere = o.ere || 2; S.nom = o.nom || ""; S.lois = (o.lois || []).slice();
-  if (eff(S, "cabaneOfferte")){ const lot = CARTE.proposer(S, "cabane"); if (lot){ S.lots[lot] = "cabane"; S.ordreLots.push(lot); S.bat.cabane = 1; } }
+  if (eff(S, "cabaneOfferte")){ const lot = CARTE.de(S).proposer(S, "cabane"); if (lot){ S.lots[lot] = "cabane"; S.ordreLots.push(lot); S.bat.cabane = 1; } }
   S.pop = 1 + eff(S, "villageois");
   return S;
 }

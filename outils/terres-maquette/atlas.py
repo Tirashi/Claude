@@ -5,7 +5,7 @@ Sorties dans terres-franches/img/ :
  - villageois.png (une rangée de 256 px par villageois : marche 576 px, repos 128 px, puis hache, pioche, canne, houe) et ../villageois.js (VILLAGEOIS LPC) ;
  - les pièces d'interface ui-*.png (copiées de bastion/img) ;
  - animaux.png + window.TerresAnimauxAtlas dans ../atlas.js : animaux LPC d'OpenGameArt (chat, chien, biche, cerf, renard, oiseaux, poules, poissons).
-Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC> <dossier des animaux>
+Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC> <dossier des animaux> [<pack Medieval Harbour>]
 (mêmes dossiers que fabriquer-7.py ; villageois : sortie de lpc-villageois.py ... 24 11 6)."""
 import json, pathlib, re, shutil, sys
 from PIL import Image
@@ -35,13 +35,17 @@ GARDE = ["herbe", "terre", "eau", "pave", "champ-mur", "champ-pousse", "champ-nu
 def feuille(d, n): return next((SC / d).rglob(f"tile-B-0{n}.png"))
 F = {"V1": feuille("village", 1), "V2": feuille("village", 2), "V3": feuille("village", 3), "F4": feuille("farm", 4), "B4": feuille("buildings", 4), "FO": feuille("foret", 1), "B2": feuille("buildings", 2),
   "F3": feuille("farm", 3), "F5": feuille("farm", 5), "V5": feuille("village", 5)}
+# la côte (ère 2, 12/11) : sable et mer du pack « Medieval Harbour » (5e dossier, facultatif : sinon on garde les morceaux déjà dans decor.png)
+if len(sys.argv) > 5:
+  HB = pathlib.Path(sys.argv[5]); F["H1"] = next(HB.rglob("tile-B-01.png")); F["H3"] = next(HB.rglob("tile-B-03.png"))
+  TOUTES.update({"sable": ("H1", 588, 8, 48, 48), "mer": ("H3", 192, 0, 192, 192)}); GARDE += ["sable", "mer"]
 images, cache = {}, {}
 for nom in GARDE:
   f, x, y, l, h, *eff = TOUTES[nom]
   if f not in cache: cache[f] = Image.open(F[f]).convert("RGBA")
   im = cache[f].crop((x, y, x + l, y + h))
   for (a, b, c, d) in eff: im.paste((0, 0, 0, 0), (a - x, b - y, c - x, d - y))
-  bb = im.getbbox(); images[nom] = im if nom in ("terre", "eau", "herbe", "pave") else (im.crop(bb) if bb else im)
+  bb = im.getbbox(); images[nom] = im if nom in ("terre", "eau", "herbe", "pave", "sable", "mer") else (im.crop(bb) if bb else im)
 # icônes des ressources (grilles de 7 ou 8 icônes sur 1024 px)
 FI = {"m2": "Medieval_Fantasy_Icons_Pack/**/2.png", "m3": "Medieval_Fantasy_Icons_Pack/**/3.png", "p1": "Pixel_Medieval_Fantasy_Icon_Pack/**/1.png", "p2": "Pixel_Medieval_Fantasy_Icon_Pack/**/2.png", "f1": "Pixel_Food_Icon_Pack/**/1.png", "f3": "Pixel_Food_Icon_Pack/**/3.png"}
 GRILLE = {"f3": 8}

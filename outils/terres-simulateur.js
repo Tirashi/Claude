@@ -118,31 +118,34 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
 
 
 /* ---------- la carte : emplacements proposés, déplacement, routes ---------- */
-{
-  const C = require("../terres-franches/carte.js"), L = C.LOTS;
+// les deux cartes : la vallée (ère 1) et la côte (ère 2) ; nb = terrains de 3 × 3, maxi = cases de rue au plus (pas de détours)
+for (const [ere, nb, maxi, stMax] of [[1, 14, 150, 2], [2, 23, 300, 3]]){
+  const C = require("../terres-franches/carte.js").CARTES[ere], L = C.LOTS, nom = C.nom.toLowerCase() + " : ";
   const compte = t => Object.values(L).filter(l => l.terrain === t).length;
-  verif(compte("terre") === 14 && compte("roche") === 2 && compte("rive") === 2 && C.FEU && C.TENTE, "carte : 14 terrains, 2 rochers, 2 rives, le feu et la tente");
-  verif(Object.values(L).every(l => l.terrain !== "terre" || (l.l === 3 && l.h === 3)), "carte : terrains de 3 × 3 cases");
-  const S = R.creer(); S.statut = 2; for (const r in S.res) S.res[r] = 1e5;
+  verif(compte("terre") === nb && compte("roche") === 2 && compte("rive") === 2 && C.FEU && C.TENTE && C.ENTREE && C.case_(...C.ENTREE) !== "T", nom + "carte : " + nb + " terrains, 2 rochers, 2 rives, le feu, la tente, l'entrée");
+  verif(Object.values(L).every(l => l.terrain !== "terre" || (l.l === 3 && l.h === 3)), nom + "terrains de 3 × 3 cases");
+  if (ere > 1) verif(Object.values(L).every(l => l.terrain !== "terre" || [...Array(stMax + 1).keys()].every(st => [[l.x, l.y], [l.x + 2, l.y], [l.x, l.y + 2], [l.x + 2, l.y + 2]].every(([x, y]) => !C.surPlace(x, y, st)))), nom + "la place, à son plus grand, ne mange aucun terrain");
+  const S = ere === 1 ? R.creer() : R.nouvelleColonie({}); S.statut = 2; for (const r in S.res) S.res[r] = 1e5;
   const d = id => Math.hypot(L[id].cx - C.FEU[0], L[id].cy - C.FEU[1]);
   R.construire(S, "cabane"); const c1 = S.ordreLots[0];
-  verif(Object.values(L).filter(l => l.terrain === "terre").every(l => d(c1) <= d(l.id) + 1e-9), "la 1re cabane va au plus près du feu");
+  verif(Object.values(L).filter(l => l.terrain === "terre").every(l => d(c1) <= d(l.id) + 1e-9), nom + "la 1re cabane va au plus près du feu");
   R.construire(S, "champ"); const ch = S.ordreLots[1];
-  verif(L[ch].tags.includes("fertile"), "le champ va sur la bonne terre");
+  verif(L[ch].tags.includes("fertile"), nom + "le champ va sur la bonne terre");
   R.construire(S, "moulin"); const mo = S.ordreLots[2];
-  verif(!L[mo].tags.includes("fertile") && Math.hypot(L[mo].cx - L[ch].cx, L[mo].cy - L[ch].cy) < 9, "le moulin se pose près du champ, sans manger la bonne terre");
-  R.construire(S, "bergerie"); verif(L[S.ordreLots[3]].tags.includes("pre"), "la bergerie va dans la clairière");
-  R.construire(S, "carriere"); verif(L[S.ordreLots[4]].terrain === "roche", "la carrière va sur un rocher");
-  verif(R.construire(S, "cabane", "X") === "CE TERRAIN NE CONVIENT PAS" && R.construire(S, "cabane", c1) === "CE TERRAIN EST PRIS", "on ne bâtit pas n'importe où");
+  verif(!L[mo].tags.includes("fertile") && Math.hypot(L[mo].cx - L[ch].cx, L[mo].cy - L[ch].cy) < 9, nom + "le moulin se pose près du champ, sans manger la bonne terre");
+  R.construire(S, "bergerie"); verif(L[S.ordreLots[3]].tags.includes("pre"), nom + "la bergerie va dans la clairière");
+  R.construire(S, "carriere"); verif(L[S.ordreLots[4]].terrain === "roche", nom + "la carrière va sur un rocher");
+  verif(R.construire(S, "cabane", "X") === "CE TERRAIN NE CONVIENT PAS" && R.construire(S, "cabane", c1) === "CE TERRAIN EST PRIS", nom + "on ne bâtit pas n'importe où");
   const libre = C.libres(S, "terre")[0];
-  verif(R.deplacer(S, c1, libre) === null && S.lots[libre] === "cabane" && !S.lots[c1] && S.chantiers.some(c => c.lot === libre), "déplacer une cabane (même en chantier)");
+  verif(R.deplacer(S, c1, libre) === null && S.lots[libre] === "cabane" && !S.lots[c1] && S.chantiers.some(c => c.lot === libre), nom + "déplacer une cabane (même en chantier)");
   // toutes les portes sont reliées à la place par une route, même la carte pleine
   while (!R.construire(S, "cabane") || !R.construire(S, "maison")) ;
   for (const t of ["terre", "roche", "rive", "reserve", "garnison", "guet"]) for (const id of C.libres(S, t)) S.lots[id] = t === "terre" ? "atelier" : t === "roche" ? "carriere" : t === "rive" ? "ponton" : t === "garnison" ? (id === "K" ? "caserne" : "forge") : t === "guet" ? "tour" : id === "R" ? "aire" : "grenier", S.ordreLots.push(id);
   const ro = C.routes(S);
-  verif(ro.traces.length === Object.keys(L).length, "routes : chaque bâtiment a sa rue (" + ro.traces.length + "/" + Object.keys(L).length + ")");
-  verif(ro.traces.every(tr => { const p = C.porte(S, tr.id); return tr.cases[0][0] === p[0] && tr.cases[0][1] === p[1]; }), "routes : elles partent des portes");
-  const nb = [...ro.cases].length; verif(nb < 150, "routes : pas de détours (" + nb + " cases)");
+  const bat = Object.keys(L).filter(id => L[id].terrain !== "port").length;   // le port (étape 3) attend son bâtiment
+  verif(ro.traces.length === bat, nom + "routes : chaque bâtiment a sa rue (" + ro.traces.length + "/" + bat + ")");
+  verif(ro.traces.every(tr => { const p = C.porte(S, tr.id); return tr.cases[0][0] === p[0] && tr.cases[0][1] === p[1]; }), nom + "routes : elles partent des portes");
+  const nr = [...ro.cases].length; verif(nr < maxi, nom + "routes : pas de détours (" + nr + " cases)");
 }
 
 /* ---------- les parties du robot ---------- */

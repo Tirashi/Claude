@@ -93,7 +93,7 @@ function volColonie(){
     h += `<h3 style="margin-top:8px"><span>${L.nom}</span></h3><p>La Loi de l'ère ${S.ere || 1}${suite ? ` : elle rapporte ${P.POINTS_LOI[S.ere || 1]} points de Loi et permet de fonder une nouvelle colonie` : ""}.</p>${conditions(L.pop, L.cout)}`;
     h += !S.loi ? `<button type="button" class="bouton or" data-act="loi"${R.peutPromulguer(S) ? " disabled" : ""}>PROMULGUER</button>`
       : suite ? `<p>Promulguée !</p><button type="button" class="bouton or" data-act="fonder">CHOISIR LES LOIS ET FONDER</button>`
-      : `<p>Promulguée ! La suite de l'ère ${S.ere} (la côte et sa Loi) arrive bientôt.</p>`;
+      : `<p>Promulguée ! La suite de l'ère ${S.ere} (la Loi des Guildes, le bourg) arrive bientôt.</p>`;
   }
   return h;
 }
@@ -287,7 +287,7 @@ function ecranNom(){
   $("nomColonie").value = auHasard();
   $("nomLois").textContent = (L.prises.length ? "Lois : " + L.prises.map(id => P.LOIS[id].nom.toLowerCase()).join(", ") + "." : "Aucune Loi prise.")
     + (L.points ? ` Il te reste ${L.points} point${L.points > 1 ? "s" : ""} : ${L.points > 1 ? "ils seront gardés" : "il sera gardé"} pour plus tard.` : "")
-    + " En attendant la carte de la côte, la nouvelle colonie s'installe dans une vallée semblable.";
+    + " La côte : une plage, des pontons et la mer, une terre plus grande ; ses bâtiments à elle (port, fumoir, brasserie…) viendront ensuite.";
   $("nomEcran").hidden = false;
 }
 $("bAutreNom").onclick = () => { $("nomColonie").value = auHasard(); };

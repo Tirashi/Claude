@@ -111,6 +111,7 @@ img, canvas{image-rendering:pixelated}
 /* messages, écrans */
 #banniere{position:fixed; left:50%; top:96px; transform:translateX(-50%); z-index:7; pointer-events:none; opacity:0; transition:opacity .4s; font-size:9px; max-width:94vw}
 #banniere.vu{opacity:1}
+#alerte[hidden]{display:none}   /* .ruban est en flex : sans ça, le bandeau vide restait visible */
 /* l'alerte des pillards : bandeau rouge qui reste tant que la bande approche */
 #alerte{position:fixed; left:50%; top:132px; transform:translateX(-50%); z-index:6; pointer-events:none; font-size:9px; max-width:94vw; border-image-source:url(img/ui-ruban-rouge.png); text-shadow:2px 2px 0 #3a1010; animation:alerte 1s steps(2) infinite}
 @keyframes alerte{50%{filter:brightness(1.3)}}
