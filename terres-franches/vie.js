@@ -20,7 +20,7 @@ function pluie(S){ const k = Math.floor(S.t / 150); return hash(k, 41) < (saison
 /* ---------- les saisons ---------- */
 const ETATS = [["nu", "pousse", "pousse"], ["pousse", "mur", "mur", "blond"], ["blond", "nu", "blond", "nu"], ["nu"]];
 const etatChamp = (t, i, s) => { const E = ETATS[s]; return E[Math.floor(t / 40 + i * 1.7) % E.length]; };
-const retouche = n => n.startsWith("s-arbre") || n === "s-jeune" ? "arbre" : /^(chaume|colomb|pierre)\d/.test(n) || ["grange", "hangar", "four", "moulin1", "puits", "puits-couvert", "fontaine"].includes(n) ? "toit" : null;
+const retouche = n => n.startsWith("s-arbre") || n === "s-jeune" ? "arbre" : /^(chaume|colomb|pierre)\d/.test(n) || ["grange", "hangar", "atelier", "four", "moulin1", "puits", "puits-couvert", "fontaine"].includes(n) ? "toit" : null;
 const cacheS = {};
 // la planche du décor retouchée pour la saison s (feuilles rousses, fleurs, neige sur les toits et les arbres)
 function recolorer(img, s){
@@ -166,13 +166,18 @@ function objets(L, x, t, dt, S, agents, vis){
 
 /* ---------- le ciel : vols d'oiseaux, pluie ou neige, nuit et lumières ---------- */
 const GOUTTES = Array.from({length: 150}, (_, i) => ({x: (i * 977) % 1000 / 1000, y: (i * 613) % 1000 / 1000, v: .8 + (i % 7) / 10}));
-const VOL = [0, 1, 2, 3, 4].map(i => ({dx: (i % 3) * 22 - i * 4, dy: i * 12 - (i % 2) * 16}));
+// vols d'oiseaux : chaque oiseau a sa place dans le V, son battement d'ailes et son petit écart (pas tous ensemble)
+const VOL = [0, 1, 2, 3, 4].map(i => ({dx: (i % 3) * 22 - i * 4, dy: i * 12 - (i % 2) * 16, ph: (i * 0.37 + i * i * .11) % 1, v: 8.5 + (i * 1.7) % 3, a: 3 + (i * 7) % 5}));
 function ciel(x, t, S, X0, Y0, vw, vh, lumieres){
   const N = nuit(S), s = saison(S), P = pluie(S), neige = s === 3;
   // vols d'oiseaux qui traversent (le jour)
-  if (N < .5 && !P) for (let n = 0; n < 2; n++){ const per = 14 + n * 7, u = ((t + n * 5) % per) / per, versD = (Math.floor((t + n * 5) / per) + n) % 2 === 0;
-    const ox = X0 - 80 + (versD ? u : 1 - u) * (vw + 160), oy = Y0 + vh * (.18 + .3 * n) + Math.sin(t * .8 + n) * 30;
-    for (const b of VOL) cadre(x, {l: 32, h: 32, py: 16, k: .5}, n ? "oiseau1" : "oiseau2", versD ? 0 : 3, Math.floor(t * 10 + b.dx) % 3, ox + b.dx * (versD ? -1.3 : 1.3), oy + b.dy * 1.3, false, 0); }
+  // dans le monde, pas sur l'écran : ils traversent la vallée, la caméra ne les emmène pas
+  if (N < .5 && !P){ const MW = C.W * C.T, MH = C.H * C.T;
+    for (let n = 0; n < 2; n++){ const per = 26 + n * 11, q = (t + n * 9) / per, u = q % 1, tour = Math.floor(q), versD = (tour + n) % 2 === 0;
+      const ox = -200 + (versD ? u : 1 - u) * (MW + 400), oy = MH * (.15 + ((tour * 37 + n * 53) % 60) / 100) + Math.sin(t * .35 + n * 2) * 40;
+      if (ox < X0 - 120 || ox > X0 + vw + 120 || oy < Y0 - 120 || oy > Y0 + vh + 120) continue;
+      for (const b of VOL){ const bx = ox + b.dx * (versD ? -1.3 : 1.3) + Math.sin(t * .9 + b.ph * 6.3) * b.a, by = oy + b.dy * 1.3 + Math.sin(t * 1.3 + b.ph * 9) * b.a * .7;
+        cadre(x, {l: 32, h: 32, py: 16, k: .5}, n ? "oiseau1" : "oiseau2", versD ? 0 : 3, Math.floor(t * b.v + b.ph * 3) % 3, bx, by, false, 0); } } }
   // pluie ou neige
   if (P){
     x.fillStyle = neige ? "rgba(200,210,230,.12)" : "rgba(30,40,60,.2)"; x.fillRect(X0, Y0, vw, vh);

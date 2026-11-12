@@ -89,13 +89,47 @@ function piedSec(X, Y, r){
   for (const dy of [0, -1, -2]) for (const dx of [-1, 0, 1]) if (/[KLG]/.test(C.case_(Math.floor(X / T) + dx, Math.floor(Y / T) + dy))) return false;   // pas d'arbre sur (ni devant) la caserne, la forge et la tour, prises sur la forêt
   return true;
 }
+// le pourtour de la vallée (vu sur PC, quand la carte est plus petite que l'écran) : la forêt continue, la rivière et le lac aussi,
+// et tout s'assombrit en s'éloignant ; refait à chaque saison
+const MB = 12;   // marge, en cases
+let BORD = null, bordSaison = -1;
+function dessinerBord(){
+  const BW = C.W + 2 * MB, BH = C.H + 2 * MB, c = BORD || (BORD = document.createElement("canvas")); c.width = BW * T; c.height = BH * T; const b = c.getContext("2d");
+  const loin = (u, v) => Math.max(-u, u - C.W + 1, -v, v - C.H + 1, 0);   // distance au bord de la carte, en cases
+  const type = (u, v) => { const k = C.case_(Math.max(0, Math.min(C.W - 1, u)), Math.max(0, Math.min(C.H - 1, v))); return k === "~" ? "~" : k === "T" || loin(u, v) > 2 ? "T" : "."; };
+  b.fillStyle = b.createPattern(piece("herbe"), "repeat"); b.fillRect(0, 0, c.width, c.height);
+  // l'eau et le sous-bois : masques flous, comme dans la vallée
+  const p = 4, m = document.createElement("canvas"); m.width = BW * p; m.height = BH * p; const mb = m.getContext("2d");
+  const flou = (car) => { mb.clearRect(0, 0, m.width, m.height); mb.fillStyle = "#fff";
+    for (let v = 0; v < BH; v++) for (let u = 0; u < BW; u++) if (type(u - MB, v - MB) === car) mb.fillRect(u * p, v * p, p, p);
+    const g = document.createElement("canvas"); g.width = c.width; g.height = c.height; const gb = g.getContext("2d"); gb.imageSmoothingEnabled = true; gb.filter = "blur(7px)"; gb.drawImage(m, 0, 0, c.width, c.height); return g; };
+  const teinte = (g, s, col) => { const d = g.getContext("2d").getImageData(0, 0, g.width, g.height), q = d.data; for (let i = 0; i < q.length; i += 4){ const a = q[i + 3] >= s; q[i] = col[0]; q[i + 1] = col[1]; q[i + 2] = col[2]; q[i + 3] = a ? col[3] : 0; } g.getContext("2d").putImageData(d, 0, 0); return g; };
+  b.drawImage(teinte(flou("T"), 110, [30, 70, 24, 120]), 0, 0);
+  const ge = flou("~"); b.drawImage(teinte(ge, 52, [150, 122, 76, 255]), 0, 0);
+  const eaux = flou("~"), ec = document.createElement("canvas"); ec.width = c.width; ec.height = c.height; const eb = ec.getContext("2d");
+  eb.fillStyle = eb.createPattern(piece("eau"), "repeat"); eb.fillRect(0, 0, c.width, c.height); if (saisonVue === 3){ eb.fillStyle = "rgba(228,238,246,.55)"; eb.fillRect(0, 0, c.width, c.height); }
+  eb.globalCompositeOperation = "destination-in"; eb.drawImage(teinte(eaux, 128, [255, 255, 255, 255]), 0, 0); b.drawImage(ec, 0, 0);
+  V.sol(c, saisonVue);
+  // les arbres, un par carré de 2 × 2 cases de forêt, entièrement hors de la carte (la vallée les cacherait)
+  const A = [];
+  for (let v = -MB; v < C.H + MB; v += 2) for (let u = -MB; u < C.W + MB; u += 2){
+    if (![[0, 0], [1, 0], [0, 1], [1, 1]].every(([dx, dy]) => type(u + dx, v + dy) === "T")) continue;
+    const h = hash(u + 99, v + 51), n = "s-arbre" + (1 + Math.floor(h * 6)), at = AT[n]; if (!at) continue;
+    const X = (u + 1 + (h - .5) * 1.1) * T, Y = (v + 1.7 + (hash(v, u) - .5) * .8) * T, l = at[2] / 2;
+    if (X + l > 0 && X - l < MW && Y > 0 && Y - at[3] < MH) continue;
+    A.push([X, Y, at]);
+  }
+  A.sort((p, q) => p[1] - q[1]);
+  for (const [X, Y, at] of A){ b.fillStyle = "rgba(20,40,10,.3)"; b.beginPath(); b.ellipse(X + MB * T, Y + MB * T - 4, at[2] * .32, 8, 0, 0, 6.3); b.fill();
+    b.drawImage(planche, at[0], at[1], at[2], at[3], Math.round(X + MB * T - at[2] / 2), Math.round(Y + MB * T - at[3] + 8), at[2], at[3]); }
+  // l'ombre qui gagne en s'éloignant (dégradé lissé d'une grille par case)
+  const o = document.createElement("canvas"); o.width = BW; o.height = BH; const ob = o.getContext("2d"), od = ob.createImageData(BW, BH);
+  for (let v = 0; v < BH; v++) for (let u = 0; u < BW; u++){ const d = loin(u - MB, v - MB), i = (v * BW + u) * 4; od.data[i] = 14; od.data[i + 1] = 24; od.data[i + 2] = 10; od.data[i + 3] = Math.round(255 * Math.min(1, Math.max(0, (d - 1.5) / (MB - 3)))); }
+  ob.putImageData(od, 0, 0); b.imageSmoothingEnabled = true; b.drawImage(o, 0, 0, c.width, c.height); b.imageSmoothingEnabled = false;
+  bordSaison = saisonVue;
+}
 // le sol, redessiné quand une rue, un bâtiment ou le statut change
 let fond = null, cleFond = "", ROUTES = {traces: [], cases: new Set()};
-function lisser(cases){   // centre des cases, coins adoucis (Chaikin)
-  let p = cases.map(([a, b]) => [(a + .5) * T, (b + .5) * T]);
-  for (let k = 0; k < 2; k++){ if (p.length < 3) break; const q = [p[0]]; for (let i = 0; i < p.length - 1; i++){ const [a, b] = p[i], [c, d] = p[i + 1]; q.push([a * .75 + c * .25, b * .75 + d * .25], [a * .25 + c * .75, b * .25 + d * .75]); } q.push(p[p.length - 1]); p = q; }
-  return p;
-}
 function dessinerFond(){
   const c = fond || (fond = document.createElement("canvas")); c.width = MW; c.height = MH; const b = c.getContext("2d");
   b.fillStyle = b.createPattern(piece("herbe"), "repeat"); b.fillRect(0, 0, MW, MH);
@@ -104,14 +138,18 @@ function dessinerFond(){
   const terre = b.createPattern(piece("terre"), "repeat"), st = S.statut, [fx, fy] = C.FEU;
   // les rues (avant la place : elles s'y fondent)
   ROUTES = C.routes(S);
-  b.lineCap = b.lineJoin = "round";
-  const PXf = (fx + .5) * T, PYf = (fy + .5) * T;
-  for (const [w, s] of [[24, "rgba(90,70,30,.35)"], [20, terre]]){
-    b.lineWidth = w; b.strokeStyle = s;
-    for (const tr of ROUTES.traces){ const p = lisser(tr.cases); b.beginPath(); b.moveTo(p[0][0], p[0][1]);
-      if (p.length === 1){ const d = Math.hypot(PXf - p[0][0], PYf - p[0][1]) || 1; b.lineTo(p[0][0] + (PXf - p[0][0]) / d * T * 1.2, p[0][1] + (PYf - p[0][1]) / d * T * 1.2); }
-      for (const q of p.slice(1)) b.lineTo(q[0], q[1]); b.stroke(); }
+  // sur la grille : une bande droite d'un centre de case au suivant (4 directions), les croisements se fondent d'eux-mêmes
+  const liens = [];
+  for (const tr of ROUTES.traces){ const p = tr.cases;
+    if (p.length === 1){ const [u, v] = p[0], dx = Math.sign(fx - u), dy = Math.sign(fy - v); liens.push(Math.abs(fx - u) >= Math.abs(fy - v) ? [u, v, u + dx, v] : [u, v, u, v + dy]); }
+    for (let i = 0; i < p.length - 1; i++) liens.push([p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]]); }
+  for (const [w, s] of [[26, "rgba(90,70,30,.32)"], [21, terre]]){
+    b.fillStyle = s; const h = w / 2;
+    for (const [u, v, u2, v2] of liens){ const x0 = Math.min(u, u2) * T + T / 2 - h, y0 = Math.min(v, v2) * T + T / 2 - h; b.fillRect(x0, y0, Math.abs(u2 - u) * T + w, Math.abs(v2 - v) * T + w); }
   }
+  // quelques cailloux sur les rues
+  for (const k of ROUTES.cases){ const u = k % C.W, v = Math.floor(k / C.W); for (let q = 0; q < 2; q++){ const hh = hash(u * 7 + q, v * 3); if (hh > .55) continue;
+    b.fillStyle = q ? "rgba(70,55,30,.45)" : "rgba(235,215,170,.4)"; b.fillRect(Math.round((u + .2 + hash(v, u + q) * .6) * T), Math.round((v + .25 + hh) * T * 1), 2, 2); } }
   // la place : terre battue (pavée au village), par-dessus le bout des rues
   const R0 = C.PLACE(st) * T, PX = (fx + .5) * T, PY = (fy + .5) * T;
   {  // bord irrégulier et adouci (piétiné), pavés au village
@@ -127,16 +165,9 @@ function dessinerFond(){
   for (const id in S.lots){ const L = C.LOTS[id], bk = S.lots[id]; if (L.terrain !== "terre" || bk === "champ") continue;
     b.fillStyle = "rgba(80,110,40,.25)"; b.fillRect(L.x * T + 4, L.y * T + 8, L.l * T - 8, L.h * T - 10); }
   V.sol(c, saisonVue);   // l'herbe de la saison
-  // le puits (hameau) puis la fontaine (village) : au bord de la place, jamais sur une rue ni sur un terrain
-  PUITS = null;
-  if (st >= 1){
-    const Rp = C.PLACE(st) * .78;
-    for (const an of [3.6, 2.7, 5.8, .5, 4.4, 1.6, 5.1, 3.1]){
-      const px = fx + .5 + Math.cos(an) * Rp, py = fy + .5 + Math.sin(an) * Rp * .85, cx = Math.floor(px), cy = Math.floor(py);
-      const occupe = [[0, 0], [-1, 0], [1, 0], [0, -1]].some(([dx, dy]) => ROUTES.cases.has((cy + dy) * C.W + cx + dx) || C.case_(cx + dx, cy + dy) !== "." && C.case_(cx + dx, cy + dy) !== "^" || Object.keys(C.LOTS).some(id => { const L = C.LOTS[id]; return cx + dx >= L.x && cx + dx < L.x + L.l && cy + dy >= L.y && cy + dy < L.y + L.h; }));
-      if (!occupe){ PUITS = [px * T, (py + .4) * T]; break; }
-    }
-  }
+  if (bordSaison !== saisonVue) dessinerBord();
+  // au hameau, le puits remplace le feu de camp au milieu de la place ; au village, la fontaine
+  PUITS = st >= 1 ? [(fx + .5) * T, (fy + .95) * T] : null;
   placerDecor();
 }
 let PUITS = null;
@@ -269,16 +300,19 @@ function carriere(L, bati){
   for (const [a, b, w, h] of [[2, 46, 12, 8], [14, 50, 10, 7], [44, 52, 13, 9], [52, 44, 9, 7]]){ x.fillStyle = "#7d7a74"; x.fillRect(X + a, Y + b, w, h); x.fillStyle = "#a9a59c"; x.fillRect(X + a, Y + b, w, 2); }
   x.fillStyle = "#6a4a26"; x.fillRect(X + 58, Y + 14, 3, 42); x.fillRect(X + 40, Y + 14, 21, 3); x.fillStyle = "#d8d0b8"; x.fillRect(X + 42, Y + 17, 1, 14);
 }
-function bergerie(L, t){
+function bergerie(L, t, id){
   const X = L.x * T, Y = L.y * T, W = L.l * T, H = L.h * T;
   x.strokeStyle = "#7a5530"; x.lineWidth = 2;
   for (const yy of [Y + 38, Y + 46]){ x.beginPath(); x.moveTo(X + 4, yy); x.lineTo(X + 4, Y + H - 4); x.lineTo(X + W - 4, Y + H - 4); x.lineTo(X + W - 4, yy); x.stroke(); }
   for (let k = 0; k <= 8; k++){ x.fillStyle = "#6a4a26"; x.fillRect(X + 3 + k * (W - 8) / 8, Y + H - 12, 3, 10); }
   spr("grange", X + W / 2, Y + 50, .55);
-  for (let k = 0; k < 3; k++){ const mx = X + 20 + k * 26 + Math.sin(t * .2 + k * 2) * 8, my = Y + 70 + (k % 2) * 10; spr("mouton-broute", mx, my, .32, t * 6 + k * 3, 12, Math.sin(t * .2 + k * 2 + 1.5) < 0); }
+  const pre = [];   // moutons et bergers, rangés de haut en bas
+  for (let k = 0; k < 3; k++){ const mx = X + 20 + k * 26 + Math.sin(t * .2 + k * 2) * 8, my = Y + 70 + (k % 2) * 10; pre.push([my, () => spr("mouton-broute", mx, my, .32, t * 6 + k * 3, 12, Math.sin(t * .2 + k * 2 + 1.5) < 0)]); }
+  if (id) for (const a of AG) if (a.etat === "troupeau" && a.lot === id) pre.push([a.y, () => { x.fillStyle = "rgba(20,30,10,.28)"; x.beginPath(); x.ellipse(a.x, a.y, 10, 4, 0, 0, 6.3); x.fill(); lpc(a, a.x, a.y, .75); }]);
+  pre.sort((p, q) => p[0] - q[0]); for (const [, f] of pre) f();
 }
 const MAISONS = {cabane: ["chaume1", "chaume2", "chaume3", "chaume4", "chaume5"], maison: ["colomb1", "colomb2", "colomb3", "colomb4", "pierre1", "pierre2", "pierre3", "pierre5"]};
-const SPRITE = {four: ["four", 1], atelier: ["hangar", 1], moulin: ["moulin1", .5], tour: ["tour", .62], caserne: ["caserne", .72], forge: ["forge", .74]};
+const SPRITE = {four: ["four", 1], atelier: ["atelier", 1], moulin: ["moulin1", .5], tour: ["tour", .62], caserne: ["caserne", .72], forge: ["forge", .74]};
 function spriteDe(b, id){ if (MAISONS[b]){ const l = MAISONS[b]; return [l[id.charCodeAt(0) % l.length], 1]; } return SPRITE[b] || null; }
 
 /* ---------- les villageois ---------- */
@@ -367,12 +401,13 @@ function bouger(a, dt){
     marcher(a, [p[0], p[1]], () => {
       if (a.job !== m){ a.etat = "pret"; return; }
       if (DON.METIERS[m].entree){ a.etat = "dedans"; a.fin = a.t + 30; return; }
-      if (m === "berger"){ a.etat = "flane"; a.anim = "repos"; a.dir = "b"; a.fin = a.t + 8; return; }
+      if (m === "berger"){ a.etat = "troupeau"; a.lot = p[2]; a.tours = 3 + Math.floor(hash(a.i, a.t | 0) * 3); a.cible = null; a.fin = 0; return; }   // il entre dans le pré, va et vient entre les moutons
       a.etat = "travail"; a.anim = OUTIL[m] ? "travail" : "repos"; a.outil = OUTIL[m]; a.f = 0; regarder(a, p[0], p[1]); if (a.anim === "travail" && a.dir !== "g" && a.dir !== "d") a.dir = hash(a.i, 9) < .5 ? "g" : "d";
       a.fin = a.t + (DUREE[m] || 8);
     });
     return;
   }
+  if (a.etat === "troupeau"){ troupeau(a, dt); return; }
   if ((a.etat === "flane" || a.etat === "dedans") && a.t > a.fin){ a.etat = "pret"; return; }
   if (a.etat === "travail" && a.t > a.fin){
     const m = a.job;
@@ -451,8 +486,21 @@ function bande(dt, L){
   }
   if (BANDE.etat === "fuite" && (dehors === BANDE.membres.length || BANDE.t > BANDE.fin + 60)) BANDE = null;
 }
+// le berger dans son pré : il marche d'un mouton à l'autre, s'arrête, les regarde (dessiné par bergerie(), derrière la clôture)
+function troupeau(a, dt){
+  const L = C.LOTS[a.lot]; if (!L || S.lots[a.lot] !== "bergerie"){ a.etat = "pret"; return; }
+  if (a.t < a.fin) return;
+  if (!a.cible){
+    if (a.tours-- <= 0){ a.etat = "pret"; return; }
+    const h = hash(a.i * 13 + a.tours, a.t * 10 | 0); a.cible = [L.x * T + 14 + h * 68, L.y * T + 62 + hash(a.t * 10 | 0, a.i + a.tours) * 24]; a.anim = "marche";
+  }
+  const dx = a.cible[0] - a.x, dy = a.cible[1] - a.y, d = Math.hypot(dx, dy), v = DON.MARCHE.vitesse * .55 * T * dt;
+  if (d > v){ a.x += dx / d * v; a.y += dy / d * v; a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "d" : "g") : (dy > 0 ? "b" : "h"); return; }
+  a.cible = null; a.anim = "repos"; a.fin = a.t + 2.5 + hash(a.i, a.t * 3 | 0) * 4;
+  const mx = L.x * T + 46; a.dir = Math.abs(mx - a.x) < 8 ? "b" : (mx > a.x ? "d" : "g");   // il se tourne vers le troupeau
+}
 function dessinerAgent(a){
-  if (a.etat === "dedans" || a.etat === "cache") return;
+  if (a.etat === "dedans" || a.etat === "cache" || a.etat === "troupeau") return;
   x.fillStyle = "rgba(20,30,10,.28)"; x.beginPath(); x.ellipse(a.x, a.y, 10, 4, 0, 0, 6.3); x.fill();
   if (a.job === "garde"){ soldat(SOL.pillards + a.i % SOL.gardes, a, a.x, a.y, .75); return; }
   lpc(a, a.x, a.y, .75);
@@ -520,7 +568,7 @@ function dessinerPlacement(t){
   for (const id of pos){ const L = C.LOTS[id]; x.strokeStyle = id === PL.lot ? "rgba(255,240,120,.95)" : "rgba(255,255,255,.65)"; x.strokeRect(L.x * T + 3, L.y * T + 3, L.l * T - 6, L.h * T - 6); }
   x.setLineDash([]);
   const ch = apercuRue();
-  if (ch){ x.strokeStyle = "rgba(255,240,140,.7)"; x.lineWidth = 6; x.lineCap = "round"; x.setLineDash([2, 9]); x.beginPath(); const p = lisser(ch); x.moveTo(p[0][0], p[0][1]); for (const q of p) x.lineTo(q[0], q[1]); x.stroke(); x.setLineDash([]); }
+  if (ch){ x.strokeStyle = "rgba(255,240,140,.7)"; x.lineWidth = 6; x.lineCap = "round"; x.setLineDash([2, 9]); x.beginPath(); const p = ch.map(([u, v]) => [(u + .5) * T, (v + .5) * T]); x.moveTo(p[0][0], p[0][1]); for (const q of p) x.lineTo(q[0], q[1]); x.stroke(); x.setLineDash([]); }
   if (PL.lot){ const L = C.LOTS[PL.lot]; x.globalAlpha = .6 + .2 * Math.sin(t * 4); batiment(PL.b, PL.lot, t, true); x.globalAlpha = 1; x.fillStyle = "rgba(255,240,120,.18)"; x.fillRect(L.x * T + 3, L.y * T + 3, L.l * T - 6, L.h * T - 6); }
 }
 
@@ -585,7 +633,7 @@ function pancarte(X, Y, rs){
     if (a) x.drawImage(planche, a[0], a[1], a[2], a[3], bx + 1, Y + 1, 14, 14 * Math.min(1, a[3] / a[2]));
     x.fillStyle = "#5a4024"; x.fillRect(bx, Y + 15, 16, 4); x.fillStyle = f > .985 ? "#c0392b" : f > .8 ? "#e0a030" : "#5aa02c"; x.fillRect(bx + 1, Y + 16, Math.round(14 * f), 2); });
 }
-// avant le grenier et l'aire : le stock est près du feu
+// avant le grenier et l'aire : le stock est près du feu (puis du puits)
 function reservesDuFeu(){
   const [fx, fy] = C.FEU, X = (fx + .5) * T, Y = (fy + .5) * T;
   if (!S.bat.aire){ buches(X - 70, Y + 34, part("bois"), 6); if (S.res.pierre > 0) pierres(X - 70, Y + 48, part("pierre"), 3); }
@@ -598,7 +646,7 @@ function batiment(b, id, t, fantome){
   if (b === "champ"){ champ(L, t, id.charCodeAt(0)); return; }
   if (b === "ponton"){ ponton(L); return; }
   if (b === "carriere"){ carriere(L, true); return; }
-  if (b === "bergerie"){ bergerie(L, t); return; }
+  if (b === "bergerie"){ bergerie(L, t, fantome ? null : id); return; }
   const s = spriteDe(b, id); if (!s) return;
   x.fillStyle = "rgba(20,30,10,.25)"; x.beginPath(); x.ellipse(X, Y - 2, 40 * s[1] / (s[1] < 1 ? .55 : 1), 7, 0, 0, 6.3); x.fill();
   spr(s[0], X, Y, s[1]); cheminee(s[0], X, Y, s[1]);
@@ -637,9 +685,10 @@ function image(now){
   if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(ch * dpr)){ cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); }
   const z = Z[cam.zi], vw = cw / z, vh = ch / z; borner(vw, vh);
   const X0 = cam.x - vw / 2, Y0 = cam.y - vh / 2;
-  x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = "#2a4a22"; x.fillRect(0, 0, cv.width, cv.height);
+  x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = "#0e180a"; x.fillRect(0, 0, cv.width, cv.height);
   x.imageSmoothingEnabled = false;
   x.setTransform(z * dpr, 0, 0, z * dpr, Math.round(-X0 * z * dpr), Math.round(-Y0 * z * dpr));
+  if (BORD && (X0 < 0 || Y0 < 0 || X0 + vw > MW || Y0 + vh > MH)) x.drawImage(BORD, -MB * T, -MB * T);
   x.drawImage(fond, 0, 0);
   eau(t, X0, Y0, vw, vh);
   // champs au sol (avant le reste)
@@ -658,10 +707,10 @@ function image(now){
   }
   const [fx, fy] = C.FEU, [tx, ty] = C.TENTE;
   if (S.statut < 1) L.push([(ty + .9) * T, () => tente((tx + .5) * T, (ty + .9) * T)]);   // au hameau, le pionnier a son toit
-  L.push([(fy + .75) * T, () => feuDeCamp((fx + .5) * T, (fy + .75) * T, t)]);
+  if (S.statut < 1) L.push([(fy + .75) * T, () => feuDeCamp((fx + .5) * T, (fy + .75) * T, t)]);
   L.push([(fy + 1.4) * T, reservesDuFeu]);
   for (const d of DECOR) if (vis(d.X, d.Y, 60)) L.push([d.Y, () => spr(d.n, d.X, d.Y, d.k)]);
-  if (PUITS) L.push([PUITS[1], () => spr(S.statut >= 2 ? "fontaine" : "puits", PUITS[0], PUITS[1], S.statut >= 2 ? .8 : .7)]);
+  if (PUITS) L.push([PUITS[1], () => spr(S.statut >= 2 ? "fontaine" : "puits", PUITS[0], PUITS[1], S.statut >= 2 ? .85 : .8)]);
   for (const a of AG){ bouger(a, dt); L.push([a.y, () => dessinerAgent(a)]); }
   bande(dt, L);
   PI.f += dt * 8; if (PI.anim === "travail" && t > PI.fin) PI.anim = "repos";
@@ -670,7 +719,7 @@ function image(now){
   L.sort((a, b) => a[0] - b[0]);
   for (const [, f] of L) f();
   // les lumières de la nuit : le feu, la fontaine, une fenêtre par logis
-  const lum = [[(fx + .5) * T, (fy + .6) * T, 90, 1.2]];
+  const lum = S.statut < 1 ? [[(fx + .5) * T, (fy + .6) * T, 90, 1.2]] : [];
   for (const id in S.lots) if (!enCours[id] && (S.lots[id] === "cabane" || S.lots[id] === "maison" || S.lots[id] === "four")){ const Lo = C.LOTS[id]; lum.push([(Lo.x + Lo.l / 2) * T, (Lo.y + Lo.h) * T - 22, 46, .9]); }
   V.ciel(x, t, S, X0, Y0, vw, vh, lum);
   dessinerPlacement(t);

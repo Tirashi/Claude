@@ -23,15 +23,17 @@ TOUTES.update({"buche": ("V2", 683, 482, 30, 14), "rocher-p": ("V2", 681, 545, 2
   "sac": ("V5", 148, 676, 40, 41), "foin": ("F5", 291, 586, 42, 34), "botte": ("F5", 534, 584, 35, 32), "meule-foin": ("V5", 673, 677, 95, 89),
   "souche-hache": ("V5", 6, 96, 41, 47), "souche": ("V5", 52, 54, 42, 41), "baies-rouges": ("F3", 51, 389, 44, 42), "baies-bleues": ("F3", 3, 485, 44, 45)})
 # pillards (11/11) : tour de guet, caserne, forge (fourneau, établi, enclume), râtelier d'armes ; feuille « buildings » 4
+# l'atelier du tisserand (11/11) : la halle ouverte aux étoffes colorées, feuille « buildings » 2 (l'ancien « hangar » était une grange à foin)
+TOUTES["atelier"] = ("B2", 144, 476, 96, 96)
 TOUTES.update({"tour": ("B4", 435, 0, 42, 97), "caserne": ("B4", 578, 288, 128, 97), "forge": ("B4", 190, 476, 100, 102), "ratelier": ("B4", 292, 617, 93, 58)})
 TOUTES.update({"i-bois": ("V1", 96, 528, 48, 48), "i-ble": ("F4", 0, 576, 48, 48), "terre": ("V1", 60, 56, 32, 32), "eau": ("V3", 408, 410, 48, 48), "herbe": ("V1", 235, 387, 48, 48)})
 GARDE = ["herbe", "terre", "eau", "pave", "champ-mur", "champ-pousse", "champ-nu", "champ-blond", "chaume1", "chaume2", "chaume3", "chaume4", "chaume5",
   "colomb1", "colomb2", "colomb3", "colomb4", "pierre1", "pierre2", "pierre3", "pierre4", "pierre5", "grange", "hangar", "moulin1", "meule1", "meule2",
   "puits", "puits-couvert", "fontaine", "four", "charrette", "lanterne", "s-arbre1", "s-arbre2", "s-arbre3", "s-arbre4", "s-arbre5", "s-arbre6", "s-jeune", "i-bois", "i-ble",
   "buche", "rocher-p", "gravats", "tonneaux", "abri", "tonneau", "caisse", "caisse-p", "panier-baies", "panier-pommes", "panier-legumes", "panier-patates",
-  "sechoir-poisson", "sechoir-viande", "sac-farine", "sacs-grain", "sac", "foin", "botte", "meule-foin", "souche-hache", "souche", "baies-rouges", "baies-bleues", "tour", "caserne", "forge", "ratelier"]
+  "sechoir-poisson", "sechoir-viande", "sac-farine", "sacs-grain", "sac", "foin", "botte", "meule-foin", "souche-hache", "souche", "baies-rouges", "baies-bleues", "tour", "caserne", "forge", "ratelier", "atelier"]
 def feuille(d, n): return next((SC / d).rglob(f"tile-B-0{n}.png"))
-F = {"V1": feuille("village", 1), "V2": feuille("village", 2), "V3": feuille("village", 3), "F4": feuille("farm", 4), "B4": feuille("buildings", 4), "FO": feuille("foret", 1),
+F = {"V1": feuille("village", 1), "V2": feuille("village", 2), "V3": feuille("village", 3), "F4": feuille("farm", 4), "B4": feuille("buildings", 4), "FO": feuille("foret", 1), "B2": feuille("buildings", 2),
   "F3": feuille("farm", 3), "F5": feuille("farm", 5), "V5": feuille("village", 5)}
 images, cache = {}, {}
 for nom in GARDE:

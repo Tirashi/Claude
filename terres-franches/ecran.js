@@ -16,9 +16,9 @@ function majBarre(){
   const S = J.S, t = R.taux(S), vus = S.vus || (S.vus = {});
   for (const r in DON.RES) if (S.res[r] >= 1 || Math.abs(t[r]) > 1e-6) vus[r] = 1;
   const liste = Object.keys(DON.RES).filter(r => TOUJOURS.includes(r) || vus[r]);
-  let h = liste.map(r => { const v = t[r] * 60, tx = Math.abs(v) < .05 ? "" : `<small class="${v < 0 ? "moins" : ""}">${v > 0 ? "+" : ""}${Math.abs(v) < 10 ? v.toFixed(1) : Math.round(v)}</small>`;
+  let h = liste.map(r => { const v = t[r] * 60, tx = Math.abs(v) < .05 ? `<small class="tx"></small>` : `<small class="tx${v < 0 ? " moins" : ""}">${v > 0 ? "+" : ""}${Math.abs(v) < 10 ? v.toFixed(1) : Math.round(v)}</small>`;
     const cap = R.capacite(S, r), f = Math.min(1, S.res[r] / cap), pl = f > .985;
-    return `<span class="${pl ? "plein" : f > .8 ? "presque" : ""}" title="${nomRes(r)} : ${fmt(S.res[r])} / ${fmt(cap)}">${ic(r)}<b>${fmt(S.res[r])}</b><small class="max">/${fmt(cap)}</small>${pl ? "<small class='pl'>PLEIN</small>" : tx}<i class="jauge"><i style="width:${Math.round(f * 100)}%"></i></i></span>`; }).join("");
+    return `<span class="${pl ? "plein" : f > .8 ? "presque" : ""}" title="${nomRes(r)} : ${fmt(S.res[r])} / ${fmt(cap)}">${ic(r)}<b>${fmt(S.res[r])}</b><small class="max">/${fmt(cap)}</small>${pl ? "<small class='tx pl'>PLEIN</small>" : tx}<i class="jauge"><i style="width:${Math.round(f * 100)}%"></i></i></span>`; }).join("");
   const lib = R.libres(S);
   h += `<span title="Habitants"><canvas class="ic portrait" width="30" height="30"></canvas><b>${S.pop}/${R.popMax(S)}</b>${lib ? `<em class="libres" title="Sans métier">${lib} LIBRE${lib > 1 ? "S" : ""}</em>` : ""}</span>`;
   if (h !== barre){ barre = h; $("res").innerHTML = h; $("res").querySelectorAll("canvas.portrait").forEach(portrait); }
