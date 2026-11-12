@@ -72,8 +72,11 @@ function maj(){
   $("#popOuv b").textContent = S.pawns.length + "/" + B.maxOuv(S); $("#popOuv").classList.toggle("plein", pleinO);
   $("#popEsc b").textContent = B.nbEsc(S) + "/" + B.maxEsc(S); $("#popEsc").classList.toggle("plein", pleinE);
   const V = S.P.vagues;
+  if (!tuto && S.prochaine > S.t + 1e5) S.prochaine = S.t + 12; // un tuto quitté en route ne bloque plus les vagues
   $("#vague").textContent = tuto ? "TUTO" : S.vague < V.nombre ? `VAGUE ${S.vague}/${V.nombre} · ${Math.max(0, Math.ceil(S.prochaine - S.t))} S` : `VAGUE ${V.nombre}/${V.nombre}`;
   $("#pvc i").style.width = Math.max(0, S.pv / B.pvChateau(S) * 100) + "%";
+  const ap = $("#appel"), bo = B.bonusAppel(S); ap.hidden = !!(tuto || S.fini || S.vague >= V.nombre || S.prochaine - S.t < 2 || S.sel);
+  if (!ap.hidden) ap.innerHTML = "APPELER LA VAGUE" + (bo ? ` <img class="ic" src="img/ic-or.png" alt="or">+${bo}` : "");
   const tn = $("#tenir"); tn.hidden = !(S.sel && !S.sel.tour && S.sel.k !== "cata"); if (!tn.hidden) tn.textContent = "TENIR LA POSITION : " + (S.sel.tenir ? "OUI" : "NON");
   tn.classList.toggle("or", !!(S.sel && S.sel.tenir));
   const pr = $("#promo"), q0 = S.sel; pr.hidden = !(q0 && PROMO[q0.k] && (S.c.L.promotions || S.triche.tout));
@@ -160,6 +163,7 @@ function majEtiquettes(){
   if (!S) return; const n = {bois: 0, or: 0, viande: 0}; S.pawns.forEach(p => { if (n[p.job] != null) n[p.job]++; });
   for (const [j] of ZONES){ const e = document.querySelector(`.etiq[data-j="${j}"] b`); if (e) e.textContent = n[j]; }
 }
+$("#appel").addEventListener("click", e => { e.stopPropagation(); if (!S || tuto) return; const err = B.appelerVague(S); if (err) dire(err); maj(); });
 $("#tenir").addEventListener("click", e => { e.stopPropagation(); if (!S || !S.sel) return; B.tenir(S, S.sel); maj(); });
 $("#promo").addEventListener("click", e => { e.stopPropagation(); if (!S || !S.sel) return; const err = B.promouvoir(S, S.sel); if (err) dire(err); maj(); });
 
@@ -387,7 +391,7 @@ function frame(now){
   // le château
   { const [X, Y] = P(CHATEAU[0], CHATEAU[1] + .55); list.push([Y, () => { batiment(L.chateau, X, Y, 246, 1);
     if (S.niveauChateau > 1) etoiles(X, Y + 22, S.niveauChateau - 1);
-    if (S.niveauChateau < S.P.niveaux.max) fleche(X + 130, Y - 200, T, B.peutPayer(S, B.coutChateau(S)));
+    if (S.niveauChateau < S.P.niveaux.max && (S.c.L.niveaux || S.triche.tout)) fleche(X + 130, Y - 200, T, B.peutPayer(S, B.coutChateau(S)));
     const p = S.pv / B.pvChateau(S); if (p < .6) for (let k = 0; k < (p < .3 ? 4 : 2); k++) x.drawImage(f8(L.feu, 64, T * 10 + k * 3), Math.round(X - 100 + k * 60), Math.round(Y - 150 - (k % 2) * 40)); }]); }
   // les emplacements et les bâtiments
   for (const s of S.sites){ const [X, Y] = P(s.x, s.y), b = s.b;
@@ -401,7 +405,7 @@ function frame(now){
     const [nom, fy] = BATI[b.k], TT = TOUR[b.k], ech = TT ? TT.ech : 1, im = TT && TT.fs ? f8(L[nom], TT.fs, T * 6 + s.i) : L[nom];
     list.push([Y, () => { batiment(im, X, Y, fy, ech);
       if ((b.niveau || 1) > 1) etoiles(X, Y + 22, b.niveau - 1);
-      if (AMELIORABLE[b.k] && (b.niveau || 1) < S.P.niveaux.max && !b.travaux) fleche(X + 58, Y - fy * ech + 40, T, B.peutPayer(S, B.coutNiveau(S, b)));
+      if (AMELIORABLE[b.k] && (b.k === "maison" || S.c.L.niveaux || S.triche.tout) && (b.niveau || 1) < S.P.niveaux.max && !b.travaux) fleche(X + 58, Y - fy * ech + 40, T, B.peutPayer(S, B.coutNiveau(S, b)));
       if (b.travaux) barre(X, Y + 4, 90, b.travaux.prog / b.travaux.total, "#ffd94a");
       if (b.pv < pm * .5) x.drawImage(f8(L.feu, 64, T * 10 + s.i), Math.round(X - 40), Math.round(Y - fy * ech * .6));
       if (b.pv < pm && !b.travaux) barre(X, Y + 4, 90, b.pv / pm, "#7ad04a"); }]);
@@ -474,7 +478,7 @@ const LIB = {
   gob: ["GOBELINS A TORCHE", null], lanceg: ["GOBELINS A LANCE", null], gnoll: ["GNOLLS (lancent des os)", null], troll: ["TROLL", null],
   maison: ["MAISON", null], caserne: ["CASERNE", null], archerie: ["ARCHERIE", null], monastere: ["MONASTERE", null], atelier: ["ATELIER", null], tour: ["TOUR", null], tourbois: ["TOUR EN BOIS", null], niveaux: ["NIVEAUX DES BATIMENTS", {cout: "Prix d'un niveau (× prix du batiment × niveau actuel)", travail: "Temps des travaux (× temps de construction × niveau)", max: "Niveau maximum"}],
   vagues: ["VAGUES", {premiere: "Premiere vague (s)", entre: "Temps entre deux vagues (s)", nombre: "Nombre de vagues", base: "Monstres a la 1re vague", plus: "Monstres en plus par vague",
-    force: "PV des monstres en plus par vague (0,15 = +15 %)", troll: "Troll toutes les N vagues (0 = jamais)", deux: "Deux chemins a partir de la vague", alerte: "Alerte avant la vague (s)"}],
+    force: "PV des monstres en plus par vague (0,15 = +15 %)", troll: "Troll toutes les N vagues (0 = jamais)", deux: "Deux chemins a partir de la vague", alerte: "Alerte avant la vague (s)", appel: "Or par seconde gagnee en appelant la vague"}],
   xp: ["EXPERIENCE", {parPv: "XP par PV de monstre abattu", survie: "XP pour une vague survecue", veteran: "XP pour VETERANS", elite: "XP pour ELITE", heros: "XP pour HEROS", bonus: "Bonus par grade (0,2 = +20 %)"}],
   renfort: ["RENFORTS AU CHATEAU", {viande: "Viande par soldat", temps: "Secondes par soldat"}],
   jeu: ["RYTHME", {ralenti: "Ralenti quand une escouade est choisie (1 = aucun)"}]};

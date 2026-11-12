@@ -72,6 +72,9 @@ const verif = (ok, txt) => { if (!ok){ erreurs++; console.log("ÉCHEC " + txt); 
     S3.mons.push({t: "gob", x: 5.5, y: 5.9, dir: "N", etape: 99, ox: 0, oy: 0, pv: 999, pvMax: 999, delai: 0, cd: 0, face: 1, mode: "walk", ph: 0, dernier: null});
     B.pas(S3, .05); B.pas(S3, .05);
     verif(t.tenir && Math.hypot(t.x - 5.5, t.y - 7.0) < .02, "une escouade qui tient sa position ne bouge pas"); }
+  { // appeler la vague en avance : de l'or, et la vague part tout de suite
+    const S5 = B.creer({}, 7, 4), or0 = S5.res.or, n = B.bonusAppel(S5); B.appelerVague(S5); B.pas(S5, .05);
+    verif(n > 0 && S5.res.or === or0 + n && S5.vague === 1, "appeler la vague donne de l'or et la lance"); }
   // grades
   const q = S.esc.find(o => o.k === "lance"), n0 = B.nMax(S, q);
   q.xp = S.P.xp.elite - 1; q.grade = 1; q.pv = B.pvMax(S, q);
