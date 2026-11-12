@@ -80,9 +80,9 @@ button.cher{opacity:.5}
 #bats img{height:50px}
 #bats img.bande4{width:66px; object-fit:cover; object-position:left}
 .actions{display:flex; flex-wrap:wrap; justify-content:center; gap:4px}
-#promo, #tenir{width:auto; font-size:9px; pointer-events:auto}
-#promo[hidden], #tenir[hidden]{display:none}
-#promo .ic, #promo img.ic{width:14px; height:14px}
+#promo, #tenir, #appel{width:auto; font-size:9px; pointer-events:auto}
+#promo[hidden], #tenir[hidden], #appel[hidden]{display:none}
+#promo .ic, #promo img.ic, #appel img.ic{width:14px; height:14px}
 #bats b{font-size:10px}
 #bats .cout{font-size:12px; font-weight:700}
 #bats .cout img.ic{width:14px; height:14px}

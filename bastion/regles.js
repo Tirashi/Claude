@@ -30,7 +30,7 @@ const DEFAUT = {
   tour:      {bois: 30, or: 20, travail: 14, pv: 300, portee: 1.2, soigne: 1.5},
   tourbois:  {bois: 15, or: 0, travail: 7, pv: 110, portee: .7, soigne: .9},
   niveaux:   {cout: 1, travail: 1, max: 3},
-  vagues: {premiere: 40, entre: 45, nombre: 10, base: 3, plus: 2, force: .12, troll: 4, trolls: 1, deux: 5, alerte: 6},
+  vagues: {premiere: 40, entre: 45, nombre: 10, base: 3, plus: 2, force: .12, troll: 4, trolls: 1, deux: 5, alerte: 6, appel: .5},
   xp: {parPv: .1, survie: 4, veteran: 25, elite: 60, heros: 120, bonus: .2},
   renfort: {viande: 4, temps: 2},
   jeu: {ralenti: .35}
@@ -577,6 +577,9 @@ function pas(S, dt){
 }
 // faire venir la prochaine vague tout de suite (labo)
 function vagueMaintenant(S){ if (S.vague < S.P.vagues.nombre && !S.fini){ S.prochaine = S.t + .01; if (!S.alerte) S.alerte = directions(S, S.vague + 1); } }
+// appeler la vague en avance (bouton du joueur) : de l'or pour chaque seconde gagnée
+const bonusAppel = S => Math.max(0, Math.floor((S.prochaine - S.t) * S.P.vagues.appel));
+function appelerVague(S){ if (S.vague >= S.P.vagues.nombre || S.fini) return "PLUS DE VAGUE"; const n = bonusAppel(S); S.res.or += n; vagueMaintenant(S); dire(S, n ? "LA VAGUE ARRIVE · +" + n + " OR" : "LA VAGUE ARRIVE"); return null; }
 
 /* ---------- le robot (simulateur et bouton ROBOT du labo) ----------
    Une stratégie simple et régulière, pour comparer des réglages : ouvriers équilibrés, archerie puis maisons,
@@ -634,7 +637,7 @@ function simuler(mods, graine, tMax, niveau){
 
 const api = {NIVEAUX, carteNiveau, routeHors, permis, DEFAUT, ESC, MONS, BAT, FEMININ, DEBLOQUE, GARNISON, GRADES, RES, CARTE, W, H, CHATEAU, DEPOT, CHEMINS, NOM_DIR, SITES, VILLAGE, TOURS, UNIQUE, FORME, PROMO, RECRUTABLES,
   peutBatir, ameliorer, tenir, retirer, AMELIORABLE, coutNiveau, ameliorerChateau, coutChateau, pvChateau, niveauForme, peutPromouvoir, promouvoir, pvBat,
-  reglages, ecarts, creer, pas, ajouterOuvrier, metierLibre, metier, construire, recruter, envoyer, vagueMaintenant, composition, directions, obstacles, dehors,
+  reglages, ecarts, creer, pas, ajouterOuvrier, metierLibre, metier, construire, recruter, envoyer, vagueMaintenant, appelerVague, bonusAppel, composition, directions, obstacles, dehors,
   maxEsc, maxOuv, nbEsc, debloque, cout, peutPayer, vivants, nMax, pvMax, pvSoldat, portee, robot, simuler, maisons};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.BastionRegles = api;

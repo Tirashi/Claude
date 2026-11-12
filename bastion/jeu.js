@@ -75,6 +75,8 @@ function maj(){
   if (!tuto && S.prochaine > S.t + 1e5) S.prochaine = S.t + 12; // un tuto quitté en route ne bloque plus les vagues
   $("#vague").textContent = tuto ? "TUTO" : S.vague < V.nombre ? `VAGUE ${S.vague}/${V.nombre} · ${Math.max(0, Math.ceil(S.prochaine - S.t))} S` : `VAGUE ${V.nombre}/${V.nombre}`;
   $("#pvc i").style.width = Math.max(0, S.pv / B.pvChateau(S) * 100) + "%";
+  const ap = $("#appel"), bo = B.bonusAppel(S); ap.hidden = !!(tuto || S.fini || S.vague >= V.nombre || S.prochaine - S.t < 2 || S.sel);
+  if (!ap.hidden) ap.innerHTML = "APPELER LA VAGUE" + (bo ? ` <img class="ic" src="img/ic-or.png" alt="or">+${bo}` : "");
   const tn = $("#tenir"); tn.hidden = !(S.sel && !S.sel.tour && S.sel.k !== "cata"); if (!tn.hidden) tn.textContent = "TENIR LA POSITION : " + (S.sel.tenir ? "OUI" : "NON");
   tn.classList.toggle("or", !!(S.sel && S.sel.tenir));
   const pr = $("#promo"), q0 = S.sel; pr.hidden = !(q0 && PROMO[q0.k] && (S.c.L.promotions || S.triche.tout));
@@ -161,6 +163,7 @@ function majEtiquettes(){
   if (!S) return; const n = {bois: 0, or: 0, viande: 0}; S.pawns.forEach(p => { if (n[p.job] != null) n[p.job]++; });
   for (const [j] of ZONES){ const e = document.querySelector(`.etiq[data-j="${j}"] b`); if (e) e.textContent = n[j]; }
 }
+$("#appel").addEventListener("click", e => { e.stopPropagation(); if (!S || tuto) return; const err = B.appelerVague(S); if (err) dire(err); maj(); });
 $("#tenir").addEventListener("click", e => { e.stopPropagation(); if (!S || !S.sel) return; B.tenir(S, S.sel); maj(); });
 $("#promo").addEventListener("click", e => { e.stopPropagation(); if (!S || !S.sel) return; const err = B.promouvoir(S, S.sel); if (err) dire(err); maj(); });
 
@@ -475,7 +478,7 @@ const LIB = {
   gob: ["GOBELINS A TORCHE", null], lanceg: ["GOBELINS A LANCE", null], gnoll: ["GNOLLS (lancent des os)", null], troll: ["TROLL", null],
   maison: ["MAISON", null], caserne: ["CASERNE", null], archerie: ["ARCHERIE", null], monastere: ["MONASTERE", null], atelier: ["ATELIER", null], tour: ["TOUR", null], tourbois: ["TOUR EN BOIS", null], niveaux: ["NIVEAUX DES BATIMENTS", {cout: "Prix d'un niveau (× prix du batiment × niveau actuel)", travail: "Temps des travaux (× temps de construction × niveau)", max: "Niveau maximum"}],
   vagues: ["VAGUES", {premiere: "Premiere vague (s)", entre: "Temps entre deux vagues (s)", nombre: "Nombre de vagues", base: "Monstres a la 1re vague", plus: "Monstres en plus par vague",
-    force: "PV des monstres en plus par vague (0,15 = +15 %)", troll: "Troll toutes les N vagues (0 = jamais)", deux: "Deux chemins a partir de la vague", alerte: "Alerte avant la vague (s)"}],
+    force: "PV des monstres en plus par vague (0,15 = +15 %)", troll: "Troll toutes les N vagues (0 = jamais)", deux: "Deux chemins a partir de la vague", alerte: "Alerte avant la vague (s)", appel: "Or par seconde gagnee en appelant la vague"}],
   xp: ["EXPERIENCE", {parPv: "XP par PV de monstre abattu", survie: "XP pour une vague survecue", veteran: "XP pour VETERANS", elite: "XP pour ELITE", heros: "XP pour HEROS", bonus: "Bonus par grade (0,2 = +20 %)"}],
   renfort: ["RENFORTS AU CHATEAU", {viande: "Viande par soldat", temps: "Secondes par soldat"}],
   jeu: ["RYTHME", {ralenti: "Ralenti quand une escouade est choisie (1 = aucun)"}]};
