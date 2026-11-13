@@ -431,8 +431,9 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(Math.abs(gagne / N - 0.75) < 0.025, `bataille : l'attaquant gagne avec la probabilité Fa / (Fa + Fd) (1920 contre 640 : ${(gagne / N).toFixed(3)} pour 0,75)`);
   const bat = (s) => { const e = enGuerre(vrai(), 'val_roc', 'joueur'); e.guerre.ennemis = ['val_roc']; const v = GU.bataille(e, true, rng(s)); return { e, v }; };
   let def = null, vic = null; for (let s = 1; s < 50 && !(def && vic); s++) { const b = bat(s); if (b.v) vic = vic || b.e; else def = def || b.e; }
-  check(def.tresor === 150 && Object.values(def.factions).every((x, i) => x.colere === Object.values(CHAMPS.joueur.factions)[i].colere + 10) && def.nations.val_roc.tresor === 400, 'défaite : −25 % de trésor et +10 de colère pour toutes nos factions');
-  check(vic.nations.val_roc.tresor === 300 && vic.nations.val_roc.colere === 40 && vic.tresor === 200, 'victoire : l\'ennemi perd 25 % de son trésor et prend +10 de colère');
+  const dc = G.defaite.colere;
+  check(dc === 5 && def.tresor === 150 && Object.values(def.factions).every((x, i) => x.colere === Object.values(CHAMPS.joueur.factions)[i].colere + dc) && def.nations.val_roc.tresor === 400, 'défaite : −25 % de trésor et +5 de colère pour toutes nos factions');
+  check(vic.nations.val_roc.tresor === 300 && vic.nations.val_roc.colere === 30 + dc && vic.tresor === 200, 'victoire : l\'ennemi perd 25 % de son trésor et prend +5 de colère');
   const b1 = Tour.tourSuivant(enGuerre(neuf({ tresor: 5000 }), 'val_roc', 'joueur'), [{ type: 'bataille' }]);
   check(refuse(() => Tour.tourSuivant(enGuerre(neuf({ tresor: 5000 }), 'val_roc', 'joueur'), [{ type: 'bataille' }, { type: 'bataille' }])) && b1.guerre.derniereBataille === 1, 'bataille : une par tour et par guerre');
   const fort = enGuerre(vrai(), 'val_roc', 'val_roc'); fort.guerre.ennemis = ['val_roc']; GU.tour(fort, rng(3));
@@ -463,6 +464,19 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(!ok2(pf, { type: 'paix_blanche' }), 'paix blanche : refusée par un ennemi plus fort');
   const fin = Tour.tourSuivant(Object.assign(Tour.tourSuivant(pb, []), {}), [{ type: 'paix_blanche' }]);
   check(!fin.guerre && !fin.sanctions.length && Object.keys(fin.nonRearmement).length === 0, 'paix blanche : sans clause ; sanctions levées');
+  // trêve après la paix
+  const tr = Tour.tourSuivant(pb, []), tr1 = Tour.tourSuivant(tr, [{ type: 'paix_blanche' }]);
+  check(tr1.treves.val_roc === tr.tour + 10 && !ok2(tr1, { type: 'declarer_guerre', id: 'val_roc' }) && ok2(tr1, { type: 'declarer_guerre', id: 'brume' }), 'trêve : 10 tours sans pouvoir redéclarer la guerre à l\'ancien ennemi');
+  const finTreve = Object.assign(JSON.parse(JSON.stringify(tr1)), { tour: tr1.treves.val_roc + 1 });
+  check(ok2(finTreve, { type: 'declarer_guerre', id: 'val_roc' }), 'trêve : finie après 10 tours');
+  let redeclare = 0, apres = 0;
+  for (let s = 1; s <= 100; s++) {
+    const e = vrai(); e.treves = { val_roc: 10 }; GU.tour(e, rng(s)); if (e.guerre) redeclare++;
+    const f = vrai(); f.treves = { val_roc: 0 }; GU.tour(f, rng(s)); if (f.guerre) apres++;
+  }
+  check(redeclare === 0 && apres > 15, `trêve : Val-Roc ne déclare pas la guerre pendant la trêve (${redeclare}/100), le fait après (${apres}/100)`);
+  let traitre = 0; for (let s = 1; s <= 100; s++) { const e = vrai(); e.treves = { contreforts: 10 }; GU.declarer(e, 'val_roc', 'val_roc', rng(s)); if (e.guerre.ennemis.includes('contreforts')) traitre++; }
+  check(traitre === 0, 'trêve : Contreforts ne rejoint pas nos ennemis pendant sa trêve avec nous');
   const neg = enGuerre(vrai({ tresor: -10 }), 'val_roc', 'joueur'); neg.guerre.ennemis = ['val_roc'];
   check(!GU.bataille(neg, true, rng(1)) && neg.tresor === -10, 'bataille : sans force (trésor négatif) on perd toujours, sans perte de trésor en plus');
 }

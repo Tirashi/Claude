@@ -32,7 +32,8 @@ Identifiants du code en français comme le reste du dépôt ; les `id` des lois 
 - **M3b — guerre et paix** ✅ (13/11) : `donnees/guerre.js`, `moteur/guerre.js` : force, forge, fortifications, déclarations (joueur et Val-Roc), défense mutuelle, Contreforts opportuniste, batailles au hasard à graine, sanctions de bloc de l'Entente, usure et capitulation, clauses (réparations, levée d'embargo, non-réarmement), paix blanche.
 - **M4 — bots et simulateur** ✅ (13/11) : `outils/politique-bots.js` (passif, economy, spam_medicine, no_appeasement, militarist, random, replica), `outils/politique-simulateur.js` (`--parties`, `--bot`, `--tours`, `--graine`, `--json`, `--controle`) ; métriques par partie (fins, durée, trésor et capital politique aux tours 20/30/40/60, réputation, guerres, batailles, colère, grèves, apaisements, lois adoptées, catalogue complet).
 - **M5 — métriques et balayages** ✅ (13/11) : `--regle chemin=valeur`, `--balayage chemin=v1,v2,v3` (tableau comparatif, données modifiées en mémoire seulement), confrontations bot contre bot et stratégie dominante, issue des guerres, lois jamais adoptées, tours sans vraie décision politique.
-- M6 backlog (un item à la fois, après accord), M7 écran (après maquette) : voir le plan.
+- **Décisions du 13/11** : colère d'une défaite 10 → 5 ; trêve de 10 tours après une paix (backlog E1). Règles complètes du moteur : [`politique/regles-moteur.md`](politique/regles-moteur.md).
+- M6 : brainstorming sur les règles, puis backlog (un item à la fois, après accord). M7 écran (après maquette).
 
 ## 4. Valeurs validées (13/11, toutes les propositions par défaut)
 **Économie** : trésor 200, capital politique 0, 80 familles, 4 fermes et 1 mine ; +1 %/tour de familles, plafond 200 ; impôts = familles × 1 or × loi ;
@@ -99,6 +100,30 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 - **Colère d'une défaite** (10 / 5 / 2) : le levier le plus fort. À 5, plus aucune révolution pour passif (66 % → 0 %) ni militarist, apaisements d'economy divisés par 2,4 (67 → 28), replica inchangé (2 794 or au tour 30). no_appeasement et random restent en révolution : l'apaisement reste utile sans être obligatoire.
 - **Coût de l'apaisement** (12 / 24 / 36) : à 24, economy perd 57 % de son or au tour 60 sans révolution ; à 36, 15 à 20 % de révolutions pour economy, spam_medicine et replica. Rendre l'apaisement cher sans toucher à la guerre punit surtout les bons joueurs.
 - **Militarist** : un essai d'apaisement plus tardif (70) l'a fait passer de 2 % à 52 % de révolutions ; retiré.
+
+## 5 sexies. Bilan avant M6 (13/11, défaite à +5 et trêve, 200 parties par bot)
+| Bot | Fins | Or t30 / t60 | Guerre (tours) | Batailles G / P | Apaisements | Grève |
+|---|---|---|---|---|---|---|
+| passif | fin 100 % (avant : révolution 66 %) | −271 / −1 303 | 26 | 1,5 / 22,0 | 0 | 100 % |
+| economy | fin 100 % | 756 / 9 785 | 49 | 8,5 / 33,2 | 28 (avant 67) | 0 % |
+| spam_medicine | fin 100 % | 750 / 9 363 | 49 | 8,3 / 33,8 | 10 | 0 % |
+| no_appeasement | révolution 96 % | — | 16 | 1,7 / 13,8 | 0 | 97 % |
+| militarist | fin 100 % | 143 / 109 | 59 | 5,0 / 51,2 | 41 | 0 % |
+| random | révolution 95 % | — | 20 | 1,3 / 22,5 | 4 | 98 % |
+| replica | fin 100 % | 2 781 / 9 003 | 16 | 2,2 / 11,7 | 6 | 0 % |
+
+**Ce qui va** : moteur stable et reproductible ; aucune stratégie dominante (economy bat spam_medicine 79 %, égalité avec replica 56/44) ; un joueur qui gère ses factions ne fait jamais grève, un joueur qui les néglige va à la révolution ; replica proche de la partie 1 (2 781 or au tour 30 contre 3 214) et **gagne sa guerre par l'usure** (embargo + sanctions de l'Entente : 1 guerre gagnée par partie), la thèse de la partie 1 tient.
+
+**Ce qui ne va pas** :
+1. **Guerre perpétuelle** : toutes les parties, 49 tours sur 60 pour economy, 59 pour militarist ; Val-Roc gagne ~80 % des batailles. La trêve ne joue presque pas, faute de paix (Val-Roc, toujours plus fort, ne capitule ni n'accepte la paix blanche). Cause : force = trésor, et Val-Roc ne dépense rien (+78 or/tour) (A5).
+2. **L'investissement militaire ne rapporte rien** : militarist garde ~130 or, sa conscription multiplie presque zéro (A5).
+3. **Trésor sans débouché** : economy 9 785 or au tour 60, no_appeasement 17 069 (A1 ; une ferme se rembourse en 3 tours).
+4. **Capital politique sans débouché** : 825 à 900 chez les bots qui votent peu ; même les bons bots n'adoptent que 3 ou 4 lois (A1, B5).
+5. **L'apaisement reste la parade universelle** : avec, jamais de grève ; sans, 96 % de révolutions (A2).
+6. **Pas de hasard hors des batailles** : une seule crise écrite au tour 1 (A4).
+7. **La Médecine du travail n'est pas dominante** (A3 non confirmé) : elle remplace des apaisements (28 → 10) pour 10 or par tour.
+
+**Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
 ## 6. Propositions pour M3 (13/11, validées le 13/11)
 **Détails ajoutés en écrivant M3b (à confirmer)** : une seule guerre à la fois ; une forge ou des fortifications ne comptent qu'une fois quel que soit leur nombre ; l'attaque d'un membre de l'Entente coûte −30 **au lieu de** −20 (pas les deux), plus −15 par traité rompu avec la cible ; sanctions de bloc contre le joueur = chaque autre membre rompt ses traités et contrats (sans pénalité de réputation pour le joueur), relation −30, et le met sous embargo (sans effet sur le marché du joueur en V1) ; sanctions de bloc contre une nation = elle manque de ce que les membres exportent ; Contreforts peut rejoindre Val-Roc si Val-Roc est le plus fort (les relations entre nations ne sont pas modélisées) ; les alliés ne livrent pas de bataille à part, ils perdent comme leur camp ; l'ennemi accepte la paix blanche s'il n'est pas plus fort ; quand nous capitulons, l'ennemi impose toutes les clauses ; quand l'ennemi capitule, la guerre est suspendue jusqu'à ce que le joueur choisisse ses clauses ; à la paix, les sanctions liées à la guerre sont levées ; le non-réarmement n'empêche pas le perdant de redéclarer la guerre, et un joueur sous la clause ne peut tout simplement pas la violer (le « ré-embargo » n'arrive donc jamais en V1).

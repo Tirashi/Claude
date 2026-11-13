@@ -67,7 +67,7 @@ function actions(e){
 const legitime = (e, n) => ennemi(e, n);
 
 // sanctions de bloc d'un membre de l'Entente contre le joueur : fin de ses traités (sans pénalité pour le joueur),
-// de ses contrats, relation −30 (ASSUMPTION (M3b))
+// de ses contrats, relation −30 (ASSUMPTION validée (M3b))
 function couper(e, n){
   e.traites = e.traites.filter(t => t.avec !== n);
   e.contrats = e.contrats.filter(x => D.contrats[x.id].nation !== n);
@@ -81,7 +81,7 @@ function rompre(e, type, avec){
   e.traites = e.traites.filter(t => !(t.type === type && t.avec === avec));
   e.reputation += D.reputation.traiteRompu;
   e.journal.push(`Traité rompu : ${nom} avec ${avec}.`);
-  // un traité qui dépendait de celui-ci tombe aussi (ASSUMPTION (M3a))
+  // un traité qui dépendait de celui-ci tombe aussi (ASSUMPTION validée (M3a))
   for (const t of e.traites.filter(t => t.avec === avec && D.traites[t.type].requiert === type)) rompre(e, t.type, avec);
 }
 

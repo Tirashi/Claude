@@ -2,6 +2,7 @@
    e.guerre = { ennemis: [nations], allies: [nations], agresseur, depuis, derniereBataille, bataille (tour), capitulation }
    (capitulation : null, ou "ennemi" quand l'ennemi a capitulé et que le joueur doit choisir les clauses).
    Actions : declarer_guerre { id }, bataille {}, imposer_paix { reparations, lever_embargo, non_rearmement }, paix_blanche {}.
+   Après une paix : trêve de G.treve tours avec chaque ancien ennemi (pas de déclaration, Contreforts ne nous attaque pas).
    Fin de tour (tour) : capitulations (moral < 0,3), bataille de l'ennemi s'il est plus fort, déclarations de guerre des nations. */
 (function(racine){
 "use strict";
@@ -13,6 +14,7 @@ const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 
 const arrondi = x => Math.round(x * 100) / 100;
+const enTreve = (e, n) => ((e.treves || {})[n] || 0) >= e.tour;
 
 // force d'un membre ("joueur" ou une nation) ; defense : les fortifications du joueur comptent
 function force(e, qui, defense){
@@ -54,7 +56,7 @@ function declarer(e, cible, agresseur, r){
     if (Alea.suivant(r) >= pol.rejoint) continue;
     const fj = forceCamp(e, campJoueur(g), false), fe = forceCamp(e, g.ennemis, false);
     if (fj >= fe && e.nations[n].relation >= 0){ g.allies.push(n); e.journal.push(`${e.profils[n].nom} entre en guerre à nos côtés.`); }
-    else if (fe > fj){ g.ennemis.push(n); e.nations[n].relation = G.relationGuerre; e.journal.push(`${e.profils[n].nom} entre en guerre contre nous.`); }
+    else if (fe > fj && !enTreve(e, n)){ g.ennemis.push(n); e.nations[n].relation = G.relationGuerre; e.journal.push(`${e.profils[n].nom} entre en guerre contre nous.`); }
   }
 }
 
@@ -100,6 +102,8 @@ function paix(e, vainqueur, clauses){
   // les sanctions liées à la guerre sont levées
   const camp = g.ennemis.concat(g.allies, ["joueur"]);
   e.sanctions = e.sanctions.filter(s => !camp.includes(s.contre));
+  // trêve : ni le joueur ni ses anciens ennemis ne peuvent se déclarer la guerre pendant G.treve tours
+  for (const n of g.ennemis) e.treves[n] = e.tour + G.treve;
   e.guerre = null;
   e.journal.push(vainqueur ? (vainqueur === "joueur" ? "Paix : l'ennemi capitule." : "Paix : nous capitulons.") : "Paix blanche.");
 }
@@ -108,7 +112,7 @@ const accepteBlanche = e => forceCamp(e, e.guerre.ennemis, false) <= forceCamp(e
 
 function actions(e){
   const g = e.guerre, r = [];
-  if (!g){ for (const n in e.nations) r.push({ type: "declarer_guerre", id: n }); return r; }
+  if (!g){ for (const n in e.nations) if (!enTreve(e, n)) r.push({ type: "declarer_guerre", id: n }); return r; }
   if (g.capitulation === "ennemi"){
     for (const k of [0, 1, 2, 3, 4, 5, 6, 7]) r.push({ type: "imposer_paix", reparations: !!(k & 1), lever_embargo: !!(k & 2), non_rearmement: !!(k & 4) });
     return r;
@@ -138,7 +142,7 @@ function tour(e, r){
   }
   for (const n in e.nations){
     const d = G.politiques[e.profils[n].caractere].declare;
-    if (!d || e.nations[n].relation >= d.relationMax) continue;
+    if (!d || enTreve(e, n) || e.nations[n].relation >= d.relationMax) continue;
     const nous = forceCamp(e, ["joueur"].concat(partenaires(e, "defense_mutuelle")), true);
     if (force(e, n, false) > d.ratio * nous && Alea.suivant(r) < d.proba){ declarer(e, n, n, r); return; }
   }
@@ -146,6 +150,6 @@ function tour(e, r){
 
 const rearmementInterdit = (e, qui) => (e.nonRearmement[qui] || 0) >= e.tour;
 
-const Guerre = { force, forceCamp, declarer, bataille, paix, actions, appliquer, tour, rearmementInterdit };
+const Guerre = { enTreve, force, forceCamp, declarer, bataille, paix, actions, appliquer, tour, rearmementInterdit };
 if (NODE) module.exports = Guerre; else (racine.Politique = racine.Politique || {}).Guerre = Guerre;
 })(typeof window !== "undefined" ? window : globalThis);

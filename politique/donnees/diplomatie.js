@@ -1,6 +1,5 @@
 /* Politique : diplomatie et commerce (RULES_V1 § Diplomatie et commerce ; propositions de M3a validées le 13/11,
-   specs/politique.md § 6). « ASSUMPTION validée (M3) » = proposée avec M3, validée ;
-   « ASSUMPTION (M3a) » = détail ajouté pendant l'écriture de M3a, à confirmer. */
+   specs/politique.md § 6). « ASSUMPTION validée (M3) » = proposée avant M3 ; « (M3a) » = détail ajouté en écrivant M3a ; tout validé le 13/11. */
 (function(racine){
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
@@ -12,13 +11,13 @@ const DIPLOMATIE = {
   reputation: { donPar20: 1, donMax: 5, traiteSigne: 3, traiteRespecte: 2, respectTous: 10, traiteRompu: -15,
                 sanctionLegitime: 3, sanctionIllegitime: -5, paria: -50 },
 
-  dons: [20, 50, 100],              // ASSUMPTION validée (M3) ; un don par nation et par tour : ASSUMPTION (M3a)
+  dons: [20, 50, 100],              // ASSUMPTION validée (M3) ; un don par nation et par tour : ASSUMPTION validée (M3a)
 
   nation: { croissance: 0.005, armee: 12, dissipation: 1 },   // économie simplifiée des nations : ASSUMPTION validée (M3)
 
   // embargo : la cible manque de ce qu'elle importe et dont le joueur a un surplus (ASSUMPTION validée, M3)
   embargo: { colereParManque: 1 / 3 },
-  // sanction légitime si la cible est en guerre contre le joueur ou un membre de l'Entente (M3b) : ASSUMPTION (M3a)
+  // sanction légitime si la cible est en guerre contre le joueur ou un membre de l'Entente (M3b) : ASSUMPTION validée (M3a)
 
   // contrats : sens = ce que fait le joueur ; volume par tour, prix fixe ; acceptés si relation ≥ 0
   contrats: {

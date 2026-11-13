@@ -38,7 +38,7 @@ Pour les industries privées : modèle simple proposé — chaque bâtiment est 
 3. **Stocks de biens** : en V1 la balance est vendue ou achetée chaque tour, rien n'est gardé (voir aussi B9, réserves).
 
 ## E. Notées pendant M3 (13/11, propositions de Claude, non validées)
-1. **Trêve après la paix** (ex. 10 tours sans déclaration possible) : en V1, Val-Roc peut redéclarer la guerre au tour qui suit la paix.
+1. ✅ **Trêve après la paix** : 10 tours sans déclaration possible entre anciens ennemis (acceptée et faite le 13/11).
 2. **Territoires** : pertes de territoire et clause de restitution (RULES_V1 « éventuelles »), impossibles sans carte.
 3. **Relations entre nations** et guerres entre nations de l'ordinateur.
 4. **Effet d'un embargo contre le joueur** sur son marché (aujourd'hui seulement la fin des contrats et traités).

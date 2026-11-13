@@ -45,6 +45,7 @@ function creerEtat(scenario, graine){
     sanctions: [],                    // embargos entre nations ou contre le joueur : [{ par, contre }] (sanctions de bloc)
     guerre: null,                     // la guerre en cours (moteur/guerre.js)
     nonRearmement: {},                // camp ("joueur" ou nation) → dernier tour de la clause
+    treves: {},                       // nation → dernier tour de la trêve avec le joueur
     fin: false,
     issue: null,                      // fin de partie : { type: "fin" } ou { type: "revolution", faction }
     journal: []                       // messages du tour, pour l'écran et les rapports
