@@ -13,9 +13,10 @@ const BATIMENTS = {
   weaving:  { nom: "Tissage national", cout: 110, delai: 3, produit: { tissu: 10 }, artisans: true },
   // cofinancée 50/50 avec Brume (traité de filature conjointe) ; 6 tissu livrés à Brume : donnees/diplomatie.js
   entente_mill:   { nom: "Filature de l'Entente", cout: 100, partJoueur: 0.5, delai: 6, produit: { tissu: 18 }, traite: "filature" },
-  // force militaire (donnees/guerre.js) ; la forge convertit 10 fer + 8 or par tour en +15 % de force
-  forge:          { nom: "Forge d'armes",         cout: 120, delai: 5, consomme: { fer: 10 }, entretien: 8 },
-  fortifications: { nom: "Fortifications",        cout: 150, delai: 6, emplacement: false }   // n'occupe pas d'emplacement (V2)
+  // armée (V2 étape 2, remplacent forge et fortifications) : la caserne permet de recruter dans sa région ;
+  // le fort multiplie la défense de sa région (un par région, sans emplacement)
+  caserne:        { nom: "Caserne",               cout: 60,  delai: 2 },                                           // ASSUMPTION validée (V2)
+  fort:           { nom: "Fort",                  cout: 80,  delai: 3, emplacement: false, unique: true }          // ASSUMPTION validée (V2)
 };
 
 if (NODE) module.exports = BATIMENTS; else (racine.Politique = racine.Politique || {}).BATIMENTS = BATIMENTS;

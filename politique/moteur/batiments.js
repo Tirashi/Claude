@@ -23,16 +23,18 @@ function occupes(e, r){
   return n;
 }
 const enChantier = (e, r) => e.chantiers.some(c => c.region === r);
-const desarme = e => !!e.nonRearmement && (e.nonRearmement.joueur || 0) >= e.tour;   // clause de non-réarmement : pas de forge
 
 // ce qui peut se construire, et où : [{ id, region }]
 function constructibles(e){
   const r = [];
   for (const id in BAT){
     const b = BAT[id];
-    if (b.jalon || (b.traite && !Diplomatie.aTraite(e, b.traite)) || e.tresor < cout(id) || (id === "forge" && desarme(e))) continue;
-    for (const reg in e.regions)
-      if (!enChantier(e, reg) && (!prendPlace(id) || occupes(e, reg) < e.regions[reg].emplacements)) r.push({ id, region: reg });
+    if (b.jalon || (b.traite && !Diplomatie.aTraite(e, b.traite)) || e.tresor < cout(id)) continue;
+    for (const reg in e.regions){
+      if (enChantier(e, reg) || (e.occupations || {})[reg]) continue;                       // V2 étape 2 : pas de chantier en région occupée
+      if (b.unique && (e.regions[reg].batiments[id] || 0) > 0) continue;                    // un fort par région
+      if (!prendPlace(id) || occupes(e, reg) < e.regions[reg].emplacements) r.push({ id, region: reg });
+    }
   }
   return r;
 }
@@ -46,6 +48,7 @@ function commander(e, id, region){
 // fin du tour : chaque chantier avance d'un tour ; un bâtiment fini produit dès le tour suivant
 function avancer(e){
   for (const c of e.chantiers){
+    if ((e.occupations || {})[c.region]) continue;   // chantier arrêté pendant l'occupation
     c.restant--;
     if (c.restant > 0) continue;
     const b = e.regions[c.region].batiments;

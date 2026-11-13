@@ -125,6 +125,20 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 9. V2, étape 2 : armée en régiments (13/11) — mécanique faite, équilibre à décider
+Fait : `donnees/guerre.js` (régiments, fort, pertes, politiques de recrutement), caserne et fort (forge et fortifications retirées), 3 régions par nation (`champs.js`), `moteur/guerre.js` réécrit (force = régiments × loi × moral, fort ×1,5 dans sa région, bataille pour une région, occupation et libération, cession, recrutement du joueur et des nations), revenus des nations selon leurs régions tenues, régions occupées sans production ni chantier. 199 tests.
+
+**Détails ajoutés (ASSUMPTION (V2 étape 2), à valider)** : 1 régiment pour 10 familles au plus ; 1 recrue par caserne et par tour ; pas de caserne au départ ; un fort par région ; pertes arrondies (perdant au-dessus, gagnant en dessous) ; capitulation aussi sans régiment avec une région occupée ; région cédée au joueur : 3 emplacements ; le revenu d'une nation suit la part de ses régions tenues ; recrutement des nations : militariste au plafond (+2/tour), commerçante la moitié, opportuniste 70 % (+1/tour), réserve d'or 100 ou 200, plafond en guerre ; Val-Roc, Brume, Contreforts ont chacun 3 régions (noms et terrains dans `champs.js`) ; l'ennemi libère d'abord ses régions, sinon attaque notre région la moins défendue.
+
+**Résultat (200 parties par bot)** : le joueur perd **2 à 3 régions par partie** par cession (passif 2,77, economy 2,45, replica 2,11, militarist 1,37). Enchaînement : Val-Roc recrute au plafond (9 × 1,6 = 14,4, plus Contreforts) et déclare la guerre vers le tour 2 contre nos 3 régiments sans caserne ; 3 défaites, 0 régiment, capitulation, cession et non-réarmement 15 tours ; la guerre suivante recommence. Même au plafond (8 régiments), le joueur reste sous Val-Roc (12,8 avec la conscription).
+
+**Balayages (100 parties, passif, economy, militarist, replica)** :
+- Recrutement de Val-Roc (par tour, part visée, réserve), régiments de départ de Val-Roc, seuil de déclaration : presque aucun effet (il recrute au plafond dès la guerre).
+- Sans la capitulation « sans régiment », ou avec 6 à 8 régiments au départ : **guerres sans fin** (39 tours sur 40, nos 4 régions occupées pendant 37 tours, trésor négatif) : il manque une règle de fin de guerre.
+- Candidat « +2 colère par tour et par région occupée » (désactivé, `guerre.occupationColere`) : les guerres finissent, mais par la révolution (economy 53 %, replica 89 %).
+- Candidat « pas de déclaration avant le tour T » (désactivé, `declare.tourMin`) : T = 8 ou 15 sauve l'ouverture, mais militarist devient dominant et economy reste occupé 23 à 26 tours.
+- Bots corrigés : alternance sans fin École publique / gratuite ; bataille jouée en dernier et hasard du moteur dans le plan d'un tour.
+
 ## 8. V2, étape 1 : 40 tours et régions (13/11)
 Fait : `donnees/carte.js` (terrains), régions dans `champs.js`, `moteur/batiments.js` (un chantier par région, emplacements, bonus de terrain), délais raccourcis. 183 tests. Avant (V1, 60 tours) → après (200 parties par bot) :
 

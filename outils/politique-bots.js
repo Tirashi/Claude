@@ -11,14 +11,21 @@ const BAT = P('donnees/batiments.js');
 
 const FACTIONS = ['ouvriers', 'paysans', 'artisans', 'patrons'];
 
+// une bataille a une issue au hasard : elle n'est pas jouée sur la copie et passe en dernier dans le tour
+// (sinon une action suivante pourrait compter sur une victoire, par exemple recruter dans une région libérée)
 function plan(e){
-  const tmp = Etat.copie(e), acts = [], r = { s: 0 };
+  // même état du hasard que le moteur : une action qui tire au hasard (déclarer une guerre) donne le même résultat
+  const tmp = Etat.copie(e), liste = [], r = { s: tmp.alea };
+  let bataille = null;
   return {
-    e: tmp, acts,
+    e: tmp,
+    // la bataille gardée pour la fin n'est jouée que si elle reste possible (une paix a pu finir la guerre entre-temps)
+    get acts(){ return bataille && this.peut(bataille) ? liste.concat([bataille]) : liste; },
     peut: a => Tour.actionsDisponibles(tmp).some(d => Tour.memeAction(a, d)),
     essayer(a){
       if (!this.peut(a)) return false;
-      Tour.appliquerAction(tmp, a, r); acts.push(a); return true;
+      if (a.type === 'bataille'){ if (bataille) return false; bataille = a; return true; }
+      Tour.appliquerAction(tmp, a, r); liste.push(a); return true;
     }
   };
 }
@@ -28,12 +35,32 @@ function plan(e){
 function guerre(p, o){
   const g = p.e.guerre;
   if (!g) return;
-  if (g.capitulation === 'ennemi'){ p.essayer({ type: 'imposer_paix', reparations: true, lever_embargo: !!o.leverEmbargo, non_rearmement: true }); return; }
+  if (g.capitulation === 'ennemi'){
+    p.essayer({ type: 'imposer_paix', reparations: true, lever_embargo: !!o.leverEmbargo, non_rearmement: true, cession: true })
+      || p.essayer({ type: 'imposer_paix', reparations: true, lever_embargo: !!o.leverEmbargo, non_rearmement: true, cession: false });
+    return;
+  }
   if (o.paixBlanche !== false && p.essayer({ type: 'paix_blanche' })) return;
   if (o.embargoEnGuerre) for (const n of g.ennemis) p.essayer({ type: 'embargo', id: n });
-  const fa = Guerre.forceCamp(p.e, ['joueur'].concat(g.allies), false), fd = Guerre.forceCamp(p.e, g.ennemis, true);
-  if (o.seuilBataille != null && fa + fd > 0 && fa / (fa + fd) >= o.seuilBataille) p.essayer({ type: 'bataille' });
+  if (o.seuilBataille == null) return;
+  // la cible : d'abord une de nos régions occupées, sinon une région ennemie ; seulement si nos chances suffisent
+  const nous = ['joueur'].concat(g.allies), fa = Guerre.forceCamp(p.e, nous);
+  const cibles = Tour.actionsDisponibles(p.e).filter(a => a.type === 'bataille')
+    .sort((a, b) => (p.e.regions[b.cible] ? 1 : 0) - (p.e.regions[a.cible] ? 1 : 0));
+  for (const a of cibles){
+    const fd = Guerre.forceCamp(p.e, g.ennemis, a.cible);
+    if (fa + fd > 0 && fa / (fa + fd) >= o.seuilBataille){ p.essayer(a); break; }
+  }
 }
+// l'armée : recruter tant que notre force reste sous ratio × la force de la nation la plus menaçante (hostile ou en guerre)
+function armee(p, ratio, reserve){
+  const e = p.e, menaces = Object.keys(e.nations).filter(n => e.nations[n].relation < 0 || (e.guerre && e.guerre.ennemis.includes(n)));
+  const cible = ratio * Math.max(0, ...menaces.map(n => Guerre.force(e, n)));
+  for (const a of Tour.actionsDisponibles(e).filter(x => x.type === 'recruter'))
+    if (Guerre.force(p.e, 'joueur') < cible && p.e.tresor - 30 >= (reserve || 0)) p.essayer(a);
+}
+// une caserne d'abord si on n'en a pas
+const avecCaserne = liste => e => (!e.batiments.caserne && !e.chantiers.some(c => c.id === 'caserne') ? ['caserne'] : []).concat(liste(e));
 // apaiser les factions dont la colère atteint le seuil (la plus en colère d'abord)
 function apaiser(p, seuil){
   if (seuil == null) return;
@@ -43,7 +70,11 @@ function apaiser(p, seuil){
 // la prochaine loi de la liste qui n'est ni en vigueur ni en cours (on garde le capital pour elle)
 function loiSuivante(p, liste){
   const e = p.e;
-  const id = liste.find(x => !(e.lois[LOIS[x].categorie] && e.lois[LOIS[x].categorie].id === x) && !e.loisEnCours.some(c => c.id === x));
+  // une loi est « faite » si elle, ou une loi placée après elle dans la liste et de même catégorie, est en vigueur ou en cours
+  // (sinon École publique et École gratuite se remplaceraient sans fin)
+  const faite = (x, i) => liste.slice(i).some(y => LOIS[y].categorie === LOIS[x].categorie &&
+    ((e.lois[LOIS[y].categorie] && e.lois[LOIS[y].categorie].id === y) || e.loisEnCours.some(c => c.id === y)));
+  const id = liste.find((x, i) => !faite(x, i));
   if (id) p.essayer({ type: 'loi', id });
 }
 // les bâtiments par ordre d'utilité : d'abord ce qui manque (tissu, outils, fer), puis fermes, mines…
@@ -79,7 +110,8 @@ const BOTS = {
     guerre(p, { seuilBataille: 0.6 });
     apaiser(p, 55);
     loiSuivante(p, ['income_progressive', 'school_public', 'school_free', 'income_capital']);
-    construire(p, batimentUtile, 0);
+    armee(p, 1, 50);
+    construire(p, avecCaserne(batimentUtile), 0);
     return p.acts;
   },
 
@@ -89,7 +121,8 @@ const BOTS = {
     guerre(p, { seuilBataille: 0.6 });
     apaiser(p, 55);
     loiSuivante(p, ['labor_medicine', 'income_progressive', 'school_public', 'school_free', 'income_capital']);
-    construire(p, batimentUtile, 0);
+    armee(p, 1, 50);
+    construire(p, avecCaserne(batimentUtile), 0);
     return p.acts;
   },
 
@@ -98,22 +131,24 @@ const BOTS = {
     const p = plan(e);
     guerre(p, { seuilBataille: 0.6 });
     loiSuivante(p, ['income_progressive', 'school_public', 'school_free', 'income_capital']);
-    construire(p, batimentUtile, 0);
+    armee(p, 1, 50);
+    construire(p, avecCaserne(batimentUtile), 0);
     return p.acts;
   },
 
-  // conscription, forge et fortifications, réserve d'or ; attaque la nation la plus faible quand il l'écrase
+  // conscription, deux casernes, des forts, armée au plafond ; attaque la nation la plus faible quand il l'écrase
   militarist: () => e => {
     const p = plan(e);
     guerre(p, { seuilBataille: 0.5, embargoEnGuerre: true });
     apaiser(p, 55);   // essai à 70 (13/11) : pire (52 % de révolutions au lieu de 2 %)
     loiSuivante(p, ['army_conscription', 'income_progressive']);
-    construire(p, x => [!x.batiments.forge && !x.chantiers.some(c => c.id === 'forge') ? 'forge' : null,
-      !x.batiments.fortifications && !x.chantiers.some(c => c.id === 'fortifications') ? 'fortifications' : null].filter(Boolean).concat(batimentUtile(x)), 300);
+    armee(p, 99, 30);
+    construire(p, x => ((x.batiments.caserne || 0) + x.chantiers.filter(c => c.id === 'caserne').length < 2 ? ['caserne'] : [])
+      .concat(Object.keys(x.regions).some(r => !x.regions[r].batiments.fort) ? ['fort'] : []).concat(batimentUtile(x)), 60);
     if (!p.e.guerre){
-      const nous = Guerre.force(p.e, 'joueur', false);
+      const nous = Guerre.force(p.e, 'joueur');
       const cible = Object.keys(p.e.nations).sort((a, b) => Guerre.force(p.e, a) - Guerre.force(p.e, b))[0];
-      if (nous > 1.5 * Guerre.force(p.e, cible, false)) p.essayer({ type: 'declarer_guerre', id: cible });
+      if (nous > 1.5 * Guerre.force(p.e, cible)) p.essayer({ type: 'declarer_guerre', id: cible });
     }
     return p.acts;
   },
@@ -156,6 +191,8 @@ const BOTS = {
       const p = plan(e);
       guerre(p, { seuilBataille: null, paixBlanche: false, leverEmbargo: true, embargoEnGuerre: true });
       apaiser(p, 55);
+      armee(p, 1, 50);
+      if (e.tour >= 3 && !p.e.batiments.caserne && !p.e.chantiers.some(c => c.id === 'caserne')) construireMieux(p, 'caserne');
       etapes.forEach(([t, a], i) => { if (!faites.has(i) && e.tour >= t && (a.type === 'construire' ? construireMieux(p, a.id) : p.essayer(a))) faites.add(i); });
       return p.acts;
     };

@@ -2,7 +2,7 @@
    actionsDisponibles(etat) : la seule liste que voient l'écran et les bots ; toute autre action est refusée.
    Actions : { type: "loi", id } lance une loi ; { type: "construire", id, region } commande un bâtiment (V2 : dans une région) ;
    { type: "apaiser", id: faction } apaise une faction (M2) ; diplomatie (M3a) : don, contrat, traite, rompre,
-   embargo, lever_embargo (moteur/diplomatie.js) ; guerre (M3b) : declarer_guerre, bataille, imposer_paix, paix_blanche.
+   embargo, lever_embargo (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche.
    Les actions d'un tour s'appliquent dans l'ordre, chacune vérifiée sur l'état laissé par la précédente.
    Ordre du tour T (ASSUMPTION validée) : événements de T → actions → adoption des lois arrivées à échéance
    (et leurs chocs sur les factions) → économie (production, commerce, impôts, entretiens ; grèves du tour précédent)
@@ -39,7 +39,7 @@ function appliquerAction(e, a, r){
   if (a.type === "loi") Lois.lancer(e, a.id);
   else if (a.type === "construire") Batiments.commander(e, a.id, a.region);
   else if (a.type === "apaiser") Factions.apaiser(e, a.id);
-  else if (["declarer_guerre", "bataille", "imposer_paix", "paix_blanche"].includes(a.type)) Guerre.appliquer(e, a, r);
+  else if (["recruter", "declarer_guerre", "bataille", "imposer_paix", "paix_blanche"].includes(a.type)) Guerre.appliquer(e, a, r);
   else Diplomatie.appliquer(e, a);
 }
 
@@ -56,6 +56,7 @@ function tourSuivant(etat, actions, rng){
   const e = Etat.copie(etat);
   const r = rng || { s: e.alea };
   e.journal = [];
+  e.recrues = [];
   evenements(e);
   for (const a of actions || []) appliquerAction(e, a, r);
   Lois.adopter(e);

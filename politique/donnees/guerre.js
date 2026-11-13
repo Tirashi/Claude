@@ -1,31 +1,40 @@
-/* Politique : guerre et paix (RULES_V1 § Guerre ; propositions de M3b validées le 13/11, specs/politique.md § 6).
-   « ASSUMPTION validée (M3) » = proposée avant M3 ; « (M3b) » = détail ajouté en écrivant M3b ; tout validé le 13/11. */
+/* Politique : guerre et paix (RULES_V1 § Guerre ; V2 étape 2 : armée en régiments, specs/politique/regles-v2.md § 5).
+   « ASSUMPTION validée (V2) » = premier jet V2 validé le 13/11 ; « ASSUMPTION (V2 étape 2) » = détail ajouté en écrivant
+   l'étape 2, à confirmer. Les nombres de la V1 encore utilisés gardent leur marque. */
 (function(racine){
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
 
 const GUERRE = {
-  // force = trésor (≥ 0) × loi militaire × moral × bonus (multipliés : À TRANCHER, validé) ; forces d'un camp additionnées
-  forge: 1.15,                      // RULES_V1 ; un seul bonus quel que soit le nombre de forges : ASSUMPTION validée (M3b)
-  fortifications: 1.2,              // RULES_V1, en défense seulement ; un seul bonus : ASSUMPTION validée (M3b)
-  // la forge consomme 10 fer + 8 or par tour (RULES_V1) : donnees/batiments.js
+  // force = régiments × loi militaire × moral (× fort dans la région défendue) ; forces d'un camp additionnées ; le trésor ne compte plus
+  regiment: { cout: 30, entretien: 3, depart: 3 },          // ASSUMPTION validée (V2)
+  parFamilles: 10,                  // au plus 1 régiment pour 10 familles : ASSUMPTION (V2 étape 2)
+  recrueParCaserne: 1,              // 1 régiment par caserne et par tour : ASSUMPTION (V2 étape 2)
+  fort: 1.5,                        // défense de la région ×1,5 : ASSUMPTION validée (V2) ; un fort par région : ASSUMPTION (V2 étape 2)
+  pertes: { perdant: 0.25, gagnant: 0.10 },   // part des régiments de chaque membre du camp (perdant arrondi au-dessus, gagnant en dessous) : ASSUMPTION validée (V2)
+  defaite: { colere: 5 },           // colère d'une défaite (13/11 : 10 → 5) ; le trésor ne paie plus les défaites (V2)
 
-  defaite: { tresor: 0.25, colere: 5 },           // RULES_V1 (−25 %) ; colère : +10 (M3) puis +5, choisi le 13/11 après balayage (specs/politique.md § 5 quinquies)
   capitulation: 0.3,                // moral sous lequel un camp capitule (usure) : ASSUMPTION validée (M3)
+  // candidats en essai (désactivés, à valider) : colère par tour et par région occupée (nos factions / la nation) ;
+  // tour avant lequel une nation ne déclare pas la guerre (declare.tourMin)
+  occupationColere: 0,
+  capitulationSansRegiment: true,   // capitule aussi : plus aucun régiment et au moins une de ses régions occupée : ASSUMPTION (V2 étape 2)
   paixBlanche: 5,                   // tours sans bataille avant une paix blanche : ASSUMPTION validée (M3)
   // l'ennemi accepte la paix blanche s'il n'est pas plus fort que le camp du joueur : ASSUMPTION validée (M3b)
   reparations: { part: 0.25, max: 300 },          // ASSUMPTION validée (M3) (Paix de Brume : 300)
-  nonRearmement: 15,                // RULES_V1 ; le perdant ne peut ni changer de loi militaire ni bâtir de forge
+  nonRearmement: 15,                // RULES_V1 ; V2 : le perdant ne peut plus recruter
+  // cession (V2, validée le 13/11) : le vainqueur garde la région occupée la plus riche ; les autres sont rendues
   reputation: { agression: -20, attaqueEntente: -30 },   // barème validé (l'attaque d'un membre de l'Entente remplace l'agression)
   relationGuerre: -100,             // ASSUMPTION validée (M3)
   treve: 10,                        // tours sans déclaration de guerre entre anciens ennemis après une paix (backlog E1, accepté le 13/11)
   uneSeuleGuerre: true,             // une seule guerre à la fois : ASSUMPTION validée (M3b)
 
-  // politiques des nations (par caractère) : ASSUMPTION validée (M3)
+  // politiques des nations (par caractère ; personas à l'étape 5) : déclaration (ASSUMPTION validée, M3) ;
+  // recrutement : armée visée en part du plafond, régiments par tour, or gardé en réserve (en guerre : plafond) : ASSUMPTION (V2 étape 2)
   politiques: {
-    militariste:  { declare: { ratio: 1.2, relationMax: 0, proba: 0.3 }, bataille: true },
-    commercante:  { declare: null, bataille: true },
-    opportuniste: { declare: null, bataille: true, rejoint: 0.5 }
+    militariste:  { declare: { ratio: 1.2, relationMax: 0, proba: 0.3, tourMin: 1 }, bataille: true, recrute: { cible: 1,   parTour: 2, reserve: 100 } },
+    commercante:  { declare: null, bataille: true,                        recrute: { cible: 0.5, parTour: 1, reserve: 200 } },
+    opportuniste: { declare: null, bataille: true, rejoint: 0.5,          recrute: { cible: 0.7, parTour: 1, reserve: 100 } }
   }
 };
 

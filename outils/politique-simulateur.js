@@ -43,7 +43,7 @@ function regler(reglages){
 
 // décisions politiques (lois, traités, contrats, guerre ; pas les bâtiments, toujours possibles dès qu'on a 60 or) :
 // tour sans vraie décision s'il y en a au plus une (ASSUMPTION (M5))
-const FOND = ['loi', 'contrat', 'traite', 'bataille', 'imposer_paix', 'paix_blanche'];
+const FOND = ['loi', 'contrat', 'traite', 'bataille', 'imposer_paix', 'paix_blanche', 'recruter'];
 const decisions = e => new Set(Tour.actionsDisponibles(e).filter(a => FOND.includes(a.type)).map(a => a.type === 'imposer_paix' ? 'imposer_paix' : a.type + ':' + (a.id || '') + ':' + (a.avec || ''))).size;
 
 // --- une partie : métriques relevées tour par tour ---
@@ -53,7 +53,7 @@ function partie(nom, graine, tours, coupe){
   const bot = Bots.creer(nom, graine);
   const m = { graine, issue: null, duree: 0, tresor: {}, cp: {}, reputation: {}, toursGuerre: 0, guerres: 0, declareesParNous: 0,
               issuesGuerres: { gagnees: 0, perdues: 0, blanches: 0 }, batailles: { gagnees: 0, perdues: 0 },
-              tours55: 0, tours75: 0, greves: 0, apaisements: 0, sansDecision: 0, loisAdoptees: [], catalogueComplet: null, colereMax: 0 };
+              tours55: 0, tours75: 0, greves: 0, apaisements: 0, sansDecision: 0, regionsGagnees: 0, regionsPerdues: 0, regimentsMax: 0, toursOccupes: 0, loisAdoptees: [], catalogueComplet: null, colereMax: 0 };
   const adoptees = new Set(), traces = [];
   while (!e.fin){
     if (coupe && e.tour === coupe) e = JSON.parse(JSON.stringify(e));
@@ -65,12 +65,16 @@ function partie(nom, graine, tours, coupe){
     e = Tour.tourSuivant(e, acts);
     const t = e.tour - 1;
     if (e.guerre) m.toursGuerre++;
+    m.regimentsMax = Math.max(m.regimentsMax, e.regiments || 0);
+    if (Object.keys(e.regions).some(r => (e.occupations || {})[r])) m.toursOccupes++;
     if (!avant && e.guerre) m.guerres++;
     for (const l of e.journal){
       if (/^Bataille/.test(l)) l.includes('victoire') ? m.batailles.gagnees++ : m.batailles.perdues++;
       if (l === "Paix : l'ennemi capitule.") m.issuesGuerres.gagnees++;
       if (l === 'Paix : nous capitulons.') m.issuesGuerres.perdues++;
       if (l === 'Paix blanche.') m.issuesGuerres.blanches++;
+      if (/^Cession : .* passe à nous/.test(l)) m.regionsGagnees++;
+      if (/^Cession : .* passe à (?!nous)/.test(l)) m.regionsPerdues++;
       const a = /^Loi adoptée : (.+?)(?: \(|\.)/.exec(l);
       if (a) { const id = Object.keys(LOIS).find(k => LOIS[k].nom === a[1]); if (id) adoptees.add(id); }
     }
@@ -103,7 +107,9 @@ function resume(nom, ms){
     tours55: med(ms.map(m => m.tours55)), tours75: med(ms.map(m => m.tours75)), avecGreve: ms.filter(m => m.greves > 0).length,
     apaisements: med(ms.map(m => m.apaisements)), lois: med(ms.map(m => m.loisAdoptees.length)), jamaisAdoptees: [...jamais],
     catalogueComplet: ms.filter(m => m.catalogueComplet != null).length, colereMax: med(ms.map(m => m.colereMax)),
-    sansDecision: med(ms.map(m => m.sansDecision / m.duree))
+    sansDecision: med(ms.map(m => m.sansDecision / m.duree)),
+    regionsGagnees: somme(m => m.regionsGagnees) / n, regionsPerdues: somme(m => m.regionsPerdues) / n,
+    regimentsMax: med(ms.map(m => m.regimentsMax)), toursOccupes: med(ms.map(m => m.toursOccupes))
   };
 }
 
@@ -134,6 +140,7 @@ function afficher(r){
   console.log(`  trésor médian : t10 ${r0(r.tresor[10])}, t20 ${r0(r.tresor[20])}, t30 ${r0(r.tresor[30])}, t40 ${r0(r.tresor[40])} ; capital politique t10 ${r0(r.cp[10])}, t20 ${r0(r.cp[20])}, t40 ${r0(r.cp[40])}`);
   console.log(`  réputation médiane : t30 ${r0(r.reputation30)}, fin ${r0(r.reputationFin)}`);
   console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; par partie : guerres gagnées ${r.guerres.gagnees.toFixed(2)}, perdues ${r.guerres.perdues.toFixed(2)}, paix blanches ${r.guerres.blanches.toFixed(2)} ; batailles ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
+  console.log(`  armée : ${r0(r.regimentsMax)} régiments au plus (médiane) ; ${r0(r.toursOccupes)} tours avec une région occupée (médiane) ; régions par partie : ${r.regionsGagnees.toFixed(2)} gagnées, ${r.regionsPerdues.toFixed(2)} perdues`);
   console.log(`  factions : colère max ${r0(r.colereMax)}, tours ≥ 55 : ${r0(r.tours55)}, ≥ 75 : ${r0(r.tours75)} (médianes) ; grève dans ${pct(r.avecGreve, n)} des parties ; ${r0(r.apaisements)} apaisements`);
   console.log(`  lois adoptées : ${r0(r.lois)} sur ${Object.keys(LOIS).length} (médiane) ; jamais adoptées : ${r.jamaisAdoptees.length ? r.jamaisAdoptees.join(', ') : 'aucune'} ; catalogue complet dans ${pct(r.catalogueComplet, n)} des parties`);
   console.log(`  tours sans vraie décision politique (≤ 1 loi, traité, contrat ou action de guerre possible) : ${pct(Math.round(100 * r.sansDecision), 100)} (médiane)`);
@@ -194,10 +201,10 @@ if (require.main === module){
       const dom = dominance(parties).dominants;
       for (const nom of noms){
         const r = resumes[nom];
-        lignes.push([JSON.stringify(v), nom, pct(r.fins.revolution || 0, r.parties), r0(r.dureeMediane), r0(r.tresor[20]), r0(r.tresor[40]), r0(r.toursGuerre), r.batailles.perdues.toFixed(1), r0(r.apaisements), r0(r.tours75), pct(r.avecGreve, r.parties), dom.includes(nom) ? 'oui' : '']);
+        lignes.push([JSON.stringify(v), nom, pct(r.fins.revolution || 0, r.parties), r0(r.dureeMediane), r0(r.tresor[20]), r0(r.tresor[40]), r0(r.toursGuerre), r.batailles.perdues.toFixed(1), r.regionsPerdues.toFixed(2), r0(r.toursOccupes), r0(r.apaisements), r0(r.tours75), pct(r.avecGreve, r.parties), dom.includes(nom) ? 'oui' : '']);
       }
     }
-    const tete = ['valeur', 'bot', 'révol.', 'durée', 'or t20', 'or t40', 'guerre', 'bat. P', 'apais.', 't≥75', 'grève', 'domine'];
+    const tete = ['valeur', 'bot', 'révol.', 'durée', 'or t20', 'or t40', 'guerre', 'bat. P', 'rég. P', 'occup.', 'apais.', 't≥75', 'grève', 'domine'];
     const largeurs = tete.map((h, i) => Math.max(h.length, ...lignes.map(l => String(l[i]).length)));
     console.log('\n' + tete.map((h, i) => h.padEnd(largeurs[i])).join(' | '));
     console.log(largeurs.map(w => '-'.repeat(w)).join('-|-'));

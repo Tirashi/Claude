@@ -11,6 +11,7 @@ const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAINS;
+const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
 
 const arrondi = x => Math.round(x * 100) / 100;
 const zero = () => Object.fromEntries(ECO.biens.map(b => [b, 0]));
@@ -25,22 +26,20 @@ function prix(e){
 function bilan(e){
   const fx = Lois.effets(e), fa = Factions.effetsEco(e), prod = zero(), conso = zero(), p = prix(e);
   let entretienBat = 0;
-  // production région par région (bonus de terrain, V2) ; consommation et entretien des bâtiments du pays
+  // région par région (bonus de terrain, V2) ; une région occupée ne produit ni ne consomme rien (V2 étape 2)
   for (const reg in e.regions){
+    if ((e.occupations || {})[reg]) continue;
     const bonus = TERRAINS[e.regions[reg].terrain].bonus;
     for (const id in e.regions[reg].batiments){
       const n = e.regions[reg].batiments[id], b = BAT[id];
       if (!n) continue;
       const mult = fx.production * (b.artisans ? 1 + fx.artisans : 1) * (fa.batiments[id] == null ? 1 : fa.batiments[id]) * (bonus[id] || 1);
       for (const r in b.produit || {}) prod[r] += n * b.produit[r] * mult;
+      for (const r in b.consomme || {}) conso[r] += n * b.consomme[r];
+      if (b.entretien) entretienBat += n * b.entretien;
     }
   }
-  for (const id in e.batiments){
-    const n = e.batiments[id], b = BAT[id];
-    if (!n) continue;
-    for (const r in b.consomme || {}) conso[r] += n * b.consomme[r];
-    if (b.entretien) entretienBat += n * b.entretien;
-  }
+  entretienBat += (e.regiments || 0) * GU.regiment.entretien;   // V2 : entretien des régiments
   for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
   for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
   let ventes = 0, achats = 0, contrats = 0;

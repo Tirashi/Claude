@@ -28,7 +28,8 @@ const SCENARIO_CHAMPS = {
       artisans: { colere: 25, puissance: 30 },
       patrons:  { colere: 20, puissance: 45 }
     },
-    reputation: 0                     // ASSUMPTION validée
+    reputation: 0,                    // ASSUMPTION validée
+    regiments: 3                      // V2 : régiments de départ (ASSUMPTION validée (V2)) ; pas de caserne au départ : ASSUMPTION (V2 étape 2)
   },
 
   // événements écrits du scénario (pas de tirage en V1)
@@ -38,14 +39,18 @@ const SCENARIO_CHAMPS = {
 
   // nations de l'ordinateur (modèle simplifié, M3a : specs/politique.md § 6, validé le 13/11)
   // taux : impôts par famille ; force : loi militaire fixe (M3b) ; colere : départ ;
-  // exporte / importe : volumes fixes par tour (servent aux embargos)
+  // exporte / importe : volumes fixes par tour (servent aux embargos) ; V2 : régiments de départ (validés) et 3 régions
+  // (noms et terrains : ASSUMPTION (V2 étape 2) ; le revenu d'une nation suit la part de ses régions qu'elle contrôle)
   nations: {
     val_roc:     { nom: "Val-Roc",        dirigeant: "Vermeil", caractere: "militariste", relation: -20, tresor: 400, familles: 90,   // ASSUMPTION validée
-                   taux: 1.0, force: 1.6, colere: 30, exporte: { fer: 10 }, importe: { grain: 15, tissu: 5 } },                     // ASSUMPTION validée (M3)
+                   taux: 1.0, force: 1.6, colere: 30, exporte: { fer: 10 }, importe: { grain: 15, tissu: 5 },                       // ASSUMPTION validée (M3)
+                   regiments: 5, regions: { hauts: { nom: "Hauts-Rocs", terrain: "filons" }, forges: { nom: "Forges de Vermeil", terrain: "ville" }, marches: { nom: "Marches de l'Ouest", terrain: "mixte" } } },
     brume:       { nom: "Brume-la-Brume", dirigeant: "Ferreol", caractere: "commercante", relation:  20, tresor: 600, familles: 100,  // ASSUMPTION validée
-                   taux: 1.3, force: 1.0, colere: 20, exporte: { tissu: 20 }, importe: { fer: 10, grain: 5 } },                     // ASSUMPTION validée (M3)
+                   taux: 1.3, force: 1.0, colere: 20, exporte: { tissu: 20 }, importe: { fer: 10, grain: 5 },                       // ASSUMPTION validée (M3)
+                   regiments: 3, regions: { port: { nom: "Port de Brume", terrain: "ville" }, marais: { nom: "Marais", terrain: "mixte" }, coteaux: { nom: "Coteaux", terrain: "fertile" } } },
     contreforts: { nom: "Contreforts",    dirigeant: "Harl",    caractere: "opportuniste", relation:  0, tresor: 150, familles: 50,   // ASSUMPTION validée
-                   taux: 1.0, force: 1.3, colere: 25, exporte: { outils: 10 }, importe: { grain: 5 } }                              // ASSUMPTION validée (M3)
+                   taux: 1.0, force: 1.3, colere: 25, exporte: { outils: 10 }, importe: { grain: 5 },                               // ASSUMPTION validée (M3)
+                   regiments: 2, regions: { cols: { nom: "Cols", terrain: "filons" }, paturages: { nom: "Pâturages", terrain: "fertile" }, bastide: { nom: "Bastide", terrain: "ville" } } }
   }
 };
 

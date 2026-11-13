@@ -2,7 +2,7 @@
    node outils/politique-tests.js
    M1 : économie, capital politique, lois, bâtiments (une règle = un test), puis des parties au hasard (invariants).
    M3a : nations de l'ordinateur, dons, contrats, embargo, traités (Entente, défense mutuelle, filature), réputation, paria.
-   M3b : force, forge, fortifications, déclarations, alliés, batailles, sanctions de bloc, capitulation, clauses, paix blanche.
+   M3b et V2 étape 2 : régiments, recrutement, casernes, forts, occupation, déclarations, alliés, batailles, sanctions, capitulation, clauses, cession, paix blanche, trêve.
    M2 : factions (dissipation, effets par tour, chocs, suffrages, apaisement, bornes, statuts, moral, grève, révolte, révolution).
    M0 : hasard à graine, état initial du scénario « champs », invariants du tour
    (déterminisme, état reçu jamais modifié, JSON rechargé à l'identique, action hors liste refusée).
@@ -90,7 +90,7 @@ const vrai = (mod, graine) => Object.assign(Etat.creerEtat(CHAMPS, graine || 1),
 const Batiments = P('moteur/batiments.js');
 const neuf = (mod) => {
   const m = Object.assign({}, mod), bats = m.batiments || { farm: 4, mine: 1 }; delete m.batiments;
-  const e = vrai(m); e.profils.val_roc.caractere = 'commercante';
+  const e = vrai(Object.assign({ regiments: 0 }, m)); e.profils.val_roc.caractere = 'commercante';   // sans armée : l'économie de la V1
   e.regions = { essai: { nom: 'Essai', terrain: 'mixte', emplacements: 99, batiments: JSON.parse(JSON.stringify(bats)) } };
   e.batiments = Batiments.totaux(e.regions);
   return e;
@@ -167,7 +167,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const e = Tour.tourSuivant(neuf(), [C('farm', 'essai')]);
   check(proche(e.tresor, 200 - 60 + 26.5), 'bâtiments : payés à la commande');
   check(refuse(() => Tour.tourSuivant(neuf({ tresor: 59 }), [C('farm', 'essai')])), 'bâtiments : refusés si le trésor ne suffit pas');
-  check(!Tour.actionsDisponibles(neuf({ tresor: 10000 })).some(a => a.id === 'entente_mill') && ['forge', 'fortifications'].every(id => Tour.actionsDisponibles(neuf({ tresor: 10000 })).some(a => a.id === id)), 'bâtiments : filature seulement avec son traité ; forge et fortifications constructibles');
+  check(!Tour.actionsDisponibles(neuf({ tresor: 10000 })).some(a => a.id === 'entente_mill') && ['caserne', 'fort'].every(id => Tour.actionsDisponibles(neuf({ tresor: 10000 })).some(a => a.id === id)), 'bâtiments : filature seulement avec son traité ; caserne et fort constructibles');
   check(refuse(() => Tour.tourSuivant(neuf({ tresor: 1000 }), [C('farm', 'essai'), C('farm', 'essai')])), 'régions : un seul chantier à la fois par région');
   const v = (k, acts, mod) => tours(vrai(Object.assign({ tresor: 2000 }, mod)), k, acts);
   const quatre = v(1, [C('farm', 'plaine'), C('farm', 'vallee'), C('mine', 'collines'), C('workshop', 'bourg')]);
@@ -182,7 +182,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(bourg.bilan.production.outils === 12.5 && val.bilan.production.outils === 10, 'régions : atelier ×1,25 au bourg, ×1 ailleurs');
   let pl = vrai({ tresor: 5000 }); for (let k = 0; k < 2; k++) pl = tours(pl, 2, [C('farm', 'plaine')]);
   check(pl.regions.plaine.batiments.farm === 4 && Batiments.occupes(pl, 'plaine') === 4 && !Tour.actionsDisponibles(pl).some(a => a.region === 'plaine' && a.id === 'farm'), 'régions : 4 emplacements en plaine, plus de place ensuite');
-  check(Tour.actionsDisponibles(pl).some(a => a.region === 'plaine' && a.id === 'fortifications'), 'régions : les fortifications ne prennent pas d\'emplacement');
+  check(Tour.actionsDisponibles(pl).some(a => a.region === 'plaine' && a.id === 'fort'), 'régions : le fort ne prend pas d\'emplacement');
   const ch = Tour.tourSuivant(vrai({ tresor: 5000 }), [C('farm', 'vallee')]);
   check(Batiments.occupes(ch, 'vallee') === 3 && !Tour.actionsDisponibles(Tour.tourSuivant(ch, [])).some(a => a.region === 'vallee' && a.id === 'farm'), 'régions : un chantier occupe sa place (Vallée : 2 fermes + 1 en chantier = 3 sur 3)');
 }
@@ -328,7 +328,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const n0 = neuf();
   check(n0.nations.val_roc.colere === 30 && n0.nations.val_roc.moral === 1 && n0.profils.brume.taux === 1.3, 'nations : colère, moral et profil de départ');
   const t1 = Tour.tourSuivant(neuf(), []);
-  check(t1.nations.val_roc.tresor === 478 && t1.nations.brume.tresor === 718 && t1.nations.contreforts.tresor === 188, 'nations : trésor += familles × taux − 12 (armée)');
+  check(t1.nations.val_roc.tresor === 475 && t1.nations.brume.tresor === 691 && t1.nations.contreforts.tresor === 164, 'nations : trésor += familles × taux − 3 par régiment, moins les recrues (Brume et Contreforts : +1 régiment, 30 or)');
   check(t1.nations.brume.familles === 100.5 && t1.nations.val_roc.colere === 29, 'nations : familles +0,5 %/tour, colère −1/tour');
   const mn = c => DP.moralNation(c);
   check(mn(40) === 1 && proche(mn(70), 0.5) && mn(100) === 0, 'nations : moral par la formule des factions');
@@ -359,7 +359,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const fermes = (mod) => neuf(Object.assign({ batiments: { farm: 6, mine: 1 } }, mod));
   const em = Tour.tourSuivant(fermes(), [{ type: 'embargo', id: 'val_roc' }]);
   check(em.nations.val_roc.relation === -50 && em.reputation === -5, 'embargo : relation −30, réputation −5 (sanction illégitime hors guerre)');
-  check(em.nations.val_roc.manque === 15 && em.nations.val_roc.colere === 30 - 1 + 5 && em.nations.val_roc.tresor === 478 - 15, 'embargo : la cible manque du grain que le joueur a en trop (15) : colère +5, trésor −15');
+  check(em.nations.val_roc.manque === 15 && em.nations.val_roc.colere === 30 - 1 + 5 && em.nations.val_roc.tresor === 475 - 15, 'embargo : la cible manque du grain que le joueur a en trop (15) : colère +5, trésor −15');
   const em0 = Tour.tourSuivant(neuf(), [{ type: 'embargo', id: 'val_roc' }]);
   check(em0.nations.val_roc.manque === 0 && em0.nations.val_roc.colere === 29, 'embargo : sans surplus du joueur, il ne coûte rien à la cible');
   const ec = Tour.tourSuivant(neuf(), [{ type: 'contrat', id: 'brume_tissu' }, { type: 'embargo', id: 'brume' }]);
@@ -392,23 +392,45 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(!Tour.actionsDisponibles(pa).some(a => a.type === 'traite' || a.type === 'contrat') && Tour.actionsDisponibles(Object.assign(pa, { reputation: -50 })).some(a => a.type === 'traite'), 'paria : sous −50 de réputation, plus aucun traité ni contrat');
 }
 
-// ===================== M3b : guerre et paix =====================
+// ===================== M3b et V2 étape 2 : armée en régiments, guerre et paix =====================
 {
-  const GU = P('moteur/guerre.js'), G = P('donnees/guerre.js');
+  const GU = P('moteur/guerre.js'), G = P('donnees/guerre.js'), DPm = P('moteur/diplomatie.js');
   const rng = s => Alea.creer(s);
   const enGuerre = (e, cible, agresseur, s) => { GU.declarer(e, cible, agresseur, rng(s || 1)); e.journal = []; return e; };
-  const avecRel = (rels, mod) => { const e = neuf(mod); for (const n in rels) e.nations[n].relation = rels[n]; return e; };
+  const seul = e => { e.guerre.ennemis = ['val_roc']; e.guerre.allies = []; return e; };
   const ok2 = (e, a) => Tour.actionsDisponibles(e).some(d => JSON.stringify(Object.entries(d).sort()) === JSON.stringify(Object.entries(a).sort()));
+  const caserne = (mod, regions) => { const e = vrai(mod); for (const r of regions || ['bourg']) e.regions[r].batiments.caserne = 1; e.batiments = Batiments.totaux(e.regions); return e; };
 
   // force
-  const fj = (mod, def, lois) => GU.force(Object.assign(avecLois(lois || [], 1, mod)), 'joueur', def);
-  check(fj() === 200 && fj({}, false, ['army_professional']) === 260 && fj({}, false, ['army_conscription']) === 320, 'force : trésor × loi militaire (milice ×1, métier ×1,3, conscription ×1,6)');
-  check(fj({ moral: 0.5 }) === 100 && fj({ tresor: -50 }) === 0, 'force : × moral ; un trésor négatif ne donne aucune force');
-  check(proche(fj({ batiments: { forge: 1 } }), 230) && fj({ batiments: { fortifications: 1 } }, false) === 200 && proche(fj({ batiments: { fortifications: 1 } }, true), 240), 'force : forge ×1,15 ; fortifications ×1,2 en défense seulement');
-  check(proche(fj({ batiments: { forge: 2, fortifications: 1 } }, true, ['army_conscription']), 200 * 1.6 * 1.15 * 1.2), 'force : bonus multipliés ; une seule fois même avec deux forges');
-  check(GU.force(vrai(), 'val_roc') === 640 && GU.force(vrai(), 'brume') === 600, 'force d\'une nation : trésor × loi militaire × moral');
-  const fo = Economie.bilan(neuf({ batiments: { farm: 4, mine: 1, forge: 1 } }));
-  check(fo.consommation.fer === 14 && fo.entretiens === 8, 'forge : consomme 10 fer et 8 or par tour');
+  const fj = (reg, lois, mod) => GU.force(Object.assign(vrai(Object.assign({ regiments: reg }, mod)), { lois: Object.fromEntries((lois || []).map(id => [LOIS[id].categorie, { id, depuis: 1 }])) }), 'joueur');
+  check(fj(10) === 10 && fj(10, ['army_professional']) === 13 && fj(10, ['army_conscription']) === 16, 'force : régiments × loi militaire (milice ×1, métier ×1,3, conscription ×1,6)');
+  check(fj(10, [], { moral: 0.5 }) === 5 && fj(10, [], { tresor: -500 }) === 10 && fj(10, [], { tresor: 99999 }) === 10, 'force : × moral ; le trésor ne compte plus');
+  const ft = vrai(); ft.regions.plaine.batiments.fort = 1;
+  check(GU.force(ft, 'joueur', 'plaine') === 4.5 && GU.force(ft, 'joueur', 'vallee') === 3 && GU.force(ft, 'joueur') === 3, 'fort : défense de sa région ×1,5, nulle part ailleurs');
+  check(GU.force(vrai(), 'val_roc') === 8 && GU.force(vrai(), 'brume') === 3 && GU.force(vrai(), 'contreforts') === 2.6, 'force d\'une nation : régiments × loi militaire × moral (Val-Roc 5 × 1,6)');
+  check(vrai().regiments === 3 && vrai().nations.val_roc.regiments === 5, 'départ : 3 régiments pour nous, 5 pour Val-Roc, 3 pour Brume, 2 pour Contreforts');
+
+  // recrutement et entretien
+  check(!Tour.actionsDisponibles(vrai({ tresor: 1000 })).some(a => a.type === 'recruter') && ok2(caserne({ tresor: 1000 }), { type: 'recruter', region: 'bourg' }), 'recrutement : une caserne est nécessaire');
+  const rc = Tour.tourSuivant(caserne({ tresor: 1000 }), [{ type: 'recruter', region: 'bourg' }]);
+  check(rc.regiments === 4 && refuse(() => Tour.tourSuivant(caserne({ tresor: 1000 }), [{ type: 'recruter', region: 'bourg' }, { type: 'recruter', region: 'bourg' }])), 'recrutement : 1 régiment par caserne et par tour');
+  check(Tour.tourSuivant(caserne({ tresor: 1000 }, ['bourg', 'vallee']), [{ type: 'recruter', region: 'bourg' }, { type: 'recruter', region: 'vallee' }]).regiments === 5, 'recrutement : deux casernes, deux régiments');
+  check(!ok2(caserne({ tresor: 1000, regiments: 8 }), { type: 'recruter', region: 'bourg' }) && ok2(caserne({ tresor: 1000, regiments: 7 }), { type: 'recruter', region: 'bourg' }), 'recrutement : au plus 1 régiment pour 10 familles (8 au départ)');
+  check(!ok2(caserne({ tresor: 29 }), { type: 'recruter', region: 'bourg' }), 'recrutement : 30 or');
+  const b0 = Economie.bilan(vrai()), b5 = Economie.bilan(vrai({ regiments: 5 }));
+  check(b0.entretiens === 9 && b5.entretiens === 15, 'régiments : 3 or d\'entretien par tour chacun');
+  check(Object.keys(BAT).includes('caserne') && BAT.caserne.cout === 60 && BAT.caserne.delai === 2 && BAT.fort.cout === 80 && BAT.fort.delai === 3 && !BAT.forge && !BAT.fortifications, 'bâtiments : caserne (60 or, 2 tours) et fort (80 or, 3 tours) remplacent forge et fortifications');
+  const f1 = Tour.tourSuivant(vrai({ tresor: 1000 }), [{ type: 'construire', id: 'fort', region: 'plaine' }]);
+  check(!ok2(Object.assign(JSON.parse(JSON.stringify(f1)), { chantiers: [], regions: Object.assign(JSON.parse(JSON.stringify(f1.regions)), { plaine: Object.assign({}, f1.regions.plaine, { batiments: { farm: 2, fort: 1 } }) }) }), { type: 'construire', id: 'fort', region: 'plaine' }), 'fort : un seul par région');
+  // nations
+  const nr = vrai(); DPm.tour(nr);
+  check(nr.nations.val_roc.tresor === 400 + 90 - 15 && nr.nations.brume.tresor === 600 + 130 - 9 && nr.nations.contreforts.tresor === 150 + 50 - 6, 'nations : trésor += familles × taux − 3 par régiment');
+  const no = vrai({ occupations: { hauts: 'joueur' } }); DPm.tour(no);
+  check(no.nations.val_roc.tresor === 400 + 60 - 15, 'nations : une région occupée sur 3 retire un tiers du revenu');
+  const nrec = vrai(); GU.tour(nrec, rng(99)); nrec.guerre = null;
+  check(nrec.nations.val_roc.regiments === 7 && nrec.nations.brume.regiments === 4 && nrec.nations.contreforts.regiments === 3, 'nations : recrutent avec leur or selon leur caractère (Val-Roc +2 par tour, Brume +1, Contreforts +1)');
+  let vr = vrai({}); for (const n in vr.nations) { vr.nations[n].tresor = 5000; vr.nations[n].relation = 0; } for (let k = 0; k < 8; k++) { GU.tour(vr, rng(k)); vr.guerre = null; }
+  check(vr.nations.val_roc.regiments === 9 && vr.nations.brume.regiments === 5 && vr.nations.contreforts.regiments === 4, 'nations : jusqu\'à leur cible (Val-Roc au plafond de 9, Brume la moitié, Contreforts 70 %)');
 
   // déclaration du joueur
   const d1 = Tour.tourSuivant(neuf(), [{ type: 'declarer_guerre', id: 'contreforts' }]);
@@ -416,78 +438,80 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(!Tour.actionsDisponibles(d1).some(a => a.type === 'declarer_guerre'), 'guerre : une seule à la fois');
   const em = Tour.tourSuivant(d1, [{ type: 'embargo', id: 'contreforts' }]);
   check(em.reputation === -20 + 3, 'embargo : sanction légitime (+3) contre un ennemi en guerre');
-  check(!ok2(avecRel({ contreforts: 90 }, { guerre: { ennemis: ['contreforts'], allies: [], depuis: 1 } }), { type: 'contrat', id: 'contreforts_outils' }), 'guerre : pas de contrat ni de traité avec l\'ennemi');
-  // attaquer un membre de l'Entente
   const ent = neuf({ traites: [{ type: 'entente', avec: 'brume', depuis: 1 }, { type: 'entente', avec: 'contreforts', depuis: 1 }, { type: 'defense_mutuelle', avec: 'contreforts', depuis: 1 }], contrats: [{ id: 'brume_tissu', jusqua: 9 }] });
   ent.nations.brume.relation = 60;
   const at = Tour.tourSuivant(ent, [{ type: 'declarer_guerre', id: 'contreforts' }]);
   check(at.reputation === -30 - 15 - 15, 'attaquer un membre de l\'Entente : −30 (au lieu de −20), et ses traités avec nous rompus (−15 chacun)');
   check(!at.traites.length && !at.contrats.length && at.nations.brume.relation === 30 && at.sanctions.some(s => s.par === 'brume' && s.contre === 'joueur'), 'sanctions de bloc : les autres membres rompent avec nous (traités, contrats, relation −30, embargo)');
-  check(!Tour.actionsDisponibles(Object.assign(at, { tresor: 1000 })).some(a => a.type === 'traite' && a.avec === 'brume'), 'sanctions de bloc : plus de traité avec Brume');
 
   // déclarations des nations
-  const declare = (mod, s, rel) => { const e = vrai(mod); if (rel != null) e.nations.val_roc.relation = rel; GU.tour(e, rng(s)); return e.guerre; };
+  const declare = (mod, s, rel, regBrume) => { const e = vrai(mod); if (rel != null) e.nations.val_roc.relation = rel; if (regBrume) e.nations.brume.regiments = regBrume; GU.tour(e, rng(s)); return e.guerre; };
   let k = 0; for (let s = 1; s <= 400; s++) if (declare({}, s)) k++;
   check(k > 400 * 0.24 && k < 400 * 0.36, `Val-Roc déclare la guerre une fois sur trois environ quand il est 1,2× plus fort et hostile (${k}/400)`);
-  check([1, 2, 3, 4, 5, 6, 7, 8].every(s => !declare({}, s, 0) && !declare({ tresor: 600 }, s)), 'Val-Roc ne déclare rien si la relation est ≥ 0 ou s\'il n\'est pas 1,2× plus fort');
-  check([1, 2, 3, 4, 5, 6, 7, 8].every(s => !declare({ traites: [{ type: 'defense_mutuelle', avec: 'brume', depuis: 1 }] }, s)), 'la défense mutuelle compte dans la force qui dissuade (200 + 600)');
+  check([1, 2, 3, 4, 5, 6, 7, 8].every(s => !declare({}, s, 0) && !declare({ regiments: 20 }, s)), 'Val-Roc ne déclare rien si la relation est ≥ 0 ou s\'il n\'est pas 1,2× plus fort');
+  check([1, 2, 3, 4, 5, 6, 7, 8].every(s => !declare({ traites: [{ type: 'defense_mutuelle', avec: 'brume', depuis: 1 }] }, s, null, 8)), 'la défense mutuelle compte dans la force qui dissuade');
   check([1, 2, 3, 4, 5, 6, 7, 8].every(s => { const e = vrai(); e.nations.brume.relation = -90; e.nations.contreforts.relation = -90; GU.tour(e, rng(s)); return !e.guerre || e.guerre.ennemis[0] === 'val_roc'; }), 'Brume et Contreforts ne déclarent jamais la guerre');
   const dm = enGuerre(vrai({ traites: [{ type: 'defense_mutuelle', avec: 'brume', depuis: 1 }, { type: 'entente', avec: 'brume', depuis: 1 }] }), 'val_roc', 'val_roc');
-  check(dm.guerre.allies.includes('brume') && GU.forceCamp(dm, ['joueur'].concat(dm.guerre.allies)) >= 800, 'défense mutuelle : Brume entre en guerre à nos côtés ; forces additionnées');
-  check(dm.reputation === 0 && dm.sanctions.some(s => s.par === 'brume' && s.contre === 'val_roc'), 'attaquer l\'Entente : ses membres mettent l\'agresseur sous embargo');
-  const dmt = Tour.tourSuivant(dm, []);
-  check(dmt.nations.val_roc.manque === 5 && Math.abs(dmt.nations.val_roc.colere - (30 - 1 + 5 / 3)) < 0.01, 'sanctions de bloc : Val-Roc manque du tissu que Brume exporte (5)');
-  // Contreforts, opportuniste
-  let avecNous = 0, contreNous = 0, seul = 0;
-  for (let s = 1; s <= 300; s++) {
-    const e = enGuerre(vrai(), 'val_roc', 'val_roc', s);
-    if (e.guerre.allies.includes('contreforts')) avecNous++; else if (e.guerre.ennemis.includes('contreforts')) contreNous++; else seul++;
-  }
-  check(avecNous === 0 && contreNous > 120 && contreNous < 180, `Contreforts rejoint le camp le plus fort une fois sur deux (ici Val-Roc : ${contreNous}/300)`);
-  let rej = 0; for (let s = 1; s <= 300; s++) { const e = vrai({ tresor: 3000 }); e.nations.contreforts.relation = 0; GU.declarer(e, 'val_roc', 'val_roc', rng(s)); if (e.guerre.allies.includes('contreforts')) rej++; }
+  check(dm.guerre.allies.includes('brume') && dm.sanctions.some(s => s.par === 'brume' && s.contre === 'val_roc'), 'défense mutuelle : Brume entre en guerre à nos côtés ; l\'Entente met l\'agresseur sous embargo');
+  let contreNous = 0; for (let s = 1; s <= 300; s++) { const e = enGuerre(vrai(), 'val_roc', 'val_roc', s); if (e.guerre.ennemis.includes('contreforts')) contreNous++; }
+  check(contreNous > 120 && contreNous < 180, `Contreforts rejoint le camp le plus fort une fois sur deux (ici Val-Roc : ${contreNous}/300)`);
+  let rej = 0; for (let s = 1; s <= 300; s++) { const e = vrai({ regiments: 20 }); e.nations.contreforts.relation = 0; GU.declarer(e, 'val_roc', 'val_roc', rng(s)); if (e.guerre.allies.includes('contreforts')) rej++; }
   check(rej > 120 && rej < 180, `Contreforts nous rejoint si nous sommes les plus forts et que la relation est ≥ 0 (${rej}/300)`);
-  let jamais = true; for (let s = 1; s <= 100; s++) { const e = vrai({ tresor: 3000 }); e.nations.contreforts.relation = -1; GU.declarer(e, 'val_roc', 'val_roc', rng(s)); if (e.guerre.allies.includes('contreforts')) jamais = false; }
-  check(jamais, 'Contreforts ne nous rejoint pas si la relation est négative');
 
-  // batailles
+  // batailles et occupation
+  check(egal(GU.cibles(seul(enGuerre(vrai(), 'val_roc', 'joueur')), ['joueur'], ['val_roc']), ['hauts', 'forges', 'marches']), 'bataille : on vise une région de l\'ennemi');
+  check(ok2(seul(enGuerre(vrai(), 'val_roc', 'joueur')), { type: 'bataille', cible: 'hauts' }) && !ok2(seul(enGuerre(vrai(), 'val_roc', 'joueur')), { type: 'bataille' }), 'bataille : l\'action nomme sa cible');
   let gagne = 0; const N = 4000;
-  for (let s = 1; s <= N; s++) { const e = enGuerre(vrai({ tresor: 1920 }), 'val_roc', 'joueur'); e.guerre.ennemis = ['val_roc']; e.guerre.allies = []; if (GU.bataille(e, true, rng(s))) gagne++; }
-  check(Math.abs(gagne / N - 0.75) < 0.025, `bataille : l'attaquant gagne avec la probabilité Fa / (Fa + Fd) (1920 contre 640 : ${(gagne / N).toFixed(3)} pour 0,75)`);
-  const bat = (s) => { const e = enGuerre(vrai(), 'val_roc', 'joueur'); e.guerre.ennemis = ['val_roc']; const v = GU.bataille(e, true, rng(s)); return { e, v }; };
-  let def = null, vic = null; for (let s = 1; s < 50 && !(def && vic); s++) { const b = bat(s); if (b.v) vic = vic || b.e; else def = def || b.e; }
+  for (let s = 1; s <= N; s++) { const e = seul(enGuerre(vrai({ regiments: 15 }), 'val_roc', 'joueur')); if (GU.bataille(e, true, 'hauts', rng(s))) gagne++; }
+  check(Math.abs(gagne / N - 15 / 23) < 0.025, `bataille : l'attaquant gagne avec la probabilité Fa / (Fa + Fd) (15 contre 8 : ${(gagne / N).toFixed(3)} pour ${(15 / 23).toFixed(3)})`);
+  let def = null, vic = null;
+  for (let s = 1; s < 80 && !(def && vic); s++) { const e = seul(enGuerre(vrai({ regiments: 4 }), 'val_roc', 'joueur')); if (GU.bataille(e, true, 'hauts', rng(s))) vic = vic || e; else def = def || e; }
   const dc = G.defaite.colere;
-  check(dc === 5 && def.tresor === 150 && Object.values(def.factions).every((x, i) => x.colere === Object.values(CHAMPS.joueur.factions)[i].colere + dc) && def.nations.val_roc.tresor === 400, 'défaite : −25 % de trésor et +5 de colère pour toutes nos factions');
-  check(vic.nations.val_roc.tresor === 300 && vic.nations.val_roc.colere === 30 + dc && vic.tresor === 200, 'victoire : l\'ennemi perd 25 % de son trésor et prend +5 de colère');
-  const b1 = Tour.tourSuivant(enGuerre(neuf({ tresor: 5000 }), 'val_roc', 'joueur'), [{ type: 'bataille' }]);
-  check(refuse(() => Tour.tourSuivant(enGuerre(neuf({ tresor: 5000 }), 'val_roc', 'joueur'), [{ type: 'bataille' }, { type: 'bataille' }])) && b1.guerre.derniereBataille === 1, 'bataille : une par tour et par guerre');
-  const fort = enGuerre(vrai(), 'val_roc', 'val_roc'); fort.guerre.ennemis = ['val_roc']; GU.tour(fort, rng(3));
-  const faible = enGuerre(vrai({ tresor: 5000 }), 'val_roc', 'val_roc'); faible.guerre.ennemis = ['val_roc']; GU.tour(faible, rng(3));
-  check(fort.guerre.bataille === 1 && faible.guerre.bataille === null, 'l\'ennemi livre bataille seulement s\'il est plus fort que nous (en défense)');
+  check(def.regiments === 3 && def.nations.val_roc.regiments === 5 && !def.occupations.hauts && Object.values(def.factions).every((x, i) => x.colere === Object.values(CHAMPS.joueur.factions)[i].colere + dc), 'défaite : −25 % de régiments (arrondi au-dessus), +5 de colère, pas d\'occupation');
+  check(vic.occupations.hauts === 'joueur' && vic.nations.val_roc.regiments === 3 && vic.regiments === 4 && vic.nations.val_roc.colere === 30 + dc, 'victoire : la région est occupée ; l\'ennemi perd 25 % de ses régiments et prend +5 de colère ; le vainqueur perd 10 % (arrondi en dessous)');
+  const oc = vrai({ occupations: { plaine: 'val_roc' } });
+  check(Economie.bilan(oc).production.grain === 40 && !Tour.actionsDisponibles(Object.assign(oc, { tresor: 1000 })).some(a => a.region === 'plaine'), 'occupation : la région ne produit plus et on ne peut plus y construire');
+  const ch = vrai({ occupations: { vallee: 'val_roc' }, chantiers: [{ id: 'farm', region: 'vallee', restant: 2 }] }); Batiments.avancer(ch);
+  check(ch.chantiers[0].restant === 2, 'occupation : le chantier de la région s\'arrête');
+  const lib = seul(enGuerre(vrai({ regiments: 40, occupations: { plaine: 'val_roc' } }), 'val_roc', 'val_roc'));
+  check(GU.cibles(lib, ['joueur'], ['val_roc']).includes('plaine') && GU.bataille(lib, true, 'plaine', rng(1)) && !lib.occupations.plaine, 'libération : on peut reprendre une de nos régions occupées');
+  const ia = seul(enGuerre(vrai(), 'val_roc', 'val_roc')); ia.regions.plaine.batiments.fort = 1; GU.tour(ia, rng(3));
+  check(ia.guerre.bataille === 1 && ia.journal.some(t => /Bataille pour (?!Plaine)/.test(t)), 'l\'ennemi plus fort attaque une région sans fort');
+  const iaLib = seul(enGuerre(vrai({ occupations: { hauts: 'joueur' } }), 'val_roc', 'val_roc')); GU.tour(iaLib, rng(3));
+  check(iaLib.journal.some(t => /Bataille pour Hauts-Rocs/.test(t)), 'l\'ennemi cherche d\'abord à libérer ses régions');
+  const faible = seul(enGuerre(vrai({ regiments: 20 }), 'val_roc', 'val_roc')); GU.tour(faible, rng(3));
+  check(faible.guerre.bataille === null, 'l\'ennemi n\'attaque pas s\'il est plus faible');
+  check(refuse(() => Tour.tourSuivant(seul(enGuerre(neuf({ regiments: 9 }), 'val_roc', 'joueur')), [{ type: 'bataille', cible: 'hauts' }, { type: 'bataille', cible: 'forges' }])), 'bataille : une par tour et par guerre');
 
   // capitulation et paix
-  const cap = enGuerre(vrai({ tresor: 3000 }), 'val_roc', 'val_roc'); cap.guerre.ennemis = ['val_roc']; cap.guerre.allies = [];
-  cap.nations.val_roc.colere = 90; cap.nations.val_roc.moral = P('moteur/diplomatie.js').moralNation(90); cap.nations.val_roc.tresor = 2000; cap.embargos = ['val_roc'];
+  const cap = seul(enGuerre(vrai({ regiments: 20, embargos: ['val_roc'] }), 'val_roc', 'val_roc'));
+  cap.nations.val_roc.colere = 90; cap.nations.val_roc.moral = DPm.moralNation(90); cap.nations.val_roc.tresor = 2000;
   GU.tour(cap, rng(1));
   check(cap.guerre.capitulation === 'ennemi', 'usure : un ennemi dont le moral passe sous 0,3 capitule');
-  const choix = Tour.actionsDisponibles(cap).filter(a => a.type === 'imposer_paix');
-  check(choix.length === 8 && !Tour.actionsDisponibles(cap).some(a => a.type === 'bataille' || a.type === 'paix_blanche'), 'capitulation : le joueur choisit ses clauses (8 combinaisons), plus de bataille');
-  const pa = Tour.tourSuivant(cap, [{ type: 'imposer_paix', reparations: true, lever_embargo: true, non_rearmement: true }]);
+  check(Tour.actionsDisponibles(cap).filter(a => a.type === 'imposer_paix').length === 8 && !Tour.actionsDisponibles(cap).some(a => a.type === 'bataille'), 'capitulation : clauses au choix (8 combinaisons sans région occupée), plus de bataille');
+  const cap0 = seul(enGuerre(vrai({ regiments: 5, occupations: { hauts: 'joueur' } }), 'val_roc', 'val_roc')); cap0.nations.val_roc.regiments = 0; cap0.nations.val_roc.tresor = 0;
+  GU.tour(cap0, rng(1));
+  check(cap0.guerre.capitulation === 'ennemi' && Tour.actionsDisponibles(cap0).filter(a => a.type === 'imposer_paix').length === 16, 'capitulation : sans régiment et avec une région occupée ; 16 combinaisons avec la cession');
+  const pa = Tour.tourSuivant(cap, [{ type: 'imposer_paix', reparations: true, lever_embargo: true, non_rearmement: true, cession: false }]);
   check(!pa.guerre && pa.nonRearmement.val_roc === 16 && !pa.embargos.length && pa.journal.some(t => /Réparations : 300 or/.test(t)), 'paix : réparations plafonnées à 300 or, embargo levé, non-réarmement 15 tours');
-  const cap2 = JSON.parse(JSON.stringify(cap)); cap2.nations.val_roc.tresor = 400;
-  const pa2 = Tour.tourSuivant(cap2, [{ type: 'imposer_paix', reparations: true, lever_embargo: false, non_rearmement: false }]);
-  check(pa2.journal.some(t => /Réparations : 100 or/.test(t)) && pa2.embargos.length === 1, 'paix : réparations = 25 % du trésor du perdant ; clauses au choix');
-  const nous = enGuerre(vrai({ moral: 0.25, tresor: 800, embargos: ['val_roc'] }), 'val_roc', 'val_roc'); nous.guerre.ennemis = ['val_roc']; nous.guerre.allies = [];
+  const ce = Tour.tourSuivant(cap0, [{ type: 'imposer_paix', reparations: false, lever_embargo: false, non_rearmement: false, cession: true }]);
+  check(ce.regions.hauts && ce.regions.hauts.terrain === 'filons' && ce.regions.hauts.emplacements === 3 && !ce.profils.val_roc.regions.hauts && !ce.occupations.hauts, 'cession : la région occupée devient nôtre (3 emplacements, son terrain)');
+  check(Tour.actionsDisponibles(Object.assign(JSON.parse(JSON.stringify(ce)), { tresor: 1000 })).some(a => a.id === 'mine' && a.region === 'hauts'), 'cession : on peut construire dans la région gagnée');
+  const nous = seul(enGuerre(vrai({ moral: 0.25, tresor: 800, embargos: ['val_roc'], occupations: { plaine: 'val_roc', vallee: 'val_roc' } }), 'val_roc', 'val_roc'));
+  nous.regions.plaine.batiments.fort = 1;
   GU.tour(nous, rng(1));
   check(!nous.guerre && nous.tresor === 600 && !nous.embargos.length && nous.nonRearmement.joueur === 16, 'notre moral sous 0,3 : nous capitulons, l\'ennemi impose toutes les clauses');
-  const desarme = Object.assign(avecLois([], 1, { cp: 200, tresor: 5000, nonRearmement: { joueur: 16 } }));
-  check(!Tour.actionsDisponibles(desarme).some(a => /^army_/.test(a.id) || a.id === 'forge') && Tour.actionsDisponibles(Object.assign(desarme, { tour: 17 })).some(a => a.id === 'forge'), 'non-réarmement : ni loi militaire ni forge pendant 15 tours');
-  let pb = enGuerre(neuf({ tresor: 3000 }), 'val_roc', 'joueur');
+  check(!nous.regions.plaine && nous.profils.val_roc.regions.plaine && nous.batiments.farm === 2 && !nous.batiments.fort && !nous.occupations.vallee, 'cession contre nous : la région la plus riche (Plaine : 2 fermes et un fort) est perdue avec ses bâtiments ; les autres sont rendues');
+  const desarme = caserne({ cp: 200, tresor: 5000, nonRearmement: { joueur: 16 } });
+  check(!Tour.actionsDisponibles(desarme).some(a => /^army_/.test(a.id) || a.type === 'recruter') && Tour.actionsDisponibles(Object.assign(desarme, { tour: 17 })).some(a => a.type === 'recruter'), 'non-réarmement : ni loi militaire ni recrutement pendant 15 tours');
+  let pb = seul(enGuerre(vrai({ regiments: 20 }), 'val_roc', 'joueur'));
   pb = tours(pb, 4);
-  check(!ok2(pb, { type: 'paix_blanche' }) && ok2(Tour.tourSuivant(pb, []), { type: 'paix_blanche' }), 'paix blanche : proposée après 5 tours sans bataille');
-  const pf = enGuerre(neuf({ tresor: 100 }), 'val_roc', 'joueur'); pf.tour = 6;
+  check(pb.guerre && !ok2(pb, { type: 'paix_blanche' }) && ok2(Tour.tourSuivant(pb, []), { type: 'paix_blanche' }), 'paix blanche : proposée après 5 tours sans bataille');
+  const pf = seul(enGuerre(vrai({ regiments: 1 }), 'val_roc', 'joueur')); pf.tour = 6;
   check(!ok2(pf, { type: 'paix_blanche' }), 'paix blanche : refusée par un ennemi plus fort');
-  const fin = Tour.tourSuivant(Object.assign(Tour.tourSuivant(pb, []), {}), [{ type: 'paix_blanche' }]);
-  check(!fin.guerre && !fin.sanctions.length && Object.keys(fin.nonRearmement).length === 0, 'paix blanche : sans clause ; sanctions levées');
+  const pbo = Tour.tourSuivant(pb, []); pbo.occupations = { forges: 'joueur' };
+  const fin = Tour.tourSuivant(pbo, [{ type: 'paix_blanche' }]);
+  check(!fin.guerre && !fin.sanctions.length && !Object.keys(fin.occupations).length && fin.profils.val_roc.regions.forges, 'paix blanche : sans clause ; régions occupées rendues');
   // trêve après la paix
   const tr = Tour.tourSuivant(pb, []), tr1 = Tour.tourSuivant(tr, [{ type: 'paix_blanche' }]);
   check(tr1.treves.val_roc === tr.tour + 10 && !ok2(tr1, { type: 'declarer_guerre', id: 'val_roc' }) && ok2(tr1, { type: 'declarer_guerre', id: 'brume' }), 'trêve : 10 tours sans pouvoir redéclarer la guerre à l\'ancien ennemi');
@@ -501,8 +525,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(redeclare === 0 && apres > 15, `trêve : Val-Roc ne déclare pas la guerre pendant la trêve (${redeclare}/100), le fait après (${apres}/100)`);
   let traitre = 0; for (let s = 1; s <= 100; s++) { const e = vrai(); e.treves = { contreforts: 10 }; GU.declarer(e, 'val_roc', 'val_roc', rng(s)); if (e.guerre.ennemis.includes('contreforts')) traitre++; }
   check(traitre === 0, 'trêve : Contreforts ne rejoint pas nos ennemis pendant sa trêve avec nous');
-  const neg = enGuerre(vrai({ tresor: -10 }), 'val_roc', 'joueur'); neg.guerre.ennemis = ['val_roc'];
-  check(!GU.bataille(neg, true, rng(1)) && neg.tresor === -10, 'bataille : sans force (trésor négatif) on perd toujours, sans perte de trésor en plus');
+  const zero = seul(enGuerre(vrai({ regiments: 0 }), 'val_roc', 'joueur'));
+  check(!GU.bataille(zero, true, 'hauts', rng(1)) && zero.regiments === 0, 'bataille : sans régiment on perd toujours');
 }
 
 console.log(`\n${n - fail}/${n} tests réussis`);

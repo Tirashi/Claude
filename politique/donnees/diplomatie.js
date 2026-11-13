@@ -13,7 +13,7 @@ const DIPLOMATIE = {
 
   dons: [20, 50, 100],              // ASSUMPTION validée (M3) ; un don par nation et par tour : ASSUMPTION validée (M3a)
 
-  nation: { croissance: 0.005, armee: 12, dissipation: 1 },   // économie simplifiée des nations : ASSUMPTION validée (M3)
+  nation: { croissance: 0.005, dissipation: 1 },   // économie simplifiée des nations : ASSUMPTION validée (M3) ; V2 : l'armée coûte ses régiments (donnees/guerre.js)
 
   // embargo : la cible manque de ce qu'elle importe et dont le joueur a un surplus (ASSUMPTION validée, M3)
   embargo: { colereParManque: 1 / 3 },

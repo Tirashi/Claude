@@ -8,6 +8,7 @@
 const NODE = typeof module !== "undefined" && module.exports;
 const D = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
+const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 
 const arrondi = x => Math.round(x * 100) / 100;
@@ -22,7 +23,7 @@ function nationsInitiales(scenario){
   const r = {};
   for (const id in scenario.nations){
     const n = scenario.nations[id];
-    r[id] = { relation: n.relation, tresor: n.tresor, familles: n.familles, colere: n.colere, moral: moralNation(n.colere) };
+    r[id] = { relation: n.relation, tresor: n.tresor, familles: n.familles, colere: n.colere, moral: moralNation(n.colere), regiments: n.regiments || 0 };
   }
   return r;
 }
@@ -139,7 +140,9 @@ function tour(e){
   const surplus = e.bilan ? e.bilan.balance : {};
   for (const id in e.nations){
     const n = e.nations[id], s = e.profils[id];
-    n.tresor = arrondi(n.tresor + n.familles * s.taux - D.nation.armee);
+    // V2 : le revenu suit la part des régions tenues (3 au départ ; occupées : perdues) ; l'armée coûte ses régiments
+    const tenues = Object.keys(s.regions).filter(r => !(e.occupations || {})[r]).length;
+    n.tresor = arrondi(n.tresor + n.familles * s.taux * tenues / 3 - n.regiments * GU.regiment.entretien);
     n.familles = arrondi(n.familles * (1 + D.nation.croissance));
     let colere = n.colere - D.nation.dissipation;
     // embargo du joueur (ce qu'il a en trop) et sanctions d'autres nations (ce qu'elles exportent)
