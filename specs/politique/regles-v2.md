@@ -75,3 +75,18 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 4. Une loi à la fois, sans capital politique.
 5. Personas cachés.
 6. Réputation fusionnée dans les relations.
+
+## Propositions du 13/11 (à valider) : personas avancés avant d'équilibrer la guerre
+Remarque de l'utilisateur : Val-Roc ne doit pas être l'ennemi désigné à chaque partie. Le caractère passe donc de la nation au **dirigeant**, tiré au hasard (3 personas différents parmi 7, cachés au joueur). La nation garde ses régions, son économie et ses échanges ; le persona décide de l'armée, de la guerre et de la diplomatie, et de la relation de départ.
+
+| Persona | Déclare la guerre | Rejoint une guerre | Armée (loi, régiments au départ, armée visée) | Traités / contrats (relation min.) | Relation de départ |
+|---|---|---|---|---|---|
+| Belliqueux | force > 1,2 × la nôtre, relation < 0, 30 %/tour, pas avant le tour 6 | non | ×1,6 ; 5 ; plafond | 60 / 0 | −20 |
+| Marchand | jamais | non | ×1 ; 3 ; moitié | 30 / −10 | +20 |
+| Opportuniste | jamais | le plus fort, 1 fois sur 2 | ×1,3 ; 3 ; 70 % | 30 / 0 | 0 |
+| Isolationniste | jamais | jamais ; refuse la défense mutuelle | ×1,3 ; 4 ; 70 % | 50 / 0 | 0 |
+| Revanchard | comme prudent ; belliqueux contre qui l'a battu, après la trêve | non | ×1,3 ; 3 ; 70 % | 40 / 0 | −10 |
+| Idéaliste | si le joueur est paria (réputation < −50) | contre un agresseur | ×1 ; 3 ; moitié | 30 / 0 et plus réputation ≥ 0 | réputation ÷ 2 |
+| Prudent | force > 2 × la nôtre, relation < −30, 20 %/tour | non | ×1,3 ; 3 ; 70 % | 40 / 0 | 0 |
+
+Avec l'équilibre de la guerre (étape 2) : capitulation quand la moitié de ses régions est occupée (à la place de « sans régiment ») ; fort ×2 ; une caserne au Bourg au départ ; l'ordinateur vainqueur n'impose que réparations et cession au joueur.
