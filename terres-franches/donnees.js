@@ -210,7 +210,7 @@ const LOIS = {
 };
 const POINTS_LOI = [0, 3, 4];   // par ère : la Charte du Village (ère 1) rapporte 3 points, la Loi des Guildes (ère 2) 4
 // les colonies : une par ère (l'ère 2, la côte, aura sa carte et son contenu aux étapes 2 et 3 du plan)
-const ERES = [null, {nom: "LA VALLEE", loi: "CHARTE DU VILLAGE"}, {nom: "LA COTE", loi: "LOI DES GUILDES"}];
+const ERES = [null, {nom: "LA VALLEE", loi: "CHARTE DU VILLAGE"}, {nom: "LA COTE", loi: "LOI DES GUILDES"}, {nom: "LA FORET", loi: "EDIT DU COMMERCE"}];
 
 // la marche des villageois (cases par seconde ; × route sur les rues et la place)
 const MARCHE = {vitesse: 1.7, route: 1.5};

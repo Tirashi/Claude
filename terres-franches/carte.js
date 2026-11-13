@@ -56,9 +56,9 @@ function fabriquer(n, nom, GRILLE, o){
     const c = GRILLE[y][x];
     if (c === "F") FEU = [x, y];
     if (c === "^") TENTE = [x, y];
-    if (!/[a-zXYPQRSKLGM]/.test(c)) continue;
+    if (!/[a-zXYPQRSKLGMZC]/.test(c)) continue;
     const L = LOTS[c] || (LOTS[c] = {id: c, x, y, l: 0, h: 0, terrain: /[a-z]/.test(c) ? "terre" : /[XY]/.test(c) ? "roche" : /[RS]/.test(c) ? "reserve" : /[KL]/.test(c) ? "garnison" 
-      : c === "G" ? "guet" : c === "M" ? "port" : "rive", tags: ETIQUETTES[c] || []});
+      : c === "G" ? "guet" : c === "M" ? "port" : c === "Z" ? "grotte" : c === "C" ? "cercle" : "rive", tags: ETIQUETTES[c] || []});
     L.l = Math.max(L.l, x - L.x + 1); L.h = Math.max(L.h, y - L.y + 1);
   }
   for (const L of Object.values(LOTS)){
@@ -137,7 +137,7 @@ function fabriquer(n, nom, GRILLE, o){
         const nx = x + DIRS[nd][0], ny = y + DIRS[nd][1]; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const c = GRILLE[ny][nx], estBut = but(nx, ny);
         let k = deja.has(ny * W + nx) ? .35 : cout(c);
-        if (/[a-zXYPQM]/.test(c) && !estBut) k = null;
+        if (/[a-zXYPQMZC]/.test(c) && !estBut) k = null;
         if (eviter && eviter.has(ny * W + nx) && !estBut) k = null;
         if (k === null) continue;
         const ng = gc + k + (d !== 4 && d !== nd ? .6 : 0), kk = cle(nx, ny, nd);
@@ -221,14 +221,61 @@ const COTE = [
   "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
   "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
   "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"];
+/* ---------- la forêt profonde (ère 3, maquette 9 direction A : la clairière des anciens) ----------
+   40 × 40 : une grande clairière dans la forêt ; au nord, la grotte aux cristaux (Z, « grotte », 3 × 2) entre ses rochers, d'où le ruisseau part
+   vers l'est puis longe tout le bord est ; le cercle de pierres (C, « cercle », 3 × 3) dans sa clairière au nord-ouest ; chaque terrain a une marge
+   d'herbe (rien ne chevauche la forêt), le ruisseau a ses berges ; 26 terrains de 3 × 3 (bonne terre à l'est, entre la ville et le ruisseau : o p q r s t ; pré : z). */
+const FORET = [
+  "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+  "TTTTTTTTTTTTTTT..TT..TTTTTTTTTTTTTTTTTTT",
+  "TTTTTTTTTTTT...........TTTTTTTTTTTTTTTTT",
+  "TTTTTTTTTTT..XX...ZZZ..................T",
+  "TTTTTTTTTT...XX...ZZZ.~~~~~~~~~~~~~~~~~T",
+  "TTTTTTTT..............~~~~~~~~~~~~~~~~~T",
+  "TTT......zzz.YY......................~~T",
+  "TT.......zzz.YY........RR...TTTTTTTT.~~T",
+  "TT.......zzz...........RR.......TTTT.~~T",
+  "T...CCC.........................TTTT.~~T",
+  "T...CCC.......*...........*....TTTTT.~~T",
+  "TT..CCC.........................TTTT.~~T",
+  "TTT................................T.~~T",
+  "TTT.....*..aaa.bbb.ccc.ddd....ooo..T.~~T",
+  "TTTT.......aaa.bbb.ccc.ddd....ooo..T.~~T",
+  "TTT........aaa.bbb.ccc.ddd....ooo...P~~T",
+  "TT...................................~~T",
+  "TT.....xxx.iii............lll.ppp.sss~~T",
+  "TTTT...xxx.iii............lll.ppp.sss~~T",
+  "T......xxx.iii............lll.ppp.sss~~T",
+  "T................^...................~~T",
+  "TTT....yyy.jjj.....F......mmm.qqq.ttt~~T",
+  "TTT....yyy.jjj............mmm.qqq.ttt~~T",
+  "TT.....yyy.jjj............mmm.qqq.ttt~~T",
+  "TT...................................~~T",
+  "TT..*..KKK.kkk............nnn.rrr....~~T",
+  "TT.....KKK.kkk..*.........nnn.rrr....~~T",
+  "T......KKK.kkk............nnn.rrr...Q~~T",
+  "TTTT.................................~~T",
+  "TTTT...LLL.eee.fff.ggg.hhh....SS.....~~T",
+  "TTTT.*.LLL.eee.fff.ggg.hhh....SS...T.~~T",
+  "TT.T...LLL.eee.fff.ggg.hhh.........T.~~T",
+  "T.G.TT............................TT.~~T",
+  "......T....uuu.vvv.....www.......TTT.~~T",
+  "TTTTTTTTTT.uuu.vvv.....www.......TTT.~~T",
+  "TTTTTTTTTT.uuu.vvv.....www..TTTTTTTT.~~T",
+  "TTTTTTTTTT.................TTTTTTTTT.~~T",
+  "TTTTTTTTTTTTTT...TT...TT..TTTTTTTTTT.~~T",
+  "TTTTTTTTTTTTTTT.TTT..TTTTTTTTTTTTTTT.~~T",
+  "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT.~~T"];
 const CARTES = {
   1: fabriquer(1, "LA VALLEE", GRILLE, {etiquettes: {i: ["fertile"], j: ["fertile"], k: ["fertile"], l: ["fertile"], n: ["pre"]}, entree: [2, 23],
     zones: {biche: [[3, 10, 2, 6], [1, 4.5, 8, 15]], cerf: [3, 11, 1.5, 5.5], renard: [21.2, 21.8, 3, 17], champs: [2, 13, 17, 23]}}),
   2: fabriquer(2, "LA COTE", COTE, {etiquettes: {m: ["fertile"], r: ["fertile"], s: ["fertile"], q: ["fertile"], w: ["fertile"], p: ["pre"]}, entree: [0, 17], mer: true,
-    zones: {biche: [[2, 9, 2, 6], [26, 30, 2, 9]], cerf: [8, 16, 1.5, 4], renard: [1, 30, 26.2, 26.8], champs: [24, 30, 6, 22]}})
+    zones: {biche: [[2, 9, 2, 6], [26, 30, 2, 9]], cerf: [8, 16, 1.5, 4], renard: [1, 30, 26.2, 26.8], champs: [24, 30, 6, 22]}}),
+  3: fabriquer(3, "LA FORET", FORET, {etiquettes: {o: ["fertile"], p: ["fertile"], q: ["fertile"], r: ["fertile"], s: ["fertile"], t: ["fertile"], z: ["pre"]}, entree: [0, 33],
+    zones: {biche: [[1, 8, 1, 8], [27, 36, 6, 11]], cerf: [1, 4, 12, 30], renard: [36.2, 36.8, 7, 34], champs: [29, 37, 12, 28]}})
 };
 // la carte d'une partie (selon son ère) ; l'objet exporté est la carte affichée, changée sur place par utiliser(n)
-const de = S => CARTES[Math.min(2, (S && S.ere) || 1)];
+const de = S => CARTES[Math.min(3, (S && S.ere) || 1)];
 const api = Object.assign({CARTES, de, utiliser(n){ if (api.n !== n) Object.assign(api, CARTES[n]); return api; }}, CARTES[1]);
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresCarte = api;

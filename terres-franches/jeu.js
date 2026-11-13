@@ -65,7 +65,7 @@ function fonder(nom){
   recompenser(); const L = lois();
   const P = REEL || S; if (!P.loi) return "LA LOI N'EST PAS PROMULGUEE";
   P.vu = Date.now();
-  if ((P.ere || 1) === 1) ecrire(CLE_VALLEE, R.sauver(P));
+  ecrire(cleTerre(P.ere || 1), R.sauver(P));
   L.colonies.push({nom: P.nom || DON.ERES[P.ere || 1].nom, ere: P.ere || 1, pop: P.pop, statut: P.statut, fin: Date.now()});
   sauverLois(L);
   S = R.nouvelleColonie({nom, lois: L.prises, ere: (P.ere || 1) + 1});
@@ -73,9 +73,10 @@ function fonder(nom){
   return null;
 }
 // revoir la vallée, figée : rien n'y avance, la partie en cours continue pendant ce temps
-const valleeGardee = () => !!lire(CLE_VALLEE);
-function visiter(){
-  const t = lire(CLE_VALLEE), V0 = t && R.charger(t); if (!V0) return false;
+const cleTerre = e => e === 1 ? CLE_VALLEE : "terres.terre" + e;
+const valleeGardee = (e) => !!lire(cleTerre(e || 1));
+function visiter(e){
+  const t = lire(cleTerre(e || 1)), V0 = t && R.charger(t); if (!V0) return false;
   if (!REEL) REEL = S;
   V0.raid.phase = null; V0.evts = []; S = V0; vueNeuve(); document.body.classList.add("visite"); centrer(); return true;
 }
@@ -106,7 +107,7 @@ function planterArbres(){
   for (let y = -2; y < C.H - 1; y += 2) for (let xx = -2; xx < C.W + 1; xx += 2){
     let n = 0; for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) if (C.case_(xx + dx, y + dy) === "T") n++;
     if (n < 3) continue;
-    const h = hash(xx, y), n2 = "s-arbre" + (1 + Math.floor(h * 6));
+    const h = hash(xx, y), n2 = C.n === 3 && AT["arbre-ancien1"] && hash(y * 3, xx) < .22 ? "arbre-ancien" + (1 + Math.floor(hash(xx, y * 7) * 3)) : "s-arbre" + (1 + Math.floor(h * 6));   // la forêt profonde : des arbres anciens
     // décalé au hasard, sinon au centre du carré, sinon on recule vers la forêt : l'ombre au pied ne doit pas toucher l'eau
     for (const [ox, oy] of [[(h - .5) * 1.2, (hash(y, xx) - .5)], [0, 0], [.5, 0], [-.5, 0], [0, -.5]]){
       const X = (xx + 1 + ox) * T, Y = (y + 1.6 + oy) * T;
@@ -349,6 +350,19 @@ function barques(t){
   const n = Math.min(3, Math.max(1, (S.jobs.pecheur || 0) - 4)), X = (L.x + L.l / 2) * T, Y = (L.y + L.h + 2.2) * T;
   for (let k = 0; k < n; k++){ const an = t * .07 + k * 2.1, bx = X + Math.cos(an) * (110 + k * 40), by = Y + 20 + Math.sin(an) * 18 + k * 14;
     x.save(); x.translate(Math.round(bx), Math.round(by)); if (Math.sin(an) < 0) x.scale(-1, 1); spr("barque", 0, Math.sin(t * 2 + k) * 1.2, .8); x.restore(); }
+}
+// la forêt profonde : la grotte aux cristaux (au nord, entre ses rochers) et le cercle de pierres (le lieu du mage)
+function grotte(L, t){
+  const X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T + 6;
+  spr("grotte", X, Y, 1.05);
+  for (const [dx, dy, n, k] of [[-46, 2, "cristaux-b", .5], [44, 4, "cristaux-v", .45], [-24, 12, "cristaux-v", .32]]) spr(n, X + dx, Y + dy, k);
+  const a = .25 + .1 * Math.sin(t * 1.5); x.fillStyle = `rgba(140,190,255,${a})`; x.beginPath(); x.ellipse(X, Y - 38, 40, 18, 0, 0, 6.3); x.fill();   // la lueur des cristaux
+}
+function cercle(L, liste){
+  const X = (L.x + L.l / 2) * T, Y = (L.y + L.h / 2) * T + 8;
+  liste.push([Y - 12, () => spr("dolmen", X, Y - 4, .62)]);
+  for (let k = 0; k < 8; k++){ const an = k / 8 * 6.283 + .2, px = X + Math.cos(an) * 50, py = Y + Math.sin(an) * 30; if (Math.abs(Math.sin(an)) < .2 && Math.cos(an) > 0 && k % 2) continue;
+    liste.push([py, () => spr(k % 3 ? "menhir" : "menhir2", px, py, .38)]); }
 }
 function ponton(L){
   const [dx, dy] = L.vers, X = (L.x + .5) * T, Y = (L.y + .5) * T, lg = 1.6 * T;
@@ -779,6 +793,8 @@ function image(now){
   for (let y = 0; y < C.H; y++) for (let xx = 0; xx < C.W; xx++) if (C.GRILLE[y][xx] === "*") L.push([(y + .95) * T, () => buissonBaies(xx, y, t)]);
   for (const id in C.LOTS){ const Lo = C.LOTS[id];
     if (Lo.terrain === "roche" && S.lots[id] !== "carriere") for (const [a, b2, k] of ROCHERS) L.push([Lo.y * T + b2, () => spr("rocher", Lo.x * T + a, Lo.y * T + b2, k)]);
+    if (Lo.terrain === "grotte" && !S.lots[id]) L.push([(Lo.y + Lo.h) * T, () => grotte(Lo, t)]);
+    if (Lo.terrain === "cercle" && !S.lots[id]) cercle(Lo, L);
     if (enCours[id] && enCours[id].agrandit) L.push([(Lo.y + Lo.h) * T, () => { batiment(S.lots[id], id, t); chantier(enCours[id], id, t, true); }]);
     else if (enCours[id]) L.push([(Lo.y + Lo.h) * T, () => chantier(enCours[id], id, t)]);
     else if (S.lots[id] && !["champ", "orge", "ponton"].includes(S.lots[id])) L.push([(Lo.y + Lo.h) * T - 2, () => batiment(S.lots[id], id, t)]);

@@ -119,13 +119,13 @@ const mn = s => s === undefined ? "  —  " : (s / 60).toFixed(1).padStart(5) + 
 
 /* ---------- la carte : emplacements proposés, déplacement, routes ---------- */
 // les deux cartes : la vallée (ère 1) et la côte (ère 2) ; nb = terrains de 3 × 3, maxi = cases de rue au plus (pas de détours)
-for (const [ere, nb, maxi, stMax] of [[1, 14, 150, 2], [2, 23, 300, 3]]){
+for (const [ere, nb, maxi, stMax] of [[1, 14, 150, 2], [2, 23, 300, 3], [3, 26, 420, 4]]){
   const C = require("../terres-franches/carte.js").CARTES[ere], L = C.LOTS, nom = C.nom.toLowerCase() + " : ";
   const compte = t => Object.values(L).filter(l => l.terrain === t).length;
   verif(compte("terre") === nb && compte("roche") === 2 && compte("rive") === 2 && C.FEU && C.TENTE && C.ENTREE && C.case_(...C.ENTREE) !== "T", nom + "carte : " + nb + " terrains, 2 rochers, 2 rives, le feu, la tente, l'entrée");
   verif(Object.values(L).every(l => l.terrain !== "terre" || (l.l === 3 && l.h === 3)), nom + "terrains de 3 × 3 cases");
   if (ere > 1) verif(Object.values(L).every(l => l.terrain !== "terre" || [...Array(stMax + 1).keys()].every(st => [[l.x, l.y], [l.x + 2, l.y], [l.x, l.y + 2], [l.x + 2, l.y + 2]].every(([x, y]) => !C.surPlace(x, y, st)))), nom + "la place, à son plus grand, ne mange aucun terrain");
-  const S = ere === 1 ? R.creer() : R.nouvelleColonie({}); S.statut = 2; for (const r in S.res) S.res[r] = 1e5;
+  const S = ere === 1 ? R.creer() : R.nouvelleColonie({ere}); S.statut = 2; for (const r in S.res) S.res[r] = 1e5;
   const d = id => Math.hypot(L[id].cx - C.FEU[0], L[id].cy - C.FEU[1]);
   R.construire(S, "cabane"); const c1 = S.ordreLots[0];
   verif(Object.values(L).filter(l => l.terrain === "terre").every(l => d(c1) <= d(l.id) + 1e-9), nom + "la 1re cabane va au plus près du feu");
@@ -142,7 +142,7 @@ for (const [ere, nb, maxi, stMax] of [[1, 14, 150, 2], [2, 23, 300, 3]]){
   while (!R.construire(S, "cabane") || !R.construire(S, "maison")) ;
   for (const t of ["terre", "roche", "rive", "reserve", "garnison", "guet"]) for (const id of C.libres(S, t)) S.lots[id] = t === "terre" ? "atelier" : t === "roche" ? "carriere" : t === "rive" ? "ponton" : t === "garnison" ? (id === "K" ? "caserne" : "forge") : t === "guet" ? "tour" : id === "R" ? "aire" : "grenier", S.ordreLots.push(id);
   const ro = C.routes(S);
-  const bat = Object.keys(L).filter(id => L[id].terrain !== "port").length;   // le port (étape 3) attend son bâtiment
+  const bat = Object.keys(L).filter(id => !["port", "grotte", "cercle"].includes(L[id].terrain)).length;   // port, grotte et cercle : leurs bâtiments viennent avec le contenu de leur ère
   verif(ro.traces.length === bat, nom + "routes : chaque bâtiment a sa rue (" + ro.traces.length + "/" + bat + ")");
   verif(ro.traces.every(tr => { const p = C.porte(S, tr.id); return tr.cases[0][0] === p[0] && tr.cases[0][1] === p[1]; }), nom + "routes : elles partent des portes");
   const nr = [...ro.cases].length; verif(nr < maxi, nom + "routes : pas de détours (" + nr + " cases)");
