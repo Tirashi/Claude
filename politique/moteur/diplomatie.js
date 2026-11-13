@@ -32,8 +32,11 @@ function moralNation(colere){
   return Math.round(Factions.moralFaction(x) * 10000) / 10000;
 }
 
-// une nation accepte un traité ou un contrat : pas de paria, pas d'embargo entre nous, relation suffisante
-const ouverte = (e, n, min) => !paria(e) && !embargo(e, n) && e.nations[n].relation >= min;
+// une nation accepte un traité ou un contrat : pas de paria, pas d'embargo ni de sanction entre nous,
+// pas en guerre contre nous, relation suffisante
+const sanctionne = (e, n) => (e.sanctions || []).some(s => s.par === n && s.contre === "joueur");
+const ennemi = (e, n) => !!e.guerre && e.guerre.ennemis.includes(n);
+const ouverte = (e, n, min) => !paria(e) && !embargo(e, n) && !sanctionne(e, n) && !ennemi(e, n) && e.nations[n].relation >= min;
 
 function traitesPossibles(e){
   const r = [];
@@ -60,8 +63,18 @@ function actions(e){
   return r;
 }
 
-// sanction légitime : cible en guerre contre le joueur ou contre un membre de l'Entente (guerres en M3b)
-const legitime = (e, n) => (e.guerres || []).some(g => g.contre === n);
+// sanction légitime : cible en guerre contre le joueur (seules guerres du jeu ; le joueur peut être membre de l'Entente)
+const legitime = (e, n) => ennemi(e, n);
+
+// sanctions de bloc d'un membre de l'Entente contre le joueur : fin de ses traités (sans pénalité pour le joueur),
+// de ses contrats, relation −30 (ASSUMPTION (M3b))
+function couper(e, n){
+  e.traites = e.traites.filter(t => t.avec !== n);
+  e.contrats = e.contrats.filter(x => D.contrats[x.id].nation !== n);
+  relation(e, n, D.relation.embargo);
+  e.sanctions.push({ par: n, contre: "joueur" });
+  e.journal.push(`${e.profils[n].nom} rompt avec nous et nous met sous embargo.`);
+}
 
 function rompre(e, type, avec){
   const nom = D.traites[type].nom;
@@ -129,9 +142,15 @@ function tour(e){
     n.tresor = arrondi(n.tresor + n.familles * s.taux - D.nation.armee);
     n.familles = arrondi(n.familles * (1 + D.nation.croissance));
     let colere = n.colere - D.nation.dissipation;
-    if (embargo(e, id)){
+    // embargo du joueur (ce qu'il a en trop) et sanctions d'autres nations (ce qu'elles exportent)
+    const par = e.sanctions.filter(x => x.contre === id && x.par !== "joueur").map(x => x.par);
+    if (embargo(e, id) || par.length){
       let manque = 0, cout = 0;
-      for (const b in s.importe){ const m = Math.min(s.importe[b], Math.max(0, surplus[b] || 0)); manque += m; cout += m * ECO.prix[b]; }
+      for (const b in s.importe){
+        let m = embargo(e, id) ? Math.max(0, surplus[b] || 0) : 0;
+        for (const p of par) m += e.profils[p].exporte[b] || 0;
+        m = Math.min(s.importe[b], m); manque += m; cout += m * ECO.prix[b];
+      }
       colere += manque * D.embargo.colereParManque;
       n.tresor = arrondi(n.tresor - cout);
       n.manque = manque;
@@ -148,6 +167,6 @@ function tour(e){
   e.dons = [];
 }
 
-const Diplomatie = { nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime };
+const Diplomatie = { nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
 if (NODE) module.exports = Diplomatie; else (racine.Politique = racine.Politique || {}).Diplomatie = Diplomatie;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -15,7 +15,9 @@ const enVigueur = (e, id) => { const l = e.lois[LOIS[id].categorie]; return !!l 
 // (ASSUMPTION validée le 13/11 avec M1) et que le capital politique suffit
 function lancables(e){
   const occupees = new Set(e.loisEnCours.map(c => LOIS[c.id].categorie));
-  return Object.keys(LOIS).filter(id => !enVigueur(e, id) && !occupees.has(LOIS[id].categorie) && e.cp >= LOIS[id].cp);
+  // clause de non-réarmement : pas de nouvelle loi militaire (moteur/guerre.js)
+  const desarme = e.nonRearmement && (e.nonRearmement.joueur || 0) >= e.tour;
+  return Object.keys(LOIS).filter(id => !enVigueur(e, id) && !occupees.has(LOIS[id].categorie) && e.cp >= LOIS[id].cp && !(desarme && LOIS[id].categorie === "armee"));
 }
 
 function lancer(e, id){

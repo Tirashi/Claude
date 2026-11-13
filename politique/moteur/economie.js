@@ -23,12 +23,14 @@ function prix(e){
 
 function bilan(e){
   const fx = Lois.effets(e), fa = Factions.effetsEco(e), prod = zero(), conso = zero(), p = prix(e);
+  let entretienBat = 0;
   for (const id in e.batiments){
     const n = e.batiments[id], b = BAT[id];
     if (!n) continue;
     const mult = fx.production * (b.artisans ? 1 + fx.artisans : 1) * (fa.batiments[id] == null ? 1 : fa.batiments[id]);
     for (const r in b.produit || {}) prod[r] += n * b.produit[r] * mult;
     for (const r in b.consomme || {}) conso[r] += n * b.consomme[r];
+    if (b.entretien) entretienBat += n * b.entretien;
   }
   for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
   for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
@@ -46,7 +48,7 @@ function bilan(e){
   }
   contrats = arrondi(contrats);
   const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots * fa.impots);
-  const entretiens = fx.entretien;
+  const entretiens = arrondi(fx.entretien + entretienBat);
   ventes = arrondi(ventes); achats = arrondi(achats);
   return { production: prod, consommation: conso, balance, prix: p, ventes, achats, contrats, impots, entretiens,
            solde: arrondi(ventes - achats + contrats + impots - entretiens), croissance: ECO.croissance + fx.croissance };

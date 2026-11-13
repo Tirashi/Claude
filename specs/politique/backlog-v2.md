@@ -36,3 +36,9 @@ Pour les industries privées : modèle simple proposé — chaque bâtiment est 
 1. **Écart entre prix d'achat et de vente** (ex. vente ×0,8, achat ×1,2) : en V1 surplus et déficit se font au même prix, le commerce ne coûte rien.
 2. **Conséquence d'un trésor négatif** (dette, intérêts, colère) : en V1 rien n'est prévu.
 3. **Stocks de biens** : en V1 la balance est vendue ou achetée chaque tour, rien n'est gardé (voir aussi B9, réserves).
+
+## E. Notées pendant M3 (13/11, propositions de Claude, non validées)
+1. **Trêve après la paix** (ex. 10 tours sans déclaration possible) : en V1, Val-Roc peut redéclarer la guerre au tour qui suit la paix.
+2. **Territoires** : pertes de territoire et clause de restitution (RULES_V1 « éventuelles »), impossibles sans carte.
+3. **Relations entre nations** et guerres entre nations de l'ordinateur.
+4. **Effet d'un embargo contre le joueur** sur son marché (aujourd'hui seulement la fin des contrats et traités).

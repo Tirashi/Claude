@@ -10,7 +10,8 @@ const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomat
 
 // part payée par le joueur (bâtiment cofinancé par un traité)
 const cout = id => BAT[id].cout * (BAT[id].partJoueur || 1);
-const constructibles = e => Object.keys(BAT).filter(id => !BAT[id].jalon && (!BAT[id].traite || Diplomatie.aTraite(e, BAT[id].traite)) && e.tresor >= cout(id));
+const desarme = e => !!e.nonRearmement && (e.nonRearmement.joueur || 0) >= e.tour;   // clause de non-réarmement : pas de forge
+const constructibles = e => Object.keys(BAT).filter(id => !BAT[id].jalon && (!BAT[id].traite || Diplomatie.aTraite(e, BAT[id].traite)) && e.tresor >= cout(id) && !(id === "forge" && desarme(e)));
 
 function commander(e, id){
   e.tresor = arrondi(e.tresor - cout(id));

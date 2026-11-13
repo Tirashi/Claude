@@ -14,7 +14,7 @@ function creerEtat(scenario, graine){
   const j = scenario.joueur, profils = {};
   for (const id in scenario.nations){
     const n = scenario.nations[id];
-    profils[id] = { nom: n.nom, taux: n.taux, force: n.force, exporte: copie(n.exporte), importe: copie(n.importe) };
+    profils[id] = { nom: n.nom, caractere: n.caractere, taux: n.taux, force: n.force, exporte: copie(n.exporte), importe: copie(n.importe) };
   }
   const e = {
     version: VERSION,
@@ -42,6 +42,9 @@ function creerEtat(scenario, graine){
     embargos: [],                     // nations sous embargo du joueur
     traites: [],                      // [{ type, avec, depuis }]
     dons: [],                         // nations ayant reçu un don ce tour
+    sanctions: [],                    // embargos entre nations ou contre le joueur : [{ par, contre }] (sanctions de bloc)
+    guerre: null,                     // la guerre en cours (moteur/guerre.js)
+    nonRearmement: {},                // camp ("joueur" ou nation) → dernier tour de la clause
     fin: false,
     issue: null,                      // fin de partie : { type: "fin" } ou { type: "revolution", faction }
     journal: []                       // messages du tour, pour l'écran et les rapports
