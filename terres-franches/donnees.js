@@ -157,7 +157,7 @@ const ERE2 = {
   },
   METIERS: {
     pecheur:  {places: {base: 3, ponton: 2, port: 4}},
-    scieur:   {nom: "SCIEUR",   entree: {bois: 2}, sortie: "planches", debit: .12, places: {scierie: 2}},
+    scieur:   {nom: "SCIEUR",   entree: {bois: 2}, sortie: "planches", debit: .18, places: {scierie: 3}},
     fumeur:   {nom: "FUMEUR",   entree: {poisson: 1, bois: .2}, sortie: "fume", debit: .25, places: {fumoir: 1}},
     paysan:   {nom: "PAYSAN",   produit: "orge", debit: .22, places: {orge: 2}, seuil: 6, use: .9},
     brasseur: {nom: "BRASSEUR", entree: {orge: 2}, sortie: "biere", debit: .12, places: {brasserie: 1}}
@@ -165,7 +165,7 @@ const ERE2 = {
   BATIMENTS: {
     caserne:  {niveaux: 3},
     maison:   {logement: 5, desc: "Un toit pour 5 habitants de plus (les maisons de la côte sont plus grandes), dans la limite du statut."},
-    scierie:  {desc: "2 scieurs : le bois devient des planches, pour les bâtiments du bourg.", nom: "SCIERIE", cout: {bois: 120, pierre: 40}, croit: 1.6, travail: 50, terrain: "terre", statut: 1, pres: {foret: 4, logis: -1, fertile: -4, pre: -2}},
+    scierie:  {desc: "3 scieurs : le bois devient des planches, pour les bâtiments du bourg.", nom: "SCIERIE", cout: {bois: 120, pierre: 40}, croit: 1.6, travail: 50, terrain: "terre", statut: 1, pres: {foret: 4, logis: -1, fertile: -4, pre: -2}},
     fumoir:   {desc: "1 fumeur : poisson et un peu de bois deviennent du poisson fumé, qui nourrit deux fois plus.", nom: "FUMOIR", cout: {bois: 80, pierre: 30}, croit: 1.6, travail: 45, terrain: "terre", statut: 1, pres: {eau: 5, logis: -1, fertile: -4, pre: -2}},
     orge:     {desc: "2 places de paysan : de l'orge, sur la bonne terre.", nom: "CHAMP D'ORGE", cout: {bois: 40, baies: 20}, croit: 1.3, travail: 30, terrain: "terre", statut: 2, pres: {fertile: 6, orge: 2, brasserie: 2, feu: -1}},
     brasserie:{desc: "1 brasseur : l'orge devient de la bière.", nom: "BRASSERIE", cout: {planches: 60, pierre: 80, bois: 60}, croit: 1.6, travail: 60, terrain: "terre", statut: 2, pres: {orge: 4, logis: 1, fertile: -4, pre: -2}},
@@ -180,9 +180,9 @@ const ERE2 = {
     {nom: "CAMPEMENT", popMax: 5},
     {nom: "HAMEAU",    popMax: 10, pop: 5,  cout: {bois: 800, baies: 150, poisson: 150}},
     {nom: "VILLAGE",   popMax: 20, pop: 10, cout: {bois: 3000, pierre: 1200, pain: 400, planches: 150}},
-    {nom: "BOURG",     popMax: 45, pop: 20, cout: {bois: 5000, pierre: 3000, planches: 800, pain: 600, fume: 300}}
+    {nom: "BOURG",     popMax: 45, pop: 20, cout: {bois: 4000, pierre: 2500, planches: 700, pain: 600, fume: 300}}
   ],
-  LOI: {nom: "LOI DES GUILDES", pop: 45, cout: {planches: 2500, pierre: 3500, biere: 400, vetements: 200, fume: 600}},
+  LOI: {nom: "LOI DES GUILDES", pop: 45, cout: {planches: 1800, pierre: 3000, biere: 400, vetements: 200, fume: 600}},
   BESOINS: {biere: {pop: 25, bonus: .1, conso: .002, lieu: "taverne"}},
   RECRUTER: {croit: 1.075},   // 45 habitants : chaque recrue coûte un peu moins de plus qu'au village
   RAIDS: {intervalle: [null, [1800, 2700], [1200, 1800], [1000, 1500]], force: {statut: [0, 1, 1.6, 2.3]}, mer: true},

@@ -156,16 +156,14 @@ for (const [ere, nb, maxi, stMax] of [[1, 14, 150, 2], [2, 23, 300, 3]]){
   verif(!P2.LOI.cout.bois && P2.LOI.cout.planches, "côte : le coût de la Loi est le sien (pas celui de la Charte)");
   const S = R.nouvelleColonie({}); S.graine = 12345; S.statut = 3; S.pop = 30; S.bat.taverne = 1; S.res.biere = 50;
   verif(R.moral(S).det.some(d => d.k === "biere" && d.ok), "côte : de la bière à la taverne donne du moral à 25 habitants");
-  // une partie du robot sur la côte, sans Lois : elle va jusqu'à la Loi des Guildes
-  const G = R.nouvelleColonie({}); G.graine = 12345;
-  while (G.t < 12 * 3600 && !G.loi){ const tape = G.t < 900 ? 1 : 0; for (let i = 0; i < 5; i++){ if (tape) R.toucher(G, R.aToucher(G), tape); R.pas(G, 1); } R.robot(G); }
-  const j = G.jalons; console.log(`COTE      hameau ${mn(j.hameau)} | village ${mn(j.village)} | bourg ${mn(j.bourg)} | Guildes ${mn(j.loi)} (robot actif, sans Lois)`);
-  verif(j.bourg && j.loi && j.loi <= 9 * 3600, "côte : le robot atteint le bourg et la Loi des Guildes (en moins de 9 h)");
+  // les parties du robot sur la côte : plus bas (ÈRE 2)
 }
 
 /* ---------- les parties du robot ---------- */
-function partie(profil){
-  const S = R.creer(mods), fin = profil === "actif" ? 8 * 3600 : 72 * 3600; S.graine = 12345;   // le même hasard (pillards) à chaque partie
+// une partie du robot : profil actif (toujours là) ou sessions (5 min par heure, le reste hors ligne) ; ere 2 = la côte, avec des Lois
+function partie(profil, ere, lois){
+  const S = (ere || 1) > 1 ? R.nouvelleColonie({mods, lois: lois || [], ere}) : R.creer(mods), P = R.reglages(mods, ere);
+  const fin = (profil === "actif" ? 8 : 72) * 3600 * ((ere || 1) > 1 ? 1.5 : 1); S.graine = 12345;   // le même hasard (pillards) à chaque partie
   let plafond;
   while (S.t < fin && !S.loi){
     const present = profil === "actif" || S.t % 3600 < 300;
@@ -173,7 +171,7 @@ function partie(profil){
     const tape = S.t < 900 ? 1 : 0;   // on touche au début, après les villageois font mieux
     for (let i = 0; i < 5; i++){ if (tape) R.toucher(S, R.aToucher(S), tape); R.pas(S, 1); }
     R.robot(S);
-    if (plafond === undefined && S.statut === 2 && S.pop >= 20) plafond = S.t;
+    if (plafond === undefined && S.statut === P.STATUTS.length - 1 && S.pop >= P.LOI.pop) plafond = S.t;
   }
   return {S, j: S.jalons, plafond};
 }
@@ -195,6 +193,21 @@ if (!process.argv[2]){
   verif(s.j.loi !== undefined && s.j.loi <= 48 * 3600, "SESSIONS : la Charte en moins de 2 jours");
   // reproductible (pas de hasard)
   verif(JSON.stringify(partie("actif").j) === JSON.stringify(a.j), "parties reproductibles");
+}
+// l'ère 2 (la côte), étape 4 du plan (13/11) : avec les 3 points de la Charte (Lois « types » : glanage, corvées, terre d'accueil), sans Lois, et en sessions
+// cibles : la côte en 4 à 6 h (actif, avec des Lois) ; sans Lois 6 h 30 au plus ; le bourg entre 2 h 30 et 4 h 30 ; les Guildes moins de 45 min après le plafond
+const LOIS_TYPES = ["glanage", "corvees", "hospices"], cote = {};
+for (const [k, profil, lois] of [["actif", "actif", LOIS_TYPES], ["sansLois", "actif", []], ["sessions", "sessions", LOIS_TYPES]]){
+  const {S, j, plafond} = partie(profil, 2, lois); cote[k] = {j, plafond};
+  console.log(`COTE ${k.toUpperCase().padEnd(8)} hameau ${mn(j.hameau)} | village ${mn(j.village)} | bourg ${mn(j.bourg)} | 45 hab. ${mn(plafond)} | Guildes ${mn(j.loi)}${lois.length ? "" : " (sans Lois)"}`);
+}
+if (!process.argv[2]){
+  const a = cote.actif, z = cote.sansLois;
+  verif(a.j.loi >= 4 * 3600 && a.j.loi <= 6 * 3600, "CÔTE ACTIF : les Guildes entre 4 et 6 h (avec les 3 points de la Charte)");
+  verif(a.j.bourg >= 150 * 60 && a.j.bourg <= 270 * 60, "CÔTE ACTIF : le bourg entre 2 h 30 et 4 h 30");
+  verif(a.plafond !== undefined && a.j.loi - a.plafond <= 45 * 60, "CÔTE ACTIF : les Guildes moins de 45 min après le plafond");
+  verif(z.j.loi !== undefined && z.j.loi <= 6.5 * 3600 && z.j.loi > a.j.loi, "CÔTE SANS LOIS : plus lent, mais 6 h 30 au plus");
+  verif(cote.sessions.j.loi !== undefined && cote.sessions.j.loi <= 4 * 24 * 3600, "CÔTE SESSIONS : les Guildes en moins de 4 jours");
 }
 if (erreurs){ console.log(erreurs + " échec(s)"); process.exit(1); }
 console.log("Terres franches : tout est bon.");
