@@ -125,6 +125,24 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 11. V2, étape 3 : marché et niveau de vie (13/11)
+Fait : `economie.marche` (vente ×(1 − 0,01 × vendu), au moins ×0,5 ; achat ×(1 + 0,01 × acheté), au plus ×1,5 ; prix au centime ; les contrats restent à prix fixe), `factions.niveauDeVie` (paniers ; couverture = production / consommation, au plus 100 % ; ≥ 100 % : −2/tour, ×2 pour les ouvriers avec le code du travail ; < 50 % : +2/tour ; remplace la dissipation de −1). Les tests écrits avant cette étape tournent en mode V1 (prix fixes, dissipation) ; 232 tests.
+
+**Avant (personas, prix fixes, dissipation) → après (200 parties par bot)** :
+
+| Bot | Fins | Or t40 | Grève dans | Colère max |
+|---|---|---|---|---|
+| passif | fin 100 % → **révolution 100 %** | 2 443 → — | 0 % → 100 % | 34 → 100 |
+| economy | fin 100 % | 8 890 → 6 759 | 0 % → 18 % | 34 → 41 |
+| spam_medicine | fin 100 % | 8 352 → 5 741 | 0 % → 0 % | 34 → 35 |
+| militarist | fin 100 % → 91 % | 5 352 → 3 230 | 0 % → 10 % | 39 → 56 |
+| random | révolution 3 % → 51 % | — | 11 % → 69 % | 47 → 99 |
+| replica | fin 100 % | 6 514 → 4 098 | 0 % → 6 % | 37 → 50 |
+
+- Les factions ont enfin une raison de se fâcher : au départ, sans atelier ni tissage, les artisans sont gênés (+2/tour) ; **négliger l'économie mène à la révolution** (passif 100 %). La Médecine du travail devient utile (spam_medicine : aucune grève) sans être dominante (economy le bat sur 100 % des graines grâce à l'or).
+- Le marché mord : −24 % d'or pour economy, −37 % pour replica et militarist. L'or reste pourtant abondant (6 759 au tour 40) : il manque des dépenses (entretien des bâtiments, étape 4 ou backlog).
+- Aucune stratégie dominante.
+
 ## 10. Mise en place neutre et personas (13/11)
 Décisions de l'utilisateur : pas d'ennemi désigné ; **toutes les relations commencent à +10** ; **traités possibles avec n'importe quelle nation** ; **personas cachés tirés au hasard** (3 différents parmi 7) ; **aucune crise au début**.
 Fait : `donnees/personas.js` (armée, recrutement, relation minimale pour traités et contrats, déclaration, ralliement, refus), tirage dans `etat.js` (au hasard à graine), contrats calculés à partir des échanges de chaque nation (`e.offres` : volume ≤ 10, achat ×0,8, vente ×1,3, 10 tours), filature avec toute nation de l'Entente, crise du tissu retirée. Belliqueux : déclare dès le tour 6 tant que la relation est < 20 (on peut « acheter la paix ») ; revanchard : belliqueux contre qui l'a battu ; idéaliste : rejoint le camp attaqué, ne frappe qu'un paria. Valeurs des personas : propositions à valider (`regles-v2.md`). 221 tests.

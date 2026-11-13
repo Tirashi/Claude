@@ -43,7 +43,7 @@ function bilan(e){
   for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
   for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
   let ventes = 0, achats = 0, contrats = 0;
-  const balance = {}, fl = Diplomatie.flux(e), t = Diplomatie.tarifs(e);
+  const balance = {}, pv = {}, pa = {}, fl = Diplomatie.flux(e), t = Diplomatie.tarifs(e);
   for (const r of ECO.biens){
     prod[r] = arrondi(prod[r]); conso[r] = arrondi(conso[r]);
     balance[r] = prod[r] - conso[r];
@@ -52,13 +52,16 @@ function bilan(e){
   for (const f of fl){ balance[f.bien] += f.volume; contrats -= f.volume * f.prix; }
   for (const r of ECO.biens){
     balance[r] = arrondi(balance[r]);
-    if (balance[r] > 0) ventes += balance[r] * p[r] * t.vente; else achats -= balance[r] * p[r] * t.achat;
+    // marché (V2) : le prix baisse avec la quantité vendue, monte avec la quantité achetée, dans le tour
+    const q = Math.abs(balance[r]), M = ECO.marche;
+    if (balance[r] > 0){ pv[r] = arrondi(p[r] * Math.max(M.min, 1 - M.pente * q)); ventes += q * pv[r] * t.vente; }
+    else if (balance[r] < 0){ pa[r] = arrondi(p[r] * Math.min(M.max, 1 + M.pente * q)); achats += q * pa[r] * t.achat; }
   }
   contrats = arrondi(contrats);
   const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots * fa.impots);
   const entretiens = arrondi(fx.entretien + entretienBat);
   ventes = arrondi(ventes); achats = arrondi(achats);
-  return { production: prod, consommation: conso, balance, prix: p, ventes, achats, contrats, impots, entretiens,
+  return { production: prod, consommation: conso, balance, prix: p, prixVente: pv, prixAchat: pa, ventes, achats, contrats, impots, entretiens,
            solde: arrondi(ventes - achats + contrats + impots - entretiens), croissance: ECO.croissance + fx.croissance };
 }
 

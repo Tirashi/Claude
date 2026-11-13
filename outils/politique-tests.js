@@ -15,6 +15,11 @@ const Alea = P('moteur/alea.js'), Etat = P('moteur/etat.js'), Tour = P('moteur/t
 const Economie = P('moteur/economie.js'), Lois = P('moteur/lois.js'), FAm = P('moteur/factions.js');
 const CHAMPS = P('donnees/champs.js'), ECO = P('donnees/economie.js'), { LOIS, CATEGORIES } = P('donnees/lois.js'), BAT = P('donnees/batiments.js');
 
+// les tests écrits avant la V2 étape 3 vérifient des règles sans marché ni niveau de vie : prix fixes et dissipation de la V1
+// (rétablis pour le bloc de l'étape 3, à la fin)
+const RFV = P('donnees/factions.js').REGLES_FACTIONS, PENTE = P('donnees/economie.js').marche.pente;
+P('donnees/economie.js').marche.pente = 0; RFV.niveauDeVie.actif = false;
+
 let fail = 0, n = 0;
 const check = (ok, msg) => { n++; console.log((ok ? 'ok    ' : 'ÉCHEC ') + msg); if (!ok) fail++; };
 const egal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -583,6 +588,32 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const id2 = vrai(); id2.profils.brume.persona = 'idealiste'; GU.declarer(id2, 'contreforts', 'joueur', rng(1));
   const id3 = vrai(); id3.profils.brume.persona = 'idealiste'; GU.declarer(id3, 'val_roc', 'val_roc', rng(1));
   check(id2.guerre.ennemis.includes('brume') && id3.guerre.allies.includes('brume'), 'personas : un idéaliste rejoint le camp attaqué');
+}
+
+// ===================== V2 étape 3 : marché et niveau de vie =====================
+{
+  ECO.marche.pente = PENTE; RFV.niveauDeVie.actif = true;
+  const FAx = P('moteur/factions.js');
+  const b = Tour.tourSuivant(neuf(), []).bilan;   // 4 fermes, 1 mine, sans armée : grain 0, fer +11, tissu −18 (crise : ×1,5), outils −8
+  check(b.prixVente.fer === 1.34 && proche(b.ventes, 11 * 1.34), 'marché : vendre 11 fer le fait baisser de 11 % (1,5 → 1,34, au centime)');
+  check(proche(b.prixAchat.tissu, 3 * 1.18) && proche(b.prixAchat.outils, 2 * 1.08) && proche(b.achats, 18 * 3.54 + 8 * 2.16), 'marché : acheter 18 tissu le fait monter de 18 %, 8 outils de 8 %');
+  const gros = Economie.bilan(neuf({ batiments: { farm: 20, mine: 1 } }));
+  check(gros.balance.grain === 320 && gros.prixVente.grain === 0.5 && proche(gros.ventes - 11 * 1.34, 320 * 0.5), 'marché : le prix de vente ne descend pas sous la moitié');
+  const manque = Economie.bilan(neuf({ batiments: {}, familles: 150 }));
+  check(manque.prixAchat.grain === 1.5, 'marché : le prix d\'achat ne monte pas au-delà de ×1,5');
+  check(Math.abs(Economie.bilan(Object.assign(neuf(), { traites: [{ type: 'entente', avec: 'brume', depuis: 1 }] })).ventes - 11 * 1.34 * 1.1) < 0.01, 'marché : les tarifs de l\'Entente s\'ajoutent');
+  // niveau de vie
+  const t1 = Tour.tourSuivant(vrai({ evenements: [] }), []);   // grain 100/80, fer 22,5/4, tissu 0/18, outils 0/8
+  check(egal(t1.niveauDeVie, { paysans: 1, ouvriers: 0.5, artisans: 0, patrons: 0.5 }), 'niveau de vie : couverture du panier de chaque faction (paysans : grain ; ouvriers : grain, outils ; artisans : tissu, outils ; patrons : tissu, fer)');
+  const c0 = CHAMPS.joueur.factions;
+  check(t1.factions.paysans.colere === c0.paysans.colere - 2 && t1.factions.artisans.colere === c0.artisans.colere + 2 && t1.factions.ouvriers.colere === c0.ouvriers.colere && t1.factions.patrons.colere === c0.patrons.colere, 'niveau de vie : panier couvert −2 par tour, moins de la moitié +2, entre les deux rien');
+  const lc = Tour.tourSuivant(Object.assign(vrai({ evenements: [] }), { lois: { reglementation: { id: 'labor_code', depuis: 1 } }, regions: { essai: { nom: 'Essai', terrain: 'mixte', emplacements: 99, batiments: { farm: 5, workshop: 1, mine: 1 } } }, batiments: { farm: 5, workshop: 1, mine: 1 } }), []);
+  check(lc.niveauDeVie.ouvriers === 1 && lc.factions.ouvriers.colere === c0.ouvriers.colere - 4, 'niveau de vie : le code du travail double l\'aise des ouvriers (−4)');
+  const su = Tour.tourSuivant(Object.assign(vrai({ evenements: [] }), { lois: { libertes: { id: 'suffrage_census', depuis: 1 } } }), []);
+  check(su.factions.artisans.colere === c0.artisans.colere + 1, 'niveau de vie : la gêne d\'une faction favorisée par le suffrage monte 2× moins vite');
+  const occ = Tour.tourSuivant(vrai({ evenements: [], occupations: { plaine: 'val_roc', vallee: 'val_roc' } }), []);
+  check(occ.niveauDeVie.paysans === 0 && occ.factions.paysans.colere === c0.paysans.colere + 2, 'niveau de vie : des régions occupées affament les paysans');
+  check(FAx.couverture({ bilan: { production: { grain: 0 }, consommation: { grain: 0 } } }, 'paysans') === 1, 'niveau de vie : rien à consommer = panier couvert');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

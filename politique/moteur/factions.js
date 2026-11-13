@@ -80,7 +80,16 @@ function evaluer(e){
   e.moral = moral(e);
 }
 
-// fin de tour : effets par tour des lois, dissipation, statuts, moral
+// couverture du panier d'une faction : moyenne, sur ses biens, de production / consommation du pays (au plus 1 ; rien à
+// consommer = couvert), d'après l'économie du tour
+function couverture(e, f){
+  const b = e.bilan, panier = R.niveauDeVie.paniers[f];
+  if (!b || !panier || !panier.length) return 1;
+  const c = panier.map(x => b.consommation[x] > 0 ? Math.min(1, b.production[x] / b.consommation[x]) : 1);
+  return Math.round(c.reduce((s, x) => s + x, 0) / c.length * 1000) / 1000;
+}
+
+// fin de tour : effets par tour des lois, niveau de vie (V1 : dissipation), statuts, moral
 function finDeTour(e){
   for (const cat in e.lois){
     const l = e.lois[cat], fx = LOIS[l.id].factions, duree = fx.dureeParTour || {};
@@ -88,9 +97,14 @@ function finDeTour(e){
       if (duree[j] == null || e.tour - l.depuis < duree[j]) modifier(e, f, j, fx.parTour[f][j]);
   }
   for (const f in e.factions){
-    let d = R.dissipation;
-    for (const cat in e.lois){ const k = (LOIS[e.lois[cat].id].factions.dissipation || {})[f]; if (k) d *= k; }
-    modifier(e, f, "colere", -d);
+    let k = 1;
+    for (const cat in e.lois){ const x = (LOIS[e.lois[cat].id].factions.dissipation || {})[f]; if (x) k *= x; }
+    if (!R.niveauDeVie.actif){ modifier(e, f, "colere", -R.dissipation * k); continue; }   // V1
+    // niveau de vie (V2) : l'aise apaise (2× plus vite avec le code du travail pour les ouvriers), la gêne fâche
+    const c = couverture(e, f), N = R.niveauDeVie;
+    (e.niveauDeVie = e.niveauDeVie || {})[f] = c;
+    if (c >= N.seuilAise) modifier(e, f, "colere", N.aise * k);
+    else if (c < N.seuilGene) modifier(e, f, "colere", N.gene);
   }
   e.apaises = [];
   evaluer(e);
@@ -108,6 +122,6 @@ function effetsEco(e){
   return r;
 }
 
-const Factions = { favorisees, modifier, choc, coutApaisement, apaisables, apaiser, statutDe, moralFaction, moral, evaluer, finDeTour, effetsEco };
+const Factions = { couverture, favorisees, modifier, choc, coutApaisement, apaisables, apaiser, statutDe, moralFaction, moral, evaluer, finDeTour, effetsEco };
 if (NODE) module.exports = Factions; else (racine.Politique = racine.Politique || {}).Factions = Factions;
 })(typeof window !== "undefined" ? window : globalThis);
