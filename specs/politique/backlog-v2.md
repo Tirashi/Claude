@@ -42,3 +42,7 @@ Pour les industries privées : modèle simple proposé — chaque bâtiment est 
 2. **Territoires** : pertes de territoire et clause de restitution (RULES_V1 « éventuelles »), impossibles sans carte.
 3. **Relations entre nations** et guerres entre nations de l'ordinateur.
 4. **Effet d'un embargo contre le joueur** sur son marché (aujourd'hui seulement la fin des contrats et traités).
+
+## F. Brainstorming M6 (13/11, idées de l'utilisateur, à préciser avant d'entrer dans le moteur)
+1. **Personas des dirigeants, tirés au hasard à chaque partie** : le caractère (militariste, commerçant, opportuniste…) passe de la nation à son dirigeant ; la nation garde sa spécialité. Le persona règle les comportements déjà dans le moteur (seuil et probabilité de déclaration, relation minimale pour un traité ou un contrat, ralliement à une guerre, réaction à un embargo, poids des dons). Pistes : belliqueux, marchand, opportuniste, isolationniste, revanchard (« rivaux apprenants », B3), idéaliste (sensible à la réputation), prudent.
+2. **Régions** : chaque nation a plusieurs régions avec une spécialité (plaine fertile, montagne riche en filons, forêt, côte, ville) : emplacements de bâtiments limités par région et rendement selon le terrain (ex. ferme ×1,5 en plaine fertile, mine ×1,5 en montagne). Les spécialités des nations en découlent. Rejoint E2 (territoires) et B6 (occupation : une région occupée ne produit plus ; clause de restitution) ; règle aussi A1 (plus de fermes à l'infini).
