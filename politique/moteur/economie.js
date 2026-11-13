@@ -1,7 +1,7 @@
 /* Politique : économie d'un tour (RULES_V1 § Ressources et économie).
    production = bâtiments × rendement (× lois × grèves et révoltes des factions) ; consommation = familles × besoins + armée + bâtiments ;
-   balance vendue (surplus) ou achetée (déficit) au prix du tour, sans stock ;
-   trésor += ventes − achats + impôts − entretiens ; puis la démographie. */
+   contrats et livraisons de traités à prix fixe (M3a) ; le reste de la balance vendu (surplus) ou acheté (déficit)
+   au prix du tour (tarifs de l'Entente), sans stock ; trésor += ventes − achats + contrats + impôts − entretiens ; puis la démographie. */
 (function(racine){
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
@@ -9,6 +9,7 @@ const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE
 const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
 const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
+const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 
 const arrondi = x => Math.round(x * 100) / 100;
 const zero = () => Object.fromEntries(ECO.biens.map(b => [b, 0]));
@@ -31,18 +32,24 @@ function bilan(e){
   }
   for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
   for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
-  let ventes = 0, achats = 0;
-  const balance = {};
+  let ventes = 0, achats = 0, contrats = 0;
+  const balance = {}, fl = Diplomatie.flux(e), t = Diplomatie.tarifs(e);
   for (const r of ECO.biens){
     prod[r] = arrondi(prod[r]); conso[r] = arrondi(conso[r]);
-    balance[r] = arrondi(prod[r] - conso[r]);
-    if (balance[r] > 0) ventes += balance[r] * p[r]; else achats -= balance[r] * p[r];
+    balance[r] = prod[r] - conso[r];
   }
+  // contrats et livraisons à prix fixe : ils remplacent le marché pour leur volume
+  for (const f of fl){ balance[f.bien] += f.volume; contrats -= f.volume * f.prix; }
+  for (const r of ECO.biens){
+    balance[r] = arrondi(balance[r]);
+    if (balance[r] > 0) ventes += balance[r] * p[r] * t.vente; else achats -= balance[r] * p[r] * t.achat;
+  }
+  contrats = arrondi(contrats);
   const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots * fa.impots);
   const entretiens = fx.entretien;
   ventes = arrondi(ventes); achats = arrondi(achats);
-  return { production: prod, consommation: conso, balance, prix: p, ventes, achats, impots, entretiens,
-           solde: arrondi(ventes - achats + impots - entretiens), croissance: ECO.croissance + fx.croissance };
+  return { production: prod, consommation: conso, balance, prix: p, ventes, achats, contrats, impots, entretiens,
+           solde: arrondi(ventes - achats + contrats + impots - entretiens), croissance: ECO.croissance + fx.croissance };
 }
 
 // applique le tour : trésor (peut passer sous zéro : ASSUMPTION validée, sans conséquence en V1), puis familles

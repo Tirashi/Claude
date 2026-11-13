@@ -5,15 +5,16 @@
 const NODE = typeof module !== "undefined" && module.exports;
 const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
+const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const VERSION = 1;
 
 const copie = o => JSON.parse(JSON.stringify(o));
 
 function creerEtat(scenario, graine){
-  const j = scenario.joueur, nations = {};
+  const j = scenario.joueur, profils = {};
   for (const id in scenario.nations){
     const n = scenario.nations[id];
-    nations[id] = { relation: n.relation, tresor: n.tresor, familles: n.familles };
+    profils[id] = { nom: n.nom, taux: n.taux, force: n.force, exporte: copie(n.exporte), importe: copie(n.importe) };
   }
   const e = {
     version: VERSION,
@@ -35,7 +36,12 @@ function creerEtat(scenario, graine){
     evenements: copie(scenario.evenements || []),   // événements écrits du scénario
     modifPrix: [],                    // [{ prix: { bien: facteur }, jusqua }] (événements ; traités en M3)
     bilan: null,                      // économie du dernier tour (Economie.bilan)
-    nations,
+    nations: Diplomatie.nationsInitiales(scenario),   // id → { relation, tresor, familles, colere, moral }
+    profils,                          // id → profil fixe de la nation (taux, force, exporte, importe)
+    contrats: [],                     // [{ id, jusqua }]
+    embargos: [],                     // nations sous embargo du joueur
+    traites: [],                      // [{ type, avec, depuis }]
+    dons: [],                         // nations ayant reçu un don ce tour
     fin: false,
     issue: null,                      // fin de partie : { type: "fin" } ou { type: "revolution", faction }
     journal: []                       // messages du tour, pour l'écran et les rapports

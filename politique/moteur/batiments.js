@@ -6,13 +6,16 @@
 const NODE = typeof module !== "undefined" && module.exports;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
+const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 
-const constructibles = e => Object.keys(BAT).filter(id => !BAT[id].jalon && e.tresor >= BAT[id].cout);
+// part payée par le joueur (bâtiment cofinancé par un traité)
+const cout = id => BAT[id].cout * (BAT[id].partJoueur || 1);
+const constructibles = e => Object.keys(BAT).filter(id => !BAT[id].jalon && (!BAT[id].traite || Diplomatie.aTraite(e, BAT[id].traite)) && e.tresor >= cout(id));
 
 function commander(e, id){
-  e.tresor = arrondi(e.tresor - BAT[id].cout);
+  e.tresor = arrondi(e.tresor - cout(id));
   e.chantiers.push({ id, restant: BAT[id].delai });
-  e.journal.push(`Chantier commandé : ${BAT[id].nom} (${BAT[id].cout} or).`);
+  e.journal.push(`Chantier commandé : ${BAT[id].nom} (${cout(id)} or).`);
 }
 
 // fin du tour : les chantiers des slots avancent d'un tour ; un bâtiment fini produit dès le tour suivant
@@ -28,6 +31,6 @@ function avancer(e){
 
 const arrondi = x => Math.round(x * 100) / 100;
 
-const Batiments = { constructibles, commander, avancer, arrondi };
+const Batiments = { constructibles, commander, avancer, arrondi, cout };
 if (NODE) module.exports = Batiments; else (racine.Politique = racine.Politique || {}).Batiments = Batiments;
 })(typeof window !== "undefined" ? window : globalThis);

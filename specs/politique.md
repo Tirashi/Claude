@@ -28,7 +28,8 @@ Identifiants du code en français comme le reste du dépôt ; les `id` des lois 
 - **M0 — socle** ✅ (13/11) : hasard mulberry32 à graine, état initial du scénario `champs`, tour vide, tests (déterminisme, état non modifié, JSON, action hors liste refusée).
 - **M1 — économie, capital politique, lois, bâtiments** ✅ (13/11) : `donnees/economie.js`, `lois.js`, `batiments.js` ; `moteur/economie.js`, `lois.js`, `batiments.js`, `tour.js`. Les effets des lois sur les factions sont écrits dans les données mais appliqués en M2. Filature de l'Entente, forge et fortifications attendent M3.
 - **M2 — factions** ✅ (13/11) : `donnees/factions.js`, `moteur/factions.js` : chocs à l'adoption, effets par tour (durée limitée pour la puissance des syndicats), dissipation, suffrages (apaisement à moitié prix, hausses ralenties), apaisement (action `apaiser`), bornes, statuts, moral, grève, révolte, révolution (fin de partie).
-- M3 diplomatie et guerre, M4 bots, M5 métriques, M6 backlog, M7 écran : voir le plan.
+- **M3a — diplomatie et commerce** ✅ (13/11) : `donnees/diplomatie.js`, profils des nations dans `donnees/champs.js`, `moteur/diplomatie.js` : nations simplifiées, dons, contrats, embargo, Entente des Ports, défense mutuelle, filature conjointe (`entente_mill`), réputation, paria.
+- M3b guerre et paix, M4 bots, M5 métriques, M6 backlog, M7 écran : voir le plan.
 
 ## 4. Valeurs validées (13/11, toutes les propositions par défaut)
 **Économie** : trésor 200, capital politique 0, 80 familles, 4 fermes et 1 mine ; +1 %/tour de familles, plafond 200 ; impôts = familles × 1 or × loi ;
@@ -63,7 +64,13 @@ Une ferme (60 or, +20 grain vendus 1 or) se rembourse en 3 tours et rien ne limi
 M2 : aucun joueur du rapport n'atteint la grève. Même un « provocateur » qui adopte impôt sur le capital, syndicats, code du travail, suffrage universel, conscription et école gratuite **sans jamais apaiser** plafonne à 67 de colère (patrons) : en V1 la colère ne monte que par les chocs de lois, et la dissipation (−1/tour) l'efface. L'apaisement est donc inutile (pire que le problème A2). Le plafond de 0,5 du moral en grève ne joue jamais : à colère 75, la formule donne déjà 0,42.
 
 
-## 6. Propositions pour M3 (13/11, à valider)
+## 5 bis. Observations M3a (information)
+Joueur « diplomate » du rapport (bâtisseur + Entente avec Brume et Contreforts, contrat de tissu, filature, défense mutuelle, embargo contre Val-Roc au tour 15) : 3 250 or et réputation +34 au tour 30 (partie 1 : 3 214 or, +42 avec la guerre et la paix).
+L'embargo ne mord presque pas : la colère de Val-Roc n'est qu'à 27,5 au tour 30 (48 au tour 60), car le joueur n'a qu'un petit surplus de grain. La victoire par usure (moral < 0,3, soit colère ≥ 82 environ) serait hors d'atteinte en M3b avec ces valeurs : à mesurer avant d'équilibrer.
+
+## 6. Propositions pour M3 (13/11, validées le 13/11)
+**Détails ajoutés en écrivant M3a (à confirmer)** : un don par nation et par tour ; un embargo est une sanction légitime seulement contre une nation en guerre contre le joueur ou un membre de l'Entente (donc toujours −5 avant M3b) ; un embargo annule les contrats avec la cible ; rompre un traité rompt ceux qui en dépendent (Entente → filature, −15 chacun) ; une filature déjà construite reste au joueur après la rupture, tout son tissu va alors au marché ; la réputation « traité respecté » compte la filature comme un traité ; Entente : les tarifs jouent dès qu'on a l'Entente avec une seule nation ; une rupture ne change pas la relation (le barème ne le prévoit pas).
+
 M3 coupé en deux : **M3a** diplomatie, commerce, traités, réputation, économie simplifiée des nations ; **M3b** guerre, paix, forge, fortifications, politiques militaires des nations.
 
 **Nations de l'ordinateur (modèle simplifié, pas de lois ni de bâtiments)** : trésor, familles (+0,5 %/tour), revenu = familles × taux − 12 (armée) ; une seule jauge de colère (dissipation −1/tour) qui donne le moral par la formule des factions ; loi militaire fixe ; un profil commercial fixe (ce qu'elles importent et exportent chaque tour).
