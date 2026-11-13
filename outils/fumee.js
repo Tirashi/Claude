@@ -173,6 +173,7 @@ const shots = process.argv[2];
         if (TerresCarte.n !== 2 || TerresCarte.W !== 32 || !TerresCarte.MER) return 'la nouvelle colonie n\'est pas sur la côte';
         if (!Terres.visiter() || !Terres.visite || Terres.S.ere !== 1 || TerresCarte.W !== 24) return 'la vallée ne se visite pas';
         Terres.revenir(); if (TerresCarte.W !== 32) return 'le retour de visite ne remet pas la côte';
+        Terres.S.loi = true; Terres.recompenser(); if (Terres.fonder('Bois-Ancien') || Terres.S.ere !== 3 || TerresCarte.W !== 40 || !Terres.valleeGardee(2)) return 'la forêt (ère 3) n\'est pas fondée';
         return 'ok';
       });
       if (r !== 'ok') errs.push('Terres franches : ' + r);

@@ -5,7 +5,7 @@ Sorties dans terres-franches/img/ :
  - villageois.png (une rangée de 256 px par villageois : marche 576 px, repos 128 px, puis hache, pioche, canne, houe) et ../villageois.js (VILLAGEOIS LPC) ;
  - les pièces d'interface ui-*.png (copiées de bastion/img) ;
  - animaux.png + window.TerresAnimauxAtlas dans ../atlas.js : animaux LPC d'OpenGameArt (chat, chien, biche, cerf, renard, oiseaux, poules, poissons).
-Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC> <dossier des animaux> [<dossier des packs de la côte>]
+Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC> <dossier des animaux> [<dossier des packs de la côte> [<dossier des packs de la forêt>]]
 (mêmes dossiers que fabriquer-7.py ; villageois : sortie de lpc-villageois.py ... 24 11 6)."""
 import json, pathlib, re, shutil, sys
 from PIL import Image
@@ -45,6 +45,14 @@ if len(sys.argv) > 5:
     "barque": ("H4", 12, 55, 66, 30), "voilier": ("H4", 192, 576, 96, 96), "barque-pillards": ("H4", 192, 384, 96, 96), "taverne": ("SP3", 0, 0, 190, 190), "brasserie": ("SP3", 190, 0, 190, 190),
     "i-biere": ("TV4", 580, 0, 42, 40), "i-planches": ("SP5", 676, 148, 46, 42)}
   TOUTES.update(COTE); GARDE += list(COTE)
+# la forêt profonde (ère 3, 13/11) : 6e dossier facultatif = les packs de la forêt (druide/ : Celtic Druid Village, mine/ : Medieval Underground Mine)
+if len(sys.argv) > 6:
+  FO3 = pathlib.Path(sys.argv[6]); pf = lambda d, n: next((FO3 / d).rglob(f"tile-B-0{n}.png"))
+  F.update({"D5": pf("druide", 5), "MI2": pf("mine", 2), "MI3": pf("mine", 3)})
+  FORET = {"arbre-ancien1": ("D5", 0, 0, 96, 96), "arbre-ancien2": ("D5", 96, 0, 96, 96), "arbre-ancien3": ("D5", 192, 0, 96, 96),
+    "dolmen": ("D5", 480, 96, 96, 96), "menhir": ("D5", 288, 192, 96, 96), "menhir2": ("D5", 576, 192, 96, 96),
+    "grotte": ("MI2", 672, 192, 96, 96), "cristaux-b": ("MI3", 192, 384, 96, 96), "cristaux-v": ("MI3", 384, 384, 96, 96)}
+  TOUTES.update(FORET); GARDE += list(FORET)
 images, cache = {}, {}
 for nom in GARDE:
   f, x, y, l, h, *eff = TOUTES[nom]
