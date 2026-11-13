@@ -1,7 +1,7 @@
 /* Politique : joueurs automatiques (bots) du simulateur (M4, specs/politique/plan-simulateur.md).
    creer(nom, graine) → bot(etat) → liste d'actions du tour. Un bot ne choisit que dans Tour.actionsDisponibles :
    il compose son tour action par action sur une copie (plan), chaque action vérifiée sur l'état laissé par la précédente.
-   Les politiques des nations de l'ordinateur sont dans le moteur (donnees/guerre.js), pas ici. */
+   Les nations de l'ordinateur suivent le persona de leur dirigeant (moteur ; donnees/personas.js) : un bot ne le lit pas. */
 'use strict';
 const path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
@@ -52,9 +52,10 @@ function guerre(p, o){
     if (fa + fd > 0 && fa / (fa + fd) >= o.seuilBataille){ p.essayer(a); break; }
   }
 }
-// l'armée : recruter tant que notre force reste sous ratio × la force de la nation la plus menaçante (hostile ou en guerre)
+// l'armée : recruter tant que notre force reste sous ratio × la force de la nation la plus forte qui n'est pas notre alliée
+// (les personas sont cachés : un bot ne sait pas qui est belliqueux)
 function armee(p, ratio, reserve){
-  const e = p.e, menaces = Object.keys(e.nations).filter(n => e.nations[n].relation < 0 || (e.guerre && e.guerre.ennemis.includes(n)));
+  const e = p.e, menaces = Object.keys(e.nations).filter(n => !e.traites.some(t => t.type === 'defense_mutuelle' && t.avec === n));
   const cible = ratio * Math.max(0, ...menaces.map(n => Guerre.force(e, n)));
   for (const a of Tour.actionsDisponibles(e).filter(x => x.type === 'recruter'))
     if (Guerre.force(p.e, 'joueur') < cible && p.e.tresor - 30 >= (reserve || 0)) p.essayer(a);

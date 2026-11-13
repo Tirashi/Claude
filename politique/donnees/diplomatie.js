@@ -19,19 +19,16 @@ const DIPLOMATIE = {
   embargo: { colereParManque: 1 / 3 },
   // sanction légitime si la cible est en guerre contre le joueur ou un membre de l'Entente (M3b) : ASSUMPTION validée (M3a)
 
-  // contrats : sens = ce que fait le joueur ; volume par tour, prix fixe ; acceptés si relation ≥ 0
-  contrats: {
-    brume_tissu:        { nation: "brume",       sens: "achat", bien: "tissu",  volume: 10, prix: 1.6, duree: 10 },  // ASSUMPTION validée (M3)
-    contreforts_outils: { nation: "contreforts", sens: "achat", bien: "outils", volume: 5,  prix: 1.6, duree: 10 },  // ASSUMPTION validée (M3)
-    val_roc_grain:      { nation: "val_roc",     sens: "vente", bien: "grain",  volume: 10, prix: 1.3, duree: 10 }   // ASSUMPTION validée (M3)
-  },
-  relationContrat: 0,
+  // contrats (13/11 : plus de liste fixe) : chaque nation propose d'acheter ce qu'elle importe et de vendre ce qu'elle exporte ;
+  // volume par tour = son volume, au plus 10 ; prix fixe = prix de base × 0,8 (on achète) ou × 1,3 (on vend) ; 10 tours ;
+  // relation minimale : celle du persona (ASSUMPTION (personas), repris des contrats de la V1)
+  contrats: { volumeMax: 10, prixAchat: 0.8, prixVente: 1.3, duree: 10 },
 
   // traités : relation minimale de la nation pour accepter ; condition supplémentaire
   traites: {
     entente:          { nom: "Entente des Ports",   relationMin: 30, tarifs: { achat: 0.9, vente: 1.1 } },   // ASSUMPTION validée (M3)
     defense_mutuelle: { nom: "Défense mutuelle",    relationMin: 50 },                                       // ASSUMPTION validée (M3)
-    filature:         { nom: "Filature conjointe",  relationMin: 30, nations: ["brume"], requiert: "entente",
+    filature:         { nom: "Filature conjointe",  relationMin: 30, requiert: "entente",   // avec n'importe quelle nation (13/11)
                         batiment: "entente_mill", livraison: { bien: "tissu", volume: 6, prix: 1 } }          // ASSUMPTION validée (M3)
   }
 };

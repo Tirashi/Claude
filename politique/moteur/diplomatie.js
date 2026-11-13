@@ -9,6 +9,8 @@ const NODE = typeof module !== "undefined" && module.exports;
 const D = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
+const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
+const persona = (e, n) => PERSONAS[e.profils[n].persona];
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 
 const arrondi = x => Math.round(x * 100) / 100;
@@ -19,11 +21,20 @@ const aTraite = (e, type, avec) => e.traites.some(t => t.type === type && (avec 
 const relation = (e, n, d) => { e.nations[n].relation = borneRel(e.nations[n].relation + d); };
 
 // état de départ des nations (etat.js)
-function nationsInitiales(scenario){
+function nationsInitiales(scenario, profils){
   const r = {};
   for (const id in scenario.nations){
     const n = scenario.nations[id];
-    r[id] = { relation: n.relation, tresor: n.tresor, familles: n.familles, colere: n.colere, moral: moralNation(n.colere), regiments: n.regiments || 0 };
+    r[id] = { relation: n.relation, tresor: n.tresor, familles: n.familles, colere: n.colere, moral: moralNation(n.colere), regiments: PERSONAS[profils[id].persona].regiments };
+  }
+  return r;
+}
+// contrats proposés : chaque nation achète ce qu'elle importe et vend ce qu'elle exporte (sens = ce que fait le joueur)
+function offres(profils){
+  const r = {}, C = D.contrats;
+  for (const n in profils){
+    for (const b in profils[n].exporte) r[n + "_" + b] = { nation: n, sens: "achat", bien: b, volume: Math.min(C.volumeMax, profils[n].exporte[b]), prix: arrondi(ECO.prix[b] * C.prixAchat), duree: C.duree };
+    for (const b in profils[n].importe) r[n + "_" + b] = { nation: n, sens: "vente", bien: b, volume: Math.min(C.volumeMax, profils[n].importe[b]), prix: arrondi(ECO.prix[b] * C.prixVente), duree: C.duree };
   }
   return r;
 }
@@ -39,12 +50,16 @@ const sanctionne = (e, n) => (e.sanctions || []).some(s => s.par === n && s.cont
 const ennemi = (e, n) => !!e.guerre && e.guerre.ennemis.includes(n);
 const ouverte = (e, n, min) => !paria(e) && !embargo(e, n) && !sanctionne(e, n) && !ennemi(e, n) && e.nations[n].relation >= min;
 
+// un traité : relation au moins celle du traité et celle du persona ; certains personas en refusent ; l'idéaliste juge la réputation
 function traitesPossibles(e){
   const r = [];
   for (const type in D.traites){
     const t = D.traites[type];
-    for (const n of t.nations || Object.keys(e.nations))
-      if (!aTraite(e, type, n) && ouverte(e, n, t.relationMin) && (!t.requiert || aTraite(e, t.requiert, n))) r.push({ type: "traite", id: type, avec: n });
+    for (const n of Object.keys(e.nations)){
+      const p = persona(e, n);
+      if ((p.refuse || []).includes(type) || (p.reputationMin != null && e.reputation < p.reputationMin)) continue;
+      if (!aTraite(e, type, n) && ouverte(e, n, Math.max(t.relationMin, p.traite)) && (!t.requiert || aTraite(e, t.requiert, n))) r.push({ type: "traite", id: type, avec: n });
+    }
   }
   return r;
 }
@@ -55,9 +70,9 @@ function actions(e){
     if (!e.dons.includes(n)) for (const m of D.dons) if (e.tresor >= m) r.push({ type: "don", id: n, montant: m });
     r.push(embargo(e, n) ? { type: "lever_embargo", id: n } : { type: "embargo", id: n });
   }
-  for (const id in D.contrats){
-    const c = D.contrats[id];
-    if (!e.contrats.some(x => x.id === id) && ouverte(e, c.nation, D.relationContrat)) r.push({ type: "contrat", id });
+  for (const id in e.offres){
+    const c = e.offres[id];
+    if (!e.contrats.some(x => x.id === id) && ouverte(e, c.nation, persona(e, c.nation).contrat)) r.push({ type: "contrat", id });
   }
   r.push(...traitesPossibles(e));
   for (const t of e.traites) r.push({ type: "rompre", id: t.type, avec: t.avec });
@@ -71,7 +86,7 @@ const legitime = (e, n) => ennemi(e, n);
 // de ses contrats, relation −30 (ASSUMPTION validée (M3b))
 function couper(e, n){
   e.traites = e.traites.filter(t => t.avec !== n);
-  e.contrats = e.contrats.filter(x => D.contrats[x.id].nation !== n);
+  e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== n);
   relation(e, n, D.relation.embargo);
   e.sanctions.push({ par: n, contre: "joueur" });
   e.journal.push(`${e.profils[n].nom} rompt avec nous et nous met sous embargo.`);
@@ -94,7 +109,7 @@ function appliquer(e, a){
     e.dons.push(a.id);
     e.journal.push(`Don de ${a.montant} or à ${a.id}.`);
   } else if (a.type === "contrat"){
-    const c = D.contrats[a.id];
+    const c = e.offres[a.id];
     e.contrats.push({ id: a.id, jusqua: e.tour + c.duree - 1 });
     relation(e, c.nation, D.relation.contrat);
     e.journal.push(`Contrat signé : ${c.sens === "achat" ? "achat" : "vente"} de ${c.volume} ${c.bien} par tour à ${c.prix} (${c.duree} tours).`);
@@ -108,7 +123,7 @@ function appliquer(e, a){
     e.embargos.push(a.id);
     relation(e, a.id, D.relation.embargo);
     e.reputation += legitime(e, a.id) ? D.reputation.sanctionLegitime : D.reputation.sanctionIllegitime;
-    e.contrats = e.contrats.filter(x => D.contrats[x.id].nation !== a.id);   // plus de commerce avec la cible
+    e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== a.id);   // plus de commerce avec la cible
     e.journal.push(`Embargo contre ${a.id}.`);
   } else if (a.type === "lever_embargo"){
     e.embargos = e.embargos.filter(n => n !== a.id);
@@ -120,7 +135,7 @@ function appliquer(e, a){
 function flux(e){
   const r = [];
   for (const x of e.contrats){
-    const c = D.contrats[x.id];
+    const c = e.offres[x.id];
     r.push({ source: x.id, bien: c.bien, volume: c.sens === "achat" ? c.volume : -c.volume, prix: c.prix });
   }
   for (const t of e.traites){
@@ -170,6 +185,6 @@ function tour(e){
   e.dons = [];
 }
 
-const Diplomatie = { nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
+const Diplomatie = { persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
 if (NODE) module.exports = Diplomatie; else (racine.Politique = racine.Politique || {}).Diplomatie = Diplomatie;
 })(typeof window !== "undefined" ? window : globalThis);

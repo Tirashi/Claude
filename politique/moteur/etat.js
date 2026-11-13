@@ -6,7 +6,8 @@ const NODE = typeof module !== "undefined" && module.exports;
 const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
-const VERSION = 2;   // V2 : régions
+const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
+const VERSION = 3;   // V2 : régions ; personas
 // totaux des bâtiments du pays (même calcul que Batiments.totaux, sans dépendance circulaire)
 function totaux(regions){
   const t = {};
@@ -17,17 +18,20 @@ function totaux(regions){
 const copie = o => JSON.parse(JSON.stringify(o));
 
 function creerEtat(scenario, graine){
-  const j = scenario.joueur, profils = {}, regions = copie(j.regions);
-  for (const id in scenario.nations){
+  const j = scenario.joueur, profils = {}, regions = copie(j.regions), r = Alea.creer(graine);
+  // personas des dirigeants : tirés au hasard, tous différents (caché au joueur : l'écran ne doit pas l'afficher)
+  const liste = Object.keys(PERSONAS);
+  for (let i = liste.length - 1; i > 0; i--){ const k = Alea.entier(r, i + 1); [liste[i], liste[k]] = [liste[k], liste[i]]; }
+  Object.keys(scenario.nations).forEach((id, i) => {
     const n = scenario.nations[id];
-    profils[id] = { nom: n.nom, caractere: n.caractere, regions: copie(n.regions || {}), taux: n.taux, force: n.force, exporte: copie(n.exporte), importe: copie(n.importe) };
-  }
+    profils[id] = { nom: n.nom, persona: liste[i], regions: copie(n.regions || {}), taux: n.taux, exporte: copie(n.exporte), importe: copie(n.importe) };
+  });
   const e = {
     version: VERSION,
     scenario: scenario.id,
     tour: 1,
     tourMax: scenario.tours,
-    alea: Alea.creer(graine).s,       // état du hasard, rangé avec la partie
+    alea: r.s,                        // état du hasard (après le tirage des personas), rangé avec la partie
     tresor: j.tresor,
     cp: j.cp,
     familles: j.familles,
@@ -43,8 +47,10 @@ function creerEtat(scenario, graine){
     evenements: copie(scenario.evenements || []),   // événements écrits du scénario
     modifPrix: [],                    // [{ prix: { bien: facteur }, jusqua }] (événements ; traités en M3)
     bilan: null,                      // économie du dernier tour (Economie.bilan)
-    nations: Diplomatie.nationsInitiales(scenario),   // id → { relation, tresor, familles, colere, moral }
-    profils,                          // id → profil fixe de la nation (taux, force, exporte, importe)
+    nations: Diplomatie.nationsInitiales(scenario, profils),   // id → { relation, tresor, familles, colere, moral, regiments }
+    profils,                          // id → profil de la nation (persona, régions, taux, exporte, importe)
+    offres: Diplomatie.offres(profils),   // contrats proposés par les nations (ce qu'elles importent et exportent)
+    revanches: {},                    // nations revanchardes battues par le joueur
     contrats: [],                     // [{ id, jusqua }]
     embargos: [],                     // nations sous embargo du joueur
     traites: [],                      // [{ type, avec, depuis }]

@@ -29,13 +29,7 @@ const GUERRE = {
   treve: 10,                        // tours sans déclaration de guerre entre anciens ennemis après une paix (backlog E1, accepté le 13/11)
   uneSeuleGuerre: true,             // une seule guerre à la fois : ASSUMPTION validée (M3b)
 
-  // politiques des nations (par caractère ; personas à l'étape 5) : déclaration (ASSUMPTION validée, M3) ;
-  // recrutement : armée visée en part du plafond, régiments par tour, or gardé en réserve (en guerre : plafond) : ASSUMPTION (V2 étape 2)
-  politiques: {
-    militariste:  { declare: { ratio: 1.2, relationMax: 0, proba: 0.3, tourMin: 1 }, bataille: true, recrute: { cible: 1,   parTour: 2, reserve: 100 } },
-    commercante:  { declare: null, bataille: true,                        recrute: { cible: 0.5, parTour: 1, reserve: 200 } },
-    opportuniste: { declare: null, bataille: true, rejoint: 0.5,          recrute: { cible: 0.7, parTour: 1, reserve: 100 } }
-  }
+  // le comportement des nations (déclaration, recrutement, ralliement, force) vient du persona de leur dirigeant : donnees/personas.js
 };
 
 if (NODE) module.exports = GUERRE; else (racine.Politique = racine.Politique || {}).GUERRE = GUERRE;

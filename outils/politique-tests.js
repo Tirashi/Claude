@@ -84,13 +84,21 @@ const partie = (graine, coupe) => {
 // ===================== M1 =====================
 // état de départ pour vérifier une règle à la fois : Val-Roc n'y déclare pas la guerre (caractère « commerçant ») ;
 // les tests de M3b partent du vrai scénario (vrai())
-const vrai = (mod, graine) => Object.assign(Etat.creerEtat(CHAMPS, graine || 1), mod || {});
+// vrai() : la mise en place des tests écrits avant les personas (Val-Roc belliqueux, Brume marchande, Contreforts opportuniste,
+// relations −20 / +20 / 0, crise du tissu au tour 1), pour qu'ils gardent leur sens ; la vraie mise en place : Etat.creerEtat
+const vrai = (mod, graine) => {
+  const e = Etat.creerEtat(CHAMPS, graine || 1);
+  const ancien = { val_roc: ['belliqueux', -20, 5], brume: ['marchand', 20, 3], contreforts: ['opportuniste', 0, 2] };
+  for (const n in ancien) { e.profils[n].persona = ancien[n][0]; e.nations[n].relation = ancien[n][1]; e.nations[n].regiments = ancien[n][2]; }
+  e.evenements = [{ tour: 1, id: 'crise_tissu', texte: "Crise du tissu : le prix du tissu s'envole.", prix: { tissu: 1.5 }, duree: 6 }];
+  return Object.assign(e, mod || {});
+};
 // neuf() : une seule région d'essai, sans bonus ni limite de place, avec les bâtiments donnés (4 fermes et 1 mine par défaut,
 // la production de la V1) ; les tests des régions partent de vrai()
 const Batiments = P('moteur/batiments.js');
 const neuf = (mod) => {
   const m = Object.assign({}, mod), bats = m.batiments || { farm: 4, mine: 1 }; delete m.batiments;
-  const e = vrai(Object.assign({ regiments: 0 }, m)); e.profils.val_roc.caractere = 'commercante';   // sans armée : l'économie de la V1
+  const e = vrai(Object.assign({ regiments: 0 }, m)); e.profils.val_roc.persona = 'marchand';   // sans armée ni guerre : l'économie de la V1
   e.regions = { essai: { nom: 'Essai', terrain: 'mixte', emplacements: 99, batiments: JSON.parse(JSON.stringify(bats)) } };
   e.batiments = Batiments.totaux(e.regions);
   return e;
@@ -375,7 +383,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(en.nations.brume.relation === 40 && en.reputation === 3, 'traités : relation +10, réputation +3');
   check(proche(en.bilan.ventes, 16.5 * 1.1) && proche(en.bilan.achats, 70 * 0.9), 'Entente des Ports : ventes +10 %, achats −10 %');
   check(!dispo(avecRel({ brume: 49 }), { type: 'traite', id: 'defense_mutuelle', avec: 'brume' }) && dispo(avecRel({ brume: 50 }), { type: 'traite', id: 'defense_mutuelle', avec: 'brume' }), 'défense mutuelle : relation ≥ 50');
-  check(!dispo(b30, { type: 'traite', id: 'filature', avec: 'brume' }) && dispo(en, { type: 'traite', id: 'filature', avec: 'brume' }) && !dispo(Object.assign(avecRel({ contreforts: 90 }), { traites: [{ type: 'entente', avec: 'contreforts', depuis: 1 }] }), { type: 'traite', id: 'filature', avec: 'contreforts' }), 'filature conjointe : seulement avec Brume, Entente requise');
+  check(!dispo(b30, { type: 'traite', id: 'filature', avec: 'brume' }) && dispo(en, { type: 'traite', id: 'filature', avec: 'brume' }) && dispo(Object.assign(avecRel({ contreforts: 90 }), { traites: [{ type: 'entente', avec: 'contreforts', depuis: 1 }] }), { type: 'traite', id: 'filature', avec: 'contreforts' }), 'filature conjointe : Entente requise, avec n\'importe quelle nation');
   check(!Tour.actionsDisponibles(en).some(a => a.id === 'entente_mill'), 'filature : pas de bâtiment sans le traité');
   let fi = Tour.tourSuivant(en, [{ type: 'traite', id: 'filature', avec: 'brume' }]);
   check(dispo(fi, { type: 'construire', id: 'entente_mill', region: 'essai' }), 'filature : bâtiment constructible avec le traité');
@@ -445,12 +453,12 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(!at.traites.length && !at.contrats.length && at.nations.brume.relation === 30 && at.sanctions.some(s => s.par === 'brume' && s.contre === 'joueur'), 'sanctions de bloc : les autres membres rompent avec nous (traités, contrats, relation −30, embargo)');
 
   // déclarations des nations
-  const declare = (mod, s, rel, regBrume) => { const e = vrai(mod); if (rel != null) e.nations.val_roc.relation = rel; if (regBrume) e.nations.brume.regiments = regBrume; GU.tour(e, rng(s)); return e.guerre; };
+  const declare = (mod, s, rel, regBrume) => { const e = vrai(Object.assign({ tour: 6 }, mod)); if (rel != null) e.nations.val_roc.relation = rel; if (regBrume) e.nations.brume.regiments = regBrume; GU.tour(e, rng(s)); return e.guerre; };
   let k = 0; for (let s = 1; s <= 400; s++) if (declare({}, s)) k++;
-  check(k > 400 * 0.24 && k < 400 * 0.36, `Val-Roc déclare la guerre une fois sur trois environ quand il est 1,2× plus fort et hostile (${k}/400)`);
-  check([1, 2, 3, 4, 5, 6, 7, 8].every(s => !declare({}, s, 0) && !declare({ regiments: 20 }, s)), 'Val-Roc ne déclare rien si la relation est ≥ 0 ou s\'il n\'est pas 1,2× plus fort');
+  check(k > 400 * 0.24 && k < 400 * 0.36, `un belliqueux (Val-Roc) déclare la guerre une fois sur trois environ quand il est 1,2× plus fort et pas notre ami (${k}/400)`);
+  check([1, 2, 3, 4, 5, 6, 7, 8].every(s => !declare({}, s, 20) && !declare({ regiments: 20 }, s) && !declare({ tour: 5 }, s)), 'un belliqueux ne déclare rien avant le tour 6, si la relation est ≥ 20, ou s\'il n\'est pas 1,2× plus fort');
   check([1, 2, 3, 4, 5, 6, 7, 8].every(s => !declare({ traites: [{ type: 'defense_mutuelle', avec: 'brume', depuis: 1 }] }, s, null, 8)), 'la défense mutuelle compte dans la force qui dissuade');
-  check([1, 2, 3, 4, 5, 6, 7, 8].every(s => { const e = vrai(); e.nations.brume.relation = -90; e.nations.contreforts.relation = -90; GU.tour(e, rng(s)); return !e.guerre || e.guerre.ennemis[0] === 'val_roc'; }), 'Brume et Contreforts ne déclarent jamais la guerre');
+  check([1, 2, 3, 4, 5, 6, 7, 8].every(s => { const e = vrai({ tour: 10 }); e.nations.brume.relation = -90; e.nations.contreforts.relation = -90; GU.tour(e, rng(s)); return !e.guerre || e.guerre.ennemis[0] === 'val_roc'; }), 'un marchand et un opportuniste ne déclarent jamais la guerre');
   const dm = enGuerre(vrai({ traites: [{ type: 'defense_mutuelle', avec: 'brume', depuis: 1 }, { type: 'entente', avec: 'brume', depuis: 1 }] }), 'val_roc', 'val_roc');
   check(dm.guerre.allies.includes('brume') && dm.sanctions.some(s => s.par === 'brume' && s.contre === 'val_roc'), 'défense mutuelle : Brume entre en guerre à nos côtés ; l\'Entente met l\'agresseur sous embargo');
   let contreNous = 0; for (let s = 1; s <= 300; s++) { const e = enGuerre(vrai(), 'val_roc', 'val_roc', s); if (e.guerre.ennemis.includes('contreforts')) contreNous++; }
@@ -519,8 +527,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(ok2(finTreve, { type: 'declarer_guerre', id: 'val_roc' }), 'trêve : finie après 10 tours');
   let redeclare = 0, apres = 0;
   for (let s = 1; s <= 100; s++) {
-    const e = vrai(); e.treves = { val_roc: 10 }; GU.tour(e, rng(s)); if (e.guerre) redeclare++;
-    const f = vrai(); f.treves = { val_roc: 0 }; GU.tour(f, rng(s)); if (f.guerre) apres++;
+    const e = vrai({ tour: 6 }); e.treves = { val_roc: 10 }; GU.tour(e, rng(s)); if (e.guerre) redeclare++;
+    const f = vrai({ tour: 6 }); f.treves = { val_roc: 0 }; GU.tour(f, rng(s)); if (f.guerre) apres++;
   }
   check(redeclare === 0 && apres > 15, `trêve : Val-Roc ne déclare pas la guerre pendant la trêve (${redeclare}/100), le fait après (${apres}/100)`);
   let traitre = 0; for (let s = 1; s <= 100; s++) { const e = vrai(); e.treves = { contreforts: 10 }; GU.declarer(e, 'val_roc', 'val_roc', rng(s)); if (e.guerre.ennemis.includes('contreforts')) traitre++; }
@@ -529,5 +537,52 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(!GU.bataille(zero, true, 'hauts', rng(1)) && zero.regiments === 0, 'bataille : sans régiment on perd toujours');
 }
 
+
+// ===================== Mise en place neutre et personas (13/11) =====================
+{
+  const GU = P('moteur/guerre.js'), PERS = P('donnees/personas.js'), DPm = P('moteur/diplomatie.js');
+  const rng = s => Alea.creer(s);
+  const ok3 = (e, a) => Tour.actionsDisponibles(e).some(d => JSON.stringify(Object.entries(d).sort()) === JSON.stringify(Object.entries(a).sort()));
+  const vraie = g => Etat.creerEtat(CHAMPS, g || 1);
+  check(Object.values(vraie().nations).every(n => n.relation === 10), 'mise en place : toutes les nations commencent à +10 de relation');
+  check(vraie().evenements.length === 0 && Tour.tourSuivant(vraie(), []).bilan.prix.tissu === 2, 'mise en place : aucune crise au début de la partie');
+  check(Object.keys(PERS).length === 7, 'personas : 7 (belliqueux, marchand, opportuniste, isolationniste, revanchard, idéaliste, prudent)');
+  const tirages = Array.from({ length: 300 }, (_, g) => Object.values(vraie(g + 1).profils).map(p => p.persona));
+  check(tirages.every(t => new Set(t).size === 3 && t.every(x => PERS[x])), 'personas : 3 différents à chaque partie');
+  const vus = {}; tirages.forEach(t => t.forEach((x, i) => { vus[i + x] = 1; }));
+  check(Object.keys(vus).length === 21, 'personas : chaque persona peut échoir à chaque nation');
+  const agr = tirages.filter(t => t.includes('belliqueux')).length;
+  check(agr > 300 * 0.33 && agr < 300 * 0.53, `personas : un belliqueux dans environ 3 parties sur 7 (${agr}/300), sinon pas d'agresseur désigné`);
+  check(egal(vraie(4).profils, vraie(4).profils) && !egal(tirages[0], tirages[1]) || !egal(tirages[1], tirages[2]), 'personas : même graine, mêmes personas');
+  const v = vraie(); check(Object.keys(v.nations).every(n => v.nations[n].regiments === PERS[v.profils[n].persona].regiments), 'personas : régiments de départ selon le persona');
+  check(GU.force(Object.assign(vrai(), {}), 'val_roc') === 8 && (() => { const e = vrai(); e.profils.val_roc.persona = 'marchand'; return GU.force(e, 'val_roc') === 5; })(), 'personas : la force d\'une nation suit son persona (belliqueux ×1,6, marchand ×1)');
+  // contrats tirés des échanges
+  check(egal(Object.keys(v.offres).sort(), ['brume_fer', 'brume_grain', 'brume_tissu', 'contreforts_grain', 'contreforts_outils', 'val_roc_fer', 'val_roc_grain', 'val_roc_tissu']), 'contrats : chaque nation propose ce qu\'elle exporte et achète ce qu\'elle importe');
+  check(egal(v.offres.brume_tissu, { nation: 'brume', sens: 'achat', bien: 'tissu', volume: 10, prix: 1.6, duree: 10 }) && egal(v.offres.val_roc_grain, { nation: 'val_roc', sens: 'vente', bien: 'grain', volume: 10, prix: 1.3, duree: 10 }) && v.offres.contreforts_grain.volume === 5, 'contrats : volume au plus 10, achat à ×0,8, vente à ×1,3, 10 tours');
+  const mar = vrai(); mar.nations.brume.relation = -10;
+  check(ok3(mar, { type: 'contrat', id: 'brume_tissu' }) && !ok3(Object.assign(mar, { nations: Object.assign(mar.nations, { brume: Object.assign(mar.nations.brume, { relation: -11 }) }) }), { type: 'contrat', id: 'brume_tissu' }), 'personas : un marchand commerce dès −10 de relation');
+  // traités avec n'importe quelle nation, selon le persona
+  const tr = vrai(); for (const n in tr.nations) tr.nations[n].relation = 59; tr.profils.contreforts.persona = 'prudent';
+  check(ok3(tr, { type: 'traite', id: 'entente', avec: 'brume' }) && ok3(tr, { type: 'traite', id: 'entente', avec: 'contreforts' }) && !ok3(tr, { type: 'traite', id: 'entente', avec: 'val_roc' }), 'traités : relation minimale du persona (belliqueux 60, marchand 30, prudent 40)');
+  const fi = vrai({ traites: [{ type: 'entente', avec: 'contreforts', depuis: 1 }] }); fi.nations.contreforts.relation = 40;
+  check(ok3(fi, { type: 'traite', id: 'filature', avec: 'contreforts' }), 'filature conjointe : avec n\'importe quelle nation de l\'Entente');
+  const iso = vrai(); iso.profils.brume.persona = 'isolationniste'; iso.nations.brume.relation = 90;
+  check(!ok3(iso, { type: 'traite', id: 'defense_mutuelle', avec: 'brume' }) && ok3(iso, { type: 'traite', id: 'entente', avec: 'brume' }), 'personas : un isolationniste refuse la défense mutuelle');
+  const ide = vrai({ reputation: -1 }); ide.profils.brume.persona = 'idealiste'; ide.nations.brume.relation = 90;
+  check(!ok3(ide, { type: 'traite', id: 'entente', avec: 'brume' }) && ok3(Object.assign(ide, { reputation: 0 }), { type: 'traite', id: 'entente', avec: 'brume' }), 'personas : un idéaliste refuse de traiter avec un pays de mauvaise réputation');
+  // guerre selon le persona
+  const decl = (pers, mod, s, rel) => { const e = vrai(Object.assign({ tour: 10 }, mod)); e.profils.val_roc.persona = pers; e.nations.val_roc.relation = rel == null ? 10 : rel; e.nations.val_roc.regiments = 20; GU.tour(e, rng(s)); return !!e.guerre; };
+  const compte = (f) => { let k = 0; for (let s = 1; s <= 200; s++) if (f(s)) k++; return k; };
+  check(compte(s => decl('marchand', {}, s, -90)) === 0 && compte(s => decl('opportuniste', {}, s, -90)) === 0 && compte(s => decl('isolationniste', {}, s, -90)) === 0, 'personas : marchand, opportuniste et isolationniste ne déclarent jamais la guerre');
+  check(compte(s => decl('prudent', {}, s, -20)) === 0 && compte(s => decl('prudent', {}, s, -40)) > 20, 'personas : un prudent ne déclare que si la relation est sous −30 (et 2× plus fort)');
+  check(compte(s => decl('idealiste', {}, s, -90)) === 0 && compte(s => decl('idealiste', { reputation: -60 }, s)) > 30, 'personas : un idéaliste ne frappe qu\'un pays paria');
+  check(compte(s => decl('revanchard', {}, s, 10)) === 0 && compte(s => decl('revanchard', { revanches: { val_roc: true } }, s, 10)) > 30, 'personas : un revanchard battu par nous redevient belliqueux contre nous');
+  const cap = vrai({ regiments: 20 }); GU.declarer(cap, 'val_roc', 'val_roc', rng(1)); cap.guerre.ennemis = ['val_roc']; cap.guerre.allies = []; cap.guerre.capitulation = 'ennemi';
+  GU.paix(cap, 'joueur', {});
+  check(cap.revanches.val_roc === true, 'personas : une nation battue s\'en souvient (revanche)');
+  const id2 = vrai(); id2.profils.brume.persona = 'idealiste'; GU.declarer(id2, 'contreforts', 'joueur', rng(1));
+  const id3 = vrai(); id3.profils.brume.persona = 'idealiste'; GU.declarer(id3, 'val_roc', 'val_roc', rng(1));
+  check(id2.guerre.ennemis.includes('brume') && id3.guerre.allies.includes('brume'), 'personas : un idéaliste rejoint le camp attaqué');
+}
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

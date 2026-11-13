@@ -125,6 +125,22 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 10. Mise en place neutre et personas (13/11)
+Décisions de l'utilisateur : pas d'ennemi désigné ; **toutes les relations commencent à +10** ; **traités possibles avec n'importe quelle nation** ; **personas cachés tirés au hasard** (3 différents parmi 7) ; **aucune crise au début**.
+Fait : `donnees/personas.js` (armée, recrutement, relation minimale pour traités et contrats, déclaration, ralliement, refus), tirage dans `etat.js` (au hasard à graine), contrats calculés à partir des échanges de chaque nation (`e.offres` : volume ≤ 10, achat ×0,8, vente ×1,3, 10 tours), filature avec toute nation de l'Entente, crise du tissu retirée. Belliqueux : déclare dès le tour 6 tant que la relation est < 20 (on peut « acheter la paix ») ; revanchard : belliqueux contre qui l'a battu ; idéaliste : rejoint le camp attaqué, ne frappe qu'un paria. Valeurs des personas : propositions à valider (`regles-v2.md`). 221 tests.
+
+**Avant (Val-Roc toujours agresseur) → après (200 parties par bot)** :
+
+| Bot | Parties avec guerre | Régions perdues / partie | Or t40 |
+|---|---|---|---|
+| passif | 100 % → 42 % | 2,77 → 0,81 | −655 → 2 443 |
+| economy | 100 % → 36 % | 2,45 → 0,14 | 2 928 → 8 890 |
+| militarist | 100 % → 100 % (il attaque) | 1,37 → 0,08 ; 0,72 guerre gagnée | 605 → 5 352 |
+| replica | 100 % → 34 % | 2,11 → 0,21 | 2 346 → 6 514 |
+| random | 100 % → 99 % | 3,74 → 2,88 | — |
+
+Aucune stratégie dominante. Restent : l'or qui déborde (étape 3, marché) ; des factions presque toujours calmes (colère max ~34 : rien ne la fait monter hors des lois et des défaites) ; les propositions d'équilibre de la guerre (capitulation à la moitié des régions, fort ×2, caserne de départ, pas de non-réarmement imposé au joueur) ne sont pas appliquées.
+
 ## 9. V2, étape 2 : armée en régiments (13/11) — mécanique faite, équilibre à décider
 Fait : `donnees/guerre.js` (régiments, fort, pertes, politiques de recrutement), caserne et fort (forge et fortifications retirées), 3 régions par nation (`champs.js`), `moteur/guerre.js` réécrit (force = régiments × loi × moral, fort ×1,5 dans sa région, bataille pour une région, occupation et libération, cession, recrutement du joueur et des nations), revenus des nations selon leurs régions tenues, régions occupées sans production ni chantier. 199 tests.
 

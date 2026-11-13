@@ -174,9 +174,9 @@ function controle(){
   }
   const rep = partie('replica', 1);
   check(rep.loisAdoptees.length >= 3, `replica : rejoue la trajectoire de la partie 1 (${rep.loisAdoptees.length} lois adoptées, fin ${rep.issue} au tour ${rep.duree})`);
-  const avant = lire('guerre.defaite.colere'), sans = lot(['economy'], 2, 5).resumes.economy;
-  const change = lot(['economy'], 2, 5, null, { 'guerre.defaite.colere': 40 }).resumes.economy;
-  check(lire('guerre.defaite.colere') === avant && JSON.stringify(lot(['economy'], 2, 5).resumes.economy) === JSON.stringify(sans), 'réglages : remis en place après un lot (même résultat avant et après)');
+  const avant = lire('economie.croissance'), sans = lot(['economy'], 2, 5).resumes.economy;
+  const change = lot(['economy'], 2, 5, null, { 'economie.croissance': 0.05 }).resumes.economy;
+  check(lire('economie.croissance') === avant && JSON.stringify(lot(['economy'], 2, 5).resumes.economy) === JSON.stringify(sans), 'réglages : remis en place après un lot (même résultat avant et après)');
   check(JSON.stringify(change) !== JSON.stringify(sans), 'réglages : un réglage change bien les parties');
   let refuse = false; try { regler({ 'guerre.inexistant': 1 }); } catch (err) { refuse = true; }
   check(refuse, 'réglages : un chemin inconnu est refusé');

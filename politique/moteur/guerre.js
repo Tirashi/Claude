@@ -16,6 +16,8 @@ const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
+const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
+const persona = (e, n) => PERSONAS[e.profils[n].persona];
 
 const arrondi = x => Math.round(x * 100) / 100;
 const enTreve = (e, n) => ((e.treves || {})[n] || 0) >= e.tour;
@@ -41,7 +43,7 @@ const occupees = (e, qui) => regionsDe(e, qui).filter(id => e.occupations[id]);
 
 // force d'un membre ; region : la région défendue (son fort compte si elle appartient au joueur et n'est pas occupée)
 function force(e, qui, region){
-  const mult = qui === "joueur" ? Lois.effets(e).force : e.profils[qui].force;
+  const mult = qui === "joueur" ? Lois.effets(e).force : persona(e, qui).armee;
   const moral = qui === "joueur" ? e.moral : e.nations[qui].moral;
   let f = regiments(e, qui) * mult * moral;
   if (region && qui === "joueur" && e.regions[region] && !e.occupations[region] && e.regions[region].batiments.fort) f *= G.fort;
@@ -63,7 +65,7 @@ function recruter(e, region){
 // les nations recrutent selon leur politique, avec leur or (en guerre : jusqu'au plafond)
 function recrutementNations(e){
   for (const n in e.nations){
-    const x = e.nations[n], pol = G.politiques[e.profils[n].caractere].recrute;
+    const x = e.nations[n], pol = persona(e, n).recrute;
     if (!pol || desarme(e, n)) continue;
     const enGuerre = !!e.guerre && (e.guerre.ennemis.includes(n) || e.guerre.allies.includes(n));
     const cap = plafond(e, n), cible = enGuerre ? cap : Math.ceil(cap * pol.cible);
@@ -91,14 +93,22 @@ function declarer(e, cible, agresseur, r){
   e.nations[cible].relation = G.relationGuerre;
   e.guerre = g;
   e.journal.push(agresseur === "joueur" ? `Guerre déclarée à ${e.profils[cible].nom}.` : `${e.profils[cible].nom} nous déclare la guerre !`);
-  // les opportunistes rejoignent le camp le plus fort (avec le joueur : relation ≥ 0)
+  const allie = n => { g.allies.push(n); e.journal.push(`${e.profils[n].nom} entre en guerre à nos côtés.`); };
+  const ennemie = n => { g.ennemis.push(n); e.nations[n].relation = G.relationGuerre; e.journal.push(`${e.profils[n].nom} entre en guerre contre nous.`); };
   for (const n in e.nations){
-    const pol = G.politiques[e.profils[n].caractere];
-    if (!pol.rejoint || g.ennemis.includes(n) || g.allies.includes(n)) continue;
-    if (Alea.suivant(r) >= pol.rejoint) continue;
+    const p = persona(e, n);
+    if (g.ennemis.includes(n) || g.allies.includes(n)) continue;
+    // l'idéaliste rejoint le camp attaqué (contre nous seulement si nous sommes l'agresseur)
+    if (p.contreAgresseur){
+      if (agresseur === "joueur"){ if (!enTreve(e, n)) ennemie(n); }
+      else if (e.nations[n].relation >= 0) allie(n);
+      continue;
+    }
+    // l'opportuniste rejoint le camp le plus fort, une fois sur deux (avec le joueur : relation ≥ 0)
+    if (!p.rejoint || Alea.suivant(r) >= p.rejoint) continue;
     const fj = forceCamp(e, campJoueur(g)), fe = forceCamp(e, g.ennemis);
-    if (fj >= fe && e.nations[n].relation >= 0){ g.allies.push(n); e.journal.push(`${e.profils[n].nom} entre en guerre à nos côtés.`); }
-    else if (fe > fj && !enTreve(e, n)){ g.ennemis.push(n); e.nations[n].relation = G.relationGuerre; e.journal.push(`${e.profils[n].nom} entre en guerre contre nous.`); }
+    if (fj >= fe && e.nations[n].relation >= 0) allie(n);
+    else if (fe > fj && !enTreve(e, n)) ennemie(n);
   }
 }
 
@@ -149,6 +159,7 @@ function paix(e, vainqueur, clauses){
     if (clauses.lever_embargo) e.embargos = e.embargos.filter(n => n !== chef);
     if (clauses.non_rearmement) e.nonRearmement[perdant] = e.tour + G.nonRearmement;
     if (clauses.cession) ceder(e, perdant, gagnant);
+    if (vainqueur === "joueur") e.revanches[chef] = true;   // un revanchard s'en souviendra
   }
   const camp = g.ennemis.concat(g.allies, ["joueur"]);
   // les régions encore occupées sont rendues ; les sanctions liées à la guerre sont levées
@@ -226,8 +237,7 @@ function tour(e, r){
     const chef = g.ennemis[0];
     if (capitule(e, chef)){ g.capitulation = "ennemi"; e.journal.push(`${e.profils[chef].nom} capitule : à nous de fixer la paix.`); return; }
     if (capitule(e, "joueur")){ paix(e, "ennemi", { reparations: true, lever_embargo: true, non_rearmement: true, cession: true }); return; }
-    const pol = G.politiques[e.profils[chef].caractere];
-    if (!pol.bataille || g.bataille === e.tour) return;
+    if (g.bataille === e.tour) return;
     // l'ennemi libère d'abord ses régions, sinon vise notre région la moins bien défendue
     const nous = campJoueur(g), possibles = cibles(e, g.ennemis, nous);
     const liberer = possibles.filter(id => g.ennemis.includes(proprietaire(e, id)));
@@ -236,14 +246,15 @@ function tour(e, r){
     return;
   }
   for (const n in e.nations){
-    const d = G.politiques[e.profils[n].caractere].declare;
+    const p = persona(e, n), d = (e.revanches || {})[n] && p.revanche ? p.revanche : p.declare;
     if (!d || enTreve(e, n) || e.tour < (d.tourMin || 1) || e.nations[n].relation >= d.relationMax) continue;
+    if (d.paria && !Diplomatie.paria(e)) continue;                 // l'idéaliste ne frappe qu'un paria
     const nous = forceCamp(e, ["joueur"].concat(partenaires(e, "defense_mutuelle")));
     if (force(e, n) > d.ratio * nous && Alea.suivant(r) < d.proba){ declarer(e, n, n, r); return; }
   }
 }
 
-const Guerre = { enTreve, desarme, force, forceCamp, plafond, regiments, proprietaire, cibles, cessibles, recrutables,
+const Guerre = { persona, enTreve, desarme, force, forceCamp, plafond, regiments, proprietaire, cibles, cessibles, recrutables,
   declarer, bataille, paix, actions, appliquer, tour };
 if (NODE) module.exports = Guerre; else (racine.Politique = racine.Politique || {}).Guerre = Guerre;
 })(typeof window !== "undefined" ? window : globalThis);
