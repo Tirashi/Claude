@@ -9,6 +9,14 @@
 "use strict";
 const DON = (typeof module !== "undefined" && module.exports) ? require("./donnees.js") : window.TerresDonnees;
 const T = 32;
+// les bâtiments et les métiers de l'ère de la partie (la côte ajoute les siens : ERE2 de donnees.js, fusionné entrée par entrée)
+const PAR_ERE = {};
+function donnees(S){
+  const e = (S && S.ere >= 2 && DON.ERE2) ? 2 : 1;
+  if (!PAR_ERE[e]){ const X = e === 2 ? DON.ERE2 : {}, f = (a, b) => { const o = {}; for (const k in a) o[k] = Object.assign({}, a[k]); for (const k in b || {}) o[k] = Object.assign(o[k] || {}, b[k]); return o; };
+    PAR_ERE[e] = {BATIMENTS: f(DON.BATIMENTS, X.BATIMENTS), METIERS: f(DON.METIERS, X.METIERS)}; }
+  return PAR_ERE[e];
+}
 const GRILLE = [
   "TTTTTTTTTTTTTTTTTTT~~TTT",
   "TTTTLLLT.nnn.TXXTTT~~TTT",
@@ -85,13 +93,13 @@ function fabriquer(n, nom, GRILLE, o){
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (GRILLE[y][x] === c) d = Math.min(d, Math.hypot(x + .5 - L.cx, y + .5 - L.cy));
       return d;
     }
-    const BAT = DON.BATIMENTS, veut = b => k === "logis" ? !!(BAT[b] && BAT[b].logement) : b === k;
+    const BAT = donnees(S).BATIMENTS, veut = b => k === "logis" ? !!(BAT[b] && BAT[b].logement) : b === k;
     let d = null;
     for (const id in S.lots || {}) if (id !== L.id && veut(S.lots[id])){ const M = LOTS[id]; const e = Math.hypot(M.cx - L.cx, M.cy - L.cy); d = d === null ? e : Math.min(d, e); }
     return d;   // null : il n'y en a pas encore
   }
   function score(S, b, id){
-    const L = LOTS[id], pres = (DON.BATIMENTS[b] && DON.BATIMENTS[b].pres) || {feu: 1}; let s = 0;
+    const BB = donnees(S).BATIMENTS, L = LOTS[id], pres = (BB[b] && BB[b].pres) || {feu: 1}; let s = 0;
     for (const k in pres){
       if (L.tags.includes(k)){ s += pres[k]; continue; }
       if (["fertile", "pre"].includes(k)) continue;
@@ -102,7 +110,7 @@ function fabriquer(n, nom, GRILLE, o){
   }
   // le terrain proposé pour b (null s'il n'y en a plus)
   function proposer(S, b){
-    const B = DON.BATIMENTS[b]; if (!B) return null;
+    const B = donnees(S).BATIMENTS[b]; if (!B) return null;
     if (B.place && libres(S, B.terrain).includes(B.place)) return B.place;   // sa réserve à lui (grenier près des champs, aire près des rochers)
     let best = null, bs = -1e9;
     for (const id of libres(S, B.terrain)){ const s = score(S, b, id); if (s > bs + 1e-9){ bs = s; best = id; } }
@@ -157,7 +165,7 @@ function fabriquer(n, nom, GRILLE, o){
   /* ---------- où travaillent les villageois ---------- */
   // cases de travail d'un métier (les plus proches du feu d'abord) : lisière pour les bûcherons, buissons, rive, ou le bâtiment
   function postes(S, m){
-    const M = DON.METIERS[m], res = [];
+    const M = donnees(S).METIERS[m], res = [];
     const pres = (x, y) => Math.hypot(x - FEU[0], y - FEU[1]);
     const voisin = (x, y, c) => DIRS.some(([dx, dy]) => case_(x + dx, y + dy) === c);
     if (m === "bucheron"){ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (/[.,]/.test(GRILLE[y][x]) && voisin(x, y, "T")) res.push([x, y]); }

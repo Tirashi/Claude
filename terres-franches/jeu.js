@@ -3,7 +3,7 @@
    window.Terres : S (la partie), cam, outils pour l'interface et les tests (avance(s), toucherCase(x, y), placer…). */
 (function(){
 "use strict";
-const R = window.TerresRegles, C = window.TerresCarte, DON = window.TerresDonnees, AT = window.TerresAtlas, VL = window.TerresVillageois;
+const R = window.TerresRegles, C = window.TerresCarte, AT = window.TerresAtlas, VL = window.TerresVillageois;
 const T = C.T, CLE = "terres.partie";
 let MW = C.W * T, MH = C.H * T;   // la taille de la carte affichée (vallée 24 × 24, côte 32 × 32) : voir preparerCarte
 const cv = document.getElementById("cv"), x = cv.getContext("2d");
@@ -30,7 +30,7 @@ function piece(n){
   const a = AT[n], c = document.createElement("canvas"); c.width = a[2]; c.height = a[3];
   c.getContext("2d").drawImage(decor, a[0], a[1], a[2], a[3], 0, 0, a[2], a[3]); return pieces[n] = c;
 }
-const ICONE = {bois: "i-bois", pierre: "i-pierre", baies: "i-baies", poisson: "i-poisson", ble: "i-ble", farine: "i-farine", pain: "i-pain", laine: "i-laine", vetements: "i-tissu", armes: "i-armes", vivres: "i-baies"};
+const ICONE = {bois: "i-bois", pierre: "i-pierre", baies: "i-baies", poisson: "i-poisson", ble: "i-ble", farine: "i-farine", pain: "i-pain", laine: "i-laine", vetements: "i-tissu", armes: "i-armes", vivres: "i-baies", planches: "i-planches", fume: "i-fume", orge: "i-orge", biere: "i-biere"};
 const icones = {};
 function icone(r){
   if (!icones[r] && ok()){
@@ -44,6 +44,8 @@ const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) ^ 0x5bd1e995; h
 
 /* ---------- la partie ---------- */
 let S = null;
+// les données de la partie affichée (selon son ère)
+const DON = new Proxy({}, {get: (o, k) => S ? R.reglages(S.mods, S.ere)[k] : window.TerresDonnees[k]});
 // pendant la visite d'une ancienne colonie, S = la colonie visitée (figée) et REEL = la partie en cours, qui continue
 let REEL = null;
 const lire = k => { try { return localStorage.getItem(k); } catch (e){ return null; } };
@@ -210,7 +212,7 @@ function dessinerFond(){
     tb.fillStyle = g; tb.fillRect(0, 0, MW, MH); b.drawImage(tmp, 0, 0);
   }
   // pied des terrains bâtis : un peu de terre devant la porte, potager des cabanes
-  for (const id in S.lots){ const L = C.LOTS[id], bk = S.lots[id]; if (L.terrain !== "terre" || bk === "champ") continue;
+  for (const id in S.lots){ const L = C.LOTS[id], bk = S.lots[id]; if (L.terrain !== "terre" || bk === "champ" || bk === "orge") continue;
     b.fillStyle = "rgba(80,110,40,.25)"; b.fillRect(L.x * T + 4, L.y * T + 8, L.l * T - 8, L.h * T - 10); }
   V.sol(c, saisonVue);   // l'herbe de la saison
   if (bordSaison !== saisonVue) dessinerBord();
@@ -276,6 +278,8 @@ function arbre(a, t){
   for (let y = 0; y < h; y += 4){ const f = Math.pow(Math.max(0, (h - 34 - y) / (h - 34)), 1.3), dx = Math.round(w * 4 * f + Math.sin(a.ph + y * .07) * w * f);
     x.drawImage(planche, at[0], at[1] + y, iw, Math.min(4, h - y), X0 + dx, Y0 + y, iw, Math.min(4, h - y)); }
 }
+// le champ d'orge (côte) : le même champ, plus pâle et tirant sur le vert
+function orge(L, t, i){ x.save(); x.filter = "hue-rotate(28deg) saturate(.75) brightness(1.08)"; champ(L, t, i + 3); x.restore(); }
 function champ(L, t, i){
   const s = V.etatChamp(t, i, saisonVue), at = AT["champ-" + s]; if (!at) return;
   const X = L.x * T, Y = L.y * T, W = L.l * T, H = L.h * T;
@@ -285,7 +289,7 @@ function champ(L, t, i){
     x.drawImage(planche, at[0], at[1] + y, at[2], 2, X + dx, Y + y * H / at[3], W, 2 * H / at[3] + .5); }
 }
 // fumée : haut de la cheminée, en px de l'image (repérés pour la maquette 7)
-const CHEMINEES = {four: [35, 31], forge: [22, 4], chaume3: [74.5, 1], chaume4: [74, 10], colomb1: [77.5, 7], colomb2: [63, 21], pierre2: [63, 19], pierre3: [15.5, 6], pierre5: [19, 2]};
+const CHEMINEES = {four: [35, 31], forge: [22, 4], fumoir: [134, 4], taverne: [72, 40], chaume3: [74.5, 1], chaume4: [74, 10], colomb1: [77.5, 7], colomb2: [63, 21], pierre2: [63, 19], pierre3: [15.5, 6], pierre5: [19, 2]};
 function fumee(n, X, Y, k, t, gris){
   const c = CHEMINEES[n] || (CHEMINEE_AJOUT[n] && [CHEMINEE_AJOUT[n][0], CHEMINEE_AJOUT[n][1] - 15]), a0 = AT[n]; if (!c || !a0) return;
   const X0 = X - a0[2] * k / 2 + c[0] * k, Y0 = Y - a0[3] * k + c[1] * k, w = vent(X, Y, t);
@@ -333,6 +337,19 @@ function tente(X, Y){
   x.fillStyle = "#4a3418"; x.beginPath(); x.moveTo(X - 6, Y); x.lineTo(X, Y - 18); x.lineTo(X + 6, Y); x.fill();
   x.fillStyle = "#6a4a26"; x.fillRect(X - 1, Y - 38, 2, 6);
 }
+// le port de pierre (côte, bourg) : les entrepôts sur pilotis au bord de l'eau, un voilier à quai
+function port(L, t){
+  const a = AT.port; if (!a) return; const k = (L.l * T + 30) / a[2], X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T + 14;
+  if (AT.voilier) spr("voilier", X + L.l * T * .62, Y + 30 + Math.sin(t * 1.3) * 1.5, .62);
+  x.drawImage(planche, a[0], a[1], a[2], a[3], Math.round(X - a[2] * k / 2), Math.round(Y - a[3] * k), Math.round(a[2] * k), Math.round(a[3] * k));
+}
+// les barques des pêcheurs en mer : elles tournent au large devant le port
+function barques(t){
+  if (!AT.barque) return; const id = Object.keys(S.lots).find(k => S.lots[k] === "port"), L = id && C.LOTS[id]; if (!L) return;
+  const n = Math.min(3, Math.max(1, (S.jobs.pecheur || 0) - 4)), X = (L.x + L.l / 2) * T, Y = (L.y + L.h + 2.2) * T;
+  for (let k = 0; k < n; k++){ const an = t * .07 + k * 2.1, bx = X + Math.cos(an) * (110 + k * 40), by = Y + 20 + Math.sin(an) * 18 + k * 14;
+    x.save(); x.translate(Math.round(bx), Math.round(by)); if (Math.sin(an) < 0) x.scale(-1, 1); spr("barque", 0, Math.sin(t * 2 + k) * 1.2, .8); x.restore(); }
+}
 function ponton(L){
   const [dx, dy] = L.vers, X = (L.x + .5) * T, Y = (L.y + .5) * T, lg = 1.6 * T;
   x.save(); x.translate(X, Y); x.rotate(Math.atan2(dy, dx));
@@ -362,7 +379,8 @@ function bergerie(L, t, id){
   pre.sort((p, q) => p[0] - q[0]); for (const [, f] of pre) f();
 }
 const MAISONS = {cabane: ["chaume1", "chaume2", "chaume3", "chaume4", "chaume5"], maison: ["colomb1", "colomb2", "colomb3", "colomb4", "pierre1", "pierre2", "pierre3", "pierre5"]};
-const SPRITE = {four: ["four", 1], atelier: ["atelier", 1], moulin: ["moulin1", .5], tour: ["tour", .62], caserne: ["caserne", .72], forge: ["forge", .74]};
+const SPRITE = {four: ["four", 1], atelier: ["atelier", 1], moulin: ["moulin1", .5], tour: ["tour", .62], caserne: ["caserne", .72], forge: ["forge", .74],
+  scierie: ["scierie", .5], fumoir: ["fumoir", .58], brasserie: ["brasserie", .5], taverne: ["taverne", .5]};   // la côte (ère 2)
 function spriteDe(b, id){ if (MAISONS[b]){ const l = MAISONS[b]; return [l[id.charCodeAt(0) % l.length], 1]; } return SPRITE[b] || null; }
 
 /* ---------- les villageois ---------- */
@@ -371,7 +389,7 @@ const PIONNIER = VL.adultes.length - 1;
 // le pionnier (dernière rangée) est le premier villageois : AG[0] ; les autres prennent les rangées suivantes
 const rang = i => i === 0 ? PIONNIER : (i - 1) % (VL.adultes.length - 1);
 // l'outil de chaque métier (planches de villageois.png : VL.outils = {outil: [x, case, images]}) ; le cueilleur cueille à la main
-const OUTIL = {bucheron: "hache", carrier: "pioche", pecheur: "canne", fermier: "houe"};
+const OUTIL = {bucheron: "hache", carrier: "pioche", pecheur: "canne", fermier: "houe", paysan: "houe"};
 function lpc(a, X, Y, k){
   const ry = rang(a.i) * 256, row = {h: 0, g: 1, b: 2, d: 3}[a.dir] ?? 2;   // ?? et pas || : « haut » vaut 0
   if (a.anim === "travail" && VL.outils[a.outil || "hache"]){
@@ -391,7 +409,7 @@ function soldat(k, a, X, Y, sc){
 }
 const PRODUIT = m => DON.METIERS[m].produit || DON.METIERS[m].sortie;
 const RAPPORTE = {bucheron: 1, cueilleur: 1, pecheur: 1, carrier: 1};      // vont déposer au feu
-const DUREE = {bucheron: 7, cueilleur: 6, pecheur: 11, carrier: 7, fermier: 9};
+const DUREE = {bucheron: 7, cueilleur: 6, pecheur: 11, carrier: 7, fermier: 9, paysan: 9};
 let cheminCache = new Map();
 function marcher(a, cible, ensuite){
   const dep = [Math.max(0, Math.min(C.W - 1, Math.floor(a.x / T))), Math.max(0, Math.min(C.H - 1, Math.floor(a.y / T)))];
@@ -497,14 +515,20 @@ function garder(a){
   marcher(a, q, () => { a.etat = "ronde"; a.anim = "repos"; a.dir = "b"; a.fin = a.t + 3 + hash(a.i, 3) * 4; });
 }
 // la bande : elle part de la lisière (sud-ouest) au début de l'approche et arrive aux réserves à l'heure du combat ; puis elle repart
+// sur la côte, les pillards débarquent sur la plage (RAIDS.mer) : une case de sable au bord de l'eau, à l'ouest des pontons
+function debarquement(){
+  for (let xx = 3; xx < C.W - 3; xx++) for (let y = C.H - 1; y > 0; y--) if (C.case_(xx, y) === "," && C.case_(xx, y + 1) === "~" && C.case_(xx - 1, y) === ",") return [xx, y];
+  return C.ENTREE;
+}
 function bande(dt, L){
-  const ph = S.raid && S.raid.phase;
+  const ph = S.raid && S.raid.phase, DEP = DON.RAIDS.mer ? debarquement() : C.ENTREE;
+  if (BANDE && DON.RAIDS.mer && AT["barque-pillards"]) L.push([(DEP[1] + 1.9) * T, () => spr("barque-pillards", (DEP[0] + .5) * T, (DEP[1] + 1.9) * T + Math.sin(BANDE.t * 1.5) * 1.5, .8)]);
   if (!BANDE && ph === "approche"){
     const n = Math.max(2, Math.min(7, Math.round((S.raid.force || 8) / 4))), cb = cibleBande(), duree = Math.max(5, S.raid.proch - S.t);
     BANDE = {n0: S.raid.n, etat: "approche", t: 0, membres: []};
     for (let k = 0; k < n; k++){
       const c = cb[k % cb.length], but = [c[0] + (k % 3) - 1, c[1] + 1 + (k > 2 ? 1 : 0)];
-      const ch = C.chercher(C.ENTREE, (u, v) => u === but[0] && v === but[1], ROUTES.cases, null) || [C.ENTREE, but];
+      const ch = C.chercher(DEP, (u, v) => u === but[0] && v === but[1], ROUTES.cases, null) || [DEP, but];
       const pts = ch.map(([u, v]) => [(u + .5) * T + (hash(k, u) - .5) * 10, (v + .5) * T + (hash(v, k) - .5) * 8]);
       let lg = 0; for (let i = 1; i < pts.length; i++) lg += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
       BANDE.membres.push({k: k % SOL.pillards, x: pts[0][0] - k * 14, y: pts[0][1] + k * 6, dir: "h", f: k, anim: "marche", chemin: pts.slice(1), v: (lg + k * 14) / (duree * .9), sac: false});
@@ -519,8 +543,8 @@ function bande(dt, L){
   if (BANDE.etat === "melee" && BANDE.t > BANDE.fin){
     BANDE.etat = "fuite";
     for (const m of BANDE.membres){
-      const dep = [Math.floor(m.x / T), Math.floor(m.y / T)], ch = C.chercher(dep, (u, v) => u === C.ENTREE[0] && v === C.ENTREE[1], ROUTES.cases, null) || [dep, C.ENTREE];
-      m.chemin = ch.map(([u, v]) => [(u + .5) * T, (v + .5) * T]).concat([[-2 * T, (C.ENTREE[1] + .5) * T]]); m.v = DON.MARCHE.vitesse * T * (BANDE.bilan && BANDE.bilan.repousse ? 2.2 : 1.6);
+      const dep = [Math.floor(m.x / T), Math.floor(m.y / T)], ch = C.chercher(dep, (u, v) => u === DEP[0] && v === DEP[1], ROUTES.cases, null) || [dep, DEP];
+      m.chemin = ch.map(([u, v]) => [(u + .5) * T, (v + .5) * T]).concat(DON.RAIDS.mer ? [] : [[-2 * T, (DEP[1] + .5) * T]]); m.v = DON.MARCHE.vitesse * T * (BANDE.bilan && BANDE.bilan.repousse ? 2.2 : 1.6);
     }
   }
   let dehors = 0;
@@ -660,7 +684,7 @@ function aire(L){
     casier("buche", X + 12, Y + 58, part("bois"), 2, 5, .5, 15, 5);
     casier("rocher-p", X + 38, Y + 59, part("pierre"), 3, 2, .4, 9, 6);
   });
-  if (Z[cam.zi] >= 1) pancarte(X + 32, Y - 4, ["bois", "pierre", "laine", "vetements"]);
+  if (Z[cam.zi] >= 1) pancarte(X + 32, Y - 4, ["bois", "pierre", "planches", "laine", "vetements"]);
 }
 // le grenier : la grange au fond ; devant, une petite cour fermée où les vivres sont rangés par sorte (baies, pain, blé, farine, poisson)
 function grenier(L){
@@ -671,7 +695,7 @@ function grenier(L){
     const cols = [["panier-baies", "baies", .26], ["panier-patates", "pain", .24], ["sacs-grain", "ble", .24], ["sac-farine", "farine", .25], ["tonneau", "poisson", .24]];
     cols.forEach(([n, r, k], i) => casier(n, X + 10 + i * 11, Y + 60, part(r), 1, 3, k, 0, 8));
   });
-  if (Z[cam.zi] >= 1) pancarte(X + 32, Y - 26, ["baies", "poisson", "ble", "farine", "pain"]);
+  if (Z[cam.zi] >= 1) pancarte(X + 32, Y - 26, ["baies", "poisson", "fume", "ble", "orge", "farine", "pain", "biere"]);
 }
 // une petite pancarte au-dessus d'une réserve : une icône et une jauge par ressource (vert, orange, rouge quand c'est plein)
 function pancarte(X, Y, rs){
@@ -693,6 +717,8 @@ function batiment(b, id, t, fantome){
   if (b === "aire"){ aire(L); return; }
   if (b === "grenier"){ grenier(L); return; }
   if (b === "champ"){ champ(L, t, id.charCodeAt(0)); return; }
+  if (b === "orge"){ orge(L, t, id.charCodeAt(0)); return; }
+  if (b === "port"){ port(L, t); return; }
   if (b === "ponton"){ ponton(L); return; }
   if (b === "carriere"){ carriere(L, true); return; }
   if (b === "bergerie"){ bergerie(L, t, fantome ? null : id); return; }
@@ -706,7 +732,7 @@ function batiment(b, id, t, fantome){
 }
 function chantier(c, id, t, barre){
   const L = C.LOTS[id], X = (L.x + L.l / 2) * T, Y = (L.y + L.h) * T - 6, tot = DON.BATIMENTS[c.k].travail, u = 1 - c.reste / tot;
-  if (c.k === "champ"){ x.fillStyle = "rgba(110,80,40,.6)"; x.fillRect(L.x * T + 6, L.y * T + 6, (L.l * T - 12) * u, L.h * T - 12); }
+  if (c.k === "champ" || c.k === "orge"){ x.fillStyle = "rgba(110,80,40,.6)"; x.fillRect(L.x * T + 6, L.y * T + 6, (L.l * T - 12) * u, L.h * T - 12); }
   else if (c.k === "ponton"){ x.globalAlpha = .4 + .6 * u; ponton(L); x.globalAlpha = 1; }
   else if (!barre) spr("chantier", X, Y, .5);
   x.fillStyle = "#2a1608"; x.fillRect(X - 22, Y + 1, 44, 6); x.fillStyle = "#ffd94a"; x.fillRect(X - 21, Y + 2, 42 * u, 4);
@@ -744,6 +770,8 @@ function image(now){
   // champs au sol (avant le reste)
   const enCours = {}; for (const c of S.chantiers) if (c.lot) enCours[c.lot] = c;
   for (const id in S.lots) if (S.lots[id] === "champ" && !enCours[id]) champ(C.LOTS[id], t, id.charCodeAt(0));
+  for (const id in S.lots) if (S.lots[id] === "orge" && !enCours[id]) orge(C.LOTS[id], t, id.charCodeAt(0));
+  if (S.bat.port) barques(t);
   for (const id in S.lots) if (S.lots[id] === "ponton" && !enCours[id]) ponton(C.LOTS[id]);
   // tout ce qui a des pieds, rangé de haut en bas
   const L = [], vis = (X, Y, m) => X > X0 - m && X < X0 + vw + m && Y > Y0 - 20 && Y < Y0 + vh + 170;
@@ -753,7 +781,7 @@ function image(now){
     if (Lo.terrain === "roche" && S.lots[id] !== "carriere") for (const [a, b2, k] of ROCHERS) L.push([Lo.y * T + b2, () => spr("rocher", Lo.x * T + a, Lo.y * T + b2, k)]);
     if (enCours[id] && enCours[id].agrandit) L.push([(Lo.y + Lo.h) * T, () => { batiment(S.lots[id], id, t); chantier(enCours[id], id, t, true); }]);
     else if (enCours[id]) L.push([(Lo.y + Lo.h) * T, () => chantier(enCours[id], id, t)]);
-    else if (S.lots[id] && !["champ", "ponton"].includes(S.lots[id])) L.push([(Lo.y + Lo.h) * T - 2, () => batiment(S.lots[id], id, t)]);
+    else if (S.lots[id] && !["champ", "orge", "ponton"].includes(S.lots[id])) L.push([(Lo.y + Lo.h) * T - 2, () => batiment(S.lots[id], id, t)]);
   }
   const [fx, fy] = C.FEU, [tx, ty] = C.TENTE;
   if (S.statut < 1) L.push([(ty + .9) * T, () => tente((tx + .5) * T, (ty + .9) * T)]);   // au hameau, le pionnier a son toit

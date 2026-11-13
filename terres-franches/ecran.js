@@ -2,7 +2,9 @@
    choix du terrain, menus, récap du retour). Lit et commande la partie par window.Terres et window.TerresRegles. */
 (function(){
 "use strict";
-const J = window.Terres, R = window.TerresRegles, DON = window.TerresDonnees, C = window.TerresCarte;
+const J = window.Terres, R = window.TerresRegles, C = window.TerresCarte;
+// les données de la partie affichée (celles de son ère : la côte a ses bâtiments, ses métiers, le bourg…)
+const DON = new Proxy({}, {get: (o, k) => { const S = J.S; return S ? R.reglages(S.mods, S.ere)[k] : window.TerresDonnees[k]; }});
 const $ = id => document.getElementById(id);
 const fmt = n => n >= 1e4 ? (n / 1e3).toFixed(n >= 1e5 ? 0 : 1) + "k" : String(Math.floor(n + 1e-6));
 const ic = r => `<img class="ic" src="${J.icone(r)}" alt="">`;
@@ -34,7 +36,7 @@ function cout(c){
   return `<span class="cout">${Object.entries(c).map(([r, n]) => { const a = r === "vivres" ? R.vivres(S) : S.res[r]; return `<span class="${a + 1e-9 < n ? "manque" : ""}">${ic(r)}${fmt(n)}</span>`; }).join("")}</span>`;
 }
 function volVillageois(){
-  const S = J.S, P = R.reglages(S.mods), t = R.taux(S);
+  const S = J.S, P = R.reglages(S.mods, S.ere), t = R.taux(S);
   const lib = R.libres(S);
   let h = `<h3><span>HABITANTS ${S.pop}/${R.popMax(S)}</span></h3>`;
   h += `<div class="sans ${lib ? "oui" : ""}"><b>${lib}</b><span>${lib ? `villageois sans métier : donne-${lib > 1 ? "leur" : "lui"} un travail avec <i>+</i>` : "Tout le monde travaille."}</span></div>`;
@@ -56,7 +58,7 @@ function volVillageois(){
   return h;
 }
 function volConstruire(){
-  const S = J.S, P = R.reglages(S.mods); let h = "";
+  const S = J.S, P = R.reglages(S.mods, S.ere); let h = "";
   for (const b of Object.keys(P.BATIMENTS).sort((u, v) => P.BATIMENTS[u].statut - P.BATIMENTS[v].statut)){   // dans l'ordre où l'on peut bâtir
     const B = P.BATIMENTS[b], e = R.peutConstruire(S, b), bloque = B.statut > S.statut, libres = C.libres(S, B.terrain).length;
     const plein = B.logement && !bloque && R.logement(S) >= R.plafondStatut(S);   // assez de toits : le statut limite
@@ -79,8 +81,8 @@ function volConstruire(){
   return h;
 }
 function volColonie(){
-  const S = J.S, P = R.reglages(S.mods), mo = R.moral(S), st = P.STATUTS[S.statut], suiv = P.STATUTS[S.statut + 1];
-  const NOMS = {fetes: "Jours de fête", variete: "Nourriture variée (2 sortes)", vetements: "Vêtements", pain: "Du pain", chauffage: "Bois pour se chauffer (hiver)", famine: "Famine !"};
+  const S = J.S, P = R.reglages(S.mods, S.ere), mo = R.moral(S), st = P.STATUTS[S.statut], suiv = P.STATUTS[S.statut + 1];
+  const NOMS = {fetes: "Jours de fête", variete: "Nourriture variée (2 sortes)", vetements: "Vêtements", pain: "Du pain", biere: "De la bière à la taverne", chauffage: "Bois pour se chauffer (hiver)", famine: "Famine !"};
   const V = window.TerresVie;
   let h = `<h3><span>${st.nom}</span><span>MORAL ${Math.round(mo.mult * 100)} %</span></h3><p>${V.NOMS[V.saison(S)]} DE L'AN ${V.annee(S)}${V.pluie(S) ? (V.saison(S) === 3 ? " · IL NEIGE" : " · IL PLEUT") : ""}${V.nuit(S) > .5 ? " · LA NUIT" : ""}</p>${R.hiver(S) ? `<p class="limite">L'hiver : chaque habitant brûle du bois et mange un peu plus. Sans bois, le moral baisse.</p>` : R.saison(S) === 2 ? `<p class="limite">L'automne : fais des réserves de bois et de nourriture pour l'hiver.</p>` : ""}`;
   h += mo.det.length ? mo.det.map(d => `<div class="besoin ${d.ok ? "ok" : "non"}"><i>${d.ok ? "+" : "-"}</i>${NOMS[d.k]}</div>`).join("") : `<p>Pas encore de besoins : à 6 habitants, il faudra varier la nourriture.</p>`;
@@ -93,13 +95,13 @@ function volColonie(){
     h += `<h3 style="margin-top:8px"><span>${L.nom}</span></h3><p>La Loi de l'ère ${S.ere || 1}${suite ? ` : elle rapporte ${P.POINTS_LOI[S.ere || 1]} points de Loi et permet de fonder une nouvelle colonie` : ""}.</p>${conditions(L.pop, L.cout)}`;
     h += !S.loi ? `<button type="button" class="bouton or" data-act="loi"${R.peutPromulguer(S) ? " disabled" : ""}>PROMULGUER</button>`
       : suite ? `<p>Promulguée !</p><button type="button" class="bouton or" data-act="fonder">CHOISIR LES LOIS ET FONDER</button>`
-      : `<p>Promulguée ! La suite de l'ère ${S.ere} (la Loi des Guildes, le bourg) arrive bientôt.</p>`;
+      : `<p>Promulguée ! ${P.POINTS_LOI[S.ere || 1] ? `Ses ${P.POINTS_LOI[S.ere || 1]} points de Loi sont gardés pour la prochaine colonie (l'ère ${(S.ere || 1) + 1} viendra plus tard).` : ""}</p>`;
   }
   return h;
 }
 // les pillards (à partir du hameau) : ce qui est à l'abri, la garde, la dernière bande
 function pillards(){
-  const S = J.S, P = R.reglages(S.mods); if (!P.RAIDS.intervalle[S.statut]) return "";
+  const S = J.S, P = R.reglages(S.mods, S.ere); if (!P.RAIDS.intervalle[S.statut]) return "";
   const d = Math.round(R.defense(S)), f = Math.round(R.forceBande(S)), dern = S.raids[S.raids.length - 1];
   let h = `<h3 style="margin-top:8px"><span>PILLARDS</span><span>${S.raid.phase ? "ILS ARRIVENT !" : ""}</span></h3>`;
   h += `<p class="limite">Une bande vient de temps en temps voler les réserves. À l'abri : <b>${Math.round(R.abri(S, "baies") * 100)} %</b> des vivres, <b>${Math.round(R.abri(S, "bois") * 100)} %</b> des matériaux (agrandis le grenier et l'aire).<br>`
@@ -119,7 +121,7 @@ const ICONES_ORD = {outils: "souche-hache", panier: "panier-baies", hottes: "ton
   serrures: "caisse-p", palissade: "souche", guetteurs: "tour", exercice: "ratelier", soins: "panier-legumes",
   tentes: "chaume2", etageres: "caisse", faucille: "i-ble", engrais: "botte", meules: "sac-farine", pelles: "panier-patates", forces: "i-laine", metiers: "i-tissu", conserves: "sechoir-poisson", fetes: "tonneau", charpente: "chantier", accueil: "chaume1", hospitalite: "panier-pommes"};
 function volAmeliorer(){
-  const S = J.S, P = R.reglages(S.mods), O = P.ORDONNANCES; let h = `<p class="limite">Ordonnances et équipements : chaque niveau s'ajoute au précédent.</p>`;
+  const S = J.S, P = R.reglages(S.mods, S.ere), O = P.ORDONNANCES; let h = `<p class="limite">Ordonnances et équipements : chaque niveau s'ajoute au précédent.</p>`;
   for (const id of Object.keys(O).sort((a, b) => O[a].statut - O[b].statut)){
     const o = O[id], n = (S.ord || {})[id] || 0, e = R.peutAcheter(S, id), bloque = o.statut > S.statut, mx = n >= o.niveaux;
     const info = bloque ? `IL FAUT LE ${P.STATUTS[o.statut].nom}` : mx ? `NIVEAU ${n} : MAXIMAL` : o.niveaux > 1 ? `NIVEAU ${n} → ${n + 1} (SUR ${o.niveaux})` : o.type === "equipement" ? "EQUIPEMENT" : "ORDONNANCE";
@@ -140,7 +142,8 @@ function majVolet(force){
   p.querySelectorAll("canvas[data-p]").forEach(c => portrait(c, +c.dataset.p));
   p.querySelectorAll("canvas[data-m]").forEach(c => { if (!c.dataset.m) return; const g = c.getContext("2d"), q = J.piece(c.dataset.m), k = Math.min(36 / q.width, 36 / q.height); g.imageSmoothingEnabled = false; g.drawImage(q, (36 - q.width * k) / 2, (36 - q.height * k) / 2, q.width * k, q.height * k); });
 }
-const MINI = {champ: "champ-mur", carriere: "rocher", ponton: null, bergerie: "grange", grenier: "grange", aire: "i-bois", tour: "tour", caserne: "caserne", forge: "forge"};
+const MINI = {champ: "champ-mur", carriere: "rocher", ponton: null, bergerie: "grange", grenier: "grange", aire: "i-bois", tour: "tour", caserne: "caserne", forge: "forge",
+  orge: "i-orge", port: "voilier", scierie: "scierie", fumoir: "fumoir", brasserie: "brasserie", taverne: "taverne"};   // la côte
 function miniature(c, _, b, r){
   const g = c.getContext("2d"); g.imageSmoothingEnabled = false; g.clearRect(0, 0, c.width, c.height);
   let n = r ? J.ICONE[r] : (b in MINI ? MINI[b] : (J.spriteDe(b, "a") || [])[0]);
@@ -253,9 +256,11 @@ const NOMS_COTE = ["Port-Clair", "Anse-aux-Mouettes", "Havre-du-Vent", "Roche-Bl
 const auHasard = () => NOMS_COTE[Math.floor(Math.random() * NOMS_COTE.length)];
 // la Loi de l'ère promulguée : ses points vont dans terres.lois
 function fin(){
-  const n = J.recompenser();
-  $("finPoints").innerHTML = n ? `Elle te rapporte <b>${pts(n)} de Loi</b>.` : "";
-  $("bFinLois").hidden = !n; $("fin").hidden = false;
+  const n = J.recompenser(), S = J.reel, P = R.reglages(S.mods, S.ere), suite = !!P.ERES[(S.ere || 1) + 1];
+  $("finTitre").textContent = (S.ere || 1) >= 2 ? "LES GUILDES" : "LA CHARTE";
+  $("finTexte").textContent = (S.ere || 1) >= 2 ? `La Loi des Guildes est promulguée : ${S.nom || "la colonie"} est devenue un vrai bourg, avec ses métiers et son port.` : "La Charte du Village est promulguée : la vallée est devenue un vrai village.";
+  $("finPoints").innerHTML = n ? `Elle te rapporte <b>${pts(n)} de Loi</b>${suite ? "" : ", gardés pour la prochaine colonie : l'ère 3 viendra plus tard"}.` : "";
+  $("finSuite").hidden = !suite; $("bFinLois").hidden = !n || !suite; $("fin").hidden = false;
 }
 $("bFinLois").onclick = () => { $("fin").hidden = true; ecranLois("choix"); };
 let loisMode = "lecture";

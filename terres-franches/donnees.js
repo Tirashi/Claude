@@ -145,6 +145,50 @@ const ORDONNANCES = {
   hospitalite:{nom: "HOSPITALITE",        type: "ordonnance", desc: "Les nouveaux venus coûtent moins cher à accueillir.", effet: {recrue: .1}, niveaux: 3, cout: {pain: 60, bois: 200}, croit: 2, statut: 2}
 };
 
+// l'ère 2, la côte (13/11) : ce qui change par-dessus l'ère 1 (fusionné par regles.js quand S.ere = 2) ; les tableaux sont remplacés
+//   en entier. Nouvelles chaînes : planches (scierie), poisson fumé (fumoir), orge et bière (champ d'orge, brasserie, taverne) ;
+//   le bourg (45 habitants) ; le port de pierre au bourg ; la Loi des Guildes. Nombres à régler avec le simulateur (étape 4 du plan).
+const ERE2 = {
+  RES: {
+    planches: {nom: "PLANCHES"},
+    fume:     {nom: "POISSON FUME", vivres: 2},
+    orge:     {nom: "ORGE"},
+    biere:    {nom: "BIERE"}
+  },
+  METIERS: {
+    pecheur:  {places: {base: 3, ponton: 2, port: 4}},
+    scieur:   {nom: "SCIEUR",   entree: {bois: 2}, sortie: "planches", debit: .12, places: {scierie: 2}},
+    fumeur:   {nom: "FUMEUR",   entree: {poisson: 1, bois: .2}, sortie: "fume", debit: .25, places: {fumoir: 1}},
+    paysan:   {nom: "PAYSAN",   produit: "orge", debit: .22, places: {orge: 2}, seuil: 6, use: .9},
+    brasseur: {nom: "BRASSEUR", entree: {orge: 2}, sortie: "biere", debit: .12, places: {brasserie: 1}}
+  },
+  BATIMENTS: {
+    caserne:  {niveaux: 3},
+    maison:   {logement: 5, desc: "Un toit pour 5 habitants de plus (les maisons de la côte sont plus grandes), dans la limite du statut."},
+    scierie:  {desc: "2 scieurs : le bois devient des planches, pour les bâtiments du bourg.", nom: "SCIERIE", cout: {bois: 120, pierre: 40}, croit: 1.6, travail: 50, terrain: "terre", statut: 1, pres: {foret: 4, logis: -1, fertile: -4, pre: -2}},
+    fumoir:   {desc: "1 fumeur : poisson et un peu de bois deviennent du poisson fumé, qui nourrit deux fois plus.", nom: "FUMOIR", cout: {bois: 80, pierre: 30}, croit: 1.6, travail: 45, terrain: "terre", statut: 1, pres: {eau: 5, logis: -1, fertile: -4, pre: -2}},
+    orge:     {desc: "2 places de paysan : de l'orge, sur la bonne terre.", nom: "CHAMP D'ORGE", cout: {bois: 40, baies: 20}, croit: 1.3, travail: 30, terrain: "terre", statut: 2, pres: {fertile: 6, orge: 2, brasserie: 2, feu: -1}},
+    brasserie:{desc: "1 brasseur : l'orge devient de la bière.", nom: "BRASSERIE", cout: {planches: 60, pierre: 80, bois: 60}, croit: 1.6, travail: 60, terrain: "terre", statut: 2, pres: {orge: 4, logis: 1, fertile: -4, pre: -2}},
+    taverne:  {desc: "On y sert la bière : à partir de 25 habitants, de la bière à la taverne donne du moral.", nom: "TAVERNE", cout: {planches: 100, pierre: 100, bois: 100}, croit: 2, travail: 70, terrain: "terre", statut: 2, niveaux: 1, pres: {feu: 5, logis: 2, fertile: -4, pre: -2}},
+    port:     {desc: "Le port de pierre : 4 pêcheurs de plus, en mer avec les barques.", nom: "PORT", cout: {planches: 300, pierre: 400}, croit: 2, travail: 120, terrain: "port", statut: 3, niveaux: 1, pres: {}}
+  },
+  STOCK: {
+    base: {planches: 150, fume: 80, orge: 100, biere: 60},
+    groupes: {nourriture: ["baies", "poisson", "ble", "farine", "pain", "fume", "orge", "biere"], materiaux: ["bois", "pierre", "laine", "vetements", "armes", "planches"]}
+  },
+  STATUTS: [
+    {nom: "CAMPEMENT", popMax: 5},
+    {nom: "HAMEAU",    popMax: 10, pop: 5,  cout: {bois: 800, baies: 150, poisson: 150}},
+    {nom: "VILLAGE",   popMax: 20, pop: 10, cout: {bois: 3000, pierre: 1200, pain: 400, planches: 150}},
+    {nom: "BOURG",     popMax: 45, pop: 20, cout: {bois: 5000, pierre: 3000, planches: 800, pain: 600, fume: 300}}
+  ],
+  LOI: {nom: "LOI DES GUILDES", pop: 45, cout: {planches: 2500, pierre: 3500, biere: 400, vetements: 200, fume: 600}},
+  BESOINS: {biere: {pop: 25, bonus: .1, conso: .002, lieu: "taverne"}},
+  RECRUTER: {croit: 1.075},   // 45 habitants : chaque recrue coûte un peu moins de plus qu'au village
+  RAIDS: {intervalle: [null, [1800, 2700], [1200, 1800], [1000, 1500]], force: {statut: [0, 1, 1.6, 2.3]}, mer: true},
+  CARTE: {terre: 23, port: 1}
+};
+
 // les Lois (prestige, maquette 8 validée le 11/11) : un arbre en 5 branches, acheté avec les points que rapporte chaque Loi d'ère
 //   (POINTS_LOI : la Charte du Village en donne 3) ; une Loi prise vaut pour toutes les colonies fondées ensuite (copiée dans S.lois).
 //   req = la Loi d'avant dans la branche. Effets (lus par R.eff, comme les ordonnances) : recolte, places, stock, garde, chantier, recrue,
@@ -164,7 +208,7 @@ const LOIS = {
   granges:    {branche: "RESERVES ET GARDE", nom: "GRANGES COMMUNES", desc: "+25 % de place dans les réserves.",             points: 1, effet: {stock: .25}},
   milice:     {branche: "RESERVES ET GARDE", nom: "MILICE",    desc: "Garde 25 % plus forte.",                               points: 2, req: "granges", effet: {garde: .25}}
 };
-const POINTS_LOI = [0, 3];   // par ère : la Charte du Village (ère 1) rapporte 3 points
+const POINTS_LOI = [0, 3, 4];   // par ère : la Charte du Village (ère 1) rapporte 3 points, la Loi des Guildes (ère 2) 4
 // les colonies : une par ère (l'ère 2, la côte, aura sa carte et son contenu aux étapes 2 et 3 du plan)
 const ERES = [null, {nom: "LA VALLEE", loi: "CHARTE DU VILLAGE"}, {nom: "LA COTE", loi: "LOI DES GUILDES"}];
 
@@ -174,7 +218,7 @@ const MARCHE = {vitesse: 1.7, route: 1.5};
 // hors ligne : la production continue, bien plus lentement, et plafonnée
 const HORS_LIGNE = {plafond: 4 * 3600, rendement: .25};   // décision du 08/11 : peu au début ; des Lois l'augmenteront
 
-const api = {LOIS, POINTS_LOI, ERES, RAIDS, ORDONNANCES, MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
+const api = {ERE2, LOIS, POINTS_LOI, ERES, RAIDS, ORDONNANCES, MARCHE, RES, METIERS, BATIMENTS, STOCK, HIVER, STATUTS, LOI, CARTE, RECRUTER, BESOINS, PIONNIER, HORS_LIGNE};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresDonnees = api;
 })();

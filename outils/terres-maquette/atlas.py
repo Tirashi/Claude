@@ -5,7 +5,7 @@ Sorties dans terres-franches/img/ :
  - villageois.png (une rangée de 256 px par villageois : marche 576 px, repos 128 px, puis hache, pioche, canne, houe) et ../villageois.js (VILLAGEOIS LPC) ;
  - les pièces d'interface ui-*.png (copiées de bastion/img) ;
  - animaux.png + window.TerresAnimauxAtlas dans ../atlas.js : animaux LPC d'OpenGameArt (chat, chien, biche, cerf, renard, oiseaux, poules, poissons).
-Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC> <dossier des animaux> [<pack Medieval Harbour>]
+Usage : python3 -I outils/terres-maquette/atlas.py <dossier SCKR> <dossier icônes> <dossier villageois LPC> <dossier des animaux> [<dossier des packs de la côte>]
 (mêmes dossiers que fabriquer-7.py ; villageois : sortie de lpc-villageois.py ... 24 11 6)."""
 import json, pathlib, re, shutil, sys
 from PIL import Image
@@ -35,10 +35,16 @@ GARDE = ["herbe", "terre", "eau", "pave", "champ-mur", "champ-pousse", "champ-nu
 def feuille(d, n): return next((SC / d).rglob(f"tile-B-0{n}.png"))
 F = {"V1": feuille("village", 1), "V2": feuille("village", 2), "V3": feuille("village", 3), "F4": feuille("farm", 4), "B4": feuille("buildings", 4), "FO": feuille("foret", 1), "B2": feuille("buildings", 2),
   "F3": feuille("farm", 3), "F5": feuille("farm", 5), "V5": feuille("village", 5)}
-# la côte (ère 2, 12/11) : sable et mer du pack « Medieval Harbour » (5e dossier, facultatif : sinon on garde les morceaux déjà dans decor.png)
+# la côte (ère 2) : 5e dossier facultatif = le dossier des packs de la côte (harbour/, seaport/, taverne/ : Medieval Harbour, Medieval Seaport,
+# Medieval Tavern, de Cute SCKR) ; sinon on garde les morceaux déjà dans decor.png. Sable et mer (12/11) ; bâtiments, barques et icônes (13/11).
 if len(sys.argv) > 5:
-  HB = pathlib.Path(sys.argv[5]); F["H1"] = next(HB.rglob("tile-B-01.png")); F["H3"] = next(HB.rglob("tile-B-03.png"))
-  TOUTES.update({"sable": ("H1", 588, 8, 48, 48), "mer": ("H3", 192, 0, 192, 192)}); GARDE += ["sable", "mer"]
+  CO = pathlib.Path(sys.argv[5]); pk = lambda d, n: next((CO / d).rglob(f"tile-B-0{n}.png"))
+  F.update({"H1": pk("harbour", 1), "H3": pk("harbour", 3), "H4": pk("harbour", 4), "H5": pk("harbour", 5), "SP3": pk("seaport", 3), "SP5": pk("seaport", 5), "TV4": pk("taverne", 4)})
+  COTE = {"sable": ("H1", 588, 8, 48, 48), "mer": ("H3", 192, 0, 192, 192),
+    "fumoir": ("H5", 200, 575, 170, 130), "scierie": ("H5", 570, 380, 198, 190), "port": ("H5", 390, 0, 378, 190),
+    "barque": ("H4", 12, 55, 66, 30), "voilier": ("H4", 192, 576, 96, 96), "barque-pillards": ("H4", 192, 384, 96, 96), "taverne": ("SP3", 0, 0, 190, 190), "brasserie": ("SP3", 190, 0, 190, 190),
+    "i-biere": ("TV4", 580, 0, 42, 40), "i-planches": ("SP5", 676, 148, 46, 42)}
+  TOUTES.update(COTE); GARDE += list(COTE)
 images, cache = {}, {}
 for nom in GARDE:
   f, x, y, l, h, *eff = TOUTES[nom]
@@ -55,6 +61,17 @@ for nom, (f, rg, c) in ICONES.items():
   im = cache[f]; n = im.width / GRILLE.get(f, 7); ic = im.crop((round(c * n), round(rg * n), round(c * n + n), round(rg * n + n))); bb = ic.getbbox()
   ic = ic.crop(bb) if bb else ic; ic.thumbnail((48, 48), Image.LANCZOS); images[nom] = ic
 images["i-bois"].thumbnail((48, 48)); images["i-ble"].thumbnail((48, 48))
+def teinter(im, f):
+  im = im.copy(); px = im.load()
+  for y in range(im.height):
+    for x in range(im.width):
+      p = px[x, y]
+      if p[3]: px[x, y] = f(p)
+  return im
+if "i-biere" in images:   # la côte : poisson fumé = le poisson bruni ; orge = le blé plus pâle, tirant sur le vert
+  images["i-fume"] = teinter(images["i-poisson"], lambda p: (min(255, int(p[0] * .75 + 60)), int(p[1] * .55 + 20), int(p[2] * .35), p[3]))
+  images["i-orge"] = teinter(images["i-ble"], lambda p: (int(p[0] * .7 + 30), min(255, int(p[1] * .85 + 40)), int(p[2] * .5 + 40), p[3]))
+  for n in ("i-biere", "i-planches"): images[n].thumbnail((48, 48))
 for nom in ["feu", "rocher", "buisson", "chantier", "mouton-broute", "mouton-marche"]: images[nom] = Image.open(racine / "bastion/img" / (nom + ".png")).convert("RGBA")
 # rangement : étagères (les plus hautes d'abord), 2 px entre les morceaux
 L = 2048; ordre = sorted(images, key=lambda n: -images[n].height); x = y = hl = 0; pos = {}

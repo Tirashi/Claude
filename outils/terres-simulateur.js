@@ -148,6 +148,21 @@ for (const [ere, nb, maxi, stMax] of [[1, 14, 150, 2], [2, 23, 300, 3]]){
   const nr = [...ro.cases].length; verif(nr < maxi, nom + "routes : pas de détours (" + nr + " cases)");
 }
 
+/* ---------- l'ère 2 : la côte (contenu du 13/11 ; le réglage fin des durées est l'étape 4) ---------- */
+{
+  const P1 = R.reglages(), P2 = R.reglages(undefined, 2);
+  verif(!P1.BATIMENTS.scierie && !P1.RES.planches && P1.STATUTS.length === 3 && P1.LOI.nom === "CHARTE DU VILLAGE", "côte : l'ère 1 ne voit rien de la côte");
+  verif(["scierie", "fumoir", "orge", "brasserie", "taverne", "port"].every(b => P2.BATIMENTS[b]) && P2.STATUTS[3].nom === "BOURG" && P2.STATUTS[3].popMax === 45 && P2.LOI.nom === "LOI DES GUILDES", "côte : ses bâtiments, le bourg (45), la Loi des Guildes");
+  verif(!P2.LOI.cout.bois && P2.LOI.cout.planches, "côte : le coût de la Loi est le sien (pas celui de la Charte)");
+  const S = R.nouvelleColonie({}); S.graine = 12345; S.statut = 3; S.pop = 30; S.bat.taverne = 1; S.res.biere = 50;
+  verif(R.moral(S).det.some(d => d.k === "biere" && d.ok), "côte : de la bière à la taverne donne du moral à 25 habitants");
+  // une partie du robot sur la côte, sans Lois : elle va jusqu'à la Loi des Guildes
+  const G = R.nouvelleColonie({}); G.graine = 12345;
+  while (G.t < 12 * 3600 && !G.loi){ const tape = G.t < 900 ? 1 : 0; for (let i = 0; i < 5; i++){ if (tape) R.toucher(G, R.aToucher(G), tape); R.pas(G, 1); } R.robot(G); }
+  const j = G.jalons; console.log(`COTE      hameau ${mn(j.hameau)} | village ${mn(j.village)} | bourg ${mn(j.bourg)} | Guildes ${mn(j.loi)} (robot actif, sans Lois)`);
+  verif(j.bourg && j.loi && j.loi <= 9 * 3600, "côte : le robot atteint le bourg et la Loi des Guildes (en moins de 9 h)");
+}
+
 /* ---------- les parties du robot ---------- */
 function partie(profil){
   const S = R.creer(mods), fin = profil === "actif" ? 8 * 3600 : 72 * 3600; S.graine = 12345;   // le même hasard (pillards) à chaque partie

@@ -1,6 +1,6 @@
 # Terres franches — notes pour Claude
 Colonie incrémentale ; ère 1 (campement → village → Charte), puis Lois et nouvelle colonie. Cahier des charges : [`specs/terres-franches.md`](../specs/terres-franches.md).
-- `donnees.js` (`window.TerresDonnees`) : **tous les nombres** (ressources, métiers, bâtiments, affinités `pres`, statuts, Loi, pillards `RAIDS`).
+- `donnees.js` (`window.TerresDonnees`) : **tous les nombres** ; `ERE2` = ce que la côte change (fusionné par `R.reglages(mods, ere)`).
 - `carte.js` (`window.TerresCarte`, aussi sous Node) : `CARTES[1]` vallée, `[2]` côte (grilles en texte, case = 32 px) ; `LOTS`, `proposer`, `routes(S)`, `postes`. Règles : `CARTE.de(S)` ; écran : carte affichée, `utiliser(n)`.
 - `regles.js` (`window.TerresRegles`, aussi sous Node) : `creer`, `pas`, ordres (erreur ou null), `taux`, pillards, `horsLigne`, `robot` ; prestige : `prendreLoi`, `recompense`, `nouvelleColonie` (`S.ere`, `S.lois`).
 - `jeu.js` (`window.Terres`) : dessin, villageois (`AG`), caméra, toucher, sauvegardes `terres.partie`, `terres.lois`, `terres.vallee` ; `fonder`, `visiter` (`REEL` = partie en cours). `ecran.js` : interface. `vie.js` : saisons, météo, bêtes.

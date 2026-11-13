@@ -15,25 +15,26 @@ const VERSION = 1;
 const copie = o => JSON.parse(JSON.stringify(o));
 function fusion(a, b){
   for (const k in b){
-    if (b[k] && typeof b[k] === "object" && !Array.isArray(b[k]) && a[k] && typeof a[k] === "object") fusion(a[k], b[k]);
+    if (k !== "cout" && b[k] && typeof b[k] === "object" && !Array.isArray(b[k]) && a[k] && typeof a[k] === "object") fusion(a[k], b[k]);   // un coût se remplace en entier
     else a[k] = copie(b[k]);
   }
   return a;
 }
 const cache = new Map();
-function reglages(mods){
-  const cle = JSON.stringify(mods || {});
-  if (!cache.has(cle)) cache.set(cle, fusion(copie(DON), mods || {}));
+// les données d'une partie : celles de l'ère 1, puis ce que change son ère (ERE2 pour la côte), puis les réglages du simulateur
+function reglages(mods, ere){
+  const cle = (ere || 1) + JSON.stringify(mods || {});
+  if (!cache.has(cle)){ const P = copie(DON); if ((ere || 1) >= 2) fusion(P, DON.ERE2); cache.set(cle, fusion(P, mods || {})); }
   return cache.get(cle);
 }
-const D = S => reglages(S.mods);
+const D = S => reglages(S.mods, S.ere);
 
 /* ---------- une partie ---------- */
-function creer(mods){
-  const P = reglages(mods), S = {v: VERSION, mods: mods || {}, t: 0, res: {}, bat: {}, chantiers: [], pop: 0, jobs: {},
+function creer(mods, ere){
+  const P = reglages(mods, ere), S = {v: VERSION, mods: mods || {}, t: 0, res: {}, bat: {}, chantiers: [], pop: 0, jobs: {},
     statut: 0, recrutes: 0, loi: false, ord: {}, touchers: 0, evts: [], jalons: {}, lots: {}, ordreLots: [],
     graine: Math.floor(Math.random() * 1e9), raid: {n: 0, proch: null, phase: null}, raids: [], blesses: [],
-    ere: 1, nom: "", lois: [], recompense: false};
+    ere: ere || 1, nom: "", lois: [], recompense: false};
   for (const r in P.RES) S.res[r] = 0;
   for (const b in P.BATIMENTS) S.bat[b] = 0;
   for (const m in P.METIERS) S.jobs[m] = 0;
@@ -138,6 +139,7 @@ function moral(S){
   }
   if (S.pop >= B.vetements.pop){ const ok = S.res.vetements >= .5; if (ok) m += B.vetements.bonus; det.push({k: "vetements", ok}); }
   if (S.pop >= B.pain.pop){ const ok = S.res.pain >= 1; if (ok) m += B.pain.bonus; det.push({k: "pain", ok}); }
+  if (B.biere && S.pop >= B.biere.pop){ const ok = S.res.biere >= .5 && (S.bat[B.biere.lieu] || 0) > 0; if (ok) m += B.biere.bonus; det.push({k: "biere", ok}); }   // la côte : la bière, servie à la taverne
   if (hiver(S) && S.pop){ const ok = S.res.bois >= 1; if (!ok) m += P.HIVER.froid; det.push({k: "chauffage", ok}); }
   if (eff(S, "moral")){ m += eff(S, "moral"); det.push({k: "fetes", ok: true}); }
   const famine = S.pop > 0 && vivres(S) < 1e-6;
@@ -233,6 +235,7 @@ function taux(S, jobs){
   if (hiver(S)) t.bois -= S.pop * chauffage(S);
   t.vivres = Object.keys(P.RES).reduce((a, r) => a + (P.RES[r].vivres ? t[r] * P.RES[r].vivres : 0), 0) - v;
   if (S.pop >= P.BESOINS.vetements.pop) t.vetements -= S.pop * P.BESOINS.vetements.conso;
+  const Bi = P.BESOINS.biere; if (Bi && S.pop >= Bi.pop && S.bat[Bi.lieu]) t.biere -= S.pop * Bi.conso;
   return t;
 }
 
@@ -268,6 +271,7 @@ function pas1(S, dt, rend){
     payerVivres(S, Math.min(besoin, vivres(S)));
     if (H) S.res.bois = Math.max(0, S.res.bois - S.pop * chauffage(S) * dt * rend);   // on se chauffe
     if (S.pop >= P.BESOINS.vetements.pop) S.res.vetements = Math.max(0, S.res.vetements - S.pop * P.BESOINS.vetements.conso * dt * rend);
+    const Bi = P.BESOINS.biere; if (Bi && S.pop >= Bi.pop && S.bat[Bi.lieu]) S.res.biere = Math.max(0, S.res.biere - S.pop * Bi.conso * dt * rend);   // on boit à la taverne
   }
   for (const r in S.res) if (S.res[r] < 1e-9) S.res[r] = 0;
   borner(S);   // ce qui dépasse la place est perdu
@@ -378,7 +382,7 @@ const sauver = S => JSON.stringify(S);
 function charger(txt){
   let S; try { S = JSON.parse(txt); } catch (e){ return null; }
   if (!S || typeof S !== "object" || !S.res || !S.jobs) return null;
-  const neuf = creer(S.mods);
+  const neuf = creer(S.mods, S.ere);
   for (const k in neuf) if (S[k] === undefined) S[k] = neuf[k];
   for (const r in neuf.res) if (typeof S.res[r] !== "number") S.res[r] = 0;
   for (const b in neuf.bat) if (typeof S.bat[b] !== "number") S.bat[b] = 0;
@@ -414,7 +418,7 @@ function recompense(S, L){
 // fonder la colonie suivante : nouvelle partie de l'ère suivante, avec les Lois prises, le premier villageois (et ceux des Lois),
 // la cabane offerte ; o = {nom, lois, ere, mods}
 function nouvelleColonie(o){
-  const S = creer(o.mods); S.ere = o.ere || 2; S.nom = o.nom || ""; S.lois = (o.lois || []).slice();
+  const S = creer(o.mods, o.ere || 2); S.nom = o.nom || ""; S.lois = (o.lois || []).slice();
   if (eff(S, "cabaneOfferte")){ const lot = CARTE.de(S).proposer(S, "cabane"); if (lot){ S.lots[lot] = "cabane"; S.ordreLots.push(lot); S.bat.cabane = 1; } }
   S.pop = 1 + eff(S, "villageois");
   return S;
@@ -422,13 +426,20 @@ function nouvelleColonie(o){
 
 /* ---------- le robot (simulateur) ---------- */
 // plan de construction : le robot pose dans cet ordre ce qui est permis, quand il en a les moyens
-const PLAN = ["cabane", "cabane", "champ", "carriere", "cabane", "moulin", "four", "cabane", "tour", "caserne", "ponton", "cabane",
-  "maison", "bergerie", "atelier", "maison", "forge", "maison", "champ", "carriere", "caserne", "ponton", "maison", "maison", "maison"];
+const PLANS = {
+  1: ["cabane", "cabane", "champ", "carriere", "cabane", "moulin", "four", "cabane", "tour", "caserne", "ponton", "cabane",
+    "maison", "bergerie", "atelier", "maison", "forge", "maison", "champ", "carriere", "caserne", "ponton", "maison", "maison", "maison"],
+  // la côte : les mêmes débuts, puis planches et poisson fumé dès le hameau, la bière au village, le port au bourg
+  2: ["cabane", "cabane", "champ", "carriere", "cabane", "scierie", "fumoir", "moulin", "four", "cabane", "tour", "caserne", "ponton", "cabane",
+    "maison", "bergerie", "atelier", "maison", "orge", "brasserie", "taverne", "forge", "maison", "carriere", "caserne", "ponton",
+    "maison", "maison", "maison", "maison", "port", "maison", "maison", "maison", "maison", "maison"]
+};
+const planDe = S => PLANS[Math.min(2, S.ere || 1)];
 function prochainBat(S){
   const P = D(S), vus = {};
   const st = P.STATUTS[S.statut + 1], vise = Object.assign({}, st ? st.cout : P.LOI.cout);
   for (const r in vise){ if (vise[r] <= capacite(S, r) * .98) continue; const g = gardien(S, r); if (g && !peutConstruireSansCout(S, g)) return g; }
-  for (const b of PLAN){
+  for (const b of planDe(S)){
     vus[b] = (vus[b] || 0) + 1;
     if (S.bat[b] + enChantier(S, b) >= vus[b]) continue;
     if (P.BATIMENTS[b].statut > S.statut) continue;
@@ -462,13 +473,21 @@ function repartir(S){
   const P = D(S), J = {}; for (const m in P.METIERS) J[m] = 0;
   let reste = S.pop;
   const mettre = (m, n) => { const k = Math.max(0, Math.min(n, reste, places(S, m) - J[m])); J[m] += k; reste -= k; return k; };
+  // une chaîne s'arrête quand son produit est en réserve en assez grande quantité (et que l'objectif n'en demande pas plus)
+  //   (sur la côte seulement : l'ère 1 garde le robot réglé le 11/11) ; sur la côte, d'abord du bois et de la pierre
+  const cote = (S.ere || 1) >= 2, mq0 = manque(S, objectif(S)), assez = r => cote && !mq0[r] && S.res[r] >= capacite(S, r) * .6;
+  if (cote && S.pop >= 6){ if (S.res.bois < 300 || mq0.bois) mettre("bucheron", 2 + Math.floor(S.pop / 10)); if (S.bat.carriere && (S.res.pierre < 150 || mq0.pierre)) mettre("carrier", 1 + Math.floor(S.pop / 15)); }
   // pain : fermiers pour nourrir le moulin, meunier, boulanger
-  if (S.bat.moulin && S.bat.four && S.pop >= 6){ mettre("fermier", 3); mettre("meunier", 1); mettre("boulanger", 1); }
+  if (S.bat.moulin && S.bat.four && S.pop >= 6 && !assez("pain")){ mettre("fermier", 3); mettre("meunier", 1); mettre("boulanger", 1); }
   // la garde (2 au hameau, 4 au village) et le forgeron tant qu'il manque des armes
-  if (S.bat.caserne) mettre("garde", S.statut >= 2 ? 4 : 2);
+  if (S.bat.caserne) mettre("garde", Math.min(S.statut >= 3 ? 6 : S.statut >= 2 ? 4 : 2, Math.max(2, Math.floor(S.pop / 4))));
   if (S.bat.forge && S.res.armes < J.garde) mettre("forgeron", 1);
   // vêtements quand le besoin compte bientôt
-  if (S.bat.atelier && S.pop >= P.BESOINS.vetements.pop - 2){ mettre("berger", 2); mettre("tisserand", 1); }
+  if (S.bat.atelier && S.pop >= P.BESOINS.vetements.pop - 2 && !assez("vetements")){ mettre("berger", 2); mettre("tisserand", 1); }
+  // la côte : de la bière quand le besoin compte bientôt, du poisson fumé et des planches tant qu'il en faut
+  if (P.METIERS.brasseur && S.bat.brasserie && S.pop >= P.BESOINS.biere.pop - 3 && !assez("biere")){ mettre("paysan", 2); mettre("brasseur", 1); }
+  if (P.METIERS.fumeur && S.bat.fumoir && (mq0.fume || S.pop >= 16) && !assez("fume")){ mettre("pecheur", 2); mettre("fumeur", 1); }
+  if (P.METIERS.scieur && S.bat.scierie && mq0.planches){ mettre("scieur", Math.min(2 * S.bat.scierie, 1 + Math.floor(S.pop / 12))); }
   // de quoi manger, avec une marge
   const nourr = ["pecheur", "cueilleur"];
   let garde = 0;
@@ -522,7 +541,7 @@ function aToucher(S){
 const api = {VERSION, eff, coutOrd, peutAcheter, acheter, plafondStatut, chauffage, faimHiver, reglages, creer, pas, taux, moral, places, logement, popMax, libres, parcellesLibres, vivres, capacite, gardien, plein, saison, hiver,
   lois, peutPrendreLoi, prendreLoi, recompense, nouvelleColonie, horsLigneRegle,
   coutBat, coutRecrue, peutPayer, toucher, recruter, affecter, peutConstruire, construire, deplacer, peutMonter, monterStatut,
-  peutPromulguer, promulguer, horsLigne, abri, defense, forceBande, gardesValides, gardesArmes, blesses, annonce, abrites, sauver, charger, robot, aToucher, objectif, PLAN};
+  peutPromulguer, promulguer, horsLigne, abri, defense, forceBande, gardesValides, gardesArmes, blesses, annonce, abrites, sauver, charger, robot, aToucher, objectif, PLAN: PLANS[1], PLANS};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.TerresRegles = api;
 })();

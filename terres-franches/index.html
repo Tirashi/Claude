@@ -63,6 +63,7 @@
       <p><b>Hiver</b> : une saison sur quatre, chacun brûle du bois et mange un peu plus. Sans bois, le moral baisse, mais personne ne meurt. Fais des réserves à l'automne.</p>
       <p><b>Pillards</b> : à partir du hameau, une bande vient de temps en temps voler les réserves. Les villageois courent s'abriter. Agrandir le grenier et l'aire met une part du stock à l'abri ; la <b>tour de guet</b> donne l'alerte plus tôt ; la <b>caserne</b> loge la garde, qui se bat toute seule (un garde blessé se soigne quelques minutes) ; au village, la <b>forge</b> fait des armes. Les bandes viennent aussi pendant ton absence.</p>
       <p><b>Les Lois</b> : au village complet, la Charte du Village rapporte des points de Loi. On les dépense dans l'arbre des Lois (récoltes, absence, bâtisseurs, accueil, réserves et garde), puis on fonde une nouvelle colonie sur la côte, qui repart du campement avec le premier villageois et profite des Lois. L'ancienne colonie reste telle quelle, à revoir dans MES TERRES.</p>
+      <p><b>La côte</b> (2e colonie) : une terre plus grande au bord de la mer, jusqu'au <b>bourg</b> (45 habitants). La <b>scierie</b> fait des planches, le <b>fumoir</b> du poisson fumé (qui nourrit deux fois plus), le <b>champ d'orge</b> et la <b>brasserie</b> de la bière, servie à la <b>taverne</b> (du moral à partir de 25 habitants). Au bourg, le <b>port de pierre</b> envoie 4 pêcheurs de plus en mer. Les pillards arrivent en bateau. Au bourg complet, promulgue la Loi des Guildes.</p>
       <p><b>Absence</b> : la colonie continue sans toi, mais bien plus lentement (le quart, 4 h au plus).</p>
     </div>
     <button type="button" id="bNouvelle" class="bouton">NOUVELLE PARTIE</button>
@@ -79,10 +80,10 @@
 </div>
 <div id="fin" class="ecran" hidden>
   <div class="plaque parchemin">
-    <h1 class="ruban rouge">LA CHARTE</h1>
-    <p>La Charte du Village est promulguée : la vallée est devenue un vrai village.</p>
+    <h1 class="ruban rouge" id="finTitre">LA CHARTE</h1>
+    <p id="finTexte">La Charte du Village est promulguée : la vallée est devenue un vrai village.</p>
     <p id="finPoints"></p>
-    <p>Choisis tes Lois, puis fonde une nouvelle colonie : elles vaudront pour elle et pour toutes les suivantes. La vallée restera telle quelle : tu pourras la revoir (MENU, MES TERRES).</p>
+    <p id="finSuite">Choisis tes Lois, puis fonde une nouvelle colonie : elles vaudront pour elle et pour toutes les suivantes. La vallée restera telle quelle : tu pourras la revoir (MENU, MES TERRES).</p>
     <button type="button" id="bFinLois" class="bouton or">CHOISIR LES LOIS</button>
     <button type="button" id="bFin" class="bouton">CONTEMPLER LE VILLAGE</button>
   </div>
