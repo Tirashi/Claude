@@ -1,9 +1,13 @@
-/* Politique : simulateur en lot (M4, specs/politique/plan-simulateur.md).
-   node outils/politique-simulateur.js [--parties 200] [--bot nom|tous] [--tours 60] [--graine 1] [--json fichier] [--controle]
-   Joue des parties complètes avec les bots de politique-bots.js (graine de la partie n = graine + n),
-   relève des métriques par partie et affiche un résumé par bot (médianes) ; --json écrit tout le détail.
-   --controle (lancé par verifications.js) : quelques parties par bot, vérifie qu'aucun bot ne joue d'action refusée,
-   que la même graine redonne la même partie (aussi après sauvegarde JSON) ; code de sortie 1 sinon. */
+/* Politique : simulateur en lot (M4, M5 ; specs/politique/plan-simulateur.md).
+   node outils/politique-simulateur.js [--parties 200] [--bot nom,nom|tous] [--tours 60] [--graine 1] [--json fichier]
+        [--regle chemin=valeur]... [--balayage chemin=v1,v2,v3] [--controle]
+   Joue des parties complètes avec les bots de politique-bots.js (graine de la partie n = graine + n : tous les bots
+   jouent les mêmes graines), relève des métriques par partie, affiche un résumé par bot et la stratégie dominante.
+   --regle : change une valeur des données pour ce lancement (chemin = fichier de donnees/ puis clés, ex.
+             guerre.defaite.colere=5, champs.nations.val_roc.tresor=200, factions.REGLES_FACTIONS.apaisement.cout=20).
+   --balayage : rejoue tout pour chaque valeur d'un chemin et affiche un tableau comparatif (rien n'est écrit sur disque).
+   --json : tout le détail. --controle (lancé par verifications.js) : chaque bot joue sans action refusée, même graine =
+   même partie (aussi après sauvegarde JSON), réglages remis en place après un balayage ; code de sortie 1 sinon. */
 'use strict';
 const fs = require('fs'), path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
@@ -12,21 +16,48 @@ const CHAMPS = P('donnees/champs.js'), { LOIS } = P('donnees/lois.js');
 const Bots = require('./politique-bots.js');
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : d; };
+const args = k => process.argv.map((a, i) => a === '--' + k ? process.argv[i + 1] : null).filter(Boolean);
 const med = xs => { const t = xs.filter(x => x != null).sort((a, b) => a - b); return t.length ? t[Math.floor(t.length / 2)] : null; };
 const pct = (k, n) => Math.round(100 * k / n) + ' %';
 const r0 = x => x == null ? '-' : Math.round(x);
 
-// une partie : métriques relevées tour par tour
+// --- réglages : les modules de données sont partagés avec le moteur (même cache de require) ---
+const RACINES = { economie: 'economie', lois: 'lois', batiments: 'batiments', factions: 'factions', diplomatie: 'diplomatie', guerre: 'guerre', champs: 'champs' };
+function cible(chemin){
+  const morceaux = chemin.split('.'), racine = RACINES[morceaux[0]];
+  if (!racine) throw new Error(`réglage inconnu : ${chemin} (racines : ${Object.keys(RACINES).join(', ')})`);
+  let o = P(`donnees/${racine}.js`);
+  for (const k of morceaux.slice(1, -1)) { if (o[k] == null) throw new Error('réglage inconnu : ' + chemin); o = o[k]; }
+  const cle = morceaux[morceaux.length - 1];
+  if (!(cle in o)) throw new Error('réglage inconnu : ' + chemin);
+  return { o, cle };
+}
+const lire = chemin => { const c = cible(chemin); return c.o[c.cle]; };
+const valeur = v => v === 'true' ? true : v === 'false' ? false : isNaN(Number(v)) ? v : Number(v);
+// applique des réglages { chemin: valeur } et renvoie de quoi les annuler
+function regler(reglages){
+  const avant = {};
+  for (const ch in reglages) { const c = cible(ch); avant[ch] = c.o[c.cle]; c.o[c.cle] = reglages[ch]; }
+  return () => { for (const ch in avant) { const c = cible(ch); c.o[c.cle] = avant[ch]; } };
+}
+
+// décisions politiques (lois, traités, contrats, guerre ; pas les bâtiments, toujours possibles dès qu'on a 60 or) :
+// tour sans vraie décision s'il y en a au plus une (ASSUMPTION (M5))
+const FOND = ['loi', 'contrat', 'traite', 'bataille', 'imposer_paix', 'paix_blanche'];
+const decisions = e => new Set(Tour.actionsDisponibles(e).filter(a => FOND.includes(a.type)).map(a => a.type === 'imposer_paix' ? 'imposer_paix' : a.type + ':' + (a.id || '') + ':' + (a.avec || ''))).size;
+
+// --- une partie : métriques relevées tour par tour ---
 function partie(nom, graine, tours, coupe){
   let e = Etat.creerEtat(CHAMPS, graine);
-  if (tours) e.tourMax = tours;
+  if (tours != null) { if (!Number.isInteger(tours) || tours < 1) throw new Error('nombre de tours invalide : ' + tours); e.tourMax = tours; }
   const bot = Bots.creer(nom, graine);
   const m = { graine, issue: null, duree: 0, tresor: {}, cp: {}, reputation: {}, toursGuerre: 0, guerres: 0, declareesParNous: 0,
-              batailles: { gagnees: 0, perdues: 0 }, tours55: 0, tours75: 0, greves: 0, apaisements: 0,
-              loisAdoptees: [], catalogueComplet: null, colereMax: 0 };
+              issuesGuerres: { gagnees: 0, perdues: 0, blanches: 0 }, batailles: { gagnees: 0, perdues: 0 },
+              tours55: 0, tours75: 0, greves: 0, apaisements: 0, sansDecision: 0, loisAdoptees: [], catalogueComplet: null, colereMax: 0 };
   const adoptees = new Set(), traces = [];
   while (!e.fin){
     if (coupe && e.tour === coupe) e = JSON.parse(JSON.stringify(e));
+    if (decisions(e) <= 1) m.sansDecision++;
     const acts = bot(e);
     m.apaisements += acts.filter(a => a.type === 'apaiser').length;
     m.declareesParNous += acts.filter(a => a.type === 'declarer_guerre').length;
@@ -37,6 +68,9 @@ function partie(nom, graine, tours, coupe){
     if (!avant && e.guerre) m.guerres++;
     for (const l of e.journal){
       if (/^Bataille/.test(l)) l.includes('victoire') ? m.batailles.gagnees++ : m.batailles.perdues++;
+      if (l === "Paix : l'ennemi capitule.") m.issuesGuerres.gagnees++;
+      if (l === 'Paix : nous capitulons.') m.issuesGuerres.perdues++;
+      if (l === 'Paix blanche.') m.issuesGuerres.blanches++;
       const a = /^Loi adoptée : (.+?)(?: \(|\.)/.exec(l);
       if (a) { const id = Object.keys(LOIS).find(k => LOIS[k].nom === a[1]); if (id) adoptees.add(id); }
     }
@@ -49,25 +83,48 @@ function partie(nom, graine, tours, coupe){
     if ([20, 30, 40, 60].includes(t)) { m.tresor[t] = e.tresor; m.cp[t] = e.cp; m.reputation[t] = e.reputation; }
     if (coupe != null) traces.push(JSON.stringify(e));
   }
-  m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = e.reputation;
+  m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = e.reputation; m.tresorFin = e.tresor;
   return coupe != null ? { m, traces } : m;
 }
 
 function resume(nom, ms){
-  const n = ms.length, fins = {};
-  for (const m of ms) fins[m.issue] = (fins[m.issue] || 0) + 1;
+  const n = ms.length, fins = {}, jamais = new Set(Object.keys(LOIS));
+  for (const m of ms) { fins[m.issue] = (fins[m.issue] || 0) + 1; m.loisAdoptees.forEach(l => jamais.delete(l)); }
   const vivantes = t => ms.filter(m => m.tresor[t] != null);
+  const somme = f => ms.reduce((s, m) => s + f(m), 0);
   return {
-    bot: nom, parties: n, fins, dureeMediane: med(ms.map(m => m.duree)),
+    bot: nom, parties: n, fins, revolution: (fins.revolution || 0) / n, dureeMediane: med(ms.map(m => m.duree)),
     tresor: Object.fromEntries([20, 30, 40, 60].map(t => [t, med(vivantes(t).map(m => m.tresor[t]))])),
     cp: Object.fromEntries([20, 40, 60].map(t => [t, med(vivantes(t).map(m => m.cp[t]))])),
     reputation30: med(vivantes(30).map(m => m.reputation[30])), reputationFin: med(ms.map(m => m.reputationFin)),
     avecGuerre: ms.filter(m => m.guerres > 0).length, toursGuerre: med(ms.map(m => m.toursGuerre)),
-    batailles: { gagnees: ms.reduce((s, m) => s + m.batailles.gagnees, 0) / n, perdues: ms.reduce((s, m) => s + m.batailles.perdues, 0) / n },
+    guerres: { gagnees: somme(m => m.issuesGuerres.gagnees) / n, perdues: somme(m => m.issuesGuerres.perdues) / n, blanches: somme(m => m.issuesGuerres.blanches) / n },
+    batailles: { gagnees: somme(m => m.batailles.gagnees) / n, perdues: somme(m => m.batailles.perdues) / n },
     tours55: med(ms.map(m => m.tours55)), tours75: med(ms.map(m => m.tours75)), avecGreve: ms.filter(m => m.greves > 0).length,
-    apaisements: med(ms.map(m => m.apaisements)), lois: med(ms.map(m => m.loisAdoptees.length)),
-    catalogueComplet: ms.filter(m => m.catalogueComplet != null).length, colereMax: med(ms.map(m => m.colereMax))
+    apaisements: med(ms.map(m => m.apaisements)), lois: med(ms.map(m => m.loisAdoptees.length)), jamaisAdoptees: [...jamais],
+    catalogueComplet: ms.filter(m => m.catalogueComplet != null).length, colereMax: med(ms.map(m => m.colereMax)),
+    sansDecision: med(ms.map(m => m.sansDecision / m.duree))
   };
+}
+
+// stratégie dominante (ASSUMPTION (M5)) : sur une même graine, A bat B s'il finit la partie et pas B, ou si les deux
+// finissent pareil et que A a plus d'or à la fin (révolution : celui qui tient le plus longtemps) ;
+// dominante = bat chaque autre bot sur plus de SEUIL des graines
+const SEUIL_DOMINANCE = 0.75;
+const valeurPartie = m => m.issue === 'fin' ? [1, m.tresorFin] : [0, m.duree];
+const bat = (a, b) => { const x = valeurPartie(a), y = valeurPartie(b); return x[0] !== y[0] ? x[0] > y[0] : x[1] > y[1]; };
+function dominance(parBot){
+  const noms = Object.keys(parBot), tableau = {};
+  for (const a of noms) {
+    tableau[a] = {};
+    for (const b of noms) if (a !== b) {
+      const n = Math.min(parBot[a].length, parBot[b].length);
+      let k = 0; for (let i = 0; i < n; i++) if (bat(parBot[a][i], parBot[b][i])) k++;
+      tableau[a][b] = k / n;
+    }
+  }
+  const dominants = noms.filter(a => noms.length > 1 && Object.values(tableau[a]).every(x => x > SEUIL_DOMINANCE));
+  return { tableau, dominants };
 }
 
 function afficher(r){
@@ -76,9 +133,27 @@ function afficher(r){
   console.log(`  fins : ${Object.entries(r.fins).map(([k, v]) => `${k} ${pct(v, n)}`).join(', ')} ; durée médiane ${r.dureeMediane} tours`);
   console.log(`  trésor médian : t20 ${r0(r.tresor[20])}, t30 ${r0(r.tresor[30])}, t40 ${r0(r.tresor[40])}, t60 ${r0(r.tresor[60])} ; capital politique t20 ${r0(r.cp[20])}, t40 ${r0(r.cp[40])}, t60 ${r0(r.cp[60])}`);
   console.log(`  réputation médiane : t30 ${r0(r.reputation30)}, fin ${r0(r.reputationFin)}`);
-  console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; batailles par partie : ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
+  console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; par partie : guerres gagnées ${r.guerres.gagnees.toFixed(2)}, perdues ${r.guerres.perdues.toFixed(2)}, paix blanches ${r.guerres.blanches.toFixed(2)} ; batailles ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
   console.log(`  factions : colère max ${r0(r.colereMax)}, tours ≥ 55 : ${r0(r.tours55)}, ≥ 75 : ${r0(r.tours75)} (médianes) ; grève dans ${pct(r.avecGreve, n)} des parties ; ${r0(r.apaisements)} apaisements`);
-  console.log(`  lois adoptées : ${r0(r.lois)} sur ${Object.keys(LOIS).length} (médiane) ; catalogue complet dans ${pct(r.catalogueComplet, n)} des parties`);
+  console.log(`  lois adoptées : ${r0(r.lois)} sur ${Object.keys(LOIS).length} (médiane) ; jamais adoptées : ${r.jamaisAdoptees.length ? r.jamaisAdoptees.join(', ') : 'aucune'} ; catalogue complet dans ${pct(r.catalogueComplet, n)} des parties`);
+  console.log(`  tours sans vraie décision politique (≤ 1 loi, traité, contrat ou action de guerre possible) : ${pct(Math.round(100 * r.sansDecision), 100)} (médiane)`);
+}
+function afficherDominance(d){
+  const noms = Object.keys(d.tableau);
+  console.log('\n== Confrontations (part des graines où la ligne bat la colonne)');
+  console.log('  ' + ''.padEnd(15) + noms.map(b => b.slice(0, 8).padStart(9)).join(''));
+  for (const a of noms) console.log('  ' + a.padEnd(15) + noms.map(b => (a === b ? '—' : Math.round(100 * d.tableau[a][b]) + '%').padStart(9)).join(''));
+  console.log(`  stratégie dominante (bat chaque autre bot sur plus de ${100 * SEUIL_DOMINANCE} % des graines) : ${d.dominants.length ? d.dominants.join(', ') : 'aucune'}`);
+}
+
+// joue N parties par bot avec des réglages ; renvoie { resumes, parties }
+function lot(noms, N, G, T, reglages){
+  const annuler = regler(reglages || {});
+  try {
+    const parties = {}, resumes = {};
+    for (const nom of noms) { parties[nom] = []; for (let i = 0; i < N; i++) parties[nom].push(partie(nom, G + i, T)); resumes[nom] = resume(nom, parties[nom]); }
+    return { resumes, parties };
+  } finally { annuler(); }
 }
 
 function controle(){
@@ -92,6 +167,14 @@ function controle(){
   }
   const rep = partie('replica', 1);
   check(rep.loisAdoptees.length >= 3, `replica : rejoue la trajectoire de la partie 1 (${rep.loisAdoptees.length} lois adoptées, fin ${rep.issue} au tour ${rep.duree})`);
+  const avant = lire('guerre.defaite.colere'), sans = lot(['economy'], 2, 5).resumes.economy;
+  const change = lot(['economy'], 2, 5, null, { 'guerre.defaite.colere': 40 }).resumes.economy;
+  check(lire('guerre.defaite.colere') === avant && JSON.stringify(lot(['economy'], 2, 5).resumes.economy) === JSON.stringify(sans), 'réglages : remis en place après un lot (même résultat avant et après)');
+  check(JSON.stringify(change) !== JSON.stringify(sans), 'réglages : un réglage change bien les parties');
+  let refuse = false; try { regler({ 'guerre.inexistant': 1 }); } catch (err) { refuse = true; }
+  check(refuse, 'réglages : un chemin inconnu est refusé');
+  const d = dominance({ a: [{ issue: 'fin', tresorFin: 10 }, { issue: 'fin', tresorFin: 10 }], b: [{ issue: 'revolution', duree: 50 }, { issue: 'fin', tresorFin: 5 }] });
+  check(d.tableau.a.b === 1 && d.tableau.b.a === 0 && d.dominants.join() === 'a', 'stratégie dominante : finir la partie, puis l\'or, départagent deux bots sur la même graine');
   process.exit(fail ? 1 : 0);
 }
 
@@ -99,17 +182,37 @@ if (require.main === module){
   if (process.argv.includes('--controle')) controle();
   const N = Number(arg('parties', 200)), G = Number(arg('graine', 1)), T = arg('tours') ? Number(arg('tours')) : null;
   const choix = arg('bot', 'tous'), noms = choix === 'tous' ? Bots.noms : choix.split(',');
-  const sortie = { parametres: { parties: N, graine: G, tours: T || CHAMPS.tours, bots: noms }, bots: {} };
-  for (const nom of noms){
-    const ms = [];
-    for (let i = 0; i < N; i++) ms.push(partie(nom, G + i, T));
-    const r = resume(nom, ms);
-    afficher(r);
-    if (nom === 'replica') console.log(`  non-régression (partie 1 au tour 30 : 3214 or, réputation +42) : ${r0(r.tresor[30])} or, ${r0(r.reputation30)} (médianes des parties encore en cours au tour 30)`);
-    sortie.bots[nom] = { resume: r, parties: ms };
+  const reglages = {};
+  for (const r of args('regle')) { const [ch, v] = r.split('='); reglages[ch] = valeur(v); }
+  const balayage = arg('balayage');
+  if (balayage){
+    const [ch, vs] = balayage.split('='), valeurs = vs.split(',').map(valeur);
+    console.log(`Balayage de ${ch} (valeur actuelle : ${JSON.stringify(lire(ch))}) ; ${N} parties par bot et par valeur, graines ${G} à ${G + N - 1}`);
+    const lignes = [];
+    for (const v of valeurs){
+      const { resumes, parties } = lot(noms, N, G, T, Object.assign({}, reglages, { [ch]: v }));
+      const dom = dominance(parties).dominants;
+      for (const nom of noms){
+        const r = resumes[nom];
+        lignes.push([JSON.stringify(v), nom, pct(r.fins.revolution || 0, r.parties), r0(r.dureeMediane), r0(r.tresor[30]), r0(r.tresor[60]), r0(r.toursGuerre), r.batailles.perdues.toFixed(1), r0(r.apaisements), r0(r.tours75), pct(r.avecGreve, r.parties), dom.includes(nom) ? 'oui' : '']);
+      }
+    }
+    const tete = ['valeur', 'bot', 'révol.', 'durée', 'or t30', 'or t60', 'guerre', 'bat. P', 'apais.', 't≥75', 'grève', 'domine'];
+    const largeurs = tete.map((h, i) => Math.max(h.length, ...lignes.map(l => String(l[i]).length)));
+    console.log('\n' + tete.map((h, i) => h.padEnd(largeurs[i])).join(' | '));
+    console.log(largeurs.map(w => '-'.repeat(w)).join('-|-'));
+    for (const l of lignes) console.log(l.map((x, i) => String(x).padEnd(largeurs[i])).join(' | '));
+  } else {
+    const { resumes, parties } = lot(noms, N, G, T, reglages);
+    if (Object.keys(reglages).length) console.log('Réglages : ' + JSON.stringify(reglages));
+    for (const nom of noms){
+      afficher(resumes[nom]);
+      if (nom === 'replica') console.log(`  non-régression (partie 1 au tour 30 : 3214 or, réputation +42) : ${r0(resumes[nom].tresor[30])} or, ${r0(resumes[nom].reputation30)}`);
+    }
+    if (noms.length > 1) afficherDominance(dominance(parties));
+    const f = arg('json');
+    if (f){ fs.writeFileSync(f, JSON.stringify({ parametres: { parties: N, graine: G, tours: T || CHAMPS.tours, bots: noms, reglages }, resumes, parties })); console.log('\nDétail écrit dans ' + f); }
   }
-  const f = arg('json');
-  if (f){ fs.writeFileSync(f, JSON.stringify(sortie)); console.log('\nDétail écrit dans ' + f); }
 }
 
-module.exports = { partie, resume };
+module.exports = { partie, resume, dominance, lot, regler };

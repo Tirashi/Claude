@@ -100,7 +100,7 @@ const BOTS = {
   militarist: () => e => {
     const p = plan(e);
     guerre(p, { seuilBataille: 0.5, embargoEnGuerre: true });
-    apaiser(p, 55);
+    apaiser(p, 55);   // essai à 70 (13/11) : pire (52 % de révolutions au lieu de 2 %)
     loiSuivante(p, ['army_conscription', 'income_progressive']);
     construire(p, x => !x.batiments.forge && !x.chantiers.some(c => c.id === 'forge') ? 'forge'
       : !x.batiments.fortifications && !x.chantiers.some(c => c.id === 'fortifications') ? 'fortifications' : batimentUtile(x), 300);
