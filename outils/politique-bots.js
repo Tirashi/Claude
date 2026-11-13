@@ -5,7 +5,7 @@
 'use strict';
 const path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
-const Alea = P('moteur/alea.js'), Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Guerre = P('moteur/guerre.js'), Batiments = P('moteur/batiments.js');
+const Lois = P('moteur/lois.js'), Alea = P('moteur/alea.js'), Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Guerre = P('moteur/guerre.js'), Batiments = P('moteur/batiments.js');
 const { LOIS } = P('donnees/lois.js');
 const BAT = P('donnees/batiments.js');
 
@@ -74,7 +74,9 @@ function loiSuivante(p, liste){
   // une loi est « faite » si elle, ou une loi placée après elle dans la liste et de même catégorie, est en vigueur ou en cours
   // (sinon École publique et École gratuite se remplaceraient sans fin)
   const faite = (x, i) => liste.slice(i).some(y => LOIS[y].categorie === LOIS[x].categorie &&
-    ((e.lois[LOIS[y].categorie] && e.lois[LOIS[y].categorie].id === y) || e.loisEnCours.some(c => c.id === y)));
+    ((e.lois[LOIS[y].categorie] && e.lois[LOIS[y].categorie].id === y) || (e.debat && e.debat.id === y)));
+  // V2 : une loi à la fois ; un débat sans espoir (moins de 15 % par tour) est abandonné
+  if (e.debat){ if (Lois.chance(e, e.debat.id) < 0.15) p.essayer({ type: 'abandonner' }); return; }
   const id = liste.find((x, i) => !faite(x, i));
   if (id) p.essayer({ type: 'loi', id });
 }

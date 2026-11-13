@@ -72,7 +72,7 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).
 3. ✅ (13/11) Marché qui bouge et niveau de vie des factions.
-4. Une loi à la fois, sans capital politique.
+4. ✅ (13/11) Une loi à la fois, sans capital politique.
 5. ✅ (13/11, avancée avant d'équilibrer la guerre) Personas cachés.
 6. Réputation fusionnée dans les relations.
 

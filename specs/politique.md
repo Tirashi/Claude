@@ -125,6 +125,27 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 12. V2, étape 4 : une loi à la fois (13/11)
+Fait : plus de capital politique ; `e.debat` (une seule loi en débat ; action « abandonner ») ; chaque tour de débat, les factions contre prennent +1 de colère ; à partir du 2e tour, adoption avec la chance affichée (`Lois.chance` : 50 % + (puissance des pour − des contre) / 2, entre 10 % et 90 %) ; les tests écrits avant tournent sans hasard (adoption à T + 2, le délai de la V1). 236 tests.
+
+**Factions pour / contre (ASSUMPTION (V2 étape 4), déduites des réactions de la V1, à valider)** :
+
+| Loi | Pour | Contre | Chance au départ |
+|---|---|---|---|
+| Impôt progressif | ouvriers, paysans | patrons | 60 % |
+| Impôt sur le capital | ouvriers | patrons, artisans | 25 % |
+| École publique | artisans, ouvriers | — | 77,5 % |
+| École gratuite | artisans, ouvriers | paysans | 57,5 % |
+| Code du travail | ouvriers | patrons | 40 % |
+| Syndicats | ouvriers | patrons | 40 % |
+| Médecine du travail | ouvriers, artisans | — | 77,5 % |
+| Armée de métier | ouvriers | — | 62,5 % |
+| Conscription | patrons | ouvriers | 60 % |
+| Suffrage universel | paysans, ouvriers | patrons | 60 % |
+| Suffrage censitaire | patrons, artisans | ouvriers, paysans | 55 % |
+
+**Avant (étape 3) → après (200 parties par bot)** : economy fin 100 % → 92 % (révolution 9 % : il fait maintenant passer l'impôt sur le capital, que patrons et artisans détestent ; 4 lois au lieu de 3) ; no_appeasement révolution 0 % → 22 % (l'apaisement redevient utile) ; spam_medicine fin 100 %, aucune grève ; replica 8 lois, révolution 2 % ; or presque inchangé (economy 6 700 au tour 40). Aucune stratégie dominante (economy bat spam_medicine 85 %, replica 84 %).
+
 ## 11. V2, étape 3 : marché et niveau de vie (13/11)
 Fait : `economie.marche` (vente ×(1 − 0,01 × vendu), au moins ×0,5 ; achat ×(1 + 0,01 × acheté), au plus ×1,5 ; prix au centime ; les contrats restent à prix fixe), `factions.niveauDeVie` (paniers ; couverture = production / consommation, au plus 100 % ; ≥ 100 % : −2/tour, ×2 pour les ouvriers avec le code du travail ; < 50 % : +2/tour ; remplace la dissipation de −1). Les tests écrits avant cette étape tournent en mode V1 (prix fixes, dissipation) ; 232 tests.
 

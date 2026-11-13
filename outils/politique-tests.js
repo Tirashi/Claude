@@ -19,6 +19,9 @@ const CHAMPS = P('donnees/champs.js'), ECO = P('donnees/economie.js'), { LOIS, C
 // (rétablis pour le bloc de l'étape 3, à la fin)
 const RFV = P('donnees/factions.js').REGLES_FACTIONS, PENTE = P('donnees/economie.js').marche.pente;
 P('donnees/economie.js').marche.pente = 0; RFV.niveauDeVie.actif = false;
+// … et sans débat au hasard : une loi lancée au tour T est adoptée au tour T + 2 (le délai de la V1), sans colère de débat
+const RLV = P('donnees/lois.js').REGLES_LOIS, RLV0 = JSON.parse(JSON.stringify(RLV));
+Object.assign(RLV, { premierTirage: 3, colereDebat: 0, chance: Object.assign({}, RLV.chance, { min: 1, max: 1 }) });
 
 let fail = 0, n = 0;
 const check = (ok, msg) => { n++; console.log((ok ? 'ok    ' : 'ÉCHEC ') + msg); if (!ok) fail++; };
@@ -48,7 +51,7 @@ const gele = o => { if (o && typeof o === 'object') { Object.freeze(o); Object.v
 {
   const e = Etat.creerEtat(CHAMPS, 1);
   check(e.tour === 1 && e.tourMax === 40 && !e.fin, 'état initial : tour 1 sur 40');
-  check(e.tresor === CHAMPS.joueur.tresor && e.familles === CHAMPS.joueur.familles && e.cp === CHAMPS.joueur.cp, 'état initial : trésor, familles, capital politique du scénario');
+  check(e.tresor === CHAMPS.joueur.tresor && e.familles === CHAMPS.joueur.familles && e.cp === undefined && e.debat === null, 'état initial : trésor et familles du scénario ; pas de capital politique (V2), aucun débat');
   check(egal(Object.keys(e.factions), ['paysans', 'ouvriers', 'artisans', 'patrons']), 'état initial : les 4 factions');
   check(Object.values(e.factions).every(f => f.colere >= 0 && f.colere <= 100 && f.puissance >= 0 && f.puissance <= 100), 'état initial : colère et puissance dans 0-100');
   check(egal(Object.keys(e.nations), ['val_roc', 'brume', 'contreforts']), 'état initial : les 3 nations de l\'ordinateur');
@@ -112,38 +115,31 @@ const tours = (e, k, actions) => { for (let i = 0; i < k; i++) e = Tour.tourSuiv
 const refuse = f => { try { f(); return false; } catch (err) { return true; } };
 const proche = (a, b) => Math.abs(a - b) < 1e-6;
 
-// --- capital politique ---
+// --- actions composées ---
 {
-  check(tours(neuf(), 1).cp === 15 && tours(neuf(), 3).cp === 45, 'capital politique : +15 par tour');
-  const e = Tour.tourSuivant(neuf({ cp: 100 }), [{ type: 'loi', id: 'income_progressive' }]);
-  check(e.cp === 100 - 30 + 15, 'capital politique : lancer une loi coûte son prix (30)');
-  check(!Tour.actionsDisponibles(neuf({ cp: 49 })).some(a => a.id === 'income_capital') && Tour.actionsDisponibles(neuf({ cp: 50 })).some(a => a.id === 'income_capital'), 'capital politique : une loi n\'est proposée que si le capital suffit');
-  check(refuse(() => Tour.tourSuivant(neuf({ cp: 20 }), [{ type: 'loi', id: 'income_capital' }])), 'capital politique : une loi trop chère est refusée');
-  const f = Tour.tourSuivant(neuf({ cp: 50 }), [{ type: 'loi', id: 'income_progressive' }, { type: 'loi', id: 'unions' }]);
-  check(f.loisEnCours.length === 2 && f.cp === 15, 'actions : plusieurs lois le même tour si le capital suffit pour toutes');
-  check(refuse(() => Tour.tourSuivant(neuf({ cp: 60 }), [{ type: 'loi', id: 'income_progressive' }, { type: 'loi', id: 'unions' }, { type: 'loi', id: 'labor_code' }])), 'actions : chaque action est vérifiée sur l\'état laissé par la précédente (la 3e loi n\'est plus payable)');
+  check(refuse(() => Tour.tourSuivant(neuf({ tresor: 75 }), [{ type: 'construire', id: 'farm', region: 'essai' }, { type: 'apaiser', id: 'paysans' }, { type: 'apaiser', id: 'ouvriers' }])), 'actions : chaque action est vérifiée sur l\'état laissé par la précédente (le 2e apaisement n\'est plus payable)');
 }
 
 // --- lois : délai, catégories ---
 {
-  let e = Tour.tourSuivant(neuf({ cp: 100 }), [{ type: 'loi', id: 'income_progressive' }]);   // lancée au tour 1
-  check(e.loisEnCours[0].adoption === 3 && !e.lois.impot, 'lois : lancée au tour 1, adoption prévue au tour 3');
+  let e = Tour.tourSuivant(neuf(), [{ type: 'loi', id: 'income_progressive' }]);   // lancée au tour 1
+  check(e.debat && e.debat.id === 'income_progressive' && e.debat.depuis === 1 && !e.lois.impot, 'lois : lancée au tour 1, en débat');
   e = Tour.tourSuivant(e, []);
   check(!e.lois.impot && proche(e.bilan.impots, 80.8), 'lois : pas encore en vigueur au tour 2 (impôts sans multiplicateur)');
   const fam3 = e.familles;
   e = Tour.tourSuivant(e, []);
-  check(e.lois.impot && e.lois.impot.id === 'income_progressive' && e.lois.impot.depuis === 3 && e.loisEnCours.length === 0, 'lois : en vigueur au tour 3 (2 tours de délai)');
+  check(e.lois.impot && e.lois.impot.id === 'income_progressive' && e.lois.impot.depuis === 3 && !e.debat, 'lois : en vigueur au tour 3 (débat sans hasard : 2 tours, le délai de la V1)');
   check(proche(e.bilan.impots, Math.round(fam3 * 1.35 * 100) / 100), 'lois : ses effets jouent dès le tour d\'adoption');
-  check(refuse(() => Tour.tourSuivant(neuf({ cp: 200 }), [{ type: 'loi', id: 'income_progressive' }, { type: 'loi', id: 'income_capital' }])), 'lois : une seule loi en cours par catégorie');
-  let g = neuf({ cp: 200 });
+  check(refuse(() => Tour.tourSuivant(neuf(), [{ type: 'loi', id: 'income_progressive' }, { type: 'loi', id: 'unions' }])), 'lois : une seule loi en débat à la fois (V2)');
+  let g = neuf();
   g = tours(g, 3, [{ type: 'loi', id: 'school_public' }]);
   check(!Tour.actionsDisponibles(g).some(a => a.id === 'school_public'), 'lois : une loi en vigueur ne se relance pas');
   g = tours(g, 3, [{ type: 'loi', id: 'school_free' }]);
   check(g.lois.education.id === 'school_free' && Object.keys(g.lois).length === 1, 'lois : adopter une loi remplace celle de sa catégorie');
   check(Object.values(CATEGORIES).length === 7 && Object.values(LOIS).every(l => CATEGORIES[l.categorie]), 'lois : 7 catégories, chaque loi dans l\'une d\'elles');
   check(Object.keys(LOIS).length === 11, 'lois : les 11 lois de RULES_V1');
-  const h = tours(neuf({ cp: 100 }), 3, [{ type: 'loi', id: 'suffrage_universal' }]);
-  const k = tours(neuf({ cp: 100 }), 3, [{ type: 'loi', id: 'suffrage_census' }]);
+  const h = tours(neuf(), 3, [{ type: 'loi', id: 'suffrage_universal' }]);
+  const k = tours(neuf(), 3, [{ type: 'loi', id: 'suffrage_census' }]);
   check(h.reputation === 5 && k.reputation === -5, 'lois : suffrage universel +5 de réputation, censitaire −5');
 }
 
@@ -219,8 +215,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
       e = Tour.tourSuivant(e, acts);
       const cats = Object.keys(e.lois);
       if (cats.some(c => LOIS[e.lois[c].id].categorie !== c)) viol = 'loi hors de sa catégorie';
-      if (new Set(e.loisEnCours.map(x => LOIS[x.id].categorie)).size !== e.loisEnCours.length) viol = 'deux lois en cours dans une catégorie';
-      if (e.cp < 0) viol = 'capital politique négatif';
+      if (e.debat && Lois.enVigueur(e, e.debat.id)) viol = 'loi en débat déjà en vigueur';
       if (!(e.familles > 0 && e.familles <= ECO.plafondFamilles)) viol = 'familles hors bornes';
       if (e.chantiers.some(c => c.restant <= 0)) viol = 'chantier fini resté dans la file';
       if (Object.keys(Object.assign({}, e.batiments, Batiments.totaux(e.regions))).some(k => (e.batiments[k] || 0) !== (Batiments.totaux(e.regions)[k] || 0))) viol = 'totaux des bâtiments faux';
@@ -284,7 +279,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
       if (x.factions[f][j] !== Math.max(0, Math.min(100, avant[f][j] + ((c[f] || {})[j] || 0)))) ok = false;
   }
   check(ok, 'chocs de lois : conformes aux données pour les 11 lois');
-  const adop = tours(neuf({ cp: 100 }), 3, [{ type: 'loi', id: 'income_progressive' }]);
+  const adop = tours(neuf(), 3, [{ type: 'loi', id: 'income_progressive' }]);
   check(fac(adop, 'patrons').colere === 20 - 3 + 5, 'chocs de lois : appliqués au tour de l\'adoption (impôt progressif, patrons +5)');
   const choc = (enVigueur, id) => { const x = avecLois(enVigueur); FA.choc(x, id); return x; };
   check(fac(choc(['suffrage_census'], 'income_capital'), 'patrons').colere === 30 && fac(choc(['suffrage_census'], 'income_capital'), 'artisans').colere === 30, 'suffrage censitaire : hausses de colère des élites 2× plus lentes (+20 → +10, +10 → +5)');
@@ -327,7 +322,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(g1.bilan.production.grain === 40 && g1.factions.paysans.statut === 'grondement' && Tour.tourSuivant(g1, []).bilan.production.grain === 80, 'grève : levée au tour suivant l\'apaisement (statut calculé en fin de tour)');
   const avecColere = (f, c, mod) => { const x = neuf(mod); x.factions[f].colere = c; FA.evaluer(x); return x; };
   const rv1 = Tour.tourSuivant(avecColere('paysans', 99), []);
-  const rv2 = Tour.tourSuivant(avecColere('paysans', 93, { loisEnCours: [{ id: 'school_free', adoption: 1 }] }), []);
+  const rv2 = Tour.tourSuivant(avecColere('paysans', 93, { debat: { id: 'school_free', depuis: -1 } }), []);
   check(!rv1.fin && rv2.fin && rv2.issue.type === 'revolution' && rv2.issue.faction === 'paysans' && refuse(() => Tour.tourSuivant(rv2, [])), 'révolution : la colère touche 100 (école gratuite, paysans 93 + 8) = partie perdue, même redescendue à 99 en fin de tour ; à 99 rien');
   check(rv2.journal.some(t => /Révolution/.test(t)), 'révolution : annoncée dans le journal');
   check(tours(neuf(), 40).issue.type === 'fin', 'fin de partie normale après 40 tours');
@@ -515,7 +510,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   GU.tour(nous, rng(1));
   check(!nous.guerre && nous.tresor === 600 && !nous.embargos.length && nous.nonRearmement.joueur === 16, 'notre moral sous 0,3 : nous capitulons, l\'ennemi impose toutes les clauses');
   check(!nous.regions.plaine && nous.profils.val_roc.regions.plaine && nous.batiments.farm === 2 && !nous.batiments.fort && !nous.occupations.vallee, 'cession contre nous : la région la plus riche (Plaine : 2 fermes et un fort) est perdue avec ses bâtiments ; les autres sont rendues');
-  const desarme = caserne({ cp: 200, tresor: 5000, nonRearmement: { joueur: 16 } });
+  const desarme = caserne({ tresor: 5000, nonRearmement: { joueur: 16 } });
   check(!Tour.actionsDisponibles(desarme).some(a => /^army_/.test(a.id) || a.type === 'recruter') && Tour.actionsDisponibles(Object.assign(desarme, { tour: 17 })).some(a => a.type === 'recruter'), 'non-réarmement : ni loi militaire ni recrutement pendant 15 tours');
   let pb = seul(enGuerre(vrai({ regiments: 20 }), 'val_roc', 'joueur'));
   pb = tours(pb, 4);
@@ -614,6 +609,30 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const occ = Tour.tourSuivant(vrai({ evenements: [], occupations: { plaine: 'val_roc', vallee: 'val_roc' } }), []);
   check(occ.niveauDeVie.paysans === 0 && occ.factions.paysans.colere === c0.paysans.colere + 2, 'niveau de vie : des régions occupées affament les paysans');
   check(FAx.couverture({ bilan: { production: { grain: 0 }, consommation: { grain: 0 } } }, 'paysans') === 1, 'niveau de vie : rien à consommer = panier couvert');
+}
+
+// ===================== V2 étape 4 : une loi à la fois =====================
+{
+  Object.assign(RLV, JSON.parse(JSON.stringify(RLV0)));
+  const LM = P('moteur/lois.js');
+  const e0 = vrai({ evenements: [] });
+  check(LM.lancables(e0).length === 11 && e0.cp === undefined, 'lois : plus de capital politique, toutes les lois se lancent dès le tour 1');
+  check(LM.chance(e0, 'income_progressive') === 0.6 && LM.chance(e0, 'income_capital') === 0.25 && LM.chance(e0, 'school_public') === 0.775, 'débat : chance = 50 % + (puissance des pour − des contre) / 2 (progressif 60 %, capital 25 %, école 77,5 %)');
+  const fort = vrai(); fort.factions.patrons.puissance = 100; fort.factions.artisans.puissance = 100;
+  const faible = vrai(); for (const f in faible.factions) faible.factions[f].puissance = 100; faible.factions.patrons.puissance = 0;
+  check(LM.chance(fort, 'income_capital') === 0.1 && LM.chance(faible, 'income_progressive') === 0.9, 'débat : chance bornée entre 10 % et 90 %');
+  const d1 = Tour.tourSuivant(vrai({ evenements: [] }), [{ type: 'loi', id: 'unions' }]);
+  check(d1.debat && d1.debat.id === 'unions' && !d1.lois.relations_sociales && !Tour.actionsDisponibles(d1).some(a => a.type === 'loi') && Tour.actionsDisponibles(d1).some(a => a.type === 'abandonner'), 'débat : une seule loi à la fois, pas d\'adoption au tour du lancement, on peut abandonner');
+  const ab = Tour.tourSuivant(d1, [{ type: 'abandonner' }]);
+  check(!ab.debat && !ab.lois.relations_sociales && Tour.actionsDisponibles(ab).some(a => a.type === 'loi'), 'débat : abandonné, on peut en ouvrir un autre');
+  let adoptees = 0; const N = 600;
+  for (let g = 1; g <= N; g++) { const x = Tour.tourSuivant(Tour.tourSuivant(Etat.creerEtat(CHAMPS, g), [{ type: 'loi', id: 'income_progressive' }]), []); if (x.lois.impot) adoptees++; }
+  check(Math.abs(adoptees / N - 0.6) < 0.06, `débat : au 2e tour, adoptée avec la chance affichée (${(adoptees / N).toFixed(2)} pour 0,60)`);
+  // colère des opposants pendant le débat (même partie avec et sans débat)
+  const sans = Tour.tourSuivant(vrai({ evenements: [] }), []), avec = Tour.tourSuivant(vrai({ evenements: [] }), [{ type: 'loi', id: 'income_capital' }]);
+  check(avec.factions.patrons.colere === sans.factions.patrons.colere + 1 && avec.factions.artisans.colere === sans.factions.artisans.colere + 1 && avec.factions.ouvriers.colere === sans.factions.ouvriers.colere, 'débat : +1 colère par tour pour les factions contre (impôt sur le capital : patrons et artisans)');
+  check(Object.values(LOIS).every(l => Array.isArray(l.pour) && Array.isArray(l.contre) && l.pour.concat(l.contre).every(f => CHAMPS.joueur.factions[f]) && l.cp === undefined), 'lois : chacune a ses factions pour et contre, plus de coût');
+  check(!LM.lancables(vrai({ nonRearmement: { joueur: 10 } })).some(id => /^army_/.test(id)), 'débat : pas de loi militaire sous la clause de non-réarmement');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

@@ -51,7 +51,7 @@ function partie(nom, graine, tours, coupe){
   let e = Etat.creerEtat(CHAMPS, graine);
   if (tours != null) { if (!Number.isInteger(tours) || tours < 1) throw new Error('nombre de tours invalide : ' + tours); e.tourMax = tours; }
   const bot = Bots.creer(nom, graine);
-  const m = { graine, issue: null, duree: 0, tresor: {}, cp: {}, reputation: {}, toursGuerre: 0, guerres: 0, declareesParNous: 0,
+  const m = { graine, issue: null, duree: 0, tresor: {}, reputation: {}, debats: 0, abandons: 0, toursGuerre: 0, guerres: 0, declareesParNous: 0,
               issuesGuerres: { gagnees: 0, perdues: 0, blanches: 0 }, batailles: { gagnees: 0, perdues: 0 },
               tours55: 0, tours75: 0, greves: 0, apaisements: 0, sansDecision: 0, regionsGagnees: 0, regionsPerdues: 0, regimentsMax: 0, toursOccupes: 0, loisAdoptees: [], catalogueComplet: null, colereMax: 0 };
   const adoptees = new Set(), traces = [];
@@ -60,6 +60,7 @@ function partie(nom, graine, tours, coupe){
     if (decisions(e) <= 1) m.sansDecision++;
     const acts = bot(e);
     m.apaisements += acts.filter(a => a.type === 'apaiser').length;
+    m.debats += acts.filter(a => a.type === 'loi').length; m.abandons += acts.filter(a => a.type === 'abandonner').length;
     m.declareesParNous += acts.filter(a => a.type === 'declarer_guerre').length;
     const avant = !!e.guerre;
     e = Tour.tourSuivant(e, acts);
@@ -84,7 +85,7 @@ function partie(nom, graine, tours, coupe){
     if (c.some(x => x >= 75)) m.tours75++;
     if (Object.values(e.factions).some(x => x.statut === 'greve')) m.greves++;
     m.colereMax = Math.max(m.colereMax, ...c);
-    if ([10, 20, 30, 40].includes(t)) { m.tresor[t] = e.tresor; m.cp[t] = e.cp; m.reputation[t] = e.reputation; }
+    if ([10, 20, 30, 40].includes(t)) { m.tresor[t] = e.tresor; m.reputation[t] = e.reputation; }
     if (coupe != null) traces.push(JSON.stringify(e));
   }
   m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = e.reputation; m.tresorFin = e.tresor;
@@ -99,7 +100,7 @@ function resume(nom, ms){
   return {
     bot: nom, parties: n, fins, revolution: (fins.revolution || 0) / n, dureeMediane: med(ms.map(m => m.duree)),
     tresor: Object.fromEntries([10, 20, 30, 40].map(t => [t, med(vivantes(t).map(m => m.tresor[t]))])),
-    cp: Object.fromEntries([10, 20, 40].map(t => [t, med(vivantes(t).map(m => m.cp[t]))])),
+    debats: med(ms.map(m => m.debats)), abandons: med(ms.map(m => m.abandons)),
     reputation30: med(vivantes(30).map(m => m.reputation[30])), reputationFin: med(ms.map(m => m.reputationFin)),
     avecGuerre: ms.filter(m => m.guerres > 0).length, toursGuerre: med(ms.map(m => m.toursGuerre)),
     guerres: { gagnees: somme(m => m.issuesGuerres.gagnees) / n, perdues: somme(m => m.issuesGuerres.perdues) / n, blanches: somme(m => m.issuesGuerres.blanches) / n },
@@ -137,11 +138,12 @@ function afficher(r){
   const n = r.parties;
   console.log(`\n== ${r.bot} (${n} parties)`);
   console.log(`  fins : ${Object.entries(r.fins).map(([k, v]) => `${k} ${pct(v, n)}`).join(', ')} ; durée médiane ${r.dureeMediane} tours`);
-  console.log(`  trésor médian : t10 ${r0(r.tresor[10])}, t20 ${r0(r.tresor[20])}, t30 ${r0(r.tresor[30])}, t40 ${r0(r.tresor[40])} ; capital politique t10 ${r0(r.cp[10])}, t20 ${r0(r.cp[20])}, t40 ${r0(r.cp[40])}`);
+  console.log(`  trésor médian : t10 ${r0(r.tresor[10])}, t20 ${r0(r.tresor[20])}, t30 ${r0(r.tresor[30])}, t40 ${r0(r.tresor[40])}`);
   console.log(`  réputation médiane : t30 ${r0(r.reputation30)}, fin ${r0(r.reputationFin)}`);
   console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; par partie : guerres gagnées ${r.guerres.gagnees.toFixed(2)}, perdues ${r.guerres.perdues.toFixed(2)}, paix blanches ${r.guerres.blanches.toFixed(2)} ; batailles ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
   console.log(`  armée : ${r0(r.regimentsMax)} régiments au plus (médiane) ; ${r0(r.toursOccupes)} tours avec une région occupée (médiane) ; régions par partie : ${r.regionsGagnees.toFixed(2)} gagnées, ${r.regionsPerdues.toFixed(2)} perdues`);
   console.log(`  factions : colère max ${r0(r.colereMax)}, tours ≥ 55 : ${r0(r.tours55)}, ≥ 75 : ${r0(r.tours75)} (médianes) ; grève dans ${pct(r.avecGreve, n)} des parties ; ${r0(r.apaisements)} apaisements`);
+  console.log(`  débats ouverts : ${r0(r.debats)}, abandonnés : ${r0(r.abandons)} (médianes)`);
   console.log(`  lois adoptées : ${r0(r.lois)} sur ${Object.keys(LOIS).length} (médiane) ; jamais adoptées : ${r.jamaisAdoptees.length ? r.jamaisAdoptees.join(', ') : 'aucune'} ; catalogue complet dans ${pct(r.catalogueComplet, n)} des parties`);
   console.log(`  tours sans vraie décision politique (≤ 1 loi, traité, contrat ou action de guerre possible) : ${pct(Math.round(100 * r.sansDecision), 100)} (médiane)`);
 }

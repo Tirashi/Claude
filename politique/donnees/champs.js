@@ -13,7 +13,6 @@ const SCENARIO_CHAMPS = {
 
   joueur: {
     tresor: 200,                      // ASSUMPTION validée : 2 à 3 bâtiments d'avance, rien de plus
-    cp: 0,                            // ASSUMPTION validée : capital politique de départ (la 1re loi vers le tour 3)
     familles: 80,                     // ASSUMPTION validée : 80 familles = 80 grain/tour = 4 fermes
     // V2 : 4 régions fixes (terrain, emplacements, bâtiments de départ) ; ni atelier ni tissage (crise du tissu du tour 1)
     regions: {                                                                                          // ASSUMPTION validée (V2)

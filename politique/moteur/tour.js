@@ -24,6 +24,7 @@ const Guerre = NODE ? require("./guerre.js") : racine.Politique.Guerre;
 function actionsDisponibles(etat){
   if (etat.fin) return [];
   return Lois.lancables(etat).map(id => ({ type: "loi", id }))
+    .concat(etat.debat ? [{ type: "abandonner" }] : [])
     .concat(Batiments.constructibles(etat).map(c => ({ type: "construire", id: c.id, region: c.region })))
     .concat(Factions.apaisables(etat).map(id => ({ type: "apaiser", id })))
     .concat(Diplomatie.actions(etat))
@@ -37,6 +38,7 @@ const memeAction = (a, b) => !!a && typeof a === "object" && cle(a) === cle(b);
 function appliquerAction(e, a, r){
   if (!actionsDisponibles(e).some(d => memeAction(a, d))) throw new Error("action refusée : " + JSON.stringify(a));
   if (a.type === "loi") Lois.lancer(e, a.id);
+  else if (a.type === "abandonner") Lois.abandonner(e);
   else if (a.type === "construire") Batiments.commander(e, a.id, a.region);
   else if (a.type === "apaiser") Factions.apaiser(e, a.id);
   else if (["recruter", "declarer_guerre", "bataille", "imposer_paix", "paix_blanche"].includes(a.type)) Guerre.appliquer(e, a, r);
@@ -59,13 +61,12 @@ function tourSuivant(etat, actions, rng){
   e.recrues = [];
   evenements(e);
   for (const a of actions || []) appliquerAction(e, a, r);
-  Lois.adopter(e);
+  Lois.debattre(e, r);
   Economie.appliquer(e);
   Diplomatie.tour(e);
   Guerre.tour(e, r);
   Factions.finDeTour(e);
   Batiments.avancer(e);
-  e.cp += ECO.cpParTour;
   e.alea = r.s >>> 0;
   e.tour++;
   e.modifPrix = e.modifPrix.filter(m => m.jusqua >= e.tour);

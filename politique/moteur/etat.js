@@ -33,7 +33,6 @@ function creerEtat(scenario, graine){
     tourMax: scenario.tours,
     alea: r.s,                        // état du hasard (après le tirage des personas), rangé avec la partie
     tresor: j.tresor,
-    cp: j.cp,
     familles: j.familles,
     reputation: j.reputation,
     factions: copie(j.factions),      // f → { colere, puissance, statut }
@@ -43,7 +42,7 @@ function creerEtat(scenario, graine){
     batiments: totaux(regions),       // totaux du pays (somme des régions)
     chantiers: [],                    // bâtiments en construction : [{ id, region, restant }], un par région
     lois: {},                         // catégorie → { id, depuis } (loi en vigueur)
-    loisEnCours: [],                  // lois lancées, pas encore adoptées : [{ id, adoption }]
+    debat: null,                      // V2 : la loi en débat { id, depuis } (une seule)
     evenements: copie(scenario.evenements || []),   // événements écrits du scénario
     modifPrix: [],                    // [{ prix: { bien: facteur }, jusqua }] (événements ; traités en M3)
     bilan: null,                      // économie du dernier tour (Economie.bilan)

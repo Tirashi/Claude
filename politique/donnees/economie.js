@@ -16,8 +16,7 @@ const ECONOMIE = {
   besoinsArmee: { fer: 4, tissu: 2 },                               // ASSUMPTION validée (toujours, même la milice)
   impotParFamille: 1,                                               // ASSUMPTION validée : revenu de base = familles × 1 or
 
-  cpParTour: 15,                 // RULES_V1
-  delaiLoi: 2,                   // RULES_V1 : lancée au tour T, en vigueur au tour T + 2
+  // V2 étape 4 : plus de capital politique (V1 : +15 par tour) ni de délai fixe des lois (débat : donnees/lois.js)
   // V2 : un chantier par région (moteur/batiments.js) ; V1 : 2 chantiers pour tout le pays
 
   croissance: 0.01,              // ASSUMPTION validée : +1 % de familles par tour
