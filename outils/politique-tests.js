@@ -42,7 +42,7 @@ const gele = o => { if (o && typeof o === 'object') { Object.freeze(o); Object.v
 // --- état initial ---
 {
   const e = Etat.creerEtat(CHAMPS, 1);
-  check(e.tour === 1 && e.tourMax === 60 && !e.fin, 'état initial : tour 1 sur 60');
+  check(e.tour === 1 && e.tourMax === 40 && !e.fin, 'état initial : tour 1 sur 40');
   check(e.tresor === CHAMPS.joueur.tresor && e.familles === CHAMPS.joueur.familles && e.cp === CHAMPS.joueur.cp, 'état initial : trésor, familles, capital politique du scénario');
   check(egal(Object.keys(e.factions), ['paysans', 'ouvriers', 'artisans', 'patrons']), 'état initial : les 4 factions');
   check(Object.values(e.factions).every(f => f.colere >= 0 && f.colere <= 100 && f.puissance >= 0 && f.puissance <= 100), 'état initial : colère et puissance dans 0-100');
@@ -66,8 +66,8 @@ const partie = (graine, coupe) => {
 {
   const a = partie(42), b = partie(42), c = partie(42, 30);
   const fin42 = JSON.parse(a[a.length - 1]);
-  check(a.length <= 60 && (a.length === 60) === (fin42.issue.type === 'fin'), `tour : une partie dure 60 tours, sauf révolution (graine 42 : ${a.length} tours, ${fin42.issue.type})`);
-  check(egal(a, b), 'déterminisme : même graine, même partie (60 tours, état complet à chaque tour)');
+  check(a.length <= 40 && (a.length === 40) === (fin42.issue.type === 'fin'), `tour : une partie dure 40 tours, sauf révolution (graine 42 : ${a.length} tours, ${fin42.issue.type})`);
+  check(egal(a, b), 'déterminisme : même graine, même partie (40 tours, état complet à chaque tour)');
   check(egal(a, c), 'déterminisme : identique après sauvegarde JSON et rechargement au tour 30');
   const e0 = gele(Etat.creerEtat(CHAMPS, 3)), avant = JSON.stringify(e0);
   let e1; try { e1 = Tour.tourSuivant(e0, []); } catch (err) { e1 = null; }
@@ -85,7 +85,16 @@ const partie = (graine, coupe) => {
 // état de départ pour vérifier une règle à la fois : Val-Roc n'y déclare pas la guerre (caractère « commerçant ») ;
 // les tests de M3b partent du vrai scénario (vrai())
 const vrai = (mod, graine) => Object.assign(Etat.creerEtat(CHAMPS, graine || 1), mod || {});
-const neuf = (mod) => { const e = vrai(mod); e.profils.val_roc.caractere = 'commercante'; return e; };
+// neuf() : une seule région d'essai, sans bonus ni limite de place, avec les bâtiments donnés (4 fermes et 1 mine par défaut,
+// la production de la V1) ; les tests des régions partent de vrai()
+const Batiments = P('moteur/batiments.js');
+const neuf = (mod) => {
+  const m = Object.assign({}, mod), bats = m.batiments || { farm: 4, mine: 1 }; delete m.batiments;
+  const e = vrai(m); e.profils.val_roc.caractere = 'commercante';
+  e.regions = { essai: { nom: 'Essai', terrain: 'mixte', emplacements: 99, batiments: JSON.parse(JSON.stringify(bats)) } };
+  e.batiments = Batiments.totaux(e.regions);
+  return e;
+};
 const tours = (e, k, actions) => { for (let i = 0; i < k; i++) e = Tour.tourSuivant(e, i === 0 ? actions || [] : []); return e; };
 const refuse = f => { try { f(); return false; } catch (err) { return true; } };
 const proche = (a, b) => Math.abs(a - b) < 1e-6;
@@ -154,15 +163,28 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
 
 // --- bâtiments ---
 {
-  const e = Tour.tourSuivant(neuf(), [{ type: 'construire', id: 'farm' }]);
+  const C = (id, region) => ({ type: 'construire', id, region });
+  const e = Tour.tourSuivant(neuf(), [C('farm', 'essai')]);
   check(proche(e.tresor, 200 - 60 + 26.5), 'bâtiments : payés à la commande');
-  check(refuse(() => Tour.tourSuivant(neuf({ tresor: 59 }), [{ type: 'construire', id: 'farm' }])), 'bâtiments : refusés si le trésor ne suffit pas');
+  check(refuse(() => Tour.tourSuivant(neuf({ tresor: 59 }), [C('farm', 'essai')])), 'bâtiments : refusés si le trésor ne suffit pas');
   check(!Tour.actionsDisponibles(neuf({ tresor: 10000 })).some(a => a.id === 'entente_mill') && ['forge', 'fortifications'].every(id => Tour.actionsDisponibles(neuf({ tresor: 10000 })).some(a => a.id === id)), 'bâtiments : filature seulement avec son traité ; forge et fortifications constructibles');
-  const f = (k) => tours(neuf({ tresor: 1000 }), k, [{ type: 'construire', id: 'farm' }, { type: 'construire', id: 'farm' }, { type: 'construire', id: 'farm' }]);
-  check(f(2).batiments.farm === 4 && f(3).batiments.farm === 6, 'bâtiments : ferme en 3 tours, deux chantiers à la fois');
-  check(f(3).chantiers.length === 1 && f(3).chantiers[0].restant === 3 && f(5).batiments.farm === 6 && f(6).batiments.farm === 7, 'bâtiments : le 3e chantier attend un emplacement libre');
-  check(f(3).bilan.production.grain === 80 && f(4).bilan.production.grain === 120, 'bâtiments : un bâtiment fini produit dès le tour suivant');
-  check(Object.entries({ farm: 3, mine: 4, workshop: 5, weaving: 5 }).every(([id, d]) => { const g = tours(neuf({ tresor: 1000 }), d, [{ type: 'construire', id }]); const avant = CHAMPS.joueur.batiments[id] || 0; return g.batiments[id] === avant + 1 && (tours(neuf({ tresor: 1000 }), d - 1, [{ type: 'construire', id }]).batiments[id] || 0) === avant; }), 'bâtiments : délais 3 / 4 / 5 / 5 tours');
+  check(refuse(() => Tour.tourSuivant(neuf({ tresor: 1000 }), [C('farm', 'essai'), C('farm', 'essai')])), 'régions : un seul chantier à la fois par région');
+  const v = (k, acts, mod) => tours(vrai(Object.assign({ tresor: 2000 }, mod)), k, acts);
+  const quatre = v(1, [C('farm', 'plaine'), C('farm', 'vallee'), C('mine', 'collines'), C('workshop', 'bourg')]);
+  check(quatre.chantiers.length === 4, 'régions : un chantier dans chacune des 4 régions en même temps');
+  check(Object.entries({ farm: 2, mine: 3, workshop: 3, weaving: 3 }).every(([id, d]) => { const r = id === 'mine' ? 'collines' : 'bourg'; const avant = vrai().batiments[id] || 0;
+    return v(d, [C(id, r)]).batiments[id] === avant + 1 && (v(d - 1, [C(id, r)]).batiments[id] || 0) === avant; }), 'bâtiments : délais 2 / 3 / 3 / 3 tours (ferme, mine, atelier, tissage)');
+  check(v(2, [C('farm', 'plaine')]).bilan.production.grain === 100 && v(3, [C('farm', 'plaine')]).bilan.production.grain === 130, 'bâtiments : un bâtiment fini produit dès le tour suivant (ferme en plaine : +30)');
+  const ini = vrai(), b0 = Tour.tourSuivant(vrai(), []).bilan;
+  check(egal(ini.batiments, { farm: 4, mine: 1 }) && ini.regions.plaine.batiments.farm === 2 && ini.regions.vallee.batiments.farm === 2 && ini.regions.collines.batiments.mine === 1, 'régions : départ 2 fermes en Plaine, 2 en Vallée, 1 mine dans les Collines');
+  check(b0.production.grain === 100 && b0.production.fer === 22.5, 'régions : bonus de terrain (fermes ×1,5 en plaine fertile, mine ×1,5 dans les collines)');
+  const bourg = v(4, [C('workshop', 'bourg')]), val = v(4, [C('workshop', 'vallee')]);
+  check(bourg.bilan.production.outils === 12.5 && val.bilan.production.outils === 10, 'régions : atelier ×1,25 au bourg, ×1 ailleurs');
+  let pl = vrai({ tresor: 5000 }); for (let k = 0; k < 2; k++) pl = tours(pl, 2, [C('farm', 'plaine')]);
+  check(pl.regions.plaine.batiments.farm === 4 && Batiments.occupes(pl, 'plaine') === 4 && !Tour.actionsDisponibles(pl).some(a => a.region === 'plaine' && a.id === 'farm'), 'régions : 4 emplacements en plaine, plus de place ensuite');
+  check(Tour.actionsDisponibles(pl).some(a => a.region === 'plaine' && a.id === 'fortifications'), 'régions : les fortifications ne prennent pas d\'emplacement');
+  const ch = Tour.tourSuivant(vrai({ tresor: 5000 }), [C('farm', 'vallee')]);
+  check(Batiments.occupes(ch, 'vallee') === 3 && !Tour.actionsDisponibles(Tour.tourSuivant(ch, [])).some(a => a.region === 'vallee' && a.id === 'farm'), 'régions : un chantier occupe sa place (Vallée : 2 fermes + 1 en chantier = 3 sur 3)');
 }
 
 // --- parties au hasard : invariants ---
@@ -188,6 +210,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
       if (e.cp < 0) viol = 'capital politique négatif';
       if (!(e.familles > 0 && e.familles <= ECO.plafondFamilles)) viol = 'familles hors bornes';
       if (e.chantiers.some(c => c.restant <= 0)) viol = 'chantier fini resté dans la file';
+      if (Object.keys(Object.assign({}, e.batiments, Batiments.totaux(e.regions))).some(k => (e.batiments[k] || 0) !== (Batiments.totaux(e.regions)[k] || 0))) viol = 'totaux des bâtiments faux';
+      if (Object.keys(e.regions).some(r => e.chantiers.filter(c => c.region === r).length > 1 || Batiments.occupes(e, r) > e.regions[r].emplacements)) viol = 'région débordée';
       if (Object.values(e.factions).some(x => x.colere < 0 || x.colere > 100 || x.puissance < 0 || x.puissance > 100)) viol = 'colère ou puissance hors bornes';
       if (Object.values(e.factions).some(x => x.statut !== FAm.statutDe(x))) viol = 'statut de faction faux';
       if (!(e.moral >= 0 && e.moral <= 1)) viol = 'moral hors de 0-1';
@@ -209,7 +233,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
     lois += Object.keys(a.fin.lois).length;
     diplo += a.fin.traites.length + a.fin.embargos.length + a.fin.contrats.length + (a.fin.reputation !== 0 ? 1 : 0);
   }
-  check(!viols.length, 'parties au hasard (40 × 60 tours) : invariants tenus' + (viols.length ? ' — ' + viols.slice(0, 3).join(' ; ') : ''));
+  check(!viols.length, 'parties au hasard (40 parties de 40 tours) : invariants tenus' + (viols.length ? ' — ' + viols.slice(0, 3).join(' ; ') : ''));
   check(diff === 0, 'parties au hasard : identiques après sauvegarde JSON à un tour quelconque');
   check(lois > 40, `parties au hasard : des lois sont bien adoptées (${(lois / 40).toFixed(1)} catégories remplies en moyenne)`);
   check(guerres > 40, `parties au hasard : des guerres ont lieu (${guerres} tours de guerre)`);
@@ -293,7 +317,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const rv2 = Tour.tourSuivant(avecColere('paysans', 93, { loisEnCours: [{ id: 'school_free', adoption: 1 }] }), []);
   check(!rv1.fin && rv2.fin && rv2.issue.type === 'revolution' && rv2.issue.faction === 'paysans' && refuse(() => Tour.tourSuivant(rv2, [])), 'révolution : la colère touche 100 (école gratuite, paysans 93 + 8) = partie perdue, même redescendue à 99 en fin de tour ; à 99 rien');
   check(rv2.journal.some(t => /Révolution/.test(t)), 'révolution : annoncée dans le journal');
-  check(tours(neuf(), 60).issue.type === 'fin', 'fin de partie normale après 60 tours');
+  check(tours(neuf(), 40).issue.type === 'fin', 'fin de partie normale après 40 tours');
 }
 
 // ===================== M3a : diplomatie et commerce =====================
@@ -354,8 +378,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(!dispo(b30, { type: 'traite', id: 'filature', avec: 'brume' }) && dispo(en, { type: 'traite', id: 'filature', avec: 'brume' }) && !dispo(Object.assign(avecRel({ contreforts: 90 }), { traites: [{ type: 'entente', avec: 'contreforts', depuis: 1 }] }), { type: 'traite', id: 'filature', avec: 'contreforts' }), 'filature conjointe : seulement avec Brume, Entente requise');
   check(!Tour.actionsDisponibles(en).some(a => a.id === 'entente_mill'), 'filature : pas de bâtiment sans le traité');
   let fi = Tour.tourSuivant(en, [{ type: 'traite', id: 'filature', avec: 'brume' }]);
-  check(dispo(fi, { type: 'construire', id: 'entente_mill' }), 'filature : bâtiment constructible avec le traité');
-  const avant = fi.tresor; fi = Tour.tourSuivant(fi, [{ type: 'construire', id: 'entente_mill' }]);
+  check(dispo(fi, { type: 'construire', id: 'entente_mill', region: 'essai' }), 'filature : bâtiment constructible avec le traité');
+  const avant = fi.tresor; fi = Tour.tourSuivant(fi, [{ type: 'construire', id: 'entente_mill', region: 'essai' }]);
   check(proche(fi.tresor, avant - 50 + fi.bilan.solde), 'filature : le joueur paie 50 or sur 100');
   fi = tours(fi, 6);
   check(fi.batiments.entente_mill === 1 && fi.bilan.production.tissu === 18 && proche(fi.bilan.contrats, 6), 'filature : +18 tissu, dont 6 livrés à Brume à 1 or');

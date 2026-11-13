@@ -1,7 +1,9 @@
-# Règles V2 — premier jet (13/11, à valider)
+# Règles V2 (premier jet validé le 13/11)
 
 Issu du brainstorming M6 (`backlog-v2.md` F et G, `specs/politique.md` § 7).
-Tous les nombres sont des propositions de Claude, à valider ; ils iront dans `politique/donnees/` marqués `ASSUMPTION`.
+Tous les nombres sont des propositions de Claude, **validées le 13/11** ; ils vont dans `politique/donnees/` marqués `ASSUMPTION validée (V2)`.
+
+**Réponses du 13/11** : paniers des factions gardés tels quels (les patrons restent aussi sensibles aux lois d'impôt par leurs chocs) ; **cession d'une région** ajoutée aux clauses de paix ; caserne et fort remplacent forge et fortifications ; le reste validé.
 
 ## Décisions de l'utilisateur (13/11)
 - Public : l'utilisateur surtout, des adultes. Une partie peut être un peu longue si elle se **sauvegarde**. Objectif : **40 tours**.
@@ -61,13 +63,13 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Régiments** : recruter coûte 30 or (une caserne requise), entretien 3 or/tour par régiment. Départ : 3 régiments.
 - **Force** = régiments × loi militaire (×1 / ×1,3 / ×1,6) × moral ; fort ×1,5 dans la région défendue. Le trésor ne compte plus.
 - **Bataille** : l'attaquant vise une région ; il gagne avec la probabilité Fa / (Fa + Fd). Le perdant perd 25 % de ses régiments engagés, le gagnant 10 %. Une attaque gagnée **occupe** la région : elle ne produit plus pour son propriétaire.
-- **Paix** : les régions occupées sont rendues (pas d'annexion pour l'instant) ; clauses de la V1 (réparations, levée d'embargo, non-réarmement = pas de recrutement). Trêve de 10 tours.
+- **Paix** : les régions occupées sont rendues, sauf une que le vainqueur peut se faire **céder** (clause « cession ») ; clauses de la V1 (réparations, levée d'embargo, non-réarmement = pas de recrutement). Trêve de 10 tours.
 - **Nations** : régiments et recrutement selon leur persona, avec leur or (elles dépensent enfin). Val-Roc commence avec 5 régiments, Brume 3, Contreforts 2.
 - **Personas cachés**, tirés au hasard pour chaque dirigeant : belliqueux, marchand, opportuniste, isolationniste, revanchard, idéaliste, prudent. Chacun règle : seuil de déclaration de guerre, relation minimale pour un traité ou un contrat, ralliement à une guerre, recrutement, réaction à un embargo.
 - **Relations** (réputation fusionnée) : une seule jauge par nation. Les actions qui touchaient la réputation touchent toutes les relations à la moitié de leur effet (ex. agression : −100 avec la cible, −10 avec les autres).
 
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
-1. 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
+1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. Armée en régiments, forts, casernes, occupation ; force sans le trésor ; nations qui recrutent.
 3. Marché qui bouge et niveau de vie des factions.
 4. Une loi à la fois, sans capital politique.

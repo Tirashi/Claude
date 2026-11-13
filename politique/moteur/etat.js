@@ -6,12 +6,18 @@ const NODE = typeof module !== "undefined" && module.exports;
 const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
-const VERSION = 1;
+const VERSION = 2;   // V2 : régions
+// totaux des bâtiments du pays (même calcul que Batiments.totaux, sans dépendance circulaire)
+function totaux(regions){
+  const t = {};
+  for (const r in regions) for (const id in regions[r].batiments) t[id] = (t[id] || 0) + regions[r].batiments[id];
+  return t;
+}
 
 const copie = o => JSON.parse(JSON.stringify(o));
 
 function creerEtat(scenario, graine){
-  const j = scenario.joueur, profils = {};
+  const j = scenario.joueur, profils = {}, regions = copie(j.regions);
   for (const id in scenario.nations){
     const n = scenario.nations[id];
     profils[id] = { nom: n.nom, caractere: n.caractere, taux: n.taux, force: n.force, exporte: copie(n.exporte), importe: copie(n.importe) };
@@ -29,8 +35,9 @@ function creerEtat(scenario, graine){
     factions: copie(j.factions),      // f → { colere, puissance, statut }
     moral: 1,                         // moral du pays (0 à 1), recalculé chaque tour
     apaises: [],                      // factions déjà apaisées ce tour
-    batiments: copie(j.batiments),
-    chantiers: [],                    // bâtiments en construction : [{ id, restant }]
+    regions,                          // région → { nom, terrain, emplacements, batiments } (V2)
+    batiments: totaux(regions),       // totaux du pays (somme des régions)
+    chantiers: [],                    // bâtiments en construction : [{ id, region, restant }], un par région
     lois: {},                         // catégorie → { id, depuis } (loi en vigueur)
     loisEnCours: [],                  // lois lancées, pas encore adoptées : [{ id, adoption }]
     evenements: copie(scenario.evenements || []),   // événements écrits du scénario

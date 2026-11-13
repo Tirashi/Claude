@@ -80,7 +80,7 @@ function partie(nom, graine, tours, coupe){
     if (c.some(x => x >= 75)) m.tours75++;
     if (Object.values(e.factions).some(x => x.statut === 'greve')) m.greves++;
     m.colereMax = Math.max(m.colereMax, ...c);
-    if ([20, 30, 40, 60].includes(t)) { m.tresor[t] = e.tresor; m.cp[t] = e.cp; m.reputation[t] = e.reputation; }
+    if ([10, 20, 30, 40].includes(t)) { m.tresor[t] = e.tresor; m.cp[t] = e.cp; m.reputation[t] = e.reputation; }
     if (coupe != null) traces.push(JSON.stringify(e));
   }
   m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = e.reputation; m.tresorFin = e.tresor;
@@ -94,8 +94,8 @@ function resume(nom, ms){
   const somme = f => ms.reduce((s, m) => s + f(m), 0);
   return {
     bot: nom, parties: n, fins, revolution: (fins.revolution || 0) / n, dureeMediane: med(ms.map(m => m.duree)),
-    tresor: Object.fromEntries([20, 30, 40, 60].map(t => [t, med(vivantes(t).map(m => m.tresor[t]))])),
-    cp: Object.fromEntries([20, 40, 60].map(t => [t, med(vivantes(t).map(m => m.cp[t]))])),
+    tresor: Object.fromEntries([10, 20, 30, 40].map(t => [t, med(vivantes(t).map(m => m.tresor[t]))])),
+    cp: Object.fromEntries([10, 20, 40].map(t => [t, med(vivantes(t).map(m => m.cp[t]))])),
     reputation30: med(vivantes(30).map(m => m.reputation[30])), reputationFin: med(ms.map(m => m.reputationFin)),
     avecGuerre: ms.filter(m => m.guerres > 0).length, toursGuerre: med(ms.map(m => m.toursGuerre)),
     guerres: { gagnees: somme(m => m.issuesGuerres.gagnees) / n, perdues: somme(m => m.issuesGuerres.perdues) / n, blanches: somme(m => m.issuesGuerres.blanches) / n },
@@ -131,7 +131,7 @@ function afficher(r){
   const n = r.parties;
   console.log(`\n== ${r.bot} (${n} parties)`);
   console.log(`  fins : ${Object.entries(r.fins).map(([k, v]) => `${k} ${pct(v, n)}`).join(', ')} ; durée médiane ${r.dureeMediane} tours`);
-  console.log(`  trésor médian : t20 ${r0(r.tresor[20])}, t30 ${r0(r.tresor[30])}, t40 ${r0(r.tresor[40])}, t60 ${r0(r.tresor[60])} ; capital politique t20 ${r0(r.cp[20])}, t40 ${r0(r.cp[40])}, t60 ${r0(r.cp[60])}`);
+  console.log(`  trésor médian : t10 ${r0(r.tresor[10])}, t20 ${r0(r.tresor[20])}, t30 ${r0(r.tresor[30])}, t40 ${r0(r.tresor[40])} ; capital politique t10 ${r0(r.cp[10])}, t20 ${r0(r.cp[20])}, t40 ${r0(r.cp[40])}`);
   console.log(`  réputation médiane : t30 ${r0(r.reputation30)}, fin ${r0(r.reputationFin)}`);
   console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; par partie : guerres gagnées ${r.guerres.gagnees.toFixed(2)}, perdues ${r.guerres.perdues.toFixed(2)}, paix blanches ${r.guerres.blanches.toFixed(2)} ; batailles ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
   console.log(`  factions : colère max ${r0(r.colereMax)}, tours ≥ 55 : ${r0(r.tours55)}, ≥ 75 : ${r0(r.tours75)} (médianes) ; grève dans ${pct(r.avecGreve, n)} des parties ; ${r0(r.apaisements)} apaisements`);
@@ -194,10 +194,10 @@ if (require.main === module){
       const dom = dominance(parties).dominants;
       for (const nom of noms){
         const r = resumes[nom];
-        lignes.push([JSON.stringify(v), nom, pct(r.fins.revolution || 0, r.parties), r0(r.dureeMediane), r0(r.tresor[30]), r0(r.tresor[60]), r0(r.toursGuerre), r.batailles.perdues.toFixed(1), r0(r.apaisements), r0(r.tours75), pct(r.avecGreve, r.parties), dom.includes(nom) ? 'oui' : '']);
+        lignes.push([JSON.stringify(v), nom, pct(r.fins.revolution || 0, r.parties), r0(r.dureeMediane), r0(r.tresor[20]), r0(r.tresor[40]), r0(r.toursGuerre), r.batailles.perdues.toFixed(1), r0(r.apaisements), r0(r.tours75), pct(r.avecGreve, r.parties), dom.includes(nom) ? 'oui' : '']);
       }
     }
-    const tete = ['valeur', 'bot', 'révol.', 'durée', 'or t30', 'or t60', 'guerre', 'bat. P', 'apais.', 't≥75', 'grève', 'domine'];
+    const tete = ['valeur', 'bot', 'révol.', 'durée', 'or t20', 'or t40', 'guerre', 'bat. P', 'apais.', 't≥75', 'grève', 'domine'];
     const largeurs = tete.map((h, i) => Math.max(h.length, ...lignes.map(l => String(l[i]).length)));
     console.log('\n' + tete.map((h, i) => h.padEnd(largeurs[i])).join(' | '));
     console.log(largeurs.map(w => '-'.repeat(w)).join('-|-'));

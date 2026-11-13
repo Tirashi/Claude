@@ -14,7 +14,7 @@ const ECONOMIE = {
 
   cpParTour: 15,                 // RULES_V1
   delaiLoi: 2,                   // RULES_V1 : lancée au tour T, en vigueur au tour T + 2
-  slotsChantier: 2,              // RULES_V1
+  // V2 : un chantier par région (moteur/batiments.js) ; V1 : 2 chantiers pour tout le pays
 
   croissance: 0.01,              // ASSUMPTION validée : +1 % de familles par tour
   plafondFamilles: 200,          // ASSUMPTION validée

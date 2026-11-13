@@ -9,13 +9,19 @@ const SCENARIO_CHAMPS = {
   id: "champs",
   nom: "La République des Champs",
   dirigeant: "Tessia la Rouge",
-  tours: 60,                          // RULES_V1 § Cadre
+  tours: 40,                          // V2 : 40 tours (décision du 13/11 ; 60 en V1)
 
   joueur: {
     tresor: 200,                      // ASSUMPTION validée : 2 à 3 bâtiments d'avance, rien de plus
     cp: 0,                            // ASSUMPTION validée : capital politique de départ (la 1re loi vers le tour 3)
     familles: 80,                     // ASSUMPTION validée : 80 familles = 80 grain/tour = 4 fermes
-    batiments: { farm: 4, mine: 1 },  // ASSUMPTION validée : ni atelier ni tissage (d'où la crise du tissu du tour 1)
+    // V2 : 4 régions fixes (terrain, emplacements, bâtiments de départ) ; ni atelier ni tissage (crise du tissu du tour 1)
+    regions: {                                                                                          // ASSUMPTION validée (V2)
+      plaine:   { nom: "Plaine du Nord", terrain: "fertile", emplacements: 4, batiments: { farm: 2 } },
+      vallee:   { nom: "Vallée",         terrain: "mixte",   emplacements: 3, batiments: { farm: 2 } },
+      collines: { nom: "Collines",       terrain: "filons",  emplacements: 3, batiments: { mine: 1 } },
+      bourg:    { nom: "Bourg",          terrain: "ville",   emplacements: 4, batiments: {} }
+    },
     factions: {                       // ASSUMPTION validée : colère et puissance de départ (patrons 45 = valeur connue en fin de partie)
       paysans:  { colere: 30, puissance: 40 },
       ouvriers: { colere: 35, puissance: 25 },

@@ -1,6 +1,6 @@
 /* Politique : le tour. tourSuivant(etat, actions, rng) → nouvel état ; ne mute jamais etat.
    actionsDisponibles(etat) : la seule liste que voient l'écran et les bots ; toute autre action est refusée.
-   Actions : { type: "loi", id } lance une loi ; { type: "construire", id } commande un bâtiment ;
+   Actions : { type: "loi", id } lance une loi ; { type: "construire", id, region } commande un bâtiment (V2 : dans une région) ;
    { type: "apaiser", id: faction } apaise une faction (M2) ; diplomatie (M3a) : don, contrat, traite, rompre,
    embargo, lever_embargo (moteur/diplomatie.js) ; guerre (M3b) : declarer_guerre, bataille, imposer_paix, paix_blanche.
    Les actions d'un tour s'appliquent dans l'ordre, chacune vérifiée sur l'état laissé par la précédente.
@@ -24,7 +24,7 @@ const Guerre = NODE ? require("./guerre.js") : racine.Politique.Guerre;
 function actionsDisponibles(etat){
   if (etat.fin) return [];
   return Lois.lancables(etat).map(id => ({ type: "loi", id }))
-    .concat(Batiments.constructibles(etat).map(id => ({ type: "construire", id })))
+    .concat(Batiments.constructibles(etat).map(c => ({ type: "construire", id: c.id, region: c.region })))
     .concat(Factions.apaisables(etat).map(id => ({ type: "apaiser", id })))
     .concat(Diplomatie.actions(etat))
     .concat(Guerre.actions(etat));
@@ -37,7 +37,7 @@ const memeAction = (a, b) => !!a && typeof a === "object" && cle(a) === cle(b);
 function appliquerAction(e, a, r){
   if (!actionsDisponibles(e).some(d => memeAction(a, d))) throw new Error("action refusée : " + JSON.stringify(a));
   if (a.type === "loi") Lois.lancer(e, a.id);
-  else if (a.type === "construire") Batiments.commander(e, a.id);
+  else if (a.type === "construire") Batiments.commander(e, a.id, a.region);
   else if (a.type === "apaiser") Factions.apaiser(e, a.id);
   else if (["declarer_guerre", "bataille", "imposer_paix", "paix_blanche"].includes(a.type)) Guerre.appliquer(e, a, r);
   else Diplomatie.appliquer(e, a);

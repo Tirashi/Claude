@@ -5,7 +5,7 @@
 'use strict';
 const path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
-const Alea = P('moteur/alea.js'), Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Guerre = P('moteur/guerre.js');
+const Alea = P('moteur/alea.js'), Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Guerre = P('moteur/guerre.js'), Batiments = P('moteur/batiments.js');
 const { LOIS } = P('donnees/lois.js');
 const BAT = P('donnees/batiments.js');
 
@@ -46,19 +46,25 @@ function loiSuivante(p, liste){
   const id = liste.find(x => !(e.lois[LOIS[x].categorie] && e.lois[LOIS[x].categorie].id === x) && !e.loisEnCours.some(c => c.id === x));
   if (id) p.essayer({ type: 'loi', id });
 }
-// le bâtiment le plus utile : un déficit de tissu, d'outils, de fer, sinon une ferme
+// les bâtiments par ordre d'utilité : d'abord ce qui manque (tissu, outils, fer), puis fermes, mines…
 function batimentUtile(e){
-  const b = e.bilan ? e.bilan.balance : {};
-  if ((b.tissu || 0) < 0) return 'weaving';
-  if ((b.outils || 0) < 0) return 'workshop';
-  if ((b.fer || 0) < 0) return 'mine';
-  return 'farm';
+  const b = e.bilan ? e.bilan.balance : {}, l = [];
+  if ((b.tissu || 0) < 0) l.push('weaving');
+  if ((b.outils || 0) < 0) l.push('workshop');
+  if ((b.fer || 0) < 0) l.push('mine');
+  return l.concat(['farm', 'mine', 'workshop', 'weaving'].filter(x => !l.includes(x)));
 }
-// remplir les deux chantiers, en gardant une réserve d'or (la force vient du trésor)
+// construire un bâtiment dans la région où il rend le plus (bonus de terrain), s'il y a une place
+function construireMieux(p, id){
+  const ou = Tour.actionsDisponibles(p.e).filter(a => a.type === 'construire' && a.id === id)
+    .sort((a, b) => Batiments.bonus(p.e, b.region, id) - Batiments.bonus(p.e, a.region, id));
+  return ou.length > 0 && p.essayer(ou[0]);
+}
+// remplir les chantiers libres (un par région), en gardant une réserve d'or
 function construire(p, choix, reserve){
-  for (let i = 0; i < 2 && p.e.chantiers.length < 2; i++){
-    const id = choix(p.e);
-    if (!id || p.e.tresor - BAT[id].cout < (reserve || 0) || !p.essayer({ type: 'construire', id })) break;
+  for (let i = 0; i < Object.keys(p.e.regions).length; i++){
+    const id = choix(p.e).find(x => p.e.tresor - BAT[x].cout >= (reserve || 0) && Tour.actionsDisponibles(p.e).some(a => a.type === 'construire' && a.id === x));
+    if (!id || !construireMieux(p, id)) break;
   }
 }
 
@@ -102,8 +108,8 @@ const BOTS = {
     guerre(p, { seuilBataille: 0.5, embargoEnGuerre: true });
     apaiser(p, 55);   // essai à 70 (13/11) : pire (52 % de révolutions au lieu de 2 %)
     loiSuivante(p, ['army_conscription', 'income_progressive']);
-    construire(p, x => !x.batiments.forge && !x.chantiers.some(c => c.id === 'forge') ? 'forge'
-      : !x.batiments.fortifications && !x.chantiers.some(c => c.id === 'fortifications') ? 'fortifications' : batimentUtile(x), 300);
+    construire(p, x => [!x.batiments.forge && !x.chantiers.some(c => c.id === 'forge') ? 'forge' : null,
+      !x.batiments.fortifications && !x.chantiers.some(c => c.id === 'fortifications') ? 'fortifications' : null].filter(Boolean).concat(batimentUtile(x)), 300);
     if (!p.e.guerre){
       const nous = Guerre.force(p.e, 'joueur', false);
       const cible = Object.keys(p.e.nations).sort((a, b) => Guerre.force(p.e, a) - Guerre.force(p.e, b))[0];
@@ -150,7 +156,7 @@ const BOTS = {
       const p = plan(e);
       guerre(p, { seuilBataille: null, paixBlanche: false, leverEmbargo: true, embargoEnGuerre: true });
       apaiser(p, 55);
-      etapes.forEach(([t, a], i) => { if (!faites.has(i) && e.tour >= t && p.essayer(a)) faites.add(i); });
+      etapes.forEach(([t, a], i) => { if (!faites.has(i) && e.tour >= t && (a.type === 'construire' ? construireMieux(p, a.id) : p.essayer(a))) faites.add(i); });
       return p.acts;
     };
   }

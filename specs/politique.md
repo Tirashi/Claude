@@ -125,6 +125,22 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 8. V2, étape 1 : 40 tours et régions (13/11)
+Fait : `donnees/carte.js` (terrains), régions dans `champs.js`, `moteur/batiments.js` (un chantier par région, emplacements, bonus de terrain), délais raccourcis. 183 tests. Avant (V1, 60 tours) → après (200 parties par bot) :
+
+| Bot | Or t40 avant → après | Guerre (tours) | Batailles P | Révolutions | Apaisements |
+|---|---|---|---|---|---|
+| economy | 1 386 → 8 217 | 49/60 → 20/40 | 33 → 13 | 0 % → 0 % | 28 → 5 |
+| spam_medicine | 1 342 → 7 857 | 49/60 → 20/40 | 34 → 13 | 0 % → 0 % | 10 → 1 |
+| no_appeasement | — → 9 443 | 16 → 16 | 14 → 10 | 96 % → 59 % | 0 |
+| militarist | 130 → 6 313 | 59/60 → 14/40 | 51 → 7 (2,65 guerres gagnées) | 0 % → 0 % | 41 → 1 |
+| replica | 4 872 → 8 173 | 16 → 12 | 12 → 6 | 0 % → 0 % | 6 → 1 |
+
+- L'économie va **beaucoup plus vite** (bonus de terrain, 4 chantiers en parallèle, délais courts) : le trésor déborde encore plus (A1). Attendu : l'armée en régiments (étape 2) et le marché (étape 3) doivent l'absorber.
+- Plus riches, les bots tiennent tête à Val-Roc : guerres deux fois plus courtes, et militarist gagne ses guerres (2,65 par partie).
+- Aucune stratégie dominante (economy bat spam_medicine 90 %, replica 51 %).
+- replica n'est plus une référence de non-régression (règles V2 ≠ partie 1).
+
 ## 7. Brainstorming M6 (13/11)
 Décisions : public adulte (l'utilisateur surtout), parties sauvegardées, **40 tours** ; grille de décision (une règle = une phrase, effet visible, un choix, liée à deux systèmes, 5 systèmes au plus) ; tableau des mécaniques validé ; réputation fusionnée dans les relations, à juger aux simulations ; personas cachés ; une seule carte. Premier jet chiffré : [`politique/regles-v2.md`](politique/regles-v2.md) (à valider).
 
