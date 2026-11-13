@@ -47,11 +47,11 @@ suffrage universel patrons +15 colère ; populaires = paysans, ouvriers ; élite
 moral : 1 jusqu'à colère 40, puis linéaire jusqu'à 0 à 100, grève (≥ 75) plafonnée à 0,5, révolte 0, moyenne pondérée par la puissance.
 Restent pour M3 : cumul des bonus de guerre (multiplicatif proposé), effet de l'embargo sur l'économie visée.
 
-**Ajoutées en M1** (même logique, à confirmer) : une seule loi **en cours** par catégorie ; plusieurs actions par tour, chacune vérifiée sur l'état laissé par la précédente ;
+**Ajoutées en M1, validées le 13/11** : une seule loi **en cours** par catégorie ; plusieurs actions par tour, chacune vérifiée sur l'état laissé par la précédente ;
 ordre du tour T : événements → actions → adoption des lois (lancée en T, en vigueur en T + 2, effets dès ce tour) → économie → démographie → chantiers → +15 capital politique → T + 1 ;
 montants arrondis au centime.
 
-**Proposées avec M2 (à valider)** : bâtiments de chaque faction (paysans fermes, ouvriers mines, artisans ateliers et tissages ; patrons : les impôts) ;
+**Proposées avec M2, validées le 13/11** : bâtiments de chaque faction (paysans fermes, ouvriers mines, artisans ateliers et tissages ; patrons : les impôts) ;
 grève = leurs bâtiments à 50 %, patrons impôts ×0,8 ; révolte = bâtiments arrêtés, patrons impôts ×0,5 ; révolution (colère qui touche 100 à n'importe quel moment du tour) = partie perdue ;
 « colère montante 2× plus lente » = toute hausse de colère (chocs et effets par tour) des factions favorisées divisée par 2, pas la puissance ;
 statuts calculés en fin de tour : une grève pèse sur l'économie du tour suivant, l'apaisement la lève au tour d'après.
@@ -62,3 +62,34 @@ Une ferme (60 or, +20 grain vendus 1 or) se rembourse en 3 tours et rien ne limi
 
 M2 : aucun joueur du rapport n'atteint la grève. Même un « provocateur » qui adopte impôt sur le capital, syndicats, code du travail, suffrage universel, conscription et école gratuite **sans jamais apaiser** plafonne à 67 de colère (patrons) : en V1 la colère ne monte que par les chocs de lois, et la dissipation (−1/tour) l'efface. L'apaisement est donc inutile (pire que le problème A2). Le plafond de 0,5 du moral en grève ne joue jamais : à colère 75, la formule donne déjà 0,42.
 
+
+## 6. Propositions pour M3 (13/11, à valider)
+M3 coupé en deux : **M3a** diplomatie, commerce, traités, réputation, économie simplifiée des nations ; **M3b** guerre, paix, forge, fortifications, politiques militaires des nations.
+
+**Nations de l'ordinateur (modèle simplifié, pas de lois ni de bâtiments)** : trésor, familles (+0,5 %/tour), revenu = familles × taux − 12 (armée) ; une seule jauge de colère (dissipation −1/tour) qui donne le moral par la formule des factions ; loi militaire fixe ; un profil commercial fixe (ce qu'elles importent et exportent chaque tour).
+
+| Nation | Taux | Armée | Colère | Exporte | Importe |
+|---|---|---|---|---|---|
+| Val-Roc | 1,0 | conscription ×1,6 | 30 | fer 10 | grain 15, tissu 5 |
+| Brume | 1,3 | milice ×1 | 20 | tissu 20 | fer 10, grain 5 |
+| Contreforts | 1,0 | armée de métier ×1,3 | 25 | outils 10 | grain 5 |
+
+**Commerce** : contrats tirés d'une liste fixe par nation (ex. Brume vend 10 tissu à 1,6 ; Contreforts vend 5 outils à 1,6 ; Val-Roc achète 10 grain à 1,3), 10 tours ; la nation accepte si relation ≥ 0. Le volume du contrat remplace le marché à ce prix ; s'il manque au joueur, il est acheté au marché pour être livré.
+**Relations** : traité signé +10, contrat +5, don +1 par 5 or, embargo −30 avec la cible, guerre → −100 ; bornes −100/+100 ; pas de dérive.
+**Dons** : 20, 50 ou 100 or (réputation selon le barème validé).
+**Embargo** (À TRANCHER) : le joueur cesse de vendre à la cible ; pour chaque bien qu'elle importe et dont le joueur a un surplus, il lui manque min(import, surplus) unités : colère +1 par 3 unités manquantes et par tour, trésor − (manque × prix). Pour le joueur : rien en V1 (marché anonyme) sauf relation et réputation — c'est le problème A3 du backlog, reproduit tel quel.
+**Traités** (acceptés selon la relation) :
+- Entente des Ports (relation ≥ 30) : achats −10 % et ventes +10 % pour ses membres ; consultation = un membre ne peut pas attaquer un autre membre (sinon traité rompu, −15) ; attaquer un membre = embargo de tous les membres.
+- Défense mutuelle (≥ 50) : si l'un est attaqué, l'autre entre en guerre ; les forces s'additionnent.
+- Filature conjointe (Brume, ≥ 30, Entente requise) : bâtiment `entente_mill` à 50 or pour le joueur, +18 tissu dont 6 livrés à Brume à 1 or.
+- Non-réarmement : clause de paix (M3b).
+**Paria** : réputation < −50 → plus aucun traité ni contrat accepté.
+
+**Guerre (M3b)** :
+- Force = trésor (≥ 0) × loi militaire × moral × forge 1,15 × fortifications 1,2 (en défense) — bonus **multipliés** (À TRANCHER) ; alliés : forces additionnées.
+- Forge : consomme 10 fer + 8 or par tour, toujours.
+- Bataille (action, une par tour et par guerre) : l'attaquant gagne avec la probabilité Fa / (Fa + Fd), tirée au hasard à graine. Perdant : −25 % de trésor et +10 de colère (toutes les factions pour le joueur).
+- Usure : un camp dont le moral passe sous 0,3 capitule.
+- Paix : capitulation (le vainqueur choisit les clauses) ou paix blanche après 5 tours sans bataille si les deux le veulent. Clauses : réparations (25 % du trésor du perdant, plafond 300), levée d'embargo, non-réarmement (15 tours sans changer de loi militaire ni bâtir de forge ; sinon ré-embargo automatique).
+- **Territoire** : pas de carte en V1 → pas de pertes de territoire ni de clause de restitution (proposé au backlog).
+- Politiques : Val-Roc déclare la guerre si sa force > 1,2 × la force du joueur et de ses alliés, relation < 0 et tirage < 30 % ; livre bataille si sa force dépasse celle d'en face ; Brume ne déclare jamais la guerre et honore la défense mutuelle ; Contreforts, quand une guerre éclate, rejoint le camp le plus fort avec lequel sa relation est ≥ 0 (tirage 50 %).
