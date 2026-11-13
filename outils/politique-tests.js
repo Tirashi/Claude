@@ -22,6 +22,8 @@ P('donnees/economie.js').marche.pente = 0; RFV.niveauDeVie.actif = false;
 // … et sans débat au hasard : une loi lancée au tour T est adoptée au tour T + 2 (le délai de la V1), sans colère de débat
 const RLV = P('donnees/lois.js').REGLES_LOIS, RLV0 = JSON.parse(JSON.stringify(RLV));
 Object.assign(RLV, { premierTirage: 3, colereDebat: 0, chance: Object.assign({}, RLV.chance, { min: 1, max: 1 }) });
+// … et avec la réputation à part (avant la V2 étape 6)
+const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
 
 let fail = 0, n = 0;
 const check = (ok, msg) => { n++; console.log((ok ? 'ok    ' : 'ÉCHEC ') + msg); if (!ok) fail++; };
@@ -633,6 +635,31 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(avec.factions.patrons.colere === sans.factions.patrons.colere + 1 && avec.factions.artisans.colere === sans.factions.artisans.colere + 1 && avec.factions.ouvriers.colere === sans.factions.ouvriers.colere, 'débat : +1 colère par tour pour les factions contre (impôt sur le capital : patrons et artisans)');
   check(Object.values(LOIS).every(l => Array.isArray(l.pour) && Array.isArray(l.contre) && l.pour.concat(l.contre).every(f => CHAMPS.joueur.factions[f]) && l.cp === undefined), 'lois : chacune a ses factions pour et contre, plus de coût');
   check(!LM.lancables(vrai({ nonRearmement: { joueur: 10 } })).some(id => /^army_/.test(id)), 'débat : pas de loi militaire sous la clause de non-réarmement');
+}
+
+// ===================== V2 étape 6 : réputation fusionnée dans les relations =====================
+{
+  FUS.actif = true;
+  const DPm = P('moteur/diplomatie.js'), GU = P('moteur/guerre.js'), LM = P('moteur/lois.js');
+  const base = () => { const e = vrai({ evenements: [] }); for (const n in e.nations) e.nations[n].relation = 10; return e; };
+  const rel = e => Object.fromEntries(Object.entries(e.nations).map(([n, x]) => [n, x.relation]));
+  const ag = base(); GU.declarer(ag, 'contreforts', 'joueur', Alea.creer(1));
+  check(ag.nations.contreforts.relation === -100 && ag.nations.brume.relation === 0 && ag.nations.val_roc.relation === 0, 'réputation fusionnée : une agression vaut −100 avec la cible et −10 avec les autres');
+  const don = base(); DPm.appliquer(don, { type: 'don', id: 'brume', montant: 100 });
+  check(egal(rel(don), { val_roc: 12.5, brume: 32.5, contreforts: 12.5 }), 'réputation fusionnée : un don de 100 or vaut +20 avec la nation aidée et +2,5 avec toutes');
+  const ts = base(); ts.nations.brume.relation = 30; DPm.appliquer(ts, { type: 'traite', id: 'entente', avec: 'brume' });
+  check(egal(rel(ts), { val_roc: 11.5, brume: 41.5, contreforts: 11.5 }), 'réputation fusionnée : un traité signé vaut +10 avec le partenaire et +1,5 avec toutes');
+  DPm.appliquer(ts, { type: 'rompre', id: 'entente', avec: 'brume' });
+  check(egal(rel(ts), { val_roc: 4, brume: 34, contreforts: 4 }), 'réputation fusionnée : un traité rompu coûte −7,5 avec toutes');
+  const em = base(); DPm.appliquer(em, { type: 'embargo', id: 'val_roc' });
+  check(egal(rel(em), { val_roc: -22.5, brume: 7.5, contreforts: 7.5 }), 'réputation fusionnée : un embargo injustifié coûte −30 avec la cible et −2,5 avec toutes');
+  const su = base(); LM.adopter(su, 'suffrage_universal');
+  check(Object.values(rel(su)).every(x => x === 12.5) && su.reputation === CHAMPS.joueur.reputation, 'réputation fusionnée : le suffrage universel vaut +2,5 avec toutes ; la réputation à part ne bouge plus');
+  check(DPm.reputation(base()) === 10 && DPm.reputation(Object.assign(base(), { nations: Object.assign(base().nations, { brume: Object.assign(base().nations.brume, { relation: 40 }) }) })) === 20, 'réputation fusionnée : la réputation affichée est la moyenne des relations');
+  const pa = base(); for (const n in pa.nations) pa.nations[n].relation = -51;
+  check(DPm.paria(pa) && !Tour.actionsDisponibles(pa).some(a => a.type === 'traite' || a.type === 'contrat'), 'réputation fusionnée : paria sous −50 de moyenne');
+  const ide = base(); ide.profils.brume.persona = 'idealiste'; ide.nations.brume.relation = 90; ide.nations.val_roc.relation = -100; ide.nations.contreforts.relation = -100;
+  check(!Tour.actionsDisponibles(ide).some(a => a.type === 'traite' && a.avec === 'brume') && Tour.actionsDisponibles(Object.assign(ide, { nations: Object.assign(ide.nations, { val_roc: Object.assign(ide.nations.val_roc, { relation: 10 }) }) })).some(a => a.type === 'traite' && a.avec === 'brume'), 'réputation fusionnée : un idéaliste juge la moyenne de nos relations');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

@@ -15,10 +15,22 @@ const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 
 const arrondi = x => Math.round(x * 100) / 100;
 const borneRel = x => Math.max(D.relation.min, Math.min(D.relation.max, arrondi(x)));
-const paria = e => e.reputation < D.reputation.paria;
+// réputation (V2 étape 6) : fusionnée dans les relations ; la « réputation » est la moyenne des relations
+const reputation = e => {
+  if (!D.fusion.actif) return e.reputation;
+  const r = Object.values(e.nations).map(n => n.relation);
+  return Math.round(r.reduce((a, b) => a + b, 0) / r.length * 100) / 100;
+};
+const paria = e => reputation(e) < D.reputation.paria;
 const embargo = (e, n) => e.embargos.includes(n);
 const aTraite = (e, type, avec) => e.traites.some(t => t.type === type && (avec == null || t.avec === avec));
 const relation = (e, n, d) => { e.nations[n].relation = borneRel(e.nations[n].relation + d); };
+// points de réputation du barème : toutes les relations bougent de part × points (sauf la nation « sauf »)
+function reputer(e, points, sauf){
+  if (!points) return;
+  if (!D.fusion.actif){ e.reputation += points; return; }   // V1
+  for (const n in e.nations) if (n !== sauf) relation(e, n, points * D.fusion.part);
+}
 
 // état de départ des nations (etat.js)
 function nationsInitiales(scenario, profils){
@@ -57,7 +69,7 @@ function traitesPossibles(e){
     const t = D.traites[type];
     for (const n of Object.keys(e.nations)){
       const p = persona(e, n);
-      if ((p.refuse || []).includes(type) || (p.reputationMin != null && e.reputation < p.reputationMin)) continue;
+      if ((p.refuse || []).includes(type) || (p.reputationMin != null && reputation(e) < p.reputationMin)) continue;
       if (!aTraite(e, type, n) && ouverte(e, n, Math.max(t.relationMin, p.traite)) && (!t.requiert || aTraite(e, t.requiert, n))) r.push({ type: "traite", id: type, avec: n });
     }
   }
@@ -95,7 +107,7 @@ function couper(e, n){
 function rompre(e, type, avec){
   const nom = D.traites[type].nom;
   e.traites = e.traites.filter(t => !(t.type === type && t.avec === avec));
-  e.reputation += D.reputation.traiteRompu;
+  reputer(e, D.reputation.traiteRompu);
   e.journal.push(`Traité rompu : ${nom} avec ${avec}.`);
   // un traité qui dépendait de celui-ci tombe aussi (ASSUMPTION validée (M3a))
   for (const t of e.traites.filter(t => t.avec === avec && D.traites[t.type].requiert === type)) rompre(e, t.type, avec);
@@ -105,7 +117,7 @@ function appliquer(e, a){
   if (a.type === "don"){
     e.tresor = arrondi(e.tresor - a.montant);
     relation(e, a.id, a.montant * D.relation.donParOr);
-    e.reputation += Math.min(D.reputation.donMax, Math.floor(a.montant / 20) * D.reputation.donPar20);
+    reputer(e, Math.min(D.reputation.donMax, Math.floor(a.montant / 20) * D.reputation.donPar20));
     e.dons.push(a.id);
     e.journal.push(`Don de ${a.montant} or à ${a.id}.`);
   } else if (a.type === "contrat"){
@@ -116,13 +128,13 @@ function appliquer(e, a){
   } else if (a.type === "traite"){
     e.traites.push({ type: a.id, avec: a.avec, depuis: e.tour });
     relation(e, a.avec, D.relation.traite);
-    e.reputation += D.reputation.traiteSigne;
+    reputer(e, D.reputation.traiteSigne);
     e.journal.push(`Traité signé : ${D.traites[a.id].nom} avec ${a.avec}.`);
   } else if (a.type === "rompre") rompre(e, a.id, a.avec);
   else if (a.type === "embargo"){
     e.embargos.push(a.id);
     relation(e, a.id, D.relation.embargo);
-    e.reputation += legitime(e, a.id) ? D.reputation.sanctionLegitime : D.reputation.sanctionIllegitime;
+    reputer(e, legitime(e, a.id) ? D.reputation.sanctionLegitime : D.reputation.sanctionIllegitime);
     e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== a.id);   // plus de commerce avec la cible
     e.journal.push(`Embargo contre ${a.id}.`);
   } else if (a.type === "lever_embargo"){
@@ -180,11 +192,11 @@ function tour(e){
   e.contrats = e.contrats.filter(x => x.jusqua > e.tour);
   for (const t of e.traites){
     const age = e.tour - t.depuis;
-    if (age > 0 && age % D.reputation.respectTous === 0) e.reputation += D.reputation.traiteRespecte;
+    if (age > 0 && age % D.reputation.respectTous === 0) reputer(e, D.reputation.traiteRespecte);
   }
   e.dons = [];
 }
 
-const Diplomatie = { persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
+const Diplomatie = { reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
 if (NODE) module.exports = Diplomatie; else (racine.Politique = racine.Politique || {}).Diplomatie = Diplomatie;
 })(typeof window !== "undefined" ? window : globalThis);

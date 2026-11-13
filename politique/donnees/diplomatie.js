@@ -11,6 +11,12 @@ const DIPLOMATIE = {
   reputation: { donPar20: 1, donMax: 5, traiteSigne: 3, traiteRespecte: 2, respectTous: 10, traiteRompu: -15,
                 sanctionLegitime: 3, sanctionIllegitime: -5, paria: -50 },
 
+  // V2 étape 6 (validée le 13/11) : la réputation est fusionnée dans les relations : chaque point de réputation du barème
+  // devient part × point de relation avec **toutes** les nations (agression : −100 avec la cible, −10 avec les autres) ;
+  // « réputation » affichée = moyenne des relations ; paria sous −50 de moyenne.
+  // actif: false : réputation à part de la V1 (utilisé par les tests de règles écrits avant cette étape)
+  fusion: { actif: true, part: 0.5 },
+
   dons: [20, 50, 100],              // ASSUMPTION validée (M3) ; un don par nation et par tour : ASSUMPTION validée (M3a)
 
   nation: { croissance: 0.005, dissipation: 1 },   // économie simplifiée des nations : ASSUMPTION validée (M3) ; V2 : l'armée coûte ses régiments (donnees/guerre.js)

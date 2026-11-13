@@ -74,7 +74,7 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 3. ✅ (13/11) Marché qui bouge et niveau de vie des factions.
 4. ✅ (13/11) Une loi à la fois, sans capital politique.
 5. ✅ (13/11, avancée avant d'équilibrer la guerre) Personas cachés.
-6. Réputation fusionnée dans les relations.
+6. ✅ (13/11) Réputation fusionnée dans les relations.
 
 ## Propositions du 13/11 (à valider) : personas avancés avant d'équilibrer la guerre
 Remarque de l'utilisateur : Val-Roc ne doit pas être l'ennemi désigné à chaque partie. Le caractère passe donc de la nation au **dirigeant**, tiré au hasard (3 personas différents parmi 7, cachés au joueur). La nation garde ses régions, son économie et ses échanges ; le persona décide de l'armée, de la guerre et de la diplomatie, et de la relation de départ.

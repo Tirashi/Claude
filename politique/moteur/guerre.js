@@ -81,7 +81,7 @@ function declarer(e, cible, agresseur, r){
   const entente = partenaires(e, "entente");
   if (agresseur === "joueur"){
     const membre = entente.includes(cible);
-    e.reputation += membre ? G.reputation.attaqueEntente : G.reputation.agression;
+    Diplomatie.reputer(e, membre ? G.reputation.attaqueEntente : G.reputation.agression, cible);   // la cible tombe à −100 plus bas
     for (const t of e.traites.filter(t => t.avec === cible)) if (e.traites.includes(t)) Diplomatie.rompre(e, t.type, cible);
     // attaquer un membre de l'Entente : sanctions de bloc des autres membres contre le joueur
     if (membre) for (const p of entente.filter(p => p !== cible)) Diplomatie.couper(e, p);

@@ -125,6 +125,11 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 13. V2, étape 6 : réputation fusionnée dans les relations (13/11)
+Fait : `diplomatie.fusion` ; chaque point du barème de réputation devient 0,5 point de relation avec **toutes** les nations (`Diplomatie.reputer`) : agression −100 avec la cible et −10 avec les autres, don de 100 or +20 avec la nation aidée et +2,5 avec toutes, traité signé +1,5, rompu −7,5, embargo injustifié −2,5, suffrages ±2,5, traité respecté +1 tous les 10 tours ; « réputation » = moyenne des relations ; paria sous −50 de moyenne ; l'idéaliste juge cette moyenne. Les tests écrits avant gardent la réputation à part. 245 tests.
+
+**Résultat (200 parties par bot)** : presque rien ne bouge pour les bots qui ne font pas de diplomatie (economy, spam_medicine, no_appeasement : relations à +10 du début à la fin, mêmes fins qu'à l'étape 4). Les agresseurs le paient : militarist finit à −39 de moyenne, random à −98 (paria). replica (diplomate) finit à +17. Aucune stratégie dominante. Une jauge de moins à l'écran, sans perte de jeu visible : à garder.
+
 ## 12. V2, étape 4 : une loi à la fois (13/11)
 Fait : plus de capital politique ; `e.debat` (une seule loi en débat ; action « abandonner ») ; chaque tour de débat, les factions contre prennent +1 de colère ; à partir du 2e tour, adoption avec la chance affichée (`Lois.chance` : 50 % + (puissance des pour − des contre) / 2, entre 10 % et 90 %) ; les tests écrits avant tournent sans hasard (adoption à T + 2, le délai de la V1). 236 tests.
 

@@ -11,7 +11,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
-const Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js');
+const Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Diplo = P('moteur/diplomatie.js');
 const CHAMPS = P('donnees/champs.js'), { LOIS } = P('donnees/lois.js');
 const Bots = require('./politique-bots.js');
 
@@ -85,10 +85,10 @@ function partie(nom, graine, tours, coupe){
     if (c.some(x => x >= 75)) m.tours75++;
     if (Object.values(e.factions).some(x => x.statut === 'greve')) m.greves++;
     m.colereMax = Math.max(m.colereMax, ...c);
-    if ([10, 20, 30, 40].includes(t)) { m.tresor[t] = e.tresor; m.reputation[t] = e.reputation; }
+    if ([10, 20, 30, 40].includes(t)) { m.tresor[t] = e.tresor; m.reputation[t] = Diplo.reputation(e); }
     if (coupe != null) traces.push(JSON.stringify(e));
   }
-  m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = e.reputation; m.tresorFin = e.tresor;
+  m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = Diplo.reputation(e); m.tresorFin = e.tresor;
   return coupe != null ? { m, traces } : m;
 }
 
@@ -139,7 +139,7 @@ function afficher(r){
   console.log(`\n== ${r.bot} (${n} parties)`);
   console.log(`  fins : ${Object.entries(r.fins).map(([k, v]) => `${k} ${pct(v, n)}`).join(', ')} ; durée médiane ${r.dureeMediane} tours`);
   console.log(`  trésor médian : t10 ${r0(r.tresor[10])}, t20 ${r0(r.tresor[20])}, t30 ${r0(r.tresor[30])}, t40 ${r0(r.tresor[40])}`);
-  console.log(`  réputation médiane : t30 ${r0(r.reputation30)}, fin ${r0(r.reputationFin)}`);
+  console.log(`  réputation médiane (moyenne des relations) : t30 ${r0(r.reputation30)}, fin ${r0(r.reputationFin)}`);
   console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; par partie : guerres gagnées ${r.guerres.gagnees.toFixed(2)}, perdues ${r.guerres.perdues.toFixed(2)}, paix blanches ${r.guerres.blanches.toFixed(2)} ; batailles ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
   console.log(`  armée : ${r0(r.regimentsMax)} régiments au plus (médiane) ; ${r0(r.toursOccupes)} tours avec une région occupée (médiane) ; régions par partie : ${r.regionsGagnees.toFixed(2)} gagnées, ${r.regionsPerdues.toFixed(2)} perdues`);
   console.log(`  factions : colère max ${r0(r.colereMax)}, tours ≥ 55 : ${r0(r.tours55)}, ≥ 75 : ${r0(r.tours75)} (médianes) ; grève dans ${pct(r.avecGreve, n)} des parties ; ${r0(r.apaisements)} apaisements`);
