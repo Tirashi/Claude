@@ -26,9 +26,12 @@ function creerEtat(scenario, graine){
     reputation: j.reputation,
     factions: copie(j.factions),
     batiments: copie(j.batiments),
-    chantiers: [],                    // M1 : bâtiments en construction
-    lois: {},                         // M1 : catégorie → id de la loi en vigueur
-    loisEnCours: [],                  // M1 : lois lancées, pas encore adoptées
+    chantiers: [],                    // bâtiments en construction : [{ id, restant }]
+    lois: {},                         // catégorie → { id, depuis } (loi en vigueur)
+    loisEnCours: [],                  // lois lancées, pas encore adoptées : [{ id, adoption }]
+    evenements: copie(scenario.evenements || []),   // événements écrits du scénario
+    modifPrix: [],                    // [{ prix: { bien: facteur }, jusqua }] (événements ; traités en M3)
+    bilan: null,                      // économie du dernier tour (Economie.bilan)
     nations,
     fin: false,
     journal: []                       // messages du tour, pour l'écran et les rapports

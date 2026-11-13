@@ -1,13 +1,16 @@
 /* Politique (moteur de règles, sans écran) : tests sous Node.
    node outils/politique-tests.js
+   M1 : économie, capital politique, lois, bâtiments (une règle = un test), puis des parties au hasard (invariants).
    M0 : hasard à graine, état initial du scénario « champs », invariants du tour
    (déterminisme, état reçu jamais modifié, JSON rechargé à l'identique, action hors liste refusée).
+   --rapport : trajectoire de deux joueurs simples (information, pas d'équilibrage).
    Code de sortie 1 si un test échoue (lancé par outils/verifications.js). */
 'use strict';
 const path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
 const Alea = P('moteur/alea.js'), Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js');
-const CHAMPS = P('donnees/champs.js');
+const Economie = P('moteur/economie.js'), Lois = P('moteur/lois.js');
+const CHAMPS = P('donnees/champs.js'), ECO = P('donnees/economie.js'), { LOIS, CATEGORIES } = P('donnees/lois.js'), BAT = P('donnees/batiments.js');
 
 let fail = 0, n = 0;
 const check = (ok, msg) => { n++; console.log((ok ? 'ok    ' : 'ÉCHEC ') + msg); if (!ok) fail++; };
@@ -72,6 +75,148 @@ const partie = (graine, coupe) => {
   check(Tour.tourSuivant(e0, [], r).alea === r.s, 'tour : le hasard injecté est rangé dans le nouvel état');
   const fin = JSON.parse(a[a.length - 1]);
   check(fin.fin && egal(Tour.actionsDisponibles(fin), []), 'tour : plus aucune action après la fin');
+}
+
+// ===================== M1 =====================
+const neuf = (mod) => Object.assign(Etat.creerEtat(CHAMPS, 1), mod || {});
+const tours = (e, k, actions) => { for (let i = 0; i < k; i++) e = Tour.tourSuivant(e, i === 0 ? actions || [] : []); return e; };
+const refuse = f => { try { f(); return false; } catch (err) { return true; } };
+const proche = (a, b) => Math.abs(a - b) < 1e-6;
+
+// --- capital politique ---
+{
+  check(tours(neuf(), 1).cp === 15 && tours(neuf(), 3).cp === 45, 'capital politique : +15 par tour');
+  const e = Tour.tourSuivant(neuf({ cp: 100 }), [{ type: 'loi', id: 'income_progressive' }]);
+  check(e.cp === 100 - 30 + 15, 'capital politique : lancer une loi coûte son prix (30)');
+  check(!Tour.actionsDisponibles(neuf({ cp: 49 })).some(a => a.id === 'income_capital') && Tour.actionsDisponibles(neuf({ cp: 50 })).some(a => a.id === 'income_capital'), 'capital politique : une loi n\'est proposée que si le capital suffit');
+  check(refuse(() => Tour.tourSuivant(neuf({ cp: 20 }), [{ type: 'loi', id: 'income_capital' }])), 'capital politique : une loi trop chère est refusée');
+  const f = Tour.tourSuivant(neuf({ cp: 50 }), [{ type: 'loi', id: 'income_progressive' }, { type: 'loi', id: 'unions' }]);
+  check(f.loisEnCours.length === 2 && f.cp === 15, 'actions : plusieurs lois le même tour si le capital suffit pour toutes');
+  check(refuse(() => Tour.tourSuivant(neuf({ cp: 60 }), [{ type: 'loi', id: 'income_progressive' }, { type: 'loi', id: 'unions' }, { type: 'loi', id: 'labor_code' }])), 'actions : chaque action est vérifiée sur l\'état laissé par la précédente (la 3e loi n\'est plus payable)');
+}
+
+// --- lois : délai, catégories ---
+{
+  let e = Tour.tourSuivant(neuf({ cp: 100 }), [{ type: 'loi', id: 'income_progressive' }]);   // lancée au tour 1
+  check(e.loisEnCours[0].adoption === 3 && !e.lois.impot, 'lois : lancée au tour 1, adoption prévue au tour 3');
+  e = Tour.tourSuivant(e, []);
+  check(!e.lois.impot && proche(e.bilan.impots, 80.8), 'lois : pas encore en vigueur au tour 2 (impôts sans multiplicateur)');
+  const fam3 = e.familles;
+  e = Tour.tourSuivant(e, []);
+  check(e.lois.impot && e.lois.impot.id === 'income_progressive' && e.lois.impot.depuis === 3 && e.loisEnCours.length === 0, 'lois : en vigueur au tour 3 (2 tours de délai)');
+  check(proche(e.bilan.impots, Math.round(fam3 * 1.35 * 100) / 100), 'lois : ses effets jouent dès le tour d\'adoption');
+  check(refuse(() => Tour.tourSuivant(neuf({ cp: 200 }), [{ type: 'loi', id: 'income_progressive' }, { type: 'loi', id: 'income_capital' }])), 'lois : une seule loi en cours par catégorie');
+  let g = neuf({ cp: 200 });
+  g = tours(g, 3, [{ type: 'loi', id: 'school_public' }]);
+  check(!Tour.actionsDisponibles(g).some(a => a.id === 'school_public'), 'lois : une loi en vigueur ne se relance pas');
+  g = tours(g, 3, [{ type: 'loi', id: 'school_free' }]);
+  check(g.lois.education.id === 'school_free' && Object.keys(g.lois).length === 1, 'lois : adopter une loi remplace celle de sa catégorie');
+  check(Object.values(CATEGORIES).length === 7 && Object.values(LOIS).every(l => CATEGORIES[l.categorie]), 'lois : 7 catégories, chaque loi dans l\'une d\'elles');
+  check(Object.keys(LOIS).length === 11, 'lois : les 11 lois de RULES_V1');
+  const h = tours(neuf({ cp: 100 }), 3, [{ type: 'loi', id: 'suffrage_universal' }]);
+  const k = tours(neuf({ cp: 100 }), 3, [{ type: 'loi', id: 'suffrage_census' }]);
+  check(h.reputation === 5 && k.reputation === -5, 'lois : suffrage universel +5 de réputation, censitaire −5');
+}
+
+// --- économie ---
+const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of ids) e.lois[LOIS[id].categorie] = { id, depuis: depuis == null ? 1 : depuis }; return e; };
+{
+  const b = Tour.tourSuivant(neuf(), []).bilan;   // le bilan du tour 1 (événement du tour compris)
+  check(b.production.grain === 80 && b.production.fer === 15 && b.production.tissu === 0, 'économie : production = bâtiments × rendement (4 fermes, 1 mine)');
+  check(b.consommation.grain === 80 && b.consommation.tissu === 18 && b.consommation.outils === 8 && b.consommation.fer === 4, 'économie : consommation = familles × besoins + armée');
+  check(b.prix.tissu === 3 && b.prix.grain === 1, 'économie : crise du tissu (prix ×1,5) au tour 1');
+  check(proche(b.ventes, 16.5) && proche(b.achats, 70) && proche(b.impots, 80) && b.entretiens === 0 && proche(b.solde, 26.5), 'économie : ventes 11 fer × 1,5, achats 18 tissu × 3 + 8 outils × 2, impôts 80, solde +26,5');
+  const e1 = Tour.tourSuivant(neuf(), []);
+  check(proche(e1.tresor, 226.5), 'économie : trésor += ventes − achats + impôts − entretiens');
+  const e6 = tours(neuf(), 5), e7 = tours(neuf(), 6);
+  check(Economie.bilan(e6).prix.tissu === 3 && Economie.bilan(e7).prix.tissu === 2, 'économie : la crise du tissu dure 6 tours (prix normal au tour 7)');
+  check(proche(Economie.bilan(avecLois(['income_progressive'])).impots, 108) && proche(Economie.bilan(avecLois(['income_capital'])).impots, 124), 'économie : impôts = familles × 1 × multiplicateur (×1,35 ; ×1,55)');
+  check(Economie.bilan(avecLois(['school_public', 'labor_medicine', 'army_professional'])).entretiens === 36 && Economie.bilan(avecLois(['school_free', 'army_conscription'])).entretiens === 32, 'économie : entretiens des lois (école 14 / 20, médecine 10, armée 12)');
+  check(proche(Economie.bilan(avecLois(['labor_code'])).production.grain, 75.2), 'économie : code du travail, production −6 %');
+  check(proche(Tour.tourSuivant(neuf(), []).familles, 80.8), 'démographie : +1 % de familles par tour');
+  check(Tour.tourSuivant(neuf({ familles: 199.5 }), []).familles === 200, 'démographie : plafond de 200 familles');
+  const ecole = (depuis) => { const e = avecLois(['school_public'], depuis); e.tour = 11; return Economie.bilan(e).croissance; };
+  check(proche(ecole(11), 0.01) && proche(ecole(6), 0.0125) && proche(ecole(1), 0.015) && proche(ecole(-5), 0.015), 'démographie : école publique +0,5 %, montée en 10 tours');
+  const art = (ids, depuis) => { const e = avecLois(ids, depuis, { batiments: { workshop: 1 } }); e.tour = 11; return Economie.bilan(e).production.outils; };
+  check(art([], 1) === 10 && proche(art(['school_public'], 6), 11.75) && proche(art(['school_public'], 1), 13.5) && proche(art(['school_free'], 1), 15), 'économie : artisans +35 % / +50 % à terme sur l\'atelier');
+  check(proche(art(['school_free', 'labor_code'], 1), 14.1), 'économie : bonus des artisans et code du travail se multiplient');
+  check(Economie.bilan(neuf({ batiments: { workshop: 2 } })).consommation.fer === 14, 'économie : un atelier consomme 5 fer');
+  const d = Tour.tourSuivant(avecLois(['school_free', 'labor_medicine', 'army_professional'], 1, { tresor: 0, familles: 10, batiments: {} }), []);
+  check(d.tresor < 0 && !d.fin && !Tour.actionsDisponibles(d).some(a => a.type === 'construire'), 'économie : le trésor peut passer sous zéro, on ne peut plus rien construire');
+}
+
+// --- bâtiments ---
+{
+  const e = Tour.tourSuivant(neuf(), [{ type: 'construire', id: 'farm' }]);
+  check(proche(e.tresor, 200 - 60 + 26.5), 'bâtiments : payés à la commande');
+  check(refuse(() => Tour.tourSuivant(neuf({ tresor: 59 }), [{ type: 'construire', id: 'farm' }])), 'bâtiments : refusés si le trésor ne suffit pas');
+  check(!Tour.actionsDisponibles(neuf({ tresor: 10000 })).some(a => ['entente_mill', 'forge', 'fortifications'].includes(a.id)), 'bâtiments : filature, forge et fortifications attendent M3');
+  const f = (k) => tours(neuf({ tresor: 1000 }), k, [{ type: 'construire', id: 'farm' }, { type: 'construire', id: 'farm' }, { type: 'construire', id: 'farm' }]);
+  check(f(2).batiments.farm === 4 && f(3).batiments.farm === 6, 'bâtiments : ferme en 3 tours, deux chantiers à la fois');
+  check(f(3).chantiers.length === 1 && f(3).chantiers[0].restant === 3 && f(5).batiments.farm === 6 && f(6).batiments.farm === 7, 'bâtiments : le 3e chantier attend un emplacement libre');
+  check(f(3).bilan.production.grain === 80 && f(4).bilan.production.grain === 120, 'bâtiments : un bâtiment fini produit dès le tour suivant');
+  check(Object.entries({ farm: 3, mine: 4, workshop: 5, weaving: 5 }).every(([id, d]) => { const g = tours(neuf({ tresor: 1000 }), d, [{ type: 'construire', id }]); const avant = CHAMPS.joueur.batiments[id] || 0; return g.batiments[id] === avant + 1 && (tours(neuf({ tresor: 1000 }), d - 1, [{ type: 'construire', id }]).batiments[id] || 0) === avant; }), 'bâtiments : délais 3 / 4 / 5 / 5 tours');
+}
+
+// --- parties au hasard : invariants ---
+{
+  const nonFini = o => typeof o === 'number' ? !Number.isFinite(o) : !!o && typeof o === 'object' && Object.values(o).some(nonFini);
+  const joueurHasard = (graine, coupe) => {
+    let e = Etat.creerEtat(CHAMPS, graine); const r = Alea.creer(graine * 7919), traces = []; let viol = '';
+    while (!e.fin) {
+      if (coupe && e.tour === coupe) e = JSON.parse(JSON.stringify(e));
+      const acts = [];
+      for (let i = 0; i < 3; i++) {
+        const d = Tour.actionsDisponibles(e);
+        if (!d.length || Alea.suivant(r) < 0.4) break;
+        const a = Alea.choisir(r, d);
+        // ne garder que ce qui reste valable après les actions déjà choisies
+        try { Tour.tourSuivant(e, acts.concat([a])); acts.push(a); } catch (err) { break; }
+      }
+      e = Tour.tourSuivant(e, acts);
+      const cats = Object.keys(e.lois);
+      if (cats.some(c => LOIS[e.lois[c].id].categorie !== c)) viol = 'loi hors de sa catégorie';
+      if (new Set(e.loisEnCours.map(x => LOIS[x.id].categorie)).size !== e.loisEnCours.length) viol = 'deux lois en cours dans une catégorie';
+      if (e.cp < 0) viol = 'capital politique négatif';
+      if (!(e.familles > 0 && e.familles <= ECO.plafondFamilles)) viol = 'familles hors bornes';
+      if (e.chantiers.some(c => c.restant <= 0)) viol = 'chantier fini resté dans la file';
+      if (nonFini(e)) viol = 'nombre non fini (NaN)';
+      if (!egal(JSON.parse(JSON.stringify(e)), e)) viol = 'pas sérialisable';
+      traces.push(JSON.stringify(e));
+    }
+    return { traces, viol, fin: e };
+  };
+  let viols = [], diff = 0, lois = 0;
+  for (let g = 1; g <= 40; g++) {
+    const a = joueurHasard(g), b = joueurHasard(g, 1 + g % 59);
+    if (a.viol) viols.push(g + ' : ' + a.viol);
+    if (!egal(a.traces, b.traces)) diff++;
+    lois += Object.keys(a.fin.lois).length;
+  }
+  check(!viols.length, 'parties au hasard (40 × 60 tours) : invariants tenus' + (viols.length ? ' — ' + viols.slice(0, 3).join(' ; ') : ''));
+  check(diff === 0, 'parties au hasard : identiques après sauvegarde JSON à un tour quelconque');
+  check(lois > 40, `parties au hasard : des lois sont bien adoptées (${(lois / 40).toFixed(1)} catégories remplies en moyenne)`);
+  check(refuse(() => Tour.tourSuivant(Object.assign(neuf(), { fin: true }), [])), 'tour : une partie terminée ne joue plus');
+}
+
+// --- rapport (information seulement) ---
+if (process.argv.includes('--rapport')) {
+  const ordre = ['income_progressive', 'school_public', 'labor_code', 'unions', 'labor_medicine', 'army_professional', 'suffrage_universal', 'school_free'];
+  const joueurs = {
+    rien: () => [],
+    batisseur: e => {
+      const d = Tour.actionsDisponibles(e), acts = [];
+      const loi = ordre.find(id => d.some(a => a.id === id)); if (loi) acts.push({ type: 'loi', id: loi });
+      const besoin = e.bilan && e.bilan.balance.tissu < 0 ? 'weaving' : e.bilan && e.bilan.balance.outils < 0 ? 'workshop' : 'farm';
+      if (e.chantiers.length < 2 && d.some(a => a.id === besoin)) acts.push({ type: 'construire', id: besoin });
+      return acts;
+    }
+  };
+  for (const nom in joueurs) {
+    let e = Etat.creerEtat(CHAMPS, 1); const l = [];
+    while (!e.fin) { e = Tour.tourSuivant(e, joueurs[nom](e)); if ([10, 20, 30, 40, 60].includes(e.tour - 1)) l.push(`t${e.tour - 1} or ${Math.round(e.tresor)} fam ${Math.round(e.familles)} cp ${e.cp} lois ${Object.keys(e.lois).length}`); }
+    console.log(`rapport ${nom.padEnd(9)} ` + l.join(' | ') + ' | bâtiments ' + JSON.stringify(e.batiments));
+  }
 }
 
 console.log(`\n${n - fail}/${n} tests réussis`);

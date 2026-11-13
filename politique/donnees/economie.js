@@ -1,0 +1,25 @@
+/* Politique : constantes de l'économie, du capital politique et de la démographie (RULES_V1).
+   « ASSUMPTION validée » = valeur proposée par Claude, validée par l'utilisateur le 13/11. */
+(function(racine){
+"use strict";
+const NODE = typeof module !== "undefined" && module.exports;
+
+const ECONOMIE = {
+  biens: ["grain", "fer", "tissu", "outils"],
+  prix: { grain: 1.0, fer: 1.5, tissu: 2.0, outils: 2.0 },        // RULES_V1
+  // surplus vendu et déficit acheté au même prix, aucun stock         // ASSUMPTION validée
+  besoinsParFamille: { grain: 1, fer: 0, tissu: 0.2, outils: 0.1 }, // ASSUMPTION validée (grain ≈ 1 : RULES_V1)
+  besoinsArmee: { fer: 4, tissu: 2 },                               // ASSUMPTION validée (toujours, même la milice)
+  impotParFamille: 1,                                               // ASSUMPTION validée : revenu de base = familles × 1 or
+
+  cpParTour: 15,                 // RULES_V1
+  delaiLoi: 2,                   // RULES_V1 : lancée au tour T, en vigueur au tour T + 2
+  slotsChantier: 2,              // RULES_V1
+
+  croissance: 0.01,              // ASSUMPTION validée : +1 % de familles par tour
+  plafondFamilles: 200,          // ASSUMPTION validée
+  montee: 10                     // ASSUMPTION validée : les effets « à terme » montent en ligne droite sur 10 tours après l'adoption
+};
+
+if (NODE) module.exports = ECONOMIE; else (racine.Politique = racine.Politique || {}).ECONOMIE = ECONOMIE;
+})(typeof window !== "undefined" ? window : globalThis);
