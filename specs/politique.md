@@ -27,7 +27,8 @@ Identifiants du code en français comme le reste du dépôt ; les `id` des lois 
 ## 3. Jalons
 - **M0 — socle** ✅ (13/11) : hasard mulberry32 à graine, état initial du scénario `champs`, tour vide, tests (déterminisme, état non modifié, JSON, action hors liste refusée).
 - **M1 — économie, capital politique, lois, bâtiments** ✅ (13/11) : `donnees/economie.js`, `lois.js`, `batiments.js` ; `moteur/economie.js`, `lois.js`, `batiments.js`, `tour.js`. Les effets des lois sur les factions sont écrits dans les données mais appliqués en M2. Filature de l'Entente, forge et fortifications attendent M3.
-- M2 factions, M3 diplomatie et guerre, M4 bots, M5 métriques, M6 backlog, M7 écran : voir le plan.
+- **M2 — factions** ✅ (13/11) : `donnees/factions.js`, `moteur/factions.js` : chocs à l'adoption, effets par tour (durée limitée pour la puissance des syndicats), dissipation, suffrages (apaisement à moitié prix, hausses ralenties), apaisement (action `apaiser`), bornes, statuts, moral, grève, révolte, révolution (fin de partie).
+- M3 diplomatie et guerre, M4 bots, M5 métriques, M6 backlog, M7 écran : voir le plan.
 
 ## 4. Valeurs validées (13/11, toutes les propositions par défaut)
 **Économie** : trésor 200, capital politique 0, 80 familles, 4 fermes et 1 mine ; +1 %/tour de familles, plafond 200 ; impôts = familles × 1 or × loi ;
@@ -50,6 +51,14 @@ Restent pour M3 : cumul des bonus de guerre (multiplicatif proposé), effet de l
 ordre du tour T : événements → actions → adoption des lois (lancée en T, en vigueur en T + 2, effets dès ce tour) → économie → démographie → chantiers → +15 capital politique → T + 1 ;
 montants arrondis au centime.
 
+**Proposées avec M2 (à valider)** : bâtiments de chaque faction (paysans fermes, ouvriers mines, artisans ateliers et tissages ; patrons : les impôts) ;
+grève = leurs bâtiments à 50 %, patrons impôts ×0,8 ; révolte = bâtiments arrêtés, patrons impôts ×0,5 ; révolution (colère qui touche 100 à n'importe quel moment du tour) = partie perdue ;
+« colère montante 2× plus lente » = toute hausse de colère (chocs et effets par tour) des factions favorisées divisée par 2, pas la puissance ;
+statuts calculés en fin de tour : une grève pèse sur l'économie du tour suivant, l'apaisement la lève au tour d'après.
+
 ## 5. Premières observations (M1, information, pas d'équilibrage)
 `node outils/politique-tests.js --rapport` : sans rien faire, 1 718 or au tour 60 ; un bâtisseur simple (lois sociales dans l'ordre de la partie 1, une ferme dès qu'il n'y a pas de déficit) finit le tour 30 à ~3 100 or (partie 1 : 3 214) mais le tour 60 à ~14 600 or avec 29 fermes.
 Une ferme (60 or, +20 grain vendus 1 or) se rembourse en 3 tours et rien ne limite le nombre : c'est le problème A1 du backlog (prix dynamiques en B1), à mesurer en M4/M5.
+
+M2 : aucun joueur du rapport n'atteint la grève. Même un « provocateur » qui adopte impôt sur le capital, syndicats, code du travail, suffrage universel, conscription et école gratuite **sans jamais apaiser** plafonne à 67 de colère (patrons) : en V1 la colère ne monte que par les chocs de lois, et la dissipation (−1/tour) l'efface. L'apaisement est donc inutile (pire que le problème A2). Le plafond de 0,5 du moral en grève ne joue jamais : à colère 75, la formule donne déjà 0,42.
+

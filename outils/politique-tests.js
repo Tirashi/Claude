@@ -1,6 +1,7 @@
 /* Politique (moteur de règles, sans écran) : tests sous Node.
    node outils/politique-tests.js
    M1 : économie, capital politique, lois, bâtiments (une règle = un test), puis des parties au hasard (invariants).
+   M2 : factions (dissipation, effets par tour, chocs, suffrages, apaisement, bornes, statuts, moral, grève, révolte, révolution).
    M0 : hasard à graine, état initial du scénario « champs », invariants du tour
    (déterminisme, état reçu jamais modifié, JSON rechargé à l'identique, action hors liste refusée).
    --rapport : trajectoire de deux joueurs simples (information, pas d'équilibrage).
@@ -9,7 +10,7 @@
 const path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
 const Alea = P('moteur/alea.js'), Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js');
-const Economie = P('moteur/economie.js'), Lois = P('moteur/lois.js');
+const Economie = P('moteur/economie.js'), Lois = P('moteur/lois.js'), FAm = P('moteur/factions.js');
 const CHAMPS = P('donnees/champs.js'), ECO = P('donnees/economie.js'), { LOIS, CATEGORIES } = P('donnees/lois.js'), BAT = P('donnees/batiments.js');
 
 let fail = 0, n = 0;
@@ -180,6 +181,9 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
       if (e.cp < 0) viol = 'capital politique négatif';
       if (!(e.familles > 0 && e.familles <= ECO.plafondFamilles)) viol = 'familles hors bornes';
       if (e.chantiers.some(c => c.restant <= 0)) viol = 'chantier fini resté dans la file';
+      if (Object.values(e.factions).some(x => x.colere < 0 || x.colere > 100 || x.puissance < 0 || x.puissance > 100)) viol = 'colère ou puissance hors bornes';
+      if (Object.values(e.factions).some(x => x.statut !== FAm.statutDe(x))) viol = 'statut de faction faux';
+      if (!(e.moral >= 0 && e.moral <= 1)) viol = 'moral hors de 0-1';
       if (nonFini(e)) viol = 'nombre non fini (NaN)';
       if (!egal(JSON.parse(JSON.stringify(e)), e)) viol = 'pas sérialisable';
       traces.push(JSON.stringify(e));
@@ -199,6 +203,85 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(refuse(() => Tour.tourSuivant(Object.assign(neuf(), { fin: true }), [])), 'tour : une partie terminée ne joue plus');
 }
 
+// ===================== M2 : factions =====================
+{
+  const FA = P('moteur/factions.js'), { REGLES_FACTIONS: RF } = P('donnees/factions.js');
+  const fac = (e, f) => e.factions[f];
+  const ini = neuf();
+  check(Object.values(ini.factions).every(x => x.statut === 'calme') && ini.moral === 1, 'factions : au départ toutes calmes, moral 1');
+
+  // dissipation et effets par tour
+  const un = (ids, mod) => Tour.tourSuivant(avecLois(ids, 1, mod), []);
+  let e = un([]);
+  check(fac(e, 'paysans').colere === 29 && fac(e, 'patrons').colere === 19, 'factions : la colère se dissipe de 1 par tour');
+  e = tours(neuf(), 40);
+  check(Object.values(e.factions).every(x => x.colere === 0), 'factions : la colère ne descend pas sous 0');
+  e = un(['labor_code']);
+  check(fac(e, 'ouvriers').colere === 33 && fac(e, 'paysans').colere === 29, 'code du travail : la colère ouvrière se dissipe 2× plus vite');
+  e = un(['labor_medicine']);
+  check(['paysans', 'ouvriers', 'artisans', 'patrons'].every(f => fac(e, f).colere === CHAMPS.joueur.factions[f].colere - 3), 'médecine du travail : −2 colère par tour pour toutes les factions');
+  e = un(['unions']);
+  check(fac(e, 'ouvriers').colere === 30 && fac(e, 'ouvriers').puissance === 28, 'syndicats : ouvriers −4 colère et +3 puissance par tour');
+  check(fac(tours(avecLois(['unions'], 1), 10), 'ouvriers').puissance === 55 && fac(tours(avecLois(['unions'], 1), 15), 'ouvriers').puissance === 55, 'syndicats : +3 puissance pendant 10 tours seulement (25 → 55)');
+
+  // chocs : chaque loi change exactement ce que disent les données
+  let ok = true;
+  for (const id in LOIS) {
+    const x = neuf(), avant = JSON.parse(JSON.stringify(x.factions)); FA.choc(x, id);
+    const c = LOIS[id].factions.chocs || {};
+    for (const f in x.factions) for (const j of ['colere', 'puissance'])
+      if (x.factions[f][j] !== Math.max(0, Math.min(100, avant[f][j] + ((c[f] || {})[j] || 0)))) ok = false;
+  }
+  check(ok, 'chocs de lois : conformes aux données pour les 11 lois');
+  const adop = tours(neuf({ cp: 100 }), 3, [{ type: 'loi', id: 'income_progressive' }]);
+  check(fac(adop, 'patrons').colere === 20 - 3 + 5, 'chocs de lois : appliqués au tour de l\'adoption (impôt progressif, patrons +5)');
+  const choc = (enVigueur, id) => { const x = avecLois(enVigueur); FA.choc(x, id); return x; };
+  check(fac(choc(['suffrage_census'], 'income_capital'), 'patrons').colere === 30 && fac(choc(['suffrage_census'], 'income_capital'), 'artisans').colere === 30, 'suffrage censitaire : hausses de colère des élites 2× plus lentes (+20 → +10, +10 → +5)');
+  check(fac(choc(['suffrage_universal'], 'school_free'), 'paysans').colere === 34 && fac(choc(['suffrage_universal'], 'army_conscription'), 'ouvriers').colere === 37.5, 'suffrage universel : hausses de colère des populaires 2× plus lentes');
+  check(fac(choc(['suffrage_universal'], 'army_conscription'), 'ouvriers').puissance === 35 && fac(choc(['suffrage_universal'], 'army_professional'), 'ouvriers').colere === 30, 'suffrage : ni la puissance ni les baisses de colère ne sont ralenties');
+  check(fac(choc(['suffrage_universal'], 'income_capital'), 'patrons').colere === 40, 'suffrage universel : les élites ne sont pas ralenties');
+
+  // apaisement
+  const ap = Tour.tourSuivant(neuf(), [{ type: 'apaiser', id: 'ouvriers' }]);
+  check(fac(ap, 'ouvriers').colere === 35 - 18 - 1 && proche(ap.tresor, 200 - 12 + 26.5), 'apaisement : −18 colère pour 12 or');
+  check(refuse(() => Tour.tourSuivant(neuf(), [{ type: 'apaiser', id: 'ouvriers' }, { type: 'apaiser', id: 'ouvriers' }])), 'apaisement : une fois par faction et par tour');
+  check(fac(Tour.tourSuivant(ap, [{ type: 'apaiser', id: 'ouvriers' }]), 'ouvriers').colere === 0, 'apaisement : de nouveau possible au tour suivant ; la colère reste ≥ 0');
+  const u = avecLois(['suffrage_universal']), c2 = avecLois(['suffrage_census']);
+  check(FA.coutApaisement(u, 'paysans') === 6 && FA.coutApaisement(u, 'ouvriers') === 6 && FA.coutApaisement(u, 'patrons') === 12 && FA.coutApaisement(c2, 'patrons') === 6 && FA.coutApaisement(c2, 'artisans') === 6 && FA.coutApaisement(c2, 'ouvriers') === 12, 'apaisement : à moitié prix pour les factions favorisées par le suffrage');
+  check(!FA.apaisables(neuf({ tresor: 11 })).length && FA.apaisables(neuf({ tresor: 12 })).length === 4, 'apaisement : refusé si le trésor ne suffit pas');
+  const zero = neuf(); zero.factions.paysans.colere = 0;
+  check(!FA.apaisables(zero).includes('paysans'), 'apaisement : pas proposé à une faction sans colère');
+
+  // bornes, statuts
+  const haut = neuf(); FA.modifier(haut, 'patrons', 'colere', 500); FA.modifier(haut, 'patrons', 'puissance', 500);
+  check(fac(haut, 'patrons').colere === 100 && fac(haut, 'patrons').puissance === 100, 'factions : colère et puissance plafonnées à 100');
+  const st = (colere, puissance) => FA.statutDe({ colere, puissance });
+  check(st(54, 50) === 'calme' && st(55, 50) === 'grondement' && st(74, 50) === 'grondement' && st(75, 50) === 'greve' && st(100, 50) === 'revolution', 'statuts : seuils 55 grondement, 75 grève, 100 révolution');
+  check(st(70, 85) === 'revolte' && st(69, 85) === 'grondement' && st(70, 84) === 'grondement' && st(100, 90) === 'revolution', 'statuts : révolte si puissance ≥ 85 et colère ≥ 70');
+
+  // moral
+  const mf = (colere, puissance) => { const x = { colere, puissance }; x.statut = FA.statutDe(x); return FA.moralFaction(x); };
+  check(mf(0, 50) === 1 && mf(40, 50) === 1 && proche(mf(70, 50), 0.5) && proche(mf(74, 50), 26 / 60) && mf(80, 90) === 0, 'moral : 1 jusqu\'à colère 40, linéaire jusqu\'à 0 à 100, révolte 0');
+  check(proche(mf(75, 50), Math.min(0.5, 25 / 60)), 'moral : grève plafonnée à 0,5');
+  const mo = neuf(); mo.factions.ouvriers.colere = 70; FA.evaluer(mo);
+  check(Math.abs(mo.moral - (40 + 25 * 0.5 + 30 + 45) / 140) < 1e-4, 'moral du pays : moyenne pondérée par la puissance');
+
+  // conséquences des statuts
+  const greve = (f, colere, puissance, mod) => { const x = neuf(mod); x.factions[f].colere = colere; if (puissance) x.factions[f].puissance = puissance; FA.evaluer(x); return Economie.bilan(x); };
+  check(greve('paysans', 80).production.grain === 40 && greve('ouvriers', 80).production.fer === 7.5 && greve('artisans', 80, 0, { batiments: { workshop: 1, weaving: 1 } }).production.outils === 5, 'grève : les bâtiments de la faction produisent moitié moins');
+  check(proche(greve('patrons', 80).impots, 64), 'grève des patrons : impôts ×0,8');
+  check(greve('paysans', 80, 90).production.grain === 0 && proche(greve('patrons', 80, 90).impots, 40), 'révolte : bâtiments arrêtés ; patrons : impôts ×0,5');
+  const g0 = neuf(); g0.factions.paysans.colere = 80; FA.evaluer(g0);
+  const g1 = Tour.tourSuivant(g0, [{ type: 'apaiser', id: 'paysans' }]);
+  check(g1.bilan.production.grain === 40 && g1.factions.paysans.statut === 'grondement' && Tour.tourSuivant(g1, []).bilan.production.grain === 80, 'grève : levée au tour suivant l\'apaisement (statut calculé en fin de tour)');
+  const avecColere = (f, c, mod) => { const x = neuf(mod); x.factions[f].colere = c; FA.evaluer(x); return x; };
+  const rv1 = Tour.tourSuivant(avecColere('paysans', 99), []);
+  const rv2 = Tour.tourSuivant(avecColere('paysans', 93, { loisEnCours: [{ id: 'school_free', adoption: 1 }] }), []);
+  check(!rv1.fin && rv2.fin && rv2.issue.type === 'revolution' && rv2.issue.faction === 'paysans' && refuse(() => Tour.tourSuivant(rv2, [])), 'révolution : la colère touche 100 (école gratuite, paysans 93 + 8) = partie perdue, même redescendue à 99 en fin de tour ; à 99 rien');
+  check(rv2.journal.some(t => /Révolution/.test(t)), 'révolution : annoncée dans le journal');
+  check(tours(neuf(), 60).issue.type === 'fin', 'fin de partie normale après 60 tours');
+}
+
 // --- rapport (information seulement) ---
 if (process.argv.includes('--rapport')) {
   const ordre = ['income_progressive', 'school_public', 'labor_code', 'unions', 'labor_medicine', 'army_professional', 'suffrage_universal', 'school_free'];
@@ -212,10 +295,18 @@ if (process.argv.includes('--rapport')) {
       return acts;
     }
   };
+  const dures = ['income_capital', 'unions', 'labor_code', 'suffrage_universal', 'army_conscription', 'school_free'];
+  joueurs.provocateur = e => { const d = Tour.actionsDisponibles(e); const id = dures.find(x => d.some(a => a.id === x)); return id ? [{ type: 'loi', id }] : []; };
   for (const nom in joueurs) {
-    let e = Etat.creerEtat(CHAMPS, 1); const l = [];
-    while (!e.fin) { e = Tour.tourSuivant(e, joueurs[nom](e)); if ([10, 20, 30, 40, 60].includes(e.tour - 1)) l.push(`t${e.tour - 1} or ${Math.round(e.tresor)} fam ${Math.round(e.familles)} cp ${e.cp} lois ${Object.keys(e.lois).length}`); }
-    console.log(`rapport ${nom.padEnd(9)} ` + l.join(' | ') + ' | bâtiments ' + JSON.stringify(e.batiments));
+    let e = Etat.creerEtat(CHAMPS, 1); const l = []; let t55 = 0, t75 = 0, cmax = 0, qui = '';
+    while (!e.fin) {
+      e = Tour.tourSuivant(e, joueurs[nom](e));
+      const xs = Object.entries(e.factions), m = xs.reduce((a, b) => b[1].colere > a[1].colere ? b : a);
+      if (m[1].colere > cmax) { cmax = m[1].colere; qui = m[0]; }
+      if (xs.some(([, x]) => x.colere >= 55)) t55++; if (xs.some(([, x]) => x.colere >= 75)) t75++;
+      if ([10, 30, 60].includes(e.tour - 1)) l.push(`t${e.tour - 1} or ${Math.round(e.tresor)} fam ${Math.round(e.familles)} cp ${e.cp} lois ${Object.keys(e.lois).length} moral ${e.moral.toFixed(2)}`);
+    }
+    console.log(`rapport ${nom.padEnd(11)} ` + l.join(' | ') + ` | colère max ${cmax} (${qui}), tours ≥55 : ${t55}, ≥75 : ${t75}, fin : ${e.issue.type} | puissance ${Object.entries(e.factions).map(([f, x]) => f + ' ' + x.puissance).join(', ')}`);
   }
 }
 

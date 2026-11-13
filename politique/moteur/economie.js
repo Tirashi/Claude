@@ -1,5 +1,5 @@
 /* Politique : économie d'un tour (RULES_V1 § Ressources et économie).
-   production = bâtiments × rendement (× lois) ; consommation = familles × besoins + armée + bâtiments ;
+   production = bâtiments × rendement (× lois × grèves et révoltes des factions) ; consommation = familles × besoins + armée + bâtiments ;
    balance vendue (surplus) ou achetée (déficit) au prix du tour, sans stock ;
    trésor += ventes − achats + impôts − entretiens ; puis la démographie. */
 (function(racine){
@@ -8,6 +8,7 @@ const NODE = typeof module !== "undefined" && module.exports;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
 const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
+const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 
 const arrondi = x => Math.round(x * 100) / 100;
 const zero = () => Object.fromEntries(ECO.biens.map(b => [b, 0]));
@@ -20,11 +21,11 @@ function prix(e){
 }
 
 function bilan(e){
-  const fx = Lois.effets(e), prod = zero(), conso = zero(), p = prix(e);
+  const fx = Lois.effets(e), fa = Factions.effetsEco(e), prod = zero(), conso = zero(), p = prix(e);
   for (const id in e.batiments){
     const n = e.batiments[id], b = BAT[id];
     if (!n) continue;
-    const mult = fx.production * (b.artisans ? 1 + fx.artisans : 1);
+    const mult = fx.production * (b.artisans ? 1 + fx.artisans : 1) * (fa.batiments[id] == null ? 1 : fa.batiments[id]);
     for (const r in b.produit || {}) prod[r] += n * b.produit[r] * mult;
     for (const r in b.consomme || {}) conso[r] += n * b.consomme[r];
   }
@@ -37,7 +38,7 @@ function bilan(e){
     balance[r] = arrondi(prod[r] - conso[r]);
     if (balance[r] > 0) ventes += balance[r] * p[r]; else achats -= balance[r] * p[r];
   }
-  const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots);
+  const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots * fa.impots);
   const entretiens = fx.entretien;
   ventes = arrondi(ventes); achats = arrondi(achats);
   return { production: prod, consommation: conso, balance, prix: p, ventes, achats, impots, entretiens,

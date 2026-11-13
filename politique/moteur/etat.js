@@ -4,6 +4,7 @@
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
 const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
+const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const VERSION = 1;
 
 const copie = o => JSON.parse(JSON.stringify(o));
@@ -14,7 +15,7 @@ function creerEtat(scenario, graine){
     const n = scenario.nations[id];
     nations[id] = { relation: n.relation, tresor: n.tresor, familles: n.familles };
   }
-  return {
+  const e = {
     version: VERSION,
     scenario: scenario.id,
     tour: 1,
@@ -24,7 +25,9 @@ function creerEtat(scenario, graine){
     cp: j.cp,
     familles: j.familles,
     reputation: j.reputation,
-    factions: copie(j.factions),
+    factions: copie(j.factions),      // f → { colere, puissance, statut }
+    moral: 1,                         // moral du pays (0 à 1), recalculé chaque tour
+    apaises: [],                      // factions déjà apaisées ce tour
     batiments: copie(j.batiments),
     chantiers: [],                    // bâtiments en construction : [{ id, restant }]
     lois: {},                         // catégorie → { id, depuis } (loi en vigueur)
@@ -34,8 +37,11 @@ function creerEtat(scenario, graine){
     bilan: null,                      // économie du dernier tour (Economie.bilan)
     nations,
     fin: false,
+    issue: null,                      // fin de partie : { type: "fin" } ou { type: "revolution", faction }
     journal: []                       // messages du tour, pour l'écran et les rapports
   };
+  Factions.evaluer(e);
+  return e;
 }
 
 const Etat = { VERSION, creerEtat, copie };

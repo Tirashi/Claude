@@ -7,6 +7,7 @@
 const NODE = typeof module !== "undefined" && module.exports;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 const { LOIS } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
+const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 
 const enVigueur = (e, id) => { const l = e.lois[LOIS[id].categorie]; return !!l && l.id === id; };
 
@@ -31,6 +32,7 @@ function adopter(e){
     const loi = LOIS[c.id], avant = e.lois[loi.categorie];
     e.lois[loi.categorie] = { id: c.id, depuis: e.tour };
     if (loi.eco.reputation) e.reputation += loi.eco.reputation;
+    Factions.choc(e, c.id);
     e.journal.push(`Loi adoptée : ${loi.nom}` + (avant ? ` (remplace ${LOIS[avant.id].nom}).` : "."));
   }
 }

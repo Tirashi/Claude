@@ -156,7 +156,7 @@ try { execFileSync(process.execPath, [path.join(__dirname, 'terres-simulateur.js
 catch (e) { bad('Terres franches : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 8 nonies quater. Politique : moteur de règles (outils/politique-tests.js)
-try { execFileSync(process.execPath, [path.join(__dirname, 'politique-tests.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Politique : moteur (hasard, économie, lois, bâtiments, parties reproductibles)'); }
+try { execFileSync(process.execPath, [path.join(__dirname, 'politique-tests.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Politique : moteur (hasard, économie, lois, bâtiments, factions, parties reproductibles)'); }
 catch (e) { bad('Politique : moteur\n' + (e.stdout || '') + (e.stderr || '')); }
 
 // 8 decies. fiches des jeux (<dossier>/fiche.js) : chaque chemin d'ORDRE a sa fiche, chargée par l'accueil et en cache
