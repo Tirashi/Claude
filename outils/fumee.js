@@ -208,7 +208,9 @@ const shots = process.argv[2];
         e.dispatchEvent(new PointerEvent('pointerdown', { clientX: b.left + b.width / 2, clientY: b.top + b.height / 2, bubbles: true }));
         e.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
         if (Romet.partie.lachers !== n + 1) return 'le toucher ne lâche pas de pièce';
-        await wait(1500); const p = Romet.partie; p.bourse = 0; p.pluie = 0; p.calme = 5; await wait(300);
+        // fin forcée : bourse vide et calme ; une pièce que le poussoir fait tomber remet le calme à 0 (et rend des pièces), on recommence (au plus 4 s)
+        await wait(1500); const p = Romet.partie;
+        for (let i = 0; i < 40 && Romet.menu !== 'eFin'; i++) { p.bourse = 0; p.pluie = 0; if (!p.fini) p.calme = Math.max(p.calme, 5); await wait(100); }
         if (Romet.menu !== 'eFin') return "pas d'écran de fin de partie";
         Romet.prog.foire.t = [true, true, true, true, true, true]; Romet.ouvrir(Romet.MACHINES[1]); await wait(300);
         if (Romet.machine.id !== 'ruche' || !Romet.partie) return 'la ruche ne s\'ouvre pas';
