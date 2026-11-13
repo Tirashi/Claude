@@ -72,6 +72,7 @@ function tourSuivant(etat, actions, rng){
   return e;
 }
 
-const Tour = { actionsDisponibles, tourSuivant };
+// pour les bots et l'écran : composer un tour action par action sur une copie (appliquerAction la modifie)
+const Tour = { actionsDisponibles, tourSuivant, appliquerAction, memeAction };
 if (NODE) module.exports = Tour; else (racine.Politique = racine.Politique || {}).Tour = Tour;
 })(typeof window !== "undefined" ? window : globalThis);

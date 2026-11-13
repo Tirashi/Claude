@@ -18,7 +18,7 @@ Les documents parlent de `engine/ data/ sim/ test/ ui/`, de modules ES et de `no
 | `engine/` | `politique/moteur/` (scripts classiques, `window.Politique.X` / `require`) |
 | `data/`, `data/scenarios/champs.js` | `politique/donnees/`, `politique/donnees/champs.js` |
 | `test/`, `node --test` | `outils/politique-tests.js` (lancé par `outils/verifications.js`) |
-| `sim/run.js` | `outils/politique-simulateur.js` (M4) |
+| `sim/run.js`, `sim/bots/` | `outils/politique-simulateur.js`, `outils/politique-bots.js` |
 | `ui/` | `politique/index.html` + fiche, **après une maquette validée** (règle « maquette d'abord ») |
 | `docs/` | `specs/politique/` |
 
@@ -30,7 +30,8 @@ Identifiants du code en français comme le reste du dépôt ; les `id` des lois 
 - **M2 — factions** ✅ (13/11) : `donnees/factions.js`, `moteur/factions.js` : chocs à l'adoption, effets par tour (durée limitée pour la puissance des syndicats), dissipation, suffrages (apaisement à moitié prix, hausses ralenties), apaisement (action `apaiser`), bornes, statuts, moral, grève, révolte, révolution (fin de partie).
 - **M3a — diplomatie et commerce** ✅ (13/11) : `donnees/diplomatie.js`, profils des nations dans `donnees/champs.js`, `moteur/diplomatie.js` : nations simplifiées, dons, contrats, embargo, Entente des Ports, défense mutuelle, filature conjointe (`entente_mill`), réputation, paria.
 - **M3b — guerre et paix** ✅ (13/11) : `donnees/guerre.js`, `moteur/guerre.js` : force, forge, fortifications, déclarations (joueur et Val-Roc), défense mutuelle, Contreforts opportuniste, batailles au hasard à graine, sanctions de bloc de l'Entente, usure et capitulation, clauses (réparations, levée d'embargo, non-réarmement), paix blanche.
-- M4 bots et simulateur, M4 bots, M5 métriques, M6 backlog, M7 écran : voir le plan.
+- **M4 — bots et simulateur** ✅ (13/11) : `outils/politique-bots.js` (passif, economy, spam_medicine, no_appeasement, militarist, random, replica), `outils/politique-simulateur.js` (`--parties`, `--bot`, `--tours`, `--graine`, `--json`, `--controle`) ; métriques par partie (fins, durée, trésor et capital politique aux tours 20/30/40/60, réputation, guerres, batailles, colère, grèves, apaisements, lois adoptées, catalogue complet).
+- M5 balayages de paramètres et stratégie dominante, M6 backlog, M7 écran : voir le plan.
 
 ## 4. Valeurs validées (13/11, toutes les propositions par défaut)
 **Économie** : trésor 200, capital politique 0, 80 familles, 4 fermes et 1 mine ; +1 %/tour de familles, plafond 200 ; impôts = familles × 1 or × loi ;
@@ -59,7 +60,7 @@ grève = leurs bâtiments à 50 %, patrons impôts ×0,8 ; révolte = bâtiments
 statuts calculés en fin de tour : une grève pèse sur l'économie du tour suivant, l'apaisement la lève au tour d'après.
 
 ## 5. Premières observations (M1, information, pas d'équilibrage)
-`node outils/politique-tests.js --rapport` : sans rien faire, 1 718 or au tour 60 ; un bâtisseur simple (lois sociales dans l'ordre de la partie 1, une ferme dès qu'il n'y a pas de déficit) finit le tour 30 à ~3 100 or (partie 1 : 3 214) mais le tour 60 à ~14 600 or avec 29 fermes.
+Ancien rapport des tests (remplacé par le simulateur en M4) : sans rien faire, 1 718 or au tour 60 ; un bâtisseur simple (lois sociales dans l'ordre de la partie 1, une ferme dès qu'il n'y a pas de déficit) finit le tour 30 à ~3 100 or (partie 1 : 3 214) mais le tour 60 à ~14 600 or avec 29 fermes.
 Une ferme (60 or, +20 grain vendus 1 or) se rembourse en 3 tours et rien ne limite le nombre : c'est le problème A1 du backlog (prix dynamiques en B1), à mesurer en M4/M5.
 
 M2 : aucun joueur du rapport n'atteint la grève. Même un « provocateur » qui adopte impôt sur le capital, syndicats, code du travail, suffrage universel, conscription et école gratuite **sans jamais apaiser** plafonne à 67 de colère (patrons) : en V1 la colère ne monte que par les chocs de lois, et la dissipation (−1/tour) l'efface. L'apaisement est donc inutile (pire que le problème A2). Le plafond de 0,5 du moral en grève ne joue jamais : à colère 75, la formule donne déjà 0,42.
@@ -70,8 +71,24 @@ Joueur « diplomate » du rapport (bâtisseur + Entente avec Brume et Contrefort
 L'embargo ne mord presque pas : la colère de Val-Roc n'est qu'à 27,5 au tour 30 (48 au tour 60), car le joueur n'a qu'un petit surplus de grain. La victoire par usure (moral < 0,3, soit colère ≥ 82 environ) serait hors d'atteinte en M3b avec ces valeurs : à mesurer avant d'équilibrer.
 
 ## 5 ter. Observations M3b (information, rien n'a été équilibré)
-`--rapport` sur 50 graines : la guerre décide de tout. Val-Roc démarre à 640 de force contre 200 pour le joueur (trésor 400 × conscription 1,6) : il remplit la condition « 1,2× plus fort » dès le tour 1, déclare la guerre dans les premiers tours (30 % par tour), livre bataille à chaque tour où il est plus fort, et chaque défaite ajoute +10 de colère à toutes nos factions. Révolution en ~9 tours pour les joueurs qui investissent (leur trésor, donc leur force, baisse) : bâtisseur 50/50, provocateur 50/50, diplomate 49/50 ; même le joueur qui ne fait rien finit en révolution 36 fois sur 50.
+Rapport sur 50 graines : la guerre décide de tout. Val-Roc démarre à 640 de force contre 200 pour le joueur (trésor 400 × conscription 1,6) : il remplit la condition « 1,2× plus fort » dès le tour 1, déclare la guerre dans les premiers tours (30 % par tour), livre bataille à chaque tour où il est plus fort, et chaque défaite ajoute +10 de colère à toutes nos factions. Révolution en ~9 tours pour les joueurs qui investissent (leur trésor, donc leur force, baisse) : bâtisseur 50/50, provocateur 50/50, diplomate 49/50 ; même le joueur qui ne fait rien finit en révolution 36 fois sur 50.
 Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trésor ou force de départ de Val-Roc, seuil de déclaration (1,2), colère d'une défaite (+10), une bataille ennemie par tour, la force tirée du trésor non dépensé (problème A5 du backlog), pas de trêve après la paix (Val-Roc peut redéclarer la guerre au tour suivant : relation restée à −100).
+
+## 5 quater. Premier passage du simulateur (M4, 200 parties par bot, graines 1 à 200 ; information, rien n'a été équilibré)
+| Bot | Fins | Trésor t30 / t60 | Guerre (tours) | Batailles G / P | Apaisements | Lois |
+|---|---|---|---|---|---|---|
+| passif | révolution 66 % | −515 / −1 983 | 20 | 1,0 / 10,1 | 0 | 0 |
+| economy | fin 100 % | 637 / 9 214 | 49 | 6,9 / 35,4 | 71 | 3 |
+| spam_medicine | fin 100 % | 588 / 7 748 | 52 | 6,8 / 37,5 | 56 | 4 |
+| no_appeasement | révolution 97 % (17 tours) | — | 10 | 0,8 / 6,9 | 0 | 3 |
+| militarist | fin 98 % | 97 / 70 | 59 | 3,3 / 49,3 | 101 | 2 |
+| random | révolution 100 % (11 tours) | — | 9 | 0,5 / 8,2 | 2 | 2 |
+| replica | fin 100 % | 2 739 / 8 960 | 16 | 1,6 / 11,5 | 19 | 8 |
+
+- **Non-régression (replica)** : 2 739 or et réputation +27 au tour 30, contre 3 214 et +42 dans la partie 1 (−15 % d'or, −15 de réputation) ; la guerre dure 16 tours au lieu de 3 et coûte 11,5 défaites.
+- **L'apaisement est devenu vital** (à cause de la guerre, pas des lois) : sans lui, révolution 97 % ; avec, aucune grève. 12 or contre −18 de colère reste la parade à tout (problème A2 du backlog, sous une autre forme).
+- **Val-Roc est en guerre contre le joueur presque toute la partie** et gagne 80 à 95 % des batailles : il n'attaque que quand il est plus fort.
+- **Le catalogue n'est jamais acheté en entier** (lois exclusives par catégorie) ; le capital politique s'accumule chez les bots qui ne votent pas (passif 900, militarist 825 au tour 60).
 
 ## 6. Propositions pour M3 (13/11, validées le 13/11)
 **Détails ajoutés en écrivant M3b (à confirmer)** : une seule guerre à la fois ; une forge ou des fortifications ne comptent qu'une fois quel que soit leur nombre ; l'attaque d'un membre de l'Entente coûte −30 **au lieu de** −20 (pas les deux), plus −15 par traité rompu avec la cible ; sanctions de bloc contre le joueur = chaque autre membre rompt ses traités et contrats (sans pénalité de réputation pour le joueur), relation −30, et le met sous embargo (sans effet sur le marché du joueur en V1) ; sanctions de bloc contre une nation = elle manque de ce que les membres exportent ; Contreforts peut rejoindre Val-Roc si Val-Roc est le plus fort (les relations entre nations ne sont pas modélisées) ; les alliés ne livrent pas de bataille à part, ils perdent comme leur camp ; l'ennemi accepte la paix blanche s'il n'est pas plus fort ; quand nous capitulons, l'ennemi impose toutes les clauses ; quand l'ennemi capitule, la guerre est suspendue jusqu'à ce que le joueur choisisse ses clauses ; à la paix, les sanctions liées à la guerre sont levées ; le non-réarmement n'empêche pas le perdant de redéclarer la guerre, et un joueur sous la clause ne peut tout simplement pas la violer (le « ré-embargo » n'arrive donc jamais en V1).

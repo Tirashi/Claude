@@ -6,7 +6,7 @@
    M2 : factions (dissipation, effets par tour, chocs, suffrages, apaisement, bornes, statuts, moral, grève, révolte, révolution).
    M0 : hasard à graine, état initial du scénario « champs », invariants du tour
    (déterminisme, état reçu jamais modifié, JSON rechargé à l'identique, action hors liste refusée).
-   --rapport : trajectoire de deux joueurs simples (information, pas d'équilibrage).
+   Parties de bots et métriques : outils/politique-simulateur.js.
    Code de sortie 1 si un test échoue (lancé par outils/verifications.js). */
 'use strict';
 const path = require('path');
@@ -465,47 +465,6 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(!fin.guerre && !fin.sanctions.length && Object.keys(fin.nonRearmement).length === 0, 'paix blanche : sans clause ; sanctions levées');
   const neg = enGuerre(vrai({ tresor: -10 }), 'val_roc', 'joueur'); neg.guerre.ennemis = ['val_roc'];
   check(!GU.bataille(neg, true, rng(1)) && neg.tresor === -10, 'bataille : sans force (trésor négatif) on perd toujours, sans perte de trésor en plus');
-}
-
-// --- rapport (information seulement) ---
-if (process.argv.includes('--rapport')) {
-  const ordre = ['income_progressive', 'school_public', 'labor_code', 'unions', 'labor_medicine', 'army_professional', 'suffrage_universal', 'school_free'];
-  const joueurs = {
-    rien: () => [],
-    batisseur: e => {
-      const d = Tour.actionsDisponibles(e), acts = [];
-      const loi = ordre.find(id => d.some(a => a.id === id)); if (loi) acts.push({ type: 'loi', id: loi });
-      const besoin = e.bilan && e.bilan.balance.tissu < 0 ? 'weaving' : e.bilan && e.bilan.balance.outils < 0 ? 'workshop' : 'farm';
-      if (e.chantiers.length < 2 && d.some(a => a.id === besoin)) acts.push({ type: 'construire', id: besoin });
-      return acts;
-    }
-  };
-  const dures = ['income_capital', 'unions', 'labor_code', 'suffrage_universal', 'army_conscription', 'school_free'];
-  joueurs.provocateur = e => { const d = Tour.actionsDisponibles(e); const id = dures.find(x => d.some(a => a.id === x)); return id ? [{ type: 'loi', id }] : []; };
-  const essayer = (e, acts, a) => { try { Tour.tourSuivant(e, acts.concat([a])); acts.push(a); } catch (err) { /* pas possible ce tour */ } };
-  joueurs.diplomate = e => {
-    const acts = joueurs.batisseur(e), n = e.nations;
-    if (e.tour >= 8 && n.brume.relation < 50) essayer(e, acts, { type: 'don', id: 'brume', montant: 50 });
-    if (e.tour >= 11 && n.contreforts.relation < 30) essayer(e, acts, { type: 'don', id: 'contreforts', montant: 50 });
-    for (const a of [{ type: 'traite', id: 'entente', avec: 'brume' }, { type: 'traite', id: 'entente', avec: 'contreforts' }, { type: 'traite', id: 'filature', avec: 'brume' },
-      { type: 'traite', id: 'defense_mutuelle', avec: 'brume' }, { type: 'contrat', id: 'brume_tissu' }, { type: 'construire', id: 'entente_mill' }]) essayer(e, acts, a);
-    if (e.tour === 15) essayer(e, acts, { type: 'embargo', id: 'val_roc' });
-    return acts;
-  };
-  // réflexes de paix communs (sauf « rien ») : imposer toutes les clauses, accepter la paix blanche
-  const paixReflexe = (e, acts) => { if (e.guerre) { essayer(e, acts, { type: 'imposer_paix', reparations: true, lever_embargo: false, non_rearmement: true }); essayer(e, acts, { type: 'paix_blanche' }); } return acts; };
-  for (const nom of ['batisseur', 'provocateur', 'diplomate']) { const f = joueurs[nom]; joueurs[nom] = e => paixReflexe(e, f(e)); }
-  const med = xs => { const t = xs.slice().sort((a, b) => a - b); return t[Math.floor(t.length / 2)]; };
-  for (const nom in joueurs) {
-    const fins = {}, or30 = [], or60 = [], rep = [], tg = [], dur = [];
-    for (let g = 1; g <= 50; g++) {
-      let e = Etat.creerEtat(CHAMPS, g), t = 0;
-      while (!e.fin) { e = Tour.tourSuivant(e, joueurs[nom](e)); if (e.guerre) t++; if (e.tour - 1 === 30) or30.push(e.tresor); }
-      fins[e.issue.type] = (fins[e.issue.type] || 0) + 1; if (e.issue.type === 'fin') or60.push(e.tresor);
-      rep.push(e.reputation); tg.push(t); dur.push(e.tour - 1);
-    }
-    console.log(`rapport ${nom.padEnd(11)} 50 parties : fins ${JSON.stringify(fins)} | durée médiane ${med(dur)} | or médian t30 ${Math.round(med(or30) || 0)} t60 ${or60.length ? Math.round(med(or60)) : '-'} | réputation médiane ${med(rep)} | tours de guerre médians ${med(tg)}`);
-  }
 }
 
 console.log(`\n${n - fail}/${n} tests réussis`);
