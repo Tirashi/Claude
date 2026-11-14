@@ -19,7 +19,7 @@ const SCENARIO_CHAMPS = {
       plaine:   { nom: "Plaine du Nord", terrain: "fertile", emplacements: 4, batiments: { farm: 2 } },
       vallee:   { nom: "Vallée",         terrain: "mixte",   emplacements: 3, batiments: { farm: 2 } },
       collines: { nom: "Collines",       terrain: "filons",  emplacements: 3, batiments: { mine: 1 } },
-      bourg:    { nom: "Bourg",          terrain: "ville",   emplacements: 4, batiments: {} }
+      bourg:    { nom: "Bourg",          terrain: "ville",   emplacements: 4, batiments: { caserne: 1 } }   // caserne de départ (validée le 14/11)
     },
     factions: {                       // ASSUMPTION validée : colère et puissance de départ (patrons 45 = valeur connue en fin de partie)
       paysans:  { colere: 30, puissance: 40 },

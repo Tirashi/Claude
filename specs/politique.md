@@ -125,7 +125,11 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
-## 14. Équilibre de la guerre : mesures du 14/11 (100 parties par bot ; rien n'est changé, décision de l'utilisateur attendue)
+## 14 bis. Équilibre de la guerre : décisions du 14/11
+Validé par l'utilisateur et activé : **une caserne au Bourg au départ** ; **capitulation quand la moitié de ses régions est occupée** (2 sur 4 pour nous, 2 sur 3 pour une nation). Gardés : forts ×1,5, non-réarmement imposé par l'ordinateur. 247 tests.
+Résultat (200 parties par bot) : economy fin 100 % (révolution 0 %, grève 0 %), 0,64 région perdue par partie, or t40 7 275 ; replica fin 100 %, 0,38 région perdue ; militarist conquiert 1,94 région par partie (guerres de 8 tours, 2,69 guerres gagnées) ; random révolution 52 % ; passif révolution 100 % (il ne construit rien). Aucune stratégie dominante.
+
+## 14. Équilibre de la guerre : mesures du 14/11 (100 parties par bot)
 Réglages ajoutés dans `donnees/guerre.js`, valeurs actuelles gardées : `capitulationMoitie` (faux), `clausesIA` (toutes les clauses), `fort` (1,5).
 
 | Réglage | economy : régions perdues, révolutions, grèves | replica : régions perdues | militarist | Verdict |

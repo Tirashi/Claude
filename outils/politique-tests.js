@@ -187,7 +187,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
     return v(d, [C(id, r)]).batiments[id] === avant + 1 && (v(d - 1, [C(id, r)]).batiments[id] || 0) === avant; }), 'bâtiments : délais 2 / 3 / 3 / 3 tours (ferme, mine, atelier, tissage)');
   check(v(2, [C('farm', 'plaine')]).bilan.production.grain === 100 && v(3, [C('farm', 'plaine')]).bilan.production.grain === 130, 'bâtiments : un bâtiment fini produit dès le tour suivant (ferme en plaine : +30)');
   const ini = vrai(), b0 = Tour.tourSuivant(vrai(), []).bilan;
-  check(egal(ini.batiments, { farm: 4, mine: 1 }) && ini.regions.plaine.batiments.farm === 2 && ini.regions.vallee.batiments.farm === 2 && ini.regions.collines.batiments.mine === 1, 'régions : départ 2 fermes en Plaine, 2 en Vallée, 1 mine dans les Collines');
+  check(egal(ini.batiments, { farm: 4, mine: 1, caserne: 1 }) && ini.regions.plaine.batiments.farm === 2 && ini.regions.vallee.batiments.farm === 2 && ini.regions.collines.batiments.mine === 1 && ini.regions.bourg.batiments.caserne === 1, 'régions : départ 2 fermes en Plaine, 2 en Vallée, 1 mine dans les Collines, une caserne au Bourg (14/11)');
   check(b0.production.grain === 100 && b0.production.fer === 22.5, 'régions : bonus de terrain (fermes ×1,5 en plaine fertile, mine ×1,5 dans les collines)');
   const bourg = v(4, [C('workshop', 'bourg')]), val = v(4, [C('workshop', 'vallee')]);
   check(bourg.bilan.production.outils === 12.5 && val.bilan.production.outils === 10, 'régions : atelier ×1,25 au bourg, ×1 ailleurs');
@@ -421,7 +421,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(vrai().regiments === 3 && vrai().nations.val_roc.regiments === 5, 'départ : 3 régiments pour nous, 5 pour Val-Roc, 3 pour Brume, 2 pour Contreforts');
 
   // recrutement et entretien
-  check(!Tour.actionsDisponibles(vrai({ tresor: 1000 })).some(a => a.type === 'recruter') && ok2(caserne({ tresor: 1000 }), { type: 'recruter', region: 'bourg' }), 'recrutement : une caserne est nécessaire');
+  const sansCaserne = vrai({ tresor: 1000 }); delete sansCaserne.regions.bourg.batiments.caserne;
+  check(!Tour.actionsDisponibles(sansCaserne).some(a => a.type === 'recruter') && ok2(vrai({ tresor: 1000 }), { type: 'recruter', region: 'bourg' }), 'recrutement : une caserne est nécessaire (une au Bourg au départ)');
   const rc = Tour.tourSuivant(caserne({ tresor: 1000 }), [{ type: 'recruter', region: 'bourg' }]);
   check(rc.regiments === 4 && refuse(() => Tour.tourSuivant(caserne({ tresor: 1000 }), [{ type: 'recruter', region: 'bourg' }, { type: 'recruter', region: 'bourg' }])), 'recrutement : 1 régiment par caserne et par tour');
   check(Tour.tourSuivant(caserne({ tresor: 1000 }, ['bourg', 'vallee']), [{ type: 'recruter', region: 'bourg' }, { type: 'recruter', region: 'vallee' }]).regiments === 5, 'recrutement : deux casernes, deux régiments');
@@ -660,6 +661,19 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(DPm.paria(pa) && !Tour.actionsDisponibles(pa).some(a => a.type === 'traite' || a.type === 'contrat'), 'réputation fusionnée : paria sous −50 de moyenne');
   const ide = base(); ide.profils.brume.persona = 'idealiste'; ide.nations.brume.relation = 90; ide.nations.val_roc.relation = -100; ide.nations.contreforts.relation = -100;
   check(!Tour.actionsDisponibles(ide).some(a => a.type === 'traite' && a.avec === 'brume') && Tour.actionsDisponibles(Object.assign(ide, { nations: Object.assign(ide.nations, { val_roc: Object.assign(ide.nations.val_roc, { relation: 10 }) }) })).some(a => a.type === 'traite' && a.avec === 'brume'), 'réputation fusionnée : un idéaliste juge la moyenne de nos relations');
+}
+
+// ===================== Équilibre de la guerre (14/11) =====================
+{
+  const GU = P('moteur/guerre.js'), Gd = P('donnees/guerre.js');
+  const g = vrai({ regiments: 20 }); GU.declarer(g, 'val_roc', 'val_roc', Alea.creer(1)); g.guerre.ennemis = ['val_roc']; g.guerre.allies = [];
+  g.occupations = { hauts: 'joueur' }; GU.tour(g, Alea.creer(1));
+  const g2 = vrai({ regiments: 20 }); GU.declarer(g2, 'val_roc', 'val_roc', Alea.creer(1)); g2.guerre.ennemis = ['val_roc']; g2.guerre.allies = [];
+  g2.occupations = { hauts: 'joueur', forges: 'joueur' }; GU.tour(g2, Alea.creer(1));
+  check(Gd.capitulationMoitie && g.guerre && !g.guerre.capitulation && g2.guerre.capitulation === 'ennemi', 'capitulation : une nation dont 2 régions sur 3 sont occupées capitule (pas avec une seule)');
+  const j = vrai({ regiments: 1 }); GU.declarer(j, 'val_roc', 'val_roc', Alea.creer(1)); j.guerre.ennemis = ['val_roc']; j.guerre.allies = [];
+  j.occupations = { plaine: 'val_roc', vallee: 'val_roc' }; GU.tour(j, Alea.creer(1));
+  check(!j.guerre && !j.regions.plaine && Object.keys(j.regions).length === 3, 'capitulation : deux de nos 4 régions occupées, nous capitulons et en cédons une');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);
