@@ -375,7 +375,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   // embargo
   const fermes = (mod) => neuf(Object.assign({ batiments: { farm: 6, mine: 1 } }, mod));
   const em = Tour.tourSuivant(fermes(), [{ type: 'embargo', id: 'val_roc' }]);
-  check(em.nations.val_roc.relation === -50 && em.reputation === -5, 'embargo : relation −30, réputation −5 (sanction illégitime hors guerre)');
+  check(em.nations.val_roc.relation === -35 && em.reputation === -5, 'embargo : relation −15, réputation −5 (sanction illégitime hors guerre)');
   check(em.nations.val_roc.manque === 15 && em.nations.val_roc.colere === 30 - 1 + 5 && em.nations.val_roc.tresor === 475 - 15, 'embargo : la cible manque du grain que le joueur a en trop (15) : colère +5, trésor −15');
   const em0 = Tour.tourSuivant(neuf(), [{ type: 'embargo', id: 'val_roc' }]);
   check(em0.nations.val_roc.manque === 0 && em0.nations.val_roc.colere === 29, 'embargo : sans surplus du joueur, il ne coûte rien à la cible');
@@ -460,7 +460,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   ent.nations.brume.relation = 60;
   const at = Tour.tourSuivant(ent, [{ type: 'declarer_guerre', id: 'contreforts' }]);
   check(at.reputation === -30 - 15 - 15, 'attaquer un membre de l\'Entente : −30 (au lieu de −20), et ses traités avec nous rompus (−15 chacun)');
-  check(!at.traites.length && !at.contrats.length && at.nations.brume.relation === 30 && at.sanctions.some(s => s.par === 'brume' && s.contre === 'joueur'), 'sanctions de bloc : les autres membres rompent avec nous (traités, contrats, relation −30, embargo)');
+  check(!at.traites.length && !at.contrats.length && at.nations.brume.relation === 45 && at.sanctions.some(s => s.par === 'brume' && s.contre === 'joueur'), 'sanctions de bloc : les autres membres rompent avec nous (traités, contrats, relation −15, embargo)');
 
   // déclarations des nations
   const declare = (mod, s, rel, regBrume) => { const e = vrai(Object.assign({ tour: 6 }, mod)); if (rel != null) e.nations.val_roc.relation = rel; if (regBrume) e.nations.brume.regiments = regBrume; GU.tour(e, rng(s)); return e.guerre; };
@@ -660,7 +660,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   DPm.appliquer(ts, { type: 'rompre', id: 'entente', avec: 'brume' });
   check(egal(rel(ts), { val_roc: 4, brume: 34, contreforts: 4 }), 'réputation fusionnée : un traité rompu coûte −7,5 avec toutes');
   const em = base(); DPm.appliquer(em, { type: 'embargo', id: 'val_roc' });
-  check(egal(rel(em), { val_roc: -22.5, brume: 7.5, contreforts: 7.5 }), 'réputation fusionnée : un embargo injustifié coûte −30 avec la cible et −2,5 avec toutes');
+  check(egal(rel(em), { val_roc: -7.5, brume: 7.5, contreforts: 7.5 }), 'réputation fusionnée : un embargo injustifié coûte −15 avec la cible et −2,5 avec toutes');
   const su = base(); LM.adopter(su, 'suffrage_universal');
   check(Object.values(rel(su)).every(x => x === 12.5) && su.reputation === CHAMPS.joueur.reputation, 'réputation fusionnée : le suffrage universel vaut +2,5 avec toutes ; la réputation à part ne bouge plus');
   check(DPm.reputation(base()) === 10 && DPm.reputation(Object.assign(base(), { nations: Object.assign(base().nations, { brume: Object.assign(base().nations.brume, { relation: 40 }) }) })) === 20, 'réputation fusionnée : la réputation affichée est la moyenne des relations');

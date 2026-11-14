@@ -5,7 +5,7 @@
 const NODE = typeof module !== "undefined" && module.exports;
 
 const DIPLOMATIE = {
-  relation: { min: -100, max: 100, traite: 10, contrat: 5, donParOr: 1 / 5, embargo: -30 },   // ASSUMPTION validée (M3)
+  relation: { min: -100, max: 100, traite: 10, contrat: 5, donParOr: 1 / 5, embargo: -15 },   // ASSUMPTION validée (M3) ; embargo −30 → −15 le 14/11 (étape 3 : la pression économique ne doit pas mener à la guerre)
   // V2 « relation à deux sens » (décisions de l'utilisateur du 14/11, étape 1) : la guerre n'est possible qu'à une relation
   // de −50 ou moins (hostile), pour le joueur comme pour les nations ; le commerce rapproche (+1 par tour avec une nation tant
   // qu'un contrat ou un traité est en cours) ; les dirigeants hostiles provoquent des incidents (personas.js, provoque).
