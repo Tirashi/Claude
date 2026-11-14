@@ -188,7 +188,7 @@ function ceder(e, perdant, gagnant){
     delete e.regions[id];
   } else {
     const reg = e.profils[perdant].regions[id];
-    e.regions[id] = { nom: reg.nom, terrain: reg.terrain, emplacements: 3, batiments: {} };   // 3 emplacements : ASSUMPTION (V2 étape 2)
+    e.regions[id] = { nom: reg.nom, terrain: reg.terrain, emplacements: 3, batiments: {} };   // 3 emplacements : ASSUMPTION validée (V2 étape 2)
     delete e.profils[perdant].regions[id];
   }
   delete e.occupations[id];

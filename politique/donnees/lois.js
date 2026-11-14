@@ -1,5 +1,5 @@
 /* Politique : catalogue des lois (RULES_V1 § Lois ; V2 étape 4 : plus de coût en capital politique, des factions pour et
-   contre — déduites des réactions de la V1, ASSUMPTION (V2 étape 4) à valider).
+   contre — déduites des réactions de la V1, validées le 14/11).
    eco : effets appliqués par le moteur dès M1 ; factions : effets appliqués en M2 (colère, puissance, apaisement).
    Effets économiques :
      impots      multiplicateur des impôts
@@ -60,7 +60,7 @@ const GROUPES = { populaires: ["paysans", "ouvriers"], elites: ["patrons", "arti
 
 // V2 étape 4 (validé le 13/11) : une loi en débat à la fois ; chaque tour de débat, ses opposants prennent +1 de colère ;
 // à partir du 2e tour de débat, adoption avec une chance de 50 % + (puissance des pour − puissance des contre) / 2,
-// bornée entre 10 % et 90 % (pour / contre : ASSUMPTION (V2 étape 4)). premierTirage : tour de débat du premier tirage (le lancement
+// bornée entre 10 % et 90 % (pour / contre : ASSUMPTION validée (V2 étape 4)). premierTirage : tour de débat du premier tirage (le lancement
 // est le 1er) ; les tests de règles écrits avant cette étape utilisent 3 (le délai de la V1), une chance de 100 % et pas de colère.
 const REGLES_LOIS = { chance: { base: 0.5, parPuissance: 0.005, min: 0.1, max: 0.9 }, colereDebat: 1, premierTirage: 2 };
 

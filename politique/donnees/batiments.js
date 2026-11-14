@@ -5,7 +5,7 @@
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
 
-// entretien : or par tour et par bâtiment (salaires ; V2 budget, ASSUMPTION (budget) : environ 5 % du coût)
+// entretien : or par tour et par bâtiment (salaires ; V2 budget, ASSUMPTION validée (budget) : environ 5 % du coût)
 const BATIMENTS = {
   // délais raccourcis pour 40 tours (V2, validé le 13/11 ; V1 : 3, 4, 5, 5)
   farm:     { nom: "Ferme",            cout: 60,  delai: 2, produit: { grain: 20 }, entretien: 3 },

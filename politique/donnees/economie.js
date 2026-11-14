@@ -15,7 +15,7 @@ const ECONOMIE = {
   besoinsParFamille: { grain: 1, fer: 0, tissu: 0.2, outils: 0.1 }, // ASSUMPTION validée (grain ≈ 1 : RULES_V1)
   besoinsArmee: { fer: 4, tissu: 2 },                               // ASSUMPTION validée (toujours, même la milice)
   impotParFamille: 1,
-  // V2, budget (14/11, propositions à valider : ASSUMPTION (budget)) :
+  // V2, budget (14/11, propositions validées le 14/11 : ASSUMPTION validée (budget)) :
   // niveau d'imposition choisi par le joueur : multiplicateur des impôts et colère par tour de toutes les factions
   niveauxImpot: { bas: { impots: 0.75, colere: -1 }, normal: { impots: 1, colere: 0 }, haut: { impots: 1.35, colere: 4 } },   // haut : +4 et non +2 (14/11 : à +2, la Médecine du travail (−2) l'annulait et devenait dominante)
   // entretien des bâtiments (or par tour, dans donnees/batiments.js) × ce facteur ; 0 = sans entretien (tests de règles d'avant)

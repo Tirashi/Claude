@@ -28,7 +28,7 @@ const SCENARIO_CHAMPS = {
       patrons:  { colere: 20, puissance: 45 }
     },
     reputation: 0,                    // ASSUMPTION validée
-    regiments: 3                      // V2 : régiments de départ (ASSUMPTION validée (V2)) ; pas de caserne au départ : ASSUMPTION (V2 étape 2)
+    regiments: 3                      // V2 : régiments de départ (ASSUMPTION validée (V2)) ; pas de caserne au départ : ASSUMPTION validée (V2 étape 2)
   },
 
   // événements écrits : aucun (13/11 : personne n'est en crise au début de la partie ; la crise du tissu de la V1 est retirée)
@@ -37,7 +37,7 @@ const SCENARIO_CHAMPS = {
   // nations de l'ordinateur : la mise en place est fixe (régions, économie, échanges) ; le caractère vient du persona de leur
   // dirigeant, tiré au hasard (donnees/personas.js). Relation de départ : +10 pour toutes (décision du 13/11).
   // taux : impôts par famille ; exporte / importe : volumes fixes par tour (contrats, embargos) ; 3 régions chacune
-  // (noms et terrains : ASSUMPTION (V2 étape 2) ; le revenu d'une nation suit la part de ses régions qu'elle contrôle)
+  // (noms et terrains : ASSUMPTION validée (V2 étape 2) ; le revenu d'une nation suit la part de ses régions qu'elle contrôle)
   nations: {
     val_roc:     { nom: "Val-Roc",        dirigeant: "Vermeil", relation: 10, tresor: 400, familles: 90,     // ASSUMPTION validée
                    taux: 1.0, colere: 30, exporte: { fer: 10 }, importe: { grain: 15, tissu: 5 },                       // ASSUMPTION validée (M3)

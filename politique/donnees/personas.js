@@ -1,7 +1,6 @@
 /* Politique : personas des dirigeants (V2 ; décision de l'utilisateur du 13/11 : tirés au hasard à chaque partie, cachés au
    joueur, 3 différents parmi 7). La nation garde ses régions, son économie et ses échanges ; le persona décide de l'armée,
-   de la guerre et de la diplomatie. Valeurs : propositions de Claude du 13/11 (specs/politique/regles-v2.md), ASSUMPTION
-   (personas) à valider.
+   de la guerre et de la diplomatie. Valeurs : propositions de Claude du 13/11 (specs/politique/regles-v2.md), validées le 14/11.
    armee : multiplicateur de force ; regiments : au départ ; recrute : armée visée (part du plafond), régiments par tour,
    or gardé ; traite / contrat : relation minimale pour accepter ; declare : conditions de déclaration de guerre ;
    rejoint : chance de rejoindre le camp le plus fort ; contreAgresseur : rejoint le camp attaqué ; refuse : traités refusés. */

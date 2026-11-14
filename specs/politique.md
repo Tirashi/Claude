@@ -125,6 +125,9 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 16. Validation du 14/11
+L'utilisateur a validé toutes les valeurs encore en attente : personas (tableau de `regles-v2.md`), factions pour et contre des lois (§ 12), détails de l'armée et de la guerre (§ 9 ; la capitulation « sans régiment » est gardée à côté de celle à la moitié des régions), budget (§ 15), contrats tirés des échanges (§ 10). Prochaines étapes : le paquet d'événements, puis la revue de toutes les lois (supprimer, modifier, ajouter).
+
 ## 15. Budget : impôts, entretien, dette (14/11)
 Décision de l'utilisateur : niveau d'imposition, entretien des bâtiments, dette ; plafond des réserves seulement si l'or déborde encore. Après avoir regardé l'usage de l'or dans Victoria 3 (budget en flux, impôts réglables, salaires de l'État, réserves plafonnées, dette et faillite).
 Fait (valeurs ASSUMPTION (budget), à valider) : **niveau d'imposition** bas (×0,75, −1 colère/tour pour toutes les factions), normal, haut (×1,35, **+4**/tour) ; **entretien** par tour : ferme 3, mine 4, atelier 4, tissage 5, filature 2, caserne 3, fort 4 (environ 5 % du coût ; une région occupée ne coûte plus) ; **dette** : sous zéro, 5 % d'intérêts par tour ; sous −300 (faillite), +3 colère/tour pour toutes les factions. Bots : impôts hauts si toutes les factions sont sous 35 de colère, bas si l'une atteint 55. Les tests écrits avant gardent l'ancien budget. 255 tests.

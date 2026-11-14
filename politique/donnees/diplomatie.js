@@ -27,7 +27,7 @@ const DIPLOMATIE = {
 
   // contrats (13/11 : plus de liste fixe) : chaque nation propose d'acheter ce qu'elle importe et de vendre ce qu'elle exporte ;
   // volume par tour = son volume, au plus 10 ; prix fixe = prix de base × 0,8 (on achète) ou × 1,3 (on vend) ; 10 tours ;
-  // relation minimale : celle du persona (ASSUMPTION (personas), repris des contrats de la V1)
+  // relation minimale : celle du persona (ASSUMPTION validée (personas), repris des contrats de la V1)
   contrats: { volumeMax: 10, prixAchat: 0.8, prixVente: 1.3, duree: 10 },
 
   // traités : relation minimale de la nation pour accepter ; condition supplémentaire
