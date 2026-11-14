@@ -11,6 +11,9 @@ const DIPLOMATIE = {
   // qu'un contrat ou un traité est en cours) ; les dirigeants hostiles provoquent des incidents (personas.js, provoque).
   // actif: false = règles d'avant (tests écrits avant cette étape). ASSUMPTION (relation, 14/11) : valeurs à vérifier.
   hostilite: { actif: true, seuil: -50, commerceParTour: 1 },
+  // diplomate (étape 2 du 14/11, ASSUMPTION) : un seul à la fois, envoyé dans une nation (pas en guerre contre nous) ;
+  // chaque tour : coût en or, relation + ; rappelé à volonté, et de lui-même si la guerre éclate avec sa nation
+  diplomate: { cout: 5, relation: 2 },
 
   // réputation (À TRANCHER n° 2, validé) : seules les lignes utiles en M3a ; guerre et attaque de l'Entente en M3b
   reputation: { donPar20: 1, donMax: 5, traiteSigne: 3, traiteRespecte: 2, respectTous: 10, traiteRompu: -15,

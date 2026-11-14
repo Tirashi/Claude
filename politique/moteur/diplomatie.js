@@ -1,6 +1,6 @@
 /* Politique : diplomatie, commerce et nations de l'ordinateur (M3a).
    e.nations[id] = { relation, tresor, familles, colere, moral } ; e.contrats = [{ id, jusqua }] ;
-   e.embargos = [nation] ; e.traites = [{ type, avec, depuis }] ; e.dons = nations ayant reçu un don ce tour.
+   e.diplomate = { nation, depuis } ou null (un seul diplomate) ; e.embargos = [nation] ; e.traites = [{ type, avec, depuis }] ; e.dons = nations ayant reçu un don ce tour.
    Actions : don { id: nation, montant }, contrat { id }, traite { id: type, avec }, rompre { id: type, avec },
    embargo { id: nation }, lever_embargo { id: nation }. Fin de tour (tour) : nations, embargos, contrats, réputation. */
 (function(racine){
@@ -88,6 +88,9 @@ function actions(e){
   }
   r.push(...traitesPossibles(e));
   for (const t of e.traites) r.push({ type: "rompre", id: t.type, avec: t.avec });
+  // diplomate (V2 étape 2) : envoyé dans une nation qui n'est pas en guerre contre nous ; un seul, déplaçable, rappelable
+  for (const n in e.nations) if (!ennemi(e, n) && (!e.diplomate || e.diplomate.nation !== n) && e.tresor >= D.diplomate.cout) r.push({ type: "diplomate", id: n });
+  if (e.diplomate) r.push({ type: "rappeler_diplomate" });
   return r;
 }
 
@@ -137,6 +140,12 @@ function appliquer(e, a){
     reputer(e, legitime(e, a.id) ? D.reputation.sanctionLegitime : D.reputation.sanctionIllegitime);
     e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== a.id);   // plus de commerce avec la cible
     e.journal.push(`Embargo contre ${a.id}.`);
+  } else if (a.type === "diplomate"){
+    e.diplomate = { nation: a.id, depuis: e.tour };
+    e.journal.push(`Diplomate envoyé chez ${e.profils[a.id].nom}.`);
+  } else if (a.type === "rappeler_diplomate"){
+    e.journal.push(`Diplomate rappelé de chez ${e.profils[e.diplomate.nation].nom}.`);
+    e.diplomate = null;
   } else if (a.type === "lever_embargo"){
     e.embargos = e.embargos.filter(n => n !== a.id);
     e.journal.push(`Embargo levé contre ${a.id}.`);
@@ -187,6 +196,11 @@ function tour(e){
     } else delete n.manque;
     n.colere = Math.max(0, Math.min(100, arrondi(colere)));
     n.moral = moralNation(n.colere);
+  }
+  // diplomate (V2 étape 2) : coût et relation chaque tour ; rappelé si la guerre éclate avec sa nation
+  if (e.diplomate){
+    if (ennemi(e, e.diplomate.nation)){ e.journal.push(`Diplomate rappelé : guerre avec ${e.profils[e.diplomate.nation].nom}.`); e.diplomate = null; }
+    else { e.tresor = arrondi(e.tresor - D.diplomate.cout); relation(e, e.diplomate.nation, D.diplomate.relation); }
   }
   // le commerce rapproche (V2 étape 1) : +1 par tour avec une nation tant qu'un contrat ou un traité est en cours
   if (D.hostilite.actif) for (const id in e.nations){

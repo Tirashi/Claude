@@ -25,7 +25,7 @@ const pct = (k, n) => Math.round(100 * k / n) + ' %';
 const r0 = x => x == null ? '-' : Math.round(x);
 
 // --- réglages : les modules de données sont partagés avec le moteur (même cache de require) ---
-const RACINES = { economie: 'economie', lois: 'lois', batiments: 'batiments', factions: 'factions', diplomatie: 'diplomatie', guerre: 'guerre', champs: 'champs', objectifs: 'objectifs', pays: 'pays' };
+const RACINES = { economie: 'economie', lois: 'lois', batiments: 'batiments', factions: 'factions', diplomatie: 'diplomatie', guerre: 'guerre', champs: 'champs', objectifs: 'objectifs', pays: 'pays', personas: 'personas' };
 function cible(chemin){
   const morceaux = chemin.split('.'), racine = RACINES[morceaux[0]];
   if (!racine) throw new Error(`réglage inconnu : ${chemin} (racines : ${Object.keys(RACINES).join(', ')})`);

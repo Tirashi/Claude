@@ -72,6 +72,7 @@ function creerEtat(scenario, graine, pays){
     offres: Diplomatie.offres(profils),   // contrats proposés par les nations (ce qu'elles importent et exportent)
     revanches: {},                    // nations revanchardes battues par le joueur
     contrats: [],                     // [{ id, jusqua }]
+    diplomate: null,                  // diplomate envoyé : { nation, depuis } (un seul ; moteur/diplomatie.js)
     embargos: [],                     // nations sous embargo du joueur
     traites: [],                      // [{ type, avec, depuis }]
     dons: [],                         // nations ayant reçu un don ce tour

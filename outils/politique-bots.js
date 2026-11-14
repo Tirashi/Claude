@@ -74,6 +74,14 @@ function evenement(p){
   const payante = CARTES[ev.id].choix.find(c => c.cout && p.e.tresor >= 3 * c.cout);
   if (payante) p.essayer({ type: 'evenement', choix: payante.id });
 }
+// diplomate (V2 étape 2) : vers la nation la plus fâchée si la relation passe sous 0 ; rappelé quand toutes sont à +20
+function diplomatie(p){
+  const e = p.e, liste = Object.keys(e.nations).filter(n => !(e.guerre && e.guerre.ennemis.includes(n)));
+  if (!liste.length) return;
+  const pire = liste.sort((a, b) => e.nations[a].relation - e.nations[b].relation)[0];
+  if (e.nations[pire].relation < 0 && (!e.diplomate || e.diplomate.nation !== pire) && e.tresor >= 20) p.essayer({ type: 'diplomate', id: pire });
+  else if (e.diplomate && liste.every(n => e.nations[n].relation >= 20)) p.essayer({ type: 'rappeler_diplomate' });
+}
 // une caserne d'abord si on n'en a pas
 const avecCaserne = liste => e => (!e.batiments.caserne && !e.chantiers.some(c => c.id === 'caserne') ? ['caserne'] : []).concat(liste(e));
 // apaiser les factions dont la colère atteint le seuil (la plus en colère d'abord)
@@ -127,6 +135,7 @@ function programme(lois){
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
     evenement(p);
+    diplomatie(p);
     return p.acts;
   };
 }
@@ -146,6 +155,7 @@ const BOTS = {
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
     evenement(p);
+    diplomatie(p);
     return p.acts;
   },
 
@@ -159,6 +169,7 @@ const BOTS = {
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
     evenement(p);
+    diplomatie(p);
     return p.acts;
   },
 
@@ -171,6 +182,7 @@ const BOTS = {
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
     evenement(p);
+    diplomatie(p);
     return p.acts;
   },
 
@@ -190,6 +202,7 @@ const BOTS = {
     }
     fiscalite(p);
     evenement(p);
+    diplomatie(p);
     return p.acts;
   },
 
@@ -243,6 +256,7 @@ const BOTS = {
       etapes.forEach(([t, a], i) => { if (!faites.has(i) && e.tour >= t && (a.type === 'construire' ? construireMieux(p, a.id) : p.essayer(a))) faites.add(i); });
       fiscalite(p);
       evenement(p);
+    diplomatie(p);
       return p.acts;
     };
   }

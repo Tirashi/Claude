@@ -937,5 +937,27 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const ed = Etat.copie(e0); ed.traites = [{ type: 'entente', avec: n0, depuis: 1 }]; ed.contrats = [{ id: off, jusqua: 30 }];
   check(Tour.tourSuivant(ed, []).nations[n0].relation === c0.nations[n0].relation + 1, 'commerce : +1 par tour au plus, même avec contrat et traité');
 }
+
+// --- V2 : diplomate (étape 2 du 14/11) ---
+{
+  HOST.actif = true;
+  const DD = P('donnees/diplomatie.js').diplomate;
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand';
+  const [n0, n1] = Object.keys(e0.nations);
+  const acts = e => Tour.actionsDisponibles(e);
+  check(e0.diplomate === null && acts(e0).filter(a => a.type === 'diplomate').length === 3 && !acts(e0).some(a => a.type === 'rappeler_diplomate'), 'diplomate : envoyable chez chaque nation, rien à rappeler au départ');
+  const ref = Tour.tourSuivant(e0, []), d1 = Tour.tourSuivant(e0, [{ type: 'diplomate', id: n0 }]);
+  check(d1.diplomate.nation === n0 && d1.nations[n0].relation === ref.nations[n0].relation + DD.relation && proche(d1.tresor, ref.tresor - DD.cout) && d1.nations[n1].relation === ref.nations[n1].relation, 'diplomate : +2 de relation par tour avec sa nation, 5 or par tour');
+  check(!acts(d1).some(a => a.type === 'diplomate' && a.id === n0) && acts(d1).some(a => a.type === 'diplomate' && a.id === n1), 'diplomate : un seul, déplaçable vers une autre nation');
+  const d2 = Tour.tourSuivant(d1, [{ type: 'diplomate', id: n1 }]);
+  check(d2.diplomate.nation === n1 && d2.nations[n1].relation === Tour.tourSuivant(d1, []).nations[n1].relation + DD.relation && d2.nations[n0].relation === Tour.tourSuivant(Object.assign(Etat.copie(d1), { diplomate: null }), []).nations[n0].relation, 'diplomate : déplacé, il ne travaille plus chez la première nation');
+  const d3 = Tour.tourSuivant(d1, [{ type: 'rappeler_diplomate' }]);
+  check(d3.diplomate === null && d3.nations[n0].relation === d1.nations[n0].relation && proche(d3.tresor, Tour.tourSuivant(Object.assign(Etat.copie(d1), { diplomate: null }), []).tresor), 'diplomate : rappelé, plus d\'effet ni de coût');
+  const dg = Etat.copie(d1); dg.guerre = { ennemis: [n0], allies: [], agresseur: n0, depuis: dg.tour, derniereBataille: null, bataille: null, capitulation: null };
+  const dg1 = Tour.tourSuivant(dg, []);
+  check(dg1.diplomate === null && dg1.journal.some(l => /^Diplomate rappelé : guerre/.test(l)) && !acts(dg1).some(a => a.type === 'diplomate' && a.id === n0), 'diplomate : rappelé si la guerre éclate, pas envoyable chez l\'ennemi');
+  const pauvre = Etat.copie(e0); pauvre.tresor = DD.cout - 1;
+  check(!acts(pauvre).some(a => a.type === 'diplomate'), 'diplomate : pas sans l\'or de son premier tour');
+}
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);
