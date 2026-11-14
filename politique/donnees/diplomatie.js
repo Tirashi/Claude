@@ -6,6 +6,11 @@ const NODE = typeof module !== "undefined" && module.exports;
 
 const DIPLOMATIE = {
   relation: { min: -100, max: 100, traite: 10, contrat: 5, donParOr: 1 / 5, embargo: -30 },   // ASSUMPTION validée (M3)
+  // V2 « relation à deux sens » (décisions de l'utilisateur du 14/11, étape 1) : la guerre n'est possible qu'à une relation
+  // de −50 ou moins (hostile), pour le joueur comme pour les nations ; le commerce rapproche (+1 par tour avec une nation tant
+  // qu'un contrat ou un traité est en cours) ; les dirigeants hostiles provoquent des incidents (personas.js, provoque).
+  // actif: false = règles d'avant (tests écrits avant cette étape). ASSUMPTION (relation, 14/11) : valeurs à vérifier.
+  hostilite: { actif: true, seuil: -50, commerceParTour: 1 },
 
   // réputation (À TRANCHER n° 2, validé) : seules les lignes utiles en M3a ; guerre et attaque de l'Entente en M3b
   reputation: { donPar20: 1, donMax: 5, traiteSigne: 3, traiteRespecte: 2, respectTous: 10, traiteRompu: -15,

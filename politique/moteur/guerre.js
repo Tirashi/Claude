@@ -17,6 +17,9 @@ const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
+const D = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
+// V2 étape 1 (relation à deux sens) : la guerre ne se déclare qu'à une relation hostile (−50 ou moins)
+const hostile = (e, n) => !D.hostilite.actif || e.nations[n].relation <= D.hostilite.seuil;
 const persona = (e, n) => PERSONAS[e.profils[n].persona];
 
 const arrondi = x => Math.round(x * 100) / 100;
@@ -204,7 +207,7 @@ const capitule = (e, qui) => (qui === "joueur" ? e.moral : e.nations[qui].moral)
 
 function actions(e){
   const g = e.guerre, r = recrutables(e).map(region => ({ type: "recruter", region }));
-  if (!g){ for (const n in e.nations) if (!enTreve(e, n)) r.push({ type: "declarer_guerre", id: n }); return r; }
+  if (!g){ for (const n in e.nations) if (!enTreve(e, n) && hostile(e, n)) r.push({ type: "declarer_guerre", id: n }); return r; }
   if (g.capitulation === "ennemi"){
     const cession = cessibles(e, g.ennemis[0], "joueur").length > 0;
     for (let k = 0; k < (cession ? 16 : 8); k++) r.push({ type: "imposer_paix", reparations: !!(k & 1), lever_embargo: !!(k & 2), non_rearmement: !!(k & 4), cession: !!(k & 8) });
@@ -249,16 +252,25 @@ function tour(e, r){
     if (liste.length && forceCamp(e, g.ennemis) > forceCamp(e, nous, liste[0])) bataille(e, false, liste[0], r);
     return;
   }
+  // provocations des dirigeants hostiles : incidents qui font descendre la relation (avant de pouvoir déclarer)
+  if (D.hostilite.actif) for (const n in e.nations){
+    const v = persona(e, n).provoque;
+    if (!v || enTreve(e, n) || e.tour < v.tourMin || hostile(e, n) || (v.revanche && !(e.revanches || {})[n])) continue;
+    if (Alea.suivant(r) < v.proba){
+      e.nations[n].relation = Math.max(-100, arrondi(e.nations[n].relation + v.delta));
+      e.journal.push(`Incident provoqué par ${e.profils[n].nom} : relation ${v.delta}.`);
+    }
+  }
   for (const n in e.nations){
     const p = persona(e, n), d = (e.revanches || {})[n] && p.revanche ? p.revanche : p.declare;
-    if (!d || enTreve(e, n) || e.tour < (d.tourMin || 1) || e.nations[n].relation >= d.relationMax) continue;
+    if (!d || enTreve(e, n) || e.tour < (d.tourMin || 1) || e.nations[n].relation >= d.relationMax || !hostile(e, n)) continue;
     if (d.paria && !Diplomatie.paria(e)) continue;                 // l'idéaliste ne frappe qu'un paria
     const nous = forceCamp(e, ["joueur"].concat(partenaires(e, "defense_mutuelle")));
     if (force(e, n) > d.ratio * nous && Alea.suivant(r) < d.proba){ declarer(e, n, n, r); return; }
   }
 }
 
-const Guerre = { persona, enTreve, desarme, force, forceCamp, plafond, regiments, proprietaire, cibles, cessibles, recrutables,
+const Guerre = { persona, hostile, enTreve, desarme, force, forceCamp, plafond, regiments, proprietaire, cibles, cessibles, recrutables,
   declarer, bataille, paix, actions, appliquer, tour };
 if (NODE) module.exports = Guerre; else (racine.Politique = racine.Politique || {}).Guerre = Guerre;
 })(typeof window !== "undefined" ? window : globalThis);

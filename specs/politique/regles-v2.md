@@ -79,6 +79,12 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Le joueur choisit son pays à la création de la partie : équilibré, agricole, industriel, marchand ou militaire (`donnees/pays.js`). Même carte pour tous.
 - Le pays fixe la puissance de départ des factions (total 140), change un ou deux bâtiments (ou emplacements) de départ, l'armée, et met une loi en vigueur depuis longtemps (remplaçable par un débat normal). La colère de départ ne change pas.
 
+### 8. Relation à deux sens, la guerre en dernier recours (14/11)
+- Une seule jauge par nation (la relation, −100 à +100). Paliers : +50 alliance et défense mutuelle ; +30 Entente et filature ; de −49 à +29 commerce et ultimatums ; **−50 et moins : hostile, la guerre devient possible** (pour le joueur comme pour les nations).
+- Le commerce rapproche : +1 par tour avec une nation tant qu'un contrat ou un traité est en cours.
+- Les dirigeants belliqueux (et revanchards après une défaite) provoquent des incidents (−20) avant de pouvoir déclarer.
+- À venir : envoyer un diplomate ; ultimatum ; embargo qui fait céder ; pays minier et ambition Influence.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

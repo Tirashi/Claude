@@ -188,6 +188,10 @@ function tour(e){
     n.colere = Math.max(0, Math.min(100, arrondi(colere)));
     n.moral = moralNation(n.colere);
   }
+  // le commerce rapproche (V2 étape 1) : +1 par tour avec une nation tant qu'un contrat ou un traité est en cours
+  if (D.hostilite.actif) for (const id in e.nations){
+    if (e.contrats.some(x => e.offres[x.id].nation === id) || e.traites.some(t => t.avec === id)) relation(e, id, D.hostilite.commerceParTour);
+  }
   for (const x of e.contrats.filter(x => x.jusqua <= e.tour)) e.journal.push(`Contrat terminé : ${x.id}.`);
   e.contrats = e.contrats.filter(x => x.jusqua > e.tour);
   for (const t of e.traites){

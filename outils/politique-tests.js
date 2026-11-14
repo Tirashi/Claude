@@ -24,6 +24,8 @@ const RLV = P('donnees/lois.js').REGLES_LOIS, RLV0 = JSON.parse(JSON.stringify(R
 Object.assign(RLV, { premierTirage: 3, colereDebat: 0, chance: Object.assign({}, RLV.chance, { min: 1, max: 1 }) });
 // … et avec la réputation à part (avant la V2 étape 6)
 const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
+// … et sans la relation à deux sens (seuil hostile, commerce qui rapproche, provocations : V2 « étape 1 » du 14/11)
+const HOST = P('donnees/diplomatie.js').hostilite; HOST.actif = false;
 // … et sans entretien des bâtiments ni intérêts de la dette (avant le budget de la V2)
 const ECOV = P('donnees/economie.js'), BUDGET0 = { entretienFacteur: ECOV.entretienFacteur, dette: JSON.parse(JSON.stringify(ECOV.dette)) };
 ECOV.entretienFacteur = 0; ECOV.dette.taux = 0; ECOV.dette.colereFaillite = 0;
@@ -889,6 +891,51 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(ev.suivi.victoires === 1 && Ob.etapes(ev, 'puissance')[2].faite, 'étape : une guerre gagnée');
   const ea = Tour.tourSuivant(e0, [{ type: 'ambition', id: 'autorite' }]);
   check(Ob.etapes(ea).length === 3 && Ob.etapes(ea)[0].texte === OD.ETAPES.autorite[0].texte, 'étapes : celles de l\'ambition par défaut');
+}
+
+// --- V2 : relation à deux sens (étape 1 du 14/11) ---
+{
+  HOST.actif = true;
+  const Gm = P('moteur/guerre.js'), Dm = P('moteur/diplomatie.js'), PERS = P('donnees/personas.js');
+  const base = () => { const e = Etat.creerEtat(CHAMPS, 9); for (const n in e.profils) e.profils[n].persona = 'marchand'; return e; };
+  const e0 = base(), n0 = Object.keys(e0.nations)[0];
+  check(!Tour.actionsDisponibles(e0).some(a => a.type === 'declarer_guerre'), 'hostilité : pas de déclaration de guerre à +10');
+  const eh = Etat.copie(e0); eh.nations[n0].relation = -50;
+  check(Tour.actionsDisponibles(eh).filter(a => a.type === 'declarer_guerre').map(a => a.id).join() === n0, 'hostilité : déclaration possible à −50 seulement contre cette nation');
+  const e49 = Etat.copie(e0); e49.nations[n0].relation = -49;
+  check(!Tour.actionsDisponibles(e49).some(a => a.type === 'declarer_guerre'), 'hostilité : pas à −49');
+  // une nation belliqueuse, bien plus forte, ne déclare pas tant que la relation n'est pas hostile
+  const eb = Etat.copie(e0); eb.profils[n0].persona = 'belliqueux'; PERS.belliqueux.provoque.proba = 0; eb.tour = 10; eb.nations[n0].regiments = 30;
+  let declare = false; for (let i = 0; i < 20 && !declare; i++){ const x = Tour.tourSuivant(Object.assign(Etat.copie(eb), { alea: i + 1 }), []); declare = !!x.guerre; }
+  const ebh = Etat.copie(eb); ebh.nations[n0].relation = -60;
+  let declareH = false; for (let i = 0; i < 20 && !declareH; i++){ const x = Tour.tourSuivant(Object.assign(Etat.copie(ebh), { alea: i + 1 }), []); declareH = !!x.guerre; }
+  check(!declare && declareH, 'hostilité : un belliqueux plus fort ne déclare qu\'à une relation hostile');
+  // provocations : un belliqueux fait descendre la relation par incidents (−20) jusqu'au seuil
+  PERS.belliqueux.provoque.proba = 1;
+  const ep = Etat.copie(e0); ep.profils[n0].persona = 'belliqueux'; ep.tour = 4; ep.nations[n0].regiments = 0;
+  const p1 = Tour.tourSuivant(ep, []);
+  check(p1.nations[n0].relation === 10 - 20 && p1.journal.some(l => /^Incident provoqué/.test(l)), 'provocation : incident, relation −20');
+  let pp = p1; for (let i = 0; i < 2; i++) pp = Tour.tourSuivant(pp, []);
+  const pq = Tour.tourSuivant(pp, []);
+  check(pp.nations[n0].relation === -50 && !pq.journal.some(l => /^Incident provoqué/.test(l)) && !!pq.guerre, 'provocation : plus d\'incident à −50, la guerre devient possible (et le belliqueux la déclare)');
+  const ep3 = Etat.copie(ep); ep3.tour = 3;
+  check(Tour.tourSuivant(ep3, []).nations[n0].relation === 10, 'provocation : pas avant le tour 4');
+  const ept = Etat.copie(ep); ept.treves = { [n0]: 10 };
+  check(Tour.tourSuivant(ept, []).nations[n0].relation === 10, 'provocation : pas pendant une trêve');
+  const er = Etat.copie(e0); er.profils[n0].persona = 'revanchard'; er.tour = 6;
+  const er2 = Etat.copie(er); er2.revanches = { [n0]: true };
+  check(Tour.tourSuivant(er, []).nations[n0].relation === 10 && Tour.tourSuivant(er2, []).nations[n0].relation < 10, 'provocation : le revanchard seulement contre qui l\'a battu');
+  PERS.belliqueux.provoque.proba = 0.3;
+  // le commerce rapproche : +1 par tour avec une nation tant qu'un contrat ou un traité est en cours
+  const ec = Etat.copie(e0), off = Object.keys(ec.offres).find(k => ec.offres[k].nation === n0);
+  ec.contrats = [{ id: off, jusqua: 30 }];
+  const autres = Object.keys(ec.nations).filter(n => n !== n0);
+  const c1 = Tour.tourSuivant(ec, []), c0 = Tour.tourSuivant(Etat.copie(e0), []);
+  check(c1.nations[n0].relation === c0.nations[n0].relation + 1 && autres.every(n => c1.nations[n].relation === c0.nations[n].relation), 'commerce : +1 par tour avec la nation du contrat, et elle seule');
+  const et = Etat.copie(e0); et.traites = [{ type: 'entente', avec: n0, depuis: 1 }];
+  check(Tour.tourSuivant(et, []).nations[n0].relation === c0.nations[n0].relation + 1, 'commerce : +1 par tour avec une nation liée par un traité');
+  const ed = Etat.copie(e0); ed.traites = [{ type: 'entente', avec: n0, depuis: 1 }]; ed.contrats = [{ id: off, jusqua: 30 }];
+  check(Tour.tourSuivant(ed, []).nations[n0].relation === c0.nations[n0].relation + 1, 'commerce : +1 par tour au plus, même avec contrat et traité');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);
