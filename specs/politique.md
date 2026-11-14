@@ -125,6 +125,20 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 20. Pays de départ (14/11)
+Décisions de l'utilisateur : le joueur **choisit** son pays ; la spécialité du pays change la **puissance des factions**, les **bâtiments de départ** et les **lois déjà en vigueur** ; même carte pour tous ; personne en crise. Fait : `donnees/pays.js` (ASSUMPTION, à vérifier), `Etat.creerEtat(scenario, graine, pays)` (défaut : équilibré, identique à avant ; `e.pays` ; VERSION 4), lois de départ « depuis longtemps » (effets à terme complets, effets de durée finis, remplaçables par un débat normal), `--pays nom|tous` dans le simulateur. 342 tests.
+
+| Pays | Puissance P / O / A / Pat | Départ | Loi |
+|---|---|---|---|
+| Équilibré | 40 / 25 / 30 / 45 | — | — |
+| Agricole | 60 / 20 / 25 / 35 | +1 ferme (plaine) | Écoles religieuses |
+| Industriel | 25 / 45 / 20 / 50 | +1 mine, −1 ferme (vallée) | Syndicats interdits |
+| Marchand | 30 / 20 / 45 / 45 | bourg à 5 emplacements | Libre-échange |
+| Militaire | 40 / 30 / 25 / 45 | +1 fort (bourg), 5 régiments | Conscription |
+
+Essais (100 parties par bot) : marchand avec un atelier offert trop riche (economy 5 946 or au tour 40, contre 4 669 en pays équilibré) ; sans rien 4 925 ; bourg à 5 emplacements 5 455 (retenu pour garder une spécialité de bâtiment, à confirmer). Militaire à 6 régiments : révolutions 8 % pour la gauche ; 5 régiments et fort retenu.
+Résultat : le pays change bien la voie de l'Autorité (industriel : droite 96 % sans médaille, extrême gauche 86 % de bronze ; agricole : les deux extrêmes au bronze ; marchand : droite 88 % d'or). Reste à voir avec l'utilisateur (réponse du 14/11) : pays marchand plus riche, pays militaire dur pour la gauche, extrêmes jamais au-delà du bronze, seuils communs à tous les pays.
+
 ## 19. Équilibre gauche / droite et objectifs de victoire (14/11)
 **Lois (validé)** : collectivisation, entretien des bâtiments ×1,5 → **×2** (production gardée à +15 %) ; libre entreprise, part des ventes 75 % → **85 %** ; impôt minimal ×0,8 → **×0,85**. Or médian au tour 40 (100 parties par bot), avant → après : extrême gauche 3 499 → 2 744 (grève dans 82 % des parties) ; droite 2 048 → 3 134 (faillites 11 % → 1 %) ; extrême droite 2 428 → 2 546 ; gauche 2 519 (inchangé, meilleure réputation, pas de grève). Balayages seuls : production de la collectivisation 1,1 (−290 or seulement) ; impôt minimal 0,9 (droite 2 909 à lui seul, trop avec la libre entreprise).
 

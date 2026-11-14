@@ -74,6 +74,10 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Puissance** : 10 par région tenue (non occupée) + force de l'armée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, moyenne par loi), en moyenne sur la partie.
 - Seuils fixés par simulation (`--objectifs`), d'après les bots qui visent l'objectif : bronze = leur médiane, argent = 75e centile, or = 87e (valeurs dans `donnees/objectifs.js`, à valider).
 
+### 7. Pays de départ (14/11)
+- Le joueur choisit son pays à la création de la partie : équilibré, agricole, industriel, marchand ou militaire (`donnees/pays.js`). Même carte pour tous.
+- Le pays fixe la puissance de départ des factions (total 140), change un ou deux bâtiments (ou emplacements) de départ, l'armée, et met une loi en vigueur depuis longtemps (remplaçable par un débat normal). La colère de départ ne change pas.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

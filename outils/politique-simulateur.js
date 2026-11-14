@@ -1,18 +1,21 @@
 /* Politique : simulateur en lot (M4, M5 ; specs/politique/plan-simulateur.md).
    node outils/politique-simulateur.js [--parties 200] [--bot nom,nom|tous] [--tours 60] [--graine 1] [--json fichier]
         [--regle chemin=valeur]... [--balayage chemin=v1,v2,v3] [--controle] [--objectifs [--seuils-proposes]]
+        [--pays nom,nom|tous]
    Joue des parties complètes avec les bots de politique-bots.js (graine de la partie n = graine + n : tous les bots
    jouent les mêmes graines), relève des métriques par partie, affiche un résumé par bot et la stratégie dominante.
    --regle : change une valeur des données pour ce lancement (chemin = fichier de donnees/ puis clés, ex.
              guerre.defaite.colere=5, champs.nations.val_roc.tresor=200, factions.REGLES_FACTIONS.apaisement.cout=20).
    --balayage : rejoue tout pour chaque valeur d'un chemin et affiche un tableau comparatif (rien n'est écrit sur disque).
+   --pays : pays de départ des parties (donnees/pays.js ; défaut : equilibre ; tous = un lot par pays).
    --json : tout le détail. --controle (lancé par verifications.js) : chaque bot joue sans action refusée, même graine =
    même partie (aussi après sauvegarde JSON), réglages remis en place après un balayage ; code de sortie 1 sinon. */
 'use strict';
 const fs = require('fs'), path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
 const Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Diplo = P('moteur/diplomatie.js'), Ob = P('moteur/objectifs.js'), OD = P('donnees/objectifs.js');
-const CHAMPS = P('donnees/champs.js'), { LOIS } = P('donnees/lois.js');
+const CHAMPS = P('donnees/champs.js'), { LOIS } = P('donnees/lois.js'), PAYS = P('donnees/pays.js');
+let PAYS_PARTIE = 'equilibre';   // --pays : pays de départ des parties (donnees/pays.js)
 const Bots = require('./politique-bots.js');
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : d; };
@@ -22,7 +25,7 @@ const pct = (k, n) => Math.round(100 * k / n) + ' %';
 const r0 = x => x == null ? '-' : Math.round(x);
 
 // --- réglages : les modules de données sont partagés avec le moteur (même cache de require) ---
-const RACINES = { economie: 'economie', lois: 'lois', batiments: 'batiments', factions: 'factions', diplomatie: 'diplomatie', guerre: 'guerre', champs: 'champs', objectifs: 'objectifs' };
+const RACINES = { economie: 'economie', lois: 'lois', batiments: 'batiments', factions: 'factions', diplomatie: 'diplomatie', guerre: 'guerre', champs: 'champs', objectifs: 'objectifs', pays: 'pays' };
 function cible(chemin){
   const morceaux = chemin.split('.'), racine = RACINES[morceaux[0]];
   if (!racine) throw new Error(`réglage inconnu : ${chemin} (racines : ${Object.keys(RACINES).join(', ')})`);
@@ -48,7 +51,7 @@ const decisions = e => new Set(Tour.actionsDisponibles(e).filter(a => FOND.inclu
 
 // --- une partie : métriques relevées tour par tour ---
 function partie(nom, graine, tours, coupe){
-  let e = Etat.creerEtat(CHAMPS, graine);
+  let e = Etat.creerEtat(CHAMPS, graine, PAYS_PARTIE);
   if (tours != null) { if (!Number.isInteger(tours) || tours < 1) throw new Error('nombre de tours invalide : ' + tours); e.tourMax = tours; }
   const bot = Bots.creer(nom, graine);
   const m = { graine, issue: null, duree: 0, tresor: {}, reputation: {}, debats: 0, abandons: 0, toursGuerre: 0, guerres: 0, declareesParNous: 0,
@@ -239,6 +242,11 @@ if (require.main === module){
   const choix = arg('bot', 'tous'), noms = choix === 'tous' ? Bots.noms : choix.split(',');
   const reglages = {};
   for (const r of args('regle')) { const [ch, v] = r.split('='); reglages[ch] = valeur(v); }
+  const listePays = arg('pays', 'equilibre') === 'tous' ? Object.keys(PAYS) : arg('pays', 'equilibre').split(',');
+  for (const pays of listePays){
+  if (!PAYS[pays]) throw new Error('pays inconnu : ' + pays);
+  PAYS_PARTIE = pays;
+  if (listePays.length > 1 || pays !== 'equilibre') console.log(`\n########## ${PAYS[pays].nom} (${pays})`);
   const balayage = arg('balayage');
   if (balayage){
     const [ch, vs] = balayage.split('='), valeurs = vs.split(',').map(valeur);
@@ -268,6 +276,7 @@ if (require.main === module){
     if (process.argv.includes('--objectifs')) objectifs(parties);
     const f = arg('json');
     if (f){ fs.writeFileSync(f, JSON.stringify({ parametres: { parties: N, graine: G, tours: T || CHAMPS.tours, bots: noms, reglages }, resumes, parties })); console.log('\nDétail écrit dans ' + f); }
+  }
   }
 }
 

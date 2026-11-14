@@ -7,7 +7,9 @@ const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
-const VERSION = 3;   // V2 : régions ; personas
+const PAYS = NODE ? require("../donnees/pays.js") : racine.Politique.PAYS;
+const { LOIS } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
+const VERSION = 4;   // V2 : régions ; personas ; pays de départ
 // totaux des bâtiments du pays (même calcul que Batiments.totaux, sans dépendance circulaire)
 function totaux(regions){
   const t = {};
@@ -17,8 +19,21 @@ function totaux(regions){
 
 const copie = o => JSON.parse(JSON.stringify(o));
 
-function creerEtat(scenario, graine){
+// pays : pays de départ choisi par le joueur (donnees/pays.js) ; par défaut le pays équilibré
+function creerEtat(scenario, graine, pays){
+  pays = pays || "equilibre";
+  const P = PAYS[pays];
+  if (!P) throw new Error("pays inconnu : " + pays);
   const j = scenario.joueur, profils = {}, regions = copie(j.regions), r = Alea.creer(graine);
+  const factions = copie(j.factions), lois = {};
+  for (const f in P.factions) factions[f].puissance = P.factions[f];
+  for (const reg in P.batiments) for (const id in P.batiments[reg]){
+    const b = regions[reg].batiments, n = (b[id] || 0) + P.batiments[reg][id];
+    if (n > 0) b[id] = n; else delete b[id];
+  }
+  for (const reg in P.emplacements || {}) regions[reg].emplacements += P.emplacements[reg];   // pays marchand : bourg plus grand
+  // lois en vigueur depuis longtemps : effets à terme complets, effets de durée finis
+  for (const id of P.lois) lois[LOIS[id].categorie] = { id, depuis: -100 };
   // personas des dirigeants : tirés au hasard, tous différents (caché au joueur : l'écran ne doit pas l'afficher)
   const liste = Object.keys(PERSONAS);
   for (let i = liste.length - 1; i > 0; i--){ const k = Alea.entier(r, i + 1); [liste[i], liste[k]] = [liste[k], liste[i]]; }
@@ -29,19 +44,20 @@ function creerEtat(scenario, graine){
   const e = {
     version: VERSION,
     scenario: scenario.id,
+    pays,                             // pays de départ (donnees/pays.js)
     tour: 1,
     tourMax: scenario.tours,
     alea: r.s,                        // état du hasard (après le tirage des personas), rangé avec la partie
     tresor: j.tresor,
     familles: j.familles,
     reputation: j.reputation,
-    factions: copie(j.factions),      // f → { colere, puissance, statut }
+    factions,                         // f → { colere, puissance, statut }
     moral: 1,                         // moral du pays (0 à 1), recalculé chaque tour
     apaises: [],                      // factions déjà apaisées ce tour
     regions,                          // région → { nom, terrain, emplacements, batiments } (V2)
     batiments: totaux(regions),       // totaux du pays (somme des régions)
     chantiers: [],                    // bâtiments en construction : [{ id, region, restant }], un par région
-    lois: {},                         // catégorie → { id, depuis } (loi en vigueur)
+    lois,                             // catégorie → { id, depuis } (loi en vigueur ; lois du pays au départ)
     impots: "normal",                 // V2 budget : niveau d'imposition (bas, normal, haut)
     debat: null,
     paquet: [],                       // événements : cartes restantes (mélangées au premier tirage)
@@ -61,7 +77,7 @@ function creerEtat(scenario, graine){
     dons: [],                         // nations ayant reçu un don ce tour
     sanctions: [],                    // embargos entre nations ou contre le joueur : [{ par, contre }] (sanctions de bloc)
     guerre: null,                     // la guerre en cours (moteur/guerre.js)
-    regiments: j.regiments || 0,      // V2 : armée du joueur
+    regiments: P.regiments != null ? P.regiments : (j.regiments || 0),   // V2 : armée du joueur (pays militaire : plus)
     recrues: [],                      // régions où le joueur a recruté ce tour
     occupations: {},                  // région → occupant (pendant une guerre)
     nonRearmement: {},                // camp ("joueur" ou nation) → dernier tour de la clause

@@ -831,5 +831,31 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(Ob.points(er) === 0 && Ob.resultat(er).medaille === 0, 'révolution : aucune médaille');
   for (const id in SE) OD.OBJECTIFS[id].seuils = SE[id].seuils;
 }
+
+// --- V2 : pays de départ (choisis par le joueur) ---
+{
+  const PAYS = P('donnees/pays.js'), LM2 = P('moteur/lois.js'), Fx = P('moteur/factions.js');
+  const base = Etat.creerEtat(CHAMPS, 3), eq = Etat.creerEtat(CHAMPS, 3, 'equilibre');
+  check(JSON.stringify(base) === JSON.stringify(eq) && base.pays === 'equilibre' && Object.keys(base.lois).length === 0, 'pays : par défaut le pays équilibré, sans loi');
+  let inconnu = false; try { Etat.creerEtat(CHAMPS, 3, 'atlantide'); } catch (x) { inconnu = true; }
+  check(inconnu, 'pays : un pays inconnu est refusé');
+  for (const id in PAYS){
+    const e = Etat.creerEtat(CHAMPS, 3, id), d = PAYS[id];
+    check(Object.values(e.factions).reduce((t, x) => t + x.puissance, 0) === 140, `pays ${id} : puissance totale 140`);
+    check(Object.keys(e.factions).every(f => e.factions[f].colere === CHAMPS.joueur.factions[f].colere), `pays ${id} : colère de départ inchangée`);
+    check(Object.keys(e.regions).every(r => P('moteur/batiments.js').occupes(e, r) <= e.regions[r].emplacements), `pays ${id} : bâtiments dans les emplacements`);
+    check(d.lois.every(l => e.lois[LOIS[l].categorie].id === l) && Object.keys(e.lois).length === d.lois.length, `pays ${id} : lois de départ en vigueur`);
+    check(JSON.stringify(Etat.creerEtat(CHAMPS, 3, id)) === JSON.stringify(e) && Tour.actionsDisponibles(e).length > 0, `pays ${id} : départ reproductible et jouable`);
+  }
+  const ag = Etat.creerEtat(CHAMPS, 3, 'agricole'), ind = Etat.creerEtat(CHAMPS, 3, 'industriel'), ma = Etat.creerEtat(CHAMPS, 3, 'marchand'), mi = Etat.creerEtat(CHAMPS, 3, 'militaire');
+  check(ag.factions.paysans.puissance === 60 && ag.regions.plaine.batiments.farm === 3 && ag.batiments.farm === 5, 'pays agricole : paysans 60, une ferme de plus dans la plaine');
+  check(ind.regions.collines.batiments.mine === 2 && ind.regions.vallee.batiments.farm === 1 && ind.batiments.farm === 3, 'pays industriel : une mine de plus, une ferme de moins');
+  check(ma.regions.bourg.emplacements === 5 && !ma.regions.bourg.batiments.workshop && mi.regions.bourg.batiments.fort === 1 && mi.regiments === 5 && ag.regiments === 3, 'pays marchand : bourg à 5 emplacements ; militaire : un fort et 5 régiments');
+  // une loi de départ : installée depuis longtemps, remplaçable par un débat normal
+  check(!LM2.lancables(ind).includes('syndicats_interdits') && LM2.lancables(ind).includes('unions'), 'loi de départ : en vigueur, une autre loi de sa catégorie peut être débattue');
+  const i1 = Tour.tourSuivant(ind, []);
+  check(i1.factions.ouvriers.puissance === ind.factions.ouvriers.puissance, 'loi de départ : ses effets de durée sont finis (syndicats interdits ne retirent plus de puissance)');
+  check(Etat.creerEtat(CHAMPS, 3).regions.bourg.emplacements === 4, 'pays : les emplacements des autres pays ne changent pas');
+}
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);
