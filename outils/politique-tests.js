@@ -1039,11 +1039,11 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const ins = e => Tour.actionsDisponibles(e).filter(a => a.type === 'institution');
   check(e0.institutions.sante === 0 && ins(e0).length === 3 && ins(e0).every(a => a.niveau === 1), 'institutions : niveau 0 au départ, un cran à la fois');
   const i1 = Tour.tourSuivant(e0, [{ type: 'institution', id: 'sante', niveau: 1 }]);
-  check(i1.institutions.sante === 1 && i1.bilan.institutions === 10, 'institutions : santé niveau 1, 10 or par tour');
+  check(i1.institutions.sante === 1 && i1.bilan.institutions === 20, 'institutions : santé niveau 1, 20 or par tour');
   let deux = false; try { Tour.tourSuivant(e0, [{ type: 'institution', id: 'sante', niveau: 1 }, { type: 'institution', id: 'sante', niveau: 2 }]); } catch (x) { deux = true; }
   check(deux && ins(i1).some(a => a.id === 'sante' && a.niveau === 2) && ins(i1).some(a => a.id === 'sante' && a.niveau === 0), 'institutions : un changement par tour, puis monter ou descendre');
   const s3 = Etat.copie(e0); s3.institutions = { sante: 3, enseignement: 3, police: 3 };
-  check(Economie.bilan(s3).institutions === 108 && !ins(s3).some(a => a.niveau === 4), 'institutions : 36 or par tour au niveau 3, pas au-delà');
+  check(Economie.bilan(s3).institutions === 216 && !ins(s3).some(a => a.niveau === 4), 'institutions : 72 or par tour au niveau 3, pas au-delà');
   const t0 = Tour.tourSuivant(Etat.copie(e0), []), t2 = Tour.tourSuivant(Object.assign(Etat.copie(e0), { institutions: { sante: 2, enseignement: 0, police: 0 } }), []);
   check(Object.keys(t0.factions).every(f => t2.factions[f].colere === Math.max(0, t0.factions[f].colere - 2)), 'santé : −1 de colère par tour et par niveau pour toutes les factions');
   const en = Object.assign(Etat.copie(w), { institutions: { sante: 0, enseignement: 2, police: 0 } });
