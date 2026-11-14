@@ -212,13 +212,13 @@ function objectifs(parties){
     let refs = noms.filter(n => Bots.AMBITIONS[n] === id);
     if (!refs.length) refs = [noms.reduce((a, b) => centile(vals(b, id), 0.5) > centile(vals(a, id), 0.5) ? b : a)];
     const xs = [].concat(...refs.map(n => vals(n, id)));
-    seuils[id] = { refs, seuils: [0.5, 0.75, 0.87].map(p => centile(xs, p)), actuels: OD.OBJECTIFS[id].seuils };
+    seuils[id] = { refs, seuils: [0.5, 0.75, 0.87].map(p => centile(xs, p)), actuels: OD.OBJECTIFS[id].seuils[PAYS_PARTIE] || null };
   }
   console.log('\nSeuils proposés (bronze, argent, or ; bots de référence) :');
   for (const id of ids) console.log(`  ${OD.OBJECTIFS[id].nom.padEnd(13)} ${seuils[id].seuils.join(' / ').padEnd(18)} (${seuils[id].refs.join(', ')}) ; actuels ${JSON.stringify(seuils[id].actuels)}`);
   // seuils des données s'ils sont fixés (sauf --seuils-proposes), sinon ceux proposés
-  const propres = !process.argv.includes('--seuils-proposes') && ids.every(id => OD.OBJECTIFS[id].seuils.every(x => x != null));
-  const S = id => propres ? OD.OBJECTIFS[id].seuils : seuils[id].seuils;
+  const propres = !process.argv.includes('--seuils-proposes') && ids.every(id => (OD.OBJECTIFS[id].seuils[PAYS_PARTIE] || []).length === 3);
+  const S = id => propres ? OD.OBJECTIFS[id].seuils[PAYS_PARTIE] : seuils[id].seuils;
   const medaille = (m, id) => m.issue === 'revolution' ? 0 : S(id).filter(x => m.objectifs[id] >= x).length;
   console.log(`\nAvec les seuils ${propres ? 'des données' : 'proposés'} : victoire de chaque bot (médaille de son ambition), en % des parties`);
   console.log('bot'.padEnd(15) + 'ambition'.padEnd(14) + 'aucune  bronze  argent  or');

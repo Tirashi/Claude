@@ -50,7 +50,7 @@ function mesures(e){
 function medailles(e){
   const m = mesures(e), r = {};
   for (const id in O.OBJECTIFS){
-    const seuils = O.OBJECTIFS[id].seuils;
+    const seuils = O.OBJECTIFS[id].seuils[e.pays || "equilibre"] || [];   // seuils du pays de départ
     r[id] = (e.issue && e.issue.type === "revolution") ? 0 : seuils.filter(x => x != null && m[id] >= x).length;
   }
   return r;

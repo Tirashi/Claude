@@ -824,8 +824,10 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   let deux = false; try { Tour.tourSuivant(e0, [{ type: 'ambition', id: 'concorde' }, { type: 'ambition', id: 'puissance' }]); } catch (x) { deux = true; }
   check(deux, 'ambition : une seule fois');
   const SE = JSON.parse(JSON.stringify(OD.OBJECTIFS));
-  OD.OBJECTIFS.contentement.seuils = [50, 60, 70]; OD.OBJECTIFS.prosperite.seuils = [1e9, 2e9, 3e9];
+  OD.OBJECTIFS.contentement.seuils = { equilibre: [50, 60, 70], agricole: [90, 95, 99] }; OD.OBJECTIFS.prosperite.seuils = { equilibre: [1e9, 2e9, 3e9] };
   check(Ob.medailles(e1).contentement === 3 && Ob.medailles(e1).prosperite === 0, 'médailles : bronze, argent, or selon les seuils');
+  check(Ob.medailles(Object.assign(Etat.copie(e1), { pays: 'agricole' })).contentement === 0, 'médailles : seuils du pays de départ');
+  check(Object.keys(SE).every(id => Object.keys(P('donnees/pays.js')).every(p => SE[id].seuils[p] && SE[id].seuils[p].length === 3 && SE[id].seuils[p][0] <= SE[id].seuils[p][1] && SE[id].seuils[p][1] <= SE[id].seuils[p][2])), 'seuils : trois paliers croissants pour chaque objectif et chaque pays');
   check(Ob.resultat(Object.assign(Etat.copie(e1), { ambition: 'contentement' })).medaille === 3 && Ob.resultat(e1).medaille === null, 'victoire : la médaille de l\'ambition (sans ambition : aucune)');
   const er = Etat.copie(e1); er.issue = { type: 'revolution', faction: 'ouvriers' }; er.ambition = 'contentement';
   check(Ob.points(er) === 0 && Ob.resultat(er).medaille === 0, 'révolution : aucune médaille');

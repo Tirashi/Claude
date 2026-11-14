@@ -72,7 +72,8 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Cinq objectifs mesurés à la fin de la partie (tour 40), chacun avec trois paliers : bronze, argent, or. Une révolution = défaite, aucune médaille.
 - **Ambition** : au tour 1, le joueur choisit un objectif (une fois). Sa victoire = la médaille de cet objectif ; les autres sont un bilan.
 - **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Puissance** : 10 par région tenue (non occupée) + force de l'armée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, moyenne par loi), en moyenne sur la partie.
-- Seuils fixés par simulation (`--objectifs`), d'après les bots qui visent l'objectif : bronze = leur médiane, argent = 75e centile, or = 87e (valeurs dans `donnees/objectifs.js`, à valider).
+- Seuils **par pays de départ**, fixés par simulation (`--objectifs --pays tous`), d'après les bots qui visent l'objectif : bronze = leur médiane, argent = 75e centile, or = 87e (`donnees/objectifs.js`, validés le 14/11).
+- Étapes (option 3, à préciser) : des repères affichés pendant la partie pour guider l'ambition, sans point.
 
 ### 7. Pays de départ (14/11)
 - Le joueur choisit son pays à la création de la partie : équilibré, agricole, industriel, marchand ou militaire (`donnees/pays.js`). Même carte pour tous.
