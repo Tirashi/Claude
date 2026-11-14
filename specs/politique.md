@@ -133,7 +133,7 @@ Fait (valeurs ASSUMPTION (budget), à valider) : **niveau d'imposition** bas (×
 - Entretien ×1 : economy 7 275 → 5 081 or au tour 40, aucune révolution ; ×2 : 2 030, mais 8 % de révolutions pour economy et 51 % pour militarist. Gardé ×1.
 - Impôts hauts à +2 de colère : **stratégie dominante** (Médecine du travail d'abord : −2/tour annule +2, impôts hauts 28 tours sans grogne). À +3 encore dominante, **à +4 plus aucune** (spam_medicine 4 930 contre economy 5 086). Retenu +4.
 - Dette : militarist et replica s'endettent parfois (20 % et 15 % de faillites), passif 35 %, random 69 % ; les bons gestionnaires presque jamais.
-- **Plafond des réserves** (en essai, désactivé : `economie.reserves`) : 15 tours d'impôts → economy 3 596 au tour 40 ; 10 tours → 2 398. Il détruit l'excédent mais **ne change aucune décision** (même classement, même stratégie dominante à +3) : il manque surtout des choses à acheter en fin de partie. Décision de l'utilisateur attendue.
+- **Plafond des réserves** (en essai, désactivé : `economie.reserves`) : 15 tours d'impôts → economy 3 596 au tour 40 ; 10 tours → 2 398. Il détruit l'excédent mais **ne change aucune décision** (même classement, même stratégie dominante à +3) : il manque surtout des choses à acheter en fin de partie. **Décision du 14/11 : plafond laissé désactivé** ; piste pour plus tard : des usages de l'or en fin de partie (améliorations de bâtiments, or au service de la diplomatie).
 
 ## 14 bis. Équilibre de la guerre : décisions du 14/11
 Validé par l'utilisateur et activé : **une caserne au Bourg au départ** ; **capitulation quand la moitié de ses régions est occupée** (2 sur 4 pour nous, 2 sur 3 pour une nation). Gardés : forts ×1,5, non-réarmement imposé par l'ordinateur. 247 tests.

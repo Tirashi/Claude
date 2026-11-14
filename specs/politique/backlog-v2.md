@@ -59,3 +59,6 @@ Boucle centrale de Victoria 3 : **économie → niveau de vie des populations �
 6. **Services de l'État** (école, santé, police) en niveaux qui coûtent de l'or par tour.
 7. **Lois** : un seul emplacement de loi (comme dans Victoria 3 : une loi à la fois) ; l'adoption avance, piétine ou échoue chaque tour selon l'appui et l'opposition des factions (pondérés par leur puissance) ; les factions opposées s'agitent pendant le débat. Devenir du capital politique à décider (supprimé, ou converti en légitimité ou en influence diplomatique).
 8. **Gouvernement** : le joueur choisit les factions au pouvoir ; leurs lois passent plus vite, les exclues s'agitent (rejoint C, « régime de la faction au pouvoir »).
+
+## H. Usages de l'or en fin de partie (14/11, à préciser)
+Le budget (impôts, entretien, dette) freine l'or, mais un bon gestionnaire finit encore avec ~5 000 or sans rien d'utile à acheter (emplacements pleins, armée au plafond). Le plafond des réserves a été écarté (il détruit l'or sans créer de choix). Pistes : améliorations de bâtiments (niveau 2, plus de rendement), or au service de la diplomatie (subsides à un allié en guerre, financer l'agitation chez un rival), grands projets (monuments, infrastructures).
