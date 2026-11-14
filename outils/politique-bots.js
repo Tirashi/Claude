@@ -100,6 +100,14 @@ function contraindre(p){
     if (p.essayer({ type: 'embargo', id: n })) p.essayer({ type: 'exiger', id: n, exigence: sanctionne ? 'lever_sanctions' : 'cesser_provocations' });
   }
 }
+// commercer : signer les contrats utiles (vendre ce qu'on a en trop, acheter ce qui manque, au prix du contrat)
+function commercer(p){
+  const e = p.e, b = (e.bilan || {}).balance || {};
+  for (const a of Tour.actionsDisponibles(e).filter(a => a.type === 'contrat')){
+    const c = e.offres[a.id];
+    if (c.sens === 'vente' ? (b[c.bien] || 0) >= c.volume : (b[c.bien] || 0) <= -c.volume) p.essayer(a);
+  }
+}
 // une caserne d'abord si on n'en a pas
 const avecCaserne = liste => e => (!e.batiments.caserne && !e.chantiers.some(c => c.id === 'caserne') ? ['caserne'] : []).concat(liste(e));
 // apaiser les factions dont la colère atteint le seuil (la plus en colère d'abord)
@@ -180,6 +188,21 @@ const BOTS = {
   },
 
   // la Médecine du travail d'abord (option dominante supposée), puis comme economy
+  // commerce (14/11) : gestion d'economy, contrats utiles, diplomate et exigences ; ambition Influence
+  commerce: () => e => {
+    const p = plan(e);
+    guerre(p, { seuilBataille: 0.6 });
+    apaiser(p, 55);
+    loiSuivante(p, ['income_progressive', 'school_public', 'libre_echange', 'school_free']);
+    armee(p, 1, 50);
+    construire(p, avecCaserne(batimentUtile), 0);
+    fiscalite(p);
+    evenement(p);
+    commercer(p);
+    diplomatie(p);
+    contraindre(p);
+    return p.acts;
+  },
   spam_medicine: () => e => {
     const p = plan(e);
     guerre(p, { seuilBataille: 0.6 });
@@ -286,7 +309,7 @@ const BOTS = {
 
 // ambition de chaque bot (objectif de victoire choisi au tour 1) ; random la tire parmi ses actions, passif n'en a pas
 const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', spam_medicine: 'contentement', gauche: 'contentement', gauche_med: 'contentement',
-  militarist: 'puissance', replica: 'concorde', droite: 'autorite', extreme_droite: 'autorite', extreme_gauche: 'autorite' };
+  commerce: 'influence', replica: 'concorde', droite: 'autorite', extreme_droite: 'autorite', extreme_gauche: 'autorite' };
 const creer = (nom, graine) => {
   if (!BOTS[nom]) throw new Error('bot inconnu : ' + nom);
   const bot = BOTS[nom](graine);

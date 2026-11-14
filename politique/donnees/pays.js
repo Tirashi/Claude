@@ -4,7 +4,8 @@
    factions : puissance de départ (total 140 comme le pays équilibré) ; batiments : { region: { id: +n / −n } } ;
    emplacements : { region: +n } ;
    lois : en vigueur depuis longtemps (effets à terme complets, effets de durée finis, pas de choc à l'adoption).
-   ASSUMPTION (pays, 14/11) : toutes les valeurs, à vérifier par simulation. */
+   ASSUMPTION (pays, 14/11) : toutes les valeurs, à vérifier par simulation. Le pays militaire est remplacé par le pays minier
+   (décision du 14/11 : la guerre n'est la spécialité de personne). */
 (function(racine){
 "use strict";
 const PAYS = {
@@ -16,8 +17,8 @@ const PAYS = {
     factions: { paysans: 25, ouvriers: 45, artisans: 20, patrons: 50 }, batiments: { collines: { mine: 1 }, vallee: { farm: -1 } }, lois: ["syndicats_interdits"] },
   marchand: { nom: "Pays marchand", texte: "Artisans et patrons tiennent le bourg et le commerce : le bourg a un emplacement de plus. Le libre-échange est la règle.",
     factions: { paysans: 30, ouvriers: 20, artisans: 45, patrons: 45 }, batiments: {}, emplacements: { bourg: 1 }, lois: ["libre_echange"] },
-  militaire: { nom: "Pays militaire", texte: "Une armée forte et un bourg fortifié. La conscription est en vigueur.",
-    factions: { paysans: 40, ouvriers: 30, artisans: 25, patrons: 45 }, batiments: { bourg: { fort: 1 } }, lois: ["army_conscription"], regiments: 5 }
+  minier: { nom: "Pays minier", texte: "Les mines des collines font vivre le pays : une mine de plus. Les ouvriers pèsent lourd ; la police garde les puits.",
+    factions: { paysans: 35, ouvriers: 40, artisans: 20, patrons: 45 }, batiments: { collines: { mine: 1 } }, lois: ["police_etat"] }
 };
 if (typeof module !== "undefined" && module.exports) module.exports = PAYS; else (racine.Politique = racine.Politique || {}).PAYS = PAYS;
 })(typeof window !== "undefined" ? window : globalThis);

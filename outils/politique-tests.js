@@ -803,7 +803,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(e0.suivi.tours === 0 && Ob.mesures(e0).contentement === 100 && Ob.mesures(e0).autorite === 0 && e0.ambition === null, 'objectifs : rien de cumulé au départ, pas d\'ambition');
   const m0 = Ob.mesures(e0), val = Object.keys(e0.batiments).reduce((t, id) => t + e0.batiments[id] * BAT[id].cout, 0);
   check(m0.prosperite === Math.round(e0.tresor + val), 'prospérité : trésor + coût des bâtiments en service');
-  check(m0.puissance === 4 * 10 + P('moteur/guerre.js').force(e0, 'joueur'), 'puissance : 10 par région tenue + force de l\'armée');
+  check(m0.influence === 0 && Ob.dependantes(e0).length === 0, 'influence : rien au départ (ni contrat, ni nation dépendante)');
   check(m0.concorde === Math.round(Dp.reputation(e0)), 'concorde : moyenne des relations (+10 par traité)');
   const e1 = Tour.tourSuivant(e0, []);
   const moy = Object.values(e1.factions).reduce((t, x) => t + x.colere, 0) / Object.keys(e1.factions).length;
@@ -815,15 +815,21 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(Ob.legitimite(el2) === Math.round((Fp('patrons') + Fp('artisans') - Fp('ouvriers') + Fp('patrons') - Fp('ouvriers')) / 2 * 100) / 100, 'autorité : moyenne par loi (laisser-faire : contre les ouvriers seulement)');
   Ob.suivre(el);
   check(el.suivi.tours === 2 && Ob.mesures(el).autorite === Math.round((e1.suivi.legitimite + Ob.legitimite(el)) / 2), 'autorité : moyenne sur la partie');
-  const eo = Etat.copie(e1); eo.occupations = { plaine: 'valroc' };
-  check(Ob.mesures(eo).puissance === m0.puissance - 10, 'puissance : une région occupée ne compte pas');
+  const ei = Etat.copie(e1), nv = Object.keys(ei.nations)[0], ventes = Object.keys(ei.offres).filter(k => ei.offres[k].nation === nv && ei.offres[k].sens === 'vente');
+  const achat = Object.keys(ei.offres).find(k => ei.offres[k].sens === 'achat');
+  ei.contrats = ventes.map(id => ({ id, jusqua: 30 })).concat([{ id: achat, jusqua: 30 }]);
+  check(Ob.dependantes(ei).join() === nv && Ob.influence(ei) === 10 * (ventes.length + 1 + 1), 'influence : 10 par contrat en cours et 10 par nation dépendante (nos contrats de vente lui livrent la moitié de ses importations)');
+  const ei2 = Etat.copie(ei); ei2.contrats = [{ id: achat, jusqua: 30 }];
+  check(Ob.dependantes(ei2).length === 0 && Ob.dependantes(Object.assign(Etat.copie(e1), { bilan: { balance: { grain: 999, fer: 999, tissu: 999, outils: 999 } } })).length === 0, 'influence : un achat ou un simple surplus ne rend pas dépendant');
+  const es0 = Etat.copie(e1); es0.journal = ['Brume cède : accepte de payer un dédommagement.']; Ob.suivre(es0);
+  check(es0.suivi.cedees === 1 && Ob.mesures(es0).influence === Math.round(es0.suivi.influence / es0.suivi.tours + 10), 'influence : moyenne sur la partie, plus 10 par exigence cédée');
   // ambition : tour 1 seulement, une fois
   const amb = Tour.actionsDisponibles(e0).filter(a => a.type === 'ambition').map(a => a.id);
   check(amb.join() === Object.keys(OD.OBJECTIFS).join(), 'ambition : les cinq objectifs proposés au tour 1');
   const ea = Tour.tourSuivant(e0, [{ type: 'ambition', id: 'concorde' }]);
   check(ea.ambition === 'concorde' && e0.ambition === null, 'ambition : choisie au tour 1');
   check(!Tour.actionsDisponibles(ea).some(a => a.type === 'ambition') && !Tour.actionsDisponibles(e1).some(a => a.type === 'ambition'), 'ambition : plus proposée après le tour 1');
-  let deux = false; try { Tour.tourSuivant(e0, [{ type: 'ambition', id: 'concorde' }, { type: 'ambition', id: 'puissance' }]); } catch (x) { deux = true; }
+  let deux = false; try { Tour.tourSuivant(e0, [{ type: 'ambition', id: 'concorde' }, { type: 'ambition', id: 'influence' }]); } catch (x) { deux = true; }
   check(deux, 'ambition : une seule fois');
   const SE = JSON.parse(JSON.stringify(OD.OBJECTIFS));
   OD.OBJECTIFS.contentement.seuils = { equilibre: [50, 60, 70], agricole: [90, 95, 99] }; OD.OBJECTIFS.prosperite.seuils = { equilibre: [1e9, 2e9, 3e9] };
@@ -851,10 +857,10 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
     check(d.lois.every(l => e.lois[LOIS[l].categorie].id === l) && Object.keys(e.lois).length === d.lois.length, `pays ${id} : lois de départ en vigueur`);
     check(JSON.stringify(Etat.creerEtat(CHAMPS, 3, id)) === JSON.stringify(e) && Tour.actionsDisponibles(e).length > 0, `pays ${id} : départ reproductible et jouable`);
   }
-  const ag = Etat.creerEtat(CHAMPS, 3, 'agricole'), ind = Etat.creerEtat(CHAMPS, 3, 'industriel'), ma = Etat.creerEtat(CHAMPS, 3, 'marchand'), mi = Etat.creerEtat(CHAMPS, 3, 'militaire');
+  const ag = Etat.creerEtat(CHAMPS, 3, 'agricole'), ind = Etat.creerEtat(CHAMPS, 3, 'industriel'), ma = Etat.creerEtat(CHAMPS, 3, 'marchand'), mi = Etat.creerEtat(CHAMPS, 3, 'minier');
   check(ag.factions.paysans.puissance === 60 && ag.regions.plaine.batiments.farm === 3 && ag.batiments.farm === 5, 'pays agricole : paysans 60, une ferme de plus dans la plaine');
   check(ind.regions.collines.batiments.mine === 2 && ind.regions.vallee.batiments.farm === 1 && ind.batiments.farm === 3, 'pays industriel : une mine de plus, une ferme de moins');
-  check(ma.regions.bourg.emplacements === 5 && !ma.regions.bourg.batiments.workshop && mi.regions.bourg.batiments.fort === 1 && mi.regiments === 5 && ag.regiments === 3, 'pays marchand : bourg à 5 emplacements ; militaire : un fort et 5 régiments');
+  check(ma.regions.bourg.emplacements === 5 && !ma.regions.bourg.batiments.workshop && mi.regions.collines.emplacements === 3 && mi.regions.collines.batiments.mine === 2 && mi.regiments === 3 && mi.lois.ordre.id === 'police_etat', 'pays marchand : bourg à 5 emplacements ; minier : une mine de plus, police d\'État');
   // une loi de départ : installée depuis longtemps, remplaçable par un débat normal
   check(!LM2.lancables(ind).includes('syndicats_interdits') && LM2.lancables(ind).includes('unions'), 'loi de départ : en vigueur, une autre loi de sa catégorie peut être débattue');
   const i1 = Tour.tourSuivant(ind, []);
@@ -875,7 +881,9 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(!at('colere_moyenne', () => {}) && at('colere_moyenne', e => { for (const f in e.factions) e.factions[f].colere = 19; }), 'étape : colère moyenne sous 20');
   check(!at('toutes_calmes', e => { for (const f in e.factions) e.factions[f].colere = 10; e.factions.ouvriers.colere = 30; }) && at('toutes_calmes', e => { for (const f in e.factions) e.factions[f].colere = 29; }), 'étape : toutes les factions sous 30');
   check(!at('legitimite', e => { e.lois = { a: { id: 'school_public' } }; }), 'étape : soutien net de 40 en moyenne, avec au moins 5 lois');
-  check(!at('regiments', () => {}) && at('regiments', e => { e.regiments = 10; }) && at('fort', e => { e.batiments.fort = 1; }), 'étapes : 10 régiments, un fort');
+  check(!at('contrats', () => {}) && at('contrats', e => { e.contrats = Object.keys(e.offres).slice(0, 2).map(id => ({ id, jusqua: 30 })); }), 'étape : 2 contrats en cours');
+  check(!at('dependantes', e => { e.contrats = Object.keys(e.offres).filter(k => e.offres[k].sens === 'vente').map(id => ({ id, jusqua: 30 })); }) && at('dependantes', e => { e.suivi.toursDependance = 20; }), 'étape : 2 nations dépendantes de nos ventes pendant 20 tours');
+  { const ed = Etat.copie(e0); ed.contrats = Object.keys(ed.offres).filter(k => ed.offres[k].sens === 'vente').map(id => ({ id, jusqua: 30 })); ed.journal = []; P('moteur/objectifs.js').suivre(ed); check(ed.suivi.toursDependance === 1, 'suivi : tours avec 2 nations dépendantes'); }
   check(!at('traite', () => {}) && at('traite', e => { e.traites = [{ type: 'entente', avec: 'brume', depuis: 1 }]; }) && at('ami', e => { e.nations.brume.relation = 50; }), 'étapes : un traité, 50 de relation');
   check(at('relations', e => { for (const n in e.nations) e.nations[n].relation = 30; }) && !at('relations', () => {}), 'étape : relations à +30 en moyenne');
   check(!at('lois', () => {}) && at('lois', e => { e.lois = { a: { id: 'impot_minimal' }, b: { id: 'school_public' }, c: { id: 'labor_medicine' } }; }), 'étape : 3 lois en vigueur');
@@ -887,8 +895,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const coche = Ob.etapes(eg, 'contentement')[0].faite;
   for (const f in eg.factions) eg.factions[f].colere = 60; eg.factions.ouvriers.statut = 'greve'; Ob.suivre(eg);
   check(coche && eg.suivi.serieSansGreve === 0 && eg.suivi.greves === 1 && eg.suivi.serieSansGrondement === 0 && Ob.etapes(eg, 'contentement')[0].faite, 'étape : cochée pour de bon (une grève remet les séries à zéro)');
-  const ev = Etat.copie(e); ev.journal = ["Paix : l'ennemi capitule."]; Ob.suivre(ev);
-  check(ev.suivi.victoires === 1 && Ob.etapes(ev, 'puissance')[2].faite, 'étape : une guerre gagnée');
+  const ev = Etat.copie(e); ev.journal = ['Brume cède : accepte de lever ses sanctions.']; Ob.suivre(ev);
+  check(ev.suivi.cedees === 1 && Ob.etapes(ev, 'influence')[2].faite, 'étape : une exigence cédée');
   const ea = Tour.tourSuivant(e0, [{ type: 'ambition', id: 'autorite' }]);
   check(Ob.etapes(ea).length === 3 && Ob.etapes(ea)[0].texte === OD.ETAPES.autorite[0].texte, 'étapes : celles de l\'ambition par défaut');
 }

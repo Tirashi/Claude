@@ -71,12 +71,12 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 ### 6. Objectifs de victoire (14/11)
 - Cinq objectifs mesurés à la fin de la partie (tour 40), chacun avec trois paliers : bronze, argent, or. Une révolution = défaite, aucune médaille.
 - **Ambition** : au tour 1, le joueur choisit un objectif (une fois). Sa victoire = la médaille de cet objectif ; les autres sont un bilan.
-- **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Puissance** : 10 par région tenue (non occupée) + force de l'armée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, moyenne par loi), en moyenne sur la partie.
+- **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Influence** (à la place de Puissance, 14/11) : en moyenne sur la partie, 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats lui livrent au moins la moitié de ses importations), plus 10 par exigence cédée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, moyenne par loi), en moyenne sur la partie.
 - Seuils **par pays de départ**, fixés par simulation (`--objectifs --pays tous`), d'après les bots qui visent l'objectif : bronze = leur médiane, argent = 75e centile, or = 87e (`donnees/objectifs.js`, validés le 14/11).
 - **Étapes** (option 3) : trois repères par ambition (facile, moyen, difficile), affichés pendant la partie et cochés pour de bon, sans point (`ETAPES` de `donnees/objectifs.js`).
 
 ### 7. Pays de départ (14/11)
-- Le joueur choisit son pays à la création de la partie : équilibré, agricole, industriel, marchand ou militaire (`donnees/pays.js`). Même carte pour tous.
+- Le joueur choisit son pays à la création de la partie : équilibré, agricole, industriel, marchand ou minier (`donnees/pays.js` ; le minier remplace le militaire le 14/11). Même carte pour tous.
 - Le pays fixe la puissance de départ des factions (total 140), change un ou deux bâtiments (ou emplacements) de départ, l'armée, et met une loi en vigueur depuis longtemps (remplaçable par un débat normal). La colère de départ ne change pas.
 
 ### 8. Relation à deux sens, la guerre en dernier recours (14/11)
@@ -85,7 +85,7 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Les dirigeants belliqueux (et revanchards après une défaite) provoquent des incidents (−20) avant de pouvoir déclarer.
 - **Diplomate** : un seul, envoyé chez une nation (pas en guerre contre nous), 5 or et +2 de relation par tour, déplaçable et rappelable.
 - **Exigence** (l'ultimatum, attaché à un embargo) : lever ses sanctions, cesser les provocations (10 tours), payer un dédommagement (50 or). La nation cède si l'embargo lui fait manquer des marchandises : chance (colère − 30) / 30 par tour ; cédé : relation +10 ; refusé au bout de 10 tours : relation −20.
-- À venir : pays minier et ambition Influence.
+- Fait aussi : pays minier à la place du pays militaire, ambition Influence à la place de Puissance.
 
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.

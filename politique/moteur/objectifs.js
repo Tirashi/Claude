@@ -10,7 +10,6 @@ const NODE = typeof module !== "undefined" && module.exports;
 const O = NODE ? require("../donnees/objectifs.js") : racine.Politique.OBJECTIFS;
 const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
-const Guerre = NODE ? require("./guerre.js") : racine.Politique.Guerre;
 const { LOIS } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
 
 const arrondi = x => Math.round(x * 100) / 100, dixieme = x => Math.round(x * 10) / 10;
@@ -21,6 +20,9 @@ function suivre(e){
   s.tours++;
   s.colere = arrondi(s.colere + f.reduce((t, x) => t + x.colere, 0) / f.length);
   s.legitimite = arrondi(s.legitimite + legitimite(e));
+  s.influence = arrondi((s.influence || 0) + influence(e));
+  s.cedees = (s.cedees || 0) + e.journal.filter(l => / cède : accepte de /.test(l)).length;
+  if (dependantes(e).length >= O.ETAPES.influence[1].valeur) s.toursDependance = (s.toursDependance || 0) + 1;
   // pour les étapes : grèves, séries de tours calmes, victoires
   const greve = f.some(x => x.statut === "greve" || x.statut === "revolte" || x.statut === "revolution");
   s.greves = (s.greves || 0) + (greve ? 1 : 0);
@@ -46,9 +48,9 @@ function atteinte(e, et){
     case "colere_moyenne": return f.reduce((t, x) => t + x.colere, 0) / f.length < et.valeur;
     case "sans_grondement": return s.serieSansGrondement >= et.valeur;
     case "toutes_calmes": return f.every(x => x.colere < et.valeur);
-    case "regiments": return (e.regiments || 0) >= et.valeur;
-    case "fort": return (e.batiments.fort || 0) > 0;
-    case "victoire": return (s.victoires || 0) > 0;
+    case "contrats": return (e.contrats || []).length >= et.valeur;
+    case "dependantes": return (s.toursDependance || 0) >= et.tours;
+    case "cedee": return (s.cedees || 0) > 0;
     case "traite": return (e.traites || []).length > 0;
     case "ami": return Object.values(e.nations).some(n => n.relation >= et.valeur);
     case "relations": return Diplomatie.reputation(e) >= et.valeur;
@@ -71,6 +73,17 @@ function etapes(e, objectif){
   return O.ETAPES[id].map((et, i) => ({ id: et.id, texte: et.texte, faite: t[i] != null }));
 }
 
+// nations qui dépendent de nos ventes : nos contrats de vente leur livrent au moins la moitié de ce qu'elles importent
+function dependantes(e){
+  return Object.keys(e.nations).filter(n => {
+    const total = Object.values(e.profils[n].importe).reduce((t, v) => t + v, 0);
+    const livre = (e.contrats || []).map(x => e.offres[x.id]).filter(c => c && c.nation === n && c.sens === "vente").reduce((t, c) => t + c.volume, 0);
+    return total > 0 && livre >= O.dependance * total;
+  });
+}
+// influence d'un tour : 10 par contrat en cours, 10 par nation dépendante
+const influence = e => O.pointsInfluence * ((e.contrats || []).length + dependantes(e).length);
+
 // soutien aux lois en vigueur : pour chaque loi, puissance des factions pour − puissance des factions contre ;
 // moyenne par loi (décision du 14/11 : un programme court mais bien soutenu compte autant qu'un long) ; sans loi : 0
 function legitimite(e){
@@ -87,11 +100,10 @@ function mesures(e){
   const s = e.suivi || { tours: 0, colere: 0, legitimite: 0 };
   let valeur = 0;
   for (const id in e.batiments) valeur += (e.batiments[id] || 0) * (BAT[id] ? BAT[id].cout : 0);
-  const tenues = Object.keys(e.regions).filter(r => !(e.occupations || {})[r]).length;
   return {
     prosperite: Math.round(e.tresor + valeur),
     contentement: s.tours ? dixieme(100 - s.colere / s.tours) : 100,
-    puissance: dixieme(tenues * O.pointsRegion + Guerre.force(e, "joueur")),   // force : régiments × loi militaire × moral
+    influence: s.tours ? Math.round((s.influence || 0) / s.tours + O.pointsInfluence * (s.cedees || 0)) : 0,
     concorde: Math.round(Diplomatie.reputation(e) + (e.traites || []).length * O.pointsTraite),
     autorite: s.tours ? Math.round(s.legitimite / s.tours) : 0
   };
@@ -116,6 +128,6 @@ function choisir(e, id){
 // victoire : la médaille de l'ambition (0 = aucune ; sans ambition : null)
 const resultat = e => ({ ambition: e.ambition || null, medaille: e.ambition ? medailles(e)[e.ambition] : null });
 
-const Objectifs = { suivre, mesures, medailles, points, legitimite, actions, choisir, resultat, etapes, atteinte };
+const Objectifs = { suivre, mesures, medailles, points, legitimite, influence, dependantes, actions, choisir, resultat, etapes, atteinte };
 if (NODE) module.exports = Objectifs; else (racine.Politique = racine.Politique || {}).Objectifs = Objectifs;
 })(typeof window !== "undefined" ? window : globalThis);
