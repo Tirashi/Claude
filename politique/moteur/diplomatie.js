@@ -6,6 +6,7 @@
 (function(racine){
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
+const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const D = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
@@ -91,7 +92,34 @@ function actions(e){
   // diplomate (V2 étape 2) : envoyé dans une nation qui n'est pas en guerre contre nous ; un seul, déplaçable, rappelable
   for (const n in e.nations) if (!ennemi(e, n) && (!e.diplomate || e.diplomate.nation !== n) && e.tresor >= D.diplomate.cout) r.push({ type: "diplomate", id: n });
   if (e.diplomate) r.push({ type: "rappeler_diplomate" });
+  // exigence (V2 étape 3) : contre une nation sous notre embargo, une à la fois par nation ; lever ses sanctions seulement si elle en a
+  for (const n in e.nations){
+    if (!embargo(e, n) || ennemi(e, n) || (e.exigences || []).some(x => x.nation === n)) continue;
+    for (const t in D.exigence.types)
+      if (t !== "lever_sanctions" || e.sanctions.some(x => x.par === n && x.contre === "joueur")) r.push({ type: "exiger", id: n, exigence: t });
+  }
   return r;
+}
+
+// fin de tour (V2 étape 3) : chaque exigence en cours ; la nation cède si l'embargo lui fait assez mal, sinon refuse au bout du délai
+function exigences(e, r){
+  const X = D.exigence, garde = [];
+  for (const x of e.exigences || []){
+    const n = e.nations[x.nation], nom = e.profils[x.nation].nom, type = X.types[x.exigence];
+    if (!embargo(e, x.nation) || ennemi(e, x.nation)) continue;                    // embargo levé ou guerre : abandonnée
+    const chance = n.manque > 0 ? Math.max(0, Math.min(1, (n.colere - X.debut) / (X.cede - X.debut))) : 0;
+    if (chance > 0 && Alea.suivant(r) < chance){
+      if (x.exigence === "lever_sanctions") e.sanctions = e.sanctions.filter(s => !(s.par === x.nation && s.contre === "joueur"));
+      else if (x.exigence === "cesser_provocations") (e.calmes = e.calmes || {})[x.nation] = e.tour + type.tours;
+      else if (x.exigence === "dedommagement"){ const o = Math.max(0, Math.min(type.or, n.tresor)); n.tresor = arrondi(n.tresor - o); e.tresor = arrondi(e.tresor + o); }
+      relation(e, x.nation, X.cedeRelation);
+      e.journal.push(`${nom} cède : accepte de ${type.nom}.`);
+    } else if (e.tour - x.depuis + 1 >= X.duree){
+      relation(e, x.nation, X.refusRelation);
+      e.journal.push(`${nom} refuse de ${type.nom}.`);
+    } else garde.push(x);
+  }
+  e.exigences = garde;
 }
 
 // sanction légitime : cible en guerre contre le joueur (seules guerres du jeu ; le joueur peut être membre de l'Entente)
@@ -140,6 +168,9 @@ function appliquer(e, a){
     reputer(e, legitime(e, a.id) ? D.reputation.sanctionLegitime : D.reputation.sanctionIllegitime);
     e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== a.id);   // plus de commerce avec la cible
     e.journal.push(`Embargo contre ${a.id}.`);
+  } else if (a.type === "exiger"){
+    (e.exigences = e.exigences || []).push({ nation: a.id, exigence: a.exigence, depuis: e.tour });
+    e.journal.push(`Exigence envoyée à ${e.profils[a.id].nom} : ${D.exigence.types[a.exigence].nom}.`);
   } else if (a.type === "diplomate"){
     e.diplomate = { nation: a.id, depuis: e.tour };
     e.journal.push(`Diplomate envoyé chez ${e.profils[a.id].nom}.`);
@@ -215,6 +246,6 @@ function tour(e){
   e.dons = [];
 }
 
-const Diplomatie = { reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
+const Diplomatie = { exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
 if (NODE) module.exports = Diplomatie; else (racine.Politique = racine.Politique || {}).Diplomatie = Diplomatie;
 })(typeof window !== "undefined" ? window : globalThis);

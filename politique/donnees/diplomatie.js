@@ -14,6 +14,13 @@ const DIPLOMATIE = {
   // diplomate (étape 2 du 14/11, ASSUMPTION) : un seul à la fois, envoyé dans une nation (pas en guerre contre nous) ;
   // chaque tour : coût en or, relation + ; rappelé à volonté, et de lui-même si la guerre éclate avec sa nation
   diplomate: { cout: 5, relation: 2 },
+  // exigence (étape 3 du 14/11, ASSUMPTION) : seulement contre une nation sous notre embargo, une à la fois par nation.
+  // Chaque tour où l'embargo lui fait manquer des marchandises, elle cède avec une chance (colère − debut) / (cede − debut),
+  // à coup sûr à « cede » de colère. Cédé : exigence accordée, relation +cedeRelation. Pas cédé au bout de « duree » tours :
+  // relation +refusRelation, exigence abandonnée. Embargo levé avant : exigence abandonnée sans effet.
+  exigence: { debut: 30, cede: 60, cedeRelation: 10, duree: 10, refusRelation: -20,
+    types: { lever_sanctions: { nom: "lever ses sanctions" }, cesser_provocations: { nom: "cesser les provocations", tours: 10 },
+             dedommagement: { nom: "payer un dédommagement", or: 50 } } },
 
   // réputation (À TRANCHER n° 2, validé) : seules les lignes utiles en M3a ; guerre et attaque de l'Entente en M3b
   reputation: { donPar20: 1, donMax: 5, traiteSigne: 3, traiteRespecte: 2, respectTous: 10, traiteRompu: -15,

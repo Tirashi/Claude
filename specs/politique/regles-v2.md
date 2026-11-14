@@ -84,7 +84,8 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Le commerce rapproche : +1 par tour avec une nation tant qu'un contrat ou un traité est en cours.
 - Les dirigeants belliqueux (et revanchards après une défaite) provoquent des incidents (−20) avant de pouvoir déclarer.
 - **Diplomate** : un seul, envoyé chez une nation (pas en guerre contre nous), 5 or et +2 de relation par tour, déplaçable et rappelable.
-- À venir : ultimatum ; embargo qui fait céder ; pays minier et ambition Influence.
+- **Exigence** (l'ultimatum, attaché à un embargo) : lever ses sanctions, cesser les provocations (10 tours), payer un dédommagement (50 or). La nation cède si l'embargo lui fait manquer des marchandises : chance (colère − 30) / 30 par tour ; cédé : relation +10 ; refusé au bout de 10 tours : relation −20.
+- À venir : pays minier et ambition Influence.
 
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.

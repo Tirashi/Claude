@@ -82,6 +82,24 @@ function diplomatie(p){
   if (e.nations[pire].relation < 0 && (!e.diplomate || e.diplomate.nation !== pire) && e.tresor >= 20) p.essayer({ type: 'diplomate', id: pire });
   else if (e.diplomate && liste.every(n => e.nations[n].relation >= 20)) p.essayer({ type: 'rappeler_diplomate' });
 }
+// contraindre (V2 étape 3) : embargo et exigence contre une nation qui nous sanctionne ou nous provoque, si l'embargo peut
+// lui faire mal (nous avons en trop ce qu'elle importe) et sans tomber à −50 ; embargo levé une fois l'affaire réglée
+function contraindre(p){
+  if (process.env.POLITIQUE_SANS_EXIGENCE) return;   // pour comparer avant / après dans le simulateur
+  const e = p.e, en = n => !!e.guerre && e.guerre.ennemis.includes(n), b = (e.bilan || {}).balance || {};
+  for (const n in e.nations){
+    if (en(n)) continue;
+    const enCours = (e.exigences || []).some(x => x.nation === n), sous = e.embargos.includes(n);
+    if (sous && !enCours){ p.essayer({ type: 'lever_embargo', id: n }); continue; }
+    if (sous || enCours) continue;
+    const levier = Object.keys(e.profils[n].importe).some(x => (b[x] || 0) > 0);
+    if (!levier || e.nations[n].relation - 30 <= -50) continue;
+    const sanctionne = e.sanctions.some(x => x.par === n && x.contre === 'joueur');
+    const provoque = e.journal.some(l => l.startsWith('Incident provoqué par ' + e.profils[n].nom));
+    if (!sanctionne && !provoque) continue;
+    if (p.essayer({ type: 'embargo', id: n })) p.essayer({ type: 'exiger', id: n, exigence: sanctionne ? 'lever_sanctions' : 'cesser_provocations' });
+  }
+}
 // une caserne d'abord si on n'en a pas
 const avecCaserne = liste => e => (!e.batiments.caserne && !e.chantiers.some(c => c.id === 'caserne') ? ['caserne'] : []).concat(liste(e));
 // apaiser les factions dont la colère atteint le seuil (la plus en colère d'abord)
@@ -136,6 +154,7 @@ function programme(lois){
     fiscalite(p);
     evenement(p);
     diplomatie(p);
+    contraindre(p);
     return p.acts;
   };
 }
@@ -156,6 +175,7 @@ const BOTS = {
     fiscalite(p);
     evenement(p);
     diplomatie(p);
+    contraindre(p);
     return p.acts;
   },
 
@@ -170,6 +190,7 @@ const BOTS = {
     fiscalite(p);
     evenement(p);
     diplomatie(p);
+    contraindre(p);
     return p.acts;
   },
 
@@ -183,6 +204,7 @@ const BOTS = {
     fiscalite(p);
     evenement(p);
     diplomatie(p);
+    contraindre(p);
     return p.acts;
   },
 

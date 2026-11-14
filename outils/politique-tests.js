@@ -961,5 +961,45 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const pauvre = Etat.copie(e0); pauvre.tresor = DD.cout - 1;
   check(!acts(pauvre).some(a => a.type === 'diplomate'), 'diplomate : pas sans l\'or de son premier tour');
 }
+
+// --- V2 : exigence sous embargo (étape 3 du 14/11) ---
+{
+  HOST.actif = true;
+  const X = P('donnees/diplomatie.js').exigence, Dm = P('moteur/diplomatie.js'), Gm = P('moteur/guerre.js');
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand';
+  const [n0, n1] = Object.keys(e0.nations);
+  const ex = e => Tour.actionsDisponibles(e).filter(a => a.type === 'exiger');
+  check(ex(e0).length === 0, 'exigence : impossible sans embargo');
+  const eb = Etat.copie(e0); eb.embargos = [n0];
+  check(ex(eb).map(a => a.exigence).sort().join() === 'cesser_provocations,dedommagement' && ex(eb).every(a => a.id === n0), 'exigence : seulement contre la nation sous embargo ; lever ses sanctions seulement si elle en a');
+  const es = Etat.copie(eb); es.sanctions = [{ par: n0, contre: 'joueur' }];
+  check(ex(es).some(a => a.exigence === 'lever_sanctions'), 'exigence : lever ses sanctions, si elle nous sanctionne');
+  const e1 = Tour.tourSuivant(eb, [{ type: 'exiger', id: n0, exigence: 'dedommagement' }]);
+  check(e1.exigences.length === 1 && ex(e1).length === 0, 'exigence : une seule à la fois par nation');
+  // cède : colère au seuil, l'embargo fait manquer des marchandises → cède à coup sûr
+  const fort = (exigence, modif) => { const e = Etat.copie(eb); e.exigences = [{ nation: n0, exigence, depuis: e.tour }]; e.nations[n0].colere = X.cede; e.nations[n0].manque = 5; if (modif) modif(e); e.journal = []; Dm.exigences(e, { s: 1 }); return e; };
+  const c1 = fort('dedommagement', e => { e.nations[n0].tresor = 500; });
+  check(c1.exigences.length === 0 && proche(c1.tresor, eb.tresor + 50) && c1.nations[n0].tresor === 450 && c1.nations[n0].relation === eb.nations[n0].relation + X.cedeRelation, 'exigence cédée : dédommagement de 50 or, relation +10');
+  const c2 = fort('lever_sanctions', e => { e.sanctions = [{ par: n0, contre: 'joueur' }, { par: n1, contre: 'joueur' }]; });
+  check(c2.sanctions.length === 1 && c2.sanctions[0].par === n1, 'exigence cédée : ses sanctions levées (pas celles des autres)');
+  const c3 = fort('cesser_provocations');
+  check(c3.calmes[n0] === c3.tour + 10, 'exigence cédée : plus de provocations pendant 10 tours');
+  const PERS = P('donnees/personas.js'), PB = PERS.belliqueux.provoque.proba; PERS.belliqueux.provoque.proba = 1;
+  const cp = Etat.copie(e0); cp.profils[n0].persona = 'belliqueux'; cp.tour = 5; cp.calmes = { [n0]: 8 }; cp.nations[n0].regiments = 0;
+  check(Tour.tourSuivant(cp, []).nations[n0].relation === Tour.tourSuivant(Object.assign(Etat.copie(cp), { profils: Object.assign({}, cp.profils, { [n0]: Object.assign({}, cp.profils[n0], { persona: 'marchand' }) }) }), []).nations[n0].relation, 'exigence cédée : le belliqueux ne provoque plus pendant ce temps');
+  PERS.belliqueux.provoque.proba = PB;
+  // ne cède pas : pas de manque, ou colère au seuil de départ
+  const r1 = fort('dedommagement', e => { e.nations[n0].manque = 0; });
+  const r2 = fort('dedommagement', e => { e.nations[n0].colere = X.debut; });
+  check(r1.exigences.length === 1 && r2.exigences.length === 1, 'exigence : pas de cession si l\'embargo ne fait rien manquer, ni à 30 de colère');
+  const rf = fort('dedommagement', e => { e.nations[n0].manque = 0; e.exigences[0].depuis = e.tour - X.duree + 1; });
+  check(rf.exigences.length === 0 && rf.nations[n0].relation === eb.nations[n0].relation + X.refusRelation && rf.journal.some(l => / refuse de /.test(l)), 'exigence refusée au bout de 10 tours : relation −20');
+  const rl = fort('dedommagement', e => { e.embargos = []; });
+  check(rl.exigences.length === 0 && rl.nations[n0].relation === eb.nations[n0].relation, 'exigence : abandonnée sans effet si l\'embargo est levé');
+  // la chance de céder monte avec la colère : à 45 (mi-chemin), environ une fois sur deux
+  let cedes = 0;
+  for (let g = 1; g <= 400; g++){ const e = Etat.copie(eb); e.exigences = [{ nation: n0, exigence: 'dedommagement', depuis: e.tour }]; e.nations[n0].colere = 45; e.nations[n0].manque = 5; Dm.exigences(e, { s: g * 7919 }); if (!e.exigences.length) cedes++; }
+  check(cedes > 160 && cedes < 240, `exigence : à 45 de colère, cède environ une fois sur deux (${cedes}/400)`);
+}
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

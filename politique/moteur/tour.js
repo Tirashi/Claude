@@ -2,7 +2,7 @@
    actionsDisponibles(etat) : la seule liste que voient l'écran et les bots ; toute autre action est refusée.
    Actions : { type: "loi", id } lance une loi ; { type: "construire", id, region } commande un bâtiment (V2 : dans une région) ;
    { type: "apaiser", id: faction } apaise une faction (M2) ; diplomatie (M3a) : don, contrat, traite, rompre,
-   embargo, lever_embargo, diplomate { id }, rappeler_diplomate (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
+   embargo, lever_embargo, diplomate { id }, rappeler_diplomate, exiger { id, exigence } (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
    { type: "ambition", id } (tour 1 seulement) : l'objectif de victoire.
    Les actions d'un tour s'appliquent dans l'ordre, chacune vérifiée sur l'état laissé par la précédente.
    Ordre du tour T (ASSUMPTION validée) : événements de T → actions → adoption des lois arrivées à échéance
@@ -74,6 +74,7 @@ function tourSuivant(etat, actions, rng){
   Lois.debattre(e, r);
   Economie.appliquer(e);
   Diplomatie.tour(e);
+  Diplomatie.exigences(e, r);       // V2 étape 3 : la nation sous embargo cède-t-elle ?
   Guerre.tour(e, r);
   Factions.finDeTour(e);
   Objectifs.suivre(e);              // objectifs de victoire : colère moyenne, tours calmes

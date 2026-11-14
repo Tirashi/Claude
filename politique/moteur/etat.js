@@ -73,6 +73,8 @@ function creerEtat(scenario, graine, pays){
     revanches: {},                    // nations revanchardes battues par le joueur
     contrats: [],                     // [{ id, jusqua }]
     diplomate: null,                  // diplomate envoyé : { nation, depuis } (un seul ; moteur/diplomatie.js)
+    exigences: [],                    // exigences en cours : [{ nation, exigence, depuis }] (une par nation, sous embargo)
+    calmes: {},                       // nation → dernier tour sans provocation (exigence accordée)
     embargos: [],                     // nations sous embargo du joueur
     traites: [],                      // [{ type, avec, depuis }]
     dons: [],                         // nations ayant reçu un don ce tour

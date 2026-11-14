@@ -255,7 +255,7 @@ function tour(e, r){
   // provocations des dirigeants hostiles : incidents qui font descendre la relation (avant de pouvoir déclarer)
   if (D.hostilite.actif) for (const n in e.nations){
     const v = persona(e, n).provoque;
-    if (!v || enTreve(e, n) || e.tour < v.tourMin || hostile(e, n) || (v.revanche && !(e.revanches || {})[n])) continue;
+    if (!v || enTreve(e, n) || e.tour < v.tourMin || hostile(e, n) || (v.revanche && !(e.revanches || {})[n]) || ((e.calmes || {})[n] || 0) >= e.tour) continue;   // exigence « cesser les provocations »
     if (Alea.suivant(r) < v.proba){
       e.nations[n].relation = Math.max(-100, arrondi(e.nations[n].relation + v.delta));
       e.journal.push(`Incident provoqué par ${e.profils[n].nom} : relation ${v.delta}.`);
