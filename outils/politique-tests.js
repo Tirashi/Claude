@@ -925,7 +925,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const er = Etat.copie(e0); er.profils[n0].persona = 'revanchard'; er.tour = 6;
   const er2 = Etat.copie(er); er2.revanches = { [n0]: true };
   check(Tour.tourSuivant(er, []).nations[n0].relation === 10 && Tour.tourSuivant(er2, []).nations[n0].relation < 10, 'provocation : le revanchard seulement contre qui l\'a battu');
-  PERS.belliqueux.provoque.proba = 0.3;
+  PERS.belliqueux.provoque.proba = 0.2;
   // le commerce rapproche : +1 par tour avec une nation tant qu'un contrat ou un traité est en cours
   const ec = Etat.copie(e0), off = Object.keys(ec.offres).find(k => ec.offres[k].nation === n0);
   ec.contrats = [{ id: off, jusqua: 30 }];

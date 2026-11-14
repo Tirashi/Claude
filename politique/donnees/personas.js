@@ -13,14 +13,14 @@ const NODE = typeof module !== "undefined" && module.exports;
 const PERSONAS = {
   belliqueux:     { nom: "belliqueux", armee: 1.6, regiments: 5, recrute: { cible: 1, parTour: 2, reserve: 100 }, traite: 60, contrat: 0,
                     declare: { ratio: 1.2, relationMax: 20, proba: 0.3, tourMin: 6 },   // relationMax 20 : déclare tant qu'on n'est pas amis
-                    provoque: { proba: 0.3, tourMin: 4, delta: -20 } },
+                    provoque: { proba: 0.2, tourMin: 4, delta: -20 } },
   marchand:       { nom: "marchand", armee: 1, regiments: 3, recrute: { cible: 0.5, parTour: 1, reserve: 200 }, traite: 30, contrat: -10 },
   opportuniste:   { nom: "opportuniste", armee: 1.3, regiments: 3, recrute: { cible: 0.7, parTour: 1, reserve: 100 }, traite: 30, contrat: 0, rejoint: 0.5 },
   isolationniste: { nom: "isolationniste", armee: 1.3, regiments: 4, recrute: { cible: 0.7, parTour: 1, reserve: 100 }, traite: 50, contrat: 0, refuse: ["defense_mutuelle"] },
   revanchard:     { nom: "revanchard", armee: 1.3, regiments: 3, recrute: { cible: 0.7, parTour: 1, reserve: 100 }, traite: 40, contrat: 0,
                     declare: { ratio: 2, relationMax: -30, proba: 0.2, tourMin: 6 },
                     revanche: { ratio: 1.2, relationMax: 101, proba: 0.3, tourMin: 6 },   // contre qui l'a battu, après la trêve
-                    provoque: { proba: 0.3, tourMin: 4, delta: -20, revanche: true } },
+                    provoque: { proba: 0.2, tourMin: 4, delta: -20, revanche: true } },
   idealiste:      { nom: "idéaliste", armee: 1, regiments: 3, recrute: { cible: 0.5, parTour: 1, reserve: 200 }, traite: 30, contrat: 0, reputationMin: 0,
                     declare: { paria: true, ratio: 1, relationMax: 101, proba: 0.3, tourMin: 6 }, contreAgresseur: true },
   prudent:        { nom: "prudent", armee: 1.3, regiments: 3, recrute: { cible: 0.7, parTour: 1, reserve: 100 }, traite: 40, contrat: 0,
