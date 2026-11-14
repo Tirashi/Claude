@@ -21,15 +21,16 @@ function suivre(e){
   s.legitimite = arrondi(s.legitimite + legitimite(e));
 }
 
-// soutien aux lois en vigueur : pour chaque loi, puissance des factions pour − puissance des factions contre
+// soutien aux lois en vigueur : pour chaque loi, puissance des factions pour − puissance des factions contre ;
+// moyenne par loi (décision du 14/11 : un programme court mais bien soutenu compte autant qu'un long) ; sans loi : 0
 function legitimite(e){
   const P = id => e.factions[id] ? e.factions[id].puissance : 0;
-  let t = 0;
+  let t = 0, n = 0;
   for (const c in e.lois){
     const L = LOIS[e.lois[c].id];
-    if (L) t += (L.pour || []).reduce((s, f) => s + P(f), 0) - (L.contre || []).reduce((s, f) => s + P(f), 0);
+    if (L){ t += (L.pour || []).reduce((s, f) => s + P(f), 0) - (L.contre || []).reduce((s, f) => s + P(f), 0); n++; }
   }
-  return t;
+  return n ? arrondi(t / n) : 0;
 }
 
 function mesures(e){

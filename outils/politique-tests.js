@@ -272,7 +272,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   e = un(['journee_huit_heures']);
   check(fac(e, 'ouvriers').colere === 32 && fac(e, 'paysans').colere === 29, 'journée de huit heures : les ouvriers −2 de colère par tour');
   e = un(['labor_medicine']);
-  check(['paysans', 'ouvriers', 'artisans', 'patrons'].every(f => fac(e, f).colere === CHAMPS.joueur.factions[f].colere - 3), 'médecine du travail : −2 colère par tour pour toutes les factions');
+  check(['paysans', 'ouvriers', 'artisans', 'patrons'].every(f => fac(e, f).colere === CHAMPS.joueur.factions[f].colere - 2), 'médecine du travail : −1 colère par tour pour toutes les factions');
   e = un(['unions']);
   check(fac(e, 'ouvriers').colere === 30 && fac(e, 'ouvriers').puissance === 28, 'syndicats : ouvriers −4 colère et +3 puissance par tour');
   check(fac(tours(avecLois(['unions'], 1), 10), 'ouvriers').puissance === 55 && fac(tours(avecLois(['unions'], 1), 15), 'ouvriers').puissance === 55, 'syndicats : +3 puissance pendant 10 tours seulement (25 → 55)');
@@ -784,7 +784,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   // effets sur les factions par tour (une partie avec et sans la loi)
   const delta = (id, f) => { const a = Tour.tourSuivant(avec([id]), []), b = Tour.tourSuivant(avec([]), []); return a.factions[f].colere - b.factions[f].colere; };
   check(delta('impot_minimal', 'patrons') === -1 && delta('laisser_faire', 'ouvriers') === 2 && delta('laisser_faire', 'patrons') === -2, 'impôt minimal : patrons −1 par tour ; laisser-faire : ouvriers +2, patrons −2');
-  check(delta('securite_sociale', 'ouvriers') === -3 && delta('charite_privee', 'paysans') === 1 && delta('comites_populaires', 'patrons') === 2 && delta('police_etat', 'artisans') === -1, 'sécurité sociale, charité privée, comités populaires, police d\'État : colère par tour');
+  check(delta('securite_sociale', 'ouvriers') === -2 && delta('securite_sociale', 'artisans') === -2 && delta('charite_privee', 'paysans') === 1 && delta('comites_populaires', 'patrons') === 2 && delta('police_etat', 'artisans') === -1, 'sécurité sociale, charité privée, comités populaires, police d\'État : colère par tour');
   check(delta('travail_enfants', 'artisans') === 1 && delta('libre_echange', 'artisans') === 1 && delta('ecoles_religieuses', 'paysans') === -1, 'travail des enfants, libre-échange, écoles religieuses : colère par tour');
   let si = avec([]); LM.adopter(si, 'syndicats_interdits'); const p0 = si.factions.ouvriers.puissance;
   check(si.factions.ouvriers.colere === CHAMPS.joueur.factions.ouvriers.colere + 10 && si.factions.patrons.colere === CHAMPS.joueur.factions.patrons.colere - 10, 'syndicats interdits : ouvriers +10, patrons −10 à l\'adoption');
@@ -809,6 +809,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const el = Etat.copie(e1); el.lois = { impot: { id: 'impot_minimal', depuis: 1 } };
   const Fp = f => el.factions[f].puissance;
   check(Ob.legitimite(el) === Fp('patrons') + Fp('artisans') - Fp('ouvriers'), 'autorité : puissance des factions pour − contre, pour chaque loi en vigueur');
+  const el2 = Etat.copie(el); el2.lois.economie = { id: 'laisser_faire', depuis: 1 };
+  check(Ob.legitimite(el2) === Math.round((Fp('patrons') + Fp('artisans') - Fp('ouvriers') + Fp('patrons') - Fp('ouvriers')) / 2 * 100) / 100, 'autorité : moyenne par loi (laisser-faire : contre les ouvriers seulement)');
   Ob.suivre(el);
   check(el.suivi.tours === 2 && Ob.mesures(el).autorite === Math.round((e1.suivi.legitimite + Ob.legitimite(el)) / 2), 'autorité : moyenne sur la partie');
   const eo = Etat.copie(e1); eo.occupations = { plaine: 'valroc' };

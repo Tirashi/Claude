@@ -10,13 +10,13 @@ const OBJECTIFS = {
   prosperite: { nom: "Prospérité", texte: "Trésor et valeur des bâtiments à la fin de la partie.",
     seuils: [5374, 5951, 6410] },
   contentement: { nom: "Contentement", texte: "100 moins la colère moyenne des factions, en moyenne sur toute la partie.",
-    seuils: [78.5, 80.5, 81.1] },
+    seuils: [78.8, 80.5, 81.9] },
   puissance: { nom: "Puissance", texte: "10 points par région tenue (non occupée), plus la force de l'armée (régiments × loi militaire × moral), à la fin de la partie.",
     seuils: [84.4, 86.6, 87.3] },
   concorde: { nom: "Concorde", texte: "Moyenne des relations avec les nations, plus 10 par traité en cours, à la fin de la partie.",
-    seuils: [23, 38, 79] },
-  autorite: { nom: "Autorité", texte: "Soutien des factions puissantes aux lois en vigueur : pour chaque loi, puissance des factions pour moins puissance des factions contre ; en moyenne sur la partie.",
-    seuils: [210, 335, 366] }
+    seuils: [28, 54, 80] },
+  autorite: { nom: "Autorité", texte: "Soutien des factions puissantes aux lois en vigueur : pour chaque loi en vigueur, puissance des factions pour moins puissance des factions contre ; moyenne par loi, puis moyenne sur la partie.",
+    seuils: [34, 53, 54] }
 };
 const MEDAILLES = ["bronze", "argent", "or"];   // 1, 2 et 3 points
 const R = { OBJECTIFS, MEDAILLES, pointsTraite: 10, pointsRegion: 10 };

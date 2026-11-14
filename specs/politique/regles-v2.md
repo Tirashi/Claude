@@ -71,7 +71,7 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 ### 6. Objectifs de victoire (14/11)
 - Cinq objectifs mesurés à la fin de la partie (tour 40), chacun avec trois paliers : bronze, argent, or. Une révolution = défaite, aucune médaille.
 - **Ambition** : au tour 1, le joueur choisit un objectif (une fois). Sa victoire = la médaille de cet objectif ; les autres sont un bilan.
-- **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Puissance** : 10 par région tenue (non occupée) + force de l'armée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, loi par loi), en moyenne sur la partie.
+- **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Puissance** : 10 par région tenue (non occupée) + force de l'armée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, moyenne par loi), en moyenne sur la partie.
 - Seuils fixés par simulation (`--objectifs`), d'après les bots qui visent l'objectif : bronze = leur médiane, argent = 75e centile, or = 87e (valeurs dans `donnees/objectifs.js`, à valider).
 
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
