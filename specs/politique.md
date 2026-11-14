@@ -125,6 +125,19 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 14. Équilibre de la guerre : mesures du 14/11 (100 parties par bot ; rien n'est changé, décision de l'utilisateur attendue)
+Réglages ajoutés dans `donnees/guerre.js`, valeurs actuelles gardées : `capitulationMoitie` (faux), `clausesIA` (toutes les clauses), `fort` (1,5).
+
+| Réglage | economy : régions perdues, révolutions, grèves | replica : régions perdues | militarist | Verdict |
+|---|---|---|---|---|
+| Forts ×2 au lieu de ×1,5 | identique | identique | identique | **aucun effet** : l'ennemi attaque les régions sans fort |
+| Caserne au Bourg au départ | 0,34 → 0,24 ; 7 % → 8 % ; or t40 6 700 → 7 333 | 0,13 → 0,04 | 0,18 → 0,08 | **aide nettement** |
+| Pas de non-réarmement imposé au joueur | identique | 0,13 → 0,11 | identique | **presque aucun effet** (la spirale de défaites a disparu avec les personas) |
+| Capitulation à la moitié des régions occupées | 0,34 → 0,69 ; 7 % → **0 %** ; 19 % → **0 %** | 0,13 → 0,49 | guerres 18 → 8 tours ; or t40 +20 % | **choix de conception** : guerres courtes et pas de révolution par la famine, mais une région cédée plus souvent |
+| Caserne + capitulation à la moitié (+ forts ×2, sans non-réarmement) | 0,19 → 0,41 ; 8 % → 0 % ; 18 % → 0 % | 0,04 → 0,25 | guerres 17 → 8 tours | |
+
+Constat : les révolutions d'economy (7 %) venaient des longues occupations (régions qui ne produisent plus, paysans affamés) ; finir la guerre plus tôt les supprime.
+
 ## 13. V2, étape 6 : réputation fusionnée dans les relations (13/11)
 Fait : `diplomatie.fusion` ; chaque point du barème de réputation devient 0,5 point de relation avec **toutes** les nations (`Diplomatie.reputer`) : agression −100 avec la cible et −10 avec les autres, don de 100 or +20 avec la nation aidée et +2,5 avec toutes, traité signé +1,5, rompu −7,5, embargo injustifié −2,5, suffrages ±2,5, traité respecté +1 tous les 10 tours ; « réputation » = moyenne des relations ; paria sous −50 de moyenne ; l'idéaliste juge cette moyenne. Les tests écrits avant gardent la réputation à part. 245 tests.
 

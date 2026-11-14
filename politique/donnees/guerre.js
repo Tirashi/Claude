@@ -19,6 +19,9 @@ const GUERRE = {
   // tour avant lequel une nation ne déclare pas la guerre (declare.tourMin)
   occupationColere: 0,
   capitulationSansRegiment: true,   // capitule aussi : plus aucun régiment et au moins une de ses régions occupée : ASSUMPTION (V2 étape 2)
+  capitulationMoitie: false,        // (en essai, 14/11) capitule quand la moitié de ses régions (arrondie au-dessus) est occupée
+  // clauses imposées au joueur quand l'ordinateur gagne (en essai, 14/11 : sans non-réarmement ?)
+  clausesIA: { reparations: true, lever_embargo: true, non_rearmement: true, cession: true },
   paixBlanche: 5,                   // tours sans bataille avant une paix blanche : ASSUMPTION validée (M3)
   // l'ennemi accepte la paix blanche s'il n'est pas plus fort que le camp du joueur : ASSUMPTION validée (M3b)
   reparations: { part: 0.25, max: 300 },          // ASSUMPTION validée (M3) (Paix de Brume : 300)

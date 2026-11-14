@@ -196,7 +196,9 @@ function ceder(e, perdant, gagnant){
 }
 
 const accepteBlanche = e => forceCamp(e, e.guerre.ennemis) <= forceCamp(e, campJoueur(e.guerre));
-const capitule = (e, qui) => (qui === "joueur" ? e.moral : e.nations[qui].moral) < G.capitulation || (G.capitulationSansRegiment && regiments(e, qui) === 0 && occupees(e, qui).length > 0);
+const capitule = (e, qui) => (qui === "joueur" ? e.moral : e.nations[qui].moral) < G.capitulation
+  || (G.capitulationSansRegiment && regiments(e, qui) === 0 && occupees(e, qui).length > 0)
+  || (G.capitulationMoitie && occupees(e, qui).length >= Math.ceil(regionsDe(e, qui).length / 2));
 
 function actions(e){
   const g = e.guerre, r = recrutables(e).map(region => ({ type: "recruter", region }));
@@ -236,7 +238,7 @@ function tour(e, r){
     if (g.capitulation) return;
     const chef = g.ennemis[0];
     if (capitule(e, chef)){ g.capitulation = "ennemi"; e.journal.push(`${e.profils[chef].nom} capitule : à nous de fixer la paix.`); return; }
-    if (capitule(e, "joueur")){ paix(e, "ennemi", { reparations: true, lever_embargo: true, non_rearmement: true, cession: true }); return; }
+    if (capitule(e, "joueur")){ paix(e, "ennemi", Object.assign({}, G.clausesIA)); return; }
     if (g.bataille === e.tour) return;
     // l'ennemi libère d'abord ses régions, sinon vise notre région la moins bien défendue
     const nous = campJoueur(g), possibles = cibles(e, g.ennemis, nous);
