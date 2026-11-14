@@ -83,7 +83,8 @@ function actions(e){
     if (!e.dons.includes(n)) for (const m of D.dons) if (e.tresor >= m) r.push({ type: "don", id: n, montant: m });
     r.push(embargo(e, n) ? { type: "lever_embargo", id: n } : { type: "embargo", id: n });
   }
-  for (const id in e.offres){
+  const plein = D.contrats.maxEnCours != null && e.contrats.length >= D.contrats.maxEnCours;   // plafond (en essai)
+  if (!plein) for (const id in e.offres){
     const c = e.offres[id];
     if (!e.contrats.some(x => x.id === id) && ouverte(e, c.nation, persona(e, c.nation).contrat)) r.push({ type: "contrat", id });
   }
