@@ -9,6 +9,7 @@ const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMEN
 const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAINS;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
+const { NIVEAUX } = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
 
 const arrondi = x => Math.round(x * 100) / 100;
 // part payée par le joueur (bâtiment cofinancé par un traité)
@@ -21,7 +22,7 @@ const bonus = (e, r, id) => TERRAINS[e.regions[r].terrain].bonus[id] || 1;
 function occupes(e, r){
   let n = 0;
   for (const id in e.regions[r].batiments) if (prendPlace(id)) n += e.regions[r].batiments[id];
-  for (const c of e.chantiers) if (c.region === r && prendPlace(c.id)) n++;
+  for (const c of e.chantiers) if (c.region === r && prendPlace(c.id) && !c.agrandir) n++;
   return n;
 }
 const enChantier = (e, r) => e.chantiers.some(c => c.region === r);
@@ -41,6 +42,33 @@ function constructibles(e){
   return r;
 }
 
+// agrandir (budget de fin de partie, 14/11) : e.regions[r].niveaux[id] = nombre de niveaux ajoutés aux bâtiments de ce type
+// (les bâtiments passent d'abord tous au niveau 2, puis au niveau 3 : au plus 2 niveaux par bâtiment)
+const niveaux = (e, r, id) => ((e.regions[r].niveaux || {})[id] || 0);
+// facteur d'un type de bâtiment dans une région : n bâtiments, k niveaux ajoutés → n + gain × k
+const facteur = (e, r, id) => (e.regions[r].batiments[id] || 0) + NIVEAUX.gain * niveaux(e, r, id);
+function coutAgrandir(e, r, id){
+  const n = e.regions[r].batiments[id] || 0, k = niveaux(e, r, id);
+  return Math.round(BAT[id].cout * NIVEAUX.cout[k < n ? 2 : 3] * (e ? Lois.effets(e).construction : 1) * 100) / 100;
+}
+function agrandissables(e){
+  const r = [];
+  for (const reg in e.regions){
+    if (enChantier(e, reg) || (e.occupations || {})[reg]) continue;
+    for (const id of NIVEAUX.batiments){
+      const n = e.regions[reg].batiments[id] || 0;
+      if (n > 0 && niveaux(e, reg, id) < 2 * n && e.tresor >= coutAgrandir(e, reg, id)) r.push({ id, region: reg });
+    }
+  }
+  return r;
+}
+function agrandir(e, id, region){
+  const prix = coutAgrandir(e, region, id);
+  e.tresor = arrondi(e.tresor - prix);
+  e.chantiers.push({ id, region, restant: BAT[id].delai, agrandir: true });
+  e.journal.push(`Agrandissement commandé : ${BAT[id].nom} (${e.regions[region].nom}, ${prix} or).`);
+}
+
 function commander(e, id, region){
   const prix = cout(id, e);
   e.tresor = arrondi(e.tresor - prix);
@@ -54,6 +82,12 @@ function avancer(e){
     if ((e.occupations || {})[c.region]) continue;   // chantier arrêté pendant l'occupation
     c.restant--;
     if (c.restant > 0) continue;
+    if (c.agrandir){
+      const nv = e.regions[c.region].niveaux = e.regions[c.region].niveaux || {};
+      nv[c.id] = (nv[c.id] || 0) + 1;
+      e.journal.push(`Agrandissement terminé : ${BAT[c.id].nom} (${e.regions[c.region].nom}).`);
+      continue;
+    }
     const b = e.regions[c.region].batiments;
     b[c.id] = (b[c.id] || 0) + 1;
     e.batiments[c.id] = (e.batiments[c.id] || 0) + 1;
@@ -69,6 +103,6 @@ function totaux(regions){
   return t;
 }
 
-const Batiments = { constructibles, commander, avancer, arrondi, cout, bonus, occupes, totaux };
+const Batiments = { constructibles, commander, avancer, arrondi, cout, bonus, occupes, totaux, niveaux, facteur, coutAgrandir, agrandissables, agrandir };
 if (NODE) module.exports = Batiments; else (racine.Politique = racine.Politique || {}).Batiments = Batiments;
 })(typeof window !== "undefined" ? window : globalThis);

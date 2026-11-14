@@ -4,10 +4,11 @@
    Les nations de l'ordinateur suivent le persona de leur dirigeant (moteur ; donnees/personas.js) : un bot ne le lit pas. */
 'use strict';
 const path = require('path');
+const INS = require(path.join(__dirname, '..', 'politique', 'donnees', 'institutions.js'));
 const P = f => require(path.join(__dirname, '..', 'politique', f));
 const Lois = P('moteur/lois.js'), Alea = P('moteur/alea.js'), Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Guerre = P('moteur/guerre.js'), Batiments = P('moteur/batiments.js');
 const { LOIS } = P('donnees/lois.js');
-const BAT = P('donnees/batiments.js');
+const BAT = P('donnees/batiments.js'), ECO = P('donnees/economie.js');
 
 const FACTIONS = ['ouvriers', 'paysans', 'artisans', 'patrons'];
 
@@ -108,6 +109,29 @@ function commercer(p){
     if (c.sens === 'vente' ? (b[c.bien] || 0) >= c.volume : (b[c.bien] || 0) <= -c.volume) p.essayer(a);
   }
 }
+// budget de fin de partie (14/11) : agrandir le bâtiment le plus rentable (prix de vente du tour, sans marché saturé),
+// puis financer des institutions dans l'ordre des priorités du bot ; redescendre si le trésor fond
+function budget(p, prio){
+  if (process.env.POLITIQUE_SANS_BUDGET) return;   // pour comparer avant / après dans le simulateur
+  const e = p.e, pv = (e.bilan || {}).prixVente || {};
+  if (e.tresor >= 300){
+    let mieux = null, score = 0;
+    for (const a of Tour.actionsDisponibles(e).filter(a => a.type === 'agrandir')){
+      const b = BAT[a.id], bien = Object.keys(b.produit)[0], prix = pv[bien] || ECO.prix[bien];
+      if (prix < 0.6 * ECO.prix[bien]) continue;                       // marché saturé : inutile d'en produire plus
+      const gain = (b.produit[bien] * prix - b.entretien) / Batiments.coutAgrandir(e, a.region, a.id);
+      if (gain > score){ score = gain; mieux = a; }
+    }
+    if (mieux) p.essayer(mieux);
+  }
+  const niv = e.institutions || {}, solde = (e.bilan || {}).solde || 0;
+  if (e.tresor < 100){ const haut = Object.keys(niv).filter(i => niv[i] > 0).sort((a, b) => niv[b] - niv[a])[0]; if (haut) p.essayer({ type: 'institution', id: haut, niveau: niv[haut] - 1 }); return; }
+  for (const id of prio || []){
+    const n = niv[id] || 0; if (n >= INS.max) continue;
+    if (e.tresor >= 500 && solde > INS.INSTITUTIONS[id].cout[n + 1] - INS.INSTITUTIONS[id].cout[n] + 20) p.essayer({ type: 'institution', id, niveau: n + 1 });
+    break;
+  }
+}
 // une caserne d'abord si on n'en a pas
 const avecCaserne = liste => e => (!e.batiments.caserne && !e.chantiers.some(c => c.id === 'caserne') ? ['caserne'] : []).concat(liste(e));
 // apaiser les factions dont la colère atteint le seuil (la plus en colère d'abord)
@@ -151,7 +175,7 @@ function construire(p, choix, reserve){
 }
 
 // un bot à programme : comme economy, avec sa liste de lois
-function programme(lois){
+function programme(lois, prio){
   return e => {
     const p = plan(e);
     guerre(p, { seuilBataille: 0.6 });
@@ -163,6 +187,7 @@ function programme(lois){
     evenement(p);
     diplomatie(p);
     contraindre(p);
+    budget(p, prio);
     return p.acts;
   };
 }
@@ -184,6 +209,7 @@ const BOTS = {
     evenement(p);
     diplomatie(p);
     contraindre(p);
+    budget(p, ['enseignement', 'sante']);
     return p.acts;
   },
 
@@ -201,6 +227,7 @@ const BOTS = {
     commercer(p);
     diplomatie(p);
     contraindre(p);
+    budget(p, ['enseignement', 'sante']);
     return p.acts;
   },
   spam_medicine: () => e => {
@@ -214,6 +241,7 @@ const BOTS = {
     evenement(p);
     diplomatie(p);
     contraindre(p);
+    budget(p, ['sante', 'enseignement']);
     return p.acts;
   },
 
@@ -228,6 +256,7 @@ const BOTS = {
     evenement(p);
     diplomatie(p);
     contraindre(p);
+    budget(p, ['enseignement']);
     return p.acts;
   },
 
@@ -266,11 +295,11 @@ const BOTS = {
   },
 
   // programmes politiques (panel du 14/11) : même gestion qu'economy, lois du camp dans l'ordre
-  gauche_med: () => programme(['labor_medicine', 'income_progressive', 'school_public', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional']),
-  gauche: () => programme(['income_progressive', 'school_public', 'securite_sociale', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional']),
-  droite: () => programme(['impot_minimal', 'libre_entreprise', 'ecoles_religieuses', 'police_etat', 'suffrage_census', 'syndicats_interdits', 'army_conscription', 'libre_echange', 'charite_privee']),
-  extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'journee_huit_heures']),
-  extreme_droite: () => programme(['laisser_faire', 'parti_unique', 'syndicats_interdits', 'police_etat', 'travail_enfants', 'army_conscription', 'impot_minimal', 'ecoles_religieuses', 'libre_echange']),
+  gauche_med: () => programme(['labor_medicine', 'income_progressive', 'school_public', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional'], ['sante', 'enseignement']),
+  gauche: () => programme(['income_progressive', 'school_public', 'securite_sociale', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional'], ['sante', 'enseignement']),
+  droite: () => programme(['impot_minimal', 'libre_entreprise', 'ecoles_religieuses', 'police_etat', 'suffrage_census', 'syndicats_interdits', 'army_conscription', 'libre_echange', 'charite_privee'], ['police', 'sante']),
+  extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'journee_huit_heures'], ['police', 'sante']),
+  extreme_droite: () => programme(['laisser_faire', 'parti_unique', 'syndicats_interdits', 'police_etat', 'travail_enfants', 'army_conscription', 'impot_minimal', 'ecoles_religieuses', 'libre_echange'], ['police', 'sante']),
 
   // rejoue la trajectoire de la partie 1 (RULES_V1 § Trajectoire) : chaque étape est tentée à partir de son tour
   // jusqu'à ce qu'elle passe ; guerre gagnée par l'usure (embargo, pas de bataille), pas de paix blanche
@@ -302,7 +331,8 @@ const BOTS = {
       fiscalite(p);
       evenement(p);
     diplomatie(p);
-      return p.acts;
+      budget(p, ['sante']);
+    return p.acts;
     };
   }
 };

@@ -1,6 +1,7 @@
 /* Politique : le tour. tourSuivant(etat, actions, rng) → nouvel état ; ne mute jamais etat.
    actionsDisponibles(etat) : la seule liste que voient l'écran et les bots ; toute autre action est refusée.
    Actions : { type: "loi", id } lance une loi ; { type: "construire", id, region } commande un bâtiment (V2 : dans une région) ;
+   { type: "agrandir", id, region } agrandit un bâtiment (niveau 2 puis 3) ; { type: "institution", id, niveau } (±1 par tour) ;
    { type: "apaiser", id: faction } apaise une faction (M2) ; diplomatie (M3a) : don, contrat, traite, rompre,
    embargo, lever_embargo, diplomate { id }, rappeler_diplomate, exiger { id, exigence } (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
    { type: "ambition", id } (tour 1 seulement) : l'objectif de victoire.
@@ -23,6 +24,7 @@ const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomat
 const Guerre = NODE ? require("./guerre.js") : racine.Politique.Guerre;
 const Evenements = NODE ? require("./evenements.js") : racine.Politique.Evenements;
 const Objectifs = NODE ? require("./objectifs.js") : racine.Politique.Objectifs;
+const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
 
 function actionsDisponibles(etat){
   if (etat.fin) return [];
@@ -30,11 +32,26 @@ function actionsDisponibles(etat){
     .concat(etat.debat ? [{ type: "abandonner" }] : [])
     .concat(Object.keys(ECO.niveauxImpot).filter(n => n !== (etat.impots || "normal")).map(id => ({ type: "impots", id })))
     .concat(Batiments.constructibles(etat).map(c => ({ type: "construire", id: c.id, region: c.region })))
+    .concat(Batiments.agrandissables(etat).map(c => ({ type: "agrandir", id: c.id, region: c.region })))
+    .concat(institutions(etat))
     .concat(Factions.apaisables(etat).map(id => ({ type: "apaiser", id })))
     .concat(Diplomatie.actions(etat))
     .concat(Guerre.actions(etat))
     .concat(Evenements.actions(etat))
     .concat(Objectifs.actions(etat));
+}
+
+// institutions (budget de fin de partie) : un cran de plus ou de moins, une fois par tour par institution ;
+// monter demande l'or du nouveau niveau pour ce tour
+function institutions(e){
+  const r = [], niv = e.institutions || {};
+  for (const id in INST.INSTITUTIONS){
+    if ((e.institutionsChangees || []).includes(id)) continue;
+    const n = niv[id] || 0, I = INST.INSTITUTIONS[id];
+    if (n < INST.max && e.tresor >= I.cout[n + 1]) r.push({ type: "institution", id, niveau: n + 1 });
+    if (n > 0) r.push({ type: "institution", id, niveau: n - 1 });
+  }
+  return r;
 }
 
 // même action : mêmes champs et mêmes valeurs, dans n'importe quel ordre
@@ -48,6 +65,12 @@ function appliquerAction(e, a, r){
   else if (a.type === "evenement") Evenements.appliquer(e, a.choix);
   else if (a.type === "impots"){ e.impots = a.id; e.journal.push(`Impôts : niveau ${a.id}.`); }
   else if (a.type === "construire") Batiments.commander(e, a.id, a.region);
+  else if (a.type === "agrandir") Batiments.agrandir(e, a.id, a.region);
+  else if (a.type === "institution"){
+    (e.institutions = e.institutions || {})[a.id] = a.niveau;
+    (e.institutionsChangees = e.institutionsChangees || []).push(a.id);
+    e.journal.push(`${INST.INSTITUTIONS[a.id].nom} : niveau ${a.niveau}.`);
+  }
   else if (a.type === "apaiser") Factions.apaiser(e, a.id);
   else if (a.type === "ambition") Objectifs.choisir(e, a.id);
   else if (["recruter", "declarer_guerre", "bataille", "imposer_paix", "paix_blanche"].includes(a.type)) Guerre.appliquer(e, a, r);
@@ -81,6 +104,7 @@ function tourSuivant(etat, actions, rng){
   Batiments.avancer(e);
   Evenements.tirer(e, r);           // fin de tour : peut-être une carte (réponse au tour suivant)
   e.alea = r.s >>> 0;
+  e.institutionsChangees = [];       // un changement par institution et par tour
   e.tour++;
   e.modifPrix = e.modifPrix.filter(m => m.jusqua >= e.tour);
   e.modifProd = (e.modifProd || []).filter(m => m.jusqua >= e.tour);

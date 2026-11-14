@@ -7,6 +7,7 @@
 (function(racine){
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
+const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 const { LOIS, REGLES_LOIS: R } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
@@ -28,7 +29,8 @@ function chance(e, id){
   const p = f => (e.factions[f] ? e.factions[f].puissance : 0);
   const s = (LOIS[id].pour || []).reduce((a, f) => a + p(f), 0) - (LOIS[id].contre || []).reduce((a, f) => a + p(f), 0);
   // parti unique : les autres lois passent plus facilement
-  return Math.max(R.chance.min, Math.min(R.chance.max, Math.round((R.chance.base + s * R.chance.parPuissance + effets(e).debat) * 1000) / 1000));
+  return Math.max(R.chance.min, Math.min(R.chance.max, Math.round((R.chance.base + s * R.chance.parPuissance + effets(e).debat
+    + ((e.institutions || {}).police || 0) * INST.INSTITUTIONS.police.debat) * 1000) / 1000));   // police : débats plus faciles
 }
 
 function lancer(e, id){

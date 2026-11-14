@@ -5,6 +5,7 @@
 (function(racine){
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
+const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
 const { FACTIONS, REGLES_FACTIONS: R } = NODE ? require("../donnees/factions.js") : racine.Politique.FACTIONS;
 const { LOIS, GROUPES } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
@@ -45,10 +46,11 @@ function apaiser(e, f){
   e.journal.push(`${FACTIONS[f].nom} apaisés (${cout} or).`);
 }
 
-function statutDe(x){
+// police (budget de fin de partie) : les grèves commencent plus tard (decalage en points de colère)
+function statutDe(x, decalage){
   if (x.colere >= R.seuils.revolution) return "revolution";
   if (x.puissance >= R.revolte.puissance && x.colere >= R.revolte.colere) return "revolte";
-  if (x.colere >= R.seuils.greve) return "greve";
+  if (x.colere >= R.seuils.greve + (decalage || 0)) return "greve";
   if (x.colere >= R.seuils.grondement) return "grondement";
   return "calme";
 }
@@ -70,7 +72,7 @@ function moral(e){
 function evaluer(e){
   for (const f in e.factions){
     const x = e.factions[f], avant = x.statut;
-    x.statut = statutDe(x);
+    x.statut = statutDe(x, ((e.institutions || {}).police || 0) * INST.INSTITUTIONS.police.greve);
     if (avant && x.statut !== avant && x.statut !== "calme") e.journal.push(`${FACTIONS[f].nom} : ${x.statut === "greve" ? "grève" : x.statut === "revolte" ? "révolte" : x.statut} !`);
     if (x.statut === "revolution" && R.revolutionFin && !e.issue) e.issue = { type: "revolution", faction: f };
   }
@@ -97,6 +99,9 @@ function finDeTour(e){
     for (const f in fx.parTour || {}) for (const j in fx.parTour[f])
       if (duree[j] == null || e.tour - l.depuis < duree[j]) modifier(e, f, j, fx.parTour[f][j]);
   }
+  // santé (budget de fin de partie) : chaque niveau calme toutes les factions
+  const sante = (e.institutions || {}).sante || 0;
+  if (sante) for (const f in e.factions) modifier(e, f, "colere", sante * INST.INSTITUTIONS.sante.colere);
   for (const f in e.factions){
     let k = 1;
     for (const cat in e.lois){ const x = (LOIS[e.lois[cat].id].factions.dissipation || {})[f]; if (x) k *= x; }

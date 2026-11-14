@@ -100,6 +100,11 @@ function mesures(e){
   const s = e.suivi || { tours: 0, colere: 0, legitimite: 0 };
   let valeur = 0;
   for (const id in e.batiments) valeur += (e.batiments[id] || 0) * (BAT[id] ? BAT[id].cout : 0);
+  // agrandissements : leur prix de base (niveau 2 : ×1,5 ; niveau 3 : ×2), pour que bâtir plus haut ne fasse pas baisser la Prospérité
+  for (const r in e.regions) for (const id in e.regions[r].niveaux || {}){
+    const n = e.regions[r].batiments[id] || 0, k = e.regions[r].niveaux[id];
+    valeur += BAT[id].cout * (Math.min(k, n) * 1.5 + Math.max(0, k - n) * 2);
+  }
   return {
     prosperite: Math.round(e.tresor + valeur),
     contentement: s.tours ? dixieme(100 - s.colere / s.tours) : 100,

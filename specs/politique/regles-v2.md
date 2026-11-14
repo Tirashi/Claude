@@ -87,6 +87,10 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Exigence** (l'ultimatum, attaché à un embargo) : lever ses sanctions, cesser les provocations (10 tours), payer un dédommagement (50 or). La nation cède si l'embargo lui fait manquer des marchandises : chance (colère − 30) / 30 par tour ; cédé : relation +10 ; refusé au bout de 10 tours : relation −20.
 - Fait aussi : pays minier à la place du pays militaire, ambition Influence à la place de Puissance.
 
+### 9. L'or en fin de partie (14/11)
+- **Agrandir** une ferme, une mine, un atelier ou un tissage sur place : niveau 2 (×1,5 du prix), niveau 3 (×2) ; chaque niveau +50 % de production, de consommation et d'entretien ; occupe le chantier de la région, pas d'emplacement.
+- **Institutions** (niveau 0 à 3, dépense chaque tour, un cran par tour) : santé (−1 de colère par tour et par niveau pour toutes les factions), enseignement (+0,25 % de croissance, ateliers et tissages +10 % par niveau), police (+5 % aux débats, grèves 3 points plus tard par niveau).
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

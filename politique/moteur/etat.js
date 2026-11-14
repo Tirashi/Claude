@@ -58,6 +58,8 @@ function creerEtat(scenario, graine, pays){
     batiments: totaux(regions),       // totaux du pays (somme des régions)
     chantiers: [],                    // bâtiments en construction : [{ id, region, restant }], un par région
     lois,                             // catégorie → { id, depuis } (loi en vigueur ; lois du pays au départ)
+    institutions: { sante: 0, enseignement: 0, police: 0 },   // budget de fin de partie : niveau de chaque institution (0 à 3)
+    institutionsChangees: [],         // institutions changées ce tour (une fois par tour)
     impots: "normal",                 // V2 budget : niveau d'imposition (bas, normal, haut)
     debat: null,
     paquet: [],                       // événements : cartes restantes (mélangées au premier tirage)

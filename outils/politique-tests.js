@@ -201,10 +201,10 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const bourg = v(4, [C('workshop', 'bourg')]), val = v(4, [C('workshop', 'vallee')]);
   check(bourg.bilan.production.outils === 12.5 && val.bilan.production.outils === 10, 'régions : atelier ×1,25 au bourg, ×1 ailleurs');
   let pl = vrai({ tresor: 5000 }); for (let k = 0; k < 2; k++) pl = tours(pl, 2, [C('farm', 'plaine')]);
-  check(pl.regions.plaine.batiments.farm === 4 && Batiments.occupes(pl, 'plaine') === 4 && !Tour.actionsDisponibles(pl).some(a => a.region === 'plaine' && a.id === 'farm'), 'régions : 4 emplacements en plaine, plus de place ensuite');
+  check(pl.regions.plaine.batiments.farm === 4 && Batiments.occupes(pl, 'plaine') === 4 && !Tour.actionsDisponibles(pl).some(a => a.type === 'construire' && a.region === 'plaine' && a.id === 'farm'), 'régions : 4 emplacements en plaine, plus de place ensuite');
   check(Tour.actionsDisponibles(pl).some(a => a.region === 'plaine' && a.id === 'fort'), 'régions : le fort ne prend pas d\'emplacement');
   const ch = Tour.tourSuivant(vrai({ tresor: 5000 }), [C('farm', 'vallee')]);
-  check(Batiments.occupes(ch, 'vallee') === 3 && !Tour.actionsDisponibles(Tour.tourSuivant(ch, [])).some(a => a.region === 'vallee' && a.id === 'farm'), 'régions : un chantier occupe sa place (Vallée : 2 fermes + 1 en chantier = 3 sur 3)');
+  check(Batiments.occupes(ch, 'vallee') === 3 && !Tour.actionsDisponibles(Tour.tourSuivant(ch, [])).some(a => a.type === 'construire' && a.region === 'vallee' && a.id === 'farm'), 'régions : un chantier occupe sa place (Vallée : 2 fermes + 1 en chantier = 3 sur 3)');
 }
 
 // --- parties au hasard : invariants ---
@@ -232,7 +232,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
       if (Object.keys(Object.assign({}, e.batiments, Batiments.totaux(e.regions))).some(k => (e.batiments[k] || 0) !== (Batiments.totaux(e.regions)[k] || 0))) viol = 'totaux des bâtiments faux';
       if (Object.keys(e.regions).some(r => e.chantiers.filter(c => c.region === r).length > 1 || Batiments.occupes(e, r) > e.regions[r].emplacements)) viol = 'région débordée';
       if (Object.values(e.factions).some(x => x.colere < 0 || x.colere > 100 || x.puissance < 0 || x.puissance > 100)) viol = 'colère ou puissance hors bornes';
-      if (Object.values(e.factions).some(x => x.statut !== FAm.statutDe(x))) viol = 'statut de faction faux';
+      if (Object.values(e.factions).some(x => x.statut !== FAm.statutDe(x, ((e.institutions || {}).police || 0) * 3))) viol = 'statut de faction faux';
       if (!(e.moral >= 0 && e.moral <= 1)) viol = 'moral hors de 0-1';
       if (Object.values(e.nations).some(x => x.relation < -100 || x.relation > 100 || x.colere < 0 || x.colere > 100 || !(x.moral >= 0 && x.moral <= 1))) viol = 'nation hors bornes';
       if (e.guerre && (!e.guerre.ennemis.length || e.guerre.ennemis.some(n => e.guerre.allies.includes(n)) || e.guerre.allies.includes(e.guerre.ennemis[0]))) viol = 'camps de guerre incohérents';
@@ -756,7 +756,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   let viol = '';
   for (let g = 1; g <= 30; g++) { let e = Etat.creerEtat(CHAMPS, g); const r = Alea.creer(g);
     while (!e.fin) { const d = Tour.actionsDisponibles(e); const a = d.length && Alea.suivant(r) < 0.5 ? [Alea.choisir(r, d)] : []; e = Tour.tourSuivant(e, a);
-      if (Object.values(e.factions).some(x => x.statut !== FAm.statutDe(x) || x.colere < 0 || x.colere > 100)) viol = 'faction'; if (!(e.familles > 0)) viol = 'familles'; if (e.regiments < 0) viol = 'régiments'; } }
+      if (Object.values(e.factions).some(x => x.statut !== FAm.statutDe(x, ((e.institutions || {}).police || 0) * 3) || x.colere < 0 || x.colere > 100)) viol = 'faction'; if (!(e.familles > 0)) viol = 'familles'; if (e.regiments < 0) viol = 'régiments'; } }
   check(!viol, 'événements : parties au hasard, invariants tenus' + (viol ? ' — ' + viol : ''));
 }
 
@@ -1012,6 +1012,45 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   let cedes = 0;
   for (let g = 1; g <= 400; g++){ const e = Etat.copie(eb); e.exigences = [{ nation: n0, exigence: 'dedommagement', depuis: e.tour }]; e.nations[n0].colere = 45; e.nations[n0].manque = 5; Dm.exigences(e, { s: g * 7919 }); if (!e.exigences.length) cedes++; }
   check(cedes > 160 && cedes < 240, `exigence : à 45 de colère, cède environ une fois sur deux (${cedes}/400)`);
+}
+
+// --- budget de fin de partie : agrandir les bâtiments, institutions (14/11) ---
+{
+  const INS = P('donnees/institutions.js'), Bm = P('moteur/batiments.js'), Ob = P('moteur/objectifs.js'), FAx = P('moteur/factions.js'), LMx = P('moteur/lois.js');
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand'; e0.tresor = 2000;
+  const ag = e => Tour.actionsDisponibles(e).filter(a => a.type === 'agrandir');
+  check(ag(e0).some(a => a.id === 'farm' && a.region === 'plaine') && !ag(e0).some(a => a.id === 'caserne'), 'agrandir : ferme oui, caserne non');
+  check(Bm.coutAgrandir(e0, 'plaine', 'farm') === 90 && Bm.coutAgrandir(e0, 'collines', 'mine') === 120, 'agrandir : niveau 2 à ×1,5 du prix (ferme 90, mine 120)');
+  const a1 = Tour.tourSuivant(e0, [{ type: 'agrandir', id: 'farm', region: 'plaine' }]);
+  check(proche(e0.tresor - 90, a1.tresor - (a1.bilan.solde)) && a1.chantiers.some(c => c.agrandir && c.region === 'plaine') && Bm.occupes(a1, 'plaine') === 2, 'agrandir : payé à la commande, chantier de la région, pas d\'emplacement pris');
+  check(!ag(a1).some(a => a.region === 'plaine') && !Tour.actionsDisponibles(a1).some(a => a.type === 'construire' && a.region === 'plaine'), 'agrandir : occupe le chantier de la région');
+  let a2 = a1; for (let i = 0; i < BAT.farm.delai; i++) a2 = Tour.tourSuivant(a2, []);
+  check(a2.regions.plaine.niveaux.farm === 1 && a2.regions.plaine.batiments.farm === 2, 'agrandir : un niveau de plus à la fin du délai');
+  const b0 = Etat.copie(e0), b1 = Etat.copie(e0); b1.regions.plaine.niveaux = { farm: 1 };
+  check(proche(Economie.bilan(b1).production.grain - Economie.bilan(b0).production.grain, 20 * 1.5 * 0.5) && proche(Economie.bilan(b1).entretiens - Economie.bilan(b0).entretiens, 3 * 0.5), 'agrandir : niveau 2 = +50 % de production et d\'entretien (plaine fertile ×1,5)');
+  const b2 = Etat.copie(e0); b2.regions.plaine.niveaux = { farm: 2 };
+  check(Bm.coutAgrandir(b2, 'plaine', 'farm') === 120, 'agrandir : niveau 3 à ×2 du prix une fois tous au niveau 2');
+  const b4 = Etat.copie(e0); b4.regions.plaine.niveaux = { farm: 4 };
+  check(!ag(b4).some(a => a.region === 'plaine' && a.id === 'farm'), 'agrandir : niveau 3 au plus');
+  const w = Etat.copie(e0); w.regions.bourg.batiments.workshop = 1; const w1 = Etat.copie(w); w1.regions.bourg.niveaux = { workshop: 2 };
+  check(proche(Economie.bilan(w1).consommation.fer - Economie.bilan(w).consommation.fer, 5), 'agrandir : un atelier au niveau 3 consomme deux fois plus de fer');
+  check(Ob.mesures(b1).prosperite === Ob.mesures(b0).prosperite + 90, 'prospérité : un agrandissement compte pour son prix');
+  // institutions
+  const ins = e => Tour.actionsDisponibles(e).filter(a => a.type === 'institution');
+  check(e0.institutions.sante === 0 && ins(e0).length === 3 && ins(e0).every(a => a.niveau === 1), 'institutions : niveau 0 au départ, un cran à la fois');
+  const i1 = Tour.tourSuivant(e0, [{ type: 'institution', id: 'sante', niveau: 1 }]);
+  check(i1.institutions.sante === 1 && i1.bilan.institutions === 10, 'institutions : santé niveau 1, 10 or par tour');
+  let deux = false; try { Tour.tourSuivant(e0, [{ type: 'institution', id: 'sante', niveau: 1 }, { type: 'institution', id: 'sante', niveau: 2 }]); } catch (x) { deux = true; }
+  check(deux && ins(i1).some(a => a.id === 'sante' && a.niveau === 2) && ins(i1).some(a => a.id === 'sante' && a.niveau === 0), 'institutions : un changement par tour, puis monter ou descendre');
+  const s3 = Etat.copie(e0); s3.institutions = { sante: 3, enseignement: 3, police: 3 };
+  check(Economie.bilan(s3).institutions === 108 && !ins(s3).some(a => a.niveau === 4), 'institutions : 36 or par tour au niveau 3, pas au-delà');
+  const t0 = Tour.tourSuivant(Etat.copie(e0), []), t2 = Tour.tourSuivant(Object.assign(Etat.copie(e0), { institutions: { sante: 2, enseignement: 0, police: 0 } }), []);
+  check(Object.keys(t0.factions).every(f => t2.factions[f].colere === Math.max(0, t0.factions[f].colere - 2)), 'santé : −1 de colère par tour et par niveau pour toutes les factions');
+  const en = Object.assign(Etat.copie(w), { institutions: { sante: 0, enseignement: 2, police: 0 } });
+  check(proche(Economie.bilan(en).croissance - Economie.bilan(w).croissance, 0.005) && proche(Economie.bilan(en).production.outils / Economie.bilan(w).production.outils, 1.2), 'enseignement : +0,25 % de croissance et ateliers +10 % par niveau');
+  const po = Object.assign(Etat.copie(e0), { institutions: { sante: 0, enseignement: 0, police: 2 } });
+  check(proche(LMx.chance(po, 'school_public') - LMx.chance(e0, 'school_public'), 0.1), 'police : +5 % de chance aux débats par niveau');
+  check(FAx.statutDe({ colere: 78, puissance: 50 }, 6) === 'grondement' && FAx.statutDe({ colere: 81, puissance: 50 }, 6) === 'greve', 'police : les grèves commencent 3 points plus tard par niveau');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

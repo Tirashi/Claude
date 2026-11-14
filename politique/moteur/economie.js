@@ -13,8 +13,12 @@ const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomat
 const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAINS;
 const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
 const Evenements = NODE ? require("./evenements.js") : racine.Politique.Evenements;
+const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
 
 const arrondi = x => Math.round(x * 100) / 100;
+// institutions (budget de fin de partie) : niveau et dépense par tour
+const inst = (e, id) => (e.institutions || {})[id] || 0;
+const coutInstitutions = e => Object.keys(INST.INSTITUTIONS).reduce((t, id) => t + INST.INSTITUTIONS[id].cout[inst(e, id)], 0);
 const zero = () => Object.fromEntries(ECO.biens.map(b => [b, 0]));
 
 // prix du tour : prix de base × modificateurs en cours (événements ; traités en M3)
@@ -32,9 +36,11 @@ function bilan(e){
     if ((e.occupations || {})[reg]) continue;
     const bonus = TERRAINS[e.regions[reg].terrain].bonus;
     for (const id in e.regions[reg].batiments){
-      const n = e.regions[reg].batiments[id], b = BAT[id];
-      if (!n) continue;
-      const mult = fx.production * (b.artisans ? 1 + fx.artisans : 1) * (fa.batiments[id] == null ? 1 : fa.batiments[id]) * (bonus[id] || 1)
+      const b = BAT[id];
+      if (!e.regions[reg].batiments[id]) continue;
+      // niveaux (budget de fin de partie) : n bâtiments, k niveaux ajoutés → comptent pour n + 0,5 × k
+      const n = e.regions[reg].batiments[id] + INST.NIVEAUX.gain * ((e.regions[reg].niveaux || {})[id] || 0);
+      const mult = fx.production * (b.artisans ? 1 + fx.artisans + inst(e, "enseignement") * INST.INSTITUTIONS.enseignement.artisans : 1) * (fa.batiments[id] == null ? 1 : fa.batiments[id]) * (bonus[id] || 1)
         * ((e.bonusRendement || {})[id] || 1);                                      // Inventeur (événement)
       for (const r in b.produit || {}) prod[r] += n * b.produit[r] * mult * Evenements.multProduction(e, r);   // sécheresse, quarantaine…
       for (const r in b.consomme || {}) conso[r] += n * b.consomme[r];
@@ -66,10 +72,12 @@ function bilan(e){
   const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots * fa.impots * niveau.impots);
   // dette (V2 budget) : intérêts sur ce qui est dû
   const interets = e.tresor < 0 ? arrondi(-e.tresor * ECO.dette.taux) : 0;
-  const entretiens = arrondi(fx.entretien + entretienBat + interets);
+  const institutions = coutInstitutions(e);   // budget de fin de partie : dépense des institutions
+  const entretiens = arrondi(fx.entretien + entretienBat + interets + institutions);
   ventes = arrondi(ventes); achats = arrondi(achats);
   return { interets, production: prod, consommation: conso, balance, prix: p, prixVente: pv, prixAchat: pa, ventes, achats, contrats, impots, entretiens,
-           solde: arrondi(ventes - achats + contrats + impots - entretiens), croissance: ECO.croissance + fx.croissance };
+           solde: arrondi(ventes - achats + contrats + impots - entretiens), institutions,
+           croissance: ECO.croissance + fx.croissance + inst(e, "enseignement") * INST.INSTITUTIONS.enseignement.croissance };
 }
 
 // applique le tour : trésor (peut passer sous zéro : ASSUMPTION validée, sans conséquence en V1), puis familles
