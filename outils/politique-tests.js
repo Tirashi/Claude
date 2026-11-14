@@ -859,5 +859,36 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(i1.factions.ouvriers.puissance === ind.factions.ouvriers.puissance, 'loi de départ : ses effets de durée sont finis (syndicats interdits ne retirent plus de puissance)');
   check(Etat.creerEtat(CHAMPS, 3).regions.bourg.emplacements === 4, 'pays : les emplacements des autres pays ne changent pas');
 }
+
+// --- V2 : étapes des ambitions (option 3) ---
+{
+  const Ob = P('moteur/objectifs.js'), OD = P('donnees/objectifs.js');
+  const e0 = Etat.creerEtat(CHAMPS, 5);
+  check(Object.keys(OD.ETAPES).join() === Object.keys(OD.OBJECTIFS).join() && Object.values(OD.ETAPES).every(l => l.length === 3), 'étapes : trois par objectif');
+  check(Ob.etapes(e0).length === 0 && Ob.etapes(e0, 'concorde').every(x => !x.faite), 'étapes : sans ambition, rien ; au départ, rien de coché');
+  const at = (id, modif) => { const e = Etat.copie(e0); modif(e); return Ob.atteinte(e, OD.ETAPES[Object.keys(OD.ETAPES).find(o => OD.ETAPES[o].some(x => x.id === id))].find(x => x.id === id)); };
+  check(!at('tresor', () => {}) && at('tresor', e => { e.tresor = 3000; }), 'étape : 3 000 or au trésor');
+  check(!at('batiments', () => {}) && at('batiments', e => { e.batiments.farm = 13; }), 'étape : 15 bâtiments en service');
+  check(!at('regions_pleines', () => {}) && at('regions_pleines', e => { for (const r in e.regions) e.regions[r].batiments = { farm: e.regions[r].emplacements, fort: 1 }; }), 'étape : toutes les régions pleines (le fort ne prend pas de place)');
+  check(!at('colere_moyenne', () => {}) && at('colere_moyenne', e => { for (const f in e.factions) e.factions[f].colere = 19; }), 'étape : colère moyenne sous 20');
+  check(!at('toutes_calmes', e => { for (const f in e.factions) e.factions[f].colere = 10; e.factions.ouvriers.colere = 30; }) && at('toutes_calmes', e => { for (const f in e.factions) e.factions[f].colere = 29; }), 'étape : toutes les factions sous 30');
+  check(!at('legitimite', e => { e.lois = { a: { id: 'school_public' } }; }), 'étape : soutien net de 40 en moyenne, avec au moins 5 lois');
+  check(!at('regiments', () => {}) && at('regiments', e => { e.regiments = 10; }) && at('fort', e => { e.batiments.fort = 1; }), 'étapes : 10 régiments, un fort');
+  check(!at('traite', () => {}) && at('traite', e => { e.traites = [{ type: 'entente', avec: 'brume', depuis: 1 }]; }) && at('ami', e => { e.nations.brume.relation = 50; }), 'étapes : un traité, 50 de relation');
+  check(at('relations', e => { for (const n in e.nations) e.nations[n].relation = 30; }) && !at('relations', () => {}), 'étape : relations à +30 en moyenne');
+  check(!at('lois', () => {}) && at('lois', e => { e.lois = { a: { id: 'impot_minimal' }, b: { id: 'school_public' }, c: { id: 'labor_medicine' } }; }), 'étape : 3 lois en vigueur');
+  check(!at('soutien', () => {}) && !at('soutien', e => { e.lois = { a: { id: 'school_public' } }; }) && at('soutien', e => { e.lois = { a: { id: 'school_public' }, b: { id: 'labor_medicine' }, c: { id: 'impot_minimal' }, d: { id: 'libre_entreprise' }, f: { id: 'ecoles_religieuses' } }; }) && !at('soutien', e => { e.lois = { a: { id: 'school_public' }, b: { id: 'labor_medicine' }, c: { id: 'impot_minimal' }, d: { id: 'libre_entreprise' }, f: { id: 'parti_unique' } }; }), 'étape : 5 lois, chacune avec plus de soutien que d\'opposition');
+  // séries et étapes cochées pour de bon, à la fin de chaque tour
+  let e = e0; for (let i = 0; i < 20; i++) e = Tour.tourSuivant(e, []);
+  check(e.suivi.serieSansGreve === 20 && e.suivi.greves === 0, 'suivi : série de tours sans grève');
+  const eg = Etat.copie(e); for (const f in eg.factions) eg.factions[f].colere = 10; eg.journal = []; Ob.suivre(eg);
+  const coche = Ob.etapes(eg, 'contentement')[0].faite;
+  for (const f in eg.factions) eg.factions[f].colere = 60; eg.factions.ouvriers.statut = 'greve'; Ob.suivre(eg);
+  check(coche && eg.suivi.serieSansGreve === 0 && eg.suivi.greves === 1 && eg.suivi.serieSansGrondement === 0 && Ob.etapes(eg, 'contentement')[0].faite, 'étape : cochée pour de bon (une grève remet les séries à zéro)');
+  const ev = Etat.copie(e); ev.journal = ["Paix : l'ennemi capitule."]; Ob.suivre(ev);
+  check(ev.suivi.victoires === 1 && Ob.etapes(ev, 'puissance')[2].faite, 'étape : une guerre gagnée');
+  const ea = Tour.tourSuivant(e0, [{ type: 'ambition', id: 'autorite' }]);
+  check(Ob.etapes(ea).length === 3 && Ob.etapes(ea)[0].texte === OD.ETAPES.autorite[0].texte, 'étapes : celles de l\'ambition par défaut');
+}
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

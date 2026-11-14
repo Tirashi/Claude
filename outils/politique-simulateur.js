@@ -96,7 +96,7 @@ function partie(nom, graine, tours, coupe){
     if (coupe != null) traces.push(JSON.stringify(e));
   }
   m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = Diplo.reputation(e); m.tresorFin = e.tresor;
-  m.objectifs = Ob.mesures(e); m.medailles = Ob.medailles(e); m.ambition = e.ambition;
+  m.objectifs = Ob.mesures(e); m.medailles = Ob.medailles(e); m.ambition = e.ambition; m.etapes = e.suivi.etapes;
   return coupe != null ? { m, traces } : m;
 }
 
@@ -233,6 +233,14 @@ function objectifs(parties){
   console.log('\nSi chaque bot avait visé un autre objectif : médaille moyenne (0 à 3) par objectif');
   console.log('bot'.padEnd(15) + ids.map(id => id.slice(0, 11).padEnd(12)).join(''));
   for (const nom of noms) console.log(nom.padEnd(15) + ids.map(id => (parties[nom].reduce((t, m) => t + medaille(m, id), 0) / parties[nom].length).toFixed(2).padEnd(12)).join(''));
+  // étapes de l'ambition : part des parties où chacune est atteinte, et tour médian (ni gratuites, ni hors d'atteinte)
+  console.log("\nÉtapes de l'ambition : % des parties où elle est atteinte (tour médian)");
+  for (const nom of noms){
+    const ms = parties[nom].filter(m => m.ambition); if (!ms.length) continue;
+    const amb = ms[0].ambition;
+    console.log(nom.padEnd(15) + amb.padEnd(14) + OD.ETAPES[amb].map((et, i) => { const ts = ms.map(m => (m.etapes[m.ambition] || [])[i]).filter(t => t != null);
+      return `${et.id} ${Math.round(100 * ts.length / ms.length)} % (t${ts.length ? centile(ts, 0.5) : '-'})`.padEnd(30); }).join(''));
+  }
   return seuils;
 }
 

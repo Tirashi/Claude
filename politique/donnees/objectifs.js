@@ -19,7 +19,31 @@ const OBJECTIFS = {
   autorite: { nom: "Autorité", texte: "Soutien des factions puissantes aux lois en vigueur : pour chaque loi en vigueur, puissance des factions pour moins puissance des factions contre ; moyenne par loi, puis moyenne sur la partie.",
     seuils: { equilibre: [34, 53, 54], agricole: [47, 50, 51], industriel: [30, 35, 39], marchand: [29, 55, 56], militaire: [36, 50, 52] } }
 };
+// étapes (option 3, validées le 14/11 ; durcies après simulation : plusieurs étaient atteintes dès le départ) : trois repères par ambition, affichés et cochés pendant la partie (une fois
+// atteints, ils restent cochés) ; ils guident sans rapporter de points. Le moteur les vérifie par leur id (moteur/objectifs.js).
+const ETAPES = {
+  prosperite: [
+    { id: "batiments", texte: "Avoir 12 bâtiments en service.", valeur: 12 },
+    { id: "regions_pleines", texte: "Remplir tous les emplacements de toutes les régions." },
+    { id: "tresor", texte: "Avoir 3 000 or au trésor.", valeur: 3000 }],
+  contentement: [
+    { id: "colere_moyenne", texte: "Faire descendre la colère moyenne des factions sous 20.", valeur: 20 },
+    { id: "sans_grondement", texte: "Tenir 15 tours de suite sans qu'aucune faction dépasse 45 de colère.", valeur: 15, seuil: 45 },
+    { id: "toutes_calmes", texte: "Avoir toutes les factions sous 30 de colère en même temps.", valeur: 30 }],
+  puissance: [
+    { id: "regiments", texte: "Avoir 10 régiments.", valeur: 10 },
+    { id: "fort", texte: "Construire un fort." },
+    { id: "victoire", texte: "Gagner une guerre ou prendre une région." }],
+  concorde: [
+    { id: "traite", texte: "Signer un traité." },
+    { id: "ami", texte: "Atteindre 50 de relation avec une nation.", valeur: 50 },
+    { id: "relations", texte: "Avoir des relations à +30 en moyenne.", valeur: 30 }],
+  autorite: [
+    { id: "lois", texte: "Avoir 3 lois en vigueur.", valeur: 3 },
+    { id: "soutien", texte: "Avoir au moins 5 lois en vigueur, chacune avec plus de soutien que d'opposition.", valeur: 5 },
+    { id: "legitimite", texte: "Avoir au moins 5 lois en vigueur avec, en moyenne, 40 de soutien net (puissance des factions pour moins contre).", valeur: 40, lois: 5 }]
+};
 const MEDAILLES = ["bronze", "argent", "or"];   // 1, 2 et 3 points
-const R = { OBJECTIFS, MEDAILLES, pointsTraite: 10, pointsRegion: 10 };
+const R = { OBJECTIFS, ETAPES, MEDAILLES, pointsTraite: 10, pointsRegion: 10 };
 if (typeof module !== "undefined" && module.exports) module.exports = R; else (racine.Politique = racine.Politique || {}).OBJECTIFS = R;
 })(typeof window !== "undefined" ? window : globalThis);

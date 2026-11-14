@@ -83,7 +83,7 @@ function creerEtat(scenario, graine, pays){
     nonRearmement: {},                // camp ("joueur" ou nation) → dernier tour de la clause
     treves: {},                       // nation → dernier tour de la trêve avec le joueur
     ambition: null,                   // objectif de victoire choisi au tour 1 (moteur/objectifs.js)
-    suivi: { tours: 0, colere: 0, legitimite: 0 },   // cumuls des objectifs de victoire
+    suivi: { tours: 0, colere: 0, legitimite: 0, greves: 0, serieSansGreve: 0, serieSansGrondement: 0, victoires: 0, etapes: {} },   // cumuls des objectifs et des étapes
     fin: false,
     issue: null,                      // fin de partie : { type: "fin" } ou { type: "revolution", faction }
     journal: []                       // messages du tour, pour l'écran et les rapports
