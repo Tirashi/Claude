@@ -21,6 +21,7 @@ const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const Guerre = NODE ? require("./guerre.js") : racine.Politique.Guerre;
 const Evenements = NODE ? require("./evenements.js") : racine.Politique.Evenements;
+const Objectifs = NODE ? require("./objectifs.js") : racine.Politique.Objectifs;
 
 function actionsDisponibles(etat){
   if (etat.fin) return [];
@@ -72,6 +73,7 @@ function tourSuivant(etat, actions, rng){
   Diplomatie.tour(e);
   Guerre.tour(e, r);
   Factions.finDeTour(e);
+  Objectifs.suivre(e);              // objectifs de victoire : colère moyenne, tours calmes
   Batiments.avancer(e);
   Evenements.tirer(e, r);           // fin de tour : peut-être une carte (réponse au tour suivant)
   e.alea = r.s >>> 0;

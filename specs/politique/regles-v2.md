@@ -68,6 +68,11 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Personas cachés**, tirés au hasard pour chaque dirigeant : belliqueux, marchand, opportuniste, isolationniste, revanchard, idéaliste, prudent. Chacun règle : seuil de déclaration de guerre, relation minimale pour un traité ou un contrat, ralliement à une guerre, recrutement, réaction à un embargo.
 - **Relations** (réputation fusionnée) : une seule jauge par nation. Les actions qui touchaient la réputation touchent toutes les relations à la moitié de leur effet (ex. agression : −100 avec la cible, −10 avec les autres).
 
+### 6. Objectifs de victoire (14/11)
+- Cinq objectifs mesurés à la fin de la partie (tour 40), chacun avec trois paliers : bronze (1 point), argent (2), or (3). Une révolution = défaite, aucune médaille.
+- **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Puissance** : 10 par région tenue (non occupée) + 1 par régiment. **Concorde** : moyenne des relations + 10 par traité en cours. **Ordre** : part des tours où toutes les factions sont calmes.
+- Seuils fixés par simulation (`--objectifs`) : l'or atteint par environ 10 à 15 % des parties d'un bot qui vise l'objectif, le bronze par environ la moitié. **Seuils et définitions encore en discussion.**
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

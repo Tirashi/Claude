@@ -66,6 +66,7 @@ function creerEtat(scenario, graine){
     occupations: {},                  // région → occupant (pendant une guerre)
     nonRearmement: {},                // camp ("joueur" ou nation) → dernier tour de la clause
     treves: {},                       // nation → dernier tour de la trêve avec le joueur
+    suivi: { tours: 0, colere: 0, calmes: 0 },   // objectifs de victoire (moteur/objectifs.js)
     fin: false,
     issue: null,                      // fin de partie : { type: "fin" } ou { type: "revolution", faction }
     journal: []                       // messages du tour, pour l'écran et les rapports

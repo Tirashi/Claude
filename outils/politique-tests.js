@@ -761,14 +761,14 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const LM = P('moteur/lois.js'), GU = P('moteur/guerre.js'), Bm = P('moteur/batiments.js');
   const avec = (ids, mod) => { const e = Object.assign(vrai({ evenements: [] }), mod || {}); for (const id of ids) e.lois[LOIS[id].categorie] = { id, depuis: 1 }; return e; };
   const b0 = Economie.bilan(avec([]));
-  check(Economie.bilan(avec(['impot_minimal'])).impots === 64, 'impôt minimal : impôts ×0,8');
+  check(Economie.bilan(avec(['impot_minimal'])).impots === 68, 'impôt minimal : impôts ×0,85');
   const co = Economie.bilan(avec(['collectivisation']));
-  check(co.production.grain === 115 && co.entretiens === 19 * 1.5 + 9, 'collectivisation : production +15 %, entretien des bâtiments ×1,5');
+  check(co.production.grain === 115 && co.entretiens === 19 * 2 + 9, 'collectivisation : production +15 %, entretien des bâtiments ×2');
   const ad = avec([]); LM.adopter(ad, 'collectivisation');
   check(Object.values(ad.nations).every((x, i) => x.relation === Object.values(vrai().nations)[i].relation - 10) && ad.factions.patrons.puissance === 25, 'collectivisation : relations −10 avec toutes, patrons −20 de puissance');
   check(Bm.cout('farm', avec(['interventionnisme'])) === 48 && Bm.cout('farm', avec(['laisser_faire'])) === 45 && Bm.cout('farm', avec([])) === 60, 'interventionnisme : construire −20 % ; laisser-faire −25 %');
   const le = avec(['libre_entreprise'], { batiments: { farm: 4, mine: 1, caserne: 1 } });
-  check(Economie.bilan(le).entretiens === 9 && Math.abs(Economie.bilan(le).ventes - b0.ventes * 0.75) < 0.01, 'libre entreprise : plus d\'entretien des bâtiments (les régiments restent), l\'État touche 75 % des ventes');
+  check(Economie.bilan(le).entretiens === 9 && Math.abs(Economie.bilan(le).ventes - b0.ventes * 0.85) < 0.01, 'libre entreprise : plus d\'entretien des bâtiments (les régiments restent), l\'État touche 85 % des ventes');
   check(Math.abs(Economie.bilan(avec(['laisser_faire'])).ventes - b0.ventes * 0.6) < 0.01, 'laisser-faire : l\'État touche 60 % des ventes');
   const te = Economie.bilan(Object.assign(avec(['travail_enfants']), { tour: 11 }));
   check(te.production.grain === 110 && proche(te.croissance, 0.005), 'travail des enfants : production +10 %, croissance −0,5 %');
@@ -792,6 +792,30 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(si.factions.ouvriers.puissance === p0 - 20, 'syndicats interdits : ouvriers −2 de puissance par tour pendant 10 tours');
   let lb = avec([]); LM.adopter(lb, 'libre_entreprise'); lb = tours(lb, 12);
   check(lb.factions.patrons.puissance === CHAMPS.joueur.factions.patrons.puissance + 30, 'libre entreprise : patrons +3 de puissance par tour pendant 10 tours');
+}
+
+// --- V2 : objectifs de victoire (regles-v2.md § 6) ---
+{
+  const Ob = P('moteur/objectifs.js'), OD = P('donnees/objectifs.js'), Dp = P('moteur/diplomatie.js');
+  const e0 = Etat.creerEtat(CHAMPS, 7);
+  check(e0.suivi.tours === 0 && Ob.mesures(e0).contentement === 100 && Ob.mesures(e0).ordre === 100, 'objectifs : rien de cumulé au départ');
+  const m0 = Ob.mesures(e0), val = Object.keys(e0.batiments).reduce((t, id) => t + e0.batiments[id] * BAT[id].cout, 0);
+  check(m0.prosperite === Math.round(e0.tresor + val), 'prospérité : trésor + coût des bâtiments en service');
+  check(m0.puissance === 4 * 10 + e0.regiments, 'puissance : 10 par région tenue + 1 par régiment');
+  check(m0.concorde === Math.round(Dp.reputation(e0)), 'concorde : moyenne des relations (+10 par traité)');
+  const e1 = Tour.tourSuivant(e0, []);
+  const moy = Object.values(e1.factions).reduce((t, x) => t + x.colere, 0) / Object.keys(e1.factions).length;
+  check(e1.suivi.tours === 1 && proche(e1.suivi.colere, moy) && Ob.mesures(e1).contentement === Math.round(100 - moy), 'contentement : 100 − colère moyenne des factions, cumulée chaque tour');
+  const eg = Etat.copie(e1); eg.factions.ouvriers.statut = 'greve'; Ob.suivre(eg);
+  check(eg.suivi.calmes === e1.suivi.calmes && Ob.mesures(eg).ordre === 50, 'ordre : un tour avec une faction qui gronde ou fait grève n\'est pas un tour calme');
+  const eo = Etat.copie(e1); eo.occupations = { plaine: 'valroc' };
+  check(Ob.mesures(eo).puissance === m0.puissance - 10, 'puissance : une région occupée ne compte pas');
+  const SE = JSON.parse(JSON.stringify(OD.OBJECTIFS));
+  OD.OBJECTIFS.ordre.seuils = [50, 80, 100]; OD.OBJECTIFS.prosperite.seuils = [1e9, 2e9, 3e9];
+  check(Ob.medailles(e1).ordre === 3 && Ob.medailles(e1).prosperite === 0 && Ob.medailles(eg).ordre === 1, 'médailles : bronze, argent, or selon les seuils');
+  const er = Etat.copie(e1); er.issue = { type: 'revolution', faction: 'ouvriers' };
+  check(Ob.points(er) === 0, 'révolution : aucune médaille');
+  for (const id in SE) OD.OBJECTIFS[id].seuils = SE[id].seuils;
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

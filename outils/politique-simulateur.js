@@ -1,6 +1,6 @@
 /* Politique : simulateur en lot (M4, M5 ; specs/politique/plan-simulateur.md).
    node outils/politique-simulateur.js [--parties 200] [--bot nom,nom|tous] [--tours 60] [--graine 1] [--json fichier]
-        [--regle chemin=valeur]... [--balayage chemin=v1,v2,v3] [--controle]
+        [--regle chemin=valeur]... [--balayage chemin=v1,v2,v3] [--controle] [--objectifs]
    Joue des parties complètes avec les bots de politique-bots.js (graine de la partie n = graine + n : tous les bots
    jouent les mêmes graines), relève des métriques par partie, affiche un résumé par bot et la stratégie dominante.
    --regle : change une valeur des données pour ce lancement (chemin = fichier de donnees/ puis clés, ex.
@@ -11,7 +11,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const P = f => require(path.join(__dirname, '..', 'politique', f));
-const Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Diplo = P('moteur/diplomatie.js');
+const Etat = P('moteur/etat.js'), Tour = P('moteur/tour.js'), Diplo = P('moteur/diplomatie.js'), Ob = P('moteur/objectifs.js'), OD = P('donnees/objectifs.js');
 const CHAMPS = P('donnees/champs.js'), { LOIS } = P('donnees/lois.js');
 const Bots = require('./politique-bots.js');
 
@@ -93,6 +93,7 @@ function partie(nom, graine, tours, coupe){
     if (coupe != null) traces.push(JSON.stringify(e));
   }
   m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = Diplo.reputation(e); m.tresorFin = e.tresor;
+  m.objectifs = Ob.mesures(e); m.medailles = Ob.medailles(e);
   return coupe != null ? { m, traces } : m;
 }
 
@@ -192,6 +193,35 @@ function controle(){
   process.exit(fail ? 1 : 0);
 }
 
+
+// objectifs de victoire (--objectifs) : mesures de chaque bot, et seuils proposés : pour chaque objectif, le bot qui le
+// réussit le mieux (médiane la plus haute) sert de référence : bronze = sa médiane (la moitié l'atteint),
+// argent = son 75e centile, or = son 87e centile (environ 13 % l'atteignent) ; puis médailles de chaque bot avec ces seuils
+const centile = (xs, p) => { const t = xs.slice().sort((a, b) => a - b); return t.length ? t[Math.min(t.length - 1, Math.floor(p * t.length))] : null; };
+function objectifs(parties){
+  const ids = Object.keys(OD.OBJECTIFS), noms = Object.keys(parties), seuils = {};
+  const vals = (nom, id) => parties[nom].filter(m => m.issue !== 'revolution').map(m => m.objectifs[id]);
+  console.log('\nObjectifs de victoire : médiane (75e et 87e centiles) par bot ; une révolution ne compte pas');
+  console.log('bot'.padEnd(15) + ids.map(id => id.padEnd(20)).join(''));
+  for (const nom of noms) console.log(nom.padEnd(15) + ids.map(id => `${centile(vals(nom, id), 0.5)} (${centile(vals(nom, id), 0.75)}, ${centile(vals(nom, id), 0.87)})`.padEnd(20)).join(''));
+  for (const id of ids){
+    const ref = noms.reduce((a, b) => centile(vals(b, id), 0.5) > centile(vals(a, id), 0.5) ? b : a);
+    seuils[id] = { ref, seuils: [0.5, 0.75, 0.87].map(p => centile(vals(ref, id), p)), actuels: OD.OBJECTIFS[id].seuils };
+  }
+  console.log('\nSeuils proposés (bronze, argent, or ; bot de référence) :');
+  for (const id of ids) console.log(`  ${OD.OBJECTIFS[id].nom.padEnd(13)} ${seuils[id].seuils.join(' / ').padEnd(18)} (${seuils[id].ref}) ; actuels ${JSON.stringify(seuils[id].actuels)}`);
+  const medaille = (m, id) => m.issue === 'revolution' ? 0 : seuils[id].seuils.filter(x => m.objectifs[id] >= x).length;
+  console.log('\nAvec ces seuils : médailles moyennes par partie (bronze 1, argent 2, or 3 ; 15 au plus) et part des parties avec au moins un or');
+  console.log('bot'.padEnd(15) + ids.map(id => id.slice(0, 11).padEnd(12)).join('') + 'total   un or');
+  for (const nom of noms){
+    const ms = parties[nom], moy = id => ms.reduce((t, m) => t + medaille(m, id), 0) / ms.length;
+    const tot = ms.reduce((t, m) => t + ids.reduce((u, id) => u + medaille(m, id), 0), 0) / ms.length;
+    const unOr = ms.filter(m => ids.some(id => medaille(m, id) === 3)).length / ms.length;
+    console.log(nom.padEnd(15) + ids.map(id => moy(id).toFixed(2).padEnd(12)).join('') + tot.toFixed(2).padEnd(8) + Math.round(unOr * 100) + ' %');
+  }
+  return seuils;
+}
+
 if (require.main === module){
   if (process.argv.includes('--controle')) controle();
   const N = Number(arg('parties', 200)), G = Number(arg('graine', 1)), T = arg('tours') ? Number(arg('tours')) : null;
@@ -224,6 +254,7 @@ if (require.main === module){
       if (nom === 'replica') console.log(`  non-régression (partie 1 au tour 30 : 3214 or, réputation +42) : ${r0(resumes[nom].tresor[30])} or, ${r0(resumes[nom].reputation30)}`);
     }
     if (noms.length > 1) afficherDominance(dominance(parties));
+    if (process.argv.includes('--objectifs')) objectifs(parties);
     const f = arg('json');
     if (f){ fs.writeFileSync(f, JSON.stringify({ parametres: { parties: N, graine: G, tours: T || CHAMPS.tours, bots: noms, reglages }, resumes, parties })); console.log('\nDétail écrit dans ' + f); }
   }
