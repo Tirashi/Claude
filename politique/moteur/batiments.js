@@ -8,10 +8,12 @@ const NODE = typeof module !== "undefined" && module.exports;
 const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
 const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAINS;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
+const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
 
 const arrondi = x => Math.round(x * 100) / 100;
 // part payée par le joueur (bâtiment cofinancé par un traité)
-const cout = id => BAT[id].cout * (BAT[id].partJoueur || 1);
+// lois : interventionnisme, laisser-faire (coût des bâtiments) ; sans état : le prix de base
+const cout = (id, e) => Math.round(BAT[id].cout * (BAT[id].partJoueur || 1) * (e ? Lois.effets(e).construction : 1) * 100) / 100;
 const prendPlace = id => BAT[id].emplacement !== false;
 // bonus de terrain d'un bâtiment dans une région
 const bonus = (e, r, id) => TERRAINS[e.regions[r].terrain].bonus[id] || 1;
@@ -29,7 +31,7 @@ function constructibles(e){
   const r = [];
   for (const id in BAT){
     const b = BAT[id];
-    if (b.jalon || (b.traite && !Diplomatie.aTraite(e, b.traite)) || e.tresor < cout(id)) continue;
+    if (b.jalon || (b.traite && !Diplomatie.aTraite(e, b.traite)) || e.tresor < cout(id, e)) continue;
     for (const reg in e.regions){
       if (enChantier(e, reg) || (e.occupations || {})[reg]) continue;                       // V2 étape 2 : pas de chantier en région occupée
       if (b.unique && (e.regions[reg].batiments[id] || 0) > 0) continue;                    // un fort par région
@@ -40,9 +42,10 @@ function constructibles(e){
 }
 
 function commander(e, id, region){
-  e.tresor = arrondi(e.tresor - cout(id));
+  const prix = cout(id, e);
+  e.tresor = arrondi(e.tresor - prix);
   e.chantiers.push({ id, region, restant: BAT[id].delai });
-  e.journal.push(`Chantier commandé : ${BAT[id].nom} (${e.regions[region].nom}, ${cout(id)} or).`);
+  e.journal.push(`Chantier commandé : ${BAT[id].nom} (${e.regions[region].nom}, ${prix} or).`);
 }
 
 // fin du tour : chaque chantier avance d'un tour ; un bâtiment fini produit dès le tour suivant

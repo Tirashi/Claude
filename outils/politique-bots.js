@@ -116,6 +116,21 @@ function construire(p, choix, reserve){
   }
 }
 
+// un bot à programme : comme economy, avec sa liste de lois
+function programme(lois){
+  return e => {
+    const p = plan(e);
+    guerre(p, { seuilBataille: 0.6 });
+    apaiser(p, 55);
+    loiSuivante(p, lois);
+    armee(p, 1, 50);
+    construire(p, avecCaserne(batimentUtile), 0);
+    fiscalite(p);
+    evenement(p);
+    return p.acts;
+  };
+}
+
 // --- les bots ---
 const BOTS = {
   // ne fait rien (référence)
@@ -192,6 +207,12 @@ const BOTS = {
     };
   },
 
+  // programmes politiques (panel du 14/11) : même gestion qu'economy, lois du camp dans l'ordre
+  gauche: () => programme(['income_progressive', 'school_public', 'securite_sociale', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional']),
+  droite: () => programme(['impot_minimal', 'libre_entreprise', 'ecoles_religieuses', 'police_etat', 'suffrage_census', 'syndicats_interdits', 'army_conscription', 'libre_echange', 'charite_privee']),
+  extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'journee_huit_heures']),
+  extreme_droite: () => programme(['laisser_faire', 'parti_unique', 'syndicats_interdits', 'police_etat', 'travail_enfants', 'army_conscription', 'impot_minimal', 'ecoles_religieuses', 'libre_echange']),
+
   // rejoue la trajectoire de la partie 1 (RULES_V1 § Trajectoire) : chaque étape est tentée à partir de son tour
   // jusqu'à ce qu'elle passe ; guerre gagnée par l'usure (embargo, pas de bataille), pas de paix blanche
   replica: () => {
@@ -199,7 +220,7 @@ const BOTS = {
       [1, { type: 'contrat', id: 'brume_tissu' }], [2, { type: 'construire', id: 'farm' }],
       [3, { type: 'loi', id: 'income_progressive' }], [4, { type: 'construire', id: 'mine' }],
       [5, { type: 'loi', id: 'school_public' }], [6, { type: 'construire', id: 'workshop' }],
-      [7, { type: 'loi', id: 'labor_code' }], [8, { type: 'don', id: 'brume', montant: 50 }],
+      [7, { type: 'loi', id: 'journee_huit_heures' }], [8, { type: 'don', id: 'brume', montant: 50 }],
       [9, { type: 'construire', id: 'farm' }], [10, { type: 'traite', id: 'entente', avec: 'brume' }],
       [11, { type: 'loi', id: 'unions' }], [11, { type: 'don', id: 'contreforts', montant: 50 }],
       [12, { type: 'don', id: 'contreforts', montant: 50 }], [12, { type: 'traite', id: 'filature', avec: 'brume' }],

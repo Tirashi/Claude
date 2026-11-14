@@ -125,6 +125,21 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 18. Panel de lois (14/11)
+Décisions de l'utilisateur : retirer les lois inutiles ou en double (code du travail) ; un panel de l'extrême gauche à l'extrême droite, petits bonus ou gros bonus avec malus ; **les deux crans** libre entreprise / laisser-faire ; chaque loi expliquée au joueur en phrases simples, dans un **mini-wiki** consultable pendant la partie (tour par tour : le joueur a le temps de lire).
+Fait : `donnees/lois.js` réécrit : **27 lois en 10 catégories** (fiscalité, système économique, travail, santé et solidarité, éducation, relations sociales, libertés publiques, ordre public, armée, commerce), chacune avec son `bord`, ses factions pour et contre et son `texte` (les phrases du joueur, source du mini-wiki). Moteur : nouveaux effets de loi (entretien des bâtiments, part des ventes, coût de construction, prix d'achat, pente du marché, plafond et prix des régiments, chance de débat, relations à l'adoption, bonus des artisans immédiat). Bots `gauche`, `droite`, `extreme_gauche`, `extreme_droite` (même gestion qu'economy, programme de lois du camp). 293 tests.
+
+**Résultat (200 parties par bot)** :
+
+| Programme | Fins | Or t40 | Grève dans | Faillite |
+|---|---|---|---|---|
+| extrême gauche | fin 100 % | 3 449 | 82 % | 0 % |
+| gauche | fin 100 % | 2 501 | 4 % | 3 % |
+| extrême droite | fin 99 % | 2 412 | 5 % | 2 % |
+| droite | fin 96 % | 2 048 | 9 % | 14 % |
+
+Confrontations : extrême gauche bat gauche 91 %, droite 95 %, extrême droite 92 % ; gauche bat droite 76 % ; extrême droite et gauche à égalité (49/51). Aucune stratégie dominante au total (economy, qui vote peu de lois, reste devant : le classement se fait à l'or, qui favorise les programmes économes). Déséquilibre à corriger : la collectivisation (+15 % de production) porte l'extrême gauche ; la droite perd de l'or (impôt minimal −20 %, libre entreprise : 75 % des ventes) sans contrepartie suffisante.
+
 ## 17. Paquet d'événements (14/11)
 Décisions de l'utilisateur : une chance sur six par tour (à partir du tour 5) ; **pas de cartes « saturation » ni « pénurie »** (l'économie doit rester lisible : pas de pénurie de grain quand on en a). Fait : `donnees/evenements.js` (12 cartes : sécheresse, bonne récolte, épidémie, scandale, grève sauvage, filon découvert, réfugiés, incident de frontière, ambassadeur, inventeur, mutinerie, changement de dirigeant), `moteur/evenements.js` (paquet mélangé au hasard à graine, sans retour avant épuisement ; carte à condition passée si la condition manque ; carte tirée en fin de tour, réponse au tour suivant ; sans réponse, la réponse gratuite). Bots : réponse payante s'ils ont 3 fois son prix. 275 tests.
 

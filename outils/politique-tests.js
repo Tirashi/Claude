@@ -136,15 +136,15 @@ const proche = (a, b) => Math.abs(a - b) < 1e-6;
   const fam3 = e.familles;
   e = Tour.tourSuivant(e, []);
   check(e.lois.impot && e.lois.impot.id === 'income_progressive' && e.lois.impot.depuis === 3 && !e.debat, 'lois : en vigueur au tour 3 (débat sans hasard : 2 tours, le délai de la V1)');
-  check(proche(e.bilan.impots, Math.round(fam3 * 1.35 * 100) / 100), 'lois : ses effets jouent dès le tour d\'adoption');
+  check(proche(e.bilan.impots, Math.round(fam3 * 1.3 * 100) / 100), 'lois : ses effets jouent dès le tour d\'adoption');
   check(refuse(() => Tour.tourSuivant(neuf(), [{ type: 'loi', id: 'income_progressive' }, { type: 'loi', id: 'unions' }])), 'lois : une seule loi en débat à la fois (V2)');
   let g = neuf();
   g = tours(g, 3, [{ type: 'loi', id: 'school_public' }]);
   check(!Tour.actionsDisponibles(g).some(a => a.id === 'school_public'), 'lois : une loi en vigueur ne se relance pas');
   g = tours(g, 3, [{ type: 'loi', id: 'school_free' }]);
   check(g.lois.education.id === 'school_free' && Object.keys(g.lois).length === 1, 'lois : adopter une loi remplace celle de sa catégorie');
-  check(Object.values(CATEGORIES).length === 7 && Object.values(LOIS).every(l => CATEGORIES[l.categorie]), 'lois : 7 catégories, chaque loi dans l\'une d\'elles');
-  check(Object.keys(LOIS).length === 11, 'lois : les 11 lois de RULES_V1');
+  check(Object.values(CATEGORIES).length === 10 && Object.values(LOIS).every(l => CATEGORIES[l.categorie]), 'lois : 10 catégories (panel du 14/11), chaque loi dans l\'une d\'elles');
+  check(Object.keys(LOIS).length === 27 && !LOIS.labor_code && Object.values(LOIS).every(l => l.bord && l.texte.length > 0), 'lois : les 27 lois du panel (sans code du travail), chacune avec son bord et ses phrases pour le joueur');
   const h = tours(neuf(), 3, [{ type: 'loi', id: 'suffrage_universal' }]);
   const k = tours(neuf(), 3, [{ type: 'loi', id: 'suffrage_census' }]);
   check(h.reputation === 5 && k.reputation === -5, 'lois : suffrage universel +5 de réputation, censitaire −5');
@@ -162,16 +162,16 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(proche(e1.tresor, 226.5), 'économie : trésor += ventes − achats + impôts − entretiens');
   const e6 = tours(neuf(), 5), e7 = tours(neuf(), 6);
   check(Economie.bilan(e6).prix.tissu === 3 && Economie.bilan(e7).prix.tissu === 2, 'économie : la crise du tissu dure 6 tours (prix normal au tour 7)');
-  check(proche(Economie.bilan(avecLois(['income_progressive'])).impots, 108) && proche(Economie.bilan(avecLois(['income_capital'])).impots, 124), 'économie : impôts = familles × 1 × multiplicateur (×1,35 ; ×1,55)');
+  check(proche(Economie.bilan(avecLois(['income_progressive'])).impots, 104) && proche(Economie.bilan(avecLois(['income_capital'])).impots, 124), 'économie : impôts = familles × 1 × multiplicateur (progressif ×1,3 ; capital ×1,55)');
   check(Economie.bilan(avecLois(['school_public', 'labor_medicine', 'army_professional'])).entretiens === 36 && Economie.bilan(avecLois(['school_free', 'army_conscription'])).entretiens === 32, 'économie : entretiens des lois (école 14 / 20, médecine 10, armée 12)');
-  check(proche(Economie.bilan(avecLois(['labor_code'])).production.grain, 75.2), 'économie : code du travail, production −6 %');
+  check(proche(Economie.bilan(avecLois(['journee_huit_heures'])).production.grain, 73.6), 'économie : journée de huit heures, production −8 %');
   check(proche(Tour.tourSuivant(neuf(), []).familles, 80.8), 'démographie : +1 % de familles par tour');
   check(Tour.tourSuivant(neuf({ familles: 199.5 }), []).familles === 200, 'démographie : plafond de 200 familles');
   const ecole = (depuis) => { const e = avecLois(['school_public'], depuis); e.tour = 11; return Economie.bilan(e).croissance; };
   check(proche(ecole(11), 0.01) && proche(ecole(6), 0.0125) && proche(ecole(1), 0.015) && proche(ecole(-5), 0.015), 'démographie : école publique +0,5 %, montée en 10 tours');
   const art = (ids, depuis) => { const e = avecLois(ids, depuis, { batiments: { workshop: 1 } }); e.tour = 11; return Economie.bilan(e).production.outils; };
   check(art([], 1) === 10 && proche(art(['school_public'], 6), 11.75) && proche(art(['school_public'], 1), 13.5) && proche(art(['school_free'], 1), 15), 'économie : artisans +35 % / +50 % à terme sur l\'atelier');
-  check(proche(art(['school_free', 'labor_code'], 1), 14.1), 'économie : bonus des artisans et code du travail se multiplient');
+  check(proche(art(['school_free', 'journee_huit_heures'], 1), 13.8), 'économie : bonus des artisans et journée de huit heures se multiplient');
   check(Economie.bilan(neuf({ batiments: { workshop: 2 } })).consommation.fer === 14, 'économie : un atelier consomme 5 fer');
   const d = Tour.tourSuivant(avecLois(['school_free', 'labor_medicine', 'army_professional'], 1, { tresor: 0, familles: 10, batiments: {} }), []);
   check(d.tresor < 0 && !d.fin && !Tour.actionsDisponibles(d).some(a => a.type === 'construire'), 'économie : le trésor peut passer sous zéro, on ne peut plus rien construire');
@@ -269,8 +269,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(fac(e, 'paysans').colere === 29 && fac(e, 'patrons').colere === 19, 'factions : la colère se dissipe de 1 par tour');
   e = tours(neuf(), 40);
   check(Object.values(e.factions).every(x => x.colere === 0), 'factions : la colère ne descend pas sous 0');
-  e = un(['labor_code']);
-  check(fac(e, 'ouvriers').colere === 33 && fac(e, 'paysans').colere === 29, 'code du travail : la colère ouvrière se dissipe 2× plus vite');
+  e = un(['journee_huit_heures']);
+  check(fac(e, 'ouvriers').colere === 32 && fac(e, 'paysans').colere === 29, 'journée de huit heures : les ouvriers −2 de colère par tour');
   e = un(['labor_medicine']);
   check(['paysans', 'ouvriers', 'artisans', 'patrons'].every(f => fac(e, f).colere === CHAMPS.joueur.factions[f].colere - 3), 'médecine du travail : −2 colère par tour pour toutes les factions');
   e = un(['unions']);
@@ -285,7 +285,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
     for (const f in x.factions) for (const j of ['colere', 'puissance'])
       if (x.factions[f][j] !== Math.max(0, Math.min(100, avant[f][j] + ((c[f] || {})[j] || 0)))) ok = false;
   }
-  check(ok, 'chocs de lois : conformes aux données pour les 11 lois');
+  check(ok, 'chocs de lois : conformes aux données pour toutes les lois');
   const adop = tours(neuf(), 3, [{ type: 'loi', id: 'income_progressive' }]);
   check(fac(adop, 'patrons').colere === 20 - 3 + 5, 'chocs de lois : appliqués au tour de l\'adoption (impôt progressif, patrons +5)');
   const choc = (enVigueur, id) => { const x = avecLois(enVigueur); FA.choc(x, id); return x; };
@@ -610,8 +610,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(egal(t1.niveauDeVie, { paysans: 1, ouvriers: 0.5, artisans: 0, patrons: 0.5 }), 'niveau de vie : couverture du panier de chaque faction (paysans : grain ; ouvriers : grain, outils ; artisans : tissu, outils ; patrons : tissu, fer)');
   const c0 = CHAMPS.joueur.factions;
   check(t1.factions.paysans.colere === c0.paysans.colere - 2 && t1.factions.artisans.colere === c0.artisans.colere + 2 && t1.factions.ouvriers.colere === c0.ouvriers.colere && t1.factions.patrons.colere === c0.patrons.colere, 'niveau de vie : panier couvert −2 par tour, moins de la moitié +2, entre les deux rien');
-  const lc = Tour.tourSuivant(Object.assign(vrai({ evenements: [] }), { lois: { reglementation: { id: 'labor_code', depuis: 1 } }, regions: { essai: { nom: 'Essai', terrain: 'mixte', emplacements: 99, batiments: { farm: 5, workshop: 1, mine: 1 } } }, batiments: { farm: 5, workshop: 1, mine: 1 } }), []);
-  check(lc.niveauDeVie.ouvriers === 1 && lc.factions.ouvriers.colere === c0.ouvriers.colere - 4, 'niveau de vie : le code du travail double l\'aise des ouvriers (−4)');
+  const lc = Tour.tourSuivant(Object.assign(vrai({ evenements: [] }), { lois: { travail: { id: 'journee_huit_heures', depuis: 1 } }, regions: { essai: { nom: 'Essai', terrain: 'mixte', emplacements: 99, batiments: { farm: 5, workshop: 1, mine: 1 } } }, batiments: { farm: 5, workshop: 1, mine: 1 } }), []);
+  check(lc.niveauDeVie.ouvriers === 1 && lc.factions.ouvriers.colere === c0.ouvriers.colere - 4, 'niveau de vie : panier couvert −2, plus −2 avec la journée de huit heures (−4)');
   const su = Tour.tourSuivant(Object.assign(vrai({ evenements: [] }), { lois: { libertes: { id: 'suffrage_census', depuis: 1 } } }), []);
   check(su.factions.artisans.colere === c0.artisans.colere + 1, 'niveau de vie : la gêne d\'une faction favorisée par le suffrage monte 2× moins vite');
   const occ = Tour.tourSuivant(vrai({ evenements: [], occupations: { plaine: 'val_roc', vallee: 'val_roc' } }), []);
@@ -624,7 +624,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   Object.assign(RLV, JSON.parse(JSON.stringify(RLV0)));
   const LM = P('moteur/lois.js');
   const e0 = vrai({ evenements: [] });
-  check(LM.lancables(e0).length === 11 && e0.cp === undefined, 'lois : plus de capital politique, toutes les lois se lancent dès le tour 1');
+  check(LM.lancables(e0).length === 27 && e0.cp === undefined, 'lois : plus de capital politique, toutes les lois se lancent dès le tour 1');
   check(LM.chance(e0, 'income_progressive') === 0.6 && LM.chance(e0, 'income_capital') === 0.25 && LM.chance(e0, 'school_public') === 0.775, 'débat : chance = 50 % + (puissance des pour − des contre) / 2 (progressif 60 %, capital 25 %, école 77,5 %)');
   const fort = vrai(); fort.factions.patrons.puissance = 100; fort.factions.artisans.puissance = 100;
   const faible = vrai(); for (const f in faible.factions) faible.factions[f].puissance = 100; faible.factions.patrons.puissance = 0;
@@ -754,6 +754,44 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
     while (!e.fin) { const d = Tour.actionsDisponibles(e); const a = d.length && Alea.suivant(r) < 0.5 ? [Alea.choisir(r, d)] : []; e = Tour.tourSuivant(e, a);
       if (Object.values(e.factions).some(x => x.statut !== FAm.statutDe(x) || x.colere < 0 || x.colere > 100)) viol = 'faction'; if (!(e.familles > 0)) viol = 'familles'; if (e.regiments < 0) viol = 'régiments'; } }
   check(!viol, 'événements : parties au hasard, invariants tenus' + (viol ? ' — ' + viol : ''));
+}
+
+// ===================== Panel de lois du 14/11 =====================
+{
+  const LM = P('moteur/lois.js'), GU = P('moteur/guerre.js'), Bm = P('moteur/batiments.js');
+  const avec = (ids, mod) => { const e = Object.assign(vrai({ evenements: [] }), mod || {}); for (const id of ids) e.lois[LOIS[id].categorie] = { id, depuis: 1 }; return e; };
+  const b0 = Economie.bilan(avec([]));
+  check(Economie.bilan(avec(['impot_minimal'])).impots === 64, 'impôt minimal : impôts ×0,8');
+  const co = Economie.bilan(avec(['collectivisation']));
+  check(co.production.grain === 115 && co.entretiens === 19 * 1.5 + 9, 'collectivisation : production +15 %, entretien des bâtiments ×1,5');
+  const ad = avec([]); LM.adopter(ad, 'collectivisation');
+  check(Object.values(ad.nations).every((x, i) => x.relation === Object.values(vrai().nations)[i].relation - 10) && ad.factions.patrons.puissance === 25, 'collectivisation : relations −10 avec toutes, patrons −20 de puissance');
+  check(Bm.cout('farm', avec(['interventionnisme'])) === 48 && Bm.cout('farm', avec(['laisser_faire'])) === 45 && Bm.cout('farm', avec([])) === 60, 'interventionnisme : construire −20 % ; laisser-faire −25 %');
+  const le = avec(['libre_entreprise'], { batiments: { farm: 4, mine: 1, caserne: 1 } });
+  check(Economie.bilan(le).entretiens === 9 && Math.abs(Economie.bilan(le).ventes - b0.ventes * 0.75) < 0.01, 'libre entreprise : plus d\'entretien des bâtiments (les régiments restent), l\'État touche 75 % des ventes');
+  check(Math.abs(Economie.bilan(avec(['laisser_faire'])).ventes - b0.ventes * 0.6) < 0.01, 'laisser-faire : l\'État touche 60 % des ventes');
+  const te = Economie.bilan(Object.assign(avec(['travail_enfants']), { tour: 11 }));
+  check(te.production.grain === 110 && proche(te.croissance, 0.005), 'travail des enfants : production +10 %, croissance −0,5 %');
+  check(Economie.bilan(avec(['securite_sociale'])).entretiens === 28 + 20 && Economie.bilan(avec(['police_etat'])).entretiens === 28 + 12, 'sécurité sociale 20 or par tour, police d\'État 12');
+  const pr = Economie.bilan(avec(['protectionnisme'], { regions: { essai: { nom: 'E', terrain: 'mixte', emplacements: 9, batiments: { farm: 4, mine: 1, workshop: 1 } } }, batiments: { farm: 4, mine: 1, workshop: 1 } }));
+  check(pr.production.outils === 11.5 && pr.prixAchat.tissu === 2.83, 'protectionnisme : ateliers +15 % tout de suite, achats +20 %');
+  const lx = Economie.bilan(avec(['libre_echange'], { batiments: {}, regions: { essai: { nom: 'E', terrain: 'mixte', emplacements: 9, batiments: { farm: 4, mine: 1 } } } }));
+  check(lx.prixVente.fer === 1.42 && lx.balance.fer === 11, 'libre-échange : les prix bougent deux fois moins');
+  const pu = avec(['parti_unique']);
+  check(LM.chance(pu, 'income_progressive') === Math.round((0.6 + 0.25) * 1000) / 1000, 'parti unique : +25 % de chances pour les autres lois');
+  const mi = avec(['milice_populaire'], { tresor: 1000, regiments: 8 });
+  check(GU.plafond(mi, 'joueur') === 12 && Tour.actionsDisponibles(mi).some(a => a.type === 'recruter') && proche(Tour.tourSuivant(mi, [{ type: 'recruter', region: 'bourg' }]).tresor - Tour.tourSuivant(mi, []).tresor, -20 - 3) && GU.force(avec(['milice_populaire'], { regiments: 10 }), 'joueur') === 8, 'milice populaire : plafond ×1,5, régiment à 20 or (plus 3 d\'entretien), force ×0,8');
+  // effets sur les factions par tour (une partie avec et sans la loi)
+  const delta = (id, f) => { const a = Tour.tourSuivant(avec([id]), []), b = Tour.tourSuivant(avec([]), []); return a.factions[f].colere - b.factions[f].colere; };
+  check(delta('impot_minimal', 'patrons') === -1 && delta('laisser_faire', 'ouvriers') === 2 && delta('laisser_faire', 'patrons') === -2, 'impôt minimal : patrons −1 par tour ; laisser-faire : ouvriers +2, patrons −2');
+  check(delta('securite_sociale', 'ouvriers') === -3 && delta('charite_privee', 'paysans') === 1 && delta('comites_populaires', 'patrons') === 2 && delta('police_etat', 'artisans') === -1, 'sécurité sociale, charité privée, comités populaires, police d\'État : colère par tour');
+  check(delta('travail_enfants', 'artisans') === 1 && delta('libre_echange', 'artisans') === 1 && delta('ecoles_religieuses', 'paysans') === -1, 'travail des enfants, libre-échange, écoles religieuses : colère par tour');
+  let si = avec([]); LM.adopter(si, 'syndicats_interdits'); const p0 = si.factions.ouvriers.puissance;
+  check(si.factions.ouvriers.colere === CHAMPS.joueur.factions.ouvriers.colere + 10 && si.factions.patrons.colere === CHAMPS.joueur.factions.patrons.colere - 10, 'syndicats interdits : ouvriers +10, patrons −10 à l\'adoption');
+  si.lois.relations_sociales.depuis = si.tour; si = tours(si, 12);
+  check(si.factions.ouvriers.puissance === p0 - 20, 'syndicats interdits : ouvriers −2 de puissance par tour pendant 10 tours');
+  let lb = avec([]); LM.adopter(lb, 'libre_entreprise'); lb = tours(lb, 12);
+  check(lb.factions.patrons.puissance === CHAMPS.joueur.factions.patrons.puissance + 30, 'libre entreprise : patrons +3 de puissance par tour pendant 10 tours');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

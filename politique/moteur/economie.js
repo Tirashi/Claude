@@ -41,7 +41,7 @@ function bilan(e){
       if (b.entretien) entretienBat += n * b.entretien;
     }
   }
-  entretienBat *= ECO.entretienFacteur;                          // V2 budget : entretien des bâtiments
+  entretienBat *= ECO.entretienFacteur * fx.entretienBatiments;  // V2 budget : entretien des bâtiments (lois : collectivisation, privé)
   entretienBat += (e.regiments || 0) * GU.regiment.entretien;   // V2 : entretien des régiments
   for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
   for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
@@ -56,9 +56,10 @@ function bilan(e){
   for (const r of ECO.biens){
     balance[r] = arrondi(balance[r]);
     // marché (V2) : le prix baisse avec la quantité vendue, monte avec la quantité achetée, dans le tour
-    const q = Math.abs(balance[r]), M = ECO.marche;
-    if (balance[r] > 0){ pv[r] = arrondi(p[r] * Math.max(M.min, 1 - M.pente * q)); ventes += q * pv[r] * t.vente; }
-    else if (balance[r] < 0){ pa[r] = arrondi(p[r] * Math.min(M.max, 1 + M.pente * q)); achats += q * pa[r] * t.achat; }
+    // lois : pente du marché (libre-échange), part des ventes gardée par l'État (privé), prix d'achat (protectionnisme)
+    const q = Math.abs(balance[r]), M = ECO.marche, pente = M.pente * fx.pente;
+    if (balance[r] > 0){ pv[r] = arrondi(p[r] * Math.max(M.min, 1 - pente * q)); ventes += q * pv[r] * t.vente * fx.ventes; }
+    else if (balance[r] < 0){ pa[r] = arrondi(p[r] * Math.min(M.max, 1 + pente * q) * fx.achat); achats += q * pa[r] * t.achat; }
   }
   contrats = arrondi(contrats);
   const niveau = ECO.niveauxImpot[e.impots || "normal"];

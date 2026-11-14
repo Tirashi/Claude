@@ -31,7 +31,9 @@ function ajouterRegiments(e, qui, d){
   if (qui === "joueur") e.regiments = Math.max(0, e.regiments + d); else e.nations[qui].regiments = Math.max(0, e.nations[qui].regiments + d);
 }
 const familles = (e, qui) => qui === "joueur" ? e.familles : e.nations[qui].familles;
-const plafond = (e, qui) => Math.floor(familles(e, qui) / G.parFamilles);
+// plafond de régiments (milice populaire : ×1,5) et prix d'un régiment (milice : 20 or) pour le joueur
+const plafond = (e, qui) => Math.floor(familles(e, qui) / G.parFamilles * (qui === "joueur" ? Lois.effets(e).plafondRegiments : 1));
+const coutRegiment = e => Lois.effets(e).coutRegiment || G.regiment.cout;
 const regionsDe = (e, qui) => Object.keys(qui === "joueur" ? e.regions : e.profils[qui].regions);
 function proprietaire(e, id){
   if (e.regions[id]) return "joueur";
@@ -53,11 +55,11 @@ const forceCamp = (e, membres, region) => arrondi(membres.reduce((s, m) => s + f
 
 // --- recrutement ---
 function recrutables(e){
-  if (e.tresor < G.regiment.cout || e.regiments >= plafond(e, "joueur") || desarme(e, "joueur")) return [];
+  if (e.tresor < coutRegiment(e) || e.regiments >= plafond(e, "joueur") || desarme(e, "joueur")) return [];
   return Object.keys(e.regions).filter(r => (e.regions[r].batiments.caserne || 0) > 0 && !e.occupations[r] && !(e.recrues || []).includes(r));
 }
 function recruter(e, region){
-  e.tresor = arrondi(e.tresor - G.regiment.cout);
+  e.tresor = arrondi(e.tresor - coutRegiment(e));
   e.regiments++;
   (e.recrues = e.recrues || []).push(region);
   e.journal.push(`Régiment recruté (${e.regions[region].nom}).`);

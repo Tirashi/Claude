@@ -27,7 +27,8 @@ function lancables(e){
 function chance(e, id){
   const p = f => (e.factions[f] ? e.factions[f].puissance : 0);
   const s = (LOIS[id].pour || []).reduce((a, f) => a + p(f), 0) - (LOIS[id].contre || []).reduce((a, f) => a + p(f), 0);
-  return Math.max(R.chance.min, Math.min(R.chance.max, Math.round((R.chance.base + s * R.chance.parPuissance) * 1000) / 1000));
+  // parti unique : les autres lois passent plus facilement
+  return Math.max(R.chance.min, Math.min(R.chance.max, Math.round((R.chance.base + s * R.chance.parPuissance + effets(e).debat) * 1000) / 1000));
 }
 
 function lancer(e, id){
@@ -43,6 +44,7 @@ function adopter(e, id){
   const loi = LOIS[id], avant = e.lois[loi.categorie];
   e.lois[loi.categorie] = { id, depuis: e.tour };
   if (loi.eco.reputation) Diplomatie.reputer(e, loi.eco.reputation);
+  if (loi.eco.relations) for (const n in e.nations) e.nations[n].relation = Math.max(-100, Math.min(100, e.nations[n].relation + loi.eco.relations));
   Factions.choc(e, id);
   e.journal.push(`Loi adoptée : ${loi.nom}` + (avant ? ` (remplace ${LOIS[avant.id].nom}).` : "."));
 }
@@ -61,7 +63,8 @@ const montee = (e, l) => Math.min(1, (e.tour - l.depuis) / ECO.montee);
 
 // effets économiques cumulés des lois en vigueur
 function effets(e){
-  const r = { impots: 1, entretien: 0, production: 1, croissance: 0, artisans: 0, force: 1 };
+  const r = { impots: 1, entretien: 0, production: 1, croissance: 0, artisans: 0, force: 1,
+              entretienBatiments: 1, ventes: 1, construction: 1, achat: 1, pente: 1, plafondRegiments: 1, coutRegiment: null, debat: 0 };
   for (const cat in e.lois){
     const l = e.lois[cat], x = LOIS[l.id].eco;
     if (x.impots) r.impots *= x.impots;
@@ -70,6 +73,10 @@ function effets(e){
     if (x.force) r.force *= x.force;
     if (x.croissance) r.croissance += x.croissance * montee(e, l);
     if (x.artisans) r.artisans += x.artisans * montee(e, l);
+    if (x.artisansImmediat) r.artisans += x.artisansImmediat;
+    for (const k of ["entretienBatiments", "ventes", "construction", "achat", "pente", "plafondRegiments"]) if (x[k] != null) r[k] *= x[k];
+    if (x.coutRegiment != null) r.coutRegiment = x.coutRegiment;
+    if (x.debat) r.debat += x.debat;
   }
   return r;
 }
