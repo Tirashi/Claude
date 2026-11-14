@@ -14,9 +14,9 @@ const OBJECTIFS = {
   contentement: { nom: "Contentement", texte: "100 moins la colère moyenne des factions, en moyenne sur toute la partie.",
     seuils: { equilibre: [79.5, 81.8, 82.7], agricole: [80.5, 83.9, 84.4], industriel: [79.2, 81.5, 82.1], marchand: [80.5, 81.6, 82], minier: [82.3, 83.5, 83.8] } },
   influence: { nom: "Influence", texte: "Poids économique chez les voisins, en moyenne sur la partie : 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats de vente lui livrent au moins la moitié de ce qu'elle importe) ; plus 10 par exigence cédée.",
-    seuils: { equilibre: [71, 73, 81], agricole: [59, 66, 72], industriel: [70, 73, 79], marchand: [64, 71, 78], minier: [72, 76, 81] } },
+    seuils: { equilibre: [70, 74, 78], agricole: [71, 75, 78], industriel: [70, 73, 76], marchand: [63, 71, 78], minier: [72, 76, 81] } },
   concorde: { nom: "Concorde", texte: "Moyenne des relations avec les nations, plus 10 par traité en cours, à la fin de la partie.",
-    seuils: { equilibre: [86, 107, 109], agricole: [86, 107, 109], industriel: [84, 107, 110], marchand: [86, 107, 110], minier: [86, 107, 109] } },
+    seuils: { equilibre: [86, 107, 110], agricole: [86, 107, 109], industriel: [84, 107, 110], marchand: [86, 107, 110], minier: [86, 107, 109] } },
   autorite: { nom: "Autorité", texte: "Soutien des factions puissantes aux lois en vigueur : pour chaque loi en vigueur, puissance des factions pour moins puissance des factions contre ; moyenne par loi, puis moyenne sur la partie.",
     seuils: { equilibre: [35, 53, 54], agricole: [47, 50, 51], industriel: [30, 36, 40], marchand: [30, 54, 56], minier: [35, 38, 42] } }
 };

@@ -26,6 +26,8 @@ Object.assign(RLV, { premierTirage: 3, colereDebat: 0, chance: Object.assign({},
 const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
 // … et sans la relation à deux sens (seuil hostile, commerce qui rapproche, provocations : V2 « étape 1 » du 14/11)
 const HOST = P('donnees/diplomatie.js').hostilite; HOST.actif = false;
+// … et avec les prix des contrats d'avant le 14/11 (×0,8 à l'achat, ×1,3 à la vente)
+const CTR = P('donnees/diplomatie.js').contrats, CTR0 = { prixAchat: CTR.prixAchat, prixVente: CTR.prixVente }; CTR.prixAchat = 0.8; CTR.prixVente = 1.3;
 // … et sans entretien des bâtiments ni intérêts de la dette (avant le budget de la V2)
 const ECOV = P('donnees/economie.js'), BUDGET0 = { entretienFacteur: ECOV.entretienFacteur, dette: JSON.parse(JSON.stringify(ECOV.dette)) };
 ECOV.entretienFacteur = 0; ECOV.dette.taux = 0; ECOV.dette.colereFaillite = 0;
@@ -903,6 +905,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
 
 // --- V2 : relation à deux sens (étape 1 du 14/11) ---
 {
+  Object.assign(CTR, CTR0);
+  { const v = Etat.creerEtat(CHAMPS, 1); check(v.offres.brume_tissu.prix === 1.8 && v.offres.val_roc_grain.prix === 1.15, 'contrats (14/11) : achat à ×0,9, vente à ×1,15'); }
   HOST.actif = true;
   const Gm = P('moteur/guerre.js'), Dm = P('moteur/diplomatie.js'), PERS = P('donnees/personas.js');
   const base = () => { const e = Etat.creerEtat(CHAMPS, 9); for (const n in e.profils) e.profils[n].persona = 'marchand'; return e; };
