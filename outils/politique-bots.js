@@ -208,6 +208,7 @@ const BOTS = {
   },
 
   // programmes politiques (panel du 14/11) : même gestion qu'economy, lois du camp dans l'ordre
+  gauche_med: () => programme(['labor_medicine', 'income_progressive', 'school_public', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional']),
   gauche: () => programme(['income_progressive', 'school_public', 'securite_sociale', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional']),
   droite: () => programme(['impot_minimal', 'libre_entreprise', 'ecoles_religieuses', 'police_etat', 'suffrage_census', 'syndicats_interdits', 'army_conscription', 'libre_echange', 'charite_privee']),
   extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'journee_huit_heures']),
@@ -248,7 +249,7 @@ const BOTS = {
 };
 
 // ambition de chaque bot (objectif de victoire choisi au tour 1) ; random la tire parmi ses actions, passif n'en a pas
-const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', spam_medicine: 'contentement', gauche: 'contentement',
+const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', spam_medicine: 'contentement', gauche: 'contentement', gauche_med: 'contentement',
   militarist: 'puissance', replica: 'concorde', droite: 'autorite', extreme_droite: 'autorite', extreme_gauche: 'autorite' };
 const creer = (nom, graine) => {
   if (!BOTS[nom]) throw new Error('bot inconnu : ' + nom);

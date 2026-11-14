@@ -1,6 +1,6 @@
 /* Politique : simulateur en lot (M4, M5 ; specs/politique/plan-simulateur.md).
    node outils/politique-simulateur.js [--parties 200] [--bot nom,nom|tous] [--tours 60] [--graine 1] [--json fichier]
-        [--regle chemin=valeur]... [--balayage chemin=v1,v2,v3] [--controle] [--objectifs]
+        [--regle chemin=valeur]... [--balayage chemin=v1,v2,v3] [--controle] [--objectifs [--seuils-proposes]]
    Joue des parties complètes avec les bots de politique-bots.js (graine de la partie n = graine + n : tous les bots
    jouent les mêmes graines), relève des métriques par partie, affiche un résumé par bot et la stratégie dominante.
    --regle : change une valeur des données pour ce lancement (chemin = fichier de donnees/ puis clés, ex.
@@ -22,7 +22,7 @@ const pct = (k, n) => Math.round(100 * k / n) + ' %';
 const r0 = x => x == null ? '-' : Math.round(x);
 
 // --- réglages : les modules de données sont partagés avec le moteur (même cache de require) ---
-const RACINES = { economie: 'economie', lois: 'lois', batiments: 'batiments', factions: 'factions', diplomatie: 'diplomatie', guerre: 'guerre', champs: 'champs' };
+const RACINES = { economie: 'economie', lois: 'lois', batiments: 'batiments', factions: 'factions', diplomatie: 'diplomatie', guerre: 'guerre', champs: 'champs', objectifs: 'objectifs' };
 function cible(chemin){
   const morceaux = chemin.split('.'), racine = RACINES[morceaux[0]];
   if (!racine) throw new Error(`réglage inconnu : ${chemin} (racines : ${Object.keys(RACINES).join(', ')})`);
@@ -33,7 +33,7 @@ function cible(chemin){
   return { o, cle };
 }
 const lire = chemin => { const c = cible(chemin); return c.o[c.cle]; };
-const valeur = v => v === 'true' ? true : v === 'false' ? false : isNaN(Number(v)) ? v : Number(v);
+const valeur = v => v === 'true' ? true : v === 'false' ? false : /^[\[{]/.test(v) ? JSON.parse(v) : isNaN(Number(v)) ? v : Number(v);   // objets et listes en JSON
 // applique des réglages { chemin: valeur } et renvoie de quoi les annuler
 function regler(reglages){
   const avant = {};
@@ -213,8 +213,11 @@ function objectifs(parties){
   }
   console.log('\nSeuils proposés (bronze, argent, or ; bots de référence) :');
   for (const id of ids) console.log(`  ${OD.OBJECTIFS[id].nom.padEnd(13)} ${seuils[id].seuils.join(' / ').padEnd(18)} (${seuils[id].refs.join(', ')}) ; actuels ${JSON.stringify(seuils[id].actuels)}`);
-  const medaille = (m, id) => m.issue === 'revolution' ? 0 : seuils[id].seuils.filter(x => m.objectifs[id] >= x).length;
-  console.log('\nAvec ces seuils : victoire de chaque bot (médaille de son ambition), en % des parties');
+  // seuils des données s'ils sont fixés (sauf --seuils-proposes), sinon ceux proposés
+  const propres = !process.argv.includes('--seuils-proposes') && ids.every(id => OD.OBJECTIFS[id].seuils.every(x => x != null));
+  const S = id => propres ? OD.OBJECTIFS[id].seuils : seuils[id].seuils;
+  const medaille = (m, id) => m.issue === 'revolution' ? 0 : S(id).filter(x => m.objectifs[id] >= x).length;
+  console.log(`\nAvec les seuils ${propres ? 'des données' : 'proposés'} : victoire de chaque bot (médaille de son ambition), en % des parties`);
   console.log('bot'.padEnd(15) + 'ambition'.padEnd(14) + 'aucune  bronze  argent  or');
   for (const nom of noms){
     const ms = parties[nom].filter(m => m.ambition), c = [0, 0, 0, 0];
