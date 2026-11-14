@@ -4,13 +4,14 @@
    Le joueur choisit au tour 1 son **ambition** (un objectif) : sa victoire est la médaille de cet objectif ; les autres
    ne sont qu'un bilan. Une révolution = défaite : aucune médaille. Seuils : fixés par simulation (outils/politique-simulateur.js --objectifs),
    l'or atteint par environ 10 à 15 % des parties d'un bot qui vise cet objectif, le bronze par environ la moitié.
-   **Seuils par pays de départ** (décision du 14/11) : une médaille veut dire « bien joué pour ce pays ». */
+   **Seuils par pays de départ** (décision du 14/11) : une médaille veut dire « bien joué pour ce pays ».
+   Prospérité : mesurée aussi contre le bot commerce (14/11 : les contrats enrichissent sans viser la Prospérité). */
 (function(racine){
 "use strict";
 // seuils : { pays: [bronze, argent, or] }, tirés de 200 parties par bot et par pays (--objectifs --pays tous --seuils-proposes), validés le 14/11
 const OBJECTIFS = {
   prosperite: { nom: "Prospérité", texte: "Trésor et valeur des bâtiments à la fin de la partie.",
-    seuils: { equilibre: [5494, 6006, 6353], agricole: [6143, 6770, 6978], industriel: [5793, 6313, 6701], marchand: [6294, 6770, 7115], minier: [5840, 6310, 6778] } },
+    seuils: { equilibre: [5590, 6133, 6433], agricole: [5970, 6538, 6851], industriel: [6222, 6690, 7069], marchand: [6682, 7194, 7398], minier: [6237, 7406, 7709] } },
   contentement: { nom: "Contentement", texte: "100 moins la colère moyenne des factions, en moyenne sur toute la partie.",
     seuils: { equilibre: [79.5, 81.8, 82.7], agricole: [80.5, 83.9, 84.4], industriel: [79.2, 81.5, 82.1], marchand: [80.5, 81.6, 82], minier: [82.3, 83.5, 83.8] } },
   influence: { nom: "Influence", texte: "Poids économique chez les voisins, en moyenne sur la partie : 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats de vente lui livrent au moins la moitié de ce qu'elle importe) ; plus 10 par exigence cédée.",

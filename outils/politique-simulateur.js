@@ -205,6 +205,7 @@ function controle(){
 // objectifs de victoire (--objectifs) : mesures de chaque bot, et seuils proposés : pour chaque objectif, les parties des
 // bots qui l'ont pour ambition (sinon le bot qui le réussit le mieux) : bronze = leur médiane (la moitié l'atteint),
 // argent = 75e centile, or = 87e centile (environ 13 %) ; puis la victoire de chaque bot (médaille de son ambition)
+const REFERENCES = { prosperite: ['commerce'] };
 const centile = (xs, p) => { const t = xs.slice().sort((a, b) => a - b); return t.length ? t[Math.min(t.length - 1, Math.floor(p * t.length))] : null; };
 function objectifs(parties){
   const ids = Object.keys(OD.OBJECTIFS), noms = Object.keys(parties), seuils = {};
@@ -214,7 +215,8 @@ function objectifs(parties){
   console.log('bot'.padEnd(15) + 'ambition'.padEnd(14) + ids.map(id => id.padEnd(20)).join(''));
   for (const nom of noms) console.log(nom.padEnd(15) + String(Bots.AMBITIONS[nom] || '-').padEnd(14) + ids.map(id => `${centile(vals(nom, id), 0.5)} (${centile(vals(nom, id), 0.75)}, ${centile(vals(nom, id), 0.87)})`.padEnd(20)).join(''));
   for (const id of ids){
-    let refs = noms.filter(n => Bots.AMBITIONS[n] === id);
+    // références en plus (14/11) : la Prospérité se mesure aussi contre le commerce (les contrats enrichissent sans la viser)
+    let refs = noms.filter(n => Bots.AMBITIONS[n] === id || (REFERENCES[id] || []).includes(n));
     if (!refs.length) refs = [noms.reduce((a, b) => centile(vals(b, id), 0.5) > centile(vals(a, id), 0.5) ? b : a)];
     const xs = [].concat(...refs.map(n => vals(n, id)));
     seuils[id] = { refs, seuils: [0.5, 0.75, 0.87].map(p => centile(xs, p)), actuels: OD.OBJECTIFS[id].seuils[PAYS_PARTIE] || null };
