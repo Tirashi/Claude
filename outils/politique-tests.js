@@ -798,23 +798,35 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
 {
   const Ob = P('moteur/objectifs.js'), OD = P('donnees/objectifs.js'), Dp = P('moteur/diplomatie.js');
   const e0 = Etat.creerEtat(CHAMPS, 7);
-  check(e0.suivi.tours === 0 && Ob.mesures(e0).contentement === 100 && Ob.mesures(e0).ordre === 100, 'objectifs : rien de cumulé au départ');
+  check(e0.suivi.tours === 0 && Ob.mesures(e0).contentement === 100 && Ob.mesures(e0).autorite === 0 && e0.ambition === null, 'objectifs : rien de cumulé au départ, pas d\'ambition');
   const m0 = Ob.mesures(e0), val = Object.keys(e0.batiments).reduce((t, id) => t + e0.batiments[id] * BAT[id].cout, 0);
   check(m0.prosperite === Math.round(e0.tresor + val), 'prospérité : trésor + coût des bâtiments en service');
-  check(m0.puissance === 4 * 10 + e0.regiments, 'puissance : 10 par région tenue + 1 par régiment');
+  check(m0.puissance === 4 * 10 + P('moteur/guerre.js').force(e0, 'joueur'), 'puissance : 10 par région tenue + force de l\'armée');
   check(m0.concorde === Math.round(Dp.reputation(e0)), 'concorde : moyenne des relations (+10 par traité)');
   const e1 = Tour.tourSuivant(e0, []);
   const moy = Object.values(e1.factions).reduce((t, x) => t + x.colere, 0) / Object.keys(e1.factions).length;
-  check(e1.suivi.tours === 1 && proche(e1.suivi.colere, moy) && Ob.mesures(e1).contentement === Math.round(100 - moy), 'contentement : 100 − colère moyenne des factions, cumulée chaque tour');
-  const eg = Etat.copie(e1); eg.factions.ouvriers.statut = 'greve'; Ob.suivre(eg);
-  check(eg.suivi.calmes === e1.suivi.calmes && Ob.mesures(eg).ordre === 50, 'ordre : un tour avec une faction qui gronde ou fait grève n\'est pas un tour calme');
+  check(e1.suivi.tours === 1 && proche(e1.suivi.colere, moy) && Ob.mesures(e1).contentement === Math.round((100 - moy) * 10) / 10, 'contentement : 100 − colère moyenne des factions, cumulée chaque tour');
+  const el = Etat.copie(e1); el.lois = { impot: { id: 'impot_minimal', depuis: 1 } };
+  const Fp = f => el.factions[f].puissance;
+  check(Ob.legitimite(el) === Fp('patrons') + Fp('artisans') - Fp('ouvriers'), 'autorité : puissance des factions pour − contre, pour chaque loi en vigueur');
+  Ob.suivre(el);
+  check(el.suivi.tours === 2 && Ob.mesures(el).autorite === Math.round((e1.suivi.legitimite + Ob.legitimite(el)) / 2), 'autorité : moyenne sur la partie');
   const eo = Etat.copie(e1); eo.occupations = { plaine: 'valroc' };
   check(Ob.mesures(eo).puissance === m0.puissance - 10, 'puissance : une région occupée ne compte pas');
+  // ambition : tour 1 seulement, une fois
+  const amb = Tour.actionsDisponibles(e0).filter(a => a.type === 'ambition').map(a => a.id);
+  check(amb.join() === Object.keys(OD.OBJECTIFS).join(), 'ambition : les cinq objectifs proposés au tour 1');
+  const ea = Tour.tourSuivant(e0, [{ type: 'ambition', id: 'concorde' }]);
+  check(ea.ambition === 'concorde' && e0.ambition === null, 'ambition : choisie au tour 1');
+  check(!Tour.actionsDisponibles(ea).some(a => a.type === 'ambition') && !Tour.actionsDisponibles(e1).some(a => a.type === 'ambition'), 'ambition : plus proposée après le tour 1');
+  let deux = false; try { Tour.tourSuivant(e0, [{ type: 'ambition', id: 'concorde' }, { type: 'ambition', id: 'puissance' }]); } catch (x) { deux = true; }
+  check(deux, 'ambition : une seule fois');
   const SE = JSON.parse(JSON.stringify(OD.OBJECTIFS));
-  OD.OBJECTIFS.ordre.seuils = [50, 80, 100]; OD.OBJECTIFS.prosperite.seuils = [1e9, 2e9, 3e9];
-  check(Ob.medailles(e1).ordre === 3 && Ob.medailles(e1).prosperite === 0 && Ob.medailles(eg).ordre === 1, 'médailles : bronze, argent, or selon les seuils');
-  const er = Etat.copie(e1); er.issue = { type: 'revolution', faction: 'ouvriers' };
-  check(Ob.points(er) === 0, 'révolution : aucune médaille');
+  OD.OBJECTIFS.contentement.seuils = [50, 60, 70]; OD.OBJECTIFS.prosperite.seuils = [1e9, 2e9, 3e9];
+  check(Ob.medailles(e1).contentement === 3 && Ob.medailles(e1).prosperite === 0, 'médailles : bronze, argent, or selon les seuils');
+  check(Ob.resultat(Object.assign(Etat.copie(e1), { ambition: 'contentement' })).medaille === 3 && Ob.resultat(e1).medaille === null, 'victoire : la médaille de l\'ambition (sans ambition : aucune)');
+  const er = Etat.copie(e1); er.issue = { type: 'revolution', faction: 'ouvriers' }; er.ambition = 'contentement';
+  check(Ob.points(er) === 0 && Ob.resultat(er).medaille === 0, 'révolution : aucune médaille');
   for (const id in SE) OD.OBJECTIFS[id].seuils = SE[id].seuils;
 }
 console.log(`\n${n - fail}/${n} tests réussis`);

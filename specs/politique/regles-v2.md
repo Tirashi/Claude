@@ -69,9 +69,10 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Relations** (réputation fusionnée) : une seule jauge par nation. Les actions qui touchaient la réputation touchent toutes les relations à la moitié de leur effet (ex. agression : −100 avec la cible, −10 avec les autres).
 
 ### 6. Objectifs de victoire (14/11)
-- Cinq objectifs mesurés à la fin de la partie (tour 40), chacun avec trois paliers : bronze (1 point), argent (2), or (3). Une révolution = défaite, aucune médaille.
-- **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Puissance** : 10 par région tenue (non occupée) + 1 par régiment. **Concorde** : moyenne des relations + 10 par traité en cours. **Ordre** : part des tours où toutes les factions sont calmes.
-- Seuils fixés par simulation (`--objectifs`) : l'or atteint par environ 10 à 15 % des parties d'un bot qui vise l'objectif, le bronze par environ la moitié. **Seuils et définitions encore en discussion.**
+- Cinq objectifs mesurés à la fin de la partie (tour 40), chacun avec trois paliers : bronze, argent, or. Une révolution = défaite, aucune médaille.
+- **Ambition** : au tour 1, le joueur choisit un objectif (une fois). Sa victoire = la médaille de cet objectif ; les autres sont un bilan.
+- **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Puissance** : 10 par région tenue (non occupée) + force de l'armée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, loi par loi), en moyenne sur la partie.
+- Seuils fixés par simulation (`--objectifs`), d'après les bots qui visent l'objectif : bronze = leur médiane, argent = 75e centile, or = 87e (valeurs dans `donnees/objectifs.js`, à valider).
 
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.

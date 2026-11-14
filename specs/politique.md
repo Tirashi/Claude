@@ -131,7 +131,22 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 **Objectifs de victoire (validés dans leur principe)** : cinq objectifs mesurés au tour 40, avec bronze / argent / or (1, 2, 3 points) ; une révolution = aucune médaille. Fait : `donnees/objectifs.js` (seuils encore vides : aucune médaille), `moteur/objectifs.js` (`suivre` à chaque fin de tour, `mesures`, `medailles`, `points`), `e.suivi` dans l'état ; `--objectifs` dans le simulateur (mesures par bot, seuils proposés d'après le bot qui réussit le mieux chaque objectif : bronze = sa médiane, argent = 75e centile, or = 87e). 302 tests.
 - Prospérité = trésor + coût des bâtiments en service ; Contentement = 100 − colère moyenne des factions, en moyenne sur la partie ; Puissance = 10 par région tenue + 1 par régiment ; Concorde = moyenne des relations + 10 par traité ; Ordre = % des tours où toutes les factions sont calmes (d'abord « sans grève ni révolte » : 100 % pour presque tous les bots).
 
-**Premier lot (200 parties par bot)** : les objectifs sont trop liés entre eux. Une bonne gestion (spam_medicine : Médecine du travail d'abord) prend des médailles en prospérité, contentement et ordre (4,8 points en moyenne) ; les programmes de lois presque rien (0,01 à 0,94). Ordre reste presque toujours à 95-100 % (les bots apaisent à 55) et double le contentement. Contentement serré (72 à 80). Décisions à prendre : voir la réponse du 14/11.
+**Premier lot (200 parties par bot)** : les objectifs étaient trop liés (une bonne gestion raflait prospérité, contentement et ordre) et « Ordre » doublait le contentement (95 à 100 % pour presque tous les bots).
+
+**Décision de l'utilisateur (14/11) : A et B.** A : **ambition** choisie au tour 1 (action `ambition`, une fois) ; la victoire est la médaille de cet objectif, les autres ne sont qu'un bilan. B : **Autorité** remplace Ordre = soutien des factions puissantes aux lois en vigueur (pour chaque loi, puissance des pour − des contre), en moyenne sur la partie ; mesure comparée à « 100 − puissance moyenne des factions », qui ne distinguait aucun bot (60 à 67). Contentement à une décimale, Puissance = 10 par région + force de l'armée (sinon argent et or tombaient sur la même valeur). Bots : ambition fixe (economy et no_appeasement prospérité, spam_medicine et gauche contentement, militarist puissance, replica concorde, droite et les deux extrêmes autorité). 308 tests.
+
+**Seuils (ASSUMPTION, d'après les bots qui visent l'objectif ; bronze = médiane, argent = 75e centile, or = 87e)** : Prospérité 5 374 / 5 951 / 6 410 ; Contentement 78,5 / 80,5 / 81,1 ; Puissance 84,4 / 86,6 / 87,3 ; Concorde 23 / 38 / 79 ; Autorité 210 / 335 / 366.
+
+| Bot (ambition) | aucune | bronze | argent | or |
+|---|---|---|---|---|
+| economy (prospérité) | 41 % | 29 % | 14 % | 17 % |
+| spam_medicine (contentement) | 22 % | 29 % | 22 % | 28 % |
+| gauche (contentement) | 78 % | 20 % | 1 % | 2 % |
+| militarist (puissance) | 60 % | 19 % | 11 % | 11 % |
+| replica (concorde) | 52 % | 23 % | 11 % | 15 % |
+| droite (autorité) | 0 % | 25 % | 35 % | 41 % |
+| extrême gauche (autorité) | 50 % | 50 % | 0 % | 0 % |
+| extrême droite (autorité) | 100 % | 0 % | 0 % | 0 % |
 
 ## 18. Panel de lois (14/11)
 Décisions de l'utilisateur : retirer les lois inutiles ou en double (code du travail) ; un panel de l'extrême gauche à l'extrême droite, petits bonus ou gros bonus avec malus ; **les deux crans** libre entreprise / laisser-faire ; chaque loi expliquée au joueur en phrases simples, dans un **mini-wiki** consultable pendant la partie (tour par tour : le joueur a le temps de lire).

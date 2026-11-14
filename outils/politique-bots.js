@@ -247,5 +247,12 @@ const BOTS = {
   }
 };
 
-const creer = (nom, graine) => { if (!BOTS[nom]) throw new Error('bot inconnu : ' + nom); return BOTS[nom](graine); };
-module.exports = { creer, noms: Object.keys(BOTS), plan };
+// ambition de chaque bot (objectif de victoire choisi au tour 1) ; random la tire parmi ses actions, passif n'en a pas
+const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', spam_medicine: 'contentement', gauche: 'contentement',
+  militarist: 'puissance', replica: 'concorde', droite: 'autorite', extreme_droite: 'autorite', extreme_gauche: 'autorite' };
+const creer = (nom, graine) => {
+  if (!BOTS[nom]) throw new Error('bot inconnu : ' + nom);
+  const bot = BOTS[nom](graine);
+  return e => { const acts = bot(e); if (e.tour === 1 && !e.ambition && AMBITIONS[nom]) acts.unshift({ type: 'ambition', id: AMBITIONS[nom] }); return acts; };
+};
+module.exports = { creer, noms: Object.keys(BOTS), plan, AMBITIONS };

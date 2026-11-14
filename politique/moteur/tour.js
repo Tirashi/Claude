@@ -2,7 +2,8 @@
    actionsDisponibles(etat) : la seule liste que voient l'écran et les bots ; toute autre action est refusée.
    Actions : { type: "loi", id } lance une loi ; { type: "construire", id, region } commande un bâtiment (V2 : dans une région) ;
    { type: "apaiser", id: faction } apaise une faction (M2) ; diplomatie (M3a) : don, contrat, traite, rompre,
-   embargo, lever_embargo (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche.
+   embargo, lever_embargo (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
+   { type: "ambition", id } (tour 1 seulement) : l'objectif de victoire.
    Les actions d'un tour s'appliquent dans l'ordre, chacune vérifiée sur l'état laissé par la précédente.
    Ordre du tour T (ASSUMPTION validée) : événements de T → actions → adoption des lois arrivées à échéance
    (et leurs chocs sur les factions) → économie (production, commerce, impôts, entretiens ; grèves du tour précédent)
@@ -32,7 +33,8 @@ function actionsDisponibles(etat){
     .concat(Factions.apaisables(etat).map(id => ({ type: "apaiser", id })))
     .concat(Diplomatie.actions(etat))
     .concat(Guerre.actions(etat))
-    .concat(Evenements.actions(etat));
+    .concat(Evenements.actions(etat))
+    .concat(Objectifs.actions(etat));
 }
 
 // même action : mêmes champs et mêmes valeurs, dans n'importe quel ordre
@@ -47,6 +49,7 @@ function appliquerAction(e, a, r){
   else if (a.type === "impots"){ e.impots = a.id; e.journal.push(`Impôts : niveau ${a.id}.`); }
   else if (a.type === "construire") Batiments.commander(e, a.id, a.region);
   else if (a.type === "apaiser") Factions.apaiser(e, a.id);
+  else if (a.type === "ambition") Objectifs.choisir(e, a.id);
   else if (["recruter", "declarer_guerre", "bataille", "imposer_paix", "paix_blanche"].includes(a.type)) Guerre.appliquer(e, a, r);
   else Diplomatie.appliquer(e, a);
 }
