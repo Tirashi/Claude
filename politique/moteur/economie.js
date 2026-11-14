@@ -12,6 +12,7 @@ const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAINS;
 const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
+const Evenements = NODE ? require("./evenements.js") : racine.Politique.Evenements;
 
 const arrondi = x => Math.round(x * 100) / 100;
 const zero = () => Object.fromEntries(ECO.biens.map(b => [b, 0]));
@@ -33,8 +34,9 @@ function bilan(e){
     for (const id in e.regions[reg].batiments){
       const n = e.regions[reg].batiments[id], b = BAT[id];
       if (!n) continue;
-      const mult = fx.production * (b.artisans ? 1 + fx.artisans : 1) * (fa.batiments[id] == null ? 1 : fa.batiments[id]) * (bonus[id] || 1);
-      for (const r in b.produit || {}) prod[r] += n * b.produit[r] * mult;
+      const mult = fx.production * (b.artisans ? 1 + fx.artisans : 1) * (fa.batiments[id] == null ? 1 : fa.batiments[id]) * (bonus[id] || 1)
+        * ((e.bonusRendement || {})[id] || 1);                                      // Inventeur (événement)
+      for (const r in b.produit || {}) prod[r] += n * b.produit[r] * mult * Evenements.multProduction(e, r);   // sécheresse, quarantaine…
       for (const r in b.consomme || {}) conso[r] += n * b.consomme[r];
       if (b.entretien) entretienBat += n * b.entretien;
     }

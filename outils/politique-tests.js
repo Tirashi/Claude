@@ -27,6 +27,8 @@ const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
 // … et sans entretien des bâtiments ni intérêts de la dette (avant le budget de la V2)
 const ECOV = P('donnees/economie.js'), BUDGET0 = { entretienFacteur: ECOV.entretienFacteur, dette: JSON.parse(JSON.stringify(ECOV.dette)) };
 ECOV.entretienFacteur = 0; ECOV.dette.taux = 0; ECOV.dette.colereFaillite = 0;
+// … et sans événements tirés au hasard (avant le paquet d'événements)
+const REV = P('donnees/evenements.js').REGLES_EVENEMENTS, CHANCE_EV = REV.chance; REV.chance = 0;
 
 let fail = 0, n = 0;
 const check = (ok, msg) => { n++; console.log((ok ? 'ok    ' : 'ÉCHEC ') + msg); if (!ok) fail++; };
@@ -695,6 +697,63 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(dt.interets === 5 && dt.entretiens === 28 + 5 && Economie.bilan(v()).interets === 0, 'dette : sous zéro, 5 % d\'intérêts par tour');
   const ok = Tour.tourSuivant(Object.assign(v(), { tresor: -299 }), []), fa = Tour.tourSuivant(Object.assign(v(), { tresor: -400 }), []);
   check(Object.keys(ok.factions).every(f => fa.factions[f].colere === ok.factions[f].colere + 3), 'dette : sous −300 (faillite), +3 de colère par tour pour toutes les factions');
+}
+
+// ===================== Paquet d'événements (14/11) =====================
+{
+  REV.chance = CHANCE_EV;
+  const EVd = P('donnees/evenements.js'), EVm = P('moteur/evenements.js'), CARTES = EVd.CARTES;
+  check(Object.keys(CARTES).length === 12 && !CARTES.saturation && !CARTES.penurie && REV.debut === 5 && Math.abs(REV.chance - 1 / 6) < 1e-9, 'événements : 12 cartes (sans saturation ni pénurie), pas avant le tour 5, une chance sur six par tour');
+  // fréquence et paquet
+  let avant5 = 0, tirages = 0, tours = 0, doublon = false;
+  for (let g = 1; g <= 150; g++) {
+    let e = Etat.creerEtat(CHAMPS, g); const vus = [];
+    while (!e.fin) {
+      const t = e.tour; e = Tour.tourSuivant(e, []);
+      const ev = e.journal.find(l => /^Événement/.test(l));
+      if (t >= 5) tours++;
+      if (ev) { if (t < 5) avant5++; tirages++; const nom = ev.slice(12).split('.')[0]; if (vus.includes(nom) && vus.length < 12) doublon = true; vus.push(nom); }
+    }
+  }
+  check(avant5 === 0, 'événements : aucun avant le tour 5');
+  check(Math.abs(tirages / tours - 1 / 6) < 0.025, `événements : environ une chance sur six par tour (${(tirages / tours).toFixed(3)})`);
+  check(!doublon, 'événements : une carte ne revient pas avant que le paquet soit épuisé');
+  // effets
+  const prep = (id, mod) => { const e = Object.assign(vrai({ evenements: [], tour: 6 }), mod || {}); e.paquet = [id]; REV.chance = 1; EVm.tirer(e, Alea.creer(3)); REV.chance = CHANCE_EV; return e; };
+  const sec = prep('secheresse'); sec.tour = 7;
+  check(EVm.multProduction(sec, 'grain') === 0.6 && EVm.multProduction(sec, 'fer') === 1 && EVm.multProduction(Object.assign(sec, { tour: 10 }), 'grain') === 1, 'sécheresse : grain −40 % pendant 3 tours');
+  const rec = prep('recolte'); rec.tour = 7;
+  check(Economie.bilan(rec).production.grain === 140, 'bonne récolte : grain +40 % (100 → 140)');
+  const ep = prep('epidemie');
+  check(ep.evenement && ep.evenement.id === 'epidemie' && egal(Tour.actionsDisponibles(Object.assign(JSON.parse(JSON.stringify(ep)), { tour: 7 })).filter(a => a.type === 'evenement').map(a => a.choix), ['subir', 'quarantaine']), 'événements : une carte à choix attend la réponse du joueur au tour suivant');
+  const ep1 = Tour.tourSuivant(Object.assign(JSON.parse(JSON.stringify(ep)), { tour: 7 }), []);
+  check(!ep1.evenement && proche(ep1.familles, Math.round(Math.round(80 * 0.92 * 100) / 100 * 1.01 * 100) / 100), 'épidémie : sans réponse, la réponse gratuite (−8 % de familles)');
+  const ep2 = Tour.tourSuivant(Object.assign(JSON.parse(JSON.stringify(ep)), { tour: 7 }), [{ type: 'evenement', choix: 'quarantaine' }]);
+  check(ep2.bilan.production.grain === 80 && ep2.journal.some(l => /Quarantaine/.test(l)), 'épidémie : quarantaine, production −20 % pendant 2 tours');
+  const sc = prep('scandale'); sc.tour = 7;
+  const scA = Tour.tourSuivant(JSON.parse(JSON.stringify(sc)), []), scB = Tour.tourSuivant(JSON.parse(JSON.stringify(sc)), [{ type: 'evenement', choix: 'etouffer' }]);
+  check(Object.keys(scA.factions).every(f => scA.factions[f].colere === scB.factions[f].colere + 8) && proche(scA.tresor - scB.tresor, 80), 'scandale : +8 de colère pour toutes, ou 80 or pour l\'étouffer');
+  check(!Tour.actionsDisponibles(Object.assign(JSON.parse(JSON.stringify(sc)), { tresor: 50 })).some(a => a.choix === 'etouffer'), 'événements : une réponse trop chère n\'est pas proposée');
+  const gr = prep('greve'); const f = gr.evenement.cibles.faction;
+  check(f === 'ouvriers' && gr.factions.ouvriers.colere === CHAMPS.joueur.factions.ouvriers.colere + 15, 'grève sauvage : la faction la plus en colère +15');
+  const fi = prep('filon');
+  check(fi.regions.collines.emplacements === 4, 'filon découvert : un emplacement de plus dans une région à filons');
+  const inc = prep('incident'); const n0 = inc.evenement.cibles.nation;
+  check(inc.nations[n0].relation === vrai().nations[n0].relation - 20, 'incident de frontière : −20 avec une nation');
+  const amb = prep('ambassadeur'); check(Object.values(amb.nations).some((x, i) => x.relation === Object.values(vrai().nations)[i].relation + 15), 'ambassadeur : +15 avec une nation');
+  const inv = prep('inventeur'); inv.tour = 7; const inv2 = Tour.tourSuivant(inv, [{ type: 'evenement', choix: 'financer' }]);
+  check(Object.values(inv2.bonusRendement)[0] === 1.15, 'inventeur : 100 or pour +15 % de rendement d\'un type de bâtiment');
+  check(prep('mutinerie').paquet.includes('mutinerie') && (() => { const e = prep('mutinerie', { regiments: 8, moral: 0.5, guerre: { ennemis: ['val_roc'], allies: [] } }); return e.regiments === 6; })(), 'mutinerie : seulement en guerre et avec un moral sous 0,6 ; −25 % de régiments');
+  const di = prep('dirigeant'); const avantP = Object.values(vrai().profils).map(p => p.persona), apresP = Object.values(di.profils).map(p => p.persona);
+  check(apresP.filter((p, i) => p !== avantP[i]).length === 1 && new Set(apresP).size === 3, 'changement de dirigeant : un voisin change de persona (toujours 3 différents)');
+  const ref = prep('refugies'); ref.tour = 7; const ref2 = Tour.tourSuivant(ref, [{ type: 'evenement', choix: 'accueillir' }]);
+  check(ref2.journal.some(l => /Accueillir/.test(l)) && ref2.familles > 90, 'réfugiés : accueillir donne +10 familles');
+  // invariants avec événements
+  let viol = '';
+  for (let g = 1; g <= 30; g++) { let e = Etat.creerEtat(CHAMPS, g); const r = Alea.creer(g);
+    while (!e.fin) { const d = Tour.actionsDisponibles(e); const a = d.length && Alea.suivant(r) < 0.5 ? [Alea.choisir(r, d)] : []; e = Tour.tourSuivant(e, a);
+      if (Object.values(e.factions).some(x => x.statut !== FAm.statutDe(x) || x.colere < 0 || x.colere > 100)) viol = 'faction'; if (!(e.familles > 0)) viol = 'familles'; if (e.regiments < 0) viol = 'régiments'; } }
+  check(!viol, 'événements : parties au hasard, invariants tenus' + (viol ? ' — ' + viol : ''));
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

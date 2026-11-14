@@ -43,7 +43,11 @@ function creerEtat(scenario, graine){
     chantiers: [],                    // bâtiments en construction : [{ id, region, restant }], un par région
     lois: {},                         // catégorie → { id, depuis } (loi en vigueur)
     impots: "normal",                 // V2 budget : niveau d'imposition (bas, normal, haut)
-    debat: null,                      // V2 : la loi en débat { id, depuis } (une seule)
+    debat: null,
+    paquet: [],                       // événements : cartes restantes (mélangées au premier tirage)
+    evenement: null,                  // carte tirée qui attend la réponse du joueur { id, cibles, depuis }
+    modifProd: [],                    // effets d'événements sur la production [{ bien, mult, jusqua }]
+    bonusRendement: {},               // bâtiment → multiplicateur (Inventeur)                      // V2 : la loi en débat { id, depuis } (une seule)
     evenements: copie(scenario.evenements || []),   // événements écrits du scénario
     modifPrix: [],                    // [{ prix: { bien: facteur }, jusqua }] (événements ; traités en M3)
     bilan: null,                      // économie du dernier tour (Economie.bilan)

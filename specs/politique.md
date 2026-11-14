@@ -125,6 +125,11 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 17. Paquet d'événements (14/11)
+Décisions de l'utilisateur : une chance sur six par tour (à partir du tour 5) ; **pas de cartes « saturation » ni « pénurie »** (l'économie doit rester lisible : pas de pénurie de grain quand on en a). Fait : `donnees/evenements.js` (12 cartes : sécheresse, bonne récolte, épidémie, scandale, grève sauvage, filon découvert, réfugiés, incident de frontière, ambassadeur, inventeur, mutinerie, changement de dirigeant), `moteur/evenements.js` (paquet mélangé au hasard à graine, sans retour avant épuisement ; carte à condition passée si la condition manque ; carte tirée en fin de tour, réponse au tour suivant ; sans réponse, la réponse gratuite). Bots : réponse payante s'ils ont 3 fois son prix. 275 tests.
+
+**Avant (budget) → après (200 parties par bot)** : environ 6 événements par partie ; economy fin 100 %, or t40 5 081 → 4 914, grève 0 % → 1 % ; no_appeasement révolution 1 % → 3 %, grève 6 % → 18 % ; replica révolution 2 % → 4 % ; militarist 20 % ; random 79 % → 87 %. Aucune stratégie dominante. Les événements ajoutent une pression modérée : ils punissent surtout les pays déjà fragiles.
+
 ## 16. Validation du 14/11
 L'utilisateur a validé toutes les valeurs encore en attente : personas (tableau de `regles-v2.md`), factions pour et contre des lois (§ 12), détails de l'armée et de la guerre (§ 9 ; la capitulation « sans régiment » est gardée à côté de celle à la moitié des régions), budget (§ 15), contrats tirés des échanges (§ 10). Prochaines étapes : le paquet d'événements, puis la revue de toutes les lois (supprimer, modifier, ajouter).
 

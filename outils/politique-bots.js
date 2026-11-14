@@ -66,6 +66,14 @@ function fiscalite(p){
   const voulu = max >= 55 ? 'bas' : max < 35 ? 'haut' : 'normal';
   if ((p.e.impots || 'normal') !== voulu) p.essayer({ type: 'impots', id: voulu });
 }
+// un événement à choix : la réponse payante si on a au moins 3 fois son prix, sinon la gratuite (par défaut)
+const { CARTES } = P('donnees/evenements.js');
+function evenement(p){
+  const ev = p.e.evenement;
+  if (!ev) return;
+  const payante = CARTES[ev.id].choix.find(c => c.cout && p.e.tresor >= 3 * c.cout);
+  if (payante) p.essayer({ type: 'evenement', choix: payante.id });
+}
 // une caserne d'abord si on n'en a pas
 const avecCaserne = liste => e => (!e.batiments.caserne && !e.chantiers.some(c => c.id === 'caserne') ? ['caserne'] : []).concat(liste(e));
 // apaiser les factions dont la colère atteint le seuil (la plus en colère d'abord)
@@ -122,6 +130,7 @@ const BOTS = {
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
+    evenement(p);
     return p.acts;
   },
 
@@ -134,6 +143,7 @@ const BOTS = {
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
+    evenement(p);
     return p.acts;
   },
 
@@ -145,6 +155,7 @@ const BOTS = {
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
+    evenement(p);
     return p.acts;
   },
 
@@ -163,6 +174,7 @@ const BOTS = {
       if (nous > 1.5 * Guerre.force(p.e, cible)) p.essayer({ type: 'declarer_guerre', id: cible });
     }
     fiscalite(p);
+    evenement(p);
     return p.acts;
   },
 
@@ -208,6 +220,7 @@ const BOTS = {
       if (e.tour >= 3 && !p.e.batiments.caserne && !p.e.chantiers.some(c => c.id === 'caserne')) construireMieux(p, 'caserne');
       etapes.forEach(([t, a], i) => { if (!faites.has(i) && e.tour >= t && (a.type === 'construire' ? construireMieux(p, a.id) : p.essayer(a))) faites.add(i); });
       fiscalite(p);
+      evenement(p);
       return p.acts;
     };
   }

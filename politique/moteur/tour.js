@@ -20,6 +20,7 @@ const Economie = NODE ? require("./economie.js") : racine.Politique.Economie;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const Guerre = NODE ? require("./guerre.js") : racine.Politique.Guerre;
+const Evenements = NODE ? require("./evenements.js") : racine.Politique.Evenements;
 
 function actionsDisponibles(etat){
   if (etat.fin) return [];
@@ -29,7 +30,8 @@ function actionsDisponibles(etat){
     .concat(Batiments.constructibles(etat).map(c => ({ type: "construire", id: c.id, region: c.region })))
     .concat(Factions.apaisables(etat).map(id => ({ type: "apaiser", id })))
     .concat(Diplomatie.actions(etat))
-    .concat(Guerre.actions(etat));
+    .concat(Guerre.actions(etat))
+    .concat(Evenements.actions(etat));
 }
 
 // même action : mêmes champs et mêmes valeurs, dans n'importe quel ordre
@@ -40,6 +42,7 @@ function appliquerAction(e, a, r){
   if (!actionsDisponibles(e).some(d => memeAction(a, d))) throw new Error("action refusée : " + JSON.stringify(a));
   if (a.type === "loi") Lois.lancer(e, a.id);
   else if (a.type === "abandonner") Lois.abandonner(e);
+  else if (a.type === "evenement") Evenements.appliquer(e, a.choix);
   else if (a.type === "impots"){ e.impots = a.id; e.journal.push(`Impôts : niveau ${a.id}.`); }
   else if (a.type === "construire") Batiments.commander(e, a.id, a.region);
   else if (a.type === "apaiser") Factions.apaiser(e, a.id);
@@ -63,15 +66,18 @@ function tourSuivant(etat, actions, rng){
   e.recrues = [];
   evenements(e);
   for (const a of actions || []) appliquerAction(e, a, r);
+  Evenements.reponseParDefaut(e);   // un événement sans réponse : la réponse gratuite
   Lois.debattre(e, r);
   Economie.appliquer(e);
   Diplomatie.tour(e);
   Guerre.tour(e, r);
   Factions.finDeTour(e);
   Batiments.avancer(e);
+  Evenements.tirer(e, r);           // fin de tour : peut-être une carte (réponse au tour suivant)
   e.alea = r.s >>> 0;
   e.tour++;
   e.modifPrix = e.modifPrix.filter(m => m.jusqua >= e.tour);
+  e.modifProd = (e.modifProd || []).filter(m => m.jusqua >= e.tour);
   if (e.tour > e.tourMax && !e.fin){ e.fin = true; e.issue = { type: "fin" }; }
   return e;
 }
