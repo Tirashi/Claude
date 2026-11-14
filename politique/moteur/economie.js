@@ -39,6 +39,7 @@ function bilan(e){
       if (b.entretien) entretienBat += n * b.entretien;
     }
   }
+  entretienBat *= ECO.entretienFacteur;                          // V2 budget : entretien des bâtiments
   entretienBat += (e.regiments || 0) * GU.regiment.entretien;   // V2 : entretien des régiments
   for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
   for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
@@ -58,10 +59,13 @@ function bilan(e){
     else if (balance[r] < 0){ pa[r] = arrondi(p[r] * Math.min(M.max, 1 + M.pente * q)); achats += q * pa[r] * t.achat; }
   }
   contrats = arrondi(contrats);
-  const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots * fa.impots);
-  const entretiens = arrondi(fx.entretien + entretienBat);
+  const niveau = ECO.niveauxImpot[e.impots || "normal"];
+  const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots * fa.impots * niveau.impots);
+  // dette (V2 budget) : intérêts sur ce qui est dû
+  const interets = e.tresor < 0 ? arrondi(-e.tresor * ECO.dette.taux) : 0;
+  const entretiens = arrondi(fx.entretien + entretienBat + interets);
   ventes = arrondi(ventes); achats = arrondi(achats);
-  return { production: prod, consommation: conso, balance, prix: p, prixVente: pv, prixAchat: pa, ventes, achats, contrats, impots, entretiens,
+  return { interets, production: prod, consommation: conso, balance, prix: p, prixVente: pv, prixAchat: pa, ventes, achats, contrats, impots, entretiens,
            solde: arrondi(ventes - achats + contrats + impots - entretiens), croissance: ECO.croissance + fx.croissance };
 }
 
@@ -69,6 +73,11 @@ function bilan(e){
 function appliquer(e){
   const b = bilan(e);
   e.tresor = arrondi(e.tresor + b.solde);
+  // (en essai) réserves plafonnées : l'excédent est perdu
+  if (ECO.reserves && e.tresor > ECO.reserves * b.impots){
+    b.perdu = arrondi(e.tresor - ECO.reserves * b.impots); e.tresor = arrondi(ECO.reserves * b.impots);
+    e.journal.push(`Réserves pleines : ${b.perdu} or perdus.`);
+  }
   e.familles = arrondi(Math.min(ECO.plafondFamilles, e.familles * (1 + b.croissance)));
   e.bilan = b;
   return b;

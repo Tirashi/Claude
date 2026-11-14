@@ -24,6 +24,9 @@ const RLV = P('donnees/lois.js').REGLES_LOIS, RLV0 = JSON.parse(JSON.stringify(R
 Object.assign(RLV, { premierTirage: 3, colereDebat: 0, chance: Object.assign({}, RLV.chance, { min: 1, max: 1 }) });
 // … et avec la réputation à part (avant la V2 étape 6)
 const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
+// … et sans entretien des bâtiments ni intérêts de la dette (avant le budget de la V2)
+const ECOV = P('donnees/economie.js'), BUDGET0 = { entretienFacteur: ECOV.entretienFacteur, dette: JSON.parse(JSON.stringify(ECOV.dette)) };
+ECOV.entretienFacteur = 0; ECOV.dette.taux = 0; ECOV.dette.colereFaillite = 0;
 
 let fail = 0, n = 0;
 const check = (ok, msg) => { n++; console.log((ok ? 'ok    ' : 'ÉCHEC ') + msg); if (!ok) fail++; };
@@ -674,6 +677,24 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const j = vrai({ regiments: 1 }); GU.declarer(j, 'val_roc', 'val_roc', Alea.creer(1)); j.guerre.ennemis = ['val_roc']; j.guerre.allies = [];
   j.occupations = { plaine: 'val_roc', vallee: 'val_roc' }; GU.tour(j, Alea.creer(1));
   check(!j.guerre && !j.regions.plaine && Object.keys(j.regions).length === 3, 'capitulation : deux de nos 4 régions occupées, nous capitulons et en cédons une');
+}
+
+// ===================== Budget (14/11) : niveau d'imposition, entretien des bâtiments, dette =====================
+{
+  Object.assign(ECOV, { entretienFacteur: BUDGET0.entretienFacteur, dette: BUDGET0.dette });
+  const v = () => vrai({ evenements: [] });
+  const imp = niv => Economie.bilan(Object.assign(v(), { impots: niv })).impots;
+  check(imp('bas') === 60 && imp('normal') === 80 && imp('haut') === 108, 'impôts : niveau bas ×0,75, normal ×1, haut ×1,35');
+  const tn = Tour.tourSuivant(v(), []), th = Tour.tourSuivant(v(), [{ type: 'impots', id: 'haut' }]), tb = Tour.tourSuivant(v(), [{ type: 'impots', id: 'bas' }]);
+  check(Object.keys(tn.factions).every(f => th.factions[f].colere === tn.factions[f].colere + 4 && tb.factions[f].colere === Math.max(0, tn.factions[f].colere - 1)), 'impôts : haut +4 de colère par tour pour toutes les factions, bas −1');
+  check(th.impots === 'haut' && !Tour.actionsDisponibles(th).some(a => a.type === 'impots' && a.id === 'haut') && Tour.actionsDisponibles(th).some(a => a.type === 'impots' && a.id === 'bas'), 'impôts : le niveau choisi reste jusqu\'au prochain changement');
+  check(Economie.bilan(v()).entretiens === 4 * 3 + 4 + 3 + 3 * 3, 'entretien : 3 par ferme, 4 par mine, 3 par caserne, plus 3 par régiment (départ : 28 or par tour)');
+  check(BAT.weaving.entretien === 5 && BAT.workshop.entretien === 4 && BAT.fort.entretien === 4 && BAT.entente_mill.entretien === 2, 'entretien : tissage 5, atelier 4, fort 4, filature 2 (part du joueur)');
+  check(Economie.bilan(Object.assign(v(), { occupations: { plaine: 'val_roc' } })).entretiens === 28 - 6, 'entretien : une région occupée ne coûte plus (ni ne produit)');
+  const dt = Economie.bilan(Object.assign(v(), { tresor: -100 }));
+  check(dt.interets === 5 && dt.entretiens === 28 + 5 && Economie.bilan(v()).interets === 0, 'dette : sous zéro, 5 % d\'intérêts par tour');
+  const ok = Tour.tourSuivant(Object.assign(v(), { tresor: -299 }), []), fa = Tour.tourSuivant(Object.assign(v(), { tresor: -400 }), []);
+  check(Object.keys(ok.factions).every(f => fa.factions[f].colere === ok.factions[f].colere + 3), 'dette : sous −300 (faillite), +3 de colère par tour pour toutes les factions');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

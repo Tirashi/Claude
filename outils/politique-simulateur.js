@@ -53,7 +53,7 @@ function partie(nom, graine, tours, coupe){
   const bot = Bots.creer(nom, graine);
   const m = { graine, issue: null, duree: 0, tresor: {}, reputation: {}, debats: 0, abandons: 0, toursGuerre: 0, guerres: 0, declareesParNous: 0,
               issuesGuerres: { gagnees: 0, perdues: 0, blanches: 0 }, batailles: { gagnees: 0, perdues: 0 },
-              tours55: 0, tours75: 0, greves: 0, apaisements: 0, sansDecision: 0, regionsGagnees: 0, regionsPerdues: 0, regimentsMax: 0, toursOccupes: 0, loisAdoptees: [], catalogueComplet: null, colereMax: 0 };
+              tours55: 0, tours75: 0, greves: 0, apaisements: 0, sansDecision: 0, regionsGagnees: 0, regionsPerdues: 0, regimentsMax: 0, toursOccupes: 0, toursDette: 0, toursFaillite: 0, impotsHaut: 0, loisAdoptees: [], catalogueComplet: null, colereMax: 0 };
   const adoptees = new Set(), traces = [];
   while (!e.fin){
     if (coupe && e.tour === coupe) e = JSON.parse(JSON.stringify(e));
@@ -67,6 +67,9 @@ function partie(nom, graine, tours, coupe){
     const t = e.tour - 1;
     if (e.guerre) m.toursGuerre++;
     m.regimentsMax = Math.max(m.regimentsMax, e.regiments || 0);
+    if (e.tresor < 0) m.toursDette++;
+    if (e.tresor < -300) m.toursFaillite++;
+    if (e.impots === 'haut') m.impotsHaut++;
     if (Object.keys(e.regions).some(r => (e.occupations || {})[r])) m.toursOccupes++;
     if (!avant && e.guerre) m.guerres++;
     for (const l of e.journal){
@@ -110,7 +113,7 @@ function resume(nom, ms){
     catalogueComplet: ms.filter(m => m.catalogueComplet != null).length, colereMax: med(ms.map(m => m.colereMax)),
     sansDecision: med(ms.map(m => m.sansDecision / m.duree)),
     regionsGagnees: somme(m => m.regionsGagnees) / n, regionsPerdues: somme(m => m.regionsPerdues) / n,
-    regimentsMax: med(ms.map(m => m.regimentsMax)), toursOccupes: med(ms.map(m => m.toursOccupes))
+    regimentsMax: med(ms.map(m => m.regimentsMax)), avecDette: ms.filter(m => m.toursDette > 0).length, avecFaillite: ms.filter(m => m.toursFaillite > 0).length, impotsHaut: med(ms.map(m => m.impotsHaut)), toursOccupes: med(ms.map(m => m.toursOccupes))
   };
 }
 
@@ -141,6 +144,7 @@ function afficher(r){
   console.log(`  trésor médian : t10 ${r0(r.tresor[10])}, t20 ${r0(r.tresor[20])}, t30 ${r0(r.tresor[30])}, t40 ${r0(r.tresor[40])}`);
   console.log(`  réputation médiane (moyenne des relations) : t30 ${r0(r.reputation30)}, fin ${r0(r.reputationFin)}`);
   console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; par partie : guerres gagnées ${r.guerres.gagnees.toFixed(2)}, perdues ${r.guerres.perdues.toFixed(2)}, paix blanches ${r.guerres.blanches.toFixed(2)} ; batailles ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
+  console.log(`  budget : dette dans ${pct(r.avecDette, n)} des parties, faillite dans ${pct(r.avecFaillite, n)} ; impôts hauts ${r0(r.impotsHaut)} tours (médiane)`);
   console.log(`  armée : ${r0(r.regimentsMax)} régiments au plus (médiane) ; ${r0(r.toursOccupes)} tours avec une région occupée (médiane) ; régions par partie : ${r.regionsGagnees.toFixed(2)} gagnées, ${r.regionsPerdues.toFixed(2)} perdues`);
   console.log(`  factions : colère max ${r0(r.colereMax)}, tours ≥ 55 : ${r0(r.tours55)}, ≥ 75 : ${r0(r.tours75)} (médianes) ; grève dans ${pct(r.avecGreve, n)} des parties ; ${r0(r.apaisements)} apaisements`);
   console.log(`  débats ouverts : ${r0(r.debats)}, abandonnés : ${r0(r.abandons)} (médianes)`);

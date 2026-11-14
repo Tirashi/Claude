@@ -125,6 +125,16 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 15. Budget : impôts, entretien, dette (14/11)
+Décision de l'utilisateur : niveau d'imposition, entretien des bâtiments, dette ; plafond des réserves seulement si l'or déborde encore. Après avoir regardé l'usage de l'or dans Victoria 3 (budget en flux, impôts réglables, salaires de l'État, réserves plafonnées, dette et faillite).
+Fait (valeurs ASSUMPTION (budget), à valider) : **niveau d'imposition** bas (×0,75, −1 colère/tour pour toutes les factions), normal, haut (×1,35, **+4**/tour) ; **entretien** par tour : ferme 3, mine 4, atelier 4, tissage 5, filature 2, caserne 3, fort 4 (environ 5 % du coût ; une région occupée ne coûte plus) ; **dette** : sous zéro, 5 % d'intérêts par tour ; sous −300 (faillite), +3 colère/tour pour toutes les factions. Bots : impôts hauts si toutes les factions sont sous 35 de colère, bas si l'une atteint 55. Les tests écrits avant gardent l'ancien budget. 255 tests.
+
+**Mesures (100 à 200 parties par bot)** :
+- Entretien ×1 : economy 7 275 → 5 081 or au tour 40, aucune révolution ; ×2 : 2 030, mais 8 % de révolutions pour economy et 51 % pour militarist. Gardé ×1.
+- Impôts hauts à +2 de colère : **stratégie dominante** (Médecine du travail d'abord : −2/tour annule +2, impôts hauts 28 tours sans grogne). À +3 encore dominante, **à +4 plus aucune** (spam_medicine 4 930 contre economy 5 086). Retenu +4.
+- Dette : militarist et replica s'endettent parfois (20 % et 15 % de faillites), passif 35 %, random 69 % ; les bons gestionnaires presque jamais.
+- **Plafond des réserves** (en essai, désactivé : `economie.reserves`) : 15 tours d'impôts → economy 3 596 au tour 40 ; 10 tours → 2 398. Il détruit l'excédent mais **ne change aucune décision** (même classement, même stratégie dominante à +3) : il manque surtout des choses à acheter en fin de partie. Décision de l'utilisateur attendue.
+
 ## 14 bis. Équilibre de la guerre : décisions du 14/11
 Validé par l'utilisateur et activé : **une caserne au Bourg au départ** ; **capitulation quand la moitié de ses régions est occupée** (2 sur 4 pour nous, 2 sur 3 pour une nation). Gardés : forts ×1,5, non-réarmement imposé par l'ordinateur. 247 tests.
 Résultat (200 parties par bot) : economy fin 100 % (révolution 0 %, grève 0 %), 0,64 région perdue par partie, or t40 7 275 ; replica fin 100 %, 0,38 région perdue ; militarist conquiert 1,94 région par partie (guerres de 8 tours, 2,69 guerres gagnées) ; random révolution 52 % ; passif révolution 100 % (il ne construit rien). Aucune stratégie dominante.

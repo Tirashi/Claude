@@ -7,6 +7,7 @@
 const NODE = typeof module !== "undefined" && module.exports;
 const { FACTIONS, REGLES_FACTIONS: R } = NODE ? require("../donnees/factions.js") : racine.Politique.FACTIONS;
 const { LOIS, GROUPES } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
+const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 
 const borne = x => Math.max(R.bornes.min, Math.min(R.bornes.max, Math.round(x * 100) / 100));
 
@@ -105,6 +106,12 @@ function finDeTour(e){
     (e.niveauDeVie = e.niveauDeVie || {})[f] = c;
     if (c >= N.seuilAise) modifier(e, f, "colere", N.aise * k);
     else if (c < N.seuilGene) modifier(e, f, "colere", N.gene);
+  }
+  // V2 budget : le niveau d'imposition et la faillite pèsent sur toutes les factions
+  const niv = ECO.niveauxImpot[e.impots || "normal"].colere;
+  for (const f in e.factions){
+    if (niv) modifier(e, f, "colere", niv);
+    if (e.tresor < ECO.dette.faillite) modifier(e, f, "colere", ECO.dette.colereFaillite);
   }
   e.apaises = [];
   evaluer(e);

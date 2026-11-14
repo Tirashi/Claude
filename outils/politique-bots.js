@@ -60,6 +60,12 @@ function armee(p, ratio, reserve){
   for (const a of Tour.actionsDisponibles(e).filter(x => x.type === 'recruter'))
     if (Guerre.force(p.e, 'joueur') < cible && p.e.tresor - 30 >= (reserve || 0)) p.essayer(a);
 }
+// le niveau d'imposition : haut si toutes les factions sont calmes (colère < 35), bas si l'une gronde (≥ 55), sinon normal
+function fiscalite(p){
+  const max = Math.max(...Object.values(p.e.factions).map(x => x.colere));
+  const voulu = max >= 55 ? 'bas' : max < 35 ? 'haut' : 'normal';
+  if ((p.e.impots || 'normal') !== voulu) p.essayer({ type: 'impots', id: voulu });
+}
 // une caserne d'abord si on n'en a pas
 const avecCaserne = liste => e => (!e.batiments.caserne && !e.chantiers.some(c => c.id === 'caserne') ? ['caserne'] : []).concat(liste(e));
 // apaiser les factions dont la colère atteint le seuil (la plus en colère d'abord)
@@ -115,6 +121,7 @@ const BOTS = {
     loiSuivante(p, ['income_progressive', 'school_public', 'school_free', 'income_capital']);
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
+    fiscalite(p);
     return p.acts;
   },
 
@@ -126,6 +133,7 @@ const BOTS = {
     loiSuivante(p, ['labor_medicine', 'income_progressive', 'school_public', 'school_free', 'income_capital']);
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
+    fiscalite(p);
     return p.acts;
   },
 
@@ -136,6 +144,7 @@ const BOTS = {
     loiSuivante(p, ['income_progressive', 'school_public', 'school_free', 'income_capital']);
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
+    fiscalite(p);
     return p.acts;
   },
 
@@ -153,6 +162,7 @@ const BOTS = {
       const cible = Object.keys(p.e.nations).sort((a, b) => Guerre.force(p.e, a) - Guerre.force(p.e, b))[0];
       if (nous > 1.5 * Guerre.force(p.e, cible)) p.essayer({ type: 'declarer_guerre', id: cible });
     }
+    fiscalite(p);
     return p.acts;
   },
 
@@ -197,6 +207,7 @@ const BOTS = {
       armee(p, 1, 50);
       if (e.tour >= 3 && !p.e.batiments.caserne && !p.e.chantiers.some(c => c.id === 'caserne')) construireMieux(p, 'caserne');
       etapes.forEach(([t, a], i) => { if (!faites.has(i) && e.tour >= t && (a.type === 'construire' ? construireMieux(p, a.id) : p.essayer(a))) faites.add(i); });
+      fiscalite(p);
       return p.acts;
     };
   }

@@ -25,6 +25,7 @@ function actionsDisponibles(etat){
   if (etat.fin) return [];
   return Lois.lancables(etat).map(id => ({ type: "loi", id }))
     .concat(etat.debat ? [{ type: "abandonner" }] : [])
+    .concat(Object.keys(ECO.niveauxImpot).filter(n => n !== (etat.impots || "normal")).map(id => ({ type: "impots", id })))
     .concat(Batiments.constructibles(etat).map(c => ({ type: "construire", id: c.id, region: c.region })))
     .concat(Factions.apaisables(etat).map(id => ({ type: "apaiser", id })))
     .concat(Diplomatie.actions(etat))
@@ -39,6 +40,7 @@ function appliquerAction(e, a, r){
   if (!actionsDisponibles(e).some(d => memeAction(a, d))) throw new Error("action refusée : " + JSON.stringify(a));
   if (a.type === "loi") Lois.lancer(e, a.id);
   else if (a.type === "abandonner") Lois.abandonner(e);
+  else if (a.type === "impots"){ e.impots = a.id; e.journal.push(`Impôts : niveau ${a.id}.`); }
   else if (a.type === "construire") Batiments.commander(e, a.id, a.region);
   else if (a.type === "apaiser") Factions.apaiser(e, a.id);
   else if (["recruter", "declarer_guerre", "bataille", "imposer_paix", "paix_blanche"].includes(a.type)) Guerre.appliquer(e, a, r);
