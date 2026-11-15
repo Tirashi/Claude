@@ -47,8 +47,20 @@ const SCENARIO_CHAMPS = {
                    regions: { port: { nom: "Port de Brume", terrain: "ville" }, marais: { nom: "Marais", terrain: "mixte" }, coteaux: { nom: "Coteaux", terrain: "fertile" } } },
     contreforts: { nom: "Contreforts",    dirigeant: "Harl",    relation: 10, tresor: 150, familles: 50,     // ASSUMPTION validée
                    taux: 1.0, colere: 25, exporte: { outils: 10, bois: 10 }, importe: { grain: 5, charbon: 5 },                               // ASSUMPTION validée (M3)
-                   regions: { cols: { nom: "Cols", terrain: "filons" }, paturages: { nom: "Pâturages", terrain: "fertile" }, bastide: { nom: "Bastide", terrain: "ville" } } }
-  }
+                   regions: { cols: { nom: "Cols", terrain: "filons" }, paturages: { nom: "Pâturages", terrain: "fertile" }, bastide: { nom: "Bastide", terrain: "ville" } } },
+    // trois nations de plus (15/11, ASSUMPTION (nations)) : plusieurs sources et plusieurs débouchés pour chaque ressource
+    aurele:      { nom: "Aurèle",         dirigeant: "Clémence", relation: 10, tresor: 300, familles: 110,
+                   taux: 1.0, colere: 25, exporte: { grain: 20, vin: 5 }, importe: { outils: 10, fer: 5, tissu: 5 },
+                   regions: { epis: { nom: "Plaine des Épis", terrain: "fertile" }, vignes: { nom: "Coteaux d'Aurèle", terrain: "fertile" }, halle: { nom: "Halle d'Aurèle", terrain: "ville" } } },
+    port_salin:  { nom: "Port-Salin",     dirigeant: "Odon",     relation: 10, tresor: 700, familles: 70,
+                   taux: 1.4, colere: 20, exporte: { tissu: 10, outils: 5 }, importe: { bois: 10, vin: 10, charbon: 5 },
+                   regions: { quais: { nom: "Quais de Salin", terrain: "ville" }, salines: { nom: "Salines", terrain: "mixte" }, comptoir: { nom: "Comptoir", terrain: "ville" } } },
+    hautefage:   { nom: "Hautefage",      dirigeant: "Bertille", relation: 10, tresor: 250, familles: 80,
+                   taux: 1.0, colere: 25, exporte: { bois: 15, fer: 10 }, importe: { charbon: 10, grain: 10 },
+                   regions: { futaie: { nom: "Grande Futaie", terrain: "mixte" }, fonderies: { nom: "Fonderies de Hautefage", terrain: "filons" }, essarts: { nom: "Essarts", terrain: "mixte" } } }
+  },
+  // tirage au début de la partie (15/11) : au plus 2 dirigeants avec le même persona ; volumes d'échanges × (1 ± 0,5)
+  tirage: { personasIdentiques: 2, variation: 0.5 }
 };
 
 if (NODE) module.exports = SCENARIO_CHAMPS; else (racine.Politique = racine.Politique || {}).SCENARIO_CHAMPS = SCENARIO_CHAMPS;

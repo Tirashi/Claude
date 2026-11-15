@@ -37,7 +37,10 @@ const RES = (() => {
   E.boisParChantier = 0; E.besoinsParFamille.vin = 0; B.workshop.consomme = { fer: 5 }; delete B.weaving.consomme; F.niveauDeVie.paniers.patrons = ['tissu', 'fer'];
   for (const n in ancien){ C.nations[n].exporte = ancien[n][0]; C.nations[n].importe = ancien[n][1]; }
   C.joueur.regions.vallee.emplacements = 3; C.joueur.regions.plaine.batiments = { farm: 2 };
-  return () => { E.boisParChantier = avant.bois; E.besoinsParFamille.vin = avant.vin; B.workshop.consomme = avant.ws; B.weaving.consomme = avant.we; F.niveauDeVie.paniers.patrons = avant.pat;
+  // … et les trois nations d'avant, personas tous différents, échanges fixes (avant le 15/11)
+  const nouvelles = {}; for (const n of ['aurele', 'port_salin', 'hautefage']){ nouvelles[n] = C.nations[n]; delete C.nations[n]; }
+  const tirage = C.tirage; C.tirage = { personasIdentiques: 1, variation: 0 };
+  return () => { Object.assign(C.nations, nouvelles); C.tirage = tirage; E.boisParChantier = avant.bois; E.besoinsParFamille.vin = avant.vin; B.workshop.consomme = avant.ws; B.weaving.consomme = avant.we; F.niveauDeVie.paniers.patrons = avant.pat;
     for (const n in avant.nat){ C.nations[n].exporte = avant.nat[n].exporte; C.nations[n].importe = avant.nat[n].importe; } C.joueur.regions.vallee.emplacements = avant.vallee; C.joueur.regions.plaine.batiments = avant.plaine; };
 })();
 // … et avec les prix des contrats d'avant le 14/11 (×0,8 à l'achat, ×1,3 à la vente)
@@ -1106,6 +1109,39 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(e0.offres.val_roc_charbon.sens === 'achat' && e0.offres.val_roc_vin.sens === 'vente' && e0.offres.brume_vin.sens === 'achat' && e0.offres.brume_bois.sens === 'vente' && e0.offres.contreforts_bois.sens === 'achat' && e0.offres.contreforts_charbon.sens === 'vente',
     'ressources : Val-Roc vend du charbon et achète du vin, Brume vend du vin et achète du bois, Contreforts vend du bois et achète du charbon');
   check(['scierie', 'mine_charbon', 'vignoble'].every(id => P('donnees/institutions.js').NIVEAUX.batiments.includes(id)), 'ressources : les nouveaux bâtiments s\'agrandissent');
+}
+
+// --- six nations, tirages variés (15/11) ---
+{
+  const C = CHAMPS, PERSO = P('donnees/personas.js');
+  const e0 = Etat.creerEtat(C, 11);
+  check(Object.keys(e0.nations).length === 6 && ['aurele', 'port_salin', 'hautefage'].every(n => e0.nations[n].relation === 10), 'nations : six, les nouvelles à +10');
+  const toutes = []; for (const n in e0.profils) toutes.push(...Object.keys(e0.profils[n].regions));
+  check(new Set(toutes).size === toutes.length && toutes.length === 18, 'nations : 3 régions chacune, noms tous différents');
+  const vend = b => Object.keys(C.nations).filter(n => C.nations[n].exporte[b]), achete = b => Object.keys(C.nations).filter(n => C.nations[n].importe[b]);
+  check(['grain', 'fer', 'tissu', 'outils', 'bois', 'charbon', 'vin'].every(b => vend(b).length >= 1 && achete(b).length >= 1 && vend(b).length + achete(b).length >= 3), 'échanges : chaque ressource a des vendeurs et des acheteurs, plusieurs sources ou débouchés');
+  // personas : au plus deux fois le même, et des doublons apparaissent sur plusieurs parties
+  let doublon = false, max = 0;
+  for (let g = 1; g <= 60; g++){
+    const e = Etat.creerEtat(C, g), c = {};
+    for (const n in e.profils) c[e.profils[n].persona] = (c[e.profils[n].persona] || 0) + 1;
+    max = Math.max(max, ...Object.values(c)); if (Object.values(c).some(x => x === 2)) doublon = true;
+    if (!Object.values(e.profils).every(p => PERSO[p.persona])) max = 99;
+  }
+  check(max <= 2 && doublon, 'personas : au plus deux dirigeants avec le même, doublons possibles');
+  // variation des échanges : ±50 %, au moins 1, et elle change d'une partie à l'autre
+  let dans = true; const vus = new Set();
+  for (let g = 1; g <= 40; g++){
+    const e = Etat.creerEtat(C, g);
+    for (const n in e.profils) for (const sens of ['exporte', 'importe']) for (const b in e.profils[n][sens]){
+      const v = e.profils[n][sens][b], base = C.nations[n][sens][b];
+      if (v < Math.max(1, Math.round(base * 0.5)) || v > Math.round(base * 1.5)) dans = false;
+    }
+    vus.add(e.profils.aurele.exporte.grain);
+  }
+  check(dans && vus.size > 5, 'échanges : volumes tirés entre ×0,5 et ×1,5 du profil, différents selon la partie');
+  check(JSON.stringify(Etat.creerEtat(C, 5)) === JSON.stringify(Etat.creerEtat(C, 5)), 'tirages : même graine, même partie');
+  check(Object.keys(e0.offres).length === Object.values(C.nations).reduce((t, n) => t + Object.keys(n.exporte).length + Object.keys(n.importe).length, 0), 'contrats : une offre par bien vendu ou acheté de chaque nation');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

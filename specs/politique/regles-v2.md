@@ -97,6 +97,10 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Bois** (1 or) : scierie (15, vallée ×1,5) ; chaque chantier en cours consomme 5 bois par tour. **Charbon** (1,5) : mine de charbon (12, collines ×1,5) ; ateliers et tissages en consomment 3. **Vin** (2,5) : vignoble (10, plaine ×1,25) ; 0,05 par famille ; panier des patrons : tissu et vin. Un vignoble au départ dans la plaine ; vallée à 4 emplacements.
 - Échanges : Val-Roc vend du charbon, achète du vin ; Brume vend du vin, achète du bois ; Contreforts vend du bois, achète du charbon.
 
+### 11. Six nations (15/11)
+- Val-Roc, Brume, Contreforts, **Aurèle** (grain, vin), **Port-Salin** (tissu, outils ; riche), **Hautefage** (bois, fer) ; 3 régions chacune ; chaque ressource a plusieurs sources ou plusieurs débouchés.
+- Au début de la partie : personas tirés au hasard (au plus 2 dirigeants avec le même) ; volumes d'échanges des nations × (1 ± 0,5).
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

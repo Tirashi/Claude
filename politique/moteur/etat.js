@@ -34,12 +34,22 @@ function creerEtat(scenario, graine, pays){
   for (const reg in P.emplacements || {}) regions[reg].emplacements += P.emplacements[reg];   // pays marchand : bourg plus grand
   // lois en vigueur depuis longtemps : effets à terme complets, effets de durée finis
   for (const id of P.lois) lois[LOIS[id].categorie] = { id, depuis: -100 };
-  // personas des dirigeants : tirés au hasard, tous différents (caché au joueur : l'écran ne doit pas l'afficher)
-  const liste = Object.keys(PERSONAS);
-  for (let i = liste.length - 1; i > 0; i--){ const k = Alea.entier(r, i + 1); [liste[i], liste[k]] = [liste[k], liste[i]]; }
-  Object.keys(scenario.nations).forEach((id, i) => {
+  // personas des dirigeants : tirés au hasard (caché au joueur : l'écran ne doit pas l'afficher) ; tous différents si
+  // tirage.personasIdentiques vaut 1 (avant le 15/11), sinon au plus ce nombre de dirigeants avec le même persona
+  const T = scenario.tirage || { personasIdentiques: 1, variation: 0 };
+  const liste = Object.keys(PERSONAS), nations = Object.keys(scenario.nations), tires = [];
+  if (T.personasIdentiques <= 1){
+    for (let i = liste.length - 1; i > 0; i--){ const k = Alea.entier(r, i + 1); [liste[i], liste[k]] = [liste[k], liste[i]]; }
+    tires.push(...liste.slice(0, nations.length));
+  } else for (const id of nations){
+    const libres = liste.filter(p => tires.filter(x => x === p).length < T.personasIdentiques);
+    tires.push(Alea.choisir(r, libres));
+  }
+  // profils d'échanges qui varient d'une partie à l'autre (15/11) : chaque volume × (1 ± variation), au moins 1
+  const varie = o => { const v = copie(o); if (T.variation) for (const b in v) v[b] = Math.max(1, Math.round(v[b] * (1 - T.variation + 2 * T.variation * Alea.suivant(r)))); return v; };
+  nations.forEach((id, i) => {
     const n = scenario.nations[id];
-    profils[id] = { nom: n.nom, persona: liste[i], regions: copie(n.regions || {}), taux: n.taux, exporte: copie(n.exporte), importe: copie(n.importe) };
+    profils[id] = { nom: n.nom, persona: tires[i], regions: copie(n.regions || {}), taux: n.taux, exporte: varie(n.exporte), importe: varie(n.importe) };
   });
   const e = {
     version: VERSION,
