@@ -16,8 +16,8 @@ const SCENARIO_CHAMPS = {
     familles: 80,                     // ASSUMPTION validée : 80 familles = 80 grain/tour = 4 fermes
     // V2 : 4 régions fixes (terrain, emplacements, bâtiments de départ) ; ni atelier ni tissage (crise du tissu du tour 1)
     regions: {                                                                                          // ASSUMPTION validée (V2)
-      plaine:   { nom: "Plaine du Nord", terrain: "fertile", emplacements: 4, batiments: { farm: 2 } },
-      vallee:   { nom: "Vallée",         terrain: "mixte",   emplacements: 3, batiments: { farm: 2 } },
+      plaine:   { nom: "Plaine du Nord", terrain: "fertile", emplacements: 4, batiments: { farm: 2, vignoble: 1 } },   // vignoble de départ (15/11 : sans vin, les patrons partaient en gêne)
+      vallee:   { nom: "Vallée",         terrain: "mixte",   emplacements: 4, batiments: { farm: 2 } },
       collines: { nom: "Collines",       terrain: "filons",  emplacements: 3, batiments: { mine: 1 } },
       bourg:    { nom: "Bourg",          terrain: "ville",   emplacements: 4, batiments: { caserne: 1 } }   // caserne de départ (validée le 14/11)
     },
@@ -40,13 +40,13 @@ const SCENARIO_CHAMPS = {
   // (noms et terrains : ASSUMPTION validée (V2 étape 2) ; le revenu d'une nation suit la part de ses régions qu'elle contrôle)
   nations: {
     val_roc:     { nom: "Val-Roc",        dirigeant: "Vermeil", relation: 10, tresor: 400, familles: 90,     // ASSUMPTION validée
-                   taux: 1.0, colere: 30, exporte: { fer: 10 }, importe: { grain: 15, tissu: 5 },                       // ASSUMPTION validée (M3)
+                   taux: 1.0, colere: 30, exporte: { fer: 10, charbon: 10 }, importe: { grain: 15, tissu: 5, vin: 5 },                       // ASSUMPTION validée (M3)
                    regions: { hauts: { nom: "Hauts-Rocs", terrain: "filons" }, forges: { nom: "Forges de Vermeil", terrain: "ville" }, marches: { nom: "Marches de l'Ouest", terrain: "mixte" } } },
     brume:       { nom: "Brume-la-Brume", dirigeant: "Ferreol", relation: 10, tresor: 600, familles: 100,    // ASSUMPTION validée
-                   taux: 1.3, colere: 20, exporte: { tissu: 20 }, importe: { fer: 10, grain: 5 },                       // ASSUMPTION validée (M3)
+                   taux: 1.3, colere: 20, exporte: { tissu: 20, vin: 10 }, importe: { fer: 10, grain: 5, bois: 10 },                       // ASSUMPTION validée (M3)
                    regions: { port: { nom: "Port de Brume", terrain: "ville" }, marais: { nom: "Marais", terrain: "mixte" }, coteaux: { nom: "Coteaux", terrain: "fertile" } } },
     contreforts: { nom: "Contreforts",    dirigeant: "Harl",    relation: 10, tresor: 150, familles: 50,     // ASSUMPTION validée
-                   taux: 1.0, colere: 25, exporte: { outils: 10 }, importe: { grain: 5 },                               // ASSUMPTION validée (M3)
+                   taux: 1.0, colere: 25, exporte: { outils: 10, bois: 10 }, importe: { grain: 5, charbon: 5 },                               // ASSUMPTION validée (M3)
                    regions: { cols: { nom: "Cols", terrain: "filons" }, paturages: { nom: "Pâturages", terrain: "fertile" }, bastide: { nom: "Bastide", terrain: "ville" } } }
   }
 };

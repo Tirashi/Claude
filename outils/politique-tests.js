@@ -28,6 +28,18 @@ const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
 const HOST = P('donnees/diplomatie.js').hostilite; HOST.actif = false;
 // … et sans la pression contre la thésaurisation (15/11)
 const THES = P('donnees/institutions.js').THESAURISATION; THES.actif = false;
+// … et sans les ressources du 15/11 (bois, charbon, vin) : besoins, consommations, paniers, échanges et vallée d'avant
+const RES = (() => {
+  const E = P('donnees/economie.js'), B = P('donnees/batiments.js'), F = P('donnees/factions.js').REGLES_FACTIONS, C = P('donnees/champs.js');
+  const avant = JSON.parse(JSON.stringify({ bois: E.boisParChantier, vin: E.besoinsParFamille.vin, ws: B.workshop.consomme, we: B.weaving.consomme,
+    pat: F.niveauDeVie.paniers.patrons, nat: Object.fromEntries(Object.keys(C.nations).map(n => [n, { exporte: C.nations[n].exporte, importe: C.nations[n].importe }])), vallee: C.joueur.regions.vallee.emplacements, plaine: C.joueur.regions.plaine.batiments }));
+  const ancien = { val_roc: [{ fer: 10 }, { grain: 15, tissu: 5 }], brume: [{ tissu: 20 }, { fer: 10, grain: 5 }], contreforts: [{ outils: 10 }, { grain: 5 }] };
+  E.boisParChantier = 0; E.besoinsParFamille.vin = 0; B.workshop.consomme = { fer: 5 }; delete B.weaving.consomme; F.niveauDeVie.paniers.patrons = ['tissu', 'fer'];
+  for (const n in ancien){ C.nations[n].exporte = ancien[n][0]; C.nations[n].importe = ancien[n][1]; }
+  C.joueur.regions.vallee.emplacements = 3; C.joueur.regions.plaine.batiments = { farm: 2 };
+  return () => { E.boisParChantier = avant.bois; E.besoinsParFamille.vin = avant.vin; B.workshop.consomme = avant.ws; B.weaving.consomme = avant.we; F.niveauDeVie.paniers.patrons = avant.pat;
+    for (const n in avant.nat){ C.nations[n].exporte = avant.nat[n].exporte; C.nations[n].importe = avant.nat[n].importe; } C.joueur.regions.vallee.emplacements = avant.vallee; C.joueur.regions.plaine.batiments = avant.plaine; };
+})();
 // … et avec les prix des contrats d'avant le 14/11 (×0,8 à l'achat, ×1,3 à la vente)
 const CTR = P('donnees/diplomatie.js').contrats, CTR0 = { prixAchat: CTR.prixAchat, prixVente: CTR.prixVente }; CTR.prixAchat = 0.8; CTR.prixVente = 1.3;
 // … et sans entretien des bâtiments ni intérêts de la dette (avant le budget de la V2)
@@ -1070,6 +1082,30 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(t1.journal.some(l => /l'État thésaurise/.test(l)) && !t0.journal.some(l => /l'État thésaurise/.test(l)), 'thésaurisation : message seulement si le trésor dépasse le seuil');
   const ts = Tour.tourSuivant(sat, []);
   check(!ts.journal.some(l => /l'État thésaurise/.test(l)), 'thésaurisation : demandes satisfaites, pas de colère');
+}
+
+// --- ressources du 15/11 : bois, charbon, vin (sans stock) ---
+{
+  RES();
+  const E = P('donnees/economie.js'), Fd = P('donnees/factions.js').REGLES_FACTIONS;
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand'; e0.tresor = 2000;
+  check(['bois', 'charbon', 'vin'].every(b => E.biens.includes(b)) && E.prix.bois === 1 && E.prix.charbon === 1.5 && E.prix.vin === 2.5, 'ressources : bois 1, charbon 1,5, vin 2,5');
+  check(e0.regions.vallee.emplacements === 4 && e0.regions.plaine.batiments.vignoble === 1, 'ressources : la vallée a 4 emplacements, un vignoble au départ dans la plaine');
+  const ctr = Tour.actionsDisponibles(e0).filter(a => a.type === 'construire');
+  check(['scierie', 'mine_charbon', 'vignoble'].every(id => ctr.some(a => a.id === id)), 'ressources : scierie, mine de charbon et vignoble constructibles');
+  const reg = (id, terrain, n) => Object.assign(Etat.copie(e0), { regions: { essai: { nom: 'E', terrain, emplacements: 9, batiments: { [id]: n || 1 } } }, chantiers: [] });
+  check(Economie.bilan(reg('scierie', 'mixte')).production.bois === 22.5 && Economie.bilan(reg('mine_charbon', 'filons')).production.charbon === 18 && Economie.bilan(reg('vignoble', 'fertile')).production.vin === 12.5,
+    'ressources : scierie 15 bois (vallée ×1,5), mine de charbon 12 (collines ×1,5), vignoble 10 vin (plaine ×1,25)');
+  const ch = Etat.copie(e0); ch.chantiers = [{ id: 'farm', region: 'plaine', restant: 2 }, { id: 'farm', region: 'vallee', restant: 2, agrandir: true }];
+  check(Economie.bilan(ch).consommation.bois === Economie.bilan(e0).consommation.bois + 10, 'bois : 5 par tour et par chantier en cours (agrandissements compris)');
+  const oc = Etat.copie(ch); oc.occupations = { plaine: 'val_roc' };
+  check(Economie.bilan(oc).consommation.bois === Economie.bilan(e0).consommation.bois + 5, 'bois : pas pour un chantier arrêté en région occupée');
+  check(Economie.bilan(reg('workshop', 'mixte')).consommation.charbon === 3 && Economie.bilan(reg('weaving', 'mixte')).consommation.charbon === 3, 'charbon : 3 par tour pour un atelier ou un tissage');
+  check(proche(Economie.bilan(e0).consommation.vin, e0.familles * 0.05), 'vin : 0,05 par famille');
+  check(Fd.niveauDeVie.paniers.patrons.join() === 'tissu,vin', 'vin : dans le panier des patrons (tissu et vin)');
+  check(e0.offres.val_roc_charbon.sens === 'achat' && e0.offres.val_roc_vin.sens === 'vente' && e0.offres.brume_vin.sens === 'achat' && e0.offres.brume_bois.sens === 'vente' && e0.offres.contreforts_bois.sens === 'achat' && e0.offres.contreforts_charbon.sens === 'vente',
+    'ressources : Val-Roc vend du charbon et achète du vin, Brume vend du vin et achète du bois, Contreforts vend du bois et achète du charbon');
+  check(['scierie', 'mine_charbon', 'vignoble'].every(id => P('donnees/institutions.js').NIVEAUX.batiments.includes(id)), 'ressources : les nouveaux bâtiments s\'agrandissent');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

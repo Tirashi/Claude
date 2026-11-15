@@ -5,7 +5,7 @@
 (function(racine){
 "use strict";
 const NIVEAUX = {
-  batiments: ["farm", "mine", "workshop", "weaving"],   // bâtiments agrandissables
+  batiments: ["farm", "mine", "workshop", "weaving", "scierie", "mine_charbon", "vignoble"],   // bâtiments agrandissables
   cout: { 2: 1.5, 3: 2 },                                // × prix de base du bâtiment
   gain: 0.5                                              // chaque niveau : +50 % de production, de consommation et d'entretien
 };

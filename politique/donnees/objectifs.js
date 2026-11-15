@@ -11,13 +11,13 @@
 // seuils : { pays: [bronze, argent, or] }, tirés de 200 parties par bot et par pays (--objectifs --pays tous --seuils-proposes), validés le 14/11
 const OBJECTIFS = {
   prosperite: { nom: "Prospérité", texte: "Valeur de ce qui est bâti (bâtiments et agrandissements, à leur prix) à la fin de la partie, moins les dettes ; l'or en caisse ne compte pas.",
-    seuils: { equilibre: [2190, 2415, 2685], agricole: [2250, 2415, 2625], industriel: [2175, 3105, 3480], marchand: [2900, 2960, 3090], minier: [2175, 3255, 3780] } },
+    seuils: { equilibre: [3560, 4050, 4200], agricole: [2895, 3510, 3780], industriel: [3180, 4500, 4660], marchand: [4290, 4645, 4795], minier: [3070, 4470, 4640] } },
   contentement: { nom: "Contentement", texte: "100 moins la colère moyenne des factions, en moyenne sur toute la partie.",
-    seuils: { equilibre: [82.1, 82.9, 83.5], agricole: [84.1, 84.7, 85], industriel: [82, 82.7, 83.2], marchand: [82.2, 82.7, 83], minier: [84.7, 85.2, 85.4] } },
+    seuils: { equilibre: [83, 83.8, 84.3], agricole: [81.1, 82.7, 83.3], industriel: [80.7, 82.3, 83.2], marchand: [83.8, 84.3, 84.6], minier: [84.6, 85.1, 85.3] } },
   influence: { nom: "Influence", texte: "Poids économique chez les voisins, en moyenne sur la partie : 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats de vente lui livrent au moins la moitié de ce qu'elle importe) ; plus 10 par exigence cédée.",
-    seuils: { equilibre: [72, 75, 80], agricole: [74, 76, 83], industriel: [70, 72, 78], marchand: [72, 74, 83], minier: [72, 76, 81] } },
+    seuils: { equilibre: [97, 101, 108], agricole: [98, 103, 110], industriel: [94, 98, 106], marchand: [98, 102, 110], minier: [97, 101, 109] } },
   concorde: { nom: "Concorde", texte: "Moyenne des relations avec les nations, plus 10 par traité en cours, à la fin de la partie.",
-    seuils: { equilibre: [86, 107, 110], agricole: [87, 107, 109], industriel: [86, 107, 110], marchand: [86, 107, 110], minier: [86, 107, 109] } },
+    seuils: { equilibre: [87, 107, 110], agricole: [87, 107, 109], industriel: [87, 107, 110], marchand: [86, 107, 110], minier: [86, 107, 109] } },
   autorite: { nom: "Autorité", texte: "Soutien des factions puissantes aux lois en vigueur : pour chaque loi en vigueur, puissance des factions pour moins puissance des factions contre ; moyenne par loi, puis moyenne sur la partie.",
     seuils: { equilibre: [35, 53, 54], agricole: [47, 50, 51], industriel: [30, 36, 40], marchand: [30, 54, 56], minier: [35, 38, 42] } }
 };

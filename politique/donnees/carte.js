@@ -6,9 +6,9 @@
 const NODE = typeof module !== "undefined" && module.exports;
 
 const TERRAINS = {
-  fertile: { nom: "fertile", bonus: { farm: 1.5 } },                       // ASSUMPTION validée (V2)
-  mixte:   { nom: "mixte",   bonus: {} },
-  filons:  { nom: "filons",  bonus: { mine: 1.5 } },                       // ASSUMPTION validée (V2)
+  fertile: { nom: "fertile", bonus: { farm: 1.5, vignoble: 1.25 } },       // ASSUMPTION validée (V2) ; vignoble : ASSUMPTION (ressources, 15/11)
+  mixte:   { nom: "mixte",   bonus: { scierie: 1.5 } },                   // scierie : ASSUMPTION (ressources, 15/11)
+  filons:  { nom: "filons",  bonus: { mine: 1.5, mine_charbon: 1.5 } },   // ASSUMPTION validée (V2) ; mine de charbon : ASSUMPTION (ressources, 15/11)
   ville:   { nom: "ville",   bonus: { workshop: 1.25, weaving: 1.25 } }    // ASSUMPTION validée (V2)
 };
 

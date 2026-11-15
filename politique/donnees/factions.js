@@ -23,7 +23,7 @@ const REGLES_FACTIONS = {
   // ≥ 100 % : aise (−2 colère/tour, ×2 pour les ouvriers avec le code du travail) ; < 50 % : gêne (+2/tour) ; entre les deux : 0.
   // actif: false : dissipation fixe de la V1 (utilisé par les tests de règles écrits avant le niveau de vie)
   niveauDeVie: { actif: true, aise: -2, gene: 2, seuilAise: 1, seuilGene: 0.5,
-                 paniers: { paysans: ["grain"], ouvriers: ["grain", "outils"], artisans: ["tissu", "outils"], patrons: ["tissu", "fer"] } },
+                 paniers: { paysans: ["grain"], ouvriers: ["grain", "outils"], artisans: ["tissu", "outils"], patrons: ["tissu", "vin"] } },
   ralentissement: 0.5,                              // RULES_V1 (suffrages) : « colère montante 2× plus lente » ; s'applique à toute hausse de colère
                                                     // (chocs et effets par tour) des factions favorisées : ASSUMPTION validée (M2)
   // moral (À TRANCHER n° 3, validé) : 1 jusqu'à colère 40, puis linéaire jusqu'à 0 à 100 ; grève plafonnée à 0,5 ; révolte 0 ;

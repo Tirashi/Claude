@@ -92,6 +92,11 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Thésaurisation** (15/11) : trésor au-dessus de 10 tours d'impôts → +2 de colère par tour pour chaque faction dont la demande n'est pas satisfaite (ouvriers : Santé 2 ; artisans : Enseignement 2 ; paysans : 2 fermes agrandies ; patrons : 4 agrandissements).
 - **Institutions** (niveau 0 à 3, dépense chaque tour, un cran par tour) : santé (−1 de colère par tour et par niveau pour toutes les factions), enseignement (+0,25 % de croissance, ateliers et tissages +10 % par niveau), police (+5 % aux débats, grèves 3 points plus tard par niveau).
 
+### 10. Ressources : bois, charbon, vin (15/11)
+- Sans stock : surplus vendu, manque acheté chaque tour.
+- **Bois** (1 or) : scierie (15, vallée ×1,5) ; chaque chantier en cours consomme 5 bois par tour. **Charbon** (1,5) : mine de charbon (12, collines ×1,5) ; ateliers et tissages en consomment 3. **Vin** (2,5) : vignoble (10, plaine ×1,25) ; 0,05 par famille ; panier des patrons : tissu et vin. Un vignoble au départ dans la plaine ; vallée à 4 emplacements.
+- Échanges : Val-Roc vend du charbon, achète du vin ; Brume vend du vin, achète du bois ; Contreforts vend du bois, achète du charbon.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

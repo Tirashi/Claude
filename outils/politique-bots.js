@@ -154,11 +154,11 @@ function loiSuivante(p, liste){
 }
 // les bâtiments par ordre d'utilité : d'abord ce qui manque (tissu, outils, fer), puis fermes, mines…
 function batimentUtile(e){
-  const b = e.bilan ? e.bilan.balance : {}, l = [];
-  if ((b.tissu || 0) < 0) l.push('weaving');
-  if ((b.outils || 0) < 0) l.push('workshop');
-  if ((b.fer || 0) < 0) l.push('mine');
-  return l.concat(['farm', 'mine', 'workshop', 'weaving'].filter(x => !l.includes(x)));
+  // ressources (15/11) : d'abord ce qui manque le plus cher (déficit × prix), puis l'ordre habituel
+  const b = e.bilan ? e.bilan.balance : {};
+  const PAR = { grain: 'farm', fer: 'mine', tissu: 'weaving', outils: 'workshop', bois: 'scierie', charbon: 'mine_charbon', vin: 'vignoble' };
+  const l = Object.keys(PAR).filter(x => (b[x] || 0) < 0).sort((x, y) => b[x] * ECO.prix[x] - b[y] * ECO.prix[y]).map(x => PAR[x]);
+  return l.concat(['farm', 'mine', 'workshop', 'weaving', 'scierie', 'mine_charbon', 'vignoble'].filter(x => !l.includes(x)));
 }
 // construire un bâtiment dans la région où il rend le plus (bonus de terrain), s'il y a une place
 function construireMieux(p, id){

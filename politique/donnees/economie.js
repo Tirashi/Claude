@@ -5,14 +5,16 @@
 const NODE = typeof module !== "undefined" && module.exports;
 
 const ECONOMIE = {
-  biens: ["grain", "fer", "tissu", "outils"],
-  prix: { grain: 1.0, fer: 1.5, tissu: 2.0, outils: 2.0 },        // RULES_V1
+  biens: ["grain", "fer", "tissu", "outils", "bois", "charbon", "vin"],   // 15/11 : bois, charbon, vin (sans stock)
+  prix: { grain: 1.0, fer: 1.5, tissu: 2.0, outils: 2.0, bois: 1.0, charbon: 1.5, vin: 2.5 },        // RULES_V1 ; bois, charbon, vin : ASSUMPTION (ressources, 15/11)
   // surplus vendu, déficit acheté, aucun stock         // ASSUMPTION validée
   // V2 étape 3, marché (validé le 13/11) : « plus tu vends d'un bien dans le tour, moins il rapporte ; plus tu en achètes,
   // plus il coûte » : vente = prix × (1 − pente × vendu), au moins ×min ; achat = prix × (1 + pente × acheté), au plus ×max.
   // pente 0 : prix fixes de la V1 (utilisé par les tests de règles écrits avant le marché)
   marche: { pente: 0.01, min: 0.5, max: 1.5 },
-  besoinsParFamille: { grain: 1, fer: 0, tissu: 0.2, outils: 0.1 }, // ASSUMPTION validée (grain ≈ 1 : RULES_V1)
+  besoinsParFamille: { grain: 1, fer: 0, tissu: 0.2, outils: 0.1, vin: 0.05 }, // ASSUMPTION validée (grain ≈ 1 : RULES_V1) ; vin : ASSUMPTION (ressources, 15/11)
+  // bois : chaque chantier en cours (construction ou agrandissement) consomme ce bois par tour (ASSUMPTION (ressources, 15/11))
+  boisParChantier: 5,
   besoinsArmee: { fer: 4, tissu: 2 },                               // ASSUMPTION validée (toujours, même la milice)
   impotParFamille: 1,
   // V2, budget (14/11, propositions validées le 14/11 : ASSUMPTION validée (budget)) :

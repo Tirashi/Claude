@@ -51,6 +51,8 @@ function bilan(e){
   entretienBat += (e.regiments || 0) * GU.regiment.entretien;   // V2 : entretien des régiments
   for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
   for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
+  // ressources (15/11) : chaque chantier en cours consomme du bois (sauf en région occupée)
+  if (ECO.boisParChantier) conso.bois += ECO.boisParChantier * (e.chantiers || []).filter(c => !(e.occupations || {})[c.region]).length;
   let ventes = 0, achats = 0, contrats = 0;
   const balance = {}, pv = {}, pa = {}, fl = Diplomatie.flux(e), t = Diplomatie.tarifs(e);
   for (const r of ECO.biens){
