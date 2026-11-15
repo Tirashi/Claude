@@ -26,6 +26,8 @@ Object.assign(RLV, { premierTirage: 3, colereDebat: 0, chance: Object.assign({},
 const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
 // … et sans la relation à deux sens (seuil hostile, commerce qui rapproche, provocations : V2 « étape 1 » du 14/11)
 const HOST = P('donnees/diplomatie.js').hostilite; HOST.actif = false;
+// … et sans la pression contre la thésaurisation (15/11)
+const THES = P('donnees/institutions.js').THESAURISATION; THES.actif = false;
 // … et avec les prix des contrats d'avant le 14/11 (×0,8 à l'achat, ×1,3 à la vente)
 const CTR = P('donnees/diplomatie.js').contrats, CTR0 = { prixAchat: CTR.prixAchat, prixVente: CTR.prixVente }; CTR.prixAchat = 0.8; CTR.prixVente = 1.3;
 // … et sans entretien des bâtiments ni intérêts de la dette (avant le budget de la V2)
@@ -804,7 +806,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const e0 = Etat.creerEtat(CHAMPS, 7);
   check(e0.suivi.tours === 0 && Ob.mesures(e0).contentement === 100 && Ob.mesures(e0).autorite === 0 && e0.ambition === null, 'objectifs : rien de cumulé au départ, pas d\'ambition');
   const m0 = Ob.mesures(e0), val = Object.keys(e0.batiments).reduce((t, id) => t + e0.batiments[id] * BAT[id].cout, 0);
-  check(m0.prosperite === Math.round(e0.tresor + val), 'prospérité : trésor + coût des bâtiments en service');
+  check(m0.prosperite === Math.round(val) && Ob.mesures(Object.assign(Etat.copie(e0), { tresor: -50 })).prosperite === Math.round(val - 50), 'prospérité : coût des bâtiments en service, moins les dettes (le trésor ne compte pas)');
   check(m0.influence === 0 && Ob.dependantes(e0).length === 0, 'influence : rien au départ (ni contrat, ni nation dépendante)');
   check(m0.concorde === Math.round(Dp.reputation(e0)), 'concorde : moyenne des relations (+10 par traité)');
   const e1 = Tour.tourSuivant(e0, []);
@@ -1051,6 +1053,23 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const po = Object.assign(Etat.copie(e0), { institutions: { sante: 0, enseignement: 0, police: 2 } });
   check(proche(LMx.chance(po, 'school_public') - LMx.chance(e0, 'school_public'), 0.1), 'police : +5 % de chance aux débats par niveau');
   check(FAx.statutDe({ colere: 78, puissance: 50 }, 6) === 'grondement' && FAx.statutDe({ colere: 81, puissance: 50 }, 6) === 'greve', 'police : les grèves commencent 3 points plus tard par niveau');
+}
+
+// --- thésaurisation (15/11) ---
+{
+  THES.actif = true;
+  const FAt = P('moteur/factions.js');
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand';
+  const riche = Etat.copie(e0); riche.bilan = { impots: 100 }; riche.tresor = 1001;
+  const pauvre = Etat.copie(riche); pauvre.tresor = 1000;
+  check(FAt.thesaurise(riche) && !FAt.thesaurise(pauvre), 'thésaurisation : au-dessus de 10 tours d\'impôts');
+  const sat = Etat.copie(riche); sat.institutions = { sante: 2, enseignement: 2, police: 0 }; sat.regions.plaine.niveaux = { farm: 2 }; sat.regions.collines.niveaux = { mine: 2 };
+  check(['ouvriers', 'artisans', 'paysans', 'patrons'].every(f => FAt.demandeSatisfaite(sat, f)) && !['ouvriers', 'artisans', 'paysans', 'patrons'].some(f => FAt.demandeSatisfaite(riche, f)), 'thésaurisation : demandes (santé 2, enseignement 2, 2 fermes agrandies, 4 agrandissements)');
+  const t1 = Tour.tourSuivant(riche, []), t0 = Tour.tourSuivant(Object.assign(Etat.copie(riche), { tresor: 10 }), []);
+  check(t1.tresor > 10 * t1.bilan.impots ? Object.keys(t1.factions).every(f => t1.factions[f].colere === Math.min(100, t0.factions[f].colere + 2)) : true, 'thésaurisation : +2 de colère par tour pour chaque demande non satisfaite');
+  check(t1.journal.some(l => /l'État thésaurise/.test(l)) && !t0.journal.some(l => /l'État thésaurise/.test(l)), 'thésaurisation : message seulement si le trésor dépasse le seuil');
+  const ts = Tour.tourSuivant(sat, []);
+  check(!ts.journal.some(l => /l'État thésaurise/.test(l)), 'thésaurisation : demandes satisfaites, pas de colère');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

@@ -92,6 +92,23 @@ function couverture(e, f){
   return Math.round(c.reduce((s, x) => s + x, 0) / c.length * 1000) / 1000;
 }
 
+// thésaurisation (15/11) : un trésor au-dessus de 10 tours d'impôts fâche les factions dont la demande n'est pas satisfaite
+const agrandis = (e, id) => Object.values(e.regions).reduce((t, r) => t + Object.keys(r.niveaux || {}).filter(x => !id || x === id).reduce((u, x) => u + r.niveaux[x], 0), 0);
+function demandeSatisfaite(e, f){
+  const d = INST.THESAURISATION.demandes[f];
+  if (!d) return true;
+  if (d.institution) return ((e.institutions || {})[d.institution] || 0) >= d.niveau;
+  return agrandis(e, d.agrandis) >= d.nombre;
+}
+const thesaurise = e => INST.THESAURISATION.actif && !!e.bilan && e.tresor > INST.THESAURISATION.tours * e.bilan.impots;
+function thesaurisation(e){
+  if (!thesaurise(e)) return;
+  for (const f in e.factions) if (!demandeSatisfaite(e, f)){
+    modifier(e, f, "colere", INST.THESAURISATION.colere);
+    e.journal.push(`${FACTIONS[f].nom} : l'État thésaurise (ils réclament ${INST.THESAURISATION.demandes[f].texte}).`);
+  }
+}
+
 // fin de tour : effets par tour des lois, niveau de vie (V1 : dissipation), statuts, moral
 function finDeTour(e){
   for (const cat in e.lois){
@@ -99,6 +116,7 @@ function finDeTour(e){
     for (const f in fx.parTour || {}) for (const j in fx.parTour[f])
       if (duree[j] == null || e.tour - l.depuis < duree[j]) modifier(e, f, j, fx.parTour[f][j]);
   }
+  thesaurisation(e);
   // santé (budget de fin de partie) : chaque niveau calme toutes les factions
   const sante = (e.institutions || {}).sante || 0;
   if (sante) for (const f in e.factions) modifier(e, f, "colere", sante * INST.INSTITUTIONS.sante.colere);
@@ -134,6 +152,6 @@ function effetsEco(e){
   return r;
 }
 
-const Factions = { couverture, favorisees, modifier, choc, coutApaisement, apaisables, apaiser, statutDe, moralFaction, moral, evaluer, finDeTour, effetsEco };
+const Factions = { thesaurise, demandeSatisfaite, couverture, favorisees, modifier, choc, coutApaisement, apaisables, apaiser, statutDe, moralFaction, moral, evaluer, finDeTour, effetsEco };
 if (NODE) module.exports = Factions; else (racine.Politique = racine.Politique || {}).Factions = Factions;
 })(typeof window !== "undefined" ? window : globalThis);

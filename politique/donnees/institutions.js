@@ -17,6 +17,14 @@ const INSTITUTIONS = {
   police:       { nom: "Police", cout: [0, 20, 44, 72], debat: 0.05, greve: 3,
                   texte: "Chaque niveau : +5 % de chance d'adoption aux débats ; les grèves commencent 3 points de colère plus tard." }
 };
-const R = { NIVEAUX, INSTITUTIONS, max: 3 };
+// thésaurisation (15/11, ASSUMPTION) : trésor au-dessus de « tours » tours d'impôts → chaque faction dont la demande
+// n'est pas satisfaite prend « colere » par tour. actif: false = règles d'avant (tests écrits avant).
+const THESAURISATION = { actif: true, tours: 10, colere: 2,
+  demandes: {
+    ouvriers: { institution: "sante", niveau: 2, texte: "la Santé au niveau 2" },
+    artisans: { institution: "enseignement", niveau: 2, texte: "l'Enseignement au niveau 2" },
+    paysans:  { agrandis: "farm", nombre: 2, texte: "2 fermes agrandies" },
+    patrons:  { agrandis: null, nombre: 4, texte: "4 agrandissements" } } };
+const R = { NIVEAUX, INSTITUTIONS, THESAURISATION, max: 3 };
 if (typeof module !== "undefined" && module.exports) module.exports = R; else (racine.Politique = racine.Politique || {}).INSTITUTIONS = R;
 })(typeof window !== "undefined" ? window : globalThis);

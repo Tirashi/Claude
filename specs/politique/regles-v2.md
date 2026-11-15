@@ -71,7 +71,7 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 ### 6. Objectifs de victoire (14/11)
 - Cinq objectifs mesurés à la fin de la partie (tour 40), chacun avec trois paliers : bronze, argent, or. Une révolution = défaite, aucune médaille.
 - **Ambition** : au tour 1, le joueur choisit un objectif (une fois). Sa victoire = la médaille de cet objectif ; les autres sont un bilan.
-- **Prospérité** : trésor + coût des bâtiments en service. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Influence** (à la place de Puissance, 14/11) : en moyenne sur la partie, 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats lui livrent au moins la moitié de ses importations), plus 10 par exigence cédée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, moyenne par loi), en moyenne sur la partie.
+- **Prospérité** (15/11) : valeur de ce qui est bâti (bâtiments et agrandissements, à leur prix), moins les dettes ; l'or en caisse ne compte pas. **Contentement** : 100 − colère moyenne des factions, en moyenne sur la partie. **Influence** (à la place de Puissance, 14/11) : en moyenne sur la partie, 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats lui livrent au moins la moitié de ses importations), plus 10 par exigence cédée. **Concorde** : moyenne des relations + 10 par traité en cours. **Autorité** : soutien des factions puissantes aux lois en vigueur (puissance des pour − des contre, moyenne par loi), en moyenne sur la partie.
 - Seuils **par pays de départ**, fixés par simulation (`--objectifs --pays tous`), d'après les bots qui visent l'objectif (la Prospérité aussi contre le bot commerce) : bronze = leur médiane, argent = 75e centile, or = 87e (`donnees/objectifs.js`, validés le 14/11).
 - **Étapes** (option 3) : trois repères par ambition (facile, moyen, difficile), affichés pendant la partie et cochés pour de bon, sans point (`ETAPES` de `donnees/objectifs.js`).
 
@@ -89,6 +89,7 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 
 ### 9. L'or en fin de partie (14/11)
 - **Agrandir** une ferme, une mine, un atelier ou un tissage sur place : niveau 2 (×1,5 du prix), niveau 3 (×2) ; chaque niveau +50 % de production, de consommation et d'entretien ; occupe le chantier de la région, pas d'emplacement.
+- **Thésaurisation** (15/11) : trésor au-dessus de 10 tours d'impôts → +2 de colère par tour pour chaque faction dont la demande n'est pas satisfaite (ouvriers : Santé 2 ; artisans : Enseignement 2 ; paysans : 2 fermes agrandies ; patrons : 4 agrandissements).
 - **Institutions** (niveau 0 à 3, dépense chaque tour, un cran par tour) : santé (−1 de colère par tour et par niveau pour toutes les factions), enseignement (+0,25 % de croissance, ateliers et tissages +10 % par niveau), police (+5 % aux débats, grèves 3 points plus tard par niveau).
 
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)

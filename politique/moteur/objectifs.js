@@ -106,7 +106,7 @@ function mesures(e){
     valeur += BAT[id].cout * (Math.min(k, n) * 1.5 + Math.max(0, k - n) * 2);
   }
   return {
-    prosperite: Math.round(e.tresor + valeur),
+    prosperite: Math.round(valeur + Math.min(0, e.tresor)),   // 15/11 : ce qui est bâti, moins les dettes (le trésor ne compte plus)
     contentement: s.tours ? dixieme(100 - s.colere / s.tours) : 100,
     influence: s.tours ? Math.round((s.influence || 0) / s.tours + O.pointsInfluence * (s.cedees || 0)) : 0,
     concorde: Math.round(Diplomatie.reputation(e) + (e.traites || []).length * O.pointsTraite),

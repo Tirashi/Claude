@@ -10,8 +10,8 @@
 "use strict";
 // seuils : { pays: [bronze, argent, or] }, tirés de 200 parties par bot et par pays (--objectifs --pays tous --seuils-proposes), validés le 14/11
 const OBJECTIFS = {
-  prosperite: { nom: "Prospérité", texte: "Trésor et valeur des bâtiments à la fin de la partie.",
-    seuils: { equilibre: [5388, 6129, 6520], agricole: [5714, 6347, 6693], industriel: [5569, 7265, 7752], marchand: [6708, 7146, 7389], minier: [6309, 7601, 8177] } },
+  prosperite: { nom: "Prospérité", texte: "Valeur de ce qui est bâti (bâtiments et agrandissements, à leur prix) à la fin de la partie, moins les dettes ; l'or en caisse ne compte pas.",
+    seuils: { equilibre: [2190, 2415, 2685], agricole: [2250, 2415, 2625], industriel: [2175, 3105, 3480], marchand: [2900, 2960, 3090], minier: [2175, 3255, 3780] } },
   contentement: { nom: "Contentement", texte: "100 moins la colère moyenne des factions, en moyenne sur toute la partie.",
     seuils: { equilibre: [82.1, 82.9, 83.5], agricole: [84.1, 84.7, 85], industriel: [82, 82.7, 83.2], marchand: [82.2, 82.7, 83], minier: [84.7, 85.2, 85.4] } },
   influence: { nom: "Influence", texte: "Poids économique chez les voisins, en moyenne sur la partie : 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats de vente lui livrent au moins la moitié de ce qu'elle importe) ; plus 10 par exigence cédée.",
