@@ -11,15 +11,15 @@
 // seuils : { pays: [bronze, argent, or] }, tirés de 200 parties par bot et par pays (--objectifs --pays tous --seuils-proposes), validés le 14/11
 const OBJECTIFS = {
   prosperite: { nom: "Prospérité", texte: "Valeur de ce qui est bâti (bâtiments et agrandissements, à leur prix) à la fin de la partie, moins les dettes ; l'or en caisse ne compte pas.",
-    seuils: { equilibre: [3560, 4050, 4200], agricole: [2895, 3510, 3780], industriel: [3180, 4500, 4660], marchand: [4290, 4645, 4795], minier: [3070, 4470, 4640] } },
+    seuils: { equilibre: [3470, 3825, 4145], agricole: [2895, 3600, 4095], industriel: [3220, 4095, 4565], marchand: [4220, 4440, 4560], minier: [3045, 3825, 4275] } },
   contentement: { nom: "Contentement", texte: "100 moins la colère moyenne des factions, en moyenne sur toute la partie.",
-    seuils: { equilibre: [83, 83.8, 84.3], agricole: [81.1, 82.7, 83.3], industriel: [80.7, 82.3, 83.2], marchand: [83.8, 84.3, 84.6], minier: [84.6, 85.1, 85.3] } },
+    seuils: { equilibre: [82.8, 83.8, 84.2], agricole: [81.2, 82.7, 83.3], industriel: [81, 82.6, 83.5], marchand: [83.8, 84.3, 84.4], minier: [84.5, 85, 85.4] } },
   influence: { nom: "Influence", texte: "Poids économique chez les voisins, en moyenne sur la partie : 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats de vente lui livrent au moins la moitié de ce qu'elle importe) ; plus 10 par exigence cédée.",
-    seuils: { equilibre: [97, 101, 108], agricole: [98, 103, 110], industriel: [94, 98, 106], marchand: [98, 102, 110], minier: [97, 101, 109] } },
+    seuils: { equilibre: [172, 185, 192], agricole: [169, 180, 191], industriel: [168, 181, 190], marchand: [178, 189, 197], minier: [170, 182, 189] } },
   concorde: { nom: "Concorde", texte: "Moyenne des relations avec les nations, plus 10 par traité en cours, à la fin de la partie.",
-    seuils: { equilibre: [87, 107, 110], agricole: [87, 107, 109], industriel: [87, 107, 110], marchand: [86, 107, 110], minier: [86, 107, 109] } },
+    seuils: { equilibre: [68, 84, 88], agricole: [69, 84, 88], industriel: [70, 85, 88], marchand: [70, 85, 88], minier: [68, 84, 88] } },
   autorite: { nom: "Autorité", texte: "Soutien des factions puissantes aux lois en vigueur : pour chaque loi en vigueur, puissance des factions pour moins puissance des factions contre ; moyenne par loi, puis moyenne sur la partie.",
-    seuils: { equilibre: [35, 53, 54], agricole: [47, 50, 51], industriel: [30, 36, 40], marchand: [30, 54, 56], minier: [35, 38, 42] } }
+    seuils: { equilibre: [35, 53, 54], agricole: [47, 50, 51], industriel: [30, 36, 40], marchand: [30, 55, 56], minier: [35, 38, 42] } }
 };
 // étapes (option 3, validées le 14/11 ; durcies après simulation : plusieurs étaient atteintes dès le départ) : trois repères par ambition, affichés et cochés pendant la partie (une fois
 // atteints, ils restent cochés) ; ils guident sans rapporter de points. Le moteur les vérifie par leur id (moteur/objectifs.js).
