@@ -29,6 +29,6 @@
 - Piles qui ne tournent jamais (arbres, rochers) : les assembler une fois au chargement (ce qu'on fait déjà, voir plus haut).
 - Fabriquer les tranches à partir de 4 vues à plat (dessus, côté, avant, arrière) : un voxel existe là où toutes les vues en ont un ; couleur du dessus = vue de dessus, bords = vue du côté concerné. Marche pour les objets simples (pas de trous ni de surplombs). Outil gratuit dans le navigateur : « Sprite Stack Generator » de SpriteCook.
 
-## Essai des 4 vues (16/11) : `maquettes/quatre-vues.html` (https://claude.ai/artifact/MuJ5u8vJsBX4JLbxyp6Dn1)
+## Essai des 4 vues (16/11) : `maquettes/quatre-vues.html` (https://claude.ai/artifact/TbS2xJjpTCLth4s6ng1dJ5)
 - `vues.py <dossier>` : dessine les 4 vues d'un remorqueur et d'un chalutier (dessus : ligne 0 = proue ; côté : colonne = même rang que le dessus, ligne 0 = en haut ; avant, arrière), les sculpte (`sculpter` : voxel là où les 4 vues sont d'accord ; dessus = couleur du dessus, bords = vue du côté) et écrit les planches `-vues.png` et les rubans.
 - `source4.html` : la page (`/*DONNEES*/` → `const DONNEES={nom:{vues,pile,w,h,n}}`) ; `assembler()` avec contour tracé une fois autour de la pile finie.
