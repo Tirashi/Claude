@@ -1,0 +1,82 @@
+<title>Quatre vues en relief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* essai : fabriquer une pile de tranches à partir de 4 vues dessinées à plat */
+:root{--bg:#e6ebef;--carte:#f4f7f9;--fg:#1f2a33;--doux:#5f6d78;--bord:#2f5d7a;--accent:#c0392b;--eau:#2b6f8c;
+  --titre:"Press Start 2P",monospace;--texte:"Alegreya Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171d;--carte:#1a242c;--fg:#e6eef3;--doux:#9fb0bc;--bord:#5f9cc2;--accent:#ff7a66;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10171d;--carte:#1a242c;--fg:#e6eef3;--doux:#9fb0bc;--bord:#5f9cc2;--accent:#ff7a66;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.5 var(--texte);padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1100px;margin:0 auto;display:grid;gap:34px}
+h1,h2{font-family:var(--titre);font-weight:400;letter-spacing:.02em;text-wrap:balance}
+h1{font-size:18px;margin:0;color:var(--accent)} h2{font-size:12px;margin:0 0 14px;color:var(--bord)}
+p{margin:0;max-width:72ch}
+.etapes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;align-items:start}
+.etape{background:var(--carte);border-radius:10px;padding:12px;display:grid;gap:8px;justify-items:center;min-width:0}
+.etape b{font-family:var(--titre);font-size:9px;color:var(--bord);justify-self:start;line-height:1.6}
+.etape canvas{max-width:100%;image-rendering:pixelated;background:var(--eau);border-radius:6px;touch-action:none}
+.etape span{font-size:15px;color:var(--doux);justify-self:start}
+.scene{display:grid;justify-items:center;gap:8px}
+.scene canvas{width:100%;max-width:640px;image-rendering:pixelated;border-radius:10px;background:var(--eau);touch-action:none;cursor:grab}
+ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
+.q{background:var(--carte);border-left:6px solid var(--accent);padding:14px 16px;display:grid;gap:8px}
+</style>
+<main>
+<header style="display:grid;gap:10px">
+<h1>QUATRE VUES EN RELIEF</h1>
+<p>L'essai de la méthode de SpriteCook. On dessine un bateau en 4 petites vues à plat (dessus, côté, avant, arrière), comme une fiche de modèle. Un script garde un pixel de volume là où les 4 vues sont d'accord, et donne à chaque face la couleur de la vue qui la regarde. On obtient une pile de tranches qui tourne comme un modèle 3D. Glisse le doigt sur les bateaux qui tournent.</p>
+</header>
+<section id="remorqueur"><h2>LE REMORQUEUR</h2><div class="etapes"></div></section>
+<section id="chalutier"><h2>LE CHALUTIER</h2><div class="etapes"></div></section>
+<section class="scene"><h2>SUR L'EAU</h2><canvas id="eau" width="320" height="180"></canvas><span style="font-size:15px;color:var(--doux)">Le remorqueur pousse le chalutier ; glisse pour tourner la caméra.</span></section>
+<section><h2>Ce que j'en retiens</h2><ul>
+<li><b>Ça marche bien pour les bateaux simples</b> : 4 dessins de quelques dizaines de pixels suffisent. Tu pourrais dessiner tes propres bateaux (dans un éditeur de pixel art, ou sur papier quadrillé), et je les transformerais en piles.</li>
+<li><b>La limite</b> : un pixel n'existe que si toutes les vues sont d'accord. Les trous, les parties en surplomb ou les objets fins dans tous les sens (cordages, antennes en biais) ne sortent pas. Le mât et la vergue du chalutier passent parce qu'ils sont droits.</li>
+<li><b>Le contour tracé une fois</b> autour de la pile finie (à droite) détache bien le bateau de l'eau, sans lignes sombres à l'intérieur.</li>
+<li><b>Comparé aux autres sources</b> : les modèles 3D (Kenney) donnent plus de détails, mais les 4 vues donnent un vrai pixel art dessiné à la main, dans le style exact du jeu.</li>
+</ul></section>
+<section class="q"><h2>A choisir</h2>
+<p>1. Tu veux essayer de dessiner toi-même les 4 vues d'un bateau ? Je te ferai une petite page pour les dessiner et voir le relief tout de suite.</p>
+<p>2. Pour Capitaine du port et Amiral !, quelle source préfères-tu : les 4 vues dessinées, mes navires construits en voxels, ou les modèles Kenney ?</p>
+</section>
+</main>
+<script>
+/*DONNEES*/
+const IMG={};
+function charger(src){return new Promise(ok=>{const i=new Image();i.onload=()=>ok(i);i.src=src;});}
+// assemble une pile tournée (une fois par angle), avec ou sans contour tracé autour de la pile finie
+function assembler(p,ang,k,pas,contour){const q=((Math.round(ang/(Math.PI*2)*64)%64)+64)%64;const cle=q+'|'+k+'|'+contour;p.cache=p.cache||{};if(p.cache[cle])return p.cache[cle];
+  const a=q/64*Math.PI*2,co=Math.cos(a),si=Math.sin(a);const R=Math.ceil(Math.hypot(p.w,p.h)/2)+2,Hh=Math.ceil(p.n*pas)+2;
+  const c=document.createElement('canvas');c.width=2*R+2;c.height=Math.ceil(2*R*k)+Hh+2;const x=c.getContext('2d');x.imageSmoothingEnabled=false;const cx=R+1,cy=Hh+R*k+1;
+  for(let i=0;i<p.n;i++){const f=.62+.38*(i+1)/p.n;x.filter=`brightness(${f.toFixed(2)})`;x.setTransform(co,si*k,-si,co*k,Math.round(cx),Math.round(cy-i*pas));x.drawImage(p.im,i*p.w,0,p.w,p.h,-p.w/2,-p.h/2,p.w,p.h);}
+  x.filter='none';x.setTransform(1,0,0,1,0,0);
+  if(contour){const d=x.getImageData(0,0,c.width,c.height),A=d.data,W=c.width,Hc=c.height,o=new Uint8ClampedArray(A);
+    for(let y=0;y<Hc;y++)for(let xx=0;xx<W;xx++){const i=(y*W+xx)*4;if(A[i+3]>100)continue;const v=(dx,dy)=>{const X=xx+dx,Y=y+dy;return X>=0&&Y>=0&&X<W&&Y<Hc&&A[(Y*W+X)*4+3]>100;};
+      if(v(1,0)||v(-1,0)||v(0,1)||v(0,-1)){o[i]=18;o[i+1]=20;o[i+2]=34;o[i+3]=255;}}
+    x.putImageData(new ImageData(o,W,Hc),0,0);}
+  return p.cache[cle]={c,cx,cy};}
+function dessinerPile(ctx,p,x,y,ang,k=.75,pas=1,contour=false){const r=assembler(p,ang,k,pas,contour);ctx.drawImage(r.c,Math.round(x-r.cx),Math.round(y-r.cy));}
+function tourne(cv,f){const S={a:0,auto:true,g:null};cv.addEventListener('pointerdown',e=>{S.g={x:e.clientX,a:S.a};S.auto=false;cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener('pointermove',e=>{if(S.g)S.a=S.g.a+(e.clientX-S.g.x)*.02;});cv.addEventListener('pointerup',()=>{S.g=null;setTimeout(()=>S.auto=true,2500);});
+  let av=performance.now();(function boucle(m){const dt=Math.min(.05,(m-av)/1000);av=m;if(S.auto)S.a+=dt*.6;const x=cv.getContext('2d');x.imageSmoothingEnabled=false;x.clearRect(0,0,cv.width,cv.height);f(x,S);requestAnimationFrame(boucle);})(av);}
+(async()=>{
+  for(const nom of ['remorqueur','chalutier']){const d=DONNEES[nom];const vues=await charger(d.vues),pile=await charger(d.pile);const p={im:pile,w:d.w,h:d.h,n:d.n};IMG[nom]=p;
+    const box=document.querySelector('#'+nom+' .etapes');
+    const etape=(titre,texte,w,h,dessin)=>{const e=document.createElement('div');e.className='etape';e.innerHTML=`<b>${titre}</b>`;const c=document.createElement('canvas');c.width=w;c.height=h;e.appendChild(c);const s=document.createElement('span');s.textContent=texte;e.appendChild(s);box.appendChild(e);dessin(c);return c;};
+    etape('1 · LES 4 VUES','Dessus, côté ; avant, arrière. Dessinées à plat.',vues.width,vues.height,c=>{c.style.width=vues.width*4+'px';c.getContext('2d').drawImage(vues,0,0);});
+    etape('2 · LES TRANCHES',`${d.n} tranches de ${d.w} × ${d.h} px, du bas vers le haut.`,Math.min(d.n,8)*(d.w+2),2*(d.h+2),c=>{c.style.width=Math.min(d.n,8)*(d.w+2)*3+'px';const x=c.getContext('2d');for(let i=0;i<Math.min(16,d.n);i++){const k=i<8?i:i-8;x.drawImage(pile,i*d.w,0,d.w,d.h,k*(d.w+2),(i<8?0:1)*(d.h+2),d.w,d.h);}});
+    const t1=etape('3 · LA PILE QUI TOURNE','Sans contour.',64,72,c=>c.style.width='256px');
+    const t2=etape('4 · AVEC UN CONTOUR','Tracé une fois, autour de la pile finie.',64,72,c=>c.style.width='256px');
+    tourne(t1,(x,S)=>dessinerPile(x,p,32,50,S.a));tourne(t2,(x,S)=>dessinerPile(x,p,32,50,S.a,.75,1,true));}
+  // les deux bateaux sur l'eau
+  const cv=document.getElementById('eau'),ctx=cv.getContext('2d');const vagues=[];for(let i=0;i<70;i++)vagues.push([Math.random()*360,Math.random()*200,2+Math.random()*4|0]);
+  tourne(cv,(x,S)=>{x.fillStyle='#2b6f8c';x.fillRect(0,0,cv.width,cv.height);const t=performance.now()/1000;
+    x.fillStyle='rgba(255,255,255,.18)';for(const v of vagues)x.fillRect((v[0]+t*4)%340-10,v[1]%cv.height,v[2],1);
+    const cam=S.a*.4,co=Math.cos(cam),si=Math.sin(cam),k=.75;const av=(t*14)%200-100;
+    const objets=[['chalutier',av,0],['remorqueur',av-34,0]].map(([n,wx,wy])=>({n,x:160+wx*co-wy*si,y:100+(wx*si+wy*co)*k,d:wx*si+wy*co}));
+    objets.sort((a,b)=>a.d-b.d);for(const o of objets){x.fillStyle='rgba(255,255,255,.35)';for(let q=0;q<4;q++)x.fillRect(o.x-co*20-q*co*4+(Math.random()-.5)*4,o.y-si*20*k+(Math.random()-.5)*3,2,1);
+      dessinerPile(x,IMG[o.n],o.x,o.y+Math.sin(t*2+o.d)*.6,cam+Math.PI/2,k,1,true);}});
+})();
+</script>
