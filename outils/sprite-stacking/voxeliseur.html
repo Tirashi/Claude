@@ -1,0 +1,30 @@
+<body><script src="/js/three.min.js"></script><script src="/js/libs/fflate.min.js"></script><script src="/js/loaders/FBXLoader.js"></script><script src="/js/loaders/GLTFLoader.js"></script><script src="/js/loaders/OBJLoader.js"></script><script src="/js/loaders/MTLLoader.js"></script>
+<script>
+// voxelise un modèle 3D : renvoie une grille RGBA (x, y = profondeur, z = hauteur)
+window.voxeliser=async(url,L,rotY,Wmax)=>{
+  const ext=url.split('.').pop().toLowerCase();let obj;
+  if(ext==='fbx')obj=await new THREE.FBXLoader().loadAsync(url);
+  else if(ext==='glb'||ext==='gltf')obj=(await new THREE.GLTFLoader().loadAsync(url)).scene;
+  else if(ext==='obj'){const mtl=url.replace(/\.obj$/,'.mtl');let m=null;try{m=await new THREE.MTLLoader().loadAsync(mtl);m.preload();}catch(e){}const l=new THREE.OBJLoader();if(m)l.setMaterials(m);obj=await l.loadAsync(url);}
+  obj.rotation.y=rotY||0;obj.updateMatrixWorld(true);
+  const b=new THREE.Box3().setFromObject(obj),s=new THREE.Vector3();b.getSize(s);const r=Math.max(s.x,s.z)/L;const rx=Wmax&&s.x/r>Wmax?s.x/Wmax:r;
+  const NX=Math.ceil(s.x/rx)+1,NY=Math.ceil(s.z/r)+1,NZ=Math.ceil(s.y/r)+1;const G=new Uint8Array(NX*NY*NZ*4);
+  const textes=new Map();await new Promise(ok=>setTimeout(ok,300));
+  const pix=tex=>{if(!tex||!tex.image)return null;if(textes.has(tex))return textes.get(tex);const im=tex.image;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);
+    const d={w:c.width,h:c.height,p:x.getImageData(0,0,c.width,c.height).data,flip:tex.flipY};textes.set(tex,d);return d;};
+  const A=new THREE.Vector3(),B=new THREE.Vector3(),C=new THREE.Vector3(),P=new THREE.Vector3();
+  obj.traverse(m=>{if(!m.isMesh)return;const g=m.geometry,pos=g.attributes.position,uv=g.attributes.uv,col=g.attributes.color;const idx=g.index;
+    const mats=Array.isArray(m.material)?m.material:[m.material];const groupes=g.groups.length?g.groups:[{start:0,count:idx?idx.count:pos.count,materialIndex:0}];
+    for(const gr of groupes){const mat=mats[gr.materialIndex]||mats[0];const T=pix(mat.map);const mc=mat.color||new THREE.Color(1,1,1);
+      for(let t=gr.start;t<gr.start+gr.count;t+=3){const ia=idx?idx.getX(t):t,ib=idx?idx.getX(t+1):t+1,ic=idx?idx.getX(t+2):t+2;
+        A.fromBufferAttribute(pos,ia).applyMatrix4(m.matrixWorld);B.fromBufferAttribute(pos,ib).applyMatrix4(m.matrixWorld);C.fromBufferAttribute(pos,ic).applyMatrix4(m.matrixWorld);
+        const Lg=Math.max(A.distanceTo(B),A.distanceTo(C),B.distanceTo(C));const n=Math.max(2,Math.ceil(Lg/r*2.5));
+        for(let i=0;i<=n;i++)for(let j=0;j<=n-i;j++){const u=i/n,v=j/n,w=1-u-v;P.set(A.x*w+B.x*u+C.x*v,A.y*w+B.y*u+C.y*v,A.z*w+B.z*u+C.z*v);
+          const gx=Math.min(NX-1,Math.floor((P.x-b.min.x)/rx)),gy=Math.min(NY-1,Math.floor((P.z-b.min.z)/r)),gz=Math.min(NZ-1,Math.floor((P.y-b.min.y)/r));
+          let R=mc.r,Gc=mc.g,Bc=mc.b;
+          if(T&&uv){const tu=uv.getX(ia)*w+uv.getX(ib)*u+uv.getX(ic)*v,tv=uv.getY(ia)*w+uv.getY(ib)*u+uv.getY(ic)*v;const xx=((Math.floor((tu%1+1)%1*T.w))),yy=Math.floor(((T.flip?1-((tv%1+1)%1):(tv%1+1)%1))*T.h);const o=(Math.min(T.h-1,yy)*T.w+Math.min(T.w-1,xx))*4;R*=T.p[o]/255;Gc*=T.p[o+1]/255;Bc*=T.p[o+2]/255;}
+          if(col&&mat.vertexColors){R*=col.getX(ia)*w+col.getX(ib)*u+col.getX(ic)*v;Gc*=col.getY(ia)*w+col.getY(ib)*u+col.getY(ic)*v;Bc*=col.getZ(ia)*w+col.getZ(ib)*u+col.getZ(ic)*v;}
+          const q=((gx*NY+gy)*NZ+gz)*4;G[q]=Math.min(255,R*255);G[q+1]=Math.min(255,Gc*255);G[q+2]=Math.min(255,Bc*255);G[q+3]=255;}}}});
+  let s2='';for(let i=0;i<G.length;i+=32768)s2+=String.fromCharCode.apply(null,G.subarray(i,i+32768));
+  return{dims:[NX,NY,NZ],data:btoa(s2)};};
+</script>

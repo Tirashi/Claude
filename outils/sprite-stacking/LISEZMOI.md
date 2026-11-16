@@ -11,3 +11,9 @@
 - `piles.py` : commun (intérieur rempli, dessus éclairés, `tailles.json` à côté des rubans). `planche.py <dossier> <sortie.png>` : planche d'aperçu de 3/4.
 - `donnees2.py` + `source2.html` → la maquette. Sens des modèles : Kenney nez vers le bas de l'image (π/2), avions vers le haut, F1 vers la gauche.
 - Packs : Kenney Watercraft Kit et Car Kit (CC0), padadu Voxel Pack 02 et 15 (CC0, une couleur), coralorca F1 (licence non précisée), pixelemy airplanes (libre).
+
+## Maquette 3 (16/11) : `maquettes/bateaux-relief.html` (Amiral ! et Capitaine du port)
+- `flotte.py <dossier> [case=28]` : construit en voxels les 11 navires d'Amiral ! (longueur = cases × 28 − 4 ; proue en haut de l'image).
+- `voxeliser.js <modèle fbx|glb|obj> <longueur> <sortie.json> [rotY] [largeur max]` + `voxeliseur.html` : voxelise n'importe quel modèle dans Chromium avec Three.js (couleurs des matières et textures) ; il faut les loaders de three 0.128 (`npm pack three@0.128.0`, dossier `npm/package/examples/js`, ou `THREE_JS=`). La largeur max resserre les bateaux trop larges pour une case. `grille.py <json> <png>` écrit le ruban.
+- `source3.html` + données (navires, bateaux Kenney, maisons médiévales, phare) → la maquette.
+- Piste payante repérée : Low Poly Modern Military RTS Pack Vol. 2 (artiquea, 10 €) : 13 navires de guerre modernes.
