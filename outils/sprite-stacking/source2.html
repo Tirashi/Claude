@@ -1,0 +1,315 @@
+<title>Sprite stacking 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* six téléphones animés : grand prix, shoot'em up, Amiral, course de bateaux, village HD-2D, port HD-2D */
+:root{--bg:#e9e4d6;--carte:#f6f2e7;--fg:#2c2a33;--doux:#6c6676;--bord:#5a4e6e;--accent:#2f7a8a;--or:#b07a1e;
+  --titre:"Press Start 2P",monospace;--texte:"Alegreya Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161d;--carte:#20212b;--fg:#ece6f4;--doux:#a79fb4;--bord:#6f6a98;--accent:#7fd0dc;--or:#e2b04f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15161d;--carte:#20212b;--fg:#ece6f4;--doux:#a79fb4;--bord:#6f6a98;--accent:#7fd0dc;--or:#e2b04f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.5 var(--texte);padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1180px;margin:0 auto;display:grid;gap:36px}
+h1,h2{font-family:var(--titre);font-weight:400;letter-spacing:.02em;text-wrap:balance}
+h1{font-size:18px;margin:0;color:var(--accent)} h2{font-size:12px;margin:0 0 14px;color:var(--bord)}
+p{margin:0;max-width:72ch} a{color:var(--accent)}
+.tels{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:30px 24px}
+figure{margin:0;display:grid;gap:10px;min-width:0;justify-items:center;align-content:start}
+.tel{width:100%;max-width:340px;aspect-ratio:9/16;border:6px solid var(--bord);border-radius:24px;overflow:hidden;background:#000;position:relative;touch-action:none;cursor:grab}
+.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.tel .aide{position:absolute;left:0;right:0;bottom:9px;text-align:center;font:7px var(--titre);color:#fff;text-shadow:1px 1px 0 #000;pointer-events:none;opacity:.8}
+figcaption{display:grid;gap:4px;max-width:340px} figcaption b{font-family:var(--titre);font-size:10px;color:var(--accent);line-height:1.6}
+.idee{font-size:15px;color:var(--doux)}
+ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
+.q{background:var(--carte);border-left:6px solid var(--accent);padding:14px 16px;display:grid;gap:8px}
+table{border-collapse:collapse;font-size:15px;width:100%;min-width:620px} td,th{border-bottom:1px solid var(--bord);padding:6px 8px;text-align:left;vertical-align:top}
+.defile{overflow-x:auto}
+</style>
+<main>
+<header style="display:grid;gap:10px">
+<h1>SPRITE STACKING · SIX IDEES</h1>
+<p>Six petites scènes animées, avec des voitures, des bateaux et des avions trouvés sur itch.io. Presque tout est en CC0. Glisse le doigt pour tourner la caméra (sur le shoot'em up, ça déplace l'avion). Les deux dernières scènes essaient un rendu « HD-2D » : flou de profondeur en haut et en bas, halo autour des lumières, lumière chaude.</p>
+</header>
+<section class="tels">
+<figure><div class="tel" id="s1"><canvas width="150" height="267"></canvas><div class="aide">TOUCHER : CAMERA SUIVIE / HAUTE</div></div>
+<figcaption><b>1 · GRAND PRIX</b><span>Des F1 voxel sur un circuit avec vibreurs, pneus, tribune et public. La caméra tourne derrière ta voiture.</span><span class="idee">Idée : course au tour par tour façon « Formula Dé », ou un vrai jeu d'arcade où l'on tient le volant au doigt.</span></figcaption></figure>
+<figure><div class="tel" id="s2"><canvas width="150" height="267"></canvas><div class="aide">GLISSER : PILOTER</div></div>
+<figcaption><b>2 · SHOOT'EM UP</b><span>Ton avion survole la mer et des îles en relief (fabriquées par le code). Les avions ennemis arrivent en escadrille, les bateaux défilent en dessous, et chaque avion a son ombre.</span><span class="idee">Idée : un shoot'em up vertical 1942 en voxels, avec un boss cuirassé.</span></figcaption></figure>
+<figure><div class="tel" id="s3"><canvas width="150" height="267"></canvas><div class="aide">GLISSER POUR TOURNER</div></div>
+<figcaption><b>3 · AMIRAL EN RELIEF</b><span>Des galions et un vaisseau fantôme tournent autour d'une île et se canonnent : fumée, gerbes d'eau, sillages.</span><span class="idee">Idée : refaire Amiral ! avec ces navires, tour par tour sur une mer qu'on fait pivoter, bordées de canons.</span></figcaption></figure>
+<figure><div class="tel" id="s4"><canvas width="150" height="267"></canvas><div class="aide">TOUCHER : CAMERA SUIVIE / HAUTE</div></div>
+<figcaption><b>4 · COURSE DE HORS-BORDS</b><span>Hors-bords autour des bouées, avec leurs sillages, jusqu'à l'arche d'arrivée.</span><span class="idee">Idée : jeu de course sur l'eau, ou une épreuve dans Capitaine du port.</span></figcaption></figure>
+<figure><div class="tel" id="s5"><canvas width="150" height="267"></canvas><div class="aide">GLISSER POUR TOURNER</div></div>
+<figcaption><b>5 · HD-2D · LE VILLAGE AU CREPUSCULE</b><span>La ville médiévale à la tombée de la nuit : lanternes et fenêtres qui brillent, lucioles, fumée des cheminées, flou de profondeur.</span><span class="idee">Idée : le décor d'un RPG ou d'un jeu de gestion (Terres franches, Bastion) qu'on fait pivoter.</span></figcaption></figure>
+<figure><div class="tel" id="s6"><canvas width="150" height="267"></canvas><div class="aide">GLISSER POUR TOURNER</div></div>
+<figcaption><b>6 · HD-2D · LE PORT AU SOLEIL COUCHANT</b><span>Quais en bois, phare, bateaux de pêche, voilier, remorqueur et paquebot. Les mouettes passent, la lumière est dorée.</span><span class="idee">Idée : un Capitaine du port en relief, ou le port d'attache d'Amiral !.</span></figcaption></figure>
+</section>
+<section><h2>Ce qui marche bien</h2><ul>
+<li><b>Je peux découper n'importe quel modèle 3D en tranches</b> : les fichiers voxel (.vox, MagicaVoxel) comme les modèles lisses de Kenney (.obj). Deux petits scripts transforment un modèle en pile en quelques secondes. Les kits CC0 de Kenney (bateaux, voitures, villes, châteaux…) deviennent donc tous utilisables.</li>
+<li><b>Les décors peuvent être fabriqués par le code</b> : les îles viennent d'une carte des hauteurs, et le phare, les quais, la tribune et les arbres sont dessinés en tranches dans le code.</li>
+<li><b>Le rendu « HD-2D » marche aussi en 2D</b> : un flou en haut et en bas de l'écran (effet maquette), un halo sur les lumières et une teinte chaude suffisent à donner l'ambiance.</li>
+<li><b>Les limites</b> : les modèles trop petits (moins de 10 tranches) paraissent plats, et beaucoup d'objets serrés peuvent se chevaucher bizarrement. Les avions qui virent ne peuvent pas pencher sur le côté : on ne fait que les tourner.</li>
+</ul></section>
+<section><h2>Ressources utilisées</h2><div class="defile"><table>
+<tr><th>Pack</th><th>Auteur</th><th>Licence</th><th>Dans les scènes</th></tr>
+<tr><td><a href="https://kenney-assets.itch.io/watercraft-kit">Watercraft Kit</a></td><td>Kenney</td><td>CC0</td><td>galions, vaisseau fantôme, paquebot, cargo, hors-bords, voilier, remorqueur, pêche, bouées, arche (3, 4, 6, 2)</td></tr>
+<tr><td><a href="https://kenney-assets.itch.io/car-kit">Car Kit</a></td><td>Kenney</td><td>CC0</td><td>voitures de course, cônes (1)</td></tr>
+<tr><td><a href="https://coralorca.itch.io/vox-f1-race-cars">Voxel F1 Race Cars</a></td><td>coralorca</td><td>prix libre, licence non précisée</td><td>les F1 (1) : demander avant de s'en servir dans un jeu</td></tr>
+<tr><td><a href="https://pixelemy.itch.io/voxely-low-poly-airplane-pack">Voxely airplane pack</a></td><td>pixelemy</td><td>libre, même commercial</td><td>les avions, recoloriés (2)</td></tr>
+<tr><td><a href="https://padadu.itch.io/voxel-pack-15-modern-warfare">Voxel Pack 15</a> et <a href="https://padadu.itch.io/voxel-pack-02-nature">Voxel Pack 02</a></td><td>padadu</td><td>CC0</td><td>hélicoptère, arbres (formes d'une seule couleur, coloriées par le code)</td></tr>
+<tr><td><a href="https://felixstrefter.itch.io/medieval-voxel-assets">Medieval Voxel Assets</a></td><td>Felix Strefter</td><td>CC0</td><td>maisons, tour, kiosque, lanternes (5, 6)</td></tr>
+</table></div>
+<p style="margin-top:12px">Aussi repérés : chars de la Seconde Guerre mondiale (padadu, CC0), petits chars en couleur et voitures de course voxel (staycalmlad), Space Kit et City Kit de Kenney (CC0), drakkars et navires voxel payants (1 à 2 $).</p></section>
+<section class="q"><h2>A choisir</h2>
+<p>1. Quelles scènes te donnent le plus envie ? On peut en garder plusieurs pour plus tard dans <code>IDEES.md</code>.</p>
+<p>2. Pour la première, je ferais une vraie maquette de jeu (écran titre, boucle de jeu, commandes au doigt) avant de programmer, comme d'habitude.</p>
+<p>3. Le rendu HD-2D (scènes 5 et 6) : à mettre partout, ou seulement pour les jeux d'ambiance ?</p>
+</section>
+</main>
+<script>
+/*DONNEES*/
+const IM={};
+for(const k in PILES){const p=PILES[k];const im=new Image();im.src=p.src;IM[k]={...p,im,ok:false};im.onload=()=>{IM[k].ok=true;IM[k].c=ombrer(IM[k]);};}
+function rnd(s){return()=>(s=(s*16807)%2147483647)/2147483647;}
+function ombrer(p,fort=.42){const c=document.createElement('canvas');c.width=p.w*p.n;c.height=p.h;const x=c.getContext('2d');x.drawImage(p.im,0,0);
+  for(let i=0;i<p.n;i++){const f=1-(i+1)/p.n;x.globalCompositeOperation='source-atop';x.fillStyle=`rgba(10,8,30,${(fort*f).toFixed(3)})`;x.fillRect(i*p.w,0,p.w,p.h);}
+  return c;}
+// une pile fabriquée par le code : f(i, a, b) rend une couleur ou null
+function fabrique(w,h,n,f,fort){const c=document.createElement('canvas');c.width=w*n;c.height=h;const x=c.getContext('2d');const id=x.createImageData(w*n,h);
+  for(let i=0;i<n;i++)for(let b=0;b<h;b++)for(let a=0;a<w;a++){const col=f(i,a,b);if(!col)continue;const o=(b*w*n+i*w+a)*4;id.data[o]=col[0];id.data[o+1]=col[1];id.data[o+2]=col[2];id.data[o+3]=255;}
+  x.putImageData(id,0,0);const p={w,h,n,im:c,ok:true};p.c=ombrer(p,fort);return p;}
+const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mix=(c,f)=>c.map(v=>Math.max(0,Math.min(255,v*f|0)));
+
+// arbre feuillu et palmier
+function arbre(g,teinte){const r=rnd(g);const w=15,n=17;return fabrique(w,w,n,(i,a,b)=>{const dx=a-7,dy=b-7,d=dx*dx+dy*dy;
+  if(i<6&&Math.abs(dx)<=1&&Math.abs(dy)<=1)return hex(i<5?'#6b4426':'#563519');
+  const rr=i<5?0:5.6*Math.sin(Math.PI*(i-4.5)/12.5);if(i>=5&&d<=rr*rr+r()*3){return hsl(teinte+r()*14,.48,(40+i*2.2+r()*10-(d>rr*rr-6?8:0))*.0062);}return null;});}
+function hsl(h,s,l){h/=360;const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;const t=x=>{x=(x+1)%1;return x<1/6?p+(q-p)*6*x:x<.5?q:x<2/3?p+(q-p)*(2/3-x)*6:p;};return[t(h+1/3)*255|0,t(h)*255|0,t(h-1/3)*255|0];}
+function palmier(g){const r=rnd(g);const w=21,n=22;return fabrique(w,w,n,(i,a,b)=>{const dx=a-10,dy=b-10,d=Math.hypot(dx,dy);const sx=Math.round(i*.18);
+  if(i<17&&Math.abs(dx-sx)<=.6&&Math.abs(dy)<=.6)return hex(i%3?'#8a6a3e':'#735530');
+  if(i>=16&&i<=19){const ang=Math.atan2(dy,dx);const br=(Math.cos(ang*5)+1)/2;const R=8.5-(i-16)*1.1;if(d<R&&br>.45-d*.02&&d>.5)return hsl(100+r()*20,.55,.28+i*.012+r()*.05);}return null;});}
+const ARBRES=[arbre(7,95),arbre(31,108),arbre(77,82)],PALMIERS=[palmier(3),palmier(9)];
+
+// île à partir d'une carte des hauteurs
+function ile(g,R,H,neige){const r=rnd(g);const N=[];for(let k=0;k<6;k++)N.push([r()*6.28,1+r()*3,r()*.25]);const w=2*R;
+  const haut=(a,b)=>{const dx=a-R,dy=b-R,an=Math.atan2(dy,dx);let rr=R*.8;for(const[ph,f,amp]of N)rr+=R*amp*.4*Math.sin(an*f+ph);const d=Math.hypot(dx,dy)/rr;if(d>=1)return-1;return Math.pow(1-d,.9)*H*(.8+.2*Math.sin(dx*.3+dy*.2));};
+  const Hm=[];for(let b=0;b<w;b++)for(let a=0;a<w;a++)Hm.push(haut(a,b));
+  return fabrique(w,w,H,(i,a,b)=>{const h=Hm[b*w+a];if(h<i)return null;const top=h<i+1;const z=i/H;
+    let c=z<.12?hex('#e7d39a'):z<.55?hsl(95+(a*7+b*3)%9,.42,.36+z*.15):z<.8?hex('#8d8574'):hex(neige?'#f2f2f2':'#a39c8a');
+    if(!top)c=mix(c,.78);if(top&&(a+b*3)%7===0&&z>.12&&z<.55)c=mix(c,1.12);return c;},.5);}
+
+// phare, quai, tribune, pile de pneus
+const PHARE=fabrique(13,13,46,(i,a,b)=>{const d=Math.hypot(a-6,b-6);if(i<4)return d<6.3?hex(i<3?'#7d7666':'#968e7c'):null;
+  if(i<36){const R=4.8-i*.04;if(d<R)return hex(((i/6|0)%2)?'#d8423a':'#f1ece2');return null;}if(i<38)return d<5.4?hex('#3a3a44'):null;
+  if(i<42)return d<3.4&&d>2.6||(Math.abs(a-6)<.6&&Math.abs(b-6)<.6)?hex(i<41?'#ffe9a0':'#3a3a44'):null;if(i<46)return d<3.6-(i-42)*.9?hex('#2e2e38'):null;return null;});
+function quai(L){return fabrique(L,14,6,(i,a,b)=>{if(i<5){if((a%12<2)&&(b<2||b>11))return hex('#4b3626');return null;}if(i===5)return mix(hex('#9b7550'),a%4===0?.8:(b%5===0?.9:1));return null;});}
+const QUAI=quai(70),QUAI2=quai(40);
+const TRIBUNE=fabrique(60,20,22,(i,a,b)=>{const r=rnd(a*31+b*7+i);const marche=Math.floor(b/3);const hm=4+marche*3;
+  if(i<hm&&b<18)return i===hm-1?(r()<.75?hsl(r()*360,.6,.55):hex('#3c4250')):hex('#5c6070');if(i>=hm&&i<hm+2&&b<18&&r()<.6&&i===hm)return hsl(r()*360,.55,.6);
+  if(b>=18&&i<22)return hex(i>18?'#c03a3a':'#d8d8d8');return null;});
+const PNEUS=fabrique(6,6,5,(i,a,b)=>{const d=Math.hypot(a-2.5,b-2.5);return d<3&&d>1?hex(i%2?'#1c1c22':'#2a2a32'):null;});
+
+function pile(ctx,p,x,y,ang,k,z=0,pas=1,de=0){if(!p||!p.ok)return;const c=p.c||p.im;const co=Math.cos(ang),si=Math.sin(ang);
+  for(let i=de;i<p.n;i++){ctx.setTransform(co,si*k,-si,co*k,x,y-(z+i)*pas);ctx.drawImage(c,i*p.w,0,p.w,p.h,-p.w/2,-p.h/2,p.w,p.h);}
+  ctx.setTransform(1,0,0,1,0,0);}
+// ombre d'une pile : sa tranche la plus large, en sombre, posée au sol
+const OMB=new WeakMap();
+function ombrePile(ctx,p,x,y,ang,k,a=.3){if(!p||!p.ok)return;let o=OMB.get(p);if(!o){o=document.createElement('canvas');o.width=p.w;o.height=p.h;const g=o.getContext('2d');
+    for(let i=0;i<p.n;i+=2)g.drawImage(p.im,i*p.w,0,p.w,p.h,0,0,p.w,p.h);g.globalCompositeOperation='source-in';g.fillStyle='#000';g.fillRect(0,0,p.w,p.h);OMB.set(p,o);}
+  const co=Math.cos(ang),si=Math.sin(ang);ctx.globalAlpha=a;ctx.setTransform(co,si*k,-si,co*k,x,y);ctx.drawImage(o,-p.w/2,-p.h/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;}
+
+// caméra et boucle (une scène n'est animée que si elle est visible)
+function scene(id,dessin,opts={}){const el=document.getElementById(id),cv=el.querySelector('canvas'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+  const S={cam:opts.cam||0,auto:true,glisse:null,t:0,suivre:true,px:null,cv,ctx,vu:false};
+  el.addEventListener('pointerdown',e=>{S.glisse={x:e.clientX,cam:S.cam,bouge:false};el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{const r=el.getBoundingClientRect();S.px=(e.clientX-r.left)/r.width;if(!S.glisse)return;const d=e.clientX-S.glisse.x;if(Math.abs(d)>4)S.glisse.bouge=true;S.cam=S.glisse.cam+d*.012;S.auto=false;});
+  el.addEventListener('pointerup',()=>{if(S.glisse&&!S.glisse.bouge&&opts.toucher)opts.toucher(S);S.glisse=null;clearTimeout(S.to);S.to=setTimeout(()=>{S.auto=true;S.px=null;},2500);});
+  new IntersectionObserver(es=>{S.vu=es[0].isIntersecting;}).observe(el);
+  let avant=performance.now();
+  function boucle(m){const dt=Math.min(.05,(m-avant)/1000);avant=m;if(S.vu||window.TOUT_VOIR){S.t+=dt;if(S.auto&&!S.glisse)S.cam+=dt*(opts.vit||0);
+    ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';dessin(ctx,S,dt,cv.width,cv.height);}requestAnimationFrame(boucle);}
+  requestAnimationFrame(boucle);return S;}
+function vers(S,cx,cy,k,wx,wy,ox=0,oy=0){const c=Math.cos(S.cam),s=Math.sin(S.cam);const x=wx-ox,y=wy-oy;return[cx+x*c-y*s,cy+(x*s+y*c)*k,x*s+y*c];}
+function sol(ctx,S,img,cx,cy,k,ox=0,oy=0){const c=Math.cos(S.cam),s=Math.sin(S.cam);ctx.setTransform(c,s*k,-s,c*k,cx,cy);ctx.drawImage(img,-ox,-oy);ctx.setTransform(1,0,0,1,0,0);}
+// mer : un motif de vagues qui défile sous la caméra
+function motifMer(base,clair,g){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');const r=rnd(g);x.fillStyle=base;x.fillRect(0,0,64,64);
+  for(let i=0;i<34;i++){x.fillStyle=i%5?clair:'rgba(255,255,255,.4)';const a=r()*64|0,b=r()*64|0,l=2+r()*5|0;x.fillRect(a,b,l,1);if(a+l>64)x.fillRect(a-64,b,l,1);}return c;}
+function mer(ctx,S,motif,cx,cy,k,ox,oy,dx,dy,W,H){const pat=ctx.createPattern(motif,'repeat');const c=Math.cos(S.cam),s=Math.sin(S.cam);
+  ctx.setTransform(c,s*k,-s,c*k,cx,cy);ctx.translate(-ox+dx,-oy+dy);ctx.fillStyle=pat;const R=Math.max(W,H)*2;ctx.fillRect(ox-dx-R,oy-dy-R,2*R,2*R);ctx.setTransform(1,0,0,1,0,0);}
+// effets HD-2D : flou en haut et en bas, halo des zones claires, teinte et vignette
+const TMP={};
+function tampon(n,W,H){let c=TMP[n];if(!c||c.width!==W||c.height!==H){c=TMP[n]=document.createElement('canvas');c.width=W;c.height=H;}return c;}
+function hd2d(ctx,W,H,o={}){const cv=ctx.canvas;const a=tampon('a',W,H),ax=a.getContext('2d');ax.clearRect(0,0,W,H);ax.filter=`blur(${o.flou||1.6}px)`;ax.drawImage(cv,0,0);ax.filter='none';
+  ax.globalCompositeOperation='destination-in';const g=ax.createLinearGradient(0,0,0,H);g.addColorStop(0,'#000');g.addColorStop(o.haut||.3,'rgba(0,0,0,0)');g.addColorStop(o.bas||.8,'rgba(0,0,0,0)');g.addColorStop(1,'#000');ax.fillStyle=g;ax.fillRect(0,0,W,H);ax.globalCompositeOperation='source-over';
+  ctx.drawImage(a,0,0);
+  const b=tampon('b',W,H),bx=b.getContext('2d');bx.clearRect(0,0,W,H);bx.filter=`blur(4px) brightness(${o.seuil||1.6}) contrast(2.2)`;bx.drawImage(cv,0,0);bx.filter='none';
+  ctx.globalCompositeOperation='screen';ctx.globalAlpha=o.halo||.35;ctx.drawImage(b,0,0);ctx.globalAlpha=1;
+  if(o.teinte){ctx.globalCompositeOperation='soft-light';ctx.fillStyle=o.teinte;ctx.fillRect(0,0,W,H);}
+  ctx.globalCompositeOperation='source-over';const v=ctx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,10,.45)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);}
+// chemin fermé lissé (Catmull-Rom) : position et direction à une distance donnée
+function chemin(P){const pts=[];const n=P.length;for(let i=0;i<n;i++){const[p0,p1,p2,p3]=[P[(i-1+n)%n],P[i],P[(i+1)%n],P[(i+2)%n]];
+    for(let t=0;t<1;t+=.05){const t2=t*t,t3=t2*t;const f=(a,b,c,d)=>.5*(2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3);pts.push([f(p0[0],p1[0],p2[0],p3[0]),f(p0[1],p1[1],p2[1],p3[1])]);}}
+  const L=[0];for(let i=1;i<=pts.length;i++){const a=pts[i-1],b=pts[i%pts.length];L.push(L[i-1]+Math.hypot(b[0]-a[0],b[1]-a[1]));}
+  return{pts,L,tot:L[L.length-1],at(s,dec=0){s=((s%this.tot)+this.tot)%this.tot;let i=0;while(this.L[i+1]<s)i++;const a=this.pts[i],b=this.pts[(i+1)%this.pts.length];const f=(s-this.L[i])/(this.L[i+1]-this.L[i]);
+    const h=Math.atan2(b[1]-a[1],b[0]-a[0]);return[a[0]+(b[0]-a[0])*f-Math.sin(h)*dec,a[1]+(b[1]-a[1])*f+Math.cos(h)*dec,h];}};}
+const NEZ={k:Math.PI/2,av:-Math.PI/2,f1:Math.PI};
+function dessinerListe(ctx,L){L.sort((a,b)=>a.d-b.d);for(const e of L){if(e.fx)e.fx();else pile(ctx,e.p,e.sx,e.sy,e.a,e.k,e.z||0,1,e.de||0);}}
+
+/* ---------- 1 : grand prix ---------- */
+const CIRC=chemin([[90,300],[90,140],[150,80],[260,90],[300,160],[250,220],[330,280],[420,250],[470,330],[420,430],[260,450],[150,420]]);
+const solGP=(()=>{const c=document.createElement('canvas');c.width=560;c.height=540;const x=c.getContext('2d');
+  for(let i=0;i<28;i++){x.fillStyle=i%2?'#4f9a3e':'#59a646';x.fillRect(i*20,0,20,540);}
+  const trace=(w,st)=>{x.lineWidth=w;x.strokeStyle=st;x.lineJoin='round';x.beginPath();CIRC.pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.stroke();};
+  trace(46,'#d8c89a');trace(30,'#ffffff');x.setLineDash([5,5]);trace(30,'#d33b30');x.setLineDash([]);trace(26,'#55545e');
+  const r=rnd(4);for(let i=0;i<5000;i++){const a=r()*560,b=r()*540;const d=x.getImageData(a,b,1,1).data;if(d[0]===85){x.fillStyle=r()<.5?'#5d5c66':'#4d4c56';x.fillRect(a,b,1,1);}}
+  const[sx,sy,h]=CIRC.at(10);x.save();x.translate(sx,sy);x.rotate(h);for(let i=0;i<13;i++)for(let j=0;j<2;j++){x.fillStyle=(i+j)%2?'#111':'#fff';x.fillRect(j*2,-13+i*2,2,2);}x.restore();
+  return c;})();
+const OBJ1=[];{const r=rnd(12);for(let i=0;i<55;i++){const x=r()*560,y=r()*540;let près=false;for(const p of CIRC.pts)if(Math.hypot(p[0]-x,p[1]-y)<40){près=true;break;}if(!près)OBJ1.push({p:ARBRES[i%3],x,y,a:0});}
+  for(let s=0;s<CIRC.tot;s+=24){const[x,y,h]=CIRC.at(s,30);if(OBJ1.every(o=>Math.hypot(o.x-x,o.y-y)>12))OBJ1.push({p:PNEUS,x,y,a:0});}
+  OBJ1.push({p:TRIBUNE,x:90-44,y:220,a:Math.PI/2},{p:TRIBUNE,x:260,y:40,a:0});}
+const VOIT1=[['f1j',0,1.0],['f1v',30,.985],['f1b',62,.975],['f1o',95,.97],['cRace',130,.96],['cFutur',165,.955]].map(([n,s,v])=>({n,s,v}));
+scene('s1',(ctx,S,dt,W,H)=>{const k=.72;for(const v of VOIT1)v.s+=dt*92*v.v*(1+.05*Math.sin(S.t*.7+v.s*.01));
+  const J=VOIT1[0],[jx,jy,jh]=CIRC.at(J.s);if(S.suivre)S.cam=-Math.PI/2-jh;else S.cam+=dt*.15;
+  const ox=S.suivre?jx:280,oy=S.suivre?jy:270,cx=W/2,cy=S.suivre?H*.68:H*.55;const kk=S.suivre?k:.6;
+  ctx.fillStyle='#4f9a3e';ctx.fillRect(0,0,W,H);sol(ctx,S,solGP,cx,cy,kk,ox,oy);
+  const L=[];const ajoute=(p,x,y,a,z=0)=>{const[sx,sy,d]=vers(S,cx,cy,kk,x,y,ox,oy);if(sx>-60&&sx<W+60&&sy>-60&&sy<H+70)L.push({p,sx,sy,d,a:a+S.cam,k:kk,z});};
+  for(const o of OBJ1)ajoute(o.p,o.x,o.y,o.a);
+  for(const v of VOIT1){const[x,y,h]=CIRC.at(v.s,((v.v*100|0)%3-1)*5);const p=IM[v.n];ajoute(p,x,y,h-(v.n[0]==='f'?NEZ.f1:NEZ.k));}
+  for(const e of L)if(e.p&&e.p.w<30)ombrePile(ctx,e.p,e.sx+1.5,e.sy+1.5,e.a,e.k,.25);
+  dessinerListe(ctx,L);
+  ctx.font='6px "Press Start 2P"';ctx.fillStyle='#fff';ctx.fillText('TOUR 2/5  P1',5,11);
+},{toucher:S=>{S.suivre=!S.suivre;}});
+
+/* ---------- 2 : shoot'em up ---------- */
+const MER2=motifMer('#2f78a8','#4a92c0',5);
+const ILES2=[ile(3,34,16),ile(8,26,12),ile(21,40,20,true),ile(5,22,10)];
+const S2={iles:[],bateaux:[],ennemis:[],tirs:[],eclats:[],nuages:[],x:75,cad:0,vague:0};
+for(let i=0;i<3;i++)S2.iles.push({p:ILES2[i],x:20+i*55,y:-60-i*140});
+for(let i=0;i<5;i++)S2.nuages.push({x:Math.random()*150,y:Math.random()*300-40,r:10+Math.random()*14});
+scene('s2',(ctx,S,dt,W,H)=>{const v=22;S.cam=0;
+  // défilement
+  const dy=v*dt;
+  mer(ctx,S,MER2,0,0,1,0,0,0,(S.t*v)%64,W,H);
+  for(const il of S2.iles){il.y+=dy;if(il.y>H+50){il.y=-60-Math.random()*80;il.x=Math.random()*W;il.p=ILES2[Math.random()*4|0];}}
+  if(Math.random()<dt*.35&&S2.bateaux.length<3)S2.bateaux.push({p:IM[['cargo','remorqueur','peche','paquebot'][Math.random()*4|0]],x:Math.random()*W,y:-50,h:Math.PI/2+(Math.random()-.5)*.6});
+  for(const b of S2.bateaux){b.y+=dy+Math.sin(b.h)*6*dt;b.x+=Math.cos(b.h)*6*dt;if(Math.random()<.4)S2.eclats.push({x:b.x-Math.cos(b.h)*14,y:b.y-Math.sin(b.h)*14,z:0,vx:0,vy:dy/dt,t:1.6,c:'#e8f4ff',r:1,mer:true});}
+  S2.bateaux=S2.bateaux.filter(b=>b.y<H+60);
+  // joueur
+  const cible=S.px!=null?S.px*W:W/2+Math.sin(S.t*.9)*45;const vx=(cible-S2.x)*3;S2.x+=vx*dt;const jy=H*.82;
+  S2.cad-=dt;if(S2.cad<=0){S2.cad=.16;S2.tirs.push({x:S2.x-5,y:jy-12},{x:S2.x+5,y:jy-12});}
+  for(const t of S2.tirs)t.y-=170*dt;S2.tirs=S2.tirs.filter(t=>t.y>-10&&!t.mort);
+  // escadrilles
+  S2.vague-=dt;if(S2.vague<=0){S2.vague=3.2;const typ=Math.random()<.5?'avR':'avK';const x0=20+Math.random()*(W-40),forme=Math.random()<.5;
+    for(let i=0;i<4;i++)S2.ennemis.push({p:typ,x:forme?x0+(i-1.5)*18:x0,y:-20-i*(forme?6:22),ph:i*.6,pv:2,zig:!forme});}
+  for(const e of S2.ennemis){e.y+=(38)*dt;if(e.zig)e.x+=Math.sin(S.t*2+e.ph)*30*dt;
+    for(const t of S2.tirs)if(!t.mort&&Math.abs(t.x-e.x)<9&&Math.abs(t.y-(e.y-22))<9){t.mort=true;e.pv--;if(e.pv<=0){e.mort=true;for(let k=0;k<16;k++){const a=Math.random()*6.28,s=10+Math.random()*30;S2.eclats.push({x:e.x,y:e.y,z:22,vx:Math.cos(a)*s,vy:Math.sin(a)*s,vz:Math.random()*20,t:.5+Math.random()*.6,c:['#ffd25a','#ff8a3a','#fff3c0','#555'][k%4],r:1.4});}}}}
+  S2.ennemis=S2.ennemis.filter(e=>!e.mort&&e.y<H+40);
+  // dessin : îles (relief), bateaux, ombres, avions, nuages
+  const L=[];for(const il of S2.iles)L.push({p:il.p,sx:il.x,sy:il.y,d:il.y,a:0,k:1});
+  for(const b of S2.bateaux)L.push({p:b.p,sx:b.x,sy:b.y,d:b.y,a:b.h-NEZ.k,k:1});
+  L.sort((a,b)=>a.d-b.d);for(const e of L)pile(ctx,e.p,e.sx,e.sy,e.a,1,0,.9);
+  for(const e of S2.eclats.filter(e=>e.mer)){ctx.fillStyle=`rgba(232,244,255,${Math.min(1,e.t)*.6})`;ctx.fillRect(e.x,e.y,1,1);}
+  const avions=[...S2.ennemis.map(e=>({p:IM[e.p],x:e.x,y:e.y,a:Math.PI/2-NEZ.av+(e.zig?Math.cos(S.t*2+e.ph)*.4:0),z:22})),{p:IM.avJ,x:S2.x,y:jy,a:-Math.PI/2-NEZ.av+Math.max(-.5,Math.min(.5,vx*.01)),z:30}];
+  for(const a of avions)ombrePile(ctx,a.p,a.x+a.z*.45,a.y+a.z*.25,a.a,1,.28);
+  ctx.fillStyle='#fff6b0';for(const t of S2.tirs){ctx.fillRect(t.x-.5,t.y-30,1,4);}
+  for(const a of avions)pile(ctx,a.p,a.x,a.y,a.a,1,a.z,.8);
+  for(const e of S2.eclats){e.t-=dt;if(e.mer){e.y+=e.vy*dt;continue;}e.x+=e.vx*dt;e.y+=e.vy*dt;e.z+=(e.vz||0)*dt;ctx.fillStyle=e.c;ctx.globalAlpha=Math.min(1,e.t*2);ctx.fillRect(e.x,e.y-e.z,e.r*2,e.r*2);}
+  ctx.globalAlpha=1;S2.eclats=S2.eclats.filter(e=>e.t>0);
+  for(const n of S2.nuages){n.y+=dy*2.2;if(n.y>H+40){n.y=-40;n.x=Math.random()*W;}ctx.fillStyle='rgba(255,255,255,.22)';for(let k=0;k<4;k++){ctx.beginPath();ctx.ellipse(n.x+k*n.r*.5-n.r*.7,n.y+Math.sin(k)*4,n.r*.7,n.r*.45,0,0,7);ctx.fill();}}
+  ctx.font='6px "Press Start 2P"';ctx.fillStyle='#fff';ctx.fillText('SCORE 012450',5,11);
+});
+
+/* ---------- 3 : Amiral en relief ---------- */
+const MER3=motifMer('#2b6f9a','#3f86b2',11);const ILE3=ile(14,46,18);
+const NAV3=[{n:'galion',r:95,ph:0,v:.16,cote:1},{n:'fantome',r:95,ph:Math.PI,v:.16,cote:1},{n:'galion2',r:140,ph:Math.PI/2,v:-.11,cote:-1}].map(o=>({...o,tir:Math.random()*2}));
+const FX3=[];
+scene('s3',(ctx,S,dt,W,H)=>{const k=.7,cx=W/2,cy=H*.55;
+  mer(ctx,S,MER3,cx,cy,k,0,0,S.t*4,S.t*2,W,H);
+  const L=[];const aj=(p,x,y,a,z=0)=>{const[sx,sy,d]=vers(S,cx,cy,k,x,y);L.push({p,sx,sy,d,a:a+S.cam,k,z});};
+  aj(ILE3,0,0,0,-2);for(const[x,y,g]of[[-8,-10,0],[10,4,1],[-2,12,0]])aj(PALMIERS[g],x,y,0,8);
+  for(const n of NAV3){n.ph+=n.v*dt;const x=Math.cos(n.ph)*n.r,y=Math.sin(n.ph)*n.r*.85;const h=n.ph+Math.PI/2*Math.sign(n.v);n.x=x;n.y=y;n.h=h;
+    aj(IM[n.n],x,y,h-NEZ.k,-3);if(Math.random()<.5)FX3.push({x:x-Math.cos(h)*20,y:y-Math.sin(h)*20,z:0,t:2,type:'sillage'});
+    n.tir-=dt;if(n.tir<=0){n.tir=2+Math.random()*2;const cote=Math.random()<.5?1:-1;for(let i=-1;i<=1;i++){const bx=x+Math.cos(h)*i*8+Math.cos(h+cote*Math.PI/2)*9,by=y+Math.sin(h)*i*8+Math.sin(h+cote*Math.PI/2)*9;
+      FX3.push({x:bx,y:by,z:8,t:1.4+i*.1,type:'fumee',vx:Math.cos(h+cote*Math.PI/2)*8,vy:Math.sin(h+cote*Math.PI/2)*8});
+      FX3.push({x:bx+Math.cos(h+cote*Math.PI/2)*(40+Math.random()*30),y:by+Math.sin(h+cote*Math.PI/2)*(40+Math.random()*30),z:0,t:1.2,type:'gerbe',d:.5+Math.random()*.3});}}}
+  for(const f of FX3){f.t-=dt;const[sx,sy,d]=vers(S,cx,cy,k,f.x,f.y);
+    if(f.type==='sillage')L.push({d:d-30,fx:()=>{ctx.fillStyle=`rgba(235,248,255,${Math.min(.7,f.t*.4)})`;ctx.fillRect(sx-1,sy-1,2+(2-f.t),1);}});
+    if(f.type==='fumee'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.z+=6*dt;const r=2+(1.6-f.t)*5;L.push({d:d+50,fx:()=>{ctx.fillStyle=`rgba(230,230,225,${Math.min(.8,f.t*.6)})`;ctx.beginPath();ctx.arc(sx,sy-f.z,r,0,7);ctx.fill();}});}
+    if(f.type==='gerbe'&&f.t<f.d+.6&&f.t>0)L.push({d,fx:()=>{const a=f.t-f.d;if(a>0)return;const h=Math.max(0,(1+a*2.5))*12;ctx.fillStyle='rgba(240,250,255,.85)';ctx.fillRect(sx-1,sy-h,2,h);ctx.fillStyle='rgba(240,250,255,.5)';ctx.beginPath();ctx.ellipse(sx,sy,4+(-a)*6,2+(-a)*3,0,0,7);ctx.fill();}});}
+  for(let i=FX3.length-1;i>=0;i--)if(FX3[i].t<=0)FX3.splice(i,1);
+  dessinerListe(ctx,L);
+  hd2d(ctx,W,H,{flou:1.2,haut:.22,bas:.85,halo:.22,teinte:'rgba(255,190,120,.35)'});
+},{cam:.4,vit:.08});
+
+/* ---------- 4 : course de hors-bords ---------- */
+const MER4=motifMer('#2a8fb0','#46a8c6',23);
+const BOU=[[0,-120],[110,-60],[90,80],[-40,120],[-120,30],[-90,-80]];const CH4=chemin(BOU.map(([x,y])=>[x*1.1,y*1.1]));
+const BAT4=[['horsbordR',0,1],['horsbordB',22,.985],['voilier',40,.9],['remorqueur',60,.92]].map(([n,s,v])=>({n,s,v}));const FX4=[];
+scene('s4',(ctx,S,dt,W,H)=>{const k=.7;for(const b of BAT4)b.s+=dt*70*b.v;const J=BAT4[0],[jx,jy,jh]=CH4.at(J.s);
+  if(S.suivre)S.cam=-Math.PI/2-jh;else S.cam+=dt*.12;const ox=S.suivre?jx:0,oy=S.suivre?jy:0,cx=W/2,cy=S.suivre?H*.66:H*.55,kk=S.suivre?k:.62;
+  mer(ctx,S,MER4,cx,cy,kk,ox,oy,S.t*3,0,W,H);
+  const L=[];const aj=(p,x,y,a,z=0)=>{const[sx,sy,d]=vers(S,cx,cy,kk,x,y,ox,oy);L.push({p,sx,sy,d,a:a+S.cam,k:kk,z});};
+  for(const[i,[x,y]]of BOU.entries()){aj(IM[i%2?'bouee':'boueeD'],x*1.1+18,y*1.1,0,-2);aj(IM.bouee,x*1.1-18,y*1.1,0,-2);}
+  {const[x,y,h]=CH4.at(8);aj(IM.arrivee,x,y,h+Math.PI/2,-3);}
+  for(const b of BAT4){const[x,y,h]=CH4.at(b.s,((b.v*1000|0)%3-1)*8);aj(IM[b.n],x,y,h-NEZ.k,-3);
+    const n=b.n==='voilier'?1:3;for(let i=0;i<n;i++)FX4.push({x:x-Math.cos(h)*12+(Math.random()-.5)*4,y:y-Math.sin(h)*12+(Math.random()-.5)*4,t:1.8,big:b.n.startsWith('hors')});}
+  for(const f of FX4){f.t-=dt;const[sx,sy,d]=vers(S,cx,cy,kk,f.x,f.y,ox,oy);L.push({d:d-40,fx:()=>{const r=(1.8-f.t)*(f.big?2.2:1.2)+.5;ctx.fillStyle=`rgba(240,252,255,${Math.min(.75,f.t*.45)})`;ctx.beginPath();ctx.ellipse(sx,sy,r,r*kk,0,0,7);ctx.fill();}});}
+  for(let i=FX4.length-1;i>=0;i--)if(FX4[i].t<=0)FX4.splice(i,1);
+  dessinerListe(ctx,L);
+  ctx.font='6px "Press Start 2P"';ctx.fillStyle='#fff';ctx.fillText('BOUEE 3/6',5,11);
+},{toucher:S=>{S.suivre=!S.suivre;}});
+
+/* ---------- 5 : HD-2D, le village au crépuscule ---------- */
+const sol5=(()=>{const c=document.createElement('canvas');c.width=c.height=260;const x=c.getContext('2d');const r=rnd(3);
+  x.fillStyle='#3f6a35';x.fillRect(0,0,260,260);for(let i=0;i<3000;i++){x.fillStyle=['#4a7a3e','#36602e','#557f45'][i%3];x.fillRect(r()*260|0,r()*260|0,1+(r()*2|0),1);}
+  x.fillStyle='#8f7a5a';x.beginPath();x.arc(130,130,34,0,7);x.fill();x.fillRect(118,0,24,260);x.fillRect(0,118,260,24);
+  for(let i=0;i<1400;i++){const a=r()*260,b=r()*260;if(Math.hypot(a-130,b-130)<34||(a>118&&a<142)||(b>118&&b<142)){x.fillStyle=['#a08a66','#7c6a4e','#94805e'][i%3];x.fillRect(a|0,b|0,2,1);}}return c;})();
+const OBJ5=[['House_1',70,72,0],['House_2',190,70,Math.PI/2],['House_3',72,190,Math.PI],['House_1',192,192,Math.PI],['Kiosk',130,130,0],['Tower_Simple',40,130,0],
+  ['Shop_Simple',160,104,-.8],['Cart_Straight',104,160,.6],['Lamp_Ground_Small',108,108,0],['Lamp_Ground_Small',152,152,0],['Lamp_Ground_Small',152,108,0],['Lamp_Ground_Small',108,152,0],
+  ['A0',30,40,0],['A1',230,40,0],['A2',230,230,0],['A0',30,230,0],['A1',120,30,0],['A2',230,130,0],['A0',140,236,0]];
+const LUM5=[[108,108,9],[152,152,9],[152,108,9],[108,152,9],[70,80,14],[190,78,14],[72,182,10],[130,130,6],[40,130,40]];const LUC5=Array.from({length:18},()=>({x:Math.random()*260,y:Math.random()*260,z:4+Math.random()*16,ph:Math.random()*6}));
+const FUM5=[];
+scene('s5',(ctx,S,dt,W,H)=>{const k=.68,cx=W/2,cy=H*.56,o=130;
+  const ciel=ctx.createLinearGradient(0,0,0,H);ciel.addColorStop(0,'#2b2550');ciel.addColorStop(1,'#1c2236');ctx.fillStyle=ciel;ctx.fillRect(0,0,W,H);
+  sol(ctx,S,sol5,cx,cy,k,o,o);
+  const L=[];for(const[n,x,y,a]of OBJ5){const p=n[0]==='A'&&n.length===2?ARBRES[+n[1]]:IM[n];const[sx,sy,d]=vers(S,cx,cy,k,x,y,o,o);L.push({p,sx,sy,d,a:a+S.cam,k});}
+  if(Math.random()<dt*3)FUM5.push({x:[70,190,72][Math.random()*3|0]+3,y:[72,70,190][Math.random()*3|0],z:30,t:3});
+  for(const f of FUM5){f.t-=dt;f.z+=7*dt;f.x+=3*dt;const[sx,sy,d]=vers(S,cx,cy,k,f.x,f.y,o,o);L.push({d:d+80,fx:()=>{ctx.fillStyle=`rgba(150,150,170,${f.t*.12})`;ctx.beginPath();ctx.arc(sx,sy-f.z,2+(3-f.t)*2,0,7);ctx.fill();}});}
+  for(let i=FUM5.length-1;i>=0;i--)if(FUM5[i].t<=0)FUM5.splice(i,1);
+  dessinerListe(ctx,L);
+  // pénombre bleutée, puis lumières chaudes
+  ctx.globalCompositeOperation='multiply';ctx.fillStyle='#6f6aa8';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='lighter';
+  for(const[i,[x,y,z]]of LUM5.entries()){const[sx,sy]=vers(S,cx,cy,k,x,y,o,o);const f=1+.07*Math.sin(S.t*7+i*2);const R=(z>20?22:16)*f;
+    const g=ctx.createRadialGradient(sx,sy-z,1,sx,sy-z,R);g.addColorStop(0,'rgba(255,190,90,.75)');g.addColorStop(.35,'rgba(240,120,40,.22)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(sx-R,sy-z-R,2*R,2*R);}
+  for(const l of LUC5){l.x+=Math.sin(S.t*.6+l.ph)*6*dt;l.y+=Math.cos(S.t*.5+l.ph)*6*dt;const[sx,sy]=vers(S,cx,cy,k,l.x,l.y,o,o);const a=(Math.sin(S.t*3+l.ph)+1)/2;ctx.fillStyle=`rgba(220,255,140,${a*.9})`;ctx.fillRect(sx,sy-l.z,1,1);}
+  ctx.globalCompositeOperation='source-over';
+  hd2d(ctx,W,H,{flou:1.6,haut:.3,bas:.78,halo:.5,seuil:1.3});
+},{cam:.5,vit:.07});
+
+/* ---------- 6 : HD-2D, le port au soleil couchant ---------- */
+const sol6=(()=>{const c=document.createElement('canvas');c.width=c.height=300;const x=c.getContext('2d');const r=rnd(8);
+  x.fillStyle='#8b8578';x.fillRect(0,0,300,120);for(let i=0;i<1600;i++){x.fillStyle=['#9a9384','#7d776b','#a59e8e'][i%3];x.fillRect(r()*300|0,r()*120|0,2,1);}
+  for(let j=0;j<120;j+=6)for(let i=(j/6%2)*5;i<300;i+=10){x.fillStyle='rgba(60,55,50,.25)';x.fillRect(i,j,1,6);}
+  x.fillStyle='#6d675c';x.fillRect(0,116,300,5);return c;})();
+const MER6=motifMer('#2f6f8e','#4c8eaa',31);
+const OBJ6=[{n:'House_1',x:60,y:50,a:0},{n:'House_2',x:130,y:40,a:Math.PI/2},{n:'House_3',x:190,y:52,a:0},{n:'Shop_Simple',x:105,y:96,a:0},{n:'Cart_Straight',x:160,y:100,a:1.2},
+  {p:PHARE,x:262,y:150,a:0},{p:QUAI,x:80,y:150,a:Math.PI/2},{p:QUAI2,x:180,y:142,a:Math.PI/2},{n:'Lamp_Ground_Small',x:60,y:108,a:0},{n:'Lamp_Ground_Small',x:200,y:108,a:0},
+  {n:'peche',x:62,y:150,a:Math.PI/2-NEZ.k,eau:1},{n:'voilier',x:98,y:160,a:-Math.PI/2-NEZ.k,eau:1},{n:'remorqueur',x:162,y:150,a:Math.PI/2-NEZ.k,eau:1},{n:'cargo',x:205,y:160,a:-Math.PI/2-NEZ.k,eau:1},{n:'A1',x:20,y:40,a:0},{n:'A0',x:240,y:40,a:0}];
+const MOU6=Array.from({length:5},(_,i)=>({ph:i*1.3,r:40+i*14,z:30+i*6}));
+scene('s6',(ctx,S,dt,W,H)=>{const k=.66,cx=W/2,cy=H*.55,ox=150,oy=130;
+  ctx.fillStyle='#2f6f8e';ctx.fillRect(0,0,W,H);mer(ctx,S,MER6,cx,cy,k,ox,oy,S.t*2,S.t,W,H);
+  // reflets du soleil sur l'eau
+  sol(ctx,S,sol6,cx,cy,k,ox,oy);
+  const L=[];for(const o of OBJ6){const p=o.p||(o.n[0]==='A'&&o.n.length===2?ARBRES[+o.n[1]]:IM[o.n]);const bob=o.eau?Math.sin(S.t*1.5+o.x)*.8:0;const[sx,sy,d]=vers(S,cx,cy,k,o.x,o.y,ox,oy);L.push({p,sx,sy:sy+bob,d,a:o.a+S.cam+(o.eau?Math.sin(S.t+o.y)*.03:0),k,z:o.eau?-3:0});}
+  {const t=S.t*.05;const x=150+Math.cos(t)*230,y=260+Math.sin(t)*30;const[sx,sy,d]=vers(S,cx,cy,k,x,y,ox,oy);L.push({p:IM.paquebot,sx,sy,d,a:t+Math.PI/2+Math.PI/2-NEZ.k+S.cam,k,z:-3});}
+  dessinerListe(ctx,L);
+  // lumière : soleil couchant, faisceau du phare, mouettes
+  ctx.globalCompositeOperation='soft-light';const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'rgba(255,170,90,.9)');g.addColorStop(1,'rgba(120,80,160,.6)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='lighter';{const[sx,sy]=vers(S,cx,cy,k,262,150,ox,oy);const a=S.t*1.2;const R=36;const gr=ctx.createRadialGradient(sx,sy-40,1,sx,sy-40,14);gr.addColorStop(0,'rgba(255,240,170,.9)');gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.fillRect(sx-14,sy-54,28,28);
+    ctx.fillStyle='rgba(255,240,180,.16)';ctx.beginPath();ctx.moveTo(sx,sy-40);ctx.lineTo(sx+Math.cos(a-.12)*R*3,sy-40+Math.sin(a-.12)*R*1.2);ctx.lineTo(sx+Math.cos(a+.12)*R*3,sy-40+Math.sin(a+.12)*R*1.2);ctx.fill();}
+  ctx.globalCompositeOperation='source-over';
+  for(const m of MOU6){const a=S.t*.4+m.ph;const[sx,sy]=vers(S,cx,cy,k,150+Math.cos(a)*m.r,140+Math.sin(a)*m.r*.6,ox,oy);const b=Math.sin(S.t*8+m.ph)>0;ctx.fillStyle='#fff';ctx.fillRect(sx-2,sy-m.z+(b?0:1),2,1);ctx.fillRect(sx+1,sy-m.z+(b?0:1),2,1);ctx.fillRect(sx,sy-m.z+1,1,1);}
+  hd2d(ctx,W,H,{flou:1.5,haut:.28,bas:.8,halo:.35,seuil:1.4});
+},{cam:-.3,vit:.06});
+</script>
