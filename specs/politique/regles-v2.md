@@ -125,6 +125,12 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 ### 16. Défricher (16/11)
 - Action « défricher » une région : +1 emplacement ; 100, 150 puis 200 or (lois de construction comprises), 3 fois au plus par région ; occupe le chantier de la région 3 tours (bois compris) ; pas en région occupée. Fini : paysans −5 de colère. Le défrichement compte dans la Prospérité pour son prix de base (décision du 16/11).
 
+### 17. Cinq factions (16/11, lot « voies du joueur », étape 1)
+- De gauche à droite : ouvriers, paysans, **classe moyenne** (ex-artisans, le centre), patrons (droite libérale), **conservateurs** (clergé, noblesse, officiers : droite traditionnelle). Puissance de départ 25 / 35 / 30 / 40 / 30 (total 160) ; conservateurs : colère 20, panier vin et grain, grève = force de l'armée ×0,5 et plus de recrutement (révolte : force nulle), thésaurisation : Police niveau 2.
+- Pays (ouvriers / paysans / classe moyenne / patrons / conservateurs) : agricole 20 / 55 / 25 / 20 / 40 (patrons 20 au lieu des 25 proposés, pour garder le total de 160) ; industriel 45 / 25 / 20 / 50 / 20 ; marchand 20 / 25 / 45 / 45 / 25 ; minier 40 / 30 / 20 / 40 / 30.
+- Lois revues (pour / contre) d'après le tableau validé ; catégorie **Culte** : Religion d'État, Liberté de culte, Laïcité (32 lois, 12 catégories).
+- **Réprimer** une faction (Police d'État ou Comités populaires en vigueur) : −10 de puissance, +15 de colère, relations −5 avec toutes, 30 or, une fois tous les 5 tours.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

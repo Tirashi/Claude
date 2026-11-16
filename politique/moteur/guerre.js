@@ -48,7 +48,7 @@ const occupees = (e, qui) => regionsDe(e, qui).filter(id => e.occupations[id]);
 
 // force d'un membre ; region : la région défendue (son fort compte si elle appartient au joueur et n'est pas occupée)
 function force(e, qui, region){
-  const mult = qui === "joueur" ? Lois.effets(e).force : persona(e, qui).armee;
+  const mult = qui === "joueur" ? Lois.effets(e).force * Factions.effetsEco(e).force : persona(e, qui).armee;   // grève des conservateurs
   const moral = qui === "joueur" ? e.moral : e.nations[qui].moral;
   let f = regiments(e, qui) * mult * moral;
   if (region && qui === "joueur" && e.regions[region] && !e.occupations[region] && e.regions[region].batiments.fort) f *= G.fort;
@@ -58,7 +58,7 @@ const forceCamp = (e, membres, region) => arrondi(membres.reduce((s, m) => s + f
 
 // --- recrutement ---
 function recrutables(e){
-  if (e.tresor < coutRegiment(e) || e.regiments >= plafond(e, "joueur") || desarme(e, "joueur")) return [];
+  if (e.tresor < coutRegiment(e) || e.regiments >= plafond(e, "joueur") || desarme(e, "joueur") || !Factions.effetsEco(e).recrutement) return [];
   return Object.keys(e.regions).filter(r => (e.regions[r].batiments.caserne || 0) > 0 && !e.occupations[r] && !(e.recrues || []).includes(r));
 }
 function recruter(e, region){

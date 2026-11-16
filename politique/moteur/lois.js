@@ -11,6 +11,7 @@ const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INS
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 const { LOIS, REGLES_LOIS: R } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
+const { FACTIONS, REGLES_FACTIONS } = NODE ? require("../donnees/factions.js") : racine.Politique.FACTIONS;
 const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 
@@ -67,7 +68,8 @@ const montee = (e, l) => Math.min(1, (e.tour - l.depuis) / ECO.montee);
 function effets(e){
   const r = { impots: 1, entretien: 0, production: 1, croissance: 0, artisans: 0, force: 1,
               entretienBatiments: 1, ventes: 1, construction: 1, achat: 1, pente: 1, plafondRegiments: 1, coutRegiment: null, debat: 0,
-              dividendes: 1, sansInvestissement: false };
+              dividendes: 1, sansInvestissement: false, repression: false };
+  let ecoles = 0;
   for (const cat in e.lois){
     const l = e.lois[cat], x = LOIS[l.id].eco;
     if (x.impots) r.impots *= x.impots;
@@ -79,12 +81,33 @@ function effets(e){
     if (x.artisansImmediat) r.artisans += x.artisansImmediat;
     for (const k of ["entretienBatiments", "ventes", "construction", "achat", "pente", "plafondRegiments", "dividendes"]) if (x[k] != null) r[k] *= x[k];
     if (x.sansInvestissement) r.sansInvestissement = true;
+    if (x.repression) r.repression = true;
+    if (x.ecoles) ecoles += x.ecoles;
     if (x.coutRegiment != null) r.coutRegiment = x.coutRegiment;
     if (x.debat) r.debat += x.debat;
   }
+  // laïcité (16/11) : la loi d'éducation en vigueur coûte moins cher (jamais moins que rien)
+  const edu = e.lois.education && LOIS[e.lois.education.id].eco.entretien;
+  if (ecoles && edu) r.entretien += Math.max(ecoles, -edu);
   return r;
 }
 
-const Lois = { lancables, chance, lancer, abandonner, adopter, debattre, effets, enVigueur, montee };
+// réprimer une faction (16/11) : avec une loi d'ordre qui le permet, de l'or, et pas plus d'une fois tous les « delai » tours
+function reprimables(e){
+  const X = REGLES_FACTIONS.repression;
+  if (!effets(e).repression || e.tresor < X.cout || (e.repression != null && e.tour - e.repression < X.delai)) return [];
+  return Object.keys(e.factions);
+}
+function reprimer(e, f){
+  const X = REGLES_FACTIONS.repression;
+  e.tresor = Math.round((e.tresor - X.cout) * 100) / 100;
+  Factions.modifier(e, f, "puissance", X.puissance);
+  Factions.modifier(e, f, "colere", X.colere);
+  for (const n in e.nations) Diplomatie.changerRelation(e, n, X.relations);
+  e.repression = e.tour;
+  e.journal.push(`Répression : les ${FACTIONS[f].nom.toLowerCase()} perdent de l'influence et s'indignent ; les voisins nous jugent.`);
+}
+
+const Lois = { reprimables, reprimer, lancables, chance, lancer, abandonner, adopter, debattre, effets, enVigueur, montee };
 if (NODE) module.exports = Lois; else (racine.Politique = racine.Politique || {}).Lois = Lois;
 })(typeof window !== "undefined" ? window : globalThis);

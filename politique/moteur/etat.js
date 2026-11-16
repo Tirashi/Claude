@@ -65,6 +65,7 @@ function creerEtat(scenario, graine, pays){
     factions,                         // f → { colere, puissance, statut }
     moral: 1,                         // moral du pays (0 à 1), recalculé chaque tour
     apaises: [],                      // factions déjà apaisées ce tour
+    repression: null,                 // tour de la dernière répression (16/11)
     regions,                          // région → { nom, terrain, emplacements, batiments } (V2)
     batiments: totaux(regions),       // totaux du pays (somme des régions)
     chantiers: [],                    // bâtiments en construction : [{ id, region, restant }], un par région

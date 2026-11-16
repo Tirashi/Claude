@@ -21,11 +21,12 @@ const SCENARIO_CHAMPS = {
       collines: { nom: "Collines",       terrain: "filons",  emplacements: 3, batiments: { mine: 1 } },
       bourg:    { nom: "Bourg",          terrain: "ville",   emplacements: 4, batiments: { caserne: 1 } }   // caserne de départ (validée le 14/11)
     },
-    factions: {                       // ASSUMPTION validée : colère et puissance de départ (patrons 45 = valeur connue en fin de partie)
-      paysans:  { colere: 30, puissance: 40 },
-      ouvriers: { colere: 35, puissance: 25 },
-      artisans: { colere: 25, puissance: 30 },
-      patrons:  { colere: 20, puissance: 45 }
+    factions: {                       // colère et puissance de départ (ASSUMPTION validée) ; cinq factions le 16/11 (paysans 40 → 35, patrons 45 → 40)
+      ouvriers:      { colere: 35, puissance: 25 },
+      paysans:       { colere: 30, puissance: 35 },
+      artisans:      { colere: 25, puissance: 30 },
+      patrons:       { colere: 20, puissance: 40 },
+      conservateurs: { colere: 20, puissance: 30 }
     },
     reputation: 0,                    // ASSUMPTION validée
     regiments: 3                      // V2 : régiments de départ (ASSUMPTION validée (V2)) ; pas de caserne au départ : ASSUMPTION validée (V2 étape 2)

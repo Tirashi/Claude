@@ -4,7 +4,7 @@
    { type: "projet", id, region, avec } : projet commun (bâtiment cofinancé par une nation de l'Entente) ;
    { type: "defricher", region } : +1 emplacement dans la région (chantier de 3 tours) ;
    { type: "agrandir", id, region } agrandit un bâtiment (niveau 2 puis 3) ; { type: "institution", id, niveau } (±1 par tour) ;
-   { type: "apaiser", id: faction } apaise une faction (M2) ; diplomatie (M3a) : don, contrat, traite, rompre,
+   { type: "apaiser", id: faction } apaise une faction (M2) ; { type: "reprimer", id: faction } (16/11, avec une loi qui le permet) ; diplomatie (M3a) : don, contrat, traite, rompre,
    embargo, lever_embargo, diplomate { id }, rappeler_diplomate, exiger { id, exigence }, caravane, route { id } (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
    { type: "ambition", id } (tour 1 seulement) : l'objectif de victoire.
    Les actions d'un tour s'appliquent dans l'ordre, chacune vérifiée sur l'état laissé par la précédente.
@@ -40,6 +40,7 @@ function actionsDisponibles(etat){
     .concat(Batiments.defrichables(etat).map(region => ({ type: "defricher", region })))
     .concat(institutions(etat))
     .concat(Factions.apaisables(etat).map(id => ({ type: "apaiser", id })))
+    .concat(Lois.reprimables(etat).map(id => ({ type: "reprimer", id })))
     .concat(Diplomatie.actions(etat))
     .concat(Guerre.actions(etat))
     .concat(Evenements.actions(etat))
@@ -79,6 +80,7 @@ function appliquerAction(e, a, r){
     e.journal.push(`${INST.INSTITUTIONS[a.id].nom} : niveau ${a.niveau}.`);
   }
   else if (a.type === "apaiser") Factions.apaiser(e, a.id);
+  else if (a.type === "reprimer") Lois.reprimer(e, a.id);
   else if (a.type === "ambition") Objectifs.choisir(e, a.id);
   else if (["recruter", "declarer_guerre", "bataille", "imposer_paix", "paix_blanche"].includes(a.type)) Guerre.appliquer(e, a, r);
   else Diplomatie.appliquer(e, a);

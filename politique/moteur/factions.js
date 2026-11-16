@@ -143,12 +143,14 @@ function finDeTour(e){
 
 // multiplicateurs de l'économie : production d'un bâtiment, impôts (grève, révolte)
 function effetsEco(e){
-  const r = { batiments: {}, impots: 1 };
+  const r = { batiments: {}, impots: 1, force: 1, recrutement: true };
   for (const f in FACTIONS){
+    if (!e.factions[f]) continue;
     const st = e.factions[f].statut, k = st === "greve" ? R.greve : st === "revolte" ? R.revolteEffets : null;
     if (!k) continue;
     for (const b of FACTIONS[f].batiments) r.batiments[b] = k.production;
     if (FACTIONS[f].impots) r.impots *= k.impots;
+    if (FACTIONS[f].armee){ r.force *= k.force; r.recrutement = false; }   // conservateurs (16/11) : l'armée boude
   }
   return r;
 }

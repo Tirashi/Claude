@@ -10,7 +10,7 @@ const Lois = P('moteur/lois.js'), Alea = P('moteur/alea.js'), Etat = P('moteur/e
 const { LOIS } = P('donnees/lois.js');
 const BAT = P('donnees/batiments.js'), ECO = P('donnees/economie.js');
 
-const FACTIONS = ['ouvriers', 'paysans', 'artisans', 'patrons'];
+const FACTIONS = ['ouvriers', 'paysans', 'artisans', 'patrons', 'conservateurs'];
 
 // une bataille a une issue au hasard : elle n'est pas jouée sur la copie et passe en dernier dans le tour
 // (sinon une action suivante pourrait compter sur une victoire, par exemple recruter dans une région libérée)
@@ -225,12 +225,21 @@ function rapprocher(p){
   if (l.length && (!e.diplomate || e.diplomate.nation !== l[0]) && e.tresor >= 20) p.essayer({ type: 'diplomate', id: l[0] });
 }
 
-// un bot à programme : comme economy, avec sa liste de lois
-function programme(lois, prio){
+// réprimer (16/11) : la plus puissante des factions visées, si elle pèse au moins 30 et n'est pas déjà trop en colère
+function reprimer(p, cibles){
+  if (!cibles) return;
+  const f = cibles.filter(x => p.e.factions[x].puissance >= 30 && p.e.factions[x].colere < 50)
+    .sort((a, b) => p.e.factions[b].puissance - p.e.factions[a].puissance)[0];
+  if (f) p.essayer({ type: 'reprimer', id: f });
+}
+
+// un bot à programme : comme economy, avec sa liste de lois ; cibles : factions qu'il réprime quand il le peut
+function programme(lois, prio, cibles){
   return e => {
     const p = plan(e);
     guerre(p, { seuilBataille: 0.6 });
     apaiser(p, 55);
+    reprimer(p, cibles);
     loiSuivante(p, lois);
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
@@ -352,11 +361,12 @@ const BOTS = {
   },
 
   // programmes politiques (panel du 14/11) : même gestion qu'economy, lois du camp dans l'ordre
-  gauche_med: () => programme(['labor_medicine', 'income_progressive', 'school_public', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional'], ['sante', 'enseignement']),
-  gauche: () => programme(['income_progressive', 'school_public', 'securite_sociale', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'army_professional'], ['sante', 'enseignement']),
+  gauche_med: () => programme(['labor_medicine', 'income_progressive', 'school_public', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'laicite', 'army_professional'], ['sante', 'enseignement']),
+  gauche: () => programme(['income_progressive', 'school_public', 'securite_sociale', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'laicite', 'army_professional'], ['sante', 'enseignement']),
   droite: () => programme(['impot_minimal', 'libre_entreprise', 'ecoles_religieuses', 'police_etat', 'suffrage_census', 'syndicats_interdits', 'army_conscription', 'libre_echange', 'charite_privee'], ['police', 'sante']),
-  extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'journee_huit_heures'], ['police', 'sante']),
-  extreme_droite: () => programme(['laisser_faire', 'parti_unique', 'syndicats_interdits', 'police_etat', 'travail_enfants', 'army_conscription', 'impot_minimal', 'ecoles_religieuses', 'libre_echange'], ['police', 'sante']),
+  extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'laicite', 'journee_huit_heures'], ['police', 'sante'], ['patrons', 'conservateurs']),
+  // extrême droite (16/11) : le programme conservateur (Église, ordre, armée) ; réprime les ouvriers et la classe moyenne
+  extreme_droite: () => programme(['religion_etat', 'police_etat', 'parti_unique', 'army_conscription', 'ecoles_religieuses', 'syndicats_interdits', 'charite_privee', 'impot_minimal', 'suffrage_census'], ['police', 'sante'], ['ouvriers', 'artisans']),
 
   // patrons (16/11) : programme de droite avec l'Exportation des capitaux ; investit à l'étranger une fois ses régions
   // pleines ; jamais d'embargo (il ferait confisquer ses investissements) ; ambition Prospérité

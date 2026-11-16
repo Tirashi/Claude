@@ -24,7 +24,8 @@ const THESAURISATION = { actif: true, tours: 10, colere: 2,
     ouvriers: { institution: "sante", niveau: 2, texte: "la Santé au niveau 2" },
     artisans: { institution: "enseignement", niveau: 2, texte: "l'Enseignement au niveau 2" },
     paysans:  { agrandis: "farm", nombre: 2, texte: "2 fermes agrandies" },
-    patrons:  { agrandis: null, nombre: 4, texte: "4 agrandissements" } } };
+    patrons:  { agrandis: null, nombre: 4, texte: "4 agrandissements" },
+    conservateurs: { institution: "police", niveau: 2, texte: "la Police au niveau 2" } } };
 // défricher (16/11, ASSUMPTION (défrichement) validée le 16/11) : +1 emplacement dans une région ; prix selon le nombre
 // de défrichements déjà faits dans la région (au plus couts.length) ; occupe le chantier de la région pendant « delai »
 // tours (bois compris) ; fini : les paysans prennent « paysans » de colère. actif: false = règles d'avant.
