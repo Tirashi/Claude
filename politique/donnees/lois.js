@@ -46,8 +46,8 @@ const LOIS = {
     texte: ["L'État aide les chantiers : construire coûte 20 % de moins.", "Les patrons grognent (+5 de colère à l'adoption)."],
     eco: { construction: 0.8 }, factions: { chocs: { patrons: { colere: 5 } } } },
   libre_entreprise: { nom: "Libre entreprise", categorie: "economie", bord: "droite", pour: ["patrons"], contre: ["ouvriers"],
-    texte: ["Les bâtiments deviennent privés : l'État ne paie plus leur entretien, mais ne touche plus que 85 % de ce qu'ils vendent.", "Les patrons gagnent de l'influence (+3 de puissance par tour pendant 10 tours)."],
-    eco: { entretienBatiments: 0, ventes: 0.85 }, factions: { parTour: { patrons: { puissance: 3 } }, dureeParTour: { puissance: 10 } } },
+    texte: ["Les bâtiments deviennent privés : l'État ne paie plus leur entretien, mais ne touche plus que 85 % de ce qu'ils vendent."],
+    eco: { entretienBatiments: 0, ventes: 0.85 }, factions: {} },
   laisser_faire: { nom: "Laisser-faire", categorie: "economie", bord: "droite", pour: ["patrons"], contre: ["ouvriers", "conservateurs"],
     texte: ["L'État se retire : il ne paie plus l'entretien des bâtiments, construire coûte 25 % de moins, mais il ne touche plus que 60 % des ventes.", "Les ouvriers, sans protection, se fâchent chaque tour (+2 de colère) ; les patrons se calment (−2)."],
     eco: { entretienBatiments: 0, construction: 0.75, ventes: 0.6 }, factions: { parTour: { ouvriers: { colere: 2 }, patrons: { colere: -2 } } } },
@@ -62,7 +62,7 @@ const LOIS = {
   securite_sociale: { nom: "Sécurité sociale", categorie: "sante", bord: "gauche", pour: ["ouvriers", "paysans"], contre: ["patrons"],
     texte: ["Coûte 20 or par tour.", "Les ouvriers, les paysans et la classe moyenne se calment chaque tour (−2 de colère).", "Les patrons grognent (+5 de colère à l'adoption)."],
     eco: { entretien: 20 }, factions: { chocs: { patrons: { colere: 5 } }, parTour: { paysans: { colere: -2 }, ouvriers: { colere: -2 }, artisans: { colere: -2 } } } },
-  labor_medicine: { nom: "Médecine du travail", categorie: "sante", bord: "centre", pour: ["ouvriers", "artisans"], contre: [],
+  labor_medicine: { nom: "Médecine du travail", categorie: "sante", bord: "centre", pour: ["ouvriers", "artisans"], contre: ["patrons"],
     texte: ["Coûte 10 or par tour.", "Toutes les factions se calment chaque tour (−1 de colère)."],
     eco: { entretien: 10 }, factions: { parTour: { paysans: { colere: -1 }, ouvriers: { colere: -1 }, artisans: { colere: -1 }, patrons: { colere: -1 }, conservateurs: { colere: -1 } } } },
   charite_privee: { nom: "Charité privée", categorie: "sante", bord: "droite", pour: ["patrons", "conservateurs"], contre: ["paysans"],
@@ -72,7 +72,7 @@ const LOIS = {
   school_free: { nom: "École gratuite et obligatoire", categorie: "education", bord: "gauche", pour: ["artisans", "ouvriers"], contre: ["conservateurs"],
     texte: ["Coûte 20 or par tour.", "Les familles grandissent plus vite (+1 % par tour).", "Ateliers et tissages produisent 50 % de plus, pleinement au bout de 10 tours.", "Les conservateurs voient l'Église chassée de l'école (+8 de colère à l'adoption)."],
     eco: { entretien: 20, croissance: 0.01, artisans: 0.5 }, factions: { chocs: { conservateurs: { colere: 8 } } } },
-  school_public: { nom: "École publique", categorie: "education", bord: "centre", pour: ["artisans", "ouvriers"], contre: [],
+  school_public: { nom: "École publique", categorie: "education", bord: "centre", pour: ["artisans", "ouvriers"], contre: ["conservateurs"],
     texte: ["Coûte 14 or par tour.", "Les familles grandissent plus vite (+0,5 % par tour).", "Ateliers et tissages produisent 35 % de plus, pleinement au bout de 10 tours."],
     eco: { entretien: 14, croissance: 0.005, artisans: 0.35 }, factions: {} },
   ecoles_religieuses: { nom: "Écoles religieuses", categorie: "education", bord: "droite", pour: ["conservateurs", "paysans"], contre: ["ouvriers"],
@@ -80,11 +80,11 @@ const LOIS = {
     eco: { artisans: 0.2 }, factions: { parTour: { paysans: { colere: -1 }, conservateurs: { colere: -1 } } } },
   // --- Relations sociales ---
   unions: { nom: "Syndicats autorisés", categorie: "relations_sociales", bord: "gauche", pour: ["ouvriers"], contre: ["patrons"],
-    texte: ["Les ouvriers se calment chaque tour (−4 de colère) et gagnent de l'influence (+3 de puissance par tour pendant 10 tours).", "Les patrons se fâchent (+15 de colère à l'adoption)."],
-    eco: {}, factions: { chocs: { patrons: { colere: 15 } }, parTour: { ouvriers: { colere: -4, puissance: 3 } }, dureeParTour: { puissance: 10 } } },
+    texte: ["Les ouvriers se calment chaque tour (−4 de colère).", "Les patrons se fâchent (+15 de colère à l'adoption)."],
+    eco: {}, factions: { chocs: { patrons: { colere: 15 } }, parTour: { ouvriers: { colere: -4 } } } },
   syndicats_interdits: { nom: "Syndicats interdits", categorie: "relations_sociales", bord: "droite", pour: ["patrons", "conservateurs"], contre: ["ouvriers"],
-    texte: ["Les ouvriers se fâchent (+10 de colère à l'adoption) et perdent de l'influence (−2 de puissance par tour pendant 10 tours).", "Les patrons se calment (−10 de colère à l'adoption)."],
-    eco: {}, factions: { chocs: { ouvriers: { colere: 10 }, patrons: { colere: -10 } }, parTour: { ouvriers: { puissance: -2 } }, dureeParTour: { puissance: 10 } } },
+    texte: ["Les ouvriers se fâchent (+10 de colère à l'adoption).", "Les patrons se calment (−10 de colère à l'adoption)."],
+    eco: {}, factions: { chocs: { ouvriers: { colere: 10 }, patrons: { colere: -10 } } } },
   // --- Libertés publiques ---
   suffrage_universal: { nom: "Suffrage universel", categorie: "libertes", bord: "gauche", pour: ["paysans", "ouvriers"], contre: ["patrons", "conservateurs"],
     texte: ["Apaiser les paysans et les ouvriers coûte moitié prix, et leur colère monte moitié moins vite.", "Les voisins apprécient (+2,5 de relation avec toutes).", "Les patrons perdent du pouvoir (+15 de colère à l'adoption) ; les conservateurs aussi (+10)."],
@@ -93,8 +93,8 @@ const LOIS = {
     texte: ["Apaiser les patrons et la classe moyenne coûte moitié prix, et leur colère monte moitié moins vite.", "Les voisins désapprouvent (−2,5 de relation avec toutes).", "Les ouvriers et les paysans sont exclus du vote (+10 de colère chacun à l'adoption)."],
     eco: { reputation: -5 }, factions: { chocs: { ouvriers: { colere: 10 }, paysans: { colere: 10 } }, faveur: "elites" } },
   parti_unique: { nom: "Parti unique", categorie: "libertes", bord: "extrême droite", pour: ["conservateurs"], contre: ["ouvriers", "paysans", "artisans"],
-    texte: ["Les lois suivantes passent plus facilement (+25 % de chances à chaque tour de débat).", "Les voisins s'inquiètent (relations −10 avec toutes).", "Les ouvriers et les paysans se fâchent (+15 de colère à l'adoption).", "L'opposition est muselée : ouvriers, paysans et classe moyenne perdent de l'influence (−3 de puissance par tour pendant 10 tours)."],
-    eco: { debat: 0.25, relations: -10 }, factions: { chocs: { ouvriers: { colere: 15 }, paysans: { colere: 15 } }, parTour: { ouvriers: { puissance: -3 }, paysans: { puissance: -3 }, artisans: { puissance: -3 } }, dureeParTour: { puissance: 10 } } },
+    texte: ["Les lois suivantes passent plus facilement (+25 % de chances à chaque tour de débat).", "Les voisins s'inquiètent (relations −10 avec toutes).", "Les ouvriers et les paysans se fâchent (+15 de colère à l'adoption)."],
+    eco: { debat: 0.25, relations: -10 }, factions: { chocs: { ouvriers: { colere: 15 }, paysans: { colere: 15 } } } },
   // --- Ordre public ---
   comites_populaires: { nom: "Comités populaires", categorie: "ordre", bord: "extrême gauche", pour: ["ouvriers"], contre: ["patrons", "conservateurs"],
     texte: ["Les ouvriers et les paysans se calment chaque tour (−1 de colère).", "Les patrons et les conservateurs se fâchent chaque tour (+2).", "Permet de réprimer une faction."],
@@ -106,7 +106,7 @@ const LOIS = {
   milice_populaire: { nom: "Milice populaire", categorie: "armee", bord: "extrême gauche", pour: ["ouvriers"], contre: ["conservateurs"],
     texte: ["On peut lever 50 % de régiments en plus, et un régiment coûte 20 or au lieu de 30, mais chacun se bat 20 % moins bien."],
     eco: { plafondRegiments: 1.5, coutRegiment: 20, force: 0.8 }, factions: {} },
-  army_professional: { nom: "Armée de métier", categorie: "armee", bord: "centre", pour: ["ouvriers", "conservateurs"], contre: [],
+  army_professional: { nom: "Armée de métier", categorie: "armee", bord: "centre", pour: ["ouvriers", "conservateurs"], contre: ["paysans"],
     texte: ["Coûte 12 or par tour.", "L'armée se bat 30 % mieux.", "Les ouvriers trouvent des emplois (−5 de colère à l'adoption)."],
     eco: { entretien: 12, force: 1.3 }, factions: { chocs: { ouvriers: { colere: -5 } } } },
   army_conscription: { nom: "Conscription", categorie: "armee", bord: "droite", pour: ["conservateurs"], contre: ["ouvriers", "paysans"],
@@ -131,14 +131,14 @@ const LOIS = {
     eco: { dividendes: 0.5, impots: 1.05, sansInvestissement: true }, factions: { parTour: { patrons: { colere: 1 } } } },
   // --- Culte (16/11, cinq factions ; ASSUMPTION validée le 16/11) ---
   religion_etat: { nom: "Religion d'État", categorie: "culte", bord: "extrême droite", pour: ["conservateurs", "paysans"], contre: ["ouvriers", "artisans"],
-    texte: ["L'Église apaise les campagnes : les paysans et les conservateurs se calment chaque tour (−1 de colère).", "Les conservateurs gagnent de l'influence (+3 de puissance par tour pendant 10 tours).", "Les ouvriers se fâchent (+10 de colère à l'adoption)."],
-    eco: {}, factions: { chocs: { ouvriers: { colere: 10 } }, parTour: { paysans: { colere: -1 }, conservateurs: { colere: -1, puissance: 3 } }, dureeParTour: { puissance: 10 } } },
+    texte: ["L'Église apaise les campagnes : les paysans et les conservateurs se calment chaque tour (−1 de colère).", "Les ouvriers se fâchent (+10 de colère à l'adoption)."],
+    eco: {}, factions: { chocs: { ouvriers: { colere: 10 } }, parTour: { paysans: { colere: -1 }, conservateurs: { colere: -1 } } } },
   liberte_culte: { nom: "Liberté de culte", categorie: "culte", bord: "centre", pour: ["artisans"], contre: ["conservateurs"],
     texte: ["Les voisins apprécient (relations +5 avec toutes).", "Les conservateurs se fâchent (+5 de colère à l'adoption)."],
     eco: { relations: 5 }, factions: { chocs: { conservateurs: { colere: 5 } } } },
   laicite: { nom: "Laïcité", categorie: "culte", bord: "gauche", pour: ["ouvriers", "artisans"], contre: ["conservateurs", "paysans"],
-    texte: ["La loi d'éducation en vigueur coûte 5 or de moins par tour.", "Les conservateurs perdent de l'influence (−2 de puissance par tour pendant 10 tours)."],
-    eco: { ecoles: -5 }, factions: { parTour: { conservateurs: { puissance: -2 } }, dureeParTour: { puissance: 10 } } }
+    texte: ["La loi d'éducation en vigueur coûte 5 or de moins par tour."],
+    eco: { ecoles: -5 }, factions: {} }
 };
 // ASSUMPTION validée : populaires = paysans, ouvriers ; élites = patrons, artisans
 const GROUPES = { populaires: ["paysans", "ouvriers"], elites: ["patrons", "artisans"] };
@@ -147,7 +147,9 @@ const GROUPES = { populaires: ["paysans", "ouvriers"], elites: ["patrons", "arti
 // à partir du 2e tour de débat, adoption avec une chance de 50 % + (puissance des pour − puissance des contre) / 2,
 // bornée entre 10 % et 90 % (pour / contre : ASSUMPTION validée (V2 étape 4)). premierTirage : tour de débat du premier tirage (le lancement
 // est le 1er) ; les tests de règles écrits avant cette étape utilisent 3 (le délai de la V1), une chance de 100 % et pas de colère.
-const REGLES_LOIS = { chance: { base: 0.5, parPuissance: 0.005, min: 0.1, max: 0.9 }, colereDebat: 1, premierTirage: 2 };
+// puissance (16/11, validé) : une loi adoptée renforce chacun de ses partisans et affaiblit chacun de ses opposants
+// (remplace les effets « +N de puissance par tour pendant 10 tours » de quelques lois)
+const REGLES_LOIS = { chance: { base: 0.5, parPuissance: 0.005, min: 0.1, max: 0.9 }, colereDebat: 1, premierTirage: 2, puissance: { pour: 3, contre: -3 } };
 
 const Lois = { CATEGORIES, LOIS, GROUPES, REGLES_LOIS };
 if (NODE) module.exports = Lois; else (racine.Politique = racine.Politique || {}).LOIS = Lois;

@@ -298,8 +298,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   e = un(['labor_medicine']);
   check(['paysans', 'ouvriers', 'artisans', 'patrons'].every(f => fac(e, f).colere === CHAMPS.joueur.factions[f].colere - 2), 'médecine du travail : −1 colère par tour pour toutes les factions');
   e = un(['unions']);
-  check(fac(e, 'ouvriers').colere === 30 && fac(e, 'ouvriers').puissance === 28, 'syndicats : ouvriers −4 colère et +3 puissance par tour');
-  check(fac(tours(avecLois(['unions'], 1), 10), 'ouvriers').puissance === 55 && fac(tours(avecLois(['unions'], 1), 15), 'ouvriers').puissance === 55, 'syndicats : +3 puissance pendant 10 tours seulement (25 → 55)');
+  check(fac(e, 'ouvriers').colere === 30 && fac(e, 'ouvriers').puissance === 25, 'syndicats : ouvriers −4 colère par tour (plus de puissance par tour depuis le 16/11)');
 
   // chocs : chaque loi change exactement ce que disent les données
   let ok = true;
@@ -649,7 +648,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const LM = P('moteur/lois.js');
   const e0 = vrai({ evenements: [] });
   check(LM.lancables(e0).length === 33 && e0.cp === undefined, 'lois : plus de capital politique, toutes les lois se lancent dès le tour 1');
-  check(LM.chance(e0, 'income_progressive') === 0.6 && LM.chance(e0, 'income_capital') === 0.275 && LM.chance(e0, 'school_public') === 0.775, 'débat : chance = 50 % + (puissance des pour − des contre) / 2 (progressif 60 %, capital 27,5 %, école 77,5 %)');
+  check(LM.chance(e0, 'income_progressive') === 0.6 && LM.chance(e0, 'income_capital') === 0.275 && LM.chance(e0, 'school_public') === 0.625, 'débat : chance = 50 % + (puissance des pour − des contre) / 2 (progressif 60 %, capital 27,5 %, école 62,5 %)');
   const fort = vrai(); fort.factions.patrons.puissance = 100; fort.factions.artisans.puissance = 100;
   const faible = vrai(); for (const f in faible.factions) faible.factions[f].puissance = 100; faible.factions.patrons.puissance = 0;
   check(LM.chance(fort, 'income_capital') === 0.1 && LM.chance(faible, 'income_progressive') === 0.9, 'débat : chance bornée entre 10 % et 90 %');
@@ -789,7 +788,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const co = Economie.bilan(avec(['collectivisation']));
   check(co.production.grain === 115 && co.entretiens === 19 * 2 + 9, 'collectivisation : production +15 %, entretien des bâtiments ×2');
   const ad = avec([]); LM.adopter(ad, 'collectivisation');
-  check(Object.values(ad.nations).every((x, i) => x.relation === Object.values(vrai().nations)[i].relation - 10) && ad.factions.patrons.puissance === 20, 'collectivisation : relations −10 avec toutes, patrons −20 de puissance');
+  check(Object.values(ad.nations).every((x, i) => x.relation === Object.values(vrai().nations)[i].relation - 10) && ad.factions.patrons.puissance === 17, 'collectivisation : relations −10 avec toutes, patrons −20 de puissance (et −3 comme opposants)');
   check(Bm.cout('farm', avec(['interventionnisme'])) === 48 && Bm.cout('farm', avec(['laisser_faire'])) === 45 && Bm.cout('farm', avec([])) === 60, 'interventionnisme : construire −20 % ; laisser-faire −25 %');
   const le = avec(['libre_entreprise'], { batiments: { farm: 4, mine: 1, caserne: 1 } });
   check(Economie.bilan(le).entretiens === 9 && Math.abs(Economie.bilan(le).ventes - b0.ventes * 0.85) < 0.01, 'libre entreprise : plus d\'entretien des bâtiments (les régiments restent), l\'État touche 85 % des ventes');
@@ -812,10 +811,9 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(delta('travail_enfants', 'artisans') === 1 && delta('libre_echange', 'artisans') === 1 && delta('ecoles_religieuses', 'paysans') === -1, 'travail des enfants, libre-échange, écoles religieuses : colère par tour');
   let si = avec([]); LM.adopter(si, 'syndicats_interdits'); const p0 = si.factions.ouvriers.puissance;
   check(si.factions.ouvriers.colere === CHAMPS.joueur.factions.ouvriers.colere + 10 && si.factions.patrons.colere === CHAMPS.joueur.factions.patrons.colere - 10, 'syndicats interdits : ouvriers +10, patrons −10 à l\'adoption');
-  si.lois.relations_sociales.depuis = si.tour; si = tours(si, 12);
-  check(si.factions.ouvriers.puissance === p0 - 20, 'syndicats interdits : ouvriers −2 de puissance par tour pendant 10 tours');
-  let lb = avec([]); LM.adopter(lb, 'libre_entreprise'); lb = tours(lb, 12);
-  check(lb.factions.patrons.puissance === CHAMPS.joueur.factions.patrons.puissance + 30, 'libre entreprise : patrons +3 de puissance par tour pendant 10 tours');
+  check(p0 === CHAMPS.joueur.factions.ouvriers.puissance - 3, 'syndicats interdits : ouvriers −3 de puissance à l\'adoption (opposants)');
+  let lb = avec([]); LM.adopter(lb, 'libre_entreprise');
+  check(lb.factions.patrons.puissance === CHAMPS.joueur.factions.patrons.puissance + 3 && lb.factions.ouvriers.puissance === CHAMPS.joueur.factions.ouvriers.puissance - 3 && lb.journal.some(l => /Puissance : patrons \+3, ouvriers −3/.test(l)), 'une loi adoptée : partisans +3, opposants −3 (libre entreprise)');
 }
 
 // --- V2 : objectifs de victoire (regles-v2.md § 6) ---
@@ -1317,7 +1315,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const avec = (id, mod) => { const x = Etat.copie(e0); x.lois[LOIS[id].categorie] = { id, depuis: x.tour }; if (mod) mod(x); return x; };
   // Culte
   const re = Tour.tourSuivant(avec('religion_etat'), []), sans = Tour.tourSuivant(e0, []);
-  check(proche(re.factions.conservateurs.puissance, sans.factions.conservateurs.puissance + 3) && proche(re.factions.paysans.colere, sans.factions.paysans.colere - 1), 'Religion d\'État : conservateurs +3 de puissance par tour, paysans −1 de colère');
+  const ra = Etat.copie(e0); LM.adopter(ra, 'religion_etat');
+  check(proche(re.factions.paysans.colere, sans.factions.paysans.colere - 1) && ra.factions.conservateurs.puissance === e0.factions.conservateurs.puissance + 3 && ra.factions.ouvriers.puissance === e0.factions.ouvriers.puissance - 3, 'Religion d\'État : paysans −1 de colère par tour ; à l\'adoption, conservateurs et paysans +3, ouvriers et classe moyenne −3');
   check(proche(LM.effets(avec('laicite', x => { x.lois.education = { id: 'school_public', depuis: 1 }; })).entretien, 14 - 5) && LM.effets(avec('laicite')).entretien === 0, 'Laïcité : l\'école en vigueur coûte 5 or de moins (et rien sans école)');
   const lc = Etat.copie(e0); LM.adopter(lc, 'liberte_culte');
   check(Object.keys(lc.nations).every(n => lc.nations[n].relation === Math.min(100, e0.nations[n].relation + 5)), 'Liberté de culte : relations +5 avec toutes');

@@ -49,7 +49,11 @@ function adopter(e, id){
   if (loi.eco.reputation) Diplomatie.reputer(e, loi.eco.reputation);
   if (loi.eco.relations) for (const n in e.nations) Diplomatie.changerRelation(e, n, loi.eco.relations);
   Factions.choc(e, id);
-  e.journal.push(`Loi adoptée : ${loi.nom}` + (avant ? ` (remplace ${LOIS[avant.id].nom}).` : "."));
+  // 16/11 : une loi adoptée renforce ses partisans, affaiblit ses opposants
+  const X = R.puissance || { pour: 0, contre: 0 }, gains = [];
+  for (const f of loi.pour || []) if (e.factions[f] && X.pour){ Factions.modifier(e, f, "puissance", X.pour); gains.push(`${FACTIONS[f].nom.toLowerCase()} +${X.pour}`); }
+  for (const f of loi.contre || []) if (e.factions[f] && X.contre){ Factions.modifier(e, f, "puissance", X.contre); gains.push(`${FACTIONS[f].nom.toLowerCase()} −${Math.abs(X.contre)}`); }
+  e.journal.push(`Loi adoptée : ${loi.nom}` + (avant ? ` (remplace ${LOIS[avant.id].nom}).` : ".") + (gains.length ? ` Puissance : ${gains.join(", ")}.` : ""));
 }
 
 // un tour de débat : les opposants s'agitent ; à partir du tour R.premierTirage, tirage de l'adoption

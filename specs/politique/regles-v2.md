@@ -137,6 +137,10 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Nationalisation** : chaque tour, 1 % de chances par investissement chez une nation (×3 si la relation est négative) ; ses investissements sont perdus.
 - **Ressentiment** : une nation qui dépend de nos ventes perd 1 de relation par tour.
 
+### 19. Les lois bâtissent la puissance (16/11)
+- Une loi adoptée : **+3 de puissance à chacun de ses partisans, −3 à chacun de ses opposants** (dans le journal). Remplace les effets « +N de puissance par tour pendant 10 tours » (Libre entreprise, Syndicats, Syndicats interdits, Parti unique, Religion d'État, Laïcité) : aucune loi ne décide seule, il faut un programme cohérent.
+- Les lois sans opposant en reçoivent un : École publique (conservateurs), Médecine du travail (patrons), Armée de métier (paysans).
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).
