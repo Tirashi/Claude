@@ -73,11 +73,13 @@ function etapes(e, objectif){
   return O.ETAPES[id].map((et, i) => ({ id: et.id, texte: et.texte, faite: t[i] != null }));
 }
 
-// nations qui dépendent de nos ventes : nos contrats de vente leur livrent au moins la moitié de ce qu'elles importent
+// nations qui dépendent de nos ventes : nos contrats de vente et nos projets communs en service leur livrent au moins la
+// moitié de ce qu'elles importent
 function dependantes(e){
   return Object.keys(e.nations).filter(n => {
     const total = Object.values(e.profils[n].importe).reduce((t, v) => t + v, 0);
-    const livre = (e.contrats || []).map(x => e.offres[x.id]).filter(c => c && c.nation === n && c.sens === "vente").reduce((t, c) => t + c.volume, 0);
+    const livre = (e.contrats || []).map(x => e.offres[x.id]).filter(c => c && c.nation === n && c.sens === "vente").reduce((t, c) => t + c.volume, 0)
+      + (e.projets || []).filter(x => x.nation === n && x.enService).reduce((t, x) => t + Diplomatie.livraisonProjet(x.id).volume, 0);
     return total > 0 && livre >= O.dependance * total;
   });
 }

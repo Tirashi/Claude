@@ -28,6 +28,7 @@ const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
 const HOST = P('donnees/diplomatie.js').hostilite; HOST.actif = false;
 // … et sans transport des contrats ni caravanes (16/11)
 const TRA = P('donnees/diplomatie.js').transport; TRA.actif = false;
+const PRJ = P('donnees/diplomatie.js').projet; PRJ.actif = false;   // projet commun (16/11) : les tests d'avant gardent la filature conjointe
 // … et sans la pression contre la thésaurisation (15/11)
 const THES = P('donnees/institutions.js').THESAURISATION; THES.actif = false;
 // … et sans les ressources du 15/11 (bois, charbon, vin) : besoins, consommations, paniers, échanges et vallée d'avant
@@ -1202,6 +1203,52 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const ef = Etat.copie(e0), rf = Object.keys(ef.regions)[0]; ef.regions[rf].batiments.entente_mill = 1; ef.batiments.entente_mill = 1; ef.traites = [{ type: 'filature', avec: 'brume', depuis: 1 }];
   const livre = e => Dm.flux(e).filter(f => f.source === 'filature').length;
   check(livre(ef) === 1 && livre(Object.assign(Etat.copie(ef), { occupations: { [rf]: 'val_roc' } })) === 0, 'filature : pas de livraison si sa région est occupée');
+}
+
+// --- projet commun (16/11) : bâtiment de production cofinancé, remplace la filature conjointe ---
+{
+  PRJ.actif = true;
+  const Dm = P('moteur/diplomatie.js'), Bm = P('moteur/batiments.js'), Ob = P('moteur/objectifs.js'), GU = P('moteur/guerre.js');
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand';
+  e0.tresor = 1000; e0.traites = [{ type: 'entente', avec: 'brume', depuis: 1 }];
+  const prj = e => Tour.actionsDisponibles(e).filter(a => a.type === 'projet');
+  const bien = id => Object.keys(BAT[id].produit)[0];
+  check(prj(e0).length > 0 && prj(e0).every(a => a.avec === 'brume' && e0.profils.brume.importe[bien(a.id)] != null && PRJ.batiments.includes(a.id)),
+    'projet commun : seulement avec une nation de l\'Entente, pour un bâtiment de production qui fait ce qu\'elle importe');
+  check(!Tour.actionsDisponibles(e0).some(a => a.type === 'traite' && a.id === 'filature'), 'filature conjointe : plus proposée (remplacée par le projet commun)');
+  const a = prj(e0).find(x => x.id === 'farm') || prj(e0)[0];
+  const e1 = Tour.tourSuivant(e0, [a]);
+  const x = e1.projets[0];
+  check(x && x.nation === 'brume' && x.id === a.id && !x.enService && x.livraisons === 10 && e1.chantiers.some(c => c.projet === 'brume')
+    && proche(Bm.coutProjet(a.id, e0), Bm.cout(a.id, e0) / 2), 'projet commun : la moitié du prix, un chantier comme les autres');
+  check(e1.nations.brume.relation === e0.nations.brume.relation + 5 + 1, 'projet commun : relation +5 à la commande (et +1 par tour)');
+  check(prj(e1).length === 0, 'projet commun : un seul en cours par nation');
+  let e = e1; while (e.chantiers.length) e = Tour.tourSuivant(e, []);
+  const l = Dm.livraisonProjet(a.id), f = Dm.flux(e).find(z => z.source === 'projet_brume');
+  check(e.projets[0].enService && f && f.volume === -Math.round(BAT[a.id].produit[bien(a.id)] / 3) && proche(f.prix, P('donnees/economie.js').prix[bien(a.id)] / 2) && l.volume === -f.volume,
+    'projet en service : un tiers de la production de base livré, à moitié prix, sans transport');
+  check(Ob.dependantes(Object.assign(Etat.copie(e), { profils: Object.assign({}, e.profils, { brume: Object.assign({}, e.profils.brume, { importe: { [bien(a.id)]: 1 } }) }) })).includes('brume'), 'projet commun : ses livraisons comptent pour les nations dépendantes');
+  // occupation : livraisons suspendues, les tours ne comptent pas
+  const eo = Etat.copie(e); eo.occupations = { [a.region]: 'val_roc' };
+  const eo1 = Tour.tourSuivant(eo, []);
+  check(!Dm.flux(eo).some(z => z.source === 'projet_brume') && eo1.projets[0].livraisons === e.projets[0].livraisons, 'projet commun : suspendu pendant l\'occupation de sa région');
+  let ef = e; for (let i = 0; i < 10; i++) ef = Tour.tourSuivant(ef, []);
+  check(ef.projets.length === 0 && ef.regions[a.region].batiments[a.id] === (e0.regions[a.region].batiments[a.id] || 0) + 1,
+    'projet commun : terminé après 10 tours de livraison, le bâtiment reste');
+  check(!Dm.flux(ef).some(z => z.source === 'projet_brume') && prj(ef).length > 0, 'projet terminé : plus de livraison, un nouveau projet possible');
+  // ruptures
+  const ee = Tour.tourSuivant(e, [{ type: 'embargo', id: 'brume' }]);
+  const sans = Tour.tourSuivant(Object.assign(Etat.copie(e), { projets: [] }), [{ type: 'embargo', id: 'brume' }]);
+  check(ee.projets.length === 0 && proche(ee.nations.brume.relation, sans.nations.brume.relation - 20), 'embargo sur le partenaire : projet renié, relation −20 de plus');
+  const er = Tour.tourSuivant(e, [{ type: 'rompre', id: 'entente', avec: 'brume' }]);
+  check(er.projets.length === 0 && er.journal.some(j => /renions/.test(j)), 'Entente rompue : projet renié');
+  const ec = Etat.copie(e); ec.journal = []; Dm.couper(ec, 'brume');
+  check(ec.projets.length === 0 && ec.nations.brume.relation === e.nations.brume.relation - 15 && !ec.journal.some(j => /renions/.test(j)), 'la nation nous sanctionne : projet arrêté sans pénalité');
+  const eg = Etat.copie(e); eg.journal = []; GU.declarer(eg, 'brume', 'brume', { s: 1 });
+  check(eg.projets.length === 0, 'guerre avec le partenaire : projet arrêté');
+  const ep = Etat.copie(e1); ep.journal = []; Dm.finirProjets(ep, 'brume', true); let ep2 = ep; while (ep2.chantiers.length) ep2 = Tour.tourSuivant(ep2, []);
+  check(ep2.projets.length === 0 && ep2.regions[a.region].batiments[a.id] === (e0.regions[a.region].batiments[a.id] || 0) + 1, 'projet rompu pendant le chantier : le bâtiment est fini et reste à nous, sans livraison');
+  PRJ.actif = false;
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

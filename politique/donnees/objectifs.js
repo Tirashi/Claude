@@ -17,7 +17,7 @@ const OBJECTIFS = {
   influence: { nom: "Influence", texte: "Poids économique chez les voisins, en moyenne sur la partie : 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats de vente lui livrent au moins la moitié de ce qu'elle importe) ; plus 10 par exigence cédée.",
     seuils: { equilibre: [110, 118, 122], agricole: [112, 119, 124], industriel: [109, 117, 125], marchand: [117, 127, 134], minier: [117, 125, 131] } },
   concorde: { nom: "Concorde", texte: "Moyenne des relations avec les nations, plus 10 par traité en cours, à la fin de la partie.",
-    seuils: { equilibre: [68, 84, 88], agricole: [69, 84, 88], industriel: [70, 85, 88], marchand: [70, 85, 88], minier: [68, 84, 88] } },
+    seuils: { equilibre: [55, 74, 79], agricole: [55, 74, 79], industriel: [55, 75, 79], marchand: [59, 74, 79], minier: [54, 72, 79] } },   // 16/11 : recalculés sans le traité de filature (projet commun)
   autorite: { nom: "Autorité", texte: "Soutien des factions puissantes aux lois en vigueur : pour chaque loi en vigueur, puissance des factions pour moins puissance des factions contre ; moyenne par loi, puis moyenne sur la partie.",
     seuils: { equilibre: [35, 53, 54], agricole: [47, 50, 51], industriel: [30, 36, 40], marchand: [30, 55, 56], minier: [35, 38, 42] } }
 };

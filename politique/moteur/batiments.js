@@ -10,6 +10,7 @@ const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAI
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
 const { NIVEAUX } = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
+const D = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 
 const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
 // part payée par le joueur (bâtiment cofinancé par un traité)
@@ -27,19 +28,44 @@ function occupes(e, r){
 }
 const enChantier = (e, r) => e.chantiers.some(c => c.region === r);
 
+// une région peut-elle recevoir ce bâtiment ? (chantier libre, pas occupée, un fort par région, une place)
+function placeLibre(e, reg, id){
+  if (enChantier(e, reg) || (e.occupations || {})[reg]) return false;                       // V2 étape 2 : pas de chantier en région occupée
+  if (BAT[id].unique && (e.regions[reg].batiments[id] || 0) > 0) return false;              // un fort par région
+  return !prendPlace(id) || occupes(e, reg) < e.regions[reg].emplacements;
+}
 // ce qui peut se construire, et où : [{ id, region }]
 function constructibles(e){
   const r = [];
   for (const id in BAT){
     const b = BAT[id];
     if (b.jalon || (b.traite && !Diplomatie.aTraite(e, b.traite)) || e.tresor < cout(id, e)) continue;
-    for (const reg in e.regions){
-      if (enChantier(e, reg) || (e.occupations || {})[reg]) continue;                       // V2 étape 2 : pas de chantier en région occupée
-      if (b.unique && (e.regions[reg].batiments[id] || 0) > 0) continue;                    // un fort par région
-      if (!prendPlace(id) || occupes(e, reg) < e.regions[reg].emplacements) r.push({ id, region: reg });
+    for (const reg in e.regions) if (placeLibre(e, reg, id)) r.push({ id, region: reg });
+  }
+  return r;
+}
+
+// projet commun (16/11) : un bâtiment de production cofinancé par une nation partenaire (donnees/diplomatie.js, projet)
+const coutProjet = (id, e) => arrondi(cout(id, e) * (1 - D.projet.part));
+function projets(e){
+  const P = D.projet, r = [];
+  if (!P.actif) return r;
+  for (const n in e.nations){
+    if (!Diplomatie.partenaire(e, n) || (e.projets || []).some(x => x.nation === n)) continue;   // un projet en cours par nation
+    for (const id of P.batiments){
+      if (e.profils[n].importe[Object.keys(BAT[id].produit)[0]] == null || e.tresor < coutProjet(id, e)) continue;
+      for (const reg in e.regions) if (placeLibre(e, reg, id)) r.push({ id, region: reg, avec: n });
     }
   }
   return r;
+}
+function commanderProjet(e, id, region, avec){
+  const prix = coutProjet(id, e);
+  e.tresor = arrondi(e.tresor - prix);
+  e.chantiers.push({ id, region, restant: BAT[id].delai, projet: avec });
+  (e.projets = e.projets || []).push({ nation: avec, id, region, livraisons: D.projet.livraisons, enService: false });
+  Diplomatie.changerRelation(e, avec, D.projet.relation);
+  e.journal.push(`Projet commun avec ${e.profils[avec].nom} : ${BAT[id].nom} (${e.regions[region].nom}, ${prix} or, le reste payé par eux).`);
 }
 
 // agrandir (budget de fin de partie, 14/11) : e.regions[r].niveaux[id] = nombre de niveaux ajoutés aux bâtiments de ce type
@@ -89,6 +115,10 @@ function avancer(e){
       continue;
     }
     const b = e.regions[c.region].batiments;
+    if (c.projet){   // projet commun : les livraisons commencent (s'il n'a pas été rompu pendant le chantier)
+      const x = (e.projets || []).find(x => x.nation === c.projet && x.region === c.region && x.id === c.id && !x.enService);
+      if (x){ x.enService = true; e.journal.push(`Projet commun : ${e.profils[c.projet].nom} reçoit sa part pendant ${x.livraisons} tours.`); }
+    }
     b[c.id] = (b[c.id] || 0) + 1;
     e.batiments[c.id] = (e.batiments[c.id] || 0) + 1;
     e.journal.push(`Bâtiment terminé : ${BAT[c.id].nom} (${e.regions[c.region].nom}).`);
@@ -103,6 +133,6 @@ function totaux(regions){
   return t;
 }
 
-const Batiments = { constructibles, commander, avancer, arrondi, cout, bonus, occupes, totaux, niveaux, facteur, coutAgrandir, agrandissables, agrandir };
+const Batiments = { projets, coutProjet, commanderProjet, placeLibre, constructibles, commander, avancer, arrondi, cout, bonus, occupes, totaux, niveaux, facteur, coutAgrandir, agrandissables, agrandir };
 if (NODE) module.exports = Batiments; else (racine.Politique = racine.Politique || {}).Batiments = Batiments;
 })(typeof window !== "undefined" ? window : globalThis);

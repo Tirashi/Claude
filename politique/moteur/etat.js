@@ -10,7 +10,7 @@ const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PER
 const PAYS = NODE ? require("../donnees/pays.js") : racine.Politique.PAYS;
 const DIPLO = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 const { LOIS } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
-const VERSION = 4;   // V2 : régions ; personas ; pays de départ
+const VERSION = 5;   // V2 : régions ; personas ; pays de départ ; projets communs (16/11)
 // totaux des bâtiments du pays (même calcul que Batiments.totaux, sans dépendance circulaire)
 function totaux(regions){
   const t = {};
@@ -85,6 +85,7 @@ function creerEtat(scenario, graine, pays){
     offres: Diplomatie.offres(profils),   // contrats proposés par les nations (ce qu'elles importent et exportent)
     revanches: {},                    // nations revanchardes battues par le joueur
     contrats: [],                     // [{ id, jusqua }]
+    projets: [],                      // projets communs (16/11) : [{ nation, id, region, livraisons (restantes), enService }]
     caravanes: (DIPLO.transport || {}).caravanes || 0,   // transport (16/11) : caravanes du joueur (une par contrat en cours)
     routes: [],                       // nations vers lesquelles la route est améliorée
     diplomate: null,                  // diplomate envoyé : { nation, depuis } (un seul ; moteur/diplomatie.js)

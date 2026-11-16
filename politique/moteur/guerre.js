@@ -116,6 +116,7 @@ function declarer(e, cible, agresseur, r){
     else if (fe > fj && !enTreve(e, n)) ennemie(n);
   }
   // pas de commerce avec l'ennemi (revue du 16/11) : les contrats en cours avec tout le camp ennemi sont coupés
+  for (const n of g.ennemis) Diplomatie.finirProjets(e, n, false);   // projets communs avec l'ennemi : arrêtés
   const coupes = e.contrats.filter(x => g.ennemis.includes(e.offres[x.id].nation));
   if (coupes.length){
     e.contrats = e.contrats.filter(x => !coupes.includes(x));
@@ -198,6 +199,7 @@ function ceder(e, perdant, gagnant){
     const reg = e.regions[id];
     for (const b in reg.batiments) e.batiments[b] -= reg.batiments[b];
     e.chantiers = e.chantiers.filter(c => c.region !== id);
+    if (e.projets) e.projets = e.projets.filter(x => x.region !== id);   // projet commun : le bâtiment n'est plus à nous
     e.profils[gagnant].regions[id] = { nom: reg.nom, terrain: reg.terrain };
     delete e.regions[id];
   } else {

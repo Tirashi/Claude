@@ -47,6 +47,14 @@ const DIPLOMATIE = {
   // vente diminué, prix d'achat augmenté) ; chaque contrat occupe une caravane (2 au départ, achetables, entretien par tour
   // pour celles achetées) ; une route améliorée vers une nation divise son coût de transport. actif: false = règles d'avant.
   transport: { actif: true, parUnite: 0.1, caravanes: 2, coutCaravane: 60, entretienCaravane: 2, coutRoute: 100, route: 0.5 },
+  // projet commun (16/11, ASSUMPTION (projet) validée le 16/11 ; remplace la filature conjointe) : un bâtiment de production
+  // cofinancé par une nation de l'Entente qui importe ce qu'il produit (un projet en cours par nation). Elle paie « part » du
+  // bâtiment ; en échange, pendant « livraisons » tours de service (hors occupation), elle reçoit « volume » de la production
+  // de base, à « prix » × le prix de base, sans transport. Relation +relation à la commande et +1 par tour pendant les
+  // livraisons. Rupture par le joueur (embargo, guerre, Entente rompue) : livraisons arrêtées, relation +rupture ; par la
+  // nation (sanctions) : sans pénalité. actif: false = règles d'avant (filature conjointe, tests écrits avant).
+  projet: { actif: true, part: 0.5, volume: 1 / 3, prix: 0.5, livraisons: 10, relation: 5, rupture: -20,
+            batiments: ["farm", "mine", "workshop", "weaving", "scierie", "mine_charbon", "vignoble"] },
   contrats: { volumeMax: 10, prixAchat: 0.9, prixVente: 1.15, duree: 10, maxEnCours: null },   // maxEnCours : plafond de contrats en cours (en essai, null = aucun)   // 14/11 : ×0,8 / ×1,3 → ×0,9 / ×1,15 (le commerce raflait aussi la Prospérité)
 
   // traités : relation minimale de la nation pour accepter ; condition supplémentaire

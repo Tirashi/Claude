@@ -110,6 +110,13 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Les bâtiments d'une région occupée ne livrent plus rien aux traités (filature) et ne comptent pas pour l'étape « 12 bâtiments ».
 - **Négoce gardé** (décision de l'utilisateur) : acheter un bien sous contrat à une nation pour le revendre sous contrat à une autre est permis.
 
+### 14. Projet commun (16/11, remplace la filature conjointe)
+- Action « projet commun » : un bâtiment de production (ferme, mine, mine de charbon, scierie, vignoble, atelier, tissage) cofinancé par une nation de l'**Entente** qui **importe** ce qu'il produit ; un projet en cours par nation ; emplacement, chantier et délai habituels.
+- La nation paie **50 %** ; en échange, pendant **10 tours** de service (hors occupation), elle reçoit **un tiers de la production de base** à **moitié prix**, sans transport ; ensuite le bâtiment est entièrement à nous.
+- Relation +5 à la commande, +1 par tour tant que le projet court ; ses livraisons comptent pour les nations dépendantes (Influence).
+- Rupture par nous (embargo, guerre, Entente rompue) : livraisons arrêtées, relation −20 ; par elle (sanctions) : sans pénalité. Rompu pendant le chantier : le bâtiment est fini et reste à nous.
+- La filature conjointe et le traité Filature disparaissent du jeu.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

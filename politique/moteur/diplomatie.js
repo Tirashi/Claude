@@ -10,6 +10,7 @@ const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const D = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
 const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
+const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
 const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
 const persona = (e, n) => PERSONAS[e.profils[n].persona];
 const nom = (e, n) => (e.profils[n] || {}).nom || n;   // nom d'une nation pour le journal
@@ -66,6 +67,8 @@ function moralNation(colere){
 // pas en guerre contre nous, relation suffisante
 const sanctionne = (e, n) => (e.sanctions || []).some(s => s.par === n && s.contre === "joueur");
 const ennemi = (e, n) => !!e.guerre && e.guerre.ennemis.includes(n);
+// partenaire d'un projet commun : l'Entente avec nous, sans embargo, sanction ni guerre
+const partenaire = (e, n) => aTraite(e, "entente", n) && !embargo(e, n) && !sanctionne(e, n) && !ennemi(e, n);
 const ouverte = (e, n, min) => !paria(e) && !embargo(e, n) && !sanctionne(e, n) && !ennemi(e, n) && e.nations[n].relation >= min;
 
 // un traité : relation au moins celle du traité et celle du persona ; certains personas en refusent ; l'idéaliste juge la réputation
@@ -73,6 +76,7 @@ function traitesPossibles(e){
   const r = [];
   for (const type in D.traites){
     const t = D.traites[type];
+    if (t.batiment && D.projet.actif) continue;   // filature conjointe : remplacée par le projet commun (16/11)
     for (const n of Object.keys(e.nations)){
       const p = persona(e, n);
       if ((p.refuse || []).includes(type) || (p.reputationMin != null && reputation(e) < p.reputationMin)) continue;
@@ -142,6 +146,7 @@ const legitime = (e, n) => ennemi(e, n);
 // de ses contrats, relation −30 (ASSUMPTION validée (M3b))
 function couper(e, n){
   e.traites = e.traites.filter(t => t.avec !== n);
+  finirProjets(e, n, false);
   e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== n);
   relation(e, n, D.relation.embargo);
   e.sanctions.push({ par: n, contre: "joueur" });
@@ -151,6 +156,7 @@ function couper(e, n){
 function rompre(e, type, avec){
   e.traites = e.traites.filter(t => !(t.type === type && t.avec === avec));
   reputer(e, D.reputation.traiteRompu);
+  if (type === "entente") finirProjets(e, avec, true);   // plus d'Entente : projets communs reniés
   e.journal.push(`Traité rompu : ${D.traites[type].nom} avec ${nom(e, avec)}.`);
   // un traité qui dépendait de celui-ci tombe aussi (ASSUMPTION validée (M3a))
   for (const t of e.traites.filter(t => t.avec === avec && D.traites[t.type].requiert === type)) rompre(e, t.type, avec);
@@ -176,6 +182,7 @@ function appliquer(e, a){
   } else if (a.type === "rompre") rompre(e, a.id, a.avec);
   else if (a.type === "embargo"){
     e.embargos.push(a.id);
+    finirProjets(e, a.id, true);
     relation(e, a.id, D.relation.embargo);
     reputer(e, legitime(e, a.id) ? D.reputation.sanctionLegitime : D.reputation.sanctionIllegitime);
     e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== a.id);   // plus de commerce avec la cible
@@ -215,7 +222,27 @@ function flux(e){
     const l = D.traites[t.type].livraison, b = D.traites[t.type].batiment, n = l && enService(e, b);
     if (n) r.push({ source: t.type, bien: l.bien, volume: -l.volume * n, prix: l.prix });
   }
+  // projets communs en service : la part du partenaire, à prix réduit, sans transport (pas pendant une occupation)
+  for (const x of e.projets || []){
+    if (!x.enService || (e.occupations || {})[x.region]) continue;
+    const l = livraisonProjet(x.id);
+    r.push({ source: "projet_" + x.nation, bien: l.bien, volume: -l.volume, prix: l.prix });
+  }
   return r;
+}
+
+// projet commun : ce que reçoit le partenaire chaque tour (part de la production de base d'un bâtiment)
+function livraisonProjet(id){
+  const bien = Object.keys(BAT[id].produit)[0];
+  return { bien, volume: Math.round(BAT[id].produit[bien] * D.projet.volume), prix: arrondi(ECO.prix[bien] * D.projet.prix) };
+}
+// fin des projets communs avec une nation avant leur terme ; faute : le joueur les renie (relation)
+function finirProjets(e, n, faute){
+  const fin = (e.projets || []).filter(x => x.nation === n);
+  if (!fin.length) return;
+  e.projets = e.projets.filter(x => x.nation !== n);
+  if (faute) relation(e, n, D.projet.rupture);
+  e.journal.push(`Projet commun avec ${nom(e, n)} interrompu` + (faute ? ` : nous renions notre dette (relation ${D.projet.rupture}).` : "."));
 }
 
 // bâtiments d'un type en service : ceux des régions occupées ne produisent pas (revue du 16/11)
@@ -266,8 +293,15 @@ function tour(e){
   }
   // le commerce rapproche (V2 étape 1) : +1 par tour avec une nation tant qu'un contrat ou un traité est en cours
   if (D.hostilite.actif) for (const id in e.nations){
-    if (e.contrats.some(x => e.offres[x.id].nation === id) || e.traites.some(t => t.avec === id)) relation(e, id, D.hostilite.commerceParTour);
+    if (e.contrats.some(x => e.offres[x.id].nation === id) || e.traites.some(t => t.avec === id) || (e.projets || []).some(x => x.nation === id))
+      relation(e, id, D.hostilite.commerceParTour);
   }
+  // projets communs : un tour de livraison de moins (pas pendant une occupation) ; terminé : le bâtiment est à nous
+  for (const x of e.projets || []){
+    if (!x.enService || (e.occupations || {})[x.region]) continue;
+    if (--x.livraisons <= 0) e.journal.push(`Projet commun terminé avec ${nom(e, x.nation)} : ${BAT[x.id].nom} entièrement à nous.`);
+  }
+  if (e.projets) e.projets = e.projets.filter(x => x.livraisons > 0);
   for (const x of e.contrats.filter(x => x.jusqua <= e.tour)) { const c = e.offres[x.id]; e.journal.push(`Contrat terminé : ${c.sens === "achat" ? "achat" : "vente"} de ${c.bien} (${nom(e, c.nation)}).`); }
   e.contrats = e.contrats.filter(x => x.jusqua > e.tour);
   for (const t of e.traites){
@@ -277,6 +311,6 @@ function tour(e){
   e.dons = [];
 }
 
-const Diplomatie = { changerRelation: relation, transport, exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
+const Diplomatie = { partenaire, livraisonProjet, finirProjets, changerRelation: relation, transport, exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
 if (NODE) module.exports = Diplomatie; else (racine.Politique = racine.Politique || {}).Diplomatie = Diplomatie;
 })(typeof window !== "undefined" ? window : globalThis);

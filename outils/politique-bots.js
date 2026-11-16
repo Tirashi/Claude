@@ -189,6 +189,15 @@ function construire(p, choix, reserve){
   }
 }
 
+// projet commun (16/11) : signer l'Entente avec qui l'accepte (entente), puis cofinancer le bâtiment le plus utile
+function cofinancer(p, entente){
+  if (entente) for (const a of Tour.actionsDisponibles(p.e).filter(a => a.type === 'traite' && a.id === 'entente')) p.essayer(a);
+  const ordre = batimentUtile(p.e);
+  const liste = Tour.actionsDisponibles(p.e).filter(a => a.type === 'projet')
+    .sort((a, b) => ordre.indexOf(a.id) - ordre.indexOf(b.id) || Batiments.bonus(p.e, b.region, b.id) - Batiments.bonus(p.e, a.region, a.id));
+  if (liste.length) p.essayer(liste[0]);
+}
+
 // un bot à programme : comme economy, avec sa liste de lois
 function programme(lois, prio){
   return e => {
@@ -236,6 +245,7 @@ const BOTS = {
     apaiser(p, 55);
     loiSuivante(p, ['income_progressive', 'school_public', 'libre_echange', 'school_free']);
     armee(p, 1, 50);
+    cofinancer(p, true);
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
     evenement(p);
@@ -326,8 +336,7 @@ const BOTS = {
       [7, { type: 'loi', id: 'journee_huit_heures' }], [8, { type: 'don', id: 'brume', montant: 50 }],
       [9, { type: 'construire', id: 'farm' }], [10, { type: 'traite', id: 'entente', avec: 'brume' }],
       [11, { type: 'loi', id: 'unions' }], [11, { type: 'don', id: 'contreforts', montant: 50 }],
-      [12, { type: 'don', id: 'contreforts', montant: 50 }], [12, { type: 'traite', id: 'filature', avec: 'brume' }],
-      [12, { type: 'construire', id: 'entente_mill' }], [13, { type: 'traite', id: 'entente', avec: 'contreforts' }],
+      [12, { type: 'don', id: 'contreforts', montant: 50 }], [13, { type: 'traite', id: 'entente', avec: 'contreforts' }],
       [14, { type: 'don', id: 'contreforts', montant: 20 }], [14, { type: 'construire', id: 'mine' }],
       [15, { type: 'loi', id: 'labor_medicine' }], [15, { type: 'embargo', id: 'val_roc' }],
       [16, { type: 'loi', id: 'army_professional' }], [17, { type: 'construire', id: 'weaving' }],
@@ -342,6 +351,7 @@ const BOTS = {
       apaiser(p, 55);
       armee(p, 1, 50);
       if (e.tour >= 3 && !p.e.batiments.caserne && !p.e.chantiers.some(c => c.id === 'caserne')) construireMieux(p, 'caserne');
+      if (e.tour >= 12) cofinancer(p, false);   // 16/11 : projets communs avec ses partenaires (remplacent la filature)
       etapes.forEach(([t, a], i) => { if (!faites.has(i) && e.tour >= t && (a.type === 'construire' ? construireMieux(p, a.id) : p.essayer(a))) faites.add(i); });
       fiscalite(p);
       evenement(p);
