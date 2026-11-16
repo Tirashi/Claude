@@ -148,6 +148,10 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Autorité : 3 lois ; **3 lois avec 20 de soutien net en moyenne** (au lieu de « 5 lois chacune plus soutenue que contestée », presque impossible pour un régime extrême) ; 5 lois avec 40.
 - Contentement et Concorde : inchangées.
 
+### 21. Ateliers et bots (16/11)
+- **Atelier 15 outils** (au lieu de 10), **tissage 14 tissus** (au lieu de 10) : ils rapportaient 4 % et 10 % de leur prix par tour, contre 18 à 28 % pour les autres bâtiments ; la voie de la classe moyenne reposait sur les deux bâtiments les moins rentables.
+- Bots : les extrêmes répriment dès que c'est utile ; le bot commerce ne défriche plus ; spam_medicine n'est plus une référence du Contentement ; bot **centre** (ateliers d'abord, École publique, Savoir-faire national, Interventionnisme, Liberté de culte, Laïcité, Médecine du travail), référence de l'Autorité.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

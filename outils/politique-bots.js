@@ -369,16 +369,15 @@ const BOTS = {
   // extrême droite (16/11) : le programme conservateur (Église, ordre, armée) ; réprime les ouvriers et la classe moyenne
   extreme_droite: () => programme(['religion_etat', 'police_etat', 'parti_unique', 'army_conscription', 'ecoles_religieuses', 'syndicats_interdits', 'charite_privee', 'impot_minimal', 'suffrage_census'], ['police', 'sante'], ['ouvriers', 'artisans']),
 
-  // centre (16/11) : la voie de la classe moyenne ; ateliers et tissages d'abord, Savoir-faire national, lois du centre
+  // centre (16/11) : la voie de la classe moyenne ; ateliers et tissages d'abord, Savoir-faire national, lois du centre peu
+  // coûteuses ; ambition Autorité (gouverner au centre avec une base d'ateliers)
   centre: () => e => {
     const p = plan(e);
     guerre(p, { seuilBataille: 0.6 });
     apaiser(p, 55);
-    const V = process.env.CENTRE_VARIANTE || '';
-    loiSuivante(p, V.includes('L') ? ['school_public', 'savoir_faire', 'interventionnisme', 'liberte_culte', 'laicite', 'labor_medicine']
-      : ['school_public', 'savoir_faire', 'interventionnisme', 'labor_medicine', 'liberte_culte', 'impot_minimal', 'suffrage_census', 'laicite', 'army_professional']);
+    loiSuivante(p, ['school_public', 'savoir_faire', 'interventionnisme', 'liberte_culte', 'laicite', 'labor_medicine']);
     armee(p, 1, 50);
-    construire(p, avecCaserne(V.includes('B') ? batimentUtile : x => ['workshop', 'weaving'].concat(batimentUtile(x).filter(b => b !== 'workshop' && b !== 'weaving'))), 0);
+    construire(p, avecCaserne(x => ['workshop', 'weaving'].concat(batimentUtile(x).filter(b => b !== 'workshop' && b !== 'weaving'))), 0);
     defricher(p, 100);
     fiscalite(p);
     evenement(p);
@@ -446,7 +445,7 @@ const BOTS = {
 
 // ambition de chaque bot (objectif de victoire choisi au tour 1) ; random la tire parmi ses actions, passif n'en a pas
 // spam_medicine (bot de test du 13/11) n'a plus d'ambition : il ne sert plus de référence au Contentement (16/11)
-const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', gauche: 'contentement', gauche_med: 'contentement',
+const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', gauche: 'contentement', gauche_med: 'contentement', centre: 'autorite',
   commerce: 'influence', patrons: 'prosperite', replica: 'concorde', droite: 'autorite', extreme_droite: 'autorite', extreme_gauche: 'autorite' };
 const creer = (nom, graine) => {
   if (!BOTS[nom]) throw new Error('bot inconnu : ' + nom);

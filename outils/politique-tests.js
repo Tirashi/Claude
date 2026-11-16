@@ -29,6 +29,8 @@ const HOST = P('donnees/diplomatie.js').hostilite; HOST.actif = false;
 // … et sans transport des contrats ni caravanes (16/11)
 const TRA = P('donnees/diplomatie.js').transport; TRA.actif = false;
 const PRJ = P('donnees/diplomatie.js').projet; PRJ.actif = false;   // projet commun (16/11) : les tests d'avant gardent la filature conjointe
+// … et avec l'atelier et le tissage d'avant le 16/11 (10 outils, 10 tissus) ; remis dans le bloc « revue du 16/11 »
+const ATEL = { outils: BAT.workshop.produit.outils, tissu: BAT.weaving.produit.tissu }; BAT.workshop.produit.outils = 10; BAT.weaving.produit.tissu = 10;
 // … et sans la pression contre la thésaurisation (15/11)
 const THES = P('donnees/institutions.js').THESAURISATION; THES.actif = false;
 // … et sans les ressources du 15/11 (bois, charbon, vin) : besoins, consommations, paniers, échanges et vallée d'avant
@@ -1169,6 +1171,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
 }
 
 // --- revue du 16/11 : pas de commerce avec l'ennemi, compteurs des objectifs, noms dans le journal ---
+BAT.workshop.produit.outils = ATEL.outils; BAT.weaving.produit.tissu = ATEL.tissu;   // ateliers du 16/11
 {
   const Dm = P('moteur/diplomatie.js'), GU = P('moteur/guerre.js'), Ob = P('moteur/objectifs.js');
   const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand'; e0.tresor = 1000;
@@ -1359,7 +1362,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const sf = Etat.copie(e0); sf.lois.commerce = { id: 'savoir_faire', depuis: 1 };
   sf.regions[r0].batiments.workshop = 3; sf.batiments.workshop = 3;
   const b0 = Tour.tourSuivant(Object.assign(Etat.copie(sf), { lois: {} }), []).bilan, b1 = Tour.tourSuivant(sf, []).bilan;
-  check(b1.prixVente.outils && proche(b1.prixVente.outils, b0.prixVente.outils * 1.25) && b1.prixVente.grain === b0.prixVente.grain, 'Savoir-faire national : outils et tissus vendus 25 % plus cher au marché');
+  check(b1.prixVente.outils && Math.abs(b1.prixVente.outils - b0.prixVente.outils * 1.25) < 0.01 && b1.prixVente.grain === b0.prixVente.grain, 'Savoir-faire national : outils et tissus vendus 25 % plus cher au marché');
   const vente = Object.keys(e0.offres).find(k => e0.offres[k].sens === 'vente' && ECOd.finis.includes(e0.offres[k].bien));
   if (vente){
     const cv = Etat.copie(sf); cv.contrats = [{ id: vente, jusqua: 30 }]; const cv0 = Object.assign(Etat.copie(cv), { lois: {} });
@@ -1392,5 +1395,8 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const at = Etat.copie(e0); FAm3.renforcer(at, 'artisans', 1, null, 'workshop');
   check(d(mi, 'ouvriers') === 1 && d(mi, 'patrons') === 1 && d(at, 'artisans') === 2, 'propriétaires : mine, ouvriers et patrons +1 ; atelier, classe moyenne +2');
 }
+
+// --- ateliers du 16/11 : 15 outils, 14 tissus ---
+check(BAT.workshop.produit.outils === 15 && BAT.weaving.produit.tissu === 14, 'atelier : 15 outils ; tissage : 14 tissus (16/11)');
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

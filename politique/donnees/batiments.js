@@ -7,11 +7,13 @@ const NODE = typeof module !== "undefined" && module.exports;
 
 // entretien : or par tour et par bâtiment (salaires ; V2 budget, ASSUMPTION validée (budget) : environ 5 % du coût)
 const BATIMENTS = {
+  // 16/11 (validé) : atelier 10 → 15 outils, tissage 10 → 14 tissus (ils rapportaient 4 % et 10 % de leur prix par tour,
+  // contre 18 à 28 % pour les autres bâtiments)
   // délais raccourcis pour 40 tours (V2, validé le 13/11 ; V1 : 3, 4, 5, 5)
   farm:     { nom: "Ferme",            cout: 60,  delai: 2, produit: { grain: 20 }, entretien: 3 },
   mine:     { nom: "Mine",             cout: 80,  delai: 3, produit: { fer: 15 }, entretien: 4 },
-  workshop: { nom: "Atelier d'outils", cout: 90,  delai: 3, produit: { outils: 10 }, entretien: 4, consomme: { fer: 5, charbon: 3 }, artisans: true },  // ASSUMPTION validée : 5 fer ; charbon : ASSUMPTION (ressources, 15/11)
-  weaving:  { nom: "Tissage national", cout: 110, delai: 3, produit: { tissu: 10 }, entretien: 5, consomme: { charbon: 3 }, artisans: true },
+  workshop: { nom: "Atelier d'outils", cout: 90,  delai: 3, produit: { outils: 15 }, entretien: 4, consomme: { fer: 5, charbon: 3 }, artisans: true },  // ASSUMPTION validée : 5 fer ; charbon : ASSUMPTION (ressources, 15/11)
+  weaving:  { nom: "Tissage national", cout: 110, delai: 3, produit: { tissu: 14 }, entretien: 5, consomme: { charbon: 3 }, artisans: true },
   // ressources du 15/11 (ASSUMPTION (ressources)) : bois, charbon, vin
   scierie:      { nom: "Scierie",         cout: 60, delai: 2, produit: { bois: 15 }, entretien: 3 },
   mine_charbon: { nom: "Mine de charbon", cout: 80, delai: 3, produit: { charbon: 12 }, entretien: 4 },
