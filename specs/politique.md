@@ -125,6 +125,16 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 30. Le lot « voies du joueur » (16/11)
+Point sur les mécaniques et les voies du joueur, puis quatre problèmes et leurs solutions passées à la grille du 13/11 (une phrase, visible à l'écran, un choix, deux systèmes touchés, budget de cinq systèmes) ; idée de l'utilisateur en plus : **cinq factions** (une faction conservatrice d'extrême droite, la classe moyenne au centre). Tout validé et fait (regles-v2 § 17 et 18), 506 tests :
+1. Cinq factions (ouvriers, paysans, classe moyenne, patrons, conservateurs), lois revues, catégorie Culte, répression.
+2. La puissance suit l'économie (+2 à la faction du bâtiment terminé, −0,5 aux autres).
+3. Savoir-faire national (outils et tissus +25 % à l'étranger).
+4. Nationalisations (1 % par investissement et par tour, ×3 si la relation est négative).
+5. Ressentiment (nation dépendante : −1 de relation par tour).
+6. Tous les seuils recalculés (5 pays, 200 parties chacun).
+Médailles avec les nouveaux seuils (pays équilibré ; avant le lot entre parenthèses) : Prospérité economy 49 % (37 %), patrons 55 % (82 %) ; Autorité extrême gauche 21 % (0 %), extrême droite 99 % dont 50 % d'or (54 %, bronze seulement), droite 39 % (100 %) ; Contentement gauche 83 %, gauche_med 53 % ; Influence commerce 53 % ; Concorde replica 51 %. Révolutions : 0 à 2 % selon les bots. À surveiller : l'extrême droite domine maintenant l'Autorité (Religion d'État, Parti unique, répression), la droite libérale y est faible (0 % en pays agricole), et le bot patrons aurait 2,5 de médaille moyenne en Autorité s'il la visait.
+
 ## 29. Défricher (16/11)
 Proposition validée (rééquilibrer en donnant aux autres voies une dépense de fin de partie, plutôt qu'affaiblir les patrons) : défricher une région (+1 emplacement, 100 / 150 / 200 or, 3 par région, 3 tours, paysans −5). Bots : economy, commerce, spam_medicine, no_appeasement et les programmes défrichent quand plus aucun bâtiment de production n'a de place ; le bot patrons investit d'abord. 489 tests.
 Mesures (pays équilibré, 50 parties, Prospérité médiane et médaille moyenne avec les seuils actuels) :

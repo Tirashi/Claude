@@ -12,6 +12,7 @@ const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE
 const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
 const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
 const { LOIS } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
+const OD = NODE ? require("../donnees/objectifs.js") : racine.Politique.OBJECTIFS;
 const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
 const persona = (e, n) => PERSONAS[e.profils[n].persona];
 const nom = (e, n) => (e.profils[n] || {}).nom || n;   // nom d'une nation pour le journal
@@ -134,6 +135,32 @@ function investissables(e){
   }
   return r;
 }
+// nations qui dépendent de nos ventes : nos contrats de vente et nos projets communs en service leur livrent au moins
+// la moitié de ce qu'elles importent (objectif Influence ; ressentiment, 16/11)
+function dependantes(e){
+  return Object.keys(e.nations).filter(n => {
+    const total = Object.values(e.profils[n].importe).reduce((t, v) => t + v, 0);
+    const livre = (e.contrats || []).map(x => e.offres[x.id]).filter(c => c && c.nation === n && c.sens === "vente").reduce((t, c) => t + c.volume, 0)
+      + (e.projets || []).filter(x => x.nation === n && x.enService).reduce((t, x) => t + livraisonProjet(x.id).volume, 0);
+    return total > 0 && livre >= OD.dependance * total;
+  });
+}
+// nationalisation (16/11) : risque par tour chez une nation (pour l'écran) ; tirage en fin de tour
+function risqueNationalisation(e, n){
+  const N = D.investissement.nationalisation, k = (e.investissements || []).filter(x => x.nation === n).length;
+  return Math.min(1, k * N.parInvestissement * (e.nations[n].relation < 0 ? N.hostile : 1));
+}
+function nationalisations(e, r){
+  for (const n in e.nations){
+    const p = risqueNationalisation(e, n);
+    if (p > 0 && Alea.suivant(r) < p){
+      const perdus = e.investissements.filter(x => x.nation === n);
+      e.investissements = e.investissements.filter(x => x.nation !== n);
+      e.journal.push(`${nom(e, n)} nationalise nos investissements (${perdus.map(x => BAT[x.id].nom.toLowerCase()).join(", ")}).`);
+    }
+  }
+}
+
 // dividendes du tour, avant les lois : dividende × prix de chaque investissement construit
 const dividendes = e => arrondi((e.investissements || []).filter(x => x.restant <= 0).reduce((t, x) => t + BAT[x.id].cout * D.investissement.dividende, 0));
 // confiscation de nos investissements chez une nation (embargo, guerre, sanctions)
@@ -330,6 +357,8 @@ function tour(e){
       || (e.investissements || []).some(x => x.nation === id))
       relation(e, id, D.hostilite.commerceParTour);
   }
+  // ressentiment (16/11) : une nation qui dépend de nos ventes nous en veut
+  for (const n of dependantes(e)) relation(e, n, D.dependance.relation);
   // projets communs : un tour de livraison de moins (pas pendant une occupation) ; terminé : le bâtiment est à nous
   for (const x of e.projets || []){
     if (!x.enService || (e.occupations || {})[x.region]) continue;
@@ -339,7 +368,7 @@ function tour(e){
   // investissements en construction (arrêtés pendant une occupation de la région)
   for (const x of e.investissements || []){
     if (x.restant <= 0 || (e.occupations || {})[x.region]) continue;
-    if (--x.restant <= 0) e.journal.push(`Investissement terminé chez ${nom(e, x.nation)} : ${BAT[x.id].nom} ; les dividendes commencent.`);
+    if (--x.restant <= 0){ e.journal.push(`Investissement terminé chez ${nom(e, x.nation)} : ${BAT[x.id].nom} ; les dividendes commencent.`); Factions.renforcer(e, "patrons", 1, "investissement à l'étranger"); }
   }
   for (const x of e.contrats.filter(x => x.jusqua <= e.tour)) { const c = e.offres[x.id]; e.journal.push(`Contrat terminé : ${c.sens === "achat" ? "achat" : "vente"} de ${c.bien} (${nom(e, c.nation)}).`); }
   e.contrats = e.contrats.filter(x => x.jusqua > e.tour);
@@ -350,6 +379,6 @@ function tour(e){
   e.dons = [];
 }
 
-const Diplomatie = { investissables, dividendes, confisquer, partenaire, livraisonProjet, finirProjets, changerRelation: relation, transport, exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
+const Diplomatie = { dependantes, risqueNationalisation, nationalisations, investissables, dividendes, confisquer, partenaire, livraisonProjet, finirProjets, changerRelation: relation, transport, exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
 if (NODE) module.exports = Diplomatie; else (racine.Politique = racine.Politique || {}).Diplomatie = Diplomatie;
 })(typeof window !== "undefined" ? window : globalThis);

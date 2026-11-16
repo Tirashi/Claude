@@ -126,7 +126,7 @@ function avancer(e){
     if (c.defricher){
       const reg = e.regions[c.region];
       reg.emplacements++; reg.defriche = (reg.defriche || 0) + 1;
-      if (e.factions.paysans){ Factions.modifier(e, "paysans", "colere", DEF.paysans); Factions.evaluer(e); }   // statuts à jour (fin de tour)
+      if (e.factions.paysans){ Factions.modifier(e, "paysans", "colere", DEF.paysans); Factions.renforcer(e, "paysans", 1, "défrichement"); Factions.evaluer(e); }   // statuts à jour (fin de tour)
       e.journal.push(`Défrichement terminé : ${reg.nom} gagne un emplacement ; les paysans s'en réjouissent.`);
       continue;
     }
@@ -134,6 +134,7 @@ function avancer(e){
       const nv = e.regions[c.region].niveaux = e.regions[c.region].niveaux || {};
       nv[c.id] = (nv[c.id] || 0) + 1;
       e.journal.push(`Agrandissement terminé : ${BAT[c.id].nom} (${e.regions[c.region].nom}).`);
+      Factions.renforcer(e, "patrons", 1, "agrandissement"); Factions.evaluer(e);
       continue;
     }
     const b = e.regions[c.region].batiments;
@@ -144,6 +145,8 @@ function avancer(e){
     b[c.id] = (b[c.id] || 0) + 1;
     e.batiments[c.id] = (e.batiments[c.id] || 0) + 1;
     e.journal.push(`Bâtiment terminé : ${BAT[c.id].nom} (${e.regions[c.region].nom}).`);
+    const f = Factions.baseDe(c.id);
+    if (f){ Factions.renforcer(e, f, 1, BAT[c.id].nom.toLowerCase() + " terminé"); Factions.evaluer(e); }
   }
   e.chantiers = e.chantiers.filter(c => c.restant > 0);
 }

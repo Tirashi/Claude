@@ -131,6 +131,12 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Lois revues (pour / contre) d'après le tableau validé ; catégorie **Culte** : Religion d'État, Liberté de culte, Laïcité (32 lois, 12 catégories).
 - **Réprimer** une faction (Police d'État ou Comités populaires en vigueur) : −10 de puissance, +15 de colère, relations −5 avec toutes, 30 or, une fois tous les 5 tours.
 
+### 18. Les voies du joueur (16/11, lot, étapes 2 à 5)
+- **La puissance suit l'économie** : chaque bâtiment terminé donne +2 de puissance à sa faction et −0,5 à chacune des autres (perdu par cession : l'inverse). Ouvriers : mine, mine de charbon, scierie ; paysans : ferme, vignoble, défrichement ; classe moyenne : atelier, tissage ; patrons : agrandissement, investissement à l'étranger ; conservateurs : caserne, fort.
+- **Savoir-faire national** (Commerce ; pour la classe moyenne, contre les patrons) : outils et tissus vendus 25 % plus cher (marché et contrats de vente).
+- **Nationalisation** : chaque tour, 1 % de chances par investissement chez une nation (×3 si la relation est négative) ; ses investissements sont perdus.
+- **Ressentiment** : une nation qui dépend de nos ventes perd 1 de relation par tour.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

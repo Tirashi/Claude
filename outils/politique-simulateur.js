@@ -85,7 +85,7 @@ function partie(nom, graine, tours, coupe){
       if (/^Exigence envoyée/.test(l)) m.exigences++;
       if (/^Projet commun avec .* : /.test(l)) m.projets++;
       if (/^Projet commun avec .* interrompu/.test(l)) m.projetsInterrompus++;
-      if (/confisque nos investissements/.test(l)) m.confisques++;
+      if (/confisque nos investissements|nationalise nos investissements/.test(l)) m.confisques++;
       if (/ cède : accepte de /.test(l)) m.cedees++;
       if (/ refuse de /.test(l)) m.refusees++;
       if (/^Incident provoqué/.test(l)) m.incidents++;
@@ -160,7 +160,7 @@ function afficher(r){
   console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; par partie : guerres gagnées ${r.guerres.gagnees.toFixed(2)}, perdues ${r.guerres.perdues.toFixed(2)}, paix blanches ${r.guerres.blanches.toFixed(2)} ; batailles ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
   console.log(`  budget : dette dans ${pct(r.avecDette, n)} des parties, faillite dans ${pct(r.avecFaillite, n)} ; impôts hauts ${r0(r.impotsHaut)} tours (médiane) ; ${r0(r.evenements)} événements par partie (médiane)`);
   console.log(`  budget de fin de partie : ${r0(r.agrandis)} agrandissements (médiane) ; institutions au tour 40 (médianes) : santé ${r.institutions.sante}, enseignement ${r.institutions.enseignement}, police ${r.institutions.police}`);
-  console.log(`  commerce : ${r.contratsFin} contrats en cours au tour 40, ${r.caravanes} caravanes, ${r.routes} routes améliorées (médianes) ; ${r.projets.toFixed(1)} projets communs par partie (${r.projetsInterrompus.toFixed(1)} interrompus) ; ${r.investissements} investissements à l'étranger en fin de partie, ${Math.round(r.dividendes)} or de dividendes (médianes), ${r.confisques.toFixed(2)} confiscations par partie`);
+  console.log(`  commerce : ${r.contratsFin} contrats en cours au tour 40, ${r.caravanes} caravanes, ${r.routes} routes améliorées (médianes) ; ${r.projets.toFixed(1)} projets communs par partie (${r.projetsInterrompus.toFixed(1)} interrompus) ; ${r.investissements} investissements à l'étranger en fin de partie, ${Math.round(r.dividendes)} or de dividendes (médianes), ${r.confisques.toFixed(2)} confiscations ou nationalisations par partie`);
   console.log(`  diplomatie : ${r.incidents.toFixed(1)} incidents subis, ${r.exigences.toFixed(1)} exigences (${r.cedees.toFixed(1)} cédées, ${r.refusees.toFixed(1)} refusées) par partie`);
   console.log(`  armée : ${r0(r.regimentsMax)} régiments au plus (médiane) ; ${r0(r.toursOccupes)} tours avec une région occupée (médiane) ; régions par partie : ${r.regionsGagnees.toFixed(2)} gagnées, ${r.regionsPerdues.toFixed(2)} perdues`);
   console.log(`  factions : colère max ${r0(r.colereMax)}, tours ≥ 55 : ${r0(r.tours55)}, ≥ 75 : ${r0(r.tours75)} (médianes) ; grève dans ${pct(r.avecGreve, n)} des parties ; ${r0(r.apaisements)} apaisements`);

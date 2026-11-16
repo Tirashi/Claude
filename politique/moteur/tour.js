@@ -107,6 +107,7 @@ function tourSuivant(etat, actions, rng){
   Economie.appliquer(e);
   Diplomatie.tour(e);
   Diplomatie.exigences(e, r);       // V2 étape 3 : la nation sous embargo cède-t-elle ?
+  Diplomatie.nationalisations(e, r);   // 16/11 : investissements à l'étranger nationalisés
   Guerre.tour(e, r);
   Factions.finDeTour(e);
   Objectifs.suivre(e);              // objectifs de victoire : colère moyenne, tours calmes

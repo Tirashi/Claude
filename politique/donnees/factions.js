@@ -41,7 +41,12 @@ const REGLES_FACTIONS = {
   // réprimer une faction (16/11, ASSUMPTION validée) : seulement avec une loi d'ordre qui le permet (eco.repression : Police
   // d'État, Comités populaires) ; la faction perd de la puissance et prend de la colère ; relations avec toutes les nations ;
   // au plus une répression tous les « delai » tours
-  repression: { cout: 30, puissance: -10, colere: 15, relations: -5, delai: 5 }
+  repression: { cout: 30, puissance: -10, colere: 15, relations: -5, delai: 5 },
+  // la puissance suit l'économie (16/11, ASSUMPTION validée) : chaque bâtiment terminé donne « gain » de puissance à sa
+  // faction et « autres » à chacune des autres (perdu : l'inverse). Patrons : agrandissements et investissements terminés ;
+  // paysans : aussi les défrichements. actif: false = règles d'avant.
+  economie: { actif: true, gain: 2, autres: -0.5,
+              bases: { ouvriers: ["mine", "mine_charbon", "scierie"], paysans: ["farm", "vignoble"], artisans: ["workshop", "weaving"], conservateurs: ["caserne", "fort"] } }
 };
 
 const Factions = { FACTIONS, REGLES_FACTIONS };

@@ -38,6 +38,8 @@ const DIPLOMATIE = {
 
   // embargo : la cible manque de ce qu'elle importe et dont le joueur a un surplus (ASSUMPTION validée, M3)
   embargo: { colereParManque: 1 / 3 },
+  // ressentiment (16/11, ASSUMPTION validée) : une nation qui dépend de nos ventes (moteur/objectifs.js) nous en veut chaque tour
+  dependance: { relation: -1 },
   // sanction légitime si la cible est en guerre contre le joueur ou un membre de l'Entente (M3b) : ASSUMPTION validée (M3a)
 
   // contrats (13/11 : plus de liste fixe) : chaque nation propose d'acheter ce qu'elle importe et de vendre ce qu'elle exporte ;
@@ -60,7 +62,9 @@ const DIPLOMATIE = {
   // embargo, ni sanction, ni guerre. Une fois construit (délai du bâtiment) : chaque tour, « dividende » × son prix (lois :
   // Exportation des capitaux ×1,5, Contrôle des capitaux ×0,5) ; relation +1 par tour avec la nation ; compte dans la
   // Prospérité pour son prix. Embargo, guerre ou sanctions avec la nation : confisqué (perdu).
-  investissement: { actif: true, dividende: 0.1, relationMin: 30,
+  // nationalisation (16/11, ASSUMPTION validée) : chaque tour, parInvestissement de chances par investissement chez la nation,
+  // × hostile si la relation est négative ; les investissements chez elle sont perdus
+  investissement: { actif: true, dividende: 0.1, relationMin: 30, nationalisation: { parInvestissement: 0.01, hostile: 3 },
                     batiments: ["farm", "mine", "workshop", "weaving", "scierie", "mine_charbon", "vignoble"] },
   contrats: { volumeMax: 10, prixAchat: 0.9, prixVente: 1.15, duree: 10, maxEnCours: null },   // maxEnCours : plafond de contrats en cours (en essai, null = aucun)   // 14/11 : ×0,8 / ×1,3 → ×0,9 / ×1,15 (le commerce raflait aussi la Prospérité)
 

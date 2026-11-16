@@ -119,6 +119,9 @@ const LOIS = {
   libre_echange: { nom: "Libre-échange", categorie: "commerce", bord: "droite", pour: ["patrons"], contre: ["artisans"],
     texte: ["Les prix bougent deux fois moins quand on vend ou achète beaucoup.", "La classe moyenne, concurrencée, se fâche chaque tour (+1 de colère)."],
     eco: { pente: 0.5 }, factions: { parTour: { artisans: { colere: 1 } } } },
+  savoir_faire: { nom: "Savoir-faire national", categorie: "commerce", bord: "centre", pour: ["artisans"], contre: ["patrons"],
+    texte: ["Nos outils et nos tissus se vendent 25 % plus cher à l'étranger (au marché et dans les contrats de vente)."],
+    eco: { finis: 1.25 }, factions: {} },   // 16/11, ASSUMPTION validée
   // --- Capitaux (16/11, ASSUMPTION (capitaux) validée le 16/11) ---
   exportation_capitaux: { nom: "Exportation des capitaux", categorie: "capitaux", bord: "droite", pour: ["patrons"], contre: ["ouvriers"],
     texte: ["Nos investissements à l'étranger rapportent 50 % de plus.", "Les ouvriers, qui voient l'argent partir, se fâchent chaque tour (+1 de colère)."],

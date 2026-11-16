@@ -110,6 +110,20 @@ function thesaurisation(e){
   }
 }
 
+// la puissance suit l'économie (16/11) : un bâtiment de la base d'une faction terminé (k = 1) ou perdu (k = −1) ;
+// faction : directement (patrons : agrandissement, investissement ; paysans : défrichement), sinon d'après le bâtiment
+function baseDe(id){
+  const B = R.economie.bases;
+  return Object.keys(B).find(f => B[f].includes(id)) || null;
+}
+function renforcer(e, f, k, raison){
+  const X = R.economie;
+  if (!X.actif || !f || !e.factions[f]) return;
+  k = k == null ? 1 : k;
+  for (const g in e.factions) modifier(e, g, "puissance", (g === f ? X.gain : X.autres) * k);
+  if (raison) e.journal.push(`${FACTIONS[f].nom} ${k > 0 ? "+" : "−"}${Math.abs(X.gain * k)} de puissance : ${raison}.`);
+}
+
 // fin de tour : effets par tour des lois, niveau de vie (V1 : dissipation), statuts, moral
 function finDeTour(e){
   for (const cat in e.lois){
@@ -155,6 +169,6 @@ function effetsEco(e){
   return r;
 }
 
-const Factions = { thesaurise, demandeSatisfaite, couverture, favorisees, modifier, choc, coutApaisement, apaisables, apaiser, statutDe, moralFaction, moral, evaluer, finDeTour, effetsEco };
+const Factions = { baseDe, renforcer, thesaurise, demandeSatisfaite, couverture, favorisees, modifier, choc, coutApaisement, apaisables, apaiser, statutDe, moralFaction, moral, evaluer, finDeTour, effetsEco };
 if (NODE) module.exports = Factions; else (racine.Politique = racine.Politique || {}).Factions = Factions;
 })(typeof window !== "undefined" ? window : globalThis);

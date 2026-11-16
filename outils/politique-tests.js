@@ -168,7 +168,7 @@ const proche = (a, b) => Math.abs(a - b) < 1e-6;
   g = tours(g, 3, [{ type: 'loi', id: 'school_free' }]);
   check(g.lois.education.id === 'school_free' && Object.keys(g.lois).length === 1, 'lois : adopter une loi remplace celle de sa catégorie');
   check(Object.values(CATEGORIES).length === 12 && Object.values(LOIS).every(l => CATEGORIES[l.categorie]), 'lois : 12 catégories (panel du 14/11, capitaux et culte le 16/11), chaque loi dans l\'une d\'elles');
-  check(Object.keys(LOIS).length === 32 && !LOIS.labor_code && Object.values(LOIS).every(l => l.bord && l.texte.length > 0), 'lois : les 32 lois du panel (sans code du travail), chacune avec son bord et ses phrases pour le joueur');
+  check(Object.keys(LOIS).length === 33 && !LOIS.labor_code && Object.values(LOIS).every(l => l.bord && l.texte.length > 0), 'lois : les 33 lois du panel (sans code du travail), chacune avec son bord et ses phrases pour le joueur');
   const h = tours(neuf(), 3, [{ type: 'loi', id: 'suffrage_universal' }]);
   const k = tours(neuf(), 3, [{ type: 'loi', id: 'suffrage_census' }]);
   check(h.reputation === 5 && k.reputation === -5, 'lois : suffrage universel +5 de réputation, censitaire −5');
@@ -648,7 +648,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   Object.assign(RLV, JSON.parse(JSON.stringify(RLV0)));
   const LM = P('moteur/lois.js');
   const e0 = vrai({ evenements: [] });
-  check(LM.lancables(e0).length === 32 && e0.cp === undefined, 'lois : plus de capital politique, toutes les lois se lancent dès le tour 1');
+  check(LM.lancables(e0).length === 33 && e0.cp === undefined, 'lois : plus de capital politique, toutes les lois se lancent dès le tour 1');
   check(LM.chance(e0, 'income_progressive') === 0.6 && LM.chance(e0, 'income_capital') === 0.275 && LM.chance(e0, 'school_public') === 0.775, 'débat : chance = 50 % + (puissance des pour − des contre) / 2 (progressif 60 %, capital 27,5 %, école 77,5 %)');
   const fort = vrai(); fort.factions.patrons.puissance = 100; fort.factions.artisans.puissance = 100;
   const faible = vrai(); for (const f in faible.factions) faible.factions[f].puissance = 100; faible.factions.patrons.puissance = 0;
@@ -1329,6 +1329,56 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
     && Object.keys(p1.nations).every(n => proche(p1.nations[n].relation, p1s.nations[n].relation - 5)) && proche(p1.tresor, p1s.tresor - 30), 'réprimer : −10 de puissance, +15 de colère, relations −5 avec toutes, 30 or');
   let pr = p1; for (let i = 0; i < 3; i++) pr = Tour.tourSuivant(pr, []);
   check(rep(pr).length === 0 && rep(Tour.tourSuivant(pr, [])).length === 5, 'réprimer : une fois tous les 5 tours');
+}
+
+// --- la puissance suit l'économie, Savoir-faire national, nationalisations, ressentiment (16/11) ---
+{
+  const Dm = P('moteur/diplomatie.js'), FAm2 = P('moteur/factions.js'), GU = P('moteur/guerre.js'), ECOd = P('donnees/economie.js');
+  const e0 = Etat.creerEtat(CHAMPS, 9); e0.tresor = 2000; e0.evenements = [];
+  for (const n in e0.profils) e0.profils[n].persona = 'marchand';
+  const puis = e => Object.fromEntries(Object.keys(e.factions).map(f => [f, e.factions[f].puissance]));
+  // un bâtiment terminé
+  const r0 = Object.keys(e0.regions).find(r => Tour.actionsDisponibles(e0).some(a => a.type === 'construire' && a.id === 'workshop' && a.region === r));
+  let e = Tour.tourSuivant(e0, [{ type: 'construire', id: 'workshop', region: r0 }]);
+  let av = null; while (e.chantiers.length){ av = e; e = Tour.tourSuivant(e, []); }
+  const sansAtelier = Tour.tourSuivant(Object.assign(Etat.copie(av), { chantiers: [] }), []);
+  check(proche(e.factions.artisans.puissance, sansAtelier.factions.artisans.puissance + 2) && proche(e.factions.patrons.puissance, sansAtelier.factions.patrons.puissance - 0.5)
+    && e.journal.some(l => /^Classe moyenne \+2 de puissance : atelier/.test(l)), 'puissance : un atelier terminé, classe moyenne +2, les autres −0,5');
+  check(FAm2.baseDe('caserne') === 'conservateurs' && FAm2.baseDe('scierie') === 'ouvriers' && FAm2.baseDe('vignoble') === 'paysans' && FAm2.baseDe('fort') === 'conservateurs', 'puissance : bases des factions (scierie : ouvriers, caserne et fort : conservateurs)');
+  const tot = x => Object.values(x.factions).reduce((t, f) => t + f.puissance, 0);
+  const er = Etat.copie(e0); for (const f in er.factions) er.factions[f].puissance = 30; FAm2.renforcer(er, 'patrons', 1);
+  check(proche(tot(er), 150) && er.factions.patrons.puissance === 32, 'puissance : la puissance totale ne change pas');
+  // perdre une région : l'inverse
+  const ec = Etat.copie(e0); for (const f in ec.factions) ec.factions[f].puissance = 50;
+  const reg = Object.keys(ec.regions).find(r => ec.regions[r].batiments.farm);
+  ec.guerre = { ennemis: ['val_roc'], allies: [], agresseur: 'val_roc', depuis: 1, derniereBataille: null, bataille: null, capitulation: null };
+  ec.occupations = { [reg]: 'val_roc' }; ec.journal = [];
+  GU.paix(ec, 'ennemi', { cession: true });
+  check(!ec.regions[reg] && ec.factions.paysans.puissance < 50, 'puissance : une région cédée fait perdre la faction de ses bâtiments');
+  // Savoir-faire national
+  const sf = Etat.copie(e0); sf.lois.commerce = { id: 'savoir_faire', depuis: 1 };
+  sf.regions[r0].batiments.workshop = 3; sf.batiments.workshop = 3;
+  const b0 = Tour.tourSuivant(Object.assign(Etat.copie(sf), { lois: {} }), []).bilan, b1 = Tour.tourSuivant(sf, []).bilan;
+  check(b1.prixVente.outils && proche(b1.prixVente.outils, b0.prixVente.outils * 1.25) && b1.prixVente.grain === b0.prixVente.grain, 'Savoir-faire national : outils et tissus vendus 25 % plus cher au marché');
+  const vente = Object.keys(e0.offres).find(k => e0.offres[k].sens === 'vente' && ECOd.finis.includes(e0.offres[k].bien));
+  if (vente){
+    const cv = Etat.copie(sf); cv.contrats = [{ id: vente, jusqua: 30 }]; const cv0 = Object.assign(Etat.copie(cv), { lois: {} });
+    const P1 = P('moteur/economie.js').bilan(cv).contrats, P0 = P('moteur/economie.js').bilan(cv0).contrats;
+    check(proche(P1, P0 * 1.25), 'Savoir-faire national : contrats de vente de produits finis +25 %');
+  }
+  // nationalisations
+  const en = Etat.copie(e0); en.investissements = [{ nation: 'brume', region: Object.keys(en.profils.brume.regions)[0], id: 'farm', restant: 0 }, { nation: 'brume', region: Object.keys(en.profils.brume.regions)[1], id: 'farm', restant: 0 }];
+  en.nations.brume.relation = 10;
+  check(proche(Dm.risqueNationalisation(en, 'brume'), 0.02) && proche(Dm.risqueNationalisation(Object.assign(Etat.copie(en), { nations: Object.assign({}, en.nations, { brume: Object.assign({}, en.nations.brume, { relation: -5 }) }) }), 'brume'), 0.06) && Dm.risqueNationalisation(en, 'val_roc') === 0,
+    'nationalisation : 1 % par investissement, ×3 si la relation est négative');
+  let pris = 0; for (let s = 1; s <= 400; s++){ const x = Etat.copie(en); x.journal = []; Dm.nationalisations(x, { s }); if (!x.investissements.length && x.journal.some(l => /nationalise/.test(l))) pris++; }
+  check(pris > 0 && pris < 30, `nationalisation : arrive, rarement (${pris} fois sur 400 à 2 %)`);
+  // ressentiment
+  const ed = Etat.copie(e0); ed.journal = [];
+  ed.contrats = Object.keys(ed.offres).filter(k => ed.offres[k].nation === 'brume' && ed.offres[k].sens === 'vente').map(id => ({ id, jusqua: 30 }));
+  ed.profils.brume.importe = Object.fromEntries(ed.contrats.map(c => [ed.offres[c.id].bien, 1]));
+  const rel = ed.nations.brume.relation; Dm.tour(ed);
+  check(Dm.dependantes(ed).includes('brume') && proche(ed.nations.brume.relation, rel + 1 - 1), 'ressentiment : une nation dépendante perd 1 de relation par tour (le commerce en rendait 1)');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

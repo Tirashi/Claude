@@ -68,7 +68,7 @@ const montee = (e, l) => Math.min(1, (e.tour - l.depuis) / ECO.montee);
 function effets(e){
   const r = { impots: 1, entretien: 0, production: 1, croissance: 0, artisans: 0, force: 1,
               entretienBatiments: 1, ventes: 1, construction: 1, achat: 1, pente: 1, plafondRegiments: 1, coutRegiment: null, debat: 0,
-              dividendes: 1, sansInvestissement: false, repression: false };
+              dividendes: 1, sansInvestissement: false, repression: false, finis: 1 };
   let ecoles = 0;
   for (const cat in e.lois){
     const l = e.lois[cat], x = LOIS[l.id].eco;
@@ -79,7 +79,7 @@ function effets(e){
     if (x.croissance) r.croissance += x.croissance * montee(e, l);
     if (x.artisans) r.artisans += x.artisans * montee(e, l);
     if (x.artisansImmediat) r.artisans += x.artisansImmediat;
-    for (const k of ["entretienBatiments", "ventes", "construction", "achat", "pente", "plafondRegiments", "dividendes"]) if (x[k] != null) r[k] *= x[k];
+    for (const k of ["entretienBatiments", "ventes", "construction", "achat", "pente", "plafondRegiments", "dividendes", "finis"]) if (x[k] != null) r[k] *= x[k];
     if (x.sansInvestissement) r.sansInvestissement = true;
     if (x.repression) r.repression = true;
     if (x.ecoles) ecoles += x.ecoles;

@@ -361,7 +361,7 @@ const BOTS = {
   },
 
   // programmes politiques (panel du 14/11) : même gestion qu'economy, lois du camp dans l'ordre
-  gauche_med: () => programme(['labor_medicine', 'income_progressive', 'school_public', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'laicite', 'army_professional'], ['sante', 'enseignement']),
+  gauche_med: () => programme(['labor_medicine', 'income_progressive', 'school_public', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'laicite', 'savoir_faire', 'army_professional'], ['sante', 'enseignement']),
   gauche: () => programme(['income_progressive', 'school_public', 'securite_sociale', 'unions', 'suffrage_universal', 'journee_huit_heures', 'interventionnisme', 'school_free', 'laicite', 'army_professional'], ['sante', 'enseignement']),
   droite: () => programme(['impot_minimal', 'libre_entreprise', 'ecoles_religieuses', 'police_etat', 'suffrage_census', 'syndicats_interdits', 'army_conscription', 'libre_echange', 'charite_privee'], ['police', 'sante']),
   extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'laicite', 'journee_huit_heures'], ['police', 'sante'], ['patrons', 'conservateurs']),

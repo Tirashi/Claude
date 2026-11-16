@@ -63,13 +63,15 @@ function bilan(e){
     balance[r] = prod[r] - conso[r];
   }
   // contrats et livraisons à prix fixe : ils remplacent le marché pour leur volume
-  for (const f of fl){ balance[f.bien] += f.volume; contrats -= f.volume * f.prix; }
+  // Savoir-faire national (16/11) : nos contrats de vente de produits finis rapportent plus
+  const fini = b => ECO.finis.includes(b) ? fx.finis : 1;
+  for (const f of fl){ balance[f.bien] += f.volume; contrats -= f.volume * f.prix * (f.volume < 0 && e.offres[f.source] ? fini(f.bien) : 1); }
   for (const r of ECO.biens){
     balance[r] = arrondi(balance[r]);
     // marché (V2) : le prix baisse avec la quantité vendue, monte avec la quantité achetée, dans le tour
     // lois : pente du marché (libre-échange), part des ventes gardée par l'État (privé), prix d'achat (protectionnisme)
     const q = Math.abs(balance[r]), M = ECO.marche, pente = M.pente * fx.pente;
-    if (balance[r] > 0){ pv[r] = arrondi(p[r] * Math.max(M.min, 1 - pente * q)); ventes += q * pv[r] * t.vente * fx.ventes; }
+    if (balance[r] > 0){ pv[r] = arrondi(p[r] * Math.max(M.min, 1 - pente * q) * fini(r)); ventes += q * pv[r] * t.vente * fx.ventes; }
     else if (balance[r] < 0){ pa[r] = arrondi(p[r] * Math.min(M.max, 1 + pente * q) * fx.achat); achats += q * pa[r] * t.achat; }
   }
   contrats = arrondi(contrats);

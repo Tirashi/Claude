@@ -6,6 +6,7 @@ const NODE = typeof module !== "undefined" && module.exports;
 
 const ECONOMIE = {
   biens: ["grain", "fer", "tissu", "outils", "bois", "charbon", "vin"],   // 15/11 : bois, charbon, vin (sans stock)
+  finis: ["outils", "tissu"],       // produits finis (loi Savoir-faire national, 16/11)
   prix: { grain: 1.0, fer: 1.5, tissu: 2.0, outils: 2.0, bois: 1.0, charbon: 1.5, vin: 2.5 },        // RULES_V1 ; bois, charbon, vin : ASSUMPTION (ressources, 15/11)
   // surplus vendu, déficit acheté, aucun stock         // ASSUMPTION validée
   // V2 étape 3, marché (validé le 13/11) : « plus tu vends d'un bien dans le tour, moins il rapporte ; plus tu en achètes,
