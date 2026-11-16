@@ -46,7 +46,9 @@ const REGLES_FACTIONS = {
   // faction et « autres » à chacune des autres (perdu : l'inverse). Patrons : agrandissements et investissements terminés ;
   // paysans : aussi les défrichements. actif: false = règles d'avant.
   economie: { actif: true, gain: 2, autres: -0.5,
-              bases: { ouvriers: ["mine", "mine_charbon", "scierie"], paysans: ["farm", "vignoble"], artisans: ["workshop", "weaving"], conservateurs: ["caserne", "fort"] } }
+              bases: { ouvriers: ["mine", "mine_charbon", "scierie"], paysans: ["farm", "vignoble"], artisans: ["workshop", "weaving"], conservateurs: ["caserne", "fort"] },
+              // propriétaires (16/11, validé) : le gain est partagé à moitié avec ceux qui possèdent le bâtiment
+              proprietaires: { farm: "conservateurs", vignoble: "conservateurs", mine: "patrons", mine_charbon: "patrons", scierie: "patrons" } }
 };
 
 const Factions = { FACTIONS, REGLES_FACTIONS };

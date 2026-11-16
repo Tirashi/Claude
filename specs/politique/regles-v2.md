@@ -139,6 +139,7 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 
 ### 19. Les lois bâtissent la puissance (16/11)
 - Une loi adoptée : **+3 de puissance à chacun de ses partisans, −3 à chacun de ses opposants** (dans le journal). Remplace les effets « +N de puissance par tour pendant 10 tours » (Libre entreprise, Syndicats, Syndicats interdits, Parti unique, Religion d'État, Laïcité) : aucune loi ne décide seule, il faut un programme cohérent.
+- **Propriétaires** : le +2 d'un bâtiment terminé est partagé entre ceux qui y travaillent et ceux qui le possèdent : fermes et vignobles +1 paysans, +1 conservateurs ; mines, mines de charbon et scieries +1 ouvriers, +1 patrons ; ateliers et tissages +2 classe moyenne ; casernes et forts +2 conservateurs.
 - Les lois sans opposant en reçoivent un : École publique (conservateurs), Médecine du travail (patrons), Armée de métier (paysans).
 
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)

@@ -1379,5 +1379,17 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const rel = ed.nations.brume.relation; Dm.tour(ed);
   check(Dm.dependantes(ed).includes('brume') && proche(ed.nations.brume.relation, rel + 1 - 1), 'ressentiment : une nation dépendante perd 1 de relation par tour (le commerce en rendait 1)');
 }
+
+// --- propriétaires (16/11) : le gain d'un bâtiment est partagé avec ceux qui le possèdent ---
+{
+  const FAm3 = P('moteur/factions.js'), e0 = Etat.creerEtat(CHAMPS, 9);
+  const avant = Object.fromEntries(Object.keys(e0.factions).map(f => [f, e0.factions[f].puissance]));
+  const d = (x, f) => x.factions[f].puissance - avant[f];
+  const fe = Etat.copie(e0); fe.journal = []; FAm3.renforcer(fe, 'paysans', 1, 'ferme terminée', 'farm');
+  check(d(fe, 'paysans') === 1 && d(fe, 'conservateurs') === 1 && d(fe, 'ouvriers') === -0.5 && fe.journal.some(l => /^Paysans \+1, Conservateurs \+1 de puissance : ferme/.test(l)), 'propriétaires : ferme, paysans +1 et conservateurs +1, les autres −0,5');
+  const mi = Etat.copie(e0); FAm3.renforcer(mi, 'ouvriers', 1, null, 'mine');
+  const at = Etat.copie(e0); FAm3.renforcer(at, 'artisans', 1, null, 'workshop');
+  check(d(mi, 'ouvriers') === 1 && d(mi, 'patrons') === 1 && d(at, 'artisans') === 2, 'propriétaires : mine, ouvriers et patrons +1 ; atelier, classe moyenne +2');
+}
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);
