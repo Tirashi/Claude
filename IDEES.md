@@ -9,6 +9,7 @@ Ici, seulement des idées courtes (un titre et quelques lignes). Dès qu'une id�
 - **La colonie, écran en paysage** (16/10) : maquette, détails et liens déplacés dans [`specs/colonie.md`](specs/colonie.md).
 - **Terres franches** (ex-« Terres d'Éveil », cahier des charges de l'utilisateur reçu le 08/11 : colonie incrémentale médiévale-fantastique en temps réel, chaînes de production, magie, prestige par les Lois) : 🟡 en cours : maquette 7 validée, **ère 1 jouable** dans `terres-franches/` (démo, 08/11) ; suite (animaux, saisons, ère 2, Lois) dans [`specs/terres-franches.md`](specs/terres-franches.md).
 - **Nebula** — ✅ (sessions 1 à 4) : maquettes (chantier naval, écrans, banc d'écoute des sons, nouveaux vaisseaux), détails et liens déplacés dans [`specs/nebula.md`](specs/nebula.md).
+- **Sprite stacking** (16/11) : trois essais animés avec des ressources d'itch.io (A ville voxel *Medieval Voxel Assets* CC0 découpée par `outils/sprite-stacking/`, B donjon *IsoSlice*, C route *Sprite Stack Cars* + avion monogon, caméra qui suit) : https://claude.ai/artifact/FaaMpZFwZTnFC7iWsAcedu ; en attente du choix d'une direction et d'un jeu.
 - Maquette 32 bits d'Injagility : https://claude.ai/artifact/TymnL37HHZbjo2BTgMT5Kj
 - 9 coups de cœur + 4 jeux de bateaux en 32 bits : https://claude.ai/artifact/XzRmvgNKZeSMRUAM1NuFsA
 - **Amiral !** — ✅ : maquettes de style (HD-2D, low poly, cartoon, illustré, DS, Pokémon, pixel art isométrique et vu de dessus) et chantier naval validé, liens déplacés dans [`specs/amiral.md`](specs/amiral.md).
