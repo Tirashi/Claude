@@ -43,6 +43,10 @@ const DIPLOMATIE = {
   // contrats (13/11 : plus de liste fixe) : chaque nation propose d'acheter ce qu'elle importe et de vendre ce qu'elle exporte ;
   // volume par tour = son volume, au plus 10 ; prix fixe = prix de base × 0,8 (on achète) ou × 1,3 (on vend) ; 10 tours ;
   // relation minimale : celle du persona (ASSUMPTION validée (personas), repris des contrats de la V1)
+  // transport (16/11, ASSUMPTION (transport)) : un contrat coûte parUnite or par unité et par cran de distance (prix de
+  // vente diminué, prix d'achat augmenté) ; chaque contrat occupe une caravane (2 au départ, achetables, entretien par tour
+  // pour celles achetées) ; une route améliorée vers une nation divise son coût de transport. actif: false = règles d'avant.
+  transport: { actif: true, parUnite: 0.1, caravanes: 2, coutCaravane: 60, entretienCaravane: 2, coutRoute: 100, route: 0.5 },
   contrats: { volumeMax: 10, prixAchat: 0.9, prixVente: 1.15, duree: 10, maxEnCours: null },   // maxEnCours : plafond de contrats en cours (en essai, null = aucun)   // 14/11 : ×0,8 / ×1,3 → ×0,9 / ×1,15 (le commerce raflait aussi la Prospérité)
 
   // traités : relation minimale de la nation pour accepter ; condition supplémentaire

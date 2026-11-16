@@ -101,12 +101,27 @@ function contraindre(p){
     if (p.essayer({ type: 'embargo', id: n })) p.essayer({ type: 'exiger', id: n, exigence: sanctionne ? 'lever_sanctions' : 'cesser_provocations' });
   }
 }
-// commercer : signer les contrats utiles (vendre ce qu'on a en trop, acheter ce qui manque, au prix du contrat)
-function commercer(p){
-  const e = p.e, b = (e.bilan || {}).balance || {};
-  for (const a of Tour.actionsDisponibles(e).filter(a => a.type === 'contrat')){
-    const c = e.offres[a.id];
-    if (c.sens === 'vente' ? (b[c.bien] || 0) >= c.volume : (b[c.bien] || 0) <= -c.volume) p.essayer(a);
+// commercer : signer les contrats utiles (vendre ce qu'on a en trop, acheter ce qui manque) s'ils battent le marché une fois
+// le transport payé ; investir : acheter une caravane quand elles sont toutes prises, améliorer la route la plus utilisée
+const Diplo = P('moteur/diplomatie.js');
+function commercer(p, investir){
+  const e = p.e, b = (e.bilan || {}).balance || {}, pv = (e.bilan || {}).prixVente || {}, pa = (e.bilan || {}).prixAchat || {};
+  const bonnes = Object.keys(e.offres).filter(id => {
+    const c = e.offres[id];
+    if (e.contrats.some(x => x.id === id)) return false;
+    const t = Diplo.transport(e, c.nation);
+    return c.sens === 'vente' ? (b[c.bien] || 0) >= c.volume && c.prix - t > (pv[c.bien] || ECO.prix[c.bien] * 0.8)
+                              : (b[c.bien] || 0) <= -c.volume && c.prix + t < (pa[c.bien] || ECO.prix[c.bien] * 1.2);
+  });
+  for (const id of bonnes) p.essayer({ type: 'contrat', id });
+  if (!investir) return;
+  // une caravane de plus seulement si toutes sont prises et qu'un bon contrat attend (puis on le signe)
+  const attend = bonnes.find(id => !p.e.contrats.some(x => x.id === id));
+  if (attend && p.e.contrats.length >= (p.e.caravanes || 0) && p.e.tresor >= 200 && p.essayer({ type: 'caravane' })) p.essayer({ type: 'contrat', id: attend });
+  if (p.e.tresor >= 400){
+    const compte = {}; for (const x of p.e.contrats){ const n = p.e.offres[x.id].nation; if (p.e.profils[n].distance >= 2 && !(p.e.routes || []).includes(n)) compte[n] = (compte[n] || 0) + 1; }
+    const n = Object.keys(compte).sort((x, y) => compte[y] - compte[x])[0];
+    if (n) p.essayer({ type: 'route', id: n });
   }
 }
 // budget de fin de partie (14/11) : agrandir le bâtiment le plus rentable (prix de vente du tour, sans marché saturé),
@@ -224,7 +239,7 @@ const BOTS = {
     construire(p, avecCaserne(batimentUtile), 0);
     fiscalite(p);
     evenement(p);
-    commercer(p);
+    commercer(p, true);
     diplomatie(p);
     contraindre(p);
     budget(p, ['enseignement', 'sante']);

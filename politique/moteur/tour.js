@@ -3,7 +3,7 @@
    Actions : { type: "loi", id } lance une loi ; { type: "construire", id, region } commande un bâtiment (V2 : dans une région) ;
    { type: "agrandir", id, region } agrandit un bâtiment (niveau 2 puis 3) ; { type: "institution", id, niveau } (±1 par tour) ;
    { type: "apaiser", id: faction } apaise une faction (M2) ; diplomatie (M3a) : don, contrat, traite, rompre,
-   embargo, lever_embargo, diplomate { id }, rappeler_diplomate, exiger { id, exigence } (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
+   embargo, lever_embargo, diplomate { id }, rappeler_diplomate, exiger { id, exigence }, caravane, route { id } (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
    { type: "ambition", id } (tour 1 seulement) : l'objectif de victoire.
    Les actions d'un tour s'appliquent dans l'ordre, chacune vérifiée sur l'état laissé par la précédente.
    Ordre du tour T (ASSUMPTION validée) : événements de T → actions → adoption des lois arrivées à échéance

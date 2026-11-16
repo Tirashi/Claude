@@ -14,6 +14,7 @@ const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAI
 const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
 const Evenements = NODE ? require("./evenements.js") : racine.Politique.Evenements;
 const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
+const DIPLO = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 
 const arrondi = x => Math.round(x * 100) / 100;
 // institutions (budget de fin de partie) : niveau et dépense par tour
@@ -49,6 +50,8 @@ function bilan(e){
   }
   entretienBat *= ECO.entretienFacteur * fx.entretienBatiments;  // V2 budget : entretien des bâtiments (lois : collectivisation, privé)
   entretienBat += (e.regiments || 0) * GU.regiment.entretien;   // V2 : entretien des régiments
+  // transport (16/11) : entretien des caravanes achetées (celles du départ sont gratuites)
+  if (DIPLO.transport.actif) entretienBat += Math.max(0, (e.caravanes || 0) - DIPLO.transport.caravanes) * DIPLO.transport.entretienCaravane;
   for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
   for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
   // ressources (15/11) : chaque chantier en cours consomme du bois (sauf en région occupée)

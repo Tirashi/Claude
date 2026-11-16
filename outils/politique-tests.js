@@ -26,6 +26,8 @@ Object.assign(RLV, { premierTirage: 3, colereDebat: 0, chance: Object.assign({},
 const FUS = P('donnees/diplomatie.js').fusion; FUS.actif = false;
 // … et sans la relation à deux sens (seuil hostile, commerce qui rapproche, provocations : V2 « étape 1 » du 14/11)
 const HOST = P('donnees/diplomatie.js').hostilite; HOST.actif = false;
+// … et sans transport des contrats ni caravanes (16/11)
+const TRA = P('donnees/diplomatie.js').transport; TRA.actif = false;
 // … et sans la pression contre la thésaurisation (15/11)
 const THES = P('donnees/institutions.js').THESAURISATION; THES.actif = false;
 // … et sans les ressources du 15/11 (bois, charbon, vin) : besoins, consommations, paniers, échanges et vallée d'avant
@@ -1142,6 +1144,26 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(dans && vus.size > 5, 'échanges : volumes tirés entre ×0,5 et ×1,5 du profil, différents selon la partie');
   check(JSON.stringify(Etat.creerEtat(C, 5)) === JSON.stringify(Etat.creerEtat(C, 5)), 'tirages : même graine, même partie');
   check(Object.keys(e0.offres).length === Object.values(C.nations).reduce((t, n) => t + Object.keys(n.exporte).length + Object.keys(n.importe).length, 0), 'contrats : une offre par bien vendu ou acheté de chaque nation');
+}
+
+// --- transport des contrats : distance, caravanes, routes (16/11) ---
+{
+  TRA.actif = true;
+  const Dm = P('moteur/diplomatie.js');
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand'; e0.tresor = 1000;
+  check(e0.caravanes === 2 && e0.profils.val_roc.distance === 1 && e0.profils.brume.distance === 2 && e0.profils.port_salin.distance === 3, 'transport : 2 caravanes au départ ; distances 1 (voisins) à 3 (lointains)');
+  check(Dm.transport(e0, 'val_roc') === 0.1 && Dm.transport(e0, 'port_salin') === 0.3 && Dm.transport(Object.assign(Etat.copie(e0), { routes: ['port_salin'] }), 'port_salin') === 0.15, 'transport : 0,1 par unité et par cran, moitié avec une route améliorée');
+  const vente = Object.keys(e0.offres).find(k => e0.offres[k].nation === 'port_salin' && e0.offres[k].sens === 'vente'), achat = Object.keys(e0.offres).find(k => e0.offres[k].nation === 'val_roc' && e0.offres[k].sens === 'achat');
+  const ec = Etat.copie(e0); ec.contrats = [{ id: vente, jusqua: 30 }, { id: achat, jusqua: 30 }];
+  const fl = Dm.flux(ec), fv = fl.find(f => f.source === vente), fa = fl.find(f => f.source === achat);
+  check(proche(fv.prix, e0.offres[vente].prix - 0.3) && proche(fa.prix, e0.offres[achat].prix + 0.1), 'transport : la vente rapporte moins, l\'achat coûte plus');
+  const ctr = e => Tour.actionsDisponibles(e).filter(a => a.type === 'contrat');
+  check(ctr(e0).length > 0 && ctr(ec).length === 0, 'caravanes : une par contrat en cours (2 contrats, plus de place)');
+  const c3 = Tour.tourSuivant(ec, [{ type: 'caravane' }]);
+  check(c3.caravanes === 3 && ctr(c3).length > 0 && proche(c3.bilan.entretiens - Tour.tourSuivant(ec, []).bilan.entretiens, 2), 'caravane achetée : 60 or, une place de plus, 2 or d\'entretien par tour');
+  check(proche(ec.tresor - 60 + (c3.bilan.solde), c3.tresor), 'caravane : payée à l\'achat');
+  const r1 = Tour.tourSuivant(e0, [{ type: 'route', id: 'aurele' }]);
+  check(r1.routes.includes('aurele') && !Tour.actionsDisponibles(r1).some(a => a.type === 'route' && a.id === 'aurele'), 'route améliorée : une fois par nation');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

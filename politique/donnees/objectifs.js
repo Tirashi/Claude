@@ -11,11 +11,11 @@
 // seuils : { pays: [bronze, argent, or] }, tirés de 200 parties par bot et par pays (--objectifs --pays tous --seuils-proposes), validés le 14/11
 const OBJECTIFS = {
   prosperite: { nom: "Prospérité", texte: "Valeur de ce qui est bâti (bâtiments et agrandissements, à leur prix) à la fin de la partie, moins les dettes ; l'or en caisse ne compte pas.",
-    seuils: { equilibre: [3470, 3825, 4145], agricole: [2895, 3600, 4095], industriel: [3220, 4095, 4565], marchand: [4220, 4440, 4560], minier: [3045, 3825, 4275] } },
+    seuils: { equilibre: [3480, 3765, 3930], agricole: [2895, 3465, 3705], industriel: [3240, 3885, 4160], marchand: [4230, 4400, 4470], minier: [3120, 4025, 4180] } },
   contentement: { nom: "Contentement", texte: "100 moins la colère moyenne des factions, en moyenne sur toute la partie.",
     seuils: { equilibre: [82.8, 83.8, 84.2], agricole: [81.2, 82.7, 83.3], industriel: [81, 82.6, 83.5], marchand: [83.8, 84.3, 84.4], minier: [84.5, 85, 85.4] } },
   influence: { nom: "Influence", texte: "Poids économique chez les voisins, en moyenne sur la partie : 10 par contrat en cours et 10 par nation qui dépend de nos ventes (nos contrats de vente lui livrent au moins la moitié de ce qu'elle importe) ; plus 10 par exigence cédée.",
-    seuils: { equilibre: [172, 185, 192], agricole: [169, 180, 191], industriel: [168, 181, 190], marchand: [178, 189, 197], minier: [170, 182, 189] } },
+    seuils: { equilibre: [110, 118, 122], agricole: [112, 119, 124], industriel: [109, 117, 125], marchand: [117, 127, 134], minier: [117, 125, 131] } },
   concorde: { nom: "Concorde", texte: "Moyenne des relations avec les nations, plus 10 par traité en cours, à la fin de la partie.",
     seuils: { equilibre: [68, 84, 88], agricole: [69, 84, 88], industriel: [70, 85, 88], marchand: [70, 85, 88], minier: [68, 84, 88] } },
   autorite: { nom: "Autorité", texte: "Soutien des factions puissantes aux lois en vigueur : pour chaque loi en vigueur, puissance des factions pour moins puissance des factions contre ; moyenne par loi, puis moyenne sur la partie.",

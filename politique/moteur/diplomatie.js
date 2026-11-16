@@ -83,7 +83,8 @@ function actions(e){
     if (!e.dons.includes(n)) for (const m of D.dons) if (e.tresor >= m) r.push({ type: "don", id: n, montant: m });
     r.push(embargo(e, n) ? { type: "lever_embargo", id: n } : { type: "embargo", id: n });
   }
-  const plein = D.contrats.maxEnCours != null && e.contrats.length >= D.contrats.maxEnCours;   // plafond (en essai)
+  const plein = (D.contrats.maxEnCours != null && e.contrats.length >= D.contrats.maxEnCours)   // plafond (en essai)
+    || (D.transport.actif && e.contrats.length >= (e.caravanes || 0));                               // transport : une caravane par contrat
   if (!plein) for (const id in e.offres){
     const c = e.offres[id];
     if (!e.contrats.some(x => x.id === id) && ouverte(e, c.nation, persona(e, c.nation).contrat)) r.push({ type: "contrat", id });
@@ -93,6 +94,11 @@ function actions(e){
   // diplomate (V2 étape 2) : envoyé dans une nation qui n'est pas en guerre contre nous ; un seul, déplaçable, rappelable
   for (const n in e.nations) if (!ennemi(e, n) && (!e.diplomate || e.diplomate.nation !== n) && e.tresor >= D.diplomate.cout) r.push({ type: "diplomate", id: n });
   if (e.diplomate) r.push({ type: "rappeler_diplomate" });
+  // transport (16/11) : acheter une caravane ; améliorer la route vers une nation (pas en guerre contre nous)
+  if (D.transport.actif){
+    if (e.tresor >= D.transport.coutCaravane) r.push({ type: "caravane" });
+    for (const n in e.nations) if (!(e.routes || []).includes(n) && !ennemi(e, n) && e.tresor >= D.transport.coutRoute) r.push({ type: "route", id: n });
+  }
   // exigence (V2 étape 3) : contre une nation sous notre embargo, une à la fois par nation ; lever ses sanctions seulement si elle en a
   for (const n in e.nations){
     if (!embargo(e, n) || ennemi(e, n) || (e.exigences || []).some(x => x.nation === n)) continue;
@@ -169,6 +175,14 @@ function appliquer(e, a){
     reputer(e, legitime(e, a.id) ? D.reputation.sanctionLegitime : D.reputation.sanctionIllegitime);
     e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== a.id);   // plus de commerce avec la cible
     e.journal.push(`Embargo contre ${a.id}.`);
+  } else if (a.type === "caravane"){
+    e.tresor = arrondi(e.tresor - D.transport.coutCaravane);
+    e.caravanes = (e.caravanes || 0) + 1;
+    e.journal.push(`Caravane achetée (${e.caravanes} en tout).`);
+  } else if (a.type === "route"){
+    e.tresor = arrondi(e.tresor - D.transport.coutRoute);
+    (e.routes = e.routes || []).push(a.id);
+    e.journal.push(`Route améliorée vers ${e.profils[a.id].nom}.`);
   } else if (a.type === "exiger"){
     (e.exigences = e.exigences || []).push({ nation: a.id, exigence: a.exigence, depuis: e.tour });
     e.journal.push(`Exigence envoyée à ${e.profils[a.id].nom} : ${D.exigence.types[a.exigence].nom}.`);
@@ -188,14 +202,22 @@ function appliquer(e, a){
 function flux(e){
   const r = [];
   for (const x of e.contrats){
-    const c = e.offres[x.id];
-    r.push({ source: x.id, bien: c.bien, volume: c.sens === "achat" ? c.volume : -c.volume, prix: c.prix });
+    const c = e.offres[x.id], t = transport(e, c.nation);
+    // transport : à l'achat le prix monte, à la vente il baisse (jamais sous 0)
+    r.push({ source: x.id, bien: c.bien, volume: c.sens === "achat" ? c.volume : -c.volume, prix: c.sens === "achat" ? arrondi(c.prix + t) : Math.max(0, arrondi(c.prix - t)) });
   }
   for (const t of e.traites){
     const l = D.traites[t.type].livraison, b = D.traites[t.type].batiment, n = l && (e.batiments[b] || 0);
     if (n) r.push({ source: t.type, bien: l.bien, volume: -l.volume * n, prix: l.prix });
   }
   return r;
+}
+
+// coût de transport d'une unité vers une nation (16/11) : parUnite × distance, divisé par la route améliorée
+function transport(e, n){
+  if (!D.transport.actif) return 0;
+  const p = e.profils[n];
+  return arrondi(D.transport.parUnite * ((p && p.distance) || 1) * ((e.routes || []).includes(n) ? D.transport.route : 1));
 }
 
 // tarifs de l'Entente sur le marché (achat, vente) pour un membre
@@ -247,6 +269,6 @@ function tour(e){
   e.dons = [];
 }
 
-const Diplomatie = { exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
+const Diplomatie = { transport, exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
 if (NODE) module.exports = Diplomatie; else (racine.Politique = racine.Politique || {}).Diplomatie = Diplomatie;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -101,7 +101,7 @@ function partie(nom, graine, tours, coupe){
     if (coupe != null) traces.push(JSON.stringify(e));
   }
   m.issue = e.issue.type; m.duree = e.tour - 1; m.loisAdoptees = [...adoptees]; m.reputationFin = Diplo.reputation(e); m.tresorFin = e.tresor;
-  m.objectifs = Ob.mesures(e); m.medailles = Ob.medailles(e); m.ambition = e.ambition; m.etapes = e.suivi.etapes; m.institutions = Object.assign({}, e.institutions);
+  m.objectifs = Ob.mesures(e); m.medailles = Ob.medailles(e); m.ambition = e.ambition; m.etapes = e.suivi.etapes; m.institutions = Object.assign({}, e.institutions); m.caravanes = e.caravanes || 0; m.routes = (e.routes || []).length; m.contratsFin = e.contrats.length;
   return coupe != null ? { m, traces } : m;
 }
 
@@ -123,7 +123,7 @@ function resume(nom, ms){
     catalogueComplet: ms.filter(m => m.catalogueComplet != null).length, colereMax: med(ms.map(m => m.colereMax)),
     sansDecision: med(ms.map(m => m.sansDecision / m.duree)),
     regionsGagnees: somme(m => m.regionsGagnees) / n, regionsPerdues: somme(m => m.regionsPerdues) / n,
-    regimentsMax: med(ms.map(m => m.regimentsMax)), avecDette: ms.filter(m => m.toursDette > 0).length, avecFaillite: ms.filter(m => m.toursFaillite > 0).length, impotsHaut: med(ms.map(m => m.impotsHaut)), evenements: med(ms.map(m => m.evenements)), exigences: somme(m => m.exigences) / n, cedees: somme(m => m.cedees) / n, refusees: somme(m => m.refusees) / n, incidents: somme(m => m.incidents) / n, agrandis: med(ms.map(m => m.agrandis)), institutions: Object.fromEntries(['sante', 'enseignement', 'police'].map(i => [i, med(ms.map(m => (m.institutions || {})[i] || 0))])), toursOccupes: med(ms.map(m => m.toursOccupes))
+    regimentsMax: med(ms.map(m => m.regimentsMax)), avecDette: ms.filter(m => m.toursDette > 0).length, avecFaillite: ms.filter(m => m.toursFaillite > 0).length, impotsHaut: med(ms.map(m => m.impotsHaut)), evenements: med(ms.map(m => m.evenements)), exigences: somme(m => m.exigences) / n, cedees: somme(m => m.cedees) / n, refusees: somme(m => m.refusees) / n, incidents: somme(m => m.incidents) / n, agrandis: med(ms.map(m => m.agrandis)), caravanes: med(ms.map(m => m.caravanes)), routes: med(ms.map(m => m.routes)), contratsFin: med(ms.map(m => m.contratsFin)), institutions: Object.fromEntries(['sante', 'enseignement', 'police'].map(i => [i, med(ms.map(m => (m.institutions || {})[i] || 0))])), toursOccupes: med(ms.map(m => m.toursOccupes))
   };
 }
 
@@ -156,6 +156,7 @@ function afficher(r){
   console.log(`  guerre : ${pct(r.avecGuerre, n)} des parties, ${r0(r.toursGuerre)} tours (médiane) ; par partie : guerres gagnées ${r.guerres.gagnees.toFixed(2)}, perdues ${r.guerres.perdues.toFixed(2)}, paix blanches ${r.guerres.blanches.toFixed(2)} ; batailles ${r.batailles.gagnees.toFixed(1)} gagnées, ${r.batailles.perdues.toFixed(1)} perdues`);
   console.log(`  budget : dette dans ${pct(r.avecDette, n)} des parties, faillite dans ${pct(r.avecFaillite, n)} ; impôts hauts ${r0(r.impotsHaut)} tours (médiane) ; ${r0(r.evenements)} événements par partie (médiane)`);
   console.log(`  budget de fin de partie : ${r0(r.agrandis)} agrandissements (médiane) ; institutions au tour 40 (médianes) : santé ${r.institutions.sante}, enseignement ${r.institutions.enseignement}, police ${r.institutions.police}`);
+  console.log(`  commerce : ${r.contratsFin} contrats en cours au tour 40, ${r.caravanes} caravanes, ${r.routes} routes améliorées (médianes)`);
   console.log(`  diplomatie : ${r.incidents.toFixed(1)} incidents subis, ${r.exigences.toFixed(1)} exigences (${r.cedees.toFixed(1)} cédées, ${r.refusees.toFixed(1)} refusées) par partie`);
   console.log(`  armée : ${r0(r.regimentsMax)} régiments au plus (médiane) ; ${r0(r.toursOccupes)} tours avec une région occupée (médiane) ; régions par partie : ${r.regionsGagnees.toFixed(2)} gagnées, ${r.regionsPerdues.toFixed(2)} perdues`);
   console.log(`  factions : colère max ${r0(r.colereMax)}, tours ≥ 55 : ${r0(r.tours55)}, ≥ 75 : ${r0(r.tours75)} (médianes) ; grève dans ${pct(r.avecGreve, n)} des parties ; ${r0(r.apaisements)} apaisements`);

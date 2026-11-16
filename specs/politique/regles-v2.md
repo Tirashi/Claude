@@ -101,6 +101,10 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Val-Roc, Brume, Contreforts, **Aurèle** (grain, vin), **Port-Salin** (tissu, outils ; riche), **Hautefage** (bois, fer) ; 3 régions chacune ; chaque ressource a plusieurs sources ou plusieurs débouchés.
 - Au début de la partie : personas tirés au hasard (au plus 2 dirigeants avec le même) ; volumes d'échanges des nations × (1 ± 0,5).
 
+### 12. Transport des contrats (16/11)
+- Distances : 1 (Val-Roc, Contreforts), 2 (Brume, Hautefage), 3 (Aurèle, Port-Salin). Un contrat coûte 0,1 or par unité et par cran de distance (vente diminuée, achat augmenté).
+- Chaque contrat en cours occupe une caravane : 2 au départ, 60 or l'une (2 or d'entretien par tour). Une route améliorée vers une nation (100 or) divise son transport par deux.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

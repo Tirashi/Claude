@@ -8,6 +8,7 @@ const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
 const PAYS = NODE ? require("../donnees/pays.js") : racine.Politique.PAYS;
+const DIPLO = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 const { LOIS } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
 const VERSION = 4;   // V2 : régions ; personas ; pays de départ
 // totaux des bâtiments du pays (même calcul que Batiments.totaux, sans dépendance circulaire)
@@ -49,7 +50,7 @@ function creerEtat(scenario, graine, pays){
   const varie = o => { const v = copie(o); if (T.variation) for (const b in v) v[b] = Math.max(1, Math.round(v[b] * (1 - T.variation + 2 * T.variation * Alea.suivant(r)))); return v; };
   nations.forEach((id, i) => {
     const n = scenario.nations[id];
-    profils[id] = { nom: n.nom, persona: tires[i], regions: copie(n.regions || {}), taux: n.taux, exporte: varie(n.exporte), importe: varie(n.importe) };
+    profils[id] = { nom: n.nom, distance: n.distance || 1, persona: tires[i], regions: copie(n.regions || {}), taux: n.taux, exporte: varie(n.exporte), importe: varie(n.importe) };
   });
   const e = {
     version: VERSION,
@@ -84,6 +85,8 @@ function creerEtat(scenario, graine, pays){
     offres: Diplomatie.offres(profils),   // contrats proposés par les nations (ce qu'elles importent et exportent)
     revanches: {},                    // nations revanchardes battues par le joueur
     contrats: [],                     // [{ id, jusqua }]
+    caravanes: (DIPLO.transport || {}).caravanes || 0,   // transport (16/11) : caravanes du joueur (une par contrat en cours)
+    routes: [],                       // nations vers lesquelles la route est améliorée
     diplomate: null,                  // diplomate envoyé : { nation, depuis } (un seul ; moteur/diplomatie.js)
     exigences: [],                    // exigences en cours : [{ nation, exigence, depuis }] (une par nation, sous embargo)
     calmes: {},                       // nation → dernier tour sans provocation (exigence accordée)
