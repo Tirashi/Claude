@@ -123,7 +123,7 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Catégorie de lois « Capitaux » : **Exportation des capitaux** (pour les patrons, contre les ouvriers : dividendes ×1,5, ouvriers +1 de colère par tour) ; **Contrôle des capitaux** (pour les ouvriers, contre les patrons : plus de nouvel investissement, dividendes ×0,5, impôts +5 %, patrons +1 de colère par tour).
 
 ### 16. Défricher (16/11)
-- Action « défricher » une région : +1 emplacement ; 100, 150 puis 200 or (lois de construction comprises), 3 fois au plus par région ; occupe le chantier de la région 3 tours (bois compris) ; pas en région occupée. Fini : paysans −5 de colère. Le défrichement ne compte pas dans la Prospérité (réglage `DEFRICHEMENT.prosperite`, à décider).
+- Action « défricher » une région : +1 emplacement ; 100, 150 puis 200 or (lois de construction comprises), 3 fois au plus par région ; occupe le chantier de la région 3 tours (bois compris) ; pas en région occupée. Fini : paysans −5 de colère. Le défrichement compte dans la Prospérité pour son prix de base (décision du 16/11).
 
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.

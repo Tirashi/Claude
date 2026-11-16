@@ -28,7 +28,7 @@ const THESAURISATION = { actif: true, tours: 10, colere: 2,
 // défricher (16/11, ASSUMPTION (défrichement) validée le 16/11) : +1 emplacement dans une région ; prix selon le nombre
 // de défrichements déjà faits dans la région (au plus couts.length) ; occupe le chantier de la région pendant « delai »
 // tours (bois compris) ; fini : les paysans prennent « paysans » de colère. actif: false = règles d'avant.
-const DEFRICHEMENT = { actif: true, couts: [100, 150, 200], delai: 3, paysans: -5, prosperite: 0 };   // prosperite : part de son prix comptée dans la Prospérité (0 validé ; à l'essai)
+const DEFRICHEMENT = { actif: true, couts: [100, 150, 200], delai: 3, paysans: -5, prosperite: 1 };   // prosperite : part de son prix de base comptée dans la Prospérité (1, validé le 16/11)
 const R = { NIVEAUX, INSTITUTIONS, THESAURISATION, DEFRICHEMENT, max: 3 };
 if (typeof module !== "undefined" && module.exports) module.exports = R; else (racine.Politique = racine.Politique || {}).INSTITUTIONS = R;
 })(typeof window !== "undefined" ? window : globalThis);
