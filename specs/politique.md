@@ -125,6 +125,13 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 35. Les quatre points avant la maquette (16/11)
+1. **Répression** : les bots ne réprimaient que 0 à 2 fois par partie ; dès que possible (6 à 8 fois), +3 à +12 d'Autorité sans plus de révolutions. Les bots extrêmes répriment maintenant dès que c'est utile ; règle inchangée (à revoir après des parties réelles).
+2. **Classe moyenne** : le bot centre finissait sans or ; cause : l'atelier rapportait 4 % de son prix par tour et le tissage 10 % (18 à 28 % pour les autres). Validé : **atelier 15 outils, tissage 14 tissus** ; bot centre (ateliers d'abord, lois du centre peu coûteuses), référence de l'Autorité.
+3. **Médecine du travail seule** : faux problème (le bot de test avait aussi l'Impôt sur le capital) ; spam_medicine n'est plus une référence du Contentement.
+4. **Bot commerce** : il défrichait au détriment du commerce ; sans défrichement, Influence 0,86 → 2,45 de médaille moyenne. Il ne défriche plus.
+Seuils recalculés (5 pays, 200 parties). Médailles : Prospérité economy 59 à 66 %, patrons 75 à 85 % ; Contentement gauche 45 à 61 %, centre-gauche 41 à 60 % ; Influence environ 52 % ; Concorde environ 50 %. Autorité (droite / extrême gauche / extrême droite / centre) : équilibré 83 / 0 / 73 / 43 % ; agricole 0 / 87 / 96 / 17 % ; industriel 0 / 98 / 33 / 84 % ; marchand 100 / 0 / 0 / 99 % ; minier 0 / 99 / 97 / 3 %. Révolutions : seuls les bots passif et au hasard.
+
 ## 34. Seuils de l'Autorité : chaque pays penche vers un camp (16/11)
 Décision de l'utilisateur (option A) : on garde des seuils communs aux trois camps dans chaque pays ; le pays de départ favorise un camp, c'est son identité. **L'écran de choix du pays devra l'indiquer** (mesures du 16/11, médailles d'Autorité) : équilibré, la droite (99 %) ; agricole, les deux droites et l'extrême gauche (extrême droite 88 %, extrême gauche 71 %) ; industriel, la gauche (98 %) ; marchand, la droite (100 %) ; minier, la gauche (96 %). Écartée : des seuils par camp (un handicap selon le camp, difficile à expliquer).
 
