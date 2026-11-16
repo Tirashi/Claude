@@ -10,8 +10,9 @@ const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PER
 const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
 const Alea = NODE ? require("./alea.js") : racine.Politique.Alea;
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
+const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 
-const arrondi = x => Math.round(x * 100) / 100;
+const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
 const melanger = (liste, r) => { for (let i = liste.length - 1; i > 0; i--){ const k = Alea.entier(r, i + 1); [liste[i], liste[k]] = [liste[k], liste[i]]; } return liste; };
 
 function conditionOk(e, c){
@@ -31,7 +32,7 @@ function effet(e, x, cibles){
   else if (x.type === "or") e.tresor = arrondi(e.tresor + x.delta);
   else if (x.type === "relation"){
     for (const n of x.cible === "toutes" ? Object.keys(e.nations) : [cibles.nation])
-      e.nations[n].relation = Math.max(-100, Math.min(100, arrondi(e.nations[n].relation + x.delta)));
+      Diplomatie.changerRelation(e, n, x.delta);
   }
   else if (x.type === "emplacement") e.regions[cibles.region].emplacements += x.delta;
   else if (x.type === "rendement") e.bonusRendement[cibles.batiment] = arrondi((e.bonusRendement[cibles.batiment] || 1) * x.mult);

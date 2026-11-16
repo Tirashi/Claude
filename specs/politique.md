@@ -125,6 +125,17 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 26. Revue du code (16/11)
+Demande de l'utilisateur : une grosse revue du moteur avant la suite. Relecture complète du moteur et des bots, puis 780 parties de bots (tous les bots, 5 pays, 12 graines) avec contrôle des invariants à chaque tour (relations et colères bornées, bâtiments du pays = somme des régions, agrandissements ≤ 2 par bâtiment, contrats ≤ caravanes, personas connus) : aucun plantage, aucun invariant violé.
+Corrigé (accord de l'utilisateur, « corrige tout ») :
+1. **Commerce avec l'ennemi** : les contrats continuaient pendant une guerre et la relation remontait de 1 par tour ; une déclaration coupe maintenant les contrats avec tout le camp ennemi.
+2. Journal : noms des nations au lieu des identifiants (dons, embargos, traités, contrats).
+3. Les objectifs ne lisent plus le texte du journal : exigences cédées comptées par `Diplomatie.exigences`, victoires par `Guerre.paix`.
+4. Offres de contrat : identifiant `nation_bien_achat` / `nation_bien_vente` si une nation exporte et importe le même bien (aucune aujourd'hui).
+5. Régions occupées : plus de livraison de filature, pas comptées pour l'étape des 12 bâtiments.
+6. Ménage : `moteur/calcul.js` (arrondis, au lieu de 7 copies) ; toutes les relations passent par `Diplomatie.changerRelation` ; commentaires périmés de `tour.js` et `etat.js` ; `politique/CLAUDE.md` sous 2 Ko.
+Gardé : le **négoce** (acheter sous contrat à une nation pour revendre sous contrat à une autre, environ 3 or par tour et par paire). 455 tests. Simulation avant/après : écarts d'un point au plus.
+
 ## 25. Transport des contrats : distance, caravanes, routes (16/11)
 Explication donnée à l'utilisateur : le marché mondial achète et vend tout, mais dans le tour le prix baisse de 1 % par unité vendue (au plus −50 %) et monte de 1 % par unité achetée (au plus +50 %), sur toute la quantité ; rien ne se garde d'un tour à l'autre (sauf événements) ; d'où l'intérêt des contrats à prix fixe. Prix qui évoluent d'un tour à l'autre : backlog (I).
 Décision de l'utilisateur : un contrat coûte plus cher avec une nation lointaine ; des caravanes à acheter et des routes à améliorer. Fait (`diplomatie.transport`, ASSUMPTION) : distances 1 (Val-Roc, Contreforts), 2 (Brume, Hautefage), 3 (Aurèle, Port-Salin) ; transport 0,1 or par unité et par cran (vente diminuée, achat augmenté) ; **une caravane par contrat en cours**, 2 au départ, 60 or l'une et 2 or d'entretien par tour ; **route améliorée** vers une nation (100 or) : transport divisé par deux. Bots : contrats signés seulement s'ils battent le prix du marché une fois le transport payé ; le bot commerce achète une caravane quand toutes sont prises et qu'un bon contrat attend, et améliore la route la plus utilisée (distance ≥ 2). Les tests d'avant gardent les contrats sans transport. 445 tests.

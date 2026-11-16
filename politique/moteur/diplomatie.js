@@ -12,19 +12,21 @@ const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE
 const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
 const PERSONAS = NODE ? require("../donnees/personas.js") : racine.Politique.PERSONAS;
 const persona = (e, n) => PERSONAS[e.profils[n].persona];
+const nom = (e, n) => (e.profils[n] || {}).nom || n;   // nom d'une nation pour le journal
 const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 
-const arrondi = x => Math.round(x * 100) / 100;
+const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
 const borneRel = x => Math.max(D.relation.min, Math.min(D.relation.max, arrondi(x)));
 // réputation (V2 étape 6) : fusionnée dans les relations ; la « réputation » est la moyenne des relations
 const reputation = e => {
   if (!D.fusion.actif) return e.reputation;
   const r = Object.values(e.nations).map(n => n.relation);
-  return Math.round(r.reduce((a, b) => a + b, 0) / r.length * 100) / 100;
+  return arrondi(r.reduce((a, b) => a + b, 0) / r.length);
 };
 const paria = e => reputation(e) < D.reputation.paria;
 const embargo = (e, n) => e.embargos.includes(n);
 const aTraite = (e, type, avec) => e.traites.some(t => t.type === type && (avec == null || t.avec === avec));
+// la seule façon de changer une relation : bornée par D.relation (−100 à 100)
 const relation = (e, n, d) => { e.nations[n].relation = borneRel(e.nations[n].relation + d); };
 // points de réputation du barème : toutes les relations bougent de part × points (sauf la nation « sauf »)
 function reputer(e, points, sauf){
@@ -42,12 +44,15 @@ function nationsInitiales(scenario, profils){
   }
   return r;
 }
-// contrats proposés : chaque nation achète ce qu'elle importe et vend ce qu'elle exporte (sens = ce que fait le joueur)
+// contrats proposés : chaque nation achète ce qu'elle importe et vend ce qu'elle exporte (sens = ce que fait le joueur) ;
+// identifiant « nation_bien », ou « nation_bien_achat » / « nation_bien_vente » si la nation exporte et importe ce bien
 function offres(profils){
   const r = {}, C = D.contrats;
   for (const n in profils){
-    for (const b in profils[n].exporte) r[n + "_" + b] = { nation: n, sens: "achat", bien: b, volume: Math.min(C.volumeMax, profils[n].exporte[b]), prix: arrondi(ECO.prix[b] * C.prixAchat), duree: C.duree };
-    for (const b in profils[n].importe) r[n + "_" + b] = { nation: n, sens: "vente", bien: b, volume: Math.min(C.volumeMax, profils[n].importe[b]), prix: arrondi(ECO.prix[b] * C.prixVente), duree: C.duree };
+    const deux = b => profils[n].exporte[b] != null && profils[n].importe[b] != null;
+    const cle = (b, sens) => n + "_" + b + (deux(b) ? "_" + sens : "");
+    for (const b in profils[n].exporte) r[cle(b, "achat")] = { nation: n, sens: "achat", bien: b, volume: Math.min(C.volumeMax, profils[n].exporte[b]), prix: arrondi(ECO.prix[b] * C.prixAchat), duree: C.duree };
+    for (const b in profils[n].importe) r[cle(b, "vente")] = { nation: n, sens: "vente", bien: b, volume: Math.min(C.volumeMax, profils[n].importe[b]), prix: arrondi(ECO.prix[b] * C.prixVente), duree: C.duree };
   }
   return r;
 }
@@ -120,6 +125,7 @@ function exigences(e, r){
       else if (x.exigence === "cesser_provocations") (e.calmes = e.calmes || {})[x.nation] = e.tour + type.tours;
       else if (x.exigence === "dedommagement"){ const o = Math.max(0, Math.min(type.or, n.tresor)); n.tresor = arrondi(n.tresor - o); e.tresor = arrondi(e.tresor + o); }
       relation(e, x.nation, X.cedeRelation);
+      if (e.suivi) e.suivi.cedees = (e.suivi.cedees || 0) + 1;   // objectif Influence
       e.journal.push(`${nom} cède : accepte de ${type.nom}.`);
     } else if (e.tour - x.depuis + 1 >= X.duree){
       relation(e, x.nation, X.refusRelation);
@@ -143,10 +149,9 @@ function couper(e, n){
 }
 
 function rompre(e, type, avec){
-  const nom = D.traites[type].nom;
   e.traites = e.traites.filter(t => !(t.type === type && t.avec === avec));
   reputer(e, D.reputation.traiteRompu);
-  e.journal.push(`Traité rompu : ${nom} avec ${avec}.`);
+  e.journal.push(`Traité rompu : ${D.traites[type].nom} avec ${nom(e, avec)}.`);
   // un traité qui dépendait de celui-ci tombe aussi (ASSUMPTION validée (M3a))
   for (const t of e.traites.filter(t => t.avec === avec && D.traites[t.type].requiert === type)) rompre(e, t.type, avec);
 }
@@ -157,24 +162,24 @@ function appliquer(e, a){
     relation(e, a.id, a.montant * D.relation.donParOr);
     reputer(e, Math.min(D.reputation.donMax, Math.floor(a.montant / 20) * D.reputation.donPar20));
     e.dons.push(a.id);
-    e.journal.push(`Don de ${a.montant} or à ${a.id}.`);
+    e.journal.push(`Don de ${a.montant} or à ${nom(e, a.id)}.`);
   } else if (a.type === "contrat"){
     const c = e.offres[a.id];
     e.contrats.push({ id: a.id, jusqua: e.tour + c.duree - 1 });
     relation(e, c.nation, D.relation.contrat);
-    e.journal.push(`Contrat signé : ${c.sens === "achat" ? "achat" : "vente"} de ${c.volume} ${c.bien} par tour à ${c.prix} (${c.duree} tours).`);
+    e.journal.push(`Contrat signé avec ${nom(e, c.nation)} : ${c.sens === "achat" ? "achat" : "vente"} de ${c.volume} ${c.bien} par tour à ${c.prix} (${c.duree} tours).`);
   } else if (a.type === "traite"){
     e.traites.push({ type: a.id, avec: a.avec, depuis: e.tour });
     relation(e, a.avec, D.relation.traite);
     reputer(e, D.reputation.traiteSigne);
-    e.journal.push(`Traité signé : ${D.traites[a.id].nom} avec ${a.avec}.`);
+    e.journal.push(`Traité signé : ${D.traites[a.id].nom} avec ${nom(e, a.avec)}.`);
   } else if (a.type === "rompre") rompre(e, a.id, a.avec);
   else if (a.type === "embargo"){
     e.embargos.push(a.id);
     relation(e, a.id, D.relation.embargo);
     reputer(e, legitime(e, a.id) ? D.reputation.sanctionLegitime : D.reputation.sanctionIllegitime);
     e.contrats = e.contrats.filter(x => e.offres[x.id].nation !== a.id);   // plus de commerce avec la cible
-    e.journal.push(`Embargo contre ${a.id}.`);
+    e.journal.push(`Embargo contre ${nom(e, a.id)}.`);
   } else if (a.type === "caravane"){
     e.tresor = arrondi(e.tresor - D.transport.coutCaravane);
     e.caravanes = (e.caravanes || 0) + 1;
@@ -194,7 +199,7 @@ function appliquer(e, a){
     e.diplomate = null;
   } else if (a.type === "lever_embargo"){
     e.embargos = e.embargos.filter(n => n !== a.id);
-    e.journal.push(`Embargo levé contre ${a.id}.`);
+    e.journal.push(`Embargo levé contre ${nom(e, a.id)}.`);
   }
 }
 
@@ -207,11 +212,14 @@ function flux(e){
     r.push({ source: x.id, bien: c.bien, volume: c.sens === "achat" ? c.volume : -c.volume, prix: c.sens === "achat" ? arrondi(c.prix + t) : Math.max(0, arrondi(c.prix - t)) });
   }
   for (const t of e.traites){
-    const l = D.traites[t.type].livraison, b = D.traites[t.type].batiment, n = l && (e.batiments[b] || 0);
+    const l = D.traites[t.type].livraison, b = D.traites[t.type].batiment, n = l && enService(e, b);
     if (n) r.push({ source: t.type, bien: l.bien, volume: -l.volume * n, prix: l.prix });
   }
   return r;
 }
+
+// bâtiments d'un type en service : ceux des régions occupées ne produisent pas (revue du 16/11)
+const enService = (e, b) => Object.keys(e.regions).filter(r => !(e.occupations || {})[r]).reduce((t, r) => t + (e.regions[r].batiments[b] || 0), 0);
 
 // coût de transport d'une unité vers une nation (16/11) : parUnite × distance, divisé par la route améliorée
 function transport(e, n){
@@ -260,7 +268,7 @@ function tour(e){
   if (D.hostilite.actif) for (const id in e.nations){
     if (e.contrats.some(x => e.offres[x.id].nation === id) || e.traites.some(t => t.avec === id)) relation(e, id, D.hostilite.commerceParTour);
   }
-  for (const x of e.contrats.filter(x => x.jusqua <= e.tour)) e.journal.push(`Contrat terminé : ${x.id}.`);
+  for (const x of e.contrats.filter(x => x.jusqua <= e.tour)) { const c = e.offres[x.id]; e.journal.push(`Contrat terminé : ${c.sens === "achat" ? "achat" : "vente"} de ${c.bien} (${nom(e, c.nation)}).`); }
   e.contrats = e.contrats.filter(x => x.jusqua > e.tour);
   for (const t of e.traites){
     const age = e.tour - t.depuis;
@@ -269,6 +277,6 @@ function tour(e){
   e.dons = [];
 }
 
-const Diplomatie = { transport, exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
+const Diplomatie = { changerRelation: relation, transport, exigences, reputer, reputation, persona, offres, nationsInitiales, moralNation, actions, appliquer, flux, tarifs, tour, aTraite, paria, embargo, legitime, rompre, couper };
 if (NODE) module.exports = Diplomatie; else (racine.Politique = racine.Politique || {}).Diplomatie = Diplomatie;
 })(typeof window !== "undefined" ? window : globalThis);

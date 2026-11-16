@@ -9,8 +9,9 @@ const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INS
 const { FACTIONS, REGLES_FACTIONS: R } = NODE ? require("../donnees/factions.js") : racine.Politique.FACTIONS;
 const { LOIS, GROUPES } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
 const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
+const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
 
-const borne = x => Math.max(R.bornes.min, Math.min(R.bornes.max, Math.round(x * 100) / 100));
+const borne = x => Math.max(R.bornes.min, Math.min(R.bornes.max, arrondi(x)));
 
 // factions favorisées par le suffrage en vigueur (apaisement à moitié prix, hausses ralenties)
 function favorisees(e){
@@ -40,7 +41,7 @@ const apaisables = e => Object.keys(FACTIONS).filter(f =>
 
 function apaiser(e, f){
   const cout = coutApaisement(e, f);
-  e.tresor = Math.round((e.tresor - cout) * 100) / 100;
+  e.tresor = arrondi(e.tresor - cout);
   modifier(e, f, "colere", R.apaisement.colere);
   (e.apaises = e.apaises || []).push(f);
   e.journal.push(`${FACTIONS[f].nom} apaisés (${cout} or).`);

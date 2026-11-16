@@ -11,10 +11,10 @@ const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomat
 const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
 const { NIVEAUX } = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
 
-const arrondi = x => Math.round(x * 100) / 100;
+const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
 // part payée par le joueur (bâtiment cofinancé par un traité)
 // lois : interventionnisme, laisser-faire (coût des bâtiments) ; sans état : le prix de base
-const cout = (id, e) => Math.round(BAT[id].cout * (BAT[id].partJoueur || 1) * (e ? Lois.effets(e).construction : 1) * 100) / 100;
+const cout = (id, e) => arrondi(BAT[id].cout * (BAT[id].partJoueur || 1) * (e ? Lois.effets(e).construction : 1));
 const prendPlace = id => BAT[id].emplacement !== false;
 // bonus de terrain d'un bâtiment dans une région
 const bonus = (e, r, id) => TERRAINS[e.regions[r].terrain].bonus[id] || 1;
@@ -49,7 +49,7 @@ const niveaux = (e, r, id) => ((e.regions[r].niveaux || {})[id] || 0);
 const facteur = (e, r, id) => (e.regions[r].batiments[id] || 0) + NIVEAUX.gain * niveaux(e, r, id);
 function coutAgrandir(e, r, id){
   const n = e.regions[r].batiments[id] || 0, k = niveaux(e, r, id);
-  return Math.round(BAT[id].cout * NIVEAUX.cout[k < n ? 2 : 3] * (e ? Lois.effets(e).construction : 1) * 100) / 100;
+  return arrondi(BAT[id].cout * NIVEAUX.cout[k < n ? 2 : 3] * Lois.effets(e).construction);
 }
 function agrandissables(e){
   const r = [];

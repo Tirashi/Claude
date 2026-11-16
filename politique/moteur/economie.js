@@ -16,7 +16,7 @@ const Evenements = NODE ? require("./evenements.js") : racine.Politique.Evenemen
 const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
 const DIPLO = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 
-const arrondi = x => Math.round(x * 100) / 100;
+const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
 // institutions (budget de fin de partie) : niveau et dépense par tour
 const inst = (e, id) => (e.institutions || {})[id] || 0;
 const coutInstitutions = e => Object.keys(INST.INSTITUTIONS).reduce((t, id) => t + INST.INSTITUTIONS[id].cout[inst(e, id)], 0);

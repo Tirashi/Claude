@@ -12,7 +12,7 @@ const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMEN
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const { LOIS } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
 
-const arrondi = x => Math.round(x * 100) / 100, dixieme = x => Math.round(x * 10) / 10;
+const { arrondi, dixieme } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
 
 function suivre(e){
   const s = e.suivi = e.suivi || { tours: 0, colere: 0, legitimite: 0 };
@@ -21,14 +21,13 @@ function suivre(e){
   s.colere = arrondi(s.colere + f.reduce((t, x) => t + x.colere, 0) / f.length);
   s.legitimite = arrondi(s.legitimite + legitimite(e));
   s.influence = arrondi((s.influence || 0) + influence(e));
-  s.cedees = (s.cedees || 0) + e.journal.filter(l => / cède : accepte de /.test(l)).length;
+  s.cedees = s.cedees || 0;          // compté par Diplomatie.exigences (revue du 16/11 : plus de lecture du journal)
   if (dependantes(e).length >= O.ETAPES.influence[1].valeur) s.toursDependance = (s.toursDependance || 0) + 1;
-  // pour les étapes : grèves, séries de tours calmes, victoires
+  // pour les étapes : grèves, séries de tours calmes (les victoires sont comptées par Guerre.paix)
   const greve = f.some(x => x.statut === "greve" || x.statut === "revolte" || x.statut === "revolution");
   s.greves = (s.greves || 0) + (greve ? 1 : 0);
   s.serieSansGreve = greve ? 0 : (s.serieSansGreve || 0) + 1;
   s.serieSansGrondement = f.some(x => x.colere > O.ETAPES.contentement[1].seuil) ? 0 : (s.serieSansGrondement || 0) + 1;
-  if (e.journal.some(l => l === "Paix : l'ennemi capitule." || /^Cession : .* passe à nous/.test(l))) s.victoires = (s.victoires || 0) + 1;
   s.etapes = s.etapes || {};
   for (const id in O.ETAPES){
     const t = s.etapes[id] = s.etapes[id] || O.ETAPES[id].map(() => null);
@@ -42,7 +41,8 @@ function atteinte(e, et){
   const place = id => BAT[id] && BAT[id].emplacement !== false;
   switch (et.id){
     case "tresor": return e.tresor >= et.valeur;
-    case "batiments": return Object.values(e.batiments).reduce((t, n) => t + n, 0) >= et.valeur;
+    case "batiments": return Object.keys(e.regions).filter(r => !(e.occupations || {})[r])   // régions occupées : pas comptées
+      .reduce((t, r) => t + Object.values(e.regions[r].batiments).reduce((u, n) => u + n, 0), 0) >= et.valeur;
     case "regions_pleines": return Object.keys(e.regions).every(r => Object.keys(e.regions[r].batiments).filter(place)
       .reduce((t, id) => t + e.regions[r].batiments[id], 0) >= e.regions[r].emplacements);
     case "colere_moyenne": return f.reduce((t, x) => t + x.colere, 0) / f.length < et.valeur;

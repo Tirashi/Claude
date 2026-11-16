@@ -72,11 +72,11 @@ function creerEtat(scenario, graine, pays){
     institutions: { sante: 0, enseignement: 0, police: 0 },   // budget de fin de partie : niveau de chaque institution (0 à 3)
     institutionsChangees: [],         // institutions changées ce tour (une fois par tour)
     impots: "normal",                 // V2 budget : niveau d'imposition (bas, normal, haut)
-    debat: null,
+    debat: null,                      // V2 : la loi en débat { id, depuis } (une seule)
     paquet: [],                       // événements : cartes restantes (mélangées au premier tirage)
     evenement: null,                  // carte tirée qui attend la réponse du joueur { id, cibles, depuis }
     modifProd: [],                    // effets d'événements sur la production [{ bien, mult, jusqua }]
-    bonusRendement: {},               // bâtiment → multiplicateur (Inventeur)                      // V2 : la loi en débat { id, depuis } (une seule)
+    bonusRendement: {},               // bâtiment → multiplicateur (Inventeur)
     evenements: copie(scenario.evenements || []),   // événements écrits du scénario
     modifPrix: [],                    // [{ prix: { bien: facteur }, jusqua }] (événements ; traités en M3)
     bilan: null,                      // économie du dernier tour (Economie.bilan)
@@ -95,7 +95,7 @@ function creerEtat(scenario, graine, pays){
     dons: [],                         // nations ayant reçu un don ce tour
     sanctions: [],                    // embargos entre nations ou contre le joueur : [{ par, contre }] (sanctions de bloc)
     guerre: null,                     // la guerre en cours (moteur/guerre.js)
-    regiments: P.regiments != null ? P.regiments : (j.regiments || 0),   // V2 : armée du joueur (pays militaire : plus)
+    regiments: P.regiments != null ? P.regiments : (j.regiments || 0),   // V2 : armée du joueur (le pays peut en fixer le nombre)
     recrues: [],                      // régions où le joueur a recruté ce tour
     occupations: {},                  // région → occupant (pendant une guerre)
     nonRearmement: {},                // camp ("joueur" ou nation) → dernier tour de la clause

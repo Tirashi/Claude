@@ -22,7 +22,7 @@ const D = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMAT
 const hostile = (e, n) => !D.hostilite.actif || e.nations[n].relation <= D.hostilite.seuil;
 const persona = (e, n) => PERSONAS[e.profils[n].persona];
 
-const arrondi = x => Math.round(x * 100) / 100;
+const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
 const enTreve = (e, n) => ((e.treves || {})[n] || 0) >= e.tour;
 const desarme = (e, qui) => ((e.nonRearmement || {})[qui] || 0) >= e.tour;
 const partenaires = (e, type) => e.traites.filter(t => t.type === type).map(t => t.avec);
@@ -115,6 +115,12 @@ function declarer(e, cible, agresseur, r){
     if (fj >= fe && e.nations[n].relation >= 0) allie(n);
     else if (fe > fj && !enTreve(e, n)) ennemie(n);
   }
+  // pas de commerce avec l'ennemi (revue du 16/11) : les contrats en cours avec tout le camp ennemi sont coupés
+  const coupes = e.contrats.filter(x => g.ennemis.includes(e.offres[x.id].nation));
+  if (coupes.length){
+    e.contrats = e.contrats.filter(x => !coupes.includes(x));
+    e.journal.push(`Guerre : ${coupes.length} contrat${coupes.length > 1 ? "s" : ""} rompu${coupes.length > 1 ? "s" : ""} avec l'ennemi.`);
+  }
 }
 
 // --- batailles ---
@@ -164,7 +170,10 @@ function paix(e, vainqueur, clauses){
     if (clauses.lever_embargo) e.embargos = e.embargos.filter(n => n !== chef);
     if (clauses.non_rearmement) e.nonRearmement[perdant] = e.tour + G.nonRearmement;
     if (clauses.cession) ceder(e, perdant, gagnant);
-    if (vainqueur === "joueur") e.revanches[chef] = true;   // un revanchard s'en souviendra
+    if (vainqueur === "joueur"){
+      e.revanches[chef] = true;   // un revanchard s'en souviendra
+      if (e.suivi) e.suivi.victoires = (e.suivi.victoires || 0) + 1;
+    }
   }
   const camp = g.ennemis.concat(g.allies, ["joueur"]);
   // les régions encore occupées sont rendues ; les sanctions liées à la guerre sont levées
@@ -257,7 +266,7 @@ function tour(e, r){
     const v = persona(e, n).provoque;
     if (!v || enTreve(e, n) || e.tour < v.tourMin || hostile(e, n) || (v.revanche && !(e.revanches || {})[n]) || ((e.calmes || {})[n] || 0) >= e.tour) continue;   // exigence « cesser les provocations »
     if (Alea.suivant(r) < v.proba){
-      e.nations[n].relation = Math.max(-100, arrondi(e.nations[n].relation + v.delta));
+      Diplomatie.changerRelation(e, n, v.delta);
       e.journal.push(`Incident provoqué par ${e.profils[n].nom} : relation ${v.delta}.`);
     }
   }

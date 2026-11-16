@@ -6,11 +6,12 @@
    embargo, lever_embargo, diplomate { id }, rappeler_diplomate, exiger { id, exigence }, caravane, route { id } (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
    { type: "ambition", id } (tour 1 seulement) : l'objectif de victoire.
    Les actions d'un tour s'appliquent dans l'ordre, chacune vérifiée sur l'état laissé par la précédente.
-   Ordre du tour T (ASSUMPTION validée) : événements de T → actions → adoption des lois arrivées à échéance
-   (et leurs chocs sur les factions) → économie (production, commerce, impôts, entretiens ; grèves du tour précédent)
-   → démographie → nations (revenus, embargos, contrats échus, traités respectés) → guerre (usure, bataille de l'ennemi,
-   déclarations) → factions (effets par tour, dissipation, statuts, moral ; révolution = fin) → chantiers
-   → capital politique → T + 1. (M3 : diplomatie et guerre.) */
+   Ordre du tour T (voir tourSuivant) : événements écrits de T → actions → réponse par défaut à l'événement en attente
+   → débat de la loi (colère des opposants, tirage de l'adoption et ses chocs) → économie (production, marché, contrats,
+   impôts, entretiens ; grèves du tour précédent ; démographie) → nations (revenus, embargos, diplomate, contrats échus,
+   traités respectés) → exigences → guerre (recrutement, capitulations, bataille de l'ennemi, provocations, déclarations)
+   → factions (effets par tour, thésaurisation, santé, niveau de vie, impôts, statuts, moral ; révolution = fin)
+   → suivi des objectifs → chantiers → tirage d'un événement → T + 1. */
 (function(racine){
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;

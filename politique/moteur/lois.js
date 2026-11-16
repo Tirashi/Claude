@@ -46,7 +46,7 @@ function adopter(e, id){
   const loi = LOIS[id], avant = e.lois[loi.categorie];
   e.lois[loi.categorie] = { id, depuis: e.tour };
   if (loi.eco.reputation) Diplomatie.reputer(e, loi.eco.reputation);
-  if (loi.eco.relations) for (const n in e.nations) e.nations[n].relation = Math.max(-100, Math.min(100, e.nations[n].relation + loi.eco.relations));
+  if (loi.eco.relations) for (const n in e.nations) Diplomatie.changerRelation(e, n, loi.eco.relations);
   Factions.choc(e, id);
   e.journal.push(`Loi adoptée : ${loi.nom}` + (avant ? ` (remplace ${LOIS[avant.id].nom}).` : "."));
 }

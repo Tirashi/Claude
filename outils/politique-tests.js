@@ -842,7 +842,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(Ob.dependantes(ei).join() === nv && Ob.influence(ei) === 10 * (ventes.length + 1 + 1), 'influence : 10 par contrat en cours et 10 par nation dépendante (nos contrats de vente lui livrent la moitié de ses importations)');
   const ei2 = Etat.copie(ei); ei2.contrats = [{ id: achat, jusqua: 30 }];
   check(Ob.dependantes(ei2).length === 0 && Ob.dependantes(Object.assign(Etat.copie(e1), { bilan: { balance: { grain: 999, fer: 999, tissu: 999, outils: 999 } } })).length === 0, 'influence : un achat ou un simple surplus ne rend pas dépendant');
-  const es0 = Etat.copie(e1); es0.journal = ['Brume cède : accepte de payer un dédommagement.']; Ob.suivre(es0);
+  const es0 = Etat.copie(e1); es0.suivi.cedees = 1; es0.journal = []; Ob.suivre(es0);
   check(es0.suivi.cedees === 1 && Ob.mesures(es0).influence === Math.round(es0.suivi.influence / es0.suivi.tours + 10), 'influence : moyenne sur la partie, plus 10 par exigence cédée');
   // ambition : tour 1 seulement, une fois
   const amb = Tour.actionsDisponibles(e0).filter(a => a.type === 'ambition').map(a => a.id);
@@ -897,7 +897,9 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(Ob.etapes(e0).length === 0 && Ob.etapes(e0, 'concorde').every(x => !x.faite), 'étapes : sans ambition, rien ; au départ, rien de coché');
   const at = (id, modif) => { const e = Etat.copie(e0); modif(e); return Ob.atteinte(e, OD.ETAPES[Object.keys(OD.ETAPES).find(o => OD.ETAPES[o].some(x => x.id === id))].find(x => x.id === id)); };
   check(!at('tresor', () => {}) && at('tresor', e => { e.tresor = 3000; }), 'étape : 3 000 or au trésor');
-  check(!at('batiments', () => {}) && at('batiments', e => { e.batiments.farm = 13; }), 'étape : 15 bâtiments en service');
+  { const plus = e => { const r = Object.keys(e.regions)[0]; e.regions[r].batiments.farm = (e.regions[r].batiments.farm || 0) + 12; return r; };
+  check(!at('batiments', () => {}) && at('batiments', plus), 'étape : 15 bâtiments en service');
+  check(!at('batiments', e => { e.occupations = { [plus(e)]: 'val_roc' }; }), 'étape : les bâtiments d\'une région occupée ne comptent pas (revue du 16/11)'); }
   check(!at('regions_pleines', () => {}) && at('regions_pleines', e => { for (const r in e.regions) e.regions[r].batiments = { farm: e.regions[r].emplacements, fort: 1 }; }), 'étape : toutes les régions pleines (le fort ne prend pas de place)');
   check(!at('colere_moyenne', () => {}) && at('colere_moyenne', e => { for (const f in e.factions) e.factions[f].colere = 19; }), 'étape : colère moyenne sous 20');
   check(!at('toutes_calmes', e => { for (const f in e.factions) e.factions[f].colere = 10; e.factions.ouvriers.colere = 30; }) && at('toutes_calmes', e => { for (const f in e.factions) e.factions[f].colere = 29; }), 'étape : toutes les factions sous 30');
@@ -916,7 +918,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const coche = Ob.etapes(eg, 'contentement')[0].faite;
   for (const f in eg.factions) eg.factions[f].colere = 60; eg.factions.ouvriers.statut = 'greve'; Ob.suivre(eg);
   check(coche && eg.suivi.serieSansGreve === 0 && eg.suivi.greves === 1 && eg.suivi.serieSansGrondement === 0 && Ob.etapes(eg, 'contentement')[0].faite, 'étape : cochée pour de bon (une grève remet les séries à zéro)');
-  const ev = Etat.copie(e); ev.journal = ['Brume cède : accepte de lever ses sanctions.']; Ob.suivre(ev);
+  const ev = Etat.copie(e); ev.suivi.cedees = 1; ev.journal = []; Ob.suivre(ev);
   check(ev.suivi.cedees === 1 && Ob.etapes(ev, 'influence')[2].faite, 'étape : une exigence cédée');
   const ea = Tour.tourSuivant(e0, [{ type: 'ambition', id: 'autorite' }]);
   check(Ob.etapes(ea).length === 3 && Ob.etapes(ea)[0].texte === OD.ETAPES.autorite[0].texte, 'étapes : celles de l\'ambition par défaut');
@@ -1164,6 +1166,42 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(proche(ec.tresor - 60 + (c3.bilan.solde), c3.tresor), 'caravane : payée à l\'achat');
   const r1 = Tour.tourSuivant(e0, [{ type: 'route', id: 'aurele' }]);
   check(r1.routes.includes('aurele') && !Tour.actionsDisponibles(r1).some(a => a.type === 'route' && a.id === 'aurele'), 'route améliorée : une fois par nation');
+}
+
+// --- revue du 16/11 : pas de commerce avec l'ennemi, compteurs des objectifs, noms dans le journal ---
+{
+  const Dm = P('moteur/diplomatie.js'), GU = P('moteur/guerre.js'), Ob = P('moteur/objectifs.js');
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand'; e0.tresor = 1000;
+  const de = n => Object.keys(e0.offres).find(k => e0.offres[k].nation === n);
+  // guerre : les contrats avec l'ennemi (la cible et ceux qui la rejoignent) sont coupés, les autres restent
+  const eg = Etat.copie(e0); eg.contrats = [{ id: de('val_roc'), jusqua: 30 }, { id: de('brume'), jusqua: 30 }]; eg.journal = [];
+  GU.declarer(eg, 'val_roc', 'joueur', { s: 1 });
+  check(eg.contrats.length === 1 && eg.contrats[0].id === de('brume') && eg.journal.some(l => /^Guerre : 1 contrat rompu/.test(l)), 'guerre : contrats coupés avec l\'ennemi, gardés avec les autres');
+  const eh = Etat.copie(eg); eh.journal = []; Dm.tour(eh);
+  check(eh.nations.val_roc.relation === eg.nations.val_roc.relation, 'guerre : la relation avec l\'ennemi ne remonte plus par le commerce');
+  const ej = Etat.copie(e0); ej.contrats = [{ id: de('brume'), jusqua: 30 }]; ej.profils.brume.persona = 'idealiste'; ej.journal = [];
+  GU.declarer(ej, 'val_roc', 'joueur', { s: 1 });
+  check(ej.guerre.ennemis.includes('brume') && ej.contrats.length === 0, 'guerre : contrats coupés aussi avec une nation qui rejoint l\'ennemi');
+  const ek = Etat.copie(e0); ek.contrats = [{ id: de('val_roc'), jusqua: 30 }]; ek.journal = [];
+  GU.declarer(ek, 'val_roc', 'val_roc', { s: 1 });
+  check(ek.contrats.length === 0, 'guerre déclarée par une nation : contrats coupés aussi');
+  // compteurs : exigence cédée, victoire (sans lire le journal)
+  const ex = Etat.copie(e0); ex.embargos = ['brume']; ex.exigences = [{ nation: 'brume', exigence: 'dedommagement', depuis: ex.tour }];
+  ex.nations.brume.colere = 100; ex.nations.brume.manque = 5; ex.journal = []; Dm.exigences(ex, { s: 1 });
+  check(ex.suivi.cedees === 1 && Ob.etapes(Object.assign(Etat.copie(ex), { journal: [] }), 'influence').length === 3, 'exigence cédée : comptée dans le suivi');
+  const ev = Etat.copie(eg); ev.guerre.capitulation = 'ennemi'; GU.paix(ev, 'joueur', {});
+  const ep = Etat.copie(eg); GU.paix(ep, null);
+  check(ev.suivi.victoires === 1 && ep.suivi.victoires === 0, 'victoire : comptée à la paix gagnée, pas à la paix blanche');
+  // offres : une nation qui exporte et importe le même bien a deux offres distinctes
+  const pr = { x: { nom: 'X', exporte: { fer: 5 }, importe: { fer: 4, grain: 3 } } }, of = Dm.offres(pr);
+  check(of.x_fer_achat.sens === 'achat' && of.x_fer_vente.sens === 'vente' && of.x_grain.sens === 'vente' && !of.x_fer, 'offres : pas de collision quand une nation exporte et importe le même bien');
+  // journal : noms des nations, pas leurs identifiants
+  const ed = Tour.tourSuivant(e0, [{ type: 'don', id: 'val_roc', montant: Dm.actions(e0).find(a => a.type === 'don').montant }, { type: 'embargo', id: 'brume' }]);
+  check(ed.journal.some(l => l.startsWith('Don de') && l.includes(e0.profils.val_roc.nom)) && ed.journal.some(l => l === 'Embargo contre ' + e0.profils.brume.nom + '.') && !ed.journal.some(l => /val_roc|brume/.test(l)), 'journal : noms des nations');
+  // livraisons des traités : pas de filature en région occupée
+  const ef = Etat.copie(e0), rf = Object.keys(ef.regions)[0]; ef.regions[rf].batiments.entente_mill = 1; ef.batiments.entente_mill = 1; ef.traites = [{ type: 'filature', avec: 'brume', depuis: 1 }];
+  const livre = e => Dm.flux(e).filter(f => f.source === 'filature').length;
+  check(livre(ef) === 1 && livre(Object.assign(Etat.copie(ef), { occupations: { [rf]: 'val_roc' } })) === 0, 'filature : pas de livraison si sa région est occupée');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

@@ -105,6 +105,11 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - Distances : 1 (Val-Roc, Contreforts), 2 (Brume, Hautefage), 3 (Aurèle, Port-Salin). Un contrat coûte 0,1 or par unité et par cran de distance (vente diminuée, achat augmenté).
 - Chaque contrat en cours occupe une caravane : 2 au départ, 60 or l'une (2 or d'entretien par tour). Une route améliorée vers une nation (100 or) divise son transport par deux.
 
+### 13. Revue du code (16/11)
+- **Pas de commerce avec l'ennemi** : une déclaration de guerre (du joueur ou d'une nation) coupe les contrats en cours avec tout le camp ennemi, y compris les nations qui le rejoignent.
+- Les bâtiments d'une région occupée ne livrent plus rien aux traités (filature) et ne comptent pas pour l'étape « 12 bâtiments ».
+- **Négoce gardé** (décision de l'utilisateur) : acheter un bien sous contrat à une nation pour le revendre sous contrat à une autre est permis.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).
