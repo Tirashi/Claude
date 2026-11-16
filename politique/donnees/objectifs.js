@@ -10,7 +10,7 @@
 "use strict";
 // seuils : { pays: [bronze, argent, or] }, tirés de 200 parties par bot et par pays (--objectifs --pays tous --seuils-proposes), validés le 14/11
 const OBJECTIFS = {
-  prosperite: { nom: "Prospérité", texte: "Valeur de ce qui est bâti (bâtiments et agrandissements, à leur prix) à la fin de la partie, moins les dettes ; l'or en caisse ne compte pas.",
+  prosperite: { nom: "Prospérité", texte: "Valeur de ce qui est bâti à la fin de la partie (bâtiments, agrandissements, défrichements et investissements à l'étranger, à leur prix), moins les dettes ; l'or en caisse ne compte pas.",
     seuils: { equilibre: [5155, 5310, 5440], agricole: [5210, 5385, 5555], industriel: [5170, 5345, 5460], marchand: [5385, 5605, 5780], minier: [5270, 5420, 5535] } },
   contentement: { nom: "Contentement", texte: "100 moins la colère moyenne des factions, en moyenne sur toute la partie.",
     seuils: { equilibre: [82, 83.3, 83.8], agricole: [81.8, 82.7, 83.1], industriel: [80.8, 82, 83.1], marchand: [82.9, 83.4, 83.7], minier: [83.8, 84.2, 84.5] } },
