@@ -225,10 +225,11 @@ function rapprocher(p){
   if (l.length && (!e.diplomate || e.diplomate.nation !== l[0]) && e.tresor >= 20) p.essayer({ type: 'diplomate', id: l[0] });
 }
 
-// réprimer (16/11) : la plus puissante des factions visées, si elle pèse au moins 30 et n'est pas déjà trop en colère
+// réprimer (16/11) : dès que c'est utile, la plus puissante des factions visées (au moins 20 de puissance), tant que
+// sa colère reste loin de la révolte (moins de 70)
 function reprimer(p, cibles){
   if (!cibles) return;
-  const f = cibles.filter(x => p.e.factions[x].puissance >= 30 && p.e.factions[x].colere < 50)
+  const f = cibles.filter(x => p.e.factions[x].puissance >= 20 && p.e.factions[x].colere < 70)
     .sort((a, b) => p.e.factions[b].puissance - p.e.factions[a].puissance)[0];
   if (f) p.essayer({ type: 'reprimer', id: f });
 }
@@ -285,7 +286,7 @@ const BOTS = {
     armee(p, 1, 50);
     cofinancer(p, true);
     construire(p, avecCaserne(batimentUtile), 0);
-    if (!process.env.POLITIQUE_COMMERCE_SANS_DEFRICHER) defricher(p, 100);   // pour comparer (16/11)
+    // pas de défrichement (16/11) : l'or et les chantiers vont au commerce
     fiscalite(p);
     evenement(p);
     commercer(p, true);
@@ -373,9 +374,11 @@ const BOTS = {
     const p = plan(e);
     guerre(p, { seuilBataille: 0.6 });
     apaiser(p, 55);
-    loiSuivante(p, ['school_public', 'savoir_faire', 'interventionnisme', 'labor_medicine', 'liberte_culte', 'impot_minimal', 'suffrage_census', 'laicite', 'army_professional']);
+    const V = process.env.CENTRE_VARIANTE || '';
+    loiSuivante(p, V.includes('L') ? ['school_public', 'savoir_faire', 'interventionnisme', 'liberte_culte', 'laicite', 'labor_medicine']
+      : ['school_public', 'savoir_faire', 'interventionnisme', 'labor_medicine', 'liberte_culte', 'impot_minimal', 'suffrage_census', 'laicite', 'army_professional']);
     armee(p, 1, 50);
-    construire(p, avecCaserne(x => ['workshop', 'weaving'].concat(batimentUtile(x).filter(b => b !== 'workshop' && b !== 'weaving'))), 0);
+    construire(p, avecCaserne(V.includes('B') ? batimentUtile : x => ['workshop', 'weaving'].concat(batimentUtile(x).filter(b => b !== 'workshop' && b !== 'weaving'))), 0);
     defricher(p, 100);
     fiscalite(p);
     evenement(p);
@@ -442,7 +445,8 @@ const BOTS = {
 };
 
 // ambition de chaque bot (objectif de victoire choisi au tour 1) ; random la tire parmi ses actions, passif n'en a pas
-const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', spam_medicine: 'contentement', gauche: 'contentement', gauche_med: 'contentement',
+// spam_medicine (bot de test du 13/11) n'a plus d'ambition : il ne sert plus de référence au Contentement (16/11)
+const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', gauche: 'contentement', gauche_med: 'contentement',
   commerce: 'influence', patrons: 'prosperite', replica: 'concorde', droite: 'autorite', extreme_droite: 'autorite', extreme_gauche: 'autorite' };
 const creer = (nom, graine) => {
   if (!BOTS[nom]) throw new Error('bot inconnu : ' + nom);
