@@ -25,6 +25,10 @@ const THESAURISATION = { actif: true, tours: 10, colere: 2,
     artisans: { institution: "enseignement", niveau: 2, texte: "l'Enseignement au niveau 2" },
     paysans:  { agrandis: "farm", nombre: 2, texte: "2 fermes agrandies" },
     patrons:  { agrandis: null, nombre: 4, texte: "4 agrandissements" } } };
-const R = { NIVEAUX, INSTITUTIONS, THESAURISATION, max: 3 };
+// défricher (16/11, ASSUMPTION (défrichement) validée le 16/11) : +1 emplacement dans une région ; prix selon le nombre
+// de défrichements déjà faits dans la région (au plus couts.length) ; occupe le chantier de la région pendant « delai »
+// tours (bois compris) ; fini : les paysans prennent « paysans » de colère. actif: false = règles d'avant.
+const DEFRICHEMENT = { actif: true, couts: [100, 150, 200], delai: 3, paysans: -5, prosperite: 0 };   // prosperite : part de son prix comptée dans la Prospérité (0 validé ; à l'essai)
+const R = { NIVEAUX, INSTITUTIONS, THESAURISATION, DEFRICHEMENT, max: 3 };
 if (typeof module !== "undefined" && module.exports) module.exports = R; else (racine.Politique = racine.Politique || {}).INSTITUTIONS = R;
 })(typeof window !== "undefined" ? window : globalThis);

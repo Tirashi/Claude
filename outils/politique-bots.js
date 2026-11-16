@@ -209,6 +209,13 @@ function investir(p, reserve){
     if (!l.length || !p.essayer(l[0])) break;
   }
 }
+// défricher (16/11) : quand plus aucun bâtiment de production ne trouve de place, la région la moins chère, avec une réserve
+function defricher(p, reserve){
+  if (Tour.actionsDisponibles(p.e).some(a => a.type === 'construire' && PRODUCTION.includes(a.id))) return;
+  const l = Tour.actionsDisponibles(p.e).filter(a => a.type === 'defricher' && p.e.tresor - Batiments.coutDefricher(p.e, a.region) >= reserve)
+    .sort((a, b) => Batiments.coutDefricher(p.e, a.region) - Batiments.coutDefricher(p.e, b.region));
+  if (l.length) p.essayer(l[0]);
+}
 // rapprocher : sans nation où investir, le diplomate va chez la mieux disposée qui n'a pas encore 30
 function rapprocher(p){
   const e = p.e;
@@ -227,6 +234,7 @@ function programme(lois, prio){
     loiSuivante(p, lois);
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
+    defricher(p, 100);
     fiscalite(p);
     evenement(p);
     diplomatie(p);
@@ -249,6 +257,7 @@ const BOTS = {
     loiSuivante(p, ['income_progressive', 'school_public', 'school_free', 'income_capital']);
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
+    defricher(p, 100);
     fiscalite(p);
     evenement(p);
     diplomatie(p);
@@ -267,6 +276,7 @@ const BOTS = {
     armee(p, 1, 50);
     cofinancer(p, true);
     construire(p, avecCaserne(batimentUtile), 0);
+    defricher(p, 100);
     fiscalite(p);
     evenement(p);
     commercer(p, true);
@@ -282,6 +292,7 @@ const BOTS = {
     loiSuivante(p, ['labor_medicine', 'income_progressive', 'school_public', 'school_free', 'income_capital']);
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
+    defricher(p, 100);
     fiscalite(p);
     evenement(p);
     diplomatie(p);
@@ -297,6 +308,7 @@ const BOTS = {
     loiSuivante(p, ['income_progressive', 'school_public', 'school_free', 'income_capital']);
     armee(p, 1, 50);
     construire(p, avecCaserne(batimentUtile), 0);
+    defricher(p, 100);
     fiscalite(p);
     evenement(p);
     diplomatie(p);
@@ -360,6 +372,7 @@ const BOTS = {
     commercer(p, false);
     rapprocher(p);
     investir(p, 100);
+    defricher(p, 100);   // ce qui reste, après les investissements
     budget(p, ['police', 'sante']);
     return p.acts;
   },

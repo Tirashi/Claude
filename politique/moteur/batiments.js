@@ -9,7 +9,8 @@ const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMEN
 const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAINS;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
-const { NIVEAUX } = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
+const { NIVEAUX, DEFRICHEMENT: DEF } = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
+const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
 const D = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
 
 const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
@@ -23,7 +24,7 @@ const bonus = (e, r, id) => TERRAINS[e.regions[r].terrain].bonus[id] || 1;
 function occupes(e, r){
   let n = 0;
   for (const id in e.regions[r].batiments) if (prendPlace(id)) n += e.regions[r].batiments[id];
-  for (const c of e.chantiers) if (c.region === r && prendPlace(c.id) && !c.agrandir) n++;
+  for (const c of e.chantiers) if (c.region === r && !c.agrandir && !c.defricher && prendPlace(c.id)) n++;
   return n;
 }
 const enChantier = (e, r) => e.chantiers.some(c => c.region === r);
@@ -102,12 +103,33 @@ function commander(e, id, region){
   e.journal.push(`Chantier commandé : ${BAT[id].nom} (${e.regions[region].nom}, ${prix} or).`);
 }
 
+// défricher (16/11) : +1 emplacement dans une région, 3 fois au plus par région, de plus en plus cher
+const coutDefricher = (e, r) => arrondi(DEF.couts[e.regions[r].defriche || 0] * Lois.effets(e).construction);
+function defrichables(e){
+  if (!DEF.actif) return [];
+  return Object.keys(e.regions).filter(r => !enChantier(e, r) && !(e.occupations || {})[r]
+    && (e.regions[r].defriche || 0) < DEF.couts.length && e.tresor >= coutDefricher(e, r));
+}
+function defricher(e, region){
+  const prix = coutDefricher(e, region);
+  e.tresor = arrondi(e.tresor - prix);
+  e.chantiers.push({ id: "defrichement", region, restant: DEF.delai, defricher: true });
+  e.journal.push(`Défrichement commencé : ${e.regions[region].nom} (${prix} or).`);
+}
+
 // fin du tour : chaque chantier avance d'un tour ; un bâtiment fini produit dès le tour suivant
 function avancer(e){
   for (const c of e.chantiers){
     if ((e.occupations || {})[c.region]) continue;   // chantier arrêté pendant l'occupation
     c.restant--;
     if (c.restant > 0) continue;
+    if (c.defricher){
+      const reg = e.regions[c.region];
+      reg.emplacements++; reg.defriche = (reg.defriche || 0) + 1;
+      if (e.factions.paysans){ Factions.modifier(e, "paysans", "colere", DEF.paysans); Factions.evaluer(e); }   // statuts à jour (fin de tour)
+      e.journal.push(`Défrichement terminé : ${reg.nom} gagne un emplacement ; les paysans s'en réjouissent.`);
+      continue;
+    }
     if (c.agrandir){
       const nv = e.regions[c.region].niveaux = e.regions[c.region].niveaux || {};
       nv[c.id] = (nv[c.id] || 0) + 1;
@@ -133,6 +155,6 @@ function totaux(regions){
   return t;
 }
 
-const Batiments = { projets, coutProjet, commanderProjet, placeLibre, constructibles, commander, avancer, arrondi, cout, bonus, occupes, totaux, niveaux, facteur, coutAgrandir, agrandissables, agrandir };
+const Batiments = { coutDefricher, defrichables, defricher, projets, coutProjet, commanderProjet, placeLibre, constructibles, commander, avancer, arrondi, cout, bonus, occupes, totaux, niveaux, facteur, coutAgrandir, agrandissables, agrandir };
 if (NODE) module.exports = Batiments; else (racine.Politique = racine.Politique || {}).Batiments = Batiments;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -2,6 +2,7 @@
    actionsDisponibles(etat) : la seule liste que voient l'écran et les bots ; toute autre action est refusée.
    Actions : { type: "loi", id } lance une loi ; { type: "construire", id, region } commande un bâtiment (V2 : dans une région) ;
    { type: "projet", id, region, avec } : projet commun (bâtiment cofinancé par une nation de l'Entente) ;
+   { type: "defricher", region } : +1 emplacement dans la région (chantier de 3 tours) ;
    { type: "agrandir", id, region } agrandit un bâtiment (niveau 2 puis 3) ; { type: "institution", id, niveau } (±1 par tour) ;
    { type: "apaiser", id: faction } apaise une faction (M2) ; diplomatie (M3a) : don, contrat, traite, rompre,
    embargo, lever_embargo, diplomate { id }, rappeler_diplomate, exiger { id, exigence }, caravane, route { id } (moteur/diplomatie.js) ; guerre (M3b, V2) : recruter, declarer_guerre, bataille { cible }, imposer_paix, paix_blanche ;
@@ -36,6 +37,7 @@ function actionsDisponibles(etat){
     .concat(Batiments.constructibles(etat).map(c => ({ type: "construire", id: c.id, region: c.region })))
     .concat(Batiments.agrandissables(etat).map(c => ({ type: "agrandir", id: c.id, region: c.region })))
     .concat(Batiments.projets(etat).map(c => ({ type: "projet", id: c.id, region: c.region, avec: c.avec })))
+    .concat(Batiments.defrichables(etat).map(region => ({ type: "defricher", region })))
     .concat(institutions(etat))
     .concat(Factions.apaisables(etat).map(id => ({ type: "apaiser", id })))
     .concat(Diplomatie.actions(etat))
@@ -70,6 +72,7 @@ function appliquerAction(e, a, r){
   else if (a.type === "construire") Batiments.commander(e, a.id, a.region);
   else if (a.type === "agrandir") Batiments.agrandir(e, a.id, a.region);
   else if (a.type === "projet") Batiments.commanderProjet(e, a.id, a.region, a.avec);
+  else if (a.type === "defricher") Batiments.defricher(e, a.region);
   else if (a.type === "institution"){
     (e.institutions = e.institutions || {})[a.id] = a.niveau;
     (e.institutionsChangees = e.institutionsChangees || []).push(a.id);

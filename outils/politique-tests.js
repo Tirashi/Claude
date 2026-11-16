@@ -1283,5 +1283,28 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const ep = Etat.copie(e0); ep.projets = [{ nation: 'brume', id: 'farm', region: Object.keys(ep.regions)[0], livraisons: 10, enService: false }];
   check(Ob.mesures(ep).concorde === Ob.mesures(e0).concorde + 10 && Ob.atteinte(ep, { id: 'traite' }), 'projet commun : compte comme un traité (Concorde, étape)');
 }
+
+// --- défricher (16/11) : +1 emplacement par région, 100 / 150 / 200 or, 3 fois au plus, 3 tours ---
+{
+  const Bm = P('moteur/batiments.js'), DEF = P('donnees/institutions.js').DEFRICHEMENT;
+  const e0 = Etat.creerEtat(CHAMPS, 9); e0.tresor = 2000; e0.chantiers = []; e0.evenements = [];
+  const r0 = Object.keys(e0.regions)[0], emp = e0.regions[r0].emplacements;
+  const def = e => Tour.actionsDisponibles(e).filter(a => a.type === 'defricher').map(a => a.region);
+  check(def(e0).includes(r0) && proche(Bm.coutDefricher(e0, r0), 100), 'défricher : possible dans une région sans chantier, 100 or la première fois');
+  const e1 = Tour.tourSuivant(e0, [{ type: 'defricher', region: r0 }]);
+  check(proche(e1.tresor, e0.tresor - 100 + e1.bilan.solde) && e1.chantiers.some(c => c.defricher && c.region === r0) && !def(e1).includes(r0)
+    && !Tour.actionsDisponibles(e1).some(a => a.type === 'construire' && a.region === r0), 'défricher : payé à la commande, occupe le chantier de la région');
+  check(e1.bilan.consommation.bois >= 5, 'défricher : le chantier consomme du bois');
+  let e = e1; while (e.chantiers.some(c => c.defricher)) e = Tour.tourSuivant(e, []);
+  check(e.tour === e0.tour + 3 && e.regions[r0].emplacements === emp + 1 && e.regions[r0].defriche === 1 && proche(Bm.coutDefricher(e, r0), 150), 'défricher : 3 tours, +1 emplacement, puis 150 or');
+  const ep = Etat.copie(e1); ep.chantiers[ep.chantiers.findIndex(c => c.defricher)].restant = 1; ep.factions.paysans.colere = 30;
+  const ep1 = Tour.tourSuivant(ep, []), ep0 = Tour.tourSuivant(Object.assign(Etat.copie(ep), { chantiers: [] }), []);
+  check(proche(ep1.factions.paysans.colere, ep0.factions.paysans.colere - 5), 'défrichement terminé : les paysans −5 de colère');
+  const e3 = Etat.copie(e0); e3.regions[r0].defriche = 3;
+  check(!def(e3).includes(r0), 'défricher : 3 fois au plus par région');
+  const eo = Etat.copie(e0); eo.occupations = { [r0]: 'val_roc' };
+  check(!def(eo).includes(r0), 'défricher : pas dans une région occupée');
+  check(proche(Bm.coutDefricher(Object.assign(Etat.copie(e0), { lois: Object.assign({}, e0.lois, { economie: { id: 'interventionnisme', depuis: 1 } }) }), r0), 80), 'défricher : les lois sur la construction comptent (Interventionnisme −20 %)');
+}
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

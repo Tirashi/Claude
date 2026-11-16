@@ -9,6 +9,7 @@
 const NODE = typeof module !== "undefined" && module.exports;
 const O = NODE ? require("../donnees/objectifs.js") : racine.Politique.OBJECTIFS;
 const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
+const { DEFRICHEMENT: DEF } = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
 const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
 const { LOIS } = NODE ? require("../donnees/lois.js") : racine.Politique.LOIS;
 
@@ -107,6 +108,8 @@ function mesures(e){
     const n = e.regions[r].batiments[id] || 0, k = e.regions[r].niveaux[id];
     valeur += BAT[id].cout * (Math.min(k, n) * 1.5 + Math.max(0, k - n) * 2);
   }
+  // défrichements (16/11) : une part de leur prix de base
+  if (DEF.prosperite) for (const r in e.regions) for (let i = 0; i < (e.regions[r].defriche || 0); i++) valeur += DEF.couts[i] * DEF.prosperite;
   // investissements à l'étranger (16/11) : leur prix
   for (const x of e.investissements || []) valeur += BAT[x.id].cout * O.poidsInvestissement;
   return {

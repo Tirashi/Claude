@@ -125,6 +125,17 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 29. Défricher (16/11)
+Proposition validée (rééquilibrer en donnant aux autres voies une dépense de fin de partie, plutôt qu'affaiblir les patrons) : défricher une région (+1 emplacement, 100 / 150 / 200 or, 3 par région, 3 tours, paysans −5). Bots : economy, commerce, spam_medicine, no_appeasement et les programmes défrichent quand plus aucun bâtiment de production n'a de place ; le bot patrons investit d'abord. 489 tests.
+Mesures (pays équilibré, 50 parties, Prospérité médiane et médaille moyenne avec les seuils actuels) :
+| | economy | commerce | patrons | droite |
+|---|---|---|---|---|
+| sans défrichement | 3 390 (0,44) | 3 795 (1,72) | 4 160 (2,50) | 3 510 (0,96) |
+| défrichement non compté (validé) | 3 330 (0,24) | 3 375 (0,28) | 3 605 (0,80) | 3 010 (0,02) |
+| défrichement compté à son prix | 5 130 | 5 175 | 5 405 | 4 810 |
+| … et investissements à moitié prix | 5 130 | 5 175 | 4 985 | 4 810 |
+Non compté, le défrichement fait **baisser** la Prospérité : les bots défrichent les 12 emplacements possibles et agrandissent moins (10 agrandissements au lieu de 16), alors qu'un agrandissement compte pour son prix. Compté à son prix, il rapporte autant de Prospérité par pièce d'or qu'un agrandissement ou un investissement, et l'écart des patrons tombe de +23 % à +5 % sur economy (les seuils seraient à recalculer). À décider avec l'utilisateur.
+
 ## 28. Investir à l'étranger, la voie des patrons (16/11)
 Idée de l'utilisateur : le projet commun comme un traité, et des investissements dans les sociétés étrangères qui ouvrent une voie aux patrons, avec des lois. Proposition validée en entier (regles-v2 § 15) : A. projet commun = traité (Concorde, étape) ; B. action `{ type: "investir", id, avec, region }` (relation ≥ 30, bien exporté par la nation, une par région de la nation, prix plein, délai du bâtiment ; 10 % du prix en dividendes par tour ; relation +1 par tour ; Prospérité au prix ; confisqué par embargo, guerre ou sanctions) ; C. catégorie « Capitaux » (11e) : Exportation des capitaux, Contrôle des capitaux ; D. bot **patrons** (programme de droite avec l'Exportation des capitaux, investit quand ses régions sont pleines, jamais d'embargo, diplomate vers la nation la mieux disposée sous 30 ; ambition Prospérité). 481 tests.
 Mesures (pays équilibré, 60 à 80 parties) : le bot patrons finit avec 9 investissements (médiane), environ 1 900 or de dividendes sur la partie, presque jamais de confiscation. **Trop fort en Prospérité** : 4 170 (médiane) contre 3 380 pour economy et 3 510 pour droite ; médaille moyenne 2,5 (or dans 79 % des parties) contre 0,45 pour economy. Le dividende ne change presque rien (6 % : 4 095) ; compter les investissements à **moitié de leur prix** dans la Prospérité : 3 705, médaille moyenne 1,55. Réglage à décider avec l'utilisateur (`objectifs.poidsInvestissement`, 1 validé). Seuils de la Prospérité pas encore recalculés (le bot patrons entrerait dans les bots de référence).
