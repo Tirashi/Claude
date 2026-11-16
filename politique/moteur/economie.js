@@ -78,10 +78,11 @@ function bilan(e){
   // dette (V2 budget) : intérêts sur ce qui est dû
   const interets = e.tresor < 0 ? arrondi(-e.tresor * ECO.dette.taux) : 0;
   const institutions = coutInstitutions(e);   // budget de fin de partie : dépense des institutions
+  const dividendes = arrondi(Diplomatie.dividendes(e) * fx.dividendes);   // investissements à l'étranger (16/11)
   const entretiens = arrondi(fx.entretien + entretienBat + interets + institutions);
   ventes = arrondi(ventes); achats = arrondi(achats);
   return { interets, production: prod, consommation: conso, balance, prix: p, prixVente: pv, prixAchat: pa, ventes, achats, contrats, impots, entretiens,
-           solde: arrondi(ventes - achats + contrats + impots - entretiens), institutions,
+           solde: arrondi(ventes - achats + contrats + impots + dividendes - entretiens), institutions, dividendes,
            croissance: ECO.croissance + fx.croissance + inst(e, "enseignement") * INST.INSTITUTIONS.enseignement.croissance };
 }
 

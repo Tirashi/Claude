@@ -85,6 +85,7 @@ function creerEtat(scenario, graine, pays){
     offres: Diplomatie.offres(profils),   // contrats proposés par les nations (ce qu'elles importent et exportent)
     revanches: {},                    // nations revanchardes battues par le joueur
     contrats: [],                     // [{ id, jusqua }]
+    investissements: [],              // investissements à l'étranger (16/11) : [{ nation, region (de la nation), id, restant }]
     projets: [],                      // projets communs (16/11) : [{ nation, id, region, livraisons (restantes), enService }]
     caravanes: (DIPLO.transport || {}).caravanes || 0,   // transport (16/11) : caravanes du joueur (une par contrat en cours)
     routes: [],                       // nations vers lesquelles la route est améliorée

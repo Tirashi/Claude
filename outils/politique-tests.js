@@ -167,8 +167,8 @@ const proche = (a, b) => Math.abs(a - b) < 1e-6;
   check(!Tour.actionsDisponibles(g).some(a => a.id === 'school_public'), 'lois : une loi en vigueur ne se relance pas');
   g = tours(g, 3, [{ type: 'loi', id: 'school_free' }]);
   check(g.lois.education.id === 'school_free' && Object.keys(g.lois).length === 1, 'lois : adopter une loi remplace celle de sa catégorie');
-  check(Object.values(CATEGORIES).length === 10 && Object.values(LOIS).every(l => CATEGORIES[l.categorie]), 'lois : 10 catégories (panel du 14/11), chaque loi dans l\'une d\'elles');
-  check(Object.keys(LOIS).length === 27 && !LOIS.labor_code && Object.values(LOIS).every(l => l.bord && l.texte.length > 0), 'lois : les 27 lois du panel (sans code du travail), chacune avec son bord et ses phrases pour le joueur');
+  check(Object.values(CATEGORIES).length === 11 && Object.values(LOIS).every(l => CATEGORIES[l.categorie]), 'lois : 11 catégories (panel du 14/11, capitaux le 16/11), chaque loi dans l\'une d\'elles');
+  check(Object.keys(LOIS).length === 29 && !LOIS.labor_code && Object.values(LOIS).every(l => l.bord && l.texte.length > 0), 'lois : les 29 lois du panel (sans code du travail), chacune avec son bord et ses phrases pour le joueur');
   const h = tours(neuf(), 3, [{ type: 'loi', id: 'suffrage_universal' }]);
   const k = tours(neuf(), 3, [{ type: 'loi', id: 'suffrage_census' }]);
   check(h.reputation === 5 && k.reputation === -5, 'lois : suffrage universel +5 de réputation, censitaire −5');
@@ -648,7 +648,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   Object.assign(RLV, JSON.parse(JSON.stringify(RLV0)));
   const LM = P('moteur/lois.js');
   const e0 = vrai({ evenements: [] });
-  check(LM.lancables(e0).length === 27 && e0.cp === undefined, 'lois : plus de capital politique, toutes les lois se lancent dès le tour 1');
+  check(LM.lancables(e0).length === 29 && e0.cp === undefined, 'lois : plus de capital politique, toutes les lois se lancent dès le tour 1');
   check(LM.chance(e0, 'income_progressive') === 0.6 && LM.chance(e0, 'income_capital') === 0.25 && LM.chance(e0, 'school_public') === 0.775, 'débat : chance = 50 % + (puissance des pour − des contre) / 2 (progressif 60 %, capital 25 %, école 77,5 %)');
   const fort = vrai(); fort.factions.patrons.puissance = 100; fort.factions.artisans.puissance = 100;
   const faible = vrai(); for (const f in faible.factions) faible.factions[f].puissance = 100; faible.factions.patrons.puissance = 0;
@@ -1249,6 +1249,39 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   const ep = Etat.copie(e1); ep.journal = []; Dm.finirProjets(ep, 'brume', true); let ep2 = ep; while (ep2.chantiers.length) ep2 = Tour.tourSuivant(ep2, []);
   check(ep2.projets.length === 0 && ep2.regions[a.region].batiments[a.id] === (e0.regions[a.region].batiments[a.id] || 0) + 1, 'projet rompu pendant le chantier : le bâtiment est fini et reste à nous, sans livraison');
   PRJ.actif = false;
+}
+
+// --- investir à l'étranger, lois des capitaux ; projet commun = traité (16/11) ---
+{
+  const Dm = P('moteur/diplomatie.js'), Ob = P('moteur/objectifs.js'), GU = P('moteur/guerre.js'), LM = P('moteur/lois.js'), I = P('donnees/diplomatie.js').investissement;
+  const e0 = Etat.creerEtat(CHAMPS, 9); for (const n in e0.profils) e0.profils[n].persona = 'marchand'; e0.tresor = 1000;
+  for (const n in e0.nations) e0.nations[n].relation = 0; e0.nations.brume.relation = 40;
+  const inv = e => Tour.actionsDisponibles(e).filter(a => a.type === 'investir');
+  const bien = id => Object.keys(BAT[id].produit)[0];
+  check(inv(e0).length > 0 && inv(e0).every(a => a.avec === 'brume' && e0.profils.brume.exporte[bien(a.id)] != null && e0.profils.brume.regions[a.region]),
+    'investir : seulement chez une nation à 30 de relation ou plus, pour un bien qu\'elle exporte, dans une de ses régions');
+  const a = inv(e0)[0], e1 = Tour.tourSuivant(e0, [a]);
+  check(e1.investissements.length === 1 && e1.investissements[0].restant === BAT[a.id].delai - 1 && !inv(e1).some(x => x.region === a.region), 'investir : prix plein, délai du bâtiment, une seule fois par région');
+  check(Ob.mesures(e1).prosperite === Ob.mesures(e0).prosperite + BAT[a.id].cout, 'investissement : compte dans la Prospérité pour son prix');
+  let e = e1; while (e.investissements[0].restant > 0) e = Tour.tourSuivant(e, []);
+  const d = Tour.tourSuivant(e, []).bilan.dividendes;
+  check(e1.bilan.dividendes === 0 && proche(d, BAT[a.id].cout * 0.1), 'investissement construit : 10 % de son prix en dividendes chaque tour');
+  const avecLoi = id => { const x = Etat.copie(e); x.lois.capitaux = { id, depuis: 1 }; return x; };
+  check(proche(Tour.tourSuivant(avecLoi('exportation_capitaux'), []).bilan.dividendes, d * 1.5) && proche(Tour.tourSuivant(avecLoi('controle_capitaux'), []).bilan.dividendes, d * 0.5),
+    'lois : Exportation des capitaux ×1,5, Contrôle des capitaux ×0,5 sur les dividendes');
+  check(inv(avecLoi('controle_capitaux')).length === 0 && inv(avecLoi('exportation_capitaux')).length > 0, 'Contrôle des capitaux : plus de nouvel investissement');
+  check(LM.effets(avecLoi('controle_capitaux')).impots > LM.effets(e).impots, 'Contrôle des capitaux : impôts +5 %');
+  // confiscations
+  const ee = Tour.tourSuivant(e, [{ type: 'embargo', id: 'brume' }]);
+  check(ee.investissements.length === 0 && ee.journal.some(l => /confisque/.test(l)), 'embargo : nos investissements chez la nation sont confisqués');
+  const eg = Etat.copie(e); eg.journal = []; GU.declarer(eg, 'brume', 'brume', { s: 1 });
+  const es = Etat.copie(e); es.journal = []; Dm.couper(es, 'brume');
+  check(eg.investissements.length === 0 && es.investissements.length === 0, 'guerre ou sanctions : investissements confisqués');
+  const eo = Etat.copie(e); eo.nations.brume.relation = 0;
+  check(Tour.tourSuivant(eo, []).investissements.length === 1, 'relation basse : l\'investissement reste (pas de nouveau)');
+  // A : un projet commun compte comme un traité
+  const ep = Etat.copie(e0); ep.projets = [{ nation: 'brume', id: 'farm', region: Object.keys(ep.regions)[0], livraisons: 10, enService: false }];
+  check(Ob.mesures(ep).concorde === Ob.mesures(e0).concorde + 10 && Ob.atteinte(ep, { id: 'traite' }), 'projet commun : compte comme un traité (Concorde, étape)');
 }
 console.log(`\n${n - fail}/${n} tests réussis`);
 process.exit(fail ? 1 : 0);

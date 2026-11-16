@@ -20,10 +20,11 @@
 "use strict";
 const NODE = typeof module !== "undefined" && module.exports;
 
-// panel du 14/11 : 10 catégories
+// panel du 14/11 : 10 catégories ; « capitaux » ajoutée le 16/11 (investir à l'étranger)
 const CATEGORIES = {
   impot: "Fiscalité", economie: "Système économique", travail: "Travail", sante: "Santé et solidarité", education: "Éducation",
-  relations_sociales: "Relations sociales", libertes: "Libertés publiques", ordre: "Ordre public", armee: "Armée", commerce: "Commerce"
+  relations_sociales: "Relations sociales", libertes: "Libertés publiques", ordre: "Ordre public", armee: "Armée", commerce: "Commerce",
+  capitaux: "Capitaux"
 };
 
 const LOIS = {
@@ -117,7 +118,14 @@ const LOIS = {
     eco: { achat: 1.2, artisansImmediat: 0.15 }, factions: {} },
   libre_echange: { nom: "Libre-échange", categorie: "commerce", bord: "droite", pour: ["patrons"], contre: ["artisans"],
     texte: ["Les prix bougent deux fois moins quand on vend ou achète beaucoup.", "Les artisans, concurrencés, se fâchent chaque tour (+1 de colère)."],
-    eco: { pente: 0.5 }, factions: { parTour: { artisans: { colere: 1 } } } }
+    eco: { pente: 0.5 }, factions: { parTour: { artisans: { colere: 1 } } } },
+  // --- Capitaux (16/11, ASSUMPTION (capitaux) validée le 16/11) ---
+  exportation_capitaux: { nom: "Exportation des capitaux", categorie: "capitaux", bord: "droite", pour: ["patrons"], contre: ["ouvriers"],
+    texte: ["Nos investissements à l'étranger rapportent 50 % de plus.", "Les ouvriers, qui voient l'argent partir, se fâchent chaque tour (+1 de colère)."],
+    eco: { dividendes: 1.5 }, factions: { parTour: { ouvriers: { colere: 1 } } } },
+  controle_capitaux: { nom: "Contrôle des capitaux", categorie: "capitaux", bord: "gauche", pour: ["ouvriers"], contre: ["patrons"],
+    texte: ["Plus de nouvel investissement à l'étranger ; les dividendes sont taxés de moitié.", "Les impôts rapportent 5 % de plus.", "Les patrons se fâchent chaque tour (+1 de colère)."],
+    eco: { dividendes: 0.5, impots: 1.05, sansInvestissement: true }, factions: { parTour: { patrons: { colere: 1 } } } }
 };
 // ASSUMPTION validée : populaires = paysans, ouvriers ; élites = patrons, artisans
 const GROUPES = { populaires: ["paysans", "ouvriers"], elites: ["patrons", "artisans"] };

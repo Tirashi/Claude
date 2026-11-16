@@ -55,6 +55,13 @@ const DIPLOMATIE = {
   // nation (sanctions) : sans pénalité. actif: false = règles d'avant (filature conjointe, tests écrits avant).
   projet: { actif: true, part: 0.5, volume: 1 / 3, prix: 0.5, livraisons: 10, relation: 5, rupture: -20,
             batiments: ["farm", "mine", "workshop", "weaving", "scierie", "mine_charbon", "vignoble"] },
+  // investir à l'étranger (16/11, ASSUMPTION (investissement) validée le 16/11) : financer, au prix plein, un bâtiment de
+  // production chez une nation (pour un bien qu'elle exporte), un par région de la nation ; relation ≥ relationMin, ni
+  // embargo, ni sanction, ni guerre. Une fois construit (délai du bâtiment) : chaque tour, « dividende » × son prix (lois :
+  // Exportation des capitaux ×1,5, Contrôle des capitaux ×0,5) ; relation +1 par tour avec la nation ; compte dans la
+  // Prospérité pour son prix. Embargo, guerre ou sanctions avec la nation : confisqué (perdu).
+  investissement: { actif: true, dividende: 0.1, relationMin: 30,
+                    batiments: ["farm", "mine", "workshop", "weaving", "scierie", "mine_charbon", "vignoble"] },
   contrats: { volumeMax: 10, prixAchat: 0.9, prixVente: 1.15, duree: 10, maxEnCours: null },   // maxEnCours : plafond de contrats en cours (en essai, null = aucun)   // 14/11 : ×0,8 / ×1,3 → ×0,9 / ×1,15 (le commerce raflait aussi la Prospérité)
 
   // traités : relation minimale de la nation pour accepter ; condition supplémentaire

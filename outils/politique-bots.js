@@ -198,6 +198,26 @@ function cofinancer(p, entente){
   if (liste.length) p.essayer(liste[0]);
 }
 
+// investir à l'étranger (16/11) : seulement quand on ne peut plus construire de bâtiment de production chez nous ;
+// le plus cher d'abord (dividendes proportionnels au prix), en gardant une réserve
+const PRODUCTION = ['farm', 'mine', 'workshop', 'weaving', 'scierie', 'mine_charbon', 'vignoble'];
+function investir(p, reserve){
+  if (Tour.actionsDisponibles(p.e).some(a => a.type === 'construire' && PRODUCTION.includes(a.id))) return;
+  for (let k = 0; k < 3; k++){
+    const l = Tour.actionsDisponibles(p.e).filter(a => a.type === 'investir' && p.e.tresor - BAT[a.id].cout >= reserve)
+      .sort((a, b) => BAT[b.id].cout - BAT[a.id].cout);
+    if (!l.length || !p.essayer(l[0])) break;
+  }
+}
+// rapprocher : sans nation où investir, le diplomate va chez la mieux disposée qui n'a pas encore 30
+function rapprocher(p){
+  const e = p.e;
+  if (Tour.actionsDisponibles(e).some(a => a.type === 'investir')) return;
+  const l = Object.keys(e.nations).filter(n => !(e.guerre && e.guerre.ennemis.includes(n)) && e.nations[n].relation < 30)
+    .sort((a, b) => e.nations[b].relation - e.nations[a].relation);
+  if (l.length && (!e.diplomate || e.diplomate.nation !== l[0]) && e.tresor >= 20) p.essayer({ type: 'diplomate', id: l[0] });
+}
+
 // un bot à programme : comme economy, avec sa liste de lois
 function programme(lois, prio){
   return e => {
@@ -326,6 +346,24 @@ const BOTS = {
   extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'journee_huit_heures'], ['police', 'sante']),
   extreme_droite: () => programme(['laisser_faire', 'parti_unique', 'syndicats_interdits', 'police_etat', 'travail_enfants', 'army_conscription', 'impot_minimal', 'ecoles_religieuses', 'libre_echange'], ['police', 'sante']),
 
+  // patrons (16/11) : programme de droite avec l'Exportation des capitaux ; investit à l'étranger une fois ses régions
+  // pleines ; jamais d'embargo (il ferait confisquer ses investissements) ; ambition Prospérité
+  patrons: () => e => {
+    const p = plan(e);
+    guerre(p, { seuilBataille: 0.6 });
+    apaiser(p, 55);
+    loiSuivante(p, ['impot_minimal', 'libre_entreprise', 'exportation_capitaux', 'ecoles_religieuses', 'police_etat', 'suffrage_census', 'syndicats_interdits', 'army_conscription', 'libre_echange']);
+    armee(p, 1, 50);
+    construire(p, avecCaserne(batimentUtile), 0);
+    fiscalite(p);
+    evenement(p);
+    commercer(p, false);
+    rapprocher(p);
+    investir(p, 100);
+    budget(p, ['police', 'sante']);
+    return p.acts;
+  },
+
   // rejoue la trajectoire de la partie 1 (RULES_V1 § Trajectoire) : chaque étape est tentée à partir de son tour
   // jusqu'à ce qu'elle passe ; guerre gagnée par l'usure (embargo, pas de bataille), pas de paix blanche
   replica: () => {
@@ -364,7 +402,7 @@ const BOTS = {
 
 // ambition de chaque bot (objectif de victoire choisi au tour 1) ; random la tire parmi ses actions, passif n'en a pas
 const AMBITIONS = { economy: 'prosperite', no_appeasement: 'prosperite', spam_medicine: 'contentement', gauche: 'contentement', gauche_med: 'contentement',
-  commerce: 'influence', replica: 'concorde', droite: 'autorite', extreme_droite: 'autorite', extreme_gauche: 'autorite' };
+  commerce: 'influence', patrons: 'prosperite', replica: 'concorde', droite: 'autorite', extreme_droite: 'autorite', extreme_gauche: 'autorite' };
 const creer = (nom, graine) => {
   if (!BOTS[nom]) throw new Error('bot inconnu : ' + nom);
   const bot = BOTS[nom](graine);

@@ -51,7 +51,7 @@ function atteinte(e, et){
     case "contrats": return (e.contrats || []).length >= et.valeur;
     case "dependantes": return (s.toursDependance || 0) >= et.tours;
     case "cedee": return (s.cedees || 0) > 0;
-    case "traite": return (e.traites || []).length > 0;
+    case "traite": return (e.traites || []).length + (e.projets || []).length > 0;   // un projet commun compte comme un traité (16/11)
     case "ami": return Object.values(e.nations).some(n => n.relation >= et.valeur);
     case "relations": return Diplomatie.reputation(e) >= et.valeur;
     case "lois": return Object.keys(e.lois).length >= et.valeur;
@@ -107,11 +107,13 @@ function mesures(e){
     const n = e.regions[r].batiments[id] || 0, k = e.regions[r].niveaux[id];
     valeur += BAT[id].cout * (Math.min(k, n) * 1.5 + Math.max(0, k - n) * 2);
   }
+  // investissements à l'étranger (16/11) : leur prix
+  for (const x of e.investissements || []) valeur += BAT[x.id].cout * O.poidsInvestissement;
   return {
     prosperite: Math.round(valeur + Math.min(0, e.tresor)),   // 15/11 : ce qui est bâti, moins les dettes (le trésor ne compte plus)
     contentement: s.tours ? dixieme(100 - s.colere / s.tours) : 100,
     influence: s.tours ? Math.round((s.influence || 0) / s.tours + O.pointsInfluence * (s.cedees || 0)) : 0,
-    concorde: Math.round(Diplomatie.reputation(e) + (e.traites || []).length * O.pointsTraite),
+    concorde: Math.round(Diplomatie.reputation(e) + ((e.traites || []).length + (e.projets || []).length) * O.pointsTraite),   // projet commun = traité (16/11)
     autorite: s.tours ? Math.round(s.legitimite / s.tours) : 0
   };
 }
