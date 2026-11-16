@@ -21,3 +21,10 @@
 ## Leçon de performance (16/11)
 - Ne jamais redessiner les tranches à chaque image : assembler chaque pile **une fois par angle** (arrondi à 1/64 de tour) dans une toile en cache, puis un seul `drawImage` par objet (`assembler()` dans `source3.html`). Mesuré avec le processeur ralenti ×6 (comme un téléphone) : 8 → 58 images/s.
 - Pas de `ctx.filter = blur(...)` recalculé à chaque image (effet HD-2D) : trop lourd sur téléphone ; préférer un vignetage précalculé, ou flouter seulement le décor fixe une fois.
+
+## Article de SpriteCook (lu le 16/11) : https://www.spritecook.ai/blog/sprite-stacking-pixel-art
+- Même technique que la nôtre ; leurs réglages : écrasement 0,75 (en dessous de 0,6 les toits deviennent trop fins), 1 px entre tranches, positions arrondies au pixel, tri des piles par leur point au sol (jamais tranche par tranche).
+- Contour : ne pas le mettre sur chaque tranche (lignes sombres à l'intérieur en diagonale) ; dessiner la pile finie hors écran puis faire le contour une fois.
+- Rotation lente qui tremble : dessiner plus grand, ou RotSprite (agrandir ×8 avec Scale2x, tourner, prendre le pixel central).
+- Piles qui ne tournent jamais (arbres, rochers) : les assembler une fois au chargement (ce qu'on fait déjà, voir plus haut).
+- Fabriquer les tranches à partir de 4 vues à plat (dessus, côté, avant, arrière) : un voxel existe là où toutes les vues en ont un ; couleur du dessus = vue de dessus, bords = vue du côté concerné. Marche pour les objets simples (pas de trous ni de surplombs). Outil gratuit dans le navigateur : « Sprite Stack Generator » de SpriteCook.
