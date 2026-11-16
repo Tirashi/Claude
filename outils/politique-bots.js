@@ -285,7 +285,7 @@ const BOTS = {
     armee(p, 1, 50);
     cofinancer(p, true);
     construire(p, avecCaserne(batimentUtile), 0);
-    defricher(p, 100);
+    if (!process.env.POLITIQUE_COMMERCE_SANS_DEFRICHER) defricher(p, 100);   // pour comparer (16/11)
     fiscalite(p);
     evenement(p);
     commercer(p, true);
@@ -367,6 +367,24 @@ const BOTS = {
   extreme_gauche: () => programme(['income_capital', 'collectivisation', 'comites_populaires', 'securite_sociale', 'unions', 'milice_populaire', 'suffrage_universal', 'school_free', 'laicite', 'journee_huit_heures'], ['police', 'sante'], ['patrons', 'conservateurs']),
   // extrême droite (16/11) : le programme conservateur (Église, ordre, armée) ; réprime les ouvriers et la classe moyenne
   extreme_droite: () => programme(['religion_etat', 'police_etat', 'parti_unique', 'army_conscription', 'ecoles_religieuses', 'syndicats_interdits', 'charite_privee', 'impot_minimal', 'suffrage_census'], ['police', 'sante'], ['ouvriers', 'artisans']),
+
+  // centre (16/11) : la voie de la classe moyenne ; ateliers et tissages d'abord, Savoir-faire national, lois du centre
+  centre: () => e => {
+    const p = plan(e);
+    guerre(p, { seuilBataille: 0.6 });
+    apaiser(p, 55);
+    loiSuivante(p, ['school_public', 'savoir_faire', 'interventionnisme', 'labor_medicine', 'liberte_culte', 'impot_minimal', 'suffrage_census', 'laicite', 'army_professional']);
+    armee(p, 1, 50);
+    construire(p, avecCaserne(x => ['workshop', 'weaving'].concat(batimentUtile(x).filter(b => b !== 'workshop' && b !== 'weaving'))), 0);
+    defricher(p, 100);
+    fiscalite(p);
+    evenement(p);
+    commercer(p, true);
+    diplomatie(p);
+    contraindre(p);
+    budget(p, ['enseignement', 'sante']);
+    return p.acts;
+  },
 
   // patrons (16/11) : programme de droite avec l'Exportation des capitaux ; investit à l'étranger une fois ses régions
   // pleines ; jamais d'embargo (il ferait confisquer ses investissements) ; ambition Prospérité
