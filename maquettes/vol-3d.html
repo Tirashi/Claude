@@ -171,7 +171,7 @@ async function vol(id,cle,modele,o){
     hud.textContent=D.anneaux?`ANNEAUX ${S.score}`:`${Math.round(-S.z)} M`;
     R.render(sc,cam);}
   requestAnimationFrame(image);}
-vol('v1','canyon','racing',{taille:3,rotY:0,feu:'#ff9a3a',vitesse:36});
-vol('v2','archipel','intercepteur',{taille:3,rotY:0,feu:'#7fd7ff',vitesse:30});
-vol('v3','montagnes','speeder',{taille:2.4,rotY:Math.PI,feu:'#ff5aa0',vitesse:38});
+vol('v1','canyon','racing',{taille:3,rotY:Math.PI,feu:'#ff9a3a',vitesse:36});
+vol('v2','archipel','intercepteur',{taille:3,rotY:Math.PI,feu:'#7fd7ff',vitesse:30});
+vol('v3','montagnes','speeder',{taille:2.4,rotY:0,feu:'#ff5aa0',vitesse:38});
 </script>
