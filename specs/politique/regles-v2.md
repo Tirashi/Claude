@@ -142,6 +142,12 @@ Filature de l'Entente : inchangée (traité). Forge et fortifications V1 remplac
 - **Propriétaires** : le +2 d'un bâtiment terminé est partagé entre ceux qui y travaillent et ceux qui le possèdent : fermes et vignobles +1 paysans, +1 conservateurs ; mines, mines de charbon et scieries +1 ouvriers, +1 patrons ; ateliers et tissages +2 classe moyenne ; casernes et forts +2 conservateurs.
 - Les lois sans opposant en reçoivent un : École publique (conservateurs), Médecine du travail (patrons), Armée de métier (paysans).
 
+### 20. Étapes revues (16/11)
+- Prospérité : 12 bâtiments ; toutes les régions pleines ; **agrandir, défricher ou investir 12 fois** (au lieu de 3 000 or, presque jamais atteint et contraire à la thésaurisation).
+- Influence : **4 contrats** (au lieu de 2) ; une exigence cédée ; 2 nations dépendantes pendant 20 tours (ordre de difficulté).
+- Autorité : 3 lois ; **3 lois avec 20 de soutien net en moyenne** (au lieu de « 5 lois chacune plus soutenue que contestée », presque impossible pour un régime extrême) ; 5 lois avec 40.
+- Contentement et Concorde : inchangées.
+
 ## Ordre de mise en œuvre proposé (chaque étape : code, tests, simulation avant/après)
 1. ✅ (13/11) 40 tours, régions, un chantier par région, emplacements et bonus de terrain.
 2. 🟡 (13/11) Armée en régiments, forts, casernes, occupation, cession ; force sans le trésor ; nations qui recrutent. **Mécanique faite et testée ; équilibre à décider** (`specs/politique.md` § 9).

@@ -895,21 +895,22 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   check(Object.keys(OD.ETAPES).join() === Object.keys(OD.OBJECTIFS).join() && Object.values(OD.ETAPES).every(l => l.length === 3), 'étapes : trois par objectif');
   check(Ob.etapes(e0).length === 0 && Ob.etapes(e0, 'concorde').every(x => !x.faite), 'étapes : sans ambition, rien ; au départ, rien de coché');
   const at = (id, modif) => { const e = Etat.copie(e0); modif(e); return Ob.atteinte(e, OD.ETAPES[Object.keys(OD.ETAPES).find(o => OD.ETAPES[o].some(x => x.id === id))].find(x => x.id === id)); };
-  check(!at('tresor', () => {}) && at('tresor', e => { e.tresor = 3000; }), 'étape : 3 000 or au trésor');
+  check(!at('amenagements', () => {}) && at('amenagements', e => { const r = Object.keys(e.regions); e.regions[r[0]].defriche = 3; e.regions[r[1]].niveaux = { farm: 4 }; e.investissements = [1, 2, 3, 4, 5].map(i => ({ nation: 'brume', region: 'x' + i, id: 'farm', restant: 0 })); }) && !at('amenagements', e => { e.regions[Object.keys(e.regions)[0]].defriche = 3; }), 'étape : agrandir, défricher ou investir 12 fois au total');
   { const plus = e => { const r = Object.keys(e.regions)[0]; e.regions[r].batiments.farm = (e.regions[r].batiments.farm || 0) + 12; return r; };
   check(!at('batiments', () => {}) && at('batiments', plus), 'étape : 15 bâtiments en service');
   check(!at('batiments', e => { e.occupations = { [plus(e)]: 'val_roc' }; }), 'étape : les bâtiments d\'une région occupée ne comptent pas (revue du 16/11)'); }
   check(!at('regions_pleines', () => {}) && at('regions_pleines', e => { for (const r in e.regions) e.regions[r].batiments = { farm: e.regions[r].emplacements, fort: 1 }; }), 'étape : toutes les régions pleines (le fort ne prend pas de place)');
   check(!at('colere_moyenne', () => {}) && at('colere_moyenne', e => { for (const f in e.factions) e.factions[f].colere = 19; }), 'étape : colère moyenne sous 20');
   check(!at('toutes_calmes', e => { for (const f in e.factions) e.factions[f].colere = 10; e.factions.ouvriers.colere = 30; }) && at('toutes_calmes', e => { for (const f in e.factions) e.factions[f].colere = 29; }), 'étape : toutes les factions sous 30');
-  check(!at('legitimite', e => { e.lois = { a: { id: 'school_public' } }; }), 'étape : soutien net de 40 en moyenne, avec au moins 5 lois');
-  check(!at('contrats', () => {}) && at('contrats', e => { e.contrats = Object.keys(e.offres).slice(0, 2).map(id => ({ id, jusqua: 30 })); }), 'étape : 2 contrats en cours');
+  const au = (i, modif) => { const e = Etat.copie(e0); modif(e); return Ob.atteinte(e, OD.ETAPES.autorite[i]); };
+  check(!au(2, e => { e.lois = { a: { id: 'school_public' } }; }) && !au(1, e => { e.lois = { a: { id: 'school_public' } }; }), 'étapes : soutien net (20 avec 3 lois, 40 avec 5 lois)');
+  check(au(1, e => { e.lois = { a: { id: 'impot_minimal' }, b: { id: 'libre_entreprise' }, c: { id: 'interventionnisme' } }; for (const f in e.factions) e.factions[f].puissance = 10; e.factions.patrons.puissance = 60; e.factions.artisans.puissance = 60; }), 'étape : 3 lois avec 20 de soutien net en moyenne');
+  check(!at('contrats', e => { e.contrats = Object.keys(e.offres).slice(0, 3).map(id => ({ id, jusqua: 30 })); }) && at('contrats', e => { e.contrats = Object.keys(e.offres).slice(0, 4).map(id => ({ id, jusqua: 30 })); }), 'étape : 4 contrats en cours');
   check(!at('dependantes', e => { e.contrats = Object.keys(e.offres).filter(k => e.offres[k].sens === 'vente').map(id => ({ id, jusqua: 30 })); }) && at('dependantes', e => { e.suivi.toursDependance = 20; }), 'étape : 2 nations dépendantes de nos ventes pendant 20 tours');
   { const ed = Etat.copie(e0); ed.contrats = Object.keys(ed.offres).filter(k => ed.offres[k].sens === 'vente').map(id => ({ id, jusqua: 30 })); ed.journal = []; P('moteur/objectifs.js').suivre(ed); check(ed.suivi.toursDependance === 1, 'suivi : tours avec 2 nations dépendantes'); }
   check(!at('traite', () => {}) && at('traite', e => { e.traites = [{ type: 'entente', avec: 'brume', depuis: 1 }]; }) && at('ami', e => { e.nations.brume.relation = 50; }), 'étapes : un traité, 50 de relation');
   check(at('relations', e => { for (const n in e.nations) e.nations[n].relation = 30; }) && !at('relations', () => {}), 'étape : relations à +30 en moyenne');
   check(!at('lois', () => {}) && at('lois', e => { e.lois = { a: { id: 'impot_minimal' }, b: { id: 'school_public' }, c: { id: 'labor_medicine' } }; }), 'étape : 3 lois en vigueur');
-  check(!at('soutien', () => {}) && !at('soutien', e => { e.lois = { a: { id: 'school_public' } }; }) && at('soutien', e => { e.lois = { a: { id: 'school_public' }, b: { id: 'labor_medicine' }, c: { id: 'impot_minimal' }, d: { id: 'libre_entreprise' }, f: { id: 'ecoles_religieuses' } }; }) && !at('soutien', e => { e.lois = { a: { id: 'school_public' }, b: { id: 'labor_medicine' }, c: { id: 'impot_minimal' }, d: { id: 'libre_entreprise' }, f: { id: 'parti_unique' } }; }), 'étape : 5 lois, chacune avec plus de soutien que d\'opposition');
   // séries et étapes cochées pour de bon, à la fin de chaque tour
   let e = e0; for (let i = 0; i < 20; i++) e = Tour.tourSuivant(e, []);
   check(e.suivi.serieSansGreve === 20 && e.suivi.greves === 0, 'suivi : série de tours sans grève');
@@ -918,7 +919,7 @@ const avecLois = (ids, depuis, mod) => { const e = neuf(mod); for (const id of i
   for (const f in eg.factions) eg.factions[f].colere = 60; eg.factions.ouvriers.statut = 'greve'; Ob.suivre(eg);
   check(coche && eg.suivi.serieSansGreve === 0 && eg.suivi.greves === 1 && eg.suivi.serieSansGrondement === 0 && Ob.etapes(eg, 'contentement')[0].faite, 'étape : cochée pour de bon (une grève remet les séries à zéro)');
   const ev = Etat.copie(e); ev.suivi.cedees = 1; ev.journal = []; Ob.suivre(ev);
-  check(ev.suivi.cedees === 1 && Ob.etapes(ev, 'influence')[2].faite, 'étape : une exigence cédée');
+  check(ev.suivi.cedees === 1 && Ob.etapes(ev, 'influence')[1].faite, 'étape : une exigence cédée (deuxième étape de l\'Influence)');
   const ea = Tour.tourSuivant(e0, [{ type: 'ambition', id: 'autorite' }]);
   check(Ob.etapes(ea).length === 3 && Ob.etapes(ea)[0].texte === OD.ETAPES.autorite[0].texte, 'étapes : celles de l\'ambition par défaut');
 }

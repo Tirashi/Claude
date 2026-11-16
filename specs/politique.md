@@ -125,6 +125,9 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 33. Étapes revues (16/11)
+Mesures (30 parties par bot et par pays, part atteinte et tour médian) puis proposition validée (regles-v2 § 20) : Prospérité, étape 3 « agrandir, défricher ou investir 12 fois » (97 à 100 %, tours 24 à 29) au lieu de 3 000 or (0 à 39 %) ; Influence, 4 contrats (100 %, tours 16 à 19) au lieu de 2 (tour 2), exigence cédée avant les nations dépendantes ; Autorité, étape 2 « 3 lois avec 20 de soutien net » (73 à 100 %) au lieu de « 5 lois chacune plus soutenue que contestée » (0 à 17 % pour un extrême dans certains pays). 507 tests.
+
 ## 32. Jouer contre qui ? (16/11)
 Constat : on joue contre le système (ambition et médailles, seuils par pays) ; les nations n'ont pas d'objectif, elles sont partenaires, obstacles ou menaces. **Décision de l'utilisateur : pour l'instant, purement solo.** Pistes gardées au backlog (I) : défi du jour et classement sur la même graine ; rivalités ciblées (un dirigeant qui convoite la même chose que nous) ; nations rivales avec leur ambition (jugé trop lourd).
 

@@ -23,12 +23,13 @@ function suivre(e){
   s.legitimite = arrondi(s.legitimite + legitimite(e));
   s.influence = arrondi((s.influence || 0) + influence(e));
   s.cedees = s.cedees || 0;          // compté par Diplomatie.exigences (revue du 16/11 : plus de lecture du journal)
-  if (dependantes(e).length >= O.ETAPES.influence[1].valeur) s.toursDependance = (s.toursDependance || 0) + 1;
+  const dep = O.ETAPES.influence.find(x => x.id === "dependantes"), gr = O.ETAPES.contentement.find(x => x.id === "sans_grondement");
+  if (dependantes(e).length >= dep.valeur) s.toursDependance = (s.toursDependance || 0) + 1;
   // pour les étapes : grèves, séries de tours calmes (les victoires sont comptées par Guerre.paix)
   const greve = f.some(x => x.statut === "greve" || x.statut === "revolte" || x.statut === "revolution");
   s.greves = (s.greves || 0) + (greve ? 1 : 0);
   s.serieSansGreve = greve ? 0 : (s.serieSansGreve || 0) + 1;
-  s.serieSansGrondement = f.some(x => x.colere > O.ETAPES.contentement[1].seuil) ? 0 : (s.serieSansGrondement || 0) + 1;
+  s.serieSansGrondement = f.some(x => x.colere > gr.seuil) ? 0 : (s.serieSansGrondement || 0) + 1;
   s.etapes = s.etapes || {};
   for (const id in O.ETAPES){
     const t = s.etapes[id] = s.etapes[id] || O.ETAPES[id].map(() => null);
@@ -42,6 +43,11 @@ function atteinte(e, et){
   const place = id => BAT[id] && BAT[id].emplacement !== false;
   switch (et.id){
     case "tresor": return e.tresor >= et.valeur;
+    case "amenagements": {   // agrandissements, défrichements et investissements à l'étranger
+      let n = (e.investissements || []).length;
+      for (const r in e.regions){ n += e.regions[r].defriche || 0; for (const k of Object.values(e.regions[r].niveaux || {})) n += k; }
+      return n >= et.valeur;
+    }
     case "batiments": return Object.keys(e.regions).filter(r => !(e.occupations || {})[r])   // régions occupées : pas comptées
       .reduce((t, r) => t + Object.values(e.regions[r].batiments).reduce((u, n) => u + n, 0), 0) >= et.valeur;
     case "regions_pleines": return Object.keys(e.regions).every(r => Object.keys(e.regions[r].batiments).filter(place)
@@ -56,10 +62,6 @@ function atteinte(e, et){
     case "ami": return Object.values(e.nations).some(n => n.relation >= et.valeur);
     case "relations": return Diplomatie.reputation(e) >= et.valeur;
     case "lois": return Object.keys(e.lois).length >= et.valeur;
-    case "soutien": {
-      const P = id => e.factions[id] ? e.factions[id].puissance : 0, lois = Object.values(e.lois).map(l => LOIS[l.id]).filter(Boolean);
-      return lois.length >= (et.valeur || 1) && lois.every(L => (L.pour || []).reduce((t, x) => t + P(x), 0) > (L.contre || []).reduce((t, x) => t + P(x), 0));
-    }
     case "sans_greve": return s.serieSansGreve >= et.valeur;
     case "legitimite": return Object.keys(e.lois).length >= et.lois && legitimite(e) >= et.valeur;
   }

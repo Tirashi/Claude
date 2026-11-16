@@ -27,22 +27,22 @@ const ETAPES = {
   prosperite: [
     { id: "batiments", texte: "Avoir 12 bâtiments en service.", valeur: 12 },
     { id: "regions_pleines", texte: "Remplir tous les emplacements de toutes les régions." },
-    { id: "tresor", texte: "Avoir 3 000 or au trésor.", valeur: 3000 }],
+    { id: "amenagements", texte: "Agrandir, défricher ou investir à l'étranger 12 fois au total.", valeur: 12 }],   // 16/11 : remplace « 3 000 or »
   contentement: [
     { id: "colere_moyenne", texte: "Faire descendre la colère moyenne des factions sous 20.", valeur: 20 },
     { id: "sans_grondement", texte: "Tenir 15 tours de suite sans qu'aucune faction dépasse 45 de colère.", valeur: 15, seuil: 45 },
     { id: "toutes_calmes", texte: "Avoir toutes les factions sous 30 de colère en même temps.", valeur: 30 }],
   influence: [
-    { id: "contrats", texte: "Avoir 2 contrats en cours.", valeur: 2 },
-    { id: "dependantes", texte: "Garder 2 nations dépendantes de nos ventes pendant 20 tours (pas forcément de suite).", valeur: 2, tours: 20 },
-    { id: "cedee", texte: "Obtenir qu'une nation cède à une exigence." }],
+    { id: "contrats", texte: "Avoir 4 contrats en cours.", valeur: 4 },   // 16/11 : 2 → 4, ordre revu
+    { id: "cedee", texte: "Obtenir qu'une nation cède à une exigence." },
+    { id: "dependantes", texte: "Garder 2 nations dépendantes de nos ventes pendant 20 tours (pas forcément de suite).", valeur: 2, tours: 20 }],
   concorde: [
     { id: "traite", texte: "Signer un traité." },
     { id: "ami", texte: "Atteindre 50 de relation avec une nation.", valeur: 50 },
     { id: "relations", texte: "Avoir des relations à +30 en moyenne.", valeur: 30 }],
   autorite: [
     { id: "lois", texte: "Avoir 3 lois en vigueur.", valeur: 3 },
-    { id: "soutien", texte: "Avoir au moins 5 lois en vigueur, chacune avec plus de soutien que d'opposition.", valeur: 5 },
+    { id: "legitimite", texte: "Avoir au moins 3 lois en vigueur avec, en moyenne, 20 de soutien net.", valeur: 20, lois: 3 },   // 16/11 : remplace « 5 lois plus soutenues que contestées »
     { id: "legitimite", texte: "Avoir au moins 5 lois en vigueur avec, en moyenne, 40 de soutien net (puissance des factions pour moins contre).", valeur: 40, lois: 5 }]
 };
 const MEDAILLES = ["bronze", "argent", "or"];   // 1, 2 et 3 points
