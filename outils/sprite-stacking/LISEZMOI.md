@@ -17,3 +17,7 @@
 - `voxeliser.js <modèle fbx|glb|obj> <longueur> <sortie.json> [rotY] [largeur max]` + `voxeliseur.html` : voxelise n'importe quel modèle dans Chromium avec Three.js (couleurs des matières et textures) ; il faut les loaders de three 0.128 (`npm pack three@0.128.0`, dossier `npm/package/examples/js`, ou `THREE_JS=`). La largeur max resserre les bateaux trop larges pour une case. `grille.py <json> <png>` écrit le ruban.
 - `source3.html` + données (navires, bateaux Kenney, maisons médiévales, phare) → la maquette.
 - Piste payante repérée : Low Poly Modern Military RTS Pack Vol. 2 (artiquea, 10 €) : 13 navires de guerre modernes.
+
+## Leçon de performance (16/11)
+- Ne jamais redessiner les tranches à chaque image : assembler chaque pile **une fois par angle** (arrondi à 1/64 de tour) dans une toile en cache, puis un seul `drawImage` par objet (`assembler()` dans `source3.html`). Mesuré avec le processeur ralenti ×6 (comme un téléphone) : 8 → 58 images/s.
+- Pas de `ctx.filter = blur(...)` recalculé à chaque image (effet HD-2D) : trop lourd sur téléphone ; préférer un vignetage précalculé, ou flouter seulement le décor fixe une fois.

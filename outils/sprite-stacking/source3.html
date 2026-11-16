@@ -60,19 +60,22 @@ function ombrer(p,fort=.38){const c=document.createElement('canvas');c.width=p.w
   for(let i=0;i<p.n;i++){const f=1-(i+1)/p.n;x.globalCompositeOperation='source-atop';x.fillStyle=`rgba(10,12,30,${(fort*f).toFixed(3)})`;x.fillRect(i*p.w,0,p.w,p.h);}return c;}
 const rnd=s=>()=>(s=(s*16807)%2147483647)/2147483647;
 // une pile : (x, y) au sol, ang = rotation à l'écran, k = écrasement, pas = hauteur d'une tranche
-function pile(ctx,p,x,y,ang,k,pas=.7,z=0,teinte){if(!p||!p.ok)return;const c=teinte?(p.t||(p.t=teinter(p,teinte))):p.c;const co=Math.cos(ang),si=Math.sin(ang);
-  for(let i=0;i<p.n;i++){ctx.setTransform(co,si*k,-si,co*k,x,y-(z+i)*pas);ctx.drawImage(c,i*p.w,0,p.w,p.h,-p.w/2,-p.h/2,p.w,p.h);}ctx.setTransform(1,0,0,1,0,0);}
+// une pile est assemblée une seule fois par angle (arrondi à 1/64 de tour), puis dessinée d'un seul drawImage
+function assembler(p,ang,k,pas,teinte){const q=Math.round(ang/(Math.PI*2)*64);const cle=q+'|'+k+'|'+pas+'|'+(teinte||'');p.cache=p.cache||{};if(p.cache[cle])return p.cache[cle];
+  const a=q/64*Math.PI*2,co=Math.cos(a),si=Math.sin(a);const R=Math.ceil(Math.hypot(p.w,p.h)/2)+2,Hh=Math.ceil(p.n*pas)+2;
+  const c=document.createElement('canvas');c.width=2*R;c.height=Math.ceil(2*R*k)+Hh;const x=c.getContext('2d');x.imageSmoothingEnabled=false;const src=teinte?(p.t||(p.t=teinter(p,teinte))):p.c;
+  const cx=R,cy=Hh+R*k;for(let i=0;i<p.n;i++){x.setTransform(co,si*k,-si,co*k,cx,cy-i*pas);x.drawImage(src,i*p.w,0,p.w,p.h,-p.w/2,-p.h/2,p.w,p.h);}
+  return p.cache[cle]={c,cx,cy};}
+function pile(ctx,p,x,y,ang,k,pas=.7,z=0,teinte){if(!p||!p.ok)return;const r=assembler(p,ang,k,pas,teinte);ctx.drawImage(r.c,Math.round(x-r.cx),Math.round(y-r.cy-z*pas));}
 function teinter(p,t){const c=document.createElement('canvas');c.width=p.c.width;c.height=p.c.height;const x=c.getContext('2d');x.drawImage(p.c,0,0);x.globalCompositeOperation='color';x.fillStyle=t;x.fillRect(0,0,c.width,c.height);x.globalCompositeOperation='destination-in';x.drawImage(p.c,0,0);return c;}
 function ombre(ctx,p,x,y,ang,k,a=.3){if(!p||!p.ok)return;if(!p.o){const o=document.createElement('canvas');o.width=p.w;o.height=p.h;const g=o.getContext('2d');for(let i=0;i<Math.min(4,p.n);i++)g.drawImage(p.im,i*p.w,0,p.w,p.h,0,0,p.w,p.h);g.globalCompositeOperation='source-in';g.fillStyle='#001';g.fillRect(0,0,p.w,p.h);p.o=o;}
   const co=Math.cos(ang),si=Math.sin(ang);ctx.globalAlpha=a;ctx.setTransform(co,si*k,-si,co*k,x,y);ctx.drawImage(p.o,-p.w/2,-p.h/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;}
 function motifMer(base,clair,g){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');const r=rnd(g);x.fillStyle=base;x.fillRect(0,0,64,64);
   for(let i=0;i<30;i++){x.fillStyle=i%5?clair:'rgba(255,255,255,.35)';const a=r()*64|0,b=r()*64|0,l=2+r()*5|0;x.fillRect(a,b,l,1);if(a+l>64)x.fillRect(a-64,b,l,1);}return c;}
 const TMP={};function tampon(n,W,H){let c=TMP[n+W];if(!c){c=TMP[n+W]=document.createElement('canvas');c.width=W;c.height=H;}return c;}
-function hd2d(ctx,W,H,o={}){const cv=ctx.canvas;const a=tampon('a',W,H),ax=a.getContext('2d');ax.clearRect(0,0,W,H);ax.filter=`blur(${o.flou||1.4}px)`;ax.drawImage(cv,0,0);ax.filter='none';
-  ax.globalCompositeOperation='destination-in';const g=ax.createLinearGradient(0,0,0,H);g.addColorStop(0,'#000');g.addColorStop(o.haut||.2,'rgba(0,0,0,0)');g.addColorStop(o.bas||.85,'rgba(0,0,0,0)');g.addColorStop(1,'#000');ax.fillStyle=g;ax.fillRect(0,0,W,H);ax.globalCompositeOperation='source-over';ctx.drawImage(a,0,0);
-  const b=tampon('b',W,H),bx=b.getContext('2d');bx.clearRect(0,0,W,H);bx.filter='blur(4px) brightness(1.5) contrast(2)';bx.drawImage(cv,0,0);bx.filter='none';ctx.globalCompositeOperation='screen';ctx.globalAlpha=o.halo||.28;ctx.drawImage(b,0,0);ctx.globalAlpha=1;
-  if(o.teinte){ctx.globalCompositeOperation='soft-light';ctx.fillStyle=o.teinte;ctx.fillRect(0,0,W,H);}ctx.globalCompositeOperation='source-over';
-  const v=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,10,.4)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);}
+function hd2d(ctx,W,H,o={}){if(o.teinte){ctx.globalCompositeOperation='soft-light';ctx.fillStyle=o.teinte;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';}
+  const cle='v'+W;if(!TMP[cle]){const c=TMP[cle]=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const v=x.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,10,.4)');x.fillStyle=v;x.fillRect(0,0,W,H);}
+  ctx.drawImage(TMP[cle],0,0);}
 function scene(id,dessin,toucher){const el=document.getElementById(id),cv=el.querySelector('canvas'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;const S={t:0,vu:false};
   el.addEventListener('pointerdown',()=>toucher&&toucher(S));new IntersectionObserver(es=>S.vu=es[0].isIntersecting).observe(el);
   let av=performance.now();(function f(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(f);if(!S.vu&&!window.TOUT_VOIR)return;S.t+=dt;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;dessin(ctx,S,dt,cv.width,cv.height);})(av);return S;}
@@ -96,7 +99,7 @@ scene('b1',(ctx,S,dt,W,H)=>{const k=.8,ox=(W-N*C)/2+C/2,oy=118;const sway=Math.s
   for(const key in ETAT){const[i,j]=key.split(',').map(Number);const[x,y]=pos(i,j);if(ETAT[key]==='eau'){ctx.strokeStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.ellipse(x,y,6,6*k,0,0,7);ctx.stroke();ctx.fillStyle='#fff';ctx.fillRect(x-1,y-1,2,2);}}
   // navires
   const L=[];for(const f of FLOTTE){const p=IM[f.n];const cx=f.h?f.i+(f.l-1)/2:f.i,cy=f.h?f.j:f.j+(f.l-1)/2;const[x,y]=pos(cx,cy);
-    const ang=(f.h?Math.PI/2:0)+Math.sin(S.t*1.3+f.i)*.012;L.push({p,x,y:y+Math.sin(S.t*1.6+f.j)*.4,ang,d:y});}
+    const ang=f.h?Math.PI/2:0;L.push({p,x,y:y+Math.sin(S.t*1.6+f.j)*.4,ang,d:y});}
   for(const e of L)ombre(ctx,e.p,e.x+2,e.y+2,e.ang,k,.25);
   L.sort((a,b)=>a.d-b.d);for(const e of L)pile(ctx,e.p,e.x,e.y,e.ang,k,.62);
   // incendies sur les cases touchées
@@ -152,7 +155,9 @@ scene('b3',(ctx,S,dt,W,H)=>{SC.t+=dt;const T=SC.t;const k=.82,ox=(W-NC*CC)/2+CC/
   // quais de pierre autour du bassin (la passe à droite, rangée 2)
   const q0=ox-CC/2-10,q1=ox+(NC-.5)*CC+10,qy0=oy-CC/2*k-10,qy1=oy+(NC-.5)*CC*k+10;
   ctx.fillStyle='#8c8577';ctx.fillRect(0,0,W,qy0);ctx.fillRect(0,qy1,W,H-qy1);ctx.fillRect(0,0,q0+10-10,H);ctx.fillRect(q1,0,W-q1,qy0+ (2)*CC*k+10);ctx.fillRect(q1,qy0+3*CC*k+10,W-q1,H);
-  for(let y=0;y<H;y+=5)for(let x=(y/5%2)*6;x<W;x+=12){const dans=x>q0&&x<q1&&y>qy0&&y<qy1;const passe=x>=q1&&y>qy0+2*CC*k+10&&y<qy0+3*CC*k+10;if(!dans&&!passe){ctx.fillStyle='rgba(60,55,48,.22)';ctx.fillRect(x,y,1,5);ctx.fillRect(x,y,12,1);}}
+  if(!SC.quai){SC.quai=document.createElement('canvas');SC.quai.width=W;SC.quai.height=H;const qx=SC.quai.getContext('2d');
+  for(let y=0;y<H;y+=5)for(let x=(y/5%2)*6;x<W;x+=12){const dans=x>q0&&x<q1&&y>qy0&&y<qy1;const passe=x>=q1&&y>qy0+2*CC*k+10&&y<qy0+3*CC*k+10;if(!dans&&!passe){qx.fillStyle='rgba(60,55,48,.22)';qx.fillRect(x,y,1,5);qx.fillRect(x,y,12,1);}}}
+  ctx.drawImage(SC.quai,0,0);
   ctx.fillStyle='#6d675c';ctx.fillRect(q0,qy0,q1-q0,3);ctx.fillRect(q0,qy1-3,q1-q0,3);ctx.fillRect(q0,qy0,3,qy1-qy0);
   // bornes et maisons du quai
   for(const[n,x,y]of[['House_1',30,48],['House_2',92,40],['House_3',160,50],['House_1',190,345]])if(IM[n])pile(ctx,IM[n],x,y,0,k,1);
