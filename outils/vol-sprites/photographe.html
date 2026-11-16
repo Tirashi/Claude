@@ -1,0 +1,25 @@
+<body style="margin:0"><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script><script>/*MODELES*/
+window.createImageBitmap=undefined;const b64=s=>{const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;};
+// photographie un modèle sous plusieurs angles et rend une planche pixel art
+window.planche=async(nom,rotY,FW,FH,NR,pitchs,deFace,teinte)=>{
+  const g=await new Promise(ok=>new THREE.GLTFLoader().parse(b64(MODELES[nom]),'',x=>ok(x.scene)));
+  const K=6,R=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});R.setSize(FW*K,FH*K);R.setClearColor(0,0);
+  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#fff6e8','#3a3550',1.15));const L=new THREE.DirectionalLight('#ffffff',.9);L.position.set(-2,4,3);sc.add(L);const L2=new THREE.DirectionalLight('#c8d0ff',.7);L2.position.set(1,-3,2);sc.add(L2);
+  const b=new THREE.Box3().setFromObject(g),s=new THREE.Vector3();b.getSize(s);const k=1/Math.max(s.x,s.y,s.z);g.scale.setScalar(k);g.position.sub(b.getCenter(new THREE.Vector3()).multiplyScalar(k));
+  g.traverse(m=>{if(m.material&&'metalness' in m.material){m.material.metalness=0;m.material.roughness=.6;}});
+  const piv=new THREE.Group(),inc=new THREE.Group(),av=new THREE.Group();av.add(g);av.rotation.y=rotY;inc.add(av);piv.add(inc);sc.add(piv);
+  const cam=new THREE.OrthographicCamera(-.62,.62,.62*FH/FW,-.62*FH/FW,.1,10);const el=deFace?.35:.5;cam.position.set(0,Math.sin(el)*3,(deFace?-1:1)*Math.cos(el)*3);cam.lookAt(0,0,0);
+  const out=document.createElement('canvas');out.width=FW*NR;out.height=FH*pitchs.length;const ox=out.getContext('2d');
+  const pt=document.createElement('canvas');pt.width=FW;pt.height=FH;const px=pt.getContext('2d',{willReadFrequently:true});
+  pitchs.forEach((p,j)=>{for(let i=0;i<NR;i++){inc.rotation.set(0,0,0);piv.rotation.set(0,0,0);inc.rotation.x=p;av.rotation.z=0;
+      // le tonneau : autour de l'axe avant-arrière (Z du monde)
+      piv.rotation.z=-i/NR*Math.PI*2;R.render(sc,cam);
+      px.clearRect(0,0,FW,FH);px.imageSmoothingQuality='high';px.drawImage(R.domElement,0,0,FW,FH);
+      const id=px.getImageData(0,0,FW,FH),d=id.data;const A=new Uint8Array(FW*FH);
+      for(let q=0;q<FW*FH;q++){if(d[q*4+3]<110){d[q*4+3]=0;continue;}A[q]=1;const f=255/d[q*4+3];for(let c=0;c<3;c++){let v=Math.min(255,d[q*4+c]*f);v=Math.round(v/24)*24;d[q*4+c]=Math.min(255,v);}d[q*4+3]=255;}
+      // contour sombre d'un pixel
+      for(let y=0;y<FH;y++)for(let x=0;x<FW;x++){const q=y*FW+x;if(A[q])continue;if((x>0&&A[q-1])||(x<FW-1&&A[q+1])||(y>0&&A[q-FW])||(y<FH-1&&A[q+FW])){d[q*4]=20;d[q*4+1]=16;d[q*4+2]=34;d[q*4+3]=255;}}
+      px.putImageData(id,0,0);ox.drawImage(pt,i*FW,j*FH);}});
+  return out.toDataURL('image/png');};
+</script>

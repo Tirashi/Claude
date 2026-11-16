@@ -1,0 +1,151 @@
+<title>Vol en sprites</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* trois téléphones : un vaisseau en sprites pré-calculés au-dessus d'un sol en perspective (Mode 7) */
+:root{--bg:#e8e6ef;--carte:#f5f4f9;--fg:#24232c;--doux:#666274;--bord:#4b4672;--accent:#c4552a;
+  --titre:"Press Start 2P",monospace;--texte:"Alegreya Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121219;--carte:#1d1d28;--fg:#ecebf4;--doux:#a5a1b6;--bord:#6c66a6;--accent:#f0905a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121219;--carte:#1d1d28;--fg:#ecebf4;--doux:#a5a1b6;--bord:#6c66a6;--accent:#f0905a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.5 var(--texte);padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1180px;margin:0 auto;display:grid;gap:34px}
+h1,h2{font-family:var(--titre);font-weight:400;letter-spacing:.02em;text-wrap:balance}
+h1{font-size:18px;margin:0;color:var(--accent)} h2{font-size:12px;margin:0 0 14px;color:var(--bord)}
+p{margin:0;max-width:72ch} a{color:var(--accent)}
+.tels{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:30px 24px}
+figure{margin:0;display:grid;gap:10px;min-width:0;justify-items:center;align-content:start}
+.tel{width:100%;max-width:340px;aspect-ratio:9/16;border:6px solid var(--bord);border-radius:24px;overflow:hidden;background:#000;position:relative;touch-action:none;cursor:grab;user-select:none}
+.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.tel .tonneau{position:absolute;right:10px;bottom:28px;font:8px var(--titre);padding:9px 8px;border-radius:8px;border:2px solid #fff;background:rgba(0,0,0,.35);color:#fff;cursor:pointer}
+.tel .aide{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:7px var(--titre);color:#fff;text-shadow:1px 1px 0 #000;pointer-events:none;opacity:.85}
+figcaption{display:grid;gap:4px;max-width:340px} figcaption b{font-family:var(--titre);font-size:10px;color:var(--accent);line-height:1.6}
+.idee{font-size:15px;color:var(--doux)}
+.planche{display:grid;gap:10px}
+.planche canvas{width:100%;max-width:900px;image-rendering:pixelated;background:#6f8fb8;border-radius:6px}
+ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
+.q{background:var(--carte);border-left:6px solid var(--accent);padding:14px 16px;display:grid;gap:8px}
+</style>
+<main>
+<header style="display:grid;gap:10px">
+<h1>VOL EN SPRITES · FACON ARCADE</h1>
+<p>Ici, tout est en 2D. Le vaisseau est une image pixel art choisie parmi 48 vues (16 positions de tonneau × 3 inclinaisons), que j'ai fabriquées automatiquement en photographiant le modèle 3D sous tous les angles. Le sol est dessiné en perspective ligne par ligne, comme le « Mode 7 » de la Super Nintendo. Glisse le doigt pour virer et monter ou descendre : l'horizon penche. Le bouton TONNEAU, ou deux touchers rapides, fait un tonneau.</p>
+</header>
+<section class="tels">
+<figure><div class="tel" id="m1"><canvas width="160" height="284"></canvas><button class="tonneau">TONNEAU</button><div class="aide">GLISSER : PILOTER</div></div>
+<figcaption><b>A · LA MER D'EMERAUDE</b><span>Le speeder de Kenney (CC0) au ras de l'eau, entre des îles, au soleil couchant. On passe dans les anneaux.</span><span class="idee">Idée : course d'anneaux, contre la montre.</span></figcaption></figure>
+<figure><div class="tel" id="m2"><canvas width="160" height="284"></canvas><button class="tonneau">TONNEAU</button><div class="aide">GLISSER : PILOTER</div></div>
+<figcaption><b>B · LE DAMIER</b><span>Un intercepteur Edenpunk au-dessus d'une plaine en damier, entre des obélisques. Des ennemis foncent vers toi et ton tir part tout seul.</span><span class="idee">Idée : un rail shooter d'arcade, avec un boss à la fin de chaque monde.</span></figcaption></figure>
+<figure><div class="tel" id="m3"><canvas width="160" height="284"></canvas><button class="tonneau">TONNEAU</button><div class="aide">GLISSER : PILOTER</div></div>
+<figcaption><b>C · AU-DESSUS DES NUAGES</b><span>Le chasseur de course Edenpunk file sur une mer de nuages, à l'aube, contre un rival.</span><span class="idee">Idée : une course à deux ou trois, avec des raccourcis entre les pics.</span></figcaption></figure>
+</section>
+<section class="planche"><h2>Les planches de sprites</h2><p>Voici les 48 vues du speeder, toutes fabriquées par un script à partir du modèle 3D. Ce même script marche pour n'importe quel vaisseau, voiture ou bateau.</p><canvas id="pl"></canvas></section>
+<section><h2>Ce que j'en retiens</h2><ul>
+<li><b>C'est le style des jeux d'arcade 16 bits</b> (Space Harrier, After Burner, F-Zero) : du pixel art qui bouge comme de la 3D.</li>
+<li><b>Les tonneaux marchent</b> : le jeu affiche l'image qui correspond à l'angle du moment. Avec 16 positions, la rotation paraît fluide.</li>
+<li><b>Les vaisseaux en couleurs unies</b> (Kenney) ressortent mieux en petit que les chasseurs texturés (Edenpunk), dont le dessous est noir.</li>
+<li><b>C'est léger</b> : une planche fait environ 40 Ko, et tout reste en 2D.</li>
+</ul></section>
+<section class="q"><h2>A choisir</h2>
+<p>1. Quelle direction : A (anneaux sur la mer), B (rail shooter sur le damier), C (course au-dessus des nuages) ?</p>
+<p>2. Par rapport à la maquette en vraie 3D : tu préfères ce style pixel art, ou la 3D lisse ?</p>
+</section>
+</main>
+<script>
+/*DONNEES*/
+const IMG={};for(const k in SPR){const i=new Image();i.src=SPR[k].src;IMG[k]={...SPR[k],im:i};}
+const rnd=s=>()=>(s=(s*16807)%2147483647)/2147483647;
+function bruit(seed){const r=rnd(seed),G=new Float32Array(64*64);for(let i=0;i<G.length;i++)G[i]=r();const f=t=>t*t*(3-2*t);
+  return(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),a=x-xi,b=y-yi,g=(i,j)=>G[((j&63)*64)+(i&63)];const u=f(a),v=f(b);
+    return g(xi,yi)*(1-u)*(1-v)+g(xi+1,yi)*u*(1-v)+g(xi,yi+1)*(1-u)*v+g(xi+1,yi+1)*u*v;};}
+const fbm=(n,x,y,o=4)=>{let v=0,a=.5,f=1;for(let i=0;i<o;i++){v+=a*n(x*f,y*f);a*=.5;f*=2;}return v;};
+const rgb=(r,g,b)=>(255<<24)|(b<<16)|(g<<8)|r;const hx=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+// textures du sol, 256 × 256, qui se répètent
+function texture(f){const T=new Uint32Array(256*256);for(let y=0;y<256;y++)for(let x=0;x<256;x++){const c=f(x,y);T[y*256+x]=rgb(c[0],c[1],c[2]);}return T;}
+const NM=bruit(5),NC=bruit(9);
+const TEX={
+  mer:texture((x,y)=>{const n=fbm(NM,x/32,y/32);const v=fbm(NM,x/6+40,y/6);if(n>.6)return n>.68?(n>.74?[70,120,60]:[90,150,70]):[226,206,150];if(n>.56)return[90,190,190];return v>.62?[90,170,200]:((x+y*3)%17===0?[120,190,215]:[40,120,170]);}),
+  damier:texture((x,y)=>{const c=((x>>5)+(y>>5))&1;return c?[214,170,80]:[98,160,72];}),
+  nuages:texture((x,y)=>{const n=fbm(NC,x/24,y/24,5);const l=Math.min(1,Math.max(0,(n-.3)*2.2));return[200+55*l|0,170+70*l|0,190+60*l|0];})};
+
+function vol(id,o){const el=document.getElementById(id),cv=el.querySelector('canvas'),ctx=cv.getContext('2d');const W=cv.width,H=cv.height;
+  const off=document.createElement('canvas');off.width=W+80;off.height=H+80;const ox=off.getContext('2d');const OW=off.width,OH=off.height;
+  const img=ox.createImageData(OW,OH),px=new Uint32Array(img.data.buffer);const T=TEX[o.sol];
+  const ciel=hx(o.ciel[1]),haut=hx(o.ciel[0]);const brume=hx(o.brume);
+  const S={x:0,z:0,cap:0,alt:o.alt,vcap:0,valt:0,roll:0,rollT:-1,rollD:1,t:0,auto:true,doigt:null,dernier:0,score:0,vu:false,objets:[],tirs:[],eclats:[]};
+  const tonneau=()=>{if(S.rollT<0){S.rollT=0;S.rollD=S.vcap>0?1:-1;}};
+  el.querySelector('.tonneau').addEventListener('pointerdown',e=>{e.stopPropagation();tonneau();});
+  el.addEventListener('pointerdown',e=>{const t=performance.now();if(t-S.dernier<300)tonneau();S.dernier=t;const r=el.getBoundingClientRect();S.doigt={x:e.clientX,y:e.clientY,w:r.width,h:r.height};S.auto=false;el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{if(!S.doigt)return;S.cx=(e.clientX-S.doigt.x)/S.doigt.w;S.cy=(e.clientY-S.doigt.y)/S.doigt.h;});
+  el.addEventListener('pointerup',()=>{S.doigt=null;S.cx=0;S.cy=0;clearTimeout(S.to);S.to=setTimeout(()=>S.auto=true,3000);});
+  new IntersectionObserver(es=>S.vu=es[0].isIntersecting).observe(el);
+  // objets du monde : anneaux, obélisques, îles lointaines, ennemis…
+  const r=rnd(o.graine||3);
+  function placer(k){const d=140+k*60+r()*30;return{x:S.x+Math.sin(S.cap)*d+(r()-.5)*60,z:S.z+Math.cos(S.cap)*d+(r()-.5)*60};}
+  for(let k=0;k<(o.nb||6);k++){const p=placer(k);S.objets.push({...p,type:o.objets[k%o.objets.length],y:o.alt+(r()-.5)*6,ph:r()*6});}
+  const F=150,camRecul=26;let avant=performance.now();
+  function image(m){const dt=Math.min(.05,(m-avant)/1000);avant=m;requestAnimationFrame(image);if(!S.vu&&!window.TOUT_VOIR)return;S.t+=dt;
+    // commandes
+    let tc,ta;if(S.auto){tc=Math.sin(S.t*.5)*.9;ta=o.alt+Math.sin(S.t*.37)*5;if(S.t%5<dt&&S.t>2)tonneau();}else{tc=Math.max(-1,Math.min(1,(S.cx||0)*3));ta=Math.max(4,Math.min(o.alt+14,S.alt-(S.cy||0)*30*dt*4));}
+    S.vcap+=(tc*1.1-S.vcap)*Math.min(1,dt*3);S.cap+=S.vcap*dt;const va=(ta-S.alt)*2;S.valt+=(va-S.valt)*Math.min(1,dt*4);S.alt+=S.valt*dt;
+    const V=o.vitesse;S.x+=Math.sin(S.cap)*V*dt;S.z+=Math.cos(S.cap)*V*dt;
+    if(S.rollT>=0){S.rollT+=dt/.75;S.roll=(S.rollT<1?(1-Math.cos(S.rollT*Math.PI))/2:1)*Math.PI*2*S.rollD;S.cap+=S.rollD*.35*dt;if(S.rollT>=1){S.rollT=-1;S.roll=0;}}
+    const bank=S.vcap*.55;
+    // caméra derrière le vaisseau
+    const camH=S.alt+13,cx=S.x-Math.sin(S.cap)*camRecul,cz=S.z-Math.cos(S.cap)*camRecul;
+    const hz=OH*.38+S.valt*1.5;const sn=Math.sin(S.cap),cs=Math.cos(S.cap);
+    // sol en perspective, ligne par ligne
+    for(let y=0;y<OH;y++){const row=y*OW;
+      if(y<=hz+1){const t=Math.max(0,Math.min(1,y/hz));const c=rgb(haut[0]+(ciel[0]-haut[0])*t|0,haut[1]+(ciel[1]-haut[1])*t|0,haut[2]+(ciel[2]-haut[2])*t|0);px.fill(c,row,row+OW);continue;}
+      const d=camH*F/(y-hz);const fx=sn,fz=cs,rx=cs,rz=-sn;const bx=cx+fx*d,bz=cz+fz*d,k=d/F;const bru=Math.min(1,d/o.loin);
+      for(let x=0;x<OW;x++){const l=(x-OW/2)*k;const u=(bx+rx*l)*o.ech&255,v=(bz+rz*l)*o.ech&255;let c=T[(v<<8)|u];
+        if(bru>.02){const R=c&255,G=(c>>8)&255,B=(c>>16)&255;c=rgb(R+(brume[0]-R)*bru|0,G+(brume[1]-G)*bru|0,B+(brume[2]-B)*bru|0);}px[row+x]=c;}}
+    ox.putImageData(img,0,0);
+    // soleil et décor lointain qui glissent avec le cap
+    if(o.soleil){const sx=((-S.cap*120)%OW+OW*1.5)%OW;ox.fillStyle=o.soleil;ox.beginPath();ox.arc(sx,hz-18,12,0,7);ox.fill();ox.globalAlpha=.3;ox.beginPath();ox.arc(sx,hz-18,20,0,7);ox.fill();ox.globalAlpha=1;}
+    if(o.montagnes){ox.fillStyle=o.montagnes;ox.beginPath();ox.moveTo(0,hz+1);for(let x=0;x<=OW;x+=4){const a=x/OW*6.28-S.cap*1.5;ox.lineTo(x,hz+1-(8+6*Math.sin(a*3)+5*Math.sin(a*7+1))*(o.montH||1));}ox.lineTo(OW,hz+1);ox.fill();}
+    // objets, du plus loin au plus proche
+    const proj=(x,z,y)=>{const dx=x-cx,dz=z-cz;const lz=dx*sn+dz*cs,lx=dx*cs-dz*sn;if(lz<2)return null;return{x:OW/2+lx*F/lz,y:hz+(camH-y)*F/lz,s:F/lz,lz};};
+    const L=[];
+    for(const ob of S.objets){const p=proj(ob.x,ob.z,ob.y);if(ob.type==='ennemi'){ob.x-=Math.sin(S.cap)*30*dt;ob.z-=Math.cos(S.cap)*30*dt;ob.x+=Math.cos(S.t*2+ob.ph)*10*dt;}
+      if(!p||p.lz<4){if(!p||p.lz<4){const q=placer(4+Math.random()*3);Object.assign(ob,q,{y:o.alt+(Math.random()-.5)*6,passe:false,mort:false});}continue;}
+      if(ob.type==='anneau'&&!ob.passe&&p.lz<camRecul+2){ob.passe=true;const dxs=p.x-OW/2,dys=p.y-(hz+(camH-S.alt)*F/camRecul);if(Math.hypot(dxs,dys)<9*p.s){S.score++;ob.ok=1;}}
+      if(!ob.mort)L.push({...p,ob});}
+    // tirs
+    if(o.tir){S.tc=(S.tc||0)-dt;if(S.tc<=0){S.tc=.22;S.tirs.push({x:S.x+Math.sin(S.cap)*2,z:S.z+Math.cos(S.cap)*2,y:S.alt,cap:S.cap,t:1.2});}
+      for(const t of S.tirs){t.t-=dt;t.x+=Math.sin(t.cap)*140*dt;t.z+=Math.cos(t.cap)*140*dt;const p=proj(t.x,t.z,t.y);if(p)L.push({...p,tir:1});
+        for(const ob of S.objets)if(ob.type==='ennemi'&&!ob.mort&&Math.hypot(ob.x-t.x,ob.z-t.z)<6&&Math.abs(ob.y-t.y)<5){ob.mort=true;t.t=0;S.score+=100;for(let k=0;k<14;k++)S.eclats.push({x:ob.x,z:ob.z,y:ob.y,vx:(Math.random()-.5)*30,vz:(Math.random()-.5)*30,vy:(Math.random()-.5)*20,t:.8,c:['#ffe066','#ff8a3a','#fff'][k%3]});}}
+      S.tirs=S.tirs.filter(t=>t.t>0);}
+    for(const e of S.eclats){e.t-=dt;e.x+=e.vx*dt;e.z+=e.vz*dt;e.y+=e.vy*dt;const p=proj(e.x,e.z,e.y);if(p)L.push({...p,ec:e});}S.eclats=S.eclats.filter(e=>e.t>0);
+    // rival
+    if(o.rival){const R=S.rival||(S.rival={d:60,dx:-8,t:0});R.d=60+Math.sin(S.t*.4)*30;R.dx=Math.sin(S.t*.7)*12;const x=S.x+Math.sin(S.cap)*R.d+Math.cos(S.cap)*R.dx,z=S.z+Math.cos(S.cap)*R.d-Math.sin(S.cap)*R.dx;
+      const p=proj(x,z,o.alt+Math.sin(S.t)*2);if(p)L.push({...p,rival:Math.cos(S.t*.7)*.6});}
+    L.sort((a,b)=>b.lz-a.lz);
+    for(const e of L){const s=e.s;
+      if(e.tir){ox.fillStyle='#fff6a0';ox.fillRect(e.x-s*.6,e.y-s*.6,Math.max(1,s*1.2),Math.max(1,s*1.2));continue;}
+      if(e.ec){ox.fillStyle=e.ec.c;ox.globalAlpha=Math.min(1,e.ec.t*2);ox.fillRect(e.x,e.y,Math.max(1,s*.6),Math.max(1,s*.6));ox.globalAlpha=1;continue;}
+      if(e.rival!==undefined){dessinerNav(ox,IMG[o.rivalNav],e.x,e.y,e.rival,0,Math.min(1.2,s/(F/camRecul)));continue;}
+      const ob=e.ob;
+      if(ob.type==='anneau'){ox.lineWidth=Math.max(1,s*1.2);ox.strokeStyle='#3a2410';ox.beginPath();ox.ellipse(e.x,e.y,9*s,9*s,0,0,7);ox.stroke();ox.lineWidth=Math.max(1,s*.8);ox.strokeStyle=ob.ok?'#7dff8a':'#ffd23a';ox.stroke();}
+      if(ob.type==='obelisque'){const h=26*s,w=4*s,gy=hz+camH*F/e.lz;ox.fillStyle='rgba(0,0,0,.25)';ox.beginPath();ox.ellipse(e.x,gy,w*1.4,w*.4,0,0,7);ox.fill();ox.fillStyle='#5a4a8a';ox.fillRect(e.x-w,gy-h,w*2,h);ox.fillStyle='#8a78c8';ox.fillRect(e.x-w,gy-h,w*.8,h);ox.fillStyle='#ffd23a';ox.fillRect(e.x-w,gy-h-w,w*2,w);}
+      if(ob.type==='ile'){const gy=hz+camH*F/e.lz,w=16*s;ox.fillStyle='#3d6f3a';ox.beginPath();ox.moveTo(e.x-w,gy);ox.lineTo(e.x-w*.3,gy-w*.9);ox.lineTo(e.x+w*.2,gy-w*.6);ox.lineTo(e.x+w*.5,gy-w*1.1);ox.lineTo(e.x+w,gy);ox.fill();ox.fillStyle='#e2ce96';ox.fillRect(e.x-w,gy-1,w*2,Math.max(1,s));}
+      if(ob.type==='pic'){const gy=hz+camH*F/e.lz,w=12*s;ox.fillStyle='#8a7fa8';ox.beginPath();ox.moveTo(e.x-w,gy);ox.lineTo(e.x,gy-w*2.4);ox.lineTo(e.x+w,gy);ox.fill();ox.fillStyle='#fff';ox.beginPath();ox.moveTo(e.x-w*.3,gy-w*1.7);ox.lineTo(e.x,gy-w*2.4);ox.lineTo(e.x+w*.3,gy-w*1.7);ox.fill();}
+      if(ob.type==='ennemi'){const I=IMG.ennemi;const f=((Math.round(Math.sin(S.t*2+ob.ph)*1.2)%8)+8)%8;const k=Math.min(1.4,s/(F/camRecul)*1.1);ox.imageSmoothingEnabled=false;ox.drawImage(I.im,f*I.w,0,I.w,I.h,e.x-I.w*k/2,e.y-I.h*k/2,I.w*k,I.h*k);}
+    }
+    // ombre et vaisseau
+    const nyS=hz+(camH-S.alt)*F/camRecul,gy=hz+camH*F/camRecul;
+    ox.fillStyle='rgba(0,0,0,.28)';ox.beginPath();ox.ellipse(OW/2+S.vcap*6,gy,14,3,0,0,7);ox.fill();
+    dessinerNav(ox,IMG[o.nav],OW/2+S.vcap*6,nyS,bank+S.roll,S.valt,1);
+    // horizon qui penche : on tourne toute l'image
+    ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(W/2,H/2);ctx.rotate(-(bank+S.roll*0)*.35);ctx.drawImage(off,-OW/2,-OH/2);ctx.restore();
+    ctx.font='6px "Press Start 2P"';ctx.fillStyle='#fff';ctx.fillText(o.tir?`SCORE ${String(S.score).padStart(5,'0')}`:o.rival?'COURSE  2E':`ANNEAUX ${S.score}`,6,12);}
+  requestAnimationFrame(image);}
+// choisit l'image du vaisseau : 16 positions de tonneau, 3 inclinaisons
+function dessinerNav(c,I,x,y,roll,valt,ech){if(!I.im.complete)return;const NR=16;let f=Math.round(-roll/(Math.PI*2)*NR);f=((f%NR)+NR)%NR;const row=valt>2.5?0:valt<-2.5?2:1;
+  c.imageSmoothingEnabled=false;const w=I.w*ech,h=I.h*ech;c.drawImage(I.im,f*I.w,row*I.h,I.w,I.h,Math.round(x-w/2),Math.round(y-h/2),w,h);}
+vol('m1',{sol:'mer',ech:1.2,ciel:['#3a3a7a','#ff9a6a'],brume:'#f0a080',loin:900,soleil:'#ffe39a',montagnes:'#6a4a7a',alt:8,vitesse:60,objets:['anneau','anneau','ile'],nb:7,nav:'speeder'});
+vol('m2',{sol:'damier',ech:1,ciel:['#3a7ad8','#bfe4ff'],brume:'#bfe4ff',loin:700,montagnes:'#6a8ac8',montH:1.6,alt:10,vitesse:55,objets:['obelisque','ennemi','obelisque','ennemi'],nb:8,nav:'intercepteur',tir:true,graine:8});
+vol('m3',{sol:'nuages',ech:.9,ciel:['#2a3a8a','#ffc0a0'],brume:'#ffd0b0',loin:800,soleil:'#fff2c8',alt:12,vitesse:70,objets:['anneau','pic','pic'],nb:7,nav:'racing',rival:true,rivalNav:'intercepteur',graine:21});
+// la planche des 48 vues
+{const I=IMG.speeder;I.im.addEventListener('load',()=>{const c=document.getElementById('pl');c.width=I.im.width;c.height=I.im.height;c.getContext('2d').drawImage(I.im,0,0);});}
+</script>
