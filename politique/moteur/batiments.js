@@ -146,7 +146,7 @@ function avancer(e){
     e.batiments[c.id] = (e.batiments[c.id] || 0) + 1;
     e.journal.push(`Bâtiment terminé : ${BAT[c.id].nom} (${e.regions[c.region].nom}).`);
     const f = Factions.baseDe(c.id);
-    if (f){ Factions.renforcer(e, f, 1, BAT[c.id].nom.toLowerCase() + " terminé"); Factions.evaluer(e); }
+    if (f){ Factions.renforcer(e, f, 1, BAT[c.id].nom.toLowerCase() + " terminé", c.id); Factions.evaluer(e); }
   }
   e.chantiers = e.chantiers.filter(c => c.restant > 0);
 }

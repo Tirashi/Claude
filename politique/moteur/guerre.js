@@ -197,7 +197,7 @@ function ceder(e, perdant, gagnant){
   if (!id) return;
   if (perdant === "joueur"){
     const reg = e.regions[id];
-    for (const b in reg.batiments){ e.batiments[b] -= reg.batiments[b]; Factions.renforcer(e, Factions.baseDe(b), -reg.batiments[b]); }   // bâtiments perdus
+    for (const b in reg.batiments){ e.batiments[b] -= reg.batiments[b]; Factions.renforcer(e, Factions.baseDe(b), -reg.batiments[b], null, b); }   // bâtiments perdus
     e.chantiers = e.chantiers.filter(c => c.region !== id);
     if (e.projets) e.projets = e.projets.filter(x => x.region !== id);   // projet commun : le bâtiment n'est plus à nous
     e.profils[gagnant].regions[id] = { nom: reg.nom, terrain: reg.terrain };

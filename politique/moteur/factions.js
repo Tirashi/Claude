@@ -116,12 +116,14 @@ function baseDe(id){
   const B = R.economie.bases;
   return Object.keys(B).find(f => B[f].includes(id)) || null;
 }
-function renforcer(e, f, k, raison){
+function renforcer(e, f, k, raison, batiment){
   const X = R.economie;
   if (!X.actif || !f || !e.factions[f]) return;
   k = k == null ? 1 : k;
-  for (const g in e.factions) modifier(e, g, "puissance", (g === f ? X.gain : X.autres) * k);
-  if (raison) e.journal.push(`${FACTIONS[f].nom} ${k > 0 ? "+" : "−"}${Math.abs(X.gain * k)} de puissance : ${raison}.`);
+  // propriétaires (à l'essai) : le gain d'un bâtiment est partagé entre ceux qui y travaillent et ceux qui le possèdent
+  const p = batiment && (X.proprietaires || {})[batiment], parts = p && e.factions[p] ? { [f]: X.gain / 2, [p]: X.gain / 2 } : { [f]: X.gain };
+  for (const g in e.factions) modifier(e, g, "puissance", (parts[g] != null ? parts[g] : X.autres) * k);
+  if (raison) e.journal.push(Object.keys(parts).map(g => `${FACTIONS[g].nom} ${k > 0 ? "+" : "−"}${Math.abs(parts[g] * k)}`).join(", ") + ` de puissance : ${raison}.`);
 }
 
 // fin de tour : effets par tour des lois, niveau de vie (V1 : dissipation), statuts, moral
