@@ -24,3 +24,7 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 - **Vagues** (`vague()`) : 1 + 2 × n chasseurs (11 au plus) en V à 300 m devant, ils foncent (« arrivee ») puis tournent devant le joueur (« combat », rayon 18 à 46) et tirent des paires de balles orange avec avance ; blindage 100 (−7 par balle, pas pendant un tonneau), bordure orange quand on est touché, « ABATTU » à 0 ; vague finie : bonus 500 × n et +30 de blindage ; HUD : score, vague, ennemis, blindage.
 - Pilote automatique : vise l'ennemi le plus proche, tire quand il est dans un cône de 0,3 rad, remonte sous 14 m.
 - Sommets : roche selon la pente, neige au-dessus de 34 m (plus de damier gris et blanc).
+
+## Version 6 (17/11 : ennemis à reculons, boutons carrés peu pratiques)
+- Ennemis : `Object3D.lookAt` tourne l'axe +Z vers la cible, le chasseur a le nez en −Z : modèle retourné (`rotation.y = π`) dans son groupe.
+- Commandes de jeu de tir sur téléphone : **joystick** qui apparaît sous le pouce gauche (anneau 104 px, bille bornée à 46 px ; pousser vers le haut = piqué), suivi par `pointerId` ; **boutons ronds** à droite en arc : FEU (84 px, à garder appuyé), MISSILE, LOOP, TONNEAU ; VUE en petit en haut à droite. Le pilote automatique reprend 4 s après qu'on a tout lâché.
