@@ -89,6 +89,7 @@ function couleurSol(x,z,a,b){const h=H(x,z),r=hash(a,b),v=fbm(N2,x*.02,z*.02,2);
 const el=document.getElementById('t'),hud=document.getElementById('hud'),band=document.getElementById('bandeau');
 const LW=180,LH=320;
 const R=new THREE.WebGLRenderer({antialias:false});R.setPixelRatio(1);R.setSize(LW,LH,false);el.prepend(R.domElement);
+const ov=document.createElement('canvas');ov.width=LW;ov.height=LH;ov.style.cssText='position:absolute;inset:0;pointer-events:none';R.domElement.after(ov);const ox=ov.getContext('2d');
 const cible=new THREE.WebGLRenderTarget(LW,LH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
 // les avions sont dessinés à part, en deux fois moins de pixels, pour avoir l'air de sprites
 const AW=LW/2,AH=LH/2;const cibleAvions=new THREE.WebGLRenderTarget(AW,AH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
@@ -179,7 +180,7 @@ const lacher=e=>{if(!S.doigt||e.pointerId!==S.doigt.id)return;S.doigt=null;S.dx=
 const bouton=(id,f)=>{const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();manuel(5000);f(true,b);});b.addEventListener('pointerup',e=>{e.stopPropagation();f(false,b);});b.addEventListener('pointerleave',()=>f(false,b));b.addEventListener('contextmenu',e=>e.preventDefault());};
 bouton('bLoop',d=>{if(d&&S.loopT<0)S.loopT=0;});bouton('bRoll',d=>{if(d)tonneau();});bouton('bVue',d=>{if(d)S.vue=(S.vue+1)%2;});
 bouton('bTir',(d,b)=>{S.tir=d;b.classList.toggle('on',d);if(d)manuel(1e9);else manuel();});
-bouton('bMis',d=>{if(!d||S.munM<=0)return;S.munM--;const c=ennemis.filter(e=>e.vie>0).sort((a,b)=>a.g.position.distanceTo(S.p)-b.g.position.distanceTo(S.p))[0];
+bouton('bMis',d=>{if(!d||S.munM<=0)return;S.munM--;const c=LOCK.e&&LOCK.t>=LOCK.T&&LOCK.e.vie>0?LOCK.e:null;
   const m=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,1.4),new THREE.MeshBasicMaterial({color:'#ffffff'}));m.position.copy(S.p);sc.add(m);missiles.push({m,c,v:S.fwd.clone().multiplyScalar(S.v+20),t:4});});
 
 let av=performance.now(),vu=false;new IntersectionObserver(es=>vu=es[0].isIntersecting).observe(el);setTimeout(()=>band.style.opacity=0,4500);
@@ -208,10 +209,10 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   // traînées
   for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const w=new THREE.Vector3(k?1.05:-1.05,.1,.4).applyQuaternion(Q).add(S.p);t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
   // canon
-  if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;const b=new THREE.Mesh(new THREE.BoxGeometry(.3,.3,2.2),new THREE.MeshBasicMaterial({color:'#fff2a0',fog:false}));b.position.copy(S.p).addScaledVector(fwd,3);b.quaternion.copy(Q);sc.add(b);balles.push({b,v:fwd.clone().multiplyScalar(v+160),t:1.1});}
+  if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;const b=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,3.2),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));b.position.copy(S.p).addScaledVector(fwd,3);b.quaternion.copy(Q);sc.add(b);balles.push({b,v:fwd.clone().multiplyScalar(v+160),t:1.1});}
   for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<4.6){b.t=0;e.vie--;if(e.vie<=0){boom(e.g.position);sc.remove(e.g);S.score+=100;}}}
   for(let i=balles.length-1;i>=0;i--)if(balles[i].t<=0){sc.remove(balles[i].b);balles.splice(i,1);}
-  for(const mi of missiles){mi.t-=dt;if(mi.c&&mi.c.vie>0){const d=mi.c.g.position.clone().sub(mi.m.position).normalize().multiplyScalar(90);mi.v.lerp(d,Math.min(1,dt*3));}mi.m.position.addScaledVector(mi.v,dt);mi.m.lookAt(mi.m.position.clone().add(mi.v));
+  for(const mi of missiles){mi.t-=dt;if(mi.c&&mi.c.vie>0){const d=mi.c.g.position.clone().sub(mi.m.position).normalize().multiplyScalar(110);mi.v.lerp(d,Math.min(1,dt*5));}mi.m.position.addScaledVector(mi.v,dt);mi.m.lookAt(mi.m.position.clone().add(mi.v));
     if(Math.random()<.9){const f=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,.8),new THREE.MeshBasicMaterial({color:'#e8eef4',transparent:true,opacity:.8}));f.position.copy(mi.m.position);sc.add(f);eclats.push({s:f,v:new THREE.Vector3(0,1,0),t:1.2,fum:1});}
     if(mi.c&&mi.c.vie>0&&mi.m.position.distanceTo(mi.c.g.position)<4){mi.t=0;mi.c.vie=0;boom(mi.c.g.position,26);sc.remove(mi.c.g);S.score+=250;}}
   for(let i=missiles.length-1;i>=0;i--)if(missiles[i].t<=0){sc.remove(missiles[i].m);missiles.splice(i,1);}
@@ -241,7 +242,27 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=5;S.rech=0;},6000);}
   cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
   cam.layers.set(AVIONS);R.setRenderTarget(cibleAvions);R.setClearColor(0x000000,0);R.clear();R.render(sc,cam);
-  placerSprite(Q,fwd);R.setRenderTarget(null);R.render(scPost,camPost);}
+  placerSprite(Q,fwd);R.setRenderTarget(null);R.render(scPost,camPost);viseur(fwd,dt);}
+const LOCK={e:null,t:0,T:.7};
+// pixel art à la main : croix du viseur, coins des cadres
+function px(x,y,w,h,c){ox.fillStyle=c;ox.fillRect(Math.round(x),Math.round(y),w,h);}
+function coins(x,y,r,c,ep=1){const L=Math.max(2,Math.round(r*.45));for(const[sx,sy]of[[-1,-1],[1,-1],[-1,1],[1,1]]){const cx=x+sx*r,cy=y+sy*r;px(sx<0?cx:cx-L+1,cy,L,ep,c);px(cx,sy<0?cy:cy-L+1,ep,L,c);}}
+function versEcran(v){const q=v.clone().project(cam);if(q.z>1||q.z<-1)return null;return[(q.x+1)/2*LW,(1-q.y)/2*LH];}
+function viseur(fwd,dt){ox.clearRect(0,0,LW,LH);
+  // le verrouillage : l'ennemi le plus près de l'axe, dans un cône de 0,3 rad et à moins de 240 m
+  let best=null,ba=.3;for(const e of ennemis){if(e.vie<=0)continue;const d=e.g.position.clone().sub(S.p);const l=d.length();if(l>240)continue;const a=d.angleTo(fwd);if(a<ba){ba=a;best=e;}}
+  if(best!==LOCK.e){LOCK.e=best;LOCK.t=0;}else if(best)LOCK.t+=dt;
+  // cadres : gris au loin, rouges dans l'axe de tir, jaune qui se resserre pendant le verrouillage, rouge + LOCK une fois verrouillé
+  for(const e of ennemis){if(e.vie<=0)continue;const p=versEcran(e.g.position);if(!p)continue;const l=e.g.position.distanceTo(S.p);const r=Math.max(4,Math.min(12,700/l));
+    if(e===LOCK.e){const f=Math.min(1,LOCK.t/LOCK.T);if(f<1){coins(p[0],p[1],r+8*(1-f),Math.floor(S.t*10)%2?'#ffe080':'#ffb040');}
+      else{coins(p[0],p[1],r,'#e2682e',2);if(Math.floor(S.t*6)%2){ox.font='bold 7px monospace';ox.fillStyle='#1a1c22';ox.fillText('LOCK',Math.round(p[0]-9),Math.round(p[1]-r-3));ox.fillStyle='#ffe080';ox.fillText('LOCK',Math.round(p[0]-10),Math.round(p[1]-r-4));}}}
+    else coins(p[0],p[1],r,e.g.position.clone().sub(S.p).angleTo(fwd)<.06?'#e2682e':'rgba(230,238,246,.75)');}
+  // le viseur : là où vont les balles, 120 m devant
+  const v=versEcran(S.p.clone().addScaledVector(fwd,120));if(v){const[x,y]=[Math.round(v[0]),Math.round(v[1])];
+    for(const[c,o]of[['#1a1c22',1],['#ffffff',0]]){px(x-6+o,y+o,4,1,c);px(x+3+o,y+o,4,1,c);px(x+o,y-6+o,1,4,c);px(x+o,y+3+o,1,4,c);px(x+o,y+o,1,1,c);}}
+  // munitions de missiles et état du verrouillage, sous le viseur
+  if(LOCK.e&&LOCK.t>=LOCK.T&&v){ox.font='bold 7px monospace';ox.fillStyle='#ffe080';ox.fillText('MISSILE PRET',Math.round(v[0]-24),Math.round(v[1]+16));}}
+
 requestAnimationFrame(image);
 })();
 </script>

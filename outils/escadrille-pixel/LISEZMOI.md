@@ -32,3 +32,8 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 ## Sensibilité (17/11 : « ça va trop vite »)
 - Zone morte de 12 % au centre du joystick ; virage en courbe (dx × |dx| × 0,75, au lieu de dx × 1,7) avec une vitesse de virage lissée (`S.vyaw`) ; tangage plus doux (−dy × 0,7, borné à ± 0,75 rad, suivi en 1/1,3 s au lieu de 1/2,2 s).
 - Puis « un petit peu plus rapide » : virage dx × |dx| × 1, tangage −dy × 0,9 (borné à ± 0,85, suivi en 1/1,7 s), lissage du virage ×3.
+
+## Viseur et verrouillage (17/11 : « on ne voit pas bien où on vise », « les missiles devraient se lock »)
+- Toile 2D par-dessus (même 180 × 320, `viseur()`) : croix pixel art 120 m devant l'avion ; coins autour de chaque ennemi visible (gris, rouges dans l'axe à moins de 0,06 rad).
+- Verrouillage (`LOCK`) : l'ennemi le plus près de l'axe (cône 0,3 rad, moins de 240 m) ; cadre jaune et orange qui se resserre pendant 0,7 s, puis cadre rouge épais + « LOCK » qui clignote et « MISSILE PRET ». Le missile ne poursuit que la cible verrouillée (virage plus serré), sinon il part tout droit.
+- Balles traçantes plus longues et jaunes.
