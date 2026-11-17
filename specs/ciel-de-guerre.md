@@ -99,6 +99,17 @@ Deux camps, un seul style : coques grises, couleur du camp. Chaque coque Free Ga
   - Corvettes 2 à 4 : `coupe`, pour ignorer les tiges qui dépassent à l'arrière.
 - **Projectiles** : traçantes fines et partagées. Le joueur tire alternativement de ses deux canons. Les tirs ennemis sont rouges. Les missiles ont une petite flamme et une fumée légère (une bouffée toutes les 0,05 s, qui grossit et s'efface en 0,55 s).
 
+## Recherche de petits chasseurs (17/11)
+Free Game Assets n'a pas de chasseurs : ses plus petits vaisseaux sont les corvettes. Je les ai cherchés sur itch.io (tags low-poly + spaceship, recherche « low poly spaceship fighter »), puis j'ai essayé 4 packs gratuits repeints aux couleurs des camps. Règle de repeinture : la teinte dominante (la coque) passe au gris teinté du camp, les autres couleurs vives prennent la couleur du camp, le reste devient gris.
+| Pack | Licence | Contenu | Avis |
+|---|---|---|---|
+| [polyyai, 3D Spaceships Pack](https://polyyai.itch.io/3d-spaceships-pack) (et [Pack 2](https://polyyai.itch.io/3d-spaceships-pack-2), 25 de plus) | CC0, prix libre | 35 chasseurs en GLB texturés (0,7 à 1,5 Mo, textures à réduire) | **Le meilleur** : vrais chasseurs aux formes variées ; repeints, ils ont une coque gris-bleu et des touches du camp, comme Free Game Assets |
+| [polyhangar, Orbital Utility Fleet](https://polyhangar.itch.io/orbital-utility-fleet-low-poly-spaceships-cc0) | CC0 | 8 vaisseaux à couleurs pleines (intercepteur, bombardier, courrier, et des utilitaires) | 3 bons : intercepteur, bombardier, courrier ; se repeignent parfaitement |
+| [mehrasaur (Inborn Ninja), Spaceship Pack](https://mehrasaur.itch.io/3d-spaceships-pack) | CC0 | 9 chasseurs blancs sans texture (le 10e copie un chasseur de film : exclu) | Belles silhouettes, mais tout d'une couleur |
+| [Quaternius, Lowpoly Spaceships](https://quaternius.itch.io/lowpoly-spaceships) | CC0 | 5 vaisseaux, blanc et noir | Moins intéressant |
+| Repérés, non essayés | | ad-sounddesign (4,99 $), Void Fleet (5,99 $), Kenney Space Kit (CC0, style plus jouet) | |
+Planche : `chasseurs-proposes.png` (scratchpad, envoyée à l'utilisateur). Outils d'essai : `essai_chasseurs/page.html` et `rendre.js` (scratchpad), à ranger dans `outils/` si on les garde.
+
 ## Licences à régler avant le jeu
 - **monogon** : réglé, tous retirés.
 - **niko** : réglé, retiré.
