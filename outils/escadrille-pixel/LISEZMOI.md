@@ -31,3 +31,4 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 
 ## Sensibilité (17/11 : « ça va trop vite »)
 - Zone morte de 12 % au centre du joystick ; virage en courbe (dx × |dx| × 0,75, au lieu de dx × 1,7) avec une vitesse de virage lissée (`S.vyaw`) ; tangage plus doux (−dy × 0,7, borné à ± 0,75 rad, suivi en 1/1,3 s au lieu de 1/2,2 s).
+- Puis « un petit peu plus rapide » : virage dx × |dx| × 1, tangage −dy × 0,9 (borné à ± 0,85, suivi en 1/1,7 s), lissage du virage ×3.

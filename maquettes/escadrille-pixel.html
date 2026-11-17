@@ -195,10 +195,10 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     if(c){const d=c.g.position.clone().sub(S.p);const a=Math.atan2(-d.x,-d.z);let da=a-S.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));tyaw=Math.max(-1,Math.min(1,da*2));tp=Math.max(-.6,Math.min(.6,(c.g.position.y-S.p.y)*.03));
       S.tir=Math.abs(da)<.3&&d.length()<170;}else{tyaw=Math.sin(S.t*.35)*.6;tp=(40-S.p.y)*.02;S.tir=false;}
     if(S.p.y<14)tp=.5;if(S.t%11<dt&&S.t>3)tonneau();}
-  else{tyaw=-S.dx*Math.abs(S.dx)*.75;tp=-S.dy*.7;/* joystick vers le haut : l'avion monte ; vers le bas : il descend */}
-  S.vyaw=(S.vyaw||0)+(tyaw-(S.vyaw||0))*Math.min(1,dt*2.5);S.yaw+=S.vyaw*dt;S.bank+=((S.vyaw*1.1)-S.bank)*Math.min(1,dt*3);
+  else{tyaw=-S.dx*Math.abs(S.dx)*1;tp=-S.dy*.9;/* joystick vers le haut : l'avion monte ; vers le bas : il descend */}
+  S.vyaw=(S.vyaw||0)+(tyaw-(S.vyaw||0))*Math.min(1,dt*3);S.yaw+=S.vyaw*dt;S.bank+=((S.vyaw*1.1)-S.bank)*Math.min(1,dt*3);
   if(S.loopT>=0){S.loopT+=dt/2.6;S.pitch+=Math.PI*2*dt/2.6;if(S.loopT>=1){S.loopT=-1;S.pitch=Math.round(S.pitch/(Math.PI*2))*Math.PI*2;}}
-  else{S.pitch+=(Math.max(-.75,Math.min(.75,tp))-S.pitch)*Math.min(1,dt*1.3);}
+  else{S.pitch+=(Math.max(-.85,Math.min(.85,tp))-S.pitch)*Math.min(1,dt*1.7);}
   if(S.rollT>=0){S.rollT+=dt/.8;S.roll=(S.rollT<1?(1-Math.cos(S.rollT*Math.PI))/2:1)*Math.PI*2*S.rollD;if(S.rollT>=1){S.rollT=-1;S.roll=0;}}
   E.set(S.pitch,S.yaw,S.bank+S.roll);Q.setFromEuler(E);nav.quaternion.copy(Q);
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Q);S.fwd=fwd;const up=new THREE.Vector3(0,1,0).applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch,S.yaw,0,'YXZ')));
