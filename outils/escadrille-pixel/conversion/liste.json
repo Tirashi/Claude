@@ -80,6 +80,27 @@
   "pack": "niko"
  },
  {
+  "cle": "niko_carrier",
+  "nom": "NIKO CARRIER",
+  "f": "PACKS/niko/x_carrier/carrier/carrier.fbx",
+  "tex": "PACKS/niko/x_carrier/carrier/carrier_albedo.png",
+  "pack": "niko"
+ },
+ {
+  "cle": "niko_fighter_r",
+  "nom": "NIKO FIGHTER ROUGE",
+  "f": "PACKS/niko/x_fighter/fighter/fighter.fbx",
+  "tex": "PACKS/niko/x_fighter/fighter/fighter_albedo_rouge.png",
+  "pack": "niko"
+ },
+ {
+  "cle": "niko_bomber_r",
+  "nom": "NIKO BOMBER ROUGE",
+  "f": "PACKS/niko/x_bomber/bomber/bomber.fbx",
+  "tex": "PACKS/niko/x_bomber/bomber/bomber_albedo_rouge.png",
+  "pack": "niko"
+ },
+ {
   "cle": "texnist2",
   "nom": "TEXNIST 2",
   "f": "PACKS/texnist/x_Voxel_Spaceships/Voxel Spaceships/obj/Spaceship2.obj",

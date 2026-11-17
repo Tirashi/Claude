@@ -35,7 +35,7 @@ def maille(vox_list,occ,pal,origine):
                     base=len(P)
                     for cu,cw in coins:
                         v=[0,0,0];v[ax]=plan;v[u]=cu;v[w]=cw
-                        P.append(((v[0]-origine[0])*PAS,(v[2]-origine[2])*PAS,-(v[1]-origine[1])*PAS));C.append(np.round(((pal[(c-1)%256][:3]/255.)**2.2)*255).astype(np.uint8))   # couleurs en linéaire, comme les textures décodées par Three.js
+                        P.append(((v[0]-origine[0])*PAS,(v[2]-origine[2])*PAS,-(v[1]-origine[1])*PAS));C.append(pal[(c-1)%256][:3].astype(np.uint8))   # couleurs telles quelles (le jeu affiche les textures sans conversion sRGB)
                     I+=[base,base+1,base+2,base,base+2,base+3]
     return np.array(P,np.float32),np.array(C,np.uint8),np.array(I,np.uint32)
 def glb(pieces,sortie):

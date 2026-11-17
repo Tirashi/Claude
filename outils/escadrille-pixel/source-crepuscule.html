@@ -210,15 +210,25 @@ const MODELES3D={
 const COULEURS={FAUCON:{m:'faucon',corps:'#7f7896',aile:'#a49dba',accent:'#e2682e',verriere:'#ffcf7a'},HIRONDELLE:{m:'hirondelle',corps:'#2f5690',aile:'#5f8cc4',accent:'#f2c94c',verriere:'#ffb040'},
   CORSAIRE:{m:'corsaire',corps:'#4a6236',aile:'#6f8a52',accent:'#f2c94c',verriere:'#86bdea'},VIPERE:{m:'vipere',corps:'#6a2a26',aile:'#a04e36',accent:'#ffe080',verriere:'#7fd0ff'},
   SPECTRE:{m:'spectre',corps:'#3a3a48',aile:'#565668',accent:'#7fd0ff',verriere:'#ffcf7a'}};
-// modèles importés (GLB en base64, GLBS) : analysés une seule fois, puis clonés ; matériaux convertis en Lambert à facettes
+// modèles importés (GLB en base64, GLBS) : analysés une seule fois, puis clonés ; matériaux convertis en Phong à facettes ; textures lues telles quelles (sans décodage sRGB, qui assombrissait tout)
 const IMPORTS={};const b64=s=>{const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;};
 await Promise.all(Object.entries(GLBS).map(([k,v])=>new Promise(ok=>new THREE.GLTFLoader().parse(b64(v.b64),'',g=>{const sc0=g.scene;
-  sc0.traverse(o=>{if(o.isMesh){const mm=Array.isArray(o.material)?o.material:[o.material];const n=mm.map(m=>new THREE.MeshPhongMaterial({color:m.color,map:m.map||null,vertexColors:!!m.vertexColors,flatShading:true,shininess:0,specular:0x000000,side:THREE.DoubleSide}));o.material=Array.isArray(o.material)?n:n[0];}});
+  sc0.traverse(o=>{if(o.isMesh){const mm=Array.isArray(o.material)?o.material:[o.material];const n=mm.map(m=>{if(m.map){m.map.encoding=THREE.LinearEncoding;if(m.map.image&&m.map.image.height<=4){m.map.magFilter=m.map.minFilter=THREE.NearestFilter;m.map.generateMipmaps=false;}}return m;}).map(m=>new THREE.MeshPhongMaterial({color:m.color,map:m.map||null,vertexColors:!!m.vertexColors,flatShading:true,shininess:0,specular:0x000000,side:THREE.DoubleSide}));o.material=Array.isArray(o.material)?n:n[0];}});
   IMPORTS[k]=sc0;ok();},()=>ok()))));
 function importe(cle,rot,taille){const g=new THREE.Group(),m=IMPORTS[cle].clone();const piv=new THREE.Group();piv.add(m);piv.rotation.y=rot;g.add(piv);
   const b=new THREE.Box3().setFromObject(piv),s=new THREE.Vector3();b.getSize(s);const k=taille/Math.max(s.x,s.z);piv.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(piv),c=b2.getCenter(new THREE.Vector3());piv.position.sub(c);
-  const s2=new THREE.Vector3();b2.getSize(s2);const helices=[];m.traverse(o=>{if(/^helice/.test(o.name))helices.push(o);});return{g,env:s2.x/2,arriere:s2.z/2,larg:s2.x,helices};}
-function construire(c,flammes){if(c.m==='import'){const r=importe(c.cle,c.rot,c.taille||6.4);r.tuy=c.helice?[]:[[r.larg*.12,0,r.arriere],[-r.larg*.12,0,r.arriere]];r.flammes=[];
+  const s2=new THREE.Vector3();b2.getSize(s2);const helices=[];m.traverse(o=>{if(/^helice/.test(o.name))helices.push(o);});return{g,env:s2.x/2,arriere:s2.z/2,larg:s2.x,helices,tuyeres:f=>tuyeres(g,f)};}
+// repère les tuyères : les points les plus en arrière du modèle, regroupés en taches (grille en x-y) ; une tache = une flamme
+function tuyeres(g,force){g.updateMatrixWorld(true);const P=[],v=new THREE.Vector3();g.traverse(o=>{if(!o.isMesh)return;const a=o.geometry.attributes.position,pas=Math.max(1,Math.floor(a.count/6000));for(let i=0;i<a.count;i+=pas){v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);P.push([v.x,v.y,v.z]);}});
+  let z0=1e9,z1=-1e9,x0=1e9,x1=-1e9;for(const p of P){z0=Math.min(z0,p[2]);z1=Math.max(z1,p[2]);x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);}
+  if(force)return force.map(([fx,fy])=>{const x=fx*(x1-x0),y=fy*(x1-x0),R=(x1-x0)*.08;let z=-1e9;for(const p of P)if(Math.hypot(p[0]-x,p[1]-y)<R)z=Math.max(z,p[2]);return[x,y,z>-1e9?z:z1];});
+  const L=z1-z0,W=x1-x0,c=W/20,arr=P.filter(p=>p[2]>z1-L*.07),cel=new Map();
+  for(const p of arr){const k=Math.floor(p[0]/c)+','+Math.floor(p[1]/c);const e=cel.get(k);if(e){e.n++;e.x+=p[0];e.y+=p[1];e.z=Math.max(e.z,p[2]);}else cel.set(k,{n:1,x:p[0],y:p[1],z:p[2]});}
+  const vu=new Set(),taches=[];for(const k of cel.keys()){if(vu.has(k))continue;const t={n:0,x:0,y:0,z:-1e9,c:0},pile=[k];vu.add(k);
+    while(pile.length){const q=pile.pop(),e=cel.get(q);t.n+=e.n;t.x+=e.x;t.y+=e.y;t.z=Math.max(t.z,e.z);t.c++;const [i,j]=q.split(',').map(Number);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const r=(i+a)+','+(j+b);if(cel.has(r)&&!vu.has(r)){vu.add(r);pile.push(r);}}}
+    taches.push({x:t.x/t.n,y:t.y/t.n,z:t.z,c:t.c});}
+  taches.sort((a,b)=>b.c-a.c);return taches.filter(t=>t.c>=Math.max(2,taches[0].c*.3)).slice(0,4).map(t=>[t.x,t.y,t.z]);}
+function construire(c,flammes){if(c.m==='import'){const r=importe(c.cle,c.rot,c.taille||6.4);r.tuy=c.helice?[]:r.tuyeres(c.tuy);r.flammes=[];
     if(flammes)for(const t of r.tuy){const f=new THREE.Group();const a=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));a.position.z=.55;const b=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));b.position.z=.3;f.add(a,b);f.position.set(t[0],t[1],t[2]);r.g.add(f);r.flammes.push(f);}
     return r;}
   const r=MODELES3D[c.m](c);r.flammes=[];if(flammes)for(const t of r.tuy){const f=new THREE.Group();const a=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));a.position.z=.55;
@@ -236,14 +246,17 @@ Object.assign(COULEURS,{'mono_plane01':{m:'import',cle:'mono_plane01',rot:Math.P
   'mono_camo':{m:'import',cle:'mono_camo',rot:Math.PI,pack:'{PACK_mono_camo}'},
   'mono_infrared':{m:'import',cle:'mono_infrared',rot:Math.PI,pack:'{PACK_mono_infrared}'},
   'mono_dual':{m:'import',cle:'mono_dual',rot:Math.PI,pack:'{PACK_mono_dual}'},
-  'niko_fighter':{m:'import',cle:'niko_fighter',rot:-Math.PI/2,pack:'{PACK_niko_fighter}'},
-  'niko_bomber':{m:'import',cle:'niko_bomber',rot:0,pack:'{PACK_niko_bomber}'},
+  'niko_fighter':{m:'import',cle:'niko_fighter',tuy:[[.36,-.08],[-.36,-.08]],rot:-Math.PI/2,pack:'{PACK_niko_fighter}'},
+  'niko_bomber':{m:'import',cle:'niko_bomber',tuy:[[.25,0],[-.25,0]],rot:0,pack:'{PACK_niko_bomber}'},
+  'niko_carrier':{m:'import',cle:'niko_carrier',tuy:[[.22,-.1],[-.22,-.1]],rot:0,pack:'{PACK_niko_carrier}'},
+  'niko_fighter_r':{m:'import',cle:'niko_fighter_r',tuy:[[.36,-.08],[-.36,-.08]],rot:-Math.PI/2,pack:'{PACK_niko_fighter_r}'},
+  'niko_bomber_r':{m:'import',cle:'niko_bomber_r',tuy:[[.25,0],[-.25,0]],rot:0,pack:'{PACK_niko_bomber_r}'},
   'texnist2':{m:'import',cle:'texnist2',rot:Math.PI,pack:'{PACK_texnist2}'},
   'texnist4':{m:'import',cle:'texnist4',rot:Math.PI,pack:'{PACK_texnist4}'},
   'fga_corvette':{m:'import',cle:'fga_corvette',rot:-Math.PI/2,pack:'{PACK_fga_corvette}'},
   'fga_frigate':{m:'import',cle:'fga_frigate',rot:-Math.PI/2,pack:'{PACK_fga_frigate}'},
-  'maja1':{m:'import',cle:'maja1',rot:0,pack:'{PACK_maja1}'},
-  'maja2':{m:'import',cle:'maja2',rot:0,pack:'{PACK_maja2}'},
+  'maja1':{m:'import',cle:'maja1',tuy:[[.35,0],[-.35,0]],rot:0,pack:'{PACK_maja1}'},
+  'maja2':{m:'import',cle:'maja2',tuy:[[.3,0],[-.3,0]],rot:0,pack:'{PACK_maja2}'},
   'maja3':{m:'import',cle:'maja3',rot:0,pack:'{PACK_maja3}'},
   'maja4':{m:'import',cle:'maja4',rot:Math.PI,pack:'{PACK_maja4}'}});
 for(const k in COULEURS){const c=COULEURS[k];c.pack=c.m==='import'?(PACKS[GLBS[c.cle].pack]||''):'ESCADRILLE (construits dans le code)';c.nom=c.m==='import'?GLBS[c.cle].nom:k;}
