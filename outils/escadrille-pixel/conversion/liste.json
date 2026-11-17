@@ -1,35 +1,5 @@
 [
  {
-  "cle": "mono_microrecon",
-  "nom": "MICRO RECON",
-  "f": "PACKS/monoship/x_MicroRecon/Package/MicroRecon.obj",
-  "pack": "monoship"
- },
- {
-  "cle": "mono_redfighter",
-  "nom": "RED FIGHTER",
-  "f": "PACKS/monoship/x_RedFighter/Package/RedFighter.obj",
-  "pack": "monoship"
- },
- {
-  "cle": "mono_camo",
-  "nom": "CAMO JET",
-  "f": "PACKS/monoship/x_Camo_Stellar_Jet/Package/CamoStellarJet.obj",
-  "pack": "monoship"
- },
- {
-  "cle": "mono_infrared",
-  "nom": "INFRARED",
-  "f": "PACKS/monoship/x_Infrared_Furtive/Package/InfraredFurtive.obj",
-  "pack": "monoship"
- },
- {
-  "cle": "mono_dual",
-  "nom": "DUAL STRIKER",
-  "f": "PACKS/monoship/x_DualStriker/Package/DualStriker.obj",
-  "pack": "monoship"
- },
- {
   "cle": "niko_fighter",
   "nom": "NIKO FIGHTER",
   "f": "PACKS/niko/x_fighter/fighter/fighter.fbx",

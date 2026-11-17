@@ -105,3 +105,4 @@ L'utilisateur : « ce n'est pas ce que je veux : dynamique, low poly fluide, dé
 - Les mouvements de plus de 150 px d'un coup sont ignorés (saut parasite de Chrome à la capture). Le hangar libère la souris.
 - Test Playwright : le double appui avec `keyboard.press` échoue sous swiftshader (images trop lentes, les deux appuis arrivent à plus de 0,3 s) ; envoyer les `KeyboardEvent` dans un même `evaluate`.
 - **Avions à hélices retirés** (17/11, décision de l'utilisateur : des vaisseaux, pas d'avions) : les 6 monogon voxel plane et le Corsaire sortent du hangar et de `modeles.json` ; on garde Faucon, Hirondelle, Vipère et Spectre.
+- **Vaisseaux monogon retirés** (17/11, design trop différent). Aperçu d'une flotte cohérente : `planche.js` (scratchpad) ; les 5 corvettes et 5 frégates du premier pack Free Game Assets se convertissent en bleu ou en rouge en changeant de texture (`T_Spase_blue` / `T_Spase_64`).

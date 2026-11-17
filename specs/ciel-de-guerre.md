@@ -79,6 +79,7 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 
 ## Décision du 17/11 : des vaisseaux, pas d'avions
 Le joueur et les ennemis volent sur des **vaisseaux**. Les avions à hélices sont retirés : les 6 monogon voxel plane et le Corsaire. On garde ce qui ressemble à des avions de chasse : Faucon, Hirondelle, Vipère et Spectre, construits dans le code. Le hangar de la maquette est mis à jour. Les outils des hélices (`vox_glb.py`, `helices.py`) restent dans `outils/escadrille-pixel/conversion/`.
+Le même jour, les **5 vaisseaux voxel monogon** sont retirés aussi (« design trop différent »). Le problème de licence monogon disparaît.
 
 ## Licences à régler avant le jeu
 - **monogon (maxparata)** : CC BY-ND, donc **pas de modification**. Les avions à hélices sont retirés, mais il reste les 5 vaisseaux voxel, convertis et réduits. Il faut demander l'accord de l'auteur, ou ne garder que les modèles d'origine non modifiés, ou s'en passer.

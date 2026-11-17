@@ -58,7 +58,7 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 <li><b>Ciel du crépuscule peint par la carte graphique</b> : dégradé lavande, rose, pêche et jaune, soleil bas avec son halo, traînées de nuages roses.</li>
 <li><b>Décor peint pixel par pixel</b> : forêts d'automne (vert, jaune, orange, rouge, olive) mouchetées, roche mauve sur les pentes, plages, mer qui passe du turquoise au bleu profond selon la profondeur, écume des côtes et moutons qui bougent. Le monde est infini.</li>
 <li><b>Traînées blanches</b> au bout des ailes, flamme du réacteur, ombre sous l'avion : ce sont elles qui donnent la vitesse.</li>
-<li><b>Avions 3D low poly</b> construits dans le code, avec un contour fin : parfaitement fluides. Le bouton AVION ouvre le hangar : nos 4 chasseurs et les vaisseaux des packs que tu as choisis (monogon, niko, Texnist, Free Game Assets, Majadroid) ; les avions à hélices ont été retirés le 17/11; la touche C passe au suivant. <b>Nuages en volume</b> éclairés en trois tons.</li>
+<li><b>Avions 3D low poly</b> construits dans le code, avec un contour fin : parfaitement fluides. Le bouton AVION ouvre le hangar : nos 4 chasseurs et les vaisseaux des packs que tu as choisis (niko, Texnist, Free Game Assets, Majadroid) ; les avions à hélices ont été retirés le 17/11; la touche C passe au suivant. <b>Nuages en volume</b> éclairés en trois tons.</li>
 </ul></section>
 <section class="q"><h2>A CHOISIR</h2>
 <p>1. Le rendu est-il proche de tes captures ? Qu'est-ce qui manque le plus : le décor, la lumière, l'avion ?</p>
@@ -240,13 +240,8 @@ function construire(c,flammes){if(c.m==='import'){const r=importe(c.cle,c.rot,c.
   const r=MODELES3D[c.m](c);r.flammes=[];if(flammes)for(const t of r.tuy){const f=new THREE.Group();const a=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));a.position.z=.55;
     const b=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));b.position.z=.3;f.add(a,b);f.position.set(t[0],t[1],t[2]);r.g.add(f);r.flammes.push(f);}return r;}
 function chasseur(c){return construire(Object.assign({m:'faucon'},c),false).g;}
-const PACKS={"monoship": "MONOGON \u00b7 VOXEL SPACESHIPS (CC BY-ND)", "niko": "NIKO-3D-MODELS", "texnist": "TEXNIST \u00b7 VOXEL SPACESHIPS (CC BY)", "fga": "FREE GAME ASSETS (craftpix)", "fga2": "FREE GAME ASSETS \u00b7 BATTLE SPACESHIP (craftpix)", "maja": "MAJADROID (CC0)"};
-Object.assign(COULEURS,{  'mono_microrecon':{m:'import',cle:'mono_microrecon',rot:Math.PI,pack:'{PACK_mono_microrecon}'},
-  'mono_redfighter':{m:'import',cle:'mono_redfighter',rot:Math.PI,pack:'{PACK_mono_redfighter}'},
-  'mono_camo':{m:'import',cle:'mono_camo',rot:Math.PI,pack:'{PACK_mono_camo}'},
-  'mono_infrared':{m:'import',cle:'mono_infrared',rot:Math.PI,pack:'{PACK_mono_infrared}'},
-  'mono_dual':{m:'import',cle:'mono_dual',rot:Math.PI,pack:'{PACK_mono_dual}'},
-  'niko_fighter':{m:'import',cle:'niko_fighter',tuy:[[.36,-.08],[-.36,-.08]],rot:Math.PI/2,pack:'{PACK_niko_fighter}'},
+const PACKS={"niko": "NIKO-3D-MODELS", "texnist": "TEXNIST \u00b7 VOXEL SPACESHIPS (CC BY)", "fga": "FREE GAME ASSETS (craftpix)", "fga2": "FREE GAME ASSETS \u00b7 BATTLE SPACESHIP (craftpix)", "maja": "MAJADROID (CC0)"};
+Object.assign(COULEURS,{  'niko_fighter':{m:'import',cle:'niko_fighter',tuy:[[.36,-.08],[-.36,-.08]],rot:Math.PI/2,pack:'{PACK_niko_fighter}'},
   'niko_bomber':{m:'import',cle:'niko_bomber',tuy:[[.25,0],[-.25,0]],rot:Math.PI,pack:'{PACK_niko_bomber}'},
   'niko_carrier':{m:'import',cle:'niko_carrier',tuy:[[.22,-.1],[-.22,-.1]],rot:Math.PI,pack:'{PACK_niko_carrier}'},
   'niko_fighter_r':{m:'import',cle:'niko_fighter_r',tuy:[[.36,-.08],[-.36,-.08]],rot:Math.PI/2,pack:'{PACK_niko_fighter_r}'},
