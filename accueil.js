@@ -38,6 +38,7 @@ const ORDRE = [
   "bannieres/index.html",
   "lanterne/index.html",
   "terres-franches/index.html",
+  "politique/index.html",
   "bastion/index.html",
   "mot-d-or/index.html",
   "capitaine-du-port/index.html",

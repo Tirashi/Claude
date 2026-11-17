@@ -1,0 +1,510 @@
+# Politique (« Victoria 3 minimaliste », nom à trouver) — chantier
+
+Jeu de gestion politique au tour par tour : une petite nation, ses ressources, ses lois, ses factions, la diplomatie et la guerre.
+Une première partie a été jouée à la main avec un LLM comme maître du jeu ; ses incohérences motivent un **moteur de règles déterministe, testé par simulation**, puis un écran par-dessus.
+Proche de l'idée « Grande stratégie commerciale victorienne » d'`IDEES.md`.
+
+## 1. Documents de l'utilisateur (13/11)
+- [`politique/regles-v1.md`](politique/regles-v1.md) : règles V1, **source de vérité du moteur**.
+- [`politique/backlog-v2.md`](politique/backlog-v2.md) : idées V2 et problèmes, **hors périmètre** tant que non validé.
+- [`politique/plan-simulateur.md`](politique/plan-simulateur.md) : plan du moteur, des bots, des métriques, jalons M0 à M7.
+- [`politique/bilan-partie-1.md`](politique/bilan-partie-1.md) : bilan de la partie 1 et pistes V2.
+
+## 2. Adaptation au dépôt
+Les documents parlent de `engine/ data/ sim/ test/ ui/`, de modules ES et de `node --test`. Dans la Ludothèque :
+
+| Document | Dépôt |
+|---|---|
+| `engine/` | `politique/moteur/` (scripts classiques, `window.Politique.X` / `require`) |
+| `data/`, `data/scenarios/champs.js` | `politique/donnees/`, `politique/donnees/champs.js` |
+| `test/`, `node --test` | `outils/politique-tests.js` (lancé par `outils/verifications.js`) |
+| `sim/run.js`, `sim/bots/` | `outils/politique-simulateur.js`, `outils/politique-bots.js` |
+| `ui/` | `politique/index.html` + fiche, **après une maquette validée** (règle « maquette d'abord ») |
+| `docs/` | `specs/politique/` |
+
+Identifiants du code en français comme le reste du dépôt ; les `id` des lois et bâtiments restent ceux des règles V1.
+
+## 3. Jalons
+- **M0 — socle** ✅ (13/11) : hasard mulberry32 à graine, état initial du scénario `champs`, tour vide, tests (déterminisme, état non modifié, JSON, action hors liste refusée).
+- **M1 — économie, capital politique, lois, bâtiments** ✅ (13/11) : `donnees/economie.js`, `lois.js`, `batiments.js` ; `moteur/economie.js`, `lois.js`, `batiments.js`, `tour.js`. Les effets des lois sur les factions sont écrits dans les données mais appliqués en M2. Filature de l'Entente, forge et fortifications attendent M3.
+- **M2 — factions** ✅ (13/11) : `donnees/factions.js`, `moteur/factions.js` : chocs à l'adoption, effets par tour (durée limitée pour la puissance des syndicats), dissipation, suffrages (apaisement à moitié prix, hausses ralenties), apaisement (action `apaiser`), bornes, statuts, moral, grève, révolte, révolution (fin de partie).
+- **M3a — diplomatie et commerce** ✅ (13/11) : `donnees/diplomatie.js`, profils des nations dans `donnees/champs.js`, `moteur/diplomatie.js` : nations simplifiées, dons, contrats, embargo, Entente des Ports, défense mutuelle, filature conjointe (`entente_mill`), réputation, paria.
+- **M3b — guerre et paix** ✅ (13/11) : `donnees/guerre.js`, `moteur/guerre.js` : force, forge, fortifications, déclarations (joueur et Val-Roc), défense mutuelle, Contreforts opportuniste, batailles au hasard à graine, sanctions de bloc de l'Entente, usure et capitulation, clauses (réparations, levée d'embargo, non-réarmement), paix blanche.
+- **M4 — bots et simulateur** ✅ (13/11) : `outils/politique-bots.js` (passif, economy, spam_medicine, no_appeasement, militarist, random, replica), `outils/politique-simulateur.js` (`--parties`, `--bot`, `--tours`, `--graine`, `--json`, `--controle`) ; métriques par partie (fins, durée, trésor et capital politique aux tours 20/30/40/60, réputation, guerres, batailles, colère, grèves, apaisements, lois adoptées, catalogue complet).
+- **M5 — métriques et balayages** ✅ (13/11) : `--regle chemin=valeur`, `--balayage chemin=v1,v2,v3` (tableau comparatif, données modifiées en mémoire seulement), confrontations bot contre bot et stratégie dominante, issue des guerres, lois jamais adoptées, tours sans vraie décision politique.
+- **Décisions du 13/11** : colère d'une défaite 10 → 5 ; trêve de 10 tours après une paix (backlog E1). Règles complètes du moteur : [`politique/regles-moteur.md`](politique/regles-moteur.md).
+- M6 : brainstorming sur les règles, puis backlog (un item à la fois, après accord). M7 écran (après maquette).
+
+## 4. Valeurs validées (13/11, toutes les propositions par défaut)
+**Économie** : trésor 200, capital politique 0, 80 familles, 4 fermes et 1 mine ; +1 %/tour de familles, plafond 200 ; impôts = familles × 1 or × loi ;
+besoins par famille grain 1, tissu 0,2, outils 0,1 ; armée 4 fer + 2 tissu ; atelier 5 fer ; surplus vendu et déficit acheté au prix du tour, sans stock ;
+conscription 12 or, milice 0 ; code du travail −6 % sur toute la production ; bâtiments payés à la commande, productifs le tour qui suit leur fin ;
+trésor négatif permis, sans conséquence en V1 ; crise du tissu au tour 1 : tissu ×1,5 pendant 6 tours.
+Effets « à terme » (croissance des écoles +0,5 / +1 %, artisans +35 / +50 % sur ateliers et tissages) : montée en ligne droite sur 10 tours après l'adoption (repart de zéro quand l'école gratuite remplace la publique).
+
+**Factions** (appliquées en M2) : colère / puissance de départ paysans 30/40, ouvriers 35/25, artisans 25/30, patrons 20/45 ; dissipation −1 colère/tour ; apaisement une fois par faction et par tour ;
+chocs : impôt progressif patrons +5, armée de métier ouvriers −5, conscription ouvriers +5 colère et +10 puissance ; syndicats +3 puissance pendant 10 tours ;
+suffrage universel patrons +15 colère ; populaires = paysans, ouvriers ; élites = patrons, artisans.
+
+**Nations** : Val-Roc −20 / 400 or / 90 familles ; Brume +20 / 600 / 100 ; Contreforts 0 / 150 / 50 ; réputation de départ 0.
+
+**À TRANCHER, tranchés** : 7 catégories de lois ; barème de réputation (don +1 par 20 or, max +5 ; traité signé +3 ; respecté +2 tous les 10 tours ; rompu −15 ; sanction légitime +3, illégitime −5 ; guerre d'agression −20 ; attaque d'un membre de l'Entente −30 ; suffrages ±5 ; paria sous −50) ;
+moral : 1 jusqu'à colère 40, puis linéaire jusqu'à 0 à 100, grève (≥ 75) plafonnée à 0,5, révolte 0, moyenne pondérée par la puissance.
+Restent pour M3 : cumul des bonus de guerre (multiplicatif proposé), effet de l'embargo sur l'économie visée.
+
+**Ajoutées en M1, validées le 13/11** : une seule loi **en cours** par catégorie ; plusieurs actions par tour, chacune vérifiée sur l'état laissé par la précédente ;
+ordre du tour T : événements → actions → adoption des lois (lancée en T, en vigueur en T + 2, effets dès ce tour) → économie → démographie → chantiers → +15 capital politique → T + 1 ;
+montants arrondis au centime.
+
+**Proposées avec M2, validées le 13/11** : bâtiments de chaque faction (paysans fermes, ouvriers mines, artisans ateliers et tissages ; patrons : les impôts) ;
+grève = leurs bâtiments à 50 %, patrons impôts ×0,8 ; révolte = bâtiments arrêtés, patrons impôts ×0,5 ; révolution (colère qui touche 100 à n'importe quel moment du tour) = partie perdue ;
+« colère montante 2× plus lente » = toute hausse de colère (chocs et effets par tour) des factions favorisées divisée par 2, pas la puissance ;
+statuts calculés en fin de tour : une grève pèse sur l'économie du tour suivant, l'apaisement la lève au tour d'après.
+
+## 5. Premières observations (M1, information, pas d'équilibrage)
+Ancien rapport des tests (remplacé par le simulateur en M4) : sans rien faire, 1 718 or au tour 60 ; un bâtisseur simple (lois sociales dans l'ordre de la partie 1, une ferme dès qu'il n'y a pas de déficit) finit le tour 30 à ~3 100 or (partie 1 : 3 214) mais le tour 60 à ~14 600 or avec 29 fermes.
+Une ferme (60 or, +20 grain vendus 1 or) se rembourse en 3 tours et rien ne limite le nombre : c'est le problème A1 du backlog (prix dynamiques en B1), à mesurer en M4/M5.
+
+M2 : aucun joueur du rapport n'atteint la grève. Même un « provocateur » qui adopte impôt sur le capital, syndicats, code du travail, suffrage universel, conscription et école gratuite **sans jamais apaiser** plafonne à 67 de colère (patrons) : en V1 la colère ne monte que par les chocs de lois, et la dissipation (−1/tour) l'efface. L'apaisement est donc inutile (pire que le problème A2). Le plafond de 0,5 du moral en grève ne joue jamais : à colère 75, la formule donne déjà 0,42.
+
+
+## 5 bis. Observations M3a (information)
+Joueur « diplomate » du rapport (bâtisseur + Entente avec Brume et Contreforts, contrat de tissu, filature, défense mutuelle, embargo contre Val-Roc au tour 15) : 3 250 or et réputation +34 au tour 30 (partie 1 : 3 214 or, +42 avec la guerre et la paix).
+L'embargo ne mord presque pas : la colère de Val-Roc n'est qu'à 27,5 au tour 30 (48 au tour 60), car le joueur n'a qu'un petit surplus de grain. La victoire par usure (moral < 0,3, soit colère ≥ 82 environ) serait hors d'atteinte en M3b avec ces valeurs : à mesurer avant d'équilibrer.
+
+## 5 ter. Observations M3b (information, rien n'a été équilibré)
+Rapport sur 50 graines : la guerre décide de tout. Val-Roc démarre à 640 de force contre 200 pour le joueur (trésor 400 × conscription 1,6) : il remplit la condition « 1,2× plus fort » dès le tour 1, déclare la guerre dans les premiers tours (30 % par tour), livre bataille à chaque tour où il est plus fort, et chaque défaite ajoute +10 de colère à toutes nos factions. Révolution en ~9 tours pour les joueurs qui investissent (leur trésor, donc leur force, baisse) : bâtisseur 50/50, provocateur 50/50, diplomate 49/50 ; même le joueur qui ne fait rien finit en révolution 36 fois sur 50.
+Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trésor ou force de départ de Val-Roc, seuil de déclaration (1,2), colère d'une défaite (+10), une bataille ennemie par tour, la force tirée du trésor non dépensé (problème A5 du backlog), pas de trêve après la paix (Val-Roc peut redéclarer la guerre au tour suivant : relation restée à −100).
+
+## 5 quater. Premier passage du simulateur (M4, 200 parties par bot, graines 1 à 200 ; information, rien n'a été équilibré)
+| Bot | Fins | Trésor t30 / t60 | Guerre (tours) | Batailles G / P | Apaisements | Lois |
+|---|---|---|---|---|---|---|
+| passif | révolution 66 % | −515 / −1 983 | 20 | 1,0 / 10,1 | 0 | 0 |
+| economy | fin 100 % | 637 / 9 214 | 49 | 6,9 / 35,4 | 71 | 3 |
+| spam_medicine | fin 100 % | 588 / 7 748 | 52 | 6,8 / 37,5 | 56 | 4 |
+| no_appeasement | révolution 97 % (17 tours) | — | 10 | 0,8 / 6,9 | 0 | 3 |
+| militarist | fin 98 % | 97 / 70 | 59 | 3,3 / 49,3 | 101 | 2 |
+| random | révolution 100 % (11 tours) | — | 9 | 0,5 / 8,2 | 2 | 2 |
+| replica | fin 100 % | 2 739 / 8 960 | 16 | 1,6 / 11,5 | 19 | 8 |
+
+- **Non-régression (replica)** : 2 739 or et réputation +27 au tour 30, contre 3 214 et +42 dans la partie 1 (−15 % d'or, −15 de réputation) ; la guerre dure 16 tours au lieu de 3 et coûte 11,5 défaites.
+- **L'apaisement est devenu vital** (à cause de la guerre, pas des lois) : sans lui, révolution 97 % ; avec, aucune grève. 12 or contre −18 de colère reste la parade à tout (problème A2 du backlog, sous une autre forme).
+- **Val-Roc est en guerre contre le joueur presque toute la partie** et gagne 80 à 95 % des batailles : il n'attaque que quand il est plus fort.
+- **Le catalogue n'est jamais acheté en entier** (lois exclusives par catégorie) ; le capital politique s'accumule chez les bots qui ne votent pas (passif 900, militarist 825 au tour 60).
+
+## 5 quinquies. Balayages M5 (13/11, 100 parties par bot et par valeur ; information, aucune valeur changée)
+**Choix de mesure (à confirmer)** : un bot en bat un autre sur une graine s'il finit la partie et pas l'autre, sinon s'il a plus d'or à la fin (deux révolutions : celui qui tient le plus longtemps) ; stratégie dominante = bat chaque autre bot sur plus de 75 % des graines ; « tour sans vraie décision » = au plus une loi, un traité, un contrat ou une action de guerre possible (les bâtiments ne comptent pas, toujours possibles dès 60 or).
+- **Stratégie dominante : aucune.** economy bat spam_medicine 82 % du temps, fait jeu égal avec replica (51 %) ; la Médecine du travail d'abord n'est pas dominante (problème A3 non confirmé par les chiffres).
+- **Tours sans vraie décision : ~0 %** (3 % pour replica, 6 % pour no_appeasement) : le capital politique s'accumule, il y a toujours une loi à lancer, et une bataille possible en guerre.
+- **Trésor de départ de Val-Roc** (400 / 200 / 100) et **seuil de déclaration** (1,2 / 2 / 3) : presque aucun effet (guerre 45 à 50 tours sur 60 pour economy dans tous les cas). Val-Roc gagne ~78 or par tour sans rien dépenser, sa force (= trésor) dépasse vite n'importe quel seuil : c'est le problème A5 du backlog (force tirée du trésor non dépensé), le vrai moteur des guerres sans fin, avec l'absence de trêve.
+- **Colère d'une défaite** (10 / 5 / 2) : le levier le plus fort. À 5, plus aucune révolution pour passif (66 % → 0 %) ni militarist, apaisements d'economy divisés par 2,4 (67 → 28), replica inchangé (2 794 or au tour 30). no_appeasement et random restent en révolution : l'apaisement reste utile sans être obligatoire.
+- **Coût de l'apaisement** (12 / 24 / 36) : à 24, economy perd 57 % de son or au tour 60 sans révolution ; à 36, 15 à 20 % de révolutions pour economy, spam_medicine et replica. Rendre l'apaisement cher sans toucher à la guerre punit surtout les bons joueurs.
+- **Militarist** : un essai d'apaisement plus tardif (70) l'a fait passer de 2 % à 52 % de révolutions ; retiré.
+
+## 5 sexies. Bilan avant M6 (13/11, défaite à +5 et trêve, 200 parties par bot)
+| Bot | Fins | Or t30 / t60 | Guerre (tours) | Batailles G / P | Apaisements | Grève |
+|---|---|---|---|---|---|---|
+| passif | fin 100 % (avant : révolution 66 %) | −271 / −1 303 | 26 | 1,5 / 22,0 | 0 | 100 % |
+| economy | fin 100 % | 756 / 9 785 | 49 | 8,5 / 33,2 | 28 (avant 67) | 0 % |
+| spam_medicine | fin 100 % | 750 / 9 363 | 49 | 8,3 / 33,8 | 10 | 0 % |
+| no_appeasement | révolution 96 % | — | 16 | 1,7 / 13,8 | 0 | 97 % |
+| militarist | fin 100 % | 143 / 109 | 59 | 5,0 / 51,2 | 41 | 0 % |
+| random | révolution 95 % | — | 20 | 1,3 / 22,5 | 4 | 98 % |
+| replica | fin 100 % | 2 781 / 9 003 | 16 | 2,2 / 11,7 | 6 | 0 % |
+
+**Ce qui va** : moteur stable et reproductible ; aucune stratégie dominante (economy bat spam_medicine 79 %, égalité avec replica 56/44) ; un joueur qui gère ses factions ne fait jamais grève, un joueur qui les néglige va à la révolution ; replica proche de la partie 1 (2 781 or au tour 30 contre 3 214) et **gagne sa guerre par l'usure** (embargo + sanctions de l'Entente : 1 guerre gagnée par partie), la thèse de la partie 1 tient.
+
+**Ce qui ne va pas** :
+1. **Guerre perpétuelle** : toutes les parties, 49 tours sur 60 pour economy, 59 pour militarist ; Val-Roc gagne ~80 % des batailles. La trêve ne joue presque pas, faute de paix (Val-Roc, toujours plus fort, ne capitule ni n'accepte la paix blanche). Cause : force = trésor, et Val-Roc ne dépense rien (+78 or/tour) (A5).
+2. **L'investissement militaire ne rapporte rien** : militarist garde ~130 or, sa conscription multiplie presque zéro (A5).
+3. **Trésor sans débouché** : economy 9 785 or au tour 60, no_appeasement 17 069 (A1 ; une ferme se rembourse en 3 tours).
+4. **Capital politique sans débouché** : 825 à 900 chez les bots qui votent peu ; même les bons bots n'adoptent que 3 ou 4 lois (A1, B5).
+5. **L'apaisement reste la parade universelle** : avec, jamais de grève ; sans, 96 % de révolutions (A2).
+6. **Pas de hasard hors des batailles** : une seule crise écrite au tour 1 (A4).
+7. **La Médecine du travail n'est pas dominante** (A3 non confirmé) : elle remplace des apaisements (28 → 10) pour 10 or par tour.
+
+**Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
+
+## 38. Maquette 2 de la carte (17/11)
+Retour sur la maquette 1 : « ces assets ne fonctionnent pas pour ça » ; la vue pays montrait une île alors que le continent montrait l'inverse. Recherche de graphismes faits pour des cartes du monde (planche : World Map d'unTied Games, Overworld 16×16 de Larchrow, Hex Overworld, cartes dessinées) ; l'utilisateur signale l'Overworld (gratuit) et ses favoris itch.io (collection « Assets ») en vue isométrique : **Isometric Strategy – Medieval Pixel Art Tiles** (crabcrabcrabs, gratuit, CC BY 4.0, 320 tuiles de 64 px faites pour les jeux de stratégie). Maquette 2 : https://claude.ai/artifact/LyPtByPYdsxCn9zg3fdTt3 — source `outils/politique-maquette/source2.html` + `fabriquer2.py` (les packs ne sont pas dans le dépôt : à télécharger). **Un seul continent** pour les deux vues : « Mon pays » est un zoom sur la même carte. **A. Isométrique** (diorama : forêts, montagnes, châteaux aux drapeaux recoloriés par nation, maisons qui fument, champs, moulins, charrettes sur les routes, frontières colorées) ; **B. Carte du monde 16 px** (Larchrow : côtes et vagues animées, mer profonde, forêts raccordées, routes, montagnes, châteaux, bourgs et villages, moulins). À améliorer : la mer en blocs surélevés (A), étiquettes coupées au bord. En attente du choix de l'utilisateur.
+
+
+## 39. Maquette 3 de la carte (17/11)
+Choix de l'utilisateur : **l'isométrique** (A), à corriger. Retours : charrettes mal découpées, routes « pas terribles », « Mon pays » ne doit pas être un zoom du continent mais **une carte à part de la nation**. Corrections (source `outils/politique-maquette/source3.html` + `fabriquer3.py`, même lien d'artefact) :
+- **Routes pavées du pack** (rangée 13 : 16 morceaux qui se raccordent ; bits NE 1 = y−1, SE 2 = x+1, SO 4 = y+1, NO 8 = x−1 ; code → colonne 0→1, 8→2, 2→3, 1→5, 4→6, 10→0, 5→7, 12→8, 9→9, 3→10, 6→11, 14→12, 7→13, 11→14, 13→15, 15→4).
+- **Charrettes détourées** (cases 11 à 13 de la rangée 1) : on efface les pixels identiques à la case d'herbe nue (5, 0), les brins d'herbe et le socle ; retournées selon le sens de la marche.
+- **Carte de la nation** : le même pays relu trois fois plus finement (côtes et frontières tremblées), voisins aux bords sous un voile sombre avec leur nom (« Brume → »), quatre régions autour de la capitale, routes vers chaque région et vers les frontières par où passent les charrettes, emplacements le long des routes, champs, forêts, montagnes dans les collines.
+- Mer plus basse que la terre ; Pixelify Sans ; boutons Mon pays / ◀ Continent.
+
+Retours du 17/11 (forêts : ça va) et corrections :
+- **Sens des charrettes** : le pack ne dessine la charrette que vers le sud-ouest ; on en tire les quatre sens (miroir pour le sud-est ; pour le nord-est, cheval et caisse séparés puis recomposés, cheval derrière ; miroir pour le nord-ouest).
+- **Limites des régions** : pointillés à la couleur de chaque région ; la région touchée reste claire, les autres s'assombrissent.
+- **Où et quoi construire** : chaque emplacement libre est une plaque dorée « + » qui respire (étiquette de région « Bourg +1 ») ; la toucher ouvre le menu de construction : tous les bâtiments avec icône, production, délai et prix, ceux qui profitent du terrain en premier et encadrés d'or (« Mine de fer ×1,5 ») ; la fiche de région donne le terrain et ses bonus, les bâtiments en puces, « + libre », et Défricher (70 or, ASSUMPTION pour la maquette) ; les terrains à défricher apparaissent en pointillés dans la région choisie. Valeurs tirées du moteur (bâtiments, terrains).
+
+Retours suivants (17/11) : charrettes « coupées par la route » (dessinées case par case, la case suivante les recouvrait : elles sont maintenant dessinées après le sol) ; « je comprends rien à comment construire ce que je veux » : rappel de la règle du moteur, **tout bâtiment se construit dans toute région** sur un emplacement libre, le terrain ne fait que multiplier la production. Nouveau parcours : bouton doré **« + Construire »** sur la carte du pays → liste de tous les bâtiments (prix, production, délai, ★ meilleure région) → la carte recule pour montrer toutes les plaques libres, chacune avec ce que le bâtiment y produirait (« 30 grain ★ ») → on touche la plaque. L'ancien chemin (toucher une plaque, puis choisir) reste.
+
+« La carte du pays est trop grande » (17/11) : le pays du joueur prenait 171 cases du continent (684 sur sa carte, pour une quinzaine d'emplacements). Il est limité à un rayon d'environ 5 cases autour de la capitale (73 cases ; les voisins prennent le reste), la carte du pays est lue deux fois plus finement au lieu de trois (292 cases), elle s'ouvre cadrée sur le pays entier, et 7 cases de voisins tout autour remplissent l'écran.
+
+Mines (17/11) : les cases (3, 18) étaient des **coffres** ; mine de fer = entrée de galerie (2, 0), mine de charbon = tas de charbon (10, 19). Autres tuiles utiles repérées en rangée 19 : tas de pierre (11), piles de bois (12, 13), chantiers à grue (14, 15).
+
+Charrettes et lisibilité (17/11) : « le cheval est perpendiculaire à la route dans certaines directions », « ça fait un peu brouillon ». Charrettes redessinées en petits cubes (voxels, rendu isométrique au pixel, trois variantes de bâche et de robe), modèle tourné dans les quatre sens. Décor allégé : moins de forêt dans le pays, champs seulement autour des fermes (plus semés au hasard), voisins plus sombres. Étape suivante demandée : chercher d'autres packs.
+## 37. Maquette de la carte (17/11)
+Retour de l'utilisateur sur la maquette d'écran (§ 36) : « pas du tout comme ça que je voyais le jeu » ; il veut un **jeu vidéo** : une carte du monde, une carte de chaque nation, des territoires qui se remplissent de bâtiments, des villes qui grandissent, des caravanes qui traversent la carte quand un contrat est signé, en **pixel art très soigné**, un continent comme les cartes de RPG tactique. Maquette jouable : https://claude.ai/artifact/9pYzf7xgZ58fWEjqwf6LDM — source `outils/politique-maquette/` (`source.html`, `atlas_ts.py`, `fabriquer.py` → `maquettes/politique-carte.html`). Deux directions avec des packs déjà achetés : **A. Tiny Swords** (terrain des cinq couleurs, écume animée, châteaux et maisons aux couleurs des nations, ouvriers qui portent l'or et le bois, nuages) ; **B. Terres franches** (décors Cute SCKR du jeu Terres franches : herbe, plages, mer, chaumières, moulins, champs, charrettes). Deux vues : le **continent** (sept pays, routes, frontières, villes dont la taille suit leur richesse, caravanes en aller-retour, relation affichée) et **mon pays** (quatre régions séparées par une rivière, emplacements, bâtiments, chantiers, emplacement libre). Interactions : toucher une nation (signer un contrat fait partir une caravane), toucher une région (construire, défricher), tour suivant (chantiers finis, le Bourg grandit), glisser et zoomer. En attente du choix de l'utilisateur.
+
+## 36. Maquette de l'écran principal (17/11)
+Demande de l'utilisateur : joli, sobre, clair et très lisible. Trois directions sur un écran de téléphone, même tour de jeu (tour 12, ambition Autorité, Laïcité en débat, conservateurs qui grondent) : **A. La Gazette** (journal d'époque, papier ivoire, serif, hémicycle et colères) ; **B. Le Cabinet** (moderne et sombre, cartes, anneau du tour, barre de chance du débat) ; **C. L'Atlas** (la carte des quatre régions au centre, emplacements visibles, fiche de la région choisie). Canevas : https://claude.ai/artifact/3PHDH9RQUgYvKLzJEwC8XJ — source `maquettes/politique-ecran/project/`. En attente du choix de l'utilisateur.
+
+## 35. Les quatre points avant la maquette (16/11)
+1. **Répression** : les bots ne réprimaient que 0 à 2 fois par partie ; dès que possible (6 à 8 fois), +3 à +12 d'Autorité sans plus de révolutions. Les bots extrêmes répriment maintenant dès que c'est utile ; règle inchangée (à revoir après des parties réelles).
+2. **Classe moyenne** : le bot centre finissait sans or ; cause : l'atelier rapportait 4 % de son prix par tour et le tissage 10 % (18 à 28 % pour les autres). Validé : **atelier 15 outils, tissage 14 tissus** ; bot centre (ateliers d'abord, lois du centre peu coûteuses), référence de l'Autorité.
+3. **Médecine du travail seule** : faux problème (le bot de test avait aussi l'Impôt sur le capital) ; spam_medicine n'est plus une référence du Contentement.
+4. **Bot commerce** : il défrichait au détriment du commerce ; sans défrichement, Influence 0,86 → 2,45 de médaille moyenne. Il ne défriche plus.
+Seuils recalculés (5 pays, 200 parties). Médailles : Prospérité economy 59 à 66 %, patrons 75 à 85 % ; Contentement gauche 45 à 61 %, centre-gauche 41 à 60 % ; Influence environ 52 % ; Concorde environ 50 %. Autorité (droite / extrême gauche / extrême droite / centre) : équilibré 83 / 0 / 73 / 43 % ; agricole 0 / 87 / 96 / 17 % ; industriel 0 / 98 / 33 / 84 % ; marchand 100 / 0 / 0 / 99 % ; minier 0 / 99 / 97 / 3 %. Révolutions : seuls les bots passif et au hasard.
+
+## 34. Seuils de l'Autorité : chaque pays penche vers un camp (16/11)
+Décision de l'utilisateur (option A) : on garde des seuils communs aux trois camps dans chaque pays ; le pays de départ favorise un camp, c'est son identité. **L'écran de choix du pays devra l'indiquer** (mesures du 16/11, médailles d'Autorité) : équilibré, la droite (99 %) ; agricole, les deux droites et l'extrême gauche (extrême droite 88 %, extrême gauche 71 %) ; industriel, la gauche (98 %) ; marchand, la droite (100 %) ; minier, la gauche (96 %). Écartée : des seuils par camp (un handicap selon le camp, difficile à expliquer).
+
+## 33. Étapes revues (16/11)
+Mesures (30 parties par bot et par pays, part atteinte et tour médian) puis proposition validée (regles-v2 § 20) : Prospérité, étape 3 « agrandir, défricher ou investir 12 fois » (97 à 100 %, tours 24 à 29) au lieu de 3 000 or (0 à 39 %) ; Influence, 4 contrats (100 %, tours 16 à 19) au lieu de 2 (tour 2), exigence cédée avant les nations dépendantes ; Autorité, étape 2 « 3 lois avec 20 de soutien net » (73 à 100 %) au lieu de « 5 lois chacune plus soutenue que contestée » (0 à 17 % pour un extrême dans certains pays). 507 tests.
+
+## 32. Jouer contre qui ? (16/11)
+Constat : on joue contre le système (ambition et médailles, seuils par pays) ; les nations n'ont pas d'objectif, elles sont partenaires, obstacles ou menaces. **Décision de l'utilisateur : pour l'instant, purement solo.** Pistes gardées au backlog (I) : défi du jour et classement sur la même graine ; rivalités ciblées (un dirigeant qui convoite la même chose que nous) ; nations rivales avec leur ambition (jugé trop lourd).
+
+## 31. Les lois bâtissent la puissance, les propriétaires (16/11)
+Remarque de l'utilisateur : une seule loi (Religion d'État, +3 de puissance par tour pendant 10 tours) ne doit pas faire pencher l'Autorité ; plusieurs lois doivent renforcer au fur et à mesure. Mesures : sans le +3 de la Religion d'État, l'Autorité médiane de l'extrême droite tombe de 43 à 18 ; la répression ne pèse rien ; « la puissance suit l'économie » pénalise le bot droite, qui mélange lois libérales et conservatrices. Fait (regles-v2 § 19) : **une loi adoptée donne +3 à chacun de ses partisans et −3 à chacun de ses opposants**, à la place des effets de 10 tours ; École publique, Médecine du travail et Armée de métier reçoivent un opposant. Simulation : la gauche dominait alors partout (extrême gauche 85 à 98 % de médailles dans quatre pays), parce que tous les bots bâtissent surtout fermes et mines, qui renforçaient paysans et ouvriers. Fait aussi : **propriétaires** (le +2 d'un bâtiment partagé : fermes et vignobles paysans et conservateurs, mines, mines de charbon et scieries ouvriers et patrons). 507 tests ; tous les seuils recalculés.
+Médailles d'Autorité avec les nouveaux seuils (droite / extrême gauche / extrême droite) : équilibré 99 / 2 / 47 % ; agricole 1 / 71 / 88 % ; industriel 39 / 98 / 55 % ; marchand 100 / 0 / 50 % ; minier 0 / 96 / 51 %. Chaque pays favorise son camp ; l'extrême droite a une médaille dans la moitié des parties partout. Les seuils de l'Autorité sont tirés des trois bots ensemble : par construction, l'un d'eux échoue souvent. Prospérité, Contentement, Influence, Concorde : à peu près inchangés. Révolutions : seuls les bots passif et au hasard.
+
+## 30. Le lot « voies du joueur » (16/11)
+Point sur les mécaniques et les voies du joueur, puis quatre problèmes et leurs solutions passées à la grille du 13/11 (une phrase, visible à l'écran, un choix, deux systèmes touchés, budget de cinq systèmes) ; idée de l'utilisateur en plus : **cinq factions** (une faction conservatrice d'extrême droite, la classe moyenne au centre). Tout validé et fait (regles-v2 § 17 et 18), 506 tests :
+1. Cinq factions (ouvriers, paysans, classe moyenne, patrons, conservateurs), lois revues, catégorie Culte, répression.
+2. La puissance suit l'économie (+2 à la faction du bâtiment terminé, −0,5 aux autres).
+3. Savoir-faire national (outils et tissus +25 % à l'étranger).
+4. Nationalisations (1 % par investissement et par tour, ×3 si la relation est négative).
+5. Ressentiment (nation dépendante : −1 de relation par tour).
+6. Tous les seuils recalculés (5 pays, 200 parties chacun).
+Médailles avec les nouveaux seuils (pays équilibré ; avant le lot entre parenthèses) : Prospérité economy 49 % (37 %), patrons 55 % (82 %) ; Autorité extrême gauche 21 % (0 %), extrême droite 99 % dont 50 % d'or (54 %, bronze seulement), droite 39 % (100 %) ; Contentement gauche 83 %, gauche_med 53 % ; Influence commerce 53 % ; Concorde replica 51 %. Révolutions : 0 à 2 % selon les bots. À surveiller : l'extrême droite domine maintenant l'Autorité (Religion d'État, Parti unique, répression), la droite libérale y est faible (0 % en pays agricole), et le bot patrons aurait 2,5 de médaille moyenne en Autorité s'il la visait.
+
+## 29. Défricher (16/11)
+Proposition validée (rééquilibrer en donnant aux autres voies une dépense de fin de partie, plutôt qu'affaiblir les patrons) : défricher une région (+1 emplacement, 100 / 150 / 200 or, 3 par région, 3 tours, paysans −5). Bots : economy, commerce, spam_medicine, no_appeasement et les programmes défrichent quand plus aucun bâtiment de production n'a de place ; le bot patrons investit d'abord. 489 tests.
+Mesures (pays équilibré, 50 parties, Prospérité médiane et médaille moyenne avec les seuils actuels) :
+| | economy | commerce | patrons | droite |
+|---|---|---|---|---|
+| sans défrichement | 3 390 (0,44) | 3 795 (1,72) | 4 160 (2,50) | 3 510 (0,96) |
+| défrichement non compté (validé) | 3 330 (0,24) | 3 375 (0,28) | 3 605 (0,80) | 3 010 (0,02) |
+| défrichement compté à son prix | 5 130 | 5 175 | 5 405 | 4 810 |
+| … et investissements à moitié prix | 5 130 | 5 175 | 4 985 | 4 810 |
+Non compté, le défrichement fait **baisser** la Prospérité : les bots défrichent les 12 emplacements possibles et agrandissent moins (10 agrandissements au lieu de 16), alors qu'un agrandissement compte pour son prix. Compté à son prix, il rapporte autant de Prospérité par pièce d'or qu'un agrandissement ou un investissement, et l'écart des patrons tombe de +23 % à +5 % sur economy (les seuils seraient à recalculer). Décision de l'utilisateur : le défrichement compte pour son prix. **Tous les seuils recalculés** (5 pays, 200 parties chacun ; le bot patrons entre dans les références de la Prospérité) : Prospérité en pays équilibré 5 155 / 5 310 / 5 440 (écart serré, environ 5 % entre bronze et or) ; Influence en baisse (110 / 118 / 122 → 90 / 97 / 102 : le bot commerce défriche au lieu d'acheter des caravanes). Médailles avec ces seuils (pays équilibré) : patrons 82 % de médailles (38 % d'or), economy 37 % (7 %), no_appeasement 33 % (4 %) : la voie des patrons reste la meilleure en Prospérité.
+
+## 28. Investir à l'étranger, la voie des patrons (16/11)
+Idée de l'utilisateur : le projet commun comme un traité, et des investissements dans les sociétés étrangères qui ouvrent une voie aux patrons, avec des lois. Proposition validée en entier (regles-v2 § 15) : A. projet commun = traité (Concorde, étape) ; B. action `{ type: "investir", id, avec, region }` (relation ≥ 30, bien exporté par la nation, une par région de la nation, prix plein, délai du bâtiment ; 10 % du prix en dividendes par tour ; relation +1 par tour ; Prospérité au prix ; confisqué par embargo, guerre ou sanctions) ; C. catégorie « Capitaux » (11e) : Exportation des capitaux, Contrôle des capitaux ; D. bot **patrons** (programme de droite avec l'Exportation des capitaux, investit quand ses régions sont pleines, jamais d'embargo, diplomate vers la nation la mieux disposée sous 30 ; ambition Prospérité). 481 tests.
+Mesures (pays équilibré, 60 à 80 parties) : le bot patrons finit avec 9 investissements (médiane), environ 1 900 or de dividendes sur la partie, presque jamais de confiscation. **Trop fort en Prospérité** : 4 170 (médiane) contre 3 380 pour economy et 3 510 pour droite ; médaille moyenne 2,5 (or dans 79 % des parties) contre 0,45 pour economy. Le dividende ne change presque rien (6 % : 4 095) ; compter les investissements à **moitié de leur prix** dans la Prospérité : 3 705, médaille moyenne 1,55. Réglage à décider avec l'utilisateur (`objectifs.poidsInvestissement`, 1 validé). Seuils de la Prospérité pas encore recalculés (le bot patrons entrerait dans les bots de référence).
+
+## 27. Projet commun (16/11)
+Demande de l'utilisateur : généraliser la filature de l'Entente à tous les bâtiments de production ; chiffres proposés et validés, filature supprimée. Fait (`diplomatie.projet`, regles-v2 § 14) : action `{ type: "projet", id, region, avec }` ; partenaire de l'Entente qui importe le bien ; un projet en cours par nation ; il paie 50 % ; un tiers de la production de base livré à moitié prix pendant 10 tours de service (suspendu pendant une occupation) ; relation +5 puis +1 par tour ; compte pour les nations dépendantes ; rupture par nous −20. Le traité Filature n'est plus proposé (gardé seulement pour les tests d'avant, interrupteur `PRJ`). Bots : le bot commerce signe l'Entente quand elle est possible puis cofinance le bâtiment le plus utile ; replica cofinance au lieu de la filature. 470 tests.
+Mesures (200 parties par pays) : bot commerce 0,6 projet par partie, replica 1,5 ; peu de projets parce que l'Entente arrive vers le tour 13 à 16, quand les régions sont déjà pleines. Le bot commerce gagne surtout à signer l'Entente : or au tour 40 1 860 → 2 183, relations en fin de partie 60 → 77, guerres 16 % → 11 %. Concorde : sans le traité de filature (10 points), seuils recalculés (pays équilibré 68 / 84 / 88 → 55 / 74 / 79) ; les autres seuils bougent de moins de 3 points, gardés.
+
+## 26. Revue du code (16/11)
+Demande de l'utilisateur : une grosse revue du moteur avant la suite. Relecture complète du moteur et des bots, puis 780 parties de bots (tous les bots, 5 pays, 12 graines) avec contrôle des invariants à chaque tour (relations et colères bornées, bâtiments du pays = somme des régions, agrandissements ≤ 2 par bâtiment, contrats ≤ caravanes, personas connus) : aucun plantage, aucun invariant violé.
+Corrigé (accord de l'utilisateur, « corrige tout ») :
+1. **Commerce avec l'ennemi** : les contrats continuaient pendant une guerre et la relation remontait de 1 par tour ; une déclaration coupe maintenant les contrats avec tout le camp ennemi.
+2. Journal : noms des nations au lieu des identifiants (dons, embargos, traités, contrats).
+3. Les objectifs ne lisent plus le texte du journal : exigences cédées comptées par `Diplomatie.exigences`, victoires par `Guerre.paix`.
+4. Offres de contrat : identifiant `nation_bien_achat` / `nation_bien_vente` si une nation exporte et importe le même bien (aucune aujourd'hui).
+5. Régions occupées : plus de livraison de filature, pas comptées pour l'étape des 12 bâtiments.
+6. Ménage : `moteur/calcul.js` (arrondis, au lieu de 7 copies) ; toutes les relations passent par `Diplomatie.changerRelation` ; commentaires périmés de `tour.js` et `etat.js` ; `politique/CLAUDE.md` sous 2 Ko.
+Gardé : le **négoce** (acheter sous contrat à une nation pour revendre sous contrat à une autre, environ 3 or par tour et par paire). 455 tests. Simulation avant/après : écarts d'un point au plus.
+
+## 25. Transport des contrats : distance, caravanes, routes (16/11)
+Explication donnée à l'utilisateur : le marché mondial achète et vend tout, mais dans le tour le prix baisse de 1 % par unité vendue (au plus −50 %) et monte de 1 % par unité achetée (au plus +50 %), sur toute la quantité ; rien ne se garde d'un tour à l'autre (sauf événements) ; d'où l'intérêt des contrats à prix fixe. Prix qui évoluent d'un tour à l'autre : backlog (I).
+Décision de l'utilisateur : un contrat coûte plus cher avec une nation lointaine ; des caravanes à acheter et des routes à améliorer. Fait (`diplomatie.transport`, ASSUMPTION) : distances 1 (Val-Roc, Contreforts), 2 (Brume, Hautefage), 3 (Aurèle, Port-Salin) ; transport 0,1 or par unité et par cran (vente diminuée, achat augmenté) ; **une caravane par contrat en cours**, 2 au départ, 60 or l'une et 2 or d'entretien par tour ; **route améliorée** vers une nation (100 or) : transport divisé par deux. Bots : contrats signés seulement s'ils battent le prix du marché une fois le transport payé ; le bot commerce achète une caravane quand toutes sont prises et qu'un bon contrat attend, et améliore la route la plus utilisée (distance ≥ 2). Les tests d'avant gardent les contrats sans transport. 445 tests.
+Mesures (200 parties) : bot commerce 12 contrats en cours au tour 40, 15 caravanes, 4 routes ; or au tour 40 2 671 → 1 860 (economy 3 105, inchangé) ; essais : entretien 1 → 2 069 ; caravane 40 et entretien 1 → 2 357 ; transport 0,05 → 2 059. L'or ne compte plus pour la Prospérité : le bot commerce garde de bonnes médailles (Prospérité 1,83 en moyenne, Influence comme avant). Seuils de tous les pays recalculés (Influence 110 / 118 / 122 en pays équilibré : moins de contrats).
+
+## 24. Six nations, parties plus variées (15/11)
+Décisions de l'utilisateur : diversifier les parties ; plusieurs nations peuvent vendre ou acheter la même ressource (plusieurs sources, plusieurs débouchés). Fait (`champs.js`, ASSUMPTION (nations)) : **Aurèle** (plaines agricoles : vend grain 20, vin 5 ; achète outils 10, fer 5, tissu 5 ; 110 familles, 300 or), **Port-Salin** (cité marchande riche : vend tissu 10, outils 5 ; achète bois 10, vin 10, charbon 5 ; 70 familles, 700 or, taux 1,4), **Hautefage** (forêts et forges : vend bois 15, fer 10 ; achète charbon 10, grain 10 ; 80 familles, 250 or) ; 3 régions chacune. **Tirage** (`champs.tirage`) : au plus 2 dirigeants avec le même persona (doublons possibles) ; chaque volume d'échanges × (1 ± 0,5) au hasard à graine, au moins 1. Les tests d'avant gardent la carte à trois nations. 438 tests.
+Mesures (200 parties) : or au tour 40 economy 3 078, commerce 2 646, spam_medicine 2 829, gauche 1 289, droite 1 202, replica 1 820 ; réputation du commerce +77 ; **guerres en hausse** (economy 6 % → 30 %, gauche 23 %, droite 21 %, commerce 17 %, extrême gauche 41 %) : plus de belliqueux et un seul diplomate. Leviers (guerre economy / gauche / droite / commerce) : provocations à 0,12 : 13 / 14 / 13 / 6 % ; à 0,08 : 4 / 6 / 7 / 2 % ; diplomate +4 : 20 / 14 / 15 / 7 % ; personas tous différents : 24 / 22 / 21 / 15 %. **Décision (15/11) : provocations à 0,12** (environ une fois sur 8) ; seuils de tous les pays recalculés (Influence 168 à 197 ; Concorde 68 / 84 / 88 : six nations, moyenne des relations plus basse).
+
+## 23. Trois nouvelles ressources : bois, charbon, vin (15/11)
+Décisions de l'utilisateur : rester **sans stock** (comme Victoria 3 ; entrepôt possible plus tard, backlog) ; les trois ressources validées (poisson plus tard). Rappel : les nations n'ont pas d'économie simulée ; leur profil d'échanges (exporte, importe) sert aux contrats, aux embargos et à la dépendance ; le marché est mondial et abstrait.
+Fait (ASSUMPTION (ressources)) : **bois** (prix 1 ; scierie 60 or, 15 bois, vallée ×1,5 ; chaque chantier en cours, agrandissements compris, consomme 5 bois par tour), **charbon** (1,5 ; mine de charbon 80 or, 12 charbon, collines ×1,5 ; ateliers et tissages en consomment 3 par tour), **vin** (2,5 ; vignoble 90 or, 10 vin, plaine ×1,25 ; 0,05 par famille ; panier des patrons : tissu et vin). Vallée à 4 emplacements ; nouveaux échanges : Val-Roc vend du charbon et achète du vin, Brume vend du vin et achète du bois, Contreforts vend du bois et achète du charbon ; les nouveaux bâtiments s'agrandissent. Bots : comblent d'abord le manque le plus cher. Les tests d'avant gardent l'ancienne économie. 431 tests.
+Premier essai : économie bien plus serrée (or au tour 40 economy 2 857 → 1 820, gauche 1 425 → 591 et plus d'institutions) et grèves des patrons (economy 1 % → 17 % des parties) : sans vin au départ, leur panier n'est couvert qu'à 38 %. Panier à trois biens (tissu, fer, vin) : sans effet. **Vignoble de départ** dans la plaine (comme la caserne : personne n'est en crise au début) : grève economy 1 %, or au tour 40 economy 3 268, commerce 4 017, gauche 1 375, droite 1 328, replica 1 985 ; 16 à 24 agrandissements par partie. Seuils de tous les pays recalculés (Prospérité et Influence montent : plus de bâtiments et de contrats possibles).
+
+## 22. L'or en fin de partie : agrandir les bâtiments, institutions (14/11)
+Décisions de l'utilisateur : pistes 1 et 2 du backlog H (grands projets et or diplomatique plus tard) ; chiffres validés. Idées notées pour la suite : 2 ou 3 nations de plus, 2 à 4 ressources (bois, charbon, vin ou mobilier, poisson) ; ordre conseillé : niveaux et institutions, puis ressources, puis nations.
+Fait (`donnees/institutions.js`, ASSUMPTION) : **agrandir** une ferme, une mine, un atelier ou un tissage sur place (niveau 2 à ×1,5 du prix, niveau 3 à ×2 ; chaque niveau +50 % de production, de consommation et d'entretien ; sans emplacement, avec le chantier de la région ; `regions[r].niveaux`) ; la Prospérité compte les agrandissements à leur prix. **Institutions** santé, enseignement, police, niveau 0 à 3, coût par tour 10 / 22 / 36, un cran par institution et par tour : santé −1 de colère par tour et par niveau pour toutes les factions ; enseignement +0,25 % de croissance et ateliers et tissages +10 % par niveau ; police +5 % de chance aux débats et grèves 3 points plus tard par niveau. Bots : agrandissent le bâtiment le plus rentable (prix de vente du tour, rien si le marché est saturé) dès 300 or ; montent leurs institutions prioritaires dès 500 or si le solde le permet, redescendent sous 100 or. 415 tests.
+**Avant → après (200 parties)** : or au tour 40 economy 4 709 → 4 216, gauche 2 865 → 2 346, droite 3 173 → 2 337, commerce 4 737 → 5 085 ; 6 à 11 agrandissements par partie ; les bots finissent avec leurs institutions prioritaires au niveau 3. L'or s'entasse encore (economy +2 000 entre les tours 30 et 40). Médailles avec les anciens seuils : Prospérité et Contentement plus faciles (seuils à recalculer). **Coûts des institutions** (or au tour 40, economy / gauche / droite / commerce) : 10 / 22 / 36 : 4 210 / 2 368 / 2 369 / 5 101 ; **×2 (20 / 44 / 72)** : 2 851 / 1 432 / 1 398 / 3 732 ; ×3 (30 / 65 / 110) : 1 600 / 1 029 / 845 / 2 303 (les bots ne montent plus tout au niveau 3). **Décision (14/11) : coûts doublés (20 / 44 / 72)** ; seuils de tous les pays recalculés (Contentement plus haut et plus serré, ex. équilibré 82,1 / 82,9 / 83,5, car la santé au niveau 3 calme tout le monde). Or au tour 40 (pays équilibré, 200 parties) : economy 2 857, commerce 3 717, spam_medicine 3 005, replica 1 973, gauche 1 425, droite 1 374, extrêmes 940. L'utilisateur pense qu'il faudra d'autres pistes pour pousser le joueur à dépenser. **Pistes validées le 15/11** : (1) la **Prospérité ne compte plus le trésor** : valeur de ce qui est bâti (bâtiments et agrandissements), moins les dettes ; (2) **thésaurisation** (`institutions.THESAURISATION`, ASSUMPTION) : trésor au-dessus de 10 tours d'impôts → chaque faction dont la demande n'est pas satisfaite prend +2 de colère par tour (ouvriers : Santé 2 ; artisans : Enseignement 2 ; paysans : 2 fermes agrandies ; patrons : 4 agrandissements). 420 tests.
+Mesures (200 parties) : sur les bots qui investissent, **aucun effet** (leurs demandes sont déjà satisfaites) ; sur les mêmes bots sans dépenses de fin de partie (« thésauriseurs ») : tours avec une faction ≥ 55 economy 1 → 5, apaisements 1 → 4, or au tour 40 4 709 → 4 591 ; seuil à 6 tours et +4 : 12 tours ≥ 55, 14 apaisements, 4 423 or. Les bots apaisent à 55 : la pression se paie en apaisements, pas en grèves. Nouveaux seuils de Prospérité : équilibré 2 190 / 2 415 / 2 685, agricole 2 250 / 2 415 / 2 625, industriel 2 175 / 3 105 / 3 480, marchand 2 900 / 2 960 / 3 090, minier 2 175 / 3 255 / 3 780 ; la gauche, qui investit, y est désormais bien placée.
+
+## 21. La guerre en dernier recours : relation à deux sens (14/11)
+Remarque de l'utilisateur : le jeu est tourné vers le commerce et la société ; la guerre doit être un dernier recours, la spécialité de personne ; diplomatie et sanctions règlent la plupart des conflits. **Validé** : (1) pays minier à la place du pays militaire, ambition **Influence** à la place de Puissance ; (2) la **relation** devient une jauge à deux sens (gestes amicaux et coups bas des deux côtés) et **la guerre n'est possible qu'à −50 ou moins** ; paliers : +50 alliance et défense mutuelle, +30 Entente et filature, −49 à +29 commerce et ultimatums, −50 hostile ; (3) envoyer un diplomate ; (4) ultimatum et embargo qui fait céder. Filature conjointe gardée ; « projet commun » au backlog (I).
+Ordre : 1. relation à deux sens et seuil hostile ; 2. diplomate ; 3. ultimatum et embargo qui fait céder ; 4. pays minier et Influence.
+
+**Étape 1 faite** (`diplomatie.hostilite`, ASSUMPTION) : déclaration de guerre (joueur et nations, revanches comprises) seulement à une relation ≤ −50 ; **le commerce rapproche** : +1 par tour avec une nation tant qu'un contrat ou un traité est en cours ; **provocations** (`personas.js`, `provoque`) : le belliqueux (et le revanchard contre qui l'a battu) provoque des incidents (−20, une chance sur trois par tour, puis **une sur cinq** après l'étape 2, à partir du tour 4, hors guerre et trêve) tant que la relation n'est pas hostile. Les tests d'avant gardent l'ancienne règle (`hostilite.actif = false`). 373 tests.
+
+**Avant → après (200 parties par bot)** : guerre economy 43 % → 35 %, droite 41 % → 24 %, militarist **100 % → 20 %** (8 tours de guerre → 0, 1,84 → 0,13 région prise) ; régions perdues par partie economy 0,72 → 0,48 ; révolutions militarist 20 % → 4 %, no_appeasement 10 % → 3 %, replica 13 % → 1 %, random 89 % → 60 % ; or au tour 40 economy 4 587 → 4 708, gauche 2 559 → 2 802, replica 2 370 → 3 217. Les bots ne répondent pas encore aux incidents (dons, diplomate) : les guerres restantes viennent des belliqueux qui ont provoqué jusqu'au seuil.
+
+**Étape 2 faite** : **diplomate** (`diplomatie.diplomate`, ASSUMPTION) : un seul, envoyé chez une nation qui n'est pas en guerre contre nous, déplaçable, rappelable ; 5 or et +2 de relation par tour ; rappelé de lui-même si la guerre éclate. Bots : diplomate vers la nation la plus fâchée sous 0, rappelé quand toutes sont à +20. 380 tests.
+Avant → après (200 parties) : guerre economy 35 % → 31 %, gauche 31 % → 28 %, droite 24 % → 18 %, replica 25 % → 23 % ; réputation finale economy −2 → +5, droite −4 → +3, replica +36 → +45. Le diplomate (+2) ne suit pas les provocations (−20 une fois sur trois, soit −6 par tour en moyenne). Leviers mesurés (guerre economy / gauche / droite / replica) : provocations à 0,2 : 25 / 13 / 11 / 13 % ; à 0,15 : 15 / 6 / 6 / 8 % ; diplomate +3 : 27 / 22 / 17 / 22 % ; +4 : 22 / 18 / 13 / 15 %. Choix à faire avec l'utilisateur.
+
+**Étape 3 faite** : **exigence** (`diplomatie.exigence`, ASSUMPTION ; l'ultimatum devient l'exigence attachée à un embargo) : seulement contre une nation sous notre embargo, une à la fois par nation : **lever ses sanctions** (si elle en a), **cesser les provocations** (10 tours), **payer un dédommagement** (50 or). Chaque tour où l'embargo lui fait manquer des marchandises, elle cède avec une chance (colère − 30) / 30, à coup sûr à 60 ; cédé : relation +10 ; pas cédé en 10 tours : relation −20 ; embargo levé avant : abandonnée. Bots (economy, spam_medicine, no_appeasement, programmes) : embargo et exigence contre qui nous sanctionne ou nous provoque, s'ils ont en trop ce qu'elle importe et sans tomber à −50 ; embargo levé une fois réglé. Simulateur : incidents, exigences cédées et refusées. 392 tests.
+Avant → après (200 parties) : incidents subis 2,4 → 1,4 par partie ; 0,5 exigence par partie, un tiers cédées ; mais **plus de guerres** (gauche 13 % → 21 %, droite 11 % → 17 %) : l'embargo coûte −30 de relation et rapproche du seuil de −50. Essai embargo à −15 : guerre 8 à 19 % (gauche 8 %, droite 10 %, economy 12 %), cessions deux fois plus nombreuses. **Décision (14/11) : embargo à −15 de relation** (au lieu de −30).
+
+**Étape 4 faite** : **pays minier** à la place du pays militaire (paysans 35, ouvriers 40, artisans 20, patrons 45 ; une mine de plus ; Police d'État en vigueur). Essais (or au tour 40, economy / gauche / droite / extrême gauche ; équilibré 4 709 / 2 850 / 3 185 / 2 893) : mine, emplacement et libre entreprise 7 809 / 4 481 / 4 745 / 3 812 (la libre entreprise dès le départ supprime 40 tours d'entretien) ; sans libre entreprise 6 030 ; mine et Police d'État 4 889 / 2 902 / 3 439 / 2 965 (retenu). **Ambition Influence** à la place de Puissance : en moyenne sur la partie, 10 par contrat en cours et 10 par nation dépendante (nos contrats de vente lui livrent au moins la moitié de ce qu'elle importe ; d'abord mesuré sur nos surplus, mais atteint dès le départ), plus 10 par exigence cédée ; étapes : 2 contrats, 2 nations dépendantes pendant 20 tours, une exigence cédée (bot commerce : 100 %, 99 %, 22 % des parties). Bot **commerce** (gestion d'economy, contrats utiles, diplomate, exigences ; ambition Influence) ; le militariste n'a plus d'ambition. Seuils de tous les pays recalculés (la Concorde monte : 86 / 107 / 109, car le commerce et le diplomate rapprochent). 396 tests.
+**À régler** : le bot commerce est le plus riche (5 882 or au tour 40 contre 4 709 pour economy) et passe l'or en Prospérité : les contrats sont très généreux (vente ×1,3, achat ×0,8). Essais : ×1,15 / ×0,9 → 4 703 (comme economy) ; ×1,1 / ×0,95 → 4 926. **Décision (14/11) : ×1,15 à la vente, ×0,9 à l'achat** ; seuils recalculés (Influence surtout). Reste : en pays industriel, marchand et minier, le bot commerce reste plus riche qu'economy (or au tour 40 : 5 585 / 4 928, 6 115 / 5 590, **6 590 / 4 889**) : il vend par contrat le fer des mines en plus. **Essai d'un plafond de contrats en cours** (`contrats.maxEnCours`, en essai, désactivé) : or au tour 40 du bot commerce en pays minier sans plafond 6 590, plafond 4 : 6 519, 3 : 6 402, 2 : 5 920 (economy 4 889) : presque sans effet. Contrats au prix du marché : 6 247 ; sans aucun contrat : 4 193. **Cause** : un contrat vend à prix fixe, hors de la pente du marché (vendre beaucoup fait baisser le prix) ; avec le fer des mines en trop, le marché sature et le contrat vaut cher, même au prix de base. **Décision (14/11)** : mécanisme gardé (un pays qui produit beaucoup d'un bien a intérêt à le vendre par contrats) ; les seuils de Prospérité se mesurent aussi contre le bot commerce : équilibré 5 590 / 6 133 / 6 433, agricole 5 970 / 6 538 / 6 851, industriel 6 222 / 6 690 / 7 069, marchand 6 682 / 7 194 / 7 398, minier 6 237 / 7 406 / 7 709 (economy en pays minier : 68 % sans médaille, 1 % d'or : il faut des contrats pour y briller).
+
+## 20. Pays de départ (14/11)
+Décisions de l'utilisateur : le joueur **choisit** son pays ; la spécialité du pays change la **puissance des factions**, les **bâtiments de départ** et les **lois déjà en vigueur** ; même carte pour tous ; personne en crise. Fait : `donnees/pays.js` (ASSUMPTION, à vérifier), `Etat.creerEtat(scenario, graine, pays)` (défaut : équilibré, identique à avant ; `e.pays` ; VERSION 4), lois de départ « depuis longtemps » (effets à terme complets, effets de durée finis, remplaçables par un débat normal), `--pays nom|tous` dans le simulateur. 342 tests.
+
+| Pays | Puissance P / O / A / Pat | Départ | Loi |
+|---|---|---|---|
+| Équilibré | 40 / 25 / 30 / 45 | — | — |
+| Agricole | 60 / 20 / 25 / 35 | +1 ferme (plaine) | Écoles religieuses |
+| Industriel | 25 / 45 / 20 / 50 | +1 mine, −1 ferme (vallée) | Syndicats interdits |
+| Marchand | 30 / 20 / 45 / 45 | bourg à 5 emplacements | Libre-échange |
+| Militaire | 40 / 30 / 25 / 45 | +1 fort (bourg), 5 régiments | Conscription |
+
+Essais (100 parties par bot) : marchand avec un atelier offert trop riche (economy 5 946 or au tour 40, contre 4 669 en pays équilibré) ; sans rien 4 925 ; bourg à 5 emplacements 5 455 (retenu pour garder une spécialité de bâtiment, à confirmer). Militaire à 6 régiments : révolutions 8 % pour la gauche ; 5 régiments et fort retenu.
+Résultat : le pays change bien la voie de l'Autorité (industriel : droite 96 % sans médaille, extrême gauche 86 % de bronze ; agricole : les deux extrêmes au bronze ; marchand : droite 88 % d'or). Reste à voir avec l'utilisateur (réponse du 14/11) : pays marchand plus riche, pays militaire dur pour la gauche, extrêmes jamais au-delà du bronze, seuils communs à tous les pays.
+
+**Décisions du 14/11 (suite)** : comme Victoria 3 n'a pas de victoire (objectifs de départ = guides à étapes, sans note), l'utilisateur choisit l'**option 3** : des **étapes** affichées pendant la partie pour guider l'ambition, **et** la médaille au tour 40 ; **seuils par pays** (une médaille = « bien joué pour ce pays »). Fait : `seuils: { pays: [bronze, argent, or] }` dans `donnees/objectifs.js` (200 parties par bot et par pays), lus d'après `e.pays`. Avec ces seuils, l'Autorité dépend du pays : industriel → extrême gauche 45 % d'or, droite 0 % ; agricole et marchand → droite. 344 tests. **Étapes (validées, puis durcies après simulation)** : `ETAPES` dans `donnees/objectifs.js`, vérifiées à chaque fin de tour par `Objectifs.suivre`, cochées pour de bon (`e.suivi.etapes`), `Objectifs.etapes(e)` pour l'écran ; rapport dans `--objectifs`. Plusieurs étapes de la liste validée étaient atteintes dès le départ (colère moyenne de départ 27,5 ; 10 tours sans grève pour presque tous) : Prospérité 12 bâtiments, régions pleines, **3 000** or ; Contentement colère moyenne **sous 20**, **15** tours sans faction **au-dessus de 45**, **toutes les factions sous 30** ; Puissance 10 régiments, un fort, une guerre gagnée ou une région prise ; Concorde un traité, 50 de relation avec une nation, +30 en moyenne ; Autorité 3 lois, **5 lois toutes soutenues**, **5 lois avec 40 de soutien net en moyenne**. Une étape facile, une moyenne, une difficile (ex. gauche en Contentement : 98 %, 74 %, 5 % des parties). 361 tests.
+
+## 19. Équilibre gauche / droite et objectifs de victoire (14/11)
+**Lois (validé)** : collectivisation, entretien des bâtiments ×1,5 → **×2** (production gardée à +15 %) ; libre entreprise, part des ventes 75 % → **85 %** ; impôt minimal ×0,8 → **×0,85**. Or médian au tour 40 (100 parties par bot), avant → après : extrême gauche 3 499 → 2 744 (grève dans 82 % des parties) ; droite 2 048 → 3 134 (faillites 11 % → 1 %) ; extrême droite 2 428 → 2 546 ; gauche 2 519 (inchangé, meilleure réputation, pas de grève). Balayages seuls : production de la collectivisation 1,1 (−290 or seulement) ; impôt minimal 0,9 (droite 2 909 à lui seul, trop avec la libre entreprise).
+
+**Objectifs de victoire (validés dans leur principe)** : cinq objectifs mesurés au tour 40, avec bronze / argent / or (1, 2, 3 points) ; une révolution = aucune médaille. Fait : `donnees/objectifs.js` (seuils encore vides : aucune médaille), `moteur/objectifs.js` (`suivre` à chaque fin de tour, `mesures`, `medailles`, `points`), `e.suivi` dans l'état ; `--objectifs` dans le simulateur (mesures par bot, seuils proposés d'après le bot qui réussit le mieux chaque objectif : bronze = sa médiane, argent = 75e centile, or = 87e). 302 tests.
+- Prospérité = trésor + coût des bâtiments en service ; Contentement = 100 − colère moyenne des factions, en moyenne sur la partie ; Puissance = 10 par région tenue + 1 par régiment ; Concorde = moyenne des relations + 10 par traité ; Ordre = % des tours où toutes les factions sont calmes (d'abord « sans grève ni révolte » : 100 % pour presque tous les bots).
+
+**Premier lot (200 parties par bot)** : les objectifs étaient trop liés (une bonne gestion raflait prospérité, contentement et ordre) et « Ordre » doublait le contentement (95 à 100 % pour presque tous les bots).
+
+**Décision de l'utilisateur (14/11) : A et B.** A : **ambition** choisie au tour 1 (action `ambition`, une fois) ; la victoire est la médaille de cet objectif, les autres ne sont qu'un bilan. B : **Autorité** remplace Ordre = soutien des factions puissantes aux lois en vigueur (pour chaque loi, puissance des pour − des contre), en moyenne sur la partie ; mesure comparée à « 100 − puissance moyenne des factions », qui ne distinguait aucun bot (60 à 67). Contentement à une décimale, Puissance = 10 par région + force de l'armée (sinon argent et or tombaient sur la même valeur). Bots : ambition fixe (economy et no_appeasement prospérité, spam_medicine et gauche contentement, militarist puissance, replica concorde, droite et les deux extrêmes autorité). 308 tests.
+
+**Seuils (ASSUMPTION, d'après les bots qui visent l'objectif ; bronze = médiane, argent = 75e centile, or = 87e)** : Prospérité 5 374 / 5 951 / 6 410 ; Contentement 78,5 / 80,5 / 81,1 ; Puissance 84,4 / 86,6 / 87,3 ; Concorde 23 / 38 / 79 ; Autorité 210 / 335 / 366.
+
+| Bot (ambition) | aucune | bronze | argent | or |
+|---|---|---|---|---|
+| economy (prospérité) | 41 % | 29 % | 14 % | 17 % |
+| spam_medicine (contentement) | 22 % | 29 % | 22 % | 28 % |
+| gauche (contentement) | 78 % | 20 % | 1 % | 2 % |
+| militarist (puissance) | 60 % | 19 % | 11 % | 11 % |
+| replica (concorde) | 52 % | 23 % | 11 % | 15 % |
+| droite (autorité) | 0 % | 25 % | 35 % | 41 % |
+| extrême gauche (autorité) | 50 % | 50 % | 0 % | 0 % |
+| extrême droite (autorité) | 100 % | 0 % | 0 % | 0 % |
+
+**Équilibrage validé (14/11, suite)** : Médecine du travail −2 → **−1** de colère par tour pour toutes les factions ; Sécurité sociale −3 pour paysans et ouvriers → **−2 pour paysans, ouvriers et artisans** (sous la gauche, paysans et ouvriers étaient déjà à 0 de colère : l'effet était perdu) ; Parti unique : opposants (ouvriers, paysans, artisans) **−3 de puissance par tour pendant 10 tours** ; Laisser-faire : contre les **ouvriers seulement** ; Autorité = **moyenne par loi** (au lieu de la somme). Bot `gauche_med` (gauche avec la Médecine). 309 tests.
+Résultat (200 parties par bot, seuils recalculés : Contentement 78,8 / 80,5 / 81,9, Concorde 28 / 54 / 80, Autorité 34 / 53 / 54) : gauche en Contentement 22 % sans médaille, 33 % d'or (avant 78 % et 2 %) ; spam_medicine 84 % sans médaille (avant 22 %) ; Autorité : droite 71 % d'or, extrême droite 58 % de bronze, extrême gauche rien (la moyenne par loi n'a pas suffi : la droite garde le soutien des patrons, faction la plus puissante). Piste de l'utilisateur pour la suite : des **pays de départ différents** (factions plus ou moins puissantes), voir la réponse du 14/11.
+
+## 18. Panel de lois (14/11)
+Décisions de l'utilisateur : retirer les lois inutiles ou en double (code du travail) ; un panel de l'extrême gauche à l'extrême droite, petits bonus ou gros bonus avec malus ; **les deux crans** libre entreprise / laisser-faire ; chaque loi expliquée au joueur en phrases simples, dans un **mini-wiki** consultable pendant la partie (tour par tour : le joueur a le temps de lire).
+Fait : `donnees/lois.js` réécrit : **27 lois en 10 catégories** (fiscalité, système économique, travail, santé et solidarité, éducation, relations sociales, libertés publiques, ordre public, armée, commerce), chacune avec son `bord`, ses factions pour et contre et son `texte` (les phrases du joueur, source du mini-wiki). Moteur : nouveaux effets de loi (entretien des bâtiments, part des ventes, coût de construction, prix d'achat, pente du marché, plafond et prix des régiments, chance de débat, relations à l'adoption, bonus des artisans immédiat). Bots `gauche`, `droite`, `extreme_gauche`, `extreme_droite` (même gestion qu'economy, programme de lois du camp). 293 tests.
+
+**Résultat (200 parties par bot)** :
+
+| Programme | Fins | Or t40 | Grève dans | Faillite |
+|---|---|---|---|---|
+| extrême gauche | fin 100 % | 3 449 | 82 % | 0 % |
+| gauche | fin 100 % | 2 501 | 4 % | 3 % |
+| extrême droite | fin 99 % | 2 412 | 5 % | 2 % |
+| droite | fin 96 % | 2 048 | 9 % | 14 % |
+
+Confrontations : extrême gauche bat gauche 91 %, droite 95 %, extrême droite 92 % ; gauche bat droite 76 % ; extrême droite et gauche à égalité (49/51). Aucune stratégie dominante au total (economy, qui vote peu de lois, reste devant : le classement se fait à l'or, qui favorise les programmes économes). Déséquilibre à corriger : la collectivisation (+15 % de production) porte l'extrême gauche ; la droite perd de l'or (impôt minimal −20 %, libre entreprise : 75 % des ventes) sans contrepartie suffisante.
+
+## 17. Paquet d'événements (14/11)
+Décisions de l'utilisateur : une chance sur six par tour (à partir du tour 5) ; **pas de cartes « saturation » ni « pénurie »** (l'économie doit rester lisible : pas de pénurie de grain quand on en a). Fait : `donnees/evenements.js` (12 cartes : sécheresse, bonne récolte, épidémie, scandale, grève sauvage, filon découvert, réfugiés, incident de frontière, ambassadeur, inventeur, mutinerie, changement de dirigeant), `moteur/evenements.js` (paquet mélangé au hasard à graine, sans retour avant épuisement ; carte à condition passée si la condition manque ; carte tirée en fin de tour, réponse au tour suivant ; sans réponse, la réponse gratuite). Bots : réponse payante s'ils ont 3 fois son prix. 275 tests.
+
+**Avant (budget) → après (200 parties par bot)** : environ 6 événements par partie ; economy fin 100 %, or t40 5 081 → 4 914, grève 0 % → 1 % ; no_appeasement révolution 1 % → 3 %, grève 6 % → 18 % ; replica révolution 2 % → 4 % ; militarist 20 % ; random 79 % → 87 %. Aucune stratégie dominante. Les événements ajoutent une pression modérée : ils punissent surtout les pays déjà fragiles.
+
+## 16. Validation du 14/11
+L'utilisateur a validé toutes les valeurs encore en attente : personas (tableau de `regles-v2.md`), factions pour et contre des lois (§ 12), détails de l'armée et de la guerre (§ 9 ; la capitulation « sans régiment » est gardée à côté de celle à la moitié des régions), budget (§ 15), contrats tirés des échanges (§ 10). Prochaines étapes : le paquet d'événements, puis la revue de toutes les lois (supprimer, modifier, ajouter).
+
+## 15. Budget : impôts, entretien, dette (14/11)
+Décision de l'utilisateur : niveau d'imposition, entretien des bâtiments, dette ; plafond des réserves seulement si l'or déborde encore. Après avoir regardé l'usage de l'or dans Victoria 3 (budget en flux, impôts réglables, salaires de l'État, réserves plafonnées, dette et faillite).
+Fait (valeurs ASSUMPTION (budget), à valider) : **niveau d'imposition** bas (×0,75, −1 colère/tour pour toutes les factions), normal, haut (×1,35, **+4**/tour) ; **entretien** par tour : ferme 3, mine 4, atelier 4, tissage 5, filature 2, caserne 3, fort 4 (environ 5 % du coût ; une région occupée ne coûte plus) ; **dette** : sous zéro, 5 % d'intérêts par tour ; sous −300 (faillite), +3 colère/tour pour toutes les factions. Bots : impôts hauts si toutes les factions sont sous 35 de colère, bas si l'une atteint 55. Les tests écrits avant gardent l'ancien budget. 255 tests.
+
+**Mesures (100 à 200 parties par bot)** :
+- Entretien ×1 : economy 7 275 → 5 081 or au tour 40, aucune révolution ; ×2 : 2 030, mais 8 % de révolutions pour economy et 51 % pour militarist. Gardé ×1.
+- Impôts hauts à +2 de colère : **stratégie dominante** (Médecine du travail d'abord : −2/tour annule +2, impôts hauts 28 tours sans grogne). À +3 encore dominante, **à +4 plus aucune** (spam_medicine 4 930 contre economy 5 086). Retenu +4.
+- Dette : militarist et replica s'endettent parfois (20 % et 15 % de faillites), passif 35 %, random 69 % ; les bons gestionnaires presque jamais.
+- **Plafond des réserves** (en essai, désactivé : `economie.reserves`) : 15 tours d'impôts → economy 3 596 au tour 40 ; 10 tours → 2 398. Il détruit l'excédent mais **ne change aucune décision** (même classement, même stratégie dominante à +3) : il manque surtout des choses à acheter en fin de partie. **Décision du 14/11 : plafond laissé désactivé** ; piste pour plus tard : des usages de l'or en fin de partie (améliorations de bâtiments, or au service de la diplomatie).
+
+## 14 bis. Équilibre de la guerre : décisions du 14/11
+Validé par l'utilisateur et activé : **une caserne au Bourg au départ** ; **capitulation quand la moitié de ses régions est occupée** (2 sur 4 pour nous, 2 sur 3 pour une nation). Gardés : forts ×1,5, non-réarmement imposé par l'ordinateur. 247 tests.
+Résultat (200 parties par bot) : economy fin 100 % (révolution 0 %, grève 0 %), 0,64 région perdue par partie, or t40 7 275 ; replica fin 100 %, 0,38 région perdue ; militarist conquiert 1,94 région par partie (guerres de 8 tours, 2,69 guerres gagnées) ; random révolution 52 % ; passif révolution 100 % (il ne construit rien). Aucune stratégie dominante.
+
+## 14. Équilibre de la guerre : mesures du 14/11 (100 parties par bot)
+Réglages ajoutés dans `donnees/guerre.js`, valeurs actuelles gardées : `capitulationMoitie` (faux), `clausesIA` (toutes les clauses), `fort` (1,5).
+
+| Réglage | economy : régions perdues, révolutions, grèves | replica : régions perdues | militarist | Verdict |
+|---|---|---|---|---|
+| Forts ×2 au lieu de ×1,5 | identique | identique | identique | **aucun effet** : l'ennemi attaque les régions sans fort |
+| Caserne au Bourg au départ | 0,34 → 0,24 ; 7 % → 8 % ; or t40 6 700 → 7 333 | 0,13 → 0,04 | 0,18 → 0,08 | **aide nettement** |
+| Pas de non-réarmement imposé au joueur | identique | 0,13 → 0,11 | identique | **presque aucun effet** (la spirale de défaites a disparu avec les personas) |
+| Capitulation à la moitié des régions occupées | 0,34 → 0,69 ; 7 % → **0 %** ; 19 % → **0 %** | 0,13 → 0,49 | guerres 18 → 8 tours ; or t40 +20 % | **choix de conception** : guerres courtes et pas de révolution par la famine, mais une région cédée plus souvent |
+| Caserne + capitulation à la moitié (+ forts ×2, sans non-réarmement) | 0,19 → 0,41 ; 8 % → 0 % ; 18 % → 0 % | 0,04 → 0,25 | guerres 17 → 8 tours | |
+
+Constat : les révolutions d'economy (7 %) venaient des longues occupations (régions qui ne produisent plus, paysans affamés) ; finir la guerre plus tôt les supprime.
+
+## 13. V2, étape 6 : réputation fusionnée dans les relations (13/11)
+Fait : `diplomatie.fusion` ; chaque point du barème de réputation devient 0,5 point de relation avec **toutes** les nations (`Diplomatie.reputer`) : agression −100 avec la cible et −10 avec les autres, don de 100 or +20 avec la nation aidée et +2,5 avec toutes, traité signé +1,5, rompu −7,5, embargo injustifié −2,5, suffrages ±2,5, traité respecté +1 tous les 10 tours ; « réputation » = moyenne des relations ; paria sous −50 de moyenne ; l'idéaliste juge cette moyenne. Les tests écrits avant gardent la réputation à part. 245 tests.
+
+**Résultat (200 parties par bot)** : presque rien ne bouge pour les bots qui ne font pas de diplomatie (economy, spam_medicine, no_appeasement : relations à +10 du début à la fin, mêmes fins qu'à l'étape 4). Les agresseurs le paient : militarist finit à −39 de moyenne, random à −98 (paria). replica (diplomate) finit à +17. Aucune stratégie dominante. Une jauge de moins à l'écran, sans perte de jeu visible : à garder.
+
+## 12. V2, étape 4 : une loi à la fois (13/11)
+Fait : plus de capital politique ; `e.debat` (une seule loi en débat ; action « abandonner ») ; chaque tour de débat, les factions contre prennent +1 de colère ; à partir du 2e tour, adoption avec la chance affichée (`Lois.chance` : 50 % + (puissance des pour − des contre) / 2, entre 10 % et 90 %) ; les tests écrits avant tournent sans hasard (adoption à T + 2, le délai de la V1). 236 tests.
+
+**Factions pour / contre (ASSUMPTION (V2 étape 4), déduites des réactions de la V1, à valider)** :
+
+| Loi | Pour | Contre | Chance au départ |
+|---|---|---|---|
+| Impôt progressif | ouvriers, paysans | patrons | 60 % |
+| Impôt sur le capital | ouvriers | patrons, artisans | 25 % |
+| École publique | artisans, ouvriers | — | 77,5 % |
+| École gratuite | artisans, ouvriers | paysans | 57,5 % |
+| Code du travail | ouvriers | patrons | 40 % |
+| Syndicats | ouvriers | patrons | 40 % |
+| Médecine du travail | ouvriers, artisans | — | 77,5 % |
+| Armée de métier | ouvriers | — | 62,5 % |
+| Conscription | patrons | ouvriers | 60 % |
+| Suffrage universel | paysans, ouvriers | patrons | 60 % |
+| Suffrage censitaire | patrons, artisans | ouvriers, paysans | 55 % |
+
+**Avant (étape 3) → après (200 parties par bot)** : economy fin 100 % → 92 % (révolution 9 % : il fait maintenant passer l'impôt sur le capital, que patrons et artisans détestent ; 4 lois au lieu de 3) ; no_appeasement révolution 0 % → 22 % (l'apaisement redevient utile) ; spam_medicine fin 100 %, aucune grève ; replica 8 lois, révolution 2 % ; or presque inchangé (economy 6 700 au tour 40). Aucune stratégie dominante (economy bat spam_medicine 85 %, replica 84 %).
+
+## 11. V2, étape 3 : marché et niveau de vie (13/11)
+Fait : `economie.marche` (vente ×(1 − 0,01 × vendu), au moins ×0,5 ; achat ×(1 + 0,01 × acheté), au plus ×1,5 ; prix au centime ; les contrats restent à prix fixe), `factions.niveauDeVie` (paniers ; couverture = production / consommation, au plus 100 % ; ≥ 100 % : −2/tour, ×2 pour les ouvriers avec le code du travail ; < 50 % : +2/tour ; remplace la dissipation de −1). Les tests écrits avant cette étape tournent en mode V1 (prix fixes, dissipation) ; 232 tests.
+
+**Avant (personas, prix fixes, dissipation) → après (200 parties par bot)** :
+
+| Bot | Fins | Or t40 | Grève dans | Colère max |
+|---|---|---|---|---|
+| passif | fin 100 % → **révolution 100 %** | 2 443 → — | 0 % → 100 % | 34 → 100 |
+| economy | fin 100 % | 8 890 → 6 759 | 0 % → 18 % | 34 → 41 |
+| spam_medicine | fin 100 % | 8 352 → 5 741 | 0 % → 0 % | 34 → 35 |
+| militarist | fin 100 % → 91 % | 5 352 → 3 230 | 0 % → 10 % | 39 → 56 |
+| random | révolution 3 % → 51 % | — | 11 % → 69 % | 47 → 99 |
+| replica | fin 100 % | 6 514 → 4 098 | 0 % → 6 % | 37 → 50 |
+
+- Les factions ont enfin une raison de se fâcher : au départ, sans atelier ni tissage, les artisans sont gênés (+2/tour) ; **négliger l'économie mène à la révolution** (passif 100 %). La Médecine du travail devient utile (spam_medicine : aucune grève) sans être dominante (economy le bat sur 100 % des graines grâce à l'or).
+- Le marché mord : −24 % d'or pour economy, −37 % pour replica et militarist. L'or reste pourtant abondant (6 759 au tour 40) : il manque des dépenses (entretien des bâtiments, étape 4 ou backlog).
+- Aucune stratégie dominante.
+
+## 10. Mise en place neutre et personas (13/11)
+Décisions de l'utilisateur : pas d'ennemi désigné ; **toutes les relations commencent à +10** ; **traités possibles avec n'importe quelle nation** ; **personas cachés tirés au hasard** (3 différents parmi 7) ; **aucune crise au début**.
+Fait : `donnees/personas.js` (armée, recrutement, relation minimale pour traités et contrats, déclaration, ralliement, refus), tirage dans `etat.js` (au hasard à graine), contrats calculés à partir des échanges de chaque nation (`e.offres` : volume ≤ 10, achat ×0,8, vente ×1,3, 10 tours), filature avec toute nation de l'Entente, crise du tissu retirée. Belliqueux : déclare dès le tour 6 tant que la relation est < 20 (on peut « acheter la paix ») ; revanchard : belliqueux contre qui l'a battu ; idéaliste : rejoint le camp attaqué, ne frappe qu'un paria. Valeurs des personas : propositions à valider (`regles-v2.md`). 221 tests.
+
+**Avant (Val-Roc toujours agresseur) → après (200 parties par bot)** :
+
+| Bot | Parties avec guerre | Régions perdues / partie | Or t40 |
+|---|---|---|---|
+| passif | 100 % → 42 % | 2,77 → 0,81 | −655 → 2 443 |
+| economy | 100 % → 36 % | 2,45 → 0,14 | 2 928 → 8 890 |
+| militarist | 100 % → 100 % (il attaque) | 1,37 → 0,08 ; 0,72 guerre gagnée | 605 → 5 352 |
+| replica | 100 % → 34 % | 2,11 → 0,21 | 2 346 → 6 514 |
+| random | 100 % → 99 % | 3,74 → 2,88 | — |
+
+Aucune stratégie dominante. Restent : l'or qui déborde (étape 3, marché) ; des factions presque toujours calmes (colère max ~34 : rien ne la fait monter hors des lois et des défaites) ; les propositions d'équilibre de la guerre (capitulation à la moitié des régions, fort ×2, caserne de départ, pas de non-réarmement imposé au joueur) ne sont pas appliquées.
+
+## 9. V2, étape 2 : armée en régiments (13/11) — mécanique faite, équilibre à décider
+Fait : `donnees/guerre.js` (régiments, fort, pertes, politiques de recrutement), caserne et fort (forge et fortifications retirées), 3 régions par nation (`champs.js`), `moteur/guerre.js` réécrit (force = régiments × loi × moral, fort ×1,5 dans sa région, bataille pour une région, occupation et libération, cession, recrutement du joueur et des nations), revenus des nations selon leurs régions tenues, régions occupées sans production ni chantier. 199 tests.
+
+**Détails ajoutés (ASSUMPTION (V2 étape 2), à valider)** : 1 régiment pour 10 familles au plus ; 1 recrue par caserne et par tour ; pas de caserne au départ ; un fort par région ; pertes arrondies (perdant au-dessus, gagnant en dessous) ; capitulation aussi sans régiment avec une région occupée ; région cédée au joueur : 3 emplacements ; le revenu d'une nation suit la part de ses régions tenues ; recrutement des nations : militariste au plafond (+2/tour), commerçante la moitié, opportuniste 70 % (+1/tour), réserve d'or 100 ou 200, plafond en guerre ; Val-Roc, Brume, Contreforts ont chacun 3 régions (noms et terrains dans `champs.js`) ; l'ennemi libère d'abord ses régions, sinon attaque notre région la moins défendue.
+
+**Résultat (200 parties par bot)** : le joueur perd **2 à 3 régions par partie** par cession (passif 2,77, economy 2,45, replica 2,11, militarist 1,37). Enchaînement : Val-Roc recrute au plafond (9 × 1,6 = 14,4, plus Contreforts) et déclare la guerre vers le tour 2 contre nos 3 régiments sans caserne ; 3 défaites, 0 régiment, capitulation, cession et non-réarmement 15 tours ; la guerre suivante recommence. Même au plafond (8 régiments), le joueur reste sous Val-Roc (12,8 avec la conscription).
+
+**Balayages (100 parties, passif, economy, militarist, replica)** :
+- Recrutement de Val-Roc (par tour, part visée, réserve), régiments de départ de Val-Roc, seuil de déclaration : presque aucun effet (il recrute au plafond dès la guerre).
+- Sans la capitulation « sans régiment », ou avec 6 à 8 régiments au départ : **guerres sans fin** (39 tours sur 40, nos 4 régions occupées pendant 37 tours, trésor négatif) : il manque une règle de fin de guerre.
+- Candidat « +2 colère par tour et par région occupée » (désactivé, `guerre.occupationColere`) : les guerres finissent, mais par la révolution (economy 53 %, replica 89 %).
+- Candidat « pas de déclaration avant le tour T » (désactivé, `declare.tourMin`) : T = 8 ou 15 sauve l'ouverture, mais militarist devient dominant et economy reste occupé 23 à 26 tours.
+- Bots corrigés : alternance sans fin École publique / gratuite ; bataille jouée en dernier et hasard du moteur dans le plan d'un tour.
+
+## 8. V2, étape 1 : 40 tours et régions (13/11)
+Fait : `donnees/carte.js` (terrains), régions dans `champs.js`, `moteur/batiments.js` (un chantier par région, emplacements, bonus de terrain), délais raccourcis. 183 tests. Avant (V1, 60 tours) → après (200 parties par bot) :
+
+| Bot | Or t40 avant → après | Guerre (tours) | Batailles P | Révolutions | Apaisements |
+|---|---|---|---|---|---|
+| economy | 1 386 → 8 217 | 49/60 → 20/40 | 33 → 13 | 0 % → 0 % | 28 → 5 |
+| spam_medicine | 1 342 → 7 857 | 49/60 → 20/40 | 34 → 13 | 0 % → 0 % | 10 → 1 |
+| no_appeasement | — → 9 443 | 16 → 16 | 14 → 10 | 96 % → 59 % | 0 |
+| militarist | 130 → 6 313 | 59/60 → 14/40 | 51 → 7 (2,65 guerres gagnées) | 0 % → 0 % | 41 → 1 |
+| replica | 4 872 → 8 173 | 16 → 12 | 12 → 6 | 0 % → 0 % | 6 → 1 |
+
+- L'économie va **beaucoup plus vite** (bonus de terrain, 4 chantiers en parallèle, délais courts) : le trésor déborde encore plus (A1). Attendu : l'armée en régiments (étape 2) et le marché (étape 3) doivent l'absorber.
+- Plus riches, les bots tiennent tête à Val-Roc : guerres deux fois plus courtes, et militarist gagne ses guerres (2,65 par partie).
+- Aucune stratégie dominante (economy bat spam_medicine 90 %, replica 51 %).
+- replica n'est plus une référence de non-régression (règles V2 ≠ partie 1).
+
+## 7. Brainstorming M6 (13/11)
+Décisions : public adulte (l'utilisateur surtout), parties sauvegardées, **40 tours** ; grille de décision (une règle = une phrase, effet visible, un choix, liée à deux systèmes, 5 systèmes au plus) ; tableau des mécaniques validé ; réputation fusionnée dans les relations, à juger aux simulations ; personas cachés ; une seule carte. Premier jet chiffré : [`politique/regles-v2.md`](politique/regles-v2.md) (à valider).
+
+## 6. Propositions pour M3 (13/11, validées le 13/11)
+**Détails ajoutés en écrivant M3b (à confirmer)** : une seule guerre à la fois ; une forge ou des fortifications ne comptent qu'une fois quel que soit leur nombre ; l'attaque d'un membre de l'Entente coûte −30 **au lieu de** −20 (pas les deux), plus −15 par traité rompu avec la cible ; sanctions de bloc contre le joueur = chaque autre membre rompt ses traités et contrats (sans pénalité de réputation pour le joueur), relation −30, et le met sous embargo (sans effet sur le marché du joueur en V1) ; sanctions de bloc contre une nation = elle manque de ce que les membres exportent ; Contreforts peut rejoindre Val-Roc si Val-Roc est le plus fort (les relations entre nations ne sont pas modélisées) ; les alliés ne livrent pas de bataille à part, ils perdent comme leur camp ; l'ennemi accepte la paix blanche s'il n'est pas plus fort ; quand nous capitulons, l'ennemi impose toutes les clauses ; quand l'ennemi capitule, la guerre est suspendue jusqu'à ce que le joueur choisisse ses clauses ; à la paix, les sanctions liées à la guerre sont levées ; le non-réarmement n'empêche pas le perdant de redéclarer la guerre, et un joueur sous la clause ne peut tout simplement pas la violer (le « ré-embargo » n'arrive donc jamais en V1).
+
+**Détails ajoutés en écrivant M3a (à confirmer)** : un don par nation et par tour ; un embargo est une sanction légitime seulement contre une nation en guerre contre le joueur ou un membre de l'Entente (donc toujours −5 avant M3b) ; un embargo annule les contrats avec la cible ; rompre un traité rompt ceux qui en dépendent (Entente → filature, −15 chacun) ; une filature déjà construite reste au joueur après la rupture, tout son tissu va alors au marché ; la réputation « traité respecté » compte la filature comme un traité ; Entente : les tarifs jouent dès qu'on a l'Entente avec une seule nation ; une rupture ne change pas la relation (le barème ne le prévoit pas).
+
+M3 coupé en deux : **M3a** diplomatie, commerce, traités, réputation, économie simplifiée des nations ; **M3b** guerre, paix, forge, fortifications, politiques militaires des nations.
+
+**Nations de l'ordinateur (modèle simplifié, pas de lois ni de bâtiments)** : trésor, familles (+0,5 %/tour), revenu = familles × taux − 12 (armée) ; une seule jauge de colère (dissipation −1/tour) qui donne le moral par la formule des factions ; loi militaire fixe ; un profil commercial fixe (ce qu'elles importent et exportent chaque tour).
+
+| Nation | Taux | Armée | Colère | Exporte | Importe |
+|---|---|---|---|---|---|
+| Val-Roc | 1,0 | conscription ×1,6 | 30 | fer 10 | grain 15, tissu 5 |
+| Brume | 1,3 | milice ×1 | 20 | tissu 20 | fer 10, grain 5 |
+| Contreforts | 1,0 | armée de métier ×1,3 | 25 | outils 10 | grain 5 |
+
+**Commerce** : contrats tirés d'une liste fixe par nation (ex. Brume vend 10 tissu à 1,6 ; Contreforts vend 5 outils à 1,6 ; Val-Roc achète 10 grain à 1,3), 10 tours ; la nation accepte si relation ≥ 0. Le volume du contrat remplace le marché à ce prix ; s'il manque au joueur, il est acheté au marché pour être livré.
+**Relations** : traité signé +10, contrat +5, don +1 par 5 or, embargo −30 avec la cible, guerre → −100 ; bornes −100/+100 ; pas de dérive.
+**Dons** : 20, 50 ou 100 or (réputation selon le barème validé).
+**Embargo** (À TRANCHER) : le joueur cesse de vendre à la cible ; pour chaque bien qu'elle importe et dont le joueur a un surplus, il lui manque min(import, surplus) unités : colère +1 par 3 unités manquantes et par tour, trésor − (manque × prix). Pour le joueur : rien en V1 (marché anonyme) sauf relation et réputation — c'est le problème A3 du backlog, reproduit tel quel.
+**Traités** (acceptés selon la relation) :
+- Entente des Ports (relation ≥ 30) : achats −10 % et ventes +10 % pour ses membres ; consultation = un membre ne peut pas attaquer un autre membre (sinon traité rompu, −15) ; attaquer un membre = embargo de tous les membres.
+- Défense mutuelle (≥ 50) : si l'un est attaqué, l'autre entre en guerre ; les forces s'additionnent.
+- Filature conjointe (Brume, ≥ 30, Entente requise) : bâtiment `entente_mill` à 50 or pour le joueur, +18 tissu dont 6 livrés à Brume à 1 or.
+- Non-réarmement : clause de paix (M3b).
+**Paria** : réputation < −50 → plus aucun traité ni contrat accepté.
+
+**Guerre (M3b)** :
+- Force = trésor (≥ 0) × loi militaire × moral × forge 1,15 × fortifications 1,2 (en défense) — bonus **multipliés** (À TRANCHER) ; alliés : forces additionnées.
+- Forge : consomme 10 fer + 8 or par tour, toujours.
+- Bataille (action, une par tour et par guerre) : l'attaquant gagne avec la probabilité Fa / (Fa + Fd), tirée au hasard à graine. Perdant : −25 % de trésor et +10 de colère (toutes les factions pour le joueur).
+- Usure : un camp dont le moral passe sous 0,3 capitule.
+- Paix : capitulation (le vainqueur choisit les clauses) ou paix blanche après 5 tours sans bataille si les deux le veulent. Clauses : réparations (25 % du trésor du perdant, plafond 300), levée d'embargo, non-réarmement (15 tours sans changer de loi militaire ni bâtir de forge ; sinon ré-embargo automatique).
+- **Territoire** : pas de carte en V1 → pas de pertes de territoire ni de clause de restitution (proposé au backlog).
+- Politiques : Val-Roc déclare la guerre si sa force > 1,2 × la force du joueur et de ses alliés, relation < 0 et tirage < 30 % ; livre bataille si sa force dépasse celle d'en face ; Brume ne déclare jamais la guerre et honore la défense mutuelle ; Contreforts, quand une guerre éclate, rejoint le camp le plus fort avec lequel sa relation est ≥ 0 (tirage 50 %).
+
+## 40. Maquette 4 : la carte sur papier (17/11)
+Retour : « rien ne donne vraiment comme je voudrais » ; recherche de packs de cartes « papier » et d'overworld gratuits (planche des couvertures : Fantasy Map Assets Lite d'amanz, gratuit ; Fantasy Paper Map pixel art d'aamatniekss, 20 $ ; Games Container 5,99 $ ; overworlds d'Ivess et de Raccoon, CC BY). L'utilisateur choisit d'essayer le papier. Maquette 4 : https://claude.ai/artifact/VAaCPoE8Uo5Ygy6gdXxfxH — source `outils/politique-maquette/source4.html` + `fabriquer4.py` (pack à télécharger, pas dans le dépôt) :
+- Géographie **continue** (mêmes fonctions de forme à toutes les échelles) : le continent et la carte du pays sont rendus une fois en image, puis déplacés et zoomés.
+- **A · Encre** : feuille de parchemin du pack, lavis aux couleurs des nations (plus soutenu le long des frontières), trait de côte et ondes à l'encre, frontières en pointillés, routes en tirets, tampons du pack (montagnes, forêts, villes, rose des vents) ; pays : régions en pointillés fins, voisins hachurés, places libres = cercles rouges « + », bâtiments en pictogrammes à la plume (champ et maison, vignes, grotte, tas de charbon, sapin et rondins, enclume, bobine, tour à drapeau rouge) ; charrette vue de côté.
+- **B · Pixel** : la même carte rendue à 10 px par case (16 pour le pays), parchemin au pixel, couleurs réduites, contours tranchés, zoom par multiples entiers.
+- Le parcours « + Construire » (bâtiment puis place, production affichée) est repris.
+
+Retours sur la maquette 4 (17/11) : « la A rend vraiment bien » ; menus à retravailler ; carte du pays : « pas super fan » ; « notre pays est au centre alors que les distances sont différentes : le joueur ne voit pas qu'il est plus loin d'une nation que d'une autre ». Corrections :
+- **Distances lisibles** : notre pays passe sur la côte ouest (une baie au nord) ; seuls les deux voisins à 1 étape (Val-Roc, Contreforts) le touchent ; routes d'environ 10 cases (1 étape), 16 à 19 (2), 26 (3) ; la distance est écrite sous chaque nation (« +38 · 2 étapes · traité ») ; les charrettes vont à la même vitesse, donc mettent plus longtemps vers les nations lointaines.
+- **Menus façon carte ancienne** : cartouche en haut (tour, titre de la carte, or, Autorité, barre des factions) sur le papier du pack avec double filet d'encre ; onglet « Mon pays ▸ » accroché dessous ; ruban Lois / Budget / Armée / Journal ; **sceau de cire rouge** « Tour suivant » ; fiches au même papier.
+
+Carte du pays (17/11) : ce qui gêne : bâtiments peu lisibles, régions pas claires, pas assez vivante ; l'utilisateur demande une maquette des trois pistes proposées (boutons 1 · 2 · 3 sur la carte du pays) :
+1. **Cadastre** : une feuille à part, bandeau de la capitale (maisons ajoutées à chaque tour, fumée) ; 4 parcelles (disposées comme sur la carte : plaine en haut à gauche, collines en haut à droite, vallée, bourg) au lavis de leur couleur, titre et bonus du terrain ; 6 cases par parcelle : bâtiment + nom + production, cercle rouge « libre », « friche · à défricher ».
+2. **Épurée** : la même carte, beaucoup moins de décor dans le pays, chaque région lavée de sa couleur avec une limite en tirets marqués, titres en cartouches colorés, bâtiments plus grands et toujours nommés, fumées, passants sur les chemins de la capitale aux régions.
+3. **Vignettes** : 4 petites gravures (champs ondulés, montagnes, rivière et sapins, rempart du bourg), nuages et oiseaux qui passent, un passant, bâtiments sur deux rangs avec leur nom, panneaux « + » pour les places libres.
+Le parcours Construire marche dans les trois (production affichée sur chaque place libre).
+
+Choix du 17/11 : **direction A (encre) gardée, pas de version pixel** ; vignettes écartées. La **carte épurée** est la carte du pays ; le **cadastre** devient le **Registre du pays** : la vue des menus, pour chercher et lancer des constructions (« + Construire » l'ouvre directement ; bouton « ▤ Registre » / « ◂ Carte » sur la carte du pays). Carte épurée aérée : notre pays un peu plus grand (rayon 6 au lieu de 5 ; toujours seuls Val-Roc et Contreforts le touchent), places espacées d'au moins 1,4 case, loin de la capitale, des routes et des noms de régions, bâtiments un peu plus petits, la carte s'ouvre assez près pour lire (46 px par case) et on la fait glisser.
+
+## 41. L'écran, session 1 (17/11)
+Maquette 4 validée (« Je valide la maquette, on passe à l'écran »). Fichiers : `politique/index.html` (page, styles de la maquette), `politique/ecran/carte.js` (géographie continue et rendu à l'encre repris de la maquette, `window.PolCarte`, 8 places par région), `politique/ecran/ecran.js` (l'écran, `window.PolEcran`), `politique/images/` (papier et tampons du pack Deface Games, fabriqués par `outils/politique-images.py`), `politique/fiche.js` (accueil : démo).
+- **Branché sur le moteur** : tout ce que l'écran propose vient de `Tour.actionsDisponibles` ; un ordre s'applique tout de suite sur un **aperçu** (copie de l'état du début du tour, même hasard) pour montrer son effet ; « Tour suivant » rejoue les ordres avec `tourSuivant`. Pastille sur le sceau = nombre d'ordres ; Journal : ordres du tour, « Annuler le dernier ordre ». Partie sauvée dans `localStorage` (`politique-partie`).
+- Écrans : titre (reprendre, nouvelle partie, retour à la Ludothèque), choix du pays (5 pays), ambition au tour 1 (obligatoire avant de finir le tour), continent (relation, distance, traité, embargo, guerre ; fiche de nation : toutes ses actions — contrats, don, diplomate, traités, route, investir, projet commun, exiger, embargo, guerre), carte du pays épurée (bâtiments, chantiers avec tours restants, niveaux ★, défrichage, places libres, capitale qui grandit avec les familles), Registre (cadastre ; « + Construire » choisit le bâtiment puis la place), Lois (débat et chance d'adoption, lois par catégorie), Budget (bilan prévu, impôts, institutions), Armée (recruter, guerre, batailles, paix), Factions (barre du haut : colère, puissance, statut, apaiser, réprimer), événements (cartes à choix), rapport de chaque tour, fin de partie (médailles des 5 objectifs).
+- Une charrette par contrat en cours, en aller-retour sur la route de la nation.
+- Testé : 12 tours joués dans le navigateur avec des ordres au hasard, sans erreur ; `verifications.js` passe. À essayer sur le téléphone. Pas encore d'artefact (le jeu lit ses images dans `politique/images/`).
+- Prochaines sessions possibles : mini-wiki des lois, détails des factions (demandes, personas cachés), guerre sur la carte (régions occupées), écran de fin plus riche, nom du jeu.
+
+## 42. L'écran, session 2 (17/11)
+- CI : le jeu manquait dans `ORDRE` (accueil.js) ; corrigé.
+- **Choix du pays** : le camp que chaque pays favorise pour l'Autorité (§ 34, champ `camp` de `donnees/pays.js`, texte seulement) et la loi déjà en vigueur.
+- **Mini-wiki des lois** : « Lire » sur chaque loi (catégorie, bord, texte complet, factions pour et contre en couleur, chance d'adoption, en vigueur / en débat, Proposer) ; « Toutes les lois (wiki) » : les 33 lois par catégorie, celle en vigueur marquée.
+- **Factions** : niveau de vie (part de leur panier couverte), demande (thésaurisation) satisfaite ou non, seuils de colère.
+- **Guerre sur la carte du pays** : une région occupée est hachurée de rouge, « occupée par … ».
+- **Rapport de tour** : « Ce qui a changé » (statuts des factions, relations qui bougent de 5 ou plus) avant le journal.
+- **Fin de partie** : pour chaque objectif, notre valeur et les seuils bronze / argent / or du pays ; étapes de l'ambition.
+- Testé : une partie entière jouée au hasard jusqu'à la fin (révolution au tour 39), sans erreur.
+
