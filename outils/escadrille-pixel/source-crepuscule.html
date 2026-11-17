@@ -34,6 +34,10 @@ p{margin:0;max-width:72ch}
 .clavier{position:absolute;left:10px;bottom:10px;font:8px/1.6 var(--titre);color:#fff;text-shadow:1px 1px 0 #1c3350;background:rgba(28,48,72,.45);padding:5px 7px;pointer-events:none;display:none;transition:opacity .6s}
 @media (hover:hover) and (pointer:fine){.clavier{display:block}.aidejoy{display:none}}
 .aidejoy{position:absolute;left:24px;bottom:40px;font:9px/1.5 var(--titre);color:#fff;text-shadow:1px 1px 0 #1c3350;opacity:.8;pointer-events:none}
+.hangar{position:absolute;inset:8px;z-index:5;display:none;flex-direction:column;gap:5px;overflow:auto;padding:12px;background:rgba(28,22,44,.92);border-radius:16px;font:11px/1.4 var(--titre);color:#fff;touch-action:pan-y}
+.hangar b{font-size:15px;letter-spacing:.14em;margin-bottom:4px}.hangar i{font-style:normal;color:#f2c94c;margin-top:8px;font-size:10px}
+.hangar button{font:11px var(--titre);text-align:left;padding:8px 10px;border-radius:8px;border:1px solid rgba(220,200,240,.4);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.hangar button.on{background:#e2682e}.hangar .fermer{text-align:center;margin-top:8px}
 .charge{position:absolute;inset:0;display:grid;place-items:center;font:12px var(--titre);color:#fff}
 ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 .q{background:var(--carte);border-left:6px solid var(--accent);padding:14px 16px;display:grid;gap:8px}
@@ -47,14 +51,14 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 <div class="hud" id="hud"></div>
 <div class="bandeau" id="bandeau">MISSION 1 · ARCHIPEL<b>VAGUES</b>Abats chaque vague de chasseurs. Ils tirent aussi !</div>
 <div class="joy" id="joy"><i></i></div><div class="aidejoy" id="aidejoy">POUCE GAUCHE :<br>PILOTER</div><div class="clavier" id="clavier">↑↓ ZS : MONTER, DESCENDRE<br>←→ QD : VIRER<br>ESPACE : FEU · E : MISSILE<br>R : LOOP · F : TONNEAU · V : VUE · C : AVION</div>
-<button class="rond" id="bAvion">AVION</button><button class="rond" id="bVue">VUE</button><button class="rond" id="bLoop">LOOP</button><button class="rond" id="bRoll">TON-<br>NEAU</button><button class="rond" id="bMis">MIS.<small id="nMis">▮▮▮▮▮</small></button><button class="rond" id="bTir">FEU<small id="nTir">300</small></button>
+<div class="hangar" id="hangar"></div><button class="rond" id="bAvion">AVION</button><button class="rond" id="bVue">VUE</button><button class="rond" id="bLoop">LOOP</button><button class="rond" id="bRoll">TON-<br>NEAU</button><button class="rond" id="bMis">MIS.<small id="nMis">▮▮▮▮▮</small></button><button class="rond" id="bTir">FEU<small id="nTir">300</small></button>
 </div></section>
 <section><h2>CE QUI FAIT LE STYLE</h2><ul>
 <li><b>Finesse</b> : environ un pixel d'image pour 2,5 pixels d'écran (jusqu'à 560 pixels de large), avec un tramage léger qui donne le grain des dégradés.</li>
 <li><b>Ciel du crépuscule peint par la carte graphique</b> : dégradé lavande, rose, pêche et jaune, soleil bas avec son halo, traînées de nuages roses.</li>
 <li><b>Décor peint pixel par pixel</b> : forêts d'automne (vert, jaune, orange, rouge, olive) mouchetées, roche mauve sur les pentes, plages, mer qui passe du turquoise au bleu profond selon la profondeur, écume des côtes et moutons qui bougent. Le monde est infini.</li>
 <li><b>Traînées blanches</b> au bout des ailes, flamme du réacteur, ombre sous l'avion : ce sont elles qui donnent la vitesse.</li>
-<li><b>Avions 3D low poly</b> construits dans le code, avec un contour fin : parfaitement fluides. Cinq avions différents au choix (bouton AVION, touche C) : Faucon, Hirondelle, Corsaire (à hélice), Vipère, Spectre (aile volante). <b>Nuages en volume</b> éclairés en trois tons.</li>
+<li><b>Avions 3D low poly</b> construits dans le code, avec un contour fin : parfaitement fluides. Le bouton AVION ouvre le hangar : nos 5 avions et 21 modèles des packs que tu as choisis (monogon, niko, Texnist, Free Game Assets, Majadroid) ; la touche C passe au suivant. <b>Nuages en volume</b> éclairés en trois tons.</li>
 </ul></section>
 <section class="q"><h2>A CHOISIR</h2>
 <p>1. Le rendu est-il proche de tes captures ? Qu'est-ce qui manque le plus : le décor, la lumière, l'avion ?</p>
@@ -206,9 +210,43 @@ const MODELES3D={
 const COULEURS={FAUCON:{m:'faucon',corps:'#7f7896',aile:'#a49dba',accent:'#e2682e',verriere:'#ffcf7a'},HIRONDELLE:{m:'hirondelle',corps:'#2f5690',aile:'#5f8cc4',accent:'#f2c94c',verriere:'#ffb040'},
   CORSAIRE:{m:'corsaire',corps:'#4a6236',aile:'#6f8a52',accent:'#f2c94c',verriere:'#86bdea'},VIPERE:{m:'vipere',corps:'#6a2a26',aile:'#a04e36',accent:'#ffe080',verriere:'#7fd0ff'},
   SPECTRE:{m:'spectre',corps:'#3a3a48',aile:'#565668',accent:'#7fd0ff',verriere:'#ffcf7a'}};
-function construire(c,flammes){const r=MODELES3D[c.m](c);r.flammes=[];if(flammes)for(const t of r.tuy){const f=new THREE.Group();const a=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));a.position.z=.55;
+// modèles importés (GLB en base64, GLBS) : analysés une seule fois, puis clonés ; matériaux convertis en Lambert à facettes
+const IMPORTS={};const b64=s=>{const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;};
+await Promise.all(Object.entries(GLBS).map(([k,v])=>new Promise(ok=>new THREE.GLTFLoader().parse(b64(v.b64),'',g=>{const sc0=g.scene;
+  sc0.traverse(o=>{if(o.isMesh){const mm=Array.isArray(o.material)?o.material:[o.material];const n=mm.map(m=>new THREE.MeshPhongMaterial({color:m.color,map:m.map||null,flatShading:true,shininess:0,specular:0x000000,side:THREE.DoubleSide}));o.material=Array.isArray(o.material)?n:n[0];}});
+  IMPORTS[k]=sc0;ok();},()=>ok()))));
+function importe(cle,rot,taille){const g=new THREE.Group(),m=IMPORTS[cle].clone();const piv=new THREE.Group();piv.add(m);piv.rotation.y=rot;g.add(piv);
+  const b=new THREE.Box3().setFromObject(piv),s=new THREE.Vector3();b.getSize(s);const k=taille/Math.max(s.x,s.z);piv.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(piv),c=b2.getCenter(new THREE.Vector3());piv.position.sub(c);
+  const s2=new THREE.Vector3();b2.getSize(s2);return{g,env:s2.x/2,arriere:s2.z/2,larg:s2.x};}
+function construire(c,flammes){if(c.m==='import'){const r=importe(c.cle,c.rot,c.taille||6.4);r.tuy=c.helice?[]:[[r.larg*.12,0,r.arriere],[-r.larg*.12,0,r.arriere]];r.flammes=[];
+    if(flammes)for(const t of r.tuy){const f=new THREE.Group();const a=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));a.position.z=.55;const b=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));b.position.z=.3;f.add(a,b);f.position.set(t[0],t[1],t[2]);r.g.add(f);r.flammes.push(f);}
+    return r;}
+  const r=MODELES3D[c.m](c);r.flammes=[];if(flammes)for(const t of r.tuy){const f=new THREE.Group();const a=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));a.position.z=.55;
     const b=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));b.position.z=.3;f.add(a,b);f.position.set(t[0],t[1],t[2]);r.g.add(f);r.flammes.push(f);}return r;}
 function chasseur(c){return construire(Object.assign({m:'faucon'},c),false).g;}
+const PACKS={"monoplane": "MONOGON \u00b7 VOXEL PLANE (CC BY-ND)", "monoship": "MONOGON \u00b7 VOXEL SPACESHIPS (CC BY-ND)", "niko": "NIKO-3D-MODELS", "texnist": "TEXNIST \u00b7 VOXEL SPACESHIPS (CC BY)", "fga": "FREE GAME ASSETS (craftpix)", "maja": "MAJADROID (CC0)"};
+Object.assign(COULEURS,{'mono_plane01':{m:'import',cle:'mono_plane01',rot:Math.PI/2,pack:'{PACK_mono_plane01}',helice:1},
+  'mono_plane02':{m:'import',cle:'mono_plane02',rot:Math.PI/2,pack:'{PACK_mono_plane02}',helice:1},
+  'mono_plane03':{m:'import',cle:'mono_plane03',rot:Math.PI/2,pack:'{PACK_mono_plane03}',helice:1},
+  'mono_plane04':{m:'import',cle:'mono_plane04',rot:Math.PI/2,pack:'{PACK_mono_plane04}',helice:1},
+  'mono_plane05':{m:'import',cle:'mono_plane05',rot:Math.PI/2,pack:'{PACK_mono_plane05}',helice:1},
+  'mono_plane06':{m:'import',cle:'mono_plane06',rot:Math.PI/2,pack:'{PACK_mono_plane06}',helice:1},
+  'mono_microrecon':{m:'import',cle:'mono_microrecon',rot:Math.PI,pack:'{PACK_mono_microrecon}'},
+  'mono_redfighter':{m:'import',cle:'mono_redfighter',rot:Math.PI,pack:'{PACK_mono_redfighter}'},
+  'mono_camo':{m:'import',cle:'mono_camo',rot:Math.PI,pack:'{PACK_mono_camo}'},
+  'mono_infrared':{m:'import',cle:'mono_infrared',rot:Math.PI,pack:'{PACK_mono_infrared}'},
+  'mono_dual':{m:'import',cle:'mono_dual',rot:Math.PI,pack:'{PACK_mono_dual}'},
+  'niko_fighter':{m:'import',cle:'niko_fighter',rot:-Math.PI/2,pack:'{PACK_niko_fighter}'},
+  'niko_bomber':{m:'import',cle:'niko_bomber',rot:0,pack:'{PACK_niko_bomber}'},
+  'texnist2':{m:'import',cle:'texnist2',rot:Math.PI,pack:'{PACK_texnist2}'},
+  'texnist4':{m:'import',cle:'texnist4',rot:Math.PI,pack:'{PACK_texnist4}'},
+  'fga_corvette':{m:'import',cle:'fga_corvette',rot:-Math.PI/2,pack:'{PACK_fga_corvette}'},
+  'fga_frigate':{m:'import',cle:'fga_frigate',rot:-Math.PI/2,pack:'{PACK_fga_frigate}'},
+  'maja1':{m:'import',cle:'maja1',rot:0,pack:'{PACK_maja1}'},
+  'maja2':{m:'import',cle:'maja2',rot:0,pack:'{PACK_maja2}'},
+  'maja3':{m:'import',cle:'maja3',rot:0,pack:'{PACK_maja3}'},
+  'maja4':{m:'import',cle:'maja4',rot:Math.PI,pack:'{PACK_maja4}'}});
+for(const k in COULEURS){const c=COULEURS[k];c.pack=c.m==='import'?(PACKS[GLBS[c.cle].pack]||''):'ESCADRILLE (construits dans le code)';c.nom=c.m==='import'?GLBS[c.cle].nom:k;}
 const NOMS=Object.keys(COULEURS);let choix=0;try{choix=Math.max(0,NOMS.indexOf(localStorage.getItem('escadrille.avion3d')));}catch(e){}
 const nav=new THREE.Group();let modele=construire(COULEURS[NOMS[choix]],true),moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);sc.add(nav);versCalque(nav);
 const ombre=new THREE.Mesh(new THREE.CircleGeometry(2.6,8).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#3a2a50',transparent:true,opacity:.35,depthWrite:false}));sc.add(ombre);
@@ -218,7 +256,7 @@ const tr=[trainee(),trainee()];
 // ennemis
 const ennemis=[];
 function ennemi(pos,dir){const g=new THREE.Group();const as=V.n>=4&&Math.random()<.3,bomb=!as&&V.n>=3&&Math.random()<.22;
-  const m=construire(bomb?{m:'spectre',corps:'#2e2a36',aile:'#46404e',accent:'#d2402e',verriere:'#d2402e'}:as?{m:'vipere',corps:'#5a1a1a',aile:'#8a2a24',accent:'#ffe080',verriere:'#1a1c22'}:{m:'faucon',corps:'#4a3f5e',aile:'#6e6182',accent:'#d2402e',verriere:'#1a1c22'},false).g;
+  const m=construire(bomb?{m:'import',cle:'fga_frigate',rot:-Math.PI/2,taille:6.4}:as?{m:'vipere',corps:'#5a1a1a',aile:'#8a2a24',accent:'#ffe080',verriere:'#1a1c22'}:{m:'faucon',corps:'#4a3f5e',aile:'#6e6182',accent:'#d2402e',verriere:'#1a1c22'},false).g;
   if(bomb)m.scale.setScalar(2.2);m.rotation.y=Math.PI;g.add(m);versCalque(g);sc.add(g);g.position.copy(pos);
   const roles=['tournoi','tournoi','chasse','passe'];const role=roles[Math.random()*roles.length|0];const e={g,as,bomb,rayon:bomb?9:4.6,roleDepart:bomb?'bombardier':role,ph:Math.random()*6,r:18+Math.random()*28,vie:bomb?10:as?5:3,etat:'arrivee',role:bomb?'bombardier':role,v:dir.clone().multiplyScalar(58),t:0,tirT:2+Math.random()*2,vise:0,jink:null};ennemis.push(e);return e;}
 const tirsEnnemis=[];
@@ -233,6 +271,10 @@ const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},ta:{value
     if(a.a>.5)c=a.rgb;else if(texture2D(ta,v+vec2(pa.x,0.)).a>.5||texture2D(ta,v-vec2(pa.x,0.)).a>.5||texture2D(ta,v+vec2(0.,pa.y)).a>.5||texture2D(ta,v-vec2(0.,pa.y)).a>.5)c=vec3(.2,.15,.26);
     float n=22.;c=floor(c*n+bayer(gl_FragCoord.xy))/n;gl_FragColor=vec4(c,1.);}`});
 const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),post),scPost=new THREE.Scene(),camPost=new THREE.Camera();scPost.add(quad);
+function choisir(k){choix=k;nav.remove(moi);modele=construire(COULEURS[NOMS[choix]],true);moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);versCalque(moi);try{localStorage.setItem('escadrille.avion3d',NOMS[choix]);}catch(e){}annonce(`HANGAR<b>${COULEURS[NOMS[choix]].nom}</b>${COULEURS[NOMS[choix]].pack}`);}
+const hangar=document.getElementById('hangar');
+function ouvrirHangar(){let h='<b>HANGAR</b>';let pk='';NOMS.forEach((n,k)=>{const c=COULEURS[n];if(c.pack!==pk){pk=c.pack;h+=`<i>${pk}</i>`;}h+=`<button data-k="${k}" class="${k===choix?'on':''}">${c.nom}</button>`;});h+='<button data-k="x" class="fermer">FERMER</button>';hangar.innerHTML=h;hangar.style.display='flex';}
+hangar.addEventListener('pointerdown',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.k!=='x')choisir(+b.dataset.k);hangar.style.display='none';});
 function changerAvion(){choix=(choix+1)%NOMS.length;nav.remove(moi);modele=construire(COULEURS[NOMS[choix]],true);moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);versCalque(moi);try{localStorage.setItem('escadrille.avion3d',NOMS[choix]);}catch(e){}annonce(`HANGAR<b>${NOMS[choix]}</b>Bon vol !`);}
 el.querySelector('.charge').remove();
 // pilotage
@@ -246,7 +288,7 @@ el.addEventListener('pointermove',e=>{if(!S.doigt||e.pointerId!==S.doigt.id)retu
   bille.style.transform=`translate(${dx}px,${dy}px)`;const zm=v=>Math.sign(v)*Math.max(0,Math.abs(v)-.12)/.88;S.dx=zm(dx/RJ);S.dy=zm(dy/RJ);/* zone morte au centre, puis réponse douce */});
 const lacher=e=>{if(!S.doigt||e.pointerId!==S.doigt.id)return;S.doigt=null;S.dx=S.dy=0;joy.classList.remove('on');manuel();};el.addEventListener('pointerup',lacher);el.addEventListener('pointercancel',lacher);
 const bouton=(id,f)=>{const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();manuel(5000);f(true,b);});b.addEventListener('pointerup',e=>{e.stopPropagation();f(false,b);});b.addEventListener('pointerleave',()=>f(false,b));b.addEventListener('contextmenu',e=>e.preventDefault());};
-bouton('bLoop',d=>{if(d&&S.loopT<0)S.loopT=0;});bouton('bAvion',d=>{if(d)changerAvion();});bouton('bRoll',d=>{if(d)tonneau();});bouton('bVue',d=>{if(d)S.vue=(S.vue+1)%2;});
+bouton('bLoop',d=>{if(d&&S.loopT<0)S.loopT=0;});bouton('bAvion',d=>{if(d)ouvrirHangar();});bouton('bRoll',d=>{if(d)tonneau();});bouton('bVue',d=>{if(d)S.vue=(S.vue+1)%2;});
 bouton('bTir',(d,b)=>{S.tir=d;b.classList.toggle('on',d);if(d)manuel(1e9);else manuel();});
 // clavier (PC) : AZERTY et QWERTY ; les directions agissent comme un joystick qu'on pousse progressivement
 const TOUCHES={};const DIR={ArrowUp:'h',KeyW:'h',KeyZ:'h',ArrowDown:'b',KeyS:'b',ArrowLeft:'g',KeyA:'g',KeyQ:'g',ArrowRight:'d',KeyD:'d'};
