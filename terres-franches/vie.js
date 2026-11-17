@@ -20,7 +20,7 @@ function pluie(S){ const k = Math.floor(S.t / 150); return hash(k, 41) < (saison
 /* ---------- les saisons ---------- */
 const ETATS = [["nu", "pousse", "pousse"], ["pousse", "mur", "mur", "blond"], ["blond", "nu", "blond", "nu"], ["nu"]];
 const etatChamp = (t, i, s) => { const E = ETATS[s]; return E[Math.floor(t / 40 + i * 1.7) % E.length]; };
-const retouche = n => n.startsWith("s-arbre") || n === "s-jeune" ? "arbre" : /^(chaume|colomb|pierre)\d/.test(n) || ["grange", "hangar", "atelier", "four", "moulin1", "puits", "puits-couvert", "fontaine"].includes(n) ? "toit" : null;
+const retouche = n => n.startsWith("s-arbre") || n.startsWith("arbre-ancien") || n === "s-jeune" ? "arbre" : /^(chaume|colomb|pierre)\d/.test(n) || ["grange", "hangar", "atelier", "four", "moulin1", "puits", "puits-couvert", "fontaine"].includes(n) ? "toit" : null;
 const cacheS = {};
 // la planche du décor retouchée pour la saison s (feuilles rousses, fleurs, neige sur les toits et les arbres)
 function recolorer(img, s){

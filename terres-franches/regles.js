@@ -487,7 +487,7 @@ function repartir(S){
   // la côte : de la bière quand le besoin compte bientôt, du poisson fumé et des planches tant qu'il en faut
   if (P.METIERS.brasseur && S.bat.brasserie && S.pop >= P.BESOINS.biere.pop - 3 && !assez("biere")){ mettre("paysan", 2); mettre("brasseur", 1); }
   if (P.METIERS.fumeur && S.bat.fumoir && (mq0.fume || S.pop >= 16) && !assez("fume")){ mettre("pecheur", 2); mettre("fumeur", 1); }
-  if (P.METIERS.scieur && S.bat.scierie && mq0.planches){ mettre("scieur", Math.min(2 * S.bat.scierie, 1 + Math.floor(S.pop / 12))); }
+  if (P.METIERS.scieur && S.bat.scierie && mq0.planches){ mettre("scieur", Math.min(places(S, "scieur"), 1 + Math.floor(S.pop / 12))); }
   // de quoi manger, avec une marge
   const nourr = ["pecheur", "cueilleur"];
   let garde = 0;

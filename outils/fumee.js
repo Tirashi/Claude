@@ -173,6 +173,7 @@ const shots = process.argv[2];
         if (TerresCarte.n !== 2 || TerresCarte.W !== 32 || !TerresCarte.MER) return 'la nouvelle colonie n\'est pas sur la côte';
         if (!Terres.visiter() || !Terres.visite || Terres.S.ere !== 1 || TerresCarte.W !== 24) return 'la vallée ne se visite pas';
         Terres.revenir(); if (TerresCarte.W !== 32) return 'le retour de visite ne remet pas la côte';
+        Terres.S.loi = true; Terres.recompenser(); if (Terres.fonder('Bois-Ancien') || Terres.S.ere !== 3 || TerresCarte.W !== 40 || !Terres.valleeGardee(2)) return 'la forêt (ère 3) n\'est pas fondée';
         return 'ok';
       });
       if (r !== 'ok') errs.push('Terres franches : ' + r);
@@ -208,7 +209,9 @@ const shots = process.argv[2];
         e.dispatchEvent(new PointerEvent('pointerdown', { clientX: b.left + b.width / 2, clientY: b.top + b.height / 2, bubbles: true }));
         e.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
         if (Romet.partie.lachers !== n + 1) return 'le toucher ne lâche pas de pièce';
-        await wait(1500); const p = Romet.partie; p.bourse = 0; p.pluie = 0; p.calme = 5; await wait(300);
+        // fin forcée : bourse vide et calme ; une pièce que le poussoir fait tomber remet le calme à 0 (et rend des pièces), on recommence (au plus 4 s)
+        await wait(1500); const p = Romet.partie;
+        for (let i = 0; i < 40 && Romet.menu !== 'eFin'; i++) { p.bourse = 0; p.pluie = 0; if (!p.fini) p.calme = Math.max(p.calme, 5); await wait(100); }
         if (Romet.menu !== 'eFin') return "pas d'écran de fin de partie";
         Romet.prog.foire.t = [true, true, true, true, true, true]; Romet.ouvrir(Romet.MACHINES[1]); await wait(300);
         if (Romet.machine.id !== 'ruche' || !Romet.partie) return 'la ruche ne s\'ouvre pas';

@@ -308,7 +308,7 @@ function ecranTerres(){
   const S = J.reel, L = J.lois();
   let h = `<div class="terre"><div><b>${MAJ(nomColonie(S))}</b><small>Ère ${S.ere || 1} · ${DON.STATUTS[S.statut].nom.toLowerCase()} de ${S.pop} habitant${S.pop > 1 ? "s" : ""} · en cours</small></div></div>`;
   for (const c of L.colonies.slice().reverse())
-    h += `<div class="terre"><div><b>${MAJ(c.nom)}</b><small>Ère ${c.ere} · ${(DON.STATUTS[c.statut] || DON.STATUTS[0]).nom.toLowerCase()} de ${c.pop} habitants · figée</small></div>${c.ere === 1 && J.valleeGardee() ? `<button type="button" class="bouton petit or" data-visite="1">VISITER</button>` : ""}</div>`;
+    h += `<div class="terre"><div><b>${MAJ(c.nom)}</b><small>Ère ${c.ere} · ${(R.reglages(undefined, c.ere).STATUTS[c.statut] || DON.STATUTS[0]).nom.toLowerCase()} de ${c.pop} habitant${c.pop > 1 ? "s" : ""} · figée</small></div>${J.valleeGardee(c.ere) ? `<button type="button" class="bouton petit or" data-visite="${c.ere}">VISITER</button>` : ""}</div>`;
   if (!L.colonies.length) h += `<p class="note">Une seule colonie pour l'instant. Au village complet, la Charte du Village permettra d'en fonder une nouvelle ; celle-ci restera à revoir ici.</p>`;
   $("terresListe").innerHTML = h; $("terresEcran").hidden = false;
 }
@@ -316,8 +316,8 @@ $("bTerres").onclick = () => { $("menu").hidden = true; ecranTerres(); };
 $("bTerresFermer").onclick = () => { $("terresEcran").hidden = true; };
 $("bMesLois").onclick = () => { $("terresEcran").hidden = true; ecranLois("lecture"); };
 $("terresListe").addEventListener("click", e => {
-  if (!e.target.closest("[data-visite]")) return;
-  if (!J.visiter()) return;
+  const b = e.target.closest("[data-visite]"); if (!b) return;
+  if (!J.visiter(+b.dataset.visite)) return;
   $("terresEcran").hidden = true; bulle(null); finPlacement();
   $("visiteNom").textContent = MAJ(nomColonie(J.S)) + " · FIGEE"; $("visite").hidden = false;
 });
