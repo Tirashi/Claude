@@ -50,6 +50,8 @@ button.btn:disabled{opacity:.55}
 .choix .c{grid-column:3;grid-row:1/3;font-weight:700;color:#ffe9a8}
 .actions-bas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 1.5fr;gap:6px}
 .btn.fin{background:#3d7be0;color:#fff}
+button.btn.construire{position:absolute;left:10px;bottom:76px;padding:0 16px;background:#e8b84a;color:#24201b;font-size:16px}
+.fiche.ouverte~.construire,.tel:has(.fiche.ouverte) .construire{display:none}
 .zoom{position:absolute;right:10px;top:112px;display:flex;flex-direction:column;gap:6px}
 .zoom .btn{width:44px;height:44px;font-size:20px;padding:0}
 .toast{position:absolute;left:50%;top:116px;transform:translateX(-50%);padding:8px 12px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:290px;text-align:center}
@@ -69,6 +71,7 @@ button.btn:disabled{opacity:.55}
     </div>
     <div class="titre panneau"><span id="titre">Le continent</span><span style="margin-left:auto"></span><button class="btn" id="retour" hidden>◀ Continent</button><button class="btn" id="versPays">Mon pays ▶</button></div>
   </div>
+  <button class="btn construire" id="construire" hidden>+ Construire</button>
   <div class="zoom"><button class="btn" id="zPlus" aria-label="Rapprocher">+</button><button class="btn" id="zMoins" aria-label="Éloigner">−</button></div>
   <div class="toast panneau" id="toast" role="status"></div>
   <div class="hud bas">
@@ -79,7 +82,7 @@ button.btn:disabled{opacity:.55}
     </div>
   </div>
 </div>
-<p class="legende">Deux cartes : le continent, puis la carte de votre nation (même forme de pays, voisins aux bords). Touchez une nation (« Signer un contrat » fait partir une charrette), une région ou une plaque dorée « + » (un emplacement libre) pour construire. « Tour suivant » finit les chantiers et fait grandir la capitale.</p>
+<p class="legende">Deux cartes : le continent, puis la carte de votre nation (même forme de pays, voisins aux bords). Touchez une nation (« Signer un contrat » fait partir une charrette), une région, une plaque dorée « + », ou « + Construire » : on choisit le bâtiment, puis la carte montre ce qu'il produirait sur chaque emplacement libre. « Tour suivant » finit les chantiers et fait grandir la capitale.</p>
 <script>
 "use strict";
 // ======================= la partie (d'après le moteur) =======================
@@ -282,7 +285,7 @@ function frame(){
     // terre étrangère sur la carte du pays : un voile sombre ; la région choisie : un voile clair
     if (etranger){ g.fillStyle = "rgba(10,14,30,.38)"; losange(X, Y, 16); g.fill(); }
     const reg = enPays && C.region[y][x];
-    if (reg && REGIONS[choix] && reg !== choix){ g.fillStyle = "rgba(10,14,30,.45)"; losange(X, Y, 16); g.fill(); }
+    if (reg && REGIONS[choix] && reg !== choix && !aConstruire){ g.fillStyle = "rgba(10,14,30,.45)"; losange(X, Y, 16); g.fill(); }
     if (enPays){ const lot = lotDe(x, y, true); if (lot) dessineLot(lot, X, Y); }
     // limites des régions : trait clair en pointillés, couleur de la région
     if (reg){ const autreR = (a, b) => dans(C, a, b) && C.nation[b][a] === "joueur" && C.region[b][a] !== reg;
@@ -300,10 +303,11 @@ function frame(){
     if (autre(x, y + 1)){ g.moveTo(X, Y + 31); g.lineTo(X - 31, Y + 16); }
     if (autre(x - 1, y)){ g.moveTo(X - 31, Y + 16); g.lineTo(X, Y + 1); }
     g.stroke();
-    // les charrettes qui passent ici
-    for (const { c, p } of car) if (Math.round(c.ix) === x && Math.round(c.iy) === y)
-      g.drawImage(charrettes[c.v % 3][c.dir], Math.round(p[0]) - 32, Math.round(p[1]) - 42, 64, 64);
   }
+  // les charrettes, par-dessus le sol (dessinées case par case, la case suivante les coupait)
+  car.sort((a, b) => a.p[1] - b.p[1]);
+  for (const { c, p } of car) g.drawImage(charrettes[c.v % 3][c.dir], Math.round(p[0]) - 32, Math.round(p[1]) - 42, 64, 64);
+  if (enPays && aConstruire) prodSurPlaques();
   etiquettes();
   for (let i = fumees.length - 1; i >= 0; i--){ const f = fumees[i], a = (performance.now() - f.t) / 900; if (a > 1){ fumees.splice(i, 1); continue; }
     const [X, Y] = isoXY(f.x, f.y); g.globalAlpha = 1 - a; g.fillStyle = "#fff";
@@ -332,6 +336,14 @@ function dessineLot([r, i], X, Y){ const R = REGIONS[r], t = performance.now();
   else if (type === "weaving") cellule(13, 17, X, Y, a);
   if (ch){ g.strokeStyle = "#7a5230"; g.lineWidth = 2; for (const k of [-14, 0, 14]){ g.beginPath(); g.moveTo(X + k, Y + 18); g.lineTo(X + k, Y - 10); g.stroke(); }
     g.beginPath(); g.moveTo(X - 14, Y + 4); g.lineTo(X + 14, Y + 4); g.moveTo(X - 14, Y - 5); g.lineTo(X + 14, Y - 5); g.stroke(); } }
+
+// ---------- construire : d'abord le bâtiment, puis la plaque ----------
+let aConstruire = null;
+const prodIci = (id, r) => { const B = BATS[id], k = TERRAINS[REGIONS[r].terrain].bonus[id] || 1, m = B.produit.match(/^(\d+) (.*)$/);
+  return { k, txt: m && id !== "caserne" ? Math.round(+m[1] * k) + " " + m[2] : B.produit }; };
+function prodSurPlaques(){ const fs = Math.round(11 / cam.z);
+  for (const r in REGIONS) REGIONS[r].bat.forEach((b, i) => { if (b) return; const [u, v] = PAYS.lots[r][i], [X, Y] = isoXY(u, v), q = prodIci(aConstruire, r);
+    etiquette(q.txt + (q.k > 1 ? " ★" : ""), X, Y + 44, q.k > 1 ? "#e8b84a" : "#f1e9d2", "#24201b", fs); }); }
 
 // ---------- étiquettes ----------
 function etiquette(txt, x, y, fond, encre, fs, actif){
@@ -384,12 +396,36 @@ function zoom(k){ cam.z = Math.max(0.3, Math.min(2.6, cam.z * k)); }
 function touche(e){ const r = cv.getBoundingClientRect(), wx = (e.clientX - r.left - r.width / 2) / cam.z + cam.x, wy = (e.clientY - r.top - r.height / 2) / cam.z + cam.y;
   const u = (wy - 16) / 16, v = wx / 32, x = Math.round((u + v) / 2), y = Math.round((u - v) / 2), C = carte;
   if (!terre(C, x, y)){ fermeFiche(); return; } const id = C.nation[y][x];
+  if (C === PAYS && aConstruire){ const lot = lotDe(x, y);
+    if (lot && id === "joueur" && !REGIONS[lot[0]].bat[lot[1]]) batir(aConstruire, lot[0], lot[1]); else toast("Touchez une plaque dorée + pour y bâtir.");
+    return; }
   if (C === PAYS && id === "joueur"){ choix = C.region[y][x]; const lot = lotDe(x, y);
     if (lot && !REGIONS[lot[0]].bat[lot[1]]){ choix = lot[0]; menuConstruire(lot[0], lot[1]); } else ficheRegion(choix); }
   else { choix = id; ficheNation(id); } }
 const fiche = document.getElementById("fiche");
 let lotChoisi = null;
-function fermeFiche(){ fiche.classList.remove("ouverte"); choix = null; lotChoisi = null; }
+function fermeFiche(){ fiche.classList.remove("ouverte"); choix = null; lotChoisi = null; aConstruire = null; }
+function batir(id, r, i){ const R = REGIONS[r]; R.bat[i] = "+" + id; or -= BATS[id].cout; maj(); aConstruire = null; choix = r; ficheRegion(r);
+  toast(`Chantier : ${BATS[id].nom} (${R.nom}), ${BATS[id].delai} tours.`); }
+// le bouton Construire : la liste de tous les bâtiments, puis la carte montre ce que chacun donnerait sur chaque plaque
+function menuGeneral(){ fermeFiche(); const libres = Object.values(REGIONS).reduce((n, R) => n + R.bat.filter(b => !b).length, 0);
+  fiche.innerHTML = `<h2>Que construire ?</h2><p class="aide">Tous les bâtiments se construisent dans toutes les régions, sur un emplacement libre (${libres} en tout). Le terrain fait seulement produire plus : ★ = meilleur endroit.</p>
+    <div class="menu">${Object.keys(BATS).map(id => { const B = BATS[id], ok = or >= B.cout && libres > 0;
+      const best = Object.keys(REGIONS).filter(r => TERRAINS[REGIONS[r].terrain].bonus[id]);
+      const ou = best.length ? "★ " + best.map(r => REGIONS[r].nom + " ×" + String(TERRAINS[REGIONS[r].terrain].bonus[id]).replace(".", ",")).join(", ") : "pareil partout";
+      return `<button class="choix" data-id="${id}" ${ok ? "" : "disabled"}><img src="${B.url}" alt=""><span class="n">${B.nom}</span>
+        <span class="d">${B.produit} par tour · ${B.delai} tours · ${ou}</span><span class="c">${B.cout} or</span></button>`; }).join("")}</div>`;
+  fiche.classList.add("ouverte"); fiche.scrollTop = 0;
+  fiche.querySelectorAll(".choix").forEach(el => el.onclick = () => choisirEmplacement(el.dataset.id)); }
+function choisirEmplacement(id){ aConstruire = id; choix = null; const B = BATS[id];
+  // on recule pour voir toutes les plaques du pays
+  const pl = []; for (const r in REGIONS) REGIONS[r].bat.forEach((b, i) => { if (!b) pl.push(isoXY(...PAYS.lots[r][i])); });
+  if (pl.length){ const xs = pl.map(q => q[0]), ys = pl.map(q => q[1]), w = Math.max(...xs) - Math.min(...xs) + 160, h = Math.max(...ys) - Math.min(...ys) + 160, rr = cv.getBoundingClientRect();
+    cam.z = Math.max(0.3, Math.min(1, rr.width / w, (rr.height - 330) / h)); cam.x = (Math.max(...xs) + Math.min(...xs)) / 2; cam.y = (Math.max(...ys) + Math.min(...ys)) / 2 + 150 / cam.z * 0.5; }
+  fiche.innerHTML = `<h2>${B.nom} · ${B.cout} or</h2><p>Touchez une <b>plaque dorée +</b> sur la carte. Chaque plaque montre ce que le bâtiment y produirait ; ★ = terrain favorable.</p>
+    <div class="actions"><button class="btn" id="autre">◀ Autre bâtiment</button><button class="btn" id="annule">Annuler</button></div>`;
+  fiche.classList.add("ouverte");
+  document.getElementById("autre").onclick = menuGeneral; document.getElementById("annule").onclick = fermeFiche; }
 function ficheNation(id){ const n = NATIONS[id];
   if (id === "joueur"){ fiche.innerHTML = `<h2>Notre pays</h2><p>4 régions, 15 bâtiments, 112 familles.</p><div class="actions"><button class="btn" id="voir">Ouvrir la carte de mon pays</button></div>`;
     fiche.classList.add("ouverte"); document.getElementById("voir").onclick = () => change(PAYS); return; }
@@ -414,13 +450,13 @@ function ficheRegion(r){ lotChoisi = null; const R = REGIONS[r], libre = R.bat.i
   document.getElementById("def").onclick = () => { R.bat.push(null); or -= COUT_DEFRICHER; maj(); ficheRegion(r); toast(`${R.nom} : un emplacement de plus.`); }; }
 function menuConstruire(r, i){ const R = REGIONS[r], bonus = TERRAINS[R.terrain].bonus; lotChoisi = [r, i];
   const liste = Object.keys(BATS).sort((a, b) => (bonus[b] || 1) - (bonus[a] || 1));
-  fiche.innerHTML = `<h2>Construire — ${R.nom}</h2><p class="aide">Terrain ${TERRAINS[R.terrain].nom} : les bâtiments marqués produisent plus ici.</p>
+  fiche.innerHTML = `<h2>Construire — ${R.nom}</h2><p class="aide">Tout se construit ici ; le terrain ${TERRAINS[R.terrain].nom} fait produire plus les bâtiments encadrés d'or.</p>
     <div class="menu">${liste.map(id => { const B = BATS[id], k = bonus[id], ok = or >= B.cout;
       return `<button class="choix${k ? " bonus" : ""}" data-id="${id}" ${ok ? "" : "disabled"}><img src="${B.url}" alt=""><span class="n">${B.nom}${k ? ` <i>×${String(k).replace(".", ",")}</i>` : ""}</span>
-        <span class="d">${B.produit} par tour · ${B.delai} tours</span><span class="c">${B.cout} or</span></button>`; }).join("")}</div>
+        <span class="d">${prodIci(id, r).txt} par tour ici · ${B.delai} tours</span><span class="c">${B.cout} or</span></button>`; }).join("")}</div>
     <div class="actions"><button class="btn" id="annule">◀ ${R.nom}</button></div>`;
   fiche.classList.add("ouverte"); fiche.scrollTop = 0;
-  fiche.querySelectorAll(".choix").forEach(el => el.onclick = () => { const id = el.dataset.id; R.bat[i] = "+" + id; or -= BATS[id].cout; maj(); ficheRegion(r); toast(`Chantier : ${BATS[id].nom} (${R.nom}), ${BATS[id].delai} tours.`); });
+  fiche.querySelectorAll(".choix").forEach(el => el.onclick = () => batir(el.dataset.id, r, i));
   document.getElementById("annule").onclick = () => ficheRegion(r); }
 let minut = null;
 function toast(t){ const el = document.getElementById("toast"); el.textContent = t; el.classList.add("vue"); clearTimeout(minut); minut = setTimeout(() => el.classList.remove("vue"), 2600); }
@@ -433,8 +469,9 @@ function change(C){ carte = C; fermeFiche();
   const [x, y] = C === MONDE ? NATIONS.joueur.graine : PAYS.capitale, [X, Y] = isoXY(x, y);
   cam = { x: X, y: Y + 30, z: C === MONDE ? 0.5 : 0.75 };
   document.getElementById("titre").textContent = C === MONDE ? "Le continent" : "Notre pays — 4 régions";
-  document.getElementById("retour").hidden = C === MONDE; document.getElementById("versPays").hidden = C !== MONDE; }
+  document.getElementById("construire").hidden = C === MONDE; document.getElementById("retour").hidden = C === MONDE; document.getElementById("versPays").hidden = C !== MONDE; }
 document.getElementById("retour").onclick = () => change(MONDE);
+document.getElementById("construire").onclick = menuGeneral;
 document.getElementById("versPays").onclick = () => change(PAYS);
 document.getElementById("factions").innerHTML = FACTIONS.map(([c, p]) => `<span style="width:${p / 1.68}%;background:${c}"></span>`).join("");
 window.addEventListener("resize", dimensionne);
