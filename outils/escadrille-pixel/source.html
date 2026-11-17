@@ -39,10 +39,10 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 </div></section>
 <section><h2>CE QUI FAIT LE STYLE</h2><ul>
 <li><b>Petite résolution</b> : l'image est calculée en 180 × 320 pixels, puis agrandie en gros pixels nets. Les modèles 3D deviennent du pixel art tout seuls.</li>
-<li><b>Palette tramée</b> : chaque couleur est arrondie à quelques niveaux, avec un damier de tramage. Ça donne les bandes du ciel et les paliers de la brume.</li>
-<li><b>Décor fabriqué par le code</b> : mer avec écume, îles avec plages, forêts et rochers, liseré d'écume sur les côtes, nuages en blocs. Le monde est infini.</li>
+<li><b>Ciel en bandes</b> : de larges bandes unies, avec un petit damier seulement à leurs frontières.</li>
+<li><b>Sol moucheté en gros pixels</b> : une texture d'environ 3 m par pixel posée sur le relief : mer profonde avec écume, haut-fond, liseré blanc, plage, quatre verts selon la pente, rochers. Le monde est infini.</li>
 <li><b>Traînées blanches</b> au bout des ailes, flamme du réacteur, ombre sous l'avion : ce sont elles qui donnent la vitesse.</li>
-<li>Le vaisseau est le chasseur de course Edenpunk (libre, même en commercial), les ennemis sont des intercepteurs du même pack.</li>
+<li><b>Les avions sont construits dans le code</b> (fuselage, ailes delta, double dérive, réacteurs) : lisibles de dos, et chaque couleur vient de la palette.</li><li><b>Palette fixe</b> relevée sur ta capture : chaque pixel prend la couleur la plus proche.</li>
 </ul></section>
 <section class="q"><h2>A CHOISIR</h2>
 <p>1. Le rendu est-il proche de ce que tu cherches ?</p>
@@ -60,63 +60,82 @@ const charger=nom=>new Promise((ok,ko)=>new THREE.GLTFLoader().parse(b64(MODELES
 function bruit(seed){const P=new Uint8Array(512);let s=seed;for(let i=0;i<256;i++)P[i]=i;for(let i=255;i>0;i--){s=(s*16807)%2147483647;const j=s%(i+1);[P[i],P[j]]=[P[j],P[i]];}for(let i=0;i<256;i++)P[i+256]=P[i];
   const g=(x,y)=>P[P[x&255]+(y&255)]/255;const f=t=>t*t*(3-2*t);return(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),xf=f(x-xi),yf=f(y-yi);const a=g(xi,yi),b=g(xi+1,yi),c=g(xi,yi+1),d=g(xi+1,yi+1);return a+(b-a)*xf+(c-a)*yf+(a-b-c+d)*xf*yf;};}
 const N1=bruit(11),N2=bruit(37);const fbm=(n,x,y,o=5)=>{let v=0,a=.5,f=1;for(let i=0;i<o;i++){v+=a*n(x*f,y*f);a*=.5;f*=2;}return v;};
+// palette fixe, relevée sur la capture de référence
+const PAL=['#6aa8e0','#86bdea','#a3d0f0','#c3e2f6','#dceef9','#1c4f9c','#2563b4','#3577c4','#4d9bd6','#79bde6','#ffffff','#e6eef6','#e8d9a0','#d1bd7e',
+  '#1f5a2a','#2d7a32','#43963a','#6db84a','#a6d672','#6e6a62','#9a958a','#1a1c22','#3a3d46','#6a6e78','#c8402e','#e2682e','#ffb040','#ffe080','#5a2a1a'];
 // relief des îles : 0 = niveau de la mer
-const H=(x,z)=>{const n=fbm(N1,x*.0045,z*.0045);return (n-.47)*170+fbm(N2,x*.05,z*.05,3)*6-3;};
-function couleur(h,x,z){const v=fbm(N2,x*.03,z*.03,2);if(h<-4)return[.06,.2,.45];if(h<-.6)return[.25,.55,.8];if(h<.9)return[.97,.97,.95];if(h<2.6)return[.86,.8,.58];
-  if(h<16)return v>.55?[.2,.47,.2]:v>.42?[.28,.58,.24]:[.4,.68,.3];if(h<26)return[.52,.52,.46];return[.82,.82,.78];}
-
+const H=(x,z)=>{const n=fbm(N1,x*.004,z*.004);return (n-.47)*130+fbm(N2,x*.04,z*.04,3)*5-2.5;};
+const hash=(a,b)=>{let h=(a*374761393+b*668265263)|0;h=(h^(h>>>13))*1274126177|0;return((h^(h>>>16))>>>0)/4294967296;};
+// couleur d'un pixel du sol (une case de la texture)
+function couleurSol(x,z,a,b){const h=H(x,z),r=hash(a,b),v=fbm(N2,x*.02,z*.02,2);
+  if(h<-10)return r<.008?'#ffffff':(v>.55?'#2563b4':'#1c4f9c');
+  if(h<-3)return r<.012?'#e6eef6':(v>.5?'#3577c4':'#2563b4');
+  if(h<-.9)return r<.25?'#79bde6':'#4d9bd6';
+  if(h<.5)return r<.35?'#e6eef6':'#ffffff';
+  if(h<1.8)return r<.3?'#d1bd7e':'#e8d9a0';
+  const pente=(H(x-3,z+3)-H(x+3,z-3))*.25;
+  if(h<18){let k=(v>.6?0:v>.48?1:2)+(r<.25?1:0)+(pente>.5?1:pente<-.5?-1:0);k=Math.max(0,Math.min(4,k));return['#1f5a2a','#2d7a32','#43963a','#6db84a','#a6d672'][k];}
+  if(h<28)return pente>0||r<.3?'#9a958a':'#6e6a62';return r<.5?'#e6eef6':'#9a958a';}
 (async()=>{
 const el=document.getElementById('t'),hud=document.getElementById('hud'),band=document.getElementById('bandeau');
 const LW=180,LH=320;
 const R=new THREE.WebGLRenderer({antialias:false});R.setPixelRatio(1);R.setSize(LW,LH,false);el.prepend(R.domElement);
 const cible=new THREE.WebGLRenderTarget(LW,LH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
 const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(60,LW/LH,.5,900);
-sc.fog=new THREE.Fog('#a9d3f0',120,520);
-// ciel dégradé
-{const g=new THREE.SphereGeometry(800,24,12),c=[];const a=new THREE.Color('#4e93d8'),b=new THREE.Color('#cfe9f8');for(let i=0;i<g.attributes.position.count;i++){const y=g.attributes.position.getY(i)/800;const t=Math.max(0,Math.min(1,1-y*2.2));const k=a.clone().lerp(b,t);c.push(k.r,k.g,k.b);}
-  g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));var ciel=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false}));sc.add(ciel);}
+sc.fog=new THREE.Fog('#dceef9',170,540);
+// ciel : larges bandes unies, avec un damier seulement à la frontière entre deux bandes
+{const c=document.createElement('canvas');c.width=8;c.height=512;const x=c.getContext('2d');const B=[[.5,'#dceef9'],[.535,'#c3e2f6'],[.585,'#a3d0f0'],[.66,'#86bdea'],[.76,'#6aa8e0']];
+  x.fillStyle='#dceef9';x.fillRect(0,0,8,512);for(const[v,col]of B){const y0=Math.round((1-v)*512);x.fillStyle=col;x.fillRect(0,0,8,y0);for(let q=0;q<3;q++)for(let a=0;a<8;a++)if((a+q)%2===0)x.fillRect(a,y0+q,1,1);}
+  const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;
+  var ciel=new THREE.Mesh(new THREE.SphereGeometry(800,32,64),new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false}));sc.add(ciel);}
 sc.add(new THREE.HemisphereLight('#eef6ff','#4a6a50',.85));const L=new THREE.DirectionalLight('#fff4e0',.85);L.position.set(-.5,1,.3);sc.add(L);
-// mer : un plan texturé d'écume, qui suit l'avion par pas entiers (le motif reste fixe)
-const tex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.fillStyle='#174f98';x.fillRect(0,0,128,128);let s=5;const r=()=>(s=(s*16807)%2147483647)/2147483647;
-  for(let i=0;i<60;i++){x.fillStyle=i%3?'#215fa8':'#13468a';x.fillRect(r()*128|0,r()*128|0,6+r()*10|0,2+r()*3|0);}
-  for(let i=0;i<34;i++){x.fillStyle='#f4f8ff';const a=r()*128|0,b=r()*128|0,l=2+r()*5|0;x.fillRect(a,b,l,1);if(r()<.5)x.fillRect(a+1,b+1,l-1,1);}
-  const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(24,24);return t;})();
-const mer=new THREE.Mesh(new THREE.PlaneGeometry(1536,1536).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({map:tex,transparent:true,opacity:.9}));sc.add(mer);
-// relief en carreaux qui suivent l'avion
-const T=200,SEG=40;const matSol=new THREE.MeshLambertMaterial({vertexColors:true});const carreaux=new Map();
-function carreau(i,j){const g=new THREE.PlaneGeometry(T,T,SEG,SEG).rotateX(-Math.PI/2).toNonIndexed();const p=g.attributes.position,c=new Float32Array(p.count*3);
-  for(let k=0;k<p.count;k++){const x=p.getX(k)+i*T,z=p.getZ(k)+j*T;p.setY(k,H(x,z));}
-  for(let k=0;k<p.count;k+=3){let hm=0,xm=0,zm=0;for(let q=0;q<3;q++){hm+=p.getY(k+q);xm+=p.getX(k+q)+i*T;zm+=p.getZ(k+q)+j*T;}const col=couleur(hm/3,xm/3,zm/3);for(let q=0;q<3;q++)c.set(col,(k+q)*3);}
-  g.setAttribute('color',new THREE.BufferAttribute(c,3));g.computeVertexNormals();const m=new THREE.Mesh(g,matSol);m.position.set(i*T,0,j*T);sc.add(m);return m;}
-function majCarreaux(x,z){const ci=Math.round(x/T),cj=Math.round(z/T),vus=new Set();for(let a=-2;a<=2;a++)for(let b=-2;b<=2;b++){const k=(ci+a)+','+(cj+b);vus.add(k);if(!carreaux.has(k))carreaux.set(k,carreau(ci+a,cj+b));}
-  for(const[k,m]of carreaux)if(!vus.has(k)){sc.remove(m);m.geometry.dispose();carreaux.delete(k);}}
+// au-delà des carreaux : la mer profonde
+const mer=new THREE.Mesh(new THREE.PlaneGeometry(3000,3000).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#1c4f9c'}));mer.position.y=-.3;sc.add(mer);
+// relief en carreaux : la hauteur dans la géométrie, les couleurs dans une texture en gros pixels (≈ 3 m par pixel)
+const T=200,SEG=40,TX=64;const carreaux=new Map();
+function carreau(i,j){const g=new THREE.PlaneGeometry(T,T,SEG,SEG).rotateX(-Math.PI/2);const p=g.attributes.position;
+  for(let k=0;k<p.count;k++){const x=p.getX(k)+i*T,z=p.getZ(k)+j*T;p.setY(k,Math.max(0,H(x,z)));}g.computeVertexNormals();
+  const c=document.createElement('canvas');c.width=c.height=TX;const cx=c.getContext('2d');
+  for(let b=0;b<TX;b++)for(let a=0;a<TX;a++){const x=i*T-T/2+(a+.5)*T/TX,z=j*T-T/2+(b+.5)*T/TX;cx.fillStyle=couleurSol(x,z,i*TX+a,j*TX+b);cx.fillRect(a,b,1,1);}
+  const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;
+  const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:t}));m.position.set(i*T,0,j*T);sc.add(m);return m;}
+function majCarreaux(x,z){const ci=Math.round(x/T),cj=Math.round(z/T),vus=new Set();let neuf=0;for(let a=-2;a<=2;a++)for(let b=-2;b<=2;b++){const k=(ci+a)+','+(cj+b);vus.add(k);if(!carreaux.has(k)&&neuf<2){carreaux.set(k,carreau(ci+a,cj+b));neuf++;}}
+  for(const[k,m]of carreaux)if(!vus.has(k)){sc.remove(m);m.geometry.dispose();m.material.map.dispose();carreaux.delete(k);}}
 // nuages en blocs
 const nuages=[];{const c=document.createElement('canvas');c.width=32;c.height=16;const x=c.getContext('2d');let s=9;const r=()=>(s=(s*16807)%2147483647)/2147483647;
   for(let i=0;i<9;i++){const cx=7+r()*18,cy=8+r()*2,rr=3+r()*4;x.fillStyle=i<6?'#ffffff':'#e2ecf6';x.beginPath();x.arc(cx,cy,rr,0,7);x.fill();}x.fillStyle='#d4e2f0';x.fillRect(4,12,24,2);x.clearRect(0,14,32,2);
   const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;
   for(let i=0;i<40;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,fog:true}));const s2=9+Math.random()*14;sp.scale.set(s2,s2/2,1);sp.userData={dx:(Math.random()-.5)*700,dz:(Math.random()-.5)*700,y:14+Math.random()*24};sc.add(sp);nuages.push(sp);}}
-// l'avion du joueur
-const nav=new THREE.Group();const corps=await charger('racing');{const b=new THREE.Box3().setFromObject(corps),s=new THREE.Vector3();b.getSize(s);const k=4/Math.max(s.x,s.y,s.z);corps.scale.setScalar(k);corps.position.sub(b.getCenter(new THREE.Vector3()).multiplyScalar(k));}
-corps.traverse(m=>{if(m.isMesh&&m.material&&'metalness' in m.material){m.material.metalness=0;m.material.roughness=.7;}});const piv=new THREE.Group();piv.add(corps);piv.rotation.y=Math.PI;nav.add(piv);sc.add(nav);
-const feu=new THREE.Mesh(new THREE.BoxGeometry(.32,.26,.9),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));feu.position.set(0,.05,2.1);nav.add(feu);
-const ombre=new THREE.Mesh(new THREE.CircleGeometry(2.2,10).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#0a2a50',transparent:true,opacity:.35,depthWrite:false}));sc.add(ombre);
+// un chasseur construit dans le code : fuselage, ailes delta, double dérive, réacteurs
+function chasseur(c){const g=new THREE.Group();const M=col=>new THREE.MeshLambertMaterial({color:col,flatShading:true,side:THREE.DoubleSide});
+  const fus=new THREE.Mesh(new THREE.CylinderGeometry(.38,.62,4.2,6).rotateX(Math.PI/2),M(c.corps));g.add(fus);
+  const nez=new THREE.Mesh(new THREE.ConeGeometry(.38,1.6,6).rotateX(-Math.PI/2),M(c.corps));nez.position.z=-2.9;g.add(nez);
+  const verr=new THREE.Mesh(new THREE.BoxGeometry(.42,.32,1.1),M(c.verriere));verr.position.set(0,.45,-1.1);g.add(verr);
+  const bande=new THREE.Mesh(new THREE.BoxGeometry(.18,.06,3),M(c.accent));bande.position.set(0,.6,.6);g.add(bande);
+  const aile=new THREE.Shape([new THREE.Vector2(.4,-.9),new THREE.Vector2(3,1.1),new THREE.Vector2(3,1.6),new THREE.Vector2(.4,1.7)]);
+  for(const s of[1,-1]){const a=new THREE.Mesh(new THREE.ExtrudeGeometry(aile,{depth:.12,bevelEnabled:false}).rotateX(Math.PI/2),M(c.aile));a.scale.x=s;a.position.y=-.05;g.add(a);
+    const bout=new THREE.Mesh(new THREE.BoxGeometry(.22,.16,.9),M(c.accent));bout.position.set(2.95*s,-.02,1.3);g.add(bout);
+    const der=new THREE.Mesh(new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(0,0),new THREE.Vector2(1.3,0),new THREE.Vector2(1.25,1.2),new THREE.Vector2(.75,1.2)]),{depth:.08,bevelEnabled:false}).rotateY(-Math.PI/2),M(c.aile));
+    der.position.set(.55*s,.15,.6);der.rotation.z=-.3*s;g.add(der);
+    const reac=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.8,6).rotateX(Math.PI/2),M('#1a1c22'));reac.position.set(.34*s,-.05,2.2);g.add(reac);}
+  return g;}
+const nav=new THREE.Group();const moi=chasseur({corps:'#3a3d46',aile:'#6a6e78',accent:'#c8402e',verriere:'#79bde6'});moi.scale.setScalar(.72);nav.add(moi);sc.add(nav);
+const feu=new THREE.Group();for(const s of[1,-1]){const f=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));f.position.set(.34*s,-.05,2.9);feu.add(f);
+  const f2=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));f2.position.set(.34*s,-.05,2.75);feu.add(f2);}feu.scale.setScalar(.72);nav.add(feu);
+const ombre=new THREE.Mesh(new THREE.CircleGeometry(2.6,8).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#0a2a50',transparent:true,opacity:.35,depthWrite:false}));sc.add(ombre);
 // traînées des ailes
 function trainee(){const n=60,pos=new Float32Array(n*3),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:.9}));l.frustumCulled=false;sc.add(l);return{pos,g,n};}
 const tr=[trainee(),trainee()];
 // ennemis
-const modeleEnnemi=await charger('intercepteur');const ennemis=[];
-function ennemi(){const g=new THREE.Group();const m=modeleEnnemi.clone();{const b=new THREE.Box3().setFromObject(m),s=new THREE.Vector3();b.getSize(s);const k=4/Math.max(s.x,s.y,s.z);m.scale.setScalar(k);m.position.sub(b.getCenter(new THREE.Vector3()).multiplyScalar(k));}
-  m.traverse(o=>{if(o.isMesh&&o.material&&'metalness' in o.material){o.material=o.material.clone();o.material.metalness=0;o.material.color=new THREE.Color('#ffb0a0');}});const p=new THREE.Group();p.add(m);p.rotation.y=Math.PI;g.add(p);sc.add(g);
+const ennemis=[];
+function ennemi(){const g=new THREE.Group();g.add(chasseur({corps:'#9a958a',aile:'#d1bd7e',accent:'#e2682e',verriere:'#1a1c22'}));sc.add(g);
   const e={g,ph:Math.random()*6,r:40+Math.random()*40,vie:3};ennemis.push(e);return e;}
 const eclats=[],balles=[],missiles=[];
 const boom=(p,n=18,c=['#ffe066','#ff8a2a','#ff4a2a','#555555'])=>{for(let i=0;i<n;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.9,.9,.9),new THREE.MeshBasicMaterial({color:c[i%c.length],fog:false}));s.position.copy(p);const v=new THREE.Vector3().randomDirection().multiplyScalar(6+Math.random()*14);sc.add(s);eclats.push({s,v,t:.6+Math.random()*.7});}};
-// rendu final : palette arrondie + tramage de Bayer 4 × 4
-const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},res:{value:new THREE.Vector2(LW,LH)}},vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}',
-  fragmentShader:`uniform sampler2D t;uniform vec2 res;varying vec2 v;
-  float bayer(vec2 p){int x=int(mod(p.x,4.)),y=int(mod(p.y,4.));int i=x+y*4;
-    float m[16];m[0]=0.;m[1]=8.;m[2]=2.;m[3]=10.;m[4]=12.;m[5]=4.;m[6]=14.;m[7]=6.;m[8]=3.;m[9]=11.;m[10]=1.;m[11]=9.;m[12]=15.;m[13]=7.;m[14]=13.;m[15]=5.;
-    for(int k=0;k<16;k++){if(k==i)return m[k]/16.;}return 0.;}
-  void main(){vec3 c=texture2D(t,v).rgb;c=pow(c,vec3(.95));float n=7.;vec3 q=floor(c*n+bayer(gl_FragCoord.xy))/n;gl_FragColor=vec4(q,1.);}`});
+// rendu final : chaque pixel prend la couleur la plus proche de la palette (pas de tramage : le damier est déjà dans le ciel)
+const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},pal:{value:PAL.map(h=>new THREE.Color(h))}},vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}',
+  fragmentShader:`uniform sampler2D t;uniform vec3 pal[${PAL.length}];varying vec2 v;
+  void main(){vec3 c=texture2D(t,v).rgb;float best=1e9;vec3 r=c;for(int i=0;i<${PAL.length};i++){vec3 d=(pal[i]-c)*vec3(.9,1.2,.8);float e=dot(d,d);if(e<best){best=e;r=pal[i];}}gl_FragColor=vec4(r,1.);}`});
 const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),post),scPost=new THREE.Scene(),camPost=new THREE.Camera();scPost.add(quad);
 el.querySelector('.charge').remove();
 // pilotage
@@ -143,11 +162,11 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   if(S.rollT>=0){S.rollT+=dt/.8;S.roll=(S.rollT<1?(1-Math.cos(S.rollT*Math.PI))/2:1)*Math.PI*2*S.rollD;if(S.rollT>=1){S.rollT=-1;S.roll=0;}}
   E.set(S.pitch,S.yaw,S.bank+S.roll);Q.setFromEuler(E);nav.quaternion.copy(Q);
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Q);S.fwd=fwd;const up=new THREE.Vector3(0,1,0).applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch,S.yaw,0,'YXZ')));
-  const v=S.v*(S.boost>0?1.7:1);S.boost-=dt;S.p.addScaledVector(fwd,v*dt);const sol=Math.max(0,H(S.p.x,S.p.z));if(S.p.y<sol+3){S.p.y=sol+3;if(S.loopT<0)S.pitch=Math.max(S.pitch,.2);}
-  nav.position.copy(S.p);feu.scale.set(1,1,.6+Math.random()*.8+(S.boost>0?1:0));
+  const v=S.v*(S.boost>0?1.7:1);S.boost-=dt;S.p.addScaledVector(fwd,v*dt);const sol=Math.max(0,H(S.p.x,S.p.z));if(S.p.y<sol+4){S.p.y=sol+4;if(S.loopT<0)S.pitch=Math.max(S.pitch,.2);}
+  nav.position.copy(S.p);feu.scale.set(.72,.72,.5+Math.random()*.45);
   ombre.position.set(S.p.x,sol+.3,S.p.z);ombre.material.opacity=Math.max(0,.35-(S.p.y-sol)*.004);
   // traînées
-  for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const w=new THREE.Vector3(k?2:-2,0,.8).applyQuaternion(Q).add(S.p);t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
+  for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const w=new THREE.Vector3(k?2.15:-2.15,0,1.1).applyQuaternion(Q).add(S.p);t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
   // canon
   if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;const b=new THREE.Mesh(new THREE.BoxGeometry(.3,.3,2.2),new THREE.MeshBasicMaterial({color:'#fff2a0',fog:false}));b.position.copy(S.p).addScaledVector(fwd,3);b.quaternion.copy(Q);sc.add(b);balles.push({b,v:fwd.clone().multiplyScalar(v+160),t:1.1});}
   for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<3.5){b.t=0;e.vie--;if(e.vie<=0){boom(e.g.position);e.g.visible=false;S.score+=100;setTimeout(()=>{e.vie=3;e.g.visible=true;e.ph=Math.random()*6;},4000);}}}
@@ -163,9 +182,9 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     const d=p.clone().sub(e.g.position);e.g.position.lerp(p,Math.min(1,dt*.8));if(d.lengthSq()>.01){e.g.lookAt(e.g.position.clone().add(d));e.g.rotateZ(Math.sin(e.ph)*.6);}}
   // nuages
   for(const n of nuages){const u=n.userData;let x=u.dx,z=u.dz;x=((x-S.p.x)%700+1050)%700-350+S.p.x;z=((z-S.p.z)%700+1050)%700-350+S.p.z;n.position.set(x,u.y,z);}
-  majCarreaux(S.p.x,S.p.z);mer.position.set(Math.round(S.p.x/64)*64,0,Math.round(S.p.z/64)*64);
+  majCarreaux(S.p.x,S.p.z);mer.position.x=S.p.x;mer.position.z=S.p.z;
   // caméra derrière l'avion
-  const loin=S.vue?22:11,haut=S.vue?7:3.2;const cp=S.p.clone().addScaledVector(fwd,-loin).addScaledVector(up,haut);if(cp.y<Math.max(0,H(cp.x,cp.z))+2)cp.y=Math.max(0,H(cp.x,cp.z))+2;
+  const loin=S.vue?22:10.5,haut=S.vue?7:2.6;const cp=S.p.clone().addScaledVector(fwd,-loin).addScaledVector(up,haut);if(cp.y<Math.max(0,H(cp.x,cp.z))+2)cp.y=Math.max(0,H(cp.x,cp.z))+2;
   cam.position.lerp(cp,Math.min(1,dt*6));cam.up.lerp(up,Math.min(1,dt*4)).normalize();cam.lookAt(S.p.clone().addScaledVector(fwd,10).addScaledVector(up,1));ciel.position.copy(cam.position);
   hud.innerHTML=`ALT ${Math.round(S.p.y*3)}<br>SCORE ${String(S.score).padStart(5,'0')}`;document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=5;S.rech=0;},6000);}
