@@ -124,7 +124,7 @@ function chasseur(c){const g=new THREE.Group();const M=col=>new THREE.MeshLamber
   return g;}
 const nav=new THREE.Group();const moi=chasseur({corps:'#3a3d46',aile:'#6a6e78',accent:'#c8402e',verriere:'#79bde6'});moi.scale.setScalar(.8);nav.add(moi);sc.add(nav);
 const feu=new THREE.Group();for(const s of[1,-1]){const f=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));f.position.set(.34*s,-.05,2.9);feu.add(f);
-  const f2=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));f2.position.set(.34*s,-.05,2.75);feu.add(f2);}feu.scale.setScalar(.8);nav.add(feu);versCalque(nav);
+  const f2=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));f2.position.set(.34*s,-.05,2.75);feu.add(f2);}feu.scale.setScalar(.8);nav.add(feu);nav.visible=false; // l'avion du joueur est dessiné en sprite pixel art (planche SPRITE), le modèle ne sert qu'aux calculs
 const ombre=new THREE.Mesh(new THREE.CircleGeometry(2.6,8).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#0a2a50',transparent:true,opacity:.35,depthWrite:false}));sc.add(ombre);
 // traînées des ailes
 function trainee(){const n=60,pos=new Float32Array(n*3),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:.9}));l.frustumCulled=false;sc.add(l);return{pos,g,n};}
@@ -134,7 +134,7 @@ const ennemis=[];
 function ennemi(){const g=new THREE.Group();g.add(chasseur({corps:'#9a958a',aile:'#d1bd7e',accent:'#e2682e',verriere:'#1a1c22'}));versCalque(g);sc.add(g);
   const e={g,ph:Math.random()*6,r:40+Math.random()*40,vie:3};ennemis.push(e);return e;}
 const eclats=[],balles=[],missiles=[];
-const boom=(p,n=18,c=['#ffe066','#ff8a2a','#ff4a2a','#555555'])=>{for(let i=0;i<n;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.9,.9,.9),new THREE.MeshBasicMaterial({color:c[i%c.length],fog:false}));s.position.copy(p);const v=new THREE.Vector3().randomDirection().multiplyScalar(6+Math.random()*14);sc.add(s);eclats.push({s,v,t:.6+Math.random()*.7});}};
+const boom=(p,n=18,c=['#ffe066','#ff8a2a','#ff4a2a','#555555'])=>{for(let i=0;i<n;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.9,.9,.9),new THREE.MeshBasicMaterial({color:c[i%c.length],fog:false}));s.position.copy(p);const v=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(6+Math.random()*14);sc.add(s);eclats.push({s,v,t:.6+Math.random()*.7});}};
 // rendu final : chaque pixel prend la couleur la plus proche de la palette (pas de tramage : le damier est déjà dans le ciel)
 const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},ta:{value:cibleAvions.texture},pa:{value:new THREE.Vector2(1/AW,1/AH)},pal:{value:PAL.map(h=>new THREE.Color(h))}},vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}',
   fragmentShader:`uniform sampler2D t;uniform sampler2D ta;uniform vec2 pa;uniform vec3 pal[${PAL.length}];varying vec2 v;
@@ -142,6 +142,19 @@ const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},ta:{value
     if(a.a>.5)c=a.rgb;else if(texture2D(ta,v+vec2(pa.x,0.)).a>.5||texture2D(ta,v-vec2(pa.x,0.)).a>.5||texture2D(ta,v+vec2(0.,pa.y)).a>.5||texture2D(ta,v-vec2(0.,pa.y)).a>.5)c=vec3(.1,.11,.13);
     float best=1e9;vec3 r=c;for(int i=0;i<${PAL.length};i++){vec3 d=(pal[i]-c)*vec3(.9,1.2,.8);float e=dot(d,d);if(e<best){best=e;r=pal[i];}}gl_FragColor=vec4(r,1.);}`});
 const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),post),scPost=new THREE.Scene(),camPost=new THREE.Camera();scPost.add(quad);
+// le sprite du joueur : une planche de 16 angles de tonneau × 3 inclinaisons, dessinée à la main (outils/escadrille-pixel/chasseur.py)
+const SP=SPRITE,texSp=new THREE.TextureLoader().load(SP.src);texSp.magFilter=texSp.minFilter=THREE.NearestFilter;texSp.generateMipmaps=false;texSp.repeat.set(1/SP.nr,1/3);
+const spr=new THREE.Mesh(new THREE.PlaneGeometry(2*SP.w/LW,2*SP.h/LH),new THREE.MeshBasicMaterial({map:texSp,transparent:true,alphaTest:.5,depthTest:false}));scPost.add(spr);
+const flammes=[0,1].map(()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(2*3/LW,2*3/LH),new THREE.MeshBasicMaterial({color:'#ffe080',depthTest:false}));scPost.add(m);return m;});
+function placerSprite(Qs,fwd){const ndc=S.p.clone().project(cam);const px=Math.round((ndc.x+1)/2*LW),py=Math.round((ndc.y+1)/2*LH);
+  const droite=new THREE.Vector3(1,0,0).applyQuaternion(Qs),haut=new THREE.Vector3(0,1,0).applyQuaternion(Qs);
+  const a1=S.p.clone().add(droite).project(cam);const ang=Math.atan2((a1.y-ndc.y)*LH,(a1.x-ndc.x)*LW);
+  const i=((Math.round(ang/(Math.PI*2)*SP.nr)%SP.nr)+SP.nr)%SP.nr;
+  const vers=cam.position.clone().sub(S.p).normalize();const vu=haut.dot(vers);const j=vu>.42?2:vu<.12?0:1;
+  texSp.offset.set(i/SP.nr,1-(j+1)/3);
+  const cxs=px-SP.w/2+SP.w/2,cys=py+SP.h*.62-SP.h/2;spr.position.set((cxs)/LW*2-1,(cys)/LH*2-1,0);
+  const tu=SP.tuyeres[i+','+j];tu.forEach((t,k)=>{const fx=px-SP.w*.5+t[0]+.5,fy=py+SP.h*.62-t[1]-.5;const f=flammes[k];const l=1+Math.random()*1.4;f.scale.set(1,l,1);
+    f.material.color.set(Math.random()<.5?'#ffe080':'#ffb040');f.position.set(fx/LW*2-1,(fy-l)/LH*2-1,0);});}
 el.querySelector('.charge').remove();
 // pilotage
 const S={p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
@@ -171,7 +184,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   nav.position.copy(S.p);feu.scale.set(.8,.8,.55+Math.random()*.5);
   ombre.position.set(S.p.x,sol+.3,S.p.z);ombre.material.opacity=Math.max(0,.35-(S.p.y-sol)*.004);
   // traînées
-  for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const w=new THREE.Vector3(k?2.15:-2.15,0,1.1).applyQuaternion(Q).add(S.p);t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
+  for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const w=new THREE.Vector3(k?1.05:-1.05,.1,.4).applyQuaternion(Q).add(S.p);t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
   // canon
   if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;const b=new THREE.Mesh(new THREE.BoxGeometry(.3,.3,2.2),new THREE.MeshBasicMaterial({color:'#fff2a0',fog:false}));b.position.copy(S.p).addScaledVector(fwd,3);b.quaternion.copy(Q);sc.add(b);balles.push({b,v:fwd.clone().multiplyScalar(v+160),t:1.1});}
   for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<3.5){b.t=0;e.vie--;if(e.vie<=0){boom(e.g.position);e.g.visible=false;S.score+=100;setTimeout(()=>{e.vie=3;e.g.visible=true;e.ph=Math.random()*6;},4000);}}}
@@ -195,7 +208,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=5;S.rech=0;},6000);}
   cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
   cam.layers.set(AVIONS);R.setRenderTarget(cibleAvions);R.setClearColor(0x000000,0);R.clear();R.render(sc,cam);
-  R.setRenderTarget(null);R.render(scPost,camPost);}
+  placerSprite(Q,fwd);R.setRenderTarget(null);R.render(scPost,camPost);}
 requestAnimationFrame(image);
 })();
 </script>

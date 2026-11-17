@@ -13,3 +13,8 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 
 ## Version 3 (17/11, « l'avion n'est pas pixelisé du tout »)
 - Les avions (joueur et ennemis, calque 1 via `versCalque`) sont dessinés à part dans une cible de **90 × 160** (deux fois moins de pixels que le décor), fond transparent ; la passe finale les pose sur le décor avec un **contour sombre d'un pixel** (voisins de la cible des avions), puis la palette. Les lumières sont activées sur les deux calques. Ailes épaissies (0,24) pour rester lisibles de profil.
+
+## Version 4 (17/11, « même comme ça c'est pas très joli » ; pas d'avion vu de dos en pixel art sur itch.io)
+- Le joueur est un **sprite pixel art** : `chasseur.py <sortie.png>` dessine le chasseur vu de dos (64 × 40) sous 16 angles de tonneau × 3 inclinaisons, avec des rampes de gris faites à la main, bouts d'ailes et bande rouges, verrière, double dérive, réacteurs, contour d'un pixel ; écrit aussi `.json` (taille, positions des tuyères par image). Planche et json copiés ici (`chasseur.png`, `chasseur.json`).
+- Dans le jeu : le modèle 3D du joueur est invisible (il sert aux calculs) ; `placerSprite()` projette sa position, choisit l'angle de tonneau d'après l'aile droite projetée à l'écran et l'inclinaison d'après ce qu'on voit du dessus, et pose le sprite (et deux flammes qui vacillent) par-dessus l'image finale, calé au pixel. `/*DONNEES*/` → `const MODELES={};const SPRITE={src,w,h,nr,tuyeres}`.
+- Bug corrigé : `Vector3.randomDirection` n'existe pas dans three r128 (les explosions plantaient).
