@@ -81,6 +81,9 @@ const el=document.getElementById('t'),hud=document.getElementById('hud'),band=do
 const LW=180,LH=320;
 const R=new THREE.WebGLRenderer({antialias:false});R.setPixelRatio(1);R.setSize(LW,LH,false);el.prepend(R.domElement);
 const cible=new THREE.WebGLRenderTarget(LW,LH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+// les avions sont dessinés à part, en deux fois moins de pixels, pour avoir l'air de sprites
+const AW=LW/2,AH=LH/2;const cibleAvions=new THREE.WebGLRenderTarget(AW,AH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+const AVIONS=1;const versCalque=o=>o.traverse(m=>m.layers.set(AVIONS));
 const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(60,LW/LH,.5,900);
 sc.fog=new THREE.Fog('#dceef9',170,540);
 // ciel : larges bandes unies, avec un damier seulement à la frontière entre deux bandes
@@ -88,7 +91,7 @@ sc.fog=new THREE.Fog('#dceef9',170,540);
   x.fillStyle='#dceef9';x.fillRect(0,0,8,512);for(const[v,col]of B){const y0=Math.round((1-v)*512);x.fillStyle=col;x.fillRect(0,0,8,y0);for(let q=0;q<3;q++)for(let a=0;a<8;a++)if((a+q)%2===0)x.fillRect(a,y0+q,1,1);}
   const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;
   var ciel=new THREE.Mesh(new THREE.SphereGeometry(800,32,64),new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false}));sc.add(ciel);}
-sc.add(new THREE.HemisphereLight('#eef6ff','#4a6a50',.85));const L=new THREE.DirectionalLight('#fff4e0',.85);L.position.set(-.5,1,.3);sc.add(L);
+const hemi=new THREE.HemisphereLight('#eef6ff','#4a6a50',.85);sc.add(hemi);const L=new THREE.DirectionalLight('#fff4e0',.95);L.position.set(-.5,1,.6);sc.add(L);hemi.layers.enable(AVIONS);L.layers.enable(AVIONS);
 // au-delà des carreaux : la mer profonde
 const mer=new THREE.Mesh(new THREE.PlaneGeometry(3000,3000).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#1c4f9c'}));mer.position.y=-.3;sc.add(mer);
 // relief en carreaux : la hauteur dans la géométrie, les couleurs dans une texture en gros pixels (≈ 3 m par pixel)
@@ -113,29 +116,31 @@ function chasseur(c){const g=new THREE.Group();const M=col=>new THREE.MeshLamber
   const verr=new THREE.Mesh(new THREE.BoxGeometry(.42,.32,1.1),M(c.verriere));verr.position.set(0,.45,-1.1);g.add(verr);
   const bande=new THREE.Mesh(new THREE.BoxGeometry(.18,.06,3),M(c.accent));bande.position.set(0,.6,.6);g.add(bande);
   const aile=new THREE.Shape([new THREE.Vector2(.4,-.9),new THREE.Vector2(3,1.1),new THREE.Vector2(3,1.6),new THREE.Vector2(.4,1.7)]);
-  for(const s of[1,-1]){const a=new THREE.Mesh(new THREE.ExtrudeGeometry(aile,{depth:.12,bevelEnabled:false}).rotateX(Math.PI/2),M(c.aile));a.scale.x=s;a.position.y=-.05;g.add(a);
+  for(const s of[1,-1]){const a=new THREE.Mesh(new THREE.ExtrudeGeometry(aile,{depth:.24,bevelEnabled:false}).rotateX(Math.PI/2),M(c.aile));a.scale.x=s;a.position.y=-.05;g.add(a);
     const bout=new THREE.Mesh(new THREE.BoxGeometry(.22,.16,.9),M(c.accent));bout.position.set(2.95*s,-.02,1.3);g.add(bout);
     const der=new THREE.Mesh(new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(0,0),new THREE.Vector2(1.3,0),new THREE.Vector2(1.25,1.2),new THREE.Vector2(.75,1.2)]),{depth:.08,bevelEnabled:false}).rotateY(-Math.PI/2),M(c.aile));
     der.position.set(.55*s,.15,.6);der.rotation.z=-.3*s;g.add(der);
     const reac=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.8,6).rotateX(Math.PI/2),M('#1a1c22'));reac.position.set(.34*s,-.05,2.2);g.add(reac);}
   return g;}
-const nav=new THREE.Group();const moi=chasseur({corps:'#3a3d46',aile:'#6a6e78',accent:'#c8402e',verriere:'#79bde6'});moi.scale.setScalar(.72);nav.add(moi);sc.add(nav);
+const nav=new THREE.Group();const moi=chasseur({corps:'#3a3d46',aile:'#6a6e78',accent:'#c8402e',verriere:'#79bde6'});moi.scale.setScalar(.8);nav.add(moi);sc.add(nav);
 const feu=new THREE.Group();for(const s of[1,-1]){const f=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));f.position.set(.34*s,-.05,2.9);feu.add(f);
-  const f2=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));f2.position.set(.34*s,-.05,2.75);feu.add(f2);}feu.scale.setScalar(.72);nav.add(feu);
+  const f2=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));f2.position.set(.34*s,-.05,2.75);feu.add(f2);}feu.scale.setScalar(.8);nav.add(feu);versCalque(nav);
 const ombre=new THREE.Mesh(new THREE.CircleGeometry(2.6,8).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#0a2a50',transparent:true,opacity:.35,depthWrite:false}));sc.add(ombre);
 // traînées des ailes
 function trainee(){const n=60,pos=new Float32Array(n*3),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:.9}));l.frustumCulled=false;sc.add(l);return{pos,g,n};}
 const tr=[trainee(),trainee()];
 // ennemis
 const ennemis=[];
-function ennemi(){const g=new THREE.Group();g.add(chasseur({corps:'#9a958a',aile:'#d1bd7e',accent:'#e2682e',verriere:'#1a1c22'}));sc.add(g);
+function ennemi(){const g=new THREE.Group();g.add(chasseur({corps:'#9a958a',aile:'#d1bd7e',accent:'#e2682e',verriere:'#1a1c22'}));versCalque(g);sc.add(g);
   const e={g,ph:Math.random()*6,r:40+Math.random()*40,vie:3};ennemis.push(e);return e;}
 const eclats=[],balles=[],missiles=[];
 const boom=(p,n=18,c=['#ffe066','#ff8a2a','#ff4a2a','#555555'])=>{for(let i=0;i<n;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.9,.9,.9),new THREE.MeshBasicMaterial({color:c[i%c.length],fog:false}));s.position.copy(p);const v=new THREE.Vector3().randomDirection().multiplyScalar(6+Math.random()*14);sc.add(s);eclats.push({s,v,t:.6+Math.random()*.7});}};
 // rendu final : chaque pixel prend la couleur la plus proche de la palette (pas de tramage : le damier est déjà dans le ciel)
-const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},pal:{value:PAL.map(h=>new THREE.Color(h))}},vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}',
-  fragmentShader:`uniform sampler2D t;uniform vec3 pal[${PAL.length}];varying vec2 v;
-  void main(){vec3 c=texture2D(t,v).rgb;float best=1e9;vec3 r=c;for(int i=0;i<${PAL.length};i++){vec3 d=(pal[i]-c)*vec3(.9,1.2,.8);float e=dot(d,d);if(e<best){best=e;r=pal[i];}}gl_FragColor=vec4(r,1.);}`});
+const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},ta:{value:cibleAvions.texture},pa:{value:new THREE.Vector2(1/AW,1/AH)},pal:{value:PAL.map(h=>new THREE.Color(h))}},vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}',
+  fragmentShader:`uniform sampler2D t;uniform sampler2D ta;uniform vec2 pa;uniform vec3 pal[${PAL.length}];varying vec2 v;
+  void main(){vec3 c=texture2D(t,v).rgb;vec4 a=texture2D(ta,v);
+    if(a.a>.5)c=a.rgb;else if(texture2D(ta,v+vec2(pa.x,0.)).a>.5||texture2D(ta,v-vec2(pa.x,0.)).a>.5||texture2D(ta,v+vec2(0.,pa.y)).a>.5||texture2D(ta,v-vec2(0.,pa.y)).a>.5)c=vec3(.1,.11,.13);
+    float best=1e9;vec3 r=c;for(int i=0;i<${PAL.length};i++){vec3 d=(pal[i]-c)*vec3(.9,1.2,.8);float e=dot(d,d);if(e<best){best=e;r=pal[i];}}gl_FragColor=vec4(r,1.);}`});
 const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),post),scPost=new THREE.Scene(),camPost=new THREE.Camera();scPost.add(quad);
 el.querySelector('.charge').remove();
 // pilotage
@@ -163,7 +168,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   E.set(S.pitch,S.yaw,S.bank+S.roll);Q.setFromEuler(E);nav.quaternion.copy(Q);
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Q);S.fwd=fwd;const up=new THREE.Vector3(0,1,0).applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch,S.yaw,0,'YXZ')));
   const v=S.v*(S.boost>0?1.7:1);S.boost-=dt;S.p.addScaledVector(fwd,v*dt);const sol=Math.max(0,H(S.p.x,S.p.z));if(S.p.y<sol+4){S.p.y=sol+4;if(S.loopT<0)S.pitch=Math.max(S.pitch,.2);}
-  nav.position.copy(S.p);feu.scale.set(.72,.72,.5+Math.random()*.45);
+  nav.position.copy(S.p);feu.scale.set(.8,.8,.55+Math.random()*.5);
   ombre.position.set(S.p.x,sol+.3,S.p.z);ombre.material.opacity=Math.max(0,.35-(S.p.y-sol)*.004);
   // traînées
   for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const w=new THREE.Vector3(k?2.15:-2.15,0,1.1).applyQuaternion(Q).add(S.p);t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
@@ -188,7 +193,9 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   cam.position.lerp(cp,Math.min(1,dt*6));cam.up.lerp(up,Math.min(1,dt*4)).normalize();cam.lookAt(S.p.clone().addScaledVector(fwd,10).addScaledVector(up,1));ciel.position.copy(cam.position);
   hud.innerHTML=`ALT ${Math.round(S.p.y*3)}<br>SCORE ${String(S.score).padStart(5,'0')}`;document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=5;S.rech=0;},6000);}
-  R.setRenderTarget(cible);R.render(sc,cam);R.setRenderTarget(null);R.render(scPost,camPost);}
+  cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
+  cam.layers.set(AVIONS);R.setRenderTarget(cibleAvions);R.setClearColor(0x000000,0);R.clear();R.render(sc,cam);
+  R.setRenderTarget(null);R.render(scPost,camPost);}
 requestAnimationFrame(image);
 })();
 </script>

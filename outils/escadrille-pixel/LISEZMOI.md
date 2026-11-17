@@ -10,3 +10,6 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 - **Ciel** : texture de larges bandes unies avec 3 lignes de damier à chaque frontière (sphère, NearestFilter) ; brouillard à la couleur de l'horizon.
 - **Sol** : texture de 64 × 64 par carreau de 200 (≈ 3 m par pixel), couleur par pixel (`couleurSol` : mer profonde et écume rare, haut-fond, liseré blanc, plage, 4 verts selon la pente et le hasard, rochers), MeshBasicMaterial ; géométrie aplatie au niveau de la mer ; au plus 2 carreaux neufs par image.
 - **Avions construits dans le code** (`chasseur()` : fuselage hexagonal, nez, verrière, ailes delta extrudées, bouts d'ailes rouges, double dérive inclinée, deux réacteurs et leurs flammes) ; les ennemis : le même en gris clair et orange. Plus de GLB : `MODELES={}`.
+
+## Version 3 (17/11, « l'avion n'est pas pixelisé du tout »)
+- Les avions (joueur et ennemis, calque 1 via `versCalque`) sont dessinés à part dans une cible de **90 × 160** (deux fois moins de pixels que le décor), fond transparent ; la passe finale les pose sur le décor avec un **contour sombre d'un pixel** (voisins de la cible des avions), puis la palette. Les lumières sont activées sur les deux calques. Ailes épaissies (0,24) pour rester lisibles de profil.
