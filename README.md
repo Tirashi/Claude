@@ -11,6 +11,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`tank-arena/index.html`](tank-arena/index.html) : **Tank Arena**, une petite arène de tanks en 3D : toi contre trois tanks de l'ordinateur, en manches de 90 secondes.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`lune-rover/index.html`](lune-rover/index.html) : **Lune-Rover**, un puzzle de programmation en 32 bits : écrire à l'avance le programme d'un petit robot lunaire pour ramasser tous les cristaux, en 30 niveaux.
 - [`calculator/index.html`](calculator/index.html) : **Calculator**, le calcul mental de 7 à 77 ans : additions, soustractions, multiplications et divisions sur 5 niveaux, en série de 20, contre la montre ou avec le calcul du jour, en trois styles (arcade, cahier d'écolier, calculatrice de poche).
@@ -172,6 +173,13 @@ Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32
 - **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
 - **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
 - **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
+
+## Tank Arena
+Une petite arène de tanks en 3D (pack Low Poly Tank Assets de dani567) : un damier entouré de rochers et de sapins, une plateforme au centre.
+
+- **La règle** : toi contre trois tanks de l'ordinateur, chacun pour soi. Détruis-en le plus possible en 90 secondes ; un tank détruit revient 3 secondes plus tard.
+- **Commandes** : glisser le doigt pour rouler (ou les flèches, ZQSD) ; le tank tire tout seul sur l'ennemi le plus proche.
+- **La caisse du centre** : réparation, tir triple, bouclier ou vitesse.
 
 ## Le Magasinier
 Un Sokoban dans un entrepôt en HD-2D (façon Octopath Traveler) : un petit diorama en relief habillé de pixel art, avec la lumière du soleil qui entre par les fenêtres, et un docker en pixel art (casquette, foulard rouge, gilet de cuir) qui marche, pousse, glisse et se retourne vers toi quand il attend.
@@ -496,6 +504,7 @@ Les classements sont dans le **volet de chaque jeu**, sur l'accueil : des classe
 - **Bannières** : le plus de drapeaux à la fin d'une partie sur la petite carte.
 - **Duché** : le meilleur règne (en normal), et le Duché du jour.
 - **Capitaine du port** : le total d'étoiles des 60 bassins, et le bassin du jour (le moins de coups).
+- **Tank Arena** : le plus de tanks détruits en une manche.
 - **Le Magasinier** : le total d'étoiles des 60 niveaux, et la grille du jour (le moins de coups).
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).

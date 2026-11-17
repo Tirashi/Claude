@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tank Arena</title>
+<meta name="description" content="Tank Arena : petite arène de tanks en 3D, toi contre trois tanks de l'ordinateur, en manches de 90 secondes.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#14152a">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="jeu">
+  <canvas id="cv" aria-label="L'arène des tanks"></canvas>
+  <canvas id="hud" aria-hidden="true"></canvas>
+  <button id="bPause" class="fenetre" aria-label="Pause" hidden>❚❚</button>
+
+  <div class="ecranMenu" id="eTitre">
+    <div class="fenetre carte">
+      <h1>TANK<br>ARENA</h1>
+      <p class="petit">Toi contre 3 tanks, chacun pour soi. Detruis-en le plus possible en 90 secondes !</p>
+      <button class="fenetre" id="bJouer">JOUER</button>
+      <p class="petit" id="tRecord"></p>
+      <a class="fenetre lien" href="../index.html#tankarena">CLASSEMENT</a>
+      <a class="fenetre lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
+      <p class="aide">Glisse le doigt pour rouler (ou fleches, ZQSD). Le tank tire tout seul. La caisse du centre : reparation, tir triple, bouclier ou vitesse.</p>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="ePause" hidden>
+    <div class="fenetre carte">
+      <p class="titre2">PAUSE</p>
+      <button class="fenetre" id="bReprendre">REPRENDRE</button>
+      <button class="fenetre" id="bRecommencer">RECOMMENCER</button>
+      <button class="fenetre" id="bSons">BRUITAGES : OUI</button>
+      <button class="fenetre" id="bTitreP">◀ TITRE</button>
+      <a class="fenetre lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
+    </div>
+  </div>
+
+  <div class="ecranMenu" id="eFin" hidden>
+    <div class="fenetre carte">
+      <p class="titre2" id="fTitre">FIN DE MANCHE</p>
+      <ol class="podium" id="fPodium"></ol>
+      <p id="fScore"></p>
+      <p class="petit" id="fRecord"></p>
+      <p class="petit" id="fRang"></p>
+      <button class="fenetre" id="bRejouer">REJOUER</button>
+      <button class="fenetre" id="bTitre">◀ TITRE</button>
+    </div>
+  </div>
+</div>
+<script src="../lib/three.min.js"></script>
+<script src="modeles.js"></script>
+<script src="../ludo-scores.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
