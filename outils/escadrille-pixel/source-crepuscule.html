@@ -283,19 +283,29 @@ const ombre=new THREE.Mesh(new THREE.CircleGeometry(2.6,8).rotateX(-Math.PI/2),n
 function trainee(){const n=60,pos=new Float32Array(n*3),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:.9}));l.frustumCulled=false;sc.add(l);return{pos,g,n};}
 const tr=[trainee(),trainee()];
 // grands vaisseaux au loin : deux flottes qui se croisent au-dessus du paysage en échangeant des tirs laser (décor : on ne peut pas les abattre)
-const FLOTTE=[],LASERS=[],CAP=.55;{const camps=[['fga_destroyer2','fga_croiseur1','fga_destroyer4'],['fga_destroyer1','fga_croiseur2','fga_destroyer3','fga_croiseur4']];
+const FLOTTE=[],LASERS=[],CAP=.55;let TOURS=[];/* TOURS : tourelles rouges encore debout, cibles du joueur (balles, verrouillage des missiles) */{const camps=[['fga_destroyer2','fga_croiseur1','fga_destroyer4'],['fga_destroyer1','fga_croiseur2','fga_destroyer3','fga_croiseur4']];
   camps.forEach((l,camp)=>l.forEach((cle,i)=>{const lg=cle.includes('destroyer')?120:85;const r=importe(cle,-Math.PI/2,lg);const s=camp?-1:1;
     for(const t of r.tuyeres()){const f=new THREE.Mesh(new THREE.BoxGeometry(lg*.035,lg*.035,lg*.09),new THREE.MeshBasicMaterial({color:camp?'#ffb070':'#9fe0ff'}));f.position.set(t[0],t[1],t[2]+lg*.04);r.g.add(f);}
-    const yaw=CAP+(camp?Math.PI:0);r.g.rotation.y=yaw;sc.add(r.g);
-    FLOTTE.push({g:r.g,camp,lg,yaw,tourelles:r.tourelles.map(o=>({o,cad:Math.random()*2,c:null})),base:new THREE.Vector3(),v:9+Math.random()*3,ph:Math.random()*6,neuf:1});}));}
+    const yaw=CAP+(camp?Math.PI:0);r.g.rotation.order='YXZ';r.g.rotation.y=yaw;sc.add(r.g);
+    FLOTTE.push({g:r.g,camp,lg,yaw,tourelles:r.tourelles.map(o=>({o,cad:Math.random()*2,c:null,cible:camp?{g:new THREE.Object3D(),vie:8,rayon:4,tour:1}:null})),base:new THREE.Vector3(),v:9+Math.random()*3,ph:Math.random()*6,neuf:1});}));}
+function fumee(p,n){for(let i=0;i<n;i++){const f=new THREE.Mesh(new THREE.BoxGeometry(2.2,2.2,2.2),new THREE.MeshBasicMaterial({color:i%2?'#3a3240':'#5a4e5e',transparent:true,opacity:.8}));f.position.copy(p).add(new THREE.Vector3((Math.random()-.5)*3,Math.random()*2,(Math.random()-.5)*3));sc.add(f);eclats.push({s:f,v:new THREE.Vector3((Math.random()-.5)*2,4+Math.random()*3,(Math.random()-.5)*2),t:1.6,fum:1});}}
 function flotte(dt){for(const n of FLOTTE){n.ph+=dt;const d=new THREE.Vector3(-Math.sin(n.yaw),0,-Math.cos(n.yaw));n.base.addScaledVector(d,n.v*dt);
+    if(n.chute){/* toutes ses tourelles détruites : il prend feu, pique du nez et tombe */n.chute+=dt;n.base.y-=dt*(4+n.chute*5);n.g.rotation.z+=dt*.12*(n.camp?1:-1);n.g.rotation.x=Math.min(.35,n.chute*.06);n.boomT=(n.boomT||0)-dt;
+      if(n.boomT<=0){n.boomT=.12+Math.random()*.2;const p=n.g.position.clone().add(new THREE.Vector3((Math.random()-.5)*n.lg*.3,(Math.random()-.3)*n.lg*.08,(Math.random()-.5)*n.lg*.6).applyQuaternion(n.g.quaternion));boom(p,10+Math.random()*10|0);fumee(p,3);}
+      n.g.position.set(n.base.x,n.base.y,n.base.z);if(n.base.y<H(n.base.x,n.base.z)-10||n.chute>9){boom(n.g.position,40);n.neuf=1;n.g.rotation.x=0;}continue;}
     const rel=n.base.clone().sub(S.p);rel.y=0;if(n.neuf||rel.length()>560){/* trop loin : il revient devant le joueur, dans la brume */
-      const a=S.yaw+(Math.random()-.5)*(n.neuf?2.4:1.6),dist=n.neuf?180+Math.random()*320:460+Math.random()*60;n.base.set(S.p.x-Math.sin(a)*dist,62+Math.random()*55,S.p.z-Math.cos(a)*dist);n.neuf=0;
+      const a=S.yaw+(Math.random()-.5)*(n.neuf?2.4:1.6),dist=n.neuf?180+Math.random()*320:460+Math.random()*60;n.base.set(S.p.x-Math.sin(a)*dist,62+Math.random()*55,S.p.z-Math.cos(a)*dist);n.neuf=0;n.chute=0;for(const t of n.tourelles){t.o.visible=true;t.mort=0;if(t.cible)t.cible.vie=8;}
       for(const m of FLOTTE)if(m!==n&&m.base.distanceTo(n.base)<m.lg*.9+n.lg*.9){n.neuf=1;break;}}/* pas l'un dans l'autre : on retire au prochain coup */
-    const x=n.base.x,z=n.base.z;n.g.position.set(x,Math.max(n.base.y,H(x,z)+45)+Math.sin(n.ph*.4)*3,z);n.g.rotation.z=Math.sin(n.ph*.3)*.03;n.g.visible=!n.neuf;}
+    const x=n.base.x,z=n.base.z;n.g.position.set(x,Math.max(n.base.y,H(x,z)+45)+Math.sin(n.ph*.4)*3,z);n.g.rotation.z=Math.sin(n.ph*.3)*.03;n.g.rotation.x=0;n.g.visible=!n.neuf;}
   // tourelles : chacune choisit une cible (vaisseau ennemi ; les rouges visent aussi le joueur s'il passe près, les bleus les chasseurs ennemis), pivote vers elle et tire du bout de ses canons
   const loc=new THREE.Vector3(),bout=new THREE.Vector3();
-  for(const n of FLOTTE){if(n.neuf)continue;for(const t of n.tourelles){t.cad-=dt;
+  TOURS=[];
+  for(const n of FLOTTE){if(n.neuf||n.chute)continue;for(const t of n.tourelles){t.cad-=dt;
+      if(t.cible){t.o.getWorldPosition(t.cible.g.position);if(!t.r){t.r=1;t.cible.rayon=Math.max(3.5,Math.hypot(...t.o.userData.bout)*t.o.getWorldScale(loc).x*.75);}
+        if(t.cible.vie<=0&&!t.mort){t.mort=1;t.o.visible=false;boom(t.cible.g.position,28);fumee(t.cible.g.position,6);S.score+=300;
+          if(n.tourelles.every(u=>u.mort)){n.chute=.01;S.score+=2000;annonce(`VAISSEAU ABATTU<b>+2000</b>Toutes ses tourelles sont détruites`);}}
+        if(t.mort){if(Math.random()<dt*4)fumee(t.cible.g.position,1);continue;}/* une tourelle détruite fume */
+        TOURS.push(t.cible);}
       if(!t.c||t.cad<-3||(t.c.n&&t.c.n.neuf)||(t.c.e&&t.c.e.vie<=0)){t.c=null;const op=t.o.getWorldPosition(loc).clone();const choix=[];
         if(n.camp===1&&op.distanceTo(S.p)<260)choix.push({joueur:1},{joueur:1});
         if(n.camp===0)for(const e of ennemis)if(e.vie>0&&e.g.position.distanceTo(op)<260)choix.push({e});
@@ -404,6 +414,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   // canon
   if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;const b=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,3.2),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));b.position.copy(S.p).addScaledVector(fwd,3);b.quaternion.copy(Q);sc.add(b);balles.push({b,v:fwd.clone().multiplyScalar(v+160),t:1.1});}
   for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<e.rayon){b.t=0;e.vie--;if(e.vie<=0){boom(e.g.position);sc.remove(e.g);S.score+=100;}}
+    if(b.t>0)for(const t of TOURS)if(t.vie>0&&b.b.position.distanceTo(t.g.position)<t.rayon){b.t=0;t.vie--;boom(b.b.position,5,['#ffffff','#ffe066','#ff8a2a']);break;}/* tourelles rouges : 8 balles */
     if(b.t>0)for(const n of FLOTTE)if(b.b.position.distanceTo(n.g.position)<n.lg*.3){b.t=0;boom(b.b.position,4,['#ffffff','#ffe066']);break;}/* les balles ricochent sur les grands vaisseaux */}
   for(let i=balles.length-1;i>=0;i--)if(balles[i].t<=0){sc.remove(balles[i].b);balles.splice(i,1);}
   for(const mi of missiles){mi.t-=dt;if(mi.c&&mi.c.vie>0){const d=mi.c.g.position.clone().sub(mi.m.position).normalize().multiplyScalar(110);mi.v.lerp(d,Math.min(1,dt*5));}mi.m.position.addScaledVector(mi.v,dt);mi.m.lookAt(mi.m.position.clone().add(mi.v));
@@ -471,10 +482,10 @@ function coins(x,y,r,c,ep=1){const L=Math.max(2,Math.round(r*.45));for(const[sx,
 function versEcran(v){const q=v.clone().project(cam);if(q.z>1||q.z<-1)return null;return[(q.x+1)/2*OW,(1-q.y)/2*OH];}
 function viseur(fwd,dt){ox.clearRect(0,0,OW,OH);
   // le verrouillage : l'ennemi le plus près de l'axe, dans un cône de 0,3 rad et à moins de 240 m
-  let best=null,ba=.3;for(const e of ennemis){if(e.vie<=0)continue;const d=e.g.position.clone().sub(S.p);const l=d.length();if(l>240)continue;const a=d.angleTo(fwd);if(a<ba){ba=a;best=e;}}
+  let best=null,ba=.3;for(const e of ennemis.concat(TOURS)){if(e.vie<=0)continue;const d=e.g.position.clone().sub(S.p);const l=d.length();if(l>240)continue;const a=d.angleTo(fwd);if(a<ba){ba=a;best=e;}}
   if(best!==LOCK.e){LOCK.e=best;LOCK.t=0;}else if(best)LOCK.t+=dt;
   // cadres : gris au loin, rouges dans l'axe de tir, jaune qui se resserre pendant le verrouillage, rouge + LOCK une fois verrouillé
-  for(const e of ennemis){if(e.vie<=0)continue;const p=versEcran(e.g.position);if(!p)continue;const l=e.g.position.distanceTo(S.p);const r=Math.max(4,Math.min(12,700/l));
+  for(const e of ennemis.concat(TOURS)){if(e.vie<=0)continue;const p=versEcran(e.g.position);if(!p)continue;const l=e.g.position.distanceTo(S.p);if(e.tour&&l>320)continue;const r=Math.max(4,Math.min(12,700/l));
     if(e===LOCK.e){const f=Math.min(1,LOCK.t/LOCK.T);if(f<1){coins(p[0],p[1],r+8*(1-f),Math.floor(S.t*10)%2?'#ffe080':'#ffb040');}
       else{coins(p[0],p[1],r,'#e2682e',2);if(Math.floor(S.t*6)%2){ox.font='bold 7px monospace';ox.fillStyle='#1a1c22';ox.fillText('LOCK',Math.round(p[0]-9),Math.round(p[1]-r-3));ox.fillStyle='#ffe080';ox.fillText('LOCK',Math.round(p[0]-10),Math.round(p[1]-r-4));}}}
     else coins(p[0],p[1],r,e.g.position.clone().sub(S.p).angleTo(fwd)<.06?'#e2682e':'rgba(230,238,246,.75)');}
