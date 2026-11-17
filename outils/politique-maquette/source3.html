@@ -139,7 +139,7 @@ function chemin(C, a, b, cout){ // plus court chemin sur la terre (file de prior
   const r = []; let p = b; while (p){ r.unshift(p); p = prec.get(k(p[0], p[1])); } return r[0] && r[0][0] === a[0] && r[0][1] === a[1] ? r : []; }
 
 // ---------- le continent ----------
-const MONDE = nouvelleCarte(37, 38);
+const MONDE = nouvelleCarte(37, 38), RAYON_JOUEUR = 5;
 (function(){ const C = MONDE, blobs = [[18, 19, 13, 15], [9, 9, 6, 6], [27, 11, 6, 7], [8, 26, 6, 6], [28, 28, 6, 7], [17, 33, 6, 4], [18, 4, 5, 3.5]];
   for (let y = 0; y < C.H; y++) for (let x = 0; x < C.W; x++){ let f = -9;
     for (const [cx, cy, rx, ry] of blobs) f = Math.max(f, 1 - ((x - cx) / rx) ** 2 - ((y - cy) / ry) ** 2);
@@ -147,7 +147,9 @@ const MONDE = nouvelleCarte(37, 38);
     if (((x - 1.5) / 3) ** 2 + ((y - 17) / 4) ** 2 < 1 || ((x - 35) / 3) ** 2 + ((y - 19) / 3) ** 2 < 1) f = -1;
     C.terre[y][x] = f > 0.1 && x > 1 && y > 1 && x < C.W - 2 && y < C.H - 2; }
   for (let y = 0; y < C.H; y++) for (let x = 0; x < C.W; x++){ if (!C.terre[y][x]) continue; let best = null, bd = 1e9;
-    for (const id in NATIONS){ const [gx, gy] = NATIONS[id].graine; const d = Math.hypot(x - gx, y - gy) + 2.4 * (bruit(x / 3, y / 3, 7) - 0.5) - (id === "joueur" ? 0.8 : 0); if (d < bd){ bd = d; best = id; } }
+    for (const id in NATIONS){ const [gx, gy] = NATIONS[id].graine; const d0 = Math.hypot(x - gx, y - gy) + 2.4 * (bruit(x / 3, y / 3, 7) - 0.5);
+      // 17/11 : le pays du joueur limité à un rayon d'environ 4,5 cases (il prenait 171 cases, la carte du pays était trop grande)
+      const d = id === "joueur" && d0 > RAYON_JOUEUR ? 1e8 : d0; if (d < bd){ bd = d; best = id; } }
     C.nation[y][x] = best; }
   for (const id in NATIONS) if (id !== "joueur"){ C.routes[id] = chemin(C, NATIONS.joueur.graine, NATIONS[id].graine); C.routes[id].forEach(([x, y]) => C.route[y][x] = true); }
   // villes : château au centre, maisons autour
@@ -169,11 +171,11 @@ function placeMaisons(C){
 }
 
 // ---------- la carte de la nation : le même pays, trois fois plus détaillé, voisins aux bords ----------
-const K = 3;
+const K = 2; // 17/11 : 3 donnait une carte trop grande
 const PAYS = (function(){
   let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
   for (let y = 0; y < MONDE.H; y++) for (let x = 0; x < MONDE.W; x++) if (MONDE.nation[y][x] === "joueur"){ x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
-  x0 -= 1; y0 -= 1; x1 += 1; y1 += 1;
+  x0 -= 7; y0 -= 7; x1 += 7; y1 += 7; // de la marge : les voisins remplissent l'écran autour du pays
   const C = nouvelleCarte((x1 - x0 + 1) * K, (y1 - y0 + 1) * K); C.origine = [x0, y0];
   for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++){
     // on lit le continent avec un léger tremblement, pour des côtes et des frontières moins carrées
@@ -187,7 +189,7 @@ const PAYS = (function(){
   C.objet[cy][cx] = { t: "chateau", id: "joueur" };
   // routes : de la capitale vers chaque région et vers les frontières où passent les charrettes
   const vers = [];
-  for (const r in REGIONS){ const R = REGIONS[r], ax = cx + R.dx * 6, ay = cy + R.dy * 6; let best = null, bd = 1e9;
+  for (const r in REGIONS){ const R = REGIONS[r], ax = cx + R.dx * 2 * K, ay = cy + R.dy * 2 * K; let best = null, bd = 1e9;
     for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++) if (C.region[v][u] === r){ const d = Math.hypot(u - ax, v - ay); if (d < bd){ bd = d; best = [u, v]; } }
     R.centre = best; vers.push(best); }
   C.sorties = {};
@@ -468,6 +470,11 @@ function maj(){ document.getElementById("tour").textContent = `Tour ${tour}/40`;
 function change(C){ carte = C; fermeFiche();
   const [x, y] = C === MONDE ? NATIONS.joueur.graine : PAYS.capitale, [X, Y] = isoXY(x, y);
   cam = { x: X, y: Y + 30, z: C === MONDE ? 0.5 : 0.75 };
+  if (C === PAYS){ // le pays entier à l'écran
+    let a = 1e9, b = -1e9, c = 1e9, d = -1e9;
+    for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++) if (C.nation[v][u] === "joueur"){ const [X2, Y2] = isoXY(u, v); a = Math.min(a, X2); b = Math.max(b, X2); c = Math.min(c, Y2); d = Math.max(d, Y2); }
+    const rr = cv.getBoundingClientRect(); cam.z = Math.max(0.3, Math.min(1.2, rr.width / (b - a + 80), (rr.height - 230) / (d - c + 80)));
+    cam.x = (a + b) / 2; cam.y = (c + d) / 2 + 16 + 20 / cam.z; }
   document.getElementById("titre").textContent = C === MONDE ? "Le continent" : "Notre pays — 4 régions";
   document.getElementById("construire").hidden = C === MONDE; document.getElementById("retour").hidden = C === MONDE; document.getElementById("versPays").hidden = C !== MONDE; }
 document.getElementById("retour").onclick = () => change(MONDE);
