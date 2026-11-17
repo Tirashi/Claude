@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Politique — carte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--fond:#14161f;--texte:#f1e9d2}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--fond:#e7e2d6;--texte:#24201b}}
+:root[data-theme="dark"]{--fond:#14161f;--texte:#f1e9d2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font-family:'Pixelify Sans',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 0 24px;min-height:100vh}
+.tel{position:relative;width:390px;max-width:100vw;height:844px;max-height:calc(100vh - 70px);border-radius:28px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5);touch-action:none;user-select:none;-webkit-user-select:none;background:#1b3558}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+.hud{position:absolute;left:0;right:0;pointer-events:none}
+.hud *{pointer-events:auto}
+.haut{top:0;padding:10px 10px 0;display:flex;flex-direction:column;gap:6px}
+.panneau{background:#232634;color:#f1e9d2;border:3px solid #0c0d13;box-shadow:inset 0 0 0 2px #4a4f66, 0 3px 0 rgba(0,0,0,.35);border-radius:6px}
+.barre{display:flex;align-items:center;gap:8px;padding:7px 10px}
+.barre b{font-size:15px}
+.or{margin-left:auto}
+.puce{font-size:13px;padding:2px 7px;border-radius:4px;background:#e8b84a;color:#2a1d0e;font-weight:700}
+.factions{display:flex;height:8px;border-radius:2px;overflow:hidden;flex:1;min-width:50px;border:1px solid #0c0d13}
+.factions span{display:block;height:100%}
+.titre{padding:6px 10px;display:flex;align-items:center;gap:8px;font-size:15px}
+.titre .btn{min-height:36px;padding:0 10px;font-size:13px}
+button.btn{font:700 14px 'Pixelify Sans',sans-serif;min-height:44px;border-radius:6px;cursor:pointer;background:#f1e9d2;color:#24201b;border:3px solid #0c0d13;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+button.btn:disabled{opacity:.55}
+.bas{bottom:0;padding:0 10px 12px;display:flex;flex-direction:column;gap:8px}
+.fiche{padding:12px;display:none;flex-direction:column;gap:8px;max-height:44vh;overflow:auto}
+.fiche.ouverte{display:flex}
+.fiche h2{margin:0;font-size:20px}
+.fiche p{margin:0;font-size:14px;line-height:1.35}
+.fiche .actions{display:flex;gap:8px}
+.fiche .actions .btn{flex:1}
+.actions-bas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 1.5fr;gap:6px}
+.btn.fin{background:#3d7be0;color:#fff}
+.zoom{position:absolute;right:10px;top:112px;display:flex;flex-direction:column;gap:6px}
+.zoom .btn{width:44px;height:44px;font-size:20px;padding:0}
+.toast{position:absolute;left:50%;top:116px;transform:translateX(-50%);padding:8px 12px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:290px;text-align:center}
+.toast.vue{opacity:1}
+.legende{font-size:13px;max-width:390px;padding:0 16px;text-align:center;opacity:.85}
+</style>
+</head>
+<body>
+<div class="tel" id="tel">
+  <canvas id="c" aria-label="Carte du jeu"></canvas>
+  <div class="hud haut">
+    <div class="barre panneau">
+      <b id="tour">Tour 12/40</b>
+      <span class="puce">Autorité 1/3</span>
+      <div class="factions" aria-label="Puissance des cinq factions" id="factions"></div>
+      <b class="or" id="or">486 or</b>
+    </div>
+    <div class="titre panneau"><span id="titre">Le continent</span><span style="margin-left:auto"></span><button class="btn" id="retour" hidden>◀ Continent</button><button class="btn" id="versPays">Mon pays ▶</button></div>
+  </div>
+  <div class="zoom"><button class="btn" id="zPlus" aria-label="Rapprocher">+</button><button class="btn" id="zMoins" aria-label="Éloigner">−</button></div>
+  <div class="toast panneau" id="toast" role="status"></div>
+  <div class="hud bas">
+    <div class="fiche panneau" id="fiche"></div>
+    <div class="actions-bas">
+      <button class="btn">Lois</button><button class="btn">Budget</button><button class="btn">Armée</button><button class="btn">Journal</button>
+      <button class="btn fin" id="fin">Tour suivant</button>
+    </div>
+  </div>
+</div>
+<p class="legende">Deux cartes : le continent, puis la carte de votre nation (même forme de pays, voisins aux bords). Touchez une nation (« Signer un contrat » fait partir une charrette) ou une région (« Construire »). « Tour suivant » finit les chantiers et fait grandir la capitale.</p>
+<script>
+"use strict";
+// ======================= la partie (d'après le moteur) =======================
+const NATIONS = {
+  joueur:      { nom: "Notre pays",  graine: [18, 20], coul: "#3d7be0", rel: null },
+  val_roc:     { nom: "Val-Roc",     graine: [27, 11], coul: "#d24a3c", rel: 12, dist: 1, vend: "fer, charbon", achete: "grain, tissu, vin" },
+  contreforts: { nom: "Contreforts", graine: [8, 25],  coul: "#9a5ac8", rel: 20, dist: 1, vend: "outils, bois", achete: "grain, charbon" },
+  brume:       { nom: "Brume",       graine: [9, 9],   coul: "#e3b23c", rel: 38, dist: 2, vend: "tissu, vin", achete: "fer, grain, bois", traite: "Entente des Ports" },
+  hautefage:   { nom: "Hautefage",   graine: [28, 28], coul: "#55596b", rel: 5,  dist: 2, vend: "bois, fer", achete: "charbon, grain" },
+  aurele:      { nom: "Aurèle",      graine: [18, 4],  coul: "#e07a2c", rel: -4, dist: 3, vend: "grain, vin", achete: "outils, fer, tissu" },
+  port_salin:  { nom: "Port-Salin",  graine: [17, 33], coul: "#2f9e8f", rel: -8, dist: 3, vend: "tissu, outils", achete: "bois, vin, charbon" }
+};
+const FACTIONS = [["#B23A2E", 27], ["#C98A1B", 36], ["#3E8E7E", 31], ["#2F5D9E", 41], ["#5B3B6E", 33]];
+const REGIONS = {
+  plaine:   { nom: "Plaine du Nord", bat: ["ferme", "moulin", "vignoble", "ferme"], dx: -1, dy: -1 },
+  collines: { nom: "Collines",       bat: ["mine", "+mine", null], dx: 1, dy: -1 },
+  vallee:   { nom: "Vallée",         bat: ["ferme", "ferme", "scierie", null], dx: -1, dy: 1 },
+  bourg:    { nom: "Bourg",          bat: ["caserne", "atelier", "atelier", "tissage", null], dx: 1, dy: 1 }
+};
+const NOMS_BAT = { ferme: "Ferme", moulin: "Ferme", vignoble: "Vignoble", mine: "Mine", scierie: "Scierie", caserne: "Caserne", atelier: "Atelier", tissage: "Tissage" };
+let tour = 12, or = 486, tailleCapitale = 3;
+const taillesVilles = { val_roc: 4, contreforts: 2, brume: 4, hautefage: 3, aurele: 3, port_salin: 4 };
+
+// ======================= hasard à graine =======================
+function hache(x, y, s){ let h = (x * 374761393 + y * 668265263 + (s || 0) * 982451653) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function bruit(x, y, s){ const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, l = t => t * t * (3 - 2 * t);
+  const a = hache(xi, yi, s), b = hache(xi + 1, yi, s), c = hache(xi, yi + 1, s), d = hache(xi + 1, yi + 1, s);
+  return a + (b - a) * l(fx) + (c - a) * l(fy) + (a - b - c + d) * l(fx) * l(fy); }
+
+// ======================= une carte = une grille de cases =======================
+function nouvelleCarte(W, H){ const m = (v) => Array.from({ length: H }, () => Array(W).fill(v));
+  return { W, H, terre: m(false), nation: m(null), foret: m(null), montagne: m(false), route: m(false), champ: m(false), objet: m(null), region: m(null), routes: {} }; }
+const dans = (C, x, y) => x >= 0 && y >= 0 && x < C.W && y < C.H;
+const terre = (C, x, y) => dans(C, x, y) && C.terre[y][x];
+function chemin(C, a, b, cout){ // plus court chemin sur la terre (file de priorité simple)
+  const k = (x, y) => y * C.W + x, dist = new Map([[k(a[0], a[1]), 0]]), prec = new Map([[k(a[0], a[1]), null]]), file = [[0, a[0], a[1]]];
+  while (file.length){ file.sort((p, q) => p[0] - q[0]); const [d0, x, y] = file.shift(); if (x === b[0] && y === b[1]) break;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const nx = x + dx, ny = y + dy; if (!terre(C, nx, ny)) continue;
+      const nd = d0 + (cout ? cout(nx, ny) : 1); if (nd < (dist.get(k(nx, ny)) ?? 1e9)){ dist.set(k(nx, ny), nd); prec.set(k(nx, ny), [x, y]); file.push([nd, nx, ny]); } } }
+  const r = []; let p = b; while (p){ r.unshift(p); p = prec.get(k(p[0], p[1])); } return r[0] && r[0][0] === a[0] && r[0][1] === a[1] ? r : []; }
+
+// ---------- le continent ----------
+const MONDE = nouvelleCarte(37, 38);
+(function(){ const C = MONDE, blobs = [[18, 19, 13, 15], [9, 9, 6, 6], [27, 11, 6, 7], [8, 26, 6, 6], [28, 28, 6, 7], [17, 33, 6, 4], [18, 4, 5, 3.5]];
+  for (let y = 0; y < C.H; y++) for (let x = 0; x < C.W; x++){ let f = -9;
+    for (const [cx, cy, rx, ry] of blobs) f = Math.max(f, 1 - ((x - cx) / rx) ** 2 - ((y - cy) / ry) ** 2);
+    f += 0.5 * (bruit(x / 3.5, y / 3.5, 3) - 0.5);
+    if (((x - 1.5) / 3) ** 2 + ((y - 17) / 4) ** 2 < 1 || ((x - 35) / 3) ** 2 + ((y - 19) / 3) ** 2 < 1) f = -1;
+    C.terre[y][x] = f > 0.1 && x > 1 && y > 1 && x < C.W - 2 && y < C.H - 2; }
+  for (let y = 0; y < C.H; y++) for (let x = 0; x < C.W; x++){ if (!C.terre[y][x]) continue; let best = null, bd = 1e9;
+    for (const id in NATIONS){ const [gx, gy] = NATIONS[id].graine; const d = Math.hypot(x - gx, y - gy) + 2.4 * (bruit(x / 3, y / 3, 7) - 0.5) - (id === "joueur" ? 0.8 : 0); if (d < bd){ bd = d; best = id; } }
+    C.nation[y][x] = best; }
+  for (const id in NATIONS) if (id !== "joueur"){ C.routes[id] = chemin(C, NATIONS.joueur.graine, NATIONS[id].graine); C.routes[id].forEach(([x, y]) => C.route[y][x] = true); }
+  // villes : château au centre, maisons autour
+  for (const id in NATIONS){ const [x, y] = NATIONS[id].graine; C.objet[y][x] = { t: "chateau", id }; C.route[y][x] = false; }
+  placeMaisons(C);
+  for (let y = 0; y < C.H; y++) for (let x = 0; x < C.W; x++){ if (!C.terre[y][x] || C.route[y][x] || C.objet[y][x] || pres(C, x, y, 2)) continue;
+    const id = C.nation[y][x], m = bruit(x / 2.6, y / 2.6, 23), f = bruit(x / 3.2, y / 3.2, 11);
+    if ((id === "val_roc" || id === "hautefage" || id === "contreforts") && m > 0.64) C.montagne[y][x] = true;
+    else if (f > 0.52) C.foret[y][x] = id === "aurele" || id === "val_roc" ? 12 : 11; }
+})();
+function pres(C, x, y, r){ for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++){ const o = dans(C, x + dx, y + dy) && C.objet[y + dy][x + dx]; if (o && o.t === "chateau") return true; } return false; }
+function placeMaisons(C){
+  for (let y = 0; y < C.H; y++) for (let x = 0; x < C.W; x++){ const o = C.objet[y][x]; if (o && o.t === "maison") C.objet[y][x] = null; }
+  for (const id in NATIONS){ const [gx, gy] = C === MONDE ? NATIONS[id].graine : C.capitale; if (C !== MONDE && id !== "joueur") continue;
+    const n = id === "joueur" ? tailleCapitale + (C === MONDE ? 0 : 2) : taillesVilles[id];
+    const cases = [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1], [2, 0], [0, 2], [-2, 0], [0, -2]];
+    let k = 0; for (const [dx, dy] of cases){ if (k >= n) break; const x = gx + dx, y = gy + dy;
+      if (!terre(C, x, y) || C.route[y][x] || C.objet[y][x]) continue; C.objet[y][x] = { t: "maison", v: k }; C.foret[y][x] = null; C.montagne[y][x] = false; k++; } }
+}
+
+// ---------- la carte de la nation : le même pays, trois fois plus détaillé, voisins aux bords ----------
+const K = 3;
+const PAYS = (function(){
+  let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+  for (let y = 0; y < MONDE.H; y++) for (let x = 0; x < MONDE.W; x++) if (MONDE.nation[y][x] === "joueur"){ x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  x0 -= 1; y0 -= 1; x1 += 1; y1 += 1;
+  const C = nouvelleCarte((x1 - x0 + 1) * K, (y1 - y0 + 1) * K); C.origine = [x0, y0];
+  for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++){
+    // on lit le continent avec un léger tremblement, pour des côtes et des frontières moins carrées
+    const fx = x0 + (u + 0.5) / K + 0.55 * (bruit(u / 2.5, v / 2.5, 51) - 0.5), fy = y0 + (v + 0.5) / K + 0.55 * (bruit(u / 2.5, v / 2.5, 52) - 0.5);
+    const mx = Math.floor(fx), my = Math.floor(fy);
+    C.terre[v][u] = terre(MONDE, mx, my); C.nation[v][u] = C.terre[v][u] ? MONDE.nation[my][mx] : null; }
+  const [gx, gy] = NATIONS.joueur.graine; C.capitale = [(gx - x0) * K + 1, (gy - y0) * K + 1];
+  const [cx, cy] = C.capitale;
+  // régions : quatre quarts autour de la capitale
+  for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++) if (C.nation[v][u] === "joueur") C.region[v][u] = u < cx ? (v < cy ? "plaine" : "vallee") : (v < cy ? "collines" : "bourg");
+  C.objet[cy][cx] = { t: "chateau", id: "joueur" };
+  // routes : de la capitale vers chaque région et vers les frontières où passent les charrettes
+  const vers = [];
+  for (const r in REGIONS){ const R = REGIONS[r], ax = cx + R.dx * 6, ay = cy + R.dy * 6; let best = null, bd = 1e9;
+    for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++) if (C.region[v][u] === r){ const d = Math.hypot(u - ax, v - ay); if (d < bd){ bd = d; best = [u, v]; } }
+    R.centre = best; vers.push(best); }
+  C.sorties = {};
+  for (const id of ["brume", "val_roc", "contreforts", "hautefage", "aurele", "port_salin"]){
+    const rt = MONDE.routes[id]; const sortie = rt.find(([x, y]) => MONDE.nation[y][x] !== "joueur");
+    if (!sortie) continue; let best = null, bd = 1e9;
+    for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++){ if (C.nation[v][u] !== id) continue; const d = Math.hypot(u - ((sortie[0] - x0) * K + 1), v - ((sortie[1] - y0) * K + 1)); if (d < bd){ bd = d; best = [u, v]; } }
+    if (best){ C.sorties[id] = best; vers.push(best); } }
+  const cout = (u, v) => C.route[v][u] ? 0.3 : (C.nation[v][u] === "joueur" ? 1 : 1.6);
+  for (const b of vers){ const r = chemin(C, C.capitale, b, cout); r.forEach(([u, v]) => { if (!C.objet[v][u]) C.route[v][u] = true; }); }
+  for (const id in C.sorties) C.routes[id] = chemin(C, C.capitale, C.sorties[id], (u, v) => C.route[v][u] ? 0.2 : 3);
+  placeMaisons(C);
+  // emplacements : près du centre de chaque région, espacés, au bord des routes
+  C.lots = {};
+  for (const r in REGIONS){ const [ax, ay] = REGIONS[r].centre, cand = [];
+    for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++) if (C.region[v][u] === r && !C.route[v][u] && !C.objet[v][u]) cand.push([u, v, Math.hypot(u - ax, v - ay)]);
+    cand.sort((a, b) => a[2] - b[2]); C.lots[r] = [];
+    for (const [u, v] of cand){ if (C.lots[r].length >= 6) break; if (C.lots[r].some(([a, b]) => Math.abs(a - u) + Math.abs(b - v) < 2)) continue; C.lots[r].push([u, v]); } }
+  // décor : forêts, montagnes dans les collines, champs autour des fermes
+  const libre = (u, v) => C.terre[v][u] && !C.route[v][u] && !C.objet[v][u] && !Object.values(C.lots).some(l => l.some(([a, b]) => a === u && b === v));
+  for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++){ if (!libre(u, v)) continue;
+    const f = bruit(u / 3.4, v / 3.4, 61), m = bruit(u / 2.5, v / 2.5, 62), reg = C.region[v][u];
+    if ((reg === "collines" || C.nation[v][u] === "val_roc") && m > 0.62) C.montagne[v][u] = true;
+    else if (f > (reg ? 0.6 : 0.5)) C.foret[v][u] = C.nation[v][u] === "val_roc" ? 12 : 11;
+    else if ((reg === "plaine" || reg === "vallee") && bruit(u / 2, v / 2, 63) > 0.62) C.champ[v][u] = true; }
+  return C;
+})();
+const lotDe = (u, v) => { for (const r in PAYS.lots){ const i = PAYS.lots[r].findIndex(([a, b]) => a === u && b === v); if (i >= 0 && i < REGIONS[r].bat.length) return [r, i]; } return null; };
+
+// ======================= dessin isométrique =======================
+const IMG = {};
+const charge = (n, s) => new Promise(ok => { const i = new Image(); i.onload = () => ok(IMG[n] = i); i.src = s; });
+const tel = document.getElementById("tel"), cv = document.getElementById("c"), g = cv.getContext("2d");
+let carte = MONDE, cam = { x: 0, y: 0, z: 0.5 }, choix = null;
+const caravanes = [], fumees = [];
+const isoXY = (x, y) => [(x - y) * 32, (x + y) * 16];
+function dimensionne(){ const r = tel.getBoundingClientRect(), d = window.devicePixelRatio || 1; cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); }
+function cellule(col, lig, X, Y, a){ if (a != null) g.globalAlpha = a; g.drawImage(IMG.iso, col * 64, lig * 64, 64, 64, Math.round(X - 32), Math.round(Y - 24), 64, 64); g.globalAlpha = 1; }
+// routes pavées du pack (rangée 13) : raccords NE 1 (y−1), SE 2 (x+1), SO 4 (y+1), NO 8 (x−1)
+const ROUTE_COL = { 0: 1, 8: 2, 2: 3, 1: 5, 4: 6, 10: 0, 5: 7, 12: 8, 9: 9, 3: 10, 6: 11, 14: 12, 7: 13, 11: 14, 13: 15, 15: 4 };
+// drapeaux recolorés et charrettes détourées
+const chateaux = {}, charrettes = [];
+function prepare(){
+  const base = document.createElement("canvas"); base.width = IMG.iso.width; base.height = IMG.iso.height; const bg = base.getContext("2d"); bg.drawImage(IMG.iso, 0, 0);
+  for (const id in NATIONS){ const hex = NATIONS[id].coul, cr = parseInt(hex.slice(1, 3), 16), cg = parseInt(hex.slice(3, 5), 16), cb = parseInt(hex.slice(5, 7), 16);
+    const c = document.createElement("canvas"); c.width = 1024; c.height = 192; const k = c.getContext("2d"); k.drawImage(base, 0, 128, 1024, 192, 0, 0, 1024, 192);
+    const d = k.getImageData(0, 0, 1024, 192), p = d.data;
+    for (let i = 0; i < p.length; i += 4){ const r = p[i], gg = p[i + 1], b = p[i + 2]; if (r > 120 && gg < 90 && b < 90 && r > gg * 1.8){ const l = r / 210; p[i] = Math.min(255, cr * l); p[i + 1] = Math.min(255, cg * l); p[i + 2] = Math.min(255, cb * l); } }
+    k.putImageData(d, 0, 0); chateaux[id] = c; }
+  // la charrette sans sa case d'herbe : on retire ce qui est identique à la case nue, puis les brins d'herbe
+  const nu = bg.getImageData(5 * 64, 0, 64, 64).data;
+  for (const col of [11, 12, 13]){ const c = document.createElement("canvas"); c.width = c.height = 64; const k = c.getContext("2d");
+    k.drawImage(base, col * 64, 64, 64, 64, 0, 0, 64, 64); const d = k.getImageData(0, 0, 64, 64), p = d.data;
+    for (let i = 0; i < p.length; i += 4){ const diff = Math.abs(p[i] - nu[i]) + Math.abs(p[i + 1] - nu[i + 1]) + Math.abs(p[i + 2] - nu[i + 2]);
+      if (diff < 30 || (p[i + 1] > p[i] + 20 && p[i + 1] > p[i + 2] + 10) || i / 4 >= 64 * 54) p[i + 3] = 0; }
+    k.putImageData(d, 0, 0); charrettes.push(c); }
+}
+function chateau(id, X, Y, rang){ const f = Math.floor(performance.now() / 110) % 14; g.drawImage(chateaux[id], f * 64, rang * 64, 64, 64, Math.round(X - 32), Math.round(Y - 24), 64, 64); }
+function losange(X, Y, r){ g.beginPath(); g.moveTo(X, Y + 16 - r); g.lineTo(X + 2 * r, Y + 16); g.lineTo(X, Y + 16 + r); g.lineTo(X - 2 * r, Y + 16); g.closePath(); }
+
+function frame(){
+  const d = window.devicePixelRatio || 1, C = carte;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.fillStyle = "#1b3558"; g.fillRect(0, 0, cv.width, cv.height);
+  g.setTransform(cam.z * d, 0, 0, cam.z * d, cv.width / 2 - cam.x * cam.z * d, cv.height / 2 - cam.y * cam.z * d);
+  const car = caravanes.map(c => ({ c, p: posCaravane(c) })).filter(o => o.p);
+  const enPays = C === PAYS;
+  for (let s = 0; s < C.W + C.H; s++) for (let x = 0; x < C.W; x++){ const y = s - x; if (y < 0 || y >= C.H) continue;
+    const [X, Y] = isoXY(x, y);
+    if (!C.terre[y][x]){ cellule(9, 17, X, Y + 10); continue; }   // la mer, plus basse que la terre
+    const id = C.nation[y][x], etranger = enPays && id !== "joueur";
+    // le sol
+    if (C.route[y][x]){ const code = (rt(C, x, y - 1) ? 1 : 0) + (rt(C, x + 1, y) ? 2 : 0) + (rt(C, x, y + 1) ? 4 : 0) + (rt(C, x - 1, y) ? 8 : 0); cellule(ROUTE_COL[code], 13, X, Y); }
+    else if (C.foret[y][x]) cellule(1 + Math.floor(hache(x, y, 9) * 14), C.foret[y][x], X, Y);
+    else if (C.montagne[y][x]) cellule(4, 0, X, Y);
+    else if (C.champ[y][x]) cellule(Math.floor(hache(x, y, 4) * 16), 5, X, Y);
+    else cellule(5, 0, X, Y);
+    // ce qui est posé dessus
+    const o = C.objet[y][x];
+    if (o && o.t === "chateau") chateau(o.id, X, Y, o.id === "joueur" || (taillesVilles[o.id] || 3) >= 3 ? 2 : 1);
+    if (o && o.t === "maison") cellule(Math.floor(performance.now() / 120 + o.v * 5) % 16, o.v % 2 ? 16 : 15, X, Y);
+    if (enPays){ const lot = lotDe(x, y); if (lot) dessineLot(lot, X, Y); }
+    // terre étrangère sur la carte du pays : un voile sombre
+    if (etranger){ g.fillStyle = "rgba(10,14,30,.38)"; losange(X, Y, 16); g.fill(); }
+    // frontières : bords colorés du losange
+    const autre = (a, b) => terre(C, a, b) && C.nation[b][a] !== id;
+    g.strokeStyle = NATIONS[id].coul; g.lineWidth = enPays ? 3 : 2; g.beginPath();
+    if (autre(x, y - 1)){ g.moveTo(X, Y + 1); g.lineTo(X + 31, Y + 16); }
+    if (autre(x + 1, y)){ g.moveTo(X + 31, Y + 16); g.lineTo(X, Y + 31); }
+    if (autre(x, y + 1)){ g.moveTo(X, Y + 31); g.lineTo(X - 31, Y + 16); }
+    if (autre(x - 1, y)){ g.moveTo(X - 31, Y + 16); g.lineTo(X, Y + 1); }
+    g.stroke();
+    // les charrettes qui passent ici
+    for (const { c, p } of car) if (Math.round(c.ix) === x && Math.round(c.iy) === y){ const img = charrettes[c.v % 3];
+      g.save(); g.translate(Math.round(p[0]), Math.round(p[1])); if (c.ecranDx > 0) g.scale(-1, 1); g.drawImage(img, -32, -42, 64, 64); g.restore(); }
+  }
+  etiquettes();
+  for (let i = fumees.length - 1; i >= 0; i--){ const f = fumees[i], a = (performance.now() - f.t) / 900; if (a > 1){ fumees.splice(i, 1); continue; }
+    const [X, Y] = isoXY(f.x, f.y); g.globalAlpha = 1 - a; g.fillStyle = "#fff";
+    for (let k = 0; k < 6; k++){ const an = k / 6 * 6.283; g.fillRect(Math.round(X + Math.cos(an) * a * 24) - 3, Math.round(Y + 10 + Math.sin(an) * a * 10 - a * 20) - 3, 6, 6); } g.globalAlpha = 1; }
+  requestAnimationFrame(frame);
+}
+const rt = (C, x, y) => dans(C, x, y) && (C.route[y][x] || (C.objet[y][x] && C.objet[y][x].t === "chateau"));
+function dessineLot([r, i], X, Y){ const b = REGIONS[r].bat[i];
+  if (!b){ g.setLineDash([4, 3]); g.strokeStyle = "#f6efd8"; g.lineWidth = 2; losange(X, Y, 12); g.stroke(); g.setLineDash([]); return; }
+  const ch = b[0] === "+", type = ch ? b.slice(1) : b, a = ch ? 0.45 : 1, t = performance.now();
+  if (type === "ferme") cellule((i * 5) % 16, 5, X, Y, a);
+  else if (type === "moulin") cellule(Math.floor(t / 160) % 4, 1, X, Y, a);
+  else if (type === "vignoble") cellule(4, 1, X, Y, a);
+  else if (type === "mine") cellule(3, 18, X, Y, a);
+  else if (type === "scierie") cellule(0, 0, X, Y, a);
+  else if (type === "caserne") cellule(15, 3, X, Y, a);
+  else if (type === "atelier") cellule(1, 0, X, Y, a);
+  else if (type === "tissage") cellule(13, 17, X, Y, a);
+  if (ch){ g.strokeStyle = "#7a5230"; g.lineWidth = 2; for (const k of [-14, 0, 14]){ g.beginPath(); g.moveTo(X + k, Y + 18); g.lineTo(X + k, Y - 10); g.stroke(); }
+    g.beginPath(); g.moveTo(X - 14, Y + 4); g.lineTo(X + 14, Y + 4); g.moveTo(X - 14, Y - 5); g.lineTo(X + 14, Y - 5); g.stroke(); } }
+
+// ---------- étiquettes ----------
+function etiquette(txt, x, y, fond, encre, fs, actif){
+  g.font = `700 ${fs}px 'Pixelify Sans', sans-serif`; const w = Math.ceil(g.measureText(txt).width + fs * 0.9), h = Math.ceil(fs * 1.45);
+  const x0 = Math.round(x - w / 2), y0 = Math.round(y - h / 2);
+  g.fillStyle = "#0c0d13"; g.fillRect(x0 - 1, y0 - 1, w + 2, h + 2); g.fillStyle = fond; g.fillRect(x0, y0, w, h);
+  g.fillStyle = "rgba(255,255,255,.2)"; g.fillRect(x0, y0, w, Math.max(1, Math.round(h / 6)));
+  if (actif){ g.strokeStyle = "#fff"; g.lineWidth = 2; g.strokeRect(x0 - 3, y0 - 3, w + 6, h + 6); }
+  g.fillStyle = encre; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(txt, x, y + 1); }
+function etiquettes(){
+  const fs = Math.round(12 / cam.z);
+  if (carte === MONDE){
+    for (const id in NATIONS){ const n = NATIONS[id], [x, y] = n.graine, [X, Y] = isoXY(x, y);
+      etiquette(id === "joueur" ? "Notre pays" : n.nom + "  " + (n.rel > 0 ? "+" : "") + n.rel, X, Y - 22 - fs, n.coul, "#fff", fs, choix === id); } }
+  else {
+    for (const r in REGIONS){ const [u, v] = REGIONS[r].centre, [X, Y] = isoXY(u, v), R = REGIONS[r];
+      etiquette(R.nom + "  " + R.bat.filter(b => b && b[0] !== "+").length + "/" + R.bat.length, X, Y - 30, "#232634", "#f1e9d2", fs, choix === r); }
+    for (const id in PAYS.sorties){ const [u, v] = PAYS.sorties[id], [X, Y] = isoXY(u, v), n = NATIONS[id];
+      etiquette(n.nom + " →", X, Y - 14, n.coul, "#fff", Math.round(fs * 0.9), choix === id); }
+    if (cam.z >= 1.1) for (const r in PAYS.lots) REGIONS[r].bat.forEach((b, i) => { if (!b) return; const [u, v] = PAYS.lots[r][i], [X, Y] = isoXY(u, v), ch = b[0] === "+";
+      etiquette(NOMS_BAT[ch ? b.slice(1) : b] + (ch ? " · 1 tour" : ""), X, Y + 30, ch ? "#e8b84a" : "rgba(12,13,19,.8)", ch ? "#24201b" : "#f1e9d2", Math.round(fs * 0.75)); });
+  } }
+
+// ---------- charrettes ----------
+function posCaravane(c){ const r = carte.routes[c.nation]; if (!r || r.length < 2) return null;
+  const n = r.length - 1, u = Math.max(0, Math.min(n, c.i)), a = Math.floor(u), b = Math.min(n, a + 1), f = u - a;
+  c.ix = r[a][0] + (r[b][0] - r[a][0]) * f; c.iy = r[a][1] + (r[b][1] - r[a][1]) * f;
+  const dx = (r[b][0] - r[a][0]) * c.sens, dy = (r[b][1] - r[a][1]) * c.sens; c.ecranDx = dx - dy;
+  const [X, Y] = isoXY(c.ix, c.iy); return [X, Y + 18]; }
+let dernier = performance.now();
+(function bouge(){ const t = performance.now(), dt = (t - dernier) / 1000; dernier = t;
+  for (const c of caravanes){ const r = carte.routes[c.nation]; if (!r) continue; const n = r.length - 1, v = carte === PAYS ? 2.2 : 1.1;
+    c.i += c.sens * dt * v; if (c.i >= n){ c.i = n; c.sens = -1; } if (c.i <= 0){ c.i = 0; c.sens = 1; } }
+  requestAnimationFrame(bouge); })();
+
+// ======================= interactions =======================
+let glisse = null;
+cv.addEventListener("pointerdown", e => { glisse = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, bouge: false }; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener("pointermove", e => { if (!glisse) return; const dx = e.clientX - glisse.x, dy = e.clientY - glisse.y; if (Math.hypot(dx, dy) > 6) glisse.bouge = true; cam.x = glisse.cx - dx / cam.z; cam.y = glisse.cy - dy / cam.z; });
+cv.addEventListener("pointerup", e => { if (glisse && !glisse.bouge) touche(e); glisse = null; });
+cv.addEventListener("wheel", e => { e.preventDefault(); zoom(e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
+document.getElementById("zPlus").onclick = () => zoom(1.3);
+document.getElementById("zMoins").onclick = () => zoom(1 / 1.3);
+function zoom(k){ cam.z = Math.max(0.3, Math.min(2.6, cam.z * k)); }
+function touche(e){ const r = cv.getBoundingClientRect(), wx = (e.clientX - r.left - r.width / 2) / cam.z + cam.x, wy = (e.clientY - r.top - r.height / 2) / cam.z + cam.y;
+  const u = (wy - 16) / 16, v = wx / 32, x = Math.round((u + v) / 2), y = Math.round((u - v) / 2), C = carte;
+  if (!terre(C, x, y)){ fermeFiche(); return; } const id = C.nation[y][x];
+  if (C === PAYS && id === "joueur"){ choix = C.region[y][x]; ficheRegion(choix); } else { choix = id; ficheNation(id); } }
+const fiche = document.getElementById("fiche");
+function fermeFiche(){ fiche.classList.remove("ouverte"); choix = null; }
+function ficheNation(id){ const n = NATIONS[id];
+  if (id === "joueur"){ fiche.innerHTML = `<h2>Notre pays</h2><p>4 régions, 15 bâtiments, 112 familles.</p><div class="actions"><button class="btn" id="voir">Ouvrir la carte de mon pays</button></div>`;
+    fiche.classList.add("ouverte"); document.getElementById("voir").onclick = () => change(PAYS); return; }
+  const actif = caravanes.some(c => c.nation === id);
+  fiche.innerHTML = `<h2>${n.nom}</h2><p>Relation <b>${n.rel > 0 ? "+" : ""}${n.rel}</b> · distance ${"●".repeat(n.dist)}${"○".repeat(3 - n.dist)} · dirigeant au caractère inconnu</p>
+    <p>Vend : ${n.vend}. Achète : ${n.achete}.${n.traite ? " Traité : " + n.traite + "." : ""}</p>
+    <div class="actions"><button class="btn" id="contrat" ${actif ? "disabled" : ""}>${actif ? "Charrette en route" : "Signer un contrat"}</button><button class="btn" id="diplo">Diplomate</button></div>`;
+  fiche.classList.add("ouverte");
+  document.getElementById("contrat").onclick = () => { caravanes.push({ nation: id, i: 0, sens: 1, v: caravanes.length }); n.rel += 5; ficheNation(id); toast(`Contrat signé avec ${n.nom} : une charrette part.`); };
+  document.getElementById("diplo").onclick = () => toast(`Le diplomate part pour ${n.nom}.`); }
+function ficheRegion(r){ const R = REGIONS[r], libre = R.bat.indexOf(null);
+  const liste = R.bat.map(b => b ? (b[0] === "+" ? NOMS_BAT[b.slice(1)] + " (chantier)" : NOMS_BAT[b]) : "emplacement libre").join(", ");
+  fiche.innerHTML = `<h2>${R.nom}</h2><p>${R.bat.filter(b => b && b[0] !== "+").length} bâtis sur ${R.bat.length} : ${liste}.</p>
+    <div class="actions"><button class="btn" id="bat" ${libre < 0 ? "disabled" : ""}>Construire</button><button class="btn" id="def" ${R.bat.length >= PAYS.lots[r].length ? "disabled" : ""}>Défricher</button></div>`;
+  fiche.classList.add("ouverte");
+  document.getElementById("bat").onclick = () => { const t = { plaine: "ferme", collines: "mine", vallee: "scierie", bourg: "atelier" }[r]; R.bat[libre] = "+" + t; or -= 90; maj(); ficheRegion(r); toast(`Chantier : ${NOMS_BAT[t]} (${R.nom}).`); };
+  document.getElementById("def").onclick = () => { R.bat.push(null); ficheRegion(r); toast(`${R.nom} : un emplacement de plus.`); }; }
+let minut = null;
+function toast(t){ const el = document.getElementById("toast"); el.textContent = t; el.classList.add("vue"); clearTimeout(minut); minut = setTimeout(() => el.classList.remove("vue"), 2600); }
+document.getElementById("fin").onclick = () => { tour++; or += 38;
+  for (const r in REGIONS) REGIONS[r].bat.forEach((b, i) => { if (b && b[0] === "+"){ REGIONS[r].bat[i] = b.slice(1); const [u, v] = PAYS.lots[r][i]; if (carte === PAYS) fumees.push({ x: u, y: v, t: performance.now() }); } });
+  tailleCapitale = Math.min(8, tailleCapitale + 1); placeMaisons(MONDE); placeMaisons(PAYS); maj(); if (choix && REGIONS[choix]) ficheRegion(choix);
+  toast(`Tour ${tour} : chantiers finis, la capitale grandit.`); };
+function maj(){ document.getElementById("tour").textContent = `Tour ${tour}/40`; document.getElementById("or").textContent = `${or} or`; }
+function change(C){ carte = C; fermeFiche();
+  const [x, y] = C === MONDE ? NATIONS.joueur.graine : PAYS.capitale, [X, Y] = isoXY(x, y);
+  cam = { x: X, y: Y + 30, z: C === MONDE ? 0.5 : 0.75 };
+  document.getElementById("titre").textContent = C === MONDE ? "Le continent" : "Notre pays — 4 régions";
+  document.getElementById("retour").hidden = C === MONDE; document.getElementById("versPays").hidden = C !== MONDE; }
+document.getElementById("retour").onclick = () => change(MONDE);
+document.getElementById("versPays").onclick = () => change(PAYS);
+document.getElementById("factions").innerHTML = FACTIONS.map(([c, p]) => `<span style="width:${p / 1.68}%;background:${c}"></span>`).join("");
+window.addEventListener("resize", dimensionne);
+charge("iso", "__ISO_PNG__").then(() => { dimensionne(); prepare();
+  caravanes.push({ nation: "brume", i: 2, sens: 1, v: 0 }, { nation: "val_roc", i: 1, sens: 1, v: 1 });
+  change(MONDE); requestAnimationFrame(frame); });
+</script>
+</body>
+</html>
