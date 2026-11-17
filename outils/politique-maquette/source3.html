@@ -213,8 +213,9 @@ const PAYS = (function(){
   for (let v = 0; v < C.H; v++) for (let u = 0; u < C.W; u++){ if (!libre(u, v)) continue;
     const f = bruit(u / 3.4, v / 3.4, 61), m = bruit(u / 2.5, v / 2.5, 62), reg = C.region[v][u];
     if ((reg === "collines" || C.nation[v][u] === "val_roc") && m > 0.62) C.montagne[v][u] = true;
-    else if (f > (reg ? 0.6 : 0.5)) C.foret[v][u] = C.nation[v][u] === "val_roc" ? 12 : 11;
-    else if ((reg === "plaine" || reg === "vallee") && bruit(u / 2, v / 2, 63) > 0.62) C.champ[v][u] = true; }
+    else if (f > (reg ? 0.66 : 0.52)) C.foret[v][u] = C.nation[v][u] === "val_roc" ? 12 : 11;
+    // champs seulement autour des fermes (avant : semés au hasard, ça faisait brouillon)
+    else if (reg && Object.entries(C.lots).some(([r, l]) => l.some(([a, b], i) => REGIONS[r].bat[i] === "farm" && Math.abs(a - u) <= 1 && Math.abs(b - v) <= 1))) C.champ[v][u] = true; }
   return C;
 })();
 // [région, rang] de l'emplacement à cette case ; au-delà du nombre d'emplacements : terrain à défricher
@@ -240,23 +241,31 @@ function prepare(){
     const d = k.getImageData(0, 0, 1024, 192), p = d.data;
     for (let i = 0; i < p.length; i += 4){ const r = p[i], gg = p[i + 1], b = p[i + 2]; if (r > 120 && gg < 90 && b < 90 && r > gg * 1.8){ const l = r / 210; p[i] = Math.min(255, cr * l); p[i + 1] = Math.min(255, cg * l); p[i + 2] = Math.min(255, cb * l); } }
     k.putImageData(d, 0, 0); chateaux[id] = c; }
-  // la charrette sans sa case d'herbe : on retire ce qui est identique à la case nue, puis les brins d'herbe
-  const nu = bg.getImageData(5 * 64, 0, 64, 64).data;
-  // le pack ne dessine la charrette que vers le sud-ouest : on en tire les quatre sens
-  const toile = () => { const c = document.createElement("canvas"); c.width = c.height = 64; return c; };
-  const miroir = (src) => { const c = toile(), k = c.getContext("2d"); k.translate(64, 0); k.scale(-1, 1); k.drawImage(src, 0, 0); return c; };
-  for (const col of [11, 12, 13]){ const c = toile(), k = c.getContext("2d");
-    k.drawImage(base, col * 64, 64, 64, 64, 0, 0, 64, 64); const d = k.getImageData(0, 0, 64, 64), p = d.data;
-    for (let i = 0; i < p.length; i += 4){ const diff = Math.abs(p[i] - nu[i]) + Math.abs(p[i + 1] - nu[i + 1]) + Math.abs(p[i + 2] - nu[i + 2]);
-      if (diff < 30 || (p[i + 1] > p[i] + 20 && p[i + 1] > p[i + 2] + 10) || i / 4 >= 64 * 54) p[i + 3] = 0; }
-    k.putImageData(d, 0, 0);
-    // cheval (en bas à gauche) et caisse (en haut à droite), séparés
-    const cheval = toile(), caisse = toile();
-    cheval.getContext("2d").drawImage(c, 0, 30, 33, 34, 0, 30, 33, 34);
-    const kc = caisse.getContext("2d"); kc.drawImage(c, 0, 0); kc.clearRect(0, 30, 33, 34);
-    // vers le nord-est : la caisse devant (en bas à gauche), le cheval derrière, tourné vers la droite
-    const ne = toile(), kn = ne.getContext("2d"); kn.drawImage(miroir(cheval), 0, -12); kn.drawImage(caisse, -16, 8);
-    charrettes.push({ so: c, se: miroir(c), ne, no: miroir(ne) }); }
+  // charrettes en petits cubes (17/11) : le pack ne les dessine que de face, le cheval était de travers dans les montées.
+  // Modèle : x = vers l'avant, y = largeur, z = hauteur ; rendu isométrique au pixel, dans les quatre sens.
+  const VARIANTES = [{ bache: "#efe6cc", cheval: "#7a5236" }, { bache: "#d9b45a", cheval: "#4e4a5e" }, { bache: "#c9d6e8", cheval: "#9a6a3e" }];
+  for (const V of VARIANTES){
+    const vox = [], box = (x0, x1, y0, y1, z0, z1, c) => { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) for (let z = z0; z <= z1; z++) vox.push([x, y, z, c]); };
+    box(0, 7, 0, 3, 1, 1, "#7a4a2a");            // plancher
+    box(0, 7, 0, 0, 2, 2, "#8a5630"); box(0, 7, 3, 3, 2, 2, "#8a5630"); box(0, 0, 0, 3, 2, 2, "#8a5630"); // ridelles
+    box(1, 6, 0, 3, 3, 3, V.bache); box(1, 6, 1, 2, 4, 4, V.bache);  // bâche en arc
+    for (const x of [1, 6]) for (const y of [-1, 4]) box(x, x, y, y, 0, 1, "#2e2622");  // roues
+    box(8, 9, 1, 1, 1, 1, "#5a3a20"); box(8, 9, 2, 2, 1, 1, "#5a3a20");            // brancards
+    box(10, 13, 1, 2, 2, 3, V.cheval);                                              // corps du cheval
+    box(10, 10, 1, 2, 0, 1, V.cheval); box(13, 13, 1, 2, 0, 1, V.cheval);           // pattes
+    box(14, 15, 1, 2, 3, 4, V.cheval); box(15, 16, 1, 2, 5, 5, V.cheval); box(14, 14, 1, 2, 5, 5, "#3a2a20"); // tête et crinière
+    const rot = { se: (x, y) => [x, y], so: (x, y) => [-y, x], no: (x, y) => [-x, -y], ne: (x, y) => [y, -x] };
+    const teinte = (hex, k) => "#" + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, "0")).join("");
+    const jeu = {};
+    for (const d in rot){ const c = document.createElement("canvas"); c.width = c.height = 64; const k = c.getContext("2d");
+      const w = vox.map(([x, y, z, col]) => { const [X, Y] = rot[d](x - 7.5, y - 1.5); return [X, Y, z, col]; });
+      w.sort((a, b) => (a[0] + a[1]) - (b[0] + b[1]) || a[2] - b[2]);
+      for (const [X, Y, Z, col] of w){ const sx = Math.round(32 + (X - Y) * 2 - 2), sy = Math.round(40 + (X + Y) - Z * 2 - 2);
+        k.fillStyle = col; k.fillRect(sx + 1, sy, 2, 1); k.fillRect(sx, sy + 1, 4, 1);          // dessus
+        k.fillStyle = teinte(col, 0.78); k.fillRect(sx, sy + 2, 2, 2);                          // face gauche
+        k.fillStyle = teinte(col, 0.6); k.fillRect(sx + 2, sy + 2, 2, 2); }                     // face droite
+      jeu[d] = c; }
+    charrettes.push(jeu); }
   // icônes des bâtiments pour le menu de construction
   for (const id in BATS){ const [col, lig] = BATS[id].icone, c = document.createElement("canvas"); c.width = c.height = 64;
     c.getContext("2d").drawImage(base, col * 64, lig * 64, 64, 64, 0, 0, 64, 64); BATS[id].url = c.toDataURL(); }
@@ -285,7 +294,7 @@ function frame(){
     if (o && o.t === "chateau") chateau(o.id, X, Y, o.id === "joueur" || (taillesVilles[o.id] || 3) >= 3 ? 2 : 1);
     if (o && o.t === "maison") cellule(Math.floor(performance.now() / 120 + o.v * 5) % 16, o.v % 2 ? 16 : 15, X, Y);
     // terre étrangère sur la carte du pays : un voile sombre ; la région choisie : un voile clair
-    if (etranger){ g.fillStyle = "rgba(10,14,30,.38)"; losange(X, Y, 16); g.fill(); }
+    if (etranger){ g.fillStyle = "rgba(10,14,30,.5)"; losange(X, Y, 16); g.fill(); }
     const reg = enPays && C.region[y][x];
     if (reg && REGIONS[choix] && reg !== choix && !aConstruire){ g.fillStyle = "rgba(10,14,30,.45)"; losange(X, Y, 16); g.fill(); }
     if (enPays){ const lot = lotDe(x, y, true); if (lot) dessineLot(lot, X, Y); }
