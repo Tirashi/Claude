@@ -142,7 +142,8 @@ const tr=[trainee(),trainee()];
 // ennemis
 const ennemis=[];
 function ennemi(pos,dir){const g=new THREE.Group();const m=chasseur({corps:'#9a958a',aile:'#d1bd7e',accent:'#e2682e',verriere:'#1a1c22'});m.rotation.y=Math.PI;g.add(m);versCalque(g);sc.add(g);g.position.copy(pos);
-  const e={g,ph:Math.random()*6,r:18+Math.random()*28,vie:3,etat:'arrivee',v:dir.clone().multiplyScalar(58),t:0,tirT:2+Math.random()*2};ennemis.push(e);return e;}
+  const as=V.n>=4&&Math.random()<.3;if(as)m.traverse(o=>{if(o.material&&o.material.color&&o.material.color.getHexString()==='e2682e')o.material.color.set('#c8402e');});
+  const roles=['tournoi','tournoi','chasse','passe'];const e={g,as,ph:Math.random()*6,r:18+Math.random()*28,vie:as?5:3,etat:'arrivee',role:roles[Math.random()*roles.length|0],v:dir.clone().multiplyScalar(58),t:0,tirT:2+Math.random()*2,vise:0,jink:null};ennemis.push(e);return e;}
 const tirsEnnemis=[];
 const eclats=[],balles=[],missiles=[];
 const boom=(p,n=18,c=['#ffe066','#ff8a2a','#ff4a2a','#555555'])=>{for(let i=0;i<n;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.9,.9,.9),new THREE.MeshBasicMaterial({color:c[i%c.length],fog:false}));s.position.copy(p);const v=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(6+Math.random()*14);sc.add(s);eclats.push({s,v,t:.6+Math.random()*.7});}};
@@ -168,8 +169,8 @@ function placerSprite(Qs,fwd){const ndc=S.p.clone().project(cam);const px=Math.r
     f.material.color.set(Math.random()<.6?'#ffe080':'#ffb040');f.position.set(fx/LW*2-1,(fy-(l-2)/2)/LH*2-1,0);});}
 el.querySelector('.charge').remove();
 // pilotage
-const S={blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
-const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');
+const S={dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
+const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.Escadrille={S,get ennemis(){return ennemis;}};/* pour les tests */
 const tonneau=()=>{if(S.rollT<0){S.rollT=0;S.rollD=S.bank>0?-1:1;}};
 const joy=document.getElementById('joy'),bille=joy.firstElementChild,RJ=46;const manuel=(ms=4000)=>{S.auto=false;clearTimeout(S.to);S.to=setTimeout(()=>{S.auto=true;S.tir=false;},ms);};
 el.addEventListener('pointerdown',e=>{if(e.target.closest('button')||S.doigt)return;const r=el.getBoundingClientRect();S.doigt={id:e.pointerId,x:e.clientX,y:e.clientY};S.dx=S.dy=0;manuel(1e9);
@@ -186,10 +187,18 @@ bouton('bMis',d=>{if(!d||S.munM<=0)return;S.munM--;const c=LOCK.e&&LOCK.t>=LOCK.
 let av=performance.now(),vu=false;new IntersectionObserver(es=>vu=es[0].isIntersecting).observe(el);setTimeout(()=>band.style.opacity=0,4500);
 // les vagues : une formation en V arrive de face, fonce sur le joueur, puis se disperse pour le combat
 const V={n:0,pause:4,flash:0};const annonce=(h)=>{band.innerHTML=h;band.style.opacity=1;clearTimeout(V.to);V.to=setTimeout(()=>band.style.opacity=0,2600);};
-function vague(){V.n++;const nb=Math.min(11,1+V.n*2);const f=new THREE.Vector3(S.fwd?S.fwd.x:0,0,S.fwd?S.fwd.z:-1).normalize();const cote=new THREE.Vector3(-f.z,0,f.x);
-  const tete=S.p.clone().addScaledVector(f,300).addScaledVector(cote,(Math.random()-.5)*80);tete.y=Math.max(S.p.y,30);
-  for(let k=0;k<nb;k++){const rang=Math.ceil(k/2),s2=k%2?1:-1;const p=tete.clone().addScaledVector(cote,s2*rang*9).addScaledVector(f,rang*10);ennemi(p,f.clone().negate());}
-  annonce(`VAGUE ${V.n}<b>${nb} CHASSEURS</b>Ils arrivent de face.`);}
+const MOTIFS=[{nom:'DE FACE',ang:[0]},{nom:'PAR DERRIERE !',ang:[Math.PI]},{nom:'SUR LES FLANCS',ang:[Math.PI/2,-Math.PI/2]},
+  {nom:'PAR LE DESSUS',ang:[.35,-.35],dy:70},{nom:'ENCERCLES !',ang:[0,Math.PI*2/3,-Math.PI*2/3]},{nom:'EN DEUX TEMPS',ang:[0,Math.PI],decale:6}];
+V.file=[];
+function vague(){V.n++;const nb=Math.min(12,1+V.n*2);const m=V.n===1?MOTIFS[0]:V.n===2?MOTIFS[2]:MOTIFS[Math.random()*MOTIFS.length|0];const G=m.ang.length;
+  for(let g=0;g<G;g++){const a=S.yaw+m.ang[g]+(Math.random()-.5)*.5;const dir=new THREE.Vector3(-Math.sin(a),0,-Math.cos(a));const cote=new THREE.Vector3(-dir.z,0,dir.x);
+    const tete=S.p.clone().addScaledVector(dir,270);tete.y=Math.max(28,S.p.y+(m.dy||0)+(Math.random()-.5)*20);const n=Math.ceil(nb/G)-(g===G-1?Math.ceil(nb/G)*G-nb:0);
+    const forme=['V','ligne','disperse'][Math.random()*3|0];const vers=S.p.clone().sub(tete).normalize();
+    for(let k=0;k<n;k++){const rang=Math.ceil(k/2),s2=k%2?1:-1;let o;
+      if(forme==='V')o=cote.clone().multiplyScalar(s2*rang*9).addScaledVector(dir,rang*10);else if(forme==='ligne')o=cote.clone().multiplyScalar((k-(n-1)/2)*10);
+      else o=new THREE.Vector3((Math.random()-.5)*60,(Math.random()-.5)*20,(Math.random()-.5)*60);
+      V.file.push({t:(m.decale||0)*g+g*1.2,p:tete.clone().add(o),v:vers.clone()});}}
+  annonce(`VAGUE ${V.n}<b>${nb} CHASSEURS</b>${m.nom}`);}
 function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(image);if(!vu&&!window.TOUT_VOIR)return;S.t+=dt;
   // commandes : virage et tangage
   let tyaw,tp;if(S.auto){const c=ennemis.filter(e=>e.vie>0).sort((a,b)=>a.g.position.distanceTo(S.p)-b.g.position.distanceTo(S.p))[0];
@@ -197,8 +206,9 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
       S.tir=Math.abs(da)<.3&&d.length()<170;}else{tyaw=Math.sin(S.t*.35)*.6;tp=(40-S.p.y)*.02;S.tir=false;}
     if(S.p.y<14)tp=.5;if(S.t%11<dt&&S.t>3)tonneau();}
   else{tyaw=-S.dx*Math.abs(S.dx)*1;tp=-S.dy*.9;/* joystick vers le haut : l'avion monte ; vers le bas : il descend */}
+  if(S.loopT>=0)tyaw=0;/* pendant le looping, le joystick ne fait pas virer */
   S.vyaw=(S.vyaw||0)+(tyaw-(S.vyaw||0))*Math.min(1,dt*3);S.yaw+=S.vyaw*dt;S.bank+=((S.vyaw*1.1)-S.bank)*Math.min(1,dt*3);
-  if(S.loopT>=0){S.loopT+=dt/2.6;S.pitch+=Math.PI*2*dt/2.6;if(S.loopT>=1){S.loopT=-1;S.pitch=Math.round(S.pitch/(Math.PI*2))*Math.PI*2;}}
+  if(S.loopT>=0){S.loopT+=dt/2.6;S.pitch+=Math.PI*2*dt/2.6;if(S.loopT>=1){S.loopT=-1;S.pitch-=Math.round(S.pitch/(Math.PI*2))*Math.PI*2;/* un tour complet = 0 : sinon l'avion « déroule » la boucle à l'envers */}}
   else{S.pitch+=(Math.max(-.85,Math.min(.85,tp))-S.pitch)*Math.min(1,dt*1.7);}
   if(S.rollT>=0){S.rollT+=dt/.8;S.roll=(S.rollT<1?(1-Math.cos(S.rollT*Math.PI))/2:1)*Math.PI*2*S.rollD;if(S.rollT>=1){S.rollT=-1;S.roll=0;}}
   E.set(S.pitch,S.yaw,S.bank+S.roll);Q.setFromEuler(E);nav.quaternion.copy(Q);
@@ -220,13 +230,23 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   for(let i=eclats.length-1;i>=0;i--)if(eclats[i].t<=0){sc.remove(eclats[i].s);eclats.splice(i,1);}
   // ennemis : arrivée en formation, puis combat tournoyant devant le joueur ; ils tirent
   for(let k=ennemis.length-1;k>=0;k--)if(ennemis[k].vie<=0)ennemis.splice(k,1);
-  if(!ennemis.length){V.pause-=dt;if(V.pause<=0){V.pause=4;vague();}else if(V.n&&!V.fin){V.fin=1;annonce(`VAGUE ${V.n} TERMINEE<b>+${V.n*500}</b>Prochaine vague…`);S.score+=V.n*500;S.blindage=Math.min(100,S.blindage+30);}}else V.fin=0;
-  for(const e of ennemis){e.t+=dt;e.ph+=dt*.5;let cible;
-    if(e.etat==='arrivee'){cible=e.g.position.clone().addScaledVector(e.v,1);if(e.t>3.2||e.g.position.distanceTo(S.p)<45)e.etat='combat';}
-    else{const c=S.p.clone().addScaledVector(new THREE.Vector3(fwd.x,0,fwd.z).normalize(),85);cible=new THREE.Vector3(c.x+Math.cos(e.ph)*e.r,Math.max(H(c.x,c.z)+12,S.p.y+Math.sin(e.ph*1.7)*6),c.z+Math.sin(e.ph)*e.r);}
-    const voulu=cible.clone().sub(e.g.position);const vit=e.etat==='arrivee'?58:Math.min(70,voulu.length()*1.2);e.v.lerp(voulu.normalize().multiplyScalar(vit),Math.min(1,dt*1.5));
+  for(const f of V.file)f.t-=dt;for(let k=V.file.length-1;k>=0;k--)if(V.file[k].t<=0){const f=V.file[k];ennemi(f.p,f.v);V.file.splice(k,1);}
+  if(!ennemis.length&&!V.file.length){V.pause-=dt;if(V.pause<=0){V.pause=4;vague();}else if(V.n&&!V.fin){V.fin=1;annonce(`VAGUE ${V.n} TERMINEE<b>+${V.n*500}</b>Prochaine vague…`);S.score+=V.n*500;S.blindage=Math.min(100,S.blindage+30);}}else V.fin=0;
+  const fh=new THREE.Vector3(fwd.x,0,fwd.z).normalize(),lat=new THREE.Vector3(-fh.z,0,fh.x);
+  for(const e of ennemis){e.t+=dt;e.ph+=dt*(e.as?.8:.5);let cible;const dpl=e.g.position.distanceTo(S.p);
+    if(e.etat==='arrivee'){cible=e.g.position.clone().addScaledVector(e.v,1);if(e.t>3.4||dpl<50)e.etat='combat';}
+    else if(e.role==='chasse'){cible=S.p.clone().addScaledVector(fh,-32).addScaledVector(lat,Math.sin(e.ph)*14);cible.y=S.p.y+Math.sin(e.ph*1.3)*5;}
+    else if(e.role==='passe'){if(!e.cap||e.g.position.distanceTo(e.cap)<25)e.cap=e.cap&&e.cap.retour?S.p.clone().addScaledVector(fh,40):Object.assign(S.p.clone().addScaledVector(new THREE.Vector3(Math.random()-.5,0,Math.random()-.5).normalize(),260),{retour:1});
+      if(!e.cap.retour)e.cap.copy(S.p);cible=e.cap.clone();cible.y=Math.max(cible.y,24);}
+    else{const c=S.p.clone().addScaledVector(fh,85);cible=new THREE.Vector3(c.x+Math.cos(e.ph)*e.r,Math.max(H(c.x,c.z)+12,S.p.y+Math.sin(e.ph*1.7)*6),c.z+Math.sin(e.ph)*e.r);}
+    cible.y=Math.max(cible.y,H(cible.x,cible.z)+10);
+    // esquive : un ennemi qui reste dans le viseur fait un écart brusque
+    if(e.etat==='combat'&&dpl<190&&e.g.position.clone().sub(S.p).angleTo(fwd)<.12)e.vise+=dt;else e.vise=Math.max(0,e.vise-dt);
+    if(e.vise>(e.as?.35:.6)&&!e.jink){e.jink={v:new THREE.Vector3(Math.random()-.5,(Math.random()-.5)*.6,Math.random()-.5).normalize().multiplyScalar(e.as?60:42),t:.8};e.vise=0;}
+    if(e.jink){cible.addScaledVector(e.jink.v,1.4);e.jink.t-=dt;if(e.jink.t<=0)e.jink=null;}
+    const voulu=cible.clone().sub(e.g.position);const vmax=(e.role==='passe'?80:e.role==='chasse'?S.v*(1.05+.1*Math.sin(e.ph)):70)*(e.as?1.12:1);const vit=e.etat==='arrivee'?58:Math.min(vmax,Math.max(30,voulu.length()*1.2));e.v.lerp(voulu.normalize().multiplyScalar(vit),Math.min(1,dt*(e.as?2.6:1.6)));
     e.g.position.addScaledVector(e.v,dt);if(e.v.lengthSq()>1){e.g.lookAt(e.g.position.clone().add(e.v));e.g.rotateZ(Math.sin(e.ph*1.3)*.7);}
-    e.tirT-=dt;const d=S.p.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<140){e.tirT=1.6+Math.random()*2.2;const vise=S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
+    e.tirT-=dt;const d=S.p.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<140&&e.v.angleTo(d)<.45){e.tirT=1.6+Math.random()*2.2;const vise=S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
       for(let q=0;q<2;q++){const b=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,1.6),new THREE.MeshBasicMaterial({color:'#e2682e',fog:false}));b.position.copy(e.g.position).addScaledVector(vise,3+q*3);b.lookAt(b.position.clone().add(vise));sc.add(b);tirsEnnemis.push({b,v:vise.clone().multiplyScalar(120),t:1.6});}}}
   for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0){b.t=0;S.blindage-=7;V.flash=.15;
       if(S.blindage<=0){boom(S.p,30);S.blindage=100;annonce('ABATTU !<b>-1000</b>Un nouvel avion décolle.');S.score=Math.max(0,S.score-1000);}}}
@@ -236,8 +256,11 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   for(const n of nuages){const u=n.userData;let x=u.dx,z=u.dz;x=((x-S.p.x)%700+1050)%700-350+S.p.x;z=((z-S.p.z)%700+1050)%700-350+S.p.z;n.position.set(x,u.y,z);}
   majCarreaux(S.p.x,S.p.z);mer.position.x=S.p.x;mer.position.z=S.p.z;
   // caméra derrière l'avion
-  const loin=S.vue?22:10.5,haut=S.vue?7:2.6;const cp=S.p.clone().addScaledVector(fwd,-loin).addScaledVector(up,haut);if(cp.y<Math.max(0,H(cp.x,cp.z))+2)cp.y=Math.max(0,H(cp.x,cp.z))+2;
-  cam.position.lerp(cp,Math.min(1,dt*6));cam.up.lerp(up,Math.min(1,dt*4)).normalize();cam.lookAt(S.p.clone().addScaledVector(fwd,10).addScaledVector(up,1));ciel.position.copy(cam.position);
+  // caméra derrière l'avion : elle suit son orientation par une vraie rotation (slerp), même sur le dos pendant un looping
+  const loin=S.vue?22:10.5,haut=S.vue?7:2.6;const qc=new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch-.1,S.yaw,0,'YXZ'));
+  if(!S.qc)S.qc=qc.clone();S.qc.slerp(qc,Math.min(1,dt*(S.loopT>=0?8:5)));
+  const cp=S.p.clone().add(new THREE.Vector3(0,haut,loin).applyQuaternion(S.qc));const solC=Math.max(0,H(cp.x,cp.z))+2;if(cp.y<solC)cp.y=solC;
+  cam.position.copy(cp);cam.quaternion.copy(S.qc);ciel.position.copy(cam.position);
   hud.innerHTML=`SCORE ${String(S.score).padStart(6,'0')}<br>VAGUE ${V.n} · ENNEMIS ${ennemis.length}<br>BLINDAGE ${'▮'.repeat(Math.ceil(S.blindage/10))}${'▯'.repeat(10-Math.ceil(S.blindage/10))}`;document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=5;S.rech=0;},6000);}
   cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
@@ -257,6 +280,12 @@ function viseur(fwd,dt){ox.clearRect(0,0,LW,LH);
     if(e===LOCK.e){const f=Math.min(1,LOCK.t/LOCK.T);if(f<1){coins(p[0],p[1],r+8*(1-f),Math.floor(S.t*10)%2?'#ffe080':'#ffb040');}
       else{coins(p[0],p[1],r,'#e2682e',2);if(Math.floor(S.t*6)%2){ox.font='bold 7px monospace';ox.fillStyle='#1a1c22';ox.fillText('LOCK',Math.round(p[0]-9),Math.round(p[1]-r-3));ox.fillStyle='#ffe080';ox.fillText('LOCK',Math.round(p[0]-10),Math.round(p[1]-r-4));}}}
     else coins(p[0],p[1],r,e.g.position.clone().sub(S.p).angleTo(fwd)<.06?'#e2682e':'rgba(230,238,246,.75)');}
+  // flèches au bord de l'écran : les ennemis hors de vue (rouges qui clignotent s'ils sont derrière et proches)
+  for(const e of ennemis){if(e.vie<=0)continue;const q=e.g.position.clone().applyMatrix4(cam.matrixWorldInverse);const n=e.g.position.clone().project(cam);
+    if(q.z<0&&Math.abs(n.x)<.95&&Math.abs(n.y)<.95)continue;let dx=q.x,dy=-q.y;if(q.z>0&&Math.hypot(dx,dy)<.01)dy=1;const l=Math.hypot(dx,dy);dx/=l;dy/=l;
+    const k=Math.min((LW/2-9)/Math.abs(dx||1e-6),(LH/2-9)/Math.abs(dy||1e-6));const x=LW/2+dx*k,y=LH/2+dy*k;const prs=q.z>0&&e.g.position.distanceTo(S.p)<80;
+    if(prs&&Math.floor(S.t*6)%2)continue;ox.save();ox.translate(Math.round(x),Math.round(y));ox.rotate(Math.atan2(dy,dx));
+    ox.fillStyle='#1a1c22';ox.beginPath();ox.moveTo(6,0);ox.lineTo(-4,-5);ox.lineTo(-4,5);ox.fill();ox.fillStyle=prs?'#ff4a2a':'#e2682e';ox.beginPath();ox.moveTo(4,0);ox.lineTo(-3,-3);ox.lineTo(-3,3);ox.fill();ox.restore();}
   // le viseur : là où vont les balles, 120 m devant
   const v=versEcran(S.p.clone().addScaledVector(fwd,120));if(v){const[x,y]=[Math.round(v[0]),Math.round(v[1])];
     for(const[c,o]of[['#1a1c22',1],['#ffffff',0]]){px(x-6+o,y+o,4,1,c);px(x+3+o,y+o,4,1,c);px(x+o,y-6+o,1,4,c);px(x+o,y+3+o,1,4,c);px(x+o,y+o,1,1,c);}}

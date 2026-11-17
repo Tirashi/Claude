@@ -37,3 +37,11 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 - Toile 2D par-dessus (même 180 × 320, `viseur()`) : croix pixel art 120 m devant l'avion ; coins autour de chaque ennemi visible (gris, rouges dans l'axe à moins de 0,06 rad).
 - Verrouillage (`LOCK`) : l'ennemi le plus près de l'axe (cône 0,3 rad, moins de 240 m) ; cadre jaune et orange qui se resserre pendant 0,7 s, puis cadre rouge épais + « LOCK » qui clignote et « MISSILE PRET ». Le missile ne poursuit que la cible verrouillée (virage plus serré), sinon il part tout droit.
 - Balles traçantes plus longues et jaunes.
+
+## Looping et vagues variées (17/11 : « le looping marche bizarrement », ennemis trop faciles en ligne)
+- Looping : (1) en fin de boucle, l'angle valait 2π et le tangage le ramenait doucement à 0 : l'avion refaisait la boucle à l'envers → on retire les tours complets ; (2) la caméra faisait `up.lerp` de +1 à −1 en passant par 0 (perte d'orientation) → caméra par quaternion (`S.qc.slerp`) ; (3) pas de virage au joystick pendant la boucle.
+- Bug : un bouton pressé avant le joystick donnait `S.dy` indéfini → NaN, jeu figé (corrigé : `dx:0, dy:0` au départ).
+- `window.Escadrille = {S, ennemis}` pour les tests.
+- Vagues (`MOTIFS`) : de face, par derrière, sur les flancs, par le dessus, encerclement (3 groupes), en deux temps (6 s d'écart) ; formation en V, en ligne ou dispersée ; vague 1 de face, vague 2 sur les flancs, puis au hasard ; file d'attente `V.file`.
+- Rôles au combat : `tournoi` (tourne devant), `chasse` (se cale 32 m derrière le joueur), `passe` (traverse puis s'éloigne à 260 m et revient) ; esquive (écart de 0,8 s) si l'ennemi reste dans le viseur 0,6 s (0,35 s pour un as) ; **as** dès la vague 4 (30 %, 5 points de vie, plus vifs, accent rouge). Ils ne tirent que s'ils font face au joueur.
+- Flèches au bord de l'écran pour les ennemis hors de vue (rouge clignotant s'ils sont derrière à moins de 80 m).
