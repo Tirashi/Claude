@@ -82,6 +82,11 @@ button.btn.construire{position:absolute;left:10px;bottom:76px;padding:0 16px;bac
   background:radial-gradient(circle at 38% 32%,#c4473a,#8c2219 62%,#6d1912);box-shadow:0 3px 6px rgba(0,0,0,.5),inset 0 0 0 4px rgba(255,255,255,.12),inset 0 0 0 6px #8c2219,inset 0 0 0 7px rgba(255,255,255,.25)}
 .px .sceau{border-radius:0;font-family:'Pixelify Sans',sans-serif;font-size:13px;background:#9b2a1f;box-shadow:0 0 0 3px #3a2a1c,0 3px 0 4px rgba(0,0,0,.4)}
 button.btn{background:#e8d8b4;border:1.5px solid #3a2a1c;box-shadow:inset 0 0 0 2px #e8d8b4,inset 0 0 0 3px rgba(58,42,28,.5)}
+.outils-pays{position:absolute;left:10px;right:10px;bottom:96px;display:flex;gap:8px}
+.tel:has(.fiche.ouverte) .outils-pays{display:none}
+.outils-pays[hidden]{display:none}
+.outils-pays button.btn.construire{position:static}
+button.btn.registre{min-height:50px;padding:0 14px;font-size:17px;background:#efe3c8 var(--papier) center/cover;border:none;box-shadow:0 0 0 2px #3a2a1c,0 4px 10px rgba(0,0,0,.45);outline:1.5px solid #3a2a1c;outline-offset:-5px;margin-left:auto}
 button.btn.construire{bottom:96px;background:#efe3c8 var(--papier) center/cover;color:#9b2a1f;border:none;box-shadow:0 0 0 2px #3a2a1c,0 4px 10px rgba(0,0,0,.45);outline:1.5px solid #9b2a1f;outline-offset:-5px;font-size:18px;min-height:50px}
 .zoom{top:200px}
 .fiche{gap:9px;padding:16px 16px 14px}
@@ -91,10 +96,6 @@ button.btn.construire{bottom:96px;background:#efe3c8 var(--papier) center/cover;
 </style>
 </head>
 <body>
-<div class="choixdir" role="group" aria-label="Direction">
-  <button id="dirA" aria-pressed="true">A · Encre</button><button id="dirB" aria-pressed="false">B · Pixel</button>
-</div>
-<div class="choixdir" id="varPays" role="group" aria-label="Carte du pays"><button data-v="cadastre" aria-pressed="true">1 · Cadastre</button><button data-v="epure" aria-pressed="false">2 · Épurée</button><button data-v="vignettes" aria-pressed="false">3 · Vignettes</button></div>
 <div class="tel" id="tel">
   <canvas id="c" aria-label="Carte du jeu"></canvas>
   <div class="hud haut">
@@ -104,7 +105,7 @@ button.btn.construire{bottom:96px;background:#efe3c8 var(--papier) center/cover;
     </div>
     <button class="btn onglet" id="bascule">Mon pays ▸</button>
   </div>
-  <button class="btn construire" id="construire" hidden>+ Construire</button>
+  <div class="outils-pays" id="outilsPays" hidden><button class="btn construire" id="construire">+ Construire</button><button class="btn registre" id="registre">▤ Registre</button></div>
   <div class="zoom"><button class="btn" id="zPlus" aria-label="Rapprocher">+</button><button class="btn" id="zMoins" aria-label="Éloigner">−</button></div>
   <div class="toast panneau" id="toast" role="status"></div>
   <div class="hud bas">
@@ -113,7 +114,7 @@ button.btn.construire{bottom:96px;background:#efe3c8 var(--papier) center/cover;
       <button class="sceau" id="fin">Tour<br>suivant</button></div>
   </div>
 </div>
-<p class="legende">Carte sur papier : A à l'encre (pack Fantasy Map Assets Lite, Deface Games), B la même carte en pixel art. Touchez une nation (contrat : une charrette part), « Mon pays », puis « + Construire ».</p>
+<p class="legende">Carte sur papier (pack Fantasy Map Assets Lite, Deface Games). Touchez une nation (contrat : une charrette part), puis « Mon pays ». « + Construire » et « Registre » ouvrent le registre du pays, rangé région par région.</p>
 <script>
 "use strict";
 // ======================= la partie (valeurs du moteur) =======================
@@ -145,7 +146,7 @@ const BATS = {
 };
 const COUT_DEFRICHER = 70;
 // 17/11 : trois versions de la carte du pays (cadastre, carte épurée, vignettes) ; couleur de chaque région
-let variante = "cadastre"; const ZONES = [];
+let variante = "epure"; const ZONES = [];   // 17/11 : carte épurée ; « cadastre » = le registre, ouvert par Construire ou le bouton Registre
 const RCOUL = { plaine: [205, 172, 64], collines: [138, 112, 92], vallee: [92, 150, 86], bourg: [184, 92, 108] };
 let tour = 12, or = 486, tailleCapitale = 3, mode = "encre";
 const ENCRE = [58, 42, 28], ROUGE = "#9b2a1f";
@@ -164,7 +165,7 @@ function champ(x, y){ let f = -9;
   const bord = Math.min(x - 1.5, y - 1.5, W - 2.5 - x, H - 2.5 - y); if (bord < 1) f -= (1 - bord) * 0.6;
   return f - 0.1; }
 const terre = (x, y) => champ(x, y) > 0;
-const RAYON_JOUEUR = 5;
+const RAYON_JOUEUR = 6;   // 17/11 : un peu plus de place pour aérer la carte du pays
 function nationEn(x, y){ let best = -1, bd = 1e9;
   IDS.forEach((id, k) => { const [gx, gy] = NATIONS[id].graine;
     const d0 = Math.hypot(x - gx, y - gy) + 2.4 * (bruit(x / 3, y / 3, 7) - 0.5) + 0.7 * (bruit(x / 1.2, y / 1.2, 8) - 0.5);
@@ -206,10 +207,10 @@ const CENTRES = {}, LOTS = {};
       if (!terre(x, y) || nationEn(x, y) !== 0 || RIDS[regionEn(x, y)] !== r) continue;
       // assez loin des bords de la région, de la capitale et des routes
       if ([[.6, 0], [-.6, 0], [0, .6], [0, -.6]].some(([a, b]) => !terre(x + a, y + b) || nationEn(x + a, y + b) !== 0 || RIDS[regionEn(x + a, y + b)] !== r)) continue;
-      if (Math.hypot(x - CAP[0], y - CAP[1]) < 1.6 || presRoute(x, y, 0.45) || montagneEn(x, y)) continue;
+      if (Math.hypot(x - CAP[0], y - CAP[1]) < 2 || presRoute(x, y, 0.5) || montagneEn(x, y) || Math.hypot(x - cx, y - (cy - 1)) < 0.9) continue;   // ni sur la ville, ni sur une route, ni sous le nom de la région
       cand.push([x, y, Math.hypot(x - cx, y - cy)]); }
     cand.sort((a, b) => a[2] - b[2]); LOTS[r] = [];
-    for (const [x, y] of cand){ if (LOTS[r].length >= 6) break; if (LOTS[r].some(([a, b]) => Math.hypot(a - x, b - y) < 1.05)) continue; LOTS[r].push([x, y]); } } })();
+    for (const [x, y] of cand){ if (LOTS[r].length >= 6) break; if (LOTS[r].some(([a, b]) => Math.hypot(a - x, b - y) < 1.4)) continue; LOTS[r].push([x, y]); } } })();
 const estLot = (x, y, r) => RIDS.some(k => LOTS[k].some(([a, b]) => Math.hypot(a - x, b - y) < r));
 
 // ======================= images =======================
@@ -307,7 +308,7 @@ function rendu(B, px, net, pays){
   for (let y = B.y0; y < B.y1; y += pas) for (let x = B.x0; x < B.x1; x += pas){
     const jx = x + (hache(Math.round(x * 9), Math.round(y * 9), 41) - .5) * pas * .8, jy = y + (hache(Math.round(x * 9), Math.round(y * 9), 42) - .5) * pas * .8;
     if (champ(jx, jy) < 0.08 || Object.values(NATIONS).some(N => Math.hypot(N.graine[0] - jx, N.graine[1] - jy) < (pays ? 1.4 : 1.1))) continue;
-    if (presRoute(jx, jy, pays ? 0.35 : 0.45) || (pays && estLot(jx, jy, 0.75))) continue;
+    if (presRoute(jx, jy, pays ? 0.35 : 0.45) || (pays && estLot(jx, jy, 0.95))) continue;
     if (pays && nationEn(jx, jy) === 0 && hache(Math.round(jx * 5), Math.round(jy * 5), 46) > (montagneEn(jx, jy) ? .55 : .2)) continue;   // pays épuré
     if (montagneEn(jx, jy)) dec.push([jx, jy, "mount" + (1 + Math.floor(hache(Math.round(jx * 7), Math.round(jy * 7), 43) * 10)), pays ? 1.1 : 1.45]);
     else if (foretEn(jx, jy) && (!pays || bruit(jx / 3.2, jy / 3.2, 11) > 0.6)){ const pin = ROCHEUX.has(IDS[nationEn(jx, jy)]) || bruit(jx / 4, jy / 4, 44) > .5;
@@ -364,7 +365,7 @@ function frame(){
       const [X, Y] = ecran(x, y - .3); g.strokeStyle = ROUGE; g.lineWidth = net ? Math.max(2, cam.z / 8) : 2.2; g.setLineDash(net ? [] : [5, 4]);
       g.fillStyle = sel ? "rgba(155,42,31,.25)" : "rgba(239,227,200,.7)"; g.beginPath(); g.arc(X, Y, .42 * cam.z * k, 0, 6.3); g.fill(); g.stroke(); g.setLineDash([]);
       g.fillStyle = ROUGE; const a = .2 * cam.z, e = Math.max(2, .07 * cam.z); g.fillRect(Math.round(X - a), Math.round(Y - e / 2), Math.round(2 * a), Math.round(e)); g.fillRect(Math.round(X - e / 2), Math.round(Y - a), Math.round(e), Math.round(2 * a)); }
-    else { const ch = b[0] === "+", type = b.replace("+", ""); papierRond(x, y - .35, .68); sprite(S[type], x, y + .25, 1.35, true, ch ? .45 : 1); if (!ch && FUME[type]) fumee(...ecran(x + .25, y - .9), .7, i);
+    else { const ch = b[0] === "+", type = b.replace("+", ""); papierRond(x, y - .35, .62); sprite(S[type], x, y + .2, 1.15, true, ch ? .45 : 1); if (!ch && FUME[type]) fumee(...ecran(x + .25, y - .9), .7, i);
       if (ch){ const [X, Y] = ecran(x, y - .35); g.strokeStyle = "rgb(58,42,28)"; g.lineWidth = 1.5; g.setLineDash([3, 3]); g.strokeRect(X - .45 * cam.z, Y - .45 * cam.z, .9 * cam.z, .9 * cam.z); g.setLineDash([]); } } });
   // région choisie : les autres voilées
   if (carte === "pays" && REGIONS[choix] && !aConstruire){ const m = masque(choix); g.globalAlpha = .45; g.drawImage(m, Math.round(ax), Math.round(ay), Math.round((Rm.B.x1 - Rm.B.x0) * cam.z), Math.round((Rm.B.y1 - Rm.B.y0) * cam.z)); g.globalAlpha = 1; }
@@ -575,22 +576,20 @@ document.getElementById("fin").onclick = () => { tour++; or += 38;
 function maj(){ document.getElementById("tour").textContent = `Tour ${tour}/40`; document.getElementById("or").textContent = `${or} or`; }
 function cadrePays(){ const v = vue(), B = PAYS_B, iw = B.x1 - B.x0 - 4, ih = B.y1 - B.y0 - 4;
   cam.x = (B.x0 + B.x1) / 2; cam.y = (B.y0 + B.y1) / 2 + 1.2;
-  const z = Math.min(v.w / iw, (v.h - 250) / ih) * (variante === "epure" ? 1.35 : 1); cam.z = mode === "pixel" ? Math.max(1, Math.round(z / PX.pixel.pays)) * PX.pixel.pays : z; }
+  const z = Math.max(46, Math.min(v.w / iw, (v.h - 250) / ih));   /* assez près pour lire ; on fait glisser la carte */ cam.z = mode === "pixel" ? Math.max(1, Math.round(z / PX.pixel.pays)) * PX.pixel.pays : z; }
 function change(c){ carte = c; fermeFiche(); const v = vue();
   if (c === "monde"){ cam.x = W / 2; cam.y = H / 2 + 1; const z = Math.min(v.w / (W - 4), (v.h - 200) / H); cam.z = mode === "pixel" ? Math.max(1, Math.round(z / PX.pixel.monde)) * PX.pixel.monde : z; }
   else cadrePays();
   document.getElementById("titre").textContent = c === "monde" ? "Le continent" : "Notre pays";
   document.getElementById("bascule").textContent = c === "monde" ? "Mon pays ▸" : "◂ Le continent";
-  document.getElementById("construire").hidden = c === "monde"; majVariante(); }
+  document.getElementById("outilsPays").hidden = c === "monde"; if (c === "monde") variante = "epure"; majVariante(); }
 document.getElementById("bascule").onclick = () => change(carte === "monde" ? "pays" : "monde");
-document.getElementById("construire").onclick = menuGeneral;
+document.getElementById("construire").onclick = () => { variante = "cadastre"; majVariante(); menuGeneral(); };
+document.getElementById("registre").onclick = () => { variante = variante === "cadastre" ? "epure" : "cadastre"; fermeFiche(); majVariante(); if (variante === "epure") cadrePays(); };
 function changeMode(m){ mode = m; tel.classList.toggle("px", m === "pixel"); document.getElementById("dirA").setAttribute("aria-pressed", m === "encre"); document.getElementById("dirB").setAttribute("aria-pressed", m === "pixel"); prepare(); change(carte); }
-function majVariante(){ document.querySelectorAll("#varPays button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === variante));
-  document.querySelector(".zoom").style.display = carte === "pays" && variante !== "epure" ? "none" : "";
-  document.getElementById("varPays").style.visibility = carte === "pays" ? "visible" : "hidden"; }
-document.querySelectorAll("#varPays button").forEach(b => b.onclick = () => { variante = b.dataset.v; majVariante(); if (carte === "pays") cadrePays(); });
-document.getElementById("dirA").onclick = () => changeMode("encre");
-document.getElementById("dirB").onclick = () => changeMode("pixel");
+function majVariante(){ document.querySelector(".zoom").style.display = carte === "pays" && variante !== "epure" ? "none" : "";
+  document.getElementById("registre").textContent = variante === "cadastre" ? "◂ Carte" : "▤ Registre";
+  document.getElementById("titre").textContent = carte === "monde" ? "Le continent" : variante === "cadastre" ? "Registre du pays" : "Notre pays"; }
 document.getElementById("factions").innerHTML = FACTIONS.map(([c, p]) => `<span style="width:${p / 1.68}%;background:${c}"></span>`).join("");
 window.addEventListener("resize", dimensionne);
 Promise.all([charge("papier", "__PAPIER__"), ...Object.entries(T).map(([n, s]) => charge(n, s))]).then(() => {

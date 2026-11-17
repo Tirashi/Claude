@@ -488,3 +488,5 @@ Carte du pays (17/11) : ce qui gêne : bâtiments peu lisibles, régions pas cla
 3. **Vignettes** : 4 petites gravures (champs ondulés, montagnes, rivière et sapins, rempart du bourg), nuages et oiseaux qui passent, un passant, bâtiments sur deux rangs avec leur nom, panneaux « + » pour les places libres.
 Le parcours Construire marche dans les trois (production affichée sur chaque place libre).
 
+Choix du 17/11 : **direction A (encre) gardée, pas de version pixel** ; vignettes écartées. La **carte épurée** est la carte du pays ; le **cadastre** devient le **Registre du pays** : la vue des menus, pour chercher et lancer des constructions (« + Construire » l'ouvre directement ; bouton « ▤ Registre » / « ◂ Carte » sur la carte du pays). Carte épurée aérée : notre pays un peu plus grand (rayon 6 au lieu de 5 ; toujours seuls Val-Roc et Contreforts le touchent), places espacées d'au moins 1,4 case, loin de la capitale, des routes et des noms de régions, bâtiments un peu plus petits, la carte s'ouvre assez près pour lire (46 px par case) et on la fait glisser.
+
