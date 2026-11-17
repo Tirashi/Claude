@@ -18,3 +18,9 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 - Le joueur est un **sprite pixel art** : `chasseur.py <sortie.png>` dessine le chasseur vu de dos (64 × 40) sous 16 angles de tonneau × 3 inclinaisons, avec des rampes de gris faites à la main, bouts d'ailes et bande rouges, verrière, double dérive, réacteurs, contour d'un pixel ; écrit aussi `.json` (taille, positions des tuyères par image). Planche et json copiés ici (`chasseur.png`, `chasseur.json`).
 - Dans le jeu : le modèle 3D du joueur est invisible (il sert aux calculs) ; `placerSprite()` projette sa position, choisit l'angle de tonneau d'après l'aile droite projetée à l'écran et l'inclinaison d'après ce qu'on voit du dessus, et pose le sprite (et deux flammes qui vacillent) par-dessus l'image finale, calé au pixel. `/*DONNEES*/` → `const MODELES={};const SPRITE={src,w,h,nr,tuyeres}`.
 - Bug corrigé : `Vector3.randomDirection` n'existe pas dans three r128 (les explosions plantaient).
+
+## Version 5 (17/11 : « c'est beaucoup mieux » ; flammes décalées ; vol libre et vagues d'ennemis)
+- Flammes posées pile sur les tuyères : ancre entière du sprite (haut à `py + 25`), cœur 2 × 2 jaune ou orange, queue de 1 px qui vacille.
+- **Vagues** (`vague()`) : 1 + 2 × n chasseurs (11 au plus) en V à 300 m devant, ils foncent (« arrivee ») puis tournent devant le joueur (« combat », rayon 18 à 46) et tirent des paires de balles orange avec avance ; blindage 100 (−7 par balle, pas pendant un tonneau), bordure orange quand on est touché, « ABATTU » à 0 ; vague finie : bonus 500 × n et +30 de blindage ; HUD : score, vague, ennemis, blindage.
+- Pilote automatique : vise l'ennemi le plus proche, tire quand il est dans un cône de 0,3 rad, remonte sous 14 m.
+- Sommets : roche selon la pente, neige au-dessus de 34 m (plus de damier gris et blanc).
