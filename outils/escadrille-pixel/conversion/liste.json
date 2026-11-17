@@ -129,6 +129,76 @@
   "pack": "fga"
  },
  {
+  "cle": "fga_destroyer1",
+  "nom": "DESTROYER 1",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_01.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_croiseur1",
+  "nom": "CROISEUR 1",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_01.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_destroyer2",
+  "nom": "DESTROYER 2",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_02.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_croiseur2",
+  "nom": "CROISEUR 2",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_02.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_destroyer3",
+  "nom": "DESTROYER 3",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_03.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_croiseur3",
+  "nom": "CROISEUR 3",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_03.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_destroyer4",
+  "nom": "DESTROYER 4",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_04.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_croiseur4",
+  "nom": "CROISEUR 4",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_04.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_destroyer5",
+  "nom": "DESTROYER 5",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_05.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_croiseur5",
+  "nom": "CROISEUR 5",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_05.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
+  "pack": "fga2"
+ },
+ {
   "cle": "maja1",
   "nom": "MAJADROID 1",
   "f": "PACKS/maja/x_LowPoly-Spaceships-By-Majadroid/LowPoly-Spaceships-By-Majadroid/obj-files/obj-ships/material-01/m1-ship3.obj",
