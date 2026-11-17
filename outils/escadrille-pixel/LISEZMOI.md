@@ -45,3 +45,7 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 - Vagues (`MOTIFS`) : de face, par derrière, sur les flancs, par le dessus, encerclement (3 groupes), en deux temps (6 s d'écart) ; formation en V, en ligne ou dispersée ; vague 1 de face, vague 2 sur les flancs, puis au hasard ; file d'attente `V.file`.
 - Rôles au combat : `tournoi` (tourne devant), `chasse` (se cale 32 m derrière le joueur), `passe` (traverse puis s'éloigne à 260 m et revient) ; esquive (écart de 0,8 s) si l'ennemi reste dans le viseur 0,6 s (0,35 s pour un as) ; **as** dès la vague 4 (30 %, 5 points de vie, plus vifs, accent rouge). Ils ne tirent que s'ils font face au joueur.
 - Flèches au bord de l'écran pour les ennemis hors de vue (rouge clignotant s'ils sont derrière à moins de 80 m).
+
+## Commandes PC (17/11)
+- Clavier (codes physiques, donc AZERTY et QWERTY) : ↑/Z/W monter, ↓/S descendre, ←/Q/A et →/D virer (rampe de 0,25 s comme un joystick, `clavierPilote`) ; Espace canon (maintenu), E missile, R looping, F ou Maj tonneau, V vue. Les touches déclenchent les mêmes gestionnaires que les boutons ronds (`PointerEvent` envoyé au bouton) ; flèches et Espace ne font pas défiler la page quand le jeu est visible.
+- Aide des touches en bas à gauche sur écran à souris (`@media (hover:hover) and (pointer:fine)`), estompée dès qu'on joue au clavier ; la souris garde le joystick (cliquer-glisser) et les boutons.

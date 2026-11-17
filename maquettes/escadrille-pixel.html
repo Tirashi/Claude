@@ -30,6 +30,8 @@ p{margin:0;max-width:72ch}
 .joy{position:absolute;width:104px;height:104px;margin:-52px 0 0 -52px;border-radius:50%;border:2px solid rgba(220,235,250,.7);background:rgba(28,48,72,.25);pointer-events:none;opacity:0;transition:opacity .15s}
 .joy i{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:rgba(230,240,250,.8);box-shadow:0 2px 0 rgba(0,0,0,.3)}
 .joy.on{opacity:1}
+.clavier{position:absolute;left:10px;bottom:10px;font:8px/1.6 var(--titre);color:#fff;text-shadow:1px 1px 0 #1c3350;background:rgba(28,48,72,.45);padding:5px 7px;pointer-events:none;display:none;transition:opacity .6s}
+@media (hover:hover) and (pointer:fine){.clavier{display:block}.aidejoy{display:none}}
 .aidejoy{position:absolute;left:24px;bottom:40px;font:9px/1.5 var(--titre);color:#fff;text-shadow:1px 1px 0 #1c3350;opacity:.8;pointer-events:none}
 .charge{position:absolute;inset:0;display:grid;place-items:center;font:12px var(--titre);color:#fff}
 ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
@@ -38,12 +40,12 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 <main>
 <header style="display:grid;gap:10px">
 <h1>ESCADRILLE PIXEL · MAQUETTE</h1>
-<p>Le style de ta capture : de la vraie 3D (on peut piquer, faire des loopings et des tonneaux), mais calculée en très petite résolution (180 × 320 pixels), avec une palette réduite et un tramage, puis agrandie sans lissage. Pouce gauche : un joystick apparaît là où tu poses le doigt (vers le haut : l'avion monte ; vers le bas : il descend). Pouce droit : FEU (à garder appuyé), MISSILE, LOOP et TONNEAU. Sans toucher, le pilote automatique vole tout seul.</p>
+<p>Le style de ta capture : de la vraie 3D (on peut piquer, faire des loopings et des tonneaux), mais calculée en très petite résolution (180 × 320 pixels), avec une palette réduite et un tramage, puis agrandie sans lissage. Sur téléphone, pouce gauche : un joystick apparaît là où tu poses le doigt (vers le haut : l'avion monte ; vers le bas : il descend) ; pouce droit : FEU (à garder appuyé), MISSILE, LOOP et TONNEAU. Sur PC : flèches ou ZQSD (WASD en QWERTY), Espace pour le canon, E missile, R looping, F tonneau, V vue ; la souris marche comme le doigt. Sans toucher, le pilote automatique vole tout seul.</p>
 </header>
 <section class="jeu"><div class="tel" id="t"><div class="charge">CHARGEMENT…</div>
 <div class="hud" id="hud"></div>
 <div class="bandeau" id="bandeau">MISSION 1 · ARCHIPEL<b>VAGUES</b>Abats chaque vague de chasseurs. Ils tirent aussi !</div>
-<div class="joy" id="joy"><i></i></div><div class="aidejoy" id="aidejoy">POUCE GAUCHE :<br>PILOTER</div>
+<div class="joy" id="joy"><i></i></div><div class="aidejoy" id="aidejoy">POUCE GAUCHE :<br>PILOTER</div><div class="clavier" id="clavier">↑↓ ZS : MONTER, DESCENDRE<br>←→ QD : VIRER<br>ESPACE : FEU · E : MISSILE<br>R : LOOP · F : TONNEAU · V : VUE</div>
 <button class="rond" id="bVue">VUE</button><button class="rond" id="bLoop">LOOP</button><button class="rond" id="bRoll">TON-<br>NEAU</button><button class="rond" id="bMis">MIS.<small id="nMis">▮▮▮▮▮</small></button><button class="rond" id="bTir">FEU<small id="nTir">300</small></button>
 </div></section>
 <section><h2>CE QUI FAIT LE STYLE</h2><ul>
@@ -181,6 +183,17 @@ const lacher=e=>{if(!S.doigt||e.pointerId!==S.doigt.id)return;S.doigt=null;S.dx=
 const bouton=(id,f)=>{const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();manuel(5000);f(true,b);});b.addEventListener('pointerup',e=>{e.stopPropagation();f(false,b);});b.addEventListener('pointerleave',()=>f(false,b));b.addEventListener('contextmenu',e=>e.preventDefault());};
 bouton('bLoop',d=>{if(d&&S.loopT<0)S.loopT=0;});bouton('bRoll',d=>{if(d)tonneau();});bouton('bVue',d=>{if(d)S.vue=(S.vue+1)%2;});
 bouton('bTir',(d,b)=>{S.tir=d;b.classList.toggle('on',d);if(d)manuel(1e9);else manuel();});
+// clavier (PC) : AZERTY et QWERTY ; les directions agissent comme un joystick qu'on pousse progressivement
+const TOUCHES={};const DIR={ArrowUp:'h',KeyW:'h',KeyZ:'h',ArrowDown:'b',KeyS:'b',ArrowLeft:'g',KeyA:'g',KeyQ:'g',ArrowRight:'d',KeyD:'d'};
+const appui=(id,v)=>{const b=document.getElementById(id);b.dispatchEvent(new PointerEvent(v?'pointerdown':'pointerup',{bubbles:true}));};
+addEventListener('keydown',e=>{if(!vu)return;const d=DIR[e.code];if(d||e.code==='Space')e.preventDefault();if(e.repeat)return;
+  if(d){TOUCHES[d]=1;manuel(1e9);document.getElementById('clavier').style.opacity=.35;}
+  else if(e.code==='Space')appui('bTir',true);else if(e.code==='KeyE')appui('bMis',true);else if(e.code==='KeyR')appui('bLoop',true);
+  else if(e.code==='KeyF'||e.key==='Shift')appui('bRoll',true);else if(e.code==='KeyV')appui('bVue',true);});
+addEventListener('keyup',e=>{const d=DIR[e.code];if(d){TOUCHES[d]=0;if(!TOUCHES.h&&!TOUCHES.b&&!TOUCHES.g&&!TOUCHES.d)manuel();}else if(e.code==='Space')appui('bTir',false);});
+addEventListener('blur',()=>{for(const k in TOUCHES)TOUCHES[k]=0;if(S.tir)appui('bTir',false);});
+function clavierPilote(dt){if(S.doigt)return;const cx=(TOUCHES.d||0)-(TOUCHES.g||0),cy=(TOUCHES.b||0)-(TOUCHES.h||0);if(!cx&&!cy&&!S.kx&&!S.ky)return;
+  S.kx=(S.kx||0)+(cx-(S.kx||0))*Math.min(1,dt*4);S.ky=(S.ky||0)+(cy-(S.ky||0))*Math.min(1,dt*4);if(Math.abs(S.kx)<.01&&!cx)S.kx=0;if(Math.abs(S.ky)<.01&&!cy)S.ky=0;S.dx=S.kx;S.dy=S.ky;}
 bouton('bMis',d=>{if(!d||S.munM<=0)return;S.munM--;const c=LOCK.e&&LOCK.t>=LOCK.T&&LOCK.e.vie>0?LOCK.e:null;
   const m=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,1.4),new THREE.MeshBasicMaterial({color:'#ffffff'}));m.position.copy(S.p);sc.add(m);missiles.push({m,c,v:S.fwd.clone().multiplyScalar(S.v+20),t:4});});
 
@@ -200,6 +213,7 @@ function vague(){V.n++;const nb=Math.min(12,1+V.n*2);const m=V.n===1?MOTIFS[0]:V
       V.file.push({t:(m.decale||0)*g+g*1.2,p:tete.clone().add(o),v:vers.clone()});}}
   annonce(`VAGUE ${V.n}<b>${nb} CHASSEURS</b>${m.nom}`);}
 function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(image);if(!vu&&!window.TOUT_VOIR)return;S.t+=dt;
+  clavierPilote(dt);
   // commandes : virage et tangage
   let tyaw,tp;if(S.auto){const c=ennemis.filter(e=>e.vie>0).sort((a,b)=>a.g.position.distanceTo(S.p)-b.g.position.distanceTo(S.p))[0];
     if(c){const d=c.g.position.clone().sub(S.p);const a=Math.atan2(-d.x,-d.z);let da=a-S.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));tyaw=Math.max(-1,Math.min(1,da*2));tp=Math.max(-.6,Math.min(.6,(c.g.position.y-S.p.y)*.03));
