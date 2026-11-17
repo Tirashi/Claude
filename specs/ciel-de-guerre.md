@@ -81,10 +81,28 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 Le joueur et les ennemis volent sur des **vaisseaux**. Les avions à hélices sont retirés : les 6 monogon voxel plane et le Corsaire. On garde ce qui ressemble à des avions de chasse : Faucon, Hirondelle, Vipère et Spectre, construits dans le code. Le hangar de la maquette est mis à jour. Les outils des hélices (`vox_glb.py`, `helices.py`) restent dans `outils/escadrille-pixel/conversion/`.
 Le même jour, les **5 vaisseaux voxel monogon** sont retirés aussi (« design trop différent »). Le problème de licence monogon disparaît.
 
+## Flotte cohérente (validée le 17/11)
+Deux camps, un seul style : coques grises, couleur du camp. Chaque coque Free Game Assets existe en bleu (`T_Spase_blue`) ou en rouge (`T_Spase_64`).
+- **Bleu (joueur, alliés)** :
+  - chasseurs du joueur : nos 4 jets repeints en gris et bleu (Faucon au départ, puis Hirondelle, Vipère, Spectre) ;
+  - vaisseaux lourds à débloquer : les 5 corvettes bleues ;
+  - flotte alliée : destroyers et croiseurs bleus.
+- **Rouge (ennemi)** :
+  - chasseurs : Faucon gris et rouge ; les as sur la Vipère rouge ;
+  - bombardiers : corvettes rouges ;
+  - escorteurs (dès la vague 4) : frégates rouges, 18 points de vie ;
+  - grands vaisseaux : destroyers et croiseurs rouges ;
+  - boss : le croiseur rouge le plus massif, grossi 2 à 3 fois.
+- **Retirés** : niko, Texnist, Majadroid, monogon. Il ne reste que nos modèles et ceux de craftpix, ce qui règle les licences.
+- **Flammes** : trois cônes emboîtés (halo, flamme, cœur blanc) et un point chaud sur la tuyère ; bleues pour notre camp, orangées pour l'ennemi ; plus longues au boost.
+  - Sur le calque des avions, elles sont ajoutées comme une lueur, sans contour : les pixels à demi transparents (alpha entre 0,01 et 0,92) sont additionnés, et le contour ne suit que les coques.
+  - Corvettes 2 à 4 : `coupe`, pour ignorer les tiges qui dépassent à l'arrière.
+- **Projectiles** : traçantes fines et partagées. Le joueur tire alternativement de ses deux canons. Les tirs ennemis sont rouges. Les missiles ont une petite flamme et une fumée légère (une bouffée toutes les 0,05 s, qui grossit et s'efface en 0,55 s).
+
 ## Licences à régler avant le jeu
-- **monogon (maxparata)** : CC BY-ND, donc **pas de modification**. Les avions à hélices sont retirés, mais il reste les 5 vaisseaux voxel, convertis et réduits. Il faut demander l'accord de l'auteur, ou ne garder que les modèles d'origine non modifiés, ou s'en passer.
-- **niko-3d-models** : prix libre, sans licence écrite sur la page. À vérifier (commentaire ou message à l'auteur) avant de les mettre dans le jeu.
-- **Free Game Assets (craftpix)** : licence craftpix, utilisable dans un jeu, pas de revente. **Texnist** : CC BY 4.0. **Majadroid** : CC0. Ces trois-là sont bons.
+- **monogon** : réglé, tous retirés.
+- **niko** : réglé, retiré.
+- **Free Game Assets (craftpix)** : licence craftpix, utilisable dans un jeu, pas de revente. C'est le seul pack gardé.
 - Taille : la maquette pèse 12 Mo avec tous les modèles. Le jeu ne garde que les avions retenus, à choisir avec l'utilisateur en session 1.
 
 ## À décider en session 1

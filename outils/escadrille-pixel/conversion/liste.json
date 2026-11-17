@@ -1,68 +1,5 @@
 [
  {
-  "cle": "niko_fighter",
-  "nom": "NIKO FIGHTER",
-  "f": "PACKS/niko/x_fighter/fighter/fighter.fbx",
-  "tex": "PACKS/niko/x_fighter/fighter/fighter_albedo.png",
-  "pack": "niko"
- },
- {
-  "cle": "niko_bomber",
-  "nom": "NIKO BOMBER",
-  "f": "PACKS/niko/x_bomber/bomber/bomber.fbx",
-  "tex": "PACKS/niko/x_bomber/bomber/bomber_albedo.png",
-  "pack": "niko"
- },
- {
-  "cle": "niko_carrier",
-  "nom": "NIKO CARRIER",
-  "f": "PACKS/niko/x_carrier/carrier/carrier.fbx",
-  "tex": "PACKS/niko/x_carrier/carrier/carrier_albedo.png",
-  "pack": "niko"
- },
- {
-  "cle": "niko_fighter_r",
-  "nom": "NIKO FIGHTER ROUGE",
-  "f": "PACKS/niko/x_fighter/fighter/fighter.fbx",
-  "tex": "PACKS/niko/x_fighter/fighter/fighter_albedo_rouge.png",
-  "pack": "niko"
- },
- {
-  "cle": "niko_bomber_r",
-  "nom": "NIKO BOMBER ROUGE",
-  "f": "PACKS/niko/x_bomber/bomber/bomber.fbx",
-  "tex": "PACKS/niko/x_bomber/bomber/bomber_albedo_rouge.png",
-  "pack": "niko"
- },
- {
-  "cle": "texnist2",
-  "nom": "TEXNIST 2",
-  "f": "PACKS/texnist/x_Voxel_Spaceships/Voxel Spaceships/obj/Spaceship2.obj",
-  "pack": "texnist",
-  "sansTex": 1
- },
- {
-  "cle": "texnist4",
-  "nom": "TEXNIST 4",
-  "f": "PACKS/texnist/x_Voxel_Spaceships/Voxel Spaceships/obj/Spaceship4.obj",
-  "pack": "texnist",
-  "sansTex": 1
- },
- {
-  "cle": "fga_corvette",
-  "nom": "CORVETTE",
-  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_01.fbx",
-  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
-  "pack": "fga"
- },
- {
-  "cle": "fga_frigate",
-  "nom": "FREGATE",
-  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_01.fbx",
-  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
-  "pack": "fga"
- },
- {
   "cle": "fga_destroyer1",
   "nom": "DESTROYER 1",
   "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_01.fbx",
@@ -133,27 +70,108 @@
   "pack": "fga2"
  },
  {
-  "cle": "maja1",
-  "nom": "MAJADROID 1",
-  "f": "PACKS/maja/x_LowPoly-Spaceships-By-Majadroid/LowPoly-Spaceships-By-Majadroid/obj-files/obj-ships/material-01/m1-ship3.obj",
-  "pack": "maja"
+  "cle": "fga_corvette1_b",
+  "nom": "CORVETTE 1",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_01.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
+  "pack": "fga"
  },
  {
-  "cle": "maja2",
-  "nom": "MAJADROID 2",
-  "f": "PACKS/maja/x_LowPoly-Spaceships-By-Majadroid/LowPoly-Spaceships-By-Majadroid/obj-files/obj-ships/material-02/m2-ship2.obj",
-  "pack": "maja"
+  "cle": "fga_corvette1_r",
+  "nom": "CORVETTE 1",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_01.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
  },
  {
-  "cle": "maja3",
-  "nom": "MAJADROID 3",
-  "f": "PACKS/maja/x_LowPoly-Spaceships-By-Majadroid/LowPoly-Spaceships-By-Majadroid/obj-files/obj-ships/material-03/m3-ship1.obj",
-  "pack": "maja"
+  "cle": "fga_fregate1_r",
+  "nom": "FREGATE 1",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_01.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
  },
  {
-  "cle": "maja4",
-  "nom": "MAJADROID 4",
-  "f": "PACKS/maja/x_LowPoly-Spaceships-By-Majadroid/LowPoly-Spaceships-By-Majadroid/obj-files/obj-ships/material-04/m4-ship2.obj",
-  "pack": "maja"
+  "cle": "fga_corvette2_b",
+  "nom": "CORVETTE 2",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_02.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette2_r",
+  "nom": "CORVETTE 2",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_02.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate2_r",
+  "nom": "FREGATE 2",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_02.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette3_b",
+  "nom": "CORVETTE 3",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_03.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette3_r",
+  "nom": "CORVETTE 3",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_03.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate3_r",
+  "nom": "FREGATE 3",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_03.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette4_b",
+  "nom": "CORVETTE 4",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_04.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette4_r",
+  "nom": "CORVETTE 4",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_04.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate4_r",
+  "nom": "FREGATE 4",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_04.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette5_b",
+  "nom": "CORVETTE 5",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_05.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette5_r",
+  "nom": "CORVETTE 5",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_05.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate5_r",
+  "nom": "FREGATE 5",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_05.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
  }
 ]
