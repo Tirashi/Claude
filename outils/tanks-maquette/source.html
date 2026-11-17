@@ -1,0 +1,566 @@
+<title>Petits tanks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+/* Maquette « Petits tanks » (17/11) : le pack Low Poly Tank Assets de dani567 (gratuit, crédit non exigé),
+   une seule scène Blender découpée en modèles (tank simplifié, obus, caisse, arène au damier 9 × 9).
+   Trois directions jouables : A arène en temps réel, B artillerie au tour par tour, C tactique sur le damier. */
+:root{
+  --fond:#14152a; --texte:#eef0ff; --doux:#a9aed8; --or:#ffcf4a; --ligne:#2e3260; --cadre:#05060f;
+  --f-titre:"Press Start 2P", ui-monospace, monospace; --f-texte:"Pixelify Sans", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1140px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
+header b{color:var(--texte)}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:28px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%;max-width:340px}
+.dir h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);font-size:15px;text-align:center;min-height:4.5em}
+.tel{width:100%;aspect-ratio:9/19;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;position:relative;
+  box-shadow:0 18px 40px rgba(0,0,0,.6);background:#3148b8}
+.tel canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+.tel .bouton{position:absolute;font-family:var(--f-titre);font-size:9px;padding:10px 12px;border:3px solid #1a1030;border-radius:6px;
+  background:#ffcf4a;color:#2a1606;box-shadow:0 3px 0 #1a1030;cursor:pointer;display:none}
+.tel .bouton.on{display:block}
+.tel .bouton:focus-visible{outline:2px solid #fff;outline-offset:2px}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:8px;min-width:0}
+section.q h2{font-family:var(--f-titre);font-size:12px;color:var(--or);margin:0 0 6px}
+section.q p{margin:0;color:var(--doux);max-width:72ch}
+section.q li{color:var(--doux);margin:4px 0}
+section.q b{color:var(--texte)}
+#chargement{font-family:var(--f-titre);font-size:10px;color:var(--doux);text-align:center;padding:30px 0}
+</style>
+
+<div class="page">
+<header>
+  <h1>PETITS TANKS</h1>
+  <p>Le pack <b>Low Poly Tank Assets</b> de dani567 (gratuit) : 4 tanks de couleur, l'obus, la caisse bonus et une arène au damier entourée de rochers. Le pack est une seule scène 3D : je l'ai découpée en modèles et le tank a été allégé (de 66 000 à 4 600 triangles) pour tourner sur le téléphone. Les trois téléphones se jouent au doigt (ou à la souris).</p>
+</header>
+<div id="chargement">CHARGEMENT DES MODELES…</div>
+<div class="grille" id="grille"></div>
+
+<section class="q">
+  <h2>A CHOISIR</h2>
+  <ul>
+    <li><b>A. Arène</b> : action en temps réel, un doigt suffit (le tank tire tout seul sur l'ennemi le plus proche). Manches de 90 secondes, chacun pour soi contre 3 tanks de l'ordinateur.</li>
+    <li><b>B. Artillerie</b> : au tour par tour, on tire à l'arc en tenant compte du vent ; plus calme, bien pour un défi du jour (une partie, un score).</li>
+    <li><b>C. Damier</b> : tactique sur les 81 cases de l'arène, 2 tanks contre 2 ; chaque tank avance de 2 cases puis tire en ligne droite.</li>
+    <li><b>Le style</b> : ces couleurs (le fichier OBJ du pack est tout gris, je les ai reprises des images du pack) vous plaisent-elles ? Une seule arène dans le pack : d'autres arènes seraient à construire avec ses rochers, sapins et pierres.</li>
+    <li><b>Ce qui manque</b> : la tourelle ne tourne pas à part (le tank est d'un seul bloc), pas de sons ni de logo maison pour le moment.</li>
+  </ul>
+</section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>const MODELES_B64="__MODELES__";</script>
+<script>
+"use strict";
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+const TEL = [];
+let M, rendu;
+
+// ---------- couleurs (le .mtl du pack est tout gris : reprises des images du pack) ----------
+const COUL = {
+  "Material.002": "#a7949f", "Material.003": "#c98f86", "Material.008": "#3a4fb4", "Material.015": "#e6d85a",
+  "Material.011": "#8a6a48", "Material.019": "#6f6a96", "Material.024": "#bdb5ff", "Material.012": "#5e8c3a",
+  "sol": "#9fc257", "Material.021": "#2c2c38", "Material.022": "#4b4b5a", "Material.023": "#9a9aac",
+  "Material.006": "#f2b632", "Material.014": "#e2e2ec", "Material.016": "#e04040", "Material.009": "#7c40e6", "Material.005": "#f6cf48",
+};
+const EQUIPES = [
+  { nom: "JOUEUR", c: "#e2433a" }, { nom: "VERT", c: "#6cd046" }, { nom: "VIOLET", c: "#7a48ec" }, { nom: "JAUNE", c: "#f2c02c" },
+];
+const lin = h => new THREE.Color(h).convertSRGBToLinear();
+const MATS = {};
+function mat(h) { return MATS[h] || (MATS[h] = new THREE.MeshStandardMaterial({ color: lin(h), flatShading: true, roughness: .85, metalness: 0 })); }
+const GEOS = {};
+function geos(nom) {
+  if (GEOS[nom]) return GEOS[nom];
+  const out = [];
+  for (const [m, d] of Object.entries(M[nom])) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(Float32Array.from(d.p, v => v / 1000), 3));
+    g.setIndex(d.i); g.computeBoundingSphere();
+    out.push([m, g]);
+  }
+  return GEOS[nom] = out;
+}
+function modele(nom, remap = {}, ombre = true) {
+  const g = new THREE.Group();
+  for (const [m, geo] of geos(nom)) {
+    const me = new THREE.Mesh(geo, mat(remap[m] || COUL[m] || "#ff00ff"));
+    me.castShadow = ombre; me.receiveShadow = true; g.add(me);
+  }
+  return g;
+}
+
+// ---------- terrain commun ----------
+let OBS = [];
+const CASE = 1.343, BORD = -6.13;
+const cx = i => BORD + CASE * (i + .5);
+function hauteurSol(x, z) { const d = Math.hypot(x + .08, z - .17); return d < 1.5 ? .24 : d < 1.78 ? .24 * (1.78 - d) / .28 : 0; }
+function arene(scene) {
+  scene.background = lin("#3c55c8");
+  scene.fog = new THREE.Fog(lin("#3c55c8"), 24, 48);
+  scene.add(new THREE.HemisphereLight(lin("#e6e6ff"), lin("#5a4a70"), .75));
+  const so = new THREE.DirectionalLight(lin("#fff1d8"), 1.25);
+  so.position.set(-5, 11, 6); so.castShadow = true; so.shadow.mapSize.set(1024, 1024);
+  const c = so.shadow.camera; c.left = c.bottom = -8; c.right = c.top = 8; c.near = 1; c.far = 30;
+  so.shadow.bias = -.002; so.shadow.normalBias = .02; scene.add(so);
+  scene.add(modele("arene"));
+  scene.add(modele("sol", { "Material.002": COUL.sol }, false));
+}
+function collision(o, r) {
+  for (const b of OBS) {
+    const dx = o.x - b.x, dz = o.z - b.z, d = Math.hypot(dx, dz), m = b.r + r;
+    if (d < m && d > 1e-4) { o.x = b.x + dx / d * m; o.z = b.z + dz / d * m; }
+  }
+  o.x = Math.max(-5.75, Math.min(5.75, o.x)); o.z = Math.max(-5.75, Math.min(5.75, o.z));
+}
+function libre(x, z, r = .32) { return OBS.every(b => Math.hypot(x - b.x, z - b.z) > b.r + r) && Math.abs(x) < 5.7 && Math.abs(z) < 5.7; }
+function place([x, z]) { for (let k = 0; k < 60 && !libre(x, z, .4); k++) { x *= .96; z *= .96; } return [x, z]; }
+
+function creerTank(tel, eq, x, z, h) {
+  const g = new THREE.Group(), m = modele("tank", { "Material.018": eq.c });
+  m.rotation.y = Math.PI / 2; m.scale.setScalar(tel.echelle || 1); g.add(m); tel.scene.add(g);
+  const t = { g, eq, x, z, h, pv: 100, mort: false, cad: 0, t: Math.random() * 9 };
+  placer(t); return t;
+}
+function placer(t) { t.g.position.set(t.x, hauteurSol(t.x, t.z) + (t.saut || 0), t.z); t.g.rotation.y = t.h; }
+function tourner(t, cible, v, dt) {
+  let d = cible - t.h; d = Math.atan2(Math.sin(d), Math.cos(d));
+  t.h += Math.max(-v * dt, Math.min(v * dt, d)); return Math.abs(d);
+}
+function obus(tel) { const g = new THREE.Group(), m = modele("obus", {}, false); m.rotation.y = Math.PI / 2; g.add(m); tel.scene.add(g); return g; }
+
+// explosions : boules qui grossissent et s'éteignent
+const GEO_BOULE = new THREE.IcosahedronGeometry(.16, 0);
+function explosion(tel, x, y, z, taille = 1) {
+  for (let k = 0; k < 7; k++) {
+    const m = new THREE.Mesh(GEO_BOULE, new THREE.MeshBasicMaterial({ color: k < 3 ? 0xfff0a0 : k < 5 ? 0xff9a30 : 0x6a5a6a, transparent: true }));
+    const a = Math.random() * 6.3, r = Math.random() * .25 * taille;
+    m.position.set(x + Math.cos(a) * r, y + Math.random() * .2, z + Math.sin(a) * r);
+    tel.scene.add(m);
+    tel.fx.push({ m, t: 0, d: .45 + Math.random() * .3, s: taille * (1 + Math.random()), vy: .6 + Math.random() });
+  }
+  tel.secousse = Math.max(tel.secousse || 0, .12 * taille);
+}
+function majFx(tel, dt) {
+  tel.fx = tel.fx.filter(f => {
+    f.t += dt; const k = f.t / f.d;
+    if (k >= 1) { tel.scene.remove(f.m); f.m.material.dispose(); return false; }
+    f.m.scale.setScalar(.4 + f.s * k * 1.6); f.m.position.y += f.vy * dt; f.m.material.opacity = 1 - k * k; return true;
+  });
+  tel.textes = (tel.textes || []).filter(x => (x.t += dt) < 1.2);
+}
+
+// ---------- dessin de l'interface (barres de vie dans le style du pack) ----------
+const V3 = new THREE.Vector3();
+function ecran(tel, x, y, z) { V3.set(x, y, z).project(tel.cam); return [(V3.x + 1) / 2 * tel.W, (1 - V3.y) / 2 * tel.H]; }
+function txt(c, s, x, y, taille, coul = "#fff", al = "center") {
+  c.font = `${taille * DPR}px "Press Start 2P", monospace`; c.textAlign = al; c.textBaseline = "middle";
+  c.fillStyle = "#000a"; c.fillText(s, x + DPR * 1.5, y + DPR * 1.5); c.fillStyle = coul; c.fillText(s, x, y);
+}
+function barre(tel, t, nom, segs = 0) {
+  if (t.mort) return;
+  const c = tel.ctx, [x, y] = ecran(tel, t.x, hauteurSol(t.x, t.z) + .78 * (tel.echelle || 1), t.z + (tel.echelle ? -.45 : 0)), w = 44 * DPR, h = 6 * DPR;
+  txt(c, nom, x, y - 9 * DPR, 5.5, "#fff");
+  c.fillStyle = "#111"; c.fillRect(x - w / 2 - DPR, y - DPR, w + 2 * DPR, h + 2 * DPR);
+  c.fillStyle = "#333"; c.fillRect(x - w / 2, y, w, h);
+  c.fillStyle = t.eq.c; c.fillRect(x - w / 2, y, w * Math.max(0, t.pv) / 100, h);
+  c.fillStyle = "#ffffff55"; c.fillRect(x - w / 2, y, w * Math.max(0, t.pv) / 100, h / 3);
+  if (segs) { c.fillStyle = "#111"; for (let k = 1; k < segs; k++) c.fillRect(x - w / 2 + w * k / segs - DPR / 2, y, DPR, h); }
+  c.fillStyle = "#e8c050"; c.fillRect(x - w / 2, y + h + 2 * DPR, w, 2 * DPR);
+}
+function textesFlottants(tel) {
+  for (const x of tel.textes) { const [px, py] = ecran(tel, x.x, 1 + x.t * .8, x.z); txt(tel.ctx, x.s, px, py, 7, x.c); }
+}
+function bandeau(tel, l1, l2) {
+  const c = tel.ctx, y = tel.H * .4;
+  c.fillStyle = "#0c0e24dd"; c.fillRect(0, y - 40 * DPR, tel.W, 80 * DPR);
+  c.fillStyle = "#ffcf4a"; c.fillRect(0, y - 40 * DPR, tel.W, 3 * DPR); c.fillRect(0, y + 37 * DPR, tel.W, 3 * DPR);
+  txt(c, l1, tel.W / 2, y - 12 * DPR, 12, "#ffcf4a"); if (l2) txt(c, l2, tel.W / 2, y + 16 * DPR, 7, "#fff");
+}
+function vueHaute(tel, dz) { tel.cam.fov = 22; tel.cam.far = 150; tel.cam.position.set(0, 66, 9 + dz); tel.vise.set(0, 0, dz); tel.echelle = 2.1; tel.scene.fog = null; tel.cam.updateProjectionMatrix(); }
+function pointeur(tel, e) { const r = tel.cv.getBoundingClientRect(); return [(e.clientX - r.left) * tel.W / r.width, (e.clientY - r.top) * tel.H / r.height]; }
+const RAY = new THREE.Raycaster(), PLAN = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), V2 = new THREE.Vector2();
+function versSol(tel, px, py) {
+  V2.set(px / tel.W * 2 - 1, -(py / tel.H * 2 - 1)); RAY.setFromCamera(V2, tel.cam);
+  const p = new THREE.Vector3(); return RAY.ray.intersectPlane(PLAN, p) ? p : null;
+}
+
+// =====================================================================
+// A. ARENE : temps réel, chacun pour soi, tir automatique
+// =====================================================================
+const DEPARTS = [[-4.2, 4.6], [4.4, -4.9], [-4.9, -1.2], [4.6, 3.6]];
+function directionA(tel) {
+  const S = tel.S = { tanks: [], obus: [], temps: 90, fin: false, caisse: null, tc: 4, joy: null };
+  DEPARTS.map(place).forEach(([x, z], i) => { const t = creerTank(tel, EQUIPES[i], x, z, Math.atan2(-x, -z)); t.kills = 0; S.tanks.push(t); });
+  const anneau = new THREE.Mesh(new THREE.RingGeometry(.36, .44, 28), new THREE.MeshBasicMaterial({ color: lin("#ff3a2a"), transparent: true, opacity: .85 }));
+  anneau.rotation.x = -Math.PI / 2; anneau.position.y = .02; S.tanks[0].g.add(anneau);
+  const caisse = modele("caisse"); caisse.visible = false; tel.scene.add(caisse); S.mc = caisse;
+  tel.cam.fov = 50; tel.cam.position.set(-4, 10.5, 9);
+
+  function tirer(t, cible) {
+    const a = Math.atan2(cible.x - t.x, cible.z - t.z), g = obus(tel);
+    const o = { g, x: t.x + Math.sin(a) * .36, z: t.z + Math.cos(a) * .36, vx: Math.sin(a) * 7, vz: Math.cos(a) * 7, de: t, vie: 1.1 };
+    g.rotation.y = a; S.obus.push(o); t.recul = .12;
+  }
+  function plusProche(t, portee) {
+    let b = null, bd = portee;
+    for (const u of S.tanks) if (u !== t && !u.mort) { const d = Math.hypot(u.x - t.x, u.z - t.z); if (d < bd) { bd = d; b = u; } }
+    return b;
+  }
+  function renaitre(t) {
+    let best = DEPARTS[0], bd = -1;
+    for (const [x, z] of DEPARTS.map(place)) { const d = Math.min(...S.tanks.filter(u => u !== t && !u.mort).map(u => Math.hypot(u.x - x, u.z - z))); if (d > bd) { bd = d; best = [x, z]; } }
+    t.x = best[0]; t.z = best[1]; t.pv = 100; t.mort = false; t.g.visible = true; t.inv = 1.5;
+  }
+  tel.maj = dt => {
+    if (S.fin) { majFx(tel, dt); return; }
+    S.temps -= dt; if (S.temps <= 0) { S.fin = true; tel.bouton("REJOUER", () => { tel.vider(); directionA(tel); }); }
+    for (const t of S.tanks) {
+      t.t += dt; t.cad -= dt; if (t.inv) t.inv = Math.max(0, t.inv - dt);
+      if (t.mort) { t.rt -= dt; if (t.rt <= 0) renaitre(t); continue; }
+      const cible = plusProche(t, 5.2), ox = t.x, oz = t.z;
+      let mx = 0, mz = 0;
+      if (t.eq === EQUIPES[0]) {
+        if (S.joy) { const dx = S.joy.x - S.joy.ox, dy = S.joy.y - S.joy.oy, l = Math.hypot(dx, dy); if (l > 6 * DPR) { const k = Math.min(1, l / (38 * DPR)); mx = dx / l * k; mz = dy / l * k; } }
+      } else {
+        const c2 = plusProche(t, 99); const vise = S.caisse && Math.hypot(S.caisse.x - t.x, S.caisse.z - t.z) < 4 && t.pv < 80 ? S.caisse : c2;
+        if (vise) {
+          const dx = vise.x - t.x, dz = vise.z - t.z, d = Math.hypot(dx, dz) || 1;
+          if (vise === S.caisse || d > 3.4) { mx = dx / d; mz = dz / d; }
+          else if (d < 2) { mx = -dx / d; mz = -dz / d; }
+          else { const s = Math.sin(t.t * .7 + t.eq.c.length) > 0 ? 1 : -1; mx = -dz / d * s * .7; mz = dx / d * s * .7; }
+          if (t.coince > 0) { t.coince -= dt; mx = t.ex; mz = t.ez; }
+        }
+      }
+      const v = t.eq === EQUIPES[0] ? 2.7 : 2.1, l = Math.hypot(mx, mz);
+      if (l > .05) { t.x += mx * v * dt; t.z += mz * v * dt; tourner(t, Math.atan2(mx, mz), 9, dt); }
+      else if (cible) tourner(t, Math.atan2(cible.x - t.x, cible.z - t.z), 7, dt);
+      collision(t, .3);
+      for (const u of S.tanks) if (u !== t && !u.mort) { const dx = t.x - u.x, dz = t.z - u.z, d = Math.hypot(dx, dz); if (d < .58 && d > 1e-3) { t.x = u.x + dx / d * .58; t.z = u.z + dz / d * .58; } }
+      if (t.eq !== EQUIPES[0] && l > .05 && Math.hypot(t.x - ox, t.z - oz) < v * dt * .25 && !(t.coince > 0)) { const a = Math.random() * 6.3; t.coince = .8; t.ex = Math.cos(a); t.ez = Math.sin(a); }
+      if (cible && t.cad <= 0) {
+        const ecart = Math.abs(Math.atan2(Math.sin(Math.atan2(cible.x - t.x, cible.z - t.z) - t.h), Math.cos(Math.atan2(cible.x - t.x, cible.z - t.z) - t.h)));
+        if (t.eq === EQUIPES[0] || ecart < .3) { tirer(t, cible); t.cad = t.eq === EQUIPES[0] ? .55 : 1 + Math.random() * .6; }
+      }
+      if (S.caisse && Math.hypot(S.caisse.x - t.x, S.caisse.z - t.z) < .5) {
+        t.pv = Math.min(100, t.pv + 50); tel.textes.push({ s: "+50", x: t.x, z: t.z, t: 0, c: "#8f8" }); S.caisse = null; S.mc.visible = false; S.tc = 9;
+      }
+      t.recul = Math.max(0, (t.recul || 0) - dt);
+      placer(t); t.g.children[0].position.set(0, l > .05 ? Math.abs(Math.sin(t.t * 22)) * .015 : 0, -t.recul * .6);
+      t.g.visible = !t.inv || Math.sin(t.inv * 30) > 0;
+    }
+    for (const o of S.obus) {
+      o.x += o.vx * dt; o.z += o.vz * dt; o.vie -= dt; o.g.position.set(o.x, .3 + hauteurSol(o.x, o.z), o.z);
+      let touche = o.vie <= 0 || Math.abs(o.x) > 6 || Math.abs(o.z) > 6 || OBS.some(b => b.h > .3 && Math.hypot(o.x - b.x, o.z - b.z) < b.r);
+      for (const t of S.tanks) if (t !== o.de && !t.mort && Math.hypot(o.x - t.x, o.z - t.z) < .32) {
+        touche = true; if (t.inv) continue; t.pv -= 20;
+        if (t.pv <= 0) { t.mort = true; t.rt = 3; t.g.visible = false; o.de.kills++; explosion(tel, t.x, .3, t.z, 2.2); if (o.de.eq === EQUIPES[0]) tel.textes.push({ s: "+1", x: t.x, z: t.z, t: 0, c: "#ffcf4a" }); }
+      }
+      if (touche) { o.fini = true; tel.scene.remove(o.g); explosion(tel, o.x, .3, o.z, .7); }
+    }
+    S.obus = S.obus.filter(o => !o.fini);
+    if (!S.caisse && (S.tc -= dt) <= 0) { S.caisse = { x: -.08, z: .17 }; S.mc.visible = true; }
+    if (S.caisse) { S.mc.position.set(S.caisse.x, .26 + Math.sin(performance.now() / 300) * .05, S.caisse.z); S.mc.rotation.y += dt * 1.5; }
+    majFx(tel, dt);
+    const j = S.tanks[0]; tel.vise.set(j.x, 0, j.z - .3);
+    tel.cam.position.lerp(V3.set(j.x * .85, 10.5, j.z * .85 + 5), Math.min(1, dt * 3));
+  };
+  tel.hud = () => {
+    const c = tel.ctx;
+    S.tanks.forEach((t, i) => barre(tel, t, i ? "IA " + i : "JOUEUR"));
+    textesFlottants(tel);
+    txt(c, Math.ceil(Math.max(0, S.temps)) + "", tel.W / 2, 24 * DPR, 12, S.temps < 10 ? "#ff6050" : "#fff");
+    S.tanks.forEach((t, i) => { c.fillStyle = t.eq.c; c.fillRect(10 * DPR, (14 + i * 16) * DPR, 9 * DPR, 9 * DPR); txt(c, String(t.kills), 25 * DPR, (19 + i * 16) * DPR, 7, "#fff", "left"); });
+    if (S.joy) {
+      c.strokeStyle = "#ffffff70"; c.lineWidth = 3 * DPR; c.beginPath(); c.arc(S.joy.ox, S.joy.oy, 38 * DPR, 0, 7); c.stroke();
+      const dx = S.joy.x - S.joy.ox, dy = S.joy.y - S.joy.oy, l = Math.hypot(dx, dy), k = l > 38 * DPR ? 38 * DPR / l : 1;
+      c.fillStyle = "#ffffffa0"; c.beginPath(); c.arc(S.joy.ox + dx * k, S.joy.oy + dy * k, 16 * DPR, 0, 7); c.fill();
+    } else if (S.temps > 84) txt(c, "GLISSE POUR ROULER", tel.W / 2, tel.H - 34 * DPR, 7, "#fff");
+    if (S.fin) {
+      const cl = [...S.tanks].sort((a, b) => b.kills - a.kills);
+      bandeau(tel, cl[0] === S.tanks[0] ? "VICTOIRE !" : "FIN DE MANCHE", (cl[0] === S.tanks[0] ? "TU GAGNES" : cl[0].eq.nom + " GAGNE") + " AVEC " + cl[0].kills);
+    }
+  };
+  tel.bas = (x, y) => { if (!S.fin) S.joy = { ox: x, oy: y, x, y }; };
+  tel.glisse = (x, y) => { if (S.joy) { S.joy.x = x; S.joy.y = y; } };
+  tel.haut = () => { S.joy = null; };
+}
+
+// =====================================================================
+// B. ARTILLERIE : tour par tour, tir en cloche avec le vent
+// =====================================================================
+const G = 9.8, ELEV = .9;
+function trajectoire(x, z, a, p, vent, pas = .03, max = 120) {
+  const v = 3 + p * 7.5, pts = []; let px = x, py = .45, pz = z, vx = Math.sin(a) * v * Math.cos(ELEV), vz = Math.cos(a) * v * Math.cos(ELEV), vy = v * Math.sin(ELEV);
+  for (let k = 0; k < max; k++) {
+    vx += vent * pas; vy -= G * pas; px += vx * pas; py += vy * pas; pz += vz * pas; pts.push([px, py, pz]);
+    if (py < hauteurSol(px, pz)) break;
+  }
+  return pts;
+}
+function directionB(tel) {
+  const S = tel.S = { tanks: [], tour: 0, phase: "viser", vent: 0, vise: null, attente: 0, tir: null, fin: false };
+  [[-4.3, 4.6], [4.5, -4.6], [-4.6, -3.9], [4.2, 3.4]].map(place).forEach(([x, z], i) => S.tanks.push(creerTank(tel, EQUIPES[i], x, z, Math.atan2(-x, -z))));
+  S.tanks.forEach(t => t.erreur = 1);
+  vueHaute(tel, .3);
+  const points = [];
+  for (let k = 0; k < 26; k++) { const m = new THREE.Mesh(GEO_BOULE, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 })); m.scale.setScalar(.35); m.visible = false; tel.scene.add(m); points.push(m); }
+  const mo = obus(tel); mo.visible = false;
+  function nouveauTour() {
+    const vivants = S.tanks.filter(t => !t.mort);
+    if (S.tanks[0].mort || vivants.length === 1) { S.fin = true; tel.bouton("REJOUER", () => { tel.vider(); directionB(tel); }); return; }
+    do S.tour = (S.tour + 1) % 4; while (S.tanks[S.tour].mort);
+    S.vent = Math.round((Math.random() * 2 - 1) * 4) / 2; S.phase = S.tour === 0 ? "viser" : "ia"; S.attente = .9; S.vise = null;
+  }
+  function lancer(t, a, p) { t.h = a; S.tir = { pts: trajectoire(t.x, t.z, a, p, S.vent), k: 0, de: t }; S.phase = "vol"; mo.visible = true; t.recul = .15; }
+  function impact(x, y, z) {
+    explosion(tel, x, y, z, 1.8); mo.visible = false;
+    for (const t of S.tanks) if (!t.mort) {
+      const d = Math.hypot(t.x - x, t.z - z); if (d < 1.1) {
+        const deg = Math.round(50 * (1 - d / 1.1) + 10); t.pv -= deg; tel.textes.push({ s: "-" + deg, x: t.x, z: t.z, t: 0, c: "#ff8a70" });
+        if (t.pv <= 0) { t.mort = true; t.g.visible = false; explosion(tel, t.x, .3, t.z, 2.5); }
+      }
+    }
+    S.phase = "pause"; S.attente = 1.1;
+  }
+  function viseIA(t) {
+    const cibles = S.tanks.filter(u => u !== t && !u.mort).sort((a, b) => a.pv - b.pv + (Math.random() - .5) * 60);
+    const c = cibles[0], a = Math.atan2(c.x - t.x, c.z - t.z);
+    let bp = .5, bd = 99;
+    for (let p = 0; p <= 1; p += .02) { const pts = trajectoire(t.x, t.z, a, p, S.vent), f = pts[pts.length - 1], d = Math.hypot(f[0] - c.x, f[2] - c.z); if (d < bd) { bd = d; bp = p; } }
+    // chaque tir rend l'ordinateur plus précis
+    const e = t.erreur; t.erreur = Math.max(.25, t.erreur * .6);
+    return [a + (Math.random() - .5) * .3 * e, Math.max(0, Math.min(1, bp + (Math.random() - .5) * .22 * e))];
+  }
+  tel.maj = dt => {
+    majFx(tel, dt);
+    for (const t of S.tanks) { t.recul = Math.max(0, (t.recul || 0) - dt); placer(t); t.g.children[0].position.z = -t.recul * .6; }
+    if (S.fin) return;
+    const t = S.tanks[S.tour];
+    if (S.phase === "ia" && (S.attente -= dt) <= 0) { const [a, p] = viseIA(t); S.cible = [a, p]; S.phase = "ia2"; S.attente = .7; }
+    if (S.phase === "ia2") { const d = tourner(t, S.cible[0], 3, dt); if ((S.attente -= dt) <= 0 && d < .02) lancer(t, ...S.cible); }
+    if (S.phase === "vol") {
+      const T = S.tir; T.k += dt / .03 * 1.1;
+      const i = Math.min(T.pts.length - 1, Math.floor(T.k)), [x, y, z] = T.pts[i], [x2, y2, z2] = T.pts[Math.min(T.pts.length - 1, i + 1)];
+      mo.position.set(x, y, z); mo.lookAt(x2 * 2 - x, y2 * 2 - y, z2 * 2 - z); mo.rotateY(-Math.PI / 2);
+      const tank = S.tanks.find(u => u !== T.de && !u.mort && y < 1 && Math.hypot(u.x - x, u.z - z) < .5);
+      const obst = OBS.find(b => y < b.h && Math.hypot(x - b.x, z - b.z) < b.r);
+      if (tank || obst || i >= T.pts.length - 1) impact(x, Math.max(y, .1), z);
+    }
+    if (S.phase === "pause" && (S.attente -= dt) <= 0) nouveauTour();
+    const montrer = S.phase === "viser" && S.vise;
+    if (montrer) {
+      const pts = trajectoire(t.x, t.z, S.vise.a, S.vise.p, S.vent);
+      points.forEach((m, k) => { const q = pts[(k + 1) * 2]; m.visible = !!q && k < 14; if (q) m.position.set(...q); });
+      tourner(t, S.vise.a, 12, dt);
+    } else points.forEach(m => m.visible = false);
+  };
+  tel.hud = () => {
+    const c = tel.ctx;
+    S.tanks.forEach((t, i) => barre(tel, t, i ? "IA " + i : "JOUEUR"));
+    textesFlottants(tel);
+    const fl = S.vent === 0 ? "-" : (S.vent < 0 ? "<".repeat(Math.ceil(-S.vent)) : ">".repeat(Math.ceil(S.vent)));
+    txt(c, "VENT " + fl, tel.W / 2, 22 * DPR, 8, "#cfe6ff");
+    const t = S.tanks[S.tour];
+    if (!S.fin) txt(c, S.tour === 0 ? "A TOI !" : "TOUR DE " + t.eq.nom, tel.W / 2, 42 * DPR, 9, t.eq.c);
+    if (S.phase === "viser") {
+      if (S.vise) {
+        const w = tel.W * .6, x = (tel.W - w) / 2, y = tel.H - 40 * DPR;
+        c.fillStyle = "#111"; c.fillRect(x - 2 * DPR, y - 2 * DPR, w + 4 * DPR, 14 * DPR);
+        c.fillStyle = "#e2433a"; c.fillRect(x, y, w * S.vise.p, 10 * DPR); txt(c, "PUISSANCE", tel.W / 2, y - 12 * DPR, 6, "#fff");
+        c.strokeStyle = "#ffffff80"; c.lineWidth = 2 * DPR; c.beginPath(); c.moveTo(S.vise.ox, S.vise.oy); c.lineTo(S.vise.x, S.vise.y); c.stroke();
+      } else txt(c, "TIRE VERS TOI POUR VISER", tel.W / 2, tel.H - 34 * DPR, 6.5, "#fff");
+    }
+    if (S.fin) bandeau(tel, S.tanks[0].mort ? "PERDU !" : "VICTOIRE !", S.tanks[0].mort ? "TON TANK EST DETRUIT" : "DERNIER TANK DEBOUT");
+  };
+  tel.bas = (x, y) => { if (S.phase === "viser" && !S.fin) S.vise = { ox: x, oy: y, x, y, a: S.tanks[0].h, p: 0 }; };
+  tel.glisse = (x, y) => {
+    if (!S.vise) return; S.vise.x = x; S.vise.y = y;
+    const dx = S.vise.ox - x, dy = S.vise.oy - y, l = Math.hypot(dx, dy);
+    if (l > 8 * DPR) { S.vise.a = Math.atan2(dx, dy); S.vise.p = Math.min(1, l / (tel.H * .32)); }
+  };
+  tel.haut = () => { if (S.vise && S.vise.p > .05) lancer(S.tanks[0], S.vise.a, S.vise.p); S.vise = null; };
+}
+
+// =====================================================================
+// C. DAMIER : tactique, 2 tanks contre 2, case par case
+// =====================================================================
+function directionC(tel) {
+  const N = 9, bloque = [];
+  for (let i = 0; i < N; i++) { bloque[i] = []; for (let j = 0; j < N; j++) bloque[i][j] = OBS.some(b => b.h > .3 && Math.hypot(cx(i) - b.x, cx(j) - b.z) < b.r * .85); }
+  const S = tel.S = { tanks: [], sel: null, phase: "choisir", fin: false, cases: [], ia: [], att: 0 };
+  const proche = (i, j) => { for (let r = 0; r < 5; r++) for (let di = -r; di <= r; di++) for (let dj = -r; dj <= r; dj++) { const a = i + di, b = j + dj; if (a >= 0 && b >= 0 && a < N && b < N && !bloque[a][b] && !S.tanks.some(t => t.i === a && t.j === b)) return [a, b]; } };
+  [[0, 2, 8], [3, 6, 8], [1, 2, 0], [2, 6, 0]].forEach(([e, i, j]) => {
+    const [a, b] = proche(i, j), t = creerTank(tel, EQUIPES[e], cx(a), cx(b), j ? Math.PI : 0);
+    t.i = a; t.j = b; t.joueur = e === 0 || e === 3; t.fait = false; S.tanks.push(t);
+  });
+  vueHaute(tel, 0);
+  // tuiles de surbrillance
+  const tuiles = [];
+  for (let k = 0; k < 40; k++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(CASE * .9, CASE * .9), new THREE.MeshBasicMaterial({ transparent: true, opacity: .45, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.visible = false; tel.scene.add(m); tuiles.push(m); }
+  const occupe = (i, j, sauf) => S.tanks.find(t => t !== sauf && !t.mort && t.i === i && t.j === j);
+  const dedans = (i, j) => i >= 0 && j >= 0 && i < N && j < N;
+  function atteignables(t) {
+    const vus = new Map([[t.i + "," + t.j, 0]]), f = [[t.i, t.j]], out = [[t.i, t.j]];
+    while (f.length) { const [i, j] = f.shift(), d = vus.get(i + "," + j); if (d === 2) continue;
+      for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const x = i + a, y = j + b, k = x + "," + y;
+        if (dedans(x, y) && !bloque[x][y] && !occupe(x, y, t) && !vus.has(k)) { vus.set(k, d + 1); f.push([x, y]); out.push([x, y]); } } }
+    return out;
+  }
+  function ligne(t, i, j, di, dj) { const out = []; for (let k = 1; k <= 4; k++) { const x = i + di * k, y = j + dj * k; if (!dedans(x, y) || bloque[x][y]) break; out.push([x, y]); if (occupe(x, y, t)) break; } return out; }
+  function montrer(liste, coul) {
+    tuiles.forEach((m, k) => { const c = liste[k]; m.visible = !!c; if (c) { m.position.set(cx(c[0]), hauteurSol(cx(c[0]), cx(c[1])) + .03, cx(c[1])); m.material.color.set(c[2] || coul); } });
+  }
+  function bouger(t, i, j, ensuite) { t.anim = { x0: t.x, z0: t.z, x1: cx(i), z1: cx(j), k: 0, ensuite }; t.i = i; t.j = j; if (i !== Math.round((t.x - BORD) / CASE - .5) || j !== Math.round((t.z - BORD) / CASE - .5)) t.h = Math.atan2(cx(i) - t.x, cx(j) - t.z); }
+  function tirer(t, di, dj) {
+    t.h = Math.atan2(di, dj); const l = ligne(t, t.i, t.j, di, dj), f = l[l.length - 1];
+    const g = obus(tel); g.rotation.y = t.h; t.recul = .15;
+    const cible = f && occupe(f[0], f[1], t);
+    S.tir = { g, x: t.x, z: t.z, x1: f ? cx(f[0]) : t.x + di * .8, z1: f ? cx(f[1]) : t.z + dj * .8, k: 0, cible, fin: () => {} };
+    return S.tir;
+  }
+  function finTank(t) { t.fait = true; S.sel = null; montrer([]); S.phase = "choisir";
+    if (S.tanks.filter(u => u.joueur && !u.mort).every(u => u.fait)) { S.phase = "ia"; S.att = .6; S.ia = S.tanks.filter(u => !u.joueur && !u.mort); }
+    tel.bouton(null); }
+  function verifierFin() {
+    const j = S.tanks.some(t => t.joueur && !t.mort), o = S.tanks.some(t => !t.joueur && !t.mort);
+    if (!j || !o) { S.fin = j ? "VICTOIRE !" : "PERDU !"; montrer([]); tel.bouton("REJOUER", () => { tel.vider(); directionC(tel); }); }
+    return !j || !o;
+  }
+  function coupIA(t) {
+    let best = null;
+    for (const [i, j] of atteignables(t)) {
+      const menace = S.tanks.filter(u => u.joueur && !u.mort).reduce((s, u) => s + ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => ligne(u, u.i, u.j, a, b).some(([x, y]) => x === i && y === j)) ? 3 : 0), 0);
+      const dist = Math.min(...S.tanks.filter(u => u.joueur && !u.mort).map(u => Math.abs(u.i - i) + Math.abs(u.j - j)));
+      for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [0, 0]]) {
+        let s = -menace - dist * .3 + Math.random() * .5;
+        if (a || b) { const l = ligne(t, i, j, a, b), f = l[l.length - 1], c = f && occupe(f[0], f[1], t); if (c && c !== t) s += c.joueur ? (c.pv <= 34 ? 15 : 10) : -8; else s -= .2; }
+        if (!best || s > best.s) best = { s, i, j, a, b };
+      }
+    }
+    return best;
+  }
+  tel.maj = dt => {
+    majFx(tel, dt);
+    for (const t of S.tanks) {
+      if (t.anim) { const A = t.anim; A.k = Math.min(1, A.k + dt * 2.2); t.x = A.x0 + (A.x1 - A.x0) * A.k; t.z = A.z0 + (A.z1 - A.z0) * A.k; if (A.k >= 1) { t.anim = null; A.ensuite && A.ensuite(); } }
+      t.recul = Math.max(0, (t.recul || 0) - dt); placer(t); t.g.children[0].position.z = -t.recul * .6;
+    }
+    if (S.tir) {
+      const T = S.tir; T.k = Math.min(1, T.k + dt * 3.5 / Math.max(1, Math.hypot(T.x1 - T.x, T.z1 - T.z) / 2));
+      T.g.position.set(T.x + (T.x1 - T.x) * T.k, .3 + hauteurSol(T.x, T.z), T.z + (T.z1 - T.z) * T.k);
+      if (T.k >= 1) {
+        tel.scene.remove(T.g); explosion(tel, T.x1, .3, T.z1, T.cible ? 1.4 : .7);
+        if (T.cible) { const c = T.cible; c.pv -= 34; tel.textes.push({ s: "-1", x: c.x, z: c.z, t: 0, c: "#ff8a70" }); if (c.pv <= 0) { c.mort = true; c.g.visible = false; explosion(tel, c.x, .3, c.z, 2.4); } }
+        S.tir = null; T.suite && T.suite();
+      }
+    }
+    if (S.phase === "ia" && !S.tir && !S.tanks.some(t => t.anim) && (S.att -= dt) <= 0) {
+      const t = S.ia.shift();
+      if (!t || verifierFin()) { if (!S.fin) { S.phase = "choisir"; S.tanks.forEach(u => u.fait = false); } return; }
+      if (t.mort) return;
+      const c = coupIA(t); S.att = .5;
+      bouger(t, c.i, c.j, () => { if (c.a || c.b) { const T = tirer(t, c.a, c.b); T.suite = () => verifierFin(); } });
+    }
+  };
+  tel.hud = () => {
+    S.tanks.forEach(t => { barre(tel, t, t.joueur ? (t.fait && S.phase !== "ia" ? "FINI" : "A TOI") : "IA", 3); });
+    textesFlottants(tel);
+    if (!S.fin) txt(tel.ctx, S.phase === "ia" ? "TOUR DE L'IA" : S.phase === "tir" ? "TOUCHE UNE CASE ROUGE" : S.sel ? "OU ALLER ?" : "TOUCHE UN DE TES TANKS", tel.W / 2, 24 * DPR, 7, S.phase === "ia" ? "#b8a0ff" : "#fff");
+    if (S.fin) bandeau(tel, S.fin, S.fin === "PERDU !" ? "TES DEUX TANKS SONT DETRUITS" : "L'IA EST DETRUITE");
+  };
+  tel.bas = (px, py) => {
+    if (S.fin || S.phase === "ia" || S.tir || S.tanks.some(t => t.anim)) return;
+    const p = versSol(tel, px, py); if (!p) return;
+    const i = Math.floor((p.x - BORD) / CASE), j = Math.floor((p.z - BORD) / CASE);
+    if (S.phase === "tir") {
+      const t = S.sel;
+      for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (ligne(t, t.i, t.j, a, b).some(([x, y]) => x === i && y === j)) {
+        const T = tirer(t, a, b); montrer([]); S.phase = "attente"; tel.bouton(null);
+        T.suite = () => { if (!verifierFin()) finTank(t); }; return;
+      }
+      return;
+    }
+    const t = S.tanks.find(u => u.joueur && !u.mort && !u.fait && u.i === i && u.j === j);
+    if (t) { S.sel = t; montrer(atteignables(t), "#7dff8a"); return; }
+    if (S.sel && atteignables(S.sel).some(([a, b]) => a === i && b === j)) {
+      const s = S.sel; montrer([]);
+      bouger(s, i, j, () => {
+        const l = [[1, 0], [-1, 0], [0, 1], [0, -1]].flatMap(([a, b]) => ligne(s, s.i, s.j, a, b).map(([x, y]) => [x, y, occupe(x, y, s) ? (occupe(x, y, s).joueur ? "#ffb040" : "#ff2a2a") : "#ff7070"]));
+        montrer(l); S.phase = "tir"; tel.bouton("PASSER", () => finTank(s));
+      });
+    }
+  };
+  tel.glisse = tel.haut = () => {};
+  tel.dbg = { bloque, atteignables };
+}
+
+// =====================================================================
+// téléphones, rendu partagé
+// =====================================================================
+const DIRS = [
+  { cle: "A", titre: "A. ARENE", texte: "Temps réel, chacun pour soi. Glisser pour rouler, le tank tire tout seul. Caisse au centre : +50 PV.", f: directionA },
+  { cle: "B", titre: "B. ARTILLERIE", texte: "Tour par tour. Tirer vers soi comme un lance-pierre, lâcher pour faire feu. Attention au vent.", f: directionB },
+  { cle: "C", titre: "C. DAMIER", texte: "Tactique sur 9 × 9 cases, 2 contre 2. Toucher un tank, une case (2 pas), puis une ligne de tir.", f: directionC },
+];
+function creerTel(d) {
+  const sec = document.createElement("div"); sec.className = "dir";
+  sec.innerHTML = `<h2>${d.titre}</h2><p>${d.texte}</p><div class="tel"><canvas></canvas><button class="bouton"></button></div>`;
+  document.getElementById("grille").appendChild(sec);
+  const tel = { d, cv: sec.querySelector("canvas"), btn: sec.querySelector(".bouton"), fx: [], textes: [], vise: new THREE.Vector3() };
+  tel.ctx = tel.cv.getContext("2d");
+  tel.cam = new THREE.PerspectiveCamera(42, 9 / 19, .5, 80);
+  tel.bouton = (texte, f) => {
+    tel.btn.classList.toggle("on", !!texte); if (!texte) return;
+    tel.btn.textContent = texte; tel.btn.onclick = e => { e.stopPropagation(); f(); };
+    tel.btn.style.cssText = texte === "PASSER" ? "right:12px;bottom:14px" : "left:50%;top:52%;transform:translateX(-50%)";
+  };
+  tel.vider = () => { tel.echelle = 0; tel.scene = new THREE.Scene(); arene(tel.scene); tel.fx = []; tel.textes = []; tel.bouton(null); };
+  tel.vider(); d.f(tel);
+  const ev = (n, f) => tel.cv.addEventListener(n, e => { const [x, y] = pointeur(tel, e); f(x, y, e); });
+  ev("pointerdown", (x, y, e) => { tel.cv.setPointerCapture(e.pointerId); tel.bas(x, y); });
+  ev("pointermove", (x, y) => tel.glisse(x, y));
+  ev("pointerup", (x, y) => tel.haut(x, y)); ev("pointercancel", (x, y) => tel.haut(x, y));
+  new IntersectionObserver(es => tel.visible = es[0].isIntersecting).observe(tel.cv);
+  TEL.push(tel);
+}
+function taille() {
+  const r = TEL[0].cv.getBoundingClientRect(), W = Math.round(r.width * DPR), H = Math.round(r.height * DPR);
+  for (const t of TEL) { t.W = t.cv.width = W; t.H = t.cv.height = H; t.cam.aspect = W / H; t.cam.updateProjectionMatrix(); }
+  rendu.setSize(W, H, false);
+}
+let avant = performance.now();
+function boucle(now) {
+  const dt = Math.min(.05, (now - avant) / 1000); avant = now;
+  for (const t of TEL) {
+    if (!t.visible || !t.W) continue;
+    t.maj(dt);
+    t.secousse = Math.max(0, (t.secousse || 0) - dt * .5);
+    const s = t.secousse || 0;
+    t.cam.lookAt(t.vise.x + (Math.random() - .5) * s, t.vise.y, t.vise.z + (Math.random() - .5) * s);
+    rendu.render(t.scene, t.cam);
+    t.ctx.drawImage(rendu.domElement, 0, 0); t.hud();
+  }
+  requestAnimationFrame(boucle);
+}
+(async () => {
+  const bin = Uint8Array.from(atob(MODELES_B64), c => c.charCodeAt(0));
+  M = JSON.parse(await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
+  OBS = M.obstacles.filter(o => o[4] !== "Cylinder" && o[3] > .3).map(([x, z, r, h]) => ({ x, z, r, h }));
+  rendu = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  rendu.outputEncoding = THREE.sRGBEncoding; rendu.shadowMap.enabled = true; rendu.shadowMap.type = THREE.PCFSoftShadowMap; rendu.setPixelRatio(1);
+  document.getElementById("chargement").remove();
+  DIRS.forEach(creerTel);
+  taille(); addEventListener("resize", taille);
+  requestAnimationFrame(boucle);
+})();
+</script>

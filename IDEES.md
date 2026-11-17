@@ -166,6 +166,9 @@ Ordre conseillé : coloriage, puis musique, puis le dungeon crawler et son besti
 - 🟡 **Politique** (« Victoria 3 minimaliste », documents de l'utilisateur du 13/11) — chantier : moteur de règles testé puis simulateur, dans [`specs/politique.md`](specs/politique.md).
 - **Grande stratégie commerciale victorienne** 🔴 à ⚫ — façon Victoria 3 en simple : **carte aux territoires dessinés** (formes et frontières, pas d'hexagones), quelques aménagements par territoire, surtout du **commerce** : acheter et vendre des ressources entre États, prix qui bougent avec l'offre et la demande, chaînes de production et industrialisation ; batailles à résolution simple, peu d'animations. Époque **victorienne** choisie le 07/11 (le Moyen Âge serait trop proche de Duché). Voisins à ne pas répéter : Duché, Bannières, La Caravane, Le Port de commerce.
 
+## ✅ Tank Arena (ex-« Petits tanks », idée de l'utilisateur du 17/11)
+- ✅ **Tank Arena** (`tank-arena/`, 17/11) : maquette à 3 directions (arène, artillerie, damier), direction A choisie — tout dans [`specs/tank-arena.md`](specs/tank-arena.md).
+
 ## Achats (bundles et packs repérés, relevé du 30/10)
 Bundles mis de côté par l'utilisateur (onglets ouverts le 30/10). Heures en heure de Paris. Licences : utilisation dans nos jeux, pas de revente ni de redistribution des fichiers (accepté depuis le 30/10, voir « Préférences notées »).
 
