@@ -55,7 +55,7 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
    - abattre le croiseur amiral rouge ;
    - défendre une ville côtière contre des bombardiers ;
    - survivre 3 minutes.
-2. **Boss** : un très grand vaisseau rouge (le carrier niko agrandi). Ses tourelles et ses boucliers se détruisent dans l'ordre, et des chasseurs décollent de lui.
+2. **Boss** : un très grand vaisseau rouge (le croiseur rouge le plus massif, agrandi). Ses tourelles et ses boucliers se détruisent dans l'ordre, et des chasseurs décollent de lui.
 3. **Ailiers** : 2 chasseurs bleus volent avec le joueur et attaquent la cible verrouillée.
 4. **Son** : moteur qui monte avec le boost, rafales, missiles, explosions, et une musique. Sons libres, cités dans les crédits.
 5. **Sensations** :
