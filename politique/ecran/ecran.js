@@ -128,6 +128,7 @@ function frame(){
       papierRond(x0, y0 - .35, .62); sprite(S[p.id], x0, y0 + .2, 1.15, true, p.chantier ? .45 : 1);
       if (!p.chantier && FUME[p.id]) fumee(...ecran(x0 + .25, y0 - .9), .7, i);
       etiquette(BAT[p.id].nom.replace("Mine de ", "Mine ") + (p.chantier ? ` · ${p.chantier} t.` : p.niveau ? " ★".repeat(Math.min(2, p.niveau)) : ""), x0, y0 + .55, 12, { sc: false, fond: "rgba(239,227,200,.92)" }); });
+    for (const r of C.RIDS){ const occ = (apercu.occupations || {})[r]; if (occ && occ !== "joueur"){ g.globalAlpha = .35; g.drawImage(masqueRouge(r), Math.round(ax), Math.round(ay), Math.round(lw), Math.round(lh)); g.globalAlpha = 1; } }
     if (REGIONS_OK(choix) && !aConstruire){ g.globalAlpha = .45; g.drawImage(masque(choix), Math.round(ax), Math.round(ay), Math.round(lw), Math.round(lh)); g.globalAlpha = 1; }
   }
   // une charrette par contrat en cours
@@ -146,6 +147,12 @@ function masque(r){ if (MASQUES[r]) return MASQUES[r];
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++){ const x = B.x0 + (i + .5) / px, y = B.y0 + (j + .5) / px;
     if (C.terre(x, y) && C.nationEn(x, y) === 0 && C.regionEn(x, y) !== ri){ const q = (j * w + i) * 4; p[q] = 40; p[q + 1] = 30; p[q + 2] = 20; p[q + 3] = 150; } }
   k.putImageData(im, 0, 0); return MASQUES[r] = c; }
+// une région occupée : hachures rouges
+function masqueRouge(r){ const cle = "rouge_" + r; if (MASQUES[cle]) return MASQUES[cle];
+  const Rm = R.pays, px = Rm.px, B = Rm.B, w = Rm.c.width, h = Rm.c.height, c = C.toile(w, h), k = c.getContext("2d"), im = k.createImageData(w, h), p = im.data, ri = C.RIDS.indexOf(r);
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++){ const x = B.x0 + (i + .5) / px, y = B.y0 + (j + .5) / px;
+    if ((i + j) % 9 < 3 && C.terre(x, y) && C.nationEn(x, y) === 0 && C.regionEn(x, y) === ri){ const q = (j * w + i) * 4; p[q] = 155; p[q + 1] = 42; p[q + 2] = 31; p[q + 3] = 255; } }
+  k.putImageData(im, 0, 0); return MASQUES[cle] = c; }
 function fumee(X, Y, k, graine){ const t = performance.now() / 1000; g.strokeStyle = "rgba(58,42,28,.55)"; g.lineWidth = 1.2;
   for (let n = 0; n < 3; n++){ const a = (t * .45 + n / 3 + graine * .13) % 1; g.globalAlpha = 1 - a; g.beginPath(); g.arc(X + Math.sin(a * 5 + graine) * 4 * k, Y - a * 26 * k, (2.5 + a * 5) * k, 0, 6.3); g.stroke(); } g.globalAlpha = 1; }
 function passant(X, Y, k){ k = Math.max(.7, Math.min(1.4, k)); const t = performance.now() / 160; g.strokeStyle = ENC; g.fillStyle = ENC; g.lineWidth = 1.3;
@@ -173,7 +180,7 @@ function etiquettes(){
       etiquette(`${signe(N.relation)} · ${pr.distance} étape${pr.distance > 1 ? "s" : ""}${tr ? " · traité" : ""}${apercu.embargos.includes(id) ? " · embargo" : ""}${guerre ? " · GUERRE" : ""}`, x, y + 1.45, 13, { sc: false, ital: true, coul: N.relation < 0 || guerre ? ROUGE : null }); } }
   else {
     for (const r of C.RIDS){ const [x, y] = C.CENTRES[r], Rg = apercu.regions[r], occ = (apercu.occupations || {})[r];
-      etiquette(Rg.nom + (occ ? " (occupée)" : ""), x, y - 1.15, 18, { fond: choix === r ? "rgba(155,42,31,.9)" : `rgba(${C.RCOUL[r].join(",")},.85)`, coul: "#fbf3e0", cadre: ENC }); }
+      etiquette(Rg.nom + (occ && occ !== "joueur" ? " — occupée par " + nomNation(occ) : ""), x, y - 1.15, 18, { fond: choix === r ? "rgba(155,42,31,.9)" : `rgba(${C.RCOUL[r].join(",")},.85)`, coul: "#fbf3e0", cadre: ENC }); }
     for (const id of C.IDS) if (id !== "joueur"){ const p = C.ROUTES[id].find(([x, y]) => x < C.PAYS_B.x0 + 2.2 || y < C.PAYS_B.y0 + 2.2 || x > C.PAYS_B.x1 - 2.2 || y > C.PAYS_B.y1 - 2.2);
       if (p) etiquette(nomNation(id) + " →", p[0], p[1] - .5, 14, { sc: false, ital: true }); } } }
 
@@ -301,8 +308,25 @@ function menuLois(){ const t = dispo(), lanc = t.filter(a => a.type === "loi"), 
   else h += `<p class="aide">Une seule loi en débat à la fois.</p>`;
   for (const c in CAT){ const v = apercu.lois[c], ls = lanc.filter(a => LOIS[a.id].categorie === c);
     h += `<div class="section">${CAT[c]} — ${v ? LOIS[v.id].nom : "au centre"}</div>`;
-    h += ls.map(a => `<div class="ligne"><span>${LOIS[a.id].nom}<br><i class="ordres">${texteLoi(a.id).slice(0, 160)}${texteLoi(a.id).length > 160 ? "…" : ""} · ${Math.round(Lois.chance(apercu, a.id) * 100)} %</i></span><button class="btn" data-a="${lanc.indexOf(a)}">Proposer</button></div>`).join(""); }
-  ouvreFiche(h); lier(fiche, lanc, menuLois); const ab = document.getElementById("abandon"); if (ab) ab.onclick = () => { if (faire({ type: "abandonner" }, "Débat abandonné.")) menuLois(); }; }
+    h += ls.map(a => `<div class="ligne"><span>${LOIS[a.id].nom}<br><i class="ordres">${LOIS[a.id].bord || ""} · adoption ${Math.round(Lois.chance(apercu, a.id) * 100)} %</i></span><span><button class="btn" data-wiki="${a.id}">Lire</button> <button class="btn" data-a="${lanc.indexOf(a)}">Proposer</button></span></div>`).join(""); }
+  h += `<div class="actions"><button class="btn" id="wikiTout">Toutes les lois (wiki)</button></div>`;
+  ouvreFiche(h); lier(fiche, lanc, menuLois);
+  fiche.querySelectorAll("[data-wiki]").forEach(b => b.onclick = () => ficheLoi(b.dataset.wiki, menuLois));
+  document.getElementById("wikiTout").onclick = wikiLois; const ab = document.getElementById("abandon"); if (ab) ab.onclick = () => { if (faire({ type: "abandonner" }, "Débat abandonné.")) menuLois(); }; }
+// une loi en détail : bord, factions pour et contre, texte complet, état
+const nomsFac = l => (l || []).map(f => `<span style="color:${FCOUL[f]}">${FAC[f] ? FAC[f].nom : f}</span>`).join(", ") || "personne";
+function ficheLoi(id, retour){ const L = LOIS[id], v = apercu.lois[L.categorie], enVig = v && v.id === id, deb = apercu.debat && apercu.debat.id === id;
+  const a = dispo().find(x => x.type === "loi" && x.id === id);
+  ouvreFiche(`<h2>${L.nom}</h2><p class="aide">${CAT[L.categorie]} · ${L.bord || "centre"}${enVig ? " · <b>en vigueur</b>" : deb ? " · <b>en débat</b>" : ""}</p>
+    <p>${texteLoi(id)}</p><p>Pour : ${nomsFac(L.pour)}.<br>Contre : ${nomsFac(L.contre)}.</p>
+    ${a || deb ? `<p>Chance d'adoption : <b>${Math.round(Lois.chance(apercu, id) * 100)} %</b> par tour de débat (puissance des factions pour, moins celle des factions contre).</p>` : ""}
+    <div class="actions">${a ? `<button class="btn" id="proposer">Proposer</button>` : ""}<button class="btn" id="retourLoi">◂ Retour</button></div>`);
+  if (a) document.getElementById("proposer").onclick = () => { if (faire(a, libelle(a))) menuLois(); };
+  document.getElementById("retourLoi").onclick = retour || menuLois; }
+function wikiLois(){ let h = `<h2>Les lois</h2><p class="aide">Une loi en vigueur par catégorie ; sans loi, la catégorie est au centre.</p>`;
+  for (const c in CAT){ h += `<div class="section">${CAT[c]}</div>` + Object.keys(LOIS).filter(id => LOIS[id].categorie === c).map(id => {
+      const v = apercu.lois[c] && apercu.lois[c].id === id; return `<div class="ligne"><span>${v ? "● " : ""}${LOIS[id].nom} <i class="ordres">${LOIS[id].bord || ""}</i></span><button class="btn" data-wiki="${id}">Lire</button></div>`; }).join(""); }
+  ouvreFiche(h); fiche.querySelectorAll("[data-wiki]").forEach(b => b.onclick = () => ficheLoi(b.dataset.wiki, wikiLois)); }
 function menuBudget(){ const t = dispo(), b = Economie.bilan(apercu), imp = t.filter(a => a.type === "impots"), inst = t.filter(a => a.type === "institution");
   const l = (txt, v) => `<div class="ligne"><span>${txt}</span><b>${signe(v)}</b></div>`;
   ouvreFiche(`<h2>Budget</h2><p>Trésor <b>${Math.round(apercu.tresor)} or</b> · impôts <b>${apercu.impots || "normal"}</b> · prévision du tour <b>${signe(b.solde)} or</b></p>
@@ -324,7 +348,10 @@ function menuFactions(){ const t = dispo(), ac = t.filter(a => a.type === "apais
     h += `<div class="section" style="color:${FCOUL[f]}">${FAC[f].nom} — ${STATUT[x.statut] || x.statut}</div>
       <div class="ligne"><span>colère</span><div class="jauge"><span style="width:${x.colere}%;background:${ROUGE}"></span></div><b>${Math.round(x.colere)}</b></div>
       <div class="ligne"><span>puissance</span><div class="jauge"><span style="width:${Math.min(100, x.puissance)}%;background:${FCOUL[f]}"></span></div><b>${Math.round(x.puissance)}</b></div>
+      <p class="ordres">Niveau de vie : ${Math.round(Factions.couverture(apercu, f) * 100)} % de son panier (${(P.FACTIONS.REGLES_FACTIONS.niveauDeVie.paniers[f] || []).map(b => BIENS[b] || b).join(", ")}) · demande : ${(INST.THESAURISATION.demandes[f] || {}).texte || "—"} ${Factions.demandeSatisfaite(apercu, f) ? "(satisfaite)" : "(pas encore)"}</p>
       ${mes.map(a => `<div class="ligne"><span>${libelle(a)}</span><button class="btn" data-a="${ac.indexOf(a)}">Ordonner</button></div>`).join("")}`; }
+  const S0 = P.FACTIONS.REGLES_FACTIONS.seuils;
+  h += `<p class="aide">Colère : elle gronde à ${S0.grondement}, fait grève à ${S0.greve}, renverse le gouvernement à ${S0.revolution}. La puissance pèse dans les débats des lois. Garder un gros trésor fâche les factions dont la demande n'est pas satisfaite.</p>`;
   ouvreFiche(h); lier(fiche, ac, menuFactions); }
 document.getElementById("mLois").onclick = menuLois;
 document.getElementById("mBudget").onclick = menuBudget;
@@ -344,7 +371,10 @@ function titre(){ const s = charge();
   document.getElementById("nouvelle").onclick = choixPays; }
 function choixPays(){
   ouvreModale(`<h2>Choisir son pays</h2><div class="liste">${Object.keys(PAYS).map(id => { const p = PAYS[id];
-      return `<button class="carte-pays" data-p="${id}"><b>${p.nom}</b><br>${p.texte}<br><span class="ordres">${Object.keys(p.factions).map(f => `${FAC[f].nom} ${p.factions[f]}`).join(" · ")}</span></button>`; }).join("")}</div>
+      const camp = p.camp ? "favorise " + p.camp : "";
+      const lois = (p.lois || []).map(l => LOIS[l].nom).join(", ");
+      return `<button class="carte-pays" data-p="${id}"><b>${p.nom}</b> <i class="ordres">— ${camp}</i><br>${p.texte}<br><span class="ordres">${Object.keys(p.factions).map(f => `${FAC[f].nom} ${p.factions[f]}`).join(" · ")}${lois ? "<br>Loi en vigueur : " + lois : ""}</span></button>`; }).join("")}</div>
+    <p class="aide">Pour l'ambition Autorité, chaque pays favorise un camp : ses factions puissantes soutiennent plus facilement les lois de ce côté.</p>
     <div class="actions"><button class="btn" id="retourTitre">◂ Retour</button></div>`);
   modale.querySelectorAll("[data-p]").forEach(b => b.onclick = () => nouvellePartie(b.dataset.p));
   document.getElementById("retourTitre").onclick = titre; }
@@ -361,13 +391,19 @@ function evenement(){ const ev = apercu.evenement, ac = dispo().filter(a => a.ty
   modale.querySelectorAll("[data-i]").forEach(b => b.onclick = () => { if (faire(ac[+b.dataset.i], Cd.nom)) fermeModale(); }); }
 function rapport(avant){
   if (base.fin){ finDePartie(); return; }
-  const d = base.tresor - avant.tresor;
-  ouvreModale(`<h2>Tour ${base.tour}</h2><p>Trésor ${Math.round(base.tresor)} or (${signe(d)}) · ${Math.round(base.familles)} familles</p>${(base.journal || []).map(m => `<p>• ${m}</p>`).join("") || "<p class='aide'>Un tour calme.</p>"}
+  const d = base.tresor - avant.tresor, chg = [];
+  for (const f in base.factions){ const a0 = avant.factions[f].statut, a1 = base.factions[f].statut; if (a0 !== a1) chg.push(`<span style="color:${FCOUL[f]}">${FAC[f].nom}</span> : ${STATUT[a0] || a0} → <b>${STATUT[a1] || a1}</b>`); }
+  for (const n in base.nations){ const r0 = avant.nations[n].relation, r1 = base.nations[n].relation; if (Math.abs(r1 - r0) >= 5) chg.push(`${nomNation(n)} : relation ${signe(r0)} → <b>${signe(r1)}</b>`); }
+  ouvreModale(`<h2>Tour ${base.tour}</h2><p>Trésor ${Math.round(base.tresor)} or (${signe(d)}) · ${Math.round(base.familles)} familles</p>
+    ${chg.length ? `<div class="section">Ce qui a changé</div>${chg.map(x => `<p>• ${x}</p>`).join("")}` : ""}
+    <div class="section">Journal</div>${(base.journal || []).map(m => `<p>• ${m}</p>`).join("") || "<p class='aide'>Un tour calme.</p>"}
     <div class="actions"><button class="btn" id="ok">Continuer</button></div>`);
   document.getElementById("ok").onclick = () => { fermeModale(); evenement(); }; }
 function finDePartie(){ const m = Objectifs.medailles(base), noms = ["aucune", "bronze", "argent", "or"];
   ouvreModale(`<h2>Fin de la partie</h2><p>${base.issue && base.issue.type === "revolution" ? `Révolution : les ${FAC[base.issue.faction] ? FAC[base.issue.faction].nom : base.issue.faction} ont renversé le gouvernement.` : "Les 40 tours sont passés."}</p>
-    ${Object.keys(OBJ).map(id => `<div class="ligne"><span>${OBJ[id].nom}${id === base.ambition ? " (ambition)" : ""}</span><b>${noms[m[id] || 0]}</b></div>`).join("")}
+    ${(() => { const mes = Objectifs.mesures(base); return Object.keys(OBJ).map(id => { const se = (OBJ[id].seuils[base.pays] || OBJ[id].seuils.equilibre || []).join(" / ");
+      return `<div class="ligne"><span>${id === base.ambition ? "★ " : ""}${OBJ[id].nom}<br><i class="ordres">${mes[id]} — bronze / argent / or : ${se}</i></span><b>${noms[m[id] || 0]}</b></div>`; }).join(""); })()}
+    ${base.ambition ? `<div class="section">Étapes de l'ambition</div>${Objectifs.etapes(base).map(x => `<p>${x.faite ? "✔" : "○"} ${x.texte}</p>`).join("")}` : ""}
     <div class="actions"><button class="btn" id="rejouer">Nouvelle partie</button></div>`);
   document.getElementById("rejouer").onclick = choixPays; }
 

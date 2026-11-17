@@ -498,3 +498,13 @@ Maquette 4 validée (« Je valide la maquette, on passe à l'écran »). Fichier
 - Testé : 12 tours joués dans le navigateur avec des ordres au hasard, sans erreur ; `verifications.js` passe. À essayer sur le téléphone. Pas encore d'artefact (le jeu lit ses images dans `politique/images/`).
 - Prochaines sessions possibles : mini-wiki des lois, détails des factions (demandes, personas cachés), guerre sur la carte (régions occupées), écran de fin plus riche, nom du jeu.
 
+## 42. L'écran, session 2 (17/11)
+- CI : le jeu manquait dans `ORDRE` (accueil.js) ; corrigé.
+- **Choix du pays** : le camp que chaque pays favorise pour l'Autorité (§ 34, champ `camp` de `donnees/pays.js`, texte seulement) et la loi déjà en vigueur.
+- **Mini-wiki des lois** : « Lire » sur chaque loi (catégorie, bord, texte complet, factions pour et contre en couleur, chance d'adoption, en vigueur / en débat, Proposer) ; « Toutes les lois (wiki) » : les 33 lois par catégorie, celle en vigueur marquée.
+- **Factions** : niveau de vie (part de leur panier couverte), demande (thésaurisation) satisfaite ou non, seuils de colère.
+- **Guerre sur la carte du pays** : une région occupée est hachurée de rouge, « occupée par … ».
+- **Rapport de tour** : « Ce qui a changé » (statuts des factions, relations qui bougent de 5 ou plus) avant le journal.
+- **Fin de partie** : pour chaque objectif, notre valeur et les seuils bronze / argent / or du pays ; étapes de l'ambition.
+- Testé : une partie entière jouée au hasard jusqu'à la fin (révolution au tour 39), sans erreur.
+

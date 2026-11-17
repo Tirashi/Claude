@@ -8,16 +8,17 @@
    (décision du 14/11 : la guerre n'est la spécialité de personne). */
 (function(racine){
 "use strict";
+// camp : le côté que l'Autorité favorise dans ce pays (mesures du 16/11, specs/politique.md § 34), affiché au choix du pays
 const PAYS = {
-  equilibre: { nom: "Pays équilibré", texte: "Aucune faction ne domine : toutes les voies sont ouvertes.",
+  equilibre: { nom: "Pays équilibré", camp: "la droite", texte: "Aucune faction ne domine : toutes les voies sont ouvertes.",
     factions: {}, batiments: {}, lois: [] },
-  agricole: { nom: "Pays agricole", texte: "Les paysans et les conservateurs pèsent lourd ; la plaine nourrit le pays. Les écoles sont tenues par l'Église.",
+  agricole: { nom: "Pays agricole", camp: "l'extrême droite et l'extrême gauche", texte: "Les paysans et les conservateurs pèsent lourd ; la plaine nourrit le pays. Les écoles sont tenues par l'Église.",
     factions: { ouvriers: 20, paysans: 55, artisans: 25, patrons: 20, conservateurs: 40 }, batiments: { plaine: { farm: 1 } }, lois: ["ecoles_religieuses"] },
-  industriel: { nom: "Pays industriel", texte: "Ouvriers et patrons se font face ; les mines tournent. Les syndicats sont interdits.",
+  industriel: { nom: "Pays industriel", camp: "la gauche", texte: "Ouvriers et patrons se font face ; les mines tournent. Les syndicats sont interdits.",
     factions: { ouvriers: 45, paysans: 25, artisans: 20, patrons: 50, conservateurs: 20 }, batiments: { collines: { mine: 1 }, vallee: { farm: -1 } }, lois: ["syndicats_interdits"] },
-  marchand: { nom: "Pays marchand", texte: "La classe moyenne et les patrons tiennent le bourg et le commerce : le bourg a un emplacement de plus. Le libre-échange est la règle.",
+  marchand: { nom: "Pays marchand", camp: "la droite", texte: "La classe moyenne et les patrons tiennent le bourg et le commerce : le bourg a un emplacement de plus. Le libre-échange est la règle.",
     factions: { ouvriers: 20, paysans: 25, artisans: 45, patrons: 45, conservateurs: 25 }, batiments: {}, emplacements: { bourg: 1 }, lois: ["libre_echange"] },
-  minier: { nom: "Pays minier", texte: "Les mines des collines font vivre le pays : une mine de plus. Les ouvriers pèsent lourd ; la police garde les puits.",
+  minier: { nom: "Pays minier", camp: "la gauche", texte: "Les mines des collines font vivre le pays : une mine de plus. Les ouvriers pèsent lourd ; la police garde les puits.",
     factions: { ouvriers: 40, paysans: 30, artisans: 20, patrons: 40, conservateurs: 30 }, batiments: { collines: { mine: 1 } }, lois: ["police_etat"] }
 };
 if (typeof module !== "undefined" && module.exports) module.exports = PAYS; else (racine.Politique = racine.Politique || {}).PAYS = PAYS;
